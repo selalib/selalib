@@ -69,7 +69,7 @@ implicit none
     1._f64, &
     SLL_HERMITE)
 
-  A1_interp_x1x2 => new_cubic_spline_2d_interpolator( &
+  A1_interp_x1x2 => new_cubic_spline_interpolator_2d( &
        Npts1, &
        Npts2, &
        0.0_f64, &
@@ -79,7 +79,7 @@ implicit none
        SLL_HERMITE, &
        SLL_PERIODIC)
 
-  A2_interp_x1x2 => new_cubic_spline_2d_interpolator( &
+  A2_interp_x1x2 => new_cubic_spline_interpolator_2d( &
        Npts1, &
        Npts2, &
        0.0_f64, &

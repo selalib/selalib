@@ -106,7 +106,7 @@ module sll_simulation_4d_qns_mixed_module
      type(remap_plan_4D_real64), pointer :: seqx1x2_to_seqx3x4
      type(remap_plan_4D_real64), pointer :: seqx3x4_to_seqx1x2
      ! interpolators and their pointers
-     type(cubic_spline_2d_interpolator) :: interp_x1x2
+     type(sll_cubic_spline_interpolator_2d) :: interp_x1x2
 !!$     type(sll_cubic_spline_interpolator_1d) :: interp_x1
 !!$     type(sll_cubic_spline_interpolator_1d) :: interp_x2
      type(sll_cubic_spline_interpolator_1d) :: interp_x3

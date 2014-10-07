@@ -720,7 +720,7 @@ contains
         endif
 
 
-        poisson%cxx_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%cxx_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -731,7 +731,7 @@ contains
           SLL_PERIODIC)    
         call poisson%cxx_2d_interp%compute_interpolants( poisson%cxx_2d )          
 
-        poisson%cyy_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%cyy_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -742,7 +742,7 @@ contains
           SLL_PERIODIC)    
         call poisson%cyy_2d_interp%compute_interpolants( poisson%cyy_2d )          
 
-        poisson%cx_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%cx_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -753,7 +753,7 @@ contains
           SLL_PERIODIC)    
         call poisson%cx_2d_interp%compute_interpolants( poisson%cx_2d )          
 
-        poisson%cy_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%cy_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -764,7 +764,7 @@ contains
           SLL_PERIODIC)    
         call poisson%cy_2d_interp%compute_interpolants( poisson%cy_2d )          
 
-        poisson%ce_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%ce_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -935,7 +935,7 @@ contains
         endif
 
 
-        poisson%cxx_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%cxx_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -946,7 +946,7 @@ contains
           SLL_PERIODIC)    
         call poisson%cxx_2d_interp%compute_interpolants( poisson%cxx_2d )   
                
-        poisson%cxy_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%cxy_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -957,7 +957,7 @@ contains
           SLL_PERIODIC)    
         call poisson%cxy_2d_interp%compute_interpolants( poisson%cxy_2d ) 
         
-        poisson%cyy_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%cyy_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -968,7 +968,7 @@ contains
           SLL_PERIODIC)    
         call poisson%cyy_2d_interp%compute_interpolants( poisson%cyy_2d )          
 
-        poisson%cx_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%cx_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -979,7 +979,7 @@ contains
           SLL_PERIODIC)    
         call poisson%cx_2d_interp%compute_interpolants( poisson%cx_2d )          
 
-        poisson%cy_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%cy_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -990,7 +990,7 @@ contains
           SLL_PERIODIC)    
         call poisson%cy_2d_interp%compute_interpolants( poisson%cy_2d )          
 
-        poisson%ce_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%ce_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &

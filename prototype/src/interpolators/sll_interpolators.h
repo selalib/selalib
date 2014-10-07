@@ -18,6 +18,8 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+use sll_boundary_condition_descriptors
+use periodic_interp_module
 use sll_module_interpolators_1d_base
 use sll_module_cubic_spline_interpolator_1d
 use sll_module_cubic_spline_interpolator_1d_nonuniform

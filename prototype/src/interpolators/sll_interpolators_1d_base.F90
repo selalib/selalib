@@ -15,64 +15,73 @@
 !  "http://www.cecill.info".
 !**************************************************************
 
-!>@file 
-!!Abstract data type for 1D interpolation and reconstruction
-!@defgroup class sll_interpolator_1d_base
-
-!>Abstract data type for 1D interpolation and reconstruction
+!>Module for 1D interpolation and reconstruction
 module sll_module_interpolators_1d_base
 #include "sll_working_precision.h"
   use sll_boundary_condition_descriptors
   implicit none
 
-  !> Abstract data type for 1D interpolation and reconstruction
+  !>Abstract class for 1D interpolation and reconstruction
   type, abstract :: sll_interpolator_1d_base
 
 contains
 
+  !> PLEASE ADD DOCUMENTATION
    procedure(interpolator_1d_array_msg), deferred, pass(interpolator) :: &
           compute_interpolants
+  !> PLEASE ADD DOCUMENTATION
    procedure(interpolator_one_arg_sub), deferred, pass(interpolator) :: &
           interpolate_value
+  !> PLEASE ADD DOCUMENTATION
    procedure(interpolator_one_arg_sub), deferred, pass(interpolator) :: &
           interpolate_derivative_eta1
+  !> PLEASE ADD DOCUMENTATION
    procedure(interpolate_1d_array), pass, deferred :: interpolate_array
+  !> PLEASE ADD DOCUMENTATION
    procedure(interpolate_1d_array_at_displacement), pass, deferred :: interpolate_array_disp
+  !> PLEASE ADD DOCUMENTATION
    procedure(reconstruct_1d_array), pass, deferred :: reconstruct_array
      ! The following two are equivalent, and differ only by the type of
      ! the input and output data, one acts on 1d arrays, the other on 1d
      ! pointers. This is done for flexibility purposes.
+  !> PLEASE ADD DOCUMENTATION
    procedure(interpolator_1d_array_sub), deferred, pass(interpolator) :: &
           interpolate_array_values
+  !> PLEASE ADD DOCUMENTATION
    procedure(interpolator_1d_ptr_sub), deferred, pass(interpolator) :: &
           interpolate_pointer_values
      ! The following two are equivalent, and differ only by the type of
      ! the input and output data, oninterpolator_1d_array_sube acts on 1d arrays, the other on 1d
      ! pointers. This is done for flexibility purposes.
-   procedure(interpolator_1d_array_sub), deferred, pass(interpolator) :: &
-          interpolate_array_derivatives
+  ! procedure(interpolator_1d_array_sub), deferred, pass(interpolator) :: &
+  !        interpolate_array_derivatives
+  !> PLEASE ADD DOCUMENTATION
    procedure(interpolator_1d_ptr_sub), deferred, pass(interpolator) :: &
           interpolate_pointer_derivatives
      ! Momentarily comment these out until we are actually going to have
      ! implementations for them.
      ! procedure(interpolate_1d_array), pass, deferred :: interpolate_array
      ! procedure(reconstruct_1d_array), pass, deferred :: reconstruct_array
+  !> PLEASE ADD DOCUMENTATION
    procedure(interpolator_1d_set_coeffs), pass, deferred :: set_coefficients
+  !> PLEASE ADD DOCUMENTATION
    procedure(get_coeffs_1d), pass, deferred :: get_coefficients
   end type sll_interpolator_1d_base
 
-  sll_int32, parameter :: INTERP_PERIODIC_BC  = 0
-  sll_int32, parameter :: INTERP_DIRICHLET_BC = 1
-  sll_int32, parameter :: INTERP_NEUMANN_BC   = 2
+  sll_int32, parameter :: INTERP_PERIODIC_BC  = 0 !< PLEASE ADD DOCUMENTATION
+  sll_int32, parameter :: INTERP_DIRICHLET_BC = 1 !< PLEASE ADD DOCUMENTATION
+  sll_int32, parameter :: INTERP_NEUMANN_BC   = 2 !< PLEASE ADD DOCUMENTATION
 
   !> Signature of the interpolating function for one point
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
   abstract interface
      function interpolator_one_arg_msg( interpolator, eta1 ) result(val)
        use sll_working_precision
        import :: sll_interpolator_1d_base
-       sll_real64                                     :: val
-       class(sll_interpolator_1d_base), intent(inout) :: interpolator
-       sll_real64, intent(in)                         :: eta1
+       sll_real64                                     :: val !< value
+       class(sll_interpolator_1d_base), intent(inout) :: interpolator !< interpolator
+       sll_real64, intent(in)                         :: eta1 !< position
      end function interpolator_one_arg_msg
   end interface
 
@@ -196,9 +205,8 @@ contains
      end subroutine interpolator_1d_set_coeffs
   end interface
 
-
-  !> Signature of interpolating function
    abstract interface
+  !> Signature of interpolating function
      function get_coeffs_1d(interpolator)
        use sll_working_precision
        import sll_interpolator_1d_base
@@ -206,5 +214,6 @@ contains
        sll_real64, dimension(:), pointer         :: get_coeffs_1d
      end function get_coeffs_1d
   end interface
+#endif
 
 end module sll_module_interpolators_1d_base

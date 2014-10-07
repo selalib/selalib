@@ -5,7 +5,7 @@
 !> Solve Maxwell equations on cartesian domain with Discontinuous Galerkine method:
 !> * Gauss Lobatto for integration formula
 !> * Periodic boundary conditions.
-module sll_maxwell_2d_diga
+module sll_module_maxwell_2d_diga
 
 #include "sll_maxwell_solvers_macros.h"
 #include "sll_working_precision.h"
@@ -50,7 +50,7 @@ type :: cell_type
 end type cell_type
 
 !> DG method in 2D with general coordinates
-type, public, extends(sll_maxwell_solver) :: maxwell_2d_diga
+type, public, extends(sll_maxwell_solver) :: sll_maxwell_2d_diga
    sll_transformation, pointer                  :: tau    !< transformation
    type(sll_logical_mesh_2d), pointer           :: mesh   !< Logical mesh
    sll_int32                                    :: degree !< degree of gauss integration
@@ -66,7 +66,7 @@ type, public, extends(sll_maxwell_solver) :: maxwell_2d_diga
    type(dg_field), pointer                      :: po     !< Potential
    sll_real64, private                          :: xi 
 
-end type maxwell_2d_diga
+end type sll_maxwell_2d_diga
 
 !> Create a Maxwell solver using DG method in 2D
 interface sll_new
@@ -102,7 +102,7 @@ function new_maxwell_2d_digal( tau,          &
                                bc_west,      &
                                flux_type) result(this)
 
-   type( maxwell_2d_diga ), pointer :: this !< solver data object
+   type( sll_maxwell_2d_diga ), pointer :: this !< solver data object
    sll_transformation, pointer      :: tau
    sll_int32                        :: polarization
    sll_int32                        :: degree
@@ -137,7 +137,7 @@ subroutine initialize_maxwell_2d_diga( this,         &
                                        bc_west,      &
                                        flux_type)
 
-   type(maxwell_2d_diga)       :: this !< solver data object
+   type(sll_maxwell_2d_diga)       :: this !< solver data object
    sll_transformation, pointer :: tau  !< transformation
    sll_int32                   :: polarization !< TE or TM
    sll_int32                   :: degree !< degree of DG method
@@ -289,7 +289,7 @@ end subroutine initialize_maxwell_2d_diga
 !> Solve the maxwell equation
 subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
 
-   type( maxwell_2d_diga )  :: this !< Maxwell solver object
+   type( sll_maxwell_2d_diga )  :: this !< Maxwell solver object
 
    type(dg_field)  :: fx   !< x electric field
    type(dg_field)  :: fy   !< y electric field
@@ -653,4 +653,4 @@ subroutine compute_normals(tau, bc_south, bc_east, bc_north, bc_west, &
 
 end subroutine compute_normals
 
-end module sll_maxwell_2d_diga
+end module sll_module_maxwell_2d_diga

@@ -18,9 +18,9 @@ program test_lobalap_discrete
   sll_int32, parameter :: degree = 3
   real(8), external :: f_cos, f_four
 
-  type(cubic_spline_2d_interpolator)      :: x1_interp
-  type(cubic_spline_2d_interpolator)      :: x2_interp
-  type(cubic_spline_2d_interpolator)      :: j_interp
+  type(sll_cubic_spline_interpolator_2d)      :: x1_interp
+  type(sll_cubic_spline_interpolator_2d)      :: x2_interp
+  type(sll_cubic_spline_interpolator_2d)      :: j_interp
   sll_real64, dimension(:,:), allocatable :: x1_tab
   sll_real64, dimension(:,:), allocatable :: x2_tab
   sll_real64, dimension(:), allocatable   :: x1_eta1_min, x1_eta1_max

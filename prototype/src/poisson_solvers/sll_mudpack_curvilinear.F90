@@ -119,7 +119,7 @@ allocate(a21_array(nx,ny))
 allocate(phi(nx,ny))
 
 transformation => transf
-cxx_interp => new_cubic_spline_2d_interpolator( &
+cxx_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -129,7 +129,7 @@ cxx_interp => new_cubic_spline_2d_interpolator( &
           SLL_PERIODIC, &
           SLL_PERIODIC)
           
-cyy_interp => new_cubic_spline_2d_interpolator( &
+cyy_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -139,7 +139,7 @@ cyy_interp => new_cubic_spline_2d_interpolator( &
           SLL_PERIODIC, &
           SLL_PERIODIC) 
           
- cxy_interp => new_cubic_spline_2d_interpolator( &
+ cxy_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -149,7 +149,7 @@ cyy_interp => new_cubic_spline_2d_interpolator( &
           SLL_PERIODIC, &
           SLL_PERIODIC)  
           
- cx_interp => new_cubic_spline_2d_interpolator( &
+ cx_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -158,7 +158,7 @@ cyy_interp => new_cubic_spline_2d_interpolator( &
           eta2_max, &
           SLL_PERIODIC, &
           SLL_PERIODIC) 
- cy_interp => new_cubic_spline_2d_interpolator( &
+ cy_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -168,7 +168,7 @@ cyy_interp => new_cubic_spline_2d_interpolator( &
           SLL_PERIODIC, &
           SLL_PERIODIC)    
                                          
-ce_interp => new_cubic_spline_2d_interpolator( &
+ce_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -177,7 +177,7 @@ ce_interp => new_cubic_spline_2d_interpolator( &
           eta2_max, &
           SLL_PERIODIC, &
           SLL_PERIODIC)   
-a12_interp => new_cubic_spline_2d_interpolator( &
+a12_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -186,7 +186,7 @@ a12_interp => new_cubic_spline_2d_interpolator( &
           eta2_max, &
           SLL_PERIODIC, &
           SLL_PERIODIC) 
-a21_interp => new_cubic_spline_2d_interpolator( &
+a21_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &

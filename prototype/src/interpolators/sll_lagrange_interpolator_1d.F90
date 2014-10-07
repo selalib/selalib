@@ -11,21 +11,36 @@ private
 
  !> Interpolator class of Lagrange 1D interpolator
  type,extends(sll_interpolator_1d_base), public :: sll_lagrange_interpolator_1d
+   !> PLEASE ADD DOCUMENTATION
    type(sll_lagrange_interpolation_1D), pointer :: lagrange
+   !> PLEASE ADD DOCUMENTATION
    sll_int32                                    :: bc_type
    contains
+   !> PLEASE ADD DOCUMENTATION
    procedure,pass(interpolator) :: initialize => initialize_li1d_interpolator
+   !> PLEASE ADD DOCUMENTATION
    procedure :: compute_interpolants => compute_interpolants_li1d
+   !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_array_derivatives => interpolate_array_derivatives_li1d
+   !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_array => interpolate_array_li1d
+   !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_array_disp => interpolate_array_disp_li1d
+   !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_pointer_derivatives => interpolate_pointer_derivatives_li1d
+   !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_derivative_eta1 => interpolate_derivative_eta1_li1d
+   !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_pointer_values => interpolate_pointer_values_li1d
+   !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_array_values => interpolate_array_values_li1d
+   !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_value => interpolate_value_li1d
+   !> PLEASE ADD DOCUMENTATION
    procedure :: reconstruct_array => reconstruct_array_li1d
+   !> PLEASE ADD DOCUMENTATION
    procedure, pass :: set_coefficients => set_coefficients_li1d
+   !> PLEASE ADD DOCUMENTATION
    procedure, pass :: get_coefficients => get_coefficients_li1d
  end type sll_lagrange_interpolator_1d
 

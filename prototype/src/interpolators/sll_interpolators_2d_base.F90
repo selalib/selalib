@@ -37,33 +37,43 @@ implicit none
 
    contains
 
+   !> PLEASE ADD DOCUMENTATION
      procedure(interpolator_two_arg_msg),  &
           deferred, pass(interpolator) :: interpolate_value
      
+   !> PLEASE ADD DOCUMENTATION
      procedure(interpolator_two_arg_msg),  &
           deferred, pass(interpolator) :: interpolate_derivative_eta1
 
+   !> PLEASE ADD DOCUMENTATION
      procedure(interpolator_two_arg_msg),  &
           deferred, pass(interpolator) :: interpolate_derivative_eta2
      
+   !> PLEASE ADD DOCUMENTATION
      procedure(interpolate_2d_array),      &
           pass, deferred :: interpolate_array
      
+   !> PLEASE ADD DOCUMENTATION
      procedure(interpolate_2d_array_disp), &
           pass, deferred :: interpolate_array_disp
      
+   !> PLEASE ADD DOCUMENTATION
      procedure(interpolator_2d_set_coeffs), &
           pass, deferred :: set_coefficients
 
+   !> PLEASE ADD DOCUMENTATION
      procedure(interpolator_2d_logical_query), &
           pass, deferred :: coefficients_are_set
      
+   !> PLEASE ADD DOCUMENTATION
      procedure(compute_coeffs_2d),&
           pass, deferred ::  compute_interpolants
 
+   !> PLEASE ADD DOCUMENTATION
      procedure(get_coeffs_2d), &
           pass,deferred :: get_coefficients
 
+   !> PLEASE ADD DOCUMENTATION
      procedure(delete_interpolator_2d), & 
           pass, deferred :: delete
  
@@ -72,6 +82,7 @@ implicit none
   end type sll_interpolator_2d_base
   
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
   !> Signature for interpolating function
   abstract interface
      function interpolator_two_arg_msg( interpolator, eta1, eta2 ) result(val)
@@ -223,5 +234,7 @@ implicit none
        class(sll_interpolator_2d_base), intent(inout) :: interpolator
      end subroutine delete_interpolator_2d
   end interface
+
+#endif
 
 end module sll_module_interpolators_2d_base

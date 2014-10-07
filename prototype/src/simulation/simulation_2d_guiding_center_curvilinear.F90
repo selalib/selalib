@@ -709,7 +709,7 @@ contains
     select case (f_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
         print*,"#f interpolation SLL_CUBIC_SPLINES"
-        sim%f_interp2d => new_cubic_spline_2d_interpolator( &
+        sim%f_interp2d => new_cubic_spline_interpolator_2d( &
           Nc_eta1+1, &
           Nc_eta2+1, &
           eta1_min, &
@@ -731,7 +731,7 @@ contains
     select case (A_interp_case)
       case ("SLL_CUBIC_SPLINES")
        print*,"#A1_2d interpolation SLL_CUBIC_SPLINES"
-        sim%A1_interp2d => new_cubic_spline_2d_interpolator( &
+        sim%A1_interp2d => new_cubic_spline_interpolator_2d( &
           Nc_eta1+1, &
           Nc_eta2+1, &
           eta1_min, &
@@ -741,7 +741,7 @@ contains
           sim%bc_interp2d_eta1, &
           sim%bc_interp2d_eta2)
        print*,"#A2_2d interpolation SLL_CUBIC_SPLINES"   
-        sim%A2_interp2d => new_cubic_spline_2d_interpolator( &
+        sim%A2_interp2d => new_cubic_spline_interpolator_2d( &
           Nc_eta1+1, &
           Nc_eta2+1, &
           eta1_min, &
@@ -782,7 +782,7 @@ contains
     select case (phi_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
       print*,"#phi interpolation SLL_CUBIC_SPLINES"  
-        sim%phi_interp2d => new_cubic_spline_2d_interpolator( &
+        sim%phi_interp2d => new_cubic_spline_interpolator_2d( &
           Nc_eta1+1, &
           Nc_eta2+1, &
           eta1_min, &
@@ -1913,9 +1913,9 @@ subroutine sll_DSG( eta1_min,eta1_max, eta2_min,eta2_max,n_eta1,n_eta2, f )
     !type(sll_arbitrary_degree_spline_interpolator_2d)   :: a11_interp
     !type(sll_arbitrary_degree_spline_interpolator_2d)   :: a22_interp
     !type(sll_arbitrary_degree_spline_interpolator_2d)   :: a12_interp
-    type(cubic_spline_2d_interpolator)   :: a11_interp
-    type(cubic_spline_2d_interpolator)   :: a22_interp
-    type(cubic_spline_2d_interpolator)   :: a12_interp
+    type(sll_cubic_spline_interpolator_2d)   :: a11_interp
+    type(sll_cubic_spline_interpolator_2d)   :: a22_interp
+    type(sll_cubic_spline_interpolator_2d)   :: a12_interp
     sll_real64,dimension(:,:),allocatable :: cxx_array
     sll_real64,dimension(:,:),allocatable :: cyy_array
     sll_real64,dimension(:,:),allocatable :: cxy_array

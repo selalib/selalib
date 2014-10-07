@@ -11,7 +11,7 @@ program polar_advection
 
 implicit none
 
-type(cubic_spline_2d_interpolator), target  :: spline_xy
+type(sll_cubic_spline_interpolator_2d), target  :: spline_xy
 
 type(sll_logical_mesh_2d), pointer                    :: logical_mesh
 class(sll_coordinate_transformation_2d_base), pointer :: transfx

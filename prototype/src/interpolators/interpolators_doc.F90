@@ -14,19 +14,21 @@
 !! Classes for numerical interpolation.
 !> @author Selalib team 
 !! @details
-!! Methods :
-!! - compute_interpolants
-!! - interpolate_value
-!! - interpolate_derivative_eta1
-!! - interpolate_array
-!! - interpolate_array_disp
-!! - reconstruct_array
-!! - interpolate_array_values
-!! - interpolate_pointer_values
-!! - interpolate_array_derivatives
-!! - interpolate_pointer_derivatives
-!! - set_coefficients
-!! - get_coefficients
+!! PLEASE ADD DOCUMENTATION 
+!!
+!! Methods:
+!! - compute_interpolants(...)
+!! - interpolate_value(...)
+!! - interpolate_derivative_eta1(...)
+!! - interpolate_array(...)
+!! - interpolate_array_disp(...)
+!! - reconstruct_array(...)
+!! - interpolate_array_values(...)
+!! - interpolate_pointer_values(...)
+!! - interpolate_array_derivatives(...)
+!! - interpolate_pointer_derivatives(...)
+!! - set_coefficients(...)
+!! - get_coefficients(...)
 !!
 !> Classes available are:
 !!  - sll_interpolator_1d_base
