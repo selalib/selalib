@@ -37,6 +37,8 @@ use sll_module_poisson_2d_base
 use sll_mudpack_base
 use sll_module_cubic_spline_interpolator_1d
 use sll_module_cubic_spline_interpolator_2d
+use sll_module_interpolators_1d_base
+use sll_module_interpolators_2d_base
 
 !use sll_poisson_2d_polar
 implicit none

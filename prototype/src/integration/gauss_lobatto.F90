@@ -12,15 +12,16 @@ implicit none
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 abstract interface
-   function function_1d(x) result(y)
+   !> 1d real function
+   function function_1D(x)
       use sll_working_precision ! can't pass a header file because the
                                 ! preprocessor prevents double inclusion.
                                 ! This is very rare.
-      sll_real64 :: x
-      sll_real64 :: y
-   end function function_1d
+      sll_real64             :: function_1D
+      sll_real64, intent(in) :: x
+   end function function_1D
 end interface
-#endif /* DOXYGEN_SHOULD_SKIP_THIS */
+#endif
 
 !> Integrate numerically with Gauss-Lobatto formula
 interface gauss_lobatto_integrate_1d
@@ -52,9 +53,9 @@ contains
   function gauss_lobatto_integral_1D( f, a, b, n )
     sll_real64                :: gauss_lobatto_integral_1D
     procedure(function_1D)    :: f
-    sll_real64, intent(in)    :: a !< left bound
-    sll_real64, intent(in)    :: b !< right bound
-    sll_int32,  intent(in)    :: n !< number of points
+    sll_real64, intent(in)    :: a
+    sll_real64, intent(in)    :: b
+    sll_int32,  intent(in)    :: n 
     sll_real64, dimension(n+1):: xk
     sll_real64, dimension(n+1):: wk
     sll_int32                 :: k
@@ -107,9 +108,9 @@ contains
   !> @param[in] b OPTIONAL Maximun value of the interval.
   !> @return array containing points (1,:) and weights (2,:)
   function gauss_lobatto_points_and_weights(n,a,b) result(wx)
-    sll_int32,  intent(in)             :: n !< number of points
-    sll_real64, intent(in),optional    :: a !< left bound
-    sll_real64, intent(in),optional    :: b !< right bound
+    sll_int32,  intent(in)     :: n 
+    sll_real64, intent(in),optional    :: a
+    sll_real64, intent(in),optional    :: b
     sll_real64, dimension(2,n) :: wx !< wx points and weights
     
     wx(1,1:n) = gauss_lobatto_points( n, a, b )
@@ -118,12 +119,12 @@ contains
   end function gauss_lobatto_points_and_weights
   
   
-  !> Returns a 1d array of size n containing gauss-lobatto 
+  !> Returns a 1d array of size (n) containing gauss-lobatto 
   !> points in the interval [a,b].
   !> @param[in] n Number of gauss points.
   !> @param[in] a OPTIONAL Minimum value of the interval.
   !> @param[in] b OPTIONAL Maximun value of the interval.
-  !> @return array containing points 
+  !> @return xk array containing points
   function gauss_lobatto_points( n, a, b ) result(xk)
     sll_int32,  intent(in)          :: n 
     sll_real64, intent(in),optional :: a
@@ -167,12 +168,12 @@ contains
     
     end function gauss_lobatto_points
 
-  !> Returns an 1d array of size n containing gauss-lobatto 
+  !> Returns a 1d array of size (n) containing gauss-lobatto 
   !> weights in the interval [a,b].
   !> @param[in] n Number of gauss points.
   !> @param[in] a OPTIONAL Minimum value of the interval.
   !> @param[in] b OPTIONAL Maximun value of the interval.
-  !> @return array containing weights
+  !> @return wk array containing points
   function gauss_lobatto_weights( n,a,b ) result(wk)
     sll_int32,  intent(in)           :: n 
     sll_real64, intent(in), optional :: a

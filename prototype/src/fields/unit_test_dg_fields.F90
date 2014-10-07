@@ -81,12 +81,12 @@ tau => new_coordinate_transformation_2d_analytic( &
 
 call tau%write_to_file(SLL_IO_MTV)
 
-ex => new_dg_field( degree, tau, add) 
+ex => sll_new( degree, tau, add) 
 call ex%write_to_file('ex', SLL_IO_GMSH)
 call ex%write_to_file('ex', SLL_IO_MTV)
 call ex%write_to_file('ex', SLL_IO_XDMF)
 
-bz => new_dg_field( degree, collela, gaussian) 
+bz => sll_new( degree, collela, gaussian) 
 call bz%write_to_file('bz', SLL_IO_GMSH)
 call bz%write_to_file('bz', SLL_IO_MTV)
 call bz%write_to_file('bz', SLL_IO_XDMF)

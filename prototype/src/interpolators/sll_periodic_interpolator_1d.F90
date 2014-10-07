@@ -10,10 +10,11 @@ module sll_module_periodic_interpolator_1d
 #include "sll_assert.h"
 use sll_module_interpolators_1d_base
 use periodic_interp_module
-  implicit none
+implicit none
+private
 
   !> Periodic interpolator
-  type, extends(sll_interpolator_1d_base) ::  sll_periodic_interpolator_1d
+  type, extends(sll_interpolator_1d_base), public ::  sll_periodic_interpolator_1d
     ! Be careful here. For consistency with the other interpolators
     ! num_points is the number of nodes (including both boundaries)
     ! and not the number of cells as used in the periodic interpolator module.
@@ -44,10 +45,15 @@ use periodic_interp_module
      module procedure delete_per1d
   end interface sll_delete
 
+  public new_periodic_1d_interpolator
+  public initialize_per1d_interpolator
+  public sll_delete
+
 contains  ! ****************************************************************
 
 
 
+  !> Create a new interpolator
   function new_periodic_1d_interpolator( &
     num_points, &
     xmin, &

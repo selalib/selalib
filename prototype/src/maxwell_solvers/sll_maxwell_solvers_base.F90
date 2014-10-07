@@ -26,7 +26,8 @@ use sll_boundary_condition_descriptors
 
 implicit none
 
-  type :: sll_maxwell_solver
+  !> Parent object of all Maxwell solvers
+  type, public :: sll_maxwell_solver
 
    sll_int32  :: nc_eta1      !< x cells number
    sll_int32  :: nc_eta2      !< y cells number
@@ -46,7 +47,7 @@ implicit none
 contains
 
 !> write files to visualize 2d fields with gnuplot
-subroutine plot_two_fields(fname, n1, n2, f1, f2, iplot, time )
+subroutine sll_plot_two_fields(fname, n1, n2, f1, f2, iplot, time )
 
 sll_int32, intent(in) :: n1  !< size of f1 and f2 first index
 sll_int32, intent(in) :: n2  !< size of f1 and f2 second index
@@ -86,6 +87,6 @@ write(90,"(a)",advance='no')"splot '"//fname//cplot//".dat' w lines"
 write(90,"(a)",advance='no')",'"//fname//cplot//".dat' u 1:2:4 w lines"
 close(90)
 
-end subroutine plot_two_fields
+end subroutine sll_plot_two_fields
 
 end module sll_maxwell_solvers_base

@@ -21,16 +21,17 @@ module sll_module_cubic_spline_interpolator_2d
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-  use sll_module_interpolators_2d_base
-  use sll_cubic_splines
-  implicit none
+use sll_module_interpolators_2d_base
+use sll_cubic_splines
+implicit none
+private
   
   !> The spline-based interpolator is only a wrapper around the capabilities
   !> of the cubic splines. All interpolators share a common interface with
   !> respect to their use, as described by the interpolator_2d_base class.
   !>
   !> Where the diverse interpolators diverge is in the way to initialize them.
-  type, extends(sll_interpolator_2d_base) :: cubic_spline_2d_interpolator
+  type, extends(sll_interpolator_2d_base), public :: cubic_spline_2d_interpolator
      sll_int32                           :: npts1
      sll_int32                           :: npts2
      type(sll_cubic_spline_2D), pointer  :: spline
@@ -62,6 +63,9 @@ module sll_module_cubic_spline_interpolator_2d
   interface sll_delete
      module procedure delete_cubic_spline_2d_interpolator
   end interface sll_delete
+
+public new_cubic_spline_2d_interpolator
+public sll_delete
 
 contains
 

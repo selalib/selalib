@@ -32,9 +32,10 @@ use sll_module_interpolators_1d_base
 use sll_cubic_splines
 
 implicit none
+private
 
 !> Cubic spline interpolator 1d regular grid.
-type, extends(sll_interpolator_1d_base) :: sll_cubic_spline_interpolator_1d
+type, extends(sll_interpolator_1d_base), public :: sll_cubic_spline_interpolator_1d
 
    sll_real64, dimension(:), pointer  :: interpolation_points !< points position
    sll_int32                          :: num_points           !< size
@@ -71,6 +72,8 @@ interface sll_delete
    module procedure delete_cs1d
 end interface sll_delete
 
+public new_cubic_spline_interpolator_1d
+public sll_delete
 contains  ! ****************************************************************
 
 

@@ -61,6 +61,7 @@ module sll_simulation_4d_drift_kinetic_polar_module
   use sll_module_cubic_spline_interpolator_2d
   use sll_module_advection_1d_periodic
   use sll_module_poisson_2d_polar_solver
+  use sll_hermite_interpolation_2d_module
 
 
   implicit none

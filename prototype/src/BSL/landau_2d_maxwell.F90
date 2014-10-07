@@ -89,7 +89,7 @@ SLL_CLEAR_ALLOCATE(bz(1:nc_eta1+1,1:nc_eta2+1),error)
 SLL_CLEAR_ALLOCATE(jx(1:nc_eta1+1,1:nc_eta2+1),error)
 SLL_CLEAR_ALLOCATE(jy(1:nc_eta1+1,1:nc_eta2+1),error)
 
-call initialize(maxwell, &
+call sll_create(maxwell, &
                 eta1_min, eta1_max, nc_eta1, &
                 eta2_min, eta2_max, nc_eta2, TE_POLARIZATION)
 
@@ -151,7 +151,7 @@ do i_step = 1, n_step !Loop over time
 
    call compute_current()
    bz = 0.0
-   call ampere(maxwell, ex, ey, bz, delta_t, jx, jy)
+   call sll_solve_ampere(maxwell, ex, ey, bz, delta_t, jx, jy)
 
    call online_plot() 
    if (i_step == 1 .or. mod(i_step, 10) == 0) then

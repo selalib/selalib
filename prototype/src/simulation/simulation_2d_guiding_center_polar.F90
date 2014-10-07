@@ -44,6 +44,8 @@ module sll_simulation_2d_guiding_center_polar_module
      only: new_poisson_2d_elliptic_solver, &
            es_gauss_legendre
 
+  use sll_boundary_condition_descriptors
+  use sll_hermite_interpolation_2d_module
   
   !use sll_parallel_array_initializer_module
 
