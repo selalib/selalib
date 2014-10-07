@@ -19,15 +19,16 @@ use sll_common_coordinate_transformations
 implicit none
 private
 
+!> Object to describe field data with DG numerical method
 type, public :: sll_dg_field_2d
 
-   sll_int32                               :: degree
-   sll_transformation, pointer             :: tau  
-   sll_real64, dimension(:,:,:,:), pointer :: array
-   sll_real64, dimension(:), pointer       :: xgalo
-   sll_real64, dimension(:), pointer       :: wgalo
-   sll_int32                               :: tag
-   sll_int32                               :: file_id
+   sll_int32                               :: degree  !< polynom degree
+   sll_transformation, pointer             :: tau     !< coordinate transformation
+   sll_real64, dimension(:,:,:,:), pointer :: array   !< field data
+   sll_real64, dimension(:), pointer       :: xgalo   !< gauss-lobatto points
+   sll_real64, dimension(:), pointer       :: wgalo   !< gauss-lobatto weights
+   sll_int32                               :: tag     !< just a tag
+   sll_int32                               :: file_id !< file unit for output
 
 contains
 
@@ -36,14 +37,20 @@ contains
 
 end type sll_dg_field_2d
 
+!> function that return a pointer to a DG field 2d
+!> @param[in] tau           transformation 
+!> @param[in] init_function function
+!> @param[in] degree        degree integration
 interface sll_new
   module procedure new_dg_field_2d
 end interface sll_new
 
+!> sum operator DG field 2d
 interface operator(+)
   module procedure dg_field_add
 end interface operator(+)
 
+!> sub operator DG field 2d
 interface operator(-)
   module procedure dg_field_sub
 end interface operator(-)
