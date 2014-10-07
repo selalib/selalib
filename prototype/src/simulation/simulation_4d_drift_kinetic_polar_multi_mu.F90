@@ -78,6 +78,7 @@ module sll_simulation_4d_drift_kinetic_polar_multi_mu_module
   sll_int32, parameter :: SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW_WITH_PADE = 2 
   sll_int32, parameter :: SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW_WITHOUT_PADE = 3 
   sll_int32, parameter :: SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW_WITHOUT_PADE_NEW = 4 
+  sll_int32, parameter :: SLL_NO_QUASI_NEUTRAL_NEW = 5 
 
 !! choice of time scheme solver
 !! should be else where
@@ -698,6 +699,10 @@ contains
         sim%QN_case = SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW_WITH_PADE
       case ("SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW_WITHOUT_PADE")
         sim%QN_case = SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW_WITHOUT_PADE
+      case ("SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW_WITHOUT_PADE_NEW")
+        sim%QN_case = SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW_WITHOUT_PADE_NEW
+      case ("SLL_NO_QUASI_NEUTRAL_NEW")
+        sim%QN_case = SLL_NO_QUASI_NEUTRAL_NEW
       case default
         print *,'#bad choice for QN_case', QN_case
         print *,'#in init_dk4d_polar'
@@ -801,6 +806,7 @@ contains
           sim%qn%quasineutral%mu_weights_for_phi(:), &
           sim%qn%quasineutral%N_mu_for_phi)
 
+      case (SLL_NO_QUASI_NEUTRAL_NEW)
       case (SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW_WITHOUT_PADE_NEW)
         
         if(mu_quadr_for_phi_case=="SLL_USER_DEFINED") then
@@ -828,15 +834,15 @@ contains
 
         SLL_ALLOCATE(mat_loc(sim%m_x2%num_cells,sim%m_x1%num_cells+1,sim%m_x1%num_cells+1), ierr)
         SLL_ALLOCATE(sim%mat(sim%m_x2%num_cells,sim%m_x1%num_cells+1,sim%m_x1%num_cells+1), ierr)
-        SLL_ALLOCATE(points(2,gyroaverage_N_points),ierr)
+        SLL_ALLOCATE(points(3,gyroaverage_N_points),ierr)
         SLL_ALLOCATE(radius(sim%m_x1%num_cells+1),ierr)
         
         call compute_shape_circle(points,gyroaverage_N_points)
 
         sim%mat = 0._f64
-        do i=1,N_mu_for_phi
+        do i=1,sim%N_mu_for_phi
           radius(1:sim%m_x1%num_cells+1) = &
-            sqrt(2._f64*sim%mu_points_for_phi(i))*sim%Ti_r(1:sim%m_x1%num_cells+1)
+            sqrt(2._f64*sim%mu_points_for_phi(i)*sim%Ti_r(1:sim%m_x1%num_cells+1))
 !    do j=1,num_cells_r+1
 !      r = r_min+real(j-1,f64)*(r_max-r_min)/real(num_cells_r,f64)
 !      rho(j) = minval((/rho(j),abs(r-r_min)/num_buffer_cell,abs(r-r_max)/num_buffer_cell/))
@@ -2447,7 +2453,7 @@ subroutine gyroaverage_phi_dk( sim )
             do iloc2=1, loc3d_sz_x2
               do iloc1=1, loc3d_sz_x1
                 sim%phi3d_seqx1x2(iloc1,iloc2,:) = &
-                ((sim%rho3d_seqx1x2(iloc1,iloc2,:)/sim%n0_r(iloc1))-1._f64)*sim%Ti_r(iloc1)
+                ((sim%rho3d_seqx1x2(iloc1,iloc2,:)/sim%n0_r(iloc1)))*sim%Ti_r(iloc1)
               enddo
             enddo
       
@@ -2470,11 +2476,41 @@ subroutine gyroaverage_phi_dk( sim )
           sim%phi3d_seqx1x2, &
           sim%phi3d_seqx3 )       
 
+      case (SLL_NO_QUASI_NEUTRAL_NEW)
 
+
+        call compute_local_sizes_3d( &
+          sim%layout3d_seqx1x2, &
+          loc3d_sz_x1, &
+          loc3d_sz_x2, &
+          loc3d_sz_x3 )
+          
+        select case (sim%delta_f_method)           
+          case (1)
+            do iloc1 = 1,loc3d_sz_x1  
+              sim%rho3d_seqx1x2(iloc1,:,:)=&
+              sim%rho3d_seqx1x2(iloc1,:,:)-sim%n0_r(iloc1)
+            enddo
+         
+            do iloc3 = 1,loc3d_sz_x3    
+              call sim%gyroaverage%compute_gyroaverage( &
+                sqrt(2*sim%mu), &
+                sim%rho3d_seqx1x2(1:nc_x1+1,1:nc_x2+1,iloc3))   
+            enddo
+         
+            do iloc2=1, loc3d_sz_x2
+              do iloc1=1, loc3d_sz_x1
+                sim%phi3d_seqx1x2(iloc1,iloc2,:) = &
+                ((sim%rho3d_seqx1x2(iloc1,iloc2,:)/sim%n0_r(iloc1)))*sim%Te_r(iloc1)
+              enddo
+            enddo
       
-      
-      
-      
+          case default
+            print *,'#bad value for sim%delta_f_method'
+            stop  
+        end select
+   
+     
         
       case (SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW)
         print *,'#SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW'
