@@ -114,7 +114,23 @@ private
      module procedure get_node_positions_2d
   end interface get_node_positions
 
-public sll_delete, sll_display
+  !> @brief allocates the memory space for a new logical mesh on the heap,
+  !> initializes it with the given arguments and returns a pointer to the
+  !> object.
+  !> @param num_cells integer denoting the number of cells.
+  !> @param eta_min optional double precision value which represents the 
+  !> minimum value of the eta1 parameter in the logical mesh.
+  !> @param eta_max optional double precision value which represents the 
+  !> maximum value of the eta1 parameter in the logical mesh.
+  !> @return a pointer to the newly allocated object.
+  interface sll_new
+     module procedure new_logical_mesh_1d
+     module procedure new_logical_mesh_2d
+     module procedure new_logical_mesh_3d
+     module procedure new_logical_mesh_4d
+  end interface sll_new
+
+public sll_delete, sll_display, sll_new
 public new_logical_mesh_1d
 public new_logical_mesh_2d
 public new_logical_mesh_3d

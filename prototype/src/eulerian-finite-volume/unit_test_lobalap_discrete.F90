@@ -11,9 +11,9 @@ program test_lobalap_discrete
   type(lobatto_poisson_solver)        :: solver
   type(sll_logical_mesh_2d), pointer  :: mesh
   class(sll_coordinate_transformation_2d_base), pointer :: tau
-  type(dg_field), pointer :: dg_rho
-  type(dg_field), pointer :: dg_ex
-  type(dg_field), pointer :: dg_ey
+  type(sll_dg_field_2d), pointer :: dg_rho
+  type(sll_dg_field_2d), pointer :: dg_ex
+  type(sll_dg_field_2d), pointer :: dg_ey
 
   sll_int32, parameter :: degree = 3
   real(8), external :: f_cos, f_four
@@ -53,7 +53,7 @@ program test_lobalap_discrete
   allocate(x2_eta1_max(NPTS2))
   allocate(jacs(NPTS1,NPTS2))
   
-  mesh => new_logical_mesh_2d( NPTS1-1, NPTS2-1 )
+  mesh => sll_new( NPTS1-1, NPTS2-1 )
 
   do j=0,NPTS2-1
      do i=0,NPTS1-1
