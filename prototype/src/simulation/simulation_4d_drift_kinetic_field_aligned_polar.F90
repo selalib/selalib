@@ -643,10 +643,10 @@ contains
     sim%world_size = sll_get_collective_size(sll_world_collective)
     sim%my_rank    = sll_get_collective_rank(sll_world_collective)
 
-    call initialize_eta1_node_1d(sim%m_x1,sim%x1_node)
-    call initialize_eta1_node_1d(sim%m_x2,sim%x2_node)
-    call initialize_eta1_node_1d(sim%m_x3,sim%x3_node)
-    call initialize_eta1_node_1d(sim%m_x4,sim%x4_node)
+    call get_node_positions(sim%m_x1,sim%x1_node)
+    call get_node_positions(sim%m_x2,sim%x2_node)
+    call get_node_positions(sim%m_x3,sim%x3_node)
+    call get_node_positions(sim%m_x4,sim%x4_node)
 
     SLL_ALLOCATE(sim%iota_r(num_cells_x1+1),ierr)
     !SLL_ALLOCATE(sim%Diota_r(num_cells_x1+1),ierr)
@@ -2383,10 +2383,10 @@ contains
     x1_min = sim%m_x1%eta_min
     x1_max = sim%m_x1%eta_max
         
-    call initialize_eta1_node_1d(sim%m_x1,x1_node)
-    call initialize_eta1_node_1d(sim%m_x2,x2_node)
-    call initialize_eta1_node_1d(sim%m_x3,x3_node)
-    call initialize_eta1_node_1d(sim%m_x4,x4_node)
+    call get_node_positions(sim%m_x1,x1_node)
+    call get_node_positions(sim%m_x2,x2_node)
+    call get_node_positions(sim%m_x3,x3_node)
+    call get_node_positions(sim%m_x4,x4_node)
     
     call init_fequilibrium( &
       sim%m_x1%num_cells+1, &

@@ -1,7 +1,7 @@
 program test_lobalap
-#include "selalib.h"
-#include "sll_coordinate_transformations.h"
+#include "sll_working_precision.h"
 
+  use sll_coordinate_transformation_2d_base_module
   use map_function_module, only: set_map_function
   use sll_lobatto_poisson
   use sll_dg_fields
@@ -20,10 +20,10 @@ program test_lobalap
   
 #define NPTS1 2
 #define NPTS2 2
-#define R_MIN  0.0_8
-#define R_MAX  1.0_8
-#define THETA_MIN  0.00_8
-#define THETA_MAX  1.00_8
+#define R_MIN  0.0_f64
+#define R_MAX  1.0_f64
+#define THETA_MIN  0.00_f64
+#define THETA_MAX  1.00_f64
 #define N 6
 
   ! logical mesh for space coordinates

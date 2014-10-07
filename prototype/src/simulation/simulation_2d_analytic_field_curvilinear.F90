@@ -499,7 +499,7 @@ contains
         print*,'#mesh_case_eta2', mesh_case_eta2, ' not implemented'
         stop 
     end select
-    sim%mesh_2d => tensor_product_1d_1d( mesh_x1, mesh_x2)
+    sim%mesh_2d =>  mesh_x1 * mesh_x2 ! tensor product
     !  In collela  mesh params_mesh =( alpha1, alpha2, L1, L2 ) such that :
     !  x1= eta1 + alpha1*sin(2*pi*eta1/L1)*sin(2*pi*eta2/L2)
     params_mesh = (/ alpha1, alpha2, eta1_max-eta1_min, eta2_max-eta2_min/)

@@ -19,7 +19,7 @@ use sll_common_coordinate_transformations
 implicit none
 private
 
-type, public :: dg_field
+type, public :: sll_dg_field_2d
 
    sll_int32                               :: degree
    sll_transformation, pointer             :: tau  
@@ -32,12 +32,12 @@ type, public :: dg_field
 contains
 
    procedure, pass :: write_to_file => write_dg_field_2d_to_file
-   procedure, pass :: set_value => initialize_dg_field 
+   procedure, pass :: set_value => initialize_dg_field_2d 
 
-end type dg_field
+end type sll_dg_field_2d
 
 interface sll_new
-  module procedure new_dg_field
+  module procedure new_dg_field_2d
 end interface sll_new
 
 interface operator(+)
@@ -54,14 +54,14 @@ sll_int32, private :: error
 
 contains
 
-function new_dg_field( degree, tau, init_function ) result (this) 
+function new_dg_field_2d( degree, tau, init_function ) result (this) 
 
    sll_transformation, pointer    :: tau           !< transformation 
    sll_real64, external, optional :: init_function !< function
    sll_int32, intent(in)          :: degree        !< degree integration
    sll_int32                      :: nc_eta1
    sll_int32                      :: nc_eta2
-   type(dg_field), pointer        :: this
+   type(sll_dg_field_2d), pointer :: this
    sll_int32                      :: error
 
    SLL_ALLOCATE(this, error)
@@ -79,23 +79,23 @@ function new_dg_field( degree, tau, init_function ) result (this)
 
    this%array = 0.0_f64
    if (present(init_function)) then
-      call initialize_dg_field( this, init_function, 0.0_f64) 
+      call initialize_dg_field_2d( this, init_function, 0.0_f64) 
    end if
 
    this%tag = 0
    this%file_id = 0
 
-end function new_dg_field
+end function new_dg_field_2d
 
-subroutine initialize_dg_field( this, init_function, time) 
+subroutine initialize_dg_field_2d( this, init_function, time) 
 
-   class(dg_field)      :: this
-   sll_real64, external :: init_function
-   sll_real64           :: time
-   sll_real64           :: offset(2)
-   sll_real64           :: eta1
-   sll_real64           :: eta2
-   sll_int32            :: i, j, ii, jj
+   class(sll_dg_field_2d)  :: this
+   sll_real64, external    :: init_function
+   sll_real64              :: time
+   sll_real64              :: offset(2)
+   sll_real64              :: eta1
+   sll_real64              :: eta2
+   sll_int32               :: i, j, ii, jj
    
    SLL_ASSERT(associated(this%array))
 
@@ -115,11 +115,11 @@ subroutine initialize_dg_field( this, init_function, time)
    end do
    end do
 
-end subroutine initialize_dg_field
+end subroutine initialize_dg_field_2d
 
 subroutine write_dg_field_2d_to_file( this, field_name, file_format, time )
 
-   class(dg_field)        :: this
+   class(sll_dg_field_2d) :: this
    character(len=*)       :: field_name
    sll_int32, optional    :: file_format
    sll_real64, optional   :: time
@@ -147,7 +147,7 @@ end subroutine write_dg_field_2d_to_file
 
 subroutine plot_dg_field_2d_with_gnuplot( this, field_name )
 
-   class(dg_field)        :: this
+   class(sll_dg_field_2d) :: this
    character(len=*)       :: field_name
    sll_int32              :: file_id
    sll_int32              :: gnu_id
@@ -203,9 +203,9 @@ end subroutine plot_dg_field_2d_with_gnuplot
 
 function dg_field_add( W1, W2) result(W3)
 
-  type(dg_field), intent(in) :: W1
-  type(dg_field), intent(in) :: W2
-  type(dg_field)             :: W3
+  type(sll_dg_field_2d), intent(in) :: W1
+  type(sll_dg_field_2d), intent(in) :: W2
+  type(sll_dg_field_2d)             :: W3
 
   SLL_ASSERT(W1%degree == W2%degree)
   SLL_ASSERT(associated(W1%array))
@@ -217,9 +217,9 @@ end function dg_field_add
 
 function dg_field_sub( W1, W2) result(W3)
 
-  type(dg_field), intent(in) :: W1
-  type(dg_field), intent(in) :: W2
-  type(dg_field)             :: W3
+  type(sll_dg_field_2d), intent(in) :: W1
+  type(sll_dg_field_2d), intent(in) :: W2
+  type(sll_dg_field_2d)             :: W3
 
   SLL_ASSERT(W1%degree == W2%degree)
   SLL_ASSERT(associated(W1%array))
@@ -231,7 +231,7 @@ end function dg_field_sub
 
 subroutine plot_dg_field_2d_with_gmsh(this, field_name)
 
-   class(dg_field)        :: this
+   class(sll_dg_field_2d)        :: this
    character(len=*)       :: field_name
    sll_int32              :: file_id
 
@@ -346,7 +346,7 @@ end subroutine plot_dg_field_2d_with_gmsh
 
 subroutine plot_dg_field_2d_with_plotmtv(this, field_name)
 
-   class(dg_field)        :: this
+   class(sll_dg_field_2d) :: this
    character(len=*)       :: field_name
    sll_int32              :: file_id
    sll_int32              :: ni, nj, ino
@@ -452,14 +452,14 @@ end subroutine plot_dg_field_2d_with_plotmtv
 
 subroutine plot_dg_field_2d_with_xdmf(this, field_name, time)
 
-   class(dg_field)   :: this
-   character(len=*)  :: field_name
-   sll_int32         :: file_id
-   sll_int32         :: i, j, k, ii, jj
-   sll_real64        :: offset(2)
-   sll_real64        :: eta1, eta2
-   sll_int32         :: clength
-   sll_real64, optional :: time
+   class(sll_dg_field_2d)   :: this
+   character(len=*)         :: field_name
+   sll_int32                :: file_id
+   sll_int32                :: i, j, k, ii, jj
+   sll_real64               :: offset(2)
+   sll_real64               :: eta1, eta2
+   sll_int32                :: clength
+   sll_real64, optional     :: time
 
    clength = len_trim(field_name)
 

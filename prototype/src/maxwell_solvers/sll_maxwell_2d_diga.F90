@@ -63,7 +63,7 @@ type, public, extends(sll_maxwell_solver) :: sll_maxwell_2d_diga
    sll_int32, private                           :: bc_north
    sll_int32, private                           :: bc_west
    sll_int32, private                           :: flux_type
-   type(dg_field), pointer                      :: po     !< Potential
+   type(sll_dg_field_2d), pointer                      :: po     !< Potential
    sll_real64, private                          :: xi 
 
 end type sll_maxwell_2d_diga
@@ -291,13 +291,13 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
 
    type( sll_maxwell_2d_diga )  :: this !< Maxwell solver object
 
-   type(dg_field)  :: fx   !< x electric field
-   type(dg_field)  :: fy   !< y electric field
-   type(dg_field)  :: fz   !< z magnetic field
+   type(sll_dg_field_2d)  :: fx   !< x electric field
+   type(sll_dg_field_2d)  :: fy   !< y electric field
+   type(sll_dg_field_2d)  :: fz   !< z magnetic field
 
-   type(dg_field)  :: dx   !< x size step
-   type(dg_field)  :: dy   !< y size step
-   type(dg_field)  :: dz   !< z size step
+   type(sll_dg_field_2d)  :: dx   !< x size step
+   type(sll_dg_field_2d)  :: dy   !< y size step
+   type(sll_dg_field_2d)  :: dz   !< z size step
 
    sll_int32  :: left, right, node, side, bc_type, flux_type
    sll_int32  :: i, j, k, l, ii, jj, kk
