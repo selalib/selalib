@@ -1,37 +1,5 @@
-!------------------------------------------------------------------------------
-! SELALIB
-!------------------------------------------------------------------------------
-!
-! MODULE: sll_distribution_function
-!
-!> @author
-!> - Eric
-!> - Michel
-!> - Pierre
-!> - Edwin
-!>
-!
-! DESCRIPTION: 
-!
 !> @brief
 !> Implements the distribution function types
-!>
-!>@details
-!>
-!> This module depends on:
-!>    - memory
-!>    - precision
-!>    - assert
-!>    - utilities
-!>    - constants
-!>    - diagnostics
-!>    - splines
-!>    - mesh_types
-!
-! REVISION HISTORY:
-! DD Mmm YYYY - Initial Version
-! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
-!------------------------------------------------------------------------------
 module distribution_function
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -40,6 +8,7 @@ module distribution_function
   use sll_constants
   use sll_utilities   ! for int2string
   use sll_scalar_field_initializers_base
+  use sll_module_interpolators_1d_base
   implicit none
 
 #define NEW_TYPE_FOR_DF( new_df_type, extended_type)                 \

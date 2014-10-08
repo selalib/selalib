@@ -1,4 +1,4 @@
-!> @namespace sll_splines
+!> @defgroup splines sll_splines
 !> @brief 
 !> Library to use splines
 !> @details

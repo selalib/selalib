@@ -54,7 +54,7 @@ contains
   
 !> Add the the good value of time in VisIt plot.
 subroutine sll_xdmf_set_time(file_id, time)
-sll_real64, intent(in) :: time       !< time
+sll_real64, intent(in) :: time       !< input time
 sll_int32, intent(in)  :: file_id    !< file unit number
 logical                :: i_opened
 

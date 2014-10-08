@@ -115,7 +115,7 @@ contains
     character(len=*), intent(in)     :: mesh_name      !< file with mesh coordinates
     sll_real64, intent(in)           :: array(:,:)     !< data array
     character(len=*), intent(in)     :: array_name     !< name of the field
-    integer(HSSIZE_T)                :: offset(2)      !< offset
+    integer(HSSIZE_T)                :: offset(2)      !< block offset
     integer(HSIZE_T)                 :: global_dims(2) !< global dimensions
     integer(HID_T)                   :: file_id        !< data file unit number
     sll_int32                        :: npoints_x1     !< nodes number x
@@ -166,7 +166,7 @@ contains
     character(len=*), intent(in)    :: mesh_name      !< file with mesh coordinates
     sll_real64, intent(in)          :: array(:,:,:)   !< data array
     character(len=*), intent(in)    :: array_name     !< name of the field
-    integer(HSSIZE_T)               :: offset(3)      !< offset
+    integer(HSSIZE_T)               :: offset(3)      !< block offset
     integer(HSIZE_T)                :: global_dims(3) !< global dimensions
     integer(HID_T)                  :: file_id        !< data file unit number
     sll_int32                       :: npoints_x1     !< nodes number x

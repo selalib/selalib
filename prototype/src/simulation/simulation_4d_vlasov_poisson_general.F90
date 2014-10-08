@@ -9,6 +9,8 @@ module sll_simulation_4d_vlasov_poisson_general
   use sll_collective
   use sll_remapper
   use sll_constants
+  use sll_module_interpolators_1d_base
+  use sll_module_interpolators_2d_base
   use sll_module_cubic_spline_interpolator_2d
   use sll_poisson_2d_periodic_cartesian_par
   use sll_module_cubic_spline_interpolator_1d
