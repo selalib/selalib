@@ -447,9 +447,9 @@ contains
     SLL_ALLOCATE(sim%mu_weights(num_mu),ierr)  
     SLL_ALLOCATE(mu_points_for_phi_user_defined(1:N_mu_for_phi_user_defined),ierr)        
     SLL_ALLOCATE(mu_weights_for_phi_user_defined(1:N_mu_for_phi_user_defined),ierr)      
-    sim%mu_poisson = mu_poisson
     
     read(input_file,sim_params)    
+    sim%mu_poisson = mu_poisson
     close(input_file)
     sim%mus(1:num_mu) = mus(1:num_mu)
     sim%mu_weights(1:num_mu) = mu_weights(1:num_mu)
@@ -754,6 +754,7 @@ contains
             do i=1,num_cells_x1+1
               !tmp_r(i,1) = 1._f64/sim%Te_r(i)
               tmp_r(i,1) = sim%Ti_r(i)/sim%Te_r(i)
+              tmp_r(i,2) = mu_points_for_phi_user_defined(1)
             enddo  
         
             sim%poisson2d_mean =>new_poisson_2d_polar_solver( &
@@ -771,6 +772,7 @@ contains
               poisson2d_BC, &
               dlog_density=sim%dlog_density_r, &
               inv_Te=tmp_r(1:num_cells_x1+1,1)/sim%mu_poisson, &
+              mu=tmp_r(1:num_cells_x1+1,2), &
               poisson_case=SLL_POISSON_DRIFT_KINETIC)
 
           case default
