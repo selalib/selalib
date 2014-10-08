@@ -143,6 +143,7 @@ module sll_simulation_4d_drift_kinetic_polar_multi_mu_module
      sll_int32 :: num_mu
      sll_real64 :: mu
      sll_real64 :: mu_weight
+     sll_real64 :: mu_poisson
      sll_int32  :: delta_f_method
      sll_real64, dimension(:), pointer  :: mu_points_for_phi
      sll_real64, dimension(:), pointer  :: mu_weights_for_phi
@@ -300,6 +301,7 @@ contains
     sll_real64, dimension(:), pointer  :: mus
     sll_real64, dimension(:), pointer  :: mu_weights
     sll_int32 :: num_mu
+    sll_real64 :: mu_poisson
     character(len=256)      :: gyroaverage_case
     sll_int32               :: delta_f_method
     sll_int32               :: gyroaverage_N_points
@@ -415,6 +417,7 @@ contains
       quadrature_points_per_cell_for_phi, &
       mu_points_for_phi_user_defined, &
       mu_weights_for_phi_user_defined, &
+      mu_poisson, &
       gyroaverage_N_points, &
       gyroaverage_interp_degree_x1, &
       gyroaverage_interp_degree_x2, &
@@ -426,7 +429,7 @@ contains
 
     !default parameters
     quadrature_points_per_cell_for_phi = 1
-
+    mu_poisson = 1._f64
 
     open(unit = input_file, file=trim(filename),IOStat=IO_stat)
     if( IO_stat /= 0 ) then
@@ -444,6 +447,7 @@ contains
     SLL_ALLOCATE(sim%mu_weights(num_mu),ierr)  
     SLL_ALLOCATE(mu_points_for_phi_user_defined(1:N_mu_for_phi_user_defined),ierr)        
     SLL_ALLOCATE(mu_weights_for_phi_user_defined(1:N_mu_for_phi_user_defined),ierr)      
+    sim%mu_poisson = mu_poisson
     
     read(input_file,sim_params)    
     close(input_file)
@@ -748,7 +752,8 @@ contains
           case ("POLAR_FFT") 
               
             do i=1,num_cells_x1+1
-              tmp_r(i,1) = 1._f64/sim%Te_r(i)
+              !tmp_r(i,1) = 1._f64/sim%Te_r(i)
+              tmp_r(i,1) = sim%Ti_r(i)/sim%Te_r(i)
             enddo  
         
             sim%poisson2d_mean =>new_poisson_2d_polar_solver( &
@@ -765,7 +770,7 @@ contains
               sim%m_x2%num_cells, &
               poisson2d_BC, &
               dlog_density=sim%dlog_density_r, &
-              inv_Te=tmp_r(1:num_cells_x1+1,1), &
+              inv_Te=tmp_r(1:num_cells_x1+1,1)/sim%mu_poisson, &
               poisson_case=SLL_POISSON_DRIFT_KINETIC)
 
           case default
@@ -2266,7 +2271,7 @@ subroutine gyroaverage_phi_dk( sim )
         do iloc3=1, loc3d_sz_x3
           call sim%poisson2d%compute_phi_from_rho( &
             sim%phi3d_seqx1x2(:,:,iloc3), &
-            sim%phi3d_seqx1x2(:,:,iloc3) )
+            sim%phi3d_seqx1x2(:,:,iloc3)/sim%mu_poisson )
         enddo
         call apply_remap_3D( &
           sim%remap_plan_seqx1x2_to_seqx3, &
@@ -2354,20 +2359,20 @@ subroutine gyroaverage_phi_dk( sim )
          
           case (1)
             do iloc1 = 1,loc3d_sz_x1  
-              sim%rho3d_seqx1x2(iloc1,:,:)=&
+              sim%phi3d_seqx1x2(iloc1,:,:)=&
               sim%rho3d_seqx1x2(iloc1,:,:)-sim%n0_r(iloc1)
             enddo
          
             do iloc3 = 1,loc3d_sz_x3    
               call sim%gyroaverage%compute_gyroaverage( &
                 sqrt(2*sim%mu), &
-                sim%rho3d_seqx1x2(1:nc_x1+1,1:nc_x2+1,iloc3))   
+                sim%phi3d_seqx1x2(1:nc_x1+1,1:nc_x2+1,iloc3))   
             enddo
          
             do iloc2=1, loc3d_sz_x2
               do iloc1=1, loc3d_sz_x1
                 sim%phi3d_seqx1x2(iloc1,iloc2,:) = &
-                sim%rho3d_seqx1x2(iloc1,iloc2,:)/sim%n0_r(iloc1)
+                sim%phi3d_seqx1x2(iloc1,iloc2,:)/sim%n0_r(iloc1)
               enddo
             enddo
       
@@ -2377,6 +2382,10 @@ subroutine gyroaverage_phi_dk( sim )
         end select
    
         do iloc3=1, loc3d_sz_x3
+          do iloc1=1,loc3d_sz_x1
+            sim%phi3d_seqx1x2(iloc1,:,iloc3) = &
+              sim%phi3d_seqx1x2(iloc1,:,iloc3)/sim%mu_poisson*sim%Ti_r(iloc1)
+          enddo    
           call sim%poisson2d%compute_phi_from_rho( &
             sim%phi3d_seqx1x2(:,:,iloc3), &
             sim%phi3d_seqx1x2(:,:,iloc3) )
