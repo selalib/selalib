@@ -17,6 +17,7 @@
 
 
 !> Selalib Toeplitz penta-diagonal system solver
+!> @ingroup utilities
 module sll_penta_diagonal
 #include "sll_working_precision.h"
 #include "sll_memory.h"

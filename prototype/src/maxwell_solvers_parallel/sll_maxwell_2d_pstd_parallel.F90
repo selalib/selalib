@@ -72,8 +72,6 @@ type maxwell_2d_periodic_plan_cartesian_par
    sll_real64, dimension(:), pointer   :: ky          !< y wave number
 end type maxwell_2d_periodic_plan_cartesian_par
 
-sll_int32, private :: i
-sll_int32, private :: j
 
 contains
 
@@ -101,6 +99,7 @@ contains
     fftw_int                 :: sz_y_array
     sll_real64               :: kx0
     sll_real64               :: ky0
+    sll_int32                :: i, j
 
     prank = sll_get_collective_rank( sll_world_collective )
     psize = sll_get_collective_size( sll_world_collective )
@@ -178,7 +177,9 @@ contains
     sll_int32                  :: prank
     sll_int64                  :: psize
     sll_real64, intent(in)     :: dt       !< time step
+
     sll_real64                 :: dt_mu
+    sll_int32                  :: i, j
 
     prank = sll_get_collective_rank( sll_world_collective )
     psize = sll_get_collective_size( sll_world_collective )
@@ -223,7 +224,9 @@ contains
     sll_int32                                 :: ny_loc !< local  y cell number
     sll_int32                                 :: prank
     sll_int64                                 :: psize
+
     sll_real64                                :: dt_e
+    sll_int32                                 :: i, j
 
     prank = sll_get_collective_rank( sll_world_collective )
     psize = sll_get_collective_size( sll_world_collective )
@@ -281,7 +284,9 @@ contains
     sll_int32                  :: prank
     sll_int64                  :: psize
     sll_real64, intent(in)     :: dt           !< time step
+
     sll_real64                 :: dt_e
+    sll_int32                  :: i, j
 
     prank = sll_get_collective_rank( sll_world_collective )
     psize = sll_get_collective_size( sll_world_collective )
@@ -331,7 +336,9 @@ contains
     sll_int32                                 :: ny_loc !< local  y cell number
     sll_int32                                 :: prank
     sll_int64                                 :: psize
+
     sll_real64                                :: dt_mu
+    sll_int32                                 :: i, j
 
     prank = sll_get_collective_rank( sll_world_collective )
     psize = sll_get_collective_size( sll_world_collective )

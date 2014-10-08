@@ -4,7 +4,7 @@
 ! MODULE: sll_fft
 !
 ! DESCRIPTION:
-!> @namespace sll_fft
+!> @defgroup fft sll_fft
 !> @author Edwin Chacon-Golcher & Samuel De Santis
 !> @brief Interface around fftpack, fftw and the selalib fft.
 !> @details 

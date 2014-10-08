@@ -5,11 +5,11 @@
 ! in file Doxyfile.in (line 691) if it is excluded. 
 ! Type 'make doc' in build directory.
 ! To check the results, open : 
-! selalib/prototype/documentation/build/html/doxygen/html/namespaces.html 
+! selalib/prototype/documentation/build/html/doxygen/html/defgroup mapped_meshess.html 
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @namespace sll_mapped_meshes 
+!> @defgroup mapped_meshes sll_mapped_meshes 
 !> @brief 
 !> Description of mapped_meshes library (72 characters)
 !> @author Selalib team 

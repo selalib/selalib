@@ -1,4 +1,4 @@
-!> @namespace sll_boundary_condition_descriptors
+!> @defgroup boundary_condition_descriptors sll_boundary_condition_descriptors
 !> @brief Describe different boundary conditions
 !> @details
 !> The intent of this module is to provide a single, library-wide definition

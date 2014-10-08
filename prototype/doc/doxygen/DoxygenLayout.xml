@@ -4,12 +4,12 @@
 <navindex>
 <tab type="mainpage" visible="yes" title=""/>
 <tab type="pages" visible="no" title="" intro=""/>
-<tab type="modules" visible="yes" title="Fortran classes" intro="Here is a list of all Fortran classes"/>
-<tab type="namespacelist" visible="yes" title="Libraries" intro=""/>
-<tab type="namespaces" visible="no" title="Libraries">
-   <tab type="namespacemembers" visible="yes" title="Fortran modules" intro=""/>
+<tab type="modules" visible="yes" title="Libraries" intro="Here is a list of all libraries"/>
+<tab type="namespacelist" visible="yes" title="Fortran modules" intro=""/>
+<tab type="namespaces" visible="no" title="">
+<tab type="namespacemembers" visible="yes" title="" intro=""/>
 </tab>
-<tab type="classlist" visible="yes" title="Fortran modules" intro="Here are the fortran modules with brief descriptions:"/>
+<tab type="classlist" visible="yes" title="Fortran classes and interfaces" intro="Here are the fortran derived types with brief descriptions."/>
 <tab type="hierarchy" visible="yes" title="" intro="This list is sorted roughly, but not completely, alphabetically:"/>
 <tab type="classmembers" 
      visible="yes" 
@@ -90,7 +90,7 @@
     <memberdecl>
       <nestednamespaces visible="yes" title=""/>
       <constantgroups visible="yes" title=""/>
-      <classes visible="yes" title="Fortran 2003"/>
+      <classes visible="yes" title="Derived types and interfaces"/>
       <typedefs title=""/>
       <enums title=""/>
       <functions title=""/>
@@ -146,8 +146,8 @@
       <nestedgroups visible="yes" title=""/>
       <dirs visible="yes" title=""/>
       <files visible="yes" title=""/>
-      <namespaces visible="yes" title="Library"/>
-      <classes visible="yes" title="Fortran module"/>
+      <namespaces visible="yes" title="Fortran modules"/>
+      <classes visible="yes" title="Types"/>
       <defines title=""/>
       <typedefs title=""/>
       <enums title=""/>

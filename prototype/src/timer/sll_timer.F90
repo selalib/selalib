@@ -16,7 +16,7 @@
 !**************************************************************
 
 !> @file sll_timer.F90
-!> @namespace sll_timer
+!> @defgroup timer sll_timer
 !> @author samuel de santis samuel.desantis@math.unistra.fr
 !> @brief Timing facility
 !> @details <b> How to use-it </b>

@@ -15,7 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @namespace sll_poisson_solvers
+!> @defgroup poisson_solvers sll_poisson_solvers
 !> @brief
 !> Library to solve Poisson equation in 2D and 3D
 !> 

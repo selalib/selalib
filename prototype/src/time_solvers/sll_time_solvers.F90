@@ -1,4 +1,4 @@
-!> @namespace sll_time_solvers
+!> @defgroup time_solvers sll_time_solvers
 !>
 !> This library contains:
 !> - sll_time_splitting

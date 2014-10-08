@@ -1,4 +1,4 @@
-!> @namespace sll_file_io_parallel
+!> @defgroup file_io_parallel sll_file_io_parallel
 !> @brief 
 !> Library to create parallel files readable by visualization softwares.
 !> @details
