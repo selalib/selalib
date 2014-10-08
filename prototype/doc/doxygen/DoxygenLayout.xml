@@ -28,6 +28,7 @@
   <!-- Layout definition for a class page -->
   <class>
     <briefdescription visible="yes"/>
+    <detaileddescription title="Description"/>
     <includes visible="$SHOW_INCLUDE_FILES"/>
     <inheritancegraph visible="$CLASS_GRAPH"/>
     <collaborationgraph visible="$COLLABORATION_GRAPH"/>
@@ -35,11 +36,11 @@
       <nestedclasses visible="yes" title=""/>
       <publictypes title=""/>
       <services title=""/>
-      <interfaces title=""/>
+      <interfaces title="Derived types and public interfaces"/>
       <publicslots title=""/>
       <signals title=""/>
-      <publicmethods title="Members"/>
-      <publicstaticmethods title=""/>
+      <publicmethods title=""/>
+      <publicstaticmethods title="Ho"/>
       <publicattributes title=""/>
       <publicstaticattributes title=""/>
       <protectedtypes title=""/>
@@ -65,7 +66,6 @@
       <related title="" subtitle=""/>
       <membergroups visible="yes"/>
     </memberdecl>
-    <detaileddescription title=""/>
     <memberdef>
       <inlineclasses title=""/>
       <typedefs title=""/>
@@ -81,12 +81,13 @@
     </memberdef>
     <allmemberslink visible="yes"/>
     <usedfiles visible="$SHOW_USED_FILES"/>
-    <authorsection visible="yes"/>
+    <authorsection visible="no"/>
   </class>
 
   <!-- Layout definition for a namespace page -->
   <namespace>
     <briefdescription visible="yes"/>
+    <detaileddescription title=""/>
     <memberdecl>
       <nestednamespaces visible="yes" title=""/>
       <constantgroups visible="yes" title=""/>
@@ -97,7 +98,6 @@
       <variables title=""/>
       <membergroups visible="yes"/>
     </memberdecl>
-    <detaileddescription title=""/>
     <memberdef>
       <inlineclasses title=""/>
       <typedefs title=""/>
@@ -105,7 +105,7 @@
       <functions title=""/>
       <variables title=""/>
     </memberdef>
-    <authorsection visible="yes"/>
+    <authorsection visible="no"/>
   </namespace>
 
   <!-- Layout definition for a file page -->
@@ -141,9 +141,10 @@
   <!-- Layout definition for a group page -->
   <group>
     <briefdescription visible="yes"/>
+    <authorsection visible="no"/>
     <groupgraph visible="$GROUP_GRAPHS"/>
     <memberdecl>
-      <nestedgroups visible="yes" title=""/>
+      <nestedgroups visible="yes" title="Pierre"/>
       <dirs visible="yes" title=""/>
       <files visible="yes" title=""/>
       <namespaces visible="yes" title="Fortran modules"/>
@@ -166,9 +167,9 @@
     <detaileddescription title=""/>
     <memberdef>
       <pagedocs/>
-      <inlineclasses title=""/>
+      <inlineclasses title="Derived types"/>
       <defines title=""/>
-      <typedefs title=""/>
+      <typedefs title="Hooo"/>
       <enums title=""/>
       <enumvalues title=""/>
       <functions title=""/>
@@ -181,17 +182,16 @@
       <properties title=""/>
       <friends title=""/>
     </memberdef>
-    <authorsection visible="yes"/>
   </group>
 
   <!-- Layout definition for a directory page -->
   <directory>
     <briefdescription visible="yes"/>
+    <detaileddescription title=""/>
     <directorygraph visible="yes"/>
     <memberdecl>
       <dirs visible="yes"/>
       <files visible="yes"/>
     </memberdecl>
-    <detaileddescription title=""/>
   </directory>
 </doxygenlayout>
