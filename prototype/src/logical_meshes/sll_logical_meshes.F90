@@ -16,6 +16,7 @@
 !**************************************************************
 
 !> Logical mesh basic types
+!> @ingroup logical_meshes
 module sll_logical_meshes
 #include "sll_working_precision.h"
 #include "sll_memory.h"

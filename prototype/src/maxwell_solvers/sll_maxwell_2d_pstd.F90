@@ -27,6 +27,7 @@ self%tmp_y = -cmplx(0.0_f64,self%ky,kind=f64)*self%tmp_y;     \
 call fftw_execute_dft_c2r(self%bwy, self%tmp_y, self%d_dy);   \
 self%d_dy = self%d_dy / nc_y
 
+!> @ingroup maxwell_solvers
 !> @brief
 !> Implements the Maxwell solver in 2D with periodic boundary conditions
 !> with PSTD method.
@@ -93,7 +94,7 @@ public :: sll_create, sll_delete, sll_solve, sll_solve_ampere, sll_solve_faraday
 !> information about FFT, mesh and physical properties.
 type, public, extends(sll_maxwell_solver) :: sll_maxwell_2d_pstd
 
-   sll_real64, pointer :: d_dx(:)  !< field x derivative
+   sll_real64, pointer :: d_dx(:)  !< field x derivative 
    sll_real64, pointer :: d_dy(:)  !< field y derivative
    sll_real64, pointer :: kx(:)    !< x wave number
    sll_real64, pointer :: ky(:)    !< y wave number
@@ -110,7 +111,6 @@ type, public, extends(sll_maxwell_solver) :: sll_maxwell_2d_pstd
 
 end type sll_maxwell_2d_pstd
 
-sll_int32, private :: i, j
 
 contains
 
@@ -118,18 +118,20 @@ contains
 subroutine new_maxwell_2d_pstd(self,xmin,xmax,nc_x,ymin,ymax,nc_y,polarization)
 
    type(sll_maxwell_2d_pstd) :: self         !< maxwell object
-   sll_real64         :: xmin         !< xmin
-   sll_real64         :: xmax         !< xmax
-   sll_real64         :: ymin         !< ymin
-   sll_real64         :: ymax         !< ymax
-   sll_int32          :: nc_x         !< x cells number
-   sll_int32          :: nc_y         !< y cells number
-   sll_int32          :: polarization !< TE or TM
-   sll_int32          :: error        !< error code
-   sll_real64         :: dx           !< x space step
-   sll_real64         :: dy           !< y space step
-   sll_real64         :: kx0
-   sll_real64         :: ky0
+   sll_real64, intent(in)    :: xmin         !< x min
+   sll_real64, intent(in)    :: xmax         !< x max
+   sll_real64, intent(in)    :: ymin         !< y min
+   sll_real64, intent(in)    :: ymax         !< y max
+   sll_int32,  intent(in)    :: nc_x         !< x cells number
+   sll_int32,  intent(in)    :: nc_y         !< y cells number
+   sll_int32,  intent(in)    :: polarization !< TE or TM
+
+   sll_int32                 :: error        !< error code
+   sll_real64                :: dx           !< x space step
+   sll_real64                :: dy           !< y space step
+   sll_real64                :: kx0
+   sll_real64                :: ky0
+   sll_int32                 :: i, j
 
    self%nc_eta1 = nc_x
    self%nc_eta2 = nc_y
@@ -269,7 +271,9 @@ subroutine faraday_tm_2d_pstd(self, hx, hy, ez, dt)
    sll_int32                                 :: nc_x    !< x cells number
    sll_int32                                 :: nc_y    !< y cells number
    sll_real64, intent(in)                    :: dt      !< time step
+
    sll_real64                                :: dt_mu
+   sll_int32                                 :: i, j
 
    nc_x = self%nc_eta1
    nc_y = self%nc_eta2
@@ -298,7 +302,9 @@ subroutine faraday_te_2d_pstd(self, ex, ey, hz, dt)
    sll_int32                                 :: nc_x   !< x cells number
    sll_int32                                 :: nc_y   !< y cells number
    sll_real64, intent(in)                    :: dt     !< time step
+
    sll_real64                                :: dt_mu
+   sll_int32                                 :: i, j
 
    nc_x = self%nc_eta1
    nc_y = self%nc_eta2
@@ -330,8 +336,10 @@ subroutine ampere_tm_2d_pstd(self, hx, hy, ez, dt, jz)
    sll_real64, dimension(:,:)            :: hy     !< magnetic field y
    sll_real64, dimension(:,:)            :: ez     !< electric field z
    sll_real64                            :: dt     !< time step
-   sll_real64                            :: dt_e
    sll_real64, dimension(:,:), optional  :: jz     !< current z
+
+   sll_real64                            :: dt_e
+   sll_int32                             :: i, j
 
    nc_x = self%nc_eta1
    nc_y = self%nc_eta2
@@ -368,6 +376,7 @@ subroutine ampere_te_2d_pstd(self, ex, ey, hz, dt, jx, jy)
    sll_real64                            :: dt_e
    sll_int32                             :: nc_x
    sll_int32                             :: nc_y
+   sll_int32                             :: i, j
 
    nc_x = self%nc_eta1
    nc_y = self%nc_eta2

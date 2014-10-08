@@ -33,6 +33,7 @@ self%tmp_z = -cmplx(0.0_f64,self%kz,kind=f64)*self%tmp_z;     \
 call fftw_execute_dft_c2r(self%bwz, self%tmp_z, self%d_dz);   \
 self%d_dz = self%d_dz / nc_z
 
+!> @ingroup maxwell_solvers
 !> @brief
 !> Implements the Maxwell solver in 3D with periodic boundary conditions
 !> with PSTD method.
@@ -121,8 +122,6 @@ type, public :: maxwell_pstd_3d
    sll_real64                         :: mu_0         !< magnetic permeability
 end type maxwell_pstd_3d
 
-sll_int32, private :: i, j, k
-
 contains
 
 !> Initialize 2d maxwell solver on cartesian mesh with PSTD scheme
@@ -131,15 +130,16 @@ subroutine new_maxwell_3d_pstd(self,xmin,xmax,nc_x, &
                                     zmin,zmax,nc_z )
 
    type(maxwell_pstd_3d) :: self         !< maxwell object
-   sll_real64            :: xmin         !< xmin
-   sll_real64            :: xmax         !< xmax
-   sll_real64            :: ymin         !< ymin
-   sll_real64            :: ymax         !< ymax
-   sll_real64            :: zmin         !< zmin
-   sll_real64            :: zmax         !< zmax
-   sll_int32             :: nc_x         !< x cells number
-   sll_int32             :: nc_y         !< y cells number
-   sll_int32             :: nc_z         !< z cells number
+   sll_real64, intent(in):: xmin         !< x min
+   sll_real64, intent(in):: xmax         !< x max
+   sll_real64, intent(in):: ymin         !< y min
+   sll_real64, intent(in):: ymax         !< y max
+   sll_real64, intent(in):: zmin         !< z min
+   sll_real64, intent(in):: zmax         !< z max
+   sll_int32 , intent(in):: nc_x         !< x cells number
+   sll_int32 , intent(in):: nc_y         !< y cells number
+   sll_int32 , intent(in):: nc_z         !< z cells number
+
    sll_int32             :: error        !< error code
    sll_real64            :: dx           !< x space step
    sll_real64            :: dy           !< y space step
@@ -151,6 +151,8 @@ subroutine new_maxwell_3d_pstd(self,xmin,xmax,nc_x, &
    fftw_int              :: sz_tmp_x
    fftw_int              :: sz_tmp_y
    fftw_int              :: sz_tmp_z
+
+   sll_int32             :: i, j, k
 
    self%nc_x = nc_x
    self%nc_y = nc_y
@@ -263,7 +265,9 @@ subroutine faraday(self, hx, hy, hz, ex, ey, ez, dt)
    sll_int32                                   :: nc_y  !< y cells number
    sll_int32                                   :: nc_z  !< z cells number
    sll_real64, intent(in)                      :: dt    !< time step
-   sll_real64                                  :: dt_mu
+
+   sll_real64 :: dt_mu
+   sll_int32  :: i, j, k
 
    nc_x = self%nc_x
    nc_y = self%nc_y
@@ -318,7 +322,9 @@ subroutine ampere(self, hx, hy, hz, ex, ey, ez, dt, jx, jy, jz)
    sll_int32                              :: nc_x !< x cells number
    sll_int32                              :: nc_y !< y cells number
    sll_int32                              :: nc_z !< z cells number
-   sll_real64                             :: dt_e
+
+   sll_real64 :: dt_e
+   sll_int32  :: i, j, k
 
    nc_x = self%nc_x
    nc_y = self%nc_y

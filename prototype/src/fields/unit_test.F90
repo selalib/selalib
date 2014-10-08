@@ -62,7 +62,7 @@ program unit_test
   interp_eta1_ptr => interp_eta1
   interp_eta2_ptr => interp_eta2
  
-  call initialize_scalar_field_2d( &
+  call sll_create( &
        field, &
        "px1_field", &
        m, &
@@ -79,7 +79,7 @@ program unit_test
            field%data(i,j) = exp(-(transf%x1_at_node(i,j)**2+transf%x2_at_node(i,j)**2)*iplot*0.1)
         end do
      end do
-     call write_scalar_field_2d( field, multiply_by_jacobian=.true. )
+     call field%write_to_file(multiply_by_jacobian=.true. )
      !call write_scalar_field_2d( field, multiply_by_jacobian=.true., output_file_name="field" )
   end do
 

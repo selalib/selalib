@@ -22,6 +22,7 @@
 ! of the data to be initialized. It is for this reason that we include all
 ! the abstract types in the same file (this one).
 
+!>@defgroup fields  sll_scalar_field_initializers_base
 module sll_scalar_field_initializers_base
 #include "sll_working_precision.h"
   use sll_coordinate_transformation_2d_base_module

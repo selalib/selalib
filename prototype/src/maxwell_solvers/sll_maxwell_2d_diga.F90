@@ -1,5 +1,6 @@
 #define sll_transformation class(sll_coordinate_transformation_2d_base)
 
+!> @ingroup maxwell_solvers
 !> @brief DG for Maxwell
 !> @details
 !> Solve Maxwell equations on cartesian domain with Discontinuous Galerkine method:
@@ -83,7 +84,6 @@ interface sll_solve
    module procedure solve_maxwell_2d_diga
 end interface sll_solve
 
-sll_int32, private  :: error
 !> Flux parameter
 sll_int32, parameter, public :: SLL_CENTERED       = 20
 !> Flux parameter
@@ -111,6 +111,8 @@ function new_maxwell_2d_digal( tau,          &
    sll_int32, intent(in)            :: bc_north
    sll_int32, intent(in)            :: bc_south
    sll_int32, optional              :: flux_type
+
+   sll_int32                        :: error
 
    SLL_ALLOCATE(this,error)
 
@@ -158,6 +160,8 @@ subroutine initialize_maxwell_2d_diga( this,         &
    sll_real64                  :: dtau_ij_mat(2,2)
    sll_int32                   :: i, j, k, l, ii, jj, kk, ll
    sll_real64                  :: xa, xb, ya, yb
+
+   sll_int32  :: error
 
    this%tau        => tau
    ! Please undo this 'fix' whenever it is decided that gfortran 4.6 is no
@@ -540,6 +544,7 @@ subroutine compute_normals(tau, bc_south, bc_east, bc_north, bc_west, &
    sll_int32                   :: bc_north
    sll_int32                   :: bc_west
    sll_int32                   :: k
+   sll_int32                   :: error
    
    cell%i = i
    cell%j = j

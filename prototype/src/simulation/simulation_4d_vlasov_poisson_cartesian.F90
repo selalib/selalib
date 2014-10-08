@@ -10,6 +10,7 @@ module sll_simulation_4d_vlasov_poisson_cartesian
   use sll_module_cubic_spline_interpolator_1d
   use sll_test_4d_initializer
   use sll_poisson_2d_periodic_cartesian_par
+  use sll_module_interpolators_1d_base
   use sll_module_cubic_spline_interpolator_1d
   use sll_simulation_base
   implicit none
@@ -861,19 +862,19 @@ contains
        ex = r_delta*(-1.5_f64*phi_x1(1,j) + &
                       2.0_f64*phi_x1(2,j) - &
                       0.5_f64*phi_x1(3,j) )
-       efield_x1(1,j) = cmplx(ex,f64)  
+       efield_x1(1,j) = cmplx(ex,kind=f64)  
        ! right:
        ex = r_delta*(0.5_f64*phi_x1(num_pts_x1-2,j)-&
                      2.0_f64*phi_x1(num_pts_x1-1,j)+&
                      1.5_f64*phi_x1(num_pts_x1,j) )
-       efield_x1(num_pts_x1,j) = cmplx(ex,f64) 
+       efield_x1(num_pts_x1,j) = cmplx(ex,kind=f64) 
     end do
     
     ! Electric field in interior points
     do j=1,num_pts_x2
        do i=2, num_pts_x1-1
           ex = r_delta*0.5_f64*(phi_x1(i+1,j) - phi_x1(i-1,j))
-          efield_x1(i,j) = cmplx(ex,f64)
+          efield_x1(i,j) = cmplx(ex,kind=f64)
        end do
     end do
   end subroutine compute_electric_field_x1

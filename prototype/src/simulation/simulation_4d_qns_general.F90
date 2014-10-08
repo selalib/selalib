@@ -9,6 +9,7 @@ module sll_simulation_4d_qns_general_module
 !  use sll_collective
 !  use sll_remapper
 !  use sll_constants
+  use sll_module_interpolators_1d_base
   use sll_module_cubic_spline_interpolator_1d
 !  use sll_module_cubic_spline_interpolator_2d
   use sll_simulation_base

@@ -16,7 +16,7 @@
 !**************************************************************
 
 !> @file sll_cubic_splines.F90
-!> @namespace sll_cubic_splines 
+!> @defgroup splines sll_cubic_splines 
 !> @brief  
 !> provides capabilities for data and derivative
 !> interpolation with cubic B-splines and different 

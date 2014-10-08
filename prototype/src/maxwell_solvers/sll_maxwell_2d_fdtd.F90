@@ -1,4 +1,3 @@
-!**************************************************************
 !  Copyright INRIA
 !  
 !  This code SeLaLib (for Semi-Lagrangian-Library) 
@@ -12,6 +11,8 @@
 !  circulated by CEA, CNRS and INRIA at the following URL
 !  "http://www.cecill.info". 
 !**************************************************************
+!> @copyright INRIA
+!> @ingroup maxwell_solvers
 !> @brief
 !> Implements the Maxwell solver in 2D with FDTD method
 !>

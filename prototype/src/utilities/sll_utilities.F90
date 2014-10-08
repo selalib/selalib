@@ -15,7 +15,9 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> @addtogroup utilities
 !> Some common numerical utilities
+!> @defgroup utilities sll_utilities
 module sll_utilities
 #include "sll_working_precision.h"
   implicit none

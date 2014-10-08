@@ -16,7 +16,7 @@
 !**************************************************************
 
 !> @file sll_logical_multipatch.F90
-!> @namespace sll_logical_meshes_multipatch
+!> @defgroup logical_meshes_multipatch sll_logical_meshes_multipatch
 !> @brief basic types to describe a collection of logical meshes
 !> associated with the decomposition of a physical region with the 
 !> multipatch approach.
