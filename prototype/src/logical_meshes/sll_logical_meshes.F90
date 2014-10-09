@@ -32,7 +32,10 @@ private
   end type sll_logical_mesh_1d
 
 
-  !> 2D logical mesh
+!> @brief 2D logical mesh
+!> @details 
+!>  Use new_logical_mesh_2d to allocate the memory space,
+!> initialize it and get a pointer to this object.
   type, public :: sll_logical_mesh_2d
      sll_int32  :: num_cells1 !< number of cells in direction 1
      sll_int32  :: num_cells2 !< number of cells in direction 2
