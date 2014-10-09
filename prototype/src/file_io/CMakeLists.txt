@@ -16,12 +16,19 @@ SET(IO_SRC sll_ascii_io.F90
 
 ADD_LIBRARY(sll_file_io STATIC ${IO_SRC})
 
-ADD_EXECUTABLE(test_io unit_test.F90)
-
 TARGET_LINK_LIBRARIES(sll_file_io sll_utilities ${HDF5_LIBRARIES})
 
+ADD_EXECUTABLE(test_io unit_test.F90)
 TARGET_LINK_LIBRARIES(test_io sll_file_io sll_constants)
-
 ADD_TEST(NAME file_io COMMAND test_io)
-
 SET_TESTS_PROPERTIES(file_io PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+ADD_EXECUTABLE(test_ascii_io unit_test_ascii.F90)
+TARGET_LINK_LIBRARIES(test_ascii_io sll_file_io sll_constants)
+ADD_TEST(NAME ascii_file_io COMMAND test_ascii_io)
+SET_TESTS_PROPERTIES(ascii_file_io PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+ADD_EXECUTABLE(test_gnuplot unit_test_gnuplot.F90)
+TARGET_LINK_LIBRARIES(test_gnuplot sll_file_io sll_constants)
+ADD_TEST(NAME gnuplot_file_io COMMAND test_gnuplot)
+SET_TESTS_PROPERTIES(gnuplot_file_io PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
