@@ -1,7 +1,5 @@
 !**************************************************************
 !  Copyright INRIA
-!  Authors : 
-!     Pierre Navaro 
 !  
 !  This code SeLaLib (for Semi-Lagrangian-Library) 
 !  is a parallel library for simulating the plasma turbulence 
@@ -15,6 +13,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> @ingroup file_io
 !> @brief 
 !> Implements the functions to write xdmf file plotable by VisIt
 !> @details
