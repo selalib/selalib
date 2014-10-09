@@ -70,7 +70,9 @@ use hdf5, only: hid_t, hsize_t, H5Screate_simple_f, h5t_native_double, &
 
 contains
   
-  !> Create HDF5 file
+!> @brief Create HDF5 file
+!> @details To use this subroutine HDF5_ENABLE should be set to ON 
+!> in CMake configuration
   subroutine sll_hdf5_file_create(filename,file_id,error)
     character(len=*) , intent(in)  :: filename  !< file name
     integer(hid_t)   , intent(out) :: file_id   !< unit number
