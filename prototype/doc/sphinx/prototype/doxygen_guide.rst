@@ -24,7 +24,6 @@ The good way to document fortran module is to copy and paste this::
  ! MODULE: <MODULE_NAME>
  !
  ! DESCRIPTION:
- !> @file <FILE_NAME>
  !> @author <MODULE_AUTHOR_NAME_AND_AFFILIATION>
  !> @brief <BRIEF_DESCRIPTION>
  !> @details <DETAILED_DESCRIPTION>
@@ -43,10 +42,10 @@ available in this directory. Add also some examples.
 To see your documentation, remove the line containing your directory 
 in file::
 
- prototype/src/Doxyfile.in (line 691). 
+ prototype/doc/doxygen/Doxyfile (line 691). 
 
 Type 'make doc' in build directory.
 To check the results, open:: 
 
- selalib/prototype/documentation/build/html/doxygen/html/namespaces.html 
+ selalib/prototype/doc/build/html/doxygen/html/namespaces.html 
 
