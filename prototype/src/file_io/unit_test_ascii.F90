@@ -67,5 +67,7 @@ write(file_id,"(a)")"</DataItem>"
 write(file_id,"(a)")"</Attribute>"
 call sll_xml_file_close(file_id,error)
 
+print*, 'PASSED'
+
 end program test_ascii_io
 !>@internal [example] 
