@@ -325,8 +325,8 @@ subroutine sll_gnuplot_curv_2d( nx, ny, x, y,&
 
   do i=1,nx
      do j=1,ny
-        write(file_id,*) sngl(xcoord(i,j)), &
-                         sngl(ycoord(i,j)), &
+        write(file_id,*) sngl(x(i,j)), &
+                         sngl(y(i,j)), &
                          sngl(array(i,j)) 
      end do
      write(file_id,*)
