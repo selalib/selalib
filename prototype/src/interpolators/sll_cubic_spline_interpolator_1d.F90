@@ -15,6 +15,7 @@
 !  "http://www.cecill.info".
 !**************************************************************
 
+!> @ingroup interpolators
 !> @brief 
 !! Interpolator 1d using cubic splines on regular mesh
 !! @details

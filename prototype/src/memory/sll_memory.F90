@@ -21,6 +21,7 @@
 !
 ! MODULE: sll_memory
 !
+!> @ingroup memory
 !> @author
 !> Edwin Chacon-Golcher INRIA
 !> @brief

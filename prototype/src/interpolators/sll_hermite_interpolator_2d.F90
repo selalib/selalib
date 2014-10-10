@@ -15,6 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> @ingroup interpolators
 !>@brief
 !>Hermite interpolation in 2d
 !!@details

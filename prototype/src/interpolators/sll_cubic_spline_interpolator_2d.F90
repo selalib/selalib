@@ -15,7 +15,11 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> @ingroup interpolators
+!> @brief
 !> Class for the cubic spline sll_interpolator_2d_base
+!> @details
+!> Implements the sll_interpolator_2d_base interface
 module sll_module_cubic_spline_interpolator_2d
 #include "sll_working_precision.h"
 #include "sll_assert.h"

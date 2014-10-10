@@ -15,7 +15,12 @@
 !  "http://www.cecill.info".
 !**************************************************************
 
+!> @ingroup interpolators
+!> @brief
 !> Class interpolator and methods for arbitrary degree spline 1D interpolator
+!> @details
+!> Arbitrary degree splines are implemented in this class that derived from
+!> sll_interpolator_1d_base.
 module sll_module_arbitrary_degree_spline_interpolator_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
