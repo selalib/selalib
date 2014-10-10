@@ -386,7 +386,7 @@ contains
              ! SEEMS THAT THE 2d FFT DONE IN A PARALLEL WAY, NEEDS TO BE 
              ! IMPLEMENTED INDEPENDENTLY AND WITH KNOWLEDGE OF LAYOUTS, REMAP, 
              ! ETC. ...
-             call fft_set_mode_complx_2d( &
+             call fft_set_mode( &
                   plan%py,&
                   plan%fft_y_array,&
                   (0.0_f64,0.0_f64),&
@@ -413,7 +413,7 @@ contains
 
               val = -plan%fft_y_array(i,j)*normalization / &
                   ( ( (kx*r_Lx)**2 + (ky*r_Ly)**2)*4.0_f64*sll_pi**2)
-              call fft_set_mode_complx_2d(plan%py,plan%fft_y_array,val,i,j)
+              call fft_set_mode(plan%py,plan%fft_y_array,val,i,j)
           end if
        enddo
     enddo
@@ -524,7 +524,7 @@ contains
              ! SEEMS THAT THE 2d FFT DONE IN A PARALLEL WAY, NEEDS TO BE 
              ! IMPLEMENTED INDEPENDENTLY AND WITH KNOWLEDGE OF LAYOUTS, REMAP, 
              ! ETC. ...
-             call fft_set_mode_complx_2d( &
+             call fft_set_mode( &
                   plan%py,&
                   plan%fft_y_array,&
                   (0.0_f64,0.0_f64),&
@@ -551,7 +551,7 @@ contains
 
               val = -plan%fft_y_array(i,j)*normalization / &
                   ( ( (kx*r_Lx)**2 + (ky*r_Ly)**2)*4.0_f64*sll_pi**2)
-              call fft_set_mode_complx_2d(plan%py,plan%fft_y_array,val,i,j)
+              call fft_set_mode(plan%py,plan%fft_y_array,val,i,j)
           end if
        enddo
     enddo

@@ -15,7 +15,11 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> Class of arbitrary degree version of 2d irnterpolator
+!> @ingroup interpolators
+!> @brief
+!> Class of arbitrary degree version of 2d interpolator
+!> @details
+!> 
 module sll_module_arbitrary_degree_spline_interpolator_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"

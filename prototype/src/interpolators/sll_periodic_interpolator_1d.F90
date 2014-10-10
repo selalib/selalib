@@ -1,7 +1,9 @@
+!> @ingroup interpolators
 !> @brief
+!> Interpolator with periodic boundary conditions
+!! @details
 !> the following provides an implementation for the abstract interface
 !! sll_interpolator_1d_base
-!! @details
 !! Define periodic interpolation of values in data define on original grid at
 !! points coordinates
 module sll_module_periodic_interpolator_1d

@@ -15,7 +15,11 @@
 !  "http://www.cecill.info".
 !**************************************************************
 
-!>Module for 1D interpolation and reconstruction
+!> @ingroup interpolators
+!> @brief
+!> Module for 1D interpolation and reconstruction
+!> @details
+!> This is an abstract class, methods are implemented in other modules
 module sll_module_interpolators_1d_base
 #include "sll_working_precision.h"
   use sll_boundary_condition_descriptors

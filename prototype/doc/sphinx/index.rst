@@ -24,7 +24,8 @@ Contents:
    Ubuntu dependencies <install/ubuntu>
    Fedora dependencies <install/fedora>
    Macosx dependencies <install/macosx>
-   Project members     <members>
+   Project members <members>
+   COmmunications <communications/index>
 
 Some pages of this documentation display equations via the `jsMath
 <http://www.math.union.edu/~dpvc/jsMath/welcome.html>`_ package. They should

@@ -15,7 +15,11 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> Module with all functions for Fast Fourier Transform
+!> @ingroup fft
+!> @brief
+!> Functions for Fast Fourier Transform
+!> @details
+!> These functions do not depend on external library
 module sll_fft
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -24,9 +28,10 @@ module sll_fft
   use sll_constants
   use sll_fft_utils
   implicit none
+  private
   
   !> Derived type for ftt plan
-  type sll_fft_plan
+  type, public :: sll_fft_plan
      ! twiddle factors complex case
      sll_comp64, dimension(:), pointer :: t => null()         
      ! twiddles factors real case  
@@ -66,23 +71,32 @@ module sll_fft
           bit_reverse_integer64
   end interface bit_reverse
  
-  integer, parameter :: FFT_FORWARD = -1
-  integer, parameter :: FFT_INVERSE = 1
+  !> Set a forward fft
+  integer, parameter, public :: FFT_FORWARD = -1
+  !> Set a backward fft
+  integer, parameter, public :: FFT_INVERSE = 1
 
   
   ! Flags to pass when we create a new plan
   ! We can define 31 different flags.
   ! The value assigned to the flag can only be a power of two.
   ! See section "How-to manipulate flags ?" for more information.
-  integer, parameter :: FFT_NORMALIZE_FORWARD = 2**0
-  integer, parameter :: FFT_NORMALIZE_INVERSE = 2**0
-  integer, parameter :: FFT_NORMALIZE         = 2**0
-  integer, parameter :: FFT_ONLY_FIRST_DIRECTION  = 2**2
-  integer, parameter :: FFT_ONLY_SECOND_DIRECTION = 2**3
-  integer, parameter :: FFT_ONLY_THIRD_DIRECTION  = 2**4
+  !> Forward fft
+  integer, parameter, public :: FFT_NORMALIZE_FORWARD     = 2**0
+  !> Backward fft
+  integer, parameter, public :: FFT_NORMALIZE_INVERSE     = 2**0
+  !> Get the solution normalized
+  integer, parameter, public :: FFT_NORMALIZE             = 2**0
+  !> PLEASE ADD DOCUMENTATION
+  integer, parameter, public :: FFT_ONLY_FIRST_DIRECTION  = 2**2
+  !> PLEASE ADD DOCUMENTATION
+  integer, parameter, public :: FFT_ONLY_SECOND_DIRECTION = 2**3
+  !> PLEASE ADD DOCUMENTATION
+  integer, parameter, public :: FFT_ONLY_THIRD_DIRECTION  = 2**4
   
   ! Assign a value to the different library.
   ! these values are completly arbitrary.
+  !> PLEASE ADD DOCUMENTATION
   integer, parameter :: SLLFFT_MOD = 0
   !  integer, parameter :: FFTPACK_MOD = 100
   !  integer, parameter :: FFTW_MOD = 1000000000
@@ -102,10 +116,18 @@ module sll_fft
           fft_set_mode_complx_3d, fft_set_mode_real_1d
   end interface fft_set_mode
 
+  public :: fft_get_mode
+  public :: fft_new_plan
+  public :: fft_ith_stored_mode
+  public :: fft_apply_plan
+  public :: fft_set_mode
+  public :: print_defaultfftlib
+  public :: fft_delete_plan
 
 contains
 
 
+  !> Debug function
   subroutine print_defaultfftlib()
     print *, 'The library used is SLLFFT'
   end subroutine
@@ -204,7 +226,7 @@ contains
       endif
   end subroutine 
 
-  ! return the index mode of ith stored mode
+  !> return the index mode of ith stored mode
   function fft_ith_stored_mode(plan,i)
     type(sll_fft_plan), pointer :: plan
     sll_int32                   :: i, fft_ith_stored_mode
@@ -733,6 +755,7 @@ contains
 
 
 
+  !> Deallocate the fft plan
   subroutine fft_delete_plan(plan)
    type(sll_fft_plan), pointer :: plan
    sll_int32 :: ierr
