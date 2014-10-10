@@ -26,6 +26,11 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
    ADD_EXECUTABLE(test_io_parallel unit_test_parallel.F90)
    TARGET_LINK_LIBRARIES(test_io_parallel sll_file_io_parallel sll_remap)
+   SET(PROCS 4)
+   SET(ARGS  " ")
+   ADD_MPI_TEST(io_parallel test_io_parallel ${PROCS} ${ARGS})
+   SET_TESTS_PROPERTIES(io_parallel PROPERTIES PASS_REGULAR_EXPRESSION 
+      "PASSED" TIMEOUT 20)
 
 ENDIF()
 

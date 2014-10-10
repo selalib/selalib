@@ -73,6 +73,7 @@ contains
 
 !> Take a 2D array of dimensions ni*nj where ni, nj are the dimensions of
 !> the full array.
+!> @internal [example]
  subroutine plot_layout2d()
 
   sll_int32 , parameter    :: nx = 64
@@ -185,6 +186,7 @@ contains
   call delete_layout_2D( layout )
   
  end subroutine plot_layout2d
+!>@internal [example]
 
  subroutine plot_layout3d()
 

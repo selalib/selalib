@@ -23,6 +23,10 @@
 !> data is separate from the values themselves. Light data is stored using XML, 
 !> Heavy data is stored using Parallel HDF5. These files are readable by 
 !> Paraview.
+!>
+!> Here an example using the layout_2d object, check out how to compute
+!> offset values before calling sll_gnuplot_parallel subroutines.
+!> @snippet remap/unit_test_parallel.F90 example
 module sll_xdmf_parallel
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -226,3 +230,5 @@ contains
 
 
 end module sll_xdmf_parallel
+
+

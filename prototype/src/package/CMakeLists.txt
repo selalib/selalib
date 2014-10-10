@@ -89,6 +89,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/interpolators/sll_interpolators_1d_base.F90
     ${SLL_DIR}/interpolators/sll_interpolators_2d_base.F90
     ${SLL_DIR}/interpolators/sll_cubic_spline_interpolator_1d.F90
+    ${SLL_DIR}/interpolators/sll_cubic_spline_interpolator_1d_nonuniform.F90
     ${SLL_DIR}/interpolators/sll_cubic_spline_interpolator_2d.F90
     ${SLL_DIR}/interpolators/sll_arbitrary_degree_spline_interpolator_1d.F90
     ${SLL_DIR}/interpolators/sll_arbitrary_degree_spline_interpolator_2d.F90
@@ -248,7 +249,7 @@ IF(SLL_BUILD_PACKAGE)
       INSTALL(TARGETS selalib ARCHIVE DESTINATION lib COMPONENT libraries)
    ENDIF()
    
-   SET(DIST_NAME "selalib-0.5.0")
+   SET(DIST_NAME "selalib-0.5.1")
    
    ADD_CUSTOM_TARGET(release 
    COMMAND ${CMAKE_COMMAND} -E copy_directory 
@@ -266,7 +267,7 @@ IF(SLL_BUILD_PACKAGE)
            ${CMAKE_CURRENT_SOURCE_DIR}/../documentation.f90 
            ${CMAKE_BINARY_DIR}/${DIST_NAME}/
    COMMAND ${CMAKE_COMMAND} -E copy 
-           ${CMAKE_CURRENT_SOURCE_DIR}/../../documentation/sphinx/_static/logo2.png 
+           ${CMAKE_CURRENT_SOURCE_DIR}/../../doc/sphinx/_static/logo2.png 
            ${CMAKE_BINARY_DIR}/${DIST_NAME}/
    COMMAND ${CMAKE_COMMAND} -E copy_directory 
            ${CMAKE_CURRENT_SOURCE_DIR}/../fftpack 
