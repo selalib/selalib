@@ -21,6 +21,9 @@
 !> @details
 !> Data files are in ASCII format so these subroutines are slow and use
 !> a lot of disk space. Consider to use it for debug purpose.
+!> Here an example using the layout_2d object, check out how to compute
+!> offset values before calling sll_gnuplot_parallel subroutines.
+!> @snippet remap/unit_test_parallel.F90 example
 #define MPI_MASTER 0
 
 module sll_gnuplot_parallel
