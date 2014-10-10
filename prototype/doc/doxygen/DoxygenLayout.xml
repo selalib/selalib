@@ -9,7 +9,7 @@
 <tab type="namespacemembers" visible="yes" title="" intro=""/>
 </tab>
 <tab type="classlist" visible="yes" title="Fortran classes and interfaces" intro="Here are the fortran derived types with brief descriptions."/>
-<tab type="hierarchy" visible="yes" title="" intro="This list is sorted roughly, but not completely, alphabetically:"/>
+<tab type="hierarchy" visible="no" title="" intro="This list is sorted roughly, but not completely, alphabetically:"/>
 <tab type="pages" visible="no" title="" intro=""/>
 <tab type="examples" visible="yes" title="Examples" intro=""/>  
 <tab type="classmembers" 
@@ -164,7 +164,6 @@
       <friends title=""/>
       <membergroups visible="yes"/>
     </memberdecl>
-    <detaileddescription title=""/>
     <memberdef>
       <pagedocs/>
       <inlineclasses title="Derived types"/>
@@ -182,6 +181,7 @@
       <properties title=""/>
       <friends title=""/>
     </memberdef>
+    <detaileddescription title=""/>
   </group>
 
   <!-- Layout definition for a directory page -->
