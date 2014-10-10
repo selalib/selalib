@@ -15,6 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> @ingroup file_io_parallel
 !> @brief
 !> Parallel version of sll_hdf5_io
 !> @details
