@@ -118,9 +118,9 @@ If selalib is installed in /usr/local::
                       LIBS=['selalib','dfftpack'],
                       F90='ifort',
                       F90FLAGS = ['-O3'],
-	                   F90PATH = [SLL_ROOT+'/usr/include'],
+                      F90PATH = [SLL_ROOT+'/usr/include'],
                       LINK='ifort',
-	                   LIBPATH = [SLL_ROOT+'/usr/lib'])
+                      LIBPATH = [SLL_ROOT+'/usr/lib'])
 
    env.Program('landau', ['landau.F90'])
 
