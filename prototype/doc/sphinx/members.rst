@@ -11,7 +11,7 @@ Scientific Staff
 ----------------
 
 * `Eric SONNENDRUCKER (IPP Garching) <http://www.ipp.mpg.de/ippcms/eng/pr/institut/organigramm/leitung/sonnendruecker.html>`_
-* `Michel MEHRENBERGER (IRMA Strasbourg) <https://www.researchgate.net/profile/Michel_Mehrenberger/>`_
+* `Michel MEHRENBERGER (IRMA Strasbourg) <http://www-irma.u-strasbg.fr/~mehrenbe/>`_
 * `Emmanuel FRENOD (Universite Bretagne Sud) <http://www.linkedin.com/pub/emmanuel-frenod/11/68a/133>`_
 * `Sever HIRSTOAGA (IRMA Strasbourg) <http://www-irma.u-strasbg.fr/~hirstoag/>`_
 * `Laurent NAVORET (IRMA Strasbourg)  <http://www-irma.u-strasbg.fr/~navoret>`_
