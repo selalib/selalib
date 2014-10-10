@@ -21,14 +21,6 @@
 !!   - Gauss-Legendre points and weights
 !!   - Gauss-Lobatto points and weights
 !!
-!!
-!> <b> Headers file available </b>
-!>  - sll_integration.h
-!>
-!> <b> Modules available </b>
-!>  - gauss_legendre_integration
-!>  - gauss_lobatto_integration
-!>
 !> <b> How to use it </b>
 !> - Header file : \code #include 'sll_integration.h' \endcode
 !> - Link with   <code>-lsll_integration</code>

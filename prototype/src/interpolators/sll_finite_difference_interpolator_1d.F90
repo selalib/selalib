@@ -1,3 +1,4 @@
+!> @ingroup interpolators
 !> @brief
 !> Finite differences implementation of sll_interpolator_1d_base
 !> @details

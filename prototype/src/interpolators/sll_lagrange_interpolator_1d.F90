@@ -1,4 +1,8 @@
+!> @ingroup interpolators
+!> @brief
 !> Interpolator class and methods of Lagrange 1D interpolator
+!> @details
+!> Implements the sll_interpolator_1d_base interface.
 module sll_module_lagrange_interpolator_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"

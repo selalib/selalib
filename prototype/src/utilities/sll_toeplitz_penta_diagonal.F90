@@ -16,8 +16,10 @@
 !**************************************************************
 
 
-!> Selalib Toeplitz penta-diagonal system solver
 !> @ingroup utilities
+!> @brief Toeplitz penta-diagonal system solver
+!> @details
+!> This module are not fully tested, please use it carefully.
 module sll_penta_diagonal
 #include "sll_working_precision.h"
 #include "sll_memory.h"

@@ -1,3 +1,4 @@
+!> @ingroup interpolators
 !> @brief
 !> Implements sll_interpolator_1d_base with cubic splines on non uniform mesh
 !> @details

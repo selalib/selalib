@@ -1,3 +1,4 @@
+!> @ingroup integration
 !> @brief
 !> Gauss-Legendre integration
 !> @details

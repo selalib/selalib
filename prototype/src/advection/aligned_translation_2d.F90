@@ -33,9 +33,10 @@ use sll_module_advection_1d_base
 use sll_module_advection_1d_periodic
 use lagrange_interpolation
 use sll_module_advection_2d_oblic
-
+use sll_utilities
 
 implicit none
+
   type(oblic_2d_advector), pointer :: adv  
   class(sll_advection_1d_base), pointer :: adv_x1
   class(sll_advection_1d_base), pointer :: adv_x2

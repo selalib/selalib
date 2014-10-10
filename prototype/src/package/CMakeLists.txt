@@ -249,7 +249,8 @@ IF(SLL_BUILD_PACKAGE)
       INSTALL(TARGETS selalib ARCHIVE DESTINATION lib COMPONENT libraries)
    ENDIF()
    
-   SET(DIST_NAME "selalib-0.5.1")
+   
+   SET(DIST_NAME "selalib-${CPACK_PACKAGE_VERSION}")
    
    ADD_CUSTOM_TARGET(release 
    COMMAND ${CMAKE_COMMAND} -E copy_directory 

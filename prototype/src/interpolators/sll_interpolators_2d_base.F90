@@ -15,8 +15,13 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> @ingroup interpolators
 !> \brief abstract data type for 2d interpolation
-!>
+!> @details
+!> 
+!> @todo
+!> Function names should be reviewed and improved. What is the best way to
+!> express that a derivative is in a particular direction? Why eta???
 module sll_module_interpolators_2d_base
 #include "sll_working_precision.h" 
 use sll_boundary_condition_descriptors
@@ -29,9 +34,6 @@ implicit none
   !*************************************************************************
   
   
-  ! TO BE RESOLVED:
-  ! Function names should be reviewed and improved. What is the best way to
-  ! express that a derivative is in a particular direction? Why eta???
   !> Base class/basic interface for 2D interpolators
   type, abstract :: sll_interpolator_2d_base
 
