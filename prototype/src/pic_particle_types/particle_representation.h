@@ -51,4 +51,12 @@
     exit; \
  end do
 
+
+#define SET_2DPARTICLE_VALUES(p,x,y,qq,xmin,ymin,ncx,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2) \
+ do; \
+    SET_PARTICLE_POSITION(p,xmin,ymin,ncx,x,y,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2); \
+    p%q  = qq; \
+    exit; \
+ enddo
+
 #endif

@@ -43,6 +43,25 @@ module sll_particle_representations
   end type sll_particle_4d_guard_ptr
 
 
+! ------------------------------
+!  for the GUIDING CENTER model
+! ------------------------------
+  type :: sll_particle_2d
+     sll_int32  :: ic   ! cell index, linearly arranged
+     sll_real32 :: dx
+     sll_real32 :: dy
+     sll_real32 :: q
+  end type sll_particle_2d
+
+  type :: sll_particle_2d_guard
+     type(sll_particle_2d), pointer :: p
+  end type sll_particle_2d_guard
+
+  type :: sll_particle_2d_guard_ptr
+     type(sll_particle_2d_guard), dimension(:), pointer :: g_list
+  end type sll_particle_2d_guard_ptr
+
+
 !contains
 
 !!$  subroutine initialize_particle_2d( &

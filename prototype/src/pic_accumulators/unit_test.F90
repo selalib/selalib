@@ -6,7 +6,9 @@ program accumulate_tester
   use sll_pic_utilities
   use sll_constants, only: sll_pi
   use sll_particle_group_4d_module
-  use sll_particle_initializers
+  use sll_particle_group_2d_module
+  use sll_particle_initializers_2d
+  use sll_particle_initializers_4d
   use sll_logical_meshes
 
 
