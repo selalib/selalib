@@ -15,9 +15,8 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @addtogroup utilities
+!> @ingroup utilities
 !> Some common numerical utilities
-!> @defgroup utilities sll_utilities
 module sll_utilities
 #include "sll_working_precision.h"
   implicit none
@@ -56,6 +55,7 @@ module sll_utilities
      module procedure display_vector_real
   end interface sll_display
 
+  !> @param logical variable used to print time history
   logical, private :: flag = .true.
 
   !> Return factorial

@@ -23,12 +23,6 @@
 !> <b> Headers file available </b>
 !>  - sll_utilities.h
 !>
-!> <b> Modules available </b>
-!>  - sll_utilities
-!>  - sll_tridiagonal
-!>  - sll_toep_penta_diagonal
-!>  - skyline
-!>
 !> <b> How to use it </b>
 !> - Header file : \code #include 'sll_utilities.h' \endcode
 !> - Link with   <code>-lsll_utilities</code>

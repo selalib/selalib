@@ -1,6 +1,7 @@
+!> @ingroup splines
 !> @brief  
 !> Box-Splines of degree 2 using formula from : 
-!> @Condat2006 :Three-directional box splines
+!> Condat2006 :Three-directional box splines
 !> 
 module box_splines
 #include "sll_working_precision.h"
@@ -10,10 +11,11 @@ module box_splines
 #include "sll_utilities.h"
 
   implicit none
+  private
 
   !> Spline object
-  type linear_box_spline_2D
-      sll_int32  :: num_pts    !< number of points in any direction from origin
+  type, public :: linear_box_spline_2D
+      sll_int32  :: num_pts    ! number of points in any direction from origin
       sll_real64 :: radius     ! distance between origin and external vertex
       sll_real64 :: center_x1  ! x1 cartesian coordinate of the origin
       sll_real64 :: center_x2  ! x2 cartesian coordinate of the origin
@@ -62,6 +64,7 @@ module box_splines
   
 contains  ! ****************************************************************
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 #define MAKE_GET_SLOT_FUNCTION( fname, datatype, slot, ret_type )    \
   function fname( spline_obj ) result(val);                \
@@ -69,6 +72,8 @@ contains  ! ****************************************************************
     ret_type :: val;                                       \
     val = spline_obj%slot;                                 \
   end function fname
+
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
 MAKE_GET_SLOT_FUNCTION(get_radius_lbs2d, linear_box_spline_2d, radius, sll_real64 )
 MAKE_GET_SLOT_FUNCTION(get_center_x1_lbs2d, linear_box_spline_2d, center_x1, sll_real64 )
@@ -82,6 +87,7 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
 
 
 
+  !> PLEASE ADD DOCUMENTATION
   function new_linear_box_spline_2D( &
     num_pts,      &
     radius,       &
