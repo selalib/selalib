@@ -1214,9 +1214,9 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
   !----------------------------------------------------------------------
 
   !> @brief Returns a pointer to a heap-allocated 2D cubic spline object.
-  !> @param[in] num_points_x1 Dimension in the x1 direction of the 2D array
+  !> @param[in] num_pts_x1 Dimension in the x1 direction of the 2D array
   !> that stores the data to be interpolated.
-  !> @param[in] num_points_x2 Dimension in the x2 direction of the 2D array
+  !> @param[in] num_pts_x2 Dimension in the x2 direction of the 2D array
   !> that stores the data to be interpolated.
   !> @param[in] x1_min In the x1 direction, the minimum value of the domain 
   !> where the data to be interpolated are represented.
@@ -1262,6 +1262,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
   !> in case that a specific slope value should to be imposed at each border
   !> point. Default behavior is to compute the slope consistent with the 
   !> given data.
+  !> @return new_cubic_spline_2d a pointer to a heap-allocated 2D cubic spline object.
   function new_cubic_spline_2D( &
     num_pts_x1,   &
     num_pts_x2,   &

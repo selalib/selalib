@@ -1,3 +1,7 @@
+!> @ingroup general_elliptic_solvers
+!> @brief Elliptic solver on 2d curvilinear mesh
+!> @details This solver works with analytical coordinate 
+!> transformation and discrete coordiante transformation
 module sll_general_coordinate_elliptic_solver_module
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -19,8 +23,10 @@ module sll_general_coordinate_elliptic_solver_module
   use sll_module_deboor_splines_1d
 
   implicit none
+  private
 
-  type :: general_coordinate_elliptic_solver
+  type, public :: general_coordinate_elliptic_solver
+
      sll_int32 :: total_num_splines_loc
      sll_int32 :: total_num_splines_eta1
      sll_int32 :: total_num_splines_eta2
@@ -78,18 +84,29 @@ module sll_general_coordinate_elliptic_solver_module
      sll_real64, dimension(:), pointer :: stiff
   end type general_coordinate_elliptic_solver
 
-  ! For the integration mode.  
-  sll_int32, parameter :: ES_GAUSS_LEGENDRE = 0, ES_GAUSS_LOBATTO = 1
+  !> For the integration mode.  
+  sll_int32, parameter, public :: ES_GAUSS_LEGENDRE = 0
+  !> For the integration mode.  
+  sll_int32, parameter, public :: ES_GAUSS_LOBATTO = 1
   
   interface sll_delete
      module procedure delete_elliptic
   end interface sll_delete
 
-  interface initialize
+  interface sll_create
      module procedure initialize_general_elliptic_solver
-  end interface initialize
-  
-  
+  end interface sll_create
+
+  interface sll_solve
+     module procedure solve_general_coordinates_elliptic_eq
+  end interface sll_solve
+
+  public sll_delete,                          &
+         sll_create,                          &
+         sll_solve,                           &
+         new_general_elliptic_solver,         &
+         factorize_mat_es
+
 contains ! *******************************************************************
 
 
@@ -118,7 +135,7 @@ contains ! *******************************************************************
   !> @param[in] eta1_max the maximun in the direction eta1
   !> @param[in] eta2_min the minimun in the direction eta2
   !> @param[in] eta2_max the maximun in the direction eta2
-  !> @return the type general_coordinate_elliptic_solver
+  !> @param[out] the type general_coordinate_elliptic_solver
 
   subroutine initialize_general_elliptic_solver( &
        es, &
@@ -456,7 +473,7 @@ contains ! *******************************************************************
 
    !call sll_set_time_mark(t0)
    SLL_ALLOCATE(es,ierr)
-   call initialize( &
+   call sll_create( &
         es, &
         spline_degree_eta1, &
         spline_degree_eta2, &
@@ -949,6 +966,7 @@ if (sll_perper == 0) then
   ! can be used library-wide, this way we could extract this information 
   ! directly from the fields without any difficulties. 
 
+  !> PLEASE ADD DOCUMENTATION
   subroutine build_local_matrices( &
        obj, &
        cell_index,&

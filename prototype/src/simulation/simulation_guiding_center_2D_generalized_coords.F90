@@ -456,7 +456,7 @@ contains
        
   
     print *, 'started solve_quasi_neutral_eq_general_coords before loop ...'
-    call solve_general_coordinates_elliptic_eq( &
+    call sll_solve( &
             sim%qns, & 
             rho_n_ptr, &
             phi )
@@ -506,7 +506,7 @@ contains
             !Classical semi-Lagrangian scheme (order 1)
              ! compute matrix the field
             
-            call solve_general_coordinates_elliptic_eq( &
+            call sll_solve( &
             sim%qns, & 
             rho_n_ptr, &
             phi )
@@ -523,7 +523,7 @@ contains
 
    case(2) 
             !!'Semi-Lagrangian predictor-corrector scheme'  
-            call solve_general_coordinates_elliptic_eq( &
+            call sll_solve( &
             sim%qns, & 
             rho_n_ptr, &
             phi )
@@ -538,7 +538,7 @@ contains
             call rho_np1_ptr%update_interpolation_coefficients( )
             !!we just obtained f^(n+1/2)    
             
-            call solve_general_coordinates_elliptic_eq( &
+            call sll_solve( &
             sim%qns, & 
             rho_np1_ptr, &
             phi )
@@ -555,7 +555,7 @@ contains
       case(3)
            !Leap-frog scheme
              if (itime==1) then
-                call solve_general_coordinates_elliptic_eq( &
+                call sll_solve( &
                 sim%qns, & 
                 rho_n_ptr, &
                 phi )
@@ -570,7 +570,7 @@ contains
                 call rho_np1_ptr%update_interpolation_coefficients( )
              !!we just obtained f^(n+1/2)    
             
-                call solve_general_coordinates_elliptic_eq( &
+                call sll_solve( &
                 sim%qns, & 
                 rho_np1_ptr, &
                 phi )
@@ -583,7 +583,7 @@ contains
                 
              else 
              
-               call solve_general_coordinates_elliptic_eq( &
+               call sll_solve( &
                 sim%qns, & 
                 rho_n_ptr, &
                 phi )

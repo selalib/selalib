@@ -521,7 +521,7 @@ contains
     call poisson%rho_field%set_field_data(-rho)
     call poisson%rho_field%update_interpolation_coefficients( )
             
-    call solve_general_coordinates_elliptic_eq(&
+    call sll_solve(&
        poisson%elliptic_solver,&
        poisson%rho_field,&
        poisson%phi_field)
