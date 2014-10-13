@@ -1,8 +1,10 @@
-program pic_4d_cartesian
-  use sll_pic_simulation_4d_cartesian_module
+program pic_2d_cartesian
+!  use sll_pic_simulation_4d_cartesian_module
+  use sll_pic_simulation_2d_cartesian_module
   use sll_collective 
 
-  type(sll_pic_simulation_4d_cartesian) :: sim
+!  type(sll_pic_simulation_4d_cartesian) :: sim
+  type(sll_pic_simulation_2d_gc_cartesian) :: sim
 
   integer :: rank, size
 
@@ -10,7 +12,7 @@ program pic_4d_cartesian
   size = sll_get_collective_size(sll_world_collective)
   rank = sll_get_collective_rank(sll_world_collective)
 
-  call sim%init_from_file('params_pic_4d.nml')
+  call sim%init_from_file('params_pic_2d_KH.nml')! ('params_pic_4d.nml')
 ! #        OMEGA  = 1.323
 ! #        GAMMA  = -0.151
 
@@ -20,11 +22,10 @@ program pic_4d_cartesian
       print*, sim%ions_number/real(sim%m2d%num_cells1* &
            sim%m2d%num_cells2,f64), 'particles per cell'
    endif
-
   call sim%run()
 
   if (rank==0) print*, 'PASSED'
   call sll_halt_collective()
 
   ! call sim%delete()
-end program pic_4d_cartesian
+end program pic_2d_cartesian

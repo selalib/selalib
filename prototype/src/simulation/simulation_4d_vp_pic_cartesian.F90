@@ -13,7 +13,7 @@ module sll_pic_simulation_4d_cartesian_module
   use sll_logical_meshes
   use sll_timer
   use sll_particle_group_4d_module
-  use sll_particle_initializers
+  use sll_particle_initializers_4d
   use sll_particle_sort_module
 !  use sll_accumulators
   use sll_charge_to_density_module
