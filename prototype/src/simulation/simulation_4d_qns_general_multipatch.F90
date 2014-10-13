@@ -728,7 +728,7 @@ contains
        end if
        
        !call sll_set_time_mark(t0)         
-       call solve_general_coordinates_elliptic_eq_mp(&
+       call sll_solve_mp(&
             sim%qns,&
             rho,&
             phi)

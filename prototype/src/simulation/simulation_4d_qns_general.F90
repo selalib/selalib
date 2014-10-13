@@ -18,9 +18,10 @@ module sll_simulation_4d_qns_general_module
 !  use sll_coordinate_transformation_2d_base_module
   use sll_gnuplot_parallel
   use sll_general_coordinate_elliptic_solver_module
-!  use sll_module_scalar_field_2d_base
-!  use sll_module_scalar_field_2d_alternative
+  use sll_module_scalar_field_2d_base
+  use sll_module_scalar_field_2d_alternative
 !  use sll_module_arbitrary_degree_spline_interpolator_1d
+  use sll_module_arbitrary_degree_spline_interpolator_2d
   use sll_timer
   implicit none
 
@@ -1291,7 +1292,7 @@ contains
        !       if(sim%my_rank == 0) call rho%write_to_file(itime)
        
        !call sll_set_time_mark(t0)  
-       call solve_general_coordinates_elliptic_eq( &
+       call sll_solve( &
             sim%qns, &
             rho, &
             phi )
