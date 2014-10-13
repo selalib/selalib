@@ -834,7 +834,6 @@ EXCLUDE                = @CMAKE_CURRENT_SOURCE_DIR@/BSL \
                          @CMAKE_CURRENT_SOURCE_DIR@/CAID_coordinate_transformations \
                          @CMAKE_CURRENT_SOURCE_DIR@/coordinate_transformations \
                          @CMAKE_CURRENT_SOURCE_DIR@/coordinate_transformations_multipatch \
-                         @CMAKE_CURRENT_SOURCE_DIR@/splines \
                          @CMAKE_CURRENT_SOURCE_DIR@/distribution_function_multipatch \
                          @CMAKE_CURRENT_SOURCE_DIR@/fcisl \
                          @CMAKE_CURRENT_SOURCE_DIR@/field_accumulators \
@@ -870,7 +869,7 @@ EXCLUDE_SYMLINKS       = NO
 # Note that the wildcards are matched against the file with absolute path, so to
 # exclude all test directories for example use the pattern */test/*
 
-EXCLUDE_PATTERNS       = *umfpack*
+EXCLUDE_PATTERNS       = *umfpack* test_*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
@@ -2055,7 +2054,7 @@ EXPAND_AS_DEFINED      =
 # The default value is: YES.
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
-SKIP_FUNCTION_MACROS   = NO
+SKIP_FUNCTION_MACROS   = YES
 
 #---------------------------------------------------------------------------
 # Configuration options related to external references

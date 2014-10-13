@@ -18,8 +18,14 @@ integer,dimension(ndims) :: coordsse, coordssw, coordsne, coordsnw
 logical                  :: reorder
 logical,dimension(ndims) :: periods
 integer                  :: nxp, nyp, mx, my
+integer                              :: comm    
+integer                              :: error
+integer                              :: provided
+integer                              :: required
 
-call MPI_INIT(code)                             !---- Initialisation MPI
+comm = MPI_COMM_WORLD
+required = MPI_THREAD_MULTIPLE
+call MPI_Init_thread(required,provided,error)
 call MPI_Comm_rank(MPI_COMM_WORLD,prank,code)
 call MPI_COMM_SIZE(MPI_COMM_WORLD,psize,code)
 
@@ -27,7 +33,8 @@ call MPI_COMM_SIZE(MPI_COMM_WORLD,psize,code)
 !$OMP PARALLEL 
 !Obtain thread number
 !$OMP CRITICAL
-PRINT *, psize,prank,OMP_GET_NUM_THREADS(),OMP_GET_THREAD_NUM()
+PRINT "('nodes:',i3,' rank:',i3,' threads:',i3,' thread_id:',i3)", &
+         psize,      prank,     OMP_GET_NUM_THREADS(),OMP_GET_THREAD_NUM()
 !$OMP END CRITICAL
 !$OMP END PARALLEL
 
