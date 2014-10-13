@@ -12,14 +12,11 @@ IF(FFTW_ENABLED AND FFTW_FOUND)
 
 ENDIF()
 
-IF(MUDPACK_ENABLED)
-   ADD_DEFINITIONS(-DMUDPACK)
-   SET(POISSON_SRCS ${POISSON_SRCS} sll_mudpack_base.F90
-                                    sll_mudpack_cartesian.F90
-                                    sll_mudpack_polar.F90
-                                    sll_mudpack_curvilinear.F90)
-ENDIF(MUDPACK_ENABLED)
-   
+ADD_DEFINITIONS(-DMUDPACK)
+SET(POISSON_SRCS ${POISSON_SRCS} sll_mudpack_base.F90
+                                 sll_mudpack_cartesian.F90
+                                 sll_mudpack_polar.F90
+                                 sll_mudpack_curvilinear.F90)
 IF(FISHPACK_ENABLED)
 
    SET(POISSON_SRCS ${POISSON_SRCS} sll_fishpack.F90)
@@ -38,18 +35,14 @@ SET(POISSON_SRCS ${POISSON_SRCS} sll_poisson_1d_base.F90
 
 SET(POISSON_SRCS ${POISSON_SRCS} sll_poisson_2d_dirichlet_cartesian.F90 )
                                     
-IF(MUDPACK_ENABLED)                                    
-    SET(POISSON_SRCS ${POISSON_SRCS} sll_poisson_2d_mudpack_solver.F90
-                                     sll_poisson_2d_mudpack_curvilinear_solver_old.F90)
-ENDIF(MUDPACK_ENABLED)                                    
+SET(POISSON_SRCS ${POISSON_SRCS} sll_poisson_2d_mudpack_solver.F90
+                                 sll_poisson_2d_mudpack_curvilinear_solver_old.F90)
                                     
 ADD_LIBRARY(sll_poisson_solvers STATIC ${POISSON_SRCS})
 
 SET(POISSON_DEPS_LIBRARIES sll_general_coordinate_elliptic_solvers)
 
-IF(MUDPACK_ENABLED)                                    
-   SET(POISSON_DEPS_LIBRARIES ${POISSON_DEPS_LIBRARIES} mudpack) 
-ENDIF(MUDPACK_ENABLED)                                    
+SET(POISSON_DEPS_LIBRARIES ${POISSON_DEPS_LIBRARIES} mudpack) 
 
 IF(FFTW_ENABLED AND FFTW_FOUND)
    SET(POISSON_DEPS_LIBRARIES ${POISSON_DEPS_LIBRARIES} ${FFTW_LIBRARIES} )
@@ -134,26 +127,27 @@ IF(FISHPACK_ENABLED)
 
 ENDIF()
 
-IF(MUDPACK_ENABLED)
+### BEGIN MACRO
 
-   MACRO(ADD_MUDPACK_PROGRAM TEST_NAME) 
+MACRO(ADD_MUDPACK_PROGRAM TEST_NAME) 
 
-      ADD_EXECUTABLE(test_mudpack_${TEST_NAME} test_mudpack_${TEST_NAME}.F90)
-      
-      TARGET_LINK_LIBRARIES(test_mudpack_${TEST_NAME} ${POISSON_LIBS}
-                                                      sll_poisson_solvers 
-                                                      sll_file_io
-                                                      mudpack)
+  ADD_EXECUTABLE(test_mudpack_${TEST_NAME} test_mudpack_${TEST_NAME}.F90)
+    
+  TARGET_LINK_LIBRARIES(test_mudpack_${TEST_NAME} ${POISSON_LIBS}
+                                                sll_poisson_solvers 
+                                                sll_file_io
+                                                mudpack)
 
-      ADD_TEST(NAME sll_mudpack_${TEST_NAME} COMMAND test_mudpack_${TEST_NAME} )
-      SET(sll_mudpack_${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+  ADD_TEST(NAME sll_mudpack_${TEST_NAME} COMMAND test_mudpack_${TEST_NAME} )
+  SET(sll_mudpack_${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-   ENDMACRO(ADD_MUDPACK_PROGRAM)
+ENDMACRO(ADD_MUDPACK_PROGRAM)
 
-   ADD_MUDPACK_PROGRAM(cartesian)
-   ADD_MUDPACK_PROGRAM(polar)
+### END MACRO
 
-ENDIF()
+ADD_MUDPACK_PROGRAM(cartesian)
+ADD_MUDPACK_PROGRAM(polar)
+
 # ****************************************************************************
 #
 #                           PARALLEL POISSON SOLVERS

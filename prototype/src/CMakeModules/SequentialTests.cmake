@@ -43,12 +43,6 @@ SET_TESTS_PROPERTIES(pic_initializers PROPERTIES PASS_REGULAR_EXPRESSION "PASSED
 SET_TESTS_PROPERTIES(pic_accumulator PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(pic_particle_sort PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-#IF(MUDPACK_ENABLED)
-#   ADD_TEST(NAME guiding_center_2D_generalized_coords    COMMAND test_guiding_center_2D_generalized_coords)
-#   SET_TESTS_PROPERTIES(guiding_center_2D_generalized_coords PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-#ENDIF(MUDPACK_ENABLED)
-
-
 ADD_TEST(NAME fft COMMAND test_fft)
 
    ADD_TEST(NAME reduction COMMAND test_reduction)
@@ -129,26 +123,17 @@ ENDIF(PYTHON3_FOUND)
    ADD_TEST(NAME gyroaverage_polar_splines COMMAND test_gyroaverage_2d_polar_splines)
    ADD_TEST(NAME gyroaverage_polar_pade COMMAND test_gyroaverage_2d_polar_pade)
    
-   #IF(MUDPACK_ENABLED)
-
-      SET(ARGS ${CMAKE_BINARY_DIR}/gcsim2d_cartesian_input)
-      ADD_TEST(NAME sim2d_gc_cart COMMAND test_2d_gc_cartesian ${ARGS})
-      SET_TESTS_PROPERTIES(sim2d_gc_cart PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET(ARGS ${CMAKE_BINARY_DIR}/gcsim2d_cartesian_input)
+   ADD_TEST(NAME sim2d_gc_cart COMMAND test_2d_gc_cartesian ${ARGS})
+   SET_TESTS_PROPERTIES(sim2d_gc_cart PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    
-      SET(ARGS ${CMAKE_BINARY_DIR}/gcsim2d_polar_input)
-      ADD_TEST(NAME sim2d_gc_polar COMMAND test_2d_gc_polar ${ARGS})
-      SET_TESTS_PROPERTIES(sim2d_gc_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET(ARGS ${CMAKE_BINARY_DIR}/gcsim2d_polar_input)
+   ADD_TEST(NAME sim2d_gc_polar COMMAND test_2d_gc_polar ${ARGS})
+   SET_TESTS_PROPERTIES(sim2d_gc_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-      SET(ARGS ${CMAKE_BINARY_DIR}/vpsim2d_no_split_beam)
-      ADD_TEST(NAME sim2d_vp_no_split COMMAND test_2d_vp_no_split ${ARGS})
-      SET_TESTS_PROPERTIES(sim2d_vp_no_split PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-
-
-   #ENDIF(MUDPACK_ENABLED)
-
-
-
-
+   SET(ARGS ${CMAKE_BINARY_DIR}/vpsim2d_no_split_beam)
+   ADD_TEST(NAME sim2d_vp_no_split COMMAND test_2d_vp_no_split ${ARGS})
+   SET_TESTS_PROPERTIES(sim2d_vp_no_split PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
    SET_TESTS_PROPERTIES(coordinate_transformations PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    SET_TESTS_PROPERTIES(fields_2d_alternative PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")

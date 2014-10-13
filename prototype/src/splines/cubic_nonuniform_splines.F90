@@ -1,4 +1,7 @@
+!> @ingroup splines
 !> @brief  
+!> Lowlevel module for sll_cubic_spline_1d_nonuniform
+!> @details
 !> The splines module provides capabilities for 1D data interpolation 
 !> with cubic B-splines on non uniform mesh 
 !> 
@@ -8,11 +11,13 @@ module cubic_non_uniform_splines
 #include "sll_assert.h"
 #include "sll_splines.h"
 #include "sll_utilities.h"
+use sll_boundary_condition_descriptors
 
   implicit none
+  private
 
   !> Spline object
-  type cubic_nonunif_spline_1D
+  type, public :: cubic_nonunif_spline_1D
     sll_int32                         :: n_cells        !< number of cells
     sll_real64, dimension(:), pointer :: node_positions !< the non uniform 
                                                         !< mesh normalized on (0,1)
@@ -29,6 +34,17 @@ module cubic_non_uniform_splines
     sll_real64                        :: slope_R        !< right slope, for Hermite
   end type cubic_nonunif_spline_1D
 
+  interface sll_delete
+    module procedure delete_cubic_nonunif_spline_1d
+  end interface sll_delete
+
+  public new_cubic_nonunif_spline_1D
+  public compute_spline_nonunif
+  public interpolate_array_value_nonunif
+  public compute_spline_nonunif_1d_periodic_aux2
+  public setup_spline_nonunif_1d_periodic_aux
+  public interpolate_array_value_nonunif_aux
+  public sll_delete
   
   
 contains  ! ****************************************************************
@@ -136,6 +152,7 @@ contains  ! ****************************************************************
     end select  
   end subroutine compute_spline_nonunif
 
+  !> PLEASE ADD DOCUMENTATION
   subroutine compute_spline_nonunif_1D_periodic( f, spline )
     sll_real64, dimension(:), intent(in), target :: f    ! data to be fit
     type(cubic_nonunif_spline_1D), pointer         :: spline
@@ -165,6 +182,7 @@ contains  ! ****************************************************************
   end subroutine compute_spline_nonunif_1D_periodic
 
 
+  !> PLEASE ADD DOCUMENTATION
   subroutine compute_spline_nonunif_1D_hermite( f, spline )
     sll_real64, dimension(:), intent(in), target :: f    ! data to be fit
     type(cubic_nonunif_spline_1D), pointer         :: spline
@@ -237,6 +255,7 @@ contains  ! ****************************************************************
 !      0.23999999999999971       0.59333333333333360       0.16666666666666666 
 
 
+  !> PLEASE ADD DOCUMENTATION
   subroutine setup_spline_nonunif_1D_periodic_aux( node_pos, N, buf, ibuf)
     sll_real64, dimension(:), pointer :: node_pos,buf
     sll_int32, intent(in) :: N
@@ -326,6 +345,7 @@ contains  ! ****************************************************************
 
 
   
+  !> PLEASE ADD DOCUMENTATION
   subroutine compute_spline_nonunif_1D_periodic_aux( f, N, buf, ibuf, coeffs )
     sll_real64, dimension(:), pointer :: f,buf,coeffs
     sll_int32, intent(in) :: N
@@ -352,6 +372,7 @@ contains  ! ****************************************************************
     !print *,'error of compute_spline=',linf_err
   end subroutine compute_spline_nonunif_1D_periodic_aux
 
+  !> PLEASE ADD DOCUMENTATION
   subroutine compute_spline_nonunif_1D_periodic_aux2( f, N, buf, ibuf, coeffs )
     sll_real64, dimension(:) :: f
     sll_real64, dimension(:), pointer :: buf
@@ -574,6 +595,7 @@ contains  ! ****************************************************************
   end subroutine interpolate_array_value_nonunif
 
 
+  !> PLEASE ADD DOCUMENTATION
   subroutine interpolate_array_value_nonunif_aux( a_in, a_out, n, node_pos,coeffs,n_cells )
     sll_int32, intent(in) :: n,n_cells
     sll_real64, dimension(1:n), intent(in)  :: a_in

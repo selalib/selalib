@@ -10,11 +10,7 @@ FILE(COPY ${TXT_FILES} DESTINATION ${CMAKE_BINARY_DIR})
 FILE(GLOB NML_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.nml")
 FILE(COPY ${NML_FILES} DESTINATION ${CMAKE_BINARY_DIR})
 
-IF(MUDPACK_ENABLED)
-
- ADD_DEFINITIONS(-DMUDPACK)
-
-ENDIF(MUDPACK_ENABLED)
+ADD_DEFINITIONS(-DMUDPACK)
 
 ADD_LIBRARY( sll_simulation_1d STATIC simulation_1d.F90 simulation_base_class.F90 )
 
@@ -24,22 +20,6 @@ TARGET_LINK_LIBRARIES( sll_simulation_1d
                        sll_poisson_solvers
                        sll_reduction
                        sll_common_array_initializers
-#                       sll_splines
-#                       sll_fft
-#                       sll_distribution_function
-#                       sll_general_coordinate_elliptic_solvers
-#                       sll_scalar_field_2d_alternative
-#                       sll_field_accumulators
-#                       sll_splines
-#                       sll_integration
-#                       sll_constants
-#                       sll_coordinate_transformations
-#                       sll_logical_meshes
-#                       sll_utilities
-#                       sll_timer
-#                       sll_memory
-#                       sll_assert 	
-#                       sll_working_precision)
 )
 
 MACRO(ADD_SIMULATION_1D TEST_NAME SIM_NAME ) 
