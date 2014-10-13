@@ -188,6 +188,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
    ADD_SIMULATION(6d                        6d_vlasov_poisson_cartesian)
 
    ADD_SIMULATION(4d_vp_pic_cartesian       4d_vp_pic_cartesian)
+   ADD_SIMULATION(2d_guiding_center_pic_cartesian       2d_guiding_center_pic_cartesian)
 
 #   ADD_SIMULATION(4d_mixed_qns_cartesian 4d_mixed_qns_cartesian)
 
