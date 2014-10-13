@@ -7,11 +7,12 @@ IF(MUDPACK_ENABLED)
       SET(CMAKE_Fortran_COMPILER xlf)
    ENDIF(Fortran_COMPILER MATCHES IBM)
 
-   ADD_LIBRARY(mudpack STATIC mudcom.f mud2.f mud24.f 
-                                    muh2.f muh24.f 
-                                    mud24sp.f mud2sp.f
-                                    mud24cr.f mud2cr.f 
-                                    muh24cr.f muh2cr.f )
+   ADD_LIBRARY(mudpack STATIC mudcom.f 
+                              mud2.f mud24.f 
+                              muh2.f muh24.f 
+                              mud24sp.f mud2sp.f
+                              mud24cr.f mud2cr.f 
+                              muh24cr.f muh2cr.f )
 
    IF(BUILD_TESTING)
 
@@ -24,15 +25,15 @@ IF(MUDPACK_ENABLED)
       ENDMACRO(MUDPACK_TEST)
    
       MUDPACK_TEST(test_mud2    tmud2)
-      MUDPACK_TEST(test_mud24   tmud24)
-      MUDPACK_TEST(test_mud2sp  tmud2sp)
-      MUDPACK_TEST(test_mud24sp tmud24sp)
-      MUDPACK_TEST(test_mud2cr  tmud2cr)
-      MUDPACK_TEST(test_mud24cr tmud24cr)
-      MUDPACK_TEST(test_muh2    tmuh2)
-      MUDPACK_TEST(test_muh24   tmuh24)
-      MUDPACK_TEST(test_muh24cr tmuh24cr)
-      MUDPACK_TEST(test_muh2cr  tmuh2cr)
+      #MUDPACK_TEST(test_mud24   tmud24)
+      #MUDPACK_TEST(test_mud2sp  tmud2sp)
+      #MUDPACK_TEST(test_mud24sp tmud24sp)
+      #MUDPACK_TEST(test_mud2cr  tmud2cr)
+      #MUDPACK_TEST(test_mud24cr tmud24cr)
+      #MUDPACK_TEST(test_muh2    tmuh2)
+      #MUDPACK_TEST(test_muh24   tmuh24)
+      #MUDPACK_TEST(test_muh24cr tmuh24cr)
+      #MUDPACK_TEST(test_muh2cr  tmuh2cr)
 
    ELSE(BUILD_TESTING)
 
@@ -40,14 +41,4 @@ IF(MUDPACK_ENABLED)
 
    ENDIF(BUILD_TESTING)
    
-   #ADD_EXECUTABLE( tmud2sa     tmud2sa.f)
-   #ADD_EXECUTABLE( tmud3       tmud3.f)
-   #ADD_EXECUTABLE( tmud34      tmud34.f)
-   #ADD_EXECUTABLE( tmud34sp    tmud34sp.f)
-   #ADD_EXECUTABLE( tmud3cr     tmud3cr.f)
-   #ADD_EXECUTABLE( tmud3sa     tmud3sa.f)
-   #ADD_EXECUTABLE( tmud3sp     tmud3sp.f)
-   #ADD_EXECUTABLE( tmuh3       tmuh3.f)
-   #ADD_EXECUTABLE( tmuh34      tmuh34.f)
-
 ENDIF(MUDPACK_ENABLED)

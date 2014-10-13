@@ -18,7 +18,7 @@ Scientific Staff
 * `Virgine GRANDGIRARD <http://www.researchgate.net/profile/Virginie_Grandgirard/>`_
 * `Philippe HELLUY (IRMA Strasbourg) <http://www.linkedin.com/pub/philippe-helluy/34/147/952>`_
 * Martin CAMPOS-PINTO (LJLL Paris VI)
-* `Nicolas Crouseilles (IRMAR Rennes) <<http://people.rennes.inria.fr/Nicolas.Crouseilles/>`_.
+* `Nicolas Crouseilles (IRMAR Rennes) <http://people.rennes.inria.fr/Nicolas.Crouseilles/>`_.
 
 Software engineering
 --------------------
