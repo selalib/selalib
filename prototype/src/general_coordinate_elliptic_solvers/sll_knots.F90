@@ -1,11 +1,19 @@
+!> @ingroup general_coordinate_elliptic_solvers
+!> @brief 
+!> PLEASE ADD DOCUMENTATION
+!> @details 
+!> PLEASE ADD DOCUMENTATION
 module sll_knots
   implicit none
 
-  integer, parameter :: KNOTS_PERIODIC = 0, KNOTS_DIRICHLET = 1
+  !> PLEASE ADD DOCUMENTATION
+  integer, parameter :: KNOTS_PERIODIC  = 0
+  !> PLEASE ADD DOCUMENTATION
+  integer, parameter :: KNOTS_DIRICHLET = 1
 
 contains
 
-  ! SUBROUTINE ASSEMBLING KNOTS ARRAY
+  !> ASSEMBLING KNOTS ARRAY
   subroutine initialize_knots(&
        spline_degree,&
        num_cells, &
@@ -54,6 +62,7 @@ contains
   end subroutine initialize_knots
 
 
+  !> ASSEMBLING KNOTS ARRAY
   subroutine initialize_knots_per(&
        spline_degree,&
        num_cells, &
@@ -77,6 +86,7 @@ contains
     end do
   end subroutine initialize_knots_per
 
+  !> ASSEMBLING KNOTS ARRAY
   subroutine initialize_knots_dir(&
        spline_degree,&
        num_cells, &
@@ -109,6 +119,7 @@ contains
   end subroutine initialize_knots_dir
 
 
+  !> ASSEMBLING KNOTS ARRAY
   subroutine initialize_knots_all(&
        spline_degree,&
        num_cells, &

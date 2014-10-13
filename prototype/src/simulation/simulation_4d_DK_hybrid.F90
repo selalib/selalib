@@ -1661,7 +1661,7 @@ contains
     do iloc3 = 1,loc3d_sz_x3
       call sim%rho2d%set_field_data( sim%rho3d_seqx1x2(:,:,iloc3) )
       call sim%rho2d%update_interpolation_coefficients( )
-      call solve_general_coordinates_elliptic_eq( &
+      call sll_solve( &
         sim%QNS, &
         sim%rho2d, &
         sim%phi2d)

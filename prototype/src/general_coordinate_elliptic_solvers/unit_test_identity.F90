@@ -284,7 +284,7 @@ program test_general_elliptic_solver
 
   call sll_set_time_mark(t_reference)
 
-  call initialize_general_elliptic_solver( &
+  call sll_create( &
        es, &
        SPLINE_DEG1, &
        SPLINE_DEG2, &
@@ -320,7 +320,7 @@ program test_general_elliptic_solver
       ! rho)
 
   ! solve the field
-  call solve_general_coordinates_elliptic_eq(&
+  call sll_solve(&
        es,&
        rho,&
        phi)

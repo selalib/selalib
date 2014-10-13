@@ -840,7 +840,6 @@ EXCLUDE                = @CMAKE_CURRENT_SOURCE_DIR@/BSL \
                          @CMAKE_CURRENT_SOURCE_DIR@/remap \
                          @CMAKE_CURRENT_SOURCE_DIR@/fields \
                          @CMAKE_CURRENT_SOURCE_DIR@/fields_multipatch \
-                         @CMAKE_CURRENT_SOURCE_DIR@/general_coordinate_elliptic_solvers \
                          @CMAKE_CURRENT_SOURCE_DIR@/general_coordinate_elliptic_solvers_multipatch \
                          @CMAKE_CURRENT_SOURCE_DIR@/gyroaverage \
                          @CMAKE_CURRENT_SOURCE_DIR@/hermite_interpolation \

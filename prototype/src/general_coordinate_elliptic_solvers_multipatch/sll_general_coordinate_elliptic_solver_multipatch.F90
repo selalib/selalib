@@ -59,6 +59,9 @@ module sll_general_coordinate_elliptic_solver_multipatch_module
      module procedure initialize_general_elliptic_solver_mp
   end interface initialize
   
+  interface sll_solve_mp
+   module procedure solve_general_coordinates_elliptic_eq_mp
+  end interface sll_solve_mp
   
 contains ! *******************************************************************
   

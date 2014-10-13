@@ -1310,7 +1310,7 @@ end function func_zero
        !       if(sim%my_rank == 0) call rho%write_to_file(itime)
        
 
-       call solve_general_coordinates_elliptic_eq( &
+       call sll_solve( &
             sim%qns, &
             rho, &
             phi )
