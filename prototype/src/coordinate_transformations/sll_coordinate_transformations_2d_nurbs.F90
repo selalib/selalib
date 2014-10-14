@@ -1,3 +1,35 @@
+!> @ingroup coordinate_transformations
+!> @brief 
+!> 2d coordinate transformations : Discrete case Nurbs/Splines specifications
+!> @details
+!> There are two main types of coordinate transformations: analytic and       
+!> discrete. In the first case the transformation can be
+!> specified analytically, through the two functions:
+!>
+!> \f[
+!> \begin{matrix}
+!>                     x_1 = x_1(\eta_1,\eta_2)  \\\\
+!>                     x_2 = x_2(\eta_1,\eta_2)
+!> \end{matrix}
+!> \f]
+!>
+!> Where both, eta1 and eta2 should be defined on the intervals that define
+!> the extent of the logical mesh (default values in logical mesh are  [0,1]. 
+!> The same transformation 
+!> can be specified by the set of transformed points \f$x_1(i,j), x_2(i,j),\f$ as
+!> two 2D arrays or 1D arrays that describe the transformation on each
+!> direction.
+!>
+!> The transformation is also represented by the Jacobian matrix:
+!> \f[
+!> J(\eta_1,\eta_2) = 
+!> \begin{bmatrix}
+!> \partial x_1(\eta_1,\eta_2) / \partial \eta_1 & 
+!> \partial x_1(\eta_1,\eta_2) / \partial \eta_2 \\\\
+!> \partial x_2(\eta_1,\eta_2) / \partial \eta_1 & 
+!> \partial x_2(\eta_1,\eta_2) / \partial \eta_2 
+!> \end{bmatrix}
+!> \f]
 module sll_module_coordinate_transformations_2d_nurbs
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -12,45 +44,10 @@ module sll_module_coordinate_transformations_2d_nurbs
   use sll_module_deboor_splines_2d
 
   implicit none
+  private
   
-  ! ---------------------------------------------------------------------
-  !
-  !                       2D COORDINATE TRANSFORMATIONS
-  !
-  ! ---------------------------------------------------------------------
-  !
-  ! There are two main types of coordinate transformations: analytic and       
-  ! discrete. In the first case the transformation can be
-  ! specified analytically, through the two functions:
-  !
-  !                     x1 = x1(eta1,eta2) 
-  !                     x2 = x2(eta1,eta2)
-  !
-  ! Where both, eta1 and eta2 should be defined on the intervals that define
-  ! the extent of the logical mesh (default values in logical mesh are  [0,1]. 
-  ! The same transformation 
-  ! can be specified by the set of transformed points x1(i,j), x2(i,j), as
-  ! two 2D arrays or 1D arrays that describe the transformation on each
-  ! direction.
-  !
-  ! The transformation is also represented by the Jacobian matrix:
-  !
-  !                   [   partial x1(eta1,eta2)     partial x1(eta1,eta2)    ]
-  !                   [ -----------------------    ------------------------- ]
-  !                   [      partial eta1              partial eta2          ]
-  !    J(eta1,eta2) = [                                                      ]
-  !                   [   partial x2(eta1,eta2)     partial x2(eta1,eta2)    ]
-  !                   [ -----------------------    ------------------------- ]
-  !                   [      partial eta1              partial eta2          ]
-  !
 
-  ! -----------------------------------------------------------------------
-  !
-  !                Discrete case : Nurbs/Splines specifications
-  !
-  ! -----------------------------------------------------------------------
-
-  type, extends(sll_coordinate_transformation_2d_base) :: &
+  type, extends(sll_coordinate_transformation_2d_base), public :: &
        sll_coordinate_transformation_2d_nurbs
 
      sll_real64, dimension(:,:), pointer :: x1_node =>null()  ! x1(i,j) 
@@ -86,13 +83,16 @@ module sll_module_coordinate_transformations_2d_nurbs
      procedure, pass(transf) :: delete => delete_transformation_2d_nurbs
   end type sll_coordinate_transformation_2d_nurbs
 
-  type sll_coordinate_transformation_2d_nurbs_ptr
+  type, public :: sll_coordinate_transformation_2d_nurbs_ptr
      class(sll_coordinate_transformation_2d_nurbs), pointer :: T
   end type sll_coordinate_transformation_2d_nurbs_ptr
 
-  interface delete
+  interface sll_delete
      module procedure delete_transformation_2d_nurbs
-  end interface
+  end interface sll_delete
+
+  public sll_delete
+  public new_nurbs_2d_transformation_from_file
 
   
 contains

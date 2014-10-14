@@ -1,4 +1,4 @@
-!> @ingroup general_elliptic_solvers
+!> @ingroup general_coordinate_elliptic_solvers
 !> @brief Elliptic solver on 2d curvilinear mesh
 !> @details This solver works with analytical coordinate 
 !> transformation and discrete coordiante transformation
