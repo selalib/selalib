@@ -15,11 +15,10 @@ module sll_module_maxwell_2d_diga
 #include "sll_integration.h"
 #include "sll_utilities.h"
 #include "sll_assert.h"
+#include "sll_logical_meshes.h"
+#include "sll_coordinate_transformations.h"
 
 use sll_maxwell_solvers_base
-use sll_logical_meshes
-use sll_module_coordinate_transformations_2d
-use sll_common_coordinate_transformations
 use sll_dg_fields
 use sll_boundary_condition_descriptors
 

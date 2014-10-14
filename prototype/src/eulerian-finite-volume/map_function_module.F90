@@ -1,8 +1,7 @@
 
 module map_function_module
+#include "sll_coordinate_transformations.h"
 
-   use sll_common_coordinate_transformations
-   use sll_module_coordinate_transformations_2d
 
    class(sll_coordinate_transformation_2d_base),pointer :: tau
 

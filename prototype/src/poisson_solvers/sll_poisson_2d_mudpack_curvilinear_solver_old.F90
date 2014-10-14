@@ -33,14 +33,14 @@ module sll_module_poisson_2d_mudpack_curvilinear_solver_old
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
+#include "sll_coordinate_transformations.h"
 !use sll_boundary_condition_descriptors
 use sll_constants
 use sll_module_poisson_2d_base
 use sll_mudpack_base
+use sll_module_interpolators_2d_base
 use sll_module_cubic_spline_interpolator_1d
 use sll_module_cubic_spline_interpolator_2d
-use sll_coordinate_transformation_2d_base_module
-use sll_module_coordinate_transformations_2d
 !use sll_poisson_2d_polar
 implicit none
 

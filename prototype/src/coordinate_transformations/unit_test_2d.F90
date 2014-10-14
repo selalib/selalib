@@ -1,13 +1,12 @@
 program unit_test_2d
 #include "sll_working_precision.h"
-  use sll_constants
-  use sll_logical_meshes
-  use sll_module_coordinate_transformations_2d
-  use sll_module_coordinate_transformations_2d_nurbs
-  use sll_common_coordinate_transformations
-  use sll_module_cubic_spline_interpolator_2d
-  
 #include "sll_file_io.h"
+#include "sll_logical_meshes.h"
+#include "sll_coordinate_transformations.h"
+  use sll_constants
+  use sll_module_cubic_spline_interpolator_2d
+  use sll_boundary_condition_descriptors
+  
   implicit none
 
 #define NPTS1 33
