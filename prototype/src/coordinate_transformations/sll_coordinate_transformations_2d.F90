@@ -1,4 +1,35 @@
 !> @ingroup coordinate_transformations
+!> @brief 
+!> Analytic coordinate transformation
+!> @details
+!> There are two main types of coordinate transformations: analytic and       
+!> discrete. In the first case the transformation can be
+!> specified analytically, through the two functions:
+!>
+!> \f[
+!> \begin{matrix}
+!>                     x_1 = x_1(\eta_1,\eta_2)  \\\\
+!>                     x_2 = x_2(\eta_1,\eta_2)
+!> \end{matrix}
+!> \f]
+!>
+!> Where both, eta1 and eta2 should be defined on the intervals that define
+!> the extent of the logical mesh (default values in logical mesh are  [0,1]. 
+!> The same transformation 
+!> can be specified by the set of transformed points \f$x_1(i,j), x_2(i,j),\f$ as
+!> two 2D arrays or 1D arrays that describe the transformation on each
+!> direction.
+!>
+!> The transformation is also represented by the Jacobian matrix:
+!> \f[
+!> J(\eta_1,\eta_2) = 
+!> \begin{bmatrix}
+!> \partial x_1(\eta_1,\eta_2) / \partial \eta_1 & 
+!> \partial x_1(\eta_1,\eta_2) / \partial \eta_2 \\\\
+!> \partial x_2(\eta_1,\eta_2) / \partial \eta_1 & 
+!> \partial x_2(\eta_1,\eta_2) / \partial \eta_2 
+!> \end{bmatrix}
+!> \f]
 module sll_module_coordinate_transformations_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -11,72 +42,64 @@ module sll_module_coordinate_transformations_2d
   use sll_coordinate_transformation_2d_base_module
   use sll_module_deboor_splines_2d
   implicit none
+!  private
   
-  ! ---------------------------------------------------------------------
-  !
-  !                       2D COORDINATE TRANSFORMATIONS
-  !
-  ! ---------------------------------------------------------------------
-  !
-  ! There are two main types of coordinate transformations: analytic and
-  ! discrete. In the first case the transformation can be
-  ! specified analytically, through the two functions:
-  !
-  !                     x1 = x1(eta1,eta2) 
-  !                     x2 = x2(eta1,eta2)
-  !
-  ! Where both, eta1 and eta2 should be defined on the intervals that define
-  ! the extent of the logical mesh (default values in logical mesh are  [0,1]. 
-  ! The same transformation 
-  ! can be specified by the set of transformed points x1(i,j), x2(i,j), as
-  ! two 2D arrays or 1D arrays that describe the transformation on each
-  ! direction.
-  !
-  ! The transformation is also represented by the Jacobian matrix:
-  !
-  !                   [   partial x1(eta1,eta2)     partial x1(eta1,eta2)    ]
-  !                   [ -----------------------    ------------------------- ]
-  !                   [      partial eta1              partial eta2          ]
-  !    J(eta1,eta2) = [                                                      ]
-  !                   [   partial x2(eta1,eta2)     partial x2(eta1,eta2)    ]
-  !                   [ -----------------------    ------------------------- ]
-  !                   [      partial eta1              partial eta2          ]
-  !
-
 !> Analytic transformation
-  type, extends(sll_coordinate_transformation_2d_base):: &
+  type, public, extends(sll_coordinate_transformation_2d_base):: &
        sll_coordinate_transformation_2d_analytic
 !!$     sll_real64, dimension(:,:), pointer :: x1_node   ! x1(i,j) 
 !!$     sll_real64, dimension(:,:), pointer :: x2_node   ! x2(i,j)
      !character(len=64) :: label
      !logical           :: written! = .false.
      !type(sll_logical_mesh_2d), pointer :: mesh => null()
+     !> PLEASE ADD DOCUMENTATION
      type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
+     !> PLEASE ADD DOCUMENTATION
      procedure(transformation_func_nopass), pointer, nopass :: x1_func  ! user
+     !> PLEASE ADD DOCUMENTATION
      procedure(transformation_func_nopass), pointer, nopass :: x2_func  ! user
+     !> PLEASE ADD DOCUMENTATION
      procedure(two_arg_message_passing_func_analyt), pointer, pass :: &
           jacobian_func
+     !> PLEASE ADD DOCUMENTATION
      procedure(j_matrix_f_nopass), pointer, nopass :: jacobian_matrix_function
+     !> PLEASE ADD DOCUMENTATION
      sll_real64, dimension(:), pointer :: params => null() ! transf params
    contains
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: initialize => initialize_coord_transf_2d_analytic
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: get_logical_mesh => get_logical_mesh_analytic
      ! Functions with integer arguments
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: x1_at_node => x1_node_analytic
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: x2_at_node => x2_node_analytic
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: jacobian_at_node => jacobian_node_analytic
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: x1_at_cell => x1_cell_analytic
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: x2_at_cell => x2_cell_analytic
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: jacobian_at_cell => jacobian_2d_cell_analytic
      ! Functions with real arguments
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: x1         => x1_analytic
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: x2         => x2_analytic
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: jacobian   => jacobian_2d_analytic
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: jacobian_matrix => jacobian_matrix_2d_analytic
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: inverse_jacobian_matrix => &
           inverse_jacobian_matrix_2d_analytic
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: write_to_file => write_to_file_2d_analytic
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: read_from_file => read_from_file_2d_analytic
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: delete => delete_transformation_2d_analytic
   end type sll_coordinate_transformation_2d_analytic
 
@@ -87,38 +110,64 @@ module sll_module_coordinate_transformations_2d
   !
   ! -----------------------------------------------------------------------
 
-  type, extends(sll_coordinate_transformation_2d_base) :: &
+  type, public, extends(sll_coordinate_transformation_2d_base) :: &
        sll_coordinate_transformation_2d_discrete
+     !> PLEASE ADD DOCUMENTATION
      sll_real64, dimension(:,:), pointer :: x1_node =>null()   ! x1(i,j) 
+     !> PLEASE ADD DOCUMENTATION
      sll_real64, dimension(:,:), pointer :: x2_node =>null()  ! x2(i,j) 
+     !> PLEASE ADD DOCUMENTATION
      sll_real64, dimension(:,:), pointer :: x1_cell =>null()
+     !> PLEASE ADD DOCUMENTATION
      sll_real64, dimension(:,:), pointer :: x2_cell =>null()
+     !> PLEASE ADD DOCUMENTATION
      sll_real64, dimension(:,:), pointer :: jacobians_n =>null()
+     !> PLEASE ADD DOCUMENTATION
      sll_real64, dimension(:,:), pointer :: jacobians_c =>null()
 !     type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
+     !> PLEASE ADD DOCUMENTATION
      class(sll_interpolator_2d_base), pointer               :: x1_interp
+     !> PLEASE ADD DOCUMENTATION
      class(sll_interpolator_2d_base), pointer               :: x2_interp
      !type(sll_logical_mesh_2d), pointer :: mesh => null()
    contains
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: initialize => &
           initialize_coord_transf_2d_discrete
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: get_logical_mesh => get_logical_mesh_discrete
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: x1_at_node => x1_node_discrete
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: x2_at_node => x2_node_discrete
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: jacobian_at_node => transf_2d_jacobian_node_discrete
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: x1         => x1_discrete
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: x2         => x2_discrete
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: x1_at_cell => x1_cell_discrete
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: x2_at_cell => x2_cell_discrete
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: jacobian_at_cell => jacobian_2d_cell_discrete
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: jacobian   => jacobian_2d_discrete
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: jacobian_matrix => jacobian_matrix_2d_discrete
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: inverse_jacobian_matrix => &
           inverse_jacobian_matrix_2d_discrete
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: write_to_file => write_to_file_2d_discrete
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: read_from_file => read_from_file_2d_discrete
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: delete => delete_transformation_2d_discrete
   end type sll_coordinate_transformation_2d_discrete
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 
   abstract interface
      function j_matrix_f_nopass ( eta1, eta2, params ) result(val)
@@ -152,19 +201,26 @@ module sll_module_coordinate_transformations_2d
       end function two_arg_message_passing_func_analyt
    end interface
 
-  ! Here we try to represent the Jacobian matrix an actual 2D array of
-  ! functions. But since fortran does not allow arrays of pointers, here
-  ! we define a special type that can be used as an array element.
+#endif // DOXYGEN_SHOULD_SKIP_THIS
+
+  !> @brief
+  !> Functions array
+  !> @details
+  !> Here we try to represent the Jacobian matrix an actual 2D array of
+  !> functions. But since fortran does not allow arrays of pointers, here
+  !> we define a special type that can be used as an array element.
   type jacobian_matrix_element
      procedure(transformation_func_nopass), pointer, nopass :: f
   end type jacobian_matrix_element
 
+  !> Deallocate
   interface sll_delete
      module procedure &
           delete_transformation_2d_analytic, &
           delete_transformation_2d_discrete
   end interface sll_delete
 
+  public sll_delete
   
 contains
 
@@ -174,6 +230,7 @@ contains
   !
   !**************************************************************************
 
+  !> Create the analytic coordinate transformation
   function new_coordinate_transformation_2d_analytic( &
     label,          &
     mesh_2d,        &
@@ -1502,6 +1559,7 @@ contains
 !    SLL_DEALLOCATE_ARRAY(nodes2,ierr)
   end subroutine read_from_file_2d_discrete
 
+     !> PLEASE ADD DOCUMENTATION
   subroutine delete_multiplicity_in_knots(knots,nodes,sz_nodes)
     sll_real64, dimension(:), intent(in) :: knots
     sll_real64, dimension(:), intent(out) :: nodes
