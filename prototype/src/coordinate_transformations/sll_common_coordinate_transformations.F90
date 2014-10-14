@@ -5,23 +5,102 @@
 !! This module provides some common coordinate transformations in terms of the
 !! direct mapping, inverse mapping and jacobian.  All of these should be 
 !! implement following similar naming conventions.
+!!
+!!<b> Affine transformation </b> (logical mesh is [0,1]x[0,1]):
+!!
+!!   \f[  x1 = (b1-a1)*(cos(alpha)*eta1-sin(alpha)*eta2) + a1 \f]
+!!   \f[  x2 = (b2-a2)*(sin(alpha)*eta1+cos(alpha)*eta2) + a2 \f]
+!!
+!! developer's note: made the choice of the params array as the full 
+!! sequence (A1 B1 A2 B2) as the same params array may thus be passed as
+!! argument any call related with this transformation. 
+!! Delete these formerly default values:
+!!  - A1 = -1.0
+!!  - B1 =  1.0
+!!  - A2 = -1.0
+!!  - B2 =  1.0
+!!
+!!<b>Homography transformation</b> (logical mesh is [0,1]x[0,1]):
+!!
+!!  the homography is used to rectify a perspective image, for example to 
+!!  generate a "plan" view of a building from a "perspective" photo. 
+!!  We can also convert a square to a trapeze.
+!!
+!!   \f[  x1 = (a*eta1*b*eta2+c)/(g*eta1+h*eta2+1)  \f]
+!!   \f[  x2 = (d*eta1*e*eta2+f)/(g*eta1+h*eta2+1)  \f]
+!!
+!!  - a = fixed scale factor in x1 direction with scale x2 unchanged.
+!!  - b = scale factor in x1 direction proportional to x2 distance from origin.
+!!  - c = origin translation in x1 direction.
+!!  - d = scale factor in x2 direction proportional to x1 distance from origin.
+!!  - e = fixed scale factor in x2 direction with scale x1 unchanged.
+!!  - f = origin translation in x2 direction.
+!!  - g = proportional scale factors x1 and x2 in function of x1.
+!!  - h = proportional scale factors x1 and x2 in function of x2.
+!!
+!!<b> Rubber_sheeting transformation </b>
+!!
+!!  the rubber-sheeting is similar to homography. The difference is that the 
+!!  Homography gives priority to alignments, whereas the Rubber-Sheeting gives 
+!!  priority to linear proportions.
+!!
+!!   \f[  x1 = a*eta1*eta2+b*eta1+c*eta2+d \f]
+!!   \f[  x2 = e*eta1*eta2+f*eta1+g*eta2+h \f]
+!!
+!!  - a = scale factor in x1 direction proportional to the multiplication x1 * x2.
+!!  - b = fixed scale factor in x1 direction with scale x2 unchanged.
+!!  - c = scale factor in x1 direction proportional to x2 distance from origin.
+!!  - d = origin translation in x1 direction.
+!!  - e = scale factor in x2 direction proportional to the multiplication x1 * x2.
+!!  - f = fixed scale factor in x2 direction with scale x1 unchanged.
+!!  - g = scale factor in x2 direction proportional to x1 distance from origin.
+!!  - h = origin translation in x2 direction.
+!!   
+!!
+!!<b> Polar coordinate transformation </b> (r = eta1, theta = eta2):
+!!
+!!   \f[     x1 = eta1 * cos (eta2) \f]
+!!   \f[     x2 = eta1 * sin (eta2) \f]
+!!
+!!
+!! <b> "Colella transformation"; </b>
+!! sinusoidal product (see P. Colella et al. JCP 230 (2011) formula 
+!! (102) p 2968):
+!!
+!!  \f[   x1 = eta1 + alpha1 * sin(2*\pi/L1 * eta1) * sin(2*\pi/L2 * eta2) \f]
+!!  \f[   x2 = eta2 + alpha2 * sin(2*\pi/L1 * eta1) * sin(2*\pi/L2 * eta2) \f]
+!!
+!! Domain: [0,L1] X [0,L2]
+!! But we generalize it by taking a transformation 
+!! Domain: [a,b] X [c,d]  -----> Domain: [a',b'] X [c',d']
+!! so the transformation becomes 
+!! 
+!! \f[ x1 = (b'-a')/(b-a)*(eta1+alpha1*sin(2*pi*(eta1-a)/(b-a))*sin(2*pi*(eta2-c)/( d-c)))          + ( a' b - b' a)/(b- a) \f]
+!! \f[ x2 = (d' - c')/(d- c) * (  eta2 + alpha2 * sin(2*pi*( eta1-a)/( b-a)) * sin(2*pi*( eta2-c)/( d-c)))+( c' d - d' c)/(d- c) \f]
+!! 
+!! The parameters are:
+!!    - alpha1 = params(1)
+!!    - alpha2 = params(2)
+!!    - a      = params(3)
+!!    - b      = params(4)
+!!    - a'     = params(5)
+!!    - b'     = params(6)
+!!    - c      = params(7)
+!!    - d      = params(8)
+!!    - c'     = params(9)
+!!    - d'     = params(10)
+!!
+!!
+!<
 module sll_common_coordinate_transformations
 #include "sll_working_precision.h"
 #include "sll_assert.h"
   use sll_constants
   implicit none
   
-
 contains
-  
 
-  ! **************************************************************************
-  !
-  !                         Identity transformation
-  !
-  ! **************************************************************************
-
-  ! direct mapping
+  !> direct mapping 
   function identity_x1 ( eta1, eta2, params )
     sll_real64  :: identity_x1
     sll_real64, intent(in)   :: eta1
@@ -31,6 +110,7 @@ contains
     identity_x1 = eta1
   end function identity_x1
 
+  !> direct mapping
   function identity_x2 ( eta1, eta2, params )
     sll_real64  :: identity_x2
     sll_real64, intent(in)   :: eta1
@@ -40,7 +120,7 @@ contains
     identity_x2 = eta2
   end function identity_x2
 
-  ! inverse mapping
+  !> inverse mapping
   function identity_eta1 ( x1, x2, params )
     sll_real64  :: identity_eta1
     sll_real64, intent(in)   :: x1
@@ -50,6 +130,7 @@ contains
     identity_eta1 = x1
   end function identity_eta1
 
+  !> inverse mapping
   function identity_eta2 ( x1, x2, params )
     sll_real64  :: identity_eta2
     sll_real64, intent(in)   :: x1
@@ -59,7 +140,7 @@ contains
     identity_eta2 = x2
   end function identity_eta2
 
-  ! jacobian maxtrix
+  !> jacobian maxtrix
   function identity_jac11 ( eta1, eta2, params )
     sll_real64  :: identity_jac11
     sll_real64, intent(in)   :: eta1
@@ -69,6 +150,7 @@ contains
     identity_jac11 = 1.0_f64
   end function identity_jac11
 
+  !> jacobian maxtrix
   function identity_jac12 ( eta1, eta2, params )
     sll_real64  :: identity_jac12
     sll_real64, intent(in)   :: eta1
@@ -78,6 +160,7 @@ contains
     identity_jac12 = 0.0_f64
   end function identity_jac12
 
+  !> jacobian maxtrix
   function identity_jac21 ( eta1, eta2, params )
     sll_real64  :: identity_jac21
     sll_real64, intent(in)   :: eta1
@@ -87,6 +170,7 @@ contains
     identity_jac21 = 0.0_f64
   end function identity_jac21
 
+  !> jacobian maxtrix
   function identity_jac22 ( eta1, eta2, params )
     sll_real64  :: identity_jac22
     sll_real64, intent(in)   :: eta1
@@ -96,7 +180,7 @@ contains
     identity_jac22 = 1.0_f64
   end function identity_jac22
 
-  ! jacobian ie determinant of jacobian matrix
+  !> jacobian ie determinant of jacobian matrix
   function identity_jac ( eta1, eta2, params )
     sll_real64  :: identity_jac
     sll_real64, intent(in)   :: eta1
@@ -106,27 +190,7 @@ contains
     identity_jac = 1.0_f64
   end function identity_jac
 
-  ! **************************************************************************
-  !
-  !        affine transformation (logical mesh is [0,1]x[0,1]):
-  !
-  !        x1 = (b1-a1)*(cos(alpha)*eta1-sin(alpha)*eta2) + a1
-  !        x2 = (b2-a2)*(sin(alpha)*eta1+cos(alpha)*eta2) + a2
-  !
-  ! **************************************************************************
-
-  ! developer's note: made the choice of the params array as the full 
-  ! sequence (A1 B1 A2 B2) as the same params array may thus be passed as
-  ! argument any call related with this transformation. 
-  ! Delete these formerly default values:
-  ! A1 = -1.0
-  ! B1 =  1.0
-  ! A2 = -1.0
-  ! B2 =  1.0
-  ! While convenient, there is a risk associated with this: 
-
-
-  ! direct mapping
+  !> direct mapping
   function affine_x1 ( eta1, eta2, params )
     sll_real64  :: affine_x1
     sll_real64, intent(in)   :: eta1
@@ -143,6 +207,7 @@ contains
     affine_x1 = (B1-A1)*(cos(alpha)*eta1-sin(alpha)*eta2) + A1
   end function affine_x1
 
+  !> direct mapping
   function affine_x2 ( eta1, eta2, params )
     sll_real64  :: affine_x2
     sll_real64, intent(in)   :: eta1
@@ -160,6 +225,7 @@ contains
   end function affine_x2
 
   ! jacobian maxtrix
+  !> jacobian maxtrix
   function affine_jac11 ( eta1, eta2, params )
     sll_real64  :: affine_jac11
     sll_real64, intent(in)   :: eta1
@@ -177,6 +243,7 @@ contains
     affine_jac11 = (B1-A1)*cos(alpha)
   end function affine_jac11
 
+  !> jacobian maxtrix
   function affine_jac12 ( eta1, eta2, params )
     sll_real64  :: affine_jac12
     sll_real64, intent(in)   :: eta1
@@ -191,6 +258,7 @@ contains
     affine_jac12 = -(B1-A1)*sin(alpha)
   end function affine_jac12
 
+  !> jacobian maxtrix
   function affine_jac21 ( eta1, eta2, params )
     sll_real64  :: affine_jac21
     sll_real64, intent(in)   :: eta1
@@ -206,6 +274,7 @@ contains
     affine_jac21 = (b2-a2)*sin(alpha)
   end function affine_jac21
 
+  !> jacobian maxtrix
   function affine_jac22 ( eta1, eta2, params )
     sll_real64  :: affine_jac22
     sll_real64, intent(in)   :: eta1
@@ -224,7 +293,7 @@ contains
 
   end function affine_jac22
 
-  ! jacobian ie determinant of jacobian matrix
+  !> jacobian ie determinant of jacobian matrix
   function affine_jac ( eta1, eta2, params )
     sll_real64  :: affine_jac
     sll_real64, intent(in)   :: eta1
@@ -246,29 +315,8 @@ contains
   end function affine_jac
 
 
-  ! **************************************************************************
-  !
-  !        homography transformation (logical mesh is [0,1]x[0,1]):
-  !
-  !  the homography is used to rectify a perspective image, for example to 
-  !  generate a "plan" view of a building from a "perspective" photo. 
-  !  We can also convert a square to a trapeze.
-  !
-  !        x1 = (a*eta1*b*eta2+c)/(g*eta1+h*eta2+1) 
-  !        x2 = (d*eta1*e*eta2+f)/(g*eta1+h*eta2+1) 
-  !
-  !  a = fixed scale factor in x1 direction with scale x2 unchanged.
-  !  b = scale factor in x1 direction proportional to x2 distance from origin.
-  !  c = origin translation in x1 direction.
-  !  d = scale factor in x2 direction proportional to x1 distance from origin.
-  !  e = fixed scale factor in x2 direction with scale x1 unchanged.
-  !  f = origin translation in x2 direction.
-  !  g = proportional scale factors x1 and x2 in function of x1.
-  !  h = proportional scale factors x1 and x2 in function of x2.
-  !   
-  ! **************************************************************************
 
-  ! direct mapping
+  !> direct mapping
   function homography_x1 ( eta1, eta2, params )
     sll_real64  :: homography_x1
     sll_real64, intent(in)   :: eta1
@@ -288,6 +336,7 @@ contains
 
   end function homography_x1
 
+  !> direct mapping
   function homography_x2 ( eta1, eta2, params )
     sll_real64  :: homography_x2
     sll_real64, intent(in)   :: eta1
@@ -307,7 +356,7 @@ contains
 
   end function homography_x2
 
-  ! jacobian maxtrix
+  !> jacobian maxtrix
   function homography_jac11 ( eta1, eta2, params )
     sll_real64  :: homography_jac11
     sll_real64, intent(in)   :: eta1
@@ -328,6 +377,7 @@ contains
 
   end function homography_jac11
 
+  !> jacobian maxtrix
   function homography_jac12 ( eta1, eta2, params )
     sll_real64  :: homography_jac12
     sll_real64, intent(in)   :: eta1
@@ -347,6 +397,7 @@ contains
 
   end function homography_jac12
 
+  !> jacobian maxtrix
   function homography_jac21 ( eta1, eta2, params )
     sll_real64  :: homography_jac21
     sll_real64, intent(in)   :: eta1
@@ -366,6 +417,7 @@ contains
 
   end function homography_jac21
 
+  !> jacobian maxtrix
   function homography_jac22 ( eta1, eta2, params )
     sll_real64  :: homography_jac22
     sll_real64, intent(in)   :: eta1
@@ -385,7 +437,7 @@ contains
 
   end function homography_jac22
 
-  ! jacobian ie determinant of jacobian matrix
+  !> jacobian ie determinant of jacobian matrix
   function homography_jac ( eta1, eta2, params )
     sll_real64  :: homography_jac
     sll_real64, intent(in)   :: eta1
@@ -412,29 +464,8 @@ contains
 
   end function homography_jac
 
-  ! **************************************************************************
-  !
-  !        rubber_sheeting transformation 
-  !
-  !  the rubber-sheeting is similar to homography. The difference is that the 
-  !  Homography gives priority to alignments, whereas the Rubber-Sheeting gives 
-  !  priority to linear proportions.
-  !
-  !        x1 = a*eta1*eta2+b*eta1+c*eta2+d
-  !        x2 = e*eta1*eta2+f*eta1+g*eta2+h
-  !
-  !  a = scale factor in x1 direction proportional to the multiplication x1 * x2.
-  !  b = fixed scale factor in x1 direction with scale x2 unchanged.
-  !  c = scale factor in x1 direction proportional to x2 distance from origin.
-  !  d = origin translation in x1 direction.
-  !  e = scale factor in x2 direction proportional to the multiplication x1 * x2.
-  !  f = fixed scale factor in x2 direction with scale x1 unchanged.
-  !  g = scale factor in x2 direction proportional to x1 distance from origin.
-  !  h = origin translation in x2 direction.
-  !   
-  ! **************************************************************************
 
-  ! direct mapping
+  !> direct mapping
   function rubber_sheeting_x1 ( eta1, eta2, params )
     sll_real64  :: rubber_sheeting_x1
     sll_real64, intent(in)   :: eta1
@@ -453,6 +484,7 @@ contains
 
   end function rubber_sheeting_x1
 
+  !> direct mapping
   function rubber_sheeting_x2 ( eta1, eta2, params )
     sll_real64  :: rubber_sheeting_x2
     sll_real64, intent(in)   :: eta1
@@ -471,7 +503,7 @@ contains
 
   end function rubber_sheeting_x2
 
-  ! jacobian maxtrix
+  !> jacobian maxtrix
   function rubber_sheeting_jac11 ( eta1, eta2, params )
     sll_real64  :: rubber_sheeting_jac11
     sll_real64, intent(in)   :: eta1
@@ -488,6 +520,7 @@ contains
 
   end function rubber_sheeting_jac11
 
+  !> jacobian maxtrix
   function rubber_sheeting_jac12 ( eta1, eta2, params )
     sll_real64  :: rubber_sheeting_jac12
     sll_real64, intent(in)   :: eta1
@@ -504,6 +537,7 @@ contains
 
   end function rubber_sheeting_jac12
 
+  !> jacobian maxtrix
   function rubber_sheeting_jac21 ( eta1, eta2, params )
     sll_real64  :: rubber_sheeting_jac21
     sll_real64, intent(in)   :: eta1
@@ -520,6 +554,7 @@ contains
 
   end function rubber_sheeting_jac21
 
+  !> jacobian maxtrix
   function rubber_sheeting_jac22 ( eta1, eta2, params )
     sll_real64  :: rubber_sheeting_jac22
     sll_real64, intent(in)   :: eta1
@@ -536,7 +571,7 @@ contains
 
   end function rubber_sheeting_jac22
 
-  ! jacobian ie determinant of jacobian matrix
+  !> jacobian ie determinant of jacobian matrix
   function rubber_sheeting_jac ( eta1, eta2, params )
     sll_real64  :: rubber_sheeting_jac
     sll_real64, intent(in)   :: eta1
@@ -568,7 +603,7 @@ contains
   !
   ! **************************************************************************
 
-  ! direct mapping
+  !> direct mapping
   function polar_x1 ( eta1, eta2, params )
     sll_real64  :: polar_x1
     sll_real64, intent(in)   :: eta1
@@ -577,6 +612,7 @@ contains
     polar_x1 = eta1 * cos( eta2 )
   end function polar_x1
 
+  !> direct mapping
   function polar_x2 ( eta1, eta2, params )
     sll_real64  :: polar_x2
     sll_real64, intent(in)   :: eta1
@@ -585,7 +621,7 @@ contains
     polar_x2 = eta1 * sin( eta2 )
   end function polar_x2
 
-  ! inverse mapping
+  !> inverse mapping
   function polar_eta1 ( x1, x2, params )
     sll_real64  :: polar_eta1
     sll_real64, intent(in)   :: x1
@@ -594,6 +630,7 @@ contains
     polar_eta1 = sqrt( x1*x1 + x2*x2 )
   end function polar_eta1
 
+  !> inverse mapping
   function polar_eta2 ( x1, x2, params )
     sll_real64  :: polar_eta2
     sll_real64, intent(in)   :: x1
@@ -602,7 +639,7 @@ contains
     polar_eta2 = atan( x2 / x1 ) 
   end function polar_eta2
 
-  ! jacobian matrix
+  !> jacobian matrix
   function polar_jac11 ( eta1, eta2, params )
     sll_real64  :: polar_jac11
     sll_real64, intent(in)   :: eta1
@@ -612,6 +649,7 @@ contains
     polar_jac11 = cos ( eta2 ) 
   end function polar_jac11
 
+  !> jacobian matrix
     function polar_jac12 ( eta1, eta2, params )
     sll_real64  :: polar_jac12
     sll_real64, intent(in)   :: eta1
@@ -620,6 +658,7 @@ contains
     polar_jac12 = - eta1 * sin( eta2 )
   end function polar_jac12
 
+  !> jacobian matrix
   function polar_jac21 ( eta1, eta2, params )
     sll_real64  :: polar_jac21
     sll_real64, intent(in)   :: eta1
@@ -629,6 +668,7 @@ contains
     polar_jac21 = sin ( eta2 )
   end function polar_jac21
 
+  !> jacobian matrix
   function polar_jac22 ( eta1, eta2, params )
     sll_real64  :: polar_jac22
     sll_real64, intent(in)   :: eta1
@@ -637,7 +677,7 @@ contains
     polar_jac22 = eta1 * cos ( eta2 )
   end function polar_jac22
 
- ! jacobian ie determinant of jacobian matrix
+ !> jacobian ie determinant of jacobian matrix
   function polar_jac ( eta1, eta2, params )
     sll_real64  :: polar_jac
     sll_real64, intent(in)   :: eta1
@@ -682,7 +722,7 @@ contains
   !
   ! **************************************************************************
 
-  ! direct mapping
+  !> direct mapping
   function sinprod_gen_x1 ( eta1, eta2, params )
     sll_real64  :: sinprod_gen_x1
     sll_real64, intent(in)   :: eta1
@@ -727,6 +767,7 @@ contains
     sinprod_gen_x1 = coef1 * sinprod_gen_x1 + coef2
   end function sinprod_gen_x1
 
+  !> direct mapping
   function sinprod_gen_x2 ( eta1, eta2, params )
     sll_real64  :: sinprod_gen_x2
     sll_real64, intent(in)   :: eta1
@@ -772,8 +813,8 @@ contains
     sinprod_gen_x2 = coef1 * sinprod_gen_x2 + coef2
   end function sinprod_gen_x2
 
-  ! inverse mapping 
-  ! cannot be computed analytically in this case. Use fixed point iterations.
+  !> inverse mapping 
+  !> cannot be computed analytically in this case. Use fixed point iterations.
   function sinprod_gen_eta1 ( x1, x2, params )
     sll_real64  :: sinprod_gen_eta1
     sll_real64, intent(in)   :: x1
@@ -785,6 +826,8 @@ contains
     sinprod_gen_eta1 = x1
   end function sinprod_gen_eta1
 
+  !> inverse mapping 
+  !> cannot be computed analytically in this case. Use fixed point iterations.
   function sinprod_gen_eta2 ( x1, x2, params )
     sll_real64  :: sinprod_gen_eta2
     sll_real64, intent(in)   :: x1
@@ -796,7 +839,7 @@ contains
     sinprod_gen_eta2 = x2
   end function sinprod_gen_eta2
 
-  ! jacobian matrix
+  !> jacobian matrix
   function sinprod_gen_jac11 ( eta1, eta2, params )
     sll_real64  :: sinprod_gen_jac11
     sll_real64, intent(in)   :: eta1
@@ -842,6 +885,7 @@ contains
     sinprod_gen_jac11 = coef1 * sinprod_gen_jac11
   end function sinprod_gen_jac11
 
+  !> jacobian matrix
   function sinprod_gen_jac12 ( eta1, eta2, params )
     sll_real64  :: sinprod_gen_jac12
     sll_real64, intent(in)   :: eta1
@@ -886,6 +930,7 @@ contains
     sinprod_gen_jac12 = coef1 * sinprod_gen_jac12
   end function sinprod_gen_jac12
   
+  !> jacobian matrix
   function sinprod_gen_jac21 ( eta1, eta2, params )
     sll_real64  :: sinprod_gen_jac21
     sll_real64, intent(in)   :: eta1
@@ -930,6 +975,7 @@ contains
     sinprod_gen_jac21 = coef1 * sinprod_gen_jac21
   end function sinprod_gen_jac21
 
+  !> jacobian matrix
   function sinprod_gen_jac22 ( eta1, eta2, params )
     sll_real64  :: sinprod_gen_jac22
     sll_real64, intent(in)   :: eta1
@@ -976,7 +1022,7 @@ contains
     
   end function sinprod_gen_jac22
 
-   ! jacobian ie determinant of jacobian matrix
+   !> jacobian ie determinant of jacobian matrix
   function sinprod_gen_jac ( eta1, eta2, params )
     sll_real64  :: sinprod_gen_jac
     sll_real64, intent(in)   :: eta1
@@ -1019,7 +1065,7 @@ contains
   !
   ! **************************************************************************
 
-  ! direct mapping
+  !> direct mapping
   function sinprod_x1 ( eta1, eta2, params )
     sll_real64  :: sinprod_x1
     sll_real64, intent(in)   :: eta1
@@ -1038,6 +1084,7 @@ contains
     sinprod_x1 = eta1 + alpha1 * sin(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
   end function sinprod_x1
 
+  !> direct mapping
   function sinprod_x2 ( eta1, eta2, params )
     sll_real64  :: sinprod_x2
     sll_real64, intent(in)   :: eta1
@@ -1056,8 +1103,8 @@ contains
     sinprod_x2 = eta2 + alpha2*sin(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
   end function sinprod_x2
 
-  ! inverse mapping 
-  ! cannot be computed analytically in this case. Use fixed point iterations.
+  !> inverse mapping 
+  !> cannot be computed analytically in this case. Use fixed point iterations.
   function sinprod_eta1 ( x1, x2, params )
     sll_real64  :: sinprod_eta1
     sll_real64, intent(in)   :: x1
@@ -1069,6 +1116,8 @@ contains
     sinprod_eta1 = x1
   end function sinprod_eta1
 
+  !> inverse mapping 
+  !> cannot be computed analytically in this case. Use fixed point iterations.
   function sinprod_eta2 ( x1, x2, params )
     sll_real64  :: sinprod_eta2
     sll_real64, intent(in)   :: x1
@@ -1080,7 +1129,7 @@ contains
     sinprod_eta2 = x2
   end function sinprod_eta2
 
-  ! jacobian matrix
+  !> jacobian matrix
   function sinprod_jac11 ( eta1, eta2, params )
     sll_real64  :: sinprod_jac11
     sll_real64, intent(in)   :: eta1
@@ -1099,6 +1148,7 @@ contains
     sinprod_jac11 = 1.0_f64 + alpha1*pi2*rl1*cos(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
   end function sinprod_jac11
 
+  !> jacobian matrix
   function sinprod_jac12 ( eta1, eta2, params )
     sll_real64  :: sinprod_jac12
     sll_real64, intent(in)   :: eta1
@@ -1117,6 +1167,7 @@ contains
     sinprod_jac12 = alpha1*pi2*rl2*sin(pi2*rl1*eta1)*cos(pi2*rl2*eta2)
   end function sinprod_jac12
 
+  !> jacobian matrix
   function sinprod_jac21 ( eta1, eta2, params )
     sll_real64  :: sinprod_jac21
     sll_real64, intent(in)   :: eta1
@@ -1135,6 +1186,7 @@ contains
     sinprod_jac21 = alpha2*pi2*rl1*cos(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
   end function sinprod_jac21
 
+  !> jacobian matrix
   function sinprod_jac22 ( eta1, eta2, params )
     sll_real64  :: sinprod_jac22
     sll_real64, intent(in)   :: eta1
@@ -1154,7 +1206,7 @@ contains
     sinprod_jac22 = 1.0_f64 + alpha2*pi2*rl2*sin(pi2*rl1*eta1)*cos(pi2*rl2*eta2)
   end function sinprod_jac22
 
-   ! jacobian ie determinant of jacobian matrix
+   !> jacobian ie determinant of jacobian matrix
   function sinprod_jac ( eta1, eta2, params )
     sll_real64  :: sinprod_jac
     sll_real64, intent(in)   :: eta1
@@ -1474,6 +1526,7 @@ contains
   ! ***************************************************************************
 
 
+  !> direct mapping
   function x1_polar_f( eta1, eta2, params )
     sll_real64 :: x1_polar_f
     sll_real64, intent(in) :: eta1, eta2
@@ -1487,6 +1540,7 @@ contains
     x1_polar_f = (r1 + (r2-r1)*eta1)*cos(2.0_f64*sll_pi*eta2)
   end function x1_polar_f
 
+  !> direct mapping
   function x2_polar_f( eta1, eta2, params )
     sll_real64 :: x2_polar_f
     sll_real64, intent(in) :: eta1, eta2
@@ -1500,6 +1554,7 @@ contains
     x2_polar_f = (r1 + (r2-r1)*eta1)*sin(2.0_f64*sll_pi*eta2)
   end function x2_polar_f
 
+  !> PLEASE ADD DOCUMENTATION
   function deriv_x1_polar_f_eta1( eta1, eta2, params )
     sll_real64 :: deriv_x1_polar_f_eta1
     sll_real64, intent(in) :: eta1, eta2
@@ -1514,6 +1569,7 @@ contains
     deriv_x1_polar_f_eta1 = (r2-r1)*cos(2.0_f64*sll_pi*eta2)
   end function deriv_x1_polar_f_eta1
 
+  !> PLEASE ADD DOCUMENTATION
   function deriv_x1_polar_f_eta2( eta1, eta2, params )
     sll_real64 :: deriv_x1_polar_f_eta2
     sll_real64, intent(in) :: eta1, eta2
@@ -1529,6 +1585,7 @@ contains
     deriv_x1_polar_f_eta2 = -(r1+(r2-r1)*eta1)*sin(k*eta2)*k
   end function deriv_x1_polar_f_eta2
 
+  !> PLEASE ADD DOCUMENTATION
   function deriv_x2_polar_f_eta1( eta1, eta2, params )
     sll_real64 :: deriv_x2_polar_f_eta1
     sll_real64, intent(in) :: eta1, eta2
@@ -1543,6 +1600,7 @@ contains
     deriv_x2_polar_f_eta1 = (r2-r1)*sin(2.0_f64*sll_pi*eta2)
   end function deriv_x2_polar_f_eta1
 
+  !> PLEASE ADD DOCUMENTATION
   function deriv_x2_polar_f_eta2( eta1, eta2, params )
     sll_real64 :: deriv_x2_polar_f_eta2
     sll_real64, intent(in) :: eta1, eta2
@@ -1558,6 +1616,7 @@ contains
     deriv_x2_polar_f_eta2 = (r1+(r2-r1)*eta1)*cos(k*eta2)*k
   end function deriv_x2_polar_f_eta2
 
+  !> PLEASE ADD DOCUMENTATION
   function jacobian_polar_f( eta1, eta2, params ) result(jac)
     sll_real64             :: jac
     sll_real64, intent(in) :: eta1, eta2
@@ -1575,6 +1634,7 @@ contains
   ! what is the following used for? It is not meant or used for the 
   ! coordinate transformation class... this one is used in the unit_test_2d.F90
   ! file but, what else?
+  !> PLEASE ADD DOCUMENTATION
   function deriv1_jacobian_polar_f(eta1, eta2, params ) result(deriv)
     sll_real64             :: deriv
     sll_real64, intent(in) :: eta1, eta2
@@ -1612,6 +1672,7 @@ contains
   ! A = -1.0
   ! B =  1.0
 
+  !> PLEASE ADD DOCUMENTATION
   function linear_map_f( eta, params ) result(val)
     sll_real64 :: val
     sll_real64, intent(in) :: eta
@@ -1625,6 +1686,7 @@ contains
     val = (b-a)*eta + a
   end function linear_map_f
 
+  !> PLEASE ADD DOCUMENTATION
   function linear_map_jac_f( eta, params ) result(val)
     sll_real64 :: val
     sll_real64, intent(in) :: eta
@@ -1682,7 +1744,7 @@ contains
   !
   ! **************************************************************************
 
-  ! direct mapping
+  !> direct mapping
   function D_sharped_Geo_x1 ( eta1, eta2, params )
     sll_real64  :: D_sharped_Geo_x1
     sll_real64, intent(in)   :: eta1
@@ -1719,6 +1781,7 @@ contains
                       cos(pi2*eta2n+alpha4*sin(pi2*eta2n))
   end function D_sharped_Geo_x1
 
+  !> direct mapping
   function D_sharped_Geo_x2 ( eta1, eta2, params )
     sll_real64  :: D_sharped_Geo_x2
     sll_real64, intent(in)   :: eta1
@@ -1754,7 +1817,7 @@ contains
     D_sharped_Geo_x2 = alpha5*(alpha2*(2._f64*eta1n-1._f64)+alpha3)*sin(pi2*eta2n)
   end function D_sharped_Geo_x2
 
-  ! jacobian matrix
+  !> jacobian matrix
   function D_sharped_Geo_jac11 ( eta1, eta2, params )
     sll_real64  :: D_sharped_Geo_jac11
     sll_real64, intent(in)   :: eta1
@@ -1791,6 +1854,7 @@ contains
     D_sharped_Geo_jac11 = D_sharped_Geo_jac11 /(eta1_max - eta1_min) 
   end function D_sharped_Geo_jac11
 
+  !> jacobian matrix
   function D_sharped_Geo_jac12 ( eta1, eta2, params )
     sll_real64  :: D_sharped_Geo_jac12
     sll_real64, intent(in)   :: eta1
@@ -1828,6 +1892,7 @@ contains
     D_sharped_Geo_jac12 = D_sharped_Geo_jac12/(eta2_max - eta2_min)                        
   end function D_sharped_Geo_jac12
 
+  !> jacobian matrix
   function D_sharped_Geo_jac21 ( eta1, eta2, params )
     sll_real64  :: D_sharped_Geo_jac21
     sll_real64, intent(in)   :: eta1
@@ -1863,6 +1928,7 @@ contains
     D_sharped_Geo_jac21 = D_sharped_Geo_jac21/(eta1_max - eta1_min)
   end function D_sharped_Geo_jac21
 
+  !> jacobian matrix
   function D_sharped_Geo_jac22 ( eta1, eta2, params )
     sll_real64  :: D_sharped_Geo_jac22
     sll_real64, intent(in)   :: eta1
@@ -1898,7 +1964,7 @@ contains
     D_sharped_Geo_jac22 =  D_sharped_Geo_jac22/(eta2_max - eta2_min) 
   end function D_sharped_Geo_jac22
 
-   ! jacobian ie determinant of jacobian matrix
+   !> jacobian ie determinant of jacobian matrix
   function D_sharped_Geo_jac ( eta1, eta2, params )
     sll_real64  :: D_sharped_Geo_jac
     sll_real64, intent(in)   :: eta1
