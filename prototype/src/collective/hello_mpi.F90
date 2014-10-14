@@ -26,6 +26,7 @@ integer                              :: required
 comm = MPI_COMM_WORLD
 required = MPI_THREAD_MULTIPLE
 call MPI_Init_thread(required,provided,error)
+print *, 'hello, mpi', MPI_THREAD_MULTIPLE, provided 
 call MPI_Comm_rank(MPI_COMM_WORLD,prank,code)
 call MPI_COMM_SIZE(MPI_COMM_WORLD,psize,code)
 
@@ -67,15 +68,21 @@ if (voisin(S) /= MPI_PROC_NULL) then
 end if
 
 call MPI_BARRIER(MPI_COMM_WORLD, code)
+
 #ifdef _OPENMP
-!Fork a team of threads giving them their own copies of variables
-!$OMP PARALLEL 
-!Obtain thread number
-!$OMP CRITICAL
-PRINT "('nodes:',i3,' rank:',i3,' threads:',i3,' thread_id:',i3)", &
-         psize,      prank,     OMP_GET_NUM_THREADS(),OMP_GET_THREAD_NUM()
-!$OMP END CRITICAL
-!$OMP END PARALLEL
+
+if (MPI_THREAD_MULTIPLE == provided) then
+
+   !Fork a team of threads giving them their own copies of variables
+   !$OMP PARALLEL 
+   !Obtain thread number
+   !$OMP CRITICAL
+   PRINT "('nodes:',i3,' rank:',i3,' threads:',i3,' thread_id:',i3)", &
+            psize,      prank,     OMP_GET_NUM_THREADS(),OMP_GET_THREAD_NUM()
+   !$OMP END CRITICAL
+   !$OMP END PARALLEL
+
+end if
 
 #endif // _OPENMP
 

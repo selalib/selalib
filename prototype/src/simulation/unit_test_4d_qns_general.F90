@@ -7,15 +7,13 @@
 
 program qns_4d_general
 #include "sll_working_precision.h"
+#include "sll_coordinate_transformations.h"
   use sll_simulation_4d_qns_general_module, only: &
      sll_simulation_4d_qns_general, initialize_4d_qns_general, &
      run_4d_qns_general
   use sll_collective
   use sll_constants
   use sll_logical_meshes
-  use sll_module_coordinate_transformations_2d
-  use sll_common_coordinate_transformations
-  use sll_module_coordinate_transformations_2d_nurbs
   use sll_common_array_initializers_module
   use sll_module_poisson_2d_elliptic_solver, &
      only: es_gauss_legendre

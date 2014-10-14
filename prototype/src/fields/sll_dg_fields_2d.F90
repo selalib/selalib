@@ -11,10 +11,8 @@ module sll_dg_fields
 #include "sll_integration.h"
 #include "sll_utilities.h"
 #include "sll_assert.h"
-
-use sll_logical_meshes
-use sll_module_coordinate_transformations_2d
-use sll_common_coordinate_transformations
+#include "sll_logical_meshes.h"
+#include "sll_coordinate_transformations.h"
 
 implicit none
 private
