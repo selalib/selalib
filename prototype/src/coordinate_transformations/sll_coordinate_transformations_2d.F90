@@ -42,7 +42,7 @@ module sll_module_coordinate_transformations_2d
   use sll_coordinate_transformation_2d_base_module
   use sll_module_deboor_splines_2d
   implicit none
-!  private
+  private
   
 !> Analytic transformation
   type, public, extends(sll_coordinate_transformation_2d_base):: &
@@ -201,7 +201,7 @@ module sll_module_coordinate_transformations_2d
       end function two_arg_message_passing_func_analyt
    end interface
 
-#endif // DOXYGEN_SHOULD_SKIP_THIS
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
   !> @brief
   !> Functions array
@@ -221,6 +221,8 @@ module sll_module_coordinate_transformations_2d
   end interface sll_delete
 
   public sll_delete
+  public new_coordinate_transformation_2d_analytic
+  public new_coordinate_transformation_2d_discrete
   
 contains
 

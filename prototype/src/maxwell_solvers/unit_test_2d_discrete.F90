@@ -9,10 +9,9 @@ program test_maxwell_2d_discrete
 #include "sll_constants.h"
 #include "sll_maxwell_solvers_macros.h"
 #include "sll_file_io.h"
+#include "sll_logical_meshes.h"
+#include "sll_coordinate_transformations.h"
 
-use sll_logical_meshes
-use sll_module_coordinate_transformations_2d
-use sll_common_coordinate_transformations
 use sll_module_cubic_spline_interpolator_2d
 use sll_dg_fields
 use sll_maxwell_solvers_base

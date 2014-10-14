@@ -1,6 +1,6 @@
 !> @ingroup coordinate_transformations
 !> @brief 
-!> Direct mapping.
+!> Functions for analytic coordinate transformations.
 !> @details
 !! This module provides some common coordinate transformations in terms of the
 !! direct mapping, inverse mapping and jacobian.  All of these should be 
@@ -62,6 +62,16 @@
 !!   \f[     x1 = eta1 * cos (eta2) \f]
 !!   \f[     x2 = eta1 * sin (eta2) \f]
 !!
+!!<b> Alternative formulation for the polar coordinate transformation: </b>
+!!
+!!  \f[ X1 = (Rmin + (Rmax-Rmin)*eta1)*cos(2*pi*eta2) \f]
+!!  \f[ X2 = (Rmin + (Rmax-Rmin)*eta1)*sin(2*pi*eta2) \f]
+!!
+!! Where eta1 and eta2 are defined in the interval [0,1]. The 'params' array
+!! contains the information (R1, R2). Typically:
+!!
+!! R1 = 0.1, 
+!! R2 = 1.0
 !!
 !! <b> "Colella transformation"; </b>
 !! sinusoidal product (see P. Colella et al. JCP 230 (2011) formula 

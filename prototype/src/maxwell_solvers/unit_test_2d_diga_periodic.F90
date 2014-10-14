@@ -23,10 +23,9 @@ program test_maxwell_2d_diga_periodic
 #include "sll_constants.h"
 #include "sll_maxwell_solvers_macros.h"
 #include "sll_file_io.h"
+#include "sll_logical_meshes.h"
+#include "sll_coordinate_transformations.h"
 
-use sll_logical_meshes
-use sll_module_coordinate_transformations_2d
-use sll_common_coordinate_transformations
 use sll_dg_fields
 use sll_module_maxwell_2d_diga
 use sll_maxwell_solvers_base
