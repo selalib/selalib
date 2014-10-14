@@ -218,6 +218,7 @@ contains
        sll_real64, dimension(:), pointer         :: get_coeffs_1d
      end function get_coeffs_1d
   end interface
-#endif
+
+#endif // DOXYGEN_SHOULD_SKIP_THIS
 
 end module sll_module_interpolators_1d_base

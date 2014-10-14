@@ -34,38 +34,45 @@ module sll_coordinate_transformation_2d_base_module
   !! functions that receive an argument of 
   !! class(sll_coordinate_transformation_2d_base)
   type, abstract :: sll_coordinate_transformation_2d_base
+     !> logical mesh
      type(sll_logical_mesh_2d), pointer :: mesh => null()
 !     type(sll_logical_mesh_2d), pointer :: mesh2d_minimal => null()
      !logical to remember when the mesh has already been written to file
+     !> Just a name for output
      character(len=64) :: label
+     !> Check if coordinates are already written in output file
      logical           :: written = .false.
    contains
+     !> PLEASE ADD DOCUMENTATION
      procedure(get_logical_mesh_ct), deferred, pass        :: get_logical_mesh
-     ! x1 = x1(eta1,eta2)
+     !> x1 = x1(eta1,eta2)
      procedure(geometry_function_ct), deferred, pass       :: x1
-     ! x2 = x2(eta1,eta2)
+     !> x2 = x2(eta1,eta2)
      procedure(geometry_function_ct), deferred, pass       :: x2
-     ! jacobian = jacobian(eta1,eta2)
+     !> jacobian = jacobian(eta1,eta2)
      procedure(geometry_function_ct), deferred, pass       :: jacobian
-     ! x1_at_node = x1_at_node(i,j)
+     !> x1_at_node = x1_at_node(i,j)
      procedure(geometry_function_indices_ct), deferred, pass :: x1_at_node
-     ! x2_at_node = x2_at_node(i,j)
+     !> x2_at_node = x2_at_node(i,j)
      procedure(geometry_function_indices_ct), deferred, pass :: x2_at_node
-     !jacobian_at_node = jacobian_at_node(i,j)
+     !>jacobian_at_node = jacobian_at_node(i,j)
      procedure(geometry_function_indices_ct), deferred, pass :: jacobian_at_node
-     ! jacobian_matrix = jacobian(matrix(eta1,eta2))
+     !> jacobian_matrix = jacobian(matrix(eta1,eta2))
      procedure(matrix_geometry_function_ct), deferred, pass   :: jacobian_matrix
-     ! procedure(j_matrix_function_nopass), pointer, nopass :: jacobian_matrix
+     !> procedure(j_matrix_function_nopass), pointer, nopass :: jacobian_matrix
      procedure(matrix_geometry_function_ct), deferred, pass :: &
           inverse_jacobian_matrix
-     ! x1_at_cell = x1_at_cell(i,j)
+     !> x1_at_cell = x1_at_cell(i,j)
      procedure(geometry_function_indices_ct), deferred, pass :: x1_at_cell
-     ! x1_at_cell = x1_at_cell(i,j)
+     !> x1_at_cell = x1_at_cell(i,j)
      procedure(geometry_function_indices_ct), deferred, pass :: x2_at_cell
-     ! jacobian_at_cell = jacobian_at_cell(i,j)
+     !> jacobian_at_cell = jacobian_at_cell(i,j)
      procedure(geometry_function_indices_ct), deferred, pass :: jacobian_at_cell
+     !> PLEASE ADD DOCUMENTATION
      procedure(write_transformation_signature), deferred, pass :: write_to_file
+     !> PLEASE ADD DOCUMENTATION
      procedure(read_transformation), deferred, pass            :: read_from_file
+     !> PLEASE ADD DOCUMENTATION
      procedure(transformation_subroutine), deferred, pass      :: delete 
   end type sll_coordinate_transformation_2d_base
   
@@ -79,6 +86,8 @@ module sll_coordinate_transformation_2d_base_module
   !************************************************************************
   ! 2D CASE:
   !************************************************************************
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
   
   abstract interface
      function get_logical_mesh_ct( transf ) result(res)
@@ -201,5 +210,7 @@ module sll_coordinate_transformation_2d_base_module
        character(len=*), intent(in) :: filename
      end subroutine read_transformation
   end interface
+
+#endif // DOXYGEN_SHOULD_SKIP_THIS
   
 end module sll_coordinate_transformation_2d_base_module
