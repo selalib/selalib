@@ -236,8 +236,8 @@ program unit_test_2d
   !call t_d%write_to_file(SLL_IO_MTV)
 
   print *, 'Average error in jacobian = ', acc/real(NPTS1*NPTS2,f64)
-  call delete(t_a)
-  call delete(t_d)
+  call sll_delete(t_a)
+  call sll_delete(t_d)
 
   print *, 'deleted transformations'
 
@@ -295,7 +295,7 @@ program unit_test_2d
 
      print*, 'label t_n', t_n%label
 
-     call delete(t_n)
+     call sll_delete(t_n)
      !call write_to_file(t_d)
   else
      print *, 'nml file is missing '

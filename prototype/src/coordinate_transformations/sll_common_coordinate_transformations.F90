@@ -1,3 +1,10 @@
+!> @ingroup coordinate_transformations
+!> @brief 
+!> Direct mapping.
+!> @details
+!! This module provides some common coordinate transformations in terms of the
+!! direct mapping, inverse mapping and jacobian.  All of these should be 
+!! implement following similar naming conventions.
 module sll_common_coordinate_transformations
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -7,9 +14,6 @@ module sll_common_coordinate_transformations
 
 contains
   
-  ! This module provides some common coordinate transformations in terms of the
-  ! direct mapping, inverse mapping and jacobian.  All of these should be 
-  ! implement following similar naming conventions.
 
   ! **************************************************************************
   !

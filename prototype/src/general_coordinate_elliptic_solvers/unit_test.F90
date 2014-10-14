@@ -9,6 +9,7 @@ program test_general_elliptic_solver
   use sll_constants
   use sll_module_arbitrary_degree_spline_interpolator_2d
   use sll_timer
+  use sll_module_deboor_splines_2d
 
 
 #ifdef _UMFPACK
