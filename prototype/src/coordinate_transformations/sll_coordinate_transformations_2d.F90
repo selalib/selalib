@@ -1,3 +1,4 @@
+!> @ingroup coordinate_transformations
 module sll_module_coordinate_transformations_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -158,11 +159,11 @@ module sll_module_coordinate_transformations_2d
      procedure(transformation_func_nopass), pointer, nopass :: f
   end type jacobian_matrix_element
 
-  interface delete
+  interface sll_delete
      module procedure &
           delete_transformation_2d_analytic, &
           delete_transformation_2d_discrete
-  end interface
+  end interface sll_delete
 
   
 contains

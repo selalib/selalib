@@ -832,7 +832,6 @@ EXCLUDE                = @CMAKE_CURRENT_SOURCE_DIR@/BSL \
                          @CMAKE_CURRENT_SOURCE_DIR@/visu_pic \
                          @CMAKE_CURRENT_SOURCE_DIR@/eulerian-finite-volume \
                          @CMAKE_CURRENT_SOURCE_DIR@/CAID_coordinate_transformations \
-                         @CMAKE_CURRENT_SOURCE_DIR@/coordinate_transformations \
                          @CMAKE_CURRENT_SOURCE_DIR@/coordinate_transformations_multipatch \
                          @CMAKE_CURRENT_SOURCE_DIR@/distribution_function_multipatch \
                          @CMAKE_CURRENT_SOURCE_DIR@/fcisl \

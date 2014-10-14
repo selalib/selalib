@@ -33,19 +33,20 @@ program test_general_elliptic_solver_multipatch
 
   type(sll_coordinate_transformation_multipatch_2d), pointer :: T
   type(sll_logical_mesh_2d), pointer                         :: m
-  class(sll_coordinate_transformation_2d_nurbs), pointer      :: transf
-  type(general_coordinate_elliptic_solver_mp)               :: es_mp
-  class(sll_scalar_field_multipatch_2d), pointer              :: a11_field_mat
-  class(sll_scalar_field_multipatch_2d), pointer              :: a12_field_mat
-  class(sll_scalar_field_multipatch_2d), pointer              :: a21_field_mat
-  class(sll_scalar_field_multipatch_2d), pointer              :: a22_field_mat
-  class(sll_scalar_field_multipatch_2d), pointer              :: b1_field_vect
-  class(sll_scalar_field_multipatch_2d), pointer              :: b2_field_vect
-  class(sll_scalar_field_multipatch_2d), pointer              :: c_field_scal
-  class(sll_scalar_field_multipatch_2d), pointer              :: rho_field_scal
-  class(sll_scalar_field_multipatch_2d), pointer              :: phi_field_scal
-  class(sll_scalar_field_multipatch_2d), pointer              :: phi_field_ex
-  class(sll_scalar_field_multipatch_2d), pointer              :: phi_field_diff
+  class(sll_coordinate_transformation_2d_nurbs), pointer     :: transf
+  type(general_coordinate_elliptic_solver_mp)                :: es_mp
+  class(sll_scalar_field_multipatch_2d), pointer             :: a11_field_mat
+  class(sll_scalar_field_multipatch_2d), pointer             :: a12_field_mat
+  class(sll_scalar_field_multipatch_2d), pointer             :: a21_field_mat
+  class(sll_scalar_field_multipatch_2d), pointer             :: a22_field_mat
+  class(sll_scalar_field_multipatch_2d), pointer             :: b1_field_vect
+  class(sll_scalar_field_multipatch_2d), pointer             :: b2_field_vect
+  class(sll_scalar_field_multipatch_2d), pointer             :: c_field_scal
+  class(sll_scalar_field_multipatch_2d), pointer             :: rho_field_scal
+  class(sll_scalar_field_multipatch_2d), pointer             :: phi_field_scal
+  class(sll_scalar_field_multipatch_2d), pointer             :: phi_field_ex
+  class(sll_scalar_field_multipatch_2d), pointer             :: phi_field_diff
+
   sll_int32 :: num_patches
   sll_int32  :: ipatch
   sll_int32  :: i

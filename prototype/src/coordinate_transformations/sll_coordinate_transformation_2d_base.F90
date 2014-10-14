@@ -1,3 +1,23 @@
+!> @ingroup coordinate_transformations
+!> @brief 
+!> Abstract class for coordinate transformations.
+!> @details
+!> A single abstract base class is defined which will further be extended
+!> by its subclasses. The two main types of coordinate transformations are 
+!> those represented by an analytic transformation and those represented by a
+!> discrete transformation. 
+!> The coordinate transformation always transforms from a cartesian space in
+!> the logical variables \f$ \eta_1, \eta_2 \f$, ... to a physical space of variables
+!> \f$ x_1, x_2 \f$, ... For example, the 2D case represents the transformation:
+!> \f[
+!> \begin{matrix}
+!>              x_1 = x_1(\eta_1,\eta_2) \\\\
+!>              x_2 = x_2(\eta_1,\eta_2)
+!> \end{matrix}
+!> \f]
+!> The base class contains all the services (in the form of functions) that
+!> the different 'flavors' of coordinate transformations (analytic, discrete)
+!> should implement.
 module sll_coordinate_transformation_2d_base_module
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -5,21 +25,6 @@ module sll_coordinate_transformation_2d_base_module
   use sll_logical_meshes
   implicit none
   
-  ! A single abstract base class is defined which will further be extended
-  ! by its subclasses. The two main types of coordinate transformations are 
-  ! those represented by an analytic transformation and those represented by a
-  ! discrete transformation. 
-  
-  ! The coordinate transformation always transforms from a cartesian space in
-  ! the logical variables eta1, eta2, ... to a physical space of variables
-  ! x1, x2, ... For example, the 2D case represents the transformation:
-  !
-  !              x1 = x1(eta1,eta2)
-  !              x2 = x2(eta1,eta2)
-  !
-  ! The base class contains all the services (in the form of functions) that
-  ! the different 'flavors' of coordinate transformations (analytic, discrete)
-  ! should implement.
 
   type, abstract :: sll_coordinate_transformation_2d_base
      ! The decision to include the mesh here was determined by the need to,
