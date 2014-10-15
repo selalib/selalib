@@ -790,7 +790,7 @@ contains
     end if
 
 
-    call compute_local_sizes_4d( sim%layout4d_seqx1x2x4, &
+    call compute_local_sizes( sim%layout4d_seqx1x2x4, &
       loc4d_sz_x1, &
       loc4d_sz_x2, &
       loc4d_sz_x3, &
@@ -809,7 +809,7 @@ contains
     do iter=1,sim%num_iterations    
 
 
-      call compute_local_sizes_4d( sim%layout4d_seqx1x2x4, &
+      call compute_local_sizes( sim%layout4d_seqx1x2x4, &
         loc4d_sz_x1, &
         loc4d_sz_x2, &
         loc4d_sz_x3, &
@@ -1092,7 +1092,7 @@ contains
     nc_x3 = sim%m_x3%num_cells
     
     
-    call compute_local_sizes_3d( &
+    call compute_local_sizes( &
       sim%layout3d_seqx1x2, &
       loc_sz_x1, &
       loc_sz_x2, &
@@ -1108,7 +1108,7 @@ contains
         sim%phi_interp_x1x2)
     enddo
 
-    call compute_local_sizes_3d( &
+    call compute_local_sizes( &
       sim%layout3d_seqx3, &
       loc_sz_x1, &
       loc_sz_x2, &
@@ -1146,7 +1146,7 @@ contains
     
     
     
-     call compute_local_sizes_4d( sim%layout4d_seqx1x2x4, &
+     call compute_local_sizes( sim%layout4d_seqx1x2x4, &
       loc_sz_x1, &
       loc_sz_x2, &
       loc_sz_x3, &
@@ -1217,7 +1217,7 @@ contains
       sim%remap_plan_seqx1x2x4_to_seqx3, &
       sim%f4d_seqx1x2x4, &
       sim%f4d_seqx3 )
-    call compute_local_sizes_4d( sim%layout4d_seqx3, &
+    call compute_local_sizes( sim%layout4d_seqx3, &
       loc_sz_x1, &
       loc_sz_x2, &
       loc_sz_x3, &
@@ -1226,7 +1226,7 @@ contains
     do i2=1,loc_sz_x2
       do i1=1,loc_sz_x1
         do i4=1,loc_sz_x4
-          global_indices(1:4) = local_to_global_4D( &
+          global_indices(1:4) = local_to_global( &
             sim%layout4d_seqx3, &
             (/i1, i2, 1, i4/) )
           alpha = sim%m_x4%eta_min+real(global_indices(4)-1,f64)*sim%m_x4%delta_eta
@@ -1283,7 +1283,7 @@ contains
     SLL_ALLOCATE(f1d(nc_x4+1),ierr)  
     SLL_ALLOCATE(f1d_new(nc_x4+1),ierr)  
       
-    call compute_local_sizes_4d( sim%layout4d_seqx1x2x4, &
+    call compute_local_sizes( sim%layout4d_seqx1x2x4, &
       loc_sz_x1, &
       loc_sz_x2, &
       loc_sz_x3, &
@@ -1345,7 +1345,7 @@ contains
     SLL_ALLOCATE(A1(nc_x1+1,nc_x2+1),ierr)  
     SLL_ALLOCATE(A2(nc_x1+1,nc_x2+1),ierr)  
       
-    call compute_local_sizes_4d( sim%layout4d_seqx1x2x4, &
+    call compute_local_sizes( sim%layout4d_seqx1x2x4, &
       loc_sz_x1, &
       loc_sz_x2, &
       loc_sz_x3, &
@@ -1486,7 +1486,7 @@ contains
     !-->  (x1,x2) : sequential
     !-->  (x3,x4) : parallelized layout
     sim%layout4d_seqx1x2x4  => new_layout_4D( sll_world_collective )
-    call initialize_layout_with_distributed_4D_array( &
+    call initialize_layout_with_distributed_array( &
       sim%m_x1%num_cells+1, & 
       sim%m_x2%num_cells+1, & 
       sim%m_x3%num_cells+1, &
@@ -1502,7 +1502,7 @@ contains
     ! local sizes. Since the remap operations
     ! are out-of-place, we will allocate two different arrays, 
     ! one for each layout.
-    call compute_local_sizes_4d( sim%layout4d_seqx1x2x4, &
+    call compute_local_sizes( sim%layout4d_seqx1x2x4, &
       loc4d_sz_x1, &
       loc4d_sz_x2, &
       loc4d_sz_x3, &
@@ -1527,7 +1527,7 @@ contains
      
 
     sim%layout4d_seqx3  => new_layout_4D( sll_world_collective )
-    call initialize_layout_with_distributed_4D_array( &
+    call initialize_layout_with_distributed_array( &
       sim%m_x1%num_cells+1, & 
       sim%m_x2%num_cells+1, & 
       sim%m_x3%num_cells+1, &
@@ -1538,7 +1538,7 @@ contains
       sim%nproc_x4, &
       sim%layout4d_seqx3 )
         
-    call compute_local_sizes_4d( sim%layout4d_seqx3, &
+    call compute_local_sizes( sim%layout4d_seqx3, &
       loc4d_sz_x1, &
       loc4d_sz_x2, &
       loc4d_sz_x3, &
@@ -1605,7 +1605,7 @@ contains
 !      enddo
 !    enddo 
     !--> Initialization of the distribution function f4d_x3x4
-    call compute_local_sizes_4d( layout, &
+    call compute_local_sizes( layout, &
       loc4d_sz_x1, &
       loc4d_sz_x2, &
       loc4d_sz_x3, &
@@ -1620,7 +1620,7 @@ contains
       do iloc3 = 1,loc4d_sz_x3
         do iloc2 = 1,loc4d_sz_x2
           do iloc1 = 1,loc4d_sz_x1
-            glob_ind(:) = local_to_global_4D(layout, &
+            glob_ind(:) = local_to_global(layout, &
               (/iloc1,iloc2,iloc3,iloc4/))
             i1 = glob_ind(1)
             i2 = glob_ind(2)
@@ -1701,7 +1701,7 @@ contains
     !-->  x3 : parallelized layout    
     sim%layout3d_seqx1x2  => new_layout_3D( sll_world_collective )
     nproc3d_x3 = sim%nproc_x3*sim%nproc_x4
-    call initialize_layout_with_distributed_3D_array( &
+    call initialize_layout_with_distributed_array( &
       sim%m_x1%num_cells+1, & 
       sim%m_x2%num_cells+1, & 
       sim%m_x3%num_cells+1, &
@@ -1709,7 +1709,7 @@ contains
       sim%nproc_x2, &
       nproc3d_x3, &
       sim%layout3d_seqx1x2 )
-    call compute_local_sizes_3d( &
+    call compute_local_sizes( &
       sim%layout3d_seqx1x2, &
       loc3d_sz_x1, &
       loc3d_sz_x2, &
@@ -1732,7 +1732,7 @@ contains
     sim%nproc_x4 = itemp
         
     sim%layout3d_seqx3  => new_layout_3D( sll_world_collective )
-    call initialize_layout_with_distributed_3D_array( &
+    call initialize_layout_with_distributed_array( &
       sim%m_x1%num_cells+1, & 
       sim%m_x2%num_cells+1, & 
       sim%m_x3%num_cells+1, &
@@ -1740,7 +1740,7 @@ contains
       sim%nproc_x2, &
       sim%nproc_x3, &
       sim%layout3d_seqx3 )
-    call compute_local_sizes_3d( &
+    call compute_local_sizes( &
       sim%layout3d_seqx3, &
       loc3d_sz_x1, &
       loc3d_sz_x2, &
@@ -1780,7 +1780,7 @@ contains
     select case (sim%QN_case)
       case (SLL_NO_QUASI_NEUTRAL)
       ! no quasi neutral solver as in CRPP-CONF-2001-069
-        call compute_local_sizes_3d( &
+        call compute_local_sizes( &
           sim%layout3d_seqx3, &
           loc3d_sz_x1, &
           loc3d_sz_x2, &
@@ -1796,7 +1796,7 @@ contains
               /real(sim%m_x3%num_cells,f64)
             SLL_ASSERT(loc3d_sz_x3==sim%m_x3%num_cells+1)
             do i3 = 1,sim%m_x3%num_cells+1
-              glob_ind(:) = local_to_global_3D(sim%layout3d_seqx3, &
+              glob_ind(:) = local_to_global(sim%layout3d_seqx3, &
                 (/iloc1,iloc2,i3/))                        
               sim%phi3d_seqx3(iloc1,iloc2,i3) = (sim%rho3d_seqx3(iloc1,iloc2,i3)-tmp)&
                 *sim%Te_r(glob_ind(1))/sim%n0_r(glob_ind(1))
@@ -1808,7 +1808,7 @@ contains
           sim%phi3d_seqx3, &
           sim%phi3d_seqx1x2 )  
       case (SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW)
-        call compute_local_sizes_3d( &
+        call compute_local_sizes( &
           sim%layout3d_seqx1x2, &
           loc3d_sz_x1, &
           loc3d_sz_x2, &

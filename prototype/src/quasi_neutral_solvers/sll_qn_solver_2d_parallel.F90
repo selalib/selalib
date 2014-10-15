@@ -91,12 +91,12 @@ contains
     plan%inv_fft_plan => fft_new_plan( NP_theta, x, x, FFT_INVERSE )
 
     plan%layout_fft => new_layout_3D( sll_world_collective )
-    call initialize_layout_with_distributed_3D_array( NP_r, NP_theta, 1, &
+    call initialize_layout_with_distributed_array( NP_r, NP_theta, 1, &
                                        int(colsz), 1, 1, plan%layout_fft )
 
     ! Layout for Linear systems in r-direction
     plan%layout_lin_sys => new_layout_3D( sll_world_collective )
-    call initialize_layout_with_distributed_3D_array( NP_r, NP_theta, 1, &
+    call initialize_layout_with_distributed_array( NP_r, NP_theta, 1, &
                                    1, int(colsz), 1, plan%layout_lin_sys )
 
     SLL_ALLOCATE(plan%array_fft(NP_r_loc,NP_theta,1), ierr)
@@ -156,7 +156,7 @@ contains
 
        call fft_apply_plan( plan%fft_plan, plan%array_fft(i,:,1), &
                                               plan%array_fft(i,:,1) )
-       global = local_to_global_3D( plan%layout_fft, (/i, 1, 1/))
+       global = local_to_global( plan%layout_fft, (/i, 1, 1/))
        ind = global(1)
        if (ind==1) then
           if (plan%BC==SLL_NEUMANN) then
@@ -192,7 +192,7 @@ contains
 
     ! Solve linear systems (r-direction)
     do j=1,NP_theta_loc
-       global = local_to_global_3D( plan%layout_lin_sys, (/1, j, 1/))
+       global = local_to_global( plan%layout_lin_sys, (/1, j, 1/))
        ind = global(2)
        if (ind<=NP_theta/2) then
           ind = ind-1
@@ -234,8 +234,8 @@ contains
 
        call fft_delete_plan(plan%fft_plan)
        call fft_delete_plan(plan%inv_fft_plan)
-       call delete_layout_3D( plan%layout_fft )
-       call delete_layout_3D( plan%layout_lin_sys )
+       call sll_delete( plan%layout_fft )
+       call sll_delete( plan%layout_lin_sys )
 
        SLL_DEALLOCATE_ARRAY(plan%array_fft,ierr)
        SLL_DEALLOCATE_ARRAY(plan%array_lin_sys,ierr)

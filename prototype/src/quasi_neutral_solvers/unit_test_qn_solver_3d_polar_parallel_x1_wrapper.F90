@@ -66,7 +66,7 @@ implicit none
     nproc_x2, &
     layout2d_parx1 )
 
-  call compute_local_sizes_2d( &
+  call compute_local_sizes( &
     layout2d_parx1, &
     loc2d_sz_x1, &
     loc2d_sz_x2)

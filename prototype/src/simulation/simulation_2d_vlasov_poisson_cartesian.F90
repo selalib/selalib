@@ -1000,15 +1000,15 @@ contains
       np_x1, num_dof_x2, nproc_x1, nproc_x2, layout_x2 )
     call initialize_layout_with_distributed_array( &
       np_x1, num_dof_x2, nproc_x2, nproc_x1, layout_x1 )
-    !call sll_view_lims_2D( layout_x1 )
+    !call sll_view_lims( layout_x1 )
 
     
     !allocation of distribution functions f_x1 and f_x2
-    call compute_local_sizes_2d( layout_x2, local_size_x1, local_size_x2 )
+    call compute_local_sizes( layout_x2, local_size_x1, local_size_x2 )
     
     SLL_ALLOCATE(f_x2(local_size_x1,local_size_x2),ierr)
 
-    call compute_local_sizes_2d( layout_x1, local_size_x1, local_size_x2 )
+    call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
 
     global_indices(1:2) = local_to_global( layout_x1, (/1, 1/) )
     SLL_ALLOCATE(f_x1(local_size_x1,local_size_x2),ierr)    
@@ -1365,7 +1365,7 @@ contains
           !! V ADVECTION 
           !transposition
           call apply_remap_2D( remap_plan_x1_x2, f_x1, f_x2 )
-          call compute_local_sizes_2d( layout_x2, local_size_x1, local_size_x2 )
+          call compute_local_sizes( layout_x2, local_size_x1, local_size_x2 )
           global_indices(1:2) = local_to_global( layout_x2, (/1, 1/) )
           tid = 1
 
@@ -1402,7 +1402,7 @@ contains
 #endif
           !transposition
           call apply_remap_2D( remap_plan_x2_x1, f_x2, f_x1 )
-          call compute_local_sizes_2d( layout_x1, local_size_x1, local_size_x2 )
+          call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
           global_indices(1:2) = local_to_global( layout_x1, (/1, 1/) )
 
 
@@ -2252,7 +2252,7 @@ contains
 !    
 !    call int2string(iplot,cplot)
 !    prank = sll_get_collective_rank(sll_world_collective)
-!    call compute_local_sizes_2d(layout,loc_sz_x1,loc_sz_x2)        
+!    call compute_local_sizes(layout,loc_sz_x1,loc_sz_x2)        
 !
 !    offset(1) = get_layout_i_min(layout,prank)-1
 !    offset(2) = get_layout_j_min(layout,prank)-1
@@ -2302,7 +2302,7 @@ contains
 ! sll_real64, dimension(:,:), pointer :: fjl
 !
 ! prank = sll_get_collective_rank(sll_world_collective)
-! call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+! call compute_local_sizes(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 ! SLL_CLEAR_ALLOCATE(fjl(1:loc_sz_j,1:loc_sz_l),error)
 ! do l=1,loc_sz_l
 !    do j=1,loc_sz_j
@@ -2310,8 +2310,8 @@ contains
 !    end do
 ! end do
 ! global_dims = (/this%geomx%num_cells2,this%geomv%num_cells2/)
-! offset(1) = get_layout_4D_j_min(this%layout_x,prank)-1
-! offset(2) = get_layout_4D_l_min(this%layout_x,prank)-1
+! offset(1) = get_layout_j_min(this%layout_x,prank)-1
+! offset(2) = get_layout_l_min(this%layout_x,prank)-1
 ! call sll_hdf5_file_create('fx2x4_'//cplot//".h5",pfile_id,error)
 ! call sll_hdf5_write_array_2d(pfile_id,global_dims,offset,fjl,"/values",error)
 ! call sll_hdf5_file_close(pfile_id, error)
@@ -2356,7 +2356,7 @@ contains
 !     
 !    myrank = sll_get_collective_rank(sll_world_collective)
 !        
-!    call compute_local_sizes_2d( layout, local_sz_x1, local_sz_x2)
+!    call compute_local_sizes( layout, local_sz_x1, local_sz_x2)
 !    
 !    
 !    if (iplot == 1) then
@@ -2411,7 +2411,7 @@ contains
 !     call sll_xml_field(xml_id,'values', "zdata.h5:/zdataset",nx,ny,'HDF','Node')
 !     call sll_xml_file_close(xml_id,error)
 !     print *, 'Printing 2D layout: '
-!     call sll_view_lims_2D( layout )
+!     call sll_view_lims( layout )
 !     print *, '--------------------'
 !
 !  end if

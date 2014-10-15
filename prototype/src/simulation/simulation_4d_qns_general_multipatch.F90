@@ -1509,7 +1509,7 @@ contains
           do iv1 = 1,Nv1-1
              do iv2 = 1,Nv2-1
                 
-                glob_ind4d(:) = local_to_global_4D(sim%sequential_x3x4, &
+                glob_ind4d(:) = local_to_global(sim%sequential_x3x4, &
                      (/iloc1,iloc2,iv1,iv2/))
                 i1 = glob_ind4d(1)
                 i2 = glob_ind4d(2)

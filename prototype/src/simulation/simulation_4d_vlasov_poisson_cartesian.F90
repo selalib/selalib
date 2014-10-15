@@ -180,7 +180,7 @@ contains
        sim%nproc_x4 = 1
     end if
     
-    call initialize_layout_with_distributed_4D_array( &
+    call initialize_layout_with_distributed_array( &
          sim%nc_x1+1, &
          sim%nc_x2+1, &
          sim%nc_x3+1, &
@@ -209,7 +209,7 @@ contains
          sim%world_size, &
          sim%rho_seq_x1 )
     
-    call compute_local_sizes_2d( sim%rho_seq_x1, loc_sz_x1, loc_sz_x2 )
+    call compute_local_sizes( sim%rho_seq_x1, loc_sz_x1, loc_sz_x2 )
     SLL_ALLOCATE(sim%rho_x1(loc_sz_x1,loc_sz_x2),ierr)
     SLL_ALLOCATE(sim%phi_x1(loc_sz_x1,loc_sz_x2),ierr)
     ! Experiment with a dedicated array to store the values of the electric
@@ -222,7 +222,7 @@ contains
          sim%world_size, &
          1, &
          sim%rho_seq_x2 )
-    call compute_local_sizes_2d( sim%rho_seq_x2, loc_sz_x1, loc_sz_x2 )
+    call compute_local_sizes( sim%rho_seq_x2, loc_sz_x1, loc_sz_x2 )
     SLL_ALLOCATE(sim%rho_x2(loc_sz_x1,loc_sz_x2),ierr)
     SLL_ALLOCATE(sim%phi_x2(loc_sz_x1,loc_sz_x2),ierr)
     SLL_ALLOCATE(sim%efield_x2(loc_sz_x1,loc_sz_x2),ierr)
@@ -241,7 +241,7 @@ contains
     sim%nproc_x4 = sim%nproc_x2 
     sim%nproc_x2 = itemp
     
-    call initialize_layout_with_distributed_4D_array( &
+    call initialize_layout_with_distributed_array( &
          sim%nc_x1+1, &
          sim%nc_x2+1, &
          sim%nc_x3+1, &
@@ -256,7 +256,7 @@ contains
     ! function data. First compute the local sizes. Since the remap operations
     ! are out-of-place, we will allocate four different arrays, one for each
     ! layout.
-    call compute_local_sizes_4d( sim%sequential_x1x2, &
+    call compute_local_sizes( sim%sequential_x1x2, &
          loc_sz_x1, &
          loc_sz_x2, &
          loc_sz_x3, &
@@ -269,7 +269,7 @@ contains
     SLL_ALLOCATE(sim%rho_split(loc_sz_x1,loc_sz_x2),ierr)
     SLL_ALLOCATE(sim%efield_split(loc_sz_x1,loc_sz_x2),ierr)
     
-    call compute_local_sizes_4d( sim%sequential_x3x4, &
+    call compute_local_sizes( sim%sequential_x3x4, &
          loc_sz_x1, &
          loc_sz_x2, &
          loc_sz_x3, &
@@ -360,7 +360,7 @@ contains
     ! The following call is inefficient and unnecessary. The local sizes for
     ! the arrays should be kept around as parameters basically and not on 
     ! variables whose content could be anything... This will have to do for now.
-    call compute_local_sizes_2d( sim%rho_seq_x1, loc_sz_x1, loc_sz_x2 )
+    call compute_local_sizes( sim%rho_seq_x1, loc_sz_x1, loc_sz_x2 )
     call compute_electric_field_x1( &
          sim%phi_x1, &
          loc_sz_x1, &
@@ -376,7 +376,7 @@ contains
          NEW_REMAP_PLAN( sim%rho_seq_x1, sim%rho_seq_x2, sim%phi_x1 )
     call apply_remap_2D( sim%efld_seqx1_to_seqx2, sim%efield_x1, sim%efield_x2 )
     call apply_remap_2D( sim%seqx1_to_seqx2, sim%phi_x1, sim%phi_x2 )
-    call compute_local_sizes_2d( sim%rho_seq_x2, loc_sz_x1, loc_sz_x2 )
+    call compute_local_sizes( sim%rho_seq_x2, loc_sz_x1, loc_sz_x2 )
     call compute_electric_field_x2( &
          sim%phi_x2, &
          loc_sz_x1, &
@@ -428,7 +428,7 @@ contains
          sim%mesh4d%x4_max, &
          SLL_HERMITE)
 
-    call compute_local_sizes_2d( sim%rho_seq_x1, loc_sz_x1, loc_sz_x2 )
+    call compute_local_sizes( sim%rho_seq_x1, loc_sz_x1, loc_sz_x2 )
 
 
     ! ------------------------------------------------------------------------
@@ -462,7 +462,7 @@ contains
        ! Note: Since the Ex and Ey values are used separately, the proposed
        ! data structure is actually not good. These field values should be kept
        ! separate.
-       call compute_local_sizes_4d( sim%sequential_x3x4, &
+       call compute_local_sizes( sim%sequential_x3x4, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
 
        ! Start with dt/2 in vx...(x3)
@@ -516,7 +516,7 @@ contains
        
        ! what are the new local limits on x3 and x4? It is bothersome to have
        ! to make these calls...
-       call compute_local_sizes_4d( sim%sequential_x1x2, &
+       call compute_local_sizes( sim%sequential_x1x2, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 )
             
        ! dt/2 in 'y' (x2)
@@ -575,7 +575,7 @@ contains
        ! on.
        call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f_x1x2, sim%f_x3x4 )
 
-       call compute_local_sizes_4d( sim%sequential_x3x4, &
+       call compute_local_sizes( sim%sequential_x3x4, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
 
        ! dt/4 in vx
@@ -637,7 +637,7 @@ contains
        ! the arrays should be kept around as parameters basically and not on 
        ! variables whose content could be anything... This will have to do for 
        ! now.
-       call compute_local_sizes_2d( sim%rho_seq_x1, loc_sz_x1, loc_sz_x2 )
+       call compute_local_sizes( sim%rho_seq_x1, loc_sz_x1, loc_sz_x2 )
        call compute_electric_field_x1( &
             sim%phi_x1, &
             loc_sz_x1, &
@@ -649,7 +649,7 @@ contains
        ! disappear, as the Poisson solver can compute this directly.
        call apply_remap_2D(sim%efld_seqx1_to_seqx2,sim%efield_x1,sim%efield_x2)
        call apply_remap_2D( sim%seqx1_to_seqx2, sim%phi_x1, sim%phi_x2 )
-       call compute_local_sizes_2d( sim%rho_seq_x2, loc_sz_x1, loc_sz_x2 )
+       call compute_local_sizes( sim%rho_seq_x2, loc_sz_x1, loc_sz_x2 )
        call compute_electric_field_x2( &
             sim%phi_x2, &
             loc_sz_x1, &
@@ -669,7 +669,7 @@ contains
        ! Note: Since the Ex and Ey values are used separately, the proposed
        ! data structure is actually not good. These field values should be kept
        ! separate.
-       call compute_local_sizes_4d( sim%sequential_x3x4, &
+       call compute_local_sizes( sim%sequential_x3x4, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 )
        
        do j=1,loc_sz_x2
@@ -1029,7 +1029,7 @@ contains
           my_layout => sim%rho_seq_x2
        end if
 
-       call compute_local_sizes_2d( my_layout, local_nx1, local_nx2)        
+       call compute_local_sizes( my_layout, local_nx1, local_nx2)        
     
        offset(1) =  get_layout_i_min( my_layout, my_rank ) - 1
        offset(2) =  get_layout_j_min( my_layout, my_rank ) - 1

@@ -12,7 +12,7 @@
 !>  
 !>        do j = 1, my
 !>           do i = 1, mx
-!>             global_indices =  local_to_global_2D( layout, (/i, j/) )
+!>             global_indices =  local_to_global( layout, (/i, j/) )
 !>             gi = global_indices(1)
 !>             gj = global_indices(2)
 !>             xdata(i,j) = float(gi-1)/(nx-1)
@@ -21,8 +21,8 @@
 !>           end do
 !>        end do
 !>  
-!>        offset(1) =  get_layout_2D_i_min( layout, myrank ) - 1
-!>        offset(2) =  get_layout_2D_j_min( layout, myrank ) - 1
+!>        offset(1) =  get_layout_i_min( layout, myrank ) - 1
+!>        offset(2) =  get_layout_j_min( layout, myrank ) - 1
 !>        \endcode
 !>
 !>      + xdmf : Write some parallel distributed 2d 

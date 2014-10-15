@@ -61,7 +61,7 @@ implicit none
       layout_x1, &
       collective_size )
 
-    call compute_local_sizes_2d( layout_x1, local_size_x1, local_size_x2 )
+    call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
     SLL_ALLOCATE(f_x1(local_size_x1,local_size_x2),ierr)    
     SLL_ALLOCATE(f_x1_buf1d(local_size_x1*local_size_x2),ierr)    
     

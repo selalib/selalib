@@ -96,26 +96,26 @@ program vlasov_maxwell_parallel
   interp_eta2 => spl_eta2
 
   layout_x => new_layout_4D( sll_world_collective )        
-  call initialize_layout_with_distributed_4D_array( &
+  call initialize_layout_with_distributed_array( &
              nc_eta1+1, nc_eta2+1, nc_eta3+1, nc_eta4+1,    &
              1,1,1,int(psize,4),layout_x)
 
-  if ( prank == MPI_MASTER ) call sll_view_lims_4D( layout_x )
+  if ( prank == MPI_MASTER ) call sll_view_lims( layout_x )
   call flush(6)
 
-  call compute_local_sizes_4d(layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+  call compute_local_sizes(layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
   SLL_CLEAR_ALLOCATE(f_x(1:loc_sz_i,1:loc_sz_j,1:loc_sz_k,1:loc_sz_l),error)
   SLL_CLEAR_ALLOCATE(proj_f_v(1:loc_sz_k,1:loc_sz_l),error)
 
   layout_v => new_layout_4D( sll_world_collective )
-  call initialize_layout_with_distributed_4D_array( &
+  call initialize_layout_with_distributed_array( &
               nc_eta1+1, nc_eta2+1, nc_eta3+1, nc_eta4+1,    &
               1,int(psize,4),1,1,layout_v)
 
-  if ( prank == MPI_MASTER ) call sll_view_lims_4D( layout_v )
+  if ( prank == MPI_MASTER ) call sll_view_lims( layout_v )
   call flush(6)
 
-  call compute_local_sizes_4d(layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+  call compute_local_sizes(layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
   SLL_CLEAR_ALLOCATE(f_v(1:loc_sz_i,1:loc_sz_j,1:loc_sz_k,1:loc_sz_l),error)
 
   x_to_v => new_remap_plan( layout_x, layout_v, f_x)     
@@ -129,7 +129,7 @@ program vlasov_maxwell_parallel
   do j=1,loc_sz_j
   do i=1,loc_sz_i
 
-     global_indices = local_to_global_4D(layout_v,(/i,j,k,l/)) 
+     global_indices = local_to_global(layout_v,(/i,j,k,l/)) 
      gi = global_indices(1)
      gj = global_indices(2)
      gk = global_indices(3)
@@ -222,12 +222,12 @@ contains
 
    dvxvy = delta_eta3*delta_eta4
 
-   call compute_local_sizes_4d(layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+   call compute_local_sizes(layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
    
    locrho = 0.
    do j=1,loc_sz_j
    do i=1,loc_sz_i
-      global_indices = local_to_global_4D(layout_v,(/i,j,1,1/)) 
+      global_indices = local_to_global(layout_v,(/i,j,1,1/)) 
       gi = global_indices(1)
       gj = global_indices(2)
       locrho(gi,gj) = sum(f_v(i,j,:,:))*dvxvy 
@@ -246,10 +246,10 @@ contains
   sll_real64, intent(in) :: dt
   sll_real64 :: alpha
 
-  call compute_local_sizes_4d(layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+  call compute_local_sizes(layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
   do l=1,loc_sz_l
   do k=1,loc_sz_k
-     global_indices = local_to_global_4D(layout_x,(/1,1,k,1/)) 
+     global_indices = local_to_global(layout_x,(/1,1,k,1/)) 
      gk = global_indices(3)
      alpha = (eta3_min +(gk-1)*delta_eta3)*dt
      do j=1,loc_sz_j
@@ -266,11 +266,11 @@ contains
   sll_real64, intent(in) :: dt
   sll_real64 :: alpha
 
-  call compute_local_sizes_4d(layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+  call compute_local_sizes(layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
   do l=1,loc_sz_l
 
-    global_indices = local_to_global_4D(layout_x,(/1,1,1,l/)) 
+    global_indices = local_to_global(layout_x,(/1,1,1,l/)) 
     gl = global_indices(4)
     alpha = (eta4_min +(gl-1)*delta_eta4)*dt
 
@@ -299,7 +299,7 @@ contains
 
    dvxvy = delta_eta3*delta_eta4
 
-   call compute_local_sizes_4d(layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+   call compute_local_sizes(layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
    locjx = 0.0_f64
    locjy = 0.0_f64
@@ -308,7 +308,7 @@ contains
    do k=1,loc_sz_k
    do j=1,loc_sz_j
    do i=1,loc_sz_i
-      global_indices = local_to_global_4D(layout_v,(/i,j,k,l/)) 
+      global_indices = local_to_global(layout_v,(/i,j,k,l/)) 
       gi = global_indices(1)
       gj = global_indices(2)
       gk = global_indices(3)
@@ -339,7 +339,7 @@ contains
   sll_real64, dimension(nc_eta3+1,nc_eta4+1) :: alpha_y
   sll_real64 :: px, py, ctheta, stheta, depvx, depvy
 
-  call compute_local_sizes_4d(layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+  call compute_local_sizes(layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
   alpha_x = 1.0
   alpha_y = 0.0 
@@ -350,7 +350,7 @@ contains
      do k=1,loc_sz_k
      do l=1,loc_sz_l
 
-        global_indices = local_to_global_4D(layout_v,(/i,j,k,l/)) 
+        global_indices = local_to_global(layout_v,(/i,j,k,l/)) 
         gi = global_indices(1)
         gj = global_indices(2)
         gk = global_indices(3)
@@ -377,11 +377,11 @@ contains
 
  subroutine plot_proj_f_v()
 
-    offset = local_to_global_4D(layout_x,(/1,1,1,1/)) 
+    offset = local_to_global(layout_x,(/1,1,1,1/)) 
     offset_eta3 = (offset(3)-1)*delta_eta3
     offset_eta4 = (offset(4)-1)*delta_eta4
 
-    call compute_local_sizes_4d(layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+    call compute_local_sizes(layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
     do l=1,loc_sz_l 
     do k=1,loc_sz_k
        proj_f_v(k,l) = sum(f_x(:,:,k,l))

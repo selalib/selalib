@@ -75,7 +75,7 @@ program test_poisson_3d_periodic_par
   npx = 1
   npy = 2**(e/2)
   npz = int(colsz)/npy
-  call initialize_layout_with_distributed_3D_array( nx, ny, &
+  call initialize_layout_with_distributed_array( nx, ny, &
                                   nz, npx, npy, npz, layout )
 
   plan => new_poisson_3d_periodic_plan_par(layout, nx, ny, &
@@ -92,7 +92,7 @@ program test_poisson_3d_periodic_par
   do k=1,nz_loc
      do j=1,ny_loc
         do i=1,nx_loc
-           global = local_to_global_3D( layout, (/i, j, k/))
+           global = local_to_global( layout, (/i, j, k/))
            gi = global(1)
            gj = global(2)
            gk = global(3)
