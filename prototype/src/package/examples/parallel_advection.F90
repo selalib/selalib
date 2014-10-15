@@ -70,7 +70,7 @@ program parallel_advection
 
   layout_eta1 => new_layout_2D( sll_world_collective )        
 
-  call initialize_layout_with_distributed_2D_array( &
+  call initialize_layout_with_distributed_array( &
              nc_eta1+1, nc_eta2+1, 1,int(psize,4),layout_eta1)
 
   if ( prank == MPI_MASTER ) call sll_view_lims_2D( layout_eta1 )
@@ -81,7 +81,7 @@ program parallel_advection
 
   layout_eta2 => new_layout_2D( sll_world_collective )
 
-  call initialize_layout_with_distributed_2D_array( &
+  call initialize_layout_with_distributed_array( &
               nc_eta1+1, nc_eta2+1, int(psize,4),1,layout_eta2)
 
   if ( prank == MPI_MASTER ) call sll_view_lims_2D( layout_eta2 )

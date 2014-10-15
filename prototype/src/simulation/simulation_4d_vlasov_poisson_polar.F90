@@ -294,7 +294,7 @@ contains
 
     sim%layout_x1 => new_layout_2D( sll_world_collective )
 
-    call initialize_layout_with_distributed_2D_array( sim%nc_x1+1, &
+    call initialize_layout_with_distributed_array( sim%nc_x1+1, &
                                                       sim%nc_x2+1, &
                                                       1,           &
                                                       psize,       &
@@ -306,7 +306,7 @@ contains
 
     sim%layout_x2 => new_layout_2D( sll_world_collective )
 
-    call initialize_layout_with_distributed_2D_array( sim%nc_x1+1, &
+    call initialize_layout_with_distributed_array( sim%nc_x1+1, &
                                                       sim%nc_x2+1, &
                                                       psize,       &
                                                       1,           &
@@ -335,7 +335,7 @@ contains
 
     do j = 1, loc_sz_x2
     do i = 1, loc_sz_x1
-       global_indices(1:2) = local_to_global_2D(sim%layout_x2,(/i,j/))
+       global_indices(1:2) = local_to_global(sim%layout_x2,(/i,j/))
        sim%x1(i,j) = sim%transfx%x1_at_node(global_indices(1),global_indices(2))
        sim%x2(i,j) = sim%transfx%x2_at_node(global_indices(1),global_indices(2))
     end do

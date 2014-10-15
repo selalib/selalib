@@ -21,9 +21,7 @@ program test_layout_output
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
 
-  use sll_collective, only: sll_boot_collective, &
-       sll_halt_collective
-  
+  use sll_collective
   use hdf5
   use sll_hdf5_io_parallel, only: sll_hdf5_file_create, &
        sll_hdf5_write_array, &
@@ -94,7 +92,7 @@ program test_layout_output
   if( myrank .eq. 0 ) &
      print *, '3D layout configuration: ', npi, npj, npk
 
-  call initialize_layout_with_distributed_3D_array( &
+  call initialize_layout_with_distributed_array( &
                     ni, nj, nk, npi, npj, npk, layout )
      
   call compute_local_sizes( layout, loc_sz_i_init, &
@@ -103,22 +101,22 @@ program test_layout_output
 
   ! initialize the local data    
   print *, myrank, 'Printing layout1: '
-  call sll_view_lims_3D( layout )
+  call sll_view_lims( layout )
 
   SLL_ALLOCATE(array(loc_sz_i_init,loc_sz_j_init,loc_sz_k_init),error)
  
   array = myrank
 
-  offset(1) = get_layout_3D_i_min( layout, myrank ) - 1
-  offset(2) = get_layout_3D_j_min( layout, myrank ) - 1
-  offset(3) = get_layout_3D_k_min( layout, myrank ) - 1
+  offset(1) = get_layout_i_min( layout, myrank ) - 1
+  offset(2) = get_layout_j_min( layout, myrank ) - 1
+  offset(3) = get_layout_k_min( layout, myrank ) - 1
 
   comm   = sll_world_collective%comm
   call sll_hdf5_file_create('layout3d.h5',comm,file_id,error)
   call sll_hdf5_write_array(file_id,dims,offset,dble(array),'array',error)
   call sll_hdf5_file_close(file_id,error)
 
-  call delete_layout_3D( layout )
+  call sll_delete( layout )
   SLL_DEALLOCATE_ARRAY(array, error)
 
   tcpu2 = MPI_WTIME()

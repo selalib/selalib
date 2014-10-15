@@ -996,9 +996,9 @@ contains
     layout_x2       => new_layout_2D( sll_world_collective )    
     nproc_x1 = sll_get_collective_size( sll_world_collective )
     nproc_x2 = 1
-    call initialize_layout_with_distributed_2D_array( &
+    call initialize_layout_with_distributed_array( &
       np_x1, num_dof_x2, nproc_x1, nproc_x2, layout_x2 )
-    call initialize_layout_with_distributed_2D_array( &
+    call initialize_layout_with_distributed_array( &
       np_x1, num_dof_x2, nproc_x2, nproc_x1, layout_x1 )
     !call sll_view_lims_2D( layout_x1 )
 
@@ -1010,7 +1010,7 @@ contains
 
     call compute_local_sizes_2d( layout_x1, local_size_x1, local_size_x2 )
 
-    global_indices(1:2) = local_to_global_2D( layout_x1, (/1, 1/) )
+    global_indices(1:2) = local_to_global( layout_x1, (/1, 1/) )
     SLL_ALLOCATE(f_x1(local_size_x1,local_size_x2),ierr)    
     SLL_ALLOCATE(f_x1_init(local_size_x1,local_size_x2),ierr)    
     SLL_ALLOCATE(f_x1_buf1d(local_size_x1*local_size_x2),ierr)    
@@ -1366,7 +1366,7 @@ contains
           !transposition
           call apply_remap_2D( remap_plan_x1_x2, f_x1, f_x2 )
           call compute_local_sizes_2d( layout_x2, local_size_x1, local_size_x2 )
-          global_indices(1:2) = local_to_global_2D( layout_x2, (/1, 1/) )
+          global_indices(1:2) = local_to_global( layout_x2, (/1, 1/) )
           tid = 1
 
 #ifdef _OPENMP
@@ -1403,7 +1403,7 @@ contains
           !transposition
           call apply_remap_2D( remap_plan_x2_x1, f_x2, f_x1 )
           call compute_local_sizes_2d( layout_x1, local_size_x1, local_size_x2 )
-          global_indices(1:2) = local_to_global_2D( layout_x1, (/1, 1/) )
+          global_indices(1:2) = local_to_global( layout_x1, (/1, 1/) )
 
 
         endif
@@ -2254,8 +2254,8 @@ contains
 !    prank = sll_get_collective_rank(sll_world_collective)
 !    call compute_local_sizes_2d(layout,loc_sz_x1,loc_sz_x2)        
 !
-!    offset(1) = get_layout_2D_i_min(layout,prank)-1
-!    offset(2) = get_layout_2D_j_min(layout,prank)-1
+!    offset(1) = get_layout_i_min(layout,prank)-1
+!    offset(2) = get_layout_j_min(layout,prank)-1
 !
 !    global_dims = (/nnodes_x1,nnodes_x2/)
 !    
@@ -2366,7 +2366,7 @@ contains
 !
 !      do j = 1,  local_sz_x2
 !        do i = 1, local_sz_x1
-!          global_indices =  local_to_global_2D( layout, (/i, j/) )
+!          global_indices =  local_to_global( layout, (/i, j/) )
 !          gi = global_indices(1)
 !          gj = global_indices(2)
 !          xdata(i,j) = float(gi-1)/(nx-1)
@@ -2375,8 +2375,8 @@ contains
 !        end do
 !  end do
 !  
-!  offset(1) =  get_layout_2D_i_min( layout, myrank ) - 1
-!  offset(2) =  get_layout_2D_j_min( layout, myrank ) - 1
+!  offset(1) =  get_layout_i_min( layout, myrank ) - 1
+!  offset(2) =  get_layout_j_min( layout, myrank ) - 1
 !
 !  !Begin high level version
 !

@@ -314,14 +314,14 @@ contains
     ! of computing rho. This layout is not useful to do sequential operations
     ! in any of the two available directions. We also initialize the other two
     ! layouts needed for both sequential operations on x1 and x2 in the 2D case.
-    call initialize_layout_with_distributed_2D_array( &
+    call initialize_layout_with_distributed_array( &
          nc_x1+1, &
          nc_x2+1, &
          sim%nproc_x1, &
          sim%nproc_x2, &
          sim%split_rho_layout )
 
-    call initialize_layout_with_distributed_2D_array( &
+    call initialize_layout_with_distributed_array( &
          nc_x1+1, &
          nc_x2+1, &
          1, &
@@ -336,7 +336,7 @@ contains
     ! field in each point of the grid.
     SLL_ALLOCATE(sim%efield_x1(loc_sz_x1,loc_sz_x2),ierr)
 
-    call initialize_layout_with_distributed_2D_array( &
+    call initialize_layout_with_distributed_array( &
          nc_x1+1, &
          nc_x2+1, &
          sim%world_size, &
@@ -391,7 +391,7 @@ contains
          loc_sz_x3, &
          loc_sz_x4 )
 
-    call initialize_layout_with_distributed_2D_array( &
+    call initialize_layout_with_distributed_array( &
          nc_x3, &
          nc_x4, &
          sim%nproc_x3, &
@@ -446,7 +446,7 @@ contains
     call apply_remap_2D( sim%split_to_seqx1, sim%rho_split, sim%rho_x1 )
        
     global_indices(1:2) =  &
-         local_to_global_2D( sim%rho_seq_x1, (/1, 1/) )
+         local_to_global( sim%rho_seq_x1, (/1, 1/) )
 
     print *, 'proceeding to write rho_x1 to a file'
 ! This program is crashing at this point. Why is 
@@ -659,7 +659,7 @@ contains
 !       sim%rho_x1(:,:) = - sim%rho_x1(:,:) 
 
        global_indices(1:2) =  &
-            local_to_global_2D( sim%rho_seq_x1, (/1, 1/) )
+            local_to_global( sim%rho_seq_x1, (/1, 1/) )
        
        call sll_gnuplot_rect_2d_parallel( &
           sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
@@ -680,7 +680,7 @@ contains
  
 
        global_indices(1:2) =  &
-            local_to_global_2D( sim%rho_seq_x1, (/1, 1/) )
+            local_to_global( sim%rho_seq_x1, (/1, 1/) )
        
        call sll_gnuplot_rect_2d_parallel( &
          sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
@@ -722,7 +722,7 @@ contains
 !!$
 !!$
 !!$       global_indices(1:2) =  &
-!!$            local_to_global_2D( sim%rho_seq_x1, (/1, 1/) )
+!!$            local_to_global( sim%rho_seq_x1, (/1, 1/) )
 !!$       
 !!$       call sll_gnuplot_rect_2d_parallel( &
 !!$         sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
@@ -754,7 +754,7 @@ contains
 !!$       ey_field(:,:) = aimag(sim%efield_x2(:,:))
 !!$
 !!$       global_indices(1:2) =  &
-!!$            local_to_global_2D( sim%rho_seq_x2, (/1, 1/) )
+!!$            local_to_global( sim%rho_seq_x2, (/1, 1/) )
 !!$       
 !!$       call sll_gnuplot_rect_2d_parallel( &
 !!$         sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
@@ -796,7 +796,7 @@ contains
           do j=1,loc_sz_x2
              do i=1,loc_sz_x1
                 global_indices(1:2) = &
-                     local_to_global_2D( sim%split_rho_layout, (/i,j/))
+                     local_to_global( sim%split_rho_layout, (/i,j/))
                 eta1   =  real(global_indices(1)-1,f64)*delta1
                 eta2   =  real(global_indices(2)-1,f64)*delta2
                 inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
@@ -834,7 +834,7 @@ contains
           do i=1,loc_sz_x1
              do k=1,sim%mesh2d_v%num_cells1 + 1
                 global_indices(1:2) = &
-                     local_to_global_2D( sim%split_rho_layout, (/i,j/))
+                     local_to_global( sim%split_rho_layout, (/i,j/))
                 eta1   =  real(global_indices(1)-1,f64)*delta1
                 eta2   =  real(global_indices(2)-1,f64)*delta2
                 inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
@@ -861,7 +861,7 @@ contains
 !!$       end do
 
 !!$       global_indices(1:2) =  &
-!!$            local_to_global_2D( sim%split_phi_layout, (/1, 1/) )
+!!$            local_to_global( sim%split_phi_layout, (/1, 1/) )
 !!$       
 !!$       call sll_gnuplot_rect_2d_parallel( &
 !!$         sim%mesh2d_v%eta1_min+(global_indices(1)-1)*sim%mesh2d_v%delta_eta1, &
@@ -948,7 +948,7 @@ contains
 !!$          end do
 !!$       end do
 !!$
-!!$      global_indices(1:2) =  local_to_global_2D( sim%split_rho_layout, (/1, 1/) )
+!!$      global_indices(1:2) =  local_to_global( sim%split_rho_layout, (/1, 1/) )
 !!$
 !!$      call sll_gnuplot_rect_2d_parallel( &
 !!$           sim%mesh2d_x%eta1_min+(global_indices(1)-1)*delta1,delta1, &
@@ -1393,8 +1393,8 @@ contains
 
        call compute_local_sizes_2d( my_layout, local_nx1, local_nx2)        
     
-       offset(1) =  get_layout_2D_i_min( my_layout, my_rank ) - 1
-       offset(2) =  get_layout_2D_j_min( my_layout, my_rank ) - 1
+       offset(1) =  get_layout_i_min( my_layout, my_rank ) - 1
+       offset(2) =  get_layout_j_min( my_layout, my_rank ) - 1
 
        if (itime == 1) then
 
@@ -1417,7 +1417,7 @@ contains
    
           do j = 1, local_nx2
              do i = 1, local_nx1
-                global_indices =  local_to_global_2D( my_layout, (/i, j/) )
+                global_indices =  local_to_global( my_layout, (/i, j/) )
                 gi = global_indices(1)
                 gj = global_indices(2)
                 x1(i,j) = x1_min + (gi-1._f64)*delta_x1

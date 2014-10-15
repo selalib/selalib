@@ -63,13 +63,13 @@ prank  = sll_get_collective_rank(sll_world_collective)
 layout_r => new_layout_2D( sll_world_collective )
 layout_a => new_layout_2D( sll_world_collective )
 
-call initialize_layout_with_distributed_2D_array( nr,     &
+call initialize_layout_with_distributed_array( nr,     &
                                                   na,     &
                                                   1,      &
                                                   psize,  &
                                                   layout_r )
 
-call initialize_layout_with_distributed_2D_array( nr,     &
+call initialize_layout_with_distributed_array( nr,     &
                                                   na,     &
                                                   psize,  &
                                                   1,      &

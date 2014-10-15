@@ -322,7 +322,7 @@ subroutine run_vp_cart(sim)
  !write(*,*) 'size rho_split',size(sim%rho_split(1,:))
  SLL_ALLOCATE(sim%phi_split(loc_sz_x1,loc_sz_x2),ierr)
  !write(*,*) sim%my_rank,'taille ',sim%nc_x1, sim%nc_x2, sim%nproc_x1, sim%nproc_x2
- call initialize_layout_with_distributed_2D_array( &
+ call initialize_layout_with_distributed_array( &
       sim%nc_x1, &
       sim%nc_x2, &
       sim%nproc_x1, &
@@ -336,7 +336,7 @@ subroutine run_vp_cart(sim)
  ! potential layout
  !write(*,*) ' sim%nproc_x1', sim%nproc_x1
  !write(*,*) ' sim%nproc_x2', sim%nproc_x2
- call initialize_layout_with_distributed_2D_array( &
+ call initialize_layout_with_distributed_array( &
       sim%nc_x1, &
       sim%nc_x2, &
       sim%nproc_x1, &
@@ -346,7 +346,7 @@ subroutine run_vp_cart(sim)
 
 !!$write(*,*) sim%my_rank,'taille ',sim%nc_x1, sim%nc_x2, sim%nproc_x1, sim%nproc_x2
 !!$write(*,*) sim%my_rank,'size ',loc_sz_x1,loc_sz_x2
-!!$ call initialize_layout_with_distributed_2D_array( &
+!!$ call initialize_layout_with_distributed_array( &
 !!$      sim%nc_x1, &
 !!$      sim%nc_x2, &
 !!$      sim%nproc_x1, &
