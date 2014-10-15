@@ -609,14 +609,14 @@ end function func_zero
     ! of computing rho. This layout is not useful to do sequential operations
     ! in any of the two available directions. We also initialize the other two
     ! layouts needed for both sequential operations on x1 and x2 in the 2D case.
-    call initialize_layout_with_distributed_2D_array( &
+    call initialize_layout_with_distributed_array( &
          nc_x1+1, & 
          nc_x2+1, & 
          sim%nproc_x1, &
          sim%nproc_x2, &
          sim%split_rho_layout )
 
-    call initialize_layout_with_distributed_2D_array( &
+    call initialize_layout_with_distributed_array( &
          nc_x1+1, & 
          nc_x2+1, & 
          sim%nproc_x1, &
@@ -626,7 +626,7 @@ end function func_zero
 
     ! move this down!!! This is self-contained but we are initializing
     ! entities split in x1 and x2, so this isn't the logical place for this.
-    call initialize_layout_with_distributed_2D_array( &
+    call initialize_layout_with_distributed_array( &
          nc_x1+1, &
          nc_x2+1, &
          1, &
@@ -668,7 +668,7 @@ end function func_zero
     SLL_ALLOCATE(recv_buf((nc_x1+1)*(nc_x2+1)),ierr) !changed from nc, nc
 
     ! move this down
-    call initialize_layout_with_distributed_2D_array( &
+    call initialize_layout_with_distributed_array( &
          nc_x1+1, &
          nc_x2+1, &
          sim%world_size, &
@@ -799,7 +799,7 @@ end function func_zero
          sim%rho_split_q )
  
    global_indices(1:2) =  &
-         local_to_global_2D( sim%split_rho_layout, (/1, 1/) )
+         local_to_global( sim%split_rho_layout, (/1, 1/) )
 
    ! rho_split will be used by both calculations, cartesian and qns, so
    ! at this point there is no divergence in these calculations... 
@@ -840,7 +840,7 @@ end function func_zero
     call apply_remap_2D( sim%split_to_seqx1, sim%rho_split_c, sim%rho_x1 )
 
     global_indices(1:2) =  &
-         local_to_global_2D( sim%rho_seq_x1, (/1, 1/) )
+         local_to_global( sim%rho_seq_x1, (/1, 1/) )
        
     ! rho_x1 is the input for the cartesian poisson solver
     call sll_gnuplot_rect_2d_parallel( &
@@ -1171,7 +1171,7 @@ end function func_zero
        
        
        global_indices(1:2) =  &
-            local_to_global_2D( sim%split_rho_layout, (/1, 1/) )
+            local_to_global( sim%split_rho_layout, (/1, 1/) )
 #if PRINT_PLOTS       
        call sll_gnuplot_rect_2d_parallel( &
             sim%mesh2d_x%eta1_min, &
@@ -1296,7 +1296,7 @@ end function func_zero
        !       sim%rho_x1(:,:) = - sim%rho_x1(:,:) 
        
 !!$       global_indices(1:2) =  &
-!!$            local_to_global_2D( sim%rho_seq_x1, (/1, 1/) )
+!!$            local_to_global( sim%rho_seq_x1, (/1, 1/) )
 !!$       
 !!$       call sll_gnuplot_rect_2d_parallel( &
 !!$          sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
@@ -1376,7 +1376,7 @@ end function func_zero
 !!$       print *, sim%phi_x1(:,1) - sim%phi_x1(:,33)
        
        global_indices(1:2) =  &
-            local_to_global_2D( sim%rho_seq_x1, (/1, 1/) )
+            local_to_global( sim%rho_seq_x1, (/1, 1/) )
        
 #if PRINT_PLOTS       
        call sll_gnuplot_rect_2d_parallel( &
@@ -1605,7 +1605,7 @@ end function func_zero
           do j=1,loc_sz_x2
              do i=1,loc_sz_x1
                 global_indices(1:2) = &
-                     local_to_global_2D( sim%split_rho_layout, (/i,j/))
+                     local_to_global( sim%split_rho_layout, (/i,j/))
                 eta1   =  eta1_min + real(global_indices(1)-1,f64)*delta1
                 eta2   =  eta2_min + real(global_indices(2)-1,f64)*delta2
                 !print*, phi%value_at_indices(i,j), 0.05/0.5**2*cos(0.5*(eta1))
@@ -1645,7 +1645,7 @@ end function func_zero
           do i=1,loc_sz_x1
              do k=1,sim%mesh2d_v%num_cells1+1
                 global_indices(1:2) = &
-                     local_to_global_2D( sim%split_rho_layout, (/i,j/))
+                     local_to_global( sim%split_rho_layout, (/i,j/))
                 eta1   =  eta1_min + real(global_indices(1)-1,f64)*delta1
                 eta2   =  eta2_min + real(global_indices(2)-1,f64)*delta2
                 inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
@@ -1679,7 +1679,7 @@ end function func_zero
           do j=1,loc_sz_x2
              do i=1,loc_sz_x1
                 global_indices(1:2) = &
-                     local_to_global_2D( sim%split_rho_layout, (/i,j/))
+                     local_to_global( sim%split_rho_layout, (/i,j/))
                 eta1   =  eta1_min + real(global_indices(1)-1,f64)*delta1
                 eta2   =  eta2_min + real(global_indices(2)-1,f64)*delta2
 
@@ -1715,7 +1715,7 @@ end function func_zero
           do i=1,loc_sz_x1
              do k=1,sim%mesh2d_v%num_cells1+1
                 global_indices(1:2) = &
-                     local_to_global_2D( sim%split_rho_layout, (/i,j/))
+                     local_to_global( sim%split_rho_layout, (/i,j/))
                 eta1   =  eta1_min + real(global_indices(1)-1,f64)*delta1
                 eta2   =  eta2_min + real(global_indices(2)-1,f64)*delta2
                 inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
@@ -2074,7 +2074,7 @@ end function func_zero
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
              global_indices(1:2) = &
-                  local_to_global_2D( sim%split_rho_layout, (/i,j/))
+                  local_to_global( sim%split_rho_layout, (/i,j/))
              eta1   =  sim%mesh2d_v%eta1_min + &
                   real(global_indices(1)-1,f64)*sim%mesh2d_v%delta_eta1
              eta2   =  sim%mesh2d_v%eta2_min + &
@@ -2139,7 +2139,7 @@ end function func_zero
        do i=1,loc_sz_x1
           do k=1,sim%mesh2d_v%num_cells1+1
              global_indices(1:2) = &
-                  local_to_global_2D( sim%split_rho_layout, (/i,j/))
+                  local_to_global( sim%split_rho_layout, (/i,j/))
              eta1   =  sim%mesh2d_v%eta1_min + &
                   real(global_indices(1)-1,f64)*sim%mesh2d_v%delta_eta1
              eta2   =  sim%mesh2d_v%eta2_min + &
@@ -2670,8 +2670,8 @@ end function func_zero
 
        call compute_local_sizes_2d( my_layout, local_nx1, local_nx2)        
     
-       offset(1) =  get_layout_2D_i_min( my_layout, my_rank ) - 1
-       offset(2) =  get_layout_2D_j_min( my_layout, my_rank ) - 1
+       offset(1) =  get_layout_i_min( my_layout, my_rank ) - 1
+       offset(2) =  get_layout_j_min( my_layout, my_rank ) - 1
 
        if (itime == 1) then
 
@@ -2694,7 +2694,7 @@ end function func_zero
    
           do j = 1, local_nx2
              do i = 1, local_nx1
-                global_indices =  local_to_global_2D( my_layout, (/i, j/) )
+                global_indices =  local_to_global( my_layout, (/i, j/) )
                 gi = global_indices(1)
                 gj = global_indices(2)
                 x1(i,j) = x1_min + (gi-1._f64)*delta_x1

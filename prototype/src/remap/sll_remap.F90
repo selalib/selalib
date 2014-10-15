@@ -17,6 +17,8 @@
 
 
 
+!> @ingroup remap
+!> @brief
 !> Module for remapping
 module sll_remapper
 #include "sll_working_precision.h"
@@ -26,6 +28,7 @@ module sll_remapper
   use sll_collective
 
   implicit none
+  private
   
   !> @brief Index limits contained        
   !> in a given processor.
@@ -79,7 +82,7 @@ module sll_remapper
   !> different nodes. We are also adding some auxiliary fields, like the
   !> global dimensions of a given dataset distributed as per the information
   !> in the layout.
-  type layout_2D
+  type, public :: layout_2D
      type(sll_collective_t), pointer SLL_PRIV     :: collective
      sll_int32 SLL_PRIV                           :: global_sz1 !< size
      sll_int32 SLL_PRIV                           :: global_sz2 !< size
@@ -92,7 +95,7 @@ module sll_remapper
   !> different nodes. We are also adding some auxiliary fields, like the
   !> global dimensions of a given dataset distributed as per the information
   !> in the layout.
-  type layout_3D
+  type, public :: layout_3D
      type(sll_collective_t), pointer SLL_PRIV     :: collective
      sll_int32 SLL_PRIV                           :: global_sz1 !< size
      sll_int32 SLL_PRIV                           :: global_sz2 !< size
@@ -106,7 +109,7 @@ module sll_remapper
   !> different nodes. We are also adding some auxiliary fields, like the
   !> global dimensions of a given dataset distributed as per the information
   !> in the layout.
-  type layout_4D
+  type, public :: layout_4D
      type(sll_collective_t), pointer  SLL_PRIV    :: collective
      sll_int32 SLL_PRIV                           :: global_sz1 !< size
      sll_int32 SLL_PRIV                           :: global_sz2 !< size
@@ -121,7 +124,7 @@ module sll_remapper
   !> different nodes. We are also adding some auxiliary fields, like the
   !> global dimensions of a given dataset distributed as per the information
   !> in the layout.
-  type layout_5D
+  type, public :: layout_5D
      type(sll_collective_t), pointer  SLL_PRIV    :: collective
      sll_int32 SLL_PRIV                           :: global_sz1 !< size
      sll_int32 SLL_PRIV                           :: global_sz2 !< size
@@ -137,7 +140,7 @@ module sll_remapper
   !> different nodes. We are also adding some auxiliary fields, like the
   !> global dimensions of a given dataset distributed as per the information
   !> in the layout.
-  type layout_6D
+  type, public :: layout_6D
      type(sll_collective_t), pointer  SLL_PRIV    :: collective
      sll_int32 SLL_PRIV                           :: global_sz1 !< size
      sll_int32 SLL_PRIV                           :: global_sz2 !< size
@@ -182,7 +185,7 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
   ! then replace the call to alltoallv by a call to alltoall.
 
 #define MAKE_REMAP_PLAN( type_name, layout_type, box_type, data_type )   \
-  type type_name;                                             \
+  type, public :: type_name;                                             \
      type(layout_type), pointer SLL_PRIV            :: initial_layout=>null();\
      type(layout_type), pointer SLL_PRIV            :: final_layout=>null();  \
      integer, dimension(:), pointer SLL_PRIV        :: send_displs=>null();   \
@@ -371,6 +374,16 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
   interface set_layout_n_max
      module procedure set_layout_6D_n_max
   end interface set_layout_n_max
+
+  !> Display indices of the layout by processors
+  interface sll_view_lims
+     module procedure &
+          sll_view_lims_2d, &
+          sll_view_lims_3d, &
+          sll_view_lims_4d, &
+          sll_view_lims_5d, &
+          sll_view_lims_6d
+  end interface
 
   !> Get box nodes number
   interface get_layout_num_nodes
@@ -575,6 +588,43 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
           local_to_global_4D, local_to_global_5D, local_to_global_6D
   end interface local_to_global
 
+  !> @brief Initialize layout 
+  !> @details It should have been allocated with new(), which means that
+  !> its memory is allocated in accordance with the size of collective.
+  interface initialize_layout_with_distributed_array
+     module procedure initialize_layout_with_distributed_2d_array
+     module procedure initialize_layout_with_distributed_3d_array
+     module procedure initialize_layout_with_distributed_4d_array
+     module procedure initialize_layout_with_distributed_5d_array
+     module procedure initialize_layout_with_distributed_6d_array
+  end interface initialize_layout_with_distributed_array
+
+  public :: sll_delete
+  public :: sll_view_lims
+  public :: sll_get_num_nodes
+  public :: new_remap_plan
+  public :: compute_local_sizes
+  public :: new_layout_2d
+  public :: new_layout_3d
+  public :: local_to_global
+  public :: get_layout_i_min, set_layout_i_min
+  public :: get_layout_i_max, set_layout_i_max
+  public :: get_layout_j_min, set_layout_j_min
+  public :: get_layout_j_max, set_layout_j_max
+  public :: get_layout_k_min, set_layout_k_min
+  public :: get_layout_k_max, set_layout_k_max
+  public :: get_layout_l_min, set_layout_l_min
+  public :: get_layout_l_max, set_layout_l_max
+  public :: get_layout_m_min, set_layout_m_min
+  public :: get_layout_m_max, set_layout_m_max
+  public :: get_layout_n_min, set_layout_n_min
+  public :: get_layout_n_max, set_layout_n_max
+  public :: initialize_layout_with_distributed_array
+  public :: apply_remap_2d
+  public :: apply_remap_3d
+  public :: apply_remap_4d
+  public :: apply_remap_5d
+  public :: apply_remap_6d
 
 contains  !******************************************************************
 
@@ -916,7 +966,7 @@ contains  !******************************************************************
     linear_index_6D = i + npx1*(j + npx2*(k + npx3*(l + npx4*(m + npx5*n))))
   end function linear_index_6D
 
-  subroutine initialize_layout_with_distributed_2D_array( &
+  subroutine initialize_layout_with_distributed_2d_array( &
     global_npx1, &  
     global_npx2, &
     num_proc_x1, &
@@ -974,7 +1024,7 @@ contains  !******************************************************************
     total_num_processors = num_proc_x1*num_proc_x2
     collective_size = get_layout_2D_size(layout)
     if( total_num_processors .ne. collective_size ) then
-       print *, 'ERROR, initialize_layout_with_distributed_2D_array(): ',&
+       print *, 'ERROR, initialize_layout_with_distributed_2d_array(): ',&
             'requested size of the processor mesh is inconsistent with ', &
             'the size of the collective.', 'number of processors = ', &
             total_num_processors, ' collective size = ', collective_size
@@ -1005,7 +1055,7 @@ contains  !******************************************************************
     end do
     SLL_DEALLOCATE_ARRAY( intervals_x1, err )
     SLL_DEALLOCATE_ARRAY( intervals_x2, err )
-  end subroutine initialize_layout_with_distributed_2D_array
+  end subroutine initialize_layout_with_distributed_2d_array
 
   subroutine initialize_layout_with_distributed_3D_array( &
     global_npx1, &  
@@ -5598,6 +5648,7 @@ print *, 'remap 2d complex:'
   end function layout_2D_from_layout_4D
 #endif
 
+  !> Create file for plotmtv to display the MPI topology
   subroutine write_to_file( layout, fname )
 
      type(layout_2d), pointer  :: layout

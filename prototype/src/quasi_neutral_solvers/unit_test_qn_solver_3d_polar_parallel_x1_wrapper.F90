@@ -59,7 +59,7 @@ implicit none
   nproc_x1 = num_proc
   nproc_x2 = 1
   layout2d_parx1  => new_layout_2D( sll_world_collective )
-  call initialize_layout_with_distributed_2D_array( &
+  call initialize_layout_with_distributed_array( &
     Nc_x1+1, & 
     Nc_x2, & 
     nproc_x1, &
@@ -79,7 +79,7 @@ implicit none
   nproc_x1 = 1
   nproc_x2 = num_proc
   layout2d_parx2  => new_layout_2D( sll_world_collective )
-  call initialize_layout_with_distributed_2D_array( &
+  call initialize_layout_with_distributed_array( &
     Nc_x1+1, & 
     Nc_x2, & 
     nproc_x1, &

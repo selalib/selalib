@@ -49,7 +49,7 @@ implicit none
   layout_x1       => new_layout_2D( sll_world_collective )
   nproc_x1 = sll_get_collective_size( sll_world_collective )
   nproc_x2 = 1
-  call initialize_layout_with_distributed_2D_array( &
+  call initialize_layout_with_distributed_array( &
     np_x1, np_x2, nproc_x2, nproc_x1, layout_x1 )
 
 

@@ -596,7 +596,7 @@ contains
        nproc_x4 = 1
     end if
 
-    call initialize_layout_with_distributed_2D_array( &
+    call initialize_layout_with_distributed_array( &
          nc_x1+1, & 
          nc_x2+1, & 
          nproc_x1, &
@@ -663,7 +663,7 @@ contains
          loc_sz_x4 )
     SLL_ALLOCATE(f_seq_x1x2(loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4),ierr)
 
-    call initialize_layout_with_distributed_2D_array( &
+    call initialize_layout_with_distributed_array( &
          nc_x3+1, & 
          nc_x4+1, & 
          nproc_x3, &

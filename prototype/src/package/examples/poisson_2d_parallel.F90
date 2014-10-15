@@ -52,7 +52,7 @@ program poisson_2d_parallel
   layout_x => new_layout_2D( sll_world_collective )
   nprocx = 1
   nprocy = 2**e
-  call initialize_layout_with_distributed_2D_array( ncx+1, ncy+1, &
+  call initialize_layout_with_distributed_array( ncx+1, ncy+1, &
        nprocx, nprocy, layout_x )
 
   plan => new_poisson_2d_periodic_plan_cartesian_par(&

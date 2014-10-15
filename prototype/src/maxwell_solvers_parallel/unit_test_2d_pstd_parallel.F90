@@ -87,13 +87,13 @@ program test_maxwell_2d_periodic_cart_par
   nprocx = 2**e
   nprocy = 2**e
 
-  call initialize_layout_with_distributed_2D_array( ncx, &
+  call initialize_layout_with_distributed_array( ncx, &
                                                     ncy, &
                                                       1, &
                                                  nprocy, &
                                                 layout_x )
 
-  call initialize_layout_with_distributed_2D_array( ncx, &
+  call initialize_layout_with_distributed_array( ncx, &
                                                     ncy, &
                                                  nprocx, &
                                                       1, &

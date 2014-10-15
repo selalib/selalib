@@ -869,6 +869,7 @@ contains
     inverse_jacobian_matrix_2d_discrete(2,2) =  inv_j11*r_jac
   end function inverse_jacobian_matrix_2d_discrete
 
+  !> Create a new coordinate transformation object
   function new_coordinate_transformation_2d_discrete( &
        mesh_2d,        &
        label,          &

@@ -78,7 +78,7 @@ program landau_parallel
 
   layout_x => new_layout_2D( sll_world_collective )        
 
-  call initialize_layout_with_distributed_2D_array( &
+  call initialize_layout_with_distributed_array( &
              nc_x+1, nc_v+1, 1,int(psize,4),layout_x)
 
   if ( prank == MPI_MASTER ) call sll_view_lims_2D( layout_x )
@@ -89,7 +89,7 @@ program landau_parallel
 
   layout_v => new_layout_2D( sll_world_collective )
 
-  call initialize_layout_with_distributed_2D_array( &
+  call initialize_layout_with_distributed_array( &
               nc_x+1, nc_v+1, int(psize,4),1,layout_v)
 
   if ( prank == MPI_MASTER ) call sll_view_lims_2D( layout_v )
