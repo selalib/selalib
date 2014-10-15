@@ -355,7 +355,7 @@ contains
 
     num_patches = df%num_patches
     do i=0, num_patches-1
-       call apply_remap_4D_double( &
+       call apply_remap_4D( &
             df%remap_x3x4tox1x2(i+1)%r, &
             df%f_x3x4(i+1)%f, &
             df%f_x1x2(i+1)%f )
@@ -377,7 +377,7 @@ contains
 
     num_patches = df%num_patches
     do i=0, num_patches-1
-       call apply_remap_4D_double( &
+       call apply_remap_4D( &
             df%remap_x1x2tox3x4(i+1)%r, &
             df%f_x1x2(i+1)%f, &
             df%f_x3x4(i+1)%f )
@@ -500,7 +500,7 @@ contains
 
        ! Reconfigure the data to store redundantly all the values of rho.
        remap_out => rho%get_patch_data_pointer(ipatch)
-       call apply_remap_2D_double( &
+       call apply_remap_2D( &
             df%remap_split2full(ipatch+1)%r, &
             df%rho_split(ipatch+1)%array, &
             remap_out )

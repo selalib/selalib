@@ -163,7 +163,7 @@ MAKE_LAYOUT_POINTER_CONTAINER( layout_5d_ptr, layout_5D )
 MAKE_LAYOUT_POINTER_CONTAINER( layout_6d_ptr, layout_6D )
 
 #define MAKE_REMAP_POINTER_CONTAINER( name, plan_type ) \
-  type name; \
+  type, public :: name; \
     type(plan_type), pointer :: r; \
   end type name
 
@@ -588,6 +588,12 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
           local_to_global_4D, local_to_global_5D, local_to_global_6D
   end interface local_to_global
 
+  !> Get local indices
+  interface global_to_local
+     module procedure global_to_local_2D,global_to_local_3D, &
+          global_to_local_4D, global_to_local_5D, global_to_local_6D
+  end interface global_to_local
+
   !> @brief Initialize layout 
   !> @details It should have been allocated with new(), which means that
   !> its memory is allocated in accordance with the size of collective.
@@ -610,6 +616,7 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
   public :: new_layout_5d
   public :: new_layout_6d
   public :: local_to_global
+  public :: global_to_local
   public :: get_layout_i_min, set_layout_i_min
   public :: get_layout_i_max, set_layout_i_max
   public :: get_layout_j_min, set_layout_j_min
@@ -629,6 +636,8 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
   public :: apply_remap_5d
   public :: apply_remap_6d
   public :: get_layout_collective
+  public :: new_layout_2D_from_layout_4D
+  public :: new_layout_3D_from_layout_4D
 
 contains  !******************************************************************
 
@@ -5497,17 +5506,20 @@ print *, 'remap 2d complex:'
   !
   !***************************************************************************
 
-  ! layout_2D_from_layout_4D() takes a 4D layout that describes the distribution
-  ! of a 4D array of dimensions npx1 X npx2 X 1 X 1 and returns a 2D layout,
-  ! defined over the same collective, which describes the distribution of a 2D
-  ! array of dimensions npx1 X npx2. Note that it assumes that it is the last
-  ! two dimensions which are of size 1.
-  ! 
-  ! This function is special in that it allocates the new layout to be returned.
-  ! So the usual interface of declaring the layout, calling new_layout() and
-  ! then initializing is not followed. This irregularity is itself a bit of
-  ! a problem, but may be a sign that the usual way to allocate and initialize
-  ! layouts might need to be merged.
+  !> @brief
+  !> Create new layout from other layout properties.
+  !> @details
+  !> layout_2D_from_layout_4D() takes a 4D layout that describes the distribution
+  !> of a 4D array of dimensions npx1 X npx2 X 1 X 1 and returns a 2D layout,
+  !> defined over the same collective, which describes the distribution of a 2D
+  !> array of dimensions npx1 X npx2. Note that it assumes that it is the last
+  !> two dimensions which are of size 1.
+  !> 
+  !> This function is special in that it allocates the new layout to be returned.
+  !> So the usual interface of declaring the layout, calling new_layout() and
+  !> then initializing is not followed. This irregularity is itself a bit of
+  !> a problem, but may be a sign that the usual way to allocate and initialize
+  !> layouts might need to be merged.
   function new_layout_2D_from_layout_4D( layout4d )
     type(layout_2D), pointer :: new_layout_2D_from_layout_4D
     type(layout_4D), pointer :: layout4d
@@ -5556,8 +5568,8 @@ print *, 'remap 2d complex:'
     end do
   end function new_layout_2D_from_layout_4D
 
-  function layout_3D_from_layout_4D( layout4d )
-    type(layout_3D), pointer :: layout_3D_from_layout_4D
+  function new_layout_3D_from_layout_4D( layout4d )
+    type(layout_3D), pointer :: new_layout_3D_from_layout_4D
     type(layout_4D), pointer :: layout4d
     type(sll_collective_t), pointer :: coll
     sll_int32                :: coll_size
@@ -5572,9 +5584,9 @@ print *, 'remap 2d complex:'
     sll_int32                :: l_max
 
     SLL_ASSERT( associated(layout4d) )
-    coll                     => get_layout_collective( layout4d )
-    coll_size                = sll_get_collective_size( coll )
-    layout_3D_from_layout_4D => new_layout_3d( coll )
+    coll                         => get_layout_collective( layout4d )
+    coll_size                    = sll_get_collective_size( coll )
+    new_layout_3D_from_layout_4D => new_layout_3d( coll )
     ! Just copy the contents of the layout
     do process=0, coll_size-1
        i_min = get_layout_i_min( layout4d, process )
@@ -5583,12 +5595,12 @@ print *, 'remap 2d complex:'
        j_max = get_layout_j_max( layout4d, process )
        k_min = get_layout_k_min( layout4d, process )
        k_max = get_layout_k_max( layout4d, process )
-       call set_layout_i_min( layout_3D_from_layout_4D, process, i_min )
-       call set_layout_i_max( layout_3D_from_layout_4D, process, i_max )
-       call set_layout_j_min( layout_3D_from_layout_4D, process, j_min )
-       call set_layout_j_max( layout_3D_from_layout_4D, process, j_max )
-       call set_layout_k_min( layout_3D_from_layout_4D, process, k_min )
-       call set_layout_k_max( layout_3D_from_layout_4D, process, k_max )
+       call set_layout_i_min( new_layout_3D_from_layout_4D, process, i_min )
+       call set_layout_i_max( new_layout_3D_from_layout_4D, process, i_max )
+       call set_layout_j_min( new_layout_3D_from_layout_4D, process, j_min )
+       call set_layout_j_max( new_layout_3D_from_layout_4D, process, j_max )
+       call set_layout_k_min( new_layout_3D_from_layout_4D, process, k_min )
+       call set_layout_k_max( new_layout_3D_from_layout_4D, process, k_max )
        ! For safety, check if there is any loss of information
        l_min = get_layout_l_min( layout4d, process )
        l_max = get_layout_l_max( layout4d, process )
@@ -5600,7 +5612,7 @@ print *, 'remap 2d complex:'
            !print *, 'l_max = ', l_max
         end if
     end do
-  end function layout_3D_from_layout_4D
+  end function new_layout_3D_from_layout_4D
 
 
 
