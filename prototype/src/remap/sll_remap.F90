@@ -152,7 +152,7 @@ module sll_remapper
   end type layout_6D
 
 #define MAKE_LAYOUT_POINTER_CONTAINER( name, layout_type ) \
-  type name; \
+  type, public :: name; \
     type(layout_type), pointer :: l; \
   end type name
 
@@ -628,6 +628,7 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
   public :: apply_remap_4d
   public :: apply_remap_5d
   public :: apply_remap_6d
+  public :: get_layout_collective
 
 contains  !******************************************************************
 
