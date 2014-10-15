@@ -2212,7 +2212,7 @@ contains
     SLL_ALLOCATE(sim%A3_parx1(loc4d_sz_x1,loc4d_sz_x2,loc4d_sz_x3),ierr)
 
     sim%layout2d_parx1  => new_layout_2D( sll_world_collective )
-    call initialize_layout_with_distributed_2D_array( &
+    call initialize_layout_with_distributed_array( &
       sim%m_x1%num_cells+1, & 
       sim%m_x2%num_cells, & 
       sim%nproc_x1, &
@@ -2220,7 +2220,7 @@ contains
       sim%layout2d_parx1 )
 
     sim%layout2d_parx2  => new_layout_2D( sll_world_collective )
-    call initialize_layout_with_distributed_2D_array( &
+    call initialize_layout_with_distributed_array( &
       sim%m_x1%num_cells+1, & 
       sim%m_x2%num_cells, & 
       sim%nproc_x2, &

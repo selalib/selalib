@@ -6,5 +6,5 @@ def recursive_replace( root, pattern, replace ) :
             path = os.path.join( dir, name )
             text = open( path ).read()
             if pattern in text:
-                print 'occurence in' + name
+                print 'occurence in :' + name
                 open( path, 'w' ).write( text.replace( pattern, replace ) )

@@ -140,7 +140,7 @@ contains
     nprocx1 = int(colsz,kind=2)
     nprocx2 = 1
 
-    call initialize_layout_with_distributed_2D_array( &
+    call initialize_layout_with_distributed_array( &
          ncx+1, &
          ncy+1, &
          nprocx1, &
@@ -268,7 +268,7 @@ contains
     nprocx1 = int(colsz,kind=2)
     nprocx2 = 1
 
-    call initialize_layout_with_distributed_2D_array( &
+    call initialize_layout_with_distributed_array( &
          ncx, &
          ncy, &
          nprocx1, &
