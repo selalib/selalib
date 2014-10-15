@@ -633,7 +633,7 @@ end function func_zero
          sim%world_size, &
          sim%rho_seq_x1 )
     
-    call compute_local_sizes_2d( sim%rho_seq_x1, loc_sz_x1, loc_sz_x2 )
+    call compute_local_sizes( sim%rho_seq_x1, loc_sz_x1, loc_sz_x2 )
     SLL_ALLOCATE(sim%rho_x1(loc_sz_x1,loc_sz_x2),ierr)
     SLL_ALLOCATE(sim%phi_x1(loc_sz_x1,loc_sz_x2),ierr)
     SLL_ALLOCATE(sim%phi_diff(loc_sz_x1,loc_sz_x2),ierr)
@@ -674,14 +674,14 @@ end function func_zero
          sim%world_size, &
          1, &
          sim%rho_seq_x2 )
-    call compute_local_sizes_2d( sim%rho_seq_x2, loc_sz_x1, loc_sz_x2 )
+    call compute_local_sizes( sim%rho_seq_x2, loc_sz_x1, loc_sz_x2 )
     SLL_ALLOCATE(sim%rho_x2(loc_sz_x1,loc_sz_x2),ierr)
     SLL_ALLOCATE(sim%phi_x2(loc_sz_x1,loc_sz_x2),ierr)
     SLL_ALLOCATE(sim%efield_x2(loc_sz_x1,loc_sz_x2),ierr)
 
     !end move down
 
-    call initialize_layout_with_distributed_4D_array( &
+    call initialize_layout_with_distributed_array( &
          nc_x1+1, &
          nc_x2+1, &
          nc_x3+1, &
@@ -697,7 +697,7 @@ end function func_zero
     print *, 'nproc_x3: ', sim%nproc_x3
     print *, 'nproc_x4: ', sim%nproc_x4
     
-    call compute_local_sizes_4d( sim%sequential_x3x4, &
+    call compute_local_sizes( sim%sequential_x3x4, &
          loc_sz_x1, &
          loc_sz_x2, &
          loc_sz_x3, &
@@ -726,7 +726,7 @@ end function func_zero
     sim%nproc_x2 = itemp
     
     print *, 'sequential x1x2 mode...'
-    call initialize_layout_with_distributed_4D_array( &
+    call initialize_layout_with_distributed_array( &
          nc_x1+1, & 
          nc_x2+1, & 
          nc_x3+1, &
@@ -741,7 +741,7 @@ end function func_zero
     ! function data. First compute the local sizes. Since the remap operations
     ! are out-of-place, we will allocate two different arrays, one for each
     ! layout.
-    call compute_local_sizes_4d( sim%sequential_x1x2, &
+    call compute_local_sizes( sim%sequential_x1x2, &
          loc_sz_x1, &
          loc_sz_x2, &
          loc_sz_x3, &
@@ -750,7 +750,7 @@ end function func_zero
     SLL_ALLOCATE(sim%f_x1x2_q(loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4),ierr)
     SLL_ALLOCATE(sim%f_x1x2_diff(loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4),ierr)
 
-    call compute_local_sizes_4d( sim%sequential_x3x4, &
+    call compute_local_sizes( sim%sequential_x3x4, &
          loc_sz_x1, &
          loc_sz_x2, &
          loc_sz_x3, &
@@ -945,7 +945,7 @@ end function func_zero
     call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f_x3x4_q, sim%f_x1x2_q )
     call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f_x3x4_c, sim%f_x1x2_c )
     
-    call compute_local_sizes_4d( sim%sequential_x1x2, &
+    call compute_local_sizes( sim%sequential_x1x2, &
          loc_sz_x1, &
          loc_sz_x2, &
          loc_sz_x3, &
@@ -1140,7 +1140,7 @@ end function func_zero
        call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f_x1x2_c, sim%f_x3x4_c )
        
        
-       call compute_local_sizes_4d( &
+       call compute_local_sizes( &
             sim%sequential_x1x2, &
             loc_sz_x1,           &
             loc_sz_x2,           &
@@ -1416,7 +1416,7 @@ end function func_zero
        ! the arrays should be kept around as parameters basically and not on 
        ! variables whose content could be anything... This will have to do for 
        ! now.
-       call compute_local_sizes_2d( sim%rho_seq_x1, loc_sz_x1, loc_sz_x2 )
+       call compute_local_sizes( sim%rho_seq_x1, loc_sz_x1, loc_sz_x2 )
        
        call compute_electric_field_eta1( &
             sim%phi_x1, &
@@ -1437,7 +1437,7 @@ end function func_zero
        ! because they represent an identical configuration.
        call apply_remap_2D( sim%efld_seqx1_to_seqx2, sim%efield_x1, sim%efield_x2 )
        call apply_remap_2D( sim%seqx1_to_seqx2, sim%phi_x1, sim%phi_x2 )
-       call compute_local_sizes_2d( sim%rho_seq_x2, loc_sz_x1, loc_sz_x2 )
+       call compute_local_sizes( sim%rho_seq_x2, loc_sz_x1, loc_sz_x2 )
        
        call compute_electric_field_eta2( &
             sim%phi_x2, &
@@ -1500,7 +1500,7 @@ end function func_zero
 #endif
 
        
-       call compute_local_sizes_4d( sim%sequential_x3x4, &
+       call compute_local_sizes( sim%sequential_x3x4, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
        
        
@@ -1734,7 +1734,7 @@ end function func_zero
        call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f_x3x4_c, sim%f_x1x2_c )
        
        
-       call compute_local_sizes_4d( sim%sequential_x1x2, &
+       call compute_local_sizes( sim%sequential_x1x2, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
        
        ! Approximate the integral of the distribution function along all
@@ -1907,7 +1907,7 @@ end function func_zero
     sll_real64 :: eta1, eta2, eta3, eta4
     sll_int32 :: i, j, k, l
 
-    call compute_local_sizes_4d( sim%sequential_x1x2, &
+    call compute_local_sizes( sim%sequential_x1x2, &
          loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 )
 
     do l=1,loc_sz_x4
@@ -1916,7 +1916,7 @@ end function func_zero
           do j=1,loc_sz_x2-1 ! last point excluded
              do i=1,loc_sz_x1-1 ! last point excluded
                 global_indices = &
-                     local_to_global_4D(sim%sequential_x1x2,(/i,j,k,l/))
+                     local_to_global(sim%sequential_x1x2,(/i,j,k,l/))
                 gi = global_indices(1)
                 gj = global_indices(2)
                 gk = global_indices(3)
@@ -1982,7 +1982,7 @@ end function func_zero
     sll_real64 :: eta1, eta2, eta3, eta4
     sll_int32 :: i, j, k, l
 
-    call compute_local_sizes_4d( sim%sequential_x1x2, &
+    call compute_local_sizes( sim%sequential_x1x2, &
          loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 )
 
     do l=1,loc_sz_x4
@@ -1991,7 +1991,7 @@ end function func_zero
           do j=1,loc_sz_x2-1 ! last point excluded
              do i=1,loc_sz_x1-1 ! last point excluded
                 global_indices = &
-                     local_to_global_4D(sim%sequential_x1x2,(/i,j,k,l/))
+                     local_to_global(sim%sequential_x1x2,(/i,j,k,l/))
                 gi = global_indices(1)
                 gj = global_indices(2)
                 gk = global_indices(3)
@@ -2064,7 +2064,7 @@ end function func_zero
     sll_int32  :: nc_x3
     
     nc_x3 = sim%mesh2d_v%num_cells1
-    call compute_local_sizes_4d( sim%sequential_x3x4, &
+    call compute_local_sizes( sim%sequential_x3x4, &
          loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
     
     efield_energy_total = 0.0_f64
@@ -2130,7 +2130,7 @@ end function func_zero
     sll_int32  :: nc_x4
     
     nc_x4 = sim%mesh2d_v%num_cells2
-    call compute_local_sizes_4d( sim%sequential_x3x4, &
+    call compute_local_sizes( sim%sequential_x3x4, &
          loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
     
     efield_energy_total = 0.0_f64
@@ -2668,7 +2668,7 @@ end function func_zero
           my_layout => sim%rho_seq_x2
        end if
 
-       call compute_local_sizes_2d( my_layout, local_nx1, local_nx2)        
+       call compute_local_sizes( my_layout, local_nx1, local_nx2)        
     
        offset(1) =  get_layout_i_min( my_layout, my_rank ) - 1
        offset(2) =  get_layout_j_min( my_layout, my_rank ) - 1

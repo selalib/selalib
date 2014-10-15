@@ -76,8 +76,8 @@ call initialize_layout_with_distributed_array( nr,     &
                                                   layout_a )
 call flush(6)
 if (prank == 0) then
-   call sll_view_lims_2D(layout_a)
-   call sll_view_lims_2D(layout_a)
+   call sll_view_lims(layout_a)
+   call sll_view_lims(layout_a)
 end if
 call flush(6)
 
@@ -92,13 +92,13 @@ SLL_CLEAR_ALLOCATE(x(1:nr_loc,1:na_loc),error)
 SLL_CLEAR_ALLOCATE(y(1:nr_loc,1:na_loc),error)
 
 do i = 1, nr_loc
-   global = local_to_global_2D( layout_a, (/i, 1/))
+   global = local_to_global( layout_a, (/i, 1/))
    gi = global(1)
    r(i)=r_min+(gi-1)*delta_r
 end do
 
 do j = 1, na_loc
-   global = local_to_global_2D( layout_a, (/1, j/))
+   global = local_to_global( layout_a, (/1, j/))
    gj = global(2)
    a(j)=(gj-1)*delta_a
 end do

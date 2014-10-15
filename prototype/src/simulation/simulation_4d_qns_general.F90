@@ -758,7 +758,7 @@ contains
     end if
 
 
-    ! pad de initialize_layout_with_distributed_4D_array different du cartesian L182
+    ! pad de initialize_layout_with_distributed_array different du cartesian L182
 
     print *, 'sequential_x3x4 mode...'
     ! Use this information to initialize the layout that describes the result
@@ -787,12 +787,12 @@ contains
 !!$         1, &
 !!$         sim%rho_full_layout )
     
-    !  call compute_local_sizes_2d( sim%rho_full_layout, loc_sz_x1, loc_sz_x2 )
+    !  call compute_local_sizes( sim%rho_full_layout, loc_sz_x1, loc_sz_x2 )
     SLL_ALLOCATE(sim%rho_full(nc_x1+1,nc_x2+1),ierr) ! changed from nc,nc
     SLL_ALLOCATE(recv_buf((nc_x1+1)*(nc_x2+1)),ierr) !changed from nc, nc
 
 
-    call initialize_layout_with_distributed_4D_array( &
+    call initialize_layout_with_distributed_array( &
          nc_x1+1, &
          nc_x2+1, &
          nc_x3+1, &
@@ -808,7 +808,7 @@ contains
     print *, 'nproc_x3: ', sim%nproc_x3
     print *, 'nproc_x4: ', sim%nproc_x4
     
-    call compute_local_sizes_4d( sim%sequential_x3x4, &
+    call compute_local_sizes( sim%sequential_x3x4, &
          loc_sz_x1, &
          loc_sz_x2, &
          loc_sz_x3, &
@@ -836,7 +836,7 @@ contains
 !!$         sim%world_size, &
 !!$         1, &
 !!$         sim%rho_seq_x2 )
-!!$    call compute_local_sizes_2d( sim%rho_seq_x2, loc_sz_x1, loc_sz_x2 )
+!!$    call compute_local_sizes( sim%rho_seq_x2, loc_sz_x1, loc_sz_x2 )
 !!$    SLL_ALLOCATE(sim%rho_x2(loc_sz_x1,loc_sz_x2),ierr)
 !!$    SLL_ALLOCATE(sim%phi_x2(loc_sz_x1,loc_sz_x2),ierr)
 !!$    SLL_ALLOCATE(sim%efield_x2(loc_sz_x1,loc_sz_x2),ierr)
@@ -856,7 +856,7 @@ contains
     sim%nproc_x2 = itemp
     
     print *, 'sequential x1x2 mode...'
-    call initialize_layout_with_distributed_4D_array( &
+    call initialize_layout_with_distributed_array( &
          nc_x1+1, & ! changed
          nc_x2+1, & ! changed
          nc_x3+1, &
@@ -871,7 +871,7 @@ contains
     ! function data. First compute the local sizes. Since the remap operations
     ! are out-of-place, we will allocate four different arrays, one for each
     ! layout.
-    call compute_local_sizes_4d( sim%sequential_x1x2, &
+    call compute_local_sizes( sim%sequential_x1x2, &
          loc_sz_x1, &
          loc_sz_x2, &
          loc_sz_x3, &
@@ -1009,7 +1009,7 @@ contains
          NEW_REMAP_PLAN(sim%sequential_x1x2,sim%sequential_x3x4,sim%f_x1x2)
     
     call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f_x3x4, sim%f_x1x2 )
-    call compute_local_sizes_4d( sim%sequential_x1x2, &
+    call compute_local_sizes( sim%sequential_x1x2, &
          loc_sz_x1, &
          loc_sz_x2, &
          loc_sz_x3, &
@@ -1167,7 +1167,7 @@ contains
 
        call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f_x1x2, sim%f_x3x4 )
        
-       call compute_local_sizes_4d( &
+       call compute_local_sizes( &
             sim%sequential_x1x2, &
             loc_sz_x1,           &
             loc_sz_x2,           &
@@ -1303,13 +1303,13 @@ contains
           call phi%write_to_file(itime)
        end if
        
-       call compute_local_sizes_4d( sim%sequential_x1x2, &
+       call compute_local_sizes( sim%sequential_x1x2, &
             loc_sz_x1,           &
             loc_sz_x2,           &
             loc_sz_x3,           &
             loc_sz_x4 )
        
-       call compute_local_sizes_4d( sim%sequential_x3x4, &
+       call compute_local_sizes( sim%sequential_x3x4, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
        
        efield_energy_total = 0.0_f64
@@ -1356,7 +1356,7 @@ contains
        !print*, 'energy total', efield_energy_total
        !efield_energy_total = sqrt(efield_energy_total)
        
-       call compute_local_sizes_4d( sim%sequential_x3x4, &
+       call compute_local_sizes( sim%sequential_x3x4, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
        numpart = 0.0_f64
        ! dt in vy...(x4)
@@ -1401,7 +1401,7 @@ contains
 
        call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f_x3x4, sim%f_x1x2 )
        
-       call compute_local_sizes_4d( sim%sequential_x1x2, &
+       call compute_local_sizes( sim%sequential_x1x2, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
        
        ! Approximate the integral of the distribution function along all
@@ -1535,7 +1535,7 @@ contains
     sll_int32,intent(in) :: opt
     sll_real64:: alpha1_tmp,alpha2_tmp,eta1_tmp,eta2_tmp
 
-    call compute_local_sizes_4d( sim%sequential_x1x2, &
+    call compute_local_sizes( sim%sequential_x1x2, &
          loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 )
 
     do l=1,loc_sz_x4
@@ -1545,7 +1545,7 @@ contains
           do j=1,loc_sz_x2
              do i=1,loc_sz_x1
                 global_indices = &
-                     local_to_global_4D(sim%sequential_x1x2,(/i,j,k,l/))
+                     local_to_global(sim%sequential_x1x2,(/i,j,k,l/))
                 gi = global_indices(1)
                 gj = global_indices(2)
                 gk = global_indices(3)
@@ -1700,7 +1700,7 @@ contains
     sll_int32  :: nc_x3
     
     nc_x3 = sim%mesh2d_v%num_cells1
-    call compute_local_sizes_4d( sim%sequential_x3x4, &
+    call compute_local_sizes( sim%sequential_x3x4, &
          loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
     
     efield_energy_total = 0.0_f64
@@ -1768,7 +1768,7 @@ contains
     sll_int32  :: nc_x4
     
     nc_x4 = sim%mesh2d_v%num_cells2
-    call compute_local_sizes_4d( sim%sequential_x3x4, &
+    call compute_local_sizes( sim%sequential_x3x4, &
          loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
     
     efield_energy_total = 0.0_f64
@@ -2226,7 +2226,7 @@ contains
           my_layout => sim%rho_seq_x2
        end if
 
-       call compute_local_sizes_2d( my_layout, local_nx1, local_nx2)        
+       call compute_local_sizes( my_layout, local_nx1, local_nx2)        
     
        offset(1) =  get_layout_i_min( my_layout, my_rank ) - 1
        offset(2) =  get_layout_j_min( my_layout, my_rank ) - 1
@@ -2569,7 +2569,7 @@ contains
              do iv2 = 1,Nv2-1
                 v2 = sim%mesh2d_v%eta2_min + (iv2-1)*delta_eta2
                 
-                glob_ind4d(:) = local_to_global_4D(sim%sequential_x3x4, &
+                glob_ind4d(:) = local_to_global(sim%sequential_x3x4, &
                      (/iloc1,iloc2,iv1,iv2/))
                 i1 = glob_ind4d(1)
                 i2 = glob_ind4d(2)
@@ -2678,7 +2678,7 @@ contains
           do iv1 = 1,Nv1-1
              do iv2 = 1,Nv2-1
                 
-                glob_ind4d(:) = local_to_global_4D(sim%sequential_x3x4, &
+                glob_ind4d(:) = local_to_global(sim%sequential_x3x4, &
                      (/iloc1,iloc2,iv1,iv2/))
                 i1 = glob_ind4d(1)
                 i2 = glob_ind4d(2)

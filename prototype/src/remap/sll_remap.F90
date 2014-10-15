@@ -606,6 +606,9 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
   public :: compute_local_sizes
   public :: new_layout_2d
   public :: new_layout_3d
+  public :: new_layout_4d
+  public :: new_layout_5d
+  public :: new_layout_6d
   public :: local_to_global
   public :: get_layout_i_min, set_layout_i_min
   public :: get_layout_i_max, set_layout_i_max

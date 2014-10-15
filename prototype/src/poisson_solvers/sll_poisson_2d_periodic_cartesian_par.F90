@@ -108,7 +108,7 @@ contains
 
     ! Layout and local sizes for FFTs in x-direction
     plan%layout_seq_x1 => start_layout
-    call compute_local_sizes_2d( &
+    call compute_local_sizes( &
          plan%layout_seq_x1, &
          loc_sz_x1, &
          loc_sz_x2 )
@@ -147,7 +147,7 @@ contains
          nprocx2, &
          plan%layout_seq_x2 )
 
-    call compute_local_sizes_2d( &
+    call compute_local_sizes( &
          plan%layout_seq_x2, &
          loc_sz_x1, &
          loc_sz_x2 )
@@ -236,7 +236,7 @@ contains
 
     ! Layout and local sizes for FFTs in x-direction
     plan%layout_seq_x1 => start_layout
-    call compute_local_sizes_2d( &
+    call compute_local_sizes( &
          plan%layout_seq_x1, &
          loc_sz_x1, &
          loc_sz_x2 )
@@ -275,7 +275,7 @@ contains
          nprocx2, &
          plan%layout_seq_x2 )
 
-    call compute_local_sizes_2d( &
+    call compute_local_sizes( &
          plan%layout_seq_x2, &
          loc_sz_x1, &
          loc_sz_x2 )
@@ -369,7 +369,7 @@ contains
           ! will always be at the border of any splitting of the domains. This 
           ! seems safe in this case.
           
-          global = local_to_global_2D( layout_y, (/i, j/))
+          global = local_to_global( layout_y, (/i, j/))
           gi = global(1)
           gj = global(2)
           
@@ -507,7 +507,7 @@ contains
           ! will always be at the border of any splitting of the domains. This 
           ! seems safe in this case.
           
-          global = local_to_global_2D( layout_y, (/i, j/))
+          global = local_to_global( layout_y, (/i, j/))
           gi = global(1)
           gj = global(2)
           
@@ -611,7 +611,7 @@ contains
     ! Note that this checks for strict sizes, not an array being bigger
     ! than a certain size, but exactly a desired size... This may be a bit
     ! too stringent.
-    call compute_local_sizes_2d( layout, nx, ny )
+    call compute_local_sizes( layout, nx, ny )
     ! Verify the first direction
     if ( nx /= size(rho,1) ) then
        print*, 'ERROR: solve_poisson_2d_periodic_cartesian_par()', &

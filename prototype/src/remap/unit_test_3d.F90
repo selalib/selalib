@@ -13,7 +13,7 @@
 !****************************************************************************
 
 program remap_test
-  use sll_collective, only: sll_boot_collective, sll_halt_collective
+  use sll_collective
   use sll_remapper
 !#include "sll_remap.h"
 #include "sll_memory.h"
@@ -95,7 +95,7 @@ program remap_test
         print *, 'source configuration: ', npi, npj, npk
      end if
 
-     call initialize_layout_with_distributed_3D_array( &
+     call initialize_layout_with_distributed_array( &
           ni, &
           nj, &
           nk, &
@@ -117,7 +117,7 @@ program remap_test
         do j=1,loc_sz_j_init 
            do i=1,loc_sz_i_init
               tmpa(:) = (/i, j, k/)
-              global_indices =  local_to_global_3D( layout1, tmpa )
+              global_indices =  local_to_global( layout1, tmpa )
               gi = global_indices(1)
               gj = global_indices(2)
               gk = global_indices(3)
@@ -134,7 +134,7 @@ program remap_test
         print *, 'target configuration: ', npi, npj, npk
      end if
 
-     call initialize_layout_with_distributed_3D_array( &
+     call initialize_layout_with_distributed_array( &
           ni, &
           nj, &
           nk, &
@@ -161,9 +161,9 @@ program remap_test
 #if 0
      if( myrank .eq. 0 ) then
         print *, i_test, myrank, 'Printing layout1: '
-        call sll_view_lims_3D( layout1 )
+        call sll_view_lims( layout1 )
         print *, i_test, myrank, 'Printing layout2: '
-        call sll_view_lims_3D( layout2 )
+        call sll_view_lims( layout2 )
      end if
 #endif
      ! compare results with expected data
@@ -171,7 +171,7 @@ program remap_test
         do j=1,loc_sz_j_final 
            do i=1,loc_sz_i_final
               tmpa(:) = (/i, j, k/)
-              global_indices =  local_to_global_3D( layout2, tmpa )
+              global_indices =  local_to_global( layout2, tmpa )
               gi = global_indices(1)
               gj = global_indices(2)
               gk = global_indices(3)
@@ -198,9 +198,9 @@ program remap_test
              !    end if
 
                  print *, i_test, myrank, 'Printing layout1: '
-                 call sll_view_lims_3D( layout1 )
+                 call sll_view_lims( layout1 )
                  print *, i_test, myrank, 'Printing layout2: '
-                 call sll_view_lims_3D( layout2 )
+                 call sll_view_lims( layout2 )
 
                  print*, 'program stopped by failure'
                  stop
@@ -232,8 +232,8 @@ program remap_test
        
      call sll_collective_barrier(sll_world_collective)
   
-     call delete_layout_3D( layout1 )
-     call delete_layout_3D( layout2 )
+     call sll_delete( layout1 )
+     call sll_delete( layout2 )
      SLL_DEALLOCATE_ARRAY(local_array1, ierr)
      SLL_DEALLOCATE_ARRAY(local_array2, ierr)
      SLL_DEALLOCATE_ARRAY(arrays_diff, ierr)
@@ -271,33 +271,33 @@ contains
     integer                  :: i_min_n, i_max_n, j_min_n, j_max_n, &
     k_min_n, k_max_n, i_min_p, i_max_p, j_min_p, j_max_p, k_min_p, k_max_p    
     ! Get proc_n contents from layout
-    i_min_n = get_layout_3D_i_min( layout, proc_n )
-    i_max_n = get_layout_3D_i_max( layout, proc_n )
-    j_min_n = get_layout_3D_j_min( layout, proc_n )
-    j_max_n = get_layout_3D_j_max( layout, proc_n )
-    k_min_n = get_layout_3D_k_min( layout, proc_n )
-    k_max_n = get_layout_3D_k_max( layout, proc_n )
+    i_min_n = get_layout_i_min( layout, proc_n )
+    i_max_n = get_layout_i_max( layout, proc_n )
+    j_min_n = get_layout_j_min( layout, proc_n )
+    j_max_n = get_layout_j_max( layout, proc_n )
+    k_min_n = get_layout_k_min( layout, proc_n )
+    k_max_n = get_layout_k_max( layout, proc_n )
     ! Get proc_p contents from layout
-    i_min_p = get_layout_3D_i_min( layout, proc_p )
-    i_max_p = get_layout_3D_i_max( layout, proc_p )
-    j_min_p = get_layout_3D_j_min( layout, proc_p )
-    j_max_p = get_layout_3D_j_max( layout, proc_p )
-    k_min_p = get_layout_3D_k_min( layout, proc_p )
-    k_max_p = get_layout_3D_k_max( layout, proc_p )
+    i_min_p = get_layout_i_min( layout, proc_p )
+    i_max_p = get_layout_i_max( layout, proc_p )
+    j_min_p = get_layout_j_min( layout, proc_p )
+    j_max_p = get_layout_j_max( layout, proc_p )
+    k_min_p = get_layout_k_min( layout, proc_p )
+    k_max_p = get_layout_k_max( layout, proc_p )
     ! Set proc_n contents in layout
-    call set_layout_3D_i_min( layout, proc_n, i_min_p )
-    call set_layout_3D_i_max( layout, proc_n, i_max_p)
-    call set_layout_3D_j_min( layout, proc_n, j_min_p )
-    call set_layout_3D_j_max( layout, proc_n, j_max_p )
-    call set_layout_3D_k_min( layout, proc_n, k_min_p )
-    call set_layout_3D_k_max( layout, proc_n, k_max_p )
+    call set_layout_i_min( layout, proc_n, i_min_p )
+    call set_layout_i_max( layout, proc_n, i_max_p)
+    call set_layout_j_min( layout, proc_n, j_min_p )
+    call set_layout_j_max( layout, proc_n, j_max_p )
+    call set_layout_k_min( layout, proc_n, k_min_p )
+    call set_layout_k_max( layout, proc_n, k_max_p )
     ! Set proc_p contents in layout
-    call set_layout_3D_i_min( layout, proc_p, i_min_n )
-    call set_layout_3D_i_max( layout, proc_p, i_max_n )
-    call set_layout_3D_j_min( layout, proc_p, j_min_n )
-    call set_layout_3D_j_max( layout, proc_p, j_max_n )
-    call set_layout_3D_k_min( layout, proc_p, k_min_n )
-    call set_layout_3D_k_max( layout, proc_p, k_max_n )   
+    call set_layout_i_min( layout, proc_p, i_min_n )
+    call set_layout_i_max( layout, proc_p, i_max_n )
+    call set_layout_j_min( layout, proc_p, j_min_n )
+    call set_layout_j_max( layout, proc_p, j_max_n )
+    call set_layout_k_min( layout, proc_p, k_min_n )
+    call set_layout_k_max( layout, proc_p, k_max_n )   
   end subroutine swap_box_3D
   
   function theoretical_global_3D_indices(d, ni, nj) !result(ind)

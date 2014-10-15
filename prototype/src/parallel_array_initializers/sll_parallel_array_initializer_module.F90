@@ -132,7 +132,7 @@ contains
 
     do j=1,loc_size_x2
       do i=1,loc_size_x1
-        gi(:) = local_to_global_2D( layout, (/i,j/) )
+        gi(:) = local_to_global( layout, (/i,j/) )
         eta1 = eta1_min + real(gi(1)-1,f64)*delta1
         eta2 = eta2_min + real(gi(2)-1,f64)*delta2
         array(i,j) = func(eta1,eta2,func_params)
@@ -194,7 +194,7 @@ contains
 
     do j=1,loc_size_x2
       do i=1,loc_size_x1
-        gi(:) = local_to_global_2D( layout, (/i,j/) )
+        gi(:) = local_to_global( layout, (/i,j/) )
         eta1 = x1_array(gi(1))
         eta2 = x2_array(gi(2))
         array(i,j) = func(eta1,eta2,func_params)
@@ -284,7 +284,7 @@ contains
       do k=1,loc_size_x3
         do j=1,loc_size_x2
           do i=1,loc_size_x1
-            gi(:) = local_to_global_4D( layout, (/i,j,k,l/) )
+            gi(:) = local_to_global( layout, (/i,j,k,l/) )
             eta1 = eta1_min + real(gi(1)-1,f64)*delta1
             eta2 = eta2_min + real(gi(2)-1,f64)*delta2
             eta3 = eta3_min + real(gi(3)-1,f64)*delta3
@@ -556,7 +556,7 @@ contains
           do k=1,loc_size_x3
              do j=1,loc_size_x2
                 do i=1,loc_size_x1
-                   gi(:) = local_to_global_4D( layout, (/i,j,k,l/) )
+                   gi(:) = local_to_global( layout, (/i,j,k,l/) )
                    eta1 = eta1_min + real(gi(1)-1,f64)*delta1
                    eta2 = eta2_min + real(gi(2)-1,f64)*delta2
                    eta3 = eta3_min + real(gi(3)-1,f64)*delta3
@@ -571,7 +571,7 @@ contains
           do k=1,loc_size_x3
              do j=1,loc_size_x2
                 do i=1,loc_size_x1
-                   gi(:) = local_to_global_4D( layout, (/i,j,k,l/) )
+                   gi(:) = local_to_global( layout, (/i,j,k,l/) )
                    eta1 = eta1_min + real(gi(1)-1,f64)*delta1
                    eta2 = eta2_min + real(gi(2)-1,f64)*delta2
                    eta3 = eta3_min + real(gi(3)-1,f64)*delta3
@@ -589,7 +589,7 @@ contains
           do k=1,loc_size_x3
              do j=1,loc_size_x2
                 do i=1,loc_size_x1
-                   gi(:) = local_to_global_4D( layout, (/i,j,k,l/) )
+                   gi(:) = local_to_global( layout, (/i,j,k,l/) )
                    eta1 = eta1_min + real(gi(1)-1,f64)*delta1
                    eta2 = eta2_min + real(gi(2)-1,f64)*delta2
                    eta3 = eta3_min + real(gi(3)-1,f64)*delta3
@@ -606,7 +606,7 @@ contains
           do k=1,loc_size_x3
              do j=1,loc_size_x2
                 do i=1,loc_size_x1
-                   gi(:) = local_to_global_4D( layout, (/i,j,k,l/) )
+                   gi(:) = local_to_global( layout, (/i,j,k,l/) )
                    eta1 = eta1_min + real(gi(1)-1,f64)*delta1
                    eta2 = eta2_min + real(gi(2)-1,f64)*delta2
                    eta3 = eta3_min + real(gi(3)-1,f64)*delta3
@@ -764,7 +764,7 @@ contains
 !          do k=1,loc_size_x3
 !             do j=1,loc_size_x2
 !                do i=1,loc_size_x1
-!                   gi(:) = local_to_global_4D( layout, (/i,j,k,l/) )
+!                   gi(:) = local_to_global( layout, (/i,j,k,l/) )
 !                   eta1 = eta1_min + real(gi(1)-1,f64)*delta1
 !                   eta2 = eta2_min + real(gi(2)-1,f64)*delta2
 !                   eta3 = eta3_min + real(gi(3)-1,f64)*delta3
@@ -779,7 +779,7 @@ contains
 !          do k=1,loc_size_x3
 !             do j=1,loc_size_x2
 !                do i=1,loc_size_x1
-!                   gi(:) = local_to_global_4D( layout, (/i,j,k,l/) )
+!                   gi(:) = local_to_global( layout, (/i,j,k,l/) )
 !                   eta1 = eta1_min + real(gi(1)-1,f64)*delta1
 !                   eta2 = eta2_min + real(gi(2)-1,f64)*delta2
 !                   eta3 = eta3_min + real(gi(3)-1,f64)*delta3
@@ -796,7 +796,7 @@ contains
 !          do k=1,loc_size_x3
 !             do j=1,loc_size_x2
 !                do i=1,loc_size_x1
-!                   gi(:) = local_to_global_4D( layout, (/i,j,k,l/) )
+!                   gi(:) = local_to_global( layout, (/i,j,k,l/) )
 !                   eta1 = eta1_min + real(gi(1)-1,f64)*delta1
 !                   eta2 = eta2_min + real(gi(2)-1,f64)*delta2
 !                   eta3 = eta3_min + real(gi(3)-1,f64)*delta3
@@ -813,7 +813,7 @@ contains
 !          do k=1,loc_size_x3
 !             do j=1,loc_size_x2
 !                do i=1,loc_size_x1
-!                   gi(:) = local_to_global_4D( layout, (/i,j,k,l/) )
+!                   gi(:) = local_to_global( layout, (/i,j,k,l/) )
 !                   eta1 = eta1_min + real(gi(1)-1,f64)*delta1
 !                   eta2 = eta2_min + real(gi(2)-1,f64)*delta2
 !                   eta3 = eta3_min + real(gi(3)-1,f64)*delta3
@@ -1014,7 +1014,7 @@ contains
           do k=1,loc_size_x3
              do j=1,loc_size_x2
                 do i=1,loc_size_x1
-                   gi(:) = local_to_global_4D( layout, (/i,j,k,l/) )
+                   gi(:) = local_to_global( layout, (/i,j,k,l/) )
                    eta1 = eta1_min + real(gi(1)-1,f64)*delta1
                    eta2 = eta2_min + real(gi(2)-1,f64)*delta2
                    eta3 = eta3_min + real(gi(3)-1,f64)*delta3
@@ -1029,7 +1029,7 @@ contains
           do k=1,loc_size_x3
              do j=1,loc_size_x2
                 do i=1,loc_size_x1
-                   gi(:) = local_to_global_4D( layout, (/i,j,k,l/) )
+                   gi(:) = local_to_global( layout, (/i,j,k,l/) )
                    eta1 = eta1_min + real(gi(1)-1,f64)*delta1
                    eta2 = eta2_min + real(gi(2)-1,f64)*delta2
                    eta3 = eta3_min + real(gi(3)-1,f64)*delta3
@@ -1046,7 +1046,7 @@ contains
           do k=1,loc_size_x3
              do j=1,loc_size_x2
                 do i=1,loc_size_x1
-                   gi(:) = local_to_global_4D( layout, (/i,j,k,l/) )
+                   gi(:) = local_to_global( layout, (/i,j,k,l/) )
                    eta1 = eta1_min + real(gi(1)-1,f64)*delta1
                    eta2 = eta2_min + real(gi(2)-1,f64)*delta2
                    eta3 = eta3_min + real(gi(3)-1,f64)*delta3
@@ -1063,7 +1063,7 @@ contains
           do k=1,loc_size_x3
              do j=1,loc_size_x2
                 do i=1,loc_size_x1
-                   gi(:) = local_to_global_4D( layout, (/i,j,k,l/) )
+                   gi(:) = local_to_global( layout, (/i,j,k,l/) )
                    eta1 = eta1_min + real(gi(1)-1,f64)*delta1
                    eta2 = eta2_min + real(gi(2)-1,f64)*delta2
                    eta3 = eta3_min + real(gi(3)-1,f64)*delta3
@@ -1175,7 +1175,7 @@ contains
 !       do k=1,loc_size_x3
 !          do j=1,loc_size_x2
 !             do i=1,loc_size_x1
-!                gi(:) = local_to_global_4D( layout, (/i,j,k,l/) )
+!                gi(:) = local_to_global( layout, (/i,j,k,l/) )
 !                eta1 = eta1_min + real(gi(1)-1,f64)*delta1
 !                eta2 = eta2_min + real(gi(2)-1,f64)*delta2
 !                eta3 = eta3_min + real(gi(3)-1,f64)*delta3

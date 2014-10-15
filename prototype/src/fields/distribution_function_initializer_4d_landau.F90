@@ -241,7 +241,7 @@ contains
           do j=1, num_pts2
              do i=1, num_pts1
                 ! convert to global indices
-                gi(:) = local_to_global_4D( layout, (/i,j,k,l/) )
+                gi(:) = local_to_global( layout, (/i,j,k,l/) )
                 x  = gi(1)*delta1  ! danger: implicit xmin = 0
                 y  = gi(2)*delta2  ! danger: implicit ymin = 0
                 vx = vx_min + gi(3)*delta3
@@ -341,7 +341,7 @@ contains
 !!$          do j=1, num_pts2
 !!$             do i=1, num_pts1
 !!$                ! convert to global indices
-!!$                gi(:) = local_to_global_4D( layout, (/i,j,k,l/) )
+!!$                gi(:) = local_to_global( layout, (/i,j,k,l/) )
 !!$                x  = gi(1)*delta1  ! danger: implicit xmin = 0
 !!$                y  = gi(2)*delta2  ! danger: implicit ymin = 0
 !!$                vx = vx_min + gi(3)*delta3

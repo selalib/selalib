@@ -81,10 +81,10 @@ program landau_parallel
   call initialize_layout_with_distributed_array( &
              nc_x+1, nc_v+1, 1,int(psize,4),layout_x)
 
-  if ( prank == MPI_MASTER ) call sll_view_lims_2D( layout_x )
+  if ( prank == MPI_MASTER ) call sll_view_lims( layout_x )
   call flush(6)
 
-  call compute_local_sizes_2d(layout_x,loc_sz_i,loc_sz_j)        
+  call compute_local_sizes(layout_x,loc_sz_i,loc_sz_j)        
   SLL_CLEAR_ALLOCATE(f(1:loc_sz_i,1:loc_sz_j),error)
 
   layout_v => new_layout_2D( sll_world_collective )
@@ -92,10 +92,10 @@ program landau_parallel
   call initialize_layout_with_distributed_array( &
               nc_x+1, nc_v+1, int(psize,4),1,layout_v)
 
-  if ( prank == MPI_MASTER ) call sll_view_lims_2D( layout_v )
+  if ( prank == MPI_MASTER ) call sll_view_lims( layout_v )
   call flush(6)
 
-  call compute_local_sizes_2d(layout_v,loc_sz_i,loc_sz_j)        
+  call compute_local_sizes(layout_v,loc_sz_i,loc_sz_j)        
 
   SLL_CLEAR_ALLOCATE(ft(1:loc_sz_i,1:loc_sz_j),error)
 
@@ -105,7 +105,7 @@ program landau_parallel
   x_to_v => new_remap_plan( layout_x, layout_v, f)     
   v_to_x => new_remap_plan( layout_v, layout_x, ft)     
   
-  call compute_local_sizes_2d(layout_v,loc_sz_i,loc_sz_j)        
+  call compute_local_sizes(layout_v,loc_sz_i,loc_sz_j)        
 
   eps  = 0.05_f64
   kx   = 0.50_f64
@@ -113,7 +113,7 @@ program landau_parallel
   do j=1,loc_sz_j
   do i=1,loc_sz_i
 
-     global_indices = local_to_global_2D(layout_v,(/i,j/)) 
+     global_indices = local_to_global(layout_v,(/i,j/)) 
      gi = global_indices(1)
      gj = global_indices(2)
 
@@ -165,8 +165,8 @@ program landau_parallel
   if (prank == MPI_MASTER) &
        write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*psize
 
-  call delete_layout_2D(layout_x)
-  call delete_layout_2D(layout_v)
+  call sll_delete(layout_x)
+  call sll_delete(layout_v)
   SLL_DEALLOCATE_ARRAY(f, error)
   SLL_DEALLOCATE_ARRAY(ft, error)
 
@@ -181,11 +181,11 @@ contains
    sll_int32                     :: comm
    sll_real64, dimension(nc_x+1) :: locrho
 
-   call compute_local_sizes_2d(layout_v,loc_sz_i,loc_sz_j)        
+   call compute_local_sizes(layout_v,loc_sz_i,loc_sz_j)        
    
    locrho = 0.0_f64
    do i=1,loc_sz_i
-      global_indices = local_to_global_2D(layout_v,(/i,1/)) 
+      global_indices = local_to_global(layout_v,(/i,1/)) 
       gi = global_indices(1)
       gj = global_indices(2)
       locrho(gi) = sum(ft(i,:))*delta_v 
@@ -202,11 +202,11 @@ contains
   sll_real64, intent(in) :: dt
   sll_real64 :: alpha
 
-  call compute_local_sizes_2d(layout_x,loc_sz_i,loc_sz_j)
+  call compute_local_sizes(layout_x,loc_sz_i,loc_sz_j)
 
   do j=1,loc_sz_j
 
-     global_indices = local_to_global_2D(layout_x,(/1,j/)) 
+     global_indices = local_to_global(layout_x,(/1,j/)) 
      gj = global_indices(2)
      alpha = (v_min +(gj-1)*delta_v)*dt
      f(:,j) = interp_x%interpolate_array_disp(loc_sz_i,f(:,j),alpha)
@@ -220,11 +220,11 @@ contains
   sll_real64, intent(in) :: dt
   sll_real64 :: alpha
 
-  call compute_local_sizes_2d(layout_v,loc_sz_i,loc_sz_j)        
+  call compute_local_sizes(layout_v,loc_sz_i,loc_sz_j)        
 
   do i=1,loc_sz_i
 
-     global_indices = local_to_global_2D(layout_v,(/i,1/)) 
+     global_indices = local_to_global(layout_v,(/i,1/)) 
      gi = global_indices(1)
      alpha = efield(gi)*dt
      ft(i,:) = interp_v%interpolate_array_disp(loc_sz_j,ft(i,:),alpha)

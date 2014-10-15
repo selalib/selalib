@@ -290,7 +290,7 @@ contains
                    do i=1, num_pts1
                       ! convert to global indices
                       tmpa(:) = (/i,j,k,l,m,n/)
-                      gi(:) = local_to_global_6D( layout, tmpa )
+                      gi(:) = local_to_global( layout, tmpa )
                       x  = gi(1)*delta1  ! danger: implicit xmin = 0
                       y  = gi(2)*delta2  ! danger: implicit ymin = 0
                       z  = gi(3)*delta3  ! danger: implicit zmin = 0

@@ -182,12 +182,12 @@ contains
     psize = sll_get_collective_size(sll_world_collective)
 
     this%layout_r => layout_r
-    call compute_local_sizes_2d(layout_r,nr_loc,na_loc)
+    call compute_local_sizes(layout_r,nr_loc,na_loc)
     SLL_CLEAR_ALLOCATE(this%f_r(1:nr_loc,1:na_loc),error)
 
     ! Layout and local sizes for FFTs in theta-direction
     this%layout_a => layout_a
-    call compute_local_sizes_2d(layout_a,nr_loc,na_loc)
+    call compute_local_sizes(layout_a,nr_loc,na_loc)
     SLL_CLEAR_ALLOCATE(this%f_a(1:nr_loc,1:na_loc),error)
 
     this%rmp_ra => new_remap_plan(this%layout_r, this%layout_a, this%f_r)
@@ -245,7 +245,7 @@ contains
     call verify_argument_sizes_par(this%layout_a, rhs)
     this%f_a = cmplx(rhs, 0_f64, kind=f64)
 
-    call compute_local_sizes_2d( this%layout_a, nr_loc, na_loc )
+    call compute_local_sizes( this%layout_a, nr_loc, na_loc )
 
     do i=1,nr_loc
       call fft_apply_plan(this%fw,this%f_a(i,1:ntheta),this%f_a(i,1:ntheta))
@@ -255,8 +255,8 @@ contains
     call apply_remap_2D( this%rmp_ar, this%f_a, this%f_r )
     
     
-    call compute_local_sizes_2d( this%layout_r, nr_loc, na_loc )
-    !global = local_to_global_2D( this%layout_r, (/1, 1/))
+    call compute_local_sizes( this%layout_r, nr_loc, na_loc )
+    !global = local_to_global( this%layout_r, (/1, 1/))
     !k = global(2)/2 - 1
     
     !print *,'#na_loc=',sll_get_collective_rank(sll_world_collective),na_loc
@@ -267,7 +267,7 @@ contains
     !do j = 1, na_loc-1, 2
     do j = 1, na_loc  
       !k = k + 1
-      global = local_to_global_2D( this%layout_r, (/1, j/))
+      global = local_to_global( this%layout_r, (/1, j/))
       k = global(2)
       if (k<=ntheta/2) then
         k = k-1
@@ -376,7 +376,7 @@ contains
     end do
 
     call apply_remap_2D( this%rmp_ra, this%f_r, this%f_a )
-    call compute_local_sizes_2d( this%layout_a, nr_loc, na_loc )
+    call compute_local_sizes( this%layout_a, nr_loc, na_loc )
 
     call verify_argument_sizes_par(this%layout_a, phi)
     
@@ -400,7 +400,7 @@ contains
     ! Note that this checks for strict sizes, not an array being bigger
     ! than a certain size, but exactly a desired size... This may be a bit
     ! too stringent.
-    call compute_local_sizes_2d( layout, n(1), n(2) )
+    call compute_local_sizes( layout, n(1), n(2) )
 
     do i=1,2
        if ( (n(i)/=size(array,i))) then
