@@ -162,7 +162,7 @@ contains
        np_x1 = df%transf%get_num_cells_eta1(ip) + 1
        np_x2 = df%transf%get_num_cells_eta2(ip) + 1
        df%layouts_x1x2(ip+1)%l => new_layout_4D(df%collective)
-       call initialize_layout_with_distributed_4D_array( &
+       call initialize_layout_with_distributed_array( &
             np_x1, &
             np_x2, &
             np_x3, &
@@ -172,7 +172,7 @@ contains
             df%nproc_factor1, &
             df%nproc_factor2, &
             df%layouts_x1x2(ip+1)%l )
-       call compute_local_sizes_4d( &
+       call compute_local_sizes( &
             df%layouts_x1x2(ip+1)%l, &
             locsz1, &
             locsz2, &
@@ -181,7 +181,7 @@ contains
        SLL_ALLOCATE(df%f_x1x2(ip+1)%f(locsz1,locsz2,locsz3,locsz4),ierr)
 
        df%layouts_x3x4(ip+1)%l => new_layout_4D(df%collective)
-       call initialize_layout_with_distributed_4D_array( &
+       call initialize_layout_with_distributed_array( &
             np_x1, &
             np_x2, &
             np_x3, &
@@ -191,7 +191,7 @@ contains
             1, &
             1, &
             df%layouts_x3x4(ip+1)%l )
-       call compute_local_sizes_4d( &
+       call compute_local_sizes( &
             df%layouts_x3x4(ip+1)%l, &
             locsz1, &
             locsz2, &
@@ -219,8 +219,8 @@ contains
           call set_layout_j_max( df%layouts_full(ip+1)%l, j, jmax)
        end do
 
-       ! call sll_view_lims_2d(df%layouts_split(ip+1)%l)
-       ! call sll_view_lims_2d(df%layouts_full(ip+1)%l)
+       ! call sll_view_lims(df%layouts_split(ip+1)%l)
+       ! call sll_view_lims(df%layouts_full(ip+1)%l)
 
        df%remap_split2full(ip+1)%r => &
             new_remap_plan( df%layouts_split(ip+1)%l, &
@@ -405,7 +405,7 @@ contains
     SLL_ASSERT( (patch >=0) .and. (patch <= df%num_patches - 1) )
 
     if(df%ready_for_sequential_ops_in_x1x2 .eqv. .true.) then
-       call compute_local_sizes_4d( &
+       call compute_local_sizes( &
             df%layouts_x1x2(patch+1)%l, &
             loc_sz_x1, &
             loc_sz_x2, &
@@ -414,7 +414,7 @@ contains
     end if
 
     if(df%ready_for_sequential_ops_in_x1x2 .eqv. .false.) then
-       call compute_local_sizes_4d( &
+       call compute_local_sizes( &
             df%layouts_x3x4(patch+1)%l, &
             loc_sz_x1, &
             loc_sz_x2, &
@@ -455,7 +455,7 @@ contains
     delta4 = df%mesh_v%delta_eta2
 
     if(df%ready_for_sequential_ops_in_x1x2 .eqv. .true.) then
-       gi = local_to_global_4D(df%layouts_x1x2(patch+1)%l, ijkl)
+       gi = local_to_global(df%layouts_x1x2(patch+1)%l, ijkl)
        etas(1) = eta1_min + (gi(1)-1)*delta1
        etas(2) = eta2_min + (gi(2)-1)*delta2
        etas(3) = eta3_min + (gi(3)-1)*delta3
@@ -463,7 +463,7 @@ contains
     end if
 
     if(df%ready_for_sequential_ops_in_x1x2 .eqv. .false.) then
-       gi = local_to_global_4D(df%layouts_x3x4(patch+1)%l, ijkl)
+       gi = local_to_global(df%layouts_x3x4(patch+1)%l, ijkl)
        etas(1) = eta1_min + (gi(1)-1)*delta1
        etas(2) = eta2_min + (gi(2)-1)*delta2
        etas(3) = eta3_min + (gi(3)-1)*delta3

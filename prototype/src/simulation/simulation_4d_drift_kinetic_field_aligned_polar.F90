@@ -1138,7 +1138,7 @@ contains
     end if
 
 
-    call compute_local_sizes_4d( sim%layout4d_parx1, &
+    call compute_local_sizes( sim%layout4d_parx1, &
       loc4d_sz_x1, &
       loc4d_sz_x2, &
       loc4d_sz_x3, &
@@ -1162,7 +1162,7 @@ contains
     do iter=1,sim%num_iterations    
 
 
-      call compute_local_sizes_4d( sim%layout4d_parx1, &
+      call compute_local_sizes( sim%layout4d_parx1, &
         loc4d_sz_x1, &
         loc4d_sz_x2, &
         loc4d_sz_x3, &
@@ -1694,7 +1694,7 @@ contains
     nc_x3 = sim%m_x3%num_cells
     
     
-    call compute_local_sizes_4d( &
+    call compute_local_sizes( &
       sim%layout4d_parx3x4, &
       loc4d_sz_x1, &
       loc4d_sz_x2, &
@@ -1715,7 +1715,7 @@ contains
         sim%B0)
     enddo
 
-    call compute_local_sizes_4d( &
+    call compute_local_sizes( &
       sim%layout4d_parx1, &
       loc4d_sz_x1, &
       loc4d_sz_x2, &
@@ -1724,7 +1724,7 @@ contains
 
     if(sim%use_field_aligned_derivative .eqv. .true.)then
       do i1=1, loc4d_sz_x1      
-        global_indices(1:4) = local_to_global_4D( &
+        global_indices(1:4) = local_to_global( &
             sim%layout4d_parx1, &
             (/i1, 1, 1, 1/) )        
         call compute_oblic_derivative_2d( &
@@ -1781,7 +1781,7 @@ contains
     
     
     
-     call compute_local_sizes_4d( sim%layout4d_parx1, &
+     call compute_local_sizes( sim%layout4d_parx1, &
       loc_sz_x1, &
       loc_sz_x2, &
       loc_sz_x3, &
@@ -1840,7 +1840,7 @@ contains
 
    
       
-    call compute_local_sizes_4d( sim%layout4d_parx1, &
+    call compute_local_sizes( sim%layout4d_parx1, &
       loc_sz_x1, &
       loc_sz_x2, &
       loc_sz_x3, &
@@ -1850,7 +1850,7 @@ contains
       SLL_ALLOCATE(f2d(nc_x2+1,nc_x3+1),ierr)       
       do i1=1,loc_sz_x1
         do i4=1,loc_sz_x4
-          global_indices(1:4) = local_to_global_4D( &
+          global_indices(1:4) = local_to_global( &
             sim%layout4d_parx1, &
             (/i1, 1, 1, i4/) )
           alpha = sim%m_x4%eta_min+real(global_indices(4)-1,f64)*sim%m_x4%delta_eta
@@ -1876,7 +1876,7 @@ contains
       do i2=1,loc_sz_x2
         do i1=1,loc_sz_x1
           do i4=1,loc_sz_x4
-            global_indices(1:4) = local_to_global_4D( &
+            global_indices(1:4) = local_to_global( &
               sim%layout4d_parx1, &
               (/i1, i2, 1, i4/) )
             alpha = sim%m_x4%eta_min+real(global_indices(4)-1,f64)*sim%m_x4%delta_eta
@@ -1928,7 +1928,7 @@ contains
     SLL_ALLOCATE(f1d(nc_x4+1),ierr)  
     SLL_ALLOCATE(f1d_new(nc_x4+1),ierr)  
       
-    call compute_local_sizes_4d( sim%layout4d_parx1, &
+    call compute_local_sizes( sim%layout4d_parx1, &
       loc_sz_x1, &
       loc_sz_x2, &
       loc_sz_x3, &
@@ -2002,7 +2002,7 @@ contains
 
           
       
-    call compute_local_sizes_4d( sim%layout4d_parx3x4, &
+    call compute_local_sizes( sim%layout4d_parx3x4, &
       loc_sz_x1, &
       loc_sz_x2, &
       loc_sz_x3, &
@@ -2015,7 +2015,7 @@ contains
     endif
     do i4 = 1,loc_sz_x4
       do i3 = 1,loc_sz_x3
-        global_indices(:) = local_to_global_4D(sim%layout4d_parx3x4, &
+        global_indices(:) = local_to_global(sim%layout4d_parx3x4, &
               (/1,1,i3,i4/))        
         do i1=1,nc_x1+1
           A2(i1,1:nc_x2+1) = sim%A2_parx3(i1,1:nc_x2+1,i3) &
@@ -2179,7 +2179,7 @@ contains
     !-->  (x2,x3,x4) : sequential
     !-->  x1 : parallelized layout
     sim%layout4d_parx1  => new_layout_4D( sll_world_collective )
-    call initialize_layout_with_distributed_4D_array( &
+    call initialize_layout_with_distributed_array( &
       sim%m_x1%num_cells+1, & 
       sim%m_x2%num_cells+1, & 
       sim%m_x3%num_cells+1, &
@@ -2195,7 +2195,7 @@ contains
     ! local sizes. Since the remap operations
     ! are out-of-place, we will allocate two different arrays, 
     ! one for each layout.
-    call compute_local_sizes_4d( sim%layout4d_parx1, &
+    call compute_local_sizes( sim%layout4d_parx1, &
       loc4d_sz_x1, &
       loc4d_sz_x2, &
       loc4d_sz_x3, &
@@ -2243,7 +2243,7 @@ contains
      
 
     sim%layout4d_parx3x4  => new_layout_4D( sll_world_collective )
-    call initialize_layout_with_distributed_4D_array( &
+    call initialize_layout_with_distributed_array( &
       sim%m_x1%num_cells+1, & 
       sim%m_x2%num_cells+1, & 
       sim%m_x3%num_cells+1, &
@@ -2254,7 +2254,7 @@ contains
       sim%nproc_x4, &
       sim%layout4d_parx3x4 )
         
-    call compute_local_sizes_4d( sim%layout4d_parx3x4, &
+    call compute_local_sizes( sim%layout4d_parx3x4, &
       loc4d_sz_x1, &
       loc4d_sz_x2, &
       loc4d_sz_x3, &
@@ -2307,7 +2307,7 @@ contains
     sim%layout3d_parx3  => layout_3D_from_layout_4D( sim%layout4d_parx3x4 )
     
     !new_layout_3D( sim%new_collective_per_locx4 )
-!    call initialize_layout_with_distributed_3D_array( &
+!    call initialize_layout_with_distributed_array( &
 !      sim%m_x1%num_cells+1, & 
 !      sim%m_x2%num_cells+1, & 
 !      sim%m_x3%num_cells+1, &
@@ -2319,24 +2319,24 @@ contains
 !   if(sll_get_collective_rank(sll_world_collective).eq. 0) then
 !     do i=0,sll_get_collective_size(sll_world_collective)-1
 !       print *,'layout_parx1', i, &
-!         get_layout_3D_i_min(sim%layout3d_parx1,i), &
-!         get_layout_3D_i_max(sim%layout3d_parx1,i), &
-!         get_layout_3D_j_min(sim%layout3d_parx1,i), &
-!         get_layout_3D_j_max(sim%layout3d_parx1,i), &
-!         get_layout_3D_k_min(sim%layout3d_parx1,i), & 
-!         get_layout_3D_k_max(sim%layout3d_parx1,i)
+!         get_layout_i_min(sim%layout3d_parx1,i), &
+!         get_layout_i_max(sim%layout3d_parx1,i), &
+!         get_layout_j_min(sim%layout3d_parx1,i), &
+!         get_layout_j_max(sim%layout3d_parx1,i), &
+!         get_layout_k_min(sim%layout3d_parx1,i), & 
+!         get_layout_k_max(sim%layout3d_parx1,i)
 !     enddo
 !   endif
 !
 !   if(sll_get_collective_rank(sll_world_collective).eq. 0) then
 !     do i=0,sll_get_collective_size(sll_world_collective)-1
 !       print *,'layout_parx3', i, &
-!         get_layout_3D_i_min(sim%layout3d_parx3,i), &
-!         get_layout_3D_i_max(sim%layout3d_parx3,i), &
-!         get_layout_3D_j_min(sim%layout3d_parx3,i), &
-!         get_layout_3D_j_max(sim%layout3d_parx3,i), &
-!         get_layout_3D_k_min(sim%layout3d_parx3,i), & 
-!         get_layout_3D_k_max(sim%layout3d_parx3,i)
+!         get_layout_i_min(sim%layout3d_parx3,i), &
+!         get_layout_i_max(sim%layout3d_parx3,i), &
+!         get_layout_j_min(sim%layout3d_parx3,i), &
+!         get_layout_j_max(sim%layout3d_parx3,i), &
+!         get_layout_k_min(sim%layout3d_parx3,i), & 
+!         get_layout_k_max(sim%layout3d_parx3,i)
 !     enddo
 !   endif
 
@@ -2402,7 +2402,7 @@ contains
 !      enddo
 !    enddo 
     !--> Initialization of the distribution function f4d_x3x4
-    call compute_local_sizes_4d( layout, &
+    call compute_local_sizes( layout, &
       loc4d_sz_x1, &
       loc4d_sz_x2, &
       loc4d_sz_x3, &
@@ -2417,7 +2417,7 @@ contains
       do iloc3 = 1,loc4d_sz_x3
         do iloc2 = 1,loc4d_sz_x2
           do iloc1 = 1,loc4d_sz_x1
-            glob_ind(:) = local_to_global_4D(layout, &
+            glob_ind(:) = local_to_global(layout, &
               (/iloc1,iloc2,iloc3,iloc4/))
             i1 = glob_ind(1)
             i2 = glob_ind(2)
@@ -2475,7 +2475,7 @@ contains
 
     select case (sim%QN_case)
       case (SLL_NO_QUASI_NEUTRAL)
-        call compute_local_sizes_4d( &
+        call compute_local_sizes( &
           sim%layout4d_parx1, &
           loc4d_sz_x1, &
           loc4d_sz_x2, &
@@ -2483,7 +2483,7 @@ contains
           loc4d_sz_x4 )        
         sim%phi3d_parx1(:,1:loc4d_sz_x2,:) = 0._f64
       case (SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW)
-        call compute_local_sizes_4d( &
+        call compute_local_sizes( &
           sim%layout4d_parx1, &
           loc4d_sz_x1, &
           loc4d_sz_x2, &
@@ -2493,7 +2493,7 @@ contains
         SLL_ALLOCATE(tmp(loc4d_sz_x1),ierr)
       
         do i=1,loc4d_sz_x1
-          glob_ind(:) = local_to_global_4D( &
+          glob_ind(:) = local_to_global( &
             sim%layout4d_parx1, &
             (/i,1,1,1/))
           tmp(i) = 1._f64/sim%n0_r(glob_ind(1))  

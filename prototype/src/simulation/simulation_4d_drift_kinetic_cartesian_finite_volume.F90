@@ -168,7 +168,7 @@ contains
     
     ! init the layout for the distribution function
     ! the mesh is split only in the x3 direction
-    call initialize_layout_with_distributed_4D_array( &
+    call initialize_layout_with_distributed_array( &
          nc_v3, &
          nc_x1, &
          nc_x2, &
@@ -180,7 +180,7 @@ contains
          sim%sequential_v3x1x2)
 
     ! charge density layout
-    call initialize_layout_with_distributed_3D_array( &
+    call initialize_layout_with_distributed_array( &
          nc_x1, &
          nc_x2, &
          nc_x3, &
@@ -190,7 +190,7 @@ contains
          sim%rho_seq_x1x2)
     
     ! potential layout
-    call initialize_layout_with_distributed_3D_array( &
+    call initialize_layout_with_distributed_array( &
          nc_x1, &
          nc_x2, &
          nc_x3, &
@@ -200,7 +200,7 @@ contains
          sim%phi_seq_x1x2)
     
     
-    call compute_local_sizes_3d( sim%rho_seq_x1x2, loc_sz_x1, loc_sz_x2, &
+    call compute_local_sizes( sim%rho_seq_x1x2, loc_sz_x1, loc_sz_x2, &
          loc_sz_x3)
 
     ! iz=0 corresponds to the mean values of rho and phi 
@@ -210,7 +210,7 @@ contains
        
     ! Allocate the array needed to store the local chunk of the distribution
     ! function data. First compute the local sizes.
-    call compute_local_sizes_4d( sim%sequential_v3x1x2, &
+    call compute_local_sizes( sim%sequential_v3x1x2, &
          loc_sz_v3, &
          loc_sz_x1, &
          loc_sz_x2, &
@@ -299,7 +299,7 @@ contains
 
     write(*,*) 'end comm',sim%my_rank
 
-    call compute_local_sizes_4d( sim%sequential_v3x1x2, &
+    call compute_local_sizes( sim%sequential_v3x1x2, &
          loc_sz_v3, loc_sz_x1, loc_sz_x2, loc_sz_x3) 
     
     allocate (plotf2d(loc_sz_v3,loc_sz_x1))
@@ -310,7 +310,7 @@ contains
        end do
     end do
     
-    global_indices(1:4) =  local_to_global_4D(sim%sequential_v3x1x2, (/1,1,1,1/) )
+    global_indices(1:4) =  local_to_global(sim%sequential_v3x1x2, (/1,1,1,1/) )
     
     call sll_gnuplot_rect_2d_parallel( &
          sim%mesh4d%eta1_min+(global_indices(1)-1)*sim%mesh4d%delta_eta1, &
@@ -465,7 +465,7 @@ contains
 !!$          my_layout => sim%rho_seq_x2
 !!$       end if
 !!$
-!!$       call compute_local_sizes_2d( my_layout, local_nx1, local_nx2)        
+!!$       call compute_local_sizes( my_layout, local_nx1, local_nx2)        
 !!$    
 !!$       offset(1) =  get_layout_i_min( my_layout, my_rank ) - 1
 !!$       offset(2) =  get_layout_j_min( my_layout, my_rank ) - 1

@@ -133,12 +133,12 @@ contains
 
     ! Layout and local sizes for FFTs in x-direction
     plan%layout_x => layout_x
-    call compute_local_sizes_2d(plan%layout_x,nx_loc,ny_loc)
+    call compute_local_sizes(plan%layout_x,nx_loc,ny_loc)
     SLL_CLEAR_ALLOCATE(plan%fz_x(1:nx_loc,1:ny_loc),error)
 
     ! Layout and local sizes for FFTs in y-direction
     plan%layout_y => layout_y
-    call compute_local_sizes_2d(plan%layout_y,nx_loc,ny_loc)
+    call compute_local_sizes(plan%layout_y,nx_loc,ny_loc)
     SLL_CLEAR_ALLOCATE(plan%fz_y(1:nx_loc,1:ny_loc),error)
 
     plan%rmp_xy => new_remap_plan(plan%layout_x, plan%layout_y, plan%fz_x)
@@ -194,7 +194,7 @@ contains
 
     dt_mu = dt / plan%mu_0 
 
-    call compute_local_sizes_2d(plan%layout_x,nx_loc,ny_loc)
+    call compute_local_sizes(plan%layout_x,nx_loc,ny_loc)
     do j = 1, ny_loc
        D_DX(ey(:,j))
        plan%fz_x(:,j) = plan%fz_x(:,j) - dt_mu * plan%d_dx
@@ -202,7 +202,7 @@ contains
 
     call apply_remap_2D( plan%rmp_xy,plan%fz_x,plan%fz_y)
 
-    call compute_local_sizes_2d(plan%layout_y,nx_loc,ny_loc)
+    call compute_local_sizes(plan%layout_y,nx_loc,ny_loc)
     do i = 1, nx_loc
        D_DY(ex(i,:))
        plan%fz_y(i,:) = plan%fz_y(i,:) + dt_mu * plan%d_dy
@@ -238,7 +238,7 @@ contains
 
     dt_e = dt / plan%e_0
 
-    call compute_local_sizes_2d(plan%layout_y,nx_loc,ny_loc)
+    call compute_local_sizes(plan%layout_y,nx_loc,ny_loc)
     do i = 1, nx_loc
        D_DY(plan%fz_y(i,:))
        ex(i,:) = ex(i,:) + dt_e * plan%d_dy
@@ -253,7 +253,7 @@ contains
 
     call apply_remap_2D( plan%rmp_xy,plan%fz_x,plan%fz_y)
 
-    call compute_local_sizes_2d(plan%layout_x,nx_loc,ny_loc)
+    call compute_local_sizes(plan%layout_x,nx_loc,ny_loc)
     do j = 1, ny_loc
        D_DX(plan%fz_x(:,j))
        ey(:,j) = ey(:,j) - dt_e * plan%d_dx
@@ -301,7 +301,7 @@ contains
 
     dt_e = dt / plan%e_0
 
-    call compute_local_sizes_2d(plan%layout_x,nx_loc,ny_loc)
+    call compute_local_sizes(plan%layout_x,nx_loc,ny_loc)
     do j = 1, ny_loc
       D_DX(by(:,j))
       plan%fz_x(:,j) = plan%fz_x(:,j) + dt_e * plan%d_dx
@@ -309,7 +309,7 @@ contains
 
     call apply_remap_2D( plan%rmp_xy,plan%fz_x,plan%fz_y)
 
-    call compute_local_sizes_2d(plan%layout_y,nx_loc,ny_loc)
+    call compute_local_sizes(plan%layout_y,nx_loc,ny_loc)
     do i = 1, nx_loc
       D_DY(bx(i,:))
       plan%fz_y(i,:) = plan%fz_y(i,:) - dt_e * plan%d_dy
@@ -350,7 +350,7 @@ contains
 
     dt_mu = dt / plan%mu_0
 
-    call compute_local_sizes_2d(plan%layout_y,nx_loc,ny_loc)
+    call compute_local_sizes(plan%layout_y,nx_loc,ny_loc)
     do i = 1, nx_loc
        D_DY(plan%fz_y(i,:))
        bx(i,:) = bx(i,:) - dt_mu * plan%d_dy
@@ -358,7 +358,7 @@ contains
 
     call apply_remap_2D( plan%rmp_xy,plan%fz_x,plan%fz_y)
 
-    call compute_local_sizes_2d(plan%layout_x,nx_loc,ny_loc)
+    call compute_local_sizes(plan%layout_x,nx_loc,ny_loc)
     do j = 1, ny_loc
        D_DX(plan%fz_x(:,j))
        by(:,j) = by(:,j) + dt_mu * plan%d_dx
@@ -402,7 +402,7 @@ contains
     sll_int32,  dimension(2)       :: n      !< array dimension
     sll_int32                      :: i
 
-    call compute_local_sizes_2d( layout, n(1), n(2) )
+    call compute_local_sizes( layout, n(1), n(2) )
 
     do i=1,2
        if (n(i)/=size(array,i)) then

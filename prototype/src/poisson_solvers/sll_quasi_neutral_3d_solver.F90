@@ -101,7 +101,7 @@ contains
     world_size = sll_get_collective_size(sll_world_collective)
     power2 = int(log(real(world_size))/log(2.0))
 
-    call compute_local_sizes_3d( &
+    call compute_local_sizes( &
       start_layout, &
       loc_sz_x1, &
       loc_sz_x2, &
@@ -117,7 +117,7 @@ contains
         nproc_x2 = 2**((power2+1)/2)
       end if
       nproc_x3 = 1
-      call initialize_layout_with_distributed_3D_array( &
+      call initialize_layout_with_distributed_array( &
         nc_eta1+1, & 
         nc_eta2+1, & 
         nc_eta3+1, &
@@ -131,7 +131,7 @@ contains
       nproc_x1 = 1
       nproc_x2 = 1
       nproc_x3 = world_size 
-      call initialize_layout_with_distributed_3D_array( &
+      call initialize_layout_with_distributed_array( &
         nc_eta1+1, & 
         nc_eta2+1, & 
         nc_eta3+1, &

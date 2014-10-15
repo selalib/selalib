@@ -118,7 +118,7 @@ contains
 
     ! Layout and local sizes for FFTs in x-direction
     plan%layout_x => start_layout
-    call compute_local_sizes_3d( &
+    call compute_local_sizes( &
          plan%layout_x, &
          loc_sizes(1,1), &
          loc_sizes(1,2), &
@@ -130,7 +130,7 @@ contains
     npx = 2**(e/2)
     npy = 1
     npz = 2**(e-e/2)  ! int(colsz)/npx
-    call initialize_layout_with_distributed_3D_array( &
+    call initialize_layout_with_distributed_array( &
          ncx, &
          ncy, &
          ncz, &
@@ -150,7 +150,7 @@ contains
     ! npx remains the same. Exchange npy and npz.
     npy = npz
     npz = 1
-    call initialize_layout_with_distributed_3D_array( &
+    call initialize_layout_with_distributed_array( &
          ncx, &
          ncy, &
          ncz, &
@@ -250,7 +250,7 @@ contains
     do k=1,nz_loc
        do j=1,ny_loc
           do i=1,nx_loc
-             global = local_to_global_3D( layout_z, (/i, j, k/))
+             global = local_to_global( layout_z, (/i, j, k/))
              gi = global(1)
              gj = global(2)
              gk = global(3)
@@ -352,9 +352,9 @@ contains
     call fft_delete_plan(plan%py_inv)
     call fft_delete_plan(plan%pz_inv)
 
-    call delete_layout_3D( plan%layout_x )
-    call delete_layout_3D( plan%layout_y )
-    call delete_layout_3D( plan%layout_z )
+    call sll_delete( plan%layout_x )
+    call sll_delete( plan%layout_y )
+    call sll_delete( plan%layout_z )
 
     SLL_DEALLOCATE_ARRAY(plan%array_x, ierr)
     SLL_DEALLOCATE_ARRAY(plan%array_y, ierr)
