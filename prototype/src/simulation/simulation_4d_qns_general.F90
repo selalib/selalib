@@ -6,7 +6,7 @@ module sll_simulation_4d_qns_general_module
 #include "sll_field_2d.h"
 #include "sll_utilities.h"
 
-!  use sll_collective
+use sll_collective
 !  use sll_remapper
 !  use sll_constants
   use sll_module_interpolators_1d_base
