@@ -1244,7 +1244,7 @@ contains
       if(modulo(iter,sim%freq_diag)==0) then
 
         i_plot = i_plot+1
-        loc4d(1:4)  = global_to_local_4D( &
+        loc4d(1:4)  = global_to_local( &
           sim%layout4d_parx1, &
           (/nc_x1/2+1,1,1,nc_x4/2+1/))
         if(loc4d(1) > 0) then
@@ -1262,7 +1262,7 @@ contains
           sim%f4d_parx1, &
           sim%f4d_parx3x4 )
 
-        loc4d(1:4)  = global_to_local_4D( &
+        loc4d(1:4)  = global_to_local( &
           sim%layout4d_parx3x4, &
           (/1,1,1,nc_x4/2+1/))
         if(loc4d(3) > 0) then
@@ -2303,8 +2303,8 @@ contains
     
     nproc3d_x1_parx1 = sll_get_collective_size(sll_world_collective)
     
-    sim%layout3d_parx1  => layout_3D_from_layout_4D( sim%layout4d_parx1 )
-    sim%layout3d_parx3  => layout_3D_from_layout_4D( sim%layout4d_parx3x4 )
+    sim%layout3d_parx1  => new_layout_3D_from_layout_4D( sim%layout4d_parx1 )
+    sim%layout3d_parx3  => new_layout_3D_from_layout_4D( sim%layout4d_parx3x4 )
     
     !new_layout_3D( sim%new_collective_per_locx4 )
 !    call initialize_layout_with_distributed_array( &
