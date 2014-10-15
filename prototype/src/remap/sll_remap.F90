@@ -5520,6 +5520,7 @@ print *, 'remap 2d complex:'
   !> then initializing is not followed. This irregularity is itself a bit of
   !> a problem, but may be a sign that the usual way to allocate and initialize
   !> layouts might need to be merged.
+  !> @returns a new layout allocated.
   function new_layout_2D_from_layout_4D( layout4d )
     type(layout_2D), pointer :: new_layout_2D_from_layout_4D
     type(layout_4D), pointer :: layout4d
@@ -5568,6 +5569,7 @@ print *, 'remap 2d complex:'
     end do
   end function new_layout_2D_from_layout_4D
 
+  !> @returns a new layout allocated.
   function new_layout_3D_from_layout_4D( layout4d )
     type(layout_3D), pointer :: new_layout_3D_from_layout_4D
     type(layout_4D), pointer :: layout4d

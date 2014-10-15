@@ -1,4 +1,4 @@
-!> @defgroup boundary_condition_descriptors sll_boundary_condition_descriptors
+!> @ingroup boundary_condition_descriptors
 !> @brief Describe different boundary conditions
 !> @details
 !> The intent of this module is to provide a single, library-wide definition
@@ -22,16 +22,27 @@ module sll_boundary_condition_descriptors
 
   implicit none
 
+  !> User defined boundary condition
   sll_int32, parameter :: SLL_USER_DEFINED   = -1 
+  !> Periodic boundary condition u(1)=u(n)
   sll_int32, parameter :: SLL_PERIODIC       = 0 
+  !> Dirichlet boundary condition 
   sll_int32, parameter :: SLL_DIRICHLET      = 1 
+  !> Neumann boundary condition 
   sll_int32, parameter :: SLL_NEUMANN        = 2
+  !> Hermite boundary condition
   sll_int32, parameter :: SLL_HERMITE        = 3
+  !> Neumann boundary condition
   sll_int32, parameter :: SLL_NEUMANN_MODE_0 = 4
+  !> PLEASE ADD DOCUMENTATION
   sll_int32, parameter :: SLL_SET_TO_LIMIT   = 5
+  !> Interior of domain
   sll_int32, parameter :: SLL_INTERIOR       = 6
+  !> Incoming wave boundar condition for Maxwell
   sll_int32, parameter :: SLL_INCOMING_WAVE  = 7
+  !> Metallic boundary condition for Maxwell
   sll_int32, parameter :: SLL_CONDUCTOR      = 8
+  !> Absorbing boundary condition fro Maxwell
   sll_int32, parameter :: SLL_SILVER_MULLER  = 9
 
 
