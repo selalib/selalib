@@ -11,28 +11,15 @@
 
 !> @defgroup boundary_condition_descriptors sll_boundary_condition_descriptors 
 !> @brief 
-!> Description of boundary_condition_descriptors library (72 characters)
-!> @author Selalib team 
-!> You can add a contact, do not put your email to prevent spam.
+!> Descriptors for boundary_condition_descriptors
 !> @details
-!> Long description of  boundary_condition_descriptors, you can add some references or math equations.
+!> Add here parameters to select your boundary conditions.
 !>
 !> <b> Headers file available </b>
 !>  - sll_boundary_condition_descriptors.h
 !>
-!> <b> Modules available </b>
-!>  List fortran module available
-!>  - sll_boundary_condition_descriptors
-!>
 !> <b> How to use it </b>
 !> - Header file : \code #include 'sll_boundary_condition_descriptors.h' \endcode
-!> - Link with   <code>-lsll_%s</code>
+!> - Link with <code>-lsll_boundar_condition_descriptors</code>
 !> - Add <code> use sll_boundary_condition_descriptors </code>
-!>
-!> <b> Examples </b>
-!> -Add some fortran lines to explain how ti use the library
-!> \code
-!> call initialize(my_type, arg_1, arg_2)
-!> call solve(my_type, your_result)
-!> \endcode
 !>
