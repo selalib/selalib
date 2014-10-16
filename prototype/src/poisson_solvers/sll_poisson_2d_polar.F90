@@ -15,6 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> @ingroup poisson_solvers
 !> @brief Poisson equation solver in polar coordinates
 !> @details Solver for the Poisson equation 
 !> \f[ \Delta \phi = f \f]

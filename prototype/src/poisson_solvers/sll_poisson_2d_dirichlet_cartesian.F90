@@ -1,3 +1,4 @@
+!> @ingroup poisson_solvers
 !> @brief 
 !> Selalib 2D poisson solver for cartesian coordinates, Dirichlet BC's
 !   

@@ -1,3 +1,4 @@
+!> @ingroup poisson_solvers
 !>Solve Poisson equation on cartesian domain with finit elements.
 !> * Compact boundary conditions.
 !> * Linear system solve with lapack (Choleski)
