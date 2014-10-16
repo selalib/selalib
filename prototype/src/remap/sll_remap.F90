@@ -605,6 +605,7 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
      module procedure initialize_layout_with_distributed_6d_array
   end interface initialize_layout_with_distributed_array
 
+  public :: initialize_layout_with_distributed_array
   public :: sll_delete
   public :: sll_view_lims
   public :: sll_get_num_nodes
@@ -629,7 +630,6 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
   public :: get_layout_m_max, set_layout_m_max
   public :: get_layout_n_min, set_layout_n_min
   public :: get_layout_n_max, set_layout_n_max
-  public :: initialize_layout_with_distributed_array
   public :: apply_remap_2d
   public :: apply_remap_3d
   public :: apply_remap_4d
@@ -1089,6 +1089,8 @@ contains  !******************************************************************
     sll_int32, intent(in) :: num_proc_x2
     sll_int32, intent(in) :: num_proc_x3
     type(layout_3D), pointer :: layout
+
+
     sll_int32 :: i
     sll_int32 :: j
     sll_int32 :: k

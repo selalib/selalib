@@ -21,32 +21,29 @@ program test_layout_output
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
 
+  use sll_remapper
   use sll_collective
   use hdf5
-  use sll_hdf5_io_parallel, only: sll_hdf5_file_create, &
-       sll_hdf5_write_array, &
-       sll_hdf5_file_close
-  use sll_remapper
-
+  use sll_hdf5_io_parallel
 
   implicit none
 
   ! ni, nj, nk: global sizes
-  integer , parameter                       :: ni = 128
-  integer , parameter                       :: nj = 64
-  integer , parameter                       :: nk = 32
+  sll_int32 , parameter                       :: ni = 128
+  sll_int32 , parameter                       :: nj = 64
+  sll_int32 , parameter                       :: nk = 32
   ! Local sizes
-  integer                                   :: loc_sz_i_init
-  integer                                   :: loc_sz_j_init
-  integer                                   :: loc_sz_k_init
+  sll_int32                                   :: loc_sz_i_init
+  sll_int32                                   :: loc_sz_j_init
+  sll_int32                                   :: loc_sz_k_init
 
   ! the process mesh
-  integer                                   :: npi
-  integer                                   :: npj
-  integer                                   :: npk
-  integer                                   :: error
-  integer                                   :: myrank
-  integer                                   :: comm
+  sll_int32                                   :: npi
+  sll_int32                                   :: npj
+  sll_int32                                   :: npk
+  sll_int32                                   :: error
+  sll_int32                                   :: myrank
+  sll_int32                                   :: comm
   sll_int64                                 :: colsz        ! collective size
 
   type(layout_3D), pointer                  :: layout
@@ -58,7 +55,7 @@ program test_layout_output
  
   character(len=9), parameter               :: filename = "layout.h5"
 
-  integer, parameter :: rank = 3
+  sll_int32, parameter :: rank = 3
   integer(HSIZE_T),  dimension(rank) :: dims = (/ni,nj,nk/)
   sll_int32, dimension(:,:,:), allocatable :: array
 
@@ -129,8 +126,8 @@ contains
 
   subroutine two_power_rand_factorization(n, n1, n2, n3)
     sll_int64, intent(in) :: n
-    integer, intent(out)  :: n1, n2, n3
-    integer               :: expo, expo1, expo2, expo3
+    sll_int32, intent(out)  :: n1, n2, n3
+    sll_int32               :: expo, expo1, expo2, expo3
     sll_real64            :: rand_real
     if (.not.is_power_of_two(colsz)) then   
        print*, 'The number of processors must be a power of 2'
