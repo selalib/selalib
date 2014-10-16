@@ -208,8 +208,8 @@ IF(MPI_MODULE_ENABLED)
        ${SLL_DIR}/collective/sll_collective.F90
        ${SLL_DIR}/remap/sll_remap.F90
        ${SLL_DIR}/point_to_point_communications/sll_point_to_point_comms.F90
-       ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_cartesian_par.F90
-       ${SLL_DIR}/poisson_solvers/sll_poisson_polar_parallel.F90
+       ${SLL_DIR}/poisson_solvers_parallel/sll_poisson_2d_periodic_cartesian_par.F90
+       ${SLL_DIR}/poisson_solvers_parallel/sll_poisson_polar_parallel.F90
        ${SLL_DIR}/simulation/simulation_base_class.F90
        ${SLL_DIR}/parallel_array_initializers/sll_common_array_initializers_module.F90
        ${SLL_DIR}/parallel_array_initializers/sll_parallel_array_initializer_module.F90
