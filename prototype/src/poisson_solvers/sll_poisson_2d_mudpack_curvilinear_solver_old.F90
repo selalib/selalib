@@ -29,6 +29,7 @@
 ! A_11\partial_{1,1}\hat{phi}+B_1\partial_{1}\hat{phi}+(C+A_{2,2}k^2)\hat{phi} = \hat{rho}
 
 
+!> @ingroup poisson_solvers
 module sll_module_poisson_2d_mudpack_curvilinear_solver_old
 #include "sll_working_precision.h"
 #include "sll_memory.h"

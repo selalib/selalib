@@ -1,3 +1,4 @@
+!> @ingroup poisson_solvers
 !> @brief
 !> Module to use MUDPACK library to solve Poisson equation 
 !> @details We consider a regular cartesian mesh

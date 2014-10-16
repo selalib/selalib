@@ -1,3 +1,4 @@
+!> @ingroup poisson_solvers
 !> @brief
 !> Poisson solver in general coordinates using mudpack library
 !> @details

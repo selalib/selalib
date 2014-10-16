@@ -1,3 +1,4 @@
+!> @ingroup poisson_solvers
 !> @brief
 !> Base module to provide interface to mudpack library
 !> @details

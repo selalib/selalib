@@ -15,6 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> @ingroup poisson_solvers
 !> Module to solve Poisson equation on one dimensional mesh using FFT
 !> transform.
 module sll_poisson_1d_periodic

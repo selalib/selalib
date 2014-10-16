@@ -1,3 +1,4 @@
+!> @ingroup poisson_solvers
 !> @brief
 !> Implements the Poisson solver in 2D with periodic boundary conditions
 !> @details
