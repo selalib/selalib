@@ -1,3 +1,4 @@
+!> @ingroup poisson_solvers
 module sll_module_poisson_2d_base
 #include "sll_working_precision.h"
   implicit none

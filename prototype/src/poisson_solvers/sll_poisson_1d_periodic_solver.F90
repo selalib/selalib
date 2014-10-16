@@ -1,3 +1,4 @@
+!> @ingroup poisson_solvers
 module sll_module_poisson_1d_periodic_solver
 #include "sll_working_precision.h"
 #include "sll_memory.h"

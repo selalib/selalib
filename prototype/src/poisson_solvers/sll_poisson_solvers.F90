@@ -15,31 +15,9 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @defgroup poisson_solvers sll_poisson_solvers
+!> @ingroup poisson_solvers
 !> @brief
 !> Library to solve Poisson equation in 2D and 3D
-!> 
-!> - Modules available
-!>   + sll_fishpack
-!>   + sll_mudpack_cartesian
-!>   + sll_mudpack_curvilinear
-!>   + sll_mudpack_polar
-!>   + sll_poisson_1d_periodic
-!>   + sll_poisson_2d_fem
-!>   + sll_poisson_2d_periodic_fem
-!>   + sll_poisson_2d_periodic
-!>   + sll_poisson_2d_polar
-!>   + sll_poisson_3d_periodic_seq
-!>
-!> - Parallel solvers
-!>   + sll_poisson_2d_periodic_cartesian_par
-!>   + sll_poisson_polar_parallel
-!>   + sll_poisson_3d_periodic_par
-!>
-!> - Import module with  :
-!> \code
-!> #include "sll_poisson_solvers.h"
-!> \endcode
 module sll_poisson_solvers
 
 #include "sll_working_precision.h"

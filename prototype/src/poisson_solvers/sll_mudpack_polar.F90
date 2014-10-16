@@ -1,3 +1,4 @@
+!> @ingroup poisson_solvers
 !>
 !> Poisson solver in polar coordinates using mudpack library
 !>

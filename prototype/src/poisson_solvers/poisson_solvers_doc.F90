@@ -11,28 +11,13 @@
 
 !> @defgroup poisson_solvers sll_poisson_solvers 
 !> @brief 
-!> Description of poisson_solvers library (72 characters)
-!> @author Selalib team 
-!> You can add a contact, do not put your email to prevent spam.
-!> @details
-!> Long description of  poisson_solvers, you can add some references or math equations.
+!> Library with all Poisson solvers
 !>
 !> <b> Headers file available </b>
 !>  - sll_poisson_solvers.h
 !>
-!> <b> Modules available </b>
-!>  List fortran module available
-!>  - sll_poisson_solvers
-!>
 !> <b> How to use it </b>
 !> - Header file : \code #include 'sll_poisson_solvers.h' \endcode
-!> - Link with   <code>-lsll_%s</code>
+!> - Link with   <code>-lsll_poisson_solvers</code>
 !> - Add <code> use sll_poisson_solvers </code>
-!>
-!> <b> Examples </b>
-!> -Add some fortran lines to explain how ti use the library
-!> \code
-!> call initialize(my_type, arg_1, arg_2)
-!> call solve(my_type, your_result)
-!> \endcode
 !>

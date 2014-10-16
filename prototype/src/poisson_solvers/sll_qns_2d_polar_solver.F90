@@ -15,6 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> @ingroup poisson_solvers
 module sll_module_quasi_neutral_2d_polar_solver
 #include "sll_working_precision.h"
 #include "sll_memory.h"

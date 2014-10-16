@@ -1,3 +1,4 @@
+!> @ingroup poisson_solvers
 !> @brief 
 !> Selalib periodic 2D poisson solver for cartesian coordinates.
 !   
@@ -13,8 +14,6 @@
 !> which may be an in-place operation, needs to be treated as a 4D array
 !> in order to remap it appropriately with the 4D distribution function.
 !> There might be ways around this, like using 'reshape'...
-!**************************************************************************
-
 module sll_poisson_2d_periodic_cartesian_par
 
 #include "sll_memory.h"

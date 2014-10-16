@@ -1,3 +1,4 @@
+!> @ingroup poisson_solvers
 !> @brief 
 !> Interface module to use fishpack libarary
 !> @details

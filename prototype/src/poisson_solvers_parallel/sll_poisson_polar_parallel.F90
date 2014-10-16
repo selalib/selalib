@@ -15,6 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> @ingroup poisson_solvers
 !> Module to solve Poisson equation on polar mesh using FFT transform
 module sll_poisson_polar_parallel
 #include "sll_working_precision.h"

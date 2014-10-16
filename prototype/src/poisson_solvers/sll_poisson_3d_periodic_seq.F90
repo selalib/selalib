@@ -1,3 +1,4 @@
+!> @ingroup poisson_solvers
 !> @brief 
 !> 3D poisson solver
 
