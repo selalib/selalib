@@ -15,8 +15,6 @@ use sll_poisson_solvers
 implicit none
 private
 
-sll_int32, private :: i, j
-
 !> fft type use to do fft with fftpack library
 type, public :: fftclass
    sll_real64, dimension(:), pointer :: coefc !< data for complex fft
@@ -365,6 +363,7 @@ subroutine doubfft(this,array)
 
    type(fftclass) :: this
    sll_real64, dimension(:,:) :: array
+   sll_int32 :: i
 
    do i=1, size(array,2)   ! number of 1d transforms
       call dfftf( this%n, array(:,i), this%coefd)
@@ -378,6 +377,7 @@ subroutine doubcfft(this,array)
 
    type(fftclass) :: this
    sll_comp64, dimension(:,:) :: array
+   sll_int32 :: i
 
    do i=1, size(array,2)   ! number of 1d transforms
       call zfftf( this%n, array(:,i), this%coefcd)
@@ -391,6 +391,7 @@ subroutine doubfftinv(this,array)
 
    type(fftclass) :: this
    sll_real64, dimension(:,:) :: array
+   sll_int32 :: i
 
    do i=1, size(array,2)   ! number of 1d transforms
       call dfftb( this%n, array(:,i),  this%coefd )
@@ -402,6 +403,7 @@ subroutine doubcfftinv(this,array)
 
    type(fftclass) :: this
    sll_comp64, dimension(:,:) :: array
+   sll_int32 :: i
 
    do i=1, size(array,2)   ! number of 1d transforms
       call zfftb( this%n, array(:,i),  this%coefcd )

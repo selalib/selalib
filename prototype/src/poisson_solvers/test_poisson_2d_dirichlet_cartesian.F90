@@ -48,7 +48,7 @@ program test_poisson_2d_dirichlet_cartesian
      end do
   end do
 
-  call solve_poisson_2d_dirichlet_cartesian(plan, rho, phi)
+  call sll_solve(plan, rho, phi)
 
   average_err  = sum(abs(phi_an-phi))/(ncx*ncy)
 
@@ -59,7 +59,7 @@ program test_poisson_2d_dirichlet_cartesian
   call flush(6); print*, ' ------------------'
 
   if (average_err> 1.0e-06 ) then
-     print*, 'Test stopped by "sll_poisson_2d_periodic_par" failure'
+     print*, 'Test stopped by "sll_poisson_2d_dirichlet" failure'
      !call sll_halt_collective()
      !stop
   endif

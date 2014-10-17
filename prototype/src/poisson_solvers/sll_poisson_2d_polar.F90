@@ -24,7 +24,7 @@
 !> in direction \f$ r \f$.
 !> This way we solve a tridiagonal system with the cyclic reduction solver.
 !>
-!>\section how How to use the Poisson polar solver?
+!> <b>How to use the Poisson polar solver?</b>
 !>
 !>You must add \code sll_poisson_2d_polar \endcode to the list of linked libraries.
 !>The Poisson solver uses the FFT, so you also need to link the FFT
@@ -477,7 +477,7 @@ contains
     type(sll_plan_poisson_polar), pointer :: plan
     sll_real64, dimension(plan%nr+1,plan%ntheta+1), intent(in)  :: f
     sll_real64, dimension(plan%nr+1,plan%ntheta+1), intent(out) :: phi
-    sll_int32 ,                           optional, intent(out) :: ierr
+    sll_int32 ,                           optional              :: ierr !< error code
 
     sll_real64 :: rmin,dr
     sll_int32  :: nr, ntheta,bc(2)
