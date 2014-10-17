@@ -23,8 +23,8 @@ module sll_poisson_1d_periodic
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
+#include "sll_constants.h"
 
-  use sll_constants
 
   implicit none
   private

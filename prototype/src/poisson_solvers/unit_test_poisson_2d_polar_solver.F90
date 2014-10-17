@@ -15,32 +15,31 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-program unit_test_poisson_2d_polar_solver
+!> @snippets example
+program test_poisson_2d_polar_solver
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 use sll_module_poisson_2d_polar_solver
-!use sll_boundary_condition_descriptors
+use sll_boundary_condition_descriptors
 
 implicit none
   
-  class(sll_poisson_2d_base), pointer :: poisson 
-  sll_real64 :: err
-  sll_real64 :: x1_min
-  sll_real64 :: x1_max
-  sll_int32 :: Nc_x1
-  sll_int32 :: Nc_x2
-  sll_real64,dimension(:,:),allocatable :: phi
-  sll_real64,dimension(:,:),allocatable :: rho
-  sll_int32 :: ierr
+  class(sll_poisson_2d_base), pointer     :: poisson 
+  sll_real64                              :: err
+  sll_real64                              :: x1_min
+  sll_real64                              :: x1_max
+  sll_int32                               :: Nc_x1
+  sll_int32                               :: Nc_x2
+  sll_real64, dimension(:,:), allocatable :: phi
+  sll_real64, dimension(:,:), allocatable :: rho
+  sll_int32                               :: ierr
   
   x1_min = 0._f64
   x1_max = 1._f64
-
   
   Nc_x1 = 32
   Nc_x2 = 64
-  
   
   SLL_ALLOCATE(phi(Nc_x1+1,Nc_x2+1),ierr)
   SLL_ALLOCATE(rho(Nc_x1+1,Nc_x2+1),ierr)
@@ -60,10 +59,9 @@ implicit none
 
   print *,maxval(phi),minval(phi)
   
-  
-
   if(err==0)then    
     print *, '#PASSED'
   endif
 
-end program
+end program test_poisson_2d_polar_solver
+!> @snippets example
