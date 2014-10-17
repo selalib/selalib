@@ -14,6 +14,8 @@ module sll_module_poisson_2d_base
       compute_E_from_rho
   end type sll_poisson_2d_base
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
   abstract interface
     ! solves -\Delta phi = rho in 2d
     subroutine signature_compute_phi_from_rho_2d( poisson, phi, rho )
@@ -48,6 +50,8 @@ module sll_module_poisson_2d_base
       sll_real64,dimension(:,:),intent(out) :: E2
     end subroutine signature_compute_E_from_rho_2d
   end interface
+
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
 end module sll_module_poisson_2d_base
 

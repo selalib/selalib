@@ -15,18 +15,21 @@ use sll_mudpack_base
 implicit none
 private
 
+!> @brief
 !> Create a Poisson solver using mudpack library
 !> on a cartesian mesh
 interface sll_create
    module procedure  initialize_mudpack_cartesian
 end interface sll_create
 
+!> @brief
 !> Solve the Poisson solver using mudpack library
 !> on a cartesian mesh
 interface sll_solve
    module procedure  solve_mudpack_cartesian
 end interface sll_solve
 
+!> @brief
 !> Deallocate the Poisson solver using mudpack library
 !> on a cartesian mesh
 interface sll_delete
