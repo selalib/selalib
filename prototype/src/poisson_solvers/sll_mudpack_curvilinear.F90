@@ -24,6 +24,7 @@ class(sll_interpolator_2d_base), pointer   :: cy_interp
 class(sll_interpolator_2d_base), pointer   :: ce_interp
 class(sll_interpolator_2d_base), pointer   :: a12_interp
 class(sll_interpolator_2d_base), pointer   :: a21_interp
+
 class(sll_coordinate_transformation_2d_base), pointer :: transformation
 
 contains
