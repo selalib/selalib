@@ -45,10 +45,12 @@ deallocate(f_3d)
 
 contains
 
+!> @internal [example_2d]
 subroutine test_cartesian_2d(field,                               &
                              eta1_min, eta1_max, nc_eta1, bc_eta1, &
                              eta2_min, eta2_max, nc_eta2, bc_eta2  )
 implicit none
+
 integer, intent(in)                     :: nc_eta1, nc_eta2
 integer, intent(in)                     :: bc_eta1, bc_eta2 
 real(8), dimension(nc_eta1+1,nc_eta2+1) :: field
@@ -59,7 +61,7 @@ real(8), intent(in)                     :: eta2_min, eta2_max
 
 type(fishpack_2d) :: poisson
 
-call poisson%initialize(CARTESIAN_2D, &
+call poisson%create(CARTESIAN_2D, &
          eta1_min, eta1_max, nc_eta1, bc_eta1,&
          eta2_min, eta2_max, nc_eta2, bc_eta2  )
 
@@ -116,7 +118,9 @@ write (*, *) '    the output from your computer is: '
 write (*, *) '    ierror =', poisson%error, ' discretization error = ', err
 
 end subroutine test_cartesian_2d
+!> @internal [example_2d]
 
+!> @internal [example_polar]
 subroutine test_polar_2d(field, &
                          eta1_min, eta1_max, nc_eta1, bc_eta1,&
                          eta2_min, eta2_max, nc_eta2, bc_eta2)
@@ -133,30 +137,30 @@ type(fishpack_2d) :: poisson
 
 
 !--------------------------------------------------------------------------
-!									  !
-!     program to illustrate the use of subroutine hwsplr to solve	  !
-!     the equation							  !
-!									  !
+!									                    !
+!     program to illustrate the use of subroutine hwsplr to solve	        !
+!     the equation							              !
+!									                    !
 !     (1/r)(d/dr)(r*(du/dr)) + (1/r**2)(d/dtheta)(du/dtheta) = 16*r**2	  !
-!									  !
+!									                    !
 !     on the quarter-disk 0 .lt. r .lt. 1, 0 .lt. theta .lt. pi/2 with	  !
-!     with the boundary conditions					  !
-!									  !
-!     u(1,theta) = 1 - cos(4*theta), 0 .le. theta .le. 1		  !
-!									  !
-!     and								  !
-!									  !
+!     with the boundary conditions					              !
+!									                    !
+!     u(1,theta) = 1 - cos(4*theta), 0 .le. theta .le. 1		        !
+!									                    !
+!     and								                    !
+!									                    !
 !     (du/dtheta)(r,0) = (du/dtheta)(r,pi/2) = 0,  0 .le. r .le. 1.	  !
-!									  !
-!     (note that the solution u is unspecified at r = 0.)		  !
-!          the r-interval will be divided into 50 panels and the	  !
-!     theta-interval will be divided into 48 panels.			  !
-!									  !
-!     from dimension statement we get value of idimf.			  !
-!									  !
+!									                    !
+!     (note that the solution u is unspecified at r = 0.)		        !
+!          the r-interval will be divided into 50 panels and the	        !
+!     theta-interval will be divided into 48 panels.			        !
+!									                    !
+!     from dimension statement we get value of idimf.			        !
+!									                    !
 !-------------------------------------------------------------------------!
 
-call poisson%initialize(POLAR_2D, &
+call poisson%create(POLAR_2D, &
          eta1_min, eta1_max, nc_eta1, bc_eta1,&
          eta2_min, eta2_max, nc_eta2, bc_eta2   )
 
@@ -200,9 +204,11 @@ write (*, *) '    The output from your computer is: '
 write (*, *) '    IERROR =', poisson%error, ' Discretization Error = ', ERR
 
 end subroutine test_polar_2d
+!> @internal [example_polar]
 
 
 
+!> @internal [example_3d]
 subroutine test_cartesian_3d(field, &
                              eta1_min, eta1_max, nc_eta1, bc_eta1,&
                              eta2_min, eta2_max, nc_eta2, bc_eta2,&
@@ -225,7 +231,7 @@ real(8) , allocatable, dimension(:) :: eta2
 real(8) , allocatable, dimension(:) :: eta3
 real(8) :: t, delta_eta1, delta_eta2, delta_eta3
 
-call poisson%initialize(CARTESIAN_3D,     &
+call poisson%create(CARTESIAN_3D,     &
          eta1_min, eta1_max, nc_eta1, bc_eta1,&
          eta2_min, eta2_max, nc_eta2, bc_eta2,&
          eta3_min, eta3_max, nc_eta3, bc_eta3)
@@ -302,5 +308,6 @@ write (*, *) '    the output from your computer is: '
 write (*, *) '    ierror =', poisson%error, ' discretization error = ', err
 
 end subroutine test_cartesian_3d
+!> @internal [example_3d]
  
 end program test_fishpack

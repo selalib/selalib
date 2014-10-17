@@ -1,38 +1,43 @@
 !> @ingroup poisson_solvers
-!>Solve Poisson equation on cartesian domain with finit elements.
-!> * Compact boundary conditions.
+!> @brief 
+!> Poisson solver using finite elements
+!> @details
+!> Solve Poisson equation on cartesian domain with finite elements.
+!> * Peridoci boundary conditions.
 !> * Linear system solve with lapack (Choleski)
-module sll_poisson_2d_periodic_fem
+!> This solver is not fully tested, please use it carefully.
+module sll_fem_2d_periodic
 #include "sll_poisson_solvers_macros.h"
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use sll_constants
+#include "sll_constants.h"
+
 implicit none
+private
 
 !> Structure to solve Poisson equation on 2d irregular cartesian mesh
 !> with finite element numerical method
-type :: poisson_2d_periodic_fem
+type, public :: sll_fem_poisson_2d_periodic
+   sll_int32                           :: nx    !< cells number along x
+   sll_int32                           :: ny    !< cells number along y
    sll_real64, dimension(:,:), pointer :: A     !< Mass matrix
    sll_real64, dimension(:,:), pointer :: M     !< Stiffness matrix
    sll_real64, dimension(:)  , pointer :: hx    !< step size x
    sll_real64, dimension(:)  , pointer :: hy    !< step size y
    sll_int32,  dimension(:)  , pointer :: ipiv  !< Lapack array for pivoting
-end type poisson_2d_periodic_fem
+end type sll_fem_poisson_2d_periodic
 
 !> Initialize the solver
-interface initialize
+interface sll_create
    module procedure initialize_poisson_2d_periodic_fem
-end interface initialize
+end interface sll_create
+
 !> Compute the electric potential
-interface solve
+interface sll_solve
    module procedure solve_poisson_2d_periodic_fem
-end interface solve
+end interface sll_solve
 
-sll_int32, private :: nx, ny, nxy
-sll_int32, private :: i, j, k, ii, jj
-sll_int32, private :: error
-
-private :: som, build_matrices
+public :: sll_create, sll_solve
 
 contains
 
@@ -40,7 +45,7 @@ contains
 !> Indices are shifted from \f$ [1:n+1] \f$ to \f$ [0:n] \f$ only 
 !> inside this subroutine.
 subroutine initialize_poisson_2d_periodic_fem( this, x, y ,nn_x, nn_y)
-type( poisson_2d_periodic_fem ) :: this !< Solver data structure
+type( sll_fem_poisson_2d_periodic ) :: this !< Solver data structure
 sll_int32,  intent(in)          :: nn_x !< number of cells along x
 sll_int32,  intent(in)          :: nn_y !< number of cells along y
 sll_real64, dimension(nn_x)     :: x    !< x nodes coordinates
@@ -49,24 +54,28 @@ sll_real64, dimension(nn_y)     :: y    !< y nodes coordinates
 sll_real64, dimension(4,4) :: Axelem
 sll_real64, dimension(4,4) :: Ayelem
 sll_real64, dimension(4,4) :: Melem
-sll_int32, dimension(4) :: isom
+sll_int32,  dimension(4)   :: isom
+sll_int32 :: nxy
+sll_int32 :: i
+sll_int32 :: j
+sll_int32 :: error
 
-nx = nn_x-1
-ny = nn_y-1
-nxy = nx * ny
+this%nx = nn_x-1
+this%ny = nn_y-1
+nxy = this%nx*this%ny
 
-call write_mtv_periodic( x, y )
+call write_mtv_periodic( this%nx, x, this%ny, y )
 
-SLL_ALLOCATE(this%hx(1:nx),error)
-SLL_ALLOCATE(this%hy(1:ny),error)
+SLL_ALLOCATE(this%hx(1:this%nx),error)
+SLL_ALLOCATE(this%hy(1:this%ny),error)
 SLL_ALLOCATE(this%A(nxy,nxy), error)
 SLL_ALLOCATE(this%M(nxy,nxy), error)
 
-do i=1,nx
+do i=1,this%nx
    this%hx(i) = x(i+1)-x(i)
 end do
 
-do j=1,ny
+do j=1,this%ny
    this%hy(j) = y(j+1)-y(j)
 end do
 
@@ -95,44 +104,44 @@ Melem = 1.d0/36.d0 * Melem
 this%A = 0.d0
 
 !***  Interior mesh ***
-do j=1,ny-1
-   do i=1,nx-1
-      isom(1) =  som(i,j,1)
-      isom(2) =  som(i,j,2)
-      isom(3) =  som(i,j,3)
-      isom(4) =  som(i,j,4)
+do j=1,this%ny-1
+   do i=1,this%nx-1
+      isom(1) =  som(this%nx,i,j,1)
+      isom(2) =  som(this%nx,i,j,2)
+      isom(3) =  som(this%nx,i,j,3)
+      isom(4) =  som(this%nx,i,j,4)
       call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
    end do
 end do
 
-do i=2,nx-1
+do i=2,this%nx-1
 
    j = 1
-   isom(1)=som(i,ny,1)
-   isom(2)=som(i,ny,2)
-   isom(3)=som(i,j,2)
-   isom(4)=som(i,j,1)
+   isom(1)=som(this%nx,i,this%ny,1)
+   isom(2)=som(this%nx,i,this%ny,2)
+   isom(3)=som(this%nx,i,j,2)
+   isom(4)=som(this%nx,i,j,1)
    call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
 
 end do
 
-do j=2,ny-1
+do j=2,this%ny-1
 
    i = 1
-   isom(1)=som(nx,j,1)
-   isom(2)=som(i,j,1)
-   isom(3)=som(i,j,4)
-   isom(4)=som(nx,j,4)
+   isom(1)=som(this%nx,this%nx,j,1)
+   isom(2)=som(this%nx,i,j,1)
+   isom(3)=som(this%nx,i,j,4)
+   isom(4)=som(this%nx,this%nx,j,4)
    call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
 
 end do
    
 !Corners
 i=1; j=1  !SW
-isom(1) = som(nx-1,ny-1,3)
-isom(2) = som(i   ,ny-1,4)
-isom(3) = som(i   ,j   ,1)
-isom(4) = som(nx-1,j   ,2)
+isom(1) = som(this%nx,this%nx-1,this%ny-1,3)
+isom(2) = som(this%nx,i   ,this%ny-1,4)
+isom(3) = som(this%nx,i   ,j   ,1)
+isom(4) = som(this%nx,this%nx-1,j   ,2)
 call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
 
 SLL_ALLOCATE(this%ipiv(nxy),error)
@@ -144,8 +153,8 @@ call DGETRF(nxy,nxy,this%A,nxy,this%ipiv,error)
 end subroutine initialize_poisson_2d_periodic_fem
 
 !> Get the node number
-integer function som(i, j, k)
-integer :: i, j, k
+integer function som(nx, i, j, k)
+integer :: nx, i, j, k
 
 if (k == 1) then
    som = i+(j-1)*nx
@@ -161,13 +170,16 @@ end function som
 
 !> Build matrices and factorize
 subroutine build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
-type( poisson_2d_periodic_fem ) :: this     !< Poisson solver object
+type( sll_fem_poisson_2d_periodic ) :: this     !< Poisson solver object
 sll_real64, dimension(:,:)      :: Axelem   !< x electric field
 sll_real64, dimension(:,:)      :: Ayelem   !< y electric field
 sll_real64, dimension(:,:)      :: Melem    !< charge density
 sll_int32,  dimension(:)        :: isom     !< node indices
 sll_int32, intent(in)           :: i        !< int(x) position on mesh
 sll_int32, intent(in)           :: j        !< int(y) position on mesh
+
+sll_int32 :: ii
+sll_int32 :: jj
 
    do ii=1,4
       do jj=1,4
@@ -183,17 +195,22 @@ end subroutine build_matrices
 
 !> Solve the poisson equation
 subroutine solve_poisson_2d_periodic_fem( this, ex, ey, rho )
-type( poisson_2d_periodic_fem ) :: this !< Poisson solver object
-sll_real64, dimension(:,:)      :: ex   !< x electric field
-sll_real64, dimension(:,:)      :: ey   !< y electric field
-sll_real64, dimension(:,:)      :: rho  !< charge density
-sll_real64, dimension(nxy)      :: b
-sll_real64                      :: bmoy
+type( sll_fem_poisson_2d_periodic )        :: this !< Poisson solver object
+sll_real64, dimension(:,:)             :: ex   !< x electric field
+sll_real64, dimension(:,:)             :: ey   !< y electric field
+sll_real64, dimension(:,:)             :: rho  !< charge density
+sll_real64, dimension(this%nx*this%ny) :: b
+sll_real64                             :: bmoy
 
+sll_int32 :: nxy
+sll_int32 :: i, j, k
+sll_int32 :: error
+
+nxy = this%nx * this%ny
 !** Construction du second membre (rho a support compact --> projete)
 k=0
-do i=1,nx
-   do j=1,ny
+do i=1,this%nx
+   do j=1,this%ny
       k=k+1
       b(k) = rho(i,j)
    end do
@@ -207,21 +224,21 @@ call DGETRS('N',nxy,1,this%A,nxy,this%ipiv,b,nxy,error)
 bmoy = sum(b) / nxy
 
 k=0
-do i=1,nx
-   do j=1,ny
+do i=1,this%nx
+   do j=1,this%ny
       k=k+1
       rho(i,j) = b(k) - bmoy
    end do
 end do
 
-do j=1,ny-1
-do i=1,nx-2
+do j=1,this%ny-1
+do i=1,this%nx-2
    ex(i,j) = - (rho(i+1,j)-rho(i,j)) / this%hx(i)
 end do
 end do
 
-do j=1,ny-2
-do i=1,nx-1
+do j=1,this%ny-2
+do i=1,this%nx-1
    ey(i,j) = - (rho(i,j+1)-rho(i,j)) / this%hy(j)
 end do
 end do
@@ -229,12 +246,17 @@ end do
 end subroutine solve_poisson_2d_periodic_fem
 
 !> Write the Plotmtv file to plot mesh indices and cell numbers.
-subroutine write_mtv_periodic( x, y )
-integer               :: iel
-real(8), dimension(:) :: x !< x node position
-real(8), dimension(:) :: y !< y node position
-real(8)               :: x1
-real(8)               :: y1
+subroutine write_mtv_periodic( nx, x, ny, y )
+integer             :: iel
+integer, intent(in) :: nx
+integer, intent(in) :: ny
+real(8), intent(in) :: x(:) !< x node position
+real(8), intent(in) :: y(:) !< y node position
+real(8)             :: x1
+real(8)             :: y1
+
+integer :: i 
+integer :: j 
 
 open(10, file="mesh.mtv")
 write(10,*)"$DATA=CURVE3D"
@@ -277,7 +299,7 @@ do i=1,nx
       write(10,"(a)"   ,  advance="no")" y1="
       write(10,"(g15.3)", advance="no") y(j)
       write(10,"(a)"   ,  advance="no")" z1=0. lc=5 ll='"
-      write(10,"(i4)"  ,  advance="no") som(i,j,1)
+      write(10,"(i4)"  ,  advance="no") som(nx,i,j,1)
       write(10,"(a)")"'"
    end do
 end do
@@ -288,4 +310,4 @@ close(10)
 end subroutine write_mtv_periodic
 
 
-end module sll_poisson_2d_periodic_fem
+end module sll_fem_2d_periodic
