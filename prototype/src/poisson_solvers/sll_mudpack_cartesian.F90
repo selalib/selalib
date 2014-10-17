@@ -11,23 +11,30 @@ module sll_mudpack_cartesian
 #include "sll_file_io.h"
 
 use sll_mudpack_base
-!use sll_module_cubic_spline_interpolator_1d
 
 implicit none
+private
 
-interface initialize
+!> Create a Poisson solver using mudpack library
+!> on a cartesian mesh
+interface sll_create
    module procedure  initialize_mudpack_cartesian
-end interface initialize
+end interface sll_create
 
-interface solve
+!> Solve the Poisson solver using mudpack library
+!> on a cartesian mesh
+interface sll_solve
    module procedure  solve_mudpack_cartesian
-end interface solve
+end interface sll_solve
 
-interface delete
+!> Deallocate the Poisson solver using mudpack library
+!> on a cartesian mesh
+interface sll_delete
    module procedure  delete_mudpack_cartesian
-end interface delete
+end interface sll_delete
 
-!class(sll_interpolator_1d_base), pointer   :: cxx_interp
+public :: sll_create, sll_solve, sll_delete
+
 contains
 
 !> Initialize the Poisson solver using mudpack library
@@ -85,18 +92,6 @@ ny = nc_eta2+1
 ! set minimum required work space
 llwork=(7*(nx+2)*(ny+2)+44*nx*ny)/3
 
-!cxx_interp => new_cubic_spline_interpolator_1d( &
-!          nx, &
-!          eta1_min, &
-!          eta1_max, &
-!          SLL_PERIODIC)
-!allocate(cxx_array(nx))          
-!
-!cxx_array = 1._f64          
-!          
-!call cxx_interp%compute_interpolants( cxx_array )          
-
-      
 allocate(this%work(llwork))
 iiex = ceiling(log((nx-1.)/iixp)/log(2.))+1
 jjey = ceiling(log((ny-1.)/jjyq)/log(2.))+1
@@ -293,7 +288,6 @@ end subroutine solve_mudpack_cartesian
 subroutine delete_mudpack_cartesian(this)
 type(mudpack_2d)        :: this          !< Data structure for solver
 
-
    deallocate(this%work)
 
 end subroutine delete_mudpack_cartesian
@@ -320,7 +314,7 @@ subroutine cofx(x,cxx,cx,cex)
 use sll_mudpack_cartesian
 implicit none
 real(8)  :: x,cxx,cx,cex
-cxx = 1.0 +0.0*x !cxx_interp%interpolate_value(x)
+cxx = 1.0 +0.0*x 
 cx  = 0.0
 cex = 0.0
 return

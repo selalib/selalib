@@ -5,14 +5,8 @@
 !> You have to download and install fishpack 
 !> http://www2.cisl.ucar.edu/resources/legacy/fishpack
 !>
-!> <b>Example in cartesian 2d</b>
+!> Example in cartesian 2d
 !> @snippet poisson_solvers/test_fishpack.F90 example_2d
-!> 
-!> <b>Example in cartesian 3d</b>
-!> @snippet poisson_solvers/test_fishpack.F90 example_3d
-!> 
-!> <b>Example in polar coordinates</b>
-!> @snippet poisson_solvers/test_fishpack.F90 example_polar
 module sll_fishpack
 
 #include "sll_working_precision.h"

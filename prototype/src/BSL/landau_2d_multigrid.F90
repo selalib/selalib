@@ -9,6 +9,7 @@ use sll_constants
 use sll_module_interpolators_1d_base
 use sll_module_cubic_spline_interpolator_1d
 use sll_utilities, only: int2string
+use sll_mudpack_base
 use sll_mudpack_cartesian
 
 implicit none
@@ -88,7 +89,7 @@ SLL_ALLOCATE(bz(nc_eta1+1,nc_eta2+1),error)
 SLL_ALLOCATE(jx(nc_eta1+1,nc_eta2+1),error)
 SLL_ALLOCATE(jy(nc_eta1+1,nc_eta2+1),error)
 
-call initialize(poisson, eta1_min, eta1_max, nc_eta1, &
+call sll_create(poisson, eta1_min, eta1_max, nc_eta1, &
                          eta2_min, eta2_max, nc_eta2)
 
 call spl_eta1%initialize(nc_eta1+1, eta1_min, eta1_max, SLL_PERIODIC )
@@ -141,7 +142,7 @@ time  = time + 0.5 * delta_t
 do i_step = 1, n_step !Loop over time
 
    call compute_rho()
-   call solve(poisson,phi,rho,ex,ey,nrj(i_step))
+   call sll_solve(poisson,phi,rho,ex,ey,nrj(i_step))
    call online_plot() 
 
    if (i_step == 1 .or. mod(i_step, 10) == 0) then
@@ -162,7 +163,7 @@ do i_step = 1, n_step !Loop over time
 end do !next time step
 
 call cpu_time(end_time)
-
+call sll_delete(poisson)
 
 contains
 

@@ -19,7 +19,6 @@ SET(MPI_MODULE_ENABLED    ON  CACHE BOOL "Enable use of MPI library")
 SET(HDF5_ENABLED          ON  CACHE BOOL "Use HDF5 library for data output")
 SET(HDF5_PARALLEL_ENABLED OFF CACHE BOOL "Use Parallel HDF5")
 SET(FFTW_ENABLED          ON  CACHE BOOL "Enable use of FFTW library")
-SET(FISHPACK_ENABLED      OFF CACHE BOOL "Build fishpack library")
 SET(PASTIX_ENABLED        OFF CACHE BOOL "Build PasTiX solvers ")
 SET(SUITESPARSE_ENABLED   OFF CACHE BOOL "Enable UMFpack solvers")
 SET(SLL_BUILD_PACKAGE     OFF CACHE BOOL "Build selalib package")
@@ -113,6 +112,7 @@ INCLUDE(CPackConfig)
 ADD_SUBDIRECTORY(package)
 ADD_SUBDIRECTORY(fftpack)
 ADD_SUBDIRECTORY(mudpack)
+ADD_SUBDIRECTORY(fishpack)
 
 IF(NOT SLL_BUILD_PACKAGE)
 
@@ -156,7 +156,6 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(gyroaverage)
    ADD_SUBDIRECTORY(maxwell_solvers)
    ADD_SUBDIRECTORY(quasi_neutral_solvers)
-   ADD_SUBDIRECTORY(fishpack)
 
    
    IF(MPI_MODULE_ENABLED)
