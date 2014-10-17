@@ -12,20 +12,45 @@ module sll_mudpack_curvilinear
 #include "sll_coordinate_transformations.h"
 
 use sll_mudpack_base
-use sll_module_cubic_spline_interpolator_2d
 use sll_module_interpolators_2d_base
+use sll_module_cubic_spline_interpolator_2d
+
 implicit none
+private
 
-class(sll_interpolator_2d_base), pointer   :: cxx_interp
-class(sll_interpolator_2d_base), pointer   :: cyy_interp
-class(sll_interpolator_2d_base), pointer   :: cxy_interp
-class(sll_interpolator_2d_base), pointer   :: cx_interp
-class(sll_interpolator_2d_base), pointer   :: cy_interp
-class(sll_interpolator_2d_base), pointer   :: ce_interp
-class(sll_interpolator_2d_base), pointer   :: a12_interp
-class(sll_interpolator_2d_base), pointer   :: a21_interp
+!> Interpolator to compute derivative xx
+class(sll_interpolator_2d_base), pointer :: cxx_interp
+!> Interpolator to compute derivative yy
+class(sll_interpolator_2d_base), pointer :: cyy_interp
+!> Interpolator to compute derivative xy
+class(sll_interpolator_2d_base), pointer :: cxy_interp
+!> Interpolator to compute derivative x
+class(sll_interpolator_2d_base), pointer :: cx_interp
+!> Interpolator to compute derivative y
+class(sll_interpolator_2d_base), pointer :: cy_interp
+!> Interpolator to compute rhs coefficient
+class(sll_interpolator_2d_base), pointer :: ce_interp
+!> PLEASE ADD DOCUMENTATION
+class(sll_interpolator_2d_base), pointer :: a12_interp
+!> PLEASE ADD DOCUMENTATION
+class(sll_interpolator_2d_base), pointer :: a21_interp
 
+!> Coordinate transformation of the mesh
 class(sll_coordinate_transformation_2d_base), pointer :: transformation
+
+interface sll_create
+  module procedure initialize_poisson_curvilinear_mudpack
+end interface sll_create
+
+public :: sll_create
+public :: cxx_interp
+public :: cyy_interp
+public :: cxy_interp
+public :: cx_interp
+public :: cy_interp
+public :: ce_interp
+public :: a12_interp
+public :: a21_interp
 
 contains
 

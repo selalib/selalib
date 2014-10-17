@@ -16,19 +16,21 @@
 !**************************************************************
 
 
+!> @brief
 !> PLEASE ADD DOCUMENTATION
+!> @details
 !> solves 
 !> \f[
-!>      sum_{i,j=1}^2 A_{i,j}\partial_{i,j} phi
-!>       +\sum_{i=1}^2B_i\partial_i phi
-!>       +C \phi = rho
+!>      \sum_{i,j=1}^2 A_{i,j}\partial_{i,j} phi
+!>       +\sum_{i=1}^2B_i\partial_i \phi
+!>       +C \phi = \rho
 !> \f]
 !> in polar coordinates
 !> this leads when \f$ A_{1,2}=A_{2,1}=0 \f$ 
 !> and \f$ B_2 = 0 \f$
 !> \f[
-!>    A_11\partial_{1,e1}\hat{phi}+B_1\partial_{1}\hat{phi}+(C+A_{2,2}k^2)\hat{phi} 
-!>    = \hat{rho}
+!>    A_11\partial_{1,e1}\hat{\phi}+B_1\partial_{1}\hat{\phi}+(C+A_{2,2}k^2)\hat{\phi} 
+!>    = \hat{\rho}
 !> \f]
 !> @ingroup poisson_solvers
 module sll_module_poisson_2d_polar_solver
@@ -38,6 +40,7 @@ module sll_module_poisson_2d_polar_solver
 use sll_module_poisson_2d_base
 use sll_poisson_2d_polar
 implicit none
+private
 
   sll_int32, parameter :: SLL_POISSON_CLASSIC = 0
   sll_int32, parameter :: SLL_POISSON_DRIFT_KINETIC = 1
@@ -56,6 +59,9 @@ implicit none
     procedure, pass(poisson) :: compute_E_from_rho => compute_E_from_rho_2d_polar
 
   end type poisson_2d_polar_solver
+
+  public :: new_poisson_2d_polar_solver
+  public :: SLL_POISSON_DRIFT_KINETIC
 
 contains
 

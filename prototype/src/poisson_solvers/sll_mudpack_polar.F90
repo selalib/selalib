@@ -15,6 +15,14 @@ use sll_mudpack_base
 
 implicit none
 
+interface sll_create
+  module procedure initialize_poisson_polar_mudpack
+end interface sll_create
+
+interface sll_solve
+  module procedure solve_poisson_polar_mudpack
+end interface sll_solve
+
 contains
 
 !> Initialize the Poisson solver in polar coordinates using MUDPACK
@@ -26,7 +34,7 @@ subroutine initialize_poisson_polar_mudpack(this,                      &
                                             bc_theta_min, bc_theta_max )
 implicit none
 
-type(mudpack_2d) :: this            !< Solver object
+type(mudpack_2d)       :: this      !< Solver object
 sll_real64, intent(in) :: r_min     !< radius min
 sll_real64, intent(in) :: r_max     !< radius min
 sll_real64, intent(in) :: theta_min !< theta min
