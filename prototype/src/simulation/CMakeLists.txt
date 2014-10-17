@@ -201,8 +201,8 @@ TARGET_LINK_LIBRARIES(curvilinear_SL sll_mapped_meshes
 ADD_EXECUTABLE(CG_polar CG_polar.F90 sll_advection_polar.F90
 		                         sll_polar_operators.F90)
 
-TARGET_LINK_LIBRARIES(CG_polar sll_poisson_2d_polar
-	                         sll_utilities
+TARGET_LINK_LIBRARIES(CG_polar sll_poisson_solvers
+                               sll_utilities
                                sll_file_io
 	                         sll_fft
                                sll_splines
@@ -221,3 +221,6 @@ TARGET_LINK_LIBRARIES(VP1D_cart sll_mapped_meshes
   	                          sll_utilities
 	                          sll_poisson_solvers
 	                          dfftpack)
+
+ADD_EXECUTABLE(unit_test_polar unit_test_polar.F90 sll_polar_operators.F90)
+TARGET_LINK_LIBRARIES(unit_test_polar sll_poisson_solvers)
