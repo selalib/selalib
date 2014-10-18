@@ -1,3 +1,4 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 !> @ingroup poisson_solvers
 !> @brief
 !> Poisson solver using finite element
@@ -362,3 +363,4 @@ end subroutine write_mtv_file
 
 
 end module sll_fem_2d
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

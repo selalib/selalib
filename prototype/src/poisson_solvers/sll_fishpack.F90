@@ -1,3 +1,5 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
 !> @ingroup poisson_solvers
 !> @brief 
 !> Interface module to use fishpack library
@@ -260,3 +262,5 @@ contains
   end subroutine solve_3d
   
 end module sll_fishpack
+
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

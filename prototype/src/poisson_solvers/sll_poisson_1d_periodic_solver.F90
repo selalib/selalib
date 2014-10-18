@@ -1,3 +1,4 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 !> @ingroup poisson_solvers
 module sll_module_poisson_1d_periodic_solver
 #include "sll_working_precision.h"
@@ -111,3 +112,4 @@ contains
   
   
 end module sll_module_poisson_1d_periodic_solver
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
