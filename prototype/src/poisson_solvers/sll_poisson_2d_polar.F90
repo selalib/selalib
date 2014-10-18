@@ -15,6 +15,8 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
 !> @ingroup poisson_solvers
 !> @brief Poisson equation solver in polar coordinates
 !> @details Solver for the Poisson equation 
@@ -630,3 +632,4 @@ contains
   end subroutine poisson_solve_polar
 
 end module sll_poisson_2d_polar
+#endif DOXYGEN_SHOULD_SKIP_THIS

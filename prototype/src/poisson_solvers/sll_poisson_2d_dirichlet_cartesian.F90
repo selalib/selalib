@@ -1,3 +1,4 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 !> @ingroup poisson_solvers
 !> @brief 
 !> Selalib 2D poisson solver for cartesian coordinates, Dirichlet BC's
@@ -222,3 +223,4 @@ contains
 
 
 end module sll_poisson_2d_dirichlet_cartesian
+#endif  /* DOXYGEN_SHOULD_SKIP_THIS */

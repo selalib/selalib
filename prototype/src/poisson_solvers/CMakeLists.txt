@@ -1,4 +1,3 @@
-
 ADD_DEFINITIONS(-DMUDPACK)
 SET(POISSON_SRCS sll_poisson_1d_base.F90
                  sll_poisson_1d_periodic_solver.F90
@@ -15,9 +14,8 @@ SET(POISSON_SRCS sll_poisson_1d_base.F90
                  sll_poisson_2d_periodic_solver.F90
                  sll_poisson_2d_elliptic_solver.F90
                  sll_poisson_3d_base.F90
-                 sll_mudpack_base.F90
-                 sll_mudpack_cartesian.F90
-                 sll_mudpack_polar.F90
+                 sll_fishpack.F90
+                 sll_mudpack.F90
                  sll_mudpack_curvilinear.F90)
 
 IF(FFTW_ENABLED AND FFTW_FOUND)
@@ -31,6 +29,7 @@ TARGET_LINK_LIBRARIES(sll_poisson_solvers sll_general_coordinate_elliptic_solver
                                           sll_memory 
                                           sll_assert 
                                           mudpack
+                                          fishpack
                                           dfftpack )
 
 IF(FFTW_ENABLED AND FFTW_FOUND)
@@ -44,13 +43,13 @@ ADD_EXECUTABLE( test_poisson_2d_dirichlet_cartesian
 TARGET_LINK_LIBRARIES( test_poisson_2d_dirichlet_cartesian 
                        sll_poisson_solvers sll_utilities )
 
-ADD_EXECUTABLE( test_poisson_2d_fft unit_test_poisson_2d_fft.F90)
+ADD_EXECUTABLE( test_poisson_2d_fft test_poisson_2d_fft.F90)
 TARGET_LINK_LIBRARIES( test_poisson_2d_fft sll_poisson_solvers)
 
-ADD_EXECUTABLE(test_poisson_1d_polar_solver unit_test_poisson_1d_polar_solver.F90)
+ADD_EXECUTABLE(test_poisson_1d_polar_solver test_poisson_1d_polar.F90)
 TARGET_LINK_LIBRARIES( test_poisson_1d_polar_solver sll_poisson_solvers)
 
-ADD_EXECUTABLE( test_poisson_2d_polar_solver unit_test_poisson_2d_polar_solver.F90)
+ADD_EXECUTABLE( test_poisson_2d_polar_solver test_poisson_2d_polar.F90)
 TARGET_LINK_LIBRARIES( test_poisson_2d_polar_solver sll_poisson_solvers)
 
 ADD_EXECUTABLE(test_poisson_1d test_poisson_1d.F90 sll_poisson_1d_periodic.F90)
@@ -71,8 +70,8 @@ ADD_EXECUTABLE(test_poisson_2d_fem sll_poisson_2d_fem.F90
                                    test_poisson_2d_fem.F90)
 TARGET_LINK_LIBRARIES(test_poisson_2d_fem sll_memory ${LAPACK_LIBRARIES})
 
-ADD_EXECUTABLE(test_fishpack test_fishpack.F90 sll_fishpack.F90)
-TARGET_LINK_LIBRARIES( test_fishpack sll_memory sll_assert fishpack)
+ADD_EXECUTABLE(test_fishpack test_fishpack.F90)
+TARGET_LINK_LIBRARIES( test_fishpack sll_poisson_solvers)
 
 ### BEGIN MACRO
 
@@ -82,8 +81,7 @@ MACRO(ADD_MUDPACK_PROGRAM TEST_NAME)
     
   TARGET_LINK_LIBRARIES(test_mudpack_${TEST_NAME} ${POISSON_LIBS}
                                                 sll_poisson_solvers 
-                                                sll_file_io
-                                                mudpack)
+                                                sll_file_io)
 
   ADD_TEST(NAME sll_mudpack_${TEST_NAME} COMMAND test_mudpack_${TEST_NAME} )
   SET(sll_mudpack_${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")

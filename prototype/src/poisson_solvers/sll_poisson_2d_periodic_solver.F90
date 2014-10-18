@@ -1,9 +1,10 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
 !> @ingroup poisson_solvers
 module sll_module_poisson_2d_periodic_solver
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-!use sll_boundary_condition_descriptors
 use sll_module_poisson_2d_base
 #ifdef FFTW
 use sll_poisson_2d_periodic_fftw
@@ -12,17 +13,16 @@ use sll_poisson_2d_periodic_fftpack
 #endif
 implicit none
 
-
   type,extends(sll_poisson_2d_base) :: poisson_2d_periodic_solver     
   
 #ifdef FFTW
-  type(poisson_2d_periodic_fftw), pointer                   :: poiss
+  type(poisson_2d_periodic_fftw), pointer    :: poiss
 #else
-  type(poisson_2d_periodic_fftpack), pointer                   :: poiss
+  type(poisson_2d_periodic_fftpack), pointer :: poiss
 #endif
   
-  
   contains
+
     procedure, pass(poisson) :: initialize => &
       initialize_poisson_2d_periodic_solver
     procedure, pass(poisson) :: compute_phi_from_rho => &
@@ -132,3 +132,4 @@ contains
   
   
 end module sll_module_poisson_2d_periodic_solver
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

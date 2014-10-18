@@ -1,4 +1,4 @@
-!**************************************************************
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 !**************************************************************
 !  Copyright INRIA
 !  Authors : 
@@ -857,4 +857,5 @@ end
 
 
 
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
 

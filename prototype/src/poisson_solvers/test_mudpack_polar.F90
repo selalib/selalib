@@ -5,11 +5,11 @@ program test_mudpack_polar
 #include "sll_constants.h"
 
 use sll_boundary_condition_descriptors
-use sll_mudpack_polar
+use sll_mudpack
 
 implicit none
 
-type(mudpack_2d) :: poisson
+type(sll_mudpack_solver) :: poisson
 sll_real64, dimension(:,:), allocatable :: rhs
 sll_real64, dimension(:,:), allocatable :: phi
 sll_real64, dimension(:,:), allocatable :: phi_cos
@@ -63,12 +63,12 @@ end do
 
 tolmax   = 1.0e-4_f64
 
-call initialize_poisson_polar_mudpack(poisson,  &
-                                      r_min, r_max, nr, &
-                                      theta_min, theta_max, ntheta, &
-                                      SLL_DIRICHLET, SLL_DIRICHLET, &
-                                      SLL_PERIODIC, &
-                                      SLL_PERIODIC )
+call initialize_mudpack_polar(poisson,  &
+                              r_min, r_max, nr, &
+                              theta_min, theta_max, ntheta, &
+                              SLL_DIRICHLET, SLL_DIRICHLET, &
+                              SLL_PERIODIC, &
+                              SLL_PERIODIC )
 do i =1,nr
    do j=1,ntheta
       rhs(i,j) = f_cos(r(i), theta(j))
@@ -77,7 +77,7 @@ end do
 
 poisson%iguess = 0 ! no initial guess
 
-call solve_poisson_polar_mudpack(poisson, phi, rhs)
+call solve_mudpack_polar(poisson, phi, rhs)
 
 call plot_field( "mudpack_polar_cos.dat", phi )
 
@@ -98,7 +98,7 @@ end do
 
 poisson%iguess = 0 ! no initial guess
 
-call solve_poisson_polar_mudpack(poisson, phi, rhs)
+call solve_mudpack_polar(poisson, phi, rhs)
 
 call plot_field( "mudpack_polar_sin.dat", phi )
 
