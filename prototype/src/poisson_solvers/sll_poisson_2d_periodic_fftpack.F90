@@ -1,3 +1,5 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
 !> @ingroup poisson_solvers
 !> @brief
 !> Implements the Poisson solver in 2D with periodic boundary conditions
@@ -412,3 +414,5 @@ subroutine doubcfftinv(this,array)
 end subroutine doubcfftinv
 
 end module sll_poisson_2D_periodic_fftpack
+
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

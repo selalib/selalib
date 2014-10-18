@@ -1,3 +1,4 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 !> @ingroup poisson_solvers
 !> @brief
 !> Poisson solver in general coordinates using mudpack library
@@ -10,13 +11,27 @@ module sll_mudpack_curvilinear
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_coordinate_transformations.h"
-
-use sll_mudpack_base
 use sll_module_interpolators_2d_base
 use sll_module_cubic_spline_interpolator_2d
 
 implicit none
 private
+
+!> Mudpack solver cartesian 2d
+type, public :: mudpack_2d
+
+   sll_real64, dimension(:), allocatable :: work !< array for tmp data
+   sll_int32  :: mgopt(4)           !< Option to control multigrid
+   sll_int32  :: iprm(16)           !< Indices to control grid sizes
+   sll_real64 :: fprm(6)            !< Real to set boundary conditions
+   sll_int32  :: iguess             !< Initial solution or loop over time
+   sll_int32, pointer :: iwork(:,:) !< Internal work array for mudpack library
+
+end type mudpack_2d
+
+integer, parameter, public :: SLL_SEPARABLE  = 1                        !< type of equation
+integer, parameter, public :: SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS = 2 !< type of equation
+integer, parameter, public :: SLL_NON_SEPARABLE_WITH_CROSS_TERMS = 3    !< type of equation
 
 !> Interpolator to compute derivative xx
 class(sll_interpolator_2d_base), pointer :: cxx_interp
@@ -625,3 +640,5 @@ end if
 
 return
 end subroutine
+
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

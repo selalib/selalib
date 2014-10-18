@@ -1,3 +1,4 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 !**************************************************************
 !  Copyright INRIA
 !  Authors : 
@@ -168,3 +169,4 @@ contains
   
   
 end module sll_module_poisson_1d_polar_solver
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

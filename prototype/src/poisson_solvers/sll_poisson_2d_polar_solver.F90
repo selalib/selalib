@@ -1,3 +1,4 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 !**************************************************************
 !  Copyright INRIA
 !  Authors : 
@@ -16,6 +17,7 @@
 !**************************************************************
 
 
+!> @ingroup poisson_solvers
 !> @brief
 !> PLEASE ADD DOCUMENTATION
 !> @details
@@ -32,7 +34,6 @@
 !>    A_11\partial_{1,e1}\hat{\phi}+B_1\partial_{1}\hat{\phi}+(C+A_{2,2}k^2)\hat{\phi} 
 !>    = \hat{\rho}
 !> \f]
-!> @ingroup poisson_solvers
 module sll_module_poisson_2d_polar_solver
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -42,9 +43,12 @@ use sll_poisson_2d_polar
 implicit none
 private
 
+  !> Classic Poisson solver
   sll_int32, parameter :: SLL_POISSON_CLASSIC = 0
+  !> Poisson solver for drift kinetic simulation
   sll_int32, parameter :: SLL_POISSON_DRIFT_KINETIC = 1
 
+  !> Poisson solver in polar coordinates
   type,extends(sll_poisson_2d_base) :: poisson_2d_polar_solver     
 
     type(sll_plan_poisson_polar), pointer :: poiss
@@ -65,6 +69,8 @@ private
 
 contains
 
+  !> Allocate a new Poisson solver in polar coordinates
+  !> @returns a pointer to the derived type
   function new_poisson_2d_polar_solver( &
     eta1_min, &
     eta1_max, &
@@ -237,3 +243,4 @@ contains
   
   
 end module sll_module_poisson_2d_polar_solver
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

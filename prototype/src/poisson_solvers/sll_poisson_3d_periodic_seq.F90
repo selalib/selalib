@@ -1,3 +1,4 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 !> @ingroup poisson_solvers
 !> @brief 
 !> 3D poisson solver
@@ -241,3 +242,4 @@ contains
 
 
 end module sll_poisson_3d_periodic_seq
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
