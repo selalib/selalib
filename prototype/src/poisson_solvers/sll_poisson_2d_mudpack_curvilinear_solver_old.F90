@@ -38,7 +38,7 @@ module sll_module_poisson_2d_mudpack_curvilinear_solver_old
 !use sll_boundary_condition_descriptors
 use sll_constants
 use sll_module_poisson_2d_base
-use sll_mudpack_base
+use sll_mudpack_curvilinear
 use sll_module_interpolators_2d_base
 use sll_module_cubic_spline_interpolator_1d
 use sll_module_cubic_spline_interpolator_2d
