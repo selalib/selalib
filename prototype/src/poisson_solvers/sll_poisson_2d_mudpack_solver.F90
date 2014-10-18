@@ -36,7 +36,7 @@ module sll_module_poisson_2d_mudpack_solver
 #include "sll_assert.h"
 !use sll_boundary_condition_descriptors
 use sll_module_poisson_2d_base
-use sll_mudpack_base
+use sll_mudpack_curvilinear
 use sll_module_cubic_spline_interpolator_1d
 use sll_module_cubic_spline_interpolator_2d
 use sll_module_interpolators_1d_base

@@ -538,7 +538,6 @@ end subroutine
 
 !> input x dependent coefficients
 subroutine cofx(x,cxx,cx,cex)
-use sll_mudpack_cartesian
 implicit none
 real(8)  :: x,cxx,cx,cex
 cxx = 1.0 +0.0*x 
