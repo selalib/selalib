@@ -96,7 +96,6 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_solvers_base.F90
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_fdtd.F90
     ${SLL_DIR}/periodic_interpolation/periodic_interp.F90
-    ${SLL_DIR}/poisson_solvers/sll_poisson_solvers.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_1d_periodic.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_polar.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_fftpack.F90
@@ -188,8 +187,7 @@ IF((${FFT_LIB} MATCHES "FFTW") AND FFTW_ENABLED)
 ENDIF()
 
 SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
-  ${SLL_DIR}/poisson_solvers/sll_mudpack_base.F90
-  ${SLL_DIR}/poisson_solvers/sll_mudpack_cartesian.F90
+  ${SLL_DIR}/poisson_solvers/sll_mudpack.F90
 )
 
 IF(SUITESPARSE_ENABLED)

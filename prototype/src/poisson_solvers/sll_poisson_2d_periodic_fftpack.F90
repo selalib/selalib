@@ -12,8 +12,6 @@ module sll_poisson_2d_periodic_fftpack
 #include "sll_assert.h"
 #include "sll_constants.h"
 
-use sll_poisson_solvers
-
 implicit none
 private
 
