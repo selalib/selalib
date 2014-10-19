@@ -221,6 +221,6 @@ contains
      end function get_coeffs_1d
   end interface
 
-#endif // DOXYGEN_SHOULD_SKIP_THIS
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
 end module sll_module_interpolators_1d_base
