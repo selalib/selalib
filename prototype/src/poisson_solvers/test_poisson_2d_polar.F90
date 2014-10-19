@@ -15,14 +15,14 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @snippets example
-program test_poisson_2d_polar_solver
+!> @internal [example]
+program test_poisson_2d_polar
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 
 use sll_module_poisson_2d_base
-use sll_module_poisson_2d_polar_solver
+use sll_module_poisson_2d_polar
 use sll_boundary_condition_descriptors
 
 implicit none
@@ -50,7 +50,7 @@ implicit none
   
   err = 0._f64
   
-  poisson =>new_poisson_2d_polar_solver( &
+  poisson =>new_poisson_2d_polar( &
     x1_min, &
     x1_max, &
     Nc_x1, &
@@ -65,5 +65,5 @@ implicit none
     print *, '#PASSED'
   endif
 
-end program test_poisson_2d_polar_solver
-!> @snippets example
+end program test_poisson_2d_polar
+!> @internal [example]

@@ -13,11 +13,11 @@ module sll_module_poisson_2d_base
 
   contains
 
-    !> PLEASE ADD DOCUMENTATION
+    !> solves \f$ -\Delta \phi_{ij} = \rho_{ij} \f$
     procedure(signature_compute_phi_from_rho_2d), deferred, pass(poisson) :: &
       compute_phi_from_rho
 
-    !> PLEASE ADD DOCUMENTATION
+    !> solves \f$ -\Delta \phi_{ij} = \rho_{ij} \f$ and \f$ E_{ij} = \nabla  \phi_{ij} \f$
     procedure(signature_compute_E_from_rho_2d), deferred, pass(poisson) :: &
       compute_E_from_rho
 
