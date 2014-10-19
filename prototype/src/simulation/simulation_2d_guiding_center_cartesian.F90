@@ -41,7 +41,7 @@ module sll_simulation_2d_guiding_center_cartesian_module
   use sll_common_array_initializers_module
 #ifdef MUDPACK
   !use sll_mudpack_curvilinear
-  use sll_module_poisson_2d_mudpack_solver
+  use sll_module_poisson_2d_mudpack
   use sll_module_poisson_2d_mudpack_curvilinear_solver_old
 #endif
   use sll_module_poisson_2d_elliptic_solver, only:new_poisson_2d_elliptic_solver, es_gauss_legendre
@@ -754,7 +754,7 @@ contains
         
         select case(mudpack_method)
           case ("SLL_SEPARABLE")
-            sim%poisson => new_poisson_2d_mudpack_solver( &
+            sim%poisson => new_poisson_2d_mudpack( &
               x1_min,&
               x1_max,&
               Nc_x1,&
@@ -781,7 +781,7 @@ contains
             cy_2d = 0._f64
             ce_2d = 0._f64
              
-            sim%poisson => new_poisson_2d_mudpack_solver( &
+            sim%poisson => new_poisson_2d_mudpack( &
               x1_min,&
               x1_max,&
               Nc_x1,&
@@ -814,7 +814,7 @@ contains
             cy_2d = 0._f64
             ce_2d = 0._f64
              
-            sim%poisson => new_poisson_2d_mudpack_solver( &
+            sim%poisson => new_poisson_2d_mudpack( &
               x1_min,&
               x1_max,&
               Nc_x1,&

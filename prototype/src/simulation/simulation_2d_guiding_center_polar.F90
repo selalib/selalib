@@ -39,7 +39,7 @@ module sll_simulation_2d_guiding_center_polar_module
   use sll_module_poisson_2d_mudpack_curvilinear_solver_old
 #endif
 !  use sll_module_poisson_2d_base
-  use sll_module_poisson_2d_polar_solver
+  use sll_module_poisson_2d_polar
   use sll_module_poisson_2d_elliptic_solver, &
      only: new_poisson_2d_elliptic_solver, &
            es_gauss_legendre
@@ -514,7 +514,7 @@ contains
 
     select case(poisson_solver)    
       case ("SLL_POLAR_FFT")     
-        sim%poisson =>new_poisson_2d_polar_solver( &
+        sim%poisson =>new_poisson_2d_polar( &
           x1_min, &
           x1_max, &
           Nc_x1, &

@@ -62,7 +62,7 @@ module sll_simulation_4d_drift_kinetic_polar_one_mu_module
   use sll_module_characteristics_2d_verlet
   use sll_module_cubic_spline_interpolator_2d
   use sll_module_advection_1d_periodic
-  use sll_module_poisson_2d_polar_solver
+  use sll_module_poisson_2d_polar
   use sll_module_gyroaverage_2d_polar_hermite_solver
   use sll_module_gyroaverage_2d_polar_splines_solver
   use sll_module_gyroaverage_2d_polar_pade_solver
@@ -549,14 +549,14 @@ contains
           tmp_r(i,1) = 1._f64/sim%Te_r(i)
         enddo  
         
-        sim%poisson2d_mean =>new_poisson_2d_polar_solver( &
+        sim%poisson2d_mean =>new_poisson_2d_polar( &
           sim%m_x1%eta_min, &
           sim%m_x1%eta_max, &
           sim%m_x1%num_cells, &
           sim%m_x2%num_cells, &
           poisson2d_BC)
 
-        sim%poisson2d =>new_poisson_2d_polar_solver( &
+        sim%poisson2d =>new_poisson_2d_polar( &
           sim%m_x1%eta_min, &
           sim%m_x1%eta_max, &
           sim%m_x1%num_cells, &

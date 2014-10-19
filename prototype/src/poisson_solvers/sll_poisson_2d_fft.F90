@@ -1,4 +1,3 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 !**************************************************************
 !  Copyright INRIA
 !  Authors : 
@@ -17,40 +16,52 @@
 !**************************************************************
 
 !> @ingroup poisson_solvers
+!> @brief
+!> Solve Poisson equation on regular cartesian 2d mesh.
+!> @details
+!> Numerical method uses Fast Fourier Transform and periodic
+!> boundary conditions.
+!> @snippet poisson_solvers/test_poisson_2d_fft.F90 example
 module sll_module_poisson_2d_fft
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-!use sll_boundary_condition_descriptors
+
 use sll_module_poisson_2d_base
+
 #ifdef FFTW
 use sll_poisson_2D_periodic_fftw
 #else
 use sll_poisson_2D_periodic_fftpack
 #endif
-implicit none
 
-  type,extends(sll_poisson_2d_base) :: poisson_2d_fft_solver     
+implicit none
+private
+
+  type, public, extends(sll_poisson_2d_base) :: poisson_2d_fft_solver     
   
 #ifdef FFTW
-  type(poisson_2d_periodic_fftw), pointer                   :: poiss
+    type(poisson_2d_periodic_fftw),    private, pointer :: solver
 #else
-  type(poisson_2d_periodic_fftpack), pointer                   :: poiss
+    type(poisson_2d_periodic_fftpack), private, pointer :: solver
 #endif
   
   contains
-    procedure, pass(poisson) :: initialize => &
-      initialize_poisson_2d_fft_solver
-    procedure, pass(poisson) :: compute_phi_from_rho => &
-      compute_phi_from_rho_2d_fft
-    procedure, pass(poisson) :: compute_E_from_rho => &
-      compute_E_from_rho_2d_fft
-!    procedure, pass(poisson) :: compute_E_from_phi => &
-!      compute_E_from_phi_2d_fft
+
+    !> Create the Poisson solver
+    procedure, public, pass(poisson) :: initialize => initialize_poisson_2d_fft_solver
+    !> Compute potential solving the Poisson equation
+    procedure, public, pass(poisson) :: compute_phi_from_rho => compute_phi_from_rho_2d_fft
+    !> Compute electric fields solving the Poisson equation
+    procedure, public, pass(poisson) :: compute_E_from_rho => compute_E_from_rho_2d_fft
       
   end type poisson_2d_fft_solver
 
+  public :: new_poisson_2d_fft_solver
+
 contains
+
+  !> @returns a pointer to the derived type poisson_2d_fft_solver.
   function new_poisson_2d_fft_solver( &
     eta1_min, &
     eta1_max, &
@@ -99,10 +110,10 @@ contains
     sll_int32 :: nc_eta2
     sll_int32 :: ierr
     
-    SLL_ALLOCATE(poisson%poiss,ierr)
+    SLL_ALLOCATE(poisson%solver,ierr)
     
     call initialize( &
-      poisson%poiss, &
+      poisson%solver, &
       eta1_min, &
       eta1_max, &
       nc_eta1, &
@@ -111,41 +122,34 @@ contains
       nc_eta2, &
       ierr) 
 
-        
-        
   end subroutine initialize_poisson_2d_fft_solver
   
-  ! solves -\Delta phi = rho in 2d
+  !> solves \f$ -\Delta phi(x,y) = rho (x,y) \f$
   subroutine compute_phi_from_rho_2d_fft( poisson, phi, rho )
     class(poisson_2d_fft_solver), target :: poisson
     sll_real64,dimension(:,:),intent(in) :: rho
     sll_real64,dimension(:,:),intent(out) :: phi
     
-    call solve( poisson%poiss, phi, rho)
+    call solve( poisson%solver, phi, rho)
     
   end subroutine compute_phi_from_rho_2d_fft
 
-    ! solves E = -\nabla Phi in 2d
-!    subroutine compute_E_from_phi_2d_fft( poisson, phi, E1, E2 )
-!      class(poisson_2d_fft_solver) :: poisson
-!      sll_real64,dimension(:,:),intent(in) :: phi
-!      sll_real64,dimension(:,:),intent(out) :: E1
-!      sll_real64,dimension(:,:),intent(out) :: E2
-!    end subroutine compute_E_from_phi_2d_fft
-
-    ! solves E = -\nabla Phi with -\Delta phi = rho in 2d 
-    subroutine compute_E_from_rho_2d_fft( poisson, E1, E2, rho )
-      class(poisson_2d_fft_solver) :: poisson
-      sll_real64,dimension(:,:),intent(in) :: rho
-      sll_real64,dimension(:,:),intent(out) :: E1
-      sll_real64,dimension(:,:),intent(out) :: E2
+  !> @brief
+  !> Solve Poisson equation to compute electric fields
+  !> @details
+  !> solves 
+  !> \f[ 
+  !> E(x,y) = -\nabla \phi(x,y) \\
+  !> -\Delta \phi(x,y) = \rho(x,y)
+  !> \f]
+  subroutine compute_E_from_rho_2d_fft( poisson, E1, E2, rho )
+    class(poisson_2d_fft_solver) :: poisson
+    sll_real64,dimension(:,:),intent(in) :: rho
+    sll_real64,dimension(:,:),intent(out) :: E1
+    sll_real64,dimension(:,:),intent(out) :: E2
       
-      call solve( poisson%poiss, E1, E2, rho)
+    call solve( poisson%solver, E1, E2, rho)
       
-    end subroutine compute_E_from_rho_2d_fft
-  
-  
-  
+  end subroutine compute_E_from_rho_2d_fft
   
 end module sll_module_poisson_2d_fft
-#endif /* DOXYGEN_SHOULD_SKIP_THIS */
