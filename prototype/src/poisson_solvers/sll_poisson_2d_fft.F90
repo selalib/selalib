@@ -17,7 +17,7 @@
 
 !> @ingroup poisson_solvers
 !> @brief
-!> Solve Poisson equation on regular cartesian 2d mesh.
+!> Regular cartesian two dimensional mesh with periodic bounday conditions.
 !> @details
 !> Numerical method uses Fast Fourier Transform and periodic
 !> boundary conditions.
@@ -38,7 +38,7 @@ use sll_poisson_2D_periodic_fftpack
 implicit none
 private
 
-  type, public, extends(sll_poisson_2d_base) :: poisson_2d_fft_solver     
+  type, public, extends(sll_poisson_2d_base) :: poisson_2d_fft_solver
   
 #ifdef FFTW
     type(poisson_2d_periodic_fftw),    private, pointer :: solver
