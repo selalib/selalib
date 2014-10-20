@@ -632,4 +632,4 @@ contains
   end subroutine poisson_solve_polar
 
 end module sll_poisson_2d_polar
-#endif DOXYGEN_SHOULD_SKIP_THIS
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

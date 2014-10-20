@@ -37,7 +37,7 @@ module sll_simulation_2d_analytic_field_cartesian_module
   
 #ifdef MUDPACK
 !  use sll_mudpack_curvilinear
-!  use sll_module_poisson_2d_mudpack_solver
+!  use sll_module_poisson_2d_mudpack
 !  use sll_module_poisson_2d_mudpack_curvilinear_solver_old
 #endif
 !  use sll_module_poisson_2d_elliptic_solver
