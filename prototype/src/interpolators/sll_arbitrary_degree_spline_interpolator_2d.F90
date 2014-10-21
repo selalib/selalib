@@ -33,73 +33,86 @@ private
 
 ! in what follows, the direction '1' is in the contiguous memory direction.
 !> Arbitrary degree version of 2d irnterpolator
-type, extends(sll_interpolator_2d_base) :: sll_arbitrary_degree_spline_interpolator_2d           
-   sll_int32  :: num_pts1
-   sll_int32  :: num_pts2
-   sll_real64 :: eta1_min
-   sll_real64 :: eta1_max
-   sll_real64 :: eta2_min
-   sll_real64 :: eta2_max
-   sll_int32  :: bc_left
-   sll_int32  :: bc_right
-   sll_int32  :: bc_bottom
-   sll_int32  :: bc_top
-   sll_int32  :: spline_degree1
-   sll_int32  :: spline_degree2
-   sll_real64, dimension(:), pointer :: knots1
-   sll_real64, dimension(:), pointer :: knots2
+type, public, extends(sll_interpolator_2d_base) :: sll_arbitrary_degree_spline_interpolator_2d           
+   sll_int32  :: num_pts1       !< PLEASE ADD DOCUMENTATION
+   sll_int32  :: num_pts2       !< PLEASE ADD DOCUMENTATION
+   sll_real64 :: eta1_min       !< PLEASE ADD DOCUMENTATION
+   sll_real64 :: eta1_max       !< PLEASE ADD DOCUMENTATION
+   sll_real64 :: eta2_min       !< PLEASE ADD DOCUMENTATION
+   sll_real64 :: eta2_max       !< PLEASE ADD DOCUMENTATION
+   sll_int32  :: bc_left        !< PLEASE ADD DOCUMENTATION
+   sll_int32  :: bc_right       !< PLEASE ADD DOCUMENTATION
+   sll_int32  :: bc_bottom      !< PLEASE ADD DOCUMENTATION
+   sll_int32  :: bc_top         !< PLEASE ADD DOCUMENTATION
+   sll_int32  :: spline_degree1 !< PLEASE ADD DOCUMENTATION
+   sll_int32  :: spline_degree2 !< PLEASE ADD DOCUMENTATION
+   sll_real64, dimension(:), pointer :: knots1 !< PLEASE ADD DOCUMENTATION
+   sll_real64, dimension(:), pointer :: knots2 !< PLEASE ADD DOCUMENTATION
    ! some knot-like arrays needed by the spli2d_per routine
-   sll_real64, dimension(:), pointer :: t1
-   sll_real64, dimension(:), pointer :: t2
-   sll_int32  :: size_t1
-   sll_int32  :: size_t2 
-   sll_int64  :: bc_selector ! this is set in initialization
-   sll_real64, dimension(:,:), pointer :: coeff_splines
-   sll_int32                  :: size_coeffs1
-   sll_int32                  :: size_coeffs2
-   logical    :: coefficients_set = .false.
+   sll_real64, dimension(:), pointer :: t1 !< PLEASE ADD DOCUMENTATION
+   sll_real64, dimension(:), pointer :: t2 !< PLEASE ADD DOCUMENTATION
+   sll_int32  :: size_t1 !< PLEASE ADD DOCUMENTATION
+   sll_int32  :: size_t2  !< PLEASE ADD DOCUMENTATION
+   sll_int64  :: bc_selector !< this is set in initializ:wation
+   sll_real64, dimension(:,:), pointer :: coeff_splines !< PLEASE ADD DOCUMENTATION
+   sll_int32                  :: size_coeffs1 !< PLEASE ADD DOCUMENTATION
+   sll_int32                  :: size_coeffs2 !< PLEASE ADD DOCUMENTATION
+   logical    :: coefficients_set = .false.   !< PLEASE ADD DOCUMENTATION
    ! table contains the coeff spline of the function in boundary 
    ! in the case of dirichlet boundary condition non homogene 
-   sll_real64, dimension(:),pointer :: slope_left
-   sll_real64, dimension(:),pointer :: slope_right
-   sll_real64, dimension(:),pointer :: slope_bottom
-   sll_real64, dimension(:),pointer :: slope_top
-   sll_real64, dimension(:),pointer :: value_left
-   sll_real64, dimension(:),pointer :: value_right
-   sll_real64, dimension(:),pointer :: value_bottom
-   sll_real64, dimension(:),pointer :: value_top
-   logical    :: compute_slope_left = .TRUE.
-   logical    :: compute_slope_right= .TRUE.
-   logical    :: compute_slope_top = .TRUE.
-   logical    :: compute_slope_bottom= .TRUE.
-   logical    :: compute_value_left = .TRUE.
-   logical    :: compute_value_right= .TRUE.
-   logical    :: compute_value_top = .TRUE.
-   logical    :: compute_value_bottom= .TRUE.
+   sll_real64, dimension(:),pointer :: slope_left !< PLEASE ADD DOCUMENTATION
+   sll_real64, dimension(:),pointer :: slope_right !< PLEASE ADD DOCUMENTATION
+   sll_real64, dimension(:),pointer :: slope_bottom !< PLEASE ADD DOCUMENTATION
+   sll_real64, dimension(:),pointer :: slope_top !< PLEASE ADD DOCUMENTATION
+   sll_real64, dimension(:),pointer :: value_left !< PLEASE ADD DOCUMENTATION
+   sll_real64, dimension(:),pointer :: value_right !< PLEASE ADD DOCUMENTATION
+   sll_real64, dimension(:),pointer :: value_bottom !< PLEASE ADD DOCUMENTATION
+   sll_real64, dimension(:),pointer :: value_top !< PLEASE ADD DOCUMENTATION
+   logical    :: compute_slope_left = .TRUE. !< PLEASE ADD DOCUMENTATION
+   logical    :: compute_slope_right= .TRUE. !< PLEASE ADD DOCUMENTATION
+   logical    :: compute_slope_top = .TRUE. !< PLEASE ADD DOCUMENTATION
+   logical    :: compute_slope_bottom= .TRUE. !< PLEASE ADD DOCUMENTATION
+   logical    :: compute_value_left = .TRUE. !< PLEASE ADD DOCUMENTATION
+   logical    :: compute_value_right= .TRUE. !< PLEASE ADD DOCUMENTATION
+   logical    :: compute_value_top = .TRUE. !< PLEASE ADD DOCUMENTATION
+   logical    :: compute_value_bottom= .TRUE. !< PLEASE ADD DOCUMENTATION
 contains
+   !> PLEASE ADD DOCUMENTATION
    procedure, pass(interpolator) :: initialize=>initialize_ad2d_interpolator
+   !> PLEASE ADD DOCUMENTATION
    procedure, pass(interpolator) :: set_coefficients => set_coefficients_ad2d
+   !> PLEASE ADD DOCUMENTATION
    procedure, pass(interpolator) :: coefficients_are_set => &
          coefficients_are_set_ad2d
    ! better: pre-compute-interpolation-information or something...
+   !> PLEASE ADD DOCUMENTATION
    procedure :: compute_interpolants => compute_interpolants_ad2d
    ! procedure,  pass(interpolator) :: compute_spline_coefficients => &
    !     compute_spline_coefficients_ad2d
    !procedure, pass:: compute_spline_coefficients =>compute_spline_coefficients_ad2d
+   !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_value => interpolate_value_ad2d
+   !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_derivative_eta1 => interpolate_derivative1_ad2d
+   !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_derivative_eta2 => interpolate_derivative2_ad2d
+   !> PLEASE ADD DOCUMENTATION
    procedure, pass:: interpolate_array => interpolate_array_ad2d
+   !> PLEASE ADD DOCUMENTATION
    procedure, pass:: interpolate_array_disp => interpolate_2d_array_disp_ad2d
+   !> PLEASE ADD DOCUMENTATION
    procedure, pass:: get_coefficients => get_coefficients_ad2d
+   !> PLEASE ADD DOCUMENTATION
    procedure, pass:: delete => delete_arbitrary_degree_2d_interpolator
+   !> PLEASE ADD DOCUMENTATION
    procedure, pass:: set_values_at_boundary => set_boundary_value2d
+   !> PLEASE ADD DOCUMENTATION
    procedure, pass:: set_slopes_at_boundary => set_slope2d
 end type sll_arbitrary_degree_spline_interpolator_2d
 
 
 !> Pointer to arbitrary degree version of 1d interpolator
-type sll_arbitrary_degree_spline_interpolator_2d_ptr
+type, public :: sll_arbitrary_degree_spline_interpolator_2d_ptr
    type(sll_arbitrary_degree_spline_interpolator_2d), pointer :: interp
 end type sll_arbitrary_degree_spline_interpolator_2d_ptr
 
@@ -109,8 +122,6 @@ interface sll_delete
    module procedure delete_arbitrary_degree_2d_interpolator
 end interface sll_delete
 
-public sll_arbitrary_degree_spline_interpolator_2d           
-public sll_arbitrary_degree_spline_interpolator_2d_ptr
 public sll_delete
 public new_arbitrary_degree_spline_interp2d
 public set_slope2d

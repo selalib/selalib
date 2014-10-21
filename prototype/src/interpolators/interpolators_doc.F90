@@ -12,7 +12,6 @@
 !> @defgroup interpolators sll_interpolators 
 !! @brief
 !! Classes for numerical interpolation.
-!> @author Selalib team 
 !! @details
 !! PLEASE ADD DOCUMENTATION 
 !!
@@ -31,18 +30,17 @@
 !! - get_coefficients(...)
 !!
 !> Classes available are:
-!!  - sll_interpolator_1d_base
-!!  - sll_interpolator_2d_base
-!!  - sll_cubic_spline_interpolator_1d
-!!  - sll_cubic_spline_interpolator_1d_nonuniform
-!!  - sll_cubic_spline_interpolator_2d
-!!  - sll_arbitrary_degree_spline_interpolator_1d
-!!  - sll_arbitrary_degree_spline_interpolator_2d
+!!  - sll_module_interpolators_1d_base::sll_interpolator_1d_base
+!!  - sll_module_interpolators_2d_base::sll_interpolator_2d_base
+!!  - sll_module_cubic_spline_interpolator_1d::sll_cubic_spline_interpolator_1d
+!!  - sll_module_cubic_spline_interpolator_1d_nonuniform::sll_cubic_spline_interpolator_1d_nonuniform
+!!  - sll_module_cubic_spline_interpolator_2d::sll_cubic_spline_interpolator_2d
+!!  - sll_module_arbitrary_degree_spline_interpolator_1d::sll_arbitrary_degree_spline_interpolator_1d
+!!  - sll_module_arbitrary_degree_spline_interpolator_2d::sll_arbitrary_degree_spline_interpolator_2d
 !!  - sll_periodic_interpolator_1d
 !!  - sll_lagrange_interpolator_1d
 !>
 !> <b> How to use it </b>
 !> - Header file : \code #include 'sll_interpolators.h' \endcode
 !> - Link with   <code>-lsll_interpolators</code>
-!> - Add <code> use sll_interpolators </code>
 !>
