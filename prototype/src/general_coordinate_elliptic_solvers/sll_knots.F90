@@ -1,8 +1,8 @@
 !> @ingroup general_coordinate_elliptic_solvers
 !> @brief 
-!> PLEASE ADD DOCUMENTATION
+!> build knots to construct B-splines basis functions
 !> @details 
-!> PLEASE ADD DOCUMENTATION
+!> see Deboor's book
 module sll_knots
   implicit none
 
