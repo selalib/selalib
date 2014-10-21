@@ -34,8 +34,12 @@ private
 ! in what follows, the direction '1' is in the contiguous memory direction.
 !> Arbitrary degree version of 2d irnterpolator
 type, public, extends(sll_interpolator_2d_base) :: sll_arbitrary_degree_spline_interpolator_2d           
-   sll_int32  :: num_pts1       !< PLEASE ADD DOCUMENTATION
-   sll_int32  :: num_pts2       !< PLEASE ADD DOCUMENTATION
+   private
+   sll_int32,  public   :: num_pts1       !< PLEASE ADD DOCUMENTATION
+   sll_int32,  public   :: num_pts2       !< PLEASE ADD DOCUMENTATION
+   sll_real64, public, dimension(:,:), pointer :: coeff_splines !< PLEASE ADD DOCUMENTATION
+   sll_int32, public          :: size_coeffs1 !< PLEASE ADD DOCUMENTATION
+   sll_int32, public          :: size_coeffs2 !< PLEASE ADD DOCUMENTATION
    sll_real64 :: eta1_min       !< PLEASE ADD DOCUMENTATION
    sll_real64 :: eta1_max       !< PLEASE ADD DOCUMENTATION
    sll_real64 :: eta2_min       !< PLEASE ADD DOCUMENTATION
@@ -54,9 +58,6 @@ type, public, extends(sll_interpolator_2d_base) :: sll_arbitrary_degree_spline_i
    sll_int32  :: size_t1 !< PLEASE ADD DOCUMENTATION
    sll_int32  :: size_t2  !< PLEASE ADD DOCUMENTATION
    sll_int64  :: bc_selector !< this is set in initializ:wation
-   sll_real64, dimension(:,:), pointer :: coeff_splines !< PLEASE ADD DOCUMENTATION
-   sll_int32                  :: size_coeffs1 !< PLEASE ADD DOCUMENTATION
-   sll_int32                  :: size_coeffs2 !< PLEASE ADD DOCUMENTATION
    logical    :: coefficients_set = .false.   !< PLEASE ADD DOCUMENTATION
    ! table contains the coeff spline of the function in boundary 
    ! in the case of dirichlet boundary condition non homogene 
@@ -3677,22 +3678,22 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
 
        if( res1 < interpolator%eta1_min ) then
           partint = &
-               AINT(abs(res1)/(interpolator%eta1_max-interpolator%eta1_min))
+               IDINT(abs(res1)/(interpolator%eta1_max-interpolator%eta1_min))
           res1 = res1 + &
                (partint+1) *( interpolator%eta1_max-interpolator%eta1_min)
        else if( res1 >  interpolator%eta1_max ) then
           partint = &
-               AINT(abs(res1)/(interpolator%eta2_max-interpolator%eta2_min))
+               IDINT(abs(res1)/(interpolator%eta2_max-interpolator%eta2_min))
           res1 = res1 + partint*(interpolator%eta2_min-interpolator%eta2_max)
        end if
        if( res2 < interpolator%eta2_min ) then
           partint = &
-               AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
+               IDINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
           res2 = res2 + &
                (partint+1) *(interpolator%eta2_max-interpolator%eta2_min)
        else if( res2 >  interpolator%eta2_max ) then
           partint = &
-               AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
+               IDINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
           res2 = res2 + partint*(interpolator%eta2_min-interpolator%eta2_max)
        end if
        
@@ -3702,12 +3703,12 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
 
        if( res2 < interpolator%eta2_min ) then
           partint = &
-               AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
+               IDINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
           res2 = res2 + &
                (partint+1) *(interpolator%eta2_max-interpolator%eta2_min)
        else if( res2 >  interpolator%eta2_max ) then
           partint = &
-               AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
+               IDINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
           res2 = res2 + partint*(interpolator%eta2_min-interpolator%eta2_max)
        end if
 
@@ -3732,12 +3733,12 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
 
        if( res1 < interpolator%eta1_min ) then
           partint = &
-               AINT(abs(res1)/(interpolator%eta1_max-interpolator%eta1_min))
+               IDINT(abs(res1)/(interpolator%eta1_max-interpolator%eta1_min))
           res1 = res1 + &
                (partint+1) *( interpolator%eta1_max-interpolator%eta1_min)
        else if( res1 >  interpolator%eta1_max ) then
           partint = &
-               AINT(abs(res1)/(interpolator%eta2_max-interpolator%eta2_min))
+               IDINT(abs(res1)/(interpolator%eta2_max-interpolator%eta2_min))
           res1 = res1 + partint*(interpolator%eta2_min-interpolator%eta2_max)
        end if
        SLL_ASSERT( res2 >= interpolator%eta2_min )
@@ -3842,17 +3843,17 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
     case (0) ! periodic-periodic
 
        if( res1 < interpolator%eta1_min ) then
-          partint = AINT(abs(res1)/(interpolator%eta1_max-interpolator%eta1_min))
+          partint = IDINT(abs(res1)/(interpolator%eta1_max-interpolator%eta1_min))
           res1 = res1+ (partint+1) *( interpolator%eta1_max-interpolator%eta1_min)
        else if( res1 >  interpolator%eta1_max ) then
-          partint = AINT(abs(res1)/(interpolator%eta2_max-interpolator%eta2_min))
+          partint = IDINT(abs(res1)/(interpolator%eta2_max-interpolator%eta2_min))
           res1 = res1 + partint*(interpolator%eta2_min-interpolator%eta2_max)
        end if
        if( res2 < interpolator%eta2_min ) then
-          partint = AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
+          partint = IDINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
           res2 = res2 + (partint+1) *(interpolator%eta2_max-interpolator%eta2_min)
        else if( res2 >  interpolator%eta2_max ) then
-          partint = AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
+          partint = IDINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
           res2 = res2 + partint*(interpolator%eta2_min-interpolator%eta2_max)
        end if
        
@@ -3861,10 +3862,10 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
 
       
        if( res2 < interpolator%eta2_min ) then
-          partint = AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
+          partint = IDINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
           res2 = res2 + (partint+1) *(interpolator%eta2_max-interpolator%eta2_min)
        else if( res2 >  interpolator%eta2_max ) then
-          partint = AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
+          partint = IDINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
           res2 = res2 + partint*(interpolator%eta2_min-interpolator%eta2_max)
        end if
 
@@ -3882,10 +3883,10 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
     case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
 
        if( res1 < interpolator%eta1_min ) then
-          partint = AINT(abs(res1)/(interpolator%eta1_max-interpolator%eta1_min))
+          partint = IDINT(abs(res1)/(interpolator%eta1_max-interpolator%eta1_min))
           res1 = res1+ (partint+1) *( interpolator%eta1_max-interpolator%eta1_min)
        else if( res1 >  interpolator%eta1_max ) then
-          partint = AINT(abs(res1)/(interpolator%eta2_max-interpolator%eta2_min))
+          partint = IDINT(abs(res1)/(interpolator%eta2_max-interpolator%eta2_min))
           res1 = res1 + partint*(interpolator%eta2_min-interpolator%eta2_max)
        end if
 
@@ -3990,17 +3991,17 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
     case (0) ! periodic-periodic
        
        if( res1 < interpolator%eta1_min ) then
-          partint = AINT(abs(res1)/(interpolator%eta1_max-interpolator%eta1_min))
+          partint = IDINT(abs(res1)/(interpolator%eta1_max-interpolator%eta1_min))
           res1 = res1+ (partint+1) *( interpolator%eta1_max-interpolator%eta1_min)
        else if( res1 >  interpolator%eta1_max ) then
-          partint = AINT(abs(res1)/(interpolator%eta2_max-interpolator%eta2_min))
+          partint = IDINT(abs(res1)/(interpolator%eta2_max-interpolator%eta2_min))
           res1 = res1 + partint*(interpolator%eta2_min-interpolator%eta2_max)
        end if
        if( res2 < interpolator%eta2_min ) then
-          partint = AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
+          partint = IDINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
           res2 = res2 + (partint+1) *(interpolator%eta2_max-interpolator%eta2_min)
        else if( res2 >  interpolator%eta2_max ) then
-          partint = AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
+          partint = IDINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
           res2 = res2 + partint*(interpolator%eta2_min-interpolator%eta2_max)
        end if
           
@@ -4008,10 +4009,10 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
        
       
        if( res2 < interpolator%eta2_min ) then
-          partint = AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
+          partint = IDINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
           res2 = res2 + (partint+1) *(interpolator%eta2_max-interpolator%eta2_min)
        else if( res2 >  interpolator%eta2_max ) then
-          partint = AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
+          partint = IDINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
           res2 = res2 + partint*(interpolator%eta2_min-interpolator%eta2_max)
        end if
        SLL_ASSERT( res1 >= interpolator%eta1_min )
@@ -4028,10 +4029,10 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
     case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
        
        if( res1 < interpolator%eta1_min ) then
-          partint = AINT(abs(res1)/(interpolator%eta1_max-interpolator%eta1_min))
+          partint = IDINT(abs(res1)/(interpolator%eta1_max-interpolator%eta1_min))
           res1 = res1+ (partint+1) *( interpolator%eta1_max-interpolator%eta1_min)
        else if( res1 >  interpolator%eta1_max ) then
-          partint = AINT(abs(res1)/(interpolator%eta2_max-interpolator%eta2_min))
+          partint = IDINT(abs(res1)/(interpolator%eta2_max-interpolator%eta2_min))
           res1 = res1 + partint*(interpolator%eta2_min-interpolator%eta2_max)
        end if
 
