@@ -27,15 +27,16 @@ module sll_general_coordinate_elliptic_solver_module
 
   type, public :: general_coordinate_elliptic_solver
 
+     private
      sll_int32 :: total_num_splines_loc
      sll_int32 :: total_num_splines_eta1
      sll_int32 :: total_num_splines_eta2
-     sll_int32 :: num_cells1
-     sll_int32 :: num_cells2
-     sll_real64:: delta_eta1
-     sll_real64:: delta_eta2
-     sll_real64:: eta1_min
-     sll_real64:: eta2_min   
+     sll_int32, public :: num_cells1
+     sll_int32, public :: num_cells2
+     sll_real64, public :: delta_eta1
+     sll_real64, public :: delta_eta2
+     sll_real64, public :: eta1_min
+     sll_real64, public :: eta2_min   
      sll_real64, dimension(:), pointer :: knots1
      sll_real64, dimension(:), pointer :: knots2
      sll_real64, dimension(:), pointer :: knots1_rho
