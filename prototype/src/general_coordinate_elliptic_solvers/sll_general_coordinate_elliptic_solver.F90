@@ -746,16 +746,18 @@ if (sll_perper == 0) then
 
   !> @brief Assemble the matrix for elliptic solver.
   !> @details To have the function phi such that 
-  !>  div( A grad phi ) + B grad phi + C phi = rho
+  !>  \f[
+  !>  \nabla \cdot ( A \nabla \phi ) + B \nabla \phi + C \phi = \rho
+  !>  \f]
   !>  where A is a matrix of functions , B a vectorial function,
   !>  and  C and rho a scalar function.  
-  !>  A, B, C, rho can be discret or analytic. 
+  !>  A, B, C, \f$ \rho \f$  can be discret or analytic. 
   !>  phi is given with a B-spline interpolator  
   !> 
   !> The parameters are
   !> @param es the type general_coordinate_elliptic_solver
-  !> @param[in] rho the field corresponding to the source term   
-  !> @param[out] phi the field corresponding to the solution of the equation
+  !> @param[in] rho \f$ \rho \f$ the field corresponding to the source term   
+  !> @param[out] phi \f$ \phi \f$ the field corresponding to the solution of the equation
   !> @return phi the field solution of the equation
   
   subroutine solve_general_coordinates_elliptic_eq(&

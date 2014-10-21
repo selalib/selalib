@@ -15,27 +15,40 @@ implicit none
 private
 
   !> sll_interpolator_1d implemented with cubic splines on non uniform mesh
-  type, extends(sll_interpolator_1d_base) ::  sll_cubic_spline_interpolator_1d_nonuniform
-     sll_real64, dimension(:), pointer     :: interpolation_points
-     sll_int32                     :: num_points ! size
-     sll_int32                     :: bc_type
-     type(sll_cubic_spline_1D), pointer  :: spline
-     type(cubic_nonunif_spline_1D), pointer  :: nonunif_spline
+  type, public, extends(sll_interpolator_1d_base) :: sll_cubic_spline_interpolator_1d_nonuniform
+     sll_real64, dimension(:), pointer      :: interpolation_points !< points
+     sll_int32                              :: num_points     !< size
+     sll_int32                              :: bc_type        !< boundary condition
+     type(sll_cubic_spline_1D), pointer     :: spline         !< cubic spline
+     type(cubic_nonunif_spline_1D), pointer :: nonunif_spline !< spline
    contains
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(interpolator) :: initialize => initialize_cs1d_interpolator2
+     !> PLEASE ADD DOCUMENTATION
      procedure :: compute_interpolants => compute_interpolants_cs1d
+     !> PLEASE ADD DOCUMENTATION
      procedure :: interpolate_value => interpolate_value_cs1d
+     !> PLEASE ADD DOCUMENTATION
      procedure :: interpolate_derivative_eta1 => interpolate_deriv1_cs1d
+     !> PLEASE ADD DOCUMENTATION
      procedure :: interpolate_array_values => interpolate_values_cs1d
+     !> PLEASE ADD DOCUMENTATION
      procedure :: interpolate_pointer_values => interpolate_pointer_values_cs1d
+     !> PLEASE ADD DOCUMENTATION
      procedure :: interpolate_array_derivatives => interpolate_derivatives_cs1d
+     !> PLEASE ADD DOCUMENTATION
      procedure :: interpolate_pointer_derivatives => &
           interpolate_pointer_derivatives_cs1d
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass:: interpolate_array => spline_interpolate1d
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass:: interpolate_array_disp => spline_interpolate1d_disp
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass:: reconstruct_array
      !generic :: initialize => initialize_cs1d_interpolator
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass :: set_coefficients => set_coefficients_cs1d
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass :: get_coefficients => get_coefficients_cs1d
   end type sll_cubic_spline_interpolator_1d_nonuniform
 
@@ -44,7 +57,6 @@ private
      module procedure delete_cs1d
   end interface sll_delete
 
-public sll_cubic_spline_interpolator_1d_nonuniform
 public sll_delete
 
 contains  ! ****************************************************************
