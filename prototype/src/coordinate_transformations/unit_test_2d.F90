@@ -232,7 +232,8 @@ program unit_test_2d
   end do
 
   call t_d%write_to_file()
-  !call t_d%write_to_file(SLL_IO_MTV)
+  t_d%written = .false.
+  call t_d%write_to_file(SLL_IO_MTV)
 
   print *, 'Average error in jacobian = ', acc/real(NPTS1*NPTS2,f64)
   call sll_delete(t_a)
