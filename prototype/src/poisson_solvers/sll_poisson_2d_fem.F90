@@ -1,37 +1,47 @@
-!>Solve Poisson equation on cartesian domain with finite elements.
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+!> @ingroup poisson_solvers
+!> @brief
+!> Poisson solver using finite element
+!> @details
+!> Solve Poisson equation on cartesian domain with finite elements.
 !> * Compact boundary conditions.
 !> * Linear system solve with lapack (Choleski)
-module sll_poisson_2d_fem
+module sll_fem_2d
 #include "sll_poisson_solvers_macros.h"
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use sll_constants
-implicit none
+#include "sll_constants.h"
 
+implicit none
+private
+
+!> @brief
 !> Structure to solve Poisson equation on 2d domain. Mesh is cartesian and
-!> could be irregular. Numerical method is using finite elements.
-type :: poisson_fem
+!> could be irregular. 
+!> @details
+!> finite element numerical method with
+!> Compact boundary conditions
+type, public :: sll_fem_poisson_2d
    sll_real64, dimension(:,:), pointer :: A   !< Mass matrix
    sll_real64, dimension(:,:), pointer :: M   !< Stiffness matrix
    sll_real64, dimension(:,:), pointer :: mat !< Matrix solve by Lapack
    sll_real64, dimension(:)  , pointer :: hx  !< step size x
    sll_real64, dimension(:)  , pointer :: hy  !< step size y
-end type poisson_fem
+   sll_int32                           :: nx  !< cells number along x minus 1
+   sll_int32                           :: ny  !< cells number along y minus 1
+end type sll_fem_poisson_2d
 
-!> Initialize the solver 
-interface initialize
+!> Initialize the solver
+interface sll_create
    module procedure initialize_poisson_2d_fem
-end interface initialize
-!> Compute the potential
-interface solve
+end interface sll_create
+
+!> Compute the electric potential
+interface sll_solve
    module procedure solve_poisson_2d_fem
-end interface solve
+end interface sll_solve
 
-sll_int32, private :: nx, ny
-sll_int32, private :: i, j, k
-sll_int32, private :: error
-
-private :: write_mtv_file
+public :: sll_create, sll_solve
 
 contains
 
@@ -39,21 +49,30 @@ contains
 !> Indices are shifted from [1:n+1] to [0:n] only inside this 
 !> subroutine
 subroutine initialize_poisson_2d_fem( this, x, y ,nn_x, nn_y)
-type( poisson_fem ) :: this         !< solver data structure
+type( sll_fem_poisson_2d ) :: this         !< solver data structure
 sll_int32,  intent(in)      :: nn_x !< number of cells along x
 sll_int32,  intent(in)      :: nn_y !< number of cells along y
 sll_real64, dimension(nn_x) :: x    !< x nodes coordinates
 sll_real64, dimension(nn_y) :: y    !< y nodes coordinates
-sll_int32 :: ii, jj
+sll_int32                   :: ii
+sll_int32                   :: jj
 
-sll_real64, dimension(4,4) :: Axelem
-sll_real64, dimension(4,4) :: Ayelem
-sll_real64, dimension(4,4) :: Melem
-sll_real64 :: dum
-sll_int32, dimension(4) :: isom
+sll_real64, dimension(4,4)  :: Axelem
+sll_real64, dimension(4,4)  :: Ayelem
+sll_real64, dimension(4,4)  :: Melem
+sll_real64                  :: dum
+sll_int32, dimension(4)     :: isom
+sll_int32                   :: i
+sll_int32                   :: j
+sll_int32                   :: nx
+sll_int32                   :: ny
+sll_int32                   :: error
 
-nx = nn_x-1
-ny = nn_y-1
+this%nx = nn_x-1
+this%ny = nn_y-1
+
+nx = this%nx
+ny = this%ny
 
 SLL_ALLOCATE(this%hx(1:nx),error)
 SLL_ALLOCATE(this%hy(1:ny),error)
@@ -91,78 +110,78 @@ this%A = 0.d0
 
 !***  Interior mesh ***
 do i=2,nx-1
-   do j=2,ny-1
-      do ii=1,4
-         do jj=1,4
-            this%A(som(i,j,ii),som(i,j,jj)) = this%A(som(i,j,ii),som(i,j,jj)) &
-                    & + Axelem(ii,jj) * this%hy(j) / this%hx(i)   &
-                    & + Ayelem(ii,jj) * this%hx(i) / this%hy(j)
-            this%M(som(i,j,ii),som(i,j,jj)) = this%M(som(i,j,ii),som(i,j,jj)) &
-                    & + Melem(ii,jj)  * this%hx(i) * this%hy(j)
-         end do
+  do j=2,ny-1
+    do ii=1,4
+      do jj=1,4
+        this%A(som(nx,i,j,ii),som(nx,i,j,jj)) = this%A(som(nx,i,j,ii),som(nx,i,j,jj)) &
+                & + Axelem(ii,jj) * this%hy(j) / this%hx(i)   &
+                & + Ayelem(ii,jj) * this%hx(i) / this%hy(j)
+        this%M(som(nx,i,j,ii),som(nx,i,j,jj)) = this%M(som(nx,i,j,ii),som(nx,i,j,jj)) &
+                & + Melem(ii,jj)  * this%hx(i) * this%hy(j)
       end do
-   end do
+    end do
+  end do
 end do
 
 call write_mtv_file( x, y)
 
 do i=2,nx-1
-   j = 1
-   isom(3)=som(i,j+1,1)
-   isom(4)=som(i,j+1,2)
-   do ii=3,4
-      do jj=3,4
-         this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
-                 & + Axelem(ii,jj) * this%hy(j) / this%hx(i)   &
-                 & + Ayelem(ii,jj) * this%hx(i) / this%hy(j)
-         this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
-                 & + Melem(ii,jj)  * this%hx(i) * this%hy(j)
-      end do
-   end do
-   j = ny
-   isom(1)=som(i,j-1,3)
-   isom(2)=som(i,j-1,4)
-   do ii=1,2
-      do jj=1,2
-         this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
-                 & + Axelem(ii,jj) * this%hy(j) / this%hx(i)   &
-                 & + Ayelem(ii,jj) * this%hx(i) / this%hy(j)
-         this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
-                 & + Melem(ii,jj)  * this%hx(i) * this%hy(j)
-      end do
-   end do
+  j = 1
+  isom(3)=som(nx,i,j+1,1)
+  isom(4)=som(nx,i,j+1,2)
+  do ii=3,4
+    do jj=3,4
+      this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
+              & + Axelem(ii,jj) * this%hy(j) / this%hx(i)   &
+              & + Ayelem(ii,jj) * this%hx(i) / this%hy(j)
+      this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
+              & + Melem(ii,jj)  * this%hx(i) * this%hy(j)
+    end do
+  end do
+  j = ny
+  isom(1)=som(nx,i,j-1,3)
+  isom(2)=som(nx,i,j-1,4)
+  do ii=1,2
+    do jj=1,2
+      this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
+              & + Axelem(ii,jj) * this%hy(j) / this%hx(i)   &
+              & + Ayelem(ii,jj) * this%hx(i) / this%hy(j)
+      this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
+              & + Melem(ii,jj)  * this%hx(i) * this%hy(j)
+    end do
+  end do
 end do
 
 do j=2,ny-1
-   i = 1
-   isom(2)=som(i+1,j,1)
-   isom(3)=som(i+1,j,4)
-   do ii=2,3
-      do jj=2,3
-         this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
-                 & + Axelem(ii,jj) * this%hy(j) / this%hx(i) &
-                 & + Ayelem(ii,jj) * this%hx(i) / this%hy(j)
-         this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
-                 & + Melem(ii,jj)  * this%hx(i) * this%hy(j)
-      end do
-   end do
-   i = nx
-   isom(1)=som(i-1,j,2)
-   isom(4)=som(i-1,j,3)
-   do ii=1,4,3
-      do jj=1,4,3
-         this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
-                 & + Axelem(ii,jj) * this%hy(j) / this%hx(i) &
-                 & + Ayelem(ii,jj) * this%hx(i) / this%hy(j)
-         this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
-                 & + Melem(ii,jj)  * this%hx(i) * this%hy(j)
-      end do
-   end do
+  i = 1
+  isom(2)=som(nx,i+1,j,1)
+  isom(3)=som(nx,i+1,j,4)
+  do ii=2,3
+    do jj=2,3
+      this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
+              & + Axelem(ii,jj) * this%hy(j) / this%hx(i) &
+              & + Ayelem(ii,jj) * this%hx(i) / this%hy(j)
+      this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
+              & + Melem(ii,jj)  * this%hx(i) * this%hy(j)
+    end do
+  end do
+  i = nx
+  isom(1)=som(nx,i-1,j,2)
+  isom(4)=som(nx,i-1,j,3)
+  do ii=1,4,3
+    do jj=1,4,3
+      this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
+              & + Axelem(ii,jj) * this%hy(j) / this%hx(i) &
+              & + Ayelem(ii,jj) * this%hx(i) / this%hy(j)
+      this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
+              & + Melem(ii,jj)  * this%hx(i) * this%hy(j)
+    end do
+  end do
 end do
 
 !Corners
 i=1; j=1  !SW
-isom(3) = som(i+1,j+1,1)
+isom(3) = som(nx,i+1,j+1,1)
 this%A(isom(3),isom(3)) = this%A(i,j)                           &
                         + Axelem(3,3) * this%hy(j) / this%hx(i) &
                         + Ayelem(3,3) * this%hx(i) / this%hy(j)
@@ -170,7 +189,7 @@ this%M(isom(3),isom(3)) = this%M(isom(3),isom(3))               &
                         + Melem(3,3) * this%hx(i) * this%hy(j)
 
 i=nx; j=1 !SE
-isom(4) = som(i-1,j+1,2)
+isom(4) = som(nx,i-1,j+1,2)
 this%A(isom(4),isom(4)) = this%A(isom(4),isom(4))               &
                         + Axelem(4,4) * this%hy(i) / this%hx(i) &
                         + Ayelem(4,4) * this%hx(j) / this%hy(j)
@@ -178,7 +197,7 @@ this%M(isom(4),isom(4)) = this%M(isom(4),isom(4))               &
                         + Melem(4,4) * this%hx(i) * this%hy(j)
 
 i=nx; j=ny !NE
-isom(1) = som(i-1,j-1,3)
+isom(1) = som(nx,i-1,j-1,3)
 this%A(isom(1),isom(1)) = this%A(isom(1),isom(1))               &
                         + Axelem(1,1) * this%hy(j) / this%hx(i) &
                         + Ayelem(1,1) * this%hx(i) / this%hy(j)
@@ -186,7 +205,7 @@ this%M(isom(1),isom(1)) =   this%M(isom(1),isom(1))             &
                         + Melem(1,1) * this%hx(i) * this%hy(j)
 
 i=1; j=ny !NW
-isom(2) = som(i+1,j-1,4) 
+isom(2) = som(nx,i+1,j-1,4) 
 this%A(isom(2),isom(2)) = this%A(isom(2),isom(2))               &
                         + Axelem(2,2) * this%hy(j) / this%hx(i) &
                         + Ayelem(2,2) * this%hx(i) / this%hy(j)
@@ -212,9 +231,9 @@ call dpbtrf('U',(nx-1)*(ny-1),nx,this%mat,nx+1,error)
 end subroutine initialize_poisson_2d_fem
 
 !> Get the node index
-integer function som(i, j, k)
+integer function som(nx, i, j, k)
 
-   integer :: i, j, k
+   integer :: i, j, k, nx
 
    if (k == 1) then
       som = i-1+(j-2)*(nx-1)
@@ -230,11 +249,19 @@ end function som
 
 !> Solve the poisson equation
 subroutine solve_poisson_2d_fem( this, ex, ey, rho )
-type( poisson_fem )        :: this !< Poisson solver object
+type( sll_fem_poisson_2d )        :: this !< Poisson solver object
 sll_real64, dimension(:,:) :: ex   !< x electric field
 sll_real64, dimension(:,:) :: ey   !< y electric field
 sll_real64, dimension(:,:) :: rho  !< charge density
-sll_real64, dimension((nx-1)*(ny-1)) :: b
+sll_real64, dimension((this%nx-1)*(this%ny-1)) :: b
+
+sll_int32 :: nx
+sll_int32 :: ny
+sll_int32 :: i, j, k
+sll_int32 :: error
+
+nx = this%nx
+ny = this%ny
 
 !** Construction du second membre (rho a support compact)
 k = 0
@@ -278,6 +305,7 @@ real(8), dimension(:) :: x
 real(8), dimension(:) :: y
 integer :: iel, isom, nx, ny
 real(8) :: x1, y1
+sll_int32 :: i, j
 
 nx = size(x)-1
 ny = size(y)-1
@@ -334,4 +362,5 @@ close(10)
 end subroutine write_mtv_file
 
 
-end module sll_poisson_2d_fem
+end module sll_fem_2d
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

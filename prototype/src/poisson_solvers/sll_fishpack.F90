@@ -1,78 +1,92 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
+!> @ingroup poisson_solvers
 !> @brief 
-!> Interface module to use fishpack libarary
+!> Interface module to use fishpack library
 !> @details
 !> You have to download and install fishpack 
 !> http://www2.cisl.ucar.edu/resources/legacy/fishpack
+!>
+!> <b>Example in cartesian 2d</b>
+!> @snippet poisson_solvers/test_fishpack.F90 example_2d
+!> 
+!> <b>Example in cartesian 3d</b>
+!> @snippet poisson_solvers/test_fishpack.F90 example_3d
+!> 
+!> <b>Example in polar coordinates</b>
+!> @snippet poisson_solvers/test_fishpack.F90 example_polar
 module sll_fishpack
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
+#include "sll_boundary_condition_descriptors.h"
 
 implicit none
-integer, private :: i, j, k
+private
 
 !> Fishpack solver cartesian 2d
 type, public :: fishpack_2d
-   sll_int32                               :: nc_eta1  !< number of cells
-   sll_int32                               :: nc_eta2  !< number of cells
-   sll_real64                              :: eta1_min !< geometry parameter
-   sll_real64                              :: eta1_max !< geometry parameter
-   sll_real64                              :: eta2_min !< geometry parameter
-   sll_real64                              :: eta2_max !< geometry parameter
-   sll_real64, allocatable, dimension(:)   :: bda      !< boundary condition parameter
-   sll_real64, allocatable, dimension(:)   :: bdb      !< boundary condition parameter
-   sll_real64, allocatable, dimension(:)   :: bdc      !< boundary condition parameter
-   sll_real64, allocatable, dimension(:)   :: bdd      !< boundary condition parameter
-   sll_int32                               :: bc_eta1  !< boundary condition parameter
-   sll_int32                               :: bc_eta2  !< boundary condition parameter
-   sll_real64                              :: elmbda   !< fishpack parameter
-   sll_real64                              :: pertrb   !< fishpack parameter
-   sll_int32                               :: error    !< error code
-   sll_int32                               :: geometry !< cartesian or polar
+   sll_int32           :: nc_eta1  !< number of cells
+   sll_int32           :: nc_eta2  !< number of cells
+   sll_real64          :: eta1_min !< geometry parameter
+   sll_real64          :: eta1_max !< geometry parameter
+   sll_real64          :: eta2_min !< geometry parameter
+   sll_real64          :: eta2_max !< geometry parameter
+   sll_real64, pointer :: bda(:)   !< boundary condition parameter
+   sll_real64, pointer :: bdb(:)   !< boundary condition parameter
+   sll_real64, pointer :: bdc(:)   !< boundary condition parameter
+   sll_real64, pointer :: bdd(:)   !< boundary condition parameter
+   sll_int32           :: bc_eta1  !< boundary condition parameter
+   sll_int32           :: bc_eta2  !< boundary condition parameter
+   sll_real64          :: elmbda   !< fishpack parameter
+   sll_real64          :: pertrb   !< fishpack parameter
+   sll_int32           :: error    !< error code
+   sll_int32           :: geometry !< cartesian or polar
 contains
    !> create the solver
-   procedure :: initialize => new_2d   
+   procedure :: create => new_2d   
    !> compute the potential
    procedure :: solve => solve_2d      
 end type fishpack_2d
 
 !> Fishpack solver cartesian 3d
 type, public :: fishpack_3d
-   sll_int32                               :: nc_eta1  !< number of cells
-   sll_int32                               :: nc_eta2  !< number of cells
-   sll_int32                               :: nc_eta3  !< number of cells
-   sll_real64                              :: eta1_min !< geometry parameter
-   sll_real64                              :: eta1_max !< geometry parameter
-   sll_real64                              :: eta2_min !< geometry parameter
-   sll_real64                              :: eta2_max !< geometry parameter
-   sll_real64                              :: eta3_min !< geometry parameter
-   sll_real64                              :: eta3_max !< geometry parameter
-   sll_real64, allocatable, dimension(:,:) :: bda      !< boundary condition parameter
-   sll_real64, allocatable, dimension(:,:) :: bdb      !< boundary condition parameter
-   sll_real64, allocatable, dimension(:,:) :: bdc      !< boundary condition parameter
-   sll_real64, allocatable, dimension(:,:) :: bdd      !< boundary condition parameter
-   sll_real64, allocatable, dimension(:,:) :: bde      !< boundary condition parameter
-   sll_real64, allocatable, dimension(:,:) :: bdf      !< boundary condition parameter
-   sll_int32                               :: bc_eta1  !< boundary condition parameter
-   sll_int32                               :: bc_eta2  !< boundary condition parameter
-   sll_int32                               :: bc_eta3  !< boundary condition parameter
-   sll_real64                              :: elmbda   !< fishpack parameter
-   sll_real64                              :: pertrb   !< fishpack parameter
-   sll_int32                               :: error    !< fishpack parameter
-   sll_int32                               :: geometry !< cartesian or cylindrical
+   sll_int32           :: nc_eta1  !< number of cells
+   sll_int32           :: nc_eta2  !< number of cells
+   sll_int32           :: nc_eta3  !< number of cells
+   sll_real64          :: eta1_min !< geometry parameter
+   sll_real64          :: eta1_max !< geometry parameter
+   sll_real64          :: eta2_min !< geometry parameter
+   sll_real64          :: eta2_max !< geometry parameter
+   sll_real64          :: eta3_min !< geometry parameter
+   sll_real64          :: eta3_max !< geometry parameter
+   sll_real64, pointer :: bda(:,:) !< boundary condition parameter
+   sll_real64, pointer :: bdb(:,:) !< boundary condition parameter
+   sll_real64, pointer :: bdc(:,:) !< boundary condition parameter
+   sll_real64, pointer :: bdd(:,:) !< boundary condition parameter
+   sll_real64, pointer :: bde(:,:) !< boundary condition parameter
+   sll_real64, pointer :: bdf(:,:) !< boundary condition parameter
+   sll_int32           :: bc_eta1  !< boundary condition parameter
+   sll_int32           :: bc_eta2  !< boundary condition parameter
+   sll_int32           :: bc_eta3  !< boundary condition parameter
+   sll_real64          :: elmbda   !< fishpack parameter
+   sll_real64          :: pertrb   !< fishpack parameter
+   sll_int32           :: error    !< fishpack parameter
+   sll_int32           :: geometry !< cartesian or cylindrical
 contains
    !> create the solver
-   procedure :: initialize => new_3d    
+   procedure :: create => new_3d    
    !> compute the potential
    procedure :: solve => solve_3d 
 end type fishpack_3d
 
-enum, bind(C)
-   enumerator :: CARTESIAN_2D = 0, POLAR_2D = 1, CARTESIAN_3D = 2
-   enumerator :: PERIODIC=0, DIRICHLET=1
-   enumerator :: NEUMANN_RIGHT=2, NEUMANN_LEFT=3, NEUMANN=4
-end enum
+!> Parameter to solve poisson equation on cartesian mesh 2d
+sll_int32, parameter, public :: CARTESIAN_2D = 0
+!> Parameter to solve poisson equation on polar mesh 2d
+sll_int32, parameter, public :: POLAR_2D     = 1
+!> Parameter to solve poisson equation on cartesian mesh 3d
+sll_int32, parameter, public :: CARTESIAN_3D = 2
 
 contains
 
@@ -91,7 +105,6 @@ contains
     sll_int32                      :: geometry  !< polar or cartesian
     sll_int32                      :: bc_eta1   !< boundary condition parameter
     sll_int32                      :: bc_eta2   !< boundary condition parameter
-    !sll_real64                    :: elmbda
 
     this%geometry = geometry
     ! Indicateur d'erreur
@@ -108,11 +121,11 @@ contains
     this%bc_eta1 = bc_eta1
     this%bc_eta2 = bc_eta2
 
-    if (bc_eta1 /= PERIODIC) then
+    if (bc_eta1 /= SLL_PERIODIC) then
        SLL_ALLOCATE(this%bda(nc_eta2+1),this%error)
        SLL_ALLOCATE(this%bdb(nc_eta2+1),this%error)
     end if
-    if (bc_eta2 /= PERIODIC) then
+    if (bc_eta2 /= SLL_PERIODIC) then
        SLL_ALLOCATE(this%bdc(nc_eta1+1),this%error)
        SLL_ALLOCATE(this%bdd(nc_eta1+1),this%error)
     end if
@@ -126,27 +139,25 @@ contains
                     eta3_min,eta3_max,nc_eta3,bc_eta3  )
 
     class(fishpack_3d),intent(out) :: this
-    sll_int32, intent(in)          :: nc_eta1
-    sll_int32, intent(in)          :: nc_eta2
-    sll_int32, intent(in)          :: nc_eta3
-    sll_int32, intent(in)          :: bc_eta1
-    sll_int32, intent(in)          :: bc_eta2
-    sll_int32, intent(in)          :: bc_eta3
-    sll_real64, intent(in)         :: eta1_min
-    sll_real64, intent(in)         :: eta2_min
-    sll_real64, intent(in)         :: eta3_min
-    sll_real64, intent(in)         :: eta1_max
-    sll_real64, intent(in)         :: eta2_max
-    sll_real64, intent(in)         :: eta3_max
-    sll_int32,  intent(in)         :: geometry
+    sll_int32,         intent(in)  :: nc_eta1
+    sll_int32,         intent(in)  :: nc_eta2
+    sll_int32,         intent(in)  :: nc_eta3
+    sll_int32,         intent(in)  :: bc_eta1
+    sll_int32,         intent(in)  :: bc_eta2
+    sll_int32,         intent(in)  :: bc_eta3
+    sll_real64,        intent(in)  :: eta1_min
+    sll_real64,        intent(in)  :: eta2_min
+    sll_real64,        intent(in)  :: eta3_min
+    sll_real64,        intent(in)  :: eta1_max
+    sll_real64,        intent(in)  :: eta2_max
+    sll_real64,        intent(in)  :: eta3_max
+    sll_int32,         intent(in)  :: geometry
 
     this%geometry = geometry
-    ! Indicateur d'erreur
-    this%error = 0
-    ! Initialisation de la geometrie
-    this%nc_eta1=nc_eta1
-    this%nc_eta2=nc_eta2
-    this%nc_eta3=nc_eta3
+    this%error    = 0
+    this%nc_eta1  = nc_eta1
+    this%nc_eta2  = nc_eta2
+    this%nc_eta3  = nc_eta3
 
     this%eta1_min = eta1_min
     this%eta2_min = eta2_min
@@ -155,19 +166,19 @@ contains
     this%eta2_max = eta2_max
     this%eta3_max = eta3_max
 
-    this%bc_eta1 = bc_eta1
-    this%bc_eta2 = bc_eta2
-    this%bc_eta3 = bc_eta3
+    this%bc_eta1  = bc_eta1
+    this%bc_eta2  = bc_eta2
+    this%bc_eta3  = bc_eta3
 
-    if (bc_eta1 /= PERIODIC) then
+    if (bc_eta1 /= SLL_PERIODIC) then
        SLL_ALLOCATE(this%bda(nc_eta2+1,nc_eta3+1),this%error)
        SLL_ALLOCATE(this%bdb(nc_eta2+1,nc_eta3+1),this%error)
     end if
-    if (bc_eta2 /= PERIODIC) then
+    if (bc_eta2 /= SLL_PERIODIC) then
        SLL_ALLOCATE(this%bdc(nc_eta1+1,nc_eta3+1),this%error)
        SLL_ALLOCATE(this%bdd(nc_eta1+1,nc_eta3+1),this%error)
     end if
-    if (bc_eta3 /= PERIODIC) then
+    if (bc_eta3 /= SLL_PERIODIC) then
        SLL_ALLOCATE(this%bde(nc_eta1+1,nc_eta2+1),this%error)
        SLL_ALLOCATE(this%bdf(nc_eta1+1,nc_eta2+1),this%error)
     end if
@@ -251,3 +262,5 @@ contains
   end subroutine solve_3d
   
 end module sll_fishpack
+
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

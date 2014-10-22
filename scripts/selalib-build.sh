@@ -21,12 +21,6 @@ fi
 if [[ "$HOST" = *-navaro* ]]; then
    WORKDIR="/tmp"
    HOMEDIR="${HOME}/Codes"
-elif [[ "$HOST" =~ "vpn-irma" ]]; then
-   HOMEDIR="${HOME}/Codes"
-   WORKDIR="/tmp"
-elif [[ "$HOST" =~ "doct" || "$HOST" =~ "reserve" ]]; then
-   WORKDIR="/Users/irma"
-   HOMEDIR="/Users/irma"
 elif [[ "$HOST" = irma-gpu* ]]; then
    WORKDIR="/scratch/navaro"
    HOMEDIR=${HOME}

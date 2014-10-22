@@ -5,13 +5,13 @@
 ! in file Doxyfile.in (line 691) if it is excluded. 
 ! Type 'make doc' in build directory.
 ! To check the results, open : 
-! selalib/prototype/documentation/build/html/doxygen/html/namespaces.html 
+! selalib/prototype/documentation/build/html/doxygen/html/defgroup integrations.html 
 ! The following lines will be read by doxygen to generate documentation:
 
 
 !!         
 
-!> @namespace sll_integration 
+!> @defgroup integration sll_integration 
 !> @brief 
 !> Integrate a function.
 !> @author Selalib team 
@@ -21,14 +21,6 @@
 !!   - Gauss-Legendre points and weights
 !!   - Gauss-Lobatto points and weights
 !!
-!!
-!> <b> Headers file available </b>
-!>  - sll_integration.h
-!>
-!> <b> Modules available </b>
-!>  - gauss_legendre_integration
-!>  - gauss_lobatto_integration
-!>
 !> <b> How to use it </b>
 !> - Header file : \code #include 'sll_integration.h' \endcode
 !> - Link with   <code>-lsll_integration</code>

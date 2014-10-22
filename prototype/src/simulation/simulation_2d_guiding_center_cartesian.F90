@@ -33,15 +33,15 @@ module sll_simulation_2d_guiding_center_cartesian_module
   use sll_module_characteristics_1d_trapezoid_conservative
   use sll_reduction_module
   use sll_simulation_base
-  use sll_cubic_spline_interpolator_1d
-  use sll_cubic_spline_interpolator_2d
+  use sll_module_cubic_spline_interpolator_1d
+  use sll_module_cubic_spline_interpolator_2d
   use sll_coordinate_transformation_2d_base_module
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
 #ifdef MUDPACK
   !use sll_mudpack_curvilinear
-  use sll_module_poisson_2d_mudpack_solver
+  use sll_module_poisson_2d_mudpack
   use sll_module_poisson_2d_mudpack_curvilinear_solver_old
 #endif
   use sll_module_poisson_2d_elliptic_solver, only:new_poisson_2d_elliptic_solver, es_gauss_legendre
@@ -352,7 +352,7 @@ contains
       
     select case (f_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
-        f_interp2d => new_cubic_spline_2d_interpolator( &
+        f_interp2d => new_cubic_spline_interpolator_2d( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
@@ -371,7 +371,7 @@ contains
 
     select case (A_interp_case)
       case ("SLL_CUBIC_SPLINES")
-        A1_interp2d => new_cubic_spline_2d_interpolator( &
+        A1_interp2d => new_cubic_spline_interpolator_2d( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
@@ -380,7 +380,7 @@ contains
           x2_max, &
           SLL_PERIODIC, &
           SLL_PERIODIC)
-        A2_interp2d => new_cubic_spline_2d_interpolator( &
+        A2_interp2d => new_cubic_spline_interpolator_2d( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
@@ -389,22 +389,22 @@ contains
           x2_max, &
           SLL_PERIODIC, &
           SLL_PERIODIC)  
-        A1_interp1d_x1 => new_cubic_spline_1d_interpolator( &
+        A1_interp1d_x1 => new_cubic_spline_interpolator_1d( &
           Nc_x1+1, &
           x1_min, &
           x1_max, &
           SLL_PERIODIC)
-        A1_interp1d_x2 => new_cubic_spline_1d_interpolator( &
+        A1_interp1d_x2 => new_cubic_spline_interpolator_1d( &
           Nc_x2+1, &
           x2_min, &
           x2_max, &
           SLL_PERIODIC)
-        A2_interp1d_x1 => new_cubic_spline_1d_interpolator( &
+        A2_interp1d_x1 => new_cubic_spline_interpolator_1d( &
           Nc_x1+1, &
           x1_min, &
           x1_max, &
           SLL_PERIODIC)
-        A2_interp1d_x2 => new_cubic_spline_1d_interpolator( &
+        A2_interp1d_x2 => new_cubic_spline_interpolator_1d( &
           Nc_x2+1, &
           x2_min, &
           x2_max, &
@@ -418,7 +418,7 @@ contains
 
     select case (phi_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
-        phi_interp2d => new_cubic_spline_2d_interpolator( &
+        phi_interp2d => new_cubic_spline_interpolator_2d( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
@@ -512,7 +512,7 @@ contains
 
     select case (f_interp1d_x1_case)
       case ("SLL_CUBIC_SPLINES")
-        f_interp1d_x1 => new_cubic_spline_1d_interpolator( &
+        f_interp1d_x1 => new_cubic_spline_interpolator_1d( &
           Nc_x1_bis+1, &
           x1_min_bis, &
           x1_max_bis, &
@@ -527,7 +527,7 @@ contains
 
     select case (f_interp1d_x2_case)
       case ("SLL_CUBIC_SPLINES")
-        f_interp1d_x2 => new_cubic_spline_1d_interpolator( &
+        f_interp1d_x2 => new_cubic_spline_interpolator_1d( &
           Nc_x2_bis+1, &
           x2_min_bis, &
           x2_max_bis, &
@@ -754,7 +754,7 @@ contains
         
         select case(mudpack_method)
           case ("SLL_SEPARABLE")
-            sim%poisson => new_poisson_2d_mudpack_solver( &
+            sim%poisson => new_poisson_2d_mudpack( &
               x1_min,&
               x1_max,&
               Nc_x1,&
@@ -781,7 +781,7 @@ contains
             cy_2d = 0._f64
             ce_2d = 0._f64
              
-            sim%poisson => new_poisson_2d_mudpack_solver( &
+            sim%poisson => new_poisson_2d_mudpack( &
               x1_min,&
               x1_max,&
               Nc_x1,&
@@ -814,7 +814,7 @@ contains
             cy_2d = 0._f64
             ce_2d = 0._f64
              
-            sim%poisson => new_poisson_2d_mudpack_solver( &
+            sim%poisson => new_poisson_2d_mudpack( &
               x1_min,&
               x1_max,&
               Nc_x1,&

@@ -1,33 +1,4 @@
-!------------------------------------------------------------------------------
-! SELALIB
-!------------------------------------------------------------------------------
-!
-! MODULE: sll_scalar_field_2d
-!
-!> @author
-!> - Edwin
-!> - Pierre
-!> - Eric
-!>
-!
-! DESCRIPTION: 
-!
-!> @brief
-!> Implements the geometry and mesh descriptor types
-!>
-!>@details
-!>
-!> This module depends on:
-!>    - memory
-!>    - precision
-!>    - assert
-!>    - utilities
-!>    - constants
-!
-! REVISION HISTORY:
-! DD Mmm YYYY - Initial Version
-! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
-!------------------------------------------------------------------------------
+!> Scalar field on mesh with coordinate transformation
 module sll_scalar_field_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -40,8 +11,9 @@ module sll_scalar_field_2d
   use sll_scalar_field_initializers_base
 
   implicit none
+  private
 
-  type scalar_field_2d
+  type, public :: scalar_field_2d
      !class(sll_mapped_mesh_2d_base), pointer  :: mesh
      class(sll_coordinate_transformation_2d_base), pointer :: transf
      class(sll_interpolator_1d_base), pointer :: eta1_interpolator
@@ -50,6 +22,9 @@ module sll_scalar_field_2d
      sll_int32                                :: data_position
      character(len=64)                        :: name
      sll_int32                                :: plot_counter
+  contains
+     procedure :: write_to_file =>  write_scalar_field_2d
+     procedure :: initialize    =>  initialize_scalar_field_2d
   end type scalar_field_2d
 
   abstract interface
@@ -60,6 +35,15 @@ module sll_scalar_field_2d
        sll_real64, intent(in)  :: eta2
      end function scalar_function_2D
   end interface
+
+  interface sll_create
+     module procedure initialize_scalar_field_2d
+  end interface sll_create
+
+  public sll_create
+  public scalar_function_2D
+  public initialize_scalar_field_2d
+  public write_scalar_field_2d
 
 contains   ! *****************************************************************  
   ! this used to be new_scalar_field_2d

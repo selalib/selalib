@@ -24,9 +24,9 @@ module sll_simulation_2d_guiding_center_polar_module
 !  use sll_fft
   use sll_reduction_module
   use sll_simulation_base
-  use sll_hermite_interpolator_2d
-  use sll_cubic_spline_interpolator_1d
-  use sll_cubic_spline_interpolator_2d
+  use sll_module_hermite_interpolator_2d
+  use sll_module_cubic_spline_interpolator_1d
+  use sll_module_cubic_spline_interpolator_2d
   use sll_coordinate_transformation_2d_base_module
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
@@ -35,15 +35,17 @@ module sll_simulation_2d_guiding_center_polar_module
 !  use sll_module_scalar_field_2d_base
 !  use sll_module_scalar_field_2d_alternative
 #ifdef MUDPACK
-  use sll_module_poisson_2d_mudpack_solver
+  use sll_module_poisson_2d_mudpack
   use sll_module_poisson_2d_mudpack_curvilinear_solver_old
 #endif
 !  use sll_module_poisson_2d_base
-  use sll_module_poisson_2d_polar_solver
+  use sll_module_poisson_2d_polar
   use sll_module_poisson_2d_elliptic_solver, &
      only: new_poisson_2d_elliptic_solver, &
            es_gauss_legendre
 
+  use sll_boundary_condition_descriptors
+  use sll_hermite_interpolation_2d_module
   
   !use sll_parallel_array_initializer_module
 
@@ -323,7 +325,7 @@ contains
       
     select case (f_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
-        f_interp2d => new_cubic_spline_2d_interpolator( &
+        f_interp2d => new_cubic_spline_interpolator_2d( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
@@ -335,7 +337,7 @@ contains
           const_eta1_min_slope = 0._f64, & !to prevent problem on the boundary
           const_eta1_max_slope = 0._f64)
       case ("SLL_HERMITE")
-        f_interp2d => new_hermite_2d_interpolator( &
+        f_interp2d => new_hermite_interpolator_2d( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
@@ -360,7 +362,7 @@ contains
 
     select case (A_interp_case)
       case ("SLL_CUBIC_SPLINES")
-        A1_interp2d => new_cubic_spline_2d_interpolator( &
+        A1_interp2d => new_cubic_spline_interpolator_2d( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
@@ -369,7 +371,7 @@ contains
           x2_max, &
           SLL_HERMITE, &
           SLL_PERIODIC)
-        A2_interp2d => new_cubic_spline_2d_interpolator( &
+        A2_interp2d => new_cubic_spline_interpolator_2d( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
@@ -378,12 +380,12 @@ contains
           x2_max, &
           SLL_HERMITE, &
           SLL_PERIODIC)  
-        A1_interp1d_x1 => new_cubic_spline_1d_interpolator( &
+        A1_interp1d_x1 => new_cubic_spline_interpolator_1d( &
           Nc_x1+1, &
           x1_min, &
           x1_max, &
           SLL_HERMITE)
-        A2_interp1d_x1 => new_cubic_spline_1d_interpolator( &
+        A2_interp1d_x1 => new_cubic_spline_interpolator_1d( &
           Nc_x1+1, &
           x1_min, &
           x1_max, &
@@ -397,7 +399,7 @@ contains
 
     select case (phi_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
-        phi_interp2d => new_cubic_spline_2d_interpolator( &
+        phi_interp2d => new_cubic_spline_interpolator_2d( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
@@ -512,7 +514,7 @@ contains
 
     select case(poisson_solver)    
       case ("SLL_POLAR_FFT")     
-        sim%poisson =>new_poisson_2d_polar_solver( &
+        sim%poisson =>new_poisson_2d_polar( &
           x1_min, &
           x1_max, &
           Nc_x1, &

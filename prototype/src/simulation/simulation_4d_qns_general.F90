@@ -6,20 +6,22 @@ module sll_simulation_4d_qns_general_module
 #include "sll_field_2d.h"
 #include "sll_utilities.h"
 
-!  use sll_collective
+use sll_collective
 !  use sll_remapper
 !  use sll_constants
-  use sll_cubic_spline_interpolator_1d
-!  use sll_cubic_spline_interpolator_2d
+  use sll_module_interpolators_1d_base
+  use sll_module_cubic_spline_interpolator_1d
+!  use sll_module_cubic_spline_interpolator_2d
   use sll_simulation_base
 !  use sll_logical_meshes
   use sll_parallel_array_initializer_module
 !  use sll_coordinate_transformation_2d_base_module
   use sll_gnuplot_parallel
   use sll_general_coordinate_elliptic_solver_module
-!  use sll_module_scalar_field_2d_base
-!  use sll_module_scalar_field_2d_alternative
-!  use sll_arbitrary_degree_spline_interpolator_1d_module
+  use sll_module_scalar_field_2d_base
+  use sll_module_scalar_field_2d_alternative
+!  use sll_module_arbitrary_degree_spline_interpolator_1d
+  use sll_module_arbitrary_degree_spline_interpolator_2d
   use sll_timer
   implicit none
 
@@ -123,16 +125,16 @@ module sll_simulation_4d_qns_general_module
      type(remap_plan_4D_real64), pointer :: seqx1x2_to_seqx3x4
      type(remap_plan_4D_real64), pointer :: seqx3x4_to_seqx1x2
      ! interpolators and their pointers
-     !type(cubic_spline_2d_interpolator) :: interp_x1x2
-     type(arb_deg_2d_interpolator) :: interp_x1x2
-!!$     type(cubic_spline_1d_interpolator) :: interp_x1
-!!$     type(cubic_spline_1d_interpolator) :: interp_x2
-     type(cubic_spline_1d_interpolator) :: interp_x3
-     !type(arb_deg_1d_interpolator) :: interp_x3
-     type(cubic_spline_1d_interpolator) :: interp_x4
+     !type(sll_cubic_spline_interpolator_2d) :: interp_x1x2
+     type(sll_arbitrary_degree_spline_interpolator_2d) :: interp_x1x2
+!!$     type(sll_cubic_spline_interpolator_1d) :: interp_x1
+!!$     type(sll_cubic_spline_interpolator_1d) :: interp_x2
+     type(sll_cubic_spline_interpolator_1d) :: interp_x3
+     !type(sll_arbitrary_degree_spline_interpolator_1d) :: interp_x3
+     type(sll_cubic_spline_interpolator_1d) :: interp_x4
      ! interpolation any arbitrary spline
-     type(arb_deg_2d_interpolator)     :: interp_rho
-     type(arb_deg_2d_interpolator)     :: interp_phi
+     type(sll_arbitrary_degree_spline_interpolator_2d)     :: interp_rho
+     type(sll_arbitrary_degree_spline_interpolator_2d)     :: interp_phi
      ! for distribution function initializer:
      procedure(sll_scalar_initializer_4d), nopass, pointer :: init_func
      sll_real64, dimension(:), pointer :: params
@@ -756,14 +758,14 @@ contains
     end if
 
 
-    ! pad de initialize_layout_with_distributed_4D_array different du cartesian L182
+    ! pad de initialize_layout_with_distributed_array different du cartesian L182
 
     print *, 'sequential_x3x4 mode...'
     ! Use this information to initialize the layout that describes the result
     ! of computing rho. This layout is not useful to do sequential operations
     ! in any of the two available directions. We also initialize the other two
     ! layouts needed for both sequential operations on x1 and x2 in the 2D case.
-    call initialize_layout_with_distributed_2D_array( &
+    call initialize_layout_with_distributed_array( &
          nc_x1+1, & ! changed from nc only
          nc_x2+1, & ! changed from nc only
          sim%nproc_x1, &
@@ -778,19 +780,19 @@ contains
     SLL_ALLOCATE(send_buf(loc_sz_x1*loc_sz_x2), ierr)
     !    SLL_ALLOCATE(sim%efield_split(loc_sz_x1,loc_sz_x2),ierr)
 
-!!$    call initialize_layout_with_distributed_2D_array( &
+!!$    call initialize_layout_with_distributed_array( &
 !!$         nc_x1+1, &
 !!$         nc_x2+1, &
 !!$         1, &
 !!$         1, &
 !!$         sim%rho_full_layout )
     
-    !  call compute_local_sizes_2d( sim%rho_full_layout, loc_sz_x1, loc_sz_x2 )
+    !  call compute_local_sizes( sim%rho_full_layout, loc_sz_x1, loc_sz_x2 )
     SLL_ALLOCATE(sim%rho_full(nc_x1+1,nc_x2+1),ierr) ! changed from nc,nc
     SLL_ALLOCATE(recv_buf((nc_x1+1)*(nc_x2+1)),ierr) !changed from nc, nc
 
 
-    call initialize_layout_with_distributed_4D_array( &
+    call initialize_layout_with_distributed_array( &
          nc_x1+1, &
          nc_x2+1, &
          nc_x3+1, &
@@ -806,7 +808,7 @@ contains
     print *, 'nproc_x3: ', sim%nproc_x3
     print *, 'nproc_x4: ', sim%nproc_x4
     
-    call compute_local_sizes_4d( sim%sequential_x3x4, &
+    call compute_local_sizes( sim%sequential_x3x4, &
          loc_sz_x1, &
          loc_sz_x2, &
          loc_sz_x3, &
@@ -828,13 +830,13 @@ contains
     ! field in each point of the grid.
     ! SLL_ALLOCATE(sim%efield_x1(loc_sz_x1,loc_sz_x2),ierr)
     
-!!$    call initialize_layout_with_distributed_2D_array( &
+!!$    call initialize_layout_with_distributed_array( &
 !!$         nc_x1+1, &
 !!$         nc_x2+1, &
 !!$         sim%world_size, &
 !!$         1, &
 !!$         sim%rho_seq_x2 )
-!!$    call compute_local_sizes_2d( sim%rho_seq_x2, loc_sz_x1, loc_sz_x2 )
+!!$    call compute_local_sizes( sim%rho_seq_x2, loc_sz_x1, loc_sz_x2 )
 !!$    SLL_ALLOCATE(sim%rho_x2(loc_sz_x1,loc_sz_x2),ierr)
 !!$    SLL_ALLOCATE(sim%phi_x2(loc_sz_x1,loc_sz_x2),ierr)
 !!$    SLL_ALLOCATE(sim%efield_x2(loc_sz_x1,loc_sz_x2),ierr)
@@ -854,7 +856,7 @@ contains
     sim%nproc_x2 = itemp
     
     print *, 'sequential x1x2 mode...'
-    call initialize_layout_with_distributed_4D_array( &
+    call initialize_layout_with_distributed_array( &
          nc_x1+1, & ! changed
          nc_x2+1, & ! changed
          nc_x3+1, &
@@ -869,7 +871,7 @@ contains
     ! function data. First compute the local sizes. Since the remap operations
     ! are out-of-place, we will allocate four different arrays, one for each
     ! layout.
-    call compute_local_sizes_4d( sim%sequential_x1x2, &
+    call compute_local_sizes( sim%sequential_x1x2, &
          loc_sz_x1, &
          loc_sz_x2, &
          loc_sz_x3, &
@@ -904,7 +906,7 @@ contains
          sim%rho_split )
     
     global_indices(1:2) =  &
-         local_to_global_2D( sim%split_rho_layout, (/1, 1/) )
+         local_to_global( sim%split_rho_layout, (/1, 1/) )
     
     call sll_gnuplot_rect_2d_parallel( &
          sim%mesh2d_x%eta1_min, &
@@ -986,7 +988,7 @@ contains
 !!$    call apply_remap_2D( sim%split_to_full, sim%rho_split, sim%rho_full )
     
 !!$    global_indices(1:2) =  &
-!!$         local_to_global_2D( sim%rho_full_layout, (/1, 1/) )
+!!$         local_to_global( sim%rho_full_layout, (/1, 1/) )
     
 !!$    call sll_gnuplot_rect_2d_parallel( &
 !!$         sim%mesh2d_x%eta1_min, &
@@ -1007,7 +1009,7 @@ contains
          NEW_REMAP_PLAN(sim%sequential_x1x2,sim%sequential_x3x4,sim%f_x1x2)
     
     call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f_x3x4, sim%f_x1x2 )
-    call compute_local_sizes_4d( sim%sequential_x1x2, &
+    call compute_local_sizes( sim%sequential_x1x2, &
          loc_sz_x1, &
          loc_sz_x2, &
          loc_sz_x3, &
@@ -1165,7 +1167,7 @@ contains
 
        call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f_x1x2, sim%f_x3x4 )
        
-       call compute_local_sizes_4d( &
+       call compute_local_sizes( &
             sim%sequential_x1x2, &
             loc_sz_x1,           &
             loc_sz_x2,           &
@@ -1183,7 +1185,7 @@ contains
             sim%rho_split )
        
        global_indices(1:2) =  &
-            local_to_global_2D( sim%split_rho_layout, (/1, 1/) )
+            local_to_global( sim%split_rho_layout, (/1, 1/) )
        
        call sll_gnuplot_rect_2d_parallel( &
           sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
@@ -1276,7 +1278,7 @@ contains
        !       sim%rho_x1(:,:) = - sim%rho_x1(:,:) 
        
 !!$       global_indices(1:2) =  &
-!!$            local_to_global_2D( sim%rho_seq_x1, (/1, 1/) )
+!!$            local_to_global( sim%rho_seq_x1, (/1, 1/) )
 !!$       
 !!$       call sll_gnuplot_rect_2d_parallel( &
 !!$          sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
@@ -1290,7 +1292,7 @@ contains
        !       if(sim%my_rank == 0) call rho%write_to_file(itime)
        
        !call sll_set_time_mark(t0)  
-       call solve_general_coordinates_elliptic_eq( &
+       call sll_solve( &
             sim%qns, &
             rho, &
             phi )
@@ -1301,13 +1303,13 @@ contains
           call phi%write_to_file(itime)
        end if
        
-       call compute_local_sizes_4d( sim%sequential_x1x2, &
+       call compute_local_sizes( sim%sequential_x1x2, &
             loc_sz_x1,           &
             loc_sz_x2,           &
             loc_sz_x3,           &
             loc_sz_x4 )
        
-       call compute_local_sizes_4d( sim%sequential_x3x4, &
+       call compute_local_sizes( sim%sequential_x3x4, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
        
        efield_energy_total = 0.0_f64
@@ -1317,7 +1319,7 @@ contains
           do j=1,loc_sz_x2
              do i=1,loc_sz_x1
                 global_indices(1:2) = &
-                     local_to_global_2D( sim%split_rho_layout, (/i,j/))
+                     local_to_global( sim%split_rho_layout, (/i,j/))
                 !eta1   =  eta1_min + real(global_indices(1)-1,f64)*delta1
                 eta1 = sim%pt_eta1(global_indices(1))
                 !eta2   =  eta2_min + real(global_indices(2)-1,f64)*delta2
@@ -1354,13 +1356,13 @@ contains
        !print*, 'energy total', efield_energy_total
        !efield_energy_total = sqrt(efield_energy_total)
        
-       call compute_local_sizes_4d( sim%sequential_x3x4, &
+       call compute_local_sizes( sim%sequential_x3x4, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
        numpart = 0.0_f64
        ! dt in vy...(x4)
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
-             global_indices(1:2) = local_to_global_2D( sim%split_rho_layout, (/i,j/))
+             global_indices(1:2) = local_to_global( sim%split_rho_layout, (/i,j/))
              do k=1,sim%mesh2d_v%num_cells1+1
                 !eta1   =  eta1_min + real(global_indices(1)-1,f64)*delta1
                 !eta2   =  eta2_min + real(global_indices(2)-1,f64)*delta2
@@ -1399,7 +1401,7 @@ contains
 
        call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f_x3x4, sim%f_x1x2 )
        
-       call compute_local_sizes_4d( sim%sequential_x1x2, &
+       call compute_local_sizes( sim%sequential_x1x2, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
        
        ! Approximate the integral of the distribution function along all
@@ -1490,7 +1492,7 @@ contains
 !!$          end do
 !!$       end do
 !!$
-!!$      global_indices(1:2) =  local_to_global_2D( sim%split_rho_layout, (/1, 1/) )
+!!$      global_indices(1:2) =  local_to_global( sim%split_rho_layout, (/1, 1/) )
 !!$
 !!$      call sll_gnuplot_rect_2d_parallel( &
 !!$           sim%mesh2d_x%eta1_min+(global_indices(1)-1)*delta1,delta1, &
@@ -1533,7 +1535,7 @@ contains
     sll_int32,intent(in) :: opt
     sll_real64:: alpha1_tmp,alpha2_tmp,eta1_tmp,eta2_tmp
 
-    call compute_local_sizes_4d( sim%sequential_x1x2, &
+    call compute_local_sizes( sim%sequential_x1x2, &
          loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 )
 
     do l=1,loc_sz_x4
@@ -1543,7 +1545,7 @@ contains
           do j=1,loc_sz_x2
              do i=1,loc_sz_x1
                 global_indices = &
-                     local_to_global_4D(sim%sequential_x1x2,(/i,j,k,l/))
+                     local_to_global(sim%sequential_x1x2,(/i,j,k,l/))
                 gi = global_indices(1)
                 gj = global_indices(2)
                 gk = global_indices(3)
@@ -1698,7 +1700,7 @@ contains
     sll_int32  :: nc_x3
     
     nc_x3 = sim%mesh2d_v%num_cells1
-    call compute_local_sizes_4d( sim%sequential_x3x4, &
+    call compute_local_sizes( sim%sequential_x3x4, &
          loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
     
     efield_energy_total = 0.0_f64
@@ -1708,7 +1710,7 @@ contains
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
              global_indices(1:2) = &
-                  local_to_global_2D( sim%split_rho_layout, (/i,j/))
+                  local_to_global( sim%split_rho_layout, (/i,j/))
              eta1   =  sim%mesh2d_v%eta1_min + &
                   real(global_indices(1)-1,f64)*sim%mesh2d_v%delta_eta1
              eta2   =  sim%mesh2d_v%eta2_min + &
@@ -1766,7 +1768,7 @@ contains
     sll_int32  :: nc_x4
     
     nc_x4 = sim%mesh2d_v%num_cells2
-    call compute_local_sizes_4d( sim%sequential_x3x4, &
+    call compute_local_sizes( sim%sequential_x3x4, &
          loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
     
     efield_energy_total = 0.0_f64
@@ -1775,7 +1777,7 @@ contains
        do i=1,loc_sz_x1
           do k=1,sim%mesh2d_v%num_cells1+1
              global_indices(1:2) = &
-                  local_to_global_2D( sim%split_rho_layout, (/i,j/))
+                  local_to_global( sim%split_rho_layout, (/i,j/))
              eta1   =  sim%mesh2d_v%eta1_min + &
                   real(global_indices(1)-1,f64)*sim%mesh2d_v%delta_eta1
              eta2   =  sim%mesh2d_v%eta2_min + &
@@ -1831,8 +1833,8 @@ contains
     call sll_delete( sim%seqx1x2_to_seqx3x4 )
     call sll_delete( sim%seqx3x4_to_seqx1x2 )
     call sll_delete( sim%interp_x1x2 )
-    call delete( sim%interp_x3 )
-    call delete( sim%interp_x4 )
+    call sll_delete( sim%interp_x3 )
+    call sll_delete( sim%interp_x4 )
     SLL_DEALLOCATE(sim%diag_masse,ierr)
     SLL_DEALLOCATE(sim%diag_norm_L1,ierr)
     SLL_DEALLOCATE(sim%diag_norm_L2,ierr)
@@ -2224,10 +2226,10 @@ contains
           my_layout => sim%rho_seq_x2
        end if
 
-       call compute_local_sizes_2d( my_layout, local_nx1, local_nx2)        
+       call compute_local_sizes( my_layout, local_nx1, local_nx2)        
     
-       offset(1) =  get_layout_2D_i_min( my_layout, my_rank ) - 1
-       offset(2) =  get_layout_2D_j_min( my_layout, my_rank ) - 1
+       offset(1) =  get_layout_i_min( my_layout, my_rank ) - 1
+       offset(2) =  get_layout_j_min( my_layout, my_rank ) - 1
 
        if (itime == 1) then
 
@@ -2250,7 +2252,7 @@ contains
    
           do j = 1, local_nx2
              do i = 1, local_nx1
-                global_indices =  local_to_global_2D( my_layout, (/i, j/) )
+                global_indices =  local_to_global( my_layout, (/i, j/) )
                 gi = global_indices(1)
                 gj = global_indices(2)
                 x1(i,j) = x1_min + (gi-1._f64)*delta_x1
@@ -2567,7 +2569,7 @@ contains
              do iv2 = 1,Nv2-1
                 v2 = sim%mesh2d_v%eta2_min + (iv2-1)*delta_eta2
                 
-                glob_ind4d(:) = local_to_global_4D(sim%sequential_x3x4, &
+                glob_ind4d(:) = local_to_global(sim%sequential_x3x4, &
                      (/iloc1,iloc2,iv1,iv2/))
                 i1 = glob_ind4d(1)
                 i2 = glob_ind4d(2)
@@ -2676,7 +2678,7 @@ contains
           do iv1 = 1,Nv1-1
              do iv2 = 1,Nv2-1
                 
-                glob_ind4d(:) = local_to_global_4D(sim%sequential_x3x4, &
+                glob_ind4d(:) = local_to_global(sim%sequential_x3x4, &
                      (/iloc1,iloc2,iv1,iv2/))
                 i1 = glob_ind4d(1)
                 i2 = glob_ind4d(2)

@@ -1,5 +1,5 @@
 program remap_test_6d
-  use sll_collective, only: sll_boot_collective, sll_halt_collective
+  use sll_collective
   use sll_remapper
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -109,7 +109,7 @@ program remap_test_6d
         print *, 'source configuration: ', npi, npj, npk, npl, npm, npn
      end if
 
-     call initialize_layout_with_distributed_6D_array( &
+     call initialize_layout_with_distributed_array( &
           ni, &
           nj, &
           nk, &
@@ -127,12 +127,12 @@ program remap_test_6d
 !!$     if( myrank == RANK_TO_PRINT ) then
 !!$        print *, '----------------------------------------'
 !!$        print *, 'process: ', myrank, 'viewing layout1: '
-!!$        call sll_view_lims_6D(layout1)
+!!$        call sll_view_lims(layout1)
 !!$        print *, '----------------------------------------'
 !!$        call flush(6)
 !!$     end if
 
-     call compute_local_sizes_6d( &
+     call compute_local_sizes( &
           layout1, &
           loc_sz_i_init, &
           loc_sz_j_init, &
@@ -161,7 +161,7 @@ program remap_test_6d
                  do j=1,loc_sz_j_init 
                     do i=1,loc_sz_i_init
                        tmp_array(:) = (/i, j, k, l, m, n/)
-                       global_indices = local_to_global_6D(layout1, tmp_array)
+                       global_indices = local_to_global(layout1, tmp_array)
                        gi = global_indices(1)
                        gj = global_indices(2)
                        gk = global_indices(3)
@@ -268,7 +268,7 @@ program remap_test_6d
         print *, 'target configuration: ', npi, npj, npk, npl, npm, npn
      end if
 
-     call initialize_layout_with_distributed_6D_array( &
+     call initialize_layout_with_distributed_array( &
           ni, &
           nj, &
           nk, &
@@ -285,7 +285,7 @@ program remap_test_6d
 
      call reorganize_randomly_6d(layout2)
      
-     call compute_local_sizes_6d( &
+     call compute_local_sizes( &
           layout2, &
           loc_sz_i_final, &
           loc_sz_j_final, &
@@ -318,9 +318,9 @@ program remap_test_6d
 #if 0
      if( myrank .eq. 0 ) then
         print *, i_test, myrank, 'Printing layout1: '
-        call sll_view_lims_6D( layout1 )
+        call sll_view_lims( layout1 )
         print *, i_test, myrank, 'Printing layout2: '
-        call sll_view_lims_6D( layout2 )
+        call sll_view_lims( layout2 )
      end if
 #endif
      ! compare results with expected data
@@ -331,7 +331,7 @@ program remap_test_6d
                  do j=1,loc_sz_j_final 
                     do i=1,loc_sz_i_final
                        tmp_array(:) = (/i,j,k,l,m,n/)
-                       global_indices = local_to_global_6D( layout2, tmp_array )
+                       global_indices = local_to_global( layout2, tmp_array )
                        gi = global_indices(1)
                        gj = global_indices(2)
                        gk = global_indices(3)
@@ -373,9 +373,9 @@ program remap_test_6d
                           !    end if
                     
                           print *, i_test, myrank, 'Printing layout1: '
-                          call sll_view_lims_6D( layout1 )
+                          call sll_view_lims( layout1 )
                           print *, i_test, myrank, 'Printing layout2: '
-                          call sll_view_lims_6D( layout2 )
+                          call sll_view_lims( layout2 )
                     
                           print*, 'program stopped by failure'
                           stop
@@ -465,60 +465,60 @@ contains
     integer                  :: n_min_p, n_max_p    
 
     ! Get proc_n contents from layout
-    i_min_n = get_layout_6D_i_min( layout, proc_n )
-    i_max_n = get_layout_6D_i_max( layout, proc_n )
-    j_min_n = get_layout_6D_j_min( layout, proc_n )
-    j_max_n = get_layout_6D_j_max( layout, proc_n )
-    k_min_n = get_layout_6D_k_min( layout, proc_n )
-    k_max_n = get_layout_6D_k_max( layout, proc_n )
-    l_min_n = get_layout_6D_l_min( layout, proc_n )
-    l_max_n = get_layout_6D_l_max( layout, proc_n )
-    m_min_n = get_layout_6D_m_min( layout, proc_n )
-    m_max_n = get_layout_6D_m_max( layout, proc_n )
-    n_min_n = get_layout_6D_n_min( layout, proc_n )
-    n_max_n = get_layout_6D_n_max( layout, proc_n )
+    i_min_n = get_layout_i_min( layout, proc_n )
+    i_max_n = get_layout_i_max( layout, proc_n )
+    j_min_n = get_layout_j_min( layout, proc_n )
+    j_max_n = get_layout_j_max( layout, proc_n )
+    k_min_n = get_layout_k_min( layout, proc_n )
+    k_max_n = get_layout_k_max( layout, proc_n )
+    l_min_n = get_layout_l_min( layout, proc_n )
+    l_max_n = get_layout_l_max( layout, proc_n )
+    m_min_n = get_layout_m_min( layout, proc_n )
+    m_max_n = get_layout_m_max( layout, proc_n )
+    n_min_n = get_layout_n_min( layout, proc_n )
+    n_max_n = get_layout_n_max( layout, proc_n )
 
     ! Get proc_p contents from layout
-    i_min_p = get_layout_6D_i_min( layout, proc_p )
-    i_max_p = get_layout_6D_i_max( layout, proc_p )
-    j_min_p = get_layout_6D_j_min( layout, proc_p )
-    j_max_p = get_layout_6D_j_max( layout, proc_p )
-    k_min_p = get_layout_6D_k_min( layout, proc_p )
-    k_max_p = get_layout_6D_k_max( layout, proc_p )
-    l_min_p = get_layout_6D_l_min( layout, proc_p )
-    l_max_p = get_layout_6D_l_max( layout, proc_p )
-    m_min_p = get_layout_6D_m_min( layout, proc_p )
-    m_max_p = get_layout_6D_m_max( layout, proc_p )
-    n_min_p = get_layout_6D_n_min( layout, proc_p )
-    n_max_p = get_layout_6D_n_max( layout, proc_p )
+    i_min_p = get_layout_i_min( layout, proc_p )
+    i_max_p = get_layout_i_max( layout, proc_p )
+    j_min_p = get_layout_j_min( layout, proc_p )
+    j_max_p = get_layout_j_max( layout, proc_p )
+    k_min_p = get_layout_k_min( layout, proc_p )
+    k_max_p = get_layout_k_max( layout, proc_p )
+    l_min_p = get_layout_l_min( layout, proc_p )
+    l_max_p = get_layout_l_max( layout, proc_p )
+    m_min_p = get_layout_m_min( layout, proc_p )
+    m_max_p = get_layout_m_max( layout, proc_p )
+    n_min_p = get_layout_n_min( layout, proc_p )
+    n_max_p = get_layout_n_max( layout, proc_p )
 
     ! Set proc_n contents in layout
-    call set_layout_6D_i_min( layout, proc_n, i_min_p )
-    call set_layout_6D_i_max( layout, proc_n, i_max_p)
-    call set_layout_6D_j_min( layout, proc_n, j_min_p )
-    call set_layout_6D_j_max( layout, proc_n, j_max_p )
-    call set_layout_6D_k_min( layout, proc_n, k_min_p )
-    call set_layout_6D_k_max( layout, proc_n, k_max_p )
-    call set_layout_6D_l_min( layout, proc_n, l_min_p )
-    call set_layout_6D_l_max( layout, proc_n, l_max_p )
-    call set_layout_6D_m_min( layout, proc_n, m_min_p )
-    call set_layout_6D_m_max( layout, proc_n, m_max_p )
-    call set_layout_6D_n_min( layout, proc_n, n_min_p )
-    call set_layout_6D_n_max( layout, proc_n, n_max_p )
+    call set_layout_i_min( layout, proc_n, i_min_p )
+    call set_layout_i_max( layout, proc_n, i_max_p)
+    call set_layout_j_min( layout, proc_n, j_min_p )
+    call set_layout_j_max( layout, proc_n, j_max_p )
+    call set_layout_k_min( layout, proc_n, k_min_p )
+    call set_layout_k_max( layout, proc_n, k_max_p )
+    call set_layout_l_min( layout, proc_n, l_min_p )
+    call set_layout_l_max( layout, proc_n, l_max_p )
+    call set_layout_m_min( layout, proc_n, m_min_p )
+    call set_layout_m_max( layout, proc_n, m_max_p )
+    call set_layout_n_min( layout, proc_n, n_min_p )
+    call set_layout_n_max( layout, proc_n, n_max_p )
 
     ! Set proc_p contents in layout
-    call set_layout_6D_i_min( layout, proc_p, i_min_n )
-    call set_layout_6D_i_max( layout, proc_p, i_max_n )
-    call set_layout_6D_j_min( layout, proc_p, j_min_n )
-    call set_layout_6D_j_max( layout, proc_p, j_max_n )
-    call set_layout_6D_k_min( layout, proc_p, k_min_n )
-    call set_layout_6D_k_max( layout, proc_p, k_max_n )   
-    call set_layout_6D_l_min( layout, proc_p, l_min_n )
-    call set_layout_6D_l_max( layout, proc_p, l_max_n )
-    call set_layout_6D_m_min( layout, proc_p, m_min_n )
-    call set_layout_6D_m_max( layout, proc_p, m_max_n )
-    call set_layout_6D_n_min( layout, proc_p, n_min_n )
-    call set_layout_6D_n_max( layout, proc_p, n_max_n )
+    call set_layout_i_min( layout, proc_p, i_min_n )
+    call set_layout_i_max( layout, proc_p, i_max_n )
+    call set_layout_j_min( layout, proc_p, j_min_n )
+    call set_layout_j_max( layout, proc_p, j_max_n )
+    call set_layout_k_min( layout, proc_p, k_min_n )
+    call set_layout_k_max( layout, proc_p, k_max_n )   
+    call set_layout_l_min( layout, proc_p, l_min_n )
+    call set_layout_l_max( layout, proc_p, l_max_n )
+    call set_layout_m_min( layout, proc_p, m_min_n )
+    call set_layout_m_max( layout, proc_p, m_max_n )
+    call set_layout_n_min( layout, proc_p, n_min_n )
+    call set_layout_n_max( layout, proc_p, n_max_n )
   end subroutine swap_box_6D
 
   function theoretical_global_6D_indices(d, ni, nj, nk, nl, nm)

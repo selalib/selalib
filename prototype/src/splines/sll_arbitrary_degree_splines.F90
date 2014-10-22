@@ -15,22 +15,29 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> @ingroup splines
+!> @brief 
+!> Low level arbitrary degree splines
+!> @details
 ! This module attempts to replace the functionalities of the arbitrary
 ! degree spline functions by deBoor. 
-
 module sll_arbitrary_degree_splines
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
   implicit none
+  private
 
   ! With these read-only parameters, we mimic the behavior of an enumerator
   ! or object macros. These are the alternatives with a different 
   ! implementation.
-  sll_int32, parameter :: PERIODIC_ARBITRARY_DEG_SPLINE = 0
-  sll_int32, parameter :: OPEN_ARBITRARY_DEG_SPLINE     = 1 
+  ! This should be in sll_boundary_condition_descriptors ?
+  !> PLEASE ADD DOCUMENTATION
+  sll_int32, parameter, public :: PERIODIC_ARBITRARY_DEG_SPLINE = 0
+  !> PLEASE ADD DOCUMENTATION
+  sll_int32, parameter, public :: OPEN_ARBITRARY_DEG_SPLINE     = 1 
 
-  type :: arbitrary_degree_spline_1d
+  type, public :: arbitrary_degree_spline_1d
      sll_int32  :: num_pts
      sll_int32  :: bc_type
      sll_int32  :: degree
@@ -39,12 +46,22 @@ module sll_arbitrary_degree_splines
      sll_real64, dimension(:), pointer :: k   ! local copy of knots array
   end type arbitrary_degree_spline_1d
 
-  interface delete
+  interface sll_delete
      module procedure delete_arbitrary_order_spline_1d
-  end interface delete
+  end interface sll_delete
+
+  public :: sll_delete,                           &
+            b_splines_at_x,                       &
+            b_splines_and_derivs_at_x,            &
+            uniform_b_splines_at_x,               &
+            new_arbitrary_degree_spline_1d,       &
+            b_spline_derivatives_at_x,            &
+            uniform_b_spline_derivatives_at_x,    &
+            uniform_b_splines_and_derivs_at_x
 
 contains
 
+  !> PLEASE ADD DOCUMENTATION
   function new_arbitrary_degree_spline_1d( degree, knots, num_pts, bc_type )
     type(arbitrary_degree_spline_1d), pointer :: new_arbitrary_degree_spline_1d
     sll_int32, intent(in)                    :: degree
@@ -190,11 +207,15 @@ contains
   ! (i-J):(i+J). We populate these with the values of the B[0,i](x) splines
   ! and iteratively build the higher order splines as needed.
 
+  !> @brief
+  !> Computes splines values.
+  !> @details
   !> b_splines_at_x( spline_obj, cell, x ) computes the values of all the
   !> splines which have support in 'cell' and evaluates them at point 'x',
   !> which is supposed to be in cell. The spline object should have already
   !> been initialized and will contain information on the spline degree
   !> to use and the type of boundary condition desired.
+  !> @return b_spline_at_x B-spline values
   function b_splines_at_x( spline_obj, cell, x )
     type(arbitrary_degree_spline_1d), pointer      :: spline_obj
     sll_int32, intent(in)                          :: cell
@@ -321,13 +342,17 @@ contains
     b_splines_at_x(1:deg+1) = splines(1:deg+1)
   end function b_splines_at_x
 
-  ! b_spline_derivatives_at_x() returns an array with the derivative values of 
-  ! the B-splines of a requested order that are supported in 'cell' and 
-  ! evaluated at 'x'. The return value has the format:
-  !
-  ! B'[j,i-degree](x), B'[j,i-degree+1](x), B'[j,i-degree+2](x),..., B'[j,i](x)
-  !
-  ! where 'j' is the requested degree of the spline.
+  !> @brief
+  !> returns derivative values.
+  !> @details
+  !> b_spline_derivatives_at_x() returns an array with the derivative values of 
+  !> the B-splines of a requested order that are supported in 'cell' and 
+  !> evaluated at 'x'. The return value has the format:
+  !> \f[
+  !> B'[j,i-degree](x), B'[j,i-degree+1](x), B'[j,i-degree+2](x),..., B'[j,i](x)
+  !> \f]
+  !> where 'j' is the requested degree of the spline.
+  !> @return b_spline_derivatives_at_x B-spline derivatives
   function b_spline_derivatives_at_x( spline_obj, cell, x )
     type(arbitrary_degree_spline_1d), pointer      :: spline_obj
     sll_int32, intent(in)                          :: cell
@@ -460,6 +485,11 @@ contains
   end function b_spline_derivatives_at_x
 
 
+  !> @brief 
+  !> returns splines and derivatives
+  !> @details
+  !> See b_spline_derivatives_at_x and  b_splines_at_x
+  !> @return b_spline_and_derivs_at_x B-spline values and derivatives
   function b_splines_and_derivs_at_x( spline_obj, cell, x )
     type(arbitrary_degree_spline_1d), pointer      :: spline_obj
     sll_int32, intent(in)                          :: cell

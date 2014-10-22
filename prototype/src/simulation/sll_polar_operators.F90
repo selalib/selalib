@@ -3,7 +3,9 @@ module polar_operators
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
+#include "sll_constants.h"
 
+  use sll_boundary_condition_descriptors
   use sll_poisson_2d_polar
   use sll_fft
   use sll_cubic_splines

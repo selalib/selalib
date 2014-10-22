@@ -9,14 +9,14 @@ program VP_1d
   use sll_logical_meshes
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
-  use sll_cubic_spline_interpolator_1d
+  use sll_module_cubic_spline_interpolator_1d
   use sll_landau_2d_initializer
   use sll_tsi_2d_initializer
   use distribution_function
   use sll_poisson_1d_periodic
   implicit none
 
-  type(cubic_spline_1d_interpolator), target  :: interp_spline_x, interp_spline_v
+  type(sll_cubic_spline_interpolator_1d), target  :: interp_spline_x, interp_spline_v
   class(sll_interpolator_1d_base), pointer    :: interp_x, interp_v
   !type(sll_mapped_mesh_2d_cartesian), target   :: mesh2d 
   !class(sll_mapped_mesh_2d_base), pointer :: mesh2d_base

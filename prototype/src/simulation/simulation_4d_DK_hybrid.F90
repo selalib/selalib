@@ -21,7 +21,7 @@ module sll_simulation_4d_DK_hybrid_module
   use sll_general_coordinate_elliptic_solver_module
   use sll_module_scalar_field_2d_base
   use sll_module_scalar_field_2d_alternative
-  use sll_arbitrary_degree_spline_interpolator_1d_module
+  use sll_module_arbitrary_degree_spline_interpolator_1d
   use sll_module_scalar_field_1d_base
   use sll_module_scalar_field_1d_alternative
   use sll_timer
@@ -146,9 +146,9 @@ module sll_simulation_4d_DK_hybrid_module
     type(remap_plan_4D_real64), pointer :: seqx1x2_to_seqx3x4
     type(remap_plan_4D_real64), pointer :: seqx3x4_to_seqx1x2
     !----> for interpolations
-    type(arb_deg_2d_interpolator) :: interp2d_f_eta1eta2
-    type(sll_arb_deg_1d_interpolator) :: interp1d_f_eta3
-    type(sll_arb_deg_1d_interpolator) :: interp1d_f_vpar
+    type(sll_arbitrary_degree_spline_interpolator_2d) :: interp2d_f_eta1eta2
+    type(sll_arbitrary_degree_spline_interpolator_1d) :: interp1d_f_eta3
+    type(sll_arbitrary_degree_spline_interpolator_1d) :: interp1d_f_vpar
 
     !--> 3D charge density and 3D electric potential
     !----> sequential in (x1,x2)
@@ -173,16 +173,16 @@ module sll_simulation_4d_DK_hybrid_module
     !--> For general QN solver
     type(general_coordinate_elliptic_solver), pointer :: QNS
     ! interpolation any arbitrary spline
-    type(arb_deg_2d_interpolator) :: interp2d_rho_eta1eta2
-    type(arb_deg_2d_interpolator) :: interp2d_Phi_eta1eta2
-    type(sll_arb_deg_1d_interpolator) :: interp1d_Phi_eta3
-    type(arb_deg_2d_interpolator) :: interp2d_QN_A11
-    type(arb_deg_2d_interpolator) :: interp2d_QN_A12
-    type(arb_deg_2d_interpolator) :: interp2d_QN_A21
-    type(arb_deg_2d_interpolator) :: interp2d_QN_A22
-    type(arb_deg_2d_interpolator) :: interp2d_QN_B1
-    type(arb_deg_2d_interpolator) :: interp2d_QN_B2
-    type(arb_deg_2d_interpolator) :: interp2d_QN_C
+    type(sll_arbitrary_degree_spline_interpolator_2d) :: interp2d_rho_eta1eta2
+    type(sll_arbitrary_degree_spline_interpolator_2d) :: interp2d_Phi_eta1eta2
+    type(sll_arbitrary_degree_spline_interpolator_1d) :: interp1d_Phi_eta3
+    type(sll_arbitrary_degree_spline_interpolator_2d) :: interp2d_QN_A11
+    type(sll_arbitrary_degree_spline_interpolator_2d) :: interp2d_QN_A12
+    type(sll_arbitrary_degree_spline_interpolator_2d) :: interp2d_QN_A21
+    type(sll_arbitrary_degree_spline_interpolator_2d) :: interp2d_QN_A22
+    type(sll_arbitrary_degree_spline_interpolator_2d) :: interp2d_QN_B1
+    type(sll_arbitrary_degree_spline_interpolator_2d) :: interp2d_QN_B2
+    type(sll_arbitrary_degree_spline_interpolator_2d) :: interp2d_QN_C
     class(sll_scalar_field_2d_base) , pointer :: rho2d
     type(sll_scalar_field_1d_discrete_alt), pointer :: phi1d! for derivative in eta3
     type(sll_scalar_field_2d_discrete_alt), pointer :: phi2d
@@ -814,7 +814,7 @@ contains
     !-->  (x1,x2) : parallelized layout
     !-->  (x3,x4) : sequential
     sim%layout4d_seqx3x4  => new_layout_4D( sll_world_collective )
-    call initialize_layout_with_distributed_4D_array( &
+    call initialize_layout_with_distributed_array( &
       sim%nc_x1+1, &
       sim%nc_x2+1, &
       sim%nc_x3+1, &
@@ -825,7 +825,7 @@ contains
       nproc_x4, &
       sim%layout4d_seqx3x4 )
         
-    call compute_local_sizes_4d( sim%layout4d_seqx3x4, &
+    call compute_local_sizes( sim%layout4d_seqx3x4, &
       loc4d_sz_x1, &
       loc4d_sz_x2, &
       loc4d_sz_x3, &
@@ -852,7 +852,7 @@ contains
     nproc_x4 = 1
 !earemettre
     sim%layout4d_seqx1x2  => new_layout_4D( sll_world_collective )
-    call initialize_layout_with_distributed_4D_array( &
+    call initialize_layout_with_distributed_array( &
       sim%nc_x1+1, & 
       sim%nc_x2+1, & 
       sim%nc_x3+1, &
@@ -868,7 +868,7 @@ contains
     ! local sizes. Since the remap operations
     ! are out-of-place, we will allocate two different arrays, 
     ! one for each layout.
-    call compute_local_sizes_4d( sim%layout4d_seqx1x2, &
+    call compute_local_sizes( sim%layout4d_seqx1x2, &
       loc4d_sz_x1, &
       loc4d_sz_x2, &
       loc4d_sz_x3, &
@@ -968,7 +968,7 @@ contains
       vpar_grid_tmp,sim%n0_xy,sim%Ti_xy,sim%feq_xyvpar)
 
     !--> Initialization of the distribution function f4d_seqx3x4
-    call compute_local_sizes_4d( sim%layout4d_seqx3x4, &
+    call compute_local_sizes( sim%layout4d_seqx3x4, &
       loc4d_sz_x1, &
       loc4d_sz_x2, &
       loc4d_sz_x3, &
@@ -980,7 +980,7 @@ contains
       do iloc3 = 1,loc4d_sz_x3
         do iloc2 = 1,loc4d_sz_x2
           do iloc1 = 1,loc4d_sz_x1
-            glob_ind4d(:) = local_to_global_4D(sim%layout4d_seqx3x4, &
+            glob_ind4d(:) = local_to_global(sim%layout4d_seqx3x4, &
                 (/iloc1,iloc2,iloc3,iloc4/))
             i1 = glob_ind4d(1)
             i2 = glob_ind4d(2)
@@ -1059,7 +1059,7 @@ contains
     !-->  (x1,x2) : parallelized layout
     !-->  x3 : sequential        
     sim%layout3d_seqx3  => new_layout_3D( sll_world_collective )
-    call initialize_layout_with_distributed_3D_array( &
+    call initialize_layout_with_distributed_array( &
       sim%nc_x1+1, &
       sim%nc_x2+1, &
       sim%nc_x3+1, &
@@ -1067,7 +1067,7 @@ contains
       nproc_x2, &
       nproc_x3, &
       sim%layout3d_seqx3 )
-    call compute_local_sizes_3d( sim%layout3d_seqx3, &
+    call compute_local_sizes( sim%layout3d_seqx3, &
       loc3d_sz_x1, &
       loc3d_sz_x2, &
       loc3d_sz_x3)
@@ -1084,7 +1084,7 @@ contains
     nproc_x2 = 1
 
     sim%layout3d_seqx1x2  => new_layout_3D( sll_world_collective )
-    call initialize_layout_with_distributed_3D_array( &
+    call initialize_layout_with_distributed_array( &
       sim%nc_x1+1, & 
       sim%nc_x2+1, & 
       sim%nc_x3+1, &
@@ -1092,7 +1092,7 @@ contains
       nproc_x2, &
       nproc_x3, &
       sim%layout3d_seqx1x2 )
-    call compute_local_sizes_3d( sim%layout3d_seqx1x2, &
+    call compute_local_sizes( sim%layout3d_seqx1x2, &
       loc3d_sz_x1, &
       loc3d_sz_x2, &
       loc3d_sz_x3)
@@ -1618,7 +1618,7 @@ contains
           intf_dvpar = 0._f64
 
           do i4 = 1,Nvpar-1
-            glob_ind4d(:) = local_to_global_4D(sim%layout4d_seqx3x4, &
+            glob_ind4d(:) = local_to_global(sim%layout4d_seqx3x4, &
                   (/iloc1,iloc2,i3,i4/))
             i1 = glob_ind4d(1)
             i2 = glob_ind4d(2)
@@ -1652,7 +1652,7 @@ contains
     sll_int32 :: ieta1, ieta2, iloc3
     sll_int32 :: loc3d_sz_x1, loc3d_sz_x2, loc3d_sz_x3
 
-    call compute_local_sizes_3d( sim%layout3d_seqx1x2, &
+    call compute_local_sizes( sim%layout3d_seqx1x2, &
       loc3d_sz_x1, &
       loc3d_sz_x2, &
       loc3d_sz_x3)
@@ -1661,7 +1661,7 @@ contains
     do iloc3 = 1,loc3d_sz_x3
       call sim%rho2d%set_field_data( sim%rho3d_seqx1x2(:,:,iloc3) )
       call sim%rho2d%update_interpolation_coefficients( )
-      call solve_general_coordinates_elliptic_eq( &
+      call sll_solve( &
         sim%QNS, &
         sim%rho2d, &
         sim%phi2d)
@@ -1700,7 +1700,7 @@ contains
 
     !--> Compute E3d_eta1_seqx1x2 = -dPhi3d_seqx1x2/deta1 and 
     !-->  E3d_eta2_seqx1x2 = -dPhi3d_seqx1x2/deta2
-    call compute_local_sizes_3d( sim%layout3d_seqx1x2, &
+    call compute_local_sizes( sim%layout3d_seqx1x2, &
       loc3d_sz_x1, &
       loc3d_sz_x2, &
       loc3d_sz_x3)
@@ -1735,7 +1735,7 @@ contains
      
     !--> Compute E3d_eta3_seqx3 = -dPhi3d_seqx3/deta3
     SLL_ALLOCATE(phi1d_seqx3_tmp(sim%Neta3),ierr)
-    call compute_local_sizes_3d( sim%layout3d_seqx3, &
+    call compute_local_sizes( sim%layout3d_seqx3, &
       loc3d_sz_x1, &
       loc3d_sz_x2, &
       loc3d_sz_x3)
@@ -1868,7 +1868,7 @@ contains
     SLL_ASSERT(size(sim%f4d_seqx3x4,2).eq.size(sim%phi3d_seqx3,2))
     SLL_ASSERT(size(sim%f4d_seqx3x4,3).eq.size(sim%phi3d_seqx3,3))
 
-    call compute_local_sizes_4d( sim%layout4d_seqx3x4, &
+    call compute_local_sizes( sim%layout4d_seqx3x4, &
       loc4d_sz_x1, &
       loc4d_sz_x2, &
       loc4d_sz_x3, &
@@ -1919,7 +1919,7 @@ contains
     sll_real64:: eta3, alpha3, vpar
     sll_real64, dimension(:), pointer :: f1d_eta3_tmp
 
-    call compute_local_sizes_4d( sim%layout4d_seqx3x4, &
+    call compute_local_sizes( sim%layout4d_seqx3x4, &
       loc4d_sz_x1, &
       loc4d_sz_x2, &
       loc4d_sz_x3, &
@@ -1969,7 +1969,7 @@ contains
     sll_real64 :: val_jac,val_B
     sll_real64, dimension(:,:), pointer :: f2d_eta1eta2_tmp
 
-    call compute_local_sizes_4d( sim%layout4d_seqx1x2, &
+    call compute_local_sizes( sim%layout4d_seqx1x2, &
       loc4d_sz_x1, &
       loc4d_sz_x2, &
       loc4d_sz_x3, &
@@ -2429,7 +2429,7 @@ contains
             do i4 = 1,Nvpar-1
                vpar = sim%vpar_grid(i4)
 
-               glob_ind4d(:) = local_to_global_4D(sim%layout4d_seqx3x4, &
+               glob_ind4d(:) = local_to_global(sim%layout4d_seqx3x4, &
                     (/iloc1,iloc2,i3,i4/))
                i1 = glob_ind4d(1)
                i2 = glob_ind4d(2)
@@ -2538,7 +2538,7 @@ contains
         do i3 = 1,Neta3-1
           do i4 = 1,Nvpar-1
 
-            glob_ind4d(:) = local_to_global_4D(sim%layout4d_seqx3x4, &
+            glob_ind4d(:) = local_to_global(sim%layout4d_seqx3x4, &
               (/iloc1,iloc2,i3,i4/))
             i1 = glob_ind4d(1)
             i2 = glob_ind4d(2)

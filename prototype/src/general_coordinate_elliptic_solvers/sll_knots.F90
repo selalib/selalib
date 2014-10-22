@@ -1,14 +1,22 @@
+!> @ingroup general_coordinate_elliptic_solvers
+!> @brief 
+!> build knots to construct B-splines basis functions
+!> @details 
+!> see Deboor's book
 module sll_knots
 #include "sll_working_precision.h"
 
 
   implicit none
 
-  sll_int32, parameter :: KNOTS_PERIODIC = 0, KNOTS_DIRICHLET = 1
+  !> PLEASE ADD DOCUMENTATION
+  integer, parameter :: KNOTS_PERIODIC  = 0
+  !> PLEASE ADD DOCUMENTATION
+  integer, parameter :: KNOTS_DIRICHLET = 1
 
 contains
 
-  subroutine initialize_knots_source(&
+subroutine initialize_knots_source(&
        spline_degree, &
        num_cells, &
        eta_min, &
@@ -42,8 +50,7 @@ contains
   end subroutine initialize_knots_source
 
 
-
-  ! SUBROUTINE ASSEMBLING KNOTS ARRAY
+  !> ASSEMBLING KNOTS ARRAY
   subroutine initialize_knots(&
        spline_degree,&
        num_cells, &
@@ -90,5 +97,107 @@ contains
     end if
 
   end subroutine initialize_knots
+
+
+  !> ASSEMBLING KNOTS ARRAY
+  subroutine initialize_knots_per(&
+       spline_degree,&
+       num_cells, &
+       eta_min, &
+       eta_max, &
+       knots)
+
+    integer, intent(in)   :: spline_degree 
+    integer, intent(in)   :: num_cells
+    real(8), intent(in)   :: eta_min
+    real(8), intent(in)   :: eta_max
+    real(8), dimension(:) :: knots
+    integer               :: i
+    real(8)               :: delta
+
+    delta = (eta_max - eta_min)/num_cells
+    
+    do i = - spline_degree, num_cells + spline_degree
+       
+       knots( i+ spline_degree + 1 ) = eta_min + i* delta
+    end do
+  end subroutine initialize_knots_per
+
+  !> ASSEMBLING KNOTS ARRAY
+  subroutine initialize_knots_dir(&
+       spline_degree,&
+       num_cells, &
+       eta_min, &
+       eta_max, &
+       knots)
+    
+    integer, intent(in)   :: spline_degree 
+    integer, intent(in)   :: num_cells
+    real(8), intent(in)   :: eta_min
+    real(8), intent(in)   :: eta_max
+    real(8), dimension(:) :: knots
+    integer               :: i
+    real(8)               :: delta
+    real(8)               :: eta
+    
+    delta = (eta_max - eta_min)/num_cells
+    
+    do i = 1, spline_degree + 1
+       knots(i) = eta_min
+    enddo
+    eta = eta_min
+    do i = spline_degree + 2, num_cells + 1 + spline_degree
+       eta = eta + delta
+       knots(i) = eta
+    enddo
+    do i = num_cells + spline_degree + 1, num_cells + 1 + 2*spline_degree
+       knots(i) = eta_max
+    enddo
+  end subroutine initialize_knots_dir
+
+
+  !> ASSEMBLING KNOTS ARRAY
+  subroutine initialize_knots_all(&
+       spline_degree,&
+       num_cells, &
+       eta_min, &
+       eta_max, &
+       bc_left, &
+       bc_right, &
+       knots)
+    
+    integer, intent(in)   :: spline_degree 
+    integer, intent(in)   :: num_cells
+    real(8), intent(in)   :: eta_min
+    real(8), intent(in)   :: eta_max
+    integer, intent(in)   :: bc_left
+    integer, intent(in)   :: bc_right
+    real(8), dimension(:) :: knots
+    real(8)               :: delta
+    
+    ! This routine needs some error-checking...
+    delta = (eta_max - eta_min)/num_cells
+    
+    if ( (bc_left  == KNOTS_PERIODIC) .and. &
+         (bc_right == KNOTS_PERIODIC) ) then 
+      
+       call initialize_knots_per(&
+            spline_degree,&
+            num_cells, &
+            eta_min, &
+            eta_max, &
+            knots)
+    else if ( (bc_left  == KNOTS_DIRICHLET) .and. &
+         (bc_right == KNOTS_DIRICHLET) ) then 
+       call initialize_knots_dir(&
+            spline_degree,&
+            num_cells, &
+            eta_min, &
+            eta_max, &
+            knots)
+       
+    end if
+    
+  end subroutine initialize_knots_all
   
 end module sll_knots

@@ -1,38 +1,20 @@
-! This file is read by doxygen software
-! Change it to match with your library
-! http://www.stack.nl/~dimitri/doxygen/manual/docblocks.html#fortranblocks
-! To see the documentation, remove the line containing your directory 
-! in file Doxyfile.in (line 691) if it is excluded. 
-! Type 'make doc' in build directory.
-! To check the results, open : 
-! selalib/prototype/documentation/build/html/doxygen/html/namespaces.html 
-! The following lines will be read by doxygen to generate documentation:
-
-
-!> @namespace sll_maxwell_solvers 
+!> @defgroup maxwell_solvers sll_maxwell_solvers
 !> @brief 
-!> Description of maxwell_solvers library (72 characters)
-!> @author Selalib team 
-!> You can add a contact, do not put your email to prevent spam.
+!> Library to solve Maxwell system in 2D and 3D
 !> @details
-!> Long description of  maxwell_solvers, you can add some references or math equations.
 !>
-!> <b> Headers file available </b>
-!>  - sll_maxwell_solvers.h
+!> - Include file
+!> <code>sll_maxwell_solvers.h</code>
 !>
-!> <b> Modules available </b>
-!>  List fortran module available
-!>  - sll_maxwell_solvers
+!> - Fortran modules
+!>  + sll_module_maxwell_2d_fdtd
+!>  + sll_module_maxwell_2d_pstd
+!>  + sll_module_maxwell_3d_pstd
 !>
-!> <b> How to use it </b>
-!> - Header file : \code #include 'sll_maxwell_solvers.h' \endcode
-!> - Link with   <code>-lsll_%s</code>
-!> - Add <code> use sll_maxwell_solvers </code>
+!> - Solvers available:
+!>  + sll_maxwell_2d_fdtd
+!>  + sll_maxwell_2d_pstd
+!>  + sll_maxwell_3d_pstd
 !>
-!> <b> Examples </b>
-!> -Add some fortran lines to explain how ti use the library
-!> \code
-!> call initialize(my_type, arg_1, arg_2)
-!> call solve(my_type, your_result)
-!> \endcode
-!>
+!> @todo Implement sll_maxwell_3d_fdtd
+!> @todo Add examples in documentation

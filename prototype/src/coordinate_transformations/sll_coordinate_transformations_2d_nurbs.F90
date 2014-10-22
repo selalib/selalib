@@ -1,117 +1,114 @@
+!> @ingroup coordinate_transformations
+!> @brief 
+!> Functions for the general transformation defined with nurbs*
+!> @details
+!>
+!>
+!> The nurbs-based coordinate transformation is associated with 2 logical 
+!> meshes: the 'minimal' logical mesh, which is implicit in the spline 
+!> description and  that is able to faitfully represent a given geometry. 
+!> The other logical mesh, which is the usual logical mesh on which we want 
+!> to represent quantities. 
+!> This needs to be present to answer questions like T%x_node(i,j). 
+!> We set this logical mesh outside of the read_from_file routine.
 module sll_module_coordinate_transformations_2d_nurbs
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_file_io.h"
   use sll_xdmf
+  use sll_meshes_base
   use sll_logical_meshes
-  use sll_cubic_spline_interpolator_2d
+  use sll_module_cubic_spline_interpolator_2d
   use sll_gnuplot
   use sll_module_interpolators_2d_base
   use sll_coordinate_transformation_2d_base_module
   use sll_module_deboor_splines_2d
 
   implicit none
+  private
   
-  ! ---------------------------------------------------------------------
-  !
-  !                       2D COORDINATE TRANSFORMATIONS
-  !
-  ! ---------------------------------------------------------------------
-  !
-  ! There are two main types of coordinate transformations: analytic and       
-  ! discrete. In the first case the transformation can be
-  ! specified analytically, through the two functions:
-  !
-  !                     x1 = x1(eta1,eta2) 
-  !                     x2 = x2(eta1,eta2)
-  !
-  ! Where both, eta1 and eta2 should be defined on the intervals that define
-  ! the extent of the logical mesh (default values in logical mesh are  [0,1]. 
-  ! The same transformation 
-  ! can be specified by the set of transformed points x1(i,j), x2(i,j), as
-  ! two 2D arrays or 1D arrays that describe the transformation on each
-  ! direction.
-  !
-  ! The transformation is also represented by the Jacobian matrix:
-  !
-  !                   [   partial x1(eta1,eta2)     partial x1(eta1,eta2)    ]
-  !                   [ -----------------------    ------------------------- ]
-  !                   [      partial eta1              partial eta2          ]
-  !    J(eta1,eta2) = [                                                      ]
-  !                   [   partial x2(eta1,eta2)     partial x2(eta1,eta2)    ]
-  !                   [ -----------------------    ------------------------- ]
-  !                   [      partial eta1              partial eta2          ]
-  !
 
-  ! -----------------------------------------------------------------------
-  !
-  !                Discrete case : Nurbs/Splines specifications
-  !
-  ! -----------------------------------------------------------------------
-
-  type, extends(sll_coordinate_transformation_2d_base) :: &
+  !> Nurbs-based coordinate transformation 
+  type, extends(sll_coordinate_transformation_2d_base), public :: &
        sll_coordinate_transformation_2d_nurbs
-
-     sll_real64, dimension(:,:), pointer :: x1_node =>null()  ! x1(i,j) 
-     sll_real64, dimension(:,:), pointer :: x2_node =>null()  ! x2(i,j) 
+     !> \f$ x_1(i,j) \f$
+     sll_real64, dimension(:,:), pointer :: x1_node =>null()  
+     !> \f$ x_2(i,j) \f$
+     sll_real64, dimension(:,:), pointer :: x2_node =>null()  
+     !> PLEASE ADD DOCUMENTATION
      sll_real64, dimension(:,:), pointer :: x1_cell =>null()
+     !> PLEASE ADD DOCUMENTATION
      sll_real64, dimension(:,:), pointer :: x2_cell =>null()
+     !> PLEASE ADD DOCUMENTATION
      class(sll_interpolator_2d_base), pointer :: x1_interp =>null()
+     !> PLEASE ADD DOCUMENTATION
      class(sll_interpolator_2d_base), pointer :: x2_interp =>null()
+     !> PLEASE ADD DOCUMENTATION
      class(sll_interpolator_2d_base), pointer :: x3_interp =>null()
+     !> PLEASE ADD DOCUMENTATION
      sll_int32 :: is_rational
+     !> PLEASE ADD DOCUMENTATION
      sll_int32 :: spline_deg1
+     !> PLEASE ADD DOCUMENTATION
      sll_int32 :: spline_deg2
+     !> PLEASE ADD DOCUMENTATION
      sll_real64, dimension(:),pointer :: knots1
+     !> PLEASE ADD DOCUMENTATION
      sll_real64, dimension(:),pointer :: knots2
 !     type(sll_logical_mesh_2d), pointer  :: mesh2d_minimal =>null()
-     type(sll_logical_mesh_2d), pointer :: mesh
+!     type(sll_logical_mesh_2d), pointer :: mesh
    contains
+     
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: get_logical_mesh => get_logical_mesh_nurbs_2d
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: x1_at_node => x1_node_nurbs
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: x2_at_node => x2_node_nurbs
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: jacobian_at_node =>transf_2d_jacobian_node_nurbs
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: x1         => x1_nurbs
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: x2         => x2_nurbs
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: x1_at_cell => x1_cell_nurbs
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: x2_at_cell => x2_cell_nurbs
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: jacobian_at_cell => jacobian_2d_cell_nurbs
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: jacobian   => jacobian_2d_nurbs
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: jacobian_matrix => jacobian_matrix_2d_nurbs
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: inverse_jacobian_matrix => &
           inverse_jacobian_matrix_2d_nurbs
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: write_to_file => write_to_file_2d_nurbs
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: read_from_file => read_from_file_2d_nurbs
+     !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: delete => delete_transformation_2d_nurbs
   end type sll_coordinate_transformation_2d_nurbs
 
-  type sll_coordinate_transformation_2d_nurbs_ptr
+  type, public :: sll_coordinate_transformation_2d_nurbs_ptr
+     !> Pointer to class
      class(sll_coordinate_transformation_2d_nurbs), pointer :: T
   end type sll_coordinate_transformation_2d_nurbs_ptr
 
-  interface delete
+  interface sll_delete
      module procedure delete_transformation_2d_nurbs
-  end interface
+  end interface sll_delete
+
+  public sll_delete
+  public new_nurbs_2d_transformation_from_file
 
   
 contains
-  !**************************************************************************
-  !
-  !        Functions for the general transformation defined with nurbs
-  !
-  !**************************************************************************
 
-
-  ! -------------------------------------------------------------------------
-  ! The nurbs-based coordinate transformation is associated with 2 logical 
-  ! meshes: the 'minimal' logical mesh, which is implicit in the spline 
-  ! description and  that is able to faitfully represent a given geometry. 
-  ! The other logical mesh, which is the usual logical mesh on which we want 
-  ! to represent quantities. 
-  ! This needs to be present to answer questions like T%x_node(i,j). 
-  ! We set this logical mesh outside of the read_from_file routine.
-  ! -------------------------------------------------------------------------
+     !> PLEASE ADD DOCUMENTATION
   function new_nurbs_2d_transformation_from_file( filename ) result(res)
     type(sll_coordinate_transformation_2d_nurbs), pointer :: res
     character(len=*), intent(in) :: filename
@@ -121,7 +118,7 @@ contains
   end function new_nurbs_2d_transformation_from_file
 
   subroutine read_from_file_2d_nurbs( transf, filename )
-    use sll_arbitrary_degree_spline_interpolator_2d_module
+    use sll_module_arbitrary_degree_spline_interpolator_2d
     class(sll_coordinate_transformation_2d_nurbs), intent(inout) :: transf
     character(len=*), intent(in) :: filename
     intrinsic :: trim
@@ -440,6 +437,7 @@ contains
     SLL_DEALLOCATE_ARRAY(weights_2d,ierr)
   end subroutine read_from_file_2d_nurbs
 
+     !> PLEASE ADD DOCUMENTATION
   function get_logical_mesh_nurbs_2d( transf ) result(res)
     class(sll_logical_mesh_2d), pointer :: res
     class(sll_coordinate_transformation_2d_nurbs), intent(in) :: transf

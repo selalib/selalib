@@ -15,7 +15,7 @@
   sll_gyroaverage
   sll_characteristics
   sll_interpolators
-  sll_periodic_interp
+  sll_periodic_interpolation
   sll_splines)
 
   ADD_EXECUTABLE(

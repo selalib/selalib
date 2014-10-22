@@ -1,28 +1,71 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+!> @ingroup poisson_solvers
 !> @brief
 !> Poisson solver in general coordinates using mudpack library
 !> @details
 !> red/black gauss-seidel point relaxation is used along with the
-!> the default multigrid options.  first mud2cr is called to generate
-!> a second-order approximation.  then mud24cr is called to improve
-!> the estimate to fourth-order.
+!> the default multigrid options.  
+!>  - first mud2cr is called to generate a second-order approximation.  
+!>  - then mud24cr is called to improve the estimate to fourth-order.
 module sll_mudpack_curvilinear
 #include "sll_working_precision.h"
 #include "sll_assert.h"
+#include "sll_coordinate_transformations.h"
+use sll_module_interpolators_2d_base
+use sll_module_cubic_spline_interpolator_2d
 
-use sll_mudpack_base
-use sll_cubic_spline_interpolator_2d
-use sll_module_coordinate_transformations_2d
 implicit none
+private
 
-class(sll_interpolator_2d_base), pointer   :: cxx_interp
-class(sll_interpolator_2d_base), pointer   :: cyy_interp
-class(sll_interpolator_2d_base), pointer   :: cxy_interp
-class(sll_interpolator_2d_base), pointer   :: cx_interp
-class(sll_interpolator_2d_base), pointer   :: cy_interp
-class(sll_interpolator_2d_base), pointer   :: ce_interp
-class(sll_interpolator_2d_base), pointer   :: a12_interp
-class(sll_interpolator_2d_base), pointer   :: a21_interp
+!> Mudpack solver cartesian 2d
+type, public :: mudpack_2d
+
+   sll_real64, dimension(:), allocatable :: work !< array for tmp data
+   sll_int32  :: mgopt(4)           !< Option to control multigrid
+   sll_int32  :: iprm(16)           !< Indices to control grid sizes
+   sll_real64 :: fprm(6)            !< Real to set boundary conditions
+   sll_int32  :: iguess             !< Initial solution or loop over time
+   sll_int32, pointer :: iwork(:,:) !< Internal work array for mudpack library
+
+end type mudpack_2d
+
+integer, parameter, public :: SLL_SEPARABLE  = 1                        !< type of equation
+integer, parameter, public :: SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS = 2 !< type of equation
+integer, parameter, public :: SLL_NON_SEPARABLE_WITH_CROSS_TERMS = 3    !< type of equation
+
+!> Interpolator to compute derivative xx
+class(sll_interpolator_2d_base), pointer :: cxx_interp
+!> Interpolator to compute derivative yy
+class(sll_interpolator_2d_base), pointer :: cyy_interp
+!> Interpolator to compute derivative xy
+class(sll_interpolator_2d_base), pointer :: cxy_interp
+!> Interpolator to compute derivative x
+class(sll_interpolator_2d_base), pointer :: cx_interp
+!> Interpolator to compute derivative y
+class(sll_interpolator_2d_base), pointer :: cy_interp
+!> Interpolator to compute rhs coefficient
+class(sll_interpolator_2d_base), pointer :: ce_interp
+!> PLEASE ADD DOCUMENTATION
+class(sll_interpolator_2d_base), pointer :: a12_interp
+!> PLEASE ADD DOCUMENTATION
+class(sll_interpolator_2d_base), pointer :: a21_interp
+
+!> Coordinate transformation of the mesh
 class(sll_coordinate_transformation_2d_base), pointer :: transformation
+
+interface sll_create
+  module procedure initialize_poisson_curvilinear_mudpack
+end interface sll_create
+
+public :: sll_create
+public :: cxx_interp
+public :: cyy_interp
+public :: cxy_interp
+public :: cx_interp
+public :: cy_interp
+public :: ce_interp
+public :: a12_interp
+public :: a21_interp
 
 contains
 
@@ -119,7 +162,7 @@ allocate(a21_array(nx,ny))
 allocate(phi(nx,ny))
 
 transformation => transf
-cxx_interp => new_cubic_spline_2d_interpolator( &
+cxx_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -129,7 +172,7 @@ cxx_interp => new_cubic_spline_2d_interpolator( &
           SLL_PERIODIC, &
           SLL_PERIODIC)
           
-cyy_interp => new_cubic_spline_2d_interpolator( &
+cyy_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -139,7 +182,7 @@ cyy_interp => new_cubic_spline_2d_interpolator( &
           SLL_PERIODIC, &
           SLL_PERIODIC) 
           
- cxy_interp => new_cubic_spline_2d_interpolator( &
+ cxy_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -149,7 +192,7 @@ cyy_interp => new_cubic_spline_2d_interpolator( &
           SLL_PERIODIC, &
           SLL_PERIODIC)  
           
- cx_interp => new_cubic_spline_2d_interpolator( &
+ cx_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -158,7 +201,7 @@ cyy_interp => new_cubic_spline_2d_interpolator( &
           eta2_max, &
           SLL_PERIODIC, &
           SLL_PERIODIC) 
- cy_interp => new_cubic_spline_2d_interpolator( &
+ cy_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -168,7 +211,7 @@ cyy_interp => new_cubic_spline_2d_interpolator( &
           SLL_PERIODIC, &
           SLL_PERIODIC)    
                                          
-ce_interp => new_cubic_spline_2d_interpolator( &
+ce_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -177,7 +220,7 @@ ce_interp => new_cubic_spline_2d_interpolator( &
           eta2_max, &
           SLL_PERIODIC, &
           SLL_PERIODIC)   
-a12_interp => new_cubic_spline_2d_interpolator( &
+a12_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -186,7 +229,7 @@ a12_interp => new_cubic_spline_2d_interpolator( &
           eta2_max, &
           SLL_PERIODIC, &
           SLL_PERIODIC) 
-a21_interp => new_cubic_spline_2d_interpolator( &
+a21_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -542,7 +585,6 @@ return
 end subroutine
 !> input x dependent coefficients
 subroutine cofx(x,cxx,cx,cex)
-use sll_mudpack_cartesian
 implicit none
 real(8)  :: x,cxx,cx,cex
 cxx = 1.0  !cxx_interp%interpolate_value(x)
@@ -597,3 +639,5 @@ end if
 
 return
 end subroutine
+
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

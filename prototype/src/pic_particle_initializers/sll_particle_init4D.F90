@@ -22,7 +22,7 @@ module sll_particle_initializers
 #include "particle_representation.h"
 
   use sll_constants, only: sll_pi
-  use sll_particle_group_2d_module
+  use sll_particle_group_4d_module
   use sll_logical_meshes
   use gaussian
   use hammersley
@@ -46,7 +46,7 @@ contains
     sll_real64, intent(in) :: thermal_speed, alpha, k
     type(sll_logical_mesh_2d), intent(in) :: m2d
     sll_int32, intent(in)  :: num_particles
-    type(sll_particle_group_2d), pointer, intent(inout) :: p_group
+    type(sll_particle_group_4d), pointer, intent(inout) :: p_group
     sll_int32  :: j
     sll_int32  :: ncx, ic_x,ic_y
     sll_real64 :: x, y, vx, vy, nu, xmin, ymin, rdx, rdy

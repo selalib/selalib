@@ -5,11 +5,11 @@
 ! in file Doxyfile.in (line 691) if it is excluded. 
 ! Type 'make doc' in build directory.
 ! To check the results, open : 
-! selalib/prototype/documentation/build/html/doxygen/html/namespaces.html 
+! selalib/prototype/documentation/build/html/doxygen/html/defgroup deboor_spliness.html 
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @namespace sll_deboor_splines 
+!> @defgroup deboor_splines sll_deboor_splines 
 !> @brief 
 !> Description of deboor_splines library (72 characters)
 !> @author Selalib team 

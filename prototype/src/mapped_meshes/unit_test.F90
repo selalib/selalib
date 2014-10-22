@@ -3,7 +3,7 @@ program unit_test
   use sll_constants
   use sll_module_mapped_meshes_2d
   use sll_common_coordinate_transformations
-  use sll_cubic_spline_interpolator_2d
+  use sll_module_cubic_spline_interpolator_2d
   implicit none
 
 #define NPTS1 33
@@ -13,9 +13,9 @@ program unit_test
   type(sll_mapped_mesh_2d_discrete)    :: map_d    ! discrete map
   type(sll_mapped_mesh_2d_analytic), pointer :: map_a_ptr !test
   ! for the discrete case...
-  type(cubic_spline_2d_interpolator)   :: x1_interp
-  type(cubic_spline_2d_interpolator)   :: x2_interp
-  type(cubic_spline_2d_interpolator)   :: j_interp
+  type(sll_cubic_spline_interpolator_2d)   :: x1_interp
+  type(sll_cubic_spline_interpolator_2d)   :: x2_interp
+  type(sll_cubic_spline_interpolator_2d)   :: j_interp
   sll_real64, dimension(:,:), allocatable :: x1_tab
   sll_real64, dimension(:,:), allocatable :: x2_tab
   sll_real64, dimension(:), allocatable   :: x1_eta1_min, x1_eta1_max

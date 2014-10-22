@@ -21,34 +21,29 @@ program test_layout_output
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
 
-  use sll_collective, only: sll_boot_collective, &
-       sll_halt_collective
-  
-  use hdf5
-  use sll_hdf5_io_parallel, only: sll_hdf5_file_create, &
-       sll_hdf5_write_array, &
-       sll_hdf5_file_close
   use sll_remapper
-
+  use sll_collective
+  use hdf5
+  use sll_hdf5_io_parallel
 
   implicit none
 
   ! ni, nj, nk: global sizes
-  integer , parameter                       :: ni = 128
-  integer , parameter                       :: nj = 64
-  integer , parameter                       :: nk = 32
+  sll_int32 , parameter                       :: ni = 128
+  sll_int32 , parameter                       :: nj = 64
+  sll_int32 , parameter                       :: nk = 32
   ! Local sizes
-  integer                                   :: loc_sz_i_init
-  integer                                   :: loc_sz_j_init
-  integer                                   :: loc_sz_k_init
+  sll_int32                                   :: loc_sz_i_init
+  sll_int32                                   :: loc_sz_j_init
+  sll_int32                                   :: loc_sz_k_init
 
   ! the process mesh
-  integer                                   :: npi
-  integer                                   :: npj
-  integer                                   :: npk
-  integer                                   :: error
-  integer                                   :: myrank
-  integer                                   :: comm
+  sll_int32                                   :: npi
+  sll_int32                                   :: npj
+  sll_int32                                   :: npk
+  sll_int32                                   :: error
+  sll_int32                                   :: myrank
+  sll_int32                                   :: comm
   sll_int64                                 :: colsz        ! collective size
 
   type(layout_3D), pointer                  :: layout
@@ -60,7 +55,7 @@ program test_layout_output
  
   character(len=9), parameter               :: filename = "layout.h5"
 
-  integer, parameter :: rank = 3
+  sll_int32, parameter :: rank = 3
   integer(HSIZE_T),  dimension(rank) :: dims = (/ni,nj,nk/)
   sll_int32, dimension(:,:,:), allocatable :: array
 
@@ -94,7 +89,7 @@ program test_layout_output
   if( myrank .eq. 0 ) &
      print *, '3D layout configuration: ', npi, npj, npk
 
-  call initialize_layout_with_distributed_3D_array( &
+  call initialize_layout_with_distributed_array( &
                     ni, nj, nk, npi, npj, npk, layout )
      
   call compute_local_sizes( layout, loc_sz_i_init, &
@@ -103,22 +98,22 @@ program test_layout_output
 
   ! initialize the local data    
   print *, myrank, 'Printing layout1: '
-  call sll_view_lims_3D( layout )
+  call sll_view_lims( layout )
 
   SLL_ALLOCATE(array(loc_sz_i_init,loc_sz_j_init,loc_sz_k_init),error)
  
   array = myrank
 
-  offset(1) = get_layout_3D_i_min( layout, myrank ) - 1
-  offset(2) = get_layout_3D_j_min( layout, myrank ) - 1
-  offset(3) = get_layout_3D_k_min( layout, myrank ) - 1
+  offset(1) = get_layout_i_min( layout, myrank ) - 1
+  offset(2) = get_layout_j_min( layout, myrank ) - 1
+  offset(3) = get_layout_k_min( layout, myrank ) - 1
 
   comm   = sll_world_collective%comm
   call sll_hdf5_file_create('layout3d.h5',comm,file_id,error)
   call sll_hdf5_write_array(file_id,dims,offset,dble(array),'array',error)
   call sll_hdf5_file_close(file_id,error)
 
-  call delete_layout_3D( layout )
+  call sll_delete( layout )
   SLL_DEALLOCATE_ARRAY(array, error)
 
   tcpu2 = MPI_WTIME()
@@ -131,8 +126,8 @@ contains
 
   subroutine two_power_rand_factorization(n, n1, n2, n3)
     sll_int64, intent(in) :: n
-    integer, intent(out)  :: n1, n2, n3
-    integer               :: expo, expo1, expo2, expo3
+    sll_int32, intent(out)  :: n1, n2, n3
+    sll_int32               :: expo, expo1, expo2, expo3
     sll_real64            :: rand_real
     if (.not.is_power_of_two(colsz)) then   
        print*, 'The number of processors must be a power of 2'

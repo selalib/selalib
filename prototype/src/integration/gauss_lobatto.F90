@@ -1,4 +1,9 @@
-!> Low-level mathematical utility that applies the 
+!> @ingroup integration
+!> @brief 
+!> Gauss-Lobatto integration
+!> @details
+!> Low-level mathematical utility 
+!> that applies the 
 !> Gauss-Lobatto method to compute numeric integrals.
 module gauss_lobatto_integration
 #include "sll_working_precision.h"
@@ -6,6 +11,7 @@ module gauss_lobatto_integration
   
 implicit none
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 abstract interface
    !> 1d real function
    function function_1D(x)
@@ -16,6 +22,7 @@ abstract interface
       sll_real64, intent(in) :: x
    end function function_1D
 end interface
+#endif
 
 !> Integrate numerically with Gauss-Lobatto formula
 interface gauss_lobatto_integrate_1d
@@ -113,6 +120,12 @@ contains
   end function gauss_lobatto_points_and_weights
   
   
+  !> Returns a 1d array of size (n) containing gauss-lobatto 
+  !> points in the interval [a,b].
+  !> @param[in] n Number of gauss points.
+  !> @param[in] a OPTIONAL Minimum value of the interval.
+  !> @param[in] b OPTIONAL Maximun value of the interval.
+  !> @return xk array containing points
   function gauss_lobatto_points( n, a, b ) result(xk)
     sll_int32,  intent(in)          :: n 
     sll_real64, intent(in),optional :: a
@@ -156,6 +169,12 @@ contains
     
     end function gauss_lobatto_points
 
+  !> Returns a 1d array of size (n) containing gauss-lobatto 
+  !> weights in the interval [a,b].
+  !> @param[in] n Number of gauss points.
+  !> @param[in] a OPTIONAL Minimum value of the interval.
+  !> @param[in] b OPTIONAL Maximun value of the interval.
+  !> @return wk array containing points
   function gauss_lobatto_weights( n,a,b ) result(wk)
     sll_int32,  intent(in)           :: n 
     sll_real64, intent(in), optional :: a

@@ -4,8 +4,10 @@ program unit_test_4d
 #include "sll_assert.h"
 
 use sll_constants
-use sll_cubic_spline_interpolator_2d
+use sll_module_interpolators_2d_base
+use sll_module_cubic_spline_interpolator_2d
 use sll_utilities, only: int2string
+use sll_boundary_condition_descriptors
 
 implicit none
 
@@ -32,8 +34,8 @@ implicit none
   class(sll_interpolator_2d_base), pointer    :: interp_xy
   class(sll_interpolator_2d_base), pointer    :: interp_vxvy
 
-  type(cubic_spline_2d_interpolator), target  :: spline_xy
-  type(cubic_spline_2d_interpolator), target  :: spline_vxvy
+  type(sll_cubic_spline_interpolator_2d), target  :: spline_xy
+  type(sll_cubic_spline_interpolator_2d), target  :: spline_vxvy
 
   print*,'*******************************'
   print*,' 4D case                       '

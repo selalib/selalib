@@ -1,13 +1,12 @@
 program unit_test_2d
 #include "sll_working_precision.h"
-  use sll_constants
-  use sll_logical_meshes
-  use sll_module_coordinate_transformations_2d
-  use sll_module_coordinate_transformations_2d_nurbs
-  use sll_common_coordinate_transformations
-  use sll_cubic_spline_interpolator_2d
-  
 #include "sll_file_io.h"
+#include "sll_logical_meshes.h"
+#include "sll_coordinate_transformations.h"
+  use sll_constants
+  use sll_module_cubic_spline_interpolator_2d
+  use sll_boundary_condition_descriptors
+  
   implicit none
 
 #define NPTS1 33
@@ -18,9 +17,9 @@ program unit_test_2d
   type(sll_coordinate_transformation_2d_nurbs)    :: t_n    ! nurbs transf
   type(sll_coordinate_transformation_2d_analytic), pointer :: t_a_ptr !test
   ! for the discrete case...
-  type(cubic_spline_2d_interpolator)   :: x1_interp
-  type(cubic_spline_2d_interpolator)   :: x2_interp
-  type(cubic_spline_2d_interpolator)   :: j_interp
+  type(sll_cubic_spline_interpolator_2d)   :: x1_interp
+  type(sll_cubic_spline_interpolator_2d)   :: x2_interp
+  type(sll_cubic_spline_interpolator_2d)   :: j_interp
   sll_real64, dimension(:,:), allocatable :: x1_tab
   sll_real64, dimension(:,:), allocatable :: x2_tab
   sll_real64, dimension(:), allocatable   :: x1_eta1_min, x1_eta1_max
@@ -237,8 +236,8 @@ program unit_test_2d
   !call t_d%write_to_file(SLL_IO_MTV)
 
   print *, 'Average error in jacobian = ', acc/real(NPTS1*NPTS2,f64)
-  call delete(t_a)
-  call delete(t_d)
+  call sll_delete(t_a)
+  call sll_delete(t_d)
 
   print *, 'deleted transformations'
 
@@ -296,7 +295,7 @@ program unit_test_2d
 
      print*, 'label t_n', t_n%label
 
-     call delete(t_n)
+     call sll_delete(t_n)
      !call write_to_file(t_d)
   else
      print *, 'nml file is missing '

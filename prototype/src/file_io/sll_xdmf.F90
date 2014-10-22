@@ -1,7 +1,5 @@
 !**************************************************************
 !  Copyright INRIA
-!  Authors : 
-!     Pierre Navaro 
 !  
 !  This code SeLaLib (for Semi-Lagrangian-Library) 
 !  is a parallel library for simulating the plasma turbulence 
@@ -15,6 +13,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> @ingroup file_io
 !> @brief 
 !> Implements the functions to write xdmf file plotable by VisIt
 !> @details
@@ -54,7 +53,7 @@ contains
   
 !> Add the the good value of time in VisIt plot.
 subroutine sll_xdmf_set_time(file_id, time)
-sll_real64, intent(in) :: time       !< time
+sll_real64, intent(in) :: time       !< input time
 sll_int32, intent(in)  :: file_id    !< file unit number
 logical                :: i_opened
 

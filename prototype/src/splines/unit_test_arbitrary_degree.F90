@@ -153,7 +153,7 @@ contains
     SLL_DEALLOCATE_ARRAY(answer2, ierr)
     SLL_DEALLOCATE_ARRAY(answer3, ierr)
 
-    call delete(spline)
+    call sll_delete(spline)
   end subroutine test_nonuniform_arb_deg_splines_periodic
 
   subroutine test_uniform_b_splines_randomly( passed_flag )
@@ -335,7 +335,7 @@ contains
     end do
     SLL_DEALLOCATE_ARRAY(answer, ierr)
     SLL_DEALLOCATE_ARRAY(answer2, ierr)
-    call delete(spline)
+    call sll_delete(spline)
   end subroutine test_nonuniform_arb_deg_splines_open
 
   ! given an array of values ordered in ascending order and a value 'x', 

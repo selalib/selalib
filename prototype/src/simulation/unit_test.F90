@@ -11,9 +11,9 @@ program unit_test
   use sll_scalar_field_initializers_base
   use sll_landau_2d_initializer
   use sll_module_interpolators_1d_base
-  use sll_cubic_spline_interpolator_1d
+  use sll_module_cubic_spline_interpolator_1d
   use sll_advection_field
-  use sll_finite_difference_interpolator_1d
+  use sll_module_finite_difference_interpolator_1d
   implicit none
 
   sll_int32 :: nc_eta1, nc_eta2
@@ -24,9 +24,9 @@ program unit_test
   character(len=4)                                    :: cstep
   type(init_landau_2d), target                        :: init_landau
   class(scalar_field_2d_initializer_base), pointer    :: p_init_f
-  type(cubic_spline_1d_interpolator)                  :: spline_interp
-  type(finite_difference_1d_interpolator)             :: fd_interp1
-  type(finite_difference_1d_interpolator)             :: fd_interp2
+  type(sll_cubic_spline_interpolator_1d)                  :: spline_interp
+  type(sll_finite_difference_interpolator_1d)             :: fd_interp1
+  type(sll_finite_difference_interpolator_1d)             :: fd_interp2
   type(hamiltonian_advection_field_2d)                :: hamiltonian
   sll_int32  :: ierr, istep
   sll_int32  :: ieta1, ieta2, nnode_x1, nnode_v1

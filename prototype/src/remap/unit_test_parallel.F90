@@ -73,6 +73,7 @@ contains
 
 !> Take a 2D array of dimensions ni*nj where ni, nj are the dimensions of
 !> the full array.
+!> @internal [example]
  subroutine plot_layout2d()
 
   sll_int32 , parameter    :: nx = 64
@@ -103,12 +104,12 @@ contains
      print *, '2d layout configuration: ', npi, npj
   end if
   
-  call initialize_layout_with_distributed_2D_array( &
+  call initialize_layout_with_distributed_array( &
        nx, ny, npi, npj, layout )
        
   call sll_collective_barrier(sll_world_collective)
   
-  call compute_local_sizes_2d( layout, mx, my)        
+  call compute_local_sizes( layout, mx, my)        
   
   SLL_ALLOCATE(xdata(mx,my),error)
   SLL_ALLOCATE(ydata(mx,my),error)
@@ -116,7 +117,7 @@ contains
   
   do j = 1, my
      do i = 1, mx
-        global_indices =  local_to_global_2D( layout, (/i, j/) )
+        global_indices =  local_to_global( layout, (/i, j/) )
         gi = global_indices(1)
         gj = global_indices(2)
         xdata(i,j) = myrank !float(gi-1)!/(nx-1)
@@ -125,8 +126,8 @@ contains
      end do
   end do
   
-  offset(1) =  get_layout_2D_i_min( layout, myrank ) - 1
-  offset(2) =  get_layout_2D_j_min( layout, myrank ) - 1
+  offset(1) =  get_layout_i_min( layout, myrank ) - 1
+  offset(2) =  get_layout_j_min( layout, myrank ) - 1
 
   !Gnuplot output
   call sll_gnuplot_rect_2d_parallel(dble(offset(1)), dble(1), &
@@ -173,7 +174,7 @@ contains
      call sll_xml_field(xml_id,'values', "zdata.h5:/zdataset",nx,ny,'HDF','Node')
      call sll_xml_file_close(xml_id,error)
      print *, 'Printing 2D layout: '
-     call sll_view_lims_2D( layout )
+     call sll_view_lims( layout )
      print *, '--------------------'
 
   end if
@@ -182,9 +183,10 @@ contains
 
   !End low level version
 
-  call delete_layout_2D( layout )
+  call sll_delete( layout )
   
  end subroutine plot_layout2d
+!>@internal [example]
 
  subroutine plot_layout3d()
 
@@ -231,7 +233,7 @@ contains
   if( myrank .eq. 0 ) &
      print *, '3D layout configuration: ', npi, npj, npk
 
-  call initialize_layout_with_distributed_3D_array( &
+  call initialize_layout_with_distributed_array( &
                      ni, nj, nk, npi, npj, npk, layout)
      
   call compute_local_sizes( layout,       &
@@ -248,7 +250,7 @@ contains
   do k=1,loc_sz_k_init
      do j=1,loc_sz_j_init 
         do i=1,loc_sz_i_init
-           global_indices =  local_to_global_3D( layout, (/i, j, k/) )
+           global_indices =  local_to_global( layout, (/i, j, k/) )
            gi = global_indices(1)
            gj = global_indices(2)
            gk = global_indices(3)
@@ -261,9 +263,9 @@ contains
   enddo
 
 
-  offset(1) = get_layout_3D_i_min( layout, myrank ) - 1
-  offset(2) = get_layout_3D_j_min( layout, myrank ) - 1
-  offset(3) = get_layout_3D_k_min( layout, myrank ) - 1
+  offset(1) = get_layout_i_min( layout, myrank ) - 1
+  offset(2) = get_layout_j_min( layout, myrank ) - 1
+  offset(3) = get_layout_k_min( layout, myrank ) - 1
 
 #ifndef NOHDF5
 
@@ -305,7 +307,7 @@ contains
      call sll_xml_file_close(xml_id,error)
 
      print *, 'Printing 3D layout: '
-     call sll_view_lims_3D( layout )
+     call sll_view_lims( layout )
      print *, '--------------------'
   end if
 
@@ -313,7 +315,7 @@ contains
 
   call sll_collective_barrier(sll_world_collective)
   
-  call delete_layout_3D( layout )
+  call sll_delete( layout )
   SLL_DEALLOCATE_ARRAY(local_array, error)
 
   end subroutine plot_layout3d
