@@ -1278,8 +1278,10 @@ contains
                                   x1mesh, x2mesh, trim(transf%label),ierr)
 
        else
+
           print*, 'Not recognized format to write this mesh'
           stop
+
        end if
     else
        print*,' Warning, you have already written the mesh '
