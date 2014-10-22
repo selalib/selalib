@@ -14,9 +14,8 @@ program VP1d_deltaf
 #include "sll_utilities.h"
 
   use sll_cubic_splines
-  use sll_cubic_spline_interpolator_1d
-  use sll_periodic_interpolator_1d
-  use sll_odd_degree_spline_interpolator_1d
+  use sll_module_cubic_spline_interpolator_1d
+  use sll_module_periodic_interpolator_1d
   use sll_landau_2d_initializer
   use sll_tsi_2d_initializer
   use distribution_function
@@ -24,12 +23,13 @@ program VP1d_deltaf
   use sll_timer
   use omp_lib
   use sll_hdf5_io_serial
+  use periodic_interp_module
   implicit none
 
-!  type(cubic_spline_1d_interpolator), target  ::  interp_spline_x
+!  type(sll_cubic_spline_interpolator_1d), target  ::  interp_spline_x
   type(sll_cubic_spline_1d), pointer :: interp_spline_v, interp_spline_vh, interp_spline_x
-  type(per_1d_interpolator), target      :: interp_per_x, interp_per_v
-  type(odd_degree_spline_1d_interpolator), target      :: interp_comp_v
+  type(sll_periodic_interpolator_1d), target      :: interp_per_x, interp_per_v
+  type(sll_cubic_spline_interpolator_1d), target      :: interp_comp_v
   class(sll_interpolator_1d_base), pointer    :: interp_x, interp_v
   type(poisson_1d_periodic)  :: poisson_1d
   sll_real64, dimension(:,:), allocatable, target :: f
@@ -244,11 +244,12 @@ program VP1d_deltaf
   SLL_ALLOCATE(ff1(Ncx+1,Ncvh+1),ierr)
   SLL_ALLOCATE(ff2(Ncx+1,Ncvh+1),ierr)
 
-#ifdef tomp
+#ifdef __OPENMP
   !$omp parallel default(shared) &
   !$omp& private(i,alpha,v,j,f1d,my_num,istartx,iendx, jstartv, jendv,  &
   !$omp& interp_x, interp_v, interp_spline_x, interp_spline_v, &
   !$omp& interp_per_x, interp_per_v, time1, time0)
+
   my_num = omp_get_thread_num()
   num_threads =  omp_get_num_threads()
   print*, 'running with openmp using ', num_threads, ' threads'
@@ -295,12 +296,13 @@ program VP1d_deltaf
      call interp_per_v%initialize( Ncv + 1, vmin, vmax, LAGRANGE, order_v)
      interp_v => interp_per_v
   case(4) ! arbitrary order open spline interpolation   
-     call interp_comp_v%initialize( Ncv + 1, vmin, vmax, order_v)
+     !PN remove odd_degree replaced by cubic_spline
+     call interp_comp_v%initialize( Ncv + 1, vmin, vmax, SLL_HERMITE)!order_v)
   case default
      print*,'interpolation in x number ', interpol_v, ' not implemented' 
   end select
  
-#ifdef tomp
+#ifdef __OPENMP
   !$omp barrier
   !$omp single
   fname = 'dist_func'
@@ -383,7 +385,7 @@ program VP1d_deltaf
   write(rho_diag,*)
   write(eapp_diag,*)
   write(adr_diag,'(2g15.5)') istep*dt, adr
-#ifdef tomp
+#ifdef __OPENMP
   !$omp end single
 #endif
 
@@ -447,7 +449,7 @@ program VP1d_deltaf
 
      enddo
 
-#ifdef tomp
+#ifdef __OPENMP
      !$omp barrier
 #endif
 
@@ -489,7 +491,7 @@ program VP1d_deltaf
 
      enddo
 
-#ifdef tomp
+#ifdef __OPENMP
      !$omp barrier
 
      !$omp single
@@ -513,7 +515,7 @@ program VP1d_deltaf
         enddo
      endif
 
-#ifdef tomp
+#ifdef __OPENMP
      !$omp end single
 #endif     
 
@@ -571,7 +573,7 @@ program VP1d_deltaf
      enddo
 
 
-#ifdef tomp
+#ifdef __OPENMP
      !$omp barrier
      !$omp single
 #endif
@@ -620,7 +622,7 @@ program VP1d_deltaf
         call sll_hdf5_file_close(file_id, error)
      end if
 
-#ifdef tomp
+#ifdef __OPENMP
      !$omp end single
 #endif     
 
@@ -660,7 +662,7 @@ program VP1d_deltaf
   enddo
   close(12)
 
-#ifdef tomp
+#ifdef __OPENMP
   !$omp end parallel
 #endif
 

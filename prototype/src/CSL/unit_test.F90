@@ -13,7 +13,7 @@ program unit_test
   use sll_logical_meshes
   use sll_module_coordinate_transformations_2d
   use sll_gaussian_2d_initializer
-  use sll_cubic_spline_interpolator_1d
+  use sll_module_cubic_spline_interpolator_1d
   implicit none
   
   sll_int32 :: nc_eta1_coarse, nc_eta2_coarse
@@ -39,8 +39,8 @@ program unit_test
   !type(csl_workspace), pointer :: csl_work
   character(32),parameter  :: name = 'distribution_function'
   type(init_gaussian_2d),target :: pgaussian
-  type(cubic_spline_1d_interpolator), target  :: interp_eta1
-  type(cubic_spline_1d_interpolator), target  :: interp_eta2
+  type(sll_cubic_spline_interpolator_1d), target  :: interp_eta1
+  type(sll_cubic_spline_interpolator_1d), target  :: interp_eta2
 
   
   eta1_min =  -8.0_f64

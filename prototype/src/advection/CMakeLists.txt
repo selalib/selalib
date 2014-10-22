@@ -36,7 +36,7 @@ IF(HDF5_ENABLED)
     sll_logical_meshes
     sll_characteristics
     sll_interpolators
-    sll_periodic_interp
+    sll_periodic_interpolation
     sll_splines
     sll_boundary_condition_descriptors
     sll_utilities

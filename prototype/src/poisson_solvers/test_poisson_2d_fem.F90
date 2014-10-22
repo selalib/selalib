@@ -4,8 +4,8 @@ program test_poisson_2d_fem
 #include "sll_memory.h"
 #include "sll_constants.h"
 
-use sll_poisson_2d_fem
-use sll_poisson_2d_periodic_fem
+use sll_fem_2d
+use sll_fem_2d_periodic
 implicit none
 
 sll_int32  :: i, j
@@ -58,7 +58,7 @@ call test_periodic()
 contains
 
 subroutine test_compact()
-type( poisson_fem ) :: poisson
+type( sll_fem_poisson_2d ) :: poisson
 
 phi = 0.0_f64
 do j = 2, nc_y
@@ -69,8 +69,8 @@ do j = 2, nc_y
    end do
 end do
 
-call initialize(poisson, x, y, nc_x+1, nc_y+1)
-call solve(poisson, ex, ey, rho)
+call sll_create(poisson, x, y, nc_x+1, nc_y+1)
+call sll_solve(poisson, ex, ey, rho)
 
 errmax = 0.
 do j = 1, nc_y+1
@@ -87,7 +87,7 @@ print*, 'compact, error = ', errmax / (nc_x+1) / (nc_y+1)
 end subroutine test_compact
 
 subroutine test_periodic()
-type( poisson_2d_periodic_fem ) :: poisson
+type( sll_fem_poisson_2d_periodic ) :: poisson
 
 do j = 1, nc_y+1
    do i = 1, nc_x+1
@@ -95,8 +95,8 @@ do j = 1, nc_y+1
    end do
 end do
 
-call initialize(poisson, x, y, nc_x+1, nc_y+1)
-call solve(poisson, ex, ey, rho)
+call sll_create(poisson, x, y, nc_x+1, nc_y+1)
+call sll_solve(poisson, ex, ey, rho)
 
 errmax = 0.
 do j = 1, nc_y

@@ -596,7 +596,7 @@ contains
        nproc_x4 = 1
     end if
 
-    call initialize_layout_with_distributed_2D_array( &
+    call initialize_layout_with_distributed_array( &
          nc_x1+1, & 
          nc_x2+1, & 
          nproc_x1, &
@@ -620,7 +620,7 @@ contains
 
 
 
-    call initialize_layout_with_distributed_4D_array( &
+    call initialize_layout_with_distributed_array( &
          nc_x1+1, &
          nc_x2+1, &
          nc_x3+1, &
@@ -631,7 +631,7 @@ contains
          nproc_x4, &
          sequential_x3x4 )
     
-    call compute_local_sizes_4d( sequential_x3x4, &
+    call compute_local_sizes( sequential_x3x4, &
          loc_sz_x1, &
          loc_sz_x2, &
          loc_sz_x3, &
@@ -646,7 +646,7 @@ contains
     nproc_x4 = nproc_x2 
     nproc_x2 = itemp
     
-    call initialize_layout_with_distributed_4D_array( &
+    call initialize_layout_with_distributed_array( &
          nc_x1+1, & 
          nc_x2+1, & 
          nc_x3+1, &
@@ -656,14 +656,14 @@ contains
          nproc_x3, &
          nproc_x4, &
          sequential_x1x2 )
-    call compute_local_sizes_4d( sequential_x1x2, &
+    call compute_local_sizes( sequential_x1x2, &
          loc_sz_x1, &
          loc_sz_x2, &
          loc_sz_x3, &
          loc_sz_x4 )
     SLL_ALLOCATE(f_seq_x1x2(loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4),ierr)
 
-    call initialize_layout_with_distributed_2D_array( &
+    call initialize_layout_with_distributed_array( &
          nc_x3+1, & 
          nc_x4+1, & 
          nproc_x3, &
@@ -746,7 +746,7 @@ contains
     
     !print *,'#nrj=',nrj
     call apply_remap_4D( seqx3x4_to_seqx1x2, f_seq_x3x4, f_seq_x1x2 )
-    call compute_local_sizes_4d( sequential_x1x2, &
+    call compute_local_sizes( sequential_x1x2, &
          loc_sz_x1, &
          loc_sz_x2, &
          loc_sz_x3, &
@@ -763,7 +763,7 @@ contains
       do split_istep=1,sim%split%nb_split_step
         if(split_T)then
           !T advection
-          global_indices(1:4) = local_to_global_4D( sequential_x1x2, (/1, 1, 1, 1/) )
+          global_indices(1:4) = local_to_global( sequential_x1x2, (/1, 1, 1, 1/) )
           do i4=1,loc_sz_x4
             do i3=1,loc_sz_x3
               !advection in x1
@@ -797,7 +797,7 @@ contains
         else
           !V advection
           call apply_remap_4D( seqx1x2_to_seqx3x4, f_seq_x1x2, f_seq_x3x4 )
-          call compute_local_sizes_4d( sequential_x3x4, &
+          call compute_local_sizes( sequential_x3x4, &
            loc_sz_x1, &
            loc_sz_x2, &
            loc_sz_x3, &
@@ -836,7 +836,7 @@ contains
           
           
           
-          global_indices(1:4) = local_to_global_4D( sequential_x3x4, (/1, 1, 1, 1/) ) 
+          global_indices(1:4) = local_to_global( sequential_x3x4, (/1, 1, 1, 1/) ) 
           do i2=1,loc_sz_x2
             do i1=1,loc_sz_x1
 
@@ -875,7 +875,7 @@ contains
           enddo
 
           call apply_remap_4D( seqx3x4_to_seqx1x2, f_seq_x3x4, f_seq_x1x2 )
-          call compute_local_sizes_4d( sequential_x1x2, &
+          call compute_local_sizes( sequential_x1x2, &
            loc_sz_x1, &
            loc_sz_x2, &
            loc_sz_x3, &

@@ -4,10 +4,9 @@ program test_dg_fields
 #include "sll_assert.h"
 #include "sll_constants.h"
 #include "sll_file_io.h"
+#include "sll_logical_meshes.h"
+#include "sll_coordinate_transformations.h"
 
-use sll_logical_meshes
-use sll_module_coordinate_transformations_2d
-use sll_common_coordinate_transformations
 use sll_dg_fields
 
 implicit none
@@ -28,8 +27,8 @@ type(sll_logical_mesh_2d), pointer :: mesh
 class(sll_coordinate_transformation_2d_base), pointer :: tau
 class(sll_coordinate_transformation_2d_base), pointer :: collela
 
-type(dg_field), pointer :: ex
-type(dg_field), pointer :: bz
+type(sll_dg_field_2d), pointer :: ex
+type(sll_dg_field_2d), pointer :: bz
 
 sll_real64, external :: gaussian, add
 
@@ -81,12 +80,12 @@ tau => new_coordinate_transformation_2d_analytic( &
 
 call tau%write_to_file(SLL_IO_MTV)
 
-ex => new_dg_field( degree, tau, add) 
+ex => sll_new( degree, tau, add) 
 call ex%write_to_file('ex', SLL_IO_GMSH)
 call ex%write_to_file('ex', SLL_IO_MTV)
 call ex%write_to_file('ex', SLL_IO_XDMF)
 
-bz => new_dg_field( degree, collela, gaussian) 
+bz => sll_new( degree, collela, gaussian) 
 call bz%write_to_file('bz', SLL_IO_GMSH)
 call bz%write_to_file('bz', SLL_IO_MTV)
 call bz%write_to_file('bz', SLL_IO_XDMF)

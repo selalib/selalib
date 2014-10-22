@@ -20,8 +20,8 @@ module sll_simulation_2d_guiding_center_curvilinear_mudpack_module
   use sll_module_characteristics_2d_verlet
   use sll_reduction_module
   use sll_simulation_base
-  use sll_cubic_spline_interpolator_2d
-  use sll_cubic_spline_interpolator_1d
+  use sll_module_cubic_spline_interpolator_2d
+  use sll_module_cubic_spline_interpolator_1d
   use sll_coordinate_transformation_2d_base_module
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
@@ -235,7 +235,7 @@ contains
     
     select case (f_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
-        f_interp2d => new_cubic_spline_2d_interpolator( &
+        f_interp2d => new_cubic_spline_interpolator_2d( &
           Nc_eta1+1, &
           Nc_eta2+1, &
           eta1_min, &
@@ -255,7 +255,7 @@ contains
 
     select case (A_interp_case)
       case ("SLL_CUBIC_SPLINES")
-        A1_interp2d => new_cubic_spline_2d_interpolator( &
+        A1_interp2d => new_cubic_spline_interpolator_2d( &
           Nc_eta1+1, &
           Nc_eta2+1, &
           eta1_min, &
@@ -264,7 +264,7 @@ contains
           eta2_max, &
           SLL_PERIODIC, &
           SLL_PERIODIC)
-        A2_interp2d => new_cubic_spline_2d_interpolator( &
+        A2_interp2d => new_cubic_spline_interpolator_2d( &
           Nc_eta1+1, &
           Nc_eta2+1, &
           eta1_min, &
@@ -273,12 +273,12 @@ contains
           eta2_max, &
           SLL_PERIODIC, &
           SLL_PERIODIC)  
-        A1_interp1d_x1 => new_cubic_spline_1d_interpolator( &
+        A1_interp1d_x1 => new_cubic_spline_interpolator_1d( &
           Nc_eta1+1, &
           eta1_min, &
           eta1_max, &
           SLL_PERIODIC)
-        A2_interp1d_x1 => new_cubic_spline_1d_interpolator( &
+        A2_interp1d_x1 => new_cubic_spline_interpolator_1d( &
           Nc_eta1+1, &
           eta1_min, &
           eta1_max, &
@@ -292,7 +292,7 @@ contains
 
     select case (phi_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
-        phi_interp2d => new_cubic_spline_2d_interpolator( &
+        phi_interp2d => new_cubic_spline_interpolator_2d( &
           Nc_eta1+1, &
           Nc_eta2+1, &
           eta1_min, &

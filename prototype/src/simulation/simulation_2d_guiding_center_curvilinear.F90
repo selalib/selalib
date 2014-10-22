@@ -9,6 +9,7 @@ module sll_simulation_2d_guiding_center_curvilinear_module
 #include "sll_memory.h"
 !#include "sll_field_2d.h"
 #include "sll_utilities.h"
+#include "sll_fft.h"
 #include "sll_poisson_solvers.h"
 !  use sll_constants
 !  use sll_logical_meshes  
@@ -30,8 +31,8 @@ module sll_simulation_2d_guiding_center_curvilinear_module
   use sll_reduction_module
   use sll_simulation_base
  
-  use sll_cubic_spline_interpolator_1d
-  use sll_cubic_spline_interpolator_2d
+  use sll_module_cubic_spline_interpolator_1d
+  use sll_module_cubic_spline_interpolator_2d
 !  use sll_coordinate_transformation_2d_base_module
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
@@ -709,7 +710,7 @@ contains
     select case (f_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
         print*,"#f interpolation SLL_CUBIC_SPLINES"
-        sim%f_interp2d => new_cubic_spline_2d_interpolator( &
+        sim%f_interp2d => new_cubic_spline_interpolator_2d( &
           Nc_eta1+1, &
           Nc_eta2+1, &
           eta1_min, &
@@ -731,7 +732,7 @@ contains
     select case (A_interp_case)
       case ("SLL_CUBIC_SPLINES")
        print*,"#A1_2d interpolation SLL_CUBIC_SPLINES"
-        sim%A1_interp2d => new_cubic_spline_2d_interpolator( &
+        sim%A1_interp2d => new_cubic_spline_interpolator_2d( &
           Nc_eta1+1, &
           Nc_eta2+1, &
           eta1_min, &
@@ -741,7 +742,7 @@ contains
           sim%bc_interp2d_eta1, &
           sim%bc_interp2d_eta2)
        print*,"#A2_2d interpolation SLL_CUBIC_SPLINES"   
-        sim%A2_interp2d => new_cubic_spline_2d_interpolator( &
+        sim%A2_interp2d => new_cubic_spline_interpolator_2d( &
           Nc_eta1+1, &
           Nc_eta2+1, &
           eta1_min, &
@@ -751,23 +752,23 @@ contains
           sim%bc_interp2d_eta1, &
           sim%bc_interp2d_eta2)  
        print*,"#A1_1d interpolation SLL_CUBIC_SPLINES"   
-        sim%A1_interp1d_x1 => new_cubic_spline_1d_interpolator( &
+        sim%A1_interp1d_x1 => new_cubic_spline_interpolator_1d( &
           Nc_eta1+1, &
           eta1_min, &
           eta1_max, &
           sim%bc_interp2d_eta1)
-        sim%A1_interp1d_x2 => new_cubic_spline_1d_interpolator( &
+        sim%A1_interp1d_x2 => new_cubic_spline_interpolator_1d( &
           Nc_eta2+1, &
           eta2_min, &
           eta2_max, &
           sim%bc_interp2d_eta2)
        print*,"#A2_1d interpolation SLL_CUBIC_SPLINES"     
-        sim%A2_interp1d_x1 => new_cubic_spline_1d_interpolator( &
+        sim%A2_interp1d_x1 => new_cubic_spline_interpolator_1d( &
           Nc_eta1+1, &
           eta1_min, &
           eta1_max, &
           sim%bc_interp2d_eta1)
-        sim%A2_interp1d_x2 => new_cubic_spline_1d_interpolator( &
+        sim%A2_interp1d_x2 => new_cubic_spline_interpolator_1d( &
           Nc_eta2+1, &
           eta2_min, &
           eta2_max, &
@@ -782,7 +783,7 @@ contains
     select case (phi_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
       print*,"#phi interpolation SLL_CUBIC_SPLINES"  
-        sim%phi_interp2d => new_cubic_spline_2d_interpolator( &
+        sim%phi_interp2d => new_cubic_spline_interpolator_2d( &
           Nc_eta1+1, &
           Nc_eta2+1, &
           eta1_min, &
@@ -800,7 +801,7 @@ contains
 
     select case (f_interp1d_x1_case)
       case ("SLL_CUBIC_SPLINES")
-        sim%f_interp1d_x1 => new_cubic_spline_1d_interpolator( &
+        sim%f_interp1d_x1 => new_cubic_spline_interpolator_1d( &
           Nc_eta1_bis+1, &
           eta1_min_bis, &
           eta1_max_bis, &
@@ -815,7 +816,7 @@ contains
 
     select case (f_interp1d_x2_case)
       case ("SLL_CUBIC_SPLINES")
-        sim%f_interp1d_x2 => new_cubic_spline_1d_interpolator( &
+        sim%f_interp1d_x2 => new_cubic_spline_interpolator_1d( &
           Nc_eta2_bis+1, &
           eta2_min_bis, &
           eta2_max_bis, &
@@ -1910,12 +1911,12 @@ subroutine sll_DSG( eta1_min,eta1_max, eta2_min,eta2_max,n_eta1,n_eta2, f )
     sll_real64, intent(in)   :: eta1_min,eta1_max
     sll_real64, intent(in)   :: eta2_min,eta2_max  
     sll_int32, intent(in)    :: n_eta1,n_eta2  
-    !type(arb_deg_2d_interpolator)   :: a11_interp
-    !type(arb_deg_2d_interpolator)   :: a22_interp
-    !type(arb_deg_2d_interpolator)   :: a12_interp
-    type(cubic_spline_2d_interpolator)   :: a11_interp
-    type(cubic_spline_2d_interpolator)   :: a22_interp
-    type(cubic_spline_2d_interpolator)   :: a12_interp
+    !type(sll_arbitrary_degree_spline_interpolator_2d)   :: a11_interp
+    !type(sll_arbitrary_degree_spline_interpolator_2d)   :: a22_interp
+    !type(sll_arbitrary_degree_spline_interpolator_2d)   :: a12_interp
+    type(sll_cubic_spline_interpolator_2d)   :: a11_interp
+    type(sll_cubic_spline_interpolator_2d)   :: a22_interp
+    type(sll_cubic_spline_interpolator_2d)   :: a12_interp
     sll_real64,dimension(:,:),allocatable :: cxx_array
     sll_real64,dimension(:,:),allocatable :: cyy_array
     sll_real64,dimension(:,:),allocatable :: cxy_array

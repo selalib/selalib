@@ -22,7 +22,7 @@
 !
 ! DESCRIPTION:
 !> @file sll_collective.F90
-!> @namespace sll_collective
+!> @defgroup collective sll_collective
 !> @author Module Author Name and Affiliation
 !> @brief Parallelizing facility.
 !> @details Selalib applies the principle of modularization throughout all

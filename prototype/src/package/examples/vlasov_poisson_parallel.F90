@@ -45,10 +45,10 @@ program vlasov_poisson_parallel
   class(sll_interpolator_1d_base), pointer   :: interp_eta3
   class(sll_interpolator_1d_base), pointer   :: interp_eta4
 
-  type(cubic_spline_1d_interpolator), target :: spl_eta1
-  type(cubic_spline_1d_interpolator), target :: spl_eta2
-  type(cubic_spline_1d_interpolator), target :: spl_eta3
-  type(cubic_spline_1d_interpolator), target :: spl_eta4
+  type(sll_cubic_spline_interpolator_1d), target :: spl_eta1
+  type(sll_cubic_spline_interpolator_1d), target :: spl_eta2
+  type(sll_cubic_spline_interpolator_1d), target :: spl_eta3
+  type(sll_cubic_spline_interpolator_1d), target :: spl_eta4
 
   sll_int32  :: istep, jstep
   sll_int32  :: prank, comm
@@ -84,25 +84,25 @@ program vlasov_poisson_parallel
   interp_eta4 => spl_eta4
 
   layout_x => new_layout_4D( sll_world_collective )        
-  call initialize_layout_with_distributed_4D_array( &
+  call initialize_layout_with_distributed_array( &
              nc_eta1+1, nc_eta2+1, nc_eta3+1, nc_eta4+1,    &
              1,1,1,int(psize,4),layout_x)
 
-  if ( prank == MPI_MASTER ) call sll_view_lims_4D( layout_x )
+  if ( prank == MPI_MASTER ) call sll_view_lims( layout_x )
   call flush(6)
 
-  call compute_local_sizes_4d(layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+  call compute_local_sizes(layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
   SLL_CLEAR_ALLOCATE(f_x(1:loc_sz_i,1:loc_sz_j,1:loc_sz_k,1:loc_sz_l),error)
 
   layout_v => new_layout_4D( sll_world_collective )
-  call initialize_layout_with_distributed_4D_array( &
+  call initialize_layout_with_distributed_array( &
               nc_eta1+1, nc_eta2+1, nc_eta3+1, nc_eta4+1,    &
               1,int(psize,4),1,1,layout_v)
 
-  if ( prank == MPI_MASTER ) call sll_view_lims_4D( layout_v )
+  if ( prank == MPI_MASTER ) call sll_view_lims( layout_v )
   call flush(6)
 
-  call compute_local_sizes_4d(layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+  call compute_local_sizes(layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
   SLL_CLEAR_ALLOCATE(f_v(1:loc_sz_i,1:loc_sz_j,1:loc_sz_k,1:loc_sz_l),error)
 
   x_to_v => new_remap_plan( layout_x, layout_v, f_x)     
@@ -116,7 +116,7 @@ program vlasov_poisson_parallel
   do j=1,loc_sz_j
   do i=1,loc_sz_i
 
-     global_indices = local_to_global_4D(layout_v,(/i,j,k,l/)) 
+     global_indices = local_to_global(layout_v,(/i,j,k,l/)) 
      gi = global_indices(1)
      gj = global_indices(2)
      gk = global_indices(3)
@@ -205,12 +205,12 @@ contains
 
    dvxvy = delta_eta3*delta_eta4
 
-   call compute_local_sizes_4d(layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+   call compute_local_sizes(layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
    
    locrho = 0.
    do j=1,loc_sz_j
    do i=1,loc_sz_i
-      global_indices = local_to_global_4D(layout_v,(/i,j,1,1/)) 
+      global_indices = local_to_global(layout_v,(/i,j,1,1/)) 
       gi = global_indices(1)
       gj = global_indices(2)
       locrho(gi,gj) = sum(f_v(i,j,:,:))*dvxvy 
@@ -229,10 +229,10 @@ contains
   sll_real64, intent(in) :: dt
   sll_real64 :: alpha
 
-  call compute_local_sizes_4d(layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+  call compute_local_sizes(layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
   do l=1,loc_sz_l
   do k=1,loc_sz_k
-     global_indices = local_to_global_4D(layout_x,(/1,1,k,1/)) 
+     global_indices = local_to_global(layout_x,(/1,1,k,1/)) 
      gk = global_indices(3)
      alpha = (eta3_min +(gk-1)*delta_eta3)*dt
      do j=1,loc_sz_j
@@ -249,11 +249,11 @@ contains
   sll_real64, intent(in) :: dt
   sll_real64 :: alpha
 
-  call compute_local_sizes_4d(layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+  call compute_local_sizes(layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
   do l=1,loc_sz_l
 
-    global_indices = local_to_global_4D(layout_x,(/1,1,1,l/)) 
+    global_indices = local_to_global(layout_x,(/1,1,1,l/)) 
     gl = global_indices(4)
     alpha = (eta4_min +(gl-1)*delta_eta4)*dt
 
@@ -274,13 +274,13 @@ contains
   sll_real64, intent(in) :: dt
   sll_real64 :: alpha
 
-  call compute_local_sizes_4d(layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+  call compute_local_sizes(layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
   do l=1,loc_sz_l
   do j=1,loc_sz_j
   do i=1,loc_sz_i
 
-     global_indices = local_to_global_4D(layout_v,(/i,j,1,1/)) 
+     global_indices = local_to_global(layout_v,(/i,j,1,1/)) 
      gi = global_indices(1)
      gj = global_indices(2)
      alpha = ex(gi,gj)*dt
@@ -298,12 +298,12 @@ contains
   sll_real64, intent(in) :: dt
   sll_real64 :: alpha
 
-  call compute_local_sizes_4d(layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+  call compute_local_sizes(layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
   do k=1,loc_sz_k
   do j=1,loc_sz_j
   do i=1,loc_sz_i
 
-     global_indices = local_to_global_4D(layout_v,(/i,j,1,1/)) 
+     global_indices = local_to_global(layout_v,(/i,j,1,1/)) 
      gi = global_indices(1)
      gj = global_indices(2)
      alpha = ey(gi,gj)*dt

@@ -5,11 +5,11 @@
 ! in file Doxyfile.in (line 691) if it is excluded. 
 ! Type 'make doc' in build directory.
 ! To check the results, open : 
-! selalib/prototype/documentation/build/html/doxygen/html/namespaces.html 
+! selalib/prototype/documentation/build/html/doxygen/html/defgroup pic_methodss.html 
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @namespace sll_pic_methods 
+!> @defgroup pic_methods sll_pic_methods 
 !> @brief 
 !> Description of pic_methods library (72 characters)
 !> @author Selalib team 

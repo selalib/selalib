@@ -15,15 +15,18 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
+!> @ingroup poisson_solvers
 !> @brief Poisson equation solver in polar coordinates
 !> @details Solver for the Poisson equation 
 !> \f[ \Delta \phi = f \f]
-!> in polar coordinate
-!> using a fft in direction \f$ \theta \f$ and final differencies 
+!> in polar coordinates
+!> using a fft in direction \f$ \theta \f$ and finite differences 
 !> in direction \f$ r \f$.
-!> This way we solve a tridiagonal system with the solver from SELALIB.
+!> This way we solve a tridiagonal system with the cyclic reduction solver.
 !>
-!>\section how How to use the Poisson polar solver?
+!> <b>How to use the Poisson polar solver?</b>
 !>
 !>You must add \code sll_poisson_2d_polar \endcode to the list of linked libraries.
 !>The Poisson solver uses the FFT, so you also need to link the FFT
@@ -31,20 +34,22 @@
 !>1. Declare a Poisson polar plan
 !>\code type(sll_plan_poisson_polar), pointer :: plan \endcode
 !>2. Initialize the plan
-!>\code plan => new_plan_poisson_polar(dr,rmin,nr,ntheta,boundary_conditions) \endcode
-!>nr and ntheta are the number of step in direction r and theta
+!>\code plan => new_poisson_polar(dr,rmin,nr,ntheta,boundary_conditions) \endcode
+!> `nr` and `ntheta` are step numbers in direction r and theta
 !> 3. Execute the plan
 !> \code call poisson_solve_polar(plan,in,out) \endcode
 !> 4. Delete the plan
-!> \code call delete_plan_poisson_polar(plan) \endcode
+!> \code call sll_delete(plan) \endcode
 !>
 !>\section bc Boundary conditions :
 !>
-!>The boundary conditions define the potential behaviour in r_{min} (BOT_) and r_{max} (TOP_)
+!>The boundary conditions define the potential behaviour in \f$ r_{min} \f$
+!> (BOT_) and \f$ r_{max} \f$ (TOP_)
 !>They can take the value DIRICHLET or NEUMANN
 !>
 !>Summary
-!>The boundary conditions define the potential behaviour in r_{min} (BOT_) and r_{max} (TOP_)
+!>The boundary conditions define the potential behaviour in \f$ r_{min} \f$
+!> (BOT_) and \f$ r_{max} \f$ (TOP_)
 !>They can take the value DIRICHLET or NEUMANN
 !>
 !>Summary :
@@ -80,13 +85,13 @@
 !>in= !definition of in
 !>
 !>!initialization of plan
-!>plan => new_plan_poisson_polar(dr,rmin,nr,ntheta,bc)
+!>plan => new_poisson_polar(dr,rmin,nr,ntheta,bc)
 !>
 !>!computation of Poisson
 !>call poisson_solve_polar(plan,in,out)
 !>
 !>!deletion of plan
-!>call delete_plan_poisson_polar(plan)
+!>call sll_delete(plan)
 !>\endcode
 
 module sll_poisson_2d_polar
@@ -100,9 +105,11 @@ module sll_poisson_2d_polar
   use sll_boundary_condition_descriptors
 
   implicit none
-  !>type sll_plan_poisson_polar
+  private
+
   !>type for the Poisson solver in polar coordinate
-  type sll_plan_poisson_polar
+  type, public :: sll_plan_poisson_polar
+
      sll_real64                          :: rmin   !< r min
      sll_real64                          :: rmax   !< r max
      sll_real64                          :: dr     !< step size
@@ -114,29 +121,38 @@ module sll_poisson_2d_polar
      sll_real64, dimension(:,:), pointer :: f_fft  !< potential fft in theta
      sll_comp64, dimension(:),   pointer :: fk     !< \f$ f_k \f$
      sll_comp64, dimension(:),   pointer :: phik   !< \f$ phi_k \f$
-     sll_real64, dimension(:), pointer   :: a      !< data for the tridiagonal solver
-     sll_real64, dimension(:), pointer   :: cts    !< lapack array
-     sll_int32, dimension(:),  pointer   :: ipiv   !< lapack pivot data
-     sll_real64, dimension(:), pointer ::dlog_density,inv_Te !<for quasi neutral solver
-
+     sll_real64, dimension(:),   pointer :: a      !< data for the tridiagonal solver
+     sll_real64, dimension(:),   pointer :: cts    !< lapack array
+     sll_int32,  dimension(:),   pointer :: ipiv   !< lapack pivot data
+     sll_real64, dimension(:),   pointer :: dlog_density !<for quasi neutral solver
+     sll_real64, dimension(:),   pointer :: inv_Te !<for quasi neutral solver
 
   end type sll_plan_poisson_polar
 
   !> Initialize the polar poisson solver
-  interface initialize
+  interface sll_create
      module procedure initialize_poisson_polar
-  end interface initialize
+  end interface sll_create
 
   !> Get potential from the polar poisson solver
-  interface solve
+  interface sll_solve
      module procedure solve_poisson_polar
-  end interface solve
+  end interface sll_solve
+
+  !> Deallocate memory
+  interface sll_delete
+     module procedure delete_plan_poisson_polar
+  end interface sll_delete
+
+  public :: sll_create, sll_solve, sll_delete
+  public :: new_plan_poisson_polar
+  public :: poisson_solve_polar, solve_poisson_polar
 
 contains
 
 !> Creation of sll_plan_poisson_polar object for the 
 !> Poisson solver in polar coordinate
-!> @return
+!> @returns a Poisson solver object for polar coordinates
   function new_plan_poisson_polar(dr,rmin,nr,ntheta,bc,dlog_density,inv_Te) result(this)
 
     implicit none
@@ -194,36 +210,37 @@ contains
       this%bc(2)=-1
     end if
 
- 
-
     this%pfwd => fft_new_plan(ntheta,buf,buf,FFT_FORWARD,FFT_NORMALIZE)
     this%pinv => fft_new_plan(ntheta,buf,buf,FFT_INVERSE)
     
-    
-    
     SLL_DEALLOCATE_ARRAY(buf,err)
-    
-    
 
   end function new_plan_poisson_polar
 
   !> Initialize the Poisson solver in polar coordinates
-  subroutine initialize_poisson_polar(this, rmin,rmax,nr,ntheta,bc_rmin,bc_rmax,dlog_density,inv_Te)
+  subroutine initialize_poisson_polar(this,         &
+                                      rmin,         &
+                                      rmax,         &
+                                      nr,           &
+                                      ntheta,       &
+                                      bc_rmin,      &
+                                      bc_rmax,      &
+                                      dlog_density, &
+                                      inv_Te)
 
-    implicit none
     type(sll_plan_poisson_polar) :: this !< Poisson solver object
 
-    sll_real64               :: rmin     !< rmin
-    sll_real64               :: rmax     !< rmax
-    sll_int32                :: nr       !< number of cells radial
-    sll_int32                :: ntheta   !< number of cells angular
-    sll_int32, optional      :: bc_rmin  !< radial boundary conditions
-    sll_int32, optional      :: bc_rmax  !< radial boundary conditions
-    sll_int32                :: error
-    sll_real64, dimension(:), allocatable :: buf
+    sll_real64, intent(in)             :: rmin         !< r min
+    sll_real64, intent(in)             :: rmax         !< r max
+    sll_int32,  intent(in)             :: nr           !< number of cells radial
+    sll_int32,  intent(in)             :: ntheta       !< number of cells angular
+    sll_int32,  optional               :: bc_rmin      !< radial boundary conditions
+    sll_int32,  optional               :: bc_rmax      !< radial boundary conditions
+    sll_real64, dimension(:), optional :: dlog_density !< For quasi neutral solver
+    sll_real64, dimension(:), optional :: inv_Te       !< For quasi neutral solver
 
-    sll_real64,dimension(:),optional ::dlog_density !< For quasi neutral solver
-    sll_real64,dimension(:),optional ::inv_Te       !< For quasi neutral solver
+    sll_int32               :: error
+    sll_real64, allocatable :: buf(:)
 
     SLL_ALLOCATE(this%f_fft(nr+1,ntheta+1),error)
     SLL_ALLOCATE(this%fk(nr+1),error)
@@ -251,8 +268,6 @@ contains
       this%inv_Te = inv_Te
     endif
 
-
-
     if (present(bc_rmin) .and. present(bc_rmax)) then
       this%bc(1)=bc_rmin
       this%bc(2)=bc_rmax
@@ -272,14 +287,12 @@ contains
 ! deletion of sll_plan_poisson_polar
 !======================================
 
-  !>delete_plan_poisson_polar(plan)
   !>delete a sll_plan_poisson_polar object
   subroutine delete_plan_poisson_polar(this)
 
-    implicit none
-
     type(sll_plan_poisson_polar), pointer :: this
     sll_int32 :: err
+
     if (associated(this)) then
        call fft_delete_plan(this%pfwd)
        call fft_delete_plan(this%pinv)
@@ -299,10 +312,10 @@ contains
 !===================
 
   !>subroutine solve_poisson_polar(plan,f,phi)
-  !>poisson solver for polar system : -\Delta (phi)=f
-  !>plan : sll_plan_poisson_polar, contains data for the solver
-  !>f : distribution function, size (nr+1)*(ntheta+1), input
-  !>phi : unknown field, size (nr+1)*(ntheta+1), output
+  !>poisson solver for polar system : \f$ -\Delta (phi)=f \f$
+  !>@param plan : sll_plan_poisson_polar, contains data for the solver
+  !>@param f : distribution function, size (nr+1)*(ntheta+1), input
+  !>@param phi : unknown field, size (nr+1)*(ntheta+1), output
   !>initialization must be done outside the solver
   subroutine solve_poisson_polar(plan,f,phi)
 
@@ -328,35 +341,13 @@ contains
     rmin   = plan%rmin
     dr     = plan%dr
     
-    !print *,'#nr=',nr,ntheta
-    !stop
-
-    !do k=1,ntheta+1!/2
-    !  print *,k,f(2,k)!,plan%f_fft(2,k)!fft_get_mode(plan%pfwd,plan%f_fft(2,1:ntheta),k)
-    !enddo
-    
-    !stop
-
-
-
     bc         = plan%bc
     plan%f_fft = f
-
-   
 
     do i=1,nr+1
       call fft_apply_plan(plan%pfwd,plan%f_fft(i,1:ntheta),plan%f_fft(i,1:ntheta))
     end do
 
-    !do k=0,ntheta/2
-    !  print *,k,fft_get_mode(plan%pfwd,plan%f_fft(2,1:ntheta),k)
-    !enddo
-    
-    
-    
-    
-
-    ! poisson solver
     do k = 0,ntheta/2
 
       ind_k=k
@@ -370,17 +361,9 @@ contains
         plan%a(3*(i-1)-1) =  2.0_f64/dr**2+(kval/r)**2+plan%inv_Te(i)
         plan%a(3*(i-1)-2) = -1.0_f64/dr**2+1.0_f64/(2._f64*dr*r)+plan%dlog_density(i)/(2._f64*dr)
         
-        !print *,'before1'
-        
         plan%fk(i)=fft_get_mode(plan%pfwd,plan%f_fft(i,1:ntheta),k)
 
-        !print *,'after1'
-
       enddo
-      
-      
-      
-      !print *,k,maxval(abs(plan%fk))
       
       plan%phik=0.0_f64
 
@@ -481,17 +464,13 @@ contains
 
     phi(:,ntheta+1)=phi(:,1)
     
-    
-    
-    
-
   end subroutine solve_poisson_polar
 
   !>subroutine poisson_solve_polar(plan,f,phi)
-  !>poisson solver for polar system : -\Delta (phi)=f
-  !>plan : sll_plan_poisson_polar, contains data for the solver
-  !>f : distribution function, size (nr+1)*(ntheta+1), input
-  !>phi : unknown field, size (nr+1)*(ntheta+1), output
+  !>poisson solver for polar system : \f$ -\Delta (phi)=fa\f$
+  !>@param plan : sll_plan_poisson_polar, contains data for the solver
+  !>@param f : distribution function, size (nr+1)*(ntheta+1), input
+  !>@param phi : unknown field, size (nr+1)*(ntheta+1), output
   !>initialization must be done outside the solver
   subroutine poisson_solve_polar(plan,f,phi,ierr)
 
@@ -500,7 +479,7 @@ contains
     type(sll_plan_poisson_polar), pointer :: plan
     sll_real64, dimension(plan%nr+1,plan%ntheta+1), intent(in)  :: f
     sll_real64, dimension(plan%nr+1,plan%ntheta+1), intent(out) :: phi
-    sll_int32 ,                           optional, intent(out) :: ierr
+    sll_int32 ,                           optional              :: ierr !< error code
 
     sll_real64 :: rmin,dr
     sll_int32  :: nr, ntheta,bc(2)
@@ -652,6 +631,5 @@ contains
     end if
   end subroutine poisson_solve_polar
 
-
-
 end module sll_poisson_2d_polar
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

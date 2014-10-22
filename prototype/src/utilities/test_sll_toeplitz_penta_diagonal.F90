@@ -1,10 +1,10 @@
 !**************************************************************
 !
 ! Selalib 2012     
-! Module: test_sll_toep_penta_diagonal.F90
+! Module: test_sll_penta_diagonal.F90
 !
 !> @brief 
-!> Selalib sll_toep_penta_diagonal.F90 tester
+!> Selalib sll_penta_diagonal.F90 tester
 !
 !> Last modification: September 20, 2012
 !   
@@ -13,11 +13,11 @@
 !                                  
 !**************************************************************
 
-program test_sll_toep_penta_diagonal
+program test_sll_penta_diagonal
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-use sll_toep_penta_diagonal
+use sll_penta_diagonal
   implicit none
 
 
@@ -27,7 +27,7 @@ use sll_toep_penta_diagonal
   sll_real64, dimension(:), allocatable   :: f
   sll_real64, dimension(:), allocatable   :: x, x_exact
   sll_real64                              :: error, norm
-  type(toep_penta_diagonal_plan), pointer :: plan
+  type(sll_penta_diagonal_solver), pointer :: plan
 
   print*,' '
   print*, 'Testing Toeplitz penta-diagonal solver...'
@@ -66,8 +66,8 @@ use sll_toep_penta_diagonal
                                   b*x_exact(i+1) + c*x_exact(i+2)      
       enddo
 
-      plan => new_toep_penta_diagonal(n)
-      call  solve_toep_penta_diagonal(a, b, c, f, plan)
+      plan => sll_create(n)
+      call  sll_solve(a, b, c, f, plan)
       x = plan%solution
 
       error = 0.d0
@@ -88,7 +88,7 @@ use sll_toep_penta_diagonal
       SLL_DEALLOCATE_ARRAY(f, ierr)
       SLL_DEALLOCATE_ARRAY(x, ierr)
       SLL_DEALLOCATE_ARRAY(x_exact, ierr)
-      call delete_toep_penta_diagonal(plan);
+      call sll_delete(plan);
 
     enddo
   enddo
@@ -97,4 +97,4 @@ use sll_toep_penta_diagonal
   print*, 'Toeplitz penta-diagonal solver: PASSED'
   print*,' '
 
-end program test_sll_toep_penta_diagonal
+end program test_sll_penta_diagonal

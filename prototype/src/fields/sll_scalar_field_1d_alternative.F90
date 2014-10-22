@@ -34,7 +34,7 @@ module sll_module_scalar_field_1d_alternative
   use sll_constants
   use sll_logical_meshes
   use sll_module_interpolators_1d_base
-  use sll_arbitrary_degree_spline_interpolator_1d_module
+  use sll_module_arbitrary_degree_spline_interpolator_1d
   use sll_utilities
   use sll_boundary_condition_descriptors
   use sll_gnuplot

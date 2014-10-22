@@ -20,6 +20,7 @@ module sll_fdistribu4d_DK
 #include "sll_memory.h"
 
   use sll_constants
+  use sll_boundary_condition_descriptors
 
   implicit none
 

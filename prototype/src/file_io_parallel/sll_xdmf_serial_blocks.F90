@@ -15,6 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> @ingroup file_io_parallel
 !> @brief
 !> Implements the functions to write xdmf file plotable by VisIt
 !> @details
@@ -37,6 +38,7 @@ module sll_xdmf_serial_blocks
   
   implicit none
   
+  !> Create a new xmdf file to plot parallel array using hdf5 serial library
   interface sll_xdmf_open
      module procedure sll_xdmf_open_serial_blocks
   end interface

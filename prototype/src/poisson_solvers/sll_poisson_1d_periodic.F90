@@ -1,3 +1,4 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 !**************************************************************
 !  Copyright INRIA
 !  Authors : 
@@ -15,6 +16,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> @ingroup poisson_solvers
 !> Module to solve Poisson equation on one dimensional mesh using FFT
 !> transform.
 module sll_poisson_1d_periodic
@@ -22,8 +24,8 @@ module sll_poisson_1d_periodic
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
+#include "sll_constants.h"
 
-  use sll_constants
 
   implicit none
   private
@@ -173,3 +175,4 @@ contains
 
 
 end module sll_poisson_1d_periodic
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

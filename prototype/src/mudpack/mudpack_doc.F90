@@ -5,11 +5,11 @@
 ! in file Doxyfile.in (line 691) if it is excluded. 
 ! Type 'make doc' in build directory.
 ! To check the results, open : 
-! selalib/prototype/documentation/build/html/doxygen/html/namespaces.html 
+! selalib/prototype/documentation/build/html/doxygen/html/defgroup mudpacks.html 
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @namespace sll_mudpack 
+!> @defgroup mudpack sll_mudpack 
 !> @brief 
 !> Description of mudpack library (72 characters)
 !> @author Selalib team 

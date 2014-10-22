@@ -15,7 +15,11 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> @ingroup constants
+!> @brief
 !> Fortran module where set some physical and mathematical constants.
+!> @details
+!> In this module, all variables must be protected
 module sll_constants
 #include "sll_working_precision.h"
 

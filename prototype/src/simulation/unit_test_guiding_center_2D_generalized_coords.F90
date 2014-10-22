@@ -15,7 +15,7 @@ program gc_2d_general
   use sll_common_array_initializers_module
   use sll_module_scalar_field_2d_alternative
   use sll_module_scalar_field_2d_base
-  use sll_arbitrary_degree_spline_interpolator_2d_module
+  use sll_module_arbitrary_degree_spline_interpolator_2d
   use sll_module_interpolators_2d_base
   implicit none
 

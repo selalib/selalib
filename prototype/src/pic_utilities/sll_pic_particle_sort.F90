@@ -22,7 +22,7 @@ module sll_particle_sort_module
 #include "sll_assert.h"
   use sll_logical_meshes
   use sll_particle_representations
-  use sll_particle_group_2d_module
+  use sll_particle_group_4d_module
   implicit none
 
   type :: sll_particle_sorter_2d
@@ -64,7 +64,7 @@ contains
 
   subroutine sll_sort_particles_2d( sorter, group )
     type(sll_particle_sorter_2d), pointer :: sorter
-    type(sll_particle_group_2d), pointer  :: group
+    type(sll_particle_group_4d), pointer  :: group
     sll_int32 :: i
     sll_int32 :: j
     sll_int32 :: k
@@ -74,8 +74,8 @@ contains
     sll_int32 :: index_in
     sll_int32 :: index_out
     sll_int32 :: index_stop
-    type(sll_particle_2d), dimension(:), pointer :: p
-    type(sll_particle_2d)                        :: p_tmp
+    type(sll_particle_4d), dimension(:), pointer :: p
+    type(sll_particle_4d)                        :: p_tmp
     sll_int32, dimension(:), pointer             :: pa
     sll_int32, dimension(:), pointer             :: pa_save
     ! make sure that the meshes are the same

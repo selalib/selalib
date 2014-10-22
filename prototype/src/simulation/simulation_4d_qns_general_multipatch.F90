@@ -14,8 +14,8 @@ module sll_simulation_4d_qns_general_multipatch_module
 !  use sll_collective
 !  use sll_remapper
 !  use sll_constants
-  use sll_cubic_spline_interpolator_1d
-!  use sll_cubic_spline_interpolator_2d
+  use sll_module_cubic_spline_interpolator_1d
+!  use sll_module_cubic_spline_interpolator_2d
   use sll_simulation_base
 !  use sll_logical_meshes
   use sll_parallel_array_initializer_module
@@ -25,7 +25,7 @@ module sll_simulation_4d_qns_general_multipatch_module
   use sll_common_array_initializers_module
 !  use sll_module_scalar_field_2d_base
 !  use sll_module_scalar_field_2d_alternative
-!  use sll_arbitrary_degree_spline_interpolator_1d_module
+!  use sll_module_arbitrary_degree_spline_interpolator_1d
   use sll_timer
   implicit none
 
@@ -124,8 +124,8 @@ module sll_simulation_4d_qns_general_multipatch_module
      type(remap_plan_4D_real64), pointer :: seqx1x2_to_seqx3x4
      type(remap_plan_4D_real64), pointer :: seqx3x4_to_seqx1x2
      ! interpolators
-     type(cubic_spline_1d_interpolator) :: interp_x3
-     type(cubic_spline_1d_interpolator) :: interp_x4
+     type(sll_cubic_spline_interpolator_1d) :: interp_x3
+     type(sll_cubic_spline_interpolator_1d) :: interp_x4
      ! for distribution function initializer:
      procedure(sll_scalar_initializer_4d), nopass, pointer :: init_func
      sll_real64, dimension(:), pointer :: params
@@ -728,7 +728,7 @@ contains
        end if
        
        !call sll_set_time_mark(t0)         
-       call solve_general_coordinates_elliptic_eq_mp(&
+       call sll_solve_mp(&
             sim%qns,&
             rho,&
             phi)
@@ -1169,8 +1169,8 @@ contains
     call sll_delete( sim%seqx1x2_to_seqx3x4 )
     call sll_delete( sim%seqx3x4_to_seqx1x2 )
     ! call sll_delete( sim%interp_x1x2 )
-    call delete( sim%interp_x3 )
-    call delete( sim%interp_x4 )
+    call sll_delete( sim%interp_x3 )
+    call sll_delete( sim%interp_x4 )
     SLL_DEALLOCATE(sim%diag_masse,ierr)
     SLL_DEALLOCATE(sim%diag_norm_L1,ierr)
     SLL_DEALLOCATE(sim%diag_norm_L2,ierr)
@@ -1509,7 +1509,7 @@ contains
           do iv1 = 1,Nv1-1
              do iv2 = 1,Nv2-1
                 
-                glob_ind4d(:) = local_to_global_4D(sim%sequential_x3x4, &
+                glob_ind4d(:) = local_to_global(sim%sequential_x3x4, &
                      (/iloc1,iloc2,iv1,iv2/))
                 i1 = glob_ind4d(1)
                 i2 = glob_ind4d(2)
