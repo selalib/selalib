@@ -19,8 +19,6 @@ SET(MPI_MODULE_ENABLED    ON  CACHE BOOL "Enable use of MPI library")
 SET(HDF5_ENABLED          ON  CACHE BOOL "Use HDF5 library for data output")
 SET(HDF5_PARALLEL_ENABLED OFF CACHE BOOL "Use Parallel HDF5")
 SET(FFTW_ENABLED          ON  CACHE BOOL "Enable use of FFTW library")
-SET(MUDPACK_ENABLED       ON  CACHE BOOL "Build mudpack library")
-SET(FISHPACK_ENABLED      OFF CACHE BOOL "Build fishpack library")
 SET(PASTIX_ENABLED        OFF CACHE BOOL "Build PasTiX solvers ")
 SET(SUITESPARSE_ENABLED   OFF CACHE BOOL "Enable UMFpack solvers")
 SET(SLL_BUILD_PACKAGE     OFF CACHE BOOL "Build selalib package")
@@ -88,10 +86,33 @@ ENDIF(PASTIX_ENABLED)
 
 # include's .h files
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
+IF(SLL_BUILD_PACKAGE)
+   SET(CMAKE_BUILD_TYPE Release
+       CACHE STRING "Choose the type of build, options are: Debug Release." FORCE)
+ENDIF(SLL_BUILD_PACKAGE)
 
+MACRO(SLL_TEST _NAME)
+   ADD_EXECUTABLE( test_${_NAME} "unit_test_${_NAME}.F90")
+   TARGET_LINK_LIBRARIES(test_${_NAME} ${ARGN})
+   ADD_TEST(NAME ${_NAME} COMMAND test_${_NAME})
+   SET(${_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+ENDMACRO(SLL_TEST)
+
+EXECUTE_PROCESS(COMMAND "date" "+%d/%m/%Y" OUTPUT_VARIABLE RESULT)
+STRING(REGEX REPLACE "([0-9][0-9])/([0-9][0-9])/([0-9][0-9][0-9][0-9]).*" "\\3\\2\\1" 
+TODAY ${RESULT})
+STRING(REGEX REPLACE "([0-9][0-9][0-9][0-9])[0-9][0-9][0-9][0-9]" "\\1" 
+CPACK_PACKAGE_VERSION_MAJOR ${TODAY})
+STRING(REGEX REPLACE "[0-9][0-9][0-9][0-9]([0-9][0-9])[0-9][0-9]" "\\1" 
+CPACK_PACKAGE_VERSION_MINOR ${TODAY} )
+STRING(REGEX REPLACE "[0-9][0-9][0-9][0-9][0-9][0-9]([0-9][0-9])" "\\1" 
+CPACK_PACKAGE_VERSION_PATCH ${TODAY} )
+
+INCLUDE(CPackConfig) 
 ADD_SUBDIRECTORY(package)
 ADD_SUBDIRECTORY(fftpack)
 ADD_SUBDIRECTORY(mudpack)
+ADD_SUBDIRECTORY(fishpack)
 
 IF(NOT SLL_BUILD_PACKAGE)
 
@@ -133,6 +154,9 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(advection)
    ADD_SUBDIRECTORY(fcisl)
    ADD_SUBDIRECTORY(gyroaverage)
+   ADD_SUBDIRECTORY(maxwell_solvers)
+   ADD_SUBDIRECTORY(quasi_neutral_solvers)
+
    
    IF(MPI_MODULE_ENABLED)
       
@@ -143,13 +167,10 @@ IF(NOT SLL_BUILD_PACKAGE)
       ADD_SUBDIRECTORY(parallel_utilities)
       ADD_SUBDIRECTORY(point_to_point_communications)
       ADD_SUBDIRECTORY(distribution_function_multipatch)
+      ADD_SUBDIRECTORY(poisson_solvers_parallel)
    
    ENDIF()
 
-   ADD_SUBDIRECTORY(parallel_array_initializers)
-      
-   ADD_SUBDIRECTORY(quasi_neutral_solvers)
-   ADD_SUBDIRECTORY(fishpack)
    ADD_SUBDIRECTORY(fields)
    ADD_SUBDIRECTORY(logical_meshes_multipatch)
    ADD_SUBDIRECTORY(coordinate_transformations_multipatch)
@@ -158,7 +179,9 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers)
    ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers_multipatch)
    ADD_SUBDIRECTORY(poisson_solvers)
-   ADD_SUBDIRECTORY(maxwell_solvers)
+
+   ADD_SUBDIRECTORY(parallel_array_initializers)
+      
    ADD_SUBDIRECTORY(multigrid)
    ADD_SUBDIRECTORY(BSL)
    ADD_SUBDIRECTORY(CSL)
@@ -181,7 +204,6 @@ IF(NOT SLL_BUILD_PACKAGE)
 
 ELSE() # Packages generation
 
-   INCLUDE(CPackConfig) 
    MESSAGE(STATUS "SeLaLib will be installed in directory ${CMAKE_INSTALL_PREFIX}")
 
 ENDIF(NOT SLL_BUILD_PACKAGE)
@@ -200,3 +222,11 @@ ENDIF()
 MESSAGE(STATUS "####")
 MESSAGE(STATUS "############################################################")
 
+ADD_CUSTOM_TARGET( clean_outputs
+    COMMAND find . -name *.mtv -delete
+    COMMAND find . -name *.gnu -delete
+    COMMAND find . -name *.dat -delete
+    COMMAND find . -name *.xmf -delete
+    COMMAND find . -name *.h5  -delete
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMENT "Delete all .gnu, .dat, .mtv, .h5, .xmf " VERBATIM)

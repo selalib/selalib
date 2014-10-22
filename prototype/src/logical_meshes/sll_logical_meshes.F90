@@ -15,19 +15,17 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @file sll_logical_meshes.F90
-!> @namespace sll_logical_meshes
-!> @brief logical mesh basic types
-
+!> Logical mesh basic types
+!> @ingroup logical_meshes
 module sll_logical_meshes
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 use sll_meshes_base
-
-  implicit none
+implicit none
+private
 
   !> @brief 1D logical mesh
-  type, extends(sll_mesh_1d_base) :: sll_logical_mesh_1d
+  type, public, extends(sll_mesh_1d_base) :: sll_logical_mesh_1d
      sll_int32  :: num_cells
      sll_real64 :: eta_min
      sll_real64 :: eta_max
@@ -41,7 +39,7 @@ use sll_meshes_base
 
 
   !> @brief 2D logical mesh
-  type, extends(sll_mesh_2d_base) :: sll_logical_mesh_2d
+  type, public, extends(sll_mesh_2d_base) :: sll_logical_mesh_2d
      sll_int32  :: num_cells1 !< number of cells in direction 1
      sll_int32  :: num_cells2 !< number of cells in direction 2
      sll_real64 :: eta1_min   !< minimum value of eta, direction 1
@@ -61,12 +59,13 @@ use sll_meshes_base
      procedure, pass(mesh) :: delete => delete_logical_mesh_2d
   end type sll_logical_mesh_2d
 
-  type sll_logical_mesh_2d_ptr
+  !> 2d logical mesh pointer
+  type, public :: sll_logical_mesh_2d_ptr
      type(sll_logical_mesh_2d), pointer :: lm
   end type sll_logical_mesh_2d_ptr
 
   !> @brief 3D logical mesh
-  type, extends(sll_mesh_3d_base) :: sll_logical_mesh_3d
+  type, public, extends(sll_mesh_3d_base) :: sll_logical_mesh_3d
      sll_int32  :: num_cells1 !< number of cells in direction 1
      sll_int32  :: num_cells2 !< number of cells in direction 2
      sll_int32  :: num_cells3 !< number of cells in direction 3 
@@ -90,8 +89,8 @@ use sll_meshes_base
      procedure, pass(mesh) :: delete => delete_logical_mesh_3d
   end type sll_logical_mesh_3d
 
-  !> @brief 4D logical mesh
-  type sll_logical_mesh_4d
+  !> 4D logical mesh
+  type, public :: sll_logical_mesh_4d
      sll_int32  :: num_cells1 !< number of cells in direction 1
      sll_int32  :: num_cells2 !< number of cells in direction 2
      sll_int32  :: num_cells3 !< number of cells in direction 3
@@ -119,25 +118,60 @@ use sll_meshes_base
      procedure, pass(mesh) :: delete => delete_logical_mesh_4d
   end type sll_logical_mesh_4d
 
-  ! this should be sll_delete library-wide...
-  interface delete
+  !> @brief Deallocates memory for the logical mesh. 
+  !> @param mesh pointer to a sll_logical_mesh_*d object.
+  interface sll_delete
      module procedure delete_logical_mesh_1d
      module procedure delete_logical_mesh_2d
      module procedure delete_logical_mesh_3d
      module procedure delete_logical_mesh_4d
-  end interface delete
+  end interface sll_delete
 
+
+  !> Tensor product 
   interface operator(*)
      module procedure tensor_product_1d_1d
      module procedure tensor_product_2d_2d
   end interface operator(*)
 
+  !> Print mesh parameters
   interface sll_display
      module procedure display_logical_mesh_1d
      module procedure display_logical_mesh_2d
      module procedure display_logical_mesh_3d
      module procedure display_logical_mesh_4d
   end interface sll_display
+
+  !> Get node positions array
+  interface get_node_positions
+     module procedure get_node_positions_1d
+     module procedure get_node_positions_2d
+  end interface get_node_positions
+
+  !> @brief allocates the memory space for a new logical mesh on the heap,
+  !> initializes it with the given arguments and returns a pointer to the
+  !> object.
+  !> @param num_cells integer denoting the number of cells.
+  !> @param eta_min optional double precision value which represents the 
+  !> minimum value of the eta1 parameter in the logical mesh.
+  !> @param eta_max optional double precision value which represents the 
+  !> maximum value of the eta1 parameter in the logical mesh.
+  !> @return a pointer to the newly allocated object.
+  interface sll_new
+     module procedure new_logical_mesh_1d
+     module procedure new_logical_mesh_2d
+     module procedure new_logical_mesh_3d
+     module procedure new_logical_mesh_4d
+  end interface sll_new
+
+public sll_delete, sll_display, sll_new
+public new_logical_mesh_1d
+public new_logical_mesh_2d
+public new_logical_mesh_3d
+public new_logical_mesh_4d
+public operator(*)
+public get_node_positions
+
 contains
 
 #define TEST_PRESENCE_AND_ASSIGN_VAL( obj, arg, slot, default_val ) \
@@ -150,12 +184,12 @@ end if
   !> @brief allocates the memory space for a new 1D logical mesh on the heap,
   !> initializes it with the given arguments and returns a pointer to the
   !> object.
-  !> @param num_cells1 integer denoting the number of cells.
-  !> @param eta1_min optional double precision value which represents the 
+  !> @param num_cells integer denoting the number of cells.
+  !> @param eta_min optional double precision value which represents the 
   !> minimum value of the eta1 parameter in the logical mesh.
-  !> @param eta1_max optional double precision value which represents the 
+  !> @param eta_max optional double precision value which represents the 
   !> maximum value of the eta1 parameter in the logical mesh.
-  !> return a pointer to the newly allocated object.
+  !> @return a pointer to the newly allocated object.
   function new_logical_mesh_1d( &
     num_cells, &
     eta_min, &
@@ -172,13 +206,13 @@ end if
   end function new_logical_mesh_1d
 
 
-  !> @brief initializes a previously allocated 1D logical mesh object.
-  !> @param num_cells1 integer denoting the number of cells.
-  !> @param eta1_min optional double precision value which represents the 
+  !> Initializes a previously allocated 1D logical mesh object.
+  !> @param num_cells integer denoting the number of cells.
+  !> @param eta_min optional double precision value which represents the 
   !> minimum value of the eta1 parameter in the logical mesh.
-  !> @param eta1_max optional double precision value which represents the 
+  !> @param eta_max optional double precision value which represents the 
   !> maximum value of the eta1 parameter in the logical mesh.
-  !> return a pointer to the newly allocated object.
+  !> @param m is a pointer to the newly allocated object.
   subroutine initialize_logical_mesh_1d( m, num_cells, eta_min, eta_max )
     type(sll_logical_mesh_1d), pointer :: m
     sll_int32, intent(in)  :: num_cells
@@ -200,6 +234,7 @@ end if
   end subroutine initialize_logical_mesh_1d
 
 
+  !> Create a 2d mesh from two 1d meshes
   function tensor_product_1d_1d( m_a, m_b) result(m_c)
     type(sll_logical_mesh_1d), intent(in),  pointer :: m_a
     type(sll_logical_mesh_1d), intent(in),  pointer :: m_b
@@ -215,6 +250,7 @@ end if
 
   end function tensor_product_1d_1d
 
+  !> Create a 4d mesh from two 2d meshes
   function tensor_product_2d_2d( m_a, m_b) result(m_c)
     type(sll_logical_mesh_2d), intent(in),  pointer :: m_a
     type(sll_logical_mesh_2d), intent(in),  pointer :: m_b
@@ -236,7 +272,7 @@ end if
 
   end function tensor_product_2d_2d
 
-  subroutine initialize_eta1_node_1d( m, eta1_node )
+  subroutine get_node_positions_1d( m, eta1_node )
     type(sll_logical_mesh_1d), pointer :: m
     sll_real64, dimension(:), pointer :: eta1_node
     sll_int32  :: num_cells
@@ -252,8 +288,7 @@ end if
     do i=1,num_cells+1
       eta1_node(i) = eta_min+real(i-1,f64)*delta_eta
     enddo    
-  end subroutine initialize_eta1_node_1d
-
+  end subroutine get_node_positions_1d
 
   function eta1_node_1d(mesh, i) result(res)
     class(sll_logical_mesh_1d), intent(in) :: mesh
@@ -280,6 +315,37 @@ end if
   end function eta1_cell_1d
 
 
+  subroutine get_node_positions_2d( m, eta1, eta2 )
+    type(sll_logical_mesh_2d),  pointer :: m
+    sll_real64, dimension(:,:), pointer :: eta1
+    sll_real64, dimension(:,:), pointer :: eta2
+    sll_int32  :: num_cells1
+    sll_int32  :: num_cells2
+    sll_real64 :: eta1_min
+    sll_real64 :: eta2_min
+    sll_real64 :: delta_eta1
+    sll_real64 :: delta_eta2
+    sll_int32  :: i
+    sll_int32  :: j
+    sll_int32  :: ierr
+    
+    num_cells1 = m%num_cells1
+    num_cells2 = m%num_cells2
+    eta1_min   = m%eta1_min
+    delta_eta1 = m%delta_eta1
+    eta2_min   = m%eta2_min
+    delta_eta2 = m%delta_eta2
+    SLL_ALLOCATE(eta1(num_cells1+1,num_cells2+1), ierr)
+    SLL_ALLOCATE(eta2(num_cells1+1,num_cells2+1), ierr)
+    do j=1,num_cells2+1
+      do i=1,num_cells1+1
+        eta1(i,j) = eta1_min+(i-1)*delta_eta1
+        eta2(i,j) = eta2_min+(j-1)*delta_eta2
+      enddo    
+    enddo    
+
+  end subroutine get_node_positions_2d
+
   !> @brief allocates the memory space for a new 2D logical mesh on the heap,
   !> initializes it with the given arguments and returns a pointer to the
   !> object.
@@ -293,7 +359,7 @@ end if
   !> minimum value of the eta1 parameter in the logical mesh, direction 2.
   !> @param eta2_max optional double precision value which represents the 
   !> maximum value of the eta1 parameter in the logical mesh, direction 2.
-  !> return a pointer to the newly allocated object.
+  !> @return a pointer to the newly allocated object.
   function new_logical_mesh_2d( &
     num_cells1, &
     num_cells2, &
@@ -335,7 +401,7 @@ end if
   !> minimum value of the eta1 parameter in the logical mesh, direction 2.
   !> @param eta2_max optional double precision value which represents the 
   !> maximum value of the eta1 parameter in the logical mesh, direction 2.
-  !> return a pointer to the newly allocated object.
+  !> @param m is a pointer to the newly allocated object.
   subroutine initialize_logical_mesh_2d( &
     m, & 
     num_cells1, &
@@ -476,7 +542,7 @@ end if
   !> minimum value of the eta1 parameter in the logical mesh, direction 3.
   !> @param eta3_max optional double precision value which represents the 
   !> maximum value of the eta1 parameter in the logical mesh, direction 3.
-  !> return a pointer to the newly allocated object.
+  !> @return m a pointer to the newly allocated object.
   function new_logical_mesh_3d( &
        num_cells1, &
        num_cells2, &
@@ -532,8 +598,7 @@ end if
 
   end function new_logical_mesh_3d
 
-
-  function eta1_node_3d(mesh, i1, i2, i3) result(res)
+function eta1_node_3d(mesh, i1, i2, i3) result(res)
     class(sll_logical_mesh_3d), intent(in) :: mesh
     sll_int32, intent(in) :: i1
     sll_int32, intent(in) :: i2
@@ -620,29 +685,31 @@ end if
 
 
   !> @brief allocates the memory space for a new 4D logical mesh on the heap,
+  !> @details
+  !> Allocates the memory space for a new 4D logical mesh on the heap,
   !> initializes it with the given arguments and returns a pointer to the
   !> object.
   !> @param num_cells1 integer denoting the number of cells, direction 1.
   !> @param num_cells2 integer denoting the number of cells, direction 2.
   !> @param num_cells3 integer denoting the number of cells, direction 3.
-  !> @param num_cells3 integer denoting the number of cells, direction 4.
+  !> @param num_cells4 integer denoting the number of cells, direction 4.
   !> @param eta1_min optional double precision value which represents the 
   !> minimum value of the eta1 parameter in the logical mesh, direction 1.
   !> @param eta1_max optional double precision value which represents the 
   !> maximum value of the eta1 parameter in the logical mesh, direction 1.
   !> @param eta2_min optional double precision value which represents the 
-  !> minimum value of the eta1 parameter in the logical mesh, direction 2.
+  !> minimum value of the eta2 parameter in the logical mesh, direction 2.
   !> @param eta2_max optional double precision value which represents the 
-  !> maximum value of the eta1 parameter in the logical mesh, direction 2.
+  !> maximum value of the eta2 parameter in the logical mesh, direction 2.
   !> @param eta3_min optional double precision value which represents the 
-  !> minimum value of the eta1 parameter in the logical mesh, direction 3.
+  !> minimum value of the eta3 parameter in the logical mesh, direction 3.
   !> @param eta3_max optional double precision value which represents the 
-  !> maximum value of the eta1 parameter in the logical mesh, direction 3.
-  !> @param eta3_min optional double precision value which represents the 
-  !> minimum value of the eta1 parameter in the logical mesh, direction 4.
-  !> @param eta3_max optional double precision value which represents the 
-  !> maximum value of the eta1 parameter in the logical mesh, direction 4.
-  !> return a pointer to the newly allocated object.  
+  !> maximum value of the eta3 parameter in the logical mesh, direction 3.
+  !> @param eta4_min optional double precision value which represents the 
+  !> minimum value of the eta4 parameter in the logical mesh, direction 4.
+  !> @param eta4_max optional double precision value which represents the 
+  !> maximum value of the eta4 parameter in the logical mesh, direction 4.
+  !> @return m a pointer to the newly allocated object.  
   function new_logical_mesh_4d( &
     num_cells1, &
     num_cells2, &

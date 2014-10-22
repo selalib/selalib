@@ -15,6 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> @ingroup file_io
 !> @brief
 !> Implements the functions to write data file plotable by Plotmtv
 !> @details

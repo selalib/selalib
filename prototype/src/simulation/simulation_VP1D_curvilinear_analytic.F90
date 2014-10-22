@@ -12,6 +12,7 @@ module simulation_VP1D_curvilinear_analytic
   use sll_simulation_base
   use cubic_non_uniform_splines
   use sll_constants
+  use sll_boundary_condition_descriptors
   implicit none
 
   type, extends(sll_simulation_base_class) :: &
@@ -1752,7 +1753,7 @@ function compute_non_unif_integral_spline_old(integration_points,N_points,Nb)
   call compute_spline_nonunif( integration_points(2,1:N_points), spl, integration_points(1,1:N_points),0._f64,0._f64)
   call interpolate_array_value_nonunif( integration_points_fine(1,1:N_points_fine), &
   &integration_points_fine(2,1:N_points_fine),N_points_fine-1, spl)
-  call delete_cubic_nonunif_spline_1D( spl, ierr)
+  call sll_delete( spl, ierr)
 
   do i=1,N_points_fine-1
      x1 = integration_points_fine(1,i)
@@ -1794,7 +1795,7 @@ function compute_non_unif_integral_spline(integration_points,N_points)
   call compute_spline_nonunif( integration_points(2,1:N_points), spl, integration_points(1,1:N_points),0._f64,0._f64)
   call interpolate_array_value_nonunif( integration_points_middle(1,1:N_points-1), &
   &integration_points_middle(2,1:N_points-1),N_points-1, spl)
-  call delete_cubic_nonunif_spline_1D( spl, ierr)
+  call sll_delete( spl, ierr)
   
   do i=1,N_points-1
     x1 = integration_points(1,i)
@@ -1835,7 +1836,7 @@ function compute_non_unif_integral_spline_per(integration_points,N_points)
   call compute_spline_nonunif( integration_points(2,1:N_points), spl, integration_points(1,1:N_points))
   call interpolate_array_value_nonunif( integration_points_middle(1,1:N_points-1), &
   &integration_points_middle(2,1:N_points-1),N_points-1, spl)
-  call delete_cubic_nonunif_spline_1D( spl, ierr)
+  call sll_delete( spl, ierr)
   
   do i=1,N_points-1
     x1 = integration_points(1,i)

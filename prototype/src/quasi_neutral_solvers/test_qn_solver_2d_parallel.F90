@@ -185,12 +185,12 @@ contains
     ! Test sll_qns2d_angular_spect_method_par
 
     layout => new_layout_3D( sll_world_collective )
-    call initialize_layout_with_distributed_3D_array( NP_r, NP_theta, 1, &
+    call initialize_layout_with_distributed_array( NP_r, NP_theta, 1, &
                                                 int(colsz), 1, 1, layout )
 
     do j=1,NP_theta_loc
        do i=1,NP_r_loc
-          global = local_to_global_3D( layout, (/i, j, 1/))
+          global = local_to_global( layout, (/i, j, 1/))
           gi = global(1)
           gj = global(2)
           rho_par(i,j) = rho_seq(gi,gj)
@@ -206,7 +206,7 @@ contains
 
     do j=1,NP_theta_loc
        do i=1,NP_r_loc
-          global = local_to_global_3D(layout, (/i, j, 1/))
+          global = local_to_global(layout, (/i, j, 1/))
           gi = global(1)
           gj = global(2)
           theta = (gj-1)*dtheta

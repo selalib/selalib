@@ -4,7 +4,7 @@ program test_time_splitting
 #include "sll_assert.h"
 #include "sll_field_2d.h"
   use sll_const_coef_advection_2d
-  use sll_cubic_spline_interpolator_1d
+  use sll_module_cubic_spline_interpolator_1d
   use sll_module_interpolators_1d_base
   use sll_time_splitting
   use sll_hdf5_io_serial
@@ -22,8 +22,8 @@ program test_time_splitting
   sll_int32 :: ierr, file_id
   character(len=20) :: filename
 
-  type(cubic_spline_1d_interpolator), target  :: interp_eta1
-  type(cubic_spline_1d_interpolator), target  :: interp_eta2
+  type(sll_cubic_spline_interpolator_1d), target  :: interp_eta1
+  type(sll_cubic_spline_interpolator_1d), target  :: interp_eta2
   class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
   class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
 

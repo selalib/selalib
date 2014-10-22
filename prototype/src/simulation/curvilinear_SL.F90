@@ -5,6 +5,7 @@ program radial_1d_SL
 
   use sll_cubic_splines
   use sll_constants
+  use sll_boundary_condition_descriptors
   implicit none
 
   type(sll_cubic_spline_2D), pointer :: spl_bsl,spl_bsl_nc,spl_fsl,spl_fsl_nc

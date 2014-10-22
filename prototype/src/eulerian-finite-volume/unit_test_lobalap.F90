@@ -1,22 +1,25 @@
 program test_lobalap
-#include "selalib.h"
-#include "sll_coordinate_transformations.h"
+#include "sll_working_precision.h"
 
-  use map_function_module, only: set_map_function
+  use sll_common_coordinate_transformations
+  use sll_coordinate_transformation_2d_base_module
+  use sll_module_coordinate_transformations_2d
+  !use map_function_module, only: set_map_function
   use sll_lobatto_poisson
   use sll_dg_fields
   use sll_logical_meshes
   implicit none
 
-  type(lobatto_poisson_solver)        :: solver
-  type(sll_logical_mesh_2d), pointer  :: mesh
+  type(lobatto_poisson_solver)                          :: solver
+  type(sll_logical_mesh_2d), pointer                    :: mesh
   class(sll_coordinate_transformation_2d_base), pointer :: tau
-  type(dg_field), pointer :: dg_rho
-  type(dg_field), pointer :: dg_ex
-  type(dg_field), pointer :: dg_ey
+  type(sll_dg_field_2d), pointer                        :: dg_rho
+  type(sll_dg_field_2d), pointer                        :: dg_ex
+  type(sll_dg_field_2d), pointer                        :: dg_ey
 
-  sll_int32, parameter :: degree = 3
-  real(8), external :: f_cos, f_four
+  sll_int32, parameter                                  :: degree = 3
+  real(8), external                                     :: f_cos
+  real(8), external                                     :: f_four
   
 #define NPTS1 2
 #define NPTS2 2
@@ -67,15 +70,15 @@ program test_lobalap
 
   call tau%write_to_file()
 
-  dg_rho => new_dg_field( degree, tau, f_four ) 
-  dg_ex => new_dg_field( degree, tau ) 
-  dg_ey => new_dg_field( degree, tau ) 
+  dg_rho => sll_new( degree, tau, f_four ) 
+  dg_ex  => sll_new( degree, tau ) 
+  dg_ey  => sll_new( degree, tau ) 
 
   call dg_rho%write_to_file('rho')
 
-  call initialize(solver, tau, degree )
-  call solve(solver, dg_rho, dg_ex, dg_ey)
-  call delete(solver)
+  call sll_create(solver, tau, degree )
+  call sll_solve(solver, dg_rho, dg_ex, dg_ey)
+  call sll_delete(solver)
 
   call dg_ex%write_to_file('ex')
   call dg_ey%write_to_file('ey')

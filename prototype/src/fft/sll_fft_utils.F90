@@ -15,7 +15,11 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> @ingroup fft
+!> @brief
 !> Module with intern function for fft
+!> @details
+!> This module do not depends on the fft library used.
 module sll_fft_utils
 #include "sll_working_precision.h"
 #include "sll_assert.h"

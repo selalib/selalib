@@ -1,3 +1,7 @@
+!> @ingroup general_coordinate_elliptic_solvers
+!> @brief Elliptic solver on 2d curvilinear mesh
+!> @details This solver works with analytical coordinate 
+!> transformation and discrete coordiante transformation
 module sll_general_coordinate_elliptic_solver_module
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -8,7 +12,7 @@ module sll_general_coordinate_elliptic_solver_module
   use sll_boundary_condition_descriptors
   use sll_module_scalar_field_2d_base
   use sll_module_scalar_field_2d_alternative
-  use sll_arbitrary_degree_spline_interpolator_2d_module
+  use sll_module_arbitrary_degree_spline_interpolator_2d
   !use sparsematrix_module
   use connectivity_module
   use sll_knots
@@ -16,21 +20,23 @@ module sll_general_coordinate_elliptic_solver_module
   use gauss_lobatto_integration
   use sll_timer 
   use sll_sparse_matrix_module
-
-
+  use sll_module_deboor_splines_1d
 
   implicit none
+  private
 
-  type :: general_coordinate_elliptic_solver
+  type, public :: general_coordinate_elliptic_solver
+
+     private
      sll_int32 :: total_num_splines_loc
      sll_int32 :: total_num_splines_eta1
      sll_int32 :: total_num_splines_eta2
-     sll_int32 :: num_cells1
-     sll_int32 :: num_cells2
-     sll_real64:: delta_eta1
-     sll_real64:: delta_eta2
-     sll_real64:: eta1_min
-     sll_real64:: eta2_min   
+     sll_int32, public :: num_cells1
+     sll_int32, public :: num_cells2
+     sll_real64, public :: delta_eta1
+     sll_real64, public :: delta_eta2
+     sll_real64, public :: eta1_min
+     sll_real64, public :: eta2_min   
      sll_real64, dimension(:), pointer :: knots1
      sll_real64, dimension(:), pointer :: knots2
      sll_real64, dimension(:), pointer :: knots1_rho
@@ -79,18 +85,29 @@ module sll_general_coordinate_elliptic_solver_module
      sll_real64, dimension(:), pointer :: stiff
   end type general_coordinate_elliptic_solver
 
-  ! For the integration mode.  
-  sll_int32, parameter :: ES_GAUSS_LEGENDRE = 0, ES_GAUSS_LOBATTO = 1
+  !> For the integration mode.  
+  sll_int32, parameter, public :: ES_GAUSS_LEGENDRE = 0
+  !> For the integration mode.  
+  sll_int32, parameter, public :: ES_GAUSS_LOBATTO = 1
   
-  interface delete
+  interface sll_delete
      module procedure delete_elliptic
-  end interface delete
+  end interface sll_delete
 
-  interface initialize
+  interface sll_create
      module procedure initialize_general_elliptic_solver
-  end interface initialize
-  
-  
+  end interface sll_create
+
+  interface sll_solve
+     module procedure solve_general_coordinates_elliptic_eq
+  end interface sll_solve
+
+  public sll_delete,                          &
+         sll_create,                          &
+         sll_solve,                           &
+         new_general_elliptic_solver,         &
+         factorize_mat_es
+
 contains ! *******************************************************************
 
 
@@ -119,7 +136,7 @@ contains ! *******************************************************************
   !> @param[in] eta1_max the maximun in the direction eta1
   !> @param[in] eta2_min the minimun in the direction eta2
   !> @param[in] eta2_max the maximun in the direction eta2
-  !> @return the type general_coordinate_elliptic_solver
+  !> @param[out] the type general_coordinate_elliptic_solver
 
   subroutine initialize_general_elliptic_solver( &
        es, &
@@ -458,7 +475,7 @@ contains ! *******************************************************************
 
    !call sll_set_time_mark(t0)
    SLL_ALLOCATE(es,ierr)
-   call initialize( &
+   call sll_create( &
         es, &
         spline_degree_eta1, &
         spline_degree_eta2, &
@@ -720,16 +737,18 @@ contains ! *******************************************************************
 
   !> @brief Assemble the matrix for elliptic solver.
   !> @details To have the function phi such that 
-  !>  div( A grad phi ) + B grad phi + C phi = rho
+  !>  \f[
+  !>  \nabla \cdot ( A \nabla \phi ) + B \nabla \phi + C \phi = \rho
+  !>  \f]
   !>  where A is a matrix of functions , B a vectorial function,
   !>  and  C and rho a scalar function.  
-  !>  A, B, C, rho can be discret or analytic. 
+  !>  A, B, C, \f$ \rho \f$  can be discret or analytic. 
   !>  phi is given with a B-spline interpolator  
   !> 
   !> The parameters are
   !> @param es the type general_coordinate_elliptic_solver
-  !> @param[in] rho the field corresponding to the source term   
-  !> @param[out] phi the field corresponding to the solution of the equation
+  !> @param[in] rho \f$ \rho \f$ the field corresponding to the source term   
+  !> @param[out] phi \f$ \phi \f$ the field corresponding to the solution of the equation
   !> @return phi the field solution of the equation
   
   subroutine solve_general_coordinates_elliptic_eq(&
@@ -786,7 +805,7 @@ contains ! *******************************************************************
        base_interpolator_pointer => type_field%interp_2d
 
        select type( type_interpolator => base_interpolator_pointer)
-       class is (arb_deg_2d_interpolator)
+       class is (sll_arbitrary_degree_spline_interpolator_2d)
           coeff_rho => type_interpolator%get_coefficients()
                   
           ! put the spline coefficients in a 1d array
@@ -941,6 +960,7 @@ contains ! *******************************************************************
   ! can be used library-wide, this way we could extract this information 
   ! directly from the fields without any difficulties. 
 
+  !> PLEASE ADD DOCUMENTATION
   subroutine build_local_matrices( &
        obj, &
        cell_index,&

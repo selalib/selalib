@@ -5,14 +5,15 @@ program test_mudpack_cartesian
 #include "sll_constants.h"
 #include "sll_memory.h"
 
-use sll_mudpack_cartesian
+use sll_mudpack
+use sll_boundary_condition_descriptors
 
 implicit none
 
 integer :: nc_eta1
 integer :: nc_eta2
-type(mudpack_2d) :: periodic
-type(mudpack_2d) :: dirichlet
+type(sll_mudpack_solver) :: periodic
+type(sll_mudpack_solver) :: dirichlet
 real(8), allocatable :: sol(:,:)
 real(8), allocatable :: phi(:,:)
 real(8), allocatable :: rhs(:,:)
@@ -50,11 +51,11 @@ end do
 
 !Poisson periodic
 
-call initialize_mudpack_cartesian(periodic,                    &
-                                  eta1_min, eta1_max, nc_eta1, &
-                                  eta2_min, eta2_max, nc_eta2, &
-                                  SLL_PERIODIC, SLL_PERIODIC,  &
-                                  SLL_PERIODIC, SLL_PERIODIC)
+call initialize_mudpack_cartesian(periodic,  &
+                eta1_min, eta1_max, nc_eta1, &
+                eta2_min, eta2_max, nc_eta2, &
+                SLL_PERIODIC, SLL_PERIODIC,  &
+                SLL_PERIODIC, SLL_PERIODIC)
 
 
 sol  = sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
@@ -68,6 +69,8 @@ call sll_gnuplot_corect_2d(eta1_min, eta1_max, nc_eta1+1, &
 
 !compute and print maximum norm of error
 write(*,201) maxval(abs(phi-sol))
+
+call delete_mudpack_cartesian(periodic)
 
 print*,"PASSED"
 
@@ -85,11 +88,11 @@ do i=1,nc_eta1+1
    end do
 end do
      
-call initialize_mudpack_cartesian(dirichlet,                    &
-                                  eta1_min, eta1_max, nc_eta1,  &
-                                  eta2_min, eta2_max, nc_eta2,  &
-                                  SLL_DIRICHLET, SLL_DIRICHLET, &
-                                  SLL_DIRICHLET, SLL_DIRICHLET)
+call initialize_mudpack_cartesian(dirichlet,  &
+                eta1_min, eta1_max, nc_eta1,  &
+                eta2_min, eta2_max, nc_eta2,  &
+                SLL_DIRICHLET, SLL_DIRICHLET, &
+                SLL_DIRICHLET, SLL_DIRICHLET)
 
 
 sol = exp(-(eta1*eta1+eta2*eta2))
@@ -126,6 +129,8 @@ call sll_gnuplot_corect_2d(eta1_min, eta1_max, nc_eta1+1, &
 
 !compute and print maximum norm of error
 write(*,201) maxval(abs(phi-sol))
+
+call delete_mudpack_cartesian(dirichlet)
 
 print*,"PASSED"
 

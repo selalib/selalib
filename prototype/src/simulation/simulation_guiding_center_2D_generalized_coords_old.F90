@@ -7,10 +7,10 @@ module sll_simulation_2d_guiding_center_generalized_coords_module
 #include "sll_utilities.h"
 
   use sll_constants
-  use sll_cubic_spline_interpolator_2d
-  use sll_cubic_spline_interpolator_1d
+  use sll_module_cubic_spline_interpolator_2d
+  use sll_module_cubic_spline_interpolator_1d
   use sll_module_interpolators_2d_base
-  use sll_arbitrary_degree_spline_interpolator_2d_module
+  use sll_module_arbitrary_degree_spline_interpolator_2d
   use sll_simulation_base
   use sll_logical_meshes
   use sll_coordinate_transformation_2d_base_module
@@ -50,8 +50,8 @@ module sll_simulation_2d_guiding_center_generalized_coords_module
      sll_real64, dimension(:,:), pointer     :: rho_np1
      sll_real64, dimension(:,:), pointer     :: rho_nm1
      
-      type(arb_deg_2d_interpolator)     :: interp_rho
-      type(arb_deg_2d_interpolator)     :: interp_phi
+      type(sll_arbitrary_degree_spline_interpolator_2d)     :: interp_rho
+      type(sll_arbitrary_degree_spline_interpolator_2d)     :: interp_phi
       
      ! for distribution function initializer:
      procedure(sll_scalar_initializer_2d), nopass, pointer :: init_func

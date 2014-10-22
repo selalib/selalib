@@ -5,28 +5,30 @@
 ! in file Doxyfile.in (line 691) if it is excluded. 
 ! Type 'make doc' in build directory.
 ! To check the results, open : 
-! selalib/prototype/documentation/build/html/doxygen/html/namespaces.html 
+! selalib/prototype/documentation/build/html/doxygen/html/defgroup fieldss.html 
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @namespace sll_fields 
+!> @defgroup fields sll_fields 
 !> @brief 
-!> Description of fields library (72 characters)
-!> @author Selalib team 
-!> You can add a contact, do not put your email to prevent spam.
+!> Field objects.
+!> @author 
+!> Selalib team 
 !> @details
-!> Long description of  fields, you can add some references or math equations.
 !>
 !> <b> Headers file available </b>
 !>  - sll_fields.h
 !>
 !> <b> Modules available </b>
 !>  List fortran module available
-!>  - sll_fields
+!>  - sll_scalar_field_1d
+!>  - sll_scalar_field_1d_alternative
+!>  - sll_scalar_field_2d
+!>  - sll_scalar_field_2d_alternative
 !>
 !> <b> How to use it </b>
 !> - Header file : \code #include 'sll_fields.h' \endcode
-!> - Link with   <code>-lsll_%s</code>
+!> - Link with   <code>-lsll_fields</code>
 !> - Add <code> use sll_fields </code>
 !>
 !> <b> Examples </b>

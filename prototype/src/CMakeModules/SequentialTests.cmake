@@ -18,8 +18,6 @@ ADD_TEST(NAME toeplitz_penta_diagonal   COMMAND test_toeplitz_penta_diagonal)
 ADD_TEST(NAME cubic_splines             COMMAND test_splines) 
 ADD_TEST(NAME box_splines_hex           COMMAND test_box_splines) 
 ADD_TEST(NAME splines_arbitrary_degree  COMMAND test_arbitrary_degree_splines)
-ADD_TEST(NAME quintic_splines           COMMAND test_quintic_splines)
-ADD_TEST(NAME odd_degree_splines        COMMAND test_odd_degree_splines)
 ADD_TEST(NAME cubic_non_uniform_splines COMMAND test_non_unif_splines)
 ADD_TEST(NAME integration               COMMAND test_integration)
 ADD_TEST(NAME lagrange_interpolation    COMMAND test_lagrange_interpolation)
@@ -39,8 +37,6 @@ SET_TESTS_PROPERTIES(toeplitz_penta_diagonal PROPERTIES PASS_REGULAR_EXPRESSION 
 SET_TESTS_PROPERTIES(cubic_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(splines_arbitrary_degree PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(deboor_spline PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-SET_TESTS_PROPERTIES(quintic_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-SET_TESTS_PROPERTIES(odd_degree_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(cubic_non_uniform_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(integration PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(lagrange_interpolation PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
@@ -49,13 +45,6 @@ SET_TESTS_PROPERTIES(pic_particles PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(pic_initializers PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(pic_accumulator PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(pic_particle_sort PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-
-#IF(MUDPACK_ENABLED)
-#   ADD_TEST(NAME guiding_center_2D_generalized_coords    COMMAND test_guiding_center_2D_generalized_coords)
-#   SET_TESTS_PROPERTIES(guiding_center_2D_generalized_coords PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-#ENDIF(MUDPACK_ENABLED)
-
-ADD_TEST(NAME periodic_interp COMMAND test_periodic_interp)
 
 ADD_TEST(NAME fft COMMAND test_fft)
 
@@ -77,8 +66,6 @@ ADD_TEST(NAME fft COMMAND test_fft)
                      PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 #consider merging the following 2 tests
-   ADD_TEST(NAME arb_deg_spline_interpolator_1d COMMAND test_arb_deg_spline_interpolators_1d)
-   ADD_TEST(NAME arb_deg_spline_interpolator_2d COMMAND test_arb_deg_spline_interpolators_2d)
    ADD_TEST(NAME fields COMMAND test_scalar_field)
    ADD_TEST(NAME time_splitting COMMAND test_time_splitting)
    ADD_TEST(NAME distribution_function COMMAND test_distribution_function)
@@ -140,26 +127,17 @@ ENDIF(PYTHON3_FOUND)
    ADD_TEST(NAME gyroaverage_polar_splines COMMAND test_gyroaverage_2d_polar_splines)
    ADD_TEST(NAME gyroaverage_polar_pade COMMAND test_gyroaverage_2d_polar_pade)
    
-   #IF(MUDPACK_ENABLED)
-
-      SET(ARGS ${CMAKE_BINARY_DIR}/gcsim2d_cartesian_input)
-      ADD_TEST(NAME sim2d_gc_cart COMMAND test_2d_gc_cartesian ${ARGS})
-      SET_TESTS_PROPERTIES(sim2d_gc_cart PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET(ARGS ${CMAKE_BINARY_DIR}/gcsim2d_cartesian_input)
+   ADD_TEST(NAME sim2d_gc_cart COMMAND test_2d_gc_cartesian ${ARGS})
+   SET_TESTS_PROPERTIES(sim2d_gc_cart PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    
-      SET(ARGS ${CMAKE_BINARY_DIR}/gcsim2d_polar_input)
-      ADD_TEST(NAME sim2d_gc_polar COMMAND test_2d_gc_polar ${ARGS})
-      SET_TESTS_PROPERTIES(sim2d_gc_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET(ARGS ${CMAKE_BINARY_DIR}/gcsim2d_polar_input)
+   ADD_TEST(NAME sim2d_gc_polar COMMAND test_2d_gc_polar ${ARGS})
+   SET_TESTS_PROPERTIES(sim2d_gc_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-      SET(ARGS ${CMAKE_BINARY_DIR}/vpsim2d_no_split_beam)
-      ADD_TEST(NAME sim2d_vp_no_split COMMAND test_2d_vp_no_split ${ARGS})
-      SET_TESTS_PROPERTIES(sim2d_vp_no_split PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-
-
-   #ENDIF(MUDPACK_ENABLED)
-
-
-
-
+   SET(ARGS ${CMAKE_BINARY_DIR}/vpsim2d_no_split_beam)
+   ADD_TEST(NAME sim2d_vp_no_split COMMAND test_2d_vp_no_split ${ARGS})
+   SET_TESTS_PROPERTIES(sim2d_vp_no_split PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
    SET_TESTS_PROPERTIES(coordinate_transformations PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    SET_TESTS_PROPERTIES(fields_2d_alternative PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
@@ -183,23 +161,7 @@ ENDIF(PYTHON3_FOUND)
    SET_TESTS_PROPERTIES(gyroaverage_polar_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    SET_TESTS_PROPERTIES(gyroaverage_polar_pade PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-   SET_TESTS_PROPERTIES(arb_deg_spline_interpolator_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-   SET_TESTS_PROPERTIES(arb_deg_spline_interpolator_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-   IF(FFTW_ENABLED AND FFTW_FOUND)
-      ADD_TEST(NAME maxwell_2d_pstd COMMAND test_maxwell_2d_pstd)
-      SET_TESTS_PROPERTIES(maxwell_2d_pstd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-   ENDIF()
-
-ADD_TEST(NAME quintic_1d COMMAND test_quintic_interpolators_1d)
-SET_TESTS_PROPERTIES(quintic_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-ADD_TEST(NAME quintic_1d_nonuniform COMMAND test_quintic_interpolators_1d_nonuniform)
-SET_TESTS_PROPERTIES(quintic_1d_nonuniform PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-
-ADD_TEST(NAME odd_degree_1d COMMAND test_odd_degree_interpolators_1d)
-SET_TESTS_PROPERTIES(odd_degree_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-ADD_TEST(NAME odd_degree_1d_nonuniform COMMAND test_odd_degree_interpolators_1d_nonuniform)
-SET_TESTS_PROPERTIES(odd_degree_1d_nonuniform PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 ADD_TEST(NAME electric_field_accumulators COMMAND test_e_field_accumulator_2d)
 
@@ -211,13 +173,9 @@ ADD_TEST(NAME ode_solvers COMMAND test_implicit_ode_nonuniform)
 ADD_TEST(NAME BSL COMMAND bsl_1d_cubic_uniform_periodic
                           bsl_1d_cubic_nonuniform_periodic
                           bsl_1d_cubic_uniform_compact
-                          bsl_1d_cubic_nonuniform_compact
-                          bsl_1d_quintic_uniform_compact
-                          bsl_1d_quintic_nonuniform_compact)
+                          bsl_1d_cubic_nonuniform_compact)
 SET_TESTS_PROPERTIES(BSL PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-ADD_TEST(NAME maxwell_2d_fdtd COMMAND test_maxwell_2d_fdtd)
-SET_TESTS_PROPERTIES(maxwell_2d_fdtd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 IF(FORTRANCL_FOUND)
    ADD_TEST(NAME opencl COMMAND test_opencl)

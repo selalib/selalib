@@ -41,6 +41,7 @@ module sll_advection_field
   use sll_constants
   use sll_utilities   ! for int2string
   use sll_scalar_field_1d
+  use sll_module_interpolators_1d_base
   implicit none
   
   type, extends(scalar_field_2d) :: hamiltonian_advection_field_2d

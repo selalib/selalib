@@ -11,16 +11,16 @@ program test_lobalap_discrete
   type(lobatto_poisson_solver)        :: solver
   type(sll_logical_mesh_2d), pointer  :: mesh
   class(sll_coordinate_transformation_2d_base), pointer :: tau
-  type(dg_field), pointer :: dg_rho
-  type(dg_field), pointer :: dg_ex
-  type(dg_field), pointer :: dg_ey
+  type(sll_dg_field_2d), pointer :: dg_rho
+  type(sll_dg_field_2d), pointer :: dg_ex
+  type(sll_dg_field_2d), pointer :: dg_ey
 
   sll_int32, parameter :: degree = 3
   real(8), external :: f_cos, f_four
 
-  type(cubic_spline_2d_interpolator)      :: x1_interp
-  type(cubic_spline_2d_interpolator)      :: x2_interp
-  type(cubic_spline_2d_interpolator)      :: j_interp
+  type(sll_cubic_spline_interpolator_2d)  :: x1_interp
+  type(sll_cubic_spline_interpolator_2d)  :: x2_interp
+  type(sll_cubic_spline_interpolator_2d)  :: j_interp
   sll_real64, dimension(:,:), allocatable :: x1_tab
   sll_real64, dimension(:,:), allocatable :: x2_tab
   sll_real64, dimension(:), allocatable   :: x1_eta1_min, x1_eta1_max
@@ -53,7 +53,7 @@ program test_lobalap_discrete
   allocate(x2_eta1_max(NPTS2))
   allocate(jacs(NPTS1,NPTS2))
   
-  mesh => new_logical_mesh_2d( NPTS1-1, NPTS2-1 )
+  mesh => sll_new( NPTS1-1, NPTS2-1 )
 
   do j=0,NPTS2-1
      do i=0,NPTS1-1
@@ -127,15 +127,15 @@ program test_lobalap_discrete
 
   call tau%write_to_file()
 
-  dg_rho => new_dg_field( degree, tau, f_four ) 
-  dg_ex => new_dg_field( degree, tau ) 
-  dg_ey => new_dg_field( degree, tau ) 
+  dg_rho => sll_new( degree, tau, f_four ) 
+  dg_ex  => sll_new( degree, tau ) 
+  dg_ey  => sll_new( degree, tau ) 
 
   call dg_rho%write_to_file('rho')
 
-  call initialize(solver, tau, degree )
-  call solve(solver, dg_rho, dg_ex, dg_ey)
-  call delete(solver)
+  call sll_create(solver, tau, degree )
+  call sll_solve(solver, dg_rho, dg_ex, dg_ey)
+  call sll_delete(solver)
 
   call dg_ex%write_to_file('ex')
   call dg_ey%write_to_file('ey')

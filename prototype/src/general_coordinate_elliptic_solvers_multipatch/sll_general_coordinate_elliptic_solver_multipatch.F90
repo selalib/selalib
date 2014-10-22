@@ -6,7 +6,7 @@ module sll_general_coordinate_elliptic_solver_multipatch_module
   use sll_boundary_condition_descriptors
   use sll_module_scalar_field_2d_base
   use sll_module_scalar_field_2d_alternative
-  use sll_arbitrary_degree_spline_interpolator_2d_module
+  use sll_module_arbitrary_degree_spline_interpolator_2d
   !use sparsematrix_module
   use connectivity_module
   use sll_knots
@@ -17,6 +17,7 @@ module sll_general_coordinate_elliptic_solver_multipatch_module
   use sll_sparse_matrix_mp_module
   use sll_module_scalar_field_2d_multipatch
   use sll_general_coordinate_elliptic_solver_module
+  use sll_module_deboor_splines_2d
 
   implicit none
 
@@ -59,6 +60,9 @@ module sll_general_coordinate_elliptic_solver_multipatch_module
      module procedure initialize_general_elliptic_solver_mp
   end interface initialize
   
+  interface sll_solve_mp
+   module procedure solve_general_coordinates_elliptic_eq_mp
+  end interface sll_solve_mp
   
 contains ! *******************************************************************
   

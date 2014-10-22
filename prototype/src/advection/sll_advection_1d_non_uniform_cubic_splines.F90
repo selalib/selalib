@@ -15,7 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-! for the moment mimic of sll_periodic_interpolator_1d.F90
+! for the moment mimic of sll_module_periodic_interpolator_1d.F90
 
 module sll_module_advection_1d_non_uniform_cubic_splines
 #include "sll_working_precision.h"

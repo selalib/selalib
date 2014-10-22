@@ -46,6 +46,6 @@ program test_periodic_interp
      endif
   end do
  
-
+  print*, 'PASSED'
 end program test_periodic_interp
 

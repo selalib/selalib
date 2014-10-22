@@ -34,7 +34,7 @@ module sll_module_scalar_field_2d_multipatch
   use sll_coordinate_transformation_multipatch_module
   use sll_constants
   use sll_module_interpolators_2d_base
-  use sll_arbitrary_degree_spline_interpolator_2d_module
+  use sll_module_arbitrary_degree_spline_interpolator_2d
   use sll_utilities
   use sll_boundary_condition_descriptors
   use sll_gnuplot
@@ -47,7 +47,7 @@ module sll_module_scalar_field_2d_multipatch
      type(sll_coordinate_transformation_multipatch_2d), pointer    :: transf
      type(sll_scalar_field_2d_discrete_ptr), dimension(:), pointer :: fields &
           => null()
-     type(sll_arb_deg_2d_interpolator_ptr), dimension(:), pointer :: interps &
+     type(sll_arbitrary_degree_spline_interpolator_2d_ptr), dimension(:), pointer :: interps &
           => null()
      ! to be used if the field is supposed to allocate its own data and so
      ! it would be responsible for deleting it too. Else, it is just a pointer
@@ -874,7 +874,7 @@ contains   ! *****************************************************************
     sll_real64, dimension(:),optional :: slope_bottom
     sll_real64, dimension(:),optional :: slope_top
     class(sll_scalar_field_multipatch_2d), intent(in) :: mp
-    class(arb_deg_2d_interpolator),pointer:: interpolator
+    class(sll_arbitrary_degree_spline_interpolator_2d),pointer:: interpolator
     sll_int32 :: patch
     sll_int32 :: num_pts1,num_pts2
 

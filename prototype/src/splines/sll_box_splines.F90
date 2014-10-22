@@ -13,6 +13,7 @@ module sll_box_splines
 #include "sll_assert.h"
 #include "sll_splines.h"
 #include "sll_utilities.h"
+#include "sll_boundary_condition_descriptors.h"
 use hex_pre_filters
 use sll_hex_meshes
 

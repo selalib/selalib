@@ -1,7 +1,5 @@
 !**************************************************************
 !  Copyright INRIA
-!  Authors : 
-!     Pierre Navaro 
 !  
 !  This code SeLaLib (for Semi-Lagrangian-Library) 
 !  is a parallel library for simulating the plasma turbulence 
@@ -15,6 +13,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> @ingroup file_io
 !> @brief
 !> Implements the functions to write hdf5 file to store heavy data.
 !> @details
@@ -35,7 +34,9 @@ use hdf5, only: hid_t, hsize_t, H5Screate_simple_f, h5t_native_double, &
   
   implicit none
   
+  !> @brief 
   !> Write a nD array of float in double precision in a HDF5 file 
+  !>
   !>\param[in]  file_id file unit number
   !>\param[in]  array array
   !>\param[in]  dsetname dataset name
@@ -69,7 +70,9 @@ use hdf5, only: hid_t, hsize_t, H5Screate_simple_f, h5t_native_double, &
 
 contains
   
-  !> Create HDF5 file
+!> @brief Create HDF5 file
+!> @details To use this subroutine HDF5_ENABLE should be set to ON 
+!> in CMake configuration
   subroutine sll_hdf5_file_create(filename,file_id,error)
     character(len=*) , intent(in)  :: filename  !< file name
     integer(hid_t)   , intent(out) :: file_id   !< unit number

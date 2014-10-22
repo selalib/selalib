@@ -5,11 +5,11 @@
 ! in file Doxyfile.in (line 691) if it is excluded. 
 ! Type 'make doc' in build directory.
 ! To check the results, open : 
-! selalib/prototype/documentation/build/html/doxygen/html/namespaces.html 
+! selalib/prototype/documentation/build/html/doxygen/html/defgroup fields_multipatchs.html 
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @namespace sll_fields_multipatch 
+!> @defgroup fields_multipatch sll_fields_multipatch 
 !> @brief 
 !> Description of fields_multipatch library (72 characters)
 !> @author Selalib team 

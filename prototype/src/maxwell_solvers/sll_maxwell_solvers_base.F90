@@ -17,6 +17,7 @@
 !  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
 !
 
+!> @ingroup maxwell_solvers
 !> This module contains common subroutines for  Maxwell solvers
 module sll_maxwell_solvers_base
 
@@ -26,21 +27,41 @@ module sll_maxwell_solvers_base
 #include "sll_constants.h"
 #include "sll_utilities.h"
 #include "sll_maxwell_solvers_macros.h"
+use sll_boundary_condition_descriptors
 
 implicit none
+
+  !> Parent object of all Maxwell solvers
+  type, public :: sll_maxwell_solver
+
+   sll_int32  :: nc_eta1      !< x cells number
+   sll_int32  :: nc_eta2      !< y cells number
+   sll_int32  :: polarization !< TE or TM
+   sll_real64 :: e_0          !< electric conductivity
+   sll_real64 :: mu_0         !< magnetic permeability
+   sll_real64 :: c            !< speed of light
+   sll_real64 :: eta1_min     !< left side 
+   sll_real64 :: eta1_max     !< right side
+   sll_real64 :: delta_eta1   !< step size
+   sll_real64 :: eta2_min     !< bottom side
+   sll_real64 :: eta2_max     !< top side
+   sll_real64 :: delta_eta2   !< step size
+
+  end type sll_maxwell_solver
 
 contains
 
 !> write files to visualize 2d fields with gnuplot
-subroutine plot_two_fields(fname, n1, n2, f1, f2, iplot, time )
+subroutine sll_plot_two_fields(fname, n1, n2, f1, f2, iplot, time )
+character(len=*),             intent(in) :: fname !< output file name
+sll_int32,                    intent(in) :: n1    !< size of f1 and f2 first index
+sll_int32,                    intent(in) :: n2    !< size of f1 and f2 second index
+sll_real64, dimension(n1,n2), intent(in) :: f1    !< first field 2d
+sll_real64, dimension(n1,n2), intent(in) :: f2    !< second field 2d
+sll_int32,                    intent(in) :: iplot !< plot counter
+sll_real64,                   intent(in) :: time  !< step time
 
-sll_int32, intent(in) :: n1, n2
-sll_real64, dimension(n1,n2), intent(in) :: f1 !< first field 2d
-sll_real64, dimension(n1,n2), intent(in) :: f2 !< second field 2d
-integer :: iplot !< plot counter
-integer :: i, j
-sll_real64, intent(in) :: time !< time
-character(len=*) :: fname !< output file name
+integer          :: i, j
 character(len=4) :: cplot
 
 call int2string(iplot, cplot)
@@ -71,6 +92,6 @@ write(90,"(a)",advance='no')"splot '"//fname//cplot//".dat' w lines"
 write(90,"(a)",advance='no')",'"//fname//cplot//".dat' u 1:2:4 w lines"
 close(90)
 
-end subroutine plot_two_fields
+end subroutine sll_plot_two_fields
 
 end module sll_maxwell_solvers_base

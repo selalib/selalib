@@ -19,8 +19,8 @@ program unit_test_characteristics_2d_verlet
 #include "sll_working_precision.h"
 use sll_module_characteristics_2d_verlet
 use sll_boundary_condition_descriptors
-use sll_cubic_spline_interpolator_1d
-use sll_cubic_spline_interpolator_2d
+use sll_module_cubic_spline_interpolator_1d
+use sll_module_cubic_spline_interpolator_2d
 
 implicit none
   
@@ -57,19 +57,19 @@ implicit none
 
   
   !initialization for verlet
-  A1_interp_x1 => new_cubic_spline_1d_interpolator( &
+  A1_interp_x1 => new_cubic_spline_interpolator_1d( &
     Npts1, &
     0._f64, &
     1._f64, &
     SLL_HERMITE)
 
-  A2_interp_x1 => new_cubic_spline_1d_interpolator( &
+  A2_interp_x1 => new_cubic_spline_interpolator_1d( &
     Npts1, &
     0._f64, &
     1._f64, &
     SLL_HERMITE)
 
-  A1_interp_x1x2 => new_cubic_spline_2d_interpolator( &
+  A1_interp_x1x2 => new_cubic_spline_interpolator_2d( &
        Npts1, &
        Npts2, &
        0.0_f64, &
@@ -79,7 +79,7 @@ implicit none
        SLL_HERMITE, &
        SLL_PERIODIC)
 
-  A2_interp_x1x2 => new_cubic_spline_2d_interpolator( &
+  A2_interp_x1x2 => new_cubic_spline_interpolator_2d( &
        Npts1, &
        Npts2, &
        0.0_f64, &

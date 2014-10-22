@@ -52,14 +52,14 @@ program poisson_2d_parallel
   layout_x => new_layout_2D( sll_world_collective )
   nprocx = 1
   nprocy = 2**e
-  call initialize_layout_with_distributed_2D_array( ncx+1, ncy+1, &
+  call initialize_layout_with_distributed_array( ncx+1, ncy+1, &
        nprocx, nprocy, layout_x )
 
   plan => new_poisson_2d_periodic_plan_cartesian_par(&
        layout_x, ncx, ncy, Lx, Ly)
 
   call compute_local_sizes( layout_x, nx_loc, ny_loc )
-  call sll_view_lims_2D( layout_x )
+  call sll_view_lims( layout_x )
 
   SLL_ALLOCATE(rho(nx_loc,ny_loc), error)
   SLL_ALLOCATE(phi_an(nx_loc,ny_loc), error)
@@ -68,7 +68,7 @@ program poisson_2d_parallel
   ! initialize reference array
   do j=1,ny_loc
      do i=1,nx_loc
-        global = local_to_global_2D( layout_x, (/i, j/))
+        global = local_to_global( layout_x, (/i, j/))
         gi = global(1)
         gj = global(2)
         x  = (gi-1)*dx
@@ -80,8 +80,8 @@ program poisson_2d_parallel
 
   call solve_poisson_2d_periodic_cartesian_par(plan, rho, phi)
 
-  offset(1) =  get_layout_2D_i_min( layout_x, myrank ) - 1
-  offset(2) =  get_layout_2D_j_min( layout_x, myrank ) - 1
+  offset(1) =  get_layout_i_min( layout_x, myrank ) - 1
+  offset(2) =  get_layout_j_min( layout_x, myrank ) - 1
   call sll_gnuplot_rect_2d_parallel(dble(offset(1)), dble(1), &
                                     dble(offset(2)), dble(1), &
                                     size(phi,1), size(phi,2), &

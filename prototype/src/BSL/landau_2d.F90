@@ -7,7 +7,7 @@ program landau_4d
 
 use sll_constants
 use sll_module_interpolators_1d_base
-use sll_cubic_spline_interpolator_1d
+use sll_module_cubic_spline_interpolator_1d
 use sll_utilities, only: int2string
 
 implicit none
@@ -43,10 +43,10 @@ class(sll_interpolator_1d_base), pointer    :: interp_2
 class(sll_interpolator_1d_base), pointer    :: interp_3
 class(sll_interpolator_1d_base), pointer    :: interp_4
 
-type(cubic_spline_1d_interpolator), target  :: spl_eta1
-type(cubic_spline_1d_interpolator), target  :: spl_eta2
-type(cubic_spline_1d_interpolator), target  :: spl_eta3
-type(cubic_spline_1d_interpolator), target  :: spl_eta4
+type(sll_cubic_spline_interpolator_1d), target  :: spl_eta1
+type(sll_cubic_spline_interpolator_1d), target  :: spl_eta2
+type(sll_cubic_spline_interpolator_1d), target  :: spl_eta3
+type(sll_cubic_spline_interpolator_1d), target  :: spl_eta4
 
 !Diagnostics and errors
 sll_int32                             :: error

@@ -45,8 +45,8 @@ module sll_simulation_2d_vlasov_poisson_no_splitting
   use sll_module_characteristics_1d_explicit_euler
   use sll_module_characteristics_1d_trapezoid
   use sll_module_characteristics_1d_explicit_euler_conservative
-  use sll_cubic_spline_interpolator_2d
-  use sll_cubic_spline_interpolator_1d
+  use sll_module_cubic_spline_interpolator_2d
+  use sll_module_cubic_spline_interpolator_1d
   use sll_poisson_1d_periodic  
   use sll_fft
   use sll_simulation_base
@@ -401,10 +401,10 @@ contains
       case ("SLL_LANDAU_MESH")
         x1_max = real(nbox_x1,f64) * 2._f64 * sll_pi / kmode
         mesh_x1 => new_logical_mesh_1d(num_cells_x1,eta_min=x1_min, eta_max=x1_max)
-        call initialize_eta1_node_1d( mesh_x1, sim%x1_array )
+        call get_node_positions( mesh_x1, sim%x1_array )
       case ("SLL_LOGICAL_MESH")
         mesh_x1 => new_logical_mesh_1d(num_cells_x1,eta_min=x1_min, eta_max=x1_max)  
-        call initialize_eta1_node_1d( mesh_x1, sim%x1_array )
+        call get_node_positions( mesh_x1, sim%x1_array )
       case default
         print*,'#mesh_case_x1', mesh_case_x1, ' not implemented'
         print*,'#in init_vp2d_par_cart'
@@ -413,7 +413,7 @@ contains
     select case (mesh_case_x2)
       case ("SLL_LOGICAL_MESH")
         mesh_x2 => new_logical_mesh_1d(num_cells_x2,eta_min=x2_min, eta_max=x2_max)
-        call initialize_eta1_node_1d( mesh_x2, sim%x2_array )
+        call get_node_positions( mesh_x2, sim%x2_array )
       case default
         print*,'#mesh_case_x2', mesh_case_x2, ' not implemented'
         print*,'#in init_vp2d_par_cart'
@@ -483,7 +483,7 @@ contains
       
     select case (f_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
-        f_interp2d => new_cubic_spline_2d_interpolator( &
+        f_interp2d => new_cubic_spline_interpolator_2d( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
@@ -504,7 +504,7 @@ contains
 
     select case (A_interp_case)
       case ("SLL_CUBIC_SPLINES")
-        A1_interp2d => new_cubic_spline_2d_interpolator( &
+        A1_interp2d => new_cubic_spline_interpolator_2d( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
@@ -513,7 +513,7 @@ contains
           x2_max, &
           SLL_PERIODIC, &
           SLL_PERIODIC)
-        A2_interp2d => new_cubic_spline_2d_interpolator( &
+        A2_interp2d => new_cubic_spline_interpolator_2d( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
@@ -522,22 +522,22 @@ contains
           x2_max, &
           SLL_PERIODIC, &
           SLL_PERIODIC)  
-        A1_interp1d_x1 => new_cubic_spline_1d_interpolator( &
+        A1_interp1d_x1 => new_cubic_spline_interpolator_1d( &
           Nc_x1+1, &
           x1_min, &
           x1_max, &
           SLL_PERIODIC)
-        A1_interp1d_x2 => new_cubic_spline_1d_interpolator( &
+        A1_interp1d_x2 => new_cubic_spline_interpolator_1d( &
           Nc_x2+1, &
           x2_min, &
           x2_max, &
           SLL_PERIODIC)
-        A2_interp1d_x1 => new_cubic_spline_1d_interpolator( &
+        A2_interp1d_x1 => new_cubic_spline_interpolator_1d( &
           Nc_x1+1, &
           x1_min, &
           x1_max, &
           SLL_PERIODIC)
-        A2_interp1d_x2 => new_cubic_spline_1d_interpolator( &
+        A2_interp1d_x2 => new_cubic_spline_interpolator_1d( &
           Nc_x2+1, &
           x2_min, &
           x2_max, &
@@ -551,7 +551,7 @@ contains
 
     select case (phi_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
-        phi_interp2d => new_cubic_spline_2d_interpolator( &
+        phi_interp2d => new_cubic_spline_interpolator_2d( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
@@ -636,7 +636,7 @@ contains
 
     select case (f_interp1d_x1_case)
       case ("SLL_CUBIC_SPLINES")
-        f_interp1d_x1 => new_cubic_spline_1d_interpolator( &
+        f_interp1d_x1 => new_cubic_spline_interpolator_1d( &
           Nc_x1_bis+1, &
           x1_min_bis, &
           x1_max_bis, &
@@ -651,7 +651,7 @@ contains
 
     select case (f_interp1d_x2_case)
       case ("SLL_CUBIC_SPLINES")
-        f_interp1d_x2 => new_cubic_spline_1d_interpolator( &
+        f_interp1d_x2 => new_cubic_spline_interpolator_1d( &
           Nc_x2_bis+1, &
           x2_min_bis, &
           x2_max_bis, &

@@ -6,8 +6,8 @@ program parallel_advection
 
   class(sll_interpolator_1d_base), pointer   :: interp_eta1
   class(sll_interpolator_1d_base), pointer   :: interp_eta2
-  type(cubic_spline_1d_interpolator), target :: spl_eta1
-  type(cubic_spline_1d_interpolator), target :: spl_eta2
+  type(sll_cubic_spline_interpolator_1d), target :: spl_eta1
+  type(sll_cubic_spline_interpolator_1d), target :: spl_eta2
   sll_real64, dimension(:,:),  pointer       :: f_eta1
   sll_real64, dimension(:,:),  pointer       :: f_eta2
   type(layout_2D), pointer                   :: layout_eta1
@@ -70,24 +70,24 @@ program parallel_advection
 
   layout_eta1 => new_layout_2D( sll_world_collective )        
 
-  call initialize_layout_with_distributed_2D_array( &
+  call initialize_layout_with_distributed_array( &
              nc_eta1+1, nc_eta2+1, 1,int(psize,4),layout_eta1)
 
-  if ( prank == MPI_MASTER ) call sll_view_lims_2D( layout_eta1 )
+  if ( prank == MPI_MASTER ) call sll_view_lims( layout_eta1 )
   call flush(6)
 
-  call compute_local_sizes_2d(layout_eta1,loc_sz_i,loc_sz_j)        
+  call compute_local_sizes(layout_eta1,loc_sz_i,loc_sz_j)        
   SLL_CLEAR_ALLOCATE(f_eta1(1:loc_sz_i,1:loc_sz_j),error)
 
   layout_eta2 => new_layout_2D( sll_world_collective )
 
-  call initialize_layout_with_distributed_2D_array( &
+  call initialize_layout_with_distributed_array( &
               nc_eta1+1, nc_eta2+1, int(psize,4),1,layout_eta2)
 
-  if ( prank == MPI_MASTER ) call sll_view_lims_2D( layout_eta2 )
+  if ( prank == MPI_MASTER ) call sll_view_lims( layout_eta2 )
   call flush(6)
 
-  call compute_local_sizes_2d(layout_eta2,loc_sz_i,loc_sz_j)        
+  call compute_local_sizes(layout_eta2,loc_sz_i,loc_sz_j)        
   SLL_CLEAR_ALLOCATE(f_eta2(1:loc_sz_i,1:loc_sz_j),error)
 
   eta1_to_eta2 => new_remap_plan( layout_eta1, layout_eta2, f_eta1)     
@@ -96,7 +96,7 @@ program parallel_advection
   do j=1,loc_sz_j
   do i=1,loc_sz_i
 
-     global_indices = local_to_global_2D(layout_eta2,(/i,j/)) 
+     global_indices = local_to_global(layout_eta2,(/i,j/)) 
      gi = global_indices(1)
      gj = global_indices(2)
 
@@ -111,7 +111,7 @@ program parallel_advection
   call apply_remap_2D( eta2_to_eta1, f_eta2, f_eta1 )
   call advection_eta1(0.5*delta_t)
 
-  offset = local_to_global_2D(layout_eta1,(/1,1/)) 
+  offset = local_to_global(layout_eta1,(/1,1/)) 
   offset_eta1 = (offset(1)-1)*delta_eta1
   offset_eta2 = (offset(2)-1)*delta_eta2
 
@@ -137,8 +137,8 @@ program parallel_advection
   if (prank == MPI_MASTER) &
        write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*psize
 
-  call delete_layout_2D(layout_eta1)
-  call delete_layout_2D(layout_eta2)
+  call sll_delete(layout_eta1)
+  call sll_delete(layout_eta2)
   SLL_DEALLOCATE_ARRAY(f_eta1, error)
   SLL_DEALLOCATE_ARRAY(f_eta2, error)
 
@@ -151,11 +151,11 @@ contains
   sll_real64, intent(in) :: dt
   sll_real64 :: alpha
 
-  call compute_local_sizes_2d(layout_eta1,loc_sz_i,loc_sz_j)
+  call compute_local_sizes(layout_eta1,loc_sz_i,loc_sz_j)
 
   do j=1,loc_sz_j
 
-     global_indices = local_to_global_2D(layout_eta1,(/1,j/)) 
+     global_indices = local_to_global(layout_eta1,(/1,j/)) 
      gj = global_indices(2)
      alpha = dt
      f_eta1(:,j) = interp_eta1%interpolate_array_disp(loc_sz_i,f_eta1(:,j),alpha)
@@ -169,11 +169,11 @@ contains
   sll_real64, intent(in) :: dt
   sll_real64 :: alpha
 
-  call compute_local_sizes_2d(layout_eta2,loc_sz_i,loc_sz_j)        
+  call compute_local_sizes(layout_eta2,loc_sz_i,loc_sz_j)        
 
   do i=1,loc_sz_i
 
-     global_indices = local_to_global_2D(layout_eta2,(/i,1/)) 
+     global_indices = local_to_global(layout_eta2,(/i,1/)) 
      gi = global_indices(1)
      alpha = dt
      f_eta2(i,:) = interp_eta2%interpolate_array_disp(loc_sz_j,f_eta2(i,:),alpha)

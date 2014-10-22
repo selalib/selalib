@@ -20,10 +20,10 @@ program unit_test_advection_2d_CSL1D
 #include "sll_memory.h"
 use sll_module_advection_2d_tensor_product
 use sll_module_characteristics_2d_explicit_euler
-use sll_cubic_spline_interpolator_2d
+use sll_module_cubic_spline_interpolator_2d
 use sll_module_advection_1d_BSL
 use sll_module_characteristics_1d_explicit_euler
-use sll_cubic_spline_interpolator_1d
+use sll_module_cubic_spline_interpolator_1d
 
 implicit none
   
@@ -90,7 +90,7 @@ implicit none
 
 
 
-  interp_x1 => new_cubic_spline_1d_interpolator( &
+  interp_x1 => new_cubic_spline_interpolator_1d( &
     num_cells_x1+1, &
     x1_min, &
     x1_max, &
@@ -107,7 +107,7 @@ implicit none
     num_cells_x1+1, &
     eta_coords = x1_mesh)
 
-  interp_x2 => new_cubic_spline_1d_interpolator( &
+  interp_x2 => new_cubic_spline_interpolator_1d( &
     num_cells_x2+1, &
     x2_min, &
     x2_max, &
@@ -128,7 +128,7 @@ implicit none
 
 
 
-  interp => new_cubic_spline_2d_interpolator( &
+  interp => new_cubic_spline_interpolator_2d( &
     num_cells_x1+1, &
     num_cells_x2+1, &
     x1_min, &

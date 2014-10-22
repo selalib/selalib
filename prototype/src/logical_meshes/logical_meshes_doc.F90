@@ -5,35 +5,19 @@
 ! in file Doxyfile.in (line 691) if it is excluded. 
 ! Type 'make doc' in build directory.
 ! To check the results, open : 
-! selalib/prototype/documentation/build/html/doxygen/html/namespaces.html 
+! selalib/prototype/documentation/build/html/doxygen/html/defgroup logical_meshess.html 
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @namespace sll_logical_meshes 
+!> @defgroup logical_meshes sll_logical_meshes 
 !> @brief 
-!> Description of logical_meshes library (72 characters)
-!> @author Selalib team 
-!> You can add a contact, do not put your email to prevent spam.
+!> Logical mesh basic types
+!> @author Edwin Chacon-Golcher
 !> @details
-!> Long description of  logical_meshes, you can add some references or math equations.
-!>
-!> <b> Headers file available </b>
-!>  - sll_logical_meshes.h
-!>
-!> <b> Modules available </b>
-!>  List fortran module available
-!>  - sll_logical_meshes
-!>  - sll_hex_meshes
 !>
 !> <b> How to use it </b>
-!> - Header file : \code #include 'sll_logical_meshes.h' \endcode
-!> - Link with   <code>-lsll_%s</code>
+!> - Link with   <code>-lsll_logical_meshes</code>
 !> - Add <code> use sll_logical_meshes </code>
 !>
 !> <b> Examples </b>
-!> -Add some fortran lines to explain how ti use the library
-!> \code
-!> call initialize(my_type, arg_1, arg_2)
-!> call solve(my_type, your_result)
-!> \endcode
-!>
+!> @snippet logical_meshes/unit_test.F90 example

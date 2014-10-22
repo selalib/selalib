@@ -77,8 +77,6 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/general_coordinate_elliptic_solvers/sll_knots.F90
     ${SLL_DIR}/general_coordinate_elliptic_solvers/connectivity_qn.f90
     ${SLL_DIR}/splines/sll_cubic_splines.F90
-    ${SLL_DIR}/splines/sll_quintic_splines.F90
-    ${SLL_DIR}/splines/sll_odd_degree_splines.F90
     ${SLL_DIR}/splines/sll_arbitrary_degree_splines.F90
     ${SLL_DIR}/splines/cubic_nonuniform_splines.F90
     ${SLL_DIR}/deboor_splines/banfac.f90  
@@ -87,18 +85,17 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/deboor_splines/splopt.f90
     ${SLL_DIR}/deboor_splines/sll_module_deboor_splines_1d.F90
     ${SLL_DIR}/deboor_splines/sll_module_deboor_splines_2d.F90
+    ${SLL_DIR}/hermite_interpolation/sll_hermite_interpolation_2d.F90
     ${SLL_DIR}/interpolators/sll_interpolators_1d_base.F90
-    ${SLL_DIR}/interpolators/sll_odd_degree_spline_interpolator_1d.F90
-    ${SLL_DIR}/interpolators/sll_quintic_spline_interpolator_1d.F90
-    ${SLL_DIR}/interpolators/sll_cubic_spline_interpolator_2d.F90
     ${SLL_DIR}/interpolators/sll_interpolators_2d_base.F90
     ${SLL_DIR}/interpolators/sll_cubic_spline_interpolator_1d.F90
+    ${SLL_DIR}/interpolators/sll_cubic_spline_interpolator_1d_nonuniform.F90
+    ${SLL_DIR}/interpolators/sll_cubic_spline_interpolator_2d.F90
     ${SLL_DIR}/interpolators/sll_arbitrary_degree_spline_interpolator_1d.F90
     ${SLL_DIR}/interpolators/sll_arbitrary_degree_spline_interpolator_2d.F90
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_solvers_base.F90
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_fdtd.F90
     ${SLL_DIR}/periodic_interpolation/periodic_interp.F90
-    ${SLL_DIR}/poisson_solvers/sll_poisson_solvers.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_1d_periodic.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_polar.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_fftpack.F90
@@ -189,15 +186,9 @@ IF((${FFT_LIB} MATCHES "FFTW") AND FFTW_ENABLED)
   )
 ENDIF()
 
-IF(MUDPACK_ENABLED)
-
-  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
-    ${SLL_DIR}/poisson_solvers/sll_mudpack_base.F90
-    ${SLL_DIR}/poisson_solvers/sll_mudpack_cartesian.F90
-  )
-
-ENDIF(MUDPACK_ENABLED)
-
+SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
+  ${SLL_DIR}/poisson_solvers/sll_mudpack.F90
+)
 
 IF(SUITESPARSE_ENABLED)
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
@@ -215,8 +206,8 @@ IF(MPI_MODULE_ENABLED)
        ${SLL_DIR}/collective/sll_collective.F90
        ${SLL_DIR}/remap/sll_remap.F90
        ${SLL_DIR}/point_to_point_communications/sll_point_to_point_comms.F90
-       ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_cartesian_par.F90
-       ${SLL_DIR}/poisson_solvers/sll_poisson_polar_parallel.F90
+       ${SLL_DIR}/poisson_solvers_parallel/sll_poisson_2d_periodic_cartesian_par.F90
+       ${SLL_DIR}/poisson_solvers_parallel/sll_poisson_polar_parallel.F90
        ${SLL_DIR}/simulation/simulation_base_class.F90
        ${SLL_DIR}/parallel_array_initializers/sll_common_array_initializers_module.F90
        ${SLL_DIR}/parallel_array_initializers/sll_parallel_array_initializer_module.F90
@@ -251,7 +242,8 @@ IF(SLL_BUILD_PACKAGE)
       INSTALL(TARGETS selalib ARCHIVE DESTINATION lib COMPONENT libraries)
    ENDIF()
    
-   SET(DIST_NAME "selalib-0.5.0")
+   
+   SET(DIST_NAME "selalib-${CPACK_PACKAGE_VERSION}")
    
    ADD_CUSTOM_TARGET(release 
    COMMAND ${CMAKE_COMMAND} -E copy_directory 
@@ -269,7 +261,7 @@ IF(SLL_BUILD_PACKAGE)
            ${CMAKE_CURRENT_SOURCE_DIR}/../documentation.f90 
            ${CMAKE_BINARY_DIR}/${DIST_NAME}/
    COMMAND ${CMAKE_COMMAND} -E copy 
-           ${CMAKE_CURRENT_SOURCE_DIR}/../../documentation/sphinx/_static/logo2.png 
+           ${CMAKE_CURRENT_SOURCE_DIR}/../../doc/sphinx/_static/logo2.png 
            ${CMAKE_BINARY_DIR}/${DIST_NAME}/
    COMMAND ${CMAKE_COMMAND} -E copy_directory 
            ${CMAKE_CURRENT_SOURCE_DIR}/../fftpack 
