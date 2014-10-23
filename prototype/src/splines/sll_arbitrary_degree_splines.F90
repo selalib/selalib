@@ -900,9 +900,9 @@ contains
     !        0, 0, 0, 1, 0, 0, 0
     !
     ! And from this we recursively build the higher degree splines.
-    splines(:)               = 0.0_f64
+    splines(:)        = 0.0_f64
     splines(degree+1) = 1.0_f64
-    derivs(:)               = 0.0_f64
+    derivs(:)         = 0.0_f64
     
     
     ! Build the higher order splines. 
@@ -943,10 +943,5 @@ contains
     
     uniform_b_splines_and_derivs_at_x(1,1:degree+1) = splines(1:degree+1)
   end function uniform_b_splines_and_derivs_at_x
-
-
-
-
-
 
 end module sll_arbitrary_degree_splines
