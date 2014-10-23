@@ -471,15 +471,14 @@ end subroutine plot_dg_field_2d_with_plotmtv
 
 subroutine plot_dg_field_2d_with_xdmf(this, field_name, time)
 
-   class(sll_dg_field_2d)              :: this
-   character(len=*)                    :: field_name
-   sll_int32                           :: file_id
-   sll_int32                           :: i, j, k, ii, jj
-   sll_real64                          :: offset(2)
-   sll_real64                          :: eta1, eta2
-   sll_int32                           :: clength
-   sll_real64, optional                :: time
-   class(sll_logical_mesh_2d), pointer :: lm
+   class(sll_dg_field_2d)   :: this
+   character(len=*)         :: field_name
+   sll_int32                :: file_id
+   sll_int32                :: i, j, k, ii, jj
+   sll_real64               :: offset(2)
+   sll_real64               :: eta1, eta2
+   sll_int32                :: clength
+   sll_real64, optional     :: time
 
    clength = len_trim(field_name)
 
