@@ -4,9 +4,6 @@
 *.pyc
 *.so
 *~
-*.so
-*.pyc
-*.F90#
 .sconsign.dblite
 unit_test
 *.swp
@@ -114,7 +111,4 @@ prototype/src/fix-names.py
 
 *.orig
 
-prototype/intel_build
-*.orig
-
-*.orig
+prototype/intel_build/*
