@@ -24,9 +24,9 @@ module sll_meshes_base
      procedure(display_mesh_2d), deferred, pass :: display
      procedure(delete_mesh_2d),  deferred, pass :: delete
      generic, public :: eta1_cell => eta1_cell_one_arg, &
-          eta1_cell_two_arg
+                                     eta1_cell_two_arg
      generic, public :: eta2_cell => eta2_cell_one_arg, &
-          eta2_cell_two_arg
+                                     eta2_cell_two_arg
   end type sll_mesh_2d_base
 
   !> @brief 3D logical mesh

@@ -37,7 +37,6 @@ module sll_coordinate_transformation_2d_base_module
      !> logical mesh
      type(sll_logical_mesh_2d), pointer :: mesh => null()
 !     type(sll_logical_mesh_2d), pointer :: mesh2d_minimal => null()
-     !logical to remember when the mesh has already been written to file
      !> Just a name for output
      character(len=64) :: label
      !> Check if coordinates are already written in output file
@@ -211,6 +210,6 @@ module sll_coordinate_transformation_2d_base_module
      end subroutine read_transformation
   end interface
 
-#endif // DOXYGEN_SHOULD_SKIP_THIS
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
   
 end module sll_coordinate_transformation_2d_base_module
