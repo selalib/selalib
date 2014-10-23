@@ -22,7 +22,6 @@ module sll_logical_meshes
 #include "sll_memory.h"
 use sll_meshes_base
 implicit none
-private
 
   !> @brief 1D logical mesh
   type, public, extends(sll_mesh_1d_base) :: sll_logical_mesh_1d
