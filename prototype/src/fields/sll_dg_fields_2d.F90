@@ -480,6 +480,8 @@ subroutine plot_dg_field_2d_with_xdmf(this, field_name, time)
    sll_int32                :: clength
    sll_real64, optional     :: time
 
+   class(sll_logical_mesh_2d), pointer :: lm
+
    clength = len_trim(field_name)
 
    SLL_ASSERT(this%degree < 10)
