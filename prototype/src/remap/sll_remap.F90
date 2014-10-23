@@ -638,6 +638,7 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
   public :: get_layout_collective
   public :: new_layout_2D_from_layout_4D
   public :: new_layout_3D_from_layout_4D
+  public :: write_to_file
 
 contains  !******************************************************************
 
