@@ -115,3 +115,6 @@ prototype/src/fix-names.py
 *.orig
 
 prototype/intel_build
+*.orig
+
+*.orig
