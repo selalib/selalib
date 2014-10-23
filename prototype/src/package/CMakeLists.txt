@@ -93,6 +93,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/interpolators/sll_cubic_spline_interpolator_2d.F90
     ${SLL_DIR}/interpolators/sll_arbitrary_degree_spline_interpolator_1d.F90
     ${SLL_DIR}/interpolators/sll_arbitrary_degree_spline_interpolator_2d.F90
+    ${SLL_DIR}/interpolators/sll_periodic_interpolator_1d.F90
+    ${SLL_DIR}/interpolators/sll_lagrange_interpolator_1d.F90
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_solvers_base.F90
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_fdtd.F90
     ${SLL_DIR}/periodic_interpolation/periodic_interp.F90
@@ -164,8 +166,7 @@ IF(${FFT_LIB} MATCHES "FFTPACK")
 ELSEIF(${FFT_LIB} MATCHES "FFTW")
 
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
-      ${SLL_DIR}/fft/fftw3/sll_fft.F90
-      ${SLL_DIR}/fft/fftw3/fftw3.F90 )
+      ${SLL_DIR}/fft/fftw3/sll_fft.F90)
 
 ELSE()
 
@@ -177,8 +178,9 @@ ENDIF()
 # Got the impression that this maxwell solver is made to work with FFTW only,
 # thus I'm including the following. Intent needs to be made more explicit if 
 # this is not the case. ECG
-IF((${FFT_LIB} MATCHES "FFTW") AND FFTW_ENABLED)
+IF(FFTW_ENABLED)
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
+    ${SLL_DIR}/fft/fftw3/fftw3.F90
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_pstd.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_fftw.F90
     ${SLL_DIR}/multigrid/sll_multigrid_2d.F90
