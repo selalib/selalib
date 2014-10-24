@@ -72,10 +72,12 @@ interface sll_solve
  module procedure solve_maxwell_2d_pstd
 end interface sll_solve
 
+!> Solve ampere equation using maxwell solver 2d cartesian periodic with PSTD scheme
 interface sll_solve_ampere
  module procedure ampere_2d_pstd
 end interface sll_solve_ampere
 
+!> Solve faraday equation using solver 2d cartesian periodic with PSTD scheme
 interface sll_solve_faraday
  module procedure faraday_2d_pstd
 end interface sll_solve_faraday
