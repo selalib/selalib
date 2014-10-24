@@ -27,6 +27,8 @@ SET(SLL_MACROS
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations.h
     ${SLL_DIR}/pic_accumulators/sll_accumulators.h
     ${SLL_DIR}/pic_particle_types/particle_representation.h
+    ${SLL_DIR}/multigrid/compdir.inc
+    ${SLL_DIR}/multigrid/mgd2_routines.h
 )
 
 FILE(COPY ${SLL_MACROS} DESTINATION ${CMAKE_BINARY_DIR}/include)
@@ -283,7 +285,7 @@ IF(SLL_BUILD_PACKAGE)
    COMMAND ${CMAKE_COMMAND} -E md5sum ${DIST_NAME}.tar.gz
    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/${DIST_NAME}
            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-           COMMENT "Generating Release for macports" VERBATIM)
+           COMMENT "Generating Release" VERBATIM)
    
    ADD_CUSTOM_TARGET(make_source_dir 
    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/${DIST_NAME}/src)
