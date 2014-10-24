@@ -30,6 +30,10 @@ integer, parameter, public :: CARTESIAN_3D = 3    !< geometry parameter
 integer, parameter, public :: POLAR        = 11   !< geometry parameter
 integer, parameter, public :: CYLINDRICAL  = 12   !< geometry parameter
 
+interface sll_create
+  module procedure initialize_mudpack_cartesian
+end interface sll_create
+
 interface sll_solve
   module procedure solve_mudpack_cartesian
 end interface sll_solve
