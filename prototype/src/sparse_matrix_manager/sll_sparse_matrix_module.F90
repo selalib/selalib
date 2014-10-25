@@ -318,7 +318,7 @@ contains
       li_k_1 = mat % opi_ia(li_i)
       li_k_2 = mat % opi_ia(li_i + 1) - 1
       output(li_i) = &
-        DOT_PRODUCT(mat % opr_a(li_k_1: li_k_2), input(mat % opi_ja(li_k_1: li_k_2)))
+        DOT_PRODUCT(mat % opr_a(li_k_1:li_k_2), input(mat % opi_ja(li_k_1:li_k_2)))
             
     end do
 
@@ -353,23 +353,12 @@ contains
   subroutine sll_solve_csr_matrix(mat, apr_B, apr_U)
     implicit none
     type(sll_csr_matrix), intent(in) :: mat
-    sll_real64, dimension(:),intent(in) :: apr_B
+    sll_real64, dimension(:),intent(inout) :: apr_B
     sll_real64, dimension(:),intent(out) :: apr_U
-    !local var
-    !sll_int32  :: sys
-    !sll_real64, dimension(umfpack_info) :: info
-    !sys = 0
-    !call umf4sol(sys,apr_U,apr_B,mat%umf_numeric,mat%umf_control,info)
-    !use SparseMatrix_Module
-    !implicit none
-    !type(csr_matrix) :: this
-    !real(8), dimension(:) :: apr_U
-    !real(8), dimension(:) :: apr_B
     integer  :: ai_maxIter
     real(8) :: ar_eps
     !local var
     real(8), dimension(:), pointer :: lpr_Ad
-    real(8), dimension(:), pointer :: lpr_r
     real(8), dimension(:), pointer :: lpr_d
     real(8), dimension(:), pointer :: lpr_Ux
     real(8) :: lr_Norm2r1
@@ -400,8 +389,6 @@ contains
 
     allocate(lpr_Ad(mat%num_rows),stat=li_err)
     if (li_err.ne.0) li_flag=10
-    allocate(lpr_r(mat%num_rows),stat=li_err)
-    if (li_err.ne.0) li_flag=20
     allocate(lpr_d(mat%num_rows),stat=li_err)
     if (li_err.ne.0) li_flag=30
     allocate(lpr_Ux(mat%num_rows),stat=li_err)
@@ -411,17 +398,19 @@ contains
     !================!
     
     apr_U(:)  = 0.0_8
-    lpr_Ux(:) = apr_U(:)
+    lpr_Ux(:) = 0.0_8
     li_iter = 0
+
     call sll_mult_csr_matrix_vector( mat , lpr_Ux , lpr_Ad )
+
     !-------------------!
     ! calcul des normes !
     !-------------------!
-    lpr_r       = apr_B - lpr_Ad
-    lr_Norm2r0  = DOT_PRODUCT( lpr_r , lpr_r )
     lr_NormInfb = maxval( dabs( apr_B ) )
+    apr_B       = apr_B - lpr_Ad
+    lr_Norm2r0  = DOT_PRODUCT( apr_B , apr_B )
 
-    lpr_d = lpr_r
+    lpr_d = apr_B
     !================!
 
  
@@ -441,7 +430,7 @@ contains
             !==================================================!
             ! calcul des composantes residuelles
             !-----------------------------------
-            lpr_r = lpr_r - lr_alpha * lpr_Ad
+            apr_B = apr_B - lr_alpha * lpr_Ad
             
             !----------------------------------------!
             ! approximations ponctuelles au rang k+1 !
@@ -453,14 +442,14 @@ contains
             !     pour le test d'arret                              !
             ! (b) extraction de la norme euclidienne du residu rk+1 !
             !-------------------------------------------------------!
-            lr_NormInfr = maxval(dabs( lpr_r ))
-            lr_Norm2r1 = DOT_PRODUCT( lpr_r , lpr_r )
+            lr_NormInfr = maxval(dabs( apr_B ))
+            lr_Norm2r1 = DOT_PRODUCT( apr_B , apr_B )
             !==================================================!
             ! calcul de la nouvelle direction de descente dk+1 !
             !==================================================!
             lr_beta = lr_Norm2r1 / lr_Norm2r0
             lr_Norm2r0 = lr_Norm2r1
-            lpr_d = lpr_r + lr_beta * lpr_d
+            lpr_d = apr_B + lr_beta * lpr_d
             
             !-------------------!
             ! boucle suivante ? !
@@ -478,7 +467,6 @@ contains
     
     deallocate(lpr_Ad)
     deallocate(lpr_d)
-    deallocate(lpr_r)
     deallocate(lpr_Ux)
 
   end subroutine sll_solve_csr_matrix
