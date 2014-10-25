@@ -7,8 +7,6 @@ module sll_general_coordinate_elliptic_solver_module
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-
-
   use sll_boundary_condition_descriptors
   use sll_module_scalar_field_2d_base
   use sll_module_scalar_field_2d_alternative
@@ -110,8 +108,6 @@ module sll_general_coordinate_elliptic_solver_module
 
 contains ! *******************************************************************
 
-
-
   !> @brief Initialization for elleptic solver.
   !> @details To have the function phi such that 
   !>  div( A grad phi ) + B grad phi + C phi = rho
@@ -178,8 +174,6 @@ contains ! *******************************************************************
    sll_int32 :: ierr,ierr1
    sll_int32 :: solution_size,i
    sll_int32 :: sll_perper  
-   !sll_int32 :: quadrature_type1_tmp
-   !sll_int32 :: quadrature_type2_tmp
    
    es%total_num_splines_loc = (spline_degree_eta1+1)*(spline_degree_eta2+1)
    ! The total number of splines in a single direction is given by
@@ -243,7 +237,6 @@ contains ! *******************************************************************
       
    end select
 
-   !print*, es%gauss_pts2(1,:), ES_GAUSS_LEGENDRE
    if( (bc_left == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
        (bc_bottom == SLL_PERIODIC) .and. (bc_top == SLL_PERIODIC) ) then
 
@@ -328,8 +321,6 @@ contains ! *******************************************************************
         bc_top, &
         es%knots2 )
 
-
- 
    call initconnectivity( &
         num_cells_eta1, &
         num_cells_eta2, &
@@ -352,9 +343,8 @@ contains ! *******************************************************************
       es%local_to_global_spline_indices, &
       es%total_num_splines_loc)
 
-    es%knots1_rho ( 1 : spline_degree_eta1 +1 ) = eta1_min
+     es%knots1_rho ( 1 : spline_degree_eta1 +1 ) = eta1_min
     es%knots1_rho ( num_cells_eta1 + 2 : num_cells_eta1 + 1 + spline_degree_eta1 +1 ) = eta1_max
-    
     
      if ( mod(spline_degree_eta1 +1,2) == 0 ) then
         do i = spline_degree_eta1 +1 + 1, num_cells_eta1 + 1
@@ -412,8 +402,6 @@ contains ! *******************************************************************
 !
   end subroutine initialize_general_elliptic_solver
   
-
-
   !> @brief Initialization for elleptic solver.
   !> @details To have the function phi such that 
   !>  div( A grad phi ) + B grad phi + C phi = rho
@@ -1170,8 +1158,6 @@ if (sll_perper == 0) then
              
           end if
     
-          
-          
           call bsplvd(&
                obj%knots1,&
                obj%spline_degree1+1,&
