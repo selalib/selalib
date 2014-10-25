@@ -109,6 +109,8 @@ program test_general_elliptic_solver
   real(8) :: integral_solution
   real(8) :: integral_exact_solution
 
+  CHARACTER(len=10) :: cmd
+
   sll_real64 :: grad1_node_val,grad2_node_val,grad1ref,grad2ref
   sll_real64, dimension(1) :: whatever  ! dummy params array
 
@@ -136,7 +138,13 @@ program test_general_elliptic_solver
   normL2 = 0.0_f64
   normH1 = 0.0_f64
 
-  k = 1
+  call Get_command_argument(1,cmd)
+  read (cmd,'(I2)') k
+  print *, i
+
+  do k = 1, 13
+  select case(k)
+  case(1)
   print*, "-------------------------------------------------------------"
   print*, "1 test case witout change of coordinates"
   print*, " periodic-periodic boundary conditions "
@@ -189,11 +197,11 @@ program test_general_elliptic_solver
   
   call check_error()
 
+  case(2)
   print*, "-------------------------------------------------------------"
   print*, " 2 test case witout change of coordinates"
   print*, " periodic-dirichlet boundary conditions"
   print*, "-------------------------------------------------------------"
-  k = k+1
   
   T => new_coordinate_transformation_2d_analytic( &
        "analytic", &
@@ -243,11 +251,11 @@ program test_general_elliptic_solver
   
   call check_error()
 
+  case(3)
   print*, "-------------------------------------------------------------"
   print*, " 3 test case witout change of coordinates"
   print*, " dirichlet-dirichlet boundary conditions"
   print*, "-------------------------------------------------------------"
-  k = k+1
   
   T => new_coordinate_transformation_2d_analytic( &
        "analytic", &
@@ -296,11 +304,11 @@ program test_general_elliptic_solver
   call delete_things()
   call check_error()
 
+  case(4)
   print*, "-------------------------------------------------------------"
   print*, " 4 test case witout change of coordinates"
   print*, " dirichlet-periodic boundary conditions"
   print*, "-------------------------------------------------------------"
-  k = k+1
   
   T => new_coordinate_transformation_2d_analytic( &
        "analytic", &
@@ -353,11 +361,11 @@ program test_general_elliptic_solver
   
   call check_error()
 
+  case(5)
   print*, "---------------------"
   print*, " 5 test case with colella change of coordinates"
   print*, " periodic-periodic boundary conditions"
   print*, "---------------------"
-  k = k+1
   
   T => new_coordinate_transformation_2d_analytic( &
        "analytic", &
@@ -416,11 +424,11 @@ program test_general_elliptic_solver
   
   call check_error()
 
+  case(6)
   print*, "-------------------------------------------------------------"
   print*, " 6 test case with colella change of coordinates"
   print*, " periodic-dirichlet boundary conditions"
   print*, "-------------------------------------------------------------"
-  k = k+1
   
   T => new_coordinate_transformation_2d_analytic( &
        "analytic", &
@@ -482,11 +490,11 @@ program test_general_elliptic_solver
   call delete_things()
   
 
+  case(7)
   print*, "-------------------------------------------------------------"
   print*, " 7 test case with colella change of coordinates"
   print*, " dirichlet-dirichlet boundary conditions"
   print*, "-------------------------------------------------------------"
-  k = k+1
   
   T => new_coordinate_transformation_2d_analytic( &
        "analytic", &
@@ -543,11 +551,11 @@ program test_general_elliptic_solver
 
   call check_error()
 
+  case(8)
   print*, "---------------------"
   print*, " 8 test case with colella change of coordinates"
   print*, " dirichlet-periodic boundary conditions"
   print*, "---------------------"
-  k = k+1
   
   T => new_coordinate_transformation_2d_analytic( &
        "analytic", &
@@ -604,12 +612,12 @@ program test_general_elliptic_solver
 
   call check_error()
 
+  case(9)
   print*, "---------------------"
   print*, " 95 test case without change of coordinates"
   print*, " periodic-periodic boundary conditions"
   print*, " with non analytic source term " 
   print*, "---------------------"
-  k = k+1
   
   T => new_coordinate_transformation_2d_analytic( &
        "analytic", &
@@ -674,12 +682,12 @@ program test_general_elliptic_solver
 
   call check_error()
 
+  case(10)
   print*, "---------------------"
   print*, " 9 test case with colella change of coordinates"
   print*, " periodic-periodic boundary conditions"
   print*, " with non analytic source term " 
   print*, "---------------------"
-  k = k+1
   
   T => new_coordinate_transformation_2d_analytic( &
        "analytic", &
@@ -754,12 +762,12 @@ program test_general_elliptic_solver
 
   call check_error()
 
+  case(11)
   print*, "---------------------"
   print*, " 10 test case with colella change of coordinates"
   print*, " periodic-dirichlet boundary conditions"
   print*, " with non analytic source term " 
   print*, "---------------------"
-  k = k+1
   
   T => new_coordinate_transformation_2d_analytic( &
        "analytic", &
@@ -835,12 +843,12 @@ program test_general_elliptic_solver
   
   call check_error()
 
+  case(12)
   print*, "---------------------"
   print*, " 11 test case with colella change of coordinates"
   print*, " dirichlet-dirichlet boundary conditions"
   print*, " with non analytic source term " 
   print*, "---------------------"
-  k = k+1
   
    T => new_coordinate_transformation_2d_analytic( &
        "analytic", &
@@ -915,12 +923,12 @@ program test_general_elliptic_solver
 
   call check_error()
 
+  case(13)
   print*, "---------------------"
   print*, " 12 test case with colella change of coordinates"
   print*, " dirichlet-periodic  boundary conditions"
   print*, " with non analytic source term " 
   print*, "---------------------"
-  k = k+1
   
   T => new_coordinate_transformation_2d_analytic( &
        "analytic", &
@@ -994,33 +1002,24 @@ program test_general_elliptic_solver
 
   call check_error()
 
+  end select
+  end do
+
   acc = acc/(npts1*npts2)
 
-  print*, '-----------------------------------------------------'
-  print*, ' WITHOUT CHANGE OF COORDINATES AND ANALYTIC DATA' 
-  print*, '-----------------------------------------------------'
-  print*,'Average error (per-per) without change of coordinates=',acc(1)
-  print*,'Average error (per-dir) without change of coordinates=',acc(2)
-  print*,'Average error (dir-dir) without change of coordinates=',acc(3)
-  print*,'Average error (dir-per) without change of coordinates=',acc(4)
-  print*,'-------------------------------------------------------'
-  print*,' COLELLA CHANGE OF COORDINATES AND ANALYTIC DATA' 
-  print*,'-------------------------------------------------------'
-  print*,'Average error (per-per) with colella change of coordinates=',acc(5)
-  print*,'Average error (per-dir) with colella change of coordinates=',acc(6)
-  print*,'Average error (dir-dir) with colella change of coordinates=',acc(7)
-  print*,'Average error (dir-per) with colella change of coordinates=',acc(8)
-  print*,'------------------------------------------------------------------'
-  print*,' WITHOUT CHANGE OF COORDINATES AND WITH A SOURCE TERM NON-ANALYTIC' 
-  print*,'------------------------------------------------------------------'
-  print*,'Average error (per-per) without change of coordinates=',acc(9)
-  print*,'------------------------------------------------------------------'
-  print*,' COLELLA CHANGE OF COORDINATES AND WITH A SOURCE TERM NON-ANALYTIC' 
-  print*,'------------------------------------------------------------------'
-  print*,'Average error (per-per) with colella and source term non analytic=',acc(10)
-  print*,'Average error (per-dir) with colella and source term non analytic=',acc(11)
-  print*,'Average error (dir-dir) with colella and source term non analytic=',acc(12)
-  print*,'Average error (dir-per) with colella and source term non analytic=',acc(13)
+  print*,'error (per-per) with identity   =',acc(1)
+  print*,'error (per-dir) with identity   =',acc(2)
+  print*,'error (dir-dir) with identity   =',acc(3)
+  print*,'error (dir-per) with identity   =',acc(4)
+  print*,'error (per-per) with colella    =',acc(5)
+  print*,'error (per-dir) with colella    =',acc(6)
+  print*,'error (dir-dir) with colella    =',acc(7)
+  print*,'error (dir-per) with colella    =',acc(8)
+  print*,'error (per-per) with identity and source term non analytic=',acc(9)
+  print*,'error (per-per) with colella  and source term non analytic=',acc(10)
+  print*,'error (per-dir) with colella  and source term non analytic=',acc(11)
+  print*,'error (dir-dir) with colella  and source term non analytic=',acc(12)
+  print*,'error (dir-per) with colella  and source term non analytic=',acc(13)
 
   do k = 1, 13
     print"('test',i2,' : ','norm L2=',g15.3,' norm H1=',g15.3,' times=',2g15.3)" &
@@ -1210,29 +1209,33 @@ contains
        ETA2MIN, &
        ETA2MAX)
  
-  ti = sll_time_elapsed_since(t_reference)
  
+  call factorize_mat_es(&
+    es, &
+    a11_field_mat, &
+    a12_field_mat,&
+    a21_field_mat,&
+    a22_field_mat,&
+    b1_field_vect,&
+    b2_field_vect,&
+    c_field)
+
+  ti = sll_time_elapsed_since(t_reference)
+
   call sll_set_time_mark(t_reference)
 
-  call factorize_mat_es(&
-       es, &
-       a11_field_mat, &
-       a12_field_mat,&
-       a21_field_mat,&
-       a22_field_mat,&
-       b1_field_vect,&
-       b2_field_vect,&
-       c_field)
-
-  do istep = 1, 10
+  write(*,"(' ')",advance="no")
+  do istep = 1, 20
 
     values = 0.0_f64
     call phi%set_field_data(values)
     call phi%update_interpolation_coefficients()
 
     call sll_solve( es, rho, phi)
+    write(*,"(i3)",advance="no") istep
 
   end do
+  write(*,*) ' steps'
 
   te = sll_time_elapsed_since(t_reference)
 
