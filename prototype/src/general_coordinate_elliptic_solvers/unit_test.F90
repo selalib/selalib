@@ -65,7 +65,6 @@ program test_general_elliptic_solver
 
   sll_real64, dimension(NUM_CELLS1+1,NUM_CELLS2+1) :: values
   sll_real64, dimension(NUM_CELLS1+1,NUM_CELLS2+1) :: calculated
-  sll_real64, dimension(NUM_CELLS1+1,NUM_CELLS2+1) :: difference
   sll_real64, dimension(NUM_CELLS1+1,NUM_CELLS2+1) :: reference
   sll_real64, dimension(NUM_CELLS1+1,NUM_CELLS2+1) :: tab_rho
 
@@ -183,7 +182,6 @@ program test_general_elliptic_solver
         ref        = sol_exacte_perper(eta1(i),eta2(j))
         grad1ref   = sol_exacte_perper_der1(eta1(i),eta2(j))
         grad2ref   = sol_exacte_perper_der2(eta1(i),eta2(j))
-        difference(i,j) = ref-node_val
         reference( i,j) = ref
         normL2(k)   = normL2(k) + (node_val-ref)**2*h1*h2
         normH1(k)   = normH1(k) + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2
@@ -195,7 +193,7 @@ program test_general_elliptic_solver
 
   call delete_things()
   
-  call check_error()
+  call check_error(k)
 
   case(2)
   print*, "-------------------------------------------------------------"
@@ -236,7 +234,6 @@ program test_general_elliptic_solver
         ref        = sol_exacte_perdir(eta1(i),eta2(j))
         grad1ref   = sol_exacte_perdir_der1(eta1(i),eta2(j))
         grad2ref   = sol_exacte_perdir_der2(eta1(i),eta2(j))
-        difference(i,j) = ref-node_val
         reference( i,j) = ref
         if(PRINT_COMPARISON) call printout_comparison()
         normL2(k)    = normL2(k) + (node_val-ref)**2*h1*h2
@@ -249,7 +246,7 @@ program test_general_elliptic_solver
 
   call delete_things()
   
-  call check_error()
+  call check_error(k)
 
   case(3)
   print*, "-------------------------------------------------------------"
@@ -290,7 +287,6 @@ program test_general_elliptic_solver
         ref             = sol_exacte_perdir(eta1(i),eta2(j))
         grad1ref        = sol_exacte_perdir_der1(eta1(i),eta2(j))
         grad2ref        = sol_exacte_perdir_der2(eta1(i),eta2(j))
-        difference(i,j) = ref-node_val
         reference(i,j)  = ref
         normL2(k)  = normL2(k) + (node_val-ref)**2*h1*h2
         normH1(k)  = normH1(k) + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2
@@ -302,7 +298,7 @@ program test_general_elliptic_solver
   integral_exact_solution = sum(reference(1:NUM_CELLS1,1:NUM_CELLS2))*h1*h2
 
   call delete_things()
-  call check_error()
+  call check_error(k)
 
   case(4)
   print*, "-------------------------------------------------------------"
@@ -345,8 +341,6 @@ program test_general_elliptic_solver
         ref             = sol_exacte_dirper(eta1(i),eta2(j))
         grad1ref        = sol_exacte_dirper_der1(eta1(i),eta2(j))
         grad2ref        = sol_exacte_dirper_der2(eta1(i),eta2(j))
-        calculated(i,j) = node_val
-        difference(i,j) = ref-node_val
         reference(i,j)  = ref
         normL2(k)       = normL2(k) + (node_val-ref)**2*h1*h2
         normH1(k)       = normH1(k) + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2
@@ -359,7 +353,7 @@ program test_general_elliptic_solver
 
   call delete_things()
   
-  call check_error()
+  call check_error(k)
 
   case(5)
   print*, "---------------------"
@@ -401,7 +395,6 @@ program test_general_elliptic_solver
         ref        = sol_exacte_chgt_perper(eta1(i),eta2(j))
         grad1ref   = sol_exacte_chgt_perper_der1(eta1(i),eta2(j))
         grad2ref   = sol_exacte_chgt_perper_der2(eta1(i),eta2(j))
-        difference(i,j) = ref-node_val
         reference(i,j) = ref
         val_jac = sinprod_jac11(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
                   sinprod_jac22(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
@@ -422,7 +415,7 @@ program test_general_elliptic_solver
 
   call delete_things()
   
-  call check_error()
+  call check_error(k)
 
   case(6)
   print*, "-------------------------------------------------------------"
@@ -454,8 +447,6 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        whatever )
   
-  
-  call sll_set_time_mark(t_reference)
   call solve_fields( SLL_PERIODIC, SLL_PERIODIC, SLL_DIRICHLET, SLL_DIRICHLET, ti(k), te(k))
 
   do j=1,npts2
@@ -464,13 +455,10 @@ program test_general_elliptic_solver
         node_val = calculated(i,j)
         grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
         grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
-        !print*, 'rer'
         ref        = sol_exacte_chgt_perdir(eta1(i),eta2(j))
         grad1ref   = sol_exacte_chgt_perdir_der1(eta1(i),eta2(j))
         grad2ref   = sol_exacte_chgt_perdir_der2(eta1(i),eta2(j))
-        difference(i,j) = ref-node_val
         reference(i,j) = ref
-        
         if(PRINT_COMPARISON) call printout_comparison()
         
         val_jac = sinprod_jac11(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
@@ -531,7 +519,6 @@ program test_general_elliptic_solver
         ref        = sol_exacte_chgt_dirdir(eta1(i),eta2(j))
         grad1ref   = sol_exacte_chgt_dirdir_der1(eta1(i),eta2(j))
         grad2ref   = sol_exacte_chgt_dirdir_der2(eta1(i),eta2(j))
-        difference(i,j) = ref-node_val
         reference(i,j) = ref
         if(PRINT_COMPARISON) call printout_comparison()
         val_jac = sinprod_jac11(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
@@ -549,7 +536,7 @@ program test_general_elliptic_solver
   end do
   call delete_things()
 
-  call check_error()
+  call check_error(k)
 
   case(8)
   print*, "---------------------"
@@ -592,7 +579,6 @@ program test_general_elliptic_solver
         ref        = sol_exacte_chgt_dirper(eta1(i),eta2(j))
         grad1ref   = sol_exacte_chgt_dirper_der1(eta1(i),eta2(j))
         grad2ref   = sol_exacte_chgt_dirper_der2(eta1(i),eta2(j))
-        difference(i,j) = ref-node_val
         reference(i,j) = ref
         if(PRINT_COMPARISON) call printout_comparison()
         val_jac = sinprod_jac11(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
@@ -610,7 +596,7 @@ program test_general_elliptic_solver
 
   call delete_things()
 
-  call check_error()
+  call check_error(k)
 
   case(9)
   print*, "---------------------"
@@ -665,7 +651,6 @@ program test_general_elliptic_solver
         ref        = sol_exacte_perper(eta1(i),eta2(j))
         grad1ref   = sol_exacte_perper_der1(eta1(i),eta2(j))
         grad2ref   = sol_exacte_perper_der2(eta1(i),eta2(j))
-        difference(i,j) = ref-node_val
         reference(i,j) = ref
         val_jac = 1.0
         if(PRINT_COMPARISON) call printout_comparison()
@@ -680,7 +665,7 @@ program test_general_elliptic_solver
 
   call delete_things()
 
-  call check_error()
+  call check_error(k)
 
   case(10)
   print*, "---------------------"
@@ -740,7 +725,6 @@ program test_general_elliptic_solver
         ref        = sol_exacte_chgt_perper(eta1(i),eta2(j))
         grad1ref   = sol_exacte_chgt_perper_der1(eta1(i),eta2(j))
         grad2ref   = sol_exacte_chgt_perper_der2(eta1(i),eta2(j))
-        difference(i,j) = ref-node_val
         reference(i,j) = ref
         if(PRINT_COMPARISON) call printout_comparison()
         val_jac = sinprod_jac11(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
@@ -760,7 +744,7 @@ program test_general_elliptic_solver
   
   call delete_things()
 
-  call check_error()
+  call check_error(k)
 
   case(11)
   print*, "---------------------"
@@ -819,7 +803,6 @@ program test_general_elliptic_solver
         ref        = sol_exacte_chgt_perdir(eta1(i),eta2(j))
         grad1ref   = sol_exacte_chgt_perdir_der1(eta1(i),eta2(j))
         grad2ref   = sol_exacte_chgt_perdir_der2(eta1(i),eta2(j))
-        difference(i,j) = ref-node_val
         reference(i,j) = ref
         if(PRINT_COMPARISON) call printout_comparison()
         val_jac = sinprod_jac11(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
@@ -841,7 +824,7 @@ program test_general_elliptic_solver
 
   call delete_things()
   
-  call check_error()
+  call check_error(k)
 
   case(12)
   print*, "---------------------"
@@ -899,7 +882,6 @@ program test_general_elliptic_solver
         ref        = sol_exacte_chgt_dirdir(eta1(i),eta2(j))
         grad1ref   = sol_exacte_chgt_dirdir_der1(eta1(i),eta2(j))
         grad2ref   = sol_exacte_chgt_dirdir_der2(eta1(i),eta2(j))
-        difference(i,j) = ref-node_val
         reference(i,j)  = ref
 
         if(PRINT_COMPARISON) call printout_comparison()
@@ -921,7 +903,7 @@ program test_general_elliptic_solver
 
   call delete_things()
 
-  call check_error()
+  call check_error(k)
 
   case(13)
   print*, "---------------------"
@@ -979,7 +961,6 @@ program test_general_elliptic_solver
         ref        = sol_exacte_chgt_dirper(eta1(i),eta2(j))
         grad1ref   = sol_exacte_chgt_dirper_der1(eta1(i),eta2(j))
         grad2ref   = sol_exacte_chgt_dirper_der2(eta1(i),eta2(j))
-        difference(i,j) = ref-node_val
         reference(i,j)  = ref
         if (PRINT_COMPARISON) call printout_comparison()
         val_jac = sinprod_jac11(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
@@ -1000,12 +981,11 @@ program test_general_elliptic_solver
   end do
   call delete_things()
 
-  call check_error()
+  call check_error(k)
 
   end select
   end do
 
-  acc = acc/(npts1*npts2)
 
   print*,'error (per-per) with identity   =',acc(1)
   print*,'error (per-dir) with identity   =',acc(2)
@@ -1110,7 +1090,6 @@ contains
        first_deriv_eta1 = func_zero, &
        first_deriv_eta2 = func_zero)
 
-
   c_field => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "c_field", &
@@ -1174,7 +1153,7 @@ contains
     call b2_field_vect%delete()
     call a22_field_mat%delete()
     call T%delete()
- end subroutine delete_things
+  end subroutine delete_things
 
   subroutine solve_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max, &
                            ti, te)
@@ -1208,7 +1187,6 @@ contains
        ETA1MAX, &
        ETA2MIN, &
        ETA2MAX)
- 
  
   call factorize_mat_es(&
     es, &
@@ -1250,16 +1228,16 @@ contains
 
   end subroutine solve_fields
 
-  subroutine check_error()
+  subroutine check_error(icase)
+  integer, intent(in) :: icase
   print"('integral de la solution =',g15.3)", integral_solution
   print"('integral de la solution exacte =',g15.3)", integral_exact_solution
-  acc = sum(abs(difference))
-  print*, 'TEST ',k
-  if ( ( sqrt(normL2(k)) <= h1**(SPLINE_DEG1-1))   .AND. &
-       ( sqrt(normH1(k)) <= h1**(SPLINE_DEG1-1-1))) then     
-     print *, 'PASSED'
+  acc(icase) = sum(abs(calculated-reference))/(npts1*npts2)
+  if ((sqrt(normL2(icase)) <= h1**(SPLINE_DEG1-1))   .AND. &
+      (sqrt(normH1(icase)) <= h1**(SPLINE_DEG1-1-1))) then     
+     print"('test:',i2,4x,'error=',g15.3, 4X, 'PASSED')", acc(icase)
   else
-     stop     'FAILED'
+     stop 'FAILED'
   end if
   end subroutine check_error
 
