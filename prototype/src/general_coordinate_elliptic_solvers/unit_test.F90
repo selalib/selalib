@@ -46,7 +46,7 @@ program test_general_elliptic_solver
   type(sll_scalar_field_2d_discrete_alt), pointer           :: phi
   type(sll_time_mark)                                       :: t_reference
 
-  sll_real64 :: ti(13), te(13)
+  sll_real64 :: ti(15), te(15)
 
   real(8), external :: func_zero
   real(8), external :: func_one
@@ -58,10 +58,12 @@ program test_general_elliptic_solver
   real(8), external :: source_term_chgt_perdir
   real(8), external :: source_term_chgt_dirper
   real(8), external :: source_term_chgt_dirdir
+  real(8), external :: f_sin, u_sin, u_sin_der1, u_sin_der2
+  real(8), external :: f_cos, u_cos, u_cos_der1, u_cos_der2
 
-  sll_real64 :: acc(13)
-  sll_real64 :: normL2(13)
-  sll_real64 :: normH1(13)
+  sll_real64 :: acc(15)
+  sll_real64 :: normL2(15)
+  sll_real64 :: normH1(15)
 
   sll_real64, dimension(NUM_CELLS1+1,NUM_CELLS2+1) :: values
   sll_real64, dimension(NUM_CELLS1+1,NUM_CELLS2+1) :: calculated
@@ -109,6 +111,7 @@ program test_general_elliptic_solver
   real(8) :: integral_exact_solution
 
   CHARACTER(len=10) :: cmd
+  integer           :: itest1, itest2
 
   sll_real64 :: grad1_node_val,grad2_node_val,grad1ref,grad2ref
   sll_real64, dimension(1) :: whatever  ! dummy params array
@@ -138,10 +141,14 @@ program test_general_elliptic_solver
   normH1 = 0.0_f64
 
   call Get_command_argument(1,cmd)
-  read (cmd,'(I2)') k
-  print *, i
+  itest1 = 1
+  read (cmd,'(I2)') itest1
+  call Get_command_argument(2,cmd)
+  itest2 = 13
+  read (cmd,'(I2)') itest2
+  print *, itest1, itest2
 
-  do k = 1, 13
+  do k = itest1, itest2
   select case(k)
   case(1)
   print*, "-------------------------------------------------------------"
@@ -161,6 +168,15 @@ program test_general_elliptic_solver
        (/ 0.0_f64 /) )
 
   call initialize_fields( SLL_PERIODIC, SLL_PERIODIC, SLL_PERIODIC, SLL_PERIODIC)
+
+  phi => new_scalar_field_2d_discrete_alt( &
+       "phi", &
+       interp_2d, &
+       T, &
+       bc_eta1_min, &
+       bc_eta1_max, &
+       bc_eta2_min, &
+       bc_eta2_max )
 
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_perper, &
@@ -228,16 +244,16 @@ program test_general_elliptic_solver
   
   do j=1,npts2
      do i=1,npts1
-        node_val = calculated(i,j)
+        node_val       = calculated(i,j)
         grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
         grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
-        ref        = sol_exacte_perdir(eta1(i),eta2(j))
-        grad1ref   = sol_exacte_perdir_der1(eta1(i),eta2(j))
-        grad2ref   = sol_exacte_perdir_der2(eta1(i),eta2(j))
-        reference( i,j) = ref
+        ref            = sol_exacte_perdir(eta1(i),eta2(j))
+        grad1ref       = sol_exacte_perdir_der1(eta1(i),eta2(j))
+        grad2ref       = sol_exacte_perdir_der2(eta1(i),eta2(j))
+        reference(i,j) = ref
+        normL2(k)      = normL2(k) + (node_val-ref)**2*h1*h2
+        normH1(k)      = normH1(k) + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2
         if(PRINT_COMPARISON) call printout_comparison()
-        normL2(k)    = normL2(k) + (node_val-ref)**2*h1*h2
-        normH1(k)    = normH1(k) + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2
      end do
   end do
   
@@ -600,7 +616,7 @@ program test_general_elliptic_solver
 
   case(9)
   print*, "---------------------"
-  print*, " 95 test case without change of coordinates"
+  print*, " 9 test case without change of coordinates"
   print*, " periodic-periodic boundary conditions"
   print*, " with non analytic source term " 
   print*, "---------------------"
@@ -669,7 +685,7 @@ program test_general_elliptic_solver
 
   case(10)
   print*, "---------------------"
-  print*, " 9 test case with colella change of coordinates"
+  print*, " 10 test case with colella change of coordinates"
   print*, " periodic-periodic boundary conditions"
   print*, " with non analytic source term " 
   print*, "---------------------"
@@ -748,7 +764,7 @@ program test_general_elliptic_solver
 
   case(11)
   print*, "---------------------"
-  print*, " 10 test case with colella change of coordinates"
+  print*, " 11 test case with colella change of coordinates"
   print*, " periodic-dirichlet boundary conditions"
   print*, " with non analytic source term " 
   print*, "---------------------"
@@ -828,7 +844,7 @@ program test_general_elliptic_solver
 
   case(12)
   print*, "---------------------"
-  print*, " 11 test case with colella change of coordinates"
+  print*, " 12 test case with colella change of coordinates"
   print*, " dirichlet-dirichlet boundary conditions"
   print*, " with non analytic source term " 
   print*, "---------------------"
@@ -907,7 +923,7 @@ program test_general_elliptic_solver
 
   case(13)
   print*, "---------------------"
-  print*, " 12 test case with colella change of coordinates"
+  print*, " 13 test case with colella change of coordinates"
   print*, " dirichlet-periodic  boundary conditions"
   print*, " with non analytic source term " 
   print*, "---------------------"
@@ -979,6 +995,149 @@ program test_general_elliptic_solver
         end if
      end do
   end do
+
+  call delete_things()
+  call check_error(k)
+
+  case(14)
+  print*, "--------------------------------------------------"
+  print*, " 14 test case with polar change of coordinates    "
+  print*, " dirichlet-periodic  boundary conditions          "
+  print*, " with analytic source term                        " 
+  print*, "--------------------------------------------------"
+  
+  T => new_coordinate_transformation_2d_analytic( &
+       "polar",                                   &
+       mesh_2d,                                   &
+       x1_polar_f,                                &
+       x2_polar_f,                                &
+       deriv_x1_polar_f_eta1,                     & 
+       deriv_x1_polar_f_eta2,                     &
+       deriv_x2_polar_f_eta1,                     &
+       deriv_x2_polar_f_eta2,                     &
+       [1.0_f64,2.0_f64] )
+  
+  call initialize_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
+                          SLL_PERIODIC,  SLL_PERIODIC)
+
+  rho => new_scalar_field_2d_analytic_alt( &
+       f_sin, &
+       "fsin", &
+       T, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       whatever)
+
+
+  do j = 1, npts2
+    do i = 1, npts1
+      values(i,j) = u_sin(eta1(i),eta2(j))
+    end do
+  end do
+
+  call phi%set_field_data(values)
+  call phi%write_to_file(0)
+
+  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
+   
+  do j=1,npts2
+    do i=1,npts1
+        
+      node_val       = calculated(i,j)
+      grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
+      grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
+      ref            = u_sin(eta1(i),eta2(j))
+      grad1ref       = u_sin_der1(eta1(i),eta2(j))
+      grad2ref       = u_sin_der2(eta1(i),eta2(j))
+      reference(i,j) = ref
+
+      if (PRINT_COMPARISON) call printout_comparison()
+
+      val_jac = deriv_x1_polar_f_eta1(eta1(i),eta2(j),[1.0_f64,2.0_f64])*&
+                deriv_x2_polar_f_eta2(eta1(i),eta2(j),[1.0_f64,2.0_f64])-&
+                deriv_x1_polar_f_eta2(eta1(i),eta2(j),[1.0_f64,2.0_f64])*&
+                deriv_x2_polar_f_eta1(eta1(i),eta2(j),[1.0_f64,2.0_f64])
+        
+      if ( i < NUM_CELLS1 .and. j < NUM_CELLS2) then
+        integral_solution = integral_solution + node_val*val_jac * h1*h2
+        integral_exact_solution = integral_exact_solution + ref*val_jac * h1*h2
+        normL2(k)    = normL2(k) + (node_val-ref)**2*h1*h2*val_jac
+        normH1(k)    = normH1(k) + ((grad1_node_val-grad1ref)**2+&
+                                   (grad2_node_val-grad2ref)**2)*h1*h2*val_jac
+           
+      end if
+
+    end do
+  end do
+
+  call delete_things()
+  call check_error(k)
+
+  case(15)
+
+  print*, "--------------------------------------------------"
+  print*, " 15 test case with polar change of coordinates    "
+  print*, " dirichlet-periodic  boundary conditions          "
+  print*, " with analytic source term                        " 
+  print*, "--------------------------------------------------"
+  
+  T => new_coordinate_transformation_2d_analytic( &
+       "polar", &
+       mesh_2d, &
+       x1_polar_f, &
+       x2_polar_f, &
+       deriv_x1_polar_f_eta1, &
+       deriv_x1_polar_f_eta2, &
+       deriv_x2_polar_f_eta1, &
+       deriv_x2_polar_f_eta2, &
+       [1.0_f64,2.0_f64] )
+  
+  call initialize_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
+                          SLL_PERIODIC,  SLL_PERIODIC)
+
+  rho => new_scalar_field_2d_analytic_alt( &
+       f_cos, &
+       "f_cos", &
+       T, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       whatever)
+
+  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
+   
+  do j=1,npts2
+    do i=1,npts1
+        
+      node_val       = calculated(i,j)
+      grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
+      grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
+      ref            = u_cos(eta1(i),eta2(j))
+      grad1ref       = u_cos_der1(eta1(i),eta2(j))
+      grad2ref       = u_cos_der2(eta1(i),eta2(j))
+      reference(i,j) = ref
+
+      if (PRINT_COMPARISON) call printout_comparison()
+
+      val_jac = deriv_x1_polar_f_eta1(eta1(i),eta2(j),[1.0_f64,2.0_f64])*&
+                deriv_x2_polar_f_eta2(eta1(i),eta2(j),[1.0_f64,2.0_f64])-&
+                deriv_x1_polar_f_eta2(eta1(i),eta2(j),[1.0_f64,2.0_f64])*&
+                deriv_x2_polar_f_eta1(eta1(i),eta2(j),[1.0_f64,2.0_f64])
+        
+      if ( i < NUM_CELLS1 .and. j < NUM_CELLS2) then
+        integral_solution       = integral_solution + node_val*val_jac * h1*h2
+        integral_exact_solution = integral_exact_solution + ref*val_jac * h1*h2
+        normL2(k) = normL2(k) + (node_val-ref)**2*h1*h2*val_jac
+        normH1(k) = normH1(k) + ((grad1_node_val-grad1ref)**2+&
+                                 (grad2_node_val-grad2ref)**2)*h1*h2*val_jac
+      end if
+
+    end do
+  end do
+
   call delete_things()
 
   call check_error(k)
@@ -986,20 +1145,21 @@ program test_general_elliptic_solver
   end select
   end do
 
-
-  print*,'error (per-per) with identity   =',acc(1)
-  print*,'error (per-dir) with identity   =',acc(2)
-  print*,'error (dir-dir) with identity   =',acc(3)
-  print*,'error (dir-per) with identity   =',acc(4)
-  print*,'error (per-per) with colella    =',acc(5)
-  print*,'error (per-dir) with colella    =',acc(6)
-  print*,'error (dir-dir) with colella    =',acc(7)
-  print*,'error (dir-per) with colella    =',acc(8)
-  print*,'error (per-per) with identity and source term non analytic=',acc(9)
-  print*,'error (per-per) with colella  and source term non analytic=',acc(10)
-  print*,'error (per-dir) with colella  and source term non analytic=',acc(11)
-  print*,'error (dir-dir) with colella  and source term non analytic=',acc(12)
-  print*,'error (dir-per) with colella  and source term non analytic=',acc(13)
+  print*,'error (per-per) with identity and source term analytic =',acc(01)
+  print*,'error (per-dir) with identity and source term analytic =',acc(02)
+  print*,'error (dir-dir) with identity and source term analytic =',acc(03)
+  print*,'error (dir-per) with identity and source term analytic =',acc(04)
+  print*,'error (per-per) with colella  and source term analytic =',acc(05)
+  print*,'error (per-dir) with colella  and source term analytic =',acc(06)
+  print*,'error (dir-dir) with colella  and source term analytic =',acc(07)
+  print*,'error (dir-per) with colella  and source term analytic =',acc(08)
+  print*,'error (per-per) with identity and source term discrete =',acc(09)
+  print*,'error (per-per) with colella  and source term discrete =',acc(10)
+  print*,'error (per-dir) with colella  and source term discrete =',acc(11)
+  print*,'error (dir-dir) with colella  and source term discrete =',acc(12)
+  print*,'error (dir-per) with colella  and source term discrete =',acc(13)
+  print*,'error (dir-per) with polar    and source term analytic =',acc(14)
+  print*,'error (dir-per) with polar    and source term analytic =',acc(15)
 
   do k = 1, 13
     print"('test',i2,' : ','norm L2=',g15.3,' norm H1=',g15.3,' times=',2g15.3)" &
@@ -1009,24 +1169,27 @@ program test_general_elliptic_solver
 contains
 
   subroutine printout_comparison()
+
     print *, '(eta1,eta2) = ', eta1, eta2(j), 'calculated = ', node_val, &
              'theoretical = ', ref, 'difference=', node_val-ref
     print *, '(eta1,eta2) = ', eta1, eta2(j), 'calculated = ', grad1_node_val, &
              'theoretical = ', grad1ref, 'difference=',grad1ref-grad1_node_val
     print *, '(eta1,eta2) = ', eta1, eta2(j), 'calculated = ', grad2_node_val, &
              'theoretical = ', grad2ref, 'difference=',grad2ref-grad2_node_val
+
   end subroutine printout_comparison
 
   ! Each field object must be initialized using the same logical
   ! mesh and coordinate transformation.
   subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max)
-  sll_int32, intent(in) :: bc_eta1_min
-  sll_int32, intent(in) :: bc_eta2_min
-  sll_int32, intent(in) :: bc_eta1_max
-  sll_int32, intent(in) :: bc_eta2_max
+
+    sll_int32, intent(in) :: bc_eta1_min
+    sll_int32, intent(in) :: bc_eta2_min
+    sll_int32, intent(in) :: bc_eta1_max
+    sll_int32, intent(in) :: bc_eta2_max
 
 
-  a11_field_mat => new_scalar_field_2d_analytic_alt( &
+    a11_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a11", &
        T, &
@@ -1036,7 +1199,7 @@ contains
        bc_eta2_max, &
        whatever  ) 
   
-  a12_field_mat => new_scalar_field_2d_analytic_alt( &
+    a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a12", &
        T, &
@@ -1046,7 +1209,7 @@ contains
        bc_eta2_max, &
        whatever )
   
-  a21_field_mat => new_scalar_field_2d_analytic_alt( &
+    a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a21", &
        T, &
@@ -1056,7 +1219,7 @@ contains
        bc_eta2_max, &
        whatever ) 
   
-  a22_field_mat => new_scalar_field_2d_analytic_alt( &
+    a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a22", &
        T, &
@@ -1066,7 +1229,7 @@ contains
        bc_eta2_max, &
        whatever)
 
-  b1_field_vect => new_scalar_field_2d_analytic_alt( &
+    b1_field_vect => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "b1", &
        T, &
@@ -1078,7 +1241,7 @@ contains
        first_deriv_eta1 = func_zero, &
        first_deriv_eta2 = func_zero) 
 
-  b2_field_vect => new_scalar_field_2d_analytic_alt( &
+    b2_field_vect => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "b2", &
        T, &
@@ -1090,7 +1253,7 @@ contains
        first_deriv_eta1 = func_zero, &
        first_deriv_eta2 = func_zero)
 
-  c_field => new_scalar_field_2d_analytic_alt( &
+    c_field => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "c_field", &
        T, &
@@ -1100,7 +1263,7 @@ contains
        bc_eta2_max, &
        whatever  )
 
-  call initialize_ad2d_interpolator( &
+    call initialize_ad2d_interpolator( &
        interp_2d, &
        NUM_CELLS1+1, &
        NUM_CELLS2+1, &
@@ -1115,7 +1278,7 @@ contains
        SPLINE_DEG1, &
        SPLINE_DEG2 )
 
-  call initialize_ad2d_interpolator( &
+    call initialize_ad2d_interpolator( &
        interp_2d_term_source, &
        NUM_CELLS1+1, &
        NUM_CELLS2+1, &
@@ -1130,18 +1293,11 @@ contains
        SPLINE_DEG1, &
        SPLINE_DEG2 )
 
-  phi => new_scalar_field_2d_discrete_alt( &
-       "phi", &
-       interp_2d, &
-       T, &
-       bc_eta1_min, &
-       bc_eta1_max, &
-       bc_eta2_min, &
-       bc_eta2_max )
 
   end subroutine initialize_fields
 
   subroutine delete_things()
+
     call sll_delete(es)
     call rho%delete()
     call c_field%delete()
@@ -1153,92 +1309,95 @@ contains
     call b2_field_vect%delete()
     call a22_field_mat%delete()
     call T%delete()
+
   end subroutine delete_things
 
   subroutine solve_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max, &
                            ti, te)
 
-  sll_int32,  intent(in)  :: bc_eta1_min
-  sll_int32,  intent(in)  :: bc_eta2_min
-  sll_int32,  intent(in)  :: bc_eta1_max
-  sll_int32,  intent(in)  :: bc_eta2_max
-  sll_real64, intent(out) :: ti
-  sll_real64, intent(out) :: te
-  sll_int32               :: istep
-
-  integral_solution = 0.0_f64
-  integral_exact_solution = 0.0_f64
-
-  call sll_set_time_mark(t_reference)
-
-  call sll_create( &
-       es, &
-       SPLINE_DEG1, &
-       SPLINE_DEG2, &
-       NUM_CELLS1, &
-       NUM_CELLS2, &
-       ES_GAUSS_LEGENDRE, &
-       ES_GAUSS_LEGENDRE, &
-       bc_eta1_min, &
-       bc_eta1_max, &
-       bc_eta2_min, &
-       bc_eta2_max, &
-       ETA1MIN, &
-       ETA1MAX, &
-       ETA2MIN, &
-       ETA2MAX)
- 
-  call factorize_mat_es(&
-    es, &
-    a11_field_mat, &
-    a12_field_mat,&
-    a21_field_mat,&
-    a22_field_mat,&
-    b1_field_vect,&
-    b2_field_vect,&
-    c_field)
-
-  ti = sll_time_elapsed_since(t_reference)
-
-  call sll_set_time_mark(t_reference)
-
-  write(*,"(' ')",advance="no")
-  do istep = 1, 20
-
-    values = 0.0_f64
-    call phi%set_field_data(values)
-    call phi%update_interpolation_coefficients()
-
-    call sll_solve( es, rho, phi)
-    write(*,"(i3)",advance="no") istep
-
-  end do
-  write(*,*) ' steps'
-
-  te = sll_time_elapsed_since(t_reference)
-
-  do j=1,npts2
-     do i=1,npts1
-        calculated(i,j) = phi%value_at_point(eta1(i),eta2(j))
-     end do
-  end do
-
-  integral_solution = 0.0_f64
-  integral_exact_solution = 0.0_f64
+    sll_int32,  intent(in)  :: bc_eta1_min
+    sll_int32,  intent(in)  :: bc_eta2_min
+    sll_int32,  intent(in)  :: bc_eta1_max
+    sll_int32,  intent(in)  :: bc_eta2_max
+    sll_real64, intent(out) :: ti
+    sll_real64, intent(out) :: te
+    sll_int32               :: istep
+  
+    integral_solution = 0.0_f64
+    integral_exact_solution = 0.0_f64
+  
+    call sll_set_time_mark(t_reference)
+  
+    call sll_create( &
+         es, &
+         SPLINE_DEG1, &
+         SPLINE_DEG2, &
+         NUM_CELLS1, &
+         NUM_CELLS2, &
+         ES_GAUSS_LEGENDRE, &
+         ES_GAUSS_LEGENDRE, &
+         bc_eta1_min, &
+         bc_eta1_max, &
+         bc_eta2_min, &
+         bc_eta2_max, &
+         ETA1MIN, &
+         ETA1MAX, &
+         ETA2MIN, &
+         ETA2MAX)
+   
+    call factorize_mat_es(&
+      es, &
+      a11_field_mat, &
+      a12_field_mat,&
+      a21_field_mat,&
+      a22_field_mat,&
+      b1_field_vect,&
+      b2_field_vect,&
+      c_field)
+  
+    ti = sll_time_elapsed_since(t_reference)
+  
+    call sll_set_time_mark(t_reference)
+  
+    write(*,"(' ')",advance="no")
+    do istep = 1, 20
+  
+      values = 0.0_f64
+      call phi%set_field_data(values)
+      call phi%update_interpolation_coefficients()
+  
+      call sll_solve( es, rho, phi)
+      write(*,"(i3)",advance="no") istep
+  
+    end do
+    write(*,*) ' steps'
+  
+    te = sll_time_elapsed_since(t_reference)
+  
+    do j=1,npts2
+       do i=1,npts1
+          calculated(i,j) = phi%value_at_point(eta1(i),eta2(j))
+       end do
+    end do
+  
+    integral_solution = 0.0_f64
+    integral_exact_solution = 0.0_f64
 
   end subroutine solve_fields
 
   subroutine check_error(icase)
-  integer, intent(in) :: icase
-  print"('integral de la solution =',g15.3)", integral_solution
-  print"('integral de la solution exacte =',g15.3)", integral_exact_solution
-  acc(icase) = sum(abs(calculated-reference))/(npts1*npts2)
-  if ((sqrt(normL2(icase)) <= h1**(SPLINE_DEG1-1))   .AND. &
-      (sqrt(normH1(icase)) <= h1**(SPLINE_DEG1-1-1))) then     
-     print"('test:',i2,4x,'error=',g15.3, 4X, 'PASSED')", icase, acc(icase)
-  else
-     stop 'FAILED'
-  end if
+
+    integer, intent(in) :: icase
+    print"('integral de la solution =',g15.3)", integral_solution
+    print"('integral de la solution exacte =',g15.3)", integral_exact_solution
+    acc(icase) = sum(abs(calculated-reference))/(npts1*npts2)
+    if ((sqrt(normL2(icase)) <= h1**(SPLINE_DEG1-1))   .AND. &
+        (sqrt(normH1(icase)) <= h1**(SPLINE_DEG1-1-1))) then     
+       print"('test:',i2,4x,'error=',g15.3, 4X, 'PASSED')", icase, acc(icase)
+    else
+       stop 'FAILED'
+    end if
+
   end subroutine check_error
 
 end program test_general_elliptic_solver
