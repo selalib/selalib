@@ -1235,7 +1235,7 @@ contains
   acc(icase) = sum(abs(calculated-reference))/(npts1*npts2)
   if ((sqrt(normL2(icase)) <= h1**(SPLINE_DEG1-1))   .AND. &
       (sqrt(normH1(icase)) <= h1**(SPLINE_DEG1-1-1))) then     
-     print"('test:',i2,4x,'error=',g15.3, 4X, 'PASSED')", acc(icase)
+     print"('test:',i2,4x,'error=',g15.3, 4X, 'PASSED')", icase, acc(icase)
   else
      stop 'FAILED'
   end if
