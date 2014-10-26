@@ -360,7 +360,6 @@ contains
     !local var
     real(8), dimension(:), pointer :: lpr_Ad
     real(8), dimension(:), pointer :: lpr_d
-    real(8), dimension(:), pointer :: lpr_Ux
     real(8) :: lr_Norm2r1
     real(8) :: lr_Norm2r0
     real(8) :: lr_NormInfb
@@ -373,10 +372,9 @@ contains
     integer  :: li_err
     integer  :: li_flag
 	
-    ar_eps = 1.d-13
-    ai_maxIter = 100000
+    ar_eps = 1.d-12
+    ai_maxIter = 10000
 	
-		
     if ( mat%num_rows /= mat%num_cols ) then
             PRINT*,'#ERROR Gradient_conj: The matrix must be square'
             stop
@@ -391,32 +389,23 @@ contains
     if (li_err.ne.0) li_flag=10
     allocate(lpr_d(mat%num_rows),stat=li_err)
     if (li_err.ne.0) li_flag=30
-    allocate(lpr_Ux(mat%num_rows),stat=li_err)
-    if (li_err.ne.0) li_flag=40
     !================!
     ! initialisation !
     !================!
     
     apr_U(:)  = 0.0_8
-    lpr_Ux(:) = 0.0_8
     li_iter = 0
 
-    call sll_mult_csr_matrix_vector( mat , lpr_Ux , lpr_Ad )
-
+    lpr_Ad = 0.0_8
     !-------------------!
     ! calcul des normes !
     !-------------------!
     lr_NormInfb = maxval( dabs( apr_B ) )
-    apr_B       = apr_B - lpr_Ad
     lr_Norm2r0  = DOT_PRODUCT( apr_B , apr_B )
 
     lpr_d = apr_B
-    !================!
-
  
-    ll_continue=.true.
-    do while(ll_continue)
-            li_iter = li_iter + 1
+    do li_iter = 1, ai_maxiter
             !--------------------------------------!
             ! calcul du ak parametre optimal local !
             !--------------------------------------!
@@ -435,7 +424,7 @@ contains
             !----------------------------------------!
             ! approximations ponctuelles au rang k+1 !
             !----------------------------------------!
-            lpr_Ux = lpr_Ux + lr_alpha * lpr_d
+            apr_U = apr_U + lr_alpha * lpr_d
             
             !-------------------------------------------------------!
             ! (a) extraction de la norme infinie du residu          !
@@ -454,20 +443,17 @@ contains
             !-------------------!
             ! boucle suivante ? !
             !-------------------!
-            ll_continue=( ( lr_NormInfr / lr_NormInfb ) >= ar_eps ) .AND. ( li_iter < ai_maxIter )
-            !print*, 'norme infr = ',lr_NormInfr, 'norme infb=',  lr_NormInfb
+            if ( lr_NormInfr / lr_NormInfb < ar_eps ) exit
             
     end do
-    apr_U = lpr_Ux
-    if ( li_iter == ai_maxIter ) then
-            print*,'Warning Gradient_conj : li_iter == ai_maxIter'
-            print*,'Error after CG =',( lr_NormInfr / lr_NormInfb )
-    end if
 
+    if ( li_iter == ai_maxIter ) then
+      print*,'Warning Gradient_conj : li_iter == ai_maxIter'
+      print*,'Error after CG =',( lr_NormInfr / lr_NormInfb )
+    end if
     
     deallocate(lpr_Ad)
     deallocate(lpr_d)
-    deallocate(lpr_Ux)
 
   end subroutine sll_solve_csr_matrix
 
