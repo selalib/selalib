@@ -154,20 +154,22 @@ contains ! *******************************************************************
        eta2_max)
     
    type(general_coordinate_elliptic_solver), intent(out) :: es
-   sll_int32, intent(in) :: spline_degree_eta1
-   sll_int32, intent(in) :: spline_degree_eta2
-   sll_int32, intent(in) :: num_cells_eta1
-   sll_int32, intent(in) :: num_cells_eta2
-   sll_int32, intent(in) :: bc_left
-   sll_int32, intent(in) :: bc_right
-   sll_int32, intent(in) :: bc_bottom
-   sll_int32, intent(in) :: bc_top
-   sll_int32, intent(in) :: quadrature_type1
-   sll_int32, intent(in) :: quadrature_type2
+
+   sll_int32,  intent(in) :: spline_degree_eta1
+   sll_int32,  intent(in) :: spline_degree_eta2
+   sll_int32,  intent(in) :: num_cells_eta1
+   sll_int32,  intent(in) :: num_cells_eta2
+   sll_int32,  intent(in) :: bc_left
+   sll_int32,  intent(in) :: bc_right
+   sll_int32,  intent(in) :: bc_bottom
+   sll_int32,  intent(in) :: bc_top
+   sll_int32,  intent(in) :: quadrature_type1
+   sll_int32,  intent(in) :: quadrature_type2
    sll_real64, intent(in) :: eta1_min
    sll_real64, intent(in) :: eta1_max
    sll_real64, intent(in) :: eta2_min
    sll_real64, intent(in) :: eta2_max
+
    sll_int32 :: knots1_size
    sll_int32 :: knots2_size
    sll_int32 :: num_splines1
@@ -194,20 +196,22 @@ contains ! *******************************************************************
    es%local_to_global_spline_indices_source = 0
    SLL_ALLOCATE(es%local_to_global_spline_indices_source_bis((spline_degree_eta1+1)*(spline_degree_eta2+1),(num_cells_eta1*num_cells_eta2)),ierr)
    es%local_to_global_spline_indices_source_bis = 0
+
    ! This should be changed to verify that the passed BC's are part of the
    ! recognized list described in sll_boundary_condition_descriptors...
-   es%bc_left   = bc_left
-   es%bc_right  = bc_right
-   es%bc_bottom = bc_bottom
-   es%bc_top    = bc_top
+
+   es%bc_left        = bc_left
+   es%bc_right       = bc_right
+   es%bc_bottom      = bc_bottom
+   es%bc_top         = bc_top
    es%spline_degree1 = spline_degree_eta1
    es%spline_degree2 = spline_degree_eta2
-   es%num_cells1 = num_cells_eta1
-   es%num_cells2 = num_cells_eta2
-   es%delta_eta1 = (eta1_max-eta1_min)/num_cells_eta1
-   es%delta_eta2 = (eta2_max-eta2_min)/num_cells_eta2
-   es%eta1_min   = eta1_min
-   es%eta2_min   = eta2_min
+   es%num_cells1     = num_cells_eta1
+   es%num_cells2     = num_cells_eta2
+   es%delta_eta1     = (eta1_max-eta1_min)/num_cells_eta1
+   es%delta_eta2     = (eta2_max-eta2_min)/num_cells_eta2
+   es%eta1_min       = eta1_min
+   es%eta2_min       = eta2_min
 
    !quadrature_type1_tmp = ES_GAUSS_LEGENDRE
    !quadrature_type2_tmp = ES_GAUSS_LEGENDRE
@@ -221,13 +225,13 @@ contains ! *******************************************************************
    case (ES_GAUSS_LOBATTO)
       SLL_ALLOCATE(es%gauss_pts1(2,spline_degree_eta1+2),ierr)
       es%gauss_pts1(:,:) = gauss_lobatto_points_and_weights(spline_degree_eta1+2)
-   case DEFAULT
-      print *, 'new_general_qn_solver(): have not type of gauss points in the first direction'
+   case default
+      print *, 'new_general_qn_solver(): &
+                & have not type of gauss points in the first direction'
    end select
       
    select case(quadrature_type2)
    case (ES_GAUSS_LEGENDRE)
-      !print*, 'Hello'
       SLL_ALLOCATE(es%gauss_pts2(2,spline_degree_eta2+2),ierr)
       es%gauss_pts2(:,:) = 0.0_f64
       es%gauss_pts2(:,:) = gauss_legendre_points_and_weights(spline_degree_eta2+2)
@@ -235,12 +239,13 @@ contains ! *******************************************************************
       SLL_ALLOCATE(es%gauss_pts2(2,spline_degree_eta2+2),ierr)
       es%gauss_pts2(:,:) = gauss_lobatto_points_and_weights(spline_degree_eta2+2)
    case DEFAULT
-      print *, 'new_general_qn_solver(): have not type of gauss points in the second direction'
+      print *, 'new_general_qn_solver(): &
+                & have not type of gauss points in the second direction'
       
    end select
 
-   if( (bc_left == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
-       (bc_bottom == SLL_PERIODIC) .and. (bc_top == SLL_PERIODIC) ) then
+   if( (bc_left   == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
+       (bc_bottom == SLL_PERIODIC) .and. (bc_top   == SLL_PERIODIC) ) then
 
       es%total_num_splines_eta1 = num_cells_eta1 
       es%total_num_splines_eta2 = num_cells_eta2
@@ -249,18 +254,21 @@ contains ! *******************************************************************
       knots2_size = 2*spline_degree_eta2+2
       vec_sz      = num_cells_eta1*num_cells_eta2
       sll_perper  = 0 
-   else if( (bc_left == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and.&
-       (bc_bottom == SLL_DIRICHLET) .and. (bc_top == SLL_DIRICHLET) ) then
+
+   else if( (bc_left   == SLL_PERIODIC)  .and. (bc_right == SLL_PERIODIC) .and.&
+            (bc_bottom == SLL_DIRICHLET) .and. (bc_top   == SLL_DIRICHLET) ) then
 
       es%total_num_splines_eta1 = num_cells_eta1 
-      es%total_num_splines_eta2 = num_cells_eta2 + &
-                                   spline_degree_eta2 - 2
+      es%total_num_splines_eta2 = num_cells_eta2 + spline_degree_eta2 - 2
+
       knots1_size = 2*spline_degree_eta1+2
       knots2_size = 2*spline_degree_eta2+num_cells_eta2+1
+
       vec_sz      = num_cells_eta1*(num_cells_eta2+spline_degree_eta2)
       sll_perper  = 1
-   else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
-            (bc_bottom == SLL_PERIODIC) .and. (bc_top == SLL_PERIODIC) ) then
+
+   else if( (bc_left   == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
+            (bc_bottom == SLL_PERIODIC)  .and. (bc_top == SLL_PERIODIC) ) then
 
       es%total_num_splines_eta1 = num_cells_eta1 + spline_degree_eta1 - 2
       es%total_num_splines_eta2 = num_cells_eta2 
@@ -268,8 +276,9 @@ contains ! *******************************************************************
       knots2_size = 2*spline_degree_eta2+2
       vec_sz      = (num_cells_eta1 + spline_degree_eta1)*num_cells_eta2
       sll_perper  = 1
-   else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
-       (bc_bottom == SLL_DIRICHLET) .and. (bc_top == SLL_DIRICHLET) ) then
+
+   else if( (bc_left   == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
+            (bc_bottom == SLL_DIRICHLET) .and. (bc_top   == SLL_DIRICHLET) ) then
 
       es%total_num_splines_eta1 = num_cells_eta1 + spline_degree_eta1 - 2
       es%total_num_splines_eta2 = num_cells_eta2 + spline_degree_eta2 - 2
@@ -278,9 +287,9 @@ contains ! *******************************************************************
       vec_sz      = (num_cells_eta1 + spline_degree_eta1)*&
                     (num_cells_eta2 + spline_degree_eta2)
       sll_perper  = 1              
+
    end if
 
- 
    solution_size = es%total_num_splines_eta1*es%total_num_splines_eta2
    SLL_ALLOCATE(es%knots1(knots1_size),ierr1)
    SLL_ALLOCATE(es%knots2(knots2_size),ierr)
