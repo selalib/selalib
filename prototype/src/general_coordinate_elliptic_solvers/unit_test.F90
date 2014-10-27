@@ -169,14 +169,6 @@ program test_general_elliptic_solver
 
   call initialize_fields( SLL_PERIODIC, SLL_PERIODIC, SLL_PERIODIC, SLL_PERIODIC)
 
-  phi => new_scalar_field_2d_discrete_alt( &
-       "phi", &
-       interp_2d, &
-       T, &
-       bc_eta1_min, &
-       bc_eta1_max, &
-       bc_eta2_min, &
-       bc_eta2_max )
 
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_perper, &
@@ -191,17 +183,18 @@ program test_general_elliptic_solver
   call solve_fields( SLL_PERIODIC, SLL_PERIODIC, SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
 
   do j=1,npts2
-     do i=1,npts1
-        node_val = calculated(i,j)
-        grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1(i),eta2(j))
-        grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1(i),eta2(j))
-        ref        = sol_exacte_perper(eta1(i),eta2(j))
-        grad1ref   = sol_exacte_perper_der1(eta1(i),eta2(j))
-        grad2ref   = sol_exacte_perper_der2(eta1(i),eta2(j))
-        reference( i,j) = ref
-        normL2(k)   = normL2(k) + (node_val-ref)**2*h1*h2
-        normH1(k)   = normH1(k) + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2
-     end do
+  do i=1,npts1
+    node_val = calculated(i,j)
+    grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1(i),eta2(j))
+    grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1(i),eta2(j))
+    ref        = sol_exacte_perper(eta1(i),eta2(j))
+    grad1ref   = sol_exacte_perper_der1(eta1(i),eta2(j))
+    grad2ref   = sol_exacte_perper_der2(eta1(i),eta2(j))
+    reference( i,j) = ref
+    normL2(k)   = normL2(k) + (node_val-ref)**2*h1*h2
+    normH1(k)   = normH1(k) + &
+          ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2
+  end do
   end do
 
   integral_solution = sum(calculated(1:NUM_CELLS1,1:NUM_CELLS2))*h1*h2
@@ -243,18 +236,19 @@ program test_general_elliptic_solver
   call solve_fields( SLL_PERIODIC, SLL_PERIODIC, SLL_DIRICHLET, SLL_DIRICHLET, ti(k), te(k))
   
   do j=1,npts2
-     do i=1,npts1
-        node_val       = calculated(i,j)
-        grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
-        grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
-        ref            = sol_exacte_perdir(eta1(i),eta2(j))
-        grad1ref       = sol_exacte_perdir_der1(eta1(i),eta2(j))
-        grad2ref       = sol_exacte_perdir_der2(eta1(i),eta2(j))
-        reference(i,j) = ref
-        normL2(k)      = normL2(k) + (node_val-ref)**2*h1*h2
-        normH1(k)      = normH1(k) + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2
-        if(PRINT_COMPARISON) call printout_comparison()
-     end do
+  do i=1,npts1
+    node_val       = calculated(i,j)
+    grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
+    grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
+    ref            = sol_exacte_perdir(eta1(i),eta2(j))
+    grad1ref       = sol_exacte_perdir_der1(eta1(i),eta2(j))
+    grad2ref       = sol_exacte_perdir_der2(eta1(i),eta2(j))
+    reference(i,j) = ref
+    normL2(k)      = normL2(k) + (node_val-ref)**2*h1*h2
+    normH1(k)      = normH1(k) + &
+         ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2
+    if(PRINT_COMPARISON) call printout_comparison()
+  end do
   end do
   
   integral_solution = sum(calculated(1:NUM_CELLS1,1:NUM_CELLS2))*h1*h2
@@ -296,18 +290,19 @@ program test_general_elliptic_solver
   call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, SLL_DIRICHLET, SLL_DIRICHLET, ti(k), te(k))
 
   do j=1,npts2
-     do i=1,npts1
-        node_val = calculated(i,j)
-        grad1_node_val  = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
-        grad2_node_val  = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
-        ref             = sol_exacte_perdir(eta1(i),eta2(j))
-        grad1ref        = sol_exacte_perdir_der1(eta1(i),eta2(j))
-        grad2ref        = sol_exacte_perdir_der2(eta1(i),eta2(j))
-        reference(i,j)  = ref
-        normL2(k)  = normL2(k) + (node_val-ref)**2*h1*h2
-        normH1(k)  = normH1(k) + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2
-        if (PRINT_COMPARISON) call printout_comparison()
-     end do
+  do i=1,npts1
+    node_val = calculated(i,j)
+    grad1_node_val  = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
+    grad2_node_val  = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
+    ref             = sol_exacte_perdir(eta1(i),eta2(j))
+    grad1ref        = sol_exacte_perdir_der1(eta1(i),eta2(j))
+    grad2ref        = sol_exacte_perdir_der2(eta1(i),eta2(j))
+    reference(i,j)  = ref
+    normL2(k)  = normL2(k) + (node_val-ref)**2*h1*h2
+    normH1(k)  = normH1(k) + &
+      ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2
+    if (PRINT_COMPARISON) call printout_comparison()
+  end do
   end do
   
   integral_solution = sum(calculated(1:NUM_CELLS1,1:NUM_CELLS2))*h1*h2
@@ -346,7 +341,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        whatever )
   
-  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
+  call solve_fields( SLL_DIRICHLET, &
+    SLL_DIRICHLET, SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
   
   do j=1,npts2
      do i=1,npts1
@@ -359,7 +355,8 @@ program test_general_elliptic_solver
         grad2ref        = sol_exacte_dirper_der2(eta1(i),eta2(j))
         reference(i,j)  = ref
         normL2(k)       = normL2(k) + (node_val-ref)**2*h1*h2
-        normH1(k)       = normH1(k) + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2
+        normH1(k)       = normH1(k) + &
+        ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2
         if(PRINT_COMPARISON) call printout_comparison()
      end do
   end do
@@ -401,7 +398,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        whatever )
   
-  call solve_fields( SLL_PERIODIC, SLL_PERIODIC, SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
+  call solve_fields( SLL_PERIODIC, SLL_PERIODIC, &
+   SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
   
   do j=1,npts2
      do i=1,npts1
@@ -421,7 +419,8 @@ program test_general_elliptic_solver
            integral_solution = integral_solution + node_val*val_jac * h1*h2
            integral_exact_solution = integral_exact_solution + ref*val_jac * h1*h2
            normL2(k)    = normL2(k) + (node_val-ref)**2*h1*h2*val_jac
-           normH1(k)    = normH1(k) + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
+           normH1(k)    = normH1(k) + &
+          ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
         end if
      end do
   end do
@@ -463,7 +462,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        whatever )
   
-  call solve_fields( SLL_PERIODIC, SLL_PERIODIC, SLL_DIRICHLET, SLL_DIRICHLET, ti(k), te(k))
+  call solve_fields( SLL_PERIODIC, SLL_PERIODIC, &
+    SLL_DIRICHLET, SLL_DIRICHLET, ti(k), te(k))
 
   do j=1,npts2
      do i=1,npts1
@@ -485,7 +485,8 @@ program test_general_elliptic_solver
            integral_solution = integral_solution + node_val*val_jac* h1*h2
            integral_exact_solution = integral_exact_solution + ref*val_jac* h1*h2
            normL2(k)    = normL2(k) + (node_val-ref)**2*h1*h2
-           normH1(k)    = normH1(k) + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
+           normH1(k)    = normH1(k) + &
+          ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
            
         end if
      end do
@@ -524,7 +525,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        whatever )
   
-  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, SLL_DIRICHLET, SLL_DIRICHLET, ti(k), te(k))
+  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
+     SLL_DIRICHLET, SLL_DIRICHLET, ti(k), te(k))
   
   do j=1,npts2
      do i=1,npts1
@@ -545,7 +547,8 @@ program test_general_elliptic_solver
            integral_solution = integral_solution + node_val*val_jac * h1*h2
            integral_exact_solution = integral_exact_solution + ref*val_jac * h1*h2
            normL2(k)    = normL2(k) + (node_val-ref)**2*h1*h2*val_jac
-           normH1(k)    = normH1(k) + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
+           normH1(k)    = normH1(k) + &
+         ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
            
         end if
      end do
@@ -584,7 +587,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        whatever)
   
-  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
+  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
+      SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
   
   do j=1,npts2
      do i=1,npts1
@@ -605,7 +609,8 @@ program test_general_elliptic_solver
            integral_solution = integral_solution + node_val*val_jac * h1*h2
            integral_exact_solution = integral_exact_solution + ref*val_jac * h1*h2
            normL2(k)    = normL2(k) + (node_val-ref)**2*h1*h2*val_jac
-           normH1(k)    = normH1(k) + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
+           normH1(k)    = normH1(k) + &
+          ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
         end if
      end do
   end do
@@ -656,7 +661,8 @@ program test_general_elliptic_solver
   call rho%set_field_data(tab_rho)
   call rho%update_interpolation_coefficients()
 
-  call solve_fields( SLL_PERIODIC, SLL_PERIODIC, SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
+  call solve_fields( SLL_PERIODIC, SLL_PERIODIC, &
+     SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
   
   do j=1,npts2
      do i=1,npts1
@@ -674,7 +680,8 @@ program test_general_elliptic_solver
            integral_solution = integral_solution + node_val * h1*h2
            integral_exact_solution = integral_exact_solution + ref * h1*h2
            normL2(k)    = normL2(k) + (node_val-ref)**2*h1*h2*val_jac
-           normH1(k)    = normH1(k) + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
+           normH1(k)    = normH1(k) + &
+          ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
         end if
      end do
   end do
@@ -730,7 +737,8 @@ program test_general_elliptic_solver
   call rho%update_interpolation_coefficients()
   
   
-  call solve_fields( SLL_PERIODIC, SLL_PERIODIC, SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
+  call solve_fields( SLL_PERIODIC, SLL_PERIODIC, &
+     SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
   
   do j=1,npts2
      do i=1,npts1
@@ -752,7 +760,8 @@ program test_general_elliptic_solver
            integral_solution = integral_solution + node_val*val_jac * h1*h2
            integral_exact_solution = integral_exact_solution + ref*val_jac * h1*h2
            normL2(k)    = normL2(k) + (node_val-ref)**2*h1*h2*val_jac
-           normH1(k)    = normH1(k) + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
+           normH1(k)    = normH1(k) + &
+          ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
            
         end if
      end do
@@ -808,7 +817,8 @@ program test_general_elliptic_solver
   call rho%update_interpolation_coefficients()
 
   
-  call solve_fields( SLL_PERIODIC, SLL_PERIODIC, SLL_DIRICHLET, SLL_DIRICHLET, ti(k), te(k))
+  call solve_fields( SLL_PERIODIC, SLL_PERIODIC, &
+     SLL_DIRICHLET, SLL_DIRICHLET, ti(k), te(k))
   
   do j=1,npts2
      do i=1,npts1
@@ -887,7 +897,8 @@ program test_general_elliptic_solver
   call rho%set_field_data(tab_rho)
   call rho%update_interpolation_coefficients()
   
-  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, SLL_DIRICHLET, SLL_DIRICHLET, ti(k), te(k))
+  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
+    SLL_DIRICHLET, SLL_DIRICHLET, ti(k), te(k))
   
   do j=1,npts2
      do i=1,npts1
@@ -966,7 +977,8 @@ program test_general_elliptic_solver
   call rho%set_field_data(tab_rho)
   call rho%update_interpolation_coefficients()
 
-  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
+  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
+     SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
    
   do j=1,npts2
      do i=1,npts1
@@ -1040,7 +1052,8 @@ program test_general_elliptic_solver
   call phi%set_field_data(values)
   call phi%write_to_file(0)
 
-  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
+  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
+     SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
    
   do j=1,npts2
     do i=1,npts1
@@ -1107,7 +1120,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC,&
        whatever)
 
-  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
+  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
+     SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
    
   do j=1,npts2
     do i=1,npts1
@@ -1293,6 +1307,14 @@ contains
        SPLINE_DEG1, &
        SPLINE_DEG2 )
 
+    phi => new_scalar_field_2d_discrete_alt( &
+       "phi", &
+       interp_2d, &
+       T, &
+       bc_eta1_min, &
+       bc_eta1_max, &
+       bc_eta2_min, &
+       bc_eta2_max )
 
   end subroutine initialize_fields
 
