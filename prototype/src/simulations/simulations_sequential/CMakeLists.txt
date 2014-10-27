@@ -18,5 +18,6 @@ IF(HDF5_ENABLED)
   SET( SIM_LIBS sll_advection )
   ADD_SUBDIRECTORY( sim_2d_analytic_field_cartesian )
   ADD_SUBDIRECTORY( sim_2d_analytic_field_curvilinear )
+  ADD_SUBDIRECTORY( sim_2d_guiding_center_cartesian )
 ENDIF(HDF5_ENABLED)
 
