@@ -25,10 +25,10 @@ private
 
   !> 1D logical mesh
   type, public :: sll_logical_mesh_1d
-     sll_int32  :: num_cells
-     sll_real64 :: eta_min
-     sll_real64 :: eta_max
-     sll_real64 :: delta_eta
+     sll_int32  :: num_cells !< number of cells
+     sll_real64 :: eta_min   !< minimum value of eta
+     sll_real64 :: eta_max   !< maximum value of eta
+     sll_real64 :: delta_eta !< step size
   end type sll_logical_mesh_1d
 
 

@@ -85,7 +85,7 @@ implicit none
    start_time = MPI_WTIME() 
 
 
-   call initialize( solver,                      &
+   call sll_create( solver,                      &
                     x_min, x_max, y_min, y_max,  &
                     nxprocs, nyprocs, nx, ny,    &
                     SLL_PERIODIC, SLL_PERIODIC )
@@ -138,7 +138,7 @@ implicit none
    f = cnst * q
    call gp_plot2d(f,x,y,sx,ex,sy,ey,'f')
    
-   call solve(solver, p, f, r)
+   call sll_solve(solver, p, f, r)
 
    end_time = MPI_WTIME() 
 
@@ -153,7 +153,7 @@ implicit none
    !-----------------------------------------------------------------------
    ! Calculate the error between the numerical and exact solution to
    ! the test problem.
-   !
+   !-----------------------------------------------------------------------
 
    errloc=sum(abs(p(sx:ex,sy:ey)-q(sx:ex,sy:ey)))
    

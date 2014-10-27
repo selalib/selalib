@@ -30,6 +30,18 @@ integer, parameter, public :: CARTESIAN_3D = 3    !< geometry parameter
 integer, parameter, public :: POLAR        = 11   !< geometry parameter
 integer, parameter, public :: CYLINDRICAL  = 12   !< geometry parameter
 
+interface sll_create
+  module procedure initialize_mudpack_cartesian
+end interface sll_create
+
+interface sll_solve
+  module procedure solve_mudpack_cartesian
+end interface sll_solve
+
+interface sll_delete
+  module procedure delete_mudpack_cartesian
+end interface sll_delete
+
 contains
 
 !> Initialize the Poisson solver using mudpack library

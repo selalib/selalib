@@ -211,16 +211,12 @@ contains
         stop
      end select   
 
-!PN WTF ???
-
-    !call solve( poisson%solver, rho, phi)
-    
   end subroutine compute_phi_from_rho_2d_polar
 
     !> solves \f$ \vec{E} = -\nabla \phi \f$ with \f$ -\Delta \phi(x,y) = rho(x,y) \f$.
   subroutine compute_E_from_rho_2d_polar( poisson, E1, E2, rho )
-    class(poisson_2d_polar_solver) :: poisson
-    sll_real64,dimension(:,:),intent(in) :: rho
+    class(poisson_2d_polar_solver)        :: poisson
+    sll_real64,dimension(:,:),intent(in)  :: rho
     sll_real64,dimension(:,:),intent(out) :: E1
     sll_real64,dimension(:,:),intent(out) :: E2
       
