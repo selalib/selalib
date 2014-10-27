@@ -42,7 +42,6 @@ ADD_SIMULATION_1D(VP1D_cartesian_non_unif   VP1D_cartesian_non_unif)
 IF(HDF5_ENABLED)
    SET(SIM_LIBS sll_advection)
    ADD_SIMULATION_1D(2d_vp_no_split            2d_vlasov_poisson_no_splitting)
-   #ADD_SIMULATION_1D(2d_gc_curvilinear 2d_guiding_center_curvilinear)
 ENDIF(HDF5_ENABLED)
 
 ADD_EXECUTABLE(VP1D_deltaf_cart VP1D_deltaf_BSL.F90)
@@ -147,7 +146,6 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
    #ADD_SIMULATION(MYMETHOD MYSIM)
 
    ADD_SIMULATION(2d_vp_cartesian   2d_vlasov_poisson_cartesian)
-   ADD_SIMULATION(2d_gc_curvilinear 2d_guiding_center_curvilinear)
    ADD_SIMULATION(4d                4d_vlasov_poisson_cartesian)
    ADD_SIMULATION(4d_vp_cartesian   4d_vlasov_parallel_poisson_sequential_cartesian)
    ADD_SIMULATION(4d_vp_general     4d_vlasov_poisson_general)

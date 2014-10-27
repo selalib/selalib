@@ -49,7 +49,14 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
                          sll_memory
                          sll_assert 	
                          sll_working_precision
-)
+                        )
+
+    # Variables passed to simulations' CMakeFiles
+    SET( INSTALL_DIR "${INSTALL_DIR}/simulations_parallel" )
+    SET( SIM_LIBS sll_simulations_parallel )
+
+    # Simulations as new subdirectories
+    ADD_SUBDIRECTORY( sim_2d_guiding_center_curvilinear )
 
 #   MACRO(ADD_SIMULATION TEST_NAME SIM_NAME) 
 #      ADD_EXECUTABLE(test_${TEST_NAME} simulation_${SIM_NAME}.F90
