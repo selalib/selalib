@@ -7,8 +7,6 @@ module sll_general_coordinate_elliptic_solver_module
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-
-
   use sll_boundary_condition_descriptors
   use sll_module_scalar_field_2d_base
   use sll_module_scalar_field_2d_alternative
@@ -18,7 +16,6 @@ module sll_general_coordinate_elliptic_solver_module
   use sll_knots
   use gauss_legendre_integration
   use gauss_lobatto_integration
-  use sll_timer 
   use sll_sparse_matrix_module
   use sll_module_deboor_splines_1d
 
@@ -27,15 +24,16 @@ module sll_general_coordinate_elliptic_solver_module
 
   type, public :: general_coordinate_elliptic_solver
 
+     private
      sll_int32 :: total_num_splines_loc
      sll_int32 :: total_num_splines_eta1
      sll_int32 :: total_num_splines_eta2
-     sll_int32 :: num_cells1
-     sll_int32 :: num_cells2
-     sll_real64:: delta_eta1
-     sll_real64:: delta_eta2
-     sll_real64:: eta1_min
-     sll_real64:: eta2_min   
+     sll_int32, public :: num_cells1
+     sll_int32, public :: num_cells2
+     sll_real64, public :: delta_eta1
+     sll_real64, public :: delta_eta2
+     sll_real64, public :: eta1_min
+     sll_real64, public :: eta2_min   
      sll_real64, dimension(:), pointer :: knots1
      sll_real64, dimension(:), pointer :: knots2
      sll_real64, dimension(:), pointer :: knots1_rho
@@ -107,9 +105,10 @@ module sll_general_coordinate_elliptic_solver_module
          new_general_elliptic_solver,         &
          factorize_mat_es
 
+  sll_real64, dimension(:),   allocatable :: rho_coeff_1d
+  sll_real64, dimension(:,:), allocatable :: rho_at_gauss
+
 contains ! *******************************************************************
-
-
 
   !> @brief Initialization for elleptic solver.
   !> @details To have the function phi such that 
@@ -177,8 +176,6 @@ contains ! *******************************************************************
    sll_int32 :: ierr,ierr1
    sll_int32 :: solution_size,i
    sll_int32 :: sll_perper  
-   !sll_int32 :: quadrature_type1_tmp
-   !sll_int32 :: quadrature_type2_tmp
    
    es%total_num_splines_loc = (spline_degree_eta1+1)*(spline_degree_eta2+1)
    ! The total number of splines in a single direction is given by
@@ -242,7 +239,6 @@ contains ! *******************************************************************
       
    end select
 
-   !print*, es%gauss_pts2(1,:), ES_GAUSS_LEGENDRE
    if( (bc_left == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
        (bc_bottom == SLL_PERIODIC) .and. (bc_top == SLL_PERIODIC) ) then
 
@@ -327,8 +323,6 @@ contains ! *******************************************************************
         bc_top, &
         es%knots2 )
 
-
- 
    call initconnectivity( &
         num_cells_eta1, &
         num_cells_eta2, &
@@ -351,9 +345,8 @@ contains ! *******************************************************************
       es%local_to_global_spline_indices, &
       es%total_num_splines_loc)
 
-    es%knots1_rho ( 1 : spline_degree_eta1 +1 ) = eta1_min
+     es%knots1_rho ( 1 : spline_degree_eta1 +1 ) = eta1_min
     es%knots1_rho ( num_cells_eta1 + 2 : num_cells_eta1 + 1 + spline_degree_eta1 +1 ) = eta1_max
-    
     
      if ( mod(spline_degree_eta1 +1,2) == 0 ) then
         do i = spline_degree_eta1 +1 + 1, num_cells_eta1 + 1
@@ -411,8 +404,6 @@ contains ! *******************************************************************
 !
   end subroutine initialize_general_elliptic_solver
   
-
-
   !> @brief Initialization for elleptic solver.
   !> @details To have the function phi such that 
   !>  div( A grad phi ) + B grad phi + C phi = rho
@@ -471,7 +462,6 @@ contains ! *******************************************************************
    sll_int32 :: ierr
 
 
-   !call sll_set_time_mark(t0)
    SLL_ALLOCATE(es,ierr)
    call sll_create( &
         es, &
@@ -490,10 +480,6 @@ contains ! *******************************************************************
         eta2_min, &
         eta2_max )
    
-    !time = sll_time_elapsed_since(t0)
-    !print*, '#time for new_general_elliptic_solver', time
-    
-
   end function new_general_elliptic_solver
 
   
@@ -526,7 +512,7 @@ contains ! *******************************************************************
     SLL_DEALLOCATE(es%local_to_global_spline_indices_source,ierr)
     SLL_DEALLOCATE(es%local_to_global_spline_indices_source_bis,ierr)
     call sll_delete(es%sll_csr_mat)
-    call sll_delete(es% sll_csr_mat_with_constraint)
+    call sll_delete(es%sll_csr_mat_with_constraint)
     call sll_delete(es%sll_csr_mat_source)
     SLL_DEALLOCATE(es%rho_vec,ierr)
     SLL_DEALLOCATE(es%phi_vec,ierr)
@@ -574,7 +560,6 @@ contains ! *******************************************************************
        b2_field_vect,&
        c_field)!, &
     ! rho)
-    use sll_timer
     type(general_coordinate_elliptic_solver),intent(inout) :: es
     class(sll_scalar_field_2d_base), pointer :: a11_field_mat
     class(sll_scalar_field_2d_base), pointer :: a12_field_mat
@@ -604,11 +589,7 @@ contains ! *******************************************************************
     sll_int32 :: bc_bottom
     sll_int32 :: bc_top
     sll_int32 :: sll_perper
-    type(sll_time_mark)  :: t0 
-    double precision :: time
     character(len=*),parameter :: as_file1='mat'
-    
-    !call sll_set_time_mark(t0)
     
     bc_left   = es%bc_left
     bc_right  = es%bc_right
@@ -737,32 +718,26 @@ if (sll_perper == 0) then
     SLL_DEALLOCATE_ARRAY(Stiff_loc,ierr) 
     SLL_DEALLOCATE_ARRAY(Masse_loc,ierr) 
    
-    !time = sll_time_elapsed_since(t0)
-    !print*, '#time for factorize_mat_es', time
-
   end subroutine factorize_mat_es
   
-
-
   !> @brief Assemble the matrix for elliptic solver.
   !> @details To have the function phi such that 
-  !>  div( A grad phi ) + B grad phi + C phi = rho
+  !>  \f[
+  !>  \nabla \cdot ( A \nabla \phi ) + B \nabla \phi + C \phi = \rho
+  !>  \f]
   !>  where A is a matrix of functions , B a vectorial function,
   !>  and  C and rho a scalar function.  
-  !>  A, B, C, rho can be discret or analytic. 
+  !>  A, B, C, \f$ \rho \f$  can be discret or analytic. 
   !>  phi is given with a B-spline interpolator  
   !> 
   !> The parameters are
   !> @param es the type general_coordinate_elliptic_solver
-  !> @param[in] rho the field corresponding to the source term   
-  !> @param[out] phi the field corresponding to the solution of the equation
+  !> @param[in] rho \f$ \rho \f$ the field corresponding to the source term   
+  !> @param[out] phi \f$ \phi \f$ the field corresponding to the solution of the equation
   !> @return phi the field solution of the equation
   
-  subroutine solve_general_coordinates_elliptic_eq(&
-       es,&
-       rho,&
-       phi)
-    use sll_timer
+  subroutine solve_general_coordinates_elliptic_eq( es, rho, phi)
+
     class(general_coordinate_elliptic_solver) :: es
     class(sll_scalar_field_2d_discrete_alt), intent(inout)  :: phi
     class(sll_scalar_field_2d_base), intent(in),target  :: rho
@@ -772,14 +747,12 @@ if (sll_perper == 0) then
     sll_int32 :: total_num_splines_loc
     sll_real64 :: int_rho,int_jac
     sll_real64, dimension(:), allocatable   :: M_rho_loc
-    sll_real64, dimension(:,:), allocatable   :: rho_at_gauss
     sll_int32 :: num_pts_g1, num_pts_g2, ig1, ig2, ig, jg
     sll_real64 :: wgpt1, wgpt2, gpt1, gpt2, eta1, eta2
     sll_real64 :: val_jac
     class(sll_scalar_field_2d_base),pointer  :: base_field_pointer
     class(sll_interpolator_2d_base),pointer  :: base_interpolator_pointer
     sll_real64, dimension(:,:), pointer :: coeff_rho
-    sll_real64, dimension(:), pointer :: rho_coeff_1d
     
     total_num_splines_loc = es%total_num_splines_loc
     SLL_ALLOCATE(M_rho_loc(total_num_splines_loc),ierr)
@@ -787,8 +760,10 @@ if (sll_perper == 0) then
     
     num_pts_g1 = size(es%gauss_pts1,2)
     num_pts_g2 = size(es%gauss_pts2,2)
+    if (.not. allocated(rho_at_gauss)) &
     SLL_ALLOCATE(rho_at_gauss(es%num_cells1*num_pts_g1,es%num_cells2*num_pts_g2),ierr)
     rho_at_gauss(:,:) = 0.0_f64   
+    if (.not. allocated(rho_coeff_1d)) &
     SLL_ALLOCATE(rho_coeff_1d((es%num_cells1+1)*(es%num_cells2+1)),ierr)
 
     M_rho_loc     = 0.0_f64
@@ -796,7 +771,6 @@ if (sll_perper == 0) then
     rho_coeff_1d  = 0.0_f64
    
   
-    !call sll_set_time_mark(t0)
     !ES Compute rho at all Gauss points
     ig1 = 0 
     ig2 = 0 
@@ -948,7 +922,6 @@ if (sll_perper == 0) then
        end do
        
     end select
-    !time = sll_time_elapsed_since(t0)
 
 
    
@@ -1143,7 +1116,7 @@ if (sll_perper == 0) then
             dbiatx2_rho,&
             2)
       
-       ! we stocke the values of spline to construct the source term
+       ! we stock values of spline to construct the source term
        obj%values_splines_eta2(cell_j + obj%num_cells2*(j-1),:) = dbiatx2(:,1)
        obj%values_splines_gauss2(cell_j+obj%num_cells2*(j-1),:)=dbiatx2_rho(:,1)
        obj%tab_index_coeff2(cell_j + obj%num_cells2*(j-1)) = left_y
@@ -1167,8 +1140,6 @@ if (sll_perper == 0) then
              
           end if
     
-          
-          
           call bsplvd(&
                obj%knots1,&
                obj%spline_degree1+1,&
@@ -1209,7 +1180,7 @@ if (sll_perper == 0) then
           val_b2_der2  = b2_field_vect%first_deriv_eta2_value_at_point(gpt1,gpt2)
    
           jac_mat(:,:) = c_field%get_jacobian_matrix(gpt1,gpt2)
-          val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)!abs(jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1))
+          val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)
 
           obj%values_jacobian(cell_i + obj%num_cells1*(i-1),cell_j + obj%num_cells2*(j-1)) = val_jac
         
@@ -1224,8 +1195,6 @@ if (sll_perper == 0) then
                jac_mat(1,1)*jac_mat(1,2)*val_a22 - &
                jac_mat(2,1)*jac_mat(2,2)*val_a11 + &
                jac_mat(1,2)*jac_mat(2,1)*val_a21
-          
-          
           
           B12 = jac_mat(1,1)*jac_mat(2,2)*val_a21 - &
                jac_mat(1,1)*jac_mat(1,2)*val_a22 - &
@@ -1255,8 +1224,6 @@ if (sll_perper == 0) then
                 
                 index1  =  jj * ( obj%spline_degree1 + 1 ) + ii + 1
                 
-                
-                
                 Masse_loc(index1) = &
                      Masse_loc(index1) + &
                      val_jac*wgpt1*wgpt2* &
@@ -1268,9 +1235,6 @@ if (sll_perper == 0) then
                      (dbiatx1(ii+1,2)*dbiatx2(jj+1,1)+&
                      dbiatx1(ii+1,1)*dbiatx2(jj+1,2))
                 
-                
-         
-                
                 do iii = 0,obj%spline_degree1
                    do jjj = 0,obj%spline_degree2
                       
@@ -1281,8 +1245,6 @@ if (sll_perper == 0) then
                            val_jac*wgpt1*wgpt2* &
                            dbiatx1_rho(ii+1,1)*dbiatx1(iii+1,1)*  &
                            dbiatx2_rho(jj+1,1)*dbiatx2(jjj+1,1)
-                      
-                      
                       
                       M_c_loc(index1, index2) = &
                            M_c_loc(index1, index2) + &

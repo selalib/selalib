@@ -34,8 +34,10 @@ module sll_module_arbitrary_degree_spline_interpolator_1d
 
   ! in what follows, the direction '1' is in the contiguous memory direction.
   !> Class for arbitrary degree spline 1d interpolator
-  type, public, extends(sll_interpolator_1d_base) :: &
-     sll_arbitrary_degree_spline_interpolator_1d
+  type, public, extends(sll_interpolator_1d_base) :: sll_arbitrary_degree_spline_interpolator_1d
+     private
+    !> PLEASE ADD DOCUMENTATION
+     sll_real64, public, dimension(:), pointer :: coeff_splines
     !> PLEASE ADD DOCUMENTATION
      sll_int32  :: num_pts
     !> PLEASE ADD DOCUMENTATION
@@ -57,8 +59,6 @@ module sll_module_arbitrary_degree_spline_interpolator_1d
      sll_int32  :: size_t
     !> PLEASE ADD DOCUMENTATION
      sll_int64  :: bc_selector ! this is set in initialization
-    !> PLEASE ADD DOCUMENTATION
-     sll_real64, dimension(:), pointer :: coeff_splines
     !> PLEASE ADD DOCUMENTATION
      sll_int32  :: size_coeffs
     !> PLEASE ADD DOCUMENTATION

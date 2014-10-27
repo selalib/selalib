@@ -13,11 +13,7 @@
 !> @brief 
 !> Library with all Poisson solvers
 !>
-!> <b> Headers file available </b>
-!>  - sll_poisson_solvers.h
-!>
 !> <b> How to use it </b>
 !> - Header file : \code #include 'sll_poisson_solvers.h' \endcode
 !> - Link with   <code>-lsll_poisson_solvers</code>
-!> - Add <code> use sll_poisson_solvers </code>
 !>
