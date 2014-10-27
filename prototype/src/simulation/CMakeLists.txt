@@ -43,7 +43,6 @@ IF(HDF5_ENABLED)
    SET(SIM_LIBS sll_advection)
    ADD_SIMULATION_1D(2d_vp_no_split            2d_vlasov_poisson_no_splitting)
    #ADD_SIMULATION_1D(2d_gc_curvilinear 2d_guiding_center_curvilinear)
-   ADD_SIMULATION_1D(2d_gc_polar 2d_guiding_center_polar)
 ENDIF(HDF5_ENABLED)
 
 ADD_EXECUTABLE(VP1D_deltaf_cart VP1D_deltaf_BSL.F90)
