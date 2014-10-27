@@ -30,17 +30,6 @@ ADD_EXECUTABLE(test_general_coordinates_elliptic_solver
 TARGET_LINK_LIBRARIES(test_general_coordinates_elliptic_solver
                       sll_general_coordinate_elliptic_solvers)
 
-ADD_EXECUTABLE(test_gces_identity init_functions.F90
-               example_identity.F90)
-
-TARGET_LINK_LIBRARIES(test_gces_identity sll_general_coordinate_elliptic_solvers)
-
-ADD_EXECUTABLE(test_gces_colella_periodic init_functions.F90
-               example_colella_periodic.F90)
-
-TARGET_LINK_LIBRARIES(test_gces_colella_periodic 
-                      sll_general_coordinate_elliptic_solvers)
-
 ADD_TEST(NAME general_coordinate_elliptic_solver 
          COMMAND test_general_coordinates_elliptic_solver)
 
