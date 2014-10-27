@@ -1,10 +1,16 @@
 module connectivity_module
+
   implicit none
+  private
 
   integer, parameter :: CONNECT_PERIODIC = 0, CONNECT_DIRICHLET = 1
 
+  public initconnectivity
+
 contains
 !----------------------------------------------------------------------------					
+
+  !> PLEASE ADD DOCUMENTATION
   subroutine initconnectivity( &
     num_cells1, &
     num_cells2, &

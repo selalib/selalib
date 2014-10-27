@@ -15,6 +15,8 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
 
 module sll_assert
   implicit none
@@ -37,3 +39,5 @@ subroutine sll_assertion(msg, file, line)
 end subroutine sll_assertion
 
 end module sll_assert
+
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

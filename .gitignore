@@ -108,3 +108,7 @@ prototype/documentation/selalib_manual.synctex.gz
 prototype/documentation/selalib_manual.toc
 
 prototype/src/fix-names.py
+
+*.orig
+
+prototype/intel_build/*

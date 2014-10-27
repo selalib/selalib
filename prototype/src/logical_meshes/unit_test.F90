@@ -1,3 +1,4 @@
+!> @internal [example]
 program unit_test_logical_meshes
 #include "sll_working_precision.h"
   use sll_logical_meshes
@@ -54,3 +55,4 @@ program unit_test_logical_meshes
   print *, 'PASSED'
 
 end program unit_test_logical_meshes
+!> @internal [example]
