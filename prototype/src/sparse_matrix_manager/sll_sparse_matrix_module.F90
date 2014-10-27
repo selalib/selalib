@@ -135,6 +135,15 @@ subroutine initialize_csr_matrix( &
   sll_int32, dimension(:,:), allocatable :: lpi_columns
   sll_int32, dimension(:),   allocatable :: lpi_occ
   sll_int32                              :: li_COEF
+  sll_int32 :: li_e
+  sll_int32 :: li_b_1
+  sll_int32 :: li_A_1
+  sll_int32 :: li_b_2
+  sll_int32 :: li_A_2
+  sll_int32 :: li_i
+  sll_int32 :: li_result
+  sll_int32 :: lpi_size(2)
+  logical   :: ll_done
 
   print *,'#initialize_csr_matrix'
   li_COEF = 10
@@ -144,17 +153,60 @@ subroutine initialize_csr_matrix( &
 
   lpi_columns(:,:) = 0
   lpi_occ(:) = 0
-  ! COUNTING NON ZERO ELEMENTS
-  num_nz = sll_count_non_zero_elts( &
-    num_rows,                       &
-    num_cols,                       &
-    num_elements,                   &
-    local_to_global_row,            &
-    num_local_dof_row,              &
-    local_to_global_col,            &
-    num_local_dof_col,              &
-    lpi_columns,                    &
-    lpi_occ)      
+  
+  ! WE FIRST COMPUTE, FOR EACH ROW, THE NUMBER OF COLUMNS THAT WILL BE USED
+  do li_e = 1, num_elements
+
+    do li_b_1 = 1, num_local_dof_row
+
+      li_A_1 = local_to_global_row(li_b_1, li_e)
+      if (li_A_1 == 0) cycle
+
+      do li_b_2 = 1, num_local_dof_col
+
+        li_A_2 = local_to_global_col(li_b_2, li_e)
+        if (li_A_2 == 0) cycle
+
+        ll_done = .false.
+        ! WE CHECK IF IT IS THE FIRST OCCURANCE OF THE COUPLE (li_A_1, li_A_2)
+        do li_i = 1, lpi_columns(li_A_1, 0)
+          if (lpi_columns(li_A_1, li_i) /= li_A_2) cycle
+          ll_done = .true.
+          exit
+        end do
+
+        if (.not.ll_done) then
+
+          lpi_occ(li_A_1) = lpi_occ(li_A_1) + 1
+
+          ! li_A_1 IS THE ROW NUM, li_A_2 THE COLUMN NUM
+          ! INITIALIZATION OF THE SPARSE MATRIX
+          lpi_columns(li_A_1, 0) = lpi_columns(li_A_1, 0) + 1
+          lpi_columns(li_A_1, lpi_columns(li_A_1, 0)) = li_A_2
+
+          ! resizing the array
+          lpi_size(1) = SIZE(lpi_columns, 1)
+          lpi_size(2) = SIZE(lpi_columns, 2)
+          if (lpi_size(2) < lpi_columns(li_A_1, 0)) then
+            !ALLOCATE(lpi_columns(lpi_size(1), lpi_size(2)))
+            lpi_columns = lpi_columns
+            !DEALLOCATE(lpi_columns)
+            !ALLOCATE(lpi_columns(lpi_size(1), 2 * lpi_size(2)))
+            lpi_columns(1:lpi_size(1),1:lpi_size(2)) = &
+              lpi_columns(1:lpi_size(1), 1:lpi_size(2))
+            DEALLOCATE(lpi_columns)
+          end if
+
+        end if
+
+      end do
+
+    end do
+
+  end do
+
+  ! COUNT NON ZERO ELEMENTS
+  num_nz = SUM(lpi_occ(1: num_rows))
 
   mat%num_rows = num_rows
   mat%num_cols = num_cols
@@ -451,98 +503,6 @@ subroutine sll_solve_csr_matrix(mat, apr_B, apr_U)
 
 end subroutine sll_solve_csr_matrix
 
-sll_int32 function sll_count_non_zero_elts( &
-  ai_nR,                                    &
-  ai_nC,                                    &
-  ai_nel,                                   &
-  api_LM_1,                                 &
-  ai_nen_1,                                 &
-  api_LM_2,                                 &
-  ai_nen_2,                                 &
-  api_columns,                              &
-  api_occ)
-
-  ! _1 FOR ROWS
-  ! _2 FOR COLUMNS
-
-  sll_int32                 :: ai_nR
-  sll_int32                 :: ai_nC
-  sll_int32, dimension(:,:) :: api_LM_1
-  sll_int32, dimension(:,:) :: api_LM_2
-  sll_int32                 :: ai_nel
-  sll_int32                 :: ai_nen_1
-  sll_int32                 :: ai_nen_2
-  sll_int32, dimension(:,:) :: api_columns
-  sll_int32, dimension(:)   :: api_occ
-  
-  sll_int32 :: li_e
-  sll_int32 :: li_b_1
-  sll_int32 :: li_A_1
-  sll_int32 :: li_b_2
-  sll_int32 :: li_A_2
-  sll_int32 :: li_i
-
-  sll_int32 :: li_result
-  sll_int32 :: lpi_size(2)
-  logical   :: ll_done
-  sll_int32 :: lpi_columns(:,:)
-
-  ! WE FIRST COMPUTE, FOR EACH ROW, THE NUMBER OF COLUMNS THAT WILL BE USED
-  do li_e = 1, ai_nel
-
-    do li_b_1 = 1, ai_nen_1
-
-      li_A_1 = api_LM_1(li_b_1, li_e)
-      if (li_A_1 == 0) cycle
-
-      do li_b_2 = 1, ai_nen_2
-
-        li_A_2 = api_LM_2(li_b_2, li_e)
-        if (li_A_2 == 0) cycle
-
-        ll_done = .false.
-        ! WE CHECK IF IT IS THE FIRST OCCURANCE OF THE COUPLE (li_A_1, li_A_2)
-        do li_i = 1, api_columns(li_A_1, 0)
-          if (api_columns(li_A_1, li_i) /= li_A_2) cycle
-          ll_done = .true.
-          exit
-        end do
-
-        if (.not.ll_done) then
-
-          api_occ(li_A_1) = api_occ(li_A_1) + 1
-
-          ! li_A_1 IS THE ROW NUM, li_A_2 THE COLUMN NUM
-          ! INITIALIZATION OF THE SPARSE MATRIX
-          api_columns(li_A_1, 0) = api_columns(li_A_1, 0) + 1
-          api_columns(li_A_1, api_columns(li_A_1, 0)) = li_A_2
-
-          ! resizing the array
-          lpi_size(1) = SIZE(api_columns, 1)
-          lpi_size(2) = SIZE(api_columns, 2)
-          if (lpi_size(2) < api_columns(li_A_1, 0)) then
-            ALLOCATE(lpi_columns(lpi_size(1), lpi_size(2)))
-            lpi_columns = api_columns
-            DEALLOCATE(api_columns)
-            ALLOCATE(api_columns(lpi_size(1), 2 * lpi_size(2)))
-            api_columns(1:lpi_size(1),1:lpi_size(2)) = &
-              lpi_columns(1:lpi_size(1), 1:lpi_size(2))
-            DEALLOCATE(lpi_columns)
-          end if
-
-        end if
-
-      end do
-
-    end do
-
-  end do
-
-  ! COUNT NON ZERO ELEMENTS
-  li_result = SUM(api_occ(1: ai_nR))
-  sll_count_non_zero_elts = li_result
-
-end function sll_count_non_zero_elts
 
 subroutine sll_init_SparseMatrix( &
   self,                           &
