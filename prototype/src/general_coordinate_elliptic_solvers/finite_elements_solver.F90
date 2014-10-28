@@ -808,9 +808,9 @@ contains ! =============================================================
                i)
           
        end do
-       call sll_factorize_csr_matrix(solv%sll_csr_mat_with_constraint)
+       !call sll_factorize_csr_matrix(solv%sll_csr_mat_with_constraint)
     else
-       call sll_factorize_csr_matrix(solv%sll_csr_mat)
+       !call sll_factorize_csr_matrix(solv%sll_csr_mat)
     end if
     
     solv%sll_csr_mat_source => new_csr_matrix( &
