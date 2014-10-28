@@ -56,8 +56,9 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
     SET( SIM_LIBS sll_simulations_parallel )
 
     # Simulations as new subdirectories
-    ADD_SUBDIRECTORY( sim_2d_guiding_center_curvilinear )
-    ADD_SUBDIRECTORY( sim_2d_vlasov_poisson_cartesian   )
+    ADD_SUBDIRECTORY( sim_2d_guiding_center_curvilinear  )
+    ADD_SUBDIRECTORY( sim_2d_vlasov_poisson_cartesian    )
+    ADD_SUBDIRECTORY( sim_2d_vlasov_poisson_no_splitting )
 
 #   MACRO(ADD_SIMULATION TEST_NAME SIM_NAME) 
 #      ADD_EXECUTABLE(test_${TEST_NAME} simulation_${SIM_NAME}.F90
