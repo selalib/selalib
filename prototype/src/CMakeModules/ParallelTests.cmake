@@ -123,11 +123,9 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
        SET_TESTS_PROPERTIES( distribution_function_4d_multipatch PROPERTIES 
          PASS_REGULAR_EXPRESSION "PASSED")
 
-       SET(ARGS ${CMAKE_BINARY_DIR}/sim4d_qns_general_multipatch_input.txt)
-       ADD_MPI_TEST(vp4d_sim_qns_general_multipatch test_4d_qns_general_multipatch
-         ${PROCS} ${ARGS})
-       SET_TESTS_PROPERTIES(vp4d_sim_qns_general_multipatch PROPERTIES 
-         PASS_REGULAR_EXPRESSION "PASSED")
+#PN SET(ARGS ${CMAKE_BINARY_DIR}/sim4d_qns_general_multipatch_input.txt)
+#PN ADD_MPI_TEST(vp4d_sim_qns_general_multipatch test_4d_qns_general_multipatch ${PROCS} ${ARGS})
+#PN SET_TESTS_PROPERTIES(vp4d_sim_qns_general_multipatch PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
     ENDIF(PYTHON3_FOUND)
 
