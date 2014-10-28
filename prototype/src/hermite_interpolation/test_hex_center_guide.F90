@@ -1,9 +1,9 @@
 program test_hex_hermite
-
+  
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_assert.h"
-
+  
   use sll_constants
   use sll_interpolation_hex_hermite
   use euler_2d_hex
@@ -13,27 +13,57 @@ program test_hex_hermite
   implicit none
 
   type(sll_hex_mesh_2d), pointer          :: mesh, mesh2
+  sll_int32    :: num_cells, n_points, n_triangle, n_edge
+  sll_real64   :: center_mesh_x1, center_mesh_x2, radius
+
   sll_real64, dimension(:,:), allocatable :: deriv
+
+  ! vertex's variables
+  sll_real64, dimension(:),allocatable    :: rho_tn, rho_tn1
+  sll_real64, dimension(:),allocatable    :: uxn,uyn,phi,phi_interm,second_term
   sll_real64, dimension(:),allocatable    :: dxuxn,dyuxn,dxuyn,dyuyn
+  sll_real64, dimension(:,:),allocatable  :: matrix_poisson, l, u
+  sll_int32                               :: width_band1,width_band2
+
+  sll_real64, dimension(:),allocatable    :: rho_tn_1,uxn_1,uyn_1 
+  sll_real64, dimension(:),allocatable    :: dxuxn_1,dyuxn_1,dxuyn_1,dyuyn_1
+
+  sll_real64, dimension(:),allocatable    :: rho_tn_2,uxn_2,uyn_2
+  sll_real64, dimension(:),allocatable    :: dxuxn_2,dyuxn_2,dxuyn_2,dyuyn_2
+
+  ! centers' variables
+  sll_real64,dimension(:),allocatable     :: rho_center_tn, rho_center_tn1
+  sll_real64, dimension(:),allocatable    :: uxn_center,uyn_center, phi_center_interm
   sll_real64, dimension(:),allocatable    :: dxuxn_center,dyuxn_center,dxuyn_center,dyuyn_center
+  sll_real64, dimension(:),allocatable    :: second_term_center, phi_center
+  sll_real64, dimension(:,:),allocatable  :: matrix_poisson_center, l_center, u_center
+
+  sll_real64, dimension(:),allocatable    :: rho_center_tn_1,uxn_1_center,uyn_1_center
+  sll_real64, dimension(:),allocatable    :: dxuxn_1_center,dyuxn_1_center,dxuyn_1_center,dyuyn_1_center
+
+  sll_real64, dimension(:),allocatable    :: rho_center_tn_2,uxn_2_center,uyn_2_center
+  sll_real64, dimension(:),allocatable    :: dxuxn_2_center,dyuxn_2_center,dxuyn_2_center,dyuyn_2_center
+
+  ! middle of the edge's variables
+  sll_real64, dimension(:),allocatable    :: rho_edge_tn, rho_edge_tn1
   sll_real64, dimension(:),allocatable    :: dxuxn_edge,dyuxn_edge,dxuyn_edge,dyuyn_edge
-  sll_real64, dimension(:),allocatable    :: second_term, phi,uxn,uyn,phi_interm
+  sll_real64, dimension(:),allocatable    :: uxn_edge,uyn_edge
+
+  sll_real64, dimension(:),allocatable    :: rho_edge_tn_1,uxn_1_edge,uyn_1_edge
+  sll_real64, dimension(:),allocatable    :: dxuxn_1_edge,dyuxn_1_edge,dxuyn_1_edge,dyuyn_1_edge
+
+  sll_real64, dimension(:),allocatable    :: rho_edge_tn_2,uxn_2_edge,uyn_2_edge
+  sll_real64, dimension(:),allocatable    :: dxuxn_2_edge,dyuxn_2_edge,dxuyn_2_edge,dyuyn_2_edge
+
+  ! 2 times more dense mesh's variables
   sll_real64, dimension(:),allocatable    :: second_term2, phi2,uxn2,uyn2,phi2_interm,rho2
   sll_real64, dimension(:),allocatable    :: dxuxn2,dyuxn2,dxuyn2,dyuyn2
-  sll_real64, dimension(:),allocatable    :: dxuxn_center2,dyuxn_center2,dxuyn_center2,dyuyn_center2
-  sll_real64, dimension(:),allocatable    :: dxuxn_edge2,dyuxn_edge2,dxuyn_edge2,dyuyn_edge2
-  sll_real64, dimension(:),allocatable    :: second_term_center, phi_center
-  sll_real64, dimension(:),allocatable    :: uxn_center,uyn_center
-  sll_real64, dimension(:),allocatable    :: uxn_edge,uyn_edge
-  sll_real64, dimension(:),allocatable    :: phi_center_interm
-  sll_real64, dimension(:,:) ,allocatable :: matrix_poisson, l, u
-  sll_real64, dimension(:,:) ,allocatable :: matrix_poisson_center, l_center, u_center
-  sll_real64, dimension(:,:) ,allocatable :: matrix_poisson2, l2, u2
-  sll_int32                               :: i,j, k1, k2, index_tab
-  sll_int32                               :: width_band1,width_band2, type  ,width_band1_2,width_band2_2
+  sll_real64, dimension(:,:),allocatable  :: matrix_poisson2, l2, u2
+  sll_int32                               :: width_band1_2,width_band2_2
+  sll_int32                               :: n_points2
+
+  sll_int32    :: i,j, k1, k2, index_tab, type
   sll_int32    :: i1,i2,i3
-  sll_int32    :: num_cells, n_points, n_triangle, n_edge, n_points2
-  sll_real64   :: center_mesh_x1, center_mesh_x2, radius
   sll_int32    :: nloops,count, ierr, EXTRA_TABLES = 1 ! put 1 for num_method = 15
   sll_real64   :: dt
   sll_real64   :: tmax
@@ -42,15 +72,15 @@ program test_hex_hermite
   sll_real64   :: t1,t2,t3,t4,t5,t6
   sll_real64   :: step , aire, h1, h2, f_min, x ,y,xx, yy
   sll_real64   :: r11,r12,r21,r22,det
+
   sll_int32    :: p = 6!-> degree of the approximation for the derivative 
   ! distribution at time n
-  sll_int32    :: num_method = 15
+
+  sll_int32    :: num_method = 9
+
   logical      :: inside
   character(len = 50) :: filename
   character(len = 4)  :: filenum
-  sll_real64,dimension(:),allocatable :: rho_tn, rho_center_tn, rho_edge_tn
-  ! distribution at time n + 1
-  sll_real64,dimension(:),allocatable :: rho_tn1,rho_center_tn1,rho_edge_tn1
 
   center_mesh_x1 = 0._f64
   center_mesh_x2 = 0._f64
@@ -58,12 +88,12 @@ program test_hex_hermite
   radius = 14._f64
 
   call print_method(num_method)
-  
+
   do num_cells = 80,80,40 
-     
+
      t = 0._f64
      tmax  = 100._f64
-     dt    = 0.1_f64!*20._f64 !/ real(num_cells,f64)  
+     dt    = 0.05_f64!*20._f64 !/ real(num_cells,f64)  
      !cfl   = radius * dt / ( radius / real(num_cells,f64)  )
      nloops = 0
      count  = 0
@@ -74,7 +104,7 @@ program test_hex_hermite
 
      n_points   = 1 + 3 * num_cells * (num_cells + 1)  
      n_triangle = 6 * num_cells * num_cells
-     n_edge    = 3 * num_cells * ( 3 * num_cells + 1 )
+     n_edge     = 3 * num_cells * ( 3 * num_cells + 1 )
 
      print*," minimum number of points computed on the mesh: ", n_points
 
@@ -86,46 +116,79 @@ program test_hex_hermite
 
      allocate( deriv(1:6,n_points) )
 
+     ! vertex's variables
      SLL_ALLOCATE(rho_tn( n_points),ierr)
      SLL_ALLOCATE(rho_tn1( n_points ),ierr)
-     SLL_ALLOCATE(rho_center_tn ( n_triangle),ierr)
-     SLL_ALLOCATE(rho_center_tn1( n_triangle),ierr)
-
      SLL_ALLOCATE(uxn( n_points),ierr)
      SLL_ALLOCATE(uyn( n_points ),ierr)
-     SLL_ALLOCATE(uxn_center( n_triangle),ierr)
-     SLL_ALLOCATE(uyn_center( n_triangle),ierr)
-
      SLL_ALLOCATE(dxuxn( n_points),ierr)
      SLL_ALLOCATE(dxuyn( n_points ),ierr)
-     SLL_ALLOCATE(dxuxn_center( n_triangle),ierr)
-     SLL_ALLOCATE(dxuyn_center( n_triangle),ierr)
      SLL_ALLOCATE(dyuxn( n_points),ierr)
      SLL_ALLOCATE(dyuyn( n_points ),ierr)
-     SLL_ALLOCATE(dyuxn_center( n_triangle),ierr)
-     SLL_ALLOCATE(dyuyn_center( n_triangle),ierr)
+
+     SLL_ALLOCATE(rho_tn_1( n_points),ierr)
+     SLL_ALLOCATE(uxn_1( n_points),ierr)
+     SLL_ALLOCATE(uyn_1( n_points ),ierr)
+     SLL_ALLOCATE(dxuxn_1( n_points),ierr)
+     SLL_ALLOCATE(dxuyn_1( n_points ),ierr)
+     SLL_ALLOCATE(dyuxn_1( n_points),ierr)
+     SLL_ALLOCATE(dyuyn_1( n_points ),ierr)
+
+     SLL_ALLOCATE(rho_tn_2( n_points),ierr)
+     SLL_ALLOCATE(uxn_2( n_points),ierr)
+     SLL_ALLOCATE(uyn_2( n_points ),ierr)
+     SLL_ALLOCATE(dxuxn_2( n_points),ierr)
+     SLL_ALLOCATE(dxuyn_2( n_points ),ierr)
+     SLL_ALLOCATE(dyuxn_2( n_points),ierr)
+     SLL_ALLOCATE(dyuyn_2( n_points ),ierr)
 
      SLL_ALLOCATE(second_term( n_points),ierr)    
      SLL_ALLOCATE(phi( n_points),ierr)           
-     SLL_ALLOCATE(phi_interm( n_points),ierr)       
-     SLL_ALLOCATE(phi_center_interm( n_points),ierr)          
-     SLL_ALLOCATE(phi_center( n_triangle),ierr)  
-     SLL_ALLOCATE(second_term_center( n_points),ierr)       
-     SLL_ALLOCATE(matrix_poisson( n_points,1 + 4*num_cells + 2 ) , ierr)
-     SLL_ALLOCATE(matrix_poisson_center( n_triangle,1 + 4*num_cells + 2), ierr)
+     SLL_ALLOCATE(phi_interm( n_points),ierr)        
+     SLL_ALLOCATE(matrix_poisson( n_points,1 + 4*num_cells + 2 ) , ierr) 
      SLL_ALLOCATE(l( n_points,1 + 4*num_cells + 2 ) , ierr)
      SLL_ALLOCATE(u( n_points,1 + 4*num_cells + 2), ierr)
-     SLL_ALLOCATE(l_center( n_triangle,1 + 4*num_cells + 2 ) , ierr)
-     SLL_ALLOCATE(u_center( n_triangle,1 + 4*num_cells + 2), ierr)
+
+     if  ( num_method == 10 )  then
+        SLL_ALLOCATE(rho_center_tn ( n_triangle),ierr)
+        SLL_ALLOCATE(rho_center_tn1( n_triangle),ierr)
+        SLL_ALLOCATE(uxn_center( n_triangle),ierr)
+        SLL_ALLOCATE(uyn_center( n_triangle),ierr)
+        SLL_ALLOCATE(dxuxn_center( n_triangle),ierr)
+        SLL_ALLOCATE(dxuyn_center( n_triangle),ierr)
+        SLL_ALLOCATE(dyuxn_center( n_triangle),ierr)
+        SLL_ALLOCATE(dyuyn_center( n_triangle),ierr)
+
+        SLL_ALLOCATE(rho_center_tn_1 ( n_triangle),ierr)
+        SLL_ALLOCATE(uxn_1_center( n_triangle),ierr)
+        SLL_ALLOCATE(uyn_1_center( n_triangle),ierr)
+        SLL_ALLOCATE(dxuxn_1_center( n_triangle),ierr)
+        SLL_ALLOCATE(dxuyn_1_center( n_triangle),ierr)
+        SLL_ALLOCATE(dyuxn_1_center( n_triangle),ierr)
+        SLL_ALLOCATE(dyuyn_1_center( n_triangle),ierr)
+
+        SLL_ALLOCATE(rho_center_tn_2 ( n_triangle),ierr)
+        SLL_ALLOCATE(uxn_2_center( n_triangle),ierr)
+        SLL_ALLOCATE(uyn_2_center( n_triangle),ierr)
+        SLL_ALLOCATE(dxuxn_2_center( n_triangle),ierr)
+        SLL_ALLOCATE(dxuyn_2_center( n_triangle),ierr)
+        SLL_ALLOCATE(dyuxn_2_center( n_triangle),ierr)
+        SLL_ALLOCATE(dyuyn_2_center( n_triangle),ierr)
+
+        SLL_ALLOCATE(phi_center_interm( n_points),ierr)          
+        SLL_ALLOCATE(phi_center( n_triangle),ierr)  
+        SLL_ALLOCATE(second_term_center( n_points),ierr)
+        SLL_ALLOCATE(matrix_poisson_center( n_triangle,1 + 4*num_cells + 2), ierr)
+        SLL_ALLOCATE(l_center( n_triangle,1 + 4*num_cells + 2 ) , ierr)
+        SLL_ALLOCATE(u_center( n_triangle,1 + 4*num_cells + 2), ierr)
+     endif
 
      if  ( num_method == 15 )  then
+
         width_band1_2 = 4*num_cells+1
         width_band2_2 = width_band1_2
-        n_points2   = 1 + 6 * num_cells * (2*num_cells + 1)  
-        SLL_ALLOCATE(second_term2( n_points2 ),ierr) 
-        SLL_ALLOCATE(rho2( n_points2),ierr)     
-        SLL_ALLOCATE(phi2( n_points2),ierr)           
-        SLL_ALLOCATE(phi2_interm( n_points2),ierr) 
+        n_points2   = 1 + 6 * num_cells * (2*num_cells + 1) 
+
         SLL_ALLOCATE(rho_edge_tn ( n_edge),ierr)
         SLL_ALLOCATE(rho_edge_tn1( n_edge),ierr)
         SLL_ALLOCATE(uxn_edge( n_edge),ierr)
@@ -134,6 +197,27 @@ program test_hex_hermite
         SLL_ALLOCATE(dxuyn_edge( n_edge),ierr)
         SLL_ALLOCATE(dyuxn_edge( n_edge),ierr)
         SLL_ALLOCATE(dyuyn_edge( n_edge),ierr)
+
+        SLL_ALLOCATE(rho_edge_tn_1( n_edge),ierr)
+        SLL_ALLOCATE(uxn_1_edge( n_edge),ierr)
+        SLL_ALLOCATE(uyn_1_edge( n_edge),ierr) 
+        SLL_ALLOCATE(dxuxn_1_edge( n_edge),ierr)
+        SLL_ALLOCATE(dxuyn_1_edge( n_edge),ierr)
+        SLL_ALLOCATE(dyuxn_1_edge( n_edge),ierr)
+        SLL_ALLOCATE(dyuyn_1_edge( n_edge),ierr)
+
+        SLL_ALLOCATE(rho_edge_tn_2( n_edge),ierr)
+        SLL_ALLOCATE(uxn_2_edge( n_edge),ierr)
+        SLL_ALLOCATE(uyn_2_edge( n_edge),ierr) 
+        SLL_ALLOCATE(dxuxn_2_edge( n_edge),ierr)
+        SLL_ALLOCATE(dxuyn_2_edge( n_edge),ierr)
+        SLL_ALLOCATE(dyuxn_2_edge( n_edge),ierr)
+        SLL_ALLOCATE(dyuyn_2_edge( n_edge),ierr)
+
+        SLL_ALLOCATE(second_term2( n_points2 ),ierr) 
+        SLL_ALLOCATE(rho2( n_points2),ierr)     
+        SLL_ALLOCATE(phi2( n_points2),ierr)           
+        SLL_ALLOCATE(phi2_interm( n_points2),ierr) 
         SLL_ALLOCATE(uxn2( n_points2),ierr)
         SLL_ALLOCATE(uyn2( n_points2),ierr) 
         SLL_ALLOCATE(dxuxn2( n_points2),ierr)
@@ -143,6 +227,7 @@ program test_hex_hermite
         SLL_ALLOCATE(l2( n_points2,1 + 8*num_cells + 2 ) , ierr)
         SLL_ALLOCATE(u2( n_points2,1 + 8*num_cells + 2), ierr)
         SLL_ALLOCATE(matrix_poisson2( n_points2,1 + 8*num_cells + 2 ) , ierr)
+
      endif
 
 
@@ -158,15 +243,15 @@ program test_hex_hermite
         mesh2 => new_hex_mesh_2d( num_cells*2, center_mesh_x1, center_mesh_x2,&
              radius=radius, EXTRA_TABLES = EXTRA_TABLES ) 
      endif
-        
-     
+
+
      det = (mesh%r1_x1*mesh%r2_x2 - mesh%r1_x2*mesh%r2_x1)/mesh%delta
 
      r11 = + mesh%r2_x2/det
      r12 = - mesh%r2_x1/det
      r21 = - mesh%r1_x2/det
      r22 = + mesh%r1_x1/det
-     
+
      call init_distr(rho_tn,rho_center_tn,rho_edge_tn,num_method,mesh)
 
      if ( num_method /= 15 ) then
@@ -174,7 +259,7 @@ program test_hex_hermite
         call factolub_bande(matrix_poisson,l,u,n_points,width_band1,width_band2)
         call hex_second_terme_poisson( second_term, mesh, rho_tn )
         call solvlub_bande(l,u,phi_interm,second_term,n_points,width_band1,width_band2)
-        
+
         do i = 1, mesh%num_pts_tot    ! need to re-index phi : 
            k1 = mesh%hex_coord(1, i)
            k2 = mesh%hex_coord(2, i)
@@ -225,33 +310,9 @@ program test_hex_hermite
         call deassemble(dyuxn,dyuxn_edge,dyuxn2,mesh,mesh2)
         call deassemble(dyuyn,dyuyn_edge,dyuyn2,mesh,mesh2)
 
-
-        
-       ! open(unit = 11, file="essai_sommet", action="write", status="replace")
-       ! open(unit = 12, file="essai_edge", action="write", status="replace")
-       ! open(unit = 13, file="essai_mesh2", action="write", status="replace")
-
-       ! do i = 1,n_points
-       !    write(11,*) mesh%cartesian_coord(1,i),mesh%cartesian_coord(2,i), uxn(i)
-       ! enddo
-
-       ! do i = 1,n_edge
-       !    write(12,*) mesh%edge_center_cartesian_coord(1,i),mesh%edge_center_cartesian_coord(2,i), uxn_edge(i)
-       ! enddo
-
-       ! do i = 1,n_points2
-       !    write(13,*) mesh2%cartesian_coord(1,i),mesh2%cartesian_coord(2,i), uxn2(i)
-       ! enddo
-
-       ! close(11)
-       ! close(12)
-       ! close(13)
-
-
-
      endif
 
-     
+
      if (num_method /= 15) then
         call int2string(0,filenum)
         filename  = "center_guide_rho"//trim(filenum)
@@ -282,7 +343,7 @@ program test_hex_hermite
      !*********************************************************
      !                          Time loop
      !*********************************************************
-
+     
      call cpu_time(t3)
 
      print*,"fin init",t3 - t_init
@@ -307,23 +368,72 @@ program test_hex_hermite
            !*************************************************
            !       computation of the characteristics
            !*************************************************
+           
+           if (t < 2*dt) then
 
-           call compute_characteristic_euler_2d_hex( &
-                x,y,uxn,uyn,i,xx,yy,dt )
+              ! solving with euler
+              call compute_characteristic_euler_2d_hex( &
+                   x,y,uxn,uyn,i,xx,yy,dt )
 
-           inside = .true.
-           h1 =  xx*r11 + yy*r12
-           h2 =  xx*r21 + yy*r22 
+              inside = .true.
+              h1 =  xx*r11 + yy*r12
+              h2 =  xx*r21 + yy*r22 
 
-           if ( abs(h1) >  radius-mesh%delta .or. abs(h2) >  radius-mesh%delta ) inside = .false.
-           if ( abs(xx) > (radius-mesh%delta)*sqrt(3._f64)*0.5_f64) inside = .false.
+              if ( abs(h1) >  radius-mesh%delta .or. abs(h2) >  radius-mesh%delta &
+                   .or. abs(xx) > (radius-mesh%delta)*sqrt(3._f64)*0.5_f64) inside = .false.
 
-           if ( inside ) then
-              call hermite_interpolation(i, xx, yy, rho_tn, rho_center_tn,&
-                   rho_edge_tn, rho_tn1, mesh, deriv, aire,& 
-                   num_method)
-           else 
-              rho_tn1(i) = 0._f64 ! dirichlet boundary condition
+              if ( inside ) then
+                 call hermite_interpolation(i, xx, yy, rho_tn, rho_center_tn,&
+                      rho_edge_tn, rho_tn1, mesh, deriv, aire,& 
+                      num_method)
+              else 
+                 rho_tn1(i) = 0._f64 ! dirichlet boundary condition
+              endif
+
+           ! elseif (t < 3*dt) then
+           !    !solving with leapfrog
+              
+           !    call compute_characteristic_leapfrog_2d_hex( x,y,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,i,xx,yy,dt)
+
+           !    inside = .true.
+           !    h1 =  xx*r11 + yy*r12
+           !    h2 =  xx*r21 + yy*r22 
+
+           !    if ( abs(h1) >  radius-mesh%delta .or. abs(h2) >  radius-mesh%delta &
+           !         .or. abs(xx) > (radius-mesh%delta)*sqrt(3._f64)*0.5_f64) inside = .false.
+
+           !    if ( inside ) then
+           !       call hermite_interpolation(i, xx, yy, rho_tn_1, rho_center_tn_1,&
+           !            rho_edge_tn_1, rho_tn1, mesh, deriv, aire,& 
+           !            num_method)
+           !    else 
+           !       rho_tn1(i) = 0._f64 ! dirichlet boundary condition
+           !    endif
+
+           else
+
+              ! solving with Adams 2
+              
+              call compute_characteristic_adams2_2d_hex( x,y,uxn,uyn,uxn_1,uyn_1,&
+                   dxuxn,dyuxn,dxuyn,dyuyn,i,xx,yy,dt)
+
+              !print*,x,y,xx,yy,uxn(200),uyn(200),uxn_1(200),uyn_1(200)
+
+              inside = .true.
+              h1 =  xx*r11 + yy*r12
+              h2 =  xx*r21 + yy*r22 
+
+              if ( abs(h1) >  radius-mesh%delta .or. abs(h2) >  radius-mesh%delta &
+                   .or. abs(xx) > (radius-mesh%delta)*sqrt(3._f64)*0.5_f64) inside = .false.
+
+              if ( inside ) then
+                 call hermite_interpolation(i, xx, yy, rho_tn, rho_center_tn,&
+                      rho_edge_tn, rho_tn1, mesh, deriv, aire,& 
+                      num_method)
+              else 
+                 rho_tn1(i) = 0._f64 ! dirichlet boundary condition
+              endif
+
            endif
 
         end do ! end of the computation of the mesh points
@@ -346,7 +456,7 @@ program test_hex_hermite
 
               if ( abs(h1) >  radius-mesh%delta .or. abs(h2) >  radius-mesh%delta ) inside = .false.
               if ( abs(xx) > (radius-mesh%delta)*sqrt(3._f64)*0.5_f64) inside = .false.
-              
+
               if ( inside ) then
                  call hermite_interpolation(i, x, y, rho_tn, rho_center_tn,&
                       rho_edge_tn, rho_center_tn1, mesh, deriv, aire,& 
@@ -392,11 +502,66 @@ program test_hex_hermite
         endif
 
 
+
+        uxn_2 = uxn_1
+        uxn_1 = uxn
+        uyn_2 = uyn_1
+        uyn_1 = uyn
+
+        dxuxn_2 = dxuxn_1
+        dyuxn_2 = dyuxn_1
+        dxuyn_2 = dxuyn_1
+        dyuyn_2 = dyuyn_1
+
+        dxuxn_1 = dxuxn
+        dyuxn_1 = dyuxn
+        dxuyn_1 = dxuyn
+        dyuyn_1 = dyuyn
+
+
+        if ( num_method == 10 ) then
+
+           uxn_2_center = uxn_1_center
+           uxn_1_center = uxn_center
+           uyn_2_center = uyn_1_center
+           uyn_1_center = uyn_center
+
+           dxuxn_2_center = dxuxn_1_center
+           dyuxn_2_center = dyuxn_1_center
+           dxuyn_2_center = dxuyn_1_center
+           dyuyn_2_center = dyuyn_1_center
+
+           dxuxn_1_center = dxuxn_center
+           dyuxn_1_center = dyuxn_center
+           dxuyn_1_center = dxuyn_center
+           dyuyn_1_center = dyuyn_center
+
+        endif
+
+        if ( num_method == 15 ) then
+
+           uxn_2_edge = uxn_1_edge
+           uxn_1_edge = uxn_edge
+           uyn_2_edge = uyn_1_edge
+           uyn_1_edge = uyn_edge
+
+           dxuxn_2_edge = dxuxn_1_edge
+           dyuxn_2_edge = dyuxn_1_edge
+           dxuyn_2_edge = dxuyn_1_edge
+           dyuyn_2_edge = dyuyn_1_edge
+
+           dxuxn_1_edge = dxuxn_edge
+           dyuxn_1_edge = dyuxn_edge
+           dxuyn_1_edge = dxuyn_edge
+           dyuyn_1_edge = dyuyn_edge
+
+        endif
+
         !*********************************************************
         !      computing the solution of the poisson equation
         !*********************************************************
 
-        
+
         if ( num_method /= 15 ) then
            call hex_second_terme_poisson( second_term, mesh, rho_tn )
 
@@ -422,12 +587,12 @@ program test_hex_hermite
                  ! call hermite_interpolation(i,x,y,uyn,uyn_center&
                  !      ,uyn_edge, uyn_center,mesh,deriv,aire,&
                  !      9)
-                  uxn_center(i) = (uxn(i1)+uxn(i2)+uxn(i3))/3._f64
-                  uyn_center(i) = (uyn(i1)+uyn(i2)+uyn(i3))/3._f64
+                 uxn_center(i) = (uxn(i1)+uxn(i2)+uxn(i3))/3._f64
+                 uyn_center(i) = (uyn(i1)+uyn(i2)+uyn(i3))/3._f64
               enddo
            endif
         endif
-        
+
         if ( num_method == 15 ) then
            call assemble(rho_tn,rho_edge_tn,rho2,mesh,mesh2)
            call hex_second_terme_poisson( second_term2, mesh2, rho2)
@@ -458,7 +623,7 @@ program test_hex_hermite
         else
            call hex_diagnostics(rho2,t,mesh2,uxn2,uyn2,nloops, num_method)
         endif
-        
+
         if ( num_method /= 15 .and.count == 10.and.nloops<10000) then
            call int2string(nloops,filenum)
            filename  = "center_guide_rho"//trim(filenum)
@@ -467,7 +632,7 @@ program test_hex_hermite
            call write_field_hex_mesh_xmf(mesh, phi, trim(filename))
            count = 0
            if ( num_method == 10 ) then
-              
+
               filename  = "center_guide_rho_center"//trim(filenum)//".dat"
               call write_center(mesh,rho_center_tn1,filename)
            endif
@@ -480,70 +645,94 @@ program test_hex_hermite
            count = 0
         endif
 
-        rho_tn = rho_tn1
-        if ( num_method == 10 ) rho_center_tn = rho_center_tn1
-        if ( num_method == 15 ) rho_edge_tn  = rho_edge_tn1
+        rho_tn_2 = rho_tn_1
+        rho_tn_1 = rho_tn
+        rho_tn   = rho_tn1
+
+        if ( num_method == 10 ) then
+
+           rho_center_tn_2 = rho_center_tn_1
+           rho_center_tn_1 = rho_center_tn
+           rho_center_tn   = rho_center_tn1
+
+        endif
+
+        if ( num_method == 15 ) then
+
+           rho_edge_tn_2 = rho_edge_tn_1
+           rho_edge_tn_1 = rho_edge_tn
+           rho_edge_tn   = rho_edge_tn1
+
+        endif
 
      enddo
 
 
+     SLL_DEALLOCATE_ARRAY(rho_tn,ierr)
+     SLL_DEALLOCATE_ARRAY(rho_tn1,ierr)
      SLL_DEALLOCATE_ARRAY(second_term,ierr)        
      SLL_DEALLOCATE_ARRAY(phi,ierr)        
      SLL_DEALLOCATE_ARRAY(phi_interm,ierr)  
-     SLL_DEALLOCATE_ARRAY(phi_center_interm,ierr) 
-     SLL_DEALLOCATE_ARRAY(second_term_center,ierr)    
-     SLL_DEALLOCATE_ARRAY(phi_center,ierr)        
-     SLL_DEALLOCATE_ARRAY(rho_tn,ierr)
-     SLL_DEALLOCATE_ARRAY(rho_tn1,ierr)
-     SLL_DEALLOCATE_ARRAY(rho_center_tn,ierr)
-     SLL_DEALLOCATE_ARRAY(rho_center_tn1,ierr)
      SLL_DEALLOCATE_ARRAY(uxn,ierr)
      SLL_DEALLOCATE_ARRAY(uyn,ierr)
      SLL_DEALLOCATE_ARRAY(dxuxn,ierr)
      SLL_DEALLOCATE_ARRAY(dxuyn,ierr)
      SLL_DEALLOCATE_ARRAY(dyuxn,ierr)
      SLL_DEALLOCATE_ARRAY(dyuyn,ierr)
-     SLL_DEALLOCATE_ARRAY(uxn_center,ierr)
-     SLL_DEALLOCATE_ARRAY(uyn_center,ierr)
-     SLL_DEALLOCATE_ARRAY(dxuxn_center,ierr)
-     SLL_DEALLOCATE_ARRAY(dxuyn_center,ierr)
-     SLL_DEALLOCATE_ARRAY(dyuxn_center,ierr)
-     SLL_DEALLOCATE_ARRAY(dyuyn_center,ierr)
-     deallocate(deriv,matrix_poisson,matrix_poisson_center)
-     deallocate(l,u,l_center,u_center)
+     deallocate(l,u,deriv,matrix_poisson)
 
-     
+     if  ( num_method == 10 )  then
+
+        SLL_DEALLOCATE_ARRAY(rho_center_tn,ierr)
+        SLL_DEALLOCATE_ARRAY(rho_center_tn1,ierr)
+        SLL_DEALLOCATE_ARRAY(phi_center_interm,ierr) 
+        SLL_DEALLOCATE_ARRAY(second_term_center,ierr)    
+        SLL_DEALLOCATE_ARRAY(phi_center,ierr) 
+        SLL_DEALLOCATE_ARRAY(uxn_center,ierr)
+        SLL_DEALLOCATE_ARRAY(uyn_center,ierr)
+        SLL_DEALLOCATE_ARRAY(dxuxn_center,ierr)
+        SLL_DEALLOCATE_ARRAY(dxuyn_center,ierr)
+        SLL_DEALLOCATE_ARRAY(dyuxn_center,ierr)
+        SLL_DEALLOCATE_ARRAY(dyuyn_center,ierr)
+        deallocate(matrix_poisson_center,l_center,u_center)
+
+     endif
+
      if  ( num_method == 15 )  then
-        SLL_DEALLOCATE_ARRAY(phi2,ierr)        
-        SLL_DEALLOCATE_ARRAY(phi2_interm,ierr)  
-        SLL_DEALLOCATE_ARRAY(rho2,ierr)
+
         SLL_DEALLOCATE_ARRAY(rho_edge_tn,ierr)
         SLL_DEALLOCATE_ARRAY(rho_edge_tn1,ierr)
-        SLL_DEALLOCATE_ARRAY(second_term2,ierr)    
-        SLL_DEALLOCATE_ARRAY(uxn2,ierr)
-        SLL_DEALLOCATE_ARRAY(uyn2,ierr) 
-        SLL_DEALLOCATE_ARRAY(dxuxn2,ierr)
-        SLL_DEALLOCATE_ARRAY(dxuyn2,ierr)
-        SLL_DEALLOCATE_ARRAY(dyuxn2,ierr)
-        SLL_DEALLOCATE_ARRAY(dyuyn2,ierr)
         SLL_DEALLOCATE_ARRAY(uxn_edge,ierr)
         SLL_DEALLOCATE_ARRAY(uyn_edge,ierr)
         SLL_DEALLOCATE_ARRAY(dxuxn_edge,ierr)
         SLL_DEALLOCATE_ARRAY(dxuyn_edge,ierr)
         SLL_DEALLOCATE_ARRAY(dyuxn_edge,ierr)
         SLL_DEALLOCATE_ARRAY(dyuyn_edge,ierr)
+
+        SLL_DEALLOCATE_ARRAY(second_term2,ierr)  
+        SLL_DEALLOCATE_ARRAY(phi2,ierr)        
+        SLL_DEALLOCATE_ARRAY(phi2_interm,ierr)  
+        SLL_DEALLOCATE_ARRAY(rho2,ierr)  
+        SLL_DEALLOCATE_ARRAY(uxn2,ierr)
+        SLL_DEALLOCATE_ARRAY(uyn2,ierr) 
+        SLL_DEALLOCATE_ARRAY(dxuxn2,ierr)
+        SLL_DEALLOCATE_ARRAY(dxuyn2,ierr)
+        SLL_DEALLOCATE_ARRAY(dyuxn2,ierr)
+        SLL_DEALLOCATE_ARRAY(dyuyn2,ierr)
         deallocate(l2,u2,matrix_poisson2)
+
      endif
 
 
      call delete_hex_mesh_2d( mesh )
+     if  ( num_method == 15 ) call delete_hex_mesh_2d( mesh2 )
 
      call cpu_time(t_end)
      print*, "time used =", t_end - t_init
 
   end do
 
-  
+
 contains
 
   !*********initialization**************
@@ -607,7 +796,7 @@ contains
 
 
   end subroutine init_distr
-  
+
   !********** diagnostics **************
 
   subroutine hex_diagnostics(rho,t,mesh,uxn,uyn,nloop, num_method)
@@ -663,8 +852,8 @@ contains
     sll_real64,dimension(:) :: rho,rho_edge,rho2
     sll_int32               :: i,h1,h2,m1,m2,k1,k2,ne,ns, index_tab
     sll_real64              :: eps = 1.e-6
-    
-    
+
+
     do i = 1,mesh2%num_pts_tot 
 
 
@@ -706,8 +895,8 @@ contains
     sll_real64,dimension(:) :: rho,rho_edge,rho2
     sll_int32               ::i,h1,h2,m1,m2,k1,k2,ne,ns
     sll_real64              :: eps = 1.e-6
-    
-    
+
+
     do i = 1,mesh2%num_pts_tot 
 
        h1 = mesh2%hex_coord(1,i)
@@ -724,7 +913,7 @@ contains
 
        call index_hex_to_global(mesh, k1, k2, index_tab)
        ns = mesh%global_indices(index_tab)
-       
+
        if ( abs(m1) > eps .and. abs(m2) > eps ) then
           ne =  mesh%edge_center_index(2,ns)
           rho_edge(ne) = rho2(i)
