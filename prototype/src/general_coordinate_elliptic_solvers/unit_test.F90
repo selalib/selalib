@@ -2,6 +2,7 @@ program test_general_elliptic_solver
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
+#include "sll_file_io.h"
 
 use sll_logical_meshes
 use sll_module_coordinate_transformations_2d
@@ -76,7 +77,8 @@ sll_int32  :: i, j, k
 sll_real64 :: h1,h2,node_val,ref
 sll_real64 :: eta1(NUM_CELLS1+1)
 sll_real64 :: eta2(NUM_CELLS2+1)
-sll_int32 :: npts1,npts2
+sll_int32  :: npts1,npts2
+sll_int32  :: ierr
 
 real(8), external :: sol_exacte_perper
 real(8), external :: sol_exacte_perper_der1
@@ -113,11 +115,29 @@ real(8) :: integral_exact_solution
 
 CHARACTER(len=10) :: cmd
 integer           :: itest1, itest2
-character(len=4)      :: ccase
+character(len=4)  :: ccase
+sll_int32         :: file_id
 
 
 sll_real64 :: grad1_node_val,grad2_node_val,grad1ref,grad2ref
 sll_real64, dimension(1) :: whatever  ! dummy params array
+character(len=49) :: case_name(15)
+
+case_name = ['(per-per) with identity and source term analytic', &
+             '(per-dir) with identity and source term analytic', &
+             '(dir-dir) with identity and source term analytic', &
+             '(dir-per) with identity and source term analytic', &
+             '(per-per) with colella  and source term analytic', &
+             '(per-dir) with colella  and source term analytic', &
+             '(dir-dir) with colella  and source term analytic', &
+             '(dir-per) with colella  and source term analytic', &
+             '(per-per) with identity and source term discrete', &
+             '(per-per) with colella  and source term discrete', &
+             '(per-dir) with colella  and source term discrete', &
+             '(dir-dir) with colella  and source term discrete', &
+             '(dir-per) with colella  and source term discrete', &
+             '(dir-per) with polar    and source term analytic', &
+             '(dir-per) with polar    and source term analytic']
 
 ! First thing, initialize the logical mesh associated with this problem. 
 mesh_2d => new_logical_mesh_2d( NUM_CELLS1, &
@@ -1169,25 +1189,16 @@ do k = itest1, itest2
   end select
 end do
 
-print"(a,g15.3)",'error (per-per) with identity and source term analytic =',acc(01)
-print"(a,g15.3)",'error (per-dir) with identity and source term analytic =',acc(02)
-print"(a,g15.3)",'error (dir-dir) with identity and source term analytic =',acc(03)
-print"(a,g15.3)",'error (dir-per) with identity and source term analytic =',acc(04)
-print"(a,g15.3)",'error (per-per) with colella  and source term analytic =',acc(05)
-print"(a,g15.3)",'error (per-dir) with colella  and source term analytic =',acc(06)
-print"(a,g15.3)",'error (dir-dir) with colella  and source term analytic =',acc(07)
-print"(a,g15.3)",'error (dir-per) with colella  and source term analytic =',acc(08)
-print"(a,g15.3)",'error (per-per) with identity and source term discrete =',acc(09)
-print"(a,g15.3)",'error (per-per) with colella  and source term discrete =',acc(10)
-print"(a,g15.3)",'error (per-dir) with colella  and source term discrete =',acc(11)
-print"(a,g15.3)",'error (dir-dir) with colella  and source term discrete =',acc(12)
-print"(a,g15.3)",'error (dir-per) with colella  and source term discrete =',acc(13)
-print"(a,g15.3)",'error (dir-per) with polar    and source term analytic =',acc(14)
-print"(a,g15.3)",'error (dir-per) with polar    and source term analytic =',acc(15)
 
+call sll_ascii_file_create("solutions_gces.gnu",file_id,ierr)
 do k = 1, 13
+  write(*,"(a)") case_name(k)
   print"('test',i2,' : ','norm L2=',g15.3,' norm H1=',g15.3,' times=',2g15.3)" &
     ,k,normL2(k),normH1(k),ti(k),te(k)
+  call int2string(k, ccase)
+  write(file_id,"(a)") "set title '"//case_name(k)//"'"
+  write(file_id,"(a)") "load 'phi_"//ccase//".gnu'"
+  write(file_id,"(a)") " pause -1"
 end do
   
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

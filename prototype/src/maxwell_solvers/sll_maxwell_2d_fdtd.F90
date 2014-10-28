@@ -44,7 +44,6 @@ module sll_module_maxwell_2d_fdtd
 
 use sll_maxwell_solvers_base
 implicit none
-private
 
 !> Initialize maxwell solver 2d with FDTD scheme
 interface sll_create
@@ -68,7 +67,20 @@ public :: sll_create, sll_solve, sll_solve_ampere, sll_solve_faraday
 
 !> @brief Object with data to solve Maxwell equation 
 !> Maxwell in TE mode: (Ex,Ey,Bz)
-type, public, extends(sll_maxwell_solver) :: sll_maxwell_2d_fdtd
+type, public :: sll_maxwell_2d_fdtd
+  private
+  sll_int32  :: nc_eta1      !< x cells number
+  sll_int32  :: nc_eta2      !< y cells number
+  sll_int32  :: polarization !< TE or TM
+  sll_real64 :: e_0          !< electric conductivity
+  sll_real64 :: mu_0         !< magnetic permeability
+  sll_real64 :: c            !< speed of light
+  sll_real64 :: eta1_min     !< left side 
+  sll_real64 :: eta1_max     !< right side
+  sll_real64 :: delta_eta1   !< step size
+  sll_real64 :: eta2_min     !< bottom side
+  sll_real64 :: eta2_max     !< top side
+  sll_real64 :: delta_eta2   !< step size
   sll_int32  :: i1           !< first indice of the block dimension 1
   sll_int32  :: j1           !< last indice of the block dimension 1
   sll_int32  :: i2           !< first indice of the block dimesnion 2
@@ -76,6 +88,8 @@ type, public, extends(sll_maxwell_solver) :: sll_maxwell_2d_fdtd
   sll_real64 :: dx           !< step size along dimension 1
   sll_real64 :: dy           !< step size along dimension 2
 end type sll_maxwell_2d_fdtd
+
+private
 
 contains
 

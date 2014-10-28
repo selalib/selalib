@@ -177,7 +177,8 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(fields_multipatch)
    ADD_SUBDIRECTORY(sparse_matrix_manager)
    ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers)
-   ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers_multipatch)
+   #PN : REMOVE MULTIPATCH BECAUSE SIMPLE VERSION NEEDS IMPROVEMENTS
+   #ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers_multipatch)
    ADD_SUBDIRECTORY(poisson_solvers)
 
    ADD_SUBDIRECTORY(parallel_array_initializers)

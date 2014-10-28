@@ -64,27 +64,28 @@ module sll_module_maxwell_3d_pstd
 use fftw3
 
 implicit none
-private
 
 !> Initialize maxwell solver 2d cartesian periodic with PSTD scheme
 interface sll_new
  module procedure new_maxwell_3d_pstd
 end interface sll_new
 
-!> Solve maxwell solver 2d cartesian periodic with PSTD scheme
+!> Solve maxwell solver 3d cartesian periodic with PSTD scheme
 interface sll_solve
  module procedure solve_maxwell_3d
 end interface sll_solve
 
+!> Solve Ampere equation 3d cartesian periodic with PSTD scheme
 interface sll_solve_ampere
  module procedure ampere
 end interface sll_solve_ampere
 
+!> Solve Faraday equation 3d cartesian periodic with PSTD scheme
 interface sll_solve_faraday
  module procedure faraday
 end interface sll_solve_faraday
 
-!> Delete maxwell solver 2d cartesian periodic with PSTD scheme
+!> Delete maxwell solver 3d cartesian periodic with PSTD scheme
 interface sll_delete
  module procedure free_maxwell_3d_pstd
 end interface sll_delete
@@ -93,6 +94,7 @@ public :: sll_new, sll_delete, sll_solve, sll_solve_ampere, sll_solve_faraday
 
 !> Maxwell solver object
 type, public :: maxwell_pstd_3d
+   private
    sll_int32                          :: nc_x         !< x cells number
    sll_int32                          :: nc_y         !< y cells number
    sll_int32                          :: nc_z         !< z cells number
@@ -121,6 +123,8 @@ type, public :: maxwell_pstd_3d
    sll_real64                         :: e_0          !< electric conductivity
    sll_real64                         :: mu_0         !< magnetic permeability
 end type maxwell_pstd_3d
+
+private
 
 contains
 
@@ -211,13 +215,13 @@ end subroutine new_maxwell_3d_pstd
 !> in your appication.
 subroutine solve_maxwell_3d(self, ex, ey, ez, bx, by, bz, dt)
 
-   type(maxwell_pstd_3d), intent(inout)           :: self !< maxwell object
-   sll_real64, intent(inout), dimension(:,:,:) :: ex   !< Ex
-   sll_real64, intent(inout), dimension(:,:,:) :: ey   !< Ey
-   sll_real64, intent(inout), dimension(:,:,:) :: ez   !< Ez
-   sll_real64, intent(inout), dimension(:,:,:) :: bx   !< Bx
-   sll_real64, intent(inout), dimension(:,:,:) :: by   !< By
-   sll_real64, intent(inout), dimension(:,:,:) :: bz   !< Bz
+   type(maxwell_pstd_3d), intent(inout)        :: self !< maxwell object
+   sll_real64, intent(inout), dimension(:,:,:) :: ex   !< Ex field
+   sll_real64, intent(inout), dimension(:,:,:) :: ey   !< Ey field
+   sll_real64, intent(inout), dimension(:,:,:) :: ez   !< Ez field
+   sll_real64, intent(inout), dimension(:,:,:) :: bx   !< Bx field
+   sll_real64, intent(inout), dimension(:,:,:) :: by   !< By field
+   sll_real64, intent(inout), dimension(:,:,:) :: bz   !< Bz field
    sll_real64, intent(in)                      :: dt   !< time step
 
    call faraday(self, ex, ey, ez, bx, by, bz, 0.5*dt)   
