@@ -282,6 +282,69 @@ module  euler_2d_hex
 
   end subroutine compute_characteristic_euler_2d_hex
 
+  ! subroutine compute_characteristic_verlet_2d_hex( z1,z2,uxn,uyn,dxux,dyux,dxuy,dyuy,i,zz1,zz2,dt, aire, mesh)
+
+  !   type(sll_hex_mesh_2d), pointer    :: mesh
+  !   sll_real64,dimension(:),intent(in):: uxn, uyn,dxux,dyux,dxuy,dyuy
+  !   sll_real64, intent(in)  :: dt, aire
+  !   sll_real64, intent(in)  :: z1, z2 ! point of the characteristic at tn+1 
+  !   sll_real64, intent(out) :: zz1, zz2 ! point of the characteristic at tn
+  !   sll_int32, intent(in)   :: i
+  !   sll_real64              :: x1,x2,x3,y1,y2,y3,xx,ey,erreur,f
+    	
+  !   step = mesh%delta
+    
+  !   ! premier newton 
+
+  !   erreur = 1._f64
+
+  !   do while(erreur > 1.E-12) 
+
+  !      f = 
+
+  !      xx = 
+
+  !      erreur = abs(f)
+
+  !   enddo
+    
+  !   xx = z1 - uyn(n_j)
+    
+  !   ! deuxième newton
+
+  !   zz2 = 
+
+
+  !   ! dernière égalité
+
+  !   call get_cell_vertices_index( xx, zz2, mesh, i1, i2, i3 )
+
+  !   x1 = mesh%cartesian_coord(1,i1) 
+  !   x2 = mesh%cartesian_coord(1,i2) 
+  !   x3 = mesh%cartesian_coord(1,i3) 
+  !   y1 = mesh%cartesian_coord(2,i1) 
+  !   y2 = mesh%cartesian_coord(2,i2) 
+  !   y3 = mesh%cartesian_coord(2,i3) 
+
+
+  !   a2  = 0.5_f64/aire
+  !   y3y = y3 - y
+  !   y2y = y2 - y
+  !   y1y = y1 - y
+  !   x3x = x3 - x
+  !   x2x = x2 - x
+  !   x1x = x1 - x
+
+  !   l1   = a2 * abs( x2x*y3y - x3x*y2y )    ! barycentric coordinates
+  !   l2   = a2 * abs( x1x*y3y - x3x*y1y ) 
+  !   l3   = 1._f64 - l1 - l2
+  !   ey = l1*uxn(i1) + l2*uxn(i2) + l3*uxn(i3) 
+
+  !   zz1 = z1 - ey * dt * 0.5_f64
+
+  ! end subroutine compute_characteristic_verlet_2d_hex
+
+
   subroutine compute_characteristic_leapfrog_2d_hex( x1,x2,uxn,uyn,dxux,dyux,dxuy,dyuy,i,y1,y2,dt)
 
     sll_real64,dimension(:),intent(in):: uxn, uyn,dxux,dyux,dxuy,dyuy
@@ -292,14 +355,14 @@ module  euler_2d_hex
     sll_real64              :: d1x, d1y, dij0, dij1 
     	
     
-    d1x = dt * uxn(i);
-    d1y = dt * uyn(i);
+    d1x = dt * uxn(i)
+    d1y = dt * uyn(i)
 
-    dij0 = d1x - dt *( d1x*dxUx(i) + d1y*dyUx(i) ); 
-    dij1 = d1y - dt *( d1y*dyUy(i) + d1x*dxUy(i) );
+    dij0 = d1x - dt *( d1x*dxux(i) + d1y*dyux(i) ) 
+    dij1 = d1y - dt *( d1y*dyuy(i) + d1x*dxuy(i) )
 
-    y1 = x1 - 2.0*dij0;
-    y2 = x2 - 2.0*dij1;
+    y1 = x1 - 2._f64*dij0
+    y2 = x2 - 2._f64*dij1
 
   end subroutine compute_characteristic_leapfrog_2d_hex
 
@@ -346,17 +409,11 @@ module  euler_2d_hex
     uxn1 = 3._f64*uxn(i) - 3._f64*uxn_1(i) + uxn_2(i)
     uyn1 = 3._f64*uyn(i) - 3._f64*uyn_1(i) + uyn_2(i)
 
-    ! Uxn1 = 2*my_Ux[ix][iy] -  _Uxp[ix][iy]
-    ! Uyn1 = 2*my_Uy[ix][iy] -  _Uyp[ix][iy]
+    ! Uxn1 = 0.5*x1*tan(tn+dt)
+    ! Uyn1 = 0.5*x2*tan(tn+dt)
 
-    ! Uxn1 = 0.5*X[ix]*tan(tn+dt)
-    ! Uyn1 = 0.5*Y[iy]*tan(tn+dt)
-
-    ! Uxn1 = 4.0*my_Ux[ix][iy] - 6.0*_Uxp[ix][iy] + 4.0*_Uxpp[ix][iy] - _Uxppp[ix][iy];
-    ! Uyn1 = 4.0*my_Uy[ix][iy] - 6.0*_Uyp[ix][iy] + 4.0*_Uypp[ix][iy] - _Uyppp[ix][iy];
-
-    d1x = dt * (5*uxn1 + 8*uxn_1(i) - uxn_2(i))/12._f64
-    d1y = dt * (5*uyn1 + 8*uyn_1(i) - uyn_2(i))/12._f64
+    d1x = dt * (5._f64*uxn1 + 8._f64*uxn_1(i) - uxn_2(i))/12._f64
+    d1y = dt * (5._f64*uyn1 + 8._f64*uyn_1(i) - uyn_2(i))/12._f64
     
     erreur = 1._f64
 
@@ -368,16 +425,16 @@ module  euler_2d_hex
        ! interpolation de uxn(xn), uyn(yn), dxUxn,dyUxn,dxUyn,dyUyn
        ! à faire ici
 
-       xn_1 = x1 - 2._f64*dt*(uxn1+2*uxn_loc) + 4._f64*d1x;
-       yn_1 = x2 - 2._f64*dt*(uyn1+2*uyn_loc) + 4._f64*d1y;
+       xn_1 = x1 - 2._f64*dt*(uxn1+2*uxn_loc) + 4._f64*d1x
+       yn_1 = x2 - 2._f64*dt*(uyn1+2*uyn_loc) + 4._f64*d1y
 
        ! interpolation de uxn_1(xn_1), uyn_1(yn_1), dxUxn_1,dyUxn_1,dxUyn_1,dyUyn_1
        ! à faire ici
 
-       a   = 1._f64 + dt*(2._f64*dxuxn_loc - dxuxn_1_loc)/3._f64;
-       b   =          dt*(2._f64*dyuxn_loc - dyuxn_1_loc)/3._f64;
-       c   =          dt*(2._f64*dxuyn_loc - dxuyn_1_loc)/3._f64;
-       d   = 1._f64 + dt*(2._f64*dyuyn_loc - dyuyn_1_loc)/3._f64;
+       a   = 1._f64 + dt*(2._f64*dxuxn_loc - dxuxn_1_loc)/3._f64
+       b   =          dt*(2._f64*dyuxn_loc - dyuxn_1_loc)/3._f64
+       c   =          dt*(2._f64*dxuyn_loc - dxuyn_1_loc)/3._f64
+       d   = 1._f64 + dt*(2._f64*dyuyn_loc - dyuyn_1_loc)/3._f64
 
        det = a*d - b*c 
 
