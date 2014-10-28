@@ -457,12 +457,18 @@ program test_hex_hermite
         !*********************************************************
         !  computation of the root of the characteristics
         !*********************************************************
-           ! call compute_characteristic_leapfrog_2d_hex( &
-           !    x,y,uxn,uyn,dxux,dyux,dxuy,dyuy,i,xx,yy,2._f64*sll_pi*dt)
+
+           call compute_characteristic_adams2_2d_hex( x1,x2,uxn,uyn,uxn_1,uyn_1,&
+                dxuxn,dyuxn,dxuyn,dyuyn,i,y1,y2,2._f64*sll_pi*dt)
+
+           !call  compute_characteristic_leapfrog_2d_hex( x1,x2,uxn,uyn,uxn_1,&
+           !    uyn_1,dxuxn,dyuxn,dxuyn,dyuyn,i,y1,y2,2._f64*sll_pi*dt)
            !- > for the leapfrog scheme to work, one needs to 
            ! make a interpolation on f(tn-dt) instead of f(tn)
+
            ! call compute_characteristic_euler_2d_hex( &
            !      x,y,uxn,uyn,i,xx,yy,2._f64*sll_pi*dt )
+
         !*********************************************************
         !                INTERPOLATION
         !*********************************************************
@@ -664,27 +670,6 @@ contains
     if (type==1) then
 
        do i = 1,mesh%num_pts_tot
-
-          ! h1 = mesh%hex_coord(1,i)
-          ! h2 = mesh%hex_coord(2,i)
-
-          ! phii_2 = value_if_inside_phi(h1-2,h2,mesh,phi)
-          ! phii_1 = value_if_inside_phi(h1-1,h2,mesh,phi)
-          ! phii1  = value_if_inside_phi(h1+1,h2,mesh,phi)
-          ! phii2  = value_if_inside_phi(h1+2,h2,mesh,phi)
-
-          ! phij_2 = value_if_inside_phi(h1,h2-2,mesh,phi)
-          ! phij_1 = value_if_inside_phi(h1,h2-1,mesh,phi)
-          ! phij1  = value_if_inside_phi(h1,h2+1,mesh,phi)
-          ! phij2  = value_if_inside_phi(h1,h2+2,mesh,phi)
-
-          ! ! order 2
-
-          ! uh1 = ( phii1 - phii_1 ) / (2._f64)!*mesh%delta)
-          ! uh2 = ( phij1 - phij_1 ) / (2._f64)!*mesh%delta)
-
-          ! uxn = -( mesh%r1_x2*uh1 + mesh%r2_x2*uh2)   ! -d(phi)/dy 
-          ! uyn = +( mesh%r1_x1*uh1 + mesh%r2_x1*uh2)   ! +d(phi)/dx
 
           uxn(i) = + mesh%cartesian_coord(2,i)   ! +y
           uyn(i) = - mesh%cartesian_coord(1,i)   ! -x
