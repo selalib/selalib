@@ -461,10 +461,8 @@ subroutine sll_solve_csr_matrix(mat, apr_B, apr_U)
     return
   end if
 
-  allocate(lpr_Ad(mat%num_rows),stat=li_err)
-  if (li_err.ne.0) li_flag=10
-  allocate(lpr_d(mat%num_rows),stat=li_err)
-  if (li_err.ne.0) li_flag=30
+  SLL_ALLOCATE(lpr_Ad(mat%num_rows),li_err)
+  SLL_ALLOCATE(lpr_d(mat%num_rows),li_err)
   
   apr_U   = 0.0_8
   li_iter = 0
