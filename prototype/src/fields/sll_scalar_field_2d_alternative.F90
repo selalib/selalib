@@ -784,6 +784,7 @@ subroutine write_to_file_discrete_2d( field, tag )
   sll_int32 :: i
   sll_int32 :: j
   sll_int32 :: ierr
+  character(len=4) :: ctag
 
   ! use the logical mesh information to find out the extent of the
   ! domain and allocate the arrays for the plotter.
@@ -815,6 +816,10 @@ subroutine write_to_file_discrete_2d( field, tag )
          trim(field%name), &
          tag, &
          ierr )
+
+  call int2string(tag, ctag)
+  call sll_xdmf_curv2d_nodes(trim(field%name)//ctag, &
+       values, "values", x1coords, x2coords, "HDF5") 
 
   SLL_DEALLOCATE_ARRAY(x1coords,ierr)
   SLL_DEALLOCATE_ARRAY(x2coords,ierr)
