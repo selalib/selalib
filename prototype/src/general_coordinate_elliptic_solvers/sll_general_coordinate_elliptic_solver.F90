@@ -19,20 +19,20 @@ module sll_general_coordinate_elliptic_solver_module
   use sll_module_deboor_splines_1d
 
   implicit none
-  private
 
   type, public :: general_coordinate_elliptic_solver
 
      private
-     sll_int32 :: total_num_splines_loc
-     sll_int32 :: total_num_splines1
-     sll_int32 :: total_num_splines2
-     sll_int32, public :: num_cells1
-     sll_int32, public :: num_cells2
+     sll_int32,  public :: num_cells1
+     sll_int32,  public :: num_cells2
      sll_real64, public :: delta_eta1
      sll_real64, public :: delta_eta2
      sll_real64, public :: eta1_min
      sll_real64, public :: eta2_min   
+
+     sll_int32 :: total_num_splines_loc
+     sll_int32 :: total_num_splines1
+     sll_int32 :: total_num_splines2
      sll_real64, dimension(:), pointer :: knots1
      sll_real64, dimension(:), pointer :: knots2
      sll_real64, dimension(:), pointer :: knots1_rho
@@ -79,6 +79,9 @@ module sll_general_coordinate_elliptic_solver_module
      sll_real64, dimension(:), pointer :: tmp_phi_vec
      sll_real64, dimension(:), pointer :: masse
      sll_real64, dimension(:), pointer :: stiff
+     sll_real64, dimension(:),   pointer :: rho_coeff_1d
+     sll_real64, dimension(:,:), pointer :: rho_at_gauss
+    sll_real64, dimension(:), pointer   :: M_rho_loc
   end type general_coordinate_elliptic_solver
 
   !> For the integration mode.  
@@ -98,14 +101,14 @@ module sll_general_coordinate_elliptic_solver_module
      module procedure solve_general_coordinates_elliptic_eq
   end interface sll_solve
 
-  sll_real64, dimension(:),   allocatable :: rho_coeff_1d
-  sll_real64, dimension(:,:), allocatable :: rho_at_gauss
 
   public sll_delete,                          &
          sll_create,                          &
          sll_solve,                           &
          new_general_elliptic_solver,         &
          factorize_mat_es
+
+  private
 
 ! *******************************************************************
 
@@ -183,6 +186,7 @@ subroutine initialize_general_elliptic_solver( &
  sll_int32 :: solution_size,i
  sll_int32 :: sll_perper  
  sll_int32 :: dim1, dim2
+ sll_int32 :: num_pts_g1, num_pts_g2
    
  es%total_num_splines_loc = (spline_degree1+1)*(spline_degree2+1)
  ! The total number of splines in a single direction is given by
@@ -404,7 +408,13 @@ subroutine initialize_general_elliptic_solver( &
  SLL_ALLOCATE(es%tab_index_coeff1(num_cells1*(spline_degree1+2)),ierr)
  SLL_ALLOCATE(es%tab_index_coeff2(num_cells2*(spline_degree2+2)),ierr)
 
-  end subroutine initialize_general_elliptic_solver
+  num_pts_g1 = size(es%gauss_pts1,2)
+  num_pts_g2 = size(es%gauss_pts2,2)
+  SLL_ALLOCATE(es%rho_at_gauss(num_cells1*num_pts_g1,num_cells2*num_pts_g2),ierr)
+  SLL_ALLOCATE(es%rho_coeff_1d((num_cells1+1)*(num_cells2+1)),ierr)
+  SLL_ALLOCATE(es%M_rho_loc(es%total_num_splines_loc),ierr)
+
+end subroutine initialize_general_elliptic_solver
   
   !> @brief Initialization for elleptic solver.
   !> @details To have the function phi such that 
@@ -536,7 +546,7 @@ subroutine initialize_general_elliptic_solver( &
   !> @brief Assemble the matrix for elliptic solver.
   !> @details To have the function phi such that 
   !> \f[
-  !>  \nable \cdot ( A \nabla \phi ) + B \nabla \phi + C \phi = \rho
+  !>  \nabla \cdot ( A \nabla \phi ) + B \nabla \phi + C \phi = \rho
   !> \f]
   !>  where A is a matrix of functions , B a vectorial function,
   !>  and  C and rho a scalar function.  
@@ -653,6 +663,7 @@ subroutine initialize_general_elliptic_solver( &
                S_b1_loc,  &
                S_b2_loc,&
                Source_loc)
+
           call local_to_global_matrices( &
                es, &
                cell_index, &
@@ -736,7 +747,6 @@ subroutine initialize_general_elliptic_solver( &
     sll_int32 :: cell_index
     sll_int32 :: total_num_splines_loc
     sll_real64 :: int_rho,int_jac
-    sll_real64, dimension(:), allocatable   :: M_rho_loc
     sll_int32 :: num_pts_g1, num_pts_g2, ig1, ig2, ig, jg
     sll_real64 :: wgpt1, wgpt2, gpt1, gpt2, eta1, eta2
     sll_real64 :: val_jac
@@ -745,20 +755,15 @@ subroutine initialize_general_elliptic_solver( &
     sll_real64, dimension(:,:), pointer :: coeff_rho
     
     total_num_splines_loc = es%total_num_splines_loc
-    SLL_ALLOCATE(M_rho_loc(total_num_splines_loc),ierr)
     
     
     num_pts_g1 = size(es%gauss_pts1,2)
     num_pts_g2 = size(es%gauss_pts2,2)
-    if (.not. allocated(rho_at_gauss)) &
-    SLL_ALLOCATE(rho_at_gauss(es%num_cells1*num_pts_g1,es%num_cells2*num_pts_g2),ierr)
-    rho_at_gauss(:,:) = 0.0_f64   
-    if (.not. allocated(rho_coeff_1d)) &
-    SLL_ALLOCATE(rho_coeff_1d((es%num_cells1+1)*(es%num_cells2+1)),ierr)
+    es%rho_at_gauss(:,:) = 0.0_f64   
 
-    M_rho_loc     = 0.0_f64
+    es%M_rho_loc     = 0.0_f64
     es%rho_vec(:) = 0.0_f64
-    rho_coeff_1d  = 0.0_f64
+    es%rho_coeff_1d  = 0.0_f64
    
   
     !ES Compute rho at all Gauss points
@@ -780,14 +785,12 @@ subroutine initialize_general_elliptic_solver( &
           ! put the spline coefficients in a 1d array
           do j=1,es%num_cells2+1
              do i=1,es%num_cells1+1
-                
-                rho_coeff_1d(i+(es%num_cells1+1)*(j-1)) = coeff_rho(i,j)
+                es%rho_coeff_1d(i+(es%num_cells1+1)*(j-1)) = coeff_rho(i,j)
              end do
           end do
 
           call sll_mult_csr_matrix_vector(&
-               es%sll_csr_mat_source,&
-               rho_coeff_1d,es%rho_vec)
+               es%sll_csr_mat_source, es%rho_coeff_1d,es%rho_vec)
 
           if( ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC)) &
                .and.((es%bc_left==SLL_PERIODIC).and.(es%bc_right==SLL_PERIODIC)) )then
@@ -816,7 +819,7 @@ subroutine initialize_general_elliptic_solver( &
                            ( es%gauss_pts1(1,ig) + 1.0_f64 )
                       wgpt1 = 0.5_f64*es%delta_eta1*es%gauss_pts1(2,ig)
                       ig1 = ig + (i-1)*num_pts_g1
-                      rho_at_gauss(ig1,ig2)   = rho%value_at_point(gpt1,gpt2)
+                      es%rho_at_gauss(ig1,ig2)   = rho%value_at_point(gpt1,gpt2)
                       val_jac = &
                            es%values_jacobian(i+es%num_cells1*(ig-1),j+es%num_cells2*(jg-1))
                       int_rho = int_rho + &
@@ -831,7 +834,7 @@ subroutine initialize_general_elliptic_solver( &
           if( ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC)) &
                .and. ((es%bc_left==SLL_PERIODIC).and.(es%bc_right==SLL_PERIODIC)) )then
              
-             rho_at_gauss = rho_at_gauss - int_rho/int_jac
+             es%rho_at_gauss = es%rho_at_gauss - int_rho/int_jac
           end if
           
           do j=1,es%num_cells2
@@ -841,15 +844,12 @@ subroutine initialize_general_elliptic_solver( &
                 call build_local_matrices_rho( &
                      es, &
                      i, &
-                     j, &
-                     rho_at_gauss, &
-                     M_rho_loc)
+                     j)
                 
                 call local_to_global_matrices_rho( &
                      es, &
                      i, &
-                     j, &
-                     M_rho_loc)
+                     j)
              end do
           end do
        end select
@@ -874,7 +874,7 @@ subroutine initialize_general_elliptic_solver( &
                         ( es%gauss_pts1(1,ig) + 1.0_f64 )
                    wgpt1 = 0.5_f64*es%delta_eta1*es%gauss_pts1(2,ig)
                    ig1 = ig + (i-1)*num_pts_g1
-                   rho_at_gauss(ig1,ig2)   = rho%value_at_point(gpt1,gpt2)
+                   es%rho_at_gauss(ig1,ig2)   = rho%value_at_point(gpt1,gpt2)
                    val_jac = &
                         es%values_jacobian(i+es%num_cells1*(ig-1),j+es%num_cells2*(jg-1))
                    int_rho = int_rho &
@@ -889,7 +889,7 @@ subroutine initialize_general_elliptic_solver( &
        if( ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC)) &
             .and. ((es%bc_left==SLL_PERIODIC).and.(es%bc_right==SLL_PERIODIC)) )then
           
-          rho_at_gauss = rho_at_gauss - int_rho/int_jac
+          es%rho_at_gauss = es%rho_at_gauss - int_rho/int_jac
        end if
           
        do j=1,es%num_cells2
@@ -899,15 +899,12 @@ subroutine initialize_general_elliptic_solver( &
              call build_local_matrices_rho( &
                   es, &
                   i, &
-                  j, &
-                  rho_at_gauss, &
-                  M_rho_loc)
+                  j)
              
              call local_to_global_matrices_rho( &
                   es, &
                   i, &
-                  j, &
-                  M_rho_loc)
+                  j)
           end do
        end do
        
@@ -917,8 +914,6 @@ subroutine initialize_general_elliptic_solver( &
     
     call  phi%interp_2d%set_coefficients( es%phi_vec)
 
-    SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
-    SLL_DEALLOCATE_ARRAY(rho_at_gauss,ierr)
   end subroutine solve_general_coordinates_elliptic_eq
   
   ! This is based on the assumption that all the input fields have the same
@@ -1297,16 +1292,11 @@ subroutine initialize_general_elliptic_solver( &
   subroutine build_local_matrices_rho( &
        obj, &
        cell_i, &
-       cell_j, &
-       rho_at_gauss, &
-       M_rho_loc)
+       cell_j)
 
     class(general_coordinate_elliptic_solver) :: obj
     sll_int32, intent(in) :: cell_i
     sll_int32, intent(in) :: cell_j
-    sll_real64, dimension(:,:), intent(in)   :: rho_at_gauss
-
-    sll_real64, dimension(:), intent(out)   :: M_rho_loc
     sll_int32 :: bc_left    
     sll_int32 :: bc_right
     sll_int32 :: bc_bottom    
@@ -1335,7 +1325,7 @@ subroutine initialize_general_elliptic_solver( &
     sll_real64 :: val_f
     sll_real64 :: val_jac,spline1,spline2
     
-    M_rho_loc(:)  = 0.0_f64
+    obj%M_rho_loc(:)  = 0.0_f64
     dbiatx1(:,:)  = 0.0_f64
     dbiatx2(:,:)  = 0.0_f64
     work1(:,:)    = 0.0_f64
@@ -1370,7 +1360,7 @@ subroutine initialize_general_elliptic_solver( &
           gpt1  = eta1  + 0.5_f64*delta1 * ( obj%gauss_pts1(1,i) + 1.0_f64 )
           wgpt1 = 0.5_f64*delta1*obj%gauss_pts1(2,i)
    
-          val_f = rho_at_gauss(i+(cell_i-1)*num_pts_g1, j + (cell_j-1)*num_pts_g2)
+          val_f = obj%rho_at_gauss(i+(cell_i-1)*num_pts_g1, j + (cell_j-1)*num_pts_g2)
           val_jac = &
                obj%values_jacobian(cell_i+obj%num_cells1*(i-1),cell_j+obj%num_cells2*(j-1))
 
@@ -1384,7 +1374,7 @@ subroutine initialize_general_elliptic_solver( &
                 spline2 = obj%values_splines2(cell_j + obj%num_cells2*(j-1),jj+1)
                 
                 index1  =  jj * ( obj%spline_degree1 + 1 ) + ii + 1
-                M_rho_loc(index1)= M_rho_loc(index1) + &
+                obj%M_rho_loc(index1)= obj%M_rho_loc(index1) + &
                      val_f*val_jac*wgpt1*wgpt2* &
                      spline1*spline2
                 
@@ -1549,17 +1539,11 @@ subroutine initialize_general_elliptic_solver( &
     
   end subroutine local_to_global_matrices
   
-  
-  subroutine local_to_global_matrices_rho( &
-       es,&
-       cell_i, &
-       cell_j, &
-       M_rho_loc)
-    
+  subroutine local_to_global_matrices_rho( es, cell_i, cell_j) 
+
     class(general_coordinate_elliptic_solver)  :: es
     sll_int32 :: cell_i
     sll_int32 :: cell_j
-    sll_real64, dimension(:), intent(in)   :: M_rho_loc
     sll_int32 :: i,mm, b, x!,y
     sll_int32 :: nbsp!,nbsp1
     sll_int32 :: bc_left
@@ -1601,7 +1585,7 @@ subroutine initialize_general_elliptic_solver( &
 
        x          =  index1 + (index3-1)*nbsp
        b          =  mm * ( es%spline_degree1 + 1 ) + i + 1
-       es%rho_vec(x)  =  es%rho_vec(x)  + M_rho_loc(b)
+       es%rho_vec(x)  =  es%rho_vec(x)  + es%M_rho_loc(b)
           
      end do
   end do
