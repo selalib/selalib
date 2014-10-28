@@ -41,7 +41,6 @@ ADD_SIMULATION_1D(vp1d_fourier_fem          vp1d_fourier_fem)
 ADD_SIMULATION_1D(VP1D_cartesian_non_unif   VP1D_cartesian_non_unif)
 IF(HDF5_ENABLED)
    SET(SIM_LIBS sll_advection)
-   ADD_SIMULATION_1D(2d_vp_no_split            2d_vlasov_poisson_no_splitting)
 ENDIF(HDF5_ENABLED)
 
 ADD_EXECUTABLE(VP1D_deltaf_cart VP1D_deltaf_BSL.F90)
