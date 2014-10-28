@@ -23,10 +23,9 @@ use sll_dg_fields
 use sll_boundary_condition_descriptors
 
 implicit none
-private
 
 !> Local type with edge properties
-type :: edge_type
+type, private :: edge_type
 
    sll_real64                            :: length 
    sll_real64, dimension(:,:), pointer   :: vec_norm
@@ -35,7 +34,7 @@ type :: edge_type
 end type edge_type
 
 !> Information about a mesh cell
-type :: cell_type
+type, private :: cell_type
 
    sll_int32                           :: i,j         !< indices 
    sll_real64                          :: eta1_min    !< left side
@@ -50,21 +49,34 @@ type :: cell_type
 end type cell_type
 
 !> DG method in 2D with general coordinates
-type, public, extends(sll_maxwell_solver) :: sll_maxwell_2d_diga
-   sll_transformation, pointer                  :: tau    !< transformation
-   type(sll_logical_mesh_2d), pointer           :: mesh   !< Logical mesh
-   sll_int32                                    :: degree !< degree of gauss integration
-   type(cell_type), dimension(:,:), pointer     :: cell   !< mesh cells
-   sll_real64, dimension(:,:), pointer, private :: f      !< cell flux
-   sll_real64, dimension(:,:), pointer, private :: w      !< edge flux
-   sll_real64, dimension(:,:), pointer, private :: r      !< source flux
-   sll_int32, private                           :: bc_south
-   sll_int32, private                           :: bc_east
-   sll_int32, private                           :: bc_north
-   sll_int32, private                           :: bc_west
-   sll_int32, private                           :: flux_type
-   type(sll_dg_field_2d), pointer                      :: po     !< Potential
-   sll_real64, private                          :: xi 
+type, public :: sll_maxwell_2d_diga
+   private
+   sll_int32                           :: nc_eta1      !< x cells number
+   sll_int32                           :: nc_eta2      !< y cells number
+   sll_int32                           :: polarization !< TE or TM
+   sll_real64                          :: e_0          !< electric conductivity
+   sll_real64                          :: mu_0         !< magnetic permeability
+   sll_real64                          :: c            !< speed of light
+   sll_real64                          :: eta1_min     !< left side 
+   sll_real64                          :: eta1_max     !< right side
+   sll_real64                          :: delta_eta1   !< step size
+   sll_real64                          :: eta2_min     !< bottom side
+   sll_real64                          :: eta2_max     !< top side
+   sll_real64                          :: delta_eta2   !< step size
+   sll_transformation, pointer         :: tau          !< transformation
+   type(sll_logical_mesh_2d), pointer  :: mesh         !< Logical mesh
+   sll_int32                           :: degree       !< degree of gauss integration
+   type(cell_type), pointer            :: cell(:,:)    !< mesh cells
+   sll_real64, pointer                 :: f(:,:)       !< cell flux
+   sll_real64, pointer                 :: w(:,:)       !< edge flux
+   sll_real64, pointer                 :: r(:,:)       !< source flux
+   sll_int32                           :: bc_south
+   sll_int32                           :: bc_east
+   sll_int32                           :: bc_north
+   sll_int32                           :: bc_west
+   sll_int32                           :: flux_type
+   type(sll_dg_field_2d), pointer      :: po           !< Potential
+   sll_real64                          :: xi 
 
 end type sll_maxwell_2d_diga
 
@@ -89,6 +101,8 @@ sll_int32, parameter, public :: SLL_CENTERED       = 20
 sll_int32, parameter, public :: SLL_UNCENTERED     = 21
 
 public sll_new, sll_create, sll_solve
+
+private
 
 contains
 

@@ -72,6 +72,7 @@ implicit none
 !> information about FFT, mesh and physical properties.
 type, public :: sll_maxwell_2d_pstd
 
+   private
    sll_int32           :: nc_eta1      !< x cells number
    sll_int32           :: nc_eta2      !< y cells number
    sll_int32           :: polarization !< TE or TM
