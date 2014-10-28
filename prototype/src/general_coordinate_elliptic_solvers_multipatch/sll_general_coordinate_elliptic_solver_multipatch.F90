@@ -656,14 +656,8 @@ contains ! *******************************************************************
        
     end select
 
-       
-    time = sll_time_elapsed_since(t0)
-
     es_mp%phi_vec(1:es_mp%solution_size_final) = 0.0_f64
     call solve_linear_system_mp(es_mp,es_mp%solution_size_final)
-    !!    end if
-
-
 
     do patch = 1,es_mp%T%number_patches
        
