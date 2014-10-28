@@ -1,5 +1,5 @@
-set(   TEST_NAME 2d_gc_curvilinear             )
-set(    SIM_NAME 2d_guiding_center_curvilinear )
+set(   TEST_NAME 2d_vp_cartesian               )
+set(    SIM_NAME 2d_vlasov_poisson_cartesian   )
 set(  EXECUTABLE "test_${TEST_NAME}"           )
 set( INSTALL_DIR "${INSTALL_DIR}/${TEST_NAME}" )
 
