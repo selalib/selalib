@@ -1979,15 +1979,14 @@ contains  !******************************************************************
     sll_int64                       :: acc = 0       ! accumulator, for sizing
 
     if( (.not. associated(initial)) .or. (.not. associated(final)) ) then
-       write (*,'(a)') &
-            'ERROR: un-initialized arguments given to sll_new_remap_plan_3D'
-       stop 'sll_new_remap_plan_3D'
+       call errout(6,'F', &
+         'un-initialized arguments given to sll_new_remap_plan_3D',1981,
+         'sll_remap.F90')
     end if
     if( .not. associated(get_layout_3D_collective(initial),&
          target=get_layout_3D_collective(final)) ) then
-       write (*,'(a)') &
-            'ERROR: init and final configurations given to new_remap_plan do not refer to the same collective.'
-       stop 'new_remap_plan_3D'
+       call errout(6,'F', &
+         'init and final configurations given to new_remap_plan do not refer to the same collective.',1989,'sll_remap.F90')
     end if
   
     col => get_layout_3D_collective(initial)
@@ -2625,13 +2624,13 @@ end subroutine fname
           ! get the information on the box to send, get the limits,
           ! convert to the local indices and find out where in the 
           ! buffer to start writing.
-          sbox = plan%send_boxes(i)
-          loi = get_box_3D_i_min(sbox)
-          loj = get_box_3D_j_min(sbox)
-          lok = get_box_3D_k_min(sbox)
-          hii = get_box_3D_i_max(sbox)
-          hij = get_box_3D_j_max(sbox)
-          hik = get_box_3D_k_max(sbox)
+          sbox     = plan%send_boxes(i)
+          loi      = get_box_3D_i_min(sbox)
+          loj      = get_box_3D_j_min(sbox)
+          lok      = get_box_3D_k_min(sbox)
+          hii      = get_box_3D_i_max(sbox)
+          hij      = get_box_3D_j_max(sbox)
+          hik      = get_box_3D_k_max(sbox)
           tmpa(:)  = (/loi,loj,lok/)
           local_lo = global_to_local_3D( init_layout, tmpa)
           tmpa(:)  = (/hii,hij,hik/)

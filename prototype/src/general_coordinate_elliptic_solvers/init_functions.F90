@@ -617,7 +617,198 @@ real(8) function source_term_chgt_adim(eta1,eta2)
   x =   2*sll_pi*eta1 !+eta2)
   y =   2* sll_pi*eta2
   
-  
   source_term_chgt_adim = -2*cos(x)*cos(y)
   
 end function source_term_chgt_adim
+
+#define R_MIN 1.0_8
+#define R_MAX 2.0_8
+#define N_MOD 8
+
+real(8) function f_cos( eta1, eta2)
+
+   use sll_constants
+   implicit none
+   !sage: assume(r>=1)
+   !sage: assume(r<=2)
+   !sage: phi = (r-r_min)*(r-r_max)*r*cos(n*theta)
+   !sage: diff(r*diff(phi,r),r)/r + diff(phi,theta,theta)/(r*r)
+
+   real(8) :: eta1, eta2
+   real(8) :: r, theta
+   real(8) :: r_min = R_MIN
+   real(8) :: r_max = R_MAX
+   real(8) :: n = N_MOD * sll_pi
+
+   r = eta1 + R_MIN
+   theta = eta2 * sll_pi
+
+   f_cos = -(r-r_max)*(r-r_min)*n*n*cos(n*theta)/r &
+           + ((r-r_max)*(r-r_min)*cos(n*theta)  &
+           + (r-r_max)*r*cos(n*theta) + (r-r_min)*r*cos(n*theta) &
+           + 2*((r-r_max)*cos(n*theta) + (r-r_min)*cos(n*theta) &
+           + r*cos(n*theta))*r)/r
+
+end function f_cos
+
+real(8) function f_sin( eta1, eta2)
+
+   use sll_constants
+   implicit none
+   !sage: assume(r>=1)
+   !sage: assume(r<=2)
+   !sage: phi = (r-r_min)*(r-r_max)*r*sin(n*theta)
+   !sage: diff(r*diff(phi,r),r)/r + diff(phi,theta,theta)/(r*r)
+
+   real(8) :: eta1, eta2
+   real(8) :: r, theta
+   real(8) :: r_min = R_MIN
+   real(8) :: r_max = R_MAX
+   integer :: n = N_MOD 
+
+   r = eta1 + R_MIN
+   theta = eta2 * sll_pi
+
+   f_sin = -(r-r_max)*(r-r_min)*n*n*sin(n*theta)/r &
+         + ((r-r_max)*(r-r_min)*sin(n*theta) &
+         + (r-r_max)*r*sin(n*theta) + (r-r_min)*r*sin(n*theta) &
+         + 2*((r-r_max)*sin(n*theta) + (r-r_min)*sin(n*theta)  &
+         + r*sin(n*theta))*r)/r
+
+end function f_sin
+       	
+real(8) function u_sin_der1( eta1, eta2)
+
+   use sll_constants
+   implicit none
+   !sage: assume(r>=1)
+   !sage: assume(r<=2)
+   !sage: phi = (r-r_min)*(r-r_max)*r*sin(n*theta)
+   !sage: diff(r*diff(phi,r),r)/r + diff(phi,theta,theta)/(r*r)
+
+   real(8) :: eta1, eta2
+   real(8) :: r, theta
+   real(8) :: r_min = R_MIN
+   real(8) :: r_max = R_MAX
+   real(8) :: n = N_MOD * sll_pi
+   
+   r = eta1 + R_MIN
+   theta = eta2 * sll_pi
+
+   u_sin_der1 = (r - r_max)*(r - r_min)*sin(n*theta) &
+              + (r - r_max)*r*sin(n*theta) &
+              + (r - r_min)*r*sin(n*theta)
+
+end function u_sin_der1
+
+real(8) function u_sin_der2( eta1, eta2)
+
+   use sll_constants
+   implicit none
+   !sage: assume(r>=1)
+   !sage: assume(r<=2)
+   !sage: phi = (r-r_min)*(r-r_max)*r*sin(n*theta)
+   !sage: diff(r*diff(phi,r),r)/r + diff(phi,theta,theta)/(r*r)
+
+   real(8) :: eta1, eta2
+   real(8) :: r, theta
+   real(8) :: r_min = R_MIN
+   real(8) :: r_max = R_MAX
+   real(8) :: n = N_MOD * sll_pi
+   
+   r = eta1 + R_MIN
+   theta = eta2 * sll_pi
+
+   u_sin_der2 = n*(r - r_max)*(r - r_min)*r*cos(n*theta)
+
+end function u_sin_der2
+
+real(8) function u_sin( eta1, eta2)
+
+   use sll_constants
+   implicit none
+   !sage: assume(r>=1)
+   !sage: assume(r<=2)
+   !sage: phi = (r-r_min)*(r-r_max)*r*sin(n*theta)
+   !sage: diff(r*diff(phi,r),r)/r + diff(phi,theta,theta)/(r*r)
+
+   real(8) :: eta1, eta2
+   real(8) :: r, theta
+   real(8) :: r_min = R_MIN
+   real(8) :: r_max = R_MAX
+   real(8) :: n = N_MOD * sll_pi
+   
+   r = eta1 + R_MIN
+   theta = eta2 * sll_pi
+
+   u_sin = (r-r_min)*(r-r_max)*sin(n*theta)*r
+
+end function u_sin
+
+real(8) function u_cos( eta1, eta2)
+
+   use sll_constants
+   implicit none
+   !sage: assume(r>=1)
+   !sage: assume(r<=2)
+   !sage: phi = (r-r_min)*(r-r_max)*r*cos(n*theta)
+   !sage: diff(r*diff(phi,r),r)/r + diff(phi,theta,theta)/(r*r)
+
+   real(8) :: eta1, eta2
+   real(8) :: r, theta
+   real(8) :: r_min = R_MIN
+   real(8) :: r_max = R_MAX
+   real(8) :: n = N_MOD * sll_pi
+   
+   r = eta1 + R_MIN
+   theta = eta2 * sll_pi
+
+   u_cos = (r-r_min)*(r-r_max)*cos(n*theta)*r
+
+end function u_cos
+
+real(8) function u_cos_der1( eta1, eta2)
+
+   use sll_constants
+   implicit none
+   !sage: assume(r>=1)
+   !sage: assume(r<=2)
+   !sage: phi = (r-r_min)*(r-r_max)*r*sin(n*theta)
+   !sage: diff(r*diff(phi,r),r)/r + diff(phi,theta,theta)/(r*r)
+
+   real(8) :: eta1, eta2
+   real(8) :: r, theta
+   real(8) :: r_min = R_MIN
+   real(8) :: r_max = R_MAX
+   real(8) :: n = N_MOD * sll_pi
+   
+   r = eta1 + R_MIN
+   theta = eta2 * sll_pi
+   u_cos_der1 = (r - r_max)*(r - r_min)*cos(n*theta) &
+              + (r - r_max)*r*cos(n*theta) &
+              + (r - r_min)*r*cos(n*theta)
+
+end function u_cos_der1
+
+real(8) function u_cos_der2( eta1, eta2)
+
+   use sll_constants
+   implicit none
+   !sage: assume(r>=1)
+   !sage: assume(r<=2)
+   !sage: phi = (r-r_min)*(r-r_max)*r*sin(n*theta)
+   !sage: diff(r*diff(phi,r),r)/r + diff(phi,theta,theta)/(r*r)
+
+   real(8) :: eta1, eta2
+   real(8) :: r, theta
+   real(8) :: r_min = R_MIN
+   real(8) :: r_max = R_MAX
+   real(8) :: n = N_MOD * sll_pi
+   
+   r = eta1 + R_MIN
+   theta = eta2 * sll_pi
+   u_cos_der2 = - n*(r - r_max)*(r - r_min)*r*sin(n*theta)
+
+end function u_cos_der2
+
+       	
