@@ -28,11 +28,11 @@ module sll_module_scalar_field_2d_alternative
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_file_io.h"
+#include "sll_utilities.h"
 use sll_module_scalar_field_2d_base
 use sll_constants
 use sll_module_interpolators_2d_base
 use sll_module_arbitrary_degree_spline_interpolator_2d
-use sll_utilities
 use sll_boundary_condition_descriptors
 use sll_gnuplot
 
@@ -221,9 +221,8 @@ function first_deriv_eta1_value_at_pt_analytic( field, eta1, eta2)
           field%first_deriv_eta1(eta1,eta2,field%params)
   else 
      first_deriv_eta1_value_at_pt_analytic = 0.0_f64
-     print*,field%name, &
-          'first_deriv_eta1_value_at_pt_analytic(), ERROR: ', &
-          ': first derivative in eta1 is not given in the initialization'
+     print*, field%name, 'first_deriv_eta1_value_at_pt_analytic()'
+     SLL_ERROR("first derivative in eta1 is not given in the initialization")
   end if
 
 end function first_deriv_eta1_value_at_pt_analytic
@@ -239,9 +238,8 @@ function first_deriv_eta2_value_at_pt_analytic( field, eta1, eta2)
           field%first_deriv_eta2(eta1,eta2,field%params)
   else 
      first_deriv_eta2_value_at_pt_analytic  = 0.0_f64
-     print*, field%name, &
-          'first_deriv_eta2_value_at_pt_analytic(), ERROR: ', &
-          ': first derivative in eta2 is not given in the initialization'
+     print*, field%name, 'first_deriv_eta2_value_at_pt_analytic()'
+     SLL_ERROR("first derivative in eta2 is not given in the initialization")
   end if
     
 end function first_deriv_eta2_value_at_pt_analytic

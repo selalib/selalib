@@ -2624,13 +2624,13 @@ end subroutine fname
           ! get the information on the box to send, get the limits,
           ! convert to the local indices and find out where in the 
           ! buffer to start writing.
-          sbox = plan%send_boxes(i)
-          loi = get_box_3D_i_min(sbox)
-          loj = get_box_3D_j_min(sbox)
-          lok = get_box_3D_k_min(sbox)
-          hii = get_box_3D_i_max(sbox)
-          hij = get_box_3D_j_max(sbox)
-          hik = get_box_3D_k_max(sbox)
+          sbox     = plan%send_boxes(i)
+          loi      = get_box_3D_i_min(sbox)
+          loj      = get_box_3D_j_min(sbox)
+          lok      = get_box_3D_k_min(sbox)
+          hii      = get_box_3D_i_max(sbox)
+          hij      = get_box_3D_j_max(sbox)
+          hik      = get_box_3D_k_max(sbox)
           tmpa(:)  = (/loi,loj,lok/)
           local_lo = global_to_local_3D( init_layout, tmpa)
           tmpa(:)  = (/hii,hij,hik/)
