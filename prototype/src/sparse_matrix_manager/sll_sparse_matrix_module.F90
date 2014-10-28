@@ -130,20 +130,23 @@ subroutine initialize_csr_matrix( &
   sll_int32, dimension(:,:), intent(in)    :: local_to_global_col
   sll_int32,                 intent(in)    :: num_local_dof_col
 
-  sll_int32                              :: num_nz
-  sll_int32                              :: ierr
-  sll_int32, dimension(:,:), allocatable :: lpi_columns
-  sll_int32, dimension(:),   allocatable :: lpi_occ
-  sll_int32                              :: li_COEF
-  sll_int32 :: li_e
-  sll_int32 :: li_b_1
-  sll_int32 :: li_A_1
-  sll_int32 :: li_b_2
-  sll_int32 :: li_A_2
-  sll_int32 :: li_i
-  sll_int32 :: li_result
-  sll_int32 :: lpi_size(2)
-  logical   :: ll_done
+  sll_int32                                :: num_nz
+  sll_int32                                :: ierr
+  sll_int32,  dimension(:,:), allocatable  :: lpi_columns
+  sll_int32,  dimension(:),   allocatable  :: lpi_occ
+  sll_int32                                :: li_COEF
+  sll_int32                                :: li_err
+  sll_int32                                :: li_e
+  sll_int32                                :: li_b_1
+  sll_int32                                :: li_A_1
+  sll_int32                                :: li_b_2
+  sll_int32                                :: li_A_2
+  sll_int32                                :: li_i
+  sll_int32                                :: li_flag
+  sll_int32                                :: li_size
+  sll_int32                                :: li_result
+  sll_int32                                :: lpi_size(2)
+  logical                                  :: ll_done
 
   print *,'#initialize_csr_matrix'
   li_COEF = 10
@@ -160,6 +163,7 @@ subroutine initialize_csr_matrix( &
     do li_b_1 = 1, num_local_dof_row
 
       li_A_1 = local_to_global_row(li_b_1, li_e)
+
       if (li_A_1 == 0) cycle
 
       do li_b_2 = 1, num_local_dof_col
@@ -185,17 +189,17 @@ subroutine initialize_csr_matrix( &
           lpi_columns(li_A_1, lpi_columns(li_A_1, 0)) = li_A_2
 
           ! resizing the array
-          lpi_size(1) = SIZE(lpi_columns, 1)
-          lpi_size(2) = SIZE(lpi_columns, 2)
-          if (lpi_size(2) < lpi_columns(li_A_1, 0)) then
-            !ALLOCATE(lpi_columns(lpi_size(1), lpi_size(2)))
-            lpi_columns = lpi_columns
-            !DEALLOCATE(lpi_columns)
-            !ALLOCATE(lpi_columns(lpi_size(1), 2 * lpi_size(2)))
-            lpi_columns(1:lpi_size(1),1:lpi_size(2)) = &
-              lpi_columns(1:lpi_size(1), 1:lpi_size(2))
-            DEALLOCATE(lpi_columns)
-          end if
+          !lpi_size(1) = SIZE(lpi_columns, 1)
+          !lpi_size(2) = SIZE(lpi_columns, 2)
+          !if (lpi_size(2) < lpi_columns(li_A_1, 0)) then
+          !  !ALLOCATE(lpi_columns(lpi_size(1), lpi_size(2)))
+          !  !lpi_columns = lpi_columns
+          !  !DEALLOCATE(lpi_columns)
+          !  !ALLOCATE(lpi_columns(lpi_size(1), 2 * lpi_size(2)))
+          !  lpi_columns(1:lpi_size(1),1:lpi_size(2)) = &
+          !    lpi_columns(1:lpi_size(1), 1:lpi_size(2))
+          !  DEALLOCATE(lpi_columns)
+          !end if
 
         end if
 
@@ -206,11 +210,11 @@ subroutine initialize_csr_matrix( &
   end do
 
   ! COUNT NON ZERO ELEMENTS
-  num_nz = SUM(lpi_occ(1: num_rows))
+  num_nz = SUM(lpi_occ(1:num_rows))
 
   mat%num_rows = num_rows
   mat%num_cols = num_cols
-  mat%num_nz = num_nz   
+  mat%num_nz   = num_nz   
 
   print *,'#num_rows=',num_rows
   print *,'#num_nz=',num_nz
@@ -219,16 +223,37 @@ subroutine initialize_csr_matrix( &
   SLL_ALLOCATE(mat%opi_ja(num_nz),ierr)
   SLL_ALLOCATE(mat%opr_a(num_nz),ierr)
   
-  call sll_init_SparseMatrix(      &
-    mat,                           &
-    num_elements,                  &
-    local_to_global_row,           &
-    num_local_dof_row,             &
-    local_to_global_col,           &
-    num_local_dof_col,             &
-    lpi_columns,                   &
-    lpi_occ)
-    
+  mat%opi_ia(1) = 1
+
+  do li_i = 1, mat%num_rows
+    mat%opi_ia(li_i + 1) = mat%opi_ia(1) + SUM(lpi_occ(1: li_i))
+  end do
+
+  do li_e = 1, num_elements
+
+    do li_b_1 = 1, num_local_dof_row
+
+      li_A_1 = local_to_global_row(li_b_1, li_e)
+
+      if (li_A_1 == 0) cycle
+      if (lpi_columns(li_A_1, 0) == 0) cycle
+
+      li_size = lpi_columns(li_A_1, 0)
+
+      if (li_err .ne. 0) li_flag = 10
+
+      call QsortC(lpi_columns(li_A_1, 1: li_size))
+
+      do li_i = 1, li_size
+         mat%opi_ja(mat%opi_ia(li_A_1)+li_i-1) = lpi_columns(li_A_1,li_i)
+      end do
+
+      lpi_columns(li_A_1, 0) = 0
+
+      end do
+
+   end do
+
   mat%opr_a(:) = 0.0_f64
   SLL_DEALLOCATE_ARRAY(lpi_columns,ierr)
   SLL_DEALLOCATE_ARRAY(lpi_occ,ierr)
@@ -504,73 +529,8 @@ subroutine sll_solve_csr_matrix(mat, apr_B, apr_U)
 end subroutine sll_solve_csr_matrix
 
 
-subroutine sll_init_SparseMatrix( &
-  self,                           &
-  ai_nel,                         &
-  api_LM_1,                       &
-  ai_nen_1,                       &
-  api_LM_2,                       &
-  ai_nen_2,                       &
-  api_columns,                    &
-  api_occ)
-
-  ! _1 FOR ROWS
-  ! _2 FOR COLUMNS
-  
-  type(sll_csr_matrix) :: self
-  sll_int32, dimension(:,:), intent(in) :: api_LM_1
-  sll_int32, dimension(:,:), intent(in) :: api_LM_2
-  sll_int32 :: ai_nel, ai_nen_1, ai_nen_2
-  sll_int32, dimension(:,:), pointer :: api_columns
-  sll_int32, dimension(:), pointer :: api_occ
-
-  sll_int32 :: li_e, li_b_1, li_A_1,li_i, li_size
-  sll_int32 :: li_err, li_flag
-  real(f64), dimension(:), pointer :: lpr_tmp
-
-  ! INITIALIZING ia
-  self % opi_ia(1) = 1
-
-  do li_i = 1, self % num_rows
-
-    self % opi_ia(li_i + 1) = self % opi_ia(1) + SUM(api_occ(1: li_i))
-
-  end do
-
-  ! INITIALIZING ja
-  do li_e = 1, ai_nel
-
-    do li_b_1 = 1, ai_nen_1
-
-      li_A_1 = api_LM_1(li_b_1, li_e)
-
-      if (li_A_1 == 0) cycle
-      if (api_columns(li_A_1, 0) == 0) cycle
-
-      li_size = api_columns(li_A_1, 0)
-
-      allocate ( lpr_tmp(li_size), stat = li_err)
-      if (li_err .ne. 0) li_flag = 10
-
-      lpr_tmp(1: li_size) = real( api_columns(li_A_1, 1: li_size))
-
-      call QsortC(lpr_tmp)
-
-      do li_i = 1, li_size
-         self%opi_ja(self % opi_ia(li_A_1) + li_i - 1) = int ( lpr_tmp(li_i))
-      end do
-
-      api_columns(li_A_1, 0) = 0
-      deallocate ( lpr_tmp)
-
-      end do
-
-   end do
-
-end subroutine sll_init_SparseMatrix
-
 recursive subroutine QsortC(A)
-  real(f64), intent(in out), dimension(:) :: A
+  sll_int32, intent(inout), dimension(:) :: A
   sll_int32 :: iq
 
   if(size(A) > 1) then
@@ -581,7 +541,7 @@ recursive subroutine QsortC(A)
 end subroutine QsortC
 
 subroutine Partition(A, marker)
-  real(f64), intent(in out), dimension(:) :: A
+  sll_int32, intent(inout), dimension(:) :: A
   sll_int32, intent(out) :: marker
   sll_int32 :: i, j
   real(f64) :: temp
