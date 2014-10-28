@@ -18,3 +18,8 @@ Talks
    **Software Engineering in SeLaLib** 
    presented by Pierre Navaro. 
    `Slides <http://developr6.dr6.cnrs.fr/manifestations/007-tests/navaro>`_.
+
+ * 2014/10/24: SeLaLib day in Garching during `NumKin2014 <http://www.ipp.mpg.de/3765166/Program>`_,
+   **Starting to Develop in SeLaLib** 
+   presented by Pierre Navaro. 
+   `Slides <http://www-irma.u-strasbg.fr/~navaro/selalib_munich_october_2014.pdf>`_.

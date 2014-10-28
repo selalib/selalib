@@ -22,6 +22,7 @@ module sll_general_coordinate_elliptic_solver_multipatch_module
   implicit none
 
   type :: general_coordinate_elliptic_solver_mp
+     private
      sll_int32,dimension(:),pointer :: total_num_splines_loc
      sll_int32 :: total_num_splines_eta1
      sll_int32 :: total_num_splines_eta2
@@ -548,18 +549,14 @@ contains ! *******************************************************************
       end do
    end do
 
-   call sll_factorize_csr_matrix(es_mp%sll_csr_mat)
-
-
-
    es_mp%sll_csr_mat_source => new_csr_matrix_mp( &
-        es_mp%solution_size_final, &
-        es_mp%solution_size_final, &
-        es_mp%T%number_patches,&
-        es_mp%num_elts_no_null_patchs, &
-        es_mp%local_to_global_row, &
-        es_mp%total_num_splines_loc, &
-        es_mp%local_to_global_col, &
+        es_mp%solution_size_final,                &
+        es_mp%solution_size_final,                &
+        es_mp%T%number_patches,                   &
+        es_mp%num_elts_no_null_patchs,            &
+        es_mp%local_to_global_row,                &
+        es_mp%total_num_splines_loc,              &
+        es_mp%local_to_global_col,                &
         es_mp%total_num_splines_loc ) 
 
     call compute_Source_matrice_mp(es_mp,Source_loc)
@@ -579,8 +576,6 @@ contains ! *******************************************************************
 
   end subroutine factorize_mat_es_mp
   
-
-
   !> @brief Assemble the matrix for elliptic solver.
   !> @details To have the function phi such that 
   !>  div( A grad phi ) + B grad phi + C phi = rho
@@ -599,7 +594,7 @@ contains ! *******************************************************************
        es_mp,&
        rho,&
        phi)
-    use sll_timer
+
     class(general_coordinate_elliptic_solver_mp) :: es_mp
     class(sll_scalar_field_multipatch_2d), intent(inout)  :: phi
     class(sll_scalar_field_multipatch_2d), intent(in),target  :: rho
@@ -617,7 +612,6 @@ contains ! *******************************************************************
     sll_int32, dimension(2) :: connectivity
     sll_int32 :: num_coef,i_spline_tot,index
     
-
     num_pts_g1 = size(es_mp%gauss_pts1,2)
     num_pts_g2 = size(es_mp%gauss_pts2,2)
 
@@ -625,11 +619,8 @@ contains ! *******************************************************************
     es_mp%rho_vec(:) = 0.0_f64
     rho_coeff_1d(:)  = 0.0_f64
    
-    
     print*, maxval(es_mp%T%global_indices),es_mp%solution_size_final 
 
-    call sll_set_time_mark(t0)
-    
     k = 0
 
     base_field_pointer => rho
@@ -663,15 +654,10 @@ contains ! *******************************************************************
             es_mp%sll_csr_mat_source,&
             rho_coeff_1d(1:es_mp%solution_size_final),es_mp%rho_vec(1:es_mp%solution_size_final))
        
-       
     end select
 
        
     time = sll_time_elapsed_since(t0)
-
-    print*, 'time to construct the rho', time
-
-  
 
     es_mp%phi_vec(1:es_mp%solution_size_final) = 0.0_f64
     call solve_linear_system_mp(es_mp,es_mp%solution_size_final)
@@ -704,12 +690,8 @@ contains ! *******************************************************************
        SLL_DEALLOCATE(tmp_phi_vec,ierr)
     end do
 
-
-    
     SLL_DEALLOCATE_ARRAY(rho_coeff_1d,ierr)
     
-!    SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
-!!$    SLL_DEALLOCATE_ARRAY(rho_at_gauss,ierr)
   end subroutine solve_general_coordinates_elliptic_eq_mp
   
   ! This is based on the assumption that all the input fields have the same
@@ -765,10 +747,6 @@ contains ! *******************************************************************
     sll_real64, dimension(:,:), intent(out) :: S_b1_loc
     sll_real64, dimension(:,:), intent(out) :: S_b2_loc
 
-!!$    sll_int32 :: bc_left    
-!!$    sll_int32 :: bc_right
-!!$    sll_int32 :: bc_bottom    
-!!$    sll_int32 :: bc_top  
     sll_real64 :: delta1
     sll_real64 :: delta2
     sll_real64 :: eta1_min

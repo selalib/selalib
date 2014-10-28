@@ -327,7 +327,7 @@ contains
     sll_int32 :: li_nen_C
     sll_int32 :: li_err
     sll_int32 :: li_flag
-    sll_real64, dimension(:), pointer :: lpr_tmp
+    sll_int32, dimension(:), pointer :: lpr_tmp
     
     ! INITIALIZING ia
     self % opi_ia(1) = 1
@@ -365,13 +365,13 @@ contains
              allocate ( lpr_tmp(li_size), stat = li_err)
              if (li_err .ne. 0) li_flag = 10
              
-             lpr_tmp(1: li_size) = real( api_columns(li_A_C, 1: li_size))
+             lpr_tmp(1: li_size) = api_columns(li_A_C, 1: li_size)
              
              call QsortC(lpr_tmp)
              
              do li_i = 1, li_size
                 
-                self % opi_ja(self % opi_ia(li_A_C) + li_i - 1) = int ( lpr_tmp(li_i))
+                self % opi_ja(self % opi_ia(li_A_C) + li_i - 1) = lpr_tmp(li_i)
                 
              end do
              

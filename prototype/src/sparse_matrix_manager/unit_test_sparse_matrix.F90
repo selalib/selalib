@@ -66,9 +66,6 @@ program unit_test_sparse_matrix
   enddo
   !print *,'#colptr=',mat%linear_solver%colptr
   print *,'#end add_to_csr_matrix'
-  print *,'#begin sll_factorize_csr_matrix'
-  call sll_factorize_csr_matrix(mat)
-  print *,'#end sll_factorize_csr_matrix'
   print *,'#begin sll_solve_csr_matrix'
   call sll_solve_csr_matrix(mat, b, x)
   print *,'#end sll_solve_csr_matrix'
