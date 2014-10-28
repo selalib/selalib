@@ -1979,15 +1979,14 @@ contains  !******************************************************************
     sll_int64                       :: acc = 0       ! accumulator, for sizing
 
     if( (.not. associated(initial)) .or. (.not. associated(final)) ) then
-       write (*,'(a)') &
-            'ERROR: un-initialized arguments given to sll_new_remap_plan_3D'
-       stop 'sll_new_remap_plan_3D'
+       call errout(6,'F', &
+         'un-initialized arguments given to sll_new_remap_plan_3D',1981,
+         'sll_remap.F90')
     end if
     if( .not. associated(get_layout_3D_collective(initial),&
          target=get_layout_3D_collective(final)) ) then
-       write (*,'(a)') &
-            'ERROR: init and final configurations given to new_remap_plan do not refer to the same collective.'
-       stop 'new_remap_plan_3D'
+       call errout(6,'F', &
+         'init and final configurations given to new_remap_plan do not refer to the same collective.',1989,'sll_remap.F90')
     end if
   
     col => get_layout_3D_collective(initial)

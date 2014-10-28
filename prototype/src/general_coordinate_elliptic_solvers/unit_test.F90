@@ -113,6 +113,8 @@ real(8) :: integral_exact_solution
 
 CHARACTER(len=10) :: cmd
 integer           :: itest1, itest2
+character(len=4)      :: ccase
+
 
 sll_real64 :: grad1_node_val,grad2_node_val,grad1ref,grad2ref
 sll_real64, dimension(1) :: whatever  ! dummy params array
@@ -151,6 +153,8 @@ if (itest2 ==0) itest2 = 13
 
 do k = itest1, itest2
 
+  call int2string(k, ccase)
+
   select case(k)
 
   case(1)
@@ -176,7 +180,7 @@ do k = itest1, itest2
 
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_perper, &
-       "rho1", &     
+       "rho"//ccase, &     
        T, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
@@ -230,7 +234,7 @@ do k = itest1, itest2
 
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_perdir, &
-       "rho2", &     
+       "rho"//ccase, &     
        T, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
@@ -285,7 +289,7 @@ do k = itest1, itest2
 
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_perdir, &
-       "rho3", &     
+       "rho"//ccase, &     
        T, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
@@ -340,7 +344,7 @@ do k = itest1, itest2
   
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_dirper, &
-       "rho4", &     
+       "rho"//ccase, &     
        T, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
@@ -397,7 +401,7 @@ do k = itest1, itest2
 
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_chgt_perper, &
-       "rho5", &     
+       "rho"//ccase, &     
        T, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
@@ -406,7 +410,7 @@ do k = itest1, itest2
        whatever )
   
   call solve_fields( SLL_PERIODIC, SLL_PERIODIC, &
-   SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
+                     SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
   
   do j=1,npts2
      do i=1,npts1
@@ -461,7 +465,7 @@ do k = itest1, itest2
   
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_chgt_perdir, &
-       "rho6", &     
+       "rho"//ccase, &     
        T, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
@@ -523,7 +527,7 @@ do k = itest1, itest2
 
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_chgt_dirdir, &
-       "rho7", &     
+       "rho"//ccase, &     
        T, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
@@ -585,7 +589,7 @@ do k = itest1, itest2
   
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_chgt_dirper, &
-       "rho8", &     
+       "rho"//ccase, &     
        T, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET,&
@@ -653,7 +657,7 @@ do k = itest1, itest2
   end do
   
   rho => new_scalar_field_2d_discrete_alt( &
-       "rho95", &
+       "rho"//ccase, &
        interp_2d_term_source, &
        T, &
        SLL_PERIODIC, &
@@ -664,6 +668,7 @@ do k = itest1, itest2
        NUM_CELLS1,&
        eta2,&
        NUM_CELLS2)  
+
   call rho%set_field_data(tab_rho)
   call rho%update_interpolation_coefficients()
 
@@ -727,7 +732,7 @@ do k = itest1, itest2
   tab_rho(:,:) = tab_rho - sum(tab_rho)/(NUM_CELLS1*NUM_CELLS2)
 
   rho => new_scalar_field_2d_discrete_alt( &
-       "rho9", &
+       "rho"//ccase, &
        rhs_interp, &
        T, &
        SLL_PERIODIC, &
@@ -807,7 +812,7 @@ do k = itest1, itest2
   rhs_interp => interp_2d_term_source
 
   rho => new_scalar_field_2d_discrete_alt( &
-       "rho10", &
+       "rho"//ccase, &
        rhs_interp, &
        T, &
        SLL_PERIODIC, &
@@ -888,7 +893,7 @@ do k = itest1, itest2
   rhs_interp => interp_2d_term_source
 
   rho => new_scalar_field_2d_discrete_alt( &
-       "rho11", &
+       "rho"//ccase, &
        rhs_interp, &
        T, &
        SLL_DIRICHLET, &
@@ -968,7 +973,7 @@ do k = itest1, itest2
   rhs_interp => interp_2d_term_source
 
   rho => new_scalar_field_2d_discrete_alt( &
-       "rho12", &
+       "rho"//ccase, &
        rhs_interp, &
        T, &
        SLL_DIRICHLET,&
@@ -1164,21 +1169,21 @@ do k = itest1, itest2
   end select
 end do
 
-print*,'error (per-per) with identity and source term analytic =',acc(01)
-print*,'error (per-dir) with identity and source term analytic =',acc(02)
-print*,'error (dir-dir) with identity and source term analytic =',acc(03)
-print*,'error (dir-per) with identity and source term analytic =',acc(04)
-print*,'error (per-per) with colella  and source term analytic =',acc(05)
-print*,'error (per-dir) with colella  and source term analytic =',acc(06)
-print*,'error (dir-dir) with colella  and source term analytic =',acc(07)
-print*,'error (dir-per) with colella  and source term analytic =',acc(08)
-print*,'error (per-per) with identity and source term discrete =',acc(09)
-print*,'error (per-per) with colella  and source term discrete =',acc(10)
-print*,'error (per-dir) with colella  and source term discrete =',acc(11)
-print*,'error (dir-dir) with colella  and source term discrete =',acc(12)
-print*,'error (dir-per) with colella  and source term discrete =',acc(13)
-print*,'error (dir-per) with polar    and source term analytic =',acc(14)
-print*,'error (dir-per) with polar    and source term analytic =',acc(15)
+print"(a,g15.3)",'error (per-per) with identity and source term analytic =',acc(01)
+print"(a,g15.3)",'error (per-dir) with identity and source term analytic =',acc(02)
+print"(a,g15.3)",'error (dir-dir) with identity and source term analytic =',acc(03)
+print"(a,g15.3)",'error (dir-per) with identity and source term analytic =',acc(04)
+print"(a,g15.3)",'error (per-per) with colella  and source term analytic =',acc(05)
+print"(a,g15.3)",'error (per-dir) with colella  and source term analytic =',acc(06)
+print"(a,g15.3)",'error (dir-dir) with colella  and source term analytic =',acc(07)
+print"(a,g15.3)",'error (dir-per) with colella  and source term analytic =',acc(08)
+print"(a,g15.3)",'error (per-per) with identity and source term discrete =',acc(09)
+print"(a,g15.3)",'error (per-per) with colella  and source term discrete =',acc(10)
+print"(a,g15.3)",'error (per-dir) with colella  and source term discrete =',acc(11)
+print"(a,g15.3)",'error (dir-dir) with colella  and source term discrete =',acc(12)
+print"(a,g15.3)",'error (dir-per) with colella  and source term discrete =',acc(13)
+print"(a,g15.3)",'error (dir-per) with polar    and source term analytic =',acc(14)
+print"(a,g15.3)",'error (dir-per) with polar    and source term analytic =',acc(15)
 
 do k = 1, 13
   print"('test',i2,' : ','norm L2=',g15.3,' norm H1=',g15.3,' times=',2g15.3)" &
@@ -1208,7 +1213,6 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
   sll_int32, intent(in) :: bc_eta2_min
   sll_int32, intent(in) :: bc_eta1_max
   sll_int32, intent(in) :: bc_eta2_max
-  character(len=4)      :: ccase
 
   a11_field_mat => new_scalar_field_2d_analytic_alt( &
     func_one,                                        &
@@ -1314,7 +1318,6 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
     SPLINE_DEG1,                                     &
     SPLINE_DEG2 )
 
-  call int2string(k, ccase)
   phi => new_scalar_field_2d_discrete_alt(           &
     "phi_"//ccase,                                   &
     interp_2d,                                       &
@@ -1350,7 +1353,6 @@ subroutine solve_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max, &
   sll_int32,  intent(in)  :: bc_eta2_max
   sll_real64, intent(out) :: ti
   sll_real64, intent(out) :: te
-  sll_int32               :: istep
   
   integral_solution = 0.0_f64
   integral_exact_solution = 0.0_f64
@@ -1388,17 +1390,12 @@ subroutine solve_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max, &
   
   call sll_set_time_mark(t_reference)
   
-  write(*,"(' ')",advance="no")
-  do istep = 1, 20
-  
-    values = 0.0_f64
-    call phi%set_field_data(values)
-    call phi%update_interpolation_coefficients()
-    call sll_solve( es, rho, phi)
-    write(*,"(i3)",advance="no") istep
-  
-  end do
-  write(*,*) ' steps'
+  values = 0.0_f64
+  call phi%set_field_data(values)
+  call phi%update_interpolation_coefficients()
+  call rho%write_to_file(0)
+  call sll_solve( es, rho, phi)
+  call phi%write_to_file(0)
   
   te = sll_time_elapsed_since(t_reference)
   
