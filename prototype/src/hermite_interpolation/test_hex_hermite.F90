@@ -39,7 +39,7 @@ program test_hex_hermite
   sll_real64,dimension(:),allocatable :: f_tn1,center_values_tn1,edge_values_tn1
   ! exact distribution 
   sll_real64,dimension(:),allocatable :: f_sol
-  sll_real64,dimension(:),allocatable :: phi, uxn, uyn,dxux,dyux,dxuy,dyuy
+  sll_real64,dimension(:),allocatable :: phi, uxn, uyn,dxuxn,dyuxn,dxuyn,dyuyn
   sll_real64   :: norm2_error, norm2_sol, norm_infinite
   sll_real64   :: norm2_error_center, norm2_error_edge, norm2_error_pt
   sll_real64   :: norm2_sol_center, norm2_sol_edge, norm2_sol_pt
@@ -98,10 +98,10 @@ program test_hex_hermite
      SLL_ALLOCATE(phi( n_points ),ierr)
      SLL_ALLOCATE(uxn( n_points ),ierr)
      SLL_ALLOCATE(uyn( n_points ),ierr)
-     SLL_ALLOCATE(dxux( n_points ),ierr)
-     SLL_ALLOCATE(dyux( n_points ),ierr)
-     SLL_ALLOCATE(dxuy( n_points ),ierr)
-     SLL_ALLOCATE(dyuy( n_points ),ierr)
+     SLL_ALLOCATE(dxuxn( n_points ),ierr)
+     SLL_ALLOCATE(dyuxn( n_points ),ierr)
+     SLL_ALLOCATE(dxuyn( n_points ),ierr)
+     SLL_ALLOCATE(dyuyn( n_points ),ierr)
      SLL_ALLOCATE(center_values_tn ( n_triangle),ierr)
      SLL_ALLOCATE(center_values_tn1( n_triangle),ierr)
      SLL_ALLOCATE(edge_values_tn ( n_edge),ierr)
@@ -438,7 +438,7 @@ program test_hex_hermite
         !       computation of the value at the mesh points
         !*********************************************************
 
-        call compute_hex_fields(mesh,uxn,uyn,dxux,dyux,dxuy,dyuy,phi,1)
+        call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,1)
 
         norm2_error_pt = 0._f64
         norm2_sol_pt = 0._f64
@@ -457,12 +457,18 @@ program test_hex_hermite
         !*********************************************************
         !  computation of the root of the characteristics
         !*********************************************************
-           ! call compute_characteristic_leapfrog_2d_hex( &
-           !    x,y,uxn,uyn,dxux,dyux,dxuy,dyuy,i,xx,yy,2._f64*sll_pi*dt)
+
+           ! call compute_characteristic_adams2_2d_hex( x,y,uxn,uyn,uxn_1,uyn_1,&
+           !      dxuxn,dyuxn,dxuyn,dyuyn,i,xx,yy,2._f64*sll_pi*dt)
+
+           !call  compute_characteristic_leapfrog_2d_hex( x,y,uxn,uyn,uxn_1,&
+           !    uyn_1,dxuxn,dyuxn,dxuyn,dyuyn,i,xx,yy,2._f64*sll_pi*dt)
            !- > for the leapfrog scheme to work, one needs to 
            ! make a interpolation on f(tn-dt) instead of f(tn)
-           ! call compute_characteristic_euler_2d_hex( &
-           !      x,y,uxn,uyn,i,xx,yy,2._f64*sll_pi*dt )
+
+           call compute_characteristic_euler_2d_hex( &
+                x,y,uxn,uyn,i,xx,yy,2._f64*sll_pi*dt )
+
         !*********************************************************
         !                INTERPOLATION
         !*********************************************************
@@ -584,10 +590,10 @@ program test_hex_hermite
      SLL_DEALLOCATE_ARRAY(phi,ierr)
      SLL_DEALLOCATE_ARRAY(uxn,ierr)
      SLL_DEALLOCATE_ARRAY(uyn,ierr)
-     SLL_DEALLOCATE_ARRAY(dxux,ierr)
-     SLL_DEALLOCATE_ARRAY(dyux,ierr)
-     SLL_DEALLOCATE_ARRAY(dxuy,ierr)
-     SLL_DEALLOCATE_ARRAY(dyuy,ierr)
+     SLL_DEALLOCATE_ARRAY(dxuxn,ierr)
+     SLL_DEALLOCATE_ARRAY(dyuxn,ierr)
+     SLL_DEALLOCATE_ARRAY(dxuyn,ierr)
+     SLL_DEALLOCATE_ARRAY(dyuyn,ierr)
      SLL_DEALLOCATE_ARRAY(center_values_tn,ierr)
      SLL_DEALLOCATE_ARRAY(center_values_tn1,ierr)
      SLL_DEALLOCATE_ARRAY(edge_values_tn,ierr)
@@ -664,27 +670,6 @@ contains
     if (type==1) then
 
        do i = 1,mesh%num_pts_tot
-
-          ! h1 = mesh%hex_coord(1,i)
-          ! h2 = mesh%hex_coord(2,i)
-
-          ! phii_2 = value_if_inside_phi(h1-2,h2,mesh,phi)
-          ! phii_1 = value_if_inside_phi(h1-1,h2,mesh,phi)
-          ! phii1  = value_if_inside_phi(h1+1,h2,mesh,phi)
-          ! phii2  = value_if_inside_phi(h1+2,h2,mesh,phi)
-
-          ! phij_2 = value_if_inside_phi(h1,h2-2,mesh,phi)
-          ! phij_1 = value_if_inside_phi(h1,h2-1,mesh,phi)
-          ! phij1  = value_if_inside_phi(h1,h2+1,mesh,phi)
-          ! phij2  = value_if_inside_phi(h1,h2+2,mesh,phi)
-
-          ! ! order 2
-
-          ! uh1 = ( phii1 - phii_1 ) / (2._f64)!*mesh%delta)
-          ! uh2 = ( phij1 - phij_1 ) / (2._f64)!*mesh%delta)
-
-          ! uxn = -( mesh%r1_x2*uh1 + mesh%r2_x2*uh2)   ! -d(phi)/dy 
-          ! uyn = +( mesh%r1_x1*uh1 + mesh%r2_x1*uh2)   ! +d(phi)/dx
 
           uxn(i) = + mesh%cartesian_coord(2,i)   ! +y
           uyn(i) = - mesh%cartesian_coord(1,i)   ! -x

@@ -49,7 +49,7 @@ module sll_coordinate_transformation_multipatch_module
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_file_io.h"
-  use sll_logical_meshes_multipatch
+  use sll_cartesian_meshes_multipatch
   use sll_module_coordinate_transformations_2d_nurbs
   implicit none
 
@@ -60,7 +60,7 @@ module sll_coordinate_transformation_multipatch_module
      character(len=128) :: name_root  ! file names should share this string
 !     character(len=128), dimension(:), pointer :: patch_names => null()
      sll_int32, dimension(:,:),pointer :: connectivities => null()
- !    type(sll_logical_mesh_multipatch_2d), pointer :: logical_mesh_mp => null()
+ !    type(sll_cartesian_mesh_multipatch_2d), pointer :: logical_mesh_mp => null()
      type(sll_coordinate_transformation_2d_nurbs_ptr), dimension(:), pointer::&
           transfs => null()
      ! Element connectivity information for finite element calculations.
@@ -71,7 +71,7 @@ module sll_coordinate_transformation_multipatch_module
      procedure, pass :: read_from_file => read_from_file_ctmp2d
      procedure, pass :: get_number_patches => get_number_patches_ctmp2d
      procedure, pass :: get_transformation => get_transformation_ctmp2d
-     procedure, pass :: get_logical_mesh => get_logical_mesh_ctmp2d
+     procedure, pass :: get_cartesian_mesh => get_cartesian_mesh_ctmp2d
      procedure, pass :: get_num_cells_eta1 => get_num_cells_eta1_ctmp2d
      procedure, pass :: get_num_cells_eta2 => get_num_cells_eta2_ctmp2d
      procedure, pass :: get_delta_eta1 => get_delta_eta1_ctmp2d
@@ -374,21 +374,21 @@ contains
     res = mp%number_patches
   end function get_number_patches_ctmp2d
 
-  function get_logical_mesh_ctmp2d( mp, patch ) result(res)
-    type(sll_logical_mesh_2d), pointer :: res
+  function get_cartesian_mesh_ctmp2d( mp, patch ) result(res)
+    type(sll_cartesian_mesh_2d), pointer :: res
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
     res => mp%transfs(patch+1)%t%mesh
-  end function get_logical_mesh_ctmp2d
+  end function get_cartesian_mesh_ctmp2d
 
   function get_num_cells_eta1_ctmp2d ( mp, patch ) result(res)
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
     sll_int32 :: res
-    type(sll_logical_mesh_2d), pointer :: mesh
+    type(sll_cartesian_mesh_2d), pointer :: mesh
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
-    mesh => mp%get_logical_mesh(patch)
+    mesh => mp%get_cartesian_mesh(patch)
     res = mesh%num_cells1
   end function get_num_cells_eta1_ctmp2d
 
@@ -396,9 +396,9 @@ contains
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
     sll_int32 :: res
-    type(sll_logical_mesh_2d), pointer :: mesh
+    type(sll_cartesian_mesh_2d), pointer :: mesh
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
-    mesh => mp%get_logical_mesh(patch)
+    mesh => mp%get_cartesian_mesh(patch)
     res = mesh%num_cells2
   end function get_num_cells_eta2_ctmp2d
 
@@ -406,9 +406,9 @@ contains
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
     sll_real64 :: res
-    type(sll_logical_mesh_2d), pointer :: mesh
+    type(sll_cartesian_mesh_2d), pointer :: mesh
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
-    mesh => mp%get_logical_mesh(patch)
+    mesh => mp%get_cartesian_mesh(patch)
     res = mesh%delta_eta1
   end function get_delta_eta1_ctmp2d
 
@@ -416,9 +416,9 @@ contains
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
     sll_real64 :: res
-    type(sll_logical_mesh_2d), pointer :: mesh
+    type(sll_cartesian_mesh_2d), pointer :: mesh
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
-    mesh => mp%get_logical_mesh(patch)
+    mesh => mp%get_cartesian_mesh(patch)
     res = mesh%delta_eta2
   end function get_delta_eta2_ctmp2d
 
@@ -426,9 +426,9 @@ contains
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
     sll_real64 :: res
-    type(sll_logical_mesh_2d), pointer :: mesh
+    type(sll_cartesian_mesh_2d), pointer :: mesh
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
-    mesh => mp%get_logical_mesh(patch)
+    mesh => mp%get_cartesian_mesh(patch)
     res = mesh%eta1_min
   end function get_eta1_min_ctmp2d
 
@@ -436,9 +436,9 @@ contains
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
     sll_real64 :: res
-    type(sll_logical_mesh_2d), pointer :: mesh
+    type(sll_cartesian_mesh_2d), pointer :: mesh
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
-    mesh => mp%get_logical_mesh(patch)
+    mesh => mp%get_cartesian_mesh(patch)
     res = mesh%eta1_max
   end function get_eta1_max_ctmp2d
 
@@ -446,9 +446,9 @@ contains
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
     sll_real64 :: res
-    type(sll_logical_mesh_2d), pointer :: mesh
+    type(sll_cartesian_mesh_2d), pointer :: mesh
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
-    mesh => mp%get_logical_mesh(patch)
+    mesh => mp%get_cartesian_mesh(patch)
     res = mesh%eta2_min
   end function get_eta2_min_ctmp2d
 
@@ -456,9 +456,9 @@ contains
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
     sll_real64 :: res
-    type(sll_logical_mesh_2d), pointer :: mesh
+    type(sll_cartesian_mesh_2d), pointer :: mesh
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
-    mesh => mp%get_logical_mesh(patch)
+    mesh => mp%get_cartesian_mesh(patch)
     res = mesh%eta2_max
   end function get_eta2_max_ctmp2d
 
@@ -659,7 +659,7 @@ contains
   function get_spline_local_index_tmp2d(mp,patch,splines_local,cell_i,cell_j)&
        result(res)
     class(sll_coordinate_transformation_multipatch_2d), intent(inout) :: mp
-    type(sll_logical_mesh_2d), pointer                                :: lm
+    type(sll_cartesian_mesh_2d), pointer                                :: lm
     sll_int32 :: patch
     sll_int32 :: splines_local
     sll_int32 :: cell_i,cell_j
@@ -672,7 +672,7 @@ contains
     SLL_ASSERT((cell_j>=1).and.(cell_j<mp%transfs(patch+1)%t%mesh%num_cells2))
     
 
-    lm=>mp%get_logical_mesh(patch)
+    lm=>mp%get_cartesian_mesh(patch)
     num_spline_loc_max = (mp%transfs(patch+1)%T%spline_deg1 +1)*&
                          (mp%transfs(patch+1)%T%spline_deg2 +1)
 
@@ -760,7 +760,7 @@ contains
   function get_spline_local_to_global_index_Tmp2d(mp,patch,splines_local,cell_i,cell_j)&
        result(res)
     class(sll_coordinate_transformation_multipatch_2d), intent(inout) :: mp
-    type(sll_logical_mesh_2d), pointer                         :: lm
+    type(sll_cartesian_mesh_2d), pointer                         :: lm
     sll_int32 :: patch
     sll_int32 :: splines_local
     sll_int32 :: cell_i,cell_j
@@ -768,7 +768,7 @@ contains
     sll_int32 :: res
     sll_int32 :: num_spline_loc_max
     
-    lm=>mp%get_logical_mesh(patch)
+    lm=>mp%get_cartesian_mesh(patch)
     
     SLL_ASSERT( (patch >= 0)  .and. (patch < mp%number_patches) )
     SLL_ASSERT( (cell_i >= 1) .and. (cell_i <= lm%num_cells1) )

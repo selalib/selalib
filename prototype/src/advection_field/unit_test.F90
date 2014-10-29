@@ -5,7 +5,7 @@ program unit_test
   use sll_constants
   use sll_advection_field
 !  use sll_module_mapped_meshes_2d
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_module_coordinate_transformations_2d
   use sll_module_mapped_meshes_1d
   use sll_module_cubic_spline_interpolator_1d
@@ -15,7 +15,7 @@ program unit_test
   sll_int32 :: nc_eta1, nc_eta2
   !type(sll_mapped_mesh_2d_analytic),target     :: mesh2d
   !class(sll_mapped_mesh_2d_base), pointer      :: pm2d
-  type(sll_logical_mesh_2d), pointer :: mesh2d
+  type(sll_cartesian_mesh_2d), pointer :: mesh2d
   class(sll_coordinate_transformation_2d_base), pointer   :: pm2d
   class(sll_mapped_mesh_1d_base), pointer      :: pm1d
   !class(scalar_field_2d_initializer_base), pointer    :: pfinit
@@ -39,7 +39,7 @@ program unit_test
   affine_map_params(:) = (/-1.0_f64, 1.0_f64, -1.0_f64, 1.0_f64, 0.0_f64/)
 
   print*, 'initialization of mesh'
-  mesh2d => new_logical_mesh_2d( &
+  mesh2d => new_cartesian_mesh_2d( &
        nc_eta1, &
        nc_eta2  &
    )
