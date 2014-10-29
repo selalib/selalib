@@ -253,14 +253,12 @@ contains ! =============================================================
             " have not type of gauss points in the first direction"
     end select
     
-    
-    !  ---------------------------------------------- END QUADRATURE POINTS INIT
-    ! --------------------------------------------------------------------------
+    !  -------------------------------------------------- QUADRATURE POINTS INIT
+    ! -----------------------------------------------------------------------END
 
 
-    ! --------------------------------------------------------------------------
-    ! BEGIN ALLOCATION AND INITIALIZATION OF SPLINES KNOTS ---------------------
-
+    ! ALLOCATION AND INITIALIZATION OF SPLINES KNOTS ---------------------------
+    ! -------------------------------------------------------------------- BEGIN
     if( (bc_left == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
          (bc_bottom == SLL_PERIODIC) .and. (bc_top == SLL_PERIODIC) ) then
        solv%num_splines_tot = solv%num_cells
