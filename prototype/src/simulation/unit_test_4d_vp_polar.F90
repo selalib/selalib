@@ -11,7 +11,7 @@ program vlasov_poisson_4d_polar
 
   use sll_simulation_4d_vlasov_poisson_polar
   use sll_collective
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
@@ -19,8 +19,8 @@ program vlasov_poisson_4d_polar
 
   character(len=256)                  :: filename
   type(sll_simulation_4d_vp_polar)    :: simulation
-  type(sll_logical_mesh_2d), pointer  :: mx
-  type(sll_logical_mesh_2d), pointer  :: mv
+  type(sll_cartesian_mesh_2d), pointer  :: mx
+  type(sll_cartesian_mesh_2d), pointer  :: mv
   sll_real64                          :: params(6)
   sll_int32                           :: nargs
 
@@ -42,12 +42,12 @@ program vlasov_poisson_4d_polar
 #define NPTS4 32
 
      ! logical mesh for space coordinates
-     mx => new_logical_mesh_2d( NPTS1, NPTS2,    & 
+     mx => new_cartesian_mesh_2d( NPTS1, NPTS2,    & 
        eta1_min= 2.0_f64, eta1_max= 8.0_f64,         &
        eta2_min=.0_f64, eta2_max=2.0_f64*sll_pi)
 
      ! logical mesh for velocity coordinates
-     mv => new_logical_mesh_2d( NPTS3, NPTS4, &
+     mv => new_cartesian_mesh_2d( NPTS3, NPTS4, &
        eta1_min=-6.0_f64, eta1_max=6.0_f64, &
        eta2_min=-6.0_f64, eta2_max=6.0_f64)
 

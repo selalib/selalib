@@ -14,7 +14,7 @@ program qns_4d_general_multipatch
      run_4d_qns_general_mp
   use sll_collective
 !  use sll_constants
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
 !  use sll_module_coordinate_transformations_2d_nurbs
@@ -31,7 +31,7 @@ program qns_4d_general_multipatch
   character(len=256) :: filename
   character(len=256) :: filename_local
   type(sll_simulation_4d_qns_general_multipatch)     :: simulation
-  type(sll_logical_mesh_2d), pointer      :: mv ! delete
+  type(sll_cartesian_mesh_2d), pointer      :: mv ! delete
   type(sll_coordinate_transformation_multipatch_2d) :: mp
 
   sll_real64, dimension(1:8) :: gaussian_beam_params
@@ -83,7 +83,7 @@ program qns_4d_general_multipatch
 
 
   ! logical mesh for velocity coordinates
-  mv => new_logical_mesh_2d( NPTS3, NPTS4, &
+  mv => new_cartesian_mesh_2d( NPTS3, NPTS4, &
        eta1_min=-9.0_f64, eta1_max=9.0_f64, &
        eta2_min=-9.0_f64, eta2_max=9.0_f64)
 

@@ -21,7 +21,7 @@ module sll_charge_to_density_module
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_accumulators.h"
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   implicit none
   
 contains
@@ -29,7 +29,7 @@ contains
 !!$  function new_charge_to_meshdens(   &
 !!$                 all_charge, m2d ) result(ro)
 !!$
-!!$    type(sll_logical_mesh_2d), intent(in) :: m2d
+!!$    type(sll_cartesian_mesh_2d), intent(in) :: m2d
 !!$    type(charge_accumulator_cell),dimension(1:m2d%num_cells2*m2d%num_cells1), &
 !!$    intent(in) :: all_charge
 !!$    sll_real64, dimension(:,:), pointer  :: ro

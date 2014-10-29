@@ -87,17 +87,16 @@ subroutine initialize_knots_source(&
           knots(i) = eta_min
        enddo
        eta = eta_min
-       do i = spline_degree + 2, num_cells + 1 + spline_degree
+       do i = spline_degree+2, num_cells+1+spline_degree
           eta = eta + delta
           knots(i) = eta
        enddo
-       do i = num_cells + spline_degree + 1, num_cells + 1 + 2*spline_degree
+       do i = num_cells+spline_degree+1, num_cells+1+2*spline_degree
           knots(i) = eta_max
        enddo
     end if
 
   end subroutine initialize_knots
-
 
   !> ASSEMBLING KNOTS ARRAY
   subroutine initialize_knots_per(&

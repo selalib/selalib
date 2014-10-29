@@ -13,7 +13,7 @@ use sll_collective
   use sll_module_cubic_spline_interpolator_1d
 !  use sll_module_cubic_spline_interpolator_2d
   use sll_simulation_base
-!  use sll_logical_meshes
+!  use sll_cartesian_meshes
   use sll_parallel_array_initializer_module
 !  use sll_coordinate_transformation_2d_base_module
   use sll_gnuplot_parallel
@@ -59,8 +59,8 @@ use sll_collective
      sll_int32  :: bc_vy_0
      sll_int32  :: bc_vy_1
      ! the logical meshes are split in two one for space, one for velocity
-     type(sll_logical_mesh_2d), pointer    :: mesh2d_x
-     type(sll_logical_mesh_2d), pointer    :: mesh2d_v
+     type(sll_cartesian_mesh_2d), pointer    :: mesh2d_x
+     type(sll_cartesian_mesh_2d), pointer    :: mesh2d_v
      ! This simulation only applies a coordinate transformation to the spatial
      ! coordinates.
      class(sll_coordinate_transformation_2d_base), pointer :: transfx
@@ -221,8 +221,8 @@ contains
    number_diags)
     
     type(sll_simulation_4d_qns_general), intent(inout)    :: sim
-    type(sll_logical_mesh_2d), pointer                    :: mesh2d_x
-    type(sll_logical_mesh_2d), pointer                    :: mesh2d_v
+    type(sll_cartesian_mesh_2d), pointer                    :: mesh2d_x
+    type(sll_cartesian_mesh_2d), pointer                    :: mesh2d_v
     class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
     procedure(sll_scalar_initializer_4d)                  :: init_func
     sll_real64, dimension(:), target                      :: params
@@ -430,11 +430,11 @@ contains
 !!$    sim%nc_x3 = num_cells_x3
 !!$    sim%nc_x4 = num_cells_x4
 
-    sim%mesh2d_x => new_logical_mesh_2d( num_cells_x1, num_cells_x2,  & 
+    sim%mesh2d_x => new_cartesian_mesh_2d( num_cells_x1, num_cells_x2,  & 
          eta1_min= eta1_min, eta1_max= eta1_max, &
          eta2_min= eta2_min, eta2_max= eta2_max )
 
-    sim%mesh2d_v => new_logical_mesh_2d( num_cells_x3, num_cells_x4,  & 
+    sim%mesh2d_v => new_cartesian_mesh_2d( num_cells_x3, num_cells_x4,  & 
          eta1_min= vx_min, eta1_max= vx_max, &
          eta2_min= vy_min, eta2_max= vy_max )
         ! boundary conditions
@@ -1883,8 +1883,8 @@ contains
     partial, &
     rho )
 
-    type(sll_logical_mesh_2d), pointer     :: mx
-    type(sll_logical_mesh_2d), pointer     :: mv
+    type(sll_cartesian_mesh_2d), pointer     :: mx
+    type(sll_cartesian_mesh_2d), pointer     :: mv
     sll_int32, intent(in)                  :: numpts1
     sll_int32, intent(in)                  :: numpts2
     sll_real64, intent(in),  dimension(:,:,:,:) :: f       ! local distr. func
@@ -1944,7 +1944,7 @@ contains
        rho, &
        density_tot )
     class(sll_simulation_4d_qns_general)     :: sim
-    type(sll_logical_mesh_2d), pointer     :: mx
+    type(sll_cartesian_mesh_2d), pointer     :: mx
     sll_real64, intent(inout), dimension(:,:)     :: rho     ! local rho
     sll_real64, intent(out)              :: density_tot
     

@@ -12,7 +12,7 @@ module sll_simulation_2d_guiding_center_curvilinear_module
 #include "sll_fft.h"
 #include "sll_poisson_solvers.h"
 !  use sll_constants
-!  use sll_logical_meshes  
+!  use sll_cartesian_meshes  
 !  use sll_module_advection_1d_periodic
 !  use sll_module_interpolators_1d_base
   use sll_module_advection_2d_base
@@ -63,7 +63,7 @@ module sll_simulation_2d_guiding_center_curvilinear_module
     sll_simulation_2d_guiding_center_curvilinear
 
    !geometry
-   type(sll_logical_mesh_2d), pointer :: mesh_2d
+   type(sll_cartesian_mesh_2d), pointer :: mesh_2d
   
    !transformation 
    class(sll_coordinate_transformation_2d_base), pointer :: transformation
@@ -599,7 +599,7 @@ contains
     end select
 
         
-    sim%mesh_2d => new_logical_mesh_2d( &
+    sim%mesh_2d => new_cartesian_mesh_2d( &
       Nc_eta1, &
       Nc_eta2, &
       eta1_min , &
@@ -1374,7 +1374,7 @@ contains
     sll_real64, dimension(:,:), intent(in) :: phi
     sll_real64, dimension(:,:), intent(out) :: A1
     sll_real64, dimension(:,:), intent(out) :: A2
-    type(sll_logical_mesh_2d), pointer :: mesh_2d
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     class(sll_coordinate_transformation_2d_base), pointer :: transformation
     class(sll_interpolator_2d_base), pointer   :: interp2d
     sll_int32 :: Nc_eta1
@@ -1414,7 +1414,7 @@ contains
   subroutine compute_f_to_f_conserv(f,f_conserv,transformation,mesh_2d)
     sll_real64, dimension(:,:), intent(in) :: f
     sll_real64, dimension(:,:), intent(out) :: f_conserv
-    type(sll_logical_mesh_2d), pointer :: mesh_2d
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     class(sll_coordinate_transformation_2d_base), pointer :: transformation
     sll_int32 :: Nc_eta1
     sll_int32 :: Nc_eta2
@@ -1450,7 +1450,7 @@ contains
    subroutine compute_f_conserv_to_f(f_conserv,f,transformation,mesh_2d)
     sll_real64, dimension(:,:), intent(out) :: f
     sll_real64, dimension(:,:), intent(in) :: f_conserv
-    type(sll_logical_mesh_2d), pointer :: mesh_2d
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     class(sll_coordinate_transformation_2d_base), pointer :: transformation
     sll_int32 :: Nc_eta1
     sll_int32 :: Nc_eta2
@@ -1494,7 +1494,7 @@ contains
     sll_int32, intent(in) :: file_id
     sll_int32, intent(in) :: step
     sll_real64, intent(in) :: dt
-    type(sll_logical_mesh_2d), pointer :: mesh_2d
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     class(sll_coordinate_transformation_2d_base), pointer :: transformation
     sll_real64, dimension(:,:), intent(in) :: f
     sll_real64, dimension(:,:), intent(in) :: phi
@@ -1609,7 +1609,7 @@ contains
     sll_int32, intent(in) :: file_id
     sll_int32, intent(in) :: step
     sll_real64, intent(in) :: dt
-    type(sll_logical_mesh_2d), pointer :: mesh_2d
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     sll_real64, dimension(:,:), intent(in) :: f
     sll_real64, dimension(:,:), intent(in) :: phi
     sll_real64, dimension(:,:), intent(in) :: A1
@@ -1725,7 +1725,7 @@ contains
     sll_int32, intent(in) :: file_id
     sll_int32, intent(in) :: step
     sll_real64, intent(in) :: dt
-    type(sll_logical_mesh_2d), pointer :: mesh_2d
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     sll_real64, dimension(:,:), intent(in) :: f
     sll_real64, dimension(:,:), intent(in) :: phi
     sll_real64, dimension(:,:), intent(in) :: A1
@@ -1850,7 +1850,7 @@ contains
     sll_int32, intent(in) :: iplot
     character(len=4)      :: cplot
     sll_int32             :: nnodes_x1, nnodes_x2
-    type(sll_logical_mesh_2d), pointer :: mesh_2d
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     class(sll_coordinate_transformation_2d_base), pointer :: transf
     sll_real64, dimension(:,:), intent(in) :: f
     sll_real64 :: eta1

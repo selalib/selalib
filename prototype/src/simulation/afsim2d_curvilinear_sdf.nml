@@ -4,8 +4,8 @@
 
 
 &geometry
-  mesh_case_eta1 = "SLL_LOGICAL_MESH"
-  mesh_case_eta2 = "SLL_LOGICAL_MESH"
+  mesh_case_eta1 = "SLL_CARTESIAN_MESH"
+  mesh_case_eta2 = "SLL_CARTESIAN_MESH"
   num_cells_eta1 = 256
   num_cells_eta2 = 256
   eta1_min = -3.1415926535897932385

@@ -524,6 +524,7 @@ contains
 
     call get_cell_vertices_index( x, y, mesh, i1, i2, i3 )
 
+
     x1 = mesh%cartesian_coord(1,i1) 
     x2 = mesh%cartesian_coord(1,i2) 
     x3 = mesh%cartesian_coord(1,i3) 

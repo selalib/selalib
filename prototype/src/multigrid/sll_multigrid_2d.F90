@@ -20,21 +20,20 @@ module sll_multigrid_2d
       sll_int32  :: pdims(2)
       sll_int32  :: coords(2)
       sll_int32  :: neighbor(8)
-
       sll_real64, pointer :: work(:)
 
    end type multigrid_2d
 
-   interface initialize
+   interface sll_create
       module procedure initialize_multigrid_2d
       module procedure initialize_multigrid_2d_periodic
-   end interface initialize
+   end interface sll_create
 
-   interface solve
+   interface sll_solve
       module procedure solve_multigrid_2d
-   end interface solve
+   end interface sll_solve
 
-   public :: initialize, solve, write_topology
+   public :: sll_create, sll_solve, write_topology
 
    private
 

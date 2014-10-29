@@ -72,7 +72,7 @@ module sll_module_scalar_field_2d_multipatch
      procedure, pass :: update_interpolation_coefficients => &
           update_interp_coeffs_sfmp2d
      procedure, pass :: get_transformation  => get_patch_transformation_sfmp2d
-     procedure, pass :: get_logical_mesh    => get_patch_logical_mesh_sfmp2d
+     procedure, pass :: get_cartesian_mesh    => get_patch_logical_mesh_sfmp2d
      procedure, pass :: get_jacobian_matrix => get_jacobian_matrix_sfmp2d
      procedure, pass :: get_number_patches  => get_number_patches_sfmp2d
      ! These are the functions to aid the finite element calculation  
@@ -132,7 +132,7 @@ contains   ! *****************************************************************
     type(sll_coordinate_transformation_multipatch_2d), target :: transf
     logical, intent(in), optional                             :: owns_data
     character(len=256)                                        :: patch_name
-    class(sll_logical_mesh_2d), pointer                       :: lm
+    class(sll_cartesian_mesh_2d), pointer                       :: lm
     sll_int32, dimension(1:2)                                 :: connectivity
     character(len=128) :: format_string 
     sll_int32  :: i
@@ -166,7 +166,7 @@ contains   ! *****************************************************************
     print *, 'proceeding to create the patches...'
     do i=0, num_patches-1
        ! create the patch-dedicated interpolator.
-       lm=>fmp%get_logical_mesh(i)
+       lm=>fmp%get_cartesian_mesh(i)
        print *, 'extracted logical mesh from patch ', i
        !------------------------------------------------------------------
        !                      WARNING!!!!!!!!
@@ -282,7 +282,7 @@ contains   ! *****************************************************************
 #define NUM_DERIVS 1
 
     do i=1,num_patches
-       lm => fmp%get_logical_mesh(i-1)
+       lm => fmp%get_cartesian_mesh(i-1)
        num_pts1 = lm%num_cells1 + 1
        num_pts2 = lm%num_cells2 + 1
        SLL_ALLOCATE(fmp%buffers0(i)%array(num_pts1,NUM_DERIVS),ierr)
@@ -375,7 +375,7 @@ contains   ! *****************************************************************
   ! thus avoiding unnecessary memory copying.
   subroutine allocate_memory_sfmp2d( field )
     class(sll_scalar_field_multipatch_2d), intent(inout) :: field
-    class(sll_logical_mesh_2d), pointer :: lm
+    class(sll_cartesian_mesh_2d), pointer :: lm
     sll_int32 :: i
     sll_int32 :: ierr
     sll_int32 :: num_patches
@@ -391,7 +391,7 @@ contains   ! *****************************************************************
     num_patches = field%num_patches
 
     do i=0,num_patches-1
-       lm => field%get_logical_mesh(i)
+       lm => field%get_cartesian_mesh(i)
        numpts1 = lm%num_cells1+1
        numpts2 = lm%num_cells2+1
        SLL_ALLOCATE(field%patch_data(i+1)%array(numpts1,numpts2),ierr)
@@ -420,12 +420,12 @@ contains   ! *****************************************************************
     class(sll_scalar_field_multipatch_2d), intent(inout) :: mp
     sll_int32, intent(in)                               :: patch
     sll_real64, dimension(:,:), intent(in)              :: values
-    class(sll_logical_mesh_2d), pointer                 :: lm
+    class(sll_cartesian_mesh_2d), pointer                 :: lm
     sll_int32                                           :: numpts1
     sll_int32                                           :: numpts2
 
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )
-    lm => mp%get_logical_mesh(patch)
+    lm => mp%get_cartesian_mesh(patch)
     numpts1 = lm%num_cells1+1
     numpts2 = lm%num_cells2+1
 
@@ -472,7 +472,7 @@ contains   ! *****************************************************************
   ! CHANGES IN BETWEEN PATCHES!!!
   subroutine compute_compatible_derivatives_in_borders( fmp )
     class(sll_scalar_field_multipatch_2d), intent(inout) :: fmp
-    class(sll_logical_mesh_2d), pointer :: m
+    class(sll_cartesian_mesh_2d), pointer :: m
     sll_int32 :: num_patches
     sll_int32 :: ip
     sll_int32 :: i
@@ -494,7 +494,7 @@ contains   ! *****************************************************************
     num_patches = fmp%num_patches
 
     do ip=1,num_patches
-       m => fmp%get_logical_mesh(ip-1)
+       m => fmp%get_cartesian_mesh(ip-1)
        num_pts1 = m%num_cells1 + 1
        num_pts2 = m%num_cells2 + 1
        rdelta1  = 1.0_f64/m%delta_eta1
@@ -737,11 +737,11 @@ contains   ! *****************************************************************
   end function get_patch_transformation_sfmp2d
 
   function get_patch_logical_mesh_sfmp2d( mp, patch ) result(res)
-    class(sll_logical_mesh_2d), pointer                 :: res
+    class(sll_cartesian_mesh_2d), pointer                 :: res
     class(sll_scalar_field_multipatch_2d), intent(in)   :: mp
     sll_int32, intent(in)                              :: patch
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )
-    res => mp%transf%get_logical_mesh(patch)
+    res => mp%transf%get_cartesian_mesh(patch)
   end function get_patch_logical_mesh_sfmp2d
 
   function get_jacobian_matrix_sfmp2d( mp, eta1, eta2, patch ) result(res)
@@ -929,7 +929,7 @@ contains   ! *****************************************************************
 !!$    sll_int32 :: res
 !!$    sll_int32 :: num_spline_loc_max
 !!$    sll_int32 :: total_num_cells_in_patch
-!!$    type(sll_logical_mesh_2d), pointer                         :: lm
+!!$    type(sll_cartesian_mesh_2d), pointer                         :: lm
 !!$    
 !!$   
 !!$    SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )
@@ -937,7 +937,7 @@ contains   ! *****************************************************************
 !!$    SLL_ASSERT( (cell_j >= 1) .and. (cell_j < mp%fields(patch+1)%f%mesh%num_cells2) )
 !!$    SLL_ASSERT( (splines_local >= 1) .and. (splines_local < num_spline_loc_max) )
 !!$
-!!$    lm=>mp%transf%get_logical_mesh(patch)
+!!$    lm=>mp%transf%get_cartesian_mesh(patch)
 !!$    num_spline_loc_max = (mp%interps(patch+1)%interp%spline_degree1 +1)*&
 !!$                         (mp%interps(patch+1)%interp%spline_degree2 +1)
 !!$    num_cell = cell_i + (cell_j-1)*lm%num_cells1
@@ -983,7 +983,7 @@ contains   ! *****************************************************************
 !!$    sll_int32 :: num_spline_loc_max
 !!$    sll_int32 :: index
 !!$    sll_int32 :: total_num_cells_in_patch
-!!$    type(sll_logical_mesh_2d), pointer                         :: lm
+!!$    type(sll_cartesian_mesh_2d), pointer                         :: lm
 !!$    
 !!$    
 !!$    SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )
@@ -991,7 +991,7 @@ contains   ! *****************************************************************
 !!$    SLL_ASSERT( (cell_j >= 1) .and. (cell_j < mp%fields(patch+1)%f%mesh%num_cells2) )
 !!$   
 !!$    
-!!$    lm=>mp%transf%get_logical_mesh(patch)
+!!$    lm=>mp%transf%get_cartesian_mesh(patch)
 !!$    num_spline_loc_max = (mp%interps(patch+1)%interp%spline_degree1 +1)*&
 !!$         (mp%interps(patch+1)%interp%spline_degree2 +1)
 !!$
