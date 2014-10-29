@@ -18,7 +18,7 @@ module sll_module_coordinate_transformations_2d_nurbs
 #include "sll_file_io.h"
   use sll_xdmf
   use sll_meshes_base
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_module_cubic_spline_interpolator_2d
   use sll_gnuplot
   use sll_module_interpolators_2d_base
@@ -56,12 +56,12 @@ module sll_module_coordinate_transformations_2d_nurbs
      sll_real64, dimension(:),pointer :: knots1
      !> PLEASE ADD DOCUMENTATION
      sll_real64, dimension(:),pointer :: knots2
-!     type(sll_logical_mesh_2d), pointer  :: mesh2d_minimal =>null()
-!     type(sll_logical_mesh_2d), pointer :: mesh
+!     type(sll_cartesian_mesh_2d), pointer  :: mesh2d_minimal =>null()
+!     type(sll_cartesian_mesh_2d), pointer :: mesh
    contains
      
      !> PLEASE ADD DOCUMENTATION
-     procedure, pass(transf) :: get_logical_mesh => get_logical_mesh_nurbs_2d
+     procedure, pass(transf) :: get_cartesian_mesh => get_cartesian_mesh_nurbs_2d
      !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: x1_at_node => x1_node_nurbs
      !> PLEASE ADD DOCUMENTATION
@@ -414,7 +414,7 @@ contains
     ! possession of the logical mesh or not... For now we keep the minimum
     ! information related with the number of cells to at least be able to
     ! initialize a logical mesh outside of the object.
-    transf%mesh => new_logical_mesh_2d(&
+    transf%mesh => new_cartesian_mesh_2d(&
          number_cells1,&
          number_cells2,&
          eta1_min = eta1_min_minimal,&
@@ -438,22 +438,22 @@ contains
   end subroutine read_from_file_2d_nurbs
 
      !> PLEASE ADD DOCUMENTATION
-  function get_logical_mesh_nurbs_2d( transf ) result(res)
-    class(sll_logical_mesh_2d), pointer :: res
+  function get_cartesian_mesh_nurbs_2d( transf ) result(res)
+    class(sll_cartesian_mesh_2d), pointer :: res
     class(sll_coordinate_transformation_2d_nurbs), intent(in) :: transf
     res => transf%mesh
-  end function get_logical_mesh_nurbs_2d
+  end function get_cartesian_mesh_nurbs_2d
 
   function x1_node_nurbs( transf, i, j ) result(val)
     class(sll_coordinate_transformation_2d_nurbs) :: transf
-    class(sll_logical_mesh_2d), pointer :: lm
+    class(sll_cartesian_mesh_2d), pointer :: lm
     sll_real64             :: val
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
     sll_real64  :: eta1
     sll_real64  :: eta2
 
-    lm => transf%get_logical_mesh()
+    lm => transf%get_cartesian_mesh()
 
     eta1 = lm%eta1_node(i,j)
     eta2 = lm%eta2_node(i,j)
@@ -480,7 +480,7 @@ contains
     sll_real64  :: eta1
     sll_real64  :: eta2
 
-    lm => transf%get_logical_mesh()
+    lm => transf%get_cartesian_mesh()
 
     eta1 = lm%eta1_node(i,j)
     eta2 = lm%eta2_node(i,j)
@@ -501,7 +501,7 @@ contains
 
   function x1_cell_nurbs( transf, i, j ) result(val)
     class(sll_coordinate_transformation_2d_nurbs) :: transf
-    class(sll_logical_mesh_2d), pointer :: lm
+    class(sll_cartesian_mesh_2d), pointer :: lm
     sll_real64             :: val
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
@@ -512,7 +512,7 @@ contains
     sll_real64  :: eta1_min
     sll_real64  :: eta2_min
     
-    lm => transf%get_logical_mesh()
+    lm => transf%get_cartesian_mesh()
     SLL_ASSERT( i <= lm%num_cells1 )
     SLL_ASSERT( j <= lm%num_cells2 )
     eta1 = lm%eta1_cell(i,j)
@@ -534,14 +534,14 @@ contains
   
    function x2_cell_nurbs( transf, i, j ) result(val)
     class(sll_coordinate_transformation_2d_nurbs) :: transf
-    class(sll_logical_mesh_2d), pointer :: lm
+    class(sll_cartesian_mesh_2d), pointer :: lm
     sll_real64             :: val
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
     sll_real64  :: eta1
     sll_real64  :: eta2
 
-    lm => transf%get_logical_mesh()
+    lm => transf%get_cartesian_mesh()
     SLL_ASSERT( i <= lm%num_cells1)
     SLL_ASSERT( j <= lm%num_cells2)
 
@@ -631,7 +631,7 @@ contains
     class(sll_coordinate_transformation_2d_nurbs)   :: transf
     sll_int32, intent(in)   :: i
     sll_int32, intent(in)   :: j
-    class(sll_logical_mesh_2d), pointer :: lm
+    class(sll_cartesian_mesh_2d), pointer :: lm
     sll_real64              :: transf_2d_jacobian_node_nurbs
     sll_real64  :: eta1
     sll_real64  :: eta2
@@ -641,7 +641,7 @@ contains
     sll_real64  :: j22
     sll_real64, dimension(1:2,1:2) :: jacobian_matrix
     
-    lm => transf%get_logical_mesh()
+    lm => transf%get_cartesian_mesh()
     
     eta1 = lm%eta1_node(i,j)
     eta2 = lm%eta2_node(i,j)
@@ -663,7 +663,7 @@ contains
     class(sll_coordinate_transformation_2d_nurbs) :: transf
     sll_int32, intent(in)              :: i
     sll_int32, intent(in)              :: j
-    class(sll_logical_mesh_2d), pointer :: lm
+    class(sll_cartesian_mesh_2d), pointer :: lm
     sll_real64                         :: var
     sll_real64  :: eta1
     sll_real64  :: eta2
@@ -673,7 +673,7 @@ contains
     sll_real64  :: j22
     sll_real64, dimension(1:2,1:2) :: jacobian_matrix
 
-    lm => transf%get_logical_mesh()
+    lm => transf%get_cartesian_mesh()
 
     SLL_ASSERT( i <= lm%num_cells1)
     SLL_ASSERT( j <= lm%num_cells2)
@@ -792,7 +792,7 @@ contains
   subroutine write_to_file_2d_nurbs(transf,output_format)
     class(sll_coordinate_transformation_2d_nurbs) :: transf
     sll_int32, optional :: output_format 
-    class(sll_logical_mesh_2d), pointer :: lm
+    class(sll_cartesian_mesh_2d), pointer :: lm
     sll_int32           :: local_format 
     sll_real64, dimension(:,:), pointer :: x1mesh
     sll_real64, dimension(:,:), pointer :: x2mesh
@@ -803,7 +803,7 @@ contains
     sll_int32  :: npts_eta1
     sll_int32  :: npts_eta2
 
-    lm => transf%get_logical_mesh()
+    lm => transf%get_cartesian_mesh()
 
     npts_eta1  = lm%num_cells1 +1
     npts_eta2  = lm%num_cells2 +1

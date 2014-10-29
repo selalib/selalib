@@ -9,7 +9,7 @@ program gc_2d_general
 #include "sll_working_precision.h"
   use sll_simulation_2d_guiding_center_generalized_coords_module
   use sll_constants
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
@@ -22,7 +22,7 @@ program gc_2d_general
   character(len=256) :: filename
   character(len=256) :: filename_local
   type(sll_simulation_2d_guiding_center_generalized)      :: simulation
-  type(sll_logical_mesh_2d), pointer      :: M
+  type(sll_cartesian_mesh_2d), pointer      :: M
   class(sll_coordinate_transformation_2d_base), pointer :: transformation
   
   sll_real64, external ::     func_zero, func_one, func_minus_one
@@ -95,13 +95,13 @@ program gc_2d_general
 
 print*,'pass -1'
   ! logical mesh for space coordinates
-  M => new_logical_mesh_2d( NCELL1, NCELL2,       & 
+  M => new_cartesian_mesh_2d( NCELL1, NCELL2,       & 
        eta1_min, eta1_max,eta2_min, eta2_max)
 
  
 
 !  ! logical mesh for space coordinates
-!  mx => new_logical_mesh_2d( NPTS1, NPTS2)
+!  mx => new_cartesian_mesh_2d( NPTS1, NPTS2)
 print*,'pass 0'
   ! coordinate transformation associated with space coordinates
 transformation => new_coordinate_transformation_2d_analytic( &
