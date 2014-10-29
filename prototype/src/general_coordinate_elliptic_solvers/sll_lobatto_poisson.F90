@@ -11,11 +11,9 @@ module sll_lobatto_poisson
 
   implicit none
   
-  private
-   
   type, public :: lobatto_poisson_solver
-    class(sll_coordinate_transformation_2d_base),pointer :: tau
-    sll_int32  :: order
+    sll_transformation, pointer :: tau
+    sll_int32                   :: order
   end type lobatto_poisson_solver
    
   interface sll_create
@@ -32,12 +30,14 @@ module sll_lobatto_poisson
 
   public :: sll_create, sll_solve, sll_delete
 
+  private
+
 contains
 
 subroutine initialize_lobatto_poisson(this, tau, order)
 
   type(lobatto_poisson_solver) :: this
-  class(sll_coordinate_transformation_2d_base),pointer :: tau
+  sll_transformation, pointer :: tau
   sll_int32, optional :: order
   sll_int32 :: nx0
   sll_int32 :: ny0
@@ -61,9 +61,9 @@ end subroutine initialize_lobatto_poisson
 subroutine solve_lobatto_poisson(this, rhs, ex, ey)
 
   type(lobatto_poisson_solver) :: this
-  type(sll_dg_field_2d)               :: rhs
-  type(sll_dg_field_2d)               :: ex
-  type(sll_dg_field_2d)               :: ey
+  type(sll_dg_field_2d)        :: rhs
+  type(sll_dg_field_2d)        :: ex
+  type(sll_dg_field_2d)        :: ey
 
   call assemb_rhs(rhs%array)
   call compute_phi()
