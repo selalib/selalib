@@ -6,9 +6,7 @@ SET(SPM_FILES getdia.F90
               basic_cg.F90 
               gauss_seidel.F90 
               spm_def.F90 
-              spm_tools.F90
-   ) 
-
+              spm_tools.F90) 
 
 IF(SUITESPARSE_FOUND)
    LIST(APPEND SPM_FILES spm_umfpack.F90)
@@ -66,7 +64,7 @@ ELSEIF(SUITESPARSE_FOUND)
 
 ENDIF()
 
-ADD_EXECUTABLE( test_sparse_matrix unit_test_sparse_matrix.F90)
+ADD_EXECUTABLE(test_sparse_matrix unit_test_sparse_matrix.F90)
 TARGET_LINK_LIBRARIES( test_sparse_matrix sll_sparse_matrix sll_collective)
 
 ADD_LIBRARY(sll_csr_one_constraint STATIC sll_csr_one_constraint_module.F90)
@@ -75,5 +73,5 @@ TARGET_LINK_LIBRARIES(sll_csr_one_constraint sll_utilities sll_memory)
 ADD_EXECUTABLE(test_csr_one_constraint unit_test_csr_one_constraint.F90)
 TARGET_LINK_LIBRARIES(test_csr_one_constraint sll_csr_one_constraint)
 
-ADD_EXECUTABLE(test_gmres dDriver.f dPackgmres.f)
+ADD_EXECUTABLE(test_gmres test_gmres_driver.F90 dPackgmres.f)
 TARGET_LINK_LIBRARIES(test_gmres ${BLAS_LIBRARIES})

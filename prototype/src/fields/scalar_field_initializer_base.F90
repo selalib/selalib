@@ -47,7 +47,6 @@ module sll_scalar_field_initializers_base
   abstract interface
      subroutine scalar_field_2d_initializer( init_obj, data_out )
        use sll_working_precision
-!       import sll_mapped_mesh_2d_base, scalar_field_2d_initializer_base
        import scalar_field_2d_initializer_base
        class(scalar_field_2d_initializer_base), intent(inout) :: init_obj
        sll_real64, dimension(:,:), intent(out)                :: data_out
