@@ -9,15 +9,15 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup logical_meshes sll_logical_meshes 
+!> @defgroup logical_meshes sll_cartesian_meshes 
 !> @brief 
 !> Logical mesh basic types
 !> @author Edwin Chacon-Golcher
 !> @details
 !>
 !> <b> How to use it </b>
-!> - Link with   <code>-lsll_logical_meshes</code>
-!> - Add <code> use sll_logical_meshes </code>
+!> - Link with   <code>-lsll_cartesian_meshes</code>
+!> - Add <code> use sll_cartesian_meshes </code>
 !>
 !> <b> Examples </b>
 !> @snippet logical_meshes/unit_test.F90 example

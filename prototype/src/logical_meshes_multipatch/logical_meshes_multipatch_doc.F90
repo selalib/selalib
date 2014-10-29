@@ -9,7 +9,7 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup logical_meshes_multipatch sll_logical_meshes_multipatch 
+!> @defgroup logical_meshes_multipatch sll_cartesian_meshes_multipatch 
 !> @brief 
 !> Description of logical_meshes_multipatch library (72 characters)
 !> @author Selalib team 
@@ -18,16 +18,16 @@
 !> Long description of  logical_meshes_multipatch, you can add some references or math equations.
 !>
 !> <b> Headers file available </b>
-!>  - sll_logical_meshes_multipatch.h
+!>  - sll_cartesian_meshes_multipatch.h
 !>
 !> <b> Modules available </b>
 !>  List fortran module available
-!>  - sll_logical_meshes_multipatch
+!>  - sll_cartesian_meshes_multipatch
 !>
 !> <b> How to use it </b>
-!> - Header file : \code #include 'sll_logical_meshes_multipatch.h' \endcode
+!> - Header file : \code #include 'sll_cartesian_meshes_multipatch.h' \endcode
 !> - Link with   <code>-lsll_%s</code>
-!> - Add <code> use sll_logical_meshes_multipatch </code>
+!> - Add <code> use sll_cartesian_meshes_multipatch </code>
 !>
 !> <b> Examples </b>
 !> -Add some fortran lines to explain how ti use the library

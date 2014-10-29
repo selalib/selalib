@@ -6,7 +6,7 @@ module sll_module_scalar_field_1d_base
   ! Fundamental field type
   type, abstract :: sll_scalar_field_1d_base 
    contains
-!     procedure(function_get_mesh_1d), deferred, pass :: get_logical_mesh
+!     procedure(function_get_mesh_1d), deferred, pass :: get_cartesian_mesh
      procedure(function_evaluation_real_1d), deferred, pass :: value_at_point
 !     procedure(function_evaluation_integer_1d), deferred, pass :: value_at_indices
      procedure(function_evaluation_real_1d), deferred, pass :: derivative_value_at_point
@@ -36,10 +36,10 @@ module sll_module_scalar_field_1d_base
 !  
 !  abstract interface
 !     function function_get_mesh_1d(field) result(res)
-!       use sll_logical_meshes
+!       use sll_cartesian_meshes
 !       import sll_scalar_field_1d_base
 !       class(sll_scalar_field_1d_base), intent(in) :: field
-!       type(sll_logical_mesh_1d), pointer :: res  ! a implementer
+!       type(sll_cartesian_mesh_1d), pointer :: res  ! a implementer
 !     end function function_get_mesh_1d
 !  end interface
 !  

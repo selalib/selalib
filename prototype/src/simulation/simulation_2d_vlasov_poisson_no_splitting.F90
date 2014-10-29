@@ -31,7 +31,7 @@ module sll_simulation_2d_vlasov_poisson_no_splitting
 #include "sll_utilities.h"
 #include "sll_poisson_solvers.h"
   use sll_constants
-  use sll_logical_meshes  
+  use sll_cartesian_meshes  
   use sll_coordinate_transformation_2d_base_module
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
@@ -67,7 +67,7 @@ module sll_simulation_2d_vlasov_poisson_no_splitting
        sll_simulation_2d_vlasov_poisson_no_split
 
    !geometry
-   type(sll_logical_mesh_2d), pointer :: mesh_2d
+   type(sll_cartesian_mesh_2d), pointer :: mesh_2d
    sll_real64, dimension(:), pointer :: x1_array
    sll_real64, dimension(:), pointer :: x2_array
    sll_real64, dimension(:), pointer :: integration_weight
@@ -206,8 +206,8 @@ contains
     intrinsic :: trim
     sll_int32             :: IO_stat
     sll_int32, parameter  :: input_file = 99
-    type(sll_logical_mesh_1d), pointer :: mesh_x1
-    type(sll_logical_mesh_1d), pointer :: mesh_x2
+    type(sll_cartesian_mesh_1d), pointer :: mesh_x1
+    type(sll_cartesian_mesh_1d), pointer :: mesh_x2
     sll_int32 :: Nc_x1
     sll_int32 :: Nc_x2
     class(sll_interpolator_2d_base), pointer :: f_interp2d
@@ -305,7 +305,7 @@ contains
     num_cells_x1 = 32
     x1_min = 0.0_f64
     nbox_x1 = 1
-    mesh_case_x2 = "SLL_LOGICAL_MESH"
+    mesh_case_x2 = "SLL_CARTESIAN_MESH"
     num_cells_x2 = 64
     x2_min = -6._f64
     x2_max = 6._f64
@@ -400,10 +400,10 @@ contains
     select case (mesh_case_x1)
       case ("SLL_LANDAU_MESH")
         x1_max = real(nbox_x1,f64) * 2._f64 * sll_pi / kmode
-        mesh_x1 => new_logical_mesh_1d(num_cells_x1,eta_min=x1_min, eta_max=x1_max)
+        mesh_x1 => new_cartesian_mesh_1d(num_cells_x1,eta_min=x1_min, eta_max=x1_max)
         call get_node_positions( mesh_x1, sim%x1_array )
-      case ("SLL_LOGICAL_MESH")
-        mesh_x1 => new_logical_mesh_1d(num_cells_x1,eta_min=x1_min, eta_max=x1_max)  
+      case ("SLL_CARTESIAN_MESH")
+        mesh_x1 => new_cartesian_mesh_1d(num_cells_x1,eta_min=x1_min, eta_max=x1_max)  
         call get_node_positions( mesh_x1, sim%x1_array )
       case default
         print*,'#mesh_case_x1', mesh_case_x1, ' not implemented'
@@ -411,8 +411,8 @@ contains
         stop 
     end select
     select case (mesh_case_x2)
-      case ("SLL_LOGICAL_MESH")
-        mesh_x2 => new_logical_mesh_1d(num_cells_x2,eta_min=x2_min, eta_max=x2_max)
+      case ("SLL_CARTESIAN_MESH")
+        mesh_x2 => new_cartesian_mesh_1d(num_cells_x2,eta_min=x2_min, eta_max=x2_max)
         call get_node_positions( mesh_x2, sim%x2_array )
       case default
         print*,'#mesh_case_x2', mesh_case_x2, ' not implemented'
@@ -471,7 +471,7 @@ contains
     end select
 
     !advector 
-    sim%mesh_2d => new_logical_mesh_2d( &
+    sim%mesh_2d => new_cartesian_mesh_2d( &
       num_cells_x1, &
       num_cells_x2, &
       eta1_min = x1_min, &
@@ -1432,7 +1432,7 @@ contains
     sll_int32, intent(in) :: iplot
     character(len=4)      :: cplot
     sll_int32             :: nnodes_x1, nnodes_x2
-    type(sll_logical_mesh_2d), pointer :: mesh_2d
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     sll_real64, dimension(:,:), intent(in) :: f
     !sll_real64 :: r
     !sll_real64 :: theta

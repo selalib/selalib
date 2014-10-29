@@ -6,7 +6,7 @@ program unit_test
   use distribution_function
   use sll_common_coordinate_transformations
   !use sll_module_mapped_meshes_2d
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_module_coordinate_transformations_2d
   use sll_landau_2d_initializer
   use sll_module_cubic_spline_interpolator_1d
@@ -16,7 +16,7 @@ program unit_test
 !  type(sll_mapped_mesh_2d_analytic), target :: mesh2d
   !class(sll_mapped_mesh_2d_base), pointer   :: m
   class(sll_coordinate_transformation_2d_base), pointer   :: m
-  type(sll_logical_mesh_2d), pointer :: m_log
+  type(sll_cartesian_mesh_2d), pointer :: m_log
   class(scalar_field_2d_initializer_base), pointer    :: p_init_f
   class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
   class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
@@ -34,7 +34,7 @@ program unit_test
 
   print*, 'initialization of mesh'
   
- m_log => new_logical_mesh_2d( &
+ m_log => new_cartesian_mesh_2d( &
        nc_eta1, &
        nc_eta2  &
    )

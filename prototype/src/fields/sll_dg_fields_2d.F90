@@ -11,7 +11,7 @@ module sll_dg_fields
 #include "sll_integration.h"
 #include "sll_utilities.h"
 #include "sll_assert.h"
-#include "sll_logical_meshes.h"
+#include "sll_cartesian_meshes.h"
 #include "sll_coordinate_transformations.h"
 
 implicit none
@@ -68,7 +68,7 @@ function new_dg_field_2d( degree, tau, init_function ) result (this)
    sll_int32                      :: nc_eta2
    type(sll_dg_field_2d), pointer :: this
    sll_int32                      :: error
-   class(sll_logical_mesh_2d), pointer :: lm
+   class(sll_cartesian_mesh_2d), pointer :: lm
    SLL_ALLOCATE(this, error)
    this%tau    => tau
    this%degree =  degree
@@ -79,7 +79,7 @@ function new_dg_field_2d( degree, tau, init_function ) result (this)
    this%xgalo  = gauss_lobatto_points(degree+1,-1._f64,1._f64)
    this%wgalo  = gauss_lobatto_weights(degree+1)
 
-   lm => this%tau%get_logical_mesh()
+   lm => this%tau%get_cartesian_mesh()
    nc_eta1 = lm%num_cells1
    nc_eta2 = lm%num_cells2
    SLL_CLEAR_ALLOCATE(this%array(1:degree+1,1:degree+1,1:nc_eta1,1:nc_eta2),error)
@@ -103,11 +103,11 @@ subroutine initialize_dg_field_2d( this, init_function, time)
    sll_real64           :: eta1
    sll_real64           :: eta2
    sll_int32            :: i, j, ii, jj
-   class(sll_logical_mesh_2d), pointer :: lm
+   class(sll_cartesian_mesh_2d), pointer :: lm
    
    SLL_ASSERT(associated(this%array))
 
-   lm => this%tau%get_logical_mesh()
+   lm => this%tau%get_cartesian_mesh()
 
    do j = 1, lm%num_cells2
    do i = 1, lm%num_cells1
@@ -165,7 +165,7 @@ subroutine plot_dg_field_2d_with_gnuplot( this, field_name )
    sll_real64             :: offset(2)
    sll_int32              :: i, j, ii, jj
    character(len=4)       :: ctag
-   class(sll_logical_mesh_2d), pointer :: lm
+   class(sll_cartesian_mesh_2d), pointer :: lm
 
    call int2string(this%tag, ctag)
 
@@ -183,7 +183,7 @@ subroutine plot_dg_field_2d_with_gnuplot( this, field_name )
 
    call sll_ascii_file_create(field_name//ctag//".dat", file_id, error)
 
-   lm => this%tau%get_logical_mesh()
+   lm => this%tau%get_cartesian_mesh()
 
    do j = 1, lm%num_cells2
    do i = 1, lm%num_cells1
@@ -261,14 +261,14 @@ subroutine plot_dg_field_2d_with_gmsh(this, field_name)
    sll_real64, allocatable, dimension(:)   :: values
    sll_real64 :: offset(2), eta1, eta2
    character(len=32) :: my_fmt
-   class(sll_logical_mesh_2d), pointer :: lm
+   class(sll_cartesian_mesh_2d), pointer :: lm
 
    if (this%degree > 3) then
       write(*,*) 'ordre non prévu'
       stop
    end if
 
-   lm => this%tau%get_logical_mesh()
+   lm => this%tau%get_cartesian_mesh()
 
    ni   = lm%num_cells1
    nj   = lm%num_cells2
@@ -369,7 +369,7 @@ subroutine plot_dg_field_2d_with_plotmtv(this, field_name)
    sll_int32              :: i, j, ii, jj
    sll_real64             :: offset(2)
    sll_real64             :: eta1, eta2
-   class(sll_logical_mesh_2d), pointer :: lm
+   class(sll_cartesian_mesh_2d), pointer :: lm
 
    call sll_ascii_file_create(field_name//".mtv", file_id, error)
 
@@ -378,7 +378,7 @@ subroutine plot_dg_field_2d_with_plotmtv(this, field_name)
    write(file_id,*)"%contfill"
    write(file_id,*)"%toplabel='"//field_name//"'"
 
-   lm => this%tau%get_logical_mesh()
+   lm => this%tau%get_cartesian_mesh()
 
    do j=1,lm%num_cells2
       offset(2) = lm%eta2_min+(j-1)*lm%delta_eta2
@@ -480,7 +480,7 @@ subroutine plot_dg_field_2d_with_xdmf(this, field_name, time)
    sll_int32                :: clength
    sll_real64, optional     :: time
 
-   class(sll_logical_mesh_2d), pointer :: lm
+   class(sll_cartesian_mesh_2d), pointer :: lm
 
    clength = len_trim(field_name)
 
@@ -497,7 +497,7 @@ subroutine plot_dg_field_2d_with_xdmf(this, field_name, time)
       write(file_id,"(a13,g15.3,a3)") "<Time Value='",time,"'/>"
    end if
 
-   lm => this%tau%get_logical_mesh()
+   lm => this%tau%get_cartesian_mesh()
 
    k = 0
    do i=1,lm%num_cells1

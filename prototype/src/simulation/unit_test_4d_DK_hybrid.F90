@@ -8,7 +8,7 @@ program DK_hybrid_4d
   use sll_simulation_4d_DK_hybrid_module
   use sll_collective
   use sll_constants
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_common_coordinate_transformations
   use sll_module_coordinate_transformations_2d
   implicit none
@@ -19,8 +19,8 @@ program DK_hybrid_4d
   character(len=256) :: filename
   character(len=256) :: filename_local
   type(sll_simulation_4d_DK_hybrid)  :: simulation
-  type(sll_logical_mesh_4d), pointer :: logical_mesh4d
-  type(sll_logical_mesh_2d), pointer :: logical_mesh2d
+  type(sll_cartesian_mesh_4d), pointer :: logical_mesh4d
+  type(sll_cartesian_mesh_2d), pointer :: logical_mesh2d
   class(sll_coordinate_transformation_2d_base), pointer :: transf_xy
 
   ! Parallelization initialization
@@ -36,14 +36,14 @@ program DK_hybrid_4d
 
   print*, 'get logical mesh 4d'
   !*** logical mesh for space coordinates ***
-  logical_mesh4D => new_logical_mesh_4d( &
+  logical_mesh4D => new_cartesian_mesh_4d( &
     simulation%nc_x1,simulation%nc_x2, &
     simulation%nc_x3,simulation%nc_x4,eta1_min=0.0_f64, &
     eta1_max=1._f64,eta2_min=0.0_f64,eta2_max=1._f64, &
     eta3_min=simulation%phi_min,eta3_max=simulation%phi_max, &
     eta4_min=simulation%vpar_min,eta4_max=simulation%vpar_max)
   
-  logical_mesh2d => new_logical_mesh_2d( &
+  logical_mesh2d => new_cartesian_mesh_2d( &
     simulation%nc_x1,simulation%nc_x2)
 
   !*** coordinate transformation associated with space coordinates ***

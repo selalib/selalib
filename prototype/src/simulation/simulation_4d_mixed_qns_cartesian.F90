@@ -18,7 +18,7 @@ module sll_simulation_4d_qns_mixed_module
   use sll_poisson_2d_periodic_cartesian_par
   use sll_module_cubic_spline_interpolator_1d
   use sll_simulation_base
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_parallel_array_initializer_module
   use sll_coordinate_transformation_2d_base_module
   use sll_gnuplot_parallel
@@ -55,8 +55,8 @@ module sll_simulation_4d_qns_mixed_module
      sll_int32  :: bc_bottom
      sll_int32  :: bc_top
      ! the logical meshes are split in two one for space, one for velocity
-     type(sll_logical_mesh_2d), pointer    :: mesh2d_x
-     type(sll_logical_mesh_2d), pointer    :: mesh2d_v
+     type(sll_cartesian_mesh_2d), pointer    :: mesh2d_x
+     type(sll_cartesian_mesh_2d), pointer    :: mesh2d_v
      ! This simulation only applies a coordinate transformation to the spatial
      ! coordinates.
      class(sll_coordinate_transformation_2d_base), pointer :: transfx
@@ -175,8 +175,8 @@ contains
    bc_top)
 
    type(sll_simulation_4d_qns_mixed), intent(inout)     :: sim
-   type(sll_logical_mesh_2d), pointer                    :: mesh2d_x
-   type(sll_logical_mesh_2d), pointer                    :: mesh2d_v
+   type(sll_cartesian_mesh_2d), pointer                    :: mesh2d_x
+   type(sll_cartesian_mesh_2d), pointer                    :: mesh2d_v
    class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
    procedure(sll_scalar_initializer_4d)                  :: init_func
    sll_real64, dimension(:), target                      :: params
@@ -2218,8 +2218,8 @@ end function func_zero
     partial, &
     rho )
 
-    type(sll_logical_mesh_2d), pointer     :: mx
-    type(sll_logical_mesh_2d), pointer     :: mv
+    type(sll_cartesian_mesh_2d), pointer     :: mx
+    type(sll_cartesian_mesh_2d), pointer     :: mv
     sll_int32, intent(in)                  :: numpts1
     sll_int32, intent(in)                  :: numpts2
     sll_real64, intent(in),  dimension(:,:,:,:) :: f       ! local distr. func
@@ -2380,7 +2380,7 @@ end function func_zero
        rho, &
        density_tot )
     class(sll_simulation_4d_qns_mixed)     :: sim
-    type(sll_logical_mesh_2d), pointer     :: mx
+    type(sll_cartesian_mesh_2d), pointer     :: mx
     sll_real64, intent(inout), dimension(:,:)     :: rho     ! local rho
     sll_real64, intent(out)              :: density_tot
     

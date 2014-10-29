@@ -14,7 +14,7 @@ module sll_simulation_4d_DK_hybrid_module
   use sll_collective
   use sll_remapper
   use sll_simulation_base
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_coordinate_transformation_2d_base_module
   use sll_module_coordinate_transformations_2d
   use sll_fdistribu4D_DK
@@ -93,7 +93,7 @@ module sll_simulation_4d_DK_hybrid_module
 
     !--> 4D logical mesh (eta1,eta2,eta3,vpar)
     sll_int32 :: Neta1, Neta2, Neta3, Nvpar
-    type(sll_logical_mesh_4d), pointer :: logical_mesh4d
+    type(sll_cartesian_mesh_4d), pointer :: logical_mesh4d
     sll_real64, dimension(:), pointer :: eta1_grid
     sll_real64, dimension(:), pointer :: eta2_grid
     sll_real64, dimension(:), pointer :: eta3_grid
@@ -229,7 +229,7 @@ contains
     type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
     sll_int32                        , intent(in)    :: world_size
     sll_int32                        , intent(in)    :: my_rank
-    type(sll_logical_mesh_4d)        , pointer       :: logical_mesh4d
+    type(sll_cartesian_mesh_4d)        , pointer       :: logical_mesh4d
     class(sll_coordinate_transformation_2d_base), pointer :: transf_xy
 
     sll_int32 :: ierr
@@ -1028,13 +1028,13 @@ contains
 
     type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 
-    class(sll_logical_mesh_2d), pointer :: logical_mesh2d
+    class(sll_cartesian_mesh_2d), pointer :: logical_mesh2d
     sll_int32 :: ierr
     sll_int32 :: loc3d_sz_x1, loc3d_sz_x2, loc3d_sz_x3
     sll_int32 :: nproc_x1
     sll_int32 :: nproc_x2
     sll_int32 :: nproc_x3
-    type(sll_logical_mesh_1d), pointer :: logical_mesh1d
+    type(sll_cartesian_mesh_1d), pointer :: logical_mesh1d
 
     ! layout for sequential operations in (x1,x2) 
     sim%power2 = int(log(real(sim%world_size))/log(2.0))
@@ -1104,7 +1104,7 @@ contains
     SLL_ALLOCATE(sim%E3d_x2_seqx1x2(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
     
     !---->
-    logical_mesh2d => sim%transf_xy%get_logical_mesh()
+    logical_mesh2d => sim%transf_xy%get_cartesian_mesh()
 
     !---> For iterpolations of Phi
     call sim%interp2d_Phi_eta1eta2%initialize( &
@@ -1253,7 +1253,7 @@ contains
       sim%bc_left_eta2, &
       sim%bc_right_eta2)
     !-----> phi1D in the direction eta3
-    logical_mesh1d => new_logical_mesh_1d( &
+    logical_mesh1d => new_cartesian_mesh_1d( &
       sim%nc_x3,eta_min=sim%phi_min,eta_max=sim%phi_max)
     sim%phi1d => new_scalar_field_1d_discrete_alt( &
          "phi1d_seqx3", &
@@ -1296,7 +1296,7 @@ contains
     sll_real64, dimension(:,:), pointer :: B1
     sll_real64, dimension(:,:), pointer :: B2
     sll_real64, dimension(:,:), pointer :: C
-    class(sll_logical_mesh_2d), pointer :: logical_mesh2d
+    class(sll_cartesian_mesh_2d), pointer :: logical_mesh2d
 
     Neta1 = sim%Neta1
     Neta2 = sim%Neta2
@@ -1400,7 +1400,7 @@ contains
     call sim%QN_C%update_interpolation_coefficients( )
 
     !---> Initialization of the QNS type
-    logical_mesh2d => sim%transf_xy%get_logical_mesh()
+    logical_mesh2d => sim%transf_xy%get_cartesian_mesh()
 
     sim%QNS => new_general_elliptic_solver( &
       sim%spline_degree_eta1, & 

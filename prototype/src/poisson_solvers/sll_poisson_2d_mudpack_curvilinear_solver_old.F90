@@ -498,7 +498,7 @@ contains
     sll_int32  :: error
     sll_int32  :: intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny
     sll_int32  :: iguess,maxcy,method,nwork,lwrkqd,itero
-    class(sll_logical_mesh_2d), pointer :: mesh
+    class(sll_cartesian_mesh_2d), pointer :: mesh
 
     common/itmud2sp/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
               iguess,maxcy,method,nwork,lwrkqd,itero
@@ -521,7 +521,7 @@ contains
     intl = 1
     !write(*,106) intl,method,iguess
 
-    mesh => poisson%transformation%get_logical_mesh()
+    mesh => poisson%transformation%get_cartesian_mesh()
     Nc_eta1    = mesh%num_cells1
     Nc_eta2    = mesh%num_cells2
     eta1_min   = mesh%eta1_min
