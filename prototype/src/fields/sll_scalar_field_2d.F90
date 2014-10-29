@@ -14,7 +14,6 @@ module sll_scalar_field_2d
   private
 
   type, public :: scalar_field_2d
-     !class(sll_mapped_mesh_2d_base), pointer  :: mesh
      class(sll_coordinate_transformation_2d_base), pointer :: transf
      class(sll_interpolator_1d_base), pointer :: eta1_interpolator
      class(sll_interpolator_1d_base), pointer :: eta2_interpolator
