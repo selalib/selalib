@@ -13,7 +13,6 @@ program unit_test
   sll_int32 :: nc_eta1, nc_eta2
   type(sll_cartesian_mesh_2d), pointer :: mesh2d
   class(sll_coordinate_transformation_2d_base), pointer   :: pm2d
-  class(sll_mapped_mesh_1d_base), pointer      :: pm1d
   class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
   class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
   type(hamiltonian_advection_field_2d)         :: adv_field
