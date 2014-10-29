@@ -21,7 +21,8 @@ SET(SLL_MACROS
     ${SLL_DIR}/fields/sll_field_1d.h
     ${SLL_DIR}/fields/sll_field_2d.h
     ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.h
-    ${SLL_DIR}/logical_meshes/sll_logical_meshes.h
+    ${SLL_DIR}/meshes/sll_meshes.h
+    ${SLL_DIR}/meshes/sll_cartesian_meshes.h
     ${SLL_DIR}/fields/sll_fields.h
     ${SLL_DIR}/mapped_meshes/sll_mapped_meshes.h
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations.h
@@ -130,7 +131,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/sparse_matrix_manager/spm_tools.F90
     ${SLL_DIR}/time_solvers/sll_time_splitting_coeff.F90
     ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.F90
-    ${SLL_DIR}/logical_meshes/sll_logical_meshes.F90
+    ${SLL_DIR}/meshes/sll_meshes.F90
     ${SLL_DIR}/fields/scalar_field_initializer_base.F90
 #    ${SLL_DIR}/fields/sll_scalar_field_2d_base.F90
     ${SLL_DIR}/fields/sll_scalar_field_2d.F90
@@ -141,7 +142,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d_nurbs.F90	
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformation_2d_base.F90	
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d.F90
-    ${SLL_DIR}/logical_meshes_multipatch/sll_logical_meshes_multipatch.F90
+    ${SLL_DIR}/meshes_multipatch/sll_meshes_multipatch.F90
     ${SLL_DIR}/coordinate_transformations_multipatch/sll_coordinate_transformation_multipatch.F90
     ${SLL_DIR}/fields_multipatch/sll_scalar_field_2d_multipatch.F90
     ${SLL_DIR}/sparse_matrix_manager/sll_sparse_matrix_mp_module.F90

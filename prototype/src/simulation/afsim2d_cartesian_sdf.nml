@@ -5,11 +5,11 @@
 
 
 &geometry
-  mesh_case_x1="SLL_LOGICAL_MESH"
+  mesh_case_x1="SLL_CARTESIAN_MESH"
   num_cells_x1 = 64
   x1_min = -3.1415926535897932385
   x1_max = 3.1415926535897932385
-  mesh_case_x2="SLL_LOGICAL_MESH"
+  mesh_case_x2="SLL_CARTESIAN_MESH"
   num_cells_x2 = 64
   x2_min = -3.1415926535897932385
   x2_max = 3.1415926535897932385

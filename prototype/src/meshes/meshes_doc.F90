@@ -5,19 +5,19 @@
 ! in file Doxyfile.in (line 691) if it is excluded. 
 ! Type 'make doc' in build directory.
 ! To check the results, open : 
-! selalib/prototype/documentation/build/html/doxygen/html/defgroup logical_meshess.html 
+! selalib/prototype/documentation/build/html/doxygen/html/
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup logical_meshes sll_cartesian_meshes 
+!> @defgroup meshes sll_meshes 
 !> @brief 
 !> Logical mesh basic types
 !> @author Edwin Chacon-Golcher
 !> @details
 !>
 !> <b> How to use it </b>
-!> - Link with   <code>-lsll_cartesian_meshes</code>
-!> - Add <code> use sll_cartesian_meshes </code>
+!> - Link with   <code>-lsll_meshes</code>
+!> - Add <code> use sll_meshes </code>
 !>
 !> <b> Examples </b>
-!> @snippet logical_meshes/unit_test.F90 example
+!> @snippet meshes/unit_test.F90 example

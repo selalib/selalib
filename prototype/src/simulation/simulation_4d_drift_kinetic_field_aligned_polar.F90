@@ -148,7 +148,7 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
      sll_real64 :: eps_perturb   
 
      !--> 4D logical mesh (r,theta,phi,vpar)
-     !type(sll_cartesian_mesh_4d), pointer :: logical_mesh4d
+     !type(sll_cartesian_mesh_4d), pointer :: cartesian_mesh4d
 
 
      !--> Density and temperature profiles
