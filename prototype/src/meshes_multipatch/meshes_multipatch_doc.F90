@@ -5,17 +5,17 @@
 ! in file Doxyfile.in (line 691) if it is excluded. 
 ! Type 'make doc' in build directory.
 ! To check the results, open : 
-! selalib/prototype/documentation/build/html/doxygen/html/defgroup logical_meshes_multipatchs.html 
+! selalib/prototype/documentation/build/html/doxygen/html/defgroup meshes_multipatchs.html 
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup logical_meshes_multipatch sll_cartesian_meshes_multipatch 
+!> @defgroup meshes_multipatch sll_cartesian_meshes_multipatch 
 !> @brief 
-!> Description of logical_meshes_multipatch library (72 characters)
+!> Description of meshes_multipatch library (72 characters)
 !> @author Selalib team 
 !> You can add a contact, do not put your email to prevent spam.
 !> @details
-!> Long description of  logical_meshes_multipatch, you can add some references or math equations.
+!> Long description of  meshes_multipatch, you can add some references or math equations.
 !>
 !> <b> Headers file available </b>
 !>  - sll_cartesian_meshes_multipatch.h

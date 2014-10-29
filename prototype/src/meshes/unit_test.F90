@@ -1,5 +1,5 @@
 !> @internal [example]
-program unit_test_logical_meshes
+program unit_test_meshes
 #include "sll_working_precision.h"
   use sll_cartesian_meshes
   implicit none
@@ -54,5 +54,5 @@ program unit_test_logical_meshes
 
   print *, 'PASSED'
 
-end program unit_test_logical_meshes
+end program unit_test_meshes
 !> @internal [example]

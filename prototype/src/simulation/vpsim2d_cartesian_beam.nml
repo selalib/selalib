@@ -3,11 +3,11 @@
 
 
 &geometry
-  mesh_case_x1 = "SLL_LOGICAL_MESH"
+  mesh_case_x1 = "SLL_CARTESIAN_MESH"
   num_cells_x1 = 128
   x1_min = -4.0
   x1_max = 4.0
-  mesh_case_x2 = "SLL_LOGICAL_MESH"
+  mesh_case_x2 = "SLL_CARTESIAN_MESH"
   num_cells_x2 = 128
   x2_min = -4.0
   x2_max = 4.0

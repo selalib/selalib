@@ -7,7 +7,7 @@
      sll_remap
      sll_parallel_array_initializers
      sll_timer
-     sll_logical_meshes_multipatch
+     sll_meshes_multipatch
      sll_memory)
 
    ADD_EXECUTABLE(test_distribution_function_4d_multipatch unit_test.F90)
