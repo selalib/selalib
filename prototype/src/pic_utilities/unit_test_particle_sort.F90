@@ -5,7 +5,7 @@ program particle_sorter
 #include "particle_representation.h"
   
   use sll_constants, only: sll_pi
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_particle_sort_module
   use sll_particle_group_4d_module
   use gaussian
@@ -25,7 +25,7 @@ program particle_sorter
 
 
   type(sll_particle_group_4d), pointer  :: group
-  type(sll_logical_mesh_2d), pointer    :: m
+  type(sll_cartesian_mesh_2d), pointer    :: m
   type(sll_particle_sorter_2d), pointer :: sorter
 !  sll_int32  :: i
   sll_real64 :: x, y, vx, vy, nu, xmin, ymin, rdx, rdy
@@ -34,7 +34,7 @@ program particle_sorter
   sll_int32  :: ncx, ic_x,ic_y
   sll_real64 :: tmp1, tmp2
 
-  m => new_logical_mesh_2d( NC_X, NC_Y, XMIN, XMAX, YMIN, YMAX )
+  m => new_cartesian_mesh_2d( NC_X, NC_Y, XMIN, XMAX, YMIN, YMAX )
 
   group => new_particle_4d_group( int(num_particles,i32),  &
        int(num_particles,i32), int(num_particles/4,i32), QoverM, m )

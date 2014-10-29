@@ -10,7 +10,7 @@ program unit_test
   use sll_csl
   !use sll_module_mapped_meshes_2d_cartesian
   use sll_common_coordinate_transformations
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_module_coordinate_transformations_2d
   use sll_gaussian_2d_initializer
   use sll_module_cubic_spline_interpolator_1d
@@ -23,7 +23,7 @@ program unit_test
   sll_real64 :: eta1_min, eta1_max,  eta2_min, eta2_max
   procedure(scalar_function_2D), pointer :: x1_coarse, x1_fine, x2_coarse, x2_fine, jac_coarse, jac_fine
   !class(sll_mapped_mesh_2d_base), pointer   :: m
-  type(sll_logical_mesh_2d), pointer :: mesh_c, mesh_f
+  type(sll_cartesian_mesh_2d), pointer :: mesh_c, mesh_f
   class(sll_coordinate_transformation_2d_base), pointer   :: m
   class(scalar_field_2d_initializer_base), pointer    :: p_init_f
   class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
@@ -51,7 +51,7 @@ program unit_test
   nc_eta2_coarse = 100
   
   
-  mesh_c => new_logical_mesh_2d( &
+  mesh_c => new_cartesian_mesh_2d( &
        nc_eta1_coarse, &
        nc_eta2_coarse,  &
        eta1_min,       &

@@ -2,7 +2,7 @@ program test_finite_elements_solver
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
   use sll_module_scalar_field_2d_alternative
@@ -28,7 +28,7 @@ program test_finite_elements_solver
 #define ETA2MAX  1.0_f64
 #define PRINT_COMPARISON .false.
 
-  type(sll_logical_mesh_2d), pointer                    :: mesh_2d
+  type(sll_cartesian_mesh_2d), pointer                    :: mesh_2d
   class(sll_coordinate_transformation_2d_base), pointer :: T
   type(finite_elements_solver)                          :: es
   type(sll_arbitrary_degree_spline_interpolator_2d), target :: interp_2d
@@ -118,7 +118,7 @@ program test_finite_elements_solver
 
 !   ! First thing, initialize the logical mesh associated with this problem. 
 
-!   mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
+!   mesh_2d => new_cartesian_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
 !        ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
 
 !   ! Second, initialize the coordinate transformation associated with this 
@@ -393,7 +393,7 @@ program test_finite_elements_solver
   values(:,:) = 0.0_f64
   
   ! First thing, initialize the logical mesh associated with this problem.    
-  mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
+  mesh_2d => new_cartesian_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
        ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
   
   ! Second, initialize the coordinate transformation associated with this 
@@ -655,7 +655,7 @@ program test_finite_elements_solver
   values(:,:) = 0.0_f64
 
   ! First thing, initialize the logical mesh associated with this problem.        
-  mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
+  mesh_2d => new_cartesian_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
        ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
   
   ! Second, initialize the coordinate transformation associated with this 
@@ -924,7 +924,7 @@ program test_finite_elements_solver
   values(:,:) = 0.0_f64
   
   ! First thing, initialize the logical mesh associated with this problem.        
-  mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
+  mesh_2d => new_cartesian_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
        ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
   
   ! Second, initialize the coordinate transformation associated with this 

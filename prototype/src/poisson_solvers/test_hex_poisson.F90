@@ -21,7 +21,7 @@ program test_hex_poisson
   sll_real64                              :: erreur1, erreur2, erreur3
   sll_real64                              :: t_init,t_inter, t_end, residu
 
-  num_cells = 80
+  num_cells = 40
 
 
   n_points  = 1 + 3 * num_cells * (num_cells + 1) 

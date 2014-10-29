@@ -8,12 +8,12 @@ program dk_cartesian_4d
   use sll_simulation_4d_drift_kinetic_cartesian_finite_volume
   use sll_collective
   use sll_constants
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_common_array_initializers_module
   implicit none
 
   type(sll_simulation_4d_drift_kinetic_cart_finite_volume)      :: simulation
-  type(sll_logical_mesh_4d), pointer      :: mx
+  type(sll_cartesian_mesh_4d), pointer      :: mx
   sll_real64, dimension(1:2) :: landau_params
 
   print *, 'Booting parallel environment...'
@@ -45,7 +45,7 @@ program dk_cartesian_4d
 #define NCELL4 8
 
   ! logical mesh for space coordinates
-  mx => new_logical_mesh_4d( NCELL1, NCELL2,NCELL3, NCELL4 , &
+  mx => new_cartesian_mesh_4d( NCELL1, NCELL2,NCELL3, NCELL4 , &
        eta1_min=-6.0_f64, eta1_max=6.0_f64,eta2_min=0.0_f64,eta2_max=1.0_f64)
 
 

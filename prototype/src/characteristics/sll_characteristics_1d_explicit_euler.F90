@@ -22,8 +22,9 @@ module sll_module_characteristics_1d_explicit_euler
 use sll_boundary_condition_descriptors
 use sll_module_characteristics_1d_base
 implicit none
+private
 
-  type,extends(sll_characteristics_1d_base) :: explicit_euler_1d_charac_computer
+  type,public,extends(sll_characteristics_1d_base) :: explicit_euler_1d_charac_computer
     sll_int32                               :: Npts
     sll_real64                              :: eta_min   
     sll_real64                              :: eta_max  
@@ -36,6 +37,9 @@ implicit none
     procedure, pass(charac) :: compute_characteristics => &
       compute_explicit_euler_1d_charac
   end type explicit_euler_1d_charac_computer
+
+
+public :: new_explicit_euler_1d_charac
 
 contains
   function new_explicit_euler_1d_charac(&
