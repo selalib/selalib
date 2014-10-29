@@ -11,7 +11,7 @@ program test_maxwell_2d_diga_wave
 #include "sll_constants.h"
 #include "sll_maxwell_solvers_macros.h"
 #include "sll_file_io.h"
-#include "sll_logical_meshes.h"
+#include "sll_cartesian_meshes.h"
 #include "sll_coordinate_transformations.h"
 
     use sll_dg_fields
@@ -33,7 +33,7 @@ program test_maxwell_2d_diga_wave
     sll_real64 :: eta2_max, eta2_min
     sll_real64 :: delta_eta1, delta_eta2
 
-    type(sll_logical_mesh_2d), pointer :: mesh
+    type(sll_cartesian_mesh_2d), pointer :: mesh
     class(sll_coordinate_transformation_2d_base), pointer :: tau
 
     type(sll_maxwell_2d_diga)   :: maxwell_TE
@@ -51,7 +51,7 @@ program test_maxwell_2d_diga_wave
     !init functions
     sll_real64, external :: gaussian
 
-    mesh => new_logical_mesh_2d(nc_eta1, nc_eta2, &
+    mesh => new_cartesian_mesh_2d(nc_eta1, nc_eta2, &
         eta1_min=-5._f64, eta1_max=5._f64, &
         eta2_min=-5._f64, eta2_max=5._f64)
 

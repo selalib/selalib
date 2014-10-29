@@ -27,11 +27,11 @@ contains
     real(8),intent(in) :: u,v
     real(8),intent(out) :: x,y
     real(8) :: eta1, eta2
-    class(sll_logical_mesh_2d), pointer :: mesh
+    class(sll_cartesian_mesh_2d), pointer :: mesh
 
     !x=(1+u)*(1+v)*cos(pi*v)
     !y=(1+u)*sin(pi*v)
-    mesh => tau%get_logical_mesh()
+    mesh => tau%get_cartesian_mesh()
     
     eta1 = mesh%eta1_min + u * (mesh%eta1_max -mesh%eta1_min)
     eta2 = mesh%eta2_min + v * (mesh%eta2_max -mesh%eta2_min)

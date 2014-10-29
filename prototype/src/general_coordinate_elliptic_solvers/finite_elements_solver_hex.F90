@@ -28,7 +28,7 @@ module finite_elements_solver_module
   use gauss_lobatto_integration
   use sll_timer 
   use sll_sparse_matrix_module
-  use sll_logical_meshes
+  use sll_cartesian_meshes
 
   implicit none
 
