@@ -150,9 +150,6 @@ ENDIF(PYTHON3_FOUND)
 
 ADD_TEST(NAME electric_field_accumulators COMMAND test_e_field_accumulator_2d)
 
-ADD_TEST(NAME mapped_meshes COMMAND test_mapped_meshes_1d
-				    test_mapped_meshes_2d)
-
 ADD_TEST(NAME ode_solvers COMMAND test_implicit_ode_nonuniform)
 
 ADD_TEST(NAME BSL COMMAND bsl_1d_cubic_uniform_periodic
