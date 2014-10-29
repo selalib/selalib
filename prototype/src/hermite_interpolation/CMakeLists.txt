@@ -68,3 +68,16 @@ TARGET_LINK_LIBRARIES( test_hex_center_guide
 		       hex_poisson
 		       sll_constants )
 		    
+# sixth executable
+
+ADD_EXECUTABLE( sim2d_gc_splines_hex 
+                simulation_2d_guiding_center_hexagonal.F90 
+                euler_2d_hex.F90
+		../poisson_solvers/pivotbande.F90 )
+
+TARGET_LINK_LIBRARIES( sim2d_gc_splines_hex 
+                       sll_box_splines
+		       sll_hex_meshes 
+		       hex_poisson
+		       sll_constants )
+		    
