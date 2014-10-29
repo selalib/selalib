@@ -1,4 +1,4 @@
-program unit_test_logical_meshes_multipatch
+program unit_test_meshes_multipatch
   use sll_cartesian_meshes_multipatch
 #include "sll_working_precision.h"
   implicit none
@@ -28,4 +28,4 @@ program unit_test_logical_meshes_multipatch
 
   print *, 'PASSED'
 
-end program unit_test_logical_meshes_multipatch
+end program unit_test_meshes_multipatch

@@ -3,7 +3,7 @@
   num_cells_x1 = 256
   x1_min = 0.0
   nbox_x1 = 1
-  mesh_case_x2 = "SLL_LOGICAL_MESH"
+  mesh_case_x2 = "SLL_CARTESIAN_MESH"
   num_cells_x2 = 1024
   x2_min = -6.0
   x2_max = 6.0

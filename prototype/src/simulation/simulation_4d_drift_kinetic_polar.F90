@@ -132,7 +132,7 @@ module sll_simulation_4d_drift_kinetic_polar_module
      sll_real64 :: eps_perturb   
 
      !--> 4D logical mesh (r,theta,phi,vpar)
-     !type(sll_cartesian_mesh_4d), pointer :: logical_mesh4d
+     !type(sll_cartesian_mesh_4d), pointer :: cartesian_mesh4d
 
 
      !--> Density and temperature profiles
@@ -1667,7 +1667,7 @@ contains
   subroutine allocate_QN_DK( sim )
     class(sll_simulation_4d_drift_kinetic_polar), intent(inout) :: sim
 
-    !type(sll_cartesian_mesh_2d), pointer :: logical_mesh2d
+    !type(sll_cartesian_mesh_2d), pointer :: cartesian_mesh2d
     sll_int32 :: ierr, itemp
     !sll_int32 :: i1, i2, i3, i4
     !sll_int32 :: iloc1, iloc2, iloc3, iloc4

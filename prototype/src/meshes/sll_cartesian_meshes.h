@@ -1,5 +1,5 @@
-#ifndef _SLL_LOGICAL_MESHES
-#define _SLL_LOGICAL_MESHES
+#ifndef _SLL_CARTESIAN_MESHES
+#define _SLL_CARTESIAN_MESHES
 
 !**************************************************************
 !  Copyright INRIA
@@ -18,7 +18,8 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-use sll_logical_meshes
+use sll_meshes_base
+use sll_cartesian_meshes
 
 #endif
 

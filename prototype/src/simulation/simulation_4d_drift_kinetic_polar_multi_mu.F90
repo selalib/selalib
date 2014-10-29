@@ -145,7 +145,7 @@ module sll_simulation_4d_drift_kinetic_polar_multi_mu_module
      sll_int32  :: delta_f_method
 
      !--> 4D logical mesh (r,theta,phi,vpar)
-     !type(sll_cartesian_mesh_4d), pointer :: logical_mesh4d
+     !type(sll_cartesian_mesh_4d), pointer :: cartesian_mesh4d
 
 
      !--> Density and temperature profiles
@@ -1966,7 +1966,7 @@ subroutine gyroaverage_phi_dk( sim )
   subroutine allocate_QN_DK( sim )
     class(sll_simulation_4d_drift_kinetic_polar_multi_mu), intent(inout) :: sim
 
-    !type(sll_cartesian_mesh_2d), pointer :: logical_mesh2d
+    !type(sll_cartesian_mesh_2d), pointer :: cartesian_mesh2d
     sll_int32 :: ierr, itemp
     !sll_int32 :: i1, i2, i3, i4
     !sll_int32 :: iloc1, iloc2, iloc3, iloc4

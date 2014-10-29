@@ -11,7 +11,7 @@ module sll_dg_fields
 #include "sll_integration.h"
 #include "sll_utilities.h"
 #include "sll_assert.h"
-#include "sll_cartesian_meshes.h"
+#include "sll_meshes.h"
 #include "sll_coordinate_transformations.h"
 
 implicit none

@@ -35,7 +35,7 @@
      sll_general_coordinate_elliptic_solvers_multipatch
      sll_interpolators
      sll_coordinate_transformations
-     sll_logical_meshes
+     sll_meshes
      sll_boundary_condition_descriptors
      sll_file_io
      sll_constants
@@ -92,7 +92,7 @@
 #     sll_scalar_field_2d_alternative
 #     sll_interpolators
 #     sll_coordinate_transformations
-#     sll_logical_meshes
+#     sll_meshes
 #     sll_boundary_condition_descriptors
 #     sll_file_io
 #     sll_integration
