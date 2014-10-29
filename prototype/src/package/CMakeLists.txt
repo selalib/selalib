@@ -131,7 +131,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/sparse_matrix_manager/spm_tools.F90
     ${SLL_DIR}/time_solvers/sll_time_splitting_coeff.F90
     ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.F90
-    ${SLL_DIR}/meshes/sll_meshes.F90
+    ${SLL_DIR}/meshes/sll_meshes_base.F90
+    ${SLL_DIR}/meshes/sll_cartesian_meshes.F90
     ${SLL_DIR}/fields/scalar_field_initializer_base.F90
 #    ${SLL_DIR}/fields/sll_scalar_field_2d_base.F90
     ${SLL_DIR}/fields/sll_scalar_field_2d.F90
