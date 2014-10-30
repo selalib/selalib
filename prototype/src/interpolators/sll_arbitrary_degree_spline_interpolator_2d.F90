@@ -29,13 +29,14 @@ use sll_module_interpolators_2d_base
 use sll_module_arbitrary_degree_spline_interpolator_1d
 use sll_module_deboor_splines_2d
 
-integer, parameter :: N = 1
-integer, parameter :: S = 1
-integer, parameter :: E = 1
-integer, parameter :: W = 1
-
 implicit none
 private
+
+integer, parameter :: N = 1
+integer, parameter :: E = 2
+integer, parameter :: S = 3
+integer, parameter :: W = 4
+
 
 ! in what follows, the direction '1' is in the contiguous memory direction.
 !> Arbitrary degree version of 2d irnterpolator
@@ -50,7 +51,10 @@ type, public, extends(sll_interpolator_2d_base) :: &
    sll_int32,  public          :: size_coeffs1      !< PLEASE ADD DOCUMENTATION
    sll_int32,  public          :: size_coeffs2      !< PLEASE ADD DOCUMENTATION
 
-   sll_real64 :: eta(4)             !< PLEASE ADD DOCUMENTATION
+   sll_real64 :: eta1_min           !< PLEASE ADD DOCUMENTATION
+   sll_real64 :: eta1_max           !< PLEASE ADD DOCUMENTATION
+   sll_real64 :: eta2_min           !< PLEASE ADD DOCUMENTATION
+   sll_real64 :: eta2_max           !< PLEASE ADD DOCUMENTATION
    sll_int32  :: bc(4)              !< PLEASE ADD DOCUMENTATION
    sll_int32  :: spline_degree1     !< PLEASE ADD DOCUMENTATION
    sll_int32  :: spline_degree2     !< PLEASE ADD DOCUMENTATION
@@ -66,8 +70,8 @@ type, public, extends(sll_interpolator_2d_base) :: &
    ! table contains the coeff spline of the function in boundary 
    ! in the case of dirichlet boundary condition non homogene 
 
-   sll_real64, pointer :: slopes(:,:)       !< PLEASE ADD DOCUMENTATION
-   sll_real64, pointer :: values(:,:)       !< PLEASE ADD DOCUMENTATION
+   sll_real64, pointer :: slope(:,:)       !< PLEASE ADD DOCUMENTATION
+   sll_real64, pointer :: value(:,:)       !< PLEASE ADD DOCUMENTATION
 
    logical, dimension(4) :: compute_slope = .TRUE. !< PLEASE ADD DOCUMENTATION
    logical, dimension(4) :: compute_value = .TRUE. !< PLEASE ADD DOCUMENTATION
@@ -134,14 +138,8 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
   SLL_DEALLOCATE(interpolator%t1,ierr)
   SLL_DEALLOCATE(interpolator%t2,ierr)
   SLL_DEALLOCATE(interpolator%coeff_splines,ierr)
-  SLL_DEALLOCATE(interpolator%value_left,ierr)
-  SLL_DEALLOCATE(interpolator%value_right,ierr)
-  SLL_DEALLOCATE(interpolator%value_bottom,ierr)
-  SLL_DEALLOCATE(interpolator%value_top,ierr)
-  SLL_DEALLOCATE(interpolator%slope_left,ierr)
-  SLL_DEALLOCATE(interpolator%slope_right,ierr)
-  SLL_DEALLOCATE(interpolator%slope_bottom,ierr)
-  SLL_DEALLOCATE(interpolator%slope_top,ierr)
+  SLL_DEALLOCATE(interpolator%value,ierr)
+  SLL_DEALLOCATE(interpolator%slope,ierr)
 end subroutine delete_arbitrary_degree_2d_interpolator
 
 !> @brief Initialization of a pointer interpolator arbitrary degree splines 2d.
@@ -302,23 +300,16 @@ subroutine initialize_ad2d_interpolator( &
   interpolator%eta1_max       = eta1_max
   interpolator%eta2_min       = eta2_min
   interpolator%eta2_max       = eta2_max
-  interpolator%bc_left        = bc_left
-  interpolator%bc_right       = bc_right
-  interpolator%bc_bottom      = bc_bottom
-  interpolator%bc_top         = bc_top
+  interpolator%bc(W)          = bc_left
+  interpolator%bc(E)          = bc_right
+  interpolator%bc(S)          = bc_bottom
+  interpolator%bc(N)          = bc_top
   interpolator%bc_selector    = bc_selector
   interpolator%num_pts1       = num_pts1
   interpolator%num_pts2       = num_pts2
 
-  SLL_CLEAR_ALLOCATE(interpolator%value_left  (1:num_pts2),  ierr)
-  SLL_CLEAR_ALLOCATE(interpolator%value_right (1:num_pts2),  ierr)
-  SLL_CLEAR_ALLOCATE(interpolator%value_bottom(1:num_pts1+2),ierr)
-  SLL_CLEAR_ALLOCATE(interpolator%value_top   (1:num_pts1+2),ierr)
-
-  SLL_CLEAR_ALLOCATE(interpolator%slope_left  (1:num_pts2),  ierr)
-  SLL_CLEAR_ALLOCATE(interpolator%slope_right (1:num_pts2),  ierr)
-  SLL_CLEAR_ALLOCATE(interpolator%slope_bottom(1:num_pts1+2),ierr)
-  SLL_CLEAR_ALLOCATE(interpolator%slope_top   (1:num_pts1+2),ierr)
+  SLL_CLEAR_ALLOCATE(interpolator%value(1:num_pts2,4),  ierr)
+  SLL_CLEAR_ALLOCATE(interpolator%slope(1:num_pts2,4),  ierr)
 
   select case (bc_selector)
 
@@ -469,53 +460,39 @@ subroutine set_slope2d( interpolator,  &
   num_pts1     = interpolator%num_pts1
   num_pts2     = interpolator%num_pts2
   bc_selector  = interpolator%bc_selector
-  bc_left      = interpolator%bc_left 
-  bc_right     = interpolator%bc_right 
-  bc_bottom    = interpolator%bc_bottom  
-  bc_top       = interpolator%bc_top
+  bc_left      = interpolator%bc(W) 
+  bc_right     = interpolator%bc(E)
+  bc_bottom    = interpolator%bc(S)
+  bc_top       = interpolator%bc(N)
 
-    select case (bc_selector)
-    case(0)
-    case (9) ! dirichlet-left, dirichlet-right, periodic
-    case (576) ! 3. periodic, dirichlet-bottom, dirichlet-top
-    case (585) ! 4. dirichlet in all sides
-    case (650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet
-       !if ( present( slope_left)) then 
-       interpolator%slope_left = 0.0
-       interpolator%compute_slope_left= .FALSE.
-       !end if
-       if ( present( slope_right)) then 
-          interpolator%slope_right = slope_right
-          interpolator%compute_slope_right= .FALSE.
-       end if
+  select case (bc_selector)
+  case (650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet
+    interpolator%slope(:,W) = 0.0
+    interpolator%compute_slope(W)= .FALSE.
+    if ( present(slope_right)) then 
+      interpolator%slope(:,E) = slope_right
+      interpolator%compute_slope(E)= .FALSE.
+    end if
 
-       interpolator%slope_bottom = 0.0_f64
-       interpolator%compute_slope_bottom= .FALSE.
-       
+    interpolator%slope(:,S) = 0.0_f64
+    interpolator%compute_slope(S)= .FALSE.
 
-       if ( present( slope_top)) then 
-          interpolator%compute_slope_top= .FALSE.
-
+    if ( present(slope_top)) then 
+      interpolator%compute_slope(N)= .FALSE.
           
-          sz_slope_top = size(slope_top)
-          if ( sz_slope_top .ne. interpolator%num_pts1 ) then 
-             print*, ' problem in the initialization of arb_deg_spline 2d'
-             print*, ' slope_top must have the size of numbers of pts in direction 1 '
-             stop
-          end if
+      SLL_ASSERT(size(slope_top) == interpolator%num_pts1 ) 
           
-          interp1d_top => new_arbitrary_degree_1d_interpolator(&
+      interp1d_top => new_arbitrary_degree_1d_interpolator(&
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
-               interpolator%bc_left, &
-               interpolator%bc_right, &
+               interpolator%bc(W), &
+               interpolator%bc(E), &
                interpolator%spline_degree1 )
           
-          call interp1d_top%compute_interpolants(&
-               slope_top(1:sz_slope_top))
+      call interp1d_top%compute_interpolants(slope_top)
           
-          interpolator%slope_top(1:sz_slope_top+2) = &
+          interpolator%slope(1:sz_slope_top+2,N) = &
                interp1d_top%coeff_splines(1:sz_slope_top+2)
           call sll_delete(interp1d_top)
        else
@@ -523,20 +500,20 @@ subroutine set_slope2d( interpolator,  &
        end if
     case(657) !left: Dirichlet, right: Neumann, bottom: Neumann, Top: Dirichlet 
        if ( present( slope_left)) then 
-          interpolator%slope_left = slope_left
-          interpolator%compute_slope_left= .FALSE.
+          interpolator%slope(:,W) = slope_left
+          interpolator%compute_slope(W)= .FALSE.
        end if
        
        
        sz_slope_bottom = size(slope_bottom)
-       interpolator%slope_right = 0.0_f64
-       interpolator%compute_slope_right= .FALSE.
+       interpolator%slope(:,E) = 0.0_f64
+       interpolator%compute_slope(E)= .FALSE.
        
-       interpolator%slope_bottom(1:sz_slope_bottom+2) = 0.0_f64
-       interpolator%compute_slope_bottom = .FALSE.
+       interpolator%slope(1:sz_slope_bottom+2,S) = 0.0_f64
+       interpolator%compute_slope(S) = .FALSE.
 
        if ( present( slope_top)) then 
-          interpolator%compute_slope_top= .FALSE.
+          interpolator%compute_slope(N)= .FALSE.
 
 
           sz_slope_top = size(slope_top)
@@ -550,14 +527,14 @@ subroutine set_slope2d( interpolator,  &
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
-               interpolator%bc_left, &
-               interpolator%bc_right, &
+               interpolator%bc(W), &
+               interpolator%bc(E), &
                interpolator%spline_degree1 )
           
           call interp1d_top%compute_interpolants(&
                slope_top(1:sz_slope_top))
           
-          interpolator%slope_top(1:sz_slope_top+2) = &
+          interpolator%slope(1:sz_slope_top+2,N) = &
                interp1d_top%coeff_splines(1:sz_slope_top+2)
           call sll_delete(interp1d_top)
        else
@@ -566,12 +543,12 @@ subroutine set_slope2d( interpolator,  &
 
     case(780)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Dirichlet
        if ( present( slope_left)) then 
-          interpolator%slope_left = slope_left
-          interpolator%compute_slope_left= .FALSE.
+          interpolator%slope(:,W) = slope_left
+          interpolator%compute_slope(W)= .FALSE.
        end if
         if ( present( slope_right)) then 
-          interpolator%slope_right = slope_right
-          interpolator%compute_slope_right= .FALSE.
+          interpolator%slope(:,E) = slope_right
+          interpolator%compute_slope(E)= .FALSE.
        end if
        
        if (present(slope_bottom)) then 
@@ -586,22 +563,22 @@ subroutine set_slope2d( interpolator,  &
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
-               interpolator%bc_left, &
-               interpolator%bc_right, &
+               interpolator%bc(W), &
+               interpolator%bc(E), &
                interpolator%spline_degree1 )
           
           call interp1d_bottom%compute_interpolants( &
                slope_bottom(1:sz_slope_bottom))
           
-          interpolator%slope_bottom(1:sz_slope_bottom+2) = &
+          interpolator%slope(1:sz_slope_bottom+2,S) = &
                interp1d_bottom%coeff_splines(1:sz_slope_bottom+2)
           call sll_delete(interp1d_bottom)
-          interpolator%compute_slope_bottom = .FALSE.
+          interpolator%compute_slope(S) = .FALSE.
        else
           print*, 'problem with slope bottom in case 780'
        end if
        if ( present( slope_top)) then 
-          interpolator%compute_slope_top= .FALSE.
+          interpolator%compute_slope(N)= .FALSE.
 
 
           sz_slope_top = size(slope_top)
@@ -615,14 +592,14 @@ subroutine set_slope2d( interpolator,  &
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
-               interpolator%bc_left, &
-               interpolator%bc_right, &
+               interpolator%bc(W), &
+               interpolator%bc(E), &
                interpolator%spline_degree1 )
           
           call interp1d_top%compute_interpolants(&
                slope_top(1:sz_slope_top))
           
-          interpolator%slope_top(1:sz_slope_top+2) = &
+          interpolator%slope(1:sz_slope_top+2,N) = &
                interp1d_top%coeff_splines(1:sz_slope_top+2)
           call sll_delete(interp1d_top)
        else
@@ -631,13 +608,13 @@ subroutine set_slope2d( interpolator,  &
 
     case(801)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Dirichlet
         if ( present( slope_right)) then 
-           interpolator%slope_right = slope_right
-           interpolator%compute_slope_right= .FALSE.
+           interpolator%slope(:,E) = slope_right
+           interpolator%compute_slope(E)= .FALSE.
        end if
 
         if ( present( slope_left)) then 
-          interpolator%slope_left = slope_left
-          interpolator%compute_slope_left= .FALSE.
+          interpolator%slope(:,W) = slope_left
+          interpolator%compute_slope(W)= .FALSE.
        end if
        
        if (present(slope_bottom)) then 
@@ -652,22 +629,22 @@ subroutine set_slope2d( interpolator,  &
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
-               interpolator%bc_left, &
-               interpolator%bc_right, &
+               interpolator%bc(W), &
+               interpolator%bc(E), &
                interpolator%spline_degree1 )
           
           call interp1d_bottom%compute_interpolants( &
                slope_bottom(1:sz_slope_bottom))
           
-          interpolator%slope_bottom(1:sz_slope_bottom+2) = &
+          interpolator%slope(1:sz_slope_bottom+2,S) = &
                interp1d_bottom%coeff_splines(1:sz_slope_bottom+2)
           call sll_delete(interp1d_bottom)
-          interpolator%compute_slope_bottom = .FALSE.
+          interpolator%compute_slope(S) = .FALSE.
        else
           print*, 'problem with slope bottom in case 801'
        end if
        if ( present( slope_top)) then 
-          interpolator%compute_slope_top= .FALSE.
+          interpolator%compute_slope(N)= .FALSE.
 
 
           sz_slope_top = size(slope_top)
@@ -681,14 +658,14 @@ subroutine set_slope2d( interpolator,  &
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
-               interpolator%bc_left, &
-               interpolator%bc_right, &
+               interpolator%bc(W), &
+               interpolator%bc(E), &
                interpolator%spline_degree1 )
           
           call interp1d_top%compute_interpolants(&
                slope_top(1:sz_slope_top))
           
-          interpolator%slope_top(1:sz_slope_top+2) = &
+          interpolator%slope(1:sz_slope_top+2,N) = &
                interp1d_top%coeff_splines(1:sz_slope_top+2)
           call sll_delete(interp1d_top)
        else
@@ -698,13 +675,13 @@ subroutine set_slope2d( interpolator,  &
     case(804)  !left: Hermite, right: Hermite, bottom: Hermite, Top: Dirichlet
 
         if ( present( slope_right)) then 
-           interpolator%slope_right = slope_right
-           interpolator%compute_slope_right= .FALSE.
+           interpolator%slope(:,E) = slope_right
+           interpolator%compute_slope(E)= .FALSE.
        end if
 
         if ( present( slope_left)) then 
-          interpolator%slope_left = slope_left
-          interpolator%compute_slope_left= .FALSE.
+          interpolator%slope(:,W) = slope_left
+          interpolator%compute_slope(W)= .FALSE.
        end if
        
        if (present(slope_bottom)) then 
@@ -719,22 +696,22 @@ subroutine set_slope2d( interpolator,  &
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
-               interpolator%bc_left, &
-               interpolator%bc_right, &
+               interpolator%bc(W), &
+               interpolator%bc(E), &
                interpolator%spline_degree1 )
           
           call interp1d_bottom%compute_interpolants( &
                slope_bottom(1:sz_slope_bottom))
           
-          interpolator%slope_bottom(1:sz_slope_bottom+2) = &
+          interpolator%slope(1:sz_slope_bottom+2,S) = &
                interp1d_bottom%coeff_splines(1:sz_slope_bottom+2)
           call sll_delete(interp1d_bottom)
-          interpolator%compute_slope_bottom = .FALSE.
+          interpolator%compute_slope(S) = .FALSE.
        else
           print*, 'problem with slope bottom in case 801'
        end if
        if ( present( slope_top)) then 
-          interpolator%compute_slope_top= .FALSE.
+          interpolator%compute_slope(N)= .FALSE.
 
 
           sz_slope_top = size(slope_top)
@@ -748,14 +725,14 @@ subroutine set_slope2d( interpolator,  &
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
-               interpolator%bc_left, &
-               interpolator%bc_right, &
+               interpolator%bc(W), &
+               interpolator%bc(E), &
                interpolator%spline_degree1 )
           
           call interp1d_top%compute_interpolants(&
                slope_top(1:sz_slope_top))
           
-          interpolator%slope_top(1:sz_slope_top+2) = &
+          interpolator%slope(1:sz_slope_top+2,N) = &
                interp1d_top%coeff_splines(1:sz_slope_top+2)
           call sll_delete(interp1d_top)
        else
@@ -764,17 +741,17 @@ subroutine set_slope2d( interpolator,  &
 
 
     case(1098)  !left: Neumann, right: Dirichlet, bottom: Dirichlet, Top: Neumann
-       interpolator%slope_left = 0.0_f64
-       interpolator%compute_slope_left= .FALSE.
+       interpolator%slope(:,W) = 0.0_f64
+       interpolator%compute_slope(W)= .FALSE.
     
        if ( present( slope_right)) then 
-          interpolator%slope_right = slope_right
-          interpolator%compute_slope_right= .FALSE.
+          interpolator%slope(:,E) = slope_right
+          interpolator%compute_slope(E)= .FALSE.
        end if
        
        sz_slope_top= size(slope_top)
-       interpolator%slope_top(1:sz_slope_top+2) = 0.0_f64
-       interpolator%compute_slope_top = .FALSE.
+       interpolator%slope(1:sz_slope_top+2,N) = 0.0_f64
+       interpolator%compute_slope(N) = .FALSE.
 
        if (present(slope_bottom)) then 
            sz_slope_bottom = size(slope_bottom)
@@ -788,22 +765,22 @@ subroutine set_slope2d( interpolator,  &
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
-               interpolator%bc_left, &
-               interpolator%bc_right, &
+               interpolator%bc(W), &
+               interpolator%bc(E), &
                interpolator%spline_degree1 )
           
           call interp1d_bottom%compute_interpolants( &
                slope_bottom(1:sz_slope_bottom))
           
-          interpolator%slope_bottom(1:sz_slope_bottom+2) = &
+          interpolator%slope(1:sz_slope_bottom+2,S) = &
                interp1d_bottom%coeff_splines(1:sz_slope_bottom+2)
           call sll_delete(interp1d_bottom)
-          interpolator%compute_slope_bottom = .FALSE.
+          interpolator%compute_slope(S) = .FALSE.
        else
           print*, 'problem with slope bottom in case 2124'
        end if
        if ( present( slope_top)) then 
-          interpolator%compute_slope_top= .FALSE.
+          interpolator%compute_slope(N)= .FALSE.
 
 
           sz_slope_top = size(slope_top)
@@ -817,14 +794,14 @@ subroutine set_slope2d( interpolator,  &
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
-               interpolator%bc_left, &
-               interpolator%bc_right, &
+               interpolator%bc(W), &
+               interpolator%bc(E), &
                interpolator%spline_degree1 )
           
           call interp1d_top%compute_interpolants(&
                slope_top(1:sz_slope_top))
           
-          interpolator%slope_top(1:sz_slope_top+2) = &
+          interpolator%slope(1:sz_slope_top+2,N) = &
                interp1d_top%coeff_splines(1:sz_slope_top+2)
           call sll_delete(interp1d_top)
        else
@@ -832,15 +809,15 @@ subroutine set_slope2d( interpolator,  &
        end if
     case(1105)  !left: Dirichlet, right: Neumann, bottom: Dirichlet, Top: Neumann
        if ( present( slope_right)) then 
-          interpolator%slope_right = slope_right
-          interpolator%compute_slope_right= .FALSE.
+          interpolator%slope(:,E) = slope_right
+          interpolator%compute_slope(E)= .FALSE.
        end if
-       interpolator%slope_left = 0.0_f64
-       interpolator%compute_slope_left= .FALSE.
+       interpolator%slope(:,W) = 0.0_f64
+       interpolator%compute_slope(W)= .FALSE.
        
        sz_slope_top = size(slope_top)
-       interpolator%compute_slope_top= .FALSE.
-       interpolator%slope_top(1:sz_slope_top+2) = 0.0_f64
+       interpolator%compute_slope(N)= .FALSE.
+       interpolator%slope(1:sz_slope_top+2,N) = 0.0_f64
 
        if (present(slope_bottom)) then 
            sz_slope_bottom = size(slope_bottom)
@@ -854,48 +831,48 @@ subroutine set_slope2d( interpolator,  &
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
-               interpolator%bc_left, &
-               interpolator%bc_right, &
+               interpolator%bc(W), &
+               interpolator%bc(E), &
                interpolator%spline_degree1 )
           
           call interp1d_bottom%compute_interpolants( &
                slope_bottom(1:sz_slope_bottom))
           
-          interpolator%slope_bottom(1:sz_slope_bottom+2) = &
+          interpolator%slope(1:sz_slope_bottom+2,S) = &
                interp1d_bottom%coeff_splines(1:sz_slope_bottom+2)
           call sll_delete(interp1d_bottom)
-          interpolator%compute_slope_bottom = .FALSE.
+          interpolator%compute_slope(S) = .FALSE.
        else
           print*, 'problem with slope bottom in case 2145'
        end if
     case(1170)  !left: Neumann, right: Neumann, bottom: Neuman, Top: Neumann
        
-       interpolator%slope_right = 0.0_f64
-       interpolator%compute_slope_right= .FALSE.
+       interpolator%slope(:,E) = 0.0_f64
+       interpolator%compute_slope(E)= .FALSE.
        
-       interpolator%slope_left = 0.0_f64
-       interpolator%compute_slope_left= .FALSE.
+       interpolator%slope(:,W) = 0.0_f64
+       interpolator%compute_slope(W)= .FALSE.
        
        sz_slope_top = size(slope_top)
-       interpolator%compute_slope_top= .FALSE.
-       interpolator%slope_top(1:sz_slope_top+2) = 0.0_f64
+       interpolator%compute_slope(N)= .FALSE.
+       interpolator%slope(1:sz_slope_top+2,N) = 0.0_f64
           
        sz_slope_bottom = size(slope_bottom)
-       interpolator%slope_bottom(1:sz_slope_bottom+2) = 0.0_f64
-       interpolator%compute_slope_bottom = .FALSE.
+       interpolator%slope(1:sz_slope_bottom+2,S) = 0.0_f64
+       interpolator%compute_slope(S) = .FALSE.
 
     case(2338)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Hermite
        if ( present( slope_right)) then 
-          interpolator%slope_right = slope_right
-          interpolator%compute_slope_right= .FALSE.
+          interpolator%slope(:,E) = slope_right
+          interpolator%compute_slope(E)= .FALSE.
        end if
        if ( present( slope_left)) then 
-          interpolator%slope_left = slope_left
-          interpolator%compute_slope_left= .FALSE.
+          interpolator%slope(:,W) = slope_left
+          interpolator%compute_slope(W)= .FALSE.
        end if
        
        if ( present( slope_top)) then 
-          interpolator%compute_slope_top= .FALSE.
+          interpolator%compute_slope(N)= .FALSE.
 
           
           sz_slope_top = size(slope_top)
@@ -909,14 +886,14 @@ subroutine set_slope2d( interpolator,  &
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
-               interpolator%bc_left, &
-               interpolator%bc_right, &
+               interpolator%bc(W), &
+               interpolator%bc(E), &
                interpolator%spline_degree1 )
           
           call interp1d_top%compute_interpolants(&
                slope_top(1:sz_slope_top))
           
-          interpolator%slope_top(1:sz_slope_top+2) = &
+          interpolator%slope(1:sz_slope_top+2,N) = &
                interp1d_top%coeff_splines(1:sz_slope_top+2)
           call sll_delete(interp1d_top)
        else
@@ -935,33 +912,33 @@ subroutine set_slope2d( interpolator,  &
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
-               interpolator%bc_left, &
-               interpolator%bc_right, &
+               interpolator%bc(W), &
+               interpolator%bc(E), &
                interpolator%spline_degree1 )
           
           call interp1d_bottom%compute_interpolants( &
                slope_bottom(1:sz_slope_bottom))
           
-          interpolator%slope_bottom(1:sz_slope_bottom+2) = &
+          interpolator%slope(1:sz_slope_bottom+2,S) = &
                interp1d_bottom%coeff_splines(1:sz_slope_bottom+2)
           call sll_delete(interp1d_bottom)
-          interpolator%compute_slope_bottom = .FALSE.
+          interpolator%compute_slope(S) = .FALSE.
        else
           print*, 'problem with slope bottom in case 2145'
        end if
 
     case(2145)  !left: Dirichlet, right: Hermite, bottom: Dirichlet, Top: Hermite
        if ( present( slope_right)) then 
-          interpolator%slope_right = slope_right
-          interpolator%compute_slope_right= .FALSE.
+          interpolator%slope(:,E) = slope_right
+          interpolator%compute_slope(E)= .FALSE.
        end if
         if ( present( slope_left)) then 
-          interpolator%slope_left = slope_left
-          interpolator%compute_slope_left= .FALSE.
+          interpolator%slope(:,W) = slope_left
+          interpolator%compute_slope(W)= .FALSE.
        end if
        
        if ( present( slope_top)) then 
-          interpolator%compute_slope_top= .FALSE.
+          interpolator%compute_slope(N)= .FALSE.
 
           
           sz_slope_top = size(slope_top)
@@ -975,14 +952,14 @@ subroutine set_slope2d( interpolator,  &
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
-               interpolator%bc_left, &
-               interpolator%bc_right, &
+               interpolator%bc(W), &
+               interpolator%bc(E), &
                interpolator%spline_degree1 )
           
           call interp1d_top%compute_interpolants(&
                slope_top(1:sz_slope_top))
           
-          interpolator%slope_top(1:sz_slope_top+2) = &
+          interpolator%slope(1:sz_slope_top+2,N) = &
                interp1d_top%coeff_splines(1:sz_slope_top+2)
           call sll_delete(interp1d_top)
        else
@@ -1001,17 +978,17 @@ subroutine set_slope2d( interpolator,  &
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
-               interpolator%bc_left, &
-               interpolator%bc_right, &
+               interpolator%bc(W), &
+               interpolator%bc(E), &
                interpolator%spline_degree1 )
           
           call interp1d_bottom%compute_interpolants( &
                slope_bottom(1:sz_slope_bottom))
           
-          interpolator%slope_bottom(1:sz_slope_bottom+2) = &
+          interpolator%slope(1:sz_slope_bottom+2,S) = &
                interp1d_bottom%coeff_splines(1:sz_slope_bottom+2)
           call sll_delete(interp1d_bottom)
-          interpolator%compute_slope_bottom = .FALSE.
+          interpolator%compute_slope(S) = .FALSE.
        else
           print*, 'problem with slope bottom in case 2145'
        end if
@@ -1020,16 +997,16 @@ subroutine set_slope2d( interpolator,  &
     case(2124)  !left: Hermite, right: Dirichlet, bottom: Dirichlet, Top: Hermite
        
        if ( present( slope_left)) then 
-          interpolator%slope_left = slope_left
-          interpolator%compute_slope_left= .FALSE.
+          interpolator%slope(:,W) = slope_left
+          interpolator%compute_slope(W)= .FALSE.
        end if
         if ( present( slope_right)) then 
-          interpolator%slope_right = slope_right
-          interpolator%compute_slope_right= .FALSE.
+          interpolator%slope(:,E) = slope_right
+          interpolator%compute_slope(E)= .FALSE.
        end if
        
        if ( present( slope_top)) then 
-          interpolator%compute_slope_top= .FALSE.
+          interpolator%compute_slope(N)= .FALSE.
 
 
           sz_slope_top = size(slope_top)
@@ -1043,14 +1020,14 @@ subroutine set_slope2d( interpolator,  &
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
-               interpolator%bc_left, &
-               interpolator%bc_right, &
+               interpolator%bc(W), &
+               interpolator%bc(E), &
                interpolator%spline_degree1 )
           
           call interp1d_top%compute_interpolants(&
                slope_top(1:sz_slope_top))
           
-          interpolator%slope_top(1:sz_slope_top+2) = &
+          interpolator%slope(1:sz_slope_top+2,N) = &
                interp1d_top%coeff_splines(1:sz_slope_top+2)
 
           call sll_delete(interp1d_top)
@@ -1070,22 +1047,22 @@ subroutine set_slope2d( interpolator,  &
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
-               interpolator%bc_left, &
-               interpolator%bc_right, &
+               interpolator%bc(W), &
+               interpolator%bc(E), &
                interpolator%spline_degree1 )
           
           call interp1d_bottom%compute_interpolants( &
                slope_bottom(1:sz_slope_bottom))
           
-          interpolator%slope_bottom(1:sz_slope_bottom+2) = &
+          interpolator%slope(1:sz_slope_bottom+2,S) = &
                interp1d_bottom%coeff_splines(1:sz_slope_bottom+2)
           call sll_delete(interp1d_bottom)
-          interpolator%compute_slope_bottom = .FALSE.
+          interpolator%compute_slope(S) = .FALSE.
        else
           print*, 'problem with slope bottom in case 2124'
        end if
        if ( present( slope_top)) then 
-          interpolator%compute_slope_top= .FALSE.
+          interpolator%compute_slope(N)= .FALSE.
 
 
           sz_slope_top = size(slope_top)
@@ -1099,14 +1076,14 @@ subroutine set_slope2d( interpolator,  &
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
-               interpolator%bc_left, &
-               interpolator%bc_right, &
+               interpolator%bc(W), &
+               interpolator%bc(E), &
                interpolator%spline_degree1 )
           
           call interp1d_top%compute_interpolants(&
                slope_top(1:sz_slope_top))
           
-          interpolator%slope_top(1:sz_slope_top+2) = &
+          interpolator%slope(1:sz_slope_top+2,N) = &
                interp1d_top%coeff_splines(1:sz_slope_top+2)
           call sll_delete(interp1d_top)
        else
@@ -1115,16 +1092,16 @@ subroutine set_slope2d( interpolator,  &
       
     case(2148)  !left:Hermite , right: Hermite, bottom: Dirichlet, Top: Hermite  
        if ( present( slope_left)) then 
-          interpolator%slope_left = slope_left
-          interpolator%compute_slope_left= .FALSE.
+          interpolator%slope(:,W) = slope_left
+          interpolator%compute_slope(W)= .FALSE.
        end if
        if ( present( slope_right)) then 
-          interpolator%slope_right = slope_right
-          interpolator%compute_slope_right= .FALSE.
+          interpolator%slope(:,E) = slope_right
+          interpolator%compute_slope(E)= .FALSE.
        end if
        
        if ( present( slope_top)) then 
-          interpolator%compute_slope_top= .FALSE.
+          interpolator%compute_slope(N)= .FALSE.
 
 
           sz_slope_top = size(slope_top)
@@ -1138,14 +1115,14 @@ subroutine set_slope2d( interpolator,  &
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
-               interpolator%bc_left, &
-               interpolator%bc_right, &
+               interpolator%bc(W), &
+               interpolator%bc(E), &
                interpolator%spline_degree1 )
           
           call interp1d_top%compute_interpolants(&
                slope_top(1:sz_slope_top))
           
-          interpolator%slope_top(1:sz_slope_top+2) = &
+          interpolator%slope(1:sz_slope_top+2,N) = &
                interp1d_top%coeff_splines(1:sz_slope_top+2)
 
           call sll_delete(interp1d_top)
@@ -1165,22 +1142,22 @@ subroutine set_slope2d( interpolator,  &
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
-               interpolator%bc_left, &
-               interpolator%bc_right, &
+               interpolator%bc(W), &
+               interpolator%bc(E), &
                interpolator%spline_degree1 )
           
           call interp1d_bottom%compute_interpolants( &
                slope_bottom(1:sz_slope_bottom))
           
-          interpolator%slope_bottom(1:sz_slope_bottom+2) = &
+          interpolator%slope(1:sz_slope_bottom+2,S) = &
                interp1d_bottom%coeff_splines(1:sz_slope_bottom+2)
           call sll_delete(interp1d_bottom)
-          interpolator%compute_slope_bottom = .FALSE.
+          interpolator%compute_slope(S) = .FALSE.
        else
           print*, 'problem with slope bottom in case 2124'
        end if
        if ( present( slope_top)) then 
-          interpolator%compute_slope_top= .FALSE.
+          interpolator%compute_slope(N)= .FALSE.
 
 
           sz_slope_top = size(slope_top)
@@ -1194,14 +1171,14 @@ subroutine set_slope2d( interpolator,  &
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
-               interpolator%bc_left, &
-               interpolator%bc_right, &
+               interpolator%bc(W), &
+               interpolator%bc(E), &
                interpolator%spline_degree1 )
           
           call interp1d_top%compute_interpolants(&
                slope_top(1:sz_slope_top))
           
-          interpolator%slope_top(1:sz_slope_top+2) = &
+          interpolator%slope(1:sz_slope_top+2,N) = &
                interp1d_top%coeff_splines(1:sz_slope_top+2)
           call sll_delete(interp1d_top)
        else
@@ -1209,16 +1186,16 @@ subroutine set_slope2d( interpolator,  &
        end if
     case(2316)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Hermite
        if ( present( slope_right)) then 
-          interpolator%slope_right = slope_right
-          interpolator%compute_slope_right= .FALSE.
+          interpolator%slope(:,E) = slope_right
+          interpolator%compute_slope(E)= .FALSE.
        end if
        if ( present( slope_left)) then 
-          interpolator%slope_left = slope_left
-          interpolator%compute_slope_left= .FALSE.
+          interpolator%slope(:,W) = slope_left
+          interpolator%compute_slope(W)= .FALSE.
        end if
        
        if ( present( slope_top)) then 
-          interpolator%compute_slope_top= .FALSE.
+          interpolator%compute_slope(N)= .FALSE.
 
 
           sz_slope_top = size(slope_top)
@@ -1232,14 +1209,14 @@ subroutine set_slope2d( interpolator,  &
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
-               interpolator%bc_left, &
-               interpolator%bc_right, &
+               interpolator%bc(W), &
+               interpolator%bc(E), &
                interpolator%spline_degree1 )
           
           call interp1d_top%compute_interpolants(&
                slope_top(1:sz_slope_top))
           
-          interpolator%slope_top(1:sz_slope_top+2) = &
+          interpolator%slope(1:sz_slope_top+2,N) = &
                interp1d_top%coeff_splines(1:sz_slope_top+2)
           call sll_delete(interp1d_top)
        else
@@ -1258,33 +1235,33 @@ subroutine set_slope2d( interpolator,  &
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
-               interpolator%bc_left, &
-               interpolator%bc_right, &
+               interpolator%bc(W), &
+               interpolator%bc(E), &
                interpolator%spline_degree1 )
           
           call interp1d_bottom%compute_interpolants( &
                slope_bottom(1:sz_slope_bottom))
           
-          interpolator%slope_bottom(1:sz_slope_bottom+2) = &
+          interpolator%slope(1:sz_slope_bottom+2,S) = &
                interp1d_bottom%coeff_splines(1:sz_slope_bottom+2)
           call sll_delete(interp1d_bottom)
-          interpolator%compute_slope_bottom = .FALSE.
+          interpolator%compute_slope(S) = .FALSE.
        else
           print*, 'problem with slope bottom in case 2340'
        end if
     case(2340) ! Hermite in al sides
 
        if ( present( slope_right)) then 
-          interpolator%slope_right = slope_right
-          interpolator%compute_slope_right= .FALSE.
+          interpolator%slope(:,E) = slope_right
+          interpolator%compute_slope(E)= .FALSE.
        end if
         if ( present( slope_left)) then 
-          interpolator%slope_left = slope_left
-          interpolator%compute_slope_left= .FALSE.
+          interpolator%slope(:,W) = slope_left
+          interpolator%compute_slope(W)= .FALSE.
        end if
        
        if ( present( slope_top)) then 
-          interpolator%compute_slope_top= .FALSE.
+          interpolator%compute_slope(N)= .FALSE.
 
 
           sz_slope_top = size(slope_top)
@@ -1298,14 +1275,14 @@ subroutine set_slope2d( interpolator,  &
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
-               interpolator%bc_left, &
-               interpolator%bc_right, &
+               interpolator%bc(W), &
+               interpolator%bc(E), &
                interpolator%spline_degree1 )
           
           call interp1d_top%compute_interpolants(&
                slope_top(1:sz_slope_top))
           
-          interpolator%slope_top(1:sz_slope_top+2) = &
+          interpolator%slope(1:sz_slope_top+2,N) = &
                interp1d_top%coeff_splines(1:sz_slope_top+2)
           call sll_delete(interp1d_top)
        else
@@ -1324,17 +1301,17 @@ subroutine set_slope2d( interpolator,  &
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
-               interpolator%bc_left, &
-               interpolator%bc_right, &
+               interpolator%bc(W), &
+               interpolator%bc(E), &
                interpolator%spline_degree1 )
           
           call interp1d_bottom%compute_interpolants( &
                slope_bottom(1:sz_slope_bottom))
           
-          interpolator%slope_bottom(1:sz_slope_bottom+2) = &
+          interpolator%slope(1:sz_slope_bottom+2,S) = &
                interp1d_bottom%coeff_splines(1:sz_slope_bottom+2)
           call sll_delete(interp1d_bottom)
-          interpolator%compute_slope_bottom = .FALSE.
+          interpolator%compute_slope(S) = .FALSE.
        else
           print*, 'problem with slope bottom in case 2340'
        end if
@@ -1346,77 +1323,77 @@ subroutine set_slope2d( interpolator,  &
   end subroutine set_slope2d
   
   
-  !> Initialization of the boundary for interpolator arbitrary degree splines 2d.
-  !> The parameters are
-  !> @param[in] value_left a 1d arrays contains values in the left in the direction eta1  
-  !> @param[in] value_right a 1d arrays contains values in the right in the direction eta1 
-  !> @param[in] value_bottom a 1d arrays contains values in the left in the direction eta2 
-  !> @param[in]  value_top a 1d arrays contains values in the right in the direction eta2
-  !> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_2d
+!> @brief
+!> Initialization of the boundary for interpolator arbitrary degree splines 2d.
+!> @details
+!> @param[in]  value_left a 1d array contains values in the left direction eta1  
+!> @param[in]  value_right a 1d array contains values in the right direction eta1 
+!> @param[in]  value_bottom a 1d array contains values in the left direction eta2 
+!> @param[in]  value_top a 1d array contains values in the right direction eta2
+!> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_2d
 
-  subroutine set_boundary_value2d(&
-       interpolator,&
-       value_left,&
-       value_right,&
-       value_bottom,&
-       value_top)
+subroutine set_boundary_value2d( interpolator,  &
+                                 value_left,    &
+                                 value_right,   &
+                                 value_bottom,  &
+                                 value_top)
 
-    use sll_module_arbitrary_degree_spline_interpolator_1d
-    class(sll_arbitrary_degree_spline_interpolator_2d)    :: interpolator
-    sll_real64, dimension(:),optional :: value_left
-    sll_real64, dimension(:),optional :: value_right
-    sll_real64, dimension(:),optional :: value_bottom
-    sll_real64, dimension(:),optional :: value_top
-    class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp1d_left => null()
-    class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp1d_right => null()
-    class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp1d_bottom=> null()
-    class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp1d_top => null()
-    sll_int32 :: sz_value_left,sz_value_right,sz_value_bottom,sz_value_top
-    sll_int64 :: bc_selector
-    sll_int32 :: num_pts1
-    sll_int32 :: num_pts2
-    sll_int32 :: bc_left
-    sll_int32 :: bc_right
-    sll_int32 :: bc_bottom
-    sll_int32 :: bc_top
+class(sll_arbitrary_degree_spline_interpolator_2d) :: interpolator
+sll_real64, optional :: value_left(:)
+sll_real64, optional :: value_right(:)
+sll_real64, optional :: value_bottom(:)
+sll_real64, optional :: value_top(:)
 
-    num_pts1 = interpolator%num_pts1
-    num_pts2 = interpolator%num_pts2
-    bc_selector = interpolator%bc_selector
-    bc_left  = interpolator%bc_left 
-    bc_right = interpolator%bc_right 
-    bc_bottom= interpolator%bc_bottom  
-    bc_top   = interpolator%bc_top
+class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp1d_left => null()
+class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp1d_right => null()
+class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp1d_bottom=> null()
+class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp1d_top => null()
 
-    select case (bc_selector)
-    case(0)
+sll_int32 :: sz_value_left,sz_value_right,sz_value_bottom,sz_value_top
+sll_int64 :: bc_selector
+sll_int32 :: num_pts1
+sll_int32 :: num_pts2
+sll_int32 :: bc_left
+sll_int32 :: bc_right
+sll_int32 :: bc_bottom
+sll_int32 :: bc_top
+
+num_pts1    = interpolator%num_pts1
+num_pts2    = interpolator%num_pts2
+bc_selector = interpolator%bc_selector
+bc_left     = interpolator%bc(W) 
+bc_right    = interpolator%bc(E) 
+bc_bottom   = interpolator%bc(S)  
+bc_top      = interpolator%bc(N)
+
+select case (bc_selector)
        
-    case (9) ! dirichlet-left, dirichlet-right, periodic
-       if (present(value_left)) then 
-          sz_value_left = size(value_left)
-          if ( sz_value_left .ne. interpolator%num_pts2 ) then 
-             print*, ' problem in the initialization of arb_deg_spline 2d'
-             print*, 'value_left must have the size of numbers of pts in direction 2 '
-             stop
-          end if
-          interp1d_left => new_arbitrary_degree_1d_interpolator(&
+case (9) ! dirichlet-left, dirichlet-right, periodic
+
+  if (present(value_left)) then 
+
+    sz_value_left = size(value_left)
+
+    SLL_ASSERT(sz_value_left == interpolator%num_pts2 ) 
+
+    interp1d_left => new_arbitrary_degree_1d_interpolator(&
                interpolator%num_pts2, &
                interpolator%eta2_min, &
                interpolator%eta2_max, &
-               interpolator%bc_bottom, &
-               interpolator%bc_top, &
+               interpolator%bc(S), &
+               interpolator%bc(N), &
                interpolator%spline_degree2 )
           
           call interp1d_left%compute_interpolants( &
                value_left(1:sz_value_left))
           
-          interpolator%value_left(1:sz_value_left) = &
+          interpolator%value(1:sz_value_left,W) = &
                interp1d_left%coeff_splines(1:sz_value_left)
           call sll_delete(interp1d_left)
 
-          interpolator%compute_value_left = .FALSE.
+          interpolator%compute_value(W) = .FALSE.
        else
-          interpolator%value_left(:) = 0.0_f64
+          interpolator%value(:,W) = 0.0_f64
        end if
 
        if (present(value_right)) then 
@@ -1431,19 +1408,19 @@ subroutine set_slope2d( interpolator,  &
                interpolator%num_pts2, &
                interpolator%eta2_min, &
                interpolator%eta2_max, &
-               interpolator%bc_bottom, &
-               interpolator%bc_top, &
+               interpolator%bc(S), &
+               interpolator%bc(N), &
                interpolator%spline_degree2 )
           
           call interp1d_right%compute_interpolants( &
                value_right(1:sz_value_right))
           
-          interpolator%value_right(1:sz_value_right) = &
+          interpolator%value(1:sz_value_right,E) = &
                interp1d_right%coeff_splines(1:sz_value_right)
           call sll_delete(interp1d_right)
-          interpolator%compute_value_right = .FALSE.
+          interpolator%compute_value(E) = .FALSE.
        else
-          interpolator%value_right(:) = 0.0_f64
+          interpolator%value(:,E) = 0.0_f64
        end if
     case (576) ! 3. periodic, dirichlet-bottom, dirichlet-top
        
@@ -1459,19 +1436,19 @@ subroutine set_slope2d( interpolator,  &
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
-               interpolator%bc_left, &
-               interpolator%bc_right, &
+               interpolator%bc(W), &
+               interpolator%bc(E), &
                interpolator%spline_degree1 )
           
           call interp1d_bottom%compute_interpolants( &
                value_bottom(1:sz_value_bottom))
           
-          interpolator%value_bottom(1:sz_value_bottom) = &
+          interpolator%value(1:sz_value_bottom,S) = &
                interp1d_bottom%coeff_splines(1:sz_value_bottom)
           call sll_delete(interp1d_bottom)
-          interpolator%compute_value_bottom = .FALSE.
+          interpolator%compute_value(S) = .FALSE.
        else
-          interpolator%value_bottom(:) = 0.0_f64
+          interpolator%value(:,S) = 0.0_f64
        end if
        
        if (present(value_top)) then 
@@ -1486,19 +1463,19 @@ subroutine set_slope2d( interpolator,  &
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
-               interpolator%bc_left, &
-               interpolator%bc_right, &
+               interpolator%bc(W), &
+               interpolator%bc(E), &
                interpolator%spline_degree1 )
           
           call interp1d_top%compute_interpolants(&
                value_top(1:sz_value_top))
           
-          interpolator%value_top(1:sz_value_top) = &
+          interpolator%value(1:sz_value_top,N) = &
                interp1d_top%coeff_splines(1:sz_value_top)
           call sll_delete(interp1d_top)
-          interpolator%compute_value_top = .FALSE.
+          interpolator%compute_value(N) = .FALSE.
        else
-          interpolator%value_top(:) = 0.0_f64
+          interpolator%value(:,N) = 0.0_f64
        end if
     case (585) ! 4. dirichlet in all sides
        
@@ -1514,8 +1491,8 @@ subroutine set_slope2d( interpolator,  &
                interpolator%num_pts2, &
                interpolator%eta2_min, &
                interpolator%eta2_max, &
-               interpolator%bc_bottom, &
-               interpolator%bc_top, &
+               interpolator%bc(S), &
+               interpolator%bc(N), &
                interpolator%spline_degree2)
 
           call set_values_at_boundary1d(&
@@ -1526,12 +1503,12 @@ subroutine set_slope2d( interpolator,  &
           call interp1d_left%compute_interpolants( &
                value_left(1:sz_value_left))
           
-          interpolator%value_left(1:sz_value_left) = &
+          interpolator%value(1:sz_value_left,W) = &
                interp1d_left%coeff_splines(1:sz_value_left)
           call sll_delete(interp1d_left)
-          interpolator%compute_value_left = .FALSE.
+          interpolator%compute_value(W) = .FALSE.
        else
-          interpolator%value_left(:) = 0.0_f64
+          interpolator%value(:,W) = 0.0_f64
        end if
        
        if (present(value_right)) then 
@@ -1546,8 +1523,8 @@ subroutine set_slope2d( interpolator,  &
                interpolator%num_pts2, &
                interpolator%eta2_min, &
                interpolator%eta2_max, &
-               interpolator%bc_bottom, &
-               interpolator%bc_top, &
+               interpolator%bc(S), &
+               interpolator%bc(N), &
                interpolator%spline_degree2)
           
           call set_values_at_boundary1d(&
@@ -1558,12 +1535,12 @@ subroutine set_slope2d( interpolator,  &
           call interp1d_right%compute_interpolants( &
                value_right(1:sz_value_right))
           
-          interpolator%value_right(1:sz_value_right) = &
+          interpolator%value(1:sz_value_right,E) = &
                interp1d_right%coeff_splines(1:sz_value_right)
           call sll_delete(interp1d_right)
-          interpolator%compute_value_right = .FALSE.
+          interpolator%compute_value(E) = .FALSE.
        else
-          interpolator%value_right(:) = 0.0_f64
+          interpolator%value(:,E) = 0.0_f64
        end if
        
        
@@ -1579,8 +1556,8 @@ subroutine set_slope2d( interpolator,  &
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
-               interpolator%bc_left, &
-               interpolator%bc_right, &
+               interpolator%bc(W), &
+               interpolator%bc(E), &
                interpolator%spline_degree1)
 
           call set_values_at_boundary1d(&
@@ -1591,12 +1568,12 @@ subroutine set_slope2d( interpolator,  &
           call interp1d_bottom%compute_interpolants( &
                value_bottom(1:sz_value_bottom))
           
-          interpolator%value_bottom(1:sz_value_bottom) = &
+          interpolator%value(1:sz_value_bottom,S) = &
                interp1d_bottom%coeff_splines(1:sz_value_bottom)
           call sll_delete(interp1d_bottom)
-          interpolator%compute_value_bottom = .FALSE.
+          interpolator%compute_value(S) = .FALSE.
        else
-          interpolator%value_bottom(:) = 0.0_f64
+          interpolator%value(:,S) = 0.0_f64
        end if
        
        if (present(value_top)) then 
@@ -1611,8 +1588,8 @@ subroutine set_slope2d( interpolator,  &
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
-               interpolator%bc_left, &
-               interpolator%bc_right, &
+               interpolator%bc(W), &
+               interpolator%bc(E), &
                interpolator%spline_degree1)
           
           call set_values_at_boundary1d(&
@@ -1623,27 +1600,13 @@ subroutine set_slope2d( interpolator,  &
           call interp1d_top%compute_interpolants( &
                value_top(1:sz_value_top))
           
-          interpolator%value_top(1:sz_value_top) = &
+          interpolator%value(1:sz_value_top,N) = &
                interp1d_top%coeff_splines(1:sz_value_top)
           call sll_delete(interp1d_top)
-          interpolator%compute_value_top = .FALSE.
+          interpolator%compute_value(N) = .FALSE.
        else
-          interpolator%value_top(:) = 0.0_f64
+          interpolator%value(:,N) = 0.0_f64
        end if
-    case(650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet
-    case(657) !left: Dirichlet, right: Neumann, bottom: Neumann, Top: Dirichlet 
-    case(780)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Dirichlet
-    case(801)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Dirichlet
-    case(804)  !left: Hermite, right: Hermite, bottom: Hermite, Top: Dirichlet
-    case(1098)  !left: Neumann, right: Dirichlet, bottom: Dirichlet, Top: Neumann
-    case(1105)  !left: Dirichlet, right: Neumann, bottom: Dirichlet, Top: Neumann
-    case(1170)  !left: Neumann, right: Neumann, bottom: Neuman, Top: Neumann
-    case(2124)  !left: Hermite, right: Dirichlet, bottom: Dirichlet, Top: Hermite
-    case(2145)  !left: Dirichlet, right: Hermite, bottom: Dirichlet, Top: Hermite
-    case(2148)  !left:Hermite , right: Hermite, bottom: Dirichlet, Top: Hermite
-    case(2316)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Hermite
-    case(2338)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Hermite
-    case(2340) ! Hermite in all sides
     case default
        print*,'initialize_ad2d_interpolator: BC combination not implemented.'
     end select
@@ -1651,12 +1614,6 @@ subroutine set_slope2d( interpolator,  &
   end subroutine set_boundary_value2d
 
 
-  ! -------------------------------------------------------------
-  !  subroutine initializing the coefficients of splines
-  !  in the cas of linearization of them i.e. if we have 
-  !  a table in 1d corresponding of coefficients 2d
-  ! 
-  ! -------------------------------------------------------------
   !> @brief initializing the coefficients of splines.
   !> @details  initializing the coefficients of splines
   !>  in the cas of linearization of them i.e. if we have 
@@ -1959,7 +1916,7 @@ subroutine set_slope2d( interpolator,  &
          ! ------------------------------------------------------------
          ! reorganization of spline coefficients 1D in coefficients 2D 
          ! ------------------------------------------------------------
-         ! achtung ! normaly interpolator%slope_left(:) and interpolator%value_right(:)
+         ! achtung ! normaly interpolator%slope(:,W) and interpolator%value_right(:)
          ! achtung ! normaly interpolator%value_bottom(:) and interpolator%value_top(:)
 
          interpolator%coeff_splines(:,:) = 0.0_8
@@ -2018,7 +1975,7 @@ subroutine set_slope2d( interpolator,  &
          ! ------------------------------------------------------------
          ! reorganization of spline coefficients 1D in coefficients 2D 
          ! ------------------------------------------------------------
-         ! achtung ! normaly interpolator%slope_left(:) and interpolator%value_right(:)
+         ! achtung ! normaly interpolator%slope(:,W) and interpolator%value_right(:)
          ! achtung ! normaly interpolator%value_bottom(:) and interpolator%value_top(:)
 
          interpolator%coeff_splines(:,:) = 0.0_8
@@ -2076,7 +2033,7 @@ subroutine set_slope2d( interpolator,  &
          ! ------------------------------------------------------------
          ! reorganization of spline coefficients 1D in coefficients 2D 
          ! ------------------------------------------------------------
-         ! achtung ! normaly interpolator%slope_left(:) and interpolator%value_right(:)
+         ! achtung ! normaly interpolator%slope(:,W) and interpolator%value_right(:)
          ! achtung ! normaly interpolator%value_bottom(:) and interpolator%value_top(:)
 
          interpolator%coeff_splines(:,:) = 0.0_8
@@ -2134,7 +2091,7 @@ subroutine set_slope2d( interpolator,  &
          ! ------------------------------------------------------------
          ! reorganization of spline coefficients 1D in coefficients 2D 
          ! ------------------------------------------------------------
-         ! achtung ! normaly interpolator%slope_left(:) and interpolator%value_right(:)
+         ! achtung ! normaly interpolator%slope(:,W) and interpolator%value_right(:)
          ! achtung ! normaly interpolator%value_bottom(:) and interpolator%value_top(:)
 
          interpolator%coeff_splines(:,:) = 0.0_8
@@ -2192,7 +2149,7 @@ subroutine set_slope2d( interpolator,  &
          ! ------------------------------------------------------------
          ! reorganization of spline coefficients 1D in coefficients 2D 
          ! ------------------------------------------------------------
-         ! achtung ! normaly interpolator%slope_left(:) and interpolator%value_right(:)
+         ! achtung ! normaly interpolator%slope(:,W) and interpolator%value_right(:)
          ! achtung ! normaly interpolator%value_bottom(:) and interpolator%value_top(:)
 
          interpolator%coeff_splines(:,:) = 0.0_8
@@ -2254,7 +2211,7 @@ subroutine set_slope2d( interpolator,  &
          ! ------------------------------------------------------------
          ! reorganization of spline coefficients 1D in coefficients 2D 
          ! ------------------------------------------------------------
-         ! achtung ! normaly interpolator%slope_left(:) and interpolator%value_right(:)
+         ! achtung ! normaly interpolator%slope(:,W) and interpolator%value_right(:)
          ! achtung ! normaly interpolator%value_bottom(:) and interpolator%value_top(:)
 
          interpolator%coeff_splines(:,:) = 0.0_8
@@ -2313,7 +2270,7 @@ subroutine set_slope2d( interpolator,  &
          ! ------------------------------------------------------------
          ! reorganization of spline coefficients 1D in coefficients 2D 
          ! ------------------------------------------------------------
-         ! achtung ! normaly interpolator%slope_left(:) and interpolator%value_right(:)
+         ! achtung ! normaly interpolator%slope(:,W) and interpolator%value_right(:)
          ! achtung ! normaly interpolator%value_bottom(:) and interpolator%value_top(:)
 
          interpolator%coeff_splines(:,:) = 0.0_8
@@ -2372,7 +2329,7 @@ subroutine set_slope2d( interpolator,  &
          ! ------------------------------------------------------------
          ! reorganization of spline coefficients 1D in coefficients 2D 
          ! ------------------------------------------------------------
-         ! achtung ! normaly interpolator%slope_left(:) and interpolator%value_right(:)
+         ! achtung ! normaly interpolator%slope(:,W) and interpolator%value_right(:)
          ! achtung ! normaly interpolator%value_bottom(:) and interpolator%value_top(:)
 
          interpolator%coeff_splines(:,:) = 0.0_8
@@ -2433,7 +2390,7 @@ subroutine set_slope2d( interpolator,  &
          ! ------------------------------------------------------------
          ! reorganization of spline coefficients 1D in coefficients 2D 
          ! ------------------------------------------------------------
-         ! achtung ! normaly interpolator%slope_left(:) and interpolator%value_right(:)
+         ! achtung ! normaly interpolator%slope(:,W) and interpolator%value_right(:)
          ! achtung ! normaly interpolator%value_bottom(:) and interpolator%value_top(:)
 
          interpolator%coeff_splines(:,:) = 0.0_8
@@ -2823,11 +2780,11 @@ subroutine set_slope2d( interpolator,  &
        point_location_eta1_deriv(1) = 1
        point_location_eta1_deriv(2) = sz1
        data_array_deriv_eta1(1,1:sz2)     = 0.0_f64
-       data_array_deriv_eta1(2,1:sz2)     = interpolator%slope_right(1:sz2)
+       data_array_deriv_eta1(2,1:sz2)     = interpolator%slope(1:sz2,E)
        point_location_eta2_deriv(1) = 1
        point_location_eta2_deriv(2) = sz2
        data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=0.0_f64
-       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_top(1:sz1+sz_derivative_eta1)
+       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope(1:sz1+sz_derivative_eta1,N)
        call spli2d_custom_derder(&
             sz1,&
             sz_derivative_eta1,&
@@ -2870,12 +2827,12 @@ subroutine set_slope2d( interpolator,  &
        data_array_tmp = data_array(1:sz1,1:sz2)
        point_location_eta1_deriv(1) = 1
        point_location_eta1_deriv(2) = sz1
-       data_array_deriv_eta1(1,1:sz2)     = interpolator%slope_left(1:sz2) 
+       data_array_deriv_eta1(1,1:sz2)     = interpolator%slope(1:sz2,W) 
        data_array_deriv_eta1(2,1:sz2)     = 0.0_f64
        point_location_eta2_deriv(1) = 1
        point_location_eta2_deriv(2) = sz2
        data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)= 0.0_f64
-       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_top(1:sz1+sz_derivative_eta1)
+       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope(1:sz1+sz_derivative_eta1,N)
        call spli2d_custom_derder(&
             sz1,&
             sz_derivative_eta1,&
@@ -2920,14 +2877,14 @@ subroutine set_slope2d( interpolator,  &
        data_array_tmp = data_array(1:sz1,1:sz2)
        point_location_eta1_deriv(1) = 1
        point_location_eta1_deriv(2) = sz1
-       data_array_deriv_eta1(1,1:sz2) = interpolator%slope_left(1:sz2)
-       data_array_deriv_eta1(2,1:sz2) = interpolator%slope_right(1:sz2)
+       data_array_deriv_eta1(1,1:sz2) = interpolator%slope(1:sz2,W)
+       data_array_deriv_eta1(2,1:sz2) = interpolator%slope(1:sz2,E)
        point_location_eta2_deriv(1) = 1
        point_location_eta2_deriv(2) = sz2
        data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)= &
-          interpolator%slope_bottom(1:sz1+sz_derivative_eta1)
+          interpolator%slope(1:sz1+sz_derivative_eta1,S)
        data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)= &
-          interpolator%slope_top(1:sz1+sz_derivative_eta1)
+          interpolator%slope(1:sz1+sz_derivative_eta1,N)
 
        call spli2d_custom_derder(&
             sz1,&
@@ -2975,12 +2932,12 @@ subroutine set_slope2d( interpolator,  &
        data_array_tmp = data_array(1:sz1,1:sz2)
        point_location_eta1_deriv(1) = 1
        point_location_eta1_deriv(2) = sz1
-       data_array_deriv_eta1(1,1:sz2)     = interpolator%slope_left(1:sz2) 
-       data_array_deriv_eta1(2,1:sz2)     = interpolator%slope_right(1:sz2) 
+       data_array_deriv_eta1(1,1:sz2)     = interpolator%slope(1:sz2,W) 
+       data_array_deriv_eta1(2,1:sz2)     = interpolator%slope(1:sz2,E) 
        point_location_eta2_deriv(1) = 1
        point_location_eta2_deriv(2) = sz2
-       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_bottom(1:sz1+sz_derivative_eta1)
-       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_top(1:sz1+sz_derivative_eta1)
+       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope(1:sz1+sz_derivative_eta1,S)
+       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope(1:sz1+sz_derivative_eta1,N)
        call spli2d_custom_derder(&
             sz1,&
             sz_derivative_eta1,&
@@ -3023,12 +2980,12 @@ subroutine set_slope2d( interpolator,  &
        data_array_tmp = data_array(1:sz1,1:sz2)
        point_location_eta1_deriv(1) = 1
        point_location_eta1_deriv(2) = sz1
-       data_array_deriv_eta1(1,1:sz2)     = interpolator%slope_left(1:sz2) 
-       data_array_deriv_eta1(2,1:sz2)     = interpolator%slope_right(1:sz2) 
+       data_array_deriv_eta1(1,1:sz2)     = interpolator%slope(1:sz2,W) 
+       data_array_deriv_eta1(2,1:sz2)     = interpolator%slope(1:sz2,E) 
        point_location_eta2_deriv(1) = 1
        point_location_eta2_deriv(2) = sz2
-       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_bottom(1:sz1+sz_derivative_eta1)
-       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_top(1:sz1+sz_derivative_eta1)
+       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope(1:sz1+sz_derivative_eta1,S)
+       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope(1:sz1+sz_derivative_eta1,N)
        call spli2d_custom_derder(&
             sz1,&
             sz_derivative_eta1,&
@@ -3072,10 +3029,10 @@ subroutine set_slope2d( interpolator,  &
        point_location_eta1_deriv(1) = 1
        point_location_eta1_deriv(2) = sz1
        data_array_deriv_eta1(1,1:sz2)     = 0.0_f64
-       data_array_deriv_eta1(2,1:sz2)     = interpolator%slope_right(1:sz2)
+       data_array_deriv_eta1(2,1:sz2)     = interpolator%slope(1:sz2,E)
        point_location_eta2_deriv(1) = 1
        point_location_eta2_deriv(2) = sz2
-       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_bottom(1:sz1+sz_derivative_eta1)
+       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope(1:sz1+sz_derivative_eta1,S)
        data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)= 0.0_f64
        call spli2d_custom_derder(&
             sz1,&
@@ -3119,11 +3076,11 @@ subroutine set_slope2d( interpolator,  &
        data_array_tmp = data_array(1:sz1,1:sz2)
        point_location_eta1_deriv(1) = 1
        point_location_eta1_deriv(2) = sz1
-       data_array_deriv_eta1(1,1:sz2)     = interpolator%slope_left(1:sz2)
+       data_array_deriv_eta1(1,1:sz2)     = interpolator%slope(1:sz2,W)
        data_array_deriv_eta1(2,1:sz2)     = 0.0_f64
        point_location_eta2_deriv(1) = 1
        point_location_eta2_deriv(2) = sz2
-       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_bottom(1:sz1+sz_derivative_eta1)
+       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope(1:sz1+sz_derivative_eta1,S)
        data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)= 0.0_f64
        call spli2d_custom_derder(&
             sz1,&
@@ -3215,12 +3172,12 @@ subroutine set_slope2d( interpolator,  &
        data_array_tmp = data_array(1:sz1,1:sz2)
        point_location_eta1_deriv(1) = 1
        point_location_eta1_deriv(2) = sz1
-       data_array_deriv_eta1(1,1:sz2)     = interpolator%slope_left(1:sz2)
-       data_array_deriv_eta1(2,1:sz2)     = interpolator%slope_right(1:sz2)
+       data_array_deriv_eta1(1,1:sz2)     = interpolator%slope(1:sz2,W)
+       data_array_deriv_eta1(2,1:sz2)     = interpolator%slope(1:sz2,E)
        point_location_eta2_deriv(1) = 1
        point_location_eta2_deriv(2) = sz2
-       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_bottom(1:sz1+sz_derivative_eta1)
-       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_top(1:sz1+sz_derivative_eta1)
+       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope(1:sz1+sz_derivative_eta1,S)
+       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope(1:sz1+sz_derivative_eta1,N)
        call spli2d_custom_derder(&
             sz1,&
             sz_derivative_eta1,&
@@ -3263,12 +3220,12 @@ subroutine set_slope2d( interpolator,  &
        data_array_tmp = data_array(1:sz1,1:sz2)
        point_location_eta1_deriv(1) = 1
        point_location_eta1_deriv(2) = sz1
-       data_array_deriv_eta1(1,1:sz2)     = interpolator%slope_left(1:sz2)
-       data_array_deriv_eta1(2,1:sz2)     = interpolator%slope_right(1:sz2)
+       data_array_deriv_eta1(1,1:sz2)     = interpolator%slope(1:sz2,W)
+       data_array_deriv_eta1(2,1:sz2)     = interpolator%slope(1:sz2,E)
        point_location_eta2_deriv(1) = 1
        point_location_eta2_deriv(2) = sz2
-       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_bottom(1:sz1+sz_derivative_eta1)
-       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_top(1:sz1+sz_derivative_eta1)
+       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope(1:sz1+sz_derivative_eta1,S)
+       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope(1:sz1+sz_derivative_eta1,N)
        call spli2d_custom_derder(&
             sz1,&
             sz_derivative_eta1,&
@@ -3313,12 +3270,12 @@ subroutine set_slope2d( interpolator,  &
        data_array_tmp = data_array(1:sz1,1:sz2)
        point_location_eta1_deriv(1) = 1
        point_location_eta1_deriv(2) = sz1
-       data_array_deriv_eta1(1,1:sz2)     = interpolator%slope_left(1:sz2)
-       data_array_deriv_eta1(2,1:sz2)     = interpolator%slope_right(1:sz2)
+       data_array_deriv_eta1(1,1:sz2)     = interpolator%slope(1:sz2,W)
+       data_array_deriv_eta1(2,1:sz2)     = interpolator%slope(1:sz2,E)
        point_location_eta2_deriv(1) = 1
        point_location_eta2_deriv(2) = sz2
-       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_bottom(1:sz1+sz_derivative_eta1)
-       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_top(1:sz1+sz_derivative_eta1)
+       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope(1:sz1+sz_derivative_eta1,S)
+       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope(1:sz1+sz_derivative_eta1,N)
        call spli2d_custom_derder(&
             sz1,&
             sz_derivative_eta1,&
@@ -3361,12 +3318,12 @@ subroutine set_slope2d( interpolator,  &
        data_array_tmp = data_array(1:sz1,1:sz2)
        point_location_eta1_deriv(1) = 1
        point_location_eta1_deriv(2) = sz1
-       data_array_deriv_eta1(1,1:sz2)     = interpolator%slope_left(1:sz2)
-       data_array_deriv_eta1(2,1:sz2)     = interpolator%slope_right(1:sz2)
+       data_array_deriv_eta1(1,1:sz2)     = interpolator%slope(1:sz2,W)
+       data_array_deriv_eta1(2,1:sz2)     = interpolator%slope(1:sz2,E)
        point_location_eta2_deriv(1) = 1
        point_location_eta2_deriv(2) = sz2
-       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_bottom(1:sz1+sz_derivative_eta1)
-       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_top(1:sz1+sz_derivative_eta1)
+       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope(1:sz1+sz_derivative_eta1,S)
+       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope(1:sz1+sz_derivative_eta1,N)
        call spli2d_custom_derder(&
             sz1,&
             sz_derivative_eta1,&
@@ -3409,12 +3366,12 @@ subroutine set_slope2d( interpolator,  &
        data_array_tmp = data_array(1:sz1,1:sz2)
        point_location_eta1_deriv(1) = 1
        point_location_eta1_deriv(2) = sz1
-       data_array_deriv_eta1(1,1:sz2)     = interpolator%slope_left(1:sz2)
-       data_array_deriv_eta1(2,1:sz2)     = interpolator%slope_right(1:sz2)
+       data_array_deriv_eta1(1,1:sz2)     = interpolator%slope(1:sz2,W)
+       data_array_deriv_eta1(2,1:sz2)     = interpolator%slope(1:sz2,E)
        point_location_eta2_deriv(1) = 1
        point_location_eta2_deriv(2) = sz2
-       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_bottom(1:sz1+sz_derivative_eta1)
-       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_top(1:sz1+sz_derivative_eta1)
+       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope(1:sz1+sz_derivative_eta1,S)
+       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope(1:sz1+sz_derivative_eta1,N)
        call spli2d_custom_derder(&
             sz1,&
             sz_derivative_eta1,&
@@ -3459,12 +3416,12 @@ subroutine set_slope2d( interpolator,  &
        data_array_tmp = data_array(1:sz1,1:sz2)
        point_location_eta1_deriv(1) = 1
        point_location_eta1_deriv(2) = sz1
-       data_array_deriv_eta1(1,1:sz2)     = interpolator%slope_left(1:sz2)
-       data_array_deriv_eta1(2,1:sz2)     = interpolator%slope_right(1:sz2)
+       data_array_deriv_eta1(1,1:sz2)     = interpolator%slope(1:sz2,W)
+       data_array_deriv_eta1(2,1:sz2)     = interpolator%slope(1:sz2,E)
        point_location_eta2_deriv(1) = 1
        point_location_eta2_deriv(2) = sz2
-       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_bottom(1:sz1+sz_derivative_eta1)
-       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_top(1:sz1+sz_derivative_eta1)
+       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope(1:sz1+sz_derivative_eta1,S)
+       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope(1:sz1+sz_derivative_eta1,N)
        call spli2d_custom_derder(&
             sz1,&
             sz_derivative_eta1,&
