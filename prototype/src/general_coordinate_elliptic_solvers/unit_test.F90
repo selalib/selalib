@@ -63,7 +63,7 @@ real(8), external :: source_term_chgt_dirdir
 real(8), external :: f_sin, u_sin, u_sin_der1, u_sin_der2
 real(8), external :: f_cos, u_cos, u_cos_der1, u_cos_der2
 
-sll_real64 :: acc(15)
+sll_real64 :: acc(15)    
 sll_real64 :: normL2(15)
 sll_real64 :: normH1(15)
 
@@ -196,7 +196,6 @@ do k = itest1, itest2
        (/ 0.0_f64 /) )
 
   call initialize_fields( SLL_PERIODIC, SLL_PERIODIC, SLL_PERIODIC, SLL_PERIODIC)
-
 
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_perper, &
@@ -1200,6 +1199,9 @@ do k = 1, 13
   write(file_id,"(a)") "load 'phi_"//ccase//".gnu'"
   write(file_id,"(a)") " pause -1"
 end do
+
+print*, 'PASSED'
+
   
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
@@ -1429,9 +1431,9 @@ subroutine check_error(icase)
   acc(icase) = sum(abs(calculated-reference))/(npts1*npts2)
   if ((sqrt(normL2(icase)) <= h1**(SPLINE_DEG1-1))   .AND. &
     (sqrt(normH1(icase)) <= h1**(SPLINE_DEG1-1-1))) then     
-     print"('test:',i2,4x,'error=',g15.3, 4X, 'PASSED')", icase, acc(icase)
+     print"('test:',i2,4x,'error=',g15.3, 4x, 'OK' )", icase, acc(icase)
   else
-     stop 'FAILED'
+    stop 'FAILED'
   end if
 
 end subroutine check_error
