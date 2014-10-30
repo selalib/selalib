@@ -12,7 +12,6 @@ program VP1d_deltaf
 #include "sll_field_2d.h"
 
   use sll_constants
-  !use sll_module_mapped_meshes_2d_cartesian
   use sll_cartesian_meshes
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
@@ -30,8 +29,6 @@ program VP1d_deltaf
   type(sll_periodic_interpolator_1d), target      :: interp_per_x, interp_per_v
   type(sll_cubic_spline_interpolator_1d), target      :: interp_comp_v
   class(sll_interpolator_1d_base), pointer    :: interp_x, interp_v
-  !type(sll_mapped_mesh_2d_cartesian), target   :: mesh2d 
-  !class(sll_mapped_mesh_2d_base), pointer :: mesh2d_base
   type(sll_cartesian_mesh_2d), pointer :: mesh2d_cart
   class(sll_coordinate_transformation_2d_base), pointer   :: mesh2d_base
   type(init_landau_2d), target :: init_landau
