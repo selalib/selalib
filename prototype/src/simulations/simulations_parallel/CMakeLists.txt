@@ -59,6 +59,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
     ADD_SUBDIRECTORY( sim_2d_vlasov_poisson_cartesian    )
     ADD_SUBDIRECTORY( sim_2d_vlasov_poisson_no_splitting )
     ADD_SUBDIRECTORY( sim_4d_vlasov_poisson_cartesian    )
+    ADD_SUBDIRECTORY( sim_4d_vlasov_poisson_polar        )
 
 ENDIF()
 
