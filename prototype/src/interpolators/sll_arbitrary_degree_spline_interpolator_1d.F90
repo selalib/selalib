@@ -654,51 +654,46 @@ contains
  !> @param[in] slope_left  contains the value in the left for derivative
  !> @param[in] slope_right contains the value in the right for derivative
  !> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_1d
- subroutine set_values_at_boundary1d(&
-      interpolator,&
-      value_left,&
-      value_right,&
-      slope_left,&
-      slope_right)
+ subroutine set_values_at_boundary1d( interpolator, &
+                                      value_left,   &
+                                      value_right,  &
+                                      slope_left,   &
+                                      slope_right)
 
-   class(sll_arbitrary_degree_spline_interpolator_1d), intent(inout) :: interpolator
-   sll_real64, intent(in), optional     :: value_left
-   sll_real64, intent(in), optional     :: value_right
-   sll_real64, intent(in), optional     :: slope_left
-   sll_real64, intent(in), optional     :: slope_right
-   sll_int32 :: bc_left
-   sll_int32 :: bc_right
-   sll_int64 :: bc_selector
+  class(sll_arbitrary_degree_spline_interpolator_1d), intent(inout) :: interpolator
+  sll_real64, intent(in), optional     :: value_left
+  sll_real64, intent(in), optional     :: value_right
+  sll_real64, intent(in), optional     :: slope_left
+  sll_real64, intent(in), optional     :: slope_right
+  sll_int32 :: bc_left
+  sll_int32 :: bc_right
+  sll_int64 :: bc_selector
 
-   bc_left = interpolator%bc_left
-   bc_right= interpolator%bc_right
-   bc_selector = interpolator%bc_selector
+  bc_left = interpolator%bc_left
+  bc_right= interpolator%bc_right
+  bc_selector = interpolator%bc_selector
 
-   ! modify this such as slope
-   if (present(value_left)) then
-      interpolator%value_left = value_left
-      interpolator%compute_value_left = .FALSE.
-   end if
+  if (present(value_left)) then
+    interpolator%value_left = value_left
+    interpolator%compute_value_left = .FALSE.
+  end if
 
+  if (present(value_right)) then
+    interpolator%value_right = value_right
+    interpolator%compute_value_right = .FALSE.
+  end if
 
-   if (present(value_right)) then
-      interpolator%value_right = value_right
-      interpolator%compute_value_right = .FALSE.
-   end if
+  if (present(slope_left)) then
+    interpolator%slope_left = slope_left
+    interpolator%compute_slope_left = .FALSE.
+  end if
 
+  if (present(slope_right)) then
+    interpolator%slope_right = slope_right
+    interpolator%compute_slope_right = .FALSE.
+  end if
 
-   if (present(slope_left)) then
-      interpolator%slope_left = slope_left
-      interpolator%compute_slope_left = .FALSE.
-   end if
-
-
-   if (present(slope_right)) then
-       interpolator%slope_right = slope_right
-       interpolator%compute_slope_right = .FALSE.
-    end if
-
-  end subroutine set_values_at_boundary1d
+end subroutine set_values_at_boundary1d
 
   !> @brief computing the coefficients spline with a given
   !>  data_array 1D cooresponding at the values of a function

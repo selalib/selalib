@@ -10,10 +10,10 @@ implicit none
 #define NPTS1 64
 #define NPTS2 64 
 #define SPL_DEG 3
-#define X1MIN -2.0_f64*sll_pi
-#define X1MAX +2.0_f64*sll_pi
-#define X2MIN -2.0_f64*sll_pi
-#define X2MAX +2.0_f64*sll_pi
+#define X1MIN (-2.0_f64*sll_pi)
+#define X1MAX (+2.0_f64*sll_pi)
+#define X2MIN (-2.0_f64*sll_pi)
+#define X2MAX (+2.0_f64*sll_pi)
 #define TOLERANCE_NODE 1.0E-7_f64
 #define TOLERANCE_DER  3.0e-5_f64
 
@@ -32,7 +32,6 @@ sll_real64, dimension(NPTS2) :: value_right
 sll_real64, dimension(NPTS1) :: value_top
 sll_real64, dimension(NPTS1) :: value_bottom
 
-sll_int32  :: ierr
 sll_int32  :: i, j, k=0
 sll_real64 :: h1, h2
 sll_real64 :: acc(9)
@@ -40,9 +39,6 @@ sll_real64 :: acc_der1(9)
 sll_real64 :: acc_der2(9)
 sll_real64 :: normL2(9)
 sll_real64 :: normH1(9)
-logical :: result
-
-result = .true.
 
 h1 = (X1MAX-X1MIN)/(NPTS1-1)
 h2 = (X2MAX-X2MIN)/(NPTS2-1)
@@ -216,130 +212,95 @@ call check_interpolation( SLL_HERMITE, &
 print*, '--------------------------------------------'
 print*, ' Average error in nodes'
 print*, '--------------------------------------------'
-print *, 'Average error in nodes (periodic-periodic) = ', acc/(NPTS1*NPTS2)
-call test_value_for_acceptable_error(acc/(NPTS1*NPTS2), TOLERANCE_NODE,result)
-print *, 'Average error in nodes (dirichlet-dirichlet) = ', acc3/(NPTS1*NPTS2)
-call test_value_for_acceptable_error(acc3/(NPTS1*NPTS2), TOLERANCE_NODE,result)
-print *, 'Average error in nodes (dirichlet-periodic) = ', acc2/(NPTS1*NPTS2)
-call test_value_for_acceptable_error(acc2/(NPTS1*NPTS2), TOLERANCE_NODE,result)
-print *, 'Average error in nodes (periodic-dirichlet) = ', acc1/(NPTS1*NPTS2)
-call test_value_for_acceptable_error(acc1/(NPTS1*NPTS2), TOLERANCE_NODE,result)
-print *, 'Average error in nodes (hermite-dirichlet-dirichlet-hermite) = ', acc4/(NPTS1*NPTS2)
-call test_value_for_acceptable_error(acc4/(NPTS1*NPTS2), TOLERANCE_NODE,result)
-print *, 'Average error in nodes (hermite-dirichlet-hermite-dirichlet) = ', acc5/(NPTS1*NPTS2)
-call test_value_for_acceptable_error( acc5/(NPTS1*NPTS2), TOLERANCE_NODE,result)
-print *, 'Average error in nodes (dirichlet-hermite-hermite-dirichlet) = ', acc6/(NPTS1*NPTS2)
-call test_value_for_acceptable_error( acc6/(NPTS1*NPTS2), TOLERANCE_NODE,result)
-print *, 'Average error in nodes (dirichlet-hermite-dirichlet-hermite) = ', acc7/(NPTS1*NPTS2)
-call test_value_for_acceptable_error( acc7/(NPTS1*NPTS2), TOLERANCE_NODE,result)
-print *, 'Average error in nodes (hermite-hermite-hermite-hermite) = ', acc8/(NPTS1*NPTS2)
-call test_value_for_acceptable_error( acc8/(NPTS1*NPTS2), TOLERANCE_NODE,result)
+print*, 'Average error (periodic-periodic)                   = ', acc(1)
+print*, 'Average error (periodic-dirichlet)                  = ', acc(2)
+print*, 'Average error (dirichlet-periodic)                  = ', acc(3)
+print*, 'Average error (dirichlet-dirichlet)                 = ', acc(4)
+print*, 'Average error (hermite-dirichlet-dirichlet-hermite) = ', acc(5)
+print*, 'Average error (hermite-dirichlet-hermite-dirichlet) = ', acc(6)
+print*, 'Average error (dirichlet-hermite-hermite-dirichlet) = ', acc(7)
+print*, 'Average error (dirichlet-hermite-dirichlet-hermite) = ', acc(8)
+print*, 'Average error (hermite-hermite-hermite-hermite)     = ', acc(9)
 
 print*, '--------------------------------------------'
 print*, ' Average error in nodes first derivative eta1'
 print*, '--------------------------------------------'
-print *,'Average error first derivative eta1(dirichlet-dirichlet)=',acc3_der1/(NPTS1*NPTS2)
-call test_value_for_acceptable_error( acc3_der1/(NPTS1*NPTS2),TOLERANCE_DER,result)
-print *,'Average error first derivative eta1(dirichlet-periodic)=',acc2_der1/(NPTS1*NPTS2)
-call test_value_for_acceptable_error( acc2_der1/(NPTS1*NPTS2),TOLERANCE_DER,result)
-print *,'Average error first derivative eta1(periodic-dirichlet)=',acc1_der1/(NPTS1*NPTS2)
-call test_value_for_acceptable_error( acc1_der1/(NPTS1*NPTS2),TOLERANCE_DER,result)
-print *,'Average error first derivative eta1(periodic-periodic)=',acc_der1/(NPTS1*NPTS2)
-call test_value_for_acceptable_error( acc_der1/(NPTS1*NPTS2),TOLERANCE_DER,result)
-print *,'Average error first derivative eta1(hermite-dirichlet-dirichlet-hermite)=',acc4_der1/(NPTS1*NPTS2)
-call test_value_for_acceptable_error( acc4_der1/(NPTS1*NPTS2),TOLERANCE_DER,result)
-print *,'Average error first derivative eta1(hermite-dirichlet-hermite-dirichlet)=',acc5_der1/(NPTS1*NPTS2)
-call test_value_for_acceptable_error( acc5_der1/(NPTS1*NPTS2),TOLERANCE_DER,result)
-print *,'Average error first derivative eta1(dirichlet-hermite-hermite-dirichlet)=',acc6_der1/(NPTS1*NPTS2)
-call test_value_for_acceptable_error( acc6_der1/(NPTS1*NPTS2),TOLERANCE_DER,result)
-print *,'Average error first derivative eta1(dirichlet-hermite-dirichlet-hermite)=',acc7_der1/(NPTS1*NPTS2)
-call test_value_for_acceptable_error( acc7_der1/(NPTS1*NPTS2),TOLERANCE_DER,result)
-print *,'Average error first derivative eta1(hermite-hermite-hermite-hermite)=',acc8_der1/(NPTS1*NPTS2)
-call test_value_for_acceptable_error( acc8_der1/(NPTS1*NPTS2),TOLERANCE_DER,result)
+print*, 'Average error (periodic-periodic)                   = ',acc_der1(1)
+print*, 'Average error (periodic-dirichlet)                  = ',acc_der1(2)
+print*, 'Average error (dirichlet-periodic)                  = ',acc_der1(3)
+print*, 'Average error (dirichlet-dirichlet)                 = ',acc_der1(4)
+print*, 'Average error (hermite-dirichlet-dirichlet-hermite) = ',acc_der1(5)
+print*, 'Average error (hermite-dirichlet-hermite-dirichlet) = ',acc_der1(6)
+print*, 'Average error (dirichlet-hermite-hermite-dirichlet) = ',acc_der1(7)
+print*, 'Average error (dirichlet-hermite-dirichlet-hermite) = ',acc_der1(8)
+print*, 'Average error (hermite-hermite-hermite-hermite)     = ',acc_der1(9)
 
 print*, '--------------------------------------------'
 print*, ' Average error in nodes first derivative eta2'
 print*, '--------------------------------------------'
-print *,'Average error first derivative eta2(dirichlet-dirichlet)=',acc3_der2/(NPTS1*NPTS2)
-call test_value_for_acceptable_error( acc3_der2/(NPTS1*NPTS2),TOLERANCE_DER,result)
-print *,'Average error first derivative eta2(dirichlet-periodic)=',acc2_der2/(NPTS1*NPTS2)
-call test_value_for_acceptable_error( acc2_der2/(NPTS1*NPTS2),TOLERANCE_DER,result)
-print *,'Average error first derivative eta2(periodic-dirichlet)=',acc1_der2/(NPTS1*NPTS2)
-call test_value_for_acceptable_error( acc1_der2/(NPTS1*NPTS2),TOLERANCE_DER,result)
-print *,'Average error first derivative eta2(periodic-periodic)=',acc_der2/(NPTS1*NPTS2)
-call test_value_for_acceptable_error( acc_der2/(NPTS1*NPTS2),TOLERANCE_DER,result)
-print *,'Average error first derivative eta2(hermite-dirichlet-dirichlet-hermite)=',acc4_der2/(NPTS1*NPTS2)
-call test_value_for_acceptable_error( acc4_der2/(NPTS1*NPTS2),TOLERANCE_DER,result)
-print *,'Average error first derivative eta2(hermite-dirichlet-hermite-dirichlet)=',acc5_der2/(NPTS1*NPTS2)
-call test_value_for_acceptable_error( acc5_der2/(NPTS1*NPTS2),TOLERANCE_DER,result)
-print *,'Average error first derivative eta2(dirichlet-hermite-hermite-dirichlet)=',acc6_der2/(NPTS1*NPTS2)
-call test_value_for_acceptable_error( acc6_der2/(NPTS1*NPTS2),TOLERANCE_DER,result)
-print *,'Average error in nodes first derivative eta2(dirichlet-hermite-dirichlet-hermite)=',acc7_der2/(NPTS1*NPTS2)
-call test_value_for_acceptable_error( acc7_der2/(NPTS1*NPTS2),TOLERANCE_DER,result)
-print *,'Average error first derivative eta2(hermite-hermite-hermite-hermite)=',acc8_der2/(NPTS1*NPTS2)
-call test_value_for_acceptable_error( acc8_der2/(NPTS1*NPTS2),TOLERANCE_DER,result)
-
+print*, 'Average error (periodic-periodic)                   = ',acc_der2/(1)
+print*, 'Average error (periodic-dirichlet)                  = ',acc_der2/(2)
+print*, 'Average error (dirichlet-periodic)                  = ',acc_der2/(3)
+print*, 'Average error (dirichlet-dirichlet)                 = ',acc_der2/(4)
+print*, 'Average error (hermite-dirichlet-dirichlet-hermite) = ',acc_der2/(5)
+print*, 'Average error (hermite-dirichlet-hermite-dirichlet) = ',acc_der2/(6)
+print*, 'Average error (dirichlet-hermite-hermite-dirichlet) = ',acc_der2/(7)
+print*, 'Average error (dirichlet-hermite-dirichlet-hermite) = ',acc_der2/(8)
+print*, 'Average error (hermite-hermite-hermite-hermite)     = ',acc_der2/(9)
 
 print*, '--------------------------------------------'
 print*, ' Error norm L2'
 print*, '--------------------------------------------'
-print *,'Error norm L2 (dirichlet-dirichlet)=',                sqrt(normL2_3),h1**(SPL_DEG)*(2*sll_pi)
-print *,'Error norm L2 (dirichlet-periodic)=',                 sqrt(normL2_2),h1**(SPL_DEG)*(2*sll_pi)
-print *,'Error norm L2 (periodic-dirichlet)=',                 sqrt(normL2_1),h1**(SPL_DEG)*(2*sll_pi)
-print *,'Error norm L2 (periodic-periodic)=',                  sqrt(normL2_0),h1**(SPL_DEG)*(2*sll_pi)
-print *,'Error norm L2 (hermite-dirichlet-dirichlet-hermite)=',sqrt(normL2_4),h1**(SPL_DEG)*(2*sll_pi)
-print *,'Error norm L2 (hermite-dirichlet-hermite-dirichlet)=',sqrt(normL2_5),h1**(SPL_DEG)*(2*sll_pi)
-print *,'Error norm L2 (dirichlet-hermite-hermite-dirichlet)=',sqrt(normL2_6),h1**(SPL_DEG)*(2*sll_pi)
-print *,'Error norm L2 (dirichlet-hermite-dirichlet-hermite)=',sqrt(normL2_7),h1**(SPL_DEG)*(2*sll_pi)
-print *,'Error norm L2 (hermite-hermite-hermite-hermite)=',    sqrt(normL2_8),h1**(SPL_DEG)*(2*sll_pi)
+print*, 'Error norm L2 (periodic-periodic)                   = ',sqrt(normL2(1)),h1**(SPL_DEG)
+print*, 'Error norm L2 (periodic-dirichlet)                  = ',sqrt(normL2(2)),h1**(SPL_DEG)
+print*, 'Error norm L2 (dirichlet-periodic)                  = ',sqrt(normL2(3)),h1**(SPL_DEG)
+print*, 'Error norm L2 (dirichlet-dirichlet)                 = ',sqrt(normL2(4)),h1**(SPL_DEG)
+print*, 'Error norm L2 (hermite-dirichlet-dirichlet-hermite) = ',sqrt(normL2(5)),h1**(SPL_DEG)
+print*, 'Error norm L2 (hermite-dirichlet-hermite-dirichlet) = ',sqrt(normL2(6)),h1**(SPL_DEG)
+print*, 'Error norm L2 (dirichlet-hermite-hermite-dirichlet) = ',sqrt(normL2(7)),h1**(SPL_DEG)
+print*, 'Error norm L2 (dirichlet-hermite-dirichlet-hermite) = ',sqrt(normL2(8)),h1**(SPL_DEG)
+print*, 'Error norm L2 (hermite-hermite-hermite-hermite)     = ',sqrt(normL2(9)),h1**(SPL_DEG)
 print*, '--------------------------------------------'
 print*, ' Error norm H1'
 print*, '--------------------------------------------'
-print *,'Error norm H1 (dirichlet-dirichlet)=',                sqrt(normH1_3),h1**(SPL_DEG-3)*(2*sll_pi)**2
-print *,'Error norm H1 (dirichlet-periodic)=',                 sqrt(normH1_2),h1**(SPL_DEG-3)*(2*sll_pi)**2
-print *,'Error norm H1 (periodic-dirichlet)=',                 sqrt(normH1_1),h1**(SPL_DEG-3)*(2*sll_pi)**2
-print *,'Error norm H1 (periodic-periodic)=',                  sqrt(normH1_0),h1**(SPL_DEG-3)*(2*sll_pi)**2
-print *,'Error norm H1 (hermite-dirichlet-dirichlet-hermite)=',sqrt(normH1_4),h1**(SPL_DEG-3)*(2*sll_pi)**2
-print *,'Error norm H1 (hermite-dirichlet-hermite-dirichlet)=',sqrt(normH1_5),h1**(SPL_DEG-3)*(2*sll_pi)**2
-print *,'Error norm H1 (dirichlet-hermite-hermite-dirichlet)=',sqrt(normH1_6),h1**(SPL_DEG-3)*(2*sll_pi)**2
-print *,'Error norm H1 (dirichlet-hermite-dirichlet-hermite)=',sqrt(normH1_7),h1**(SPL_DEG-3)*(2*sll_pi)**2
-print *,'Error norm H1 (hermite-hermite-hermite-hermite)=',    sqrt(normH1_8),h1**(SPL_DEG-3)*(2*sll_pi)**2
+print*, 'Error norm H1 (periodic-periodic)                   = ',sqrt(normH1(1)),h1**(SPL_DEG-3)
+print*, 'Error norm H1 (periodic-dirichlet)                  = ',sqrt(normH1(2)),h1**(SPL_DEG-3)
+print*, 'Error norm H1 (dirichlet-periodic)                  = ',sqrt(normH1(3)),h1**(SPL_DEG-3)
+print*, 'Error norm H1 (dirichlet-dirichlet)                 = ',sqrt(normH1(4)),h1**(SPL_DEG-3)
+print*, 'Error norm H1 (hermite-dirichlet-dirichlet-hermite) = ',sqrt(normH1(5)),h1**(SPL_DEG-3)
+print*, 'Error norm H1 (hermite-dirichlet-hermite-dirichlet) = ',sqrt(normH1(6)),h1**(SPL_DEG-3)
+print*, 'Error norm H1 (dirichlet-hermite-hermite-dirichlet) = ',sqrt(normH1(7)),h1**(SPL_DEG-3)
+print*, 'Error norm H1 (dirichlet-hermite-dirichlet-hermite) = ',sqrt(normH1(8)),h1**(SPL_DEG-3)
+print*, 'Error norm H1 (hermite-hermite-hermite-hermite)     = ',sqrt(normH1(9)),h1**(SPL_DEG-3)
 
-if (  ( sqrt(normL2_0) <= h1**(SPL_DEG)*(2*sll_pi))   .AND. &
-      ( sqrt(normL2_1) <= h1**(SPL_DEG)*(2*sll_pi))   .AND. &
-      ( sqrt(normL2_2) <= h1**(SPL_DEG)*(2*sll_pi))   .AND. &
-      ( sqrt(normL2_3) <= h1**(SPL_DEG)*(2*sll_pi))   .AND. &
-      ( sqrt(normL2_4) <= h1**(SPL_DEG)*(2*sll_pi))   .AND. &
-      ( sqrt(normL2_5) <= h1**(SPL_DEG)*(2*sll_pi))   .AND. &
-      ( sqrt(normL2_6) <= h1**(SPL_DEG)*(2*sll_pi))   .AND. &
-      ( sqrt(normL2_7) <= h1**(SPL_DEG)*(2*sll_pi))   .AND. &
-      ( sqrt(normH1_0) <= h1**(SPL_DEG-3)*(2*sll_pi)**2) .AND. &
-      ( sqrt(normH1_1) <= h1**(SPL_DEG-3)*(2*sll_pi)**2) .AND. &
-      ( sqrt(normH1_2) <= h1**(SPL_DEG-3)*(2*sll_pi)**2) .AND. &
-      ( sqrt(normH1_4) <= h1**(SPL_DEG-3)*(2*sll_pi)**2) .AND. &
-      ( sqrt(normH1_5) <= h1**(SPL_DEG-3)*(2*sll_pi)**2) .AND. &
-      ( sqrt(normH1_6) <= h1**(SPL_DEG-3)*(2*sll_pi)**2) .AND. &
-      ( sqrt(normH1_7) <= h1**(SPL_DEG-3)*(2*sll_pi)**2) .AND. &
-      ( sqrt(normH1_8) <= h1**(SPL_DEG-3)*(2*sll_pi)**2) .AND. &
-      ( sqrt(normH1_3) <= h1**(SPL_DEG-3)*(2*sll_pi)**2)) then
+if (( sqrt(normL2(1)) <= h1**(SPL_DEG))   .AND. &
+    ( sqrt(normL2(2)) <= h1**(SPL_DEG))   .AND. &
+    ( sqrt(normL2(3)) <= h1**(SPL_DEG))   .AND. &
+    ( sqrt(normL2(4)) <= h1**(SPL_DEG))   .AND. &
+    ( sqrt(normL2(5)) <= h1**(SPL_DEG))   .AND. &
+    ( sqrt(normL2(6)) <= h1**(SPL_DEG))   .AND. &
+    ( sqrt(normL2(7)) <= h1**(SPL_DEG))   .AND. &
+    ( sqrt(normL2(8)) <= h1**(SPL_DEG))   .AND. &
+    ( sqrt(normL2(9)) <= h1**(SPL_DEG))   .AND. &
+    ( sqrt(normH1(1)) <= h1**(SPL_DEG-3)) .AND. &
+    ( sqrt(normH1(2)) <= h1**(SPL_DEG-3)) .AND. &
+    ( sqrt(normH1(3)) <= h1**(SPL_DEG-3)) .AND. &
+    ( sqrt(normH1(4)) <= h1**(SPL_DEG-3)) .AND. &
+    ( sqrt(normH1(5)) <= h1**(SPL_DEG-3)) .AND. &
+    ( sqrt(normH1(6)) <= h1**(SPL_DEG-3)) .AND. &
+    ( sqrt(normH1(7)) <= h1**(SPL_DEG-3)) .AND. &
+    ( sqrt(normH1(8)) <= h1**(SPL_DEG-3)) .AND. &
+    ( sqrt(normH1(9)) <= h1**(SPL_DEG-3))) then
     
-     print *, 'PASSED'
+  print *, 'PASSED'
+
+else
+
+  print *, 'FAILED'
+
 end if
 
 contains
-
-subroutine test_value_for_acceptable_error( value, max_error, boolean )
-sll_real64, intent(in) :: value
-sll_real64, intent(in) :: max_error
-logical, intent(inout) :: boolean
-
-if( value <= max_error ) then
-   boolean = boolean .and. .true.
-else
-   boolean = boolean .and. .false.
-end if
-
-end subroutine test_value_for_acceptable_error
 
 subroutine check_interpolation( bc_eta1_min, &
                                 bc_eta1_max, &
@@ -404,6 +365,10 @@ do j=1,NPTS2
     normH1(k)       = normH1(k) + (deriv2_val-df_eta2(i,j))**2 *h1*h2
   end do
 end do
+
+acc(k) = acc(k)/(NPTS1*NPTS2)
+acc_der1(k) = acc_der1(k)/(NPTS1*NPTS2)
+acc_der2(k) = acc_der2(k)/(NPTS1*NPTS2)
 
 call sll_delete(ad2d)
 
