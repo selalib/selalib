@@ -793,7 +793,7 @@ contains
         sim%tflat=0.
         sim%tL=0.
         sim%tR=0.
-        sim%turn_drive_off=0.
+        sim%turn_drive_off=.false.
         sim%Edrmax=0.
         sim%omegadr=0.    
       case("SLL_KEEN_DRIVE")
