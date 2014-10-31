@@ -15,7 +15,7 @@ module sll_simulation_4d_vlasov_poisson_general
   use sll_poisson_2d_periodic_cartesian_par
   use sll_module_cubic_spline_interpolator_1d
   use sll_simulation_base
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_parallel_array_initializer_module
   use sll_coordinate_transformation_2d_base_module
   use sll_gnuplot_parallel
@@ -41,8 +41,8 @@ module sll_simulation_4d_vlasov_poisson_general
      sll_int32  :: nc_x3
      sll_int32  :: nc_x4
      ! the logical meshes are split in two one for space, one for velocity
-     type(sll_logical_mesh_2d), pointer    :: mesh2d_x
-     type(sll_logical_mesh_2d), pointer    :: mesh2d_v
+     type(sll_cartesian_mesh_2d), pointer    :: mesh2d_x
+     type(sll_cartesian_mesh_2d), pointer    :: mesh2d_v
      ! This simulation only applies a coordinate transformation to the spatial
      ! coordinates.
      class(sll_coordinate_transformation_2d_base), pointer :: transfx
@@ -115,8 +115,8 @@ contains
    params )
 
    type(sll_simulation_4d_vp_general), intent(inout)     :: sim
-   type(sll_logical_mesh_2d), pointer                    :: mesh2d_x
-   type(sll_logical_mesh_2d), pointer                    :: mesh2d_v
+   type(sll_cartesian_mesh_2d), pointer                    :: mesh2d_x
+   type(sll_cartesian_mesh_2d), pointer                    :: mesh2d_v
    class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
    procedure(sll_scalar_initializer_4d)                  :: init_func
    sll_real64, dimension(:), target                      :: params
@@ -1081,8 +1081,8 @@ contains
     partial, &
     rho )
 
-    type(sll_logical_mesh_2d), pointer     :: mx
-    type(sll_logical_mesh_2d), pointer     :: mv
+    type(sll_cartesian_mesh_2d), pointer     :: mx
+    type(sll_cartesian_mesh_2d), pointer     :: mv
     sll_int32, intent(in)                  :: numpts1
     sll_int32, intent(in)                  :: numpts2
     sll_real64, intent(in),  dimension(:,:,:,:) :: f       ! local distr. func

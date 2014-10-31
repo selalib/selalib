@@ -11,6 +11,10 @@
 !  the software under the terms of the CeCILL-B license as 
 !  circulated by CEA, CNRS and INRIA at the following URL
 !  "http://www.cecill.info". 
+!
+!
+!  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
+!
 !**************************************************************
 
 #include "sll_fftw.h"
@@ -68,6 +72,7 @@ implicit none
 !> information about FFT, mesh and physical properties.
 type, public :: sll_maxwell_2d_pstd
 
+   private
    sll_int32           :: nc_eta1      !< x cells number
    sll_int32           :: nc_eta2      !< y cells number
    sll_int32           :: polarization !< TE or TM

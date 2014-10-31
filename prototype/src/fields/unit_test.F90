@@ -6,16 +6,14 @@ program unit_test
   use sll_module_interpolators_1d_base
   use sll_module_cubic_spline_interpolator_1d
   use sll_scalar_field_2d
- ! use sll_module_mapped_meshes_2d_base
- ! use sll_module_mapped_meshes_2d
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_module_coordinate_transformations_2d
   use sll_scalar_field_initializers_base
   use sll_landau_2d_initializer
   implicit none
   
   type(sll_coordinate_transformation_2d_analytic), pointer :: transf
-  type(sll_logical_mesh_2d), pointer :: ml
+  type(sll_cartesian_mesh_2d), pointer :: ml
   type(scalar_field_2d)                     :: field
   class(sll_coordinate_transformation_2d_base), pointer   :: m
   sll_int32 :: nc1, nc2, iplot
@@ -32,7 +30,7 @@ program unit_test
 
   nc1 = 10
   nc2 = 10
-  ml => new_logical_mesh_2d( nc1, nc2)
+  ml => new_cartesian_mesh_2d( nc1, nc2)
   px1 => sinprod_x1
   px2 => sinprod_x2
   pjac11 => sinprod_jac11
@@ -51,7 +49,10 @@ program unit_test
        pjac21, &
        pjac22, &
        sinprod_params )
+
+  print *, "in fields unit test : coo transf done"
   m => transf
+  print *, "in fields unit test : coo transf assigned"
 
   call init_landau%initialize(m,NODE_CENTERED_FIELD,0.001_f64)
   pfinit => init_landau
@@ -70,6 +71,7 @@ program unit_test
        interp_eta1_ptr, &
        interp_eta2_ptr, &
        pfinit )
+  print *, "in fields unit test : scalar field init done"
 
   print*, m%x1_at_node(5,3), m%x1(.3_f64, .4_f64)
 

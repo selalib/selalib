@@ -11,7 +11,7 @@ module sll_simulation_2d_analytic_field_curvilinear_module
 #include "sll_utilities.h"
 #include "sll_poisson_solvers.h"
   use sll_constants
-  use sll_logical_meshes  
+  use sll_cartesian_meshes  
   use sll_module_advection_1d_periodic
   use sll_module_advection_2d_BSL
   use sll_module_advection_2d_tensor_product
@@ -54,7 +54,7 @@ module sll_simulation_2d_analytic_field_curvilinear_module
     sll_simulation_2d_analytic_field_curvilinear
 
    !geometry
-   type(sll_logical_mesh_2d), pointer :: mesh_2d
+   type(sll_cartesian_mesh_2d), pointer :: mesh_2d
   
    !transformation 
     class(sll_coordinate_transformation_2d_base), pointer :: transformation
@@ -187,8 +187,8 @@ contains
     !local variables
     sll_int32 :: Nc_eta1
     sll_int32 :: Nc_eta2
-    type(sll_logical_mesh_1d), pointer :: mesh_x1
-    type(sll_logical_mesh_1d), pointer :: mesh_x2
+    type(sll_cartesian_mesh_1d), pointer :: mesh_x1
+    type(sll_cartesian_mesh_1d), pointer :: mesh_x2
     class(sll_interpolator_2d_base), pointer :: f_interp2d
     class(sll_interpolator_2d_base), pointer :: phi_interp2d
     class(sll_characteristics_2d_base), pointer :: charac2d
@@ -273,8 +273,8 @@ contains
     
     !geometry
     transf_case = "SLL_CARTESIAN"
-    mesh_case_eta1="SLL_LOGICAL_MESH"
-    mesh_case_eta2="SLL_LOGICAL_MESH"
+    mesh_case_eta1="SLL_CARTESIAN_MESH"
+    mesh_case_eta2="SLL_CARTESIAN_MESH"
     num_cells_eta1 = 128
     num_cells_eta2 = 128
     eta1_min = 0.0_f64
@@ -486,15 +486,15 @@ contains
     
     
     select case (mesh_case_eta1)
-      case ("SLL_LOGICAL_MESH")
-        mesh_x1 => new_logical_mesh_1d(Nc_eta1,eta_min=eta1_min, eta_max=eta1_max)  
+      case ("SLL_CARTESIAN_MESH")
+        mesh_x1 => new_cartesian_mesh_1d(Nc_eta1,eta_min=eta1_min, eta_max=eta1_max)  
       case default
         print*,'#mesh_case_eta1', mesh_case_eta1, ' not implemented'
         stop 
     end select
     select case (mesh_case_eta2)
-      case ("SLL_LOGICAL_MESH")
-        mesh_x2 => new_logical_mesh_1d(Nc_eta2,eta_min=eta2_min, eta_max=eta2_max)
+      case ("SLL_CARTESIAN_MESH")
+        mesh_x2 => new_cartesian_mesh_1d(Nc_eta2,eta_min=eta2_min, eta_max=eta2_max)
       case default
         print*,'#mesh_case_eta2', mesh_case_eta2, ' not implemented'
         stop 
@@ -504,7 +504,7 @@ contains
     !  x1= eta1 + alpha1*sin(2*pi*eta1/L1)*sin(2*pi*eta2/L2)
     params_mesh = (/ alpha1, alpha2, eta1_max-eta1_min, eta2_max-eta2_min/)
           
-!   sim%mesh_2d => new_logical_mesh_2d( &
+!   sim%mesh_2d => new_cartesian_mesh_2d( &
 !      Nc_eta1, &
 !      Nc_eta2, &
 !      eta1_min , &
@@ -1091,7 +1091,7 @@ contains
     sll_int32, intent(in) :: iplot
     character(len=4)      :: cplot
     sll_int32             :: nnodes_x1, nnodes_x2
-    type(sll_logical_mesh_2d), pointer :: mesh_2d
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     class(sll_coordinate_transformation_2d_base), pointer :: transf
     sll_real64, dimension(:,:), intent(in) :: f
     sll_real64 :: eta1

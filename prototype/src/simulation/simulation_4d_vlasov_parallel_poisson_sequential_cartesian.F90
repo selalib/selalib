@@ -36,7 +36,7 @@ module sll_simulation_4d_vlasov_parallel_poisson_sequential_cartesian
   use sll_buffer_loader_utilities_module
   use sll_constants
   !for mesh
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   
   use sll_gnuplot_parallel
   use sll_coordinate_transformation_2d_base_module
@@ -60,10 +60,10 @@ module sll_simulation_4d_vlasov_parallel_poisson_sequential_cartesian
        sll_simulation_4d_vlasov_par_poisson_seq_cart
 
    !geometry
-   type(sll_logical_mesh_1d), pointer :: mesh_x1
-   type(sll_logical_mesh_1d), pointer :: mesh_x2
-   type(sll_logical_mesh_1d), pointer :: mesh_x3
-   type(sll_logical_mesh_1d), pointer :: mesh_x4
+   type(sll_cartesian_mesh_1d), pointer :: mesh_x1
+   type(sll_cartesian_mesh_1d), pointer :: mesh_x2
+   type(sll_cartesian_mesh_1d), pointer :: mesh_x3
+   type(sll_cartesian_mesh_1d), pointer :: mesh_x4
 
 
    !initial function
@@ -216,11 +216,11 @@ contains
     num_cells_x2 = 16
     x2_min = 0.0_f64
     nbox_x2 = 1
-    mesh_case_x3="SLL_LOGICAL_MESH"   
+    mesh_case_x3="SLL_CARTESIAN_MESH"   
     num_cells_x3 = 16
     x3_min = -6._f64
     x3_max = 6._f64
-    mesh_case_x4="SLL_LOGICAL_MESH"   
+    mesh_case_x4="SLL_CARTESIAN_MESH"   
     num_cells_x4 = 16
     x4_min = -6._f64
     x4_max = 6._f64
@@ -282,9 +282,9 @@ contains
     select case (mesh_case_x1)
       case ("SLL_LANDAU_MESH")
         x1_max = real(nbox_x1,f64) * 2._f64 * sll_pi / kmode_x1
-        sim%mesh_x1 => new_logical_mesh_1d(num_cells_x1,eta_min=x1_min, eta_max=x1_max)
-      case ("SLL_LOGICAL_MESH")
-        sim%mesh_x1 => new_logical_mesh_1d(num_cells_x1,eta_min=x1_min, eta_max=x1_max)  
+        sim%mesh_x1 => new_cartesian_mesh_1d(num_cells_x1,eta_min=x1_min, eta_max=x1_max)
+      case ("SLL_CARTESIAN_MESH")
+        sim%mesh_x1 => new_cartesian_mesh_1d(num_cells_x1,eta_min=x1_min, eta_max=x1_max)  
       case default
         print*,'#mesh_case_x1', mesh_case_x1, ' not implemented'
         print*,'#in initialize_vlasov_par_poisson_seq_cart'
@@ -293,25 +293,25 @@ contains
     select case (mesh_case_x2)
       case ("SLL_LANDAU_MESH")
         x2_max = real(nbox_x2,f64) * 2._f64 * sll_pi / kmode_x1
-        sim%mesh_x2 => new_logical_mesh_1d(num_cells_x2,eta_min=x2_min, eta_max=x2_max)
-      case ("SLL_LOGICAL_MESH")
-        sim%mesh_x2 => new_logical_mesh_1d(num_cells_x2,eta_min=x2_min, eta_max=x2_max)
+        sim%mesh_x2 => new_cartesian_mesh_1d(num_cells_x2,eta_min=x2_min, eta_max=x2_max)
+      case ("SLL_CARTESIAN_MESH")
+        sim%mesh_x2 => new_cartesian_mesh_1d(num_cells_x2,eta_min=x2_min, eta_max=x2_max)
       case default
         print*,'#mesh_case_x2', mesh_case_x2, ' not implemented'
         print*,'#in initialize_vlasov_par_poisson_seq_cart'
         stop 
     end select
     select case (mesh_case_x3)
-      case ("SLL_LOGICAL_MESH")
-        sim%mesh_x3 => new_logical_mesh_1d(num_cells_x3,eta_min=x3_min, eta_max=x3_max)
+      case ("SLL_CARTESIAN_MESH")
+        sim%mesh_x3 => new_cartesian_mesh_1d(num_cells_x3,eta_min=x3_min, eta_max=x3_max)
       case default
         print*,'#mesh_case_x3', mesh_case_x3, ' not implemented'
         print*,'#in initialize_vlasov_par_poisson_seq_cart'
         stop 
     end select
     select case (mesh_case_x4)
-      case ("SLL_LOGICAL_MESH")
-        sim%mesh_x4 => new_logical_mesh_1d(num_cells_x4,eta_min=x4_min, eta_max=x4_max)
+      case ("SLL_CARTESIAN_MESH")
+        sim%mesh_x4 => new_cartesian_mesh_1d(num_cells_x4,eta_min=x4_min, eta_max=x4_max)
       case default
         print*,'#mesh_case_x4', mesh_case_x4, ' not implemented'
         print*,'#in initialize_vlasov_par_poisson_seq_cart'

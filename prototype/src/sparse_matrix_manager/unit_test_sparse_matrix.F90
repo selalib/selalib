@@ -21,7 +21,7 @@ program unit_test_sparse_matrix
 
   call sll_boot_collective()
   
-  num_rows = 32
+  num_rows = 2000
   num_elements = num_rows
   num_local_dof_row = 1
   

@@ -1,7 +1,7 @@
 module sll_module_scalar_field_2d_base
 #include "sll_working_precision.h"
   use sll_coordinate_transformation_2d_base_module
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   implicit none
 
 
@@ -11,7 +11,7 @@ module sll_module_scalar_field_2d_base
      ! it is already in the derived classes and is confusing...
      class(sll_coordinate_transformation_2d_base), pointer :: coord_trans 
    contains
-     procedure(function_get_mesh), deferred, pass :: get_logical_mesh
+     procedure(function_get_mesh), deferred, pass :: get_cartesian_mesh
      procedure(function_get_transformation), deferred, pass :: &
           get_transformation
      procedure(function_get_jacobian_matrix), deferred, pass :: &
@@ -43,10 +43,10 @@ module sll_module_scalar_field_2d_base
   !> Function signatures
   abstract interface
      function function_get_mesh(field) result(res)
-       use sll_logical_meshes
+       use sll_cartesian_meshes
        import sll_scalar_field_2d_base
        class(sll_scalar_field_2d_base), intent(in) :: field
-       type(sll_logical_mesh_2d), pointer :: res
+       class(sll_cartesian_mesh_2d), pointer :: res
      end function function_get_mesh
   end interface
 

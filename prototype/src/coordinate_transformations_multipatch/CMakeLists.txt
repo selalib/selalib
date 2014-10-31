@@ -3,7 +3,7 @@
 
    TARGET_LINK_LIBRARIES(sll_coordinate_transformation_multipatch
      sll_coordinate_transformations
-     sll_logical_meshes_multipatch
+     sll_meshes_multipatch
      sll_memory)
 
    ADD_EXECUTABLE(test_coordinate_transformation_multipatch_2d unit_test_2d.F90)
