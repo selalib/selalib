@@ -5,11 +5,11 @@ program test_lobalap_discrete
   use map_function_module, only: set_map_function
   use sll_lobatto_poisson
   use sll_dg_fields
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   implicit none
 
   type(lobatto_poisson_solver)        :: solver
-  type(sll_logical_mesh_2d), pointer  :: mesh
+  type(sll_cartesian_mesh_2d), pointer  :: mesh
   class(sll_coordinate_transformation_2d_base), pointer :: tau
   type(sll_dg_field_2d), pointer :: dg_rho
   type(sll_dg_field_2d), pointer :: dg_ex

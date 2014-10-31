@@ -14,7 +14,7 @@ module sll_simulation_4d_DK_hybrid_module
   use sll_collective
   use sll_remapper
   use sll_simulation_base
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_coordinate_transformation_2d_base_module
   use sll_module_coordinate_transformations_2d
   use sll_fdistribu4D_DK
@@ -93,7 +93,7 @@ module sll_simulation_4d_DK_hybrid_module
 
     !--> 4D logical mesh (eta1,eta2,eta3,vpar)
     sll_int32 :: Neta1, Neta2, Neta3, Nvpar
-    type(sll_logical_mesh_4d), pointer :: logical_mesh4d
+    type(sll_cartesian_mesh_4d), pointer :: cartesian_mesh4d
     sll_real64, dimension(:), pointer :: eta1_grid
     sll_real64, dimension(:), pointer :: eta2_grid
     sll_real64, dimension(:), pointer :: eta3_grid
@@ -223,13 +223,13 @@ contains
   subroutine initialize_4d_DK_hybrid( sim, &
       world_size, &
       my_rank, &
-      logical_mesh4d, &
+      cartesian_mesh4d, &
       transf_xy)
 
     type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
     sll_int32                        , intent(in)    :: world_size
     sll_int32                        , intent(in)    :: my_rank
-    type(sll_logical_mesh_4d)        , pointer       :: logical_mesh4d
+    type(sll_cartesian_mesh_4d)        , pointer       :: cartesian_mesh4d
     class(sll_coordinate_transformation_2d_base), pointer :: transf_xy
 
     sll_int32 :: ierr
@@ -258,26 +258,26 @@ contains
     sim%bc_right_vpar = SLL_DIRICHLET
 
     !--> Logical mesh initialization
-    sim%logical_mesh4d => logical_mesh4d
+    sim%cartesian_mesh4d => cartesian_mesh4d
     SLL_ALLOCATE(sim%eta1_grid(sim%Neta1),ierr)    
     SLL_ALLOCATE(sim%eta2_grid(sim%Neta2),ierr)
     SLL_ALLOCATE(sim%eta3_grid(sim%Neta3),ierr)
     SLL_ALLOCATE(sim%vpar_grid(sim%Nvpar),ierr)
     do ieta1 = 1,sim%Neta1
-      sim%eta1_grid(ieta1) = sim%logical_mesh4d%eta1_min + &
-          (ieta1-1)*sim%logical_mesh4d%delta_eta1
+      sim%eta1_grid(ieta1) = sim%cartesian_mesh4d%eta1_min + &
+          (ieta1-1)*sim%cartesian_mesh4d%delta_eta1
     end do
     do ieta2 = 1,sim%Neta2
-      sim%eta2_grid(ieta2) = sim%logical_mesh4d%eta2_min + &
-          (ieta2-1)*sim%logical_mesh4d%delta_eta2
+      sim%eta2_grid(ieta2) = sim%cartesian_mesh4d%eta2_min + &
+          (ieta2-1)*sim%cartesian_mesh4d%delta_eta2
     end do
     do ieta3 = 1,sim%Neta3
-      sim%eta3_grid(ieta3) = sim%logical_mesh4d%eta3_min + &
-          (ieta3-1)*sim%logical_mesh4d%delta_eta3
+      sim%eta3_grid(ieta3) = sim%cartesian_mesh4d%eta3_min + &
+          (ieta3-1)*sim%cartesian_mesh4d%delta_eta3
     end do
     do ivpar = 1,sim%Nvpar
-      sim%vpar_grid(ivpar) = sim%logical_mesh4d%eta4_min + &
-          (ivpar-1)*sim%logical_mesh4d%delta_eta4
+      sim%vpar_grid(ivpar) = sim%cartesian_mesh4d%eta4_min + &
+          (ivpar-1)*sim%cartesian_mesh4d%delta_eta4
     end do
 
     !--> Transformation initialization
@@ -884,12 +884,12 @@ contains
 
      !----> for interpolations
     call sim%interp2d_f_eta1eta2%initialize( &
-      sim%logical_mesh4d%num_cells1+1, &
-      sim%logical_mesh4d%num_cells2+1, &
-      sim%logical_mesh4d%eta1_min, &
-      sim%logical_mesh4d%eta1_max, &
-      sim%logical_mesh4d%eta2_min, &
-      sim%logical_mesh4d%eta2_max, &
+      sim%cartesian_mesh4d%num_cells1+1, &
+      sim%cartesian_mesh4d%num_cells2+1, &
+      sim%cartesian_mesh4d%eta1_min, &
+      sim%cartesian_mesh4d%eta1_max, &
+      sim%cartesian_mesh4d%eta2_min, &
+      sim%cartesian_mesh4d%eta2_max, &
       sim%bc_left_eta1, &
       sim%bc_right_eta1, &
       sim%bc_left_eta2, &
@@ -899,16 +899,16 @@ contains
 
     call sim%interp1d_f_eta3%initialize( &
        sim%Neta3, &
-       sim%logical_mesh4d%eta3_min, &
-       sim%logical_mesh4d%eta3_max, &
+       sim%cartesian_mesh4d%eta3_min, &
+       sim%cartesian_mesh4d%eta3_max, &
        sim%bc_left_eta3, &
        sim%bc_right_eta3, &
        sim%spline_degree_eta3)
 
     call sim%interp1d_f_vpar%initialize( &
        sim%Nvpar, &
-       sim%logical_mesh4d%eta4_min, &
-       sim%logical_mesh4d%eta4_max, &
+       sim%cartesian_mesh4d%eta4_min, &
+       sim%cartesian_mesh4d%eta4_max, &
        sim%bc_left_vpar, &
        sim%bc_right_vpar, &
        sim%spline_degree_vpar)
@@ -961,7 +961,7 @@ contains
     end do
 
     !--> Length in the second direction
-    Ltheta = abs(sim%logical_mesh4d%eta2_max-sim%logical_mesh4d%eta2_min) 
+    Ltheta = abs(sim%cartesian_mesh4d%eta2_max-sim%cartesian_mesh4d%eta2_min) 
     !--> Initialization of the equilibrium distribution function
     SLL_ALLOCATE(sim%feq_xyvpar(Nx,Ny,Nvpar),ierr)
     call init_fequilibrium_xy(sim%xgrid_2d,sim%ygrid_2d, &
@@ -986,8 +986,8 @@ contains
             i2 = glob_ind4d(2)
             i3 = glob_ind4d(3)
             i4 = glob_ind4d(4)
-            theta_j = sim%logical_mesh4d%eta2_min + &
-                (i2-1)*sim%logical_mesh4d%delta_eta2 
+            theta_j = sim%cartesian_mesh4d%eta2_min + &
+                (i2-1)*sim%cartesian_mesh4d%delta_eta2 
             ! theta_j = polar_eta2( &
             !      sim%xgrid_2d(i1,i2), &
             !      sim%ygrid_2d(i1,i2), &
@@ -1028,13 +1028,13 @@ contains
 
     type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 
-    type(sll_logical_mesh_2d), pointer :: logical_mesh2d
+    class(sll_cartesian_mesh_2d), pointer :: cartesian_mesh2d
     sll_int32 :: ierr
     sll_int32 :: loc3d_sz_x1, loc3d_sz_x2, loc3d_sz_x3
     sll_int32 :: nproc_x1
     sll_int32 :: nproc_x2
     sll_int32 :: nproc_x3
-    type(sll_logical_mesh_1d), pointer :: logical_mesh1d
+    type(sll_cartesian_mesh_1d), pointer :: logical_mesh1d
 
     ! layout for sequential operations in (x1,x2) 
     sim%power2 = int(log(real(sim%world_size))/log(2.0))
@@ -1104,16 +1104,16 @@ contains
     SLL_ALLOCATE(sim%E3d_x2_seqx1x2(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
     
     !---->
-    logical_mesh2d => sim%transf_xy%mesh
+    cartesian_mesh2d => sim%transf_xy%get_cartesian_mesh()
 
     !---> For iterpolations of Phi
     call sim%interp2d_Phi_eta1eta2%initialize( &
-      logical_mesh2d%num_cells1+1, &
-      logical_mesh2d%num_cells2+1, &
-      logical_mesh2d%eta1_min, &
-      logical_mesh2d%eta1_max, &
-      logical_mesh2d%eta2_min, &
-      logical_mesh2d%eta2_max, &
+      cartesian_mesh2d%num_cells1+1, &
+      cartesian_mesh2d%num_cells2+1, &
+      cartesian_mesh2d%eta1_min, &
+      cartesian_mesh2d%eta1_max, &
+      cartesian_mesh2d%eta2_min, &
+      cartesian_mesh2d%eta2_max, &
       sim%bc_left_eta1, &
       sim%bc_right_eta1, &
       sim%bc_left_eta2, &
@@ -1123,20 +1123,20 @@ contains
 
     call sim%interp1d_Phi_eta3%initialize( &
        sim%Neta3, &
-       sim%logical_mesh4d%eta3_min, &
-       sim%logical_mesh4d%eta3_max, &
+       sim%cartesian_mesh4d%eta3_min, &
+       sim%cartesian_mesh4d%eta3_max, &
        sim%bc_left_eta3, &
        sim%bc_right_eta3, &
        sim%spline_degree_eta3)
 
     !---> For rho
     call sim%interp2d_rho_eta1eta2%initialize( &
-      logical_mesh2d%num_cells1 +1, &
-      logical_mesh2d%num_cells2 +1, &
-      logical_mesh2d%eta1_min, &
-      logical_mesh2d%eta1_max, &
-      logical_mesh2d%eta2_min, &
-      logical_mesh2d%eta2_max, &
+      cartesian_mesh2d%num_cells1 +1, &
+      cartesian_mesh2d%num_cells2 +1, &
+      cartesian_mesh2d%eta1_min, &
+      cartesian_mesh2d%eta1_max, &
+      cartesian_mesh2d%eta2_min, &
+      cartesian_mesh2d%eta2_max, &
       sim%bc_left_eta1, &
       sim%bc_right_eta1, &
       sim%bc_left_eta2, &
@@ -1146,12 +1146,12 @@ contains
 
     !---> For all the matrices required for QN solver
     call sim%interp2d_QN_A11%initialize( &
-      logical_mesh2d%num_cells1 +1, &
-      logical_mesh2d%num_cells2 +1, &
-      logical_mesh2d%eta1_min, &
-      logical_mesh2d%eta1_max, &
-      logical_mesh2d%eta2_min, &
-      logical_mesh2d%eta2_max, &
+      cartesian_mesh2d%num_cells1 +1, &
+      cartesian_mesh2d%num_cells2 +1, &
+      cartesian_mesh2d%eta1_min, &
+      cartesian_mesh2d%eta1_max, &
+      cartesian_mesh2d%eta2_min, &
+      cartesian_mesh2d%eta2_max, &
       sim%bc_left_eta1, &
       sim%bc_right_eta1, &
       sim%bc_left_eta2, &
@@ -1160,12 +1160,12 @@ contains
       sim%spline_degree_eta2)    
 
     call sim%interp2d_QN_A12%initialize( &
-      logical_mesh2d%num_cells1 +1, &
-      logical_mesh2d%num_cells2 +1, &
-      logical_mesh2d%eta1_min, &
-      logical_mesh2d%eta1_max, &
-      logical_mesh2d%eta2_min, &
-      logical_mesh2d%eta2_max, &
+      cartesian_mesh2d%num_cells1 +1, &
+      cartesian_mesh2d%num_cells2 +1, &
+      cartesian_mesh2d%eta1_min, &
+      cartesian_mesh2d%eta1_max, &
+      cartesian_mesh2d%eta2_min, &
+      cartesian_mesh2d%eta2_max, &
       sim%bc_left_eta1, &
       sim%bc_right_eta1, &
       sim%bc_left_eta2, &
@@ -1174,12 +1174,12 @@ contains
       sim%spline_degree_eta2)    
 
     call sim%interp2d_QN_A21%initialize( &
-      logical_mesh2d%num_cells1 +1, &
-      logical_mesh2d%num_cells2 +1, &
-      logical_mesh2d%eta1_min, &
-      logical_mesh2d%eta1_max, &
-      logical_mesh2d%eta2_min, &
-      logical_mesh2d%eta2_max, &
+      cartesian_mesh2d%num_cells1 +1, &
+      cartesian_mesh2d%num_cells2 +1, &
+      cartesian_mesh2d%eta1_min, &
+      cartesian_mesh2d%eta1_max, &
+      cartesian_mesh2d%eta2_min, &
+      cartesian_mesh2d%eta2_max, &
       sim%bc_left_eta1, &
       sim%bc_right_eta1, &
       sim%bc_left_eta2, &
@@ -1188,12 +1188,12 @@ contains
       sim%spline_degree_eta2)    
 
     call sim%interp2d_QN_A22%initialize( &
-      logical_mesh2d%num_cells1 +1, &
-      logical_mesh2d%num_cells2 +1, &
-      logical_mesh2d%eta1_min, &
-      logical_mesh2d%eta1_max, &
-      logical_mesh2d%eta2_min, &
-      logical_mesh2d%eta2_max, &
+      cartesian_mesh2d%num_cells1 +1, &
+      cartesian_mesh2d%num_cells2 +1, &
+      cartesian_mesh2d%eta1_min, &
+      cartesian_mesh2d%eta1_max, &
+      cartesian_mesh2d%eta2_min, &
+      cartesian_mesh2d%eta2_max, &
       sim%bc_left_eta1, &
       sim%bc_right_eta1, &
       sim%bc_left_eta2, &
@@ -1202,12 +1202,12 @@ contains
       sim%spline_degree_eta2)    
 
     call sim%interp2d_QN_B1%initialize( &
-      logical_mesh2d%num_cells1 +1, &
-      logical_mesh2d%num_cells2 +1, &
-      logical_mesh2d%eta1_min, &
-      logical_mesh2d%eta1_max, &
-      logical_mesh2d%eta2_min, &
-      logical_mesh2d%eta2_max, &
+      cartesian_mesh2d%num_cells1 +1, &
+      cartesian_mesh2d%num_cells2 +1, &
+      cartesian_mesh2d%eta1_min, &
+      cartesian_mesh2d%eta1_max, &
+      cartesian_mesh2d%eta2_min, &
+      cartesian_mesh2d%eta2_max, &
       sim%bc_left_eta1, &
       sim%bc_right_eta1, &
       sim%bc_left_eta2, &
@@ -1216,12 +1216,12 @@ contains
       sim%spline_degree_eta2)
         
     call sim%interp2d_QN_B2%initialize( &
-      logical_mesh2d%num_cells1 +1, &
-      logical_mesh2d%num_cells2 +1, &
-      logical_mesh2d%eta1_min, &
-      logical_mesh2d%eta1_max, &
-      logical_mesh2d%eta2_min, &
-      logical_mesh2d%eta2_max, &
+      cartesian_mesh2d%num_cells1 +1, &
+      cartesian_mesh2d%num_cells2 +1, &
+      cartesian_mesh2d%eta1_min, &
+      cartesian_mesh2d%eta1_max, &
+      cartesian_mesh2d%eta2_min, &
+      cartesian_mesh2d%eta2_max, &
       sim%bc_left_eta1, &
       sim%bc_right_eta1, &
       sim%bc_left_eta2, &
@@ -1230,12 +1230,12 @@ contains
       sim%spline_degree_eta2)
     
     call sim%interp2d_QN_C%initialize( &
-      logical_mesh2d%num_cells1 +1, &
-      logical_mesh2d%num_cells2 +1, &
-      logical_mesh2d%eta1_min, &
-      logical_mesh2d%eta1_max, &
-      logical_mesh2d%eta2_min, &
-      logical_mesh2d%eta2_max, &
+      cartesian_mesh2d%num_cells1 +1, &
+      cartesian_mesh2d%num_cells2 +1, &
+      cartesian_mesh2d%eta1_min, &
+      cartesian_mesh2d%eta1_max, &
+      cartesian_mesh2d%eta2_min, &
+      cartesian_mesh2d%eta2_max, &
       sim%bc_left_eta1, &
       sim%bc_right_eta1, &
       sim%bc_left_eta2, &
@@ -1253,7 +1253,7 @@ contains
       sim%bc_left_eta2, &
       sim%bc_right_eta2)
     !-----> phi1D in the direction eta3
-    logical_mesh1d => new_logical_mesh_1d( &
+    logical_mesh1d => new_cartesian_mesh_1d( &
       sim%nc_x3,eta_min=sim%phi_min,eta_max=sim%phi_max)
     sim%phi1d => new_scalar_field_1d_discrete_alt( &
          "phi1d_seqx3", &
@@ -1296,7 +1296,7 @@ contains
     sll_real64, dimension(:,:), pointer :: B1
     sll_real64, dimension(:,:), pointer :: B2
     sll_real64, dimension(:,:), pointer :: C
-    type(sll_logical_mesh_2d), pointer :: logical_mesh2d
+    class(sll_cartesian_mesh_2d), pointer :: cartesian_mesh2d
 
     Neta1 = sim%Neta1
     Neta2 = sim%Neta2
@@ -1400,23 +1400,23 @@ contains
     call sim%QN_C%update_interpolation_coefficients( )
 
     !---> Initialization of the QNS type
-    logical_mesh2d => sim%transf_xy%mesh
+    cartesian_mesh2d => sim%transf_xy%get_cartesian_mesh()
 
     sim%QNS => new_general_elliptic_solver( &
       sim%spline_degree_eta1, & 
       sim%spline_degree_eta2, & 
-      logical_mesh2d%num_cells1, &
-      logical_mesh2d%num_cells2, &
+      cartesian_mesh2d%num_cells1, &
+      cartesian_mesh2d%num_cells2, &
       ES_GAUSS_LEGENDRE, &  ! put in arguments
       ES_GAUSS_LEGENDRE, &  ! put in arguments
       sim%bc_left_eta1, &
       sim%bc_right_eta1, &
       sim%bc_left_eta2, &
       sim%bc_right_eta2, &
-      logical_mesh2d%eta1_min, &  
-      logical_mesh2d%eta1_max, & 
-      logical_mesh2d%eta2_min, & 
-      logical_mesh2d%eta2_max ) 
+      cartesian_mesh2d%eta1_min, &  
+      cartesian_mesh2d%eta1_max, & 
+      cartesian_mesh2d%eta2_min, & 
+      cartesian_mesh2d%eta2_max ) 
 
     SLL_DEALLOCATE(A11,ierr)
     SLL_DEALLOCATE(A12,ierr)
@@ -1608,7 +1608,7 @@ contains
     Neta2_loc  = size(sim%f4d_seqx3x4,2)
     Neta3      = size(sim%f4d_seqx3x4,3)
     Nvpar      = size(sim%f4d_seqx3x4,4)
-    delta_vpar = sim%logical_mesh4d%delta_eta4 
+    delta_vpar = sim%cartesian_mesh4d%delta_eta4 
 
     !-> Computation of the charge density locally in (x1,x2) directions
     do i3 = 1,Neta3
@@ -2007,13 +2007,13 @@ contains
             eta1    = sim%eta1_grid(ieta1) - alpha1
             eta2    = sim%eta2_grid(ieta2) - alpha2
             
-            if (eta1 < sim%logical_mesh4d%eta1_min) then 
+            if (eta1 < sim%cartesian_mesh4d%eta1_min) then 
                !print*, 'value point', eta1
-               eta1 = sim%logical_mesh4d%eta1_min
+               eta1 = sim%cartesian_mesh4d%eta1_min
                !print*, 'value f', sim%interp2d_f_eta1eta2%interpolate_value(eta1,eta2)
-            else if ( eta1> sim%logical_mesh4d%eta1_max) then 
+            else if ( eta1> sim%cartesian_mesh4d%eta1_max) then 
                !print*, 'value point', eta1
-               eta1 = sim%logical_mesh4d%eta1_max
+               eta1 = sim%cartesian_mesh4d%eta1_max
                !print*, 'value f', sim%interp2d_f_eta1eta2%interpolate_value(eta1,eta2)
             end if
             sim%f4d_seqx1x2(ieta1,ieta2,iloc3,iloc4) = &
@@ -2408,10 +2408,10 @@ contains
     Neta2      = sim%nc_x2 + 1
     Neta3      = size(sim%f4d_seqx3x4,3)
     Nvpar      = size(sim%f4d_seqx3x4,4)
-    delta_eta1 = sim%logical_mesh4d%delta_eta1
-    delta_eta2 = sim%logical_mesh4d%delta_eta2
-    delta_eta3 = sim%logical_mesh4d%delta_eta3
-    delta_vpar = sim%logical_mesh4d%delta_eta4
+    delta_eta1 = sim%cartesian_mesh4d%delta_eta1
+    delta_eta2 = sim%cartesian_mesh4d%delta_eta2
+    delta_eta3 = sim%cartesian_mesh4d%delta_eta3
+    delta_vpar = sim%cartesian_mesh4d%delta_eta4
 
     sim%time_evol(diag_num) = sim%iter_time
 
@@ -2521,10 +2521,10 @@ contains
     Neta2      = sim%nc_x2 + 1
     Neta3      = size(sim%f4d_seqx3x4,3)
     Nvpar      = size(sim%f4d_seqx3x4,4)
-    delta_eta1 = sim%logical_mesh4d%delta_eta1
-    delta_eta2 = sim%logical_mesh4d%delta_eta2
-    delta_eta3 = sim%logical_mesh4d%delta_eta3
-    delta_vpar = sim%logical_mesh4d%delta_eta4
+    delta_eta1 = sim%cartesian_mesh4d%delta_eta1
+    delta_eta2 = sim%cartesian_mesh4d%delta_eta2
+    delta_eta3 = sim%cartesian_mesh4d%delta_eta3
+    delta_vpar = sim%cartesian_mesh4d%delta_eta4
     
     norm_L1    = 0.0
     norm_L2    = 0.0

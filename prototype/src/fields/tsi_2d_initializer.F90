@@ -57,7 +57,7 @@ contains
   subroutine f_x1x2_tsi_2d( init_obj, data_out )
     class(init_tsi_2d), intent(inout)       :: init_obj
     class(sll_coordinate_transformation_2d_base), pointer :: transf
-    type(sll_logical_mesh_2d), pointer                    :: mesh
+    class(sll_cartesian_mesh_2d), pointer                    :: mesh
     sll_real64, dimension(:,:), intent(out)    :: data_out
     sll_int32  :: i
     sll_int32  :: j
@@ -73,7 +73,7 @@ contains
     eps = init_obj%eps
     v0 = init_obj%v0
     transf => init_obj%transf
-    mesh => transf%mesh
+    mesh => transf%get_cartesian_mesh()
 
     if (init_obj%data_position ==  NODE_CENTERED_FIELD) then
        num_pts1 = mesh%num_cells1+1

@@ -1,3 +1,6 @@
+!
+!  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
+!
 #define MPI_MASTER 0
 program test_maxwell_2d_periodic_cart_par
 
