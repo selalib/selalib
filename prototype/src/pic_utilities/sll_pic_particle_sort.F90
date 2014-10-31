@@ -20,7 +20,7 @@ module sll_particle_sort_module
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_particle_representations
   use sll_particle_group_4d_module
   implicit none
@@ -28,7 +28,7 @@ module sll_particle_sort_module
   type :: sll_particle_sorter_2d
      sll_int32, dimension(:), pointer   :: pa
      sll_int32, dimension(:), pointer   :: pa_save
-     type(sll_logical_mesh_2d), pointer :: mesh
+     type(sll_cartesian_mesh_2d), pointer :: mesh
      sll_int32                          :: num_cells
   end type sll_particle_sorter_2d
   
@@ -40,7 +40,7 @@ contains
 
   function sll_new_particle_sorter_2d( mesh ) result(res)
     type(sll_particle_sorter_2d), pointer :: res
-    type(sll_logical_mesh_2d), pointer    :: mesh
+    type(sll_cartesian_mesh_2d), pointer    :: mesh
     sll_int32 :: ierr
     sll_int32 :: ncx
     sll_int32 :: ncy

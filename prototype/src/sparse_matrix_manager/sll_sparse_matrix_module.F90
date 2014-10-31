@@ -135,7 +135,6 @@ subroutine initialize_csr_matrix( &
   sll_int32,  dimension(:,:), allocatable  :: lpi_columns
   sll_int32,  dimension(:),   allocatable  :: lpi_occ
   sll_int32                                :: li_COEF
-  sll_int32                                :: li_err
   sll_int32                                :: li_e
   sll_int32                                :: li_b_1
   sll_int32                                :: li_A_1
@@ -239,8 +238,6 @@ subroutine initialize_csr_matrix( &
       if (lpi_columns(li_A_1, 0) == 0) cycle
 
       li_size = lpi_columns(li_A_1, 0)
-
-      if (li_err .ne. 0) li_flag = 10
 
       call QsortC(lpi_columns(li_A_1, 1: li_size))
 
@@ -461,10 +458,8 @@ subroutine sll_solve_csr_matrix(mat, apr_B, apr_U)
     return
   end if
 
-  allocate(lpr_Ad(mat%num_rows),stat=li_err)
-  if (li_err.ne.0) li_flag=10
-  allocate(lpr_d(mat%num_rows),stat=li_err)
-  if (li_err.ne.0) li_flag=30
+  SLL_ALLOCATE(lpr_Ad(mat%num_rows),li_err)
+  SLL_ALLOCATE(lpr_d(mat%num_rows),li_err)
   
   apr_U   = 0.0_8
   li_iter = 0
@@ -614,16 +609,11 @@ subroutine sll_solve_csr_matrix_perper ( this, apr_B,apr_U,Masse_tot )
     return
   end if
 
-  allocate(lpr_Ad(this%num_rows),stat=li_err)
-  if (li_err.ne.0) li_flag=10
-  allocate(lpr_r(this%num_rows),stat=li_err)
-  if (li_err.ne.0) li_flag=20
-  allocate(lpr_d(this%num_rows),stat=li_err)
-  if (li_err.ne.0) li_flag=30
-  allocate(lpr_Ux(this%num_rows),stat=li_err)
-  if (li_err.ne.0) li_flag=40
-  allocate(one(this%num_rows),stat=li_err)
-  if (li_err.ne.0) li_flag=50
+  SLL_ALLOCATE(lpr_Ad(this%num_rows),li_err)
+  SLL_ALLOCATE(lpr_r(this%num_rows),li_err)
+  SLL_ALLOCATE(lpr_d(this%num_rows),li_err)
+  SLL_ALLOCATE(lpr_Ux(this%num_rows),li_err)
+  SLL_ALLOCATE(one(this%num_rows),li_err)
 
   apr_U(:)  = 0.0_8
   one(:) = 1.

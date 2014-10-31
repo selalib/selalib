@@ -50,7 +50,7 @@ contains
     class(init_landau_2d), intent(inout)       :: init_obj
     class(sll_coordinate_transformation_2d_base), pointer :: transf
     sll_real64, dimension(:,:), intent(out)    :: data_out
-    type(sll_logical_mesh_2d), pointer         :: mesh
+    class(sll_cartesian_mesh_2d), pointer         :: mesh
     sll_int32  :: i
     sll_int32  :: j
     sll_int32  :: num_pts1
@@ -62,7 +62,7 @@ contains
 
     eps = init_obj%eps
     transf => init_obj%transf
-    mesh => transf%mesh
+    mesh => transf%get_cartesian_mesh()
 
     if (init_obj%data_position ==  NODE_CENTERED_FIELD) then
        num_pts1 = mesh%num_cells1+1

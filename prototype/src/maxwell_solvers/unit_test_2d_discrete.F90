@@ -1,3 +1,6 @@
+!
+!  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
+!
 program test_maxwell_2d_discrete
 !--------------------------------------------------------------------------
 !  test 2D Maxwell solver based on discontinuous galerkine on a mapped mesh
@@ -9,7 +12,7 @@ program test_maxwell_2d_discrete
 #include "sll_constants.h"
 #include "sll_maxwell_solvers_macros.h"
 #include "sll_file_io.h"
-#include "sll_logical_meshes.h"
+#include "sll_cartesian_meshes.h"
 #include "sll_coordinate_transformations.h"
 
 use sll_module_cubic_spline_interpolator_2d
@@ -22,7 +25,7 @@ implicit none
 #define NPTS1 33
 #define NPTS2 33 
 
-type(sll_logical_mesh_2d), pointer :: mesh
+type(sll_cartesian_mesh_2d), pointer :: mesh
 class(sll_coordinate_transformation_2d_base), pointer :: tau_d ! discrete transf
 class(sll_coordinate_transformation_2d_base), pointer :: tau_a ! analytic transf
 ! for the discrete case...
@@ -70,7 +73,7 @@ sll_real64, external :: sol_ex, sol_ey, sol_bz
   allocate(x2_eta1_max(NPTS2))
   allocate(jacs(NPTS1,NPTS2))
   
-  mesh => new_logical_mesh_2d( NPTS1-1, NPTS2-1 )
+  mesh => new_cartesian_mesh_2d( NPTS1-1, NPTS2-1 )
 
   do j=0,NPTS2-1
      do i=0,NPTS1-1

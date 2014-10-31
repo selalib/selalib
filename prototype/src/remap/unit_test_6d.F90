@@ -61,7 +61,7 @@ program remap_test_6d
   type(remap_plan_6D_real64), pointer       :: rmp6
 
   sll_real64                                :: rand_real
-  integer, parameter                        :: nbtest = 25
+  integer, parameter                        :: nbtest = 5
   integer                                   :: i_test
   integer                                   :: i, j, k, l, m, n
   sll_int32, dimension(6)                   :: global_indices, g

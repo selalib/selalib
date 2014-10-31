@@ -10,7 +10,7 @@ program vlasov_poisson_4d_general
   use sll_simulation_4d_vlasov_poisson_general
   use sll_collective
   use sll_constants
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
@@ -19,8 +19,8 @@ program vlasov_poisson_4d_general
   character(len=256) :: filename
   character(len=256) :: filename_local
   type(sll_simulation_4d_vp_general)      :: simulation
-  type(sll_logical_mesh_2d), pointer      :: mx
-  type(sll_logical_mesh_2d), pointer      :: mv
+  type(sll_cartesian_mesh_2d), pointer      :: mx
+  type(sll_cartesian_mesh_2d), pointer      :: mv
   class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
   sll_real64, dimension(1:5) :: landau_params
 
@@ -54,19 +54,19 @@ program vlasov_poisson_4d_general
 #define NPTS4 32
 
   ! logical mesh for space coordinates
-  mx => new_logical_mesh_2d( NPTS1, NPTS2,       & 
+  mx => new_cartesian_mesh_2d( NPTS1, NPTS2,       & 
        eta1_min=.0_f64, eta1_max=4.0_f64*sll_pi)
 
   ! logical mesh for velocity coordinates
-  mv => new_logical_mesh_2d( NPTS3, NPTS4, &
+  mv => new_cartesian_mesh_2d( NPTS3, NPTS4, &
        eta1_min=-6.0_f64, eta1_max=6.0_f64, &
        eta2_min=-6.0_f64, eta2_max=6.0_f64)
   print *, 'allocated logical meshes'
 !  ! logical mesh for space coordinates
-!  mx => new_logical_mesh_2d( NPTS1, NPTS2)
+!  mx => new_cartesian_mesh_2d( NPTS1, NPTS2)
 !
 !  ! logical mesh for velocity coordinates
-!  mv => new_logical_mesh_2d( NPTS1, NPTS2, &
+!  mv => new_cartesian_mesh_2d( NPTS1, NPTS2, &
 !       eta1_min=-6.0_f64, eta1_max=6.0_f64, &
 !       eta2_min=-6.0_f64, eta2_max=6.0_f64)
 !

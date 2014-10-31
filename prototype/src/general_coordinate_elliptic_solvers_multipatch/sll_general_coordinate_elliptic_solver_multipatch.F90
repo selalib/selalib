@@ -94,7 +94,7 @@ contains ! *******************************************************************
     
     type(general_coordinate_elliptic_solver_mp), intent(out) :: es_mp
     type(sll_coordinate_transformation_multipatch_2d), pointer :: T
-    type(sll_logical_mesh_2d), pointer                         :: lm
+    type(sll_cartesian_mesh_2d), pointer                         :: lm
     sll_int32, intent(in) :: quadrature_type1
     sll_int32, intent(in) :: quadrature_type2
     sll_int32 :: knots1_size
@@ -166,7 +166,7 @@ contains ! *******************************************************************
     ! ------------------------------------------------------------------
 
 
-    lm => es_mp%T%get_logical_mesh(0)
+    lm => es_mp%T%get_cartesian_mesh(0)
 
     ! ------------------------------------------------------------------
     ! coeff's size for the solution phi in all the domain
@@ -214,7 +214,7 @@ contains ! *******************************************************************
    
    do i=1,num_patches
       
-      lm => es_mp%T%get_logical_mesh(i-1)
+      lm => es_mp%T%get_cartesian_mesh(i-1)
       num_cells_eta1 = lm%num_cells1
       num_cells_eta2 = lm%num_cells2
       es_mp%num_elts_no_null_patchs(i) = num_cells_eta1*num_cells_eta2
@@ -235,7 +235,7 @@ contains ! *******************************************************************
    es_mp%local_to_global_spline_indices_source_col = 0
 
    do i = 1, num_patches
-      lm => es_mp%T%get_logical_mesh(i-1)
+      lm => es_mp%T%get_cartesian_mesh(i-1)
       do j =1,es_mp%total_num_splines_loc(i)
          do k=1,lm%num_cells1
             do l=1,lm%num_cells2
@@ -263,7 +263,7 @@ contains ! *******************************************************************
 
 
 !!$   do i = 1, num_patches
-!!$      lm => es_mp%T%get_logical_mesh(i-1)
+!!$      lm => es_mp%T%get_cartesian_mesh(i-1)
 !!$      es_mp%knots1_rho (i, 1 : es_mp%spline_degree1(i) +1 ) = lm%eta1_min
 !!$      es_mp%knots1_rho (i,lm%num_cells1+2:lm%num_cells1+2+es_mp%spline_degree1(i) ) = lm%eta1_max
 !!$   
@@ -311,7 +311,7 @@ contains ! *******************************************************************
    !! allocation of the table containning all values of splines in each direction 
    !! in each gauss points
    
-   lm=>es_mp%T%get_logical_mesh(0)
+   lm=>es_mp%T%get_cartesian_mesh(0)
 
    max_num_cells_eta1 = lm%num_cells1
    max_num_cells_eta2 = lm%num_cells2
@@ -470,7 +470,7 @@ contains ! *******************************************************************
    sll_int32 :: patch
    type(sll_time_mark)  :: t0 
    double precision :: time
-   type(sll_logical_mesh_2d), pointer:: lm
+   type(sll_cartesian_mesh_2d), pointer:: lm
    character(len=*),parameter :: as_file1='mat'
    
    call sll_set_time_mark(t0)
@@ -486,13 +486,13 @@ contains ! *******************************************************************
    SLL_ALLOCATE(S_b2_loc(total_num_splines_loc,total_num_splines_loc),ierr)
    SLL_ALLOCATE(M_b_vect_loc(total_num_splines_loc,total_num_splines_loc),ierr)
 
-   lm => es_mp%T%get_logical_mesh(0)
+   lm => es_mp%T%get_cartesian_mesh(0)
    SLL_ALLOCATE(Source_loc(es_mp%T%number_patches,lm%num_cells1*lm%num_cells2,total_num_splines_loc,total_num_splines_loc),ierr)
    Source_loc(:,:,:,:) = 0.0_f64
 
    do patch = 1,es_mp%T%number_patches
 
-      lm => es_mp%T%get_logical_mesh(patch-1)
+      lm => es_mp%T%get_cartesian_mesh(patch-1)
       
       do j=1,lm%num_cells2
          do i=1,lm%num_cells1
@@ -598,7 +598,7 @@ contains ! *******************************************************************
     class(general_coordinate_elliptic_solver_mp) :: es_mp
     class(sll_scalar_field_multipatch_2d), intent(inout)  :: phi
     class(sll_scalar_field_multipatch_2d), intent(in),target  :: rho
-    type(sll_logical_mesh_2d), pointer                         :: lm
+    type(sll_cartesian_mesh_2d), pointer                         :: lm
     sll_int32 :: i,k
     sll_int32 :: j,ierr
     sll_int32 :: patch,sz_coef2,sz_coef1
@@ -630,7 +630,7 @@ contains ! *******************************************************************
        ! put the spline coefficients in a 1d array
        do patch = 1,es_mp%T%number_patches
           coeff_rho => type_field%fields(patch)%f%interp_2d%get_coefficients()
-          lm => es_mp%T%get_logical_mesh(patch-1)
+          lm => es_mp%T%get_cartesian_mesh(patch-1)
         
           sz_coef2 = type_field%interps(patch)%interp%size_coeffs2
           sz_coef1 = type_field%interps(patch)%interp%size_coeffs1
@@ -656,18 +656,12 @@ contains ! *******************************************************************
        
     end select
 
-       
-    time = sll_time_elapsed_since(t0)
-
     es_mp%phi_vec(1:es_mp%solution_size_final) = 0.0_f64
     call solve_linear_system_mp(es_mp,es_mp%solution_size_final)
-    !!    end if
-
-
 
     do patch = 1,es_mp%T%number_patches
        
-       lm => es_mp%T%get_logical_mesh(patch-1)
+       lm => es_mp%T%get_cartesian_mesh(patch-1)
        sz_coef2 = phi%interps(patch)%interp%size_coeffs2
        sz_coef1 = phi%interps(patch)%interp%size_coeffs1
        SLL_ALLOCATE(tmp_phi_vec(sz_coef1*sz_coef2),ierr)
@@ -725,7 +719,7 @@ contains ! *******************************************************************
 
     
     class(general_coordinate_elliptic_solver_mp) :: es_mp
-    type(sll_logical_mesh_2d), pointer           :: lm
+    type(sll_cartesian_mesh_2d), pointer           :: lm
     sll_int32, intent(in) :: cell_i
     sll_int32, intent(in) :: cell_j
     sll_int32, intent(in) :: cell_index
@@ -810,7 +804,7 @@ contains ! *******************************************************************
     work1(:,:)        = 0.0_f64
     work2(:,:)        = 0.0_f64
     ! The supposition is that all fields use the same logical mesh
-    lm => es_mp%T%get_logical_mesh(patch-1)
+    lm => es_mp%T%get_cartesian_mesh(patch-1)
     delta1    = lm%delta_eta1 !mesh2d%delta_eta1
     delta2    = lm%delta_eta2 !! mesh2d%delta_eta2
     eta1_min  = lm%eta1_min  
@@ -1033,7 +1027,7 @@ contains ! *******************************************************************
        S_b2_loc)
     
     class(general_coordinate_elliptic_solver_mp)  :: es_mp
-    type(sll_logical_mesh_2d), pointer           :: lm
+    type(sll_cartesian_mesh_2d), pointer           :: lm
     sll_int32 :: cell_index
     sll_int32 :: cell_i
     sll_int32 :: cell_j
@@ -1057,7 +1051,7 @@ contains ! *******************************************************************
     sll_int32 :: patch
     sll_int32 :: num_cells1,num_cells2
 
-    lm => es_mp%T%get_logical_mesh(patch-1)
+    lm => es_mp%T%get_cartesian_mesh(patch-1)
     num_cells1 = lm%num_cells1
     num_cells2 = lm%num_cells2
     
@@ -1165,7 +1159,7 @@ contains ! *******************************************************************
 
   subroutine compute_Source_matrice_mp(es_mp,Source_loc)
     type(general_coordinate_elliptic_solver_mp),intent(inout) :: es_mp
-    type(sll_logical_mesh_2d), pointer           :: lm
+    type(sll_cartesian_mesh_2d), pointer           :: lm
     sll_real64, dimension(:,:,:,:), pointer :: Source_loc
     sll_int32 :: cell_j,cell_i
     sll_int32 :: cell_index
@@ -1178,7 +1172,7 @@ contains ! *******************************************************************
     sll_int32 :: patch
 
     do patch = 1, es_mp%T%number_patches
-       lm => es_mp%T%get_logical_mesh(patch-1)
+       lm => es_mp%T%get_cartesian_mesh(patch-1)
 
        num_cells2 = lm%num_cells2
        num_cells1 = lm%num_cells1

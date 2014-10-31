@@ -1,0 +1,581 @@
+%*****************************************
+% GLOBALS : packages, variable definitions, 
+%           spacings and more.
+%*****************************************
+%%% TeX-master: "thesis_main.tex"
+
+\usepackage[english]{babel}
+\selectlanguage{english}
+\usepackage{amsmath,epsfig,graphics,graphicx}
+\usepackage{amsfonts,amssymb,amsbsy}
+\usepackage{xcolor,color}
+\usepackage{enumitem}
+\usepackage{array}
+\usepackage{float}  % replaced the package 'here' (rk:  {figure}[H] normally equivalent to {figure}[ht])
+\usepackage{verbatim}
+\usepackage{hyperref,eso-pic}
+\usepackage{caption}
+\usepackage{subcaption}
+
+
+%---> page properties
+\newdimen\decalage
+\paperheight=29.7 true cm \paperwidth=21 true cm
+\textheight=24.2 true cm \textwidth=15 true cm
+\decalage=0.25 true cm
+
+% automatic computation of \topmargin,
+% \evensidemargin and \oddsidemargin
+\oddsidemargin=\paperwidth
+\advance\oddsidemargin by -\textwidth
+\divide\oddsidemargin by 2
+\advance\oddsidemargin by -1 in
+\evensidemargin=\oddsidemargin
+\advance\oddsidemargin by \decalage 
+\advance\evensidemargin by -\decalage
+
+\topmargin=\paperheight
+\advance\topmargin by -\headheight
+\advance\topmargin by -\headsep
+\advance\topmargin by -\textheight
+\advance\topmargin by -\footskip
+\divide\topmargin by 2
+\advance\topmargin by -1 in
+
+
+% ---> renew commands of headers (section, paragraph, ...)
+%\RequirePackage[calcwidth]{titlesec}
+%
+%\titleformat{\section}[hang]{\bfseries}
+%{\large\thesection}{12pt}{\Large}[{\titlerule[0.5pt]}]
+%
+%\RequirePackage[calcwidth]{titlesec}
+%
+%\titleformat{\paragraph}[hang]{\sffamily\bfseries}
+%{\Huge\theparagraph}{12pt}{\Huge}[{\titlerule[0.5pt]}]
+%
+%\titleformat{\subparagraph}[hang]{\bfseries}
+%{\tiny\thesubparagraph}{12pt}{\Large\flushright}
+
+
+%Figures path : 
+\newcommand{\figurespath}{./figures}
+%\numberwithin{equation}{section}
+
+%---> general definitions
+\newcommand{\gysela}{\textsc{Gysela }}
+\def\NN{\mathbb{N}}
+\def\RR{\mathbb{R}}
+\def\ZZ{\mathbb{Z}}
+\def\ZZd{\mathbb{Z}^2}
+
+
+
+\newcommand{\eg}{{\it e.g. }}
+\newcommand{\etal}{{\em et al }}
+% --> LM's additions :
+\newcommand{\ie}{{\it i.e.  }}
+
+
+%---> personal environment
+\newenvironment{tocheck}%
+{\color{blue}\noindent[TO CHECK]}
+
+\newenvironment{todo}%
+{\color{magenta}\noindent[TODO]}
+
+\newenvironment{becareful}%
+{\color{red}\noindent[ATTENTION]}
+
+\newenvironment{question}%
+{\color{red}\noindent[QUESTION]}
+
+% --> LM's addition : for code environment
+\definecolor{Zgris}{rgb}{0.87,0.85,0.85}
+\newsavebox{\BBbox}
+\newenvironment{DDbox}[1]{
+\begin{lrbox}{\BBbox}\begin{minipage}{\linewidth}}
+{\end{minipage}\end{lrbox}\noindent\colorbox{Zgris}{\usebox{\BBbox}} \\
+[.5cm]}
+
+
+
+%---> personal command
+\newcommand{\ask}[1]{\textcolor{red}{#1}}
+\newcommand{\rhs}{right hand side }
+\newcommand{\rmk}[1]{{\textcolor{red}{\underline{Remark #1:} }}}
+
+%---> for code description
+\newcommand{\code}[1]{\textcolor{darkgray}{\texttt{#1}}}
+\newcommand{\codecomment}[1]{\textcolor{darkgray}{\underline{Code comment:} #1}}
+
+%----> for information about the programmation
+\newcommand{\numdiag}{$<$\texttt{num\_diag}$>$}
+
+%---> mathematic operators
+\newcommand{\vecnabla}{{\pmb\nabla}}
+\newcommand{\grad}{\vecnabla}
+\newcommand{\rot}{\vecnabla\times}
+\newcommand{\rotational}{\overrightarrow{rot} \:}
+\newcommand{\diverg}{\grad\cdot}
+\newcommand{\divergence}{{\rm div}}
+\newcommand{\ee}{{\rm e}}
+\newcommand{\norm}[1]{\|{#1}\|}
+% --> LM's additions : in patch/logical domain :
+\newcommand{\gradphy}{\nabla_{\Phy} \:}
+\newcommand{\rotphy}{\nabla_{\Phy}\times}
+\newcommand{\rotationalphy}{\overrightarrow{rot_{\Phy}}\:}
+\newcommand{\divergphy}{\nabla_{\Phy}\cdot}
+% --> LM's additions : in physical domain
+\newcommand{\gradpat}{\nabla_{\Pat} \:}
+\newcommand{\rotpat}{\nabla_{\Pat}\times}
+\newcommand{\rotationalpat}{\overrightarrow{rot_{\Pat}}\:}
+\newcommand{\divergpat}{\nabla_{\Pat}\cdot}
+% --> LM's additions : other common operators
+\newcommand{\gradvit}{\nabla_{\mathbf{v}} \:}
+
+
+
+%--> Poisson Brackets
+%\newcommand{\PoissBrack}[1]{\left[#1\right]}
+%\newcommand{\PoissBrackgyro}[1]{\left\{#1\right\}}
+
+%--> GYSELA equations
+%\newcommand{\Bparstar}{B_{\|s}^*}
+%\newcommand{\Bparstarindx}[1]{B_{\|s,{#1}}^*}
+%\newcommand{\Kshear}{K_{\rm shear}}
+%\newcommand{\KgradB}{K_{\nabla B}}
+%\newcommand{\gradpar}{\grad_{\|}^{\ast}}
+%\newcommand{\phibar}{\bar{\phi}}
+%\newcommand{\pot}{U}
+%\newcommand{\potbar}{\bar{U}}
+%\newcommand{\rotb}{\rot b}
+%\newcommand{\vGpar}{v_{G\|}}
+%\newcommand{\vGparj}{v_{G\|,j}}
+\newcommand{\vecA}{\mathbf{A}}
+\newcommand{\vecB}{\mathbf{B}}
+\newcommand{\vecBstar}{\vecB^{\ast}_s}
+\newcommand{\vecE}{\mathbf{E}}
+\newcommand{\vecGamma}{\mathbf{\Gamma}}
+\newcommand{\vecN}{\mathbf{N}}
+\newcommand{\vecJ}{\mathbf{J}}
+\newcommand{\vecR}{\mathbf{R}}
+\newcommand{\vecU}{\mathbf{U}}
+\newcommand{\vecV}{\mathbf{V}}
+\newcommand{\vecW}{\mathbf{W}}
+\newcommand{\vecX}{\mathbf{X}}
+\newcommand{\vecb}{\mathbf{b}}
+\newcommand{\vecbstar}{\mathbf{b}_s^{\ast}}
+\newcommand{\vecd}{\mathbf{d}}
+\newcommand{\vece}{\mathbf{e}}
+\newcommand{\vecj}{\mathbf{j}}
+\newcommand{\veck}{\mathbf{k}}
+\newcommand{\vecm}{\mathbf{m}}
+\newcommand{\vecp}{\mathbf{p}}
+\newcommand{\vecr}{\mathbf{r}}
+\newcommand{\vecrho}{\pmb{\rho}}
+\newcommand{\vecrhos}{\pmb{\rho}_s}
+\newcommand{\vecu}{\mathbf{u}}
+\newcommand{\vecv}{\mathbf{v}}
+\newcommand{\vecx}{\mathbf{x}}
+\newcommand{\vecxG}{\mathbf{x}_G}
+\newcommand{\vperp}{v_\perp}
+\newcommand{\xGi}{x_G^i}
+
+%--> LM's variables addition :
+\newcommand{\advec}{\vecA}
+\newcommand{\patadvec}{\tilde{\advec}}
+\newcommand{\advecvar}[1]{a_{#1}}
+\newcommand{\patadvecvar}[1]{\tilde{a}_{#1}}
+\newcommand{\Phy}{\mathbf{x}}
+\newcommand{\Pat}{\boldsymbol{\eta}}
+\newcommand{\dist}{f}
+\newcommand{\patdist}{\tilde{\dist}}
+
+
+
+%--> parameters
+%\newcommand{\rhostar}{\rho_*}
+%\newcommand{\nustar}{\nu_*}
+%\newcommand{\nustars}{\nu_{*s}}
+%\newcommand{\nustarsprime}{\nu_{*s'}}
+%\newcommand{\kperp}{k_\perp}
+
+%---> for gyro-averaged quantities and gyroaverage operator
+%\newcommand{\gbar}{\bar{g}}
+%\newcommand{\gbarm}[1]{\bar{g}^{m}_{#1}}
+%\newcommand{\gm}[1]{g^{m}_{#1}}
+%\newcommand{\gyrophi}{\phibar}
+%\newcommand{\Fbars}{\bar{F}_s}
+%\newcommand{\gyroFbars}{J_0\bar{F}_s}
+%\newcommand{\Fbarsprime}{\bar{F}_{s'}}
+%\newcommand{\Fbarseq}{\bar{F}_{s,{\rm eq}}}
+%\newcommand{\Jphi}{\mathcal{J}\cdot\phi}
+ 
+%---> for electrons
+%\newcommand{\nezero}{n_{e_0}}
+
+%---> for ion species
+%\newcommand{\cs}{c_s}
+%\newcommand{\ms}{m_s}
+%\newcommand{\ns}{n_s}
+%\newcommand{\nseq}{n_{s,{\rm eq}}}
+%\newcommand{\nszero}{n_{s_0}}
+%\newcommand{\nGs}{n_{G_s}}
+%\newcommand{\nGseq}{n_{G_s,{\rm eq}}}
+%\newcommand{\nspol}{n_{s,{\rm pol}}}
+%\newcommand{\qs}{q_s}
+%\newcommand{\Ds}{D_s}
+%\newcommand{\Fs}{F_s}
+%\newcommand{\FMs}{F_{M_s}}
+%\newcommand{\Fseq}{F_{s,{\rm eq}}}
+%\newcommand{\Ts}{T_s}
+%\newcommand{\Zs}{Z_s}
+%\newcommand{\Zsprime}{Z_{s^\prime}}
+%\newcommand{\rhoLs}{\rho_{L_s}}
+%\newcommand{\vecrhoLs}{\vecrho_{L_s}}
+%\newcommand{\Omegas}{\Omega_s}
+
+%---> invariance and normalization
+%\newcommand{\alphacoll}{\alpha_{\rm coll}}
+%\newcommand{\alphadiff}{\alpha_{\rm diff}}
+%\newcommand{\alphakrook}{\alpha_{\rm Krook}}
+%\newcommand{\hatb}{\hat{b}}
+%\newcommand{\hatepsilon}{\hat{\epsilon}}
+%\newcommand{\hatchi}{\hat{\chi}}
+%\newcommand{\hatddt}[1]{\frac{{\rm d}#1}{{\rm d}\hat{t}}}
+%\newcommand{\hatnabla}{\hat{\nabla}}
+%\newcommand{\hatgrad}{\hat{\grad}}
+%\newcommand{\hatgradF}{\hat{\grad} F}
+%\newcommand{\hatgradG}{\hat{\grad} G}
+%\newcommand{\hatgradpar}{\hatgrad_{\|}^{\ast}}
+%\newcommand{\hatjacobs}{\hat{\cal J}_{\rm x}}
+%\newcommand{\hatjacobv}{\hat{\cal J}_{\rm v}}
+%\newcommand{\hatl}{\hat{l}}
+%\newcommand{\hatms}{\hat{m}_s}
+%\newcommand{\hatns}{\hat{n}_s}
+%\newcommand{\hatnezero}{\hat{n}_{e_0}}
+%\newcommand{\hatnszero}{\hat{n}_{s_0}}
+%\newcommand{\hatnseq}{\hat{n}_{s,{\rm eq}}}
+%\newcommand{\hatnGs}{\hat{n}_{G_s}}
+%\newcommand{\hatnGseq}{\hat{n}_{G_s,{\rm eq}}}
+%\newcommand{\hatnu}{\hat{\nu}}
+%\newcommand{\hatpartial}{\hat{\partial}}
+%\newcommand{\hatphi}{\hat{\phi}}
+%\newcommand{\hatphibar}{\hat{\phibar}}
+%\newcommand{\hatn}{\hat{n}}
+%\newcommand{\hatmu}{\hat{\mu}}
+%\newcommand{\hatq}{\hat{q}}
+%\newcommand{\hatr}{\hat{r}}
+%\newcommand{\hatrho}{\hat{\rho}}
+%\newcommand{\hatrmin}{\hatr_{\rm min}}
+%\newcommand{\hatrmax}{\hatr_{\rm max}}
+%\newcommand{\hatt}{\hat{t}}
+%\newcommand{\hattheta}{\hat{\theta}}
+%\newcommand{\hatthreeD}{\hatr,\theta,\varphi}
+%\newcommand{\hatv}{\hat{v}}
+%\newcommand{\hatvecb}{\hat{\vecb}}
+%\newcommand{\hatvecxG}{\hat{\vecx}_G}
+%\newcommand{\hatvecbstar}{\hat{\mathbf{b}}_s^{\ast}}
+%\newcommand{\hatvecv}{\hat{\vecv}}
+%\newcommand{\hatvs}{\hat{v}_s}
+%\newcommand{\hatvTs}{\hat{v}_{T_s}}
+%\newcommand{\hatvTsprime}{\hat{v}_{T_s'}}
+%\newcommand{\hatvecB}{\hat{\vecB}}
+%\newcommand{\hatvecE}{\hat{\vecE}}
+%\newcommand{\hatvecJ}{\hat{\vecJ}}
+%\newcommand{\hatvGpar}{\hat{v}_{G\|}}
+%\newcommand{\hatA}{\hat{A}}
+%\newcommand{\hatAs}{\hat{A}_s}
+%\newcommand{\hatAsnew}{\hat{A}_{s ({\rm new})}}
+%\newcommand{\hatB}{\hat{B}}
+%\newcommand{\hatBparstar}{\hat{B}_{\|s}^*}
+%\newcommand{\hatE}{\hat{E}}
+%\newcommand{\hatEpars}{\hat{E}_{\parallel_s}}
+%\newcommand{\hatEs}{\hat{E}_s}
+%\newcommand{\hatEsprime}{\hat{E}_{s^\prime}}
+%\newcommand{\hatFs}{\hat{F}_s}
+%\newcommand{\hatFseq}{\hat{F}_{s,{\rm eq}}}
+%\newcommand{\hatFbars}{\hat{\bar{F}}_s}
+%\newcommand{\hatFbarseq}{\hat{\bar{F}}_{s,{\rm eq}}}
+%\newcommand{\hatI}{\hat{I}}
+%\newcommand{\hatJ}{\hat{J}}
+%\newcommand{\hatP}{\hat{P}}
+%\newcommand{\hatPhi}{\hat{\Phi}}
+%\newcommand{\hatR}{\hat{R}}
+%\newcommand{\hatS}{\hat{S}}
+%\newcommand{\hatT}{\hat{T}}
+%\newcommand{\hatTe}{\hat{T}_e}
+%\newcommand{\hatTs}{\hat{T}_s}
+%\newcommand{\hatTsprime}{\hat{T}_{s'}}
+%\newcommand{\hatV}{\hat{V}}
+%\newcommand{\hatX}{\hat{X}}
+%\newcommand{\hatZe}{\hat{Z}_e}
+%\newcommand{\hatZs}{\hat{Z}_s}
+%\newcommand{\hatZsprime}{\hat{Z}_{s'}}
+%\newcommand{\hatZsnew}{\hat{Z}_{s ({\rm new})}}
+%\newcommand{\vTs}{v_{T_s}}
+%\newcommand{\vTsprime}{v_{T_s'}}
+%\newcommand{\vnorm}{v_{T_{s0}}}
+%\newcommand{\vnormprime}{v_{T_{s^\prime 0}}}
+
+%----> for the dimensions of the problem
+%\newcommand{\threeD}{r,\theta,\varphi}
+%\newcommand{\fourD}{r,\theta,\varphi,\vGpar}
+%\newcommand{\fiveD}{r,\theta,\varphi,\vGpar,\mu}
+% --> LM's addition : physical mapping
+\newcommand{\phyvar}[1]{x_{#1}}
+\newcommand{\phy}{\phyvar{1} , \phyvar{2}}
+% --> LM's addition : patch/logical mapping
+\newcommand{\patvar}[1]{\eta_{#1}}
+\newcommand{\pat}{\patvar{1} , \patvar{2}}
+% --> LM's addition : time variables
+\newcommand{\tphy}{t, \phy}
+\newcommand{\tpat}{t, \pat}
+\newcommand{\tvar}[1]{t_{#1}}
+% --> LM's addition : direct mapping
+\newcommand{\mapp}{F}
+\newcommand{\mapping}{\mapp(\pat)}
+\newcommand{\mappvar}[1]{\mapp_{#1}}
+\newcommand{\mappingvar}[1]{\mapp_{#1}(\pat)}
+% --> LM's addition : inverse mapping
+\newcommand{\invmapp}{F^{-1}}
+\newcommand{\invmapping}{F^{-1}(\phy)}
+\newcommand{\invmappvar}[1]{F^{-1}_{#1}}
+\newcommand{\invmappingvar}[1]{F^{-1}_{#1}(\phy)}
+
+
+% --> LM's addition : boundary condition
+\newcommand{\patches}[1]{\mathcal{P}_{#1}}
+\newcommand{\domain}{\Omega}
+\newcommand{\bound}{\partial \Omega}
+\newcommand{\boundpatpat}[2]{\partial \Gamma_{#1,#2}}
+\newcommand{\boundpat}[1]{\partial \patches{#1}}
+\newcommand{\npat}{N_{pat} - 1}
+
+
+% --> LM's addition : order/complexity
+\newcommand{\oden}[1]{$O(n^{#1})$} 
+
+
+%---> jacobian
+%\newcommand{\jacobs}{{\cal J}_{\rm x}}
+%\newcommand{\jacobv}{{\cal J}_{\rm v}}
+%\newcommand{\jacobspace}{{\cal J}_{\rm x}(r,\theta)}
+%\newcommand{\jacobvel}{{\cal J}_{\rm v}(r,\theta,\vGpar)}
+% --> LM's addition
+\newcommand{\jacob}{\sqrt{g}}
+\newcommand{\jacuu}{\derivate{\mappvar{1}}{1}}
+\newcommand{\jacud}{\derivate{\mappvar{2}}{1}}
+\newcommand{\jacdu}{\derivate{\mappvar{1}}{2}}
+\newcommand{\jacdd}{\derivate{\mappvar{2}}{2}}
+
+%-----> for derivatives
+\newcommand{\ddr}[1]{\frac{{\rm d}#1}{{\rm d}r}}
+\newcommand{\ddt}[1]{\frac{{\rm d}#1}{{\rm d}t}}
+\newcommand{\deriv}[2]{\frac{\partial{#1}}{\partial{#2}}}
+\newcommand{\derivtwo}[2]{\frac{\partial^2{#1}}{\partial{#2}^2}}
+\newcommand{\derivate}[2]{\partial_{#2}{#1}}
+\newcommand{\derivatetwo}[2]{\partial^2_{#2}{#1}}
+% --> LM's additions :
+\newcommand{\derivt}[1]{\dfrac{\partial{#1}}{\partial{t}}}
+\newcommand{\derivphy}[2]{\dfrac{\partial{#1}}{\partial{\phyvar{#2}}}}
+\newcommand{\derivpat}[2]{\dfrac{\partial{#1}}{\partial{\patvar{#2}}}}
+\newcommand{\derivatet}[1]{\partial_t {#1}}
+\newcommand{\derivatephy}[2]{\partial_{\phyvar{#2}}#1}
+\newcommand{\derivatepat}[2]{\partial_{\patvar{#2}}#1}
+
+
+%---> partial derivatives
+\newcommand{\partialxi}{\,\partial_{x^i}}
+\newcommand{\partialxj}{\,\partial_{x^j}}
+\newcommand{\partialx}{\,\partial_{x^1}}
+\newcommand{\partialy}{\,\partial_{x^2}}
+\newcommand{\partialz}{\,\partial_{x^3}}
+
+%---> gradient definitions
+\newcommand{\gradxi}{\grad x^i}
+\newcommand{\gradxGi}{\grad x_G^i}
+\newcommand{\gradxj}{\grad x^j}
+\newcommand{\gradxk}{\grad x^k}
+\newcommand{\gradx}{\grad x^1}
+\newcommand{\grady}{\grad x^2}
+\newcommand{\gradz}{\grad x^3}
+\newcommand{\gradr}{\grad r}
+\newcommand{\gradtheta}{\grad \theta}
+\newcommand{\gradphi}{\grad \varphi}
+\newcommand{\gradB}{\grad B}
+\newcommand{\gradF}{\grad F}
+\newcommand{\gradG}{\grad G}
+
+%-----> for the integrals
+%\newcommand{\dd}{\:{\rm d}}
+\newcommand{\dmu}{\:{\rm d}\mu}
+\newcommand{\dphi}{\:{\rm d}\varphi}
+\newcommand{\dr}{\:{\rm d}r}
+\newcommand{\dt}{\:{\rm d}t}
+\newcommand{\dtau}{\:{\rm d}\tau}
+\newcommand{\dtaustar}{\:{\rm d}\tau^*}
+\newcommand{\dtheta}{\:{\rm d}\theta}
+\newcommand{\dvolume}{\:\jacobspace\dr\dtheta\dphi}
+\newcommand{\dvelocity}{\:\jacobvel\dvGpar\dmu}
+\newcommand{\dvspace}{\:{\rm d}^3\vecv}
+\newcommand{\dvGpar}{\:{\rm d}\vGpar}
+\newcommand{\dx}{\:{\rm d}x}
+\newcommand{\dV}{\:{\rm d}V}
+
+%---> surface average
+%------> (theta,phi) average
+\newcommand{\thetaphiavg}[1]{\langle\:{#1}\:\rangle_{\theta,\:\varphi}}
+\newcommand{\TPavg}[1]{\langle\:{#1}\:\rangle_{\theta,\:\varphi}}
+%------> flux surface average
+\newcommand{\fluxSavg}[1]{\langle\:{#1}\:\rangle_{\rm Flux\:Surf}}
+\newcommand{\FSavg}[1]{\langle\:{#1}\:\rangle_{\rm FS}}
+
+%---> covariant and contravariant metric tensors and coordinates
+\newcommand{\cotensor}{\{g_{ij}\}}
+\newcommand{\contratensor}{\{g^{ij}\}}
+\newcommand{\hatxGi}{\hat{x}_G^i}
+\newcommand{\hatxi}{\hat{x}^i}
+\newcommand{\hatgradxi}{\hat{\grad}x^i}
+\newcommand{\muJgradxi}{\mu_0\vecJ\cdot\gradxi}
+\newcommand{\muJgradxGi}{\mu_0\vecJ\cdot\gradxGi}
+\newcommand{\vecbstari}{\mathbf{b}_s^{\ast i}}
+\newcommand{\Bgradxi}{B\cdot\grad x^i}
+
+%---> unit vectors
+\newcommand{\er}{\vece_r}
+\newcommand{\etheta}{\vece_\theta}
+\newcommand{\ephi}{\vece_\varphi}
+%\newcommand{\normvec}{\vec{n}}
+\newcommand{\normvec}{\mathbf{n}}
+\newcommand{\patnormvec}{\mathbf{\tilde{n}}}
+
+%---> for quasi-neutrality solver
+\newcommand{\rhos}{\rho_s}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\phitilde}{\tilde{\phi}}
+\newcommand{\FFTmPhi}{\hat{\Phi}^m(\hatr,\varphi)}
+\newcommand{\FFTmvarrho}{\varrho^m(\hatr,\varphi)}
+\newcommand{\sFFTmPhi}{\hatPhi^m}
+\newcommand{\sFFTmvarrho}{\varrho^m}
+\newcommand{\iFFTmPhi}[1]{\hatPhi^m_{#1}}
+\newcommand{\iFFTmvarrho}[1]{\varrho^m_{\:#1}}
+\newcommand{\FSavgphi}[1]{\FSavg{\hatphi}(\hatr_{#1})}
+\newcommand{\Gammarhs}[1]{\Gamma(\hatr_{#1})}
+\newcommand{\rmin}{r_{\rm min}}
+\newcommand{\rmax}{r_{\rm max}}
+\newcommand{\hatddr}[1]{\frac{{\rm d}#1}{{\rm d}\hatr}}
+\newcommand{\Asum}{\hatA_{\rm sum}}
+
+%---> for collision operator
+\newcommand{\ninit}{n_{s_0}}
+\newcommand{\ncoll}{\mathcal{N}_s}
+\newcommand{\Bstar}{B^\ast_\parallel}
+\newcommand{\Dpars}{\mathcal{D}_{\parallel s}}
+\newcommand{\Dperps}{\mathcal{D}_{\perp s}}
+\newcommand{\FbarMs}{\bar{F}_{M_s}}
+\newcommand{\Tinit}{T_{s_0}}
+\newcommand{\Tcoll}{T_{s, {\rm coll}}}
+\newcommand{\Tcollpar}{T_{s, {\rm coll\:\parallel}}}
+\newcommand{\Tcollperp}{T_{s, {\rm coll}\:\perp}}
+\newcommand{\Tcollprime}{T_{s', {\rm coll}}}
+\newcommand{\Vcoll}{V_{\parallel s, {\rm coll}}}
+\newcommand{\Vpars}{\mathcal{V}_{\parallel s}}
+%------> for normalised collision operator
+\newcommand{\hatninit}{\hat{n}_{s_0}}
+\newcommand{\hatnustars}{\hat{\nu}_{*s}}
+\newcommand{\hatnustarsprime}{\hat{\nu}_{*s'}}
+\newcommand{\hatDpars}{\hat{\mathcal{D}}_{\parallel s}}
+\newcommand{\hatFbarMs}{\hat{\bar{F}}_{M_s}}
+\newcommand{\hatTcoll}{\hat{T}_{s, {\rm coll}}}
+\newcommand{\hatTcollprime}{\hat{T}_{s', {\rm coll}}}
+\newcommand{\hatVcoll}{\hat{V}_{\parallel s, {\rm coll}}}
+\newcommand{\hatVpars}{\hat{\mathcal{V}}_{\parallel s}}
+
+%---> for collisional energy transfer operator
+\newcommand{\Ttransf}{\langle T \rangle_{ss'}}
+\newcommand{\Ttransfprime}{\langle T \rangle_{s's}}
+\newcommand{\energys}{\mathcal{E}_s}
+\newcommand{\energysprime}{\mathcal{E}_{s'}}
+\newcommand{\Vtransf}{\langle V \rangle_{ss'}}
+\newcommand{\Vtransfprime}{\langle V \rangle_{s's}}
+\newcommand{\msprime}{m_{s'}}
+\newcommand{\nsprime}{n_{s'}}
+%------> for normalised energy transfer operator
+\newcommand{\hatenergys}{\hat{\mathcal{E}}_s}
+\newcommand{\hatenergysprime}{\hat{\mathcal{E}}_{s'}}
+\newcommand{\hatnsprime}{\hat{n}_{s'}}
+\newcommand{\hatvGpars}{\hatv_{G\|s}}
+\newcommand{\hatvGparsprime}{\hatv_{G\|s'}}
+\newcommand{\hatAsprime}{\hat{A}_{s'}}
+\newcommand{\hatFbarsprime}{\hat{\bar{F}}_{s'}}
+\newcommand{\hatTtransf}{\langle \hatT \rangle_{ss'}}
+\newcommand{\hatTtransfprime}{\langle \hatT \rangle_{s's}}
+\newcommand{\hatVtransf}{\langle \hatV \rangle_{ss'}}
+\newcommand{\hatVtransfprime}{\langle \hatV \rangle_{s's}}
+
+%---> for diffusion terms 
+\newcommand{\Dcal}{\mathcal{D}}
+\newcommand{\Dcalindx}[1]{\mathcal{D}_{#1}}
+
+%---> for source terms
+\newcommand{\barvGpars}{\bar{v}_{G_\parallel s}}
+\newcommand{\barvGparsprime}{\bar{v}_{G_\parallel s^\prime}}
+\newcommand{\barmu}{\bar{\mu}}
+\newcommand{\JparB}{J_{\parallel B}}
+\newcommand{\Tssrce}{T_{s, {\rm srce}}}
+\newcommand{\Tssrceprime}{T_{s^\prime, {\rm srce}}}
+\newcommand{\hatJpar}{\hatJ_{\parallel}}
+\newcommand{\hatJparB}{\hatJ_{\parallel B}}
+\newcommand{\hatTssrce}{\hat{T}_{s, {\rm srce}}}
+\newcommand{\Sns}{S_{n_s}}
+\newcommand{\Snsprime}{S_{n_{s^\prime}}}
+\newcommand{\hatbarmu}{\hat{\bar{\mu}}}
+\newcommand{\hatbarvGpars}{\hat{\bar{v}}_{G_\parallel s}}
+\newcommand{\hatbarvGparsprime}{\hat{\bar{v}}_{G_\parallel s^\prime}}
+\newcommand{\hatSns}{\hatS_{n_s}}
+\newcommand{\hatSnsprime}{\hatS_{n_{s^\prime}}}
+\newcommand{\hatTssrceprime}{\hatT_{s^\prime, {\rm srce}}}
+
+
+%---> for time-splitting
+\newcommand{\dxdt}{\frac{{\rm d}x}{{\rm d}t}}
+\newcommand{\dydt}{\frac{{\rm d}y}{{\rm d}t}}
+\newcommand{\dhdr}{\frac{{\rm d}h}{{\rm d}r}}
+
+%---> for rbar definition
+\newcommand{\rbar}{\bar{r}}
+
+%-----> for the velocities
+\newcommand{\vEer}{\vec{v}_{Es}\cdot\er}
+\newcommand{\vEetheta}{\vec{v}_{Es}\cdot\etheta}
+\newcommand{\vEgradr}{\vec{v}_{Es}\cdot\gradr}
+\newcommand{\vEnulgradr}{\vec{v}_{Es_0}\cdot\gradr}
+\newcommand{\vEgradtheta}{\vec{v}_{Es}\cdot\gradtheta}
+\newcommand{\vEnulgradtheta}{\vec{v}_{Es_0}\cdot\gradtheta}
+\newcommand{\vgcE}{\vec{v}_{Es_{GC}}}
+\newcommand{\vgcEgradxi}{\vec{v}_{Es_{GC}}\cdot\gradxi}
+\newcommand{\vgcEgradx}{\vec{v}_{Es_{GC}}\cdot\gradx}
+\newcommand{\vgcEgrady}{\vec{v}_{Es_{GC}}\cdot\grady}
+\newcommand{\vgcEgradz}{\vec{v}_{Es_{GC}}\cdot\gradz}
+\newcommand{\vgcEgradr}{\vec{v}_{Es_{GC}}\cdot\gradr}
+\newcommand{\vgcEgradtheta}{\vec{v}_{Es_{GC}}\cdot\gradtheta}
+\newcommand{\vgcEgradphi}{\vec{v}_{Es_{GC}}\cdot\gradphi}
+\newcommand{\vgcEetheta}{\vec{v}_{Es_{GC}}\cdot\etheta}
+\newcommand{\vDgradxi}{\vec{v}_{Ds}\cdot\gradxi}
+\newcommand{\vDgradr}{\vec{v}_{Ds}\cdot\gradr}
+\newcommand{\vDgradtheta}{\vec{v}_{Ds}\cdot\gradtheta}
+\newcommand{\vDgradphi}{\vec{v}_{Ds}\cdot\gradphi}
+\newcommand{\vDer}{\vec{v}_{Ds}\cdot\er}
+\newcommand{\vDetheta}{\vec{v}_{Ds}\cdot\etheta}
+\newcommand{\vgcEgradB}{\vec{v}_{Es_{GC}}\cdot\gradB}
+
+%---> for the energy conservation
+\newcommand{\Ekin}{\delta\varepsilon_{\rm kin}}
+\newcommand{\Epot}{\delta\varepsilon_{\rm pot}}
+\newcommand{\Etot}{\delta\varepsilon_{\rm tot}}
+\newcommand{\cte}{\operatorname{const}}
+
+%---> for time splitting operator
+\newcommand{\tildevGpar}{\tilde{v}_{G\parallel}}

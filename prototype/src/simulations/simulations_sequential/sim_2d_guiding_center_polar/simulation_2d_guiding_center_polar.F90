@@ -15,7 +15,7 @@ module sll_simulation_2d_guiding_center_polar_module
 !#include "sll_field_2d.h"
 #include "sll_utilities.h"
 #include "sll_poisson_solvers.h"
-  use sll_logical_meshes  
+  use sll_cartesian_meshes  
   use sll_module_advection_1d_periodic
   use sll_module_advection_2d_BSL
   use sll_module_characteristics_2d_explicit_euler
@@ -65,7 +65,7 @@ module sll_simulation_2d_guiding_center_polar_module
 
 
    !geometry
-   type(sll_logical_mesh_2d), pointer :: mesh_2d
+   type(sll_cartesian_mesh_2d), pointer :: mesh_2d
 
 
    !initial function
@@ -273,7 +273,7 @@ contains
     if(present(filename))then
       open(unit = input_file, file=trim(filename)//'.nml',IOStat=IO_stat)
         if( IO_stat /= 0 ) then
-          print *, '#initialize_guiding_center_2d_cartesian() failed to open file ', &
+          print *, '#initialize_guiding_center_2d_polar() failed to open file ', &
           trim(filename)//'.nml'
           STOP
         end if
@@ -313,7 +313,7 @@ contains
     sim%freq_diag = freq_diag
     sim%freq_diag_time = freq_diag_time
 
-    sim%mesh_2d => new_logical_mesh_2d( &
+    sim%mesh_2d => new_cartesian_mesh_2d( &
       Nc_x1, &
       Nc_x2, &
       eta1_min = x1_min, &
@@ -771,7 +771,7 @@ contains
     sll_real64, dimension(:,:), intent(in) :: phi
     sll_real64, dimension(:,:), intent(out) :: A1
     sll_real64, dimension(:,:), intent(out) :: A2
-    type(sll_logical_mesh_2d), pointer :: mesh_2d
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     class(sll_interpolator_2d_base), pointer   :: interp2d
     sll_int32 :: Nc_x1
     sll_int32 :: Nc_x2
@@ -818,7 +818,7 @@ contains
     sll_int32, intent(in) :: file_id
     sll_int32, intent(in) :: step
     sll_real64, intent(in) :: dt
-    type(sll_logical_mesh_2d), pointer :: mesh_2d
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     sll_real64, dimension(:,:), intent(in) :: f
     sll_real64, dimension(:,:), intent(in) :: phi
     sll_real64, dimension(:,:), intent(in) :: A1
@@ -949,7 +949,7 @@ contains
     sll_int32, intent(in) :: iplot
     character(len=4)      :: cplot
     sll_int32             :: nnodes_x1, nnodes_x2
-    type(sll_logical_mesh_2d), pointer :: mesh_2d
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     sll_real64, dimension(:,:), intent(in) :: f
     sll_real64 :: r
     sll_real64 :: theta
