@@ -6,8 +6,6 @@ program unit_test
   use sll_module_interpolators_1d_base
   use sll_module_cubic_spline_interpolator_1d
   use sll_scalar_field_2d
- ! use sll_module_mapped_meshes_2d_base
- ! use sll_module_mapped_meshes_2d
   use sll_cartesian_meshes
   use sll_module_coordinate_transformations_2d
   use sll_scalar_field_initializers_base

@@ -26,7 +26,6 @@
 module sll_scalar_field_initializers_base
 #include "sll_working_precision.h"
   use sll_coordinate_transformation_2d_base_module
-  !use sll_module_mapped_meshes_2d_base
 
   implicit none
   integer, parameter :: NODE_CENTERED_FIELD = 0, CELL_CENTERED_FIELD = 1
