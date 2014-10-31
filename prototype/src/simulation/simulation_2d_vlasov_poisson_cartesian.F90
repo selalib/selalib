@@ -787,6 +787,15 @@ contains
     select case (drive_type)
       case ("SLL_NO_DRIVE")
         sim%driven = .false.
+        sim%t0=0.
+        sim%twL=0.
+        sim%twR=0.
+        sim%tflat=0.
+        sim%tL=0.
+        sim%tR=0.
+        sim%turn_drive_off=.false.
+        sim%Edrmax=0.
+        sim%omegadr=0.    
       case("SLL_KEEN_DRIVE")
         sim%driven = .true.
         sim%t0=keen_t0
@@ -817,9 +826,8 @@ contains
     if(sll_get_collective_rank(sll_world_collective)==0)then
             
       !to be compatible with VPpostprocessing_drive_KEEN.f
-      if(sim%driven) then     
-      open(unit = param_out, file = 'parameters.dat')
-      
+      !if(sim%driven) then     
+        open(unit = param_out, file = 'parameters.dat')
       
         write(param_out, *) real(number_iterations,f64)*dt !Tmax
         write(param_out, *) dt                  !dt
@@ -837,16 +845,15 @@ contains
         write(param_out, *) x2_min                !vxmin
         write(param_out, *) num_cells_x1                 !N
         write(param_out, *) num_cells_x2                 !Nv
-        ! added ES
+        ! KEEN drive
         write(param_out, *) sim%tL                  !tL
         write(param_out, *) sim%tR                  !tR
         write(param_out, *) sim%twL                 !twL
         write(param_out, *) sim%twR                 !twR
         write(param_out, *) sim%tflat               !tflat
-      
-      
-      close(param_out)
-      endif  
+            
+        close(param_out)
+      !endif  
       
 
     endif
@@ -1076,7 +1083,7 @@ contains
     end select  
         
 
-    if(sim%driven)then
+!    if(sim%driven)then
     if(sll_get_collective_rank(sll_world_collective)==0)then
       call sll_binary_file_create("x.bdat", file_id, ierr)
       call sll_binary_write_array_1d(file_id,sim%x1_array(1:np_x1-1),ierr)
@@ -1086,7 +1093,7 @@ contains
       call sll_binary_write_array_1d(file_id,node_positions_x2(1:np_x2-1),ierr)
       call sll_binary_file_close(file_id,ierr)                                             
     endif
-    endif
+!    endif
 
 
     
@@ -1256,17 +1263,17 @@ contains
     if(sll_get_collective_rank(sll_world_collective)==0)then
       call sll_ascii_file_create('thdiag.dat', th_diag_id, ierr)
       call sll_binary_file_create('deltaf.bdat', deltaf_id, ierr)
+      call sll_binary_file_create('rhotot.bdat', rhotot_id, ierr)
+      call sll_binary_file_create('efield.bdat', efield_id, ierr)
+      call sll_binary_file_create('t.bdat', t_id, ierr)
+      call sll_binary_write_array_1d(efield_id,efield(1:np_x1-1),ierr)
+      call sll_binary_write_array_1d(rhotot_id,rho(1:np_x1-1),ierr)
+      call sll_binary_write_array_0d(t_id,real(istep,f64)*sim%dt,ierr)
       if(sim%driven)then
-        call sll_binary_file_create('rhotot.bdat', rhotot_id, ierr)
-        call sll_binary_file_create('efield.bdat', efield_id, ierr)
         call sll_binary_file_create('adr.bdat', adr_id, ierr)
         call sll_binary_file_create('Edr.bdat', Edr_id, ierr)
-        call sll_binary_file_create('t.bdat', t_id, ierr)
-        call sll_binary_write_array_1d(efield_id,efield(1:np_x1-1),ierr)
-        call sll_binary_write_array_1d(rhotot_id,rho(1:np_x1-1),ierr)
         call sll_binary_write_array_1d(Edr_id,e_app(1:np_x1-1),ierr)
         call sll_binary_write_array_0d(adr_id,adr,ierr)
-        call sll_binary_write_array_0d(t_id,real(istep,f64)*sim%dt,ierr)
       endif                    
     endif
     
@@ -1509,12 +1516,12 @@ contains
           write(th_diag_id,'(g20.12)') &
               f_hat_x2(nb_mode+1)
 
-          if(sim%driven)then
             call sll_binary_write_array_1d(efield_id,efield(1:np_x1-1),ierr)
             call sll_binary_write_array_1d(rhotot_id,rho(1:np_x1-1),ierr)
+            call sll_binary_write_array_0d(t_id,time,ierr)
+          if(sim%driven)then
             call sll_binary_write_array_1d(Edr_id,e_app(1:np_x1-1),ierr)
             call sll_binary_write_array_0d(adr_id,adr,ierr)
-            call sll_binary_write_array_0d(t_id,time,ierr)
           endif   
         endif
           
@@ -1611,12 +1618,12 @@ contains
     if(sll_get_collective_rank(sll_world_collective)==0)then
       call sll_ascii_file_close(th_diag_id,ierr) 
       call sll_binary_file_close(deltaf_id,ierr) 
+      call sll_binary_file_close(efield_id,ierr)
+      call sll_binary_file_close(rhotot_id,ierr)
+      call sll_binary_file_close(t_id,ierr)
       if(sim%driven)then
-        call sll_binary_file_close(efield_id,ierr)
-        call sll_binary_file_close(rhotot_id,ierr)
         call sll_binary_file_close(Edr_id,ierr)
         call sll_binary_file_close(adr_id,ierr)
-        call sll_binary_file_close(t_id,ierr)
       endif   
     endif
 
