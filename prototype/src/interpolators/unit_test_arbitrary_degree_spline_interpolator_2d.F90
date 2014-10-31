@@ -3,9 +3,10 @@ program unit_test
 #include "sll_working_precision.h"
 #include "sll_constants.h"
 #include "sll_interpolators.h"
-  use sll_module_arbitrary_degree_spline_interpolator_2d
-  use sll_gnuplot
-  implicit none
+
+use sll_module_arbitrary_degree_spline_interpolator_2d
+use sll_gnuplot
+implicit none
 
 #define NPTS1 64
 #define NPTS2 64 
@@ -17,650 +18,474 @@ program unit_test
 #define TOLERANCE_NODE 1.0E-7_f64
 #define TOLERANCE_DER  3.0e-5_f64
 
-  type(sll_arbitrary_degree_spline_interpolator_2d) :: ad2d
+type(sll_arbitrary_degree_spline_interpolator_2d) :: ad2d
 
-  sll_real64, dimension(:,:), allocatable :: x
-  sll_real64, dimension(:,:), allocatable :: reference
-  sll_real64, dimension(:,:), allocatable :: calculated
-  sll_real64, dimension(:,:), allocatable :: difference
+sll_real64, dimension(NPTS1,NPTS2) :: x
+sll_real64, dimension(NPTS1,NPTS2) :: reference
+sll_real64, dimension(NPTS1,NPTS2) :: calculated
+sll_real64, dimension(NPTS1,NPTS2) :: difference
 
-  sll_real64, dimension(NPTS1) :: eta1_pos
-  sll_real64, dimension(NPTS2) :: eta2_pos
-  sll_real64, dimension(NPTS2) :: slope_left
-  sll_real64, dimension(NPTS2) :: slope_right
-  sll_real64, dimension(NPTS1) :: slope_top
-  sll_real64, dimension(NPTS1) :: slope_bottom
-  sll_real64, dimension(NPTS2) :: value_left
-  sll_real64, dimension(NPTS2) :: value_right
-  sll_real64, dimension(NPTS1) :: value_top
-  sll_real64, dimension(NPTS1) :: value_bottom
-!!$  sll_real64, dimension(:), allocatable      :: x1_eta1_min
-!!$  sll_real64, dimension(:), allocatable      :: x1_eta1_max
-  sll_int32 :: ierr
-  sll_int32  :: i, j
-  sll_real64 :: eta1, eta2, h1, h2
-  sll_real64 :: acc, acc1, acc2, acc3,acc4,acc5,acc6,acc7,acc8, node_val, ref, deriv1_val 
-  sll_real64 :: deriv2_val
-  sll_real64 :: acc_der1, acc1_der1, acc2_der1, acc3_der1,acc4_der1,acc5_der1,acc6_der1,acc7_der1,acc8_der1
-  sll_real64 :: acc_der2, acc1_der2, acc2_der2, acc3_der2,acc4_der2,acc5_der2,acc6_der2,acc7_der2,acc8_der2
-  sll_real64 :: normL2_0, normL2_1, normL2_2, normL2_3,normL2_4,normL2_5,normL2_6,normL2_7,normL2_8
-  sll_real64 :: normH1_0, normH1_1, normH1_2, normH1_3,normH1_4,normH1_5,normH1_6,normH1_7,normH1_8
-  logical :: result
+sll_real64, dimension(NPTS1) :: eta1
+sll_real64, dimension(NPTS2) :: eta2
+sll_real64, dimension(NPTS2) :: slope_left
+sll_real64, dimension(NPTS2) :: slope_right
+sll_real64, dimension(NPTS1) :: slope_top
+sll_real64, dimension(NPTS1) :: slope_bottom
+sll_real64, dimension(NPTS2) :: value_left
+sll_real64, dimension(NPTS2) :: value_right
+sll_real64, dimension(NPTS1) :: value_top
+sll_real64, dimension(NPTS1) :: value_bottom
 
+
+sll_int32 :: ierr
+sll_int32  :: i, j
+sll_real64 :: h1, h2
+sll_real64 :: acc, acc1, acc2, acc3,acc4,acc5,acc6,acc7,acc8, node_val, ref, deriv1_val 
+sll_real64 :: deriv2_val
+sll_real64 :: acc_der1, acc1_der1, acc2_der1, acc3_der1,acc4_der1,acc5_der1,acc6_der1,acc7_der1,acc8_der1
+sll_real64 :: acc_der2, acc1_der2, acc2_der2, acc3_der2,acc4_der2,acc5_der2,acc6_der2,acc7_der2,acc8_der2
+sll_real64 :: normL2_0, normL2_1, normL2_2, normL2_3,normL2_4,normL2_5,normL2_6,normL2_7,normL2_8
+sll_real64 :: normH1_0, normH1_1, normH1_2, normH1_3,normH1_4,normH1_5,normH1_6,normH1_7,normH1_8
+logical :: result
+
+result = .true.
+
+h1 = (X1MAX-X1MIN)/(NPTS1-1)
+h2 = (X2MAX-X2MIN)/(NPTS2-1)
+print *, 'h1 = ', h1
+print *, 'h2 = ', h2
   
-  result = .true.
-  print *,  'filling out discrete arrays for x1 '
-  h1 = (X1MAX-X1MIN)/(NPTS1-1)
-  h2 = (X2MAX-X2MIN)/(NPTS2-1)
-  print *, 'h1 = ', h1
-  print *, 'h2 = ', h2
-  
-  SLL_CLEAR_ALLOCATE(x(1:NPTS1,1:NPTS2),ierr)
-  SLL_CLEAR_ALLOCATE(reference(1:NPTS1,1:NPTS2),ierr)
-  SLL_CLEAR_ALLOCATE(calculated(1:NPTS1,1:NPTS2),ierr)
-  SLL_CLEAR_ALLOCATE(difference(1:NPTS1,1:NPTS2),ierr)
+do i=1,NPTS1
+  eta1(i) = X1MIN + (i-1)*h1
+end do
+do j=1,NPTS2
+  eta2(j) = X2MIN + (j-1)*h2
+end do
 
+print *, '***********************************************************'
+print *, '              periodic-periodic case'
+print *, '***********************************************************'
+  
+do j=1,NPTS2
   do i=1,NPTS1
-     eta1_pos(i) = X1MIN + (i-1)*h1
+    x(i,j) = cos(2*sll_pi*eta1(i))!*cos(2*sll_pi*eta2(j))
   end do
-  do j=1,NPTS2
-     eta2_pos(j) = X2MIN + (j-1)*h2
-  end do
+end do
 
-  print *, '***********************************************************'
-  print *, '              periodic-periodic case'
-  print *, '***********************************************************'
+reference = x
   
-  do j=0,NPTS2-1
-     do i=0,NPTS1-1
-        eta1               = X1MIN + real(i,f64)*h1
-        eta2               = X2MIN + real(j,f64)*h2
-        x(i+1,j+1)         = cos(2*sll_pi*eta1)!cos(2*sll_pi*eta2) *cos(2*sll_pi*eta1)
-        reference(i+1,j+1) = cos(2*sll_pi*eta1)!cos(2*sll_pi*eta2)*cos(2*sll_pi*eta1)
-     end do
-  end do
+call sll_gnuplot_2d( X1MIN, X1MAX, NPTS1, &
+                     X2MIN, X2MAX, NPTS2, &
+                     reference, 'reference_interp_arb_deg', &
+                     0, ierr)
   
-  call sll_gnuplot_2d( &
-       X1MIN, &
-       X1MAX, &
-       NPTS1, &
-       X2MIN,&
-       X2MAX,&
-       NPTS2, &
-       reference, &
-       'reference_interp_arb_deg', &
-       0, &
-       ierr)
-  
-  
-  ! Test the 2D transformation:
-  
-  call ad2d%initialize( &
-       NPTS1, &
-       NPTS2, &
-       X1MIN, &
-       X1MAX, &
-       X2MIN, &
-       X2MAX, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC, &
-       SPL_DEG, &
+call ad2d%initialize( &
+       NPTS1,         &
+       NPTS2,         &
+       X1MIN,         &
+       X1MAX,         &
+       X2MIN,         &
+       X2MAX,         &
+       SLL_PERIODIC,  & 
+       SLL_PERIODIC,  &
+       SLL_PERIODIC,  &
+       SLL_PERIODIC,  &
+       SPL_DEG,       &
        SPL_DEG )
-  
 
-  call ad2d%compute_interpolants( &
-       x(1:NPTS1,1:NPTS2),&
-       eta1_pos(1:NPTS1),&
-       NPTS1,&
-       eta2_pos(1:NPTS2),&
-       NPTS2)
+call ad2d%compute_interpolants( x, eta1, NPTS1, eta2, NPTS2)
   
-  
-  print *, 'Compare the values of the transformation at the nodes: '
-  acc      = 0.0_f64
-  acc_der1 = 0.0_f64
-  acc_der2 = 0.0_f64
-  normL2_0 = 0.0_f64
-  normH1_0 = 0.0_f64
+print *, 'Compare the values of the transformation at the nodes: '
+acc      = 0.0_f64
+acc_der1 = 0.0_f64
+acc_der2 = 0.0_f64
+normL2_0 = 0.0_f64
+normH1_0 = 0.0_f64
 
-  do j=0,NPTS2-2
-     do i=0,NPTS1-2
-        eta1       = X1MIN + real(i,f64)*h1
-        eta2       = X2MIN + real(j,f64)*h2
-        node_val   = ad2d%interpolate_value(eta1,eta2)
-        ref        = cos(2*sll_pi*eta1)!cos(2*sll_pi*eta2)*cos(2*sll_pi*eta1)
-        calculated(i+1,j+1) = node_val
-        difference(i+1,j+1) = ref-node_val
-        !print*, eta1,eta2,node_val,ref,ref-node_val
-        
-        acc        = acc + abs(node_val-ref)
-
-        normL2_0 = normL2_0 + (node_val-ref)**2 *h1*h2
-        deriv1_val = ad2d%interpolate_derivative_eta1(eta1,eta2)
-        ref = -2*sll_pi*sin(2*sll_pi*eta1)!cos(2*sll_pi*eta2)*sin(2*sll_pi*eta1)
-        acc_der1 = acc_der1 + abs(deriv1_val-ref)
-        !
-        !print*,'derive=', ref,deriv1_val,ref-deriv1_val
-        normH1_0 = normH1_0 + (deriv1_val-ref)**2 *h1*h2
-        deriv2_val = ad2d%interpolate_derivative_eta2(eta1,eta2)
-        ref  = 0.0_f64!-2*sll_pi*sin(2*sll_pi*eta2)*cos(2*sll_pi*eta1)
-        acc_der2 = acc_der2 + abs(deriv2_val-ref)
-        !print*, ref,deriv2_val
-        normH1_0 = normH1_0 + (deriv2_val-ref)**2 *h1*h2
-        !print*, deriv1_val,deriv2_val
-     end do
+do j=1,NPTS2-1
+  do i=1,NPTS1-1
+    node_val        = ad2d%interpolate_value(eta1,eta2)
+    ref             = cos(2*sll_pi*eta1(i))!*cos(2*sll_pi*eta2(j))
+    calculated(i,j) = node_val
+    difference(i,j) = ref-node_val
+    acc             = acc + abs(node_val-ref)
+    normL2_0        = normL2_0 + (node_val-ref)**2 *h1*h2
+    deriv1_val      = ad2d%interpolate_derivative_eta1(eta1(i),eta2(j))
+    ref             = -2*sll_pi*sin(2*sll_pi*eta1(i))!cos(2*sll_pi*eta2)*sin(2*sll_pi*eta1)
+    acc_der1        = acc_der1 + abs(deriv1_val-ref)
+    normH1_0        = normH1_0 + (deriv1_val-ref)**2 *h1*h2
+    deriv2_val      = ad2d%interpolate_derivative_eta2(eta1,eta2)
+    ref  = 0.0_f64!-2*sll_pi*sin(2*sll_pi*eta2)*cos(2*sll_pi*eta1)
+    acc_der2 = acc_der2 + abs(deriv2_val-ref)
+    normH1_0 = normH1_0 + (deriv2_val-ref)**2 *h1*h2
   end do
+end do
 
-  call sll_gnuplot_2d(X1MIN, X1MAX, NPTS1, X2MIN, X2MAX, NPTS2, &
+call sll_gnuplot_2d(X1MIN, X1MAX, NPTS1, X2MIN, X2MAX, NPTS2, &
        calculated, 'calculated_interp_arb_deg', 0, ierr)
 
-  call sll_gnuplot_2d(X1MIN, X1MAX, NPTS1, X2MIN, X2MAX, NPTS2, &
+call sll_gnuplot_2d(X1MIN, X1MAX, NPTS1, X2MIN, X2MAX, NPTS2, &
        difference, 'difference_interp_arb_deg', 0, ierr)
 
-  call sll_gnuplot_2d(X1MIN, X1MAX, NPTS1, X2MIN ,X2MAX, NPTS2, &
+call sll_gnuplot_2d(X1MIN, X1MAX, NPTS1, X2MIN ,X2MAX, NPTS2, &
        ad2d%coeff_splines, 'coefficients_interp_arb_deg', 0, ierr)
   
-  
-  print *, '***********************************************************'
-  print *, '              periodic-dirichlet case'
-  print *, '***********************************************************'
+print *, '***********************************************************'
+print *, '              periodic-dirichlet case'
+print *, '***********************************************************'
 
-  call sll_delete(ad2d)
+call sll_delete(ad2d)
 
-  do j=0,NPTS2-1
-     do i=0,NPTS1-1
-        eta1               = X1MIN + real(i,f64)*h1
-        eta2               = X2MIN + real(j,f64)*h2
-        x(i+1,j+1)         = sin(2*sll_pi*eta2) *sin(2*sll_pi*eta1)
-        reference(i+1,j+1) = sin(2*sll_pi*eta2)*sin(2*sll_pi*eta1)
-     end do
+do j=1,NPTS2
+  do i=1,NPTS1
+    x(i,j) = sin(2*sll_pi*eta2(j)) *sin(2*sll_pi*eta1(i))
   end do
+end do
+reference = x
   
-  
-  call ad2d%initialize( &
-       NPTS1, &
-       NPTS2, &
-       X1MIN, &
-       X1MAX, &
-       X2MIN, &
-       X2MAX, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC, &
+call ad2d%initialize( &
+       NPTS1,         &
+       NPTS2,         &
+       X1MIN,         &
+       X1MAX,         &
+       X2MIN,         &
+       X2MAX,         &
+       SLL_PERIODIC,  &
+       SLL_PERIODIC,  &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       SPL_DEG, &
+       SPL_DEG,       &
        SPL_DEG )
 
-  call ad2d%compute_interpolants( &
-       x(1:NPTS1,1:NPTS2),&
-       eta1_pos(1:NPTS1),&
-       NPTS1,&
-       eta2_pos(1:NPTS2),&
-       NPTS2)
+call ad2d%compute_interpolants( x, eta1, NPTS1, eta2, NPTS2)
 
-  
-  print *, 'Compare the values of the transformation at the nodes: '
+acc1      = 0.0_f64
+acc1_der1 = 0.0_f64
+acc1_der2 = 0.0_f64
+normL2_1  = 0.0_F64
+normH1_1  = 0.0_f64
 
-  acc1 = 0.0_f64
-  acc1_der1 = 0.0_f64
-  acc1_der2 = 0.0_f64
-  normL2_1  = 0.0_F64
-  normH1_1  = 0.0_f64
-  do j=0,NPTS2-1
-     do i=0,NPTS1-2
-        eta1       = X1MIN + real(i,f64)*h1
-        eta2       = X2MIN + real(j,f64)*h2
-        node_val   = ad2d%interpolate_value(eta1,eta2)
-        ref        = sin(2*sll_pi*eta2)*sin(2*sll_pi*eta1)
-        normL2_1 = normL2_1 + (node_val-ref)**2 *h1*h2
-        calculated(i+1,j+1) = node_val
-        acc1        = acc1 + abs(node_val-ref)
-        
-        deriv1_val = ad2d%interpolate_derivative_eta1(eta1,eta2)   
-        ref = 2*sll_pi*sin(2*sll_pi*eta2)*cos(2*sll_pi*eta1)
-        acc1_der1 = acc1_der1 + abs(deriv1_val-ref)
-        !print*, ref,deriv1_val
-        normH1_1 = normH1_1 + (deriv1_val-ref)**2 *h1*h2
-        deriv2_val = ad2d%interpolate_derivative_eta2(eta1,eta2)
-        ref  = 2*sll_pi*cos(2*sll_pi*eta2)*sin(2*sll_pi*eta1)
-        acc1_der2 = acc1_der2 + abs(deriv2_val-ref)
-        !print*, ref,deriv2_val
-        normH1_1 = normH1_1 + (deriv2_val-ref)**2 *h1*h2
-     
-     end do
-  end do
+do j=1,NPTS2
+   do i=1,NPTS1-1
+      node_val        = ad2d%interpolate_value(eta1(i),eta2(j))
+      ref             = sin(2*sll_pi*eta2(j))*sin(2*sll_pi*eta1(i))
+      normL2_1        = normL2_1 + (node_val-ref)**2 *h1*h2
+      calculated(i,j) = node_val
+      acc1            = acc1 + abs(node_val-ref)
+       
+      deriv1_val      = ad2d%interpolate_derivative_eta1(eta1,eta2)   
+      ref             = 2*sll_pi*sin(2*sll_pi*eta2(j))*cos(2*sll_pi*eta1(i))
+      acc1_der1       = acc1_der1 + abs(deriv1_val-ref)
+      normH1_1        = normH1_1 + (deriv1_val-ref)**2 *h1*h2
+      deriv2_val      = ad2d%interpolate_derivative_eta2(eta1(i),eta2(j))
+      ref             = 2*sll_pi*cos(2*sll_pi*eta2(j))*sin(2*sll_pi*eta1(i))
+      acc1_der2       = acc1_der2 + abs(deriv2_val-ref)
+      normH1_1        = normH1_1 + (deriv2_val-ref)**2 *h1*h2
+   end do
+end do
   
+print *, '***********************************************************'
+print *, '              dirichlet-periodic case'
+print *, '***********************************************************'
   
-  
-  print *, '***********************************************************'
-  print *, '              dirichlet-periodic case'
-  print *, '***********************************************************'
-  
-  call sll_delete(ad2d)
+call sll_delete(ad2d)
 
-  !reinitialize data
-  ! assumes eta mins are 0
-  do j=0,NPTS2-1
-     do i=0,NPTS1-1
-        eta1               = X1MIN + real(i,f64)*h1
-        eta2               = X2MIN + real(j,f64)*h2
-        x(i+1,j+1)         = sin(2*sll_pi*eta1)*cos(2*sll_pi*eta2)
-        reference(i+1,j+1) = sin(2*sll_pi*eta1)
-     end do
-  end do
+do j=1,NPTS2
+   do i=1,NPTS1
+      x(i,j) = sin(2*sll_pi*eta1(i))*cos(2*sll_pi*eta2(j))
+   end do
+end do
+reference = x
 
-  call ad2d%initialize( &
-       NPTS1, &
-       NPTS2, &
-       X1MIN, &
-       X1MAX, &
-       X2MIN, &
-       X2MAX, &
+call ad2d%initialize( &
+       NPTS1,         &
+       NPTS2,         &
+       X1MIN,         &
+       X1MAX,         &
+       X2MIN,         &
+       X2MAX,         &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC, &
-       SPL_DEG, &
+       SLL_PERIODIC,  &
+       SLL_PERIODIC,  &
+       SPL_DEG,       &
        SPL_DEG )
 
-  call ad2d%compute_interpolants( &
-       x(1:NPTS1,1:NPTS2),&
-       eta1_pos(1:NPTS1),&
-       NPTS1,&
-       eta2_pos(1:NPTS2),&
-       NPTS2)
+call ad2d%compute_interpolants( x, eta1, NPTS1, eta2, NPTS2)
   
-  
-  print *, 'Compare the values of the transformation at the nodes: '
-  acc2 = 0.0_f64
-  acc2_der1 = 0.0_f64
-  acc2_der2 = 0.0_f64
-  normL2_2  = 0.0_F64
-  normH1_2  = 0.0_f64
-  do j=0,NPTS2-2
-     do i=0,NPTS1-1
-        eta1       = X1MIN + real(i,f64)*h1
-        eta2       = X2MIN + real(j,f64)*h2
-        !print*, "hehe"
-        node_val   = ad2d%interpolate_value(eta1,eta2)
-        !print*, "hehe"
-        ref                 = sin(2*sll_pi*eta1)*cos(2*sll_pi*eta2)
-        normL2_2 = normL2_2 + (node_val-ref)**2 *h1*h2
-        calculated(i+1,j+1) = node_val
-        !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-         !    'theoretical = ', ref
-        acc2        = acc2 + abs(node_val-ref)
-        deriv1_val = ad2d%interpolate_derivative_eta1(eta1,eta2)
-        
-        ref = 2*sll_pi*cos(2*sll_pi*eta1)*cos(2*sll_pi*eta2)
-        acc2_der1 = acc2_der1 + abs(deriv1_val-ref)
-        !print*, ref,deriv1_val
-        normH1_2 = normH1_2 + (deriv1_val-ref)**2 *h1*h2
-        deriv2_val = ad2d%interpolate_derivative_eta2(eta1,eta2)
-        ref  = -2*sll_pi*sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
-        acc2_der2 = acc2_der2 + abs(deriv2_val-ref)
-        !print*, ref,deriv2_val
-        normH1_2 = normH1_2 + (deriv2_val-ref)**2 *h1*h2
-     end do
-  end do
-  
-  print *, '***********************************************************'
-  print *, '              dirichlet-dirichlet case'
-  print *, '***********************************************************'
-  
-  call sll_delete(ad2d)
+acc2      = 0.0_f64
+acc2_der1 = 0.0_f64
+acc2_der2 = 0.0_f64
+normL2_2  = 0.0_F64
+normH1_2  = 0.0_f64
 
-  !reinitialize data
-
-  do j=0,NPTS2-1
-     do i=0,NPTS1-1
-        eta1               = X1MIN + real(i,f64)*h1
-        eta2               = X2MIN + real(j,f64)*h2
-        x(i+1,j+1)         = sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2) 
-        reference(i+1,j+1) = sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
-     end do
-  end do
+do j=1,NPTS2
+   do i=1,NPTS1
+      node_val        = ad2d%interpolate_value(eta1(i),eta2(j))
+      ref             = sin(2*sll_pi*eta1(i))*cos(2*sll_pi*eta2(j))
+      normL2_2        = normL2_2 + (node_val-ref)**2 *h1*h2
+      calculated(i,j) = node_val
+      acc2            = acc2 + abs(node_val-ref)
+      deriv1_val      = ad2d%interpolate_derivative_eta1(eta1(i),eta2(j))
+      
+      ref             = 2*sll_pi*cos(2*sll_pi*eta1(i))*cos(2*sll_pi*eta2(j))
+      acc2_der1       = acc2_der1 + abs(deriv1_val-ref)
+      normH1_2        = normH1_2 + (deriv1_val-ref)**2 *h1*h2
+      deriv2_val      = ad2d%interpolate_derivative_eta2(eta1(i),eta2(j))
+      ref             = -2*sll_pi*sin(2*sll_pi*eta1(i))*sin(2*sll_pi*eta2(j))
+      acc2_der2       = acc2_der2 + abs(deriv2_val-ref)
+      normH1_2        = normH1_2 + (deriv2_val-ref)**2 *h1*h2
+   end do
+end do
   
-  call ad2d%initialize( &
-       NPTS1, &
-       NPTS2, &
-       X1MIN, &
-       X1MAX, &
-       X2MIN, &
-       X2MAX, &
+print *, '***********************************************************'
+print *, '              dirichlet-dirichlet case'
+print *, '***********************************************************'
+  
+call sll_delete(ad2d)
+
+do j=1,NPTS2
+  do i=1,NPTS1
+    x(i,j) = sin(2*sll_pi*eta1(i))*sin(2*sll_pi*eta2(j)) 
+  end do
+end do
+
+reference = x
+  
+call ad2d%initialize( &
+       NPTS1,         &
+       NPTS2,         &
+       X1MIN,         &
+       X1MAX,         &
+       X2MIN,         &
+       X2MAX,         &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       SPL_DEG, &
+       SPL_DEG,       &
        SPL_DEG )
-  !print*, 'ret', size(x,1), size(x,2)
-  !print*, 'x', x(1:NPTS1,1:NPTS2)
-  call ad2d%compute_interpolants( &
-       x,&
-       eta1_pos,&
-       NPTS1,&
-       eta2_pos,&
-       NPTS2)
-
+ 
+call ad2d%compute_interpolants( x, eta1, NPTS1, eta2, NPTS2)
   
-  !node_val   = ad2d%interpolate_value(0.0_f64,0.0_f64)
-  print *, 'Compare the values of the transformation at the nodes: '
+print *, 'Compare the values of the transformation at the nodes: '
 
-  acc3 = 0.0_f64
-  acc3_der1 = 0.0_f64
-  acc3_der2 = 0.0_f64
-  normL2_3  = 0.0_F64
-  normH1_3  = 0.0_f64
-  do j=0,NPTS2-1
-     do i=0,NPTS1-1
-        eta1       = X1MIN + real(i,f64)*h1
-        eta2       = X2MIN + real(j,f64)*h2
-        !print*, "hehe"
-        node_val   = ad2d%interpolate_value(eta1,eta2)
-        !print*, "hehe"
-        ref                 = reference(i+1,j+1)
-        calculated(i+1,j+1) = node_val
-        normL2_3 = normL2_3 + (node_val-ref)**2 *h1*h2
-        !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-         !    'theoretical = ', ref
-        acc3        = acc3 + abs(node_val-ref)
+acc3      = 0.0_f64
+acc3_der1 = 0.0_f64
+acc3_der2 = 0.0_f64
+normL2_3  = 0.0_F64
+normH1_3  = 0.0_f64
 
-        deriv1_val = ad2d%interpolate_derivative_eta1(eta1,eta2)        
-        ref = 2*sll_pi*cos(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
-        acc3_der1 = acc3_der1 + abs(deriv1_val-ref)
-        !print*, ref,deriv1_val,abs(deriv1_val-ref)
-        normH1_3 = normH1_3 + (deriv1_val-ref)**2 *h1*h2
-        deriv2_val = ad2d%interpolate_derivative_eta2(eta1,eta2)
-        ref  = 2*sll_pi*sin(2*sll_pi*eta1)*cos(2*sll_pi*eta2)
-        acc3_der2 = acc3_der2 + abs(deriv2_val-ref)
-        !print*, ref,deriv2_val
-        normH1_3 = normH1_3 + (deriv2_val-ref)**2 *h1*h2
-     end do
+do j=1,NPTS2
+  do i=1,NPTS1
+    node_val        = ad2d%interpolate_value(eta1(i),eta2(j))
+    ref             = reference(i,j)
+    calculated(i,j) = node_val
+    normL2_3        = normL2_3 + (node_val-ref)**2 *h1*h2
+    acc3            = acc3 + abs(node_val-ref)
+    deriv1_val      = ad2d%interpolate_derivative_eta1(eta1,eta2)        
+    ref             = 2*sll_pi*cos(2*sll_pi*eta1(i))*sin(2*sll_pi*eta2(j))
+    acc3_der1       = acc3_der1 + abs(deriv1_val-ref)
+    normH1_3        = normH1_3 + (deriv1_val-ref)**2 *h1*h2
+    deriv2_val      = ad2d%interpolate_derivative_eta2(eta1,eta2)
+    ref             = 2*sll_pi*sin(2*sll_pi*eta1)*cos(2*sll_pi*eta2)
+    acc3_der2       = acc3_der2 + abs(deriv2_val-ref)
+    normH1_3        = normH1_3 + (deriv2_val-ref)**2 *h1*h2
   end do
+end do
 
-  print *, '***********************************************************'
-  print *, '              Hermite-dirichlet-dirichlet-hermite case'
-  print *, '***********************************************************'
+print *, '***********************************************************'
+print *, '              Hermite-dirichlet-dirichlet-hermite case'
+print *, '***********************************************************'
   
-  call sll_delete(ad2d)
+call sll_delete(ad2d)
   
-  !reinitialize data
-  
-  do j=1,NPTS2
-     eta2             = X2MIN + (j-1)*h2
-     do i=1,NPTS1
-        eta1             = X1MIN + (i-1)*h1
-        x(i,j)           = sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2) 
-        reference(i,j)   = sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
-     end do
+do j=1,NPTS2
+  do i=1,NPTS1
+    x(i,j)           = sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2) 
   end do
+end do
 
-  value_bottom  = sin(2*sll_pi*eta1_pos)*sin(2*sll_pi*X2MIN) 
-  value_top     = sin(2*sll_pi*eta1_pos)*sin(2*sll_pi*X2MAX) 
-  slope_bottom  = sin(2*sll_pi*eta1_pos)*cos(2*sll_pi*X2MIN) *2*sll_pi
-  slope_top     = sin(2*sll_pi*eta1_pos)*cos(2*sll_pi*X2MAX) *2*sll_pi
+reference = x
 
-  slope_left    = cos(2*sll_pi*X1MIN)*sin(2*sll_pi*eta2_pos) *2*sll_pi  
-  slope_right   = cos(2*sll_pi*X1MAX)*sin(2*sll_pi*eta2_pos) *2*sll_pi
-  value_left    = sin(2*sll_pi*X1MIN)*sin(2*sll_pi*eta2_pos)   
-  value_right   = sin(2*sll_pi*X1MAX)*sin(2*sll_pi*eta2_pos) 
+value_bottom  = sin(2*sll_pi*eta1)*sin(2*sll_pi*X2MIN) 
+value_top     = sin(2*sll_pi*eta1)*sin(2*sll_pi*X2MAX) 
+slope_bottom  = sin(2*sll_pi*eta1)*cos(2*sll_pi*X2MIN) *2*sll_pi
+slope_top     = sin(2*sll_pi*eta1)*cos(2*sll_pi*X2MAX) *2*sll_pi
+
+slope_left    = cos(2*sll_pi*X1MIN)*sin(2*sll_pi*eta2) *2*sll_pi  
+slope_right   = cos(2*sll_pi*X1MAX)*sin(2*sll_pi*eta2) *2*sll_pi
+value_left    = sin(2*sll_pi*X1MIN)*sin(2*sll_pi*eta2)   
+value_right   = sin(2*sll_pi*X1MAX)*sin(2*sll_pi*eta2) 
   
-  call ad2d%initialize( &
-       NPTS1, &
-       NPTS2, &
-       X1MIN, &
-       X1MAX, &
-       X2MIN, &
-       X2MAX, &
-       SLL_HERMITE, &
+call ad2d%initialize( &
+       NPTS1,         &
+       NPTS2,         &
+       X1MIN,         &
+       X1MAX,         &
+       X2MIN,         &
+       X2MAX,         &
+       SLL_HERMITE,   &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       SLL_HERMITE, &
-       SPL_DEG, &
+       SLL_HERMITE,   &
+       SPL_DEG,       &
        SPL_DEG )
 
-  call ad2d%set_values_at_boundary(&
-       value_left,&
-       value_right,&
-       value_bottom,&
-       value_top)
-
-
-  call ad2d%set_slopes_at_boundary(&
-       slope_left,&
-       slope_right,&
-       slope_bottom,&
-       slope_top)
+call ad2d%set_values_at_boundary(value_left,value_right,value_bottom,value_top)
+call ad2d%set_slopes_at_boundary(slope_left,slope_right,slope_bottom,slope_top)
+call ad2d%compute_interpolants(x,eta1,NPTS1,eta2,NPTS2) 
   
-  call ad2d%compute_interpolants( &
-       x,&
-       eta1_pos,&
-       NPTS1,&
-       eta2_pos,&
-       NPTS2)
+print *, 'Compare the values of the transformation at the nodes: '
 
-  
-  !node_val   = ad2d%interpolate_value(0.0_f64,0.0_f64)
-  print *, 'Compare the values of the transformation at the nodes: '
+acc4      = 0.0_f64
+acc4_der1 = 0.0_f64
+acc4_der2 = 0.0_f64
+normL2_4  = 0.0_F64
+normH1_4  = 0.0_f64
 
-  acc4 = 0.0_f64
-  acc4_der1 = 0.0_f64
-  acc4_der2 = 0.0_f64
-  normL2_4  = 0.0_F64
-  normH1_4  = 0.0_f64
-  do j=0,NPTS2-1
-     do i=0,NPTS1-1
-        eta1       = X1MIN + real(i,f64)*h1
-        eta2       = X2MIN + real(j,f64)*h2
-        !print*, "hehe"
-        node_val   = ad2d%interpolate_value(eta1,eta2)
-        !print*, "hehe"
-        ref                 = reference(i+1,j+1)
-        calculated(i+1,j+1) = node_val
-        normL2_4 = normL2_4 + (node_val-ref)**2 *h1*h2
-        !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-        !     'theoretical = ', ref
-        acc4        = acc4 + abs(node_val-ref)
-
-        deriv1_val = ad2d%interpolate_derivative_eta1(eta1,eta2)        
-        ref = 2*sll_pi*cos(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
-        acc4_der1 = acc4_der1 + abs(deriv1_val-ref)
-        !print*, eta1,eta2,ref,deriv1_val,abs(deriv1_val-ref)
-        normH1_4 = normH1_4 + (deriv1_val-ref)**2 *h1*h2
-        deriv2_val = ad2d%interpolate_derivative_eta2(eta1,eta2)
-        ref  = 2*sll_pi*sin(2*sll_pi*eta1)*cos(2*sll_pi*eta2)
-        acc4_der2 = acc4_der2 + abs(deriv2_val-ref)
-        !print*, ref,deriv2_val
-        normH1_4 = normH1_4 + (deriv2_val-ref)**2 *h1*h2
-     end do
+do j=1,NPTS2
+  do i=1,NPTS1
+    node_val        = ad2d%interpolate_value(eta1(i),eta2(j))
+    ref             = reference(i,j)
+    calculated(i,j) = node_val
+    normL2_4        = normL2_4 + (node_val-ref)**2 *h1*h2
+    acc4            = acc4 + abs(node_val-ref)
+    deriv1_val      = ad2d%interpolate_derivative_eta1(eta1(i),eta2(j))        
+    ref             = 2*sll_pi*cos(2*sll_pi*eta1(i))*sin(2*sll_pi*eta2(j))
+    acc4_der1       = acc4_der1 + abs(deriv1_val-ref)
+    normH1_4        = normH1_4 + (deriv1_val-ref)**2 *h1*h2
+    deriv2_val      = ad2d%interpolate_derivative_eta2(eta1(i),eta2(j))
+    ref             = 2*sll_pi*sin(2*sll_pi*eta1(i))*cos(2*sll_pi*eta2(j))
+    acc4_der2       = acc4_der2 + abs(deriv2_val-ref)
+    normH1_4        = normH1_4 + (deriv2_val-ref)**2 *h1*h2
   end do
+end do
 
-
-
-  print *, '***********************************************************'
-  print *, '              Hermite-dirichlet-hermite-dirichlet case'
-  print *, '***********************************************************'
+print *, '***********************************************************'
+print *, '              Hermite-dirichlet-hermite-dirichlet case'
+print *, '***********************************************************'
   
-  call sll_delete(ad2d)
+call sll_delete(ad2d)
   
-  !reinitialize data
-  
-  do j=1,NPTS2
-     do i=1,NPTS1
-        eta1            = X1MIN + (i-1)*h1
-        eta2            = X2MIN + (j-1)*h2
-        x(i,j)          = sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2) 
-        reference(i,j)  = sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
-     end do
+do j=1,NPTS2
+  do i=1,NPTS1
+    x(i,j)          = sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2) 
   end do
+end do
 
-  slope_left   = cos(2*sll_pi*X1MIN)*sin(2*sll_pi*eta2_pos) *2*sll_pi  
-  slope_right  = cos(2*sll_pi*X1MAX)*sin(2*sll_pi*eta2_pos) *2*sll_pi
-  slope_top    = sin(2*sll_pi*eta1_pos)*cos(2*sll_pi*X2MAX) *2*sll_pi
-  slope_bottom = sin(2*sll_pi*eta1_pos)*cos(2*sll_pi*X2MIN) *2*sll_pi
-  value_left   = sin(2*sll_pi*X1MIN)*sin(2*sll_pi*eta2_pos)   
-  value_right  = sin(2*sll_pi*X1MAX)*sin(2*sll_pi*eta2_pos) 
-  value_top    = sin(2*sll_pi*eta1_pos)*sin(2*sll_pi*X2MAX) 
-  value_bottom = sin(2*sll_pi*eta1_pos)*sin(2*sll_pi*X2MIN) 
+reference  = x
+
+slope_left   = cos(2*sll_pi*X1MIN) * sin(2*sll_pi*eta2)  * 2*sll_pi  
+slope_right  = cos(2*sll_pi*X1MAX) * sin(2*sll_pi*eta2)  * 2*sll_pi
+slope_top    = sin(2*sll_pi*eta1)  * cos(2*sll_pi*X2MAX) * 2*sll_pi
+slope_bottom = sin(2*sll_pi*eta1)  * cos(2*sll_pi*X2MIN) * 2*sll_pi
+value_left   = sin(2*sll_pi*X1MIN) * sin(2*sll_pi*eta2)   
+value_right  = sin(2*sll_pi*X1MAX) * sin(2*sll_pi*eta2) 
+value_top    = sin(2*sll_pi*eta1)  * sin(2*sll_pi*X2MAX) 
+value_bottom = sin(2*sll_pi*eta1)  * sin(2*sll_pi*X2MIN) 
   
-  call ad2d%initialize( &
-       NPTS1, &
-       NPTS2, &
-       X1MIN, &
-       X1MAX, &
-       X2MIN, &
-       X2MAX, &
-       SLL_HERMITE, &
+call ad2d%initialize( &
+       NPTS1,         &
+       NPTS2,         &
+       X1MIN,         &
+       X1MAX,         &
+       X2MIN,         &
+       X2MAX,         &
+       SLL_HERMITE,   &
        SLL_DIRICHLET, &
-       SLL_HERMITE, &
+       SLL_HERMITE,   &
        SLL_DIRICHLET, &
-       SPL_DEG, &
+       SPL_DEG,       &
        SPL_DEG )
 
 
-  call ad2d%set_values_at_boundary(&
-       value_left,&
-       value_right,&
-       value_bottom,&
-       value_top)
+call ad2d%set_values_at_boundary(value_left,value_right,value_bottom,value_top)
+call ad2d%set_slopes_at_boundary(slope_left,slope_right,slope_bottom,slope_top)
+call ad2d%compute_interpolants(x,eta1,NPTS1,eta2,NPTS2)
 
+print *, 'Compare the values of the transformation at the nodes: '
 
-  call ad2d%set_slopes_at_boundary(&
-       slope_left,&
-       slope_right,&
-       slope_bottom,&
-       slope_top)
-  
-  call ad2d%compute_interpolants( &
-       x,&
-       eta1_pos,&
-       NPTS1,&
-       eta2_pos,&
-       NPTS2)
+acc5      = 0.0_f64
+acc5_der1 = 0.0_f64
+acc5_der2 = 0.0_f64
+normL2_5  = 0.0_F64
+normH1_5  = 0.0_f64
 
-  
-  !node_val   = ad2d%interpolate_value(0.0_f64,0.0_f64)
-  print *, 'Compare the values of the transformation at the nodes: '
-
-  acc5 = 0.0_f64
-  acc5_der1 = 0.0_f64
-  acc5_der2 = 0.0_f64
-  normL2_5  = 0.0_F64
-  normH1_5  = 0.0_f64
-  do j=0,NPTS2-1
-     do i=0,NPTS1-1
-        eta1       = X1MIN + real(i,f64)*h1
-        eta2       = X2MIN + real(j,f64)*h2
-        !print*, "hehe"
-        node_val   = ad2d%interpolate_value(eta1,eta2)
-        !print*, "hehe"
-        ref                 = reference(i+1,j+1)
-        calculated(i+1,j+1) = node_val
-        normL2_5 = normL2_5 + (node_val-ref)**2 *h1*h2
-        !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-        !     'theoretical = ', ref
-        acc5        = acc5 + abs(node_val-ref)
-
-        deriv1_val = ad2d%interpolate_derivative_eta1(eta1,eta2)        
-        ref = 2*sll_pi*cos(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
-        acc5_der1 = acc5_der1 + abs(deriv1_val-ref)
-        !print*, eta1,eta2,ref,deriv1_val,abs(deriv1_val-ref)
-        normH1_5 = normH1_5 + (deriv1_val-ref)**2 *h1*h2
-        deriv2_val = ad2d%interpolate_derivative_eta2(eta1,eta2)
-        ref  = 2*sll_pi*sin(2*sll_pi*eta1)*cos(2*sll_pi*eta2)
-        acc5_der2 = acc5_der2 + abs(deriv2_val-ref)
-        !print*, ref,deriv2_val
-        normH1_5 = normH1_5 + (deriv2_val-ref)**2 *h1*h2
-     end do
+do j=1,NPTS2
+  do i=1,NPTS1
+    node_val       = ad2d%interpolate_value(eta1(i),eta2(j))
+    ref            = reference(i,j)
+    calculated(i,j = node_val
+    normL2_5       = normL2_5 + (node_val-ref)**2 *h1*h2
+    acc5           = acc5 + abs(node_val-ref)
+    deriv1_val     = ad2d%interpolate_derivative_eta1(eta1(i),eta2(j))        
+    ref            = 2*sll_pi*cos(2*sll_pi*eta1(i))*sin(2*sll_pi*eta2(j))
+    acc5_der1      = acc5_der1 + abs(deriv1_val-ref)
+    normH1_5       = normH1_5 + (deriv1_val-ref)**2 *h1*h2
+    deriv2_val     = ad2d%interpolate_derivative_eta2(eta1(i),eta2(j))
+    ref            = 2*sll_pi*sin(2*sll_pi*eta1)*cos(2*sll_pi*eta2)
+    acc5_der2      = acc5_der2 + abs(deriv2_val-ref)
+    normH1_5       = normH1_5 + (deriv2_val-ref)**2 *h1*h2
   end do
+end do
 
-
-  print *, '***********************************************************'
-  print *, '              dirichlet-Hermite-hermite-dirichlet case'
-  print *, '***********************************************************'
+print *, '***********************************************************'
+print *, '              dirichlet-Hermite-hermite-dirichlet case'
+print *, '***********************************************************'
   
-  call sll_delete(ad2d)
+call sll_delete(ad2d)
   
-  !reinitialize data
-  
-  do j=0,NPTS2-1
-     do i=0,NPTS1-1
-        eta1               = X1MIN + real(i,f64)*h1
-        eta2               = X2MIN + real(j,f64)*h2
-        x(i+1,j+1)         = sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2) 
-        reference(i+1,j+1) = sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
-     end do
+do j=1,NPTS2
+  do i=1,NPTS1
+    x(i,j) = sin(2*sll_pi*eta1(i))*sin(2*sll_pi*eta2(j)) 
   end do
+end do
 
-  slope_left   = cos(2*sll_pi*X1MIN)*sin(2*sll_pi*eta2_pos) *2*sll_pi  
-  slope_right  = cos(2*sll_pi*X1MAX)*sin(2*sll_pi*eta2_pos) *2*sll_pi
-  slope_top    = sin(2*sll_pi*eta1_pos)*cos(2*sll_pi*X2MAX) *2*sll_pi
-  slope_bottom = sin(2*sll_pi*eta1_pos)*cos(2*sll_pi*X2MIN) *2*sll_pi
-  value_left   = sin(2*sll_pi*X1MIN)*sin(2*sll_pi*eta2_pos)   
-  value_right  = sin(2*sll_pi*X1MAX)*sin(2*sll_pi*eta2_pos) 
-  value_top    = sin(2*sll_pi*eta1_pos)*sin(2*sll_pi*X2MAX) 
-  value_bottom = sin(2*sll_pi*eta1_pos)*sin(2*sll_pi*X2MIN) 
+reference = x
+
+slope_left   = cos(2*sll_pi*X1MIN)*sin(2*sll_pi*eta2) *2*sll_pi  
+slope_right  = cos(2*sll_pi*X1MAX)*sin(2*sll_pi*eta2) *2*sll_pi
+slope_top    = sin(2*sll_pi*eta1)*cos(2*sll_pi*X2MAX) *2*sll_pi
+slope_bottom = sin(2*sll_pi*eta1)*cos(2*sll_pi*X2MIN) *2*sll_pi
+value_left   = sin(2*sll_pi*X1MIN)*sin(2*sll_pi*eta2)   
+value_right  = sin(2*sll_pi*X1MAX)*sin(2*sll_pi*eta2) 
+value_top    = sin(2*sll_pi*eta1)*sin(2*sll_pi*X2MAX) 
+value_bottom = sin(2*sll_pi*eta1)*sin(2*sll_pi*X2MIN) 
   
-  call ad2d%initialize( &
-       NPTS1, &
-       NPTS2, &
-       X1MIN, &
-       X1MAX, &
-       X2MIN, &
-       X2MAX, &
+call ad2d%initialize( &
+       NPTS1,         &
+       NPTS2,         &
+       X1MIN,         &
+       X1MAX,         &
+       X2MIN,         &
+       X2MAX,         &
        SLL_DIRICHLET, &
-       SLL_HERMITE, &
-       SLL_HERMITE, &
+       SLL_HERMITE,   &
+       SLL_HERMITE,   &
        SLL_DIRICHLET, &
-       SPL_DEG, &
+       SPL_DEG,       &
        SPL_DEG )
 
+call ad2d%set_values_at_boundary(value_left,value_right,value_bottom,value_top)
+call ad2d%set_slopes_at_boundary(slope_left,slope_right,slope_bottom,slope_top)
+call ad2d%compute_interpolants(x,eta1,NPTS1,eta2,NPTS2)
 
-  call ad2d%set_values_at_boundary(&
-       value_left,&
-       value_right,&
-       value_bottom,&
-       value_top)
+print *, 'Compare the values of the transformation at the nodes: '
 
+acc6      = 0.0_f64
+acc6_der1 = 0.0_f64
+acc6_der2 = 0.0_f64
+normL2_6  = 0.0_F64
+normH1_6  = 0.0_f64
 
-  call ad2d%set_slopes_at_boundary(&
-       slope_left,&
-       slope_right,&
-       slope_bottom,&
-       slope_top)
-  
-  call ad2d%compute_interpolants( &
-       x,&
-       eta1_pos,&
-       NPTS1,&
-       eta2_pos,&
-       NPTS2)
-
-  
-  !node_val   = ad2d%interpolate_value(0.0_f64,0.0_f64)
-  print *, 'Compare the values of the transformation at the nodes: '
-
-  acc6 = 0.0_f64
-  acc6_der1 = 0.0_f64
-  acc6_der2 = 0.0_f64
-  normL2_6  = 0.0_F64
-  normH1_6  = 0.0_f64
-  do j=0,NPTS2-1
-     do i=0,NPTS1-1
-        eta1       = X1MIN + real(i,f64)*h1
-        eta2       = X2MIN + real(j,f64)*h2
-        !print*, "hehe"
-        node_val   = ad2d%interpolate_value(eta1,eta2)
-        !print*, "hehe"
-        ref                 = reference(i+1,j+1)
-        calculated(i+1,j+1) = node_val
-        normL2_6 = normL2_6 + (node_val-ref)**2 *h1*h2
-        !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-        !     'theoretical = ', ref
-        acc6        = acc6 + abs(node_val-ref)
+do j=1,NPTS2
+  do i=1,NPTS1
+    node_val        = ad2d%interpolate_value(eta1(i),eta2(j))
+    ref             = reference(i,j)
+    calculated(i,j) = node_val
+    normL2_6        = normL2_6 + (node_val-ref)**2 *h1*h2
+    acc6            = acc6 + abs(node_val-ref)
 
         deriv1_val = ad2d%interpolate_derivative_eta1(eta1,eta2)        
         ref = 2*sll_pi*cos(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
@@ -694,14 +519,14 @@ program unit_test
      end do
   end do
 
-  slope_left    = cos(2*sll_pi*X1MIN)*sin(2*sll_pi*eta2_pos) *2*sll_pi  
-  slope_right   = cos(2*sll_pi*X1MAX)*sin(2*sll_pi*eta2_pos) *2*sll_pi
-  slope_top     = sin(2*sll_pi*eta1_pos)*cos(2*sll_pi*X2MAX) *2*sll_pi
-  slope_bottom  = sin(2*sll_pi*eta1_pos)*cos(2*sll_pi*X2MIN) *2*sll_pi
-  value_left    = sin(2*sll_pi*X1MIN)*sin(2*sll_pi*eta2_pos)   
-  value_right   = sin(2*sll_pi*X1MAX)*sin(2*sll_pi*eta2_pos) 
-  value_top     = sin(2*sll_pi*eta1_pos)*sin(2*sll_pi*X2MAX) 
-  value_bottom  = sin(2*sll_pi*eta1_pos)*sin(2*sll_pi*X2MIN) 
+  slope_left    = cos(2*sll_pi*X1MIN)*sin(2*sll_pi*eta2) *2*sll_pi  
+  slope_right   = cos(2*sll_pi*X1MAX)*sin(2*sll_pi*eta2) *2*sll_pi
+  slope_top     = sin(2*sll_pi*eta1)*cos(2*sll_pi*X2MAX) *2*sll_pi
+  slope_bottom  = sin(2*sll_pi*eta1)*cos(2*sll_pi*X2MIN) *2*sll_pi
+  value_left    = sin(2*sll_pi*X1MIN)*sin(2*sll_pi*eta2)   
+  value_right   = sin(2*sll_pi*X1MAX)*sin(2*sll_pi*eta2) 
+  value_top     = sin(2*sll_pi*eta1)*sin(2*sll_pi*X2MAX) 
+  value_bottom  = sin(2*sll_pi*eta1)*sin(2*sll_pi*X2MIN) 
   
   call ad2d%initialize( &
        NPTS1, &
@@ -733,9 +558,9 @@ program unit_test
   
   call ad2d%compute_interpolants( &
        x,&
-       eta1_pos,&
+       eta1,&
        NPTS1,&
-       eta2_pos,&
+       eta2,&
        NPTS2)
 
   
@@ -793,14 +618,14 @@ program unit_test
      end do
   end do
 
-  slope_left    = cos(2*sll_pi*X1MIN)*sin(2*sll_pi*eta2_pos) *2*sll_pi  
-  slope_right   = cos(2*sll_pi*X1MAX)*sin(2*sll_pi*eta2_pos) *2*sll_pi
-  slope_top     = sin(2*sll_pi*eta1_pos)*cos(2*sll_pi*X2MAX) *2*sll_pi
-  slope_bottom  = sin(2*sll_pi*eta1_pos)*cos(2*sll_pi*X2MIN) *2*sll_pi
-  value_left    = sin(2*sll_pi*X1MIN)*sin(2*sll_pi*eta2_pos)   
-  value_right   = sin(2*sll_pi*X1MAX)*sin(2*sll_pi*eta2_pos) 
-  value_top     = sin(2*sll_pi*eta1_pos)*sin(2*sll_pi*X2MAX) 
-  value_bottom  = sin(2*sll_pi*eta1_pos)*sin(2*sll_pi*X2MIN) 
+  slope_left    = cos(2*sll_pi*X1MIN)*sin(2*sll_pi*eta2) *2*sll_pi  
+  slope_right   = cos(2*sll_pi*X1MAX)*sin(2*sll_pi*eta2) *2*sll_pi
+  slope_top     = sin(2*sll_pi*eta1)*cos(2*sll_pi*X2MAX) *2*sll_pi
+  slope_bottom  = sin(2*sll_pi*eta1)*cos(2*sll_pi*X2MIN) *2*sll_pi
+  value_left    = sin(2*sll_pi*X1MIN)*sin(2*sll_pi*eta2)   
+  value_right   = sin(2*sll_pi*X1MAX)*sin(2*sll_pi*eta2) 
+  value_top     = sin(2*sll_pi*eta1)*sin(2*sll_pi*X2MAX) 
+  value_bottom  = sin(2*sll_pi*eta1)*sin(2*sll_pi*X2MIN) 
   
   call ad2d%initialize( &
        NPTS1, &
@@ -832,9 +657,9 @@ program unit_test
   
   call ad2d%compute_interpolants( &
        x,&
-       eta1_pos,&
+       eta1,&
        NPTS1,&
-       eta2_pos,&
+       eta2,&
        NPTS2)
 
   
