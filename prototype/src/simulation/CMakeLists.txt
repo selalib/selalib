@@ -143,7 +143,6 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
    #ADD_SIMULATION(MYMETHOD MYSIM)
 
    ADD_SIMULATION(4d                4d_vlasov_poisson_cartesian)
-   ADD_SIMULATION(4d_vp_cartesian   4d_vlasov_parallel_poisson_sequential_cartesian)
    ADD_SIMULATION(4d_vp_general     4d_vlasov_poisson_general)
    ADD_SIMULATION(4d_qns_general    4d_qns_general)
    #PN ADD_SIMULATION(4d_qns_general_multipatch    4d_qns_general_multipatch)
