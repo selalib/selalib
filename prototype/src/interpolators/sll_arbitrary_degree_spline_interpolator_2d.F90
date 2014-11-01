@@ -39,6 +39,12 @@ integer, parameter :: E = 2
 integer, parameter :: S = 3
 integer, parameter :: W = 4
 
+type :: edge
+   sll_int32           :: bc  
+   sll_real64, pointer :: values(:)
+   sll_real64, pointer :: slopes(:)
+end type edge
+
 
 ! in what follows, the direction '1' is in the contiguous memory direction.
 !> Arbitrary degree version of 2d irnterpolator
@@ -57,7 +63,6 @@ type, public, extends(sll_interpolator_2d_base) :: &
    sll_real64 :: eta1_max           !< PLEASE ADD DOCUMENTATION
    sll_real64 :: eta2_min           !< PLEASE ADD DOCUMENTATION
    sll_real64 :: eta2_max           !< PLEASE ADD DOCUMENTATION
-   sll_int32  :: bc(4)              !< PLEASE ADD DOCUMENTATION
    sll_int32  :: spline_degree1     !< PLEASE ADD DOCUMENTATION
    sll_int32  :: spline_degree2     !< PLEASE ADD DOCUMENTATION
    sll_real64, pointer :: knots1(:) !< PLEASE ADD DOCUMENTATION
@@ -72,8 +77,7 @@ type, public, extends(sll_interpolator_2d_base) :: &
    ! table contains the coeff spline of the function in boundary 
    ! in the case of dirichlet boundary condition non homogene 
 
-   sll_real64, pointer :: slope(:,:)       !< PLEASE ADD DOCUMENTATION
-   sll_real64, pointer :: value(:,:)       !< PLEASE ADD DOCUMENTATION
+   type(edge), dimension(4) :: side
 
    logical, dimension(4) :: compute_slope = .TRUE. !< PLEASE ADD DOCUMENTATION
    logical, dimension(4) :: compute_value = .TRUE. !< PLEASE ADD DOCUMENTATION
@@ -154,10 +158,10 @@ end subroutine delete_arbitrary_degree_2d_interpolator
 !> @param[in] eta1_max the maximun in the direction eta1
 !> @param[in] eta2_min the minimun in the direction eta2
 !> @param[in] eta2_max the maximun in the direction eta2
-!> @param[in] bc_left  the boundary condition at left in the direction eta1
-!> @param[in] bc_right the boundary condition at right in the direction eta2
-!> @param[in] bc_bottom the boundary condition at left in the direction eta2
-!> @param[in] bc_top the boundary condition at right in the direction eta2
+!> @param[in] bc_w the boundary condition at left in the direction eta1
+!> @param[in] bc_e the boundary condition at right in the direction eta2
+!> @param[in] bc_s the boundary condition at left in the direction eta2
+!> @param[in] bc_n the boundary condition at right in the direction eta2
 !> @param[in] spline_degree1 the degree of B-spline in the direction eta1
 !> @param[in] spline_degree2 the degre of B-spline in the direction eta2
 !> @return the type sll_arbitrary_degree_spline_interpolator_2d
@@ -169,10 +173,10 @@ function new_arbitrary_degree_spline_interp2d( &
   eta1_max,                                    &
   eta2_min,                                    &
   eta2_max,                                    &
-  bc_left,                                     &
-  bc_right,                                    &
-  bc_bottom,                                   &
-  bc_top,                                      &
+  bc_w,                                        &
+  bc_e,                                        &
+  bc_s,                                        &
+  bc_n,                                        &
   spline_degree1,                              &
   spline_degree2) result( res )
 
@@ -184,10 +188,10 @@ function new_arbitrary_degree_spline_interp2d( &
   sll_real64, intent(in) :: eta1_max
   sll_real64, intent(in) :: eta2_min
   sll_real64, intent(in) :: eta2_max
-  sll_int32,  intent(in) :: bc_left
-  sll_int32,  intent(in) :: bc_right
-  sll_int32,  intent(in) :: bc_bottom
-  sll_int32,  intent(in) :: bc_top
+  sll_int32,  intent(in) :: bc_w
+  sll_int32,  intent(in) :: bc_e
+  sll_int32,  intent(in) :: bc_s
+  sll_int32,  intent(in) :: bc_n
   sll_int32,  intent(in) :: spline_degree1
   sll_int32,  intent(in) :: spline_degree2
 
@@ -203,12 +207,13 @@ function new_arbitrary_degree_spline_interp2d( &
        eta1_max,                     &
        eta2_min,                     &
        eta2_max,                     &
-       bc_left,                      &
-       bc_right,                     &
-       bc_bottom,                    &
-       bc_top,                       &
+       bc_w,                         &
+       bc_e,                         &
+       bc_s,                         &
+       bc_n,                         &
        spline_degree1,               &
        spline_degree2)
+
 
 end function new_arbitrary_degree_spline_interp2d
 
@@ -218,18 +223,18 @@ end function new_arbitrary_degree_spline_interp2d
 ! -----------------------------------------------
 !> Initialization of an interpolator arbitrary degree splines 2d.
 !> The parameters are
-!> @param[in] num_pts1 the number of points in the direction eta1
-!> @param[in] num_pts2 the number of points in the direction eta2
-!> @param[in] eta1_min the minimun in the direction eta1
-!> @param[in] eta1_max the maximun in the direction eta1
-!> @param[in] eta2_min the minimun in the direction eta2
-!> @param[in] eta2_max the maximun in the direction eta2
-!> @param[in] bc_left  the boundary condition at left in the direction eta1
-!> @param[in] bc_right the boundary condition at right in the direction eta2
-!> @param[in] bc_bottom the boundary condition at left in the direction eta2
-!> @param[in] bc_top the boundary condition at right in the direction eta2
-!> @param[in] spline_degree1 the degree of B-spline in the direction eta1
-!> @param[in] spline_degree2 the degre of B-spline in the direction eta2
+!> @param[in]  num_pts1 the number of points in the direction eta1
+!> @param[in]  num_pts2 the number of points in the direction eta2
+!> @param[in]  eta1_min the minimun in the direction eta1
+!> @param[in]  eta1_max the maximun in the direction eta1
+!> @param[in]  eta2_min the minimun in the direction eta2
+!> @param[in]  eta2_max the maximun in the direction eta2
+!> @param[in]  bc_w  the boundary condition at left in the direction eta1
+!> @param[in]  bc_e the boundary condition at right in the direction eta2
+!> @param[in]  bc_s the boundary condition at left in the direction eta2
+!> @param[in]  bc_n the boundary condition at right in the direction eta2
+!> @param[in]  spline_degree1 the degree of B-spline in the direction eta1
+!> @param[in]  spline_degree2 the degre of B-spline in the direction eta2
 !> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_2d
 subroutine initialize_ad2d_interpolator( &
   interpolator,                          &
@@ -239,10 +244,10 @@ subroutine initialize_ad2d_interpolator( &
   eta1_max,                              &
   eta2_min,                              &
   eta2_max,                              &
-  bc_left,                               &
-  bc_right,                              &
-  bc_bottom,                             &
-  bc_top,                                &
+  bc_w,                                  &
+  bc_e,                                  &
+  bc_s,                                  &
+  bc_n,                                  &
   spline_degree1,                        &
   spline_degree2)
 
@@ -254,10 +259,10 @@ subroutine initialize_ad2d_interpolator( &
   sll_real64, intent(in) :: eta1_max
   sll_real64, intent(in) :: eta2_min
   sll_real64, intent(in) :: eta2_max
-  sll_int32,  intent(in) :: bc_left
-  sll_int32,  intent(in) :: bc_right
-  sll_int32,  intent(in) :: bc_bottom
-  sll_int32,  intent(in) :: bc_top
+  sll_int32,  intent(in) :: bc_w
+  sll_int32,  intent(in) :: bc_e
+  sll_int32,  intent(in) :: bc_s
+  sll_int32,  intent(in) :: bc_n
   sll_int32,  intent(in) :: spline_degree1
   sll_int32,  intent(in) :: spline_degree2
 
@@ -266,34 +271,32 @@ subroutine initialize_ad2d_interpolator( &
   sll_int32 :: tmp2
   sll_int64 :: bc_selector
    
-  ! do some argument checking...
-  if(((bc_left  == SLL_PERIODIC).and.(bc_right.ne. SLL_PERIODIC)).or.&
-     ((bc_right == SLL_PERIODIC).and.(bc_left .ne. SLL_PERIODIC)))then
-
+  if(((bc_w == SLL_PERIODIC).and.(bc_e .ne. SLL_PERIODIC)).or.&
+     ((bc_e == SLL_PERIODIC).and.(bc_w .ne. SLL_PERIODIC)))then
      SLL_ERROR("if one boundary condition is specified as periodic, then &
                & both must be. Error in first direction.")
   end if
 
-  if(((bc_bottom == SLL_PERIODIC).and.(bc_top.ne. SLL_PERIODIC)).or.&
-     ((bc_top == SLL_PERIODIC).and.(bc_bottom .ne. SLL_PERIODIC)))then
+  if(((bc_s == SLL_PERIODIC).and.(bc_n .ne. SLL_PERIODIC)).or.&
+     ((bc_n == SLL_PERIODIC).and.(bc_s .ne. SLL_PERIODIC)))then
      SLL_ERROR("if one boundary condition is specified as periodic, then &
                & both must be. Error in second direction.")
   end if
 
   bc_selector = 0
 
-  if( bc_left   == SLL_DIRICHLET ) bc_selector = bc_selector + 1
-  if( bc_left   == SLL_NEUMANN   ) bc_selector = bc_selector + 2
-  if( bc_left   == SLL_HERMITE   ) bc_selector = bc_selector + 4
-  if( bc_right  == SLL_DIRICHLET ) bc_selector = bc_selector + 8
-  if( bc_right  == SLL_NEUMANN   ) bc_selector = bc_selector + 16
-  if( bc_right  == SLL_HERMITE   ) bc_selector = bc_selector + 32
-  if( bc_bottom == SLL_DIRICHLET ) bc_selector = bc_selector + 64
-  if( bc_bottom == SLL_NEUMANN   ) bc_selector = bc_selector + 128
-  if( bc_bottom == SLL_HERMITE   ) bc_selector = bc_selector + 256
-  if( bc_top    == SLL_DIRICHLET ) bc_selector = bc_selector + 512
-  if( bc_top    == SLL_NEUMANN   ) bc_selector = bc_selector + 1024
-  if( bc_top    == SLL_HERMITE   ) bc_selector = bc_selector + 2048
+  if( bc_w == SLL_DIRICHLET ) bc_selector = bc_selector + 1
+  if( bc_w == SLL_NEUMANN   ) bc_selector = bc_selector + 2
+  if( bc_w == SLL_HERMITE   ) bc_selector = bc_selector + 4
+  if( bc_e == SLL_DIRICHLET ) bc_selector = bc_selector + 8
+  if( bc_e == SLL_NEUMANN   ) bc_selector = bc_selector + 16
+  if( bc_e == SLL_HERMITE   ) bc_selector = bc_selector + 32
+  if( bc_s == SLL_DIRICHLET ) bc_selector = bc_selector + 64
+  if( bc_s == SLL_NEUMANN   ) bc_selector = bc_selector + 128
+  if( bc_s == SLL_HERMITE   ) bc_selector = bc_selector + 256
+  if( bc_n == SLL_DIRICHLET ) bc_selector = bc_selector + 512
+  if( bc_n == SLL_NEUMANN   ) bc_selector = bc_selector + 1024
+  if( bc_n == SLL_HERMITE   ) bc_selector = bc_selector + 2048
 
   ! Initialization in the type of interpolator
   interpolator%spline_degree1 = spline_degree1
@@ -302,56 +305,59 @@ subroutine initialize_ad2d_interpolator( &
   interpolator%eta1_max       = eta1_max
   interpolator%eta2_min       = eta2_min
   interpolator%eta2_max       = eta2_max
-  interpolator%bc(W)          = bc_left
-  interpolator%bc(E)          = bc_right
-  interpolator%bc(S)          = bc_bottom
-  interpolator%bc(N)          = bc_top
+  interpolator%side(N)%bc     = bc_n
+  interpolator%side(E)%bc     = bc_e
+  interpolator%side(S)%bc     = bc_s
+  interpolator%side(W)%bc     = bc_w
   interpolator%bc_selector    = bc_selector
   interpolator%num_pts1       = num_pts1
   interpolator%num_pts2       = num_pts2
 
-  SLL_CLEAR_ALLOCATE(interpolator%value(1:num_pts2,4),  ierr)
-  SLL_CLEAR_ALLOCATE(interpolator%slope(1:num_pts2,4),  ierr)
+  SLL_CLEAR_ALLOCATE(interpolator%side(N)%values(1:num_pts1),ierr)
+  SLL_CLEAR_ALLOCATE(interpolator%side(N)%slopes(1:num_pts1),ierr)
+  SLL_CLEAR_ALLOCATE(interpolator%side(E)%values(1:num_pts2),ierr)
+  SLL_CLEAR_ALLOCATE(interpolator%side(E)%slopes(1:num_pts2),ierr)
+  SLL_CLEAR_ALLOCATE(interpolator%side(S)%values(1:num_pts1),ierr)
+  SLL_CLEAR_ALLOCATE(interpolator%side(S)%slopes(1:num_pts1),ierr)
+  SLL_CLEAR_ALLOCATE(interpolator%side(W)%values(1:num_pts2),ierr)
+  SLL_CLEAR_ALLOCATE(interpolator%side(W)%slopes(1:num_pts2),ierr)
 
   select case (bc_selector)
 
   case (0) ! 1. periodic-periodic
        
-    ! Allocate the knots in each direction 
     SLL_ALLOCATE( interpolator%knots1(2*spline_degree1+2),ierr )
     SLL_ALLOCATE( interpolator%knots2(2*spline_degree2+2),ierr )
 
   case (9) ! 2. dirichlet-left, dirichlet-right, periodic
 
-    ! Allocate the knots in each direction 
     SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
     SLL_ALLOCATE( interpolator%knots2(2*spline_degree2+2),ierr )
 
   case (576) ! 3. periodic, dirichlet-bottom, dirichlet-top
 
-    ! Allocate the knots in each direction 
     SLL_ALLOCATE( interpolator%knots1(2*spline_degree1+2),ierr )
     SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
 
   case (585) ! 4. dirichlet in all sides
-    ! Allocate the knots in each direction
+
     SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
     SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
 
   case(650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet 
-    ! Allocate the knots in each direction
+
     SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
     SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
        
   case(657) !left: Dirichlet, right: Neumann, bottom: Neumann, Top: Dirichlet 
-    ! Allocate the knots in each direction
+
     SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
     SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
        
   case(780)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Dirichlet
 
-    SLL_CLEAR_ALLOCATE( interpolator%knots1(1:num_pts1+2*spline_degree1),ierr )
-    SLL_CLEAR_ALLOCATE( interpolator%knots2(1:num_pts2+2*spline_degree2),ierr )
+    SLL_ALLOCATE( interpolator%knots1(1:num_pts1+2*spline_degree1),ierr )
+    SLL_ALLOCATE( interpolator%knots2(1:num_pts2+2*spline_degree2),ierr )
 
   case(801)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Dirichlet
 
@@ -380,8 +386,8 @@ subroutine initialize_ad2d_interpolator( &
 
   case(2124)  !left: Hermite, right: Dirichlet, bottom: Dirichlet, Top: Hermite
 
-    SLL_CLEAR_ALLOCATE( interpolator%knots1(1:num_pts1+2*spline_degree1),ierr )
-    SLL_CLEAR_ALLOCATE( interpolator%knots2(1:num_pts2+2*spline_degree2),ierr )
+    SLL_ALLOCATE( interpolator%knots1(1:num_pts1+2*spline_degree1),ierr )
+    SLL_ALLOCATE( interpolator%knots2(1:num_pts2+2*spline_degree2),ierr )
 
   case(2145)  !left: Dirichlet, right: Hermite, bottom: Dirichlet, Top: Hermite  
 
@@ -429,39 +435,39 @@ end subroutine !initialize_ad2d_interpolator
 !> @brief
 !> Initialization of the boundary for interpolator arbitrary degree splines 2d.
 !> @details
-!> @param[in] slope_left a 1d array contains values in the left in the direction eta1  
-!> @param[in] slope_right a 1d array contains values in the right in the direction eta1 
-!> @param[in] slope_bottom a 1d array contains values in the left in the direction eta2 
-!> @param[in] slope_top a 1d array contains values in the right in the direction eta2
+!> @param[in] slope_w a 1d array contains values in the left in the direction eta1  
+!> @param[in] slope_e a 1d array contains values in the right in the direction eta1 
+!> @param[in] slope_s a 1d array contains values in the left in the direction eta2 
+!> @param[in] slope_n a 1d array contains values in the right in the direction eta2
 !> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_2d
 subroutine set_slope2d( interpolator,  &
-                        slope_left,    &
-                        slope_right,   &
-                        slope_bottom,  &
-                        slope_top)
+                        slope_w,       &
+                        slope_e,       &
+                        slope_s,       &
+                        slope_n)
 
   sll_interpolator :: interpolator
 
-  sll_real64, dimension(:),optional :: slope_left
-  sll_real64, dimension(:),optional :: slope_right
-  sll_real64, dimension(:),optional :: slope_bottom
-  sll_real64, dimension(:),optional :: slope_top
+  sll_real64, dimension(:),optional :: slope_w
+  sll_real64, dimension(:),optional :: slope_e
+  sll_real64, dimension(:),optional :: slope_s
+  sll_real64, dimension(:),optional :: slope_n
 
   class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp_eta1 => null()
   class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp_eta2 => null()
 
-  sll_int32 :: sz_slope_bottom
-  sll_int32 :: sz_slope_top
-  sll_int32 :: sz_slope_left
-  sll_int32 :: sz_slope_right
+  sll_int32 :: sz_slope_s
+  sll_int32 :: sz_slope_n
+  sll_int32 :: sz_slope_w
+  sll_int32 :: sz_slope_e
   sll_int32 :: num_pts1
   sll_int32 :: num_pts2
   sll_int32 :: side
 
-  num_pts1     = interpolator%num_pts1
-  num_pts2     = interpolator%num_pts2
+  num_pts1 = interpolator%num_pts1
+  num_pts2 = interpolator%num_pts2
 
-  if (present(slope_top) .or. present(slope_bottom)) then 
+  if (present(slope_n) .or. present(slope_s)) then 
     interp_eta1 => new_arbitrary_degree_1d_interpolator( &
                    interpolator%num_pts1,                &
                    interpolator%eta1_min,                &
@@ -471,7 +477,7 @@ subroutine set_slope2d( interpolator,  &
                    interpolator%spline_degree1 )
   end if
 
-  if (present(slope_right) .or. present(slope_left)) then 
+  if (present(slope_e) .or. present(slope_w)) then 
     interp_eta2 => new_arbitrary_degree_1d_interpolator( &
                    interpolator%num_pts2,                &
                    interpolator%eta2_min,                &
@@ -484,58 +490,58 @@ subroutine set_slope2d( interpolator,  &
   interpolator%slope = 0.0
   interpolator%compute_slope = .FALSE.
 
-  if (present(slope_right)) then 
-    sz_slope_right = size(slope_right)
-    SLL_ASSERT( sz_slope_right == interpolator%num_pts2 ) 
-    interpolator%slope(:,E) = slope_right
+  if (present(slope_e)) then 
+    sz_slope_e = size(slope_e)
+    SLL_ASSERT( sz_slope_e == interpolator%num_pts2 ) 
+    interpolator%slope(:,E) = slope_e
     interpolator%compute_slope(E)= .FALSE.
   end if
 
-  if (present(slope_left)) then 
-    sz_slope_left = size(slope_left)
-    SLL_ASSERT( sz_slope_left == interpolator%num_pts2 ) 
-    interpolator%slope(:,W) = slope_left
+  if (present(slope_w)) then 
+    sz_slope_w = size(slope_w)
+    SLL_ASSERT( sz_slope_w == interpolator%num_pts2 ) 
+    interpolator%slope(:,W) = slope_w
     interpolator%compute_slope(W)= .FALSE.
   end if
 
-  if (present(slope_top)) then 
-    sz_slope_top = size(slope_top)
-    SLL_ASSERT( sz_slope_top == interpolator%num_pts1 ) 
-    interpolator%slope(:,N) = slope_top
+  if (present(slope_n)) then 
+    sz_slope_n = size(slope_n)
+    SLL_ASSERT( sz_slope_n == interpolator%num_pts1 ) 
+    interpolator%slope(:,N) = slope_n
     interpolator%compute_slope(N)= .FALSE.
   end if
 
-  if (present(slope_bottom)) then 
-    sz_slope_bottom = size(slope_bottom)
-    SLL_ASSERT( sz_slope_bottom == interpolator%num_pts1 ) 
-    interpolator%slope(:,S) = slope_bottom
+  if (present(slope_s)) then 
+    sz_slope_s = size(slope_s)
+    SLL_ASSERT( sz_slope_s == interpolator%num_pts1 ) 
+    interpolator%slope(:,S) = slope_s
     interpolator%compute_slope(S)= .FALSE.
   end if
 
   do side = 1, 4
 
-    if (interpolator%bc(side) == SLL_HERMITE) then
-      if      (present(slope_top) .and. side == N) then 
-        call interp_eta1%compute_interpolants(slope_top)
-        interpolator%slope(1:sz_slope_top+2,side) = interp_eta1%coeff_splines(1:sz_slope_top+2)
-      else if (present(slope_bottom) .and. side == S) then 
-        call interp_eta1%compute_interpolants(slope_bottom)
-        interpolator%slope(1:sz_slope_bottom+2,side) = interp_eta1%coeff_splines(1:sz_slope_bottom+2)
-      else if (present(slope_left) .and. side == W) then 
-        call interp_eta2%compute_interpolants(slope_left)
-        interpolator%slope(1:sz_slope_left+2,side) = interp_eta2%coeff_splines(1:sz_slope_left+2)
-      else if (present(slope_right) .and. side == E) then 
-        call interp_eta2%compute_interpolants(slope_right)
-        interpolator%slope(1:sz_slope_right+2,side) = interp_eta2%coeff_splines(1:sz_slope_right+2)
+    if (interpolator%side(i)%bc == SLL_HERMITE) then
+      if      (present(slope_n) .and. side == N) then 
+        call interp_eta1%compute_interpolants(slope_n)
+        interpolator%slope(1:sz_slope_n+2,side) = interp_eta1%coeff_splines(1:sz_slope_n+2)
+      else if (present(slope_s) .and. side == S) then 
+        call interp_eta1%compute_interpolants(slope_s)
+        interpolator%slope(1:sz_slope_s+2,side) = interp_eta1%coeff_splines(1:sz_slope_s+2)
+      else if (present(slope_w) .and. side == W) then 
+        call interp_eta2%compute_interpolants(slope_w)
+        interpolator%slope(1:sz_slope_w,side) = interp_eta2%coeff_splines(1:sz_slope_w)
+      else if (present(slope_e) .and. side == E) then 
+        call interp_eta2%compute_interpolants(slope_e)
+        interpolator%slope(1:sz_slope_e,side) = interp_eta2%coeff_splines(1:sz_slope_e)
       end if
     end if
 
   end do
 
-  if (present(slope_top) .or. present(slope_bottom))     &
+  if (present(slope_n) .or. present(slope_s))     &
     call sll_delete(interp_eta1)
 
-  if (present(slope_left) .or. present(slope_right))     &
+  if (present(slope_w) .or. present(slope_e))     &
     call sll_delete(interp_eta2)
 
     
@@ -545,28 +551,28 @@ end subroutine set_slope2d
 !> @brief
 !> Initialization of the boundary for interpolator arbitrary degree splines 2d.
 !> @details
-!> @param[in]  value_left a 1d array contains values in the left direction eta1  
-!> @param[in]  value_right a 1d array contains values in the right direction eta1 
-!> @param[in]  value_bottom a 1d array contains values in the left direction eta2 
-!> @param[in]  value_top a 1d array contains values in the right direction eta2
+!> @param[in]  value_w a 1d array contains values in the left direction eta1  
+!> @param[in]  value_e a 1d array contains values in the right direction eta1 
+!> @param[in]  value_s a 1d array contains values in the left direction eta2 
+!> @param[in]  value_n a 1d array contains values in the right direction eta2
 !> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_2d
 
 subroutine set_boundary_value2d( this,  &
-                                 value_left,    &
-                                 value_right,   &
-                                 value_bottom,  &
-                                 value_top)
+                                 value_w,    &
+                                 value_e,   &
+                                 value_s,  &
+                                 value_n)
 
 sll_interpolator :: this
-sll_real64, optional :: value_left(:)
-sll_real64, optional :: value_right(:)
-sll_real64, optional :: value_bottom(:)
-sll_real64, optional :: value_top(:)
+sll_real64, optional :: value_w(:)
+sll_real64, optional :: value_e(:)
+sll_real64, optional :: value_s(:)
+sll_real64, optional :: value_n(:)
 
 class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp_eta1 => null()
 class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp_eta2 => null()
 
-sll_int32 :: sz_value_left,sz_value_right,sz_value_bottom,sz_value_top
+sll_int32 :: sz_value_w,sz_value_e,sz_value_s,sz_value_n
 sll_int32 :: num_pts1
 sll_int32 :: num_pts2
 sll_int32 :: side
@@ -574,7 +580,7 @@ sll_int32 :: side
 num_pts1    = this%num_pts1
 num_pts2    = this%num_pts2
 
-if (present(value_top) .or. present(value_bottom))     &
+if (present(value_n) .or. present(value_s))     &
   interp_eta1 => new_arbitrary_degree_1d_interpolator( &
                    this%num_pts1,                      &
                    this%eta1_min,                      &
@@ -583,7 +589,7 @@ if (present(value_top) .or. present(value_bottom))     &
                    this%bc(E),                         &
                    this%spline_degree1 )
 
-if (present(value_left) .or. present(value_right))     &
+if (present(value_w) .or. present(value_e))     &
   interp_eta2 => new_arbitrary_degree_1d_interpolator( &
                    this%num_pts2,                      &
                    this%eta2_min,                      &
@@ -596,37 +602,37 @@ this%value = 0.0_f64
 
 do side = 1, 4
        
-  if (this%bc(side) == SLL_DIRICHLET) then
+  if (this%(side) == SLL_DIRICHLET) then
 
-    if (side == W .and. present(value_left)) then 
-      sz_value_left = size(value_left)
-      SLL_ASSERT(sz_value_left == this%num_pts2)
-      call interp_eta2%compute_interpolants(value_left)
-      this%value(:,side) = interp_eta2%coeff_splines(1:sz_value_left)
+    if (side == W .and. present(value_w)) then 
+      sz_value_w = size(value_w)
+      SLL_ASSERT(sz_value_w == this%num_pts2)
+      call interp_eta2%compute_interpolants(value_w)
+      this%side(W)%values = interp_eta2%coeff_splines(1:sz_value_w)
       this%compute_value(side) = .FALSE.
     end if
 
-    if (side == E .and. present(value_right)) then 
-      sz_value_right = size(value_right)
-      SLL_ASSERT(sz_value_right == this%num_pts2)
-      call interp_eta2%compute_interpolants(value_right)
-      this%value(:,side) = interp_eta2%coeff_splines(1:sz_value_right)
+    if (side == E .and. present(value_e)) then 
+      sz_value_e = size(value_e)
+      SLL_ASSERT(sz_value_e == this%num_pts2)
+      call interp_eta2%compute_interpolants(value_e)
+      this%side(E)%values = interp_eta2%coeff_splines(1:sz_value_e)
       this%compute_value(side) = .FALSE.
     end if
 
-    if (side == S .and. present(value_bottom)) then 
-      sz_value_bottom = size(value_bottom)
-      SLL_ASSERT(sz_value_bottom == this%num_pts1)
-      call interp_eta1%compute_interpolants(value_bottom)
-      this%value(:,side) = interp_eta1%coeff_splines(1:sz_value_bottom)
+    if (side == S .and. present(value_s)) then 
+      sz_value_s = size(value_s)
+      SLL_ASSERT(sz_value_s == this%num_pts1)
+      call interp_eta1%compute_interpolants(value_s)
+      this%side(S)%values = interp_eta1%coeff_splines(1:sz_value_s)
       this%compute_value(side) = .FALSE.
     end if
        
-    if (side == N .and. present(value_top)) then 
-      sz_value_top = size(value_top)
-      SLL_ASSERT(sz_value_top == this%num_pts1)
-      call interp_eta1%compute_interpolants(value_top)
-      this%value(:,side) = interp_eta1%coeff_splines(1:sz_value_top)
+    if (side == N .and. present(value_n)) then 
+      sz_value_n = size(value_n)
+      SLL_ASSERT(sz_value_n == this%num_pts1)
+      call interp_eta1%compute_interpolants(value_n)
+      this%side(N)%values = interp_eta1%coeff_splines(1:sz_value_n)
       this%compute_value(side) = .FALSE.
     end if
 
@@ -634,9 +640,9 @@ do side = 1, 4
 
 end do
 
-if (present(value_top) .or. present(value_bottom)) call sll_delete(interp_eta1)
+if (present(value_n) .or. present(value_s)) call sll_delete(interp_eta1)
 
-if (present(value_left) .or. present(value_right)) call sll_delete(interp_eta2)
+if (present(value_w) .or. present(value_e)) call sll_delete(interp_eta2)
 
 end subroutine set_boundary_value2d
 
@@ -906,8 +912,8 @@ if (present(coeffs_1d) ) then
     ! ------------------------------------------------------------
     ! reorganization of spline coefficients 1D in coefficients 2D 
     ! ------------------------------------------------------------
-    ! achtung ! normaly interpolator%slope(:,W) and interpolator%value_right(:)
-    ! achtung ! normaly interpolator%value_bottom(:) and interpolator%value_top(:)
+    ! achtung ! normaly interpolator%slope(:,W) and interpolator%value_e(:)
+    ! achtung ! normaly interpolator%value_s(:) and interpolator%value_n(:)
 
     interpolator%coeff_splines(:,:) = 0.0_8
     ! allocation coefficient spline
@@ -959,8 +965,8 @@ if (present(coeffs_1d) ) then
     ! ------------------------------------------------------------
     ! reorganization of spline coefficients 1D in coefficients 2D 
     ! ------------------------------------------------------------
-    ! achtung ! normaly interpolator%slope(:,W) and interpolator%value_right(:)
-    ! achtung ! normaly interpolator%value_bottom(:) and interpolator%value_top(:)
+    ! achtung ! normaly interpolator%slope(:,W) and interpolator%value_e(:)
+    ! achtung ! normaly interpolator%value_s(:) and interpolator%value_n(:)
 
     interpolator%coeff_splines(:,:) = 0.0_8
     ! allocation coefficient spline
@@ -1010,8 +1016,8 @@ if (present(coeffs_1d) ) then
     ! ------------------------------------------------------------
     ! reorganization of spline coefficients 1D in coefficients 2D 
     ! ------------------------------------------------------------
-    ! achtung ! normaly interpolator%slope(:,W) and interpolator%value_right(:)
-    ! achtung ! normaly interpolator%value_bottom(:) and interpolator%value_top(:)
+    ! achtung ! normaly interpolator%slope(:,W) and interpolator%value_e(:)
+    ! achtung ! normaly interpolator%value_s(:) and interpolator%value_n(:)
 
     interpolator%coeff_splines(:,:) = 0.0_8
     ! allocation coefficient spline
@@ -1064,8 +1070,8 @@ if (present(coeffs_1d) ) then
     ! ------------------------------------------------------------
     ! reorganization of spline coefficients 1D in coefficients 2D 
     ! ------------------------------------------------------------
-    ! achtung ! normaly interpolator%slope(:,W) and interpolator%value_right(:)
-    ! achtung ! normaly interpolator%value_bottom(:) and interpolator%value_top(:)
+    ! achtung ! normaly interpolator%slope(:,W) and interpolator%value_e(:)
+    ! achtung ! normaly interpolator%value_s(:) and interpolator%value_n(:)
 
     interpolator%coeff_splines(:,:) = 0.0_8
     ! allocation coefficient spline
@@ -1116,8 +1122,8 @@ if (present(coeffs_1d) ) then
     ! ------------------------------------------------------------
     ! reorganization of spline coefficients 1D in coefficients 2D 
     ! ------------------------------------------------------------
-    ! achtung ! normaly interpolator%slope(:,W) and interpolator%value_right(:)
-    ! achtung ! normaly interpolator%value_bottom(:) and interpolator%value_top(:)
+    ! achtung ! normaly interpolator%slope(:,W) and interpolator%value_e(:)
+    ! achtung ! normaly interpolator%value_s(:) and interpolator%value_n(:)
 
     interpolator%coeff_splines(:,:) = 0.0_8
     ! allocation coefficient spline
@@ -1169,8 +1175,8 @@ if (present(coeffs_1d) ) then
     ! ------------------------------------------------------------
     ! reorganization of spline coefficients 1D in coefficients 2D 
     ! ------------------------------------------------------------
-    ! achtung ! normaly interpolator%slope(:,W) and interpolator%value_right(:)
-    ! achtung ! normaly interpolator%value_bottom(:) and interpolator%value_top(:)
+    ! achtung ! normaly interpolator%slope(:,W) and interpolator%value_e(:)
+    ! achtung ! normaly interpolator%value_s(:) and interpolator%value_n(:)
 
     interpolator%coeff_splines(:,:) = 0.0_8
     ! allocation coefficient spline
@@ -1224,8 +1230,8 @@ if (present(coeffs_1d) ) then
     ! ------------------------------------------------------------
     ! reorganization of spline coefficients 1D in coefficients 2D 
     ! ------------------------------------------------------------
-    ! achtung ! normaly interpolator%slope(:,W) and interpolator%value_right(:)
-    ! achtung ! normaly interpolator%value_bottom(:) and interpolator%value_top(:)
+    ! achtung ! normaly interpolator%slope(:,W) and interpolator%value_e(:)
+    ! achtung ! normaly interpolator%value_s(:) and interpolator%value_n(:)
 
     interpolator%coeff_splines(:,:) = 0.0_8
     ! allocation coefficient spline
@@ -1277,8 +1283,8 @@ if (present(coeffs_1d) ) then
     ! ------------------------------------------------------------
     ! reorganization of spline coefficients 1D in coefficients 2D 
     ! ------------------------------------------------------------
-    ! achtung ! normaly interpolator%slope(:,W) and interpolator%value_right(:)
-    ! achtung ! normaly interpolator%value_bottom(:) and interpolator%value_top(:)
+    ! achtung ! normaly interpolator%slope(:,W) and interpolator%value_e(:)
+    ! achtung ! normaly interpolator%value_s(:) and interpolator%value_n(:)
 
     interpolator%coeff_splines(:,:) = 0.0_8
     ! allocation coefficient spline
@@ -1328,8 +1334,8 @@ if (present(coeffs_1d) ) then
     ! ------------------------------------------------------------
     ! reorganization of spline coefficients 1D in coefficients 2D 
     ! ------------------------------------------------------------
-    ! achtung ! normaly interpolator%slope(:,W) and interpolator%value_right(:)
-    ! achtung ! normaly interpolator%value_bottom(:) and interpolator%value_top(:)
+    ! achtung ! normaly interpolator%slope(:,W) and interpolator%value_e(:)
+    ! achtung ! normaly interpolator%value_s(:) and interpolator%value_n(:)
 
     interpolator%coeff_splines(:,:) = 0.0_8
     ! allocation coefficient spline
@@ -1593,9 +1599,9 @@ subroutine compute_interpolants_ad2d( &
 
       ! print*, 'oulala'
        ! boundary condition non homogene  a revoir !!!!! 
-       !print*,'zarrrr', interpolator%value_left(1:sz2)
-       interpolator%coeff_splines(1,1:sz2)   = data_array(1,1:sz2)!interpolator%value_left(1:sz2)
-       interpolator%coeff_splines(sz1,1:sz2) = data_array(sz1,1:sz2)!interpolator%value_right(1:sz2)
+       !print*,'zarrrr', interpolator%value_w(1:sz2)
+       interpolator%coeff_splines(1,1:sz2)   = data_array(1,1:sz2)!interpolator%value_w(1:sz2)
+       interpolator%coeff_splines(sz1,1:sz2) = data_array(sz1,1:sz2)!interpolator%value_e(1:sz2)
   
     case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
        interpolator%size_coeffs1 = sz1!+1
@@ -1685,10 +1691,10 @@ subroutine compute_interpolants_ad2d( &
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_left(1:sz2+sz_derivative_eta2)
+       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1:sz1+sz_derivative_eta1,1)   = interpolator%value_bottom(1:sz1+sz_derivative_eta1)
-  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_top(1:sz1)
+       !interpolator%coeff_splines(1:sz1+sz_derivative_eta1,1)   = interpolator%value_s(1:sz1+sz_derivative_eta1)
+  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_n(1:sz1)
 
     case(657) !left: Dirichlet, right: Neumann, bottom: Neumann, Top: Dirichlet 
        sz_derivative_eta1 = 2
@@ -1733,10 +1739,10 @@ subroutine compute_interpolants_ad2d( &
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_left(1:sz2+sz_derivative_eta2)
+       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
- !      interpolator%coeff_splines(1:sz1,1)   = interpolator%value_bottom(1:sz1)
-  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_top(1:sz1)
+ !      interpolator%coeff_splines(1:sz1,1)   = interpolator%value_s(1:sz1)
+  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_n(1:sz1)
 
 
     case(780)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Dirichlet
@@ -1787,10 +1793,10 @@ subroutine compute_interpolants_ad2d( &
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_left(1:sz2+sz_derivative_eta2)
+       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
- !      interpolator%coeff_splines(1:sz1,1)   = interpolator%value_bottom(1:sz1)
-  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_top(1:sz1)
+ !      interpolator%coeff_splines(1:sz1,1)   = interpolator%value_s(1:sz1)
+  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_n(1:sz1)
 
 
     case(801)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Dirichlet
@@ -1838,10 +1844,10 @@ subroutine compute_interpolants_ad2d( &
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_left(1:sz2+sz_derivative_eta2)
+       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
- !      interpolator%coeff_splines(1:sz1,1)   = interpolator%value_bottom(1:sz1)
-  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_top(1:sz1)
+ !      interpolator%coeff_splines(1:sz1,1)   = interpolator%value_s(1:sz1)
+  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_n(1:sz1)
 
     case(804)  !left: Hermite, right: Hermite, bottom: Hermite, Top: Dirichlet
        sz_derivative_eta1 = 2
@@ -1886,10 +1892,10 @@ subroutine compute_interpolants_ad2d( &
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_left(1:sz2+sz_derivative_eta2)
+       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
- !      interpolator%coeff_splines(1:sz1,1)   = interpolator%value_bottom(1:sz1)
-  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_top(1:sz1)
+ !      interpolator%coeff_splines(1:sz1,1)   = interpolator%value_s(1:sz1)
+  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_n(1:sz1)
 
     case(1098)  !left: Neumann, right: Dirichlet, bottom: Dirichlet, Top: Neumann
        sz_derivative_eta1 = 2
@@ -1934,10 +1940,10 @@ subroutine compute_interpolants_ad2d( &
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_left(1:sz2+sz_derivative_eta2)
+       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
- !      interpolator%coeff_splines(1:sz1,1)   = interpolator%value_bottom(1:sz1)
-  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_top(1:sz1)
+ !      interpolator%coeff_splines(1:sz1,1)   = interpolator%value_s(1:sz1)
+  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_n(1:sz1)
 
     case(1105)  !left: Dirichlet, right: Neumann, bottom: Dirichlet, Top: Neumann
        sz_derivative_eta1 = 2
@@ -1982,10 +1988,10 @@ subroutine compute_interpolants_ad2d( &
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_left(1:sz2+sz_derivative_eta2)
+       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1:sz1+sz_derivative_eta1,1)   = interpolator%value_bottom(1:sz1+sz_derivative_eta1)
-  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_top(1:sz1)
+       !interpolator%coeff_splines(1:sz1+sz_derivative_eta1,1)   = interpolator%value_s(1:sz1+sz_derivative_eta1)
+  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_n(1:sz1)
 
     case(1170)  !left: Neumann, right: Neumann, bottom: Neuman, Top: Neumann
 
@@ -2031,10 +2037,10 @@ subroutine compute_interpolants_ad2d( &
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_left(1:sz2+sz_derivative_eta2)
+       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1:sz1+sz_derivative_eta1,1)   = interpolator%value_bottom(1:sz1+sz_derivative_eta1)
-  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_top(1:sz1)
+       !interpolator%coeff_splines(1:sz1+sz_derivative_eta1,1)   = interpolator%value_s(1:sz1+sz_derivative_eta1)
+  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_n(1:sz1)
     case(2338)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Hermite
        sz_derivative_eta1 = 2
        sz_derivative_eta2 = 2
@@ -2078,10 +2084,10 @@ subroutine compute_interpolants_ad2d( &
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_left(1:sz2+sz_derivative_eta2)
+       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1:sz1+sz_derivative_eta1,1)   = interpolator%value_bottom(1:sz1+sz_derivative_eta1)
-  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_top(1:sz1)
+       !interpolator%coeff_splines(1:sz1+sz_derivative_eta1,1)   = interpolator%value_s(1:sz1+sz_derivative_eta1)
+  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_n(1:sz1)
        
     case(2145) !left: Dirichlet, right: Hermite, bottom: Dirichlet, Top: Hermite  
        sz_derivative_eta1 = 2
@@ -2126,10 +2132,10 @@ subroutine compute_interpolants_ad2d( &
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_left(1:sz2+sz_derivative_eta2)
+       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1:sz1+sz_derivative_eta1,1)   = interpolator%value_bottom(1:sz1+sz_derivative_eta1)
-  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_top(1:sz1)
+       !interpolator%coeff_splines(1:sz1+sz_derivative_eta1,1)   = interpolator%value_s(1:sz1+sz_derivative_eta1)
+  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_n(1:sz1)
 
 
     case(2124)  !left: Hermite, right: Dirichlet, bottom: Dirichlet, Top: Hermite
@@ -2176,10 +2182,10 @@ subroutine compute_interpolants_ad2d( &
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_left(1:sz2+sz_derivative_eta2)
+       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
- !      interpolator%coeff_splines(1:sz1,1)   = interpolator%value_bottom(1:sz1)
-  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_top(1:sz1)
+ !      interpolator%coeff_splines(1:sz1,1)   = interpolator%value_s(1:sz1)
+  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_n(1:sz1)
 
     case(2148)  !left:Hermite , right: Hermite, bottom: Dirichlet, Top: Hermite
        sz_derivative_eta1 = 2
@@ -2224,10 +2230,10 @@ subroutine compute_interpolants_ad2d( &
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_left(1:sz2+sz_derivative_eta2)
+       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
- !      interpolator%coeff_splines(1:sz1,1)   = interpolator%value_bottom(1:sz1)
-  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_top(1:sz1)
+ !      interpolator%coeff_splines(1:sz1,1)   = interpolator%value_s(1:sz1)
+  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_n(1:sz1)
 
     case(2316)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Hermite
        sz_derivative_eta1 = 2
@@ -2272,10 +2278,10 @@ subroutine compute_interpolants_ad2d( &
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_left(1:sz2+sz_derivative_eta2)
+       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
- !      interpolator%coeff_splines(1:sz1,1)   = interpolator%value_bottom(1:sz1)
-  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_top(1:sz1)
+ !      interpolator%coeff_splines(1:sz1,1)   = interpolator%value_s(1:sz1)
+  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_n(1:sz1)
 
     case(2340) ! Hermite in al sides
        
@@ -2322,10 +2328,10 @@ subroutine compute_interpolants_ad2d( &
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_left(1:sz2+sz_derivative_eta2)
+       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
- !      interpolator%coeff_splines(1:sz1,1)   = interpolator%value_bottom(1:sz1)
-  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_top(1:sz1)
+ !      interpolator%coeff_splines(1:sz1,1)   = interpolator%value_s(1:sz1)
+  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_n(1:sz1)
 
     end select
     interpolator%coefficients_set = .true.
@@ -2371,7 +2377,7 @@ subroutine compute_interpolants_ad2d( &
     sll_int32 :: size_coeffs2
     sll_int32 :: partint
     !sll_real64 :: bvalue2d
-    !integer  :: li_i, li_j, li_mflag, li_lefty
+    !integer  :: li_i, li_j, li_mflag, li_wy
     sll_real64 :: res1,res2
     !sll_int32  :: ierr
     sll_real64,dimension(:), pointer:: tmp_tx,tmp_ty
@@ -2493,7 +2499,7 @@ subroutine compute_interpolants_ad2d( &
     !print*, 't2',tmp_ty
     tmp_coeff =>interpolator%coeff_splines(1:size_coeffs1,1:size_coeffs2)
     !print*, 'coef',tmp_coeff
-    !call interv( tmp_ty, interpolator%size_t2, res2, li_lefty, li_mflag )
+    !call interv( tmp_ty, interpolator%size_t2, res2, li_wy, li_mflag )
   !  call set_time_mark(t0)
     call bvalue2d( &
          res1, &
