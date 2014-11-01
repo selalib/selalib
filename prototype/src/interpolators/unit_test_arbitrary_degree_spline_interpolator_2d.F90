@@ -60,7 +60,7 @@ do j=1,NPTS2
   do i=1,NPTS1
     f(i,j)       =  cos(eta1(i))*cos(eta2(j))
     df_eta1(i,j) = -sin(eta1(i))*cos(eta2(j))
-    df_eta2(i,j) = -sin(eta2(j))*cos(eta1(j))
+    df_eta2(i,j) = -sin(eta2(j))*cos(eta1(i))
   end do
 end do
 
@@ -75,9 +75,9 @@ print *, '***********************************************************'
 
 do j=1,NPTS2
   do i=1,NPTS1
-    f(i,j)       =  sin(eta1(i))*cos(eta2(j))
-    df_eta1(i,j) =  cos(eta1(i))*cos(eta2(j))
-    df_eta2(i,j) = -sin(eta1(i))*sin(eta2(j))
+    f(i,j)       =  cos(eta1(i))*sin(eta2(j))
+    df_eta1(i,j) = -sin(eta1(i))*sin(eta2(j))
+    df_eta2(i,j) =  cos(eta1(i))*cos(eta2(j))
   end do
 end do
 
@@ -92,20 +92,16 @@ print *, '***********************************************************'
 
 do j=1,NPTS2
   do i=1,NPTS1
-    f(i,j)       =  sin(2*sll_pi*eta1(i))*cos(2*sll_pi*eta2(j))
-    df_eta1(i,j) =  2*sll_pi*cos(2*sll_pi*eta1(i))*cos(2*sll_pi*eta2(j))
-    df_eta2(i,j) = -2*sll_pi*sin(2*sll_pi*eta1(i))*sin(2*sll_pi*eta2(j))
+    f(i,j)       =  sin(eta1(i))*cos(eta2(j))
+    df_eta1(i,j) =  cos(eta1(i))*cos(eta2(j))
+    df_eta2(i,j) = -sin(eta1(i))*sin(eta2(j))
   end do
 end do
 
-call check_interpolation( SLL_PERIODIC,  &
-                          SLL_PERIODIC,  &
-                          SLL_DIRICHLET, &
-                          SLL_DIRICHLET  )
-
-print *, '***********************************************************'
-print *, '              dirichlet-dirichlet case'
-print *, '***********************************************************'
+call check_interpolation( SLL_DIRICHLET,  &
+                          SLL_DIRICHLET,  &
+                          SLL_PERIODIC, &
+                          SLL_PERIODIC  )
 
 print *, '***********************************************************'
 print *, '              dirichlet-dirichlet case'
@@ -113,9 +109,9 @@ print *, '***********************************************************'
   
 do j=1,NPTS2
   do i=1,NPTS1
-    f(i,j)       = sin(2*sll_pi*eta1(i))*sin(2*sll_pi*eta2(j)) 
-    df_eta1(i,j) = 2*sll_pi*cos(2*sll_pi*eta1(i))*sin(2*sll_pi*eta2(j))
-    df_eta2(i,j) = 2*sll_pi*sin(2*sll_pi*eta1(i))*cos(2*sll_pi*eta2(j))
+    f(i,j)       = sin(eta1(i))*sin(eta2(j)) 
+    df_eta1(i,j) = cos(eta1(i))*sin(eta2(j))
+    df_eta2(i,j) = sin(eta1(i))*cos(eta2(j))
   end do
 end do
 
@@ -130,9 +126,9 @@ print *, '***********************************************************'
   
 do j=1,NPTS2
   do i=1,NPTS1
-    f(i,j)       = sin(2*sll_pi*eta1(i))*sin(2*sll_pi*eta2(j)) 
-    df_eta1(i,j) = 2*sll_pi*cos(2*sll_pi*eta1(i))*sin(2*sll_pi*eta2(j))
-    df_eta2(i,j) = 2*sll_pi*sin(2*sll_pi*eta1(i))*cos(2*sll_pi*eta2(j))
+    f(i,j)       = sin(eta1(i))*sin(eta2(j)) 
+    df_eta1(i,j) = cos(eta1(i))*sin(eta2(j))
+    df_eta2(i,j) = sin(eta1(i))*cos(eta2(j))
   end do
 end do
 
@@ -147,9 +143,9 @@ print *, '***********************************************************'
   
 do j=1,NPTS2
   do i=1,NPTS1
-    f(i,j)       = sin(2*sll_pi*eta1(i))*sin(2*sll_pi*eta2(j)) 
-    df_eta1(i,j) = 2*sll_pi*cos(2*sll_pi*eta1(i))*sin(2*sll_pi*eta2(j))
-    df_eta2(i,j) = 2*sll_pi*sin(2*sll_pi*eta1(i))*cos(2*sll_pi*eta2(j))
+    f(i,j)       = sin(eta1(i))*sin(eta2(j)) 
+    df_eta1(i,j) = cos(eta1(i))*sin(eta2(j))
+    df_eta2(i,j) = sin(eta1(i))*cos(eta2(j))
   end do
 end do
 
@@ -164,9 +160,9 @@ print *, '***********************************************************'
   
 do j=1,NPTS2
   do i=1,NPTS1
-    f(i,j)       = sin(2*sll_pi*eta1(i))*sin(2*sll_pi*eta2(j)) 
-    df_eta1(i,j) = 2*sll_pi*cos(2*sll_pi*eta1(i))*sin(2*sll_pi*eta2(j))
-    df_eta2(i,j) = 2*sll_pi*sin(2*sll_pi*eta1(i))*cos(2*sll_pi*eta2(j))
+    f(i,j)       = sin(eta1(i))*sin(eta2(j)) 
+    df_eta1(i,j) = cos(eta1(i))*sin(eta2(j))
+    df_eta2(i,j) = sin(eta1(i))*cos(eta2(j))
   end do
 end do
 
@@ -181,9 +177,9 @@ print *, '***********************************************************'
  
 do j=1,NPTS2
   do i=1,NPTS1
-    f(i,j)       = sin(2*sll_pi*eta1(i))*sin(2*sll_pi*eta2(j)) 
-    df_eta1(i,j) = 2*sll_pi*cos(2*sll_pi*eta1(i))*sin(2*sll_pi*eta2(j))
-    df_eta2(i,j) = 2*sll_pi*sin(2*sll_pi*eta1(i))*cos(2*sll_pi*eta2(j))
+    f(i,j)       = sin(eta1(i))*sin(eta2(j)) 
+    df_eta1(i,j) = cos(eta1(i))*sin(eta2(j))
+    df_eta2(i,j) = sin(eta1(i))*cos(eta2(j))
   end do
 end do
 
@@ -198,9 +194,9 @@ print *, '***********************************************************'
   
 do j=1,NPTS2
   do i=1,NPTS1
-    f(i,j)       = sin(2*sll_pi*eta1(i))*sin(2*sll_pi*eta2(j)) 
-    df_eta1(i,j) = 2*sll_pi*cos(2*sll_pi*eta1(i))*sin(2*sll_pi*eta2(j))
-    df_eta2(i,j) = 2*sll_pi*sin(2*sll_pi*eta1(i))*cos(2*sll_pi*eta2(j))
+    f(i,j)       =   cos(eta1(i))*cos(eta2(j)) 
+    df_eta1(i,j) = - sin(eta1(i))*cos(eta2(j))
+    df_eta2(i,j) = - cos(eta1(i))*sin(eta2(j))
   end do
 end do
 
@@ -238,40 +234,40 @@ print*, 'Average error (hermite-hermite-hermite-hermite)     = ',acc_der1(9)
 print*, '--------------------------------------------'
 print*, ' Average error in nodes first derivative eta2'
 print*, '--------------------------------------------'
-print*, 'Average error (periodic-periodic)                   = ',acc_der2/(1)
-print*, 'Average error (periodic-dirichlet)                  = ',acc_der2/(2)
-print*, 'Average error (dirichlet-periodic)                  = ',acc_der2/(3)
-print*, 'Average error (dirichlet-dirichlet)                 = ',acc_der2/(4)
-print*, 'Average error (hermite-dirichlet-dirichlet-hermite) = ',acc_der2/(5)
-print*, 'Average error (hermite-dirichlet-hermite-dirichlet) = ',acc_der2/(6)
-print*, 'Average error (dirichlet-hermite-hermite-dirichlet) = ',acc_der2/(7)
-print*, 'Average error (dirichlet-hermite-dirichlet-hermite) = ',acc_der2/(8)
-print*, 'Average error (hermite-hermite-hermite-hermite)     = ',acc_der2/(9)
+print*, 'Average error (periodic-periodic)                   = ',acc_der2(1)
+print*, 'Average error (periodic-dirichlet)                  = ',acc_der2(2)
+print*, 'Average error (dirichlet-periodic)                  = ',acc_der2(3)
+print*, 'Average error (dirichlet-dirichlet)                 = ',acc_der2(4)
+print*, 'Average error (hermite-dirichlet-dirichlet-hermite) = ',acc_der2(5)
+print*, 'Average error (hermite-dirichlet-hermite-dirichlet) = ',acc_der2(6)
+print*, 'Average error (dirichlet-hermite-hermite-dirichlet) = ',acc_der2(7)
+print*, 'Average error (dirichlet-hermite-dirichlet-hermite) = ',acc_der2(8)
+print*, 'Average error (hermite-hermite-hermite-hermite)     = ',acc_der2(9)
 
 print*, '--------------------------------------------'
 print*, ' Error norm L2'
 print*, '--------------------------------------------'
-print*, 'Error norm L2 (periodic-periodic)                   = ',sqrt(normL2(1)),h1**(SPL_DEG)
-print*, 'Error norm L2 (periodic-dirichlet)                  = ',sqrt(normL2(2)),h1**(SPL_DEG)
-print*, 'Error norm L2 (dirichlet-periodic)                  = ',sqrt(normL2(3)),h1**(SPL_DEG)
-print*, 'Error norm L2 (dirichlet-dirichlet)                 = ',sqrt(normL2(4)),h1**(SPL_DEG)
-print*, 'Error norm L2 (hermite-dirichlet-dirichlet-hermite) = ',sqrt(normL2(5)),h1**(SPL_DEG)
-print*, 'Error norm L2 (hermite-dirichlet-hermite-dirichlet) = ',sqrt(normL2(6)),h1**(SPL_DEG)
-print*, 'Error norm L2 (dirichlet-hermite-hermite-dirichlet) = ',sqrt(normL2(7)),h1**(SPL_DEG)
-print*, 'Error norm L2 (dirichlet-hermite-dirichlet-hermite) = ',sqrt(normL2(8)),h1**(SPL_DEG)
-print*, 'Error norm L2 (hermite-hermite-hermite-hermite)     = ',sqrt(normL2(9)),h1**(SPL_DEG)
+print*, 'Error norm L2 (periodic-periodic)                   = ',sqrt(normL2(1))
+print*, 'Error norm L2 (periodic-dirichlet)                  = ',sqrt(normL2(2))
+print*, 'Error norm L2 (dirichlet-periodic)                  = ',sqrt(normL2(3))
+print*, 'Error norm L2 (dirichlet-dirichlet)                 = ',sqrt(normL2(4))
+print*, 'Error norm L2 (hermite-dirichlet-dirichlet-hermite) = ',sqrt(normL2(5))
+print*, 'Error norm L2 (hermite-dirichlet-hermite-dirichlet) = ',sqrt(normL2(6))
+print*, 'Error norm L2 (dirichlet-hermite-hermite-dirichlet) = ',sqrt(normL2(7))
+print*, 'Error norm L2 (dirichlet-hermite-dirichlet-hermite) = ',sqrt(normL2(8))
+print*, 'Error norm L2 (hermite-hermite-hermite-hermite)     = ',sqrt(normL2(9))
 print*, '--------------------------------------------'
 print*, ' Error norm H1'
 print*, '--------------------------------------------'
-print*, 'Error norm H1 (periodic-periodic)                   = ',sqrt(normH1(1)),h1**(SPL_DEG-3)
-print*, 'Error norm H1 (periodic-dirichlet)                  = ',sqrt(normH1(2)),h1**(SPL_DEG-3)
-print*, 'Error norm H1 (dirichlet-periodic)                  = ',sqrt(normH1(3)),h1**(SPL_DEG-3)
-print*, 'Error norm H1 (dirichlet-dirichlet)                 = ',sqrt(normH1(4)),h1**(SPL_DEG-3)
-print*, 'Error norm H1 (hermite-dirichlet-dirichlet-hermite) = ',sqrt(normH1(5)),h1**(SPL_DEG-3)
-print*, 'Error norm H1 (hermite-dirichlet-hermite-dirichlet) = ',sqrt(normH1(6)),h1**(SPL_DEG-3)
-print*, 'Error norm H1 (dirichlet-hermite-hermite-dirichlet) = ',sqrt(normH1(7)),h1**(SPL_DEG-3)
-print*, 'Error norm H1 (dirichlet-hermite-dirichlet-hermite) = ',sqrt(normH1(8)),h1**(SPL_DEG-3)
-print*, 'Error norm H1 (hermite-hermite-hermite-hermite)     = ',sqrt(normH1(9)),h1**(SPL_DEG-3)
+print*, 'Error norm H1 (periodic-periodic)                   = ',sqrt(normH1(1))
+print*, 'Error norm H1 (periodic-dirichlet)                  = ',sqrt(normH1(2))
+print*, 'Error norm H1 (dirichlet-periodic)                  = ',sqrt(normH1(3))
+print*, 'Error norm H1 (dirichlet-dirichlet)                 = ',sqrt(normH1(4))
+print*, 'Error norm H1 (hermite-dirichlet-dirichlet-hermite) = ',sqrt(normH1(5))
+print*, 'Error norm H1 (hermite-dirichlet-hermite-dirichlet) = ',sqrt(normH1(6))
+print*, 'Error norm H1 (dirichlet-hermite-hermite-dirichlet) = ',sqrt(normH1(7))
+print*, 'Error norm H1 (dirichlet-hermite-dirichlet-hermite) = ',sqrt(normH1(8))
+print*, 'Error norm H1 (hermite-hermite-hermite-hermite)     = ',sqrt(normH1(9))
 
 if (( sqrt(normL2(1)) <= h1**(SPL_DEG))   .AND. &
     ( sqrt(normL2(2)) <= h1**(SPL_DEG))   .AND. &
@@ -366,7 +362,7 @@ do j=1,NPTS2
   end do
 end do
 
-acc(k) = acc(k)/(NPTS1*NPTS2)
+acc(k)      = acc(k)/(NPTS1*NPTS2)
 acc_der1(k) = acc_der1(k)/(NPTS1*NPTS2)
 acc_der2(k) = acc_der2(k)/(NPTS1*NPTS2)
 
