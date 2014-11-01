@@ -762,17 +762,17 @@ end subroutine set_values_at_boundary1d
     end if
 
 
-    if (interpolator%compute_slope_left .eqv. .true.) then
+    if (interpolator%compute_slope_left) then
        interpolator%slope_left = forward_fd_5pt( data_array,point_locate_eta)
     end if
-    if (interpolator%compute_slope_right .eqv. .true.) then
+    if (interpolator%compute_slope_right) then
        interpolator%slope_right = backward_fd_5pt( data_array,point_locate_eta,sz)
     end if
 
-    if (interpolator%compute_value_left .eqv. .true.) then
+    if (interpolator%compute_value_left) then
        interpolator%value_left = data_array(1)
     end if
-    if (interpolator%compute_value_right .eqv. .true.) then
+    if (interpolator%compute_value_right) then
        interpolator%value_right = data_array(sz)
     end if
 
