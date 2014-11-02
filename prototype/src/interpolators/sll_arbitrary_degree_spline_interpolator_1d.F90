@@ -25,96 +25,97 @@ module sll_module_arbitrary_degree_spline_interpolator_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  use sll_module_interpolators_1d_base
-  use sll_module_deboor_splines_1d
+#include "sll_utilities.h"
 
+use sll_module_interpolators_1d_base
+use sll_module_deboor_splines_1d
 
-  implicit none
+implicit none
+private
+
+! in what follows, the direction '1' is in the contiguous memory direction.
+!> Class for arbitrary degree spline 1d interpolator
+type, public, extends(sll_interpolator_1d_base) :: sll_arbitrary_degree_spline_interpolator_1d
   private
+  !> PLEASE ADD DOCUMENTATION
+  sll_real64, public, dimension(:), pointer :: coeff_splines
+  !> PLEASE ADD DOCUMENTATION
+  sll_int32  :: num_pts
+  !> PLEASE ADD DOCUMENTATION
+  sll_real64 :: eta_min
+  !> PLEASE ADD DOCUMENTATION
+  sll_real64 :: eta_max
+  !> PLEASE ADD DOCUMENTATION
+  sll_int32  :: bc_left
+  !> PLEASE ADD DOCUMENTATION
+  sll_int32  :: bc_right
+  !> PLEASE ADD DOCUMENTATION
+  sll_int32  :: spline_degree
+  !> PLEASE ADD DOCUMENTATION
+  sll_real64, dimension(:), pointer :: knots
+  ! some knot-like arrays needed by the spli1d_per routine
+  !> PLEASE ADD DOCUMENTATION
+  sll_real64, dimension(:), pointer :: t
+  !> PLEASE ADD DOCUMENTATION
+  sll_int32  :: size_t
+  !> PLEASE ADD DOCUMENTATION
+  sll_int64  :: bc_selector ! this is set in initialization
+  !> PLEASE ADD DOCUMENTATION
+  sll_int32  :: size_coeffs
+  !> PLEASE ADD DOCUMENTATION
+  sll_real64 :: slope_left
+  !> PLEASE ADD DOCUMENTATION
+  sll_real64 :: slope_right
+  !> PLEASE ADD DOCUMENTATION
+  sll_real64 :: value_left
+  !> PLEASE ADD DOCUMENTATION
+  sll_real64 :: value_right
+  !> PLEASE ADD DOCUMENTATION
+  logical    :: compute_slope_left = .TRUE.
+  !> PLEASE ADD DOCUMENTATION
+  logical    :: compute_slope_right= .TRUE.
+  !> PLEASE ADD DOCUMENTATION
+  logical    :: compute_value_left = .TRUE.
+  !> PLEASE ADD DOCUMENTATION
+  logical    :: compute_value_right= .TRUE.
 
-  ! in what follows, the direction '1' is in the contiguous memory direction.
-  !> Class for arbitrary degree spline 1d interpolator
-  type, public, extends(sll_interpolator_1d_base) :: sll_arbitrary_degree_spline_interpolator_1d
-     private
-    !> PLEASE ADD DOCUMENTATION
-     sll_real64, public, dimension(:), pointer :: coeff_splines
-    !> PLEASE ADD DOCUMENTATION
-     sll_int32  :: num_pts
-    !> PLEASE ADD DOCUMENTATION
-     sll_real64 :: eta_min
-    !> PLEASE ADD DOCUMENTATION
-     sll_real64 :: eta_max
-    !> PLEASE ADD DOCUMENTATION
-     sll_int32  :: bc_left
-    !> PLEASE ADD DOCUMENTATION
-     sll_int32  :: bc_right
-    !> PLEASE ADD DOCUMENTATION
-     sll_int32  :: spline_degree
-    !> PLEASE ADD DOCUMENTATION
-     sll_real64, dimension(:), pointer :: knots
-     ! some knot-like arrays needed by the spli1d_per routine
-    !> PLEASE ADD DOCUMENTATION
-     sll_real64, dimension(:), pointer :: t
-    !> PLEASE ADD DOCUMENTATION
-     sll_int32  :: size_t
-    !> PLEASE ADD DOCUMENTATION
-     sll_int64  :: bc_selector ! this is set in initialization
-    !> PLEASE ADD DOCUMENTATION
-     sll_int32  :: size_coeffs
-    !> PLEASE ADD DOCUMENTATION
-     sll_real64 :: slope_left
-    !> PLEASE ADD DOCUMENTATION
-     sll_real64 :: slope_right
-    !> PLEASE ADD DOCUMENTATION
-     sll_real64 :: value_left
-    !> PLEASE ADD DOCUMENTATION
-     sll_real64 :: value_right
-    !> PLEASE ADD DOCUMENTATION
-     logical    :: compute_slope_left = .TRUE.
-    !> PLEASE ADD DOCUMENTATION
-     logical    :: compute_slope_right= .TRUE.
-    !> PLEASE ADD DOCUMENTATION
-     logical    :: compute_value_left = .TRUE.
-    !> PLEASE ADD DOCUMENTATION
-     logical    :: compute_value_right= .TRUE.
-
-   contains
-    !> PLEASE ADD DOCUMENTATION
-    procedure, pass(interpolator) :: initialize=>initialize_ad1d_interpolator
-    !> PLEASE ADD DOCUMENTATION
-    procedure, pass :: set_coefficients => set_coefficients_ad1d
+contains
+  !> PLEASE ADD DOCUMENTATION
+  procedure, pass(interpolator) :: initialize=>initialize_ad1d_interpolator
+  !> PLEASE ADD DOCUMENTATION
+  procedure, pass :: set_coefficients => set_coefficients_ad1d
 ! better: pre-compute-interpolation-information or something...
-    !> PLEASE ADD DOCUMENTATION
-    procedure :: compute_interpolants => compute_interpolants_ad1d
-   ! procedure,  pass(interpolator) :: compute_spline_coefficients => &
-    !     compute_spline_coefficients_ad2d
-    !procedure, pass:: compute_spline_coefficients =>compute_spline_coefficients_ad2d
-    !> PLEASE ADD DOCUMENTATION
-    procedure :: interpolate_value => interpolate_value_ad1d
-    !> PLEASE ADD DOCUMENTATION
-    procedure :: interpolate_array_values => interpolate_values_ad1d
-    !> PLEASE ADD DOCUMENTATION
-    procedure :: interpolate_pointer_values => interpolate_pointer_values_ad1d
-    !> PLEASE ADD DOCUMENTATION
-    procedure :: interpolate_derivative_eta1 => interpolate_derivative_ad1d
-    !> PLEASE ADD DOCUMENTATION
-    procedure :: interpolate_array_derivatives => interpolate_derivatives_ad1d
-    !> PLEASE ADD DOCUMENTATION
-    procedure :: interpolate_pointer_derivatives =>interpolate_pointer_derivatives_ad1d
-    !> PLEASE ADD DOCUMENTATION
-    procedure, pass:: interpolate_array => interpolate_array_ad1d
-    !> PLEASE ADD DOCUMENTATION
-    procedure, pass:: interpolate_array_disp => interpolate_1d_array_disp_ad1d
-    !> PLEASE ADD DOCUMENTATION
-    procedure, pass:: get_coefficients => get_coefficients_ad1d
-    !> PLEASE ADD DOCUMENTATION
-    procedure, pass:: reconstruct_array
- end type sll_arbitrary_degree_spline_interpolator_1d
+  !> PLEASE ADD DOCUMENTATION
+  procedure :: compute_interpolants => compute_interpolants_ad1d
+  ! procedure,  pass(interpolator) :: compute_spline_coefficients => &
+  !     compute_spline_coefficients_ad2d
+  !procedure, pass:: compute_spline_coefficients =>compute_spline_coefficients_ad2d
+  !> PLEASE ADD DOCUMENTATION
+  procedure :: interpolate_value => interpolate_value_ad1d
+  !> PLEASE ADD DOCUMENTATION
+  procedure :: interpolate_array_values => interpolate_values_ad1d
+  !> PLEASE ADD DOCUMENTATION
+  procedure :: interpolate_pointer_values => interpolate_pointer_values_ad1d
+  !> PLEASE ADD DOCUMENTATION
+  procedure :: interpolate_derivative_eta1 => interpolate_derivative_ad1d
+  !> PLEASE ADD DOCUMENTATION
+  procedure :: interpolate_array_derivatives => interpolate_derivatives_ad1d
+  !> PLEASE ADD DOCUMENTATION
+  procedure :: interpolate_pointer_derivatives =>interpolate_pointer_derivatives_ad1d
+  !> PLEASE ADD DOCUMENTATION
+  procedure, pass:: interpolate_array => interpolate_array_ad1d
+  !> PLEASE ADD DOCUMENTATION
+  procedure, pass:: interpolate_array_disp => interpolate_1d_array_disp_ad1d
+  !> PLEASE ADD DOCUMENTATION
+  procedure, pass:: get_coefficients => get_coefficients_ad1d
+  !> PLEASE ADD DOCUMENTATION
+  procedure, pass:: reconstruct_array
+end type sll_arbitrary_degree_spline_interpolator_1d
 
-  !> Deallocate
-  interface sll_delete
-     module procedure delete_arbitrary_degree_1d_interpolator
-  end interface sll_delete
+!> Deallocate
+interface sll_delete
+  module procedure delete_arbitrary_degree_1d_interpolator
+end interface sll_delete
 
 public sll_delete 
 public new_arbitrary_degree_1d_interpolator
@@ -123,34 +124,33 @@ public initialize_ad1d_interpolator
 
 contains
 
-  !> @brief delete interpolator arbitrary degree splines.
-  !> @details
-  !>
-  !> The parameters are
-  !> @param interpolator the type sll_arbitrary_degree_spline_interpolator_1d
+!> @brief delete interpolator arbitrary degree splines.
+!> @details
+!> The parameters are
+!> @param interpolator the type sll_arbitrary_degree_spline_interpolator_1d
 
-  subroutine delete_arbitrary_degree_1d_interpolator( interpolator )
-    class(sll_arbitrary_degree_spline_interpolator_1d), intent(inout) :: interpolator
-    sll_int32 :: ierr
-    SLL_DEALLOCATE(interpolator%knots,ierr)
-    SLL_DEALLOCATE(interpolator%t,ierr)
-    SLL_DEALLOCATE(interpolator%coeff_splines,ierr)
-  end subroutine delete_arbitrary_degree_1d_interpolator
+subroutine delete_arbitrary_degree_1d_interpolator( interpolator )
+  class(sll_arbitrary_degree_spline_interpolator_1d), intent(inout) :: interpolator
+  sll_int32 :: ierr
+  SLL_DEALLOCATE(interpolator%knots,ierr)
+  SLL_DEALLOCATE(interpolator%t,ierr)
+  SLL_DEALLOCATE(interpolator%coeff_splines,ierr)
+end subroutine delete_arbitrary_degree_1d_interpolator
 
 
-  !> @brief Initialization of a pointer interpolator arbitrary degree splines 1d.
-  !> @details To have the interpolator arbitrary degree splines 1d such as a pointer
-  !>
-  !> The parameters are
-  !> @param[in] num_pts the number of points
-  !> @param[in] eta_min the minimun
-  !> @param[in] eta_max the maximun
-  !> @param[in] bc_left  the boundary condition at left
-  !> @param[in] bc_right the boundary condition at right
-  !> @param[in] spline_degree the degree of B-spline
-  !> @return the type interpolator arbitrary degree splines 1d
+!> @brief Initialization of a pointer interpolator arbitrary degree splines 1d.
+!> @details To have the interpolator arbitrary degree splines 1d such as a pointer
+!>
+!> The parameters are
+!> @param[in] num_pts the number of points
+!> @param[in] eta_min the minimun
+!> @param[in] eta_max the maximun
+!> @param[in] bc_left  the boundary condition at left
+!> @param[in] bc_right the boundary condition at right
+!> @param[in] spline_degree the degree of B-spline
+!> @return the type interpolator arbitrary degree splines 1d
 
-  function new_arbitrary_degree_1d_interpolator(&
+function new_arbitrary_degree_1d_interpolator(&
        num_pts, &
        eta_min, &
        eta_max, &
@@ -158,177 +158,108 @@ contains
        bc_right, &
        spline_degree) result(interpolator)
 
-    class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interpolator
-    sll_int32, intent(in) :: num_pts
-    sll_real64, intent(in) :: eta_min
-    sll_real64, intent(in) :: eta_max
-    sll_int32, intent(in) :: bc_left
-    sll_int32, intent(in) :: bc_right
-    sll_int32, intent(in) :: spline_degree
-    sll_int32 :: ierr
+  class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interpolator
+  sll_int32,  intent(in) :: num_pts
+  sll_real64, intent(in) :: eta_min
+  sll_real64, intent(in) :: eta_max
+  sll_int32,  intent(in) :: bc_left
+  sll_int32,  intent(in) :: bc_right
+  sll_int32,  intent(in) :: spline_degree
+  sll_int32              :: ierr
 
+  SLL_ALLOCATE(interpolator,ierr)
 
-    SLL_ALLOCATE(interpolator,ierr)
+  call initialize_ad1d_interpolator(interpolator, &
+                                    num_pts,      &
+                                    eta_min,      &
+                                    eta_max,      &
+                                    bc_left,      &
+                                    bc_right,     &
+                                    spline_degree)
 
-    call initialize_ad1d_interpolator( &
-         interpolator, &
-         num_pts, &
-         eta_min, &
-         eta_max, &
-         bc_left, &
-         bc_right, &
-         spline_degree)
+end function new_arbitrary_degree_1d_interpolator
 
-  end function new_arbitrary_degree_1d_interpolator
+!> @brief Initialization of interpolator arbitrary degree splines 1d.
+!> @details To have the interpolator arbitrary degree splines 1d
+!>
+!> The parameters are
+!> @param[in] num_pts the number of points
+!> @param[in] eta_min the minimun
+!> @param[in] eta_max the maximun
+!> @param[in] bc_left  the boundary condition at left
+!> @param[in] bc_right the boundary condition at right
+!> @param[in] spline_degree the degree of B-spline
+!> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_1d
 
-  !> @brief Initialization of interpolator arbitrary degree splines 1d.
-  !> @details To have the interpolator arbitrary degree splines 1d
-  !>
-  !> The parameters are
-  !> @param[in] num_pts the number of points
-  !> @param[in] eta_min the minimun
-  !> @param[in] eta_max the maximun
-  !> @param[in] bc_left  the boundary condition at left
-  !> @param[in] bc_right the boundary condition at right
-  !> @param[in] spline_degree the degree of B-spline
-  !> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_1d
+subroutine initialize_ad1d_interpolator( interpolator, &
+                                         num_pts,      &
+                                         eta_min,      &
+                                         eta_max,      &
+                                         bc_left,      &
+                                         bc_right,     &
+                                         spline_degree)
 
-  subroutine initialize_ad1d_interpolator( &
-       interpolator, &
-       num_pts, &
-       eta_min, &
-       eta_max, &
-       bc_left, &
-       bc_right, &
-       spline_degree)
+  class(sll_arbitrary_degree_spline_interpolator_1d), intent(inout) :: interpolator
+  sll_int32,  intent(in) :: num_pts
+  sll_real64, intent(in) :: eta_min
+  sll_real64, intent(in) :: eta_max
+  sll_int32,  intent(in) :: bc_left
+  sll_int32,  intent(in) :: bc_right
+  sll_int32,  intent(in) :: spline_degree
+  sll_int32 :: ierr
+  sll_int64 :: bc_selector
 
-    class(sll_arbitrary_degree_spline_interpolator_1d), intent(inout) :: interpolator
-    sll_int32, intent(in) :: num_pts
-    sll_real64, intent(in) :: eta_min
-    sll_real64, intent(in) :: eta_max
-    sll_int32, intent(in) :: bc_left
-    sll_int32, intent(in) :: bc_right
-    sll_int32, intent(in) :: spline_degree
-    sll_int32 :: ierr
-    sll_int32 :: tmp
-    sll_int64 :: bc_selector
+  if(bc_left  == SLL_PERIODIC .or. bc_right == SLL_PERIODIC) then
+    SLL_ASSERT(bc_right == SLL_PERIODIC .and. bc_left  == SLL_PERIODIC)
+  end if
 
-    ! do some argument checking...
-    if(((bc_left  == SLL_PERIODIC).and.(bc_right.ne. SLL_PERIODIC))) then
-       print *, 'initialize_arbitrary_degree_1d_interpolator, ERROR: ', &
-            'if one boundary condition is specified as periodic, then ', &
-            'both must be. Error in first direction.'
-    end if
+  bc_selector = 0
 
-    bc_selector = 0
+  if( bc_left == SLL_DIRICHLET )  bc_selector = bc_selector + 1
+  if( bc_left == SLL_NEUMANN )    bc_selector = bc_selector + 2
+  if( bc_left == SLL_HERMITE )    bc_selector = bc_selector + 4
+  if( bc_right == SLL_DIRICHLET ) bc_selector = bc_selector + 8
+  if( bc_right == SLL_NEUMANN )   bc_selector = bc_selector + 16
+  if( bc_right == SLL_HERMITE )   bc_selector = bc_selector + 32
 
-    if( bc_left == SLL_DIRICHLET ) then
-       bc_selector = bc_selector + 1
-    end if
+  interpolator%spline_degree = spline_degree
+  interpolator%eta_min       = eta_min
+  interpolator%eta_max       = eta_max
+  interpolator%bc_left       = bc_left
+  interpolator%bc_right      = bc_right
+  interpolator%bc_selector   = bc_selector
+  interpolator%num_pts       = num_pts
 
-    if( bc_left == SLL_NEUMANN ) then
-       bc_selector = bc_selector + 2
-    end if
+  SLL_CLEAR_ALLOCATE(interpolator%coeff_splines(1:num_pts*num_pts),ierr)
+  SLL_CLEAR_ALLOCATE(interpolator%t(1:num_pts*num_pts),ierr)
+  interpolator%value_left  = 0.0_f64
+  interpolator%value_right = 0.0_f64
 
-    if( bc_left == SLL_HERMITE ) then
-       bc_selector = bc_selector + 4
-    end if
+  select case (bc_selector)
+  case (0) ! 1. periodic
+    SLL_ALLOCATE( interpolator%knots(2*spline_degree+2),ierr )
+  case (9) ! 2. dirichlet-left, dirichlet-right
+    SLL_ALLOCATE( interpolator%knots(num_pts+2*spline_degree),ierr )
+  case(10) ! Neumann - Dirichlet
+    SLL_ALLOCATE( interpolator%knots(num_pts+2*spline_degree),ierr )
+  case(12) ! Hermite- Dirichlet
+    SLL_ALLOCATE( interpolator%knots(num_pts+2*spline_degree),ierr )
+  case(17) ! Dirichlet-Neumann
+    SLL_ALLOCATE( interpolator%knots(num_pts+2*spline_degree),ierr )
+  case(18) ! Neumann - Neumann
+    SLL_ALLOCATE( interpolator%knots(num_pts+2*spline_degree),ierr )
+  case(20) ! Hermite - Neumann
+    SLL_ALLOCATE( interpolator%knots(num_pts+2*spline_degree),ierr )
+  case(33) ! Dirichlet - Hermite
+    SLL_ALLOCATE( interpolator%knots(num_pts+2*spline_degree),ierr )
+  case(34) ! Neumann- Hermite
+    SLL_ALLOCATE( interpolator%knots(num_pts+2*spline_degree),ierr )
+  case(36) ! Hermitte - Hermite
+    SLL_ALLOCATE( interpolator%knots(num_pts+2*spline_degree),ierr )
+  case default
+    SLL_WARNING('initialize_ad1d_interpolator: BC combination not implemented.')
+  end select
 
-    if( bc_right == SLL_DIRICHLET ) then
-       bc_selector = bc_selector + 8
-    end if
-
-    if( bc_right == SLL_NEUMANN ) then
-       bc_selector = bc_selector + 16
-    end if
-
-    if( bc_right == SLL_HERMITE ) then
-       bc_selector = bc_selector + 32
-    end if
-
-    interpolator%spline_degree = spline_degree
-    interpolator%eta_min       = eta_min
-    interpolator%eta_max       = eta_max
-    interpolator%bc_left       = bc_left
-    interpolator%bc_right      = bc_right
-    interpolator%bc_selector   = bc_selector
-    interpolator%num_pts       = num_pts
-
-    select case (bc_selector)
-    case (0) ! 1. periodic
-       SLL_ALLOCATE( interpolator%knots(2*spline_degree+2),ierr )
-       tmp = num_pts*num_pts
-       SLL_ALLOCATE( interpolator%coeff_splines(tmp),ierr)
-
-    case (9) ! 2. dirichlet-left, dirichlet-right
-       SLL_ALLOCATE( interpolator%knots(num_pts+2*spline_degree),ierr )
-       tmp = num_pts*num_pts
-       SLL_ALLOCATE( interpolator%coeff_splines(tmp),ierr)
-       interpolator%value_left = 0.0_f64
-       interpolator%value_right = 0.0_f64
-    case(10) ! Neumann - Dirichlet
-       SLL_ALLOCATE( interpolator%knots(num_pts+2*spline_degree),ierr )
-       tmp = num_pts*num_pts
-       SLL_ALLOCATE( interpolator%coeff_splines(tmp),ierr)
-       interpolator%slope_left  = 0.0_f64
-       interpolator%value_right = 0.0_f64
-
-    case(12) ! Hermite- Dirichlet
-       SLL_ALLOCATE( interpolator%knots(num_pts+2*spline_degree),ierr )
-       tmp = num_pts*num_pts
-       SLL_ALLOCATE( interpolator%coeff_splines(tmp),ierr)
-       interpolator%slope_left = 0.0_f64
-       interpolator%value_right = 0.0_f64
-
-    case(17) ! Dirichlet-Neumann
-       SLL_ALLOCATE( interpolator%knots(num_pts+2*spline_degree),ierr )
-       tmp = num_pts*num_pts
-       SLL_ALLOCATE( interpolator%coeff_splines(tmp),ierr)
-       interpolator%slope_right = 0.0_f64
-       interpolator%value_left = 0.0_f64
-
-    case(18) ! Neumann - Neumann
-       SLL_ALLOCATE( interpolator%knots(num_pts+2*spline_degree),ierr )
-       tmp = num_pts*num_pts
-       SLL_ALLOCATE( interpolator%coeff_splines(tmp),ierr)
-       interpolator%slope_right = 0.0_f64
-       interpolator%slope_left = 0.0_f64
-
-    case(20) ! Hermite - Neumann
-       SLL_ALLOCATE( interpolator%knots(num_pts+2*spline_degree),ierr )
-       tmp = num_pts*num_pts
-       SLL_ALLOCATE( interpolator%coeff_splines(tmp),ierr)
-       interpolator%slope_right = 0.0_f64
-       interpolator%slope_left = 0.0_f64
-
-    case(33) ! Dirichlet - Hermite
-       SLL_ALLOCATE( interpolator%knots(num_pts+2*spline_degree),ierr )
-       tmp = num_pts*num_pts
-       SLL_ALLOCATE( interpolator%coeff_splines(tmp),ierr)
-       interpolator%slope_right = 0.0_f64
-       interpolator%value_left = 0.0_f64
-
-    case(34) ! Neumann- Hermite
-       SLL_ALLOCATE( interpolator%knots(num_pts+2*spline_degree),ierr )
-       tmp = num_pts*num_pts
-       SLL_ALLOCATE( interpolator%coeff_splines(tmp),ierr)
-       interpolator%slope_right = 0.0_f64
-       interpolator%slope_left = 0.0_f64
-
-    case(36) ! Hermitte - Hermite
-       SLL_ALLOCATE( interpolator%knots(num_pts+2*spline_degree),ierr )
-       tmp = num_pts*num_pts
-       SLL_ALLOCATE( interpolator%coeff_splines(tmp),ierr)
-       interpolator%slope_right = 0.0_f64
-       interpolator%slope_left = 0.0_f64
-
-    case default
-       print *, 'initialize_ad1d_interpolator: BC combination not implemented.'
-    end select
-
-    interpolator%coeff_splines(:) = 0.0_f64
-    SLL_ALLOCATE( interpolator%t(num_pts*num_pts),ierr)
-    interpolator%t(:) = 0.0_f64
   end subroutine initialize_ad1d_interpolator
 
   !> @brief initializing the coefficients of splines.
