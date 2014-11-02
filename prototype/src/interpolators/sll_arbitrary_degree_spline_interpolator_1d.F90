@@ -260,17 +260,17 @@ subroutine initialize_ad1d_interpolator( interpolator, &
     SLL_WARNING('initialize_ad1d_interpolator: BC combination not implemented.')
   end select
 
-  end subroutine initialize_ad1d_interpolator
+end subroutine initialize_ad1d_interpolator
 
-  !> @brief initializing the coefficients of splines.
-  !> @details  initializing the coefficients of splines
-  !>  fot the arbitrary degree splines interpolator 1d
-  !> The parameters are
-  !> @param interpolator the type sll_arbitrary_degree_spline_interpolator_1d
-  !> @param[in] coeffs the 1d arrays corresponding of the splines coefficients
-  !> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_1d
+!> @brief initializing the coefficients of splines.
+!> @details  initializing the coefficients of splines
+!>  fot the arbitrary degree splines interpolator 1d
+!> The parameters are
+!> @param interpolator the type sll_arbitrary_degree_spline_interpolator_1d
+!> @param[in] coeffs the 1d arrays corresponding of the splines coefficients
+!> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_1d
 
-  subroutine set_coefficients_ad1d( &
+subroutine set_coefficients_ad1d( &
    interpolator, &
    coeffs)
 
