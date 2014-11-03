@@ -142,7 +142,7 @@ program test_hex_hermite
      !*********************************************************
 
      call cpu_time(t3)
-
+     
      print*,"fin init",t3 - t_init
 
      do while (t .lt. tmax)
