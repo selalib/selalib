@@ -1,6 +1,6 @@
 program unit_test_initializers_4d
 #include "sll_working_precision.h"
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_coordinate_transformation_2d_base_module
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
@@ -9,16 +9,16 @@ program unit_test_initializers_4d
   implicit none
 
   ! logical meshes
-  type(sll_logical_mesh_2d), pointer :: mx
-  type(sll_logical_mesh_2d), pointer :: mv
+  type(sll_cartesian_mesh_2d), pointer :: mx
+  type(sll_cartesian_mesh_2d), pointer :: mv
   ! coordinate transformations (test transforming spatial coordinates only)
   class(sll_coordinate_transformation_2d_base), pointer :: tx
   sll_real64, dimension(2) :: params_identity
 
   params_identity(:) = (/0.0_f64, 0.0_f64/) ! for identity this can be whatever
   ! initialize the logical meshes
-  mx => new_logical_mesh_2d(64,64)
-  mv => new_logical_mesh_2d(64,64)
+  mx => new_cartesian_mesh_2d(64,64)
+  mv => new_cartesian_mesh_2d(64,64)
 
   ! initialize the transformation
   tx => new_coordinate_transformation_2d_analytic( &

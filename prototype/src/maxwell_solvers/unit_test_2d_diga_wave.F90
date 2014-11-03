@@ -1,3 +1,6 @@
+!
+!  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
+!
 program test_maxwell_2d_diga_wave
     !--------------------------------------------------------------------------
     !  test 2D Maxwell solver based on discontinuous galerkine on a mapped mesh
@@ -8,12 +11,11 @@ program test_maxwell_2d_diga_wave
 #include "sll_constants.h"
 #include "sll_maxwell_solvers_macros.h"
 #include "sll_file_io.h"
+#include "sll_cartesian_meshes.h"
+#include "sll_coordinate_transformations.h"
 
-    use sll_logical_meshes
-    use sll_module_coordinate_transformations_2d
-    use sll_common_coordinate_transformations
     use sll_dg_fields
-    use sll_maxwell_2d_diga
+    use sll_module_maxwell_2d_diga
     use sll_maxwell_solvers_base
 
     implicit none
@@ -31,14 +33,14 @@ program test_maxwell_2d_diga_wave
     sll_real64 :: eta2_max, eta2_min
     sll_real64 :: delta_eta1, delta_eta2
 
-    type(sll_logical_mesh_2d), pointer :: mesh
+    type(sll_cartesian_mesh_2d), pointer :: mesh
     class(sll_coordinate_transformation_2d_base), pointer :: tau
 
-    type(maxwell_2d_diga)   :: maxwell_TE
+    type(sll_maxwell_2d_diga)   :: maxwell_TE
 
-    type(dg_field), pointer :: ex, ex0, dx, sx
-    type(dg_field), pointer :: ey, ey0, dy, sy
-    type(dg_field), pointer :: bz, bz0, dz, sz
+    type(sll_dg_field_2d), pointer :: ex, ex0, dx, sx
+    type(sll_dg_field_2d), pointer :: ey, ey0, dy, sy
+    type(sll_dg_field_2d), pointer :: bz, bz0, dz, sz
 
     sll_real64  :: time
     sll_int32   :: istep
@@ -49,7 +51,7 @@ program test_maxwell_2d_diga_wave
     !init functions
     sll_real64, external :: gaussian
 
-    mesh => new_logical_mesh_2d(nc_eta1, nc_eta2, &
+    mesh => new_cartesian_mesh_2d(nc_eta1, nc_eta2, &
         eta1_min=-5._f64, eta1_max=5._f64, &
         eta2_min=-5._f64, eta2_max=5._f64)
 
@@ -178,26 +180,26 @@ program test_maxwell_2d_diga_wave
    
         time = 0.0_f64
    
-        ex  => new_dg_field(degree,tau)
-        ey  => new_dg_field(degree,tau)
-        bz  => new_dg_field(degree,tau,gaussian)
+        ex  => sll_new(degree,tau)
+        ey  => sll_new(degree,tau)
+        bz  => sll_new(degree,tau,gaussian)
    
-        ex0 => new_dg_field(degree,tau)
-        ey0 => new_dg_field(degree,tau)
-        bz0 => new_dg_field(degree,tau)
+        ex0 => sll_new(degree,tau)
+        ey0 => sll_new(degree,tau)
+        bz0 => sll_new(degree,tau)
    
-        dx  => new_dg_field(degree,tau)
-        dy  => new_dg_field(degree,tau)
-        dz  => new_dg_field(degree,tau)
+        dx  => sll_new(degree,tau)
+        dy  => sll_new(degree,tau)
+        dz  => sll_new(degree,tau)
    
-        sx  => new_dg_field(degree,tau)
-        sy  => new_dg_field(degree,tau)
-        sz  => new_dg_field(degree,tau)
+        sx  => sll_new(degree,tau)
+        sy  => sll_new(degree,tau)
+        sz  => sll_new(degree,tau)
    
         dt = cfl/sqrt(1./(delta_eta1/(degree+1))**2+1./(delta_eta2/(degree+1))**2)
         nstep = ceiling(15.0/dt)
    
-        call initialize(maxwell_TE,        &
+        call sll_create(maxwell_TE,        &
             tau,               &
             degree,            &
             TE_POLARIZATION,   &
@@ -213,20 +215,20 @@ program test_maxwell_2d_diga_wave
    
             call rksetup()
    
-            call solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
+            call sll_solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
    
             call accumulate(1._f64/6._f64)
             call rkstage(0.5_f64)
    
-            call solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
+            call sll_solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
             call accumulate(1._f64/3._f64)
             call rkstage(0.5_f64)
    
-            call solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
+            call sll_solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
             call accumulate(1._f64/3._f64)
             call rkstage(1.0_f64)
    
-            call solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
+            call sll_solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
             call accumulate(1._f64/6._f64)
    
             call rkstep()

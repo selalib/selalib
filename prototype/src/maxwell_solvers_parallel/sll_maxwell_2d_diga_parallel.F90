@@ -1,10 +1,12 @@
 
 #define sll_transformation class(sll_coordinate_transformation_2d_base)
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
 !> Solve Maxwell equations on cartesian domain with Disconituous Galerkine method:
 !> * Gauss Lobatto for integration formula
 !> * Periodic boundary conditions.
-module sll_maxwell_2d_diga_parallel
+module sll_module_maxwell_2d_diga_parallel
 
 #include "sll_maxwell_solvers_macros.h"
 #include "sll_working_precision.h"
@@ -14,7 +16,7 @@ module sll_maxwell_2d_diga_parallel
 #include "sll_utilities.h"
 #include "sll_assert.h"
 
-use sll_logical_meshes
+use sll_cartesian_meshes
 use sll_module_coordinate_transformations_2d
 use sll_common_coordinate_transformations
 use sll_dg_fields
@@ -22,12 +24,13 @@ use sll_boundary_condition_descriptors
 use sll_maxwell_2d_diga_parallel
 
 implicit none
+private
 
 !>DG method in two dimensions with general coordinates
-type, public :: maxwell_2d_diga_parallel
+type, public :: sll_maxwell_2d_diga_parallel
 
    sll_transformation, pointer              :: tau  !< transformation
-   type(sll_logical_mesh_2d), pointer       :: mesh !< Logical mesh
+   type(sll_cartesian_mesh_2d), pointer       :: mesh !< Logical mesh
    sll_int32                                :: polarization !< TE or TM
    sll_int32                                :: degree !< degree of gauss integration
    type(cell_type), dimension(:,:), pointer :: cell !< mesh cells
@@ -47,26 +50,26 @@ type, public :: maxwell_2d_diga_parallel
    sll_int32                                :: bc_north
    sll_int32                                :: bc_west
    sll_int32                                :: flux_type
-   type(dg_field), pointer                  :: po
+   type(sll_dg_field_2d), pointer           :: po
    sll_real64                               :: xi 
 
-end type maxwell_2d_diga_parallel
+end type sll_maxwell_2d_diga_parallel
 
 !> Allocate data to initialize solver
-interface new
+interface sll_new
    module procedure new_maxwell_2d_diga_parallel
-end interface new
+end interface sll_new
 
 !> Create a Maxwell solver object using Discontinuous Galerkine 
-interface initialize
+interface sll_create
    module procedure initialize_maxwell_2d_diga_parallel
-end interface initialize
+end interface sll_create
 
 
 !> Solve Maxwell system
-interface solve
+interface sll_solve
    module procedure solve_maxwell_2d_diga_parallel
-end interface solve
+end interface sll_solve
 
 contains
 
@@ -116,7 +119,7 @@ subroutine initialize_maxwell_2d_diga_parallel(      &
                                        bc_west,      &
                                        flux_type)
 
-   type(maxwell_2d_diga)       :: this !< solver data object
+   type(sll_maxwell_2d_diga)       :: this !< solver data object
    sll_transformation, pointer :: tau  !< Coordinate transformation
    sll_int32                   :: polarization !< TE or TM
    sll_int32                   :: degree       !< polynomial degree
@@ -141,7 +144,7 @@ subroutine initialize_maxwell_2d_diga_parallel(      &
    this%tau        => tau
    ! Please undo this 'fix' whenever it is decided that gfortran 4.6 is no
    ! longer supported.
-   !   this%mesh       => tau%get_logical_mesh()
+   !   this%mesh       => tau%get_cartesian_mesh()
    this%mesh => tau%mesh
    this%bc_south   =  bc_south
    this%bc_east    =  bc_east
@@ -268,15 +271,15 @@ end subroutine initialize_maxwell_2d_diga_parallel
 !> Solve the maxwell equation
 subroutine solve_maxwell_2d_diga_parallel( this, fx, fy, fz, dx, dy, dz )
 
-   type( maxwell_2d_diga )  :: this !< Maxwell solver object
+   type(sll_maxwell_2d_diga)  :: this !< Maxwell solver object
 
-   type(dg_field)  :: fx   !< x electric field
-   type(dg_field)  :: fy   !< y electric field
-   type(dg_field)  :: fz   !< z magnetic field
+   type(sll_dg_field_2d) :: fx   !< x electric field
+   type(sll_dg_field_2d) :: fy   !< y electric field
+   type(sll_dg_field_2d) :: fz   !< z magnetic field
 
-   type(dg_field)  :: dx   !< x step size
-   type(dg_field)  :: dy   !< y step size
-   type(dg_field)  :: dz   !< z step size
+   type(sll_dg_field_2d) :: dx   !< x step size
+   type(sll_dg_field_2d) :: dy   !< y step size
+   type(sll_dg_field_2d) :: dz   !< z step size
 
    sll_int32  :: left, right, node, side, bc_type, flux_type
    sll_int32  :: i, j, k, l, ii, jj, kk
@@ -459,4 +462,7 @@ subroutine solve_maxwell_2d_diga_parallel( this, fx, fy, fz, dx, dy, dz )
    
 end subroutine solve_maxwell_2d_diga_parallel
 
-end module sll_maxwell_2d_diga_parallel
+
+end module sll_module_maxwell_2d_diga_parallel
+
+#endif // DOXYGEN_SHOULD_SKIP_THIS

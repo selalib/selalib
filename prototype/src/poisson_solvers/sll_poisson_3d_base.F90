@@ -1,17 +1,27 @@
+!> @ingroup poisson_solvers
+!> @brief
+!> Module interface to solve Poisson equation in 3D
+!> @details
+!> Contains the abstract class to create a Poisson solver in 3D.
 module sll_module_poisson_3d_base
 #include "sll_working_precision.h"
+
   implicit none
   
-  ! For computing E and phi form rho, using Poisson type equation
+  !> Abstract class for Poisson solver in 3 dimensions
   type, abstract :: sll_poisson_3d_base 
   contains
+    !> PLEASE ADD DOCUMENTATION
     procedure(signature_compute_phi_from_rho_3d), deferred, pass(poisson) :: &
       compute_phi_from_rho
 !    procedure(signature_compute_E_from_phi_2d), deferred, pass(poisson) :: &
 !      compute_E_from_phi  
+    !> PLEASE ADD DOCUMENTATION
     procedure(signature_compute_E_from_rho_3d), deferred, pass(poisson) :: &
       compute_E_from_rho
   end type sll_poisson_3d_base
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 
   abstract interface
     ! solves -\Delta phi = rho in 2d or similar thing
@@ -49,5 +59,6 @@ module sll_module_poisson_3d_base
     end subroutine signature_compute_E_from_rho_3d
   end interface
 
-end module sll_module_poisson_3d_base
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
+end module sll_module_poisson_3d_base

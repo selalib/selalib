@@ -1,3 +1,4 @@
+!> @ingroup utilities
 !> @brief
 !> fortran structure for solving linear systems
 !> @details

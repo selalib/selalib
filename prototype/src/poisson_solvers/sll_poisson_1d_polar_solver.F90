@@ -1,3 +1,4 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 !**************************************************************
 !  Copyright INRIA
 !  Authors : 
@@ -16,8 +17,9 @@
 !**************************************************************
 
 
-!solves axisymmetric poisson
 
+!> @ingroup poisson_solvers
+!> solves axisymmetric poisson
 module sll_module_poisson_1d_polar_solver
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -167,3 +169,4 @@ contains
   
   
 end module sll_module_poisson_1d_polar_solver
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

@@ -8,7 +8,7 @@ program vp_cartesian_4d
   use sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
   use sll_collective
   use sll_constants
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_common_array_initializers_module
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
@@ -16,7 +16,7 @@ program vp_cartesian_4d
   implicit none
 
   type(sll_simulation_4d_vp_eulerian_cartesian_finite_volume)      :: simulation
-  type(sll_logical_mesh_2d), pointer      :: mx,mv
+  type(sll_cartesian_mesh_2d), pointer      :: mx,mv
   type(sll_time_mark)  :: t0 
   class(sll_coordinate_transformation_2d_base),pointer      :: tx,tv
   sll_real64, dimension(1:11) :: landau_params
@@ -122,13 +122,13 @@ program vp_cartesian_4d
 
 
   ! logical mesh for space coordinates
-  mx => new_logical_mesh_2d( NCELL3, NCELL4 , &
+  mx => new_cartesian_mesh_2d( NCELL3, NCELL4 , &
        eta1_min=ETA3MIN, eta1_max=ETA3MAX, &
        eta2_min=ETA4MIN,eta2_max=ETA4MAX )
 
 
   ! logical mesh for velocity coordinates
-  mv => new_logical_mesh_2d( NCELL1, NCELL2, &
+  mv => new_cartesian_mesh_2d( NCELL1, NCELL2, &
        eta1_min=ETA1MIN, eta1_max=ETA1MAX, &
        eta2_min=ETA2MIN,eta2_max=ETA2MAX )
 

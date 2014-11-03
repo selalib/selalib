@@ -15,6 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> @ingroup file_io_parallel
 !> @brief
 !> Implements the functions to write xdmf file plotable by VisIt
 !> @details
@@ -22,6 +23,10 @@
 !> data is separate from the values themselves. Light data is stored using XML, 
 !> Heavy data is stored using Parallel HDF5. These files are readable by 
 !> Paraview.
+!>
+!> Here an example using the layout_2d object, check out how to compute
+!> offset values before calling sll_gnuplot_parallel subroutines.
+!> @snippet remap/unit_test_parallel.F90 example
 module sll_xdmf_parallel
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -115,7 +120,7 @@ contains
     character(len=*), intent(in)     :: mesh_name      !< file with mesh coordinates
     sll_real64, intent(in)           :: array(:,:)     !< data array
     character(len=*), intent(in)     :: array_name     !< name of the field
-    integer(HSSIZE_T)                :: offset(2)      !< offset
+    integer(HSSIZE_T)                :: offset(2)      !< block offset
     integer(HSIZE_T)                 :: global_dims(2) !< global dimensions
     integer(HID_T)                   :: file_id        !< data file unit number
     sll_int32                        :: npoints_x1     !< nodes number x
@@ -166,7 +171,7 @@ contains
     character(len=*), intent(in)    :: mesh_name      !< file with mesh coordinates
     sll_real64, intent(in)          :: array(:,:,:)   !< data array
     character(len=*), intent(in)    :: array_name     !< name of the field
-    integer(HSSIZE_T)               :: offset(3)      !< offset
+    integer(HSSIZE_T)               :: offset(3)      !< block offset
     integer(HSIZE_T)                :: global_dims(3) !< global dimensions
     integer(HID_T)                  :: file_id        !< data file unit number
     sll_int32                       :: npoints_x1     !< nodes number x
@@ -225,3 +230,5 @@ contains
 
 
 end module sll_xdmf_parallel
+
+

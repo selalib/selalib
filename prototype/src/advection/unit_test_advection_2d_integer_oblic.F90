@@ -20,7 +20,7 @@ program unit_test_advection_2d_integer_oblic
 #include "sll_memory.h"
 use sll_module_advection_2d_integer_oblic
 use sll_module_characteristics_2d_explicit_euler
-use sll_cubic_spline_interpolator_2d
+use sll_module_cubic_spline_interpolator_2d
 use sll_module_advection_1d_periodic
 
 implicit none
@@ -96,7 +96,7 @@ implicit none
     4) 
 
 
-  interp => new_cubic_spline_2d_interpolator( &
+  interp => new_cubic_spline_interpolator_2d( &
     num_cells_x1+1, &
     num_cells_x2+1, &
     x1_min, &

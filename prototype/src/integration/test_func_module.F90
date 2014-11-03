@@ -1,6 +1,6 @@
 module test_function_module
 #include "sll_working_precision.h"
-  implicit none
+implicit none
 
 contains
 

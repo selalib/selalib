@@ -1,3 +1,6 @@
+!
+!  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
+!
 #define MPI_MASTER 0
 program test_maxwell_2d_periodic_cart_par
 
@@ -87,21 +90,21 @@ program test_maxwell_2d_periodic_cart_par
   nprocx = 2**e
   nprocy = 2**e
 
-  call initialize_layout_with_distributed_2D_array( ncx, &
+  call initialize_layout_with_distributed_array( ncx, &
                                                     ncy, &
                                                       1, &
                                                  nprocy, &
                                                 layout_x )
 
-  call initialize_layout_with_distributed_2D_array( ncx, &
+  call initialize_layout_with_distributed_array( ncx, &
                                                     ncy, &
                                                  nprocx, &
                                                       1, &
                                                 layout_y )
   call flush(6)
-  call sll_view_lims_2D(layout_x)
+  call sll_view_lims(layout_x)
   call flush(6)
-  call sll_view_lims_2D(layout_y)
+  call sll_view_lims(layout_y)
   call flush(6)
 
   plan => new_maxwell_2d_periodic_plan_cartesian_par(layout_x, &
@@ -114,16 +117,16 @@ program test_maxwell_2d_periodic_cart_par
   hz => plan%fz_x
 
   !Ex si sequential along y
-  call compute_local_sizes_2d(plan%layout_y,nx_loc,ny_loc)
+  call compute_local_sizes(plan%layout_y,nx_loc,ny_loc)
   SLL_CLEAR_ALLOCATE(ex(1:nx_loc,1:ny_loc), error)
 
   !Ey si sequential along x
-  call compute_local_sizes_2d(plan%layout_x,nx_loc,ny_loc)
+  call compute_local_sizes(plan%layout_x,nx_loc,ny_loc)
   SLL_CLEAR_ALLOCATE(ey(1:nx_loc,1:ny_loc), error)
 
   do j=1,ny_loc
      do i=1,nx_loc
-        global = local_to_global_2D( layout_x, (/i, j/))
+        global = local_to_global( layout_x, (/i, j/))
         gi = global(1)
         gj = global(2)
         x  = (gi-1)*dx
@@ -153,7 +156,7 @@ program test_maxwell_2d_periodic_cart_par
      err_l2 = 0.0
      do j=1,ny_loc
      do i=1,nx_loc
-        global = local_to_global_2D( layout_x, (/i, j/))
+        global = local_to_global( layout_x, (/i, j/))
         gi = global(1)
         gj = global(2)
         x  = (gi-1)*dx

@@ -1,3 +1,6 @@
+!
+!  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
+!
 program test_maxwell_2d_pstd
 !-------------------------------------------------------------------
 !  test 2D Maxwell solver based on FFT
@@ -8,7 +11,7 @@ program test_maxwell_2d_pstd
 #include "sll_maxwell_solvers.h"
 use sll_constants
 
-use sll_maxwell_2d_pstd
+use sll_module_maxwell_2d_pstd
 
 implicit none
 
@@ -19,8 +22,8 @@ sll_real64 :: delta_eta1, delta_eta2
 sll_int32  :: nc_eta1, nc_eta2
 sll_int32  :: error
 
-type(maxwell_2d_pstd)              :: maxwell_TE
-type(maxwell_2d_pstd)              :: maxwell_TM
+type(sll_maxwell_2d_pstd)              :: maxwell_TE
+type(sll_maxwell_2d_pstd)              :: maxwell_TM
 sll_int32                          :: i, j
 sll_real64                         :: omega
 sll_real64                         :: time
@@ -85,7 +88,7 @@ SLL_ALLOCATE(hy(nc_eta1+1,nc_eta2+1), error)
 SLL_ALLOCATE(ez(nc_eta1+1,nc_eta2+1), error)
 SLL_ALLOCATE(ez_exact(nc_eta2+1,nc_eta2+1), error)
 
-call initialize(maxwell_TM, eta1_min, eta1_max, nc_eta1, &
+call sll_create(maxwell_TM, eta1_min, eta1_max, nc_eta1, &
          eta2_min, eta2_max, nc_eta2, TM_POLARIZATION)
 
 SLL_ALLOCATE(ex(nc_eta1+1,nc_eta2+1), error)
@@ -93,7 +96,7 @@ SLL_ALLOCATE(ey(nc_eta1+1,nc_eta2+1), error)
 SLL_ALLOCATE(hz(nc_eta1+1,nc_eta2+1), error)
 SLL_ALLOCATE(hz_exact(nc_eta2+1,nc_eta2+1), error)
 
-call initialize(maxwell_TE, eta1_min, eta1_max, nc_eta1, &
+call sll_create(maxwell_TE, eta1_min, eta1_max, nc_eta1, &
          eta2_min, eta2_max, nc_eta2, TE_POLARIZATION)
 
 
@@ -119,9 +122,9 @@ do istep = 1, nstep !*** Loop over time
    write(*,"(' time = ',g12.3,' sec')",advance="no") time
    write(*,"(' erreurs TM,TE = ',2g15.5)") err_tm, err_te
 
-   call solve(maxwell_TM, hx, hy, ez, dt)
+   call sll_solve(maxwell_TM, hx, hy, ez, dt)
 
-   call solve(maxwell_TE, ex, ey, hz, dt)
+   call sll_solve(maxwell_TE, ex, ey, hz, dt)
 
    time = time + 0.5_f64*dt
 

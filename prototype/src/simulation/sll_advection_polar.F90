@@ -174,7 +174,7 @@ contains
 
     if (associated(this)) then
        call delete_plan_adv_polar(this%adv)
-       call delete_plan_poisson_polar(this%poisson)
+       call sll_delete(this%poisson)
        call delete_plan_polar_op(this%grad)
        SLL_DEALLOCATE(this,err)
     end if

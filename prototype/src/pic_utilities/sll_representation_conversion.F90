@@ -21,7 +21,7 @@ module sll_representation_conversion_module
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use sll_logical_meshes
+  use sll_cartesian_meshes
 
   implicit none
   
@@ -56,7 +56,7 @@ contains
 ! transforms a standard particle position (x,y) in our type (icell, dx, dy)
 
     sll_real64, intent(in)  :: x, y
-    type(sll_logical_mesh_2d), intent(in) :: m2d
+    type(sll_cartesian_mesh_2d), intent(in) :: m2d
     sll_int32,  intent(out) :: icell
     sll_real32, intent(out) :: offset_x, offset_y!    sll_real64, intent(out) :: offset_x, offset_y!
     sll_int32               :: icell_x, icell_y
@@ -103,7 +103,7 @@ contains
 ! transforms sll_type of a particle (icell, dx, dy) into the standard
 ! particle position (x,y)
     sll_real64, intent(out)  :: x, y
-    type(sll_logical_mesh_2d), intent(in) :: m2d
+    type(sll_cartesian_mesh_2d), intent(in) :: m2d
     sll_int32,  intent(in) :: icell
     sll_real32, intent(in) :: offset_x, offset_y!sll_real64, intent(in) :: offset_x, offset_y!
 

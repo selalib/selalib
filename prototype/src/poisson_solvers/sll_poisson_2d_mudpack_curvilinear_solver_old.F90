@@ -1,4 +1,4 @@
-!**************************************************************
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 !**************************************************************
 !  Copyright INRIA
 !  Authors : 
@@ -29,18 +29,19 @@
 ! A_11\partial_{1,1}\hat{phi}+B_1\partial_{1}\hat{phi}+(C+A_{2,2}k^2)\hat{phi} = \hat{rho}
 
 
+!> @ingroup poisson_solvers
 module sll_module_poisson_2d_mudpack_curvilinear_solver_old
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
+#include "sll_coordinate_transformations.h"
 !use sll_boundary_condition_descriptors
 use sll_constants
 use sll_module_poisson_2d_base
-use sll_mudpack_base
-use sll_cubic_spline_interpolator_1d
-use sll_cubic_spline_interpolator_2d
-use sll_coordinate_transformation_2d_base_module
-use sll_module_coordinate_transformations_2d
+use sll_mudpack_curvilinear
+use sll_module_interpolators_2d_base
+use sll_module_cubic_spline_interpolator_1d
+use sll_module_cubic_spline_interpolator_2d
 !use sll_poisson_2d_polar
 implicit none
 
@@ -333,7 +334,7 @@ contains
     SLL_ALLOCATE(poisson%ce_2d(nc_eta1+1,nc_eta2+1),ierr)      
         
     
-       poisson%a12_interp => new_cubic_spline_2d_interpolator( &
+       poisson%a12_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -342,7 +343,7 @@ contains
           eta2_max, &
           bc_interp2d_eta1, &
           bc_interp2d_eta2)        
-       poisson%a21_interp => new_cubic_spline_2d_interpolator( &
+       poisson%a21_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -358,7 +359,7 @@ contains
         call poisson%a12_interp%compute_interpolants( a12_array ) 
         call poisson%a21_interp%compute_interpolants( a21_array ) 
           
-        poisson%cxx_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%cxx_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -367,7 +368,7 @@ contains
           eta2_max, &
           bc_interp2d_eta1, &
           bc_interp2d_eta2)                
-        poisson%cyy_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%cyy_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -382,7 +383,7 @@ contains
         call poisson%cyy_2d_interp%compute_interpolants( poisson%cyy_2d )       
         
         
-        poisson%cx_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%cx_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -395,7 +396,7 @@ contains
           poisson%cxx_2d_interp,poisson%a21_interp,poisson%cx_2d)          
         call poisson%cx_2d_interp%compute_interpolants( poisson%cx_2d )          
 
-        poisson%cy_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%cy_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -408,7 +409,7 @@ contains
           poisson%cyy_2d_interp,poisson%a12_interp,poisson%cy_2d)  
         call poisson%cy_2d_interp%compute_interpolants( poisson%cy_2d )          
 
-        poisson%ce_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%ce_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -440,7 +441,7 @@ contains
         
       case (SLL_NON_SEPARABLE_WITH_CROSS_TERMS)   
           SLL_ALLOCATE(poisson%cxy_2d(nc_eta1+1,nc_eta2+1),ierr)
-          poisson%cxy_2d_interp => new_cubic_spline_2d_interpolator( &
+          poisson%cxy_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -497,7 +498,7 @@ contains
     sll_int32  :: error
     sll_int32  :: intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny
     sll_int32  :: iguess,maxcy,method,nwork,lwrkqd,itero
-    type(sll_logical_mesh_2d), pointer :: mesh
+    class(sll_cartesian_mesh_2d), pointer :: mesh
 
     common/itmud2sp/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
               iguess,maxcy,method,nwork,lwrkqd,itero
@@ -520,7 +521,7 @@ contains
     intl = 1
     !write(*,106) intl,method,iguess
 
-    mesh => poisson%transformation%mesh
+    mesh => poisson%transformation%get_cartesian_mesh()
     Nc_eta1    = mesh%num_cells1
     Nc_eta2    = mesh%num_cells2
     eta1_min   = mesh%eta1_min
@@ -856,4 +857,5 @@ end
 
 
 
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
 

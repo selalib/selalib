@@ -7,7 +7,7 @@ program utilities_tester
   use sll_constants, only: sll_pi
 !  use sll_particle_group_4d_module
   use sll_particle_initializers
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_charge_to_density_module
 
 #define THERM_SPEED 1._f64
@@ -26,13 +26,13 @@ program utilities_tester
   
   implicit none
   type(sll_particle_group_4d), pointer :: part_group
-  type(sll_logical_mesh_2d),   pointer :: m2d
+  type(sll_cartesian_mesh_2d),   pointer :: m2d
   type(charge_accumulator_cell), dimension(:), pointer :: all_charge
   sll_int32 :: j
   sll_int32 :: l, c
   sll_real64, dimension(:,:), pointer :: rho
 
-  m2d =>  new_logical_mesh_2d( NC_X, NC_Y, &
+  m2d =>  new_cartesian_mesh_2d( NC_X, NC_Y, &
        XMIN, XMAX, YMIN, YMAX )
   
   part_group => new_particle_4d_group( &

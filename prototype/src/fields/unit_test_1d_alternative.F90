@@ -1,7 +1,7 @@
 program unit_test_1d_alternative
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_constants
   use sll_module_scalar_field_1d_alternative
   implicit none
@@ -12,7 +12,7 @@ program unit_test_1d_alternative
 #define ETA1MAX  1.0_f64
 #define PRINT_COMPARISON .false.
   
-  type(sll_logical_mesh_1d), pointer       :: mesh_1d
+  type(sll_cartesian_mesh_1d), pointer       :: mesh_1d
   ! either of these type declarations can be used to work. Initialization is
   ! different.
   !class(sll_scalar_field_1d_base), pointer :: field_1d
@@ -23,7 +23,7 @@ program unit_test_1d_alternative
   sll_int32                                :: nc1!, iplot
   sll_real64                               :: grad1_node_val,grad1ref
   sll_real64, dimension(:), allocatable    :: tab_values
-  type(sll_arb_deg_1d_interpolator), target    :: interp_1d
+  type(sll_arbitrary_degree_spline_interpolator_1d), target    :: interp_1d
   sll_real64                               :: node_val,ref
   sll_real64, dimension(:),   allocatable  :: point1
   sll_real64                               :: eta1
@@ -44,7 +44,7 @@ program unit_test_1d_alternative
   print *, 'h1 = ', h1
   
   ! First thing, initialize the logical mesh associated with this problem.        
-  mesh_1d => new_logical_mesh_1d( NUM_CELLS1,ETA1MIN, ETA1MAX)
+  mesh_1d => new_cartesian_mesh_1d( NUM_CELLS1,ETA1MIN, ETA1MAX)
   
   print *, 'initialized mesh 1D'
   

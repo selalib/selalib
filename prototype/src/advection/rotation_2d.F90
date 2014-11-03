@@ -26,8 +26,8 @@ program rotation_2d
 use sll_module_advection_2d_BSL
 use sll_module_characteristics_2d_explicit_euler
 use sll_module_characteristics_2d_verlet
-use sll_cubic_spline_interpolator_2d
-use sll_cubic_spline_interpolator_1d
+use sll_module_cubic_spline_interpolator_2d
+use sll_module_cubic_spline_interpolator_1d
 
 implicit none
 
@@ -102,7 +102,7 @@ implicit none
   f = f_init
   
   !we initialize the interpolator
-  interp => new_cubic_spline_2d_interpolator( &
+  interp => new_cubic_spline_interpolator_2d( &
     Nc_x1+1, &
     Nc_x2+1, &
     x1_min, &
@@ -117,17 +117,17 @@ implicit none
 
 
   !we initialize the characteristics
-  A1_interp_x1 => new_cubic_spline_1d_interpolator( &
+  A1_interp_x1 => new_cubic_spline_interpolator_1d( &
     Nc_x1+1, &
     x1_min, &
     x1_max, &
     SLL_HERMITE)
-  A2_interp_x1 => new_cubic_spline_1d_interpolator( &
+  A2_interp_x1 => new_cubic_spline_interpolator_1d( &
     Nc_x1+1, &
     x1_min, &
     x1_max, &
     SLL_HERMITE)
-  A1_interp_x1x2 => new_cubic_spline_2d_interpolator( &
+  A1_interp_x1x2 => new_cubic_spline_interpolator_2d( &
     Nc_x1+1, &
     Nc_x2+1, &
     x1_min, &
@@ -136,7 +136,7 @@ implicit none
     x2_max, &
     SLL_HERMITE, &
     SLL_HERMITE)
-  A2_interp_x1x2 => new_cubic_spline_2d_interpolator( &
+  A2_interp_x1x2 => new_cubic_spline_interpolator_2d( &
     Nc_x1+1, &
     Nc_x2+1, &
     x1_min, &

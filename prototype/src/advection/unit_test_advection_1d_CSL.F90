@@ -21,7 +21,7 @@ program unit_test_advection_1d_CSL
 use sll_module_advection_1d_CSL
 use sll_module_advection_1d_PSM
 use sll_module_characteristics_1d_trapezoid_conservative
-use sll_cubic_spline_interpolator_1d
+use sll_module_cubic_spline_interpolator_1d
 
 implicit none
   
@@ -79,13 +79,13 @@ implicit none
   err=0._f64
 
 
-  interp => new_cubic_spline_1d_interpolator( &
+  interp => new_cubic_spline_interpolator_1d( &
     num_cells+1, &
     x_min_bis, &
     x_max_bis, &
     SLL_PERIODIC)
 
-  A_interp => new_cubic_spline_1d_interpolator( &
+  A_interp => new_cubic_spline_interpolator_1d( &
     num_cells+1, &
     x_min, &
     x_max, &

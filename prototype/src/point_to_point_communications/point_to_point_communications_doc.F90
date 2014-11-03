@@ -5,11 +5,11 @@
 ! in file Doxyfile.in (line 691) if it is excluded. 
 ! Type 'make doc' in build directory.
 ! To check the results, open : 
-! selalib/prototype/documentation/build/html/doxygen/html/namespaces.html 
+! selalib/prototype/documentation/build/html/doxygen/html/defgroup point_to_point_communicationss.html 
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @namespace sll_point_to_point_communications 
+!> @defgroup point_to_point_communications sll_point_to_point_communications 
 !> @brief 
 !> Description of point_to_point_communications library (72 characters)
 !> @author Selalib team 

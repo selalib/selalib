@@ -1,26 +1,25 @@
 program unit_test_2d
 #include "sll_working_precision.h"
-  use sll_constants
-  use sll_logical_meshes
-  use sll_module_coordinate_transformations_2d
-  use sll_module_coordinate_transformations_2d_nurbs
-  use sll_common_coordinate_transformations
-  use sll_cubic_spline_interpolator_2d
-  
 #include "sll_file_io.h"
+#include "sll_cartesian_meshes.h"
+#include "sll_coordinate_transformations.h"
+  use sll_constants
+  use sll_module_cubic_spline_interpolator_2d
+  use sll_boundary_condition_descriptors
+  
   implicit none
 
 #define NPTS1 33
 #define NPTS2 33 
-  type(sll_logical_mesh_2d), pointer :: mesh
+  type(sll_cartesian_mesh_2d), pointer :: mesh
   type(sll_coordinate_transformation_2d_analytic) :: t_a    ! analytic transf
   type(sll_coordinate_transformation_2d_discrete) :: t_d    ! discrete transf
   type(sll_coordinate_transformation_2d_nurbs)    :: t_n    ! nurbs transf
   type(sll_coordinate_transformation_2d_analytic), pointer :: t_a_ptr !test
   ! for the discrete case...
-  type(cubic_spline_2d_interpolator)   :: x1_interp
-  type(cubic_spline_2d_interpolator)   :: x2_interp
-  type(cubic_spline_2d_interpolator)   :: j_interp
+  type(sll_cubic_spline_interpolator_2d)   :: x1_interp
+  type(sll_cubic_spline_interpolator_2d)   :: x2_interp
+  type(sll_cubic_spline_interpolator_2d)   :: j_interp
   sll_real64, dimension(:,:), allocatable :: x1_tab
   sll_real64, dimension(:,:), allocatable :: x2_tab
   sll_real64, dimension(:), allocatable   :: x1_eta1_min, x1_eta1_max
@@ -83,7 +82,8 @@ program unit_test_2d
   print *, '**********************************************************'
 
 
-  mesh => new_logical_mesh_2d( NPTS1-1, NPTS2-1 )
+  mesh => new_cartesian_mesh_2d( NPTS1-1, NPTS2-1 )
+
   ! Need to do something about these variables being always on the stack...
 
   print *, x1_polar_f(1.0_f64,1.0_f64,params)
@@ -233,11 +233,12 @@ program unit_test_2d
   end do
 
   call t_d%write_to_file()
-  !call t_d%write_to_file(SLL_IO_MTV)
+  t_d%written = .false.
+  call t_d%write_to_file(SLL_IO_MTV)
 
   print *, 'Average error in jacobian = ', acc/real(NPTS1*NPTS2,f64)
-  call delete(t_a)
-  call delete(t_d)
+  call sll_delete(t_a)
+  call sll_delete(t_d)
 
   print *, 'deleted transformations'
 
@@ -253,16 +254,16 @@ program unit_test_2d
 
   if (l_exists) then
      call t_n%read_from_file("domain_patch0.nml")
-     !t_n%mesh => new_logical_mesh_2d(64,64 )
+     !t_n%mesh => new_cartesian_mesh_2d(64,64 )
      call t_n%write_to_file()
 
      param1 = (/ 0.05_f64,0.05_f64,1.0_f64,1.0_f64 /)
      param2 = (/ 0.05_f64,0.05_f64,0.0_f64,1.0_f64,-1.0_f64,1.0_f64,0.0_f64,1.0_f64,-1.0_f64,1.0_f64 /)
-     do i = 1,t_n%mesh%num_cells1+1
-        do j = 1,t_n%mesh%num_cells2+1
+     do i = 1,mesh%num_cells1+1
+        do j = 1,mesh%num_cells2+1
 
-           eta1 = t_n%mesh%eta1_min + (i-1) * t_n%mesh%delta_eta1 
-           eta2 = t_n%mesh%eta2_min + (j-1) * t_n%mesh%delta_eta2
+           eta1 = t_n%mesh%eta1_node(i,j)
+           eta2 = t_n%mesh%eta2_node(i,j)
            val_approx1 = t_n%x1(eta1,eta2)
            val_approx2 = t_n%x2(eta1,eta2)
            val_exacte1 = 2*sinprod_x1(eta1,eta2,param1)-1
@@ -295,7 +296,7 @@ program unit_test_2d
 
      print*, 'label t_n', t_n%label
 
-     call delete(t_n)
+     call sll_delete(t_n)
      !call write_to_file(t_d)
   else
      print *, 'nml file is missing '

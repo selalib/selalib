@@ -12,12 +12,12 @@ program VP1d_deltaf
 #include "sll_field_2d.h"
 
   use sll_constants
-  !use sll_module_mapped_meshes_2d_cartesian
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
-  use sll_cubic_spline_interpolator_1d
-  use sll_periodic_interpolator_1d
+  use sll_module_cubic_spline_interpolator_1d
+  use sll_module_periodic_interpolator_1d
+  use periodic_interp_module
   use sll_landau_2d_initializer
   use sll_tsi_2d_initializer
   use distribution_function
@@ -25,13 +25,11 @@ program VP1d_deltaf
   use omp_lib
   implicit none
 
-  type(cubic_spline_1d_interpolator), target  :: interp_spline_x, interp_spline_v
-  type(per_1d_interpolator), target      :: interp_per_x, interp_per_v
-  type(cubic_spline_1d_interpolator), target      :: interp_comp_v
+  type(sll_cubic_spline_interpolator_1d), target  :: interp_spline_x, interp_spline_v
+  type(sll_periodic_interpolator_1d), target      :: interp_per_x, interp_per_v
+  type(sll_cubic_spline_interpolator_1d), target      :: interp_comp_v
   class(sll_interpolator_1d_base), pointer    :: interp_x, interp_v
-  !type(sll_mapped_mesh_2d_cartesian), target   :: mesh2d 
-  !class(sll_mapped_mesh_2d_base), pointer :: mesh2d_base
-  type(sll_logical_mesh_2d), pointer :: mesh2d_cart
+  type(sll_cartesian_mesh_2d), pointer :: mesh2d_cart
   class(sll_coordinate_transformation_2d_base), pointer   :: mesh2d_base
   type(init_landau_2d), target :: init_landau
   type(init_tsi_2d), target :: init_tsi
@@ -176,7 +174,7 @@ program VP1d_deltaf
   end if
 
   ! Initialise logical cartesian mesh
-  mesh2d_cart => new_logical_mesh_2d( &
+  mesh2d_cart => new_cartesian_mesh_2d( &
        Ncx,  &
        Ncv,  &
        xmin, &  
@@ -417,10 +415,10 @@ program VP1d_deltaf
      !$omp end single
   end do
 
-  call delete(interp_spline_x)
-  call delete(interp_spline_v)
-  call delete(interp_per_x)
-  call delete(interp_per_v)
+  call sll_delete(interp_spline_x)
+  call sll_delete(interp_spline_v)
+  call sll_delete(interp_per_x)
+  call sll_delete(interp_per_v)
   !$omp end parallel
   close(th_diag)
   close(ex_diag)

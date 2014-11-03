@@ -15,7 +15,45 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> @ingroup utilities
+!> @brief
 !> Tridiagonal system solver.
+!> @details
+!> To solve systems of the form Ax=b, where A is a tridiagonal matrix, Selalib 
+!! offers a native, robust tridiagonal system solver. The present implementation 
+!! contains only a serial version.
+!! The algorith is based on an LU factorisation of a given matrix,
+!! with row pivoting. The tridiagonal matrix must be given as a single array,
+!! with a memory layout shown next.
+!> \f[ A = \begin{bmatrix}
+!! a(2) & a(3) & & & & & a(1)
+!! \\ a(4) & a(5) & a(6) & & & &
+!! \\ & a(7) & a(8) & a(9) & & &
+!! \\ & & \ddots & \ddots & \ddots & &
+!! \\ & & & \ddots & \ddots & \ddots &
+!! \\ & & & & a(3n-5) & a(3n-4)&a(3n-3)
+!! \\ a(3n)& & & & & a(3n-2) & a(3n-1)
+!! \end{bmatrix} \f]
+!>
+!> Usage:
+!>
+!> To solve a tridiagonal system, first: \n
+!> -# Assemble the matrix 'a' as a single array with the layout just 
+!>    described above
+!> -# Use 'setup_cyclic_tridiag( a, n, cts, ipiv )' to factorize the system:
+!>    In 'setup_cyclic_tridag', a is the array to be factorized, stored 
+!>        with the layout shown above. 'n' is essentially the problem size.
+!>        cts and ipiv are respectively real and integer arrays of size 7*n 
+!>        and n that are needed to return factorization information. ipiv
+!>        is the usual 'pivot' array.
+!> -# To solve the system, make a call to 
+!>         'solve_cyclic_tridiag(cts, ipiv, b, n, x)'
+!>    Here, cts and ipiv are the ones returned by setup_cyclic_tridiag. The
+!>    function returns the solution to Ax = b, storing the results in 'x'.
+!>    In case that an 'in-place' computation is desired, it is acceptable to
+!>    make the call like: 
+!>          solve_cyclic_tridiag(cts, ipiv, b, n, b)
+!>
 module sll_tridiagonal
 #include "sll_working_precision.h"
 implicit none
@@ -478,14 +516,12 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
    !> @param b the second member of the equation
    !> @param n the problem size
    !> @param x the solution vector
-   !--------------------------------------------------------------------------- 
- 
    subroutine solve_cyclic_tridiag_double( cts, ipiv, b, n, x )
-     ! size of the allocations:
-     ! x:     n
-     ! cts:  7n
-     ! ipiv:  n
-     ! b:     n
+   ! size of the allocations:
+   ! x:     n
+   ! cts:  7n
+   ! ipiv:  n
+   ! b:     n
 
      sll_int32,  intent(in)                 :: n    ! matrix size
      sll_real64, dimension(1:7*n), target   :: cts  ! 7*n size allocation
@@ -549,6 +585,12 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
      end do
    end subroutine solve_cyclic_tridiag_double
 
+   !> Complex version of  solve_cyclic_tridiag_double
+   !> @param cts a real array of size 7n where factorization information will be returned
+   !> @param[in] ipiv an ineteger array of length n on wich pivoting information will be returned
+   !> @param b the second member of the equation
+   !> @param n the problem size
+   !> @param x the solution vector
    subroutine solve_cyclic_tridiag_complex( cts, ipiv, b, n, x )
      ! size of the allocations:
      ! x:     n
