@@ -35,7 +35,6 @@ module sll_scalar_field_1d
 #include "sll_file_io.h"
   use sll_constants
   use sll_scalar_field_initializers_base
-  use sll_module_mapped_meshes_1d_base
   use sll_utilities
   implicit none
   
@@ -44,7 +43,7 @@ module sll_scalar_field_1d
   !integer, parameter :: NODE_CENTERED_FIELD = 0, CELL_CENTERED_FIELD = 1
 
   type scalar_field_1d
-     class(sll_mapped_mesh_1d_base), pointer :: mesh
+     class(sll_cartesian_mesh_1d), pointer :: mesh
      sll_real64, dimension(:), pointer       :: data
      sll_int32                               :: data_position
      character(len=64)                       :: name
@@ -67,11 +66,11 @@ contains   ! *i****************************************************************
     data_position, &
     init_function)
 
-    class(scalar_field_1d), intent(inout)               :: this
-    class(sll_mapped_mesh_1d_base), pointer             :: mesh
-    procedure(scalar_function_1D), optional             :: init_function
-    character(len=*), intent(in)                        :: field_name
-    sll_int32, intent(in)                               :: data_position
+    class(scalar_field_1d), intent(inout)   :: this
+    class(sll_cartesian_mesh_1d), pointer   :: mesh
+    procedure(scalar_function_1D), optional :: init_function
+    character(len=*), intent(in)            :: field_name
+    sll_int32, intent(in)                   :: data_position
     sll_int32  :: ierr
     sll_int32  :: num_cells1
     sll_int32  :: num_pts1
@@ -81,15 +80,15 @@ contains   ! *i****************************************************************
 
     this%mesh => mesh
     this%name  = trim(field_name)
-    num_cells1 = mesh%nc_eta1
-    num_pts1   = mesh%nc_eta1+1
+    num_cells1 = mesh%num_cells
+    num_pts1   = mesh%num_cells+1
 
     this%data_position = data_position
     if (data_position == NODE_CENTERED_FIELD) then
        SLL_ALLOCATE(this%data(num_pts1), ierr)
        if (present(init_function)) then
           do i1 = 1, num_pts1
-             this%data(i1) = init_function( mesh%x1_at_node(i1) )
+             this%data(i1) = init_function(mesh%eta_min+(i1-1)*mesh%delta_eta)
           end do
        else 
           this%data = 0.0_f64 ! initialize to zero
@@ -100,7 +99,7 @@ contains   ! *i****************************************************************
           delta1 = 1.0_f64/real(num_cells1,f64)
           eta1   = 0.5_f64 * delta1
           do i1 = 1, num_cells1
-             this%data(i1) = init_function( mesh%x1(eta1) )
+             this%data(i1) = init_function( eta1 )
              eta1 = eta1 + delta1
           end do
        else 
