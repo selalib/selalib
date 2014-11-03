@@ -29,14 +29,14 @@ module finite_elements_solver_module
   use gauss_lobatto_integration
   use sll_timer 
   use sll_sparse_matrix_module
-  use sll_logical_meshes
+  use sll_cartesian_meshes
 
   implicit none
 
   type :: finite_elements_solver
 
      ! Associated mesh (contains : eta1min, eta1max, delta1, ...)
-     type(sll_logical_mesh_2d),  pointer :: mesh
+     type(sll_cartesian_mesh_2d),  pointer :: mesh
      ! Total number of cells, typically for cartesian meshes nc1*nc2
      sll_int32 :: num_cells 
 
@@ -142,7 +142,7 @@ contains ! =============================================================
        bc_top ) result(solv)
     
     type(finite_elements_solver),          pointer :: solv
-    type(sll_logical_mesh_2d), intent(in), pointer :: mesh
+    type(sll_cartesian_mesh_2d), intent(in), pointer :: mesh
     sll_int32,  intent(in) :: spline_degree
     sll_int32,  intent(in) :: bc_left
     sll_int32,  intent(in) :: bc_right
@@ -177,7 +177,7 @@ contains ! =============================================================
        user_qpts_weights)
     
     type(finite_elements_solver), intent(out)         :: solv
-    type(sll_logical_mesh_2d),    intent(in), pointer :: mesh
+    type(sll_cartesian_mesh_2d),    intent(in), pointer :: mesh
     sll_int32,  intent(in) :: spline_degree
     sll_int32,  intent(in) :: bc_left
     sll_int32,  intent(in) :: bc_right

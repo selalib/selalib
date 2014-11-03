@@ -1,5 +1,5 @@
-#ifndef _SLL_MAPPED_MESHES
-#define _SLL_MAPPED_MESHES
+#ifndef _SLL_MESHES
+#define _SLL_MESHES
 
 !**************************************************************
 !  Copyright INRIA
@@ -18,8 +18,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-use sll_mapped_meshes_1d
-use sll_mapped_meshes_2d
+#include "sll_cartesian_meshes.h"
 
 #endif
 

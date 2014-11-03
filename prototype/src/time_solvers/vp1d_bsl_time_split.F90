@@ -10,7 +10,7 @@ program VP1d_BSL_time_split
   use sll_constants
 !  use sll_module_mapped_meshes_2d_cartesian
   use sll_common_coordinate_transformations
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_module_coordinate_transformations_2d
   use sll_module_cubic_spline_interpolator_1d
   use sll_landau_2d_initializer
@@ -24,7 +24,7 @@ program VP1d_BSL_time_split
   class(sll_interpolator_1d_base), pointer    :: interp_x, interp_v
   !type(sll_mapped_mesh_2d_cartesian), target   :: mesh2d 
   !class(sll_mapped_mesh_2d_base), pointer :: mesh2d_base
-  type(sll_logical_mesh_2d), pointer :: mesh2d_cart
+  type(sll_cartesian_mesh_2d), pointer :: mesh2d_cart
   class(sll_coordinate_transformation_2d_base), pointer   :: mesh2d_base
   type(init_landau_2d), target :: init_landau
   type(init_tsi_2d), target :: init_tsi
@@ -171,7 +171,7 @@ program VP1d_BSL_time_split
 !!$       )
 !!$  mesh2d_base => mesh2d
 
-  mesh2d_cart => new_logical_mesh_2d( &
+  mesh2d_cart => new_cartesian_mesh_2d( &
        Ncx, &
        Ncv,  &
        xmin,       &

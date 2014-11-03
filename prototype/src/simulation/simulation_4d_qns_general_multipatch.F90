@@ -6,7 +6,7 @@ module sll_simulation_4d_qns_general_multipatch_module
 #include "sll_field_2d.h"
 #include "sll_utilities.h"
 
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_module_scalar_field_2d_multipatch
   use sll_general_coordinate_elliptic_solver_multipatch_module
   use sll_coordinate_transformation_multipatch_module
@@ -17,7 +17,7 @@ module sll_simulation_4d_qns_general_multipatch_module
   use sll_module_cubic_spline_interpolator_1d
 !  use sll_module_cubic_spline_interpolator_2d
   use sll_simulation_base
-!  use sll_logical_meshes
+!  use sll_cartesian_meshes
   use sll_parallel_array_initializer_module
 !  use sll_coordinate_transformation_2d_base_module
   use sll_gnuplot_parallel
@@ -58,7 +58,7 @@ module sll_simulation_4d_qns_general_multipatch_module
      sll_int32  :: bc_vy_0
      sll_int32  :: bc_vy_1
      ! the logical meshes are split in two one for space, one for velocity
-     type(sll_logical_mesh_2d), pointer    :: mesh2d_v
+     type(sll_cartesian_mesh_2d), pointer    :: mesh2d_v
      ! This simulation only applies a coordinate transformation to the spatial
      ! coordinates.
      type(sll_coordinate_transformation_multipatch_2d), pointer :: transfx
@@ -204,7 +204,7 @@ contains
     
     class(sll_simulation_4d_qns_general_multipatch),   intent(inout)      :: sim
     type(sll_coordinate_transformation_multipatch_2d), intent(in), target :: transformation_x
-    type(sll_logical_mesh_2d), pointer         :: mesh2d_v
+    type(sll_cartesian_mesh_2d), pointer         :: mesh2d_v
     procedure(sll_scalar_initializer_4d)       :: init_func
     sll_real64, dimension(:), target           :: params
     procedure(two_var_parametrizable_function) :: a11_f
@@ -387,7 +387,7 @@ contains
     type(sll_scalar_field_multipatch_2d), pointer      :: rho
     type(sll_scalar_field_multipatch_2d), pointer      :: phi
     type(sll_scalar_field_multipatch_2d), pointer      :: layer_x1x2
-    type(sll_logical_mesh_2d), pointer                         :: logical_m
+    type(sll_cartesian_mesh_2d), pointer                         :: logical_m
     class(sll_coordinate_transformation_2d_nurbs), pointer     :: transf
     type(sll_distribution_function_4d_multipatch), pointer     :: f_mp
 
@@ -471,7 +471,7 @@ contains
     do ipatch= 0,num_patches-1
        ! Please get rid of these 'fixes' whenever it is decided that gfortran 
        ! 4.6 is no longer supported by Selalib.
-       !     m        => sim%transfx%get_logical_mesh(ipatch)
+       !     m        => sim%transfx%get_cartesian_mesh(ipatch)
        ! logical_m => sim%transfx%transfs(ipatch+1)%t%mesh
        !     transf   => sim%transfx%get_transformation(ipatch)
        transf => sim%transfx%transfs(ipatch+1)%t
@@ -1205,7 +1205,7 @@ contains
        rho, &
        density_tot )
     class(sll_simulation_4d_qns_general_multipatch)     :: sim
-    type(sll_logical_mesh_2d), pointer     :: mx
+    type(sll_cartesian_mesh_2d), pointer     :: mx
     sll_real64, intent(inout), dimension(:,:)     :: rho     ! local rho
     sll_real64, intent(out)              :: density_tot
     

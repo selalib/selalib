@@ -14,7 +14,7 @@ module sll_simulation_4d_drift_kinetic_cartesian_finite_volume
 
   use sll_simulation_base
   use sll_parallel_array_initializer_module
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_gnuplot_parallel
   implicit none
 
@@ -38,7 +38,7 @@ module sll_simulation_4d_drift_kinetic_cartesian_finite_volume
      sll_int32  :: nc_x2
      sll_int32  :: nc_x3
      ! for initializers
-     type(sll_logical_mesh_4d), pointer    :: mesh4d
+     type(sll_cartesian_mesh_4d), pointer    :: mesh4d
      type(poisson_2d_periodic_plan_cartesian_par), pointer :: poisson_plan
 
      procedure(sll_scalar_initializer_4d), nopass, pointer :: init_func
@@ -113,7 +113,7 @@ contains
    params )
 
    type(sll_simulation_4d_drift_kinetic_cart_finite_volume), intent(inout)     :: sim
-   type(sll_logical_mesh_4d), pointer                    :: mesh4d
+   type(sll_cartesian_mesh_4d), pointer                    :: mesh4d
    procedure(sll_scalar_initializer_4d)                  :: init_func
    sll_real64, dimension(:), target                      :: params
    sim%mesh4d  => mesh4d
@@ -353,7 +353,7 @@ contains
   !    need an array to store the intermediate result (after reducing in
   !    x4). This array should come as an argument.
   subroutine compute_charge_density()! mesh, numpts1, numpts2, f, partial, rho )
-!!$    type(sll_logical_mesh_4d), pointer     :: mesh
+!!$    type(sll_cartesian_mesh_4d), pointer     :: mesh
 !!$    sll_real64, intent(in),  dimension(:,:,:,:) :: f       ! local distr. func
 !!$    sll_real64, intent(inout),  dimension(:,:,:):: partial ! intermediate res.
 !!$    sll_real64, intent(inout), dimension(:,:)     :: rho     ! local rho

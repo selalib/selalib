@@ -36,7 +36,7 @@ module sll_simulation_2d_vlasov_poisson_cartesian
   use sll_remapper
   use sll_buffer_loader_utilities_module
   use sll_constants
-  use sll_logical_meshes  
+  use sll_cartesian_meshes  
   use sll_gnuplot_parallel
   use sll_coordinate_transformation_2d_base_module
   use sll_module_coordinate_transformations_2d
@@ -65,7 +65,7 @@ module sll_simulation_2d_vlasov_poisson_cartesian
    
    sll_int32 :: num_threads
    !geometry
-   type(sll_logical_mesh_2d), pointer :: mesh2d
+   type(sll_cartesian_mesh_2d), pointer :: mesh2d
    sll_int32 :: num_dof_x2
    sll_real64, dimension(:), pointer :: x1_array
    sll_real64, dimension(:), pointer :: x2_array
@@ -262,8 +262,8 @@ contains
     intrinsic :: trim
     sll_int32             :: IO_stat
     sll_int32, parameter  :: input_file = 99
-    type(sll_logical_mesh_1d), pointer :: mesh_x1
-    type(sll_logical_mesh_1d), pointer :: mesh_x2
+    type(sll_cartesian_mesh_1d), pointer :: mesh_x1
+    type(sll_cartesian_mesh_1d), pointer :: mesh_x2
     sll_int32 :: ierr
     sll_int32, parameter  :: param_out = 37, param_out_drive = 40
     sll_real64 :: bloc_coord(2)
@@ -360,7 +360,7 @@ contains
     num_cells_x1 = 32
     x1_min = 0.0_f64
     nbox_x1 = 1
-    mesh_case_x2 = "SLL_LOGICAL_MESH"
+    mesh_case_x2 = "SLL_CARTESIAN_MESH"
     num_cells_x2 = 64
     x2_min = -6._f64
     x2_max = 6._f64
@@ -463,10 +463,10 @@ contains
     select case (mesh_case_x1)
       case ("SLL_LANDAU_MESH")
         x1_max = real(nbox_x1,f64) * 2._f64 * sll_pi / kmode
-        mesh_x1 => new_logical_mesh_1d(num_cells_x1,eta_min=x1_min, eta_max=x1_max)
+        mesh_x1 => new_cartesian_mesh_1d(num_cells_x1,eta_min=x1_min, eta_max=x1_max)
         call get_node_positions( mesh_x1, sim%x1_array )
-      case ("SLL_LOGICAL_MESH")
-        mesh_x1 => new_logical_mesh_1d(num_cells_x1,eta_min=x1_min, eta_max=x1_max)  
+      case ("SLL_CARTESIAN_MESH")
+        mesh_x1 => new_cartesian_mesh_1d(num_cells_x1,eta_min=x1_min, eta_max=x1_max)  
         call get_node_positions( mesh_x1, sim%x1_array )
       case default
         print*,'#mesh_case_x1', mesh_case_x1, ' not implemented'
@@ -496,8 +496,8 @@ contains
 
         
     select case (mesh_case_x2)
-      case ("SLL_LOGICAL_MESH")
-        mesh_x2 => new_logical_mesh_1d(num_cells_x2,eta_min=x2_min, eta_max=x2_max)
+      case ("SLL_CARTESIAN_MESH")
+        mesh_x2 => new_cartesian_mesh_1d(num_cells_x2,eta_min=x2_min, eta_max=x2_max)
         call get_node_positions( mesh_x2, sim%x2_array )
         SLL_ALLOCATE(sim%x2_array_omp(num_cells_x2+1,0:sim%num_threads-1),ierr)
         do i=0,sim%num_threads-1
@@ -538,7 +538,7 @@ contains
         do i=0,sim%num_threads-1
           sim%x2_array_omp(:,i) = sim%x2_array(:)
         enddo
-        mesh_x2 => new_logical_mesh_1d(num_cells_x2,eta_min=x2_min, eta_max=x2_max)
+        mesh_x2 => new_cartesian_mesh_1d(num_cells_x2,eta_min=x2_min, eta_max=x2_max)
         sim%num_bloc_x2 = 3
         SLL_ALLOCATE(sim%every_x2(sim%num_bloc_x2),ierr)
         SLL_ALLOCATE(sim%bloc_index_x2(sim%num_bloc_x2),ierr)

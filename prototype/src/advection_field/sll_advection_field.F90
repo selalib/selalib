@@ -27,11 +27,7 @@
 !>    - diagnostics
 !>    - splines
 !>    - mesh_types
-!
-! REVISION HISTORY:
-! 21_05_2012 - Initial Version
-! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
-!------------------------------------------------------------------------------
+!>
 module sll_advection_field
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -70,7 +66,6 @@ contains
     class(scalar_field_2d_initializer_base), pointer, optional :: initializer
     class(sll_interpolator_1d_base), pointer            :: eta1_interpolator
     class(sll_interpolator_1d_base), pointer            :: eta2_interpolator
-    !class(sll_mapped_mesh_2d_base), pointer             :: mesh
     class(sll_coordinate_transformation_2d_base), pointer   :: mesh
 
     this%pmass = mass
@@ -91,13 +86,13 @@ contains
     type(hamiltonian_advection_field_2d), intent(inout)   :: this
     type(scalar_field_1d), intent(in)                  :: phi_self
     type(scalar_field_1d), intent(in), optional        :: phi_external
-    class(sll_logical_mesh_2d), pointer                :: mesh
+    class(sll_cartesian_mesh_2d), pointer                :: mesh
     sll_int32 :: nc_eta1
     sll_int32 :: nc_eta2
     sll_int32 :: i1, i2
     sll_real64 :: mass
 
-    mesh => this%transf%get_logical_mesh()
+    mesh => this%transf%get_cartesian_mesh()
     nc_eta1 = mesh%num_cells1 
     nc_eta2 = mesh%num_cells2
     mass    = this%pmass    

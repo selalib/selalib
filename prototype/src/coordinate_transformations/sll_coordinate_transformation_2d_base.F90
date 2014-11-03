@@ -22,7 +22,7 @@ module sll_coordinate_transformation_2d_base_module
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_file_io.h"
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   implicit none
   
 
@@ -35,8 +35,8 @@ module sll_coordinate_transformation_2d_base_module
   !! class(sll_coordinate_transformation_2d_base)
   type, abstract :: sll_coordinate_transformation_2d_base
      !> logical mesh
-     type(sll_logical_mesh_2d), pointer :: mesh => null()
-!     type(sll_logical_mesh_2d), pointer :: mesh2d_minimal => null()
+     type(sll_cartesian_mesh_2d), pointer :: mesh => null()
+!     type(sll_cartesian_mesh_2d), pointer :: mesh2d_minimal => null()
      !logical to remember when the mesh has already been written to file
      !> Just a name for output
      character(len=64) :: label
@@ -44,7 +44,7 @@ module sll_coordinate_transformation_2d_base_module
      logical           :: written = .false.
    contains
      !> PLEASE ADD DOCUMENTATION
-     procedure(get_logical_mesh_ct), deferred, pass        :: get_logical_mesh
+     procedure(get_cartesian_mesh_ct), deferred, pass        :: get_cartesian_mesh
      !> x1 = x1(eta1,eta2)
      procedure(geometry_function_ct), deferred, pass       :: x1
      !> x2 = x2(eta1,eta2)
@@ -90,12 +90,12 @@ module sll_coordinate_transformation_2d_base_module
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
   
   abstract interface
-     function get_logical_mesh_ct( transf ) result(res)
+     function get_cartesian_mesh_ct( transf ) result(res)
        import sll_coordinate_transformation_2d_base
-       import sll_logical_mesh_2d
+       import sll_cartesian_mesh_2d
        class(sll_coordinate_transformation_2d_base), intent(in) :: transf
-       class(sll_logical_mesh_2d), pointer :: res
-     end function get_logical_mesh_ct
+       class(sll_cartesian_mesh_2d), pointer :: res
+     end function get_cartesian_mesh_ct
   end interface
   
   abstract interface

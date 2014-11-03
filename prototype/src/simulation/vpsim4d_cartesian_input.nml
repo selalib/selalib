@@ -12,11 +12,11 @@
   num_cells_x2 = 16
   x2_min = 0.0
   nbox_x2 = 1
-  mesh_case_x3="SLL_LOGICAL_MESH"   
+  mesh_case_x3="SLL_CARTESIAN_MESH"   
   num_cells_x3 = 32
   x3_min = -6.
   x3_max = 6.
-  mesh_case_x4="SLL_LOGICAL_MESH"   
+  mesh_case_x4="SLL_CARTESIAN_MESH"   
   num_cells_x4 = 32
   x4_min = -6.
   x4_max = 6.
