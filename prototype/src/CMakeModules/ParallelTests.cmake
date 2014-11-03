@@ -57,7 +57,7 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
       # SET_TESTS_PROPERTIES(vp4d_sim PROPERTIES 
       # PASS_REGULAR_EXPRESSION "PASSED")
       
-      SET(ARGS ${CMAKE_BINARY_DIR}/vpsim4d_general_input.txt)
+      SET(ARGS ${CMAKE_BINARY_DIR}/vpsim4d_general_input.nml)
       ADD_MPI_TEST(vp4d_sim_general test_4d_vp_general ${PROCS} ${ARGS})
 
       SET_TESTS_PROPERTIES(vp4d_sim_general PROPERTIES 
@@ -151,7 +151,7 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
    
     IF(PROCESSOR_COUNT GREATER 1)
       
-      SET(ARGS ${CMAKE_BINARY_DIR}/vpsim6d_input.txt)
+      SET(ARGS ${CMAKE_BINARY_DIR}/vpsim6d_input.nml)
       ADD_MPI_TEST(vp6d_sim test_6d ${PROCS} ${ARGS})
       SET_TESTS_PROPERTIES(vp6d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
       
