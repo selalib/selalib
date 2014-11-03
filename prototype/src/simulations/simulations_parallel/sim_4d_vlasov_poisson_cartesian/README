@@ -1,6 +1,6 @@
 Directory structure
 ===================
-   test_sim4d_vp_cartesian       -- executable
+   test_4d_vp_cartesian          -- executable
    vpsim4d_cartesian_input.nml   -- input file
    vpsim4d_cartesian.gnu         -- gnuplot script
    vpsim4d_cartesian_ref.dat     -- reference results
@@ -14,13 +14,8 @@ HOWTO
      $ cd run
 
 1. Run parallel simulation within directory
-     $ mpirun -np 4 ../test_sim4d_vp_cartesian ../vpsim4d_cartesian_input
+     $ mpirun -np 4 ../test_4d_vp_cartesian ../vpsim4d_cartesian_input
 
 2. Run included gnuplot script
      $ gnuplot --persist ../vpsim4d_cartesian.gnu
-
-3. Open *.xmf database with Visit (*)
-
-
-(*) Make sure that the Xdmf plugin is installed!
 
