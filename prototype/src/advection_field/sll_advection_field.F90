@@ -27,11 +27,7 @@
 !>    - diagnostics
 !>    - splines
 !>    - mesh_types
-!
-! REVISION HISTORY:
-! 21_05_2012 - Initial Version
-! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
-!------------------------------------------------------------------------------
+!>
 module sll_advection_field
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -70,7 +66,6 @@ contains
     class(scalar_field_2d_initializer_base), pointer, optional :: initializer
     class(sll_interpolator_1d_base), pointer            :: eta1_interpolator
     class(sll_interpolator_1d_base), pointer            :: eta2_interpolator
-    !class(sll_mapped_mesh_2d_base), pointer             :: mesh
     class(sll_coordinate_transformation_2d_base), pointer   :: mesh
 
     this%pmass = mass
