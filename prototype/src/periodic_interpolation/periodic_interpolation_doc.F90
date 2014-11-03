@@ -5,11 +5,11 @@
 ! in file Doxyfile.in (line 691) if it is excluded. 
 ! Type 'make doc' in build directory.
 ! To check the results, open : 
-! selalib/prototype/documentation/build/html/doxygen/html/namespaces.html 
+! selalib/prototype/documentation/build/html/doxygen/html/defgroup periodic_interpolations.html 
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @namespace sll_periodic_interpolation 
+!> @defgroup periodic_interpolation sll_periodic_interpolation 
 !> @brief 
 !> Description of periodic_interpolation library (72 characters)
 !> @author Selalib team 

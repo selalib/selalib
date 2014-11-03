@@ -14,8 +14,8 @@ program VP1d_deltaf
 #include "sll_utilities.h"
 
   use sll_cubic_splines
-  use sll_cubic_spline_interpolator_1d
-  use sll_periodic_interpolator_1d
+  use sll_module_cubic_spline_interpolator_1d
+  use sll_module_periodic_interpolator_1d
   use sll_landau_2d_initializer
   use sll_tsi_2d_initializer
   use distribution_function
@@ -23,12 +23,13 @@ program VP1d_deltaf
   use sll_timer
   use omp_lib
   use sll_hdf5_io_serial
+  use periodic_interp_module
   implicit none
 
-!  type(cubic_spline_1d_interpolator), target  ::  interp_spline_x
+!  type(sll_cubic_spline_interpolator_1d), target  ::  interp_spline_x
   type(sll_cubic_spline_1d), pointer :: interp_spline_v, interp_spline_vh, interp_spline_x
-  type(per_1d_interpolator), target      :: interp_per_x, interp_per_v
-  type(cubic_spline_1d_interpolator), target      :: interp_comp_v
+  type(sll_periodic_interpolator_1d), target      :: interp_per_x, interp_per_v
+  type(sll_cubic_spline_interpolator_1d), target      :: interp_comp_v
   class(sll_interpolator_1d_base), pointer    :: interp_x, interp_v
   type(poisson_1d_periodic)  :: poisson_1d
   sll_real64, dimension(:,:), allocatable, target :: f

@@ -5,11 +5,11 @@
 ! in file Doxyfile.in (line 691) if it is excluded. 
 ! Type 'make doc' in build directory.
 ! To check the results, open : 
-! selalib/prototype/documentation/build/html/doxygen/html/namespaces.html 
+! selalib/prototype/documentation/build/html/doxygen/html/defgroup BSLs.html 
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @namespace sll_bsl 
+!> @defgroup BSL sll_bsl 
 !> @brief 
 !> Description of bsl library (72 characters)
 !> @author Selalib team 

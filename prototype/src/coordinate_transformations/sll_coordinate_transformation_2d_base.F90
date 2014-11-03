@@ -1,63 +1,78 @@
+!> @ingroup coordinate_transformations
+!> @brief 
+!> Abstract class for coordinate transformations.
+!> @details
+!> A single abstract base class is defined which will further be extended
+!> by its subclasses. The two main types of coordinate transformations are 
+!> those represented by an analytic transformation and those represented by a
+!> discrete transformation. 
+!> The coordinate transformation always transforms from a cartesian space in
+!> the logical variables \f$ \eta_1, \eta_2 \f$, ... to a physical space of variables
+!> \f$ x_1, x_2 \f$, ... For example, the 2D case represents the transformation:
+!> \f[
+!> \begin{matrix}
+!>              x_1 = x_1(\eta_1,\eta_2) \\\\
+!>              x_2 = x_2(\eta_1,\eta_2)
+!> \end{matrix}
+!> \f]
+!> The base class contains all the services (in the form of functions) that
+!> the different 'flavors' of coordinate transformations (analytic, discrete)
+!> should implement.
 module sll_coordinate_transformation_2d_base_module
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_file_io.h"
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   implicit none
   
-  ! A single abstract base class is defined which will further be extended
-  ! by its subclasses. The two main types of coordinate transformations are 
-  ! those represented by an analytic transformation and those represented by a
-  ! discrete transformation. 
-  
-  ! The coordinate transformation always transforms from a cartesian space in
-  ! the logical variables eta1, eta2, ... to a physical space of variables
-  ! x1, x2, ... For example, the 2D case represents the transformation:
-  !
-  !              x1 = x1(eta1,eta2)
-  !              x2 = x2(eta1,eta2)
-  !
-  ! The base class contains all the services (in the form of functions) that
-  ! the different 'flavors' of coordinate transformations (analytic, discrete)
-  ! should implement.
 
+  !> @brief
+  !> Abstract class for coordinate transformation
+  !> @details
+  !! The decision to include the mesh here was determined by the need to,
+  !! as error checking, test the association of this pointer within the
+  !! functions that receive an argument of 
+  !! class(sll_coordinate_transformation_2d_base)
   type, abstract :: sll_coordinate_transformation_2d_base
-     ! The decision to include the mesh here was determined by the need to,
-     ! as error checking, test the association of this pointer within the
-     ! functions that receive an argument of 
-     ! class(sll_coordinate_transformation_2d_base)
-     type(sll_logical_mesh_2d), pointer :: mesh => null()
-!     type(sll_logical_mesh_2d), pointer :: mesh2d_minimal => null()
+     !> logical mesh
+     type(sll_cartesian_mesh_2d), pointer :: mesh => null()
+!     type(sll_cartesian_mesh_2d), pointer :: mesh2d_minimal => null()
      !logical to remember when the mesh has already been written to file
+     !> Just a name for output
      character(len=64) :: label
+     !> Check if coordinates are already written in output file
      logical           :: written = .false.
    contains
-     procedure(get_logical_mesh_ct), deferred, pass        :: get_logical_mesh
-     ! x1 = x1(eta1,eta2)
+     !> PLEASE ADD DOCUMENTATION
+     procedure(get_cartesian_mesh_ct), deferred, pass        :: get_cartesian_mesh
+     !> x1 = x1(eta1,eta2)
      procedure(geometry_function_ct), deferred, pass       :: x1
-     ! x2 = x2(eta1,eta2)
+     !> x2 = x2(eta1,eta2)
      procedure(geometry_function_ct), deferred, pass       :: x2
-     ! jacobian = jacobian(eta1,eta2)
+     !> jacobian = jacobian(eta1,eta2)
      procedure(geometry_function_ct), deferred, pass       :: jacobian
-     ! x1_at_node = x1_at_node(i,j)
+     !> x1_at_node = x1_at_node(i,j)
      procedure(geometry_function_indices_ct), deferred, pass :: x1_at_node
-     ! x2_at_node = x2_at_node(i,j)
+     !> x2_at_node = x2_at_node(i,j)
      procedure(geometry_function_indices_ct), deferred, pass :: x2_at_node
-     !jacobian_at_node = jacobian_at_node(i,j)
+     !>jacobian_at_node = jacobian_at_node(i,j)
      procedure(geometry_function_indices_ct), deferred, pass :: jacobian_at_node
-     ! jacobian_matrix = jacobian(matrix(eta1,eta2))
+     !> jacobian_matrix = jacobian(matrix(eta1,eta2))
      procedure(matrix_geometry_function_ct), deferred, pass   :: jacobian_matrix
-     ! procedure(j_matrix_function_nopass), pointer, nopass :: jacobian_matrix
+     !> procedure(j_matrix_function_nopass), pointer, nopass :: jacobian_matrix
      procedure(matrix_geometry_function_ct), deferred, pass :: &
           inverse_jacobian_matrix
-     ! x1_at_cell = x1_at_cell(i,j)
+     !> x1_at_cell = x1_at_cell(i,j)
      procedure(geometry_function_indices_ct), deferred, pass :: x1_at_cell
-     ! x1_at_cell = x1_at_cell(i,j)
+     !> x1_at_cell = x1_at_cell(i,j)
      procedure(geometry_function_indices_ct), deferred, pass :: x2_at_cell
-     ! jacobian_at_cell = jacobian_at_cell(i,j)
+     !> jacobian_at_cell = jacobian_at_cell(i,j)
      procedure(geometry_function_indices_ct), deferred, pass :: jacobian_at_cell
+     !> PLEASE ADD DOCUMENTATION
      procedure(write_transformation_signature), deferred, pass :: write_to_file
+     !> PLEASE ADD DOCUMENTATION
      procedure(read_transformation), deferred, pass            :: read_from_file
+     !> PLEASE ADD DOCUMENTATION
      procedure(transformation_subroutine), deferred, pass      :: delete 
   end type sll_coordinate_transformation_2d_base
   
@@ -71,14 +86,16 @@ module sll_coordinate_transformation_2d_base_module
   !************************************************************************
   ! 2D CASE:
   !************************************************************************
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
   
   abstract interface
-     function get_logical_mesh_ct( transf ) result(res)
+     function get_cartesian_mesh_ct( transf ) result(res)
        import sll_coordinate_transformation_2d_base
-       import sll_logical_mesh_2d
+       import sll_cartesian_mesh_2d
        class(sll_coordinate_transformation_2d_base), intent(in) :: transf
-       type(sll_logical_mesh_2d), pointer :: res
-     end function get_logical_mesh_ct
+       class(sll_cartesian_mesh_2d), pointer :: res
+     end function get_cartesian_mesh_ct
   end interface
   
   abstract interface
@@ -193,5 +210,7 @@ module sll_coordinate_transformation_2d_base_module
        character(len=*), intent(in) :: filename
      end subroutine read_transformation
   end interface
+
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
   
 end module sll_coordinate_transformation_2d_base_module

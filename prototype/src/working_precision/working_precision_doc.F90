@@ -5,11 +5,11 @@
 ! in file Doxyfile.in (line 691) if it is excluded. 
 ! Type 'make doc' in build directory.
 ! To check the results, open : 
-! selalib/prototype/documentation/build/html/doxygen/html/namespaces.html 
+! selalib/prototype/documentation/build/html/doxygen/html/defgroup working_precisions.html 
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @namespace sll_working_precision 
+!> @defgroup working_precision sll_working_precision 
 !> @brief 
 !> Define the kind type parameter for intern type data.
 !> @author Edwin Chacon-Golcher

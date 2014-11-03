@@ -5,6 +5,7 @@ PROJECT(selalib)
 ENABLE_LANGUAGE(Fortran)
 
 ADD_DEFINITIONS(-DGFORTRAN)
+ADD_DEFINITIONS(-DSLLFFT)
 SET(CMAKE_Fortran_FLAGS_RELEASE "-w -ffree-line-length-none -fall-intrinsics -O3" CACHE STRING "opt flags" FORCE)
 
 SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")

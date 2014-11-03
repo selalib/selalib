@@ -1,3 +1,6 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
+!> @ingroup poisson_solvers
 !> @brief
 !> Implements the Poisson solver in 2D with periodic boundary conditions
 !> @details
@@ -9,12 +12,8 @@ module sll_poisson_2d_periodic_fftpack
 #include "sll_assert.h"
 #include "sll_constants.h"
 
-use sll_poisson_solvers
-
 implicit none
 private
-
-sll_int32, private :: i, j
 
 !> fft type use to do fft with fftpack library
 type, public :: fftclass
@@ -364,6 +363,7 @@ subroutine doubfft(this,array)
 
    type(fftclass) :: this
    sll_real64, dimension(:,:) :: array
+   sll_int32 :: i
 
    do i=1, size(array,2)   ! number of 1d transforms
       call dfftf( this%n, array(:,i), this%coefd)
@@ -377,6 +377,7 @@ subroutine doubcfft(this,array)
 
    type(fftclass) :: this
    sll_comp64, dimension(:,:) :: array
+   sll_int32 :: i
 
    do i=1, size(array,2)   ! number of 1d transforms
       call zfftf( this%n, array(:,i), this%coefcd)
@@ -390,6 +391,7 @@ subroutine doubfftinv(this,array)
 
    type(fftclass) :: this
    sll_real64, dimension(:,:) :: array
+   sll_int32 :: i
 
    do i=1, size(array,2)   ! number of 1d transforms
       call dfftb( this%n, array(:,i),  this%coefd )
@@ -401,6 +403,7 @@ subroutine doubcfftinv(this,array)
 
    type(fftclass) :: this
    sll_comp64, dimension(:,:) :: array
+   sll_int32 :: i
 
    do i=1, size(array,2)   ! number of 1d transforms
       call zfftb( this%n, array(:,i),  this%coefcd )
@@ -409,3 +412,5 @@ subroutine doubcfftinv(this,array)
 end subroutine doubcfftinv
 
 end module sll_poisson_2D_periodic_fftpack
+
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

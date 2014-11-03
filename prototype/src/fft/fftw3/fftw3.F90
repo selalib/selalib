@@ -20,7 +20,10 @@ module fftw3
   use, intrinsic :: iso_c_binding
   include 'fftw3.f03'
 #else
+#ifdef __INTEL_COMPILER
+  include "fftw/fftw3.f"
+#else
   include "fftw3.f"
 #endif
+#endif
 end module fftw3
-

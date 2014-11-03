@@ -5,34 +5,42 @@
 ! in file Doxyfile.in (line 691) if it is excluded. 
 ! Type 'make doc' in build directory.
 ! To check the results, open : 
-! selalib/prototype/documentation/build/html/doxygen/html/namespaces.html 
+! selalib/prototype/documentation/build/html/doxygen/html/defgroup interpolatorss.html 
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @namespace sll_interpolators 
-!> @brief 
-!> Description of interpolators library (72 characters)
-!> @author Selalib team 
-!> You can add a contact, do not put your email to prevent spam.
-!> @details
-!> Long description of  interpolators, you can add some references or math equations.
-!>
-!> <b> Headers file available </b>
-!>  - sll_interpolators.h
-!>
-!> <b> Modules available </b>
-!>  List fortran module available
-!>  - sll_interpolators
+!> @defgroup interpolators sll_interpolators 
+!! @brief
+!! Classes for numerical interpolation.
+!! @details
+!! PLEASE ADD DOCUMENTATION 
+!!
+!! Methods:
+!! - compute_interpolants(...)
+!! - interpolate_value(...)
+!! - interpolate_derivative_eta1(...)
+!! - interpolate_array(...)
+!! - interpolate_array_disp(...)
+!! - reconstruct_array(...)
+!! - interpolate_array_values(...)
+!! - interpolate_pointer_values(...)
+!! - interpolate_array_derivatives(...)
+!! - interpolate_pointer_derivatives(...)
+!! - set_coefficients(...)
+!! - get_coefficients(...)
+!!
+!> Classes available are:
+!!  - sll_module_interpolators_1d_base::sll_interpolator_1d_base
+!!  - sll_module_interpolators_2d_base::sll_interpolator_2d_base
+!!  - sll_module_cubic_spline_interpolator_1d::sll_cubic_spline_interpolator_1d
+!!  - sll_module_cubic_spline_interpolator_1d_nonuniform::sll_cubic_spline_interpolator_1d_nonuniform
+!!  - sll_module_cubic_spline_interpolator_2d::sll_cubic_spline_interpolator_2d
+!!  - sll_module_arbitrary_degree_spline_interpolator_1d::sll_arbitrary_degree_spline_interpolator_1d
+!!  - sll_module_arbitrary_degree_spline_interpolator_2d::sll_arbitrary_degree_spline_interpolator_2d
+!!  - sll_periodic_interpolator_1d
+!!  - sll_lagrange_interpolator_1d
 !>
 !> <b> How to use it </b>
 !> - Header file : \code #include 'sll_interpolators.h' \endcode
-!> - Link with   <code>-lsll_%s</code>
-!> - Add <code> use sll_interpolators </code>
-!>
-!> <b> Examples </b>
-!> -Add some fortran lines to explain how ti use the library
-!> \code
-!> call initialize(my_type, arg_1, arg_2)
-!> call solve(my_type, your_result)
-!> \endcode
+!> - Link with   <code>-lsll_interpolators</code>
 !>

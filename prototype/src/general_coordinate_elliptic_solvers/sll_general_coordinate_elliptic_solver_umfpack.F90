@@ -37,7 +37,7 @@ module sll_general_coordinate_elliptic_solver_module_umfpack
      sll_int32 :: spline_degree1
      sll_int32 :: spline_degree2
      sll_real64 :: epsi
-     type(sll_logical_mesh_2d) :: mesh2d
+     type(sll_cartesian_mesh_2d) :: mesh2d
      ! the following is otherwise known as "ID" in Aurore Back's original
      ! nomenclature. The indexing of the
      ! splines in this array depends on the boundary conditions.
@@ -397,7 +397,7 @@ contains ! *******************************************************************
     sll_int32 :: i
     sll_int32 :: j
     sll_int32 :: cell_index
-   ! type(sll_logical_mesh_2d) :: mesh
+   ! type(sll_cartesian_mesh_2d) :: mesh
     !    type(sll_time_mark) :: timer
     sll_real64 :: time,res,eta1,eta2
     character(len=*),parameter :: as_file1='mat'
@@ -428,7 +428,7 @@ contains ! *******************************************************************
     Stiff_loc(:) = 0.0_f64
     
     full_Matrix(:,:) = 0.0_f64
-   ! mesh = c_field%get_logical_mesh( )
+   ! mesh = c_field%get_cartesian_mesh( )
     number_cells1 = es%num_cells1
     number_cells2 = es%num_cells2
     
@@ -516,7 +516,7 @@ contains ! *******************************************************************
     type(general_coordinate_elliptic_solver) :: es
     type(sll_scalar_field_2d_discrete_alt), intent(inout)  :: phi
     class(sll_scalar_field_2d_base), intent(in)     :: rho
-    !type(sll_logical_mesh_2d), pointer :: mesh
+    !type(sll_cartesian_mesh_2d), pointer :: mesh
     sll_int32 :: i
     sll_int32 :: j,ierr
     sll_int32 :: cell_index
@@ -534,7 +534,7 @@ contains ! *******************************************************************
     
     M_rho_loc = 0.0
     es%rho_vec(:) = 0.0
-   ! mesh => phi%get_logical_mesh( )
+   ! mesh => phi%get_cartesian_mesh( )
     !    call set_time_mark(timer) ! comment this
     ! compute the intergale of the term source inn the case periodique periodique
     if( ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC)) &
@@ -617,7 +617,7 @@ contains ! *******************************************************************
     type(general_coordinate_elliptic_solver) :: obj
     sll_int32, intent(in) :: cell_i
     sll_int32, intent(in) :: cell_j
- !   type(sll_logical_mesh_2d) :: mesh2d
+ !   type(sll_cartesian_mesh_2d) :: mesh2d
     class(sll_scalar_field_2d_base), intent(in) :: a11_field_mat
     class(sll_scalar_field_2d_base), intent(in) :: a12_field_mat
     class(sll_scalar_field_2d_base), intent(in) :: a21_field_mat
@@ -917,7 +917,7 @@ contains ! *******************************************************************
     type(general_coordinate_elliptic_solver) :: obj
     sll_int32, intent(in) :: cell_i
     sll_int32, intent(in) :: cell_j
-   ! type(sll_logical_mesh_2d), pointer :: mesh2d
+   ! type(sll_cartesian_mesh_2d), pointer :: mesh2d
     class(sll_scalar_field_2d_base), intent(in)     :: rho
     sll_real64 :: epsi
     sll_real64, dimension(:), intent(out)   :: M_rho_loc
@@ -1294,7 +1294,7 @@ contains ! *******************************************************************
     ! CSR_MAT*phi = rho_vec is the linear system to be solved. The solution
     ! is given in terms of the spline coefficients that represent phi.
     type(general_coordinate_elliptic_solver) :: es
-   ! type(sll_logical_mesh_2d), pointer :: mesh2d
+   ! type(sll_cartesian_mesh_2d), pointer :: mesh2d
     !type(csr_matrix)  :: csr_masse
     integer :: elt, elt1
     integer :: i,j
@@ -1411,7 +1411,7 @@ contains ! *******************************************************************
     ! CSR_MAT*phi = rho_vec is the linear system to be solved. The solution
     ! is given in terms of the spline coefficients that represent phi.
     type(general_coordinate_elliptic_solver) :: es
-    !type(sll_logical_mesh_2d), pointer :: mesh2d
+    !type(sll_cartesian_mesh_2d), pointer :: mesh2d
     sll_real64, dimension(:),pointer :: Masse_tot
     
     
@@ -1452,7 +1452,7 @@ contains ! *******************************************************************
   subroutine compute_integral_source_term(es,rho, int_rho)
     ! input variables
     type(general_coordinate_elliptic_solver) :: es
-   ! type(sll_logical_mesh_2d), pointer :: mesh2d
+   ! type(sll_cartesian_mesh_2d), pointer :: mesh2d
     class(sll_scalar_field_2d_base), intent(in)     :: rho
     ! local variables
     sll_real64 :: delta1

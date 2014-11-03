@@ -222,9 +222,9 @@
       end do
 #if 0
       print *, 'View limits. Sequential THETA'
-      call sll_view_lims_3D(sequential_theta)
+      call sll_view_lims(sequential_theta)
       print *, 'View limits. Sequential R'
-      call sll_view_lims_3D(sequential_r)
+      call sll_view_lims(sequential_r)
 #endif
       new_qn_plan%seq_theta_to_seq_r => &
            NEW_REMAPPER_PLAN_3D(sequential_theta, sequential_r, rtz_mesh%data)

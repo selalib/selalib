@@ -4,18 +4,16 @@ program unit_test
   use sll_constants
   use sll_common_coordinate_transformations
   use sll_module_interpolators_1d_base
-  use sll_cubic_spline_interpolator_1d
+  use sll_module_cubic_spline_interpolator_1d
   use sll_scalar_field_2d
- ! use sll_module_mapped_meshes_2d_base
- ! use sll_module_mapped_meshes_2d
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_module_coordinate_transformations_2d
   use sll_scalar_field_initializers_base
   use sll_landau_2d_initializer
   implicit none
   
   type(sll_coordinate_transformation_2d_analytic), pointer :: transf
-  type(sll_logical_mesh_2d), pointer :: ml
+  type(sll_cartesian_mesh_2d), pointer :: ml
   type(scalar_field_2d)                     :: field
   class(sll_coordinate_transformation_2d_base), pointer   :: m
   sll_int32 :: nc1, nc2, iplot
@@ -23,8 +21,8 @@ program unit_test
        pjac21, pjac22
   type(init_landau_2d), target :: init_landau
   class(scalar_field_2d_initializer_base), pointer    :: pfinit
-  type(cubic_spline_1d_interpolator), target  :: interp_eta1
-  type(cubic_spline_1d_interpolator), target  :: interp_eta2
+  type(sll_cubic_spline_interpolator_1d), target  :: interp_eta1
+  type(sll_cubic_spline_interpolator_1d), target  :: interp_eta2
   class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
   class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
   sll_int32 :: i,j
@@ -32,7 +30,7 @@ program unit_test
 
   nc1 = 10
   nc2 = 10
-  ml => new_logical_mesh_2d( nc1, nc2)
+  ml => new_cartesian_mesh_2d( nc1, nc2)
   px1 => sinprod_x1
   px2 => sinprod_x2
   pjac11 => sinprod_jac11
@@ -51,7 +49,10 @@ program unit_test
        pjac21, &
        pjac22, &
        sinprod_params )
+
+  print *, "in fields unit test : coo transf done"
   m => transf
+  print *, "in fields unit test : coo transf assigned"
 
   call init_landau%initialize(m,NODE_CENTERED_FIELD,0.001_f64)
   pfinit => init_landau
@@ -62,7 +63,7 @@ program unit_test
   interp_eta1_ptr => interp_eta1
   interp_eta2_ptr => interp_eta2
  
-  call initialize_scalar_field_2d( &
+  call sll_create( &
        field, &
        "px1_field", &
        m, &
@@ -70,6 +71,7 @@ program unit_test
        interp_eta1_ptr, &
        interp_eta2_ptr, &
        pfinit )
+  print *, "in fields unit test : scalar field init done"
 
   print*, m%x1_at_node(5,3), m%x1(.3_f64, .4_f64)
 
@@ -79,7 +81,7 @@ program unit_test
            field%data(i,j) = exp(-(transf%x1_at_node(i,j)**2+transf%x2_at_node(i,j)**2)*iplot*0.1)
         end do
      end do
-     call write_scalar_field_2d( field, multiply_by_jacobian=.true. )
+     call field%write_to_file(multiply_by_jacobian=.true. )
      !call write_scalar_field_2d( field, multiply_by_jacobian=.true., output_file_name="field" )
   end do
 

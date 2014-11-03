@@ -363,7 +363,7 @@ contains
     sll_real64  :: eta1_max
     sll_real64  :: eta2_max
     if( .not. present(params) ) then
-       print *, '#sll_sll_D_sharped_Geo_2d, error: the params array must ', &
+       print *, '#sll_D_sharped_Geo_2d, error: the params array must ', &
             'be passed. params(1) = eta1_min, params(2) = eta2_min', &
             'be passed. params(3) = eta1_max, params(4) = eta2_max'
        stop

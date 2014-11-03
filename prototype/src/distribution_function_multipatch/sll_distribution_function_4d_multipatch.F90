@@ -30,7 +30,7 @@ module sll_distribution_function_4d_multipatch_module
   use sll_remapper
   use sll_collective
   use sll_module_interpolators_2d_base
-  use sll_arbitrary_degree_spline_interpolator_2d_module
+  use sll_module_arbitrary_degree_spline_interpolator_2d
   use sll_utilities
   use sll_boundary_condition_descriptors
   use sll_gnuplot
@@ -46,7 +46,7 @@ module sll_distribution_function_4d_multipatch_module
      sll_int32 :: nproc_factor1
      sll_int32 :: nproc_factor2
      logical   :: ready_for_sequential_ops_in_x1x2 = .false.
-     type(sll_logical_mesh_2d), pointer :: mesh_v ! same for all patches
+     type(sll_cartesian_mesh_2d), pointer :: mesh_v ! same for all patches
      type(sll_coordinate_transformation_multipatch_2d), pointer :: transf
      type(layout_4d_ptr), dimension(:), pointer :: layouts_x1x2
      type(layout_4d_ptr), dimension(:), pointer :: layouts_x3x4
@@ -102,7 +102,7 @@ contains
     type(sll_collective_t), pointer :: collective
     type(sll_coordinate_transformation_multipatch_2d), intent(in), target:: &
          transf_mp
-    type(sll_logical_mesh_2d), pointer :: mesh_v
+    type(sll_cartesian_mesh_2d), pointer :: mesh_v
     sll_int32, intent(in) :: nproc_factor1
     sll_int32, intent(in) :: nproc_factor2
     sll_int32 :: ierr
@@ -150,7 +150,7 @@ contains
     sll_int32 :: col_size
     sll_int32 :: imax
     sll_int32 :: jmax
-    type(sll_logical_mesh_2d), pointer :: lm
+    type(sll_cartesian_mesh_2d), pointer :: lm
 
     np_x3 = df%mesh_v%num_cells1+1
     np_x4 = df%mesh_v%num_cells2+1
@@ -162,7 +162,7 @@ contains
        np_x1 = df%transf%get_num_cells_eta1(ip) + 1
        np_x2 = df%transf%get_num_cells_eta2(ip) + 1
        df%layouts_x1x2(ip+1)%l => new_layout_4D(df%collective)
-       call initialize_layout_with_distributed_4D_array( &
+       call initialize_layout_with_distributed_array( &
             np_x1, &
             np_x2, &
             np_x3, &
@@ -172,7 +172,7 @@ contains
             df%nproc_factor1, &
             df%nproc_factor2, &
             df%layouts_x1x2(ip+1)%l )
-       call compute_local_sizes_4d( &
+       call compute_local_sizes( &
             df%layouts_x1x2(ip+1)%l, &
             locsz1, &
             locsz2, &
@@ -181,7 +181,7 @@ contains
        SLL_ALLOCATE(df%f_x1x2(ip+1)%f(locsz1,locsz2,locsz3,locsz4),ierr)
 
        df%layouts_x3x4(ip+1)%l => new_layout_4D(df%collective)
-       call initialize_layout_with_distributed_4D_array( &
+       call initialize_layout_with_distributed_array( &
             np_x1, &
             np_x2, &
             np_x3, &
@@ -191,7 +191,7 @@ contains
             1, &
             1, &
             df%layouts_x3x4(ip+1)%l )
-       call compute_local_sizes_4d( &
+       call compute_local_sizes( &
             df%layouts_x3x4(ip+1)%l, &
             locsz1, &
             locsz2, &
@@ -219,8 +219,8 @@ contains
           call set_layout_j_max( df%layouts_full(ip+1)%l, j, jmax)
        end do
 
-       ! call sll_view_lims_2d(df%layouts_split(ip+1)%l)
-       ! call sll_view_lims_2d(df%layouts_full(ip+1)%l)
+       ! call sll_view_lims(df%layouts_split(ip+1)%l)
+       ! call sll_view_lims(df%layouts_full(ip+1)%l)
 
        df%remap_split2full(ip+1)%r => &
             new_remap_plan( df%layouts_split(ip+1)%l, &
@@ -250,7 +250,7 @@ contains
     sll_int32 :: num_patches
     sll_int32 :: i
     type(layout_4d), pointer :: layout
-    type(sll_logical_mesh_2d), pointer :: lm
+    type(sll_cartesian_mesh_2d), pointer :: lm
     class(sll_coordinate_transformation_2d_base), pointer :: t
     !type(sll_time_mark)  :: t0 ! delete this when done timing/debugging
     !sll_real64 :: time ! delete
@@ -260,7 +260,7 @@ contains
     do i=0,num_patches-1
        layout => df%layouts_x3x4(i+1)%l
        ! please correct this to:
-       ! lm => df%transf%get_logical_mesh(i)
+       ! lm => df%transf%get_cartesian_mesh(i)
        ! whenever gfortan 4.6 is no longer supported by Selalib.
        lm => df%transf%transfs(i+1)%t%mesh
        t => df%transf%transfs(i+1)%t
@@ -355,7 +355,7 @@ contains
 
     num_patches = df%num_patches
     do i=0, num_patches-1
-       call apply_remap_4D_double( &
+       call apply_remap_4D( &
             df%remap_x3x4tox1x2(i+1)%r, &
             df%f_x3x4(i+1)%f, &
             df%f_x1x2(i+1)%f )
@@ -377,7 +377,7 @@ contains
 
     num_patches = df%num_patches
     do i=0, num_patches-1
-       call apply_remap_4D_double( &
+       call apply_remap_4D( &
             df%remap_x1x2tox3x4(i+1)%r, &
             df%f_x1x2(i+1)%f, &
             df%f_x3x4(i+1)%f )
@@ -405,7 +405,7 @@ contains
     SLL_ASSERT( (patch >=0) .and. (patch <= df%num_patches - 1) )
 
     if(df%ready_for_sequential_ops_in_x1x2 .eqv. .true.) then
-       call compute_local_sizes_4d( &
+       call compute_local_sizes( &
             df%layouts_x1x2(patch+1)%l, &
             loc_sz_x1, &
             loc_sz_x2, &
@@ -414,7 +414,7 @@ contains
     end if
 
     if(df%ready_for_sequential_ops_in_x1x2 .eqv. .false.) then
-       call compute_local_sizes_4d( &
+       call compute_local_sizes( &
             df%layouts_x3x4(patch+1)%l, &
             loc_sz_x1, &
             loc_sz_x2, &
@@ -455,7 +455,7 @@ contains
     delta4 = df%mesh_v%delta_eta2
 
     if(df%ready_for_sequential_ops_in_x1x2 .eqv. .true.) then
-       gi = local_to_global_4D(df%layouts_x1x2(patch+1)%l, ijkl)
+       gi = local_to_global(df%layouts_x1x2(patch+1)%l, ijkl)
        etas(1) = eta1_min + (gi(1)-1)*delta1
        etas(2) = eta2_min + (gi(2)-1)*delta2
        etas(3) = eta3_min + (gi(3)-1)*delta3
@@ -463,7 +463,7 @@ contains
     end if
 
     if(df%ready_for_sequential_ops_in_x1x2 .eqv. .false.) then
-       gi = local_to_global_4D(df%layouts_x3x4(patch+1)%l, ijkl)
+       gi = local_to_global(df%layouts_x3x4(patch+1)%l, ijkl)
        etas(1) = eta1_min + (gi(1)-1)*delta1
        etas(2) = eta2_min + (gi(2)-1)*delta2
        etas(3) = eta3_min + (gi(3)-1)*delta3
@@ -500,7 +500,7 @@ contains
 
        ! Reconfigure the data to store redundantly all the values of rho.
        remap_out => rho%get_patch_data_pointer(ipatch)
-       call apply_remap_2D_double( &
+       call apply_remap_2D( &
             df%remap_split2full(ipatch+1)%r, &
             df%rho_split(ipatch+1)%array, &
             remap_out )
@@ -533,7 +533,7 @@ contains
     sll_real64 :: accumulator
     sll_real64, dimension(:,:,:,:), pointer :: f
     type(sll_coordinate_transformation_multipatch_2d), pointer :: t
-    type(sll_logical_mesh_2d), pointer :: mv
+    type(sll_cartesian_mesh_2d), pointer :: mv
     sll_real64 :: delta1
     sll_real64 :: delta2
     sll_real64 :: delta3
@@ -591,7 +591,7 @@ contains
     sll_real64 :: accumulator
     sll_real64, dimension(:,:,:,:), pointer :: f
     type(sll_coordinate_transformation_multipatch_2d), pointer :: t
-    type(sll_logical_mesh_2d), pointer :: mv
+    type(sll_cartesian_mesh_2d), pointer :: mv
     sll_real64 :: delta1
     sll_real64 :: delta2
     sll_real64 :: delta3
@@ -652,7 +652,7 @@ contains
     sll_real64 :: accumulator
     sll_real64, dimension(:,:,:,:), pointer :: f
     type(sll_coordinate_transformation_multipatch_2d), pointer :: t
-    type(sll_logical_mesh_2d), pointer :: mv
+    type(sll_cartesian_mesh_2d), pointer :: mv
     sll_real64 :: delta1
     sll_real64 :: delta2
     sll_real64 :: delta3
@@ -717,7 +717,7 @@ contains
     sll_real64 :: accumulator3
     sll_real64, dimension(:,:,:,:), pointer :: f
     type(sll_coordinate_transformation_multipatch_2d), pointer :: t
-    type(sll_logical_mesh_2d), pointer :: mv
+    type(sll_cartesian_mesh_2d), pointer :: mv
     sll_real64 :: delta1
     sll_real64 :: delta2
     sll_real64 :: delta3

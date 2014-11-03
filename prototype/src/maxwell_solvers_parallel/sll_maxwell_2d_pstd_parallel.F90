@@ -12,6 +12,10 @@
 !  circulated by CEA, CNRS and INRIA at the following URL
 !  "http://www.cecill.info". 
 !**************************************************************
+!
+!
+!  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
+!
 
 #include "sll_fftw.h"
 
@@ -72,8 +76,6 @@ type maxwell_2d_periodic_plan_cartesian_par
    sll_real64, dimension(:), pointer   :: ky          !< y wave number
 end type maxwell_2d_periodic_plan_cartesian_par
 
-sll_int32, private :: i
-sll_int32, private :: j
 
 contains
 
@@ -101,6 +103,7 @@ contains
     fftw_int                 :: sz_y_array
     sll_real64               :: kx0
     sll_real64               :: ky0
+    sll_int32                :: i, j
 
     prank = sll_get_collective_rank( sll_world_collective )
     psize = sll_get_collective_size( sll_world_collective )
@@ -134,12 +137,12 @@ contains
 
     ! Layout and local sizes for FFTs in x-direction
     plan%layout_x => layout_x
-    call compute_local_sizes_2d(plan%layout_x,nx_loc,ny_loc)
+    call compute_local_sizes(plan%layout_x,nx_loc,ny_loc)
     SLL_CLEAR_ALLOCATE(plan%fz_x(1:nx_loc,1:ny_loc),error)
 
     ! Layout and local sizes for FFTs in y-direction
     plan%layout_y => layout_y
-    call compute_local_sizes_2d(plan%layout_y,nx_loc,ny_loc)
+    call compute_local_sizes(plan%layout_y,nx_loc,ny_loc)
     SLL_CLEAR_ALLOCATE(plan%fz_y(1:nx_loc,1:ny_loc),error)
 
     plan%rmp_xy => new_remap_plan(plan%layout_x, plan%layout_y, plan%fz_x)
@@ -178,7 +181,9 @@ contains
     sll_int32                  :: prank
     sll_int64                  :: psize
     sll_real64, intent(in)     :: dt       !< time step
+
     sll_real64                 :: dt_mu
+    sll_int32                  :: i, j
 
     prank = sll_get_collective_rank( sll_world_collective )
     psize = sll_get_collective_size( sll_world_collective )
@@ -193,7 +198,7 @@ contains
 
     dt_mu = dt / plan%mu_0 
 
-    call compute_local_sizes_2d(plan%layout_x,nx_loc,ny_loc)
+    call compute_local_sizes(plan%layout_x,nx_loc,ny_loc)
     do j = 1, ny_loc
        D_DX(ey(:,j))
        plan%fz_x(:,j) = plan%fz_x(:,j) - dt_mu * plan%d_dx
@@ -201,7 +206,7 @@ contains
 
     call apply_remap_2D( plan%rmp_xy,plan%fz_x,plan%fz_y)
 
-    call compute_local_sizes_2d(plan%layout_y,nx_loc,ny_loc)
+    call compute_local_sizes(plan%layout_y,nx_loc,ny_loc)
     do i = 1, nx_loc
        D_DY(ex(i,:))
        plan%fz_y(i,:) = plan%fz_y(i,:) + dt_mu * plan%d_dy
@@ -223,7 +228,9 @@ contains
     sll_int32                                 :: ny_loc !< local  y cell number
     sll_int32                                 :: prank
     sll_int64                                 :: psize
+
     sll_real64                                :: dt_e
+    sll_int32                                 :: i, j
 
     prank = sll_get_collective_rank( sll_world_collective )
     psize = sll_get_collective_size( sll_world_collective )
@@ -235,7 +242,7 @@ contains
 
     dt_e = dt / plan%e_0
 
-    call compute_local_sizes_2d(plan%layout_y,nx_loc,ny_loc)
+    call compute_local_sizes(plan%layout_y,nx_loc,ny_loc)
     do i = 1, nx_loc
        D_DY(plan%fz_y(i,:))
        ex(i,:) = ex(i,:) + dt_e * plan%d_dy
@@ -250,7 +257,7 @@ contains
 
     call apply_remap_2D( plan%rmp_xy,plan%fz_x,plan%fz_y)
 
-    call compute_local_sizes_2d(plan%layout_x,nx_loc,ny_loc)
+    call compute_local_sizes(plan%layout_x,nx_loc,ny_loc)
     do j = 1, ny_loc
        D_DX(plan%fz_x(:,j))
        ey(:,j) = ey(:,j) - dt_e * plan%d_dx
@@ -281,7 +288,9 @@ contains
     sll_int32                  :: prank
     sll_int64                  :: psize
     sll_real64, intent(in)     :: dt           !< time step
+
     sll_real64                 :: dt_e
+    sll_int32                  :: i, j
 
     prank = sll_get_collective_rank( sll_world_collective )
     psize = sll_get_collective_size( sll_world_collective )
@@ -296,7 +305,7 @@ contains
 
     dt_e = dt / plan%e_0
 
-    call compute_local_sizes_2d(plan%layout_x,nx_loc,ny_loc)
+    call compute_local_sizes(plan%layout_x,nx_loc,ny_loc)
     do j = 1, ny_loc
       D_DX(by(:,j))
       plan%fz_x(:,j) = plan%fz_x(:,j) + dt_e * plan%d_dx
@@ -304,7 +313,7 @@ contains
 
     call apply_remap_2D( plan%rmp_xy,plan%fz_x,plan%fz_y)
 
-    call compute_local_sizes_2d(plan%layout_y,nx_loc,ny_loc)
+    call compute_local_sizes(plan%layout_y,nx_loc,ny_loc)
     do i = 1, nx_loc
       D_DY(bx(i,:))
       plan%fz_y(i,:) = plan%fz_y(i,:) - dt_e * plan%d_dy
@@ -331,7 +340,9 @@ contains
     sll_int32                                 :: ny_loc !< local  y cell number
     sll_int32                                 :: prank
     sll_int64                                 :: psize
+
     sll_real64                                :: dt_mu
+    sll_int32                                 :: i, j
 
     prank = sll_get_collective_rank( sll_world_collective )
     psize = sll_get_collective_size( sll_world_collective )
@@ -343,7 +354,7 @@ contains
 
     dt_mu = dt / plan%mu_0
 
-    call compute_local_sizes_2d(plan%layout_y,nx_loc,ny_loc)
+    call compute_local_sizes(plan%layout_y,nx_loc,ny_loc)
     do i = 1, nx_loc
        D_DY(plan%fz_y(i,:))
        bx(i,:) = bx(i,:) - dt_mu * plan%d_dy
@@ -351,7 +362,7 @@ contains
 
     call apply_remap_2D( plan%rmp_xy,plan%fz_x,plan%fz_y)
 
-    call compute_local_sizes_2d(plan%layout_x,nx_loc,ny_loc)
+    call compute_local_sizes(plan%layout_x,nx_loc,ny_loc)
     do j = 1, ny_loc
        D_DX(plan%fz_x(:,j))
        by(:,j) = by(:,j) + dt_mu * plan%d_dx
@@ -395,7 +406,7 @@ contains
     sll_int32,  dimension(2)       :: n      !< array dimension
     sll_int32                      :: i
 
-    call compute_local_sizes_2d( layout, n(1), n(2) )
+    call compute_local_sizes( layout, n(1), n(2) )
 
     do i=1,2
        if (n(i)/=size(array,i)) then

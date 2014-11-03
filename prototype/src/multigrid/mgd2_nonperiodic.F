@@ -7,4 +7,4 @@
 #define cdebug 1
 #endif
 
-#include "mgd2_routines.F"
+#include "mgd2_routines.h"

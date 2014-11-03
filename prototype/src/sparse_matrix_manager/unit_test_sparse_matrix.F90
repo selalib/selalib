@@ -21,7 +21,7 @@ program unit_test_sparse_matrix
 
   call sll_boot_collective()
   
-  num_rows = 32
+  num_rows = 2000
   num_elements = num_rows
   num_local_dof_row = 1
   
@@ -66,9 +66,6 @@ program unit_test_sparse_matrix
   enddo
   !print *,'#colptr=',mat%linear_solver%colptr
   print *,'#end add_to_csr_matrix'
-  print *,'#begin sll_factorize_csr_matrix'
-  call sll_factorize_csr_matrix(mat)
-  print *,'#end sll_factorize_csr_matrix'
   print *,'#begin sll_solve_csr_matrix'
   call sll_solve_csr_matrix(mat, b, x)
   print *,'#end sll_solve_csr_matrix'

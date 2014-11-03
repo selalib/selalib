@@ -15,6 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> @ingroup file_io
 !> @brief
 !> Implements the functions to write xml file to store light data
 !> @details
@@ -255,7 +256,7 @@ contains
 #ifdef NOHDF5
      call sll_xml_grid_geometry_2d_low_level( file_id, &
           trim(filename)//"-x1.bin", nnodes_x1, &
-          trim(filename)//"-x2.bin", nnodes_x2, 'Uniform' )
+          trim(filename)//"-x2.bin", nnodes_x2, "x1", "x2", 'Uniform' )
 #else
      call sll_xml_grid_geometry_2d_low_level( file_id, &
           trim(filename)//"-x1.h5", nnodes_x1, &

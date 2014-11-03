@@ -40,10 +40,6 @@ ENDIF(PROCESSOR_COUNT GREATER 1)
 
 IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
   
-    ADD_MPI_TEST(io_parallel test_io_parallel ${PROCS} ${ARGS})
-    SET_TESTS_PROPERTIES(io_parallel PROPERTIES PASS_REGULAR_EXPRESSION 
-      "PASSED" TIMEOUT 20)
-    ######
     IF(FFT_LIB MATCHES "SLLFFT")
       
       ADD_MPI_TEST(poisson_3d_periodic_par 
@@ -127,11 +123,9 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
        SET_TESTS_PROPERTIES( distribution_function_4d_multipatch PROPERTIES 
          PASS_REGULAR_EXPRESSION "PASSED")
 
-       SET(ARGS ${CMAKE_BINARY_DIR}/sim4d_qns_general_multipatch_input.txt)
-       ADD_MPI_TEST(vp4d_sim_qns_general_multipatch test_4d_qns_general_multipatch
-         ${PROCS} ${ARGS})
-       SET_TESTS_PROPERTIES(vp4d_sim_qns_general_multipatch PROPERTIES 
-         PASS_REGULAR_EXPRESSION "PASSED")
+#PN SET(ARGS ${CMAKE_BINARY_DIR}/sim4d_qns_general_multipatch_input.txt)
+#PN ADD_MPI_TEST(vp4d_sim_qns_general_multipatch test_4d_qns_general_multipatch ${PROCS} ${ARGS})
+#PN SET_TESTS_PROPERTIES(vp4d_sim_qns_general_multipatch PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
     ENDIF(PYTHON3_FOUND)
 
@@ -167,7 +161,7 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
   ADD_MPI_TEST( visu_pic test_visu_pic ${PROCS} ${ARGS} )
   SET( visu_pic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-  SET(PROCS 1)
+  SET(PROCS 2)
   SET(ARGS ${CMAKE_BINARY_DIR}/params_pic_4d.nml)
   ADD_MPI_TEST( pic_simulation_4d  test_4d_vp_pic_cartesian ${PROCS} ${ARGS} )
   SET_TESTS_PROPERTIES( pic_simulation_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 200)

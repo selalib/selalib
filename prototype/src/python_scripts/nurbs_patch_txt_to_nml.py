@@ -110,8 +110,8 @@ def main ():
     size_x1 = 0
     size_x2 = 0
     point_counter = 0
-    logical_mesh_locations1 = []
-    logical_mesh_locations2 = []
+    cartesian_mesh_locations1 = []
+    cartesian_mesh_locations2 = []
     nc1 = 0  # number cells for logical mesh
     nc2 = 0  # number cells for logical mesh
     slash_pos = 0
@@ -247,7 +247,7 @@ def main ():
                     continue
                 elif currently_reading == "knots1":
                     if linetemp[0] == "#": # finished list of points
-                        logical_mesh_locations1=remove_duplicates(knots1)
+                        cartesian_mesh_locations1=remove_duplicates(knots1)
                         tmp = " ".join(knots1) # one space between elems
                         writefile.write("    knots1 = "+ tmp + "\n")
                         writefile.write("/" + "\n\n")
@@ -260,7 +260,7 @@ def main ():
                         knots1.extend(linetemp)
                 elif currently_reading == "knots2":
                     if linetemp[0] == "#": # finished list of points
-                        logical_mesh_locations2=remove_duplicates(knots2)
+                        cartesian_mesh_locations2=remove_duplicates(knots2)
                         tmp = " ".join(knots2) # one space between elems
                         writefile.write("    knots2 = "+ tmp + "\n")
                         writefile.write("/" + "\n\n")
@@ -299,11 +299,11 @@ def main ():
         currently_reading = ""
         # add information relevant to the construction of the logical mesh.
         writefile.write("&logical_mesh_2d\n")
-        nc1 = len(logical_mesh_locations1) - 1
+        nc1 = len(cartesian_mesh_locations1) - 1
         print('for the logical mesh implicit in the given transformation:')
         print('number of cells in dimension 1: ', nc1)
         writefile.write("    number_cells1 = " + str(nc1) + "\n")
-        nc2 = len(logical_mesh_locations2) - 1
+        nc2 = len(cartesian_mesh_locations2) - 1
         print('number of cells in dimension 2: ', nc2)
         writefile.write("    number_cells2 = " + str(nc2) + "\n")
         writefile.write("/" + "\n\n")

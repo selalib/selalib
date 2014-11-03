@@ -1,37 +1,5 @@
-!------------------------------------------------------------------------------
-! SELALIB
-!------------------------------------------------------------------------------
-!
-! MODULE: sll_distribution_function
-!
-!> @author
-!> - Eric
-!> - Michel
-!> - Pierre
-!> - Edwin
-!>
-!
-! DESCRIPTION: 
-!
 !> @brief
 !> Implements the distribution function types
-!>
-!>@details
-!>
-!> This module depends on:
-!>    - memory
-!>    - precision
-!>    - assert
-!>    - utilities
-!>    - constants
-!>    - diagnostics
-!>    - splines
-!>    - mesh_types
-!
-! REVISION HISTORY:
-! DD Mmm YYYY - Initial Version
-! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
-!------------------------------------------------------------------------------
 module distribution_function
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -40,6 +8,7 @@ module distribution_function
   use sll_constants
   use sll_utilities   ! for int2string
   use sll_scalar_field_initializers_base
+  use sll_module_interpolators_1d_base
   implicit none
 
 #define NEW_TYPE_FOR_DF( new_df_type, extended_type)                 \
@@ -81,7 +50,7 @@ contains
     sll_int32  :: i1, i2
     sll_real64 :: eta1, eta2
     sll_real64 :: delta1, delta2
-    type(sll_logical_mesh_2d), pointer :: mesh
+    class(sll_cartesian_mesh_2d), pointer :: mesh
 
     this%transf => transf
     this%plot_counter = 0
@@ -89,7 +58,7 @@ contains
     this%data_position = data_position
     this%pcharge = 1.0_f64
     this%pmass = 1.0_f64
-    mesh => transf%mesh
+    mesh => transf%get_cartesian_mesh()
 
     if (data_position == NODE_CENTERED_FIELD) then
        SLL_ALLOCATE(this%data(mesh%num_cells1+1,mesh%num_cells2+1), ierr)

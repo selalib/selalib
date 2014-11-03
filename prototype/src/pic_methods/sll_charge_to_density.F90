@@ -79,7 +79,7 @@ contains
 
 !!$  subroutine sll_charge_meshdensity( all_charge, m2d, density )
 !!$
-!!$    type(sll_logical_mesh_2d), intent(in) :: m2d
+!!$    type(sll_cartesian_mesh_2d), intent(in) :: m2d
 !!$    type(charge_accumulator_cell), dimension(1:m2d%num_cells2*m2d%num_cells1), intent(in) :: all_charge
 !!$    sll_real64, dimension(1:1+m2d%num_cells1, 1:1+m2d%num_cells2) , intent(inout) :: density
 !!$    sll_int32 :: k, i, j

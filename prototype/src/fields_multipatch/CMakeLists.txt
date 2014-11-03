@@ -4,7 +4,7 @@ ADD_LIBRARY( sll_scalar_field_multipatch STATIC
 TARGET_LINK_LIBRARIES( sll_scalar_field_multipatch
                        sll_coordinate_transformation_multipatch
 		       sll_scalar_field_2d_alternative
-		       sll_logical_meshes_multipatch )
+		       sll_meshes_multipatch )
 
 ADD_EXECUTABLE( test_scalar_field_multipatch_2d 
                 unit_test_2d.F90 )

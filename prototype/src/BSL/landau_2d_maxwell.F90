@@ -3,13 +3,14 @@ program landau_4d
 #include "sll_assert.h"
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_maxwell_solvers.h"
 #include "sll_poisson_solvers.h"
+#include "sll_maxwell_solvers_macros.h"
 
 use sll_constants
 use sll_module_interpolators_1d_base
-use sll_cubic_spline_interpolator_1d
+use sll_module_cubic_spline_interpolator_1d
 use sll_utilities, only: int2string
+use sll_module_maxwell_2d_pstd
 
 implicit none
   
@@ -42,17 +43,17 @@ sll_real64, dimension(:,:), allocatable :: rho
 
 !Poisson solver
 type(poisson_2d_periodic) :: poisson
-type(maxwell_2d_pstd)     :: maxwell
+type(sll_maxwell_2d_pstd) :: maxwell
 
 class(sll_interpolator_1d_base), pointer    :: interp_1
 class(sll_interpolator_1d_base), pointer    :: interp_2
 class(sll_interpolator_1d_base), pointer    :: interp_3
 class(sll_interpolator_1d_base), pointer    :: interp_4
 
-type(cubic_spline_1d_interpolator), target  :: spl_eta1
-type(cubic_spline_1d_interpolator), target  :: spl_eta2
-type(cubic_spline_1d_interpolator), target  :: spl_eta3
-type(cubic_spline_1d_interpolator), target  :: spl_eta4
+type(sll_cubic_spline_interpolator_1d), target  :: spl_eta1
+type(sll_cubic_spline_interpolator_1d), target  :: spl_eta2
+type(sll_cubic_spline_interpolator_1d), target  :: spl_eta3
+type(sll_cubic_spline_interpolator_1d), target  :: spl_eta4
 
 !Diagnostics and errors
 sll_int32                             :: error
@@ -88,7 +89,7 @@ SLL_CLEAR_ALLOCATE(bz(1:nc_eta1+1,1:nc_eta2+1),error)
 SLL_CLEAR_ALLOCATE(jx(1:nc_eta1+1,1:nc_eta2+1),error)
 SLL_CLEAR_ALLOCATE(jy(1:nc_eta1+1,1:nc_eta2+1),error)
 
-call initialize(maxwell, &
+call sll_create(maxwell, &
                 eta1_min, eta1_max, nc_eta1, &
                 eta2_min, eta2_max, nc_eta2, TE_POLARIZATION)
 
@@ -150,7 +151,7 @@ do i_step = 1, n_step !Loop over time
 
    call compute_current()
    bz = 0.0
-   call ampere(maxwell, ex, ey, bz, delta_t, jx, jy)
+   call sll_solve_ampere(maxwell, ex, ey, bz, delta_t, jx, jy)
 
    call online_plot() 
    if (i_step == 1 .or. mod(i_step, 10) == 0) then

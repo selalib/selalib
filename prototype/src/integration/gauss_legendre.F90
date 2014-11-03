@@ -1,4 +1,9 @@
-!> Low-level mathematical utility that applies the 
+!> @ingroup integration
+!> @brief
+!> Gauss-Legendre integration
+!> @details
+!> Low-level mathematical utility 
+!> that applies the 
 !> Gauss-Legendre method to compute numeric integrals.
 module gauss_legendre_integration
 #include "sll_working_precision.h"
@@ -18,6 +23,8 @@ module gauss_legendre_integration
   ! example, to specialize the integrator on the 'interpolated_function_1D'
   ! requires use of the spline module. 
 
+! Doxygen do not manage abstract interface
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
   abstract interface
      !> 1d real function
      function function_1D_legendre(x)
@@ -28,6 +35,7 @@ module gauss_legendre_integration
        sll_real64, intent(in) :: x
      end function function_1D_legendre
   end interface
+#endif
 
 !  abstract interface
 !     function interpolated_function_1D(x,spline_obj)
