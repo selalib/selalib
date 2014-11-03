@@ -17,7 +17,7 @@ program unit_test_2d
   sll_int32 :: nproc_factor1
   sll_int32 :: nproc_factor2
   sll_real64, dimension(5) :: landau_params
-  type(sll_logical_mesh_2d), pointer :: meshv
+  type(sll_cartesian_mesh_2d), pointer :: meshv
 
   call sll_boot_collective()
   rank = sll_get_collective_rank(sll_world_collective)
@@ -41,7 +41,7 @@ program unit_test_2d
   npts_x3 = 32
   npts_x4 = 32
 
-  meshv => new_logical_mesh_2d(npts_x3, npts_x4, &
+  meshv => new_cartesian_mesh_2d(npts_x3, npts_x4, &
        eta1_min=-9.0_f64, eta1_max=9.0_f64, &
        eta2_min=-9.0_f64, eta2_max=9.0_f64)
 

@@ -13,7 +13,7 @@ program cg_curvilinear_2D
   !--*Poisson*----
   use sll_mudpack_colella
  ! use sll_general_coordinate_qn_solver
- ! use sll_logical_meshes
+ ! use sll_cartesian_meshes
  ! use sll_common_coordinate_transformations
  ! use sll_module_scalar_field_2d_alternative
  ! use sll_constants

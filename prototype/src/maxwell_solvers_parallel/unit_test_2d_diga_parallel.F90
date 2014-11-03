@@ -9,7 +9,7 @@ program test_maxwell_2d_diga_parallel
 #include "sll_maxwell_solvers_macros.h"
 #include "sll_file_io.h"
 
-use sll_logical_meshes
+use sll_cartesian_meshes
 use sll_module_coordinate_transformations_2d
 use sll_common_coordinate_transformations
 use sll_dg_fields
@@ -31,7 +31,7 @@ sll_real64 :: eta1_max, eta1_min
 sll_real64 :: eta2_max, eta2_min
 sll_real64 :: delta_eta1, delta_eta2
 
-type(sll_logical_mesh_2d), pointer :: mesh
+type(sll_cartesian_mesh_2d), pointer :: mesh
 class(sll_coordinate_transformation_2d_base), pointer :: tau
 
 type(maxwell_2d_diga)   :: maxwell_TE
@@ -55,7 +55,7 @@ sll_real64, dimension(nc_eta1,nc_eta2) :: f1
 sll_real64, dimension(nc_eta1,nc_eta2) :: f2
 #endif
 
-mesh => new_logical_mesh_2d(nc_eta1, nc_eta2, &
+mesh => new_cartesian_mesh_2d(nc_eta1, nc_eta2, &
                             eta1_min=0._f64, eta1_max=1._f64, &
                             eta2_min=0._f64, eta2_max=1._f64)
 

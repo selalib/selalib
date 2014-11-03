@@ -13,7 +13,7 @@ implicit none
 
 type(sll_cubic_spline_interpolator_2d), target  :: spline_xy
 
-type(sll_logical_mesh_2d), pointer                    :: logical_mesh
+type(sll_cartesian_mesh_2d), pointer                    :: logical_mesh
 class(sll_coordinate_transformation_2d_base), pointer :: transfx
 
 sll_int32  :: itime
@@ -38,7 +38,7 @@ sll_real64, dimension(:,:), allocatable :: x1
 sll_real64, dimension(:,:), allocatable :: x2
 sll_int32 :: nc_x1, nc_x2
 
-logical_mesh => new_logical_mesh_2d(nc_eta1,  nc_eta2,  &
+logical_mesh => new_cartesian_mesh_2d(nc_eta1,  nc_eta2,  &
                                     eta1_min, eta1_max, & 
                                     eta2_min, eta2_max)
 

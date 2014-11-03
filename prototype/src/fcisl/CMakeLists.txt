@@ -16,7 +16,7 @@ IF(HDF5_ENABLED)
   ADD_EXECUTABLE(test_fcisl unit_test.F90)
   TARGET_LINK_LIBRARIES(test_fcisl 
     sll_fcisl
-    sll_logical_meshes 
+    sll_meshes 
     sll_advection
     sll_constants)
 
@@ -30,7 +30,7 @@ IF(HDF5_ENABLED)
   TARGET_LINK_LIBRARIES(test_derivative_2d_oblic 
     sll_derivative
     sll_fcisl
-    sll_logical_meshes 
+    sll_meshes 
     sll_advection
     sll_constants)
 
@@ -40,7 +40,7 @@ IF(HDF5_ENABLED)
   TARGET_LINK_LIBRARIES(test_aligned_derivative_2d 
     sll_derivative
     sll_fcisl
-    sll_logical_meshes 
+    sll_meshes 
     sll_advection
     sll_constants)
 

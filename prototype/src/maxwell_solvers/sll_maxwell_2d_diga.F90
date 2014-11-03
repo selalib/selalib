@@ -15,7 +15,7 @@ module sll_module_maxwell_2d_diga
 #include "sll_integration.h"
 #include "sll_utilities.h"
 #include "sll_assert.h"
-#include "sll_logical_meshes.h"
+#include "sll_cartesian_meshes.h"
 #include "sll_coordinate_transformations.h"
 
 use sll_maxwell_solvers_base
@@ -64,7 +64,7 @@ type, public :: sll_maxwell_2d_diga
    sll_real64                          :: eta2_max     !< top side
    sll_real64                          :: delta_eta2   !< step size
    sll_transformation, pointer         :: tau          !< transformation
-   type(sll_logical_mesh_2d), pointer  :: mesh         !< Logical mesh
+   type(sll_cartesian_mesh_2d), pointer  :: mesh         !< Logical mesh
    sll_int32                           :: degree       !< degree of gauss integration
    type(cell_type), pointer            :: cell(:,:)    !< mesh cells
    sll_real64, pointer                 :: f(:,:)       !< cell flux
@@ -179,7 +179,7 @@ subroutine initialize_maxwell_2d_diga( this,         &
    this%tau        => tau
    ! Please undo this 'fix' whenever it is decided that gfortran 4.6 is no
    ! longer supported.
-   !   this%mesh       => tau%get_logical_mesh()
+   !   this%mesh       => tau%get_cartesian_mesh()
    this%mesh       => tau%mesh
    this%bc_south   =  bc_south
    this%bc_east    =  bc_east
@@ -558,9 +558,9 @@ subroutine compute_normals(tau, bc_south, bc_east, bc_north, bc_west, &
    sll_int32                   :: bc_west
    sll_int32                   :: k
    sll_int32                   :: error
-   class(sll_logical_mesh_2d), pointer :: lm
+   class(sll_cartesian_mesh_2d), pointer :: lm
 
-   lm => tau%get_logical_mesh()
+   lm => tau%get_cartesian_mesh()
    
    cell%i = i
    cell%j = j

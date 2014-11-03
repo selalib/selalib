@@ -5,29 +5,29 @@
 ! in file Doxyfile.in (line 691) if it is excluded. 
 ! Type 'make doc' in build directory.
 ! To check the results, open : 
-! selalib/prototype/documentation/build/html/doxygen/html/defgroup mapped_meshess.html 
+! selalib/prototype/documentation/build/html/doxygen/html/defgroup meshes_multipatchs.html 
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup mapped_meshes sll_mapped_meshes 
+!> @defgroup meshes_multipatch sll_cartesian_meshes_multipatch 
 !> @brief 
-!> Description of mapped_meshes library (72 characters)
+!> Description of meshes_multipatch library (72 characters)
 !> @author Selalib team 
 !> You can add a contact, do not put your email to prevent spam.
 !> @details
-!> Long description of  mapped_meshes, you can add some references or math equations.
+!> Long description of  meshes_multipatch, you can add some references or math equations.
 !>
 !> <b> Headers file available </b>
-!>  - sll_mapped_meshes.h
+!>  - sll_cartesian_meshes_multipatch.h
 !>
 !> <b> Modules available </b>
 !>  List fortran module available
-!>  - sll_mapped_meshes
+!>  - sll_cartesian_meshes_multipatch
 !>
 !> <b> How to use it </b>
-!> - Header file : \code #include 'sll_mapped_meshes.h' \endcode
+!> - Header file : \code #include 'sll_cartesian_meshes_multipatch.h' \endcode
 !> - Link with   <code>-lsll_%s</code>
-!> - Add <code> use sll_mapped_meshes </code>
+!> - Add <code> use sll_cartesian_meshes_multipatch </code>
 !>
 !> <b> Examples </b>
 !> -Add some fortran lines to explain how ti use the library

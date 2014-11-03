@@ -10,7 +10,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
                          sll_coordinate_transformations
                          sll_poisson_parallel
                          sll_point_to_point_communications 
-                         sll_logical_meshes
+                         sll_meshes
                          sll_dg_fields
                          sll_mesh_calculus
                          sll_integration

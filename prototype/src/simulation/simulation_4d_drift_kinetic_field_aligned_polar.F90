@@ -61,7 +61,7 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
   use sll_module_cubic_spline_interpolator_1d
   use sll_simulation_base
   use sll_fdistribu4D_DK
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use polar_operators
   use polar_advection
   use sll_reduction_module
@@ -111,10 +111,10 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
      type(sll_collective_t), pointer :: new_collective_per_locx4
 
      ! Mesh parameters
-     type(sll_logical_mesh_1d), pointer :: m_x1
-     type(sll_logical_mesh_1d), pointer :: m_x2
-     type(sll_logical_mesh_1d), pointer :: m_x3
-     type(sll_logical_mesh_1d), pointer :: m_x4
+     type(sll_cartesian_mesh_1d), pointer :: m_x1
+     type(sll_cartesian_mesh_1d), pointer :: m_x2
+     type(sll_cartesian_mesh_1d), pointer :: m_x3
+     type(sll_cartesian_mesh_1d), pointer :: m_x4
      !sll_real64 :: r_min
      !sll_real64 :: r_max
      !sll_real64 :: phi_min
@@ -148,7 +148,7 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
      sll_real64 :: eps_perturb   
 
      !--> 4D logical mesh (r,theta,phi,vpar)
-     !type(sll_logical_mesh_4d), pointer :: logical_mesh4d
+     !type(sll_cartesian_mesh_4d), pointer :: cartesian_mesh4d
 
 
      !--> Density and temperature profiles
@@ -507,11 +507,11 @@ contains
     close(input_file)
 
     !--> Mesh
-    sim%m_x1 => new_logical_mesh_1d(num_cells_x1,eta_min=r_min,eta_max=r_max)
-    sim%m_x2 => new_logical_mesh_1d(num_cells_x2,&
+    sim%m_x1 => new_cartesian_mesh_1d(num_cells_x1,eta_min=r_min,eta_max=r_max)
+    sim%m_x2 => new_cartesian_mesh_1d(num_cells_x2,&
       eta_min=0._f64,eta_max=2._f64*sll_pi)
-    sim%m_x3 => new_logical_mesh_1d(num_cells_x3,eta_min=z_min,eta_max=z_max)
-    sim%m_x4 => new_logical_mesh_1d(num_cells_x4,eta_min=v_min,eta_max=v_max)
+    sim%m_x3 => new_cartesian_mesh_1d(num_cells_x3,eta_min=z_min,eta_max=z_max)
+    sim%m_x4 => new_cartesian_mesh_1d(num_cells_x4,eta_min=v_min,eta_max=v_max)
     
     !--> Equilibrium
     sim%tau0     = tau0
@@ -1613,8 +1613,8 @@ contains
     sll_real64, dimension(:,:), intent(in) :: phi
     sll_real64, dimension(:,:), intent(out) :: A1
     sll_real64, dimension(:,:), intent(out) :: A2
-    type(sll_logical_mesh_1d), pointer :: mesh1
-    type(sll_logical_mesh_1d), pointer :: mesh2
+    type(sll_cartesian_mesh_1d), pointer :: mesh1
+    type(sll_cartesian_mesh_1d), pointer :: mesh2
     class(sll_interpolator_2d_base), pointer   :: interp2d
     sll_real64, intent(in) :: B0
     sll_int32 :: Nc_x1
@@ -1655,7 +1655,7 @@ contains
   subroutine compute_field_from_phi_cartesian_1d(phi,mesh,A,interp)
     sll_real64, dimension(:), intent(in) :: phi
     sll_real64, dimension(:), intent(out) :: A
-    type(sll_logical_mesh_1d), pointer :: mesh
+    type(sll_cartesian_mesh_1d), pointer :: mesh
     class(sll_interpolator_1d_base), pointer   :: interp
     sll_int32 :: Nc_x1
     sll_real64 :: x1_min
@@ -2557,8 +2557,8 @@ contains
     sll_int32, intent(in) :: iplot
     character(len=4)      :: cplot
     sll_int32             :: nnodes_x1, nnodes_x2
-    type(sll_logical_mesh_1d), pointer :: m_x1
-    type(sll_logical_mesh_1d), pointer :: m_x2
+    type(sll_cartesian_mesh_1d), pointer :: m_x1
+    type(sll_cartesian_mesh_1d), pointer :: m_x2
     sll_real64, dimension(:,:), intent(in) :: f
     sll_real64 :: r
     sll_real64 :: theta
@@ -2630,8 +2630,8 @@ contains
     sll_int32, intent(in) :: iplot
     character(len=4)      :: cplot
     sll_int32             :: nnodes_x1, nnodes_x2
-    type(sll_logical_mesh_1d), pointer :: m_x1
-    type(sll_logical_mesh_1d), pointer :: m_x2
+    type(sll_cartesian_mesh_1d), pointer :: m_x1
+    type(sll_cartesian_mesh_1d), pointer :: m_x2
     sll_real64, dimension(:,:), intent(in) :: f
     sll_real64 :: r
     sll_real64 :: theta
