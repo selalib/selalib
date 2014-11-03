@@ -4,7 +4,7 @@ module sll_reduction_module
 #include "sll_memory.h"
 
 
-use sll_logical_meshes
+use sll_cartesian_meshes
 implicit none
 
   abstract interface

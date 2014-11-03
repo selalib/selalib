@@ -50,8 +50,7 @@ IF(HDF5_ENABLED)
 ENDIF(HDF5_ENABLED)
 
 ADD_EXECUTABLE(VP1D_deltaf_cart VP1D_deltaf_BSL.F90)
-TARGET_LINK_LIBRARIES(VP1D_deltaf_cart sll_mapped_meshes
-	                                 sll_interpolators
+TARGET_LINK_LIBRARIES(VP1D_deltaf_cart sll_interpolators
 	                                 sll_periodic_interpolation
 	                                 sll_fft
 	                                 sll_distribution_function
@@ -64,8 +63,7 @@ TARGET_LINK_LIBRARIES(VP1D_deltaf_cart sll_mapped_meshes
 	                                 dfftpack)
 IF(HDF5_ENABLED)
    ADD_EXECUTABLE(VP1D_mm VP1D_mm.F90)
-   TARGET_LINK_LIBRARIES(VP1D_mm sll_mapped_meshes
-                                 sll_interpolators 
+   TARGET_LINK_LIBRARIES(VP1D_mm sll_interpolators 
                                  sll_periodic_interpolation
                                  sll_fft 
                                  sll_distribution_function 
@@ -130,7 +128,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
                          sll_integration
                          sll_constants
                          sll_coordinate_transformations
-                         sll_logical_meshes
+                         sll_meshes
                          sll_utilities
                          sll_timer
                          sll_memory
@@ -184,19 +182,17 @@ ENDIF()
 
 ADD_EXECUTABLE(polar_SL polar_SL.F90)
 
-TARGET_LINK_LIBRARIES(polar_SL sll_mapped_meshes
-	                         sll_interpolators
-	                         sll_constants
-	                         sll_file_io
-  	                         sll_utilities)
+TARGET_LINK_LIBRARIES(polar_SL sll_interpolators
+	                       sll_constants
+	                       sll_file_io
+  	                       sll_utilities)
 
 ADD_EXECUTABLE(curvilinear_SL curvilinear_SL.F90)
   
-TARGET_LINK_LIBRARIES(curvilinear_SL sll_mapped_meshes
-	                               sll_interpolators
-	                               sll_constants
-	                               sll_file_io
-  	                               sll_utilities)
+TARGET_LINK_LIBRARIES(curvilinear_SL sll_interpolators
+	                             sll_constants
+	                             sll_file_io
+  	                             sll_utilities)
 
 ADD_EXECUTABLE(CG_polar CG_polar.F90 sll_advection_polar.F90
 		                         sll_polar_operators.F90)
@@ -211,16 +207,15 @@ TARGET_LINK_LIBRARIES(CG_polar sll_poisson_solvers
 
 ADD_EXECUTABLE(VP1D_cart VP_uniform_cartesian_BSL.F90)
 
-TARGET_LINK_LIBRARIES(VP1D_cart sll_mapped_meshes
-	                          sll_interpolators
-	                          sll_fft
-	                          sll_distribution_function
-	                          sll_scalar_field	
-	                          sll_constants
-	                          sll_file_io
-  	                          sll_utilities
-	                          sll_poisson_solvers
-	                          dfftpack)
+TARGET_LINK_LIBRARIES(VP1D_cart sll_interpolators
+	                        sll_fft
+	                        sll_distribution_function
+	                        sll_scalar_field	
+	                        sll_constants
+	                        sll_file_io
+  	                        sll_utilities
+	                        sll_poisson_solvers
+	                        dfftpack)
 
 ADD_EXECUTABLE(unit_test_polar unit_test_polar.F90 sll_polar_operators.F90)
 TARGET_LINK_LIBRARIES(unit_test_polar sll_poisson_solvers)

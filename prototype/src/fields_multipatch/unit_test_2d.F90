@@ -8,7 +8,7 @@ program unit_test_fields_multipatch
   
   type(sll_coordinate_transformation_multipatch_2d), pointer :: T
   class(sll_scalar_field_multipatch_2d), pointer             :: F
-  class(sll_logical_mesh_2d), pointer                        :: m
+  class(sll_cartesian_mesh_2d), pointer                        :: m
   class(sll_coordinate_transformation_2d_nurbs), pointer     :: transf
   sll_int32  :: ipatch
   sll_int32  :: i
@@ -46,7 +46,7 @@ program unit_test_fields_multipatch
   ! coming from CAID, we could also assume that the initial data also comes
   ! from outside...
   do ipatch=0, num_patches-1
-     m        => F%get_logical_mesh(ipatch)
+     m        => F%get_cartesian_mesh(ipatch)
      transf   => F%get_transformation(ipatch)
 
      num_pts1 = m%num_cells1+1

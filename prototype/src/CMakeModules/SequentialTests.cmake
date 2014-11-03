@@ -9,8 +9,6 @@ ENDIF(CMAKE_BUILD_TYPE STREQUAL DEBUG)
 
 ADD_TEST(NAME constants                 COMMAND test_constants)
 ADD_TEST(NAME timer                     COMMAND test_timer)
-ADD_TEST(NAME logical_meshes            COMMAND test_logical_meshes)
-ADD_TEST(NAME logical_meshes_multipatch COMMAND test_logical_meshes_multipatch)
 ADD_TEST(NAME tridiagonal               COMMAND test_tridiagonal)
 ADD_TEST(NAME lagrange                  COMMAND test_lagrange)
 ADD_TEST(NAME toeplitz_penta_diagonal   COMMAND test_toeplitz_penta_diagonal)
@@ -28,8 +26,6 @@ ADD_TEST(NAME pic_particle_sort         COMMAND test_particle_sort_2d)
 ADD_TEST(NAME deboor_spline             COMMAND test_deboor)
 
 SET_TESTS_PROPERTIES(timer PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-SET_TESTS_PROPERTIES(logical_meshes PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-SET_TESTS_PROPERTIES(logical_meshes_multipatch PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(toeplitz_penta_diagonal PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(cubic_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(splines_arbitrary_degree PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
@@ -153,9 +149,6 @@ ENDIF(PYTHON3_FOUND)
 
 
 ADD_TEST(NAME electric_field_accumulators COMMAND test_e_field_accumulator_2d)
-
-ADD_TEST(NAME mapped_meshes COMMAND test_mapped_meshes_1d
-				    test_mapped_meshes_2d)
 
 ADD_TEST(NAME ode_solvers COMMAND test_implicit_ode_nonuniform)
 

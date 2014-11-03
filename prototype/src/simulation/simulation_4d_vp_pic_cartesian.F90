@@ -10,7 +10,7 @@ module sll_pic_simulation_4d_cartesian_module
 
   use sll_constants
   use sll_simulation_base
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_timer
   use sll_particle_group_4d_module
   use sll_particle_initializers
@@ -38,7 +38,7 @@ module sll_pic_simulation_4d_cartesian_module
      sll_int32  :: guard_size
      sll_int32  :: array_size
      type(sll_particle_group_4d),  pointer :: part_group
-     type(sll_logical_mesh_2d),    pointer :: m2d
+     type(sll_cartesian_mesh_2d),    pointer :: m2d
      type(sll_particle_sorter_2d), pointer :: sorter
      type(sll_charge_accumulator_2d_ptr), dimension(:), pointer  :: q_accumulator
      type(electric_field_accumulator), pointer :: E_accumulator
@@ -113,7 +113,7 @@ contains
     sim%dt = dt
     sim%num_iterations = number_iterations
 
-    sim%m2d =>  new_logical_mesh_2d( NC_X, NC_Y, &
+    sim%m2d =>  new_cartesian_mesh_2d( NC_X, NC_Y, &
                 XMIN, XMAX, YMIN, YMAX )
 
     sim%part_group => new_particle_4d_group( &
@@ -630,14 +630,14 @@ contains
     logical :: res
     sll_real64, intent(in) :: x
     sll_real64, intent(in) :: y
-    type(sll_logical_mesh_2d), pointer :: mesh
+    type(sll_cartesian_mesh_2d), pointer :: mesh
 
     res = (x >= mesh%eta1_min) .and. (x <= mesh%eta1_max) .and. &
           (y >= mesh%eta2_min) .and. (y <= mesh%eta2_max)
   end function in_bounds
 
   subroutine apply_periodic_bc( mesh, x, y )
-    type(sll_logical_mesh_2d), pointer :: mesh
+    type(sll_cartesian_mesh_2d), pointer :: mesh
     sll_real64, intent(inout) :: x
     sll_real64, intent(inout) :: y
 

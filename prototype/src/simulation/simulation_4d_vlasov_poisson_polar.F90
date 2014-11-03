@@ -57,7 +57,7 @@ use sll_module_cubic_spline_interpolator_2d
 use sll_poisson_2d_polar
 use sll_module_cubic_spline_interpolator_1d
 use sll_simulation_base
-use sll_logical_meshes
+use sll_cartesian_meshes
 use sll_parallel_array_initializer_module
 use sll_coordinate_transformation_2d_base_module
 use sll_gnuplot_parallel
@@ -73,8 +73,8 @@ type, extends(sll_simulation_base_class) :: sll_simulation_4d_vp_polar
  sll_real64 :: dt              !< time step
  sll_int32  :: num_iterations  !< steps number
  sll_int32  :: nc_x1, nc_x2, nc_x3, nc_x4 !< Mesh parameters
- type(sll_logical_mesh_2d), pointer :: mesh2d_x !< the logical mesh for space
- type(sll_logical_mesh_2d), pointer :: mesh2d_v !< the logical mesh for velocity
+ type(sll_cartesian_mesh_2d), pointer :: mesh2d_x !< the logical mesh for space
+ type(sll_cartesian_mesh_2d), pointer :: mesh2d_v !< the logical mesh for velocity
  class(sll_coordinate_transformation_2d_base), pointer :: transfx !< coordinate transformation
  
  sll_real64, dimension(:,:,:,:), pointer :: f_x1x2 !< sequential in x1 and x2
@@ -150,8 +150,8 @@ contains
    params )
 
    type(sll_simulation_4d_vp_polar), intent(inout)       :: sim
-   type(sll_logical_mesh_2d), pointer                    :: mesh2d_x
-   type(sll_logical_mesh_2d), pointer                    :: mesh2d_v
+   type(sll_cartesian_mesh_2d), pointer                    :: mesh2d_x
+   type(sll_cartesian_mesh_2d), pointer                    :: mesh2d_v
    class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
    procedure(sll_scalar_initializer_4d)                  :: init_func
    sll_real64, dimension(:), target                      :: params

@@ -20,7 +20,7 @@ module sll_accumulators
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   implicit none
   
   type charge_accumulator_cell_2d
@@ -31,7 +31,7 @@ module sll_accumulators
   end type charge_accumulator_cell_2d
 
   type sll_charge_accumulator_2d
-     type(sll_logical_mesh_2d), pointer :: mesh
+     type(sll_cartesian_mesh_2d), pointer :: mesh
      type(charge_accumulator_cell_2d), dimension(:), pointer :: q_acc
   end type sll_charge_accumulator_2d
 
@@ -63,7 +63,7 @@ module sll_accumulators
   end type charge_accumulator_cell_2d_CS
 
   type sll_charge_accumulator_2d_CS
-     type(sll_logical_mesh_2d), pointer :: mesh
+     type(sll_cartesian_mesh_2d), pointer :: mesh
      type(charge_accumulator_cell_2d_CS), dimension(:), pointer :: q_acc
   end type sll_charge_accumulator_2d_CS
   
@@ -83,7 +83,7 @@ module sll_accumulators
   end type field_accumulator_cell
 
   type electric_field_accumulator
-     type(sll_logical_mesh_2d), pointer :: mesh
+     type(sll_cartesian_mesh_2d), pointer :: mesh
      type(field_accumulator_cell), dimension(:), pointer :: e_acc
   end type electric_field_accumulator
 
@@ -110,7 +110,7 @@ module sll_accumulators
   end type field_accumulator_CS
 
   type electric_field_accumulator_CS
-     type(sll_logical_mesh_2d), pointer :: mesh
+     type(sll_cartesian_mesh_2d), pointer :: mesh
      type(field_accumulator_CS), dimension(:), pointer :: e_acc
   end type electric_field_accumulator_CS
 
@@ -125,7 +125,7 @@ module sll_accumulators
 contains
   
   function new_charge_accumulator_2d( mesh_2d ) result(acc)
-    type(sll_logical_mesh_2d), pointer       :: mesh_2d
+    type(sll_cartesian_mesh_2d), pointer       :: mesh_2d
     type(sll_charge_accumulator_2d), pointer :: acc
     sll_int32  :: num_cells1
     sll_int32  :: num_cells2
@@ -220,7 +220,7 @@ contains
 
 
    function new_charge_accumulator_2d_CS( mesh_2d ) result(acc)
-     type(sll_logical_mesh_2d), pointer       :: mesh_2d
+     type(sll_cartesian_mesh_2d), pointer       :: mesh_2d
      type(sll_charge_accumulator_2d_CS), pointer :: acc
      sll_int32  :: num_cells1
      sll_int32  :: num_cells2
@@ -284,7 +284,7 @@ contains
 
 
    function new_field_accumulator_2d( mesh_2d ) result(E_acc)
-     type(sll_logical_mesh_2d), pointer        ::  mesh_2d
+     type(sll_cartesian_mesh_2d), pointer        ::  mesh_2d
      type(electric_field_accumulator), pointer ::  E_acc
      sll_int32  :: num_cells1
      sll_int32  :: num_cells2
@@ -307,7 +307,7 @@ contains
    end function new_field_accumulator_2d
    
   function new_field_accumulator_CS_2d( mesh_2d ) result(E_acc)
-    type(sll_logical_mesh_2d), pointer           ::  mesh_2d
+    type(sll_cartesian_mesh_2d), pointer           ::  mesh_2d
     type(electric_field_accumulator_CS), pointer ::  E_acc
     sll_int32  :: num_cells1
     sll_int32  :: num_cells2

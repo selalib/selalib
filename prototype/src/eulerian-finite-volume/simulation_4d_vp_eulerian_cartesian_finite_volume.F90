@@ -10,7 +10,7 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
   use sll_poisson_2d_periodic_cartesian_par
   use sll_simulation_base
   use sll_parallel_array_initializer_module  
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_mesh_calculus_2d_module
   use sll_gnuplot_parallel
   use sll_timer
@@ -60,7 +60,7 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
 
   ! for initializers
   type(sll_p2p_comm_real64), pointer :: comm
-  type(sll_logical_mesh_2d), pointer    :: mesh2dx,mesh2dv
+  type(sll_cartesian_mesh_2d), pointer    :: mesh2dx,mesh2dv
   class(sll_coordinate_transformation_2d_base),pointer     :: tx,tv
   type(poisson_2d_periodic_plan_cartesian_par), pointer :: poisson_plan
 
@@ -170,7 +170,7 @@ subroutine initialize_vp4d( &
     tmax )
 
  type(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout)     :: sim
- type(sll_logical_mesh_2d), pointer                    :: mesh2dx,mesh2dv
+ type(sll_cartesian_mesh_2d), pointer                    :: mesh2dx,mesh2dv
  class(sll_coordinate_transformation_2d_base),pointer          :: tx,tv
  procedure(sll_scalar_initializer_4d)                  :: init_func
  sll_real64, dimension(:), target                      :: params
@@ -2007,7 +2007,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
   !    need an array to store the intermediate result (after reducing in
   !    x4). This array should come as an argument.
   subroutine compute_charge_density()! mesh, numpts1, numpts2, f, partial, rho )
-!!$    type(sll_logical_mesh_4d), pointer     :: mesh
+!!$    type(sll_cartesian_mesh_4d), pointer     :: mesh
 !!$    sll_real64, intent(in),  dimension(:,:,:,:) :: f       ! local distr. func
 !!$    sll_real64, intent(inout),  dimension(:,:,:):: partial ! intermediate res.
 !!$    sll_real64, intent(inout), dimension(:,:)     :: rho     ! local rho

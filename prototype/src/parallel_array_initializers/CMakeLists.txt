@@ -12,7 +12,7 @@ IF(MPI_MODULE_ENABLED)
    TARGET_LINK_LIBRARIES(sll_parallel_array_initializers 
                          sll_remap
                          sll_coordinate_transformations
-                         sll_logical_meshes)
+                         sll_meshes)
 
    ADD_EXECUTABLE(test_parallel_array_initializer unit_test_4d.F90)
 

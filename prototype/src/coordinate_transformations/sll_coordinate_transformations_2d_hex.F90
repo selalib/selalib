@@ -49,7 +49,7 @@ module sll_module_coordinate_transformations_2d
 !!$     sll_real64, dimension(:,:), pointer :: x2_node   ! x2(i,j)
      !character(len=64) :: label
      !logical           :: written! = .false.
-     ! type(sll_logical_mesh_2d), pointer :: mesh => null()
+     ! type(sll_cartesian_mesh_2d), pointer :: mesh => null()
      type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
      procedure(transformation_func_nopass), pointer, nopass :: x1_func  ! user
      procedure(transformation_func_nopass), pointer, nopass :: x2_func  ! user
@@ -62,7 +62,7 @@ module sll_module_coordinate_transformations_2d
      procedure, pass(transf) :: initialize => initialize_coord_transf_2d_analytic_abstract
      ! generic, public :: initialize => initialize_coord_transf_2d_analytic_logic, &
      !      initialize_coord_transf_2d_analytic
-     procedure, pass(transf) :: get_logical_mesh => get_logical_mesh_analytic
+     procedure, pass(transf) :: get_cartesian_mesh => get_cartesian_mesh_analytic
      ! Functions with integer arguments
      procedure, pass(transf) :: x1_at_node => x1_node_analytic
      procedure, pass(transf) :: x2_at_node => x2_node_analytic
@@ -105,11 +105,11 @@ module sll_module_coordinate_transformations_2d
 !     type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
      class(sll_interpolator_2d_base), pointer               :: x1_interp
      class(sll_interpolator_2d_base), pointer               :: x2_interp
-     !type(sll_logical_mesh_2d), pointer :: mesh => null()
+     !type(sll_cartesian_mesh_2d), pointer :: mesh => null()
    contains
      procedure, pass(transf) :: initialize => &
           initialize_coord_transf_2d_discrete
-     procedure, pass(transf) :: get_logical_mesh => get_logical_mesh_discrete
+     procedure, pass(transf) :: get_cartesian_mesh => get_cartesian_mesh_discrete
      procedure, pass(transf) :: x1_at_node => x1_node_discrete
      procedure, pass(transf) :: x2_at_node => x2_node_discrete
      procedure, pass(transf) :: jacobian_at_node => transf_2d_jacobian_node_discrete
@@ -195,7 +195,7 @@ contains
     type(sll_coordinate_transformation_2d_analytic), pointer :: &
          new_coordinate_transformation_2d_analytic
     character(len=*), intent(in)                  :: label
-    type(sll_logical_mesh_2d), pointer :: mesh_2d
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     procedure(transformation_func_nopass)            :: x1_func
     procedure(transformation_func_nopass)            :: x2_func
     procedure(transformation_func_nopass)            :: j11_func
@@ -240,16 +240,16 @@ contains
     procedure(transformation_func_nopass)            :: j12_func
     procedure(transformation_func_nopass)            :: j21_func
     procedure(transformation_func_nopass)            :: j22_func
-    type(sll_logical_mesh_2d), pointer                 :: mesh_2d
+    type(sll_cartesian_mesh_2d), pointer                 :: mesh_2d
     sll_real64, dimension(:), intent(in), optional :: params
     sll_int32  :: ierr
 
     ! ! transf%label   = trim(label)
     ! ! select type (mesh_2d)
-    ! ! type is (sll_logical_mesh_2d)
+    ! ! type is (sll_cartesian_mesh_2d)
     !    transf%mesh => mesh_2d
     !    !call this%initialize_abstract(element)
-    ! ! type is (sll_logical_mesh_2d)
+    ! ! type is (sll_cartesian_mesh_2d)
     ! !    print *, "it's logical"
     ! class default
     !    print*,"ERROR: Unknown type of the 'mesh_2d' argument in 'initialize_coord_transf_2d_analytic'."
@@ -290,7 +290,7 @@ contains
   !   type(sll_coordinate_transformation_2d_analytic), pointer :: &
   !        new_coordinate_transformation_2d_analytic_logic
   !   character(len=*), intent(in)                  :: label
-  !   type(sll_logical_mesh_2d), pointer :: mesh_2d
+  !   type(sll_cartesian_mesh_2d), pointer :: mesh_2d
   !   procedure(transformation_func_nopass)            :: x1_func
   !   procedure(transformation_func_nopass)            :: x2_func
   !   procedure(transformation_func_nopass)            :: j11_func
@@ -335,7 +335,7 @@ contains
   !   procedure(transformation_func_nopass)            :: j12_func
   !   procedure(transformation_func_nopass)            :: j21_func
   !   procedure(transformation_func_nopass)            :: j22_func
-  !   type(sll_logical_mesh_2d), pointer :: mesh_2d
+  !   type(sll_cartesian_mesh_2d), pointer :: mesh_2d
   !   sll_real64, dimension(:), intent(in), optional :: params
   !   sll_int32  :: ierr
 
@@ -372,11 +372,11 @@ contains
     nullify( transf%jacobian_matrix_function )
   end subroutine delete_transformation_2d_analytic
 
-  function get_logical_mesh_analytic( transf ) result(res)
+  function get_cartesian_mesh_analytic( transf ) result(res)
     class(sll_coordinate_transformation_2d_analytic), intent(in) :: transf
     class(sll_mesh_2d_base), pointer :: res
     res => transf%mesh
-  end function get_logical_mesh_analytic
+  end function get_cartesian_mesh_analytic
 
   function jacobian_2d_analytic( transf, eta1, eta2 ) result(val)
     sll_real64                        :: val
@@ -685,11 +685,11 @@ contains
   !
   !**************************************************************************
 
-  function get_logical_mesh_discrete( transf ) result(res)
+  function get_cartesian_mesh_discrete( transf ) result(res)
     class(sll_coordinate_transformation_2d_discrete), intent(in) :: transf
     class(sll_mesh_2d_base), pointer :: res
     res => transf%mesh
-  end function get_logical_mesh_discrete
+  end function get_cartesian_mesh_discrete
 
 
   function x1_node_discrete( transf, i, j ) result(val)
@@ -830,7 +830,7 @@ contains
        jacobians_cell )
 
     ! INPUT VARIABLES
-    type(sll_logical_mesh_2d), pointer    :: mesh_2d
+    type(sll_cartesian_mesh_2d), pointer    :: mesh_2d
     character(len=*)       , intent(in) :: label
 
     class(sll_interpolator_2d_base), target  :: x1_interpolator
@@ -879,7 +879,7 @@ contains
     jacobians_cell )
 
     class(sll_coordinate_transformation_2d_discrete)    :: transf
-    type(sll_logical_mesh_2d), pointer :: mesh_2d
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     character(len=*), intent(in)     :: label
 
     class(sll_interpolator_2d_base), target  :: x1_interpolator
@@ -1321,7 +1321,7 @@ contains
     class(arb_deg_2d_interpolator), pointer :: interp2d_2
     class(arb_deg_2d_interpolator), pointer :: interp2d_jac
     class(sll_mesh_2d_base), pointer      :: mesh_base
-    type(sll_logical_mesh_2d), pointer   :: mesh_2d   
+    type(sll_cartesian_mesh_2d), pointer   :: mesh_2d   
 
     namelist /transf_label/  label
     namelist /degree/   spline_deg1, spline_deg2
@@ -1474,7 +1474,7 @@ contains
 
 
     ! initialization of mesh
-    mesh_2d => new_logical_mesh_2d(&
+    mesh_2d => new_cartesian_mesh_2d(&
          number_cells1,&
          number_cells2,&
          eta1_min = eta1_min,&
@@ -1490,7 +1490,7 @@ contains
     ! now be able to initialize all the necessary objects
 
     ! leave the default [0,1]X[0,1] domain for the logical mesh
-    !    transf%mesh => new_logical_mesh_2d(num_cells1, num_cells2)
+    !    transf%mesh => new_cartesian_mesh_2d(num_cells1, num_cells2)
     call transf%initialize( &
          mesh_2d, &
          label, &

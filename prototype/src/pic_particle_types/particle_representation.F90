@@ -21,7 +21,7 @@ module sll_particle_representations
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use sll_logical_meshes
+  use sll_cartesian_meshes
 
   implicit none
 
@@ -97,7 +97,7 @@ module sll_particle_representations
 !!$    type(sll_particle_2d), intent(out) :: particle
 !!$    sll_real64, intent(in) :: x, y, vx, vy
 !!$    sll_real32, intent(in) :: q
-!!$    type(sll_logical_mesh_2d), pointer :: mesh
+!!$    type(sll_cartesian_mesh_2d), pointer :: mesh
 !!$    sll_real64             :: rdeltax, rdeltay
 !!$    sll_int32              :: icell_x, icell_y
 !!$    sll_int32              :: icell
