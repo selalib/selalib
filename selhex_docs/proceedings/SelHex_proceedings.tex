@@ -10,7 +10,6 @@
 %%-----------------------------
 \usepackage{tikz}
 
-
 %%%%%%%%%%%%%%%--BODY--%%%%%%%%%%%%%%%%%%
 
 \begin{document}
@@ -161,7 +160,7 @@ How we determine the splines coefficients is almost as important as the splines 
 
 
 \begin{equation}
-\label{eqn:filter}
+\label{eqn:filterIIR2}
 p_{IIR2} [i] = \left\{
   \begin{array}{l l}
     1775/2304\text{,} & \quad \text{if } i = 0\\
@@ -175,7 +174,7 @@ p_{IIR2} [i] = \left\{
 Or for the splines of order 3 :
 
 \begin{equation}
-\label{eqn:filter}
+\label{eqn:filterIIR3}
 p_{IIR2} [i] = \left\{
   \begin{array}{l l}
     244301/460800\text{,} & \quad \text{if } i = 0\\
@@ -197,7 +196,7 @@ In details, let's give the exact formula for the coefficients. We suppose we hav
 c[\mathbf{k}] = \sum_{\mathbf{m} \in \xZ^2} s[\mathbf{m}] \cdot p_{IIR}[local(\mathbf{m} - \mathbf{k}, \mathbf{k})]
 \end{equation}
 
-and using \eqref{eqn:filter} we obtain
+and using \eqref{eqn:filterIIR2} we obtain
 
 \begin{align}
 \label{eqn:coef_algo}
@@ -296,5 +295,10 @@ At the vertexes the values are given and $f(G) = \frac{f(S_1)+f(S_2)+f(S_3)}{3}$
 %%-----------------------------
 %%      your bibliography
 %%-----------------------------
+
+\newpage
+\bibliographystyle{plain}
+\bibliography{SelHex_proceedings.bib}
+
 \end{document}
 
