@@ -324,13 +324,8 @@ contains
 !            p(i)%vx*p(i)%vx + p(i)%vy*p(i)%vy           
 !    enddo
 
-    open(65,file='logE_vals.dat')
+!    open(65,file='logE_vals.dat')
     call sll_set_time_mark(t2)    
-!! #ifdef _OPENMP
-!!     t_init = omp_get_wtime()
-!! #else
-!!     call cpu_time(t_init)
-!! #endif
 
 !  ----  TIME LOOP  ----
     do it = 0, sim%num_iterations-1
@@ -353,14 +348,14 @@ contains
 !            diag_TOTenergy(mod(counter-1,save_nb)) + &
 !            0.5_f64 * val2 *sim%m2d%delta_eta1*sim%m2d%delta_eta2
                     
-       if ( (mod(it+1,save_nb)==0) .and. (sim%my_rank == 0)) then
-          do jj=1,save_nb
-             write(65,*) diag_energy(jj,:), diag_TOTmoment(jj)!, diag_TOTenergy(jj)
-          enddo
-       endif
+!       if ( (mod(it+1,save_nb)==0) .and. (sim%my_rank == 0)) then
+!          do jj=1,save_nb
+!             write(65,*) diag_energy(jj,:), diag_TOTmoment(jj)!, diag_TOTenergy(jj)
+!          enddo
+!       endif
 
        if (mod(it+1,10)==0) then 
-!          print*, 'iter=', it+1
+!          print*, it+1
           call sll_sort_particles_2d( sim%sorter, sim%part_group )
        endif
 
@@ -567,32 +562,29 @@ contains
 
     enddo
 !  ---  ---  - - -   END TIME LOOP  - - -  --- -----
-!! #ifdef _OPENMP
-!!     t_fin = omp_get_wtime()
-!! #else
-!!     call cpu_time(t_fin)
-!! #endif
 !!     close(65)
-!!     print*, 'time is', t_fin-t_init, 'sec; and', int(sim%num_iterations,i64)*&
-!!          int(sim%ions_number,i64)/(t_fin-t_init),'average pushes/sec for Proc',sim%my_rank
     time = sll_time_elapsed_since(t2)
-    print*,  'time is', time, 'sec; and', int(sim%num_iterations,i64)*int(sim%ions_number,i64)/time, 'average pushes/sec for Proc', sim%my_rank
+!    open(93,file='time_parts_sec.dat',position='append')
+!    write(93,*) '# Nb of threads     time (sec)  average pushes/sec for Proc     sim%my_rank '
+!    write(93,*) sim%n_threads, time, int(sim%num_iterations,i64)*int(sim%ions_number,i64)/time, &
+!                sim%my_rank
+!    close(93)
 
-    if (sim%my_rank==0) then
-       open(65,file='AccesstoMemory_rk0.dat')! URGENT d'utiliser the rank_name !
-!!$    if (sim%my_rank==1) open(66,file='AccesstoMemory_rk1.dat')
-       do jj = 0, sim%num_iterations-1
-          if ( mod(jj+1,10) == 0 ) then
-             write(65,*) diag_AccMem(jj,:), diag_AccMem(jj,2)
-!!$          if (sim%my_rank==1) write(66,*) diag_AccMem(jj,:), diag_AccMem(jj,2)
-          else
-             write(65,*) diag_AccMem(jj,:)
-!!$          if (sim%my_rank==1) write(66,*) diag_AccMem(jj,:)
-          endif
-       enddo
-       close(65) 
-!!$       close(66)
-    endif
+!      if (sim%my_rank==0) then
+!         open(65,file='AccesstoMemory_rk0.dat')! URGENT d'utiliser the rank_name !
+!  !!$    if (sim%my_rank==1) open(66,file='AccesstoMemory_rk1.dat')
+!         do jj = 0, sim%num_iterations-1
+!            if ( mod(jj+1,10) == 0 ) then
+!               write(65,*) diag_AccMem(jj,:), diag_AccMem(jj,2)
+!  !!$          if (sim%my_rank==1) write(66,*) diag_AccMem(jj,:), diag_AccMem(jj,2)
+!            else
+!               write(65,*) diag_AccMem(jj,:)
+!  !!$          if (sim%my_rank==1) write(66,*) diag_AccMem(jj,:)
+!            endif
+!         enddo
+!         close(65) 
+!  !!$       close(66)
+!      endif
 
     SLL_DEALLOCATE(sim%rho,   ierr)
     SLL_DEALLOCATE(sim%E1,    ierr)
