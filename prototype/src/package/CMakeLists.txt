@@ -133,9 +133,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/meshes/sll_meshes_base.F90
     ${SLL_DIR}/meshes/sll_cartesian_meshes.F90
     ${SLL_DIR}/fields/scalar_field_initializer_base.F90
-#    ${SLL_DIR}/fields/sll_scalar_field_2d_base.F90
-    ${SLL_DIR}/fields/sll_scalar_field_2d.F90
-    ${SLL_DIR}/fields/distribution_function_initializer_4d.F90
+    ${SLL_DIR}/distribution_function/sll_scalar_field_2d_old.F90
     ${SLL_DIR}/coordinate_transformations/sll_common_coordinate_transformations.F90
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d_nurbs.F90	
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformation_2d_base.F90	
@@ -146,6 +144,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/sparse_matrix_manager/sll_sparse_matrix_mp_module.F90
     ${SLL_DIR}/general_coordinate_elliptic_solvers_multipatch/sll_general_coordinate_elliptic_solver_multipatch.F90
     ${SLL_DIR}/mesh_calculus/sll_mesh_calculus_module.F90
+    ${SLL_DIR}/distribution_function/distribution_function_initializer_4d.F90
     ${SLL_DIR}/distribution_function/sll_fdistribu4d_DK.F90
     ${SLL_DIR}/reduction/sll_reduction.F90
 
