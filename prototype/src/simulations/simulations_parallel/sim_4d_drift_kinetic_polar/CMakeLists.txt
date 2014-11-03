@@ -1,7 +1,7 @@
-set(   TEST_NAME 2d_vp_cartesian               )
-set(    SIM_NAME 2d_vlasov_poisson_cartesian   )
-set(  EXECUTABLE "test_${TEST_NAME}"           )
-set( INSTALL_DIR "${INSTALL_DIR}/${TEST_NAME}" )
+set(   TEST_NAME 4d_dk_polar                    )
+set(    SIM_NAME 4d_drift_kinetic_polar         )
+set(  EXECUTABLE "test_${TEST_NAME}"            )
+set( INSTALL_DIR "${INSTALL_DIR}/${TEST_NAME}"  )
 
 file( GLOB INPUT_FILES "*.nml"         )
 file( GLOB   POST_PROC "*.dat" "*.gnu" )
