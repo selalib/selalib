@@ -16,7 +16,7 @@ module sll_simulation_2d_guiding_center_generalized_coords_module
   use sll_coordinate_transformation_2d_base_module
   use sll_general_coordinate_qn_solver_module
   use sll_module_scalar_field_2d_base
-  use sll_module_scalar_field_2d_alternative
+  use sll_module_scalar_field_2d
   use sll_parallel_array_initializer_module
   implicit none
 

@@ -1,9 +1,9 @@
-program unit_test_1d_alternative
+program unit_test_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
   use sll_cartesian_meshes
   use sll_constants
-  use sll_module_scalar_field_1d_alternative
+  use sll_module_scalar_field_1d
   implicit none
   
 #define SPLINE_DEG1 3
@@ -337,7 +337,7 @@ program unit_test_1d_alternative
      
      print *, 'PASSED'
   end if
-end program unit_test_1d_alternative
+end program unit_test_1d
 
  ! ------------->FUNCTION PERIODIC
 function test_function_per( eta1) result(res)

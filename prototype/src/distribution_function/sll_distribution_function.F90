@@ -5,11 +5,13 @@ module distribution_function
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_field_2d.h"
-  use sll_constants
-  use sll_utilities   ! for int2string
-  use sll_scalar_field_initializers_base
-  use sll_module_interpolators_1d_base
-  implicit none
+
+use sll_constants
+use sll_utilities   ! for int2string
+use sll_module_interpolators_1d_base
+use sll_module_scalar_field_2d
+
+implicit none
 
 #define NEW_TYPE_FOR_DF( new_df_type, extended_type)                 \
   type, extends(extended_type) :: new_df_type;                       \
