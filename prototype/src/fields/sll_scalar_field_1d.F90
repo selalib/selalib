@@ -25,7 +25,7 @@
 ! DD Mmm YYYY - Initial Version
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
-module sll_module_scalar_field_1d_alternative
+module sll_module_scalar_field_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -234,7 +234,7 @@ contains   ! *****************************************************************
   end subroutine delete_field_1d_analytic_alt
 
   ! For those cases in which handling pointers to field structures is not
-  ! convenient, we offer the following alternative initialization.
+  ! convenient, we offer the following initialization.
   subroutine initialize_scalar_field_1d_analytic_alt( &
     field, &
     func, &
@@ -542,4 +542,4 @@ contains   ! *****************************************************************
 
 
 
-end module sll_module_scalar_field_1d_alternative
+end module sll_module_scalar_field_1d

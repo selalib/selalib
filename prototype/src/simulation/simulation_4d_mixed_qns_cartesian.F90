@@ -24,7 +24,7 @@ module sll_simulation_4d_qns_mixed_module
   use sll_gnuplot_parallel
   use sll_general_coordinate_elliptic_solver_module
   use sll_module_scalar_field_2d_base
-  use sll_module_scalar_field_2d_alternative
+  use sll_module_scalar_field_2d
   implicit none
 
 #define PRINT_PLOTS 1

@@ -5,7 +5,7 @@ module sll_general_coordinate_elliptic_solver_multipatch_module
 
   use sll_boundary_condition_descriptors
   use sll_module_scalar_field_2d_base
-  use sll_module_scalar_field_2d_alternative
+  use sll_module_scalar_field_2d
   use sll_module_arbitrary_degree_spline_interpolator_2d
   !use sparsematrix_module
   use connectivity_module

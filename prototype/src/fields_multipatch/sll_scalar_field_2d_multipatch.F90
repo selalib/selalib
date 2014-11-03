@@ -30,7 +30,7 @@ module sll_module_scalar_field_2d_multipatch
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_file_io.h"
-  use sll_module_scalar_field_2d_alternative
+  use sll_module_scalar_field_2d
   use sll_coordinate_transformation_multipatch_module
   use sll_constants
   use sll_module_interpolators_2d_base
