@@ -24,7 +24,6 @@ SET(SLL_MACROS
     ${SLL_DIR}/meshes/sll_meshes.h
     ${SLL_DIR}/meshes/sll_cartesian_meshes.h
     ${SLL_DIR}/fields/sll_fields.h
-    ${SLL_DIR}/mapped_meshes/sll_mapped_meshes.h
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations.h
     ${SLL_DIR}/pic_accumulators/sll_accumulators.h
     ${SLL_DIR}/pic_particle_types/particle_representation.h
@@ -131,13 +130,12 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/sparse_matrix_manager/spm_tools.F90
     ${SLL_DIR}/time_solvers/sll_time_splitting_coeff.F90
     ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.F90
-    ${SLL_DIR}/meshes/sll_meshes.F90
+    ${SLL_DIR}/meshes/sll_meshes_base.F90
+    ${SLL_DIR}/meshes/sll_cartesian_meshes.F90
     ${SLL_DIR}/fields/scalar_field_initializer_base.F90
 #    ${SLL_DIR}/fields/sll_scalar_field_2d_base.F90
     ${SLL_DIR}/fields/sll_scalar_field_2d.F90
     ${SLL_DIR}/fields/distribution_function_initializer_4d.F90
-    ${SLL_DIR}/mapped_meshes/sll_mapped_meshes_2d_base.F90
-    ${SLL_DIR}/mapped_meshes/sll_mapped_meshes_2d.F90
     ${SLL_DIR}/coordinate_transformations/sll_common_coordinate_transformations.F90
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d_nurbs.F90	
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformation_2d_base.F90	
