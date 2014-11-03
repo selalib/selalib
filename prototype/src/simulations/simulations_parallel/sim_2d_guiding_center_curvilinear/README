@@ -10,7 +10,9 @@ Directory structure
    gcsim2d_curvilinear.gnu             -- gnuplot script #1
    gcsim2d_curvilinear_cart.gnu        -- gnuplot script #2 
    gcsim2d_curvilinear_polar.gnu       -- gnuplot script #3 
-   gcsim2d_curvilinear_ref.dat         -- reference results
+   gcsim2d_curvilinear_ref.dat         -- reference results (??)
+   gcsim2d_cartesian_ref.dat           -- reference results #2
+   gcsim2d_polar_ref.dat               -- reference results #3
 
 HOWTO
 =====
