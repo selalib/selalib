@@ -146,7 +146,6 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
    #PN ADD_SIMULATION(4d_qns_general_multipatch    4d_qns_general_multipatch)
 
    ADD_SIMULATION(4d_DK_hybrid              4d_DK_hybrid)
-   ADD_SIMULATION(4d_dk_polar               4d_drift_kinetic_polar)
    ADD_SIMULATION(4d_dk_polar_one_mu        4d_drift_kinetic_polar_one_mu)
    ADD_SIMULATION(4d_dk_polar_multi_mu      4d_drift_kinetic_polar_multi_mu)
    ADD_SIMULATION(4d_dk_field_aligned_polar 4d_drift_kinetic_field_aligned_polar)
