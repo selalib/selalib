@@ -16,7 +16,6 @@ ADD_LIBRARY( sll_simulation_1d STATIC simulation_1d.F90 simulation_base_class.F9
 
 TARGET_LINK_LIBRARIES( sll_simulation_1d 
                        sll_interpolators
-                       sll_scalar_field
                        sll_poisson_solvers
                        sll_reduction
                        sll_common_array_initializers
@@ -48,7 +47,6 @@ TARGET_LINK_LIBRARIES(VP1D_deltaf_cart sll_interpolators
 	                                 sll_periodic_interpolation
 	                                 sll_fft
 	                                 sll_distribution_function
-	                                 sll_scalar_field
                                        sll_constants
 	                                 sll_file_io
   	                                 sll_utilities
@@ -61,7 +59,6 @@ IF(HDF5_ENABLED)
                                  sll_periodic_interpolation
                                  sll_fft 
                                  sll_distribution_function 
-                                 sll_scalar_field 
                                  sll_timer 
                                  sll_poisson_solvers 
                                  sll_constants 
@@ -113,7 +110,6 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
                          sll_pic_particles
                          sll_random_deviate_generators
                          sll_field_accumulators
-                         sll_scalar_field
                          sll_interpolators
                          sll_point_to_point_communications	
                          sll_splines
@@ -198,7 +194,6 @@ ADD_EXECUTABLE(VP1D_cart VP_uniform_cartesian_BSL.F90)
 TARGET_LINK_LIBRARIES(VP1D_cart sll_interpolators
 	                        sll_fft
 	                        sll_distribution_function
-	                        sll_scalar_field	
 	                        sll_constants
 	                        sll_file_io
   	                        sll_utilities
