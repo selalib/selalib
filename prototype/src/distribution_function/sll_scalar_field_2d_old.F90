@@ -4,10 +4,9 @@ module sll_scalar_field_2d_old
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_file_io.h"
-
-  use sll_constants
+#include "sll_utilities.h"
+#include "sll_constants.h"
   use sll_module_interpolators_1d_base
-  use sll_utilities
   use sll_scalar_field_initializers_base
 
   implicit none
@@ -74,6 +73,7 @@ contains   ! *****************************************************************
     sll_real64 :: eta1, eta2
     sll_real64 :: delta1, delta2
 
+    SLL_WARNING("the scalar_field_2d object is deprecated")
 
     this%transf => transf
     this%transf%written = .false.
