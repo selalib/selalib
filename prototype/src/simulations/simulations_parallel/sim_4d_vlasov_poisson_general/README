@@ -1,8 +1,9 @@
 Directory structure
 ===================
-   test_4d_vp_general   -- executable
-   README               -- info (this file)
-   run/                 -- output directory
+   test_4d_vp_general          -- executable
+   vpsim4d_general_input.nml   -- input file
+   README                      -- info (this file)
+   run/                        -- output directory
 
 HOWTO
 =====
