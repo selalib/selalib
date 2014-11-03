@@ -151,7 +151,6 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
    ADD_SIMULATION(4d_dk_polar_one_mu        4d_drift_kinetic_polar_one_mu)
    ADD_SIMULATION(4d_dk_polar_multi_mu      4d_drift_kinetic_polar_multi_mu)
    ADD_SIMULATION(4d_dk_field_aligned_polar 4d_drift_kinetic_field_aligned_polar)
-   ADD_SIMULATION(4d_dk_cartesian           4d_drift_kinetic_cartesian_finite_volume)
    ADD_SIMULATION(6d                        6d_vlasov_poisson_cartesian)
 
    ADD_SIMULATION(4d_vp_pic_cartesian       4d_vp_pic_cartesian)
