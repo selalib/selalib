@@ -6,7 +6,7 @@ ADD_LIBRARY( sll_simulations_sequential STATIC ../simulation_base_class.F90 )
 
 TARGET_LINK_LIBRARIES( sll_simulations_sequential
                        sll_interpolators
-                       sll_scalar_field
+                       sll_fields
                        sll_poisson_solvers
                        sll_reduction
                        sll_common_array_initializers
