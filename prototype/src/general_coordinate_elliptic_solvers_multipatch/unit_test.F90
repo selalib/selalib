@@ -375,7 +375,7 @@ program test_general_elliptic_solver_multipatch
 !!$
 !!$  ! Thirdly, each field object must be initialized using the same logical
 !!$  ! mesh and coordinate transformation.
-!!$  a11_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a11_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_one, &
 !!$       "a11", &
 !!$       T, &
@@ -386,7 +386,7 @@ program test_general_elliptic_solver_multipatch
 !!$       whatever ) 
 !!$
 !!$ 
-!!$  a12_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a12_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "a12", &
 !!$       T, &
@@ -396,7 +396,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_PERIODIC, &
 !!$       whatever ) 
 !!$
-!!$  a21_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a21_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "a21", &
 !!$       T, &
@@ -406,7 +406,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_PERIODIC, &
 !!$       whatever  ) 
 !!$
-!!$  a22_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a22_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_one, &
 !!$       "a22", &
 !!$       T, &
@@ -417,7 +417,7 @@ program test_general_elliptic_solver_multipatch
 !!$       whatever  ) 
 !!$
 !!$
-!!$  b1_field_vect => new_scalar_field_2d_analytic_alt( &
+!!$  b1_field_vect => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "b1", &
 !!$       T, &
@@ -429,7 +429,7 @@ program test_general_elliptic_solver_multipatch
 !!$       first_deriv_eta1 = func_zero, &
 !!$       first_deriv_eta2 = func_zero) 
 !!$
-!!$  b2_field_vect => new_scalar_field_2d_analytic_alt( &
+!!$  b2_field_vect => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "b2", &
 !!$       T, &
@@ -442,7 +442,7 @@ program test_general_elliptic_solver_multipatch
 !!$       first_deriv_eta2 = func_zero)
 !!$
 !!$
-!!$  c_field => new_scalar_field_2d_analytic_alt( &
+!!$  c_field => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "c_field", &
 !!$       T, &
@@ -452,7 +452,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_PERIODIC, &
 !!$       whatever  )
 !!$
-!!$  rho => new_scalar_field_2d_analytic_alt( &
+!!$  rho => new_scalar_field_2d_analytic( &
 !!$       source_term_perper, &
 !!$       "rho1", &     
 !!$       T, &
@@ -479,7 +479,7 @@ program test_general_elliptic_solver_multipatch
 !!$
 !!$ ! interp_2d_ptr => interp_2d
 !!$
-!!$  phi => new_scalar_field_2d_discrete_alt( &
+!!$  phi => new_scalar_field_2d_discrete( &
 !!$       "phi1", &
 !!$       interp_2d, &
 !!$       T, &
@@ -649,7 +649,7 @@ program test_general_elliptic_solver_multipatch
 !!$
 !!$  ! Thirdly, each field object must be initialized using the same logical
 !!$  ! mesh and coordinate transformation.
-!!$  a11_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a11_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_one, &
 !!$       "a11", &
 !!$       T, &
@@ -659,7 +659,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_DIRICHLET, &
 !!$       whatever  ) 
 !!$
-!!$  a12_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a12_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "a12", &
 !!$       T, &
@@ -669,7 +669,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_DIRICHLET, &
 !!$       whatever  ) 
 !!$
-!!$  a21_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a21_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "a21", &
 !!$       T, &
@@ -679,7 +679,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_DIRICHLET, &
 !!$       whatever  ) 
 !!$  
-!!$  a22_field_mat  => new_scalar_field_2d_analytic_alt( &
+!!$  a22_field_mat  => new_scalar_field_2d_analytic( &
 !!$       func_one, &
 !!$       "a22", &
 !!$       T, &
@@ -690,7 +690,7 @@ program test_general_elliptic_solver_multipatch
 !!$       whatever  ) 
 !!$  
 !!$
-!!$  b1_field_vect => new_scalar_field_2d_analytic_alt( &
+!!$  b1_field_vect => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "b1", &
 !!$       T, &
@@ -702,7 +702,7 @@ program test_general_elliptic_solver_multipatch
 !!$       first_deriv_eta1 = func_zero, &
 !!$       first_deriv_eta2 = func_zero)  
 !!$
-!!$  b2_field_vect => new_scalar_field_2d_analytic_alt( &
+!!$  b2_field_vect => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "b2", &
 !!$       T, &
@@ -714,7 +714,7 @@ program test_general_elliptic_solver_multipatch
 !!$       first_deriv_eta1 = func_zero, &
 !!$       first_deriv_eta2 = func_zero)
 !!$  
-!!$  c_field => new_scalar_field_2d_analytic_alt( &
+!!$  c_field => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "c_field", &
 !!$       T, &
@@ -724,7 +724,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_DIRICHLET, &
 !!$       whatever )
 !!$
-!!$  rho => new_scalar_field_2d_analytic_alt( &
+!!$  rho => new_scalar_field_2d_analytic( &
 !!$       source_term_perdir, &
 !!$       "rho2", &     
 !!$       T, &
@@ -750,7 +750,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SPLINE_DEG2 )
 !!$
 !!$  
-!!$  phi => new_scalar_field_2d_discrete_alt( &
+!!$  phi => new_scalar_field_2d_discrete( &
 !!$       "phi2", &
 !!$       interp_2d, &
 !!$       T, &
@@ -907,7 +907,7 @@ program test_general_elliptic_solver_multipatch
 !!$  
 !!$  ! Thirdly, each field object must be initialized using the same logical
 !!$  ! mesh and coordinate transformation.
-!!$  a11_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a11_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_one, &
 !!$       "a11", &
 !!$       T, &
@@ -917,7 +917,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_DIRICHLET, &
 !!$       whatever ) 
 !!$  
-!!$  a12_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a12_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "a12", &
 !!$       T, &
@@ -927,7 +927,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_DIRICHLET, &
 !!$       whatever ) 
 !!$  
-!!$  a21_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a21_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "a21", &
 !!$       T, &
@@ -937,7 +937,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_DIRICHLET, &
 !!$       whatever ) 
 !!$  
-!!$  a22_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a22_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_one, &
 !!$       "a22", &
 !!$       T, &
@@ -948,7 +948,7 @@ program test_general_elliptic_solver_multipatch
 !!$       whatever) 
 !!$  
 !!$
-!!$  b1_field_vect => new_scalar_field_2d_analytic_alt( &
+!!$  b1_field_vect => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "b1", &
 !!$       T, &
@@ -960,7 +960,7 @@ program test_general_elliptic_solver_multipatch
 !!$       first_deriv_eta1 = func_zero, &
 !!$       first_deriv_eta2 = func_zero) 
 !!$  
-!!$  b2_field_vect => new_scalar_field_2d_analytic_alt( &
+!!$  b2_field_vect => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "b2", &
 !!$       T, &
@@ -972,7 +972,7 @@ program test_general_elliptic_solver_multipatch
 !!$       first_deriv_eta1 = func_zero, &
 !!$       first_deriv_eta2 = func_zero)
 !!$  
-!!$  c_field => new_scalar_field_2d_analytic_alt( &
+!!$  c_field => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "c_field", &
 !!$       T, &
@@ -982,7 +982,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_DIRICHLET, &
 !!$       whatever)
 !!$
-!!$  rho => new_scalar_field_2d_analytic_alt( &
+!!$  rho => new_scalar_field_2d_analytic( &
 !!$       source_term_perdir, &
 !!$       "rho3", &     
 !!$       T, &
@@ -1008,7 +1008,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SPLINE_DEG2 )
 !!$ 
 !!$  
-!!$  phi => new_scalar_field_2d_discrete_alt( &
+!!$  phi => new_scalar_field_2d_discrete( &
 !!$       "phi3", &
 !!$       interp_2d, &
 !!$       T, &
@@ -1164,7 +1164,7 @@ program test_general_elliptic_solver_multipatch
 !!$  
 !!$  ! Thirdly, each field object must be initialized using the same logical
 !!$  ! mesh and coordinate transformation.
-!!$  a11_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a11_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_one, &
 !!$       "a11", &
 !!$       T, &
@@ -1174,7 +1174,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_PERIODIC, &
 !!$       whatever ) 
 !!$  
-!!$  a12_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a12_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "a12", &
 !!$       T, &
@@ -1184,7 +1184,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_PERIODIC, &
 !!$       whatever ) 
 !!$  
-!!$  a21_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a21_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "a21", &
 !!$       T, &
@@ -1194,7 +1194,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_PERIODIC, &
 !!$       whatever ) 
 !!$  
-!!$  a22_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a22_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_one, &
 !!$       "a22", &
 !!$       T, &
@@ -1204,7 +1204,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_PERIODIC, &
 !!$       whatever ) 
 !!$  
-!!$  b1_field_vect => new_scalar_field_2d_analytic_alt( &
+!!$  b1_field_vect => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "b1", &
 !!$       T, &
@@ -1216,7 +1216,7 @@ program test_general_elliptic_solver_multipatch
 !!$       first_deriv_eta1 = func_zero, &
 !!$       first_deriv_eta2 = func_zero)
 !!$
-!!$  b2_field_vect => new_scalar_field_2d_analytic_alt( &
+!!$  b2_field_vect => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "b2", &
 !!$       T, &
@@ -1228,7 +1228,7 @@ program test_general_elliptic_solver_multipatch
 !!$       first_deriv_eta1 = func_zero, &
 !!$       first_deriv_eta2 = func_zero)
 !!$
-!!$  c_field => new_scalar_field_2d_analytic_alt( &
+!!$  c_field => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "c_field", &
 !!$       T, &
@@ -1238,7 +1238,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_PERIODIC, &
 !!$       whatever)
 !!$  
-!!$  rho => new_scalar_field_2d_analytic_alt( &
+!!$  rho => new_scalar_field_2d_analytic( &
 !!$       source_term_dirper, &
 !!$       "rho4", &     
 !!$       T, &
@@ -1263,7 +1263,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SPLINE_DEG1, &
 !!$       SPLINE_DEG2 )
 !!$  
-!!$  phi => new_scalar_field_2d_discrete_alt( &
+!!$  phi => new_scalar_field_2d_discrete( &
 !!$       "phi4", &
 !!$       interp_2d, &
 !!$       T, &
@@ -1412,7 +1412,7 @@ program test_general_elliptic_solver_multipatch
 !!$  
 !!$  ! Thirdly, each field object must be initialized using the same logical
 !!$  ! mesh and coordinate transformation.
-!!$  a11_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a11_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_one, &
 !!$       "a11", &
 !!$       T, &
@@ -1422,7 +1422,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_PERIODIC, &
 !!$       whatever ) 
 !!$  
-!!$  a12_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a12_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "a12", &
 !!$       T, &
@@ -1432,7 +1432,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_PERIODIC, &
 !!$       whatever ) 
 !!$  
-!!$  a21_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a21_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "a21", &
 !!$       T, &
@@ -1442,7 +1442,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_PERIODIC, &
 !!$       whatever ) 
 !!$  
-!!$  a22_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a22_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_one, &
 !!$       "a22", &
 !!$       T, &
@@ -1453,7 +1453,7 @@ program test_general_elliptic_solver_multipatch
 !!$       whatever ) 
 !!$  
 !!$
-!!$  b1_field_vect => new_scalar_field_2d_analytic_alt( &
+!!$  b1_field_vect => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "b1", &
 !!$       T, &
@@ -1465,7 +1465,7 @@ program test_general_elliptic_solver_multipatch
 !!$       first_deriv_eta1 = func_zero, &
 !!$       first_deriv_eta2 = func_zero)
 !!$
-!!$  b2_field_vect => new_scalar_field_2d_analytic_alt( &
+!!$  b2_field_vect => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "b2", &
 !!$       T, &
@@ -1478,7 +1478,7 @@ program test_general_elliptic_solver_multipatch
 !!$       first_deriv_eta2 = func_zero)
 !!$
 !!$
-!!$  c_field => new_scalar_field_2d_analytic_alt( &
+!!$  c_field => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "c_field", &
 !!$       T, &
@@ -1488,7 +1488,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_PERIODIC, &
 !!$       whatever)
 !!$  
-!!$  rho => new_scalar_field_2d_analytic_alt( &
+!!$  rho => new_scalar_field_2d_analytic( &
 !!$       source_term_chgt_perper, &
 !!$       "rho5", &     
 !!$       T, &
@@ -1514,7 +1514,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SPLINE_DEG2 )
 !!$  
 !!$  
-!!$  phi => new_scalar_field_2d_discrete_alt( &
+!!$  phi => new_scalar_field_2d_discrete( &
 !!$       "phi5", &
 !!$       interp_2d, &
 !!$       T, &
@@ -1682,7 +1682,7 @@ program test_general_elliptic_solver_multipatch
 !!$  
 !!$  ! Thirdly, each field object must be initialized using the same logical
 !!$  ! mesh and coordinate transformation.
-!!$  a11_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a11_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_one, &
 !!$       "a11", &
 !!$       T, &
@@ -1692,7 +1692,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_DIRICHLET, &
 !!$       whatever ) 
 !!$  
-!!$  a12_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a12_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "a12", &
 !!$       T, &
@@ -1702,7 +1702,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_DIRICHLET, &
 !!$       whatever ) 
 !!$  
-!!$  a21_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a21_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "a21", &
 !!$       T, &
@@ -1712,7 +1712,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_DIRICHLET, &
 !!$       whatever ) 
 !!$  
-!!$  a22_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a22_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_one, &
 !!$       "a22", &
 !!$       T, &
@@ -1722,7 +1722,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_DIRICHLET, &
 !!$       whatever ) 
 !!$  
-!!$  b1_field_vect => new_scalar_field_2d_analytic_alt( &
+!!$  b1_field_vect => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "b1", &
 !!$       T, &
@@ -1734,7 +1734,7 @@ program test_general_elliptic_solver_multipatch
 !!$       first_deriv_eta1 = func_zero, &
 !!$       first_deriv_eta2 = func_zero)
 !!$  
-!!$  b2_field_vect => new_scalar_field_2d_analytic_alt( &
+!!$  b2_field_vect => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "b2", &
 !!$       T, &
@@ -1746,7 +1746,7 @@ program test_general_elliptic_solver_multipatch
 !!$       first_deriv_eta1 = func_zero, &
 !!$       first_deriv_eta2 = func_zero)
 !!$  
-!!$  c_field => new_scalar_field_2d_analytic_alt( &
+!!$  c_field => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "c_field", &
 !!$       T, &
@@ -1756,7 +1756,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_DIRICHLET, &
 !!$       whatever )
 !!$
-!!$  rho => new_scalar_field_2d_analytic_alt( &
+!!$  rho => new_scalar_field_2d_analytic( &
 !!$       source_term_chgt_perdir, &
 !!$       "rho6", &     
 !!$       T, &
@@ -1781,7 +1781,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SPLINE_DEG1, &
 !!$       SPLINE_DEG2 )
 !!$  
-!!$  phi => new_scalar_field_2d_discrete_alt( &
+!!$  phi => new_scalar_field_2d_discrete( &
 !!$       "phi6", &
 !!$       interp_2d, &
 !!$       T, &
@@ -1950,7 +1950,7 @@ program test_general_elliptic_solver_multipatch
 !!$  
 !!$   ! Thirdly, each field object must be initialized using the same logical
 !!$  ! mesh and coordinate transformation.
-!!$  a11_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a11_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_one, &
 !!$       "a11", &
 !!$       T, &
@@ -1960,7 +1960,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_DIRICHLET, &
 !!$       whatever ) 
 !!$  
-!!$  a12_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a12_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "a12", &
 !!$       T, &
@@ -1970,7 +1970,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_DIRICHLET, &
 !!$       whatever) 
 !!$  
-!!$  a21_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a21_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "a21", &
 !!$       T, &
@@ -1980,7 +1980,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_DIRICHLET, &
 !!$       whatever ) 
 !!$  
-!!$  a22_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a22_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_one, &
 !!$       "a22", &
 !!$       T, &
@@ -1990,7 +1990,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_DIRICHLET, &
 !!$       whatever) 
 !!$  
-!!$  b1_field_vect => new_scalar_field_2d_analytic_alt( &
+!!$  b1_field_vect => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "b1", &
 !!$       T, &
@@ -2002,7 +2002,7 @@ program test_general_elliptic_solver_multipatch
 !!$       first_deriv_eta1 = func_zero, &
 !!$       first_deriv_eta2 = func_zero)
 !!$
-!!$  b2_field_vect => new_scalar_field_2d_analytic_alt( &
+!!$  b2_field_vect => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "b2", &
 !!$       T, &
@@ -2015,7 +2015,7 @@ program test_general_elliptic_solver_multipatch
 !!$       first_deriv_eta2 = func_zero)
 !!$
 !!$
-!!$  c_field => new_scalar_field_2d_analytic_alt( &
+!!$  c_field => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "c_field", &
 !!$       T, &
@@ -2025,7 +2025,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_DIRICHLET, &
 !!$       whatever )
 !!$  
-!!$  rho => new_scalar_field_2d_analytic_alt( &
+!!$  rho => new_scalar_field_2d_analytic( &
 !!$       source_term_chgt_dirdir, &
 !!$       "rho7", &     
 !!$       T, &
@@ -2050,7 +2050,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SPLINE_DEG1, &
 !!$       SPLINE_DEG2 )
 !!$  
-!!$  phi => new_scalar_field_2d_discrete_alt( &
+!!$  phi => new_scalar_field_2d_discrete( &
 !!$       "phi7", &
 !!$       interp_2d, &
 !!$       T, &
@@ -2215,7 +2215,7 @@ program test_general_elliptic_solver_multipatch
 !!$  
 !!$  ! Thirdly, each field object must be initialized using the same logical
 !!$  ! mesh and coordinate transformation.
-!!$  a11_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a11_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_one, &
 !!$       "a11", &
 !!$       T, &
@@ -2225,7 +2225,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_PERIODIC, &
 !!$       whatever ) 
 !!$  
-!!$  a12_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a12_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "a12", &
 !!$       T, &
@@ -2235,7 +2235,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_PERIODIC, &
 !!$       whatever )
 !!$  
-!!$  a21_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a21_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "a21", &
 !!$       T, &
@@ -2245,7 +2245,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_PERIODIC, &
 !!$       whatever ) 
 !!$  
-!!$  a22_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a22_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_one, &
 !!$       "a22", &
 !!$       T, &
@@ -2255,7 +2255,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_PERIODIC,&
 !!$       whatever) 
 !!$  
-!!$  b1_field_vect => new_scalar_field_2d_analytic_alt( &
+!!$  b1_field_vect => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "b1", &
 !!$       T, &
@@ -2267,7 +2267,7 @@ program test_general_elliptic_solver_multipatch
 !!$       first_deriv_eta1 = func_zero, &
 !!$       first_deriv_eta2 = func_zero)
 !!$
-!!$  b2_field_vect => new_scalar_field_2d_analytic_alt( &
+!!$  b2_field_vect => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "b2", &
 !!$       T, &
@@ -2280,7 +2280,7 @@ program test_general_elliptic_solver_multipatch
 !!$       first_deriv_eta2 = func_zero)
 !!$
 !!$
-!!$  c_field => new_scalar_field_2d_analytic_alt( &
+!!$  c_field => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "c_field", &
 !!$       T, &
@@ -2290,7 +2290,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_PERIODIC, &
 !!$       whatever)
 !!$  
-!!$  rho => new_scalar_field_2d_analytic_alt( &
+!!$  rho => new_scalar_field_2d_analytic( &
 !!$       source_term_chgt_dirper, &
 !!$       "rho8", &     
 !!$       T, &
@@ -2316,7 +2316,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SPLINE_DEG2 )
 !!$  
 !!$  
-!!$  phi => new_scalar_field_2d_discrete_alt( &
+!!$  phi => new_scalar_field_2d_discrete( &
 !!$       "phi8", &
 !!$       interp_2d, &
 !!$       T, &
@@ -2492,7 +2492,7 @@ program test_general_elliptic_solver_multipatch
 !!$  
 !!$  ! Thirdly, each field object must be initialized using the same logical
 !!$  ! mesh and coordinate transformation.
-!!$  a11_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a11_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_one, &
 !!$       "a11", &
 !!$       T, &
@@ -2502,7 +2502,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_PERIODIC, &
 !!$       whatever ) 
 !!$  
-!!$  a12_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a12_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "a12", &
 !!$       T, &
@@ -2512,7 +2512,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_PERIODIC, &
 !!$       whatever )
 !!$  
-!!$  a21_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a21_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "a21", &
 !!$       T, &
@@ -2522,7 +2522,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_PERIODIC, &
 !!$       whatever ) 
 !!$  
-!!$  a22_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a22_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_one, &
 !!$       "a22", &
 !!$       T, &
@@ -2532,7 +2532,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_PERIODIC,&
 !!$       whatever)
 !!$    
-!!$  b1_field_vect => new_scalar_field_2d_analytic_alt( &
+!!$  b1_field_vect => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "b1", &
 !!$       T, &
@@ -2544,7 +2544,7 @@ program test_general_elliptic_solver_multipatch
 !!$       first_deriv_eta1 = func_zero, &
 !!$       first_deriv_eta2 = func_zero)
 !!$
-!!$  b2_field_vect => new_scalar_field_2d_analytic_alt( &
+!!$  b2_field_vect => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "b2", &
 !!$       T, &
@@ -2556,7 +2556,7 @@ program test_general_elliptic_solver_multipatch
 !!$       first_deriv_eta1 = func_zero, &
 !!$       first_deriv_eta2 = func_zero)
 !!$  
-!!$  c_field => new_scalar_field_2d_analytic_alt( &
+!!$  c_field => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "c_field", &
 !!$       T, &
@@ -2598,7 +2598,7 @@ program test_general_elliptic_solver_multipatch
 !!$  
 !!$  ! terme_source_interp => interp_2d_term_source
 !!$  
-!!$  rho => new_scalar_field_2d_discrete_alt( &
+!!$  rho => new_scalar_field_2d_discrete( &
 !!$       "rho95", &
 !!$       interp_2d_term_source, &
 !!$       T, &
@@ -2633,7 +2633,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SPLINE_DEG2 )
   
 !!$  
-!!$  phi => new_scalar_field_2d_discrete_alt( &
+!!$  phi => new_scalar_field_2d_discrete( &
 !!$       "phi95", &
 !!$       interp_2d, &
 !!$       T, &
@@ -2812,7 +2812,7 @@ program test_general_elliptic_solver_multipatch
 !!$  
 !!$  ! Thirdly, each field object must be initialized using the same logical
 !!$  ! mesh and coordinate transformation.
-!!$  a11_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a11_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_one, &
 !!$       "a11", &
 !!$       T, &
@@ -2822,7 +2822,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_PERIODIC, &
 !!$       whatever  ) 
 !!$  
-!!$  a12_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a12_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "a12", &
 !!$       T, &
@@ -2832,7 +2832,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_PERIODIC, &
 !!$       whatever )
 !!$  
-!!$  a21_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a21_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "a21", &
 !!$       T, &
@@ -2842,7 +2842,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_PERIODIC, &
 !!$       whatever ) 
 !!$  
-!!$  a22_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a22_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_one, &
 !!$       "a22", &
 !!$       T, &
@@ -2853,7 +2853,7 @@ program test_general_elliptic_solver_multipatch
 !!$       whatever)
 !!$  
 !!$  
-!!$  b1_field_vect => new_scalar_field_2d_analytic_alt( &
+!!$  b1_field_vect => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "b1", &
 !!$       T, &
@@ -2865,7 +2865,7 @@ program test_general_elliptic_solver_multipatch
 !!$       first_deriv_eta1 = func_zero, &
 !!$       first_deriv_eta2 = func_zero)
 !!$
-!!$  b2_field_vect => new_scalar_field_2d_analytic_alt( &
+!!$  b2_field_vect => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "b2", &
 !!$       T, &
@@ -2877,7 +2877,7 @@ program test_general_elliptic_solver_multipatch
 !!$       first_deriv_eta1 = func_zero, &
 !!$       first_deriv_eta2 = func_zero)
 !!$  
-!!$  c_field => new_scalar_field_2d_analytic_alt( &
+!!$  c_field => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "c_field", &
 !!$       T, &
@@ -2921,7 +2921,7 @@ program test_general_elliptic_solver_multipatch
 !!$  
 !!$  tab_rho(:,:) = tab_rho - sum(tab_rho)/((npts1-1)*(npts2-1))
 !!$  print*,'moyenne', sum(tab_rho)
-!!$  rho => new_scalar_field_2d_discrete_alt( &
+!!$  rho => new_scalar_field_2d_discrete( &
 !!$       "rho9", &
 !!$       terme_source_interp, &
 !!$       T, &
@@ -2953,7 +2953,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SPLINE_DEG2 )
   
 !!$  
-!!$  phi => new_scalar_field_2d_discrete_alt( &
+!!$  phi => new_scalar_field_2d_discrete( &
 !!$       "phi9", &
 !!$       interp_2d, &
 !!$       T, &
@@ -3130,7 +3130,7 @@ program test_general_elliptic_solver_multipatch
 !!$  
 !!$  ! Thirdly, each field object must be initialized using the same logical
 !!$  ! mesh and coordinate transformation.
-!!$  a11_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a11_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_one, &
 !!$       "a11", &
 !!$       T, &
@@ -3140,7 +3140,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_DIRICHLET, &
 !!$       whatever ) 
 !!$  
-!!$  a12_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a12_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "a12", &
 !!$       T, &
@@ -3150,7 +3150,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_DIRICHLET, &
 !!$       whatever )
 !!$  
-!!$  a21_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a21_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "a21", &
 !!$       T, &
@@ -3160,7 +3160,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_DIRICHLET, &
 !!$       whatever ) 
 !!$  
-!!$  a22_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a22_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_one, &
 !!$       "a22", &
 !!$       T, &
@@ -3171,7 +3171,7 @@ program test_general_elliptic_solver_multipatch
 !!$       whatever)
 !!$  
 !!$
-!!$  b1_field_vect => new_scalar_field_2d_analytic_alt( &
+!!$  b1_field_vect => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "b1", &
 !!$       T, &
@@ -3183,7 +3183,7 @@ program test_general_elliptic_solver_multipatch
 !!$       first_deriv_eta1 = func_zero, &
 !!$       first_deriv_eta2 = func_zero)
 !!$  
-!!$  b2_field_vect => new_scalar_field_2d_analytic_alt( &
+!!$  b2_field_vect => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "b2", &
 !!$       T, &
@@ -3196,7 +3196,7 @@ program test_general_elliptic_solver_multipatch
 !!$       first_deriv_eta2 = func_zero)
 !!$ 
 !!$  
-!!$  c_field => new_scalar_field_2d_analytic_alt( &
+!!$  c_field => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "c_field", &
 !!$       T, &
@@ -3237,7 +3237,7 @@ program test_general_elliptic_solver_multipatch
 !!$  terme_source_interp => interp_2d_term_source
 !!$
 !!$
-!!$  rho => new_scalar_field_2d_discrete_alt( &
+!!$  rho => new_scalar_field_2d_discrete( &
 !!$       "rho10", &
 !!$       terme_source_interp, &
 !!$       T, &
@@ -3269,7 +3269,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SPLINE_DEG2 )
   
 !!$  
-!!$  phi => new_scalar_field_2d_discrete_alt( &
+!!$  phi => new_scalar_field_2d_discrete( &
 !!$       "phi10", &
 !!$       interp_2d, &
 !!$       T, &
@@ -3444,7 +3444,7 @@ program test_general_elliptic_solver_multipatch
 !!$  
 !!$  ! Thirdly, each field object must be initialized using the same logical
 !!$  ! mesh and coordinate transformation.
-!!$  a11_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a11_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_one, &
 !!$       "a11", &
 !!$       T, &
@@ -3454,7 +3454,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_DIRICHLET, &
 !!$       whatever ) 
 !!$  
-!!$  a12_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a12_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "a12", &
 !!$       T, &
@@ -3464,7 +3464,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_DIRICHLET, &
 !!$       whatever )
 !!$  
-!!$  a21_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a21_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "a21", &
 !!$       T, &
@@ -3474,7 +3474,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_DIRICHLET, &
 !!$       whatever ) 
 !!$  
-!!$  a22_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a22_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_one, &
 !!$       "a22", &
 !!$       T, &
@@ -3484,7 +3484,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_DIRICHLET,&
 !!$       whatever) 
 !!$  
-!!$  b1_field_vect => new_scalar_field_2d_analytic_alt( &
+!!$  b1_field_vect => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "b1", &
 !!$       T, &
@@ -3496,7 +3496,7 @@ program test_general_elliptic_solver_multipatch
 !!$       first_deriv_eta1 = func_zero, &
 !!$       first_deriv_eta2 = func_zero)
 !!$  
-!!$  b2_field_vect => new_scalar_field_2d_analytic_alt( &
+!!$  b2_field_vect => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "b2", &
 !!$       T, &
@@ -3508,7 +3508,7 @@ program test_general_elliptic_solver_multipatch
 !!$       first_deriv_eta1 = func_zero, &
 !!$       first_deriv_eta2 = func_zero)
 !!$  
-!!$  c_field => new_scalar_field_2d_analytic_alt( &
+!!$  c_field => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "c_field", &
 !!$       T, &
@@ -3550,7 +3550,7 @@ program test_general_elliptic_solver_multipatch
 !!$
 !!$
 !!$
-!!$  rho => new_scalar_field_2d_discrete_alt( &
+!!$  rho => new_scalar_field_2d_discrete( &
 !!$       "rho11", &
 !!$       terme_source_interp, &
 !!$       T, &
@@ -3581,7 +3581,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SPLINE_DEG1, &
 !!$       SPLINE_DEG2 )
     
-!!$  phi => new_scalar_field_2d_discrete_alt( &
+!!$  phi => new_scalar_field_2d_discrete( &
 !!$       "phi11", &
 !!$       interp_2d, &
 !!$       T, &
@@ -3755,7 +3755,7 @@ program test_general_elliptic_solver_multipatch
 !!$  
 !!$  ! Thirdly, each field object must be initialized using the same logical
 !!$  ! mesh and coordinate transformation.
-!!$  a11_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a11_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_one, &
 !!$       "a11", &
 !!$       T, &
@@ -3765,7 +3765,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_PERIODIC, &
 !!$       whatever ) 
 !!$  
-!!$  a12_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a12_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "a12", &
 !!$       T, &
@@ -3775,7 +3775,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_PERIODIC, &
 !!$       whatever )
 !!$  
-!!$  a21_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a21_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "a21", &
 !!$       T, &
@@ -3785,7 +3785,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SLL_PERIODIC, &
 !!$       whatever ) 
 !!$  
-!!$  a22_field_mat => new_scalar_field_2d_analytic_alt( &
+!!$  a22_field_mat => new_scalar_field_2d_analytic( &
 !!$       func_one, &
 !!$       "a22", &
 !!$       T, &
@@ -3796,7 +3796,7 @@ program test_general_elliptic_solver_multipatch
 !!$       whatever) 
 !!$  
 !!$
-!!$  b1_field_vect => new_scalar_field_2d_analytic_alt( &
+!!$  b1_field_vect => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "b1", &
 !!$       T, &
@@ -3808,7 +3808,7 @@ program test_general_elliptic_solver_multipatch
 !!$       first_deriv_eta1 = func_zero, &
 !!$       first_deriv_eta2 = func_zero)
 !!$  
-!!$  b2_field_vect => new_scalar_field_2d_analytic_alt( &
+!!$  b2_field_vect => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "b2", &
 !!$       T, &
@@ -3820,7 +3820,7 @@ program test_general_elliptic_solver_multipatch
 !!$       first_deriv_eta1 = func_zero, &
 !!$       first_deriv_eta2 = func_zero) 
 !!$  
-!!$  c_field => new_scalar_field_2d_analytic_alt( &
+!!$  c_field => new_scalar_field_2d_analytic( &
 !!$       func_zero, &
 !!$       "c_field", &
 !!$       T, &
@@ -3861,7 +3861,7 @@ program test_general_elliptic_solver_multipatch
 !!$  terme_source_interp => interp_2d_term_source
 !!$
 !!$
-!!$  rho => new_scalar_field_2d_discrete_alt( &
+!!$  rho => new_scalar_field_2d_discrete( &
 !!$       "rho12", &
 !!$       terme_source_interp, &
 !!$       T, &
@@ -3892,7 +3892,7 @@ program test_general_elliptic_solver_multipatch
 !!$       SPLINE_DEG1, &
 !!$       SPLINE_DEG2 )
   
-!!$  phi => new_scalar_field_2d_discrete_alt( &
+!!$  phi => new_scalar_field_2d_discrete( &
 !!$       "phi12", &
 !!$       interp_2d, &
 !!$       T, &

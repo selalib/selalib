@@ -392,8 +392,8 @@ end function func_zero
     class(sll_scalar_field_2d_base), pointer              :: b1_field_vect
     class(sll_scalar_field_2d_base), pointer              :: b2_field_vect
     class(sll_scalar_field_2d_base), pointer              :: c_field
-    class(sll_scalar_field_2d_discrete_alt), pointer      :: rho
-    type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
+    class(sll_scalar_field_2d_discrete), pointer      :: rho
+    type(sll_scalar_field_2d_discrete), pointer       :: phi
     sll_real64, dimension(:), allocatable :: send_buf
     sll_real64, dimension(:), allocatable :: recv_buf
     sll_int32, dimension(:), allocatable  :: recv_sz
@@ -423,7 +423,7 @@ end function func_zero
     eta4_max = sim%mesh2d_v%eta2_max
 
     ! continue with the fields
-    a11_field_mat => new_scalar_field_2d_analytic_alt( &
+    a11_field_mat => new_scalar_field_2d_analytic( &
          sim%a11_f, &
          "a11", &
          sim%transfx, &
@@ -433,7 +433,7 @@ end function func_zero
          sim%bc_top, &
          (/1.0_f64/) ) 
 
-    a12_field_mat => new_scalar_field_2d_analytic_alt( &
+    a12_field_mat => new_scalar_field_2d_analytic( &
          sim%a12_f, &
          "a12", &
          sim%transfx, &
@@ -443,7 +443,7 @@ end function func_zero
          sim%bc_top, &
          (/0.0_f64/)) 
 
-    a21_field_mat => new_scalar_field_2d_analytic_alt( &
+    a21_field_mat => new_scalar_field_2d_analytic( &
          sim%a21_f, &
          "a21", &
          sim%transfx, &
@@ -453,7 +453,7 @@ end function func_zero
          sim%bc_top, &
          (/0.0_f64/) )
     
-    a22_field_mat => new_scalar_field_2d_analytic_alt( &
+    a22_field_mat => new_scalar_field_2d_analytic( &
          sim%a22_f, &
          "a22", &
          sim%transfx, &
@@ -465,7 +465,7 @@ end function func_zero
 
     print*, 'finished fields a'
 
-    b1_field_vect => new_scalar_field_2d_analytic_alt( &
+    b1_field_vect => new_scalar_field_2d_analytic( &
          func_zero, &
          "b1", &
          sim%transfx, &
@@ -477,7 +477,7 @@ end function func_zero
          func_zero, &
          func_zero)
     
-    b2_field_vect => new_scalar_field_2d_analytic_alt( &
+    b2_field_vect => new_scalar_field_2d_analytic( &
          func_zero, &
          "b2", &
          sim%transfx, &
@@ -489,7 +489,7 @@ end function func_zero
          func_zero, &
          func_zero) 
 
-    c_field => new_scalar_field_2d_analytic_alt( &
+    c_field => new_scalar_field_2d_analytic( &
          sim%c_f, &
          "c_field", &
          sim%transfx, &
@@ -503,7 +503,7 @@ end function func_zero
     SLL_ALLOCATE(phi_values(nc_x1+1,nc_x2+1),ierr)
     phi_values(:,:) = 0.0_f64
 
-    phi => new_scalar_field_2d_discrete_alt( &
+    phi => new_scalar_field_2d_discrete( &
          "phi_potential", &
          sim%interp_phi, &
          sim%transfx, &
@@ -897,7 +897,7 @@ end function func_zero
     
 
     
-    rho => new_scalar_field_2d_discrete_alt( &
+    rho => new_scalar_field_2d_discrete( &
          "rho_field_qns", &
          sim%interp_rho, &     
          sim%transfx, &
@@ -2057,7 +2057,7 @@ end function func_zero
     sll_real64 :: eta1, eta2, eta3, eta4
     sll_int32  :: i, j, k, l
     sll_real64, intent(out) :: efield_energy_total
-    type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
+    type(sll_scalar_field_2d_discrete), pointer       :: phi
     sll_real64, dimension(1:2,1:2) :: jac_m
     sll_real64 :: ex
     sll_real64 :: ey
@@ -2123,7 +2123,7 @@ end function func_zero
     sll_real64 :: eta1, eta2, eta3, eta4
     sll_int32  :: i, j, k, l
     sll_real64, intent(out) :: efield_energy_total
-    type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
+    type(sll_scalar_field_2d_discrete), pointer       :: phi
     sll_real64, dimension(1:2,1:2) :: jac_m
     sll_real64 :: ex
     sll_real64 :: ey
