@@ -31,12 +31,12 @@ module sll_module_poisson_2d_elliptic_solver
   use sll_module_poisson_2d_base
   use sll_general_coordinate_elliptic_solver_module
   use sll_module_scalar_field_2d_base
-  use sll_module_scalar_field_2d_alternative
+  use sll_module_scalar_field_2d
 implicit none
 
   type,extends(sll_poisson_2d_base) :: poisson_2d_elliptic_solver      
     type(general_coordinate_elliptic_solver), pointer      :: elliptic_solver
-    class(sll_scalar_field_2d_discrete_alt), pointer        :: phi_field
+    class(sll_scalar_field_2d_discrete), pointer        :: phi_field
     class(sll_scalar_field_2d_base), pointer                :: rho_field
     class(sll_scalar_field_2d_base), pointer                :: a11_field
     class(sll_scalar_field_2d_base), pointer                :: a12_field
@@ -264,7 +264,7 @@ contains
          spline_degree_eta1, &
          spline_degree_eta2)   
                                    
-    poisson%a11_field => new_scalar_field_2d_discrete_alt( &
+    poisson%a11_field => new_scalar_field_2d_discrete( &
          "a11_check", &
          poisson%interp_a11, &
          transf, &
@@ -276,7 +276,7 @@ contains
     call poisson%a11_field%set_field_data( a11_values )
     call poisson%a11_field%update_interpolation_coefficients( )  
    
-    poisson%a12_field => new_scalar_field_2d_discrete_alt( &
+    poisson%a12_field => new_scalar_field_2d_discrete( &
          "a12_check", &
          poisson%interp_a12, &
          transf, &
@@ -288,7 +288,7 @@ contains
     call poisson%a12_field%set_field_data( a12_values )
     call poisson%a12_field%update_interpolation_coefficients( ) 
     
-    poisson%a21_field => new_scalar_field_2d_discrete_alt( &
+    poisson%a21_field => new_scalar_field_2d_discrete( &
          "a21_check", &
          poisson%interp_a21, &
          transf, &
@@ -300,7 +300,7 @@ contains
     call poisson%a21_field%set_field_data( a21_values )
     call poisson%a21_field%update_interpolation_coefficients( ) 
     
-    poisson%a22_field => new_scalar_field_2d_discrete_alt( &
+    poisson%a22_field => new_scalar_field_2d_discrete( &
          "a22_check", &
          poisson%interp_a22, &
          transf, &
@@ -312,7 +312,7 @@ contains
     call poisson%a22_field%set_field_data( a22_values )
     call poisson%a22_field%update_interpolation_coefficients( )
 
-    poisson%b1_field => new_scalar_field_2d_discrete_alt( &
+    poisson%b1_field => new_scalar_field_2d_discrete( &
          "b1_check", &
          poisson%interp_b1, &
          transf, &
@@ -324,7 +324,7 @@ contains
     call poisson%b1_field%set_field_data( b1_values )
     call poisson%b1_field%update_interpolation_coefficients( ) 
     
-    poisson%b2_field => new_scalar_field_2d_discrete_alt( &
+    poisson%b2_field => new_scalar_field_2d_discrete( &
          "b2_check", &
          poisson%interp_b2, &
          transf, &
@@ -336,7 +336,7 @@ contains
     call poisson%b2_field%set_field_data( b2_values )
     call poisson%b2_field%update_interpolation_coefficients( )
   
-    poisson%c_field => new_scalar_field_2d_discrete_alt( &
+    poisson%c_field => new_scalar_field_2d_discrete( &
          "c_check", &
          poisson%interp_c, &
          transf, &
@@ -353,7 +353,7 @@ contains
     phi_values(:,:) = 0.0_f64
     rho_values(:,:) = 0.0_f64
     
-    poisson%phi_field => new_scalar_field_2d_discrete_alt( &
+    poisson%phi_field => new_scalar_field_2d_discrete( &
          "phi_check", &
          poisson%interp_phi, &
          transf, &
@@ -364,7 +364,7 @@ contains
     call poisson%phi_field%set_field_data( phi_values )
     call poisson%phi_field%update_interpolation_coefficients( )  
     
-     poisson%rho_field => new_scalar_field_2d_discrete_alt( &
+     poisson%rho_field => new_scalar_field_2d_discrete( &
          "rho_check", &
          poisson%interp_rho, &
          transf, &

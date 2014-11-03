@@ -19,13 +19,6 @@
 !> <b> Headers file available </b>
 !>  - sll_fields.h
 !>
-!> <b> Modules available </b>
-!>  List fortran module available
-!>  - sll_scalar_field_1d
-!>  - sll_scalar_field_1d_alternative
-!>  - sll_scalar_field_2d
-!>  - sll_scalar_field_2d_alternative
-!>
 !> <b> How to use it </b>
 !> - Header file : \code #include 'sll_fields.h' \endcode
 !> - Link with   <code>-lsll_fields</code>

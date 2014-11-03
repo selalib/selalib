@@ -97,7 +97,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
                          sll_time_splitting
                          sll_file_io_parallel
                          sll_poisson_parallel
-                         sll_scalar_field_1d_alternative
+                         sll_fields
                          sll_fcisl
                          sll_derivative
                          sll_qn_solvers_parallel
@@ -109,7 +109,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
                          sll_fft
                          sll_distribution_function
                          sll_general_coordinate_elliptic_solvers
-                         sll_scalar_field_2d_alternative
+                         sll_fields
                          sll_pic_particles
                          sll_random_deviate_generators
                          sll_field_accumulators

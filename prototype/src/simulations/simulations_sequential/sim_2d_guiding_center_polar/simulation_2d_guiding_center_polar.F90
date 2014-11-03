@@ -32,8 +32,6 @@ module sll_simulation_2d_guiding_center_polar_module
   use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
   use sll_parallel_array_initializer_module
-!  use sll_module_scalar_field_2d_base
-!  use sll_module_scalar_field_2d_alternative
 #ifdef MUDPACK
   use sll_module_poisson_2d_mudpack
   use sll_module_poisson_2d_mudpack_curvilinear_solver_old

@@ -22,7 +22,7 @@
 
    TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers_multipatch 
      sll_scalar_field_multipatch
-     sll_scalar_field_2d_alternative 
+     sll_scalar_field_2d
      sll_coordinate_transformation_multipatch
      sll_sparse_matrix 
      sll_integration)
@@ -89,7 +89,7 @@
 #
 #   target_link_libraries( test_general_coordinates_elliptic_solver_umfpack
 #     sll_general_coordinate_elliptic_solvers_umfpack
-#     sll_scalar_field_2d_alternative
+#     sll_scalar_field_2d
 #     sll_interpolators
 #     sll_coordinate_transformations
 #     sll_meshes
