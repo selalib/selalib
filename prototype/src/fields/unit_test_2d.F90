@@ -127,7 +127,7 @@ program unit_test_2d
 !!$       SLL_PERIODIC )
   
   ! ----> initialization of the field
-  doubly_periodic_anal  => new_scalar_field_2d_analytic_alt( &
+  doubly_periodic_anal  => new_scalar_field_2d_analytic( &
        test_function_perper, &
        "doubly_periodic_anal", &
        T, &
@@ -187,7 +187,7 @@ program unit_test_2d
   !----------------------------------------------------------------------------
   
   ! ----> initialization of the field
-  periodique_dirichlet_anal  => new_scalar_field_2d_analytic_alt( &
+  periodique_dirichlet_anal  => new_scalar_field_2d_analytic( &
        test_function_perdir, &
        "periodique_dirichlet_anal", &
        T, &
@@ -251,7 +251,7 @@ program unit_test_2d
 
 
   ! ----> initialization of the field
-  dirichlet_periodique_anal  => new_scalar_field_2d_analytic_alt( &
+  dirichlet_periodique_anal  => new_scalar_field_2d_analytic( &
        test_function_dirper, &
        "dirichlet_periodique_anal", &
        T, &
@@ -315,7 +315,7 @@ program unit_test_2d
   !----------------------------------------------------------------------------
   
   ! ----> initialization of the field
-  dirichlet_dirichlet_anal  => new_scalar_field_2d_analytic_alt( &
+  dirichlet_dirichlet_anal  => new_scalar_field_2d_analytic( &
        test_function_dirdir, &
        "dirichlet_dirichlet_anal", &
        T, &
@@ -414,7 +414,7 @@ program unit_test_2d
 
   ! ----> initialization of the field
   
-  doubly_periodic_discrete => new_scalar_field_2d_discrete_alt( &
+  doubly_periodic_discrete => new_scalar_field_2d_discrete( &
        "doubly_periodic_discrete", &
        interp_2d, &
        T, &
@@ -513,7 +513,7 @@ program unit_test_2d
   
   ! ----> initialization of the field
   
-  periodique_dirichlet_discrete => new_scalar_field_2d_discrete_alt( &
+  periodique_dirichlet_discrete => new_scalar_field_2d_discrete( &
        "periodique_dirichlet_discrete", &
        interp_2d, &
        T, &
@@ -619,7 +619,7 @@ program unit_test_2d
   
   ! ----> initialization of the field
   
-  dirichlet_periodique_discrete => new_scalar_field_2d_discrete_alt( &
+  dirichlet_periodique_discrete => new_scalar_field_2d_discrete( &
        "dirichlet_periodique_discrete", &
        interp_2d, &
        T, &
@@ -721,7 +721,7 @@ program unit_test_2d
   
   ! ----> initialization of the field
   
-  dirichlet_dirichlet_discrete => new_scalar_field_2d_discrete_alt( &
+  dirichlet_dirichlet_discrete => new_scalar_field_2d_discrete( &
        "dirichlet_dirichlet_discrete", &
        interp_2d, &
        T, &

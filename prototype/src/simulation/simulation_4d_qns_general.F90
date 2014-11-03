@@ -529,8 +529,8 @@ contains
     class(sll_scalar_field_2d_base), pointer              :: c_field
     class(sll_scalar_field_2d_base), pointer              :: elec_field_ext_1
     class(sll_scalar_field_2d_base), pointer              :: elec_field_ext_2
-    class(sll_scalar_field_2d_discrete_alt), pointer      :: rho
-    type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
+    class(sll_scalar_field_2d_discrete), pointer      :: rho
+    type(sll_scalar_field_2d_discrete), pointer       :: phi
     sll_real64, dimension(:), allocatable :: send_buf
     sll_real64, dimension(:), allocatable :: recv_buf
     sll_int32, dimension(:), allocatable  :: recv_sz
@@ -572,7 +572,7 @@ contains
     call compute_values_jacobian_and_mesh_points(sim)
     ! Start with the fields
     
-    a11_field_mat => new_scalar_field_2d_analytic_alt( &
+    a11_field_mat => new_scalar_field_2d_analytic( &
          sim%a11_f, &
          "a11", &
          sim%transfx, &
@@ -582,7 +582,7 @@ contains
          sim%bc_eta2_1, &
          sim%a11_f_params ) 
 
-    a12_field_mat => new_scalar_field_2d_analytic_alt( &
+    a12_field_mat => new_scalar_field_2d_analytic( &
          sim%a12_f, &
          "a12", &
          sim%transfx, &
@@ -592,7 +592,7 @@ contains
          sim%bc_eta2_1, &
          sim%a12_f_params ) 
 
-    a21_field_mat => new_scalar_field_2d_analytic_alt( &
+    a21_field_mat => new_scalar_field_2d_analytic( &
          sim%a21_f, &
          "a21", &
          sim%transfx, &
@@ -602,7 +602,7 @@ contains
          sim%bc_eta2_1, &
          sim%a21_f_params )
     
-    a22_field_mat => new_scalar_field_2d_analytic_alt( &
+    a22_field_mat => new_scalar_field_2d_analytic( &
          sim%a22_f, &
          "a22", &
          sim%transfx, &
@@ -612,7 +612,7 @@ contains
          sim%bc_eta2_1, &
          sim%a22_f_params) 
 
-    b1_field_vect => new_scalar_field_2d_analytic_alt( &
+    b1_field_vect => new_scalar_field_2d_analytic( &
          sim%b1_f, &
          "b1", &
          sim%transfx, &
@@ -624,7 +624,7 @@ contains
          sim%der1_b1_f,&
          sim%der2_b1_f)
     
-    b2_field_vect => new_scalar_field_2d_analytic_alt( &
+    b2_field_vect => new_scalar_field_2d_analytic( &
          sim%b2_f, &
          "b2", &
          sim%transfx, &
@@ -637,7 +637,7 @@ contains
          sim%der2_b2_f)
     
     
-    c_field => new_scalar_field_2d_analytic_alt( &
+    c_field => new_scalar_field_2d_analytic( &
          sim%c_f, &
          "c_field", &
          sim%transfx, &
@@ -647,7 +647,7 @@ contains
          sim%bc_eta2_1, &
          sim%c_f_params)
 
-    elec_field_ext_1 => new_scalar_field_2d_analytic_alt( &
+    elec_field_ext_1 => new_scalar_field_2d_analytic( &
          sim%elec_field_ext_1, &
          "E1_ext", &
          sim%transfx, &
@@ -658,7 +658,7 @@ contains
          sim%elec_field_ext_f_params )
 
     
-    elec_field_ext_2 => new_scalar_field_2d_analytic_alt( &
+    elec_field_ext_2 => new_scalar_field_2d_analytic( &
          sim%elec_field_ext_2, &
          "E2_ext", &
          sim%transfx, &
@@ -673,7 +673,7 @@ contains
     phi_values(:,:) = 0.0_f64
    
 
-    phi => new_scalar_field_2d_discrete_alt( &
+    phi => new_scalar_field_2d_discrete( &
          "phi_check", &
          sim%interp_phi, &
          sim%transfx, &
@@ -967,7 +967,7 @@ contains
 !!$    
 !!$     print*, 'density', density_tot
     
-    rho => new_scalar_field_2d_discrete_alt( &
+    rho => new_scalar_field_2d_discrete( &
          "rho_field_check", &
          sim%interp_rho, &     
          sim%transfx, &
@@ -1693,7 +1693,7 @@ contains
     sll_real64 :: eta1, eta2
     sll_int32  :: i, j, l
     sll_real64, intent(out) :: efield_energy_total
-    type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
+    type(sll_scalar_field_2d_discrete), pointer       :: phi
     sll_real64, dimension(1:2,1:2) :: jac_m
     sll_real64 :: ex
     sll_real64 :: ey
@@ -1761,7 +1761,7 @@ contains
     sll_real64 :: eta1, eta2
     sll_int32  :: i, j, k
     sll_real64, intent(out) :: efield_energy_total
-    type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
+    type(sll_scalar_field_2d_discrete), pointer       :: phi
     sll_real64, dimension(1:2,1:2) :: jac_m
     sll_real64 :: ex
     sll_real64 :: ey
@@ -2526,7 +2526,7 @@ contains
   subroutine compute_energy_qns(sim,phi)
 
     class(sll_simulation_4d_qns_general), intent(inout) :: sim
-    type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
+    type(sll_scalar_field_2d_discrete), pointer       :: phi
 
     ! local variables
     sll_int32  :: Neta1_loc,Neta2_loc,Nv2,Nv1,Neta1,Neta2

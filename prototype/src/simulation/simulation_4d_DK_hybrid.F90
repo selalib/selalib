@@ -185,7 +185,7 @@ module sll_simulation_4d_DK_hybrid_module
     type(sll_arbitrary_degree_spline_interpolator_2d) :: interp2d_QN_C
     class(sll_scalar_field_2d_base) , pointer :: rho2d
     type(sll_scalar_field_1d_discrete_alt), pointer :: phi1d! for derivative in eta3
-    type(sll_scalar_field_2d_discrete_alt), pointer :: phi2d
+    type(sll_scalar_field_2d_discrete), pointer :: phi2d
     class(sll_scalar_field_2d_base), pointer :: QN_A11 
     class(sll_scalar_field_2d_base), pointer :: QN_A12
     class(sll_scalar_field_2d_base), pointer :: QN_A21
@@ -1244,7 +1244,7 @@ contains
       sim%spline_degree_eta2)    
 
     !-----> rho2D field
-    sim%rho2d => new_scalar_field_2d_discrete_alt( &
+    sim%rho2d => new_scalar_field_2d_discrete( &
       "rho2d_seqx1x2", &
       sim%interp2d_rho_eta1eta2, &     
       sim%transf_xy, &
@@ -1262,7 +1262,7 @@ contains
          sim%bc_right_eta1,&
          logical_mesh1d)
     !-----> phi2D in the direction eta1 eta2
-    sim%phi2d => new_scalar_field_2d_discrete_alt( &
+    sim%phi2d => new_scalar_field_2d_discrete( &
       "phi2d_seqx1x2", &
       sim%interp2d_Phi_eta1eta2, &     
       sim%transf_xy, &
@@ -1315,7 +1315,7 @@ contains
        
     !---> Initialization of the 2D fields associated to
     !--->  A11, A12, A21, A22, B1, B2 and C
-    sim%QN_A11 => new_scalar_field_2d_discrete_alt( &
+    sim%QN_A11 => new_scalar_field_2d_discrete( &
       "QN_A11", &
       sim%interp2d_QN_A11, &     
       sim%transf_xy, &
@@ -1327,7 +1327,7 @@ contains
     call sim%QN_A11%set_field_data( A11 )    
     call sim%QN_A11%update_interpolation_coefficients( )
 
-    sim%QN_A12 => new_scalar_field_2d_discrete_alt( &
+    sim%QN_A12 => new_scalar_field_2d_discrete( &
       "QN_A12", &
       sim%interp2d_QN_A12, &     
       sim%transf_xy, &
@@ -1339,7 +1339,7 @@ contains
     call sim%QN_A12%set_field_data( A12 )
     call sim%QN_A12%update_interpolation_coefficients( )
 
-    sim%QN_A21 => new_scalar_field_2d_discrete_alt( &
+    sim%QN_A21 => new_scalar_field_2d_discrete( &
       "QN_A21", &
       sim%interp2d_QN_A21, &     
       sim%transf_xy, &
@@ -1351,7 +1351,7 @@ contains
     call sim%QN_A21%set_field_data( A21 )
     call sim%QN_A21%update_interpolation_coefficients( )
 
-    sim%QN_A22 => new_scalar_field_2d_discrete_alt( &
+    sim%QN_A22 => new_scalar_field_2d_discrete( &
       "QN_A22", &
       sim%interp2d_QN_A22, &     
       sim%transf_xy, &
@@ -1363,7 +1363,7 @@ contains
     call sim%QN_A22%set_field_data( A22 )
     call sim%QN_A22%update_interpolation_coefficients( )
 
-    sim%QN_B1 => new_scalar_field_2d_discrete_alt( &
+    sim%QN_B1 => new_scalar_field_2d_discrete( &
          "QN_B1", &
          sim%interp2d_QN_B1, &     
          sim%transf_xy, &
@@ -1375,7 +1375,7 @@ contains
     call sim%QN_B1%set_field_data( B1 )
     call sim%QN_B1%update_interpolation_coefficients( )
     
-    sim%QN_B2 => new_scalar_field_2d_discrete_alt( &
+    sim%QN_B2 => new_scalar_field_2d_discrete( &
          "QN_B2", &
          sim%interp2d_QN_B1, &     
          sim%transf_xy, &
@@ -1387,7 +1387,7 @@ contains
     call sim%QN_B2%set_field_data( B1 )
     call sim%QN_B2%update_interpolation_coefficients( )
     
-    sim%QN_C => new_scalar_field_2d_discrete_alt( &
+    sim%QN_C => new_scalar_field_2d_discrete( &
       "QN_C", &
       sim%interp2d_QN_C, &     
       sim%transf_xy, &
