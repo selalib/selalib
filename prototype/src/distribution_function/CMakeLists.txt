@@ -1,4 +1,5 @@
 ADD_LIBRARY(sll_distribution_function STATIC 
+               sll_scalar_field_1d_old.F90
                sll_scalar_field_2d_base_old.F90
                sll_scalar_field_2d_old.F90
                sll_fdistribu4d_DK.F90
