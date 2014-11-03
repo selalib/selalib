@@ -519,8 +519,8 @@ contains
           x1_max, &
           Nc_x1, &
           Nc_x2, &
-          !(/SLL_NEUMANN_MODE_0, SLL_DIRICHLET/))
-          (/SLL_DIRICHLET, SLL_DIRICHLET/))
+          (/SLL_NEUMANN_MODE_0, SLL_DIRICHLET/))
+          !(/SLL_DIRICHLET, SLL_DIRICHLET/))
       case ("SLL_ELLIPTIC_FINITE_ELEMENT_SOLVER")
         transformation => new_coordinate_transformation_2d_analytic( &
           "analytic_polar_transformation", &

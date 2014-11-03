@@ -698,6 +698,152 @@ contains
   end function polar_jac
 
 
+
+  ! **************************************************************************
+  !
+  !       hexagonal coordinate transformation (r = eta1, theta = eta2):
+  !
+  !        x1 = eta1 * cos (eta2) * cos(Pi/6) / cos(Pi/6-eta2)
+  !        x2 = eta1 * sin (eta2) * cos(Pi/6) / cos(Pi/6-eta2)
+  !        for 0  <= eta2 <= Pi/3
+  !
+  ! **************************************************************************
+
+  !> direct mapping
+  function hexagonal_x1 ( eta1, eta2, params )
+    sll_real64  :: hexagonal_x1
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+
+    sll_real64 :: eta2r
+    sll_real64 :: eps
+    
+    eps = params(1)
+    eta2r = eta2+sll_pi/6._f64
+    eta2r = eta2r*3._f64/sll_pi
+    eta2r = sqrt((eta2-floor(eta2r)*sll_pi/3._f64)**2+eps**2)
+    hexagonal_x1 = eta1*cos(sll_pi/6._f64)*cos(eta2)/cos(sll_pi/6._f64-eta2r)
+  end function hexagonal_x1
+
+  !> direct mapping
+  function hexagonal_x2 ( eta1, eta2, params )
+    sll_real64  :: hexagonal_x2
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    
+    sll_real64 :: eta2r
+    sll_real64 :: eps
+    
+    eps = params(1)
+    eta2r = eta2+sll_pi/6._f64
+    eta2r = eta2r*3._f64/sll_pi
+    eta2r = sqrt((eta2-floor(eta2r)*sll_pi/3._f64)**2+eps**2)
+    hexagonal_x2 = eta1*cos(sll_pi/6._f64)*sin(eta2)/cos(sll_pi/6._f64-eta2r)
+  end function hexagonal_x2
+
+
+  !> jacobian matrix
+  function hexagonal_jac11 ( eta1, eta2, params )
+    sll_real64  :: hexagonal_jac11
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    
+    sll_real64 :: eta2r
+    sll_real64 :: eps
+    
+    eps = params(1)
+    eta2r = eta2+sll_pi/6._f64
+    eta2r = eta2r*3._f64/sll_pi
+    eta2r = sqrt((eta2-floor(eta2r)*sll_pi/3._f64)**2+eps**2)
+    hexagonal_jac11 = eta1
+    hexagonal_jac11 = cos(sll_pi/6._f64)*cos(eta2)/cos(sll_pi/6._f64-eta2r) 
+  end function hexagonal_jac11
+
+  !> jacobian matrix
+    function hexagonal_jac12 ( eta1, eta2, params )
+    sll_real64  :: hexagonal_jac12
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+
+    sll_real64 :: eta2r
+    sll_real64 :: a
+    sll_real64 :: eps
+    
+    eps = params(1)
+    eta2r = eta2+sll_pi/6._f64
+    eta2r = eta2r*3._f64/sll_pi
+    a = floor(eta2r)*sll_pi/3._f64 
+    eta2r = sqrt((eta2-a)**2+eps**2)
+    hexagonal_jac12 = -eta1*cos(sll_pi/6._f64)*sin(eta2)/cos(sll_pi/6._f64-eta2r) &
+      +eta1*cos(sll_pi/6._f64)*cos(eta2) &
+      *sin(sll_pi/6._f64-eta2r)/cos(sll_pi/6._f64-eta2r)**2*(eta2-a)/eta2r
+  end function hexagonal_jac12
+
+  !> jacobian matrix
+  function hexagonal_jac21 ( eta1, eta2, params )
+    sll_real64  :: hexagonal_jac21
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+
+    sll_real64 :: eta2r
+    sll_real64 :: eps
+    
+    eps = params(1)
+    eta2r = eta2+sll_pi/6._f64
+    eta2r = eta2r*3._f64/sll_pi
+    eta2r = sqrt((eta2-floor(eta2r)*sll_pi/3._f64)**2+eps**2)
+    hexagonal_jac21 = eta1
+    hexagonal_jac21 = cos(sll_pi/6._f64)*sin(eta2)/cos(sll_pi/6._f64-eta2r)
+  end function hexagonal_jac21
+
+  !> jacobian matrix
+  function hexagonal_jac22 ( eta1, eta2, params )
+    sll_real64  :: hexagonal_jac22
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+
+    sll_real64 :: eta2r
+    sll_real64 :: eps
+    sll_real64 :: a
+    
+    eps = params(1)
+    eta2r = eta2+sll_pi/6._f64
+    eta2r = eta2r*3._f64/sll_pi
+    a = floor(eta2r)*sll_pi/3._f64
+    eta2r = sqrt((eta2-a)**2+eps**2)
+    hexagonal_jac22 = eta1*cos(sll_pi/6._f64)*cos(eta2)/cos(sll_pi/6._f64-eta2r) &
+      +eta1*cos(sll_pi/6._f64)*sin(eta2) &
+      *sin(sll_pi/6._f64-eta2r)/cos(sll_pi/6._f64-eta2r)**2*(eta2-a)/eta2r
+  end function hexagonal_jac22
+
+ !> jacobian ie determinant of jacobian matrix
+  function hexagonal_jac ( eta1, eta2, params )
+    sll_real64  :: hexagonal_jac
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+
+    sll_real64 :: eta2r
+
+    eta2r = eta2+sll_pi/6._f64
+    eta2r = eta2r*3._f64/sll_pi
+    eta2r = abs(eta2-floor(eta2r)*sll_pi/3._f64)
+    hexagonal_jac = eta2
+!    hexagonal_jac = hexagonal_jac11( eta1, eta2, params ) * &
+!      hexagonal_jac22( eta1, eta2, params ) &
+!      -hexagonal_jac21( eta1, eta2, params ) * &
+!      hexagonal_jac12( eta1, eta2, params ) &
+  end function hexagonal_jac
+
+
+
+
   ! **************************************************************************
   !
   ! "Colella transformation";
