@@ -10,7 +10,7 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
   use sll_poisson_2d_periodic_cartesian_par
   use sll_simulation_base
   use sll_parallel_array_initializer_module  
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_mesh_calculus_2d_module
   use sll_gnuplot_parallel
   use sll_timer
@@ -60,7 +60,7 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
 
   ! for initializers
   type(sll_p2p_comm_real64), pointer :: comm
-  type(sll_logical_mesh_2d), pointer    :: mesh2dx,mesh2dv
+  type(sll_cartesian_mesh_2d), pointer    :: mesh2dx,mesh2dv
   class(sll_coordinate_transformation_2d_base),pointer     :: tx,tv
   type(poisson_2d_periodic_plan_cartesian_par), pointer :: poisson_plan
 
@@ -170,7 +170,7 @@ subroutine initialize_vp4d( &
     tmax )
 
  type(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout)     :: sim
- type(sll_logical_mesh_2d), pointer                    :: mesh2dx,mesh2dv
+ type(sll_cartesian_mesh_2d), pointer                    :: mesh2dx,mesh2dv
  class(sll_coordinate_transformation_2d_base),pointer          :: tx,tv
  procedure(sll_scalar_initializer_4d)                  :: init_func
  sll_real64, dimension(:), target                      :: params
@@ -276,7 +276,7 @@ subroutine run_vp_cart(sim)
  sim%nproc_x2 = int(sqrt(real(sim%world_size)))
  ! init the layout for the distribution function
  ! the mesh is split on the x1 et x2  direction
- call initialize_layout_with_distributed_4D_array( &
+ call initialize_layout_with_distributed_array( &
       sim%np_v1, &
       sim%np_v2, &
       sim%nc_x1, & !avance il n'y a pas +1
@@ -289,7 +289,7 @@ subroutine run_vp_cart(sim)
 
  ! Allocate the array needed to store the local chunk of the distribution
  ! function data. First compute the local sizes.
- call compute_local_sizes_4d( sim%sequential_v1v2_layout, &
+ call compute_local_sizes( sim%sequential_v1v2_layout, &
       loc_sz_v1, &
       loc_sz_v2, &
       loc_sz_x1, &
@@ -322,7 +322,7 @@ subroutine run_vp_cart(sim)
  !write(*,*) 'size rho_split',size(sim%rho_split(1,:))
  SLL_ALLOCATE(sim%phi_split(loc_sz_x1,loc_sz_x2),ierr)
  !write(*,*) sim%my_rank,'taille ',sim%nc_x1, sim%nc_x2, sim%nproc_x1, sim%nproc_x2
- call initialize_layout_with_distributed_2D_array( &
+ call initialize_layout_with_distributed_array( &
       sim%nc_x1, &
       sim%nc_x2, &
       sim%nproc_x1, &
@@ -336,17 +336,17 @@ subroutine run_vp_cart(sim)
  ! potential layout
  !write(*,*) ' sim%nproc_x1', sim%nproc_x1
  !write(*,*) ' sim%nproc_x2', sim%nproc_x2
- call initialize_layout_with_distributed_2D_array( &
+ call initialize_layout_with_distributed_array( &
       sim%nc_x1, &
       sim%nc_x2, &
       sim%nproc_x1, &
       sim%nproc_x2, &
       sim%phi_seq_x1_layout)
- call compute_local_sizes_2d( sim%phi_seq_x1_layout, loc_sz_x1, loc_sz_x2)
+ call compute_local_sizes( sim%phi_seq_x1_layout, loc_sz_x1, loc_sz_x2)
 
 !!$write(*,*) sim%my_rank,'taille ',sim%nc_x1, sim%nc_x2, sim%nproc_x1, sim%nproc_x2
 !!$write(*,*) sim%my_rank,'size ',loc_sz_x1,loc_sz_x2
-!!$ call initialize_layout_with_distributed_2D_array( &
+!!$ call initialize_layout_with_distributed_array( &
 !!$      sim%nc_x1, &
 !!$      sim%nc_x2, &
 !!$      sim%nproc_x1, &
@@ -388,12 +388,12 @@ subroutine run_vp_cart(sim)
 !!$         sim%fn_v1v2(:,:,:,1:loc_sz_x2), &
 !!$         sim%init_func, &
 !!$         sim%params)
- call compute_local_sizes_4d( sim%sequential_v1v2_layout, &
+ call compute_local_sizes( sim%sequential_v1v2_layout, &
       loc_sz_v1, &
       loc_sz_v2, &
       loc_sz_x1, &
       loc_sz_x2 )
- !call sll_view_lims_4D(sim%sequential_v1v2_layout)
+ !call sll_view_lims(sim%sequential_v1v2_layout)
 !!$ write(*,*) 'taille fn_v1v2_1',size(sim%fn_v1v2(:,:,:,1:loc_sz_x2),1)
 !!$ write(*,*) 'taille fn_v1v2_2',size(sim%fn_v1v2(:,:,:,1:loc_sz_x2),2)
 !!$ write(*,*) 'taille fn_v1v2_3',size(sim%fn_v1v2(:,:,:,1:loc_sz_x2),3)
@@ -484,7 +484,7 @@ subroutine run_vp_cart(sim)
 !!$    volume=sim%mesh2dx%delta_eta1 * &
 !!$         sim%mesh2dx%delta_eta2 
 
- global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2_layout, (/1,1,1,1/) )
+ global_indices(1:4)=local_to_global(sim%sequential_v1v2_layout, (/1,1,1,1/) )
  ! cell volumes, check this...
  !print *, 'what is the size of loc_sz_x2??? ', loc_sz_x2
  do j=1,loc_sz_x2
@@ -499,7 +499,7 @@ subroutine run_vp_cart(sim)
 !!$ do j=1,loc_sz_x2
 !!$    do i=1,loc_sz_x1-1 ! loc_sz_x1 is number of points, we're processing cells
 !!$       global_indices(1:4) =  &
-!!$            local_to_global_4D(sim%sequential_v1v2, (/1,1,i,j/) )
+!!$            local_to_global(sim%sequential_v1v2, (/1,1,i,j/) )
 !!$       sim%volume(i,j) = &
 !!$            cell_volume( sim%tx, global_indices(3),global_indices(4),3)
 !!$    end do
@@ -619,8 +619,8 @@ subroutine run_vp_cart(sim)
     !allouer pour rho_x1 et phi_x1
 
     !ordonner rho_split sur x1 pour utiliser le Poisson solver.
-    !call compute_local_sizes_2d( sim%phi_seq_x1_layout, loc_sz_x1, loc_sz_x2)
-    !call sll_view_lims_2D(sim%split_rho_layout)
+    !call compute_local_sizes( sim%phi_seq_x1_layout, loc_sz_x1, loc_sz_x2)
+    !call sll_view_lims(sim%split_rho_layout)
     !write(*,*) 'taille  sim%rho_x1',size( sim%rho_x1,1),size( sim%rho_x1,2)
     !write(*,*) sim%my_rank, 'taille  sim%rho_split',size( sim%rho_split,1),size( sim%rho_split,2)
     !call set_time_mark(t0)
@@ -656,7 +656,7 @@ subroutine run_vp_cart(sim)
     sim%phi_x1=0.0_f64
 !!$    write(*,*) 'taille de rho_x1', size(sim%rho_x1(1,:)),size(sim%rho_x1(:,1))
 !!$    stop
-    call compute_local_sizes_2d( sim%phi_seq_x1_layout, loc_sz_x1, loc_sz_x2)
+    call compute_local_sizes( sim%phi_seq_x1_layout, loc_sz_x1, loc_sz_x2)
     !write(*,*) 'planter poisson'
 
     call solve_poisson_2d_periodic_cartesian_par_alt(sim%poisson_plan, &
@@ -692,7 +692,7 @@ subroutine run_vp_cart(sim)
     !revenir dans le bon valeur du loc_sz
     !write(*,*) sim%my_rank, 'here 2'
     !write(*,*) 'taille of phi _split',size(sim%phi_split)
-    call compute_local_sizes_4d( sim%sequential_v1v2_layout, &
+    call compute_local_sizes( sim%sequential_v1v2_layout, &
          loc_sz_v1, &
          loc_sz_v2, &
          loc_sz_x1, &
@@ -741,7 +741,7 @@ subroutine run_vp_cart(sim)
           do jc=2,loc_sz_x2-1
              icL=ic-1
              icR=ic+1
-             global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2_layout, &
+             global_indices(1:4)=local_to_global(sim%sequential_v1v2_layout, &
                   (/1,1,1,1/) )
              x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)* &
                   sim%mesh2dx%delta_eta1
@@ -784,7 +784,7 @@ subroutine run_vp_cart(sim)
        do ic=2,loc_sz_x1-1
           icL=ic-1
           icR=ic+1
-          global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2_layout, &
+          global_indices(1:4)=local_to_global(sim%sequential_v1v2_layout, &
                (/1,1,1,1/) )
           x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)* &
                sim%mesh2dx%delta_eta1
@@ -841,7 +841,7 @@ subroutine run_vp_cart(sim)
        sim%buf1 => get_buffer(sim%comm,1)
        sim%buf2 => get_buffer(sim%comm,2)
           do jc=2,loc_sz_x2-1
-             global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2_layout, &
+             global_indices(1:4)=local_to_global(sim%sequential_v1v2_layout, &
                   (/1,1,1,1/) )
              x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)* &
                   sim%mesh2dx%delta_eta1
@@ -874,7 +874,7 @@ subroutine run_vp_cart(sim)
           end do
           !pour ic=loc_sz_x1
           do jc=2,loc_sz_x2-1
-             global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2_layout, &
+             global_indices(1:4)=local_to_global(sim%sequential_v1v2_layout, &
                   (/1,1,1,1/) )
              x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)* &
                   sim%mesh2dx%delta_eta1
@@ -903,7 +903,7 @@ subroutine run_vp_cart(sim)
 
           end do
           !pour ic=1 et jc=1
-             global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2_layout, &
+             global_indices(1:4)=local_to_global(sim%sequential_v1v2_layout, &
                   (/1,1,1,1/) )
              x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)* &
                   sim%mesh2dx%delta_eta1
@@ -963,7 +963,7 @@ subroutine run_vp_cart(sim)
           ! stop
           !pour ic=1 et jc=loc_sz_x2
 
-!!$             global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2_layout, &
+!!$             global_indices(1:4)=local_to_global(sim%sequential_v1v2_layout, &
 !!$                  (/1,1,1,loc_sz_x2/) )
 !!$             x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)* &
 !!$                  sim%mesh2dx%delta_eta1
@@ -1007,7 +1007,7 @@ subroutine run_vp_cart(sim)
 !!$          end if
           
 
-!!$             global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2_layout, &
+!!$             global_indices(1:4)=local_to_global(sim%sequential_v1v2_layout, &
 !!$                  (/1,1,1,1/) )
 !!$             x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)* &
 !!$                  sim%mesh2dx%delta_eta1
@@ -1036,7 +1036,7 @@ subroutine run_vp_cart(sim)
                sim%mesh2dx%delta_eta2*det*(Ex**2+Ey**2)
           !write(*,*) 'pro mpi 3', sim%Enorm
           !pour ic=loc_sz_x1 et jc=loc_sz_x2
-!!$             global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2_layout, &
+!!$             global_indices(1:4)=local_to_global(sim%sequential_v1v2_layout, &
 !!$                  (/1,1,1,1/) )
 !!$             x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)* &
 !!$                  sim%mesh2dx%delta_eta1
@@ -1113,7 +1113,7 @@ subroutine run_vp_cart(sim)
 
 
 
-    call compute_local_sizes_4d( sim%sequential_v1v2_layout, &
+    call compute_local_sizes( sim%sequential_v1v2_layout, &
          loc_sz_v1, loc_sz_v2, loc_sz_x1, loc_sz_x2) 
     allocate (plotf2d_c1(loc_sz_x1,loc_sz_v1))
     do i = 1, loc_sz_x1
@@ -1166,7 +1166,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
 !!$       end do
 !!$    end do
 
- global_indices(1:4) =  local_to_global_4D(sim%sequential_v1v2_layout, (/1,1,1,1/) )
+ global_indices(1:4) =  local_to_global(sim%sequential_v1v2_layout, (/1,1,1,1/) )
  write (*,*) 'Vxmax = ', sim%mesh2dv%eta1_max
  write (*,*) 'Vxmin = ', sim%mesh2dv%eta1_min
  call sll_gnuplot_rect_2d_parallel( &
@@ -1212,7 +1212,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
 
 
 
-    global_indices(1:4) =  local_to_global_4D(sim%sequential_v1v2_layout, (/1,1,1,1/) )
+    global_indices(1:4) =  local_to_global(sim%sequential_v1v2_layout, (/1,1,1,1/) )
     !if(sim%test==1) then
        allocate (plotrho_split(loc_sz_x1,loc_sz_x2))
        do i = 1, loc_sz_x1
@@ -1262,7 +1262,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
 
        do i = 1, loc_sz_x1
           do j = 1, loc_sz_v1
-!!$          global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2, &
+!!$          global_indices(1:4)=local_to_global(sim%sequential_v1v2, &
 !!$               (/1,1,1,1/) )
 !!$          f_x_exact(i,j) = exp(-4*(modulo(((i-1)*sim%mesh2dx%delta_eta1 &
 !!$               -(sim%mesh2dv%eta1_min+(j-1)*sim%mesh2dv%delta_eta1/sim%degree)*t),sim%mesh2dx%eta1_max-sim%mesh2dx%eta1_min)+sim%mesh2dx%eta1_min)**2)
@@ -2007,7 +2007,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
   !    need an array to store the intermediate result (after reducing in
   !    x4). This array should come as an argument.
   subroutine compute_charge_density()! mesh, numpts1, numpts2, f, partial, rho )
-!!$    type(sll_logical_mesh_4d), pointer     :: mesh
+!!$    type(sll_cartesian_mesh_4d), pointer     :: mesh
 !!$    sll_real64, intent(in),  dimension(:,:,:,:) :: f       ! local distr. func
 !!$    sll_real64, intent(inout),  dimension(:,:,:):: partial ! intermediate res.
 !!$    sll_real64, intent(inout), dimension(:,:)     :: rho     ! local rho
@@ -2119,10 +2119,10 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
 !!$          my_layout => sim%rho_seq_x2
 !!$       end if
 !!$
-!!$       call compute_local_sizes_2d( my_layout, local_nx1, local_nx2)        
+!!$       call compute_local_sizes( my_layout, local_nx1, local_nx2)        
 !!$    
-!!$       offset(1) =  get_layout_2D_i_min( my_layout, my_rank ) - 1
-!!$       offset(2) =  get_layout_2D_j_min( my_layout, my_rank ) - 1
+!!$       offset(1) =  get_layout_i_min( my_layout, my_rank ) - 1
+!!$       offset(2) =  get_layout_j_min( my_layout, my_rank ) - 1
 !!$
 !!$       if (itime == 1) then
 !!$
@@ -2145,7 +2145,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
 !!$   
 !!$          do j = 1, local_nx2
 !!$             do i = 1, local_nx1
-!!$                global_indices =  local_to_global_2D( my_layout, (/i, j/) )
+!!$                global_indices =  local_to_global( my_layout, (/i, j/) )
 !!$                gi = global_indices(1)
 !!$                gj = global_indices(2)
 !!$                x1(i,j) = x1_min + (gi-1._f64)*delta_x1
@@ -2562,7 +2562,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
 
     !nsym=0    
     ! write(*,*) sim%my_rank, 'planter dans dtf1'
-    call compute_local_sizes_2d( sim%phi_seq_x1_layout, loc_sz_x1, loc_sz_x2)
+    call compute_local_sizes( sim%phi_seq_x1_layout, loc_sz_x1, loc_sz_x2)
     ! init
     sim%dtfn_v1v2=0.0_f64
     !write(*,*) sim%my_rank, 'planter dans dtf2'
@@ -2571,7 +2571,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
     vn(2)=0
     ! Added the following because this is the proper layout that should be used
     ! to compute the local sizes for the following loop. ECG
-    call compute_local_sizes_4d( sim%sequential_v1v2_layout, loc_sz_v1, loc_sz_v2, &
+    call compute_local_sizes( sim%sequential_v1v2_layout, loc_sz_v1, loc_sz_v2, &
          loc_sz_x1, loc_sz_x2 )
     !write(*,*) 'entrer dans dtf1'
     !communication pour les processors
@@ -2713,7 +2713,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
        do jc=2,loc_sz_x2-1
           icL=ic-1
           icR=ic+1
-          global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2_layout, &
+          global_indices(1:4)=local_to_global(sim%sequential_v1v2_layout, &
                (/1,1,1,1/) )
           x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)* &
                sim%mesh2dx%delta_eta1
@@ -2764,7 +2764,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
     do ic=2,loc_sz_x1-1
        icL=ic-1
        icR=ic+1
-       global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2_layout, &
+       global_indices(1:4)=local_to_global(sim%sequential_v1v2_layout, &
             (/1,1,1,1/) )
        x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)* &
             sim%mesh2dx%delta_eta1
@@ -2788,7 +2788,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
             sim%np_v1*sim%np_v2, &
             mp,ifac,isol,nsym,void,ierr,&
             sim%nsky)
-       global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2_layout, &
+       global_indices(1:4)=local_to_global(sim%sequential_v1v2_layout, &
             (/1,1,1,1/) )
        x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)* &
             sim%mesh2dx%delta_eta1
@@ -2826,7 +2826,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
     !write(*,*) 'entrer dans dtf4 pour phi 3'
     !pour ic=1
     do jc=2,loc_sz_x2-1
-       global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2_layout, &
+       global_indices(1:4)=local_to_global(sim%sequential_v1v2_layout, &
             (/1,1,1,1/) )
        x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)* &
             sim%mesh2dx%delta_eta1
@@ -2857,7 +2857,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
     end do
     !pour ic=loc_sz_x1
     do jc=2,loc_sz_x2-1
-       global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2_layout, &
+       global_indices(1:4)=local_to_global(sim%sequential_v1v2_layout, &
             (/1,1,1,1/) )
        x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)* &
             sim%mesh2dx%delta_eta1
@@ -2888,7 +2888,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
     end do
     !write(*,*) 'entrer dans dtf4 pour phi 4'
     !pour ic=1 et jc=1
-!!$    global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2_layout, &
+!!$    global_indices(1:4)=local_to_global(sim%sequential_v1v2_layout, &
 !!$         (/1,1,1,1/) )
 !!$    x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)* &
 !!$         sim%mesh2dx%delta_eta1
@@ -2916,7 +2916,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
          mp,ifac,isol,nsym,void,ierr,&
          sim%nsky)
     !pour ic=1 et jc=loc_sz_x2
-!!$ global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2_layout, &
+!!$ global_indices(1:4)=local_to_global(sim%sequential_v1v2_layout, &
 !!$               (/1,1,1,1/) )
 !!$          x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)* &
 !!$               sim%mesh2dx%delta_eta1
@@ -2946,7 +2946,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
          mp,ifac,isol,nsym,void,ierr,&
          sim%nsky)
     !pour ic=loc_sz_x1 et jc=1
-!!$ global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2_layout, &
+!!$ global_indices(1:4)=local_to_global(sim%sequential_v1v2_layout, &
 !!$               (/1,1,1,1/) )
 !!$          x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)* &
 !!$               sim%mesh2dx%delta_eta1
@@ -2974,7 +2974,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
          mp,ifac,isol,nsym,void,ierr,&
          sim%nsky)
     !pour ic=loc_sz_x1 et jc=loc_sz_x2
-!!$ global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2_layout, &
+!!$ global_indices(1:4)=local_to_global(sim%sequential_v1v2_layout, &
 !!$               (/1,1,1,1/) )
 !!$          x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)* &
 !!$               sim%mesh2dx%delta_eta1
@@ -3016,7 +3016,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
   subroutine euler(sim)
     class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim
     sll_int32  :: loc_sz_x2,loc_sz_x1
-    call compute_local_sizes_2d( sim%phi_seq_x1_layout, loc_sz_x1, loc_sz_x2)
+    call compute_local_sizes( sim%phi_seq_x1_layout, loc_sz_x1, loc_sz_x2)
     ! mpi communications
     !write(*,*) 'sim%dtfn_v1v2= ', sim%dtfn_v1v2
 !!$    do jc=0,loc_sz_x2+1
@@ -3095,7 +3095,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
 !!$ sll_int32  :: rankleft
 !!$ sll_int32  :: datasize,datasizephi
 !!$
-!!$ call compute_local_sizes_4d( sim%sequential_v1v2_layout, &
+!!$ call compute_local_sizes( sim%sequential_v1v2_layout, &
 !!$      loc_sz_v1, &
 !!$      loc_sz_v2, &
 !!$      loc_sz_x1, &
@@ -3179,7 +3179,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
     SLL_ALLOCATE(dlag(sim%degree+1,sim%degree+1),ierr)
     call lag_gauss(sim%degree,gauss,weight,lag,dlag)
 
-    call compute_local_sizes_4d( sim%sequential_v1v2_layout, &
+    call compute_local_sizes( sim%sequential_v1v2_layout, &
          loc_sz_v1, &
          loc_sz_v2, &
          loc_sz_x1, &
@@ -3187,7 +3187,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
 
 
 
-    global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2_layout, (/1,1,1,1/) )
+    global_indices(1:4)=local_to_global(sim%sequential_v1v2_layout, (/1,1,1,1/) )
 
     ! loop on cells and elems
     normL2=0
@@ -3259,7 +3259,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
 !!$    SLL_ALLOCATE(dlag(sim%degree+1,sim%degree+1),ierr)
 !!$    call lag_gauss(sim%degree,gauss,weight,lag,dlag)
 !!$
-!!$    call compute_local_sizes_4d( sim%sequential_v1v2_layout, &
+!!$    call compute_local_sizes( sim%sequential_v1v2_layout, &
 !!$         loc_sz_v1, &
 !!$         loc_sz_v2, &
 !!$         loc_sz_x1, &
@@ -3267,7 +3267,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
 !!$
 !!$
 !!$
-!!$    global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2_layout, (/1,1,1,1/) )
+!!$    global_indices(1:4)=local_to_global(sim%sequential_v1v2_layout, (/1,1,1,1/) )
 !!$
 !!$    ! loop on cells and elems
 !!$    mm=0

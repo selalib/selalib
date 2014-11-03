@@ -2,15 +2,15 @@ program test_general_elliptic_solver_multipatch
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_file_io.h"
-  use sll_logical_meshes
-  use sll_logical_meshes_multipatch
+  use sll_cartesian_meshes
+  use sll_cartesian_meshes_multipatch
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
   use sll_coordinate_transformation_multipatch_module
   use sll_module_scalar_field_2d_alternative
   use sll_module_scalar_field_2d_multipatch
   use sll_constants
-  use sll_arbitrary_degree_spline_interpolator_2d_module
+  use sll_module_arbitrary_degree_spline_interpolator_2d
   use sll_timer
 
 #ifdef _UMFPACK
@@ -32,20 +32,21 @@ program test_general_elliptic_solver_multipatch
 #define PRINT_COMPARISON .false.
 
   type(sll_coordinate_transformation_multipatch_2d), pointer :: T
-  type(sll_logical_mesh_2d), pointer                         :: m
-  class(sll_coordinate_transformation_2d_nurbs), pointer      :: transf
-  type(general_coordinate_elliptic_solver_mp)               :: es_mp
-  class(sll_scalar_field_multipatch_2d), pointer              :: a11_field_mat
-  class(sll_scalar_field_multipatch_2d), pointer              :: a12_field_mat
-  class(sll_scalar_field_multipatch_2d), pointer              :: a21_field_mat
-  class(sll_scalar_field_multipatch_2d), pointer              :: a22_field_mat
-  class(sll_scalar_field_multipatch_2d), pointer              :: b1_field_vect
-  class(sll_scalar_field_multipatch_2d), pointer              :: b2_field_vect
-  class(sll_scalar_field_multipatch_2d), pointer              :: c_field_scal
-  class(sll_scalar_field_multipatch_2d), pointer              :: rho_field_scal
-  class(sll_scalar_field_multipatch_2d), pointer              :: phi_field_scal
-  class(sll_scalar_field_multipatch_2d), pointer              :: phi_field_ex
-  class(sll_scalar_field_multipatch_2d), pointer              :: phi_field_diff
+  class(sll_cartesian_mesh_2d), pointer                        :: m
+  class(sll_coordinate_transformation_2d_nurbs), pointer     :: transf
+  type(general_coordinate_elliptic_solver_mp)                :: es_mp
+  class(sll_scalar_field_multipatch_2d), pointer             :: a11_field_mat
+  class(sll_scalar_field_multipatch_2d), pointer             :: a12_field_mat
+  class(sll_scalar_field_multipatch_2d), pointer             :: a21_field_mat
+  class(sll_scalar_field_multipatch_2d), pointer             :: a22_field_mat
+  class(sll_scalar_field_multipatch_2d), pointer             :: b1_field_vect
+  class(sll_scalar_field_multipatch_2d), pointer             :: b2_field_vect
+  class(sll_scalar_field_multipatch_2d), pointer             :: c_field_scal
+  class(sll_scalar_field_multipatch_2d), pointer             :: rho_field_scal
+  class(sll_scalar_field_multipatch_2d), pointer             :: phi_field_scal
+  class(sll_scalar_field_multipatch_2d), pointer             :: phi_field_ex
+  class(sll_scalar_field_multipatch_2d), pointer             :: phi_field_diff
+
   sll_int32 :: num_patches
   sll_int32  :: ipatch
   sll_int32  :: i
@@ -191,12 +192,8 @@ program test_general_elliptic_solver_multipatch
 
 
   do ipatch= 0,num_patches-1
-     ! Please get rid of these 'fixes' whenever it is decided that gfortran 4.6
-     ! is no longer supported by Selalib.
-     !     m        => rho_field_scal%get_logical_mesh(ipatch)
-     m => rho_field_scal%transf%transfs(ipatch+1)%t%mesh
-     !     transf   => rho_field_scal%get_transformation(ipatch)
-     transf => rho_field_scal%transf%transfs(ipatch+1)%t
+     m        => rho_field_scal%get_cartesian_mesh(ipatch)
+     transf   => rho_field_scal%get_transformation(ipatch)
      num_pts1 = m%num_cells1+1
      num_pts2 = m%num_cells2+1
      delta1   = m%delta_eta1
@@ -285,12 +282,8 @@ program test_general_elliptic_solver_multipatch
        phi_field_scal)
 
   do ipatch= 0,num_patches-1
-     ! Please get rid of these 'fixes' whenever it is decided that gfortran 4.6
-     ! is no longer supported by Selalib.
-     !     m        => rho_field_scal%get_logical_mesh(ipatch)
-     m => rho_field_scal%transf%transfs(ipatch+1)%t%mesh
-     !     transf   => rho_field_scal%get_transformation(ipatch)
-     transf => rho_field_scal%transf%transfs(ipatch+1)%t
+     m        => rho_field_scal%get_cartesian_mesh(ipatch)
+     transf   => rho_field_scal%get_transformation(ipatch)
      num_pts1 = m%num_cells1+1
      num_pts2 = m%num_cells2+1
      delta1   = m%delta_eta1
@@ -368,7 +361,7 @@ program test_general_elliptic_solver_multipatch
 !!$
 !!$  ! First thing, initialize the logical mesh associated with this problem. 
 !!$
-!!$  mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
+!!$  mesh_2d => new_cartesian_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
 !!$       ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
 !!$
 !!$  ! Second, initialize the coordinate transformation associated with this 
@@ -642,7 +635,7 @@ program test_general_elliptic_solver_multipatch
 !!$  values(:,:) = 0.0_f64
 !!$  
 !!$  ! First thing, initialize the logical mesh associated with this problem.        
-!!$  mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
+!!$  mesh_2d => new_cartesian_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
 !!$       ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
 !!$  
 !!$  ! Second, initialize the coordinate transformation associated with this 
@@ -900,7 +893,7 @@ program test_general_elliptic_solver_multipatch
 !!$  values(:,:) = 0.0_f64
 !!$  
 !!$  ! First thing, initialize the logical mesh associated with this problem.    
-!!$  mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
+!!$  mesh_2d => new_cartesian_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
 !!$       ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
 !!$  
 !!$  ! Second, initialize the coordinate transformation associated with this 
@@ -1157,7 +1150,7 @@ program test_general_elliptic_solver_multipatch
 !!$  values(:,:) = 0.0_f64
 !!$  
 !!$  ! First thing, initialize the logical mesh associated with this problem.        
-!!$  mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
+!!$  mesh_2d => new_cartesian_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
 !!$       ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
 !!$  
 !!$  ! Second, initialize the coordinate transformation associated with this 
@@ -1405,7 +1398,7 @@ program test_general_elliptic_solver_multipatch
 !!$  values(:,:) = 0.0_f64
 !!$  
 !!$  ! First thing, initialize the logical mesh associated with this problem.  
-!!$  mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
+!!$  mesh_2d => new_cartesian_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
 !!$       ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
 !!$  
 !!$  ! Second, initialize the coordinate transformation associated with this 
@@ -1675,7 +1668,7 @@ program test_general_elliptic_solver_multipatch
 !!$  values(:,:) = 0.0_f64
 !!$  
 !!$  ! First thing, initialize the logical mesh associated with this problem.        
-!!$  mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
+!!$  mesh_2d => new_cartesian_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
 !!$       ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
 !!$  
 !!$  ! Second, initialize the coordinate transformation associated with this 
@@ -1943,7 +1936,7 @@ program test_general_elliptic_solver_multipatch
 !!$  values(:,:) = 0.0_f64
 !!$
 !!$  ! First thing, initialize the logical mesh associated with this problem.        
-!!$  mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
+!!$  mesh_2d => new_cartesian_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
 !!$       ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
 !!$  
 !!$  ! Second, initialize the coordinate transformation associated with this 
@@ -2208,7 +2201,7 @@ program test_general_elliptic_solver_multipatch
 !!$  values(:,:) = 0.0_f64
 !!$  
 !!$  ! First thing, initialize the logical mesh associated with this problem.        
-!!$  mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
+!!$  mesh_2d => new_cartesian_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
 !!$       ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
 !!$  
 !!$  ! Second, initialize the coordinate transformation associated with this 
@@ -2485,7 +2478,7 @@ program test_general_elliptic_solver_multipatch
 !!$  values(:,:) = 0.0_f64
 !!$  
 !!$  ! First thing, initialize the logical mesh associated with this problem.        
-!!$  mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
+!!$  mesh_2d => new_cartesian_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
 !!$       ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
 !!$  
 !!$  ! Second, initialize the coordinate transformation associated with this 
@@ -2805,7 +2798,7 @@ program test_general_elliptic_solver_multipatch
 !!$  values(:,:) = 0.0_f64
 !!$  
 !!$  ! First thing, initialize the logical mesh associated with this problem.        
-!!$  mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
+!!$  mesh_2d => new_cartesian_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
 !!$       ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
 !!$  
 !!$  ! Second, initialize the coordinate transformation associated with this 
@@ -3122,7 +3115,7 @@ program test_general_elliptic_solver_multipatch
 !!$  values(:,:) = 0.0_f64
 !!$
 !!$  ! First thing, initialize the logical mesh associated with this problem.        
-!!$  mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
+!!$  mesh_2d => new_cartesian_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
 !!$       ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
 !!$  
 !!$  ! Second, initialize the coordinate transformation associated with this 
@@ -3436,7 +3429,7 @@ program test_general_elliptic_solver_multipatch
 !!$  values(:,:) = 0.0_f64
 !!$  
 !!$  ! First thing, initialize the logical mesh associated with this problem.        
-!!$  mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
+!!$  mesh_2d => new_cartesian_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
 !!$       ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
 !!$  
 !!$  ! Second, initialize the coordinate transformation associated with this 
@@ -3748,7 +3741,7 @@ program test_general_elliptic_solver_multipatch
 !!$  values(:,:) = 0.0_f64
 !!$  
 !!$  ! First thing, initialize the logical mesh associated with this problem.        
-!!$  mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
+!!$  mesh_2d => new_cartesian_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
 !!$       ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
 !!$  
 !!$  ! Second, initialize the coordinate transformation associated with this 

@@ -15,6 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> @ingroup file_io_parallel
 !> @brief
 !> Implements the functions to write xdmf file plotable by VisIt
 !> @details

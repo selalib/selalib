@@ -1,0 +1,67 @@
+#############################################################################
+###      Parallel simulations
+#############################################################################
+
+IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
+
+   ADD_LIBRARY( sll_simulations_parallel STATIC ../simulation_base_class.F90)
+
+   #Add new dependencies concerning simulation_MYMETHOD.F90
+   TARGET_LINK_LIBRARIES(sll_simulations_parallel
+                         sll_distribution_function_multipatch
+                         #PN sll_general_coordinate_elliptic_solvers_multipatch
+                         sll_scalar_field_multipatch
+                         sll_parallel_array_initializers
+                         sll_advection
+                         sll_parallel_utilities
+                         sll_poisson_solvers
+                         sll_time_splitting
+                         sll_file_io_parallel
+                         sll_poisson_parallel
+                         sll_scalar_field_1d_alternative
+                         sll_fcisl
+                         sll_derivative
+                         sll_qn_solvers_parallel
+                         sll_reduction
+                         sll_gyroaverage
+                         sll_pic_accumulators
+                         sll_pic_utilities
+                         sll_pic_initializers
+                         sll_fft
+                         sll_distribution_function
+                         sll_general_coordinate_elliptic_solvers
+                         sll_scalar_field_2d_alternative
+                         sll_pic_particles
+                         sll_random_deviate_generators
+                         sll_field_accumulators
+                         sll_scalar_field
+                         sll_interpolators
+                         sll_point_to_point_communications
+                         sll_splines
+                         sll_remap
+                         sll_mesh_calculus
+                         sll_integration
+                         sll_constants
+                         sll_coordinate_transformations
+                         sll_meshes
+                         sll_utilities
+                         sll_timer
+                         sll_memory
+                         sll_assert 	
+                         sll_working_precision
+                        )
+
+    # Variables passed to simulations' CMakeFiles in subdirectories
+    SET( INSTALL_DIR "${INSTALL_DIR}/simulations_parallel" )
+
+    # Simulations as new subdirectories
+    ADD_SUBDIRECTORY( sim_2d_guiding_center_curvilinear  )
+    ADD_SUBDIRECTORY( sim_2d_vlasov_poisson_cartesian    )
+    ADD_SUBDIRECTORY( sim_2d_vlasov_poisson_no_splitting )
+    ADD_SUBDIRECTORY( sim_4d_vlasov_poisson_cartesian    )
+    ADD_SUBDIRECTORY( sim_4d_vlasov_poisson_polar        )
+    ADD_SUBDIRECTORY( sim_4d_vlasov_poisson_general      )
+    ADD_SUBDIRECTORY( sim_4d_drift_kinetic_cartesian     )
+
+ENDIF()
+

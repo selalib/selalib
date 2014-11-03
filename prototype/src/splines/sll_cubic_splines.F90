@@ -15,8 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @file sll_cubic_splines.F90
-!> @namespace sll_cubic_splines 
+!> @ingroup splines 
 !> @brief  
 !> provides capabilities for data and derivative
 !> interpolation with cubic B-splines and different 
@@ -38,102 +37,108 @@ module sll_cubic_splines
   use sll_tridiagonal  ! Used for 'slow' algorithm implementation
   use sll_boundary_condition_descriptors
   implicit none
+  private
   
-  !> @brief basic type for one-dimensional cubic spline data. This should be
+  !> @brief 
+  !> basic type for one-dimensional cubic spline data. 
+  !> @details This should be
   !> treated as an opaque type. No access to its internals is directly allowed.
-  type  ::  sll_cubic_spline_1D
-     sll_int32 SLL_PRIV                   :: n_points ! size
-     sll_real64 SLL_PRIV                  :: delta    ! discretization step
-     sll_real64 SLL_PRIV                  :: rdelta   ! reciprocal of delta
-     sll_real64 SLL_PRIV                  :: xmin
-     sll_real64 SLL_PRIV                  :: xmax
-     sll_int32 SLL_PRIV                   :: bc_type  ! periodic, hermite
-     ! scratch space D (L*D=F); refer to the algorithm below. Size depends on 
-     ! BCs.
+  type, public  ::  sll_cubic_spline_1D
+     sll_int32 SLL_PRIV                   :: n_points !< size
+     sll_real64 SLL_PRIV                  :: delta    !< discretization step
+     sll_real64 SLL_PRIV                  :: rdelta   !< reciprocal of delta
+     sll_real64 SLL_PRIV                  :: xmin     !< left boundary
+     sll_real64 SLL_PRIV                  :: xmax     !< right boundary
+     sll_int32 SLL_PRIV                   :: bc_type  !< periodic, hermite
+     !> scratch space D (L*D=F); refer to the algorithm below. Size depends on 
+     !> BCs.
      sll_real64, dimension(:), pointer SLL_PRIV :: d =>null() 
-     ! the spline coeffs
+     !> the spline coeffs
      sll_real64, dimension(:), pointer SLL_PRIV :: coeffs=>null() 
-     ! left slope, for Hermite:
+     !> left slope, for Hermite:
      sll_real64 SLL_PRIV                        :: slope_L  
-     ! right slope, for Hermite
+     !> right slope, for Hermite
      sll_real64 SLL_PRIV                        :: slope_R 
+     !> PLEASE ADD DOCUMENTATION
      logical SLL_PRIV                           :: compute_slope_L
+     !> PLEASE ADD DOCUMENTATION
      logical SLL_PRIV                           :: compute_slope_R
-     ! Data required for the 'slow' algorithm based on a standard
-     ! tridiagonal system solution. Note that we use the same nomenclature
-     ! as in the sll_tridiagonal module.
+     !> Data required for the 'slow' algorithm based on a standard
+     !> tridiagonal system solution. Note that we use the same nomenclature
+     !> as in the sll_tridiagonal module.
      logical SLL_PRIV                           :: use_fast_algorithm
+     !> Tridiagonal solver data
      sll_real64, dimension(:), pointer SLL_PRIV :: a => null()
+     !> Tridiagonal solver data
      sll_real64, dimension(:), pointer SLL_PRIV :: cts => null()
+     !> Tridiagonal solver data
      sll_int32, dimension(:), pointer SLL_PRIV  :: ipiv => null()
-     ! Hermite needs extended f array:
+     !> Hermite needs extended f array:
      sll_real64, dimension(:), pointer SLL_PRIV :: f_aux => null() 
   end type sll_cubic_spline_1D
 
 
-  !> @brief basic type for one-dimensional cubic spline data. This should be
+  !> @brief 
+  !> Basic type for one-dimensional cubic spline data. 
+  !> @details
+  !> This should be
   !> treated as an opaque type. No access to its internals is directly allowed.
-  type sll_cubic_spline_2D
-     sll_int32 SLL_PRIV                           :: num_pts_x1
-     sll_int32 SLL_PRIV                           :: num_pts_x2
-     sll_real64 SLL_PRIV                          :: x1_delta
-     sll_real64 SLL_PRIV                          :: x1_rdelta
-     sll_real64 SLL_PRIV                          :: x2_delta
-     sll_real64 SLL_PRIV                          :: x2_rdelta
-     sll_real64 SLL_PRIV                          :: x1_min
-     sll_real64 SLL_PRIV                          :: x1_max
-     sll_real64 SLL_PRIV                          :: x2_min
-     sll_real64 SLL_PRIV                          :: x2_max
-     sll_int32 SLL_PRIV                           :: x1_bc_type
-     sll_int32 SLL_PRIV                           :: x2_bc_type
+  type, public :: sll_cubic_spline_2D
+     sll_int32 SLL_PRIV   :: num_pts_x1  !< PLEASE ADD DOCUMENTATION
+     sll_int32 SLL_PRIV   :: num_pts_x2  !< PLEASE ADD DOCUMENTATION
+     sll_real64 SLL_PRIV  :: x1_delta    !< PLEASE ADD DOCUMENTATION
+     sll_real64 SLL_PRIV  :: x1_rdelta   !< PLEASE ADD DOCUMENTATION
+     sll_real64 SLL_PRIV  :: x2_delta    !< PLEASE ADD DOCUMENTATION
+     sll_real64 SLL_PRIV  :: x2_rdelta   !< PLEASE ADD DOCUMENTATION
+     sll_real64 SLL_PRIV  :: x1_min      !< PLEASE ADD DOCUMENTATION
+     sll_real64 SLL_PRIV  :: x1_max      !< PLEASE ADD DOCUMENTATION
+     sll_real64 SLL_PRIV  :: x2_min      !< PLEASE ADD DOCUMENTATION
+     sll_real64 SLL_PRIV  :: x2_max      !< PLEASE ADD DOCUMENTATION
+     sll_int32 SLL_PRIV   :: x1_bc_type  !< PLEASE ADD DOCUMENTATION
+     sll_int32 SLL_PRIV   :: x2_bc_type  !< PLEASE ADD DOCUMENTATION
      ! if data is not used, it should be deleted make a decision...
-     ! data for the spline fit
-     sll_real64, dimension(:,:), pointer SLL_PRIV :: data => null()  
-     ! scratch space D (L*D = F), refer to algorithm below. Size depends on BCs.
-     sll_real64, dimension(:), pointer SLL_PRIV   :: d1 => null()   
-     ! Second scratch space: 
-     sll_real64, dimension(:), pointer SLL_PRIV   :: d2 => null()   
-     ! the spline coefficients:
-     sll_real64, dimension(:,:), pointer SLL_PRIV :: coeffs => null()  
-     sll_real64, dimension(:), pointer SLL_PRIV   :: x1_min_slopes => null()
-     sll_real64, dimension(:), pointer SLL_PRIV   :: x1_max_slopes => null()
-     sll_real64, dimension(:), pointer SLL_PRIV   :: x2_min_slopes => null()
-     sll_real64, dimension(:), pointer SLL_PRIV   :: x2_max_slopes => null()
-     sll_real64, dimension(:), pointer SLL_PRIV   :: x1_min_slopes_coeffs => &
-          null()
-     sll_real64, dimension(:), pointer SLL_PRIV   :: x1_max_slopes_coeffs => &
-          null()
-     sll_real64, dimension(:), pointer SLL_PRIV   :: x2_min_slopes_coeffs => &
-          null()
-     sll_real64, dimension(:), pointer SLL_PRIV   :: x2_max_slopes_coeffs => &
-          null()
-     logical SLL_PRIV                             :: compute_slopes_x1_min
-     logical SLL_PRIV                             :: compute_slopes_x1_max
-     logical SLL_PRIV                             :: compute_slopes_x2_min
-     logical SLL_PRIV                             :: compute_slopes_x2_max
+     sll_real64, pointer SLL_PRIV :: data(:,:) => null()    !< data for the spline fit
+     sll_real64, pointer SLL_PRIV :: d1(:) => null()        !< scratch space D (L*D = F), refer to algorithm below. Size depends on BCs.
+     sll_real64, pointer SLL_PRIV :: d2(:) => null()        !< Second scratch space: 
+     sll_real64, pointer SLL_PRIV :: coeffs(:,:) => null()  !< the spline coefficients:
+     !> PLEASE ADD DOCUMENTATION
+     sll_real64, pointer SLL_PRIV :: x1_min_slopes(:) => null() 
+     !> PLEASE ADD DOCUMENTATION
+     sll_real64, pointer SLL_PRIV :: x1_max_slopes(:) => null()
+     !> PLEASE ADD DOCUMENTATION
+     sll_real64, pointer SLL_PRIV :: x2_min_slopes(:) => null()
+     !> PLEASE ADD DOCUMENTATION
+     sll_real64, pointer SLL_PRIV :: x2_max_slopes(:) => null()
+     !> PLEASE ADD DOCUMENTATION
+     sll_real64, pointer SLL_PRIV :: x1_min_slopes_coeffs(:) => null()
+     !> PLEASE ADD DOCUMENTATION
+     sll_real64, pointer SLL_PRIV :: x1_max_slopes_coeffs(:) => null()
+     !> PLEASE ADD DOCUMENTATION
+     sll_real64, pointer SLL_PRIV :: x2_min_slopes_coeffs(:) => null()
+     !> PLEASE ADD DOCUMENTATION
+     sll_real64, pointer SLL_PRIV :: x2_max_slopes_coeffs(:) => null()
+     !> PLEASE ADD DOCUMENTATION
+     logical SLL_PRIV             :: compute_slopes_x1_min
+     !> PLEASE ADD DOCUMENTATION
+     logical SLL_PRIV             :: compute_slopes_x1_max
+     !> PLEASE ADD DOCUMENTATION
+     logical SLL_PRIV             :: compute_slopes_x2_min
+     !> PLEASE ADD DOCUMENTATION
+     logical SLL_PRIV             :: compute_slopes_x2_max
   end type sll_cubic_spline_2D
 
-  private delete_cubic_spline_1D, delete_cubic_spline_2D, &
-       compute_spline_1D_periodic_aux,&
-       compute_spline_1D_hermite_aux, compute_spline_1d_periodic, &
-       compute_spline_1d_hermite, interpolate_value_aux, &
-       interpolate_derivative_aux, compute_spline_2d_prdc_prdc, &
-       compute_spline_2d_hrmt_prdc, compute_spline_2D_prdc_hrmt, &
-       compute_spline_2d_hrmt_hrmt, get_x1_min_cs1d, get_x1_min_cs2d, &
-       get_x1_max_cs1d, get_x1_max_cs2d, get_delta_cs1d, get_x1_delta_cs2d, &
-       get_x2_max_cs2d, get_x2_delta_cs2d
-
-  !> @brief Generic sub-routine defined for the 1D and 2D cubic spline types.
+  !> @brief 
+  !~ Generic sub-routine defined for the 1D and 2D cubic spline types.
   !> deallocates the memory associated with the given cubic spline object.
   !> @param[inout] spline_object.
   interface sll_delete
      module procedure delete_cubic_spline_1D, delete_cubic_spline_2D
   end interface
 
+
   ! The following was written after declaring the contents of the fundamental
   ! spline types as private. This may be an overkill. If this ever gives 
   ! problems, it is suggested to change the corresponding slots to 'public'.
-
 
   interface get_x1_min
      module procedure get_x1_min_cs1d, get_x1_min_cs2d
@@ -154,6 +159,8 @@ module sll_cubic_splines
   interface get_x2_delta
      module procedure get_x2_delta_cs2d
   end interface get_x2_delta
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 
   ! Some useful macros that should probably be put in a different file to 
   ! make them more widely accessible. Here we use them to compute default
@@ -179,8 +186,32 @@ module sll_cubic_splines
 #define BACKWARD_FD_3PT( f, r_delta, np ) \
     r_delta*(0.5_f64*f(np-2)-2.0_f64*f(np-1) +1.5_f64*f(np))
 
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
+
+    public sll_delete,                        &
+           new_cubic_spline_1d,               &
+           new_cubic_spline_2d,               &
+           compute_cubic_spline_1d,           &
+           compute_cubic_spline_2d,           &
+           interpolate_derivative,            &
+           interpolate_value,                 &
+           interpolate_array_values,          &
+           interpolate_pointer_values,        &
+           interpolate_array_derivatives,     &
+           interpolate_pointer_derivatives,   &
+           interpolate_value_2d,              &
+           interpolate_x1_derivative_2D,      &
+           interpolate_x2_derivative_2D,      &
+           get_x1_min,                        &
+           get_x1_max,                        &
+           get_x1_delta,                      &
+           get_x2_max,                        &
+           get_x2_delta,                      &
+           deposit_value_2d
 
 contains  ! ****************************************************************
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 #define MAKE_GET_SLOT_FUNCTION( fname, datatype, slot, ret_type )    \
   function fname( spline_obj ) result(val);                \
@@ -190,14 +221,14 @@ contains  ! ****************************************************************
   end function fname
 
 
-MAKE_GET_SLOT_FUNCTION( get_x1_min_cs1d, sll_cubic_spline_1d, xmin, sll_real64 )
-MAKE_GET_SLOT_FUNCTION( get_x1_max_cs1d, sll_cubic_spline_1d, xmax, sll_real64 )
-MAKE_GET_SLOT_FUNCTION( get_delta_cs1d,  sll_cubic_spline_1d, delta,sll_real64 )
+MAKE_GET_SLOT_FUNCTION(get_x1_min_cs1d,  sll_cubic_spline_1d, xmin, sll_real64)
+MAKE_GET_SLOT_FUNCTION(get_x1_max_cs1d,  sll_cubic_spline_1d, xmax, sll_real64)
+MAKE_GET_SLOT_FUNCTION(get_delta_cs1d,   sll_cubic_spline_1d, delta,sll_real64)
 
-MAKE_GET_SLOT_FUNCTION(get_x1_min_cs2d, sll_cubic_spline_2d, x1_min, sll_real64 )
-MAKE_GET_SLOT_FUNCTION(get_x1_max_cs2d, sll_cubic_spline_2d, x1_max, sll_real64 )
-MAKE_GET_SLOT_FUNCTION(get_x2_min_cs2d, sll_cubic_spline_2d, x2_min, sll_real64 )
-MAKE_GET_SLOT_FUNCTION(get_x2_max_cs2d, sll_cubic_spline_2d, x2_max, sll_real64 )
+MAKE_GET_SLOT_FUNCTION(get_x1_min_cs2d,  sll_cubic_spline_2d, x1_min, sll_real64)
+MAKE_GET_SLOT_FUNCTION(get_x1_max_cs2d,  sll_cubic_spline_2d, x1_max, sll_real64)
+MAKE_GET_SLOT_FUNCTION(get_x2_min_cs2d,  sll_cubic_spline_2d, x2_min, sll_real64)
+MAKE_GET_SLOT_FUNCTION(get_x2_max_cs2d,  sll_cubic_spline_2d, x2_max, sll_real64)
 MAKE_GET_SLOT_FUNCTION(get_x1_delta_cs2d,sll_cubic_spline_2d,x1_delta,sll_real64)
 MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64)
 
@@ -215,6 +246,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
 
 #define NUM_TERMS 27  
 
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
   !> @brief Returns a pointer to a heap-allocated cubic spline object.
   !> @param[in] num_points Number of points where the data to be 
@@ -229,6 +261,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
   !> of hermite boundary conditions.
   !> @param[in] sr OPTIONAL: The value of the slope at xmin, for use in the case
   !> of hermite boundary conditions.
+  !> @return a pointer to a heap-allocated cubic spline object.
   function new_cubic_spline_1D( num_points, xmin, xmax, bc_type, sl, sr )
     type(sll_cubic_spline_1D), pointer   :: new_cubic_spline_1D
     sll_int32,  intent(in)               :: num_points
@@ -861,20 +894,21 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
   end function interpolate_value_aux
 
   
-  !> @brief returns the value of the interpolated image of the abscissa 'x',
+  !> @brief returns the value of the interpolated image of the abscissa x,
   !> using the spline coefficients stored in the spline object.
   !> @param[in] x the value of the abscissa where the data should be 
   !> interpolated.
-  !> @param[inout] spline, the spline object pointer, duly initialized and 
-  !> already operated on by the compute_cubic_spline_1D() subroutine.
+  !> @param[in] spline the spline object pointer, duly initialized and 
+  !> already operated on by the compute_cubic_spline_1D subroutine.
+  !> @returns the value of the interpolated image of the abscissa x,
   function interpolate_value( x, spline )
-    sll_real64                        :: interpolate_value
-    intrinsic                         :: associated, int, real
-    sll_real64, intent(in)            :: x
-    type(sll_cubic_spline_1D), pointer      :: spline
-    sll_real64, dimension(:), pointer :: coeffs
-    sll_real64                        :: xmin
-    sll_real64                        :: rh   ! reciprocal of cell spacing
+    sll_real64                         :: interpolate_value
+    intrinsic                          :: associated, int, real
+    sll_real64, intent(in)             :: x
+    type(sll_cubic_spline_1D), pointer :: spline
+    sll_real64, dimension(:), pointer  :: coeffs
+    sll_real64                         :: xmin
+    sll_real64                         :: rh   ! reciprocal of cell spacing
     
     ! We set these as assertions since we want the flexibility of turning
     ! them off.
@@ -895,7 +929,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
   !> results of the interpolation.
   !> @param[in] n the number of elements of the input array which are to be
   !> interpolated.
-  !> @param[inout] spline, the spline object pointer, duly initialized and 
+  !> @param[inout] spline the spline object pointer, duly initialized and 
   !> already operated on by the compute_cubic_spline_1D() subroutine.
   subroutine interpolate_array_values( a_in, a_out, n, spline )
     intrinsic                               :: associated, int, real
@@ -955,22 +989,24 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
   ! FIXME: The following function is not in the unit test.
 
   !> @brief returns the values of the images of a collection of abscissae,
+  !> @details
   !> represented by a 1D array pointer, in another output array pointer. 
   !> The spline coefficients used are stored in the spline object pointer.
-  !> @param[in] a_in input double-precison element pointer containing the 
+  !> @param[in] ptr_in input double-precison element pointer containing the 
   !> abscissae to be interpolated.
-  !> @param[out] a_out output double-precision element pointer containing the 
+  !> @param[out] ptr_out output double-precision element pointer containing the 
   !> results of the interpolation.
   !> @param[in] n the number of elements of the input pointer which are to be
   !> interpolated.
-  !> @param[inout] spline, the spline object pointer, duly initialized and 
+  !> @param[inout] spline the spline object pointer, duly initialized and 
   !> already operated on by the compute_cubic_spline_1D() subroutine.
+  !> @returns the values of the images of a collection of abscissae,
   subroutine interpolate_pointer_values( ptr_in, ptr_out, n, spline )
     intrinsic                               :: associated, int, real
     sll_int32, intent(in)                   :: n
     sll_real64, dimension(:), pointer       :: ptr_in
     sll_real64, dimension(:), pointer       :: ptr_out
-    type(sll_cubic_spline_1D), pointer            :: spline
+    type(sll_cubic_spline_1D), pointer      :: spline
     sll_real64, dimension(:), pointer       :: coeffs
     sll_real64                              :: rh   ! reciprocal of cell spacing
     sll_int32                               :: cell
@@ -1057,8 +1093,9 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
   !> 'x', using the spline coefficients stored in the spline object.
   !> @param[in] x the value of the abscissa at which the derivative should be
   !> interpolated.
-  !> @param[inout] spline, the spline object pointer, duly initialized and 
+  !> @param[inout] spline the spline object pointer, duly initialized and 
   !> already operated on by the compute_cubic_spline_1D() subroutine.
+  !> @returns the value of the derivative at the image of the abscissa 
   function interpolate_derivative( x, spline )
     sll_real64                        :: interpolate_derivative
     intrinsic                         :: associated
@@ -1082,12 +1119,12 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
   !> abscissae stored in the input 1D array and stores the results in a 
   !> different output array. The spline coefficients
   !> used are stored in the spline object pointer.
-  !> @param[in] a_in input double-precison element array containing the 
+  !> @param[in] array_in input double-precison element array containing the 
   !> abscissae at which the derivatives are wanted.
-  !> @param[out] a_out output double-precision element array containing the 
+  !> @param[out] array_out output double-precision element array containing the 
   !> results.
-  !> @param[in] n the number of elements of the input array.
-  !> @param[inout] spline, the spline object pointer, duly initialized and 
+  !> @param[in] num_pts the number of elements of the input array.
+  !> @param[inout] spline the spline object pointer, duly initialized and 
   !> already operated on by the compute_cubic_spline_1D() subroutine.
   subroutine interpolate_array_derivatives( &
     array_in, &
@@ -1117,12 +1154,12 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
   ! FIXME: The following subroutine is not in the unit test
   !> @brief analogous to the interpolate_array_derivatives() subroutine but
   !> its input and output arrays are pointers.
-  !> @param[in] a_in input double-precison element array pointer containing the 
+  !> @param[in] ptr_in input double-precison element array pointer containing the 
   !> abscissae at which the derivatives are wanted.
-  !> @param[out] a_out output double-precision element array pointer containing
+  !> @param[out] ptr_out output double-precision element array pointer containing
   !> the results.
-  !> @param[in] n the number of elements of the input array pointer.
-  !> @param[inout] spline, the spline object pointer, duly initialized and 
+  !> @param[in] num_pts the number of elements of the input array pointer.
+  !> @param[inout] spline the spline object pointer, duly initialized and 
   !> already operated on by the compute_cubic_spline_1D() subroutine.
   subroutine interpolate_pointer_derivatives( &
     ptr_in, &
@@ -1152,6 +1189,8 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
   end subroutine interpolate_pointer_derivatives
 
 
+  !> @brief deallocate the spline object
+  !> @details call it through the sll_delete interface. 
   subroutine delete_cubic_spline_1D( spline )
     type(sll_cubic_spline_1D), pointer :: spline
     sll_int32                    :: ierr
@@ -1181,9 +1220,9 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
   !----------------------------------------------------------------------
 
   !> @brief Returns a pointer to a heap-allocated 2D cubic spline object.
-  !> @param[in] num_points_x1 Dimension in the x1 direction of the 2D array
+  !> @param[in] num_pts_x1 Dimension in the x1 direction of the 2D array
   !> that stores the data to be interpolated.
-  !> @param[in] num_points_x2 Dimension in the x2 direction of the 2D array
+  !> @param[in] num_pts_x2 Dimension in the x2 direction of the 2D array
   !> that stores the data to be interpolated.
   !> @param[in] x1_min In the x1 direction, the minimum value of the domain 
   !> where the data to be interpolated are represented.
@@ -1229,6 +1268,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
   !> in case that a specific slope value should to be imposed at each border
   !> point. Default behavior is to compute the slope consistent with the 
   !> given data.
+  !> @return new_cubic_spline_2d a pointer to a heap-allocated 2D cubic spline object.
   function new_cubic_spline_2D( &
     num_pts_x1,   &
     num_pts_x2,   &
@@ -1397,6 +1437,9 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
        ! The following macro is obviously intended only for use within
        ! new_cubic_spline_2D(). But this should be replaced with a subroutine
        ! whenever possible.
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
 #define FILL_SLOPES(const_opt, input_opt, numpts, output, slopes) \
        if( present(input_opt) ) then;                           \
           do i=1,numpts;                                        \
@@ -1411,6 +1454,8 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
        else;                                                    \
           new_cubic_spline_2D%slopes = .true.;                        \
        end if
+
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
        ! Set the values of the slopes at x1_min     
        FILL_SLOPES(const_slope_x1_min,x1_min_slopes,num_pts_x2,x1_min_slopes,compute_slopes_x1_min)
@@ -1965,7 +2010,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
   !> (i.e. the x2 direction) and then in the first (x1) direction.
   !> @param[in] data The 2D array with the data for which the cubic spline
   !> decomposition is sought.
-  !> @param[inout] a pointer to an initialized spline object.
+  !> @param[inout] spline a pointer to an initialized spline object.
   subroutine compute_cubic_spline_2D( data, spline )
     sll_real64, dimension(:,:), intent(in), target :: data  ! data to be fit
     type(sll_cubic_spline_2D), pointer         :: spline
@@ -2026,13 +2071,17 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     end select
   end subroutine compute_cubic_spline_2D
 
-  ! deposit_value_2D(): given a spline that describes the decomposition 
-  ! of the distribution function at time t^n, and two 2D arrays x1 and x2 
-  ! where the foot of the forward characteristics are stored, returns
-  ! a 2D array a_out which is the updated distribution function at time t^{n+1}
-  !
-  ! the boundary conditions are taken into account and any type of BC are 
-  ! allowed
+  !> @brief
+  !> Updated distribution function at time \f$ t^{n+1} \f$
+  !> @details
+  !> deposit_value_2D(): given a spline that describes the decomposition 
+  !> of the distribution function at time \f$ t^n\f$ , and two 2D arrays x1 and x2 
+  !> where the foot of the forward characteristics are stored, returns
+  !> a 2D array a_out which is the updated distribution function at time 
+  !> \f$ t^{n+1} \f$.
+  !>
+  !> the boundary conditions are taken into account and any type of BC are 
+  !> allowed
   subroutine deposit_value_2D(x1, x2, spline, a_out)
     intrinsic :: real, int
     sll_real64, dimension(1:,1:), intent(in)      :: x1
@@ -2316,17 +2365,19 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     			 
   end subroutine deposit_value_2D
 
-  !> @brief Returns the interpolated value of the image of the point (x1,x2)
+  !> @brief 
+  !> Returns the interpolated value of the image of the point (x1,x2)
   !> using the spline decomposition stored in the spline object.
   !> @param[in] x1 first coordinate.
   !> @param[in] x2 second coordinate.
-  !> @param[in] pointer to spline object.
+  !> @param[in] spline pointer to spline object.
+  !> @returns the interpolated value of the image of the point (x1,x2)
   function interpolate_value_2D( x1, x2, spline )
     sll_real64                          :: interpolate_value_2D
     intrinsic                           :: associated, int, real
     sll_real64, intent(in)              :: x1
     sll_real64, intent(in)              :: x2
-    type(sll_cubic_spline_2D), pointer        :: spline
+    type(sll_cubic_spline_2D), pointer  :: spline
     sll_real64                          :: rh1   ! reciprocal of cell spacing
     sll_real64                          :: rh2   ! reciprocal of cell spacing
     sll_int32                           :: cell
@@ -2403,7 +2454,8 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
   !> (x1,x2) using the spline decomposition stored in the spline object.
   !> @param[in] x1 first coordinate.
   !> @param[in] x2 second coordinate.
-  !> @param[in] pointer to spline object.
+  !> @param[in] spline pointer to spline object.
+  !> @returns the interpolated value of the derivative in the x1 
   function interpolate_x1_derivative_2D( x1, x2, spline )
     sll_real64                          :: interpolate_x1_derivative_2D
     intrinsic                           :: associated, int, real
@@ -2481,18 +2533,21 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
   !
   ! evaluated at the point (x1,x2). (Sorry for the ambiguous use of x1)
 
-  !> @brief Returns the interpolated value of the derivative in the x2 
-  !> direction at the point
-  !> (x1,x2) using the spline decomposition stored in the spline object.
+  !> @brief 
+  !> Returns the interpolated value of the derivative 
+  !> @details
+  !> in the x2 direction at the point(x1,x2) using the spline 
+  !> decomposition stored in the spline object.
   !> @param[in] x1 first coordinate.
   !> @param[in] x2 second coordinate.
-  !> @param[in] pointer to spline object.
+  !> @param[in] spline pointer to spline object.
+  !> @return interpolate_x2_derivative_2D  interpolated value of the derivative 
   function interpolate_x2_derivative_2D( x1, x2, spline )
     sll_real64                          :: interpolate_x2_derivative_2D
     intrinsic                           :: associated, int, real
     sll_real64, intent(in)              :: x1
     sll_real64, intent(in)              :: x2
-    type(sll_cubic_spline_2D), pointer        :: spline
+    type(sll_cubic_spline_2D), pointer  :: spline
     sll_real64                          :: rh1   ! reciprocal of cell spacing
     sll_real64                          :: rh2   ! reciprocal of cell spacing
     sll_int32                           :: cell

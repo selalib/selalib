@@ -4,6 +4,7 @@ program test_poisson_polar_fft
 #include "sll_assert.h"
 #include "sll_constants.h"
 
+use sll_boundary_condition_descriptors
 use sll_poisson_2d_polar
 
 implicit none
@@ -59,7 +60,7 @@ do j=1,ntheta
    end do
 end do
 
-call initialize( poisson_fft,   &
+call sll_create( poisson_fft,   &
                  r_min,         &
                  r_max,         &
                  nr-1,          &

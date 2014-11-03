@@ -15,6 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> @ingroup file_io
 !> @brief
 !> Implements the functions to write data file plotable by Plotmtv
 !> @details
@@ -53,6 +54,7 @@ sll_real64                   :: x1, y1
 call sll_new_file_id(file_id, error)
 
 call sll_ascii_file_create(label//'.mtv', file_id, error )
+
 write(file_id,"(a)")"$DATA=CURVE2D"
 write(file_id,"('% xmin=',f7.3,' xmax=', f7.3)") minval(xcoord), maxval(xcoord)
 write(file_id,"('% ymin=',f7.3,' ymax=', f7.3)") minval(ycoord), maxval(ycoord)
@@ -61,6 +63,28 @@ write(file_id,"(a)")"% spline=1"
 write(file_id,"(a)")"% markertype=2"
 write(file_id,"(a)")"% pointID=F"
 write(file_id,"(a)")"% toplabel='"//label//"' "
+   
+do i=1,nx
+   do j=1,ny
+      write(file_id,*) xcoord(i,j), ycoord(i,j)
+   end do
+   write(file_id,*)
+end do
+do j=1,ny
+   do i=1,nx
+      write(file_id,*) xcoord(i,j), ycoord(i,j)
+   end do
+   write(file_id,*)
+end do
+
+write(file_id,"(a)")"$DATA=CURVE2D"
+write(file_id,"('% xmin=',f7.3,' xmax=', f7.3)") minval(xcoord), maxval(xcoord)
+write(file_id,"('% ymin=',f7.3,' ymax=', f7.3)") minval(ycoord), maxval(ycoord)
+write(file_id,"(a)")"% equalscale=T"
+write(file_id,"(a)")"% spline=1"
+write(file_id,"(a)")"% markertype=2"
+write(file_id,"(a)")"% pointID=F"
+write(file_id,"(a)")"% toplabel='"//label//" with numbers' "
    
 do i=1,nx
    do j=1,ny
@@ -97,3 +121,4 @@ end subroutine sll_plotmtv_curv_2d
 
 
 end module sll_plotmtv
+

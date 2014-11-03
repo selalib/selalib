@@ -1,3 +1,5 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+!> @ingroup poisson_solvers
 !> @brief 
 !> Selalib 2D poisson solver for cartesian coordinates, Dirichlet BC's
 !   
@@ -18,11 +20,12 @@ module sll_poisson_2d_dirichlet_cartesian
 #include "sll_assert.h"
 !  use sll_fft
   use sll_constants
-   implicit none
+  implicit none
+  private
 
   !> Structure to store data from Poisson solver. This
   !> solver is parallel on structured cartesian mesh. 
-  type poisson_2d_dirichlet_cartesian
+  type, public :: poisson_2d_dirichlet_cartesian
      sll_int32                           :: ncx    !< number of cells  
      sll_int32                           :: ncy    !< number of cells
 
@@ -31,22 +34,31 @@ module sll_poisson_2d_dirichlet_cartesian
      sll_real64, dimension(:), pointer   :: vkgd
      sll_real64, dimension(:), pointer   :: vkgi
      sll_real64, dimension(:), pointer   :: vkgs
-     sll_int32,dimension(:),pointer      :: prof
-     sll_int32,dimension(:),pointer      :: indi
-     sll_int32,dimension(:),pointer      :: indj
-     sll_int32,dimension(:),pointer      :: kld
+     sll_int32,  dimension(:),pointer    :: prof
+     sll_int32,  dimension(:),pointer    :: indi
+     sll_int32,  dimension(:),pointer    :: indj
+     sll_int32,  dimension(:),pointer    :: kld
      sll_real64, dimension(:),pointer    :: val
      sll_real64, dimension(:),pointer    :: f
      sll_real64, dimension(:),pointer    :: vx
      sll_int32                           :: nsky
   end type poisson_2d_dirichlet_cartesian
 
+  interface sll_solve
+     module procedure solve_poisson_2d_dirichlet_cartesian
+  end interface sll_solve
+
   interface sll_delete
      module procedure delete_poisson_2d_dirichlet_cartesian
   end interface sll_delete
 
+  public :: new_poisson_2d_dirichlet_cartesian_plan
+  public :: sll_solve
+  public :: sll_delete
+
 contains
 
+  !> @returns the pointer to poisson solver object
   function new_poisson_2d_dirichlet_cartesian_plan( &
     ncx, &            
     ncy, &            
@@ -211,3 +223,4 @@ contains
 
 
 end module sll_poisson_2d_dirichlet_cartesian
+#endif  /* DOXYGEN_SHOULD_SKIP_THIS */

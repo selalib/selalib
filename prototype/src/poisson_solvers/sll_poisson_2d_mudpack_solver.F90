@@ -20,94 +20,133 @@
 !> Adnane Hamiaz (hamiaz@math.unistra.fr)
 !**************************************************************
 
-!solves \sum_{i,j=1}^2 A_{i,j}\partial_{i,j} phi
-!       +\sum_{i=1}^2B_i\partial_i phi
-!       +C \phi = rho
-!in polar coordinates
-!this leads when A_{1,2}=A_{2,1}=0 and B_2 = 0
-! A_11\partial_{1,1}\hat{phi}+B_1\partial_{1}\hat{phi}+(C+A_{2,2}k^2)\hat{phi} = \hat{rho}
-
-
-module sll_module_poisson_2d_mudpack_solver
+!> @ingroup poisson_solvers
+!> @brief
+!> Solves Poisson equation on 2d curvilinear mesh
+!> @details
+!> We use mudpack library for multigrid method.
+!>
+!> <b> Equations </b>
+!>
+!> \f[ \sum_{i,j=1}^2 A_{i,j}\partial_{i,j} \phi(x,y)
+!>        +  \sum_{i=1}^2B_i\partial_i \phi(x,y)
+!>        +C \phi(x,y) = \rho(x,y)
+!> \f]
+!> in polar coordinates. This leads when 
+!> \f[ 
+!>      A_{1,2}=A_{2,1}=0 \\
+!> \f]
+!> \f[ 
+!>      B_2 = 0 \\
+!> \f]
+!> \f[ 
+!>      A_{1,1}\partial_{1,1}\hat{\phi}+B_1\partial_{1}\hat{\phi}+(C+A_{2,2}k^2)\hat{\phi} = \hat{\rho}
+!> \f]
+module sll_module_poisson_2d_mudpack
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-!use sll_boundary_condition_descriptors
+
 use sll_module_poisson_2d_base
-use sll_mudpack_base
-use sll_cubic_spline_interpolator_1d
-use sll_cubic_spline_interpolator_2d
+use sll_mudpack_curvilinear
+use sll_module_cubic_spline_interpolator_1d
+use sll_module_cubic_spline_interpolator_2d
+use sll_module_interpolators_1d_base
+use sll_module_interpolators_2d_base
 
-!use sll_poisson_2d_polar
 implicit none
+private
 
-  !integer, parameter :: SLL_SEPARABLE  = 1    !< type of equation
-  !integer, parameter :: SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS = 2    !< type of equation
-  !integer, parameter :: SLL_NON_SEPARABLE_WITH_CROSS_TERMS = 3    !< type of equation
-
+  !> Derived type to solve Poisson equation on 2d curvilinear mesh
+  type, public, extends(sll_poisson_2d_base) :: poisson_2d_mudpack
   
+    !> PLEASE ADD DOCUMENTATION
+    sll_real64, dimension(:,:), pointer :: cxx_2d
+    !> PLEASE ADD DOCUMENTATION
+    sll_real64, dimension(:,:), pointer :: cxy_2d
+    !> PLEASE ADD DOCUMENTATION
+    sll_real64, dimension(:,:), pointer :: cyy_2d
+    !> PLEASE ADD DOCUMENTATION
+    sll_real64, dimension(:,:), pointer :: cx_2d
+    !> PLEASE ADD DOCUMENTATION
+    sll_real64, dimension(:,:), pointer :: cy_2d
+    !> PLEASE ADD DOCUMENTATION
+    sll_real64, dimension(:,:), pointer :: ce_2d
+    !> PLEASE ADD DOCUMENTATION
+    sll_real64, dimension(:), pointer :: cxx_1d
+    !> PLEASE ADD DOCUMENTATION
+    sll_real64, dimension(:), pointer :: cyy_1d
+    !> PLEASE ADD DOCUMENTATION
+    sll_real64, dimension(:), pointer :: cx_1d
+    !> PLEASE ADD DOCUMENTATION
+    sll_real64, dimension(:), pointer :: cy_1d
+    !> PLEASE ADD DOCUMENTATION
+    sll_real64, dimension(:), pointer :: cex_1d
+    !> PLEASE ADD DOCUMENTATION
+    sll_real64, dimension(:), pointer :: cey_1d
+    !> PLEASE ADD DOCUMENTATION
+    sll_real64 :: cxx
+    !> PLEASE ADD DOCUMENTATION
+    sll_real64 :: cyy
+    !> PLEASE ADD DOCUMENTATION
+    sll_real64 :: cx
+    !> PLEASE ADD DOCUMENTATION
+    sll_real64 :: cy
+    !> PLEASE ADD DOCUMENTATION
+    sll_real64 :: ce
+    !> PLEASE ADD DOCUMENTATION
+    sll_int32  :: mudpack_case
+    !> PLEASE ADD DOCUMENTATION
+    class(sll_interpolator_2d_base), pointer   :: cxx_2d_interp
+    !> PLEASE ADD DOCUMENTATION
+    class(sll_interpolator_2d_base), pointer   :: cxy_2d_interp
+    !> PLEASE ADD DOCUMENTATION
+    class(sll_interpolator_2d_base), pointer   :: cyy_2d_interp
+    !> PLEASE ADD DOCUMENTATION
+    class(sll_interpolator_2d_base), pointer   :: cx_2d_interp
+    !> PLEASE ADD DOCUMENTATION
+    class(sll_interpolator_2d_base), pointer   :: cy_2d_interp
+    !> PLEASE ADD DOCUMENTATION
+    class(sll_interpolator_2d_base), pointer   :: ce_2d_interp
+    !> PLEASE ADD DOCUMENTATION
+    class(sll_interpolator_1d_base), pointer   :: cxx_1d_interp
+    !> PLEASE ADD DOCUMENTATION
+    class(sll_interpolator_1d_base), pointer   :: cyy_1d_interp
+    !> PLEASE ADD DOCUMENTATION
+    class(sll_interpolator_1d_base), pointer   :: cx_1d_interp
+    !> PLEASE ADD DOCUMENTATION
+    class(sll_interpolator_1d_base), pointer   :: cy_1d_interp
+    !> PLEASE ADD DOCUMENTATION
+    class(sll_interpolator_1d_base), pointer   :: cex_1d_interp
+    !> PLEASE ADD DOCUMENTATION
+    class(sll_interpolator_1d_base), pointer   :: cey_1d_interp
 
-  type,extends(sll_poisson_2d_base) :: poisson_2d_mudpack_solver     
-  
-  !type(sll_plan_poisson_polar), pointer                   :: poiss
-  sll_real64, dimension(:,:), pointer :: cxx_2d
-  sll_real64, dimension(:,:), pointer :: cxy_2d
-  sll_real64, dimension(:,:), pointer :: cyy_2d
-  sll_real64, dimension(:,:), pointer :: cx_2d
-  sll_real64, dimension(:,:), pointer :: cy_2d
-  sll_real64, dimension(:,:), pointer :: ce_2d
-  sll_real64, dimension(:), pointer :: cxx_1d
-  sll_real64, dimension(:), pointer :: cyy_1d
-  sll_real64, dimension(:), pointer :: cx_1d
-  sll_real64, dimension(:), pointer :: cy_1d
-  sll_real64, dimension(:), pointer :: cex_1d
-  sll_real64, dimension(:), pointer :: cey_1d
-  sll_real64 :: cxx
-  sll_real64 :: cyy
-  sll_real64 :: cx
-  sll_real64 :: cy
-  sll_real64 :: ce
-  sll_int32  :: mudpack_case
-  class(sll_interpolator_2d_base), pointer   :: cxx_2d_interp
-  class(sll_interpolator_2d_base), pointer   :: cxy_2d_interp
-  class(sll_interpolator_2d_base), pointer   :: cyy_2d_interp
-  class(sll_interpolator_2d_base), pointer   :: cx_2d_interp
-  class(sll_interpolator_2d_base), pointer   :: cy_2d_interp
-  class(sll_interpolator_2d_base), pointer   :: ce_2d_interp
-  class(sll_interpolator_1d_base), pointer   :: cxx_1d_interp
-  class(sll_interpolator_1d_base), pointer   :: cyy_1d_interp
-  class(sll_interpolator_1d_base), pointer   :: cx_1d_interp
-  class(sll_interpolator_1d_base), pointer   :: cy_1d_interp
-  class(sll_interpolator_1d_base), pointer   :: cex_1d_interp
-  class(sll_interpolator_1d_base), pointer   :: cey_1d_interp
+    sll_real64, dimension(:), pointer :: work !< array for tmp data
+    sll_int32  :: mgopt(4) !< Option to control multigrid
+    sll_int32  :: iprm(16) !< Indices to control grid sizes
+    sll_real64 :: fprm(6)  !< Real to set boundary conditions
+    sll_int32  :: iguess   !< Initial solution or loop over time
 
-
-  sll_real64, dimension(:), pointer :: work !< array for tmp data
-  sll_int32  :: mgopt(4) !< Option to control multigrid
-  sll_int32  :: iprm(16) !< Indices to control grid sizes
-  sll_real64 :: fprm(6)  !< Real to set boundary conditions
-  sll_int32  :: iguess   !< Initial solution or loop over time
-
-
-  
-  
   contains
-    procedure, pass(poisson) :: initialize => &
-      initialize_poisson_2d_mudpack_solver
-    procedure, pass(poisson) :: compute_phi_from_rho => &
-      compute_phi_from_rho_2d_mudpack
-    procedure, pass(poisson) :: compute_E_from_rho => &
-      compute_E_from_rho_2d_mudpack
-!    procedure, pass(poisson) :: compute_E_from_phi => &
-!      compute_E_from_phi_2d_polar
+
+    !> PLEASE ADD DOCUMENTATION
+    procedure, pass(poisson) :: initialize => initialize_poisson_2d_mudpack
+    !> PLEASE ADD DOCUMENTATION
+    procedure, pass(poisson) :: compute_phi_from_rho => compute_phi_from_rho_2d_mudpack
+    !> PLEASE ADD DOCUMENTATION
+    procedure, pass(poisson) :: compute_E_from_rho => compute_E_from_rho_2d_mudpack
       
-  end type poisson_2d_mudpack_solver
+  end type poisson_2d_mudpack
 
-  class(poisson_2d_mudpack_solver), pointer   :: mudpack_wrapper => null()
+  !> PLEASE ADD DOCUMENTATION
+  class(poisson_2d_mudpack), public, pointer :: mudpack_wrapper => null()
 
+  public :: new_poisson_2d_mudpack
 
 contains
-  function new_poisson_2d_mudpack_solver( &
+
+  !> PLEASE ADD DOCUMENTATION
+  function new_poisson_2d_mudpack( &
     eta1_min, &
     eta1_max, &
     nc_eta1, &
@@ -139,7 +178,7 @@ contains
     ce) &
     result(poisson)
       
-    type(poisson_2d_mudpack_solver),pointer :: poisson
+    type(poisson_2d_mudpack),pointer :: poisson
     sll_real64, intent(in) :: eta1_min
     sll_real64, intent(in) :: eta1_max
     sll_int32, intent(in) :: nc_eta1
@@ -173,7 +212,7 @@ contains
     sll_int32 :: ierr
       
     SLL_ALLOCATE(poisson,ierr)
-    call initialize_poisson_2d_mudpack_solver( &
+    call initialize_poisson_2d_mudpack( &
       poisson, &
       eta1_min, &
       eta1_max, &
@@ -205,10 +244,10 @@ contains
       cy, &
       ce)
     
-  end function new_poisson_2d_mudpack_solver
+  end function new_poisson_2d_mudpack
   
   
-  subroutine initialize_poisson_2d_mudpack_solver( &
+  subroutine initialize_poisson_2d_mudpack( &
     poisson, &
     eta1_min, &
     eta1_max, &
@@ -239,7 +278,7 @@ contains
     cx, &
     cy, &
     ce)
-    class(poisson_2d_mudpack_solver), target :: poisson
+    class(poisson_2d_mudpack), target :: poisson
     sll_real64, intent(in) :: eta1_min
     sll_real64, intent(in) :: eta1_max
     sll_int32, intent(in) :: nc_eta1
@@ -395,18 +434,18 @@ contains
         if(present(cxx_2d).or.present(cxy_2d).or.present(cyy_2d)&
           .or.present(cx_2d).or.present(cy_2d).or.present(ce_2d)) then
           print *,'#2d arrays should not be here'
-          print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+          print *,'#in subroutine initialize_poisson_2d_mudpack'
           stop
         endif
         
         if((.not.(present(cxx_1d))).and.(.not.(present(cxx)))) then
           print *,'#1d/0d array should be here for cxx'
-          print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+          print *,'#in subroutine initialize_poisson_2d_mudpack'
           stop        
         endif
         if(present(cxx_1d).and.present(cxx))then
           print *,'#please choose between 1d or 0d array for cxx'
-          print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+          print *,'#in subroutine initialize_poisson_2d_mudpack'
           stop        
         endif
         if(present(cxx_1d))then
@@ -424,12 +463,12 @@ contains
 
         if((.not.(present(cyy_1d))).and.(.not.(present(cyy)))) then
           print *,'#1d/0d array should be here for cyy !'
-          print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+          print *,'#in subroutine initialize_poisson_2d_mudpack'
           stop        
         endif
         if(present(cyy_1d).and.present(cyy))then
           print *,'#please choose between 1d or 0d array for cyy'
-          print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+          print *,'#in subroutine initialize_poisson_2d_mudpack'
           stop        
         endif
         if(present(cyy_1d))then
@@ -451,7 +490,7 @@ contains
         endif
         if(present(cx_1d).and.present(cx))then
           print *,'#please choose between 1d or 0d array for cx'
-          print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+          print *,'#in subroutine initialize_poisson_2d_mudpack'
           stop        
         endif
         if(present(cx_1d))then
@@ -474,7 +513,7 @@ contains
         endif
         if(present(cy_1d).and.present(cy))then
           print *,'#please choose between 1d or 0d array for cy'
-          print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+          print *,'#in subroutine initialize_poisson_2d_mudpack'
           stop        
         endif
         if(present(cy_1d))then
@@ -496,7 +535,7 @@ contains
         endif
         if(present(cex_1d).and.present(ce))then
           print *,'#please choose between 1d or 0d array for cex'
-          print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+          print *,'#in subroutine initialize_poisson_2d_mudpack'
           stop        
         endif
         if(present(cex_1d))then
@@ -518,7 +557,7 @@ contains
         endif
         if(present(cey_1d).and.present(ce))then
           print *,'#please choose between 1d or 0d array for cey'
-          print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+          print *,'#in subroutine initialize_poisson_2d_mudpack'
           stop        
         endif
         if(present(cey_1d))then
@@ -534,42 +573,42 @@ contains
           poisson%cey_1d(1:nc_eta2+1)=0.5_f64*ce
         endif
 
-        poisson%cxx_1d_interp => new_cubic_spline_1d_interpolator( &
+        poisson%cxx_1d_interp => new_cubic_spline_interpolator_1d( &
           nx, &
           eta1_min, &
           eta1_max, &
           SLL_PERIODIC)          
         call poisson%cxx_1d_interp%compute_interpolants( poisson%cxx_1d )          
 
-        poisson%cyy_1d_interp => new_cubic_spline_1d_interpolator( &
+        poisson%cyy_1d_interp => new_cubic_spline_interpolator_1d( &
           ny, &
           eta2_min, &
           eta2_max, &
           SLL_PERIODIC)          
         call poisson%cyy_1d_interp%compute_interpolants( poisson%cyy_1d )          
 
-        poisson%cx_1d_interp => new_cubic_spline_1d_interpolator( &
+        poisson%cx_1d_interp => new_cubic_spline_interpolator_1d( &
           nx, &
           eta1_min, &
           eta1_max, &
           SLL_PERIODIC)          
         call poisson%cx_1d_interp%compute_interpolants( poisson%cx_1d )          
 
-        poisson%cy_1d_interp => new_cubic_spline_1d_interpolator( &
+        poisson%cy_1d_interp => new_cubic_spline_interpolator_1d( &
           ny, &
           eta2_min, &
           eta2_max, &
           SLL_PERIODIC)          
         call poisson%cy_1d_interp%compute_interpolants( poisson%cy_1d )          
 
-        poisson%cex_1d_interp => new_cubic_spline_1d_interpolator( &
+        poisson%cex_1d_interp => new_cubic_spline_interpolator_1d( &
           nx, &
           eta1_min, &
           eta1_max, &
           SLL_PERIODIC)          
         call poisson%cex_1d_interp%compute_interpolants( poisson%cex_1d )          
 
-        poisson%cey_1d_interp => new_cubic_spline_1d_interpolator( &
+        poisson%cey_1d_interp => new_cubic_spline_interpolator_1d( &
           ny, &
           eta2_min, &
           eta2_max, &
@@ -601,18 +640,18 @@ contains
         if(present(cxx_1d).or.present(cyy_1d).or.present(cx_1d)& 
           .or.present(cy_1d).or.present(cex_1d).or.present(cey_1d)) then
           print *,'#1d arrays should not be here'
-          print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+          print *,'#in subroutine initialize_poisson_2d_mudpack'
           stop
         endif
         
         if((.not.(present(cxx_2d))).and.(.not.(present(cxx)))) then
           print *,'#2d/0d array should be here for cxx'
-          print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+          print *,'#in subroutine initialize_poisson_2d_mudpack'
           stop        
         endif
         if(present(cxx_2d).and.present(cxx))then
           print *,'#please choose between 2d or 0d array for cxx'
-          print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+          print *,'#in subroutine initialize_poisson_2d_mudpack'
           stop        
         endif
         if(present(cxx_2d))then
@@ -630,12 +669,12 @@ contains
 
         if((.not.(present(cyy_2d))).and.(.not.(present(cyy)))) then
           print *,'#2d/0d array should be here for cyy !'
-          print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+          print *,'#in subroutine initialize_poisson_2d_mudpack'
           stop        
         endif
         if(present(cyy_2d).and.present(cyy))then
           print *,'#please choose between 2d or 0d array for cyy'
-          print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+          print *,'#in subroutine initialize_poisson_2d_mudpack'
           stop        
         endif
         if(present(cyy_2d))then
@@ -657,7 +696,7 @@ contains
         endif
         if(present(cx_2d).and.present(cx))then
           print *,'#please choose between 2d or 0d array for cx'
-          print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+          print *,'#in subroutine initialize_poisson_2d_mudpack'
           stop        
         endif
         if(present(cx_2d))then
@@ -679,7 +718,7 @@ contains
         endif
         if(present(cy_2d).and.present(cy))then
           print *,'#please choose between 2d or 0d array for cy'
-          print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+          print *,'#in subroutine initialize_poisson_2d_mudpack'
           stop        
         endif
         if(present(cy_2d))then
@@ -701,7 +740,7 @@ contains
         endif
         if(present(ce_2d).and.present(ce))then
           print *,'#please choose between 2d or 0d array for ce'
-          print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+          print *,'#in subroutine initialize_poisson_2d_mudpack'
           stop        
         endif
         if(present(ce_2d))then
@@ -718,7 +757,7 @@ contains
         endif
 
 
-        poisson%cxx_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%cxx_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -729,7 +768,7 @@ contains
           SLL_PERIODIC)    
         call poisson%cxx_2d_interp%compute_interpolants( poisson%cxx_2d )          
 
-        poisson%cyy_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%cyy_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -740,7 +779,7 @@ contains
           SLL_PERIODIC)    
         call poisson%cyy_2d_interp%compute_interpolants( poisson%cyy_2d )          
 
-        poisson%cx_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%cx_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -751,7 +790,7 @@ contains
           SLL_PERIODIC)    
         call poisson%cx_2d_interp%compute_interpolants( poisson%cx_2d )          
 
-        poisson%cy_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%cy_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -762,7 +801,7 @@ contains
           SLL_PERIODIC)    
         call poisson%cy_2d_interp%compute_interpolants( poisson%cy_2d )          
 
-        poisson%ce_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%ce_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -793,18 +832,18 @@ contains
         if(present(cxx_1d).or.present(cyy_1d).or.present(cx_1d)& 
           .or.present(cy_1d).or.present(cex_1d).or.present(cey_1d)) then
           print *,'#1d arrays should not be here'
-          print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+          print *,'#in subroutine initialize_poisson_2d_mudpack'
           stop
         endif
         
         if((.not.(present(cxx_2d))).and.(.not.(present(cxx)))) then
           print *,'#2d/0d array should be here for cxx'
-          print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+          print *,'#in subroutine initialize_poisson_2d_mudpack'
           stop        
         endif
         if(present(cxx_2d).and.present(cxx))then
           print *,'#please choose between 2d or 0d array for cxx'
-          print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+          print *,'#in subroutine initialize_poisson_2d_mudpack'
           stop        
         endif
         if(present(cxx_2d))then
@@ -823,12 +862,12 @@ contains
         if((.not.(present(cxy_2d))).and.(.not.(present(cxy)))) then
           print *,'#2d array should be here for cxy'
           print *,'# cxy=0. use another method'
-          print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+          print *,'#in subroutine initialize_poisson_2d_mudpack'
           stop        
         endif
         if(present(cxy_2d).and.present(cxy))then
           print *,'#please choose between 2d or 0d array for cxy'
-          print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+          print *,'#in subroutine initialize_poisson_2d_mudpack'
           stop        
         endif        
         if(present(cxy_2d))then
@@ -845,12 +884,12 @@ contains
         endif
         if((.not.(present(cyy_2d))).and.(.not.(present(cyy)))) then
           print *,'#2d/0d array should be here for cyy !'
-          print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+          print *,'#in subroutine initialize_poisson_2d_mudpack'
           stop        
         endif
         if(present(cyy_2d).and.present(cyy))then
           print *,'#please choose between 2d or 0d array for cyy'
-          print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+          print *,'#in subroutine initialize_poisson_2d_mudpack'
           stop        
         endif
         if(present(cyy_2d))then
@@ -872,7 +911,7 @@ contains
         endif
         if(present(cx_2d).and.present(cx))then
           print *,'#please choose between 2d or 0d array for cx'
-          print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+          print *,'#in subroutine initialize_poisson_2d_mudpack'
           stop        
         endif
         if(present(cx_2d))then
@@ -894,7 +933,7 @@ contains
         endif
         if(present(cy_2d).and.present(cy))then
           print *,'#please choose between 2d or 0d array for cy'
-          print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+          print *,'#in subroutine initialize_poisson_2d_mudpack'
           stop        
         endif
         if(present(cy_2d))then
@@ -916,7 +955,7 @@ contains
         endif
         if(present(ce_2d).and.present(ce))then
           print *,'#please choose between 2d or 0d array for ce'
-          print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+          print *,'#in subroutine initialize_poisson_2d_mudpack'
           stop        
         endif
         if(present(ce_2d))then
@@ -933,7 +972,7 @@ contains
         endif
 
 
-        poisson%cxx_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%cxx_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -944,7 +983,7 @@ contains
           SLL_PERIODIC)    
         call poisson%cxx_2d_interp%compute_interpolants( poisson%cxx_2d )   
                
-        poisson%cxy_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%cxy_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -955,7 +994,7 @@ contains
           SLL_PERIODIC)    
         call poisson%cxy_2d_interp%compute_interpolants( poisson%cxy_2d ) 
         
-        poisson%cyy_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%cyy_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -966,7 +1005,7 @@ contains
           SLL_PERIODIC)    
         call poisson%cyy_2d_interp%compute_interpolants( poisson%cyy_2d )          
 
-        poisson%cx_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%cx_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -977,7 +1016,7 @@ contains
           SLL_PERIODIC)    
         call poisson%cx_2d_interp%compute_interpolants( poisson%cx_2d )          
 
-        poisson%cy_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%cy_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -988,7 +1027,7 @@ contains
           SLL_PERIODIC)    
         call poisson%cy_2d_interp%compute_interpolants( poisson%cy_2d )          
 
-        poisson%ce_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%ce_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -1016,16 +1055,16 @@ contains
 
       case default
         print *,'#bad mudpack_case',mudpack_case
-        print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+        print *,'#in subroutine initialize_poisson_2d_mudpack'
         stop 
     end select
 
         
-  end subroutine initialize_poisson_2d_mudpack_solver
+  end subroutine initialize_poisson_2d_mudpack
   
   ! solves \Delta phi = -rho in 2d
   subroutine compute_phi_from_rho_2d_mudpack( poisson, phi, rho )
-    class(poisson_2d_mudpack_solver), target :: poisson
+    class(poisson_2d_mudpack), target :: poisson
     sll_real64,dimension(:,:),intent(in) :: rho
     sll_real64,dimension(:,:),intent(out) :: phi
     !sll_real64        :: phi(:,:)  !< Electric potential
@@ -1162,57 +1201,41 @@ contains
          
       case default
         print *,'#bad mudpack_case',poisson%mudpack_case
-        print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+        print *,'#in subroutine initialize_poisson_2d_mudpack'
         stop 
     end select
 
-
-
-    
-    !call solve( poisson%poiss, rho, phi)
-    
   end subroutine compute_phi_from_rho_2d_mudpack
 
-    ! solves E = -\nabla Phi in 2d
-!    subroutine compute_E_from_phi_2d_fft( poisson, phi, E1, E2 )
-!      class(poisson_2d_fft_solver) :: poisson
-!      sll_real64,dimension(:,:),intent(in) :: phi
-!      sll_real64,dimension(:,:),intent(out) :: E1
-!      sll_real64,dimension(:,:),intent(out) :: E2
-!    end subroutine compute_E_from_phi_2d_fft
+  ! solves E = -\nabla Phi with -\Delta phi = rho in 2d 
+  subroutine compute_E_from_rho_2d_mudpack( poisson, E1, E2, rho )
+    class(poisson_2d_mudpack) :: poisson
+    sll_real64,dimension(:,:),intent(in) :: rho
+    sll_real64,dimension(:,:),intent(out) :: E1
+    sll_real64,dimension(:,:),intent(out) :: E2
+      
+    print *,'#compute_E_from_rho_2d_mudpack'      
+    print *,'#not implemented for the moment'
 
-    ! solves E = -\nabla Phi with -\Delta phi = rho in 2d 
-    subroutine compute_E_from_rho_2d_mudpack( poisson, E1, E2, rho )
-      class(poisson_2d_mudpack_solver) :: poisson
-      sll_real64,dimension(:,:),intent(in) :: rho
-      sll_real64,dimension(:,:),intent(out) :: E1
-      sll_real64,dimension(:,:),intent(out) :: E2
+    E1 = 0._f64
+    E2 = 0._f64
+    print *,maxval(rho)
       
-      print *,'#compute_E_from_rho_2d_mudpack'      
-      print *,'#not implemented for the moment'
+    if(.not.(associated(poisson%cxx_2d)))then
+      print *,'#poisson%cxx_2d is not associated'
+    endif
 
-      E1 = 0._f64
-      E2 = 0._f64
-      print *,maxval(rho)
+    stop
       
-      if(.not.(associated(poisson%cxx_2d)))then
-        print *,'#poisson%cxx_2d is not associated'
-      endif
-
-      stop
+    !call solve( poisson%poiss, E1, E2, rho)
       
-      !call solve( poisson%poiss, E1, E2, rho)
-      
-    end subroutine compute_E_from_rho_2d_mudpack
+  end subroutine compute_E_from_rho_2d_mudpack
   
-  
-  
-  
-end module sll_module_poisson_2d_mudpack_solver
+end module sll_module_poisson_2d_mudpack
 
 !> input x dependent coefficients
 subroutine mudpack_cofx(x,cxx,cx,cex)
-use sll_module_poisson_2d_mudpack_solver
+use sll_module_poisson_2d_mudpack
 implicit none
 real(8)  :: x,cxx,cx,cex
 cxx = mudpack_wrapper%cxx_1d_interp%interpolate_value(x)
@@ -1223,7 +1246,7 @@ end
 
 !> input y dependent coefficients
 subroutine mudpack_cofy(y,cyy,cy,cey)
-use sll_module_poisson_2d_mudpack_solver
+use sll_module_poisson_2d_mudpack
 implicit none
 real(8)  :: y,cyy,cy,cey
 cyy = mudpack_wrapper%cyy_1d_interp%interpolate_value(y)
@@ -1233,7 +1256,7 @@ return
 end
 
 subroutine mudpack_cof(x,y,cxx,cyy,cx,cy,ce)
-use sll_module_poisson_2d_mudpack_solver
+use sll_module_poisson_2d_mudpack
 implicit none
 real(8)  :: x,cxx,cx
 real(8)  :: y,cyy,cy,ce
@@ -1246,7 +1269,7 @@ return
 end
 
 subroutine mudpack_cofcr(x,y,cxx,cxy,cyy,cx,cy,ce)
-use sll_module_poisson_2d_mudpack_solver
+use sll_module_poisson_2d_mudpack
 implicit none
 real(8)  :: x,cxx,cx,cxy
 real(8)  :: y,cyy,cy,ce
@@ -1260,7 +1283,7 @@ return
 end
 !> input mixed derivative b.c. to mud2sp
 subroutine mudpack_bndsp(kbdy,xory,alfa,gbdy)
-use sll_module_poisson_2d_mudpack_solver
+use sll_module_poisson_2d_mudpack
 implicit none
 integer  :: kbdy
 real(8)  :: xory,alfa,gbdy,x,y,pe,px,py
@@ -1285,18 +1308,3 @@ if (kbdy == 4) then  ! y=yd boundary
    return
 end if
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

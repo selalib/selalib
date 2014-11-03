@@ -1,3 +1,6 @@
+!
+!  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
+!
 program test_maxwell_2d_discrete
 !--------------------------------------------------------------------------
 !  test 2D Maxwell solver based on discontinuous galerkine on a mapped mesh
@@ -9,27 +12,26 @@ program test_maxwell_2d_discrete
 #include "sll_constants.h"
 #include "sll_maxwell_solvers_macros.h"
 #include "sll_file_io.h"
+#include "sll_cartesian_meshes.h"
+#include "sll_coordinate_transformations.h"
 
-use sll_logical_meshes
-use sll_module_coordinate_transformations_2d
-use sll_common_coordinate_transformations
-use sll_cubic_spline_interpolator_2d
+use sll_module_cubic_spline_interpolator_2d
 use sll_dg_fields
 use sll_maxwell_solvers_base
-use sll_maxwell_2d_diga
+use sll_module_maxwell_2d_diga
 
 implicit none
   
 #define NPTS1 33
 #define NPTS2 33 
 
-type(sll_logical_mesh_2d), pointer :: mesh
+type(sll_cartesian_mesh_2d), pointer :: mesh
 class(sll_coordinate_transformation_2d_base), pointer :: tau_d ! discrete transf
 class(sll_coordinate_transformation_2d_base), pointer :: tau_a ! analytic transf
 ! for the discrete case...
-type(cubic_spline_2d_interpolator)      :: x1_interp
-type(cubic_spline_2d_interpolator)      :: x2_interp
-type(cubic_spline_2d_interpolator)      :: j_interp
+type(sll_cubic_spline_interpolator_2d)  :: x1_interp
+type(sll_cubic_spline_interpolator_2d)  :: x2_interp
+type(sll_cubic_spline_interpolator_2d)  :: j_interp
 sll_real64, dimension(:,:), allocatable :: x1_tab
 sll_real64, dimension(:,:), allocatable :: x2_tab
 sll_real64, dimension(:), allocatable   :: x1_eta1_min, x1_eta1_max
@@ -39,15 +41,15 @@ sll_int32  :: i, j
 sll_real64 :: eta1, eta2, h1, h2
 sll_real64, dimension(2) :: params   ! for the polar transformation
 
-type(maxwell_2d_diga), pointer  :: maxwell_d
-type(maxwell_2d_diga), pointer  :: maxwell_a
-sll_int32, parameter            :: degree = 2
-type(dg_field), pointer         :: ex_a, dx_a
-type(dg_field), pointer         :: ey_a, dy_a
-type(dg_field), pointer         :: bz_a, dz_a
-type(dg_field), pointer         :: ex_d, dx_d
-type(dg_field), pointer         :: ey_d, dy_d
-type(dg_field), pointer         :: bz_d, dz_d
+type(sll_maxwell_2d_diga), pointer  :: maxwell_d
+type(sll_maxwell_2d_diga), pointer  :: maxwell_a
+sll_int32, parameter                :: degree = 2
+type(sll_dg_field_2d), pointer      :: ex_a, dx_a
+type(sll_dg_field_2d), pointer      :: ey_a, dy_a
+type(sll_dg_field_2d), pointer      :: bz_a, dz_a
+type(sll_dg_field_2d), pointer      :: ex_d, dx_d
+type(sll_dg_field_2d), pointer      :: ey_d, dy_d
+type(sll_dg_field_2d), pointer      :: bz_d, dz_d
 
 sll_real64, external :: sol_ex, sol_ey, sol_bz
   
@@ -71,7 +73,7 @@ sll_real64, external :: sol_ex, sol_ey, sol_bz
   allocate(x2_eta1_max(NPTS2))
   allocate(jacs(NPTS1,NPTS2))
   
-  mesh => new_logical_mesh_2d( NPTS1-1, NPTS2-1 )
+  mesh => new_cartesian_mesh_2d( NPTS1-1, NPTS2-1 )
 
   do j=0,NPTS2-1
      do i=0,NPTS1-1
@@ -145,21 +147,21 @@ sll_real64, external :: sol_ex, sol_ey, sol_bz
 
   call tau_d%write_to_file()
 
-  maxwell_d => new_maxwell_2d_diga( tau_d, degree, TE_POLARIZATION, &
-                                  SLL_PERIODIC, SLL_PERIODIC,   &
-                                  SLL_PERIODIC, SLL_PERIODIC,   &
-                                  SLL_UNCENTERED )
+  maxwell_d => sll_new( tau_d, degree, TE_POLARIZATION, &
+                        SLL_PERIODIC, SLL_PERIODIC,   &
+                        SLL_PERIODIC, SLL_PERIODIC,   &
+                        SLL_UNCENTERED )
 
-  ex_d  => new_dg_field(degree,tau_d) 
-  ey_d  => new_dg_field(degree,tau_d) 
-  bz_d  => new_dg_field(degree,tau_d,sol_bz) 
+  ex_d  => sll_new(degree,tau_d) 
+  ey_d  => sll_new(degree,tau_d) 
+  bz_d  => sll_new(degree,tau_d,sol_bz) 
   call bz_d%write_to_file('bz_d')
   
-  dx_d  => new_dg_field(degree,tau_d) 
-  dy_d  => new_dg_field(degree,tau_d) 
-  dz_d  => new_dg_field(degree,tau_d) 
+  dx_d  => sll_new(degree,tau_d) 
+  dy_d  => sll_new(degree,tau_d) 
+  dz_d  => sll_new(degree,tau_d) 
   
-  call solve(maxwell_d, ex_d, ey_d, bz_d, dx_d, dy_d, dz_d)
+  call sll_solve(maxwell_d, ex_d, ey_d, bz_d, dx_d, dy_d, dz_d)
   call dx_d%write_to_file('dx_d')
   call dy_d%write_to_file('dy_d')
 
@@ -177,23 +179,23 @@ sll_real64, external :: sol_ex, sol_ey, sol_bz
 
   call tau_a%write_to_file()
 
-  maxwell_a => new_maxwell_2d_diga( tau_a, degree, TE_POLARIZATION, &
-                                  SLL_PERIODIC, SLL_PERIODIC,   &
-                                  SLL_PERIODIC, SLL_PERIODIC,   &
-                                  SLL_UNCENTERED )
+  maxwell_a => sll_new( tau_a, degree, TE_POLARIZATION, &
+                        SLL_PERIODIC, SLL_PERIODIC,   &
+                        SLL_PERIODIC, SLL_PERIODIC,   &
+                        SLL_UNCENTERED )
   
-  ex_a  => new_dg_field(degree,tau_a) 
+  ex_a  => sll_new(degree,tau_a) 
   call ex_a%write_to_file('ex_a')
-  ey_a  => new_dg_field(degree,tau_a) 
+  ey_a  => sll_new(degree,tau_a) 
   call ey_a%write_to_file('ey_a')
-  bz_a  => new_dg_field(degree,tau_a,sol_bz) 
+  bz_a  => sll_new(degree,tau_a,sol_bz) 
   call bz_a%write_to_file('bz_a')
   
-  dx_a  => new_dg_field(degree,tau_a) 
-  dy_a  => new_dg_field(degree,tau_a) 
-  dz_a  => new_dg_field(degree,tau_a) 
+  dx_a  => sll_new(degree,tau_a) 
+  dy_a  => sll_new(degree,tau_a) 
+  dz_a  => sll_new(degree,tau_a) 
 
-  call solve(maxwell_a, ex_a, ey_a, bz_a, dx_a, dy_a, dz_a)
+  call sll_solve(maxwell_a, ex_a, ey_a, bz_a, dx_a, dy_a, dz_a)
   call dx_a%write_to_file('dx_a')
   call dy_a%write_to_file('dy_a')
 

@@ -34,6 +34,9 @@ ENDIF(FFTW_FOUND AND FFTW_ENABLED)
 
 IF(BUILD_TESTING)
 
+   ADD_TEST(NAME maxwell_2d_fdtd COMMAND test_maxwell_2d_fdtd)
+   SET_TESTS_PROPERTIES(maxwell_2d_fdtd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
    ADD_EXECUTABLE(test_maxwell_2d_fdtd unit_test_2d_fdtd.F90)
    TARGET_LINK_LIBRARIES(test_maxwell_2d_fdtd sll_maxwell_solvers)
 
@@ -56,5 +59,9 @@ IF(BUILD_TESTING)
    ADD_TEST(NAME maxwell_2d_dg_silver_muller COMMAND test_maxwell_2d_diga_wave)
    SET_TESTS_PROPERTIES(maxwell_2d_dg_silver_muller 
                         PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   IF(FFTW_ENABLED AND FFTW_FOUND)
+      ADD_TEST(NAME maxwell_2d_pstd COMMAND test_maxwell_2d_pstd)
+      SET_TESTS_PROPERTIES(maxwell_2d_pstd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   ENDIF()
 
 ENDIF(BUILD_TESTING)

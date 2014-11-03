@@ -20,7 +20,12 @@
 ! and exponent range for the real and complex types (4.4.2, 4.4.3), and the 
 ! representation methods for the character and logical types (4.4.4, 4.4.5)."
 
+!> @ingroup working_precision
+!> @brief
 !> Module to select the kind parameter. 
+!> @details
+!> In future developement we consider to put here some ISO_C bindings
+!> to call selalib from python.
 module sll_working_precision
   implicit none
   intrinsic :: kind, selected_real_kind

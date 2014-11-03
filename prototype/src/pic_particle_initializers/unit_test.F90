@@ -8,8 +8,8 @@ program initialize_tester
   use sll_particle_group_2d_module
   use sll_particle_initializers_2d
   use sll_particle_initializers_4d
-  use sll_logical_meshes
 !  use sll_representation_conversion_module
+  use sll_cartesian_meshes
 
 #define THERM_SPEED 1._f64
 #define NUM_PARTICLES 100000_i32
@@ -29,12 +29,12 @@ program initialize_tester
   implicit none
   type(sll_particle_group_4d), pointer :: init_group
   type(sll_particle_group_2d), pointer :: init_group_GC
-  type(sll_logical_mesh_2d),   pointer :: m2d
+  type(sll_cartesian_mesh_2d),   pointer :: m2d
 !!$  sll_int32 :: j
 !!$  character(5) :: ncx_name, ncy_name
 !!$  sll_real64 :: x, y
 
-  m2d =>  new_logical_mesh_2d( NC_X, NC_Y, &
+  m2d =>  new_cartesian_mesh_2d( NC_X, NC_Y, &
        XMIN, XMAX, YMIN, YMAX )
   
   init_group => new_particle_4d_group( &

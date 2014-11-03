@@ -1,33 +1,4 @@
-!------------------------------------------------------------------------------
-! SELALIB
-!------------------------------------------------------------------------------
-!
-! MODULE: sll_scalar_field_2d
-!
-!> @author
-!> - Edwin
-!> - Pierre
-!> - Eric
-!>
-!
-! DESCRIPTION: 
-!
-!> @brief
-!> Implements the geometry and mesh descriptor types
-!>
-!>@details
-!>
-!> This module depends on:
-!>    - memory
-!>    - precision
-!>    - assert
-!>    - utilities
-!>    - constants
-!
-! REVISION HISTORY:
-! DD Mmm YYYY - Initial Version
-! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
-!------------------------------------------------------------------------------
+!> Scalar field on mesh with coordinate transformation
 module sll_scalar_field_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -40,9 +11,9 @@ module sll_scalar_field_2d
   use sll_scalar_field_initializers_base
 
   implicit none
+  private
 
-  type scalar_field_2d
-     !class(sll_mapped_mesh_2d_base), pointer  :: mesh
+  type, public :: scalar_field_2d
      class(sll_coordinate_transformation_2d_base), pointer :: transf
      class(sll_interpolator_1d_base), pointer :: eta1_interpolator
      class(sll_interpolator_1d_base), pointer :: eta2_interpolator
@@ -50,6 +21,9 @@ module sll_scalar_field_2d
      sll_int32                                :: data_position
      character(len=64)                        :: name
      sll_int32                                :: plot_counter
+  contains
+     procedure :: write_to_file =>  write_scalar_field_2d
+     procedure :: initialize    =>  initialize_scalar_field_2d
   end type scalar_field_2d
 
   abstract interface
@@ -60,6 +34,15 @@ module sll_scalar_field_2d
        sll_real64, intent(in)  :: eta2
      end function scalar_function_2D
   end interface
+
+  interface sll_create
+     module procedure initialize_scalar_field_2d
+  end interface sll_create
+
+  public sll_create
+  public scalar_function_2D
+  public initialize_scalar_field_2d
+  public write_scalar_field_2d
 
 contains   ! *****************************************************************  
   ! this used to be new_scalar_field_2d
@@ -80,7 +63,7 @@ contains   ! *****************************************************************
     class(scalar_field_2d_initializer_base), pointer, optional :: initializer
     character(len=*), intent(in)                        :: field_name
     sll_int32, intent(in)                               :: data_position
-    type(sll_logical_mesh_2d), pointer                  :: mesh
+    class(sll_cartesian_mesh_2d), pointer                  :: mesh
 
     sll_int32  :: ierr
     sll_int32  :: num_cells1
@@ -95,7 +78,7 @@ contains   ! *****************************************************************
     this%transf => transf
     this%transf%written = .false.
     
-    mesh => transf%mesh
+    mesh => transf%get_cartesian_mesh()
     SLL_ASSERT(associated(mesh))
 
     this%name  = trim(field_name)
@@ -180,7 +163,7 @@ contains   ! *****************************************************************
     sll_int32, optional    :: output_format 
     character(len=*), optional    :: output_file_name 
     sll_int32              :: local_format 
-    type(sll_logical_mesh_2d), pointer :: mesh
+    class(sll_cartesian_mesh_2d), pointer :: mesh
 
     sll_int32  :: i1
     sll_int32  :: i2
@@ -204,7 +187,7 @@ contains   ! *****************************************************************
     end if
 
     transf => scalar_field%transf
-    mesh => transf%mesh
+    mesh => transf%get_cartesian_mesh()
 
     SLL_ASSERT(associated(mesh))  
     if (.not. transf%written) then

@@ -5,34 +5,24 @@
 ! in file Doxyfile.in (line 691) if it is excluded. 
 ! Type 'make doc' in build directory.
 ! To check the results, open : 
-! selalib/prototype/documentation/build/html/doxygen/html/namespaces.html 
+! selalib/prototype/documentation/build/html/doxygen/html/defgroup coordinate_transformationss.html 
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @namespace sll_coordinate_transformations 
+!> @defgroup coordinate_transformations sll_coordinate_transformations 
 !> @brief 
-!> Description of coordinate_transformations library (72 characters)
-!> @author Selalib team 
-!> You can add a contact, do not put your email to prevent spam.
+!> Coordinate transformations (analytic and discrete)
+!> @author Edwin Chacon-Golcher
 !> @details
-!> Long description of  coordinate_transformations, you can add some references or math equations.
-!>
+!> If you want to add a analytical coordinate transformation, 
+!> implement it in
+!> module sll_common_coordinate_transformations
+!> 
 !> <b> Headers file available </b>
 !>  - sll_coordinate_transformations.h
-!>
-!> <b> Modules available </b>
-!>  List fortran module available
-!>  - sll_coordinate_transformations
 !>
 !> <b> How to use it </b>
 !> - Header file : \code #include 'sll_coordinate_transformations.h' \endcode
 !> - Link with   <code>-lsll_%s</code>
 !> - Add <code> use sll_coordinate_transformations </code>
-!>
-!> <b> Examples </b>
-!> -Add some fortran lines to explain how ti use the library
-!> \code
-!> call initialize(my_type, arg_1, arg_2)
-!> call solve(my_type, your_result)
-!> \endcode
 !>

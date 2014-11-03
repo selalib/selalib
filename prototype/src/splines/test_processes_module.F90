@@ -6,6 +6,7 @@ module test_processes_module
   use sll_constants
   use util_constants
   use test_func_module
+  use sll_boundary_condition_descriptors
   implicit none
 
   abstract interface 

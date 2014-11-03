@@ -1,4 +1,5 @@
- !*********************************************************
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+!*********************************************************
 !
 ! Selalib      
 ! Module: util_constants.F90
@@ -32,3 +33,5 @@ module util_constants
   sll_real64, parameter :: theta_max = 2.0_f64*sll_pi
 
 end module util_constants
+
+#endif // DOXYGEN_SHOULD_SKIP_THIS

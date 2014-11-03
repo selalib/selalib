@@ -1,7 +1,7 @@
 program unit_test_alternative
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_constants
   use sll_module_scalar_field_2d_alternative
   use sll_module_coordinate_transformations_2d
@@ -19,7 +19,7 @@ program unit_test_alternative
 #define ETA2MAX  1.0_f64
 #define PRINT_COMPARISON .false.
   
-  type(sll_logical_mesh_2d), pointer               :: mesh_2d
+  type(sll_cartesian_mesh_2d), pointer               :: mesh_2d
   class(sll_coordinate_transformation_2d_base), pointer :: T
   ! either of these type declarations can be used to work. Initialization is
   ! different.
@@ -36,16 +36,16 @@ program unit_test_alternative
   sll_int32 :: nc1, nc2!, iplot
   sll_real64 :: grad1_node_val,grad2_node_val,grad1ref,grad2ref
   sll_real64, dimension(:,:), pointer :: tab_values
-  type(arb_deg_2d_interpolator), target                 :: interp_2d
+  type(sll_arbitrary_degree_spline_interpolator_2d), target                 :: interp_2d
   sll_real64 :: node_val,ref
   ! procedure(polar_x1), pointer :: px1, px2, pjac11, pjac12, pjac21, pjac22
   ! type(init_landau_2d), target :: init_landau
   ! class(scalar_field_2d_initializer_base), pointer    :: pfinit
-  ! type(cubic_spline_1d_interpolator), target  :: interp_eta1
-  ! type(cubic_spline_1d_interpolator), target  :: interp_eta2
+  ! type(sll_cubic_spline_interpolator_1d), target  :: interp_eta1
+  ! type(sll_cubic_spline_interpolator_1d), target  :: interp_eta2
   ! class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
   ! class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
-  !type(arb_deg_2d_interpolator), target    :: interp_2d_term_source
+  !type(sll_arbitrary_degree_spline_interpolator_2d), target    :: interp_2d_term_source
   !class(sll_scalar_field_2d_base), pointer              :: rho
   !sll_real64, dimension(:,:), allocatable    :: calculated
   !sll_real64, dimension(:,:), allocatable    :: difference
@@ -85,11 +85,9 @@ program unit_test_alternative
   h2 = (ETA2MAX-ETA2MIN)/real(nc2,f64)
   print *, 'h1 = ', h1
   print *, 'h2 = ', h2
-  
-
 
   ! First thing, initialize the logical mesh associated with this problem.        
-  mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
+  mesh_2d => new_cartesian_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
        ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
   
   print *, 'initialized mesh 2D'
@@ -397,7 +395,6 @@ program unit_test_alternative
      end do
   end do
   
-
   ! ----> initializatio of the interpolator for the field
   
   call initialize_ad2d_interpolator( &
@@ -414,7 +411,7 @@ program unit_test_alternative
        SLL_PERIODIC,&
        SPLINE_DEG1, &
        SPLINE_DEG2)
-  
+
   ! ----> initialization of the field
   
   doubly_periodic_discrete => new_scalar_field_2d_discrete_alt( &
@@ -429,7 +426,7 @@ program unit_test_alternative
        nc1+1,&
        point2,&
        nc2+1)
-  
+
   ! ------- > allocation values of field
   call doubly_periodic_discrete%set_field_data(tab_values)
   ! --------> Compute coefficients of the field

@@ -1,7 +1,5 @@
 ADD_LIBRARY(sll_remap STATIC sll_remap.F90)
-
 TARGET_LINK_LIBRARIES(sll_remap sll_collective) 
-
 
 ADD_EXECUTABLE(test_remap_2d unit_test_2d.F90)
 TARGET_LINK_LIBRARIES(test_remap_2d sll_remap)
@@ -15,7 +13,6 @@ TARGET_LINK_LIBRARIES(test_remap_4d sll_remap)
 ADD_EXECUTABLE(test_remap_5d unit_test_5d.F90)
 TARGET_LINK_LIBRARIES(test_remap_5d sll_remap)
 
-
 ADD_EXECUTABLE(test_remap_6d unit_test_6d.F90)
 TARGET_LINK_LIBRARIES(test_remap_6d sll_remap)
 
@@ -26,6 +23,12 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
    ADD_EXECUTABLE(test_io_parallel unit_test_parallel.F90)
    TARGET_LINK_LIBRARIES(test_io_parallel sll_file_io_parallel sll_remap)
+   SET(PROCS 4)
+   SET(ARGS  " ")
+
+   ADD_MPI_TEST(io_parallel test_io_parallel ${PROCS} ${ARGS})
+   SET_TESTS_PROPERTIES(io_parallel PROPERTIES PASS_REGULAR_EXPRESSION 
+      "PASSED" TIMEOUT 20)
 
 ENDIF()
 

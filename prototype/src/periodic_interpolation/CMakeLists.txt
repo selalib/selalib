@@ -1,7 +1,11 @@
-ADD_LIBRARY(sll_periodic_interp STATIC periodic_interp.F90 bsplvb.f90)
+ADD_LIBRARY(sll_periodic_interpolation STATIC periodic_interp.F90 bsplvb.f90)
 
-TARGET_LINK_LIBRARIES(sll_periodic_interp sll_fft sll_splines dfftpack)
+TARGET_LINK_LIBRARIES(sll_periodic_interpolation sll_fft sll_splines dfftpack)
 
-ADD_EXECUTABLE(test_periodic_interp unit_test.F90)
+ADD_EXECUTABLE(test_periodic_interpolation unit_test.F90)
 
-TARGET_LINK_LIBRARIES(test_periodic_interp sll_periodic_interp)
+TARGET_LINK_LIBRARIES(test_periodic_interpolation sll_periodic_interpolation)
+
+ADD_TEST(NAME periodic_interpolation COMMAND test_periodic_interpolation)
+
+SET_TESTS_PROPERTIES(periodic_interpolation PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")

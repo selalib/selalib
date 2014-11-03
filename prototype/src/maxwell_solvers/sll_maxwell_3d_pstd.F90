@@ -12,6 +12,10 @@
 !  circulated by CEA, CNRS and INRIA at the following URL
 !  "http://www.cecill.info". 
 !**************************************************************
+!
+!
+!  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
+!
 
 #include "sll_fftw.h"
 
@@ -33,6 +37,7 @@ self%tmp_z = -cmplx(0.0_f64,self%kz,kind=f64)*self%tmp_z;     \
 call fftw_execute_dft_c2r(self%bwz, self%tmp_z, self%d_dz);   \
 self%d_dz = self%d_dz / nc_z
 
+!> @ingroup maxwell_solvers
 !> @brief
 !> Implements the Maxwell solver in 3D with periodic boundary conditions
 !> with PSTD method.
@@ -54,7 +59,7 @@ self%d_dz = self%d_dz / nc_z
 !>\f$
 !>
 !>where \f$(u,v,w) = (x,y,z),(y,z,x),(z,x,y)\f$
-module sll_maxwell_3d_pstd
+module sll_module_maxwell_3d_pstd
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -63,27 +68,37 @@ module sll_maxwell_3d_pstd
 use fftw3
 
 implicit none
-private
 
 !> Initialize maxwell solver 2d cartesian periodic with PSTD scheme
-interface new
+interface sll_new
  module procedure new_maxwell_3d_pstd
-end interface new
+end interface sll_new
 
-!> Solve maxwell solver 2d cartesian periodic with PSTD scheme
-interface solve
+!> Solve maxwell solver 3d cartesian periodic with PSTD scheme
+interface sll_solve
  module procedure solve_maxwell_3d
-end interface solve
+end interface sll_solve
 
-!> Delete maxwell solver 2d cartesian periodic with PSTD scheme
-interface free
+!> Solve Ampere equation 3d cartesian periodic with PSTD scheme
+interface sll_solve_ampere
+ module procedure ampere
+end interface sll_solve_ampere
+
+!> Solve Faraday equation 3d cartesian periodic with PSTD scheme
+interface sll_solve_faraday
+ module procedure faraday
+end interface sll_solve_faraday
+
+!> Delete maxwell solver 3d cartesian periodic with PSTD scheme
+interface sll_delete
  module procedure free_maxwell_3d_pstd
-end interface free
+end interface sll_delete
 
-public :: new, free, solve, ampere, faraday
+public :: sll_new, sll_delete, sll_solve, sll_solve_ampere, sll_solve_faraday
 
 !> Maxwell solver object
 type, public :: maxwell_pstd_3d
+   private
    sll_int32                          :: nc_x         !< x cells number
    sll_int32                          :: nc_y         !< y cells number
    sll_int32                          :: nc_z         !< z cells number
@@ -92,7 +107,7 @@ type, public :: maxwell_pstd_3d
    sll_real64, dimension(:), pointer  :: d_dz         !< field y derivative
    sll_real64, dimension(:), pointer  :: kx           !< x wave number
    sll_real64, dimension(:), pointer  :: ky           !< y wave number
-   sll_real64, dimension(:), pointer  :: kz           !< y wave number
+   sll_real64, dimension(:), pointer  :: kz           !< z wave number
    fftw_plan                          :: fwx          !< forward fft plan along x
    fftw_plan                          :: fwy          !< forward fft plan along y
    fftw_plan                          :: fwz          !< forward fft plan along y
@@ -113,7 +128,7 @@ type, public :: maxwell_pstd_3d
    sll_real64                         :: mu_0         !< magnetic permeability
 end type maxwell_pstd_3d
 
-sll_int32, private :: i, j, k
+private
 
 contains
 
@@ -123,15 +138,16 @@ subroutine new_maxwell_3d_pstd(self,xmin,xmax,nc_x, &
                                     zmin,zmax,nc_z )
 
    type(maxwell_pstd_3d) :: self         !< maxwell object
-   sll_real64            :: xmin         !< xmin
-   sll_real64            :: xmax         !< xmax
-   sll_real64            :: ymin         !< ymin
-   sll_real64            :: ymax         !< ymax
-   sll_real64            :: zmin         !< zmin
-   sll_real64            :: zmax         !< zmax
-   sll_int32             :: nc_x         !< x cells number
-   sll_int32             :: nc_y         !< y cells number
-   sll_int32             :: nc_z         !< z cells number
+   sll_real64, intent(in):: xmin         !< x min
+   sll_real64, intent(in):: xmax         !< x max
+   sll_real64, intent(in):: ymin         !< y min
+   sll_real64, intent(in):: ymax         !< y max
+   sll_real64, intent(in):: zmin         !< z min
+   sll_real64, intent(in):: zmax         !< z max
+   sll_int32 , intent(in):: nc_x         !< x cells number
+   sll_int32 , intent(in):: nc_y         !< y cells number
+   sll_int32 , intent(in):: nc_z         !< z cells number
+
    sll_int32             :: error        !< error code
    sll_real64            :: dx           !< x space step
    sll_real64            :: dy           !< y space step
@@ -143,6 +159,8 @@ subroutine new_maxwell_3d_pstd(self,xmin,xmax,nc_x, &
    fftw_int              :: sz_tmp_x
    fftw_int              :: sz_tmp_y
    fftw_int              :: sz_tmp_z
+
+   sll_int32             :: i, j, k
 
    self%nc_x = nc_x
    self%nc_y = nc_y
@@ -201,13 +219,13 @@ end subroutine new_maxwell_3d_pstd
 !> in your appication.
 subroutine solve_maxwell_3d(self, ex, ey, ez, bx, by, bz, dt)
 
-   type(maxwell_pstd_3d), intent(inout)           :: self !< maxwell object
-   sll_real64, intent(inout), dimension(:,:,:) :: ex   !< Ex
-   sll_real64, intent(inout), dimension(:,:,:) :: ey   !< Ey
-   sll_real64, intent(inout), dimension(:,:,:) :: ez   !< Ez
-   sll_real64, intent(inout), dimension(:,:,:) :: bx   !< Bx
-   sll_real64, intent(inout), dimension(:,:,:) :: by   !< By
-   sll_real64, intent(inout), dimension(:,:,:) :: bz   !< Bz
+   type(maxwell_pstd_3d), intent(inout)        :: self !< maxwell object
+   sll_real64, intent(inout), dimension(:,:,:) :: ex   !< Ex field
+   sll_real64, intent(inout), dimension(:,:,:) :: ey   !< Ey field
+   sll_real64, intent(inout), dimension(:,:,:) :: ez   !< Ez field
+   sll_real64, intent(inout), dimension(:,:,:) :: bx   !< Bx field
+   sll_real64, intent(inout), dimension(:,:,:) :: by   !< By field
+   sll_real64, intent(inout), dimension(:,:,:) :: bz   !< Bz field
    sll_real64, intent(in)                      :: dt   !< time step
 
    call faraday(self, ex, ey, ez, bx, by, bz, 0.5*dt)   
@@ -255,7 +273,9 @@ subroutine faraday(self, hx, hy, hz, ex, ey, ez, dt)
    sll_int32                                   :: nc_y  !< y cells number
    sll_int32                                   :: nc_z  !< z cells number
    sll_real64, intent(in)                      :: dt    !< time step
-   sll_real64                                  :: dt_mu
+
+   sll_real64 :: dt_mu
+   sll_int32  :: i, j, k
 
    nc_x = self%nc_x
    nc_y = self%nc_y
@@ -310,7 +330,9 @@ subroutine ampere(self, hx, hy, hz, ex, ey, ez, dt, jx, jy, jz)
    sll_int32                              :: nc_x !< x cells number
    sll_int32                              :: nc_y !< y cells number
    sll_int32                              :: nc_z !< z cells number
-   sll_real64                             :: dt_e
+
+   sll_real64 :: dt_e
+   sll_int32  :: i, j, k
 
    nc_x = self%nc_x
    nc_y = self%nc_y
@@ -376,4 +398,4 @@ call fftw_destroy_plan(self%bwz)
 
 end subroutine free_maxwell_3d_pstd
 
-end module sll_maxwell_3d_pstd
+end module sll_module_maxwell_3d_pstd
