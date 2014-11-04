@@ -3,6 +3,11 @@ module sll_module_deboor_splines_1d
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 implicit none 
+private
+
+public bvalue, splint_der, dvalue1d,       &
+       spli1d_der, spli1d_dir, spli1d_per, &
+       interv, bsplvd
   
 contains
   
@@ -612,18 +617,11 @@ function bvalue( t, bcoef, n, k, x, jderiv ) result(res)
   
   res = 0.0_8
     
-  !SLL_ALLOCATE(aj(k),ierr)
-  !SLL_ALLOCATE(dl(k),ierr)
-  !SLL_ALLOCATE(dr(k),ierr)
-    
   aj(:)=0.0_8
   dl(:)=0.0_8
   dr(:)=0.0_8
     
   if ( k <= jderiv ) then
-    !SLL_DEALLOCATE(aj,ierr)
-    !SLL_DEALLOCATE(dl,ierr)
-    !SLL_DEALLOCATE(dr,ierr)
     return
   end if
   !
@@ -636,9 +634,6 @@ function bvalue( t, bcoef, n, k, x, jderiv ) result(res)
   call interv ( t, n+k, x, i, mflag )
    
   if ( mflag /= 0 ) then
-     !SLL_DEALLOCATE(aj,ierr)
-     !SLL_DEALLOCATE(dl,ierr)
-     !SLL_DEALLOCATE(dr,ierr)
      return
   end if
   !
@@ -646,9 +641,6 @@ function bvalue( t, bcoef, n, k, x, jderiv ) result(res)
   !
   if ( k <= 1 ) then
     res = bcoef(i)
-    !SLL_DEALLOCATE(aj,ierr)
-    !SLL_DEALLOCATE(dl,ierr)
-    !SLL_DEALLOCATE(dr,ierr)
     return
   end if
   !
@@ -735,10 +727,6 @@ function bvalue( t, bcoef, n, k, x, jderiv ) result(res)
 
   res = aj(1)
    
-  !SLL_DEALLOCATE(aj,ierr)
-  !SLL_DEALLOCATE(dl,ierr)
-  !SLL_DEALLOCATE(dr,ierr)
-   
   return
     
 end function bvalue
@@ -754,8 +742,8 @@ function dvalue1d(  ar_x,      &
   sll_real64 :: res
   sll_int32  :: ai_nx, ai_kx
   sll_int32  :: deriv1
-  sll_real64, dimension ( : ),pointer :: apr_tx ! ai_nx + ai_kx
-  sll_real64, dimension ( :),pointer :: apr_Bcoef ! ai_nx 			
+  sll_real64, dimension(:), pointer :: apr_tx ! ai_nx + ai_kx
+  sll_real64, dimension(:), pointer :: apr_Bcoef ! ai_nx 			
     
   res = bvalue( apr_tx,    &
                 apr_Bcoef, & 
