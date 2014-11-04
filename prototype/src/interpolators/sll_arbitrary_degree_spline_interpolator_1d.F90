@@ -40,7 +40,7 @@ type, public, extends(sll_interpolator_1d_base) :: &
                  sll_arbitrary_degree_spline_interpolator_1d
   private
   !> PLEASE ADD DOCUMENTATION
-  sll_real64, public, dimension(:), allocatable :: coeff_splines
+  sll_real64, public, dimension(:), pointer :: coeff_splines
   !> PLEASE ADD DOCUMENTATION
   sll_int32  :: num_pts
   !> PLEASE ADD DOCUMENTATION
@@ -54,9 +54,9 @@ type, public, extends(sll_interpolator_1d_base) :: &
   !> PLEASE ADD DOCUMENTATION
   sll_int32  :: spline_degree
   !> PLEASE ADD DOCUMENTATION
-  sll_real64, dimension(:), allocatable :: knots
+  sll_real64, dimension(:), pointer :: knots
   !> PLEASE ADD DOCUMENTATION
-  sll_real64, dimension(:), allocatable :: t
+  sll_real64, dimension(:), pointer :: t
   !> PLEASE ADD DOCUMENTATION
   sll_int32  :: size_t
   !> PLEASE ADD DOCUMENTATION
