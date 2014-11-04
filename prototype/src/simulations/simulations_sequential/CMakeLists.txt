@@ -15,6 +15,7 @@ TARGET_LINK_LIBRARIES( sll_simulations_sequential
 SET( INSTALL_DIR "${INSTALL_DIR}/simulations_sequential" )
 
 ADD_SUBDIRECTORY( sim_VlasovPoisson1D_curvilinear_analytic )
+ADD_SUBDIRECTORY( sim_VlasovPoisson1D_fourier_FEM          )
 
 IF(HDF5_ENABLED)
   SET( SIM_LIBS sll_advection )
