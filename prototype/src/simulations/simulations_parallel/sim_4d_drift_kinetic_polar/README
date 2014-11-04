@@ -3,6 +3,7 @@ Directory structure
    test_4d_dk_polar          -- executable
    dksim4d_polar_input.nml   -- input file
    dksim4d_polar.gnu         -- gnuplot script
+   dksim4d_polar_ref.dat     -- reference results
    README                    -- info (this file)
    run/                      -- output directory
 
@@ -18,6 +19,6 @@ HOWTO
 2. Run included gnuplot script
      $ gnuplot --persist ../dksim4d_polar.gnu
 
-2. Run gnuplot scripts generated at runtime
+3. Run gnuplot scripts generated at runtime
      $ gnuplot --persist rho_0.gnu
 
