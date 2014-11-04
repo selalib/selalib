@@ -65,6 +65,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
     ADD_SUBDIRECTORY( sim_4d_drift_kinetic_polar_one_mu        )
     ADD_SUBDIRECTORY( sim_4d_drift_kinetic_polar_multi_mu      )
     ADD_SUBDIRECTORY( sim_4d_drift_kinetic_field_aligned_polar )
+    ADD_SUBDIRECTORY( sim_4d_drift_kinetic_hybrid              )
     ADD_SUBDIRECTORY( sim_6d                                   )
 
 ENDIF()
