@@ -1,10 +1,10 @@
 program unit_test_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-  use sll_cartesian_meshes
-  use sll_constants
-  use sll_module_scalar_field_1d
-  implicit none
+use sll_cartesian_meshes
+use sll_constants
+use sll_module_scalar_field_1d
+implicit none
   
 #define SPLINE_DEG1 3
 #define NUM_CELLS1  64
@@ -12,68 +12,61 @@ program unit_test_1d
 #define ETA1MAX  1.0_f64
 #define PRINT_COMPARISON .false.
   
-  type(sll_cartesian_mesh_1d), pointer       :: mesh_1d
-  ! either of these type declarations can be used to work. Initialization is
-  ! different.
-  !class(sll_scalar_field_1d_base), pointer :: field_1d
-  class(sll_scalar_field_1d_base), pointer :: periodic_anal
-  class(sll_scalar_field_1d_base), pointer :: dirichlet_anal
-  class(sll_scalar_field_1d_base), pointer :: periodic_discrete
-  class(sll_scalar_field_1d_base), pointer :: dirichlet_discrete
-  sll_int32                                :: nc1!, iplot
-  sll_real64                               :: grad1_node_val,grad1ref
-  sll_real64, dimension(:), allocatable    :: tab_values
-  type(sll_arbitrary_degree_spline_interpolator_1d), target    :: interp_1d
-  sll_real64                               :: node_val,ref
-  sll_real64, dimension(:),   allocatable  :: point1
-  sll_real64                               :: eta1
-  sll_real64                               :: h1
-  !sll_int32                                :: npts1,npts2
-  sll_int32                                :: i!,j
-  !sll_int32                                :: ierr
-  real(8), external                        :: test_function_per
-  real(8), external                        :: test_function_per_der1
-  real(8), external                        :: test_function_dir
-  real(8), external                        :: test_function_dir_der1
+type(sll_cartesian_mesh_1d), pointer       :: mesh_1d
+type(sll_arbitrary_degree_spline_interpolator_1d), target    :: interp_1d
 
-  sll_real64 :: normL2_1,normL2_2,normL2_3,normL2_4
-  sll_real64 :: normH1_1,normH1_2,normH1_3,normH1_4
-  ! logical mesh
-  nc1 = NUM_CELLS1
-  h1 = (ETA1MAX-ETA1MIN)/real(nc1,f64)
-  print *, 'h1 = ', h1
+class(sll_scalar_field_1d_base), pointer :: periodic_anal
+class(sll_scalar_field_1d_base), pointer :: dirichlet_anal
+class(sll_scalar_field_1d_base), pointer :: periodic_discrete
+class(sll_scalar_field_1d_base), pointer :: dirichlet_discrete
+
+sll_int32                                :: nc1!, iplot
+sll_real64                               :: grad1_node_val,grad1ref
+sll_real64, dimension(:), allocatable    :: tab_values
+sll_real64                               :: node_val,ref
+sll_real64, dimension(:),   allocatable  :: point1
+sll_real64                               :: eta1
+sll_real64                               :: h1
+sll_int32                                :: i
+
+real(8), external                        :: test_function_per
+real(8), external                        :: test_function_per_der1
+real(8), external                        :: test_function_dir
+real(8), external                        :: test_function_dir_der1
+
+sll_real64 :: normL2_1,normL2_2,normL2_3,normL2_4
+sll_real64 :: normH1_1,normH1_2,normH1_3,normH1_4
+! logical mesh
+nc1 = NUM_CELLS1
+h1 = (ETA1MAX-ETA1MIN)/real(nc1,f64)
   
-  ! First thing, initialize the logical mesh associated with this problem.        
-  mesh_1d => new_cartesian_mesh_1d( NUM_CELLS1,ETA1MIN, ETA1MAX)
+! First thing, initialize the logical mesh associated with this problem.        
+mesh_1d => new_cartesian_mesh_1d( NUM_CELLS1,ETA1MIN, ETA1MAX)
   
-  print *, 'initialized mesh 1D'
+print *, 'initialized mesh 1D'
   
-  ! ******************************************************************
-  ! ------------------ TEST ANALYTIC ------------------------------  
-  ! ******************************************************************
-  ! --------------------------------------------------------------------------
-  !   Test case periodic analytic
-  !----------------------------------------------------------------------------
+! --------------------------------------------------------------------------
+!   Test case periodic analytic
+!----------------------------------------------------------------------------
   
-  ! ----> initialization of the field
-  periodic_anal  => new_scalar_field_1d_analytic_alt( &
-       test_function_per, &
-       "periodic_anal", &
-       SLL_PERIODIC, &
-       SLL_PERIODIC, &
-       mesh_1d, &
-       first_derivative=test_function_per_der1)
+! ----> initialization of the field
+periodic_anal  => new_scalar_field_1d_analytic_alt( test_function_per, &
+                                                    "periodic_anal",   &
+                                                    SLL_PERIODIC,      &
+                                                    SLL_PERIODIC,      &
+                                                    mesh_1d,           &
+                                                    first_derivative=test_function_per_der1)
   
-  print *, 'initialized field 1d'
+print *, 'initialized field 1d'
   
-  ! -------> compute error norm L2 and H1
-  normL2_1 = 0.0_f64
-  normH1_1 = 0.0_f64
-  do i=1,nc1+1
-     eta1       = real(i-1,f64)*h1 + ETA1MIN
-     node_val   = periodic_anal%value_at_point(eta1)
+! -------> compute error norm L2 and H1
+normL2_1 = 0.0_f64
+normH1_1 = 0.0_f64
+do i=1,nc1+1
+  eta1       = real(i-1,f64)*h1 + ETA1MIN
+  node_val   = periodic_anal%value_at_point(eta1)
     
-     grad1_node_val = periodic_anal%derivative_value_at_point(eta1)
+  grad1_node_val = periodic_anal%derivative_value_at_point(eta1)
      
      ref        = test_function_per(eta1)
      grad1ref   = test_function_per_der1(eta1)
