@@ -3,14 +3,16 @@ program pic_4d_cartesian
   use sll_collective 
 
   type(sll_pic_simulation_4d_cartesian) :: sim
-
-  integer :: rank, size
+  character(len=256)                    :: filename
+  integer                               :: rank, size
 
   call sll_boot_collective()
   size = sll_get_collective_size(sll_world_collective)
   rank = sll_get_collective_rank(sll_world_collective)
 
-  call sim%init_from_file('params_pic_4d.nml')
+  call get_command_argument(1, filename)
+  call sim%init_from_file(trim(filename))
+
 ! #        OMEGA  = 1.323
 ! #        GAMMA  = -0.151
 
