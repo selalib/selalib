@@ -35,7 +35,6 @@ ENDMACRO(ADD_SIMULATION_1D)
 # Optionally add special dependencies by setting the DEP_LIBS variable
 #######################################################################
 
-ADD_SIMULATION_1D(VP1D_cartesian_non_unif   VP1D_cartesian_non_unif)
 IF(HDF5_ENABLED)
    SET(SIM_LIBS sll_advection)
 ENDIF(HDF5_ENABLED)
