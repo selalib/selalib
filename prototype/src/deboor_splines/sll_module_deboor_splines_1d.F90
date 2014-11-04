@@ -726,28 +726,6 @@ function bvalue( t, bcoef, n, k, x, jderiv ) result(res)
     
 end function bvalue
   
-function dvalue1d(  ar_x,      &
-                    ai_nx,     &
-                    ai_kx,     &
-                    apr_Bcoef, &
-                    apr_tx,    &
-                    deriv1) result(res)
-
-  sll_real64 :: ar_x
-  sll_real64 :: res
-  sll_int32  :: ai_nx, ai_kx
-  sll_int32  :: deriv1
-  sll_real64, dimension(:), pointer :: apr_tx ! ai_nx + ai_kx
-  sll_real64, dimension(:), pointer :: apr_Bcoef ! ai_nx 			
-    
-  res = bvalue( apr_tx,    &
-                apr_Bcoef, & 
-                ai_nx,     &
-                ai_kx,     &
-                ar_x,      &
-                deriv1 )
-    
-end function dvalue1d
   
 subroutine spli1d_dir ( ai_nx,     &
                         ai_kx,     &
