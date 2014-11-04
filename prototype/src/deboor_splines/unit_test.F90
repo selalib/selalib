@@ -27,9 +27,8 @@ sll_int32,  dimension(:), allocatable :: points_der
 sll_real64, dimension(:), allocatable :: matrices
 sll_real64, dimension(:), allocatable :: bcoef
 
-
 deg_spline    = 3
-dim_point     = 1024
+dim_point     = 16
 dim_point_der = 2
 ordre         = deg_spline+1
 
@@ -44,7 +43,7 @@ SLL_ALLOCATE(bcoef(dim_point+ dim_point_der),ierr)
 
 call cpu_time(tstart)
 
-do j = 1, 10000
+do j = 1, 1
 
   do i = 1 , dim_point
     points(i)     = (i-1.)/(dim_point-1)
@@ -58,6 +57,7 @@ do j = 1, 10000
   do i = 2,dim_point
     points_test(i) = points_test(i-1) +  abs( value_func(i)-value_func(i-1))/d
   end do
+
 
   knots(1:ordre) = points(1)
 
@@ -88,10 +88,9 @@ do j = 1, 10000
 
   do i = 1 , dim_point
     res=bvalue( knots, bcoef, dim_point+dim_point_der, ordre, points(i), 0)
-  end do
-
-  do i = 1,dim_point
+    write(10,*) points(i), points_test(i), value_func(i), res
     res=bvalue( knots, bcoef, dim_point+dim_point_der, ordre, points(i), 1)
+    write(10,*) points(i), points_test(i), value_func(i), res
   end do
 
 end do

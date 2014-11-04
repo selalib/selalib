@@ -33,9 +33,9 @@ use sll_module_deboor_splines_1d
 implicit none
 private
 
-! in what follows, the direction '1' is in the contiguous memory direction.
 !> Class for arbitrary degree spline 1d interpolator
-type, public, extends(sll_interpolator_1d_base) :: sll_arbitrary_degree_spline_interpolator_1d
+type, public, extends(sll_interpolator_1d_base) :: &
+                 sll_arbitrary_degree_spline_interpolator_1d
   private
   !> PLEASE ADD DOCUMENTATION
   sll_real64, public, dimension(:), pointer :: coeff_splines
@@ -53,13 +53,12 @@ type, public, extends(sll_interpolator_1d_base) :: sll_arbitrary_degree_spline_i
   sll_int32  :: spline_degree
   !> PLEASE ADD DOCUMENTATION
   sll_real64, dimension(:), pointer :: knots
-  ! some knot-like arrays needed by the spli1d_per routine
   !> PLEASE ADD DOCUMENTATION
   sll_real64, dimension(:), pointer :: t
   !> PLEASE ADD DOCUMENTATION
   sll_int32  :: size_t
   !> PLEASE ADD DOCUMENTATION
-  sll_int64  :: bc_selector ! this is set in initialization
+  sll_int64  :: bc_selector 
   !> PLEASE ADD DOCUMENTATION
   sll_int32  :: size_coeffs
   !> PLEASE ADD DOCUMENTATION
@@ -80,16 +79,13 @@ type, public, extends(sll_interpolator_1d_base) :: sll_arbitrary_degree_spline_i
   logical    :: compute_value_right= .TRUE.
 
 contains
+
   !> PLEASE ADD DOCUMENTATION
   procedure, pass(interpolator) :: initialize=>initialize_ad1d_interpolator
   !> PLEASE ADD DOCUMENTATION
   procedure, pass :: set_coefficients => set_coefficients_ad1d
-! better: pre-compute-interpolation-information or something...
   !> PLEASE ADD DOCUMENTATION
   procedure :: compute_interpolants => compute_interpolants_ad1d
-  ! procedure,  pass(interpolator) :: compute_spline_coefficients => &
-  !     compute_spline_coefficients_ad2d
-  !procedure, pass:: compute_spline_coefficients =>compute_spline_coefficients_ad2d
   !> PLEASE ADD DOCUMENTATION
   procedure :: interpolate_value => interpolate_value_ad1d
   !> PLEASE ADD DOCUMENTATION
@@ -110,6 +106,7 @@ contains
   procedure, pass:: get_coefficients => get_coefficients_ad1d
   !> PLEASE ADD DOCUMENTATION
   procedure, pass:: reconstruct_array
+
 end type sll_arbitrary_degree_spline_interpolator_1d
 
 !> Deallocate
@@ -270,326 +267,335 @@ end subroutine initialize_ad1d_interpolator
 !> @param[in] coeffs the 1d arrays corresponding of the splines coefficients
 !> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_1d
 
-subroutine set_coefficients_ad1d( &
-   interpolator, &
-   coeffs)
+subroutine set_coefficients_ad1d( interpolator, coeffs)
 
-   class(sll_arbitrary_degree_spline_interpolator_1d), intent(inout)  :: interpolator
-   sll_real64, dimension(:), intent(in), optional :: coeffs
-   sll_int32 :: sp_deg
-   sll_int32 :: num_cells
-   sll_int32 :: tmp
-   sll_int32 :: i
-   sll_real64 :: eta_min, eta_max
-   sll_real64 :: delta
-   sll_int32  ::  nb_spline_eta
-   sll_real64 :: eta
+  class(sll_arbitrary_degree_spline_interpolator_1d), intent(inout)  :: interpolator
+  sll_real64, dimension(:), intent(in), optional :: coeffs
+  sll_int32 :: sp_deg
+  sll_int32 :: num_cells
+  sll_int32 :: tmp
+  sll_int32 :: i
+  sll_real64 :: eta_min, eta_max
+  sll_real64 :: delta
+  sll_int32  ::  nb_spline_eta
+  sll_real64 :: eta
 
 
-   sp_deg    = interpolator%spline_degree
-   num_cells = interpolator%num_pts - 1
-   eta_min   = interpolator%eta_min
-   eta_max   = interpolator%eta_max
-   delta     = (eta_max - eta_min)/num_cells
+  sp_deg    = interpolator%spline_degree
+  num_cells = interpolator%num_pts - 1
+  eta_min   = interpolator%eta_min
+  eta_max   = interpolator%eta_max
+  delta     = (eta_max - eta_min)/num_cells
 
-   tmp = (sp_deg + 1)/2
+  tmp = (sp_deg + 1)/2
 
-   ! The interpretation and further filling of the spline coefficients array
-   ! depends on the boundary conditions.
-   select case (interpolator%bc_selector)
-   case(0) ! periodic
+  ! The interpretation and further filling of the spline coefficients array
+  ! depends on the boundary conditions.
+  select case (interpolator%bc_selector)
+  case(0) ! periodic
 
-      interpolator%size_coeffs =  num_cells + sp_deg
-      interpolator%size_t = 2*sp_deg + num_cells +1
-      if ( size(coeffs) .ne.  num_cells + 1 ) then
-         print*, 'problem in set_coeff_1d_arb_deg_spline '
-         print*, 'size coeffs must be equal to ',num_cells + 1
-         print*, 'and not =', size(coeffs)
-         stop
-      endif
-      ! allocation and definition of knots
-      do i = -sp_deg, num_cells + sp_deg
-         interpolator%t( i + sp_deg + 1 ) = eta_min + i*delta
-      end do
+    interpolator%size_coeffs =  num_cells + sp_deg
+    interpolator%size_t = 2*sp_deg + num_cells +1
+    if ( size(coeffs) .ne.  num_cells + 1 ) then
+      print*, 'problem in set_coeff_1d_arb_deg_spline '
+      print*, 'size coeffs must be equal to ',num_cells + 1
+      print*, 'and not =', size(coeffs)
+      stop
+    endif
+    ! allocation and definition of knots
+    do i = -sp_deg, num_cells + sp_deg
+      interpolator%t( i + sp_deg + 1 ) = eta_min + i*delta
+    end do
 
+    do i = 1,num_cells
+      interpolator%coeff_splines(i) = coeffs( i )
+    end do
 
-      do i = 1,num_cells
-         interpolator%coeff_splines(i) = coeffs( i )
-      end do
+    do i = 1, sp_deg
+      interpolator%coeff_splines(num_cells + i ) = coeffs(i )
+    end do
 
-      do i = 1, sp_deg
-
-         interpolator%coeff_splines(num_cells + i ) = coeffs(i )
-      end do
-
-      do i= 1,sp_deg
-
-         interpolator%coeff_splines(num_cells +  i ) = &
+    do i= 1,sp_deg
+      interpolator%coeff_splines(num_cells +  i ) = &
               interpolator%coeff_splines(sp_deg-(i-1))
-      end do
+    end do
 
-   case (9) ! 2. dirichlet-left, dirichlet-right
-      interpolator%size_coeffs=  num_cells + sp_deg
-      interpolator%size_t = 2*sp_deg + num_cells + 1
-      nb_spline_eta = num_cells + sp_deg - 2
-      if ( size(coeffs) .ne.  nb_spline_eta ) then
-         print*, 'problem in set_coeff_1d_arb_deg_spline '
-         print*, 'size coeffs must be equal to ',nb_spline_eta
-         print*, 'and not =', size(coeffs)
-         stop
-      endif
-      ! allocation and definition of knots
+  case (9) ! 2. dirichlet-left, dirichlet-right
 
-      do i = 1, sp_deg + 1
-         interpolator%t(i) = eta_min
-      enddo
-      eta = eta_min
-      do i = sp_deg + 2, num_cells + 1 + sp_deg
-         eta = eta + delta
-         interpolator%t(i) = eta
-      enddo
-      do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
-         interpolator%t(i) = eta
-      enddo
+    interpolator%size_coeffs=  num_cells + sp_deg
+    interpolator%size_t = 2*sp_deg + num_cells + 1
+    nb_spline_eta = num_cells + sp_deg - 2
+    if ( size(coeffs) .ne.  nb_spline_eta ) then
+      print*, 'problem in set_coeff_1d_arb_deg_spline '
+      print*, 'size coeffs must be equal to ',nb_spline_eta
+      print*, 'and not =', size(coeffs)
+      stop
+    endif
+    ! allocation and definition of knots
 
+    do i = 1, sp_deg + 1
+      interpolator%t(i) = eta_min
+    enddo
+    eta = eta_min
+    do i = sp_deg + 2, num_cells + 1 + sp_deg
+      eta = eta + delta
+      interpolator%t(i) = eta
+    enddo
+    do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
+      interpolator%t(i) = eta
+    enddo
 
-      do i = 1,nb_spline_eta
+    do i = 1,nb_spline_eta
+      interpolator%coeff_splines(i + 1 ) =  coeffs(i)
+    end do
 
-         interpolator%coeff_splines(i + 1 ) =  coeffs(i)
-      end do
+    interpolator%coeff_splines(1)               = interpolator%value_left
+    interpolator%coeff_splines(nb_spline_eta+2) = interpolator%value_right
 
-      interpolator%coeff_splines(1)               = interpolator%value_left
-      interpolator%coeff_splines(nb_spline_eta+2) = interpolator%value_right
+  case(10) ! Neumann - Dirichlet
 
-   case(10) ! Neumann - Dirichlet
+    interpolator%size_coeffs= num_cells + sp_deg
+    interpolator%size_t     = 2*sp_deg + num_cells + 1
+    nb_spline_eta = num_cells + sp_deg - 1
 
-      interpolator%size_coeffs= num_cells + sp_deg
-      interpolator%size_t     = 2*sp_deg + num_cells + 1
-      nb_spline_eta = num_cells + sp_deg - 1
+    if ( size(coeffs) .ne.  nb_spline_eta ) then
+      print*, 'problem in set_coeff_1d_arb_deg_spline '
+      print*, 'size coeffs must be equal to ',nb_spline_eta
+      print*, 'and not =', size(coeffs)
+      stop
+    endif
 
-      if ( size(coeffs) .ne.  nb_spline_eta ) then
-         print*, 'problem in set_coeff_1d_arb_deg_spline '
-         print*, 'size coeffs must be equal to ',nb_spline_eta
-         print*, 'and not =', size(coeffs)
-         stop
-      endif
+    do i = 1, sp_deg + 1
+      interpolator%t(i) = eta_min
+    enddo
+    eta = eta_min
+    do i = sp_deg + 2, num_cells + 1 + sp_deg
+      eta = eta + delta
+      interpolator%t(i) = eta
+    enddo
+    do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
+      interpolator%t(i) = eta
+    enddo
+ 
+    do i = 1,nb_spline_eta
+      interpolator%coeff_splines(i + 1 ) =  coeffs(i)
+    end do
+    interpolator%coeff_splines(nb_spline_eta+2) =  interpolator%value_right
+ 
+  case(12) ! Hermitte- Dirichlet
 
-      do i = 1, sp_deg + 1
-         interpolator%t(i) = eta_min
-      enddo
-      eta = eta_min
-      do i = sp_deg + 2, num_cells + 1 + sp_deg
-         eta = eta + delta
-         interpolator%t(i) = eta
-      enddo
-      do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
-         interpolator%t(i) = eta
-      enddo
+    interpolator%size_coeffs= num_cells + sp_deg
+    interpolator%size_t     = 2*sp_deg + num_cells + 1
+    nb_spline_eta = num_cells + sp_deg - 1
+    if ( size(coeffs) .ne.  nb_spline_eta ) then
+      print*, 'problem in set_coeff_1d_arb_deg_spline '
+      print*, 'size coeffs must be equal to ',nb_spline_eta
+      print*, 'and not =', size(coeffs)
+      stop
+    endif
+ 
+    do i = 1, sp_deg + 1
+      interpolator%t(i) = eta_min
+    enddo
+    eta = eta_min
+    do i = sp_deg + 2, num_cells + 1 + sp_deg
+      eta = eta + delta
+      interpolator%t(i) = eta
+    enddo
+    do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
+      interpolator%t(i) = eta
+    enddo
+ 
+    do i = 1,nb_spline_eta
+      interpolator%coeff_splines(i + 1 ) =  coeffs(i)
+    end do
+    interpolator%coeff_splines(nb_spline_eta+2) = interpolator%value_right
+ 
+  case(17) ! Dirichlet-Neumann
+ 
+    interpolator%size_coeffs= num_cells + sp_deg
+    interpolator%size_t     = 2*sp_deg + num_cells + 1
+    nb_spline_eta = num_cells + sp_deg - 1
+    if ( size(coeffs) .ne.  nb_spline_eta ) then
+      print*, 'problem in set_coeff_1d_arb_deg_spline '
+      print*, 'size coeffs must be equal to ',nb_spline_eta
+      print*, 'and not =', size(coeffs)
+      stop
+    endif
 
-      do i = 1,nb_spline_eta
-         interpolator%coeff_splines(i + 1 ) =  coeffs(i)
-      end do
-      interpolator%coeff_splines(nb_spline_eta+2) =  interpolator%value_right
-   case(12) ! Hermitte- Dirichlet
-      interpolator%size_coeffs= num_cells + sp_deg
-      interpolator%size_t     = 2*sp_deg + num_cells + 1
-      nb_spline_eta = num_cells + sp_deg - 1
-      if ( size(coeffs) .ne.  nb_spline_eta ) then
-         print*, 'problem in set_coeff_1d_arb_deg_spline '
-         print*, 'size coeffs must be equal to ',nb_spline_eta
-         print*, 'and not =', size(coeffs)
-         stop
-      endif
-      do i = 1, sp_deg + 1
-         interpolator%t(i) = eta_min
-      enddo
-      eta = eta_min
-      do i = sp_deg + 2, num_cells + 1 + sp_deg
-         eta = eta + delta
-         interpolator%t(i) = eta
-      enddo
-      do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
-         interpolator%t(i) = eta
-      enddo
+    do i = 1, sp_deg + 1
+      interpolator%t(i) = eta_min
+    enddo
+    eta = eta_min
+    do i = sp_deg + 2, num_cells + 1 + sp_deg
+      eta = eta + delta
+      interpolator%t(i) = eta
+    enddo
+    do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
+      interpolator%t(i) = eta
+    enddo
 
-      do i = 1,nb_spline_eta
-         interpolator%coeff_splines(i + 1 ) =  coeffs(i)
-      end do
-      interpolator%coeff_splines(nb_spline_eta+2) = interpolator%value_right
-   case(17) ! Dirichlet-Neumann
-
-      interpolator%size_coeffs= num_cells + sp_deg
-      interpolator%size_t     = 2*sp_deg + num_cells + 1
-      nb_spline_eta = num_cells + sp_deg - 1
-      if ( size(coeffs) .ne.  nb_spline_eta ) then
-         print*, 'problem in set_coeff_1d_arb_deg_spline '
-         print*, 'size coeffs must be equal to ',nb_spline_eta
-         print*, 'and not =', size(coeffs)
-         stop
-      endif
-
-      do i = 1, sp_deg + 1
-         interpolator%t(i) = eta_min
-      enddo
-      eta = eta_min
-      do i = sp_deg + 2, num_cells + 1 + sp_deg
-         eta = eta + delta
-         interpolator%t(i) = eta
-      enddo
-      do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
-         interpolator%t(i) = eta
-      enddo
-
-      do i = 1,nb_spline_eta
-         interpolator%coeff_splines(i + 1 ) =  coeffs(i)
-      end do
+    do i = 1,nb_spline_eta
+      interpolator%coeff_splines(i + 1 ) =  coeffs(i)
+    end do
       interpolator%coeff_splines(1) = interpolator%value_left
-   case(18) ! Neumann - Neumann
-      interpolator%size_coeffs= num_cells + sp_deg
-      interpolator%size_t     = 2*sp_deg + num_cells + 1
-      nb_spline_eta = num_cells + sp_deg
-      if ( size(coeffs) .ne.  nb_spline_eta ) then
-         print*, 'problem in set_coeff_1d_arb_deg_spline '
-         print*, 'size coeffs must be equal to ',nb_spline_eta
-         print*, 'and not =', size(coeffs)
-         stop
-      endif
-      do i = 1, sp_deg + 1
-         interpolator%t(i) = eta_min
-      enddo
-      eta = eta_min
-      do i = sp_deg + 2, num_cells + 1 + sp_deg
-         eta = eta + delta
-         interpolator%t(i) = eta
-      enddo
-      do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
-         interpolator%t(i) = eta
-      enddo
 
-      do i = 1,nb_spline_eta
-         interpolator%coeff_splines(i ) =  coeffs(i)
-      end do
-   case(20) ! Hermite - Neumann
-      interpolator%size_coeffs= num_cells + sp_deg
-      interpolator%size_t     = 2*sp_deg + num_cells + 1
-      nb_spline_eta = num_cells + sp_deg
-      if ( size(coeffs) .ne.  nb_spline_eta ) then
-         print*, 'problem in set_coeff_1d_arb_deg_spline '
-         print*, 'size coeffs must be equal to ',nb_spline_eta
-         print*, 'and not =', size(coeffs)
-         stop
-      endif
-      do i = 1, sp_deg + 1
-         interpolator%t(i) = eta_min
-      enddo
-      eta = eta_min
-      do i = sp_deg + 2, num_cells + 1 + sp_deg
-         eta = eta + delta
-         interpolator%t(i) = eta
-      enddo
-      do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
-         interpolator%t(i) = eta
-      enddo
+  case(18) ! Neumann - Neumann
 
-      do i = 1,nb_spline_eta
-         interpolator%coeff_splines(i) =  coeffs(i)
-      end do
-   case(33) ! Dirichlet - Hermite
-      interpolator%size_coeffs= num_cells + sp_deg
-      interpolator%size_t     = 2*sp_deg + num_cells + 1
-      nb_spline_eta = num_cells + sp_deg - 1
-      if ( size(coeffs) .ne.  nb_spline_eta ) then
-         print*, 'problem in set_coeff_1d_arb_deg_spline '
-         print*, 'size coeffs must be equal to ',nb_spline_eta
-         print*, 'and not =', size(coeffs)
-         stop
-      endif
-      do i = 1, sp_deg + 1
-         interpolator%t(i) = eta_min
-      enddo
-      eta = eta_min
-      do i = sp_deg + 2, num_cells + 1 + sp_deg
-         eta = eta + delta
-         interpolator%t(i) = eta
-      enddo
-      do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
-         interpolator%t(i) = eta
-      enddo
+    interpolator%size_coeffs= num_cells + sp_deg
+    interpolator%size_t     = 2*sp_deg + num_cells + 1
+    nb_spline_eta = num_cells + sp_deg
+    if ( size(coeffs) .ne.  nb_spline_eta ) then
+      print*, 'problem in set_coeff_1d_arb_deg_spline '
+      print*, 'size coeffs must be equal to ',nb_spline_eta
+      print*, 'and not =', size(coeffs)
+      stop
+    endif
+    do i = 1, sp_deg + 1
+      interpolator%t(i) = eta_min
+    enddo
+    eta = eta_min
+    do i = sp_deg + 2, num_cells + 1 + sp_deg
+      eta = eta + delta
+      interpolator%t(i) = eta
+    enddo
+    do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
+      interpolator%t(i) = eta
+    enddo
 
-      do i = 1,nb_spline_eta
-         interpolator%coeff_splines(i + 1 ) =  coeffs(i)
-      end do
-      interpolator%coeff_splines(1) = interpolator%value_left
+    do i = 1,nb_spline_eta
+      interpolator%coeff_splines(i ) =  coeffs(i)
+    end do
+
+  case(20) ! Hermite - Neumann
+
+    interpolator%size_coeffs= num_cells + sp_deg
+    interpolator%size_t     = 2*sp_deg + num_cells + 1
+    nb_spline_eta = num_cells + sp_deg
+    if ( size(coeffs) .ne.  nb_spline_eta ) then
+      print*, 'problem in set_coeff_1d_arb_deg_spline '
+      print*, 'size coeffs must be equal to ',nb_spline_eta
+      print*, 'and not =', size(coeffs)
+      stop
+    endif
+    do i = 1, sp_deg + 1
+      interpolator%t(i) = eta_min
+    enddo
+    eta = eta_min
+    do i = sp_deg + 2, num_cells + 1 + sp_deg
+      eta = eta + delta
+      interpolator%t(i) = eta
+    enddo
+    do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
+      interpolator%t(i) = eta
+    enddo
+
+    do i = 1,nb_spline_eta
+      interpolator%coeff_splines(i) =  coeffs(i)
+    end do
+
+  case(33) ! Dirichlet - Hermite
+
+    interpolator%size_coeffs= num_cells + sp_deg
+    interpolator%size_t     = 2*sp_deg + num_cells + 1
+    nb_spline_eta = num_cells + sp_deg - 1
+    if ( size(coeffs) .ne.  nb_spline_eta ) then
+      print*, 'problem in set_coeff_1d_arb_deg_spline '
+      print*, 'size coeffs must be equal to ',nb_spline_eta
+      print*, 'and not =', size(coeffs)
+      stop
+    endif
+    do i = 1, sp_deg + 1
+      interpolator%t(i) = eta_min
+    enddo
+    eta = eta_min
+    do i = sp_deg + 2, num_cells + 1 + sp_deg
+      eta = eta + delta
+      interpolator%t(i) = eta
+    enddo
+    do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
+      interpolator%t(i) = eta
+    enddo
+
+    do i = 1,nb_spline_eta
+      interpolator%coeff_splines(i + 1 ) =  coeffs(i)
+    end do
+    interpolator%coeff_splines(1) = interpolator%value_left
+
    case(34) ! Neumann- Hermite
-      interpolator%size_coeffs= num_cells + sp_deg
-      interpolator%size_t     = 2*sp_deg + num_cells + 1
-      nb_spline_eta = num_cells + sp_deg
-      if ( size(coeffs) .ne.  nb_spline_eta ) then
-         print*, 'problem in set_coeff_1d_arb_deg_spline '
-         print*, 'size coeffs must be equal to ',nb_spline_eta
-         print*, 'and not =', size(coeffs)
-         stop
-      endif
-      do i = 1, sp_deg + 1
-         interpolator%t(i) = eta_min
-      enddo
-      eta = eta_min
-      do i = sp_deg + 2, num_cells + 1 + sp_deg
-         eta = eta + delta
-         interpolator%t(i) = eta
-      enddo
-      do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
-         interpolator%t(i) = eta
-      enddo
 
-      do i = 1,nb_spline_eta
-         interpolator%coeff_splines(i) =  coeffs(i)
-      end do
+     interpolator%size_coeffs= num_cells + sp_deg
+     interpolator%size_t     = 2*sp_deg + num_cells + 1
+     nb_spline_eta = num_cells + sp_deg
+     if ( size(coeffs) .ne.  nb_spline_eta ) then
+       print*, 'problem in set_coeff_1d_arb_deg_spline '
+       print*, 'size coeffs must be equal to ',nb_spline_eta
+       print*, 'and not =', size(coeffs)
+       stop
+     endif
+     do i = 1, sp_deg + 1
+       interpolator%t(i) = eta_min
+     enddo
+     eta = eta_min
+     do i = sp_deg + 2, num_cells + 1 + sp_deg
+       eta = eta + delta
+       interpolator%t(i) = eta
+     enddo
+     do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
+       interpolator%t(i) = eta
+     enddo
+     do i = 1,nb_spline_eta
+       interpolator%coeff_splines(i) =  coeffs(i)
+     end do
+
    case(36)! Hermite - Hermite
 
-      interpolator%size_coeffs= num_cells + sp_deg
-      interpolator%size_t     = 2*sp_deg + num_cells + 1
-      nb_spline_eta = num_cells + sp_deg
-      if ( size(coeffs) .ne.  nb_spline_eta ) then
-         print*, 'problem in set_coeff_1d_arb_deg_spline '
-         print*, 'size coeffs must be equal to ',nb_spline_eta
-         print*, 'and not =', size(coeffs)
-         stop
-      endif
-      do i = 1, sp_deg + 1
-         interpolator%t(i) = eta_min
-      enddo
-      eta = eta_min
-      do i = sp_deg + 2, num_cells + 1 + sp_deg
-         eta = eta + delta
-         interpolator%t(i) = eta
-      enddo
-      do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
-         interpolator%t(i) = eta
-      enddo
+     interpolator%size_coeffs= num_cells + sp_deg
+     interpolator%size_t     = 2*sp_deg + num_cells + 1
+     nb_spline_eta = num_cells + sp_deg
+     if ( size(coeffs) .ne.  nb_spline_eta ) then
+       print*, 'problem in set_coeff_1d_arb_deg_spline '
+       print*, 'size coeffs must be equal to ',nb_spline_eta
+       print*, 'and not =', size(coeffs)
+       stop
+     endif
+     do i = 1, sp_deg + 1
+       interpolator%t(i) = eta_min
+     enddo
+     eta = eta_min
+     do i = sp_deg + 2, num_cells + 1 + sp_deg
+       eta = eta + delta
+       interpolator%t(i) = eta
+     enddo
+     do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
+       interpolator%t(i) = eta
+     enddo
 
-      do i = 1,nb_spline_eta
-         interpolator%coeff_splines(i ) =  coeffs(i)
-      end do
+     do i = 1,nb_spline_eta
+       interpolator%coeff_splines(i ) =  coeffs(i)
+     end do
+
    case default
-      print *, 'arbitrary_degree_spline_1d() error: set_spline_coefficients ',&
-           'not recognized.'
-      stop
-   end select
- end subroutine set_coefficients_ad1d
 
- !> Initialization of the boundary for interpolator arbitrary degree splines 1d.
- !> The parameters are
- !> @param[in] value_left  contains the value in the left
- !> @param[in] value_right contains the value in the right
- !> @param[in] slope_left  contains the value in the left for derivative
- !> @param[in] slope_right contains the value in the right for derivative
- !> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_1d
- subroutine set_values_at_boundary1d( interpolator, &
-                                      value_left,   &
-                                      value_right,  &
-                                      slope_left,   &
-                                      slope_right)
+     print *, 'arbitrary_degree_spline_1d() error: set_spline_coefficients ',&
+          'not recognized.'
+     stop
+  end select
+
+end subroutine set_coefficients_ad1d
+
+!> Initialization of the boundary for interpolator arbitrary degree splines 1d.
+!> The parameters are
+!> @param[in] value_left  contains the value in the left
+!> @param[in] value_right contains the value in the right
+!> @param[in] slope_left  contains the value in the left for derivative
+!> @param[in] slope_right contains the value in the right for derivative
+!> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_1d
+subroutine set_values_at_boundary1d( interpolator, &
+                                     value_left,   &
+                                     value_right,  &
+                                     slope_left,   &
+                                     slope_right)
 
   class(sll_arbitrary_degree_spline_interpolator_1d), intent(inout) :: interpolator
   sll_real64, intent(in), optional     :: value_left
@@ -626,61 +632,57 @@ subroutine set_coefficients_ad1d( &
 
 end subroutine set_values_at_boundary1d
 
-  !> @brief computing the coefficients spline with a given
-  !>  data_array 1D cooresponding at the values of a function
-  !> @details 
-  !>  on eta_coords of size size_eta_coords
-  !>  if the eta_coords and eta_coords is not given
-  !>  we consider that the values of the function is on the points in the mesh_1d
-  !>
-  !> The parameters are
-  !> @param[in]  data_array the 1d arrays corresponding at the values of a function
-  !> @param[in]  eta_coords the 1d arrays
-  !> @param[in]  size_eta_coords the size of eta_coords
-  !> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_1d
- subroutine compute_interpolants_ad1d( &
-      interpolator,data_array, &
-      eta_coords, &
-      size_eta_coords)
+!> @brief computing the coefficients spline with a given
+!>  data_array 1D cooresponding at the values of a function
+!> @details 
+!>  on eta_coords of size size_eta_coords
+!>  if the eta_coords and eta_coords is not given
+!>  we consider that the values of the function is on the points in the mesh_1d
+!>
+!> The parameters are
+!> @param[in]  data_array the 1d arrays corresponding at the values of a function
+!> @param[in]  eta_coords the 1d arrays
+!> @param[in]  size_eta_coords the size of eta_coords
+!> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_1d
+subroutine compute_interpolants_ad1d(  interpolator,data_array, &
+                                       eta_coords,              &
+                                       size_eta_coords)
 
-   class(sll_arbitrary_degree_spline_interpolator_1d), intent(inout)  :: interpolator
-   sll_real64, dimension(:), intent(in)           :: data_array
-   sll_real64, dimension(:),pointer               :: data_array_derivative
-   sll_real64, dimension(:), intent(in),optional  :: eta_coords
-   sll_int32, intent(in),optional                 :: size_eta_coords
-   sll_real64, dimension(:),pointer               :: point_locate_eta
-   sll_int32, dimension(:),pointer               :: point_locate_eta_derivative
-   sll_real64 :: delta_eta
-   sll_int32  :: sz,sz_deriv
-   sll_real64 :: period
-   sll_int32  :: order
-   sll_int32  :: ierr
-   sll_int32  :: i
-   logical    :: user_coords
+  class(sll_arbitrary_degree_spline_interpolator_1d), intent(inout)  :: interpolator
+  sll_real64, dimension(:), intent(in)           :: data_array
+  sll_real64, dimension(:),pointer               :: data_array_derivative
+  sll_real64, dimension(:), intent(in),optional  :: eta_coords
+  sll_int32, intent(in),optional                 :: size_eta_coords
+  sll_real64, dimension(:),pointer               :: point_locate_eta
+  sll_int32, dimension(:),pointer               :: point_locate_eta_derivative
+  sll_real64 :: delta_eta
+  sll_int32  :: sz,sz_deriv
+  sll_real64 :: period
+  sll_int32  :: order
+  sll_int32  :: ierr
+  sll_int32  :: i
+  logical    :: user_coords
 
-   if(present(eta_coords) .and. (.not. present(size_eta_coords))) then
-      print *, 'compute_interpolants_ad1d(), ERROR: if eta_coords is ', &
-           'passed, its size must be specified as well through ', &
-           'size_eta_coords.'
-      stop
-   end if
+  if(present(eta_coords) .and. (.not. present(size_eta_coords))) then
+    print *, 'compute_interpolants_ad1d(), ERROR: if eta_coords is ', &
+         'passed, its size must be specified as well through ', &
+         'size_eta_coords.'
+    stop
+  end if
 
+  if( present(eta_coords) ) then
+    user_coords = .true.
+  else
+    user_coords = .false.
+  end if
 
+  if (user_coords .eqv. .true.) then
+    sz = size(data_array)!size_eta_coords
 
-   if( present(eta_coords) ) then
-       user_coords = .true.
-    else
-       user_coords = .false.
-    end if
+    SLL_ALLOCATE(point_locate_eta(sz),ierr)
+    point_locate_eta = eta_coords
 
-
-    if (user_coords .eqv. .true.) then
-       sz = size(data_array)!size_eta_coords
-
-       SLL_ALLOCATE(point_locate_eta(sz),ierr)
-       point_locate_eta = eta_coords
-
-    else ! size depends on BC combination
+  else ! size depends on BC combination
        sz = interpolator%num_pts
 
        delta_eta = (interpolator%eta_max - interpolator%eta_min)&
@@ -1262,6 +1264,7 @@ end subroutine set_values_at_boundary1d
 
     knot_tmp =>  interpolator%t(1:interpolator%size_t)
     coef_tmp => interpolator%coeff_splines(1:size_coeffs)
+
     val = dvalue1d( &
          res, &
          size_coeffs, &
@@ -1269,6 +1272,8 @@ end subroutine set_values_at_boundary1d
          coef_tmp, &
          knot_tmp,&
          1)
+
+
   end function interpolate_derivative_ad1d
 
   function interpolate_array_ad1d( &
