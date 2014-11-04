@@ -3,11 +3,6 @@ module sll_module_deboor_splines_1d
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 implicit none 
-private
-
-public bvalue, splint_der, dvalue1d,       &
-       spli1d_der, spli1d_dir, spli1d_per, &
-       interv, bsplvd
   
 contains
   
