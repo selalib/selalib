@@ -101,9 +101,10 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
     SET_TESTS_PROPERTIES(sim4d_DK_polar_one_mu PROPERTIES 
       PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100)
 
-    SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/dksim4d_polar_multi_mu.nml)
+    SET(ARGS ${CMAKE_BINARY_DIR}/dksim4d_polar_multi_mu.nml)
     ADD_MPI_TEST(sim4d_DK_polar_multi_mu test_4d_dk_polar_multi_mu ${PROCS} ${ARGS})
-    SET_TESTS_PROPERTIES(sim4d_DK_polar_multi_mu PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100)
+    SET_TESTS_PROPERTIES(sim4d_DK_polar_multi_mu PROPERTIES 
+      PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100)
 
     SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/dksim4d_field_aligned_polar.nml)
     ADD_MPI_TEST(sim4d_DK_field_aligned_polar test_4d_dk_field_aligned_polar ${PROCS} ${ARGS})
