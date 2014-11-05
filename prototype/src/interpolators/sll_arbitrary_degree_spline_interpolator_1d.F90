@@ -572,38 +572,36 @@ subroutine compute_interpolants_ad1d( interpolator,    &
   sll_real64, dimension(:), intent(in)           :: data_array
   sll_real64, dimension(:), intent(in), optional :: eta_coords
   sll_int32,  intent(in),   optional             :: size_eta_coords
-  sll_real64, dimension(:), pointer              :: data_array_derivative
+
   sll_real64, dimension(:), pointer              :: point_locate_eta
-  sll_int32,  dimension(:), pointer              :: point_locate_eta_derivative
 
   sll_int32  :: sz
-  sll_int32  :: sz_deriv
   sll_real64 :: delta_eta
   sll_real64 :: period
   sll_int32  :: order
   sll_int32  :: ierr
   sll_int32  :: i
-  logical    :: user_coords
 
-  if(present(eta_coords) .and. (.not. present(size_eta_coords))) then
-    SLL_ERROR('compute_interpolants_ad1d()')
-  end if
+  ! ----------------------------!
+  ! It is only for cubic spline !
+  ! ----------------------------!
+  sll_int32, parameter            :: sz_deriv = 2
+  sll_real64, dimension(sz_deriv) :: data_array_derivative
+  sll_int32,  dimension(sz_deriv) :: point_locate_eta_derivative
 
   if( present(eta_coords) ) then
-    user_coords = .true.
-  else
-    user_coords = .false.
-  end if
 
-  if (user_coords) then
+    SLL_ASSERT(present(size_eta_coords))
 
     sz = size(data_array)
     SLL_ALLOCATE(point_locate_eta(sz),ierr)
     point_locate_eta = eta_coords
+    SLL_ASSERT(sz .le. interpolator%num_pts*interpolator%num_pts)
 
-  else ! size depends on BC combination
+  else 
 
     sz = interpolator%num_pts
+    SLL_ASSERT(size(data_array) .le. sz)
 
     delta_eta = (interpolator%eta_max - interpolator%eta_min)&
           /(interpolator%num_pts -1)
@@ -628,266 +626,194 @@ subroutine compute_interpolants_ad1d( interpolator,    &
     interpolator%value_right = data_array(sz)
   end if
 
-  SLL_ASSERT(sz .le. interpolator%num_pts*interpolator%num_pts)
-  SLL_ASSERT(size(data_array) .le. sz)
-  SLL_ASSERT(size(point_locate_eta)  .ge. sz)
-
   order  = interpolator%spline_degree + 1
   period = interpolator%eta_max - interpolator%eta_min
 
+
   select case (interpolator%bc_selector)
+
   case (0) ! periodic
-    interpolator%size_coeffs = sz !+ 1
-    interpolator%size_t = order + sz !+ 1
-    call spli1d_per( &
-         period, sz, order, point_locate_eta, &
-         data_array, interpolator%coeff_splines(1:sz),&!+1),&
-         interpolator%t(1:order + sz ))!+ 1))
+
+    interpolator%size_coeffs = sz 
+    interpolator%size_t = order + sz 
+    call spli1d_per( period,                           &
+                     sz,                               &
+                     order,                            &
+                     point_locate_eta,                 &
+                     data_array,                       &
+                     interpolator%coeff_splines(1:sz), &
+                     interpolator%t(1:order + sz ))
 
   case (9) ! 2. dirichlet-left, dirichlet-right
 
     interpolator%size_coeffs = sz
-    interpolator%size_t = order + sz
+    interpolator%size_t      = order + sz
 
-    call spli1d_dir( sz, order, point_locate_eta, &
-         data_array, interpolator%coeff_splines(1:sz),&
-         interpolator%t(1:sz+order) )
+    call spli1d_dir( sz,                               &
+                     order,                            &
+                     point_locate_eta,                 &
+                     data_array,                       &
+                     interpolator%coeff_splines(1:sz), &
+                     interpolator%t(1:sz+order) )
 
-    ! test dirichlet non homogene
     interpolator%coeff_splines(1)  = interpolator%value_left
     interpolator%coeff_splines(sz) = interpolator%value_right
 
   case(10) ! Neumann - Dirichlet
-    ! -----------------------------------
-    !!! It is only for cubic spline !!!!
-    ! -----------------------------------
-    sz_deriv = 2
+
     interpolator%size_coeffs = sz + sz_deriv
     interpolator%size_t = order + sz + sz_deriv
-
-    SLL_ALLOCATE(point_locate_eta_derivative(sz_deriv),ierr)
-    SLL_ALLOCATE(data_array_derivative(sz_deriv),ierr)
 
     point_locate_eta_derivative(1) = 1
     data_array_derivative(1)       = 0.0_f64
     point_locate_eta_derivative(2) = sz
     data_array_derivative(2)       = interpolator%slope_right
 
-    call spli1d_der(sz,sz_deriv,order,&
-         point_locate_eta,&
-         data_array,&
-         point_locate_eta_derivative,&
-         data_array_derivative,&
-         interpolator%coeff_splines(1:sz+sz_deriv),&
+    call spli1d_der(sz,                             &
+         sz_deriv,                                  &
+         order,                                     &
+         point_locate_eta,                          &
+         data_array,                                &
+         point_locate_eta_derivative,               &
+         data_array_derivative,                     &
+         interpolator%coeff_splines(1:sz+sz_deriv), &
          interpolator%t(1:sz+order+sz_deriv))
 
     ! test dirichlet non homogene
     interpolator%coeff_splines(sz+sz_deriv) = interpolator%value_right
-
-    SLL_DEALLOCATE(point_locate_eta_derivative,ierr)
-    SLL_DEALLOCATE(data_array_derivative,ierr)
-
- case(12) ! Hermite - Dirichlet
-
-    ! -----------------------------------
-    !!! It is only for cubic spline !!!!
-    ! -----------------------------------
-    sz_deriv = 2
-    interpolator%size_coeffs = sz + sz_deriv
-    interpolator%size_t = order + sz + sz_deriv
-
-    SLL_ALLOCATE(point_locate_eta_derivative(sz_deriv),ierr)
-    SLL_ALLOCATE(data_array_derivative(sz_deriv),ierr)
-
-    point_locate_eta_derivative(1) = 1
-    data_array_derivative(1)       = interpolator%slope_left
-    point_locate_eta_derivative(2) = sz
-    data_array_derivative(2)       = interpolator%slope_right
-
-    call spli1d_der(sz,sz_deriv,order,&
-         point_locate_eta,&
-         data_array,&
-         point_locate_eta_derivative,&
-         data_array_derivative,&
-         interpolator%coeff_splines(1:sz+sz_deriv),&
-         interpolator%t(1:sz+order+sz_deriv))
-
-    ! test dirichlet non homogene
-    interpolator%coeff_splines(sz+sz_deriv) = interpolator%value_right
-    SLL_DEALLOCATE(point_locate_eta_derivative,ierr)
-    SLL_DEALLOCATE(data_array_derivative,ierr)
 
  case(17) ! Dirichlet - Neumann
 
-    ! -----------------------------------
-    !!! It is only for cubic spline !!!!
-    ! -----------------------------------
-    sz_deriv = 2
     interpolator%size_coeffs = sz + sz_deriv
     interpolator%size_t = order + sz + sz_deriv
-
-    SLL_ALLOCATE(point_locate_eta_derivative(sz_deriv),ierr)
-    SLL_ALLOCATE(data_array_derivative(sz_deriv),ierr)
 
     point_locate_eta_derivative(1) = 1
     data_array_derivative(1)       = interpolator%slope_left
     point_locate_eta_derivative(2) = sz
     data_array_derivative(2)       = 0.0_f64
 
-    call spli1d_der(sz,sz_deriv,order,&
-         point_locate_eta,&
-         data_array,&
-         point_locate_eta_derivative,&
-         data_array_derivative,&
-         interpolator%coeff_splines(1:sz+sz_deriv),&
+    call spli1d_der(sz,sz_deriv,order,              &
+         point_locate_eta,                          &
+         data_array,                                &
+         point_locate_eta_derivative,               &
+         data_array_derivative,                     &
+         interpolator%coeff_splines(1:sz+sz_deriv), &
          interpolator%t(1:sz+order+sz_deriv))
 
     ! test dirichlet non homogene
     interpolator%coeff_splines(1) = interpolator%value_left
-    SLL_DEALLOCATE(point_locate_eta_derivative,ierr)
-    SLL_DEALLOCATE(data_array_derivative,ierr)
+
+ case(12) ! Hermite - Dirichlet
+
+    interpolator%size_coeffs = sz + sz_deriv
+    interpolator%size_t = order + sz + sz_deriv
+
+    point_locate_eta_derivative(1) = 1
+    data_array_derivative(1)       = interpolator%slope_left
+    point_locate_eta_derivative(2) = sz
+    data_array_derivative(2)       = interpolator%slope_right
+
+    call spli1d_der(sz,sz_deriv,order,              &
+         point_locate_eta,                          &
+         data_array,                                &
+         point_locate_eta_derivative,               &
+         data_array_derivative,                     &
+         interpolator%coeff_splines(1:sz+sz_deriv), &
+         interpolator%t(1:sz+order+sz_deriv))
+
+    ! test dirichlet non homogene
+    interpolator%coeff_splines(sz+sz_deriv) = interpolator%value_right
 
  case(18) ! Neumann - Neumann
 
-    ! -----------------------------------
-    !!! It is only for cubic spline !!!!
-    ! -----------------------------------
-    sz_deriv = 2
     interpolator%size_coeffs = sz + sz_deriv
     interpolator%size_t = order + sz + sz_deriv
-
-    SLL_ALLOCATE(point_locate_eta_derivative(sz_deriv),ierr)
-    SLL_ALLOCATE(data_array_derivative(sz_deriv),ierr)
 
     point_locate_eta_derivative(1) = 1
     data_array_derivative(1)       = 0.0_f64
     point_locate_eta_derivative(2) = sz
     data_array_derivative(2)       = 0.0_f64
-    call spli1d_der(sz,sz_deriv,order,&
-         point_locate_eta,&
-         data_array,&
-         point_locate_eta_derivative,&
-         data_array_derivative,&
-         interpolator%coeff_splines(1:sz+sz_deriv),&
+    call spli1d_der(sz,sz_deriv,order,              &
+         point_locate_eta,                          &
+         data_array,                                &
+         point_locate_eta_derivative,               &
+         data_array_derivative,                     &
+         interpolator%coeff_splines(1:sz+sz_deriv), & 
          interpolator%t(1:sz+order+sz_deriv))
-
-    SLL_DEALLOCATE(point_locate_eta_derivative,ierr)
-    SLL_DEALLOCATE(data_array_derivative,ierr)
 
  case(20) ! Hermite - Neumann
 
-    ! -----------------------------------
-    !!! It is only for cubic spline !!!!
-    ! -----------------------------------
-    sz_deriv = 2
     interpolator%size_coeffs = sz + sz_deriv
     interpolator%size_t = order + sz + sz_deriv
-
-    SLL_ALLOCATE(point_locate_eta_derivative(sz_deriv),ierr)
-    SLL_ALLOCATE(data_array_derivative(sz_deriv),ierr)
 
     point_locate_eta_derivative(1) = 1
     data_array_derivative(1)       = interpolator%slope_left
     point_locate_eta_derivative(2) = sz
     data_array_derivative(2)       = 0.0_f64
 
-    call spli1d_der(sz,sz_deriv,order,&
-         point_locate_eta,&
-         data_array,&
-         point_locate_eta_derivative,&
-         data_array_derivative,&
-         interpolator%coeff_splines(1:sz+sz_deriv),&
+    call spli1d_der(sz,sz_deriv,order,              &
+         point_locate_eta,                          &
+         data_array,                                &
+         point_locate_eta_derivative,               &
+         data_array_derivative,                     &
+         interpolator%coeff_splines(1:sz+sz_deriv), &
          interpolator%t(1:sz+order+sz_deriv))
-
-    SLL_DEALLOCATE(point_locate_eta_derivative,ierr)
-    SLL_DEALLOCATE(data_array_derivative,ierr)
 
  case(33) ! Dirichlet - Hermite
 
-    ! -----------------------------------
-    !!! It is only for cubic spline !!!!
-    ! -----------------------------------
-    sz_deriv = 2
     interpolator%size_coeffs = sz + sz_deriv
     interpolator%size_t = order + sz + sz_deriv
-
-    SLL_ALLOCATE(point_locate_eta_derivative(sz_deriv),ierr)
-    SLL_ALLOCATE(data_array_derivative(sz_deriv),ierr)
 
     point_locate_eta_derivative(1) = 1
     data_array_derivative(1)       = interpolator%slope_left
     point_locate_eta_derivative(2) = sz
     data_array_derivative(2)       = interpolator%slope_right
 
-    call spli1d_der(sz,sz_deriv,order,&
-         point_locate_eta,&
-         data_array,&
-         point_locate_eta_derivative,&
-         data_array_derivative,&
-         interpolator%coeff_splines(1:sz+sz_deriv),&
+    call spli1d_der(sz,sz_deriv,order,                &
+         point_locate_eta,                            &
+         data_array,                                  &
+         point_locate_eta_derivative,                 &
+         data_array_derivative,                       &
+         interpolator%coeff_splines(1:sz+sz_deriv),   &
          interpolator%t(1:sz+order+sz_deriv))
 
-    ! test dirichlet non homogene
     interpolator%coeff_splines(1) = interpolator%value_left
-    SLL_DEALLOCATE(point_locate_eta_derivative,ierr)
-    SLL_DEALLOCATE(data_array_derivative,ierr)
 
  case(34) ! Neumann - Hermite
 
-    ! -----------------------------------
-    !!! It is only for cubic spline !!!!
-    ! -----------------------------------
-
-    sz_deriv = 2
     interpolator%size_coeffs = sz + sz_deriv
     interpolator%size_t = order + sz + sz_deriv
-
-    SLL_ALLOCATE(point_locate_eta_derivative(sz_deriv),ierr)
-    SLL_ALLOCATE(data_array_derivative(sz_deriv),ierr)
 
     point_locate_eta_derivative(1) = 1
     data_array_derivative(1)       = 0.0_f64
     point_locate_eta_derivative(2) = sz
     data_array_derivative(2)       = interpolator%slope_right
 
-    call spli1d_der(sz,sz_deriv,order,&
-         point_locate_eta,&
-         data_array,&
-         point_locate_eta_derivative,&
-         data_array_derivative,&
-         interpolator%coeff_splines(1:sz+sz_deriv),&
+    call spli1d_der(sz,sz_deriv,order,               &
+         point_locate_eta,                           &
+         data_array,                                 &
+         point_locate_eta_derivative,                &
+         data_array_derivative,                      &
+         interpolator%coeff_splines(1:sz+sz_deriv),  &
          interpolator%t(1:sz+order+sz_deriv))
-
-    SLL_DEALLOCATE(point_locate_eta_derivative,ierr)
-    SLL_DEALLOCATE(data_array_derivative,ierr)
 
  case(36) ! Hermite - Hermite
 
-    ! -----------------------------------
-    !!! It is only for cubic spline !!!!
-    ! -----------------------------------
-    sz_deriv = 2
     interpolator%size_coeffs = sz + sz_deriv
     interpolator%size_t = order + sz + sz_deriv
-
-    SLL_ALLOCATE(point_locate_eta_derivative(sz_deriv),ierr)
-    SLL_ALLOCATE(data_array_derivative(sz_deriv),ierr)
 
     point_locate_eta_derivative(1) = 1
     data_array_derivative(1)       = interpolator%slope_left
     point_locate_eta_derivative(2) = sz
     data_array_derivative(2)       = interpolator%slope_right
 
-    call spli1d_der(sz,sz_deriv,order,&
-         point_locate_eta,&
-         data_array,&
-         point_locate_eta_derivative,&
-         data_array_derivative,&
-         interpolator%coeff_splines(1:sz+sz_deriv),&
+    call spli1d_der(sz,sz_deriv,order,               &
+         point_locate_eta,                           &
+         data_array,                                 &
+         point_locate_eta_derivative,                &
+         data_array_derivative,                      &
+         interpolator%coeff_splines(1:sz+sz_deriv),  &
          interpolator%t(1:sz+order+sz_deriv))
-
-    SLL_DEALLOCATE(point_locate_eta_derivative,ierr)
-    SLL_DEALLOCATE(data_array_derivative,ierr)
 
   end select
 
