@@ -35,37 +35,9 @@ ENDMACRO(ADD_SIMULATION_1D)
 # Optionally add special dependencies by setting the DEP_LIBS variable
 #######################################################################
 
-ADD_SIMULATION_1D(VP1D_curvilinear_analytic VP1D_curvilinear_analytic)
-ADD_SIMULATION_1D(vp1d_fourier_fem          vp1d_fourier_fem)
-ADD_SIMULATION_1D(VP1D_cartesian_non_unif   VP1D_cartesian_non_unif)
 IF(HDF5_ENABLED)
    SET(SIM_LIBS sll_advection)
 ENDIF(HDF5_ENABLED)
-
-ADD_EXECUTABLE(VP1D_deltaf_cart VP1D_deltaf_BSL.F90)
-TARGET_LINK_LIBRARIES(VP1D_deltaf_cart sll_interpolators
-	                                 sll_periodic_interpolation
-	                                 sll_fft
-	                                 sll_distribution_function
-                                       sll_constants
-	                                 sll_file_io
-  	                                 sll_utilities
-	                                 sll_timer
-	                                 sll_poisson_solvers
-	                                 dfftpack)
-IF(HDF5_ENABLED)
-   ADD_EXECUTABLE(VP1D_mm VP1D_mm.F90)
-   TARGET_LINK_LIBRARIES(VP1D_mm sll_interpolators 
-                                 sll_periodic_interpolation
-                                 sll_fft 
-                                 sll_distribution_function 
-                                 sll_timer 
-                                 sll_poisson_solvers 
-                                 sll_constants 
-                                 sll_file_io 
-                                 sll_utilities 
-                                 dfftpack)
-ENDIF(HDF5_ENABLED)                           
 
 #End of commands to be put in the class simulation standard
 ###################################################
@@ -177,17 +149,6 @@ TARGET_LINK_LIBRARIES(CG_polar sll_poisson_solvers
                                sll_splines
 	                         sll_constants
 	                         sll_timer)
-
-ADD_EXECUTABLE(VP1D_cart VP_uniform_cartesian_BSL.F90)
-
-TARGET_LINK_LIBRARIES(VP1D_cart sll_interpolators
-	                        sll_fft
-	                        sll_distribution_function
-	                        sll_constants
-	                        sll_file_io
-  	                        sll_utilities
-	                        sll_poisson_solvers
-	                        dfftpack)
 
 ADD_EXECUTABLE(unit_test_polar unit_test_polar.F90 sll_polar_operators.F90)
 TARGET_LINK_LIBRARIES(unit_test_polar sll_poisson_solvers)
