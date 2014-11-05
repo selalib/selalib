@@ -17,6 +17,7 @@ SET( INSTALL_DIR "${INSTALL_DIR}/simulations_sequential" )
 ADD_SUBDIRECTORY( sim_VlasovPoisson1D_curvilinear_analytic  )
 ADD_SUBDIRECTORY( sim_VlasovPoisson1D_fourier_FEM           )
 ADD_SUBDIRECTORY( sim_VlasovPoisson1D_cartesian_non_uniform )
+ADD_SUBDIRECTORY( sim_VlasovPoisson1D_various_programs      )
 
 IF(HDF5_ENABLED)
   SET( SIM_LIBS sll_advection )
