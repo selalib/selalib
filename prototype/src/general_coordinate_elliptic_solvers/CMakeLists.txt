@@ -8,7 +8,7 @@ ADD_LIBRARY( sll_general_coordinate_elliptic_solvers STATIC
 
 TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers
                        sll_sparse_matrix 
-                       sll_scalar_field_2d_alternative 
+                       sll_fields
                        sll_interpolators
                        sll_coordinate_transformations
                        sll_meshes
@@ -31,7 +31,7 @@ ADD_LIBRARY( finite_elements_solver STATIC
 
 TARGET_LINK_LIBRARIES( finite_elements_solver
                        sll_sparse_matrix 
-                       sll_scalar_field_2d_alternative 
+                       sll_fields
                        sll_interpolators
                        sll_coordinate_transformations
                        sll_meshes
