@@ -8,7 +8,6 @@ program unit_test
 
   use distribution_function
   use sll_csl
-  !use sll_module_mapped_meshes_2d_cartesian
   use sll_common_coordinate_transformations
   use sll_cartesian_meshes
   use sll_module_coordinate_transformations_2d
@@ -17,26 +16,21 @@ program unit_test
   implicit none
   
   sll_int32 :: nc_eta1_coarse, nc_eta2_coarse
-  sll_int32 :: nc_eta1_fine!, nc_eta2_fine
-  !sll_real64 :: delta_eta1_coarse, delta_eta2_coarse
-  !sll_real64 :: delta_eta1_fine, delta_eta2_fine
+  sll_int32 :: nc_eta1_fine
   sll_real64 :: eta1_min, eta1_max,  eta2_min, eta2_max
-  procedure(scalar_function_2D), pointer :: x1_coarse, x1_fine, x2_coarse, x2_fine, jac_coarse, jac_fine
-  !class(sll_mapped_mesh_2d_base), pointer   :: m
+  procedure(scalar_function_2D), pointer :: x1_coarse
+  procedure(scalar_function_2D), pointer :: x2_coarse
+  procedure(scalar_function_2D), pointer :: x1_fine
+  procedure(scalar_function_2D), pointer :: x2_fine
+  procedure(scalar_function_2D), pointer :: jac_coarse
+  procedure(scalar_function_2D), pointer :: jac_fine
   type(sll_cartesian_mesh_2d), pointer :: mesh_c, mesh_f
   class(sll_coordinate_transformation_2d_base), pointer   :: m
   class(scalar_field_2d_initializer_base), pointer    :: p_init_f
   class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
   class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
-  !type(sll_mapped_mesh_2d_cartesian),target :: mesh_c,mesh_f
-  !type(geometry_2D), pointer :: geomc, geomf
-  !type(mesh_descriptor_2D), pointer :: coarse_mesh
-  !type(mesh_descriptor_2D), pointer :: fine_mesh
   type(sll_distribution_function_2D) :: dist_func_fine
   type(sll_distribution_function_2D) :: dist_func_coarse
-  !type(scalar_field_2D), pointer :: rotating_field
-  !type(scalar_field_2D), pointer :: uniform_field
-  !type(csl_workspace), pointer :: csl_work
   character(32),parameter  :: name = 'distribution_function'
   type(init_gaussian_2d),target :: pgaussian
   type(sll_cubic_spline_interpolator_1d), target  :: interp_eta1

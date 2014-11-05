@@ -16,7 +16,6 @@ ADD_LIBRARY( sll_simulation_1d STATIC simulation_1d.F90 simulation_base_class.F9
 
 TARGET_LINK_LIBRARIES( sll_simulation_1d 
                        sll_interpolators
-                       sll_scalar_field
                        sll_poisson_solvers
                        sll_reduction
                        sll_common_array_initializers
@@ -41,12 +40,6 @@ ADD_SIMULATION_1D(vp1d_fourier_fem          vp1d_fourier_fem)
 ADD_SIMULATION_1D(VP1D_cartesian_non_unif   VP1D_cartesian_non_unif)
 IF(HDF5_ENABLED)
    SET(SIM_LIBS sll_advection)
-   ADD_SIMULATION_1D(2d_vp_no_split            2d_vlasov_poisson_no_splitting)
-   ADD_SIMULATION_1D(2d_af_cartesian           2d_analytic_field_cartesian)
-   ADD_SIMULATION_1D(2d_af_curvilinear         2d_analytic_field_curvilinear)
-   ADD_SIMULATION_1D(2d_gc_cartesian 2d_guiding_center_cartesian)
-   #ADD_SIMULATION_1D(2d_gc_curvilinear 2d_guiding_center_curvilinear)
-   ADD_SIMULATION_1D(2d_gc_polar 2d_guiding_center_polar)
 ENDIF(HDF5_ENABLED)
 
 ADD_EXECUTABLE(VP1D_deltaf_cart VP1D_deltaf_BSL.F90)
@@ -54,7 +47,6 @@ TARGET_LINK_LIBRARIES(VP1D_deltaf_cart sll_interpolators
 	                                 sll_periodic_interpolation
 	                                 sll_fft
 	                                 sll_distribution_function
-	                                 sll_scalar_field
                                        sll_constants
 	                                 sll_file_io
   	                                 sll_utilities
@@ -67,7 +59,6 @@ IF(HDF5_ENABLED)
                                  sll_periodic_interpolation
                                  sll_fft 
                                  sll_distribution_function 
-                                 sll_scalar_field 
                                  sll_timer 
                                  sll_poisson_solvers 
                                  sll_constants 
@@ -103,7 +94,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
                          sll_time_splitting
                          sll_file_io_parallel
                          sll_poisson_parallel
-                         sll_scalar_field_1d_alternative
+                         sll_fields
                          sll_fcisl
                          sll_derivative
                          sll_qn_solvers_parallel
@@ -115,11 +106,10 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
                          sll_fft
                          sll_distribution_function
                          sll_general_coordinate_elliptic_solvers
-                         sll_scalar_field_2d_alternative
+                         sll_fields
                          sll_pic_particles
                          sll_random_deviate_generators
                          sll_field_accumulators
-                         sll_scalar_field
                          sll_interpolators
                          sll_point_to_point_communications	
                          sll_splines
@@ -148,25 +138,8 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
    #and simulation_MYSIM.F90
    #ADD_SIMULATION(MYMETHOD MYSIM)
 
-   ADD_SIMULATION(2d_vp_cartesian   2d_vlasov_poisson_cartesian)
-   ADD_SIMULATION(2d_gc_curvilinear 2d_guiding_center_curvilinear)
-   ADD_SIMULATION(4d                4d_vlasov_poisson_cartesian)
-   ADD_SIMULATION(4d_vp_cartesian   4d_vlasov_parallel_poisson_sequential_cartesian)
-   ADD_SIMULATION(4d_vp_general     4d_vlasov_poisson_general)
    ADD_SIMULATION(4d_qns_general    4d_qns_general)
    #PN ADD_SIMULATION(4d_qns_general_multipatch    4d_qns_general_multipatch)
-   ADD_SIMULATION(4d_vp_polar       4d_vlasov_poisson_polar)
-
-   ADD_SIMULATION(4d_DK_hybrid              4d_DK_hybrid)
-   ADD_SIMULATION(4d_dk_polar               4d_drift_kinetic_polar)
-   ADD_SIMULATION(4d_dk_polar_one_mu        4d_drift_kinetic_polar_one_mu)
-   ADD_SIMULATION(4d_dk_polar_multi_mu      4d_drift_kinetic_polar_multi_mu)
-   ADD_SIMULATION(4d_dk_field_aligned_polar 4d_drift_kinetic_field_aligned_polar)
-   ADD_SIMULATION(4d_dk_cartesian           4d_drift_kinetic_cartesian_finite_volume)
-   ADD_SIMULATION(6d                        6d_vlasov_poisson_cartesian)
-
-   ADD_SIMULATION(4d_vp_pic_cartesian       4d_vp_pic_cartesian)
-
 #   ADD_SIMULATION(4d_mixed_qns_cartesian 4d_mixed_qns_cartesian)
 
    # Add postprocessing code for KEEN
@@ -210,7 +183,6 @@ ADD_EXECUTABLE(VP1D_cart VP_uniform_cartesian_BSL.F90)
 TARGET_LINK_LIBRARIES(VP1D_cart sll_interpolators
 	                        sll_fft
 	                        sll_distribution_function
-	                        sll_scalar_field	
 	                        sll_constants
 	                        sll_file_io
   	                        sll_utilities
