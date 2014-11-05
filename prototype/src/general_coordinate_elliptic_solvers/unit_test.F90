@@ -7,7 +7,7 @@ program test_general_elliptic_solver
 use sll_cartesian_meshes
 use sll_module_coordinate_transformations_2d
 use sll_common_coordinate_transformations
-use sll_module_scalar_field_2d_alternative
+use sll_module_scalar_field_2d
 use sll_constants
 use sll_module_arbitrary_degree_spline_interpolator_2d
 use sll_timer
@@ -45,7 +45,7 @@ class(sll_scalar_field_2d_base), pointer                  :: b1_field_vect
 class(sll_scalar_field_2d_base), pointer                  :: b2_field_vect
 class(sll_scalar_field_2d_base), pointer                  :: c_field
 class(sll_scalar_field_2d_base), pointer                  :: rho
-type(sll_scalar_field_2d_discrete_alt), pointer           :: phi
+type(sll_scalar_field_2d_discrete), pointer           :: phi
 type(sll_time_mark)                                       :: t_reference
 
 sll_real64 :: ti(15), te(15)
@@ -63,7 +63,7 @@ real(8), external :: source_term_chgt_dirdir
 real(8), external :: f_sin, u_sin, u_sin_der1, u_sin_der2
 real(8), external :: f_cos, u_cos, u_cos_der1, u_cos_der2
 
-sll_real64 :: acc(15)
+sll_real64 :: acc(15)    
 sll_real64 :: normL2(15)
 sll_real64 :: normH1(15)
 
@@ -197,8 +197,7 @@ do k = itest1, itest2
 
   call initialize_fields( SLL_PERIODIC, SLL_PERIODIC, SLL_PERIODIC, SLL_PERIODIC)
 
-
-  rho => new_scalar_field_2d_analytic_alt( &
+  rho => new_scalar_field_2d_analytic( &
        source_term_perper, &
        "rho"//ccase, &     
        T, &
@@ -252,7 +251,7 @@ do k = itest1, itest2
 
   call initialize_fields( SLL_PERIODIC, SLL_PERIODIC, SLL_DIRICHLET, SLL_DIRICHLET)
 
-  rho => new_scalar_field_2d_analytic_alt( &
+  rho => new_scalar_field_2d_analytic( &
        source_term_perdir, &
        "rho"//ccase, &     
        T, &
@@ -307,7 +306,7 @@ do k = itest1, itest2
   
   call initialize_fields( SLL_DIRICHLET, SLL_DIRICHLET, SLL_DIRICHLET, SLL_DIRICHLET)
 
-  rho => new_scalar_field_2d_analytic_alt( &
+  rho => new_scalar_field_2d_analytic( &
        source_term_perdir, &
        "rho"//ccase, &     
        T, &
@@ -362,7 +361,7 @@ do k = itest1, itest2
   call initialize_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
                           SLL_PERIODIC, SLL_PERIODIC)
   
-  rho => new_scalar_field_2d_analytic_alt( &
+  rho => new_scalar_field_2d_analytic( &
        source_term_dirper, &
        "rho"//ccase, &     
        T, &
@@ -419,7 +418,7 @@ do k = itest1, itest2
   call initialize_fields( SLL_PERIODIC, SLL_PERIODIC, &
                           SLL_PERIODIC, SLL_PERIODIC)
 
-  rho => new_scalar_field_2d_analytic_alt( &
+  rho => new_scalar_field_2d_analytic( &
        source_term_chgt_perper, &
        "rho"//ccase, &     
        T, &
@@ -483,7 +482,7 @@ do k = itest1, itest2
   call initialize_fields( SLL_PERIODIC,  SLL_PERIODIC, &
                           SLL_DIRICHLET, SLL_DIRICHLET)
   
-  rho => new_scalar_field_2d_analytic_alt( &
+  rho => new_scalar_field_2d_analytic( &
        source_term_chgt_perdir, &
        "rho"//ccase, &     
        T, &
@@ -545,7 +544,7 @@ do k = itest1, itest2
   call initialize_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
                           SLL_DIRICHLET, SLL_DIRICHLET)
 
-  rho => new_scalar_field_2d_analytic_alt( &
+  rho => new_scalar_field_2d_analytic( &
        source_term_chgt_dirdir, &
        "rho"//ccase, &     
        T, &
@@ -607,7 +606,7 @@ do k = itest1, itest2
   call initialize_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
                           SLL_PERIODIC,  SLL_PERIODIC)
   
-  rho => new_scalar_field_2d_analytic_alt( &
+  rho => new_scalar_field_2d_analytic( &
        source_term_chgt_dirper, &
        "rho"//ccase, &     
        T, &
@@ -676,7 +675,7 @@ do k = itest1, itest2
      end do
   end do
   
-  rho => new_scalar_field_2d_discrete_alt( &
+  rho => new_scalar_field_2d_discrete( &
        "rho"//ccase, &
        interp_2d_term_source, &
        T, &
@@ -751,7 +750,7 @@ do k = itest1, itest2
   
   tab_rho(:,:) = tab_rho - sum(tab_rho)/(NUM_CELLS1*NUM_CELLS2)
 
-  rho => new_scalar_field_2d_discrete_alt( &
+  rho => new_scalar_field_2d_discrete( &
        "rho"//ccase, &
        rhs_interp, &
        T, &
@@ -831,7 +830,7 @@ do k = itest1, itest2
 
   rhs_interp => interp_2d_term_source
 
-  rho => new_scalar_field_2d_discrete_alt( &
+  rho => new_scalar_field_2d_discrete( &
        "rho"//ccase, &
        rhs_interp, &
        T, &
@@ -912,7 +911,7 @@ do k = itest1, itest2
 
   rhs_interp => interp_2d_term_source
 
-  rho => new_scalar_field_2d_discrete_alt( &
+  rho => new_scalar_field_2d_discrete( &
        "rho"//ccase, &
        rhs_interp, &
        T, &
@@ -992,7 +991,7 @@ do k = itest1, itest2
   
   rhs_interp => interp_2d_term_source
 
-  rho => new_scalar_field_2d_discrete_alt( &
+  rho => new_scalar_field_2d_discrete( &
        "rho"//ccase, &
        rhs_interp, &
        T, &
@@ -1063,7 +1062,7 @@ do k = itest1, itest2
   call initialize_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
                           SLL_PERIODIC,  SLL_PERIODIC)
 
-  rho => new_scalar_field_2d_analytic_alt( &
+  rho => new_scalar_field_2d_analytic( &
        f_sin, &
        "fsin", &
        T, &
@@ -1140,7 +1139,7 @@ do k = itest1, itest2
   call initialize_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
                           SLL_PERIODIC,  SLL_PERIODIC)
 
-  rho => new_scalar_field_2d_analytic_alt( &
+  rho => new_scalar_field_2d_analytic( &
        f_cos, &
        "f_cos", &
        T, &
@@ -1200,6 +1199,9 @@ do k = 1, 13
   write(file_id,"(a)") "load 'phi_"//ccase//".gnu'"
   write(file_id,"(a)") " pause -1"
 end do
+
+print*, 'PASSED'
+
   
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
@@ -1225,7 +1227,7 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
   sll_int32, intent(in) :: bc_eta1_max
   sll_int32, intent(in) :: bc_eta2_max
 
-  a11_field_mat => new_scalar_field_2d_analytic_alt( &
+  a11_field_mat => new_scalar_field_2d_analytic( &
     func_one,                                        &
     "a11",                                           &
     T,                                               &
@@ -1235,7 +1237,7 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
     bc_eta2_max,                                     &
     whatever  ) 
   
-  a12_field_mat => new_scalar_field_2d_analytic_alt( &
+  a12_field_mat => new_scalar_field_2d_analytic( &
     func_zero,                                       &
     "a12",                                           &
     T,                                               &
@@ -1245,7 +1247,7 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
     bc_eta2_max,                                     &
     whatever )
   
-  a21_field_mat => new_scalar_field_2d_analytic_alt( &
+  a21_field_mat => new_scalar_field_2d_analytic( &
     func_zero,                                       &
     "a21",                                           &
     T,                                               &
@@ -1255,7 +1257,7 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
     bc_eta2_max,                                     &
     whatever ) 
   
-  a22_field_mat => new_scalar_field_2d_analytic_alt( &
+  a22_field_mat => new_scalar_field_2d_analytic( &
     func_one,                                        &
     "a22",                                           &
     T,                                               &
@@ -1265,7 +1267,7 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
     bc_eta2_max,                                     &
     whatever)
 
-  b1_field_vect => new_scalar_field_2d_analytic_alt( &
+  b1_field_vect => new_scalar_field_2d_analytic( &
     func_zero,                                       &
     "b1",                                            &
     T,                                               &
@@ -1277,7 +1279,7 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
     first_deriv_eta1 = func_zero,                    &
     first_deriv_eta2 = func_zero) 
 
-  b2_field_vect => new_scalar_field_2d_analytic_alt( &
+  b2_field_vect => new_scalar_field_2d_analytic( &
     func_zero,                                       &
     "b2",                                            &
     T,                                               &
@@ -1289,7 +1291,7 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
     first_deriv_eta1 = func_zero,                    &
     first_deriv_eta2 = func_zero)
 
-  c_field => new_scalar_field_2d_analytic_alt(       &
+  c_field => new_scalar_field_2d_analytic(       &
     func_zero,                                       &
     "c_field",                                       &
     T,                                               &
@@ -1329,7 +1331,7 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
     SPLINE_DEG1,                                     &
     SPLINE_DEG2 )
 
-  phi => new_scalar_field_2d_discrete_alt(           &
+  phi => new_scalar_field_2d_discrete(           &
     "phi_"//ccase,                                   &
     interp_2d,                                       &
     T,                                               &
@@ -1429,9 +1431,9 @@ subroutine check_error(icase)
   acc(icase) = sum(abs(calculated-reference))/(npts1*npts2)
   if ((sqrt(normL2(icase)) <= h1**(SPLINE_DEG1-1))   .AND. &
     (sqrt(normH1(icase)) <= h1**(SPLINE_DEG1-1-1))) then     
-     print"('test:',i2,4x,'error=',g15.3, 4X, 'PASSED')", icase, acc(icase)
+     print"('test:',i2,4x,'error=',g15.3, 4x, 'OK' )", icase, acc(icase)
   else
-     stop 'FAILED'
+    stop 'FAILED'
   end if
 
 end subroutine check_error
