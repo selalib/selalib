@@ -658,71 +658,67 @@ subroutine spli2d_dirper (nx,      &
   
  end subroutine spli2d_dirper
    
- subroutine spli2d_perper( ar_Lx,     &
+ subroutine spli2d_perper( Lx,     &
                            nx,     &
                            kx,     &
                            taux,  &
-                           ar_Ly,     &
+                           Ly,     &
                            ny,     &
                            ky,     &
                            tauy,  &
-                           apr_g,     &
+                           g,     &
                            bcoef, &
                            apr_tx,    &
                            apr_ty )
 
-  ! CALLED WHEN WE WANT TO INTERPOL WITH A PERIODIC FIRST PARAM WITH A PERIOD = ar_L
+  sll_real64, intent(in) :: Lx
+  sll_real64, intent(in) :: Ly
+  sll_int32,  intent(in) :: nx
+  sll_int32,  intent(in) :: kx
+  sll_int32,  intent(in) :: ny
+  sll_int32,  intent(in) :: ky
 
-  sll_real64 :: ar_Lx
-  sll_real64 :: ar_Ly
-  sll_int32  :: nx, kx, ny, ky
-  sll_real64, dimension (:),pointer :: taux ! nx -1
-  sll_real64, dimension (:),pointer :: tauy ! ny - 1
-  sll_real64, dimension (:,:),pointer :: apr_g !  nx  - 1, ny - 1
+  sll_real64, dimension(:)   :: taux ! nx -1
+  sll_real64, dimension(:)   :: tauy ! ny - 1
+  sll_real64, dimension(:,:) :: g !  nx  - 1, ny - 1
 
-  sll_real64, dimension ( :,:),pointer :: bcoef ! nx , ny
-  sll_real64, dimension (:),pointer :: apr_tx !  nx + kx
-  sll_real64, dimension ( :),pointer :: apr_ty ! ny + ky
+  sll_real64, dimension(:,:) :: bcoef ! nx , ny
+  sll_real64, dimension(:)   :: apr_tx !  nx + kx
+  sll_real64, dimension(:)   :: apr_ty ! ny + ky
 
-  sll_real64, dimension (1:nx),target :: lpr_taux ! tmp_ty
-  sll_real64, dimension (1:ny),target :: lpr_tauy
-  sll_real64, dimension(1:nx,1:ny),target :: lpr_g !  ( nx ,ny)
-  sll_real64, dimension (:),pointer :: lpr_taux_ptr ! tmp_ty
-  sll_real64, dimension (:),pointer :: lpr_tauy_ptr
-  sll_real64, dimension(:,:),pointer :: lpr_g_ptr
+  sll_real64, dimension(1:nx),     target  :: lpr_taux ! tmp_ty
+  sll_real64, dimension(1:ny),     target  :: lpr_tauy
+  sll_real64, dimension(1:nx,1:ny),target  :: lpr_g !  ( nx ,ny)
+  sll_real64, dimension(:),        pointer :: lpr_taux_ptr ! tmp_ty
+  sll_real64, dimension(:),        pointer :: lpr_tauy_ptr
+  sll_real64, dimension(:,:),      pointer :: lpr_g_ptr
      
-  if ( ar_Lx == 0.0_8 ) then
-    print*,'Error spli2d_perper : called with a period = 0 '
-    stop
-  end if
-  if ( ar_Ly == 0.0_8 ) then
-    print*,'Error spli2d_perper : called with a period = 0 '
-    stop
-  end if
+  SLL_ASSERT( Lx /= 0.0_8 )
+  SLL_ASSERT( Ly /= 0.0_8 )
   
-  lpr_taux ( 1 : nx - 1 ) = taux ( 1 : nx - 1 )
-  lpr_taux ( nx ) = taux ( 1 ) + ar_Lx
+  lpr_taux(1:nx-1) = taux(1:nx-1)
+  lpr_taux(nx)     = taux(1) + Lx
      
-  lpr_tauy ( 1 : ny - 1 ) = tauy ( 1 : ny - 1 )
-  lpr_tauy ( ny ) = tauy ( 1 ) + ar_Ly
+  lpr_tauy(1:ny-1) = tauy(1:ny-1)
+  lpr_tauy(ny)     = tauy(1)+Ly
      
-  lpr_g ( 1 : nx - 1 , 1 : ny - 1 ) = apr_g ( 1 : nx - 1 , 1 : ny -1 )
-  lpr_g ( nx , 1 : ny -1 ) = apr_g ( 1 , 1 : ny -1 )
-  lpr_g ( 1 : nx -1 , ny ) = apr_g ( 1 : nx -1, 1 )
-  lpr_g ( nx , ny ) = apr_g ( 1 , 1 )
+  lpr_g(1:nx-1,1:ny-1) = g(1:nx-1,1:ny-1)
+  lpr_g(    nx,1:ny-1) = g(     1,1:ny-1)
+  lpr_g(1:nx-1,    ny) = g(1:nx-1,     1)
+  lpr_g(    nx,    ny) = g(     1,     1)
 
   lpr_taux_ptr => lpr_taux
   lpr_tauy_ptr => lpr_tauy
-  lpr_g_ptr => lpr_g
+  lpr_g_ptr    => lpr_g
 
-  call spli2d_custom (  nx,        &
-                        kx,        &
+  call spli2d_custom (  nx,           &
+                        kx,           &
                         lpr_taux_ptr, & 
-                        ny,        &
-                        ky,        &
+                        ny,           &
+                        ky,           &
                         lpr_tauy_ptr, &
                         lpr_g_ptr,    &
-                        bcoef,    &
+                        bcoef,        &
                         apr_tx,       &
                         apr_ty )
      
