@@ -1821,12 +1821,17 @@ if( present(eta1_coords) .and. present(eta2_coords) ) then
   interpolator%eta1(1:sz1) = eta1_coords(1:sz1)
   interpolator%eta2(1:sz2) = eta2_coords(1:sz2)
 
+else
+
+  sz1 = interpolator%num_pts1
+  sz2 = interpolator%num_pts2
+
 end if
 
 SLL_ALLOCATE(point_location_eta1_tmp(1:sz1-1),ierr)
 SLL_ALLOCATE(point_location_eta2_tmp(1:sz2-1),ierr)
-point_location_eta1_tmp = point_location_eta1(1:sz1-1)
-point_location_eta2_tmp = point_location_eta2(1:sz2-1)
+point_location_eta1_tmp = interpolator%eta1(1:sz1-1)
+point_location_eta2_tmp = interpolator%eta2(1:sz2-1)
     
 ! the size of data_array  must be <= interpolator%num_pts1 + 4*interpolator%spline_degree1
 ! because we have not need more !! 
@@ -1834,8 +1839,8 @@ SLL_ASSERT(sz1 .le. interpolator%num_pts1 + 8*interpolator%spline_degree1)
 SLL_ASSERT(sz2 .le. interpolator%num_pts2 + 8*interpolator%spline_degree1)
 SLL_ASSERT(size(data_array,1) .ge. sz1)
 SLL_ASSERT(size(data_array,2) .ge. sz2)
-SLL_ASSERT(size(point_location_eta1)  .ge. sz1)
-SLL_ASSERT(size(point_location_eta2)  .ge. sz2)
+SLL_ASSERT(size(interpolator%eta1)  .ge. sz1)
+SLL_ASSERT(size(interpolator%eta2)  .ge. sz2)
     
 order1  = interpolator%spline_degree1 + 1
 order2  = interpolator%spline_degree2 + 1
@@ -1887,7 +1892,7 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
 
        SLL_ALLOCATE( data_array_tmp(1:sz1,1:sz2-1),ierr)
        data_array_tmp = data_array(1:sz1,1:sz2-1)
-       call spli2d_dirper( sz1, order1, point_location_eta1,&!(1:sz1), &
+       call spli2d_dirper( sz1, order1, interpolator%eta1,&!(1:sz1), &
             period2, sz2, order2, point_location_eta2_tmp,&!(1:sz2-1), & !+1
             data_array_tmp, interpolator%coeff_splines,&!(1:sz1,1:sz2),&!+1
             interpolator%t1,&!(1:sz1+order1), &
@@ -1911,7 +1916,7 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        SLL_ALLOCATE( data_array_tmp(1:sz1-1,1:sz2),ierr)
        data_array_tmp = data_array(1:sz1-1,1:sz2)
        call spli2d_perdir( period1, sz1, order1, point_location_eta1_tmp,&!(1:sz1-1), & !+ 1
-            sz2, order2, point_location_eta2, &
+            sz2, order2, interpolator%eta2, &
             data_array_tmp, interpolator%coeff_splines,&!(1:sz1,1:sz2),& !+ 1
             interpolator%t1,&!(1:sz1+order1), & ! + 1
             interpolator%t2)!)(1:sz2+order2) )
@@ -1932,8 +1937,8 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        !  i.e  data_array must have the dimension sz1 x sz2
        SLL_ALLOCATE( data_array_tmp(1:sz1,1:sz2),ierr)
        data_array_tmp = data_array(1:sz1,1:sz2)
-       call spli2d_custom( sz1, order1, point_location_eta1, &
-            sz2, order2, point_location_eta2, &
+       call spli2d_custom( sz1, order1, interpolator%eta1, &
+            sz2, order2, interpolator%eta2, &
             data_array_tmp, interpolator%coeff_splines,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
@@ -1972,11 +1977,11 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             sz1,&
             sz_derivative_eta1,&
             order1, &
-            point_location_eta1, &
+            interpolator%eta1, &
             point_location_eta1_deriv,&
             sz2, &
             sz_derivative_eta2,&
-            order2, point_location_eta2, &
+            order2, interpolator%eta2, &
             point_location_eta2_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
@@ -2020,11 +2025,11 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             sz1,&
             sz_derivative_eta1,&
             order1, &
-            point_location_eta1, &
+            interpolator%eta1, &
             point_location_eta1_deriv,&
             sz2, &
             sz_derivative_eta2,&
-            order2, point_location_eta2, &
+            order2, interpolator%eta2, &
             point_location_eta2_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
@@ -2073,11 +2078,11 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             sz1,&
             sz_derivative_eta1,&
             order1, &
-            point_location_eta1, &
+            interpolator%eta1, &
             point_location_eta1_deriv,&
             sz2, &
             sz_derivative_eta2,&
-            order2, point_location_eta2, &
+            order2, interpolator%eta2, &
             point_location_eta2_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
@@ -2125,11 +2130,11 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             sz1,&
             sz_derivative_eta1,&
             order1, &
-            point_location_eta1, &
+            interpolator%eta1, &
             point_location_eta1_deriv,&
             sz2, &
             sz_derivative_eta2,&
-            order2, point_location_eta2, &
+            order2, interpolator%eta2, &
             point_location_eta2_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
@@ -2173,11 +2178,11 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             sz1,&
             sz_derivative_eta1,&
             order1, &
-            point_location_eta1, &
+            interpolator%eta1, &
             point_location_eta1_deriv,&
             sz2, &
             sz_derivative_eta2,&
-            order2, point_location_eta2, &
+            order2, interpolator%eta2, &
             point_location_eta2_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
@@ -2221,11 +2226,11 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             sz1,&
             sz_derivative_eta1,&
             order1, &
-            point_location_eta1, &
+            interpolator%eta1, &
             point_location_eta1_deriv,&
             sz2, &
             sz_derivative_eta2,&
-            order2, point_location_eta2, &
+            order2, interpolator%eta2, &
             point_location_eta2_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
@@ -2269,11 +2274,11 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             sz1,&
             sz_derivative_eta1,&
             order1, &
-            point_location_eta1, &
+            interpolator%eta1, &
             point_location_eta1_deriv,&
             sz2, &
             sz_derivative_eta2,&
-            order2, point_location_eta2, &
+            order2, interpolator%eta2, &
             point_location_eta2_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
@@ -2318,11 +2323,11 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             sz1,&
             sz_derivative_eta1,&
             order1, &
-            point_location_eta1, &
+            interpolator%eta1, &
             point_location_eta1_deriv,&
             sz2, &
             sz_derivative_eta2,&
-            order2, point_location_eta2, &
+            order2, interpolator%eta2, &
             point_location_eta2_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
@@ -2365,11 +2370,11 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             sz1,&
             sz_derivative_eta1,&
             order1, &
-            point_location_eta1, &
+            interpolator%eta1, &
             point_location_eta1_deriv,&
             sz2, &
             sz_derivative_eta2,&
-            order2, point_location_eta2, &
+            order2, interpolator%eta2, &
             point_location_eta2_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
@@ -2413,11 +2418,11 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             sz1,&
             sz_derivative_eta1,&
             order1, &
-            point_location_eta1, &
+            interpolator%eta1, &
             point_location_eta1_deriv,&
             sz2, &
             sz_derivative_eta2,&
-            order2, point_location_eta2, &
+            order2, interpolator%eta2, &
             point_location_eta2_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
@@ -2463,11 +2468,11 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             sz1,&
             sz_derivative_eta1,&
             order1, &
-            point_location_eta1, &
+            interpolator%eta1, &
             point_location_eta1_deriv,&
             sz2, &
             sz_derivative_eta2,&
-            order2, point_location_eta2, &
+            order2, interpolator%eta2, &
             point_location_eta2_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
@@ -2511,11 +2516,11 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             sz1,&
             sz_derivative_eta1,&
             order1, &
-            point_location_eta1, &
+            interpolator%eta1, &
             point_location_eta1_deriv,&
             sz2, &
             sz_derivative_eta2,&
-            order2, point_location_eta2, &
+            order2, interpolator%eta2, &
             point_location_eta2_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
@@ -2559,11 +2564,11 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             sz1,&
             sz_derivative_eta1,&
             order1, &
-            point_location_eta1, &
+            interpolator%eta1, &
             point_location_eta1_deriv,&
             sz2, &
             sz_derivative_eta2,&
-            order2, point_location_eta2, &
+            order2, interpolator%eta2, &
             point_location_eta2_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
@@ -2609,11 +2614,11 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             sz1,&
             sz_derivative_eta1,&
             order1, &
-            point_location_eta1, &
+            interpolator%eta1, &
             point_location_eta1_deriv,&
             sz2, &
             sz_derivative_eta2,&
-            order2, point_location_eta2, &
+            order2, interpolator%eta2, &
             point_location_eta2_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
@@ -2633,34 +2638,27 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
     end select
     interpolator%coefficients_set = .true.
    
-    SLL_DEALLOCATE(point_location_eta2,ierr)
-    SLL_DEALLOCATE(point_location_eta1,ierr)
-    SLL_DEALLOCATE(point_location_eta1_tmp,ierr)
-    SLL_DEALLOCATE(point_location_eta2_tmp,ierr)
-    SLL_DEALLOCATE(data_array_tmp,ierr)
+end subroutine !compute_interpolants_ad2d
 
-  end subroutine !compute_interpolants_ad2d
+function coefficients_are_set_ad2d( interpolator ) result(res)
+  class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)  :: interpolator
+  logical :: res
+  res = interpolator%coefficients_set
+end function coefficients_are_set_ad2d
 
-  function coefficients_are_set_ad2d( interpolator ) result(res)
-    class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)  :: interpolator
-    logical :: res
-    res = interpolator%coefficients_set
-  end function coefficients_are_set_ad2d
-
-
-  !  ----------------------------------------------------------
-  !  Interpolation on the points eta1 and eta2 
-  !  ---------------------------------------------------------
-  !> @brief Interpolation on the points eta1 and eta2 
-  !> @details computing the values with the interpolator arbitrary degree splines 2d
-  !>  on the points eta1 and eta2 of arbitrary degree splines 2d
-  !> 
-  !> The parameters are
-  !> @param interpolator the type sll_arbitrary_degree_spline_interpolator_2d
-  !> @param[in] eta1 the point inthe first direction
-  !> @param[in] eta2 the point inthe second direction 
-  !> @return val the values on the points eta1 and eta2 
-  function interpolate_value_ad2d( &
+!  ----------------------------------------------------------
+!  Interpolation on the points eta1 and eta2 
+!  ---------------------------------------------------------
+!> @brief Interpolation on the points eta1 and eta2 
+!> @details computing the values with the interpolator arbitrary degree splines 2d
+!>  on the points eta1 and eta2 of arbitrary degree splines 2d
+!> 
+!> The parameters are
+!> @param interpolator the type sll_arbitrary_degree_spline_interpolator_2d
+!> @param[in] eta1 the point inthe first direction
+!> @param[in] eta2 the point inthe second direction 
+!> @return val the values on the points eta1 and eta2 
+function interpolate_value_ad2d( &
     interpolator, &
     eta1, &
     eta2 ) result(val)
