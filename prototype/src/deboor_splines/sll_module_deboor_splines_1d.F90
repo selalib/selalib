@@ -2,6 +2,8 @@ module sll_module_deboor_splines_1d
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
+#include "sll_utilities.h"
+#include "sll_assert.h"
 implicit none 
   
 contains
@@ -727,6 +729,7 @@ function bvalue( t, bcoef, n, k, x, jderiv ) result(res)
 end function bvalue
   
   
+!> PLEASE AD DOCUMENTATION
 subroutine spli1d_dir ( ai_nx,     &
                         ai_kx,     &
                         apr_taux,  &
@@ -734,43 +737,47 @@ subroutine spli1d_dir ( ai_nx,     &
                         apr_Bcoef, &
                         apr_tx )
 
-  sll_int32  :: ai_nx, ai_kx
-  sll_real64, dimension ( ai_nx) :: apr_taux
-  sll_real64, dimension ( ai_nx) :: apr_g
+  !> PLEASE AD DOCUMENTATION
+  sll_int32                                :: ai_nx
+  !> PLEASE AD DOCUMENTATION
+  sll_int32                                :: ai_kx
+  !> PLEASE AD DOCUMENTATION
+  sll_real64, dimension(ai_nx)             :: apr_taux
+  !> PLEASE AD DOCUMENTATION
+  sll_real64, dimension(ai_nx)             :: apr_g
+  !> PLEASE AD DOCUMENTATION
+  sll_real64, dimension(ai_nx)             :: apr_Bcoef
+  !> PLEASE AD DOCUMENTATION
+  sll_real64, dimension(ai_nx+ai_kx)       :: apr_tx
 
-  sll_real64, dimension ( ai_nx  ) :: apr_Bcoef
-  sll_real64, dimension ( ai_nx + ai_kx ) :: apr_tx
-
-  sll_real64, dimension ( ai_nx ) :: lpr_work1
-  !sll_real64, dimension ( ai_nx         ) :: lpr_work2
-  sll_real64, dimension ( ai_nx *( 2*ai_kx-1) ) :: lpr_work31
-  !sll_real64, dimension ( (ai_nx-ai_kx)*(2*ai_kx+3)+5*ai_kx+3 ) :: scrtch
-  !sll_real64, dimension ( ai_nx + ai_kx ) :: t 
-  sll_int32  :: li_i, li_iflag
+  sll_real64, dimension(ai_nx)             :: lpr_work1
+  sll_real64, dimension(ai_nx*(2*ai_kx-1)) :: lpr_work31
+  sll_int32                                :: li_i
+  sll_int32                                :: li_iflag
     
-  lpr_work1(:) = 0.0
+  lpr_work1 = 0.0
     
   ! *** set up knots
   !     interpolate between knots
   ! x
   !  if (ai_kx <= 2) then 
-  apr_tx ( 1 : ai_kx ) = apr_taux ( 1 )
-  apr_tx ( ai_nx + 1 : ai_nx + ai_kx ) = apr_taux ( ai_nx )
+  apr_tx(1:ai_kx)             = apr_taux(1)
+  apr_tx(ai_nx+1:ai_nx+ai_kx) = apr_taux(ai_nx)
   
-  if ( mod(ai_kx,2) == 0 ) then
-    do li_i = ai_kx + 1, ai_nx
-      apr_tx ( li_i ) = apr_taux ( li_i - ai_kx/2 ) 
+  if (mod(ai_kx,2) == 0) then
+    do li_i = ai_kx+1, ai_nx
+      apr_tx(li_i) = apr_taux(li_i-ai_kx/2) 
     end do
   else
-    do li_i = ai_kx + 1, ai_nx
-      apr_tx ( li_i ) = 0.5*( apr_taux ( li_i - (ai_kx-1)/2 ) + &
-                              apr_taux ( li_i -1 - (ai_kx-1)/2 ) )
+    do li_i = ai_kx+1, ai_nx
+      apr_tx(li_i) = 0.5*( apr_taux(li_i-(ai_kx-1)/2) + &
+                           apr_taux(li_i-1-(ai_kx-1)/2))
     end do
   end if
     
   apr_Bcoef = 0.0_8
   do li_i = 1, ai_nx
-    apr_Bcoef ( li_i ) = apr_g ( li_i )
+    apr_Bcoef (li_i) = apr_g (li_i)
   end do
     
   !  *** construct b-coefficients of interpolant
@@ -786,6 +793,10 @@ subroutine spli1d_dir ( ai_nx,     &
   
 end subroutine spli1d_dir
 
+!> @brief
+!> Compute interpolants for periodic BC
+!> @details
+!> Construct knots and call De Boor routine splint
 subroutine spli1d_per( ar_L,      &
                        ai_nx,     &
                        ai_kx,     &
@@ -797,56 +808,59 @@ subroutine spli1d_per( ar_L,      &
   ! CALLED WHEN WE WANT TO INTERPOL WITH A PERIODIC 
   ! FIRST PARAM WITH A PERIOD = ar_L
 
-  sll_real64 :: ar_L 
-  sll_int32  :: ai_nx, ai_kx
-  sll_real64, dimension ( ai_nx) :: apr_taux
-  sll_real64, dimension ( ai_nx) :: apr_g
+  !> Periodicity length
+  sll_real64                               :: ar_L 
+  !> Number of data points
+  sll_int32                                :: ai_nx
+  !> Splines degree
+  sll_int32                                :: ai_kx
+  !> Points positions
+  sll_real64, dimension(ai_nx)             :: apr_taux
+  !> Data values at points
+  sll_real64, dimension(ai_nx)             :: apr_g
+  !> Spline coefficients
+  sll_real64, dimension(ai_nx)             :: apr_Bcoef
+  !> Knots positions
+  sll_real64, dimension(ai_nx+ai_kx)       :: apr_tx
 
-  sll_real64, dimension ( ai_nx ) :: apr_Bcoef
-  sll_real64, dimension ( ai_nx + ai_kx) :: apr_tx
-
-  sll_real64, dimension ( ai_nx) :: lpr_taux
-  sll_real64, dimension ( ai_nx) :: lpr_g
-  sll_real64, dimension ( ai_nx *( 2*ai_kx-1) ) :: lpr_work
-  !sll_real64, dimension ( (ai_nx-ai_kx)*(2*ai_kx+3)+5*ai_kx+3 ) :: scrtch
+  sll_real64, dimension(ai_nx*(2*ai_kx-1)) :: lpr_work
+  
   sll_int32 :: iflag
   sll_int32 :: li_i
+
   if ( ar_L == 0.0_8 ) then
-    print*,'Error spli1d_per : called with a period = 0 '
-    stop
+    SLL_ERROR('spli1d_per : called with a period = 0 ')
   end if
   
-  lpr_taux ( 1 : ai_nx - 1 ) = apr_taux ( 1 : ai_nx - 1 )
-  lpr_taux ( ai_nx ) = apr_taux ( ai_nx ) !apr_taux ( 1 ) + ar_L
-    
-  lpr_g ( 1 : ai_nx - 1  ) = apr_g ( 1 : ai_nx - 1 )
-  lpr_g ( ai_nx) = apr_g ( ai_nx ) !apr_g ( 1 )		
-    
-  apr_tx ( 1 : ai_kx ) = lpr_taux ( 1 )
-  apr_tx ( ai_nx + 1 : ai_nx + ai_kx ) = lpr_taux ( ai_nx )
+  apr_tx ( 1 : ai_kx ) = apr_taux ( 1 )
+  apr_tx ( ai_nx + 1 : ai_nx + ai_kx ) = apr_taux ( ai_nx )
   
   if ( mod(ai_kx,2) == 0 ) then
     do li_i = ai_kx + 1, ai_nx
-      apr_tx ( li_i ) = lpr_taux ( li_i - ai_kx/2 ) 
+      apr_tx ( li_i ) = apr_taux ( li_i - ai_kx/2 ) 
     end do
   else
     do li_i = ai_kx + 1, ai_nx
-      apr_tx ( li_i ) = 0.5*( lpr_taux ( li_i - (ai_kx-1)/2 ) + &
-                              lpr_taux ( li_i -1 - (ai_kx-1)/2 ) )
+      apr_tx ( li_i ) = 0.5*( apr_taux ( li_i - (ai_kx-1)/2 ) + &
+                              apr_taux ( li_i -1 - (ai_kx-1)/2 ) )
     end do
   end if
 
-  call splint ( lpr_taux,  &
-                lpr_g,     &
+  call splint ( apr_taux,  &
+                apr_g,     &
                 apr_tx,    &
                 ai_nx,     &
                 ai_kx,     &
                 lpr_work,  &
                 apr_Bcoef, &
-                 iflag)
+                iflag)
     
 end subroutine spli1d_per
 
+!> @brief
+!> Compute interpolants for non periodic BC
+!> @details
+!> Add conditions on values and their derivatives.
 subroutine spli1d_der( ai_nx,        &
                        ai_nx_der,    &
                        ai_kx,        &
@@ -857,27 +871,37 @@ subroutine spli1d_der( ai_nx,        &
                        apr_Bcoef,    &
                        apr_tx)
 
-  sll_int32  :: ai_nx, ai_kx,ai_nx_der
-  sll_real64, dimension ( ai_nx) :: apr_taux
-  sll_real64, dimension ( ai_nx) :: apr_g
-  sll_int32, dimension ( ai_nx_der) :: apr_taux_der
-  sll_real64, dimension ( ai_nx_der) :: apr_g_der
-
-  sll_real64, dimension ( ai_nx + ai_nx_der) :: apr_Bcoef
-  sll_real64, dimension ( ai_nx + ai_nx_der + ai_kx) :: apr_tx
-
-  sll_real64, dimension ( (ai_nx+ai_nx_der) *( 2*ai_kx-1) ) :: lpr_work
+  !> Number of data points
+  sll_int32  :: ai_nx
+  !> Spline degree
+  sll_int32  :: ai_kx
+  !> Number of data derivatives points
+  sll_int32  :: ai_nx_der
+  !> Positions of points for data values
+  sll_real64, dimension(ai_nx)                         :: apr_taux
+  !> Data values
+  sll_real64, dimension(ai_nx)                         :: apr_g
+  !> Position of points for derivatives
+  sll_int32,  dimension(ai_nx_der)                     :: apr_taux_der
+  !> Values of data derivatives
+  sll_real64, dimension(ai_nx_der)                     :: apr_g_der
+  !> Splines coefficients
+  sll_real64, dimension(ai_nx+ai_nx_der)               :: apr_Bcoef
+  !> Knots positions
+  sll_real64, dimension(ai_nx+ai_nx_der+ai_kx)         :: apr_tx
+  
+  sll_real64, dimension((ai_nx+ai_nx_der)*(2*ai_kx-1)) :: lpr_work
 
   sll_int32 :: iflag
     
   apr_tx = 0.0_f64
-  apr_tx ( 1 : ai_kx ) = apr_taux ( 1 )
-  apr_tx ( ai_nx+ ai_nx_der + 1: ai_nx + ai_nx_der + ai_kx ) = apr_taux ( ai_nx )
+  apr_tx(1:ai_kx) = apr_taux(1)
+  apr_tx(ai_nx+ai_nx_der+1:ai_nx+ai_nx_der+ai_kx) = apr_taux(ai_nx)
   
-  if (ai_nx + ai_nx_der + ai_kx == ai_nx + 2*(ai_kx-1)) then
-    apr_tx (ai_kx+1: ai_nx+ ai_nx_der) = apr_taux(2:ai_nx-1)
+  if (ai_nx+ai_nx_der+ai_kx == ai_nx + 2*(ai_kx-1)) then
+    apr_tx(ai_kx+1:ai_nx+ai_nx_der) = apr_taux(2:ai_nx-1)
   else
-    print*, 'problem with construction of knots' 
+    SLL_WARNING('problem with construction of knots')
   end if
 
   call splint_der ( apr_taux,     &
@@ -894,7 +918,6 @@ subroutine spli1d_der( ai_nx,        &
     
 end subroutine spli1d_der
 
-    
 !*************************************************************************
 !
 ! SPLINT produces the B-spline coefficients BCOEF of an 
@@ -976,7 +999,7 @@ end subroutine spli1d_der
 !    1, = success.
 !    2, = failure.
 !
-subroutine splint ( tau, gtau, t, n, k, q, bcoef, iflag )
+subroutine splint( tau, gtau, t, n, k, q, bcoef, iflag )
     
   sll_int32 ::  n
    
@@ -1041,13 +1064,13 @@ subroutine splint ( tau, gtau, t, n, k, q, bcoef, iflag )
       exit
           
     end do
-    !
+    
     !  The I-th equation enforces interpolation at TAUI, hence for all J,
     !
     !    A(I,J) = B(J,K,T)(TAUI).
-    !
+    
     !Only the K entries with J = LEFT-K+1,...,LEFT actually might be nonzero.
-    !
+    
     !These K numbers are returned, in BCOEF 
     ! (used for temporary storage here),
     !  by the following.
@@ -1068,7 +1091,7 @@ subroutine splint ( tau, gtau, t, n, k, q, bcoef, iflag )
     !
     !    I -(LEFT+J)+2*K + ((LEFT+J)-K-1)*(2*K-1)
     !   = I-LEFT+1+(LEFT -K)*(2*K-1) + (2*K-2)*J
-    !
+    
     jj = i - left + 1 + ( left - k ) * ( k + k - 1 )
        
     do j = 1, k
@@ -1088,13 +1111,11 @@ subroutine splint ( tau, gtau, t, n, k, q, bcoef, iflag )
     write ( *, '(a)' ) '  The linear system is not invertible!'
     return
   end if
-  !
+  
   !  Solve 
-  !
   !    A * BCOEF = GTAU
-  !
   !  by back substitution.
-  !
+  
   bcoef(1:n) = gtau(1:n)
    
   call banslv ( q, k+k-1, n, k-1, k-1, bcoef )
@@ -1157,17 +1178,11 @@ end subroutine splint
 !    TAU should be strictly increasing.
 !
 !    Input, integer ( kind = 8 ) TAU_der(M), the node index to evaluate the derivative.
-!
 !    Input, real ( kind = 8 ) GTAU(N), the data ordinates.
-!
 !    Input, real ( kind = 8 ) GTAU_der(M), the data ordinates.
-!
 !    Input, real ( kind = 8 ) T(N+K+M), the knot sequence.
-!
 !    Input, integer ( kind = 4 ) N, the number of data points for the interpolation.
-!
 !    Input, integer ( kind = 4 ) M, the number of data points for the derivative.
-!
 !    Input, integer ( kind = 4 ) K, the order of the spline.
 !
 !    Output, real ( kind = 8 ) Q((2*K-1)*(N+M)), the triangular factorization
@@ -1188,39 +1203,38 @@ end subroutine splint
 
 subroutine splint_der( tau,gtau,tau_der,gtau_der,t,n,m,k, q, bcoef_spline, iflag )
     
-  sll_int32 ::  n
-  sll_int32 ::  m
-  sll_real64,dimension(n+m):: bcoef ! (n)
-  sll_real64,dimension(n+m):: bcoef_spline 
-  sll_real64,dimension(n)::  gtau ! (n)
-  sll_real64,dimension(m)::  gtau_der ! (n)
-  sll_int32 :: i
-  sll_int32 :: iflag,mflag
-  sll_int32 :: j,l
-  sll_int32 :: jj
-  sll_int32 :: k
-  sll_int32 :: kpkm2
-  sll_int32 :: left
-  sll_real64, dimension((2*k-1)*(n+m)) :: q!((2*k-1)*n)
-  sll_real64,dimension(n+k+m) ::  t!(n+k)
-  sll_real64,dimension(n) ::  tau!!(n)
-  sll_int32,dimension(m) ::  tau_der!!(n)
-  sll_real64:: taui,taui_der
-  sll_real64, dimension(k,k):: a
-  sll_real64,dimension(k,2) :: bcoef_der
+  sll_int32                            :: n
+  sll_int32                            :: m
+  sll_real64, dimension(n+m)           :: bcoef
+  sll_real64, dimension(n+m)           :: bcoef_spline 
+  sll_real64, dimension(n)             :: gtau
+  sll_real64, dimension(m)             :: gtau_der 
+  sll_int32                            :: i
+  sll_int32                            :: iflag,mflag
+  sll_int32                            :: j
+  sll_int32                            :: l
+  sll_int32                            :: jj
+  sll_int32                            :: k
+  sll_int32                            :: kpkm2
+  sll_int32                            :: left
+  sll_real64, dimension((2*k-1)*(n+m)) :: q
+  sll_real64, dimension(n+k+m)         :: t
+  sll_real64, dimension(n)             :: tau
+  sll_int32,  dimension(m)             :: tau_der
+  sll_real64                           :: taui
+  sll_real64                           :: taui_der
+  sll_real64, dimension(k,k)           :: a
+  sll_real64, dimension(k,2)           :: bcoef_der
   
-  kpkm2 = 2 * ( k - 1 )
-  left = k
+  kpkm2              = 2*(k-1)
+  left               = k
   q(1:(2*k-1)*(n+m)) = 0.0_f64
-  a(1:k,1:k) = 0.0_f64
+  a(1:k,1:k)         = 0.0_f64
   bcoef_der(1:k,1:2) = 0.0_f64
 
   ! we must suppose that m is <= than n 
-  if (m > n) then
-    print*, 'problem m must be < = at n'
-    print*, 'value m =', m, 'value n =', n
-    stop
-  end if
+  SLL_ASSERT(m <= n)
+
   l = 1 ! index for the derivative
   !
   !  Loop over I to construct the N interpolation equations.
@@ -1330,18 +1344,12 @@ subroutine splint_der( tau,gtau,tau_der,gtau_der,t,n,m,k, q, bcoef_spline, iflag
   call banfac ( q, k+k-1, n+m, k-1, k-1, iflag )
     
   if ( iflag == 2 ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'SPLINT - Fatal Error!'
-    write ( *, '(a)' ) '  The linear system is not invertible!'
-    return
+    SLL_ERROR("SPLINT - The linear system is not invertible!")
   end if
-  !
+  
   !  Solve 
-  !
   !    A * BCOEF = GTAU
-  !
   !  by back substitution.
-  !
 
   call banslv ( q, k+k-1, n+m, k-1, k-1, bcoef_spline )
     
