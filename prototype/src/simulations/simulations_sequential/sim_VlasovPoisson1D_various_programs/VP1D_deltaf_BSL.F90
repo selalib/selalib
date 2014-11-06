@@ -78,7 +78,7 @@ program VP1d_deltaf
   namelist / interpolator / interpol_x, order_x, interpol_v, order_v
   namelist / time_iterations / dt, nbiter, freqdiag
   namelist / landau / kmode, eps, is_delta_f, driven 
-  namelist / tsi / kmode, eps, v0 
+  namelist / tsi / kmode, eps, v0, is_delta_f 
   namelist / drive / t0, twL, twR, tstart, tflat, tL, tR, turn_drive_off, Edrmax, omegadr
 
 
@@ -86,7 +86,7 @@ program VP1d_deltaf
   call GET_COMMAND_ARGUMENT(1,case)
   ! open and read input file
   if (case == "landau") then
-     open(unit = input_file, file = 'landau_input.txt')
+     open(unit = input_file, file = 'landau_input.nml')
      read(input_file, geom) 
      read(input_file, time_iterations)
      read(input_file, landau)
@@ -96,7 +96,7 @@ program VP1d_deltaf
      end if
      close(input_file)
   else if (case == "tsi") then
-     open(unit = input_file, file = 'tsi_input.txt')
+     open(unit = input_file, file = 'tsi_input.nml')
      read(input_file, geom) 
      read(input_file, time_iterations)
      read(input_file,tsi)

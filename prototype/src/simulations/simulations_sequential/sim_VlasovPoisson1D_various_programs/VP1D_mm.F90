@@ -92,7 +92,7 @@ program VP1d_deltaf
   call GET_COMMAND_ARGUMENT(1,case)
   ! open and read input file
   if (case == "landau") then
-     open(unit = input_file, file = 'landau_input.txt')
+     open(unit = input_file, file = 'landau_input.nml')
      read(input_file, geom) 
      read(input_file, interpolator) 
      read(input_file, time_iterations)
@@ -103,14 +103,14 @@ program VP1d_deltaf
      end if
      close(input_file)
   else if (case == "tsi") then
-     open(unit = input_file, file = 'tsi_input.txt')
+     open(unit = input_file, file = 'tsi_input.nml')
      read(input_file, geom) 
      read(input_file, interpolator)
      read(input_file, time_iterations)
      read(input_file,tsi)
      close(input_file)
   elseif (case == "keen") then
-     open(unit = input_file, file = 'ex-keen.txt')
+     open(unit = input_file, file = 'ex-keen.nml')
      read(input_file, geom) 
      read(input_file, interpolator) 
      read(input_file, time_iterations)
