@@ -1956,9 +1956,9 @@ if (present(coeffs_1d) ) then
        data_array_tmp = data_array(1:sz1,1:sz2)
        call spli2d_custom( sz1, order1, point_location_eta1, &
             sz2, order2, point_location_eta2, &
-            data_array_tmp, interpolator%coeff_splines(1:sz1,1:sz2))!,&
-            !interpolator%t1,&!(1:sz1+order1), &
-            !interpolator%t2)!(1:sz2+order2) )
+            data_array_tmp, interpolator%coeff_splines,&!(1:sz1,1:sz2),&
+            interpolator%t1,&!(1:sz1+order1), &
+            interpolator%t2)!(1:sz2+order2) )
 
        ! boundary condition non homogene
        interpolator%coeff_splines(1,1:sz2)   = data_array(1,1:sz2)
