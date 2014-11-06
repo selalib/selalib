@@ -31,6 +31,8 @@ program VP_1d
   sll_int32  :: Ncx, Ncv   ! number of cells
   sll_int32, parameter  :: input_file = 33, th_diag = 34, ex_diag = 35
   sll_real64 :: kmode
+  sll_int32  :: is_delta_f
+  logical    :: driven
   sll_real64 :: xmin, xmax, vmin, vmax
   sll_real64 :: delta_x, delta_v
   sll_real64 :: alpha
@@ -49,21 +51,21 @@ program VP_1d
 
   ! namelists for data input
   namelist / geom / xmin, Ncx, nbox, vmin, vmax, Ncv
-  namelist / time_iterations / dt, nbiter
-  namelist / landau / kmode, eps 
-  namelist / tsi / kmode, eps, v0 
+  namelist / time_iterations / dt, nbiter, freqdiag
+  namelist / landau / kmode, eps, is_delta_f, driven
+  namelist / tsi / kmode, eps, v0, is_delta_f 
 
   ! determine what case is being run
   call GET_COMMAND_ARGUMENT(1,case)
   ! open and read input file
   if (case == "landau") then
-     open(unit = input_file, file = 'landau_input.txt')
+     open(unit = input_file, file = 'landau_input.nml')
      read(input_file, geom) 
      read(input_file, time_iterations)
      read(input_file,landau)
      close(input_file)
   else if (case == "tsi") then
-     open(unit = input_file, file = 'tsi_input.txt')
+     open(unit = input_file, file = 'tsi_input.nml')
      read(input_file, geom) 
      read(input_file, time_iterations)
      read(input_file,tsi)
