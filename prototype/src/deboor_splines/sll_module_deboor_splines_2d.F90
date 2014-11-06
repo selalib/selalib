@@ -374,7 +374,7 @@ subroutine spli2d_custom ( nx,     &
   sll_real64, dimension(1:ny),target:: apr_ty_bis
   sll_real64, dimension(:),pointer:: apr_ty_bis_ptr
 
-  sll_int32  :: li_i, li_j, li_iflag
+  sll_int32  :: i, j, iflag
     
   lpr_work1(:,:) = 0.0
     
@@ -385,25 +385,25 @@ subroutine spli2d_custom ( nx,     &
   apr_tx ( nx + 1 : nx + kx ) = taux ( nx )
     
   if ( mod(kx,2) == 0 ) then
-    do li_i = kx + 1, nx
-      apr_tx ( li_i ) = taux ( li_i - kx/2 ) 
+    do i = kx + 1, nx
+      apr_tx ( i ) = taux ( i - kx/2 ) 
     end do
   else
-    do li_i = kx + 1, nx
-      apr_tx ( li_i ) = 0.5*( taux ( li_i - (kx-1)/2 ) + &
-                              taux ( li_i -1 - (kx-1)/2 ) )
+    do i = kx + 1, nx
+      apr_tx ( i ) = 0.5*( taux ( i - (kx-1)/2 ) + &
+                              taux ( i -1 - (kx-1)/2 ) )
     end do
   end if
   !  *** construct b-coefficients of interpolant
   apr_ty = 0.0_f64
   if ( mod(ky,2) == 0 ) then
-    do li_i = ky + 1, ny
-      apr_ty ( li_i ) = tauy ( li_i - ky/2 ) 
+    do i = ky + 1, ny
+      apr_ty ( i ) = tauy ( i - ky/2 ) 
     end do
   else
-    do li_i = ky + 1, ny
-      apr_ty ( li_i ) = 0.5*( tauy ( li_i - (ky-1)/2 ) + &
-                              tauy ( li_i -1 - (ky-1)/2 ) )
+    do i = ky + 1, ny
+      apr_ty ( i ) = 0.5*( tauy ( i - (ky-1)/2 ) + &
+                              tauy ( i -1 - (ky-1)/2 ) )
     end do
   end if
   apr_ty ( 1 : ky ) = tauy ( 1 )
@@ -411,9 +411,7 @@ subroutine spli2d_custom ( nx,     &
   apr_ty_bis = tauy(1:ny)
   lpr_work5_ptr => lpr_work5
 
-  print*, size(bcoef,1), size(bcoef,2), nx, ny
-  print*, size(apr_g,1), size(apr_g,2), nx, ny
-  bcoef = apr_g
+  bcoef(1:nx,1:ny) = apr_g
 
   call spli2d ( taux,      &
                 bcoef,     &
@@ -422,12 +420,12 @@ subroutine spli2d_custom ( nx,     &
                 kx,         &
                 ny,         &
                 apr_g,    &
-                li_iflag )
+                iflag )
     
   bcoef(:,:) = 0.0_8
-  lpr_work4      = 0.0_8
-  lpr_work3      = 0.0_8
-  lpr_work32     = 0.0_8
+  lpr_work4  = 0.0_8
+  lpr_work3  = 0.0_8
+  lpr_work32 = 0.0_8
      
   apr_ty_bis_ptr => apr_ty_bis
   call spli2d ( apr_ty_bis_ptr, &
@@ -437,7 +435,7 @@ subroutine spli2d_custom ( nx,     &
                 ky,          &
                 nx,          &
                 bcoef,      &
-                li_iflag )
+                iflag )
      
 end subroutine spli2d_custom
 
