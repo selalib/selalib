@@ -136,9 +136,7 @@ subroutine delete_arbitrary_degree_1d_interpolator( interpolator )
 end subroutine delete_arbitrary_degree_1d_interpolator
 
 !> @brief Initialization of a pointer interpolator arbitrary degree splines 1d.
-!> @details To have the interpolator arbitrary degree splines 1d such as a pointer
-!>
-!> The parameters are
+!> @details To have the interpolator arbitrary degree splines 1d such as a pointer.
 !> @param[in] num_pts the number of points
 !> @param[in] eta_min the minimun
 !> @param[in] eta_max the maximun
@@ -177,9 +175,7 @@ function new_arbitrary_degree_1d_interpolator(     &
 end function new_arbitrary_degree_1d_interpolator
 
 !> @brief Initialization of interpolator arbitrary degree splines 1d.
-!> @details To have the interpolator arbitrary degree splines 1d
-!>
-!> The parameters are
+!> @details To have the interpolator arbitrary degree splines 1d.
 !> @param[in] num_pts the number of points
 !> @param[in] eta_min the minimun
 !> @param[in] eta_max the maximun
@@ -232,19 +228,17 @@ subroutine initialize_ad1d_interpolator( interpolator, &
   interpolator%value_left  = 0.0_f64
   interpolator%value_right = 0.0_f64
 
-  select case (bc_selector)
-  case (0) ! 1. periodic
+  if (bc_selector == 0) then
     SLL_ALLOCATE( interpolator%knots(2*spline_degree+2),ierr )
-  case default
+  else
     SLL_ALLOCATE( interpolator%knots(num_pts+2*spline_degree),ierr )
-  end select
+  end if
 
 end subroutine initialize_ad1d_interpolator
 
 !> @brief initializing the coefficients of splines.
 !> @details  initializing the coefficients of splines
-!>  fot the arbitrary degree splines interpolator 1d
-!> The parameters are
+!> for the arbitrary degree splines interpolator 1d.
 !> @param interpolator the type sll_arbitrary_degree_spline_interpolator_1d
 !> @param[in] coeffs the 1d arrays corresponding of the splines coefficients
 !> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_1d
@@ -888,8 +882,7 @@ function interpolate_derivative_ad1d( interpolator, eta1 ) result(val)
 
   res = eta1
 
-  select case (interpolator%bc_selector)
-  case (0) ! periodic
+  if(interpolator%bc_selector == 0) then
 
     if( res < interpolator%eta_min ) then
       res = res+interpolator%eta_max-interpolator%eta_min
@@ -897,12 +890,12 @@ function interpolate_derivative_ad1d( interpolator, eta1 ) result(val)
       res = res+interpolator%eta_min-interpolator%eta_max
     end if
 
-  case default
+  else
 
     SLL_ASSERT( res >= interpolator%eta_min )
     SLL_ASSERT( res <= interpolator%eta_max )
 
-  end select
+  end if
 
   val = bvalue( interpolator%t(1:interpolator%size_t),     &
                 interpolator%coeff_splines(1:size_coeffs), &
@@ -968,8 +961,8 @@ subroutine interpolate_values_ad1d( interpolator,        &
   SLL_ASSERT(num_pts==size(vals_to_interpolate))
 
   do idx=1,num_pts
-    output_array(idx)=interpolate_value_ad1d( &
-                                interpolator, &
+    output_array(idx)=interpolate_value_ad1d(            &
+                                interpolator,            &
                                 vals_to_interpolate(idx))
   enddo
 
