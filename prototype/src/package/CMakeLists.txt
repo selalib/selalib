@@ -21,12 +21,14 @@ SET(SLL_MACROS
     ${SLL_DIR}/fields/sll_field_1d.h
     ${SLL_DIR}/fields/sll_field_2d.h
     ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.h
-    ${SLL_DIR}/logical_meshes/sll_logical_meshes.h
+    ${SLL_DIR}/meshes/sll_meshes.h
+    ${SLL_DIR}/meshes/sll_cartesian_meshes.h
     ${SLL_DIR}/fields/sll_fields.h
-    ${SLL_DIR}/mapped_meshes/sll_mapped_meshes.h
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations.h
     ${SLL_DIR}/pic_accumulators/sll_accumulators.h
     ${SLL_DIR}/pic_particle_types/particle_representation.h
+    ${SLL_DIR}/multigrid/compdir.inc
+    ${SLL_DIR}/multigrid/mgd2_routines.h
 )
 
 FILE(COPY ${SLL_MACROS} DESTINATION ${CMAKE_BINARY_DIR}/include)
@@ -93,6 +95,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/interpolators/sll_cubic_spline_interpolator_2d.F90
     ${SLL_DIR}/interpolators/sll_arbitrary_degree_spline_interpolator_1d.F90
     ${SLL_DIR}/interpolators/sll_arbitrary_degree_spline_interpolator_2d.F90
+    ${SLL_DIR}/interpolators/sll_periodic_interpolator_1d.F90
+    ${SLL_DIR}/interpolators/sll_lagrange_interpolator_1d.F90
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_solvers_base.F90
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_fdtd.F90
     ${SLL_DIR}/periodic_interpolation/periodic_interp.F90
@@ -126,18 +130,17 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/sparse_matrix_manager/spm_tools.F90
     ${SLL_DIR}/time_solvers/sll_time_splitting_coeff.F90
     ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.F90
-    ${SLL_DIR}/logical_meshes/sll_logical_meshes.F90
+    ${SLL_DIR}/meshes/sll_meshes_base.F90
+    ${SLL_DIR}/meshes/sll_cartesian_meshes.F90
     ${SLL_DIR}/fields/scalar_field_initializer_base.F90
 #    ${SLL_DIR}/fields/sll_scalar_field_2d_base.F90
     ${SLL_DIR}/fields/sll_scalar_field_2d.F90
     ${SLL_DIR}/fields/distribution_function_initializer_4d.F90
-    ${SLL_DIR}/mapped_meshes/sll_mapped_meshes_2d_base.F90
-    ${SLL_DIR}/mapped_meshes/sll_mapped_meshes_2d.F90
     ${SLL_DIR}/coordinate_transformations/sll_common_coordinate_transformations.F90
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d_nurbs.F90	
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformation_2d_base.F90	
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d.F90
-    ${SLL_DIR}/logical_meshes_multipatch/sll_logical_meshes_multipatch.F90
+    ${SLL_DIR}/meshes_multipatch/sll_meshes_multipatch.F90
     ${SLL_DIR}/coordinate_transformations_multipatch/sll_coordinate_transformation_multipatch.F90
     ${SLL_DIR}/fields_multipatch/sll_scalar_field_2d_multipatch.F90
     ${SLL_DIR}/sparse_matrix_manager/sll_sparse_matrix_mp_module.F90
@@ -164,8 +167,7 @@ IF(${FFT_LIB} MATCHES "FFTPACK")
 ELSEIF(${FFT_LIB} MATCHES "FFTW")
 
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
-      ${SLL_DIR}/fft/fftw3/sll_fft.F90
-      ${SLL_DIR}/fft/fftw3/fftw3.F90 )
+      ${SLL_DIR}/fft/fftw3/sll_fft.F90)
 
 ELSE()
 
@@ -177,8 +179,9 @@ ENDIF()
 # Got the impression that this maxwell solver is made to work with FFTW only,
 # thus I'm including the following. Intent needs to be made more explicit if 
 # this is not the case. ECG
-IF((${FFT_LIB} MATCHES "FFTW") AND FFTW_ENABLED)
+IF(FFTW_ENABLED)
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
+    ${SLL_DIR}/fft/fftw3/fftw3.F90
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_pstd.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_fftw.F90
     ${SLL_DIR}/multigrid/sll_multigrid_2d.F90
@@ -281,7 +284,7 @@ IF(SLL_BUILD_PACKAGE)
    COMMAND ${CMAKE_COMMAND} -E md5sum ${DIST_NAME}.tar.gz
    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/${DIST_NAME}
            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-           COMMENT "Generating Release for macports" VERBATIM)
+           COMMENT "Generating Release" VERBATIM)
    
    ADD_CUSTOM_TARGET(make_source_dir 
    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/${DIST_NAME}/src)

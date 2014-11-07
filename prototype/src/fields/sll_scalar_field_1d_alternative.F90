@@ -32,7 +32,7 @@ module sll_module_scalar_field_1d_alternative
 #include "sll_file_io.h"
   use sll_module_scalar_field_1d_base
   use sll_constants
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_module_interpolators_1d_base
   use sll_module_arbitrary_degree_spline_interpolator_1d
   use sll_utilities
@@ -49,14 +49,14 @@ module sll_module_scalar_field_1d_alternative
      !     sll_int32                          :: plot_counter
      sll_int32 :: bc_left
      sll_int32 :: bc_right
-     type( sll_logical_mesh_1d),pointer   :: mesh   
+     type( sll_cartesian_mesh_1d),pointer   :: mesh   
      ! allows to decide if the user put the derivative of the analiytic function: func
      logical :: present_derivative
    contains
      procedure, pass(field) :: initialize => &
           initialize_scalar_field_1d_analytic_alt
-     procedure, pass(field) :: get_logical_mesh => &
-          get_logical_mesh_1d_analytic_alt
+     procedure, pass(field) :: get_cartesian_mesh => &
+          get_cartesian_mesh_1d_analytic_alt
      procedure, pass(field) :: value_at_point => value_at_pt_analytic_1d
      procedure, pass(field) :: value_at_indices => value_at_index_analytic_1d
      procedure, pass(field) :: derivative_value_at_point => &
@@ -82,12 +82,12 @@ module sll_module_scalar_field_1d_alternative
      !sll_real64, dimension(:,:), pointer :: point2d
      sll_int32 :: bc_left
      sll_int32 :: bc_right
-     type( sll_logical_mesh_1d),pointer :: mesh   
+     type( sll_cartesian_mesh_1d),pointer :: mesh   
    contains
      procedure, pass(field) :: initialize => &
           initialize_scalar_field_1d_discrete_alt
-     procedure, pass(field) :: get_logical_mesh => &
-          get_logical_mesh_1d_discrete_alt
+     procedure, pass(field) :: get_cartesian_mesh => &
+          get_cartesian_mesh_1d_discrete_alt
      procedure, pass(field) :: value_at_point => value_at_pt_discrete_1d
      procedure, pass(field) :: value_at_indices => value_at_index_discrete_1d
      procedure, pass(field) :: derivative_value_at_point => &
@@ -194,7 +194,7 @@ contains   ! *****************************************************************
     sll_int32, intent(in) :: bc_left
     sll_int32, intent(in) :: bc_right
     sll_int32  :: ierr
-    type(sll_logical_mesh_1d),pointer   :: mesh
+    type(sll_cartesian_mesh_1d),pointer   :: mesh
  
     SLL_ALLOCATE(obj,ierr)
     call obj%initialize( &
@@ -250,7 +250,7 @@ contains   ! *****************************************************************
     procedure(one_var_parametrizable_function), optional :: first_derivative
     character(len=*), intent(in)                    :: field_name
     sll_real64, dimension(:), intent(in), optional, target :: func_params
-    type(sll_logical_mesh_1d),pointer   :: mesh
+    type(sll_cartesian_mesh_1d),pointer   :: mesh
 
     sll_int32, intent(in) :: bc_left
     sll_int32, intent(in) :: bc_right
@@ -283,11 +283,11 @@ contains   ! *****************************************************************
 !!$  end subroutine compute_eta1_derivative_on_col
 
 
-  function get_logical_mesh_1d_analytic_alt( field ) result(res)
+  function get_cartesian_mesh_1d_analytic_alt( field ) result(res)
     class(sll_scalar_field_1d_analytic_alt), intent(in) :: field
-    type(sll_logical_mesh_1d), pointer :: res
+    type(sll_cartesian_mesh_1d), pointer :: res
     res => field%mesh
-  end function get_logical_mesh_1d_analytic_alt
+  end function get_cartesian_mesh_1d_analytic_alt
 
 
   subroutine write_to_file_analytic_1d( field, tag )
@@ -302,7 +302,7 @@ contains   ! *****************************************************************
     ! print*, 'passed'
     ! use the logical mesh information to find out the extent of the
     ! domain and allocate the arrays for the plotter.
-    !mesh   => field%get_logical_mesh()
+    !mesh   => field%get_cartesian_mesh()
     !print*, 'passed'
     nptsx = field%mesh%num_cells + 1
 
@@ -351,7 +351,7 @@ contains   ! *****************************************************************
 !    sll_real64, dimension(:), intent(in), target  :: array_1d
     character(len=*), intent(in)                    :: field_name
     class(sll_interpolator_1d_base), target        :: interpolator_1d ! a implementer
-     type(sll_logical_mesh_1d),pointer   :: mesh
+     type(sll_cartesian_mesh_1d),pointer   :: mesh
     sll_real64, dimension(:), optional :: point_1d
     sll_int32, optional :: sz_point
     ! sll_real64, dimension(:,:), optional :: point2d
@@ -388,7 +388,7 @@ contains   ! *****************************************************************
    ! sll_real64, dimension(:), intent(in), target  :: array_1d
     character(len=*), intent(in)                    :: field_name
     class(sll_interpolator_1d_base), target        :: interpolator_1d
-    type(sll_logical_mesh_1d),pointer   :: mesh
+    type(sll_cartesian_mesh_1d),pointer   :: mesh
     sll_real64, dimension(:), optional :: point_1d
     sll_int32,optional :: sz_point
     sll_int32, intent(in) :: bc_left
@@ -458,11 +458,11 @@ contains   ! *****************************************************************
   end subroutine update_interp_coeffs_1d_discrete
 
 
-  function get_logical_mesh_1d_discrete_alt( field ) result(res)
+  function get_cartesian_mesh_1d_discrete_alt( field ) result(res)
     class(sll_scalar_field_1d_discrete_alt), intent(in) :: field
-    type(sll_logical_mesh_1d), pointer :: res
+    type(sll_cartesian_mesh_1d), pointer :: res
     res => field%mesh
-  end function get_logical_mesh_1d_discrete_alt
+  end function get_cartesian_mesh_1d_discrete_alt
 
   function value_at_pt_discrete_1d( field, eta)
     class(sll_scalar_field_1d_discrete_alt), intent(inout) :: field
@@ -507,13 +507,13 @@ contains   ! *****************************************************************
     sll_real64, dimension(:), allocatable :: xcoords
     sll_real64, dimension(:), allocatable :: values
     sll_real64                              :: eta
-    type(sll_logical_mesh_1d), pointer      :: mesh
+    type(sll_cartesian_mesh_1d), pointer      :: mesh
     sll_int32 :: i
     sll_int32 :: ierr
     
     ! use the logical mesh information to find out the extent of the
     ! domain and allocate the arrays for the plotter.
-    mesh   => field%get_logical_mesh()
+    mesh   => field%get_cartesian_mesh()
     nptsx = mesh%num_cells + 1
 
     SLL_ALLOCATE(xcoords(nptsx),ierr)

@@ -14,7 +14,6 @@ module sll_scalar_field_2d
   private
 
   type, public :: scalar_field_2d
-     !class(sll_mapped_mesh_2d_base), pointer  :: mesh
      class(sll_coordinate_transformation_2d_base), pointer :: transf
      class(sll_interpolator_1d_base), pointer :: eta1_interpolator
      class(sll_interpolator_1d_base), pointer :: eta2_interpolator
@@ -64,7 +63,7 @@ contains   ! *****************************************************************
     class(scalar_field_2d_initializer_base), pointer, optional :: initializer
     character(len=*), intent(in)                        :: field_name
     sll_int32, intent(in)                               :: data_position
-    type(sll_logical_mesh_2d), pointer                  :: mesh
+    class(sll_cartesian_mesh_2d), pointer                  :: mesh
 
     sll_int32  :: ierr
     sll_int32  :: num_cells1
@@ -79,7 +78,7 @@ contains   ! *****************************************************************
     this%transf => transf
     this%transf%written = .false.
     
-    mesh => transf%mesh
+    mesh => transf%get_cartesian_mesh()
     SLL_ASSERT(associated(mesh))
 
     this%name  = trim(field_name)
@@ -164,7 +163,7 @@ contains   ! *****************************************************************
     sll_int32, optional    :: output_format 
     character(len=*), optional    :: output_file_name 
     sll_int32              :: local_format 
-    type(sll_logical_mesh_2d), pointer :: mesh
+    class(sll_cartesian_mesh_2d), pointer :: mesh
 
     sll_int32  :: i1
     sll_int32  :: i2
@@ -188,7 +187,7 @@ contains   ! *****************************************************************
     end if
 
     transf => scalar_field%transf
-    mesh => transf%mesh
+    mesh => transf%get_cartesian_mesh()
 
     SLL_ASSERT(associated(mesh))  
     if (.not. transf%written) then

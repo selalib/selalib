@@ -4,7 +4,7 @@ program test_dg_fields
 #include "sll_assert.h"
 #include "sll_constants.h"
 #include "sll_file_io.h"
-#include "sll_logical_meshes.h"
+#include "sll_cartesian_meshes.h"
 #include "sll_coordinate_transformations.h"
 
 use sll_dg_fields
@@ -23,7 +23,7 @@ sll_real64 :: eta1_max, eta1_min
 sll_real64 :: eta2_max, eta2_min
 sll_real64 :: delta_eta1, delta_eta2
 
-type(sll_logical_mesh_2d), pointer :: mesh
+type(sll_cartesian_mesh_2d), pointer :: mesh
 class(sll_coordinate_transformation_2d_base), pointer :: tau
 class(sll_coordinate_transformation_2d_base), pointer :: collela
 
@@ -32,7 +32,7 @@ type(sll_dg_field_2d), pointer :: bz
 
 sll_real64, external :: gaussian, add
 
-mesh => new_logical_mesh_2d(nc_eta1, nc_eta2, &
+mesh => new_cartesian_mesh_2d(nc_eta1, nc_eta2, &
                             eta1_min=-1._f64, eta1_max=1._f64, &
                             eta2_min=-1._f64, eta2_max=1._f64)
 

@@ -4,7 +4,7 @@ ADD_LIBRARY(sll_scalar_field_2d_alternative STATIC
 
 TARGET_LINK_LIBRARIES(sll_scalar_field_2d_alternative
                       sll_coordinate_transformations
-                      sll_logical_meshes
+                      sll_meshes
                       sll_interpolators
                       sll_file_io
                       sll_utilities)
@@ -31,7 +31,7 @@ ADD_LIBRARY(sll_scalar_field_1d_alternative STATIC
                sll_scalar_field_1d_alternative.F90)		
 
 TARGET_LINK_LIBRARIES(sll_scalar_field_1d_alternative
-                      sll_logical_meshes
+                      sll_meshes
                       sll_interpolators
                       sll_file_io
                       sll_utilities)
@@ -49,8 +49,7 @@ ENDIF (MPI_MODULE_ENABLED)
 
 ADD_LIBRARY(sll_scalar_field STATIC ${SLL_SCALAR_FIELD_SRCS} )
 
-TARGET_LINK_LIBRARIES( sll_scalar_field sll_mapped_meshes
-                                        sll_coordinate_transformations
+TARGET_LINK_LIBRARIES( sll_scalar_field sll_coordinate_transformations
                                         sll_utilities)
 
 ADD_EXECUTABLE(test_scalar_field unit_test.F90)

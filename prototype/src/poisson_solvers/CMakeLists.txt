@@ -92,3 +92,11 @@ ENDMACRO(ADD_MUDPACK_PROGRAM)
 
 ADD_MUDPACK_PROGRAM(cartesian)
 ADD_MUDPACK_PROGRAM(polar)
+
+ADD_LIBRARY ( hex_poisson STATIC hex_poisson.F90)
+
+TARGET_LINK_LIBRARIES( hex_poisson sll_hex_meshes  )
+
+ADD_EXECUTABLE( test_hex_poisson pivotbande.F90 test_hex_poisson.F90 ) 
+
+TARGET_LINK_LIBRARIES( test_hex_poisson hex_poisson sll_constants )

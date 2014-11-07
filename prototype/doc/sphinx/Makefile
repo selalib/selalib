@@ -36,16 +36,9 @@ help:
 clean:
 	-rm -rf $(BUILDDIR)/*
 
-doc:
-	(cd ../../build; make doc)
-
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	rm -f *~ *.*~
-
-rsync: doc html
-	rsync -vurz --exclude 'releases' --delete -e ssh $(BUILDDIR)/html/* scm.gforge.inria.fr:/home/groups/selalib/htdocs/
-
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 

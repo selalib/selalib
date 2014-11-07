@@ -1,6 +1,6 @@
 module sll_parallel_array_initializer_module
   use sll_remapper
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_coordinate_transformation_2d_base_module
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -74,7 +74,7 @@ contains
        func_params)
 
     type(layout_2D), pointer                    :: layout
-    type(sll_logical_mesh_2d), pointer          :: mesh2d
+    type(sll_cartesian_mesh_2d), pointer          :: mesh2d
     sll_real64, dimension(:,:), intent(out) :: array
     procedure(sll_scalar_initializer_2d)        :: func
     sll_real64, dimension(:), optional          :: func_params
@@ -307,10 +307,10 @@ contains
     func, &
     func_params) 
     type(layout_4D), pointer                    :: layout
-    type(sll_logical_mesh_1d), pointer          :: mesh1d_eta1
-    type(sll_logical_mesh_1d), pointer          :: mesh1d_eta2
-    type(sll_logical_mesh_1d), pointer          :: mesh1d_eta3
-    type(sll_logical_mesh_1d), pointer          :: mesh1d_eta4
+    type(sll_cartesian_mesh_1d), pointer          :: mesh1d_eta1
+    type(sll_cartesian_mesh_1d), pointer          :: mesh1d_eta2
+    type(sll_cartesian_mesh_1d), pointer          :: mesh1d_eta3
+    type(sll_cartesian_mesh_1d), pointer          :: mesh1d_eta4
     sll_real64, dimension(:,:,:,:), intent(out) :: array
     procedure(sll_scalar_initializer_4d)        :: func
     sll_real64, dimension(:), optional          :: func_params
@@ -359,7 +359,7 @@ contains
        func_params)
 
     type(layout_4D), pointer                    :: layout
-    type(sll_logical_mesh_4d), pointer          :: mesh4d
+    type(sll_cartesian_mesh_4d), pointer          :: mesh4d
     sll_real64, dimension(:,:,:,:), intent(out) :: array
     procedure(sll_scalar_initializer_4d)        :: func
     sll_real64, dimension(:), optional          :: func_params
@@ -418,8 +418,8 @@ contains
        transf_x3_x4 )
 
     type(layout_4D), pointer                    :: layout
-    type(sll_logical_mesh_2d), pointer          :: mesh2d_eta1_eta2
-    type(sll_logical_mesh_2d), pointer          :: mesh2d_eta3_eta4
+    type(sll_cartesian_mesh_2d), pointer          :: mesh2d_eta1_eta2
+    type(sll_cartesian_mesh_2d), pointer          :: mesh2d_eta3_eta4
     sll_real64, dimension(:,:,:,:), intent(out) :: array
     procedure(sll_scalar_initializer_4d)        :: func
     sll_real64, dimension(:), optional          :: func_params
@@ -499,34 +499,29 @@ contains
             'the size contained in the passed layout.'
     end if
 
-    if(present( transf_x1_x2 ) ) then
-       ! needed to change the following call from 
-       ! transf_x1_x2%get_logical_mesh() because the 4.6 version of gfortran
-       ! breaks at this point. Hence the double interface (access function and
-       ! direct access of the mesh). But this should be fixed once the decision
-       ! to not support that compiler version is made.
-       if(.not. associated(transf_x1_x2%mesh,mesh2d_eta1_eta2) )&
-          then 
+    ! if(present( transf_x1_x2 ) ) then
+    !    if(.not. associated(transf_x1_x2%get_cartesian_mesh(),mesh2d_eta1_eta2) )&
+    !       then 
 
-          print *, 'sll_4d_parallel_array_initializer warning: ', &
-               'the mesh associated to the transf_x1_x2 transformation ', &
-               'is not the same as the mesh2d_eta1_eta2 logical mesh. ', &
-               'Unless the parameters of these meshes are the same, ', &
-               'bad things will happen.'
-       end if
-    end if
+    !       print *, 'sll_4d_parallel_array_initializer warning: ', &
+    !            'the mesh associated to the transf_x1_x2 transformation ', &
+    !            'is not the same as the mesh2d_eta1_eta2 logical mesh. ', &
+    !            'Unless the parameters of these meshes are the same, ', &
+    !            'bad things will happen.'
+    !    end if
+    ! end if
 
-    if(present( transf_x3_x4 ) ) then
-       if(.not. associated(transf_x3_x4%mesh,mesh2d_eta3_eta4) )&
-          then 
+    ! if(present( transf_x3_x4 ) ) then
+    !    if(.not. associated(transf_x3_x4%get_cartesian_mesh(),mesh2d_eta3_eta4) )&
+    !       then 
 
-          print *, 'sll_4d_parallel_array_initializer warning: ', &
-               'the mesh associated to the transf_x3_x4 transformation ', &
-               'is not the same as the mesh2d_eta3_eta4 logical mesh. ', &
-               'Unless the parameters of these meshes are the same, ', &
-               'bad things will happen.'
-       end if
-    end if
+    !       print *, 'sll_4d_parallel_array_initializer warning: ', &
+    !            'the mesh associated to the transf_x3_x4 transformation ', &
+    !            'is not the same as the mesh2d_eta3_eta4 logical mesh. ', &
+    !            'Unless the parameters of these meshes are the same, ', &
+    !            'bad things will happen.'
+    !    end if
+    ! end if
 
     case_selector = 0
 
@@ -635,8 +630,8 @@ contains
 !       transf_x3_x4 )
 !
 !    type(layout_4D), pointer                    :: layout
-!    type(sll_logical_mesh_2d), pointer          :: mesh2d_eta1_eta2
-!    type(sll_logical_mesh_2d), pointer          :: mesh2d_eta3_eta4
+!    type(sll_cartesian_mesh_2d), pointer          :: mesh2d_eta1_eta2
+!    type(sll_cartesian_mesh_2d), pointer          :: mesh2d_eta3_eta4
 !    sll_real64, dimension(:,:,:,:), intent(out) :: array
 !    procedure(sll_scalar_initializer_4d)        :: func
 !    sll_real64, dimension(:), optional          :: func_params
@@ -717,7 +712,7 @@ contains
 !    end if
 !
 !    if(present( transf_x1_x2 ) ) then
-!       if( .not. associated(transf_x1_x2%mesh, mesh2d_eta1_eta2) ) then 
+!       if( .not. associated(transf_x1_x2%get_cartesian_mesh(), mesh2d_eta1_eta2) ) then 
 !          print *, 'sll_4d_parallel_array_initializer warning: ', &
 !               'the mesh associated to the transf_x1_x2 transformation ', &
 !               'is not the same as the mesh2d_eta1_eta2 logical mesh. ', &
@@ -727,7 +722,7 @@ contains
 !    end if
 !
 !    if(present( transf_x3_x4 ) ) then
-!       if( .not. associated(transf_x3_x4%mesh, mesh2d_eta3_eta4) ) then 
+!       if( .not. associated(transf_x3_x4%get_cartesian_mesh(), mesh2d_eta3_eta4) ) then 
 !          print *, 'sll_4d_parallel_array_initializer warning: ', &
 !               'the mesh associated to the transf_x3_x4 transformation ', &
 !               'is not the same as the mesh2d_eta3_eta4 logical mesh. ', &
@@ -848,8 +843,8 @@ contains
        subcells4)
     
     type(layout_4D), pointer                    :: layout
-    type(sll_logical_mesh_2d), pointer          :: mesh2d_eta1_eta2
-    type(sll_logical_mesh_2d), pointer          :: mesh2d_eta3_eta4
+    type(sll_cartesian_mesh_2d), pointer          :: mesh2d_eta1_eta2
+    type(sll_cartesian_mesh_2d), pointer          :: mesh2d_eta3_eta4
     sll_real64, dimension(:,:,:,:), intent(out) :: array
     procedure(sll_scalar_initializer_4d)        :: func
     sll_real64, dimension(:), optional          :: func_params
@@ -935,29 +930,29 @@ contains
             'the size contained in the passed layout.'
     end if
 
-    if(present( transf_x1_x2 ) ) then
-       if(.not. associated(transf_x1_x2%mesh, mesh2d_eta1_eta2) )&
-          then 
+    ! if(present( transf_x1_x2 ) ) then
+    !    if(.not. associated(transf_x1_x2%get_cartesian_mesh(), mesh2d_eta1_eta2) )&
+    !       then 
 
-          print *, 'sll_4d_parallel_array_initializer warning: ', &
-               'the mesh associated to the transf_x1_x2 transformation ', &
-               'is not the same as the mesh2d_eta1_eta2 logical mesh. ', &
-               'Unless the parameters of these meshes are the same, ', &
-               'bad things will happen.'
-       end if
-    end if
+    !       print *, 'sll_4d_parallel_array_initializer warning: ', &
+    !            'the mesh associated to the transf_x1_x2 transformation ', &
+    !            'is not the same as the mesh2d_eta1_eta2 logical mesh. ', &
+    !            'Unless the parameters of these meshes are the same, ', &
+    !            'bad things will happen.'
+    !    end if
+    ! end if
 
-    if(present( transf_x3_x4 ) ) then
-       if(.not. associated(transf_x3_x4%mesh,mesh2d_eta3_eta4) )&
-          then 
+    ! if(present( transf_x3_x4 ) ) then
+    !    if(.not. associated(transf_x3_x4%get_cartesian_mesh(),mesh2d_eta3_eta4) )&
+    !       then 
 
-          print *, 'sll_4d_parallel_array_initializer warning: ', &
-               'the mesh associated to the transf_x3_x4 transformation ', &
-               'is not the same as the mesh2d_eta3_eta4 logical mesh. ', &
-               'Unless the parameters of these meshes are the same, ', &
-               'bad things will happen.'
-       end if
-    end if
+    !       print *, 'sll_4d_parallel_array_initializer warning: ', &
+    !            'the mesh associated to the transf_x3_x4 transformation ', &
+    !            'is not the same as the mesh2d_eta3_eta4 logical mesh. ', &
+    !            'Unless the parameters of these meshes are the same, ', &
+    !            'bad things will happen.'
+    !    end if
+    ! end if
 
 
     if(.not.present(subcells1  ) ) then
@@ -1092,7 +1087,7 @@ contains
 !       func_params)
 !
 !    type(layout_4D), pointer                    :: layout
-!    type(sll_logical_mesh_4d), pointer          :: mesh4d
+!    type(sll_cartesian_mesh_4d), pointer          :: mesh4d
 !    sll_real64, dimension(:,:,:,:), intent(out) :: array
 !    procedure(sll_scalar_initializer_4d)        :: func
 !    sll_real64, dimension(:), optional          :: func_params
