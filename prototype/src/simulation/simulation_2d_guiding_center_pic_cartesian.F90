@@ -10,12 +10,11 @@ module sll_pic_simulation_2d_cartesian_module
 
   use sll_constants
   use sll_simulation_base
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_timer
   use sll_particle_group_2d_module
   use sll_particle_initializers_2d
   use sll_particle_sort_module
-!  use sll_accumulators
   use sll_charge_to_density_module
   use sll_pic_utilities
   use sll_module_poisson_2d_fft
@@ -38,7 +37,7 @@ module sll_pic_simulation_2d_cartesian_module
      sll_int32  :: guard_size
      sll_int32  :: array_size
      type(sll_particle_group_2d),  pointer :: part_group
-     type(sll_logical_mesh_2d),    pointer :: m2d
+     type(sll_cartesian_mesh_2d),    pointer :: m2d
      type(sll_particle_sorter_2d), pointer :: sorter
      type(sll_charge_accumulator_2d_ptr), dimension(:), pointer  :: q_accumulator
      type(electric_field_accumulator), pointer :: E_accumulator
@@ -113,7 +112,7 @@ contains
     sim%array_size = PARTICLE_ARRAY_SIZE
     sim%num_iterations = number_iterations
     sim%dt = dt
-    sim%m2d =>  new_logical_mesh_2d( NC_X, NC_Y, &
+    sim%m2d =>  new_cartesian_mesh_2d( NC_X, NC_Y, &
                 XMIN, XMAX, YMIN, YMAX )
 
     sim%part_group => new_particle_2d_group( &
@@ -123,7 +122,7 @@ contains
          QoverM,     &
          sim%m2d )
 
-!    sim%sorter => sll_new_particle_sorter_2d( sim%m2d )
+    sim%sorter => sll_new_particle_sorter_2d( sim%m2d )
 
     sim%poisson => new_poisson_2d_fft_solver( sim%m2d%eta1_min,    &
                                               sim%m2d%eta1_max,    & 
@@ -151,11 +150,12 @@ contains
        sim%part_group%p_list(j) = pa_gr%p_list(j)
     enddo
     !$omp end do
-    !$omp end parallel
-!    call sll_sort_gc_particles_2d( sim%sorter, sim%part_group )
 
+    !$omp single
+    call sll_sort_gc_particles_2d( sim%sorter, sim%part_group )
     sim%n_threads =  1
-    !$omp parallel default(SHARED)
+    !$omp end single
+
 #ifdef _OPENMP
     if (OMP_GET_THREAD_NUM() == 0) then
        sim%n_threads =  OMP_GET_NUM_THREADS()
@@ -197,11 +197,10 @@ contains
     class(sll_pic_simulation_2d_gc_cartesian), intent(inout)  :: sim
     sll_int32  :: ierr, it, jj, counter
     sll_int32  :: i, j
-    sll_real64 :: tmp1, tmp2, tmp3, tmp4, tmp5, tmp6
-    sll_real64 :: tmp7, tmp8, tmp9, tmp10
+    sll_real64 :: tmp3, tmp4, tmp5, tmp6
+    sll_real64 :: tmp7, tmp8
     sll_real64 :: valeur, val2
     sll_real64 :: val1f, val2f
-    sll_real64 :: ttmp(1:4,1:2), ttmp1(1:4,1:2), ttmp2(1:4,1:2)
     sll_real64, dimension(:,:), pointer :: phi
     sll_int32  :: ncx, ncy, ic_x,ic_y
     sll_int32  :: ic_x1,ic_y1
@@ -213,9 +212,11 @@ contains
     sll_real64 :: qoverm
     sll_real64 :: x, x1  ! for global position
     sll_real64 :: y, y1  ! for global position
-    sll_real64 :: dt, ttime
     sll_real64 :: pp_vx,  pp_vy
+    sll_real64 :: dt, tfin
+    type(sll_time_mark) :: tinit
     sll_real64 :: temp
+    sll_real64 :: temp1(1:4,1:2), temp2(1:4,1:2)
     type(sll_particle_2d), dimension(:), pointer :: p
     type(field_accumulator_cell), dimension(:), pointer :: accumE
     type(field_accumulator_CS), dimension(:), pointer :: accumE_CS
@@ -274,11 +275,17 @@ contains
     if (sim%use_cubic_splines) then
        accumE_CS => sim%E_accumulator_CS%e_acc
        call sum_accumulators_CS( sim%q_accumulator_CS, n_threads, ncx*ncy )
-       call sll_convert_charge_to_rho_2d_per_per_CS( sim%q_accumulator_CS(1)%q, sim%rho ) 
+       call sll_convert_charge_to_rho_2d_per_per_CS( sim%q_accumulator_CS(1)%q, sim%rho )
+       !
+       call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
+       call sll_accumulate_field_CS( sim%E1, sim%E2, sim%E_accumulator_CS )
     else
        accumE => sim%E_accumulator%e_acc
        call sum_accumulators( sim%q_accumulator, n_threads, ncx*ncy )
        call sll_convert_charge_to_rho_2d_per_per( sim%q_accumulator(1)%q, sim%rho ) 
+       !
+       call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
+       call sll_accumulate_field( sim%E1, sim%E2, sim%E_accumulator )
     endif
 
     it = 0
@@ -286,8 +293,6 @@ contains
 !!$            sim%m2d%eta2_max, ncy+1, &
 !!$            sim%rho, 'RHO_init', it, ierr )
 
-    call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
-    call sll_accumulate_field( sim%E1, sim%E2, sim%E_accumulator )
 
     ii1 = 170!  4200 ! 3000
     ii2 = 33 !  51000! 53000
@@ -301,20 +306,42 @@ contains
 ! -----------------------------
 ! --------  TIME LOOP  --------
 ! -----------------------------
+    call sll_set_time_mark( tinit )
     do it = 0, sim%num_iterations-1
 
-!!$       if (mod(it+1,10)==0) then 
-!!$          print*, 'iter=', it+1
-!!$          call sll_sort_gc_particles_2d( sim%sorter, sim%part_group )
-!!$       endif
+       if (mod(it+1,10)==0) then 
+          call sll_sort_gc_particles_2d( sim%sorter, sim%part_group )
+       endif
        ! *******************************************************************
        !
        !                   ---- PUSH PARTICLES ----
        !
        ! *******************************************************************  
        if (sim%use_cubic_splines) then 
-          print*, 'a faire'
+          call sll_accumulate_field_CS( sim%E1, sim%E2, sim%E_accumulator_CS )
+          !$omp parallel default(SHARED) PRIVATE(x,y,Ex,Ey,ic_x,ic_y,off_x,off_y,temp1,temp2,temp,tmp5,tmp6,thread_id,q_accum_CS)
+          !$&omp FIRSTPRIVATE(dt,xmin,xmax,ymin,ymax,ncx,rdx,rdy)
+#ifdef _OPENMP
+          thread_id = OMP_GET_THREAD_NUM()
+#endif    
+          call reset_charge_accumulator_to_zero_CS ( sim%q_accumulator_CS(thread_id+1)%q )
+          q_accum_CS => sim%q_accumulator_CS(thread_id+1)%q
+          !$omp do
+          do i = 1, sim%ions_number
+             SLL_INTERPOLATE_FIELD_CS(Ex,Ey,accumE_CS,p(i),temp1)
+             GET_PARTICLE_POSITION(p(i),sim%m2d,x,y)
+             x = modulo(x + dt*Ey, xmax - xmin)
+             y = modulo(y - dt*Ex, ymax - ymin)
+             SET_PARTICLE_POSITION(p(i),xmin,ymin,ncx,x,y,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp5,tmp6)
+             SLL_ACCUMULATE_PARTICLE_CHARGE_CS(q_accum_CS,p(i),temp2,temp)
+          enddo
+          !$omp end do   
+          !$omp end parallel
+          call sum_accumulators_CS( sim%q_accumulator_CS, n_threads, ncx*ncy )
+          call sll_convert_charge_to_rho_2d_per_per_CS( sim%q_accumulator_CS(1)%q, sim%rho ) 
+
        else
+
           call sll_accumulate_field( sim%E1, sim%E2, sim%E_accumulator )
           !$omp parallel default(SHARED) PRIVATE(x,y,Ex,Ey,ic_x,ic_y,off_x,off_y,tmp3,tmp4,tmp5,tmp6,tmp7,tmp8,thread_id,q_accum)
           !$&omp FIRSTPRIVATE(dt,xmin,xmax,ymin,ymax,ncx,rdx,rdy)
@@ -340,10 +367,12 @@ contains
           call sum_accumulators( sim%q_accumulator, n_threads, ncx*ncy )
           call sll_convert_charge_to_rho_2d_per_per( sim%q_accumulator(1)%q, sim%rho ) 
        endif
+
        if (mod(it+1, 50)==0) then! (it==sim%num_iterations-1) then !
+          tfin = sll_time_elapsed_since(tinit)
           write(it_name,'(i4.4)') it+1
-          print*, 'iter', it_name
-          nnnom = 'particles_at'//trim(adjustl(it_name))//'.dat'
+          print*, 'tfin at iter',it_name, 'is', tfin
+          nnnom = 'CS_ps_at'//trim(adjustl(it_name))//'.dat'
           open(50,file=nnnom)
           GET_PARTICLE_POSITION(p(ii1),sim%m2d,x1,y1)
           GET_PARTICLE_POSITION(p(ii2),sim%m2d,x2,y2)
@@ -358,9 +387,9 @@ contains
              write(50,*) x, y
           enddo
           close(50)
-!!$          call sll_gnuplot_corect_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
-!!$               sim%m2d%eta2_max, ncy+1, &
-!!$               sim%rho, 'rho_atiter', it+1, ierr )
+          call sll_gnuplot_corect_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
+               sim%m2d%eta2_max, ncy+1, &
+               sim%rho, 'rho_GC_CS_it', it+1, ierr )
        endif
        call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
     enddo
@@ -396,14 +425,14 @@ contains
     logical :: res
     sll_real64, intent(in) :: x
     sll_real64, intent(in) :: y
-    type(sll_logical_mesh_2d), pointer :: mesh
+    type(sll_cartesian_mesh_2d), pointer :: mesh
 
     res = (x >= mesh%eta1_min) .and. (x <= mesh%eta1_max) .and. &
           (y >= mesh%eta2_min) .and. (y <= mesh%eta2_max)
   end function in_bounds
 
   subroutine apply_periodic_bc( mesh, x, y )
-    type(sll_logical_mesh_2d), pointer :: mesh
+    type(sll_cartesian_mesh_2d), pointer :: mesh
     sll_real64, intent(inout) :: x
     sll_real64, intent(inout) :: y
 

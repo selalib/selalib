@@ -23,7 +23,7 @@ module sll_particle_group_2d_module
 #include "particle_representation.h"
 
 !  use sll_particle_representations
-  use sll_logical_meshes
+  use sll_cartesian_meshes
 #ifdef _OPENMP
   use omp_lib
 #endif
@@ -38,7 +38,7 @@ module sll_particle_group_2d_module
      ! to post-process after the main loop
      sll_int32, dimension(:), pointer :: num_postprocess_particles
      sll_real64 :: qoverm 
-     type(sll_logical_mesh_2d), pointer                 :: mesh
+     type(sll_cartesian_mesh_2d), pointer                 :: mesh
      type(sll_particle_2d), dimension(:), pointer       :: p_list
      type(sll_particle_2d_guard_ptr), dimension(:), pointer :: p_guard
   end type sll_particle_group_2d
@@ -61,7 +61,7 @@ contains
     sll_int32,  intent(in) :: particle_array_size
     sll_int32,  intent(in) :: guard_list_size
     sll_real64, intent(in) :: qoverm
-    type(sll_logical_mesh_2d), pointer :: mesh
+    type(sll_cartesian_mesh_2d), pointer :: mesh
     sll_int32 :: ierr
     sll_int32 :: n_thread
     sll_int32 :: thread_id

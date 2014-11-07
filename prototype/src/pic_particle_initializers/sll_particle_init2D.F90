@@ -23,7 +23,7 @@ module sll_particle_initializers_2d
 
   use sll_constants, only: sll_pi
   use sll_particle_group_2d_module
-  use sll_logical_meshes
+  use sll_cartesian_meshes
 !  use gaussian
   use hammersley
   use sll_representation_conversion_module
@@ -39,7 +39,7 @@ contains
               p_group,                 &
               rand_seed, rank )
     sll_real64, intent(in) :: alpha, kx
-    type(sll_logical_mesh_2d), intent(in) :: m2d
+    type(sll_cartesian_mesh_2d), intent(in) :: m2d
     sll_int32, intent(in)  :: num_particles
     type(sll_particle_group_2d), pointer, intent(inout) :: p_group
     sll_int32  :: j
@@ -71,9 +71,9 @@ contains
        rank_name = '00000000'
     end if
     nomfile='initialparts_'//trim(adjustl(rank_name))//'.dat'
-    open(90, file=nomfile)
-
-    write(90,*) '#  POSITIONS in 2d'
+!!$    open(90, file=nomfile)
+!!$
+!!$    write(90,*) '#  POSITIONS in 2d'
     
     j=1
     !Rejection sampling for the function 1 + alp + alp*cos(k*x) + sin(y)
@@ -85,13 +85,13 @@ contains
        call random_number(z)
        z = (2.0_f64 + 2.5_f64*alpha) * z
        if (eval_KH(alpha, kx, x, y) >= z ) then
-          write(90,*) x, y
+!!$          write(90,*) x, y
           SET_2DPARTICLE_VALUES(p_group%p_list(j),x,y,weight,xmin,ymin,ncx,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
           j = j + 1          
        endif
     end do
 !!$    print*, 'nb d essais', j-1
-    close(90)
+!!$    close(90)
 
   end subroutine sll_initial_particles_2d_KH
 
@@ -118,7 +118,7 @@ contains
                p_group,                 &
                rand_seed, rank )
      sll_real64, intent(in) :: alpha, k
-     type(sll_logical_mesh_2d), intent(in) :: m2d
+     type(sll_cartesian_mesh_2d), intent(in) :: m2d
      sll_int32, intent(in)  :: num_particles
      type(sll_particle_group_2d), pointer, intent(inout) :: p_group
      sll_int32  :: j
