@@ -3,7 +3,7 @@ program test_poisson
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use polar_operators
+  use sll_boundary_condition_descriptors
   use sll_poisson_2d_polar
   use sll_constants
   implicit none
