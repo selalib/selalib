@@ -597,7 +597,6 @@ function bvalue( t, bcoef, n, k, x, jderiv ) result(res)
   sll_int32,  intent(in) :: jderiv    !< order of the derivative
   
   sll_real64 :: res
-
   sll_real64 :: aj(k)
   sll_real64 :: dl(k)
   sll_real64 :: dr(k)
@@ -610,6 +609,9 @@ function bvalue( t, bcoef, n, k, x, jderiv ) result(res)
   sll_int32  :: jj
   sll_int32  :: mflag
   
+  SLL_ASSERT(size(t)     == n+k)
+  SLL_ASSERT(size(bcoef) == n  )
+
   res = 0.0_8
     
   aj(:)=0.0_8
