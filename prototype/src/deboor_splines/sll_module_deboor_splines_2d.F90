@@ -14,10 +14,10 @@ public bvalue2d, spli2d_custom_derder, spli2d_perper
   
 contains
   
-! Just for the record: what is ar_x, ar_y, nx, etc., etc.? What is this
+! Just for the record: what is x, y, nx, etc., etc.? What is this
 ! function supposed to do? This is a deeply frustrating file.
-subroutine bvalue2d( ar_x,        &
-                     ar_y,        &
+subroutine bvalue2d( x,        &
+                     y,        &
                      nx,       &
                      kx,       &
                      ny,       &
@@ -27,8 +27,8 @@ subroutine bvalue2d( ar_x,        &
                      apr_ty,      &
                      val )
 
-  sll_real64,                 intent(in)  :: ar_x
-  sll_real64,                 intent(in)  :: ar_y
+  sll_real64,                 intent(in)  :: x
+  sll_real64,                 intent(in)  :: y
   sll_int32,                  intent(in)  :: nx
   sll_int32,                  intent(in)  :: kx
   sll_int32,                  intent(in)  :: ny
@@ -38,12 +38,12 @@ subroutine bvalue2d( ar_x,        &
   sll_real64, dimension(:,:), intent(in)  :: bcoef!( nx,ny)
   sll_real64,                 intent(out) :: val
   
-  sll_int32  :: li_j, li_mflag, li_lefty
+  sll_int32  :: li_j, lflag, li_lefty
   sll_real64, dimension(1:ky) :: lpr_coef ! ky
    
-  call interv ( apr_ty,ny + ky, ar_y, li_lefty, li_mflag )
+  call interv ( apr_ty,ny + ky, y, li_lefty, lflag )
 
-  if ( li_mflag .NE. 0 ) then
+  if ( lflag .NE. 0 ) then
     val = 0.0_8
     return 
   end if
@@ -54,7 +54,7 @@ subroutine bvalue2d( ar_x,        &
                                bcoef(1:nx,li_lefty-ky+li_j), &
                                nx,                                  &
                                kx,                                  &
-                               ar_x,                                   &
+                               x,                                   &
                                0 )
        
   end do
@@ -63,13 +63,13 @@ subroutine bvalue2d( ar_x,        &
                lpr_coef,                                &
                ky,                                   &
                ky,                                   &
-               ar_y,                                    &
+               y,                                    &
                0 )
 
 end subroutine bvalue2d
 
-function dvalue2d( ar_x,      &
-                   ar_y,      &
+function dvalue2d( x,      &
+                   y,      &
                    nx,     &
                    kx,     &
                    ny,     &
@@ -80,8 +80,8 @@ function dvalue2d( ar_x,      &
                    deriv1,    &
                    deriv2 ) result(res)
 
-  sll_real64 :: ar_x
-  sll_real64 :: ar_y
+  sll_real64 :: x
+  sll_real64 :: y
   sll_real64 :: res
   sll_int32  :: nx
   sll_int32  :: kx
@@ -95,14 +95,14 @@ function dvalue2d( ar_x,      &
   sll_real64, dimension(:,:) :: bcoef !(nx,ny)
 
   sll_int32  :: li_j
-  sll_int32  :: li_mflag
+  sll_int32  :: lflag
   sll_int32  :: li_lefty
 
   sll_real64, dimension (1:ky),target:: lpr_coef ! ky
     
-  call interv( apr_ty, ny + ky, ar_y, li_lefty, li_mflag)
+  call interv( apr_ty, ny + ky, y, li_lefty, lflag)
     
-  if ( li_mflag .NE. 0 ) then
+  if ( lflag .NE. 0 ) then
     res = 0.0_8
     return 
   end if
@@ -113,7 +113,7 @@ function dvalue2d( ar_x,      &
                              bcoef(1:nx,li_lefty-ky+li_j), &
                              nx,                           &
                              kx,                           &
-                             ar_x,                         &
+                             x,                         &
                              deriv1 )
        
   end do
@@ -122,7 +122,7 @@ function dvalue2d( ar_x,      &
                 lpr_coef,                          &
                 ky,                                &
                 ky,                                &
-                ar_y,                              &
+                y,                              &
                 deriv2 )
 
 end function dvalue2d
@@ -544,7 +544,7 @@ subroutine spli2d_custom_derder ( nx,   &
 
 end subroutine spli2d_custom_derder
 
-subroutine spli2d_perdir ( ar_L,      &
+subroutine spli2d_perdir ( L,      &
                            nx,     &
                            kx,     &
                            taux,  &
@@ -556,8 +556,8 @@ subroutine spli2d_perdir ( ar_L,      &
                            apr_tx,    &
                            apr_ty )
 
-  ! CALLED WHEN WE WANT TO INTERPOL WITH A PERIODIC FIRST PARAM WITH A PERIOD = ar_L
-  sll_real64 :: ar_L 
+  ! CALLED WHEN WE WANT TO INTERPOL WITH A PERIODIC FIRST PARAM WITH A PERIOD = L
+  sll_real64 :: L 
   sll_int32  :: nx, kx, ny, ky
   sll_real64, dimension ( :),pointer :: taux ! nx- 1
   sll_real64, dimension ( :),pointer :: tauy ! ny		
@@ -572,13 +572,13 @@ subroutine spli2d_perdir ( ar_L,      &
   sll_real64, dimension (1:nx,1:ny),target :: lpr_g !  nx ,ny
   sll_real64, dimension (:,:),pointer :: lpr_g_ptr
 
-  if ( ar_L == 0.0_8 ) then
+  if ( L == 0.0_8 ) then
     print*,'Error spli2d_per : called with a period = 0 '
     stop
   end if
     
   lpr_taux ( 1 : nx - 1 ) = taux ( 1 : nx-1)
-  lpr_taux ( nx ) = taux ( 1 ) + ar_L
+  lpr_taux ( nx ) = taux ( 1 ) + L
 
   lpr_g ( 1 : nx - 1 , 1 : ny ) = apr_g ( 1 : nx - 1 , 1 : ny )
   lpr_g ( nx , 1 : ny ) = apr_g ( 1 , 1 : ny )
@@ -603,7 +603,7 @@ end subroutine spli2d_perdir
 subroutine spli2d_dirper (nx,      &
                           kx,      &
                           taux,   &
-                          ar_L,       &
+                          L,       &
                           ny,      &
                           ky,      &  
                           tauy,   &
@@ -612,9 +612,9 @@ subroutine spli2d_dirper (nx,      &
                           apr_tx,     &
                           apr_ty )
 
-     ! CALLED WHEN WE WANT TO INTERPOL WITH A PERIODIC second PARAM WITH A PERIOD = ar_L
+     ! CALLED WHEN WE WANT TO INTERPOL WITH A PERIODIC second PARAM WITH A PERIOD = L
 
-  sll_real64 :: ar_L
+  sll_real64 :: L
   sll_int32  :: nx, kx, ny, ky
   sll_real64, dimension ( :),pointer :: taux ! nx
   sll_real64, dimension (:),pointer :: tauy !  ny -1
@@ -629,13 +629,13 @@ subroutine spli2d_dirper (nx,      &
   sll_real64, dimension (:),pointer :: lpr_tauy_ptr ! ny	
   sll_real64, dimension (:,:),pointer :: lpr_g_ptr
      
-  if ( ar_L == 0.0_8 ) then
+  if ( L == 0.0_8 ) then
     print*,'Error spli2d_per : called with a period = 0 '
     stop
   end if
      
   lpr_tauy ( 1 : ny - 1 ) = tauy ( 1 : ny - 1 )
-  lpr_tauy ( ny ) = tauy ( 1 ) + ar_L
+  lpr_tauy ( ny ) = tauy ( 1 ) + L
      
   lpr_g ( 1 : nx , 1 : ny -1 ) = apr_g ( 1 : nx , 1 : ny -1)
   lpr_g (1: nx , ny ) = apr_g ( 1 : nx, 1 )
@@ -808,7 +808,6 @@ subroutine spli2d_der( tau,           &
                      n,           &
                      np,          &
                      k,           &
-                     q,           &
                      work_result, &
                      iflag )
        
