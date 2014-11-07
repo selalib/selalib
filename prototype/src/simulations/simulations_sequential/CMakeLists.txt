@@ -6,13 +6,18 @@ ADD_LIBRARY( sll_simulations_sequential STATIC ../simulation_base_class.F90 )
 
 TARGET_LINK_LIBRARIES( sll_simulations_sequential
                        sll_interpolators
-                       sll_scalar_field
+                       sll_fields
                        sll_poisson_solvers
                        sll_reduction
                        sll_common_array_initializers
                      )
 
 SET( INSTALL_DIR "${INSTALL_DIR}/simulations_sequential" )
+
+ADD_SUBDIRECTORY( sim_VlasovPoisson1D_curvilinear_analytic  )
+ADD_SUBDIRECTORY( sim_VlasovPoisson1D_fourier_FEM           )
+ADD_SUBDIRECTORY( sim_VlasovPoisson1D_cartesian_non_uniform )
+ADD_SUBDIRECTORY( sim_VlasovPoisson1D_various_programs      )
 
 IF(HDF5_ENABLED)
   SET( SIM_LIBS sll_advection )

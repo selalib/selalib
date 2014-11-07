@@ -1212,7 +1212,7 @@ contains
     call sll_delete( transf%mesh)
     ! Fix: there is a dependency problem where these pointers are not recognized
     ! during the linking step. A similar nullification of an abstract class
-    ! pointer is carried out in the fields_2d_alternative type without problems.
+    ! pointer is carried out in the fields_2d type without problems.
 !    transf%x1_interp => null() this gives a different message.
 !!$    nullify( transf%x1_interp )
 !!$    nullify( transf%x2_interp )

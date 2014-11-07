@@ -16,7 +16,7 @@ module sll_simulation_2d_guiding_center_generalized_coords_module
   use sll_coordinate_transformation_2d_base_module
   use sll_general_coordinate_qn_solver_module
   use sll_module_scalar_field_2d_base
-  use sll_module_scalar_field_2d_alternative
+  use sll_module_scalar_field_2d
   use sll_parallel_array_initializer_module
   implicit none
 
@@ -236,19 +236,19 @@ contains
     type(sll_scalar_field_2d_base_ptr)                    :: a12_field_mat
     type(sll_scalar_field_2d_base_ptr)                    :: a22_field_mat
     class(sll_scalar_field_2d_base), pointer              :: c_field
-    type(sll_scalar_field_2d_discrete_alt),target               :: rho_n
-    type(sll_scalar_field_2d_discrete_alt),target               :: rho_np1
-    type(sll_scalar_field_2d_discrete_alt),target               :: rho_nm1
-    class(sll_scalar_field_2d_discrete_alt), pointer      :: rho_n_ptr
-    class(sll_scalar_field_2d_discrete_alt), pointer      :: rho_np1_ptr
-    class(sll_scalar_field_2d_discrete_alt), pointer      :: rho_nm1_ptr
-    class(sll_scalar_field_2d_discrete_alt), pointer      :: rho_tmp_ptr
-    type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
+    type(sll_scalar_field_2d_discrete),target               :: rho_n
+    type(sll_scalar_field_2d_discrete),target               :: rho_np1
+    type(sll_scalar_field_2d_discrete),target               :: rho_nm1
+    class(sll_scalar_field_2d_discrete), pointer      :: rho_n_ptr
+    class(sll_scalar_field_2d_discrete), pointer      :: rho_np1_ptr
+    class(sll_scalar_field_2d_discrete), pointer      :: rho_nm1_ptr
+    class(sll_scalar_field_2d_discrete), pointer      :: rho_tmp_ptr
+    type(sll_scalar_field_2d_discrete), pointer       :: phi
     sll_real64, dimension(:,:), allocatable :: phi_values
 
     
     ! Start with the fields  
-    a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+    a11_field_mat%base => new_scalar_field_2d_analytic( &
          sim%a11_f, &
          "a11", &
          sim%transf, &
@@ -257,7 +257,7 @@ contains
          sim%bc_bottom, &
          sim%bc_top) 
 
-    a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+    a12_field_mat%base => new_scalar_field_2d_analytic( &
          sim%a12_f, &
          "a12", &
          sim%transf, &
@@ -266,7 +266,7 @@ contains
          sim%bc_bottom, &
          sim%bc_top) 
 
-    a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+    a21_field_mat%base => new_scalar_field_2d_analytic( &
          sim%a21_f, &
          "a21", &
          sim%transf, &
@@ -275,7 +275,7 @@ contains
          sim%bc_bottom, &
          sim%bc_top)
     
-    a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+    a22_field_mat%base => new_scalar_field_2d_analytic( &
          sim%a22_f, &
          "a22", &
          sim%transf, &
@@ -285,7 +285,7 @@ contains
          sim%bc_top) 
 
 
-    c_field => new_scalar_field_2d_analytic_alt( &
+    c_field => new_scalar_field_2d_analytic( &
          sim%c_f, &
          "c_field", &
          sim%transf, &
@@ -299,8 +299,8 @@ contains
     
     phi_values(:,:) = 0.0_f64
  
-    print*,'phi => new_scalar_field_2d_discrete_alt ' 
-    phi => new_scalar_field_2d_discrete_alt( &
+    print*,'phi => new_scalar_field_2d_discrete ' 
+    phi => new_scalar_field_2d_discrete( &
          phi_values, &
          "phi_check", &
          sim%interp_phi, &
@@ -613,9 +613,9 @@ contains
 
     implicit none
     
-    class(sll_scalar_field_2d_discrete_alt), pointer      :: rho_n
-    class(sll_scalar_field_2d_discrete_alt), pointer      :: rho_np1
-    type(sll_scalar_field_2d_discrete_alt) , pointer      :: phi
+    class(sll_scalar_field_2d_discrete), pointer      :: rho_n
+    class(sll_scalar_field_2d_discrete), pointer      :: rho_np1
+    type(sll_scalar_field_2d_discrete) , pointer      :: phi
     class(sll_coordinate_transformation_2d_base), pointer :: T
     type(sll_cartesian_mesh_2D), pointer :: M
     sll_real64, dimension(:,:), pointer :: jac_array
@@ -867,8 +867,8 @@ subroutine calcul_integral(rho_n,phi,&
     implicit none
     
     ! IMPUT VARIABLES
-    class(sll_scalar_field_2d_discrete_alt), pointer      :: rho_n
-    type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
+    class(sll_scalar_field_2d_discrete), pointer      :: rho_n
+    type(sll_scalar_field_2d_discrete), pointer       :: phi
     integer :: spline_degree
     
     !OUTPUT VARIABLES

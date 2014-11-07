@@ -9,7 +9,7 @@ module sll_general_coordinate_elliptic_solver_module
 
 use sll_boundary_condition_descriptors
 use sll_module_scalar_field_2d_base
-use sll_module_scalar_field_2d_alternative
+use sll_module_scalar_field_2d
 use sll_module_arbitrary_degree_spline_interpolator_2d
 use connectivity_module
 use sll_knots
@@ -743,7 +743,7 @@ end subroutine factorize_mat_es
 subroutine solve_general_coordinates_elliptic_eq( es, rho, phi)
 
   class(general_coordinate_elliptic_solver) :: es
-  class(sll_scalar_field_2d_discrete_alt), intent(inout)  :: phi
+  class(sll_scalar_field_2d_discrete), intent(inout)  :: phi
   class(sll_scalar_field_2d_base), intent(in),target  :: rho
   sll_int32 :: i
   sll_int32 :: j,ierr
@@ -777,7 +777,7 @@ subroutine solve_general_coordinates_elliptic_eq( es, rho, phi)
   ! on va proceder de la facon qui suit 
   base_field_pointer => rho
   select type( type_field => base_field_pointer)
-  class is (sll_scalar_field_2d_discrete_alt)
+  class is (sll_scalar_field_2d_discrete)
     base_interpolator_pointer => type_field%interp_2d
 
     select type( type_interpolator => base_interpolator_pointer)
@@ -844,7 +844,7 @@ subroutine solve_general_coordinates_elliptic_eq( es, rho, phi)
      end do
    end select
        
-   class is (sll_scalar_field_2d_analytic_alt)
+   class is (sll_scalar_field_2d_analytic)
     
      do j=1,es%num_cells2
        eta2  = es%eta2_min + (j-1)*es%delta_eta2
