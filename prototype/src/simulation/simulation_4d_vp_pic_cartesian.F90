@@ -89,8 +89,8 @@ contains
 
     namelist /sim_params/ NUM_PARTICLES, GUARD_SIZE, &
                           PARTICLE_ARRAY_SIZE, &
-                          THERM_SPEED, number_iterations, &
-                          dt, QoverM, ALPHA, UseCubicSplines
+                          THERM_SPEED, dt, number_iterations, &
+                          QoverM, ALPHA, UseCubicSplines
     namelist /grid_dims/  NC_X, NC_Y, XMIN, KX, YMIN, YMAX
     open(unit = input_file, file=trim(filename),IOStat=IO_stat)
     if( IO_stat /= 0 ) then
@@ -152,10 +152,12 @@ contains
        sim%part_group%p_list(j) = pa_gr%p_list(j)
     enddo
     !$omp end do
+
     !$omp single
     call sll_sort_particles_2d( sim%sorter, sim%part_group )
     sim%n_threads =  1
     !$omp end single
+
 #ifdef _OPENMP
     if (OMP_GET_THREAD_NUM() == 0) then
        sim%n_threads =  OMP_GET_NUM_THREADS()
@@ -211,8 +213,7 @@ contains
     sll_real64 :: x, x1  ! for global position
     sll_real64 :: y, y1  ! for global position
     sll_real64 :: dt, ttime
-    sll_real64 :: pp_vx,  pp_vy
-    sll_real64 :: temp
+    sll_real64 :: pp_vx, pp_vy, temp
     type(sll_particle_4d), dimension(:), pointer :: p
     type(field_accumulator_cell), dimension(:), pointer :: accumE
     type(field_accumulator_CS), dimension(:), pointer :: accumE_CS
@@ -255,11 +256,11 @@ contains
     qoverm = sim%part_group%qoverm
 !!!    p_guard => sim%part_group%p_guard
 
-    dt   = sim%dt
+    dt = sim%dt
     xmin = sim%m2d%eta1_min
     ymin = sim%m2d%eta2_min
-    rdx  = 1._f64/sim%m2d%delta_eta1
-    rdy  = 1._f64/sim%m2d%delta_eta2
+    rdx = 1._f64/sim%m2d%delta_eta1
+    rdy = 1._f64/sim%m2d%delta_eta2
 
     if (sim%use_cubic_splines) then
        accumE_CS => sim%E_accumulator_CS%e_acc
@@ -299,13 +300,13 @@ contains
           pp_vx = p(i)%vx
           pp_vy = p(i)%vy
           SLL_INTERPOLATE_FIELD_CS(Ex,Ey,accumE_CS,p(i),ttmp)
-          p(i)%vx = pp_vx - 0.5_f64 * dt * Ex* qoverm
-          p(i)%vy = pp_vy - 0.5_f64 * dt * Ey* qoverm
+          p(i)%vx = pp_vx - 0.5_f64 *dt* Ex* qoverm
+          p(i)%vy = pp_vy - 0.5_f64 *dt* Ey* qoverm
        end do! half-step advection of the velocities by -dt/2 here
        !$omp end parallel do
 
     else
-
+       
        call reset_field_accumulator_to_zero( sim%E_accumulator )
        call sll_accumulate_field( sim%E1, sim%E2, sim%E_accumulator )
        !$omp parallel do default(SHARED) PRIVATE (pp_vx, pp_vy, Ex, Ey, tmp3, tmp4)
@@ -319,7 +320,6 @@ contains
        enddo
        !$omp end parallel do   
     endif
-
 !    diag_TOTenergy(0) = 0.0_f64
 !    do i =1, sim%ions_number
 !       diag_TOTenergy(0) = diag_TOTenergy(0) + &
@@ -328,11 +328,6 @@ contains
 
     open(65,file='logE_vals.dat')
     call sll_set_time_mark(t2)    
-!! #ifdef _OPENMP
-!!     t_init = omp_get_wtime()
-!! #else
-!!     call cpu_time(t_init)
-!! #endif
 
 !  ----  TIME LOOP  ----
     do it = 0, sim%num_iterations-1
@@ -362,7 +357,7 @@ contains
        endif
 
        if (mod(it+1,10)==0) then 
-!          print*, 'iter=', it+1
+          print*, it+1
           call sll_sort_particles_2d( sim%sorter, sim%part_group )
        endif
 
@@ -389,14 +384,9 @@ contains
        !
        ! *******************************************************************
        some_val = 0.0_f64
-<<<<<<< HEAD
-       !$omp parallel default(SHARED) PRIVATE(x,y,x1,y1,Ex,Ey,Ex1,Ey1,gi,tmp1,tmp2,tmp3,tmp4,tmp5,tmp6,temp,ttmp1,ttmp2,off_x,off_y,ic_x,ic_y,thread_id,p_guard,q_accum,q_accum_CS)
-       !$&omp FIRSTPRIVATE(dt,ncx,xmin,ymin,rdx,rdy,sim%use_cubic_splines)! !qoverm
-=======
        if (sim%use_cubic_splines) then 
           !$omp parallel default(SHARED) PRIVATE(x,y,x1,y1,Ex,Ey,Ex1,Ey1,gi,tmp1,tmp2,tmp3,tmp4,tmp5,tmp6,temp,ttmp1,ttmp2,off_x,off_y,ic_x,ic_y,thread_id,p_guard,q_accum,q_accum_CS)
           !$&omp FIRSTPRIVATE(qoverm,dt,ncx,xmin,ymin,rdx,rdy,sim%use_cubic_splines)
->>>>>>> origin/prototype-devel
 #ifdef _OPENMP
           thread_id = OMP_GET_THREAD_NUM()
 #endif
@@ -407,29 +397,6 @@ contains
           do i = 1, sim%ions_number,2
              SLL_INTERPOLATE_FIELD_CS(Ex,Ey,accumE_CS,p(i),ttmp1)
              SLL_INTERPOLATE_FIELD_CS(Ex1,Ey1,accumE_CS,p(i+1),ttmp2)
-<<<<<<< HEAD
-          else
-             SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,p(i),tmp3,tmp4)
-             SLL_INTERPOLATE_FIELD(Ex1,Ey1,accumE,p(i+1),tmp5,tmp6)
-          endif
-          p(i)%vx = p(i)%vx + dt * Ex* qoverm
-          p(i)%vy = p(i)%vy + dt * Ey* qoverm
-          p(i+1)%vx = p(i+1)%vx + dt * Ex1* qoverm
-          p(i+1)%vy = p(i+1)%vy + dt * Ey1* qoverm
-
-          some_val = some_val + p(i)%vx*p(i)%vx + p(i)%vy*p(i)%vy &
-                        + p(i+1)%vx*p(i+1)%vx + p(i+1)%vy*p(i+1)%vy
-
-          GET_PARTICLE_POSITION(p(i),sim%m2d,x,y)
-          GET_PARTICLE_POSITION(p(i+1),sim%m2d,x1,y1)
-          x = x + dt * p(i)%vx
-          y = y + dt * p(i)%vy
-          x1 = x1 + dt * p(i+1)%vx
-          y1 = y1 + dt * p(i+1)%vy
-          if(in_bounds( x, y, sim%m2d )) then ! finish push
-             SET_PARTICLE_POSITION(p(i),xmin,ymin,ncx,x,y,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
-             if (sim%use_cubic_splines) then 
-=======
              p(i)%vx = p(i)%vx + dt * Ex* qoverm
              p(i)%vy = p(i)%vy + dt * Ey* qoverm
              p(i+1)%vx = p(i+1)%vx + dt * Ex1* qoverm
@@ -444,7 +411,6 @@ contains
              y1 = y1 + dt * p(i+1)%vy
              if (in_bounds( x, y, sim%m2d )) then ! finish push
                 SET_PARTICLE_POSITION(p(i),xmin,ymin,ncx,x,y,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
->>>>>>> origin/prototype-devel
                 SLL_ACCUMULATE_PARTICLE_CHARGE_CS(q_accum_CS,p(i),ttmp1,temp)
              else ! store reference for later processing
                 gi = gi + 1
@@ -598,34 +564,30 @@ contains
 
     enddo
 !  ---  ---  - - -   END TIME LOOP  - - -  --- -----
-!! #ifdef _OPENMP
-!!     t_fin = omp_get_wtime()
-!! #else
-!!     call cpu_time(t_fin)
-!! #endif
-!!     close(65)
-!!     print*, 'time is', t_fin-t_init, 'sec; and', int(sim%num_iterations,i64)*&
-!!          int(sim%ions_number,i64)/(t_fin-t_init),'average pushes/sec for Proc',sim%my_rank
+    close(65)
     time = sll_time_elapsed_since(t2)
-    print*,  'time is', time, 'sec; and', int(sim%num_iterations,i64)*int(sim%ions_number,i64)/time, 'average pushes/sec for Proc', sim%my_rank
+    open(93,file='time_parts_sec.dat',position='append')
+    write(93,*) '# Nb of threads     time (sec)  average pushes/sec for Proc     sim%my_rank '
+    write(93,*) sim%n_threads, time, int(sim%num_iterations,i64)*int(sim%ions_number,i64)/time, &
+                sim%my_rank
+    close(93)
 
-    if (sim%my_rank==0) then
-       open(65,file='AccesstoMemory_rk0.dat')! URGENT d'utiliser the rank_name !
-!!$    if (sim%my_rank==1) open(66,file='AccesstoMemory_rk1.dat')
-       do jj = 0, sim%num_iterations-1
-          if ( mod(jj+1,10) == 0 ) then
-             write(65,*) diag_AccMem(jj,:), diag_AccMem(jj,2)
-!!$          if (sim%my_rank==1) write(66,*) diag_AccMem(jj,:), diag_AccMem(jj,2)
-          else
-             write(65,*) diag_AccMem(jj,:)
-!!$          if (sim%my_rank==1) write(66,*) diag_AccMem(jj,:)
-          endif
-       enddo
-       close(65) 
-!!$       close(66)
-    endif
+!      if (sim%my_rank==0) then
+!         open(65,file='AccesstoMemory_rk0.dat')! URGENT d'utiliser the rank_name !
+!  !!$    if (sim%my_rank==1) open(66,file='AccesstoMemory_rk1.dat')
+!         do jj = 0, sim%num_iterations-1
+!            if ( mod(jj+1,10) == 0 ) then
+!               write(65,*) diag_AccMem(jj,:), diag_AccMem(jj,2)
+!  !!$          if (sim%my_rank==1) write(66,*) diag_AccMem(jj,:), diag_AccMem(jj,2)
+!            else
+!               write(65,*) diag_AccMem(jj,:)
+!  !!$          if (sim%my_rank==1) write(66,*) diag_AccMem(jj,:)
+!            endif
+!         enddo
+!         close(65) 
+!  !!$       close(66)
+!      endif
 
-    SLL_DEALLOCATE_ARRAY(diag_energy, ierr)
     SLL_DEALLOCATE(sim%rho,   ierr)
     SLL_DEALLOCATE(sim%E1,    ierr)
     SLL_DEALLOCATE(sim%E2,    ierr)

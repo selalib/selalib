@@ -12,7 +12,7 @@ program pic_2d_cartesian
   size = sll_get_collective_size(sll_world_collective)
   rank = sll_get_collective_rank(sll_world_collective)
 
-  call sim%init_from_file('params_pic_2d_KH.nml')! ('params_pic_4d.nml')
+  call sim%init_from_file('params_pic_2d_KH.nml')
 ! #        OMEGA  = 1.323
 ! #        GAMMA  = -0.151
 
@@ -21,6 +21,7 @@ program pic_2d_cartesian
         'x',sim%m2d%num_cells2,'cells'
       print*, sim%ions_number/real(sim%m2d%num_cells1* &
            sim%m2d%num_cells2,f64), 'particles per cell'
+      print*, 'xmax=',sim%m2d%eta1_max, 'ymax=', sim%m2d%eta2_max
    endif
   call sim%run()
 
