@@ -357,23 +357,14 @@ subroutine spli2d_custom ( nx,    &
   sll_int32,  intent(in)    :: ny
   sll_int32,  intent(in)    :: ky
   sll_real64, intent(in)    :: tauy(:)    !ny	
-  sll_real64, intent(inout) :: g(:,:)     !nx,ny	
+  sll_real64, intent(in)    :: g(:,:)     !nx,ny	
   sll_real64, intent(inout) :: bcoef(:,:) !nx , ny 
   sll_real64, intent(inout) :: tx(:)      !nx + kx
   sll_real64, intent(inout) :: ty(:)      !ny + ky 
 
-  sll_real64, dimension(nx,ny) :: lpr_work1
-  sll_real64, dimension(nx*ny) :: lpr_work3
-  sll_real64, dimension((2*ky-1)*ny) :: lpr_work32
-  sll_real64, dimension(ny) :: lpr_work4
-  sll_real64, dimension(1:ny,1:nx),target :: lpr_work5 !  ny , nx 
-  sll_real64, dimension(:,:),pointer :: lpr_work5_ptr !  ny , nx 
-  sll_real64, dimension(1:ny),target:: ty_bis
-  sll_real64, dimension(:),pointer:: ty_bis_ptr
+  sll_real64 :: tmp(nx,ny)
 
   sll_int32  :: i, j
-    
-  lpr_work1(:,:) = 0.0
     
   ! *** set up knots
   !     interpolate between knots
@@ -387,7 +378,7 @@ subroutine spli2d_custom ( nx,    &
     end do
   else
     do i = kx+1, nx
-      tx(i) = 0.5*(taux(i-(kx-1)/2) + taux(i-1-(kx-1)/2))
+      tx(i) = 0.5*(taux(i-(kx-1)/2)+taux(i-1-(kx-1)/2))
     end do
   end if
 
@@ -405,31 +396,20 @@ subroutine spli2d_custom ( nx,    &
   end if
 
 
-  ty_bis = tauy(1:ny)
-  lpr_work5_ptr => lpr_work5
-
-  bcoef(1:nx,1:ny) = g
-
-  call spli2d ( taux,      &
-                bcoef,     &
-                tx,        &
-                nx,         &
-                kx,         &
-                ny,         &
-                g)
+  call spli2d ( taux,  &
+                g,     &
+                tx,    &
+                nx,    &
+                kx,    &
+                ny,    &
+                tmp)
     
-  bcoef(:,:) = 0.0_8
-  lpr_work4  = 0.0_8
-  lpr_work3  = 0.0_8
-  lpr_work32 = 0.0_8
-     
-  ty_bis_ptr => ty_bis
-  call spli2d ( ty_bis_ptr, &
-                g,  &
-                ty,         &
-                ny,          &
-                ky,          &
-                nx,          &
+  call spli2d ( tauy,  &
+                tmp,   &
+                ty,    &
+                ny,    &
+                ky,    &
+                nx,    &
                 bcoef)
      
 end subroutine spli2d_custom

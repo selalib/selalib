@@ -1698,7 +1698,7 @@ subroutine compute_interpolants_ad2d( &
 
 class(sll_arbitrary_degree_spline_interpolator_2d), intent(inout)  :: interpolator
 
-sll_real64, dimension(:,:), intent(inout)      :: data_array
+sll_real64, dimension(:,:), intent(in)         :: data_array
 sll_real64, dimension(:), intent(in),optional  :: eta1_coords
 sll_real64, dimension(:), intent(in),optional  :: eta2_coords
 sll_int32, intent(in),optional                 :: size_eta1_coords
@@ -1781,10 +1781,6 @@ case (0) ! periodic-periodic
   interpolator%size_t1 = order1 + sz1 !+ 1
   interpolator%size_t2 = order2 + sz2 !+ 1 
 
-  data_array(sz1    ,1:sz2-1) = data_array(      1,1:sz2-1)
-  data_array(1:sz1-1,    sz2) = data_array(1:sz1-1,     1)
-  data_array(    sz1,    sz2) = data_array(      1,     1)
-
   call spli2d_custom( sz1, order1, interpolator%eta1,  &
                       sz2, order2, interpolator%eta2,  &
                       data_array,  interpolator%bcoef, &
@@ -1797,8 +1793,6 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
   interpolator%size_t1 = order1 + sz1
   interpolator%size_t2 = order2 + sz2 !+ 1
 
-  data_array(1:sz1,sz2) = data_array(1:sz1,1)
-     
   call spli2d_custom( sz1, order1,     interpolator%eta1,  &
                       sz2, order2,     interpolator%eta2,  &
                       data_array,      interpolator%bcoef, &
@@ -1817,7 +1811,6 @@ case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
   interpolator%size_t1 = order1 + sz1 !+ 1
   interpolator%size_t2 = order2 + sz2 
 
-  data_array(sz1,1:sz2) = data_array(1,1:sz2)
   call spli2d_custom( sz1, order1,     interpolator%eta1,  &
                       sz2, order2,     interpolator%eta2,  &
                       data_array,      interpolator%bcoef, &
