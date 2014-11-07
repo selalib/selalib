@@ -39,7 +39,7 @@ type, public, extends(sll_interpolator_2d_base) :: &
    private
    sll_int32,  public :: num_pts1     !< PLEASE ADD DOCUMENTATION
    sll_int32,  public :: num_pts2     !< PLEASE ADD DOCUMENTATION
-   sll_real64, public, pointer :: coeff_splines(:,:) !< PLEASE ADD DOCUMENTATION
+   sll_real64, public, pointer :: bcoef(:,:) !< PLEASE ADD DOCUMENTATION
    sll_int32,  public :: size_coeffs1 !< PLEASE ADD DOCUMENTATION
    sll_int32,  public :: size_coeffs2 !< PLEASE ADD DOCUMENTATION
    sll_real64 :: eta1_min             !< PLEASE ADD DOCUMENTATION
@@ -147,7 +147,7 @@ SLL_DEALLOCATE(interpolator%knots1,ierr)
 SLL_DEALLOCATE(interpolator%knots2,ierr)
 SLL_DEALLOCATE(interpolator%t1,ierr)
 SLL_DEALLOCATE(interpolator%t2,ierr)
-SLL_DEALLOCATE(interpolator%coeff_splines,ierr)
+SLL_DEALLOCATE(interpolator%bcoef,ierr)
 SLL_DEALLOCATE(interpolator%value_w,ierr)
 SLL_DEALLOCATE(interpolator%value_e,ierr)
 SLL_DEALLOCATE(interpolator%value_s,ierr)
@@ -350,7 +350,7 @@ SLL_CLEAR_ALLOCATE(interpolator%slope_n(1:num_pts1+2),ierr)
   
 tmp1 = num_pts1+4*spline_degree1
 tmp2 = num_pts2+4*spline_degree2
-SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
+SLL_ALLOCATE( interpolator%bcoef(tmp1,tmp2),ierr)
 
 select case (bc_selector)
 case (0) ! 1. periodic-periodic
@@ -450,7 +450,7 @@ case default
 end select
 
 ! knots and coeff splines allocations 
-interpolator%coeff_splines(:,:) = 0.0_f64
+interpolator%bcoef(:,:) = 0.0_f64
 ! the minimun is to be of class C^0 everywhere on the knots
 ! i.e. each knot have multiplicity (spline_degree1+1) 
 ! so the maximun number of knots is num_pts1*(spline_degree1+1)
@@ -541,7 +541,7 @@ case (650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet
   if (present(slope_e)) interpolator%slope_e = slope_e
   if (present(slope_n)) then 
     call interp1d%compute_interpolants(slope_n(1:sz_slope_n))
-    interpolator%slope_n(1:sz_slope_n+2) = interp1d%coeff_splines(1:sz_slope_n+2)
+    interpolator%slope_n(1:sz_slope_n+2) = interp1d%bcoef(1:sz_slope_n+2)
   end if
 
 case(657) !left: Dirichlet, right: Neumann, bottom: Neumann, Top: Dirichlet 
@@ -550,7 +550,7 @@ case(657) !left: Dirichlet, right: Neumann, bottom: Neumann, Top: Dirichlet
        
   if (present(slope_n)) then 
     call interp1d%compute_interpolants(slope_n(1:sz_slope_n))
-    interpolator%slope_n(1:sz_slope_n+2) = interp1d%coeff_splines(1:sz_slope_n+2)
+    interpolator%slope_n(1:sz_slope_n+2) = interp1d%bcoef(1:sz_slope_n+2)
   end if
 
 case(780)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Dirichlet
@@ -560,12 +560,12 @@ case(780)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Dirichlet
        
   if (present(slope_s)) then 
     call interp1d%compute_interpolants(slope_s(1:sz_slope_s))
-    interpolator%slope_s(1:sz_slope_s+2) = interp1d%coeff_splines(1:sz_slope_s+2)
+    interpolator%slope_s(1:sz_slope_s+2) = interp1d%bcoef(1:sz_slope_s+2)
   end if
 
   if (present(slope_n)) then 
     call interp1d%compute_interpolants(slope_n(1:sz_slope_n))
-    interpolator%slope_n(1:sz_slope_n+2) = interp1d%coeff_splines(1:sz_slope_n+2)
+    interpolator%slope_n(1:sz_slope_n+2) = interp1d%bcoef(1:sz_slope_n+2)
   end if
 
 case(801)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Dirichlet
@@ -575,12 +575,12 @@ case(801)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Dirichlet
        
   if (present(slope_s)) then 
     call interp1d%compute_interpolants(slope_s(1:sz_slope_s))
-    interpolator%slope_s(1:sz_slope_s+2) = interp1d%coeff_splines(1:sz_slope_s+2)
+    interpolator%slope_s(1:sz_slope_s+2) = interp1d%bcoef(1:sz_slope_s+2)
   end if
 
   if (present(slope_n)) then 
     call interp1d%compute_interpolants(slope_n(1:sz_slope_n))
-    interpolator%slope_n(1:sz_slope_n+2) = interp1d%coeff_splines(1:sz_slope_n+2)
+    interpolator%slope_n(1:sz_slope_n+2) = interp1d%bcoef(1:sz_slope_n+2)
   end if
 
 case(804)  !left: Hermite, right: Hermite, bottom: Hermite, Top: Dirichlet
@@ -590,12 +590,12 @@ case(804)  !left: Hermite, right: Hermite, bottom: Hermite, Top: Dirichlet
        
   if (present(slope_s)) then 
     call interp1d%compute_interpolants(slope_s(1:sz_slope_s))
-    interpolator%slope_s(1:sz_slope_s+2) = interp1d%coeff_splines(1:sz_slope_s+2)
+    interpolator%slope_s(1:sz_slope_s+2) = interp1d%bcoef(1:sz_slope_s+2)
   end if
 
   if (present(slope_n)) then 
     call interp1d%compute_interpolants(slope_n(1:sz_slope_n))
-    interpolator%slope_n(1:sz_slope_n+2) = interp1d%coeff_splines(1:sz_slope_n+2)
+    interpolator%slope_n(1:sz_slope_n+2) = interp1d%bcoef(1:sz_slope_n+2)
   end if
 
 case(1098)  !left: Neumann, right: Dirichlet, bottom: Dirichlet, Top: Neumann
@@ -604,12 +604,12 @@ case(1098)  !left: Neumann, right: Dirichlet, bottom: Dirichlet, Top: Neumann
 
   if (present(slope_s)) then 
     call interp1d%compute_interpolants(slope_s(1:sz_slope_s))
-    interpolator%slope_s(1:sz_slope_s+2) = interp1d%coeff_splines(1:sz_slope_s+2)
+    interpolator%slope_s(1:sz_slope_s+2) = interp1d%bcoef(1:sz_slope_s+2)
   end if
 
   if ( present( slope_n)) then 
     call interp1d%compute_interpolants(slope_n(1:sz_slope_n))
-    interpolator%slope_n(1:sz_slope_n+2) = interp1d%coeff_splines(1:sz_slope_n+2)
+    interpolator%slope_n(1:sz_slope_n+2) = interp1d%bcoef(1:sz_slope_n+2)
   end if
 
 case(1105)  !left: Dirichlet, right: Neumann, bottom: Dirichlet, Top: Neumann
@@ -618,7 +618,7 @@ case(1105)  !left: Dirichlet, right: Neumann, bottom: Dirichlet, Top: Neumann
 
   if (present(slope_s)) then 
     call interp1d%compute_interpolants(slope_s(1:sz_slope_s))
-    interpolator%slope_s(1:sz_slope_s+2) = interp1d%coeff_splines(1:sz_slope_s+2)
+    interpolator%slope_s(1:sz_slope_s+2) = interp1d%bcoef(1:sz_slope_s+2)
   end if
 
 case(2338)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Hermite
@@ -628,12 +628,12 @@ case(2338)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Hermite
        
   if ( present( slope_n)) then 
     call interp1d%compute_interpolants(slope_n(1:sz_slope_n))
-    interpolator%slope_n(1:sz_slope_n+2) = interp1d%coeff_splines(1:sz_slope_n+2)
+    interpolator%slope_n(1:sz_slope_n+2) = interp1d%bcoef(1:sz_slope_n+2)
   end if
 
   if (present(slope_s)) then 
     call interp1d%compute_interpolants(slope_s(1:sz_slope_s))
-    interpolator%slope_s(1:sz_slope_s+2) = interp1d%coeff_splines(1:sz_slope_s+2)
+    interpolator%slope_s(1:sz_slope_s+2) = interp1d%bcoef(1:sz_slope_s+2)
   end if
 
 case(2145)  !left: Dirichlet, right: Hermite, bottom: Dirichlet, Top: Hermite
@@ -643,12 +643,12 @@ case(2145)  !left: Dirichlet, right: Hermite, bottom: Dirichlet, Top: Hermite
        
   if ( present( slope_n)) then 
     call interp1d%compute_interpolants(slope_n(1:sz_slope_n))
-    interpolator%slope_n(1:sz_slope_n+2) = interp1d%coeff_splines(1:sz_slope_n+2)
+    interpolator%slope_n(1:sz_slope_n+2) = interp1d%bcoef(1:sz_slope_n+2)
   end if
 
   if (present(slope_s)) then 
     call interp1d%compute_interpolants(slope_s(1:sz_slope_s))
-    interpolator%slope_s(1:sz_slope_s+2) = interp1d%coeff_splines(1:sz_slope_s+2)
+    interpolator%slope_s(1:sz_slope_s+2) = interp1d%bcoef(1:sz_slope_s+2)
   end if
        
 case(2124)  !left: Hermite, right: Dirichlet, bottom: Dirichlet, Top: Hermite
@@ -658,17 +658,17 @@ case(2124)  !left: Hermite, right: Dirichlet, bottom: Dirichlet, Top: Hermite
      
   if ( present( slope_n)) then 
     call interp1d%compute_interpolants(slope_n(1:sz_slope_n))
-    interpolator%slope_n(1:sz_slope_n+2) = interp1d%coeff_splines(1:sz_slope_n+2)
+    interpolator%slope_n(1:sz_slope_n+2) = interp1d%bcoef(1:sz_slope_n+2)
   end if
 
   if (present(slope_s)) then 
     call interp1d%compute_interpolants(slope_s(1:sz_slope_s))
-    interpolator%slope_s(1:sz_slope_s+2) = interp1d%coeff_splines(1:sz_slope_s+2)
+    interpolator%slope_s(1:sz_slope_s+2) = interp1d%bcoef(1:sz_slope_s+2)
   end if
 
   if ( present( slope_n)) then 
     call interp1d%compute_interpolants(slope_n(1:sz_slope_n))
-    interpolator%slope_n(1:sz_slope_n+2) = interp1d%coeff_splines(1:sz_slope_n+2)
+    interpolator%slope_n(1:sz_slope_n+2) = interp1d%bcoef(1:sz_slope_n+2)
   end if
       
 case(2148)  !left:Hermite , right: Hermite, bottom: Dirichlet, Top: Hermite  
@@ -678,16 +678,16 @@ case(2148)  !left:Hermite , right: Hermite, bottom: Dirichlet, Top: Hermite
        
   if ( present( slope_n)) then 
     call interp1d%compute_interpolants(slope_n(1:sz_slope_n))
-    interpolator%slope_n(1:sz_slope_n+2) = interp1d%coeff_splines(1:sz_slope_n+2)
+    interpolator%slope_n(1:sz_slope_n+2) = interp1d%bcoef(1:sz_slope_n+2)
   end if
 
   if (present(slope_s)) then 
     call interp1d%compute_interpolants(slope_s(1:sz_slope_s))
-    interpolator%slope_s(1:sz_slope_s+2) = interp1d%coeff_splines(1:sz_slope_s+2)
+    interpolator%slope_s(1:sz_slope_s+2) = interp1d%bcoef(1:sz_slope_s+2)
   end if
   if ( present( slope_n)) then 
     call interp1d%compute_interpolants(slope_n(1:sz_slope_n))
-    interpolator%slope_n(1:sz_slope_n+2) = interp1d%coeff_splines(1:sz_slope_n+2)
+    interpolator%slope_n(1:sz_slope_n+2) = interp1d%bcoef(1:sz_slope_n+2)
   end if
 
 case(2316)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Hermite
@@ -698,12 +698,12 @@ case(2316)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Hermite
   if ( present( slope_n)) then 
     interpolator%compute_slope_n= .FALSE.
     call interp1d%compute_interpolants(slope_n(1:sz_slope_n))
-    interpolator%slope_n(1:sz_slope_n+2) = interp1d%coeff_splines(1:sz_slope_n+2)
+    interpolator%slope_n(1:sz_slope_n+2) = interp1d%bcoef(1:sz_slope_n+2)
   end if
        
   if (present(slope_s)) then 
     call interp1d%compute_interpolants(slope_s(1:sz_slope_s))
-    interpolator%slope_s(1:sz_slope_s+2) = interp1d%coeff_splines(1:sz_slope_s+2)
+    interpolator%slope_s(1:sz_slope_s+2) = interp1d%bcoef(1:sz_slope_s+2)
   end if
 
 case(2340) ! Hermite in al sides
@@ -713,12 +713,12 @@ case(2340) ! Hermite in al sides
        
   if ( present( slope_n)) then 
     call interp1d%compute_interpolants(slope_n(1:sz_slope_n))
-    interpolator%slope_n(1:sz_slope_n+2) = interp1d%coeff_splines(1:sz_slope_n+2)
+    interpolator%slope_n(1:sz_slope_n+2) = interp1d%bcoef(1:sz_slope_n+2)
   end if
        
   if (present(slope_s)) then 
     call interp1d%compute_interpolants(slope_s(1:sz_slope_s))
-    interpolator%slope_s(1:sz_slope_s+2) = interp1d%coeff_splines(1:sz_slope_s+2)
+    interpolator%slope_s(1:sz_slope_s+2) = interp1d%bcoef(1:sz_slope_s+2)
   end if
        
 case default
@@ -812,7 +812,7 @@ if (bc_w == SLL_DIRICHLET .and. present(value_w)) then
                interpolator%bc_n,                     &
                interpolator%spline_degree2 )
   call interp1d_w%compute_interpolants(value_w(1:sz_value_w))
-  interpolator%value_w(1:sz_value_w) = interp1d_w%coeff_splines(1:sz_value_w)
+  interpolator%value_w(1:sz_value_w) = interp1d_w%bcoef(1:sz_value_w)
   call sll_delete(interp1d_w)
 
 end if
@@ -828,7 +828,7 @@ if (bc_e == SLL_DIRICHLET .and. present(value_e)) then
                interpolator%spline_degree2 )
           
   call interp1d_e%compute_interpolants(value_e(1:sz_value_e))
-  interpolator%value_e(1:sz_value_e) = interp1d_e%coeff_splines(1:sz_value_e)
+  interpolator%value_e(1:sz_value_e) = interp1d_e%bcoef(1:sz_value_e)
   call sll_delete(interp1d_e)
 
 end if
@@ -844,7 +844,7 @@ if (bc_s == SLL_DIRICHLET .and. present(value_s)) then
                interpolator%spline_degree1 )
           
   call interp1d_s%compute_interpolants(value_s(1:sz_value_s))
-  interpolator%value_s(1:sz_value_s) = interp1d_s%coeff_splines(1:sz_value_s)
+  interpolator%value_s(1:sz_value_s) = interp1d_s%bcoef(1:sz_value_s)
   call sll_delete(interp1d_s)
 
 end if
@@ -860,7 +860,7 @@ if (bc_n == SLL_DIRICHLET .and. present(value_n)) then
                interpolator%spline_degree1 )
           
   call interp1d_n%compute_interpolants(value_n(1:sz_value_n))
-  interpolator%value_n(1:sz_value_n) = interp1d_n%coeff_splines(1:sz_value_n)
+  interpolator%value_n(1:sz_value_n) = interp1d_n%bcoef(1:sz_value_n)
   call sll_delete(interp1d_n)
 
 end if
@@ -956,26 +956,26 @@ if (present(coeffs_1d) ) then
          
     do i = 1,num_cells1
       do j = 1,num_cells2
-        interpolator%coeff_splines(i,j) = coeffs_1d(i+num_cells1*(j-1))
+        interpolator%bcoef(i,j) = coeffs_1d(i+num_cells1*(j-1))
       end do
     end do
          
     do j = 1, sp_deg2 + 1
       do i = 1,num_cells1
-        interpolator%coeff_splines(i,num_cells2+j) = coeffs_1d(i+num_cells1*(j-1))
+        interpolator%bcoef(i,num_cells2+j) = coeffs_1d(i+num_cells1*(j-1))
       end do
     end do
 
     do i = 1, sp_deg1 + 1
       do j = 1,num_cells2
-        interpolator%coeff_splines(num_cells1+i,j) = coeffs_1d(i+num_cells1*(j-1))
+        interpolator%bcoef(num_cells1+i,j) = coeffs_1d(i+num_cells1*(j-1))
       end do
     end do
 
     do i= 1,sp_deg1 + 1
       do j=1,sp_deg2 + 1
-        interpolator%coeff_splines(num_cells1+i,num_cells2+j) = &
-          interpolator%coeff_splines(i,j)
+        interpolator%bcoef(num_cells1+i,num_cells2+j) = &
+          interpolator%bcoef(i,j)
       end do
     end do
         
@@ -1019,20 +1019,20 @@ if (present(coeffs_1d) ) then
     ! ------------------------------------------------------------
     do i = 1 ,nb_spline_eta1
       do j = 1,nb_spline_eta2
-        interpolator%coeff_splines(i+1,j) = &
+        interpolator%bcoef(i+1,j) = &
              coeffs_1d(i+nb_spline_eta1*(j-1))
       end do
     end do
          
     do j = 1, sp_deg2 + 1
       do i = 1,nb_spline_eta1
-        interpolator%coeff_splines(i + 1 ,nb_spline_eta2 + j ) = &
+        interpolator%bcoef(i + 1 ,nb_spline_eta2 + j ) = &
                     coeffs_1d(i+nb_spline_eta1*(j-1))
       end do
     end do
          
-    interpolator%coeff_splines(1,:) = 0.0_8
-    interpolator%coeff_splines(nb_spline_eta1+2,:) = 0.0_8
+    interpolator%bcoef(1,:) = 0.0_8
+    interpolator%bcoef(nb_spline_eta1+2,:) = 0.0_8
          ! ------------------------------------------------------------
   case(576)!3. periodic, dirichlet-bottom, dirichlet-top
        
@@ -1073,21 +1073,21 @@ if (present(coeffs_1d) ) then
     ! -----------------------------------------------------------
     do i = 1 , nb_spline_eta1
       do j = 1,nb_spline_eta2
-        interpolator%coeff_splines(i ,j+1) = &
+        interpolator%bcoef(i ,j+1) = &
                   coeffs_1d(i+nb_spline_eta1 *(j-1) )
       end do
     end do
        
     do i = 1, sp_deg1 + 1
       do j = 1,nb_spline_eta2
-        interpolator%coeff_splines(nb_spline_eta1 + i ,j+1) = &
+        interpolator%bcoef(nb_spline_eta1 + i ,j+1) = &
                   coeffs_1d(i+nb_spline_eta1 *(j-1) )
              
       end do
     end do
          
-    interpolator%coeff_splines(:,1) = 0.0_8
-    interpolator%coeff_splines(:,nb_spline_eta2+2) = 0.0_8
+    interpolator%bcoef(:,1) = 0.0_8
+    interpolator%bcoef(:,nb_spline_eta2+2) = 0.0_8
     ! ------------------------------------------------------------
        
   case(585) ! 4. dirichlet in all sides
@@ -1139,11 +1139,11 @@ if (present(coeffs_1d) ) then
     ! achtung ! normaly interpolator%slope_w(:) and interpolator%value_e(:)
     ! achtung ! normaly interpolator%value_s(:) and interpolator%value_n(:)
 
-    interpolator%coeff_splines(:,:) = 0.0_8
+    interpolator%bcoef(:,:) = 0.0_8
     ! allocation coefficient spline
     do i = 1,nb_spline_eta1
       do j = 1,nb_spline_eta2
-         interpolator%coeff_splines(i+1,j+1) = &
+         interpolator%bcoef(i+1,j+1) = &
                     coeffs_1d( i + nb_spline_eta1 *(j-1))
       end do
     end do
@@ -1199,12 +1199,12 @@ if (present(coeffs_1d) ) then
          ! achtung ! normaly interpolator%slope_w(:) and interpolator%value_e(:)
          ! achtung ! normaly interpolator%value_s(:) and interpolator%value_n(:)
 
-         interpolator%coeff_splines(:,:) = 0.0_8
+         interpolator%bcoef(:,:) = 0.0_8
          ! allocation coefficient spline
          do i = 1,nb_spline_eta1
             do j = 1,nb_spline_eta2
                
-               interpolator%coeff_splines(i+1,j+1) = &
+               interpolator%bcoef(i+1,j+1) = &
                     coeffs_1d( i + nb_spline_eta1 *(j-1))
             end do
          end do
@@ -1257,12 +1257,12 @@ if (present(coeffs_1d) ) then
          ! achtung ! normaly interpolator%slope_w(:) and interpolator%value_e(:)
          ! achtung ! normaly interpolator%value_s(:) and interpolator%value_n(:)
 
-         interpolator%coeff_splines(:,:) = 0.0_8
+         interpolator%bcoef(:,:) = 0.0_8
          ! allocation coefficient spline
          do i = 1,nb_spline_eta1
             do j = 1,nb_spline_eta2
                
-               interpolator%coeff_splines(i+1,j+1) = &
+               interpolator%bcoef(i+1,j+1) = &
                     coeffs_1d( i + nb_spline_eta1 *(j-1))
             end do
          end do
@@ -1315,12 +1315,12 @@ if (present(coeffs_1d) ) then
          ! achtung ! normaly interpolator%slope_w(:) and interpolator%value_e(:)
          ! achtung ! normaly interpolator%value_s(:) and interpolator%value_n(:)
 
-         interpolator%coeff_splines(:,:) = 0.0_8
+         interpolator%bcoef(:,:) = 0.0_8
          ! allocation coefficient spline
          do i = 1,nb_spline_eta1
             do j = 1,nb_spline_eta2
                
-               interpolator%coeff_splines(i+1,j+1) = &
+               interpolator%bcoef(i+1,j+1) = &
                     coeffs_1d( i + nb_spline_eta1 *(j-1))
             end do
          end do
@@ -1373,12 +1373,12 @@ if (present(coeffs_1d) ) then
          ! achtung ! normaly interpolator%slope_w(:) and interpolator%value_e(:)
          ! achtung ! normaly interpolator%value_s(:) and interpolator%value_n(:)
 
-         interpolator%coeff_splines(:,:) = 0.0_8
+         interpolator%bcoef(:,:) = 0.0_8
          ! allocation coefficient spline
          do i = 1,nb_spline_eta1
             do j = 1,nb_spline_eta2
                
-               interpolator%coeff_splines(i+1,j+1) = &
+               interpolator%bcoef(i+1,j+1) = &
                     coeffs_1d( i + nb_spline_eta1 *(j-1))
             end do
          end do
@@ -1435,12 +1435,12 @@ if (present(coeffs_1d) ) then
          ! achtung ! normaly interpolator%slope_w(:) and interpolator%value_e(:)
          ! achtung ! normaly interpolator%value_s(:) and interpolator%value_n(:)
 
-         interpolator%coeff_splines(:,:) = 0.0_8
+         interpolator%bcoef(:,:) = 0.0_8
          ! allocation coefficient spline
          do i = 1,nb_spline_eta1
             do j = 1,nb_spline_eta2
                
-               interpolator%coeff_splines(i+1,j+1) = &
+               interpolator%bcoef(i+1,j+1) = &
                     coeffs_1d( i + nb_spline_eta1 *(j-1))
             end do
          end do
@@ -1494,12 +1494,12 @@ if (present(coeffs_1d) ) then
          ! achtung ! normaly interpolator%slope_w(:) and interpolator%value_e(:)
          ! achtung ! normaly interpolator%value_s(:) and interpolator%value_n(:)
 
-         interpolator%coeff_splines(:,:) = 0.0_8
+         interpolator%bcoef(:,:) = 0.0_8
          ! allocation coefficient spline
          do i = 1,nb_spline_eta1
             do j = 1,nb_spline_eta2
                
-               interpolator%coeff_splines(i+1,j+1) = &
+               interpolator%bcoef(i+1,j+1) = &
                     coeffs_1d( i + nb_spline_eta1 *(j-1))
             end do
          end do
@@ -1553,12 +1553,12 @@ if (present(coeffs_1d) ) then
          ! achtung ! normaly interpolator%slope_w(:) and interpolator%value_e(:)
          ! achtung ! normaly interpolator%value_s(:) and interpolator%value_n(:)
 
-         interpolator%coeff_splines(:,:) = 0.0_8
+         interpolator%bcoef(:,:) = 0.0_8
          ! allocation coefficient spline
          do i = 1,nb_spline_eta1
             do j = 1,nb_spline_eta2
                
-               interpolator%coeff_splines(i+1,j+1) = &
+               interpolator%bcoef(i+1,j+1) = &
                     coeffs_1d( i + nb_spline_eta1 *(j-1))
             end do
          end do
@@ -1614,12 +1614,12 @@ if (present(coeffs_1d) ) then
          ! achtung ! normaly interpolator%slope_w(:) and interpolator%value_e(:)
          ! achtung ! normaly interpolator%value_s(:) and interpolator%value_n(:)
 
-         interpolator%coeff_splines(:,:) = 0.0_8
+         interpolator%bcoef(:,:) = 0.0_8
          ! allocation coefficient spline
          do i = 1,nb_spline_eta1
             do j = 1,nb_spline_eta2
                
-               interpolator%coeff_splines(i,j) = &
+               interpolator%bcoef(i,j) = &
                     coeffs_1d( i + nb_spline_eta1 *(j-1))
             end do
          end do
@@ -1650,7 +1650,7 @@ if (present(coeffs_1d) ) then
             stop
          end if
          
-         interpolator%coeff_splines(1:coeff2d_size1,1:coeff2d_size2) = &
+         interpolator%bcoef(1:coeff2d_size1,1:coeff2d_size2) = &
               coeffs_2d(1:coeff2d_size1,1:coeff2d_size2)
 
          
@@ -1875,7 +1875,7 @@ case (0) ! periodic-periodic
   call spli2d_perper( &
             period1, sz1, order1, point_location_eta1_tmp,&!(1:sz1-1), & !+1
             period2, sz2, order2, point_location_eta2_tmp,&!(1:sz2-1), & !+1
-            data_array_tmp, interpolator%coeff_splines,&!(1:sz1,1:sz2),&
+            data_array_tmp, interpolator%bcoef,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:order1 + sz1 ), &!+ 1), &
             interpolator%t2)!(1:order2 + sz2 ))!+ 1) )
        
@@ -1894,7 +1894,7 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        data_array_tmp = data_array(1:sz1,1:sz2-1)
        call spli2d_dirper( sz1, order1, interpolator%eta1,&!(1:sz1), &
             period2, sz2, order2, point_location_eta2_tmp,&!(1:sz2-1), & !+1
-            data_array_tmp, interpolator%coeff_splines,&!(1:sz1,1:sz2),&!+1
+            data_array_tmp, interpolator%bcoef,&!(1:sz1,1:sz2),&!+1
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) ) !+1
 
@@ -1902,8 +1902,8 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
       ! print*, 'oulala'
        ! boundary condition non homogene  a revoir !!!!! 
        !print*,'zarrrr', interpolator%value_w(1:sz2)
-       interpolator%coeff_splines(1,1:sz2)   = data_array(1,1:sz2)!interpolator%value_w(1:sz2)
-       interpolator%coeff_splines(sz1,1:sz2) = data_array(sz1,1:sz2)!interpolator%value_e(1:sz2)
+       interpolator%bcoef(1,1:sz2)   = data_array(1,1:sz2)!interpolator%value_w(1:sz2)
+       interpolator%bcoef(sz1,1:sz2) = data_array(sz1,1:sz2)!interpolator%value_e(1:sz2)
   
     case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
        interpolator%size_coeffs1 = sz1!+1
@@ -1917,13 +1917,13 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        data_array_tmp = data_array(1:sz1-1,1:sz2)
        call spli2d_perdir( period1, sz1, order1, point_location_eta1_tmp,&!(1:sz1-1), & !+ 1
             sz2, order2, interpolator%eta2, &
-            data_array_tmp, interpolator%coeff_splines,&!(1:sz1,1:sz2),& !+ 1
+            data_array_tmp, interpolator%bcoef,&!(1:sz1,1:sz2),& !+ 1
             interpolator%t1,&!(1:sz1+order1), & ! + 1
             interpolator%t2)!)(1:sz2+order2) )
 
        ! boundary condition non homogene
-       interpolator%coeff_splines(1:sz1,1)   = data_array(1:sz1,1)
-       interpolator%coeff_splines(1:sz1,sz2) = data_array(1:sz1,sz2)
+       interpolator%bcoef(1:sz1,1)   = data_array(1:sz1,1)
+       interpolator%bcoef(1:sz1,sz2) = data_array(1:sz1,sz2)
        
     case (585) ! 4. dirichlet in all sides
        !print*, 'her'
@@ -1939,16 +1939,16 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        data_array_tmp = data_array(1:sz1,1:sz2)
        call spli2d_custom( sz1, order1, interpolator%eta1, &
             sz2, order2, interpolator%eta2, &
-            data_array_tmp, interpolator%coeff_splines,&!(1:sz1,1:sz2),&
+            data_array_tmp, interpolator%bcoef,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
        ! boundary condition non homogene
-       interpolator%coeff_splines(1,1:sz2)   = data_array(1,1:sz2)
-       interpolator%coeff_splines(sz1,1:sz2) = data_array(sz1,1:sz2)
+       interpolator%bcoef(1,1:sz2)   = data_array(1,1:sz2)
+       interpolator%bcoef(sz1,1:sz2) = data_array(sz1,1:sz2)
        ! boundary condition non homogene
-       interpolator%coeff_splines(1:sz1,1)   = data_array(1:sz1,1)
-       interpolator%coeff_splines(1:sz1,sz2) = data_array(1:sz1,sz2)
+       interpolator%bcoef(1:sz1,1)   = data_array(1:sz1,1)
+       interpolator%bcoef(1:sz1,sz2) = data_array(1:sz1,sz2)
 
     case (650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet
        sz_derivative_eta1 = 2
@@ -1986,17 +1986,17 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
-            interpolator%coeff_splines,&!(1:sz1,1:sz2),&
+            interpolator%bcoef,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
+       !interpolator%bcoef(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1:sz1+sz_derivative_eta1,1)   = interpolator%value_s(1:sz1+sz_derivative_eta1)
-  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_n(1:sz1)
+       !interpolator%bcoef(1:sz1+sz_derivative_eta1,1)   = interpolator%value_s(1:sz1+sz_derivative_eta1)
+  !     interpolator%bcoef(1:sz1,sz2) = interpolator%value_n(1:sz1)
 
     case(657) !left: Dirichlet, right: Neumann, bottom: Neumann, Top: Dirichlet 
        sz_derivative_eta1 = 2
@@ -2034,17 +2034,17 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
-            interpolator%coeff_splines,&!(1:sz1,1:sz2),&
+            interpolator%bcoef,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
+       !interpolator%bcoef(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
- !      interpolator%coeff_splines(1:sz1,1)   = interpolator%value_s(1:sz1)
-  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_n(1:sz1)
+ !      interpolator%bcoef(1:sz1,1)   = interpolator%value_s(1:sz1)
+  !     interpolator%bcoef(1:sz1,sz2) = interpolator%value_n(1:sz1)
 
 
     case(780)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Dirichlet
@@ -2087,7 +2087,7 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
-            interpolator%coeff_splines,&!(1:sz1,1:sz2),&
+            interpolator%bcoef,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
@@ -2095,10 +2095,10 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
+       !interpolator%bcoef(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
- !      interpolator%coeff_splines(1:sz1,1)   = interpolator%value_s(1:sz1)
-  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_n(1:sz1)
+ !      interpolator%bcoef(1:sz1,1)   = interpolator%value_s(1:sz1)
+  !     interpolator%bcoef(1:sz1,sz2) = interpolator%value_n(1:sz1)
 
 
     case(801)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Dirichlet
@@ -2139,17 +2139,17 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
-            interpolator%coeff_splines,&!(1:sz1,1:sz2),&
+            interpolator%bcoef,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
+       !interpolator%bcoef(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
- !      interpolator%coeff_splines(1:sz1,1)   = interpolator%value_s(1:sz1)
-  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_n(1:sz1)
+ !      interpolator%bcoef(1:sz1,1)   = interpolator%value_s(1:sz1)
+  !     interpolator%bcoef(1:sz1,sz2) = interpolator%value_n(1:sz1)
 
     case(804)  !left: Hermite, right: Hermite, bottom: Hermite, Top: Dirichlet
        sz_derivative_eta1 = 2
@@ -2187,17 +2187,17 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
-            interpolator%coeff_splines,&!(1:sz1,1:sz2),&
+            interpolator%bcoef,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
+       !interpolator%bcoef(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
- !      interpolator%coeff_splines(1:sz1,1)   = interpolator%value_s(1:sz1)
-  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_n(1:sz1)
+ !      interpolator%bcoef(1:sz1,1)   = interpolator%value_s(1:sz1)
+  !     interpolator%bcoef(1:sz1,sz2) = interpolator%value_n(1:sz1)
 
     case(1098)  !left: Neumann, right: Dirichlet, bottom: Dirichlet, Top: Neumann
        sz_derivative_eta1 = 2
@@ -2235,17 +2235,17 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
-            interpolator%coeff_splines,&!(1:sz1,1:sz2),&
+            interpolator%bcoef,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
+       !interpolator%bcoef(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
- !      interpolator%coeff_splines(1:sz1,1)   = interpolator%value_s(1:sz1)
-  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_n(1:sz1)
+ !      interpolator%bcoef(1:sz1,1)   = interpolator%value_s(1:sz1)
+  !     interpolator%bcoef(1:sz1,sz2) = interpolator%value_n(1:sz1)
 
     case(1105)  !left: Dirichlet, right: Neumann, bottom: Dirichlet, Top: Neumann
        sz_derivative_eta1 = 2
@@ -2283,17 +2283,17 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
-            interpolator%coeff_splines,&!(1:sz1,1:sz2),&
+            interpolator%bcoef,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
+       !interpolator%bcoef(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1:sz1+sz_derivative_eta1,1)   = interpolator%value_s(1:sz1+sz_derivative_eta1)
-  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_n(1:sz1)
+       !interpolator%bcoef(1:sz1+sz_derivative_eta1,1)   = interpolator%value_s(1:sz1+sz_derivative_eta1)
+  !     interpolator%bcoef(1:sz1,sz2) = interpolator%value_n(1:sz1)
 
     case(1170)  !left: Neumann, right: Neumann, bottom: Neuman, Top: Neumann
 
@@ -2332,17 +2332,17 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
-            interpolator%coeff_splines,&!(1:sz1,1:sz2),&
+            interpolator%bcoef,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
+       !interpolator%bcoef(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1:sz1+sz_derivative_eta1,1)   = interpolator%value_s(1:sz1+sz_derivative_eta1)
-  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_n(1:sz1)
+       !interpolator%bcoef(1:sz1+sz_derivative_eta1,1)   = interpolator%value_s(1:sz1+sz_derivative_eta1)
+  !     interpolator%bcoef(1:sz1,sz2) = interpolator%value_n(1:sz1)
     case(2338)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Hermite
        sz_derivative_eta1 = 2
        sz_derivative_eta2 = 2
@@ -2379,17 +2379,17 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
-            interpolator%coeff_splines,&!(1:sz1,1:sz2),&
+            interpolator%bcoef,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
+       !interpolator%bcoef(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1:sz1+sz_derivative_eta1,1)   = interpolator%value_s(1:sz1+sz_derivative_eta1)
-  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_n(1:sz1)
+       !interpolator%bcoef(1:sz1+sz_derivative_eta1,1)   = interpolator%value_s(1:sz1+sz_derivative_eta1)
+  !     interpolator%bcoef(1:sz1,sz2) = interpolator%value_n(1:sz1)
        
     case(2145) !left: Dirichlet, right: Hermite, bottom: Dirichlet, Top: Hermite  
        sz_derivative_eta1 = 2
@@ -2427,17 +2427,17 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
-            interpolator%coeff_splines,&!(1:sz1,1:sz2),&
+            interpolator%bcoef,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
+       !interpolator%bcoef(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1:sz1+sz_derivative_eta1,1)   = interpolator%value_s(1:sz1+sz_derivative_eta1)
-  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_n(1:sz1)
+       !interpolator%bcoef(1:sz1+sz_derivative_eta1,1)   = interpolator%value_s(1:sz1+sz_derivative_eta1)
+  !     interpolator%bcoef(1:sz1,sz2) = interpolator%value_n(1:sz1)
 
 
     case(2124)  !left: Hermite, right: Dirichlet, bottom: Dirichlet, Top: Hermite
@@ -2477,17 +2477,17 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
-            interpolator%coeff_splines,&!(1:sz1,1:sz2),&
+            interpolator%bcoef,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
+       !interpolator%bcoef(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
- !      interpolator%coeff_splines(1:sz1,1)   = interpolator%value_s(1:sz1)
-  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_n(1:sz1)
+ !      interpolator%bcoef(1:sz1,1)   = interpolator%value_s(1:sz1)
+  !     interpolator%bcoef(1:sz1,sz2) = interpolator%value_n(1:sz1)
 
     case(2148)  !left:Hermite , right: Hermite, bottom: Dirichlet, Top: Hermite
        sz_derivative_eta1 = 2
@@ -2525,17 +2525,17 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
-            interpolator%coeff_splines,&!(1:sz1,1:sz2),&
+            interpolator%bcoef,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
+       !interpolator%bcoef(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
- !      interpolator%coeff_splines(1:sz1,1)   = interpolator%value_s(1:sz1)
-  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_n(1:sz1)
+ !      interpolator%bcoef(1:sz1,1)   = interpolator%value_s(1:sz1)
+  !     interpolator%bcoef(1:sz1,sz2) = interpolator%value_n(1:sz1)
 
     case(2316)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Hermite
        sz_derivative_eta1 = 2
@@ -2573,17 +2573,17 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
-            interpolator%coeff_splines,&!(1:sz1,1:sz2),&
+            interpolator%bcoef,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
+       !interpolator%bcoef(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
- !      interpolator%coeff_splines(1:sz1,1)   = interpolator%value_s(1:sz1)
-  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_n(1:sz1)
+ !      interpolator%bcoef(1:sz1,1)   = interpolator%value_s(1:sz1)
+  !     interpolator%bcoef(1:sz1,sz2) = interpolator%value_n(1:sz1)
 
     case(2340) ! Hermite in al sides
        
@@ -2623,17 +2623,17 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
-            interpolator%coeff_splines,&!(1:sz1,1:sz2),&
+            interpolator%bcoef,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
        ! boundary condition non homogene
-       !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
+       !interpolator%bcoef(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
- !      interpolator%coeff_splines(1:sz1,1)   = interpolator%value_s(1:sz1)
-  !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_n(1:sz1)
+ !      interpolator%bcoef(1:sz1,1)   = interpolator%value_s(1:sz1)
+  !     interpolator%bcoef(1:sz1,sz2) = interpolator%value_n(1:sz1)
 
     end select
     interpolator%coefficients_set = .true.
@@ -2792,7 +2792,7 @@ function interpolate_value_ad2d( &
     !print*, 't1',tmp_tx
     tmp_ty => interpolator%t2(1:interpolator%size_t2)
     !print*, 't2',tmp_ty
-    tmp_coeff =>interpolator%coeff_splines(1:size_coeffs1,1:size_coeffs2)
+    tmp_coeff =>interpolator%bcoef(1:size_coeffs1,1:size_coeffs2)
     !print*, 'coef',tmp_coeff
     !call interv( tmp_ty, interpolator%size_t2, res2, li_wy, li_mflag )
   !  call set_time_mark(t0)
@@ -2941,7 +2941,7 @@ function interpolate_value_ad2d( &
     !SLL_ALLOCATE(knot2_tmp(interpolator%size_t2),ierr)
     knot1_tmp => interpolator%t1(1:interpolator%size_t1)
     knot2_tmp => interpolator%t2(1:interpolator%size_t2)
-    tmp_coeff => interpolator%coeff_splines(1:size_coeffs1,1:size_coeffs2)
+    tmp_coeff => interpolator%bcoef(1:size_coeffs1,1:size_coeffs2)
 
     val = dvalue2d( &
          res1, &
@@ -3087,7 +3087,7 @@ function interpolate_value_ad2d( &
    ! SLL_ALLOCATE(knot2_tmp(interpolator%size_t2),ierr)
     knot1_tmp => interpolator%t1(1:interpolator%size_t1)
     knot2_tmp => interpolator%t2(1:interpolator%size_t2)
-    tmp_coeff =>interpolator%coeff_splines(1:size_coeffs1,1:size_coeffs2)
+    tmp_coeff =>interpolator%bcoef(1:size_coeffs1,1:size_coeffs2)
     val = dvalue2d( &
          res1, &
          res2, &
@@ -3170,7 +3170,7 @@ function interpolate_value_ad2d( &
     class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)    :: interpolator
     sll_real64, dimension(:,:), pointer           :: get_coefficients_ad2d     
 
-    get_coefficients_ad2d => interpolator%coeff_splines
+    get_coefficients_ad2d => interpolator%bcoef
   end function get_coefficients_ad2d
   
 end module sll_module_arbitrary_degree_spline_interpolator_2d
