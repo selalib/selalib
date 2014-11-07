@@ -12,7 +12,7 @@ module sll_simulation_2d_guiding_center_generalized_coords_module
   use sll_module_interpolators_2d_base
   use sll_module_arbitrary_degree_spline_interpolator_2d
   use sll_simulation_base
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_coordinate_transformation_2d_base_module
   use sll_general_coordinate_qn_solver_module
   use sll_module_scalar_field_2d_base
@@ -40,7 +40,7 @@ module sll_simulation_2d_guiding_center_generalized_coords_module
      sll_int32  :: bc_bottom
      sll_int32  :: bc_top
      ! the logical meshes are split in two one for space, one for velocity
-     type(sll_logical_mesh_2d), pointer    :: mesh2d
+     type(sll_cartesian_mesh_2d), pointer    :: mesh2d
      ! This simulation only applies a coordinate transformation to the spatial
      ! coordinates.
      class(sll_coordinate_transformation_2d_base), pointer :: transf
@@ -98,7 +98,7 @@ contains
    bc_top)
 
    type(sll_simulation_2d_guiding_center_generalized), intent(inout)     :: sim
-   type(sll_logical_mesh_2d), pointer                    :: mesh2d
+   type(sll_cartesian_mesh_2d), pointer                    :: mesh2d
    class(sll_coordinate_transformation_2d_base), pointer :: transformation
    procedure(sll_scalar_initializer_2d)                  :: init_func !! see it 
    sll_real64, dimension(:), target                      :: params
@@ -617,7 +617,7 @@ contains
     class(sll_scalar_field_2d_discrete_alt), pointer      :: rho_np1
     type(sll_scalar_field_2d_discrete_alt) , pointer      :: phi
     class(sll_coordinate_transformation_2d_base), pointer :: T
-    type(sll_logical_mesh_2D), pointer :: M
+    type(sll_cartesian_mesh_2D), pointer :: M
     sll_real64, dimension(:,:), pointer :: jac_array
     sll_real64 :: eta1_loc,eta2_loc,eta1,eta1n,eta2,eta20,eta2n,tolr
     sll_real64 :: a_eta1,a_eta2,eta10,eta2_min,eta2_max 
@@ -629,7 +629,7 @@ contains
   
    
     T => phi%get_transformation() 
-    M => phi%get_logical_mesh()
+    M => phi%get_cartesian_mesh()
     
     N_eta1 = M%num_cells1
     N_eta2 = M%num_cells2
@@ -888,13 +888,13 @@ subroutine calcul_integral(rho_n,phi,&
     
     
     class(sll_coordinate_transformation_2d_base), pointer :: T
-    type(sll_logical_mesh_2D), pointer :: M
+    type(sll_cartesian_mesh_2D), pointer :: M
     sll_real64, dimension(1:2,1:2) :: jac_m
     
   
    
     T => phi%get_transformation() 
-    M => phi%get_logical_mesh()
+    M => phi%get_cartesian_mesh()
     
     N_eta1 = M%num_cells1
     N_eta2 = M%num_cells2

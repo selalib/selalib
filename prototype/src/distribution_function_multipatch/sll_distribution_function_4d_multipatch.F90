@@ -46,7 +46,7 @@ module sll_distribution_function_4d_multipatch_module
      sll_int32 :: nproc_factor1
      sll_int32 :: nproc_factor2
      logical   :: ready_for_sequential_ops_in_x1x2 = .false.
-     type(sll_logical_mesh_2d), pointer :: mesh_v ! same for all patches
+     type(sll_cartesian_mesh_2d), pointer :: mesh_v ! same for all patches
      type(sll_coordinate_transformation_multipatch_2d), pointer :: transf
      type(layout_4d_ptr), dimension(:), pointer :: layouts_x1x2
      type(layout_4d_ptr), dimension(:), pointer :: layouts_x3x4
@@ -102,7 +102,7 @@ contains
     type(sll_collective_t), pointer :: collective
     type(sll_coordinate_transformation_multipatch_2d), intent(in), target:: &
          transf_mp
-    type(sll_logical_mesh_2d), pointer :: mesh_v
+    type(sll_cartesian_mesh_2d), pointer :: mesh_v
     sll_int32, intent(in) :: nproc_factor1
     sll_int32, intent(in) :: nproc_factor2
     sll_int32 :: ierr
@@ -150,7 +150,7 @@ contains
     sll_int32 :: col_size
     sll_int32 :: imax
     sll_int32 :: jmax
-    type(sll_logical_mesh_2d), pointer :: lm
+    type(sll_cartesian_mesh_2d), pointer :: lm
 
     np_x3 = df%mesh_v%num_cells1+1
     np_x4 = df%mesh_v%num_cells2+1
@@ -250,7 +250,7 @@ contains
     sll_int32 :: num_patches
     sll_int32 :: i
     type(layout_4d), pointer :: layout
-    type(sll_logical_mesh_2d), pointer :: lm
+    type(sll_cartesian_mesh_2d), pointer :: lm
     class(sll_coordinate_transformation_2d_base), pointer :: t
     !type(sll_time_mark)  :: t0 ! delete this when done timing/debugging
     !sll_real64 :: time ! delete
@@ -260,7 +260,7 @@ contains
     do i=0,num_patches-1
        layout => df%layouts_x3x4(i+1)%l
        ! please correct this to:
-       ! lm => df%transf%get_logical_mesh(i)
+       ! lm => df%transf%get_cartesian_mesh(i)
        ! whenever gfortan 4.6 is no longer supported by Selalib.
        lm => df%transf%transfs(i+1)%t%mesh
        t => df%transf%transfs(i+1)%t
@@ -533,7 +533,7 @@ contains
     sll_real64 :: accumulator
     sll_real64, dimension(:,:,:,:), pointer :: f
     type(sll_coordinate_transformation_multipatch_2d), pointer :: t
-    type(sll_logical_mesh_2d), pointer :: mv
+    type(sll_cartesian_mesh_2d), pointer :: mv
     sll_real64 :: delta1
     sll_real64 :: delta2
     sll_real64 :: delta3
@@ -591,7 +591,7 @@ contains
     sll_real64 :: accumulator
     sll_real64, dimension(:,:,:,:), pointer :: f
     type(sll_coordinate_transformation_multipatch_2d), pointer :: t
-    type(sll_logical_mesh_2d), pointer :: mv
+    type(sll_cartesian_mesh_2d), pointer :: mv
     sll_real64 :: delta1
     sll_real64 :: delta2
     sll_real64 :: delta3
@@ -652,7 +652,7 @@ contains
     sll_real64 :: accumulator
     sll_real64, dimension(:,:,:,:), pointer :: f
     type(sll_coordinate_transformation_multipatch_2d), pointer :: t
-    type(sll_logical_mesh_2d), pointer :: mv
+    type(sll_cartesian_mesh_2d), pointer :: mv
     sll_real64 :: delta1
     sll_real64 :: delta2
     sll_real64 :: delta3
@@ -717,7 +717,7 @@ contains
     sll_real64 :: accumulator3
     sll_real64, dimension(:,:,:,:), pointer :: f
     type(sll_coordinate_transformation_multipatch_2d), pointer :: t
-    type(sll_logical_mesh_2d), pointer :: mv
+    type(sll_cartesian_mesh_2d), pointer :: mv
     sll_real64 :: delta1
     sll_real64 :: delta2
     sll_real64 :: delta3

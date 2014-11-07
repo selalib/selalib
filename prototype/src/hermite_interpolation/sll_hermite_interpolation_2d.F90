@@ -4,7 +4,6 @@ module sll_hermite_interpolation_2d_module
 #include "sll_assert.h"
 implicit none
 
-
 !Hermite interpolation in 2d
 !derivatives are given with finite stencil formulae of order p
 !which can be arbitrary in each direction
@@ -133,7 +132,9 @@ contains  !*********************************************************************
     eta1_max_slopes, &
     eta2_min_slopes, &
     eta2_max_slopes )
+
     type(sll_hermite_interpolation_2d) :: interp
+
     sll_int32, intent(in) :: npts1
     sll_int32, intent(in) :: npts2
     sll_real64, intent(in) :: eta1_min

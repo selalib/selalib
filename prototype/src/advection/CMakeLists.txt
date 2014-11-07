@@ -33,7 +33,7 @@ IF(HDF5_ENABLED)
   TARGET_LINK_LIBRARIES( 
     sll_advection
     #sll_fcisl
-    sll_logical_meshes
+    sll_meshes
     sll_characteristics
     sll_interpolators
     sll_periodic_interpolation

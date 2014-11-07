@@ -10,12 +10,11 @@ module sll_pic_simulation_4d_cartesian_module
 
   use sll_constants
   use sll_simulation_base
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_timer
   use sll_particle_group_4d_module
-  use sll_particle_initializers
+  use sll_particle_initializers_4d
   use sll_particle_sort_module
-!  use sll_accumulators
   use sll_charge_to_density_module
   use sll_pic_utilities
   use sll_module_poisson_2d_fft
@@ -38,7 +37,7 @@ module sll_pic_simulation_4d_cartesian_module
      sll_int32  :: guard_size
      sll_int32  :: array_size
      type(sll_particle_group_4d),  pointer :: part_group
-     type(sll_logical_mesh_2d),    pointer :: m2d
+     type(sll_cartesian_mesh_2d),    pointer :: m2d
      type(sll_particle_sorter_2d), pointer :: sorter
      type(sll_charge_accumulator_2d_ptr), dimension(:), pointer  :: q_accumulator
      type(electric_field_accumulator), pointer :: E_accumulator
@@ -113,7 +112,7 @@ contains
     sim%dt = dt
     sim%num_iterations = number_iterations
 
-    sim%m2d =>  new_logical_mesh_2d( NC_X, NC_Y, &
+    sim%m2d =>  new_cartesian_mesh_2d( NC_X, NC_Y, &
                 XMIN, XMAX, YMIN, YMAX )
 
     sim%part_group => new_particle_4d_group( &
@@ -143,7 +142,7 @@ contains
     call sll_initial_particles_4d( sim%thermal_speed_ions, & 
                                    ALPHA, KX, sim%m2d,     &
                                    sim%ions_number,        &
-                                   pa_gr, &!sim%part_group,         &
+                                   pa_gr, &
                                    rand_seed, sim%my_rank  ) 
     SLL_DEALLOCATE_ARRAY( rand_seed, ierr )
     !$omp parallel
@@ -152,10 +151,12 @@ contains
        sim%part_group%p_list(j) = pa_gr%p_list(j)
     enddo
     !$omp end do
+
     !$omp single
     call sll_sort_particles_2d( sim%sorter, sim%part_group )
     sim%n_threads =  1
     !$omp end single
+
 #ifdef _OPENMP
     if (OMP_GET_THREAD_NUM() == 0) then
        sim%n_threads =  OMP_GET_NUM_THREADS()
@@ -271,24 +272,20 @@ contains
     endif
 
     it = 0
-    call sll_gnuplot_corect_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
-            sim%m2d%eta2_max, ncy+1, &
-            sim%rho, 'rho_init', it, ierr )
+!!$    if (sim%my_rank == 0) then
+!!$    call sll_gnuplot_corect_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
+!!$            sim%m2d%eta2_max, ncy+1, &
+!!$            sim%rho, 'rho_init', it, ierr )
+!!$    endif
 
     call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, -sim%rho )
 
 !!$    if (sim%my_rank == 0) then
 !!$       call sll_gnuplot_corect_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
 !!$            sim%m2d%eta2_max, ncy+1, &
-!!$            sim%rho, 'rho_init', it, ierr )
-!!$       call sll_gnuplot_corect_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
-!!$            sim%m2d%eta2_max, ncy+1, &
-!!$            sim%E1, 'E1_init', it, ierr )
-!!$       call sll_gnuplot_corect_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
-!!$            sim%m2d%eta2_max, ncy+1, &
 !!$            sim%E2, 'E2_init', it, ierr )
 !!$    endif
-
+    
     if (sim%use_cubic_splines) then 
        call reset_field_accumulator_CS_to_zero( sim%E_accumulator_CS )
        call sll_accumulate_field_CS( sim%E1, sim%E2, sim%E_accumulator_CS )
@@ -324,7 +321,7 @@ contains
 !            p(i)%vx*p(i)%vx + p(i)%vy*p(i)%vy           
 !    enddo
 
-!    open(65,file='logE_vals.dat')
+    open(65,file='logE_vals.dat')
     call sll_set_time_mark(t2)    
 
 !  ----  TIME LOOP  ----
@@ -335,11 +332,11 @@ contains
        counter = 1 + mod(it,save_nb)
        diag_energy(counter,:) = (/ it*sim%dt, valeur /)
        valeur = 0.0_f64
-       val2   = 0.0_f64
+!       val2   = 0.0_f64
        do i = 1,ncx
           do j = 1,ncy
              valeur  = valeur + sim%E1(i,j)*sim%rho(i,j)
-             val2 = val2 + sim%E1(i,j)**2 + sim%E2(i,j)**2
+!             val2 = val2 + sim%E1(i,j)**2 + sim%E2(i,j)**2
           enddo
        enddo
        diag_TOTmoment(counter) = valeur
@@ -348,14 +345,13 @@ contains
 !            diag_TOTenergy(mod(counter-1,save_nb)) + &
 !            0.5_f64 * val2 *sim%m2d%delta_eta1*sim%m2d%delta_eta2
                     
-!       if ( (mod(it+1,save_nb)==0) .and. (sim%my_rank == 0)) then
-!          do jj=1,save_nb
-!             write(65,*) diag_energy(jj,:), diag_TOTmoment(jj)!, diag_TOTenergy(jj)
-!          enddo
-!       endif
+       if ( (mod(it+1,save_nb)==0) .and. (sim%my_rank == 0)) then
+          do jj=1,save_nb
+             write(65,*) diag_energy(jj,:), diag_TOTmoment(jj)!, diag_TOTenergy(jj)
+          enddo
+       endif
 
        if (mod(it+1,10)==0) then 
-!          print*, it+1
           call sll_sort_particles_2d( sim%sorter, sim%part_group )
        endif
 
@@ -518,11 +514,6 @@ contains
        gi = 0
        ! ---- END PUSH PARTICLES ----
 
-!       call sll_set_time_mark(t8)
-!       call sum_accumulators( sim%q_accumulator, n_threads, ncx*ncy )
-!       time = sll_time_elapsed_since(t8)
-!       print*, "time for the accumulators sum", time
-
        if (sim%use_cubic_splines) then
           call sum_accumulators_CS( sim%q_accumulator_CS, n_threads, ncx*ncy )
           call sll_convert_charge_to_rho_2d_per_per_CS( sim%q_accumulator_CS(1)%q, sim%rho )
@@ -562,7 +553,7 @@ contains
 
     enddo
 !  ---  ---  - - -   END TIME LOOP  - - -  --- -----
-!!     close(65)
+    close(65)
     time = sll_time_elapsed_since(t2)
 !    open(93,file='time_parts_sec.dat',position='append')
 !    write(93,*) '# Nb of threads     time (sec)  average pushes/sec for Proc     sim%my_rank '
@@ -622,14 +613,14 @@ contains
     logical :: res
     sll_real64, intent(in) :: x
     sll_real64, intent(in) :: y
-    type(sll_logical_mesh_2d), pointer :: mesh
+    type(sll_cartesian_mesh_2d), pointer :: mesh
 
     res = (x >= mesh%eta1_min) .and. (x <= mesh%eta1_max) .and. &
           (y >= mesh%eta2_min) .and. (y <= mesh%eta2_max)
   end function in_bounds
 
   subroutine apply_periodic_bc( mesh, x, y )
-    type(sll_logical_mesh_2d), pointer :: mesh
+    type(sll_cartesian_mesh_2d), pointer :: mesh
     sll_real64, intent(inout) :: x
     sll_real64, intent(inout) :: y
 

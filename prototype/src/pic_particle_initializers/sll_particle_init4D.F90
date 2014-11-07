@@ -15,7 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-module sll_particle_initializers
+module sll_particle_initializers_4d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -23,7 +23,7 @@ module sll_particle_initializers
 
   use sll_constants, only: sll_pi
   use sll_particle_group_4d_module
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use gaussian
   use hammersley
   use sll_representation_conversion_module
@@ -44,7 +44,7 @@ contains
               p_group,                 &
               rand_seed, rank )
     sll_real64, intent(in) :: thermal_speed, alpha, k
-    type(sll_logical_mesh_2d), intent(in) :: m2d
+    type(sll_cartesian_mesh_2d), intent(in) :: m2d
     sll_int32, intent(in)  :: num_particles
     type(sll_particle_group_4d), pointer, intent(inout) :: p_group
     sll_int32  :: j
@@ -116,7 +116,7 @@ contains
 !!$              p_group )
 !!$
 !!$    sll_real64, intent(in) :: thermal_speed, alpha, k
-!!$    type(sll_logical_mesh_2d), intent(in) :: m2d
+!!$    type(sll_cartesian_mesh_2d), intent(in) :: m2d
 !!$    sll_int64, intent(in)  :: num_particles
 !!$    type(sll_particle_group_2d), pointer, intent(inout) :: p_group
 !!$    sll_int64 :: j
@@ -170,4 +170,4 @@ contains
     eval_landau = 1._f64 + alp * cos(kx * x)
   end function eval_landau
 
-end module sll_particle_initializers
+end module sll_particle_initializers_4d

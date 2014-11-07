@@ -15,7 +15,7 @@ module sll_module_maxwell_2d_diga
 #include "sll_integration.h"
 #include "sll_utilities.h"
 #include "sll_assert.h"
-#include "sll_logical_meshes.h"
+#include "sll_cartesian_meshes.h"
 #include "sll_coordinate_transformations.h"
 
 use sll_maxwell_solvers_base
@@ -23,10 +23,9 @@ use sll_dg_fields
 use sll_boundary_condition_descriptors
 
 implicit none
-private
 
 !> Local type with edge properties
-type :: edge_type
+type, private :: edge_type
 
    sll_real64                            :: length 
    sll_real64, dimension(:,:), pointer   :: vec_norm
@@ -35,7 +34,7 @@ type :: edge_type
 end type edge_type
 
 !> Information about a mesh cell
-type :: cell_type
+type, private :: cell_type
 
    sll_int32                           :: i,j         !< indices 
    sll_real64                          :: eta1_min    !< left side
@@ -50,21 +49,34 @@ type :: cell_type
 end type cell_type
 
 !> DG method in 2D with general coordinates
-type, public, extends(sll_maxwell_solver) :: sll_maxwell_2d_diga
-   sll_transformation, pointer                  :: tau    !< transformation
-   type(sll_logical_mesh_2d), pointer           :: mesh   !< Logical mesh
-   sll_int32                                    :: degree !< degree of gauss integration
-   type(cell_type), dimension(:,:), pointer     :: cell   !< mesh cells
-   sll_real64, dimension(:,:), pointer, private :: f      !< cell flux
-   sll_real64, dimension(:,:), pointer, private :: w      !< edge flux
-   sll_real64, dimension(:,:), pointer, private :: r      !< source flux
-   sll_int32, private                           :: bc_south
-   sll_int32, private                           :: bc_east
-   sll_int32, private                           :: bc_north
-   sll_int32, private                           :: bc_west
-   sll_int32, private                           :: flux_type
-   type(sll_dg_field_2d), pointer                      :: po     !< Potential
-   sll_real64, private                          :: xi 
+type, public :: sll_maxwell_2d_diga
+   private
+   sll_int32                           :: nc_eta1      !< x cells number
+   sll_int32                           :: nc_eta2      !< y cells number
+   sll_int32                           :: polarization !< TE or TM
+   sll_real64                          :: e_0          !< electric conductivity
+   sll_real64                          :: mu_0         !< magnetic permeability
+   sll_real64                          :: c            !< speed of light
+   sll_real64                          :: eta1_min     !< left side 
+   sll_real64                          :: eta1_max     !< right side
+   sll_real64                          :: delta_eta1   !< step size
+   sll_real64                          :: eta2_min     !< bottom side
+   sll_real64                          :: eta2_max     !< top side
+   sll_real64                          :: delta_eta2   !< step size
+   sll_transformation, pointer         :: tau          !< transformation
+   type(sll_cartesian_mesh_2d), pointer  :: mesh         !< Logical mesh
+   sll_int32                           :: degree       !< degree of gauss integration
+   type(cell_type), pointer            :: cell(:,:)    !< mesh cells
+   sll_real64, pointer                 :: f(:,:)       !< cell flux
+   sll_real64, pointer                 :: w(:,:)       !< edge flux
+   sll_real64, pointer                 :: r(:,:)       !< source flux
+   sll_int32                           :: bc_south
+   sll_int32                           :: bc_east
+   sll_int32                           :: bc_north
+   sll_int32                           :: bc_west
+   sll_int32                           :: flux_type
+   type(sll_dg_field_2d), pointer      :: po           !< Potential
+   sll_real64                          :: xi 
 
 end type sll_maxwell_2d_diga
 
@@ -89,6 +101,8 @@ sll_int32, parameter, public :: SLL_CENTERED       = 20
 sll_int32, parameter, public :: SLL_UNCENTERED     = 21
 
 public sll_new, sll_create, sll_solve
+
+private
 
 contains
 
@@ -165,21 +179,21 @@ subroutine initialize_maxwell_2d_diga( this,         &
    this%tau        => tau
    ! Please undo this 'fix' whenever it is decided that gfortran 4.6 is no
    ! longer supported.
-   !   this%mesh       => tau%get_logical_mesh()
+   !   this%mesh       => tau%get_cartesian_mesh()
    this%mesh       => tau%mesh
    this%bc_south   =  bc_south
    this%bc_east    =  bc_east
    this%bc_north   =  bc_north
    this%bc_west    =  bc_west
 
-   this%nc_eta1    = tau%mesh%num_cells1
-   this%nc_eta2    = tau%mesh%num_cells2
-   this%eta1_min   = tau%mesh%eta1_min
-   this%eta2_min   = tau%mesh%eta2_min
-   this%eta1_max   = tau%mesh%eta1_max
-   this%eta2_max   = tau%mesh%eta2_max
-   this%delta_eta1 = tau%mesh%delta_eta1
-   this%delta_eta2 = tau%mesh%delta_eta2
+   this%nc_eta1    = this%mesh%num_cells1
+   this%nc_eta2    = this%mesh%num_cells2
+   this%eta1_min   = this%mesh%eta1_min
+   this%eta2_min   = this%mesh%eta2_min
+   this%eta1_max   = this%mesh%eta1_max
+   this%eta2_max   = this%mesh%eta2_max
+   this%delta_eta1 = this%mesh%delta_eta1
+   this%delta_eta2 = this%mesh%delta_eta2
 
    this%xi           = 0.0_f64
    this%degree       = degree
@@ -200,10 +214,10 @@ subroutine initialize_maxwell_2d_diga( this,         &
    w    = gauss_lobatto_weights(degree+1,0.0_f64,1.0_f64)
    dlag = gauss_lobatto_derivative_matrix(degree+1,x)
 
-   dtau_ij_mat(1,1) = tau%mesh%delta_eta1
+   dtau_ij_mat(1,1) = this%mesh%delta_eta1
    dtau_ij_mat(1,2) = 0.0_f64
    dtau_ij_mat(2,1) = 0.0_f64
-   dtau_ij_mat(2,2) = tau%mesh%delta_eta2
+   dtau_ij_mat(2,2) = this%mesh%delta_eta2
 
    do j = 1, this%nc_eta2   !Loop over cells
    do i = 1, this%nc_eta1
@@ -544,19 +558,22 @@ subroutine compute_normals(tau, bc_south, bc_east, bc_north, bc_west, &
    sll_int32                   :: bc_west
    sll_int32                   :: k
    sll_int32                   :: error
+   class(sll_cartesian_mesh_2d), pointer :: lm
+
+   lm => tau%get_cartesian_mesh()
    
    cell%i = i
    cell%j = j
-   cell%eta1_min = tau%mesh%eta1_min + (i-1)*tau%mesh%delta_eta1
-   cell%eta2_min = tau%mesh%eta2_min + (j-1)*tau%mesh%delta_eta2
+   cell%eta1_min = lm%eta1_min + (i-1)*lm%delta_eta1
+   cell%eta2_min = lm%eta2_min + (j-1)*lm%delta_eta2
    
-   cell%eta1_max = cell%eta1_min + tau%mesh%delta_eta1
-   cell%eta2_max = cell%eta2_min + tau%mesh%delta_eta2
+   cell%eta1_max = cell%eta1_min + lm%delta_eta1
+   cell%eta2_max = cell%eta2_min + lm%delta_eta2
 
-   dtau_ij_mat(1,1) = tau%mesh%delta_eta1
+   dtau_ij_mat(1,1) = lm%delta_eta1
    dtau_ij_mat(1,2) = 0.0_f64
    dtau_ij_mat(2,1) = 0.0_f64
-   dtau_ij_mat(2,2) = tau%mesh%delta_eta2
+   dtau_ij_mat(2,2) = lm%delta_eta2
 
    do side = 1, 4
       SLL_CLEAR_ALLOCATE(cell%edge(side)%vec_norm(1:d+1,1:2),error)
@@ -564,8 +581,8 @@ subroutine compute_normals(tau, bc_south, bc_east, bc_north, bc_west, &
    end do
 
    if (j ==                   1) cell%edge(SOUTH)%bc_type = bc_south
-   if (i == tau%mesh%num_cells1) cell%edge(EAST)%bc_type  = bc_east
-   if (j == tau%mesh%num_cells2) cell%edge(NORTH)%bc_type = bc_north
+   if (i == lm%num_cells1) cell%edge(EAST)%bc_type  = bc_east
+   if (j == lm%num_cells2) cell%edge(NORTH)%bc_type = bc_north
    if (i ==                   1) cell%edge(WEST)%bc_type  = bc_west
    
    x = gauss_lobatto_points(d+1)
@@ -590,7 +607,7 @@ subroutine compute_normals(tau, bc_south, bc_east, bc_north, bc_west, &
    end do
 
    cell%edge(SOUTH)%length = length
-   cell%edge(SOUTH)%vec_norm = vec_norm/tau%mesh%delta_eta1
+   cell%edge(SOUTH)%vec_norm = vec_norm/lm%delta_eta1
    
    length = 0._f64
    a  = cell%eta2_min 
@@ -611,7 +628,7 @@ subroutine compute_normals(tau, bc_south, bc_east, bc_north, bc_west, &
    end do
 
    cell%edge(EAST)%length = length
-   cell%edge(EAST)%vec_norm = vec_norm/tau%mesh%delta_eta2
+   cell%edge(EAST)%vec_norm = vec_norm/lm%delta_eta2
    
    length = 0._f64
    a  = cell%eta1_min 
@@ -632,7 +649,7 @@ subroutine compute_normals(tau, bc_south, bc_east, bc_north, bc_west, &
    end do
 
    cell%edge(NORTH)%length = length
-   cell%edge(NORTH)%vec_norm = vec_norm/tau%mesh%delta_eta1
+   cell%edge(NORTH)%vec_norm = vec_norm/lm%delta_eta1
    
    length = 0._f64
    a  = cell%eta2_min 
@@ -653,7 +670,7 @@ subroutine compute_normals(tau, bc_south, bc_east, bc_north, bc_west, &
    end do
 
    cell%edge(WEST)%length = length
-   cell%edge(WEST)%vec_norm = vec_norm/tau%mesh%delta_eta2
+   cell%edge(WEST)%vec_norm = vec_norm/lm%delta_eta2
 
 end subroutine compute_normals
 

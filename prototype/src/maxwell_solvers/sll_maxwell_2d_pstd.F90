@@ -11,6 +11,10 @@
 !  the software under the terms of the CeCILL-B license as 
 !  circulated by CEA, CNRS and INRIA at the following URL
 !  "http://www.cecill.info". 
+!
+!
+!  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
+!
 !**************************************************************
 
 #include "sll_fftw.h"
@@ -57,10 +61,46 @@ module sll_module_maxwell_2d_pstd
 #include "sll_maxwell_solvers_macros.h"
 
 use fftw3
-use sll_maxwell_solvers_base
 
 implicit none
-private
+
+
+!> @brief 
+!> Maxwell solver object
+!> @details
+!> We solve Maxwell system with PSTD numerical method. The type contains
+!> information about FFT, mesh and physical properties.
+type, public :: sll_maxwell_2d_pstd
+
+   private
+   sll_int32           :: nc_eta1      !< x cells number
+   sll_int32           :: nc_eta2      !< y cells number
+   sll_int32           :: polarization !< TE or TM
+   sll_real64          :: e_0          !< electric conductivity
+   sll_real64          :: mu_0         !< magnetic permeability
+   sll_real64          :: c            !< speed of light
+   sll_real64          :: eta1_min     !< left side 
+   sll_real64          :: eta1_max     !< right side
+   sll_real64          :: delta_eta1   !< step size
+   sll_real64          :: eta2_min     !< bottom side
+   sll_real64          :: eta2_max     !< top side
+   sll_real64          :: delta_eta2   !< step size
+   sll_real64, pointer :: d_dx(:)      !< field x derivative 
+   sll_real64, pointer :: d_dy(:)      !< field y derivative
+   sll_real64, pointer :: kx(:)        !< x wave number
+   sll_real64, pointer :: ky(:)        !< y wave number
+   fftw_plan           :: fwx          !< forward fft plan along x
+   fftw_plan           :: fwy          !< forward fft plan along y
+   fftw_plan           :: bwx          !< backward fft plan along x
+   fftw_plan           :: bwy          !< backward fft plan along y
+   fftw_plan           :: p_tmp_x      !< pointer for fft memory allocation
+   fftw_plan           :: p_tmp_y      !< pointer for fft memory allocation
+   fftw_comp , pointer :: tmp_x(:)     !< x fft transform
+   fftw_comp , pointer :: tmp_y(:)     !< y fft transform
+   fftw_int            :: sz_tmp_x     !< size for memory allocation
+   fftw_int            :: sz_tmp_y     !< size for memory allocation
+
+end type sll_maxwell_2d_pstd
 
 !> Initialize maxwell solver 2d cartesian periodic with PSTD scheme
 interface sll_create
@@ -72,10 +112,12 @@ interface sll_solve
  module procedure solve_maxwell_2d_pstd
 end interface sll_solve
 
+!> Solve ampere equation using maxwell solver 2d cartesian periodic with PSTD scheme
 interface sll_solve_ampere
  module procedure ampere_2d_pstd
 end interface sll_solve_ampere
 
+!> Solve faraday equation using solver 2d cartesian periodic with PSTD scheme
 interface sll_solve_faraday
  module procedure faraday_2d_pstd
 end interface sll_solve_faraday
@@ -85,32 +127,13 @@ interface sll_delete
  module procedure free_maxwell_2d_pstd
 end interface sll_delete
 
-public :: sll_create, sll_delete, sll_solve, sll_solve_ampere, sll_solve_faraday
+public sll_create
+public sll_delete
+public sll_solve_faraday
+public sll_solve_ampere
+public sll_solve
 
-!> @brief 
-!> Maxwell solver object
-!> @details
-!> We solve Maxwell system with PSTD numerical method. The type contains
-!> information about FFT, mesh and physical properties.
-type, public, extends(sll_maxwell_solver) :: sll_maxwell_2d_pstd
-
-   sll_real64, pointer :: d_dx(:)  !< field x derivative 
-   sll_real64, pointer :: d_dy(:)  !< field y derivative
-   sll_real64, pointer :: kx(:)    !< x wave number
-   sll_real64, pointer :: ky(:)    !< y wave number
-   fftw_plan           :: fwx      !< forward fft plan along x
-   fftw_plan           :: fwy      !< forward fft plan along y
-   fftw_plan           :: bwx      !< backward fft plan along x
-   fftw_plan           :: bwy      !< backward fft plan along y
-   fftw_plan           :: p_tmp_x  !< pointer for fft memory allocation
-   fftw_plan           :: p_tmp_y  !< pointer for fft memory allocation
-   fftw_comp , pointer :: tmp_x(:) !< x fft transform
-   fftw_comp , pointer :: tmp_y(:) !< y fft transform
-   fftw_int            :: sz_tmp_x !< size for memory allocation
-   fftw_int            :: sz_tmp_y !< size for memory allocation
-
-end type sll_maxwell_2d_pstd
-
+private
 
 contains
 

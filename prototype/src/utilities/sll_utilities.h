@@ -17,15 +17,15 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-  ! Some useful services that have not found a home in more specific
-  ! modules.
+! Some useful services that have not found a home in more specific
+! modules.
   
-  ! ************************************************************************
-  ! Unfortunately, fpp does not recognize the cpp operators # and ##. Some
-  ! compilers do, so we need this ugly workaround... and this only fixes
-  ! the lack of #. ## is still a dream.
-  !
-  ! ************************************************************************
+! ************************************************************************
+! Unfortunately, fpp does not recognize the cpp operators # and ##. Some
+! compilers do, so we need this ugly workaround... and this only fixes
+! the lack of #. ## is still a dream.
+!
+! ************************************************************************
 
 #if (defined ( GFORTRAN ) || defined ( G95 ) || defined(MPIF90))
 # define STRNG(x) "x"
@@ -33,14 +33,16 @@
 # define STRNG(x) #x
 #endif
 
-  ! The following is useless in fpp apparently. The workaround of using
-  ! double quotes does not allow to expand a macro for subsequent conversion
-  ! to a string. We leave this here as a testament to what would have been
-  ! nice to have.
+! The following is useless in fpp apparently. The workaround of using
+! double quotes does not allow to expand a macro for subsequent conversion
+! to a string. We leave this here as a testament to what would have been
+! nice to have.
 #define XSTRNG( x ) STRNG( x )
 
 
+#define SLL_ERROR(msg) call errout( 6, 'F', msg, __LINE__, __FILE__ )
 
+#define SLL_WARNING(msg) call errout( 6, 'W', msg, __LINE__, __FILE__ )
 
 ! BYTE_SIZEOF() uses the byte_size, which is defined in sll_utilities.F90. This
 ! macro returns the size of 'var' measured in bytes.

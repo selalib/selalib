@@ -13,7 +13,7 @@ program qns_4d_general
      run_4d_qns_general
   use sll_collective
   use sll_constants
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_common_array_initializers_module
   use sll_module_poisson_2d_elliptic_solver, &
      only: es_gauss_legendre
@@ -22,8 +22,8 @@ program qns_4d_general
   character(len=256) :: filename
   character(len=256) :: filename_local
   type(sll_simulation_4d_qns_general)     :: simulation
-  type(sll_logical_mesh_2d), pointer      :: mx
-  type(sll_logical_mesh_2d), pointer      :: mv
+  type(sll_cartesian_mesh_2d), pointer      :: mx
+  type(sll_cartesian_mesh_2d), pointer      :: mv
   class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
   !class(sll_coordinate_transformation_2d_nurbs), pointer :: transformation_x
   sll_real64, dimension(1:8) :: landau_params
@@ -88,12 +88,12 @@ program qns_4d_general
   !  sll_periodic_periodic_gaussian2002_initializer_4d
   ! sll_landau_initializer_4d
 
-!!$  mx => new_logical_mesh_2d( NPTS1, NPTS2,       & 
+!!$  mx => new_cartesian_mesh_2d( NPTS1, NPTS2,       & 
 !!$       eta1_min=0.0_f64, eta1_max= 4.0_f64*sll_pi, &
 !!$       eta2_min=0.0_f64, eta2_max= 4.0_f64*sll_pi )
 !!$  
 !!$  ! logical mesh for velocity coordinates
-!!$  mv => new_logical_mesh_2d( NPTS3, NPTS4, &
+!!$  mv => new_cartesian_mesh_2d( NPTS3, NPTS4, &
 !!$       eta1_min=-6.0_f64, eta1_max=6.0_f64, &
 !!$       eta2_min=-6.0_f64, eta2_max=6.0_f64)
 
@@ -101,12 +101,12 @@ program qns_4d_general
   ! mesh for the test case 
   ! sll_gaussian_beam_initializer_4d
 !!$  
-!!$  mx => new_logical_mesh_2d( NPTS1, NPTS2,  & 
+!!$  mx => new_cartesian_mesh_2d( NPTS1, NPTS2,  & 
 !!$       eta1_min= 0.0_f64, eta1_max= 1.0_f64, &
 !!$       eta2_min= 0.0_f64, eta2_max= 1.0_f64 )
   
 !!$  ! logical mesh for velocity coordinates
-!!$  mv => new_logical_mesh_2d( NPTS3, NPTS4, &
+!!$  mv => new_cartesian_mesh_2d( NPTS3, NPTS4, &
 !!$       eta1_min=-9.0_f64, eta1_max=9.0_f64, &
 !!$       eta2_min=-9.0_f64, eta2_max=9.0_f64)
 
@@ -157,9 +157,7 @@ program qns_4d_general
   transformation_x => new_nurbs_2d_transformation_from_file("circle_n63_rayon1_patch0.nml")
   !transformation_x => new_nurbs_2d_transformation_from_file("domain_patch0.nml")
   !transformation_x%mesh => mx
-  ! Get rid of this 'fix' whenever gfortran 4.6 is no longer supported.
-   simulation%mesh2d_x => transformation_x%mesh
-  !mx => transformation_x%get_logical_mesh()
+  !mx => transformation_x%get_cartesian_mesh()
   !print*, mx%num_cells1,mx%num_cells2,mx%eta1_min,mx%eta2_min,mx%eta1_max,mx%eta2_max
 !!$   print*, 'transformation ok'
   ! ---------------------------------------------------------------------

@@ -2,7 +2,7 @@ module sll_fcisl_module
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  use sll_logical_meshes
+  use sll_cartesian_meshes
   use sll_module_advection_1d_base
 implicit none
 
@@ -12,8 +12,8 @@ implicit none
   type :: sll_oblic_derivative
     sll_int32 :: degree
     sll_real64, dimension(:,:), pointer :: buf
-    type(sll_logical_mesh_1d), pointer :: mesh_x1
-    type(sll_logical_mesh_1d), pointer :: mesh_x2
+    type(sll_cartesian_mesh_1d), pointer :: mesh_x1
+    type(sll_cartesian_mesh_1d), pointer :: mesh_x2
     class(sll_advection_1d_base), pointer :: adv
     sll_real64, dimension(:), pointer :: w
   end type sll_oblic_derivative
@@ -378,8 +378,8 @@ contains
     sll_int32 :: ierr
     
     deriv%degree = degree    
-    deriv%mesh_x1 => new_logical_mesh_1d(Nc_x1,eta_min=x1_min,eta_max=x1_max)
-    deriv%mesh_x2 => new_logical_mesh_1d(Nc_x2,eta_min=x2_min,eta_max=x2_max)
+    deriv%mesh_x1 => new_cartesian_mesh_1d(Nc_x1,eta_min=x1_min,eta_max=x1_max)
+    deriv%mesh_x2 => new_cartesian_mesh_1d(Nc_x2,eta_min=x2_min,eta_max=x2_max)
     deriv%adv => adv
     
     SLL_ALLOCATE(deriv%buf(1:Nc_x2+2*degree+1,1:Nc_x1+1),ierr) 
@@ -660,7 +660,7 @@ contains
 !  subroutine compute_field_from_phi_cartesian_1d(phi,mesh,A,interp)
 !    sll_real64, dimension(:), intent(in) :: phi
 !    sll_real64, dimension(:), intent(out) :: A
-!    type(sll_logical_mesh_1d), pointer :: mesh
+!    type(sll_cartesian_mesh_1d), pointer :: mesh
 !    class(sll_interpolator_1d_base), pointer   :: interp
 !    sll_int32 :: Nc_x1
 !    sll_real64 :: x1_min

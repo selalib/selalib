@@ -35,7 +35,7 @@
      sll_general_coordinate_elliptic_solvers_multipatch
      sll_interpolators
      sll_coordinate_transformations
-     sll_logical_meshes
+     sll_meshes
      sll_boundary_condition_descriptors
      sll_file_io
      sll_constants
@@ -47,6 +47,11 @@
      deboor_splines
      )
 
+   ADD_TEST(NAME general_coordinate_elliptic_solver_multipatch 
+     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+     COMMAND test_general_coordinate_elliptic_solver_multipatch )
+   SET_TESTS_PROPERTIES( general_coordinate_elliptic_solver_multipatch
+     PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    
 #FIND_PACKAGE(SUITESPARSE)
 #IF(SUITESPARSE_FOUND)
@@ -87,7 +92,7 @@
 #     sll_scalar_field_2d_alternative
 #     sll_interpolators
 #     sll_coordinate_transformations
-#     sll_logical_meshes
+#     sll_meshes
 #     sll_boundary_condition_descriptors
 #     sll_file_io
 #     sll_integration
