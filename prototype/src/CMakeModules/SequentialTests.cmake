@@ -58,14 +58,11 @@ ADD_TEST(NAME fft COMMAND test_fft)
    SET_TESTS_PROPERTIES(poisson_3d_periodic_seq 
                      PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-#consider merging the following 2 tests
-   ADD_TEST(NAME fields COMMAND test_scalar_field)
-   ADD_TEST(NAME time_splitting COMMAND test_time_splitting)
-   ADD_TEST(NAME distribution_function COMMAND test_distribution_function)
    ADD_TEST(NAME advection_field COMMAND test_advection_field)
    ADD_TEST(NAME coordinate_transformations COMMAND test_coordinate_transformations_2d)
-   ADD_TEST(NAME fields_2d_alternative COMMAND test_scalar_field_alternative)
-   ADD_TEST(NAME fields_1d_alternative COMMAND test_scalar_fields_1d_alternative)	
+   ADD_TEST(NAME time_splitting COMMAND test_time_splitting)
+   ADD_TEST(NAME distribution_function COMMAND test_distribution_function)
+
 
 IF(PYTHON3_FOUND)
 
@@ -121,13 +118,8 @@ ENDIF(PYTHON3_FOUND)
    ADD_TEST(NAME sim2d_gc_polar COMMAND test_2d_gc_polar ${ARGS})
    SET_TESTS_PROPERTIES(sim2d_gc_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-   SET(ARGS ${CMAKE_BINARY_DIR}/vpsim2d_no_split_beam)
-   ADD_TEST(NAME sim2d_vp_no_split COMMAND test_2d_vp_no_split ${ARGS})
-   SET_TESTS_PROPERTIES(sim2d_vp_no_split PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
    SET_TESTS_PROPERTIES(coordinate_transformations PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-   SET_TESTS_PROPERTIES(fields_2d_alternative PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-   SET_TESTS_PROPERTIES(fields_1d_alternative PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    SET_TESTS_PROPERTIES(characteristics_2d_explicit_euler PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    SET_TESTS_PROPERTIES(characteristics_1d_explicit_euler_conservative PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    SET_TESTS_PROPERTIES(characteristics_2d_explicit_euler PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")

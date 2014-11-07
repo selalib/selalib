@@ -18,7 +18,6 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
                          sll_time_splitting
                          sll_file_io_parallel
                          sll_poisson_parallel
-                         sll_scalar_field_1d_alternative
                          sll_fcisl
                          sll_derivative
                          sll_qn_solvers_parallel
@@ -30,11 +29,10 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
                          sll_fft
                          sll_distribution_function
                          sll_general_coordinate_elliptic_solvers
-                         sll_scalar_field_2d_alternative
+                         sll_fields
                          sll_pic_particles
                          sll_random_deviate_generators
                          sll_field_accumulators
-                         sll_scalar_field
                          sll_interpolators
                          sll_point_to_point_communications
                          sll_splines
@@ -55,13 +53,21 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
     SET( INSTALL_DIR "${INSTALL_DIR}/simulations_parallel" )
 
     # Simulations as new subdirectories
-    ADD_SUBDIRECTORY( sim_2d_guiding_center_curvilinear  )
-    ADD_SUBDIRECTORY( sim_2d_vlasov_poisson_cartesian    )
-    ADD_SUBDIRECTORY( sim_2d_vlasov_poisson_no_splitting )
-    ADD_SUBDIRECTORY( sim_4d_vlasov_poisson_cartesian    )
-    ADD_SUBDIRECTORY( sim_4d_vlasov_poisson_polar        )
-    ADD_SUBDIRECTORY( sim_4d_vlasov_poisson_general      )
-    ADD_SUBDIRECTORY( sim_4d_drift_kinetic_cartesian     )
+    ADD_SUBDIRECTORY( sim_2d_guiding_center_curvilinear        )
+    ADD_SUBDIRECTORY( sim_2d_vlasov_poisson_cartesian          )
+    ADD_SUBDIRECTORY( sim_2d_vlasov_poisson_no_splitting       )
+    ADD_SUBDIRECTORY( sim_4d                                   )
+    ADD_SUBDIRECTORY( sim_4d_vlasov_poisson_cartesian          )
+    ADD_SUBDIRECTORY( sim_4d_vlasov_poisson_polar              )
+    ADD_SUBDIRECTORY( sim_4d_vlasov_poisson_general            )
+    ADD_SUBDIRECTORY( sim_4d_vlasov_poisson_PIC_cartesian      )
+    ADD_SUBDIRECTORY( sim_4d_drift_kinetic_cartesian           )
+    ADD_SUBDIRECTORY( sim_4d_drift_kinetic_polar               )
+    ADD_SUBDIRECTORY( sim_4d_drift_kinetic_polar_one_mu        )
+    ADD_SUBDIRECTORY( sim_4d_drift_kinetic_polar_multi_mu      )
+    ADD_SUBDIRECTORY( sim_4d_drift_kinetic_field_aligned_polar )
+    ADD_SUBDIRECTORY( sim_4d_drift_kinetic_hybrid              )
+    ADD_SUBDIRECTORY( sim_6d                                   )
 
 ENDIF()
 

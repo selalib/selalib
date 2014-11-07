@@ -16,7 +16,6 @@ ADD_LIBRARY( sll_simulation_1d STATIC simulation_1d.F90 simulation_base_class.F9
 
 TARGET_LINK_LIBRARIES( sll_simulation_1d 
                        sll_interpolators
-                       sll_scalar_field
                        sll_poisson_solvers
                        sll_reduction
                        sll_common_array_initializers
@@ -36,39 +35,9 @@ ENDMACRO(ADD_SIMULATION_1D)
 # Optionally add special dependencies by setting the DEP_LIBS variable
 #######################################################################
 
-ADD_SIMULATION_1D(VP1D_curvilinear_analytic VP1D_curvilinear_analytic)
-ADD_SIMULATION_1D(vp1d_fourier_fem          vp1d_fourier_fem)
-ADD_SIMULATION_1D(VP1D_cartesian_non_unif   VP1D_cartesian_non_unif)
 IF(HDF5_ENABLED)
    SET(SIM_LIBS sll_advection)
 ENDIF(HDF5_ENABLED)
-
-ADD_EXECUTABLE(VP1D_deltaf_cart VP1D_deltaf_BSL.F90)
-TARGET_LINK_LIBRARIES(VP1D_deltaf_cart sll_interpolators
-	                                 sll_periodic_interpolation
-	                                 sll_fft
-	                                 sll_distribution_function
-	                                 sll_scalar_field
-                                       sll_constants
-	                                 sll_file_io
-  	                                 sll_utilities
-	                                 sll_timer
-	                                 sll_poisson_solvers
-	                                 dfftpack)
-IF(HDF5_ENABLED)
-   ADD_EXECUTABLE(VP1D_mm VP1D_mm.F90)
-   TARGET_LINK_LIBRARIES(VP1D_mm sll_interpolators 
-                                 sll_periodic_interpolation
-                                 sll_fft 
-                                 sll_distribution_function 
-                                 sll_scalar_field 
-                                 sll_timer 
-                                 sll_poisson_solvers 
-                                 sll_constants 
-                                 sll_file_io 
-                                 sll_utilities 
-                                 dfftpack)
-ENDIF(HDF5_ENABLED)                           
 
 #End of commands to be put in the class simulation standard
 ###################################################
@@ -97,7 +66,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
                          sll_time_splitting
                          sll_file_io_parallel
                          sll_poisson_parallel
-                         sll_scalar_field_1d_alternative
+                         sll_fields
                          sll_fcisl
                          sll_derivative
                          sll_qn_solvers_parallel
@@ -109,11 +78,10 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
                          sll_fft
                          sll_distribution_function
                          sll_general_coordinate_elliptic_solvers
-                         sll_scalar_field_2d_alternative
+                         sll_fields
                          sll_pic_particles
                          sll_random_deviate_generators
                          sll_field_accumulators
-                         sll_scalar_field
                          sll_interpolators
                          sll_point_to_point_communications	
                          sll_splines
@@ -142,7 +110,6 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
    #and simulation_MYSIM.F90
    #ADD_SIMULATION(MYMETHOD MYSIM)
 
-   ADD_SIMULATION(4d                4d_vlasov_poisson_cartesian)
    ADD_SIMULATION(4d_qns_general    4d_qns_general)
    #PN ADD_SIMULATION(4d_qns_general_multipatch    4d_qns_general_multipatch)
 
@@ -155,6 +122,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
 
    ADD_SIMULATION(4d_vp_pic_cartesian       4d_vp_pic_cartesian)
    ADD_SIMULATION(2d_guiding_center_pic_cartesian       2d_guiding_center_pic_cartesian)
+
 
 #   ADD_SIMULATION(4d_mixed_qns_cartesian 4d_mixed_qns_cartesian)
 
@@ -193,18 +161,6 @@ TARGET_LINK_LIBRARIES(CG_polar sll_poisson_solvers
                                sll_splines
 	                         sll_constants
 	                         sll_timer)
-
-ADD_EXECUTABLE(VP1D_cart VP_uniform_cartesian_BSL.F90)
-
-TARGET_LINK_LIBRARIES(VP1D_cart sll_interpolators
-	                        sll_fft
-	                        sll_distribution_function
-	                        sll_scalar_field	
-	                        sll_constants
-	                        sll_file_io
-  	                        sll_utilities
-	                        sll_poisson_solvers
-	                        dfftpack)
 
 ADD_EXECUTABLE(unit_test_polar unit_test_polar.F90 sll_polar_operators.F90)
 TARGET_LINK_LIBRARIES(unit_test_polar sll_poisson_solvers)
