@@ -216,7 +216,7 @@ end function dvalue2d
 !    2, an error occurred, which may have been caused by
 !       singularity of the linear system.
 !
-subroutine spli2d ( tau, gtau, t, n, k, m, bcoef, iflag )
+subroutine spli2d ( tau, gtau, t, n, k, m, bcoef)
     
   sll_real64, dimension(:),   intent(in)    :: tau   !(n)
   sll_real64, dimension(:,:), intent(in)    :: gtau  !(n,m)
@@ -226,7 +226,6 @@ subroutine spli2d ( tau, gtau, t, n, k, m, bcoef, iflag )
   sll_int32,                  intent(in)    :: m
 
   sll_real64, dimension(:,:), intent(inout) :: bcoef !(m,n)
-  sll_int32,                  intent(out)   :: iflag
 
   sll_real64, dimension(n)         :: work  !(n)
   sll_real64, dimension((2*k-1)*n) :: q     !((2*k-1)*n)
@@ -236,6 +235,7 @@ subroutine spli2d ( tau, gtau, t, n, k, m, bcoef, iflag )
   sll_int32                :: j
   sll_int32                :: jj
   sll_int32                :: left
+  sll_int32                :: iflag
 
 
   sll_real64:: taui
@@ -366,7 +366,6 @@ subroutine spli2d_custom ( nx,     &
 
   sll_real64, dimension(nx,ny) :: lpr_work1
   sll_real64, dimension(nx*ny) :: lpr_work3
-  sll_real64, dimension(nx*(2*kx-1) ) :: q
   sll_real64, dimension(( 2*ky-1) * ny ) :: lpr_work32
   sll_real64, dimension( ny         ) :: lpr_work4
   sll_real64, dimension(1:ny,1:nx),target :: lpr_work5 !  ny , nx 
@@ -374,7 +373,7 @@ subroutine spli2d_custom ( nx,     &
   sll_real64, dimension(1:ny),target:: apr_ty_bis
   sll_real64, dimension(:),pointer:: apr_ty_bis_ptr
 
-  sll_int32  :: i, j, iflag
+  sll_int32  :: i
     
   lpr_work1(:,:) = 0.0
     
@@ -419,8 +418,7 @@ subroutine spli2d_custom ( nx,     &
                 nx,         &
                 kx,         &
                 ny,         &
-                apr_g,    &
-                iflag )
+                apr_g)
     
   bcoef(:,:) = 0.0_8
   lpr_work4  = 0.0_8
@@ -434,8 +432,7 @@ subroutine spli2d_custom ( nx,     &
                 ny,          &
                 ky,          &
                 nx,          &
-                bcoef,      &
-                iflag )
+                bcoef)
      
 end subroutine spli2d_custom
 
@@ -473,12 +470,10 @@ subroutine spli2d_custom_derder ( nx,   &
   sll_real64, dimension ( nx + nx_der , ny + ny_der) :: lpr_work1
   sll_real64, dimension ( nx + nx_der ) :: lpr_work2
   sll_real64, dimension ( (nx + nx_der)* (ny+ny_der) ) :: lpr_work3
-  sll_real64, dimension ( (nx+nx_der) *( 2*kx-1) ) :: lpr_work31
   sll_real64, dimension (( 2*ky-1) * (ny+ny_der) ) :: lpr_work32
   sll_real64, dimension ( ny +ny_der) :: lpr_work4
   sll_real64, dimension (1:ny,1:nx+nx_der),target:: lpr_work5 !  ny , nx
   sll_real64, dimension (:,:),pointer :: lpr_work5_ptr 
-  sll_int32  :: li_iflag
    
   lpr_work1(:,:) = 0.0
   lpr_work5(:,:) = 0.0
@@ -519,9 +514,7 @@ subroutine spli2d_custom_derder ( nx,   &
                     kx,         &
                     ny,         &
                     lpr_work2,     &
-                    lpr_work31,    &
-                    lpr_work5_ptr, &
-                    li_iflag )
+                    lpr_work5_ptr)
     
    bcoef(:,:) =0.0_8
    lpr_work4 = 0.0_8
@@ -538,9 +531,7 @@ subroutine spli2d_custom_derder ( nx,   &
                      ky,           &
                      nx+nx_der, &
                      lpr_work4,       &
-                     lpr_work32,      &
-                     bcoef,       &
-                     li_iflag )
+                     bcoef)
 
 end subroutine spli2d_custom_derder
 
@@ -732,9 +723,7 @@ subroutine spli2d_der( tau,           &
                        k,             &
                        m,             &
                        work,          &
-                       q,             &
-                       bcoef,         &
-                       iflag )
+                       bcoef)
   !
   !  Parameters:
   !
@@ -782,10 +771,8 @@ subroutine spli2d_der( tau,           &
   sll_real64,dimension(:,:),pointer:: bcoef !(m,n+np)
   sll_real64,dimension(:,:),pointer:: gtau  !(n,m)
   sll_real64,dimension(:,:),pointer:: gtau_der!(np,n)
-  sll_int32 :: iflag
   sll_int32 :: j
   sll_int32 :: k
-  sll_real64,dimension((2*k-1)*n):: q!((2*k-1)*n)
   sll_real64,dimension(:),pointer:: t!(n+np+k)
   sll_real64,dimension(:),pointer:: tau!(n)
   sll_int32,dimension(:),pointer:: tau_der!np
@@ -808,8 +795,7 @@ subroutine spli2d_der( tau,           &
                      n,           &
                      np,          &
                      k,           &
-                     work_result, &
-                     iflag )
+                     work_result  )
        
      bcoef(j,1:n+np) = work_result(1:n+np)
        
