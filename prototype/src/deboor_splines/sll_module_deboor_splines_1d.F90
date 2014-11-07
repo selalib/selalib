@@ -79,15 +79,16 @@ contains
 !
 subroutine interv( xt, lxt, x, left, mflag )
     
-  sll_real64, dimension(:) :: xt
-  sll_int32,  intent(in)   :: lxt
-  sll_int32,  intent(out)  :: left
-  sll_int32,  intent(out)  :: mflag
-  sll_real64, intent(in)   :: x
-  sll_int32                :: ihi
-  sll_int32, save          :: ilo = 1
-  sll_int32                :: istep
-  sll_int32                :: middle
+  sll_real64, intent(in)  :: xt(:)
+  sll_int32,  intent(in)  :: lxt
+  sll_real64, intent(in)  :: x
+  sll_int32,  intent(out) :: left
+  sll_int32,  intent(out) :: mflag
+
+  sll_int32               :: ihi
+  sll_int32, save         :: ilo = 1
+  sll_int32               :: istep
+  sll_int32               :: middle
     
   ihi = ilo + 1
   if ( lxt <= ihi ) then
@@ -204,7 +205,6 @@ subroutine interv( xt, lxt, x, left, mflag )
     
 end subroutine interv
 
-
 !***********************************************************************
 !
 ! BSPLVB evaluates B-splines at a point X with a given knot sequence.
@@ -293,40 +293,40 @@ end subroutine interv
 !
 subroutine bsplvb ( t, jhigh, index, x, left, biatx )
     
-  sll_int32, parameter :: jmax = 20
-   
-  sll_int32:: jhigh
-    
-  sll_real64,dimension(jhigh):: biatx !(jhigh)
-  sll_real64, save, dimension ( jmax ) :: deltal
-  sll_real64, save, dimension ( jmax ) :: deltar
-  sll_int32:: i
-  sll_int32:: index
-  sll_int32, save :: j = 1
-  sll_int32:: left
-  sll_real64:: saved
-  sll_real64,dimension(left+jhigh):: t!() left+jhigh
-  sll_real64:: term
-  sll_real64:: x
+  sll_real64, intent(in)  :: t(:)  ! left+jhigh
+  sll_int32,  intent(in)  :: jhigh
+  sll_int32,  intent(in)  :: index
+  sll_real64, intent(in)  :: x
+  sll_int32,  intent(in)  :: left
+  sll_real64, intent(out) :: biatx(jhigh)
+
+  sll_real64, save :: deltal(20)
+  sll_real64, save :: deltar(20)
+  sll_int32,  save :: j=1
+
+  sll_int32   :: i
+  sll_real64  :: saved
+  sll_real64  :: term
     
   if ( index == 1 ) then
     j = 1
     biatx(1) = 1.0_8
-    if ( jhigh <= j ) then
-      return
-    end if
+    if ( jhigh <= j ) return
   end if
     
-  if ( t(left+1) <= t(left) ) then
-     print*,'x=',x
-     write ( *, '(a)' ) ' '
-     write ( *, '(a)' ) 'BSPLVB - Fatal error!'
-     write ( *, '(a)' ) '  It is required that T(LEFT) < T(LEFT+1).'
-     write ( *, '(a,i8)' ) '  But LEFT = ', left
-     write ( *, '(a,g14.6)' ) '  T(LEFT) =   ', t(left)
-     write ( *, '(a,g14.6)' ) '  T(LEFT+1) = ', t(left+1)
-     stop
-  end if
+  SLL_ASSERT( t(left+1) > t(left) )
+
+  !PN replaced by selalib assertion
+  !if ( t(left+1) <= t(left) ) then
+  !   print*,'x=',x
+  !   write ( *, '(a)' ) ' '
+  !   write ( *, '(a)' ) 'BSPLVB - Fatal error!'
+  !   write ( *, '(a)' ) '  It is required that T(LEFT) < T(LEFT+1).'
+  !   write ( *, '(a,i8)' ) '  But LEFT = ', left
+  !   write ( *, '(a,g14.6)' ) '  T(LEFT) =   ', t(left)
+  !   write ( *, '(a,g14.6)' ) '  T(LEFT+1) = ', t(left+1)
+  !   stop
+  !end if
     
   do
        
@@ -404,12 +404,14 @@ end subroutine bsplvb
 !
 subroutine bsplvd ( t, k, x, left, a, dbiatx, nderiv )
     
-  sll_int32 :: k
-  sll_int32 :: left
-  sll_int32 :: nderiv
+  sll_real64, intent(in)     :: t(:)  !dimension(left+k)
+  sll_int32,  intent(in)     :: k
+  sll_real64, intent(in)     :: x
+  sll_int32,  intent(in)     :: left
+  sll_real64, intent(inout)  :: a(:,:) !dimesnion(k,k)
+  sll_int32,  intent(in)     :: nderiv
+  sll_real64, intent(out)    :: dbiatx(k,nderiv)
     
-  sll_real64, dimension(k,k):: a
-  sll_real64, dimension(k,nderiv), intent(out) :: dbiatx
   sll_real64:: factor
   sll_real64:: fkp1mm
   sll_int32 :: i
@@ -421,9 +423,6 @@ subroutine bsplvd ( t, k, x, left, a, dbiatx, nderiv )
   sll_int32 :: ldummy
   sll_int32 :: m
   sll_int32 :: mhigh
-  
-  sll_real64,dimension(left+k):: t
-  sll_real64:: x
     
   mhigh = max ( min ( nderiv, k ), 1 )
   !
@@ -590,13 +589,16 @@ end subroutine bsplvd
 !
 function bvalue( t, bcoef, n, k, x, jderiv ) result(res)
     
-  sll_int32 :: k
-  sll_int32 :: n
+  sll_real64, intent(in) :: t(:)      !< knot sequence (n+k)
+  sll_real64, intent(in) :: bcoef(:)  !< B-spline (n)
+  sll_int32,  intent(in) :: n         !< B-spline length
+  sll_int32,  intent(in) :: k         !< order of the spline
+  sll_real64, intent(in) :: x         !< evalueation point
+  sll_int32,  intent(in) :: jderiv    !< order of the derivative
   
-  sll_real64 :: aj(k)
-  sll_real64 :: bcoef(n)
   sll_real64 :: res
 
+  sll_real64 :: aj(k)
   sll_real64 :: dl(k)
   sll_real64 :: dr(k)
   sll_int32  :: i
@@ -605,12 +607,8 @@ function bvalue( t, bcoef, n, k, x, jderiv ) result(res)
   sll_int32  :: jc
   sll_int32  :: jcmax
   sll_int32  :: jcmin
-  sll_int32  :: jderiv
   sll_int32  :: jj
   sll_int32  :: mflag
-  sll_real64 :: t(n+k)
-  sll_real64 :: x
-  sll_int32  :: ierr
   
   res = 0.0_8
     
@@ -696,28 +694,26 @@ function bvalue( t, bcoef, n, k, x, jderiv ) result(res)
   do jc = jcmin, jcmax
     aj(jc) = bcoef(i-k+jc)
   end do
-  !
+  
   !  Difference the coefficients JDERIV times.
-  !
+  
   do j = 1, jderiv
       
     ilo = k - j
     do jj = 1, k - j
-      aj(jj) = ( ( aj(jj+1) - aj(jj) ) / ( dl(ilo) + dr(jj) ) ) &
-            * real ( k - j, kind = 8 )
+      aj(jj) = ((aj(jj+1)-aj(jj))/(dl(ilo)+dr(jj)))*real(k-j,kind=8)
       ilo = ilo - 1
     end do
        
   end do
-  !
+  
   !  Compute value at X in (T(I),T(I+1)) of JDERIV-th derivative,
   !  given its relevant B-spline coefficients in AJ(1),...,AJ(K-JDERIV).
-  !
+  
   do j = jderiv+1, k-1
     ilo = k-j
     do jj = 1, k-j
-      aj(jj) = ( aj(jj+1) * dl(ilo) + aj(jj) * dr(jj) ) &
-             / ( dl(ilo) + dr(jj) )
+      aj(jj) = (aj(jj+1)*dl(ilo)+aj(jj)*dr(jj))/(dl(ilo)+dr(jj))
       ilo = ilo - 1
     end do
   end do
@@ -738,15 +734,10 @@ sll_real64, dimension(:), intent(in)    :: taux  !< knots sequence
 sll_real64, dimension(:), intent(in)    :: g     !< data ordinates
 sll_real64, dimension(:), intent(inout) :: bcoef !< B-splines
 sll_real64, dimension(:), intent(inout) :: tx    !< Knots positions
-
 sll_int32                               :: i
-sll_int32                               :: iflag
     
     
-! *** set up knots
-!     interpolate between knots
-! x
-!  if (kx <= 2) then 
+! *** set up knots and interpolate between knots
 tx(1:kx)       = taux(1)
 tx(nx+1:nx+kx) = taux(nx)
   
@@ -760,7 +751,7 @@ else
   end do
 end if
     
-call splint(taux, g, tx, nx, kx, bcoef, iflag)
+call splint(taux, g, tx, nx, kx, bcoef)
   
 end subroutine spli1d_dir
 
@@ -778,7 +769,6 @@ sll_real64, intent(in)    :: g(:)     !< Data values at points
 sll_real64, intent(inout) :: bcoef(:) !< Spline coefficients
 sll_real64, intent(inout) :: tx(:)    !< Knots positions
 
-sll_int32 :: iflag
 sll_int32 :: i
 
 SLL_ASSERT ( L /= 0.0_8 )
@@ -796,7 +786,7 @@ else
   end do
 end if
 
-call splint( taux, g, tx, nx, kx, bcoef, iflag)
+call splint( taux, g, tx, nx, kx, bcoef)
     
 end subroutine spli1d_per
 
@@ -824,8 +814,6 @@ subroutine spli1d_der( nx,       &
   sll_real64, intent(inout) :: bcoef(:)    !< Splines coefficients
   sll_real64, intent(inout) :: tx(:)       !< Knots positions
   
-  sll_int32 :: iflag
-    
   tx = 0.0_f64
   tx(1:kx) = taux(1)
   tx(nx+nx_der+1:nx+nx_der+kx) = taux(nx)
@@ -844,8 +832,7 @@ subroutine spli1d_der( nx,       &
                     nx,       &
                     nx_der,   &
                     kx,       &
-                    bcoef,    &
-                    iflag )
+                    bcoef)
     
 end subroutine spli1d_der
 
@@ -930,7 +917,7 @@ end subroutine spli1d_der
 !    1, = success.
 !    2, = failure.
 !
-subroutine splint( tau, gtau, t, n, k, bcoef, iflag )
+subroutine splint( tau, gtau, t, n, k, bcoef )
     
    
   sll_real64, dimension(:), intent(in)  :: tau   !< data points
@@ -939,7 +926,6 @@ subroutine splint( tau, gtau, t, n, k, bcoef, iflag )
   sll_int32,                intent(in)  :: n     !< number of points
   sll_int32,                intent(in)  :: k     !< spline order
   sll_real64, dimension(:), intent(out) :: bcoef !< Bsplines 
-  sll_int32,                intent(out) :: iflag !< error code
 
   sll_int32                        :: i
   sll_int32                        :: ilp1mx
@@ -949,6 +935,7 @@ subroutine splint( tau, gtau, t, n, k, bcoef, iflag )
   sll_int32                        :: left
   sll_real64, dimension((2*k-1)*n) :: q
   sll_real64                       :: taui
+  sll_int32                        :: iflag
  
   kpkm2 = 2 * ( k - 1 )
   left = k
@@ -1133,30 +1120,32 @@ end subroutine splint
 !    2, = failure.
 !
 
-subroutine splint_der(tau,gtau,tau_der,gtau_der,t,n,m,k,bcoef_spline,iflag)
+subroutine splint_der(tau,gtau,tau_der,gtau_der,t,n,m,k,bcoef_spline)
     
-  sll_int32                            :: n
-  sll_int32                            :: m
+  sll_real64, intent(in)     :: tau(:)
+  sll_real64, intent(in)     :: gtau(:)
+  sll_int32,  intent(in)     :: tau_der(:)
+  sll_real64, intent(in)     :: gtau_der(:) 
+  sll_real64, intent(in)     :: t(:)
+  sll_int32,  intent(in)     :: n
+  sll_int32,  intent(in)     :: m
+  sll_int32,  intent(in)     :: k
+  sll_real64, intent(inout)  :: bcoef_spline(n+m) 
+
   sll_real64, dimension(n+m)           :: bcoef
-  sll_real64, dimension(n+m)           :: bcoef_spline 
-  sll_real64, dimension(n)             :: gtau
-  sll_real64, dimension(m)             :: gtau_der 
   sll_int32                            :: i
-  sll_int32                            :: iflag,mflag
+  sll_int32                            :: mflag
   sll_int32                            :: j
   sll_int32                            :: l
   sll_int32                            :: jj
-  sll_int32                            :: k
   sll_int32                            :: kpkm2
   sll_int32                            :: left
   sll_real64, dimension((2*k-1)*(n+m)) :: q
-  sll_real64, dimension(n+k+m)         :: t
-  sll_real64, dimension(n)             :: tau
-  sll_int32,  dimension(m)             :: tau_der
   sll_real64                           :: taui
   sll_real64                           :: taui_der
   sll_real64, dimension(k,k)           :: a
   sll_real64, dimension(k,2)           :: bcoef_der
+  sll_int32                            :: iflag
   
   kpkm2              = 2*(k-1)
   left               = k
@@ -1225,7 +1214,8 @@ subroutine splint_der(tau,gtau,tau_der,gtau_der,t,n,m,k,bcoef_spline,iflag)
       q(jj) = bcoef(j)
     end do
 
-    bcoef_spline(i+ l-1) = gtau(i)
+    bcoef_spline(i+l-1) = gtau(i)
+
     if ( tau_der(l) == i ) then   
       taui_der = taui
           
