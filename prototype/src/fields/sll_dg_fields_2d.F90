@@ -11,7 +11,7 @@ module sll_dg_fields
 #include "sll_integration.h"
 #include "sll_utilities.h"
 #include "sll_assert.h"
-#include "sll_logical_meshes.h"
+#include "sll_meshes.h"
 #include "sll_coordinate_transformations.h"
 
 implicit none
@@ -68,7 +68,7 @@ function new_dg_field_2d( degree, tau, init_function ) result (this)
    sll_int32                      :: nc_eta2
    type(sll_dg_field_2d), pointer :: this
    sll_int32                      :: error
-
+   class(sll_cartesian_mesh_2d), pointer :: lm
    SLL_ALLOCATE(this, error)
    this%tau    => tau
    this%degree =  degree
@@ -78,8 +78,10 @@ function new_dg_field_2d( degree, tau, init_function ) result (this)
 
    this%xgalo  = gauss_lobatto_points(degree+1,-1._f64,1._f64)
    this%wgalo  = gauss_lobatto_weights(degree+1)
-   nc_eta1 = tau%mesh%num_cells1
-   nc_eta2 = tau%mesh%num_cells2
+
+   lm => this%tau%get_cartesian_mesh()
+   nc_eta1 = lm%num_cells1
+   nc_eta2 = lm%num_cells2
    SLL_CLEAR_ALLOCATE(this%array(1:degree+1,1:degree+1,1:nc_eta1,1:nc_eta2),error)
 
    this%array = 0.0_f64
@@ -94,24 +96,27 @@ end function new_dg_field_2d
 
 subroutine initialize_dg_field_2d( this, init_function, time) 
 
-   class(sll_dg_field_2d)  :: this
-   sll_real64, external    :: init_function
-   sll_real64              :: time
-   sll_real64              :: offset(2)
-   sll_real64              :: eta1
-   sll_real64              :: eta2
-   sll_int32               :: i, j, ii, jj
+   class(sll_dg_field_2d)      :: this
+   sll_real64, external :: init_function
+   sll_real64           :: time
+   sll_real64           :: offset(2)
+   sll_real64           :: eta1
+   sll_real64           :: eta2
+   sll_int32            :: i, j, ii, jj
+   class(sll_cartesian_mesh_2d), pointer :: lm
    
    SLL_ASSERT(associated(this%array))
 
-   do j = 1, this%tau%mesh%num_cells2
-   do i = 1, this%tau%mesh%num_cells1
-      offset(1) = this%tau%mesh%eta1_min + (i-1)*this%tau%mesh%delta_eta1
-      offset(2) = this%tau%mesh%eta2_min + (j-1)*this%tau%mesh%delta_eta2
+   lm => this%tau%get_cartesian_mesh()
+
+   do j = 1, lm%num_cells2
+   do i = 1, lm%num_cells1
+      offset(1) = lm%eta1_min + (i-1)*lm%delta_eta1
+      offset(2) = lm%eta2_min + (j-1)*lm%delta_eta2
       do jj = 1, this%degree+1
       do ii = 1, this%degree+1
-         eta1 = offset(1) + 0.5 * (this%xgalo(ii) + 1.0) * this%tau%mesh%delta_eta1
-         eta2 = offset(2) + 0.5 * (this%xgalo(jj) + 1.0) * this%tau%mesh%delta_eta2
+         eta1 = offset(1) + 0.5 * (this%xgalo(ii) + 1.0) * lm%delta_eta1
+         eta2 = offset(2) + 0.5 * (this%xgalo(jj) + 1.0) * lm%delta_eta2
          this%array(ii,jj,i,j) = init_function(this%tau%x1(eta1,eta2), &
                                                this%tau%x2(eta1,eta2), &
                                                time)
@@ -160,6 +165,7 @@ subroutine plot_dg_field_2d_with_gnuplot( this, field_name )
    sll_real64             :: offset(2)
    sll_int32              :: i, j, ii, jj
    character(len=4)       :: ctag
+   class(sll_cartesian_mesh_2d), pointer :: lm
 
    call int2string(this%tag, ctag)
 
@@ -177,15 +183,17 @@ subroutine plot_dg_field_2d_with_gnuplot( this, field_name )
 
    call sll_ascii_file_create(field_name//ctag//".dat", file_id, error)
 
-   do j = 1, this%tau%mesh%num_cells2
-   do i = 1, this%tau%mesh%num_cells1
+   lm => this%tau%get_cartesian_mesh()
 
-      offset(1) = this%tau%mesh%eta1_min + (i-1)*this%tau%mesh%delta_eta1
-      offset(2) = this%tau%mesh%eta2_min + (j-1)*this%tau%mesh%delta_eta2
+   do j = 1, lm%num_cells2
+   do i = 1, lm%num_cells1
+
+      offset(1) = lm%eta1_min + (i-1)*lm%delta_eta1
+      offset(2) = lm%eta2_min + (j-1)*lm%delta_eta2
       do jj = 1, this%degree+1
       do ii = 1, this%degree+1
-         eta1 = offset(1) + 0.5 * (this%xgalo(ii) + 1.0) * this%tau%mesh%delta_eta1
-         eta2 = offset(2) + 0.5 * (this%xgalo(jj) + 1.0) * this%tau%mesh%delta_eta2
+         eta1 = offset(1) + 0.5 * (this%xgalo(ii) + 1.0) * lm%delta_eta1
+         eta2 = offset(2) + 0.5 * (this%xgalo(jj) + 1.0) * lm%delta_eta2
          write(file_id,*) this%tau%x1(eta1,eta2), &
                           this%tau%x2(eta1,eta2), &
                           sngl(this%array(ii,jj,i,j))
@@ -253,14 +261,17 @@ subroutine plot_dg_field_2d_with_gmsh(this, field_name)
    sll_real64, allocatable, dimension(:)   :: values
    sll_real64 :: offset(2), eta1, eta2
    character(len=32) :: my_fmt
+   class(sll_cartesian_mesh_2d), pointer :: lm
 
    if (this%degree > 3) then
       write(*,*) 'ordre non prévu'
       stop
    end if
 
-   ni   = this%tau%mesh%num_cells1
-   nj   = this%tau%mesh%num_cells2
+   lm => this%tau%get_cartesian_mesh()
+
+   ni   = lm%num_cells1
+   nj   = lm%num_cells2
    nloc = (this%degree+1)*(this%degree+1)
    nel  = ni * nj
    neq  = (ni*this%degree+1)*(nj*this%degree+1)
@@ -272,15 +283,15 @@ subroutine plot_dg_field_2d_with_gmsh(this, field_name)
    do j=0, nj-1
    do i=0, ni-1
       iel=1+i+j*ni
-      offset(1) = this%tau%mesh%eta1_min+i*this%tau%mesh%delta_eta1
-      offset(2) = this%tau%mesh%eta2_min+j*this%tau%mesh%delta_eta2
+      offset(1) = lm%eta1_min+i*lm%delta_eta1
+      offset(2) = lm%eta2_min+j*lm%delta_eta2
       do jj=0,this%degree
       do ii=0,this%degree
          inoloc=1+ii+(this%degree+1)*jj
          ino=1+ii+this%degree*i+(this%degree*ni+1)*(jj+this%degree*j)
          connec(inoloc,iel)=ino
-         eta1 = offset(1) + .5*(this%xgalo(ii+1)+1.)*this%tau%mesh%delta_eta1
-         eta2 = offset(2) + .5*(this%xgalo(jj+1)+1.)*this%tau%mesh%delta_eta2
+         eta1 = offset(1) + .5*(this%xgalo(ii+1)+1.)*lm%delta_eta1
+         eta2 = offset(2) + .5*(this%xgalo(jj+1)+1.)*lm%delta_eta2
          coords(1,ino) = this%tau%x1(eta1,eta2)
          coords(2,ino) = this%tau%x2(eta1,eta2)
          values(ino) = this%array(ii+1,jj+1,i+1,j+1)
@@ -324,8 +335,8 @@ subroutine plot_dg_field_2d_with_gmsh(this, field_name)
    write(my_fmt, '(a, i0, a)') '(3i6,', nloc, 'i5)'
 
    k = 0
-   do i = 1, this%tau%mesh%num_cells1
-   do j = 1, this%tau%mesh%num_cells2
+   do i = 1, lm%num_cells1
+   do j = 1, lm%num_cells2
       k = k+1
       write(file_id,trim(my_fmt)) k,typelem,0,(connec(l,k),l=1,nloc)
    end do
@@ -358,6 +369,7 @@ subroutine plot_dg_field_2d_with_plotmtv(this, field_name)
    sll_int32              :: i, j, ii, jj
    sll_real64             :: offset(2)
    sll_real64             :: eta1, eta2
+   class(sll_cartesian_mesh_2d), pointer :: lm
 
    call sll_ascii_file_create(field_name//".mtv", file_id, error)
 
@@ -366,14 +378,16 @@ subroutine plot_dg_field_2d_with_plotmtv(this, field_name)
    write(file_id,*)"%contfill"
    write(file_id,*)"%toplabel='"//field_name//"'"
 
-   do j=1,this%tau%mesh%num_cells2
-      offset(2) = this%tau%mesh%eta2_min+(j-1)*this%tau%mesh%delta_eta2
-      do jj=1,merge(this%degree,this%degree+1,j<this%tau%mesh%num_cells2)
-         do i=1,this%tau%mesh%num_cells1
-            offset(1) = this%tau%mesh%eta1_min+(i-1)*this%tau%mesh%delta_eta1
-            do ii=1,merge(this%degree,this%degree+1,i<this%tau%mesh%num_cells1)
-               eta1 = offset(1) + .5*(this%xgalo(ii)+1.)*this%tau%mesh%delta_eta1
-               eta2 = offset(2) + .5*(this%xgalo(jj)+1.)*this%tau%mesh%delta_eta2
+   lm => this%tau%get_cartesian_mesh()
+
+   do j=1,lm%num_cells2
+      offset(2) = lm%eta2_min+(j-1)*lm%delta_eta2
+      do jj=1,merge(this%degree,this%degree+1,j<lm%num_cells2)
+         do i=1,lm%num_cells1
+            offset(1) = lm%eta1_min+(i-1)*lm%delta_eta1
+            do ii=1,merge(this%degree,this%degree+1,i<lm%num_cells1)
+               eta1 = offset(1) + .5*(this%xgalo(ii)+1.)*lm%delta_eta1
+               eta2 = offset(2) + .5*(this%xgalo(jj)+1.)*lm%delta_eta2
                write(file_id,*) sngl(this%tau%x1(eta1,eta2)), &
                                 sngl(this%tau%x2(eta1,eta2)), &
                                 sngl(this%array(ii,jj,i,j))
@@ -389,34 +403,34 @@ subroutine plot_dg_field_2d_with_plotmtv(this, field_name)
    write(file_id,*)"%meshplot"
    write(file_id,*)"%toplabel='"//field_name//"'"
 
-   do j=1,this%tau%mesh%num_cells2
-   do i=1,this%tau%mesh%num_cells1
-      offset(1) = this%tau%mesh%eta1_min+(i-1)*this%tau%mesh%delta_eta1
-      offset(2) = this%tau%mesh%eta2_min+(j-1)*this%tau%mesh%delta_eta2
+   do j=1,lm%num_cells2
+   do i=1,lm%num_cells1
+      offset(1) = lm%eta1_min+(i-1)*lm%delta_eta1
+      offset(2) = lm%eta2_min+(j-1)*lm%delta_eta2
       do jj=1,this%degree
       do ii=1,this%degree
-         eta1 = offset(1) + .5*(this%xgalo(ii)+1.)*this%tau%mesh%delta_eta1
-         eta2 = offset(2) + .5*(this%xgalo(jj)+1.)*this%tau%mesh%delta_eta2
+         eta1 = offset(1) + .5*(this%xgalo(ii)+1.)*lm%delta_eta1
+         eta2 = offset(2) + .5*(this%xgalo(jj)+1.)*lm%delta_eta2
          write(file_id,*) sngl(this%tau%x1(eta1,eta2)), &
                           sngl(this%tau%x2(eta1,eta2)), &
                           sngl(this%array(ii,jj,i,j))
-         eta1 = offset(1) + .5*(this%xgalo(ii+1)+1.)*this%tau%mesh%delta_eta1
-         eta2 = offset(2) + .5*(this%xgalo(jj)+1.)*this%tau%mesh%delta_eta2
+         eta1 = offset(1) + .5*(this%xgalo(ii+1)+1.)*lm%delta_eta1
+         eta2 = offset(2) + .5*(this%xgalo(jj)+1.)*lm%delta_eta2
          write(file_id,*) sngl(this%tau%x1(eta1,eta2)), &
                           sngl(this%tau%x2(eta1,eta2)), &
                           sngl(this%array(ii+1,jj,i,j))
-         eta1 = offset(1) + .5*(this%xgalo(ii+1)+1.)*this%tau%mesh%delta_eta1
-         eta2 = offset(2) + .5*(this%xgalo(jj+1)+1.)*this%tau%mesh%delta_eta2
+         eta1 = offset(1) + .5*(this%xgalo(ii+1)+1.)*lm%delta_eta1
+         eta2 = offset(2) + .5*(this%xgalo(jj+1)+1.)*lm%delta_eta2
          write(file_id,*) sngl(this%tau%x1(eta1,eta2)), &
                           sngl(this%tau%x2(eta1,eta2)), &
                           sngl(this%array(ii+1,jj+1,i,j))
-         eta1 = offset(1) + .5*(this%xgalo(ii)+1.)*this%tau%mesh%delta_eta1
-         eta2 = offset(2) + .5*(this%xgalo(jj+1)+1.)*this%tau%mesh%delta_eta2
+         eta1 = offset(1) + .5*(this%xgalo(ii)+1.)*lm%delta_eta1
+         eta2 = offset(2) + .5*(this%xgalo(jj+1)+1.)*lm%delta_eta2
          write(file_id,*) sngl(this%tau%x1(eta1,eta2)), &
                           sngl(this%tau%x2(eta1,eta2)), &
                           sngl(this%array(ii,jj+1,i,j))
-         eta1 = offset(1) + .5*(this%xgalo(ii)+1.)*this%tau%mesh%delta_eta1
-         eta2 = offset(2) + .5*(this%xgalo(jj)+1.)*this%tau%mesh%delta_eta2
+         eta1 = offset(1) + .5*(this%xgalo(ii)+1.)*lm%delta_eta1
+         eta2 = offset(2) + .5*(this%xgalo(jj)+1.)*lm%delta_eta2
          write(file_id,*) sngl(this%tau%x1(eta1,eta2)), &
                           sngl(this%tau%x2(eta1,eta2)), &
                           sngl(this%array(ii,jj,i,j))
@@ -426,18 +440,18 @@ subroutine plot_dg_field_2d_with_plotmtv(this, field_name)
    end do
    end do
 
-   ni   = this%tau%mesh%num_cells1
-   nj   = this%tau%mesh%num_cells2
+   ni   = lm%num_cells1
+   nj   = lm%num_cells2
 
    do j=0, nj-1
    do i=0, ni-1
-      offset(1) = this%tau%mesh%eta1_min+i*this%tau%mesh%delta_eta1
-      offset(2) = this%tau%mesh%eta2_min+j*this%tau%mesh%delta_eta2
+      offset(1) = lm%eta1_min+i*lm%delta_eta1
+      offset(2) = lm%eta2_min+j*lm%delta_eta2
       do jj=0,this%degree
       do ii=0,this%degree
          ino=1+ii+this%degree*i+(this%degree*ni+1)*(jj+this%degree*j)
-         eta1 = offset(1)+.5*(this%xgalo(ii+1)+1.)*this%tau%mesh%delta_eta1
-         eta2 = offset(2)+.5*(this%xgalo(jj+1)+1.)*this%tau%mesh%delta_eta2
+         eta1 = offset(1)+.5*(this%xgalo(ii+1)+1.)*lm%delta_eta1
+         eta2 = offset(2)+.5*(this%xgalo(jj+1)+1.)*lm%delta_eta2
          write(file_id,"(a)"    ,advance="no") "@text x1="
          write(file_id,"(g15.3)",advance="no") this%tau%x1(eta1,eta2)
          write(file_id,"(a)"    ,advance="no")" y1="
@@ -466,6 +480,8 @@ subroutine plot_dg_field_2d_with_xdmf(this, field_name, time)
    sll_int32                :: clength
    sll_real64, optional     :: time
 
+   class(sll_cartesian_mesh_2d), pointer :: lm
+
    clength = len_trim(field_name)
 
    SLL_ASSERT(this%degree < 10)
@@ -480,11 +496,14 @@ subroutine plot_dg_field_2d_with_xdmf(this, field_name, time)
    if (present(time)) then 
       write(file_id,"(a13,g15.3,a3)") "<Time Value='",time,"'/>"
    end if
+
+   lm => this%tau%get_cartesian_mesh()
+
    k = 0
-   do i=1,this%tau%mesh%num_cells1
-   do j=1,this%tau%mesh%num_cells2
-      offset(1) = this%tau%mesh%eta1_min+(i-1)*this%tau%mesh%delta_eta1
-      offset(2) = this%tau%mesh%eta2_min+(j-1)*this%tau%mesh%delta_eta2
+   do i=1,lm%num_cells1
+   do j=1,lm%num_cells2
+      offset(1) = lm%eta1_min+(i-1)*lm%delta_eta1
+      offset(2) = lm%eta2_min+(j-1)*lm%delta_eta2
       k = k+1
       write(file_id,"(a,i6,a)") "<Grid Name='Mesh",k,"' GridType='Uniform'>"
       write(file_id,"(a,2i5,a)") &
@@ -495,8 +514,8 @@ subroutine plot_dg_field_2d_with_xdmf(this, field_name, time)
                          this%degree+1, "' NumberType='Float' Format='XML'>"
       do jj=1,this%degree+1
       do ii=1,this%degree+1
-         eta1 = offset(1)+.5*(this%xgalo(ii)+1.)*this%tau%mesh%delta_eta1
-         eta2 = offset(2)+.5*(this%xgalo(jj)+1.)*this%tau%mesh%delta_eta2
+         eta1 = offset(1)+.5*(this%xgalo(ii)+1.)*lm%delta_eta1
+         eta2 = offset(2)+.5*(this%xgalo(jj)+1.)*lm%delta_eta2
          write(file_id,"(f7.3)",advance='no') sngl(this%tau%x1(eta1,eta2))
       end do
       write(file_id,*)
@@ -506,8 +525,8 @@ subroutine plot_dg_field_2d_with_xdmf(this, field_name, time)
                          this%degree+1, "' NumberType='Float' Format='XML'>"
       do jj=1,this%degree+1
       do ii=1,this%degree+1
-         eta1 = offset(1)+.5*(this%xgalo(ii)+1.)*this%tau%mesh%delta_eta1
-         eta2 = offset(2)+.5*(this%xgalo(jj)+1.)*this%tau%mesh%delta_eta2
+         eta1 = offset(1)+.5*(this%xgalo(ii)+1.)*lm%delta_eta1
+         eta2 = offset(2)+.5*(this%xgalo(jj)+1.)*lm%delta_eta2
          write(file_id,"(f7.3)", advance='no') sngl(this%tau%x2(eta1,eta2))
       end do
       write(file_id,*)
@@ -521,8 +540,8 @@ subroutine plot_dg_field_2d_with_xdmf(this, field_name, time)
            "' NumberType='Float' Precision='4' Format='XML'>"
       do jj=1,this%degree+1
       do ii=1,this%degree+1
-         eta1 = offset(1)+.5*(this%xgalo(ii)+1.)*this%tau%mesh%delta_eta1
-         eta2 = offset(2)+.5*(this%xgalo(jj)+1.)*this%tau%mesh%delta_eta2
+         eta1 = offset(1)+.5*(this%xgalo(ii)+1.)*lm%delta_eta1
+         eta2 = offset(2)+.5*(this%xgalo(jj)+1.)*lm%delta_eta2
          write(file_id,"(f7.3)", advance='no') sngl(this%array(ii,jj,i,j))
       end do
       write(file_id,*)

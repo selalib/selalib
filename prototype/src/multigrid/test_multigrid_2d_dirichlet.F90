@@ -93,7 +93,7 @@ implicit none
 
    start_time = MPI_WTIME() 
 
-   call initialize( solver,                               &
+   call sll_create( solver,                               &
                     x_min, x_max, y_min, y_max,           &
                     nxprocs, nyprocs, nx, ny,             &
                     SLL_DIRICHLET, SLL_DIRICHLET,         &
@@ -148,7 +148,7 @@ implicit none
    p = 0.0_f64
    call gp_plot2d(f,x,y,sx,ex,sy,ey,'f')
 
-   call solve(solver, p, f, r)
+   call sll_solve(solver, p, f, r)
 
    end_time = MPI_WTIME() 
 

@@ -31,7 +31,7 @@
 #include "sll_maxwell_solvers.h"
 #include "sll_poisson_solvers.h"
 #include "sll_boundary_condition_descriptors.h"
-#include "sll_logical_meshes.h"
+#include "sll_meshes.h"
 #include "sll_coordinate_transformations.h"
 
 

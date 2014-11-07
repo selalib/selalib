@@ -14,6 +14,7 @@ program pic_4d_cartesian
 ! #        OMEGA  = 1.323
 ! #        GAMMA  = -0.151
 
+
 !!$   if (rank==0) then
 !!$      print*, sim%ions_number, 'particles',sim%m2d%num_cells1, &
 !!$        'x',sim%m2d%num_cells2,'cells'

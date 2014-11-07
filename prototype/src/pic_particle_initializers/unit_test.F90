@@ -5,9 +5,11 @@ program initialize_tester
 
   use sll_constants, only: sll_pi
   use sll_particle_group_4d_module
-  use sll_particle_initializers
-  use sll_logical_meshes
-  use sll_representation_conversion_module
+  use sll_particle_group_2d_module
+  use sll_particle_initializers_2d
+  use sll_particle_initializers_4d
+!  use sll_representation_conversion_module
+  use sll_cartesian_meshes
 
 #define THERM_SPEED 1._f64
 #define NUM_PARTICLES 100000_i32
@@ -26,12 +28,13 @@ program initialize_tester
   
   implicit none
   type(sll_particle_group_4d), pointer :: init_group
-  type(sll_logical_mesh_2d),   pointer :: m2d
-  sll_int32 :: j
-  character(5) :: ncx_name, ncy_name
-  sll_real64 :: x, y
+  type(sll_particle_group_2d), pointer :: init_group_GC
+  type(sll_cartesian_mesh_2d),   pointer :: m2d
+!!$  sll_int32 :: j
+!!$  character(5) :: ncx_name, ncy_name
+!!$  sll_real64 :: x, y
 
-  m2d =>  new_logical_mesh_2d( NC_X, NC_Y, &
+  m2d =>  new_cartesian_mesh_2d( NC_X, NC_Y, &
        XMIN, XMAX, YMIN, YMAX )
   
   init_group => new_particle_4d_group( &
@@ -40,24 +43,28 @@ program initialize_tester
        GUARD_SIZE, QoverM, m2d )
   call sll_initial_particles_4d(THERM_SPEED, &
         ALPHA, KX, m2d, NUM_PARTICLES, init_group )
-!!$  call sll_initialize_some4Dfunction( THERM_SPEED, &
-!!$       ALPHA, KX, m2d, &
-!!$       NUM_PARTICLES, init_group )
 
-  write(ncx_name,'(i3)') NC_X
-  write(ncy_name,'(i3)') NC_Y
-  open(83,file='vit_pos_'//trim(adjustl(ncx_name))//'x'//trim(adjustl(ncy_name))//'.dat')
-  do j=1,NUM_PARTICLES
-     call cell_offset_to_global ( init_group%p_list(j)%dx, &
-                                init_group%p_list(j)%dy, &
-                                init_group%p_list(j)%ic, &
-                                m2d, x, y )
-     write(83,*) init_group%p_list(j)%vx, init_group%p_list(j)%vy, &
-     init_group%p_list(j)%ic, init_group%p_list(j)%dx, init_group%p_list(j)%dy, &
-     x, y
-  enddo
+  init_group_GC => new_particle_2d_group( &
+       NUM_PARTICLES, &
+       PARTICLE_ARRAY_SIZE, &
+       GUARD_SIZE, QoverM, m2d )
+  call sll_initial_particles_2d( ALPHA, &
+       KX, m2d, NUM_PARTICLES, init_group_GC )
 
-  close(83)
+!!$  write(ncx_name,'(i3)') NC_X
+!!$  write(ncy_name,'(i3)') NC_Y
+!!$  open(83,file='vit_pos_'//trim(adjustl(ncx_name))//'x'//trim(adjustl(ncy_name))//'.dat')
+!!$  do j=1,NUM_PARTICLES
+!!$     call cell_offset_to_global ( init_group%p_list(j)%dx, &
+!!$                                init_group%p_list(j)%dy, &
+!!$                                init_group%p_list(j)%ic, &
+!!$                                m2d, x, y )
+!!$     write(83,*) init_group%p_list(j)%vx, init_group%p_list(j)%vy, &
+!!$     init_group%p_list(j)%ic, init_group%p_list(j)%dx, init_group%p_list(j)%dy, &
+!!$     x, y
+!!$  enddo
+!!$
+!!$  close(83)
   
   call sll_delete( init_group )
   call sll_delete( m2d )

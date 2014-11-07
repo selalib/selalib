@@ -9,13 +9,14 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL)
 ENDIF(HDF5_ENABLED AND HDF5_IS_PARALLEL)
 
 ADD_LIBRARY( sll_pic_initializers STATIC 
-  sll_particle_init4D.F90 )
+  sll_particle_init4D.F90 
+  sll_particle_init2D.F90 )
 
 TARGET_LINK_LIBRARIES( sll_pic_initializers
   sll_pic_utilities
   sll_pic_particles
 #  sll_visu_pic
-  sll_logical_meshes
+  sll_meshes
   sll_working_precision
   sll_assert
   sll_memory

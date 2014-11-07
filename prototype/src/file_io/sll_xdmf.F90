@@ -500,7 +500,7 @@ if(present(file_format) .and. file_format == "HDF5") then
    write(file_id,"(a)")"</DataItem>"
 
 #ifndef NOHDF5
-   call sll_hdf5_file_create(array_name//".h5",hfile_id,error)
+   call sll_hdf5_file_create(file_name//".h5",hfile_id,error)
    call sll_hdf5_write_array(hfile_id,eta1,"/x1_values",error)
    call sll_hdf5_write_array(hfile_id,eta2,"/x2_values",error)
 #endif

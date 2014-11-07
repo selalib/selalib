@@ -16,7 +16,7 @@ module sll_module_maxwell_2d_diga_parallel
 #include "sll_utilities.h"
 #include "sll_assert.h"
 
-use sll_logical_meshes
+use sll_cartesian_meshes
 use sll_module_coordinate_transformations_2d
 use sll_common_coordinate_transformations
 use sll_dg_fields
@@ -30,7 +30,7 @@ private
 type, public :: sll_maxwell_2d_diga_parallel
 
    sll_transformation, pointer              :: tau  !< transformation
-   type(sll_logical_mesh_2d), pointer       :: mesh !< Logical mesh
+   type(sll_cartesian_mesh_2d), pointer       :: mesh !< Logical mesh
    sll_int32                                :: polarization !< TE or TM
    sll_int32                                :: degree !< degree of gauss integration
    type(cell_type), dimension(:,:), pointer :: cell !< mesh cells
@@ -144,7 +144,7 @@ subroutine initialize_maxwell_2d_diga_parallel(      &
    this%tau        => tau
    ! Please undo this 'fix' whenever it is decided that gfortran 4.6 is no
    ! longer supported.
-   !   this%mesh       => tau%get_logical_mesh()
+   !   this%mesh       => tau%get_cartesian_mesh()
    this%mesh => tau%mesh
    this%bc_south   =  bc_south
    this%bc_east    =  bc_east

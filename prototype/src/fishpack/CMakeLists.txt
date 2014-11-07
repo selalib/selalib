@@ -47,3 +47,5 @@ target_link_libraries(thwsplr fishpack)
 #target_link_libraries(tpoistg fishpack)
 #target_link_libraries(tsepeli fishpack)
 #target_link_libraries(tsepx4  fishpack)
+
+INSTALL(TARGETS fishpack ARCHIVE DESTINATION lib)

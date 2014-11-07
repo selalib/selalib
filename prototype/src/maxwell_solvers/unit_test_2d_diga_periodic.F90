@@ -1,3 +1,8 @@
+! Here we solve Maxwell system without sources using 
+! discontnuous Galerkin numerical method on cartesian mesh
+! Initiallly, Bz is set to cos product and boundary conditions are periodic.
+! Ex and Ey are equals to analytic solutions.
+! For time scheme we use classic RK4 
 !>$L_x,L_y$ domain dimensions and M,N are integers.
 !>$
 !>\omega = \sqrt{(\frac{M\pi}{L_x})^2+(\frac{N\pi}{L_y})^2}
@@ -12,6 +17,9 @@
 !>E_y(x,y,t) = - \frac{c^2 M \pi }{\omega Lx} \sin (M \pi \frac{x}{L_x}) \cos (N \pi  \frac{y}{L_y}) \sin(\omega t) 
 !>$
 !>
+!
+!  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
+!
 
 program test_maxwell_2d_diga_periodic
 !--------------------------------------------------------------------------
@@ -23,7 +31,7 @@ program test_maxwell_2d_diga_periodic
 #include "sll_constants.h"
 #include "sll_maxwell_solvers_macros.h"
 #include "sll_file_io.h"
-#include "sll_logical_meshes.h"
+#include "sll_cartesian_meshes.h"
 #include "sll_coordinate_transformations.h"
 
 use sll_dg_fields
@@ -45,7 +53,7 @@ sll_real64 :: eta1_max, eta1_min
 sll_real64 :: eta2_max, eta2_min
 sll_real64 :: delta_eta1, delta_eta2
 
-type(sll_logical_mesh_2d), pointer :: mesh
+type(sll_cartesian_mesh_2d), pointer :: mesh
 class(sll_coordinate_transformation_2d_base), pointer :: tau
 
 type(sll_maxwell_2d_diga)   :: maxwell_TE
@@ -69,7 +77,7 @@ sll_real64, dimension(nc_eta1,nc_eta2) :: f1
 sll_real64, dimension(nc_eta1,nc_eta2) :: f2
 #endif
 
-mesh => new_logical_mesh_2d(nc_eta1, nc_eta2, &
+mesh => new_cartesian_mesh_2d(nc_eta1, nc_eta2, &
                             eta1_min=0._f64, eta1_max=1._f64, &
                             eta2_min=0._f64, eta2_max=1._f64)
 

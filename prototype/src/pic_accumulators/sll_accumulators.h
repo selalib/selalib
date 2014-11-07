@@ -72,8 +72,8 @@
   do; \
     tmp3 = (1.0_f64 - p%dx); \
     tmp4 = (1.0_f64 - p%dy); \
-    part_Ex = p%dx*p%dy*cell_E(p%ic)%Ex_sw + tmp3*p%dy*cell_E(p%ic)%Ex_se + p%dx*tmp4*cell_E(p%ic)%Ex_nw + tmp3*tmp4*cell_E(p%ic)%Ex_ne; \
-    part_Ey = p%dx*p%dy*cell_E(p%ic)%Ey_sw + tmp3*p%dy*cell_E(p%ic)%Ey_se + p%dx*tmp4*cell_E(p%ic)%Ey_nw + tmp3*tmp4*cell_E(p%ic)%Ey_ne; \
+    part_Ex = p%dx*p%dy*cell_E(p%ic)%Ex_ne + tmp3*p%dy*cell_E(p%ic)%Ex_nw + p%dx*tmp4*cell_E(p%ic)%Ex_se + tmp3*tmp4*cell_E(p%ic)%Ex_sw; \
+    part_Ey = p%dx*p%dy*cell_E(p%ic)%Ey_ne + tmp3*p%dy*cell_E(p%ic)%Ey_nw + p%dx*tmp4*cell_E(p%ic)%Ey_se + tmp3*tmp4*cell_E(p%ic)%Ey_sw; \
     exit; \
  end do
 

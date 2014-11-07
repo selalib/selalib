@@ -26,7 +26,6 @@
 module sll_scalar_field_initializers_base
 #include "sll_working_precision.h"
   use sll_coordinate_transformation_2d_base_module
-  !use sll_module_mapped_meshes_2d_base
 
   implicit none
   integer, parameter :: NODE_CENTERED_FIELD = 0, CELL_CENTERED_FIELD = 1
@@ -47,7 +46,6 @@ module sll_scalar_field_initializers_base
   abstract interface
      subroutine scalar_field_2d_initializer( init_obj, data_out )
        use sll_working_precision
-!       import sll_mapped_mesh_2d_base, scalar_field_2d_initializer_base
        import scalar_field_2d_initializer_base
        class(scalar_field_2d_initializer_base), intent(inout) :: init_obj
        sll_real64, dimension(:,:), intent(out)                :: data_out
