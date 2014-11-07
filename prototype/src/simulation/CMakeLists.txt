@@ -113,15 +113,16 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
    ADD_SIMULATION(4d_qns_general    4d_qns_general)
    #PN ADD_SIMULATION(4d_qns_general_multipatch    4d_qns_general_multipatch)
 
-   ADD_SIMULATION(4d_DK_hybrid              4d_DK_hybrid)
-   ADD_SIMULATION(4d_dk_polar               4d_drift_kinetic_polar)
-   ADD_SIMULATION(4d_dk_polar_one_mu        4d_drift_kinetic_polar_one_mu)
-   ADD_SIMULATION(4d_dk_polar_multi_mu      4d_drift_kinetic_polar_multi_mu)
-   ADD_SIMULATION(4d_dk_field_aligned_polar 4d_drift_kinetic_field_aligned_polar)
-   ADD_SIMULATION(6d                        6d_vlasov_poisson_cartesian)
+#PN   ADD_SIMULATION(4d_DK_hybrid              4d_DK_hybrid)
+#PN   ADD_SIMULATION(4d_dk_polar               4d_drift_kinetic_polar)
+#PN   ADD_SIMULATION(4d_dk_polar_one_mu        4d_drift_kinetic_polar_one_mu)
+#PN   ADD_SIMULATION(4d_dk_polar_multi_mu      4d_drift_kinetic_polar_multi_mu)
+#PN   ADD_SIMULATION(4d_dk_field_aligned_polar 4d_drift_kinetic_field_aligned_polar)
+#PN   ADD_SIMULATION(6d                        6d_vlasov_poisson_cartesian)
 
-   ADD_SIMULATION(4d_vp_pic_cartesian       4d_vp_pic_cartesian)
-   ADD_SIMULATION(2d_guiding_center_pic_cartesian       2d_guiding_center_pic_cartesian)
+#PN   ADD_SIMULATION(4d_vp_pic_cartesian       4d_vp_pic_cartesian)
+
+   ADD_SIMULATION(2d_guiding_center_pic_cartesian 2d_guiding_center_pic_cartesian)
 
 
 #   ADD_SIMULATION(4d_mixed_qns_cartesian 4d_mixed_qns_cartesian)
