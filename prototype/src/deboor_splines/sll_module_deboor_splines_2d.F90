@@ -349,7 +349,7 @@ subroutine spli2d_custom ( nx,    &
                            g,     &
                            bcoef, &
                            tx,    &
-                           ty )
+                           ty)
 
   sll_int32,  intent(in)    :: nx
   sll_int32,  intent(in)    :: kx
@@ -359,8 +359,8 @@ subroutine spli2d_custom ( nx,    &
   sll_real64, intent(in)    :: tauy(:)    !ny	
   sll_real64, intent(in)    :: g(:,:)     !nx,ny	
   sll_real64, intent(inout) :: bcoef(:,:) !nx , ny 
-  sll_real64, intent(inout) :: tx(:)      !nx + kx
-  sll_real64, intent(inout) :: ty(:)      !ny + ky 
+  sll_real64, intent(inout) :: tx(:) 
+  sll_real64, intent(inout) :: ty(:) 
 
   sll_real64 :: tmp(nx,ny)
 
@@ -414,107 +414,188 @@ subroutine spli2d_custom ( nx,    &
      
 end subroutine spli2d_custom
 
-subroutine spli2d_custom_derder ( nx,   &
-                                  nx_der,&
-                                  kx,&
-                                  taux,&
-                                  taux_der,&
-                                  ny,&
-                                  ny_der,&
-                                  ky,&
-                                  tauy,&
-                                  tauy_der,&
-                                  g,&
-                                  g_der1,&
-                                  g_der2,&
-                                  bcoef,&
-                                  tx,&
+!
+!  Parameters:
+!
+!    Input, real ( kind = 8 ) TAU(N), contains the data point abscissas.
+!    TAU must be strictly increasing
+!
+!    Input, real ( kind = 8 ) GTAU(N,M), contains the data point ordinates.
+!    Input, integer (kind= 8 )TAU_DER(Np), contains the data point abscissas.
+!    TAU must be strictly increasing
+!
+!    Input, real ( kind = 8 ) GTAU_DER(Np,M),contains the data point ordinates.
+!
+!    Input, real ( kind = 8 ) T(N+Np+K), the knot sequence.
+!
+!    Input, integer N, the number of data points and the
+!    dimension of the spline space SPLINE(K,T)
+!
+!    Input, integer K, the order of the spline.
+!
+!    Input, integer M, the number of data sets.
+!
+!    Work space, real ( kind = 8 ) WORK(N).
+!
+!    Output, real ( kind = 8 ) Q(2*K-1)*N, the triangular
+!    factorization of the coefficient matrix of the linear
+!    system for the B-spline coefficients of the spline interpolant.
+!    The B-spline coefficients for the interpolant of an additional
+!    data set ( TAU(I), HTAU(I) ), I=1,...,N  with the same data
+!    abscissae can be obtained without going through all the
+!    calculations in this routine, simply by loading HTAU into
+!    BCOEF and then using the statement
+!      CALL BANSLV ( Q, 2*K-1, N, K-1, K-1, BCOEF )
+!
+!    Output, real ( kind = 8 ) BCOEF(N), the B-spline coefficients of
+!    the interpolant.
+!
+!    Output, integer IFLAG, error indicator.
+!    1, no error.
+!    2, an error occurred, which may have been caused by
+!       singularity of the linear system.
+subroutine spli2d_custom_derder ( nx,       &
+                                  nx_der,   &
+                                  kx,       &
+                                  taux,     &
+                                  taux_der, &
+                                  ny,       &
+                                  ny_der,   &
+                                  ky,       &
+                                  tauy,     &
+                                  tauy_der, &
+                                  g,        &
+                                  g_der1,   &
+                                  g_der2,   &
+                                  bcoef,    &
+                                  tx,       &
                                   ty )
 
-  sll_int32  :: nx, kx, ny, ky
-  sll_int32  :: nx_der,ny_der
-  sll_real64, dimension(:),pointer :: taux !!nx
-  sll_real64, dimension(:),pointer :: tauy !! ny
-  sll_int32,  dimension(:),pointer :: taux_der !!nx_der
-  sll_int32,  dimension(:),pointer :: tauy_der !!ny_der
-  sll_real64, dimension(:,:),pointer :: g    ! nx,ny
-  sll_real64, dimension(:,:),pointer :: g_der1 ! nx_der,ny
-  sll_real64, dimension(:,:),pointer :: g_der2 !ny_der,nx + nx_der
+  sll_int32,  intent(in) :: nx
+  sll_int32,  intent(in) :: nx_der
+  sll_int32,  intent(in) :: kx
+  sll_real64, intent(in) :: taux(:)
+  sll_int32,  intent(in) :: tauy_der(:)
+  sll_int32,  intent(in) :: ny
+  sll_int32,  intent(in) :: ny_der
+  sll_int32,  intent(in) :: ky
+  sll_real64, intent(in) :: tauy(:)
+  sll_int32,  intent(in) :: taux_der(:)
+  sll_real64, intent(in) :: g(:,:)    
+  sll_real64, intent(in) :: g_der1(:,:)
+  sll_real64, intent(in) :: g_der2(:,:)
 
-  sll_real64, dimension(:,:),pointer::bcoef!nx + nx_der,ny+ ny_der 
-  sll_real64, dimension( : ),pointer:: tx ! nx + kx + nx_der
-  sll_real64, dimension( : ),pointer:: ty ! ny + ky + ny_der
+  sll_real64, intent(inout) :: bcoef(:,:)
+  sll_real64, intent(inout) :: tx(:) 
+  sll_real64, intent(inout) :: ty(:) 
 
-  sll_real64, dimension ( nx + nx_der , ny + ny_der) :: lpr_work1
-  sll_real64, dimension ( nx + nx_der ) :: lpr_work2
-  sll_real64, dimension ( (nx + nx_der)* (ny+ny_der) ) :: lpr_work3
-  sll_real64, dimension (( 2*ky-1) * (ny+ny_der) ) :: lpr_work32
-  sll_real64, dimension ( ny +ny_der) :: lpr_work4
-  sll_real64, dimension (1:ny,1:nx+nx_der),target:: lpr_work5 !  ny , nx
-  sll_real64, dimension (:,:),pointer :: lpr_work5_ptr 
+  sll_real64, dimension(1:ny,1:nx+nx_der) :: tmp
+  sll_int32 :: i
+  sll_int32 :: j
    
-  lpr_work1(:,:) = 0.0
-  lpr_work5(:,:) = 0.0
+  tx(1:kx)                     = taux(1)
+  tx(nx+nx_der+1:nx+nx_der+kx) = taux(nx)
     
-  ! *** set up knots
-  !     interpolate between knots
+  SLL_ASSERT(nx + nx_der + kx == nx + 2*(kx-1))
+  tx(kx+1:nx+nx_der) = taux(2:nx-1)
     
-  tx = 0.0_f64
-  tx ( 1 : kx ) = taux ( 1 )
-  tx ( nx+ nx_der + 1: nx + nx_der + kx ) = taux ( nx )
+  ty(1:ky) = tauy(1)
+  ty(ny+ny_der+1:ny+ny_der+ky) = tauy(ny)
     
-  if (nx + nx_der + kx == nx + 2*(kx-1)) then
-    tx (kx+1: nx+ nx_der) = taux(2:nx-1)
-  else
-    print*, 'problem with construction of knots' 
-  end if
+  SLL_ASSERT(ny+ny_der+ky == ny+2*(ky-1))
+  ty(ky+1:ny+ny_der) = tauy(2:ny-1)
     
-  !  *** construct b-coefficients of interpolant
-  ty = 0.0_f64
-  ty ( 1 : ky ) = tauy ( 1 )
-  ty ( ny+ ny_der + 1: ny + ny_der + ky ) = tauy ( ny )
-    
-  if (ny + ny_der + ky == ny + 2*(ky-1)) then
-     ty (ky+1: ny+ ny_der) = tauy(2:ny-1)
-  else
-     print*, 'problem with construction of knots' 
-  end if
-    
-  lpr_work5_ptr => lpr_work5
+  do j = 1, ny
+       
+    call splint_der( taux,        &
+                     g(:,j),      &
+                     taux_der,    &
+                     g_der1(:,j), &
+                     tx,          &
+                     nx,          &
+                     nx_der,      &
+                     kx,          &
+                     tmp(j,:))
+       
+  end do
 
-  call spli2d_der ( taux,      &
-                    g,         &
-                    taux_der,  &
-                    g_der1,    &
-                    tx,        &
-                    nx,         &
-                    nx_der,     &
-                    kx,         &
-                    ny,         &
-                    lpr_work2,     &
-                    lpr_work5_ptr)
-    
-   bcoef(:,:) =0.0_8
-   lpr_work4 = 0.0_8
-   lpr_work3 = 0.0_8
-   lpr_work32= 0.0_8
-     
-   call spli2d_der ( tauy,        &
-                     lpr_work5_ptr,   &
+!  call spli2d_der( taux,       &
+!                   g,          &
+!                   taux_der,   &
+!                   g_der1,     &
+!                   tx,         &
+!                   nx,         &
+!                   nx_der,     &
+!                   kx,         &
+!                   ny,         &
+!                   tmp)
+  do i = 1, nx+nx_der
+       
+    call splint_der( tauy,        &
+                     tmp(:,i),    &
                      tauy_der,    &
-                     g_der2,      &
+                     g_der2(:,i), &
                      ty,          &
-                     ny,           &
-                     ny_der,       &
-                     ky,           &
-                     nx+nx_der, &
-                     lpr_work4,       &
-                     bcoef)
+                     ny,          &
+                     ny_der,      &
+                     ky,          &
+                     bcoef(i,:))
+       
+  end do
+    
+!  call spli2d_der( tauy,       &
+!                   tmp,        &
+!                   tauy_der,   &
+!                   g_der2,     &
+!                   ty,         &
+!                   ny,         &
+!                   ny_der,     &
+!                   ky,         &
+!                   nx+nx_der,  &
+!                   bcoef)
 
 end subroutine spli2d_custom_derder
 
-
-
+!
+!  Parameters:
+!
+!    Input, real ( kind = 8 ) TAU(N), contains the data point abscissas.
+!    TAU must be strictly increasing
+!
+!    Input, real ( kind = 8 ) GTAU(N,M), contains the data point ordinates.
+!    Input, integer (kind= 8 )TAU_DER(Np), contains the data point abscissas.
+!    TAU must be strictly increasing
+!
+!    Input, real ( kind = 8 ) GTAU_DER(Np,M),contains the data point ordinates.
+!
+!    Input, real ( kind = 8 ) T(N+Np+K), the knot sequence.
+!
+!    Input, integer N, the number of data points and the
+!    dimension of the spline space SPLINE(K,T)
+!
+!    Input, integer K, the order of the spline.
+!
+!    Input, integer M, the number of data sets.
+!
+!    Work space, real ( kind = 8 ) WORK(N).
+!
+!    Output, real ( kind = 8 ) Q(2*K-1)*N, the triangular
+!    factorization of the coefficient matrix of the linear
+!    system for the B-spline coefficients of the spline interpolant.
+!    The B-spline coefficients for the interpolant of an additional
+!    data set ( TAU(I), HTAU(I) ), I=1,...,N  with the same data
+!    abscissae can be obtained without going through all the
+!    calculations in this routine, simply by loading HTAU into
+!    BCOEF and then using the statement
+!      CALL BANSLV ( Q, 2*K-1, N, K-1, K-1, BCOEF )
+!
+!    Output, real ( kind = 8 ) BCOEF(N), the B-spline coefficients of
+!    the interpolant.
+!
+!    Output, integer IFLAG, error indicator.
+!    1, no error.
+!    2, an error occurred, which may have been caused by
+!       singularity of the linear system.
 subroutine spli2d_der( tau,           &
                        gtau,          &
                        tau_der,       &
@@ -524,87 +605,35 @@ subroutine spli2d_der( tau,           &
                        np,            &
                        k,             &
                        m,             &
-                       work,          &
                        bcoef)
-  !
-  !  Parameters:
-  !
-  !    Input, real ( kind = 8 ) TAU(N), contains the data point abscissas.
-  !    TAU must be strictly increasing
-  !
-  !    Input, real ( kind = 8 ) GTAU(N,M), contains the data point ordinates.
-  !    Input, integer (kind= 8 )TAU_DER(Np), contains the data point abscissas.
-  !    TAU must be strictly increasing
-  !
-  !    Input, real ( kind = 8 ) GTAU_DER(Np,M),contains the data point ordinates.
-  !
-  !    Input, real ( kind = 8 ) T(N+Np+K), the knot sequence.
-  !
-  !    Input, integer N, the number of data points and the
-  !    dimension of the spline space SPLINE(K,T)
-  !
-  !    Input, integer K, the order of the spline.
-  !
-  !    Input, integer M, the number of data sets.
-  !
-  !    Work space, real ( kind = 8 ) WORK(N).
-  !
-  !    Output, real ( kind = 8 ) Q(2*K-1)*N, the triangular
-  !    factorization of the coefficient matrix of the linear
-  !    system for the B-spline coefficients of the spline interpolant.
-  !    The B-spline coefficients for the interpolant of an additional
-  !    data set ( TAU(I), HTAU(I) ), I=1,...,N  with the same data
-  !    abscissae can be obtained without going through all the
-  !    calculations in this routine, simply by loading HTAU into
-  !    BCOEF and then using the statement
-  !      CALL BANSLV ( Q, 2*K-1, N, K-1, K-1, BCOEF )
-  !
-  !    Output, real ( kind = 8 ) BCOEF(N), the B-spline coefficients of
-  !    the interpolant.
-  !
-  !    Output, integer IFLAG, error indicator.
-  !    1, no error.
-  !    2, an error occurred, which may have been caused by
-  !       singularity of the linear system.
   
-  sll_int32 :: m
-  sll_int32 :: n
-  sll_int32 :: np
-  sll_real64,dimension(:,:),pointer:: bcoef !(m,n+np)
-  sll_real64,dimension(:,:),pointer:: gtau  !(n,m)
-  sll_real64,dimension(:,:),pointer:: gtau_der!(np,n)
+  sll_real64, intent(in)    :: tau(:)
+  sll_real64, intent(in)    :: gtau(:,:)
+  sll_int32,  intent(in)    :: tau_der(:)
+  sll_real64, intent(in)    :: gtau_der(:,:)
+  sll_real64, intent(in)    :: t(:)
+  sll_int32,  intent(in)    :: n
+  sll_int32,  intent(in)    :: np
+  sll_int32,  intent(in)    :: m
+  sll_real64, intent(inout) :: bcoef(:,:)
+
   sll_int32 :: j
   sll_int32 :: k
-  sll_real64,dimension(:),pointer:: t!(n+np+k)
-  sll_real64,dimension(:),pointer:: tau!(n)
-  sll_int32,dimension(:),pointer:: tau_der!np
-  sll_real64,dimension(n):: work!(n)
-  sll_real64,dimension(np):: work_der
-  sll_real64,dimension(n+np):: work_result
-
-  work_result = 0.0_f64
 
   do j = 1, m
        
-    work(1:n) = gtau(:,j)
-    work_der(1:np) = gtau_der(1:np,j)
-
-    call splint_der( tau,         &
-                     work,        &
-                     tau_der,     &
-                     work_der,    &
-                     t,           &
-                     n,           &
-                     np,          &
-                     k,           &
-                     work_result  )
-       
-     bcoef(j,1:n+np) = work_result(1:n+np)
+    call splint_der( tau,              &
+                     gtau(:,j),        &
+                     tau_der,          &
+                     gtau_der(1:np,j), &
+                     t,                &
+                     n,                &
+                     np,               &
+                     k,                &
+                     bcoef(j,1:n+np))
        
   end do
     
-    
-  return
 end subroutine spli2d_der
-
+    
 end module sll_module_deboor_splines_2d
