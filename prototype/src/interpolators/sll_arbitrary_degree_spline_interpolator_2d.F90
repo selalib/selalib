@@ -1822,31 +1822,25 @@ case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
        
 case (585) ! 4. dirichlet in all sides
 
-       !print*, 'her'
-       interpolator%size_coeffs1 = sz1
-       interpolator%size_coeffs2 = sz2
-       interpolator%size_t1 = order1 + sz1 
-       interpolator%size_t2 = order2 + sz2 
+  !print*, 'her'
+  interpolator%size_coeffs1 = sz1
+  interpolator%size_coeffs2 = sz2
+  interpolator%size_t1 = order1 + sz1 
+  interpolator%size_t2 = order2 + sz2 
        
-       !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
-       !  i.e  data_array must have the dimension sz1 x sz2
-       SLL_ALLOCATE( data_array_tmp(1:sz1,1:sz2),ierr)
-       data_array_tmp = data_array(1:sz1,1:sz2)
-       call spli2d_custom( sz1, order1, interpolator%eta1, &
-            sz2, order2, interpolator%eta2, &
-            data_array_tmp, interpolator%bcoef,&!(1:sz1,1:sz2),&
-            interpolator%t1,&!(1:sz1+order1), &
-            interpolator%t2)!(1:sz2+order2) )
+  call spli2d_custom( sz1, order1, interpolator%eta1, &
+                      sz2, order2, interpolator%eta2, &
+                      data_array,  interpolator%bcoef,&
+                      interpolator%t1, interpolator%t2)
 
-       ! boundary condition non homogene
-       interpolator%bcoef(1,1:sz2)   = data_array(1,1:sz2)
-       interpolator%bcoef(sz1,1:sz2) = data_array(sz1,1:sz2)
-       ! boundary condition non homogene
-       interpolator%bcoef(1:sz1,1)   = data_array(1:sz1,1)
-       interpolator%bcoef(1:sz1,sz2) = data_array(1:sz1,sz2)
+  ! boundary condition non homogene
+  interpolator%bcoef(1,1:sz2)   = data_array(1,1:sz2)
+  interpolator%bcoef(sz1,1:sz2) = data_array(sz1,1:sz2)
+  ! boundary condition non homogene
+  interpolator%bcoef(1:sz1,1)   = data_array(1:sz1,1)
+  interpolator%bcoef(1:sz1,sz2) = data_array(1:sz1,sz2)
 
-    case (650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet
+case (650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet
        sz_derivative_eta1 = 2
        sz_derivative_eta2 = 2
        interpolator%size_coeffs1 = sz1 + sz_derivative_eta1
