@@ -340,16 +340,7 @@ subroutine spli2d ( tau, gtau, t, n, k, m, bcoef)
    
 end subroutine spli2d
 
-subroutine spli2d_custom ( nx,    &
-                           kx,    &
-                           taux,  &
-                           ny,    &
-                           ky,    &
-                           tauy,  &
-                           g,     &
-                           bcoef, &
-                           tx,    &
-                           ty)
+subroutine spli2d_custom ( nx, kx, taux, ny, ky, tauy, g, bcoef, tx, ty)
 
   sll_int32,  intent(in)    :: nx
   sll_int32,  intent(in)    :: kx
@@ -359,16 +350,14 @@ subroutine spli2d_custom ( nx,    &
   sll_real64, intent(in)    :: tauy(:)    !ny	
   sll_real64, intent(in)    :: g(:,:)     !nx,ny	
   sll_real64, intent(inout) :: bcoef(:,:) !nx , ny 
-  sll_real64, intent(inout) :: tx(:) 
-  sll_real64, intent(inout) :: ty(:) 
 
+  sll_real64 :: tx(nx+kx) 
+  sll_real64 :: ty(ny+ky) 
   sll_real64 :: tmp(nx,ny)
-
   sll_int32  :: i, j
     
-  ! *** set up knots
-  !     interpolate between knots
-    
+  tx = 0.0
+  ty = 0.0
   tx(1:kx)       = taux(1)
   tx(nx+1:nx+kx) = taux(nx)
     
@@ -395,22 +384,8 @@ subroutine spli2d_custom ( nx,    &
     end do
   end if
 
-
-  call spli2d ( taux,  &
-                g,     &
-                tx,    &
-                nx,    &
-                kx,    &
-                ny,    &
-                tmp)
-    
-  call spli2d ( tauy,  &
-                tmp,   &
-                ty,    &
-                ny,    &
-                ky,    &
-                nx,    &
-                bcoef)
+  call spli2d(taux,   g, tx, nx, kx, ny, tmp)
+  call spli2d(tauy, tmp, ty, ny, ky, nx, bcoef)
      
 end subroutine spli2d_custom
 
@@ -471,19 +446,19 @@ subroutine spli2d_custom_derder ( nx,       &
                                   tx,       &
                                   ty )
 
-  sll_int32,  intent(in) :: nx
-  sll_int32,  intent(in) :: nx_der
-  sll_int32,  intent(in) :: kx
-  sll_real64, intent(in) :: taux(:)
-  sll_int32,  intent(in) :: tauy_der(:)
-  sll_int32,  intent(in) :: ny
-  sll_int32,  intent(in) :: ny_der
-  sll_int32,  intent(in) :: ky
-  sll_real64, intent(in) :: tauy(:)
-  sll_int32,  intent(in) :: taux_der(:)
-  sll_real64, intent(in) :: g(:,:)    
-  sll_real64, intent(in) :: g_der1(:,:)
-  sll_real64, intent(in) :: g_der2(:,:)
+  sll_int32,  intent(in)    :: nx
+  sll_int32,  intent(in)    :: nx_der
+  sll_int32,  intent(in)    :: kx
+  sll_real64, intent(in)    :: taux(:)
+  sll_int32,  intent(in)    :: tauy_der(:)
+  sll_int32,  intent(in)    :: ny
+  sll_int32,  intent(in)    :: ny_der
+  sll_int32,  intent(in)    :: ky
+  sll_real64, intent(in)    :: tauy(:)
+  sll_int32,  intent(in)    :: taux_der(:)
+  sll_real64, intent(in)    :: g(:,:)    
+  sll_real64, intent(in)    :: g_der1(:,:)
+  sll_real64, intent(in)    :: g_der2(:,:)
 
   sll_real64, intent(inout) :: bcoef(:,:)
   sll_real64, intent(inout) :: tx(:) 
@@ -496,10 +471,10 @@ subroutine spli2d_custom_derder ( nx,       &
   tx(1:kx)                     = taux(1)
   tx(nx+nx_der+1:nx+nx_der+kx) = taux(nx)
     
-  SLL_ASSERT(nx + nx_der + kx == nx + 2*(kx-1))
+  SLL_ASSERT(nx+nx_der+kx == nx+2*(kx-1))
   tx(kx+1:nx+nx_der) = taux(2:nx-1)
     
-  ty(1:ky) = tauy(1)
+  ty(1:ky)                     = tauy(1)
   ty(ny+ny_der+1:ny+ny_der+ky) = tauy(ny)
     
   SLL_ASSERT(ny+ny_der+ky == ny+2*(ky-1))
@@ -507,29 +482,13 @@ subroutine spli2d_custom_derder ( nx,       &
     
   do j = 1, ny
        
-    call splint_der( taux,        &
-                     g(:,j),      &
-                     taux_der,    &
-                     g_der1(:,j), &
-                     tx,          &
-                     nx,          &
-                     nx_der,      &
-                     kx,          &
-                     tmp(j,:))
+    call splint_der( taux, g(:,j), taux_der, g_der1(:,j), tx, nx, nx_der, kx, tmp(j,:))
        
   end do
 
   do i = 1, nx+nx_der
        
-    call splint_der( tauy,        &
-                     tmp(:,i),    &
-                     tauy_der,    &
-                     g_der2(:,i), &
-                     ty,          &
-                     ny,          &
-                     ny_der,      &
-                     ky,          &
-                     bcoef(i,:))
+    call splint_der( tauy, tmp(:,i), tauy_der, g_der2(:,i), ty, ny, ny_der, ky, bcoef(i,:))
        
   end do
     
