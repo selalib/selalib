@@ -125,13 +125,6 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
 
 ENDIF()
 
-ADD_EXECUTABLE(curvilinear_SL curvilinear_SL.F90)
-  
-TARGET_LINK_LIBRARIES(curvilinear_SL sll_interpolators
-	                             sll_constants
-	                             sll_file_io
-  	                             sll_utilities)
-
 ADD_EXECUTABLE(CG_polar CG_polar.F90 sll_advection_polar.F90
 		                         sll_polar_operators.F90)
 
