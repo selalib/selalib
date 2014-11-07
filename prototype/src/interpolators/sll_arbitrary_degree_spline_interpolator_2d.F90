@@ -281,15 +281,15 @@ sll_real64 :: delta_eta1
 sll_real64 :: delta_eta2
    
 ! do some argument checking...
-if(((bc_w  == SLL_PERIODIC).and.(bc_e.ne. SLL_PERIODIC)).or.&
-   ((bc_e == SLL_PERIODIC).and.(bc_w .ne. SLL_PERIODIC)))then
+if(((bc_w == SLL_PERIODIC).and.(bc_e /= SLL_PERIODIC)).or.&
+   ((bc_e == SLL_PERIODIC).and.(bc_w /= SLL_PERIODIC))) then
   print *, 'initialize_arbitrary_degree_2d_interpolator, ERROR: ', &
            'if one boundary condition is specified as periodic, then ', &
            'both must be. Error in first direction.'
 end if
 
-if(((bc_s == SLL_PERIODIC).and.(bc_n.ne. SLL_PERIODIC)).or.&
-  ((bc_n == SLL_PERIODIC).and.(bc_s .ne. SLL_PERIODIC)))then
+if(((bc_s == SLL_PERIODIC).and.(bc_n /= SLL_PERIODIC)).or.&
+   ((bc_n == SLL_PERIODIC).and.(bc_s /= SLL_PERIODIC))) then
   print *, 'initialize_arbitrary_degree_2d_interpolator, ERROR: ', &
            'if one boundary condition is specified as periodic, then ', &
            'both must be. Error in second direction.'
@@ -368,84 +368,10 @@ case (576) ! 3. periodic, dirichlet-bottom, dirichlet-top
   SLL_ALLOCATE( interpolator%knots1(2*spline_degree1+2),ierr )
   SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
 
-case (585) ! 4. dirichlet in all sides
-
-  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-
-case(650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet 
-
-  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-
-case(657) !left: Dirichlet, right: Neumann, bottom: Neumann, Top: Dirichlet 
-
-  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-
-case(780)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Dirichlet
-
-  SLL_CLEAR_ALLOCATE( interpolator%knots1(1:num_pts1+2*spline_degree1),ierr )
-  SLL_CLEAR_ALLOCATE( interpolator%knots2(1:num_pts2+2*spline_degree2),ierr )
-
-case(801)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Dirichlet
-
-  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-
-case(804)  !left: Hermite, right: Hermite, bottom: Hermite, Top: Dirichlet
-       
-  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-
-case(1098)  !left: Neumann, right: Dirichlet, bottom: Dirichlet, Top: Neumann
-       
-  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-
-case(1105)  !left: Dirichlet, right: Neumann, bottom: Dirichlet, Top: Neumann
-       
-  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-
-case(1170)  !left: Neumann, right: Neumann, bottom: Neuman, Top: Neumann
-       
-  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-
-case(2124)  !left: Hermite, right: Dirichlet, bottom: Dirichlet, Top: Hermite
-
-  SLL_CLEAR_ALLOCATE( interpolator%knots1(1:num_pts1+2*spline_degree1),ierr )
-  SLL_CLEAR_ALLOCATE( interpolator%knots2(1:num_pts2+2*spline_degree2),ierr )
-
-case(2145)  !left: Dirichlet, right: Hermite, bottom: Dirichlet, Top: Hermite  
-
-  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-
-case(2148)  !left:Hermite , right: Hermite, bottom: Dirichlet, Top: Hermite  
-
-  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-
-case(2316)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Hermite
-      
-  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-       
-case(2338)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Hermite
-       
-  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-
-case(2340) ! Hermite in all sides
-
-  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-     
 case default
 
-  SLL_WARNING(" BC combination not implemented. ")
+  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
+  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
 
 end select
 
@@ -1772,7 +1698,7 @@ subroutine compute_interpolants_ad2d( &
 
 class(sll_arbitrary_degree_spline_interpolator_2d), intent(inout)  :: interpolator
 
-sll_real64, dimension(:,:), intent(in)         :: data_array
+sll_real64, dimension(:,:), intent(inout)      :: data_array
 sll_real64, dimension(:), intent(in),optional  :: eta1_coords
 sll_real64, dimension(:), intent(in),optional  :: eta2_coords
 sll_int32, intent(in),optional                 :: size_eta1_coords
@@ -1828,13 +1754,6 @@ else
 
 end if
 
-SLL_ALLOCATE(point_location_eta1_tmp(1:sz1-1),ierr)
-SLL_ALLOCATE(point_location_eta2_tmp(1:sz2-1),ierr)
-point_location_eta1_tmp = interpolator%eta1(1:sz1-1)
-point_location_eta2_tmp = interpolator%eta2(1:sz2-1)
-    
-! the size of data_array  must be <= interpolator%num_pts1 + 4*interpolator%spline_degree1
-! because we have not need more !! 
 SLL_ASSERT(sz1 .le. interpolator%num_pts1 + 8*interpolator%spline_degree1)
 SLL_ASSERT(sz2 .le. interpolator%num_pts2 + 8*interpolator%spline_degree1)
 SLL_ASSERT(size(data_array,1) .ge. sz1)
@@ -1856,76 +1775,60 @@ SLL_ALLOCATE(point_location_eta2_deriv(2),ierr)
     
 select case (interpolator%bc_selector)
 case (0) ! periodic-periodic
+
   interpolator%size_coeffs1 = sz1!+1
   interpolator%size_coeffs2 = sz2!+1
   interpolator%size_t1 = order1 + sz1 !+ 1
   interpolator%size_t2 = order2 + sz2 !+ 1 
 
-  !  data_array must have the same dimension than 
-  !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
-  !  i.e  data_array must have the dimension sz1 x sz2
-  SLL_ALLOCATE( data_array_tmp(1:sz1-1,1:sz2-1),ierr)
- 
-  data_array_tmp = data_array(1:sz1-1,1:sz2-1)
-  if ( .not. associated(point_location_eta1_tmp)) &
-    SLL_ALLOCATE(point_location_eta1_tmp(sz1-1),ierr)
-  if ( .not. associated(point_location_eta2_tmp)) &
-    SLL_ALLOCATE(point_location_eta2_tmp(sz2-1),ierr)
-  print*, 'call spli2d_perper'
-  call spli2d_perper( &
-            period1, sz1, order1, point_location_eta1_tmp,&!(1:sz1-1), & !+1
-            period2, sz2, order2, point_location_eta2_tmp,&!(1:sz2-1), & !+1
-            data_array_tmp, interpolator%bcoef,&!(1:sz1,1:sz2),&
-            interpolator%t1,&!(1:order1 + sz1 ), &!+ 1), &
-            interpolator%t2)!(1:order2 + sz2 ))!+ 1) )
-       
+  data_array(sz1    ,1:sz2-1) = data_array(      1,1:sz2-1)
+  data_array(1:sz1-1,    sz2) = data_array(1:sz1-1,     1)
+  data_array(    sz1,    sz2) = data_array(      1,     1)
+
+  call spli2d_custom( sz1, order1, interpolator%eta1,  &
+                      sz2, order2, interpolator%eta2,  &
+                      data_array,  interpolator%bcoef, &
+                      interpolator%t1, interpolator%t2 )
+
 case (9) ! 2. dirichlet-left, dirichlet-right, periodic
-       interpolator%size_coeffs1 = sz1
-       interpolator%size_coeffs2 = sz2!+1
-       interpolator%size_t1 = order1 + sz1
-       interpolator%size_t2 = order2 + sz2 !+ 1
-       
-       !print*, size(data_array(1:sz1,1:sz2-1),1)
-       !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
-       !  i.e  data_array must have the dimension sz1 x sz2
 
-       SLL_ALLOCATE( data_array_tmp(1:sz1,1:sz2-1),ierr)
-       data_array_tmp = data_array(1:sz1,1:sz2-1)
-       call spli2d_dirper( sz1, order1, interpolator%eta1,&!(1:sz1), &
-            period2, sz2, order2, point_location_eta2_tmp,&!(1:sz2-1), & !+1
-            data_array_tmp, interpolator%bcoef,&!(1:sz1,1:sz2),&!+1
-            interpolator%t1,&!(1:sz1+order1), &
-            interpolator%t2)!(1:sz2+order2) ) !+1
+  interpolator%size_coeffs1 = sz1
+  interpolator%size_coeffs2 = sz2!+1
+  interpolator%size_t1 = order1 + sz1
+  interpolator%size_t2 = order2 + sz2 !+ 1
 
+  data_array(1:sz1,sz2) = data_array(1:sz1,1)
+     
+  call spli2d_custom( sz1, order1,     interpolator%eta1,  &
+                      sz2, order2,     interpolator%eta2,  &
+                      data_array,      interpolator%bcoef, &
+                      interpolator%t1, interpolator%t2)
 
-      ! print*, 'oulala'
-       ! boundary condition non homogene  a revoir !!!!! 
-       !print*,'zarrrr', interpolator%value_w(1:sz2)
-       interpolator%bcoef(1,1:sz2)   = data_array(1,1:sz2)!interpolator%value_w(1:sz2)
-       interpolator%bcoef(sz1,1:sz2) = data_array(sz1,1:sz2)!interpolator%value_e(1:sz2)
+  ! print*, 'oulala'
+  ! boundary condition non homogene  a revoir !!!!! 
+  !print*,'zarrrr', interpolator%value_w(1:sz2)
+  interpolator%bcoef(1,1:sz2)   = data_array(1,1:sz2)!interpolator%value_w(1:sz2)
+  interpolator%bcoef(sz1,1:sz2) = data_array(sz1,1:sz2)!interpolator%value_e(1:sz2)
   
-    case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
-       interpolator%size_coeffs1 = sz1!+1
-       interpolator%size_coeffs2 = sz2
-       interpolator%size_t1 = order1 + sz1 !+ 1
-       interpolator%size_t2 = order2 + sz2 
-       !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
-       !  i.e  data_array must have the dimension sz1 x sz2
-       SLL_ALLOCATE( data_array_tmp(1:sz1-1,1:sz2),ierr)
-       data_array_tmp = data_array(1:sz1-1,1:sz2)
-       call spli2d_perdir( period1, sz1, order1, point_location_eta1_tmp,&!(1:sz1-1), & !+ 1
-            sz2, order2, interpolator%eta2, &
-            data_array_tmp, interpolator%bcoef,&!(1:sz1,1:sz2),& !+ 1
-            interpolator%t1,&!(1:sz1+order1), & ! + 1
-            interpolator%t2)!)(1:sz2+order2) )
+case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
 
-       ! boundary condition non homogene
-       interpolator%bcoef(1:sz1,1)   = data_array(1:sz1,1)
-       interpolator%bcoef(1:sz1,sz2) = data_array(1:sz1,sz2)
+  interpolator%size_coeffs1 = sz1!+1
+  interpolator%size_coeffs2 = sz2
+  interpolator%size_t1 = order1 + sz1 !+ 1
+  interpolator%size_t2 = order2 + sz2 
+
+  data_array(sz1,1:sz2) = data_array(1,1:sz2)
+  call spli2d_custom( sz1, order1,     interpolator%eta1,  &
+                      sz2, order2,     interpolator%eta2,  &
+                      data_array,      interpolator%bcoef, &
+                      interpolator%t1, interpolator%t2)
+
+  ! boundary condition non homogene
+  interpolator%bcoef(1:sz1,1)   = data_array(1:sz1,1)
+  interpolator%bcoef(1:sz1,sz2) = data_array(1:sz1,sz2)
        
-    case (585) ! 4. dirichlet in all sides
+case (585) ! 4. dirichlet in all sides
+
        !print*, 'her'
        interpolator%size_coeffs1 = sz1
        interpolator%size_coeffs2 = sz2
@@ -2773,29 +2676,11 @@ function interpolate_value_ad2d( &
     SLL_ASSERT( res1 <= interpolator%eta1_max )
     SLL_ASSERT( res2 >= interpolator%eta2_min )
     SLL_ASSERT( res2 <= interpolator%eta2_max )
-    if ( res1 > interpolator%eta1_max) then 
-       print*, 'ERROR, interpolate_value_ad2d(): problem  x > eta1_max'
-       stop
-    end if
-    if ( res1 < interpolator%eta1_min) then 
-       print*, 'ERROR, interpolate_value_ad2d(): problem  x < eta1_min'
-    end if
-    if ( res2 > interpolator%eta2_max) then 
-       print*, 'ERROR, interpolate_value_ad2d(): problem  y > eta2_max'
-       print*, res2, interpolator%eta2_min,interpolator%eta2_max
-    end if
-    if ( res2 < interpolator%eta2_min) then 
-       print*, 'ERROR, interpolate_value_ad2d(): problem  y < eta2_min'
-    end if
 
     tmp_tx => interpolator%t1(1:interpolator%size_t1)
-    !print*, 't1',tmp_tx
     tmp_ty => interpolator%t2(1:interpolator%size_t2)
-    !print*, 't2',tmp_ty
     tmp_coeff =>interpolator%bcoef(1:size_coeffs1,1:size_coeffs2)
-    !print*, 'coef',tmp_coeff
-    !call interv( tmp_ty, interpolator%size_t2, res2, li_wy, li_mflag )
-  !  call set_time_mark(t0)
+
     call bvalue2d( &
          res1, &
          res2, &
@@ -2807,8 +2692,8 @@ function interpolate_value_ad2d( &
          tmp_tx, &
          tmp_ty,&
          val)
-    ! time = time_elapsed_since(t0)
-   !  print *, 'time elapsed since t0 : ',time
+
+
   end function interpolate_value_ad2d
 
 
