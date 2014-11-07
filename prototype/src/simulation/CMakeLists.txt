@@ -125,5 +125,3 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
 
 ENDIF()
 
-ADD_EXECUTABLE(unit_test_polar unit_test_polar.F90 )
-TARGET_LINK_LIBRARIES(unit_test_polar sll_poisson_solvers)
