@@ -10,7 +10,6 @@ sll_int32  :: n
 sll_int32  :: n_der
 sll_int32  :: deg_spline
 sll_int32  :: ordre
-sll_int32  :: iflag
 sll_int32  :: ierr
 sll_real64 :: d
 sll_real64 :: res
@@ -80,8 +79,7 @@ do j = 1, 1
                    n,      &
                    n_der,  &
                    ordre,  &
-                   bcoef,  &
-                   iflag )
+                   bcoef)
 
   do i = 1 , n
     res=bvalue( knots, bcoef, n+n_der, ordre, x(i), 0)
