@@ -14,17 +14,15 @@ public bvalue2d, spli2d_custom_derder, spli2d_perper
   
 contains
   
-! Just for the record: what is x, y, nx, etc., etc.? What is this
-! function supposed to do? This is a deeply frustrating file.
-subroutine bvalue2d( x,        &
-                     y,        &
-                     nx,       &
-                     kx,       &
-                     ny,       &
-                     ky,       &
+subroutine bvalue2d( x,       &
+                     y,       &
+                     nx,      &
+                     kx,      &
+                     ny,      &
+                     ky,      &
                      bcoef,   &
-                     apr_tx,      &
-                     apr_ty,      &
+                     tx,      &
+                     ty,      &
                      val )
 
   sll_real64,                 intent(in)  :: x
@@ -33,37 +31,39 @@ subroutine bvalue2d( x,        &
   sll_int32,                  intent(in)  :: kx
   sll_int32,                  intent(in)  :: ny
   sll_int32,                  intent(in)  :: ky
-  sll_real64, dimension(:),   intent(in)  :: apr_tx !nx + kx 
-  sll_real64, dimension(:),   intent(in)  :: apr_ty !ny + ky	
-  sll_real64, dimension(:,:), intent(in)  :: bcoef!( nx,ny)
+  sll_real64, dimension(:),   intent(in)  :: tx     !nx + kx 
+  sll_real64, dimension(:),   intent(in)  :: ty     !ny + ky	
+  sll_real64, dimension(:,:), intent(in)  :: bcoef  !( nx,ny)
   sll_real64,                 intent(out) :: val
   
-  sll_int32  :: li_j, lflag, li_lefty
-  sll_real64, dimension(1:ky) :: lpr_coef ! ky
+  sll_int32  :: j
+  sll_int32  :: lflag
+  sll_int32  :: lefty
+  sll_real64, dimension(1:ky) :: lpr_coef 
    
-  call interv ( apr_ty,ny + ky, y, li_lefty, lflag )
+  call interv ( ty, ny+ky, y, lefty, lflag )
 
   if ( lflag .NE. 0 ) then
     val = 0.0_8
     return 
   end if
     
-  do li_j = 1, ky
+  do j = 1, ky
        
-    lpr_coef ( li_j ) = bvalue(apr_tx,                                 &
-                               bcoef(1:nx,li_lefty-ky+li_j), &
-                               nx,                                  &
-                               kx,                                  &
-                               x,                                   &
+    lpr_coef(j) = bvalue(tx,                     &
+                         bcoef(1:nx,lefty-ky+j), &
+                               nx,               &
+                               kx,               &
+                               x,                &
                                0 )
        
   end do
    
-  val = bvalue(apr_ty(li_lefty-ky+1:li_lefty+ky), &
-               lpr_coef,                                &
-               ky,                                   &
-               ky,                                   &
-               y,                                    &
+  val = bvalue(ty(lefty-ky+1:lefty+ky), &
+               lpr_coef,                &
+               ky,                      &
+               ky,                      &
+               y,                       &
                0 )
 
 end subroutine bvalue2d
@@ -74,56 +74,56 @@ function dvalue2d( x,      &
                    kx,     &
                    ny,     &
                    ky,     &
-                   bcoef, &
-                   apr_tx,    &
-                   apr_ty,    &
-                   deriv1,    &
-                   deriv2 ) result(res)
+                   bcoef,  &
+                   tx,     &
+                   ty,     &
+                   deriv1, &
+                   deriv2 ) 
 
-  sll_real64 :: x
-  sll_real64 :: y
-  sll_real64 :: res
-  sll_int32  :: nx
-  sll_int32  :: kx
-  sll_int32  :: ny
-  sll_int32  :: ky
-  sll_int32  :: deriv1
-  sll_int32  :: deriv2
+  sll_real64, intent(in) :: x
+  sll_real64, intent(in) :: y
+  sll_int32,  intent(in) :: nx
+  sll_int32,  intent(in) :: kx
+  sll_int32,  intent(in) :: ny
+  sll_int32,  intent(in) :: ky
+  sll_real64, intent(in) :: bcoef(:,:) ! dimension(nx,ny)
+  sll_real64, intent(in) :: tx(:)      ! dimension(nx+kx)
+  sll_real64, intent(in) :: ty(:)      ! dimension(ny+ky)
+  sll_int32,  intent(in) :: deriv1
+  sll_int32,  intent(in) :: deriv2
 
-  sll_real64, dimension(:)   :: apr_tx    ! nx + kx
-  sll_real64, dimension(:)   :: apr_ty    ! ny + ky
-  sll_real64, dimension(:,:) :: bcoef !(nx,ny)
+  sll_real64 :: dvalue2d
 
-  sll_int32  :: li_j
+  sll_int32  :: j
   sll_int32  :: lflag
-  sll_int32  :: li_lefty
+  sll_int32  :: lefty
 
   sll_real64, dimension (1:ky),target:: lpr_coef ! ky
     
-  call interv( apr_ty, ny + ky, y, li_lefty, lflag)
+  call interv( ty, ny + ky, y, lefty, lflag)
     
   if ( lflag .NE. 0 ) then
-    res = 0.0_8
+    dvalue2d = 0.0_8
     return 
   end if
     
-  do li_j = 1, ky
+  do j = 1, ky
        
-    lpr_coef(li_j) = bvalue( apr_tx,                       &
-                             bcoef(1:nx,li_lefty-ky+li_j), &
-                             nx,                           &
-                             kx,                           &
-                             x,                         &
-                             deriv1 )
+    lpr_coef(j) = bvalue( tx,                     &
+                          bcoef(1:nx,lefty-ky+j), &
+                          nx,                     &
+                          kx,                     &
+                          x,                      &
+                          deriv1 )
        
   end do
 
-  res = bvalue( apr_ty(li_lefty-ky+1:li_lefty+ky), &
-                lpr_coef,                          &
-                ky,                                &
-                ky,                                &
-                y,                              &
-                deriv2 )
+  dvalue2d = bvalue( ty(lefty-ky+1:lefty+ky), &
+                     lpr_coef,                &
+                     ky,                      &
+                     ky,                      &
+                     y,                       &
+                     deriv2 )
 
 end function dvalue2d
   
@@ -218,27 +218,25 @@ end function dvalue2d
 !
 subroutine spli2d ( tau, gtau, t, n, k, m, bcoef)
     
-  sll_real64, dimension(:),   intent(in)    :: tau   !(n)
-  sll_real64, dimension(:,:), intent(in)    :: gtau  !(n,m)
-  sll_real64, dimension(:),   intent(in)    :: t     !(n+k)
-  sll_int32,                  intent(in)    :: n
-  sll_int32,                  intent(in)    :: k
-  sll_int32,                  intent(in)    :: m
+  sll_real64, dimension(:),   intent(in) :: tau   !(n)
+  sll_real64, dimension(:,:), intent(in) :: gtau  !(n,m)
+  sll_real64, dimension(:),   intent(in) :: t     !(n+k)
+  sll_int32,                  intent(in) :: n
+  sll_int32,                  intent(in) :: k
+  sll_int32,                  intent(in) :: m
 
   sll_real64, dimension(:,:), intent(inout) :: bcoef !(m,n)
 
   sll_real64, dimension(n)         :: work  !(n)
   sll_real64, dimension((2*k-1)*n) :: q     !((2*k-1)*n)
 
-  sll_int32                :: i
-  sll_int32                :: ilp1mx
-  sll_int32                :: j
-  sll_int32                :: jj
-  sll_int32                :: left
-  sll_int32                :: iflag
-
-
-  sll_real64:: taui
+  sll_int32   :: i
+  sll_int32   :: ilp1mx
+  sll_int32   :: j
+  sll_int32   :: jj
+  sll_int32   :: left
+  sll_int32   :: iflag
+  sll_real64  :: taui
     
   left = k
    
@@ -250,7 +248,7 @@ subroutine spli2d ( tau, gtau, t, n, k, m, bcoef)
   do i = 1, n
        
     taui = tau(i)
-    ilp1mx = min ( i + k, n + 1 )
+    ilp1mx = min ( i+k, n+1 )
     !
     !  Find the index LEFT in the closed interval (I,I+K-1) such that:
     !
@@ -258,7 +256,7 @@ subroutine spli2d ( tau, gtau, t, n, k, m, bcoef)
     !
     !  The matrix will be singular if this is not possible.
     !
-    left = max ( left, i )
+    left = max(left, i)
        
     SLL_ASSERT(taui >= t(left))
     ! Check The TAU array is strictly increasing.
@@ -342,93 +340,93 @@ subroutine spli2d ( tau, gtau, t, n, k, m, bcoef)
    
 end subroutine spli2d
 
-subroutine spli2d_custom ( nx,     &
-                           kx,     &
+subroutine spli2d_custom ( nx,    &
+                           kx,    &
                            taux,  &
-                           ny,     &
-                           ky,     &
+                           ny,    &
+                           ky,    &
                            tauy,  &
-                           apr_g,     &
+                           g,     &
                            bcoef, &
-                           apr_tx,    &
-                           apr_ty )
+                           tx,    &
+                           ty )
 
-  sll_int32,                 intent(in)    :: nx
-  sll_int32,                 intent(in)    :: kx
-  sll_real64, dimension(:),  intent(in)    :: taux  !nx
-  sll_int32,                 intent(in)    :: ny
-  sll_int32,                 intent(in)    :: ky
-  sll_real64, dimension(:),  intent(in)    :: tauy  !ny	
-  sll_real64, dimension(:,:),intent(inout) :: apr_g     !nx,ny	
-  sll_real64, dimension(:,:),intent(inout) :: bcoef !nx , ny 
-  sll_real64, dimension(:)  ,intent(inout) :: apr_tx    !nx + kx
-  sll_real64, dimension(:)  ,intent(inout) :: apr_ty    !ny + ky 
+  sll_int32,  intent(in)    :: nx
+  sll_int32,  intent(in)    :: kx
+  sll_real64, intent(in)    :: taux(:)    !nx
+  sll_int32,  intent(in)    :: ny
+  sll_int32,  intent(in)    :: ky
+  sll_real64, intent(in)    :: tauy(:)    !ny	
+  sll_real64, intent(inout) :: g(:,:)     !nx,ny	
+  sll_real64, intent(inout) :: bcoef(:,:) !nx , ny 
+  sll_real64, intent(inout) :: tx(:)      !nx + kx
+  sll_real64, intent(inout) :: ty(:)      !ny + ky 
 
   sll_real64, dimension(nx,ny) :: lpr_work1
   sll_real64, dimension(nx*ny) :: lpr_work3
-  sll_real64, dimension(( 2*ky-1) * ny ) :: lpr_work32
-  sll_real64, dimension( ny         ) :: lpr_work4
+  sll_real64, dimension((2*ky-1)*ny) :: lpr_work32
+  sll_real64, dimension(ny) :: lpr_work4
   sll_real64, dimension(1:ny,1:nx),target :: lpr_work5 !  ny , nx 
   sll_real64, dimension(:,:),pointer :: lpr_work5_ptr !  ny , nx 
-  sll_real64, dimension(1:ny),target:: apr_ty_bis
-  sll_real64, dimension(:),pointer:: apr_ty_bis_ptr
+  sll_real64, dimension(1:ny),target:: ty_bis
+  sll_real64, dimension(:),pointer:: ty_bis_ptr
 
-  sll_int32  :: i
+  sll_int32  :: i, j
     
   lpr_work1(:,:) = 0.0
     
   ! *** set up knots
   !     interpolate between knots
     
-  apr_tx ( 1 : kx ) = taux ( 1 )
-  apr_tx ( nx + 1 : nx + kx ) = taux ( nx )
+  tx(1:kx)       = taux(1)
+  tx(nx+1:nx+kx) = taux(nx)
     
-  if ( mod(kx,2) == 0 ) then
+  if (mod(kx,2) == 0) then
     do i = kx + 1, nx
-      apr_tx ( i ) = taux ( i - kx/2 ) 
+      tx(i) = taux(i-kx/2) 
     end do
   else
-    do i = kx + 1, nx
-      apr_tx ( i ) = 0.5*( taux ( i - (kx-1)/2 ) + &
-                              taux ( i -1 - (kx-1)/2 ) )
+    do i = kx+1, nx
+      tx(i) = 0.5*(taux(i-(kx-1)/2) + taux(i-1-(kx-1)/2))
     end do
   end if
-  !  *** construct b-coefficients of interpolant
-  apr_ty = 0.0_f64
-  if ( mod(ky,2) == 0 ) then
-    do i = ky + 1, ny
-      apr_ty ( i ) = tauy ( i - ky/2 ) 
+
+  ty(1:ky)       = tauy(1)
+  ty(ny+1:ny+ky) = tauy(ny)
+
+  if (mod(ky,2) == 0) then
+    do j = ky+1, ny
+      ty(j) = tauy(j-ky/2) 
     end do
   else
-    do i = ky + 1, ny
-      apr_ty ( i ) = 0.5*( tauy ( i - (ky-1)/2 ) + &
-                              tauy ( i -1 - (ky-1)/2 ) )
+    do j = ky+1, ny
+      ty(j) = 0.5*(tauy(j-(ky-1)/2) + tauy(j-1-(ky-1)/2))
     end do
   end if
-  apr_ty ( 1 : ky ) = tauy ( 1 )
-  apr_ty ( ny + 1 : ny + ky ) = tauy ( ny )
-  apr_ty_bis = tauy(1:ny)
+
+
+  ty_bis = tauy(1:ny)
   lpr_work5_ptr => lpr_work5
 
-  bcoef(1:nx,1:ny) = apr_g
+  bcoef(1:nx,1:ny) = g
 
   call spli2d ( taux,      &
                 bcoef,     &
-                apr_tx,        &
+                tx,        &
                 nx,         &
                 kx,         &
                 ny,         &
-                apr_g)
+                g)
     
   bcoef(:,:) = 0.0_8
   lpr_work4  = 0.0_8
   lpr_work3  = 0.0_8
   lpr_work32 = 0.0_8
      
-  apr_ty_bis_ptr => apr_ty_bis
-  call spli2d ( apr_ty_bis_ptr, &
-                apr_g,  &
-                apr_ty,         &
+  ty_bis_ptr => ty_bis
+  call spli2d ( ty_bis_ptr, &
+                g,  &
+                ty,         &
                 ny,          &
                 ky,          &
                 nx,          &
@@ -446,12 +444,12 @@ subroutine spli2d_custom_derder ( nx,   &
                                   ky,&
                                   tauy,&
                                   tauy_der,&
-                                  apr_g,&
-                                  apr_g_der1,&
-                                  apr_g_der2,&
+                                  g,&
+                                  g_der1,&
+                                  g_der2,&
                                   bcoef,&
-                                  apr_tx,&
-                                  apr_ty )
+                                  tx,&
+                                  ty )
 
   sll_int32  :: nx, kx, ny, ky
   sll_int32  :: nx_der,ny_der
@@ -459,13 +457,13 @@ subroutine spli2d_custom_derder ( nx,   &
   sll_real64, dimension(:),pointer :: tauy !! ny
   sll_int32,  dimension(:),pointer :: taux_der !!nx_der
   sll_int32,  dimension(:),pointer :: tauy_der !!ny_der
-  sll_real64, dimension(:,:),pointer :: apr_g    ! nx,ny
-  sll_real64, dimension(:,:),pointer :: apr_g_der1 ! nx_der,ny
-  sll_real64, dimension(:,:),pointer :: apr_g_der2 !ny_der,nx + nx_der
+  sll_real64, dimension(:,:),pointer :: g    ! nx,ny
+  sll_real64, dimension(:,:),pointer :: g_der1 ! nx_der,ny
+  sll_real64, dimension(:,:),pointer :: g_der2 !ny_der,nx + nx_der
 
   sll_real64, dimension(:,:),pointer::bcoef!nx + nx_der,ny+ ny_der 
-  sll_real64, dimension( : ),pointer:: apr_tx ! nx + kx + nx_der
-  sll_real64, dimension( : ),pointer:: apr_ty ! ny + ky + ny_der
+  sll_real64, dimension( : ),pointer:: tx ! nx + kx + nx_der
+  sll_real64, dimension( : ),pointer:: ty ! ny + ky + ny_der
 
   sll_real64, dimension ( nx + nx_der , ny + ny_der) :: lpr_work1
   sll_real64, dimension ( nx + nx_der ) :: lpr_work2
@@ -481,23 +479,23 @@ subroutine spli2d_custom_derder ( nx,   &
   ! *** set up knots
   !     interpolate between knots
     
-  apr_tx = 0.0_f64
-  apr_tx ( 1 : kx ) = taux ( 1 )
-  apr_tx ( nx+ nx_der + 1: nx + nx_der + kx ) = taux ( nx )
+  tx = 0.0_f64
+  tx ( 1 : kx ) = taux ( 1 )
+  tx ( nx+ nx_der + 1: nx + nx_der + kx ) = taux ( nx )
     
   if (nx + nx_der + kx == nx + 2*(kx-1)) then
-    apr_tx (kx+1: nx+ nx_der) = taux(2:nx-1)
+    tx (kx+1: nx+ nx_der) = taux(2:nx-1)
   else
     print*, 'problem with construction of knots' 
   end if
     
   !  *** construct b-coefficients of interpolant
-  apr_ty = 0.0_f64
-  apr_ty ( 1 : ky ) = tauy ( 1 )
-  apr_ty ( ny+ ny_der + 1: ny + ny_der + ky ) = tauy ( ny )
+  ty = 0.0_f64
+  ty ( 1 : ky ) = tauy ( 1 )
+  ty ( ny+ ny_der + 1: ny + ny_der + ky ) = tauy ( ny )
     
   if (ny + ny_der + ky == ny + 2*(ky-1)) then
-     apr_ty (ky+1: ny+ ny_der) = tauy(2:ny-1)
+     ty (ky+1: ny+ ny_der) = tauy(2:ny-1)
   else
      print*, 'problem with construction of knots' 
   end if
@@ -505,10 +503,10 @@ subroutine spli2d_custom_derder ( nx,   &
   lpr_work5_ptr => lpr_work5
 
   call spli2d_der ( taux,      &
-                    apr_g,         &
+                    g,         &
                     taux_der,  &
-                    apr_g_der1,    &
-                    apr_tx,        &
+                    g_der1,    &
+                    tx,        &
                     nx,         &
                     nx_der,     &
                     kx,         &
@@ -524,8 +522,8 @@ subroutine spli2d_custom_derder ( nx,   &
    call spli2d_der ( tauy,        &
                      lpr_work5_ptr,   &
                      tauy_der,    &
-                     apr_g_der2,      &
-                     apr_ty,          &
+                     g_der2,      &
+                     ty,          &
                      ny,           &
                      ny_der,       &
                      ky,           &
@@ -542,21 +540,21 @@ subroutine spli2d_perdir ( L,      &
                            ny,     &
                            ky,     &
                            tauy,  &
-                           apr_g,     &
+                           g,     &
                            bcoef, &
-                           apr_tx,    &
-                           apr_ty )
+                           tx,    &
+                           ty )
 
   ! CALLED WHEN WE WANT TO INTERPOL WITH A PERIODIC FIRST PARAM WITH A PERIOD = L
   sll_real64 :: L 
   sll_int32  :: nx, kx, ny, ky
   sll_real64, dimension ( :),pointer :: taux ! nx- 1
   sll_real64, dimension ( :),pointer :: tauy ! ny		
-  sll_real64, dimension ( :,:) :: apr_g !nx - 1, ny
+  sll_real64, dimension ( :,:) :: g !nx - 1, ny
 
   sll_real64, dimension (:,:),pointer :: bcoef !  nx , ny	
-  sll_real64, dimension (:),pointer :: apr_tx !  nx + kx
-  sll_real64, dimension (:),pointer :: apr_ty ! ny + ky
+  sll_real64, dimension (:),pointer :: tx !  nx + kx
+  sll_real64, dimension (:),pointer :: ty ! ny + ky
 
   sll_real64, dimension (1:nx),target :: lpr_taux !  nx
   sll_real64, dimension (:),pointer :: lpr_taux_ptr
@@ -571,8 +569,8 @@ subroutine spli2d_perdir ( L,      &
   lpr_taux ( 1 : nx - 1 ) = taux ( 1 : nx-1)
   lpr_taux ( nx ) = taux ( 1 ) + L
 
-  lpr_g ( 1 : nx - 1 , 1 : ny ) = apr_g ( 1 : nx - 1 , 1 : ny )
-  lpr_g ( nx , 1 : ny ) = apr_g ( 1 , 1 : ny )
+  lpr_g ( 1 : nx - 1 , 1 : ny ) = g ( 1 : nx - 1 , 1 : ny )
+  lpr_g ( nx , 1 : ny ) = g ( 1 , 1 : ny )
 
   lpr_taux_ptr => lpr_taux
   lpr_g_ptr => lpr_g
@@ -585,8 +583,8 @@ subroutine spli2d_perdir ( L,      &
                        tauy,     &
                        lpr_g_ptr,    &
                        bcoef,    &
-                       apr_tx,       &
-                       apr_ty )
+                       tx,       &
+                       ty )
 
      
 end subroutine spli2d_perdir
@@ -598,10 +596,10 @@ subroutine spli2d_dirper (nx,      &
                           ny,      &
                           ky,      &  
                           tauy,   &
-                          apr_g,      &
+                          g,      &
                           bcoef,  &
-                          apr_tx,     &
-                          apr_ty )
+                          tx,     &
+                          ty )
 
      ! CALLED WHEN WE WANT TO INTERPOL WITH A PERIODIC second PARAM WITH A PERIOD = L
 
@@ -609,11 +607,11 @@ subroutine spli2d_dirper (nx,      &
   sll_int32  :: nx, kx, ny, ky
   sll_real64, dimension ( :),pointer :: taux ! nx
   sll_real64, dimension (:),pointer :: tauy !  ny -1
-  sll_real64, dimension ( :,:) :: apr_g ! nx , ny-1
+  sll_real64, dimension ( :,:) :: g ! nx , ny-1
 
   sll_real64, dimension (:,:),pointer :: bcoef !  nx , ny
-  sll_real64, dimension ( :),pointer :: apr_tx ! nx + kx	
-  sll_real64, dimension (:),pointer :: apr_ty ! ny + ky 
+  sll_real64, dimension ( :),pointer :: tx ! nx + kx	
+  sll_real64, dimension (:),pointer :: ty ! ny + ky 
 
   sll_real64, dimension (1:ny),target :: lpr_tauy ! ny	
   sll_real64, dimension (1:nx,1:ny),target :: lpr_g  !  nx ,ny
@@ -628,8 +626,8 @@ subroutine spli2d_dirper (nx,      &
   lpr_tauy ( 1 : ny - 1 ) = tauy ( 1 : ny - 1 )
   lpr_tauy ( ny ) = tauy ( 1 ) + L
      
-  lpr_g ( 1 : nx , 1 : ny -1 ) = apr_g ( 1 : nx , 1 : ny -1)
-  lpr_g (1: nx , ny ) = apr_g ( 1 : nx, 1 )
+  lpr_g ( 1 : nx , 1 : ny -1 ) = g ( 1 : nx , 1 : ny -1)
+  lpr_g (1: nx , ny ) = g ( 1 : nx, 1 )
      
   lpr_tauy_ptr => lpr_tauy
   lpr_g_ptr => lpr_g
@@ -642,8 +640,8 @@ subroutine spli2d_dirper (nx,      &
                       lpr_tauy_ptr, &
                       lpr_g_ptr,    &
                       bcoef,    &
-                      apr_tx,       &
-                      apr_ty )
+                      tx,       &
+                      ty )
   
  end subroutine spli2d_dirper
    
@@ -657,8 +655,8 @@ subroutine spli2d_dirper (nx,      &
                            tauy,  &
                            g,     &
                            bcoef, &
-                           apr_tx,    &
-                           apr_ty )
+                           tx,    &
+                           ty )
 
   sll_real64, intent(in) :: Lx
   sll_real64, intent(in) :: Ly
@@ -672,8 +670,8 @@ subroutine spli2d_dirper (nx,      &
   sll_real64, dimension(:,:) :: g !  nx  - 1, ny - 1
 
   sll_real64, dimension(:,:) :: bcoef ! nx , ny
-  sll_real64, dimension(:)   :: apr_tx !  nx + kx
-  sll_real64, dimension(:)   :: apr_ty ! ny + ky
+  sll_real64, dimension(:)   :: tx !  nx + kx
+  sll_real64, dimension(:)   :: ty ! ny + ky
 
   sll_real64, dimension(1:nx),     target  :: lpr_taux ! tmp_ty
   sll_real64, dimension(1:ny),     target  :: lpr_tauy
@@ -708,8 +706,8 @@ subroutine spli2d_dirper (nx,      &
                         lpr_tauy_ptr, &
                         lpr_g_ptr,    &
                         bcoef,        &
-                        apr_tx,       &
-                        apr_ty )
+                        tx,       &
+                        ty )
      
 end subroutine spli2d_perper
 
