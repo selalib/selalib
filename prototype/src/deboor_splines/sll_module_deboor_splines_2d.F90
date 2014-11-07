@@ -519,16 +519,6 @@ subroutine spli2d_custom_derder ( nx,       &
        
   end do
 
-!  call spli2d_der( taux,       &
-!                   g,          &
-!                   taux_der,   &
-!                   g_der1,     &
-!                   tx,         &
-!                   nx,         &
-!                   nx_der,     &
-!                   kx,         &
-!                   ny,         &
-!                   tmp)
   do i = 1, nx+nx_der
        
     call splint_der( tauy,        &
@@ -543,97 +533,6 @@ subroutine spli2d_custom_derder ( nx,       &
        
   end do
     
-!  call spli2d_der( tauy,       &
-!                   tmp,        &
-!                   tauy_der,   &
-!                   g_der2,     &
-!                   ty,         &
-!                   ny,         &
-!                   ny_der,     &
-!                   ky,         &
-!                   nx+nx_der,  &
-!                   bcoef)
-
 end subroutine spli2d_custom_derder
 
-!
-!  Parameters:
-!
-!    Input, real ( kind = 8 ) TAU(N), contains the data point abscissas.
-!    TAU must be strictly increasing
-!
-!    Input, real ( kind = 8 ) GTAU(N,M), contains the data point ordinates.
-!    Input, integer (kind= 8 )TAU_DER(Np), contains the data point abscissas.
-!    TAU must be strictly increasing
-!
-!    Input, real ( kind = 8 ) GTAU_DER(Np,M),contains the data point ordinates.
-!
-!    Input, real ( kind = 8 ) T(N+Np+K), the knot sequence.
-!
-!    Input, integer N, the number of data points and the
-!    dimension of the spline space SPLINE(K,T)
-!
-!    Input, integer K, the order of the spline.
-!
-!    Input, integer M, the number of data sets.
-!
-!    Work space, real ( kind = 8 ) WORK(N).
-!
-!    Output, real ( kind = 8 ) Q(2*K-1)*N, the triangular
-!    factorization of the coefficient matrix of the linear
-!    system for the B-spline coefficients of the spline interpolant.
-!    The B-spline coefficients for the interpolant of an additional
-!    data set ( TAU(I), HTAU(I) ), I=1,...,N  with the same data
-!    abscissae can be obtained without going through all the
-!    calculations in this routine, simply by loading HTAU into
-!    BCOEF and then using the statement
-!      CALL BANSLV ( Q, 2*K-1, N, K-1, K-1, BCOEF )
-!
-!    Output, real ( kind = 8 ) BCOEF(N), the B-spline coefficients of
-!    the interpolant.
-!
-!    Output, integer IFLAG, error indicator.
-!    1, no error.
-!    2, an error occurred, which may have been caused by
-!       singularity of the linear system.
-subroutine spli2d_der( tau,           &
-                       gtau,          &
-                       tau_der,       &
-                       gtau_der,      &
-                       t,             &
-                       n,             &
-                       np,            &
-                       k,             &
-                       m,             &
-                       bcoef)
-  
-  sll_real64, intent(in)    :: tau(:)
-  sll_real64, intent(in)    :: gtau(:,:)
-  sll_int32,  intent(in)    :: tau_der(:)
-  sll_real64, intent(in)    :: gtau_der(:,:)
-  sll_real64, intent(in)    :: t(:)
-  sll_int32,  intent(in)    :: n
-  sll_int32,  intent(in)    :: np
-  sll_int32,  intent(in)    :: m
-  sll_real64, intent(inout) :: bcoef(:,:)
-
-  sll_int32 :: j
-  sll_int32 :: k
-
-  do j = 1, m
-       
-    call splint_der( tau,              &
-                     gtau(:,j),        &
-                     tau_der,          &
-                     gtau_der(1:np,j), &
-                     t,                &
-                     n,                &
-                     np,               &
-                     k,                &
-                     bcoef(j,1:n+np))
-       
-  end do
-    
-end subroutine spli2d_der
-    
 end module sll_module_deboor_splines_2d
