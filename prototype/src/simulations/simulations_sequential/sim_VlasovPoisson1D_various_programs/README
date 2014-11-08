@@ -1,0 +1,19 @@
+Directory structure
+===================
+   VP1D_cart          -- executable: standard Vlasov-Poisson (landau or tsi)
+   VP1D_deltaf_cart   -- executable: delta-f  Vlasov-Poisson (landau or tsi)
+   VP1D_mm            -- executable: as #1, non-uniform v-grid (keen only)
+   landau.nml         -- input file: Landau damping
+   tsi.nml            -- input file: two-stream instability 
+   ex-keen.nml        -- input file: Keen wave
+   README             -- info (this file)
+
+HOWTO
+=====
+Run simulations choosing the proper option
+     $ ./VP1D_cart landau
+     $ ./VP1D_cart tsi
+     $ ./VP1D_deltaf_cart landau
+     $ ./VP1D_deltaf_cart tsi
+     $ ./VP1D_mm keen
+

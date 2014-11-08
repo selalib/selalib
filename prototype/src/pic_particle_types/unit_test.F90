@@ -4,6 +4,7 @@ program particles_tester
 #include "sll_assert.h"
 
   use sll_particle_group_4d_module
+  use sll_particle_group_2d_module
 
   implicit none
 

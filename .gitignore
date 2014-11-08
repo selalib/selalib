@@ -112,3 +112,13 @@ prototype/src/fix-names.py
 *.orig
 
 prototype/intel_build/*
+
+prototype/doc/selalib_manual.aux
+
+prototype/doc/selalib_manual.log
+
+prototype/doc/selalib_manual.pdf
+
+prototype/doc/selalib_manual.synctex.gz
+
+prototype/doc/selalib_manual.toc
