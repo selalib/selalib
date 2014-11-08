@@ -17,10 +17,11 @@
 %%-----------------------------
 %%      the top matter
 %%-----------------------------
-\title{A semi-Lagrangian solver for the guiding center model on a regular hexagon mesh}%\thanks{...}\thanks{...}% At most 5 thanks
+\title{A semi-Lagrangian solver for the guiding center model on a regular hexagonal mesh}%\thanks{...}\thanks{...}% At most 5 thanks
 %
-\author{Michel Mehrenberger} \address{...} %TODO
-\author{Laura S. Mendoza} \address{Max-Planck-Institut f\"{u}r Plasmaphysik; \email{mela@ipp.mpg.de\ \&\ sonnen@ipp.mpg.de}} 
+\author{Michel Mehrenberger} \address{IRMA, Universit\'e de Strasbourg, 7, rue Ren\'e Descartes, 67084 Strasbourg \& INRIA-Nancy Grand-Est, projet TONUS, 
+\email{mehrenbe@math.unistra.fr}}
+\author{Laura S. Mendoza} \address{Max-Planck-Institut f\"{u}r Plasmaphysik, Boltzmannstr. 2, D-85748 Garching, \email{mela@ipp.mpg.de\ \&\ sonnen@ipp.mpg.de}} 
 \author{Charles Prouveur}\address{...} %TODO
 \author{Eric Sonnendr\"{u}cker}\sameaddress{2}
 %
@@ -40,7 +41,7 @@
 %%-----------------------------
 \section*{Introduction}
 
-There are three kinds of regular pavings of the plane: using squares, triangles or hexagon. When considering meshes, the dual mesh of a square mesh is a shifted square mesh and the regular triangle mesh is the dual of the regular hexagonal mesh.
+There are three kinds of regular pavings of the plane: using squares, triangles or hexagons. When considering meshes, the dual mesh of a square mesh is a shifted square mesh and the regular triangle mesh is the dual of the regular hexagonal mesh.
 
 In magnetic fusion applications the embedded magnetic flux surfaces plays an important role and introduces an important anisotropy. For this reason one gets favourable numerical properties when grid points align on the concentric magnetic flux surfaces. When trying to do this with a mapped cartesian grid, one ends up with a polar coordinates mesh (when the flux surfaces are circles) or something topologically equivalent. This yields cells that are smaller and smaller when getting closer to the center and a singularity at the center. This is numerically far from optimal. 
 
@@ -126,7 +127,7 @@ The mesh is based on uniform hexagons of the first type (see \cite{Ulichney87}).
 %%-----------------------------
 \subsection{Box Splines quasi-interpolation}
 
-The accuracy of the Semi-Lagrangian method depends heavily on the interpolation method chosen. For example, for a cartesian grid is common to use cubic splines which have shown to give accurate results in an efficient manner. In our problem, with the hexagonal lattice, B-splines don't exploit the isotropy of the mesh (for more information see \cite{Mersereau79-IEEE}) and therefore we need a solution better adapted.  There are mainly two splines families that take advantage of the geometry's properties : hex-splines and the three directional box-splines. For a detailed comparison between these two types of splines we will refer to \cite{Condat2007}. Based on the latter, we have chosen to use box splines.
+The accuracy of the Semi-Lagrangian method depends heavily on the interpolation method chosen. For example, for a cartesian grid, it is common to use cubic splines which have shown to give accurate results in an efficient manner. In our problem, with the hexagonal lattice, B-splines don't exploit the isotropy of the mesh (for more information see \cite{Mersereau79-IEEE}) and therefore we need a solution better adapted.  There are mainly two splines families that take advantage of the geometry's properties : hex-splines and the three directional box-splines. For a detailed comparison between these two types of splines we will refer to \cite{Condat2007}. Based on the latter, we have chosen to use box splines.
 
 Let us describe such a model : we are given an initial sample $s[\mathbf{k}] = f_0(\mathbf{R} \mathbf{k})$, where the points $\mathbf{R} \mathbf{k}$ belong to our hexagonal mesh, and we need to know the values $f(X,V)$ where $(X,V) \notin \mathbf{R} \mathbf{k}$. We want a spline surface $f(\mathbf{x}) = \sum c[\mathbf{k}] \chi^n(\mathbf{x} - \mathbf{R}\mathbf{k})$ such that $f(\mathbf{x})$ approximates $f_0(x,v)$ and where $\chi^n$ are the box-splines of compact hexagonal support and $c[\mathbf{k}]$ are the box-splines coefficients which are obtained by \cite{Condat2006a}
 
