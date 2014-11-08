@@ -14,6 +14,8 @@
 !  circulated by CEA, CNRS and INRIA at the following URL
 !  "http://www.cecill.info". 
 !**************************************************************
+#define sll_interpolator_1d class(sll_arbitrary_degree_spline_interpolator_1d)
+#define sll_interpolator_2d class(sll_arbitrary_degree_spline_interpolator_2d)
 
 !> @ingroup interpolators
 !> @brief
@@ -81,6 +83,10 @@ type, public, extends(sll_interpolator_2d_base) :: &
    logical :: compute_value_s= .TRUE. !< PLEASE ADD DOCUMENTATION
    sll_real64, pointer :: eta1(:)
    sll_real64, pointer :: eta2(:)
+   sll_interpolator_1d, pointer :: interp1d_w => null()
+   sll_interpolator_1d, pointer :: interp1d_e => null()
+   sll_interpolator_1d, pointer :: interp1d_s => null()
+   sll_interpolator_1d, pointer :: interp1d_n => null()
 
 contains
 
@@ -124,7 +130,6 @@ type, public :: sll_arbitrary_degree_spline_interpolator_2d_ptr
 end type sll_arbitrary_degree_spline_interpolator_2d_ptr
 
 
-!> Deallocate the interpolator class
 interface sll_delete
    module procedure delete_arbitrary_degree_2d_interpolator
 end interface sll_delete
@@ -140,7 +145,7 @@ contains
 !> The parameters are
 !> @param interpolator the type sll_arbitrary_degree_spline_interpolator_2d
 subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
-class(sll_arbitrary_degree_spline_interpolator_2d), intent(inout) :: interpolator
+sll_interpolator_2d, intent(inout) :: interpolator
 sll_int32 :: ierr
 
 SLL_DEALLOCATE(interpolator%knots1,ierr)
@@ -156,6 +161,11 @@ SLL_DEALLOCATE(interpolator%slope_w,ierr)
 SLL_DEALLOCATE(interpolator%slope_e,ierr)
 SLL_DEALLOCATE(interpolator%slope_s,ierr)
 SLL_DEALLOCATE(interpolator%slope_n,ierr)
+call sll_delete(interpolator%interp1d_w)
+call sll_delete(interpolator%interp1d_e)
+call sll_delete(interpolator%interp1d_s)
+call sll_delete(interpolator%interp1d_n)
+
 end subroutine delete_arbitrary_degree_2d_interpolator
 
 !> @brief Initialization of a pointer interpolator arbitrary degree splines 2d.
@@ -257,7 +267,7 @@ subroutine initialize_ad2d_interpolator( interpolator,   &
                                          spline_degree1, &
                                          spline_degree2)
 
-class(sll_arbitrary_degree_spline_interpolator_2d):: interpolator
+sll_interpolator_2d:: interpolator
 sll_int32,  intent(in) :: num_pts1
 sll_int32,  intent(in) :: num_pts2
 sll_real64, intent(in) :: eta1_min
@@ -383,6 +393,15 @@ interpolator%bcoef(:,:) = 0.0_f64
 SLL_CLEAR_ALLOCATE(interpolator%t1(1:num_pts1*(spline_degree1+1)),ierr)
 SLL_CLEAR_ALLOCATE(interpolator%t2(1:num_pts2*(spline_degree2+1)),ierr) 
 
+interpolator%interp1d_w => new_arbitrary_degree_1d_interpolator( &
+  num_pts2, eta2_min, eta2_max, bc_s, bc_n, spline_degree2)
+interpolator%interp1d_e => new_arbitrary_degree_1d_interpolator( &
+  num_pts2, eta2_min, eta2_max, bc_s, bc_n, spline_degree2)
+interpolator%interp1d_s => new_arbitrary_degree_1d_interpolator( &
+  num_pts1, eta1_min, eta1_max, bc_w, bc_e, spline_degree1)
+interpolator%interp1d_n => new_arbitrary_degree_1d_interpolator( &
+  num_pts1, eta1_min, eta1_max, bc_w, bc_e, spline_degree1)
+
 end subroutine !initialize_ad2d_interpolator
 
 !> Initialization of the boundary for interpolator arbitrary degree splines 2d.
@@ -394,12 +413,12 @@ end subroutine !initialize_ad2d_interpolator
 !> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_2d
 subroutine set_slope2d(interpolator,slope_w,slope_e,slope_s,slope_n)
 
-class(sll_arbitrary_degree_spline_interpolator_2d)    :: interpolator
+sll_interpolator_2d    :: interpolator
 sll_real64, dimension(:),optional :: slope_w
 sll_real64, dimension(:),optional :: slope_e
 sll_real64, dimension(:),optional :: slope_s
 sll_real64, dimension(:),optional :: slope_n
-class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp1d => null()
+sll_interpolator_1d,pointer :: interp1d => null()
 sll_int32 :: sz_slope_s
 sll_int32 :: sz_slope_n
 sll_int32 :: sz_slope_e
@@ -672,17 +691,13 @@ subroutine set_boundary_value2d( interpolator, &
                                  value_s,      &
                                  value_n)
 
-class(sll_arbitrary_degree_spline_interpolator_2d)    :: interpolator
+sll_interpolator_2d    :: interpolator
 
 sll_real64, dimension(:),optional :: value_w
 sll_real64, dimension(:),optional :: value_e
 sll_real64, dimension(:),optional :: value_s
 sll_real64, dimension(:),optional :: value_n
 
-class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp1d_w => null()
-class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp1d_e => null()
-class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp1d_s=> null()
-class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp1d_n => null()
 
 sll_int32 :: sz_value_w,sz_value_e,sz_value_s,sz_value_n
 sll_int64 :: bc_selector
@@ -730,64 +745,29 @@ interpolator%compute_value_s = .FALSE.
 
 if (bc_w == SLL_DIRICHLET .and. present(value_w)) then 
 
-  interp1d_w => new_arbitrary_degree_1d_interpolator( &
-               interpolator%num_pts2,                 &
-               interpolator%eta2_min,                 &
-               interpolator%eta2_max,                 &
-               interpolator%bc_s,                     &
-               interpolator%bc_n,                     &
-               interpolator%spline_degree2 )
-  call interp1d_w%compute_interpolants(value_w(1:sz_value_w))
-  interpolator%value_w(1:sz_value_w) = interp1d_w%bcoef(1:sz_value_w)
-  call sll_delete(interp1d_w)
+  call interpolator%interp1d_w%compute_interpolants(value_w(1:sz_value_w))
+  interpolator%value_w(1:sz_value_w) = interpolator%interp1d_w%bcoef(1:sz_value_w)
 
 end if
 
 if (bc_e == SLL_DIRICHLET .and. present(value_e)) then 
           
-  interp1d_e => new_arbitrary_degree_1d_interpolator( &
-               interpolator%num_pts2,                 &
-               interpolator%eta2_min,                 &
-               interpolator%eta2_max,                 &
-               interpolator%bc_s,                     &
-               interpolator%bc_n,                     &
-               interpolator%spline_degree2 )
-          
-  call interp1d_e%compute_interpolants(value_e(1:sz_value_e))
-  interpolator%value_e(1:sz_value_e) = interp1d_e%bcoef(1:sz_value_e)
-  call sll_delete(interp1d_e)
+  call interpolator%interp1d_e%compute_interpolants(value_e(1:sz_value_e))
+  interpolator%value_e(1:sz_value_e) = interpolator%interp1d_e%bcoef(1:sz_value_e)
 
 end if
        
 if (bc_s == SLL_DIRICHLET .and. present(value_s)) then 
           
-  interp1d_s => new_arbitrary_degree_1d_interpolator( &
-               interpolator%num_pts1,                 &
-               interpolator%eta1_min,                 &
-               interpolator%eta1_max,                 &
-               interpolator%bc_w,                     &
-               interpolator%bc_e,                     &
-               interpolator%spline_degree1 )
-          
-  call interp1d_s%compute_interpolants(value_s(1:sz_value_s))
-  interpolator%value_s(1:sz_value_s) = interp1d_s%bcoef(1:sz_value_s)
-  call sll_delete(interp1d_s)
+  call interpolator%interp1d_s%compute_interpolants(value_s(1:sz_value_s))
+  interpolator%value_s(1:sz_value_s) = interpolator%interp1d_s%bcoef(1:sz_value_s)
 
 end if
        
 if (bc_n == SLL_DIRICHLET .and. present(value_n)) then 
           
-  interp1d_n => new_arbitrary_degree_1d_interpolator( &
-               interpolator%num_pts1,                 &
-               interpolator%eta1_min,                 &
-               interpolator%eta1_max,                 &
-               interpolator%bc_w,                     &
-               interpolator%bc_e,                     &
-               interpolator%spline_degree1 )
-          
-  call interp1d_n%compute_interpolants(value_n(1:sz_value_n))
-  interpolator%value_n(1:sz_value_n) = interp1d_n%bcoef(1:sz_value_n)
-  call sll_delete(interp1d_n)
+  call interpolator%interp1d_n%compute_interpolants(value_n(1:sz_value_n))
+  interpolator%value_n(1:sz_value_n) = interpolator%interp1d_n%bcoef(1:sz_value_n)
 
 end if
        
@@ -819,7 +799,7 @@ subroutine set_coefficients_ad2d( interpolator,  &
                                   knots2,        &
                                   size_knots2)
 
-class(sll_arbitrary_degree_spline_interpolator_2d), intent(inout)  :: interpolator
+sll_interpolator_2d, intent(inout)  :: interpolator
 sll_real64, dimension(:)  , intent(in), optional :: coeffs_1d
 sll_real64, dimension(:,:), intent(in), optional :: coeffs_2d
 sll_int32, intent(in), optional :: coeff2d_size1
@@ -1557,7 +1537,7 @@ if (present(coeffs_1d) ) then
          stop
       end select
 
-   else if (present(coeffs_2d) ) then 
+else if (present(coeffs_2d) ) then 
 
       if ( present(coeff2d_size1) .and. present(coeff2d_size2)) then
 
@@ -1600,8 +1580,6 @@ if (present(coeffs_1d) ) then
                print*, 'size2 of knots2 is too big'
                stop
             end if
-            
-            
             
             interpolator%t1(1:interpolator%size_t1 ) = &
                  knots1(1:interpolator%size_t1 )
@@ -1696,7 +1674,7 @@ subroutine compute_interpolants_ad2d( &
     eta2_coords, &
     size_eta2_coords )
 
-class(sll_arbitrary_degree_spline_interpolator_2d), intent(inout)  :: interpolator
+sll_interpolator_2d, intent(inout)  :: interpolator
 
 sll_real64, dimension(:,:), intent(in)         :: data_array
 sll_real64, dimension(:), intent(in),optional  :: eta1_coords
@@ -1704,16 +1682,12 @@ sll_real64, dimension(:), intent(in),optional  :: eta2_coords
 sll_int32, intent(in),optional                 :: size_eta1_coords
 sll_int32, intent(in),optional                 :: size_eta2_coords
 
-sll_real64, dimension(:),pointer               :: point_location_eta1
-sll_real64, dimension(:),pointer               :: point_location_eta2
-sll_real64, dimension(:),pointer               :: point_location_eta1_tmp
-sll_real64, dimension(:),pointer               :: point_location_eta2_tmp
 sll_real64, dimension(:,:),pointer             :: data_array_tmp
-sll_real64, dimension(:,:),pointer             :: data_array_deriv_eta1
-sll_real64, dimension(:,:),pointer             :: data_array_deriv_eta2
+sll_real64, dimension(:,:),pointer             :: deriv_eta1
+sll_real64, dimension(:,:),pointer             :: deriv_eta2
 
-sll_int32, pointer :: point_location_eta1_deriv(:)
-sll_int32, pointer :: point_location_eta2_deriv(:)
+sll_int32 :: eta1_deriv(2)
+sll_int32 :: eta2_deriv(2)
 
 sll_int32  :: sz_derivative_eta1
 sll_int32  :: sz_derivative_eta2
@@ -1770,9 +1744,6 @@ period2 = interpolator%eta2_max - interpolator%eta2_min
 ! data_array and we compute also the knots t1 and t2 using to 
 ! construct the spline to have a good interpolation
     
-SLL_ALLOCATE(point_location_eta1_deriv(2),ierr)
-SLL_ALLOCATE(point_location_eta2_deriv(2),ierr)
-    
 select case (interpolator%bc_selector)
 case (0) ! periodic-periodic
 
@@ -1822,72 +1793,62 @@ case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
        
 case (585) ! 4. dirichlet in all sides
 
-       !print*, 'her'
-       interpolator%size_coeffs1 = sz1
-       interpolator%size_coeffs2 = sz2
-       interpolator%size_t1 = order1 + sz1 
-       interpolator%size_t2 = order2 + sz2 
+  interpolator%size_coeffs1 = sz1
+  interpolator%size_coeffs2 = sz2
+  interpolator%size_t1 = order1 + sz1 
+  interpolator%size_t2 = order2 + sz2 
        
-       !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
-       !  i.e  data_array must have the dimension sz1 x sz2
-       SLL_ALLOCATE( data_array_tmp(1:sz1,1:sz2),ierr)
-       data_array_tmp = data_array(1:sz1,1:sz2)
-       call spli2d_custom( sz1, order1, interpolator%eta1, &
-            sz2, order2, interpolator%eta2, &
-            data_array_tmp, interpolator%bcoef,&!(1:sz1,1:sz2),&
-            interpolator%t1,&!(1:sz1+order1), &
-            interpolator%t2)!(1:sz2+order2) )
+  call spli2d_custom( sz1, order1, interpolator%eta1, &
+                      sz2, order2, interpolator%eta2, &
+                      data_array,  interpolator%bcoef,&
+                      interpolator%t1, interpolator%t2)
 
-       ! boundary condition non homogene
-       interpolator%bcoef(1,1:sz2)   = data_array(1,1:sz2)
-       interpolator%bcoef(sz1,1:sz2) = data_array(sz1,1:sz2)
-       ! boundary condition non homogene
-       interpolator%bcoef(1:sz1,1)   = data_array(1:sz1,1)
-       interpolator%bcoef(1:sz1,sz2) = data_array(1:sz1,sz2)
+  ! boundary condition non homogene
+  interpolator%bcoef(1,1:sz2)   = data_array(1,1:sz2)
+  interpolator%bcoef(sz1,1:sz2) = data_array(sz1,1:sz2)
+  ! boundary condition non homogene
+  interpolator%bcoef(1:sz1,1)   = data_array(1:sz1,1)
+  interpolator%bcoef(1:sz1,sz2) = data_array(1:sz1,sz2)
 
-    case (650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet
-       sz_derivative_eta1 = 2
-       sz_derivative_eta2 = 2
-       interpolator%size_coeffs1 = sz1 + sz_derivative_eta1
-       interpolator%size_coeffs2 = sz2 + sz_derivative_eta2
-       interpolator%size_t1 = order1 + sz1 + sz_derivative_eta1
-       interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
+case (650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet
+
+  sz_derivative_eta1 = 2
+  sz_derivative_eta2 = 2
+  interpolator%size_coeffs1 = sz1 + sz_derivative_eta1
+  interpolator%size_coeffs2 = sz2 + sz_derivative_eta2
+  interpolator%size_t1 = order1 + sz1 + sz_derivative_eta1
+  interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
        
-       !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
-       !  i.e  data_array must have the dimension sz1 x sz2
-       SLL_ALLOCATE( data_array_tmp(1:sz1,1:sz2),ierr)
-       SLL_CLEAR_ALLOCATE( data_array_deriv_eta1(1:2,1:sz2),ierr)
-       SLL_CLEAR_ALLOCATE( data_array_deriv_eta2(1:sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
-       data_array_tmp = data_array(1:sz1,1:sz2)
-       point_location_eta1_deriv(1) = 1
-       point_location_eta1_deriv(2) = sz1
-       data_array_deriv_eta1(1,1:sz2)     = 0.0_f64
-       data_array_deriv_eta1(2,1:sz2)     = interpolator%slope_e(1:sz2)
-       point_location_eta2_deriv(1) = 1
-       point_location_eta2_deriv(2) = sz2
-       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=0.0_f64
-       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_n(1:sz1+sz_derivative_eta1)
-       call spli2d_custom_derder(&
+  SLL_CLEAR_ALLOCATE( deriv_eta1(1:2,1:sz2),ierr)
+  SLL_CLEAR_ALLOCATE( deriv_eta2(1:sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
+  eta1_deriv(1) = 1
+  eta1_deriv(2) = sz1
+  deriv_eta1(1,1:sz2)     = 0.0_f64
+  deriv_eta1(2,1:sz2)     = interpolator%slope_e(1:sz2)
+  eta2_deriv(1) = 1
+  eta2_deriv(2) = sz2
+  deriv_eta2(1,1:sz1+sz_derivative_eta1)=0.0_f64
+  deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_n(1:sz1+sz_derivative_eta1)
+
+  call spli2d_custom_derder(&
             sz1,&
             sz_derivative_eta1,&
             order1, &
             interpolator%eta1, &
-            point_location_eta1_deriv,&
+            eta1_deriv,&
             sz2, &
             sz_derivative_eta2,&
             order2, interpolator%eta2, &
-            point_location_eta2_deriv,&
+            eta2_deriv,&
             data_array_tmp,&
-            data_array_deriv_eta1,&
-            data_array_deriv_eta2,&
+            deriv_eta1,&
+            deriv_eta2,&
             interpolator%bcoef,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
-       SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
-       SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
+       SLL_DEALLOCATE( deriv_eta1,ierr)
+       SLL_DEALLOCATE( deriv_eta2,ierr)
        ! boundary condition non homogene
        !interpolator%bcoef(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
@@ -1903,39 +1864,39 @@ case (585) ! 4. dirichlet in all sides
        interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  size(  eta1 ) x  size(  eta2 )
        !  i.e  data_array must have the dimension sz1 x sz2
        SLL_ALLOCATE( data_array_tmp(1:sz1,1:sz2),ierr)
-       SLL_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
-       SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
+       SLL_ALLOCATE( deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
+       SLL_ALLOCATE( deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
        data_array_tmp = data_array(1:sz1,1:sz2)
-       point_location_eta1_deriv(1) = 1
-       point_location_eta1_deriv(2) = sz1
-       data_array_deriv_eta1(1,1:sz2)     = interpolator%slope_w(1:sz2) 
-       data_array_deriv_eta1(2,1:sz2)     = 0.0_f64
-       point_location_eta2_deriv(1) = 1
-       point_location_eta2_deriv(2) = sz2
-       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)= 0.0_f64
-       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_n(1:sz1+sz_derivative_eta1)
+       eta1_deriv(1) = 1
+       eta1_deriv(2) = sz1
+       deriv_eta1(1,1:sz2)     = interpolator%slope_w(1:sz2) 
+       deriv_eta1(2,1:sz2)     = 0.0_f64
+       eta2_deriv(1) = 1
+       eta2_deriv(2) = sz2
+       deriv_eta2(1,1:sz1+sz_derivative_eta1)= 0.0_f64
+       deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_n(1:sz1+sz_derivative_eta1)
        call spli2d_custom_derder(&
             sz1,&
             sz_derivative_eta1,&
             order1, &
             interpolator%eta1, &
-            point_location_eta1_deriv,&
+            eta1_deriv,&
             sz2, &
             sz_derivative_eta2,&
             order2, interpolator%eta2, &
-            point_location_eta2_deriv,&
+            eta2_deriv,&
             data_array_tmp,&
-            data_array_deriv_eta1,&
-            data_array_deriv_eta2,&
+            deriv_eta1,&
+            deriv_eta2,&
             interpolator%bcoef,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
-       SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
-       SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
+       SLL_DEALLOCATE( deriv_eta1,ierr)
+       SLL_DEALLOCATE( deriv_eta2,ierr)
        ! boundary condition non homogene
        !interpolator%bcoef(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
@@ -1953,21 +1914,21 @@ case (585) ! 4. dirichlet in all sides
        interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  size(  eta1 ) x  size(  eta2 )
        !  i.e  data_array must have the dimension sz1 x sz2
        SLL_ALLOCATE(data_array_tmp(1:sz1,1:sz2),ierr)
-       SLL_CLEAR_ALLOCATE(data_array_deriv_eta1(1:sz_derivative_eta1,1:sz2),ierr)
-       SLL_CLEAR_ALLOCATE(data_array_deriv_eta2(1:sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
+       SLL_CLEAR_ALLOCATE(deriv_eta1(1:sz_derivative_eta1,1:sz2),ierr)
+       SLL_CLEAR_ALLOCATE(deriv_eta2(1:sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
        data_array_tmp = data_array(1:sz1,1:sz2)
-       point_location_eta1_deriv(1) = 1
-       point_location_eta1_deriv(2) = sz1
-       data_array_deriv_eta1(1,1:sz2) = interpolator%slope_w(1:sz2)
-       data_array_deriv_eta1(2,1:sz2) = interpolator%slope_e(1:sz2)
-       point_location_eta2_deriv(1) = 1
-       point_location_eta2_deriv(2) = sz2
-       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)= &
+       eta1_deriv(1) = 1
+       eta1_deriv(2) = sz1
+       deriv_eta1(1,1:sz2) = interpolator%slope_w(1:sz2)
+       deriv_eta1(2,1:sz2) = interpolator%slope_e(1:sz2)
+       eta2_deriv(1) = 1
+       eta2_deriv(2) = sz2
+       deriv_eta2(1,1:sz1+sz_derivative_eta1)= &
           interpolator%slope_s(1:sz1+sz_derivative_eta1)
-       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)= &
+       deriv_eta2(2,1:sz1+sz_derivative_eta1)= &
           interpolator%slope_n(1:sz1+sz_derivative_eta1)
 
        call spli2d_custom_derder(&
@@ -1975,21 +1936,21 @@ case (585) ! 4. dirichlet in all sides
             sz_derivative_eta1,&
             order1, &
             interpolator%eta1, &
-            point_location_eta1_deriv,&
+            eta1_deriv,&
             sz2, &
             sz_derivative_eta2,&
             order2, interpolator%eta2, &
-            point_location_eta2_deriv,&
+            eta2_deriv,&
             data_array_tmp,&
-            data_array_deriv_eta1,&
-            data_array_deriv_eta2,&
+            deriv_eta1,&
+            deriv_eta2,&
             interpolator%bcoef,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
 
-       SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
-       SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
+       SLL_DEALLOCATE( deriv_eta1,ierr)
+       SLL_DEALLOCATE( deriv_eta2,ierr)
        ! boundary condition non homogene
        !interpolator%bcoef(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
@@ -2008,39 +1969,39 @@ case (585) ! 4. dirichlet in all sides
        interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  size(  eta1 ) x  size(  eta2 )
        !  i.e  data_array must have the dimension sz1 x sz2
        SLL_ALLOCATE( data_array_tmp(1:sz1,1:sz2),ierr)
-       SLL_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
-       SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
+       SLL_ALLOCATE( deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
+       SLL_ALLOCATE( deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
        data_array_tmp = data_array(1:sz1,1:sz2)
-       point_location_eta1_deriv(1) = 1
-       point_location_eta1_deriv(2) = sz1
-       data_array_deriv_eta1(1,1:sz2)     = interpolator%slope_w(1:sz2) 
-       data_array_deriv_eta1(2,1:sz2)     = interpolator%slope_e(1:sz2) 
-       point_location_eta2_deriv(1) = 1
-       point_location_eta2_deriv(2) = sz2
-       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_s(1:sz1+sz_derivative_eta1)
-       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_n(1:sz1+sz_derivative_eta1)
+       eta1_deriv(1) = 1
+       eta1_deriv(2) = sz1
+       deriv_eta1(1,1:sz2)     = interpolator%slope_w(1:sz2) 
+       deriv_eta1(2,1:sz2)     = interpolator%slope_e(1:sz2) 
+       eta2_deriv(1) = 1
+       eta2_deriv(2) = sz2
+       deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_s(1:sz1+sz_derivative_eta1)
+       deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_n(1:sz1+sz_derivative_eta1)
        call spli2d_custom_derder(&
             sz1,&
             sz_derivative_eta1,&
             order1, &
             interpolator%eta1, &
-            point_location_eta1_deriv,&
+            eta1_deriv,&
             sz2, &
             sz_derivative_eta2,&
             order2, interpolator%eta2, &
-            point_location_eta2_deriv,&
+            eta2_deriv,&
             data_array_tmp,&
-            data_array_deriv_eta1,&
-            data_array_deriv_eta2,&
+            deriv_eta1,&
+            deriv_eta2,&
             interpolator%bcoef,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
-       SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
-       SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
+       SLL_DEALLOCATE( deriv_eta1,ierr)
+       SLL_DEALLOCATE( deriv_eta2,ierr)
        ! boundary condition non homogene
        !interpolator%bcoef(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
@@ -2056,39 +2017,39 @@ case (585) ! 4. dirichlet in all sides
        interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  size(  eta1 ) x  size(  eta2 )
        !  i.e  data_array must have the dimension sz1 x sz2
        SLL_ALLOCATE( data_array_tmp(1:sz1,1:sz2),ierr)
-       SLL_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
-       SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
+       SLL_ALLOCATE( deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
+       SLL_ALLOCATE( deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
        data_array_tmp = data_array(1:sz1,1:sz2)
-       point_location_eta1_deriv(1) = 1
-       point_location_eta1_deriv(2) = sz1
-       data_array_deriv_eta1(1,1:sz2)     = interpolator%slope_w(1:sz2) 
-       data_array_deriv_eta1(2,1:sz2)     = interpolator%slope_e(1:sz2) 
-       point_location_eta2_deriv(1) = 1
-       point_location_eta2_deriv(2) = sz2
-       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_s(1:sz1+sz_derivative_eta1)
-       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_n(1:sz1+sz_derivative_eta1)
+       eta1_deriv(1) = 1
+       eta1_deriv(2) = sz1
+       deriv_eta1(1,1:sz2)     = interpolator%slope_w(1:sz2) 
+       deriv_eta1(2,1:sz2)     = interpolator%slope_e(1:sz2) 
+       eta2_deriv(1) = 1
+       eta2_deriv(2) = sz2
+       deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_s(1:sz1+sz_derivative_eta1)
+       deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_n(1:sz1+sz_derivative_eta1)
        call spli2d_custom_derder(&
             sz1,&
             sz_derivative_eta1,&
             order1, &
             interpolator%eta1, &
-            point_location_eta1_deriv,&
+            eta1_deriv,&
             sz2, &
             sz_derivative_eta2,&
             order2, interpolator%eta2, &
-            point_location_eta2_deriv,&
+            eta2_deriv,&
             data_array_tmp,&
-            data_array_deriv_eta1,&
-            data_array_deriv_eta2,&
+            deriv_eta1,&
+            deriv_eta2,&
             interpolator%bcoef,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
-       SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
-       SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
+       SLL_DEALLOCATE( deriv_eta1,ierr)
+       SLL_DEALLOCATE( deriv_eta2,ierr)
        ! boundary condition non homogene
        !interpolator%bcoef(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
@@ -2104,39 +2065,39 @@ case (585) ! 4. dirichlet in all sides
        interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  size(  eta1 ) x  size(  eta2 )
        !  i.e  data_array must have the dimension sz1 x sz2
        SLL_ALLOCATE( data_array_tmp(1:sz1,1:sz2),ierr)
-       SLL_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
-       SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
+       SLL_ALLOCATE( deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
+       SLL_ALLOCATE( deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
        data_array_tmp = data_array(1:sz1,1:sz2)
-       point_location_eta1_deriv(1) = 1
-       point_location_eta1_deriv(2) = sz1
-       data_array_deriv_eta1(1,1:sz2)     = 0.0_f64
-       data_array_deriv_eta1(2,1:sz2)     = interpolator%slope_e(1:sz2)
-       point_location_eta2_deriv(1) = 1
-       point_location_eta2_deriv(2) = sz2
-       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_s(1:sz1+sz_derivative_eta1)
-       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)= 0.0_f64
+       eta1_deriv(1) = 1
+       eta1_deriv(2) = sz1
+       deriv_eta1(1,1:sz2)     = 0.0_f64
+       deriv_eta1(2,1:sz2)     = interpolator%slope_e(1:sz2)
+       eta2_deriv(1) = 1
+       eta2_deriv(2) = sz2
+       deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_s(1:sz1+sz_derivative_eta1)
+       deriv_eta2(2,1:sz1+sz_derivative_eta1)= 0.0_f64
        call spli2d_custom_derder(&
             sz1,&
             sz_derivative_eta1,&
             order1, &
             interpolator%eta1, &
-            point_location_eta1_deriv,&
+            eta1_deriv,&
             sz2, &
             sz_derivative_eta2,&
             order2, interpolator%eta2, &
-            point_location_eta2_deriv,&
+            eta2_deriv,&
             data_array_tmp,&
-            data_array_deriv_eta1,&
-            data_array_deriv_eta2,&
+            deriv_eta1,&
+            deriv_eta2,&
             interpolator%bcoef,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
-       SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
-       SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
+       SLL_DEALLOCATE( deriv_eta1,ierr)
+       SLL_DEALLOCATE( deriv_eta2,ierr)
        ! boundary condition non homogene
        !interpolator%bcoef(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
@@ -2152,39 +2113,39 @@ case (585) ! 4. dirichlet in all sides
        interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  size(  eta1 ) x  size(  eta2 )
        !  i.e  data_array must have the dimension sz1 x sz2
        SLL_ALLOCATE( data_array_tmp(1:sz1,1:sz2),ierr)
-       SLL_ALLOCATE( data_array_deriv_eta1(2,sz2),ierr)
-       SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,sz1+sz_derivative_eta1),ierr)
+       SLL_ALLOCATE( deriv_eta1(2,sz2),ierr)
+       SLL_ALLOCATE( deriv_eta2(sz_derivative_eta2,sz1+sz_derivative_eta1),ierr)
        data_array_tmp = data_array(1:sz1,1:sz2)
-       point_location_eta1_deriv(1) = 1
-       point_location_eta1_deriv(2) = sz1
-       data_array_deriv_eta1(1,1:sz2)     = interpolator%slope_w(1:sz2)
-       data_array_deriv_eta1(2,1:sz2)     = 0.0_f64
-       point_location_eta2_deriv(1) = 1
-       point_location_eta2_deriv(2) = sz2
-       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_s(1:sz1+sz_derivative_eta1)
-       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)= 0.0_f64
+       eta1_deriv(1) = 1
+       eta1_deriv(2) = sz1
+       deriv_eta1(1,1:sz2)     = interpolator%slope_w(1:sz2)
+       deriv_eta1(2,1:sz2)     = 0.0_f64
+       eta2_deriv(1) = 1
+       eta2_deriv(2) = sz2
+       deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_s(1:sz1+sz_derivative_eta1)
+       deriv_eta2(2,1:sz1+sz_derivative_eta1)= 0.0_f64
        call spli2d_custom_derder(&
             sz1,&
             sz_derivative_eta1,&
             order1, &
             interpolator%eta1, &
-            point_location_eta1_deriv,&
+            eta1_deriv,&
             sz2, &
             sz_derivative_eta2,&
             order2, interpolator%eta2, &
-            point_location_eta2_deriv,&
+            eta2_deriv,&
             data_array_tmp,&
-            data_array_deriv_eta1,&
-            data_array_deriv_eta2,&
+            deriv_eta1,&
+            deriv_eta2,&
             interpolator%bcoef,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
-       SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
-       SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
+       SLL_DEALLOCATE( deriv_eta1,ierr)
+       SLL_DEALLOCATE( deriv_eta2,ierr)
        ! boundary condition non homogene
        !interpolator%bcoef(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
@@ -2201,39 +2162,39 @@ case (585) ! 4. dirichlet in all sides
        interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  size(  eta1 ) x  size(  eta2 )
        !  i.e  data_array must have the dimension sz1 x sz2
        SLL_ALLOCATE( data_array_tmp(1:sz1,1:sz2),ierr)
-       SLL_ALLOCATE( data_array_deriv_eta1(2,sz2),ierr)
-       SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,sz1+sz_derivative_eta1),ierr)
+       SLL_ALLOCATE( deriv_eta1(2,sz2),ierr)
+       SLL_ALLOCATE( deriv_eta2(sz_derivative_eta2,sz1+sz_derivative_eta1),ierr)
        data_array_tmp = data_array(1:sz1,1:sz2)
-       point_location_eta1_deriv(1) = 1
-       point_location_eta1_deriv(2) = sz1
-       data_array_deriv_eta1(1,1:sz2)     = 0.0_f64
-       data_array_deriv_eta1(2,1:sz2)     = 0.0_f64
-       point_location_eta2_deriv(1) = 1
-       point_location_eta2_deriv(2) = sz2
-       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)= 0.0_f64
-       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)= 0.0_f64
+       eta1_deriv(1) = 1
+       eta1_deriv(2) = sz1
+       deriv_eta1(1,1:sz2)     = 0.0_f64
+       deriv_eta1(2,1:sz2)     = 0.0_f64
+       eta2_deriv(1) = 1
+       eta2_deriv(2) = sz2
+       deriv_eta2(1,1:sz1+sz_derivative_eta1)= 0.0_f64
+       deriv_eta2(2,1:sz1+sz_derivative_eta1)= 0.0_f64
        call spli2d_custom_derder(&
             sz1,&
             sz_derivative_eta1,&
             order1, &
             interpolator%eta1, &
-            point_location_eta1_deriv,&
+            eta1_deriv,&
             sz2, &
             sz_derivative_eta2,&
             order2, interpolator%eta2, &
-            point_location_eta2_deriv,&
+            eta2_deriv,&
             data_array_tmp,&
-            data_array_deriv_eta1,&
-            data_array_deriv_eta2,&
+            deriv_eta1,&
+            deriv_eta2,&
             interpolator%bcoef,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
-       SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
-       SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
+       SLL_DEALLOCATE( deriv_eta1,ierr)
+       SLL_DEALLOCATE( deriv_eta2,ierr)
        ! boundary condition non homogene
        !interpolator%bcoef(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
@@ -2248,39 +2209,39 @@ case (585) ! 4. dirichlet in all sides
        interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  size(  eta1 ) x  size(  eta2 )
        !  i.e  data_array must have the dimension sz1 x sz2
        SLL_ALLOCATE( data_array_tmp(1:sz1,1:sz2),ierr)
-       SLL_ALLOCATE( data_array_deriv_eta1(2,sz2),ierr)
-       SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,sz1+sz_derivative_eta1),ierr)
+       SLL_ALLOCATE( deriv_eta1(2,sz2),ierr)
+       SLL_ALLOCATE( deriv_eta2(sz_derivative_eta2,sz1+sz_derivative_eta1),ierr)
        data_array_tmp = data_array(1:sz1,1:sz2)
-       point_location_eta1_deriv(1) = 1
-       point_location_eta1_deriv(2) = sz1
-       data_array_deriv_eta1(1,1:sz2)     = interpolator%slope_w(1:sz2)
-       data_array_deriv_eta1(2,1:sz2)     = interpolator%slope_e(1:sz2)
-       point_location_eta2_deriv(1) = 1
-       point_location_eta2_deriv(2) = sz2
-       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_s(1:sz1+sz_derivative_eta1)
-       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_n(1:sz1+sz_derivative_eta1)
+       eta1_deriv(1) = 1
+       eta1_deriv(2) = sz1
+       deriv_eta1(1,1:sz2)     = interpolator%slope_w(1:sz2)
+       deriv_eta1(2,1:sz2)     = interpolator%slope_e(1:sz2)
+       eta2_deriv(1) = 1
+       eta2_deriv(2) = sz2
+       deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_s(1:sz1+sz_derivative_eta1)
+       deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_n(1:sz1+sz_derivative_eta1)
        call spli2d_custom_derder(&
             sz1,&
             sz_derivative_eta1,&
             order1, &
             interpolator%eta1, &
-            point_location_eta1_deriv,&
+            eta1_deriv,&
             sz2, &
             sz_derivative_eta2,&
             order2, interpolator%eta2, &
-            point_location_eta2_deriv,&
+            eta2_deriv,&
             data_array_tmp,&
-            data_array_deriv_eta1,&
-            data_array_deriv_eta2,&
+            deriv_eta1,&
+            deriv_eta2,&
             interpolator%bcoef,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
-       SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
-       SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
+       SLL_DEALLOCATE( deriv_eta1,ierr)
+       SLL_DEALLOCATE( deriv_eta2,ierr)
        ! boundary condition non homogene
        !interpolator%bcoef(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
@@ -2296,39 +2257,39 @@ case (585) ! 4. dirichlet in all sides
        interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  size(  eta1 ) x  size(  eta2 )
        !  i.e  data_array must have the dimension sz1 x sz2
        SLL_ALLOCATE( data_array_tmp(1:sz1,1:sz2),ierr)
-       SLL_ALLOCATE( data_array_deriv_eta1(2,sz2),ierr)
-       SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,sz1+sz_derivative_eta1),ierr)
+       SLL_ALLOCATE( deriv_eta1(2,sz2),ierr)
+       SLL_ALLOCATE( deriv_eta2(sz_derivative_eta2,sz1+sz_derivative_eta1),ierr)
        data_array_tmp = data_array(1:sz1,1:sz2)
-       point_location_eta1_deriv(1) = 1
-       point_location_eta1_deriv(2) = sz1
-       data_array_deriv_eta1(1,1:sz2)     = interpolator%slope_w(1:sz2)
-       data_array_deriv_eta1(2,1:sz2)     = interpolator%slope_e(1:sz2)
-       point_location_eta2_deriv(1) = 1
-       point_location_eta2_deriv(2) = sz2
-       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_s(1:sz1+sz_derivative_eta1)
-       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_n(1:sz1+sz_derivative_eta1)
+       eta1_deriv(1) = 1
+       eta1_deriv(2) = sz1
+       deriv_eta1(1,1:sz2)     = interpolator%slope_w(1:sz2)
+       deriv_eta1(2,1:sz2)     = interpolator%slope_e(1:sz2)
+       eta2_deriv(1) = 1
+       eta2_deriv(2) = sz2
+       deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_s(1:sz1+sz_derivative_eta1)
+       deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_n(1:sz1+sz_derivative_eta1)
        call spli2d_custom_derder(&
             sz1,&
             sz_derivative_eta1,&
             order1, &
             interpolator%eta1, &
-            point_location_eta1_deriv,&
+            eta1_deriv,&
             sz2, &
             sz_derivative_eta2,&
             order2, interpolator%eta2, &
-            point_location_eta2_deriv,&
+            eta2_deriv,&
             data_array_tmp,&
-            data_array_deriv_eta1,&
-            data_array_deriv_eta2,&
+            deriv_eta1,&
+            deriv_eta2,&
             interpolator%bcoef,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
-       SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
-       SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
+       SLL_DEALLOCATE( deriv_eta1,ierr)
+       SLL_DEALLOCATE( deriv_eta2,ierr)
        ! boundary condition non homogene
        !interpolator%bcoef(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
@@ -2346,39 +2307,39 @@ case (585) ! 4. dirichlet in all sides
        interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  size(  eta1 ) x  size(  eta2 )
        !  i.e  data_array must have the dimension sz1 x sz2
        SLL_CLEAR_ALLOCATE( data_array_tmp(1:sz1,1:sz2),ierr)
-       SLL_CLEAR_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
-       SLL_CLEAR_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
+       SLL_CLEAR_ALLOCATE( deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
+       SLL_CLEAR_ALLOCATE( deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
        data_array_tmp = data_array(1:sz1,1:sz2)
-       point_location_eta1_deriv(1) = 1
-       point_location_eta1_deriv(2) = sz1
-       data_array_deriv_eta1(1,1:sz2)     = interpolator%slope_w(1:sz2)
-       data_array_deriv_eta1(2,1:sz2)     = interpolator%slope_e(1:sz2)
-       point_location_eta2_deriv(1) = 1
-       point_location_eta2_deriv(2) = sz2
-       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_s(1:sz1+sz_derivative_eta1)
-       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_n(1:sz1+sz_derivative_eta1)
+       eta1_deriv(1) = 1
+       eta1_deriv(2) = sz1
+       deriv_eta1(1,1:sz2)     = interpolator%slope_w(1:sz2)
+       deriv_eta1(2,1:sz2)     = interpolator%slope_e(1:sz2)
+       eta2_deriv(1) = 1
+       eta2_deriv(2) = sz2
+       deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_s(1:sz1+sz_derivative_eta1)
+       deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_n(1:sz1+sz_derivative_eta1)
        call spli2d_custom_derder(&
             sz1,&
             sz_derivative_eta1,&
             order1, &
             interpolator%eta1, &
-            point_location_eta1_deriv,&
+            eta1_deriv,&
             sz2, &
             sz_derivative_eta2,&
             order2, interpolator%eta2, &
-            point_location_eta2_deriv,&
+            eta2_deriv,&
             data_array_tmp,&
-            data_array_deriv_eta1,&
-            data_array_deriv_eta2,&
+            deriv_eta1,&
+            deriv_eta2,&
             interpolator%bcoef,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
-       SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
-       SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
+       SLL_DEALLOCATE( deriv_eta1,ierr)
+       SLL_DEALLOCATE( deriv_eta2,ierr)
        ! boundary condition non homogene
        !interpolator%bcoef(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
@@ -2394,39 +2355,39 @@ case (585) ! 4. dirichlet in all sides
        interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  size(  eta1 ) x  size(  eta2 )
        !  i.e  data_array must have the dimension sz1 x sz2
        SLL_ALLOCATE( data_array_tmp(1:sz1,1:sz2),ierr)
-       SLL_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
-       SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
+       SLL_ALLOCATE( deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
+       SLL_ALLOCATE( deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
        data_array_tmp = data_array(1:sz1,1:sz2)
-       point_location_eta1_deriv(1) = 1
-       point_location_eta1_deriv(2) = sz1
-       data_array_deriv_eta1(1,1:sz2)     = interpolator%slope_w(1:sz2)
-       data_array_deriv_eta1(2,1:sz2)     = interpolator%slope_e(1:sz2)
-       point_location_eta2_deriv(1) = 1
-       point_location_eta2_deriv(2) = sz2
-       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_s(1:sz1+sz_derivative_eta1)
-       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_n(1:sz1+sz_derivative_eta1)
+       eta1_deriv(1) = 1
+       eta1_deriv(2) = sz1
+       deriv_eta1(1,1:sz2)     = interpolator%slope_w(1:sz2)
+       deriv_eta1(2,1:sz2)     = interpolator%slope_e(1:sz2)
+       eta2_deriv(1) = 1
+       eta2_deriv(2) = sz2
+       deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_s(1:sz1+sz_derivative_eta1)
+       deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_n(1:sz1+sz_derivative_eta1)
        call spli2d_custom_derder(&
             sz1,&
             sz_derivative_eta1,&
             order1, &
             interpolator%eta1, &
-            point_location_eta1_deriv,&
+            eta1_deriv,&
             sz2, &
             sz_derivative_eta2,&
             order2, interpolator%eta2, &
-            point_location_eta2_deriv,&
+            eta2_deriv,&
             data_array_tmp,&
-            data_array_deriv_eta1,&
-            data_array_deriv_eta2,&
+            deriv_eta1,&
+            deriv_eta2,&
             interpolator%bcoef,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
-       SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
-       SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
+       SLL_DEALLOCATE( deriv_eta1,ierr)
+       SLL_DEALLOCATE( deriv_eta2,ierr)
        ! boundary condition non homogene
        !interpolator%bcoef(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
@@ -2442,39 +2403,39 @@ case (585) ! 4. dirichlet in all sides
        interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  size(  eta1 ) x  size(  eta2 )
        !  i.e  data_array must have the dimension sz1 x sz2
        SLL_ALLOCATE( data_array_tmp(1:sz1,1:sz2),ierr)
-       SLL_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
-       SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
+       SLL_ALLOCATE( deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
+       SLL_ALLOCATE( deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
        data_array_tmp = data_array(1:sz1,1:sz2)
-       point_location_eta1_deriv(1) = 1
-       point_location_eta1_deriv(2) = sz1
-       data_array_deriv_eta1(1,1:sz2)     = interpolator%slope_w(1:sz2)
-       data_array_deriv_eta1(2,1:sz2)     = interpolator%slope_e(1:sz2)
-       point_location_eta2_deriv(1) = 1
-       point_location_eta2_deriv(2) = sz2
-       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_s(1:sz1+sz_derivative_eta1)
-       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_n(1:sz1+sz_derivative_eta1)
+       eta1_deriv(1) = 1
+       eta1_deriv(2) = sz1
+       deriv_eta1(1,1:sz2)     = interpolator%slope_w(1:sz2)
+       deriv_eta1(2,1:sz2)     = interpolator%slope_e(1:sz2)
+       eta2_deriv(1) = 1
+       eta2_deriv(2) = sz2
+       deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_s(1:sz1+sz_derivative_eta1)
+       deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_n(1:sz1+sz_derivative_eta1)
        call spli2d_custom_derder(&
             sz1,&
             sz_derivative_eta1,&
             order1, &
             interpolator%eta1, &
-            point_location_eta1_deriv,&
+            eta1_deriv,&
             sz2, &
             sz_derivative_eta2,&
             order2, interpolator%eta2, &
-            point_location_eta2_deriv,&
+            eta2_deriv,&
             data_array_tmp,&
-            data_array_deriv_eta1,&
-            data_array_deriv_eta2,&
+            deriv_eta1,&
+            deriv_eta2,&
             interpolator%bcoef,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
-       SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
-       SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
+       SLL_DEALLOCATE( deriv_eta1,ierr)
+       SLL_DEALLOCATE( deriv_eta2,ierr)
        ! boundary condition non homogene
        !interpolator%bcoef(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
@@ -2492,39 +2453,39 @@ case (585) ! 4. dirichlet in all sides
        interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  size(  eta1 ) x  size(  eta2 )
        !  i.e  data_array must have the dimension sz1 x sz2
        SLL_ALLOCATE( data_array_tmp(1:sz1,1:sz2),ierr)
-       SLL_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
-       SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
+       SLL_ALLOCATE( deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
+       SLL_ALLOCATE( deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
        data_array_tmp = data_array(1:sz1,1:sz2)
-       point_location_eta1_deriv(1) = 1
-       point_location_eta1_deriv(2) = sz1
-       data_array_deriv_eta1(1,1:sz2)     = interpolator%slope_w(1:sz2)
-       data_array_deriv_eta1(2,1:sz2)     = interpolator%slope_e(1:sz2)
-       point_location_eta2_deriv(1) = 1
-       point_location_eta2_deriv(2) = sz2
-       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_s(1:sz1+sz_derivative_eta1)
-       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_n(1:sz1+sz_derivative_eta1)
+       eta1_deriv(1) = 1
+       eta1_deriv(2) = sz1
+       deriv_eta1(1,1:sz2)     = interpolator%slope_w(1:sz2)
+       deriv_eta1(2,1:sz2)     = interpolator%slope_e(1:sz2)
+       eta2_deriv(1) = 1
+       eta2_deriv(2) = sz2
+       deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_s(1:sz1+sz_derivative_eta1)
+       deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_n(1:sz1+sz_derivative_eta1)
        call spli2d_custom_derder(&
             sz1,&
             sz_derivative_eta1,&
             order1, &
             interpolator%eta1, &
-            point_location_eta1_deriv,&
+            eta1_deriv,&
             sz2, &
             sz_derivative_eta2,&
             order2, interpolator%eta2, &
-            point_location_eta2_deriv,&
+            eta2_deriv,&
             data_array_tmp,&
-            data_array_deriv_eta1,&
-            data_array_deriv_eta2,&
+            deriv_eta1,&
+            deriv_eta2,&
             interpolator%bcoef,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
-       SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
-       SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
+       SLL_DEALLOCATE( deriv_eta1,ierr)
+       SLL_DEALLOCATE( deriv_eta2,ierr)
        ! boundary condition non homogene
        !interpolator%bcoef(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
@@ -2537,7 +2498,7 @@ case (585) ! 4. dirichlet in all sides
 end subroutine !compute_interpolants_ad2d
 
 function coefficients_are_set_ad2d( interpolator ) result(res)
-  class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)  :: interpolator
+  sll_interpolator_2d, intent(in)  :: interpolator
   logical :: res
   res = interpolator%coefficients_set
 end function coefficients_are_set_ad2d
@@ -2560,7 +2521,7 @@ function interpolate_value_ad2d( &
     eta2 ) result(val)
 
     use sll_timer
-    class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)  :: interpolator
+    sll_interpolator_2d, intent(in)  :: interpolator
     sll_real64, intent(in)         :: eta1
     sll_real64, intent(in)         :: eta2
     sll_real64                     :: val
@@ -2705,7 +2666,7 @@ function interpolate_value_ad2d( &
     eta1, &
     eta2 ) result(val)
 
-    class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)  :: interpolator
+    sll_interpolator_2d, intent(in)  :: interpolator
     sll_real64, intent(in)         :: eta1
     sll_real64, intent(in)         :: eta2
     sll_real64                     :: val
@@ -2854,7 +2815,7 @@ function interpolate_value_ad2d( &
     eta1, &
     eta2 ) result(val)
 
-    class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)  :: interpolator
+    sll_interpolator_2d, intent(in)  :: interpolator
     sll_real64, intent(in)         :: eta1
     sll_real64, intent(in)         :: eta2
     sll_real64                     :: val
@@ -2991,7 +2952,7 @@ function interpolate_value_ad2d( &
   eta1, &
   eta2 ) result(res)
     
-    class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)  :: this
+    sll_interpolator_2d, intent(in)  :: this
     sll_real64,  dimension(:,:), intent(in)         :: eta1
     sll_real64,  dimension(:,:), intent(in)         :: eta2
     sll_real64, dimension(:,:), intent(in)         :: data_in
@@ -3019,7 +2980,7 @@ function interpolate_value_ad2d( &
        alpha1,      &
        alpha2) result(res)
       
-    class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)    :: this
+    sll_interpolator_2d, intent(in)    :: this
     sll_int32, intent(in)                          :: num_points1  
     sll_int32, intent(in)                          :: num_points2 
     sll_real64, dimension(:,:), intent(in)         :: data_in
@@ -3045,7 +3006,7 @@ function interpolate_value_ad2d( &
    
   
   function get_coefficients_ad2d(interpolator)
-    class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)    :: interpolator
+    sll_interpolator_2d, intent(in)    :: interpolator
     sll_real64, dimension(:,:), pointer           :: get_coefficients_ad2d     
 
     get_coefficients_ad2d => interpolator%bcoef
