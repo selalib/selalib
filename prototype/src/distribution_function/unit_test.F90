@@ -5,7 +5,6 @@ program unit_test
   use sll_constants
   use distribution_function
   use sll_common_coordinate_transformations
-  !use sll_module_mapped_meshes_2d
   use sll_cartesian_meshes
   use sll_module_coordinate_transformations_2d
   use sll_landau_2d_initializer
@@ -13,8 +12,6 @@ program unit_test
   implicit none
  
   sll_int32 :: nc_eta1, nc_eta2
-!  type(sll_mapped_mesh_2d_analytic), target :: mesh2d
-  !class(sll_mapped_mesh_2d_base), pointer   :: m
   class(sll_coordinate_transformation_2d_base), pointer   :: m
   type(sll_cartesian_mesh_2d), pointer :: m_log
   class(scalar_field_2d_initializer_base), pointer    :: p_init_f

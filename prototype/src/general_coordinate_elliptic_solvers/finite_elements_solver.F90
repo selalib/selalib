@@ -20,7 +20,7 @@ module finite_elements_solver_module
 
   use sll_boundary_condition_descriptors
   use sll_module_scalar_field_2d_base
-  use sll_module_scalar_field_2d_alternative
+  use sll_module_scalar_field_2d
   use sll_module_deboor_splines_1d
   use sll_module_arbitrary_degree_spline_interpolator_2d
   use connectivity_module
@@ -1165,7 +1165,7 @@ contains ! =============================================================
        phi)
     use sll_timer
     type(finite_elements_solver) :: solv
-    class(sll_scalar_field_2d_discrete_alt), intent(inout) :: phi
+    class(sll_scalar_field_2d_discrete), intent(inout) :: phi
     class(sll_scalar_field_2d_base), intent(in), target    :: source
     sll_int32  :: i
     sll_int32  :: j
@@ -1216,7 +1216,7 @@ contains ! =============================================================
     base_field_pointer => source
 
     select type( type_field => base_field_pointer)
-    class is (sll_scalar_field_2d_discrete_alt)
+    class is (sll_scalar_field_2d_discrete)
        base_interpolator_pointer => type_field%interp_2d
 
        select type( type_interpolator => base_interpolator_pointer)
@@ -1275,7 +1275,7 @@ contains ! =============================================================
           end do
        end select
        
-    class is (sll_scalar_field_2d_analytic_alt)
+    class is (sll_scalar_field_2d_analytic)
 
        do quad_index=1,solv%num_quad_pts ! Loop over quadrature points
           qpt1   = solv%quad_pts1  (quad_index)

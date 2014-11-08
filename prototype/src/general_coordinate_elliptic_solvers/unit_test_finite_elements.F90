@@ -5,7 +5,7 @@ program test_finite_elements_solver
   use sll_cartesian_meshes
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
-  use sll_module_scalar_field_2d_alternative
+  use sll_module_scalar_field_2d
   use sll_constants
   use sll_module_arbitrary_degree_spline_interpolator_2d
   use sll_timer
@@ -42,7 +42,7 @@ program test_finite_elements_solver
   class(sll_scalar_field_2d_base), pointer              :: b2_field_vect
   class(sll_scalar_field_2d_base), pointer              :: c_field
   class(sll_scalar_field_2d_base), pointer              :: rho
-  type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
+  type(sll_scalar_field_2d_discrete), pointer       :: phi
   type(sll_time_mark) :: t_reference
   sll_real64 :: t1i, t1e
   sll_real64 :: t3i, t3e
@@ -137,7 +137,7 @@ program test_finite_elements_solver
 
 !   ! Thirdly, each field object must be initialized using the same logical
 !   ! mesh and coordinate transformation.
-!   a11_field_mat => new_scalar_field_2d_analytic_alt( &
+!   a11_field_mat => new_scalar_field_2d_analytic( &
 !        func_one, &
 !        "a11", &
 !        T, &
@@ -148,7 +148,7 @@ program test_finite_elements_solver
 !        whatever ) 
 
  
-!   a12_field_mat => new_scalar_field_2d_analytic_alt( &
+!   a12_field_mat => new_scalar_field_2d_analytic( &
 !        func_zero, &
 !        "a12", &
 !        T, &
@@ -158,7 +158,7 @@ program test_finite_elements_solver
 !        SLL_PERIODIC, &
 !        whatever ) 
 
-!   a21_field_mat => new_scalar_field_2d_analytic_alt( &
+!   a21_field_mat => new_scalar_field_2d_analytic( &
 !        func_zero, &
 !        "a21", &
 !        T, &
@@ -168,7 +168,7 @@ program test_finite_elements_solver
 !        SLL_PERIODIC, &
 !        whatever  ) 
 
-!   a22_field_mat => new_scalar_field_2d_analytic_alt( &
+!   a22_field_mat => new_scalar_field_2d_analytic( &
 !        func_one, &
 !        "a22", &
 !        T, &
@@ -179,7 +179,7 @@ program test_finite_elements_solver
 !        whatever  ) 
 
 
-!   b1_field_vect => new_scalar_field_2d_analytic_alt( &
+!   b1_field_vect => new_scalar_field_2d_analytic( &
 !        func_zero, &
 !        "b1", &
 !        T, &
@@ -191,7 +191,7 @@ program test_finite_elements_solver
 !        first_deriv_eta1 = func_zero, &
 !        first_deriv_eta2 = func_zero) 
 
-!   b2_field_vect => new_scalar_field_2d_analytic_alt( &
+!   b2_field_vect => new_scalar_field_2d_analytic( &
 !        func_zero, &
 !        "b2", &
 !        T, &
@@ -204,7 +204,7 @@ program test_finite_elements_solver
 !        first_deriv_eta2 = func_zero)
 
 
-!   c_field => new_scalar_field_2d_analytic_alt( &
+!   c_field => new_scalar_field_2d_analytic( &
 !        func_zero, &
 !        "c_field", &
 !        T, &
@@ -214,7 +214,7 @@ program test_finite_elements_solver
 !        SLL_PERIODIC, &
 !        whatever  )
 
-!   rho => new_scalar_field_2d_analytic_alt( &
+!   rho => new_scalar_field_2d_analytic( &
 !        source_term_perper, &
 !        "rho1", &     
 !        T, &
@@ -241,7 +241,7 @@ program test_finite_elements_solver
 
 !  ! interp_2d_ptr => interp_2d
 
-!   phi => new_scalar_field_2d_discrete_alt( &
+!   phi => new_scalar_field_2d_discrete( &
 !        "phi1", &
 !        interp_2d, &
 !        T, &
@@ -412,7 +412,7 @@ program test_finite_elements_solver
   
   ! Thirdly, each field object must be initialized using the same logical
   ! mesh and coordinate transformation.
-  a11_field_mat => new_scalar_field_2d_analytic_alt( &
+  a11_field_mat => new_scalar_field_2d_analytic( &
        func_one, &
        "a11", &
        T, &
@@ -422,7 +422,7 @@ program test_finite_elements_solver
        SLL_DIRICHLET, &
        whatever ) 
 
-  a12_field_mat => new_scalar_field_2d_analytic_alt( &
+  a12_field_mat => new_scalar_field_2d_analytic( &
        func_zero, &
        "a12", &
        T, &
@@ -432,7 +432,7 @@ program test_finite_elements_solver
        SLL_DIRICHLET, &
        whatever ) 
   
-  a21_field_mat => new_scalar_field_2d_analytic_alt( &
+  a21_field_mat => new_scalar_field_2d_analytic( &
        func_zero, &
        "a21", &
        T, &
@@ -442,7 +442,7 @@ program test_finite_elements_solver
        SLL_DIRICHLET, &
        whatever ) 
   
-  a22_field_mat => new_scalar_field_2d_analytic_alt( &
+  a22_field_mat => new_scalar_field_2d_analytic( &
        func_one, &
        "a22", &
        T, &
@@ -453,7 +453,7 @@ program test_finite_elements_solver
        whatever) 
   
 
-  b1_field_vect => new_scalar_field_2d_analytic_alt( &
+  b1_field_vect => new_scalar_field_2d_analytic( &
        func_zero, &
        "b1", &
        T, &
@@ -465,7 +465,7 @@ program test_finite_elements_solver
        first_deriv_eta1 = func_zero, &
        first_deriv_eta2 = func_zero) 
   
-  b2_field_vect => new_scalar_field_2d_analytic_alt( &
+  b2_field_vect => new_scalar_field_2d_analytic( &
        func_zero, &
        "b2", &
        T, &
@@ -477,7 +477,7 @@ program test_finite_elements_solver
        first_deriv_eta1 = func_zero, &
        first_deriv_eta2 = func_zero)
   
-  c_field => new_scalar_field_2d_analytic_alt( &
+  c_field => new_scalar_field_2d_analytic( &
        func_zero, &
        "c_field", &
        T, &
@@ -487,7 +487,7 @@ program test_finite_elements_solver
        SLL_DIRICHLET, &
        whatever)
 
-  rho => new_scalar_field_2d_analytic_alt( &
+  rho => new_scalar_field_2d_analytic( &
        source_term_perdir, &
        "rho3", &     
        T, &
@@ -512,7 +512,7 @@ program test_finite_elements_solver
        SPLINE_DEG1, &
        SPLINE_DEG2 )
  
-  phi => new_scalar_field_2d_discrete_alt( &
+  phi => new_scalar_field_2d_discrete( &
        "phi3", &
        interp_2d, &
        T, &
@@ -674,7 +674,7 @@ program test_finite_elements_solver
   
    ! Thirdly, each field object must be initialized using the same logical
   ! mesh and coordinate transformation.
-  a11_field_mat => new_scalar_field_2d_analytic_alt( &
+  a11_field_mat => new_scalar_field_2d_analytic( &
        func_one, &
        "a11", &
        T, &
@@ -684,7 +684,7 @@ program test_finite_elements_solver
        SLL_DIRICHLET, &
        whatever ) 
   
-  a12_field_mat => new_scalar_field_2d_analytic_alt( &
+  a12_field_mat => new_scalar_field_2d_analytic( &
        func_zero, &
        "a12", &
        T, &
@@ -694,7 +694,7 @@ program test_finite_elements_solver
        SLL_DIRICHLET, &
        whatever) 
   
-  a21_field_mat => new_scalar_field_2d_analytic_alt( &
+  a21_field_mat => new_scalar_field_2d_analytic( &
        func_zero, &
        "a21", &
        T, &
@@ -704,7 +704,7 @@ program test_finite_elements_solver
        SLL_DIRICHLET, &
        whatever ) 
   
-  a22_field_mat => new_scalar_field_2d_analytic_alt( &
+  a22_field_mat => new_scalar_field_2d_analytic( &
        func_one, &
        "a22", &
        T, &
@@ -714,7 +714,7 @@ program test_finite_elements_solver
        SLL_DIRICHLET, &
        whatever) 
   
-  b1_field_vect => new_scalar_field_2d_analytic_alt( &
+  b1_field_vect => new_scalar_field_2d_analytic( &
        func_zero, &
        "b1", &
        T, &
@@ -726,7 +726,7 @@ program test_finite_elements_solver
        first_deriv_eta1 = func_zero, &
        first_deriv_eta2 = func_zero)
 
-  b2_field_vect => new_scalar_field_2d_analytic_alt( &
+  b2_field_vect => new_scalar_field_2d_analytic( &
        func_zero, &
        "b2", &
        T, &
@@ -739,7 +739,7 @@ program test_finite_elements_solver
        first_deriv_eta2 = func_zero)
 
 
-  c_field => new_scalar_field_2d_analytic_alt( &
+  c_field => new_scalar_field_2d_analytic( &
        func_zero, &
        "c_field", &
        T, &
@@ -749,7 +749,7 @@ program test_finite_elements_solver
        SLL_DIRICHLET, &
        whatever )
   
-  rho => new_scalar_field_2d_analytic_alt( &
+  rho => new_scalar_field_2d_analytic( &
        source_term_chgt_dirdir, &
        "rho7", &     
        T, &
@@ -774,7 +774,7 @@ program test_finite_elements_solver
        SPLINE_DEG1, &
        SPLINE_DEG2 )
   
-  phi => new_scalar_field_2d_discrete_alt( &
+  phi => new_scalar_field_2d_discrete( &
        "phi7", &
        interp_2d, &
        T, &
@@ -944,7 +944,7 @@ program test_finite_elements_solver
   
   ! Thirdly, each field object must be initialized using the same logical
   ! mesh and coordinate transformation.
-  a11_field_mat => new_scalar_field_2d_analytic_alt( &
+  a11_field_mat => new_scalar_field_2d_analytic( &
        func_one, &
        "a11", &
        T, &
@@ -954,7 +954,7 @@ program test_finite_elements_solver
        SLL_DIRICHLET, &
        whatever ) 
   
-  a12_field_mat => new_scalar_field_2d_analytic_alt( &
+  a12_field_mat => new_scalar_field_2d_analytic( &
        func_zero, &
        "a12", &
        T, &
@@ -964,7 +964,7 @@ program test_finite_elements_solver
        SLL_DIRICHLET, &
        whatever )
   
-  a21_field_mat => new_scalar_field_2d_analytic_alt( &
+  a21_field_mat => new_scalar_field_2d_analytic( &
        func_zero, &
        "a21", &
        T, &
@@ -974,7 +974,7 @@ program test_finite_elements_solver
        SLL_DIRICHLET, &
        whatever ) 
   
-  a22_field_mat => new_scalar_field_2d_analytic_alt( &
+  a22_field_mat => new_scalar_field_2d_analytic( &
        func_one, &
        "a22", &
        T, &
@@ -984,7 +984,7 @@ program test_finite_elements_solver
        SLL_DIRICHLET,&
        whatever) 
   
-  b1_field_vect => new_scalar_field_2d_analytic_alt( &
+  b1_field_vect => new_scalar_field_2d_analytic( &
        func_zero, &
        "b1", &
        T, &
@@ -996,7 +996,7 @@ program test_finite_elements_solver
        first_deriv_eta1 = func_zero, &
        first_deriv_eta2 = func_zero)
   
-  b2_field_vect => new_scalar_field_2d_analytic_alt( &
+  b2_field_vect => new_scalar_field_2d_analytic( &
        func_zero, &
        "b2", &
        T, &
@@ -1008,7 +1008,7 @@ program test_finite_elements_solver
        first_deriv_eta1 = func_zero, &
        first_deriv_eta2 = func_zero)
   
-  c_field => new_scalar_field_2d_analytic_alt( &
+  c_field => new_scalar_field_2d_analytic( &
        func_zero, &
        "c_field", &
        T, &
@@ -1050,7 +1050,7 @@ program test_finite_elements_solver
 
 
 
-  rho => new_scalar_field_2d_discrete_alt( &
+  rho => new_scalar_field_2d_discrete( &
        "rho11_solver_LM", &
        terme_source_interp, &
        T, &
@@ -1082,7 +1082,7 @@ program test_finite_elements_solver
        SPLINE_DEG1, &
        SPLINE_DEG2 )
 !!$    
-  phi => new_scalar_field_2d_discrete_alt( &
+  phi => new_scalar_field_2d_discrete( &
        "phi11_solver_LM", &
        interp_2d, &
        T, &

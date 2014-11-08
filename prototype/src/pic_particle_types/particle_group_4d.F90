@@ -133,34 +133,4 @@ contains
   end subroutine delete_particle_4d_group
 
 
-!  subroutine set_group_particle_values( &
-!                    p_group,   &
-!                    p_index,   & 
-!                    x,  y,     &
-!                    vx, vy, q  )
-!
-!    sll_real64, intent(in) :: x, y, vx, vy
-!    sll_real32, intent(in) :: q
-!    sll_int64,  intent(in) :: p_index
-!    sll_real32 :: off_x, off_y
-!    sll_real64 :: tmp1, tmp2, xmin, ymin, rdx, rdy
-!    sll_int32  :: ic_x, ic_y, ncx
-!    type(sll_particle_group_2d), pointer :: p_group
-!    
-!    SLL_ASSERT( (p_index >= 1).and.(p_index <= p_group%number_particles) )
-!
-!    ncx  = group%mesh%num_cells1
-!    xmin = group%mesh%eta1_min
-!    ymin = group%mesh%eta2_min
-!    rdx = 1._f64/group%mesh%delta_eta1
-!    rdy = 1._f64/group%mesh%delta_eta2
-!
-!    SET_PARTICLE_VALUES(p_group%p_list(p_index),x,y,vx,vy,q,xmin,ymin,ncx,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
-!!!$    call set_particle_values( p_group%p_list(p_index), &
-!!!$                              x,  y,       &
-!!!$                              vx, vy, q,   &
-!!!$                              p_group%mesh )
-!
-!  end subroutine set_group_particle_values
-!  
 end module sll_particle_group_4d_module

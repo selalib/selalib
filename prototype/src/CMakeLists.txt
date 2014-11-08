@@ -195,6 +195,8 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(simulation)
    ADD_SUBDIRECTORY(eulerian-finite-volume)
 
+   ADD_SUBDIRECTORY( simulations ) # reorganization of simulations
+
    IF(BUILD_TESTING)
       INCLUDE(SequentialTests)
       IF(MPI_MODULE_ENABLED)
