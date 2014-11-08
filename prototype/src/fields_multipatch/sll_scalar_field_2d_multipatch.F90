@@ -30,7 +30,7 @@ module sll_module_scalar_field_2d_multipatch
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_file_io.h"
-  use sll_module_scalar_field_2d_alternative
+  use sll_module_scalar_field_2d
   use sll_coordinate_transformation_multipatch_module
   use sll_constants
   use sll_module_interpolators_2d_base
@@ -250,7 +250,7 @@ contains   ! *****************************************************************
        print *, 'created interpolator for patch ', i
        print *, "num cells = ", lm%num_cells1, lm%num_cells2
  
-      fmp%fields(i+1)%f => new_scalar_field_2d_discrete_alt( &
+      fmp%fields(i+1)%f => new_scalar_field_2d_discrete( &
             patch_name, &
             fmp%interps(i+1)%interp, &
             fmp%get_transformation(i), &
