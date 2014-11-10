@@ -15,7 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-module sll_particle_initializers
+module sll_particle_initializers_4d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -170,4 +170,4 @@ contains
     eval_landau = 1._f64 + alp * cos(kx * x)
   end function eval_landau
 
-end module sll_particle_initializers
+end module sll_particle_initializers_4d

@@ -2,8 +2,8 @@
 #define _particle_representations_h_
 
   use sll_particle_representations
-
-!  the 'real' offset (i.e. x - x_j where x_j is the closer node, at left of x)
+! ------   ATTENTION   ------   !
+!  the 'real' offset (i.e. x - x_j where x_j is the closest node, at left of x)
 !  of a particle is  offset*dx.
 #define COMPUTE_CELL_OFFSET(x,xmin,rdelta,icell,offset,tmp) \
   do; \
@@ -50,5 +50,13 @@
      y = m2d%delta_eta2*(p%dy + real( int( (p%ic-1)/m2d%num_cells1 ), f64)); \
     exit; \
  end do
+
+
+#define SET_2DPARTICLE_VALUES(p,x,y,qq,xmin,ymin,ncx,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2) \
+ do; \
+    SET_PARTICLE_POSITION(p,xmin,ymin,ncx,x,y,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2); \
+    p%q  = qq; \
+    exit; \
+ enddo
 
 #endif
