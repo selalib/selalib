@@ -312,11 +312,14 @@ subroutine initialize_general_elliptic_solver( &
  ! in the case periodic periodic to include the periodicity in the last point.  
  !  -----------------------------------------
 
- if(es%perper) solution_size = solution_size + 1
-
- SLL_ALLOCATE(es%tmp_rho_vec(solution_size),ierr)
- SLL_ALLOCATE(es%tmp_phi_vec(solution_size),ierr)
-
+ !if(es%perper) solution_size = solution_size + 1
+ if(es%perper) then
+   SLL_ALLOCATE(es%tmp_rho_vec(solution_size+1),ierr)
+   SLL_ALLOCATE(es%tmp_phi_vec(solution_size+1),ierr)
+ else
+   SLL_ALLOCATE(es%tmp_rho_vec(solution_size),ierr)
+   SLL_ALLOCATE(es%tmp_phi_vec(solution_size),ierr) 
+ endif
  es%rho_vec = 0.0_f64
  es%phi_vec = 0.0_f64
  es%masse   = 0.0_f64
@@ -807,17 +810,36 @@ subroutine factorize_mat_es(&
  
   if (es%perper) then
 
-    es%sll_csr_mat_with_constraint => es%sll_csr_mat
+   es%sll_csr_mat_with_constraint => new_csr_matrix_with_constraint(es%sll_csr_mat)  
 
-    do i = 1, es%total_num_splines1*es%total_num_splines2    
 
-      call sll_add_to_csr_matrix( &
-           es%sll_csr_mat_with_constraint, &
-           es%masse(i), &
-           es%total_num_splines1*es%total_num_splines2+1, &
-           i)
-    end do
+   call csr_add_one_constraint( &
+    es%sll_csr_mat%opi_ia, & 
+    es%sll_csr_mat%opi_ja, &
+    es%sll_csr_mat%opr_a, &
+    es%sll_csr_mat%num_rows, &
+    es%sll_csr_mat%num_nz, &
+    es%masse, &
+    es%sll_csr_mat_with_constraint%opi_ia, &
+    es%sll_csr_mat_with_constraint%opi_ja, &
+    es%sll_csr_mat_with_constraint%opr_a)  
+
+!    es%sll_csr_mat_with_constraint => es%sll_csr_mat
+!
+!    do i = 1, es%total_num_splines1*es%total_num_splines2    
+!
+!      call sll_add_to_csr_matrix( &
+!           es%sll_csr_mat_with_constraint, &
+!           es%masse(i), &
+!           es%total_num_splines1*es%total_num_splines2+1, &
+!           i)
+!    end do
+    call sll_factorize_csr_matrix(es%sll_csr_mat_with_constraint)
+  else   
+    call sll_factorize_csr_matrix(es%sll_csr_mat)
   end if 
+ 
+  
  
   es%sll_csr_mat_source => new_csr_matrix( &
          size(es%masse,1), &
@@ -1753,10 +1775,17 @@ subroutine solve_linear_system( es )
      
   end if
 
-  call sll_solve_csr_matrix(es%sll_csr_mat, &
+  if((bc_left   == SLL_PERIODIC) .and. (bc_right==SLL_PERIODIC) .and.&
+          (bc_bottom == SLL_PERIODIC) .and. (bc_top  ==SLL_PERIODIC)) then
+    call sll_solve_csr_matrix(es%sll_csr_mat_with_constraint, &
                             es%tmp_rho_vec, &
                             es%tmp_phi_vec)
 
+  else
+    call sll_solve_csr_matrix(es%sll_csr_mat, &
+                            es%tmp_rho_vec, &
+                            es%tmp_phi_vec)
+  endif
   es%phi_vec(1:es%total_num_splines1*es%total_num_splines2)=&
     es%tmp_phi_vec(1:es%total_num_splines1*es%total_num_splines2)
 

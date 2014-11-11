@@ -407,7 +407,6 @@ contains
         poisson%b2_field,&
         poisson%c_field)    
     print *,'#end factorize_mat_es'
-    stop
         
  end subroutine initialize_poisson_2d_elliptic_solver
  
