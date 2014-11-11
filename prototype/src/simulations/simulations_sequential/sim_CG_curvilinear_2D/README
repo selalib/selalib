@@ -1,0 +1,13 @@
+Directory structure
+===================
+   unit_test_mudpack_colella   -- executable #1
+   CG_Curvilinear_2D           -- executable #2
+   CG_Curvilinear_data.txt     -- input file #2
+   README                      -- info (this file)
+
+HOWTO
+=====
+1. Run simulations (this pollutes the current directory)
+     $ ./unit_test_mudpack_colella
+     $ ./CG_Curvilinear_2D
+
