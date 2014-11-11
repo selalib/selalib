@@ -16,7 +16,7 @@
 !**************************************************************
 
 
-module sll_particle_group_4d_module
+module sll_particle_group_2d_module
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -30,7 +30,7 @@ module sll_particle_group_4d_module
 
   implicit none
 
-  type :: sll_particle_group_4d
+  type :: sll_particle_group_2d
      sll_int32  :: number_particles! peut etre a faire en SLL_PRIV
      sll_int32  :: active_particles! tout ça doit passer en 32
      sll_int32  :: guard_list_size! tout ça doit passer en 32
@@ -39,24 +39,24 @@ module sll_particle_group_4d_module
      sll_int32, dimension(:), pointer :: num_postprocess_particles
      sll_real64 :: qoverm 
      type(sll_cartesian_mesh_2d), pointer                 :: mesh
-     type(sll_particle_4d), dimension(:), pointer       :: p_list
-     type(sll_particle_4d_guard_ptr), dimension(:), pointer :: p_guard
-  end type sll_particle_group_4d
+     type(sll_particle_2d), dimension(:), pointer       :: p_list
+     type(sll_particle_2d_guard_ptr), dimension(:), pointer :: p_guard
+  end type sll_particle_group_2d
   
   interface sll_delete
-     module procedure delete_particle_4d_group
+     module procedure delete_particle_2d_group
   end interface sll_delete
 
 contains
 
-  function new_particle_4d_group( &
+  function new_particle_2d_group( &
        num_particles,       &
        particle_array_size, &
        guard_list_size,     &
        qoverm,              &
        mesh ) result(res)
 
-    type(sll_particle_group_4d), pointer :: res
+    type(sll_particle_group_2d), pointer :: res
     sll_int32,  intent(in) :: num_particles
     sll_int32,  intent(in) :: particle_array_size
     sll_int32,  intent(in) :: guard_list_size
@@ -68,7 +68,7 @@ contains
     sll_int32 :: nn
 
     if( num_particles > particle_array_size ) then
-       print *, 'new_particle_4d_group(): ERROR,  num_particles should not ', &
+       print *, 'new_particle_2d_group(): ERROR,  num_particles should not ', &
             'be greater than the memory size requested, particle_array_size.'
        STOP
     end if
@@ -109,10 +109,10 @@ contains
     endif
     res%mesh => mesh
 
-  end function new_particle_4d_group
+  end function new_particle_2d_group
 
-  subroutine delete_particle_4d_group(p_group)
-    type(sll_particle_group_4d), pointer :: p_group
+  subroutine delete_particle_2d_group(p_group)
+    type(sll_particle_group_2d), pointer :: p_group
     sll_int32 :: ierr
     sll_int32 :: thread_id
 
@@ -130,7 +130,6 @@ contains
     SLL_DEALLOCATE(p_group%p_list, ierr)
     SLL_DEALLOCATE(p_group%p_guard, ierr)
     SLL_DEALLOCATE(p_group, ierr)
-  end subroutine delete_particle_4d_group
+  end subroutine delete_particle_2d_group
 
-
-end module sll_particle_group_4d_module
+end module sll_particle_group_2d_module
