@@ -19,6 +19,7 @@ Install Homebrew (`not compatible with macports <https://guide.macports.org/chun
 	$ brew install git
 	$ brew install cmake
 	$ brew install gcc
+	$ brew install openmpi --enable-mpi-thread-multiple
 	$ brew install hdf5 --enable-fortran --enable-parallel
 	$ brew install pastix
 	$ brew install fftw

@@ -40,7 +40,7 @@ type, public, extends(sll_interpolator_1d_base) :: &
                  sll_arbitrary_degree_spline_interpolator_1d
   private
   !> PLEASE ADD DOCUMENTATION
-  sll_real64, public, dimension(:), pointer :: coeff_splines
+  sll_real64, public, dimension(:), pointer :: bcoef
   !> PLEASE ADD DOCUMENTATION
   sll_int32  :: num_pts
   !> PLEASE ADD DOCUMENTATION
@@ -53,8 +53,6 @@ type, public, extends(sll_interpolator_1d_base) :: &
   sll_int32  :: bc_right
   !> PLEASE ADD DOCUMENTATION
   sll_int32  :: spline_degree
-  !> PLEASE ADD DOCUMENTATION
-  sll_real64, dimension(:), pointer :: knots
   !> PLEASE ADD DOCUMENTATION
   sll_real64, dimension(:), pointer :: t
   !> PLEASE ADD DOCUMENTATION
@@ -121,7 +119,9 @@ public new_arbitrary_degree_1d_interpolator
 public set_values_at_boundary1d
 public initialize_ad1d_interpolator
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !> @brief delete interpolator arbitrary degree splines.
 !> @details
@@ -130,15 +130,12 @@ contains
 subroutine delete_arbitrary_degree_1d_interpolator( interpolator )
   sll_interpolator, intent(inout) :: interpolator
   sll_int32 :: ierr
-  DEALLOCATE(interpolator%knots)
   DEALLOCATE(interpolator%t)
-  DEALLOCATE(interpolator%coeff_splines)
+  DEALLOCATE(interpolator%bcoef)
 end subroutine delete_arbitrary_degree_1d_interpolator
 
 !> @brief Initialization of a pointer interpolator arbitrary degree splines 1d.
-!> @details To have the interpolator arbitrary degree splines 1d such as a pointer
-!>
-!> The parameters are
+!> @details To have the interpolator arbitrary degree splines 1d such as a pointer.
 !> @param[in] num_pts the number of points
 !> @param[in] eta_min the minimun
 !> @param[in] eta_max the maximun
@@ -177,9 +174,7 @@ function new_arbitrary_degree_1d_interpolator(     &
 end function new_arbitrary_degree_1d_interpolator
 
 !> @brief Initialization of interpolator arbitrary degree splines 1d.
-!> @details To have the interpolator arbitrary degree splines 1d
-!>
-!> The parameters are
+!> @details To have the interpolator arbitrary degree splines 1d.
 !> @param[in] num_pts the number of points
 !> @param[in] eta_min the minimun
 !> @param[in] eta_max the maximun
@@ -227,28 +222,20 @@ subroutine initialize_ad1d_interpolator( interpolator, &
   interpolator%bc_selector   = bc_selector
   interpolator%num_pts       = num_pts
 
-  SLL_CLEAR_ALLOCATE(interpolator%coeff_splines(1:num_pts*num_pts),ierr)
+  SLL_CLEAR_ALLOCATE(interpolator%bcoef(1:num_pts*num_pts),ierr)
   SLL_CLEAR_ALLOCATE(interpolator%t(1:num_pts*num_pts),ierr)
   interpolator%value_left  = 0.0_f64
   interpolator%value_right = 0.0_f64
-
-  select case (bc_selector)
-  case (0) ! 1. periodic
-    SLL_ALLOCATE( interpolator%knots(2*spline_degree+2),ierr )
-  case default
-    SLL_ALLOCATE( interpolator%knots(num_pts+2*spline_degree),ierr )
-  end select
 
 end subroutine initialize_ad1d_interpolator
 
 !> @brief initializing the coefficients of splines.
 !> @details  initializing the coefficients of splines
-!>  fot the arbitrary degree splines interpolator 1d
-!> The parameters are
+!> for the arbitrary degree splines interpolator 1d.
 !> @param interpolator the type sll_arbitrary_degree_spline_interpolator_1d
 !> @param[in] coeffs the 1d arrays corresponding of the splines coefficients
 !> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_1d
-subroutine set_coefficients_ad1d( interpolator, coeffs)
+subroutine set_coefficients_ad1d(interpolator, coeffs)
 
   sll_interpolator, intent(inout)  :: interpolator
   sll_real64, intent(in), optional :: coeffs(:)
@@ -282,16 +269,16 @@ subroutine set_coefficients_ad1d( interpolator, coeffs)
     if (present(coeffs)) then
 
       SLL_ASSERT ( size(coeffs) ==  num_cells + sp_deg )
-      interpolator%coeff_splines(1:num_cells+sp_deg) = coeffs
+      interpolator%bcoef(1:num_cells+sp_deg) = coeffs
       do i = 1, sp_deg
-        interpolator%coeff_splines(num_cells+i) = coeffs(i)
+        interpolator%bcoef(num_cells+i) = coeffs(i)
       end do
 
     else
 
       do i= 1,sp_deg
-        interpolator%coeff_splines(num_cells+i ) = &
-                interpolator%coeff_splines(sp_deg-(i-1))
+        interpolator%bcoef(num_cells+i ) = &
+                interpolator%bcoef(sp_deg-(i-1))
       end do
 
     end if
@@ -314,12 +301,12 @@ subroutine set_coefficients_ad1d( interpolator, coeffs)
       nb_spline_eta = num_cells + sp_deg - 2
       SLL_ASSERT(size(coeffs) ==  nb_spline_eta )
       do i = 1,nb_spline_eta
-        interpolator%coeff_splines(i + 1 ) =  coeffs(i)
+        interpolator%bcoef(i + 1 ) =  coeffs(i)
       end do
     endif
 
-    interpolator%coeff_splines(1)               = interpolator%value_left
-    interpolator%coeff_splines(nb_spline_eta+2) = interpolator%value_right
+    interpolator%bcoef(1)               = interpolator%value_left
+    interpolator%bcoef(nb_spline_eta+2) = interpolator%value_right
 
   case(10) ! Neumann - Dirichlet
 
@@ -339,11 +326,11 @@ subroutine set_coefficients_ad1d( interpolator, coeffs)
       nb_spline_eta = num_cells + sp_deg - 1
       SLL_ASSERT(size(coeffs) == nb_spline_eta)
       do i = 1,nb_spline_eta
-        interpolator%coeff_splines(i + 1 ) =  coeffs(i)
+        interpolator%bcoef(i + 1 ) =  coeffs(i)
       end do
     end if
 
-    interpolator%coeff_splines(nb_spline_eta+2) =  interpolator%value_right
+    interpolator%bcoef(nb_spline_eta+2) =  interpolator%value_right
  
   case(12) ! Hermitte- Dirichlet
  
@@ -363,10 +350,10 @@ subroutine set_coefficients_ad1d( interpolator, coeffs)
       nb_spline_eta = num_cells + sp_deg - 1
       SLL_ASSERT(size(coeffs) == nb_spline_eta)
       do i = 1,nb_spline_eta
-        interpolator%coeff_splines(i + 1 ) =  coeffs(i)
+        interpolator%bcoef(i + 1 ) =  coeffs(i)
       end do
     end if
-    interpolator%coeff_splines(nb_spline_eta+2) = interpolator%value_right
+    interpolator%bcoef(nb_spline_eta+2) = interpolator%value_right
  
   case(17) ! Dirichlet-Neumann
 
@@ -386,10 +373,10 @@ subroutine set_coefficients_ad1d( interpolator, coeffs)
       nb_spline_eta = num_cells + sp_deg - 1
       SLL_ASSERT(size(coeffs) == nb_spline_eta)
       do i = 1,nb_spline_eta
-        interpolator%coeff_splines(i + 1 ) =  coeffs(i)
+        interpolator%bcoef(i + 1 ) =  coeffs(i)
       end do
     end if
-    interpolator%coeff_splines(1) = interpolator%value_left
+    interpolator%bcoef(1) = interpolator%value_left
 
   case(18) ! Neumann - Neumann
 
@@ -409,7 +396,7 @@ subroutine set_coefficients_ad1d( interpolator, coeffs)
       nb_spline_eta = num_cells + sp_deg
       SLL_ASSERT(size(coeffs) == nb_spline_eta)
       do i = 1,nb_spline_eta
-        interpolator%coeff_splines(i ) =  coeffs(i)
+        interpolator%bcoef(i ) =  coeffs(i)
       end do
     end if
 
@@ -431,7 +418,7 @@ subroutine set_coefficients_ad1d( interpolator, coeffs)
       nb_spline_eta = num_cells + sp_deg
       SLL_ASSERT(size(coeffs) == nb_spline_eta)
       do i = 1,nb_spline_eta
-        interpolator%coeff_splines(i) =  coeffs(i)
+        interpolator%bcoef(i) =  coeffs(i)
       end do
     end if
 
@@ -453,10 +440,10 @@ subroutine set_coefficients_ad1d( interpolator, coeffs)
       nb_spline_eta = num_cells + sp_deg - 1
       SLL_ASSERT(size(coeffs) == nb_spline_eta)
       do i = 1,nb_spline_eta
-        interpolator%coeff_splines(i + 1 ) =  coeffs(i)
+        interpolator%bcoef(i + 1 ) =  coeffs(i)
       end do
     end if
-    interpolator%coeff_splines(1) = interpolator%value_left
+    interpolator%bcoef(1) = interpolator%value_left
 
    case(34) ! Neumann- Hermite
 
@@ -476,7 +463,7 @@ subroutine set_coefficients_ad1d( interpolator, coeffs)
        nb_spline_eta = num_cells + sp_deg
        SLL_ASSERT(size(coeffs) == nb_spline_eta)
        do i = 1,nb_spline_eta
-         interpolator%coeff_splines(i) =  coeffs(i)
+         interpolator%bcoef(i) =  coeffs(i)
        end do
      end if
 
@@ -498,7 +485,7 @@ subroutine set_coefficients_ad1d( interpolator, coeffs)
        nb_spline_eta = num_cells + sp_deg
        SLL_ASSERT(size(coeffs) == nb_spline_eta)
        do i = 1,nb_spline_eta
-         interpolator%coeff_splines(i ) =  coeffs(i)
+         interpolator%bcoef(i ) =  coeffs(i)
        end do
      end if
 
@@ -641,7 +628,7 @@ subroutine compute_interpolants_ad1d( interpolator,    &
                      order,                            &
                      point_locate_eta,                 &
                      data_array,                       &
-                     interpolator%coeff_splines(1:sz), &
+                     interpolator%bcoef(1:sz), &
                      interpolator%t(1:order + sz ))
 
   case (9) ! 2. dirichlet-left, dirichlet-right
@@ -653,11 +640,11 @@ subroutine compute_interpolants_ad1d( interpolator,    &
                      order,                            &
                      point_locate_eta,                 &
                      data_array,                       &
-                     interpolator%coeff_splines(1:sz), &
+                     interpolator%bcoef(1:sz), &
                      interpolator%t(1:sz+order) )
 
-    interpolator%coeff_splines(1)  = interpolator%value_left
-    interpolator%coeff_splines(sz) = interpolator%value_right
+    interpolator%bcoef(1)  = interpolator%value_left
+    interpolator%bcoef(sz) = interpolator%value_right
 
   case(10) ! Neumann - Dirichlet
 
@@ -676,11 +663,11 @@ subroutine compute_interpolants_ad1d( interpolator,    &
          data_array,                                &
          point_locate_eta_derivative,               &
          data_array_derivative,                     &
-         interpolator%coeff_splines(1:sz+sz_deriv), &
+         interpolator%bcoef(1:sz+sz_deriv), &
          interpolator%t(1:sz+order+sz_deriv))
 
     ! test dirichlet non homogene
-    interpolator%coeff_splines(sz+sz_deriv) = interpolator%value_right
+    interpolator%bcoef(sz+sz_deriv) = interpolator%value_right
 
  case(17) ! Dirichlet - Neumann
 
@@ -697,11 +684,11 @@ subroutine compute_interpolants_ad1d( interpolator,    &
          data_array,                                &
          point_locate_eta_derivative,               &
          data_array_derivative,                     &
-         interpolator%coeff_splines(1:sz+sz_deriv), &
+         interpolator%bcoef(1:sz+sz_deriv), &
          interpolator%t(1:sz+order+sz_deriv))
 
     ! test dirichlet non homogene
-    interpolator%coeff_splines(1) = interpolator%value_left
+    interpolator%bcoef(1) = interpolator%value_left
 
  case(12) ! Hermite - Dirichlet
 
@@ -718,11 +705,11 @@ subroutine compute_interpolants_ad1d( interpolator,    &
          data_array,                                &
          point_locate_eta_derivative,               &
          data_array_derivative,                     &
-         interpolator%coeff_splines(1:sz+sz_deriv), &
+         interpolator%bcoef(1:sz+sz_deriv), &
          interpolator%t(1:sz+order+sz_deriv))
 
     ! test dirichlet non homogene
-    interpolator%coeff_splines(sz+sz_deriv) = interpolator%value_right
+    interpolator%bcoef(sz+sz_deriv) = interpolator%value_right
 
  case(18) ! Neumann - Neumann
 
@@ -738,7 +725,7 @@ subroutine compute_interpolants_ad1d( interpolator,    &
          data_array,                                &
          point_locate_eta_derivative,               &
          data_array_derivative,                     &
-         interpolator%coeff_splines(1:sz+sz_deriv), & 
+         interpolator%bcoef(1:sz+sz_deriv), & 
          interpolator%t(1:sz+order+sz_deriv))
 
  case(20) ! Hermite - Neumann
@@ -756,7 +743,7 @@ subroutine compute_interpolants_ad1d( interpolator,    &
          data_array,                                &
          point_locate_eta_derivative,               &
          data_array_derivative,                     &
-         interpolator%coeff_splines(1:sz+sz_deriv), &
+         interpolator%bcoef(1:sz+sz_deriv), &
          interpolator%t(1:sz+order+sz_deriv))
 
  case(33) ! Dirichlet - Hermite
@@ -774,10 +761,10 @@ subroutine compute_interpolants_ad1d( interpolator,    &
          data_array,                                  &
          point_locate_eta_derivative,                 &
          data_array_derivative,                       &
-         interpolator%coeff_splines(1:sz+sz_deriv),   &
+         interpolator%bcoef(1:sz+sz_deriv),   &
          interpolator%t(1:sz+order+sz_deriv))
 
-    interpolator%coeff_splines(1) = interpolator%value_left
+    interpolator%bcoef(1) = interpolator%value_left
 
  case(34) ! Neumann - Hermite
 
@@ -794,7 +781,7 @@ subroutine compute_interpolants_ad1d( interpolator,    &
          data_array,                                 &
          point_locate_eta_derivative,                &
          data_array_derivative,                      &
-         interpolator%coeff_splines(1:sz+sz_deriv),  &
+         interpolator%bcoef(1:sz+sz_deriv),  &
          interpolator%t(1:sz+order+sz_deriv))
 
  case(36) ! Hermite - Hermite
@@ -812,7 +799,7 @@ subroutine compute_interpolants_ad1d( interpolator,    &
          data_array,                                 &
          point_locate_eta_derivative,                &
          data_array_derivative,                      &
-         interpolator%coeff_splines(1:sz+sz_deriv),  &
+         interpolator%bcoef(1:sz+sz_deriv),  &
          interpolator%t(1:sz+order+sz_deriv))
 
   end select
@@ -854,7 +841,7 @@ function interpolate_value_ad1d( interpolator, eta1) result(val)
   end if
 
   val = bvalue( interpolator%t(1:interpolator%size_t),                  &
-                interpolator%coeff_splines(1:interpolator%size_coeffs), &
+                interpolator%bcoef(1:interpolator%size_coeffs), &
                 interpolator%size_coeffs,                               &
                 interpolator%spline_degree+1,                           &
                 res,                                                    &
@@ -888,8 +875,7 @@ function interpolate_derivative_ad1d( interpolator, eta1 ) result(val)
 
   res = eta1
 
-  select case (interpolator%bc_selector)
-  case (0) ! periodic
+  if(interpolator%bc_selector == 0) then
 
     if( res < interpolator%eta_min ) then
       res = res+interpolator%eta_max-interpolator%eta_min
@@ -897,15 +883,15 @@ function interpolate_derivative_ad1d( interpolator, eta1 ) result(val)
       res = res+interpolator%eta_min-interpolator%eta_max
     end if
 
-  case default
+  else
 
     SLL_ASSERT( res >= interpolator%eta_min )
     SLL_ASSERT( res <= interpolator%eta_max )
 
-  end select
+  end if
 
   val = bvalue( interpolator%t(1:interpolator%size_t),     &
-                interpolator%coeff_splines(1:size_coeffs), &
+                interpolator%bcoef(1:size_coeffs), &
                 size_coeffs,                               &
                 interpolator%spline_degree+1,              &
                 res,                                       &
@@ -950,7 +936,7 @@ function get_coefficients_ad1d(interpolator)
    sll_interpolator, intent(in)      :: interpolator
    sll_real64, dimension(:), pointer :: get_coefficients_ad1d
 
-   get_coefficients_ad1d = interpolator%coeff_splines
+   get_coefficients_ad1d = interpolator%bcoef
 
 end function get_coefficients_ad1d
 
@@ -968,8 +954,8 @@ subroutine interpolate_values_ad1d( interpolator,        &
   SLL_ASSERT(num_pts==size(vals_to_interpolate))
 
   do idx=1,num_pts
-    output_array(idx)=interpolate_value_ad1d( &
-                                interpolator, &
+    output_array(idx)=interpolate_value_ad1d(            &
+                                interpolator,            &
                                 vals_to_interpolate(idx))
   enddo
 
