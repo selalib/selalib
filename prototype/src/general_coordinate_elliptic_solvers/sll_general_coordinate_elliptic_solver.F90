@@ -107,7 +107,8 @@ public sll_delete,                          &
        sll_create,                          &
        sll_solve,                           &
        new_general_elliptic_solver,         &
-       factorize_mat_es
+       factorize_mat_es,                     & 
+       assemble_mat_es
 
 private
 
@@ -543,7 +544,126 @@ subroutine delete_elliptic( es )
   SLL_DEALLOCATE(es%tab_index_coeff2,ierr)
 
 end subroutine delete_elliptic
+
+!> @brief Assemble the matrix for elliptic solver.
+!> @details To have the function phi such that 
+!> \f[
+!>  \nabla \cdot ( A \nabla \phi ) + B \nabla \phi + C \phi = \rho
+!> \f]
+!>  where A is a matrix of functions , B a vectorial function,
+!>  and  C and rho a scalar function.  
+!>  A, B, C, rho can be discret or analytic. 
+!>  phi is given with a B-spline interpolator  
+!> 
+!> The parameters are
+!> @param es the type general_coordinate_elliptic_solver
+!> @param[in] a11_field_mat the field corresponding to the matrix coefficient A(1,1)
+!> @param[in] a12_field_mat the field corresponding to the matrix coefficient A(1,2)
+!> @param[in] a21_field_mat the field corresponding to the matrix coefficient A(2,1)
+!> @param[in] a22_field_mat the field corresponding to the matrix coefficient A(2,2)
+!> @param[in] b1_field_vect the field corresponding to the vector coefficient B(1)
+!> @param[in] b2_field_vect the field corresponding to the vector coefficient B(2)
+!> @param[in] c_field the field corresponding to the coefficient B(1) of the scalar C
+!> @return the type general_coordinate_elliptic_solver contains the matrix 
+!> to solve the equation
+
+subroutine assemble_mat_es(&
+       es, &
+       a11_field_mat, &
+       a12_field_mat,&
+       a21_field_mat,&
+       a22_field_mat,&
+       b1_field_vect,&
+       b2_field_vect,&
+       c_field)
+  type(general_coordinate_elliptic_solver),intent(inout) :: es
+
+  class(sll_scalar_field_2d_base), pointer :: a11_field_mat
+  class(sll_scalar_field_2d_base), pointer :: a12_field_mat
+  class(sll_scalar_field_2d_base), pointer :: a21_field_mat
+  class(sll_scalar_field_2d_base), pointer :: a22_field_mat
+  class(sll_scalar_field_2d_base), pointer :: b1_field_vect
+  class(sll_scalar_field_2d_base), pointer :: b2_field_vect
+  class(sll_scalar_field_2d_base), pointer :: c_field
+  sll_int32 :: i
+  sll_int32 :: j
+  sll_int32 :: cell_index
+  sll_real64 :: eta1
+  sll_real64 :: eta2
+  sll_int32 :: num_pts_g1
+  sll_int32 :: num_pts_g2
+  sll_real64, dimension(es%spline_degree1+1,es%spline_degree1+1) :: work1
+  sll_real64, dimension(es%spline_degree2+1,es%spline_degree2+1) :: work2
+  sll_real64, dimension(es%spline_degree1+1,2) :: dbiatx1
+  sll_real64, dimension(es%spline_degree2+1,2) :: dbiatx2
+  sll_int32 :: local_spline_index2
+  sll_int32 :: ii
+  sll_int32 :: jj
+  sll_real64 :: gpt1
+  sll_real64 :: gpt2
+  sll_real64 :: wgpt1
+  sll_real64 :: wgpt2
+  sll_real64 :: gtmp2
+  sll_real64 :: val_c
+  sll_real64 :: val_a11
+  sll_real64 :: val_a12
+  sll_real64 :: val_a21
+  sll_real64 :: val_a22
+  sll_real64 :: val_b1=0
+  sll_real64 :: val_b1_der1=0
+  sll_real64 :: val_b1_der2=0
+  sll_real64 :: val_b2=0
+  sll_real64 :: val_b2_der1=0
+  sll_real64 :: val_b2_der2=0
+  sll_real64, dimension(2,2) :: jac_mat
+
+
   
+  num_pts_g1 = size(es%gauss_pts1,2)
+  num_pts_g2 = size(es%gauss_pts2,2)
+  
+  do j=1,es%num_cells2
+    do i=1,es%num_cells1          
+      cell_index = i+es%num_cells1*(j-1)
+      eta1  = es%eta1_min + real(i-1,f64)*es%delta_eta1
+      eta2  = es%eta2_min + real(j-1,f64)*es%delta_eta2
+      !local_spline_index2 = es%spline_degree2 + j
+
+      do jj=1,num_pts_g2
+        gpt2  = eta2  + 0.5_f64*es%delta_eta2 * ( es%gauss_pts2(1,jj) + 1.0_f64 )
+        !wgpt2 = 0.5_f64*es%delta_eta2*es%gauss_pts2(2,jj)
+!        call bsplvd( &
+!          es%knots2, &
+!          es%spline_degree2+1, &
+!          gtmp2, &
+!          local_spline_index2, &
+!          work2, &
+!          dbiatx2, &
+!          2)
+        do ii=1,num_pts_g1
+!		  gpt1  = eta1  + 0.5_f64*es%delta_eta1 * ( es%gauss_pts1(1,ii) + 1.0_f64 )
+!		  val_c        = c_field%value_at_point(gpt1,gpt2)
+!		  val_a11      = a11_field_mat%value_at_point(gpt1,gpt2)
+!		  val_a12      = a12_field_mat%value_at_point(gpt1,gpt2)
+!		  val_a21      = a21_field_mat%value_at_point(gpt1,gpt2)
+!		  val_a22      = a22_field_mat%value_at_point(gpt1,gpt2)
+!		  val_b1       = b1_field_vect%value_at_point(gpt1,gpt2)
+!		  val_b1_der1  = b1_field_vect%first_deriv_eta1_value_at_point(gpt1,gpt2)
+!		  val_b1_der2  = b1_field_vect%first_deriv_eta2_value_at_point(gpt1,gpt2)
+!		  val_b2       = b2_field_vect%value_at_point(gpt1,gpt2)
+!		  val_b2_der1  = b2_field_vect%first_deriv_eta1_value_at_point(gpt1,gpt2)
+!		  val_b2_der2  = b2_field_vect%first_deriv_eta2_value_at_point(gpt1,gpt2)
+          jac_mat(:,:) = c_field%get_jacobian_matrix(gpt1,gpt2)
+        enddo
+      enddo  
+    enddo
+  enddo
+  
+  print *,'#not implemented for the moment'
+  
+end subroutine assemble_mat_es
+
+
 !> @brief Assemble the matrix for elliptic solver.
 !> @details To have the function phi such that 
 !> \f[
