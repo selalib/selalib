@@ -395,8 +395,9 @@ contains
         eta2_max )
         
     ! compute matrix the field
-    print *,'Compute matrix the field'
+    print *,'#begin factorize_mat_es'
     call factorize_mat_es(&
+!    call assemble_mat_es(&
         poisson%elliptic_solver, &
         poisson%a11_field, &
         poisson%a12_field,&
@@ -405,6 +406,8 @@ contains
         poisson%b1_field,&
         poisson%b2_field,&
         poisson%c_field)    
+    print *,'#end factorize_mat_es'
+    stop
         
  end subroutine initialize_poisson_2d_elliptic_solver
  
