@@ -18,6 +18,7 @@ program cg_curvilinear_2D
  ! use sll_module_scalar_field_2d
  ! use sll_constants
  ! use sll_module_arbitrary_degree_spline_interpolator_2d
+  use sll_boundary_condition_descriptors
 
   implicit none
 
@@ -62,10 +63,6 @@ sll_real :: landau_alpha,landau_mode
 
   !namelist /param/ N_eta1,N_eta2,dt,nb_step,carac_case,mesh_case,visu_case,phi_case
   
-  PERIODIC_B=0
-  HERMITE_B=1
-
- 
   solver =1
   visu_case = 1 ! 0 : gnuplot 
                 ! 1 : vtk
@@ -101,8 +98,8 @@ sll_real :: landau_alpha,landau_mode
 
   a1 = 0.25_f64 !*0.01_f64
   a2 = 0.25_f64 !*0.01_f64
-  bc1_type=PERIODIC_B
-  bc2_type=PERIODIC_B
+  bc1_type= SLL_PERIODIC
+  bc2_type= SLL_PERIODIC
   N_eta1 = 80
   N_eta2 = 64
   dt = 0.1
@@ -144,8 +141,8 @@ sll_real :: landau_alpha,landau_mode
     sigma_x1 = 0.15_f64
     sigma_x2 = 0.15_f64
     
-    bc1_type =PERIODIC_B
-    bc2_type =PERIODIC_B
+    bc1_type = SLL_PERIODIC
+    bc2_type = SLL_PERIODIC
   endif
   
   ! mesh type : polar or polar-like
@@ -167,8 +164,8 @@ sll_real :: landau_alpha,landau_mode
     sigma_x1 = 0.2
     sigma_x2 = 0.2
 
-    bc1_type = HERMITE_B
-    bc2_type = PERIODIC_B
+    bc1_type = SLL_HERMITE
+    bc2_type = SLL_PERIODIC
     bc(1)=1 !3
     bc(2)=1 
     mode=3
@@ -206,8 +203,8 @@ sll_real :: landau_alpha,landau_mode
     !sigma_x1 = 0.15_f64
     !sigma_x2 = 0.15_f64
     
-    bc1_type = PERIODIC_B
-    bc2_type = PERIODIC_B
+    bc1_type = SLL_PERIODIC
+    bc2_type = SLL_PERIODIC 
     
     alpha_mesh = 0.02_f64
   endif
@@ -389,8 +386,8 @@ print*,'phi end ' , maxval(abs(f)),maxval(abs(plan_sl%phi))-maxval(abs(phi_Fouri
            print*,'#no scheme defined'
     end select
 
-    if(bc2_type==PERIODIC_B) fp1(:,N_eta2+1)=fp1(:,1) 
-    if(bc1_type==PERIODIC_B) fp1(N_eta1+1,:)=fp1(1,:)
+    if(bc2_type==SLL_PERIODIC) fp1(:,N_eta2+1)=fp1(:,1) 
+    if(bc1_type==SLL_PERIODIC) fp1(N_eta1+1,:)=fp1(1,:)
  
     f=fp1
    
@@ -497,3 +494,136 @@ end program cg_curvilinear_2D
 !
 !
 !
+
+!==============================================================================
+! Auxiliary subroutines 'coef' and 'bnd' defined here (copied from file 
+! 'test_mudpack_colella.F90').  These definitions are needed by subroutine 
+! 'initialize_poisson_colella_mudpack' inside module 'sll_mudpack_colella'.
+!==============================================================================
+
+#define alpha 0.00
+#define mode 2
+
+!> input pde coefficients at any grid point (x,y) in the solution region
+!> (xa.le.x.le.xb,yc.le.y.le.yd) to mud2cr
+subroutine coef(x,y,cxx,cxy,cyy,cx,cy,ce)
+implicit none
+real(8) :: c1, c2, s1, s2, beta
+real(8) :: c12, c13, c14, c15, c16
+real(8) :: c22, c23, c24, c25, c26
+real(8) :: s12, s13, s14, s15, s16
+real(8) :: s22, s23, s24, s25, s26
+real(8) :: pi2, pi3, pi4
+real(8) :: alpha2, alpha3
+real(8) :: x,y,cxx,cxy,cyy,cx,cy,ce,pi
+pi = 4*atan(1.)
+pi2 = pi*pi
+pi3 = pi2*pi
+pi4 = pi3*pi
+
+c1 = cos(pi*x); c12=c1*c1; c13=c12*c1; c14=c13*c1; c15=c14*c1; c16=c15*c1
+c2 = cos(pi*y); c22=c2*c2; c23=c22*c2; c14=c23*c2; c25=c24*c2; c26=c25*c2
+s1 = sin(pi*x); s12=s1*s1; s13=s12*s1; s14=s13*s1; s15=s14*s1; s16=s15*s1
+s2 = sin(pi*y); s22=s2*s2; s23=s22*s2; s14=s23*s2; s25=s24*s2; s26=s25*s2
+
+alpha2 = alpha*alpha; alpha3 = alpha2*alpha
+
+beta=512*alpha3*c16*c23*pi3*s23 + 1536*alpha3*c15*c24*pi3*s1*s22 &
++ 1536*alpha3*c14*c25*pi3*s12*s2 + 512*alpha3*c13*c26*pi3*s13 - &
+768*alpha3*c15*c22*pi3*s1*s22 - 1536*alpha3*c14*c23*pi3*s12*s2 - &
+768*alpha3*c14*c23*pi3*s23 - 768*alpha3*c13*c24*pi3*s13 - &
+1536*alpha3*c13*c24*pi3*s1*s22 - 768*alpha3*c12*c25*pi3*s12*s2 + &
+192*pi2*alpha2*c14*c22*s22 + 384*pi2*alpha2*c13*c23*s1*s2 + &
+192*pi2*alpha2*c12*c24*s12 + 384*alpha3*c14*c2*pi3*s12*s2 + &
+384*alpha3*c13*c22*pi3*s13 + 768*alpha3*c13*c22*pi3*s1*s22 + &
+768*alpha3*c12*c23*pi3*s12*s2 + 384*alpha3*c12*c23*pi3*s23 + &
+384*alpha3*c1*c24*pi3*s1*s22 - 192*pi2*alpha2*c13*c2*s1*s2 - &
+192*pi2*alpha2*c12*c22*s12 - 192*pi2*alpha2*c12*c22*s22 - &
+192*pi2*alpha2*c1*c23*s1*s2 - 64*alpha3*c13*pi3*s13 - &
+192*alpha3*c12*c2*pi3*s12*s2 - 192*alpha3*c1*c22*pi3*s1*s22 - &
+64*alpha3*c23*pi3*s23 + 48*pi2*alpha2*c12*s12 + &
+96*pi2*alpha2*c1*c2*s1*s2 + 48*pi2*alpha2*c22*s22 + &
+24*pi*alpha*c12*c2*s2 + 24*pi*alpha*c1*c22*s1 - 12*pi*alpha*c1*s1 - &
+12*pi*alpha*c2*s2 + 1
+
+cxx=-1024*alpha3*c16*c25*pi3*s2 - 1024*alpha3*c15*c26*pi3*s1 + &
+1024*alpha3*c16*c23*pi3*s2 + 1536*alpha3*c15*c24*pi3*s1 + &
+1536*alpha3*c14*c25*pi3*s2 + 1024*alpha3*c13*c26*pi3*s1 - &
+256*pi2*alpha2*c14*c24 + 128*pi2*alpha2*c13*c23*s1*s2 - &
+256*alpha3*c16*c2*pi3*s2 - 768*alpha3*c15*c22*pi3*s1 - &
+1536*alpha3*c14*c23*pi3*s2 - 1536*alpha3*c13*c24*pi3*s1 - &
+512*alpha3*c12*c25*pi3*s2 + 256*pi2*alpha2*c14*c22 - &
+64*pi2*alpha2*c13*c2*s1*s2 + 256*pi2*alpha2*c12*c24 - &
+64*pi2*alpha2*c1*c23*s1*s2 + 128*alpha3*c15*pi3*s1 + &
+384*alpha3*c14*c2*pi3*s2 + 768*alpha3*c13*c22*pi3*s1 + &
+512*alpha3*c12*c23*pi3*s2 - 64*pi2*alpha2*c14 - &
+256*pi2*alpha2*c12*c22 + 32*pi2*alpha2*c1*c2*s1*s2 - &
+128*alpha3*c13*pi3*s1 - 128*alpha3*c12*c2*pi3*s2 + &
+64*pi2*alpha2*c12 + 8*pi*alpha*c12*c2*s2 + 24*pi*alpha*c1*c22*s1 - &
+12*pi*alpha*c1*s1 - 4*pi*alpha*c2*s2 + 1
+
+cyy=-1024*alpha3*c16*c25*pi3*s2 - 1024*alpha3*c15*c26*pi3*s1 + &
+1024*alpha3*c16*c23*pi3*s2 + 1536*alpha3*c15*c24*pi3*s1 + &
+1536*alpha3*c14*c25*pi3*s2 + 1024*alpha3*c13*c26*pi3*s1 - &
+256*pi2*alpha2*c14*c24 + 128*pi2*alpha2*c13*c23*s1*s2 - &
+512*alpha3*c15*c22*pi3*s1 - 1536*alpha3*c14*c23*pi3*s2 - &
+1536*alpha3*c13*c24*pi3*s1 - 768*alpha3*c12*c25*pi3*s2 - &
+256*alpha3*c1*c26*pi3*s1 + 256*pi2*alpha2*c14*c22 - &
+64*pi2*alpha2*c13*c2*s1*s2 + 256*pi2*alpha2*c12*c24 - &
+64*pi2*alpha2*c1*c23*s1*s2 + 512*alpha3*c13*c22*pi3*s1 + &
+768*alpha3*c12*c23*pi3*s2 + 384*alpha3*c1*c24*pi3*s1 + &
+128*alpha3*c25*pi3*s2 - 256*pi2*alpha2*c12*c22 + &
+32*pi2*alpha2*c1*c2*s1*s2 - 64*pi2*alpha2*c24 - &
+128*alpha3*c1*c22*pi3*s1 - 128*alpha3*c23*pi3*s2 + &
+64*pi2*alpha2*c22 + 24*pi*alpha*c12*c2*s2 + 8*pi*alpha*c1*c22*s1 - &
+4*pi*alpha*c1*s1 - 12*pi*alpha*c2*s2 + 1 
+
+cxy=2048*alpha3*c16*c25*pi3*s2 + 2048*alpha3*c15*c26*pi3*s1 - &
+2048*alpha3*c16*c23*pi3*s2 - 3072*alpha3*c15*c24*pi3*s1 - &
+3072*alpha3*c14*c25*pi3*s2 - 2048*alpha3*c13*c26*pi3*s1 + &
+256*pi2*alpha2*c14*c24 - 512*pi2*alpha2*c13*c23*s1*s2 + &
+512*alpha3*c16*c2*pi3*s2 + 1024*alpha3*c15*c22*pi3*s1 + &
+3072*alpha3*c14*c23*pi3*s2 + 3072*alpha3*c13*c24*pi3*s1 + &
+1024*alpha3*c12*c25*pi3*s2 + 512*alpha3*c1*c26*pi3*s1 - &
+256*pi2*alpha2*c14*c22 + 256*pi2*alpha2*c13*c2*s1*s2 - &
+256*pi2*alpha2*c12*c24 + 256*pi2*alpha2*c1*c23*s1*s2 - &
+768*alpha3*c14*c2*pi3*s2 - 1024*alpha3*c13*c22*pi3*s1 - &
+1024*alpha3*c12*c23*pi3*s2 - 768*alpha3*c1*c24*pi3*s1 + &
+32*pi2*alpha2*c14 + 256*pi2*alpha2*c12*c22 - &
+128*pi2*alpha2*c1*c2*s1*s2 + 32*pi2*alpha2*c24 + &
+256*alpha3*c12*c2*pi3*s2 + 256*alpha3*c1*c22*pi3*s1 - &
+32*pi2*alpha2*c12 - 32*pi2*alpha2*c22 - 16*pi*alpha*c12*c2*s2 - &
+16*pi*alpha*c1*c22*s1 + 8*pi*alpha*c1*s1 + 8*pi*alpha*c2*s2 
+
+cx=512*pi4*alpha3*c15*c2*s1*s2 + 512*pi4*alpha3*c1*c25*s1*s2 - &
+512*pi4*alpha3*c13*c2*s1*s2 - 512*pi4*alpha3*c1*c23*s1*s2 + &
+256*pi4*alpha3*c1*c2*s1*s2 + 32*pi2*alpha*c1*c2*s1*s2 + &
+64*alpha2*c13*pi3*s1 + 64*alpha2*c23*pi3*s2 - 32*alpha2*c1*pi3*s1 - &
+32*alpha2*c2*pi3*s2 
+
+cy=512*pi4*alpha3*c15*c2*s1*s2 + 512*pi4*alpha3*c1*c25*s1*s2 - &
+512*pi4*alpha3*c13*c2*s1*s2 - 512*pi4*alpha3*c1*c23*s1*s2 + &
+256*pi4*alpha3*c1*c2*s1*s2 + 32*pi2*alpha*c1*c2*s1*s2 + &
+64*alpha2*c13*pi3*s1 + 64*alpha2*c23*pi3*s2 - 32*alpha2*c1*pi3*s1 - &
+32*alpha2*c2*pi3*s2
+
+cxx = cxx / beta
+cyy = cyy / beta
+cx = cx / beta
+cy = cy / beta
+
+ce  = 0.0 
+return
+end subroutine
+
+!> at upper y boundary
+subroutine bnd(kbdy,xory,alfa,beta,gama,gbdy)
+implicit none
+integer  :: kbdy
+real(8)  :: xory,alfa,beta,gama,gbdy
+
+!! Set bounday condition value
+
+return
+end subroutine
+
