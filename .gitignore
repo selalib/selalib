@@ -122,3 +122,5 @@ prototype/doc/selalib_manual.pdf
 *.gz
 
 *.toc
+
+prototype/release_build/*
