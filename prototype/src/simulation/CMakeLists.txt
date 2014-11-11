@@ -122,7 +122,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
 
 #PN   ADD_SIMULATION(4d_vp_pic_cartesian       4d_vp_pic_cartesian)
 
-   ADD_SIMULATION(2d_guiding_center_pic_cartesian 2d_guiding_center_pic_cartesian)
+#SH   ADD_SIMULATION(2d_guiding_center_pic_cartesian 2d_guiding_center_pic_cartesian)
 
 
 #   ADD_SIMULATION(4d_mixed_qns_cartesian 4d_mixed_qns_cartesian)
