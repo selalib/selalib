@@ -5,6 +5,10 @@ module sll_module_deboor_splines_1d
 #include "sll_utilities.h"
 #include "sll_assert.h"
 implicit none 
+
+private
+
+public splint_der, bvalue, spli1d_der, spli1d_dir, spli1d_per, interv, bsplvd
   
 contains
   
