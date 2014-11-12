@@ -110,8 +110,8 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
    #and simulation_MYSIM.F90
    #ADD_SIMULATION(MYMETHOD MYSIM)
 
-   ADD_SIMULATION(4d_qns_general    4d_qns_general)
-   #PN ADD_SIMULATION(4d_qns_general_multipatch    4d_qns_general_multipatch)
+#YG   ADD_SIMULATION(4d_qns_general    4d_qns_general)
+#PN   ADD_SIMULATION(4d_qns_general_multipatch    4d_qns_general_multipatch)
 
 #PN   ADD_SIMULATION(4d_DK_hybrid              4d_DK_hybrid)
 #PN   ADD_SIMULATION(4d_dk_polar               4d_drift_kinetic_polar)
