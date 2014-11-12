@@ -4,6 +4,9 @@ module sll_module_deboor_splines_1d
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
 #include "sll_assert.h"
+
+use banded_linear_system_solver
+
 implicit none 
 
 contains
@@ -935,13 +938,13 @@ subroutine splint( tau, gtau, t, n, k, bcoef )
   sll_int32                        :: jj
   sll_int32                        :: kpkm2
   sll_int32                        :: left
-  sll_real64, dimension((2*k-1)*n) :: q
+  sll_real64, dimension((2*k-1),n) :: q
   sll_real64                       :: taui
   sll_int32                        :: iflag
  
   kpkm2 = 2 * ( k - 1 )
   left = k
-  q(1:(2*k-1)*n) = 0.0_f64
+  q    = 0.0_f64
   !
   !  Loop over I to construct the N interpolation equations.
   !
@@ -1013,11 +1016,12 @@ subroutine splint( tau, gtau, t, n, k, bcoef )
     !    I -(LEFT+J)+2*K + ((LEFT+J)-K-1)*(2*K-1)
     !   = I-LEFT+1+(LEFT -K)*(2*K-1) + (2*K-2)*J
     
-    jj = i - left + 1 + ( left - k ) * ( k + k - 1 )
+    !jj = i - left + 1 + ( left - k ) * ( k + k - 1 )
        
     do j = 1, k
-      jj = jj + kpkm2
-      q(jj) = bcoef(j)
+    !  jj = jj + kpkm2
+    ! q(jj) = bcoef(j)
+      q(i-(left+j)+2*k,left+j-k) = bcoef(j)
     end do
        
   end do
@@ -1149,11 +1153,11 @@ subroutine splint_der(tau,gtau,tau_der,gtau_der,t,n,m,k,bcoef_spline)
   sll_real64, dimension(k,2)           :: bcoef_der
   sll_int32                            :: iflag
   
-  kpkm2              = 2*(k-1)
-  left               = k
-  q(1:(2*k-1)*(n+m)) = 0.0_f64
-  a(1:k,1:k)         = 0.0_f64
-  bcoef_der(1:k,1:2) = 0.0_f64
+  kpkm2     = 2*(k-1)
+  left      = k
+  q         = 0.0_f64
+  a         = 0.0_f64
+  bcoef_der = 0.0_f64
 
   ! we must suppose that m is <= than n 
   SLL_ASSERT(m <= n)
@@ -1208,13 +1212,18 @@ subroutine splint_der(tau,gtau,tau_der,gtau_der,t,n,m,k,bcoef_spline)
     !    I -(LEFT+J)+2*K + ((LEFT+J)-K-1)*(2*K-1)
     !    =  begin_ligne +  (begin_col -1) * number_coef_different_0
     !   = I-LEFT+1+(LEFT -K)*(2*K-1) + (2*K-2)*J
-    !
+    
     jj = i - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
        
     do j = 1, k
       jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
-      q(jj) = bcoef(j)
+      !q(jj) = bcoef(j)
+      q(i-(left+j)+2*k+l-1,left+j-k) = bcoef(j)
     end do
+
+    !do i = 1, 2*k-1
+    !   q(i-(left+j)+2*k,(left-k+j) = bcoef(left-k+j)
+    !end do
 
     bcoef_spline(i+l-1) = gtau(i)
 
@@ -1228,7 +1237,8 @@ subroutine splint_der(tau,gtau,tau_der,gtau_der,t,n,m,k,bcoef_spline)
        
       do j = 1, k
         jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
-        q(jj) = bcoef_der(j,2)
+        !q(jj) = bcoef_der(j,2)
+        q(i-(left+j)+2*k+l-1,left+j-k) = bcoef_der(j,2)
       end do
       bcoef_spline(i+ l-1) = gtau_der(l-1)
     end if
@@ -1247,7 +1257,8 @@ subroutine splint_der(tau,gtau,tau_der,gtau_der,t,n,m,k,bcoef_spline)
        
     do j = 1, k
       jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
-      q(jj) = bcoef_der(j,2)
+      !q(jj) = bcoef_der(j,2)
+      q(i-(left+j)+2*k+l-1,left+j-k) = bcoef_der(j,2)
     end do
     bcoef_spline(n+ l-1) = gtau_der(l)
     l = l + 1
@@ -1259,7 +1270,8 @@ subroutine splint_der(tau,gtau,tau_der,gtau_der,t,n,m,k,bcoef_spline)
        
   do j = 1, k
     jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
-    q(jj) = bcoef(j)
+    !q(jj) = bcoef(j)
+    q(i-(left+j)+2*k+l-1,left+j-k) = bcoef(j)
   end do
   bcoef_spline(n+l-1) = gtau(n)
   !
