@@ -483,13 +483,13 @@ subroutine spli2d_custom_derder ( nx,       &
     
   do j = 1, ny
        
-    call splint_der( taux, g(:,j), taux_der, g_der1(:,j), tx, nx, nx_der, kx, tmp(j,:))
+    call splint_der(taux,g(:,j),taux_der,g_der1(:,j),tx,nx,nx_der,kx,tmp(j,:))
        
   end do
 
   do i = 1, nx+nx_der
        
-    call splint_der( tauy, tmp(:,i), tauy_der, g_der2(:,i), ty, ny, ny_der, ky, bcoef(i,:))
+    call splint_der(tauy,tmp(:,i),tauy_der,g_der2(:,i),ty,ny,ny_der,ky,bcoef(i,:))
        
   end do
     

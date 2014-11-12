@@ -773,11 +773,8 @@ sll_real64, intent(in)    :: taux(:)  !< Points positions
 sll_real64, intent(in)    :: g(:)     !< Data values at points
 sll_real64, intent(inout) :: bcoef(:) !< Spline coefficients
 sll_real64, intent(inout) :: tx(:)    !< Knots positions
+sll_int32                 :: i
 
-sll_int32 :: i
-
-SLL_ASSERT ( L /= 0.0_8 )
-  
 tx(1:kx)       = taux(1)
 tx(nx+1:nx+kx) = taux(nx)
   
@@ -819,7 +816,6 @@ subroutine spli1d_der( nx,       &
   sll_real64, intent(inout) :: bcoef(:)    !< Splines coefficients
   sll_real64, intent(inout) :: tx(:)       !< Knots positions
   
-  tx = 0.0_f64
   tx(1:kx) = taux(1)
   tx(nx+nx_der+1:nx+nx_der+kx) = taux(nx)
   
