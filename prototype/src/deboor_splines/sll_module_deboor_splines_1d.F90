@@ -754,7 +754,7 @@ else
 end if
     
 call splint(taux, g, tx, nx, kx, bcoef)
-  
+
 end subroutine spli1d_dir
 
 !> @brief
@@ -1124,15 +1124,15 @@ end subroutine splint
 
 subroutine splint_der(tau,gtau,tau_der,gtau_der,t,n,m,k,bcoef_spline)
     
-  sll_real64, intent(in)     :: tau(:)
-  sll_real64, intent(in)     :: gtau(:)
-  sll_int32,  intent(in)     :: tau_der(:)
-  sll_real64, intent(in)     :: gtau_der(:) 
-  sll_real64, intent(in)     :: t(:)
-  sll_int32,  intent(in)     :: n
-  sll_int32,  intent(in)     :: m
-  sll_int32,  intent(in)     :: k
-  sll_real64, intent(inout)  :: bcoef_spline(n+m) 
+  sll_real64, intent(in)   :: tau(:)
+  sll_real64, intent(in)   :: gtau(:)
+  sll_int32,  intent(in)   :: tau_der(:)
+  sll_real64, intent(in)   :: gtau_der(:) 
+  sll_real64, intent(in)   :: t(:)
+  sll_int32,  intent(in)   :: n
+  sll_int32,  intent(in)   :: m
+  sll_int32,  intent(in)   :: k
+  sll_real64, intent(inout):: bcoef_spline(:) 
 
   sll_real64, dimension(n+m)           :: bcoef
   sll_int32                            :: i
@@ -1142,7 +1142,7 @@ subroutine splint_der(tau,gtau,tau_der,gtau_der,t,n,m,k,bcoef_spline)
   sll_int32                            :: jj
   sll_int32                            :: kpkm2
   sll_int32                            :: left
-  sll_real64, dimension((2*k-1)*(n+m)) :: q
+  sll_real64, dimension((2*k-1),(n+m)) :: q
   sll_real64                           :: taui
   sll_real64                           :: taui_der
   sll_real64, dimension(k,k)           :: a
