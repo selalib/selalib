@@ -171,6 +171,7 @@ contains
     sll_real64 :: alpha3
     sll_real64 :: alpha4
     sll_real64 :: alpha5
+    sll_real64 :: num_sides
     
      !initial_function
     character(len=256) :: initial_function_case
@@ -262,7 +263,8 @@ contains
       alpha2  , &
       alpha3  , &
       alpha4  , & 
-      alpha5
+      alpha5, &
+      num_sides
 
     namelist /initial_function/ &
       type_var, &
@@ -324,6 +326,7 @@ contains
     alpha3 = 0._f64
     alpha4 = 0._f64
     alpha5 = 0._f64
+    num_sides = 6._f64
     params_mesh_DSG = (/ alpha1, alpha2, alpha3,alpha4,alpha5,eta1_min,eta2_min,eta1_max,eta2_max/)
     !initial function
     type_var = "SLL_X_Y"
@@ -438,6 +441,9 @@ contains
       case ("SLL_DIRICHLET")
         print*,"#bc_eta1_left = SLL_DIRICHLET"  
         sim%bc_eta1_left = SLL_DIRICHLET
+      case ("SLL_NEUMANN")
+        print*,"#bc_eta1_left = SLL_NEUMANN"  
+        sim%bc_eta1_left = SLL_NEUMANN
       case default
         print *,'#bad bc_eta1_left',bc_eta1_left
         print *,'#not implemented'
@@ -562,14 +568,20 @@ contains
     end select
     
     select case (mesh_case)
+      case ("SLL_CARTESIAN_MESH")
+        eta1_max = eta1_max
+        eta2_max = eta2_max
       case ("SLL_LANDAU_MESH")
         eta1_max = 2._f64 *sll_pi/kmode_eta1
         eta2_max = 2._f64 *sll_pi/kmode_eta2
       case ("SLL_POLAR_MESH")
         eta2_max = 2._f64*sll_pi
-      case ("SLL_HEXAGONAL_MESH")
+      case ("SLL_POLAR_SHEAR_MESH")
         eta2_max = 2._f64*sll_pi
-        params_mesh = (/alpha1,0._f64,0._f64,0._f64/)        
+        params_mesh = (/alpha1,alpha2,0._f64,0._f64/)
+      case ("SLL_POLYGONAL_MESH")
+        eta2_max = 2._f64*sll_pi
+        params_mesh = (/alpha1,num_sides,alpha2,0._f64/)        
       case ("SLL_COLLELA_MESH")  
         eta1_max = 2._f64*sll_pi/kmode_eta1
         eta2_max = 2._f64*sll_pi/kmode_eta2
@@ -607,6 +619,17 @@ contains
       eta2_max ) 
       
     select case (mesh_case)
+      case ("SLL_CARTESIAN_MESH")       
+        sim%transformation => new_coordinate_transformation_2d_analytic( &
+         "analytic_identity_transformation", &
+         sim%mesh_2d, &
+         identity_x1, &
+         identity_x2, &
+         identity_jac11, &
+         identity_jac12, &
+         identity_jac21, &
+         identity_jac22, &
+         params_mesh   )  
       case ("SLL_LANDAU_MESH")       
         sim%transformation => new_coordinate_transformation_2d_analytic( &
          "analytic_identity_transformation", &
@@ -629,16 +652,27 @@ contains
          polar_jac21, &
          polar_jac22, &
          params_mesh  )     
-      case ("SLL_HEXAGONAL_MESH") 
+      case ("SLL_POLAR_SHEAR_MESH") 
         sim%transformation => new_coordinate_transformation_2d_analytic( &
-         "analytic_hexagonal_transformation", &
+         "analytic_polar_shear_transformation", &
          sim%mesh_2d, &
-         hexagonal_x1, &
-         hexagonal_x2, &
-         hexagonal_jac11, &
-         hexagonal_jac12, &
-         hexagonal_jac21, &
-         hexagonal_jac22, &
+         polar_shear_x1, &
+         polar_shear_x2, &
+         polar_shear_jac11, &
+         polar_shear_jac12, &
+         polar_shear_jac21, &
+         polar_shear_jac22, &
+         params_mesh  )     
+      case ("SLL_POLYGONAL_MESH") 
+        sim%transformation => new_coordinate_transformation_2d_analytic( &
+         "analytic_polygonal_transformation", &
+         sim%mesh_2d, &
+         polygonal_x1, &
+         polygonal_x2, &
+         polygonal_jac11, &
+         polygonal_jac12, &
+         polygonal_jac21, &
+         polygonal_jac22, &
          params_mesh  )     
       case ("SLL_COLLELA_MESH")
         sim%transformation => new_coordinate_transformation_2d_analytic( &
@@ -1322,6 +1356,7 @@ contains
 #ifndef NOHDF5
       if(modulo(step-1,sim%freq_diag)==0)then
         call plot_f_curvilinear(iplot,f,sim%mesh_2d,sim%transformation)
+        call plot_phi_curvilinear(iplot,phi,sim%mesh_2d,sim%transformation)
         iplot = iplot+1  
       endif            
 #endif  
@@ -1914,6 +1949,74 @@ contains
       error,file_id,"Node")
     call sll_xdmf_close(file_id,error)
   end subroutine plot_f_curvilinear
+
+
+  subroutine plot_phi_curvilinear(iplot,f,mesh_2d,transf)
+    use sll_xdmf
+    use sll_hdf5_io_serial
+    sll_int32 :: file_id
+    sll_int32 :: error
+    sll_real64, dimension(:,:), allocatable :: x1
+    sll_real64, dimension(:,:), allocatable :: x2
+    sll_int32 :: i, j
+    sll_int32, intent(in) :: iplot
+    character(len=4)      :: cplot
+    sll_int32             :: nnodes_x1, nnodes_x2
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
+    class(sll_coordinate_transformation_2d_base), pointer :: transf
+    sll_real64, dimension(:,:), intent(in) :: f
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_real64 ::  eta1_min, eta2_min
+    sll_real64 ::  eta1_max, eta2_max  
+    sll_real64 :: deta1
+    sll_real64 :: deta2
+    
+    
+    nnodes_x1 = mesh_2d%num_cells1+1
+    nnodes_x2 = mesh_2d%num_cells2+1
+    eta1_min = mesh_2d%eta1_min
+    eta1_max = mesh_2d%eta1_max
+    eta2_min = mesh_2d%eta2_min
+    eta2_max = mesh_2d%eta2_max
+    deta1 = mesh_2d%delta_eta1
+    deta2 = mesh_2d%delta_eta2
+    
+    !print *,'#maxf=',iplot,maxval(f),minval(f)
+    
+
+    
+    if (iplot == 1) then
+
+      SLL_ALLOCATE(x1(nnodes_x1,nnodes_x2), error)
+      SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
+      do j = 1,nnodes_x2
+        do i = 1,nnodes_x1
+          eta1 = eta1_min+real(i-1,f32)*deta1
+          eta2 = eta2_min+real(j-1,f32)*deta2
+          x1(i,j) = transf%x1(eta1,eta2)
+          x2(i,j) = transf%x2(eta1,eta2)
+        end do
+      end do
+      call sll_hdf5_file_create("curvilinear_mesh-x1.h5",file_id,error)
+      call sll_hdf5_write_array(file_id,x1,"/x1",error)
+      call sll_hdf5_file_close(file_id, error)
+      call sll_hdf5_file_create("curvilinear_mesh-x2.h5",file_id,error)
+      call sll_hdf5_write_array(file_id,x2,"/x2",error)
+      call sll_hdf5_file_close(file_id, error)
+      deallocate(x1)
+      deallocate(x2)
+
+    end if
+
+    call int2string(iplot,cplot)
+    call sll_xdmf_open("phi"//cplot//".xmf","curvilinear_mesh", &
+      nnodes_x1,nnodes_x2,file_id,error)
+    call sll_xdmf_write_array("phi"//cplot,f,"values", &
+      error,file_id,"Node")
+    call sll_xdmf_close(file_id,error)
+  end subroutine plot_phi_curvilinear
+
 
 #endif
 

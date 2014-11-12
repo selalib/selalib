@@ -188,6 +188,10 @@ subroutine initialize_general_elliptic_solver( &
  sll_int32 :: solution_size,i
  sll_int32 :: dim1, dim2
  sll_int32 :: num_pts_g1, num_pts_g2
+ 
+ sll_int32 :: bc_left_knots
+ 
+ bc_left_knots = bc_left
    
  es%total_num_splines_loc = (spline_degree1+1)*(spline_degree2+1)
  ! The total number of splines in a single direction is given by
@@ -285,6 +289,16 @@ subroutine initialize_general_elliptic_solver( &
    knots2_size = 2*spline_degree2+2
    vec_sz      = (num_cells1 + spline_degree1)*num_cells2
 
+ else if( (bc_left   == SLL_NEUMANN) .and. (bc_right == SLL_DIRICHLET) .and.&
+          (bc_bottom == SLL_PERIODIC)  .and. (bc_top == SLL_PERIODIC) ) then
+
+   es%total_num_splines1 = num_cells1 + spline_degree1 - 1
+   es%total_num_splines2 = num_cells2 
+   knots1_size = 2*spline_degree1+num_cells1+1
+   knots2_size = 2*spline_degree2+2
+   vec_sz      = (num_cells1 + spline_degree1)*num_cells2
+   bc_left_knots = SLL_DIRICHLET
+
  else if( (bc_left   == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
           (bc_bottom == SLL_DIRICHLET) .and. (bc_top   == SLL_DIRICHLET) ) then
 
@@ -331,7 +345,7 @@ subroutine initialize_general_elliptic_solver( &
    num_cells1,      &
    eta1_min,            &
    eta1_max,            &
-   bc_left,             &
+   bc_left_knots,       &
    bc_right,            &
    es%knots1 )
 
@@ -758,11 +772,16 @@ subroutine factorize_mat_es(&
   Masse_loc(:) = 0.0_f64
   Stiff_loc(:) = 0.0_f64
   Source_loc(:,:,:) = 0.0_f64
+  
+  print *,'#ok here'
 
   do j=1,es%num_cells2
     do i=1,es%num_cells1
           
       cell_index = i+es%num_cells1*(j-1)
+      
+   print *,'#ok here1'
+     
       call build_local_matrices( &
                es,               &
                cell_index,       &
@@ -786,6 +805,8 @@ subroutine factorize_mat_es(&
                S_b1_loc,         &
                S_b2_loc,         &
                Source_loc)
+  print *,'#ok here2'
+
 
       call local_to_global_matrices( &
                es,                   &
@@ -804,6 +825,7 @@ subroutine factorize_mat_es(&
                S_b2_loc,             &
                es%masse,             &
                es%stiff)
+  print *,'#ok here3'
           
     end do
   end do
@@ -834,9 +856,13 @@ subroutine factorize_mat_es(&
 !           es%total_num_splines1*es%total_num_splines2+1, &
 !           i)
 !    end do
+    print *,'#begin of sll_factorize_csr_matrix'
     call sll_factorize_csr_matrix(es%sll_csr_mat_with_constraint)
+    print *,'#end of sll_factorize_csr_matrix'
   else   
+    print *,'#begin of sll_factorize_csr_matrix'
     call sll_factorize_csr_matrix(es%sll_csr_mat)
+    print *,'#end of sll_factorize_csr_matrix'
   end if 
  
   
@@ -1034,6 +1060,9 @@ subroutine solve_general_coordinates_elliptic_eq( es, rho, phi)
   end select
 
   call solve_linear_system(es)
+  
+  
+  print *,'#solve_linear_system done'
     
   call  phi%interp_2d%set_coefficients( es%phi_vec)
 
@@ -1772,6 +1801,20 @@ subroutine solve_linear_system( es )
 
       end do
     end do
+
+  else if( (bc_left   == SLL_NEUMANN) .and. (bc_right == SLL_DIRICHLET) .and.&
+           (bc_bottom == SLL_PERIODIC)  .and. (bc_top   == SLL_PERIODIC) ) then
+     
+    do i = 1, es%total_num_splines1
+      do j = 1, es%total_num_splines2
+
+        elt1 = i + 1 + ( es%total_num_splines1 + 1 ) * (  j - 1)
+        elt  = i + es%total_num_splines1 * (  j - 1)
+        es%tmp_rho_vec( elt ) = es%rho_vec( elt1 )
+
+      end do
+    end do
+
      
   end if
 
