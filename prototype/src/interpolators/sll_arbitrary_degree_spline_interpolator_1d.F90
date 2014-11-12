@@ -36,8 +36,11 @@ implicit none
 private
 
 !> Class for arbitrary degree spline 1d interpolator
-type, public, extends(sll_interpolator_1d_base) :: sll_arbitrary_degree_spline_interpolator_1d
+type, public, extends(sll_interpolator_1d_base) :: &
+  sll_arbitrary_degree_spline_interpolator_1d
+
   private
+
   sll_real64, public, pointer :: bcoef(:)
   sll_int32                   :: num_pts
   sll_real64                  :: eta_min
@@ -806,9 +809,6 @@ function interpolate_derivative_ad1d( interpolator, eta1 ) result(val)
   sll_int32                    :: size_coeffs
   sll_real64                   :: res
 
-  SLL_ASSERT( eta1 .ge. interpolator%eta_min )
-  SLL_ASSERT( eta1 .le. interpolator%eta_max )
-
   size_coeffs = interpolator%size_coeffs
 
   res = eta1
@@ -828,11 +828,11 @@ function interpolate_derivative_ad1d( interpolator, eta1 ) result(val)
 
   end if
 
-  val = bvalue( interpolator%t(1:interpolator%size_t),     &
-                interpolator%bcoef(1:size_coeffs), &
-                size_coeffs,                               &
-                interpolator%spline_degree+1,              &
-                res,                                       &
+  val = bvalue( interpolator%t(1:interpolator%size_t), &
+                interpolator%bcoef(1:size_coeffs),     &
+                size_coeffs,                           &
+                interpolator%spline_degree+1,          &
+                res,                                   &
                 1 )
     
 end function interpolate_derivative_ad1d
