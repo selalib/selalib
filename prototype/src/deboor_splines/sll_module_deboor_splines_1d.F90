@@ -753,17 +753,8 @@ subroutine spli1d_der( nx,       &
   sll_int32,  intent(in)    :: taux_der(:) !< Node index to evaluate derivative
   sll_real64, intent(in)    :: g_der(:)    !< Values of data derivatives
   sll_real64, intent(inout) :: bcoef(:)    !< Splines coefficients
-  sll_real64, intent(inout) :: tx(:)       !< Knots positions
+  sll_real64, intent(in) :: tx(:)       !< Knots positions
   
-  tx(1:kx) = taux(1)
-  tx(nx+nx_der+1:nx+nx_der+kx) = taux(nx)
-  
-  if (nx+nx_der+kx == nx + 2*(kx-1)) then
-    tx(kx+1:nx+nx_der) = taux(2:nx-1)
-  else
-    SLL_WARNING('problem with construction of knots')
-  end if
-
   call splint_der ( taux,     &
                     g,        &
                     taux_der, &

@@ -223,19 +223,29 @@ subroutine initialize_ad1d_interpolator( interpolator, &
 
   SLL_CLEAR_ALLOCATE(interpolator%t(1:num_pts*num_pts),ierr)
 
-  interpolator%t(1:spline_degree+1)       = eta_min
+  interpolator%t(1:spline_degree+1)                 = eta_min
   interpolator%t(num_pts+1:num_pts+spline_degree+1) = eta_max
   
-  if (mod(spline_degree,2) == 0) then
-    do i = spline_degree+2, num_pts
-      interpolator%t(i) = interpolator%eta(i-(spline_degree+1)/2) 
-    end do
+  if (bc_selector > 9) then
+
+    interpolator%t(1:spline_degree+1) = eta_min
+    interpolator%t(num_points+2+1:num_points+nx_der+spline_degree+1) = eta_max
+    interpolator%t(spline_degree+2:num_points+nx_der) = interpolator%eta(2:num_points-1)
+
   else
-    do i = spline_degree+2, num_pts
-      interpolator%t(i) = 0.5*(interpolator%eta(i-(spline_degree)/2) &
-                              +interpolator%eta(i-1-(spline_degree)/2))
-    end do
+
+    if (mod(spline_degree,2) == 0) then
+      do i = spline_degree+2, num_pts
+        interpolator%t(i) = interpolator%eta(i-(spline_degree+1)/2) 
+      end do
+    else
+      do i = spline_degree+2, num_pts
+        interpolator%t(i) = 0.5*(interpolator%eta(i-(spline_degree)/2) &
+                                +interpolator%eta(i-1-(spline_degree)/2))
+      end do
+    end if
   end if
+ 
 end subroutine initialize_ad1d_interpolator
 
 
@@ -359,7 +369,6 @@ subroutine compute_interpolants_ad1d( interpolator,    &
                                    data_array_derivative,               \
                                    interpolator%bcoef(1:sz+sz_deriv),   \
                                    interpolator%t(1:sz+order+sz_deriv)) \
-
 
   select case (interpolator%bc_selector)
 
