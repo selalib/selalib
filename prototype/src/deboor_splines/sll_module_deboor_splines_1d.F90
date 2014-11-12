@@ -730,67 +730,6 @@ function bvalue( t, bcoef, n, k, x, jderiv ) result(res)
 end function bvalue
   
   
-!> Compute interpolanats for Dirichlet boundar conditions
-subroutine spli1d_dir(nx, kx, taux, g, bcoef, tx)
-
-sll_int32               , intent(in)    :: nx    !< number of points
-sll_int32               , intent(in)    :: kx    !< number of knots
-sll_real64, dimension(:), intent(in)    :: taux  !< knots sequence
-sll_real64, dimension(:), intent(in)    :: g     !< data ordinates
-sll_real64, dimension(:), intent(inout) :: bcoef !< B-splines
-sll_real64, dimension(:), intent(inout) :: tx    !< Knots positions
-sll_int32                               :: i
-    
-    
-! *** set up knots and interpolate between knots
-tx(1:kx)       = taux(1)
-tx(nx+1:nx+kx) = taux(nx)
-  
-if (mod(kx,2) == 0) then
-  do i = kx+1, nx
-    tx(i) = taux(i-kx/2) 
-  end do
-else
-  do i = kx+1, nx
-    tx(i) = 0.5*(taux(i-(kx-1)/2)+taux(i-1-(kx-1)/2))
-  end do
-end if
-    
-call splint(taux, g, tx, nx, kx, bcoef)
-
-end subroutine spli1d_dir
-
-!> @brief
-!> Compute interpolants for periodic BC
-!> @details
-!> Construct knots and call De Boor routine splint
-subroutine spli1d_per( L, nx, kx, taux, g, bcoef, tx)
-
-sll_real64, intent(in)    :: L        !< Periodicity length
-sll_int32,  intent(in)    :: nx       !< Number of data points
-sll_int32,  intent(in)    :: kx       !< Splines degree
-sll_real64, intent(in)    :: taux(:)  !< Points positions
-sll_real64, intent(in)    :: g(:)     !< Data values at points
-sll_real64, intent(inout) :: bcoef(:) !< Spline coefficients
-sll_real64, intent(inout) :: tx(:)    !< Knots positions
-sll_int32                 :: i
-
-tx(1:kx)       = taux(1)
-tx(nx+1:nx+kx) = taux(nx)
-  
-if (mod(kx,2) == 0) then
-  do i = kx + 1, nx
-    tx(i) = taux(i-kx/2) 
-  end do
-else
-  do i = kx + 1, nx
-    tx(i) = 0.5*(taux(i-(kx-1)/2)+taux(i-1-(kx-1)/2))
-  end do
-end if
-
-call splint( taux, g, tx, nx, kx, bcoef)
-    
-end subroutine spli1d_per
 
 !> @brief
 !> Compute interpolants for non periodic BC
