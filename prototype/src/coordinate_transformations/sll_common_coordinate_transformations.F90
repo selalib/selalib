@@ -701,130 +701,274 @@ contains
 
   ! **************************************************************************
   !
-  !       hexagonal coordinate transformation (r = eta1, theta = eta2):
+  !       polar_shear coordinate transformation (r = eta1, theta = eta2):
   !
-  !        x1 = eta1 * cos (eta2) * cos(Pi/6) / cos(Pi/6-eta2)
-  !        x2 = eta1 * sin (eta2) * cos(Pi/6) / cos(Pi/6-eta2)
-  !        for 0  <= eta2 <= Pi/3
+  !        x1 = eta1 * cos (eta2+a*eta1+b)
+  !        x2 = eta1 * sin (eta2+a*eta1+b)
   !
   ! **************************************************************************
 
   !> direct mapping
-  function hexagonal_x1 ( eta1, eta2, params )
-    sll_real64  :: hexagonal_x1
+  function polar_shear_x1 ( eta1, eta2, params )
+    sll_real64  :: polar_shear_x1
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
-
-    sll_real64 :: eta2r
-    sll_real64 :: eps
     
-    eps = params(1)
-    eta2r = eta2+sll_pi/6._f64
-    eta2r = eta2r*3._f64/sll_pi
-    eta2r = sqrt((eta2-floor(eta2r)*sll_pi/3._f64)**2+eps**2)
-    hexagonal_x1 = eta1*cos(sll_pi/6._f64)*cos(eta2)/cos(sll_pi/6._f64-eta2r)
-  end function hexagonal_x1
+    sll_real64 :: alpha1
+    sll_real64 :: alpha2
+    alpha1=params(1)
+    alpha2=params(2)
+    
+    polar_shear_x1 = eta1 * cos( eta2 + alpha1*eta1 + alpha2 )
+  end function polar_shear_x1
 
   !> direct mapping
-  function hexagonal_x2 ( eta1, eta2, params )
-    sll_real64  :: hexagonal_x2
+  function polar_shear_x2 ( eta1, eta2, params )
+    sll_real64  :: polar_shear_x2
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
-    
-    sll_real64 :: eta2r
-    sll_real64 :: eps
-    
-    eps = params(1)
-    eta2r = eta2+sll_pi/6._f64
-    eta2r = eta2r*3._f64/sll_pi
-    eta2r = sqrt((eta2-floor(eta2r)*sll_pi/3._f64)**2+eps**2)
-    hexagonal_x2 = eta1*cos(sll_pi/6._f64)*sin(eta2)/cos(sll_pi/6._f64-eta2r)
-  end function hexagonal_x2
+
+    sll_real64 :: alpha1
+    sll_real64 :: alpha2
+    alpha1=params(1)
+    alpha2=params(2)
+
+    polar_shear_x2 = eta1 * sin( eta2 + alpha1*eta1 + alpha2 )
+  end function polar_shear_x2
 
 
   !> jacobian matrix
-  function hexagonal_jac11 ( eta1, eta2, params )
-    sll_real64  :: hexagonal_jac11
+  function polar_shear_jac11 ( eta1, eta2, params )
+    sll_real64  :: polar_shear_jac11
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
-    
-    sll_real64 :: eta2r
-    sll_real64 :: eps
-    
-    eps = params(1)
-    eta2r = eta2+sll_pi/6._f64
-    eta2r = eta2r*3._f64/sll_pi
-    eta2r = sqrt((eta2-floor(eta2r)*sll_pi/3._f64)**2+eps**2)
-    hexagonal_jac11 = eta1
-    hexagonal_jac11 = cos(sll_pi/6._f64)*cos(eta2)/cos(sll_pi/6._f64-eta2r) 
-  end function hexagonal_jac11
+
+    sll_real64 :: alpha1
+    sll_real64 :: alpha2
+    alpha1=params(1)
+    alpha2=params(2)
+
+    polar_shear_jac11 = cos(eta2+alpha1*eta1+alpha2) &
+      -eta1*alpha1*sin(eta2+alpha1*eta1+alpha2)
+  end function polar_shear_jac11
 
   !> jacobian matrix
-    function hexagonal_jac12 ( eta1, eta2, params )
-    sll_real64  :: hexagonal_jac12
+    function polar_shear_jac12 ( eta1, eta2, params )
+    sll_real64  :: polar_shear_jac12
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
 
+    sll_real64 :: alpha1
+    sll_real64 :: alpha2
+    alpha1=params(1)
+    alpha2=params(2)
+    
+    polar_shear_jac12 = - eta1 * sin( eta2 + alpha1*eta1 + alpha2  )
+  end function polar_shear_jac12
+
+  !> jacobian matrix
+  function polar_shear_jac21 ( eta1, eta2, params )
+    sll_real64  :: polar_shear_jac21
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+
+    sll_real64 :: alpha1
+    sll_real64 :: alpha2
+    alpha1=params(1)
+    alpha2=params(2)
+
+    polar_shear_jac21 = sin(eta2+alpha1*eta1+alpha2) &
+      +eta1*alpha1*cos(eta2+alpha1*eta1+alpha2)
+  end function polar_shear_jac21
+
+  !> jacobian matrix
+  function polar_shear_jac22 ( eta1, eta2, params )
+    sll_real64  :: polar_shear_jac22
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+
+    sll_real64 :: alpha1
+    sll_real64 :: alpha2
+    alpha1=params(1)
+    alpha2=params(2)
+
+    polar_shear_jac22 = eta1 * cos ( eta2+ alpha1*eta1 + alpha2   )
+  end function polar_shear_jac22
+
+ !> jacobian ie determinant of jacobian matrix not computed
+  function polar_shear_jac ( eta1, eta2, params )
+    sll_real64  :: polar_shear_jac
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    polar_shear_jac = eta2
+    polar_shear_jac = eta1
+  end function polar_shear_jac
+
+
+
+
+
+
+
+  ! **************************************************************************
+  !
+  !       polygonal coordinate transformation (r = eta1, theta = eta2):
+  !
+  !        x1 = eta1 * cos (eta2) * cos(Pi/num_sides) / cos(Pi/num_sides-|eta2|)
+  !        x2 = eta1 * sin (eta2) * cos(Pi/num_sides) / cos(Pi/num_sides-|eta2|)
+  !        for 0  <= eta2 <= 2Pi/num_sides
+  !
+  ! **************************************************************************
+
+  !> direct mapping
+  function polygonal_x1 ( eta1, eta2, params )
+    sll_real64  :: polygonal_x1
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    
+    sll_real64 :: eta2_shift
     sll_real64 :: eta2r
+    sll_real64 :: eps
+    sll_real64 :: num_sides
+    
+    eps = params(1)
+    num_sides = params(2)
+    eta2_shift = eta2+params(3)*2._f64*sll_pi/num_sides    
+    eta2r = eta2+sll_pi/num_sides
+    eta2r = eta2r*0.5_f64*num_sides/sll_pi
+    eta2r = sqrt((eta2-floor(eta2r)*sll_pi/(0.5_f64*num_sides))**2+eps**2)
+    polygonal_x1 = eta1*cos(sll_pi/num_sides)*cos(eta2_shift)/cos(sll_pi/num_sides-eta2r)
+  end function polygonal_x1
+
+  !> direct mapping
+  function polygonal_x2 ( eta1, eta2, params )
+    sll_real64  :: polygonal_x2
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    
+    sll_real64 :: eta2_shift
+    sll_real64 :: eta2r
+    sll_real64 :: eps
+    sll_real64 :: num_sides
+
+    eps = params(1)
+    num_sides = params(2)
+    eta2_shift = eta2+params(3)*2._f64*sll_pi/num_sides    
+    eta2r = eta2+sll_pi/num_sides
+    eta2r = eta2r*0.5_f64*num_sides/sll_pi
+    eta2r = sqrt((eta2-floor(eta2r)*sll_pi/(0.5_f64*num_sides))**2+eps**2)
+    polygonal_x2 = eta1*cos(sll_pi/num_sides)*sin(eta2_shift)/cos(sll_pi/num_sides-eta2r)
+  end function polygonal_x2
+
+
+  !> jacobian matrix
+  function polygonal_jac11 ( eta1, eta2, params )
+    sll_real64  :: polygonal_jac11
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    
+    sll_real64 :: eta2_shift
+    sll_real64 :: eta2r
+    sll_real64 :: eps
+    sll_real64 :: num_sides
+
+    eps = params(1)
+    num_sides = params(2)
+    eta2_shift = eta2+params(3)*2._f64*sll_pi/num_sides    
+    eta2r = eta2+sll_pi/num_sides
+    eta2r = eta2r*0.5_f64*num_sides/sll_pi
+    eta2r = sqrt((eta2-floor(eta2r)*sll_pi/(0.5_f64*num_sides))**2+eps**2)
+    polygonal_jac11 = eta1
+    polygonal_jac11 = cos(sll_pi/num_sides)*cos(eta2_shift)/cos(sll_pi/num_sides-eta2r) 
+  end function polygonal_jac11
+
+  !> jacobian matrix
+    function polygonal_jac12 ( eta1, eta2, params )
+    sll_real64  :: polygonal_jac12
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+
+    sll_real64 :: eta2_shift
+    sll_real64 :: eta2r
+    sll_real64 :: eps
+    sll_real64 :: num_sides
     sll_real64 :: a
-    sll_real64 :: eps
-    
+
     eps = params(1)
-    eta2r = eta2+sll_pi/6._f64
-    eta2r = eta2r*3._f64/sll_pi
-    a = floor(eta2r)*sll_pi/3._f64 
+    num_sides = params(2)
+    eta2_shift = eta2+params(3)*2._f64*sll_pi/num_sides    
+    eta2r = eta2+sll_pi/num_sides
+    eta2r = eta2r*0.5_f64*num_sides/sll_pi
+    a = floor(eta2r)*sll_pi/(0.5_f64*num_sides) 
     eta2r = sqrt((eta2-a)**2+eps**2)
-    hexagonal_jac12 = -eta1*cos(sll_pi/6._f64)*sin(eta2)/cos(sll_pi/6._f64-eta2r) &
-      +eta1*cos(sll_pi/6._f64)*cos(eta2) &
-      *sin(sll_pi/6._f64-eta2r)/cos(sll_pi/6._f64-eta2r)**2*(eta2-a)/eta2r
-  end function hexagonal_jac12
+    polygonal_jac12 = -eta1*cos(sll_pi/num_sides)*sin(eta2_shift)/cos(sll_pi/num_sides-eta2r) &
+      +eta1*cos(sll_pi/num_sides)*cos(eta2_shift) &
+      *sin(sll_pi/num_sides-eta2r)/cos(sll_pi/num_sides-eta2r)**2*(eta2-a)/eta2r
+  end function polygonal_jac12
 
   !> jacobian matrix
-  function hexagonal_jac21 ( eta1, eta2, params )
-    sll_real64  :: hexagonal_jac21
+  function polygonal_jac21 ( eta1, eta2, params )
+    sll_real64  :: polygonal_jac21
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
 
+    sll_real64 :: eta2_shift
     sll_real64 :: eta2r
     sll_real64 :: eps
-    
+    sll_real64 :: num_sides
+
     eps = params(1)
-    eta2r = eta2+sll_pi/6._f64
-    eta2r = eta2r*3._f64/sll_pi
-    eta2r = sqrt((eta2-floor(eta2r)*sll_pi/3._f64)**2+eps**2)
-    hexagonal_jac21 = eta1
-    hexagonal_jac21 = cos(sll_pi/6._f64)*sin(eta2)/cos(sll_pi/6._f64-eta2r)
-  end function hexagonal_jac21
+    num_sides = params(2)
+    eta2_shift = eta2+params(3)*2._f64*sll_pi/num_sides    
+    eta2r = eta2+sll_pi/num_sides
+    eta2r = eta2r*0.5_f64*num_sides/sll_pi
+    eta2r = sqrt((eta2-floor(eta2r)*sll_pi/(0.5_f64*num_sides))**2+eps**2)
+    polygonal_jac21 = eta1
+    polygonal_jac21 = cos(sll_pi/num_sides)*sin(eta2_shift)/cos(sll_pi/num_sides-eta2r)
+  end function polygonal_jac21
 
   !> jacobian matrix
-  function hexagonal_jac22 ( eta1, eta2, params )
-    sll_real64  :: hexagonal_jac22
+  function polygonal_jac22 ( eta1, eta2, params )
+    sll_real64  :: polygonal_jac22
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
 
+    sll_real64 :: eta2_shift
     sll_real64 :: eta2r
     sll_real64 :: eps
+    sll_real64 :: num_sides
     sll_real64 :: a
-    
+
     eps = params(1)
-    eta2r = eta2+sll_pi/6._f64
-    eta2r = eta2r*3._f64/sll_pi
-    a = floor(eta2r)*sll_pi/3._f64
+    num_sides = params(2)
+    eta2_shift = eta2+params(3)*2._f64*sll_pi/num_sides 
+    
+    eta2r = eta2+sll_pi/num_sides
+    eta2r = eta2r*0.5_f64*num_sides/sll_pi
+    a = floor(eta2r)*sll_pi/(0.5_f64*num_sides)
     eta2r = sqrt((eta2-a)**2+eps**2)
-    hexagonal_jac22 = eta1*cos(sll_pi/6._f64)*cos(eta2)/cos(sll_pi/6._f64-eta2r) &
-      +eta1*cos(sll_pi/6._f64)*sin(eta2) &
-      *sin(sll_pi/6._f64-eta2r)/cos(sll_pi/6._f64-eta2r)**2*(eta2-a)/eta2r
-  end function hexagonal_jac22
+    polygonal_jac22 = eta1*cos(sll_pi/num_sides)*cos(eta2_shift)/cos(sll_pi/num_sides-eta2r) &
+      +eta1*cos(sll_pi/num_sides)*sin(eta2_shift) &
+      *sin(sll_pi/num_sides-eta2r)/cos(sll_pi/num_sides-eta2r)**2*(eta2-a)/eta2r
+  end function polygonal_jac22
 
  !> jacobian ie determinant of jacobian matrix
-  function hexagonal_jac ( eta1, eta2, params )
-    sll_real64  :: hexagonal_jac
+ !>not used for the moment (recomputed)
+  function polygonal_jac ( eta1, eta2, params )
+    sll_real64  :: polygonal_jac
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -834,12 +978,12 @@ contains
     eta2r = eta2+sll_pi/6._f64
     eta2r = eta2r*3._f64/sll_pi
     eta2r = abs(eta2-floor(eta2r)*sll_pi/3._f64)
-    hexagonal_jac = eta2
-!    hexagonal_jac = hexagonal_jac11( eta1, eta2, params ) * &
-!      hexagonal_jac22( eta1, eta2, params ) &
-!      -hexagonal_jac21( eta1, eta2, params ) * &
-!      hexagonal_jac12( eta1, eta2, params ) &
-  end function hexagonal_jac
+    polygonal_jac = eta2
+!    polygonal_jac = polygonal_jac11( eta1, eta2, params ) * &
+!      polygonal_jac22( eta1, eta2, params ) &
+!      -polygonal_jac21( eta1, eta2, params ) * &
+!      polygonal_jac12( eta1, eta2, params ) &
+  end function polygonal_jac
 
 
 
