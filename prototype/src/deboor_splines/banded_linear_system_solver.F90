@@ -110,7 +110,7 @@ subroutine banfac ( w, nroww, nrow, nbandl, nbandu, iflag )
 
   integer, intent(in)    :: nrow
   integer, intent(in)    :: nroww
-  real(8), intent(inout) :: w(nroww,nrow)
+  real(8), intent(inout) :: w(:,:)
   integer, intent(in)    :: nbandl
   integer, intent(in)    :: nbandu
   integer, intent(out)   :: iflag
@@ -271,10 +271,10 @@ subroutine banslv ( w, nroww, nrow, nbandl, nbandu, b )
 
   integer, intent(in)    :: nroww
   integer, intent(in)    :: nrow
-  real(8), intent(in)    :: w(nroww,nrow)
+  real(8), intent(in)    :: w(:,:)
   integer, intent(in)    :: nbandl
   integer, intent(in)    :: nbandu
-  real(8), intent(inout) :: b(nrow)
+  real(8), intent(inout) :: b(:)
 
   integer :: i
   integer :: j
