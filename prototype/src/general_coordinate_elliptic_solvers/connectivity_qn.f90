@@ -3,7 +3,7 @@ module connectivity_module
   implicit none
   private
 
-  integer, parameter :: CONNECT_PERIODIC = 0, CONNECT_DIRICHLET = 1
+  integer, parameter :: CONNECT_PERIODIC = 0, CONNECT_DIRICHLET = 1, CONNECT_NEUMANN = 2
 
   public initconnectivity
 
@@ -85,6 +85,16 @@ contains
             nb_spl_y,&
             spline_degree2,&
             global_spline_indices)
+
+     elseif((bc_left == CONNECT_NEUMANN).and.(bc_right== CONNECT_DIRICHLET).and. &
+             (bc_bottom==CONNECT_PERIODIC).and.(bc_top==CONNECT_PERIODIC) )then
+
+       call xi_NEU_DIR_eta_PER_init(&
+            nb_spl_x,&
+            nb_spl_y,&
+            spline_degree2,&
+            global_spline_indices)       
+
 
     else if((bc_left == CONNECT_DIRICHLET).and.(bc_right==CONNECT_DIRICHLET).and. &
             (bc_bottom==CONNECT_DIRICHLET).and.(bc_top==CONNECT_DIRICHLET))then
@@ -215,6 +225,58 @@ contains
     end do
 
   end subroutine xi_DIR_eta_PER_init
+  
+  
+  
+    subroutine xi_NEU_DIR_eta_PER_init( &
+       num_cells1,&
+       num_cells2,&
+       spline_degree2,&
+       global_spline_indices)
+    
+    integer :: li_d,num_cells1,num_cells2,spline_degree2
+    integer :: li_i, li_j, li_A
+    !integer :: li_dof,ai_sizePB
+    integer :: li_L
+    integer, dimension(:) :: global_spline_indices
+    
+    li_d = 0
+    
+    do li_j = 1, num_cells2
+       do li_i = 1, num_cells1
+          li_A = li_i + num_cells1*(li_j-1)
+          
+          if (li_i == num_cells1) then
+             global_spline_indices(li_A) = 0
+             
+          else
+             
+             if (li_j /= num_cells2) then
+                
+                if (global_spline_indices(li_A) == 0) then
+                   
+                   li_d = li_d + 1
+                   
+                   global_spline_indices(li_A) = li_d
+                   
+                end if
+                
+                if ( (1 <= li_j ) .AND. ( li_j <= spline_degree2 ) ) then
+                   
+                   li_L = (num_cells2 - spline_degree2) * num_cells1
+                   global_spline_indices(li_A + li_L) =&
+                        global_spline_indices(li_A)
+
+                end if
+             end if
+          end if
+       end do
+    end do
+
+  end subroutine xi_NEU_DIR_eta_PER_init
+
+  
+  
 
   !-------------------------------------------------------------------------
   subroutine xi_PER_eta_DIR_init( &
