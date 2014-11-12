@@ -15,5 +15,5 @@ HOWTO
      $ mpirun -np 4 ../test_2d_gc_pic_cartesian ../params_pic_2d_KH.nml
 
 2. Run gnuplot script generated at runtime
-     $ gnuplot --persist rho_init.gnu
+     $ gnuplot --persist rho_gc_it.gnu
 
