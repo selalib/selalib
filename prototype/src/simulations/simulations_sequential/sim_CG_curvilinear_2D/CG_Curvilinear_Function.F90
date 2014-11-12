@@ -458,13 +458,13 @@ subroutine carac_analytique(phi_case,N_eta1,N_eta2,x1n_array,x2n_array,a1,a2,x1c
 
     
     if (bc1_type==sll_DIRICHLET) then 
-        plan_sl%spl_phi => new_spline_2D(N_eta1+1,N_eta2+1,eta1_min,eta1_max,eta2_min,eta2_max, &
+        plan_sl%spl_phi => new_cubic_spline_2D(N_eta1+1,N_eta2+1,eta1_min,eta1_max,eta2_min,eta2_max, &
                                  & bc1_type,bc2_type,const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
     elseif (bc2_type==sll_DIRICHLET) then 
-        plan_sl%spl_phi => new_spline_2D(N_eta1+1,N_eta2+1,eta1_min,eta1_max,eta2_min,eta2_max, &
+        plan_sl%spl_phi => new_cubic_spline_2D(N_eta1+1,N_eta2+1,eta1_min,eta1_max,eta2_min,eta2_max, &
                                  & bc1_type,bc2_type,const_slope_x2_min = 0._f64,const_slope_x2_max = 0._f64)
     else
-        plan_sl%spl_phi => new_spline_2D(N_eta1+1,N_eta2+1,eta1_min,eta1_max,eta2_min,eta2_max, &
+        plan_sl%spl_phi => new_cubic_spline_2D(N_eta1+1,N_eta2+1,eta1_min,eta1_max,eta2_min,eta2_max, &
                                  & bc1_type,bc2_type)
     endif
 
@@ -484,7 +484,7 @@ subroutine carac_analytique(phi_case,N_eta1,N_eta2,x1n_array,x2n_array,a1,a2,x1c
     type(plan_curvilinear_op), pointer :: this
     sll_int32 :: err
    
-    call delete_spline_2d(this%spl_phi)
+    call sll_delete(this%spl_phi)
     DEALLOCATE(this)
     this=>null()
 
@@ -550,7 +550,7 @@ subroutine carac_analytique(phi_case,N_eta1,N_eta2,x1n_array,x2n_array,a1,a2,x1c
     else if (plan%grad_case==2) then
        ! using splines for eta1 and eta2
 
-       call compute_spline_2D(phi,plan%spl_phi)
+       call compute_cubic_spline_2D(phi,plan%spl_phi)
 
        do j=1,N_eta2+1
           eta2=eta2_min+real(j-1,f64)*delta_eta2

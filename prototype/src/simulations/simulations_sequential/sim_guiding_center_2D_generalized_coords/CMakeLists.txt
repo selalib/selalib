@@ -1,7 +1,5 @@
-set(   TEST_NAME 2d_af_cartesian             )
-set(    SIM_NAME 2d_analytic_field_cartesian )
-set(  INPUT_FILE afsim2d_cartesian_sdf.nml   )
-set(   POST_PROC afsim2d_cartesian_sdf.gnu   )
+set(   TEST_NAME guiding_center_2D_generalized_coords )
+set(    SIM_NAME guiding_center_2D_generalized_coords )
 
 set(  EXECUTABLE "test_${TEST_NAME}" )
 set( INSTALL_DIR "${INSTALL_DIR}/${TEST_NAME}" )
