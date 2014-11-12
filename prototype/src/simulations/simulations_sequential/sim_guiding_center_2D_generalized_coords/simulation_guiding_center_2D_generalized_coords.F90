@@ -17,6 +17,7 @@ module sll_simulation_2d_guiding_center_generalized_coords_module
   use sll_general_coordinate_elliptic_solver_module
   use sll_module_scalar_field_2d_base
   use sll_module_scalar_field_2d
+  use sll_parallel_array_initializer_module  ! Needed to initialize 2D fields
 
   implicit none
 
@@ -271,7 +272,6 @@ contains
          sim%bc_top, &
          sim%params_field) 
        
-
     a12_field_mat => new_scalar_field_2d_analytic( &
          sim%a12_f, &
          "a12", &
@@ -281,7 +281,6 @@ contains
          sim%bc_bottom, &
          sim%bc_top, &
          sim%params_field) 
-    
     
     a21_field_mat => new_scalar_field_2d_analytic( &
          sim%a21_f, &
@@ -293,7 +292,6 @@ contains
          sim%bc_top, &
          sim%params_field)
        
-    
     a22_field_mat => new_scalar_field_2d_analytic( &
          sim%a22_f, &
          "a22", &
@@ -304,32 +302,33 @@ contains
          sim%bc_top, &
          sim%params_field) 
      
-
     b1_field => new_scalar_field_2d_analytic( &
-          sim%c_f, &
-         "c_field", &
+         sim%c_f, &            ! b1(eta1,eta2) = 0 everywhere in the domain
+         "b1_field", &
          sim%transf, &
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
          sim%bc_top, &
-         sim%params_field)
+         sim%params_field, &
+         sim%c_f, &            ! d(b1)/d(eta1) = 0
+         sim%c_f)              ! d(b1)/d(eta2) = 0
 
     b2_field => new_scalar_field_2d_analytic( &
-          sim%c_f, &
-         "c_field", &
+         sim%c_f, &            ! b2(eta1,eta2) = 0 everywhere in the domain
+         "b2_field", &
          sim%transf, &
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
          sim%bc_top, &
-         sim%params_field)
-       
-    !print*,'pass 1'
+         sim%params_field, &
+         sim%c_f, &            ! d(b2)/d(eta1) = 0
+         sim%c_f)              ! d(b2)/d(eta2) = 0
        
     !print*,'pass 1'
     c_field => new_scalar_field_2d_analytic( &
-          sim%c_f, &
+         sim%c_f, &
          "c_field", &
          sim%transf, &
          sim%bc_left, &
@@ -441,8 +440,7 @@ contains
          sim%mesh2d%eta2_min, & 
          sim%mesh2d%eta2_max ) 
  
-    
-     ! compute matrix the field
+    ! compute matrix the field
     print *,'Compute matrix the field'
     call factorize_mat_es(&
        sim%qns, &
@@ -453,9 +451,8 @@ contains
        b1_field, &
        b2_field, &
        c_field)
-       
-  
-    print *, 'started solve_quasi_neutral_eq_general_coords before loop ...'
+
+   print *, 'started solve_quasi_neutral_eq_general_coords before loop ...'
     call sll_solve( &
             sim%qns, & 
             rho_n_ptr, &
@@ -660,7 +657,7 @@ contains
     class(sll_scalar_field_2d_discrete), pointer     :: rho_n
     type(sll_scalar_field_2d_discrete) , pointer      :: phi
     class(sll_coordinate_transformation_2d_base), pointer :: T
-    type(sll_cartesian_mesh_2D), pointer :: M
+    class(sll_cartesian_mesh_2D), pointer :: M
     sll_real64 :: eta1_loc,eta2_loc,eta1,eta1n,eta2,eta20,eta2n,tolr
     sll_real64 :: a_eta1,a_eta2,eta10,eta2_min,eta2_max 
     sll_real64 :: dt, delta_eta1, delta_eta2, eta1_min, eta1_max
@@ -928,7 +925,7 @@ subroutine calcul_integral(rho_n,phi,&
     
     
     class(sll_coordinate_transformation_2d_base), pointer :: T
-    type(sll_cartesian_mesh_2D), pointer :: M
+    class(sll_cartesian_mesh_2D), pointer :: M
     sll_real64, dimension(1:2,1:2) :: jac_m
     
   
