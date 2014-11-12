@@ -1,4 +1,3 @@
-subroutine banslv ( w, nroww, nrow, nbandl, nbandu, b )
 
 !*****************************************************************************80
 !
@@ -39,6 +38,8 @@ subroutine banslv ( w, nroww, nrow, nbandl, nbandu, b )
 !    On input, B contains the right hand side of the system to be solved.
 !    On output, B contains the solution, X.
 !
+subroutine banslv ( w, nroww, nrow, nbandl, nbandu, b )
+
   implicit none
 
   integer, intent(in)    :: nroww
