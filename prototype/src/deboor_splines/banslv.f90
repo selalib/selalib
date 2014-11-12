@@ -41,17 +41,17 @@ subroutine banslv ( w, nroww, nrow, nbandl, nbandu, b )
 !
   implicit none
 
-  integer nrow
-  integer nroww
+  integer, intent(in)    :: nroww
+  integer, intent(in)    :: nrow
+  real(8), intent(in)    :: w(nroww,nrow)
+  integer, intent(in)    :: nbandl
+  integer, intent(in)    :: nbandu
+  real(8), intent(inout) :: b(nrow)
 
-  real ( kind = 8 ) b(nrow)
-  integer i
-  integer j
-  integer jmax
-  integer middle
-  integer nbandl
-  integer nbandu
-  real ( kind = 8 ) w(nroww,nrow)
+  integer :: i
+  integer :: j
+  integer :: jmax
+  integer :: middle
 
   middle = nbandu + 1
 
