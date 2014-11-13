@@ -81,10 +81,8 @@ type, public, extends(sll_interpolator_2d_base) :: &
   logical :: compute_value_s = .true.
   sll_real64, pointer :: eta1(:)
   sll_real64, pointer :: eta2(:)
-  sll_interpolator_1d, pointer :: interp1d_w => null()
-  sll_interpolator_1d, pointer :: interp1d_e => null()
-  sll_interpolator_1d, pointer :: interp1d_s => null()
-  sll_interpolator_1d, pointer :: interp1d_n => null()
+  sll_interpolator_1d, pointer :: interp_eta1 => null()
+  sll_interpolator_1d, pointer :: interp_eta2 => null()
 
 contains
 
@@ -152,10 +150,8 @@ SLL_DEALLOCATE(interpolator%slope_w,ierr)
 SLL_DEALLOCATE(interpolator%slope_e,ierr)
 SLL_DEALLOCATE(interpolator%slope_s,ierr)
 SLL_DEALLOCATE(interpolator%slope_n,ierr)
-call sll_delete(interpolator%interp1d_w)
-call sll_delete(interpolator%interp1d_e)
-call sll_delete(interpolator%interp1d_s)
-call sll_delete(interpolator%interp1d_n)
+call sll_delete(interpolator%interp_eta1)
+call sll_delete(interpolator%interp_eta2)
 
 end subroutine delete_arbitrary_degree_2d_interpolator
 
@@ -362,14 +358,10 @@ interpolator%bcoef(:,:) = 0.0_f64
 SLL_CLEAR_ALLOCATE(interpolator%t1(1:num_pts1*(spline_degree1+1)),ierr)
 SLL_CLEAR_ALLOCATE(interpolator%t2(1:num_pts2*(spline_degree2+1)),ierr) 
 
-interpolator%interp1d_w => new_arbitrary_degree_1d_interpolator( &
-  num_pts2, eta2_min, eta2_max, bc_s, bc_n, spline_degree2)
-interpolator%interp1d_e => new_arbitrary_degree_1d_interpolator( &
-  num_pts2, eta2_min, eta2_max, bc_s, bc_n, spline_degree2)
-interpolator%interp1d_s => new_arbitrary_degree_1d_interpolator( &
+interpolator%interp_eta1 => new_arbitrary_degree_1d_interpolator( &
   num_pts1, eta1_min, eta1_max, bc_w, bc_e, spline_degree1)
-interpolator%interp1d_n => new_arbitrary_degree_1d_interpolator( &
-  num_pts1, eta1_min, eta1_max, bc_w, bc_e, spline_degree1)
+interpolator%interp_eta2 => new_arbitrary_degree_1d_interpolator( &
+  num_pts2, eta2_min, eta2_max, bc_s, bc_n, spline_degree2)
 
 end subroutine !initialize_ad2d_interpolator
 
@@ -387,7 +379,6 @@ sll_real64, dimension(:),optional :: slope_w
 sll_real64, dimension(:),optional :: slope_e
 sll_real64, dimension(:),optional :: slope_s
 sll_real64, dimension(:),optional :: slope_n
-sll_interpolator_1d, pointer :: interp1d => null()
 sll_int64 :: bc_selector
 sll_int32 :: num_pts1
 sll_int32 :: num_pts2
@@ -406,26 +397,18 @@ bc_e = interpolator%bc_e
 bc_s = interpolator%bc_s  
 bc_n = interpolator%bc_n
 
-interp1d => new_arbitrary_degree_1d_interpolator( &
-            interpolator%num_pts1,                &
-            interpolator%eta1_min,                &
-            interpolator%eta1_max,                &
-            interpolator%bc_w,                    &
-            interpolator%bc_e,                    &
-            interpolator%spline_degree1 )
-
 if (present(slope_n)) then 
   SLL_ASSERT(size(slope_n) == num_pts1)
-  call interp1d%compute_interpolants(slope_n)
-  interpolator%slope_n(1:num_pts1+2) = interp1d%bcoef(1:num_pts1+2)
+  call interpolator%interp_eta1%compute_interpolants(slope_n)
+  interpolator%slope_n(1:num_pts1+2) = interpolator%interp_eta1%bcoef(1:num_pts1+2)
 else
   interpolator%slope_n = 0.0
 end if
 
 if (present(slope_s)) then 
   SLL_ASSERT(size(slope_s) == num_pts1)
-  call interp1d%compute_interpolants(slope_s)
-  interpolator%slope_s(1:num_pts1+2) = interp1d%bcoef(1:num_pts1+2)
+  call interpolator%interp_eta1%compute_interpolants(slope_s)
+  interpolator%slope_s(1:num_pts1+2) = interpolator%interp_eta1%bcoef(1:num_pts1+2)
 else
   interpolator%slope_s = 0.0
 end if
@@ -449,8 +432,6 @@ interpolator%compute_slope_e = .FALSE.
 interpolator%compute_slope_s = .FALSE.
 interpolator%compute_slope_n = .FALSE.
 
-call sll_delete(interp1d)
-    
 end subroutine set_slope2d
   
 !> @brief
@@ -510,42 +491,37 @@ if (present(value_e)) then
   SLL_ASSERT(sz_value_e == num_pts2)
 end if
 
-interpolator%value_e = 0.0_f64
-interpolator%value_w = 0.0_f64
-interpolator%value_n = 0.0_f64
-interpolator%value_s = 0.0_f64
-
 interpolator%compute_value_e = .FALSE.
 interpolator%compute_value_w = .FALSE.
 interpolator%compute_value_n = .FALSE.
 interpolator%compute_value_s = .FALSE.
 
 if (bc_w == SLL_DIRICHLET .and. present(value_w)) then 
-
-  call interpolator%interp1d_w%compute_interpolants(value_w(1:sz_value_w))
-  interpolator%value_w(1:sz_value_w) = interpolator%interp1d_w%bcoef(1:sz_value_w)
-
+  call interpolator%interp_eta2%compute_interpolants(value_w(1:sz_value_w))
+  interpolator%value_w(1:sz_value_w) = interpolator%interp_eta2%bcoef(1:sz_value_w)
+else
+  interpolator%value_w = 0.0_f64
 end if
 
 if (bc_e == SLL_DIRICHLET .and. present(value_e)) then 
-          
-  call interpolator%interp1d_e%compute_interpolants(value_e(1:sz_value_e))
-  interpolator%value_e(1:sz_value_e) = interpolator%interp1d_e%bcoef(1:sz_value_e)
-
+  call interpolator%interp_eta2%compute_interpolants(value_e(1:sz_value_e))
+  interpolator%value_e(1:sz_value_e) = interpolator%interp_eta2%bcoef(1:sz_value_e)
+else
+  interpolator%value_e = 0.0_f64
 end if
        
 if (bc_s == SLL_DIRICHLET .and. present(value_s)) then 
-          
-  call interpolator%interp1d_s%compute_interpolants(value_s(1:sz_value_s))
-  interpolator%value_s(1:sz_value_s) = interpolator%interp1d_s%bcoef(1:sz_value_s)
-
+  call interpolator%interp_eta1%compute_interpolants(value_s(1:sz_value_s))
+  interpolator%value_s(1:sz_value_s) = interpolator%interp_eta1%bcoef(1:sz_value_s)
+else
+  interpolator%value_s = 0.0_f64
 end if
        
 if (bc_n == SLL_DIRICHLET .and. present(value_n)) then 
-          
-  call interpolator%interp1d_n%compute_interpolants(value_n(1:sz_value_n))
-  interpolator%value_n(1:sz_value_n) = interpolator%interp1d_n%bcoef(1:sz_value_n)
-
+  call interpolator%interp_eta1%compute_interpolants(value_n(1:sz_value_n))
+  interpolator%value_n(1:sz_value_n) = interpolator%interp_eta1%bcoef(1:sz_value_n)
+else
+  interpolator%value_n = 0.0_f64
 end if
        
 end subroutine set_boundary_value2d
