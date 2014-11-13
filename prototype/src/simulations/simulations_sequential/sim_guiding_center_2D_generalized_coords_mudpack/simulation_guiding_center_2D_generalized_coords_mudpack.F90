@@ -404,7 +404,8 @@ contains
      !poisson solver
     select case(poisson_case)    
       case ("SLL_MUDPACK_CURVILINEAR")   
-        call initialize_poisson_curvilinear_mudpack(sim%poisson,&
+!YG        call initialize_poisson_curvilinear_mudpack(sim%poisson,&
+        call sll_create( sim%poisson,&
          sim%transformation, &
          sim%b11,&
          sim%b12,&
@@ -568,7 +569,7 @@ contains
           !call poisson_solve_cartesian(sim%poisson,f,phi)
           !call compute_rho(f,rho,sim%mesh_2d,sim%transformation)
           call solve_poisson_curvilinear_mudpack(sim%poisson, phi, f)
-          print*,'t=0, phi = ', maxval(phi),'f = ', maxval(f)
+!YG          print*,'t=0, phi = ', maxval(phi),'f = ', maxval(f)
           call compute_field_from_phi_2d_curvilinear_mudpack(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)      
           f_old = f
           call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*sim%dt, f_old, f)
