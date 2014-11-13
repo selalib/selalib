@@ -387,7 +387,4 @@ contains
     end do
   end subroutine initLM
 
-
-
-      
 end module connectivity_module
