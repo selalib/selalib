@@ -66,6 +66,7 @@ public :: cy_interp
 public :: ce_interp
 public :: a12_interp
 public :: a21_interp
+public :: solve_poisson_curvilinear_mudpack
 
 contains
 
@@ -414,14 +415,14 @@ rhs=0._f64
 
 icall = 1
 intl  = 1
-write(*,106) intl,method,iguess
+!YG write(*,106) intl,method,iguess
 
 ! attempt solution
 !call mud2cr(iprm,fprm,this%work,coefcr,bndcr,rhs,phi,this%mgopt,ierror)
 call muh2cr(iprm,fprm,this%work,this%iwork,coefcr,bndcr,rhs,phi,this%mgopt,ierror)
 !call mud2sp(iprm,fprm,this%work,cofx,cofy,bndcr,rhs,phi,this%mgopt,ierror)
 !SLL_ASSERT(ierror == 0)
-write(*,107) ierror
+!YG write(*,107) ierror
 if (ierror > 0) call exit(0)
 
 ! attempt fourth order approximation
@@ -429,13 +430,13 @@ if (ierror > 0) call exit(0)
 call muh24cr(this%work,this%iwork,coefcr,bndcr,phi,ierror)
 !call mud24sp(this%work,phi,ierror)
 !SLL_ASSERT(ierror == 0)
-write (*,108) ierror
+!YG write (*,108) ierror
 if (ierror > 0) call exit(0)
 
-106 format(/' approximation call to mud2sp', &
-    &/' intl = ',i2, ' method = ',i2,' iguess = ',i2)
-107 format(' error = ',i2)
-108 format(/' mud24cr test ', ' error = ',i2)
+!YG 106 format(/' approximation call to mud2sp', &
+!YG     &/' intl = ',i2, ' method = ',i2,' iguess = ',i2)
+!YG 107 format(' error = ',i2)
+!YG 108 format(/' mud24cr test ', ' error = ',i2)
 
 deallocate(rhs)
 return
