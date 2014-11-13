@@ -228,7 +228,7 @@ subroutine spli2d ( tau, gtau, t, n, k, m, bcoef)
   sll_real64, dimension(:,:), intent(inout) :: bcoef !(m,n)
 
   sll_real64, dimension(n)         :: work  !(n)
-  sll_real64, dimension((2*k-1)*n) :: q     !((2*k-1)*n)
+  sll_real64, dimension((2*k-1),n) :: q     !((2*k-1)*n)
 
   sll_int32   :: i
   sll_int32   :: ilp1mx
@@ -240,7 +240,7 @@ subroutine spli2d ( tau, gtau, t, n, k, m, bcoef)
     
   left = k
    
-  q(1:(2*k-1)*n) = 0.0_f64
+  q = 0.0_f64
   !
   !  Construct the N interpolation equations.
   !
@@ -311,7 +311,8 @@ subroutine spli2d ( tau, gtau, t, n, k, m, bcoef)
        
     do j = 1, k
       jj = jj + k + k - 2
-      q(jj) = work(j)
+      !q(jj) = work(j)
+      q(i-(left+j)+2*k,left+j-k) = work(j)
     end do
        
   end do
@@ -482,13 +483,13 @@ subroutine spli2d_custom_derder ( nx,       &
     
   do j = 1, ny
        
-    call splint_der( taux, g(:,j), taux_der, g_der1(:,j), tx, nx, nx_der, kx, tmp(j,:))
+    call splint_der(taux,g(:,j),taux_der,g_der1(:,j),tx,nx,nx_der,kx,tmp(j,:))
        
   end do
 
   do i = 1, nx+nx_der
        
-    call splint_der( tauy, tmp(:,i), tauy_der, g_der2(:,i), ty, ny, ny_der, ky, bcoef(i,:))
+    call splint_der(tauy,tmp(:,i),tauy_der,g_der2(:,i),ty,ny,ny_der,ky,bcoef(i,:))
        
   end do
     

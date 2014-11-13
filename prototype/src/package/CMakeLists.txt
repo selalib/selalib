@@ -111,8 +111,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/fft/sll_fft_utils.F90
     ${SLL_DIR}/integration/gauss_legendre.F90
     ${SLL_DIR}/integration/gauss_lobatto.F90
-    ${SLL_DIR}/simulation/sll_polar_operators.F90
-    ${SLL_DIR}/simulation/sll_advection_polar.F90
+    ${SLL_DIR}/simulations/simulations_sequential/sim_CG_polar/sll_polar_operators.F90
+    ${SLL_DIR}/simulations/simulations_sequential/sim_CG_polar/sll_advection_polar.F90
 #    ${SLL_DIR}/sparse_matrix_manager/basic_cg.F90
     ${SLL_DIR}/sparse_matrix_manager/gauss_seidel.F90
     ${SLL_DIR}/sparse_matrix_manager/getdia.F90
