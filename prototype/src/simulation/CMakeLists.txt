@@ -127,14 +127,14 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
 
 #   ADD_SIMULATION(4d_mixed_qns_cartesian 4d_mixed_qns_cartesian)
 
-   # Add postprocessing code for KEEN
-   IF(Fortran_COMPILER MATCHES IBM)
-      SET_SOURCE_FILES_PROPERTIES(VPpostprocessing_drive_KEEN.f 
-                                  PROPERTIES COMPILE_FLAGS -qfixed)
-   ENDIF(Fortran_COMPILER MATCHES IBM)
-
-   ADD_EXECUTABLE(VPpostprocessing_drive_KEEN VPpostprocessing_drive_KEEN.f)
-   TARGET_LINK_LIBRARIES(VPpostprocessing_drive_KEEN dfftpack)
+#YG   # Add postprocessing code for KEEN
+#YG   IF(Fortran_COMPILER MATCHES IBM)
+#YG      SET_SOURCE_FILES_PROPERTIES(VPpostprocessing_drive_KEEN.f 
+#YG                                  PROPERTIES COMPILE_FLAGS -qfixed)
+#YG   ENDIF(Fortran_COMPILER MATCHES IBM)
+#YG
+#YG   ADD_EXECUTABLE(VPpostprocessing_drive_KEEN VPpostprocessing_drive_KEEN.f)
+#YG   TARGET_LINK_LIBRARIES(VPpostprocessing_drive_KEEN dfftpack)
 
 ENDIF()
 
