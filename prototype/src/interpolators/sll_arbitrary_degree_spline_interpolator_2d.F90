@@ -37,98 +37,91 @@ private
 ! in what follows, the direction '1' is in the contiguous memory direction.
 !> Arbitrary degree version of 2d irnterpolator
 type, public, extends(sll_interpolator_2d_base) :: &
-   sll_arbitrary_degree_spline_interpolator_2d           
-   private
-   sll_int32,  public :: num_pts1     !< PLEASE ADD DOCUMENTATION
-   sll_int32,  public :: num_pts2     !< PLEASE ADD DOCUMENTATION
-   sll_real64, public, pointer :: bcoef(:,:) !< PLEASE ADD DOCUMENTATION
-   sll_int32,  public :: size_coeffs1 !< PLEASE ADD DOCUMENTATION
-   sll_int32,  public :: size_coeffs2 !< PLEASE ADD DOCUMENTATION
-   sll_real64 :: eta1_min             !< PLEASE ADD DOCUMENTATION
-   sll_real64 :: eta1_max             !< PLEASE ADD DOCUMENTATION
-   sll_real64 :: eta2_min             !< PLEASE ADD DOCUMENTATION
-   sll_real64 :: eta2_max             !< PLEASE ADD DOCUMENTATION
-   sll_int32  :: bc_w                 !< PLEASE ADD DOCUMENTATION
-   sll_int32  :: bc_e                 !< PLEASE ADD DOCUMENTATION
-   sll_int32  :: bc_s                 !< PLEASE ADD DOCUMENTATION
-   sll_int32  :: bc_n                 !< PLEASE ADD DOCUMENTATION
-   sll_int32  :: spline_degree1       !< PLEASE ADD DOCUMENTATION
-   sll_int32  :: spline_degree2       !< PLEASE ADD DOCUMENTATION
-   sll_real64, dimension(:), pointer :: knots1 !< PLEASE ADD DOCUMENTATION
-   sll_real64, dimension(:), pointer :: knots2 !< PLEASE ADD DOCUMENTATION
-   ! some knot-like arrays needed by the spli2d_per routine
-   sll_real64, dimension(:), pointer :: t1 !< PLEASE ADD DOCUMENTATION
-   sll_real64, dimension(:), pointer :: t2 !< PLEASE ADD DOCUMENTATION
-   sll_int32  :: size_t1 !< PLEASE ADD DOCUMENTATION
-   sll_int32  :: size_t2  !< PLEASE ADD DOCUMENTATION
-   sll_int64  :: bc_selector !< this is set in initializ:wation
-   logical    :: coefficients_set = .false.   !< PLEASE ADD DOCUMENTATION
-   ! table contains the coeff spline of the function in boundary 
-   ! in the case of dirichlet boundary condition non homogene 
-   sll_real64, dimension(:),pointer :: slope_w !< PLEASE ADD DOCUMENTATION
-   sll_real64, dimension(:),pointer :: slope_e !< PLEASE ADD DOCUMENTATION
-   sll_real64, dimension(:),pointer :: slope_s !< PLEASE ADD DOCUMENTATION
-   sll_real64, dimension(:),pointer :: slope_n !< PLEASE ADD DOCUMENTATION
-   sll_real64, dimension(:),pointer :: value_w !< PLEASE ADD DOCUMENTATION
-   sll_real64, dimension(:),pointer :: value_e !< PLEASE ADD DOCUMENTATION
-   sll_real64, dimension(:),pointer :: value_s !< PLEASE ADD DOCUMENTATION
-   sll_real64, dimension(:),pointer :: value_n !< PLEASE ADD DOCUMENTATION
-   logical :: compute_slope_w = .TRUE. !< PLEASE ADD DOCUMENTATION
-   logical :: compute_slope_e= .TRUE. !< PLEASE ADD DOCUMENTATION
-   logical :: compute_slope_n = .TRUE. !< PLEASE ADD DOCUMENTATION
-   logical :: compute_slope_s= .TRUE. !< PLEASE ADD DOCUMENTATION
-   logical :: compute_value_w = .TRUE. !< PLEASE ADD DOCUMENTATION
-   logical :: compute_value_e= .TRUE. !< PLEASE ADD DOCUMENTATION
-   logical :: compute_value_n = .TRUE. !< PLEASE ADD DOCUMENTATION
-   logical :: compute_value_s= .TRUE. !< PLEASE ADD DOCUMENTATION
-   sll_real64, pointer :: eta1(:)
-   sll_real64, pointer :: eta2(:)
-   sll_interpolator_1d, pointer :: interp1d_w => null()
-   sll_interpolator_1d, pointer :: interp1d_e => null()
-   sll_interpolator_1d, pointer :: interp1d_s => null()
-   sll_interpolator_1d, pointer :: interp1d_n => null()
+  sll_arbitrary_degree_spline_interpolator_2d           
+  private
+  sll_int32,  public          :: num_pts1     !< PLEASE ADD DOCUMENTATION
+  sll_int32,  public          :: num_pts2     !< PLEASE ADD DOCUMENTATION
+  sll_real64, public, pointer :: bcoef(:,:)   !< PLEASE ADD DOCUMENTATION
+  sll_int32,  public          :: size_coeffs1 !< PLEASE ADD DOCUMENTATION
+  sll_int32,  public          :: size_coeffs2 !< PLEASE ADD DOCUMENTATION
+
+  sll_real64 :: eta1_min                      
+  sll_real64 :: eta1_max                      
+  sll_real64 :: eta2_min                      
+  sll_real64 :: eta2_max                      
+  sll_int32  :: bc_w                          
+  sll_int32  :: bc_e                          
+  sll_int32  :: bc_s                          
+  sll_int32  :: bc_n                          
+  sll_int32  :: spline_degree1                
+  sll_int32  :: spline_degree2                
+  sll_real64, dimension(:), pointer :: knots1 
+  sll_real64, dimension(:), pointer :: knots2 
+  sll_real64, dimension(:), pointer :: t1     
+  sll_real64, dimension(:), pointer :: t2     
+  sll_int32  :: size_t1                       
+  sll_int32  :: size_t2                       
+  sll_int64  :: bc_selector                   
+  logical    :: coefficients_set = .false.    
+  sll_real64, dimension(:),pointer :: slope_w 
+  sll_real64, dimension(:),pointer :: slope_e 
+  sll_real64, dimension(:),pointer :: slope_s 
+  sll_real64, dimension(:),pointer :: slope_n 
+  sll_real64, dimension(:),pointer :: value_w 
+  sll_real64, dimension(:),pointer :: value_e 
+  sll_real64, dimension(:),pointer :: value_s 
+  sll_real64, dimension(:),pointer :: value_n !
+  logical :: compute_slope_w = .true. 
+  logical :: compute_slope_e = .true. 
+  logical :: compute_slope_n = .true.
+  logical :: compute_slope_s = .true.
+  logical :: compute_value_w = .true.
+  logical :: compute_value_e = .true.
+  logical :: compute_value_n = .true.
+  logical :: compute_value_s = .true.
+  sll_real64, pointer :: eta1(:)
+  sll_real64, pointer :: eta2(:)
+  sll_interpolator_1d, pointer :: interp1d_w => null()
+  sll_interpolator_1d, pointer :: interp1d_e => null()
+  sll_interpolator_1d, pointer :: interp1d_s => null()
+  sll_interpolator_1d, pointer :: interp1d_n => null()
 
 contains
 
-   !> PLEASE ADD DOCUMENTATION
-   procedure, pass(interpolator) :: initialize=>initialize_ad2d_interpolator
-   !> PLEASE ADD DOCUMENTATION
-   procedure, pass(interpolator) :: set_coefficients => set_coefficients_ad2d
-   !> PLEASE ADD DOCUMENTATION
-   procedure, pass(interpolator) :: coefficients_are_set => &
-         coefficients_are_set_ad2d
-   ! better: pre-compute-interpolation-information or something...
-   !> PLEASE ADD DOCUMENTATION
-   procedure :: compute_interpolants => compute_interpolants_ad2d
-   ! procedure,  pass(interpolator) :: compute_spline_coefficients => &
-   !     compute_spline_coefficients_ad2d
-   !procedure, pass:: compute_spline_coefficients =>compute_spline_coefficients_ad2d
-   !> PLEASE ADD DOCUMENTATION
-   procedure :: interpolate_value => interpolate_value_ad2d
-   !> PLEASE ADD DOCUMENTATION
-   procedure :: interpolate_derivative_eta1 => interpolate_derivative1_ad2d
-   !> PLEASE ADD DOCUMENTATION
-   procedure :: interpolate_derivative_eta2 => interpolate_derivative2_ad2d
-   !> PLEASE ADD DOCUMENTATION
-   procedure, pass:: interpolate_array => interpolate_array_ad2d
-   !> PLEASE ADD DOCUMENTATION
-   procedure, pass:: interpolate_array_disp => interpolate_2d_array_disp_ad2d
-   !> PLEASE ADD DOCUMENTATION
-   procedure, pass:: get_coefficients => get_coefficients_ad2d
-   !> PLEASE ADD DOCUMENTATION
-   procedure, pass:: delete => delete_arbitrary_degree_2d_interpolator
-   !> PLEASE ADD DOCUMENTATION
-   procedure, pass:: set_values_at_boundary => set_boundary_value2d
-   !> PLEASE ADD DOCUMENTATION
-   procedure, pass:: set_slopes_at_boundary => set_slope2d
-end type sll_arbitrary_degree_spline_interpolator_2d
+  !> PLEASE ADD DOCUMENTATION
+  procedure, pass(interpolator) :: initialize=>initialize_ad2d_interpolator
+  !> PLEASE ADD DOCUMENTATION
+  procedure, pass(interpolator) :: set_coefficients => set_coefficients_ad2d
+  !> PLEASE ADD DOCUMENTATION
+  procedure, pass(interpolator) :: coefficients_are_set => &
+        coefficients_are_set_ad2d
+  !> PLEASE ADD DOCUMENTATION
+  procedure :: compute_interpolants => compute_interpolants_ad2d
+  !> PLEASE ADD DOCUMENTATION
+  procedure :: interpolate_value => interpolate_value_ad2d
+  !> PLEASE ADD DOCUMENTATION
+  procedure :: interpolate_derivative_eta1 => interpolate_derivative1_ad2d
+  !> PLEASE ADD DOCUMENTATION
+  procedure :: interpolate_derivative_eta2 => interpolate_derivative2_ad2d
+  !> PLEASE ADD DOCUMENTATION
+  procedure, pass:: interpolate_array => interpolate_array_ad2d
+  !> PLEASE ADD DOCUMENTATION
+  procedure, pass:: interpolate_array_disp => interpolate_2d_array_disp_ad2d
+  !> PLEASE ADD DOCUMENTATION
+  procedure, pass:: get_coefficients => get_coefficients_ad2d
+  !> PLEASE ADD DOCUMENTATION
+  procedure, pass:: delete => delete_arbitrary_degree_2d_interpolator
+  !> PLEASE ADD DOCUMENTATION
+  procedure, pass:: set_values_at_boundary => set_boundary_value2d
+  !> PLEASE ADD DOCUMENTATION
+  procedure, pass:: set_slopes_at_boundary => set_slope2d
 
+end type sll_arbitrary_degree_spline_interpolator_2d
 
 !> Pointer to arbitrary degree version of 1d interpolator
 type, public :: sll_arbitrary_degree_spline_interpolator_2d_ptr
    type(sll_arbitrary_degree_spline_interpolator_2d), pointer :: interp
 end type sll_arbitrary_degree_spline_interpolator_2d_ptr
-
 
 interface sll_delete
    module procedure delete_arbitrary_degree_2d_interpolator
@@ -148,8 +141,6 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
 sll_interpolator_2d, intent(inout) :: interpolator
 sll_int32 :: ierr
 
-SLL_DEALLOCATE(interpolator%knots1,ierr)
-SLL_DEALLOCATE(interpolator%knots2,ierr)
 SLL_DEALLOCATE(interpolator%t1,ierr)
 SLL_DEALLOCATE(interpolator%t2,ierr)
 SLL_DEALLOCATE(interpolator%bcoef,ierr)
@@ -267,7 +258,7 @@ subroutine initialize_ad2d_interpolator( interpolator,   &
                                          spline_degree1, &
                                          spline_degree2)
 
-sll_interpolator_2d:: interpolator
+sll_interpolator_2d    :: interpolator
 sll_int32,  intent(in) :: num_pts1
 sll_int32,  intent(in) :: num_pts2
 sll_real64, intent(in) :: eta1_min
@@ -293,16 +284,17 @@ sll_real64 :: delta_eta2
 ! do some argument checking...
 if(((bc_w == SLL_PERIODIC).and.(bc_e /= SLL_PERIODIC)).or.&
    ((bc_e == SLL_PERIODIC).and.(bc_w /= SLL_PERIODIC))) then
-  print *, 'initialize_arbitrary_degree_2d_interpolator, ERROR: ', &
-           'if one boundary condition is specified as periodic, then ', &
-           'both must be. Error in first direction.'
+  SLL_ERROR('initialize_arbitrary_degree_2d_interpolator &
+           & if one boundary condition is specified as periodic, then &
+           & both must be. Error in first direction.')
 end if
 
 if(((bc_s == SLL_PERIODIC).and.(bc_n /= SLL_PERIODIC)).or.&
    ((bc_n == SLL_PERIODIC).and.(bc_s /= SLL_PERIODIC))) then
-  print *, 'initialize_arbitrary_degree_2d_interpolator, ERROR: ', &
-           'if one boundary condition is specified as periodic, then ', &
-           'both must be. Error in second direction.'
+  SLL_ERROR('initialize_arbitrary_degree_2d_interpolator &
+            & if one boundary condition is specified as  &
+            & periodic, then both must be. Error in      &
+            & second direction.')
 end if
 
 bc_selector = 0
@@ -362,31 +354,8 @@ tmp1 = num_pts1+4*spline_degree1
 tmp2 = num_pts2+4*spline_degree2
 SLL_ALLOCATE( interpolator%bcoef(tmp1,tmp2),ierr)
 
-select case (bc_selector)
-case (0) ! 1. periodic-periodic
-       
-  SLL_ALLOCATE( interpolator%knots1(2*spline_degree1+2),ierr )
-  SLL_ALLOCATE( interpolator%knots2(2*spline_degree2+2),ierr )
-
-case (9) ! 2. dirichlet-left, dirichlet-right, periodic
-       
-  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-  SLL_ALLOCATE( interpolator%knots2(2*spline_degree2+2),ierr )
-
-case (576) ! 3. periodic, dirichlet-bottom, dirichlet-top
-
-  SLL_ALLOCATE( interpolator%knots1(2*spline_degree1+2),ierr )
-  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-
-case default
-
-  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-
-end select
-
-! knots and coeff splines allocations 
 interpolator%bcoef(:,:) = 0.0_f64
+
 ! the minimun is to be of class C^0 everywhere on the knots
 ! i.e. each knot have multiplicity (spline_degree1+1) 
 ! so the maximun number of knots is num_pts1*(spline_degree1+1)
@@ -773,6 +742,535 @@ end if
        
 end subroutine set_boundary_value2d
 
+#define SPLI2D_CUSTOM_DERDER call spli2d_custom_derder( \
+ sz1, sz_derivative_eta1, order1, interpolator%eta1, eta1_deriv, \
+ sz2, sz_derivative_eta2, order2, interpolator%eta2, eta2_deriv, \
+ data_array, deriv_eta1,  deriv_eta2,  \
+ interpolator%bcoef, interpolator%t1, interpolator%t2); \
+
+!> @brief computing the coefficients spline with a given 
+!> data_array 2D cooresponding at the values of a function 
+!> @details computing the coefficients spline with a given 
+!> data_array 2D corresponding at the values of a function 
+!> on eta1_coords of size size_eta1_coords in the first direction and 
+!> on eta2_coords of size size_eta2_coords in the second direction
+!> if the eta1_coords and eta2_coords is not given,
+!> we consider that the values of the function is on the points in the mesh_2d.
+!> We compute also the knots position t1 and t2.
+!> @param interpolator the type sll_arbitrary_degree_spline_interpolator_2d
+!> @param[in] data_array the 2d arrays corresponding at the values of a function
+!> @param[in] eta1_coords the 1d arrays corresponding at the points eta1 
+!> @param[in] size_eta1_coords the size of eta1_coords
+!> @param[in] eta2_coords the 1d arrays corresponding at the points eta2
+!> @param[in] size_eta2_coords the size of eta2_coords
+!> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_2d
+
+subroutine compute_interpolants_ad2d( interpolator,     &
+                                      data_array,       &
+                                      eta1_coords,      &
+                                      size_eta1_coords, &
+                                      eta2_coords,      &
+                                      size_eta2_coords )
+
+sll_interpolator_2d, intent(inout)  :: interpolator
+
+sll_real64, dimension(:,:), intent(in)          :: data_array
+sll_real64, dimension(:),   intent(in),optional :: eta1_coords
+sll_real64, dimension(:),   intent(in),optional :: eta2_coords
+sll_int32,                  intent(in),optional :: size_eta1_coords
+sll_int32,                  intent(in),optional :: size_eta2_coords
+sll_real64, allocatable :: deriv_eta1(:,:)
+sll_real64, allocatable :: deriv_eta2(:,:)
+
+sll_int32 :: eta1_deriv(2)
+sll_int32 :: eta2_deriv(2)
+
+sll_int32, parameter :: sz_derivative_eta1 = 2
+sll_int32, parameter :: sz_derivative_eta2 = 2
+sll_int32  :: sz1
+sll_int32  :: sz2
+sll_real64 :: period1
+sll_real64 :: period2
+sll_int32  :: order1
+sll_int32  :: order2
+sll_int32  :: ierr
+
+if (present(eta1_coords)) then
+  SLL_ASSERT(present(size_eta1_coords))
+end if
+if (present(eta2_coords)) then
+  SLL_ASSERT(present(size_eta2_coords))
+end if
+if (present(eta1_coords)) then
+  SLL_ASSERT(present(eta2_coords))
+end if
+if (present(eta2_coords)) then
+  SLL_ASSERT(present(eta1_coords))
+end if
+    
+if( present(eta1_coords) .and. present(eta2_coords) ) then
+
+  sz1 = size_eta1_coords
+  sz2 = size_eta2_coords
+       
+  interpolator%eta1(1:sz1) = eta1_coords(1:sz1)
+  interpolator%eta2(1:sz2) = eta2_coords(1:sz2)
+
+  SLL_ALLOCATE(deriv_eta1(sz_derivative_eta1,sz2),ierr)
+  SLL_ALLOCATE(deriv_eta2(sz_derivative_eta2,sz1+sz_derivative_eta1),ierr)
+
+else
+
+  sz1 = interpolator%num_pts1
+  sz2 = interpolator%num_pts2
+
+end if
+
+SLL_ASSERT(sz1 .le. interpolator%num_pts1 + 8*interpolator%spline_degree1)
+SLL_ASSERT(sz2 .le. interpolator%num_pts2 + 8*interpolator%spline_degree1)
+SLL_ASSERT(size(data_array,1) .ge. sz1)
+SLL_ASSERT(size(data_array,2) .ge. sz2)
+SLL_ASSERT(size(interpolator%eta1)  .ge. sz1)
+SLL_ASSERT(size(interpolator%eta2)  .ge. sz2)
+
+eta1_deriv = [1, sz1]
+eta2_deriv = [1, sz2]
+    
+order1  = interpolator%spline_degree1 + 1
+order2  = interpolator%spline_degree2 + 1
+period1 = interpolator%eta1_max - interpolator%eta1_min
+period2 = interpolator%eta2_max - interpolator%eta2_min
+    
+if (interpolator%bc_selector > 585) then
+
+  interpolator%size_coeffs1 = sz1 + sz_derivative_eta1
+  interpolator%size_coeffs2 = sz2 + sz_derivative_eta2
+  interpolator%size_t1 = order1 + sz1 + sz_derivative_eta1
+  interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
+
+else
+
+  interpolator%size_coeffs1 = sz1
+  interpolator%size_coeffs2 = sz2
+  interpolator%size_t1 = order1 + sz1
+  interpolator%size_t2 = order2 + sz2
+
+end if
+    
+select case (interpolator%bc_selector)
+case(0) ! periodic-periodic
+
+  call spli2d_custom( sz1, order1, interpolator%eta1,  &
+                      sz2, order2, interpolator%eta2,  &
+                      data_array,  interpolator%bcoef, &
+                      interpolator%t1, interpolator%t2 )
+
+case(9) ! 2. dirichlet-left, dirichlet-right, periodic
+
+  call spli2d_custom( sz1, order1,     interpolator%eta1,  &
+                      sz2, order2,     interpolator%eta2,  &
+                      data_array,      interpolator%bcoef, &
+                      interpolator%t1, interpolator%t2)
+
+  interpolator%bcoef(1,1:sz2)   = data_array(1,1:sz2)
+  interpolator%bcoef(sz1,1:sz2) = data_array(sz1,1:sz2)
+  
+case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
+
+  call spli2d_custom( sz1, order1,     interpolator%eta1,  &
+                      sz2, order2,     interpolator%eta2,  &
+                      data_array,      interpolator%bcoef, &
+                      interpolator%t1, interpolator%t2)
+
+  interpolator%bcoef(1:sz1,1)   = data_array(1:sz1,1)
+  interpolator%bcoef(1:sz1,sz2) = data_array(1:sz1,sz2)
+       
+case(585) ! 4. dirichlet in all sides
+
+  call spli2d_custom( sz1, order1,     interpolator%eta1, &
+                      sz2, order2,     interpolator%eta2, &
+                      data_array,      interpolator%bcoef,&
+                      interpolator%t1, interpolator%t2)
+
+  interpolator%bcoef(1,1:sz2)   = data_array(1,1:sz2)
+  interpolator%bcoef(sz1,1:sz2) = data_array(sz1,1:sz2)
+  interpolator%bcoef(1:sz1,1)   = data_array(1:sz1,1)
+  interpolator%bcoef(1:sz1,sz2) = data_array(1:sz1,sz2)
+
+case(650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet
+
+  deriv_eta1(1,:) = 0.0_f64
+  deriv_eta1(2,:) = interpolator%slope_e(1:sz2)
+  deriv_eta2(1,:) = 0.0_f64
+  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
+
+  SPLI2D_CUSTOM_DERDER
+
+case(657) !left: Dirichlet, right: Neumann, bottom: Neumann, Top: Dirichlet 
+
+  deriv_eta1(1,:) = interpolator%slope_w(1:sz2) 
+  deriv_eta1(2,:) = 0.0_f64
+  deriv_eta2(1,:) = 0.0_f64
+  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
+
+  SPLI2D_CUSTOM_DERDER
+
+case(780)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Dirichlet
+
+  deriv_eta1(1,:) = interpolator%slope_w(1:sz2)
+  deriv_eta1(2,:) = interpolator%slope_e(1:sz2)
+  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
+  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
+
+  SPLI2D_CUSTOM_DERDER
+
+case(801)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Dirichlet
+
+  deriv_eta1(1,:) = interpolator%slope_w(1:sz2) 
+  deriv_eta1(2,:) = interpolator%slope_e(1:sz2) 
+  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
+  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
+
+  SPLI2D_CUSTOM_DERDER
+
+case(804)  !left: Hermite, right: Hermite, bottom: Hermite, Top: Dirichlet
+
+  deriv_eta1(1,:) = interpolator%slope_w(1:sz2) 
+  deriv_eta1(2,:) = interpolator%slope_e(1:sz2) 
+  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
+  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
+
+  SPLI2D_CUSTOM_DERDER
+
+case(1098)  !left: Neumann, right: Dirichlet, bottom: Dirichlet, Top: Neumann
+
+  deriv_eta1(1,:) = 0.0_f64
+  deriv_eta1(2,:) = interpolator%slope_e(1:sz2)
+  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
+  deriv_eta2(2,:) = 0.0_f64
+
+  SPLI2D_CUSTOM_DERDER
+
+case(1105)  !left: Dirichlet, right: Neumann, bottom: Dirichlet, Top: Neumann
+
+  deriv_eta1(1,:) = interpolator%slope_w(1:sz2)
+  deriv_eta1(2,:) = 0.0_f64
+  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
+  deriv_eta2(2,:) = 0.0_f64
+
+  SPLI2D_CUSTOM_DERDER
+
+case(1170)  !left: Neumann, right: Neumann, bottom: Neuman, Top: Neumann
+
+  deriv_eta1(1,:) = 0.0_f64
+  deriv_eta1(2,:) = 0.0_f64
+  deriv_eta2(1,:) = 0.0_f64
+  deriv_eta2(2,:) = 0.0_f64
+
+  SPLI2D_CUSTOM_DERDER
+
+case(2338)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Hermite
+
+  deriv_eta1(1,:) = interpolator%slope_w(1:sz2)
+  deriv_eta1(2,:) = interpolator%slope_e(1:sz2)
+  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
+  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
+
+  SPLI2D_CUSTOM_DERDER
+
+case(2145) !left: Dirichlet, right: Hermite, bottom: Dirichlet, Top: Hermite  
+
+  deriv_eta1(1,:) = interpolator%slope_w(1:sz2)
+  deriv_eta1(2,:) = interpolator%slope_e(1:sz2)
+  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
+  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
+
+  SPLI2D_CUSTOM_DERDER
+
+case(2124)  !left: Hermite, right: Dirichlet, bottom: Dirichlet, Top: Hermite
+
+  deriv_eta1(1,:) = interpolator%slope_w(1:sz2)
+  deriv_eta1(2,:) = interpolator%slope_e(1:sz2)
+  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
+  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
+
+  SPLI2D_CUSTOM_DERDER
+
+case(2148)  !left:Hermite , right: Hermite, bottom: Dirichlet, Top: Hermite
+
+  deriv_eta1(1,:) = interpolator%slope_w(1:sz2)
+  deriv_eta1(2,:) = interpolator%slope_e(1:sz2)
+  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
+  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
+
+  SPLI2D_CUSTOM_DERDER
+
+case(2316)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Hermite
+
+  deriv_eta1(1,:) = interpolator%slope_w(1:sz2)
+  deriv_eta1(2,:) = interpolator%slope_e(1:sz2)
+  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
+  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
+
+  SPLI2D_CUSTOM_DERDER
+
+case(2340) ! Hermite in al sides
+       
+  deriv_eta1(1,:) = interpolator%slope_w(1:sz2)
+  deriv_eta1(2,:) = interpolator%slope_e(1:sz2)
+  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
+  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
+
+  SPLI2D_CUSTOM_DERDER
+
+end select
+
+interpolator%coefficients_set = .true.
+   
+end subroutine compute_interpolants_ad2d
+
+function coefficients_are_set_ad2d( interpolator ) result(res)
+  sll_interpolator_2d, intent(in)  :: interpolator
+  logical :: res
+  res = interpolator%coefficients_set
+end function coefficients_are_set_ad2d
+
+!> @brief Interpolation on the points eta1 and eta2 
+!> @details computing the values with the interpolator arbitrary degree splines 2d
+!>  on the points eta1 and eta2 of arbitrary degree splines 2d
+!> @param interpolator the type sll_arbitrary_degree_spline_interpolator_2d
+!> @param[in] eta1 the point inthe first direction
+!> @param[in] eta2 the point inthe second direction 
+!> @return val the values on the points eta1 and eta2 
+function interpolate_value_ad2d( interpolator, eta1, eta2 ) result(val)
+
+  sll_interpolator_2d, intent(in)  :: interpolator
+  sll_real64,          intent(in)  :: eta1
+  sll_real64,          intent(in)  :: eta2
+  sll_real64                       :: val
+
+  sll_int32  :: size_coeffs1
+  sll_int32  :: size_coeffs2
+  sll_real64 :: res1
+  sll_real64 :: res2
+
+  size_coeffs1 = interpolator%size_coeffs1
+  size_coeffs2 = interpolator%size_coeffs2
+
+  if ( interpolator%bc_w == SLL_PERIODIC .and. eta1 < interpolator%eta1_min) then
+    res1 = eta1 + interpolator%eta1_max - interpolator%eta1_min
+  else if ( interpolator%bc_e == SLL_PERIODIC .and. eta1 > interpolator%eta1_max) then
+    res1 = eta1 - interpolator%eta1_max + interpolator%eta1_min
+  else
+    res1 = eta1
+  end if
+
+
+  if ( interpolator%bc_s == SLL_PERIODIC .and. eta2 < interpolator%eta2_min) then
+    res2 = eta2 + interpolator%eta2_max - interpolator%eta2_min
+  else if ( interpolator%bc_n == SLL_PERIODIC .and. eta2 > interpolator%eta2_max) then
+    res2 = eta2 - interpolator%eta2_max + interpolator%eta2_min
+  else
+    res2 = eta2
+  end if
+
+  SLL_ASSERT( res1 >= interpolator%eta1_min )
+  SLL_ASSERT( res1 <= interpolator%eta1_max )
+  SLL_ASSERT( res2 >= interpolator%eta2_min )
+  SLL_ASSERT( res2 <= interpolator%eta2_max )
+
+  call bvalue2d(res1,                                              &
+                res2,                                              &
+                size_coeffs1,                                      &
+                interpolator%spline_degree1+1,                     &
+                size_coeffs2,                                      &
+                interpolator%spline_degree2+1,                     &
+                interpolator%bcoef(1:size_coeffs1,1:size_coeffs2), &
+                interpolator%t1(1:interpolator%size_t1),           &
+                interpolator%t2(1:interpolator%size_t2),           &
+                val)
+
+end function interpolate_value_ad2d
+
+!> @brief First derivative in eta1 interpolation on the points eta1 and eta2 
+!> @details computing the values of the first derivative in eta1
+!> with the interpolator arbitrary degree splines 2d
+!> on the points eta1 and eta2 of arbitrary degree splines 2d
+!> @param interpolator the type sll_arbitrary_degree_spline_interpolator_2d
+!> @param[in] eta1 the point inthe first direction
+!> @param[in] eta2 the point inthe second direction 
+!> @return val the values on the points eta1 and eta2 of the first derivative in eta1
+function interpolate_derivative1_ad2d( interpolator, eta1, eta2 ) result(val)
+
+  sll_interpolator_2d, intent(in)  :: interpolator
+  sll_real64,          intent(in)  :: eta1
+  sll_real64,          intent(in)  :: eta2
+  sll_real64                       :: val
+
+  sll_int32  :: size_coeffs1
+  sll_int32  :: size_coeffs2
+  sll_real64 :: res1
+  sll_real64 :: res2
+
+  size_coeffs1 = interpolator%size_coeffs1
+  size_coeffs2 = interpolator%size_coeffs2
+
+  if ( interpolator%bc_w == SLL_PERIODIC .and. eta1 < interpolator%eta1_min) then
+    res1 = eta1 + interpolator%eta1_max - interpolator%eta1_min
+  else if ( interpolator%bc_e == SLL_PERIODIC .and. eta1 > interpolator%eta1_max) then
+    res1 = eta1 - interpolator%eta1_max + interpolator%eta1_min
+  else
+    res1 = eta1
+  end if
+
+  if ( interpolator%bc_s == SLL_PERIODIC .and. eta2 < interpolator%eta2_min) then
+    res2 = eta2 + interpolator%eta2_max-interpolator%eta2_min
+  else if ( interpolator%bc_n == SLL_PERIODIC .and. eta2 > interpolator%eta2_max) then
+    res2 = eta2 - interpolator%eta2_max + interpolator%eta2_min
+  else
+    res2 = eta2
+  end if
+    
+  SLL_ASSERT( res1 >= interpolator%eta1_min )
+  SLL_ASSERT( res1 <= interpolator%eta1_max )
+  SLL_ASSERT( res2 >= interpolator%eta2_min )
+  SLL_ASSERT( res2 <= interpolator%eta2_max )
+
+  val = dvalue2d(res1,                                              &
+                 res2,                                              &
+                 size_coeffs1,                                      &
+                 interpolator%spline_degree1+1,                     &
+                 size_coeffs2,                                      &
+                 interpolator%spline_degree2+1,                     &
+                 interpolator%bcoef(1:size_coeffs1,1:size_coeffs2), &
+                 interpolator%t1(1:interpolator%size_t1),           &
+                 interpolator%t2(1:interpolator%size_t2),           &
+                 1,0)
+    
+end function interpolate_derivative1_ad2d
+     
+!> @brief First derivative in eta2 Interpolation on the points eta1 and eta2 
+!> using the arbitrary degree splines interpolator 2d
+!> @details computing the values of the first derivative in eta2
+!> with the interpolator arbitrary degree splines 2d
+!> on the points eta1 and eta2 of arbitrary degree splines 2d
+!> 
+!> The parameters are
+!> @param interpolator the type sll_arbitrary_degree_spline_interpolator_2d
+!> @param[in] eta1 the point inthe first direction
+!> @param[in] eta2 the point inthe second direction 
+!> @return val the values on the points eta1 and eta2 of the first derivative in eta2
+function interpolate_derivative2_ad2d(interpolator, eta1, eta2 ) result(val)
+
+  sll_interpolator_2d, intent(in)  :: interpolator
+  sll_real64,          intent(in)  :: eta1
+  sll_real64,          intent(in)  :: eta2
+  sll_real64                       :: val
+
+  sll_int32                        :: size_coeffs1
+  sll_int32                        :: size_coeffs2
+  sll_real64                       :: res1
+  sll_real64                       :: res2
+
+  size_coeffs1 = interpolator%size_coeffs1
+  size_coeffs2 = interpolator%size_coeffs2
+
+  if ( interpolator%bc_w == SLL_PERIODIC .and. eta1 < interpolator%eta1_min) then
+    res1 = eta1 + interpolator%eta1_max - interpolator%eta1_min 
+  else if ( interpolator%bc_e == SLL_PERIODIC .and. eta1 > interpolator%eta1_max) then
+    res1 = eta1 - interpolator%eta1_max + interpolator%eta1_min
+  else
+    res1 = eta1
+  end if
+
+  if ( interpolator%bc_s == SLL_PERIODIC .and. eta2 < interpolator%eta2_min) then
+    res2 = eta2 + interpolator%eta2_max-interpolator%eta2_min
+  else if ( interpolator%bc_n == SLL_PERIODIC .and. eta2 > interpolator%eta2_max) then
+    res2 = eta2 - interpolator%eta2_max + interpolator%eta2_min
+  else
+    res2 = eta2
+  end if
+
+  SLL_ASSERT( res1 >= interpolator%eta1_min )
+  SLL_ASSERT( res1 <= interpolator%eta1_max )
+  SLL_ASSERT( res2 >= interpolator%eta2_min )
+  SLL_ASSERT( res2 <= interpolator%eta2_max )
+
+  val = dvalue2d(                                           &
+         res1,                                              &
+         res2,                                              &
+         size_coeffs1,                                      &
+         interpolator%spline_degree1+1,                     &
+         size_coeffs2,                                      &
+         interpolator%spline_degree2+1,                     &
+         interpolator%bcoef(1:size_coeffs1,1:size_coeffs2), &
+         interpolator%t1(1:interpolator%size_t1),           &
+         interpolator%t2(1:interpolator%size_t2),           &
+         0,1)
+    
+end function interpolate_derivative2_ad2d
+  
+function interpolate_array_ad2d( this,              &
+                                 num_points1,       &
+                                 num_points2,       &
+                                 data_in,           &
+                                 eta1,              &
+                                 eta2 ) result(res)
+    
+  sll_interpolator_2d,        intent(in) :: this
+  sll_real64, dimension(:,:), intent(in) :: eta1
+  sll_real64, dimension(:,:), intent(in) :: eta2
+  sll_real64, dimension(:,:), intent(in) :: data_in
+  sll_int32,                  intent(in) :: num_points1
+  sll_int32,                  intent(in) :: num_points2
+  sll_real64                             :: res(num_points1,num_points2)
+    
+  res = -1000000._f64
+  print *,this%num_pts1
+  print *,maxval(eta1)
+  print *,maxval(eta2)
+  print *,maxval(data_in)
+  print *,num_points1
+  print *,num_points2
+  SLL_ERROR( '#interpolate_array_ad2d: not implemented')
+
+end function !interpolate_array_ad2d
+  
+function interpolate_2d_array_disp_ad2d( this,        &
+                                         num_points1, &
+                                         num_points2, &
+                                         data_in,     &
+                                         alpha1,      &
+                                         alpha2) result(res)
+      
+  sll_interpolator_2d, intent(in)    :: this
+  sll_int32, intent(in)                          :: num_points1  
+  sll_int32, intent(in)                          :: num_points2 
+  sll_real64, dimension(:,:), intent(in)         :: data_in
+  sll_real64, dimension(:,:), intent(in)         :: alpha1
+  sll_real64, dimension(:,:), intent(in)         :: alpha2  
+  sll_real64, dimension(num_points1,num_points2) :: res
+  
+  print *,this%num_pts1
+  print *,num_points1 
+  print *,num_points2
+  print *,maxval(data_in)
+  print *,alpha1
+  print *,alpha2     
+  res = -1000000._f64
+  SLL_ERROR('#interpolate_2d_array_disp_ad2d: not implemented.')
+    
+end function !interpolate_2d_array_disp_ad2d
+    
+function get_coefficients_ad2d(interpolator)
+  sll_interpolator_2d, intent(in)    :: interpolator
+  sll_real64, dimension(:,:), pointer           :: get_coefficients_ad2d     
+
+  get_coefficients_ad2d => interpolator%bcoef
+
+end function get_coefficients_ad2d
+  
+
 !> @brief initializing the coefficients of splines.
 !> @details  initializing the coefficients of splines
 !>  in the cas of linearization of them i.e. if we have 
@@ -834,7 +1332,9 @@ eta1_max   = interpolator%eta1_max
 eta2_max   = interpolator%eta2_max
 delta1     = (eta1_max - eta1_min)/num_cells1
 delta2     = (eta2_max - eta2_min)/num_cells2
-   
+
+
+
 if (present(coeffs_1d) ) then 
 
   select case (interpolator%bc_selector)
@@ -1424,7 +1924,6 @@ else if (present(coeffs_2d)) then
                  knots1(1:interpolator%size_t1 )
       interpolator%t2(1:interpolator%size_t2 ) = &
                  knots2(1:interpolator%size_t2 )
-            
     else 
             
       SLL_ASSERT(interpolator%size_t1 <= (num_cells1+1)*(sp_deg1+1))
@@ -1450,689 +1949,20 @@ else if (present(coeffs_2d)) then
 
   else 
 
-    print*, 'Problem in set_coefficients in arbitrary_degree_spline_2d'
-    print*, 'problem with the size of coeffs_2d'
-    print*, 'the number of coefficients must be specified'
-    stop
+    SLL_ERROR('Problem in set_coefficients in arbitrary_degree_spline_2d &
+              & problem with the size of coeffs_2d the number of         &
+              & coefficients must be specified')
          
   end if
       
+else
+
+  SLL_WARNING(' arbitrary degree spline interpolator 2d set coefficients &
+              &  does nothing')
 end if
 
 interpolator%coefficients_set = .true.
     
 end subroutine set_coefficients_ad2d
 
-
-#define SPLI2D_CUSTOM_DERDER call spli2d_custom_derder( \
-   sz1, sz_derivative_eta1, order1, interpolator%eta1, eta1_deriv, \
-   sz2, sz_derivative_eta2, order2, interpolator%eta2, eta2_deriv, \
-   data_array, deriv_eta1,  deriv_eta2, interpolator%bcoef,  \
-   interpolator%t1, interpolator%t2); \
-
-
-!> @brief computing the coefficients spline with a given 
-!> data_array 2D cooresponding at the values of a function 
-!> @details computing the coefficients spline with a given 
-!> data_array 2D corresponding at the values of a function 
-!> on eta1_coords of size size_eta1_coords in the first direction and 
-!> on eta2_coords of size size_eta2_coords in the second direction
-!> if the eta1_coords and eta2_coords is not given,
-!> we consider that the values of the function is on the points in the mesh_2d.
-!> We compute also the knots position t1 and t2.
-!> @param interpolator the type sll_arbitrary_degree_spline_interpolator_2d
-!> @param[in] data_array the 2d arrays corresponding at the values of a function
-!> @param[in] eta1_coords the 1d arrays corresponding at the points eta1 
-!> @param[in] size_eta1_coords the size of eta1_coords
-!> @param[in] eta2_coords the 1d arrays corresponding at the points eta2
-!> @param[in] size_eta2_coords the size of eta2_coords
-!> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_2d
-
-subroutine compute_interpolants_ad2d( interpolator,     &
-                                      data_array,       &
-                                      eta1_coords,      &
-                                      size_eta1_coords, &
-                                      eta2_coords,      &
-                                      size_eta2_coords )
-
-sll_interpolator_2d, intent(inout)  :: interpolator
-
-sll_real64, dimension(:,:), intent(in)          :: data_array
-sll_real64, dimension(:),   intent(in),optional :: eta1_coords
-sll_real64, dimension(:),   intent(in),optional :: eta2_coords
-sll_int32,                  intent(in),optional :: size_eta1_coords
-sll_int32,                  intent(in),optional :: size_eta2_coords
-
-sll_real64, dimension(:,:), pointer             :: deriv_eta1
-sll_real64, dimension(:,:), pointer             :: deriv_eta2
-
-sll_int32 :: eta1_deriv(2)
-sll_int32 :: eta2_deriv(2)
-
-sll_int32, parameter :: sz_derivative_eta1 = 2
-sll_int32, parameter :: sz_derivative_eta2 = 2
-sll_int32  :: sz1
-sll_int32  :: sz2
-sll_real64 :: period1
-sll_real64 :: period2
-sll_int32  :: order1
-sll_int32  :: order2
-sll_int32  :: ierr
-
-if (present(eta1_coords)) then
-  SLL_ASSERT(present(size_eta1_coords))
-end if
-if (present(eta2_coords)) then
-  SLL_ASSERT(present(size_eta2_coords))
-end if
-if (present(eta1_coords)) then
-  SLL_ASSERT(present(eta2_coords))
-end if
-if (present(eta2_coords)) then
-  SLL_ASSERT(present(eta1_coords))
-end if
-    
-if( present(eta1_coords) .and. present(eta2_coords) ) then
-
-  sz1 = size_eta1_coords
-  sz2 = size_eta2_coords
-       
-  interpolator%eta1(1:sz1) = eta1_coords(1:sz1)
-  interpolator%eta2(1:sz2) = eta2_coords(1:sz2)
-
-else
-
-  sz1 = interpolator%num_pts1
-  sz2 = interpolator%num_pts2
-
-end if
-
-SLL_ASSERT(sz1 .le. interpolator%num_pts1 + 8*interpolator%spline_degree1)
-SLL_ASSERT(sz2 .le. interpolator%num_pts2 + 8*interpolator%spline_degree1)
-SLL_ASSERT(size(data_array,1) .ge. sz1)
-SLL_ASSERT(size(data_array,2) .ge. sz2)
-SLL_ASSERT(size(interpolator%eta1)  .ge. sz1)
-SLL_ASSERT(size(interpolator%eta2)  .ge. sz2)
-
-eta1_deriv = [1, sz1]
-eta2_deriv = [1, sz2]
-    
-order1  = interpolator%spline_degree1 + 1
-order2  = interpolator%spline_degree2 + 1
-period1 = interpolator%eta1_max - interpolator%eta1_min
-period2 = interpolator%eta2_max - interpolator%eta2_min
-    
-    
-select case (interpolator%bc_selector)
-case (0) ! periodic-periodic
-
-  interpolator%size_coeffs1 = sz1
-  interpolator%size_coeffs2 = sz2
-  interpolator%size_t1 = order1 + sz1
-  interpolator%size_t2 = order2 + sz2
-
-  call spli2d_custom( sz1, order1, interpolator%eta1,  &
-                      sz2, order2, interpolator%eta2,  &
-                      data_array,  interpolator%bcoef, &
-                      interpolator%t1, interpolator%t2 )
-
-case (9) ! 2. dirichlet-left, dirichlet-right, periodic
-
-  interpolator%size_coeffs1 = sz1
-  interpolator%size_coeffs2 = sz2
-  interpolator%size_t1 = order1 + sz1
-  interpolator%size_t2 = order2 + sz2
-
-  call spli2d_custom( sz1, order1,     interpolator%eta1,  &
-                      sz2, order2,     interpolator%eta2,  &
-                      data_array,      interpolator%bcoef, &
-                      interpolator%t1, interpolator%t2)
-
-  interpolator%bcoef(1,1:sz2)   = data_array(1,1:sz2)
-  interpolator%bcoef(sz1,1:sz2) = data_array(sz1,1:sz2)
-  
-case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
-
-  interpolator%size_coeffs1 = sz1
-  interpolator%size_coeffs2 = sz2
-  interpolator%size_t1 = order1 + sz1
-  interpolator%size_t2 = order2 + sz2 
-
-  call spli2d_custom( sz1, order1,     interpolator%eta1,  &
-                      sz2, order2,     interpolator%eta2,  &
-                      data_array,      interpolator%bcoef, &
-                      interpolator%t1, interpolator%t2)
-
-  interpolator%bcoef(1:sz1,1)   = data_array(1:sz1,1)
-  interpolator%bcoef(1:sz1,sz2) = data_array(1:sz1,sz2)
-       
-case (585) ! 4. dirichlet in all sides
-
-  interpolator%size_coeffs1 = sz1
-  interpolator%size_coeffs2 = sz2
-  interpolator%size_t1 = order1 + sz1 
-  interpolator%size_t2 = order2 + sz2 
-       
-  call spli2d_custom( sz1, order1, interpolator%eta1, &
-                      sz2, order2, interpolator%eta2, &
-                      data_array,  interpolator%bcoef,&
-                      interpolator%t1, interpolator%t2)
-
-  interpolator%bcoef(1,1:sz2)   = data_array(1,1:sz2)
-  interpolator%bcoef(sz1,1:sz2) = data_array(sz1,1:sz2)
-  interpolator%bcoef(1:sz1,1)   = data_array(1:sz1,1)
-  interpolator%bcoef(1:sz1,sz2) = data_array(1:sz1,sz2)
-
-case (650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet
-
-  interpolator%size_coeffs1 = sz1 + sz_derivative_eta1
-  interpolator%size_coeffs2 = sz2 + sz_derivative_eta2
-  interpolator%size_t1 = order1 + sz1 + sz_derivative_eta1
-  interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
-       
-  SLL_CLEAR_ALLOCATE(deriv_eta1(1:2,1:sz2),ierr)
-  SLL_CLEAR_ALLOCATE(deriv_eta2(1:sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
-  deriv_eta1(1,:) = 0.0_f64
-  deriv_eta1(2,:) = interpolator%slope_e(1:sz2)
-  deriv_eta2(1,:) = 0.0_f64
-  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
-
-  SPLI2D_CUSTOM_DERDER
-
-  SLL_DEALLOCATE( deriv_eta1,ierr)
-  SLL_DEALLOCATE( deriv_eta2,ierr)
-
-case(657) !left: Dirichlet, right: Neumann, bottom: Neumann, Top: Dirichlet 
-
-  interpolator%size_coeffs1 = sz1 + sz_derivative_eta1
-  interpolator%size_coeffs2 = sz2 + sz_derivative_eta2
-  interpolator%size_t1 = order1 + sz1 + sz_derivative_eta1
-  interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
-       
-  SLL_ALLOCATE(deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
-  SLL_ALLOCATE(deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
-  deriv_eta1(1,:) = interpolator%slope_w(1:sz2) 
-  deriv_eta1(2,:) = 0.0_f64
-  deriv_eta2(1,:) = 0.0_f64
-  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
-
-  SPLI2D_CUSTOM_DERDER
-
-  SLL_DEALLOCATE( deriv_eta1,ierr)
-  SLL_DEALLOCATE( deriv_eta2,ierr)
-
-case(780)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Dirichlet
-
-  interpolator%size_coeffs1 = sz1 + sz_derivative_eta1
-  interpolator%size_coeffs2 = sz2 + sz_derivative_eta2
-  interpolator%size_t1 = order1 + sz1 + sz_derivative_eta1
-  interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
-       
-  SLL_CLEAR_ALLOCATE(deriv_eta1(1:sz_derivative_eta1,1:sz2),ierr)
-  SLL_CLEAR_ALLOCATE(deriv_eta2(1:sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
-  deriv_eta1(1,:) = interpolator%slope_w(1:sz2)
-  deriv_eta1(2,:) = interpolator%slope_e(1:sz2)
-  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
-  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
-
-  SPLI2D_CUSTOM_DERDER
-
-  SLL_DEALLOCATE( deriv_eta1,ierr)
-  SLL_DEALLOCATE( deriv_eta2,ierr)
-
-case(801)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Dirichlet
-
-  interpolator%size_coeffs1 = sz1 + sz_derivative_eta1
-  interpolator%size_coeffs2 = sz2 + sz_derivative_eta2
-  interpolator%size_t1 = order1 + sz1 + sz_derivative_eta1
-  interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
-      
-  SLL_ALLOCATE( deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
-  SLL_ALLOCATE( deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
-  deriv_eta1(1,:) = interpolator%slope_w(1:sz2) 
-  deriv_eta1(2,:) = interpolator%slope_e(1:sz2) 
-  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
-  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
-
-  SPLI2D_CUSTOM_DERDER
-
-  SLL_DEALLOCATE( deriv_eta1,ierr)
-  SLL_DEALLOCATE( deriv_eta2,ierr)
-
-case(804)  !left: Hermite, right: Hermite, bottom: Hermite, Top: Dirichlet
-
-  interpolator%size_coeffs1 = sz1 + sz_derivative_eta1
-  interpolator%size_coeffs2 = sz2 + sz_derivative_eta2
-  interpolator%size_t1 = order1 + sz1 + sz_derivative_eta1
-  interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
-       
-  SLL_ALLOCATE( deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
-  SLL_ALLOCATE( deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
-  deriv_eta1(1,:) = interpolator%slope_w(1:sz2) 
-  deriv_eta1(2,:) = interpolator%slope_e(1:sz2) 
-  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
-  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
-
-  SPLI2D_CUSTOM_DERDER
-
-  SLL_DEALLOCATE( deriv_eta1,ierr)
-  SLL_DEALLOCATE( deriv_eta2,ierr)
-
-case(1098)  !left: Neumann, right: Dirichlet, bottom: Dirichlet, Top: Neumann
-
-  interpolator%size_coeffs1 = sz1 + sz_derivative_eta1
-  interpolator%size_coeffs2 = sz2 + sz_derivative_eta2
-  interpolator%size_t1 = order1 + sz1 + sz_derivative_eta1
-  interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
-       
-  SLL_ALLOCATE( deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
-  SLL_ALLOCATE( deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
-  deriv_eta1(1,:) = 0.0_f64
-  deriv_eta1(2,:) = interpolator%slope_e(1:sz2)
-  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
-  deriv_eta2(2,:) = 0.0_f64
-
-  SPLI2D_CUSTOM_DERDER
-
-  SLL_DEALLOCATE( deriv_eta1,ierr)
-  SLL_DEALLOCATE( deriv_eta2,ierr)
-
-case(1105)  !left: Dirichlet, right: Neumann, bottom: Dirichlet, Top: Neumann
-
-  interpolator%size_coeffs1 = sz1 + sz_derivative_eta1
-  interpolator%size_coeffs2 = sz2 + sz_derivative_eta2
-  interpolator%size_t1 = order1 + sz1 + sz_derivative_eta1
-  interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
-       
-  SLL_ALLOCATE( deriv_eta1(2,sz2),ierr)
-  SLL_ALLOCATE( deriv_eta2(sz_derivative_eta2,sz1+sz_derivative_eta1),ierr)
-  deriv_eta1(1,:) = interpolator%slope_w(1:sz2)
-  deriv_eta1(2,:) = 0.0_f64
-  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
-  deriv_eta2(2,:) = 0.0_f64
-
-  SPLI2D_CUSTOM_DERDER
-
-  SLL_DEALLOCATE( deriv_eta1,ierr)
-  SLL_DEALLOCATE( deriv_eta2,ierr)
-
-case(1170)  !left: Neumann, right: Neumann, bottom: Neuman, Top: Neumann
-
-  interpolator%size_coeffs1 = sz1 + sz_derivative_eta1
-  interpolator%size_coeffs2 = sz2 + sz_derivative_eta2
-  interpolator%size_t1 = order1 + sz1 + sz_derivative_eta1
-  interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
-       
-  SLL_ALLOCATE( deriv_eta1(2,sz2),ierr)
-  SLL_ALLOCATE( deriv_eta2(sz_derivative_eta2,sz1+sz_derivative_eta1),ierr)
-  deriv_eta1(1,:) = 0.0_f64
-  deriv_eta1(2,:) = 0.0_f64
-  deriv_eta2(1,:) = 0.0_f64
-  deriv_eta2(2,:) = 0.0_f64
-
-  SPLI2D_CUSTOM_DERDER
-
-  SLL_DEALLOCATE( deriv_eta1,ierr)
-  SLL_DEALLOCATE( deriv_eta2,ierr)
-
-case(2338)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Hermite
-
-  interpolator%size_coeffs1 = sz1 + sz_derivative_eta1
-  interpolator%size_coeffs2 = sz2 + sz_derivative_eta2
-  interpolator%size_t1 = order1 + sz1 + sz_derivative_eta1
-  interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
-       
-  SLL_ALLOCATE( deriv_eta1(2,sz2),ierr)
-  SLL_ALLOCATE( deriv_eta2(sz_derivative_eta2,sz1+sz_derivative_eta1),ierr)
-  deriv_eta1(1,:) = interpolator%slope_w(1:sz2)
-  deriv_eta1(2,:) = interpolator%slope_e(1:sz2)
-  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
-  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
-
-  SPLI2D_CUSTOM_DERDER
-
-  SLL_DEALLOCATE( deriv_eta1,ierr)
-  SLL_DEALLOCATE( deriv_eta2,ierr)
-       
-case(2145) !left: Dirichlet, right: Hermite, bottom: Dirichlet, Top: Hermite  
-
-  interpolator%size_coeffs1 = sz1 + sz_derivative_eta1
-  interpolator%size_coeffs2 = sz2 + sz_derivative_eta2
-  interpolator%size_t1 = order1 + sz1 + sz_derivative_eta1
-  interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
-       
-  SLL_ALLOCATE( deriv_eta1(2,sz2),ierr)
-  SLL_ALLOCATE( deriv_eta2(sz_derivative_eta2,sz1+sz_derivative_eta1),ierr)
-  deriv_eta1(1,:) = interpolator%slope_w(1:sz2)
-  deriv_eta1(2,:) = interpolator%slope_e(1:sz2)
-  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
-  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
-
-  SPLI2D_CUSTOM_DERDER
-
-  SLL_DEALLOCATE( deriv_eta1,ierr)
-  SLL_DEALLOCATE( deriv_eta2,ierr)
-
-case(2124)  !left: Hermite, right: Dirichlet, bottom: Dirichlet, Top: Hermite
-
-  interpolator%size_coeffs1 = sz1 + sz_derivative_eta1
-  interpolator%size_coeffs2 = sz2 + sz_derivative_eta2
-  interpolator%size_t1 = order1 + sz1 + sz_derivative_eta1
-  interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
-       
-  SLL_CLEAR_ALLOCATE( deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
-  SLL_CLEAR_ALLOCATE( deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
-  deriv_eta1(1,:) = interpolator%slope_w(1:sz2)
-  deriv_eta1(2,:) = interpolator%slope_e(1:sz2)
-  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
-  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
-
-  SPLI2D_CUSTOM_DERDER
-
-  SLL_DEALLOCATE( deriv_eta1,ierr)
-  SLL_DEALLOCATE( deriv_eta2,ierr)
-
-case(2148)  !left:Hermite , right: Hermite, bottom: Dirichlet, Top: Hermite
-
-  interpolator%size_coeffs1 = sz1 + sz_derivative_eta1
-  interpolator%size_coeffs2 = sz2 + sz_derivative_eta2
-  interpolator%size_t1 = order1 + sz1 + sz_derivative_eta1
-  interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
-       
-  SLL_ALLOCATE( deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
-  SLL_ALLOCATE( deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
-  deriv_eta1(1,:) = interpolator%slope_w(1:sz2)
-  deriv_eta1(2,:) = interpolator%slope_e(1:sz2)
-  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
-  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
-
-  SPLI2D_CUSTOM_DERDER
-
-  SLL_DEALLOCATE( deriv_eta1,ierr)
-  SLL_DEALLOCATE( deriv_eta2,ierr)
-
-case(2316)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Hermite
-
-  interpolator%size_coeffs1 = sz1 + sz_derivative_eta1
-  interpolator%size_coeffs2 = sz2 + sz_derivative_eta2
-  interpolator%size_t1 = order1 + sz1 + sz_derivative_eta1
-  interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
-       
-  SLL_ALLOCATE( deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
-  SLL_ALLOCATE( deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
-  deriv_eta1(1,:) = interpolator%slope_w(1:sz2)
-  deriv_eta1(2,:) = interpolator%slope_e(1:sz2)
-  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
-  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
-
-  SPLI2D_CUSTOM_DERDER
-
-  SLL_DEALLOCATE( deriv_eta1,ierr)
-  SLL_DEALLOCATE( deriv_eta2,ierr)
-
-case(2340) ! Hermite in al sides
-       
-  interpolator%size_coeffs1 = sz1 + sz_derivative_eta1
-  interpolator%size_coeffs2 = sz2 + sz_derivative_eta2
-  interpolator%size_t1 = order1 + sz1 + sz_derivative_eta1
-  interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
-  SLL_ALLOCATE( deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
-  SLL_ALLOCATE( deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
-  deriv_eta1(1,:) = interpolator%slope_w(1:sz2)
-  deriv_eta1(2,:) = interpolator%slope_e(1:sz2)
-  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
-  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
-
-  SPLI2D_CUSTOM_DERDER
-
-  SLL_DEALLOCATE( deriv_eta1,ierr)
-  SLL_DEALLOCATE( deriv_eta2,ierr)
-
-end select
-
-interpolator%coefficients_set = .true.
-   
-end subroutine !compute_interpolants_ad2d
-
-function coefficients_are_set_ad2d( interpolator ) result(res)
-  sll_interpolator_2d, intent(in)  :: interpolator
-  logical :: res
-  res = interpolator%coefficients_set
-end function coefficients_are_set_ad2d
-
-!> @brief Interpolation on the points eta1 and eta2 
-!> @details computing the values with the interpolator arbitrary degree splines 2d
-!>  on the points eta1 and eta2 of arbitrary degree splines 2d
-!> @param interpolator the type sll_arbitrary_degree_spline_interpolator_2d
-!> @param[in] eta1 the point inthe first direction
-!> @param[in] eta2 the point inthe second direction 
-!> @return val the values on the points eta1 and eta2 
-function interpolate_value_ad2d( interpolator, eta1, eta2 ) result(val)
-
-  sll_interpolator_2d, intent(in)  :: interpolator
-  sll_real64,          intent(in)  :: eta1
-  sll_real64,          intent(in)  :: eta2
-  sll_real64                       :: val
-
-  sll_int32  :: size_coeffs1
-  sll_int32  :: size_coeffs2
-  sll_real64 :: res1
-  sll_real64 :: res2
-
-  size_coeffs1 = interpolator%size_coeffs1
-  size_coeffs2 = interpolator%size_coeffs2
-
-  if ( interpolator%bc_w == SLL_PERIODIC .and. eta1 < interpolator%eta1_min) then
-    res1 = eta1 + interpolator%eta1_max - interpolator%eta1_min
-  else if ( interpolator%bc_e == SLL_PERIODIC .and. eta1 > interpolator%eta1_max) then
-    res1 = eta1 - interpolator%eta1_max + interpolator%eta1_min
-  else
-    res1 = eta1
-  end if
-
-
-  if ( interpolator%bc_s == SLL_PERIODIC .and. eta2 < interpolator%eta2_min) then
-    res2 = eta2 + interpolator%eta2_max - interpolator%eta2_min
-  else if ( interpolator%bc_n == SLL_PERIODIC .and. eta2 > interpolator%eta2_max) then
-    res2 = eta2 - interpolator%eta2_max + interpolator%eta2_min
-  else
-    res2 = eta2
-  end if
-
-  SLL_ASSERT( res1 >= interpolator%eta1_min )
-  SLL_ASSERT( res1 <= interpolator%eta1_max )
-  SLL_ASSERT( res2 >= interpolator%eta2_min )
-  SLL_ASSERT( res2 <= interpolator%eta2_max )
-
-  call bvalue2d(res1,                                              &
-                res2,                                              &
-                size_coeffs1,                                      &
-                interpolator%spline_degree1+1,                     &
-                size_coeffs2,                                      &
-                interpolator%spline_degree2+1,                     &
-                interpolator%bcoef(1:size_coeffs1,1:size_coeffs2), &
-                interpolator%t1(1:interpolator%size_t1),           &
-                interpolator%t2(1:interpolator%size_t2),           &
-                val)
-
-end function interpolate_value_ad2d
-
-!> @brief First derivative in eta1 interpolation on the points eta1 and eta2 
-!> @details computing the values of the first derivative in eta1
-!> with the interpolator arbitrary degree splines 2d
-!> on the points eta1 and eta2 of arbitrary degree splines 2d
-!> @param interpolator the type sll_arbitrary_degree_spline_interpolator_2d
-!> @param[in] eta1 the point inthe first direction
-!> @param[in] eta2 the point inthe second direction 
-!> @return val the values on the points eta1 and eta2 of the first derivative in eta1
-function interpolate_derivative1_ad2d( interpolator, eta1, eta2 ) result(val)
-
-  sll_interpolator_2d, intent(in)  :: interpolator
-  sll_real64,          intent(in)  :: eta1
-  sll_real64,          intent(in)  :: eta2
-  sll_real64                       :: val
-
-  sll_int32  :: size_coeffs1
-  sll_int32  :: size_coeffs2
-  sll_real64 :: res1
-  sll_real64 :: res2
-
-  size_coeffs1 = interpolator%size_coeffs1
-  size_coeffs2 = interpolator%size_coeffs2
-
-  if ( interpolator%bc_w == SLL_PERIODIC .and. eta1 < interpolator%eta1_min) then
-    res1 = eta1 + interpolator%eta1_max - interpolator%eta1_min
-  else if ( interpolator%bc_e == SLL_PERIODIC .and. eta1 > interpolator%eta1_max) then
-    res1 = eta1 - interpolator%eta1_max + interpolator%eta1_min
-  else
-    res1 = eta1
-  end if
-
-  if ( interpolator%bc_s == SLL_PERIODIC .and. eta2 < interpolator%eta2_min) then
-    res2 = eta2 + interpolator%eta2_max-interpolator%eta2_min
-  else if ( interpolator%bc_n == SLL_PERIODIC .and. eta2 > interpolator%eta2_max) then
-    res2 = eta2 - interpolator%eta2_max + interpolator%eta2_min
-  else
-    res2 = eta2
-  end if
-    
-  SLL_ASSERT( res1 >= interpolator%eta1_min )
-  SLL_ASSERT( res1 <= interpolator%eta1_max )
-  SLL_ASSERT( res2 >= interpolator%eta2_min )
-  SLL_ASSERT( res2 <= interpolator%eta2_max )
-
-  val = dvalue2d(res1,                                              &
-                 res2,                                              &
-                 size_coeffs1,                                      &
-                 interpolator%spline_degree1+1,                     &
-                 size_coeffs2,                                      &
-                 interpolator%spline_degree2+1,                     &
-                 interpolator%bcoef(1:size_coeffs1,1:size_coeffs2), &
-                 interpolator%t1(1:interpolator%size_t1),           &
-                 interpolator%t2(1:interpolator%size_t2),           &
-                 1,0)
-    
-end function interpolate_derivative1_ad2d
-     
-!> @brief First derivative in eta2 Interpolation on the points eta1 and eta2 
-!> using the arbitrary degree splines interpolator 2d
-!> @details computing the values of the first derivative in eta2
-!> with the interpolator arbitrary degree splines 2d
-!> on the points eta1 and eta2 of arbitrary degree splines 2d
-!> 
-!> The parameters are
-!> @param interpolator the type sll_arbitrary_degree_spline_interpolator_2d
-!> @param[in] eta1 the point inthe first direction
-!> @param[in] eta2 the point inthe second direction 
-!> @return val the values on the points eta1 and eta2 of the first derivative in eta2
-function interpolate_derivative2_ad2d(interpolator, eta1, eta2 ) result(val)
-
-  sll_interpolator_2d, intent(in)  :: interpolator
-  sll_real64,          intent(in)  :: eta1
-  sll_real64,          intent(in)  :: eta2
-  sll_real64                       :: val
-
-  sll_int32                        :: size_coeffs1
-  sll_int32                        :: size_coeffs2
-  sll_real64                       :: res1
-  sll_real64                       :: res2
-
-  size_coeffs1 = interpolator%size_coeffs1
-  size_coeffs2 = interpolator%size_coeffs2
-
-  if ( interpolator%bc_w == SLL_PERIODIC .and. eta1 < interpolator%eta1_min) then
-    res1 = eta1 + interpolator%eta1_max - interpolator%eta1_min 
-  else if ( interpolator%bc_e == SLL_PERIODIC .and. eta1 > interpolator%eta1_max) then
-    res1 = eta1 - interpolator%eta1_max + interpolator%eta1_min
-  else
-    res1 = eta1
-  end if
-
-  if ( interpolator%bc_s == SLL_PERIODIC .and. eta2 < interpolator%eta2_min) then
-    res2 = eta2 + interpolator%eta2_max-interpolator%eta2_min
-  else if ( interpolator%bc_n == SLL_PERIODIC .and. eta2 > interpolator%eta2_max) then
-    res2 = eta2 - interpolator%eta2_max + interpolator%eta2_min
-  else
-    res2 = eta2
-  end if
-
-  SLL_ASSERT( res1 >= interpolator%eta1_min )
-  SLL_ASSERT( res1 <= interpolator%eta1_max )
-  SLL_ASSERT( res2 >= interpolator%eta2_min )
-  SLL_ASSERT( res2 <= interpolator%eta2_max )
-
-  val = dvalue2d(                                           &
-         res1,                                              &
-         res2,                                              &
-         size_coeffs1,                                      &
-         interpolator%spline_degree1+1,                     &
-         size_coeffs2,                                      &
-         interpolator%spline_degree2+1,                     &
-         interpolator%bcoef(1:size_coeffs1,1:size_coeffs2), &
-         interpolator%t1(1:interpolator%size_t1),           &
-         interpolator%t2(1:interpolator%size_t2),           &
-         0,1)
-    
-end function interpolate_derivative2_ad2d
-  
-function interpolate_array_ad2d( this,              &
-                                 num_points1,       &
-                                 num_points2,       &
-                                 data_in,           &
-                                 eta1,              &
-                                 eta2 ) result(res)
-    
-  sll_interpolator_2d,        intent(in) :: this
-  sll_real64, dimension(:,:), intent(in) :: eta1
-  sll_real64, dimension(:,:), intent(in) :: eta2
-  sll_real64, dimension(:,:), intent(in) :: data_in
-  sll_int32,                  intent(in) :: num_points1
-  sll_int32,                  intent(in) :: num_points2
-  sll_real64                             :: res(num_points1,num_points2)
-    
-  res = -1000000._f64
-  print *,this%num_pts1
-  print *,maxval(eta1)
-  print *,maxval(eta2)
-  print *,maxval(data_in)
-  print *,num_points1
-  print *,num_points2
-  SLL_ERROR( '#interpolate_array_ad2d: not implemented')
-
-end function !interpolate_array_ad2d
-  
-function interpolate_2d_array_disp_ad2d( this,        &
-                                         num_points1, &
-                                         num_points2, &
-                                         data_in,     &
-                                         alpha1,      &
-                                         alpha2) result(res)
-      
-  sll_interpolator_2d, intent(in)    :: this
-  sll_int32, intent(in)                          :: num_points1  
-  sll_int32, intent(in)                          :: num_points2 
-  sll_real64, dimension(:,:), intent(in)         :: data_in
-  sll_real64, dimension(:,:), intent(in)         :: alpha1
-  sll_real64, dimension(:,:), intent(in)         :: alpha2  
-  sll_real64, dimension(num_points1,num_points2) :: res
-  
-  print *,this%num_pts1
-  print *,num_points1 
-  print *,num_points2
-  print *,maxval(data_in)
-  print *,alpha1
-  print *,alpha2     
-  res = -1000000._f64
-  SLL_ERROR('#interpolate_2d_array_disp_ad2d: not implemented.')
-    
-end function !interpolate_2d_array_disp_ad2d
-    
-function get_coefficients_ad2d(interpolator)
-  sll_interpolator_2d, intent(in)    :: interpolator
-  sll_real64, dimension(:,:), pointer           :: get_coefficients_ad2d     
-
-  get_coefficients_ad2d => interpolator%bcoef
-
-end function get_coefficients_ad2d
-  
 end module sll_module_arbitrary_degree_spline_interpolator_2d
