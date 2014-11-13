@@ -613,11 +613,13 @@ subroutine set_coefficients_ad1d(interpolator, coeffs)
   sll_int32                        :: nb_spline_eta
   sll_real64                       :: eta
 
+  SLL_WARNING('The set_coefficients method for arbitrary degree 1d is not tested')
+
   sp_deg    = interpolator%spline_degree
   num_cells = interpolator%num_pts - 1
   eta_min   = interpolator%eta_min
   eta_max   = interpolator%eta_max
-  delta     = (eta_max - eta_min)/num_cells
+  delta     = (eta_max-eta_min)/num_cells
 
   interpolator%size_coeffs = num_cells + sp_deg
   interpolator%size_t      = 2*sp_deg + num_cells +1
