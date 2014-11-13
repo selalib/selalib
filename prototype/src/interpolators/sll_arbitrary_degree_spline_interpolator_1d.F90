@@ -113,9 +113,8 @@ contains
 !> @param interpolator the type sll_arbitrary_degree_spline_interpolator_1d
 subroutine delete_arbitrary_degree_1d_interpolator( interpolator )
   sll_interpolator, intent(inout) :: interpolator
-  sll_int32 :: ierr
-  DEALLOCATE(interpolator%t)
-  DEALLOCATE(interpolator%bcoef)
+  deallocate(interpolator%t)
+  deallocate(interpolator%bcoef)
 end subroutine delete_arbitrary_degree_1d_interpolator
 
 !> @brief Initialization of a pointer interpolator arbitrary degree splines 1d.
@@ -186,8 +185,6 @@ subroutine initialize_ad1d_interpolator( interpolator, &
   sll_int64              :: bc_selector
   sll_real64             :: delta_eta
   sll_int32              :: i
-  sll_int32              :: kx
-  sll_int32              :: nx
 
   if(bc_left  == SLL_PERIODIC .or. bc_right == SLL_PERIODIC) then
     SLL_ASSERT(bc_right == SLL_PERIODIC .and. bc_left  == SLL_PERIODIC)
@@ -229,8 +226,8 @@ subroutine initialize_ad1d_interpolator( interpolator, &
   if (bc_selector > 9) then
 
     interpolator%t(1:spline_degree+1) = eta_min
-    interpolator%t(num_points+2+1:num_points+nx_der+spline_degree+1) = eta_max
-    interpolator%t(spline_degree+2:num_points+nx_der) = interpolator%eta(2:num_points-1)
+    interpolator%t(num_pts+2+1:num_pts+2+spline_degree+1) = eta_max
+    interpolator%t(spline_degree+2:num_pts+2) = interpolator%eta(2:num_pts-1)
 
   else
 
@@ -360,15 +357,15 @@ subroutine compute_interpolants_ad1d( interpolator,    &
   order  = interpolator%spline_degree + 1
   period = interpolator%eta_max - interpolator%eta_min
 
-#define SPLI1D_DER call spli1d_der(sz,                                  \
-                                   sz_deriv,                            \
-                                   order,                               \
-                                   point_locate_eta,                    \
-                                   data_array,                          \
-                                   point_locate_eta_derivative,         \
-                                   data_array_derivative,               \
-                                   interpolator%bcoef(1:sz+sz_deriv),   \
-                                   interpolator%t(1:sz+order+sz_deriv)) \
+#define SPLI1D_DER call splint_der(point_locate_eta,                   \
+                                   data_array,                         \
+                                   point_locate_eta_derivative,        \
+                                   data_array_derivative,              \
+                                   interpolator%t(1:sz+order+sz_deriv),\
+                                   sz,                                 \
+                                   sz_deriv,                           \
+                                   order,                              \
+                                   interpolator%bcoef(1:sz+sz_deriv))  \
 
   select case (interpolator%bc_selector)
 

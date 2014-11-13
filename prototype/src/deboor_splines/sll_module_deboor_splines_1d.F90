@@ -729,44 +729,6 @@ function bvalue( t, bcoef, n, k, x, jderiv ) result(res)
     
 end function bvalue
   
-  
-
-!> @brief
-!> Compute interpolants for non periodic BC
-!> @details
-!> Add conditions on values and their derivatives.
-subroutine spli1d_der( nx,       &
-                       nx_der,   &
-                       kx,       &
-                       taux,     &
-                       g,        &
-                       taux_der, &
-                       g_der,    &
-                       bcoef,    &
-                       tx)
-
-  sll_int32,  intent(in)    :: nx          !< Number of data points
-  sll_int32,  intent(in)    :: kx          !< Spline degree
-  sll_int32,  intent(in)    :: nx_der      !< Number of data derivatives points
-  sll_real64, intent(in)    :: taux(:)     !< Positions of points for data values
-  sll_real64, intent(in)    :: g(:)        !< Data values
-  sll_int32,  intent(in)    :: taux_der(:) !< Node index to evaluate derivative
-  sll_real64, intent(in)    :: g_der(:)    !< Values of data derivatives
-  sll_real64, intent(inout) :: bcoef(:)    !< Splines coefficients
-  sll_real64, intent(in) :: tx(:)       !< Knots positions
-  
-  call splint_der ( taux,     &
-                    g,        &
-                    taux_der, &
-                    g_der,    &
-                    tx,       &
-                    nx,       &
-                    nx_der,   &
-                    kx,       &
-                    bcoef)
-    
-end subroutine spli1d_der
-
 !*************************************************************************
 !
 ! SPLINT produces the B-spline coefficients BCOEF of an 
@@ -861,7 +823,6 @@ subroutine splint( tau, gtau, t, n, k, bcoef )
   sll_int32                        :: i
   sll_int32                        :: ilp1mx
   sll_int32                        :: j
-  sll_int32                        :: jj
   sll_int32                        :: kpkm2
   sll_int32                        :: left
   sll_real64, dimension((2*k-1),n) :: q
