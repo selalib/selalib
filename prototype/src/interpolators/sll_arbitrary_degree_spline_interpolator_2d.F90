@@ -387,11 +387,7 @@ sll_real64, dimension(:),optional :: slope_w
 sll_real64, dimension(:),optional :: slope_e
 sll_real64, dimension(:),optional :: slope_s
 sll_real64, dimension(:),optional :: slope_n
-sll_interpolator_1d,pointer :: interp1d => null()
-sll_int32 :: sz_slope_s
-sll_int32 :: sz_slope_n
-sll_int32 :: sz_slope_e
-sll_int32 :: sz_slope_w
+sll_interpolator_1d, pointer :: interp1d => null()
 sll_int64 :: bc_selector
 sll_int32 :: num_pts1
 sll_int32 :: num_pts2
@@ -410,236 +406,48 @@ bc_e = interpolator%bc_e
 bc_s = interpolator%bc_s  
 bc_n = interpolator%bc_n
 
-if (present(slope_n)) then 
-  sz_slope_n = size(slope_n)
-  SLL_ASSERT(sz_slope_n == num_pts1)
-end if
-if (present(slope_s)) then 
-  sz_slope_s = size(slope_s)
-  SLL_ASSERT(sz_slope_s == num_pts1)
-end if
-if (present(slope_w)) then 
-  sz_slope_w = size(slope_w)
-  SLL_ASSERT(sz_slope_w == num_pts2)
-end if
-if (present(slope_e)) then 
-  sz_slope_e = size(slope_e)
-  SLL_ASSERT(sz_slope_e == num_pts2)
-end if
-
 interp1d => new_arbitrary_degree_1d_interpolator( &
-             interpolator%num_pts1,               &
-             interpolator%eta1_min,               &
-             interpolator%eta1_max,               &
-             interpolator%bc_w,                   &
-             interpolator%bc_e,                   &
-             interpolator%spline_degree1 )
+            interpolator%num_pts1,                &
+            interpolator%eta1_min,                &
+            interpolator%eta1_max,                &
+            interpolator%bc_w,                    &
+            interpolator%bc_e,                    &
+            interpolator%spline_degree1 )
 
-interpolator%slope_w = 0.0
-interpolator%slope_e = 0.0
-interpolator%slope_s = 0.0
-interpolator%slope_n = 0.0
+if (present(slope_n)) then 
+  SLL_ASSERT(size(slope_n) == num_pts1)
+  call interp1d%compute_interpolants(slope_n)
+  interpolator%slope_n(1:num_pts1+2) = interp1d%bcoef(1:num_pts1+2)
+else
+  interpolator%slope_n = 0.0
+end if
 
-interpolator%compute_slope_w= .FALSE.
-interpolator%compute_slope_e= .FALSE.
-interpolator%compute_slope_s= .FALSE.
-interpolator%compute_slope_n= .FALSE.
+if (present(slope_s)) then 
+  SLL_ASSERT(size(slope_s) == num_pts1)
+  call interp1d%compute_interpolants(slope_s)
+  interpolator%slope_s(1:num_pts1+2) = interp1d%bcoef(1:num_pts1+2)
+else
+  interpolator%slope_s = 0.0
+end if
 
-select case (bc_selector)
-case (0) ! 1. periodic-periodic
+if (present(slope_w)) then 
+  SLL_ASSERT(size(slope_w) == num_pts2)
+  interpolator%slope_w = slope_w
+else
+  interpolator%slope_w = 0.0
+end if
 
-  continue
+if (present(slope_e)) then 
+  SLL_ASSERT(size(slope_e) == num_pts2)
+  interpolator%slope_e = slope_e
+else
+  interpolator%slope_e = 0.0
+end if
 
-case (650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet
-       
-  if (present(slope_e)) interpolator%slope_e = slope_e
-  if (present(slope_n)) then 
-    call interp1d%compute_interpolants(slope_n(1:sz_slope_n))
-    interpolator%slope_n(1:sz_slope_n+2) = interp1d%bcoef(1:sz_slope_n+2)
-  end if
-
-case(657) !left: Dirichlet, right: Neumann, bottom: Neumann, Top: Dirichlet 
-
-  if (present(slope_w)) interpolator%slope_w = slope_w
-       
-  if (present(slope_n)) then 
-    call interp1d%compute_interpolants(slope_n(1:sz_slope_n))
-    interpolator%slope_n(1:sz_slope_n+2) = interp1d%bcoef(1:sz_slope_n+2)
-  end if
-
-case(780)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Dirichlet
-
-  if (present(slope_w)) interpolator%slope_w = slope_w
-  if (present(slope_e)) interpolator%slope_e = slope_e
-       
-  if (present(slope_s)) then 
-    call interp1d%compute_interpolants(slope_s(1:sz_slope_s))
-    interpolator%slope_s(1:sz_slope_s+2) = interp1d%bcoef(1:sz_slope_s+2)
-  end if
-
-  if (present(slope_n)) then 
-    call interp1d%compute_interpolants(slope_n(1:sz_slope_n))
-    interpolator%slope_n(1:sz_slope_n+2) = interp1d%bcoef(1:sz_slope_n+2)
-  end if
-
-case(801)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Dirichlet
-
-  if (present(slope_e)) interpolator%slope_e = slope_e
-  if (present(slope_w)) interpolator%slope_w = slope_w
-       
-  if (present(slope_s)) then 
-    call interp1d%compute_interpolants(slope_s(1:sz_slope_s))
-    interpolator%slope_s(1:sz_slope_s+2) = interp1d%bcoef(1:sz_slope_s+2)
-  end if
-
-  if (present(slope_n)) then 
-    call interp1d%compute_interpolants(slope_n(1:sz_slope_n))
-    interpolator%slope_n(1:sz_slope_n+2) = interp1d%bcoef(1:sz_slope_n+2)
-  end if
-
-case(804)  !left: Hermite, right: Hermite, bottom: Hermite, Top: Dirichlet
-
-  if (present(slope_e)) interpolator%slope_e = slope_e
-  if (present(slope_w)) interpolator%slope_w = slope_w
-       
-  if (present(slope_s)) then 
-    call interp1d%compute_interpolants(slope_s(1:sz_slope_s))
-    interpolator%slope_s(1:sz_slope_s+2) = interp1d%bcoef(1:sz_slope_s+2)
-  end if
-
-  if (present(slope_n)) then 
-    call interp1d%compute_interpolants(slope_n(1:sz_slope_n))
-    interpolator%slope_n(1:sz_slope_n+2) = interp1d%bcoef(1:sz_slope_n+2)
-  end if
-
-case(1098)  !left: Neumann, right: Dirichlet, bottom: Dirichlet, Top: Neumann
-    
-  if (present(slope_e)) interpolator%slope_e = slope_e
-
-  if (present(slope_s)) then 
-    call interp1d%compute_interpolants(slope_s(1:sz_slope_s))
-    interpolator%slope_s(1:sz_slope_s+2) = interp1d%bcoef(1:sz_slope_s+2)
-  end if
-
-  if ( present( slope_n)) then 
-    call interp1d%compute_interpolants(slope_n(1:sz_slope_n))
-    interpolator%slope_n(1:sz_slope_n+2) = interp1d%bcoef(1:sz_slope_n+2)
-  end if
-
-case(1105)  !left: Dirichlet, right: Neumann, bottom: Dirichlet, Top: Neumann
-
-  if ( present( slope_e)) interpolator%slope_e = slope_e
-
-  if (present(slope_s)) then 
-    call interp1d%compute_interpolants(slope_s(1:sz_slope_s))
-    interpolator%slope_s(1:sz_slope_s+2) = interp1d%bcoef(1:sz_slope_s+2)
-  end if
-
-case(2338)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Hermite
-
-  if ( present( slope_e)) interpolator%slope_e = slope_e
-  if ( present( slope_w)) interpolator%slope_w = slope_w
-       
-  if ( present( slope_n)) then 
-    call interp1d%compute_interpolants(slope_n(1:sz_slope_n))
-    interpolator%slope_n(1:sz_slope_n+2) = interp1d%bcoef(1:sz_slope_n+2)
-  end if
-
-  if (present(slope_s)) then 
-    call interp1d%compute_interpolants(slope_s(1:sz_slope_s))
-    interpolator%slope_s(1:sz_slope_s+2) = interp1d%bcoef(1:sz_slope_s+2)
-  end if
-
-case(2145)  !left: Dirichlet, right: Hermite, bottom: Dirichlet, Top: Hermite
-
-  if ( present( slope_e)) interpolator%slope_e = slope_e
-  if ( present( slope_w)) interpolator%slope_w = slope_w
-       
-  if ( present( slope_n)) then 
-    call interp1d%compute_interpolants(slope_n(1:sz_slope_n))
-    interpolator%slope_n(1:sz_slope_n+2) = interp1d%bcoef(1:sz_slope_n+2)
-  end if
-
-  if (present(slope_s)) then 
-    call interp1d%compute_interpolants(slope_s(1:sz_slope_s))
-    interpolator%slope_s(1:sz_slope_s+2) = interp1d%bcoef(1:sz_slope_s+2)
-  end if
-       
-case(2124)  !left: Hermite, right: Dirichlet, bottom: Dirichlet, Top: Hermite
-       
-  if ( present( slope_w)) interpolator%slope_w = slope_w
-  if ( present( slope_e)) interpolator%slope_e = slope_e
-     
-  if ( present( slope_n)) then 
-    call interp1d%compute_interpolants(slope_n(1:sz_slope_n))
-    interpolator%slope_n(1:sz_slope_n+2) = interp1d%bcoef(1:sz_slope_n+2)
-  end if
-
-  if (present(slope_s)) then 
-    call interp1d%compute_interpolants(slope_s(1:sz_slope_s))
-    interpolator%slope_s(1:sz_slope_s+2) = interp1d%bcoef(1:sz_slope_s+2)
-  end if
-
-  if ( present( slope_n)) then 
-    call interp1d%compute_interpolants(slope_n(1:sz_slope_n))
-    interpolator%slope_n(1:sz_slope_n+2) = interp1d%bcoef(1:sz_slope_n+2)
-  end if
-      
-case(2148)  !left:Hermite , right: Hermite, bottom: Dirichlet, Top: Hermite  
-
-  if ( present( slope_w)) interpolator%slope_w = slope_w
-  if ( present( slope_e)) interpolator%slope_e = slope_e
-       
-  if ( present( slope_n)) then 
-    call interp1d%compute_interpolants(slope_n(1:sz_slope_n))
-    interpolator%slope_n(1:sz_slope_n+2) = interp1d%bcoef(1:sz_slope_n+2)
-  end if
-
-  if (present(slope_s)) then 
-    call interp1d%compute_interpolants(slope_s(1:sz_slope_s))
-    interpolator%slope_s(1:sz_slope_s+2) = interp1d%bcoef(1:sz_slope_s+2)
-  end if
-  if ( present( slope_n)) then 
-    call interp1d%compute_interpolants(slope_n(1:sz_slope_n))
-    interpolator%slope_n(1:sz_slope_n+2) = interp1d%bcoef(1:sz_slope_n+2)
-  end if
-
-case(2316)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Hermite
-
-  if ( present( slope_e)) interpolator%slope_e = slope_e
-  if ( present( slope_w)) interpolator%slope_w = slope_w
-
-  if ( present( slope_n)) then 
-    interpolator%compute_slope_n= .FALSE.
-    call interp1d%compute_interpolants(slope_n(1:sz_slope_n))
-    interpolator%slope_n(1:sz_slope_n+2) = interp1d%bcoef(1:sz_slope_n+2)
-  end if
-       
-  if (present(slope_s)) then 
-    call interp1d%compute_interpolants(slope_s(1:sz_slope_s))
-    interpolator%slope_s(1:sz_slope_s+2) = interp1d%bcoef(1:sz_slope_s+2)
-  end if
-
-case(2340) ! Hermite in al sides
-
-  if ( present( slope_e)) interpolator%slope_e = slope_e
-  if ( present( slope_w)) interpolator%slope_w = slope_w
-       
-  if ( present( slope_n)) then 
-    call interp1d%compute_interpolants(slope_n(1:sz_slope_n))
-    interpolator%slope_n(1:sz_slope_n+2) = interp1d%bcoef(1:sz_slope_n+2)
-  end if
-       
-  if (present(slope_s)) then 
-    call interp1d%compute_interpolants(slope_s(1:sz_slope_s))
-    interpolator%slope_s(1:sz_slope_s+2) = interp1d%bcoef(1:sz_slope_s+2)
-  end if
-       
-case default
-
-  SLL_WARNING('initialize_ad2d_interpolator: BC combination not implemented.')
-
-end select
+interpolator%compute_slope_w = .FALSE.
+interpolator%compute_slope_e = .FALSE.
+interpolator%compute_slope_s = .FALSE.
+interpolator%compute_slope_n = .FALSE.
 
 call sll_delete(interp1d)
     
@@ -742,11 +550,6 @@ end if
        
 end subroutine set_boundary_value2d
 
-#define SPLI2D_CUSTOM_DERDER call spli2d_custom_derder( \
- sz1, sz_derivative_eta1, order1, interpolator%eta1, eta1_deriv, \
- sz2, sz_derivative_eta2, order2, interpolator%eta2, eta2_deriv, \
- data_array, deriv_eta1,  deriv_eta2,  \
- interpolator%bcoef, interpolator%t1, interpolator%t2); \
 
 !> @brief computing the coefficients spline with a given 
 !> data_array 2D cooresponding at the values of a function 
@@ -795,29 +598,17 @@ sll_int32  :: order1
 sll_int32  :: order2
 sll_int32  :: ierr
 
-if (present(eta1_coords)) then
-  SLL_ASSERT(present(size_eta1_coords))
-end if
-if (present(eta2_coords)) then
-  SLL_ASSERT(present(size_eta2_coords))
-end if
-if (present(eta1_coords)) then
-  SLL_ASSERT(present(eta2_coords))
-end if
-if (present(eta2_coords)) then
-  SLL_ASSERT(present(eta1_coords))
-end if
     
 if( present(eta1_coords) .and. present(eta2_coords) ) then
+
+  SLL_ASSERT(present(size_eta1_coords))
+  SLL_ASSERT(present(size_eta2_coords))
 
   sz1 = size_eta1_coords
   sz2 = size_eta2_coords
        
   interpolator%eta1(1:sz1) = eta1_coords(1:sz1)
   interpolator%eta2(1:sz2) = eta2_coords(1:sz2)
-
-  SLL_ALLOCATE(deriv_eta1(sz_derivative_eta1,sz2),ierr)
-  SLL_ALLOCATE(deriv_eta2(sz_derivative_eta2,sz1+sz_derivative_eta1),ierr)
 
 else
 
@@ -848,6 +639,26 @@ if (interpolator%bc_selector > 585) then
   interpolator%size_t1 = order1 + sz1 + sz_derivative_eta1
   interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
 
+  SLL_ALLOCATE(deriv_eta1(sz_derivative_eta1,sz2),ierr)
+  SLL_ALLOCATE(deriv_eta2(sz_derivative_eta2,sz1+sz_derivative_eta1),ierr)
+
+  deriv_eta1(1,:) = interpolator%slope_w(1:sz2)
+  deriv_eta1(2,:) = interpolator%slope_e(1:sz2)
+  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
+  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
+
+  call spli2d_custom_derder(sz1, sz_derivative_eta1,    &
+                            order1, interpolator%eta1,  &
+                            eta1_deriv,                 &
+                            sz2, sz_derivative_eta2,    &
+                            order2, interpolator%eta2,  &
+                            eta2_deriv,                 & 
+                            data_array,                 &
+                            deriv_eta1,deriv_eta2,      &
+                            interpolator%bcoef,         &
+                            interpolator%t1,            &
+                            interpolator%t2)
+
 else
 
   interpolator%size_coeffs1 = sz1
@@ -855,173 +666,31 @@ else
   interpolator%size_t1 = order1 + sz1
   interpolator%size_t2 = order2 + sz2
 
-end if
-    
-select case (interpolator%bc_selector)
-case(0) ! periodic-periodic
-
   call spli2d_custom( sz1, order1, interpolator%eta1,  &
                       sz2, order2, interpolator%eta2,  &
                       data_array,  interpolator%bcoef, &
                       interpolator%t1, interpolator%t2 )
 
-case(9) ! 2. dirichlet-left, dirichlet-right, periodic
+end if
 
-  call spli2d_custom( sz1, order1,     interpolator%eta1,  &
-                      sz2, order2,     interpolator%eta2,  &
-                      data_array,      interpolator%bcoef, &
-                      interpolator%t1, interpolator%t2)
+select case (interpolator%bc_selector)
+
+case(9) ! 2. dirichlet-left, dirichlet-right, periodic
 
   interpolator%bcoef(1,1:sz2)   = data_array(1,1:sz2)
   interpolator%bcoef(sz1,1:sz2) = data_array(sz1,1:sz2)
   
 case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
 
-  call spli2d_custom( sz1, order1,     interpolator%eta1,  &
-                      sz2, order2,     interpolator%eta2,  &
-                      data_array,      interpolator%bcoef, &
-                      interpolator%t1, interpolator%t2)
-
   interpolator%bcoef(1:sz1,1)   = data_array(1:sz1,1)
   interpolator%bcoef(1:sz1,sz2) = data_array(1:sz1,sz2)
        
 case(585) ! 4. dirichlet in all sides
 
-  call spli2d_custom( sz1, order1,     interpolator%eta1, &
-                      sz2, order2,     interpolator%eta2, &
-                      data_array,      interpolator%bcoef,&
-                      interpolator%t1, interpolator%t2)
-
   interpolator%bcoef(1,1:sz2)   = data_array(1,1:sz2)
   interpolator%bcoef(sz1,1:sz2) = data_array(sz1,1:sz2)
   interpolator%bcoef(1:sz1,1)   = data_array(1:sz1,1)
   interpolator%bcoef(1:sz1,sz2) = data_array(1:sz1,sz2)
-
-case(650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet
-
-  deriv_eta1(1,:) = 0.0_f64
-  deriv_eta1(2,:) = interpolator%slope_e(1:sz2)
-  deriv_eta2(1,:) = 0.0_f64
-  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
-
-  SPLI2D_CUSTOM_DERDER
-
-case(657) !left: Dirichlet, right: Neumann, bottom: Neumann, Top: Dirichlet 
-
-  deriv_eta1(1,:) = interpolator%slope_w(1:sz2) 
-  deriv_eta1(2,:) = 0.0_f64
-  deriv_eta2(1,:) = 0.0_f64
-  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
-
-  SPLI2D_CUSTOM_DERDER
-
-case(780)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Dirichlet
-
-  deriv_eta1(1,:) = interpolator%slope_w(1:sz2)
-  deriv_eta1(2,:) = interpolator%slope_e(1:sz2)
-  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
-  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
-
-  SPLI2D_CUSTOM_DERDER
-
-case(801)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Dirichlet
-
-  deriv_eta1(1,:) = interpolator%slope_w(1:sz2) 
-  deriv_eta1(2,:) = interpolator%slope_e(1:sz2) 
-  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
-  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
-
-  SPLI2D_CUSTOM_DERDER
-
-case(804)  !left: Hermite, right: Hermite, bottom: Hermite, Top: Dirichlet
-
-  deriv_eta1(1,:) = interpolator%slope_w(1:sz2) 
-  deriv_eta1(2,:) = interpolator%slope_e(1:sz2) 
-  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
-  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
-
-  SPLI2D_CUSTOM_DERDER
-
-case(1098)  !left: Neumann, right: Dirichlet, bottom: Dirichlet, Top: Neumann
-
-  deriv_eta1(1,:) = 0.0_f64
-  deriv_eta1(2,:) = interpolator%slope_e(1:sz2)
-  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
-  deriv_eta2(2,:) = 0.0_f64
-
-  SPLI2D_CUSTOM_DERDER
-
-case(1105)  !left: Dirichlet, right: Neumann, bottom: Dirichlet, Top: Neumann
-
-  deriv_eta1(1,:) = interpolator%slope_w(1:sz2)
-  deriv_eta1(2,:) = 0.0_f64
-  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
-  deriv_eta2(2,:) = 0.0_f64
-
-  SPLI2D_CUSTOM_DERDER
-
-case(1170)  !left: Neumann, right: Neumann, bottom: Neuman, Top: Neumann
-
-  deriv_eta1(1,:) = 0.0_f64
-  deriv_eta1(2,:) = 0.0_f64
-  deriv_eta2(1,:) = 0.0_f64
-  deriv_eta2(2,:) = 0.0_f64
-
-  SPLI2D_CUSTOM_DERDER
-
-case(2338)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Hermite
-
-  deriv_eta1(1,:) = interpolator%slope_w(1:sz2)
-  deriv_eta1(2,:) = interpolator%slope_e(1:sz2)
-  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
-  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
-
-  SPLI2D_CUSTOM_DERDER
-
-case(2145) !left: Dirichlet, right: Hermite, bottom: Dirichlet, Top: Hermite  
-
-  deriv_eta1(1,:) = interpolator%slope_w(1:sz2)
-  deriv_eta1(2,:) = interpolator%slope_e(1:sz2)
-  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
-  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
-
-  SPLI2D_CUSTOM_DERDER
-
-case(2124)  !left: Hermite, right: Dirichlet, bottom: Dirichlet, Top: Hermite
-
-  deriv_eta1(1,:) = interpolator%slope_w(1:sz2)
-  deriv_eta1(2,:) = interpolator%slope_e(1:sz2)
-  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
-  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
-
-  SPLI2D_CUSTOM_DERDER
-
-case(2148)  !left:Hermite , right: Hermite, bottom: Dirichlet, Top: Hermite
-
-  deriv_eta1(1,:) = interpolator%slope_w(1:sz2)
-  deriv_eta1(2,:) = interpolator%slope_e(1:sz2)
-  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
-  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
-
-  SPLI2D_CUSTOM_DERDER
-
-case(2316)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Hermite
-
-  deriv_eta1(1,:) = interpolator%slope_w(1:sz2)
-  deriv_eta1(2,:) = interpolator%slope_e(1:sz2)
-  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
-  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
-
-  SPLI2D_CUSTOM_DERDER
-
-case(2340) ! Hermite in al sides
-       
-  deriv_eta1(1,:) = interpolator%slope_w(1:sz2)
-  deriv_eta1(2,:) = interpolator%slope_e(1:sz2)
-  deriv_eta2(1,:) = interpolator%slope_s(1:sz1+sz_derivative_eta1)
-  deriv_eta2(2,:) = interpolator%slope_n(1:sz1+sz_derivative_eta1)
-
-  SPLI2D_CUSTOM_DERDER
 
 end select
 
@@ -1064,7 +733,6 @@ function interpolate_value_ad2d( interpolator, eta1, eta2 ) result(val)
   else
     res1 = eta1
   end if
-
 
   if ( interpolator%bc_s == SLL_PERIODIC .and. eta2 < interpolator%eta2_min) then
     res2 = eta2 + interpolator%eta2_max - interpolator%eta2_min
