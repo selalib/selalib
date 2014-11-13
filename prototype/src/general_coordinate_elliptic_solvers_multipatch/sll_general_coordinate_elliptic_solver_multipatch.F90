@@ -17,7 +17,7 @@ module sll_general_coordinate_elliptic_solver_multipatch_module
   use sll_sparse_matrix_mp_module
   use sll_module_scalar_field_2d_multipatch
   use sll_general_coordinate_elliptic_solver_module
-  use sll_module_deboor_splines_2d
+  use sll_module_deboor_splines_1d
 
   implicit none
 
