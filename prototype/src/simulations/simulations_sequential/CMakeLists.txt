@@ -31,5 +31,6 @@ IF(HDF5_ENABLED)
   ADD_SUBDIRECTORY( sim_2d_analytic_field_curvilinear )
   ADD_SUBDIRECTORY( sim_2d_guiding_center_cartesian )
   ADD_SUBDIRECTORY( sim_2d_guiding_center_polar )
+  ADD_SUBDIRECTORY( sim_guiding_center_2D_generalized_coords_mudpack  )
 ENDIF(HDF5_ENABLED)
 
