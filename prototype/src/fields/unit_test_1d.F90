@@ -15,8 +15,8 @@ implicit none
 type(sll_cartesian_mesh_1d), pointer                      :: mesh_1d
 type(sll_arbitrary_degree_spline_interpolator_1d), target :: interp_1d
 
-class(sll_scalar_field_1d_base), pointer :: periodic_anal
-class(sll_scalar_field_1d_base), pointer :: dirichlet_anal
+class(sll_scalar_field_1d_base), pointer :: periodic_analytic
+class(sll_scalar_field_1d_base), pointer :: dirichlet_analytic
 class(sll_scalar_field_1d_base), pointer :: periodic_discrete
 class(sll_scalar_field_1d_base), pointer :: dirichlet_discrete
 
@@ -48,9 +48,9 @@ mesh_1d => new_cartesian_mesh_1d( NUM_CELLS1,ETA1MIN, ETA1MAX)
 !----------------------------------------------------------------------------
   
 ! ----> initialization of the field
-periodic_anal  => new_scalar_field_1d_analytic_alt( &
+periodic_analytic  => new_scalar_field_1d_analytic( &
   test_function_per, &
-   "periodic_anal",  &
+   "periodic_analytic",  &
   SLL_PERIODIC,      &
   SLL_PERIODIC,      &
   mesh_1d,           &
@@ -61,8 +61,8 @@ normL2_1 = 0.0_f64
 normH1_1 = 0.0_f64
 do i=1,nc1+1
   eta1       = real(i-1,f64)*h1 + ETA1MIN
-  node_val   = periodic_anal%value_at_point(eta1)
-  grad1_node_val = periodic_anal%derivative_value_at_point(eta1)
+  node_val   = periodic_analytic%value_at_point(eta1)
+  grad1_node_val = periodic_analytic%derivative_value_at_point(eta1)
   ref        = test_function_per(eta1)
   grad1ref   = test_function_per_der1(eta1)
   if(PRINT_COMPARISON) then
@@ -78,15 +78,15 @@ do i=1,nc1+1
      
 end do
 print*, 'PASSED'
-call periodic_anal%delete()
+call periodic_analytic%delete()
   
 ! --------------------------------------------------------------------------
 !   Test case dirichlet analytic
 !----------------------------------------------------------------------------
   
-dirichlet_anal  => new_scalar_field_1d_analytic_alt( &
+dirichlet_analytic  => new_scalar_field_1d_analytic( &
   test_function_dir,                                 &
-  "dirichlet_anal",                                  &
+  "dirichlet_analytic",                                  &
   SLL_PERIODIC,                                      &
   SLL_PERIODIC,                                      &
   mesh_1d,                                           &
@@ -96,8 +96,8 @@ normL2_2 = 0.0_f64
 normH1_2 = 0.0_f64
 do i=1,nc1+1
   eta1           = real(i-1,f64)*h1 + ETA1MIN
-  node_val       = dirichlet_anal%value_at_point(eta1)
-  grad1_node_val = dirichlet_anal%derivative_value_at_point(eta1)
+  node_val       = dirichlet_analytic%value_at_point(eta1)
+  grad1_node_val = dirichlet_analytic%derivative_value_at_point(eta1)
   ref            = test_function_dir(eta1)
   grad1ref   = test_function_dir_der1(eta1)
   if(PRINT_COMPARISON) then
@@ -112,7 +112,7 @@ do i=1,nc1+1
   normH1_2 = normH1_2 + ((grad1_node_val-grad1ref)**2)*h1
 end do
 
-call dirichlet_anal%delete()
+call dirichlet_analytic%delete()
   
 ! --------------------------------------------------------------------------
 !   Test case periodic non analytic
@@ -132,7 +132,7 @@ call initialize_ad1d_interpolator( interp_1d,    &
                                    SLL_PERIODIC, &
                                    SPLINE_DEG1)
   
-periodic_discrete => new_scalar_field_1d_discrete_alt( &
+periodic_discrete => new_scalar_field_1d_discrete( &
        "periodic_discrete", &
        interp_1d, &
        SLL_PERIODIC, &
@@ -192,7 +192,7 @@ call initialize_ad1d_interpolator( &
        SLL_DIRICHLET,&
        SPLINE_DEG1)
   
-dirichlet_discrete => new_scalar_field_1d_discrete_alt( &
+dirichlet_discrete => new_scalar_field_1d_discrete( &
        "dirichlet_discrete", &
        interp_1d, &
        SLL_DIRICHLET,&

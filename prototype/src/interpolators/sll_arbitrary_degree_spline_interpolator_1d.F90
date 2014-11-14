@@ -222,28 +222,38 @@ subroutine initialize_ad1d_interpolator( interpolator, &
 
   interpolator%t(1:spline_degree+1)                 = eta_min
   interpolator%t(num_pts+1:num_pts+spline_degree+1) = eta_max
-  
-  if (bc_selector > 9) then
 
-    interpolator%t(1:spline_degree+1) = eta_min
-    interpolator%t(num_pts+2+1:num_pts+2+spline_degree+1) = eta_max
-    interpolator%t(spline_degree+2:num_pts+2) = interpolator%eta(2:num_pts-1)
+  call compute_knots(interpolator, num_pts)
 
-  else
-
-    if (mod(spline_degree,2) == 0) then
-      do i = spline_degree+2, num_pts
-        interpolator%t(i) = interpolator%eta(i-(spline_degree+1)/2) 
-      end do
-    else
-      do i = spline_degree+2, num_pts
-        interpolator%t(i) = 0.5*(interpolator%eta(i-(spline_degree)/2) &
-                                +interpolator%eta(i-1-(spline_degree)/2))
-      end do
-    end if
-  end if
- 
 end subroutine initialize_ad1d_interpolator
+  
+subroutine compute_knots(this, num_pts)
+sll_interpolator      :: this
+sll_int32, intent(in) :: num_pts
+sll_int32             :: i
+
+if (this%bc_selector > 9) then
+
+  this%t(1:this%spline_degree+1) = this%eta_min
+  this%t(num_pts+2+1:num_pts+2+this%spline_degree+1) = this%eta_max
+  this%t(this%spline_degree+2:num_pts+2) = this%eta(2:num_pts-1)
+
+else
+
+  if (mod(this%spline_degree,2) == 0) then
+    do i = this%spline_degree+2, num_pts
+      this%t(i) = this%eta(i-(this%spline_degree+1)/2) 
+    end do
+  else
+    do i = this%spline_degree+2, num_pts
+      this%t(i) = 0.5*(this%eta(i-(this%spline_degree)/2) &
+                              +this%eta(i-1-(this%spline_degree)/2))
+    end do
+  end if
+
+end if
+ 
+end subroutine compute_knots
 
 
 !> Initialization of the boundary for interpolator arbitrary degree splines 1d.
@@ -331,6 +341,7 @@ subroutine compute_interpolants_ad1d( interpolator,    &
     SLL_ASSERT(sz .le. interpolator%num_pts*interpolator%num_pts)
     SLL_ALLOCATE(point_locate_eta(sz),ierr)
     point_locate_eta = eta_coords
+    call compute_knots(interpolator, sz)
 
   else 
 
