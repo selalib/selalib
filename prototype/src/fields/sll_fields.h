@@ -18,6 +18,8 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+use sll_module_scalar_field_1d_base
+use sll_module_scalar_field_1d
 use sll_module_scalar_field_2d_base
 use sll_module_scalar_field_2d
 

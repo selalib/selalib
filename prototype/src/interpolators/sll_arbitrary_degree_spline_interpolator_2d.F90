@@ -55,8 +55,6 @@ type, public, extends(sll_interpolator_2d_base) :: &
   sll_int32  :: bc_n                          
   sll_int32  :: spline_degree1                
   sll_int32  :: spline_degree2                
-  sll_real64, dimension(:), pointer :: knots1 
-  sll_real64, dimension(:), pointer :: knots2 
   sll_real64, dimension(:), pointer :: t1     
   sll_real64, dimension(:), pointer :: t2     
   sll_int32  :: size_t1                       
@@ -187,37 +185,37 @@ function new_arbitrary_degree_spline_interp2d( &
   spline_degree1,                              &
   spline_degree2) result( res )
 
-  type(sll_arbitrary_degree_spline_interpolator_2d), pointer :: res
-  sll_int32,  intent(in) :: num_pts1
-  sll_int32,  intent(in) :: num_pts2
-  sll_real64, intent(in) :: eta1_min
-  sll_real64, intent(in) :: eta1_max
-  sll_real64, intent(in) :: eta2_min
-  sll_real64, intent(in) :: eta2_max
-  sll_int32,  intent(in) :: bc_w
-  sll_int32,  intent(in) :: bc_e
-  sll_int32,  intent(in) :: bc_s
-  sll_int32,  intent(in) :: bc_n
-  sll_int32,  intent(in) :: spline_degree1
-  sll_int32,  intent(in) :: spline_degree2
+type(sll_arbitrary_degree_spline_interpolator_2d), pointer :: res
+sll_int32,  intent(in) :: num_pts1
+sll_int32,  intent(in) :: num_pts2
+sll_real64, intent(in) :: eta1_min
+sll_real64, intent(in) :: eta1_max
+sll_real64, intent(in) :: eta2_min
+sll_real64, intent(in) :: eta2_max
+sll_int32,  intent(in) :: bc_w
+sll_int32,  intent(in) :: bc_e
+sll_int32,  intent(in) :: bc_s
+sll_int32,  intent(in) :: bc_n
+sll_int32,  intent(in) :: spline_degree1
+sll_int32,  intent(in) :: spline_degree2
 
-  sll_int32 :: ierr
-    
-  SLL_ALLOCATE(res,ierr)
+sll_int32 :: ierr
+  
+SLL_ALLOCATE(res,ierr)
 
-  call initialize_ad2d_interpolator( res,            &
-                                     num_pts1,       &
-                                     num_pts2,       &
-                                     eta1_min,       &
-                                     eta1_max,       &
-                                     eta2_min,       &
-                                     eta2_max,       &
-                                     bc_w,           &
-                                     bc_e,           &
-                                     bc_s,           &
-                                     bc_n,           &
-                                     spline_degree1, &
-                                     spline_degree2)
+call initialize_ad2d_interpolator( res,            &
+                                   num_pts1,       &
+                                   num_pts2,       &
+                                   eta1_min,       &
+                                   eta1_max,       &
+                                   eta2_min,       &
+                                   eta2_max,       &
+                                   bc_w,           &
+                                   bc_e,           &
+                                   bc_s,           &
+                                   bc_n,           &
+                                   spline_degree1, &
+                                   spline_degree2)
 
 end function new_arbitrary_degree_spline_interp2d
 
@@ -348,7 +346,7 @@ SLL_CLEAR_ALLOCATE(interpolator%slope_n(1:num_pts1+2),ierr)
   
 tmp1 = num_pts1+4*spline_degree1
 tmp2 = num_pts2+4*spline_degree2
-SLL_ALLOCATE( interpolator%bcoef(tmp1,tmp2),ierr)
+SLL_ALLOCATE(interpolator%bcoef(tmp1,tmp2),ierr)
 
 interpolator%bcoef(:,:) = 0.0_f64
 
@@ -363,7 +361,60 @@ interpolator%interp_eta1 => new_arbitrary_degree_1d_interpolator( &
 interpolator%interp_eta2 => new_arbitrary_degree_1d_interpolator( &
   num_pts2, eta2_min, eta2_max, bc_s, bc_n, spline_degree2)
 
-end subroutine !initialize_ad2d_interpolator
+call compute_knots(interpolator, num_pts1, num_pts2)
+
+end subroutine initialize_ad2d_interpolator
+
+subroutine compute_knots(this, sz1, sz2)
+sll_interpolator_2d   :: this
+sll_int32, intent(in) :: sz1
+sll_int32, intent(in) :: sz2
+
+sll_int32 :: i
+sll_int32 :: j
+
+if (this%bc_selector > 585) then
+
+  this%t1(1:this%spline_degree1+1)             = this%eta1(1)
+  this%t1(sz1+2+1:sz1+2+this%spline_degree1+1) = this%eta1(sz1)
+  this%t1(this%spline_degree1+1+1:sz1+2)       = this%eta1(2:sz1-1)
+    
+  this%t2(1:this%spline_degree2+1)             = this%eta2(1)
+  this%t2(sz2+2+1:sz2+2+this%spline_degree2+1) = this%eta2(sz2)
+  this%t2(this%spline_degree2+1+1:sz2+2)       = this%eta2(2:sz2-1)
+
+else
+
+  this%t1(1:(this%spline_degree1+1))         = this%eta1(1)
+  this%t1(sz1+1:sz1+(this%spline_degree1+1)) = this%eta1(sz1)
+    
+  if (mod(this%spline_degree1+1,2) == 0) then
+    do i = this%spline_degree1+1+1, sz1
+      this%t1(i) = this%eta1(i-(this%spline_degree1+1)/2) 
+    end do
+  else
+    do i = (this%spline_degree1+1)+1, sz1
+      this%t1(i) = 0.5*(this%eta1(i-this%spline_degree1/2) &
+                       +this%eta1(i-1-this%spline_degree1/2))
+    end do
+  end if
+
+  this%t2(1:this%spline_degree2+1) = this%eta2(1)
+  this%t2(sz2+1:sz2+this%spline_degree2+1) = this%eta2(sz2)
+
+  if (mod((this%spline_degree2+1),2) == 0) then
+    do j = (this%spline_degree2+1)+1, sz2
+      this%t2(j) = this%eta2(j-(this%spline_degree2+1)/2) 
+    end do
+  else
+    do j = (this%spline_degree2+1)+1, sz2
+      this%t2(j) = 0.5*(this%eta2(j-this%spline_degree2/2) &
+                       +this%eta2(j-1-this%spline_degree2/2))
+    end do
+  end if
+
+end if
+end subroutine compute_knots
 
 !> Initialization of the boundary for interpolator arbitrary degree splines 2d.
 !> The parameters are
@@ -575,7 +626,6 @@ sll_int32  :: order1
 sll_int32  :: order2
 sll_int32  :: ierr
 
-    
 if( present(eta1_coords) .and. present(eta2_coords) ) then
 
   SLL_ASSERT(present(size_eta1_coords))
@@ -586,6 +636,8 @@ if( present(eta1_coords) .and. present(eta2_coords) ) then
        
   interpolator%eta1(1:sz1) = eta1_coords(1:sz1)
   interpolator%eta2(1:sz2) = eta2_coords(1:sz2)
+
+  call compute_knots(interpolator, sz1, sz2)
 
 else
 
@@ -598,8 +650,8 @@ SLL_ASSERT(sz1 .le. interpolator%num_pts1 + 8*interpolator%spline_degree1)
 SLL_ASSERT(sz2 .le. interpolator%num_pts2 + 8*interpolator%spline_degree1)
 SLL_ASSERT(size(data_array,1) .ge. sz1)
 SLL_ASSERT(size(data_array,2) .ge. sz2)
-SLL_ASSERT(size(interpolator%eta1)  .ge. sz1)
-SLL_ASSERT(size(interpolator%eta2)  .ge. sz2)
+SLL_ASSERT(size(interpolator%eta1) .ge. sz1)
+SLL_ASSERT(size(interpolator%eta2) .ge. sz2)
 
 eta1_deriv = [1, sz1]
 eta2_deriv = [1, sz2]
