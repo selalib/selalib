@@ -112,11 +112,10 @@ sll_int32                :: i
 sll_real64               :: delta
 
 delta = (eta_max - eta_min)/num_cells
-
 do i = - spline_degree, num_cells + spline_degree
-   
-   knots( i+ spline_degree + 1 ) = eta_min + i* delta
+  knots( i+ spline_degree + 1 ) = eta_min + i* delta
 end do
+
 end subroutine initialize_knots_per
 
 !> ASSEMBLING KNOTS ARRAY
@@ -159,12 +158,12 @@ subroutine initialize_knots_all( spline_degree,  &
                                  bc_right,       &
                                  knots)
     
-sll_int32, intent(in)    :: spline_degree 
-sll_int32, intent(in)    :: num_cells
-sll_real64, intent(in)   :: eta_min
-sll_real64, intent(in)   :: eta_max
-sll_int32, intent(in)    :: bc_left
-sll_int32, intent(in)    :: bc_right
+sll_int32,   intent(in)  :: spline_degree 
+sll_int32,   intent(in)  :: num_cells
+sll_real64,  intent(in)  :: eta_min
+sll_real64,  intent(in)  :: eta_max
+sll_int32,   intent(in)  :: bc_left
+sll_int32,   intent(in)  :: bc_right
 sll_real64, dimension(:) :: knots
 sll_real64               :: delta
 
