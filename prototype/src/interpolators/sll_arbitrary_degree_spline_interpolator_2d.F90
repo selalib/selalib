@@ -558,6 +558,7 @@ sll_real64, dimension(:),   intent(in),optional :: eta1_coords
 sll_real64, dimension(:),   intent(in),optional :: eta2_coords
 sll_int32,                  intent(in),optional :: size_eta1_coords
 sll_int32,                  intent(in),optional :: size_eta2_coords
+
 sll_real64, allocatable :: deriv_eta1(:,:)
 sll_real64, allocatable :: deriv_eta2(:,:)
 

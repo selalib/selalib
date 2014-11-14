@@ -184,7 +184,7 @@ module sll_simulation_4d_DK_hybrid_module
     type(sll_arbitrary_degree_spline_interpolator_2d) :: interp2d_QN_B2
     type(sll_arbitrary_degree_spline_interpolator_2d) :: interp2d_QN_C
     class(sll_scalar_field_2d_base) , pointer :: rho2d
-    type(sll_scalar_field_1d_discrete_alt), pointer :: phi1d! for derivative in eta3
+    type(sll_scalar_field_1d_discrete), pointer :: phi1d! for derivative in eta3
     type(sll_scalar_field_2d_discrete), pointer :: phi2d
     class(sll_scalar_field_2d_base), pointer :: QN_A11 
     class(sll_scalar_field_2d_base), pointer :: QN_A12
@@ -1255,7 +1255,7 @@ contains
     !-----> phi1D in the direction eta3
     logical_mesh1d => new_cartesian_mesh_1d( &
       sim%nc_x3,eta_min=sim%phi_min,eta_max=sim%phi_max)
-    sim%phi1d => new_scalar_field_1d_discrete_alt( &
+    sim%phi1d => new_scalar_field_1d_discrete( &
          "phi1d_seqx3", &
          sim%interp1d_Phi_eta3, &     
          sim%bc_left_eta1, &
