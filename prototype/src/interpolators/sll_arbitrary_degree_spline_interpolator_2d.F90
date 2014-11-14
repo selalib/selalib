@@ -1030,8 +1030,6 @@ eta2_max   = interpolator%eta2_max
 delta1     = (eta1_max - eta1_min)/num_cells1
 delta2     = (eta2_max - eta2_min)/num_cells2
 
-
-
 if (present(coeffs_1d) ) then 
 
   select case (interpolator%bc_selector)
