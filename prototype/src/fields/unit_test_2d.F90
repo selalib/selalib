@@ -25,14 +25,14 @@ program unit_test_2d
   ! different.
  ! class(sll_scalar_field_2d_base), pointer         :: field_2d
 
-  class(sll_scalar_field_2d_base), pointer         :: doubly_periodic_anal
-  class(sll_scalar_field_2d_base), pointer         :: periodique_dirichlet_anal
-  class(sll_scalar_field_2d_base), pointer         :: dirichlet_dirichlet_anal
-  class(sll_scalar_field_2d_base), pointer      :: dirichlet_periodique_anal
-  class(sll_scalar_field_2d_base), pointer      :: doubly_periodic_discrete
-  class(sll_scalar_field_2d_base), pointer      :: periodique_dirichlet_discrete
-  class(sll_scalar_field_2d_base), pointer      :: dirichlet_dirichlet_discrete
-  class(sll_scalar_field_2d_base), pointer      :: dirichlet_periodique_discrete
+  class(sll_scalar_field_2d_base), pointer :: doubly_periodic_analytic
+  class(sll_scalar_field_2d_base), pointer :: periodic_dirichlet_analytic
+  class(sll_scalar_field_2d_base), pointer :: dirichlet_dirichlet_analytic
+  class(sll_scalar_field_2d_base), pointer :: dirichlet_periodic_analytic
+  class(sll_scalar_field_2d_base), pointer :: doubly_periodic_discrete
+  class(sll_scalar_field_2d_base), pointer :: periodic_dirichlet_discrete
+  class(sll_scalar_field_2d_base), pointer :: dirichlet_dirichlet_discrete
+  class(sll_scalar_field_2d_base), pointer :: dirichlet_periodic_discrete
   sll_int32 :: nc1, nc2!, iplot
   sll_real64 :: grad1_node_val,grad2_node_val,grad1ref,grad2ref
   sll_real64, dimension(:,:), pointer :: tab_values
@@ -127,9 +127,9 @@ program unit_test_2d
 !!$       SLL_PERIODIC )
   
   ! ----> initialization of the field
-  doubly_periodic_anal  => new_scalar_field_2d_analytic( &
+  doubly_periodic_analytic  => new_scalar_field_2d_analytic( &
        test_function_perper, &
-       "doubly_periodic_anal", &
+       "doubly_periodic_analytic", &
        T, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
@@ -147,9 +147,9 @@ program unit_test_2d
      do i=1,nc1+1
         eta1       = real(i-1,f64)*h1 + ETA1MIN
         eta2       = real(j-1,f64)*h2 + ETA2MIN
-        node_val   = doubly_periodic_anal%value_at_point(eta1,eta2)
-        grad1_node_val = doubly_periodic_anal%first_deriv_eta1_value_at_point(eta1, eta2)
-        grad2_node_val = doubly_periodic_anal%first_deriv_eta2_value_at_point(eta1, eta2)
+        node_val   = doubly_periodic_analytic%value_at_point(eta1,eta2)
+        grad1_node_val = doubly_periodic_analytic%first_deriv_eta1_value_at_point(eta1, eta2)
+        grad2_node_val = doubly_periodic_analytic%first_deriv_eta2_value_at_point(eta1, eta2)
         ref        = test_function_perper(eta1,eta2,(/0.0_f64/))
         grad1ref   = test_function_perper_der1(eta1,eta2,(/0.0_f64/))
         grad2ref   = test_function_perper_der2(eta1,eta2,(/0.0_f64/))
@@ -171,7 +171,7 @@ program unit_test_2d
   !print*, normL2_1
   
   ! -------> field visualization 
-  call doubly_periodic_anal%write_to_file(0)
+  call doubly_periodic_analytic%write_to_file(0)
   
   ! the following call can also be made as:
   ! call field_2d_a%delete()
@@ -180,16 +180,16 @@ program unit_test_2d
   !call delete(field_2d_a)
   
   ! -------> delete field
-  call doubly_periodic_anal%delete()
+  call doubly_periodic_analytic%delete()
   
 !!! --------------------------------------------------------------------------
   !   Test case periodic-dirichlet analytic
   !----------------------------------------------------------------------------
   
   ! ----> initialization of the field
-  periodique_dirichlet_anal  => new_scalar_field_2d_analytic( &
+  periodic_dirichlet_analytic  => new_scalar_field_2d_analytic( &
        test_function_perdir, &
-       "periodique_dirichlet_anal", &
+       "periodic_dirichlet_analytic", &
        T, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
@@ -207,11 +207,11 @@ program unit_test_2d
      do i=1,nc1+1
         eta1       = real(i-1,f64)*h1 + ETA1MIN
         eta2       = real(j-1,f64)*h2 + ETA2MIN
-        node_val   = periodique_dirichlet_anal%value_at_point(eta1,eta2)
-        grad1_node_val = periodique_dirichlet_anal%first_deriv_eta1_value_at_point(&
+        node_val   = periodic_dirichlet_analytic%value_at_point(eta1,eta2)
+        grad1_node_val = periodic_dirichlet_analytic%first_deriv_eta1_value_at_point(&
                                                                               eta1, eta2)
         grad2_node_val = &
-             periodique_dirichlet_anal%first_deriv_eta2_value_at_point(&
+             periodic_dirichlet_analytic%first_deriv_eta2_value_at_point(&
              eta1, eta2)
         ref        = test_function_perdir(eta1,eta2,(/0.0_f64/))
         grad1ref   = test_function_perdir_der1(eta1,eta2,(/0.0_f64/))
@@ -233,7 +233,7 @@ program unit_test_2d
   end do
 
   ! -------> field visualization
-   call periodique_dirichlet_anal%write_to_file(0)
+   call periodic_dirichlet_analytic%write_to_file(0)
   
   ! the following call can also be made as:
   ! call field_2d_a%delete()
@@ -242,7 +242,7 @@ program unit_test_2d
   !call delete(field_2d_a)
   
    ! -------> delete field
-  call periodique_dirichlet_anal%delete()
+  call periodic_dirichlet_analytic%delete()
   
 !!! --------------------------------------------------------------------------
   !   Test case dirichlet-periodic analytic
@@ -251,9 +251,9 @@ program unit_test_2d
 
 
   ! ----> initialization of the field
-  dirichlet_periodique_anal  => new_scalar_field_2d_analytic( &
+  dirichlet_periodic_analytic  => new_scalar_field_2d_analytic( &
        test_function_dirper, &
-       "dirichlet_periodique_anal", &
+       "dirichlet_periodic_analytic", &
        T, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET,&
@@ -272,11 +272,11 @@ program unit_test_2d
      do i=1,nc1+1
         eta1       = real(i-1,f64)*h1 + ETA1MIN
         eta2       = real(j-1,f64)*h2 + ETA2MIN
-        node_val   = dirichlet_periodique_anal%value_at_point(eta1,eta2)
-        grad1_node_val = dirichlet_periodique_anal%first_deriv_eta1_value_at_point(&
+        node_val   = dirichlet_periodic_analytic%value_at_point(eta1,eta2)
+        grad1_node_val = dirichlet_periodic_analytic%first_deriv_eta1_value_at_point(&
                                                                               eta1, eta2)
         grad2_node_val = &
-             dirichlet_periodique_anal%first_deriv_eta2_value_at_point(&
+             dirichlet_periodic_analytic%first_deriv_eta2_value_at_point(&
              eta1, eta2)
         ref        = test_function_dirper(eta1,eta2,(/0.0_f64/))
         grad1ref   = test_function_dirper_der1(eta1,eta2,(/0.0_f64/))
@@ -298,7 +298,7 @@ program unit_test_2d
   end do
 
   ! -------> field visualization 
-   call dirichlet_periodique_anal%write_to_file(0)
+   call dirichlet_periodic_analytic%write_to_file(0)
   
   ! the following call can also be made as:
   ! call field_2d_a%delete()
@@ -307,7 +307,7 @@ program unit_test_2d
   !call delete(field_2d_a)
   
    ! -------> delete field
-  call dirichlet_periodique_anal%delete()
+  call dirichlet_periodic_analytic%delete()
 
 
 !!! --------------------------------------------------------------------------
@@ -315,9 +315,9 @@ program unit_test_2d
   !----------------------------------------------------------------------------
   
   ! ----> initialization of the field
-  dirichlet_dirichlet_anal  => new_scalar_field_2d_analytic( &
+  dirichlet_dirichlet_analytic  => new_scalar_field_2d_analytic( &
        test_function_dirdir, &
-       "dirichlet_dirichlet_anal", &
+       "dirichlet_dirichlet_analytic", &
        T, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET,&
@@ -336,10 +336,10 @@ program unit_test_2d
      do i=1,nc1+1
         eta1       = real(i-1,f64)*h1 + ETA1MIN
         eta2       = real(j-1,f64)*h2 + ETA2MIN
-        node_val   = dirichlet_dirichlet_anal%value_at_point(eta1,eta2)
-        grad1_node_val = dirichlet_dirichlet_anal%first_deriv_eta1_value_at_point(&
+        node_val   = dirichlet_dirichlet_analytic%value_at_point(eta1,eta2)
+        grad1_node_val = dirichlet_dirichlet_analytic%first_deriv_eta1_value_at_point(&
                                                                               eta1, eta2)
-        grad2_node_val = dirichlet_dirichlet_anal%first_deriv_eta2_value_at_point(&
+        grad2_node_val = dirichlet_dirichlet_analytic%first_deriv_eta2_value_at_point(&
                                                                               eta1, eta2)
         ref        = test_function_dirdir(eta1,eta2,(/0.0_f64/))
         grad1ref   = test_function_dirdir_der1(eta1,eta2,(/0.0_f64/))
@@ -360,7 +360,7 @@ program unit_test_2d
      end do
   end do
   ! -------> field visualization 
-   call dirichlet_dirichlet_anal%write_to_file(0)
+   call dirichlet_dirichlet_analytic%write_to_file(0)
   
   ! the following call can also be made as:
   ! call field_2d_a%delete()
@@ -369,7 +369,7 @@ program unit_test_2d
   !call delete(field_2d_a)
   
    ! -------> delete field   
-  call dirichlet_dirichlet_anal%delete()
+  call dirichlet_dirichlet_analytic%delete()
   
 
   
@@ -513,8 +513,8 @@ program unit_test_2d
   
   ! ----> initialization of the field
   
-  periodique_dirichlet_discrete => new_scalar_field_2d_discrete( &
-       "periodique_dirichlet_discrete", &
+  periodic_dirichlet_discrete => new_scalar_field_2d_discrete( &
+       "periodic_dirichlet_discrete", &
        interp_2d, &
        T, &
        SLL_PERIODIC, &
@@ -527,9 +527,9 @@ program unit_test_2d
        nc2+1)
   
   ! ------- > allocation values of field
-  call periodique_dirichlet_discrete%set_field_data(tab_values)
+  call periodic_dirichlet_discrete%set_field_data(tab_values)
   ! --------> Compute coefficients of the field
-  call periodique_dirichlet_discrete%update_interpolation_coefficients( )
+  call periodic_dirichlet_discrete%update_interpolation_coefficients( )
   
 
   ! -------> compute error norm L2 and H1
@@ -539,12 +539,12 @@ program unit_test_2d
      do i=1,nc1 + 1 
         eta1 = real(i-1,f64)*h1 + ETA1MIN 
         eta2 = real(j-1,f64)*h2 + ETA2MIN
-        node_val   = periodique_dirichlet_discrete%value_at_point(eta1,eta2)
+        node_val   = periodic_dirichlet_discrete%value_at_point(eta1,eta2)
         grad1_node_val = &
-             periodique_dirichlet_discrete%first_deriv_eta1_value_at_point(&
+             periodic_dirichlet_discrete%first_deriv_eta1_value_at_point(&
              eta1, eta2)
         grad2_node_val = &
-             periodique_dirichlet_discrete%first_deriv_eta2_value_at_point(&
+             periodic_dirichlet_discrete%first_deriv_eta2_value_at_point(&
              eta1, eta2)
         ref        = test_function_perdir(eta1,eta2,(/0.0_f64/))
         grad1ref   = test_function_perdir_der1(eta1,eta2,(/0.0_f64/))
@@ -565,11 +565,11 @@ program unit_test_2d
   end do
   
   ! -------> field visualization 
-  call periodique_dirichlet_discrete%write_to_file(0)
+  call periodic_dirichlet_discrete%write_to_file(0)
 
 
   ! -------> delete field
-  call periodique_dirichlet_discrete%delete()
+  call periodic_dirichlet_discrete%delete()
 
   ! -------> delete table
   DEALLOCATE(point1)
@@ -619,8 +619,8 @@ program unit_test_2d
   
   ! ----> initialization of the field
   
-  dirichlet_periodique_discrete => new_scalar_field_2d_discrete( &
-       "dirichlet_periodique_discrete", &
+  dirichlet_periodic_discrete => new_scalar_field_2d_discrete( &
+       "dirichlet_periodic_discrete", &
        interp_2d, &
        T, &
        SLL_DIRICHLET, &
@@ -633,9 +633,9 @@ program unit_test_2d
        nc2+1)
   
   ! ------- > allocation values of field
-  call dirichlet_periodique_discrete%set_field_data(tab_values)
+  call dirichlet_periodic_discrete%set_field_data(tab_values)
   ! --------> Compute coefficients of the field
-  call dirichlet_periodique_discrete%update_interpolation_coefficients( )
+  call dirichlet_periodic_discrete%update_interpolation_coefficients( )
   
 
   ! -------> compute error norm L2 and H1
@@ -645,10 +645,10 @@ program unit_test_2d
      do i=1,nc1 + 1 
         eta1 = real(i-1,f64)*h1 + ETA1MIN 
         eta2 = real(j-1,f64)*h2 + ETA2MIN
-        node_val   = dirichlet_periodique_discrete%value_at_point(eta1,eta2)
-        grad1_node_val = dirichlet_periodique_discrete%first_deriv_eta1_value_at_point(&
+        node_val   = dirichlet_periodic_discrete%value_at_point(eta1,eta2)
+        grad1_node_val = dirichlet_periodic_discrete%first_deriv_eta1_value_at_point(&
                                                                               eta1, eta2)
-        grad2_node_val = dirichlet_periodique_discrete%first_deriv_eta2_value_at_point(&
+        grad2_node_val = dirichlet_periodic_discrete%first_deriv_eta2_value_at_point(&
                                                                               eta1, eta2)
         ref        = test_function_dirper(eta1,eta2,(/0.0_f64/))
         grad1ref   = test_function_dirper_der1(eta1,eta2,(/0.0_f64/))
@@ -669,11 +669,11 @@ program unit_test_2d
   end do
   
   ! -------> field visualization 
-  call dirichlet_periodique_discrete%write_to_file(0)
+  call dirichlet_periodic_discrete%write_to_file(0)
 
 
   ! -------> delete field
-  call dirichlet_periodique_discrete%delete()
+  call dirichlet_periodic_discrete%delete()
 
   ! -------> delete table
   DEALLOCATE(point1)
