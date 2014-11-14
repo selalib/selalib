@@ -48,7 +48,7 @@ mesh_1d => new_cartesian_mesh_1d( NUM_CELLS1,ETA1MIN, ETA1MAX)
 !----------------------------------------------------------------------------
   
 ! ----> initialization of the field
-periodic_anal  => new_scalar_field_1d_analytic_alt( &
+periodic_anal  => new_scalar_field_1d_analytic( &
   test_function_per, &
    "periodic_anal",  &
   SLL_PERIODIC,      &
@@ -84,7 +84,7 @@ call periodic_anal%delete()
 !   Test case dirichlet analytic
 !----------------------------------------------------------------------------
   
-dirichlet_anal  => new_scalar_field_1d_analytic_alt( &
+dirichlet_anal  => new_scalar_field_1d_analytic( &
   test_function_dir,                                 &
   "dirichlet_anal",                                  &
   SLL_PERIODIC,                                      &
@@ -132,7 +132,7 @@ call initialize_ad1d_interpolator( interp_1d,    &
                                    SLL_PERIODIC, &
                                    SPLINE_DEG1)
   
-periodic_discrete => new_scalar_field_1d_discrete_alt( &
+periodic_discrete => new_scalar_field_1d_discrete( &
        "periodic_discrete", &
        interp_1d, &
        SLL_PERIODIC, &
@@ -192,7 +192,7 @@ call initialize_ad1d_interpolator( &
        SLL_DIRICHLET,&
        SPLINE_DEG1)
   
-dirichlet_discrete => new_scalar_field_1d_discrete_alt( &
+dirichlet_discrete => new_scalar_field_1d_discrete( &
        "dirichlet_discrete", &
        interp_1d, &
        SLL_DIRICHLET,&
