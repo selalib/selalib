@@ -373,6 +373,14 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
   SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
   SLL_ALLOCATE( interpolator%knots2(2*spline_degree2+2),ierr )
 
+case (10) ! 2. neumann-left, dirichlet-right, periodic
+       
+  !SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1-1),ierr )
+  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
+  SLL_ALLOCATE( interpolator%knots2(2*spline_degree2+2),ierr )
+
+
+
 case (576) ! 3. periodic, dirichlet-bottom, dirichlet-top
 
   SLL_ALLOCATE( interpolator%knots1(2*spline_degree1+2),ierr )
@@ -939,7 +947,66 @@ if (present(coeffs_1d) ) then
          
     interpolator%bcoef(1,:) = 0.0_8
     interpolator%bcoef(nb_spline_eta1+2,:) = 0.0_8
+
+   ! ------------------------------------------------------------
+
+  case (10) ! 2. neumann-left, dirichlet-right, periodic
+         
+    interpolator%size_coeffs1 =  num_cells1 + sp_deg1
+    interpolator%size_coeffs2 =  num_cells2 + sp_deg2 + 1
+    interpolator%size_t1      =  2*sp_deg1 + num_cells1 + 1
+    interpolator%size_t2      =  2*sp_deg2 + num_cells2 + 1 + 1
+    nb_spline_eta1            =  num_cells1 + sp_deg1 - 1
+    nb_spline_eta2            =  num_cells2
+         
+    if ( size( coeffs_1d,1) .ne. (num_cells1+sp_deg1-1)*num_cells2) then
+      print*, 'Problem in set_coefficients in arbitrary_degree_spline_2d'
+      print*, ' Problem with the size coeffs_1d must have the size equal to '
+      print*, ' (num_cells1 + sp_deg1 - 1)*num_cells2=', &
+                 (num_cells1 + sp_deg1 - 1)*num_cells2
+      stop
+    end if
+    ! ------------------------------------------------------------
+    ! allocation and definition of knots
+    ! ------------------------------------------------------------
+    do i = - sp_deg2, num_cells2 + sp_deg2 + 1
+      interpolator%t2( i+ sp_deg2 + 1 ) = eta2_min + i* delta2
+    end do
+         
+    do i = 1, sp_deg1 + 1
+      interpolator%t1(i) = eta1_min
+    enddo
+    eta1 = eta1_min
+    do i = sp_deg1 + 2, num_cells1 + 1 + sp_deg1
+      eta1 = eta1 + delta1
+      interpolator%t1(i) = eta1
+    enddo
+    do i = num_cells1 + sp_deg1 + 2, num_cells1 + 1 + 2*sp_deg1
+      interpolator%t1(i) = eta1
+    enddo
+         
+    ! ------------------------------------------------------------
+    ! reorganization of spline coefficients 1D in coefficients 2D 
+    ! ------------------------------------------------------------
+    do i = 1 ,nb_spline_eta1
+      do j = 1,nb_spline_eta2
+        interpolator%bcoef(i+1,j) = &
+             coeffs_1d(i+nb_spline_eta1*(j-1))
+      end do
+    end do
+         
+    do j = 1, sp_deg2 + 1
+      do i = 1,nb_spline_eta1
+        interpolator%bcoef(i + 1 ,nb_spline_eta2 + j ) = &
+                    coeffs_1d(i+nb_spline_eta1*(j-1))
+      end do
+    end do
+         
+    !interpolator%bcoef(1,:) = 0.0_8
+    interpolator%bcoef(nb_spline_eta1+2,:) = 0.0_8
          ! ------------------------------------------------------------
+
+
   case(576)!3. periodic, dirichlet-bottom, dirichlet-top
        
     interpolator%size_coeffs1 =  num_cells1 + sp_deg1 + 1
@@ -1854,6 +1921,53 @@ case (650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet
        ! boundary condition non homogene
        !interpolator%bcoef(1:sz1+sz_derivative_eta1,1)   = interpolator%value_s(1:sz1+sz_derivative_eta1)
   !     interpolator%bcoef(1:sz1,sz2) = interpolator%value_n(1:sz1)
+
+case (10) !left: Neumann, right: Dirichlet, bottom: Periodic, Top: Periodic
+
+  sz_derivative_eta1 = 2
+  sz_derivative_eta2 = 2
+  interpolator%size_coeffs1 = sz1 + sz_derivative_eta1
+  interpolator%size_coeffs2 = sz2 + sz_derivative_eta2
+  interpolator%size_t1 = order1 + sz1 + sz_derivative_eta1
+  interpolator%size_t2 = order2 + sz2 + sz_derivative_eta2
+       
+  SLL_CLEAR_ALLOCATE( deriv_eta1(1:2,1:sz2),ierr)
+  SLL_CLEAR_ALLOCATE( deriv_eta2(1:sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
+  eta1_deriv(1) = 1
+  eta1_deriv(2) = sz1
+  deriv_eta1(1,1:sz2)     = 0.0_f64
+  deriv_eta1(2,1:sz2)     = interpolator%slope_e(1:sz2)
+  eta2_deriv(1) = 1
+  eta2_deriv(2) = sz2
+  deriv_eta2(1,1:sz1+sz_derivative_eta1)=0.0_f64
+  deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_n(1:sz1+sz_derivative_eta1)
+
+  call spli2d_custom_derder(&
+            sz1,&
+            sz_derivative_eta1,&
+            order1, &
+            interpolator%eta1, &
+            eta1_deriv,&
+            sz2, &
+            sz_derivative_eta2,&
+            order2, interpolator%eta2, &
+            eta2_deriv,&
+            data_array_tmp,&
+            deriv_eta1,&
+            deriv_eta2,&
+            interpolator%bcoef,&!(1:sz1,1:sz2),&
+            interpolator%t1,&!(1:sz1+order1), &
+            interpolator%t2)!(1:sz2+order2) )
+
+       SLL_DEALLOCATE( deriv_eta1,ierr)
+       SLL_DEALLOCATE( deriv_eta2,ierr)
+       ! boundary condition non homogene
+       !interpolator%bcoef(1,1:sz2+sz_derivative_eta2)   = interpolator%value_w(1:sz2+sz_derivative_eta2)
+       ! boundary condition non homogene
+       !interpolator%bcoef(1:sz1+sz_derivative_eta1,1)   = interpolator%value_s(1:sz1+sz_derivative_eta1)
+  !     interpolator%bcoef(1:sz1,sz2) = interpolator%value_n(1:sz1)
+
+
 
     case(657) !left: Dirichlet, right: Neumann, bottom: Neumann, Top: Dirichlet 
        sz_derivative_eta1 = 2

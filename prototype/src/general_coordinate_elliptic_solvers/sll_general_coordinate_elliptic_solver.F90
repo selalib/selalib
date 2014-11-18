@@ -40,6 +40,7 @@ type, public :: general_coordinate_elliptic_solver
   sll_real64, dimension(:,:), pointer :: gauss_pts1
   sll_real64, dimension(:,:), pointer :: gauss_pts2
   sll_int32 :: bc_left
+  sll_int32 :: bc_left_interp
   sll_int32 :: bc_right
   sll_int32 :: bc_bottom
   sll_int32 :: bc_top
@@ -223,6 +224,11 @@ subroutine initialize_general_elliptic_solver( &
  es%delta_eta2     = (eta2_max-eta2_min)/num_cells2
  es%eta1_min       = eta1_min
  es%eta2_min       = eta2_min
+ 
+ es%bc_left_interp = bc_left
+ if(bc_left==SLL_NEUMANN)then
+   es%bc_left_interp = SLL_DIRICHLET
+ endif
 
  !quadrature_type1_tmp = ES_GAUSS_LEGENDRE
  !quadrature_type2_tmp = ES_GAUSS_LEGENDRE
@@ -773,15 +779,13 @@ subroutine factorize_mat_es(&
   Stiff_loc(:) = 0.0_f64
   Source_loc(:,:,:) = 0.0_f64
   
-  print *,'#ok here'
 
   do j=1,es%num_cells2
     do i=1,es%num_cells1
           
       cell_index = i+es%num_cells1*(j-1)
       
-   print *,'#ok here1'
-     
+      
       call build_local_matrices( &
                es,               &
                cell_index,       &
@@ -805,7 +809,6 @@ subroutine factorize_mat_es(&
                S_b1_loc,         &
                S_b2_loc,         &
                Source_loc)
-  print *,'#ok here2'
 
 
       call local_to_global_matrices( &
@@ -825,7 +828,6 @@ subroutine factorize_mat_es(&
                S_b2_loc,             &
                es%masse,             &
                es%stiff)
-  print *,'#ok here3'
           
     end do
   end do
@@ -1065,6 +1067,8 @@ subroutine solve_general_coordinates_elliptic_eq( es, rho, phi)
   print *,'#solve_linear_system done'
     
   call  phi%interp_2d%set_coefficients( es%phi_vec)
+!  call  phi%interp_2d%set_coefficients( &
+!    es%phi_vec(1:(es%total_num_splines1-1)*es%total_num_splines2))
 
 end subroutine solve_general_coordinates_elliptic_eq
   
@@ -1259,12 +1263,12 @@ subroutine build_local_matrices( &
       gpt1  = eta1  + 0.5_f64*delta1 * ( obj%gauss_pts1(1,i) + 1.0_f64 )
       wgpt1 = 0.5_f64*delta1*obj%gauss_pts1(2,i)
           
-      if((obj%bc_left==SLL_PERIODIC).and.(obj%bc_right==SLL_PERIODIC)) then 
+      if((obj%bc_left_interp==SLL_PERIODIC).and.(obj%bc_right==SLL_PERIODIC)) then 
              
         gtmp1   = 0.5_f64*delta1*( obj%gauss_pts1(1,i) + 1.0_f64)! ATTENTION 0.5 
         local_spline_index1 = obj%spline_degree1 + 1
              
-      else if ((obj%bc_left  == SLL_DIRICHLET).and.&
+      else if ((obj%bc_left_interp  == SLL_DIRICHLET).and.&
         (obj%bc_right == SLL_DIRICHLET) ) then
            
         gtmp1   = gpt1
@@ -1577,7 +1581,7 @@ subroutine local_to_global_matrices( &
   sll_int32 :: bc_top
 
 
-  bc_left   = es%bc_left
+  bc_left   = es%bc_left_interp
   bc_right  = es%bc_right
   bc_bottom = es%bc_bottom
   bc_top    = es%bc_top
@@ -1692,7 +1696,7 @@ subroutine local_to_global_matrices_rho( es, cell_i, cell_j)
   sll_int32 :: bc_top
   sll_int32 :: index1,index3
    
-  bc_left   = es%bc_left
+  bc_left   = es%bc_left_interp
   bc_right  = es%bc_right
   bc_bottom = es%bc_bottom
   bc_top    = es%bc_top
