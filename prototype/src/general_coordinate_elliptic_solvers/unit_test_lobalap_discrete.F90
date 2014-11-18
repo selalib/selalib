@@ -1,5 +1,7 @@
 program test_lobalap_discrete
-#include "selalib.h"
+!YG #include "selalib.h"
+#include "sll_working_precision.h"
+#include "sll_interpolators.h"
 #include "sll_coordinate_transformations.h"
 
   use map_function_module, only: set_map_function
