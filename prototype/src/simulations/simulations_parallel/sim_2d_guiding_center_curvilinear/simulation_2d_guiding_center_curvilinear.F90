@@ -1550,6 +1550,12 @@ contains
     sll_real64 :: l1
     sll_real64 :: l2
     sll_real64 :: e
+    
+    sll_real64, dimension(:), allocatable :: mass_array
+    sll_real64, dimension(:), allocatable  :: l1_array
+    sll_real64, dimension(:), allocatable  :: l2_array
+    sll_real64, dimension(:), allocatable  :: e_array
+    
     sll_real64 :: eta1
     sll_real64 :: eta2
     sll_real64, dimension(:),allocatable :: data
@@ -1581,43 +1587,47 @@ contains
     delta_eta2 = mesh_2d%delta_eta2
 
     SLL_ALLOCATE(data(Nc_eta1+1),ierr)
+    SLL_ALLOCATE(mass_array(Nc_eta2+1),ierr)
+    SLL_ALLOCATE(l1_array(Nc_eta2+1),ierr)
+    SLL_ALLOCATE(l2_array(Nc_eta2+1),ierr)
+    SLL_ALLOCATE(e_array(Nc_eta2+1),ierr)
  
     linf  = 0.0_f64
-    l1    = 0.0_f64
-    l2    = 0.0_f64
-    mass  = 0.0_f64
-     e     = 0.0_f64
+    !l1    = 0.0_f64
+    !l2    = 0.0_f64
+    !mass  = 0.0_f64
+     !e     = 0.0_f64
     
     do i2 = 1, Nc_eta2+1
       eta2 = eta2_min + (i2-1)* delta_eta2 
       do i1=1,Nc_eta1+1
-        eta1 = eta2_min + (i1-1)* delta_eta1
-        data(i1) = f(i1,i2)*transformation%jacobian(eta1,eta2)
+        eta1 = eta1_min + (i1-1)* delta_eta1
+        data(i1) = f(i1,i2)*abs(transformation%jacobian(eta1,eta2))
       enddo
-      mass = mass + compute_integral_trapezoid_1d(data, Nc_eta1+1, delta_eta1)
+      mass_array(i2) = compute_integral_trapezoid_1d(data, Nc_eta1+1, delta_eta1)
 
       do i1=1,Nc_eta1+1
-        eta1 = eta2_min + (i1-1)* delta_eta1
-        data(i1) = abs(f(i1,i2))*transformation%jacobian(eta1,eta2)
+        eta1 = eta1_min + (i1-1)* delta_eta1
+        data(i1) = abs(f(i1,i2))*abs(transformation%jacobian(eta1,eta2))
       enddo
-      l1 = l1 + compute_integral_trapezoid_1d(data, Nc_eta1+1, delta_eta1)
+      l1_array(i2) = compute_integral_trapezoid_1d(data, Nc_eta1+1, delta_eta1)
 
       do i1=1,Nc_eta1+1
-        eta1 = eta2_min + (i1-1)* delta_eta1
-        data(i1) = (f(i1,i2))**2 *transformation%jacobian(eta1,eta2)
+        eta1 = eta1_min + (i1-1)* delta_eta1
+        data(i1) = (f(i1,i2))**2 *abs(transformation%jacobian(eta1,eta2))
       enddo
-      l2 = l2 + compute_integral_trapezoid_1d(data, Nc_eta1+1, delta_eta1)
+      l2_array(i2) = compute_integral_trapezoid_1d(data, Nc_eta1+1, delta_eta1)
 
       do i1=1,Nc_eta1+1
-        eta1 = eta2_min + (i1-1)* delta_eta1
+        eta1 = eta1_min + (i1-1)* delta_eta1
         jac_m  =  transformation%jacobian_matrix(eta1,eta2)
-        dphi_eta1 = A1(i1,i2)* transformation%jacobian(eta1,eta2)
-        dphi_eta2 = -A2(i1,i2)* transformation%jacobian(eta1,eta2)
+        dphi_eta1 = -A2(i1,i2)* transformation%jacobian(eta1,eta2)
+        dphi_eta2 = A1(i1,i2)* transformation%jacobian(eta1,eta2)
         data(i1) = (( jac_m(2,2)*dphi_eta1 - jac_m(2,1)*dphi_eta2 )**2 + &
         ( -jac_m(1,2)*dphi_eta1 + jac_m(1,1)*dphi_eta2 )**2) &
         /abs(transformation%jacobian(eta1,eta2)) 
       enddo
-      e = e + compute_integral_trapezoid_1d(data, Nc_eta1+1, delta_eta1)
+      e_array(i2) = compute_integral_trapezoid_1d(data, Nc_eta1+1, delta_eta1)
 
       do i1=1,Nc_eta1+1
        linf = max(linf,abs(f(i1,i2)))
@@ -1625,10 +1635,16 @@ contains
          
     enddo     
 
-    mass = mass*delta_eta2
-    l1 = l1*delta_eta2
-    l2 = sqrt(l2*delta_eta2)
-    e  = e*delta_eta2
+    mass = compute_integral_trapezoid_1d(mass_array, Nc_eta2+1, delta_eta2)
+    l1 = compute_integral_trapezoid_1d(l1_array, Nc_eta2+1, delta_eta2)
+    l2 = compute_integral_trapezoid_1d(l2_array, Nc_eta2+1, delta_eta2)
+    l2 = sqrt(l2)
+    e = compute_integral_trapezoid_1d(e_array, Nc_eta2+1, delta_eta2)
+
+    !mass = mass*delta_eta2
+    !l1 = l1*delta_eta2
+    !l2 = sqrt(l2*delta_eta2)
+    !e  = e*delta_eta2
     
     write(file_id,*) &
       dt*real(step,f64), &
