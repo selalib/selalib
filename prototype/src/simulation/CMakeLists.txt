@@ -110,45 +110,31 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
    #and simulation_MYSIM.F90
    #ADD_SIMULATION(MYMETHOD MYSIM)
 
-   ADD_SIMULATION(4d_qns_general    4d_qns_general)
-   #PN ADD_SIMULATION(4d_qns_general_multipatch    4d_qns_general_multipatch)
+#YG   ADD_SIMULATION(4d_qns_general    4d_qns_general)
+#PN   ADD_SIMULATION(4d_qns_general_multipatch    4d_qns_general_multipatch)
+
+#PN   ADD_SIMULATION(4d_DK_hybrid              4d_DK_hybrid)
+#PN   ADD_SIMULATION(4d_dk_polar               4d_drift_kinetic_polar)
+#PN   ADD_SIMULATION(4d_dk_polar_one_mu        4d_drift_kinetic_polar_one_mu)
+#PN   ADD_SIMULATION(4d_dk_polar_multi_mu      4d_drift_kinetic_polar_multi_mu)
+#PN   ADD_SIMULATION(4d_dk_field_aligned_polar 4d_drift_kinetic_field_aligned_polar)
+#PN   ADD_SIMULATION(6d                        6d_vlasov_poisson_cartesian)
+
+#PN   ADD_SIMULATION(4d_vp_pic_cartesian       4d_vp_pic_cartesian)
+
+#SH   ADD_SIMULATION(2d_guiding_center_pic_cartesian 2d_guiding_center_pic_cartesian)
+
+
 #   ADD_SIMULATION(4d_mixed_qns_cartesian 4d_mixed_qns_cartesian)
 
-   # Add postprocessing code for KEEN
-   IF(Fortran_COMPILER MATCHES IBM)
-      SET_SOURCE_FILES_PROPERTIES(VPpostprocessing_drive_KEEN.f 
-                                  PROPERTIES COMPILE_FLAGS -qfixed)
-   ENDIF(Fortran_COMPILER MATCHES IBM)
-
-   ADD_EXECUTABLE(VPpostprocessing_drive_KEEN VPpostprocessing_drive_KEEN.f)
-   TARGET_LINK_LIBRARIES(VPpostprocessing_drive_KEEN dfftpack)
+#YG   # Add postprocessing code for KEEN
+#YG   IF(Fortran_COMPILER MATCHES IBM)
+#YG      SET_SOURCE_FILES_PROPERTIES(VPpostprocessing_drive_KEEN.f 
+#YG                                  PROPERTIES COMPILE_FLAGS -qfixed)
+#YG   ENDIF(Fortran_COMPILER MATCHES IBM)
+#YG
+#YG   ADD_EXECUTABLE(VPpostprocessing_drive_KEEN VPpostprocessing_drive_KEEN.f)
+#YG   TARGET_LINK_LIBRARIES(VPpostprocessing_drive_KEEN dfftpack)
 
 ENDIF()
 
-ADD_EXECUTABLE(polar_SL polar_SL.F90)
-
-TARGET_LINK_LIBRARIES(polar_SL sll_interpolators
-	                       sll_constants
-	                       sll_file_io
-  	                       sll_utilities)
-
-ADD_EXECUTABLE(curvilinear_SL curvilinear_SL.F90)
-  
-TARGET_LINK_LIBRARIES(curvilinear_SL sll_interpolators
-	                             sll_constants
-	                             sll_file_io
-  	                             sll_utilities)
-
-ADD_EXECUTABLE(CG_polar CG_polar.F90 sll_advection_polar.F90
-		                         sll_polar_operators.F90)
-
-TARGET_LINK_LIBRARIES(CG_polar sll_poisson_solvers
-                               sll_utilities
-                               sll_file_io
-	                         sll_fft
-                               sll_splines
-	                         sll_constants
-	                         sll_timer)
-
-ADD_EXECUTABLE(unit_test_polar unit_test_polar.F90 sll_polar_operators.F90)
-TARGET_LINK_LIBRARIES(unit_test_polar sll_poisson_solvers)

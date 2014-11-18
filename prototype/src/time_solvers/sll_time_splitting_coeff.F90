@@ -17,7 +17,7 @@
 !
 ! Define coefficients for time splitting
 !
-! contact: Michel Mehrenberger (mehrenbe@math.unistra.fr)
+!> @author Michel Mehrenberger (mehrenbe@math.unistra.fr)
 !
 
 module sll_time_splitting_coeff_module

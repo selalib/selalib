@@ -58,13 +58,13 @@ contains
     plan_sl%bc2_type=bc2_type
 
  if (bc1_type==sll_DIRICHLET) then 
-  plan_sl%spl_f => new_spline_2D(N_eta1+1,N_eta2+1,eta1_min,eta1_max,eta2_min,eta2_max, &
+  plan_sl%spl_f => new_cubic_spline_2D(N_eta1+1,N_eta2+1,eta1_min,eta1_max,eta2_min,eta2_max, &
          & bc1_type,bc2_type,const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
  elseif (bc2_type==sll_DIRICHLET) then 
-  plan_sl%spl_f => new_spline_2D(N_eta1+1,N_eta2+1,eta1_min,eta1_max,eta2_min,eta2_max, &
+  plan_sl%spl_f => new_cubic_spline_2D(N_eta1+1,N_eta2+1,eta1_min,eta1_max,eta2_min,eta2_max, &
          & bc1_type,bc2_type,const_slope_x2_min = 0._f64,const_slope_x2_max = 0._f64)
  else
- plan_sl%spl_f => new_spline_2D(N_eta1+1,N_eta2+1,eta1_min,eta1_max,eta2_min,eta2_max, &
+ plan_sl%spl_f => new_cubic_spline_2D(N_eta1+1,N_eta2+1,eta1_min,eta1_max,eta2_min,eta2_max, &
          & bc1_type,bc2_type)
  endif
   end function new_plan_adv_curvilinear
@@ -85,7 +85,7 @@ contains
 
     if (associated(plan_sl)) then
        DEALLOCATE(plan_sl%field)
-       call delete_spline_2d(plan_sl%spl_f)
+       call sll_delete(plan_sl%spl_f)
        DEALLOCATE(plan_sl)
        plan_sl=>null()
     end if
@@ -147,7 +147,7 @@ contains
 
     if (associated(plan_sl)) then
        call delete_plan_adv_curvilinear(plan_sl%adv)
-       call delete_plan_poisson_polar(plan_sl%poisson)
+       call sll_delete(plan_sl%poisson)
        call delete_plan_curvilinear_op(plan_sl%grad)
        DEALLOCATE(plan_sl)
     end if
@@ -204,7 +204,7 @@ contains
     bc2_type=plan%bc2_type
  
     !construction of spline coefficients for f
-    call compute_spline_2D(fn,plan%spl_f)
+    call compute_cubic_spline_2D(fn,plan%spl_f)
 
     fnp1=0._f64
     
@@ -376,8 +376,8 @@ contains
 
 
 
-    if(bc2_type==sll_PERIODIC) fnp1(:,N_eta2+1)=fnp1(:,1) 
-    if(bc1_type==sll_PERIODIC) fnp1(N_eta1+1,:)=fnp1(1,:)
+    if(bc2_type==SLL_PERIODIC) fnp1(:,N_eta2+1)=fnp1(:,1) 
+    if(bc1_type==SLL_PERIODIC) fnp1(N_eta1+1,:)=fnp1(1,:)
  
 
   end subroutine advect_CG_curvilinear
