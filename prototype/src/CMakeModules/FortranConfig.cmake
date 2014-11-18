@@ -19,7 +19,7 @@ MESSAGE(STATUS "Fortran compiler : ${Fortran_COMPILER_NAME}-${Fortran_COMPILER_V
 
 IF(Fortran_COMPILER_NAME MATCHES gfortran)
    ADD_DEFINITIONS(-DGFORTRAN)
-   SET(CMAKE_Fortran_FLAGS_RELEASE "-w -ffree-line-length-none -fall-intrinsics -O3 -fopenmp")
+   SET(CMAKE_Fortran_FLAGS_RELEASE "-w -ffree-line-length-none -fall-intrinsics -O3 -fopenmp -fPIC")
    SET(CMAKE_Fortran_FLAGS_DEBUG "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics -fbounds-check -fbacktrace -ffpe-trap=zero,overflow -O0 -fcheck-array-temporaries")
 
 ELSEIF(Fortran_COMPILER_NAME MATCHES ifort)
