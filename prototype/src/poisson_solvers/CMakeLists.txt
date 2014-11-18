@@ -63,7 +63,9 @@ TARGET_LINK_LIBRARIES(test_poisson_polar_fft sll_poisson_solvers)
 
 ADD_EXECUTABLE(test_poisson_3d_periodic_seq test_poisson_3d_periodic_seq.F90 
                                         sll_poisson_3d_periodic_seq.F90)
-TARGET_LINK_LIBRARIES(test_poisson_3d_periodic_seq sll_fft)
+TARGET_LINK_LIBRARIES(test_poisson_3d_periodic_seq
+                      sll_poisson_solvers
+                      sll_fft)
 
 ADD_EXECUTABLE(test_poisson_2d_fem sll_poisson_2d_fem.F90
                                    sll_poisson_2d_periodic_fem.F90

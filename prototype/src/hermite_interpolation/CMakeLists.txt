@@ -10,7 +10,7 @@ ADD_LIBRARY ( hex_hermite STATIC
               sll_hex_interpolation_hermite.F90
 	      )
 
-TARGET_LINK_LIBRARIES( hex_hermite sll_hermite_interpolation)
+TARGET_LINK_LIBRARIES( hex_hermite sll_hermite_interpolation sll_hex_meshes )
 
 
 # ADD_LIBRARY ( hex_poisson STATIC hex_poisson.F90)
@@ -46,13 +46,13 @@ TARGET_LINK_LIBRARIES(test_hex_hermite
 
 ADD_EXECUTABLE(test_hctc test_hctc.F90)
 
-TARGET_LINK_LIBRARIES(test_hctc sll_constants)
+TARGET_LINK_LIBRARIES(test_hctc sll_constants sll_memory)
 
 # fourth executable
 
 ADD_EXECUTABLE(test_dimitrov test_dimitrov.F90)
 
-TARGET_LINK_LIBRARIES(test_dimitrov sll_constants)
+TARGET_LINK_LIBRARIES(test_dimitrov sll_constants sll_memory)
 
 # fifth executable
 
