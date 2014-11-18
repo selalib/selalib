@@ -16,3 +16,17 @@ INSTALL( FILES  ${INPUT_FILES} README ${POST_PROC} DESTINATION ${INSTALL_DIR} )
 # Quick fix for ctest
 FILE( COPY ${INPUT_FILES} DESTINATION ${CMAKE_BINARY_DIR} )
 
+#==============================================================================
+# Postprocessing code for KEEN
+#==============================================================================
+IF(Fortran_COMPILER MATCHES IBM)
+   SET_SOURCE_FILES_PROPERTIES( VPpostprocessing_drive_KEEN.f 
+                                PROPERTIES COMPILE_FLAGS -qfixed )
+ENDIF(Fortran_COMPILER MATCHES IBM)
+
+ADD_EXECUTABLE( VPpostprocessing_drive_KEEN VPpostprocessing_drive_KEEN.f )
+TARGET_LINK_LIBRARIES( VPpostprocessing_drive_KEEN dfftpack )
+
+INSTALL( TARGETS VPpostprocessing_drive_KEEN DESTINATION ${INSTALL_DIR} )
+INSTALL( FILES vp_plots.py DESTINATION ${INSTALL_DIR} )
+
