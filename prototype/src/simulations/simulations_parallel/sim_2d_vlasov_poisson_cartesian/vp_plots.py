@@ -2,12 +2,14 @@ from numpy import *
 from pylab import *
 import tables
 import string
-rundir='/Users/sonnen/Codes/selalib/prototype/keen1d02/'
+import sys, os                             #[YG] rundir is read as command line
+rundir = os.path.abspath( sys.argv[1] )    #[YG] argument, not hardcoded.
+#==============================================================================
 
 thdiag = loadtxt(rundir+'thdiag.dat')
-efield = loadtxt(rundir+'exdiag.dat')
-rho = loadtxt(rundir+'rhodiag.dat')
-param_file = open(rundir+'param_out.dat')
+#efield = loadtxt(rundir+'exdiag.dat')     #[YG] unused variable
+#rho = loadtxt(rundir+'rhodiag.dat')       #[YG] unused variable
+param_file = open(rundir+'param_out.dat')  #[YG] file does not exist
 param = param_file.readline().split()
 case = param[0]
 xmin = string.atof(param[1])
@@ -24,10 +26,10 @@ if param[10]== 0:
     is_delta_f = True
 else:
     is_delta_f = False
-params_drive_file = open(rundir+'param_out_drive.dat')
+params_drive_file = open(rundir+'param_out_drive.dat') #[YG] file doesn't exist
 params_drive = params_drive_file.readline().split()
 omega_dr = string.atof(params_drive[8])
-edr = loadtxt(rundir+"eappdiag.dat")
+#edr = loadtxt(rundir+"eappdiag.dat")      #[YG] unused variable
 x=linspace(xmin,xmax,ncx+1)
 v=linspace(vmin,vmax,ncv+1)
 X,V=meshgrid(x,v)
