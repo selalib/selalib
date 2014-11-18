@@ -26,21 +26,6 @@ module sll_charge_to_density_module
   
 contains
 
-!!$  function new_charge_to_meshdens(   &
-!!$                 all_charge, m2d ) result(ro)
-!!$
-!!$    type(sll_cartesian_mesh_2d), intent(in) :: m2d
-!!$    type(charge_accumulator_cell),dimension(1:m2d%num_cells2*m2d%num_cells1), &
-!!$    intent(in) :: all_charge
-!!$    sll_real64, dimension(:,:), pointer  :: ro
-!!$    sll_int32  :: ierr
-!!$
-!!$    SLL_ALLOCATE( ro(1:m2d%num_cells1+1, 1:m2d%num_cells2+1), ierr)
-!!$
-!!$    call sll_charge_to_meshdensity( all_charge, m2d, ro )
-!!$
-!!$  end function new_charge_to_meshdens
-
   subroutine sll_convert_charge_to_rho_2d_per_per( charge, rho )
     type(sll_charge_accumulator_2d), pointer :: charge
     sll_real64, dimension(:,:), intent(out)  :: rho
@@ -57,7 +42,7 @@ contains
     deltax = charge%mesh%delta_eta1
     deltay = charge%mesh%delta_eta2
     factor = 1.0_f64/(deltax*deltay)
-! REMEMBER : charge is just the charge MASS and not the charge DENSITY
+! REMEMBER : charge is the charge MASS and not the charge DENSITY
 ! this explains the *factor.
     ! loop over the node indices of rho. Edges might need special treatment,
     ! thus do the non-edge nodes first.

@@ -9,7 +9,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
    #Add new dependencies concerning simulation_MYMETHOD.F90
    TARGET_LINK_LIBRARIES(sll_simulations_parallel
                          sll_distribution_function_multipatch
-                         #PN sll_general_coordinate_elliptic_solvers_multipatch
+                         sll_general_coordinate_elliptic_solvers_multipatch
                          sll_scalar_field_multipatch
                          sll_parallel_array_initializers
                          sll_advection
@@ -54,6 +54,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
 
     # Simulations as new subdirectories
     ADD_SUBDIRECTORY( sim_2d_guiding_center_curvilinear        )
+    ADD_SUBDIRECTORY( sim_2d_guiding_center_PIC_cartesian      )
     ADD_SUBDIRECTORY( sim_2d_vlasov_poisson_cartesian          )
     ADD_SUBDIRECTORY( sim_2d_vlasov_poisson_no_splitting       )
     ADD_SUBDIRECTORY( sim_4d                                   )
@@ -67,6 +68,9 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
     ADD_SUBDIRECTORY( sim_4d_drift_kinetic_polar_multi_mu      )
     ADD_SUBDIRECTORY( sim_4d_drift_kinetic_field_aligned_polar )
     ADD_SUBDIRECTORY( sim_4d_drift_kinetic_hybrid              )
+    ADD_SUBDIRECTORY( sim_4d_mixed_qns_cartesian               )
+    ADD_SUBDIRECTORY( sim_4d_qns_general                       )
+    ADD_SUBDIRECTORY( sim_4d_qns_general_multipatch            )
     ADD_SUBDIRECTORY( sim_6d                                   )
 
 ENDIF()

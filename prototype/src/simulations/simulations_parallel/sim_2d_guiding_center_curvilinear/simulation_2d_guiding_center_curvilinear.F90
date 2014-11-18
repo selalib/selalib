@@ -567,6 +567,9 @@ contains
         eta2_max = 2._f64 *sll_pi/kmode_eta2
       case ("SLL_POLAR_MESH")
         eta2_max = 2._f64*sll_pi
+      case ("SLL_HEXAGONAL_MESH")
+        eta2_max = 2._f64*sll_pi
+        params_mesh = (/alpha1,0._f64,0._f64,0._f64/)
       case ("SLL_COLLELA_MESH")  
         eta1_max = 2._f64*sll_pi/kmode_eta1
         eta2_max = 2._f64*sll_pi/kmode_eta2
@@ -625,6 +628,17 @@ contains
          polar_jac12, &
          polar_jac21, &
          polar_jac22, &
+         params_mesh  )     
+      case ("SLL_HEXAGONAL_MESH") 
+        sim%transformation => new_coordinate_transformation_2d_analytic( &
+         "analytic_hexagonal_transformation", &
+         sim%mesh_2d, &
+         hexagonal_x1, &
+         hexagonal_x2, &
+         hexagonal_jac11, &
+         hexagonal_jac12, &
+         hexagonal_jac21, &
+         hexagonal_jac22, &
          params_mesh  )     
       case ("SLL_COLLELA_MESH")
         sim%transformation => new_coordinate_transformation_2d_analytic( &
