@@ -30,7 +30,7 @@
       complex(8) :: ii
       real(8), allocatable :: abs_f_kx_v(:,:),re_f_kx_v(:,:)
       real(8), allocatable :: im_f_kx_v(:,:)
-      character(20) :: rundir
+      character(len=256) :: rundir
       double precision tflat, tL, tR, twL, twR
       ! These variables have to do with partition
       !integer N_orange, N_blue
