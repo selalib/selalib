@@ -3,58 +3,57 @@ module sll_multigrid_2d
 #include "sll_working_precision.h"
 #include "sll_boundary_condition_descriptors.h"
 
-   use sll_collective
-   use sll_ascii_io
+use sll_collective
+use sll_ascii_io
 
-   implicit none
+implicit none
 
-   type, public :: multigrid_2d
+type, public :: multigrid_2d
 
-      sll_int32  :: sx
-      sll_int32  :: ex
-      sll_int32  :: sy
-      sll_int32  :: ey
-      sll_real64 :: xl
-      sll_real64 :: yl
-      sll_int32  :: comm2d
-      sll_int32  :: pdims(2)
-      sll_int32  :: coords(2)
-      sll_int32  :: neighbor(8)
-      sll_real64, pointer :: work(:)
+   sll_int32  :: sx
+   sll_int32  :: ex
+   sll_int32  :: sy
+   sll_int32  :: ey
+   sll_real64 :: xl
+   sll_real64 :: yl
+   sll_int32  :: comm2d
+   sll_int32  :: pdims(2)
+   sll_int32  :: coords(2)
+   sll_int32  :: neighbor(8)
+   sll_real64, pointer :: work(:)
 
-   end type multigrid_2d
+end type multigrid_2d
 
-   interface sll_create
-      module procedure initialize_multigrid_2d
-      module procedure initialize_multigrid_2d_periodic
-   end interface sll_create
+interface sll_create
+   module procedure initialize_multigrid_2d
+   module procedure initialize_multigrid_2d_periodic
+end interface sll_create
 
-   interface sll_solve
-      module procedure solve_multigrid_2d
-   end interface sll_solve
+interface sll_solve
+   module procedure solve_multigrid_2d
+end interface sll_solve
 
-   public :: sll_create, sll_solve, write_topology
+public :: sll_create, sll_solve, write_topology
 
-   private
+private
 
-   sll_int32  :: bd(8)
-   sll_int32  :: nx
-   sll_int32  :: ny
-   sll_real64 :: phibc(4,20)
-   sll_real64 :: wk
-   sll_int32  :: myid
-   sll_int32  :: ngrid
-   sll_int32  :: nerror
+sll_int32  :: bd(8)
+sll_int32  :: nx
+sll_int32  :: ny
+sll_real64 :: phibc(4,20)
+sll_real64 :: wk
+sll_int32  :: myid
+sll_int32  :: ngrid
+sll_int32  :: nerror
 
-   sll_int32,  parameter :: IOUT    = 6
-   sll_int32,  parameter :: maxcy   = 5000    !Max number of mg cycles
-   sll_real64, parameter :: tolmax  = 1.0d-07 !Desired accuracy
-   sll_int32,  parameter :: kcycle  = 2       !1: V-cycles 2: W-cycles
-   sll_int32,  parameter :: iprer   = 5       !number of relaxation sweep
-   sll_int32,  parameter :: ipost   = 1
-   sll_int32,  parameter :: iresw   = 1       !1: fully weighted residual
-                                              !2: half-weighted residual
-
+sll_int32,  parameter :: IOUT    = 6
+sll_int32,  parameter :: maxcy   = 5000    !Max number of mg cycles
+sll_real64, parameter :: tolmax  = 1.0d-07 !Desired accuracy
+sll_int32,  parameter :: kcycle  = 2       !1: V-cycles 2: W-cycles
+sll_int32,  parameter :: iprer   = 5       !number of relaxation sweep
+sll_int32,  parameter :: ipost   = 1
+sll_int32,  parameter :: iresw   = 1       !1: fully weighted residual
+                                           !2: half-weighted residual
 contains
 
 subroutine initialize_multigrid_2d_periodic( this,     &

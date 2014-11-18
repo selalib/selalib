@@ -115,7 +115,7 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
 
        SET(PROCS 4)
 
-       SET(ARGS ${CMAKE_BINARY_DIR}/sim4d_qns_general_input.txt)
+       SET(ARGS ${CMAKE_BINARY_DIR}/sim4d_qns_general_input.nml)
        ADD_MPI_TEST(vp4d_sim_qns_general test_4d_qns_general ${PROCS} ${ARGS})
        SET_TESTS_PROPERTIES(vp4d_sim_qns_general PROPERTIES 
          PASS_REGULAR_EXPRESSION "PASSED")
@@ -164,11 +164,16 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
   ADD_MPI_TEST( visu_pic test_visu_pic ${PROCS} ${ARGS} )
   SET( visu_pic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-  SET(PROCS 2)
+  SET(PROCS 1)
   SET(ARGS ${CMAKE_BINARY_DIR}/params_pic_4d.nml)
   ADD_MPI_TEST( pic_simulation_4d  test_4d_vp_pic_cartesian ${PROCS} ${ARGS} )
   SET_TESTS_PROPERTIES( pic_simulation_4d PROPERTIES 
     PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 200)
+
+  SET(PROCS 1)
+  SET(ARGS ${CMAKE_BINARY_DIR}/params_pic_2d_KH.nml)
+  ADD_MPI_TEST( pic_simulation_2d test_2d_gc_pic_cartesian ${PROCS} ${ARGS} )
+  SET_TESTS_PROPERTIES( pic_simulation_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 ENDIF() # HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL
 

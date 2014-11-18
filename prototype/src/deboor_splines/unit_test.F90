@@ -6,11 +6,10 @@ use sll_module_deboor_splines_1d
 
 implicit none
 
-sll_int32  :: dim_point
-sll_int32  :: dim_point_der
+sll_int32  :: n
+sll_int32  :: n_der
 sll_int32  :: deg_spline
 sll_int32  :: ordre
-sll_int32  :: iflag
 sll_int32  :: ierr
 sll_real64 :: d
 sll_real64 :: res
@@ -20,77 +19,73 @@ sll_real64 :: tstart
 sll_real64 :: tend
 
 sll_real64, dimension(:), allocatable :: knots
-sll_real64, dimension(:), allocatable :: value_func
-sll_real64, dimension(:), allocatable :: value_der
-sll_real64, dimension(:), allocatable :: points,points_test
-sll_int32,  dimension(:), allocatable :: points_der
-sll_real64, dimension(:), allocatable :: matrices
+sll_real64, dimension(:), allocatable :: f
+sll_real64, dimension(:), allocatable :: df
+sll_real64, dimension(:), allocatable :: x,x_test
+sll_int32,  dimension(:), allocatable :: x_der
 sll_real64, dimension(:), allocatable :: bcoef
 
-deg_spline    = 3
-dim_point     = 16
-dim_point_der = 2
-ordre         = deg_spline+1
+deg_spline = 3
+n          = 64
+n_der      = 2
+ordre      = deg_spline+1
 
-SLL_ALLOCATE(knots(dim_point+ordre+dim_point_der),ierr)
-SLL_ALLOCATE(value_func(dim_point),ierr)
-SLL_ALLOCATE(value_der(dim_point_der),ierr)
-SLL_ALLOCATE(points(dim_point),ierr)
-SLL_ALLOCATE(points_test(dim_point),ierr)
-SLL_ALLOCATE(points_der(dim_point_der),ierr)
-SLL_ALLOCATE(matrices((2*ordre-1)*(dim_point+dim_point_der)),ierr)
-SLL_ALLOCATE(bcoef(dim_point+ dim_point_der),ierr)
+SLL_ALLOCATE(knots(n+ordre+n_der),ierr)
+SLL_ALLOCATE(f(n),ierr)
+SLL_ALLOCATE(df(n_der),ierr)
+SLL_ALLOCATE(x(n),ierr)
+SLL_ALLOCATE(x_test(n),ierr)
+SLL_ALLOCATE(x_der(n_der),ierr)
+SLL_ALLOCATE(bcoef(n+n_der),ierr)
 
 call cpu_time(tstart)
 
 do j = 1, 1
 
-  do i = 1 , dim_point
-    points(i)     = (i-1.)/(dim_point-1)
-    value_func(i) = cos(2*sll_pi*points(i))
+  !Data positions and values
+  do i = 1 , n
+    x(i) = (i-1.)/(n-1)
+    f(i) = cos(2*sll_pi*x(i))
   end do
 
-  d = sum( abs( value_func(2:dim_point)-value_func(1:dim_point-1)))
-  points_test(1) =  points(1)
-  points_test(dim_point) =  points(dim_point)
+  d = sum(abs(f(2:n)-f(1:n-1)))
+  x_test(1) =  x(1)
+  x_test(n) =  x(n)
   
-  do i = 2,dim_point
-    points_test(i) = points_test(i-1) +  abs( value_func(i)-value_func(i-1))/d
+  do i = 2,n
+    x_test(i) = x_test(i-1) +  abs(f(i)-f(i-1))/d
   end do
 
+  knots(1:ordre) = x(1)
 
-  knots(1:ordre) = points(1)
-
-  do i = ordre+1, dim_point + deg_spline-1
-    knots(i) = points(i-deg_spline)
+  do i = ordre+1, n+deg_spline-1
+    knots(i) = x(i-deg_spline)
   end do
   
-  do i = dim_point +deg_spline,dim_point + ordre + dim_point_der
-    knots(i) = points(dim_point)
+  do i = n+deg_spline,n+ordre+n_der
+    knots(i) = x(n)
   end do
 
-  points_der(1) = 1
-  value_der(1)  = -sin(2*sll_pi*points(1))*2*sll_pi
-  points_der(2) = dim_point
-  value_der(2)  = -sin(2*sll_pi*points(dim_point))*2*sll_pi
+  x_der(1) = 1
+  df(1)    = -sin(2*sll_pi*x(1))*2*sll_pi
+  x_der(2) = n
+  df(2)    = -sin(2*sll_pi*x(n))*2*sll_pi
 
-  call splint_der( points,          &
-                   value_func,      &
-                   points_der,      &
-                   value_der,       &
-                   knots,           &
-                   dim_point,       &
-                   dim_point_der,   &
-                   ordre,           &
-                   matrices,        &
-                   bcoef,           &
-                   iflag )
+  call splint_der( x,      &
+                   f,      &
+                   x_der,  &
+                   df,     &
+                   knots,  &
+                   n,      &
+                   n_der,  &
+                   ordre,  &
+                   bcoef)
 
-  do i = 1 , dim_point
-    res=bvalue( knots, bcoef, dim_point+dim_point_der, ordre, points(i), 0)
-    write(10,*) points(i), points_test(i), value_func(i), res
-    res=bvalue( knots, bcoef, dim_point+dim_point_der, ordre, points(i), 1)
-    write(10,*) points(i), points_test(i), value_func(i), res
+  do i = 1 , n
+    res=bvalue( knots, bcoef, n+n_der, ordre, x(i), 0)
+    write(10,*) x(i), x_test(i), f(i), res
+    res=bvalue( knots, bcoef, n+n_der, ordre, x(i), 1)
+    write(11,*) x(i), x_test(i), -sin(2*sll_pi*x(i))*2*sll_pi, res
   end do
 
 end do
@@ -100,11 +95,10 @@ call cpu_time(tend)
 print*, tend - tstart
 
 DEALLOCATE(knots)
-DEALLOCATE(value_func)
-DEALLOCATE(value_der)
-DEALLOCATE(points)
-DEALLOCATE(points_der)
-DEALLOCATE(matrices)
+DEALLOCATE(f)
+DEALLOCATE(df)
+DEALLOCATE(x)
+DEALLOCATE(x_der)
 DEALLOCATE(bcoef)
 
 print*, 'PASSED'

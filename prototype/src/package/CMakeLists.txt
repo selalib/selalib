@@ -81,8 +81,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/splines/sll_cubic_splines.F90
     ${SLL_DIR}/splines/sll_arbitrary_degree_splines.F90
     ${SLL_DIR}/splines/cubic_nonuniform_splines.F90
-    ${SLL_DIR}/deboor_splines/banfac.f90  
-    ${SLL_DIR}/deboor_splines/banslv.f90  
+    ${SLL_DIR}/deboor_splines/banded_linear_system_solver.F90  
     ${SLL_DIR}/deboor_splines/knots.f90
     ${SLL_DIR}/deboor_splines/splopt.f90
     ${SLL_DIR}/deboor_splines/sll_module_deboor_splines_1d.F90
@@ -111,8 +110,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/fft/sll_fft_utils.F90
     ${SLL_DIR}/integration/gauss_legendre.F90
     ${SLL_DIR}/integration/gauss_lobatto.F90
-    ${SLL_DIR}/simulation/sll_polar_operators.F90
-    ${SLL_DIR}/simulation/sll_advection_polar.F90
+    ${SLL_DIR}/simulations/simulations_sequential/sim_CG_polar/sll_polar_operators.F90
+    ${SLL_DIR}/simulations/simulations_sequential/sim_CG_polar/sll_advection_polar.F90
 #    ${SLL_DIR}/sparse_matrix_manager/basic_cg.F90
     ${SLL_DIR}/sparse_matrix_manager/gauss_seidel.F90
     ${SLL_DIR}/sparse_matrix_manager/getdia.F90
@@ -204,67 +203,66 @@ ELSE()
 ENDIF(SUITESPARSE_ENABLED)
 
 IF(MPI_MODULE_ENABLED)
-   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
-       ${SLL_DIR}/collective/sll_collective.F90
-       ${SLL_DIR}/remap/sll_remap.F90
-       ${SLL_DIR}/point_to_point_communications/sll_point_to_point_comms.F90
-       ${SLL_DIR}/poisson_solvers_parallel/sll_poisson_2d_periodic_cartesian_par.F90
-       ${SLL_DIR}/poisson_solvers_parallel/sll_poisson_polar_parallel.F90
-       ${SLL_DIR}/simulation/simulation_base_class.F90
-       ${SLL_DIR}/parallel_array_initializers/sll_common_array_initializers_module.F90
-       ${SLL_DIR}/parallel_array_initializers/sll_parallel_array_initializer_module.F90
-       ${SLL_DIR}/parallel_utilities/buffer_loader_utilities.F90
-       ${SLL_DIR}/file_io_parallel/sll_gnuplot_parallel.F90)
+ SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
+  ${SLL_DIR}/collective/sll_collective.F90
+  ${SLL_DIR}/remap/sll_remap.F90
+  ${SLL_DIR}/point_to_point_communications/sll_point_to_point_comms.F90
+  ${SLL_DIR}/poisson_solvers_parallel/sll_poisson_2d_periodic_cartesian_par.F90
+  ${SLL_DIR}/poisson_solvers_parallel/sll_poisson_polar_parallel.F90
+  ${SLL_DIR}/simulation/simulation_base_class.F90
+  ${SLL_DIR}/parallel_array_initializers/sll_common_array_initializers_module.F90
+  ${SLL_DIR}/parallel_array_initializers/sll_parallel_array_initializer_module.F90
+  ${SLL_DIR}/parallel_utilities/buffer_loader_utilities.F90
+  ${SLL_DIR}/file_io_parallel/sll_gnuplot_parallel.F90)
 ENDIF(MPI_MODULE_ENABLED)
 
 IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
-   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
-       ${SLL_DIR}/file_io_parallel/sll_hdf5_io_parallel.F90
-       ${SLL_DIR}/file_io_parallel/sll_xdmf_parallel.F90
-       ${SLL_DIR}/simulation/simulation_4d_qns_general.F90  #not build on IBM
-       ${SLL_DIR}/simulations/simulations_parallel/sim_2d_vlasov_poisson_cartesian/simulation_2d_vlasov_poisson_cartesian.F90
-       ${SLL_DIR}/distribution_function_multipatch/sll_distribution_function_4d_multipatch.F90
-       ${SLL_DIR}/simulation/simulation_4d_qns_general_multipatch.F90
-       ${SLL_DIR}/simulations/simulations_parallel/sim_4d_drift_kinetic_hybrid/simulation_4d_DK_hybrid.F90
-       ${SLL_DIR}/simulations/simulations_parallel/sim_4d_drift_kinetic_polar/simulation_4d_drift_kinetic_polar.F90
- )
+ SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
+  ${SLL_DIR}/file_io_parallel/sll_hdf5_io_parallel.F90
+  ${SLL_DIR}/file_io_parallel/sll_xdmf_parallel.F90
+  ${SLL_DIR}/simulations/simulations_parallel/sim_4d_qns_general/simulation_4d_qns_general.F90
+  ${SLL_DIR}/simulations/simulations_parallel/sim_2d_vlasov_poisson_cartesian/simulation_2d_vlasov_poisson_cartesian.F90
+  ${SLL_DIR}/distribution_function_multipatch/sll_distribution_function_4d_multipatch.F90
+  ${SLL_DIR}/simulations/simulations_parallel/sim_4d_qns_general_multipatch/simulation_4d_qns_general_multipatch.F90
+  ${SLL_DIR}/simulations/simulations_parallel/sim_4d_drift_kinetic_hybrid/simulation_4d_DK_hybrid.F90
+  ${SLL_DIR}/simulations/simulations_parallel/sim_4d_drift_kinetic_polar/simulation_4d_drift_kinetic_polar.F90)
 
 ENDIF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
 IF(SLL_BUILD_PACKAGE)
 
-   SET(BUILD_SHARED_LIBRARY  OFF CACHE BOOL "build shared library")
-   #SET(CMAKE_SHARED_LINKER_FLAGS "-fpic")
-   IF(BUILD_SHARED_LIBRARY)
-      ADD_LIBRARY(selalib SHARED ${SLL_SOURCE_FILES})
-      TARGET_LINK_LIBRARIES(selalib dfftpack mudpack ${HDF5_LIBRARIES} ${LAPACK_LIBRARIES})
-   ELSE()
-      ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES})
-      INSTALL(TARGETS selalib ARCHIVE DESTINATION lib COMPONENT libraries)
-   ENDIF()
-   
-   
-   SET(DIST_NAME "selalib-${CPACK_PACKAGE_VERSION}")
-   
-   ADD_CUSTOM_TARGET(release 
-   COMMAND ${CMAKE_COMMAND} -E copy_directory 
-           ${CMAKE_BINARY_DIR}/include ${CMAKE_BINARY_DIR}/${DIST_NAME}/include
-   COMMAND ${CMAKE_COMMAND} -E copy 
-           ${CMAKE_CURRENT_SOURCE_DIR}/macports/README 
-           ${CMAKE_BINARY_DIR}/${DIST_NAME}/
-   COMMAND ${CMAKE_COMMAND} -E copy 
-           ${CMAKE_CURRENT_SOURCE_DIR}/macports/CMakeLists.txt 
-           ${CMAKE_BINARY_DIR}/${DIST_NAME}/
-   COMMAND ${CMAKE_COMMAND} -E copy 
-           ${CMAKE_CURRENT_SOURCE_DIR}/macports/Doxyfile.in 
-           ${CMAKE_BINARY_DIR}/${DIST_NAME}/Doxyfile
-   COMMAND ${CMAKE_COMMAND} -E copy 
-           ${CMAKE_CURRENT_SOURCE_DIR}/../documentation.f90 
-           ${CMAKE_BINARY_DIR}/${DIST_NAME}/
-   COMMAND ${CMAKE_COMMAND} -E copy 
-           ${CMAKE_CURRENT_SOURCE_DIR}/../../doc/sphinx/_static/logo2.png 
-           ${CMAKE_BINARY_DIR}/${DIST_NAME}/
+ SET(BUILD_SHARED_LIBRARY  OFF CACHE BOOL "build shared library")
+  IF(BUILD_SHARED_LIBRARY)
+     ADD_LIBRARY(selalib SHARED ${SLL_SOURCE_FILES})
+     TARGET_LINK_LIBRARIES(selalib 
+      dfftpack mudpack ${HDF5_LIBRARIES} ${LAPACK_LIBRARIES})
+  ELSE()
+     ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES})
+     INSTALL(TARGETS selalib ARCHIVE DESTINATION lib COMPONENT libraries)
+  ENDIF()
+  
+  
+  SET(DIST_NAME "selalib-${CPACK_PACKAGE_VERSION}")
+  
+  ADD_CUSTOM_TARGET(release 
+  COMMAND ${CMAKE_COMMAND} -E copy_directory 
+          ${CMAKE_BINARY_DIR}/include ${CMAKE_BINARY_DIR}/${DIST_NAME}/include
+  COMMAND ${CMAKE_COMMAND} -E copy 
+          ${CMAKE_CURRENT_SOURCE_DIR}/macports/README 
+          ${CMAKE_BINARY_DIR}/${DIST_NAME}/
+  COMMAND ${CMAKE_COMMAND} -E copy 
+          ${CMAKE_CURRENT_SOURCE_DIR}/macports/CMakeLists.txt 
+          ${CMAKE_BINARY_DIR}/${DIST_NAME}/
+  COMMAND ${CMAKE_COMMAND} -E copy 
+          ${CMAKE_CURRENT_SOURCE_DIR}/macports/Doxyfile.in 
+          ${CMAKE_BINARY_DIR}/${DIST_NAME}/Doxyfile
+  COMMAND ${CMAKE_COMMAND} -E copy 
+          ${CMAKE_CURRENT_SOURCE_DIR}/../documentation.f90 
+          ${CMAKE_BINARY_DIR}/${DIST_NAME}/
+  COMMAND ${CMAKE_COMMAND} -E copy 
+          ${CMAKE_CURRENT_SOURCE_DIR}/../../doc/sphinx/_static/logo2.png 
+          ${CMAKE_BINARY_DIR}/${DIST_NAME}/
    COMMAND ${CMAKE_COMMAND} -E copy_directory 
            ${CMAKE_CURRENT_SOURCE_DIR}/../fftpack 
            ${CMAKE_BINARY_DIR}/${DIST_NAME}/fftpack

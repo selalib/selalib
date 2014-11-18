@@ -808,6 +808,8 @@ end function func_zero
         sim%mesh2d_x%delta_eta1, &
         sim%mesh2d_x%eta2_min, &
         sim%mesh2d_x%delta_eta2, &
+        sim%mesh2d_x%num_cells1+1, &
+        sim%mesh2d_x%num_cells2+1, &
         sim%rho_split_c, &
         "rho_split_cartesian", &
         0, &
@@ -818,6 +820,8 @@ end function func_zero
         sim%mesh2d_x%delta_eta1, &
         sim%mesh2d_x%eta2_min, &
         sim%mesh2d_x%delta_eta2, &
+        sim%mesh2d_x%num_cells1+1, &
+        sim%mesh2d_x%num_cells2+1, &
         sim%rho_split_q, &
         "rho_split_qns", &
         0, &
@@ -828,6 +832,8 @@ end function func_zero
         sim%mesh2d_x%delta_eta1, &
         sim%mesh2d_x%eta2_min, &
         sim%mesh2d_x%delta_eta2, &
+        sim%mesh2d_x%num_cells1+1, &
+        sim%mesh2d_x%num_cells2+1, &
         sim%rho_split_q-sim%rho_split_c, &
         "rho_split_diff", &
         0, &
@@ -848,6 +854,8 @@ end function func_zero
          sim%mesh2d_x%delta_eta1, &
          sim%mesh2d_x%eta2_min, &
          sim%mesh2d_x%delta_eta2, &
+         sim%mesh2d_x%num_cells1+1, &
+         sim%mesh2d_x%num_cells2+1, &
          sim%rho_x1, &
          "rho_x1", &
          0, &
@@ -884,6 +892,8 @@ end function func_zero
          sim%mesh2d_x%delta_eta1, &
          sim%mesh2d_x%eta2_min, &
          sim%mesh2d_x%delta_eta2, &
+         sim%mesh2d_x%num_cells1+1, &
+         sim%mesh2d_x%num_cells2+1, &
          sim%rho_full, &
          "rho_full", &
          0, &
@@ -926,6 +936,8 @@ end function func_zero
          sim%mesh2d_x%delta_eta1, &
          sim%mesh2d_x%eta2_min, &
          sim%mesh2d_x%delta_eta2, &
+         sim%mesh2d_x%num_cells1+1, &
+         sim%mesh2d_x%num_cells2+1, &
          sim%rho_diff, &
          "rho_diff", &
          0, &
@@ -1071,6 +1083,8 @@ end function func_zero
          sim%mesh2d_x%delta_eta1, &
          sim%mesh2d_x%eta2_min, &
          sim%mesh2d_x%delta_eta2, &
+         sim%mesh2d_x%num_cells1+1, &
+         sim%mesh2d_x%num_cells2+1, &
          sim%efield_x1_ref, &
          "electric_field_reference", &
          0, &
@@ -1178,6 +1192,8 @@ end function func_zero
             sim%mesh2d_x%delta_eta1, &
             sim%mesh2d_x%eta2_min, &
             sim%mesh2d_x%delta_eta2, &
+            sim%mesh2d_x%num_cells1+1, &
+            sim%mesh2d_x%num_cells2+1, &
             sim%rho_split_c, &
             "rho_split_cartesian", &
             itime, &
@@ -1189,6 +1205,8 @@ end function func_zero
             sim%mesh2d_x%delta_eta1, &
             sim%mesh2d_x%eta2_min, &
             sim%mesh2d_x%delta_eta2, &
+            sim%mesh2d_x%num_cells1+1, &
+            sim%mesh2d_x%num_cells2+1, &
             sim%rho_split_q-sim%rho_split_c, &
             "rho_split_qns", &
             itime, &
@@ -1214,6 +1232,8 @@ end function func_zero
                sim%mesh2d_x%delta_eta1, &
                sim%mesh2d_x%eta2_min, &
                sim%mesh2d_x%delta_eta2, &
+               sim%mesh2d_x%num_cells1+1, &
+               sim%mesh2d_x%num_cells2+1, &
                sim%rho_full, &
                "rho_full_check", &
                itime, &
@@ -1261,6 +1281,8 @@ end function func_zero
             sim%mesh2d_x%delta_eta1, &
             sim%mesh2d_x%eta2_min, &
             sim%mesh2d_x%delta_eta2, &
+            sim%mesh2d_x%num_cells1+1, &
+            sim%mesh2d_x%num_cells2+1, &
             sim%rho_diff, &
             "rho_diff", &
             itime, &
@@ -1343,6 +1365,8 @@ end function func_zero
             sim%mesh2d_x%delta_eta1, &
             sim%mesh2d_x%eta2_min, &
             sim%mesh2d_x%delta_eta2, &
+            sim%mesh2d_x%num_cells1+1, &
+            sim%mesh2d_x%num_cells2+1, &
             sim%phi_q, &
             "phi_q", &
             itime, &
@@ -1361,6 +1385,8 @@ end function func_zero
             sim%mesh2d_x%delta_eta1, &
             sim%mesh2d_x%eta2_min, &
             sim%mesh2d_x%delta_eta2, &
+            sim%mesh2d_x%num_cells1+1, &
+            sim%mesh2d_x%num_cells2+1, &
             sim%phi_diff, &
             "phi_diff_qns", &
             itime, &
@@ -1384,6 +1410,8 @@ end function func_zero
             sim%mesh2d_x%delta_eta1, &
             sim%mesh2d_x%eta2_min, &
             sim%mesh2d_x%delta_eta2, &
+            sim%mesh2d_x%num_cells1+1, &
+            sim%mesh2d_x%num_cells2+1, &
             sim%phi_x1, &
             "phi_x1", &
             itime, &
@@ -1403,6 +1431,8 @@ end function func_zero
             sim%mesh2d_x%delta_eta1, &
             sim%mesh2d_x%eta2_min, &
             sim%mesh2d_x%delta_eta2, &
+            sim%mesh2d_x%num_cells1+1, &
+            sim%mesh2d_x%num_cells2+1, &
             sim%phi_diff, &
             "phi_diff_cart", &
             itime, &
@@ -1483,6 +1513,8 @@ end function func_zero
             sim%mesh2d_x%delta_eta1, &
             sim%mesh2d_x%eta2_min, &
             sim%mesh2d_x%delta_eta2, &
+            sim%mesh2d_x%num_cells1+1, &
+            sim%mesh2d_x%num_cells2+1, &
             sim%efield_x1_cart, &
             "electric_field_x1_cart", &
             itime, &
@@ -1493,6 +1525,8 @@ end function func_zero
             sim%mesh2d_x%delta_eta1, &
             sim%mesh2d_x%eta2_min, &
             sim%mesh2d_x%delta_eta2, &
+            sim%mesh2d_x%num_cells1+1, &
+            sim%mesh2d_x%num_cells2+1, &
             sim%efield_x2_cart, &
             "electric_field_x2_cart", &
             itime, &
@@ -1521,6 +1555,8 @@ end function func_zero
             sim%mesh2d_x%delta_eta1, &
             sim%mesh2d_x%eta2_min, &
             sim%mesh2d_x%delta_eta2, &
+            sim%mesh2d_x%num_cells1+1, &
+            sim%mesh2d_x%num_cells2+1, &
             sim%efield_x1_ref_diff_qns, &
             "electric_field_difference_ref_qns", &
             itime, &
@@ -1531,6 +1567,8 @@ end function func_zero
             sim%mesh2d_x%delta_eta1, &
             sim%mesh2d_x%eta2_min, &
             sim%mesh2d_x%delta_eta2, &
+            sim%mesh2d_x%num_cells1+1, &
+            sim%mesh2d_x%num_cells2+1, &
             sim%efield_x1_qns, &
             "electric_field_x1_qns", &
             itime, &
@@ -1541,6 +1579,8 @@ end function func_zero
             sim%mesh2d_x%delta_eta1, &
             sim%mesh2d_x%eta2_min, &
             sim%mesh2d_x%delta_eta2, &
+            sim%mesh2d_x%num_cells1+1, &
+            sim%mesh2d_x%num_cells2+1, &
             sim%efield_x2_qns, &
             "electric_field_x2_qns", &
             itime, &
@@ -1568,6 +1608,8 @@ end function func_zero
             sim%mesh2d_x%delta_eta1, &
             sim%mesh2d_x%eta2_min, &
             sim%mesh2d_x%delta_eta2, &
+            sim%mesh2d_x%num_cells1+1, &
+            sim%mesh2d_x%num_cells2+1, &
             sim%efield_x1_ref_diff_cart(1:loc_sz_x1,1:loc_sz_x2), &
             "electric_field_difference_ref_cart", &
             itime, &
@@ -1586,6 +1628,8 @@ end function func_zero
             sim%mesh2d_x%delta_eta1, &
             sim%mesh2d_x%eta2_min, &
             sim%mesh2d_x%delta_eta2, &
+            sim%mesh2d_x%num_cells1+1, &
+            sim%mesh2d_x%num_cells2+1, &
             sim%efield_x1_diff(1:loc_sz_x1,1:loc_sz_x2), &
             "electric_field_x1_difference", &
             itime, &
@@ -2179,17 +2223,17 @@ end function func_zero
    ! SLL_DEALLOCATE_ARRAY( sim%phi_x1, ierr )
    ! SLL_DEALLOCATE_ARRAY( sim%phi_x2, ierr )
    ! SLL_DEALLOCATE_ARRAY( sim%phi_split, ierr )
-    call delete( sim%sequential_x1x2 )
-    call delete( sim%sequential_x3x4 )
-    call delete( sim%rho_full_layout )
-    call delete( sim%rho_seq_x2 )
-    call delete( sim%split_rho_layout )
-    call delete( sim%split_to_full )
-    call delete( sim%efld_seqx1_to_seqx2 )
-    call delete( sim%efld_seqx2_to_split )
-    call delete( sim%seqx1x2_to_seqx3x4 )
-    call delete( sim%seqx3x4_to_seqx1x2 )
-    call delete( sim%interp_x1x2 )
+    call sll_delete( sim%sequential_x1x2 )
+    call sll_delete( sim%sequential_x3x4 )
+    call sll_delete( sim%rho_full_layout )
+    call sll_delete( sim%rho_seq_x2 )
+    call sll_delete( sim%split_rho_layout )
+    call sll_delete( sim%split_to_full )
+    call sll_delete( sim%efld_seqx1_to_seqx2 )
+    call sll_delete( sim%efld_seqx2_to_split )
+    call sll_delete( sim%seqx1x2_to_seqx3x4 )
+    call sll_delete( sim%seqx3x4_to_seqx1x2 )
+    call sll_delete( sim%interp_x1x2 )
     call sll_delete( sim%interp_x3 )
     call sll_delete( sim%interp_x4 )
     !SLL_DEALLOCATE_ARRAY( sim%efield_x1, ierr )
@@ -2573,39 +2617,39 @@ end function func_zero
 
   
   
-  ! Tentative advection routines.
-  subroutine advection_x_1d( dt, vmin, delta_v, num_pts, f_line, f_interp )
-    sll_real64, intent(in)                      :: dt
-    sll_real64, intent(in)                      :: vmin
-    sll_real64, intent(in)                      :: delta_v
-    sll_int32, intent(in)                       :: num_pts
-    sll_real64, dimension(:), intent(inout)     :: f_line
-    class(sll_interpolator_1d_base)             :: f_interp
-    sll_int32  :: i
-    sll_real64 :: displacement
-
-    do i=1, num_pts
-       displacement = (vmin + real(i-1,f64)*delta_v)*dt
-       ! remember that the function interpolate_array_disp() has the wrong
-       ! interface since it should be a subroutine, not a function.
-       f_line = f_interp%interpolate_array_disp(num_pts, f_line, displacement)
-    end do
-  end subroutine advection_x_1d
-
-  subroutine advection_v_1d(dt, efield, num_pts, f_line, f_interp)
-    sll_real64, intent(in)                   :: dt
-    sll_real64, dimension(:), intent(in)     :: efield
-    sll_int32, intent(in)                    :: num_pts
-    sll_real64, dimension(:), intent(inout)  :: f_line
-    class(sll_interpolator_1d_base), pointer :: f_interp
-    sll_int32                                :: i
-    sll_real64                               :: displacement
-
-    do i=1, num_pts
-       displacement = -efield(i)*0.5_f64*dt
-       f_line = f_interp%interpolate_array_disp(num_pts, f_line, displacement)
-    end do
-  end subroutine advection_v_1d
+!YG  ! Tentative advection routines.
+!YG  subroutine advection_x_1d( dt, vmin, delta_v, num_pts, f_line, f_interp )
+!YG    sll_real64, intent(in)                      :: dt
+!YG    sll_real64, intent(in)                      :: vmin
+!YG    sll_real64, intent(in)                      :: delta_v
+!YG    sll_int32, intent(in)                       :: num_pts
+!YG    sll_real64, dimension(:), intent(inout)     :: f_line
+!YG    class(sll_interpolator_1d_base)             :: f_interp
+!YG    sll_int32  :: i
+!YG    sll_real64 :: displacement
+!YG
+!YG    do i=1, num_pts
+!YG       displacement = (vmin + real(i-1,f64)*delta_v)*dt
+!YG       ! remember that the function interpolate_array_disp() has the wrong
+!YG       ! interface since it should be a subroutine, not a function.
+!YG       f_line = f_interp%interpolate_array_disp(num_pts, f_line, displacement)
+!YG    end do
+!YG  end subroutine advection_x_1d
+!YG
+!YG  subroutine advection_v_1d(dt, efield, num_pts, f_line, f_interp)
+!YG    sll_real64, intent(in)                   :: dt
+!YG    sll_real64, dimension(:), intent(in)     :: efield
+!YG    sll_int32, intent(in)                    :: num_pts
+!YG    sll_real64, dimension(:), intent(inout)  :: f_line
+!YG    class(sll_interpolator_1d_base), pointer :: f_interp
+!YG    sll_int32                                :: i
+!YG    sll_real64                               :: displacement
+!YG
+!YG    do i=1, num_pts
+!YG       displacement = -efield(i)*0.5_f64*dt
+!YG       f_line = f_interp%interpolate_array_disp(num_pts, f_line, displacement)
+!YG    end do
+!YG  end subroutine advection_v_1d
 
 #if 0
   subroutine plot_fields(itime, sim)
