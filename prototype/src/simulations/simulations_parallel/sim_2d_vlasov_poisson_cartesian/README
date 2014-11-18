@@ -1,6 +1,8 @@
 Directory structure
 ===================
-   test_2d_vp_cartesian         -- executable
+   test_2d_vp_cartesian         -- executable (simulation)
+   VPpostprocessing_drive_KEEN  -- executable (postprocessing for KEEN test)
+   vp_plots.py                  -- Python script for visualization of KEEN data
    vpsim2d_cartesian_input.nml  -- input file #1: Landau damping
    vpsim2d_cartesian_bot.nml    -- input file #2: bump on tail
    vpsim2d_cartesian_tsi.nml    -- input file #3: two-stream instability
@@ -23,8 +25,16 @@ HOWTO
 2. Run included gnuplot script
      $ gnuplot --persist ../vpsim2d_cartesian.gnu
 
-3. Open *.xmf database with Visit (*)
+3. Open *.xmf database with Visit (make sure Xdmf plugin is installed)
 
+HOWTO - KEEN
+============
+1. Run KEEN wave simulation within directory
+     $ mpirun -np 4 ../test_2d_vp_cartesian ../vpsim2d_cartesian_keen
 
-(*) Make sure that the Xdmf plugin is installed!
+2. Run KEEN wave post-processing script
+     $ ../VPpostprocessing_drive_KEEN .
+
+3. Run Python script for visualization of post-processed data 
+     $ python ../vp_plots.py .
 
