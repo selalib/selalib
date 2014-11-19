@@ -27,5 +27,6 @@ set( INSTALL_DIR ${INSTALL_DIR}/CG_Curvilinear_2D )
 
 INSTALL( TARGETS unit_test_mudpack_colella CG_Curvilinear_2D
          DESTINATION ${INSTALL_DIR} )
-INSTALL( FILES   ${INPUT_FILES} README DESTINATION ${INSTALL_DIR} )
+INSTALL( FILES   ${INPUT_FILES} README CG_2D_Curvilinear-exe.py
+         DESTINATION ${INSTALL_DIR} )
 
