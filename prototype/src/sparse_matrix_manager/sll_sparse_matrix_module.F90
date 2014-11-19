@@ -134,63 +134,63 @@ subroutine initialize_csr_matrix( &
   sll_int32                                :: ierr
   sll_int32,  dimension(:,:), allocatable  :: lpi_columns
   sll_int32,  dimension(:),   allocatable  :: lpi_occ
-  sll_int32                                :: li_COEF
-  sll_int32                                :: li_e
-  sll_int32                                :: li_b_1
-  sll_int32                                :: li_A_1
-  sll_int32                                :: li_b_2
-  sll_int32                                :: li_A_2
-  sll_int32                                :: li_i
-  sll_int32                                :: li_flag
-  sll_int32                                :: li_size
-  sll_int32                                :: li_result
+  sll_int32                                :: COEF
+  sll_int32                                :: e
+  sll_int32                                :: b_1
+  sll_int32                                :: A_1
+  sll_int32                                :: b_2
+  sll_int32                                :: A_2
+  sll_int32                                :: i
+  sll_int32                                :: flag
+  sll_int32                                :: sz
+  sll_int32                                :: result
   sll_int32                                :: lpi_size(2)
   logical                                  :: ll_done
 
   print *,'#initialize_csr_matrix'
-  li_COEF = 10
+  COEF = 10
 
-  SLL_ALLOCATE(lpi_columns(num_rows, 0:li_COEF*num_local_dof_col),ierr)
+  SLL_ALLOCATE(lpi_columns(num_rows, 0:COEF*num_local_dof_col),ierr)
   SLL_ALLOCATE(lpi_occ(num_rows+1),ierr)
 
   lpi_columns(:,:) = 0
   lpi_occ(:) = 0
   
   ! WE FIRST COMPUTE, FOR EACH ROW, THE NUMBER OF COLUMNS THAT WILL BE USED
-  do li_e = 1, num_elements
+  do e = 1, num_elements
 
-    do li_b_1 = 1, num_local_dof_row
+    do b_1 = 1, num_local_dof_row
 
-      li_A_1 = local_to_global_row(li_b_1, li_e)
+      A_1 = local_to_global_row(b_1, e)
 
-      if (li_A_1 == 0) cycle
+      if (A_1 == 0) cycle
 
-      do li_b_2 = 1, num_local_dof_col
+      do b_2 = 1, num_local_dof_col
 
-        li_A_2 = local_to_global_col(li_b_2, li_e)
-        if (li_A_2 == 0) cycle
+        A_2 = local_to_global_col(b_2, e)
+        if (A_2 == 0) cycle
 
         ll_done = .false.
-        ! WE CHECK IF IT IS THE FIRST OCCURANCE OF THE COUPLE (li_A_1, li_A_2)
-        do li_i = 1, lpi_columns(li_A_1, 0)
-          if (lpi_columns(li_A_1, li_i) /= li_A_2) cycle
+        ! WE CHECK IF IT IS THE FIRST OCCURANCE OF THE COUPLE (A_1, A_2)
+        do i = 1, lpi_columns(A_1, 0)
+          if (lpi_columns(A_1, i) /= A_2) cycle
           ll_done = .true.
           exit
         end do
 
         if (.not.ll_done) then
 
-          lpi_occ(li_A_1) = lpi_occ(li_A_1) + 1
+          lpi_occ(A_1) = lpi_occ(A_1) + 1
 
-          ! li_A_1 IS THE ROW NUM, li_A_2 THE COLUMN NUM
+          ! A_1 IS THE ROW NUM, A_2 THE COLUMN NUM
           ! INITIALIZATION OF THE SPARSE MATRIX
-          lpi_columns(li_A_1, 0) = lpi_columns(li_A_1, 0) + 1
-          lpi_columns(li_A_1, lpi_columns(li_A_1, 0)) = li_A_2
+          lpi_columns(A_1, 0) = lpi_columns(A_1, 0) + 1
+          lpi_columns(A_1, lpi_columns(A_1, 0)) = A_2
 
           ! resizing the array
           lpi_size(1) = SIZE(lpi_columns, 1)
           lpi_size(2) = SIZE(lpi_columns, 2)
-          if (lpi_size(2) < lpi_columns(li_A_1, 0)) then
+          if (lpi_size(2) < lpi_columns(A_1, 0)) then
             ALLOCATE(lpi_columns(lpi_size(1), lpi_size(2)))
             lpi_columns = lpi_columns
             DEALLOCATE(lpi_columns)
@@ -224,28 +224,28 @@ subroutine initialize_csr_matrix( &
   
   mat%opi_ia(1) = 1
 
-  do li_i = 1, mat%num_rows
-    mat%opi_ia(li_i + 1) = mat%opi_ia(1) + SUM(lpi_occ(1: li_i))
+  do i = 1, mat%num_rows
+    mat%opi_ia(i + 1) = mat%opi_ia(1) + SUM(lpi_occ(1: i))
   end do
 
-  do li_e = 1, num_elements
+  do e = 1, num_elements
 
-    do li_b_1 = 1, num_local_dof_row
+    do b_1 = 1, num_local_dof_row
 
-      li_A_1 = local_to_global_row(li_b_1, li_e)
+      A_1 = local_to_global_row(b_1, e)
 
-      if (li_A_1 == 0) cycle
-      if (lpi_columns(li_A_1, 0) == 0) cycle
+      if (A_1 == 0) cycle
+      if (lpi_columns(A_1, 0) == 0) cycle
 
-      li_size = lpi_columns(li_A_1, 0)
+      sz = lpi_columns(A_1, 0)
 
-      call QsortC(lpi_columns(li_A_1, 1: li_size))
+      call QsortC(lpi_columns(A_1, 1: sz))
 
-      do li_i = 1, li_size
-         mat%opi_ja(mat%opi_ia(li_A_1)+li_i-1) = lpi_columns(li_A_1,li_i)
+      do i = 1, sz
+         mat%opi_ja(mat%opi_ia(A_1)+i-1) = lpi_columns(A_1,i)
       end do
 
-      lpi_columns(li_A_1, 0) = 0
+      lpi_columns(A_1, 0) = 0
 
       end do
 
@@ -384,17 +384,17 @@ subroutine sll_mult_csr_matrix_vector(mat, input, output)
   sll_real64, dimension(:), intent(in)  :: input
   sll_real64, dimension(:), intent(out) :: output
 
-  sll_int32 :: li_i
-  sll_int32 :: li_k_1
-  sll_int32 :: li_k_2
+  sll_int32 :: i
+  sll_int32 :: k_1
+  sll_int32 :: k_2
 
-  do li_i = 1, mat%num_rows
+  do i = 1, mat%num_rows
 
-    li_k_1 = mat%opi_ia(li_i)
-    li_k_2 = mat%opi_ia(li_i+1)-1
+    k_1 = mat%opi_ia(i)
+    k_2 = mat%opi_ia(i+1)-1
 
-    output(li_i) = & 
-      dot_product(mat%opr_a(li_k_1:li_k_2),input(mat%opi_ja(li_k_1:li_k_2)))
+    output(i) = & 
+      dot_product(mat%opr_a(k_1:k_2),input(mat%opi_ja(k_1:k_2)))
             
   end do
 
@@ -407,31 +407,31 @@ subroutine sll_add_to_csr_matrix(mat, val, ai_A, ai_Aprime)
   sll_int32, intent(in) :: ai_A
   sll_int32, intent(in) :: ai_Aprime
 
-  sll_int32 :: li_j
-  sll_int32 :: li_k
+  sll_int32 :: j
+  sll_int32 :: k
 
   ! THE CURRENT LINE IS self%opi_ia(ai_A)
-  do li_k = mat%opi_ia(ai_A), mat%opi_ia(ai_A+1) - 1
-    li_j = mat%opi_ja(li_k)
-    if (li_j == ai_Aprime) then
-      mat%opr_a(li_k) = mat%opr_a(li_k) + val
+  do k = mat%opi_ia(ai_A), mat%opi_ia(ai_A+1) - 1
+    j = mat%opi_ja(k)
+    if (j == ai_Aprime) then
+      mat%opr_a(k) = mat%opr_a(k) + val
       exit
     end if
   end do
 
 end subroutine sll_add_to_csr_matrix
   
-subroutine sll_solve_csr_matrix(mat, apr_B, apr_U)
+subroutine sll_solve_csr_matrix(mat, B, U)
 
   type(sll_csr_matrix), intent(in) :: mat
-  sll_real64, dimension(:),intent(inout) :: apr_B
-  sll_real64, dimension(:),intent(out) :: apr_U
+  sll_real64, dimension(:),intent(inout) :: B
+  sll_real64, dimension(:),intent(out) :: U
 
-  sll_int32  :: ai_maxIter
-  sll_real64 :: ar_eps
+  sll_int32  :: maxIter
+  sll_real64 :: eps
 
-  sll_real64, dimension(:), allocatable :: lpr_Ad
-  sll_real64, dimension(:), allocatable :: lpr_d
+  sll_real64, dimension(:), allocatable :: Ad
+  sll_real64, dimension(:), allocatable :: d
 
   logical    :: ll_continue
   sll_real64 :: lr_Norm2r1
@@ -440,86 +440,86 @@ subroutine sll_solve_csr_matrix(mat, apr_B, apr_U)
   sll_real64 :: lr_NormInfr
   sll_real64 :: lr_ps
   sll_real64 :: lr_beta
-  sll_real64 :: lr_alpha
-  sll_int32  :: li_iter
-  sll_int32  :: li_err
-  sll_int32  :: li_flag
+  sll_real64 :: alpha
+  sll_int32  :: iter
+  sll_int32  :: err
+  sll_int32  :: flag
 
-  ar_eps = 1.d-13
-  ai_maxIter = 10000
+  eps = 1.d-13
+  maxIter = 10000
 
   if ( mat%num_rows /= mat%num_cols ) then
     PRINT*,'#ERROR Gradient_conj: The matrix must be square'
     stop
   end if
 
-  if ((dabs(maxval(apr_B)) < ar_eps) .AND. (dabs(minval(apr_B)) < ar_eps)) then
-    apr_U = 0.0_8
+  if ((dabs(maxval(B)) < eps) .AND. (dabs(minval(B)) < eps)) then
+    U = 0.0_8
     return
   end if
 
-  SLL_ALLOCATE(lpr_Ad(mat%num_rows),li_err)
-  SLL_ALLOCATE(lpr_d(mat%num_rows),li_err)
+  SLL_ALLOCATE(Ad(mat%num_rows),err)
+  SLL_ALLOCATE(d(mat%num_rows),err)
   
-  apr_U   = 0.0_8
-  li_iter = 0
+  U   = 0.0_8
+  iter = 0
 
-  lr_NormInfb = maxval(abs(apr_B))
-  lr_Norm2r0  = dot_product(apr_B,apr_B)
+  lr_NormInfb = maxval(abs(B))
+  lr_Norm2r0  = dot_product(B,B)
 
-  lpr_d = apr_B
+  d = B
  
-  do li_iter = 1, ai_maxiter
+  do iter = 1, maxiter
     !--------------------------------------!
     ! calcul du ak parametre optimal local !
     !--------------------------------------!
 
-    call sll_mult_csr_matrix_vector( mat , lpr_d , lpr_Ad )
+    call sll_mult_csr_matrix_vector( mat , d , Ad )
 
-    lr_ps = dot_product( lpr_Ad , lpr_d )
-    lr_alpha = lr_Norm2r0 / lr_ps
+    lr_ps = dot_product( Ad , d )
+    alpha = lr_Norm2r0 / lr_ps
             
     !==================================================!
     ! calcul de l'approximation Xk+1 et du residu Rk+1 !
     !==================================================!
     ! calcul des composantes residuelles
     !-----------------------------------
-    apr_B = apr_B - lr_alpha * lpr_Ad
+    B = B - alpha * Ad
            
     !----------------------------------------!
     ! approximations ponctuelles au rang k+1 !
     !----------------------------------------!
-    apr_U = apr_U + lr_alpha * lpr_d
+    U = U + alpha * d
             
     !-------------------------------------------------------!
     ! (a) extraction de la norme infinie du residu          !
     !     pour le test d'arret                              !
     ! (b) extraction de la norme euclidienne du residu rk+1 !
     !-------------------------------------------------------!
-    lr_NormInfr = maxval(dabs(apr_B))
-    lr_Norm2r1  = dot_product(apr_B,apr_B)
+    lr_NormInfr = maxval(dabs(B))
+    lr_Norm2r1  = dot_product(B,B)
 
     !==================================================!
     ! calcul de la nouvelle direction de descente dk+1 !
     !==================================================!
     lr_beta    = lr_Norm2r1 / lr_Norm2r0
     lr_Norm2r0 = lr_Norm2r1
-    lpr_d      = apr_B + lr_beta * lpr_d
+    d      = B + lr_beta * d
            
     !-------------------!
     ! boucle suivante ? !
     !-------------------!
-    if ( lr_NormInfr / lr_NormInfb < ar_eps ) exit
+    if ( lr_NormInfr / lr_NormInfb < eps ) exit
             
   end do
 
-  if ( li_iter == ai_maxIter ) then
-    print*,'Warning Gradient_conj : li_iter == ai_maxIter'
+  if ( iter == maxIter ) then
+    print*,'Warning Gradient_conj : iter == maxIter'
     print*,'Error after CG =',( lr_NormInfr / lr_NormInfb )
   end if
     
-  deallocate(lpr_Ad)
-  deallocate(lpr_d)
+  deallocate(Ad)
+  deallocate(d)
 
 end subroutine sll_solve_csr_matrix
 
@@ -572,17 +572,17 @@ subroutine Partition(A, marker)
 
 end subroutine Partition
 
-subroutine sll_solve_csr_matrix_perper ( this, apr_B,apr_U,Masse_tot )
+subroutine sll_solve_csr_matrix_perper ( this, B,U,Masse_tot )
   type(sll_csr_matrix) :: this
-  sll_real64, dimension(:) :: apr_U
-  sll_real64, dimension(:) :: apr_B
-  sll_int32  :: ai_maxIter
-  sll_real64 :: ar_eps
+  sll_real64, dimension(:) :: U
+  sll_real64, dimension(:) :: B
+  sll_int32  :: maxIter
+  sll_real64 :: eps
 
-  sll_real64, dimension(:), pointer :: lpr_Ad
-  sll_real64, dimension(:), pointer :: lpr_r
-  sll_real64, dimension(:), pointer :: lpr_d
-  sll_real64, dimension(:), pointer :: lpr_Ux,one
+  sll_real64, dimension(:), pointer :: Ad
+  sll_real64, dimension(:), pointer :: r
+  sll_real64, dimension(:), pointer :: d
+  sll_real64, dimension(:), pointer :: Ux,one
   sll_real64, dimension(:), pointer :: Masse_tot
   sll_real64 :: lr_Norm2r1
   sll_real64 :: lr_Norm2r0
@@ -590,100 +590,100 @@ subroutine sll_solve_csr_matrix_perper ( this, apr_B,apr_U,Masse_tot )
   sll_real64 :: lr_NormInfr
   sll_real64 :: lr_ps
   sll_real64 :: lr_beta
-  sll_real64 :: lr_alpha
+  sll_real64 :: alpha
   logical  :: ll_continue
-  sll_int32  :: li_iter
-  sll_int32  :: li_err
-  sll_int32  :: li_flag
+  sll_int32  :: iter
+  sll_int32  :: err
+  sll_int32  :: flag
 
-  ai_maxIter = 100000
-  ar_eps = 1.d-13
+  maxIter = 100000
+  eps = 1.d-13
 
   if ( this%num_rows /= this%num_cols ) then
     PRINT*,'ERROR Gradient_conj: The matrix must be square'
     stop
   end if
 
-  if ((dabs(maxval(apr_B)) < ar_eps ) .AND. (dabs(MINVAL(apr_B)) < ar_eps )) then
-    apr_U = 0.0_8
+  if ((dabs(maxval(B)) < eps ) .AND. (dabs(MINVAL(B)) < eps )) then
+    U = 0.0_8
     return
   end if
 
-  SLL_ALLOCATE(lpr_Ad(this%num_rows),li_err)
-  SLL_ALLOCATE(lpr_r(this%num_rows),li_err)
-  SLL_ALLOCATE(lpr_d(this%num_rows),li_err)
-  SLL_ALLOCATE(lpr_Ux(this%num_rows),li_err)
-  SLL_ALLOCATE(one(this%num_rows),li_err)
+  SLL_ALLOCATE(Ad(this%num_rows),err)
+  SLL_ALLOCATE(r(this%num_rows),err)
+  SLL_ALLOCATE(d(this%num_rows),err)
+  SLL_ALLOCATE(Ux(this%num_rows),err)
+  SLL_ALLOCATE(one(this%num_rows),err)
 
-  apr_U(:)  = 0.0_8
+  U(:)  = 0.0_8
   one(:) = 1.
-  lpr_Ux(:) = apr_U(:)
-  li_iter = 0
-  call sll_mult_csr_matrix_vector( this , lpr_Ux , lpr_Ad )
-  lpr_Ad = lpr_Ad - dot_product(Masse_tot, lpr_Ux)
-  lpr_r       = apr_B - lpr_Ad
-  lr_Norm2r0  = DOT_PRODUCT( lpr_r , lpr_r )
-  lr_NormInfb = maxval( dabs( apr_B ) )
+  Ux(:) = U(:)
+  iter = 0
+  call sll_mult_csr_matrix_vector( this , Ux , Ad )
+  Ad = Ad - dot_product(Masse_tot, Ux)
+  r       = B - Ad
+  lr_Norm2r0  = DOT_PRODUCT( r , r )
+  lr_NormInfb = maxval( dabs( B ) )
 
-  lpr_d = lpr_r
+  d = r
 
   ll_continue=.true.
   do while(ll_continue)
-    li_iter = li_iter + 1
+    iter = iter + 1
     !--------------------------------------!
     ! calcul du ak parametre optimal local !
     !--------------------------------------!
 
-    call sll_mult_csr_matrix_vector( this , lpr_d , lpr_Ad )
+    call sll_mult_csr_matrix_vector( this , d , Ad )
           
-    lpr_Ad = lpr_Ad - dot_product(Masse_tot, lpr_d)
-    lr_ps = dot_product( lpr_Ad , lpr_d )
-    lr_alpha = lr_Norm2r0 / lr_ps
+    Ad = Ad - dot_product(Masse_tot, d)
+    lr_ps = dot_product( Ad , d )
+    alpha = lr_Norm2r0 / lr_ps
            
     !==================================================!
     ! calcul de l'approximation Xk+1 et du residu Rk+1 !
     !==================================================!
     ! calcul des composantes residuelles
     !-----------------------------------
-    lpr_r = lpr_r - lr_alpha * lpr_Ad
+    r = r - alpha * Ad
            
     !----------------------------------------!
     ! approximations ponctuelles au rang k+1 !
     !----------------------------------------!
-    lpr_Ux = lpr_Ux + lr_alpha * lpr_d
+    Ux = Ux + alpha * d
            
     !-------------------------------------------------------!
     ! (a) extraction de la norme infinie du residu          !
     !     pour le test d'arret                              !
     ! (b) extraction de la norme euclidienne du residu rk+1 !
     !-------------------------------------------------------!
-    lr_NormInfr = maxval(dabs( lpr_r ))
-    lr_Norm2r1 = DOT_PRODUCT( lpr_r , lpr_r )
+    lr_NormInfr = maxval(dabs( r ))
+    lr_Norm2r1 = DOT_PRODUCT( r , r )
            
     !==================================================!
     ! calcul de la nouvelle direction de descente dk+1 !
     !==================================================!
     lr_beta = lr_Norm2r1 / lr_Norm2r0
     lr_Norm2r0 = lr_Norm2r1
-    lpr_d = lpr_r + lr_beta * lpr_d
-    !lpr_d(1) =  apr_B(1)
+    d = r + lr_beta * d
+    !d(1) =  B(1)
     !-------------------!
     ! boucle suivante ? !
     !-------------------!
-    ll_continue=((lr_NormInfr/lr_NormInfb) >= ar_eps) .AND. (li_iter < ai_maxIter)
+    ll_continue=((lr_NormInfr/lr_NormInfb) >= eps) .AND. (iter < maxIter)
             
   end do
-  apr_U = lpr_Ux
+  U = Ux
    
-  if ( li_iter == ai_maxIter ) then
-    print*,'Warning Gradient_conj : li_iter == ai_maxIter'
+  if ( iter == maxIter ) then
+    print*,'Warning Gradient_conj : iter == maxIter'
     print*,'Error after CG =',( lr_NormInfr / lr_NormInfb )
   end if
     
-  deallocate(lpr_Ad)
-  deallocate(lpr_d)
-  deallocate(lpr_r)
-  deallocate(lpr_Ux)
+  deallocate(Ad)
+  deallocate(d)
+  deallocate(r)
+  deallocate(Ux)
   deallocate(one)
 end subroutine sll_solve_csr_matrix_perper
 
