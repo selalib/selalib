@@ -192,7 +192,6 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(ode_solvers)
    ADD_SUBDIRECTORY(advection_field)
    ADD_SUBDIRECTORY(mesh_calculus)
-   ADD_SUBDIRECTORY(simulation)
    ADD_SUBDIRECTORY(eulerian-finite-volume)
 
    ADD_SUBDIRECTORY( simulations ) # reorganization of simulations

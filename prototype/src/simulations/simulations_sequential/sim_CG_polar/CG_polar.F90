@@ -34,32 +34,32 @@ program cg_polar
   
   conserv_rescale = 0
   
-  !>files 'CG_data.dat'is included in directory selalib/prototype/src/simulation
+  !>file 'CG_data.txt' is included in directory selalib/prototype/src/simulation
   !>copy it in the same directory as the executable
   open(27,file='CG_data.txt',action="read")
-  read(27,*)rmin
-  read(27,*)rmax
-  read(27,*)nr
-  read(27,*)ntheta
-  read(27,*)r1
-  read(27,*)r2
-  read(27,*)alpha
-  read(27,*)mod
-  read(27,*)nb_step
-  read(27,*)dt
-  read(27,*)visustep
+  read(27,*)rmin          ! min radius
+  read(27,*)rmax          ! max radius
+  read(27,*)nr            ! no. of cells along r
+  read(27,*)ntheta        ! no. of cells along theta
+  read(27,*)r1            ! r1 parameter for init. cond.
+  read(27,*)r2            ! r2 parameter for init. cond.
+  read(27,*)alpha         ! amplitude of perturbation
+  read(27,*)mod           ! azimuthal mode number
+  read(27,*)nb_step       ! total number of time steps in simulation
+  read(27,*)dt            ! time step size
+  read(27,*)visustep      ! number of time steps between successive output
   read(27,*)
-  read(27,*)carac
-  read(27,*)grad
-  read(27,*)fcase
-  read(27,*)scheme
-  read(27,*)interp_case
-  read(27,*)PPM_order
-  read(27,*)visu
-  read(27,*)f_file
+  read(27,*)carac         ! select case: computation of characteristics
+  read(27,*)grad          ! select case: computation of gradient
+  read(27,*)fcase         ! select case: distribution function (init. cond.)
+  read(27,*)scheme        ! select case: semi-Lagrangian scheme
+  read(27,*)interp_case   ! select case: interpolation method
+  read(27,*)PPM_order     ! order of interpolation
+  read(27,*)visu          ! visualization tool (0:gnuplot, 1:vtk)
+  read(27,*)f_file        ! restart file (initial conditions for f)
   read(27,*)
-  read(27,*)bc(1)
-  read(27,*)bc(2)
+  read(27,*)bc(1)         ! select case: boundary conditions at min radius
+  read(27,*)bc(2)         ! select case: boundary conditions at max radius
   close(27)
 
 
