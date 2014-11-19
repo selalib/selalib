@@ -1358,83 +1358,88 @@ subroutine delete_things()
 
 end subroutine delete_things
 
-subroutine solve_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max, &
-                           ti, te)
-  sll_int32,  intent(in)  :: bc_eta1_min
-  sll_int32,  intent(in)  :: bc_eta2_min
-  sll_int32,  intent(in)  :: bc_eta1_max
-  sll_int32,  intent(in)  :: bc_eta2_max
-  sll_real64, intent(out) :: ti
-  sll_real64, intent(out) :: te
-  
-  integral_solution = 0.0_f64
-  integral_exact_solution = 0.0_f64
-  
-  call sll_set_time_mark(t_reference)
-  
-  call sll_create(       &
-    es,                  &
-    SPLINE_DEG1,         &
-    SPLINE_DEG2,         &
-    NUM_CELLS1,          &
-    NUM_CELLS2,          &
-    ES_GAUSS_LEGENDRE,   &
-    ES_GAUSS_LEGENDRE,   &
-    bc_eta1_min,         &
-    bc_eta1_max,         &
-    bc_eta2_min,         &
-    bc_eta2_max,         &
-    ETA1MIN,             &
-    ETA1MAX,             &
-    ETA2MIN,             &
-    ETA2MAX)
-   
-  call factorize_mat_es( &
-    es,                  &
-    a11_field_mat,       &
-    a12_field_mat,       &
-    a21_field_mat,       &
-    a22_field_mat,       &
-    b1_field_vect,       &
-    b2_field_vect,       &
-    c_field)
+subroutine solve_fields( bc_eta1_min, &
+                         bc_eta1_max, &
+                         bc_eta2_min, &
+                         bc_eta2_max, &
+                         ti,          &
+                         te           )
 
-  ti = sll_time_elapsed_since(t_reference)
-  
-  call sll_set_time_mark(t_reference)
-  
-  values = 0.0_f64
-  call phi%set_field_data(values)
-  call phi%update_interpolation_coefficients()
-  call rho%write_to_file(0)
-  call sll_solve( es, rho, phi)
-  call phi%write_to_file(0)
-  
-  te = sll_time_elapsed_since(t_reference)
-  
-  do j=1,npts2
-     do i=1,npts1
-        calculated(i,j) = phi%value_at_point(eta1(i),eta2(j))
-     end do
+sll_int32,  intent(in)  :: bc_eta1_min
+sll_int32,  intent(in)  :: bc_eta2_min
+sll_int32,  intent(in)  :: bc_eta1_max
+sll_int32,  intent(in)  :: bc_eta2_max
+sll_real64, intent(out) :: ti
+sll_real64, intent(out) :: te
+
+integral_solution = 0.0_f64
+integral_exact_solution = 0.0_f64
+
+call sll_set_time_mark(t_reference)
+
+call sll_create(       &
+  es,                  &
+  SPLINE_DEG1,         &
+  SPLINE_DEG2,         &
+  NUM_CELLS1,          &
+  NUM_CELLS2,          &
+  ES_GAUSS_LEGENDRE,   &
+  ES_GAUSS_LEGENDRE,   &
+  bc_eta1_min,         &
+  bc_eta1_max,         &
+  bc_eta2_min,         &
+  bc_eta2_max,         &
+  ETA1MIN,             &
+  ETA1MAX,             &
+  ETA2MIN,             &
+  ETA2MAX              )
+ 
+call factorize_mat_es( &
+  es,                  &
+  a11_field_mat,       &
+  a12_field_mat,       &
+  a21_field_mat,       &
+  a22_field_mat,       &
+  b1_field_vect,       &
+  b2_field_vect,       &
+  c_field              )
+
+ti = sll_time_elapsed_since(t_reference)
+
+call sll_set_time_mark(t_reference)
+
+values = 0.0_f64
+call phi%set_field_data(values)
+call phi%update_interpolation_coefficients()
+call rho%write_to_file(0)
+call sll_solve( es, rho, phi)
+call phi%write_to_file(0)
+
+te = sll_time_elapsed_since(t_reference)
+
+do j=1,npts2
+  do i=1,npts1
+    calculated(i,j) = phi%value_at_point(eta1(i),eta2(j))
   end do
-  
-  integral_solution = 0.0_f64
-  integral_exact_solution = 0.0_f64
+end do
+
+integral_solution       = 0.0_f64
+integral_exact_solution = 0.0_f64
 
 end subroutine solve_fields
 
 subroutine check_error(icase)
 
-  integer, intent(in) :: icase
-  print"('integral de la solution =',g15.3)", integral_solution
-  print"('integral de la solution exacte =',g15.3)", integral_exact_solution
-  acc(icase) = sum(abs(calculated-reference))/(npts1*npts2)
-  if ((sqrt(normL2(icase)) <= h1**(SPLINE_DEG1-1))   .AND. &
+integer, intent(in) :: icase
+print"('integral solution       =',g15.3)", integral_solution
+print"('integral exact solution =',g15.3)", integral_exact_solution
+acc(icase) = sum(abs(calculated-reference))/(npts1*npts2)
+if ((sqrt(normL2(icase)) <= h1**(SPLINE_DEG1-1))   .AND. &
     (sqrt(normH1(icase)) <= h1**(SPLINE_DEG1-1-1))) then     
-     print"('test:',i2,4x,'error=',g15.3, 4x, 'OK' )", icase, acc(icase)
-  else
-    stop 'FAILED'
-  end if
+   print"('test:',i2,4x,'error=',g15.3, 4x, 'OK' )", icase, acc(icase)
+else
+  stop 'FAILED'
+end if
 
 end subroutine check_error
 
