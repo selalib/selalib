@@ -1,6 +1,6 @@
 ADD_LIBRARY( sll_general_coordinate_elliptic_solvers STATIC
-             connectivity_qn.f90
              sll_general_coordinate_elliptic_solver.F90
+             connectivity_qn.f90
              sll_knots.F90
              sll_lobatto_poisson.F90 
              map_function_module.F90
@@ -24,10 +24,9 @@ TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers
                        sll_working_precision
                        deboor_splines)
 
-ADD_LIBRARY( finite_elements_solver STATIC
-     connectivity_qn.f90
-     finite_elements_solver.F90
-     sll_knots.F90)
+ADD_LIBRARY( finite_elements_solver STATIC connectivity_qn.f90
+                                           finite_elements_solver.F90
+                                           sll_knots.F90)
 
 TARGET_LINK_LIBRARIES( finite_elements_solver
                        sll_sparse_matrix 
@@ -54,14 +53,13 @@ TARGET_LINK_LIBRARIES(test_general_coordinates_elliptic_solver
 
 ADD_EXECUTABLE(test_finite_elements_solver unit_test_finite_elements.F90)
 
-TARGET_LINK_LIBRARIES( test_finite_elements_solver
-                       finite_elements_solver)
+TARGET_LINK_LIBRARIES( test_finite_elements_solver finite_elements_solver)
 
 ADD_TEST(NAME general_coordinate_elliptic_solver 
          COMMAND test_general_coordinates_elliptic_solver)
 
 SET_TESTS_PROPERTIES(general_coordinate_elliptic_solver 
-                     PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+                     PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 2000)
 
 ADD_EXECUTABLE(test_lobalap_analytic unit_test_lobalap_analytic.F90 )
 
