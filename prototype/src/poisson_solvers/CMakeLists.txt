@@ -32,6 +32,7 @@ TARGET_LINK_LIBRARIES(sll_poisson_solvers sll_general_coordinate_elliptic_solver
                                           fishpack
                                           dfftpack )
 
+
 IF(FFTW_ENABLED AND FFTW_FOUND)
    TARGET_LINK_LIBRARIES(sll_poisson_solvers ${FFTW_LIBRARIES})
 ENDIF()
@@ -100,3 +101,6 @@ TARGET_LINK_LIBRARIES( hex_poisson sll_hex_meshes  )
 ADD_EXECUTABLE( test_hex_poisson pivotbande.F90 test_hex_poisson.F90 ) 
 
 TARGET_LINK_LIBRARIES( test_hex_poisson hex_poisson sll_constants )
+
+ADD_LIBRARY ( pivotbande STATIC pivotbande.F90)
+TARGET_LINK_LIBRARIES( pivotbande )

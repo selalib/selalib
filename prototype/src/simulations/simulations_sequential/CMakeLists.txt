@@ -24,6 +24,7 @@ ADD_SUBDIRECTORY( sim_curvilinear_SL                        )
 ADD_SUBDIRECTORY( sim_CG_polar                              )
 ADD_SUBDIRECTORY( sim_CG_curvilinear_2D                     )
 ADD_SUBDIRECTORY( sim_poisson_polar_test                    )
+ADD_SUBDIRECTORY( sim_2d_guiding_center_hexagonal           )
 
 IF(HDF5_ENABLED)
   SET( SIM_LIBS sll_advection )
