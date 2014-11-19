@@ -83,7 +83,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/splines/cubic_nonuniform_splines.F90
     ${SLL_DIR}/deboor_splines/banded_linear_system_solver.F90  
     ${SLL_DIR}/deboor_splines/knots.f90
-    ${SLL_DIR}/deboor_splines/splopt.f90
+    #${SLL_DIR}/deboor_splines/splopt.f90
     ${SLL_DIR}/deboor_splines/sll_module_deboor_splines_1d.F90
     ${SLL_DIR}/deboor_splines/sll_module_deboor_splines_2d.F90
     ${SLL_DIR}/hermite_interpolation/sll_hermite_interpolation_2d.F90
@@ -235,8 +235,8 @@ IF(SLL_BUILD_PACKAGE)
  SET(BUILD_SHARED_LIBRARY  OFF CACHE BOOL "build shared library")
   IF(BUILD_SHARED_LIBRARY)
      ADD_LIBRARY(selalib SHARED ${SLL_SOURCE_FILES})
-     TARGET_LINK_LIBRARIES(selalib 
-      dfftpack mudpack ${HDF5_LIBRARIES} ${LAPACK_LIBRARIES})
+     TARGET_LINK_LIBRARIES(selalib dfftpack mudpack 
+       ${HDF5_LIBRARIES} ${LAPACK_LIBRARIES} ${MPI_Fortran_LIBRARIES} ${FFTW_LIBRARIES})
   ELSE()
      ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES})
      INSTALL(TARGETS selalib ARCHIVE DESTINATION lib COMPONENT libraries)

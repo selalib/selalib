@@ -188,17 +188,17 @@ subroutine initialize_csr_matrix( &
           lpi_columns(li_A_1, lpi_columns(li_A_1, 0)) = li_A_2
 
           ! resizing the array
-          !lpi_size(1) = SIZE(lpi_columns, 1)
-          !lpi_size(2) = SIZE(lpi_columns, 2)
-          !if (lpi_size(2) < lpi_columns(li_A_1, 0)) then
-          !  !ALLOCATE(lpi_columns(lpi_size(1), lpi_size(2)))
-          !  !lpi_columns = lpi_columns
-          !  !DEALLOCATE(lpi_columns)
-          !  !ALLOCATE(lpi_columns(lpi_size(1), 2 * lpi_size(2)))
-          !  lpi_columns(1:lpi_size(1),1:lpi_size(2)) = &
-          !    lpi_columns(1:lpi_size(1), 1:lpi_size(2))
-          !  DEALLOCATE(lpi_columns)
-          !end if
+          lpi_size(1) = SIZE(lpi_columns, 1)
+          lpi_size(2) = SIZE(lpi_columns, 2)
+          if (lpi_size(2) < lpi_columns(li_A_1, 0)) then
+            ALLOCATE(lpi_columns(lpi_size(1), lpi_size(2)))
+            lpi_columns = lpi_columns
+            DEALLOCATE(lpi_columns)
+            ALLOCATE(lpi_columns(lpi_size(1), 2 * lpi_size(2)))
+            lpi_columns(1:lpi_size(1),1:lpi_size(2)) = &
+              lpi_columns(1:lpi_size(1), 1:lpi_size(2))
+            DEALLOCATE(lpi_columns)
+          end if
 
         end if
 
