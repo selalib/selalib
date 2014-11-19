@@ -4,7 +4,7 @@ ADD_LIBRARY(deboor_splines STATIC
   banded_linear_system_solver.F90
   knots.f90)	
 
-TARGET_LINK_LIBRARIES( deboor_splines sll_memory)
+TARGET_LINK_LIBRARIES( deboor_splines sll_memory sll_utilities )
   
 ADD_EXECUTABLE(test_deboor unit_test.F90)
 TARGET_LINK_LIBRARIES( test_deboor deboor_splines  sll_utilities sll_file_io)
