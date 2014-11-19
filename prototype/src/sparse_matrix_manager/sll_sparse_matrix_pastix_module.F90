@@ -550,7 +550,7 @@ contains
         !local var
         integer :: li_e, li_b_1, li_A_1, li_b_2, li_A_2, li_index, li_i, li_size
         integer :: li_err, li_flag
-        real(f64), dimension(:), pointer :: lpr_tmp
+        integer, dimension(:), pointer :: lpr_tmp
 
         ! INITIALIZING ia
         opi_ia(1) = 1
@@ -602,7 +602,7 @@ contains
 
 
 recursive subroutine QsortC(A)
-  real(f64), intent(in out), dimension(:) :: A
+  integer, intent(in out), dimension(:) :: A
   integer :: iq
 
   if(size(A) > 1) then
@@ -613,7 +613,7 @@ recursive subroutine QsortC(A)
 end subroutine QsortC
 
 subroutine Partition(A, marker)
-  real(f64), intent(in out), dimension(:) :: A
+  integer, intent(in out), dimension(:) :: A
   integer, intent(out) :: marker
   integer :: i, j
   real(f64) :: temp
