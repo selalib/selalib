@@ -1,11 +1,14 @@
 module connectivity_module
 
 implicit none
-private
 
-integer, parameter :: CONNECT_PERIODIC = 0, CONNECT_DIRICHLET = 1
 
 public initconnectivity
+
+private
+
+integer, parameter :: CONNECT_PERIODIC = 0
+integer, parameter :: CONNECT_DIRICHLET = 1
 
 contains
 
@@ -22,13 +25,20 @@ subroutine initconnectivity( num_cells1,                    &
                              global_spline_indices,         &
                              local_to_global_spline_indices )
     
-integer :: num_cells1, num_cells2, spline_degree1, spline_degree2
-integer :: bc_left, bc_right, bc_bottom, bc_top
-integer :: nb_spl_x,nb_spl_y
-integer, dimension(:,:) :: local_spline_indices
-integer, dimension(:)   :: global_spline_indices
-integer, dimension(:,:) :: local_to_global_spline_indices
+integer,                intent(in)    :: num_cells1
+integer,                intent(in)    :: num_cells2
+integer,                intent(in)    :: spline_degree1
+integer,                intent(in)    :: spline_degree2
+integer,                intent(in)    :: bc_left
+integer,                intent(in)    :: bc_right
+integer,                intent(in)    :: bc_bottom
+integer,                intent(in)    :: bc_top
+integer, dimension(:,:),intent(inout) :: local_spline_indices
+integer, dimension(:)  ,intent(inout) :: global_spline_indices
+integer, dimension(:,:),intent(inout) :: local_to_global_spline_indices
 
+integer :: nb_spl_x
+integer :: nb_spl_y
 integer :: BC  ! 0 if periodic-Dirichlet and 1 if Dirichlet-Dirichlet 
 integer :: li_i_, li_j_!,t1,t2
 integer :: li_iloc, li_jloc, li_Bloc, li_B,maille    
