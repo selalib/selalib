@@ -4,7 +4,7 @@ Getting Started
 =================
 
 To download the developer version you need to use GIT.
-The latest development version of SeLaLib is tracked in the 'prototype-devel' branch.
+The latest development version of SeLaLib is tracked in the 'selalib-devel' branch.
 
 Documentation for Git is available `here <http://git-scm.com/>`_.
 
@@ -26,8 +26,8 @@ For help::
 
  git help <command-you-want-help-about>
 
-Get the prototype
------------------
+Get the source code
+-------------------
 Developer GIT Access via SSH
 
 `Edit keys on your INRIA gforge account <https://gforge.inria.fr/account/editsshkeys.php>`_ and follow instructions.
@@ -40,18 +40,17 @@ Display all branches with::
 
  git branch -a
 
-Create the local branch and merge the remote prototype branch:: 
+Create the local branch and merge the remote branch:: 
 
- git checkout -b prototype-devel origin/prototype-devel
+ git checkout -b selalib-devel origin/selalib-devel
 
 More information available on document `An overview of GIT A short tutorial for SELALIB developers <https://gforge.inria.fr/docman/view.php/3042/7642/selalib_coding_guidelines.pdf>`_ by Edwin Chacon-Golcher.
 
-Build the prototype
--------------------
+Build the devel branch
+----------------------
 
 Create a new directory, build the libraries within ::
 
- cd prototype
  mkdir build
  cd build
  cmake ../src/
