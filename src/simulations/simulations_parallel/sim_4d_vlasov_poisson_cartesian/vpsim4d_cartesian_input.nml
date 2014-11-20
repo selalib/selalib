@@ -1,7 +1,7 @@
 !ctest --verbose -R sim4d_vp_cart
 !or
-!time mpirun -np 8 ./bin/test_4d_vp_cartesian ../selalib/prototype/src/simulation/vpsim4d_cartesian_input
-!gnuplot -persist ../selalib/prototype/src/simulation/vpsim4d_cartesian.gnu
+!time mpirun -np 8 ./bin/test_4d_vp_cartesian ../selalib/src/simulation/vpsim4d_cartesian_input
+!gnuplot -persist ../selalib/src/simulation/vpsim4d_cartesian.gnu
 
 &geometry
   mesh_case_x1="SLL_LANDAU_MESH"

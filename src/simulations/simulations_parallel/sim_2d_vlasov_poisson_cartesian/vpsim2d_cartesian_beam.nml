@@ -1,5 +1,5 @@
-!./bin/test_2d_vp_cartesian ../selalib/prototype/src/simulation/vpsim2d_cartesian_beam
-!gnuplot -persist ../selalib/prototype/src/simulation/vpsim2d_cartesian_beam.gnu
+!./bin/test_2d_vp_cartesian ../selalib/src/simulation/vpsim2d_cartesian_beam
+!gnuplot -persist ../selalib/src/simulation/vpsim2d_cartesian_beam.gnu
 
 
 &geometry

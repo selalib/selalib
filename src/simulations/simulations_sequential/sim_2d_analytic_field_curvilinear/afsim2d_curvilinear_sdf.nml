@@ -1,6 +1,6 @@
 
-!./bin/test_2d_af_curvilinear ../selalib/prototype/src/simulation/afsim2d_curvilinear_input
-!gnuplot -persist ../selalib/prototype/src/simulation/afsim2d_curvilinear.gnu
+!./bin/test_2d_af_curvilinear ../selalib/src/simulation/afsim2d_curvilinear_input
+!gnuplot -persist ../selalib/src/simulation/afsim2d_curvilinear.gnu
 
 
 &geometry

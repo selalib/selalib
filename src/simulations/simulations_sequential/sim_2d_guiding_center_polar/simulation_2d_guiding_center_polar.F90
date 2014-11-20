@@ -4,7 +4,7 @@ module sll_simulation_2d_guiding_center_polar_module
 !related to simulation_2d_guiding_center_curvilinear.F90
 !but here geometry and test are specifically polar
 
-!see ../selalib/prototype/src/simulation/gcsim2d_polar_input.nml
+!see ../selalib/src/simulation/gcsim2d_polar_input.nml
 !for example of use
 
 !contact: Michel Mehrenberger (mehrenbe@math.unistra.fr)
