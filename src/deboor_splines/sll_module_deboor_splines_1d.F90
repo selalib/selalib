@@ -9,6 +9,10 @@ use banded_linear_system_solver
 
 implicit none 
 
+sll_real64, private :: aj(10)
+sll_real64, private :: deltal(10)
+sll_real64, private :: deltar(10)
+
 contains
   
     
@@ -303,8 +307,6 @@ subroutine bsplvb ( t, jhigh, index, x, left, biatx )
   sll_int32,  intent(in)  :: left
   sll_real64, intent(out) :: biatx(jhigh)
 
-  sll_real64, save :: deltal(20)
-  sll_real64, save :: deltar(20)
   sll_int32,  save :: j=1
 
   sll_int32   :: i
@@ -600,9 +602,6 @@ function bvalue( t, bcoef, n, k, x, jderiv ) result(res)
   sll_int32,  intent(in) :: jderiv    !< order of the derivative
   
   sll_real64 :: res
-  sll_real64 :: aj(k)
-  sll_real64 :: dl(k)
-  sll_real64 :: dr(k)
   sll_int32  :: i
   sll_int32  :: ilo
   sll_int32  :: j
@@ -618,8 +617,8 @@ function bvalue( t, bcoef, n, k, x, jderiv ) result(res)
   res = 0.0_8
     
   aj(:)=0.0_8
-  dl(:)=0.0_8
-  dr(:)=0.0_8
+  deltal(:)=0.0_8
+  deltar(:)=0.0_8
     
   if ( k <= jderiv ) then
     return
@@ -656,7 +655,7 @@ function bvalue( t, bcoef, n, k, x, jderiv ) result(res)
   if ( k <= i ) then
        
     do j = 1, k-1
-      dl(j) = x - t(i+1-j)
+      deltal(j) = x - t(i+1-j)
     end do
        
   else
@@ -664,12 +663,12 @@ function bvalue( t, bcoef, n, k, x, jderiv ) result(res)
     jcmin = 1 - ( i - k )
      
     do j = 1, i
-      dl(j) = x - t(i+1-j)
+      deltal(j) = x - t(i+1-j)
     end do
        
     do j = i, k-1
       aj(k-j) = 0.0_8
-      dl(j) = dl(i)
+      deltal(j) = deltal(i)
     end do
        
   end if
@@ -680,18 +679,18 @@ function bvalue( t, bcoef, n, k, x, jderiv ) result(res)
        
     jcmax = k + n - i
     do j = 1, k + n - i
-      dr(j) = t(i+j) - x
+      deltar(j) = t(i+j) - x
     end do
        
     do j = k+n-i, k-1
       aj(j+1) = 0.0_8
-      dr(j) = dr(k+n-i)
+      deltar(j) = deltar(k+n-i)
     end do
        
   else
        
     do j = 1, k-1
-      dr(j) = t(i+j) - x
+      deltar(j) = t(i+j) - x
     end do
        
   end if
@@ -706,7 +705,7 @@ function bvalue( t, bcoef, n, k, x, jderiv ) result(res)
       
     ilo = k - j
     do jj = 1, k - j
-      aj(jj) = ((aj(jj+1)-aj(jj))/(dl(ilo)+dr(jj)))*real(k-j,kind=8)
+      aj(jj) = ((aj(jj+1)-aj(jj))/(deltal(ilo)+deltar(jj)))*real(k-j,kind=8)
       ilo = ilo - 1
     end do
        
@@ -718,7 +717,7 @@ function bvalue( t, bcoef, n, k, x, jderiv ) result(res)
   do j = jderiv+1, k-1
     ilo = k-j
     do jj = 1, k-j
-      aj(jj) = (aj(jj+1)*dl(ilo)+aj(jj)*dr(jj))/(dl(ilo)+dr(jj))
+      aj(jj) = (aj(jj+1)*deltal(ilo)+aj(jj)*deltar(jj))/(deltal(ilo)+deltar(jj))
       ilo = ilo - 1
     end do
   end do
