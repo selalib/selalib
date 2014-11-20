@@ -17,9 +17,9 @@ Contents:
    :maxdepth: 2
 
    Installation <install/index>
-   Prototype <prototype/getting_started>
-   Building Tool <prototype/cmake_guide>
-   Documentation Tool <prototype/doxygen_guide>
+   Developer Page <developer/getting_started>
+   Building Tool <developer/cmake_guide>
+   Documentation Tool <developer/doxygen_guide>
    QuickStart Guide <install/quickstart>
    Ubuntu dependencies <install/ubuntu>
    Fedora dependencies <install/fedora>

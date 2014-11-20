@@ -70,10 +70,10 @@ Example :
 
 # output ::
 
-  cd /selalib/prototype/build
+  cd /selalib/build
   make test
   Running tests...
-  Test project /Users/samuel/selalib/prototype/build
+  Test project /Users/samuel/selalib/build
        Start 1: fft_unit_test
   1/12 Test #1: fft_unit_test ..............................   Passed    0.13 sec
   ...
@@ -89,7 +89,7 @@ To determine what tests are available, you can always run ::
 
 which will display the list of tests but not actually run them. ::
 
- Test project /Users/samuel/selalib/prototype/build
+ Test project /Users/samuel/selalib/build
   Test  #1: memory
   Test  #2: assert
   Test  #3: constants
@@ -121,7 +121,7 @@ The way of specifying tests is using explicit test number option -I ::
 
 will run tests ::
 
-  Test project /Users/samuel/selalib/prototype/build
+  Test project /Users/samuel/selalib/build
       Start 3: constants
   1/3 Test #3: constants ........................   Passed    0.00 sec
       Start 4: utilities
@@ -141,7 +141,7 @@ If we now run ::
 
 We will only see tests that contain string field ::
 
-  Test project /Users/samuel/selalib/prototype/build
+  Test project /Users/samuel/selalib/build
   
       Start 17: fields
   1/2 Test #17: fields ...........................   Passed    0.00 sec
@@ -158,7 +158,7 @@ We can also omit tests using -E, for example ::
 
 will produce ::
 
-  Test project /Users/samuel/selalib/prototype/build
+  Test project /Users/samuel/selalib/build
         Start  1: memory
    1/19 Test  #1: memory ...........................   Passed    0.81 sec
         Start  2: assert

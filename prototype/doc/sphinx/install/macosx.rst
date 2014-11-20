@@ -23,7 +23,7 @@ Install Homebrew (`not compatible with macports <https://guide.macports.org/chun
 	$ brew install hdf5 --enable-fortran --enable-parallel
 	$ brew install pastix
 	$ brew install fftw
-	$ cd selalib/prototype/build
+	$ cd selalib/build
 	$ cmake ../src -DPASTIX_ENABLED=ON  \
 		-DZLIB_LIBRARIES="/usr/lib/libz.dylib;/usr/local/lib/libsz.a" \
 		-DHDF5_PARALLEL_ENABLED=ON
@@ -51,6 +51,6 @@ If you want to run tests that use nurbs ::
 
 A special options file is available in selalib/cmake directory ::
 
-	$ mkdir selalib/prototype/build
-	$ cd selalib/prototype/build
+	$ mkdir selalib/build
+	$ cd selalib/build
 	$ cmake ../src -DOPTIONS_FILE=../../cmake/macports_update_2014.cmake 
