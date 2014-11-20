@@ -26,7 +26,7 @@ ADD_SUBDIRECTORY( sim_CG_curvilinear_2D                     )
 ADD_SUBDIRECTORY( sim_poisson_polar_test                    )
 
 IF(HDF5_ENABLED)
-  SET( SIM_LIBS sll_advection )
+  SET( SIM_LIBS sll_advection sll_parallel_array_initializers )
   ADD_SUBDIRECTORY( sim_2d_analytic_field_cartesian )
   ADD_SUBDIRECTORY( sim_2d_analytic_field_curvilinear )
   ADD_SUBDIRECTORY( sim_2d_guiding_center_cartesian )
