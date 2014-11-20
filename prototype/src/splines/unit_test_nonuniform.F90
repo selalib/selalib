@@ -12,7 +12,6 @@
 !                                  
 !******************************************************************************
 
-
 program nonuniform_spline_tester
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -25,7 +24,6 @@ program nonuniform_spline_tester
   implicit none
   
   
-  
   logical                                :: test_passed
   sll_int32 :: err
   sll_int32 :: N,i,N_new,j
@@ -34,11 +32,12 @@ program nonuniform_spline_tester
   sll_real64,dimension(:), pointer :: fine_node_positions,f_fine
   sll_real64,dimension(:,:,:), pointer :: f_deriv
   type(cubic_nonunif_spline_1D), pointer :: spl_per, spl_hrmt, spl 
+
   sll_real64 :: x,xmin,xmax,tmp,linf_err(4),linf(4)
   sll_real64 :: xmin_val,xmax_val,slope_left,slope_right,fmin_val,fmax_val,local_xval(4)
   sll_real64 :: p(4),pp(4),w(4),fp(4)
   sll_real64 :: node_uniformity_min,node_uniformity_max,unif_val_min,unif_val_max
-  sll_int32 :: test,nb_test,ival,N_test1,N_test2,index_max_err(6),unif_case,bdr_case
+  sll_int32  :: test,nb_test,ival,N_test1,N_test2,index_max_err(6),unif_case,bdr_case
   sll_real64 :: max_err(6)
 
 
