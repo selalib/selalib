@@ -18,7 +18,7 @@ Just type::
 
    cmake -DCMAKE_BUILD_TYPE="Release" \
          -DCMAKE_INSTALL_PREFIX=<install_dir> \
-         -DSLL_BUILD_PACKAGE=ON <prototype_src_dir>
+         -DSLL_BUILD_PACKAGE=ON <src_dir>
    make 
    make install
 
