@@ -1,7 +1,7 @@
 !ctest --verbose -R sim2d_gc_cart
 !or
-!./bin/test_2d_gc_cartesian ../selalib/prototype/src/simulation/gcsim2d_cartesian_input
-!gnuplot -persist ../selalib/prototype/src/simulation/gcsim2d_cartesian.gnu
+!./bin/test_2d_gc_cartesian ../selalib/src/simulation/gcsim2d_cartesian_input
+!gnuplot -persist ../selalib/src/simulation/gcsim2d_cartesian.gnu
 
 
 &geometry

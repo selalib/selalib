@@ -1,5 +1,5 @@
-!./bin/test_2d_gc_curvilinear ../selalib/prototype/src/simulation/gcsim2d_curvilinear_input_polar
-!gnuplot -persist ../selalib/prototype/src/simulation/gcsim2d_curvilinear_polar.gnu
+!./bin/test_2d_gc_curvilinear ../selalib/src/simulation/gcsim2d_curvilinear_input_polar
+!gnuplot -persist ../selalib/src/simulation/gcsim2d_curvilinear_polar.gnu
 
 &geometry
     mesh_case = "SLL_POLAR_MESH"

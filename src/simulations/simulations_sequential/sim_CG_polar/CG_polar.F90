@@ -34,7 +34,7 @@ program cg_polar
   
   conserv_rescale = 0
   
-  !>file 'CG_data.txt' is included in directory selalib/prototype/src/simulation
+  !>file 'CG_data.txt' is included in directory selalib/src/simulation
   !>copy it in the same directory as the executable
   open(27,file='CG_data.txt',action="read")
   read(27,*)rmin          ! min radius
@@ -187,7 +187,7 @@ program cg_polar
 
   else
     print*,"f is not defined"
-    print*,'see variable "fcase" in file selalib/prototype/src/simulation/CG_polar.F90'
+    print*,'see variable "fcase" in file selalib/src/simulation/CG_polar.F90'
     print*,'can not go any further'
     print*,'exiting...'
     stop
@@ -561,7 +561,7 @@ program cg_polar
     else
       print*,'no scheme define'
       print*,"the program won't do anything"
-      print*,'see variable scheme in file selalib/prototype/src/simulation to solve the probleme'
+      print*,'see variable scheme in file selalib/src/simulation to solve the probleme'
       print*,'exiting the loop'
       exit
     end if

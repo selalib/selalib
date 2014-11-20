@@ -1,5 +1,5 @@
-!./bin/test_2d_gc_curvilinear ../selalib/prototype/src/simulation/gcsim2d_curvilinear_input
-!gnuplot -persist ../selalib/prototype/src/simulation/gcsim2d_curvilinear.gnu
+!./bin/test_2d_gc_curvilinear ../selalib/src/simulation/gcsim2d_curvilinear_input
+!gnuplot -persist ../selalib/src/simulation/gcsim2d_curvilinear.gnu
 
 &geometry
     mesh_case ="SLL_COLLELA_MESH"
