@@ -67,7 +67,7 @@ cd build
 cmake -DCMAKE_BUILD_TYPE=Release                                    \
       -DSLL_PACKAGE=1                                               \
       -DCMAKE_INSTALL_PREFIX=<path where selalib will be installed> \
-      <the path of this directory>/prototype/src 
+      <the path of this directory>/src 
 make install
 
 selalib compilation, testing 

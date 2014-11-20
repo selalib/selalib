@@ -1,7 +1,7 @@
-!./bin/test_2d_vp_cartesian ../selalib/prototype/src/simulation/vpsim2d_cartesian_keen
+!./bin/test_2d_vp_cartesian ../selalib/src/simulation/vpsim2d_cartesian_keen
 !or
-!mpirun -np 8 ./bin/test_2d_vp_cartesian ../selalib/prototype/src/simulation/vpsim2d_cartesian_keen
-!gnuplot -persist ../selalib/prototype/src/simulation/vpsim2d_cartesian_keen.gnu
+!mpirun -np 8 ./bin/test_2d_vp_cartesian ../selalib/src/simulation/vpsim2d_cartesian_keen
+!gnuplot -persist ../selalib/src/simulation/vpsim2d_cartesian_keen.gnu
 
 &geometry
   mesh_case_x1 = "SLL_LANDAU_MESH"

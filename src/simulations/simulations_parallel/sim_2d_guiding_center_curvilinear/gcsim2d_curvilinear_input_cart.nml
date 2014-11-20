@@ -1,5 +1,5 @@
-!./bin/test_2d_gc_curvilinear ../selalib/prototype/src/simulation/gcsim2d_curvilinear_input_cart
-!gnuplot -persist ../selalib/prototype/src/simulation/gcsim2d_curvilinear_cart.gnu
+!./bin/test_2d_gc_curvilinear ../selalib/src/simulation/gcsim2d_curvilinear_input_cart
+!gnuplot -persist ../selalib/src/simulation/gcsim2d_curvilinear_cart.gnu
 
 &geometry
     mesh_case ="SLL_LANDAU_MESH"

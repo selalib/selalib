@@ -5,7 +5,7 @@
 ! in file Doxyfile.in (line 691) if it is excluded. 
 ! Type 'make doc' in build directory.
 ! To check the results, open : 
-! selalib/prototype/documentation/build/html/doxygen/html/defgroup time_solverss.html 
+! selalib/doc/build/html/doxygen/html/defgroup time_solverss.html 
 ! The following lines will be read by doxygen to generate documentation:
 
 

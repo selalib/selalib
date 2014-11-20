@@ -461,7 +461,7 @@ print*,'phi end ' , maxval(abs(f)),maxval(abs(plan_sl%phi))-maxval(abs(phi_Fouri
 end program cg_curvilinear_2D
 !
 !
-! !>files 'CG_data.dat'is included in directory selalib/prototype/src/simulation
+! !>files 'CG_data.dat'is included in directory selalib/src/simulation
   !>copy it in the same directory as the executable
 !  open(27,file='CG_Curvilinear_data.txt',action="read")
 !  read(27,*)eta1_min
