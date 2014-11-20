@@ -1,4 +1,4 @@
-SRCS_DIR = /Users/navaro/Codes/selalib/prototype/src/package/examples
+SRCS_DIR = /Users/navaro/Codes/selalib/src/package/examples
 SLL_ROOT = /Users/navaro/Codes/selalib/usr
 F90 = gfortran
 OPT = -g -Wall -ffree-line-length-none -fall-intrinsics -fbounds-check -fbacktrace -ffpe-trap=zero,overflow,underflow -O0
