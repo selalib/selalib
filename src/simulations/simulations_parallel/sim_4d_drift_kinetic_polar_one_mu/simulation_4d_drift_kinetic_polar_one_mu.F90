@@ -54,8 +54,6 @@ module sll_simulation_4d_drift_kinetic_polar_one_mu_module
   use sll_simulation_base
   use sll_fdistribu4D_DK
   use sll_cartesian_meshes
-  use polar_operators
-  use polar_advection
   use sll_reduction_module
   use sll_module_advection_2d_BSL
   use sll_module_characteristics_2d_explicit_euler
