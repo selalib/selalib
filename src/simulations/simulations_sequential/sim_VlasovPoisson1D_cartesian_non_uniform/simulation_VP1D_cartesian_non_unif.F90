@@ -8,7 +8,7 @@ module simulation_VP1D_cartesian_non_unif
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_field_2d.h"
+#include "sll_fields.h"
 
 
   use sll_simulation_base
