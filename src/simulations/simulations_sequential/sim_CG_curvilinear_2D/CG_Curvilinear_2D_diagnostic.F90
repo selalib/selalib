@@ -3,7 +3,7 @@ module module_diagnostic
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "selalib.h"
+#include "sll_fft.h"
 
    use module_cg_curvi_structure
    

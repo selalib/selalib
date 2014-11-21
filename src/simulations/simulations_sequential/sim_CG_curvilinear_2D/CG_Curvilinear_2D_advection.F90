@@ -2,7 +2,6 @@ module curvilinear_2D_advection
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "selalib.h"
 
  
   use module_cg_curvi_function
