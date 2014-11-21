@@ -1,11 +1,13 @@
 # Old library: Poisson solver on "Colella" curvilinear mesh, uses Mudpack
 ADD_LIBRARY( sll_mudpack_colella STATIC
              sll_mudpack_base.F90 sll_mudpack_colella.F90 )
-TARGET_LINK_LIBRARIES( sll_mudpack_colella sll_memory sll_assert mudpack )
+TARGET_LINK_LIBRARIES( sll_mudpack_colella
+                       sll_working_precision sll_memory sll_assert mudpack )
 
 # Executable: unit-test for library above
 ADD_EXECUTABLE( unit_test_mudpack_colella test_mudpack_colella.F90 )
-TARGET_LINK_LIBRARIES( unit_test_mudpack_colella sll_mudpack_colella )
+TARGET_LINK_LIBRARIES( unit_test_mudpack_colella
+                       sll_mudpack_colella sll_constants )
 
 # Executable: simulation
 ADD_EXECUTABLE( CG_Curvilinear_2D 
@@ -19,7 +21,9 @@ TARGET_LINK_LIBRARIES( CG_Curvilinear_2D
                        sll_poisson_solvers
                        sll_splines
                        sll_interpolators
-                       sll_mudpack_colella )
+                       sll_mudpack_colella
+                       sll_fft
+                       sll_utilities )
 
 # Installation of executables and other files
 set( INPUT_FILES CG_Curvilinear_data.txt          )

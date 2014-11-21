@@ -3,7 +3,8 @@ module module_cg_curvi_structure
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "selalib.h"
+#include "sll_splines.h"
+#include "sll_poisson_solvers.h"
 
 
 ! type sll_plan_adv_polar

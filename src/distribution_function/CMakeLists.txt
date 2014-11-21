@@ -12,8 +12,10 @@ ADD_LIBRARY(sll_distribution_function STATIC
                scalar_field_initializer_base.F90)
 
 TARGET_LINK_LIBRARIES(sll_distribution_function sll_coordinate_transformations
-                                                 sll_meshes
-                                                 sll_file_io)
+                                                sll_meshes
+                                                sll_file_io
+                                                sll_collective
+                                                sll_remap )
 
 ADD_EXECUTABLE(test_distribution_function unit_test.F90)
 
