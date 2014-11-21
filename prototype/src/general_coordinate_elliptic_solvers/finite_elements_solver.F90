@@ -12,10 +12,10 @@ module finite_elements_solver_module
   !      - for bidirectional: same number of cells
   !                            in each direction
   !      - probably only working on dirichlet BC
-  ! 
+  !
   ! Contact :  Aurore Back
   !            Laura S. Mendoza (mela@ipp.mpg.de)
-  !           
+  !
   !------------------------------------------------
 
   use sll_boundary_condition_descriptors
@@ -26,7 +26,7 @@ module finite_elements_solver_module
   use sll_knots
   use gauss_legendre_integration
   use gauss_lobatto_integration
-  use sll_timer 
+  use sll_timer
   use sll_sparse_matrix_module
   use sll_logical_meshes
 
@@ -37,9 +37,9 @@ module finite_elements_solver_module
      ! Associated mesh (contains : eta1min, eta1max, delta1, ...)
      type(sll_logical_mesh_2d),  pointer :: mesh
      ! Total number of cells, typically for cartesian meshes nc1*nc2
-     sll_int32 :: num_cells 
+     sll_int32 :: num_cells
 
-     ! Boundary conditions : THIS SHOULD BE CHANGED IN SLL AS A TYPE/LIST/... (?)
+     ! Boundary conditions: THIS SHOULD BE CHANGED IN SLL AS A TYPE/LIST/... (?)
      sll_int32 :: bc_left
      sll_int32 :: bc_right
      sll_int32 :: bc_bottom
@@ -72,12 +72,12 @@ module finite_elements_solver_module
      sll_int32, dimension(:), pointer :: global_spline_indices
      ! Local indexing of splines, independent of the mesh type
      sll_int32, dimension(:,:), pointer :: local_spline_indices
-     ! Same as global_spline_indices but including 
+     ! Same as global_spline_indices but including
      ! the changes resulting from the boundary conditions.
      sll_int32, dimension(:,:), pointer :: local_to_global_spline_indices
      sll_int32, dimension(:,:), pointer :: local_to_global_spline_indices_source
      sll_int32, dimension(:,:), pointer :: local_to_global_spline_indices_source_bis
-     ! The following tables contain the values of all non zero splines 
+     ! The following tables contain the values of all non zero splines
      ! in all quadrature points for the test function and source
      ! dim = (non_zero_splines, total_quadrature_points)
      ! value of basis functions on quadrature points
@@ -87,7 +87,7 @@ module finite_elements_solver_module
      ! value of basis of first direction * second direction derivative on quadrature pts
      sll_real64, dimension(:,:), pointer :: values_basis_val_der
      ! IDEM for source
-     sll_real64, dimension(:,:), pointer :: values_basis_source_val_val 
+     sll_real64, dimension(:,:), pointer :: values_basis_source_val_val
      sll_real64, dimension(:,:), pointer :: values_basis_source_der_val
      sll_real64, dimension(:,:), pointer :: values_basis_source_val_der
 
@@ -110,15 +110,15 @@ module finite_elements_solver_module
      sll_real64, dimension(:), pointer :: tmp_phi_vec
      sll_real64, dimension(:), pointer :: masse
      sll_real64, dimension(:), pointer :: stiff
-  
-     ! Integral of the jacobian. ie sum of weighted jacobians 
+
+     ! Integral of the jacobian. ie sum of weighted jacobians
      sll_real64 :: intjac
 
   end type finite_elements_solver
 
-  ! For the integration mode.  
+  ! For the integration mode.
   sll_int32, parameter :: ES_GAUSS_LEGENDRE = 0, ES_GAUSS_LOBATTO = 1, ES_USER = 2
-  
+
   interface sll_delete
      module procedure delete_solver
   end interface sll_delete
@@ -126,8 +126,8 @@ module finite_elements_solver_module
   interface initialize
      module procedure initialize_finite_elements_solver
   end interface initialize
-  
-  
+
+
 contains ! =============================================================
 
 
@@ -139,7 +139,7 @@ contains ! =============================================================
        bc_right, &
        bc_bottom, &
        bc_top ) result(solv)
-    
+
     type(finite_elements_solver),          pointer :: solv
     type(sll_logical_mesh_2d), intent(in), pointer :: mesh
     sll_int32,  intent(in) :: spline_degree
@@ -160,7 +160,7 @@ contains ! =============================================================
          bc_right, &
          bc_bottom, &
          bc_top)
-    
+
   end function new_finite_elements_solver
 
 
@@ -174,7 +174,7 @@ contains ! =============================================================
        bc_bottom, &
        bc_top, &
        user_qpts_weights)
-    
+
     type(finite_elements_solver), intent(out)         :: solv
     type(sll_logical_mesh_2d),    intent(in), pointer :: mesh
     sll_int32,  intent(in) :: spline_degree
@@ -192,7 +192,7 @@ contains ! =============================================================
     sll_int32  :: ierr
     sll_int32  :: num_quad_loc_1d
     ! Flag to notify is all boundary conditions are periodic
-    sll_int32 :: sll_perper = 0 
+    sll_int32 :: sll_perper = 0
 
     ! Logical mesh : contains information as : eta1min, eta1max, delta1, ...
     solv%mesh => mesh
@@ -210,7 +210,7 @@ contains ! =============================================================
     solv%bc_right  = bc_right
     solv%bc_bottom = bc_bottom
     solv%bc_top    = bc_top
-        
+
     ! Initialization the quadrature points/weights -----------------------------
     ! in both directions ------------------------------------------------- BEGIN
     num_quad_loc_1d = spline_degree+2
@@ -224,9 +224,9 @@ contains ! =============================================================
     solv%quad_pts1(:)   = 0.0_f64
     solv%quad_pts2(:)   = 0.0_f64
     solv%quad_weight(:) = 0.0_f64
-   
 
-    call initialize_quad_points_weights(solv, quadrature_type, num_quad_loc_1d, user_qpts_weights)
+    call initialize_quad_points_weights(solv, &
+         quadrature_type, num_quad_loc_1d, user_qpts_weights)
 
     !  ---------------------------------------------- END QUADRATURE POINTS INIT
     ! --------------------------------------------------------------------------
@@ -244,7 +244,7 @@ contains ! =============================================================
        vec_sz      = (mesh%num_cells1 + spline_degree) * &
             (mesh%num_cells2 + spline_degree)
     else
-       print *, "ERROR in initialize_finite_elements_solver():", & 
+       print *, "ERROR in initialize_finite_elements_solver():", &
             "Boundary conditions not yet implemented"
        STOP
     end if
@@ -260,7 +260,7 @@ contains ! =============================================================
          bc_left, &
          bc_right, &
          solv%knots1 )
-    
+
     call initialize_knots( &
          spline_degree, &
          mesh%num_cells2, &
@@ -292,25 +292,26 @@ contains ! =============================================================
     ! --------------------------------------------------------------------------
 
 
-    ! ------------------------------------------------------------------------------
-    ! BEGIN Allocation of basis functions value tables -----------------------------
+    ! --------------------------------------------------------------------------
+    ! BEGIN Allocation of basis functions value tables -------------------------
 
     ! Number of local splines :
     solv%num_splines_loc = (spline_degree+1)*(spline_degree+1)
-   
-    ! These tables contain the values of all the non-zero basis functions at 
+
+    ! These tables contain the values of all the non-zero basis functions at
     ! all the quadrature points of the domain.
     ! The val & der are here as we also need the derivatives on each direction
-    ! Dimensions = (num_splines_loc, num_quad_pts) = (non-zero-basis-funcions, total-quadrature-points)
+    ! Dimensions = (num_splines_loc, num_quad_pts) = (non-zero-basis-funcions,
+    ! total-quadrature-points)
     SLL_ALLOCATE(solv%values_basis_val_val(solv%num_splines_loc, solv%num_quad_pts), ierr)
     SLL_ALLOCATE(solv%values_basis_val_der(solv%num_splines_loc, solv%num_quad_pts), ierr)
     SLL_ALLOCATE(solv%values_basis_der_val(solv%num_splines_loc, solv%num_quad_pts), ierr)
     SLL_ALLOCATE(solv%values_basis_source_val_val(solv%num_splines_loc, solv%num_quad_pts), ierr)
     SLL_ALLOCATE(solv%values_basis_source_val_der(solv%num_splines_loc, solv%num_quad_pts), ierr)
     SLL_ALLOCATE(solv%values_basis_source_der_val(solv%num_splines_loc, solv%num_quad_pts), ierr)
-    SLL_ALLOCATE(solv%values_jacobian(solv%num_quad_pts), ierr)    
+    SLL_ALLOCATE(solv%values_jacobian(solv%num_quad_pts), ierr)
     SLL_ALLOCATE(solv%tab_index_coeff(solv%num_cells),ierr)
-    
+
     solv%values_basis_val_val(1:solv%num_splines_loc,1:solv%num_quad_pts) = 0.0_f64
     solv%values_basis_der_val(1:solv%num_splines_loc,1:solv%num_quad_pts) = 0.0_f64
     solv%values_basis_val_der(1:solv%num_splines_loc,1:solv%num_quad_pts) = 0.0_f64
@@ -319,7 +320,7 @@ contains ! =============================================================
     solv%values_basis_source_val_der(1:solv%num_splines_loc,1:solv%num_quad_pts) = 0.0_f64
     solv%values_jacobian(1:solv%num_quad_pts) = 0.0_f64
     solv%tab_index_coeff(1:solv%num_cells)  = -1
-   
+
     ! ------------------------------------------------ END ALLOCATION SPLINES TABLES
     ! ------------------------------------------------------------------------------
 
@@ -333,11 +334,11 @@ contains ! =============================================================
     num_splines2 = mesh%num_cells2 + spline_degree
     SLL_ALLOCATE(solv%global_spline_indices(num_splines1*num_splines2),ierr)
     solv%global_spline_indices(:) = 0
-    
+
     ! Local indexing of the splines 
     SLL_ALLOCATE(solv%local_spline_indices(solv%num_splines_loc,  solv%num_cells),ierr)
     solv%local_spline_indices(:,:) = 0
-    
+
     ! Connectivity between local and global indexing systems
     SLL_ALLOCATE(solv%local_to_global_spline_indices(solv%num_splines_loc, solv%num_cells), ierr)
     solv%local_to_global_spline_indices = 0
@@ -627,7 +628,7 @@ contains ! =============================================================
              print *, " WARNING : in initialize_basis_functions(...) flagy = ", mflag_y
              print *, "           quadrature point not in interval,  qpt2  = ", qpt2
           end if
-                    
+
           call bsplvd( &
                solv%knots2_source, &
                solv%spline_degree+1,&
@@ -636,13 +637,13 @@ contains ! =============================================================
                work2,&
                basis_deriv_x2_source,&
                2)
-          
+
           ! We stock the values of the basis functions
           do basis_index1 = 1, solv%spline_degree + 1
              do basis_index2 = 1, solv%spline_degree + 1
 
                 non_zero_index = basis_index1 + (solv%spline_degree + 1)*(basis_index2-1)
-                
+
                 solv%values_basis_val_val(non_zero_index, global_index) = &
                      basis_deriv_x1(basis_index1,1) * basis_deriv_x2(basis_index2,1)
 
@@ -652,7 +653,6 @@ contains ! =============================================================
                 solv%values_basis_val_der(non_zero_index, global_index) = &
                      basis_deriv_x1(basis_index1,1) * basis_deriv_x2(basis_index2,2)
 
-             
                 ! IDEM for source distribution
                 solv%values_basis_source_val_val(non_zero_index, global_index) = &
                      basis_deriv_x1_source(basis_index1,1) * basis_deriv_x2_source(basis_index2,1)
