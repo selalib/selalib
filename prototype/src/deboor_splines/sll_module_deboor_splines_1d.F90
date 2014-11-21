@@ -429,13 +429,12 @@ contains
     !    derivatives up to but not including the NDERIV-th are asked for.
     !
     implicit none
-    
+
     sll_int32 :: k
     sll_int32 :: left
     sll_int32 :: nderiv
-    
     sll_real64, dimension(k,k):: a!(k,k)
-    sll_real64,dimension(k,nderiv), intent(out) :: dbiatx!(k,nderiv)
+    sll_real64, dimension(k,nderiv), intent(out) :: dbiatx!(k,nderiv)
     sll_real64:: factor
     sll_real64:: fkp1mm
     sll_int32 :: i
@@ -450,14 +449,14 @@ contains
     !  sll_real64 sum1  ! this one is not used...
     sll_real64,dimension(left+k):: t ! (left+k)
     sll_real64:: x
-    
-    
+
+
     mhigh = max ( min ( nderiv, k ), 1 )
     !
     !  MHIGH is usually equal to NDERIV.
     !
     call bsplvb ( t, k+1-mhigh, 1, x, left, dbiatx )
-    
+
     if ( mhigh == 1 ) then
        return
     end if
