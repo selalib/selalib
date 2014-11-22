@@ -21,8 +21,8 @@ IF(PASTIX_FOUND)
   SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
   INCLUDE_DIRECTORIES(${PASTIX_INCLUDE_DIRS})
   ADD_LIBRARY(sll_sparse_matrix STATIC 
-              sll_sparse.F90
-              sll_pastix.F90
+                sll_sparse.F90
+                sll_pastix.F90
   	        sll_sparse_matrix_pastix_module.F90
 	        sll_sparse_matrix_mp_module.F90)
 
@@ -66,6 +66,9 @@ ENDIF()
 
 ADD_EXECUTABLE(test_sparse_matrix unit_test_sparse_matrix.F90)
 TARGET_LINK_LIBRARIES( test_sparse_matrix sll_sparse_matrix sll_collective)
+
+ADD_EXECUTABLE(test_csr_matrix unit_test_csr_matrix.F90)
+TARGET_LINK_LIBRARIES( test_csr_matrix sll_sparse_matrix dagmg_seq)
 
 ADD_LIBRARY(sll_csr_one_constraint STATIC sll_csr_one_constraint_module.F90)
 TARGET_LINK_LIBRARIES(sll_csr_one_constraint sll_utilities sll_memory)
