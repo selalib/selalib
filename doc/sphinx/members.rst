@@ -23,6 +23,7 @@ Post-Docs
 * `Aurore BACK (IEC Nancy) <https://sites.google.com/site/siteauroreback/>`_
 * `Morgane BERGOT (ICJ Lyon) <http://math.univ-lyon1.fr/~bergot/>`_
 * `Yaman GÜCLÜ (IPP Garching) <https://www.linkedin.com/pub/yaman-güçlü/70/805/852>`_
+* `Katharina KORMANN (IPP Garching) <http://www-m16.ma.tum.de/Allgemeines/KatharinaKormann>`_
 
 Ph.D. students
 -------------
