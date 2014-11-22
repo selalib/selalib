@@ -11,8 +11,10 @@ ADD_LIBRARY(lapack_agmg STATIC lapack_agmg.f)
 ADD_LIBRARY(mumps_agmg STATIC dagmg_mumps.f90)
 
 ADD_LIBRARY(dagmg_seq STATIC dagmg.f90 )
-ADD_EXECUTABLE(test_dagmg_seq Example_seq.f90)
-TARGET_LINK_LIBRARIES(test_dagmg_seq dagmg_seq mumps_agmg lapack_agmg blas_agmg)
+TARGET_LINK_LIBRARIES(dagmg_seq mumps_agmg lapack_agmg blas_agmg) 
+
+ADD_EXECUTABLE(test_dagmg_seq Example_seq.F90)
+TARGET_LINK_LIBRARIES(test_dagmg_seq dagmg_seq sll_working_precision)
 
 IF(MPI_MODULE_ENABLED)
 
@@ -28,7 +30,6 @@ IF(MPI_MODULE_ENABLED)
     $ENV{MUMPS_DIR}
     SUFFIXES lib
   )
-
 
   FIND_LIBRARY(DMUMPS_LIBRARY
     NAMES
@@ -54,6 +55,5 @@ IF(MPI_MODULE_ENABLED)
     TARGET_LINK_LIBRARIES(test_dagmg_par dagmg_par ${MUMPS_LIBRARIES} lapack_agmg blas_agmg)
     MARK_AS_ADVANCED(MUMPS_LIBRARIES)
   ENDIF(MUMPS_FOUND)
-
 
 ENDIF()
