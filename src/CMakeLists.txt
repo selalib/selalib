@@ -21,7 +21,8 @@ SET(HDF5_PARALLEL_ENABLED OFF CACHE BOOL "Use Parallel HDF5")
 SET(FFTW_ENABLED          ON  CACHE BOOL "Enable use of FFTW library")
 SET(PASTIX_ENABLED        OFF CACHE BOOL "Build PasTiX solvers ")
 SET(SUITESPARSE_ENABLED   OFF CACHE BOOL "Enable UMFpack solvers")
-SET(SLL_BUILD_PACKAGE     OFF CACHE BOOL "Build selalib package")
+SET(BUILD_SIMULATIONS     ON  CACHE BOOL "Build selalib simulations")
+SET(BUILD_PACKAGE         OFF CACHE BOOL "Build selalib package")
 
 FIND_PACKAGE(PythonInterp 3)
 SET(PYTHON3_FOUND FALSE)
@@ -86,10 +87,10 @@ ENDIF(PASTIX_ENABLED)
 
 # include's .h files
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
-IF(SLL_BUILD_PACKAGE)
+IF(BUILD_PACKAGE)
    SET(CMAKE_BUILD_TYPE Release
        CACHE STRING "Choose the type of build, options are: Debug Release." FORCE)
-ENDIF(SLL_BUILD_PACKAGE)
+ENDIF(BUILD_PACKAGE)
 
 MACRO(SLL_TEST _NAME)
    ADD_EXECUTABLE( test_${_NAME} "unit_test_${_NAME}.F90")
@@ -114,7 +115,7 @@ ADD_SUBDIRECTORY(fftpack)
 ADD_SUBDIRECTORY(mudpack)
 ADD_SUBDIRECTORY(fishpack)
 
-IF(NOT SLL_BUILD_PACKAGE)
+IF(NOT BUILD_PACKAGE)
 
    ENABLE_TESTING()
    
@@ -177,7 +178,6 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(fields_multipatch)
    ADD_SUBDIRECTORY(sparse_matrix_manager)
    ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers)
-   #PN : REMOVE MULTIPATCH BECAUSE SIMPLE VERSION NEEDS IMPROVEMENTS
    ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers_multipatch)
    ADD_SUBDIRECTORY(poisson_solvers)
 
@@ -192,22 +192,24 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(ode_solvers)
    ADD_SUBDIRECTORY(advection_field)
    ADD_SUBDIRECTORY(mesh_calculus)
-   ADD_SUBDIRECTORY(eulerian-finite-volume)
-
-   ADD_SUBDIRECTORY( simulations ) # reorganization of simulations
-
-   IF(BUILD_TESTING)
-      INCLUDE(SequentialTests)
-      IF(MPI_MODULE_ENABLED)
-         INCLUDE(ParallelTests)
-      ENDIF()
-   ENDIF()
 
 ELSE() # Packages generation
 
    MESSAGE(STATUS "SeLaLib will be installed in directory ${CMAKE_INSTALL_PREFIX}")
 
-ENDIF(NOT SLL_BUILD_PACKAGE)
+ENDIF(NOT BUILD_PACKAGE)
+
+IF(BUILD_SIMULATIONS)
+   SET(INSTALL_PREFIX_SIMS "${CMAKE_INSTALL_PREFIX}/simulations" CACHE BOOL "simulations install dir")
+   ADD_SUBDIRECTORY( simulations ) # reorganization of simulations
+   ADD_SUBDIRECTORY(eulerian-finite-volume)
+   IF(NOT BUILD_PACKAGE AND BUILD_TESTING)
+      INCLUDE(SequentialTests)
+      IF(MPI_MODULE_ENABLED)
+         INCLUDE(ParallelTests)
+      ENDIF()
+   ENDIF()
+ENDIF(BUILD_SIMULATIONS)
 
 MESSAGE(STATUS "############################################################")
 MESSAGE(STATUS "####")
