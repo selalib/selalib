@@ -755,6 +755,7 @@ function interpolate_value_ad2d( interpolator, eta1, eta2 ) result(val)
   size_coeffs1 = interpolator%size_coeffs1
   size_coeffs2 = interpolator%size_coeffs2
 
+  !SHOULD BE DONE IN ADVECTION
   if ( interpolator%bc_w == SLL_PERIODIC .and. eta1 < interpolator%eta1_min) then
     res1 = eta1 + interpolator%eta1_max - interpolator%eta1_min
   else if ( interpolator%bc_e == SLL_PERIODIC .and. eta1 > interpolator%eta1_max) then
