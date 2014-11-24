@@ -52,7 +52,7 @@ type, public :: general_coordinate_elliptic_solver
   ! the following is otherwise known as "ID" in Aurore Back's original
   ! nomenclature. The indexing of the
   ! splines in this array depends on the boundary conditions.
-  sll_int32, dimension(:), pointer :: global_spline_indices 
+  sll_int32, dimension(:), pointer, public :: global_spline_indices 
   ! the following is otherwise known as "IEN"
   sll_int32, dimension(:,:), pointer :: local_spline_indices
   ! the following is otherwise known as "LM". Same as global_spline_indices
