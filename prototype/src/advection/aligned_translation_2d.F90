@@ -83,6 +83,9 @@ implicit none
   sll_int32 :: IO_stat
   sll_int32, parameter  :: input_file = 99
   sll_int32 :: i
+  sll_real64 :: err0
+  sll_real64 :: err1
+  sll_real64 :: err2
   
   ! namelists for data input
   namelist /params/ &
@@ -108,6 +111,11 @@ implicit none
   dt = 0.1_f64
   nb_step = 10  
   d = 5
+  x1_min = 0._f64
+  x1_max = 1._f64
+  x2_min = 0._f64
+  x2_max = 1._f64
+  
   
   A1_0 = 3._f64
   A2_0 = 7._f64  ! we should assume A2>A1>=0
@@ -173,13 +181,23 @@ implicit none
 !    LAGRANGE, & 
     SPLINE, & 
     4) 
+!  adv_x2 => new_periodic_1d_advector( &
+!    Nc_x2, &
+!    x2_min, &
+!    x2_max, &
+!!    LAGRANGE, & 
+!    SPLINE, & 
+!    4) 
+
   adv_x2 => new_periodic_1d_advector( &
     Nc_x2, &
     x2_min, &
     x2_max, &
-!    LAGRANGE, & 
-    SPLINE, & 
-    4) 
+    LAGRANGE, & 
+    d+1)
+!    SPLINE, & 
+!    4) 
+
   
   do i2=1,Nc_x2+1
     x2 = x2_min+real(i2-1,f64)*delta_x2
@@ -192,6 +210,8 @@ implicit none
       f_exact(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64)*(-A2_0*x1+A1_0*x2))
     enddo
   enddo
+  
+  print *,'#error fexact-finit=',maxval(f_exact-f_init)
   
   !classical method with splitting  
   f = f_init    
@@ -208,6 +228,7 @@ implicit none
     enddo          
   enddo  
   err = maxval(abs(f-f_exact))  
+  err0 = err
   print *,'#err for classical method=',err
 
 
@@ -229,6 +250,27 @@ implicit none
 !        sim%num_dof_x2_light, &
 !        'light_f', time_init )        
 #endif
+
+
+#ifndef NOHDF5
+      call plot_f_cartesian( &
+        0, &
+        f-f_exact, &
+        x1_array, &
+        Nc_x1+1, &
+        x2_array, &
+        Nc_x2+1, &
+        'errorf_classic', 0._f64 )        
+!      call plot_f_cartesian( &
+!        iplot, &
+!        f_visu_light, &
+!        sim%x1_array_light, &
+!        np_x1_light, &
+!        node_positions_x2_light, &
+!        sim%num_dof_x2_light, &
+!        'light_f', time_init )        
+#endif
+
 
   
   
@@ -260,6 +302,7 @@ implicit none
     f = f_new
   enddo
   err = maxval(abs(f-f_exact))
+  err1=err
   print *,'#err with new method=',err
 
   !new method using oblic advector
@@ -286,9 +329,10 @@ implicit none
     f = f_new      
   enddo  
   err = maxval(abs(f-f_exact))
+  err2=err
   print *,'#err with new method using oblic advector=',err
   
-  
+  print *,Nc_x1,Nc_x2,d,dt,nb_step,k_mode,A1,A2,A1_0,A2_0,err0,err1,err2
 
 #ifndef NOHDF5
       call plot_f_cartesian( &
@@ -308,6 +352,26 @@ implicit none
 !        sim%num_dof_x2_light, &
 !        'light_f', time_init )        
 #endif
+
+#ifndef NOHDF5
+      call plot_f_cartesian( &
+        0, &
+        f-f_exact, &
+        x1_array, &
+        Nc_x1+1, &
+        x2_array, &
+        Nc_x2+1, &
+        'errorf_new', 0._f64 )        
+!      call plot_f_cartesian( &
+!        iplot, &
+!        f_visu_light, &
+!        sim%x1_array_light, &
+!        np_x1_light, &
+!        node_positions_x2_light, &
+!        sim%num_dof_x2_light, &
+!        'light_f', time_init )        
+#endif
+
  
   
   
