@@ -105,24 +105,24 @@ implicit none
   
   
   
-  poisson => new_poisson_2d_curvilinear( &
-    spline_degree1, &
-    spline_degree2, &
-    num_cells1, &
-    num_cells2, &
-    POISSON_GAUSS_LEGENDRE, &
-    POISSON_GAUSS_LEGENDRE, &
-    bc_left, &
-    bc_right, &
-    bc_bottom, &
-    bc_top, &
-    eta1_min, &
-    eta1_max, &
-    eta2_min, &
-    eta2_max )
-  
-  print *,poisson%knot_size1
-  print *,poisson%knot_size2
+!  poisson => new_poisson_2d_curvilinear( &
+!    spline_degree1, &
+!    spline_degree2, &
+!    num_cells1, &
+!    num_cells2, &
+!    POISSON_GAUSS_LEGENDRE, &
+!    POISSON_GAUSS_LEGENDRE, &
+!    bc_left, &
+!    bc_right, &
+!    bc_bottom, &
+!    bc_top, &
+!    eta1_min, &
+!    eta1_max, &
+!    eta2_min, &
+!    eta2_max )
+!  
+!  print *,poisson%knot_size1
+!  print *,poisson%knot_size2
 
 !  poisson_gen => new_general_elliptic_solver( &
 !    spline_degree1, &
