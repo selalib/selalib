@@ -11,6 +11,7 @@ use gauss_legendre_integration
 use gauss_lobatto_integration
 use sll_boundary_condition_descriptors
 use sll_sparse_matrix_module
+use sll_module_deboor_splines_1d
 
 implicit none
 
