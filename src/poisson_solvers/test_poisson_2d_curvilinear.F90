@@ -31,14 +31,14 @@ implicit none
   type(general_coordinate_elliptic_solver), pointer :: poisson_gen
   sll_int32 :: num_cells1
   sll_int32 :: num_cells2
-  character(len=256) :: bc_left_str
-  character(len=256) :: bc_right_str
-  character(len=256) :: bc_bottom_str
-  character(len=256) :: bc_top_str
-  sll_int32 :: bc_left
-  sll_int32 :: bc_right
-  sll_int32 :: bc_bottom
-  sll_int32 :: bc_top
+  character(len=256) :: bc_min1_str
+  character(len=256) :: bc_max1_str
+  character(len=256) :: bc_min2_str
+  character(len=256) :: bc_max2_str
+  sll_int32 :: bc_min1
+  sll_int32 :: bc_max1
+  sll_int32 :: bc_min2
+  sll_int32 :: bc_max2
   sll_real64 :: eta1_min
   sll_real64 :: eta1_max
   sll_real64 :: eta2_min
@@ -54,10 +54,10 @@ implicit none
   namelist /params/ &
     num_cells1, &
     num_cells2, &
-    bc_left_str, &
-    bc_right_str, &
-    bc_bottom_str, &
-    bc_top_str, &
+    bc_min1_str, &
+    bc_max1_str, &
+    bc_min2_str, &
+    bc_max2_str, &
     eta1_min, &
     eta1_max, &
     eta2_min, &
@@ -68,10 +68,10 @@ implicit none
   
   num_cells1 = 128
   num_cells2 = 128
-  bc_left_str = "SLL_DIRICHLET"
-  bc_right_str = "SLL_DIRICHLET"
-  bc_bottom_str = "SLL_DIRICHLET"
-  bc_top_str = "SLL_DIRICHLET"
+  bc_min1_str = "SLL_DIRICHLET"
+  bc_max1_str = "SLL_DIRICHLET"
+  bc_min2_str = "SLL_DIRICHLET"
+  bc_max2_str = "SLL_DIRICHLET"
   eta1_min = 0._f64
   eta1_max = 1._f64
   eta2_min = 0._f64
@@ -98,31 +98,48 @@ implicit none
   endif
 
   
-  bc_left = boundary_condition(bc_left_str)
-  bc_right = boundary_condition(bc_right_str)
-  bc_top = boundary_condition(bc_top_str)
-  bc_bottom = boundary_condition(bc_bottom_str)
-  
-  
+  bc_min1 = boundary_condition(bc_min1_str)
+  bc_max1 = boundary_condition(bc_max1_str)
+  bc_min2 = boundary_condition(bc_min2_str)
+  bc_max2 = boundary_condition(bc_max2_str)
   
   poisson => new_poisson_2d_curvilinear( &
     spline_degree1, &
     spline_degree2, &
     num_cells1, &
-    num_cells2, &
-    POISSON_GAUSS_LEGENDRE, &
-    POISSON_GAUSS_LEGENDRE, &
-    bc_left, &
-    bc_right, &
-    bc_bottom, &
-    bc_top, &
+    num_cells2, &  
+    bc_min1, &
+    bc_max1, &
+    bc_min2, &
+    bc_max2, &
     eta1_min, &
     eta1_max, &
     eta2_min, &
-    eta2_max )
+    eta2_max, &
+    quadrature_type1=POISSON_GAUSS_LEGENDRE, &
+    quadrature_type2=POISSON_GAUSS_LEGENDRE, &
+    num_quadrature_points1=spline_degree1+2, &
+    num_quadrature_points2=spline_degree1+2 )
   
-  print *,poisson%knot_size1
-  print *,poisson%knot_size2
+  
+!  poisson => new_poisson_2d_curvilinear( &
+!    spline_degree1, &
+!    spline_degree2, &
+!    num_cells1, &
+!    num_cells2, &
+!    POISSON_GAUSS_LEGENDRE, &
+!    POISSON_GAUSS_LEGENDRE, &
+!    bc_left, &
+!    bc_right, &
+!    bc_bottom, &
+!    bc_top, &
+!    eta1_min, &
+!    eta1_max, &
+!    eta2_min, &
+!    eta2_max )
+!  
+!  print *,poisson%knot_size1
+!  print *,poisson%knot_size2
 
 !  poisson_gen => new_general_elliptic_solver( &
 !    spline_degree1, &
@@ -166,5 +183,6 @@ contains
   
 
 end program
+
 
 
