@@ -56,7 +56,7 @@
 
 # ADD_TEST(NAME poisson_3d_periodic_seq COMMAND test_poisson_3d_periodic_seq)
 # SET_TESTS_PROPERTIES(poisson_3d_periodic_seq 
-                       PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+#                       PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 # ADD_TEST(NAME advection_field COMMAND test_advection_field)
 # ADD_TEST(NAME coordinate_transformations COMMAND test_coordinate_transformations_2d)
