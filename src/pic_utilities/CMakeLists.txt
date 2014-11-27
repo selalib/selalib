@@ -29,3 +29,7 @@ target_link_libraries( test_particle_sort_2d
 		       sll_pic_utilities
 		       sll_pic_particles
 		       sll_meshes      )
+
+# Ctest
+ADD_TEST( NAME pic_particle_sort COMMAND test_particle_sort_2d )
+SET_TESTS_PROPERTIES( pic_particle_sort PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
