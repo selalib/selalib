@@ -110,13 +110,13 @@ ENDIF(PYTHON3_FOUND)
    ADD_TEST(NAME gyroaverage_polar_splines COMMAND test_gyroaverage_2d_polar_splines)
    ADD_TEST(NAME gyroaverage_polar_pade COMMAND test_gyroaverage_2d_polar_pade)
    
-   SET(ARGS ${CMAKE_BINARY_DIR}/gcsim2d_cartesian_input)
-   ADD_TEST(NAME sim2d_gc_cart COMMAND test_2d_gc_cartesian ${ARGS})
-   SET_TESTS_PROPERTIES(sim2d_gc_cart PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-   
-   SET(ARGS ${CMAKE_BINARY_DIR}/gcsim2d_polar_input)
-   ADD_TEST(NAME sim2d_gc_polar COMMAND test_2d_gc_polar ${ARGS})
-   SET_TESTS_PROPERTIES(sim2d_gc_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+#   SET(ARGS ${CMAKE_BINARY_DIR}/gcsim2d_cartesian_input)
+#   ADD_TEST(NAME sim2d_gc_cart COMMAND test_2d_gc_cartesian ${ARGS})
+#   SET_TESTS_PROPERTIES(sim2d_gc_cart PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+#   
+#   SET(ARGS ${CMAKE_BINARY_DIR}/gcsim2d_polar_input)
+#   ADD_TEST(NAME sim2d_gc_polar COMMAND test_2d_gc_polar ${ARGS})
+#   SET_TESTS_PROPERTIES(sim2d_gc_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 
    SET_TESTS_PROPERTIES(coordinate_transformations PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
