@@ -194,8 +194,9 @@ IF(BUILD_PACKAGE)
 ENDIF(BUILD_PACKAGE)
 
 IF(BUILD_SIMULATIONS)
-   SET(INSTALL_PREFIX_SIMS "${CMAKE_INSTALL_PREFIX}/simulations" CACHE BOOL "simulations install dir")
-   ADD_SUBDIRECTORY( simulations ) # reorganization of simulations
+   SET(CMAKE_INSTALL_PREFIX_SIMS "${CMAKE_SOURCE_DIR}/../usr" 
+       CACHE PATH "simulations install dir")
+   ADD_SUBDIRECTORY(simulations) # reorganization of simulations
    ADD_SUBDIRECTORY(eulerian-finite-volume)
    IF(NOT BUILD_PACKAGE AND BUILD_TESTING)
       INCLUDE(SequentialTests)
