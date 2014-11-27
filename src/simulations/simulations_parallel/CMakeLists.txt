@@ -1,6 +1,7 @@
 #############################################################################
 ###      Parallel simulations
 #############################################################################
+SET(PROCS 4 CACHE STRING "Number of processors used for parallel tests" )
 
 IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
 
