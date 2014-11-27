@@ -49,6 +49,8 @@ implicit none
   character(len=256) :: filename
   sll_int32 :: IO_stat
   sll_int32 :: params_id
+  sll_int32 :: bc_knots1
+  sll_int32 :: bc_knots2
 
 
   namelist /params/ &
@@ -102,7 +104,17 @@ implicit none
   bc_max1 = boundary_condition(bc_max1_str)
   bc_min2 = boundary_condition(bc_min2_str)
   bc_max2 = boundary_condition(bc_max2_str)
-  
+
+  if(bc_min1==SLL_PERIODIC)then
+    bc_knots1 = SLL_POISSON_PERIODIC_KNOTS
+  else
+    bc_knots1 = SLL_POISSON_OPEN_KNOTS      
+  endif
+  if(bc_min2==SLL_PERIODIC)then
+    bc_knots2 = SLL_POISSON_PERIODIC_KNOTS
+  else
+    bc_knots2 = SLL_POISSON_OPEN_KNOTS      
+  endif
   poisson => new_poisson_2d_curvilinear( &
     spline_degree1, &
     spline_degree2, &
@@ -119,8 +131,12 @@ implicit none
     quadrature_type1=POISSON_GAUSS_LEGENDRE, &
     quadrature_type2=POISSON_GAUSS_LEGENDRE, &
     num_quadrature_points1=spline_degree1+2, &
-    num_quadrature_points2=spline_degree1+2 )
-  
+    num_quadrature_points2=spline_degree1+2, &
+    bc_knots_min1 = bc_knots1, &
+    bc_knots_max1 = bc_knots1, &
+    bc_knots_min2 = bc_knots2, &
+    bc_knots_max2 = bc_knots2 )
+
   
 !  poisson => new_poisson_2d_curvilinear( &
 !    spline_degree1, &
