@@ -265,12 +265,12 @@ subroutine initialize_csr_matrix_with_constraint( mat, mat_a)
 
   mat%num_nz = mat_a%num_nz + 2*mat_a%num_rows       
   print*,'num_nz mat, num_nz mat_tot', mat_a%num_nz,mat%num_nz 
-  mat%num_rows = mat_a%num_rows  !+  1
+  mat%num_rows = mat_a%num_rows  +  1
   print*,'num_rows mat, num_rows mat_tot',mat_a%num_rows , mat%num_rows
-  mat%num_cols = mat_a%num_cols  !+  1
+  mat%num_cols = mat_a%num_cols  +  1
   print*,'num_cols mat, num_cols mat_tot',mat_a%num_cols , mat%num_cols 
 
-  SLL_ALLOCATE(mat%opi_ia(mat%num_rows),ierr)
+  SLL_ALLOCATE(mat%opi_ia(mat%num_rows+1),ierr)
   SLL_ALLOCATE(mat%opi_ja(mat%num_nz),ierr)
   SLL_CLEAR_ALLOCATE(mat%opr_a(1:mat%num_nz),ierr)
 
@@ -287,96 +287,99 @@ function new_csr_matrix_with_constraint(mat_a) result(mat)
 
 end function new_csr_matrix_with_constraint
 
-subroutine csr_add_one_constraint( &
-  ia_in,                           &
-  ja_in,                           &
-  a_in,                            &
-  num_rows_in,                     &
-  num_nz_in,                       &
-  constraint_vec,                  &
-  ia_out,                          &
-  ja_out,                          &
-  a_out)
 
-  sll_int32,  dimension(:), intent(in)  :: ia_in  
-  sll_int32,  dimension(:), intent(in)  :: ja_in  
-  sll_real64, dimension(:), intent(in)  :: a_in
-  sll_int32,                intent(in)  :: num_rows_in
-  sll_int32,                intent(in)  :: num_nz_in
-  sll_real64, dimension(:), intent(in)  :: constraint_vec
-  sll_int32,  dimension(:), intent(out) :: ia_out
-  sll_int32,  dimension(:), intent(out) :: ja_out
-  sll_real64, dimension(:), intent(out) :: a_out
-
-
-  sll_int32 :: num_rows_out
-  sll_int32 :: num_nz_out
-  sll_int32 :: i
-  sll_int32 :: s
-  sll_int32 :: k
+  subroutine sll_factorize_csr_matrix(mat)
+    type(sll_csr_matrix), intent(inout) :: mat
     
-  num_rows_out = num_rows_in!+1
-  num_nz_out = num_nz_in+2*num_rows_in
+    print *,'#sll_factorize_csr_matrix does nothing here'
     
-  if(size(ia_in)<num_rows_in) then
-    print *, '#problem of size of ia_in', size(ia_in),num_rows_in!+1
-    stop
-  endif
-  if(size(ja_in)<num_nz_in) then
-    print *, '#problem of size of ja_in', size(ja_in),num_nz_in
-    stop
-  endif
-  if(size(a_in)<num_nz_in) then
-    print *, '#problem of size of a_in', size(a_in),num_nz_in
-    stop
-  endif
-  if(size(ia_out)<num_rows_out) then
-    print *, '#problem of size of ia_out', size(ia_out),num_rows_out!+1
-    stop
-  endif
-  if(size(ja_out)<num_nz_out) then
-    print *, '#problem of size of ja_out', size(ja_out),num_nz_out
-    stop
-  endif
-  if(size(a_out)<num_nz_out) then
-    print *, '#problem of size of a_out', size(a_out),num_nz_out
-    stop
-  endif
-  if(ia_in(num_rows_in).ne.num_nz_in)then
-    print *,'#bad value of ia_in(num_rows_in+1)', ia_in(num_rows_in),num_nz_in!+1
-    stop
-  endif
-  
-  s = 1
-  do i=1,num_rows_in
-    ia_out(i) = s
-    do k = ia_in(i), ia_in(i+1)-1
-      a_out(s) = a_in(k)
-      ja_out(s) = ja_in(k)
+  end subroutine sll_factorize_csr_matrix
+
+
+  subroutine csr_add_one_constraint( &
+    ia_in, &
+    ja_in, &
+    a_in, &
+    num_rows_in, &
+    num_nz_in, &
+    constraint_vec, &
+    ia_out, &
+    ja_out, &
+    a_out)
+    integer, dimension(:), intent(in) :: ia_in  
+    integer, dimension(:), intent(in) :: ja_in  
+    real(8), dimension(:), intent(in) :: a_in
+    integer, intent(in) :: num_rows_in
+    integer, intent(in) :: num_nz_in
+    real(8), dimension(:), intent(in) :: constraint_vec
+    integer, dimension(:), intent(out) :: ia_out
+    integer, dimension(:), intent(out) :: ja_out
+    real(8), dimension(:), intent(out) :: a_out
+    integer :: num_rows_out
+    integer :: num_nz_out
+    integer :: i
+    integer :: s
+    integer :: k
+    
+    
+    num_rows_out = num_rows_in+1
+    num_nz_out = num_nz_in+2*num_rows_in
+    
+    if(size(ia_in)<num_rows_in+1) then
+      print *, '#problem of size of ia_in', size(ia_in),num_rows_in+1
+      stop
+    endif
+    if(size(ja_in)<num_nz_in) then
+      print *, '#problem of size of ja_in', size(ja_in),num_nz_in
+      stop
+    endif
+    if(size(a_in)<num_nz_in) then
+      print *, '#problem of size of a_in', size(a_in),num_nz_in
+      stop
+    endif
+    if(size(ia_out)<num_rows_out+1) then
+      print *, '#problem of size of ia_out', size(ia_out),num_rows_out+1
+      stop
+    endif
+    if(size(ja_out)<num_nz_out) then
+      print *, '#problem of size of ja_out', size(ja_out),num_nz_out
+      stop
+    endif
+    if(size(a_out)<num_nz_out) then
+      print *, '#problem of size of a_out', size(a_out),num_nz_out
+      stop
+    endif
+    if(ia_in(num_rows_in+1).ne.num_nz_in+1)then
+      print *,'#bad value of ia_in(num_rows_in+1)', ia_in(num_rows_in+1),num_nz_in+1
+      stop
+    endif
+    
+    s = 1
+    do i=1,num_rows_in
+      ia_out(i) = s
+      do k = ia_in(i), ia_in(i+1)-1
+        a_out(s) = a_in(k)
+        ja_out(s) = ja_in(k)
+        s = s+1
+      enddo
+      a_out(s) = constraint_vec(i)
+      ja_out(s) = num_rows_out
       s = s+1
     enddo
-    a_out(s) = constraint_vec(i)
-    ja_out(s) = num_rows_out
-    s = s+1
-  enddo
-
-  ia_out(num_rows_in+1) = s
-
-  do i=1,num_rows_in
-    a_out(s) = constraint_vec(i)
-    ja_out(s) = i
-    s = s+1      
-  enddo
-
-  ia_out(num_rows_in+2) = s
-   
-  if(ia_out(num_rows_out+1).ne.num_nz_out+1)then
-    print *,'#bad value of ia_out(num_rows_out+1)', &
-      ia_out(num_rows_out+1),num_nz_out+1
-    stop
-  endif
-  
-end subroutine csr_add_one_constraint
+    ia_out(num_rows_in+1) = s
+    do i=1,num_rows_in
+      a_out(s) = constraint_vec(i)
+      ja_out(s) = i
+      s = s+1      
+    enddo
+    ia_out(num_rows_in+2) = s
+     
+    if(ia_out(num_rows_out+1).ne.num_nz_out+1)then
+      print *,'#bad value of ia_out(num_rows_out+1)',ia_out(num_rows_out+1),num_nz_out+1
+      stop
+    endif
+    
+  end subroutine csr_add_one_constraint
   
 subroutine sll_mult_csr_matrix_vector(mat, input, output)
     
