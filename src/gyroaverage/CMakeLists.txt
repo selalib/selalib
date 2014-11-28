@@ -41,3 +41,12 @@
   TARGET_LINK_LIBRARIES(
     test_gyroaverage_2d_polar_pade
     sll_gyroaverage)
+
+# Ctests
+ADD_TEST( NAME gyroaverage_polar_hermite COMMAND test_gyroaverage_2d_polar_hermite )
+ADD_TEST( NAME gyroaverage_polar_splines COMMAND test_gyroaverage_2d_polar_splines )
+ADD_TEST( NAME gyroaverage_polar_pade    COMMAND test_gyroaverage_2d_polar_pade    )
+
+SET_TESTS_PROPERTIES( gyroaverage_polar_hermite PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+SET_TESTS_PROPERTIES( gyroaverage_polar_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+SET_TESTS_PROPERTIES( gyroaverage_polar_pade    PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )

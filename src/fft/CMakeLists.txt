@@ -29,3 +29,6 @@ TARGET_LINK_LIBRARIES( sll_fft ${DEPENDENCIES}
 ADD_EXECUTABLE(test_fft unit_test.F90)
 
 TARGET_LINK_LIBRARIES(test_fft sll_fft)
+
+# Ctest
+ADD_TEST( NAME fft COMMAND test_fft )
