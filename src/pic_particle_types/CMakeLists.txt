@@ -14,3 +14,6 @@ TARGET_LINK_LIBRARIES(test_pic_particles
   sll_pic_particles
   sll_assert )
 
+# Ctest
+ADD_TEST( NAME pic_particles COMMAND test_pic_particles )
+SET_TESTS_PROPERTIES( pic_particles PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
