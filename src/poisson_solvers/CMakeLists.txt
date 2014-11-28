@@ -78,8 +78,7 @@ ADD_EXECUTABLE(test_poisson_2d_fem sll_poisson_2d_fem.F90
 TARGET_LINK_LIBRARIES(test_poisson_2d_fem sll_memory ${LAPACK_LIBRARIES})
 
 ADD_EXECUTABLE(test_fishpack test_fishpack.F90)
-TARGET_LINK_LIBRARIES( test_fishpack sll_poisson_solvers)
-
+TARGET_LINK_LIBRARIES( test_fishpack sll_poisson_solvers) 
 ### BEGIN MACRO
 
 MACRO(ADD_MUDPACK_PROGRAM TEST_NAME) 
@@ -108,8 +107,16 @@ ADD_EXECUTABLE( test_hex_poisson pivotbande.F90 test_hex_poisson.F90 )
 
 TARGET_LINK_LIBRARIES( test_hex_poisson hex_poisson sll_constants )
 
-# Ctest
+# Ctests
 ADD_TEST( NAME poisson_solvers         COMMAND test_poisson_1d              )
 ADD_TEST( NAME poisson_3d_periodic_seq COMMAND test_poisson_3d_periodic_seq )
-
 SET_TESTS_PROPERTIES( poisson_3d_periodic_seq PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+
+IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL AND FFT_LIB MATCHES "SLLFFT")
+  SET( ARGS " " )
+  ADD_MPI_TEST( poisson_3d_periodic_par test_poisson_3d_periodic_par ${PROCS} ${ARGS} ) 
+  ADD_MPI_TEST( poisson_per_cart_par_2d test_poisson_2d_per_cart_par ${PROCS} ${ARGS} ) 
+  SET_TESTS_PROPERTIES( poisson_3d_periodic_par PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+  SET_TESTS_PROPERTIES( poisson_per_cart_par_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+ENDIF()
+

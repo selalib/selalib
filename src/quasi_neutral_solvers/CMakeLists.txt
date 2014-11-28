@@ -48,3 +48,20 @@
 
 #ENDIF()
 
+# Ctests
+IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL AND FFT_LIB MATCHES "SLLFFT")
+  SET( ARGS " " )
+  ADD_MPI_TEST( qns2d_parallel
+    test_qn_solver_2d_parallel ${PROCS} ${ARGS} )
+  ADD_MPI_TEST( qns3d_polar_parallel_x1
+    test_qn_solver_3d_polar_parallel_x1 ${PROCS} ${ARGS} )
+  ADD_MPI_TEST( qns3d_polar_parallel_x1_wrapper
+    test_qn_solver_3d_polar_parallel_x1_wrapper ${PROCS} ${ARGS} )
+  SET_TESTS_PROPERTIES( qns2d_parallel
+    PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+  SET_TESTS_PROPERTIES( qns3d_polar_parallel_x1
+    PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+  SET_TESTS_PROPERTIES( qns3d_polar_parallel_x1_wrapper
+    PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+ENDIF()
+

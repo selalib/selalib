@@ -23,3 +23,11 @@ IF(MPI_MODULE_ENABLED)
                          sll_parallel_array_initializers )
 
 ENDIF(MPI_MODULE_ENABLED)
+
+# Ctest
+IF(PROCESSOR_COUNT GREATER 1)
+  SET( ARGS " " )
+  ADD_MPI_TEST( parallel_array_initializers test_parallel_array_initializer ${PROCS} ${ARGS} )
+  SET_TESTS_PROPERTIES( parallel_array_initializers PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+ENDIF(PROCESSOR_COUNT GREATER 1)
+
