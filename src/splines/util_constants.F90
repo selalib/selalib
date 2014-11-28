@@ -34,4 +34,4 @@ module util_constants
 
 end module util_constants
 
-#endif // DOXYGEN_SHOULD_SKIP_THIS
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

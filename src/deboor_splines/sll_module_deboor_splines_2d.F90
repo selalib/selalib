@@ -52,10 +52,10 @@ subroutine bvalue2d( x,       &
        
     lpr_coef(j) = bvalue(tx,                     &
                          bcoef(1:nx,lefty-ky+j), &
-                               nx,               &
-                               kx,               &
-                               x,                &
-                               0 )
+                         nx,                     &
+                         kx,                     &
+                         x,                      &
+                         0 )
        
   end do
    
@@ -98,7 +98,7 @@ function dvalue2d( x,      &
   sll_int32  :: lflag
   sll_int32  :: lefty
 
-  sll_real64, dimension (1:ky),target:: lpr_coef ! ky
+  sll_real64, dimension (1:ky) :: lpr_coef ! ky
     
   call interv( ty, ny + ky, y, lefty, lflag)
     
@@ -118,6 +118,8 @@ function dvalue2d( x,      &
        
   end do
 
+  SLL_ASSERT(lefty-ky+1 >= 1)
+  SLL_ASSERT(lefty+ky   <= ny+ky)
   dvalue2d = bvalue( ty(lefty-ky+1:lefty+ky), &
                      lpr_coef,                &
                      ky,                      &
