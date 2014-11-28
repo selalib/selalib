@@ -54,14 +54,12 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
       
       # SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim4d_input.txt)
       # ADD_MPI_TEST(vp4d_sim test_4d ${PROCS} ${ARGS})
-      # SET_TESTS_PROPERTIES(vp4d_sim PROPERTIES 
-      # PASS_REGULAR_EXPRESSION "PASSED")
+      # SET_TESTS_PROPERTIES(vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
       
-      SET(ARGS ${CMAKE_BINARY_DIR}/vpsim4d_general_input.nml)
-      ADD_MPI_TEST(vp4d_sim_general test_4d_vp_general ${PROCS} ${ARGS})
-
-      SET_TESTS_PROPERTIES(vp4d_sim_general PROPERTIES 
-	PASS_REGULAR_EXPRESSION "PASSED")
+      # SET(ARGS ${CMAKE_BINARY_DIR}/vpsim4d_general_input.nml)
+      # ADD_MPI_TEST(vp4d_sim_general test_4d_vp_general ${PROCS} ${ARGS})
+      # SET_TESTS_PROPERTIES(vp4d_sim_general PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+      
       ADD_MPI_TEST(qns2d_parallel test_qn_solver_2d_parallel ${PROCS} 
 	${ARGS})
       SET_TESTS_PROPERTIES(qns2d_parallel PROPERTIES 
@@ -81,44 +79,37 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
     
     ######
     
-    SET(ARGS ${CMAKE_BINARY_DIR}/vpsim4d_cartesian_input)
-    ADD_MPI_TEST(sim4d_vp_cart test_4d_vp_cartesian ${PROCS} ${ARGS})
-    SET_TESTS_PROPERTIES(sim4d_vp_cart PROPERTIES 
-      PASS_REGULAR_EXPRESSION "PASSED")
+    # SET(ARGS ${CMAKE_BINARY_DIR}/vpsim4d_cartesian_input)
+    # ADD_MPI_TEST(sim4d_vp_cart test_4d_vp_cartesian ${PROCS} ${ARGS})
+    # SET_TESTS_PROPERTIES(sim4d_vp_cart PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
     
-    SET(ARGS ${CMAKE_BINARY_DIR}/vpsim2d_cartesian_input)
-    ADD_MPI_TEST(sim2d_vp_cart test_2d_vp_cartesian ${PROCS} ${ARGS})
-    SET_TESTS_PROPERTIES(sim2d_vp_cart PROPERTIES 
-      PASS_REGULAR_EXPRESSION "PASSED")
+    # SET(ARGS ${CMAKE_BINARY_DIR}/vpsim2d_cartesian_input)
+    # ADD_MPI_TEST(sim2d_vp_cart test_2d_vp_cartesian ${PROCS} ${ARGS})
+    # SET_TESTS_PROPERTIES(sim2d_vp_cart PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
     
-    SET(ARGS ${CMAKE_BINARY_DIR}/dksim4d_polar_input.nml)
-    ADD_MPI_TEST(sim4d_DK_polar test_4d_dk_polar ${PROCS} ${ARGS})
-    SET_TESTS_PROPERTIES(sim4d_DK_polar PROPERTIES 
-      PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100)
+    # SET(ARGS ${CMAKE_BINARY_DIR}/dksim4d_polar_input.nml)
+    # ADD_MPI_TEST(sim4d_DK_polar test_4d_dk_polar ${PROCS} ${ARGS})
+    # SET_TESTS_PROPERTIES(sim4d_DK_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100)
 
-    SET(ARGS ${CMAKE_BINARY_DIR}/dksim4d_polar_one_mu.nml)
-    ADD_MPI_TEST(sim4d_DK_polar_one_mu test_4d_dk_polar_one_mu ${PROCS} ${ARGS})
-    SET_TESTS_PROPERTIES(sim4d_DK_polar_one_mu PROPERTIES 
-      PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100)
+    # SET(ARGS ${CMAKE_BINARY_DIR}/dksim4d_polar_one_mu.nml)
+    # ADD_MPI_TEST(sim4d_DK_polar_one_mu test_4d_dk_polar_one_mu ${PROCS} ${ARGS})
+    # SET_TESTS_PROPERTIES(sim4d_DK_polar_one_mu PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100)
 
-    SET(ARGS ${CMAKE_BINARY_DIR}/dksim4d_polar_multi_mu.nml)
-    ADD_MPI_TEST(sim4d_DK_polar_multi_mu test_4d_dk_polar_multi_mu ${PROCS} ${ARGS})
-    SET_TESTS_PROPERTIES(sim4d_DK_polar_multi_mu PROPERTIES 
-      PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100)
+    # SET(ARGS ${CMAKE_BINARY_DIR}/dksim4d_polar_multi_mu.nml)
+    # ADD_MPI_TEST(sim4d_DK_polar_multi_mu test_4d_dk_polar_multi_mu ${PROCS} ${ARGS})
+    # SET_TESTS_PROPERTIES(sim4d_DK_polar_multi_mu PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100)
 
-    SET(ARGS ${CMAKE_BINARY_DIR}/dksim4d_field_aligned_polar.nml)
-    ADD_MPI_TEST(sim4d_DK_field_aligned_polar test_4d_dk_field_aligned_polar ${PROCS} ${ARGS})
-    SET_TESTS_PROPERTIES(sim4d_DK_field_aligned_polar PROPERTIES 
-      PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100)
+    # SET(ARGS ${CMAKE_BINARY_DIR}/dksim4d_field_aligned_polar.nml)
+    # ADD_MPI_TEST(sim4d_DK_field_aligned_polar test_4d_dk_field_aligned_polar ${PROCS} ${ARGS})
+    # SET_TESTS_PROPERTIES(sim4d_DK_field_aligned_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100)
     
     IF(PYTHON3_FOUND)
 
        SET(PROCS 4)
 
-       SET(ARGS ${CMAKE_BINARY_DIR}/sim4d_qns_general_input.nml)
-       ADD_MPI_TEST(vp4d_sim_qns_general test_4d_qns_general ${PROCS} ${ARGS})
-       SET_TESTS_PROPERTIES(vp4d_sim_qns_general PROPERTIES 
-         PASS_REGULAR_EXPRESSION "PASSED")
+       # SET(ARGS ${CMAKE_BINARY_DIR}/sim4d_qns_general_input.nml)
+       # ADD_MPI_TEST(vp4d_sim_qns_general test_4d_qns_general ${PROCS} ${ARGS})
+       # SET_TESTS_PROPERTIES(vp4d_sim_qns_general PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    
        SET(ARGS " ")
        ADD_MPI_TEST(distribution_function_4d_multipatch 
@@ -141,39 +132,36 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
     # SET_TESTS_PROPERTIES(vp4d_sim_mixed_qns_cartesian PROPERTIES 
     # PASS_REGULAR_EXPRESSION "PASSED")
     
-    SET(ARGS ${CMAKE_BINARY_DIR}/sim4d_DK_hybrid_input.nml)
-    ADD_MPI_TEST(sim4d_DK_hybrid test_4d_DK_hybrid ${PROCS} ${ARGS})
-    SET_TESTS_PROPERTIES(sim4d_DK_hybrid PROPERTIES 
-      PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100)
+    # SET(ARGS ${CMAKE_BINARY_DIR}/sim4d_DK_hybrid_input.nml)
+    # ADD_MPI_TEST(sim4d_DK_hybrid test_4d_DK_hybrid ${PROCS} ${ARGS})
+    # SET_TESTS_PROPERTIES(sim4d_DK_hybrid PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100)
     
     #SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/dksim4d_general_input.txt)
-    ADD_MPI_TEST(dk4d_sim_cartesian test_4d_dk_cartesian ${PROCS} ${ARGS})
-    SET_TESTS_PROPERTIES(dk4d_sim_cartesian PROPERTIES 
-      PASS_REGULAR_EXPRESSION "PASSED")
+    # ADD_MPI_TEST(dk4d_sim_cartesian test_4d_dk_cartesian ${PROCS} ${ARGS})
+    # SET_TESTS_PROPERTIES(dk4d_sim_cartesian PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
     
    
-    IF(PROCESSOR_COUNT GREATER 1)
-      
-      SET(ARGS ${CMAKE_BINARY_DIR}/vpsim6d_input.nml)
-      ADD_MPI_TEST(vp6d_sim test_6d ${PROCS} ${ARGS})
-      SET_TESTS_PROPERTIES(vp6d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-      
-    ENDIF(PROCESSOR_COUNT GREATER 1)
+    # IF(PROCESSOR_COUNT GREATER 1)
+    #   
+    #   SET(ARGS ${CMAKE_BINARY_DIR}/vpsim6d_input.nml)
+    #   ADD_MPI_TEST(vp6d_sim test_6d ${PROCS} ${ARGS})
+    #   SET_TESTS_PROPERTIES(vp6d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+    #   
+    # ENDIF(PROCESSOR_COUNT GREATER 1)
     
   SET(PROCS 1)
   ADD_MPI_TEST( visu_pic test_visu_pic ${PROCS} ${ARGS} )
   SET( visu_pic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-  SET(PROCS 1)
-  SET(ARGS ${CMAKE_BINARY_DIR}/params_pic_4d.nml)
-  ADD_MPI_TEST( pic_simulation_4d  test_4d_vp_pic_cartesian ${PROCS} ${ARGS} )
-  SET_TESTS_PROPERTIES( pic_simulation_4d PROPERTIES 
-    PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 200)
+  # SET(PROCS 1)
+  # SET(ARGS ${CMAKE_BINARY_DIR}/params_pic_4d.nml)
+  # ADD_MPI_TEST( pic_simulation_4d  test_4d_vp_pic_cartesian ${PROCS} ${ARGS} )
+  # SET_TESTS_PROPERTIES( pic_simulation_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 200)
 
-  SET(PROCS 1)
-  SET(ARGS ${CMAKE_BINARY_DIR}/params_pic_2d_KH.nml)
-  ADD_MPI_TEST( pic_simulation_2d test_2d_gc_pic_cartesian ${PROCS} ${ARGS} )
-  SET_TESTS_PROPERTIES( pic_simulation_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+  # SET(PROCS 1)
+  # SET(ARGS ${CMAKE_BINARY_DIR}/params_pic_2d_KH.nml)
+  # ADD_MPI_TEST( pic_simulation_2d test_2d_gc_pic_cartesian ${PROCS} ${ARGS} )
+  # SET_TESTS_PROPERTIES( pic_simulation_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 ENDIF() # HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL
 
