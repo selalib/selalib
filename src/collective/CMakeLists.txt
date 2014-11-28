@@ -13,3 +13,8 @@ TARGET_LINK_LIBRARIES(test_hello_mpi sll_collective sll_timer)
 #ADD_MPI_TEST(hello_mpi test_hello_mpi ${PROCS} ${ARGS})
 #SET_TESTS_PROPERTIES(hello_mpi PROPERTIES FAIL_REGULAR_EXPRESSION "NOT PASS")
 
+# Ctest
+SET( ARGS " " )
+ADD_MPI_TEST( collective test_collective ${PROCS} ${ARGS} )
+SET_TESTS_PROPERTIES( collective PROPERTIES FAIL_REGULAR_EXPRESSION "NOT PASS" )
+

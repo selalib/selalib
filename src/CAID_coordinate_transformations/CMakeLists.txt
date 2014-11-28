@@ -79,7 +79,5 @@ ENDIF(PYTHON3_FOUND)
 
 # .nml files usually need to be accessed by the unit tests, so copy them to
 # the build directory.
-FILE(GLOB_RECURSE NML_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.nml")
-FILE(COPY ${NML_FILES} DESTINATION ${CMAKE_BINARY_DIR})
-
-
+#YG  FILE(GLOB_RECURSE NML_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.nml")
+#YG  FILE(COPY ${NML_FILES} DESTINATION ${CMAKE_BINARY_DIR})

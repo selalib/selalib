@@ -17,3 +17,10 @@ TARGET_LINK_LIBRARIES(sll_visu_pic sll_utilities
 ADD_EXECUTABLE(test_visu_pic unit_test.F90 biot_savart.F90)
 
 TARGET_LINK_LIBRARIES(test_visu_pic sll_visu_pic)
+
+# Ctest
+SET( PROCS 1 )
+SET( ARGS " ")
+ADD_MPI_TEST( visu_pic test_visu_pic ${PROCS} ${ARGS} )
+SET( visu_pic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+
