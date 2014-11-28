@@ -32,3 +32,6 @@ TARGET_LINK_LIBRARIES(test_pic_accumulator
 #  sll_pic_particles
 #  sll_pic_initializers )
 
+# Ctest
+ADD_TEST( NAME pic_accumulator COMMAND test_pic_accumulator )
+SET_TESTS_PROPERTIES( pic_accumulator PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
