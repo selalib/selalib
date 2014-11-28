@@ -66,3 +66,7 @@ TARGET_LINK_LIBRARIES( test_hex_center_guide
 		       sll_hex_meshes 
 		       hex_poisson
 		       sll_constants )
+		    
+# Ctest
+ADD_TEST( NAME hermite_interpolation COMMAND test_hermite_interpolation )
+SET_TESTS_PROPERTIES( hermite_interpolation PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
