@@ -109,9 +109,6 @@ ADD_EXECUTABLE( test_hex_poisson pivotbande.F90 test_hex_poisson.F90 )
 
 TARGET_LINK_LIBRARIES( test_hex_poisson hex_poisson sll_constants )
 
-ADD_LIBRARY ( pivotbande STATIC pivotbande.F90)
-TARGET_LINK_LIBRARIES( pivotbande )
-
 # Ctest
 ADD_TEST( NAME poisson_solvers         COMMAND test_poisson_1d              )
 ADD_TEST( NAME poisson_3d_periodic_seq COMMAND test_poisson_3d_periodic_seq )
