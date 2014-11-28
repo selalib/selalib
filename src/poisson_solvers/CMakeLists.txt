@@ -13,6 +13,7 @@ SET(POISSON_SRCS sll_poisson_1d_base.F90
                  sll_poisson_2d_polar_solver.F90
                  sll_poisson_2d_periodic_solver.F90
                  sll_poisson_2d_elliptic_solver.F90
+                 sll_poisson_2d_curvilinear.F90
                  sll_poisson_3d_base.F90
                  sll_fishpack.F90
                  sll_mudpack.F90
@@ -30,7 +31,7 @@ TARGET_LINK_LIBRARIES(sll_poisson_solvers sll_general_coordinate_elliptic_solver
                                           sll_assert 
                                           mudpack
                                           fishpack
-                                          dfftpack )
+                                          dfftpack)
 
 IF(FFTW_ENABLED AND FFTW_FOUND)
    TARGET_LINK_LIBRARIES(sll_poisson_solvers ${FFTW_LIBRARIES})
@@ -57,6 +58,10 @@ TARGET_LINK_LIBRARIES(test_poisson_1d sll_poisson_solvers)
 
 ADD_EXECUTABLE(test_poisson_2d test_poisson_2d.F90)
 TARGET_LINK_LIBRARIES(test_poisson_2d sll_poisson_solvers)
+
+ADD_EXECUTABLE(test_poisson_2d_curvilinear test_poisson_2d_curvilinear.F90)
+TARGET_LINK_LIBRARIES(test_poisson_2d_curvilinear sll_poisson_solvers)
+
 
 ADD_EXECUTABLE(test_poisson_polar_fft test_poisson_polar_fft.F90)
 TARGET_LINK_LIBRARIES(test_poisson_polar_fft sll_poisson_solvers)
@@ -102,3 +107,9 @@ TARGET_LINK_LIBRARIES( hex_poisson sll_hex_meshes  )
 ADD_EXECUTABLE( test_hex_poisson pivotbande.F90 test_hex_poisson.F90 ) 
 
 TARGET_LINK_LIBRARIES( test_hex_poisson hex_poisson sll_constants )
+
+# Ctest
+ADD_TEST( NAME poisson_solvers         COMMAND test_poisson_1d              )
+ADD_TEST( NAME poisson_3d_periodic_seq COMMAND test_poisson_3d_periodic_seq )
+
+SET_TESTS_PROPERTIES( poisson_3d_periodic_seq PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )

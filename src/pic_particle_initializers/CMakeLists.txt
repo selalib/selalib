@@ -31,4 +31,9 @@ TARGET_LINK_LIBRARIES(test_pic_initializers
  sll_collective
  # sll_file_io )
 )
+
+# Ctest
+ADD_TEST( NAME pic_initializers COMMAND test_pic_initializers )
+SET_TESTS_PROPERTIES( pic_initializers PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+
 ENDIF(MPI_MODULE_ENABLED)
