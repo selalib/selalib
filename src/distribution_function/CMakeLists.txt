@@ -20,3 +20,6 @@ TARGET_LINK_LIBRARIES(sll_distribution_function sll_coordinate_transformations
 ADD_EXECUTABLE(test_distribution_function unit_test.F90)
 
 TARGET_LINK_LIBRARIES(test_distribution_function sll_distribution_function)
+
+# Ctest
+ADD_TEST( NAME distribution_function COMMAND test_distribution_function )

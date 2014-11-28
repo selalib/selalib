@@ -36,8 +36,8 @@
 #MESSAGE(STATUS ${CMAKE_BINARY_DIR})
 #MESSAGE(STATUS ${TXT_FILES})
 
-FILE(GLOB NML_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.nml")
-FILE(COPY ${NML_FILES} DESTINATION ${CMAKE_BINARY_DIR})
+# FILE(GLOB NML_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.nml")
+# FILE(COPY ${NML_FILES} DESTINATION ${CMAKE_BINARY_DIR})
 
 ADD_LIBRARY(sll_coordinate_transformations STATIC
             sll_coordinate_transformation_2d_base.F90
@@ -57,3 +57,11 @@ ADD_EXECUTABLE(test_coordinate_transformations_2d unit_test_2d.F90)
 TARGET_LINK_LIBRARIES(test_coordinate_transformations_2d 
                          sll_coordinate_transformations)
 
+
+# Copy input files into build directory (unknown reason) [YG]
+FILE( COPY arbitrary_degree_2d_sample_input_file.nml mhdeq_patch0.txt
+      DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
+
+# Ctest
+ADD_TEST( NAME coordinate_transformations COMMAND test_coordinate_transformations_2d )
+SET_TESTS_PROPERTIES( coordinate_transformations PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
