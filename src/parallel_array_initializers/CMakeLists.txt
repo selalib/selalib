@@ -17,17 +17,19 @@ IF(MPI_MODULE_ENABLED)
                          sll_coordinate_transformations
                          sll_meshes)
 
-   ADD_EXECUTABLE(test_parallel_array_initializer unit_test_4d.F90)
+  # Ctest
+  IF(BUILD_TESTING AND (PROCESSOR_COUNT GREATER 1))
 
-   TARGET_LINK_LIBRARIES(test_parallel_array_initializer 
-                         sll_parallel_array_initializers )
+    ADD_EXECUTABLE( test_parallel_array_initializer unit_test_4d.F90 )
+    TARGET_LINK_LIBRARIES( test_parallel_array_initializer 
+      sll_parallel_array_initializers )
+
+    SET( ARGS " " )
+    ADD_MPI_TEST( parallel_array_initializers 
+      test_parallel_array_initializer ${PROCS} ${ARGS} )
+    SET_TESTS_PROPERTIES( parallel_array_initializers
+      PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+
+  ENDIF(BUILD_TESTING AND (PROCESSOR_COUNT GREATER 1))
 
 ENDIF(MPI_MODULE_ENABLED)
-
-# Ctest
-IF(PROCESSOR_COUNT GREATER 1)
-  SET( ARGS " " )
-  ADD_MPI_TEST( parallel_array_initializers test_parallel_array_initializer ${PROCS} ${ARGS} )
-  SET_TESTS_PROPERTIES( parallel_array_initializers PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-ENDIF(PROCESSOR_COUNT GREATER 1)
-

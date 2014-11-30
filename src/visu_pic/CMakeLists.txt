@@ -7,20 +7,19 @@ IF(HDF5_IS_PARALLEL AND HDF5_ENABLED)
   SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 ENDIF(HDF5_IS_PARALLEL AND HDF5_ENABLED)
 
-ADD_LIBRARY(sll_visu_pic STATIC sll_visu_pic.F90)
-
-TARGET_LINK_LIBRARIES(sll_visu_pic sll_utilities
-                                   sll_file_io
-                                   sll_assert
-                                   sll_working_precision )
-
-ADD_EXECUTABLE(test_visu_pic unit_test.F90 biot_savart.F90)
-
-TARGET_LINK_LIBRARIES(test_visu_pic sll_visu_pic)
+ADD_LIBRARY( sll_visu_pic STATIC sll_visu_pic.F90 )
+TARGET_LINK_LIBRARIES( sll_visu_pic
+  sll_utilities
+  sll_file_io
+  sll_assert
+  sll_working_precision )
 
 # Ctest
-SET( PROCS 1 )
-SET( ARGS " ")
-ADD_MPI_TEST( visu_pic test_visu_pic ${PROCS} ${ARGS} )
-SET( visu_pic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-
+IF(BUILD_TESTING)
+  ADD_EXECUTABLE( test_visu_pic unit_test.F90 biot_savart.F90 )
+  TARGET_LINK_LIBRARIES( test_visu_pic sll_visu_pic )
+  SET( PROCS 1 )
+  SET( ARGS " ")
+  ADD_MPI_TEST( visu_pic test_visu_pic ${PROCS} ${ARGS} )
+  SET( visu_pic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+ENDIF(BUILD_TESTING)
