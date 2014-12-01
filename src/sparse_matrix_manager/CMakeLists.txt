@@ -77,6 +77,9 @@ IF(BUILD_TESTING)
   ADD_EXECUTABLE( test_csr_one_constraint unit_test_csr_one_constraint.F90 )
   TARGET_LINK_LIBRARIES( test_csr_one_constraint sll_csr_one_constraint )
 
+  IF(Fortran_COMPILER MATCHES IBM)
+   SET_SOURCE_FILES_PROPERTIES(dPackgmres.f PROPERTIES COMPILE_FLAGS -qfixed)
+  ENDIF(Fortran_COMPILER MATCHES IBM)
   ADD_EXECUTABLE( test_gmres test_gmres_driver.F90 dPackgmres.f )
   TARGET_LINK_LIBRARIES( test_gmres ${BLAS_LIBRARIES} )
 
