@@ -44,26 +44,27 @@ TARGET_LINK_LIBRARIES( finite_elements_solver
                        sll_memory
                        sll_working_precision
                        deboor_splines)
+   
+ADD_EXECUTABLE(test_general_coordinates_elliptic_solver 
+               init_functions.F90 unit_test.F90)
 
-# Ctest
-IF(BUILD_TESTING)
+TARGET_LINK_LIBRARIES(test_general_coordinates_elliptic_solver
+                      sll_general_coordinate_elliptic_solvers)
 
-  ADD_EXECUTABLE( test_general_coordinates_elliptic_solver 
-                  init_functions.F90 unit_test.F90 )
-  TARGET_LINK_LIBRARIES( test_general_coordinates_elliptic_solver
-                         sll_general_coordinate_elliptic_solvers )
-  ADD_TEST( NAME general_coordinate_elliptic_solver 
-            COMMAND test_general_coordinates_elliptic_solver )
-  SET_TESTS_PROPERTIES( general_coordinate_elliptic_solver 
-                        PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 2000 )
+ADD_EXECUTABLE(test_finite_elements_solver unit_test_finite_elements.F90)
 
-  ADD_EXECUTABLE( test_finite_elements_solver unit_test_finite_elements.F90 )
-  TARGET_LINK_LIBRARIES( test_finite_elements_solver finite_elements_solver )
+TARGET_LINK_LIBRARIES( test_finite_elements_solver finite_elements_solver)
 
-  ADD_EXECUTABLE( test_lobalap_analytic unit_test_lobalap_analytic.F90 )
-  TARGET_LINK_LIBRARIES( test_lobalap_analytic sll_general_coordinate_elliptic_solvers )
+ADD_TEST(NAME general_coordinate_elliptic_solver 
+         COMMAND test_general_coordinates_elliptic_solver)
 
-  ADD_EXECUTABLE( test_lobalap_discrete unit_test_lobalap_discrete.F90 )
-  TARGET_LINK_LIBRARIES( test_lobalap_discrete sll_general_coordinate_elliptic_solvers )
+SET_TESTS_PROPERTIES(general_coordinate_elliptic_solver 
+                     PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 2000)
 
-ENDIF(BUILD_TESTING)
+ADD_EXECUTABLE(test_lobalap_analytic unit_test_lobalap_analytic.F90 )
+
+TARGET_LINK_LIBRARIES(test_lobalap_analytic sll_general_coordinate_elliptic_solvers )
+
+ADD_EXECUTABLE(test_lobalap_discrete unit_test_lobalap_discrete.F90 )
+
+TARGET_LINK_LIBRARIES(test_lobalap_discrete sll_general_coordinate_elliptic_solvers )

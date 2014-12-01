@@ -6,7 +6,7 @@ IF(FFTW_FOUND AND FFTW_ENABLED)
    
    TARGET_LINK_LIBRARIES(sll_maxwell_parallel sll_remap ${FFTW_LIBRARIES})
      
-   IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND BUILD_TESTING)
+   IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
      ADD_EXECUTABLE(test_maxwell_2d_pstd_parallel 
                     unit_test_2d_pstd_parallel.F90 )

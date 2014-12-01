@@ -742,7 +742,7 @@ C-----------------------------------------------
       COMPLEX  :: A(*)
       COMPLEX  :: BB(*)
       COMPLEX  :: C(*)
-      COMPLEX , INTENT(INOUT) :: Q(IDIMQ,*)
+      COMPLEX , INTENT(INOUT) :: Q(IDIMQ,1)
       COMPLEX  :: B(*)
       COMPLEX  :: B2(*)
       COMPLEX  :: B3(*)

@@ -17,9 +17,9 @@ TARGET_LINK_LIBRARIES(sll_distribution_function sll_coordinate_transformations
                                                 sll_collective
                                                 sll_remap )
 
+ADD_EXECUTABLE(test_distribution_function unit_test.F90)
+
+TARGET_LINK_LIBRARIES(test_distribution_function sll_distribution_function)
+
 # Ctest
-IF(BUILD_TESTING)
-  ADD_EXECUTABLE(test_distribution_function unit_test.F90)
-  TARGET_LINK_LIBRARIES(test_distribution_function sll_distribution_function)
-  ADD_TEST( NAME distribution_function COMMAND test_distribution_function )
-ENDIF(BUILD_TESTING)
+ADD_TEST( NAME distribution_function COMMAND test_distribution_function )

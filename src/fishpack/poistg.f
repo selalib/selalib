@@ -405,7 +405,7 @@ C-----------------------------------------------
       REAL  :: A(*)
       REAL  :: BB(*)
       REAL  :: C(*)
-      REAL , INTENT(INOUT) :: Q(IDIMQ,*)
+      REAL , INTENT(INOUT) :: Q(IDIMQ,1)
       REAL  :: B(*)
       REAL  :: B2(*)
       REAL  :: B3(*)
