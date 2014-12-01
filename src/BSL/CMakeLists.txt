@@ -1,3 +1,5 @@
+IF(BUILD_TESTING)
+
 ADD_EXECUTABLE(bsl_1d_cubic_uniform_periodic test_1d_cubic_uniform_periodic.F90)
 TARGET_LINK_LIBRARIES(bsl_1d_cubic_uniform_periodic sll_interpolators)
 
@@ -11,7 +13,7 @@ ADD_EXECUTABLE(bsl_1d_cubic_nonuniform_compact test_1d_cubic_nonuniform_compact.
 TARGET_LINK_LIBRARIES(bsl_1d_cubic_nonuniform_compact sll_interpolators)
 
 ADD_EXECUTABLE(bsl_2d_omp unit_test_2d_omp.F90)
-ADD_DEPENDENCIES(bsl_2d_omp sll_interpolators)
+#YG ADD_DEPENDENCIES(bsl_2d_omp sll_interpolators)
 TARGET_LINK_LIBRARIES(bsl_2d_omp sll_interpolators)
 
 ADD_EXECUTABLE(bsl_landau_1d landau_1d.F90)
@@ -52,3 +54,5 @@ SET_TESTS_PROPERTIES( BSL_1d_uniform_periodic    PROPERTIES PASS_REGULAR_EXPRESS
 SET_TESTS_PROPERTIES( BSL_1d_uniform_compact     PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 #SET_TESTS_PROPERTIES( BSL_1d_nonuniform_periodic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" ) # ISSUE
 SET_TESTS_PROPERTIES( BSL_1d_nonuniform_compact  PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+
+ENDIF(BUILD_TESTING)
