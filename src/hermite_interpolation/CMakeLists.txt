@@ -6,14 +6,9 @@ TARGET_LINK_LIBRARIES( sll_hermite_interpolation
 ADD_LIBRARY( hex_hermite STATIC sll_hex_interpolation_hermite.F90 )
 TARGET_LINK_LIBRARIES( hex_hermite sll_hermite_interpolation sll_hex_meshes )
 
-# ADD_LIBRARY ( hex_poisson STATIC hex_poisson.F90)
-# TARGET_LINK_LIBRARIES( hex_poisson sll_hex_meshes sll_hermite_interpolation)
 
-# ADD_LIBRARY ( euler_2d_hex STATIC euler_2d_hex.F90)
-# TARGET_LINK_LIBRARIES( euler_2d_hex )
-
-# ADD_LIBRARY ( pivotbande STATIC pivotbande.F90)
-# TARGET_LINK_LIBRARIES( pivotbande )
+ADD_LIBRARY ( euler_2d_hex STATIC euler_2d_hex.F90)
+TARGET_LINK_LIBRARIES( euler_2d_hex )
 
 # Tests
 IF(BUILD_TESTING)
