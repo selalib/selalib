@@ -1,6 +1,6 @@
 import os
 
-root = "../src/"
+root = "../prototype/src/"
 
 def write_doc_file(library):
   file_name = root+library+"/%s_doc.F90"%(library)
@@ -15,7 +15,7 @@ def write_doc_file(library):
      _f.write("! in file Doxyfile.in (line 691) if it is excluded. \n")
      _f.write("! Type 'make doc' in build directory.\n")
      _f.write("! To check the results, open : \n")
-     _f.write("! selalib/documentation/build/html/doxygen/html/namespaces.html \n")
+     _f.write("! selalib/prototype/documentation/build/html/doxygen/html/namespaces.html \n")
      _f.write("! The following lines will be read by doxygen to generate documentation:\n\n\n")
      _f.write("!> @namespace sll_%s \n"%(library))
      _f.write("!> @brief \n")
