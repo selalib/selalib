@@ -1,0 +1,54 @@
+\ProvidesFile{edpsproc.clo}[2014/03/10 v3
+      style option for ESAIM: Proccedings and Surveys]
+\typeout{edpsmath Class option: edpsproc.clo for ESAIM: proceedings and Surveys}
+
+\AtEndOfClass{
+\def\@MSSG@RNNGTTL{\fontsize{7}{9}\selectfont\rm\uppercase{ESAIM: Proceedings and Surveys}}
+\def\@MSSG@RNNGTHR{\fontsize{7}{9}\selectfont\rm\uppercase{ESAIM: Proceedings and Surveys}}
+\def\@setkeywords{}
+\def\@setsubjclass{}
+\def\dedicated#1{\gdef\@dedicated{#1}}
+\def\@dedicated{}
+\def\@NMJRNL@D{}
+\def\@NMJRNL@F{Editors: Will be set by the publisher}%
+\def\Editors#1{\global\def\@NMJRNL@F{#1}}
+\def\@NMJRNL@E{{ESAIM: PROCEEDINGS AND SURVEYS,}}%
+\def\@JRNL@X{Vol. ?, \the\year, 1-10}%
+\def\@maketitle{%
+  \normalfont\normalsize
+  \let\@makefnmark\relax \let\@thefnmark\relax
+  \global\def\shorttitle{\ifvoid\@b@rnngttl\@MSSG@RNNGTTL\else
+      {\ifdim\wd\@b@rnngttl>0.7\hsize\@MSSG@RNNGLRG\else{\copy\@b@rnngttl}\fi}\fi}
+  \global\def\shortauthors{\ifvoid\@b@rnngthr\@MSSG@RNNGTHR\else
+      {\ifdim\wd\@b@rnngthr>0.7\hsize\@MSSG@RNNGLRG\else{\copy\@b@rnngthr}\fi}\fi}
+  \@mkboth{\@nx\shortauthors}{\@nx\shorttitle}%
+  \global\topskip42\p@\relax
+  \@SKIP@Aa
+ \vbox{\hbox to\hsize{{\fontsize{10}{12}\selectfont{\bf\@NMJRNL@E}}\
+  {\fontsize{8}{9}\selectfont{\bf\@JRNL@X}}\hfill}
+  \hbox to\hsize{\fontsize{8}{9}\selectfont{\@NMJRNL@F}\hfill}
+  \hbox to\hsize{{\fontsize{8}{9}\selectfont{\@NMJRNL@D}}\hfill}}
+  \@SKIP@Ab
+  \@setkeywords
+  \@settitle
+  \@setauthors
+  \if!\@dedicated!
+  \else \skip@20\p@\vskip\skip@\begin{center} \@dedicated \end{center} \fi
+  \iflanguage{french}{%
+  \@setresume
+  \@setabstract}{%
+  \@setabstract
+  \@setresume}
+  \@setsubjclass
+  \normalsize
+  \if@titlepage\newpage\else\dimen@34\p@\advance\dimen@-\baselineskip\vskip\dimen@\relax\fi
+  \gdef\thanks##1{\relax}\gdef\address##1{\relax}
+}% end \@maketitle
+\renewenvironment{acknowledgement}{\par\addvspace{17pt}\small\rmfamily\trivlist\item[]}%
+                                 {\endtrivlist\addvspace{6pt}}
+}
+%
+%%
+%% End of copy of file `edpsproc.clo'.
+\endinput
+%................ ................ ................ ................  ................
