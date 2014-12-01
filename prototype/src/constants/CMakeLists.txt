@@ -1,0 +1,3 @@
+ADD_LIBRARY(sll_constants STATIC sll_constants.F90)
+ADD_EXECUTABLE(test_constants unit_test.F90)
+TARGET_LINK_LIBRARIES(test_constants sll_constants)

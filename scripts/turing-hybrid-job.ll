@@ -21,4 +21,4 @@
 # @ bg_size = 64
 # @ queue
   
-runjob --ranks-per-node 8 --envs "OMP_NUM_THREADS=4" --np 8 : ${workdir}/build/bin/test_2d_vp_cartesian ${home}/selalib/src/simulation/vpsim2d_cartesian_keen
+runjob --ranks-per-node 8 --envs "OMP_NUM_THREADS=4" --np 8 : ${workdir}/build/bin/test_2d_vp_cartesian ${home}/selalib/prototype/src/simulation/vpsim2d_cartesian_keen

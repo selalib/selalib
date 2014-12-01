@@ -112,15 +112,3 @@ prototype/src/fix-names.py
 *.orig
 
 prototype/intel_build/*
-
-*.aux
-
-*.log
-
-prototype/doc/selalib_manual.pdf
-
-*.gz
-
-*.toc
-
-prototype/release_build/*
