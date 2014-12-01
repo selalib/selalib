@@ -66,3 +66,22 @@
   TARGET_LINK_LIBRARIES(
     test_characteristics_2d_explicit_euler_conservative
     sll_characteristics)
+
+# Ctests
+ADD_TEST( NAME characteristics_1d_explicit_euler              COMMAND test_characteristics_1d_explicit_euler              )
+ADD_TEST( NAME characteristics_1d_explicit_euler_conservative COMMAND test_characteristics_1d_explicit_euler_conservative )
+ADD_TEST( NAME characteristics_1d_trapezoid                   COMMAND test_characteristics_1d_trapezoid                   )
+ADD_TEST( NAME characteristics_1d_trapezoid_conservative      COMMAND test_characteristics_1d_trapezoid_conservative      )
+ADD_TEST( NAME characteristics_2d_explicit_euler              COMMAND test_characteristics_2d_explicit_euler              )
+ADD_TEST( NAME characteristics_2d_explicit_euler_conservative COMMAND test_characteristics_2d_explicit_euler_conservative )
+ADD_TEST( NAME characteristics_2d_verlet                      COMMAND test_characteristics_2d_verlet                      )
+
+SET_TESTS_PROPERTIES( characteristics_1d_explicit_euler              PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+SET_TESTS_PROPERTIES( characteristics_1d_explicit_euler_conservative PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+SET_TESTS_PROPERTIES( characteristics_1d_trapezoid                   PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+SET_TESTS_PROPERTIES( characteristics_1d_trapezoid_conservative      PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+SET_TESTS_PROPERTIES( characteristics_2d_explicit_euler              PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+SET_TESTS_PROPERTIES( characteristics_2d_explicit_euler_conservative PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+SET_TESTS_PROPERTIES( characteristics_2d_verlet                      PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+
+
