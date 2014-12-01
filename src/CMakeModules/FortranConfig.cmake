@@ -31,7 +31,7 @@ ELSEIF(Fortran_COMPILER_NAME MATCHES ifort)
 ELSEIF(Fortran_COMPILER MATCHES "IBM")
 
    SET(CMAKE_Fortran_FLAGS_DEBUG "-qextname=flush -qxlf2003=polymorphic")
-   SET(CMAKE_Fortran_FLAGS_RELEASE "-qsmp=omp -qextname=flush -qxlf2003=polymorphic")
+   SET(CMAKE_Fortran_FLAGS_RELEASE "-qnosave -qsmp=omp -qextname=flush -qxlf2003=polymorphic")
 
 ELSE()
 
