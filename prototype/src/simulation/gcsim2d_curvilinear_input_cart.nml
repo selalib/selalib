@@ -1,0 +1,54 @@
+!./bin/test_2d_gc_curvilinear ../selalib/prototype/src/simulation/gcsim2d_curvilinear_input_cart
+!gnuplot -persist ../selalib/prototype/src/simulation/gcsim2d_curvilinear_cart.gnu
+
+&geometry
+    mesh_case ="SLL_LANDAU_MESH"
+    num_cells_eta1 = 64
+    num_cells_eta2 = 64
+    eta1_min = 0.
+    eta1_max = 6.28
+    eta2_min = 0.
+    eta2_max = 6.28
+/    
+&initial_function
+    initial_function_case="SLL_KHP1"
+    kmode_eta1 = 0.5
+    kmode_eta2 = 1.
+    eps = 1e-6 !0.015
+/    
+&time_iterations
+    dt = 0.5
+    number_iterations  = 120
+    freq_diag = 100
+    freq_diag_time = 1
+    !time_loop_case = "SLL_EULER"
+    time_loop_case = "SLL_PREDICTOR_CORRECTOR" 
+/
+&advector
+    advect2d_case = "SLL_BSL"    
+    f_interp2d_case = "SLL_CUBIC_SPLINES"
+    phi_interp2d_case = "SLL_CUBIC_SPLINES"
+    !charac2d_case = "SLL_EULER"
+    charac2d_case = "SLL_VERLET"
+    A_interp_case = "SLL_CUBIC_SPLINES"
+/
+&poisson 
+    !poisson_solver = "SLL_ELLIPTIC_FINITE_ELEMENT_SOLVER" !use with "SLL_PHI_FROM_RHO"
+    poisson_solver = "SLL_MUDPACK_CURVILINEAR"   !use with "SLL_PHI_FROM_RHO"    
+    mudpack_method = 2 ! SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS = 2  SLL_NON_SEPARABLE_WITH_CROSS_TERMS = 3  
+    spline_degree_eta1 = 3
+    spline_degree_eta2 = 3  
+/    
+&boundaries
+    bc_interp2d_eta1 =  "SLL_PERIODIC"
+    bc_interp2d_eta2 =  "SLL_PERIODIC"
+    bc_charac2d_eta1 =  "SLL_PERIODIC"
+    bc_charac2d_eta2 =  "SLL_PERIODIC"
+    bc_eta1_left     =  "SLL_PERIODIC"
+    bc_eta1_right    =  "SLL_PERIODIC"
+    bc_eta2_left     =  "SLL_PERIODIC"
+    bc_eta2_right    =  "SLL_PERIODIC"
+/   
+
+!! SLL_PERIODIC    = 0 SLL_DIRICHLET      = 1  SLL_NEUMANN        = 2
+!! SLL_HERMITE     = 3 SLL_NEUMANN_MODE_0 = 4  SLL_SET_TO_LIMIT   = 5 
