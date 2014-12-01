@@ -278,12 +278,17 @@ sll_real64 :: delta_eta2
 ! do some argument checking...
 if(((bc_w == SLL_PERIODIC).and.(bc_e /= SLL_PERIODIC)).or.&
    ((bc_e == SLL_PERIODIC).and.(bc_w /= SLL_PERIODIC))) then
-  SLL_ERROR("initialize_arbitrary_degree_2d_interpolator if one boundary condition is specified as periodic, then both must be. Error in first direction.")
+  SLL_ERROR('initialize_arbitrary_degree_2d_interpolator &
+           & if one boundary condition is specified as periodic, then &
+           & both must be. Error in first direction.')
 end if
 
 if(((bc_s == SLL_PERIODIC).and.(bc_n /= SLL_PERIODIC)).or.&
    ((bc_n == SLL_PERIODIC).and.(bc_s /= SLL_PERIODIC))) then
-  SLL_ERROR('initialize_arbitrary_degree_2d_interpolator if one boundary condition is specified as periodic, then both must be. Error in second direction.')
+  SLL_ERROR('initialize_arbitrary_degree_2d_interpolator &
+            & if one boundary condition is specified as  &
+            & periodic, then both must be. Error in      &
+            & second direction.')
 end if
 
 bc_selector = 0
@@ -750,7 +755,6 @@ function interpolate_value_ad2d( interpolator, eta1, eta2 ) result(val)
   size_coeffs1 = interpolator%size_coeffs1
   size_coeffs2 = interpolator%size_coeffs2
 
-  !SHOULD BE DONE IN ADVECTION
   if ( interpolator%bc_w == SLL_PERIODIC .and. eta1 < interpolator%eta1_min) then
     res1 = eta1 + interpolator%eta1_max - interpolator%eta1_min
   else if ( interpolator%bc_e == SLL_PERIODIC .and. eta1 > interpolator%eta1_max) then
@@ -1640,13 +1644,16 @@ else if (present(coeffs_2d)) then
 
   else 
 
-    SLL_ERROR('Problem in set_coefficients in arbitrary_degree_spline_2d problem with the size of coeffs_2d the number of coefficients must be specified')
+    SLL_ERROR('Problem in set_coefficients in arbitrary_degree_spline_2d &
+              & problem with the size of coeffs_2d the number of         &
+              & coefficients must be specified')
          
   end if
       
 else
 
-  SLL_WARNING(' arbitrary degree spline interpolator 2d set coefficients does nothing')
+  SLL_WARNING(' arbitrary degree spline interpolator 2d set coefficients &
+              &  does nothing')
 end if
 
 interpolator%coefficients_set = .true.
