@@ -155,7 +155,10 @@ contains
     character(len=256)      :: initial_function_case
     sll_real64            :: kmode_x1
     sll_real64            :: kmode_x2
+    sll_real64            :: lmode_x1
+    sll_real64            :: lmode_x2
     sll_real64            :: eps
+    sll_real64            :: eps_l
     sll_int32             :: ierr
       
     ! namelists for data input
@@ -183,7 +186,10 @@ contains
       initial_function_case, &
       kmode_x1, &
       kmode_x2, &
-      eps
+      eps, &
+      lmode_x1, &
+      lmode_x2, &
+      eps_l
 
     namelist / time_iterations / &
       dt, &
@@ -292,7 +298,7 @@ contains
     end select
     select case (mesh_case_x2)
       case ("SLL_LANDAU_MESH")
-        x2_max = real(nbox_x2,f64) * 2._f64 * sll_pi / kmode_x1
+        x2_max = real(nbox_x2,f64) * 2._f64 * sll_pi / kmode_x2
         sim%mesh_x2 => new_cartesian_mesh_1d(num_cells_x2,eta_min=x2_min, eta_max=x2_max)
       case ("SLL_CARTESIAN_MESH")
         sim%mesh_x2 => new_cartesian_mesh_1d(num_cells_x2,eta_min=x2_min, eta_max=x2_max)
@@ -325,9 +331,30 @@ contains
         SLL_ALLOCATE(sim%params(3),ierr)
         sim%params(1) = kmode_x1
         sim%params(2) = kmode_x2
-        sim%params(3) = eps
+        sim%params(3) = eps        
         sim%nrj0 = (0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
           *(1._f64/kmode_x1**2+1._f64/kmode_x2**2) 
+      case ("SLL_LANDAU_TWO_MODES")
+        sim%init_func => sll_landau_mode_initializer_4d
+        SLL_ALLOCATE(sim%params(6),ierr)
+        sim%params(1) = kmode_x1
+        sim%params(2) = kmode_x2
+        sim%params(3) = eps        
+        sim%params(4) = lmode_x1
+        sim%params(5) = lmode_x2
+        sim%params(6) = eps_l
+        if((kmode_x1==lmode_x1).and.(kmode_x2==lmode_x2)) then
+          sim%nrj0 = ((eps+eps_l)*sll_pi)**2/(kmode_x1*kmode_x2) &
+            *1._f64/(kmode_x1**2+kmode_x2**2)
+        else
+        sim%nrj0 = (eps*sll_pi)**2/(kmode_x1*kmode_x2) &
+          *1._f64/(kmode_x1**2+kmode_x2**2)
+        sim%nrj0 = sim%nrj0+(eps_l*sll_pi)**2/(kmode_x1*kmode_x2) &
+          *1._f64/(lmode_x1**2+lmode_x2**2)
+        endif
+!        sim%nrj0 = sim%nrj0+2._f64*eps*eps_l*(lmode_x1*lmode_x2)/(lmode_x1**2+lmode_x2**2) &
+!          *(sin(2*sll_pi*lmode_x1/kmode_x1)/(kmode_x1**2-lmode_x1**2)) &
+!          *(sin(2*sll_pi*lmode_x2/kmode_x2)/(kmode_x2**2-lmode_x2**2))                   
       case default
         print *,'#init_func_case not implemented'
         print *,'#in initialize_vlasov_par_poisson_seq_cart'  
