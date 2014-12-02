@@ -24,8 +24,14 @@ SET(PASTIX_ENABLED        OFF CACHE BOOL "Build PasTiX solvers ")
 SET(SUITESPARSE_ENABLED   OFF CACHE BOOL "Enable UMFpack solvers")
 SET(BUILD_SIMULATIONS     ON  CACHE BOOL "Build selalib simulations")
 SET(BUILD_PACKAGE         OFF CACHE BOOL "Build selalib package")
-SET(PROCS                 4   CACHE STRING 
+SET(PROCS                 4   CACHE STRING
     "Number of MPI processes used in parallel tests")
+
+IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  GET_FILENAME_COMPONENT(INSTALL_DIR "${CMAKE_SOURCE_DIR}/../usr" ABSOLUTE)
+  SET(CMAKE_INSTALL_PREFIX ${INSTALL_DIR} CACHE PATH
+    "Default installation directory" FORCE)
+ENDIF()
 
 FIND_PACKAGE(PythonInterp 3)
 SET(PYTHON3_FOUND FALSE)
@@ -199,10 +205,11 @@ IF(BUILD_PACKAGE)
 ENDIF(BUILD_PACKAGE)
 
 IF(BUILD_SIMULATIONS)
-   SET(CMAKE_INSTALL_PREFIX_SIMS "${CMAKE_SOURCE_DIR}/../usr" 
-       CACHE PATH "simulations install dir")
-   ADD_SUBDIRECTORY(simulations) # reorganization of simulations
-   ADD_SUBDIRECTORY(eulerian-finite-volume)
+  GET_FILENAME_COMPONENT( INSTALL_DIR_SIMS "${CMAKE_SOURCE_DIR}/../usr" ABSOLUTE )
+  SET(CMAKE_INSTALL_PREFIX_SIMS ${INSTALL_DIR_SIMS} CACHE PATH
+    "simulations install dir")
+  ADD_SUBDIRECTORY(simulations)
+  ADD_SUBDIRECTORY(eulerian-finite-volume)
 #YG   IF(NOT BUILD_PACKAGE AND BUILD_TESTING)
 #YG      INCLUDE(SequentialTests)
 #YG      IF(MPI_MODULE_ENABLED)
