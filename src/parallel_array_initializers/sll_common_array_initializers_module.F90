@@ -510,6 +510,9 @@ contains
     sll_real64 :: eps
     sll_real64 :: kx
     sll_real64 :: ky
+    sll_real64 :: ellx
+    sll_real64 :: elly
+    sll_real64 :: eps_ell    
     sll_real64 :: factor1
 
     if( .not. present(params) ) then
@@ -524,10 +527,22 @@ contains
     kx = params(1)
     ky = params(2)
     eps      = params(3)
+    
+    factor1 = eps*cos(kx*x)*cos(ky*y)
+    if(size(params)>=6) then
+      ellx = params(4)
+      elly = params(5)
+      eps_ell = params(6)
+      factor1 = factor1+eps_ell*cos(ellx*x)*cos(elly*y)            
+    endif
+    factor1 = 1._f64+factor1
+    res = (1.0_f64/(2.0*sll_pi))*factor1*exp(-0.5_f64*(vx**2+vy**2))
+    
+    !print *,'k=',kx,ky,eps
+    !print *,'ell=',ellx,elly,eps_ell
+    !print *,'size(params)=',size(params)
+    !stop
 
-    factor1 = 1.0_f64/(2.0*sll_pi)
-    res = factor1 * &
-         (1.0_f64+eps*cos(kx*x)*cos(ky*y))*exp(-0.5_f64*(vx**2+vy**2))
   end function sll_landau_mode_initializer_4d
 
 
