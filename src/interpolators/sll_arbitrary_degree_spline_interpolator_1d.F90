@@ -911,7 +911,7 @@ function get_coefficients_ad1d(interpolator)
    sll_interpolator, intent(in)      :: interpolator
    sll_real64, dimension(:), pointer :: get_coefficients_ad1d
 
-   get_coefficients_ad1d = interpolator%bcoef
+   get_coefficients_ad1d => interpolator%bcoef
 
 end function get_coefficients_ad1d
 
