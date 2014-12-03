@@ -42,10 +42,14 @@ IF(BUILD_TESTING)
     sll_memory
     sll_working_precision
     deboor_splines )
-  ADD_TEST( NAME general_coordinate_elliptic_solver_multipatch 
+
+  IF(PYTHON3_FOUND)
+    ADD_TEST( NAME general_coordinate_elliptic_solver_multipatch 
     COMMAND test_general_coordinate_elliptic_solver_multipatch )
-  SET_TESTS_PROPERTIES( general_coordinate_elliptic_solver_multipatch
+    SET_TESTS_PROPERTIES( general_coordinate_elliptic_solver_multipatch
     PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+  ENDIF(PYTHON3_FOUND)
+
   SET( INPUT_FILES_DIR ${CMAKE_SOURCE_DIR}/CAID_coordinate_transformations/circle_mp5_pts12/ )
   FILE( GLOB INPUT_FILES "${INPUT_FILES_DIR}/*.nml" )
   FILE( COPY ${INPUT_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
