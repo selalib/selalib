@@ -26,12 +26,12 @@ module sll_scalar_field_2d_old
   end type scalar_field_2d
 
   abstract interface
-     function scalar_function_2D( eta1, eta2 )
+     function scalar_function_2D_old( eta1, eta2 )
        use sll_working_precision
-       sll_real64 :: scalar_function_2D
+       sll_real64 :: scalar_function_2D_old
        sll_real64, intent(in)  :: eta1
        sll_real64, intent(in)  :: eta2
-     end function scalar_function_2D
+     end function scalar_function_2D_old
   end interface
 
   interface sll_create
@@ -39,7 +39,7 @@ module sll_scalar_field_2d_old
   end interface sll_create
 
   public sll_create
-  public scalar_function_2D
+  public scalar_function_2D_old
   public initialize_scalar_field_2d
   public write_scalar_field_2d
 

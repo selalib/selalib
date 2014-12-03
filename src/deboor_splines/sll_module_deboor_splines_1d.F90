@@ -316,6 +316,12 @@ subroutine bsplvb ( t, jhigh, index, x, left, biatx )
     biatx(1) = 1.0_8
     if ( jhigh <= j ) return
   end if
+  
+  if (t(left+1) <= t(left)) then
+    print *,'#left',left,t(left)
+    print *,'#left+1',left+1,t(left+1)
+    print *,'#size(t)',size(t)
+  end if
     
   SLL_ASSERT( t(left+1) > t(left) )
 

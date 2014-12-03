@@ -5,6 +5,11 @@ ADD_LIBRARY(deboor_splines STATIC
   knots.f90)	
 
 TARGET_LINK_LIBRARIES( deboor_splines sll_memory sll_utilities )
-  
-ADD_EXECUTABLE(test_deboor unit_test.F90)
-TARGET_LINK_LIBRARIES( test_deboor deboor_splines  sll_utilities sll_file_io)
+
+# Ctest
+IF(BUILD_TESTING)
+  ADD_EXECUTABLE( test_deboor unit_test.F90 )
+  TARGET_LINK_LIBRARIES( test_deboor deboor_splines  sll_utilities sll_file_io )
+  ADD_TEST( NAME deboor_spline COMMAND test_deboor )
+  SET_TESTS_PROPERTIES( deboor_spline PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+ENDIF(BUILD_TESTING)

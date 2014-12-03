@@ -15,8 +15,8 @@ TARGET_LINK_LIBRARIES(sll_file_io_parallel sll_collective
                                            sll_utilities
                                            ${HDF5_LIBRARIES} )
 
-
-IF(HDF5_ENABLED)
+# Ctest
+IF(HDF5_ENABLED AND BUILD_TESTING)
    ADD_EXECUTABLE(test_io_serial_blocks unit_test_serial_blocks.F90)
    TARGET_LINK_LIBRARIES(test_io_serial_blocks sll_file_io_parallel )
-ENDIF(HDF5_ENABLED)
+ENDIF(HDF5_ENABLED AND BUILD_TESTING)

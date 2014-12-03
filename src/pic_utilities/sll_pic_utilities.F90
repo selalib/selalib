@@ -51,11 +51,12 @@ contains
     num_particles =  p_group%number_particles
     p             => p_group%p_list
 
-    thread_id = 0
+    !$omp parallel default(SHARED) PRIVATE(thread_id, tmp1, tmp2, q_accum)
 #ifdef _OPENMP
     thread_id = OMP_GET_THREAD_NUM()
+#else
+    thread_id = 0
 #endif
-    !$omp parallel default(SHARED) PRIVATE(thread_id, tmp1, tmp2, q_accum)
     q_accum  => q_accumulator(thread_id+1)%q
     !$omp do
     do i=1,num_particles
@@ -112,11 +113,12 @@ contains
     num_particles =  p_group%number_particles
     p             => p_group%p_list
 
-    thread_id = 0
+    !$omp parallel default(SHARED) PRIVATE(thread_id, tmp1, tmp2, q_accum)
 #ifdef _OPENMP
     thread_id = OMP_GET_THREAD_NUM()
+#else
+    thread_id = 0
 #endif
-    !$omp parallel default(SHARED) PRIVATE(thread_id, tmp1, tmp2, q_accum)
     q_accum  => q_accumulator(thread_id+1)%q
     !$omp do
     do i=1,num_particles
@@ -141,11 +143,12 @@ contains
     num_particles =  p_group%number_particles
     p             => p_group%p_list
     
-    thread_id = 0
+    !$omp parallel default(SHARED) PRIVATE(thread_id, tmp, temp, q_accum)
 #ifdef _OPENMP
     thread_id = OMP_GET_THREAD_NUM()
+#else
+    thread_id = 0
 #endif
-    !$omp parallel default(SHARED) PRIVATE(thread_id, tmp, temp, q_accum)
     q_accum  => q_accumulator(thread_id+1)%q
     !$omp do
     do i=1,num_particles

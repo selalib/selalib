@@ -746,6 +746,7 @@ contains
     sll_int32, intent(in)      :: i, j
     sll_real64 :: res
 
+    res = 0.0_f64
     print *, "Error : eta1_cell for a hexagonal mesh only works with ONE parameter (num_cell)"
     STOP
   end function eta1_cell_hex_two_arg
@@ -755,6 +756,7 @@ contains
     sll_int32, intent(in)      :: i, j
     sll_real64 :: res
 
+    res = 0.0_f64
     print *, "Error : eta2_cell for a hexagonal mesh only works with ONE parameter (num_cell)"
     STOP
   end function eta2_cell_hex_two_arg
@@ -1336,21 +1338,21 @@ contains
 end subroutine write_hex_mesh_mtv
 
 
-  subroutine delete_hex_mesh_2d( mesh )
-    class(sll_hex_mesh_2d), intent(inout) :: mesh
-    sll_int32 :: ierr
+subroutine delete_hex_mesh_2d( mesh )
+  class(sll_hex_mesh_2d), intent(inout) :: mesh
+  sll_int32 :: ierr
 
-    SLL_DEALLOCATE(mesh%cartesian_coord, ierr)
-    SLL_DEALLOCATE(mesh%hex_coord, ierr)
-    SLL_DEALLOCATE(mesh%global_indices, ierr)
-    if ( mesh%EXTRA_TABLES.eq.1) then
-       SLL_DEALLOCATE(mesh%center_cartesian_coord, ierr)
-       SLL_DEALLOCATE(mesh%center_index, ierr)
-       SLL_DEALLOCATE(mesh%edge_center_cartesian_coord, ierr)
-       SLL_DEALLOCATE(mesh%edge_center_index, ierr)
-    end if
+  SLL_DEALLOCATE(mesh%cartesian_coord, ierr)
+  SLL_DEALLOCATE(mesh%hex_coord, ierr)
+  SLL_DEALLOCATE(mesh%global_indices, ierr)
+  if ( mesh%EXTRA_TABLES.eq.1) then
+     SLL_DEALLOCATE(mesh%center_cartesian_coord, ierr)
+     SLL_DEALLOCATE(mesh%center_index, ierr)
+     SLL_DEALLOCATE(mesh%edge_center_cartesian_coord, ierr)
+     SLL_DEALLOCATE(mesh%edge_center_index, ierr)
+  end if
 
-  end subroutine delete_hex_mesh_2d
+end subroutine delete_hex_mesh_2d
 
 
 #undef TEST_PRESENCE_AND_ASSIGN_VAL
