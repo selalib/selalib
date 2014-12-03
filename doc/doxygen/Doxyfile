@@ -812,6 +812,7 @@ EXCLUDE                = @CMAKE_CURRENT_SOURCE_DIR@/BSL \
                          @CMAKE_CURRENT_SOURCE_DIR@/lagrange_interpolation \
                          @CMAKE_CURRENT_SOURCE_DIR@/linear_solvers \
                          @CMAKE_CURRENT_SOURCE_DIR@/linearly_transformed_pic \
+                         @CMAKE_CURRENT_SOURCE_DIR@/meshes \
                          @CMAKE_CURRENT_SOURCE_DIR@/mapped_meshes \
                          @CMAKE_CURRENT_SOURCE_DIR@/mesh_calculus \
                          @CMAKE_CURRENT_SOURCE_DIR@/mudpack \
