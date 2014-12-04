@@ -81,8 +81,8 @@ C) Configuring (Makefile Generator)
         ./do-configure [OTHER OPTIONS] -D<PACKAGE>_ENABLED=ON
 
       where <PACKAGE> FFTW, etc. and SLL_HOME is set to the
-      selalib prototype source base directory (or your can just give it explicitly).
-      (ex: selalib/prototype/src)
+      selalib source base directory (or your can just give it explicitly).
+      (ex: selalib/src)
 
   b) [Recommended] Create a CMake file fragment and point to it.
 
@@ -435,7 +435,7 @@ F) Installing
 
     $ ./do-configure \
       -D CMAKE_INSTALL_PREFIX:PATH=$HOME/local \
-      -D SLL_BUILD_PACKAGE:BOOL=ON
+      -D BUILD_PACKAGE:BOOL=ON
 
   NOTE: The script 'do-configure' is just a simple shell script that calls
   CMake as shown above.

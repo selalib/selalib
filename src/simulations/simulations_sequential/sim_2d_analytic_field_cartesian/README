@@ -1,0 +1,25 @@
+Directory structure
+===================
+   test_2d_af_cartesian         -- executable
+   afsim2d_cartesian_sdf.nml    -- input file (swirling deformational flow)
+   afsim2d_cartesian_sdf.gnu    -- gnuplot script
+   README                       -- info (this file)
+   run/                         -- simulation directory
+
+HOWTO
+=====
+0. Create simulation directory if missing, and move into it
+     $ mkdir run
+     $ cd run
+
+1. Run simulation within directory
+     $ ../test_2d_af_cartesian ../afsim2d_cartesian_sdf
+
+2. Run included gnuplot script
+     $ gnuplot --persist ../afsim2d_cartesian_sdf.gnu
+
+3. Open *.xmf database with Visit (*)
+
+
+(*) Make sure that the Xdmf plugin is installed!
+
