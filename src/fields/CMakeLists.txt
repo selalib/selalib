@@ -11,11 +11,11 @@ TARGET_LINK_LIBRARIES(sll_fields
                       sll_file_io
                       sll_utilities)
 
-#IF (MPI_MODULE_ENABLED)
+#IF (MPI_ENABLED)
 #   SET(SLL_SCALAR_FIELD_SRCS ${SLL_SCALAR_FIELD_SRCS}
 #                             distribution_function_initializer_4d.F90
 #                             distribution_function_initializer_6d.F90)
-#ENDIF (MPI_MODULE_ENABLED)
+#ENDIF (MPI_ENABLED)
 
 #ADD_LIBRARY(sll_scalar_field STATIC ${SLL_SCALAR_FIELD_SRCS} )
 

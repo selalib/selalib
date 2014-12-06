@@ -133,7 +133,7 @@ C) Configuring (Makefile Generator)
       $ ./do-configure \
          -D HDF5_ENABLED:BOOL=ON \
          -D HDF5_PARALLEL_ENABLED:BOOL=ON \
-         -D MPI_MODULE_ENABLED:BOOL=ON \
+         -D MPI_ENABLED:BOOL=ON \
          -D BUILD_TESTS:BOOL=ON
   
   b) Configuring SeLaLib to test all effects of changing a given package(s):
@@ -216,7 +216,7 @@ C) Configuring (Makefile Generator)
 
   MPI is enabled by default, do disable the support you must minimally:
 
-    -D MPI_MODULE_ENABLED:BOOL=OFF
+    -D MPI_ENABLED:BOOL=OFF
 
   a) Configuring build using MPI compiler wrappers:
 
