@@ -5,10 +5,10 @@ structure like this:
                       ________________
                      |    Selalib     |
                      |________________|
-           __________________|______________________________________
-    ______|________   _______|_________   ______|________   ___|___ 
-   |   prototype   | |     selalib     | | gysela_public | | slv2d |
-   |_______________| |_________________| |_______________| |_______|
+           __________________|___________________
+    ______|________   _______|_________   ______|________ 
+   |   prototype   | |     selalib     | | gysela_public |
+   |_______________| |_________________| |_______________|
 
 The 'prototype' directory will contain the files related with the preliminary
 testing and development of an architecture for Selalib. During the initial
@@ -23,9 +23,6 @@ capabilities we intend to keep compatible with our other developments. However,
 since the public version of Gysela is derived from the proprietary version
 owned by the CEA, only the CEA personnel will work updating this part of the
 repository.
-
-'slv2d' is a code written by Eric Sonnendrucker that contains all functions
-we need to have in selalib. This part of the code will be used for testing purpose
 
 AVAILABLE BRANCHES:
 
