@@ -102,7 +102,7 @@ program vp_cartesian_4d
 
 
 #define TINI 0.0_f64
-#define TMAX 6.1_f64
+#define TMAX 0.1_f64
 !#define TMAX 0._f64
 #define CFL 0.7_f64
 #define ELECMAX 1.0_f64 ! upper bound estimate for the electric field

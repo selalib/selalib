@@ -5,7 +5,7 @@ IF(HDF5_ENABLED)
 #so the compiler should be parallel
 #should be changed
  
-  IF(MPI_MODULE_ENABLED)
+  IF(MPI_ENABLED)
     SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
   ENDIF()
 
