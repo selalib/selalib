@@ -8,6 +8,9 @@ use sll_utilities
 use biot_savart
 
 implicit none
+sll_int32  :: nbpart
+
+nbpart = 100
 
 call plot_test_2d()
 
@@ -24,14 +27,12 @@ sll_real64 :: xmin, xmax, vmin, vmax
 sll_real64 :: time
 sll_int32  :: i
 sll_int32  :: error
-sll_int32  :: nbpart
 sll_int32  :: nx, nv
 sll_real64 :: t, angle, r
 sll_real64, dimension(:), allocatable :: x
 sll_real64, dimension(:), allocatable :: v
 sll_real64, dimension(:), allocatable :: w
 
-nbpart = 10000
 SLL_ALLOCATE(x(nbpart),error)
 SLL_ALLOCATE(v(nbpart),error)
 SLL_ALLOCATE(w(nbpart),error)
@@ -71,7 +72,7 @@ call distribution_m4_gnuplot('df_m4', x, v, w, &
 end subroutine plot_test_2d
 
 subroutine test_animation_2d()
-integer :: nbpart, iplot, istep, imov, nstep
+integer :: iplot, istep, imov, nstep = 10
 sll_real64, dimension(:), pointer :: xp
 sll_real64, dimension(:), pointer :: yp
 sll_real64, dimension(:), pointer :: op
@@ -94,7 +95,6 @@ time = 0.0
 xmin = -3; xmax = 3.
 ymin = -2; ymax = 2.
 
-print*, nstep
 do istep = 1, nstep       !loop over time
    
    call vitesse(nbpart, xp, yp, op, up, vp, delta, time)
