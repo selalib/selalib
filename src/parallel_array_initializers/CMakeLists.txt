@@ -6,7 +6,7 @@ TARGET_LINK_LIBRARIES(sll_common_array_initializers
                       sll_working_precision
                       sll_constants)
 
-IF(MPI_MODULE_ENABLED)
+IF(MPI_ENABLED)
 
    ADD_LIBRARY(sll_parallel_array_initializers STATIC 
                sll_parallel_array_initializer_module.F90
@@ -32,4 +32,4 @@ IF(MPI_MODULE_ENABLED)
 
   ENDIF(BUILD_TESTING AND (PROCESSOR_COUNT GREATER 1))
 
-ENDIF(MPI_MODULE_ENABLED)
+ENDIF(MPI_ENABLED)
