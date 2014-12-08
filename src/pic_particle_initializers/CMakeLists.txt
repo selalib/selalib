@@ -23,11 +23,11 @@ TARGET_LINK_LIBRARIES( sll_pic_initializers
   sll_random_deviate_generators )
 
 # Ctest
-IF(MPI_MODULE_ENABLED AND BUILD_TESTING)
+IF(MPI_ENABLED AND BUILD_TESTING)
   ADD_EXECUTABLE( test_pic_initializers unit_test.F90 )
   TARGET_LINK_LIBRARIES( test_pic_initializers
     sll_pic_initializers
     sll_collective )
   ADD_TEST( NAME pic_initializers COMMAND test_pic_initializers )
   SET_TESTS_PROPERTIES( pic_initializers PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-ENDIF(MPI_MODULE_ENABLED AND BUILD_TESTING)
+ENDIF(MPI_ENABLED AND BUILD_TESTING)
