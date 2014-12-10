@@ -8,7 +8,7 @@
 #   ADD_TEST( NAME qns2d COMMAND test_qn_solver_2d )
 #   SET_TESTS_PROPERTIES( qns2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 #
-#   IF(MPI_MODULE_ENABLED)
+#   IF(MPI_ENABLED)
 #
 #      SET( CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER} )
 #
@@ -33,7 +33,7 @@
 #      TARGET_LINK_LIBRARIES( test_qn_solver_3d_polar_parallel_x1_wrapper 
 #          sll_qn_solvers_parallel )
 #
-#   ENDIF(MPI_MODULE_ENABLED)
+#   ENDIF(MPI_ENABLED)
 #
 ##ENDIF()
 #
@@ -59,7 +59,7 @@ ADD_LIBRARY( sll_qn_solvers STATIC sll_qn_solver_2d.F90 )
 TARGET_LINK_LIBRARIES( sll_qn_solvers sll_fft sll_utilities sll_timer )
 
 # Parallel library
-IF(MPI_MODULE_ENABLED)
+IF(MPI_ENABLED)
 
   SET( CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER} )
 
@@ -72,7 +72,7 @@ IF(MPI_MODULE_ENABLED)
   TARGET_LINK_LIBRARIES( sll_qn_solvers_parallel
     sll_remap sll_fft sll_poisson_solvers )
 
-ENDIF(MPI_MODULE_ENABLED)
+ENDIF(MPI_ENABLED)
 
 
 # Ctests
@@ -85,7 +85,7 @@ IF(BUILD_TESTING)
   SET_TESTS_PROPERTIES( qns2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
   # Parallel tests
-  IF(MPI_MODULE_ENABLED AND HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL AND
+  IF(MPI_ENABLED AND HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL AND
      FFT_LIB MATCHES "SLLFFT")
     
     ### BEGIN MACRO ###
