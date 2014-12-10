@@ -64,7 +64,9 @@ implicit none
   sll_real64 :: delta_x2
   sll_real64 :: dt
   sll_int32 :: nb_step
+  sll_int32 :: num_dt
   sll_int32 :: step
+  sll_int32 :: istep
   sll_real64 :: err
   sll_real64 :: alpha
   sll_int32 :: i0
@@ -86,7 +88,12 @@ implicit none
   sll_real64 :: err0
   sll_real64 :: err1
   sll_real64 :: err2
+  sll_real64 :: dt_max0
+  sll_real64 :: dt_max2
+  sll_int32 :: num_dt1
+  sll_int32 :: verbose
   
+   
   ! namelists for data input
   namelist /params/ &
     k_mode, &
@@ -98,23 +105,27 @@ implicit none
     x2_max, &
     dt, &
     nb_step, &
+    num_dt, &
     d, &
     A1_0, &
     A2_0, &
     A1, &
-    A2
+    A2, &
+    verbose
   
   !initialization
   k_mode = 3
   Nc_x1 = 512
   Nc_x2 = 16
   dt = 0.1_f64
-  nb_step = 10  
+  nb_step = 10
+  num_dt = 1  
   d = 5
   x1_min = 0._f64
   x1_max = 1._f64
   x2_min = 0._f64
   x2_max = 1._f64
+  verbose = 0
   
   
   A1_0 = 3._f64
@@ -125,7 +136,9 @@ implicit none
 
   call get_command_argument(1, filename)
   if (len_trim(filename) .ne. 0)then
-    print*,'#read namelist'
+    if(verbose==1)then
+      print*,'#read namelist'
+    endif
     open(unit = input_file, file=trim(filename)//'.nml',IOStat=IO_stat)
       if( IO_stat /= 0 ) then
         print *, '#aligned_translation_2d failed to open file ', trim(filename)//'.nml'
@@ -134,21 +147,25 @@ implicit none
       read(input_file, params) 
     close(input_file)    
   else
-    print *,'#use default parameters'  
+    if(verbose==1)then
+      print *,'#use default parameters'
+    endif    
   endif
-  print *,'#k_mode=',k_mode
-  print *,'#Nc_x1=',Nc_x1
-  print *,'#Nc_x2=',Nc_x2
-  print *,'#x1_min x1_max=',x1_min,x1_max
-  print *,'#x2_min x2_max=',x2_min,x2_max
-  print *,'#nb_step=',nb_step
-  print *,'#dt=',dt
-  print *,'#d=',d
-  print *,'#A1_0',A1_0
-  print *,'#A2_0',A2_0
-  print *,'#A1=',A1
-  print *,'#A2=',A2
-  
+  if(verbose==1)then
+    print *,'#k_mode=',k_mode
+    print *,'#Nc_x1=',Nc_x1
+    print *,'#Nc_x2=',Nc_x2
+    print *,'#x1_min x1_max=',x1_min,x1_max
+    print *,'#x2_min x2_max=',x2_min,x2_max
+    print *,'#nb_step=',nb_step
+    print *,'#dt=',dt
+    print *,'#num_dt=',num_dt
+    print *,'#d=',d
+    print *,'#A1_0',A1_0
+    print *,'#A2_0',A2_0
+    print *,'#A1=',A1
+    print *,'#A2=',A2
+  endif
   delta_x1 = (x1_max-x1_min)/real(Nc_x1,f64)
   delta_x2 = (x2_max-x2_min)/real(Nc_x2,f64)  
   r = -(d-1)/2
@@ -199,20 +216,34 @@ implicit none
 !    4) 
 
   
+  if(verbose==1)then
+    print *,'#error fexact-finit=',maxval(f_exact-f_init)
+  endif  
+err0 = 0._f64
+dt_max0 = dt
+if(num_dt>1)then
+  num_dt1=num_dt+1
+else
+  num_dt1 = num_dt  
+endif 
+do istep = 1,num_dt1  
+  dt_loc = real(istep,f64)/real(num_dt,f64)*dt
+  if(istep==num_dt+1)then
+    dt_loc = dt_max2
+  endif
   do i2=1,Nc_x2+1
     x2 = x2_min+real(i2-1,f64)*delta_x2
     do i1=1,Nc_x1+1
       x1 = x1_min+real(i1-1,f64)*delta_x1
       x2 = x2_min+real(i2-1,f64)*delta_x2
       f_init(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64)*(-A2_0*x1+A1_0*x2))
-      x1 = x1 - A1*real(nb_step,f64)*dt
-      x2 = x2 - A2*real(nb_step,f64)*dt
+      x1 = x1 - A1*real(nb_step,f64)*dt_loc
+      x2 = x2 - A2*real(nb_step,f64)*dt_loc
       f_exact(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64)*(-A2_0*x1+A1_0*x2))
     enddo
   enddo
-  
-  print *,'#error fexact-finit=',maxval(f_exact-f_init)
-  
+
+
   !classical method with splitting  
   f = f_init    
   err = 0._f64
@@ -220,17 +251,22 @@ implicit none
   do step = 1,nb_step    
     !advection in x1
     do i2=1,Nc_x2+1
-      call adv_x1%advect_1d_constant(A1, dt, f(1:Nc_x1+1,i2), f(1:Nc_x1+1,i2))
+      call adv_x1%advect_1d_constant(A1, dt_loc, f(1:Nc_x1+1,i2), f(1:Nc_x1+1,i2))
     enddo    
     !advection in x2
     do i1=1,Nc_x1+1
-      call adv_x2%advect_1d_constant(A2, dt, f(i1,1:Nc_x2+1), f(i1,1:Nc_x2+1))
+      call adv_x2%advect_1d_constant(A2, dt_loc, f(i1,1:Nc_x2+1), f(i1,1:Nc_x2+1))
     enddo          
   enddo  
-  err = maxval(abs(f-f_exact))  
-  err0 = err
-  print *,'#err for classical method=',err
-
+  err = maxval(abs(f-f_exact))
+  if(err>err0)then
+    dt_max0 = dt_loc
+    err0 = err 
+  endif  
+enddo
+  if(verbose==1)then  
+    print *,'#err for classical method=',err0
+  endif
 
 #ifndef NOHDF5
       call plot_f_cartesian( &
@@ -274,39 +310,38 @@ implicit none
 
   
   
-  !new method
-  f = f_init  
-  err = 0._f64  
-  alpha = A2*dt/delta_x2
-  i0 = floor(alpha)
-  alpha = alpha-i0  
-  print *,'#i0=',i0,alpha
-    
-  do step =1,nb_step
-    do i2=1,Nc_x2+1
-      !choose several dt_loc so that advection in x2 is exact
-      do ell=r,s
-        dt_loc = real(ell+i0,f64)*delta_x2/A2         
-        i2_loc = modulo(i2-ell-i0-1,Nc_x2)+1
-        call adv_x1%advect_1d_constant( &
-          A1, &
-          dt_loc, &
-          f(1:Nc_x1+1,i2_loc), &
-          buf(ell,1:Nc_x1+1))
-      enddo
-      ! interpolate between these values 
-      do i1=1,Nc_x1+1
-        f_new(i1,i2) = lagrange_interpolate(alpha, d, xx, buf(r:s,i1) )
-      enddo
-    enddo    
-    f = f_new
-  enddo
-  err = maxval(abs(f-f_exact))
-  err1=err
-  print *,'#err with new method=',err
+!!new method
+!  f = f_init  
+!  err = 0._f64  
+!  alpha = A2*dt/delta_x2
+!  i0 = floor(alpha)
+!  alpha = alpha-i0  
+!  print *,'#i0=',i0,alpha
+!    
+!  do step =1,nb_step
+!    do i2=1,Nc_x2+1
+!      !choose several dt_loc so that advection in x2 is exact
+!      do ell=r,s
+!        dt_loc = real(ell+i0,f64)*delta_x2/A2         
+!        i2_loc = modulo(i2-ell-i0-1,Nc_x2)+1
+!        call adv_x1%advect_1d_constant( &
+!          A1, &
+!          dt_loc, &
+!          f(1:Nc_x1+1,i2_loc), &
+!          buf(ell,1:Nc_x1+1))
+!      enddo
+!      ! interpolate between these values 
+!      do i1=1,Nc_x1+1
+!        f_new(i1,i2) = lagrange_interpolate(alpha, d, xx, buf(r:s,i1) )
+!      enddo
+!    enddo    
+!    f = f_new
+!  enddo
+!  err = maxval(abs(f-f_exact))
+!  err1=err
+!  print *,'#err with new method=',err
 
   !new method using oblic advector
-  f = f_init  
 
   adv => new_oblic_2d_advector( &
     Nc_x1, &
@@ -316,23 +351,50 @@ implicit none
     x2_max, &
     r, &
     s )
+
   
-  err = 0._f64  
+err2 = 0._f64
+dt_max2 = dt 
+do istep = 1,num_dt1  
+  f = f_init  
+  dt_loc = real(istep,f64)/real(num_dt,f64)*dt
+  if(istep==num_dt+1)then
+    dt_loc = dt_max2
+  endif
+
+  do i2=1,Nc_x2+1
+    x2 = x2_min+real(i2-1,f64)*delta_x2
+    do i1=1,Nc_x1+1
+      x1 = x1_min+real(i1-1,f64)*delta_x1
+      x2 = x2_min+real(i2-1,f64)*delta_x2
+      f_init(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64)*(-A2_0*x1+A1_0*x2))
+      x1 = x1 - A1*real(nb_step,f64)*dt_loc
+      x2 = x2 - A2*real(nb_step,f64)*dt_loc
+      f_exact(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64)*(-A2_0*x1+A1_0*x2))
+    enddo
+  enddo
+
+
   do step =1,nb_step
     call oblic_advect_2d_constant( &
       adv, &
       A1, &
       A2, &
-      dt, &
+      dt_loc, &
       f, &
       f_new)
     f = f_new      
   enddo  
   err = maxval(abs(f-f_exact))
-  err2=err
-  print *,'#err with new method using oblic advector=',err
-  
-  print *,Nc_x1,Nc_x2,d,dt,nb_step,k_mode,A1,A2,A1_0,A2_0,err0,err1,err2
+  if(err>err2)then
+    dt_max2 = dt_loc
+    err2 = err
+  endif
+enddo
+  if(verbose==1)then  
+    print *,'#err with new method using oblic advector=',err2
+  endif
+  print *,Nc_x1,Nc_x2,d,dt,nb_step,k_mode,A1,A2,A1_0,A2_0,err0,err2,dt_max0,dt_max2
 
 #ifndef NOHDF5
       call plot_f_cartesian( &
