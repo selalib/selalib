@@ -68,6 +68,8 @@ contains
   end subroutine sll_first_charge_accumulation_2d
 
   subroutine sll_first_charge_accumulation_2d_CS( p_group, q_accumulator )
+! ----  Remember : _CS is for use of Cubic Splines  ----
+! ------------------------------------------------------
     type(sll_particle_group_4d), pointer         :: p_group
     type(sll_charge_accumulator_2d_CS_ptr), dimension(:), pointer  :: q_accumulator
     type(sll_particle_4d), dimension(:), pointer :: p
@@ -81,11 +83,12 @@ contains
     num_particles =  p_group%number_particles
     p             => p_group%p_list
     
-    thread_id = 0
+    !$omp parallel default(SHARED) PRIVATE(thread_id, tmp, temp, q_accum)
 #ifdef _OPENMP
     thread_id = OMP_GET_THREAD_NUM()
+#else
+    thread_id = 0
 #endif
-    !$omp parallel default(SHARED) PRIVATE(thread_id, tmp, temp, q_accum)
     q_accum  => q_accumulator(thread_id+1)%q
     !$omp do
     do i=1,num_particles
