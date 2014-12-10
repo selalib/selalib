@@ -12,10 +12,10 @@ module finite_elements_solver_module
   !      - for bidirectional: same number of cells
   !                            in each direction
   !      - probably only working on dirichlet BC
-  !
+  ! 
   ! Contact :  Aurore Back
   !            Laura S. Mendoza (mela@ipp.mpg.de)
-  !
+  !           
   !------------------------------------------------
 
   use sll_knots
@@ -27,7 +27,7 @@ module finite_elements_solver_module
   use connectivity_module
   use gauss_legendre_integration
   use gauss_lobatto_integration
-  use sll_timer
+  use sll_timer 
   use sll_sparse_matrix_module
   use sll_cartesian_meshes
 
@@ -38,7 +38,7 @@ module finite_elements_solver_module
      ! Associated mesh (contains : eta1min, eta1max, delta1, ...)
      type(sll_cartesian_mesh_2d),  pointer :: mesh
      ! Total number of cells, typically for cartesian meshes nc1*nc2
-     sll_int32 :: num_cells
+     sll_int32 :: num_cells 
 
      ! Boundary conditions : THIS SHOULD BE CHANGED IN SLL AS A TYPE/LIST/... (?)
      sll_int32 :: bc_left
