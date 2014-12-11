@@ -4,11 +4,8 @@ module sll_module_deboor_splines_1d
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
 #include "sll_assert.h"
-
-use banded_linear_system_solver
-
 implicit none 
-
+  
 contains
   
     
@@ -735,6 +732,118 @@ function bvalue( t, bcoef, n, k, x, jderiv ) result(res)
     
 end function bvalue
   
+  
+!> Compute interpolanats for Dirichlet boundar conditions
+subroutine spli1d_dir(nx, kx, taux, g, bcoef, tx)
+
+sll_int32               , intent(in)    :: nx    !< number of points
+sll_int32               , intent(in)    :: kx    !< number of knots
+sll_real64, dimension(:), intent(in)    :: taux  !< knots sequence
+sll_real64, dimension(:), intent(in)    :: g     !< data ordinates
+sll_real64, dimension(:), intent(inout) :: bcoef !< B-splines
+sll_real64, dimension(:), intent(inout) :: tx    !< Knots positions
+sll_int32                               :: i
+    
+    
+! *** set up knots and interpolate between knots
+tx(1:kx)       = taux(1)
+tx(nx+1:nx+kx) = taux(nx)
+  
+if (mod(kx,2) == 0) then
+  do i = kx+1, nx
+    tx(i) = taux(i-kx/2) 
+  end do
+else
+  do i = kx+1, nx
+    tx(i) = 0.5*(taux(i-(kx-1)/2)+taux(i-1-(kx-1)/2))
+  end do
+end if
+    
+call splint(taux, g, tx, nx, kx, bcoef)
+  
+end subroutine spli1d_dir
+
+!> @brief
+!> Compute interpolants for periodic BC
+!> @details
+!> Construct knots and call De Boor routine splint
+subroutine spli1d_per( L, nx, kx, taux, g, bcoef, tx)
+
+sll_real64, intent(in)    :: L        !< Periodicity length
+sll_int32,  intent(in)    :: nx       !< Number of data points
+sll_int32,  intent(in)    :: kx       !< Splines degree
+sll_real64, intent(in)    :: taux(:)  !< Points positions
+sll_real64, intent(in)    :: g(:)     !< Data values at points
+sll_real64, intent(inout) :: bcoef(:) !< Spline coefficients
+sll_real64, intent(inout) :: tx(:)    !< Knots positions
+
+sll_int32 :: i
+
+SLL_ASSERT ( L /= 0.0_8 )
+  
+tx(1:kx)       = taux(1)
+tx(nx+1:nx+kx) = taux(nx)
+  
+if (mod(kx,2) == 0) then
+  do i = kx + 1, nx
+    tx(i) = taux(i-kx/2) 
+  end do
+else
+  do i = kx + 1, nx
+    tx(i) = 0.5*(taux(i-(kx-1)/2)+taux(i-1-(kx-1)/2))
+  end do
+end if
+
+call splint( taux, g, tx, nx, kx, bcoef)
+    
+end subroutine spli1d_per
+
+!> @brief
+!> Compute interpolants for non periodic BC
+!> @details
+!> Add conditions on values and their derivatives.
+subroutine spli1d_der( nx,       &
+                       nx_der,   &
+                       kx,       &
+                       taux,     &
+                       g,        &
+                       taux_der, &
+                       g_der,    &
+                       bcoef,    &
+                       tx)
+
+  sll_int32,  intent(in)    :: nx          !< Number of data points
+  sll_int32,  intent(in)    :: kx          !< Spline degree
+  sll_int32,  intent(in)    :: nx_der      !< Number of data derivatives points
+  sll_real64, intent(in)    :: taux(:)     !< Positions of points for data values
+  sll_real64, intent(in)    :: g(:)        !< Data values
+  sll_int32,  intent(in)    :: taux_der(:) !< Node index to evaluate derivative
+  sll_real64, intent(in)    :: g_der(:)    !< Values of data derivatives
+  sll_real64, intent(inout) :: bcoef(:)    !< Splines coefficients
+  sll_real64, intent(inout) :: tx(:)       !< Knots positions
+  
+  tx = 0.0_f64
+  tx(1:kx) = taux(1)
+  tx(nx+nx_der+1:nx+nx_der+kx) = taux(nx)
+  
+  if (nx+nx_der+kx == nx + 2*(kx-1)) then
+    tx(kx+1:nx+nx_der) = taux(2:nx-1)
+  else
+    SLL_WARNING('problem with construction of knots')
+  end if
+
+  call splint_der ( taux,     &
+                    g,        &
+                    taux_der, &
+                    g_der,    &
+                    tx,       &
+                    nx,       &
+                    nx_der,   &
+                    kx,       &
+                    bcoef)
+    
+end subroutine spli1d_der
+
 !*************************************************************************
 !
 ! SPLINT produces the B-spline coefficients BCOEF of an 
@@ -829,15 +938,16 @@ subroutine splint( tau, gtau, t, n, k, bcoef )
   sll_int32                        :: i
   sll_int32                        :: ilp1mx
   sll_int32                        :: j
+  sll_int32                        :: jj
   sll_int32                        :: kpkm2
   sll_int32                        :: left
-  sll_real64, dimension((2*k-1),n) :: q
+  sll_real64, dimension((2*k-1)*n) :: q
   sll_real64                       :: taui
   sll_int32                        :: iflag
  
   kpkm2 = 2 * ( k - 1 )
   left = k
-  q    = 0.0_f64
+  q(1:(2*k-1)*n) = 0.0_f64
   !
   !  Loop over I to construct the N interpolation equations.
   !
@@ -909,12 +1019,11 @@ subroutine splint( tau, gtau, t, n, k, bcoef )
     !    I -(LEFT+J)+2*K + ((LEFT+J)-K-1)*(2*K-1)
     !   = I-LEFT+1+(LEFT -K)*(2*K-1) + (2*K-2)*J
     
-    !jj = i - left + 1 + ( left - k ) * ( k + k - 1 )
+    jj = i - left + 1 + ( left - k ) * ( k + k - 1 )
        
     do j = 1, k
-    !  jj = jj + kpkm2
-    ! q(jj) = bcoef(j)
-      q(i-(left+j)+2*k,left+j-k) = bcoef(j)
+      jj = jj + kpkm2
+      q(jj) = bcoef(j)
     end do
        
   end do
@@ -1021,15 +1130,15 @@ end subroutine splint
 
 subroutine splint_der(tau,gtau,tau_der,gtau_der,t,n,m,k,bcoef_spline)
     
-  sll_real64, intent(in)   :: tau(:)
-  sll_real64, intent(in)   :: gtau(:)
-  sll_int32,  intent(in)   :: tau_der(:)
-  sll_real64, intent(in)   :: gtau_der(:) 
-  sll_real64, intent(in)   :: t(:)
-  sll_int32,  intent(in)   :: n
-  sll_int32,  intent(in)   :: m
-  sll_int32,  intent(in)   :: k
-  sll_real64, intent(inout):: bcoef_spline(:) 
+  sll_real64, intent(in)     :: tau(:)
+  sll_real64, intent(in)     :: gtau(:)
+  sll_int32,  intent(in)     :: tau_der(:)
+  sll_real64, intent(in)     :: gtau_der(:) 
+  sll_real64, intent(in)     :: t(:)
+  sll_int32,  intent(in)     :: n
+  sll_int32,  intent(in)     :: m
+  sll_int32,  intent(in)     :: k
+  sll_real64, intent(inout)  :: bcoef_spline(n+m) 
 
   sll_real64, dimension(n+m)           :: bcoef
   sll_int32                            :: i
@@ -1039,18 +1148,18 @@ subroutine splint_der(tau,gtau,tau_der,gtau_der,t,n,m,k,bcoef_spline)
   sll_int32                            :: jj
   sll_int32                            :: kpkm2
   sll_int32                            :: left
-  sll_real64, dimension((2*k-1),(n+m)) :: q
+  sll_real64, dimension((2*k-1)*(n+m)) :: q
   sll_real64                           :: taui
   sll_real64                           :: taui_der
   sll_real64, dimension(k,k)           :: a
   sll_real64, dimension(k,2)           :: bcoef_der
   sll_int32                            :: iflag
   
-  kpkm2     = 2*(k-1)
-  left      = k
-  q         = 0.0_f64
-  a         = 0.0_f64
-  bcoef_der = 0.0_f64
+  kpkm2              = 2*(k-1)
+  left               = k
+  q(1:(2*k-1)*(n+m)) = 0.0_f64
+  a(1:k,1:k)         = 0.0_f64
+  bcoef_der(1:k,1:2) = 0.0_f64
 
   ! we must suppose that m is <= than n 
   SLL_ASSERT(m <= n)
@@ -1105,18 +1214,13 @@ subroutine splint_der(tau,gtau,tau_der,gtau_der,t,n,m,k,bcoef_spline)
     !    I -(LEFT+J)+2*K + ((LEFT+J)-K-1)*(2*K-1)
     !    =  begin_ligne +  (begin_col -1) * number_coef_different_0
     !   = I-LEFT+1+(LEFT -K)*(2*K-1) + (2*K-2)*J
-    
+    !
     jj = i - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
        
     do j = 1, k
       jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
-      !q(jj) = bcoef(j)
-      q(i-(left+j)+2*k+l-1,left+j-k) = bcoef(j)
+      q(jj) = bcoef(j)
     end do
-
-    !do i = 1, 2*k-1
-    !   q(i-(left+j)+2*k,(left-k+j) = bcoef(left-k+j)
-    !end do
 
     bcoef_spline(i+l-1) = gtau(i)
 
@@ -1130,8 +1234,7 @@ subroutine splint_der(tau,gtau,tau_der,gtau_der,t,n,m,k,bcoef_spline)
        
       do j = 1, k
         jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
-        !q(jj) = bcoef_der(j,2)
-        q(i-(left+j)+2*k+l-1,left+j-k) = bcoef_der(j,2)
+        q(jj) = bcoef_der(j,2)
       end do
       bcoef_spline(i+ l-1) = gtau_der(l-1)
     end if
@@ -1150,8 +1253,7 @@ subroutine splint_der(tau,gtau,tau_der,gtau_der,t,n,m,k,bcoef_spline)
        
     do j = 1, k
       jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
-      !q(jj) = bcoef_der(j,2)
-      q(i-(left+j)+2*k+l-1,left+j-k) = bcoef_der(j,2)
+      q(jj) = bcoef_der(j,2)
     end do
     bcoef_spline(n+ l-1) = gtau_der(l)
     l = l + 1
@@ -1163,8 +1265,7 @@ subroutine splint_der(tau,gtau,tau_der,gtau_der,t,n,m,k,bcoef_spline)
        
   do j = 1, k
     jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
-    !q(jj) = bcoef(j)
-    q(i-(left+j)+2*k+l-1,left+j-k) = bcoef(j)
+    q(jj) = bcoef(j)
   end do
   bcoef_spline(n+l-1) = gtau(n)
   !
