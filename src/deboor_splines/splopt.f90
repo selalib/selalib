@@ -1,5 +1,4 @@
 subroutine splopt ( tau, n, k, scrtch, t, iflag )
-use banded_linear_system_solver
   
 !*****************************************************************************80
   !
