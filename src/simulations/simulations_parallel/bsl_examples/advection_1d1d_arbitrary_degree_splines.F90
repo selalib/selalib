@@ -72,8 +72,8 @@ end if
 call spl_eta1%initialize(nc_eta1+1, eta1_min, eta1_max, &
                          SLL_PERIODIC, SLL_PERIODIC, 2)
 
-!call spl_eta2%initialize(nc_eta2+1, eta2_min, eta2_max, &
-!                         SLL_PERIODIC, SLL_PERIODIC, 2)
+call spl_eta2%initialize(nc_eta2+1, eta2_min, eta2_max, &
+                         SLL_PERIODIC, SLL_PERIODIC, 2)
 
 interp_eta1 => spl_eta1
 interp_eta2 => spl_eta2
@@ -129,7 +129,7 @@ do i_step=1, n_step
 
   call apply_remap_2D( eta1_to_eta2, f_eta1, f_eta2 )
 
-  !call advection_eta2(delta_t)
+  call advection_eta2(delta_t)
 
   call apply_remap_2D( eta2_to_eta1, f_eta2, f_eta1 )
 
