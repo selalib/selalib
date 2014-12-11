@@ -8,7 +8,7 @@
 use sll_xml_io
 use sll_ascii_io
 use sll_binary_io
-use sll_gnuplot
+use sll_gnuplot_parallel
 #ifdef HDF5_PARALLEL
 use sll_hdf5_io_parallel
 #endif
