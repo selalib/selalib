@@ -2,12 +2,11 @@ program parallel_advection
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_remap.h"
 #include "sll_interpolators.h"
 #include "sll_utilities.h"
 use sll_gnuplot_parallel
-
 use sll_collective
+use sll_remapper
 #define MPI_MASTER 0
 
   implicit none
