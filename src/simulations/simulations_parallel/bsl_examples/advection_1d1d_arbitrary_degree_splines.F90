@@ -49,7 +49,7 @@ sll_real64, parameter :: eta2_min = - 5.0_f64            !
 sll_real64, parameter :: eta2_max = + 5.0_f64            !
 sll_real64 :: delta_eta1 = (eta1_max-eta1_min)/nc_eta1   !
 sll_real64 :: delta_eta2 = (eta2_max-eta2_min)/nc_eta2   !
-sll_real64, parameter :: delta_t = 0.05_f64              !
+sll_real64, parameter :: delta_t = 0.01_f64              !
 sll_int32,  parameter :: n_step  = 200                  !
                                                            !
 !###########################################################
@@ -72,8 +72,8 @@ end if
 call spl_eta1%initialize(nc_eta1+1, eta1_min, eta1_max, &
                          SLL_PERIODIC, SLL_PERIODIC, 2)
 
-call spl_eta2%initialize(nc_eta2+1, eta2_min, eta2_max, &
-                         SLL_PERIODIC, SLL_PERIODIC, 2)
+!call spl_eta2%initialize(nc_eta2+1, eta2_min, eta2_max, &
+!                         SLL_PERIODIC, SLL_PERIODIC, 2)
 
 interp_eta1 => spl_eta1
 interp_eta2 => spl_eta2
@@ -129,7 +129,7 @@ do i_step=1, n_step
 
   call apply_remap_2D( eta1_to_eta2, f_eta1, f_eta2 )
 
-  call advection_eta2(delta_t)
+  !call advection_eta2(delta_t)
 
   call apply_remap_2D( eta2_to_eta1, f_eta2, f_eta1 )
 
@@ -171,7 +171,7 @@ subroutine advection_eta1(dt)
      call interp_eta1%compute_interpolants( f_eta1(:,j) )
 
      do i = 1, loc_sz_i
-        eta1 = eta1_min + modulo((i-1)*delta_eta1 - alpha, eta1_max-eta1_min)
+        eta1 = eta1_min + (i-1)*delta_eta1 - alpha
         f_eta1(i,j) = interp_eta1%interpolate_value(eta1)
      end do
 
