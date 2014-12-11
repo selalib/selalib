@@ -3,13 +3,21 @@ program integration_tester
 #include "sll_constants.h"
   use gauss_legendre_integration
   use gauss_lobatto_integration
-  use test_function_module, only: one, test_func
+  use fekete_integration
+  use test_function_module, only: one, test_func, one_2D, test_func_2D
   implicit none
   intrinsic :: dsin
   integer :: i,j,n
   sll_real64, dimension(10) :: x, w
   sll_real64, dimension(:,:), allocatable :: d, dlag
   character(len=18) :: string
+  ! For the fekete quadrature:
+  sll_real64, dimension(2, 3) :: pxy1
+  sll_real64, dimension(2, 3) :: pxy2
+  sll_real64, dimension(3,10) :: xyw
+  sll_real64 :: app_res
+  sll_real64 :: exa_res
+
 
   write (*,'(9x, a10, 9x, a10, 5x, a20 )') ' legendre ',' lobatto ', 'Exact value: '
   do i=2,10
@@ -90,9 +98,39 @@ program integration_tester
 
   write(*,"(/,a,/)") " Exact values with maple "
 
-  do i = 1, n
-     write(*,string) ( dlag(i,j), j = 1, n)
+  do j = 1, n
+     write(*,string) ( dlag(i,j), i = 1, n)
   end do 
+
+
+  write(*,"(/,a)") "*********************************** "
+  write(*,"(a)") "       FEKETE QUAD TEST       "
+  write(*,"(a)") "*********************************** "
+  
+  !Definition of first triangle
+  pxy1(:,1) = (/ 0._f64, 0._f64 /)
+  pxy1(:,2) = (/ 1._f64, 0._f64 /)
+  pxy1(:,3) = (/ 0._f64, 1._f64 /)
+
+  !Definition of first triangle
+  pxy2(:,1) = (/ 1._f64, 0._f64 /)
+  pxy2(:,2) = (/ 1._f64, 1._f64 /)
+  pxy2(:,3) = (/ 0._f64, 1._f64 /)
+
+  write(*,"(a)") " Computing Fekete points on reference triangle "
+
+  xyw = fekete_points_and_weights(pxy1)
+
+  do j = 1, 10
+     write(*, string) (xyw(i,j), i = 1, 3)
+  end do 
+
+  write(*,"(a)") " Test for a constant real function (=1) "
+  write(*,"(a)") " on the squared domain [0,1]^2 divided on 2 triangles "
+
+  app_res = fekete_integral(one_2D, pxy1) + fekete_integral(one_2D, pxy2)
+  
+  write (*,"(a, f20.12)") " aprox = ", app_res
 
   print*, 'PASSED'
 
