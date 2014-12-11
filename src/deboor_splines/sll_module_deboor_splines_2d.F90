@@ -228,7 +228,7 @@ subroutine spli2d ( tau, gtau, t, n, k, m, bcoef)
   sll_real64, dimension(:,:), intent(inout) :: bcoef !(m,n)
 
   sll_real64, dimension(n)         :: work  !(n)
-  sll_real64, dimension((2*k-1),n) :: q     !((2*k-1)*n)
+  sll_real64, dimension((2*k-1)*n) :: q     !((2*k-1)*n)
 
   sll_int32   :: i
   sll_int32   :: ilp1mx
@@ -240,7 +240,7 @@ subroutine spli2d ( tau, gtau, t, n, k, m, bcoef)
     
   left = k
    
-  q = 0.0_f64
+  q(1:(2*k-1)*n) = 0.0_f64
   !
   !  Construct the N interpolation equations.
   !
@@ -311,8 +311,7 @@ subroutine spli2d ( tau, gtau, t, n, k, m, bcoef)
        
     do j = 1, k
       jj = jj + k + k - 2
-      !q(jj) = work(j)
-      q(i-(left+j)+2*k,left+j-k) = work(j)
+      q(jj) = work(j)
     end do
        
   end do
@@ -352,10 +351,39 @@ subroutine spli2d_custom ( nx, kx, taux, ny, ky, tauy, g, bcoef, tx, ty)
   sll_real64, intent(in)    :: g(:,:)     !nx,ny	
   sll_real64, intent(inout) :: bcoef(:,:) !nx , ny 
 
-  sll_real64, intent(in) :: tx(:) 
-  sll_real64, intent(in) :: ty(:) 
+  sll_real64 :: tx(nx+kx) 
+  sll_real64 :: ty(ny+ky) 
   sll_real64 :: tmp(nx,ny)
+  sll_int32  :: i, j
     
+  tx = 0.0
+  ty = 0.0
+  tx(1:kx)       = taux(1)
+  tx(nx+1:nx+kx) = taux(nx)
+    
+  if (mod(kx,2) == 0) then
+    do i = kx + 1, nx
+      tx(i) = taux(i-kx/2) 
+    end do
+  else
+    do i = kx+1, nx
+      tx(i) = 0.5*(taux(i-(kx-1)/2)+taux(i-1-(kx-1)/2))
+    end do
+  end if
+
+  ty(1:ky)       = tauy(1)
+  ty(ny+1:ny+ky) = tauy(ny)
+
+  if (mod(ky,2) == 0) then
+    do j = ky+1, ny
+      ty(j) = tauy(j-ky/2) 
+    end do
+  else
+    do j = ky+1, ny
+      ty(j) = 0.5*(tauy(j-(ky-1)/2) + tauy(j-1-(ky-1)/2))
+    end do
+  end if
+
   call spli2d(taux,   g, tx, nx, kx, ny, tmp)
   call spli2d(tauy, tmp, ty, ny, ky, nx, bcoef)
      
@@ -440,18 +468,27 @@ subroutine spli2d_custom_derder ( nx,       &
   sll_int32 :: i
   sll_int32 :: j
    
+  tx(1:kx)                     = taux(1)
+  tx(nx+nx_der+1:nx+nx_der+kx) = taux(nx)
+    
   SLL_ASSERT(nx+nx_der+kx == nx+2*(kx-1))
+  tx(kx+1:nx+nx_der) = taux(2:nx-1)
+    
+  ty(1:ky)                     = tauy(1)
+  ty(ny+ny_der+1:ny+ny_der+ky) = tauy(ny)
+    
   SLL_ASSERT(ny+ny_der+ky == ny+2*(ky-1))
+  ty(ky+1:ny+ny_der) = tauy(2:ny-1)
     
   do j = 1, ny
        
-    call splint_der(taux,g(:,j),taux_der,g_der1(:,j),tx,nx,nx_der,kx,tmp(j,:))
+    call splint_der( taux, g(:,j), taux_der, g_der1(:,j), tx, nx, nx_der, kx, tmp(j,:))
        
   end do
 
   do i = 1, nx+nx_der
        
-    call splint_der(tauy,tmp(:,i),tauy_der,g_der2(:,i),ty,ny,ny_der,ky,bcoef(i,:))
+    call splint_der( tauy, tmp(:,i), tauy_der, g_der2(:,i), ty, ny, ny_der, ky, bcoef(i,:))
        
   end do
     
