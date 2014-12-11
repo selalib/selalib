@@ -4,11 +4,11 @@ program unit_test
 #include "sll_interpolators.h"
 implicit none
 
-#define NPTS1 65
-#define NPTS2 65 
+#define NPTS1 31
+#define NPTS2 31 
 #define SPL_DEG 3
-#define X1MIN (-5.0_f64)
-#define X1MAX (+5.0_f64)
+#define X1MIN 0.0_f64
+#define X1MAX 1.0_f64
 
 type(sll_arbitrary_degree_spline_interpolator_1d) :: ad1d
 
@@ -37,15 +37,15 @@ allocate(reference(NPTS1))
 allocate(eta1_pos(NPTS1))
 allocate(eta1_prime(2))
 
-!print *, '***********************************************************'
-!print *, '              periodic case'
-!print *, '***********************************************************'
+print *, '***********************************************************'
+print *, '              periodic case'
+print *, '***********************************************************'
   
-do i=1,NPTS1
-  eta1         = X1MIN + (i-1)*h1
-  eta1_pos(i)  = eta1
-  x(i)         = sin(2.0_f64*sll_pi*eta1)
-  reference(i) = sin(2.0_f64*sll_pi*eta1)
+do i=0,NPTS1-1
+  eta1           = X1MIN + real(i,f64)*h1
+  eta1_pos(i+1)  = eta1
+  x(i+1)         = sin(2.0_f64*sll_pi*eta1)
+  reference(i+1) = sin(2.0_f64*sll_pi*eta1)
 end do
   
 call ad1d%initialize(NPTS1,X1MIN,X1MAX,SLL_PERIODIC,SLL_PERIODIC,SPL_DEG)
@@ -55,10 +55,10 @@ acc  = 0.0_f64
 acc_der1  = 0.0_f64
 normL2_0 = 0.0_f64
 normH1_0 = 0.0_f64
-do i=1,NPTS1
-  eta1       = eta1_pos(i)
+do i=0,NPTS1-2
+  eta1       = X1MIN + real(i,f64)*h1
   node_val   = ad1d%interpolate_value(eta1)
-  ref        = reference(i)
+  ref        = sin(2.0_f64*sll_pi*eta1)
   acc        = acc + abs(node_val-ref)
   normL2_0   = normL2_0  + (node_val-ref)**2*h1
   deriv1_val = ad1d%interpolate_derivative_eta1(eta1)
@@ -69,9 +69,16 @@ end do
 
 call sll_delete(ad1d)
   
-!print *, '***********************************************************'
-!print *, '              dirichlet case'
-!print *, '***********************************************************'
+print *, '***********************************************************'
+print *, '              dirichlet case'
+print *, '***********************************************************'
+  
+do i=0,NPTS1-1
+  eta1           = X1MIN + real(i,f64)*h1
+  eta1_pos(i+1)  = eta1
+  x(i+1)         = sin(2.0_f64*sll_pi*eta1)
+  reference(i+1) = sin(2.0_f64*sll_pi*eta1)
+end do
   
 call ad1d%initialize(NPTS1,X1MIN,X1MAX,SLL_DIRICHLET,SLL_DIRICHLET,SPL_DEG)
 call ad1d%compute_interpolants(x)
@@ -80,10 +87,10 @@ acc1 = 0.0_f64
 acc1_der1 = 0.0_f64
 normL2_1 = 0.0_f64
 normH1_1 = 0.0_f64
-do i=1,NPTS1
-   eta1       = eta1_pos(i)
+do i=0,NPTS1-2
+   eta1       = X1MIN + real(i,f64)*h1
    node_val   = ad1d%interpolate_value(eta1)
-   ref        = reference(i)
+   ref        = sin(2.0_f64*sll_pi*eta1)
    acc1       = acc1 + abs(node_val-ref)
    normL2_1   = normL2_1  + (node_val-ref)**2*h1
    deriv1_val = ad1d%interpolate_derivative_eta1(eta1)   
@@ -94,14 +101,15 @@ end do
 
 call sll_delete(ad1d)
   
-!print *, '***********************************************************'
-!print *, '              dirichlet case non homogene'
-!print *, '***********************************************************'
+print *, '***********************************************************'
+print *, '              dirichlet case non homogene'
+print *, '***********************************************************'
 
-do i=1,NPTS1
-  eta1         = eta1_pos(i)
-  x(i)         = sin(2.0_f64*sll_pi*eta1) + 3.0_f64
-  reference(i) = sin(2.0_f64*sll_pi*eta1) + 3.0_f64
+do i=0,NPTS1-1
+  eta1           = X1MIN + real(i,f64)*h1
+  eta1_pos(i+1)  = eta1
+  x(i+1)         = sin(2.0_f64*sll_pi*eta1) + 3.0_f64
+  reference(i+1) = sin(2.0_f64*sll_pi*eta1) + 3.0_f64
 end do
   
 call ad1d%initialize(NPTS1,X1MIN,X1MAX,SLL_DIRICHLET,SLL_DIRICHLET,SPL_DEG)
@@ -114,8 +122,8 @@ acc2 = 0.0_f64
 acc2_der1 = 0.0_f64
 normL2_2 = 0.0_f64
 normH1_2 = 0.0_f64
-do i=1,NPTS1
-  eta1       = eta1_pos(i)
+do i=0,NPTS1-2
+  eta1       = X1MIN + real(i,f64)*h1
   node_val   = ad1d%interpolate_value(eta1)
   ref        = sin(2.0_f64*sll_pi*eta1)+ 3.0_f64
   acc2       = acc2 + abs(node_val-ref)
@@ -128,14 +136,15 @@ end do
   
 call sll_delete(ad1d)
 
-!print *, '***********************************************************'
-!print *, '              Hermite-Hermite case '
-!print *, '***********************************************************'
+print *, '***********************************************************'
+print *, '              Hermite-Hermite case '
+print *, '***********************************************************'
 
-do i=1,NPTS1
-  eta1         = eta1_pos(i)
-  x(i)         = sin(2.0_f64*sll_pi*eta1) + 3.0_f64
-  reference(i) = sin(2.0_f64*sll_pi*eta1) + 3.0_f64
+do i=0,NPTS1-1
+     eta1               = X1MIN + real(i,f64)*h1
+     eta1_pos(i+1)      = eta1
+     x(i+1)             = sin(2.0_f64*sll_pi*eta1) + 3.0_f64
+     reference(i+1)     = sin(2.0_f64*sll_pi*eta1) + 3.0_f64
 end do
 xprime(1)     = cos(2.0_f64*sll_pi*eta1_pos(1))*2.0_f64*sll_pi
 xprime(2)     = cos(2.0_f64*sll_pi*eta1_pos(NPTS1))*2.0_f64*sll_pi
@@ -156,8 +165,8 @@ acc3 = 0.0_f64
 acc3_der1 = 0.0_f64
 normL2_3 = 0.0_f64
 normH1_3 = 0.0_f64
-do i=1,NPTS1
-  eta1       = eta1_pos(i)
+do i=0,NPTS1-2
+  eta1       = X1MIN + real(i,f64)*h1
   node_val   = ad1d%interpolate_value(eta1)
   ref        = sin(2.0_f64*sll_pi*eta1)+ 3.0_f64
   acc3       = acc3 + abs(node_val-ref)
@@ -170,14 +179,15 @@ end do
   
 call sll_delete(ad1d)
 
-!print *, '***********************************************************'
-!print *, '              Neumann-Dirichlet case '
-!print *, '***********************************************************'
+print *, '***********************************************************'
+print *, '              Neumann-Dirichlet case '
+print *, '***********************************************************'
 
-do i=1,NPTS1
-  eta1         = eta1_pos(i)
-  x(i)         = cos(2.0_f64*sll_pi*eta1)
-  reference(i) = cos(2.0_f64*sll_pi*eta1)
+do i=0,NPTS1-1
+  eta1               = X1MIN + real(i,f64)*h1
+  eta1_pos(i+1)      = eta1
+  x(i+1)             = cos(2.0_f64*sll_pi*eta1)
+  reference(i+1)     = cos(2.0_f64*sll_pi*eta1)
 end do
 
 xprime(1) = 0.0
@@ -199,8 +209,8 @@ acc4 = 0.0_f64
 acc4_der1 = 0.0_f64
 normL2_4 = 0.0_f64
 normH1_4 = 0.0_f64
-do i=1,NPTS1
-   eta1       = eta1_pos(i)
+do i=0,NPTS1-2
+   eta1       = X1MIN + real(i,f64)*h1
    node_val   = ad1d%interpolate_value(eta1)
    ref        = cos(2.0_f64*sll_pi*eta1)
    acc4       = acc4 + abs(node_val-ref)
@@ -213,14 +223,15 @@ end do
 
 call sll_delete(ad1d)
 
-!print *, '***********************************************************'
-!print *, '              Neumann-Dirichlet case '
-!print *, '***********************************************************'
+print *, '***********************************************************'
+print *, '              Neumann-Dirichlet case '
+print *, '***********************************************************'
 
-do i=1,NPTS1
-   eta1         = eta1_pos(i)
-   x(i)         = cos(2.0_f64*sll_pi*eta1)
-   reference(i) = cos(2.0_f64*sll_pi*eta1)
+do i=0,NPTS1-1
+   eta1           = X1MIN + real(i,f64)*h1
+   eta1_pos(i+1)  = eta1
+   x(i+1)         = cos(2.0_f64*sll_pi*eta1)
+   reference(i+1) = cos(2.0_f64*sll_pi*eta1)
 end do
 xprime(1) = 0.0
 xprime(2) = 0.0
@@ -241,8 +252,8 @@ acc4 = 0.0_f64
 acc4_der1 = 0.0_f64
 normL2_4 = 0.0_f64
 normH1_4 = 0.0_f64
-do i=1,NPTS1
-   eta1       = eta1_pos(i)
+do i=0,NPTS1-1
+   eta1       = X1MIN + real(i,f64)*h1
    node_val   = ad1d%interpolate_value(eta1)
    ref        = cos(2.0_f64*sll_pi*eta1)
    acc4       = acc4 + abs(node_val-ref)
@@ -255,14 +266,15 @@ end do
 
 call sll_delete(ad1d)
 
-!print *, '***********************************************************'
-!print *, '              Neumann-Neumann case '
-!print *, '***********************************************************'
+print *, '***********************************************************'
+print *, '              Neumann-Neumann case '
+print *, '***********************************************************'
 
-do i=1,NPTS1
-   eta1         = eta1_pos(i)
-   x(i)         = cos(2.0_f64*sll_pi*eta1)
-   reference(i) = cos(2.0_f64*sll_pi*eta1)
+do i=0,NPTS1-1
+   eta1           = X1MIN + real(i,f64)*h1
+   eta1_pos(i+1)  = eta1
+   x(i+1)         = cos(2.0_f64*sll_pi*eta1)
+   reference(i+1) = cos(2.0_f64*sll_pi*eta1)
 end do
 xprime(1) = 0.0
 xprime(2) = 0.0
@@ -283,8 +295,8 @@ acc5 = 0.0_f64
 acc5_der1 = 0.0_f64
 normL2_5 = 0.0_f64
 normH1_5 = 0.0_f64
-do i=1,NPTS1
-   eta1       = eta1_pos(i)
+do i=0,NPTS1-1
+   eta1       = X1MIN + real(i,f64)*h1
    node_val   = ad1d%interpolate_value(eta1)
    ref        = cos(2.0_f64*sll_pi*eta1)
    acc5       = acc5 + abs(node_val-ref)
@@ -297,14 +309,15 @@ end do
 
 call sll_delete(ad1d)
 
-!print *, '***********************************************************'
-!print *, '              Hermite-Neumann case '
-!print *, '***********************************************************'
+print *, '***********************************************************'
+print *, '              Hermite-Neumann case '
+print *, '***********************************************************'
 
-do i=1,NPTS1
-   eta1         = eta1_pos(i)
-   x(i)         = cos(2.0_f64*sll_pi*eta1)
-   reference(i) = cos(2.0_f64*sll_pi*eta1)
+do i=0,NPTS1-1
+   eta1           = X1MIN + real(i,f64)*h1
+   eta1_pos(i+1)  = eta1
+   x(i+1)         = cos(2.0_f64*sll_pi*eta1)
+   reference(i+1) = cos(2.0_f64*sll_pi*eta1)
 end do
 xprime(1) = 0.0
 xprime(2) = 0.0
@@ -325,8 +338,8 @@ acc6 = 0.0_f64
 acc6_der1 = 0.0_f64
 normL2_6 = 0.0_f64
 normH1_6 = 0.0_f64
-do i=1,NPTS1
-   eta1       = eta1_pos(i)
+do i=0,NPTS1-1
+   eta1       = X1MIN + real(i,f64)*h1
    node_val   = ad1d%interpolate_value(eta1)
    ref        = cos(2.0_f64*sll_pi*eta1)
    acc6       = acc6 + abs(node_val-ref)
@@ -339,14 +352,15 @@ end do
 
 call sll_delete(ad1d)
 
-!print *, '***********************************************************'
-!print *, '              Neumann-Hermite case '
-!print *, '***********************************************************'
+print *, '***********************************************************'
+print *, '              Neumann-Hermite case '
+print *, '***********************************************************'
 
-do i=1,NPTS1
-   eta1         = eta1_pos(i)
-   x(i)         = cos(2.0_f64*sll_pi*eta1)
-   reference(i) = cos(2.0_f64*sll_pi*eta1)
+do i=0,NPTS1-1
+   eta1           = X1MIN + real(i,f64)*h1
+   eta1_pos(i+1)  = eta1
+   x(i+1)         = cos(2.0_f64*sll_pi*eta1)
+   reference(i+1) = cos(2.0_f64*sll_pi*eta1)
 end do
 xprime(1) = 0.0
 xprime(2) = 0.0
@@ -367,8 +381,8 @@ acc7 = 0.0_f64
 acc7_der1 = 0.0_f64
 normL2_7 = 0.0_f64
 normH1_7 = 0.0_f64
-do i=1,NPTS1
-   eta1       = eta1_pos(i)
+do i=0,NPTS1-1
+   eta1       = X1MIN + real(i,f64)*h1
    node_val   = ad1d%interpolate_value(eta1)
    ref        = cos(2.0_f64*sll_pi*eta1)
    acc7        = acc7 + abs(node_val-ref)
