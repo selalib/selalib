@@ -1,14 +1,16 @@
+subroutine knots ( break, l, kpm, m, t, n )
+  
 !*****************************************************************************80
-!
-!! KNOTS is to be called in COLLOC.
-!
-!  Discussion:
-!
-!    Note that the FORTRAN77 calling sequence has been modified, by
-!    adding the variable M.
-!
+  !
+  !! KNOTS is to be called in COLLOC.
+  !
+  !  Discussion:
+  !
+  !    Note that the FORTRAN77 calling sequence has been modified, by
+  !    adding the variable M.
+  !
 !    From the given breakpoint sequence BREAK, this routine constructs the 
-!    knot sequence T so that
+  !    knot sequence T so that
 !
 !      SPLINE(K+M,T) = PP(K+M,BREAK) 
 !
@@ -49,8 +51,6 @@
 !
 !    Output, integer ( kind = 4 ) N, = L*K+M = the dimension of SPLINE(K+M,T).
 !
-subroutine knots ( break, l, kpm, m, t, n )
-
   implicit none
 
   integer ( kind = 4 ) kpm
@@ -86,4 +86,5 @@ subroutine knots ( break, l, kpm, m, t, n )
    
   t(1:kpm) = break(1)
 
+  return
 end
