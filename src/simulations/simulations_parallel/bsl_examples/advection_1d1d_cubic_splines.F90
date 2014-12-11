@@ -1,6 +1,14 @@
 program parallel_advection
 
-#include "selalib-mpi.h"
+#include "sll_working_precision.h"
+#include "sll_memory.h"
+#include "sll_remap.h"
+#include "sll_interpolators.h"
+#include "sll_utilities.h"
+#include "sll_file_io_parallel.h"
+
+use sll_collective
+#define MPI_MASTER 0
 
   implicit none
 
