@@ -1,44 +1,3 @@
-#FILE(GLOB TXT_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.txt")
-#FILE(COPY ${TXT_FILES} DESTINATION ${CMAKE_BINARY_DIR})
-
-#IF(PYTHON3_FOUND)
-
-#   SET(TRANSLATE_PYTHON_SCRIPT 
-#      "${CMAKE_CURRENT_SOURCE_DIR}/../python_scripts/translate_multipatch_info.py")
-
-#   SET(TRANSLATE_NML_FILE "${CMAKE_CURRENT_SOURCE_DIR}/circle_5mp_info.txt")
-
-#   SET(NURBS_PATCH_PYTHON_SCRIPT 
-#         "${CMAKE_CURRENT_SOURCE_DIR}/../python_scripts/nurbs_patch_txt_to_nml.py")
-
-#   FILE(GLOB CIRCLE_TXT_FILES "${CMAKE_CURRENT_SOURCE_DIR}/circle_5mp_patch*.txt")
-
-#   FOREACH(_TXT_CIRCLE_FILE ${CIRCLE_TXT_FILES})
-#      EXECUTE_PROCESS(
-#         COMMAND ${PYTHON_EXECUTABLE} ${NURBS_PATCH_PYTHON_SCRIPT} ${_TXT_CIRCLE_FILE}
-#      )
-#   ENDFOREACH()
-
-#   EXECUTE_PROCESS(
-#      COMMAND ${PYTHON_EXECUTABLE}  ${TRANSLATE_PYTHON_SCRIPT} ${TRANSLATE_NML_FILE}
-#      WORKING_DIRECTORY  ${CMAKE_CURRENT_SOURCE_DIR}
-#      OUTPUT_FILE "circle_patch_info.out")
-
-#ELSE(PYTHON3_FOUND)
-
-#   MESSAGE(STATUS "Multipatch test needs python3")
-#   SET(PYTHON3_FOUND OFF)
-
-#ENDIF(PYTHON3_FOUND)
-
-#MESSAGE(STATUS "Coordinate transformation")
-#MESSAGE(STATUS ${CMAKE_CURRENT_SOURCE_DIR})
-#MESSAGE(STATUS ${CMAKE_BINARY_DIR})
-#MESSAGE(STATUS ${TXT_FILES})
-
-# FILE(GLOB NML_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.nml")
-# FILE(COPY ${NML_FILES} DESTINATION ${CMAKE_BINARY_DIR})
-
 ADD_LIBRARY(sll_coordinate_transformations STATIC
             sll_coordinate_transformation_2d_base.F90
             sll_coordinate_transformations_2d.F90
@@ -52,16 +11,15 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL)
    SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 ENDIF(HDF5_ENABLED AND HDF5_IS_PARALLEL)
 
-ADD_EXECUTABLE(test_coordinate_transformations_2d unit_test_2d.F90)
-
-TARGET_LINK_LIBRARIES(test_coordinate_transformations_2d 
-                         sll_coordinate_transformations)
-
-
-# Copy input files into build directory (unknown reason) [YG]
-FILE( COPY arbitrary_degree_2d_sample_input_file.nml mhdeq_patch0.txt
-      DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
-
 # Ctest
-ADD_TEST( NAME coordinate_transformations COMMAND test_coordinate_transformations_2d )
-SET_TESTS_PROPERTIES( coordinate_transformations PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+IF(BUILD_TESTING)
+  ADD_EXECUTABLE( test_coordinate_transformations_2d unit_test_2d.F90)
+  TARGET_LINK_LIBRARIES( test_coordinate_transformations_2d sll_coordinate_transformations )
+  ADD_TEST( NAME coordinate_transformations COMMAND test_coordinate_transformations_2d )
+  SET_TESTS_PROPERTIES( coordinate_transformations PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+  SET( INPUT_FILES_DIR
+    ${CMAKE_SOURCE_DIR}/CAID_coordinate_transformations/mesh_collela/ )
+  FILE( GLOB INPUT_FILES "${INPUT_FILES_DIR}/*.nml" )
+  FILE( COPY ${INPUT_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
+ENDIF(BUILD_TESTING)
+

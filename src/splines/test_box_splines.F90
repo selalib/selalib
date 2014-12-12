@@ -15,7 +15,7 @@ type(sll_hex_mesh_2d),   pointer  :: mesh
 type(sll_box_spline_2d), pointer  :: spline
 sll_int32    :: num_cells
 sll_int32    :: i
-sll_int32    :: deg = 2
+sll_int32    :: deg = 3
 sll_int32    :: nloops
 sll_int32    :: ierr
 ! initial distribution
@@ -77,7 +77,7 @@ character(len = 4)  :: filenum
 
 ! sum_chi = 0._f64
 
-do num_cells = 20,20,20
+do num_cells = 40,160,40
 
    ! Mesh initialization
    mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, &
@@ -120,25 +120,25 @@ do num_cells = 20,20,20
       x2(i) = mesh%global_to_x2(i)
       
       !--------- GAUSSIAN PULSE : 
-      !       f_init(i) = gauss_amp * &
-      !            exp(-0.5_f64*((x1(i)-gauss_x1)**2 / gauss_sig**2 &
-      !            + (x2(i)-gauss_x2)**2 / gauss_sig**2))
+      f_init(i) = gauss_amp * &
+           exp(-0.5_f64*((x1(i)-gauss_x1)**2 / gauss_sig**2 &
+           + (x2(i)-gauss_x2)**2 / gauss_sig**2))
       !--------- DIOCOTRON : 
-      dioco_r= sqrt(x1(i)**2+x2(i)**2)
-      if (dioco_r.eq.0._f64) then
-         dioco_theta = 0._f64
-      elseif (x2(i)>=0) then
-         dioco_theta = acos(x1(i)/dioco_r)
-      else
-         dioco_theta = 2._f64*sll_pi-acos(x1(i)/dioco_r)
-      endif
+!       dioco_r= sqrt(x1(i)**2+x2(i)**2)
+!       if (dioco_r.eq.0._f64) then
+!          dioco_theta = 0._f64
+!       elseif (x2(i)>=0) then
+!          dioco_theta = acos(x1(i)/dioco_r)
+!       else
+!          dioco_theta = 2._f64*sll_pi-acos(x1(i)/dioco_r)
+!       endif
 
-      if((dioco_r>=dioco_rminus).and.(dioco_r<=dioco_rplus))then
-         f_init(i) = 1.0_f64+dioco_eps*cos(dioco_kmode*dioco_theta)
-      else
-         f_init(i) = 0._f64  
-      endif
-
+!       if((dioco_r>=dioco_rminus).and.(dioco_r<=dioco_rplus))then
+!          f_init(i) = 1.0_f64+dioco_eps*cos(dioco_kmode*dioco_theta)
+!       else
+!          f_init(i) = 0._f64  
+!       endif
+      !-------------------------
       if (exponent(f_init(i)) .lt. -17) then
          f_init(i) = 0._f64
       end if
@@ -224,27 +224,27 @@ do num_cells = 20,20,20
          ! end if
 
          !--------- GAUSSIAN PULSE : 
-!          f_fin(i) = gauss_amp * &
-!               exp(-0.5_f64*((x1(i)-gauss_x1)**2/gauss_sig**2 &
-!               + (x2(i)-gauss_x2)**2 / gauss_sig**2))
-!          if (exponent(f_fin(i)) .lt. -17) then
-!             f_fin(i) = 0._f64
-!          end if
+         f_fin(i) = gauss_amp * &
+              exp(-0.5_f64*((x1(i)-gauss_x1)**2/gauss_sig**2 &
+              + (x2(i)-gauss_x2)**2 / gauss_sig**2))
+         if (exponent(f_fin(i)) .lt. -17) then
+            f_fin(i) = 0._f64
+         end if
 
          !--------- DIOCOTRON : 
-         dioco_r= sqrt(x1(i)**2+x2(i)**2)
-         if (dioco_r.eq.0._f64) then
-            dioco_theta = 0._f64
-         elseif (x2(i)>=0) then
-            dioco_theta = acos(x1(i)/dioco_r)
-         else
-            dioco_theta = 2._f64*sll_pi-acos(x1(i)/dioco_r)
-         endif
-         if((dioco_r>=dioco_rminus).and.(dioco_r<=dioco_rplus))then
-            f_fin(i) = (1.0_f64+dioco_eps*cos(dioco_kmode*dioco_theta))
-         else
-            f_fin(i) = 0._f64  
-         endif
+!          dioco_r= sqrt(x1(i)**2+x2(i)**2)
+!          if (dioco_r.eq.0._f64) then
+!             dioco_theta = 0._f64
+!          elseif (x2(i)>=0) then
+!             dioco_theta = acos(x1(i)/dioco_r)
+!          else
+!             dioco_theta = 2._f64*sll_pi-acos(x1(i)/dioco_r)
+!          endif
+!          if((dioco_r>=dioco_rminus).and.(dioco_r<=dioco_rplus))then
+!             f_fin(i) = (1.0_f64+dioco_eps*cos(dioco_kmode*dioco_theta))
+!          else
+!             f_fin(i) = 0._f64  
+!          endif
 
          
          ! Relative error
