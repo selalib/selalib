@@ -192,8 +192,6 @@ ADD_SUBDIRECTORY(poisson_solvers)
 ADD_SUBDIRECTORY(parallel_array_initializers)
    
 ADD_SUBDIRECTORY(multigrid)
-ADD_SUBDIRECTORY(BSL)
-ADD_SUBDIRECTORY(CSL)
 ADD_SUBDIRECTORY(visu_pic)
 ADD_SUBDIRECTORY(time_solvers)
 ADD_SUBDIRECTORY(distribution_function)
