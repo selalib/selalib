@@ -44,6 +44,7 @@ module sll_simulation_4d_vlasov_parallel_poisson_sequential_cartesian
   use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
   use sll_parallel_array_initializer_module
+  use sll_hermite_interpolation_2d_module
   
   use sll_module_advection_1d_periodic
 
@@ -87,6 +88,11 @@ module sll_simulation_4d_vlasov_parallel_poisson_sequential_cartesian
    !poisson solver
    !class(sll_poisson_2d_base), pointer   :: poisson
    type(poisson_2d_periodic), pointer   :: poisson
+   type(poisson_2d_periodic), pointer   :: poisson_for_K
+   ! -Delta K = 4Det(Jac(E)) 
+   !   = 4(\partial_x1E_x1\partial_x2E_x2-\partial_x1E_x2\partial_x2E_x1
+   sll_int32 :: stencil_r
+   sll_int32 :: stencil_s
                  
    contains
      procedure, pass(sim) :: run => run_vp4d_cartesian
@@ -160,6 +166,9 @@ contains
     sll_real64            :: eps
     sll_real64            :: eps_l
     sll_int32             :: ierr
+    sll_int32 :: stencil_r
+    sll_int32 :: stencil_s
+    
       
     ! namelists for data input
     namelist / geometry /   &
@@ -209,6 +218,9 @@ contains
       advector_x4, &
       order_x4
 
+    namelist / poisson /   &
+      stencil_r, &
+      stencil_s
 
  
     !!set default parameters
@@ -261,6 +273,10 @@ contains
     order_x3 = 4
     advector_x4 = "SLL_LAGRANGE"
     order_x4 = 4
+    
+    !poisson
+    stencil_r = -2
+    stencil_s = 2
  
     if(present(filename))then
  
@@ -278,6 +294,7 @@ contains
       read(input_file, initial_function)
       read(input_file, time_iterations)
       read(input_file, advector)
+      read(input_file, poisson)
       close(input_file)
     else
       if(sll_get_collective_rank(sll_world_collective)==0)then
@@ -336,6 +353,24 @@ contains
           *(1._f64/kmode_x1**2+1._f64/kmode_x2**2) 
       case ("SLL_LANDAU_TWO_MODES")
         sim%init_func => sll_landau_mode_initializer_4d
+        SLL_ALLOCATE(sim%params(6),ierr)
+        sim%params(1) = kmode_x1
+        sim%params(2) = kmode_x2
+        sim%params(3) = eps        
+        sim%params(4) = lmode_x1
+        sim%params(5) = lmode_x2
+        sim%params(6) = eps_l
+        if((kmode_x1==lmode_x1).and.(kmode_x2==lmode_x2)) then
+          sim%nrj0 = ((eps+eps_l)*sll_pi)**2/(kmode_x1*kmode_x2) &
+            *1._f64/(kmode_x1**2+kmode_x2**2)
+        else
+        sim%nrj0 = (eps*sll_pi)**2/(kmode_x1*kmode_x2) &
+          *1._f64/(kmode_x1**2+kmode_x2**2)
+        sim%nrj0 = sim%nrj0+(eps_l*sll_pi)**2/(kmode_x1*kmode_x2) &
+          *1._f64/(lmode_x1**2+lmode_x2**2)
+        endif
+      case ("SLL_LANDAU_TWO_MODES_SUM_COS")
+        sim%init_func => sll_landau_mode_initializer_sum_cos_4d
         SLL_ALLOCATE(sim%params(6),ierr)
         sim%params(1) = kmode_x1
         sim%params(2) = kmode_x2
@@ -485,7 +520,8 @@ contains
       x2_max, &
       num_cells_x2, &
       ierr)
-        
+    sim%stencil_r = stencil_r    
+    sim%stencil_s = stencil_s    
   end subroutine initialize_vlasov_par_poisson_seq_cart
   
   subroutine init_vp4d_fake(sim, filename)
@@ -520,6 +556,7 @@ contains
     sll_real64, dimension(:,:), allocatable :: intfdx_full
     sll_real64, dimension(:,:), allocatable :: E_x1
     sll_real64, dimension(:,:), allocatable :: E_x2
+    sll_real64, dimension(:,:), allocatable :: jacobian_E
     sll_real64, dimension(:), allocatable :: send_buf_x1x2
     sll_real64, dimension(:), allocatable :: recv_buf_x1x2
     sll_real64, dimension(:), allocatable :: send_buf_x3x4
@@ -642,6 +679,7 @@ contains
     SLL_ALLOCATE(intfdx_full(nc_x3+1,nc_x4+1),ierr)
     SLL_ALLOCATE(E_x1(nc_x1+1,nc_x2+1),ierr)
     SLL_ALLOCATE(E_x2(nc_x1+1,nc_x2+1),ierr)
+    SLL_ALLOCATE(jacobian_E(nc_x1+1,nc_x2+1),ierr)
     SLL_ALLOCATE(recv_buf_x1x2((nc_x1+1)*(nc_x2+1)),ierr)
     SLL_ALLOCATE(recv_buf_x3x4((nc_x3+1)*(nc_x4+1)),ierr)
 
@@ -740,6 +778,15 @@ contains
     call unload_buffer_2d(layout2d_par_x1x2, recv_buf_x1x2, rho_full)
 
     call solve(sim%poisson,E_x1,E_x2,rho_full,nrj)
+    call compute_jacobian( &
+      E_x1, &
+      E_x2, &
+      nc_x1, &
+      nc_x2, &
+      4._f64/(delta1*delta2), &
+      sim%stencil_r, &
+      sim%stencil_s, &
+      jacobian_E)
 
 
     seqx3x4_to_seqx1x2 => &
@@ -767,7 +814,7 @@ contains
       call sll_binary_write_array_2d(E_x1_id,E_x1(1:nc_x1,1:nc_x2),ierr)  
       call sll_binary_write_array_2d(E_x2_id,E_x2(1:nc_x1,1:nc_x2),ierr)  
       call sll_binary_write_array_2d(intfdx_id,intfdx_full(1:nc_x3+1,1:nc_x4+1),ierr)  
-      write(th_diag_id,'(f12.5,5g20.12)') time, nrj,ekin,nrj0,ekin0!0.5*nrj+ekin
+      write(th_diag_id,'(f12.5,5g20.12)') time, nrj,ekin,nrj0,ekin0,maxval(abs(jacobian_E))!0.5*nrj+ekin
     endif
 
     
@@ -856,6 +903,15 @@ contains
             recv_buf_x1x2 )
           call unload_buffer_2d(layout2d_par_x1x2, recv_buf_x1x2, rho_full)
           call solve(sim%poisson,E_x1,E_x2,rho_full,nrj)
+          call compute_jacobian( &
+            E_x1, &
+            E_x2, &
+            nc_x1, &
+            nc_x2, &
+            4._f64/(delta1*delta2), &
+            sim%stencil_r, &
+            sim%stencil_s, &
+            jacobian_E)
           !end compute poisson 
           
           
@@ -967,7 +1023,13 @@ contains
         
         
         if(sll_get_collective_rank(sll_world_collective)==0) then
-          write(th_diag_id,'(f12.5,5g20.12)') time, nrj,ekin,nrj0,ekin0!,ekin+0.5_f64*nrj
+          write(th_diag_id,'(f12.5,5g20.12)') &
+            time, &
+            nrj, &
+            ekin, &
+            nrj0, &
+            ekin0, &
+            maxval(abs(jacobian_E))!,ekin+0.5_f64*nrj
         endif
       endif
       if (mod(istep,sim%freq_diag)==0) then
@@ -990,7 +1052,41 @@ contains
   end subroutine run_vp4d_cartesian    
   
   
-  
+  subroutine compute_jacobian(E_x1,E_x2,nc_x1,nc_x2,factor,r,s,jac_E)
+    sll_real64, dimension(:,:), intent(in) :: E_x1
+    sll_real64, dimension(:,:), intent(in) :: E_x2
+    sll_int32, intent(in) :: nc_x1
+    sll_int32, intent(in) :: nc_x2
+    sll_real64, intent(in) :: factor
+    sll_int32, intent(in) ::r
+    sll_int32, intent(in) ::s
+    sll_real64, dimension(:,:), intent(out) :: jac_E
+    sll_real64, dimension(:), allocatable  :: w
+    sll_int32 :: i
+    sll_int32 :: j
+    sll_int32 :: k
+    sll_real64 :: g(2,2)
+    sll_int32 :: ierr
+    
+    SLL_ALLOCATE(w(r:s),ierr)
+    call compute_w_hermite(w,r,s)
+    
+    
+    do j=1,nc_x1+1
+      do i=1,nc_x2+1
+        g = 0._f64
+        do k=r,s
+          g(1,1) = g(1,1)+w(k)*E_x1(modulo(i+k-1+nc_x1,nc_x1)+1,j)
+          g(1,2) = g(1,2)+w(k)*E_x2(modulo(i+k-1+nc_x1,nc_x1)+1,j)
+          g(2,1) = g(2,1)+w(k)*E_x1(i,modulo(j+k-1+nc_x2,nc_x2)+1)
+          g(2,2) = g(2,2)+w(k)*E_x2(i,modulo(j+k-1+nc_x2,nc_x2)+1)
+        enddo
+        
+        jac_E(i,j) =  (g(1,1)*g(2,2)-g(1,2)*g(2,1))*factor 
+      enddo
+    enddo
+    
+  end subroutine compute_jacobian  
   
   
   
