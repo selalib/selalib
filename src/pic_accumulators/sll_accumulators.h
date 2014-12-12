@@ -20,8 +20,8 @@
   ! expression unfortunately.
 #define SLL_ACCUMULATE_CHARGE( acc, dx, dy, icell, q, tmp1, tmp2) \
   do; \
-    tmp1 = (1.0_f64 - dx); \
-    tmp2 = (1.0_f64 - dy); \
+    tmp1 = (1.0_f32 - dx); \
+    tmp2 = (1.0_f32 - dy); \
     acc%q_acc(icell)%q_sw = acc%q_acc(icell)%q_sw + q*tmp1*tmp2; \
     acc%q_acc(icell)%q_se = acc%q_acc(icell)%q_se + q*  dx*tmp2; \
     acc%q_acc(icell)%q_nw = acc%q_acc(icell)%q_nw + q*tmp1*  dy; \
@@ -36,13 +36,13 @@
   do; \
     tmp(1,1) = dx**3;\
     tmp(1,2) = dy**3;\
-    tmp(2,1) = (1.0_f64 - dx)**3; \
-    tmp(2,2) = (1.0_f64 - dy)**3; \
-    tmp(3,1) = (1.0_f64 + dx)**3 - 4.0_f64*tmp(1,1); \
-    tmp(3,2) = (1.0_f64 + dy)**3 - 4.0_f64*tmp(1,2); \
-    tmp(4,1) = (2.0_f64 - dx)**3 - 4.0_f64*tmp(2,1); \
-    tmp(4,2) = (2.0_f64 - dy)**3 - 4.0_f64*tmp(2,2); \
-    temp = q/36._f64; \
+    tmp(2,1) = (1.0_f32 - dx)**3; \
+    tmp(2,2) = (1.0_f32 - dy)**3; \
+    tmp(3,1) = (1.0_f32 + dx)**3 - 4.0_f32*tmp(1,1); \
+    tmp(3,2) = (1.0_f32 + dy)**3 - 4.0_f32*tmp(1,2); \
+    tmp(4,1) = (2.0_f32 - dx)**3 - 4.0_f32*tmp(2,1); \
+    tmp(4,2) = (2.0_f32 - dy)**3 - 4.0_f32*tmp(2,2); \
+    temp = q/36._f32; \
     acc%q_acc(icell)%q_im1j = acc%q_acc(icell)%q_im1j + temp*tmp(2,1)*tmp(4,2); \
     acc%q_acc(icell)%q_ij   = acc%q_acc(icell)%q_ij   + temp*tmp(4,1)*tmp(4,2); \
     acc%q_acc(icell)%q_ip1j = acc%q_acc(icell)%q_ip1j + temp*tmp(3,1)*tmp(4,2); \
@@ -70,8 +70,8 @@
 
 #define SLL_INTERPOLATE_FIELD(part_Ex, part_Ey, cell_E, p, tmp3, tmp4) \
   do; \
-    tmp3 = (1.0_f64 - p%dx); \
-    tmp4 = (1.0_f64 - p%dy); \
+    tmp3 = (1.0_f32 - p%dx); \
+    tmp4 = (1.0_f32 - p%dy); \
     part_Ex = p%dx*p%dy*cell_E(p%ic)%Ex_ne + tmp3*p%dy*cell_E(p%ic)%Ex_nw + p%dx*tmp4*cell_E(p%ic)%Ex_se + tmp3*tmp4*cell_E(p%ic)%Ex_sw; \
     part_Ey = p%dx*p%dy*cell_E(p%ic)%Ey_ne + tmp3*p%dy*cell_E(p%ic)%Ey_nw + p%dx*tmp4*cell_E(p%ic)%Ey_se + tmp3*tmp4*cell_E(p%ic)%Ey_sw; \
     exit; \
@@ -81,12 +81,12 @@
  do; \
     tmp(1,1) = p%dx**3; \
     tmp(1,2) = p%dy**3; \
-    tmp(2,1) = (1.0_f64 - p%dx)**3; \
-    tmp(2,2) = (1.0_f64 - p%dy)**3; \
-    tmp(3,1) = (1.0_f64 + p%dx)**3 - 4.0_f64*tmp(1,1); \
-    tmp(3,2) = (1.0_f64 + p%dy)**3 - 4.0_f64*tmp(1,2); \
-    tmp(4,1) = (2.0_f64 - p%dx)**3 - 4.0_f64*tmp(2,1); \
-    tmp(4,2) = (2.0_f64 - p%dy)**3 - 4.0_f64*tmp(2,2); \
+    tmp(2,1) = (1.0_f32 - p%dx)**3; \
+    tmp(2,2) = (1.0_f32 - p%dy)**3; \
+    tmp(3,1) = (1.0_f32 + p%dx)**3 - 4.0_f32*tmp(1,1); \
+    tmp(3,2) = (1.0_f32 + p%dy)**3 - 4.0_f32*tmp(1,2); \
+    tmp(4,1) = (2.0_f32 - p%dx)**3 - 4.0_f32*tmp(2,1); \
+    tmp(4,2) = (2.0_f32 - p%dy)**3 - 4.0_f32*tmp(2,2); \
     part_Ex = tmp(2,1)*tmp(4,2)*cellE(p%ic)%Ex_im1j + tmp(4,1)*tmp(4,2)*cellE(p%ic)%Ex_ij   + tmp(3,1)*tmp(4,2)*cellE(p%ic)%Ex_ip1j   + tmp(1,1)*tmp(4,2)*cellE(p%ic)%Ex_ip2j +\
             tmp(2,1)*tmp(2,2)*cellE(p%ic)%Ex_im1jm1 + tmp(4,1)*tmp(2,2)*cellE(p%ic)%Ex_ijm1 + tmp(3,1)*tmp(2,2)*cellE(p%ic)%Ex_ip1jm1 + tmp(1,1)*tmp(2,2)*cellE(p%ic)%Ex_ip2jm1 +\
             tmp(2,1)*tmp(3,2)*cellE(p%ic)%Ex_im1jp1 + tmp(4,1)*tmp(3,2)*cellE(p%ic)%Ex_ijp1 + tmp(3,1)*tmp(3,2)*cellE(p%ic)%Ex_ip1jp1 + tmp(1,1)*tmp(3,2)*cellE(p%ic)%Ex_ip2jp1 +\
