@@ -47,7 +47,7 @@ contains
     
     class(sll_distribution_function_2D)   :: this
     class(sll_coordinate_transformation_2d_base), pointer :: transf
-    procedure(scalar_function_2D)           :: data_func
+    procedure(scalar_function_2D_old)           :: data_func
     sll_int32, intent(in)                   :: data_position
     character(len=*), intent(in)            :: name
     sll_int32                         :: ierr

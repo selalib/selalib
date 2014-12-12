@@ -197,6 +197,7 @@ subroutine sll_gnuplot_rect_2d_parallel(x_min, delta_x, &
      end if
      
      write(gnu_id,*)"set title 'Time = ",iplot,"'"
+     write(gnu_id,*)"set output '"//array_name//'_'//fin//".png'"
      write(gnu_id,"(a)",advance='no') &
           "splot '"//"0000/"//array_name//'_'//fin//".dat' w l"
      do iproc = 1, nproc - 1

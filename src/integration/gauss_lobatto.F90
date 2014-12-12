@@ -14,13 +14,13 @@ implicit none
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 abstract interface
    !> 1d real function
-   function function_1D(x)
+   function function_1d(x)
       use sll_working_precision ! can't pass a header file because the
                                 ! preprocessor prevents double inclusion.
                                 ! This is very rare.
-      sll_real64             :: function_1D
+      sll_real64             :: function_1d
       sll_real64, intent(in) :: x
-   end function function_1D
+   end function function_1d
 end interface
 #endif
 
@@ -51,18 +51,18 @@ contains
   !> @param[in] b right-bound of the definition interval of f 
   !> @param[in] n the desired number of Gauss points
   !> @return The value of the integral
-  function gauss_lobatto_integral_1D( f, a, b, n )
-    sll_real64                :: gauss_lobatto_integral_1D
-    procedure(function_1D)    :: f
+  function gauss_lobatto_integral_1d( f, a, b, n )
+    sll_real64                :: gauss_lobatto_integral_1d
+    procedure(function_1d)    :: f
     sll_real64, intent(in)    :: a
     sll_real64, intent(in)    :: b
     sll_int32,  intent(in)    :: n 
-    sll_real64, dimension(n+1):: xk
-    sll_real64, dimension(n+1):: wk
+    sll_real64, dimension(n)  :: xk
+    sll_real64, dimension(n)  :: wk
     sll_int32                 :: k
     sll_int32                 :: err
-    sll_real64                :: alpha(0:n), beta(0:n)
-    sll_real64                :: de(n+1), da(n+1), db(n+1)
+    sll_real64                :: alpha(0:n-1), beta(0:n-1)
+    sll_real64                :: de(n), da(n), db(n)
     sll_real64                :: ans
     sll_real64                :: x
     sll_real64                :: c1
@@ -72,8 +72,8 @@ contains
     wk(:) = 0.0_f64
 
     alpha = 0.0_f64
-    do k = 0, n
-       beta(k)=real(k,kind(n))**2/((2.0d0*k+1)*(2.0d0*k-1))
+    do k = 0, n-1
+       beta(k)=real(k,kind(n-1))**2/((2.0d0*k+1)*(2.0d0*k-1))
     end do
 
     !for Gauss-Legendre and Gauss-Lobatto, beta(0)=int(dlambda)
@@ -81,26 +81,23 @@ contains
     !polynomials and Gauss-type quadrature rules by _Walter Gautschi_
     beta(0)=2.0d0
 
-    call dlob(n-1,alpha,beta,-1.0_f64,1._f64,xk,wk,err,de,da,db)
+    call dlob(n-2,alpha,beta,-1.d0,1.d0,xk,wk,err,de,da,db)
 
-    ! The results of this call can yield values that are beyond
-    ! the [-1;1] interval. Therefore we try to correct it
-    ! by forcing the boundary values.
-    ! FIXME : IT NEEDS TO BE CORRECTED. (TODO)
     xk(1) = -1.0_f64
     xk(n) =  1.0_f64
 
-    ans = 0.0
-    ! need to map the interval [-1,1] into the interval [a,b]
     c1 = 0.5_f64*(b-a)
     c2 = 0.5_f64*(b+a)
-    do k=1,n
-       x = c1*xk(k) + c2
-       ans = ans + f(x)*wk(k)
-    end do
-    gauss_lobatto_integral_1D = c1*ans
+    xk = c1*xk + c2
+    wk = c1*wk
 
-  end function gauss_lobatto_integral_1D
+    ans = 0.0
+    do k=1,n
+       ans = ans + f(xk(k))*wk(k)
+    end do
+    gauss_lobatto_integral_1D = ans
+
+  end function gauss_lobatto_integral_1d
 
   !> Returns a 2d array of size (2,n) containing gauss-lobatto 
   !> points and weights in the interval [a,b].
@@ -159,12 +156,10 @@ contains
     xk(1) = -1.0_f64
     xk(n) =  1.0_f64
 
-    
     if (present(a) .and. present(b)) then
        c1 = 0.5_f64*(b-a)
        c2 = 0.5_f64*(b+a)
        xk = c1*xk + c2
-       
     end if
     
     end function gauss_lobatto_points
@@ -203,7 +198,6 @@ contains
     call dlob(n-2,alpha,beta,-1._f64,1._f64,xk,wk,err,de,da,db)
     
     if (present(a) .and. present(b)) then
-       
        c1 = 0.5_f64*(b-a)
        wk = c1*wk
     end if
