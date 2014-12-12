@@ -1,12 +1,13 @@
-ADD_LIBRARY(sll_integration STATIC gauss_legendre.F90
-                                   gauss_lobatto.F90 )
+ADD_LIBRARY( sll_integration STATIC gauss_legendre.F90
+                                    gauss_lobatto.F90
+                                    fekete.F90)
 
-TARGET_LINK_LIBRARIES(sll_integration sll_splines)
-
-ADD_EXECUTABLE(test_integration unit_test.F90 test_func_module.F90)
-
-TARGET_LINK_LIBRARIES(test_integration sll_integration)
+TARGET_LINK_LIBRARIES( sll_integration sll_splines )
 
 # Ctest
-ADD_TEST( NAME integration COMMAND test_integration )
-SET_TESTS_PROPERTIES( integration PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+IF(BUILD_TESTING)
+  ADD_EXECUTABLE( test_integration unit_test.F90 test_func_module.F90 )
+  TARGET_LINK_LIBRARIES( test_integration sll_integration )
+  ADD_TEST( NAME integration COMMAND test_integration )
+  SET_TESTS_PROPERTIES( integration PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+ENDIF(BUILD_TESTING)

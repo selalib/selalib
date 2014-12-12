@@ -5,45 +5,46 @@ IF(HDF5_ENABLED)
 #so the compiler should be parallel
 #should be changed
  
-   IF(MPI_MODULE_ENABLED)
-   
-      SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+  IF(MPI_ENABLED)
+    SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+  ENDIF()
 
-   ENDIF()
+  ADD_LIBRARY( sll_fcisl STATIC fcisl.F90 )
+  TARGET_LINK_LIBRARIES( sll_fcisl sll_advection sll_utilities )
 
-  ADD_LIBRARY (sll_fcisl STATIC fcisl.F90)
-  TARGET_LINK_LIBRARIES(sll_fcisl sll_advection sll_utilities)
-  ADD_EXECUTABLE(test_fcisl unit_test.F90)
-  TARGET_LINK_LIBRARIES(test_fcisl 
-    sll_fcisl
-    sll_meshes 
-    sll_advection
-    sll_constants)
-
-
-  ADD_LIBRARY (sll_derivative STATIC sll_derivative_2d_oblic.F90)
-  TARGET_LINK_LIBRARIES(sll_derivative 
+  ADD_LIBRARY( sll_derivative STATIC sll_derivative_2d_oblic.F90 )
+  TARGET_LINK_LIBRARIES( sll_derivative 
     sll_advection
     sll_fcisl
-    sll_utilities)
-  ADD_EXECUTABLE(test_derivative_2d_oblic unit_test_derivative_2d_oblic.F90)
-  TARGET_LINK_LIBRARIES(test_derivative_2d_oblic 
-    sll_derivative
-    sll_fcisl
-    sll_meshes 
-    sll_advection
-    sll_constants)
+    sll_utilities )
 
+  # Tests
+  IF(BUILD_TESTING)
+  
+    ADD_EXECUTABLE( test_fcisl unit_test.F90 )
+    TARGET_LINK_LIBRARIES( test_fcisl 
+      sll_fcisl
+      sll_meshes 
+      sll_advection
+      sll_constants )
 
+    ADD_EXECUTABLE( test_derivative_2d_oblic unit_test_derivative_2d_oblic.F90 )
+    TARGET_LINK_LIBRARIES( test_derivative_2d_oblic 
+      sll_derivative
+      sll_fcisl
+      sll_meshes 
+      sll_advection
+      sll_constants)
 
-  ADD_EXECUTABLE(test_aligned_derivative_2d aligned_derivative_2d.F90)
-  TARGET_LINK_LIBRARIES(test_aligned_derivative_2d 
-    sll_derivative
-    sll_fcisl
-    sll_meshes 
-    sll_advection
-    sll_constants)
+    ADD_EXECUTABLE( test_aligned_derivative_2d aligned_derivative_2d.F90 )
+    TARGET_LINK_LIBRARIES( test_aligned_derivative_2d 
+      sll_derivative
+      sll_fcisl
+      sll_meshes 
+      sll_advection
+      sll_constants )
+
+  ENDIF(BUILD_TESTING)
 
 ENDIF(HDF5_ENABLED)
-
 ENDIF(NOT STDF95)
