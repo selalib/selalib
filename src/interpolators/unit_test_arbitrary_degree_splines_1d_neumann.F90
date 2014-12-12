@@ -1,4 +1,4 @@
-program arbitrary_degree_splines_1d_periodic
+program arbitrary_degree_splines_1d_neumann
 #include "sll_working_precision.h"
 #include "sll_constants.h"
 #include "sll_interpolators.h"
@@ -24,7 +24,7 @@ sll_real64 :: normH1
 h = (XMAX-XMIN)/real(NPTS-1,f64)
   
 print *, '***********************************************************'
-print *, '              periodic case'
+print *, '              Neumann case'
 print *, '***********************************************************'
   
 do i=1,NPTS
@@ -33,7 +33,14 @@ end do
 call random_number(x)
 x = x * (XMAX-XMIN)
   
-call interpolator%initialize(NPTS,XMIN,XMAX,SLL_PERIODIC,SLL_PERIODIC,SPL_DEG)
+call interpolator%initialize(NPTS,XMIN,XMAX,SLL_NEUMANN,SLL_NEUMANN,SPL_DEG)
+
+call set_values_at_boundary1d(interpolator,          &
+                              value_left=1.0_f64,    &
+                              value_right=1.0_f64,   &
+                              slope_left=0.0_f64,  &
+                              slope_right=0.0_f64)
+
 call interpolator%compute_interpolants(y)
   
 normL2 = 0.0_f64
@@ -62,8 +69,8 @@ print*,'--------------------------------------------'
 print*,' Norm H1 error ', sqrt(normH1), h**(SPL_DEG-2)
 print*,'--------------------------------------------'
 
-if(( sqrt(normL2) <= h**(SPL_DEG+1)) .AND. &
-   ( sqrt(normH1) <= h**(SPL_DEG-3))) then
+if(( sqrt(normL2) <= 1e-6) .AND. &
+   ( sqrt(normH1) <= 1e-4)) then
   print *, 'PASSED'
 else
   print *, 'PASSED'
@@ -78,7 +85,7 @@ function f(x)
   sll_real64 :: x
   sll_real64 :: f
 
-  f = sin(2.0_f64*sll_pi*x)
+  f = cos(2.0_f64*sll_pi*x)
 
 end function f
 
@@ -87,9 +94,9 @@ function df(x)
   sll_real64 :: x
   sll_real64 :: df
 
-  df = 2.0_f64*sll_pi*cos(2.0_f64*sll_pi*x)
+  df = -2.0_f64*sll_pi*sin(2.0_f64*sll_pi*x)
 
 end function df
 
 
-end program arbitrary_degree_splines_1d_periodic
+end program arbitrary_degree_splines_1d_neumann

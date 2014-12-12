@@ -1,4 +1,4 @@
-program arbitrary_degree_splines_1d_periodic
+program arbitrary_degree_splines_1d_dirichlet
 #include "sll_working_precision.h"
 #include "sll_constants.h"
 #include "sll_interpolators.h"
@@ -24,7 +24,7 @@ sll_real64 :: normH1
 h = (XMAX-XMIN)/real(NPTS-1,f64)
   
 print *, '***********************************************************'
-print *, '              periodic case'
+print *, '              Dirichlet'
 print *, '***********************************************************'
   
 do i=1,NPTS
@@ -33,7 +33,9 @@ end do
 call random_number(x)
 x = x * (XMAX-XMIN)
   
-call interpolator%initialize(NPTS,XMIN,XMAX,SLL_PERIODIC,SLL_PERIODIC,SPL_DEG)
+call interpolator%initialize(NPTS,XMIN,XMAX,SLL_DIRICHLET,SLL_DIRICHLET,SPL_DEG)
+call set_values_at_boundary1d(interpolator,value_left=1.0_f64,value_right=1.0_f64)
+
 call interpolator%compute_interpolants(y)
   
 normL2 = 0.0_f64
@@ -78,7 +80,7 @@ function f(x)
   sll_real64 :: x
   sll_real64 :: f
 
-  f = sin(2.0_f64*sll_pi*x)
+  f = sin(2.0_f64*sll_pi*x)+1
 
 end function f
 
@@ -92,4 +94,4 @@ function df(x)
 end function df
 
 
-end program arbitrary_degree_splines_1d_periodic
+end program arbitrary_degree_splines_1d_dirichlet
