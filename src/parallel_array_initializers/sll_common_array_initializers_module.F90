@@ -500,6 +500,53 @@ contains
          (1.0_f64+eps*cos(kx*x))*exp(-0.5_f64*(vx**2+vy**2))
   end function sll_landau_initializer_4d
 
+  function sll_landau_mode_initializer_sum_cos_4d( x, y, vx, vy, params ) result(res)
+    sll_real64 :: res
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64, intent(in) :: vx
+    sll_real64, intent(in) :: vy
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: eps
+    sll_real64 :: kx
+    sll_real64 :: ky
+    sll_real64 :: ellx
+    sll_real64 :: elly
+    sll_real64 :: eps_ell    
+    sll_real64 :: factor1
+
+    if( .not. present(params) ) then
+       print *, 'sll_landau_initializer_4d, error: the params array must ', &
+            'be passed. params(1) = kx, params(2) = ky, ', &
+            'params(3) = eps.'
+       stop
+    end if
+
+    SLL_ASSERT( size(params) >= 3 )
+
+    kx = params(1)
+    ky = params(2)
+    eps      = params(3)
+    
+    !factor1 = eps*cos(kx*x)*cos(ky*y)
+    factor1 = eps*cos(kx*x+ky*y)
+    if(size(params)>=6) then
+      ellx = params(4)
+      elly = params(5)
+      eps_ell = params(6)
+      !factor1 = factor1+eps_ell*cos(ellx*x)*cos(elly*y)            
+      factor1 = factor1+eps_ell*cos(ellx*x+elly*y)            
+    endif
+    factor1 = 1._f64+factor1
+    res = (1.0_f64/(2.0*sll_pi))*factor1*exp(-0.5_f64*(vx**2+vy**2))
+    
+    !print *,'k=',kx,ky,eps
+    !print *,'ell=',ellx,elly,eps_ell
+    !print *,'size(params)=',size(params)
+    !stop
+
+  end function sll_landau_mode_initializer_sum_cos_4d
+
   function sll_landau_mode_initializer_4d( x, y, vx, vy, params ) result(res)
     sll_real64 :: res
     sll_real64, intent(in) :: x
@@ -529,11 +576,13 @@ contains
     eps      = params(3)
     
     factor1 = eps*cos(kx*x)*cos(ky*y)
+    !factor1 = eps*cos(kx*x+ky*y)
     if(size(params)>=6) then
       ellx = params(4)
       elly = params(5)
       eps_ell = params(6)
       factor1 = factor1+eps_ell*cos(ellx*x)*cos(elly*y)            
+      !factor1 = factor1+eps_ell*cos(ellx*x+elly*y)            
     endif
     factor1 = 1._f64+factor1
     res = (1.0_f64/(2.0*sll_pi))*factor1*exp(-0.5_f64*(vx**2+vy**2))
@@ -544,6 +593,7 @@ contains
     !stop
 
   end function sll_landau_mode_initializer_4d
+
 
 
   function sll_test_x_transport_initializer_v1v2x1x2( vx, vy, x, y, params ) 
