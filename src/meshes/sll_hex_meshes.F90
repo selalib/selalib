@@ -1081,7 +1081,7 @@ contains
 
     write(*,"(/,(a))") '2D mesh : num_cells   num_pts        center_x1       center_x2 &
          &       radius'
-    write(*,"(10x,2(i4,10x),3(g13.3,1x))") mesh%num_cells,  &
+    write(*,"(10x,2(i6,9x),3(g13.3,1x))") mesh%num_cells,  &
          mesh%num_pts_tot,&
          mesh%center_x1,  &
          mesh%center_x2,  &

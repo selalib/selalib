@@ -1,11 +1,15 @@
-!**************************************************************
-!  This module defines box splines (of arbitrary degree)
-!  on a hexagonal mesh subdivided in equilateral triangles
-!  Reference :
-!     @Condat2006 "Three-directional box splines"
-!  Author : 
-!     Laura Mendoza (mela@ipp.mpg.de)
-!************************************************************** 
+!> @ingroup splines
+!> @author Laura S. Mendoza
+!> @brief Provides capabilities for values and derivatives 
+!> interpolation with box splines on a hexagonal mesh
+!> @details This modules contains the computation of boxsplines
+!> of arbitrary degree. There is a special optimized algorithm
+!> for degree 2. The boxsplines here are defined only on hexagonal
+!> meshes (regular equilateral triangles elements).
+!> The only boundary condition supported right now
+!> is dirichlet.
+!>  Reference :
+!>     @Condat2006 "Three-directional box splines"
 
 module sll_box_splines
 #include "sll_working_precision.h"
@@ -19,12 +23,15 @@ use sll_hex_meshes
 
 implicit none
 
+!> @brief 
+!> basic type for 2 dimensional box splines dara
+!> @details 
+!> 2D Box spline type, containing the mesh information, the
+!> boundary condition, and the spline coefficients
 type sll_box_spline_2d
-   type(sll_hex_mesh_2d), pointer  :: mesh
-   ! Boundary conditions definition
-   sll_int32 SLL_PRIV :: bc_type
-   ! Spline coefficients
-   sll_real64, dimension(:), pointer :: coeffs
+   type(sll_hex_mesh_2d), pointer  :: mesh !> Hexagonal mesh
+   sll_int32 SLL_PRIV :: bc_type !> Boundary conditions definition
+   sll_real64, dimension(:), pointer :: coeffs !> Spline coefficients
 end type sll_box_spline_2d
 
   
@@ -40,6 +47,13 @@ contains  ! ****************************************************************
   end function fname
 
 
+  !---------------------------------------------------------------------------
+  !> @brief Creates a box spline element
+  !> @details Creates a box spline element to the associated mesh and with
+  !> the given boundary conditions. Also allocates memory for the coefficients
+  !> @param[in] mesh Hexagonal mesh on which the box spline will be defined
+  !> @param[in] bc_type Integer defining the boundary condition, usual values
+  !> are SLL_PERIODIC, SLL_DIRICHLET, ...
   function new_box_spline_2d( &
        mesh,         &
        bc_type)
@@ -60,9 +74,15 @@ contains  ! ****************************************************************
 
   end function new_box_spline_2d
 
-
+  !---------------------------------------------------------------------------
+  !> @brief Computes box splines coefficients
+  !> @details Computes box splines coefficients for a box spline of degree deg
+  !> and fitted to the data vector
+  !> @param[in] data vector containing the data to be fit
+  !> @param[in] deg integer representing the box spline degree
+  !> @param[in] spline box spline type element, containting the mesh, bc, ...
   subroutine compute_box_spline_2d( data, deg, spline )
-    sll_real64, dimension(:), intent(in), target :: data  ! data to be fit
+    sll_real64, dimension(:), intent(in), target :: data 
     sll_int32, intent(in)                        :: deg
     type(sll_box_spline_2d), pointer, intent(in)     :: spline
     sll_int32  :: bc
@@ -103,23 +123,28 @@ contains  ! ****************************************************************
           call compute_box_spline_2d_diri( data, deg, spline )
        case ( 2 )
           ! boundary condition type is periodic
-          call compute_box_spline_2d_prdc( data, spline )
+          call compute_box_spline_2d_prdc( data, deg, spline )
        case ( 4 )
           ! boundary condition type is neumann
-          call compute_box_spline_2d_neum( data, spline )
+          call compute_box_spline_2d_neum( data, deg, spline )
        case default
           print *, 'ERROR: compute_box_spline_2d(): ', &
             'did not recognize given boundary condition combination.'
        STOP
     end select
-
-  
   end subroutine compute_box_spline_2d
 
 
+  !---------------------------------------------------------------------------
+  !> @brief Computes box splines coefficients for dirichlet BC
+  !> @details Computes box splines coefficients for a box spline of degree deg
+  !> and fitted to the data vector on a hexmesh with dirichlet BC
+  !> @param[in] data vector containing the data to be fit
+  !> @param[in] deg integer representing the box spline degree
+  !> @param[in] spline box spline type element, containting the mesh, bc, ...
   subroutine compute_box_spline_2d_diri( data, deg, spline )
     sll_real64, dimension(:), intent(in), target  :: data  ! data to be fit
-    type(sll_box_spline_2d), pointer                  :: spline
+    type(sll_box_spline_2d), pointer              :: spline
     sll_int32, intent(in)                         :: deg
     sll_int32  :: num_pts_tot
     sll_int32  :: k1_ref, k2_ref
@@ -156,9 +181,17 @@ contains  ! ****************************************************************
   end subroutine compute_box_spline_2d_diri
 
 
-  subroutine compute_box_spline_2d_prdc( data, spline )
+  !---------------------------------------------------------------------------
+  !> @brief Computes box splines coefficients with periodic BC.
+  !> @details NOT YET IMPLEMENTED. Computes periodic box splines coefficients for a 
+  !> box spline of degree deg and fitted to the data vector
+  !> @param[in] data vector containing the data to be fit
+  !> @param[in] deg integer representing the box spline degree
+  !> @param[in] spline box spline type element, containting the mesh, bc, ...
+  subroutine compute_box_spline_2d_prdc( data, deg, spline )
     sll_real64, dimension(:), intent(in), target :: data  ! data to be fit
-    type(sll_box_spline_2d), pointer      :: spline
+    type(sll_box_spline_2d), pointer             :: spline
+    sll_int32, intent(in)                        :: deg
     sll_int32  :: num_pts_tot
     sll_int32  :: i
 
@@ -171,10 +204,17 @@ contains  ! ****************************************************************
 
   end subroutine compute_box_spline_2d_prdc
 
-
-  subroutine compute_box_spline_2d_neum( data, spline )
+  !---------------------------------------------------------------------------
+  !> @brief Computes box splines coefficients with neumann BC.
+  !> @details NOT YET IMPLEMENTED. Computes neuman box splines coefficients for a 
+  !> box spline of degree deg and fitted to the data vector
+  !> @param[in] data vector containing the data to be fit
+  !> @param[in] deg integer representing the box spline degree
+  !> @param[in] spline box spline type element, containting the mesh, bc, ...
+  subroutine compute_box_spline_2d_neum( data, deg, spline )
     sll_real64, dimension(:), intent(in), target :: data  ! data to be fit
-    type(sll_box_spline_2d), pointer      :: spline
+    sll_int32, intent(in)                        :: deg
+    type(sll_box_spline_2d), pointer             :: spline
     sll_int32  :: num_pts_tot
     sll_int32  :: i
 
@@ -187,7 +227,12 @@ contains  ! ****************************************************************
 
   end subroutine compute_box_spline_2d_neum
 
- 
+  !---------------------------------------------------------------------------
+  !> @brief Computes the binomial coefficient (n, k)
+  !> @details Computes the binomial coefficient (n, k)
+  !> @param[in] n integer
+  !> @param[in] k integer
+  !> @result res binomial coefficient \f[ \dfrac{n!}{(k!(n-k)!} \f]
   function choose (n, k) result (res)
     sll_int32, intent (in) :: n
     sll_int32, intent (in) :: k
@@ -202,12 +247,20 @@ contains  ! ****************************************************************
   end function choose
 
 
+  !---------------------------------------------------------------------------
+  !> @brief Computes the box spline of degree deg on (x1, x2)
+  !> @details Computes the value of the box spline (chi) of degree deg
+  !> on the point of cartesian coordiantes (x1, x2). The algorithm is specific
+  !> to the hexagonal mesh and has been optimized for degree 2 splines.
+  !> Reference : @Condat and Van De Ville (2006)
+  !>             "Three directional Box Splines:
+  !>             Characterization and Efficient Evaluation."
+  !> @param[in] x1_in real containing first coordinate of point 
+  !> where spline is to be evaluated
+  !> @param[in] x2_in real containing second coordinate of point 
+  !> where spline is to be evaluated
+  !> @param[in] deg integer containing the degree of the spline
   function chi_gen_val(x1_in,x2_in,deg) result(val)
-    ! Computes the value of the box spline (chi) of degree deg
-    ! on the point of cartesian coordiantes (x1, x2)
-    ! Reference : @Condat and Van De Ville (2006)
-    !             "Three directional Box Splines:
-    !             Characterization and Efficient Evaluation."
     sll_real64, intent(in) :: x1_in
     sll_real64, intent(in) :: x2_in
     sll_int32,  intent(in) :: deg
@@ -329,9 +382,15 @@ contains  ! ****************************************************************
   end function chi_gen_val
 
 
+  !---------------------------------------------------------------------------
+  !> @brief 1st coo. when change of coordinates of (x1, x2) to reference hex-mesh coo.
+  !> @details This function allows to change a point of coordinates (x1, x2)
+  !> on the spline basis to the mesh basis. Gives 1st coordinate.
+  !> @param[in] spline box spline who contains the reference hexagonal mesh
+  !> @param[in] x1 real containing first coordinate of point 
+  !> @param[in] x2 real containing second coordinate of point 
+  !> @return the first coordinate after change of coordinate sys.
   function change_basis_x1(spline, x1, x2) result(x1_basis)
-    ! This function allows to change a point of coordinates (x1, x2)
-    ! on the spline basis to the mesh basis
     type(sll_box_spline_2d), pointer    :: spline
     sll_real64, intent(in) :: x1
     sll_real64, intent(in) :: x2 
@@ -364,7 +423,14 @@ contains  ! ****************************************************************
     
   end function change_basis_x1
 
-
+  !---------------------------------------------------------------------------
+  !> @brief 2nd coo. when change of coordinates of (x1, x2) to reference hex-mesh coo.
+  !> @details This function allows to change a point of coordinates (x1, x2)
+  !> on the spline basis to the mesh basis. Gives 2nd coordinate.
+  !> @param[in] spline box spline who contains the reference hexagonal mesh
+  !> @param[in] x1 real containing first coordinate of point 
+  !> @param[in] x2 real containing second coordinate of point 
+  !> @return the second coordinate after change of coordinate sys.
   function change_basis_x2(spline, x1, x2) result(x2_basis)
     ! This function allows to change a point of coordinates (x1, x2)
     ! on the spline basis to the mesh basis
@@ -401,9 +467,17 @@ contains  ! ****************************************************************
     
   end function change_basis_x2
 
-
+  !---------------------------------------------------------------------------
+  !> @brief Interpolates on point of cartesian coordinates (x1, x2)
+  !> @details Interpolation with box splines of degree deg on the point
+  !> of cartesian coordinates (x1, x2) on the mesh mesh_geom
+  !> @param[in] mesh_geom geometric mesh
+  !> @param[in] x1 real containing second coordinate of point where to interpolate
+  !> @param[in] x2 real containing second coordinate of point where to interpolate
+  !> @param[in] spline box spline with coefficients already pre computed
+  !> @param[in] deg integer with degree of splines
+  !> @return real Interpolated value
   function hex_interpolate_value(mesh_geom, x1, x2, spline, deg) result(val)
-    ! Interpolates point of cartesian coordinates x1, x2)
     type(sll_hex_mesh_2d), pointer, intent(in) :: mesh_geom
     type(sll_box_spline_2d), pointer           :: spline
     sll_int32,  intent(in)  :: deg
