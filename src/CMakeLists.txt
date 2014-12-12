@@ -15,7 +15,8 @@ PROJECT(SeLaLib)
 ENABLE_LANGUAGE(Fortran)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
-SET(MPI_MODULE_ENABLED    ON  CACHE BOOL "Enable use of MPI library")
+SET(OPENMP_ENABLED        OFF CACHE BOOL "Enable use of OpenMP library")
+SET(MPI_ENABLED    ON  CACHE BOOL "Enable use of MPI library")
 SET(HDF5_ENABLED          ON  CACHE BOOL "Use HDF5 library for data output")
 SET(HDF5_PARALLEL_ENABLED OFF CACHE BOOL "Use Parallel HDF5")
 SET(FFTW_ENABLED          ON  CACHE BOOL "Enable use of FFTW library")
@@ -23,6 +24,14 @@ SET(PASTIX_ENABLED        OFF CACHE BOOL "Build PasTiX solvers ")
 SET(SUITESPARSE_ENABLED   OFF CACHE BOOL "Enable UMFpack solvers")
 SET(BUILD_SIMULATIONS     ON  CACHE BOOL "Build selalib simulations")
 SET(BUILD_PACKAGE         OFF CACHE BOOL "Build selalib package")
+SET(PROCS                 4   CACHE STRING
+    "Number of MPI processes used in parallel tests")
+
+IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  GET_FILENAME_COMPONENT(INSTALL_DIR "${CMAKE_SOURCE_DIR}/../usr" ABSOLUTE)
+  SET(CMAKE_INSTALL_PREFIX ${INSTALL_DIR} CACHE PATH
+    "Default installation directory" FORCE)
+ENDIF()
 
 FIND_PACKAGE(PythonInterp 3)
 SET(PYTHON3_FOUND FALSE)
@@ -70,7 +79,7 @@ INCLUDE(HDF5Config)
 INCLUDE(DoxygenConfig)
 INCLUDE(CTest)
 
-IF(MPI_MODULE_ENABLED)
+IF(MPI_ENABLED)
    INCLUDE(MPIConfig)
    INCLUDE(ProcessorCount)
    INCLUDE(POEConfig)
@@ -111,6 +120,8 @@ ELSE()
 ENDIF(BUILD_PACKAGE)
 
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
+INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/modules)
+
 ADD_SUBDIRECTORY(package)
 ADD_SUBDIRECTORY(fftpack)
 ADD_SUBDIRECTORY(mudpack)
@@ -155,7 +166,7 @@ ADD_SUBDIRECTORY(maxwell_solvers)
 ADD_SUBDIRECTORY(quasi_neutral_solvers)
 
 
-IF(MPI_MODULE_ENABLED)
+IF(MPI_ENABLED)
    
    SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
    ADD_SUBDIRECTORY(collective)
@@ -180,8 +191,6 @@ ADD_SUBDIRECTORY(poisson_solvers)
 ADD_SUBDIRECTORY(parallel_array_initializers)
    
 ADD_SUBDIRECTORY(multigrid)
-ADD_SUBDIRECTORY(BSL)
-ADD_SUBDIRECTORY(CSL)
 ADD_SUBDIRECTORY(visu_pic)
 ADD_SUBDIRECTORY(time_solvers)
 ADD_SUBDIRECTORY(distribution_function)
@@ -194,16 +203,17 @@ IF(BUILD_PACKAGE)
 ENDIF(BUILD_PACKAGE)
 
 IF(BUILD_SIMULATIONS)
-   SET(CMAKE_INSTALL_PREFIX_SIMS "${CMAKE_SOURCE_DIR}/../usr" 
-       CACHE PATH "simulations install dir")
-   ADD_SUBDIRECTORY(simulations) # reorganization of simulations
-   ADD_SUBDIRECTORY(eulerian-finite-volume)
-   IF(NOT BUILD_PACKAGE AND BUILD_TESTING)
-      INCLUDE(SequentialTests)
-      IF(MPI_MODULE_ENABLED)
-         INCLUDE(ParallelTests)
-      ENDIF()
-   ENDIF()
+  GET_FILENAME_COMPONENT( INSTALL_DIR_SIMS "${CMAKE_SOURCE_DIR}/../usr" ABSOLUTE )
+  SET(CMAKE_INSTALL_PREFIX_SIMS ${INSTALL_DIR_SIMS} CACHE PATH
+    "simulations install dir")
+  ADD_SUBDIRECTORY(simulations)
+  ADD_SUBDIRECTORY(eulerian-finite-volume)
+#YG   IF(NOT BUILD_PACKAGE AND BUILD_TESTING)
+#YG      INCLUDE(SequentialTests)
+#YG      IF(MPI_ENABLED)
+#YG         INCLUDE(ParallelTests)
+#YG      ENDIF()
+#YG   ENDIF()
 ENDIF(BUILD_SIMULATIONS)
 
 MESSAGE(STATUS "############################################################")
