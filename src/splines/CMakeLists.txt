@@ -36,6 +36,9 @@ IF(BUILD_TESTING)
   ADD_EXECUTABLE( test_box_splines test_box_splines.F90 )
   TARGET_LINK_LIBRARIES( test_box_splines sll_box_splines )
 
+  ADD_EXECUTABLE( test_box_splines_derivatives test_box_splines_derivatives.F90 )
+  TARGET_LINK_LIBRARIES( test_box_splines_derivatives sll_box_splines )
+
   # Ctests
   ADD_TEST( NAME cubic_splines             COMMAND test_splines                  )
   ADD_TEST( NAME cubic_non_uniform_splines COMMAND test_non_unif_splines         )

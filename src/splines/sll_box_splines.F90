@@ -556,5 +556,75 @@ contains  ! ****************************************************************
   end function hex_interpolate_value
 
 
+
+  !---------------------------------------------------------------------------
+  !> @brief Computes x-derivative on (x,y) 
+  !> @details Using the 5 point stencil computes the x-derivative on (x,y)
+  !> @param[in] mesh_geom geometric mesh
+  !> @param[in] x1 real containing second coordinate of point 
+  !> @param[in] x2 real containing second coordinate of point 
+  !> @param[in] spline box spline with coefficients already pre computed
+  !> @param[in] deg integer with degree of splines
+  !> @return real derivative on x1 of box spline 
+  function boxspline_x1_derivative(x1, x2, deg) result(val)
+    sll_int32,  intent(in)  :: deg
+    sll_real64, intent(in)  :: x1
+    sll_real64, intent(in)  :: x2
+    sll_real64 :: h
+    sll_real64 :: fm2h
+    sll_real64 :: fm1h
+    sll_real64 :: fp1h
+    sll_real64 :: fp2h
+    sll_real64 :: val
+
+    !Computing step on each direction
+    h = max(10.*sll_epsilon_0*abs(x1), sll_epsilon_0)
+
+    ! Finite difference method of order 5
+    fm2h = chi_gen_val(x1-2.0*h, x2, deg)
+    fm1h = chi_gen_val(x1 - h,   x2, deg)
+    fp2h = chi_gen_val(x1+2.0*h, x2, deg)
+    fp1h = chi_gen_val(x1 + h,   x2, deg)
+
+    val = 0.25/3._f64/h * ( - fp2h + 8._f64 * fp1h - 8._f64 * fm1h + fm2h)
+
+  end function boxspline_x1_derivative
+
+
+  !---------------------------------------------------------------------------
+  !> @brief Computes y-derivative on (x,y) 
+  !> @details Using the 5 point stencil computes the y-derivative on (x,y)
+  !> @param[in] mesh_geom geometric mesh
+  !> @param[in] x1 real containing second coordinate of point 
+  !> @param[in] x2 real containing second coordinate of point 
+  !> @param[in] spline box spline with coefficients already pre computed
+  !> @param[in] deg integer with degree of splines
+  !> @return real derivative on x2 of box spline 
+  function boxspline_x2_derivative(x1, x2, deg) result(val)
+    sll_int32,  intent(in)  :: deg
+    sll_real64, intent(in)  :: x1
+    sll_real64, intent(in)  :: x2
+    sll_real64 :: h
+    sll_real64 :: fm2h
+    sll_real64 :: fm1h
+    sll_real64 :: fp1h
+    sll_real64 :: fp2h
+    sll_real64 :: val
+
+    !Computing step on each direction
+    h = max(10.*sll_epsilon_0*abs(x2), sll_epsilon_0)
+
+    ! Finite difference method of order 5
+    fm2h = chi_gen_val(x1, x2-2.0*h, deg)
+    fm1h = chi_gen_val(x1, x2 - h,   deg)
+    fp2h = chi_gen_val(x1, x2+2.0*h, deg)
+    fp1h = chi_gen_val(x1, x2 + h,   deg)
+
+    val = 0.25/3._f64/h * ( - fp2h + 8._f64 * fp1h - 8._f64 * fm1h + fm2h)
+
+  end function boxspline_x2_derivative
+
+
+
 end module sll_box_splines
 
