@@ -29,6 +29,7 @@ SET(SLL_MACROS
     ${SLL_DIR}/pic_particle_types/particle_representation.h
     ${SLL_DIR}/multigrid/compdir.inc
     ${SLL_DIR}/multigrid/mgd2_routines.h
+    ${SLL_DIR}/remap/sll_remap.h
 )
 
 FILE(COPY ${SLL_MACROS} DESTINATION ${CMAKE_BINARY_DIR}/include)
@@ -202,7 +203,7 @@ ELSE()
 
 ENDIF(SUITESPARSE_ENABLED)
 
-IF(MPI_MODULE_ENABLED)
+IF(MPI_ENABLED)
  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
   ${SLL_DIR}/collective/sll_collective.F90
   ${SLL_DIR}/remap/sll_remap.F90
@@ -214,7 +215,7 @@ IF(MPI_MODULE_ENABLED)
   ${SLL_DIR}/parallel_array_initializers/sll_parallel_array_initializer_module.F90
   ${SLL_DIR}/parallel_utilities/buffer_loader_utilities.F90
   ${SLL_DIR}/file_io_parallel/sll_gnuplot_parallel.F90)
-ENDIF(MPI_MODULE_ENABLED)
+ENDIF(MPI_ENABLED)
 
 IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
