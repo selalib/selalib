@@ -38,21 +38,14 @@ IF(FFTW_ENABLED AND FFTW_FOUND)
 
 ENDIF(FFTW_ENABLED AND FFTW_FOUND)
 
-# Ctest
-#ADD_TEST( NAME BSL COMMAND bsl_1d_cubic_uniform_periodic
-#                           bsl_1d_cubic_nonuniform_periodic
-#                           bsl_1d_cubic_uniform_compact
-#                           bsl_1d_cubic_nonuniform_compact)
-#SET_TESTS_PROPERTIES( BSL PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+ADD_TEST( NAME bsl_1d_uniform_periodic    COMMAND bsl_1d_cubic_uniform_periodic    )
+ADD_TEST( NAME bsl_1d_uniform_compact     COMMAND bsl_1d_cubic_uniform_compact     )
+#ADD_TEST( NAME bsl_1d_nonuniform_periodic COMMAND bsl_1d_cubic_nonuniform_periodic ) # ISSUE
+ADD_TEST( NAME bsl_1d_nonuniform_compact  COMMAND bsl_1d_cubic_nonuniform_compact  )
 
-ADD_TEST( NAME BSL_1d_uniform_periodic    COMMAND bsl_1d_cubic_uniform_periodic    )
-ADD_TEST( NAME BSL_1d_uniform_compact     COMMAND bsl_1d_cubic_uniform_compact     )
-#ADD_TEST( NAME BSL_1d_nonuniform_periodic COMMAND bsl_1d_cubic_nonuniform_periodic ) # ISSUE
-ADD_TEST( NAME BSL_1d_nonuniform_compact  COMMAND bsl_1d_cubic_nonuniform_compact  )
-
-SET_TESTS_PROPERTIES( BSL_1d_uniform_periodic    PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-SET_TESTS_PROPERTIES( BSL_1d_uniform_compact     PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-#SET_TESTS_PROPERTIES( BSL_1d_nonuniform_periodic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" ) # ISSUE
-SET_TESTS_PROPERTIES( BSL_1d_nonuniform_compact  PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+SET_TESTS_PROPERTIES( bsl_1d_uniform_periodic    PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+SET_TESTS_PROPERTIES( bsl_1d_uniform_compact     PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+#SET_TESTS_PROPERTIES( bsl_1d_nonuniform_periodic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" ) # ISSUE
+SET_TESTS_PROPERTIES( bsl_1d_nonuniform_compact  PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 ENDIF(BUILD_TESTING)

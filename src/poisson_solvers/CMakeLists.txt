@@ -41,6 +41,10 @@ ADD_LIBRARY( hex_poisson STATIC hex_poisson.F90 )
 TARGET_LINK_LIBRARIES( hex_poisson sll_hex_meshes )
 
 
+ADD_LIBRARY ( pivotbande STATIC pivotbande.F90)
+TARGET_LINK_LIBRARIES( pivotbande )
+
+
 # Tests
 IF(BUILD_TESTING)
 
