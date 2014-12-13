@@ -38,7 +38,7 @@ sll_real64 :: eta2
 sll_int32  :: offset(2)
 sll_real64 :: offset_eta1, offset_eta2
 
-!###########################################################
+!#########################################################
 !Simulation parameters and geometry sizes                !
                                                          !
 sll_int32,  parameter :: nc_eta1 = 64                    !
@@ -49,10 +49,10 @@ sll_real64, parameter :: eta2_min = - 5.0_f64            !
 sll_real64, parameter :: eta2_max = + 5.0_f64            !
 sll_real64 :: delta_eta1 = (eta1_max-eta1_min)/nc_eta1   !
 sll_real64 :: delta_eta2 = (eta2_max-eta2_min)/nc_eta2   !
-sll_real64, parameter :: delta_t = 0.01_f64              !
-sll_int32,  parameter :: n_step  = 200                  !
-                                                           !
-!###########################################################
+sll_real64, parameter :: delta_t = 0.05_f64              !
+sll_int32,  parameter :: n_step  = 200                   !
+                                                         !
+!#########################################################
 
 sll_int32  :: i, j
 
@@ -129,7 +129,7 @@ do i_step=1, n_step
 
   call apply_remap_2D( eta1_to_eta2, f_eta1, f_eta2 )
 
-  call advection_eta2(delta_t)
+  !call advection_eta2(delta_t)
 
   call apply_remap_2D( eta2_to_eta1, f_eta2, f_eta1 )
 
@@ -141,7 +141,7 @@ do i_step=1, n_step
                                   f_eta1, 'f_parallel', &
                                   i_step, error)
   if (prank == MPI_MASTER) &
-     write(*,"(//10x,' time = ', G15.3, ' sec' )") i_step*delta_t
+     write(*,"(10x,' time = ', G15.3, ' sec' )") i_step*delta_t
 
 end do
 
