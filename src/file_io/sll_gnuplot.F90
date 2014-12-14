@@ -317,7 +317,8 @@ subroutine sll_gnuplot_curv_2d( nx, ny, x, y,&
   end if
   
   open(gnu_id,file=array_name//".gnu", position="append")
-  write(gnu_id,"(a)")"set pm3d"
+  !write(gnu_id,"(a)")"set pm3d"
+  write(gnu_id,*)"set output '"//array_name//"_"//fin//".png'"
   write(gnu_id,*)"splot '"//array_name//"_"//fin//".dat' w l"
   close(gnu_id)
   
