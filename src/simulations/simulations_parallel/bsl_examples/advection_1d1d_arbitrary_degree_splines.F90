@@ -6,7 +6,6 @@ program parallel_advection
 #include "sll_utilities.h"
 use sll_gnuplot_parallel
 use sll_remapper
-
 use sll_collective
 #define MPI_MASTER 0
 
@@ -166,7 +165,6 @@ subroutine advection_eta1(dt)
   sll_real64, intent(in) :: dt
   sll_real64 :: alpha
 
-  print*, '--- begin advection eta1'
   call compute_local_sizes(layout_eta1,loc_sz_i,loc_sz_j)
 
   do j=1,loc_sz_j
@@ -180,7 +178,6 @@ subroutine advection_eta1(dt)
      end do
 
   end do
-  print*, '--- end advection eta1'
 
 end subroutine advection_eta1
 
@@ -189,7 +186,6 @@ subroutine advection_eta2(dt)
   sll_real64, intent(in) :: dt
   sll_real64 :: alpha
 
-  print*, '--- begin advection eta2'
   call compute_local_sizes(layout_eta2,loc_sz_i,loc_sz_j)        
 
   do i=1,loc_sz_i
@@ -203,7 +199,6 @@ subroutine advection_eta2(dt)
      end do
 
   end do
-  print*, '--- end advection eta2'
 
 end subroutine advection_eta2
 
