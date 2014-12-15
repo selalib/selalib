@@ -29,6 +29,7 @@ SET(SLL_MACROS
     ${SLL_DIR}/pic_particle_types/particle_representation.h
     ${SLL_DIR}/multigrid/compdir.inc
     ${SLL_DIR}/multigrid/mgd2_routines.h
+    ${SLL_DIR}/remap/sll_remap.h
 )
 
 FILE(COPY ${SLL_MACROS} DESTINATION ${CMAKE_BINARY_DIR}/include)
@@ -81,7 +82,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/splines/sll_cubic_splines.F90
     ${SLL_DIR}/splines/sll_arbitrary_degree_splines.F90
     ${SLL_DIR}/splines/cubic_nonuniform_splines.F90
-    ${SLL_DIR}/deboor_splines/banded_linear_system_solver.F90  
+    ${SLL_DIR}/deboor_splines/banfac.f90
+    ${SLL_DIR}/deboor_splines/banslv.f90
     ${SLL_DIR}/deboor_splines/knots.f90
     #${SLL_DIR}/deboor_splines/splopt.f90
     ${SLL_DIR}/deboor_splines/sll_module_deboor_splines_1d.F90
@@ -202,7 +204,7 @@ ELSE()
 
 ENDIF(SUITESPARSE_ENABLED)
 
-IF(MPI_MODULE_ENABLED)
+IF(MPI_ENABLED)
  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
   ${SLL_DIR}/collective/sll_collective.F90
   ${SLL_DIR}/remap/sll_remap.F90
@@ -214,7 +216,7 @@ IF(MPI_MODULE_ENABLED)
   ${SLL_DIR}/parallel_array_initializers/sll_parallel_array_initializer_module.F90
   ${SLL_DIR}/parallel_utilities/buffer_loader_utilities.F90
   ${SLL_DIR}/file_io_parallel/sll_gnuplot_parallel.F90)
-ENDIF(MPI_MODULE_ENABLED)
+ENDIF(MPI_ENABLED)
 
 IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
@@ -230,7 +232,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
 ENDIF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
-IF(SLL_BUILD_PACKAGE)
+IF(BUILD_PACKAGE)
 
  SET(BUILD_SHARED_LIBRARY  OFF CACHE BOOL "build shared library")
   IF(BUILD_SHARED_LIBRARY)
@@ -263,23 +265,23 @@ IF(SLL_BUILD_PACKAGE)
   COMMAND ${CMAKE_COMMAND} -E copy 
           ${CMAKE_CURRENT_SOURCE_DIR}/../../doc/sphinx/_static/logo2.png 
           ${CMAKE_BINARY_DIR}/${DIST_NAME}/
-   COMMAND ${CMAKE_COMMAND} -E copy_directory 
-           ${CMAKE_CURRENT_SOURCE_DIR}/../fftpack 
-           ${CMAKE_BINARY_DIR}/${DIST_NAME}/fftpack
-   COMMAND ${CMAKE_COMMAND} -E copy_directory 
-           ${CMAKE_CURRENT_SOURCE_DIR}/../mudpack 
-           ${CMAKE_BINARY_DIR}/${DIST_NAME}/mudpack
-   COMMAND ${CMAKE_COMMAND} -E copy_directory 
-           ${CMAKE_CURRENT_SOURCE_DIR}/examples 
-           ${CMAKE_BINARY_DIR}/${DIST_NAME}/examples
-   COMMAND ${CMAKE_COMMAND} -E remove_directory 
-           ${CMAKE_BINARY_DIR}/${DIST_NAME}/CMakeFiles
-   COMMAND ${CMAKE_COMMAND} -E remove 
-           ${CMAKE_BINARY_DIR}/${DIST_NAME}/CMakeCache.txt
-   COMMAND ${CMAKE_COMMAND} -E tar zcf ${DIST_NAME}.tar.gz 
-           ${CMAKE_BINARY_DIR}/${DIST_NAME}
-   COMMAND ${CMAKE_COMMAND} -E md5sum ${DIST_NAME}.tar.gz
-   COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/${DIST_NAME}
+  COMMAND ${CMAKE_COMMAND} -E copy_directory 
+          ${CMAKE_CURRENT_SOURCE_DIR}/../fftpack 
+          ${CMAKE_BINARY_DIR}/${DIST_NAME}/fftpack
+  COMMAND ${CMAKE_COMMAND} -E copy_directory 
+          ${CMAKE_CURRENT_SOURCE_DIR}/../mudpack 
+          ${CMAKE_BINARY_DIR}/${DIST_NAME}/mudpack
+  COMMAND ${CMAKE_COMMAND} -E copy_directory 
+          ${CMAKE_CURRENT_SOURCE_DIR}/examples 
+          ${CMAKE_BINARY_DIR}/${DIST_NAME}/examples
+  COMMAND ${CMAKE_COMMAND} -E remove_directory 
+          ${CMAKE_BINARY_DIR}/${DIST_NAME}/CMakeFiles
+  COMMAND ${CMAKE_COMMAND} -E remove 
+          ${CMAKE_BINARY_DIR}/${DIST_NAME}/CMakeCache.txt
+  COMMAND ${CMAKE_COMMAND} -E tar zcf ${DIST_NAME}.tar.gz 
+          ${CMAKE_BINARY_DIR}/${DIST_NAME}
+  COMMAND ${CMAKE_COMMAND} -E md5sum ${DIST_NAME}.tar.gz
+  COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/${DIST_NAME}
            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
            COMMENT "Generating Release" VERBATIM)
    
@@ -300,4 +302,4 @@ IF(SLL_BUILD_PACKAGE)
    
    INSTALL(FILES ${SLL_MACROS}  DESTINATION include/selalib  )
 
-ENDIF(SLL_BUILD_PACKAGE)
+ENDIF(BUILD_PACKAGE)

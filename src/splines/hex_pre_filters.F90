@@ -155,6 +155,7 @@ contains
      
      k1 = mesh%global_to_hex1(local_index)
      k2 = mesh%global_to_hex2(local_index)
+     weight = 0._f64
 
       if (deg .eq. 1) then 
           ! prefiltre PFIR for box-splines chi2

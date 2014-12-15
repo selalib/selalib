@@ -4,33 +4,31 @@ IF(HDF5_ENABLED)
 #so the compiler should be parallel
 #should be changed
  
-   IF(MPI_MODULE_ENABLED)
-   
-      SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-
-   ENDIF()
+  IF(MPI_ENABLED)
+    SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+  ENDIF()
 
   SET( ADVECTION_SRC_FILES 
-        lagrange_interpolation.F90 
-	sll_advection_1d_periodic.F90
-	sll_advection_1d_non_uniform_cubic_splines.F90
-	sll_advection_1d_BSL.F90
-	sll_advection_1d_CSL.F90
-	sll_advection_1d_PSM.F90
-	sll_advection_1d_base.F90
-	sll_advection_2d_BSL.F90
-	sll_advection_2d_integer_oblic.F90
-	sll_advection_2d_oblic.F90
-	sll_advection_2d_tensor_product.F90
-	sll_advection_2d_CSL.F90
-	sll_advection_2d_base.F90)
+    lagrange_interpolation.F90 
+    sll_advection_1d_periodic.F90
+    sll_advection_1d_non_uniform_cubic_splines.F90
+    sll_advection_1d_BSL.F90
+    sll_advection_1d_CSL.F90
+    sll_advection_1d_PSM.F90
+    sll_advection_1d_base.F90
+    sll_advection_2d_BSL.F90
+    sll_advection_2d_integer_oblic.F90
+    sll_advection_2d_oblic.F90
+    sll_advection_2d_tensor_product.F90
+    sll_advection_2d_CSL.F90
+    sll_advection_2d_base.F90)
 
   ADD_LIBRARY(
     sll_advection
     STATIC
     ${ADVECTION_SRC_FILES})
 
-  TARGET_LINK_LIBRARIES( 
+  TARGET_LINK_LIBRARIES(
     sll_advection
     #sll_fcisl
     sll_meshes
@@ -39,8 +37,10 @@ IF(HDF5_ENABLED)
     sll_periodic_interpolation
     sll_splines
     sll_boundary_condition_descriptors
-    sll_utilities
-  )
+    sll_utilities)
+
+# Tests
+IF(BUILD_TESTING)
 
   ADD_EXECUTABLE(
     test_advection_1d_periodic
@@ -125,7 +125,7 @@ IF(HDF5_ENABLED)
     test_advection_2d_CSL
     sll_advection)
 
-  IF(MPI_MODULE_ENABLED)
+  IF(MPI_ENABLED)
 
      #ADD_EXECUTABLE(
      #  test_aligned_translation_2d_spaghetti
@@ -148,9 +148,7 @@ IF(HDF5_ENABLED)
        sll_advection
        sll_utilities)
 
-
-
-  ENDIF(MPI_MODULE_ENABLED)
+  ENDIF(MPI_ENABLED)
 
   ADD_EXECUTABLE(
     test_rotation_2d
@@ -159,5 +157,29 @@ IF(HDF5_ENABLED)
   TARGET_LINK_LIBRARIES(
     test_rotation_2d
     sll_advection)
+
+  # Ctests
+  ADD_TEST( NAME lagrange                    COMMAND test_lagrange                    )
+  ADD_TEST( NAME advection_1d_periodic       COMMAND test_advection_1d_periodic       )
+  ADD_TEST( NAME advection_1d_non_uniform_cubic_splines
+                                COMMAND test_advection_1d_non_uniform_cubic_splines )
+  ADD_TEST( NAME advection_1d_BSL            COMMAND test_advection_1d_BSL            )
+  ADD_TEST( NAME advection_1d_CSL            COMMAND test_advection_1d_CSL            )
+  ADD_TEST( NAME advection_1d_PSM            COMMAND test_advection_1d_PSM            )
+  ADD_TEST( NAME advection_2d_BSL            COMMAND test_advection_2d_BSL            )
+  ADD_TEST( NAME advection_2d_CSL            COMMAND test_advection_2d_CSL            )
+  ADD_TEST( NAME advection_2d_tensor_product COMMAND test_advection_2d_tensor_product )
+
+  SET_TESTS_PROPERTIES( advection_1d_periodic       PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+  SET_TESTS_PROPERTIES( advection_1d_non_uniform_cubic_splines
+                                                    PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+  SET_TESTS_PROPERTIES( advection_1d_BSL            PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+#  SET_TESTS_PROPERTIES( advection_1d_CSL            PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" ) # ISSUE
+#  SET_TESTS_PROPERTIES( advection_1d_PSM            PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" ) # ISSUE
+  SET_TESTS_PROPERTIES( advection_2d_BSL            PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+#  SET_TESTS_PROPERTIES( advection_2d_CSL            PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" ) # ISSUE
+  SET_TESTS_PROPERTIES( advection_2d_tensor_product PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+
+ENDIF(BUILD_TESTING)
 
 ENDIF(HDF5_ENABLED)

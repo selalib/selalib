@@ -10,8 +10,9 @@ TARGET_LINK_LIBRARIES(sll_mesh_calculus sll_coordinate_transformations
                                         sll_assert
                                         sll_working_precision)
 
-ADD_EXECUTABLE( test_mesh_calculus_2d unit_test_2d.F90 )
-
-TARGET_LINK_LIBRARIES( test_mesh_calculus_2d sll_mesh_calculus sll_file_io sll_memory ${HDF5_LIBRARIES} )
-
-
+# Tests
+IF(BUILD_TESTING)
+  ADD_EXECUTABLE( test_mesh_calculus_2d unit_test_2d.F90 )
+  TARGET_LINK_LIBRARIES( test_mesh_calculus_2d
+    sll_mesh_calculus sll_file_io sll_memory ${HDF5_LIBRARIES} )
+ENDIF(BUILD_TESTING)
