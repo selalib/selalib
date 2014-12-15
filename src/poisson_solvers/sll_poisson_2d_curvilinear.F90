@@ -331,6 +331,8 @@ subroutine initialize_poisson_2d_curvilinear( &
   sll_real64, dimension(:,:), allocatable :: splines_at_points2
   sll_real64, dimension(:,:), allocatable :: output
   
+  sll_int32 :: num_nz
+  
   
   poisson%spline_degree1 = spline_degree1
   poisson%spline_degree2 = spline_degree2
@@ -390,88 +392,104 @@ subroutine initialize_poisson_2d_curvilinear( &
 
 
 
-!  
-!  
-!  poisson%knot_size1 = compute_knot_size(bc_left, bc_right, num_cells1, spline_degree1)
-!  poisson%knot_size2 = compute_knot_size(bc_bottom, bc_top, num_cells2, spline_degree2)
-!  
-!  SLL_ALLOCATE(poisson%knots1(poisson%knot_size1),ierr)
-!  SLL_ALLOCATE(poisson%knots2(poisson%knot_size2),ierr)
-!  
-!  call compute_knots(bc_left, &
-!    bc_right, &
-!    num_cells1, &
-!    eta1_min, &
-!    eta1_max, &
-!    spline_degree1, &
-!    poisson%knots1)
+
+  dim1 = (spline_degree1+1)*(spline_degree2+1)
+  dim2 = num_cells1*num_cells2
+  SLL_CLEAR_ALLOCATE(poisson%local_spline_indices(1:dim1,1:dim2),ierr)
+  SLL_CLEAR_ALLOCATE(poisson%local_to_global_spline_indices(1:dim1,1:dim2),ierr)
+  num_spl1=num_cells1+spline_degree1
+  num_spl2=num_cells2+spline_degree2
+  SLL_CLEAR_ALLOCATE(poisson%global_spline_indices(num_spl1*num_spl2),ierr)
+
+  call compute_local_splines_indices( &
+    num_cells1, &
+    num_cells2, &
+    spline_degree1, &
+    spline_degree2, &
+    poisson%local_spline_indices)
+
+  SLL_ALLOCATE(poisson%bc_indices1(num_spl1),ierr)
+  SLL_ALLOCATE(poisson%bc_indices2(num_spl2),ierr)
+
+  call compute_bc_indices(num_cells1,spline_degree1,bc_min1,bc_max1,poisson%bc_indices1)
+  call compute_bc_indices(num_cells2,spline_degree2,bc_min2,bc_max2,poisson%bc_indices2)
+  call compute_global_splines_indices( &
+    num_spl1, &
+    num_spl2, &
+    poisson%bc_indices1, &
+    poisson%bc_indices2, &
+    poisson%global_spline_indices)
+  call compute_local_to_global_splines_indices( &
+    num_cells1, &
+    num_cells2, &
+    spline_degree1, &
+    spline_degree2, &
+    poisson%local_spline_indices, &
+    poisson%global_spline_indices, &
+    poisson%local_to_global_spline_indices)
+
+  poisson%solution_size1 = compute_solution_size( &
+    bc_min1, &
+    bc_max1, &
+    num_cells1, &
+    spline_degree1)
+  poisson%solution_size2 = compute_solution_size( &
+    bc_min2, &
+    bc_max2, &
+    num_cells2, &
+    spline_degree2)
+  
+  solution_size = poisson%solution_size1*poisson%solution_size2
+  total_num_splines_loc = (spline_degree1+1)*(spline_degree2+1)
+
+  num_nz = compute_nz( &
+    num_cells1, &
+    num_cells2, &
+    spline_degree1, &
+    spline_degree2, &
+    poisson%global_spline_indices)
+ 
+  print*,'#num_nz=',num_nz
+
+  poisson%sll_csr_mat => new_csr_matrix( &
+    solution_size, &
+    solution_size, &
+    num_cells1*num_cells2, &
+    poisson%local_to_global_spline_indices, &
+    total_num_splines_loc, &
+    poisson%local_to_global_spline_indices, &
+    total_num_splines_loc)
+
+
+  print *,'#begin of sll_factorize_csr_matrix'
+  call sll_factorize_csr_matrix(poisson%sll_csr_mat)
+  print *,'#end of sll_factorize_csr_matrix'
+
+!  if (es%perper) then
 !
-!  call compute_knots(bc_bottom, &
-!    bc_top, &
-!    num_cells2, &
-!    eta2_min, &
-!    eta2_max, &
-!    spline_degree2, &
-!    poisson%knots2)
+!   es%sll_csr_mat_with_constraint => new_csr_matrix_with_constraint(es%sll_csr_mat)  
 !
 !
-!  dim1 = (spline_degree1+1)*(spline_degree2+1)
-!  dim2 = num_cells1*num_cells2
-!  SLL_CLEAR_ALLOCATE(poisson%local_spline_indices(1:dim1,1:dim2),ierr)
-!  SLL_CLEAR_ALLOCATE(poisson%local_to_global_spline_indices(1:dim1,1:dim2),ierr)
-!  num_spl1=num_cells1+spline_degree1
-!  num_spl2=num_cells2+spline_degree2
-!  SLL_CLEAR_ALLOCATE(poisson%global_spline_indices(num_spl1*num_spl2),ierr)
+!   call csr_add_one_constraint( &
+!    es%sll_csr_mat%opi_ia, & 
+!    es%sll_csr_mat%opi_ja, &
+!    es%sll_csr_mat%opr_a, &
+!    es%sll_csr_mat%num_rows, &
+!    es%sll_csr_mat%num_nz, &
+!    es%masse, &
+!    es%sll_csr_mat_with_constraint%opi_ia, &
+!    es%sll_csr_mat_with_constraint%opi_ja, &
+!    es%sll_csr_mat_with_constraint%opr_a)  
 !
-!  call compute_local_splines_indices( &
-!    num_cells1, &
-!    num_cells2, &
-!    spline_degree1, &
-!    spline_degree2, &
-!    poisson%local_spline_indices)
-!
-!  SLL_ALLOCATE(poisson%bc_indices1(num_spl1),ierr)
-!  SLL_ALLOCATE(poisson%bc_indices2(num_spl2),ierr)
-!
-!  call compute_bc_indices(num_cells1,spline_degree1,bc_left,bc_right,poisson%bc_indices1)
-!  call compute_bc_indices(num_cells2,spline_degree2,bc_bottom,bc_top,poisson%bc_indices2)
-!  call compute_global_splines_indices( &
-!    num_spl1, &
-!    num_spl2, &
-!    poisson%bc_indices1, &
-!    poisson%bc_indices2, &
-!    poisson%global_spline_indices)
-!  call compute_local_to_global_splines_indices( &
-!    num_cells1, &
-!    num_cells2, &
-!    spline_degree1, &
-!    spline_degree2, &
-!    poisson%local_spline_indices, &
-!    poisson%global_spline_indices, &
-!    poisson%local_to_global_spline_indices)
-!
-!  poisson%solution_size1 = compute_solution_size( &
-!    bc_left, &
-!    bc_right, &
-!    num_cells1, &
-!    spline_degree1)
-!  poisson%solution_size2 = compute_solution_size( &
-!    bc_bottom, &
-!    bc_top, &
-!    num_cells2, &
-!    spline_degree2)
-!  
-!  solution_size = poisson%solution_size1*poisson%solution_size2
-!  total_num_splines_loc = (spline_degree1+1)*(spline_degree2+1)
-!
-!!  poisson%sll_csr_mat => new_csr_matrix( &
-!!    solution_size, &
-!!    solution_size, &
-!!    num_cells1*num_cells2, &
-!!    poisson%local_to_global_spline_indices, &
-!!    total_num_splines_loc, &
-!!    poisson%local_to_global_spline_indices, &
-!!    total_num_splines_loc)
+!    print *,'#begin of sll_factorize_csr_matrix'
+!    call sll_factorize_csr_matrix(es%sll_csr_mat_with_constraint)
+!    print *,'#end of sll_factorize_csr_matrix'
+!  else   
+!    print *,'#begin of sll_factorize_csr_matrix'
+!    call sll_factorize_csr_matrix(es%sll_csr_mat)
+!    print *,'#end of sll_factorize_csr_matrix'
+!  end if 
+
 !
 !
 !!  call compute_composite_quadrature_points( &
@@ -792,89 +810,10 @@ function new_knots( &
     end select  
   endif
 
-    
-  
-!  if((bc_left==SLL_PERIODIC).and.(bc_right==SLL_PERIODIC))then
-!    do i = -spline_degree, spline_degree+1
-!      knots(i+spline_degree+1) = real(i,f64)*delta 
-!    end do    
-!  else
-!    !repeated left point
-!    do i = 1, spline_degree + 1
-!      knots(i) = eta_min
-!    enddo
-!    !interior points
-!    do i = spline_degree+2, num_cells+spline_degree
-!      knots(i) = eta_min+real(i-spline_degree-1,f64)*delta
-!    enddo
-!    !repeated right point
-!    do i = num_cells+spline_degree+1, num_cells+1+2*spline_degree
-!      knots(i) = eta_max
-!    enddo
-!  endif
-
 end function new_knots
 
 
-function compute_knot_size(bc_left,bc_right,num_cells, spline_degree) result(res)
-  sll_int32, intent(in) :: bc_left
-  sll_int32, intent(in) :: bc_right
-  sll_int32, intent(in) :: num_cells
-  sll_int32, intent(in) :: spline_degree
-  sll_int32 :: res   
-  
-  if((bc_left==SLL_PERIODIC).and.(bc_right==SLL_PERIODIC))then
-    res = 2*spline_degree+2
-  else
-    res = 2*spline_degree+num_cells+1
-  endif
 
-end function compute_knot_size
-
-
-
-
-subroutine compute_knots( &
-  bc_left, &
-  bc_right, &
-  num_cells, &
-  eta_min, &
-  eta_max, &
-  spline_degree, &
-  knots)
-  sll_int32, intent(in) :: bc_left
-  sll_int32, intent(in) :: bc_right
-  sll_int32, intent(in) :: num_cells
-  sll_real64, intent(in) :: eta_min
-  sll_real64, intent(in) :: eta_max
-  sll_int32, intent(in) :: spline_degree
-  sll_real64, dimension(:), intent(out) :: knots
-  sll_real64 :: delta
-  sll_int32 :: i
-  
-  delta = (eta_max - eta_min)/real(num_cells,f64)
-  
-  
-  if((bc_left==SLL_PERIODIC).and.(bc_right==SLL_PERIODIC))then
-    do i = -spline_degree, spline_degree+1
-      knots(i+spline_degree+1) = real(i,f64)*delta 
-    end do    
-  else
-    !repeated left point
-    do i = 1, spline_degree + 1
-      knots(i) = eta_min
-    enddo
-    !interior points
-    do i = spline_degree+2, num_cells+spline_degree
-      knots(i) = eta_min+real(i-spline_degree-1,f64)*delta
-    enddo
-    !repeated right point
-    do i = num_cells+spline_degree+1, num_cells+1+2*spline_degree
-      knots(i) = eta_max
-    enddo
-  endif
-
-end subroutine compute_knots
 
 
 subroutine compute_local_splines_indices( &
@@ -908,17 +847,15 @@ subroutine compute_local_splines_indices( &
         end do
       end do
     end do
-  end do
-
-  
+  end do  
   
 end subroutine compute_local_splines_indices
 
-subroutine compute_bc_indices(num_cells,spline_degree,bc_left,bc_right,index)
+subroutine compute_bc_indices(num_cells,spline_degree,bc_min,bc_max,index)
   sll_int32, intent(in) :: num_cells
   sll_int32, intent(in) :: spline_degree
-  sll_int32, intent(in) :: bc_left
-  sll_int32, intent(in) :: bc_right
+  sll_int32, intent(in) :: bc_min
+  sll_int32, intent(in) :: bc_max
   sll_int32, dimension(:), intent(out) :: index
   
   sll_int32 :: i
@@ -927,15 +864,15 @@ subroutine compute_bc_indices(num_cells,spline_degree,bc_left,bc_right,index)
     index(i) = i
   enddo
   
-  !left boundary correction  
-  select case (bc_left)
+  !eta_min boundary correction  
+  select case (bc_min)
     case (SLL_DIRICHLET)
       index(1) = 0
     case default     
   end select
       
-  !right boundary correction
-  select case (bc_right)
+  !eta_max boundary correction
+  select case (bc_max)
     case (SLL_DIRICHLET)
       index(num_cells+spline_degree) = 0
     case (SLL_PERIODIC)
@@ -994,6 +931,8 @@ subroutine compute_global_splines_indices( &
 
 end subroutine compute_global_splines_indices
 
+
+
 subroutine compute_local_to_global_splines_indices( &
   num_cells1,&
   num_cells2,&
@@ -1023,22 +962,93 @@ subroutine compute_local_to_global_splines_indices( &
 end subroutine compute_local_to_global_splines_indices
 
 
-function compute_solution_size(bc_left,bc_right,num_cells, spline_degree) result(res)
-  sll_int32, intent(in) :: bc_left
-  sll_int32, intent(in) :: bc_right
+function compute_nz( &
+  num_cells1, &
+  num_cells2, &
+  spline_degree1, &
+  spline_degree2, &
+  global_spline_indices &
+  ) result(nz)
+  sll_int32, intent(in) :: num_cells1
+  sll_int32, intent(in) :: num_cells2
+  sll_int32, intent(in) :: spline_degree1
+  sll_int32, intent(in) :: spline_degree2
+  sll_int32, dimension(:), intent(in) :: global_spline_indices
+  sll_int32 :: nz
+
+  sll_int32 :: i
+  sll_int32 :: j
+  sll_int32 :: i_loc
+  sll_int32 :: j_loc
+  sll_int32 :: i_glob
+  sll_int32 :: j_glob
+  sll_int32 :: num_spl1
+  sll_int32 :: num_spl2
+  sll_int32 :: index1
+  sll_int32 :: index2
+  sll_int32 :: li_A
+  sll_int32 :: li_B
+  !sll_int32, dimension(:,:,:), allocatable :: work
+  sll_int32, dimension(:), allocatable :: flag
+  sll_int32 :: ierr
+  sll_int32 :: count
+  
+  num_spl1 = num_cells1+spline_degree1
+  num_spl2 = num_cells2+spline_degree2
+
+  !SLL_CLEAR_ALLOCATE(work(-degree_spline1:degree_spline1,-degree_spline2:degree_spline2,num_spl1*num_spl2),ierr)
+  SLL_CLEAR_ALLOCATE(flag(0:num_spl1*num_spl2),ierr)
+
+  count = 0
+  do j_glob=1,num_spl2
+    do i_glob=1,num_spl1
+      li_A = global_spline_indices(i_glob+num_spl1*(j_glob-1))
+      if(li_A/=0)then
+      !if((flag(li_A)==0))then
+        do j_loc = -spline_degree2,spline_degree2
+          j = j_glob+j_loc
+          if(j>0.and.j<=num_spl2)then
+            do i_loc = -spline_degree1,spline_degree1
+              i = i_glob+i_loc
+              if(i>0.and.i<=num_spl1)then
+                li_B = global_spline_indices(i+num_spl1*(j-1))
+                if(li_B/=0)then
+                  flag(li_A) = flag(li_A)+1
+                  count = count+1
+                endif
+              endif          
+            enddo
+          endif  
+        enddo
+      !endif
+      endif  
+    enddo
+  enddo  
+  
+  nz = count
+  
+  print *,maxval(flag),minval(flag)
+  print *,'#val=',num_spl1*num_spl2*(2*spline_degree1+1)*(2*spline_degree2+1)
+
+end function  compute_nz 
+  
+
+function compute_solution_size(bc_min,bc_max,num_cells, spline_degree) result(res)
+  sll_int32, intent(in) :: bc_min
+  sll_int32, intent(in) :: bc_max
   sll_int32, intent(in) :: num_cells
   sll_int32, intent(in) :: spline_degree
   sll_int32 :: res   
   
-  if((bc_left==SLL_PERIODIC).and.(bc_right==SLL_PERIODIC))then
+  if((bc_min==SLL_PERIODIC).and.(bc_max==SLL_PERIODIC))then
     res = num_cells
   else
     res = num_cells+spline_degree
   endif
-  if(bc_left==SLL_DIRICHLET)then
+  if(bc_min==SLL_DIRICHLET)then
     res = res-1
   endif
-  if(bc_right==SLL_DIRICHLET)then
+  if(bc_max==SLL_DIRICHLET)then
     res = res-1
   endif
   
