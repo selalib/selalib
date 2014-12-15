@@ -10,4 +10,4 @@ mkdir ${workdir}/build
 cd ${workdir}/build
 cmake -DCMAKE_TOOLCHAIN_FILE=${SELALIB_DIR}/cmake/turing-toolchain.cmake \
       -DOPTIONS_FILE=${SELALIB_DIR}/cmake/turing.cmake \
-      ${SELALIB_DIR}/prototype/src
+      ${SELALIB_DIR}/src
