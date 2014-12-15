@@ -12,7 +12,7 @@ Just type::
 
    cmake -DCMAKE_BUILD_TYPE="Release" \
          -DCMAKE_INSTALL_PREFIX=<install_dir> \
-         -DSLL_BUILD_PACKAGE=1 selalib/prototype/src
+         -DSLL_BUILD_PACKAGE=1 selalib/src
    make 
    make install
 
@@ -49,7 +49,7 @@ Be careful, you could have to link with HDF5, FFTW, LAPACK, etc ...
 Il you want to use some macros like SLL_ALLOCATE or SLL_ASSERT with gfortran, just add
 the compilation flag *-ffree-line-length-none*.
 
-Find this example in directory : prototype/src/examples
+Find this example in directory : src/examples
 
 
 CMakeLists.txt
@@ -118,9 +118,9 @@ If selalib is installed in /usr/local::
                       LIBS=['selalib','dfftpack'],
                       F90='ifort',
                       F90FLAGS = ['-O3'],
-	                   F90PATH = [SLL_ROOT+'/usr/include'],
+                      F90PATH = [SLL_ROOT+'/usr/include'],
                       LINK='ifort',
-	                   LIBPATH = [SLL_ROOT+'/usr/lib'])
+                      LIBPATH = [SLL_ROOT+'/usr/lib'])
 
    env.Program('landau', ['landau.F90'])
 

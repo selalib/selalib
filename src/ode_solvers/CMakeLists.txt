@@ -1,0 +1,7 @@
+ADD_LIBRARY(ode_solvers STATIC sll_ode_solvers.F90)
+
+TARGET_LINK_LIBRARIES(ode_solvers sll_distribution_function)
+
+ADD_EXECUTABLE(test_implicit_ode_nonuniform unit_test_implicit_ode_nonuniform.F90)
+
+TARGET_LINK_LIBRARIES(test_implicit_ode_nonuniform ode_solvers sll_memory)
