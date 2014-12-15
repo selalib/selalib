@@ -119,7 +119,14 @@ contains
    sll_int32 :: np_eta1
    sll_int32 :: np_eta2
    sll_int32 :: ierr
-
+   
+   sll_int32 :: bc_eta1_left_interp
+   
+   bc_eta1_left_interp = bc_eta1_left
+   
+   if(bc_eta1_left==SLL_NEUMANN)then
+     bc_eta1_left_interp = SLL_DIRICHLET
+   endif
 
     np_eta1 = num_cells_eta1 + 1
     np_eta2 = num_cells_eta2 + 1
@@ -131,7 +138,7 @@ contains
          eta1_max, &
          eta2_min, &
          eta2_max, &
-         bc_eta1_left, &
+         bc_eta1_left_interp, &
          bc_eta1_right, &
          bc_eta2_left, &
          bc_eta2_right,&
@@ -145,7 +152,7 @@ contains
          eta1_max, &
          eta2_min, &
          eta2_max, &
-         bc_eta1_left, &
+         bc_eta1_left_interp, &
          bc_eta1_right, &
          bc_eta2_left, &
          bc_eta2_right,&
@@ -159,7 +166,7 @@ contains
          eta1_max, &
          eta2_min, &
          eta2_max, &
-         bc_eta1_left, &
+         bc_eta1_left_interp, &
          bc_eta1_right, &
          bc_eta2_left, &
          bc_eta2_right,&
@@ -173,7 +180,7 @@ contains
          eta1_max, &
          eta2_min, &
          eta2_max, &
-         bc_eta1_left, &
+         bc_eta1_left_interp, &
          bc_eta1_right, &
          bc_eta2_left, &
          bc_eta2_right,&
@@ -187,7 +194,7 @@ contains
          eta1_max, &
          eta2_min, &
          eta2_max, &
-         bc_eta1_left, &
+         bc_eta1_left_interp, &
          bc_eta1_right, &
          bc_eta2_left, &
          bc_eta2_right,&
@@ -201,7 +208,7 @@ contains
          eta1_max, &
          eta2_min, &
          eta2_max, &
-         bc_eta1_left, &
+         bc_eta1_left_interp, &
          bc_eta1_right, &
          bc_eta2_left, &
          bc_eta2_right,&
@@ -215,7 +222,7 @@ contains
          eta1_max, &
          eta2_min, &
          eta2_max, &
-         bc_eta1_left, &
+         bc_eta1_left_interp, &
          bc_eta1_right, &
          bc_eta2_left, &
          bc_eta2_right,&
@@ -229,7 +236,7 @@ contains
          eta1_max, &
          eta2_min, &
          eta2_max, &
-         bc_eta1_left, &
+         bc_eta1_left_interp, &
          bc_eta1_right, &
          bc_eta2_left, &
          bc_eta2_right,&
@@ -243,7 +250,7 @@ contains
          eta1_max, &
          eta2_min, &
          eta2_max, &
-         bc_eta1_left, &
+         bc_eta1_left_interp, &
          bc_eta1_right, &
          bc_eta2_left, &
          bc_eta2_right,&
@@ -257,7 +264,7 @@ contains
          eta1_max, &
          eta2_min, &
          eta2_max, &
-         bc_eta1_left, &
+         bc_eta1_left_interp, &
          bc_eta1_right, &
          bc_eta2_left, &
          bc_eta2_right,&
@@ -268,7 +275,7 @@ contains
          "a11_check", &
          poisson%interp_a11, &
          transf, &
-         bc_eta1_left, &
+         bc_eta1_left_interp, &
          bc_eta1_right, &
          bc_eta2_left, &
          bc_eta2_right)
@@ -280,7 +287,7 @@ contains
          "a12_check", &
          poisson%interp_a12, &
          transf, &
-         bc_eta1_left, &
+         bc_eta1_left_interp, &
          bc_eta1_right, &
          bc_eta2_left, &
          bc_eta2_right)
@@ -292,7 +299,7 @@ contains
          "a21_check", &
          poisson%interp_a21, &
          transf, &
-         bc_eta1_left, &
+         bc_eta1_left_interp, &
          bc_eta1_right, &
          bc_eta2_left, &
          bc_eta2_right)
@@ -304,7 +311,7 @@ contains
          "a22_check", &
          poisson%interp_a22, &
          transf, &
-         bc_eta1_left, &
+         bc_eta1_left_interp, &
          bc_eta1_right, &
          bc_eta2_left, &
          bc_eta2_right)
@@ -316,7 +323,7 @@ contains
          "b1_check", &
          poisson%interp_b1, &
          transf, &
-         bc_eta1_left, &
+         bc_eta1_left_interp, &
          bc_eta1_right, &
          bc_eta2_left, &
          bc_eta2_right)
@@ -328,7 +335,7 @@ contains
          "b2_check", &
          poisson%interp_b2, &
          transf, &
-         bc_eta1_left, &
+         bc_eta1_left_interp, &
          bc_eta1_right, &
          bc_eta2_left, &
          bc_eta2_right)
@@ -340,7 +347,7 @@ contains
          "c_check", &
          poisson%interp_c, &
          transf, &
-         bc_eta1_left, &
+         bc_eta1_left_interp, &
          bc_eta1_right, &
          bc_eta2_left, &
          bc_eta2_right)
@@ -357,7 +364,7 @@ contains
          "phi_check", &
          poisson%interp_phi, &
          transf, &
-         bc_eta1_left, &
+         bc_eta1_left_interp, &
          bc_eta1_right, &
          bc_eta2_left, &
          bc_eta2_right)
@@ -368,7 +375,7 @@ contains
          "rho_check", &
          poisson%interp_rho, &
          transf, &
-         bc_eta1_left, &
+         bc_eta1_left_interp, &
          bc_eta1_right, &
          bc_eta2_left, &
          bc_eta2_right)
@@ -395,8 +402,9 @@ contains
         eta2_max )
         
     ! compute matrix the field
-    print *,'Compute matrix the field'
+    print *,'#begin factorize_mat_es'
     call factorize_mat_es(&
+!    call assemble_mat_es(&
         poisson%elliptic_solver, &
         poisson%a11_field, &
         poisson%a12_field,&
@@ -405,6 +413,7 @@ contains
         poisson%b1_field,&
         poisson%b2_field,&
         poisson%c_field)    
+    print *,'#end factorize_mat_es'
         
  end subroutine initialize_poisson_2d_elliptic_solver
  

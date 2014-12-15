@@ -24,9 +24,10 @@ program test_hex_hermite
   sll_real64, dimension(:),   allocatable :: x1_char
   sll_real64, dimension(:),   allocatable :: x2_char
 
-  sll_int32    :: deg = 2
+  sll_int32    :: deg = 2, k_min, n_min
+  sll_real64   :: r_min
   sll_int32    :: i,j, k1, k2, index_tab
-  sll_int32    :: l1,l2, type  
+  sll_int32    :: l1,l2
   sll_int32    :: i1,i2,i3
   sll_int32    :: num_cells, n_points, n_triangle, n_points2
   sll_real64   :: center_mesh_x1, center_mesh_x2, radius
@@ -120,9 +121,9 @@ program test_hex_hermite
      ! ---------------------------------------
 
      ! Poisson solver ------------------------
-     call hex_matrix_poisson( matrix_poisson, mesh,1)
+     call hex_matrix_poisson( matrix_poisson, mesh, n_min, k_min)
      call factolub_bande(matrix_poisson,l,u,n_points,l1,l2)
-     call hex_second_terme_poisson( second_term, mesh, rho_tn )
+     call hex_second_terme_poisson( second_term, mesh, rho_tn, n_min, k_min )
      call solvlub_bande(l,u,phi_interm,second_term,n_points,l1,l2)
 
      do i = 1, mesh%num_pts_tot 
@@ -131,7 +132,7 @@ program test_hex_hermite
         call index_hex_to_global(mesh, k1, k2, index_tab)
         phi(i) = phi_interm(index_tab)
      enddo
-     call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type=1)
+     call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi, n_min, k_min)
      ! ---------------------------------------     
       
      call hex_diagnostics(rho_tn,t,mesh,uxn,uyn,nloops)
@@ -191,7 +192,7 @@ program test_hex_hermite
         !*********************************************************
 
         
-        call hex_second_terme_poisson( second_term, mesh, rho_tn )
+        call hex_second_terme_poisson( second_term, mesh, rho_tn, n_min, k_min )
 
         call solvlub_bande(l,u,phi_interm,second_term,n_points,l1,l2)
 
@@ -202,7 +203,7 @@ program test_hex_hermite
            phi(i) = phi_interm(index_tab)
         enddo
 
-        call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type=1)
+        call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi, n_min, k_min)
 
 
         !*********************************************************
