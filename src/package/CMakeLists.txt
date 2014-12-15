@@ -82,7 +82,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/splines/sll_cubic_splines.F90
     ${SLL_DIR}/splines/sll_arbitrary_degree_splines.F90
     ${SLL_DIR}/splines/cubic_nonuniform_splines.F90
-    ${SLL_DIR}/deboor_splines/banded_linear_system_solver.F90  
+    ${SLL_DIR}/deboor_splines/banfac.f90
+    ${SLL_DIR}/deboor_splines/banslv.f90
     ${SLL_DIR}/deboor_splines/knots.f90
     #${SLL_DIR}/deboor_splines/splopt.f90
     ${SLL_DIR}/deboor_splines/sll_module_deboor_splines_1d.F90
