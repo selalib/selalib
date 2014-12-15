@@ -15,7 +15,7 @@ type(sll_hex_mesh_2d),   pointer  :: mesh
 type(sll_box_spline_2d), pointer  :: spline
 sll_int32    :: num_cells
 sll_int32    :: i
-sll_int32    :: deg = 3
+sll_int32    :: deg = 2
 sll_int32    :: nloops
 sll_int32    :: ierr
 ! initial distribution
@@ -77,7 +77,7 @@ character(len = 4)  :: filenum
 
 ! sum_chi = 0._f64
 
-do num_cells = 40,160,40
+do num_cells = 20,100,40
 
    ! Mesh initialization
    mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, &

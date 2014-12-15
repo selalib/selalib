@@ -26,6 +26,9 @@ ADD_LIBRARY(sll_fft STATIC sll_fft_utils.F90 ${FFT_SRC})
 TARGET_LINK_LIBRARIES( sll_fft ${DEPENDENCIES} 
                        sll_utilities sll_memory sll_assert sll_constants )
 
-ADD_EXECUTABLE(test_fft unit_test.F90)
-
-TARGET_LINK_LIBRARIES(test_fft sll_fft)
+# Ctest
+IF(BUILD_TESTING)
+  ADD_EXECUTABLE( test_fft unit_test.F90 )
+  TARGET_LINK_LIBRARIES( test_fft sll_fft )
+  ADD_TEST( NAME fft COMMAND test_fft )
+ENDIF(BUILD_TESTING)
