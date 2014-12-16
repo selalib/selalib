@@ -12,6 +12,8 @@ module fekete_integration
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 
+use sll_hex_meshes
+  
 implicit none
 
 
@@ -38,6 +40,7 @@ end interface
 
 
 contains
+
   !---------------------------------------------------------------------------
   !> @brief Fekete quadrature rule over a triangle
   !> @details To integrate the function \f$ f(x) \f$
@@ -253,6 +256,28 @@ contains
     end do
 
   end function fekete_points_and_weights
+
+
+  !---------------------------------------------------------------------------
+  !> @brief Computes fekete points coordinates on a hex-mesh
+  !> @details Goes through each cell (triangle) of the hex mesh and computes
+  !> the fekete points on each one. It fills in the knots table and the
+  !> connectivity table LM.
+  !> @param[in]  spline_degree integer for the fekete quadrature rule
+  !> @param[in]  mesh hex_mesh on which we want to evaluate quadrature points
+  !> @param[out]  knots real 2D array to be filled in with fekete points
+  !> @param[out]  connectivity array that allows to pass from local to global indices
+  subroutine initialize_knots_hexmesh( spline_degree, &
+                                 mesh, &
+                                 knots, &
+                                 LM)
+    
+    sll_int32, intent(in) :: spline_degree
+    type(sll_hex_mesh_2d), intent(in), pointer :: mesh
+    sll_real64, dimension(:,:), intent(out) :: knots  
+    sll_real64, dimension(:,:), intent(out) :: LM
+    
+  end subroutine initialize_knots_hexmesh
 
 
 end module fekete_integration
