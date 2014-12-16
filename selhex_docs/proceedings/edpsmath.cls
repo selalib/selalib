@@ -482,7 +482,7 @@ www.edpsciences.org
 \end{center}
 }
 %%% Ajout pour babel
-\StandardLayout
+%\StandardLayout
 \addto\captionsfrench{\def\CaptionSeparator{.\space}}
 \addto\captionsfrench{\def\figurename{{\scshape Figure}}}
 \addto\captionsfrench{\def\tablename{{\scshape Tableau}}}

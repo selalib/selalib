@@ -42,12 +42,15 @@
 %%-----------------------------
 \section*{Introduction}
 
+{\color{red}{
+[A REVOIR: Toute l'intro me semble dure a lire, pas "fluide", il n'y a pas de transitions et il faudrait aussi présenter les parties].\par}}
+
 There are three kinds of regular pavings of the plane: using squares, triangles or hexagons. When considering meshes, the dual mesh of a square mesh is a shifted square mesh and the regular triangle mesh is the dual of the regular hexagonal mesh.
 
-In magnetic fusion applications the embedded magnetic flux surfaces plays an important role and introduces an important anisotropy. For this reason one gets favourable numerical properties when grid points align on the concentric magnetic flux surfaces. When trying to do this with a mapped cartesian grid, one ends up with a polar coordinates mesh (when the flux surfaces are circles) or something topologically equivalent. This yields cells that are smaller and smaller when getting closer to the center and a singularity at the center. This is numerically far from optimal. 
+In magnetic fusion applications the embedded magnetic flux surfaces play an important role and introduce an important anisotropy. For this reason one gets favourable numerical properties when grid points align on the concentric magnetic flux surfaces. When trying to do this with a mapped cartesian grid, one ends up with a polar coordinates mesh (when the flux surfaces are circles) or something topologically equivalent. This yields cells that are smaller and smaller when getting closer to the center and a singularity at the center. This is numerically far from optimal. 
 
-On the other hand tiling a regular hexagon into triangles yields a mesh of equilateral triangles having all the same size, and this can be easily mapped to a circle by slightly stretching the edges of the hexagon. This yields a nice mesh of a disk with slightly stretched triangles of almost the same size and there is no singularity. 
-On the other hand such a mesh has a clear structure with three privileged directions, so that it is completely straightforward to localise points within this mesh. On the other hand derivatives along the three directions can be nicely computed using finite differencing along uniform lines. Moreover there is a spline construct on this mesh, called box spline. These splines have a hexagonal support and are invariant by translations along the three directions of the mesh.
+However, tiling a regular hexagon into triangles yields a mesh of equilateral triangles having all the same area, plus the grid can be easily mapped to a circle by slightly stretching the edges of the hexagon. This yields a nice mesh of a disk with slightly stretched triangles of almost the same size and there is no singularity in any point on the domain. 
+Moreover, such a mesh has a clear structure with three privileged directions, thus it is completely straightforward to localise points within this mesh. The derivatives along the three directions can also be nicely computed using finite differencing along uniform lines. And last but not least, there is a spline construct on this mesh, called box spline. These splines have a hexagonal support and are invariant by translations along the three directions of the mesh.
 
 %%-----------------------------
 %% Interpolation 
