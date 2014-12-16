@@ -369,8 +369,8 @@ contains
         sim%nrj0 = sim%nrj0+(eps_l*sll_pi)**2/(kmode_x1*kmode_x2) &
           *1._f64/(lmode_x1**2+lmode_x2**2)
         endif
-      case ("SLL_LANDAU_TWO_MODES_SUM_COS")
-        sim%init_func => sll_landau_mode_initializer_sum_cos_4d
+      case ("SLL_LANDAU_TWO_MODES_COS_SUM")
+        sim%init_func => sll_landau_mode_initializer_cos_sum_4d
         SLL_ALLOCATE(sim%params(6),ierr)
         sim%params(1) = kmode_x1
         sim%params(2) = kmode_x2
@@ -379,23 +379,17 @@ contains
         sim%params(5) = lmode_x2
         sim%params(6) = eps_l
         if((kmode_x1==lmode_x1).and.(kmode_x2==lmode_x2)) then
-          sim%nrj0 = ((eps+eps_l)*sll_pi)**2/(kmode_x1*kmode_x2) &
-            *1._f64/(kmode_x1**2+kmode_x2**2)
+          sim%nrj0 = 2._f64*((eps+eps_l)*sll_pi)**2/(kmode_x1*kmode_x2*(kmode_x1**2+kmode_x2**2))
         else
-        sim%nrj0 = (eps*sll_pi)**2/(kmode_x1*kmode_x2) &
-          *1._f64/(kmode_x1**2+kmode_x2**2)
-        sim%nrj0 = sim%nrj0+(eps_l*sll_pi)**2/(kmode_x1*kmode_x2) &
-          *1._f64/(lmode_x1**2+lmode_x2**2)
-        endif
-!        sim%nrj0 = sim%nrj0+2._f64*eps*eps_l*(lmode_x1*lmode_x2)/(lmode_x1**2+lmode_x2**2) &
-!          *(sin(2*sll_pi*lmode_x1/kmode_x1)/(kmode_x1**2-lmode_x1**2)) &
-!          *(sin(2*sll_pi*lmode_x2/kmode_x2)/(kmode_x2**2-lmode_x2**2))                   
+          sim%nrj0 = 2._f64*(eps*sll_pi)**2/(kmode_x1*kmode_x2*(kmode_x1**2+kmode_x2**2))
+          sim%nrj0 = sim%nrj0+ &
+            2._f64*(eps_l*sll_pi)**2/(lmode_x1*lmode_x2*(lmode_x1**2+lmode_x2**2))
+        endif           
       case default
         print *,'#init_func_case not implemented'
         print *,'#in initialize_vlasov_par_poisson_seq_cart'  
         stop
     end select
-
 
     !time iterations
     sim%dt=dt
@@ -425,6 +419,8 @@ contains
         sim%split => new_time_splitting_coeff(SLL_ORDER6VPnew_TVT,dt=dt)
       case ("SLL_ORDER6VPnew1_VTV") 
         sim%split => new_time_splitting_coeff(SLL_ORDER6VPnew1_VTV,dt=dt)
+      case ("SLL_ORDER6VP2D_VTV") 
+        sim%split => new_time_splitting_coeff(SLL_ORDER6VP2D_VTV,dt=dt)
       case ("SLL_ORDER6VPnew2_VTV") 
         sim%split => new_time_splitting_coeff(SLL_ORDER6VPnew2_VTV,dt=dt)
       case default
@@ -787,6 +783,7 @@ contains
       sim%stencil_r, &
       sim%stencil_s, &
       jacobian_E)
+    !call solve(sim%poisson,E_x1,E_x2,jacobian_E,nrj)
 
 
     seqx3x4_to_seqx1x2 => &

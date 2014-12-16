@@ -43,6 +43,7 @@ module sll_time_splitting_coeff_module
   sll_int32, parameter :: SLL_ORDER6VPnew_TVT      = 8 
   sll_int32, parameter :: SLL_ORDER6VPnew1_VTV     = 9 
   sll_int32, parameter :: SLL_ORDER6VPnew2_VTV     = 10 
+  sll_int32, parameter :: SLL_ORDER6VP2D_VTV     = 11 
   
   type splitting_coeff
     sll_int32 :: split_case
@@ -301,6 +302,29 @@ contains
           split%split_step(11) = split%split_step(1)
         else
           print *,'#provide dt for use of case SLL_ORDER6VPnew1_VTV=',SLL_ORDER6VPnew1_VTV
+          stop
+        endif  
+      case (SLL_ORDER6VP2D_VTV) ! Order 6 for Vlasov-Poisson VTV 2D
+        if(present(dt))then        
+          split%nb_split_step = 11
+          SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
+          split%split_begin_T = .false.
+          split%split_step(1) = 0.0490864609761162454914412_f64&
+            +2._f64*dt**2*(0.00166171386175851683711044_f64)
+          split%split_step(2) = 0.1687359505634374224481957_f64
+          split%split_step(3) = 0.2641776098889767002001462_f64&
+            -2._f64*dt**2*(0.00461492847770001641230401_f64)
+          split%split_step(4) = 0.377851589220928303880766_f64
+          split%split_step(5) = 0.1867359291349070543084126_f64&
+            +2._f64*dt**2*(0.0000446959494108217402966857_f64)
+          split%split_step(6) = -0.0931750795687314526579244_f64
+          split%split_step(7) = split%split_step(5)
+          split%split_step(8) = split%split_step(4)
+          split%split_step(9) = split%split_step(3)
+          split%split_step(10) = split%split_step(2)
+          split%split_step(11) = split%split_step(1)
+        else
+          print *,'#provide dt for use of case SLL_ORDER6VP2D_VTV=',SLL_ORDER6VP2D_VTV
           stop
         endif  
       case (SLL_ORDER6VPnew2_VTV) ! Order 6 for Vlasov-Poisson VTV (new2)
