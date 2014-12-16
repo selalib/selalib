@@ -500,7 +500,7 @@ contains
          (1.0_f64+eps*cos(kx*x))*exp(-0.5_f64*(vx**2+vy**2))
   end function sll_landau_initializer_4d
 
-  function sll_landau_mode_initializer_sum_cos_4d( x, y, vx, vy, params ) result(res)
+  function sll_landau_mode_initializer_cos_sum_4d( x, y, vx, vy, params ) result(res)
     sll_real64 :: res
     sll_real64, intent(in) :: x
     sll_real64, intent(in) :: y
@@ -545,7 +545,7 @@ contains
     !print *,'size(params)=',size(params)
     !stop
 
-  end function sll_landau_mode_initializer_sum_cos_4d
+  end function sll_landau_mode_initializer_cos_sum_4d
 
   function sll_landau_mode_initializer_4d( x, y, vx, vy, params ) result(res)
     sll_real64 :: res
