@@ -23,20 +23,26 @@ module sll_module_arbitrary_degree_spline_interpolator_1d
 #include "sll_utilities.h"
 
 use sll_module_interpolators_1d_base
-use sll_module_deboor_splines_1d, only : splint_der, spli1d_der
 
 implicit none
 private
 
+!this derived type is created to avoid the save attribute you found
+!in module deboor splines 1d
+!Some deboor functions are clone copied because we don't want to have
+!side effects with general coordinates elliptic solver that uses
+!module deboor splines
 type deboor_type
    sll_int32 :: ilo = 1
    sll_int32 :: j   = 1
-   sll_real64, dimension ( 20 ) :: deltal
-   sll_real64, dimension ( 20 ) :: deltar
+   sll_real64, dimension(20) :: deltal
+   sll_real64, dimension(20) :: deltar
 end type deboor_type
 
 !> Class for arbitrary degree spline 1d interpolator
-type, public, extends(sll_interpolator_1d_base) :: sll_arbitrary_degree_spline_interpolator_1d
+type, public, extends(sll_interpolator_1d_base) :: &
+  sll_arbitrary_degree_spline_interpolator_1d
+
   sll_int32                         :: num_pts
   sll_real64                        :: eta_min
   sll_real64                        :: eta_max
@@ -59,7 +65,9 @@ type, public, extends(sll_interpolator_1d_base) :: sll_arbitrary_degree_spline_i
   logical                           :: compute_value_left = .TRUE.
   logical                           :: compute_value_right= .TRUE.
   type(deboor_type)                 :: deboor
+
 contains
+
   procedure :: initialize=>initialize_ad1d_interpolator
   procedure :: set_coefficients => set_coefficients_ad1d
   procedure :: compute_interpolants => compute_interpolants_ad1d
@@ -74,6 +82,7 @@ contains
   procedure :: get_coefficients => get_coefficients_ad1d
   procedure :: reconstruct_array
   procedure :: delete => delete_arbitrary_degree_1d_interpolator
+
 end type sll_arbitrary_degree_spline_interpolator_1d
 
 !> Deallocate
@@ -179,6 +188,7 @@ sll_int32              :: tmp
 sll_int64              :: bc_selector
 sll_int32              :: i, k
 sll_real64             :: delta_eta
+sll_int32              :: deriv
 
 ! do some argument checking...
 if(((bc_left == SLL_PERIODIC).and.(bc_right.ne. SLL_PERIODIC))) then
@@ -211,6 +221,7 @@ do i = 1, num_pts
 end do
 
 k = spline_degree+1
+deriv = 2
 
 select case (bc_selector)
 
@@ -255,75 +266,28 @@ case (9) ! 2. dirichlet-left, dirichlet-right
   end if
   SLL_ALLOCATE(interpolator%work(num_pts*(2*k-1)),ierr)
 
-case(10) ! Neumann - Dirichlet
-   tmp = num_pts*num_pts
-   SLL_ALLOCATE( interpolator%coeff_splines(tmp),ierr)
-   interpolator%slope_left  = 0.0_f64
-   interpolator%value_right = 0.0_f64
-   SLL_ALLOCATE( interpolator%t(num_pts*num_pts),ierr)
-   interpolator%t(:) = 0.0_f64
-
-case(12) ! Hermite- Dirichlet
-   tmp = num_pts*num_pts
-   SLL_ALLOCATE( interpolator%coeff_splines(tmp),ierr)
-   interpolator%slope_left = 0.0_f64
-   interpolator%value_right = 0.0_f64
-   SLL_ALLOCATE( interpolator%t(num_pts*num_pts),ierr)
-   interpolator%t(:) = 0.0_f64
-
-case(17) ! Dirichlet-Neumann
-   tmp = num_pts*num_pts
-   SLL_ALLOCATE( interpolator%coeff_splines(tmp),ierr)
-   interpolator%slope_right = 0.0_f64
-   interpolator%value_left = 0.0_f64
-   SLL_ALLOCATE( interpolator%t(num_pts*num_pts),ierr)
-   interpolator%t(:) = 0.0_f64
-
-case(18) ! Neumann - Neumann
-   tmp = num_pts*num_pts
-   SLL_ALLOCATE( interpolator%coeff_splines(tmp),ierr)
-   interpolator%slope_right = 0.0_f64
-   interpolator%slope_left = 0.0_f64
-   SLL_ALLOCATE( interpolator%t(num_pts*num_pts),ierr)
-   interpolator%t(:) = 0.0_f64
-
-case(20) ! Hermite - Neumann
-   tmp = num_pts*num_pts
-   SLL_ALLOCATE( interpolator%coeff_splines(tmp),ierr)
-   interpolator%slope_right = 0.0_f64
-   interpolator%slope_left = 0.0_f64
-   SLL_ALLOCATE( interpolator%t(num_pts*num_pts),ierr)
-   interpolator%t(:) = 0.0_f64
-
-case(33) ! Dirichlet - Hermite
-   tmp = num_pts*num_pts
-   SLL_ALLOCATE( interpolator%coeff_splines(tmp),ierr)
-   interpolator%slope_right = 0.0_f64
-   interpolator%value_left = 0.0_f64
-   SLL_ALLOCATE( interpolator%t(num_pts*num_pts),ierr)
-   interpolator%t(:) = 0.0_f64
-
-case(34) ! Neumann- Hermite
-   tmp = num_pts*num_pts
-   SLL_ALLOCATE( interpolator%coeff_splines(tmp),ierr)
-   interpolator%slope_right = 0.0_f64
-   interpolator%slope_left = 0.0_f64
-   SLL_ALLOCATE( interpolator%t(num_pts*num_pts),ierr)
-   interpolator%t(:) = 0.0_f64
-
-case(36) ! Hermitte - Hermite
-   tmp = num_pts*num_pts
-   SLL_ALLOCATE( interpolator%coeff_splines(tmp),ierr)
-   interpolator%slope_right = 0.0_f64
-   interpolator%slope_left = 0.0_f64
-   SLL_ALLOCATE( interpolator%t(num_pts*num_pts),ierr)
-   interpolator%t(:) = 0.0_f64
-
 case default
-   print *, 'initialize_ad1d_interpolator: BC combination not implemented.'
+
+   tmp = num_pts*num_pts
+   SLL_ALLOCATE( interpolator%coeff_splines(tmp),ierr)
+   interpolator%slope_right = 0.0_f64
+   interpolator%slope_left = 0.0_f64
+   SLL_ALLOCATE(interpolator%t(num_pts+k+deriv),ierr)
+   interpolator%t = 0.0_f64
+   interpolator%t(1:k) = interpolator%eta(1)
+   interpolator%t(num_pts+deriv+1:num_pts+deriv+k) = interpolator%eta(num_pts)
+   SLL_ALLOCATE(interpolator%work((num_pts+deriv)*(2*k-1)),ierr)
+    
+   if (num_pts+deriv+k == num_pts+2*(k-1)) then
+     interpolator%t(k+1:num_pts+deriv) = interpolator%eta(2:num_pts-1)
+   else
+     SLL_ERROR('Problem with knots settings') 
+   end if
+
 end select
 
 interpolator%coeff_splines(:) = 0.0_f64
+
 end subroutine initialize_ad1d_interpolator
 
 
@@ -399,39 +363,23 @@ class(sll_arbitrary_degree_spline_interpolator_1d), intent(inout)  :: interpolat
 sll_real64, dimension(:), intent(in)           :: data_array
 sll_real64, dimension(:), intent(in), optional :: eta_coords
 sll_int32,                intent(in), optional :: size_eta_coords
+sll_int32, parameter                           :: sz_deriv = 2
+sll_int32,  dimension(sz_deriv)                :: point_locate_eta_derivative
+sll_real64, dimension(sz_deriv)                :: data_array_derivative
+sll_int32                                      :: sz
+sll_real64                                     :: period
+sll_int32                                      :: order
+sll_int32                                      :: ierr
 
-sll_real64, dimension(:), pointer             :: point_locate_eta
-sll_int32,  dimension(:), pointer             :: point_locate_eta_derivative
-sll_int32                                     :: sz
-sll_int32                                     :: sz_deriv
-sll_real64                                    :: period
-sll_int32                                     :: order
-sll_int32                                     :: ierr
-sll_real64, dimension(:),  pointer            :: data_array_derivative
-
-if(present(eta_coords) .and. (.not. present(size_eta_coords))) then
-   print *, 'compute_interpolants_ad1d(), ERROR: if eta_coords is ', &
-        'passed, its size must be specified as well through ', &
-        'size_eta_coords.'
-   SLL_ERROR(' ')
-end if
-
-if( present(eta_coords) ) then
-  sz = size(eta_coords)
-  SLL_ALLOCATE(point_locate_eta(sz),ierr)
-  point_locate_eta = eta_coords
-else
-  sz = size(data_array)
-  print*, 'sz =', sz
-  SLL_ALLOCATE(point_locate_eta(sz),ierr)
-  point_locate_eta(1:sz) = interpolator%eta(1:sz)
+if(present(eta_coords)) then
+   SLL_ERROR('This case is not yet implemented')
 end if
 
 if (interpolator%compute_slope_left) then
-  interpolator%slope_left = forward_fd_5pt( data_array,point_locate_eta)
+  interpolator%slope_left = forward_fd_5pt(data_array,interpolator%eta)
 end if
 if (interpolator%compute_slope_right) then
-  interpolator%slope_right = backward_fd_5pt( data_array,point_locate_eta,sz)
+  interpolator%slope_right = backward_fd_5pt(data_array,interpolator%eta,sz)
 end if
 
 if (interpolator%compute_value_left) then
@@ -441,19 +389,17 @@ if (interpolator%compute_value_right) then
   interpolator%value_right = data_array(sz)
 end if
 
-SLL_ASSERT(sz .le. interpolator%num_pts* interpolator%num_pts)
-SLL_ASSERT(size(data_array) .le. sz)
-SLL_ASSERT(size(point_locate_eta)  .ge. sz)
-
 order  = interpolator%spline_degree + 1
 period = interpolator%eta_max - interpolator%eta_min
+
+interpolator%deboor%ilo = 1
+interpolator%deboor%j   = 1
 
 select case (interpolator%bc_selector)
 case (0) ! periodic
 
-  interpolator%size_coeffs = sz !+ 1
-  interpolator%size_t = order + sz !+ 1
-  interpolator%deboor%ilo = 1
+  interpolator%size_coeffs = sz 
+  interpolator%size_t = order + sz 
 
   call splint ( interpolator%deboor,        &
                 interpolator%eta,           &
@@ -469,8 +415,8 @@ case (9) ! 2. dirichlet-left, dirichlet-right
 
   interpolator%size_coeffs = sz
   interpolator%size_t = order + sz
-    
   interpolator%coeff_splines  = data_array
+  interpolator%deboor%ilo = 1
 
   call splint ( interpolator%deboor,        &
                 interpolator%eta,           &
@@ -485,240 +431,234 @@ case (9) ! 2. dirichlet-left, dirichlet-right
   interpolator%coeff_splines(1)  = interpolator%value_left
   interpolator%coeff_splines(sz) = interpolator%value_right
 
-case(10) ! Neumann - Dirichlet
-       ! -----------------------------------
-       !!! It is only for cubic spline !!!!
-       ! -----------------------------------
-       sz_deriv = 2
-       interpolator%size_coeffs = sz + sz_deriv
-       interpolator%size_t = order + sz + sz_deriv
+case default
 
-       SLL_ALLOCATE(point_locate_eta_derivative(sz_deriv),ierr)
-       SLL_ALLOCATE(data_array_derivative(sz_deriv),ierr)
+  ! -----------------------------------
+  !!! It is only for cubic spline !!!!
+  ! -----------------------------------
+  interpolator%size_coeffs = sz + sz_deriv
+  interpolator%size_t = order + sz + sz_deriv
 
-       point_locate_eta_derivative(1) = 1
-       data_array_derivative(1)       = 0.0_f64
-       point_locate_eta_derivative(2) = sz
-       data_array_derivative(2)       = interpolator%slope_right
+  point_locate_eta_derivative(1) = 1
+  if (interpolator%bc_left == SLL_NEUMANN .or. &
+      interpolator%bc_left == SLL_HERMITE ) then 
+    data_array_derivative(1) = interpolator%slope_left
+  else
+    data_array_derivative(1) = 0.0_f64
+  end if
 
-       call spli1d_der(sz,sz_deriv,order,&
-            point_locate_eta,&
-            data_array,&
-            point_locate_eta_derivative,&
-            data_array_derivative,&
-            interpolator%coeff_splines(1:sz+sz_deriv),&
-            interpolator%t(1:sz+order+sz_deriv))
+  point_locate_eta_derivative(2) = sz
+  if (interpolator%bc_right == SLL_NEUMANN .or. &
+      interpolator%bc_right == SLL_HERMITE ) then 
+    data_array_derivative(2) = interpolator%slope_right
+  else
+    data_array_derivative(2) = 0.0_f64
+  end if
 
-       ! test dirichlet non homogene
-       interpolator%coeff_splines(sz+sz_deriv) = interpolator%value_right
+  call splint_der(                                &
+       interpolator%deboor,                       &
+       interpolator%eta,                          &
+       data_array,                                &
+       point_locate_eta_derivative,               &
+       data_array_derivative,                     &
+       interpolator%t,                            &
+       sz,                                        &
+       sz_deriv,                                  &
+       order,                                     &
+       interpolator%work,                         &
+       interpolator%coeff_splines(1:sz+sz_deriv), &
+       ierr )
 
-       SLL_DEALLOCATE(point_locate_eta_derivative,ierr)
-       SLL_DEALLOCATE(data_array_derivative,ierr)
+  if (interpolator%bc_left == SLL_DIRICHLET) &
+     interpolator%coeff_splines(1)           = interpolator%value_left
+  if (interpolator%bc_right == SLL_DIRICHLET) &
+     interpolator%coeff_splines(sz+sz_deriv) = interpolator%value_right
 
-    case(12) ! Hermite - Dirichlet
-
-       ! -----------------------------------
-       !!! It is only for cubic spline !!!!
-       ! -----------------------------------
-       sz_deriv = 2
-       interpolator%size_coeffs = sz + sz_deriv
-       interpolator%size_t = order + sz + sz_deriv
-
-       SLL_ALLOCATE(point_locate_eta_derivative(sz_deriv),ierr)
-       SLL_ALLOCATE(data_array_derivative(sz_deriv),ierr)
-
-       point_locate_eta_derivative(1) = 1
-       data_array_derivative(1)       = interpolator%slope_left
-       point_locate_eta_derivative(2) = sz
-       data_array_derivative(2)       = interpolator%slope_right
-
-       call spli1d_der(sz,sz_deriv,order,&
-            point_locate_eta,&
-            data_array,&
-            point_locate_eta_derivative,&
-            data_array_derivative,&
-            interpolator%coeff_splines(1:sz+sz_deriv),&
-            interpolator%t(1:sz+order+sz_deriv))
-
-       ! test dirichlet non homogene
-       interpolator%coeff_splines(sz+sz_deriv) = interpolator%value_right
-       SLL_DEALLOCATE(point_locate_eta_derivative,ierr)
-       SLL_DEALLOCATE(data_array_derivative,ierr)
-
-    case(17) ! Dirichlet - Neumann
-
-        ! -----------------------------------
-       !!! It is only for cubic spline !!!!
-       ! -----------------------------------
-       sz_deriv = 2
-       interpolator%size_coeffs = sz + sz_deriv
-       interpolator%size_t = order + sz + sz_deriv
-
-       SLL_ALLOCATE(point_locate_eta_derivative(sz_deriv),ierr)
-       SLL_ALLOCATE(data_array_derivative(sz_deriv),ierr)
-
-       point_locate_eta_derivative(1) = 1
-       data_array_derivative(1)       = interpolator%slope_left
-       point_locate_eta_derivative(2) = sz
-       data_array_derivative(2)       = 0.0_f64
-
-       call spli1d_der(sz,sz_deriv,order,&
-            point_locate_eta,&
-            data_array,&
-            point_locate_eta_derivative,&
-            data_array_derivative,&
-            interpolator%coeff_splines(1:sz+sz_deriv),&
-            interpolator%t(1:sz+order+sz_deriv))
-
-       ! test dirichlet non homogene
-       interpolator%coeff_splines(1) = interpolator%value_left
-       SLL_DEALLOCATE(point_locate_eta_derivative,ierr)
-       SLL_DEALLOCATE(data_array_derivative,ierr)
-    case(18) ! Neumann - Neumann
-
-        ! -----------------------------------
-       !!! It is only for cubic spline !!!!
-       ! -----------------------------------
-       sz_deriv = 2
-       interpolator%size_coeffs = sz + sz_deriv
-       interpolator%size_t = order + sz + sz_deriv
-
-       SLL_ALLOCATE(point_locate_eta_derivative(sz_deriv),ierr)
-       SLL_ALLOCATE(data_array_derivative(sz_deriv),ierr)
-
-       point_locate_eta_derivative(1) = 1
-       data_array_derivative(1)       = 0.0_f64
-       point_locate_eta_derivative(2) = sz
-       data_array_derivative(2)       = 0.0_f64
-       call spli1d_der(sz,sz_deriv,order,&
-            point_locate_eta,&
-            data_array,&
-            point_locate_eta_derivative,&
-            data_array_derivative,&
-            interpolator%coeff_splines(1:sz+sz_deriv),&
-            interpolator%t(1:sz+order+sz_deriv))
-
-       SLL_DEALLOCATE(point_locate_eta_derivative,ierr)
-       SLL_DEALLOCATE(data_array_derivative,ierr)
-
-    case(20) ! Hermite - Neumann
-
-        ! -----------------------------------
-       !!! It is only for cubic spline !!!!
-       ! -----------------------------------
-       sz_deriv = 2
-       interpolator%size_coeffs = sz + sz_deriv
-       interpolator%size_t = order + sz + sz_deriv
-
-       SLL_ALLOCATE(point_locate_eta_derivative(sz_deriv),ierr)
-       SLL_ALLOCATE(data_array_derivative(sz_deriv),ierr)
-
-       point_locate_eta_derivative(1) = 1
-       data_array_derivative(1)       = interpolator%slope_left
-       point_locate_eta_derivative(2) = sz
-       data_array_derivative(2)       = 0.0_f64
-
-       call spli1d_der(sz,sz_deriv,order,&
-            point_locate_eta,&
-            data_array,&
-            point_locate_eta_derivative,&
-            data_array_derivative,&
-            interpolator%coeff_splines(1:sz+sz_deriv),&
-            interpolator%t(1:sz+order+sz_deriv))
-       SLL_DEALLOCATE(point_locate_eta_derivative,ierr)
-       SLL_DEALLOCATE(data_array_derivative,ierr)
-
-    case(33) ! Dirichlet - Hermite
-
-        ! -----------------------------------
-       !!! It is only for cubic spline !!!!
-       ! -----------------------------------
-       sz_deriv = 2
-       interpolator%size_coeffs = sz + sz_deriv
-       interpolator%size_t = order + sz + sz_deriv
-
-       SLL_ALLOCATE(point_locate_eta_derivative(sz_deriv),ierr)
-       SLL_ALLOCATE(data_array_derivative(sz_deriv),ierr)
-
-       point_locate_eta_derivative(1) = 1
-       data_array_derivative(1)       = interpolator%slope_left
-       point_locate_eta_derivative(2) = sz
-       data_array_derivative(2)       = interpolator%slope_right
-
-       call spli1d_der(sz,sz_deriv,order,&
-            point_locate_eta,&
-            data_array,&
-            point_locate_eta_derivative,&
-            data_array_derivative,&
-            interpolator%coeff_splines(1:sz+sz_deriv),&
-            interpolator%t(1:sz+order+sz_deriv))
-
-       ! test dirichlet non homogene
-       interpolator%coeff_splines(1) = interpolator%value_left
-       SLL_DEALLOCATE(point_locate_eta_derivative,ierr)
-       SLL_DEALLOCATE(data_array_derivative,ierr)
-    case(34) ! Neumann - Hermite
-
-        ! -----------------------------------
-       !!! It is only for cubic spline !!!!
-       ! -----------------------------------
-
-       sz_deriv = 2
-       interpolator%size_coeffs = sz + sz_deriv
-       interpolator%size_t = order + sz + sz_deriv
-
-       SLL_ALLOCATE(point_locate_eta_derivative(sz_deriv),ierr)
-       SLL_ALLOCATE(data_array_derivative(sz_deriv),ierr)
-
-       point_locate_eta_derivative(1) = 1
-       data_array_derivative(1)       = 0.0_f64
-       point_locate_eta_derivative(2) = sz
-       data_array_derivative(2)       = interpolator%slope_right
-
-       call spli1d_der(sz,sz_deriv,order,&
-            point_locate_eta,&
-            data_array,&
-            point_locate_eta_derivative,&
-            data_array_derivative,&
-            interpolator%coeff_splines(1:sz+sz_deriv),&
-            interpolator%t(1:sz+order+sz_deriv))
-
-       SLL_DEALLOCATE(point_locate_eta_derivative,ierr)
-       SLL_DEALLOCATE(data_array_derivative,ierr)
-
-    case(36) ! Hermite - Hermite
-
-        ! -----------------------------------
-       !!! It is only for cubic spline !!!!
-       ! -----------------------------------
-       sz_deriv = 2
-       interpolator%size_coeffs = sz + sz_deriv
-       interpolator%size_t = order + sz + sz_deriv
-
-        SLL_ALLOCATE(point_locate_eta_derivative(sz_deriv),ierr)
-       SLL_ALLOCATE(data_array_derivative(sz_deriv),ierr)
-
-       point_locate_eta_derivative(1) = 1
-       data_array_derivative(1)       = interpolator%slope_left
-       point_locate_eta_derivative(2) = sz
-       data_array_derivative(2)       = interpolator%slope_right
-
-       call spli1d_der(sz,sz_deriv,order,&
-            point_locate_eta,&
-            data_array,&
-            point_locate_eta_derivative,&
-            data_array_derivative,&
-            interpolator%coeff_splines(1:sz+sz_deriv),&
-            interpolator%t(1:sz+order+sz_deriv))
-
-       SLL_DEALLOCATE(point_locate_eta_derivative,ierr)
-       SLL_DEALLOCATE(data_array_derivative,ierr)
-
-    end select
-    SLL_DEALLOCATE(point_locate_eta,ierr)
+end select
 
 end subroutine compute_interpolants_ad1d
 
+    
+subroutine splint_der( deboor,       &
+                       tau,          &
+                       gtau,         &
+                       tau_der,      &
+                       gtau_der,     &
+                       t,            &
+                       n,            &
+                       m,            &
+                       k,            &
+                       q,            &
+                       bcoef_spline, &
+                       iflag )
+    
+type(deboor_type) :: deboor
+sll_int32         ::  n
+sll_int32         ::  m
+sll_real64,dimension(n+m):: bcoef ! (n)
+sll_real64,dimension(n+m):: bcoef_spline 
+sll_real64,dimension(n)::  gtau ! (n)
+sll_real64,dimension(m)::  gtau_der ! (n)
+sll_int32 :: i
+sll_int32 :: iflag,mflag
+sll_int32 :: j,l
+sll_int32 :: jj
+sll_int32 :: k
+sll_int32 :: kpkm2
+sll_int32 :: left
+sll_real64, dimension((2*k-1)*(n+m)) :: q!((2*k-1)*n)
+sll_real64,dimension(n+k+m) ::  t!(n+k)
+sll_real64,dimension(n) ::  tau!!(n)
+sll_int32,dimension(m) ::  tau_der!!(n)
+sll_real64:: taui,taui_der
+sll_real64, dimension(k,k):: a
+sll_real64,dimension(k,2) :: bcoef_der
+
+kpkm2 = 2 * ( k - 1 )
+left = k
+q(1:(2*k-1)*(n+m)) = 0.0_f64
+a(1:k,1:k) = 0.0_f64
+bcoef_der(1:k,1:2) = 0.0_f64
+
+! we must suppose that m is <= than n 
+if (m > n) then
+   print*, 'problem m must be < = at n'
+   print*, 'value m =', m, 'value n =', n
+   stop
+end if
+l = 1 ! index for the derivative
+!
+!  Loop over I to construct the N interpolation equations.
+!
+do i = 1, n-1
+   
+   taui = tau(i)
+   
+   !
+   !  Find LEFT in the closed interval (I,I+K-1) such that
+   !
+   !    T(LEFT) <= TAU(I) < T(LEFT+1)
+   !
+   !  The matrix is singular if this is not possible.
+   !  With help of the Schoenberg-Whitney theorem 
+   !  we can prove that if the diagonal of the 
+   !  matrix B_j(x_i) is null, we have a non-inversible matrix.  
+
+   call interv( deboor, t, n+m+k, taui, left, mflag )
+
+   !
+
+   !
+   !  The I-th equation enforces interpolation at TAUI, hence for all J,
+   !
+   !    A(I,J) = B(J,K,T)(TAUI).
+   !
+   !Only the K entries with J = LEFT-K+1,...,LEFT actually might be nonzero.
+   !
+   !These K numbers are returned, in BCOEF 
+   ! (used for temporary storage here),
+   !  by the following.
+   !
+   
+   call bsplvb ( deboor, t, k, 1, taui, left, bcoef )
+   
+      
+   !
+   !  We therefore want BCOEF(J) = B(LEFT-K+J)(TAUI) to go into
+   !  A(I,LEFT-K+J), that is, into Q(I-(LEFT+J)+2*K,(LEFT+J)-K) since
+   !  A(I+J,J) is to go into Q(I+K,J), for all I, J, if we consider Q
+   !  as a two-dimensional array, with  2*K-1 rows.  See comments in
+   !  BANFAC.
+   !
+   !  In the present program, we treat Q as an equivalent
+   !  one-dimensional array, because of fortran restrictions on
+   !  dimension statements.
+   !
+   !  We therefore want  BCOEF(J) to go into the entry of Q with index:
+   !
+   !    I -(LEFT+J)+2*K + ((LEFT+J)-K-1)*(2*K-1)
+   !    =  begin_ligne +  (begin_col -1) * number_coef_different_0
+   !   = I-LEFT+1+(LEFT -K)*(2*K-1) + (2*K-2)*J
+   !
+   jj = i - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
+   
+   do j = 1, k
+      jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
+      q(jj) = bcoef(j)
+   end do
+
+   bcoef_spline(i+ l-1) = gtau(i)
+   if ( tau_der(l) == i ) then   
+      taui_der = taui
+      
+      call bsplvd( deboor, t, k, taui_der, left, a, bcoef_der, 2)
+
+      l = l + 1
+      jj = i - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
+   
+      do j = 1, k
+         jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
+         q(jj) = bcoef_der(j,2)
+      end do
+   bcoef_spline(i+ l-1) = gtau_der(l-1)
+   end if
+   
+
+end do
+
+
+taui = tau(n)
+call interv( deboor, t, n+m+k, taui, left, mflag )
+if ( tau_der(l)== n ) then   
+      taui_der = taui
+      
+      call bsplvd( deboor, t, k, taui_der, left, a, bcoef_der, 2)
+
+      
+      jj = n - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
+   
+      do j = 1, k
+         jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
+         q(jj) = bcoef_der(j,2)
+      end do
+      bcoef_spline(n+ l-1) = gtau_der(l)
+      l = l + 1
+      
+   end if
+   
+
+ call bsplvb ( deboor, t, k, 1, taui, left, bcoef )
+ jj = n - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
+   
+ do j = 1, k
+    jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
+    q(jj) = bcoef(j)
+ end do
+ bcoef_spline(n+l-1) = gtau(n)
+
+!
+!  Obtain factorization of A, stored again in Q.
+!
+call banfac ( q, k+k-1, n+m, k-1, k-1, iflag )
+
+if ( iflag == 2 ) then
+   write ( *, '(a)' ) ' '
+   write ( *, '(a)' ) 'SPLINT - Fatal Error!'
+   write ( *, '(a)' ) '  The linear system is not invertible!'
+   return
+end if
+!
+!  Solve 
+!
+!    A * BCOEF = GTAU
+!
+!  by back substitution.
+
+call banslv ( q, k+k-1, n+m, k-1, k-1, bcoef_spline )
+
+return
+end subroutine splint_der
+  
 !> @brief Interpolation on the points eta using
 !> the arbitrary degree splines interpolator 1d
 !> @details computing the values with the interpolator arbitrary degree splines 1d
@@ -1819,19 +1759,21 @@ end subroutine splint
   ! derivatives is valid only for uniform spacing between the points, the
   ! specific coefficients chosen here using the eta coordinates is not to
   ! be used. ABSOLUTE FIXME!!
-  function forward_fd_5pt( data,eta) result(res)
+  function forward_fd_5pt( data,eta) 
     sll_real64, dimension(:), intent(in) :: data
     sll_real64, dimension(:), intent(in) :: eta
-    sll_real64 :: res
+    sll_real64, allocatable :: res(:,:)
+    sll_real64 :: forward_fd_5pt
 
-    res = (-(25.0_f64/12.0_f64)*data(1)*(eta(2) - eta(1)) &
-                      + 4.0_f64*data(2)*(eta(3) - eta(2)) &
-                      - 3.0_f64*data(3)*(eta(4) - eta(3)) &
-            + (4.0_f64/3.0_f64)*data(4)*(eta(5) - eta(4)) &
-                      -0.25_f64*data(5)*(eta(6) - eta(5)))
+    allocate(res(0:1,size(data)))
+
+    call apply_fd(5,1,eta(1:5),data(1:5), eta(1),res(0:1,1))
+
+    forward_fd_5pt = res(1,1) 
+
   end function forward_fd_5pt
 
-  function backward_fd_5pt( data,eta,li)result(res)
+  function backward_fd_5pt( data,eta,li) result(res)
     sll_real64, dimension(:), intent(in) :: data
     sll_real64, dimension(:), intent(in) :: eta
     sll_int32, intent(in)  :: li  ! last index of the array
@@ -1844,4 +1786,123 @@ end subroutine splint
           4.0_f64*           data(li-1)*(eta(li-2) - eta(li-1)) + &
          (25.0_f64/12.0_f64)*data(li)*  (eta(li-1) - eta(li)) )
   end function backward_fd_5pt
+
+ subroutine bsplvd ( deboor, t, k, x, left, a, dbiatx, nderiv )
+
+    type(deboor_type) :: deboor
+    sll_int32 :: k
+    sll_int32 :: left
+    sll_int32 :: nderiv
+    
+    sll_real64, dimension(k,k):: a!(k,k)
+    sll_real64,dimension(k,nderiv), intent(out) :: dbiatx!(k,nderiv)
+    sll_real64:: factor
+    sll_real64:: fkp1mm
+    sll_int32 :: i
+    sll_int32 :: ideriv
+    sll_int32 :: il
+    sll_int32 :: j
+    sll_int32 :: jlow
+    sll_int32 :: jp1mid
+    sll_int32 :: ldummy
+    sll_int32 :: m
+    sll_int32 :: mhigh
+    !  sll_real64 sum1  ! this one is not used...
+    sll_real64,dimension(left+k):: t ! (left+k)
+    sll_real64:: x
+    
+    
+    mhigh = max ( min ( nderiv, k ), 1 )
+    !
+    !  MHIGH is usually equal to NDERIV.
+    !
+    call bsplvb ( deboor, t, k+1-mhigh, 1, x, left, dbiatx )
+    
+    if ( mhigh == 1 ) then
+       return
+    end if
+    !
+    !  The first column of DBIATX always contains the B-spline values
+    !  for the current order.  These are stored in column K+1-current
+    !  order before BSPLVB is called to put values for the next
+    !  higher order on top of it.
+    !
+    ideriv = mhigh
+    do m = 2, mhigh
+       jp1mid = 1
+       do j = ideriv, k
+          dbiatx(j,ideriv) = dbiatx(jp1mid,1)
+          jp1mid = jp1mid + 1
+          
+       end do
+       ideriv = ideriv - 1
+       
+       call bsplvb ( deboor, t, k+1-ideriv, 2, x, left, dbiatx )
+       
+    end do
+    !
+    !  At this point, B(LEFT-K+I, K+1-J)(X) is in DBIATX(I,J) for
+    !  I=J,...,K and J=1,...,MHIGH ('=' NDERIV).
+    !
+    !  In particular, the first column of DBIATX is already in final form.
+    !
+    !  To obtain corresponding derivatives of B-splines in subsequent columns,
+    !  generate their B-representation by differencing, then evaluate at X.
+    !
+    jlow = 1
+    do i = 1, k
+       a(jlow:k,i) = 0.0D+00
+       jlow = i
+       a(i,i) = 1.0D+00
+    end do
+    !
+    !  At this point, A(.,J) contains the B-coefficients for the J-th of the
+    !  K B-splines of interest here.
+    !
+    do m = 2, mhigh
+       
+       fkp1mm = real ( k + 1 - m, kind = 8 )
+       il = left
+       i = k
+       !
+       !  For J = 1,...,K, construct B-coefficients of (M-1)st derivative of
+       !  B-splines from those for preceding derivative by differencing
+       !  and store again in  A(.,J).  The fact that  A(I,J) = 0 for
+       !  I < J is used.
+       !
+       do ldummy = 1, k+1-m
+          
+          factor = fkp1mm / ( t(il+k+1-m) - t(il) )
+          !
+          !  The assumption that T(LEFT) < T(LEFT+1) makes denominator
+          !  in FACTOR nonzero.
+          !
+          a(i,1:i) = ( a(i,1:i) - a(i-1,1:i) ) * factor
+          
+          il = il - 1
+          i = i - 1
+       
+       end do
+       !
+       !  For I = 1,...,K, combine B-coefficients A(.,I) with B-spline values
+       !  stored in DBIATX(.,M) to get value of (M-1)st derivative of
+       !  I-th B-spline (of interest here) at X, and store in DBIATX(I,M).
+       !
+       !  Storage of this value over the value of a B-spline
+       !  of order M there is safe since the remaining B-spline derivatives
+       !  of the same order do not use this value due to the fact
+       !  that  A(J,I) = 0  for J < I.
+       !
+       do i = 1, k
+          
+          jlow = max ( i, m )
+          
+          dbiatx(i,m) = dot_product ( a(jlow:k,i), dbiatx(jlow:k,m) )
+          
+       end do
+    
+    end do
+    return
+  end subroutine bsplvd
+
 end module sll_module_arbitrary_degree_spline_interpolator_1d
