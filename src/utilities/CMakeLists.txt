@@ -2,6 +2,7 @@ SET( SRC_UTILITIES
   sll_utilities.F90 
   tridiagonal.F90
   sll_toeplitz_penta_diagonal.F90
+  fornberg.F90
   sol.f
   muls.f )
 
@@ -16,6 +17,10 @@ TARGET_LINK_LIBRARIES( sll_utilities sll_memory sll_assert sll_working_precision
 # Example (tridiagonal solver)
 ADD_EXECUTABLE( example_tridiagonal example.F90 )
 TARGET_LINK_LIBRARIES( example_tridiagonal sll_utilities )
+
+# Example (tridiagonal solver)
+ADD_EXECUTABLE( test_fornberg test_fornberg.F90 )
+TARGET_LINK_LIBRARIES( test_fornberg sll_utilities )
 
 # Ctests
 IF(BUILD_TESTING)
