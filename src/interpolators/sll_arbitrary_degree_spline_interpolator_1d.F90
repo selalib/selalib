@@ -375,6 +375,8 @@ if(present(eta_coords)) then
    SLL_ERROR('This case is not yet implemented')
 end if
 
+sz = interpolator%num_pts
+
 if (interpolator%compute_slope_left) then
   interpolator%slope_left = forward_fd_5pt(data_array,interpolator%eta)
 end if
@@ -392,8 +394,6 @@ end if
 order  = interpolator%spline_degree + 1
 period = interpolator%eta_max - interpolator%eta_min
 
-interpolator%deboor%ilo = 1
-interpolator%deboor%j   = 1
 
 select case (interpolator%bc_selector)
 case (0) ! periodic
@@ -1778,7 +1778,6 @@ end subroutine splint
     sll_real64, dimension(:), intent(in) :: eta
     sll_int32, intent(in)  :: li  ! last index of the array
     sll_real64 :: res
-
 
     res = (0.25_f64*data(li-4)*(eta(li-5) - eta(li-4)) -&
          (4.0_f64/3.0_f64)*  data(li-3)*(eta(li-4) - eta(li-3)) + &
