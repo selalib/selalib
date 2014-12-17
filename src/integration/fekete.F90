@@ -12,13 +12,11 @@ module fekete_integration
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
+#include "sll_utilities.h"
 
-use sll_utilities
 use sll_hex_meshes
 
 implicit none
-
-
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 abstract interface
@@ -34,12 +32,10 @@ abstract interface
 end interface
 #endif
 
-
 !> Integrate numerically with Fekete quadrature formula
 interface fekete_integrate
   module procedure fekete_integral
 end interface
-
 
 contains
 
@@ -128,9 +124,9 @@ contains
     sll_int32                  :: next
     sll_real64                 :: temp_x
     sll_real64                 :: temp_y
-    logical, dimension(10)        :: cond1
-    logical, dimension(10)        :: cond2
-    logical, dimension(10)        :: cond3
+    logical, dimension(10)     :: cond1
+    logical, dimension(10)     :: cond2
+    logical, dimension(10)     :: cond3
 
     ! Coordinates of base orbits points and weights
     ! in the following reference triangle
@@ -145,9 +141,9 @@ contains
     !    |
     !    +--0-----1-->
 
-    ref_xyw(1:3, 1) = (/ 1./3._f64,    1./3._f64,   0.45_f64 /)
-    ref_xyw(1:3, 2) = (/    0._f64,       0._f64, 1./60._f64 /)
-    ref_xyw(1:3, 3) = (/    0._f64, 0.2763932023_f64, 1./12._f64 /)
+    ref_xyw(1:3, 1) = [ 1.0_f64/3.0_f64,  1.0_f64/3.0_f64,        0.45_f64 ]
+    ref_xyw(1:3, 2) = [ 0.0_f64        ,          0.0_f64, 1.0_f64/60._f64 ]
+    ref_xyw(1:3, 3) = [ 0.0_f64        , 0.2763932023_f64, 1.0_f64/12._f64 ]
 
     ! Initialiting array containing points and weigths
     xyw(:,:) = 0.0_f64
@@ -329,7 +325,7 @@ contains
 
           do i = 1, 10
              !We add them if they are not already on the table:
-             cond1 = abs(knots(1,:)-fekete_tri(1, i)).le.0.1E-14
+             cond1 = abs(knots(1,:)-fekete_tri(1,i)).le.0.1E-14
              cond2 = abs(knots(2,:)-fekete_tri(2,i)).le.0.1E-14
              cond3 = abs(knots(3,:)-fekete_tri(3,i)).le.0.1E-14
              if ( .not.( ANY(cond1.and.cond2.and.cond3) ) ) then
@@ -337,10 +333,9 @@ contains
                 next = next + 1
                 LM(ntri, i) = next
              else
-                cond123 = transfer(cond1.and.cond2.and.cond3, cond123)
+                cond123 = transfer(cond1.and.cond2.and.cond3, cond123, num_fekete)
                 ! LM(ntri, i) = MAXLOC(cond123)
                 ! where((cond1.and.cond2.and.cond3) .eqv. .true.)
-
              end if
           end do
        end do
@@ -357,8 +352,8 @@ contains
   !> @param[in]  rule integer for the fekete quadrature rule
   subroutine write_quadrature(rule)
     sll_int32, intent(in)       :: rule
-    sll_int32, parameter        :: out_unit=20
-    character(len=*), parameter :: name = "quadrature.txt"
+    sll_int32                   :: out_unit
+    character(len=14), parameter :: name = "quadrature.txt"
     sll_real64, dimension(2, 3) :: ref_pts
     sll_real64, dimension(3,10) :: quad_pw
     sll_int32  :: num_fek
@@ -366,6 +361,7 @@ contains
     sll_real64 :: x
     sll_real64 :: y
     sll_real64 :: w
+    sll_int32  :: ierr
     ! Definition of reference triangle, such that:
     !    |
     !    1  3
@@ -384,13 +380,14 @@ contains
     ! Computing fekete points on that triangle
     quad_pw = fekete_points_and_weights(ref_pts)
 
+    call sll_new_file_id(out_unit, ierr)
     open (unit=out_unit,file=name,action="write",status="replace")
     write(out_unit, "(i6)") rule
 
     if (rule .eq. 1) then
        num_fek = 10
     else
-       print *, "Error in write_quadrature : this rule was not implemented"
+       SLL_WARNING("Error in write_quadrature : this rule was not implemented")
        num_fek = 0
     end if
 
