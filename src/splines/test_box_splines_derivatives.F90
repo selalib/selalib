@@ -50,7 +50,7 @@ do i=1, mesh%num_pts_tot
    ! And derivatives :
    dxf(i) = boxspline_x1_derivative(x1, x2, 2)
    dyf(i) = boxspline_x2_derivative(x1, x2, 2)
-   
+
 end do
 
 !Wrtting on docs:
@@ -62,5 +62,9 @@ call write_field_hex_mesh_xmf(mesh, dyf, "der2_boxspline2")
 SLL_DEALLOCATE_ARRAY(f, ierr)
 SLL_DEALLOCATE_ARRAY(dxf, ierr)
 SLL_DEALLOCATE_ARRAY(dyf, ierr)
+
+
+!Writing file for CAID:
+call write_basis_values(1)
 
 end program box_spline_tester
