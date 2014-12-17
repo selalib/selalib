@@ -371,7 +371,7 @@ sll_real64                                     :: period
 sll_int32                                      :: order
 sll_int32                                      :: ierr
 
-if(present(eta_coords)) then
+if(present(eta_coords) .or. present(size_eta_coords)) then
    SLL_ERROR('This case is not yet implemented')
 end if
 
@@ -492,151 +492,142 @@ subroutine splint_der( deboor,       &
                        bcoef_spline, &
                        iflag )
     
-type(deboor_type) :: deboor
-sll_int32         ::  n
-sll_int32         ::  m
-sll_real64,dimension(n+m):: bcoef ! (n)
-sll_real64,dimension(n+m):: bcoef_spline 
-sll_real64,dimension(n)::  gtau ! (n)
-sll_real64,dimension(m)::  gtau_der ! (n)
-sll_int32 :: i
-sll_int32 :: iflag,mflag
-sll_int32 :: j,l
-sll_int32 :: jj
-sll_int32 :: k
-sll_int32 :: kpkm2
-sll_int32 :: left
-sll_real64, dimension((2*k-1)*(n+m)) :: q!((2*k-1)*n)
-sll_real64,dimension(n+k+m) ::  t!(n+k)
-sll_real64,dimension(n) ::  tau!!(n)
-sll_int32,dimension(m) ::  tau_der!!(n)
-sll_real64:: taui,taui_der
-sll_real64, dimension(k,k):: a
-sll_real64,dimension(k,2) :: bcoef_der
+type(deboor_type)                     :: deboor
+sll_real64, dimension(:), intent(in)  :: tau
+sll_real64, dimension(:), intent(in)  :: gtau
+sll_int32,  dimension(:), intent(in)  :: tau_der
+sll_real64, dimension(:), intent(in)  :: gtau_der 
+sll_real64, dimension(:), intent(in)  :: t
+sll_int32,                intent(in)  :: n
+sll_int32,                intent(in)  :: m
+sll_real64, dimension(:), intent(out) :: q
+sll_real64, dimension(:), intent(out) :: bcoef_spline 
+sll_int32,                intent(out) :: iflag
 
-kpkm2 = 2 * ( k - 1 )
-left = k
-q(1:(2*k-1)*(n+m)) = 0.0_f64
-a(1:k,1:k) = 0.0_f64
-bcoef_der(1:k,1:2) = 0.0_f64
+
+sll_real64,dimension(n+m)  :: bcoef
+sll_int32                  :: i
+sll_int32                  :: j
+sll_int32                  :: jj
+sll_int32                  :: k
+sll_int32                  :: l
+sll_int32                  :: mflag
+sll_int32                  :: kpkm2
+sll_int32                  :: left
+sll_real64                 :: taui
+sll_real64                 :: taui_der
+sll_real64, dimension(k,k) :: a
+sll_real64, dimension(k,2) :: bcoef_der
+
+kpkm2     = 2*(k-1)
+left      = k
+q         = 0.0_f64
+a         = 0.0_f64
+bcoef_der = 0.0_f64
 
 ! we must suppose that m is <= than n 
-if (m > n) then
-   print*, 'problem m must be < = at n'
-   print*, 'value m =', m, 'value n =', n
-   stop
-end if
+SLL_ASSERT(m <= n)
 l = 1 ! index for the derivative
 !
 !  Loop over I to construct the N interpolation equations.
 !
 do i = 1, n-1
    
-   taui = tau(i)
+  taui = tau(i)
    
-   !
-   !  Find LEFT in the closed interval (I,I+K-1) such that
-   !
-   !    T(LEFT) <= TAU(I) < T(LEFT+1)
-   !
-   !  The matrix is singular if this is not possible.
-   !  With help of the Schoenberg-Whitney theorem 
-   !  we can prove that if the diagonal of the 
-   !  matrix B_j(x_i) is null, we have a non-inversible matrix.  
+  !
+  !  Find LEFT in the closed interval (I,I+K-1) such that
+  !
+  !    T(LEFT) <= TAU(I) < T(LEFT+1)
+  !
+  !  The matrix is singular if this is not possible.
+  !  With help of the Schoenberg-Whitney theorem 
+  !  we can prove that if the diagonal of the 
+  !  matrix B_j(x_i) is null, we have a non-inversible matrix.  
 
-   call interv( deboor, t, n+m+k, taui, left, mflag )
+  call interv( deboor, t, n+m+k, taui, left, mflag )
 
-   !
-
-   !
-   !  The I-th equation enforces interpolation at TAUI, hence for all J,
-   !
-   !    A(I,J) = B(J,K,T)(TAUI).
-   !
-   !Only the K entries with J = LEFT-K+1,...,LEFT actually might be nonzero.
-   !
-   !These K numbers are returned, in BCOEF 
-   ! (used for temporary storage here),
-   !  by the following.
-   !
+  !
+  !  The I-th equation enforces interpolation at TAUI, hence for all J,
+  !
+  !    A(I,J) = B(J,K,T)(TAUI).
+  !
+  !Only the K entries with J = LEFT-K+1,...,LEFT actually might be nonzero.
+  !
+  !These K numbers are returned, in BCOEF 
+  ! (used for temporary storage here),
+  !  by the following.
+  
+  call bsplvb ( deboor, t, k, 1, taui, left, bcoef )
    
-   call bsplvb ( deboor, t, k, 1, taui, left, bcoef )
+  !  We therefore want BCOEF(J) = B(LEFT-K+J)(TAUI) to go into
+  !  A(I,LEFT-K+J), that is, into Q(I-(LEFT+J)+2*K,(LEFT+J)-K) since
+  !  A(I+J,J) is to go into Q(I+K,J), for all I, J, if we consider Q
+  !  as a two-dimensional array, with  2*K-1 rows.  See comments in
+  !  BANFAC.
+  !
+  !  In the present program, we treat Q as an equivalent
+  !  one-dimensional array, because of fortran restrictions on
+  !  dimension statements.
+  !
+  !  We therefore want  BCOEF(J) to go into the entry of Q with index:
+  !
+  !    I -(LEFT+J)+2*K + ((LEFT+J)-K-1)*(2*K-1)
+  !    =  begin_ligne +  (begin_col -1) * number_coef_different_0
+  !   = I-LEFT+1+(LEFT -K)*(2*K-1) + (2*K-2)*J
+  !
+  jj = i - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
    
+  do j = 1, k
+    jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
+    q(jj) = bcoef(j)
+  end do
+
+  bcoef_spline(i+ l-1) = gtau(i)
+  if ( tau_der(l) == i ) then   
+    taui_der = taui
       
-   !
-   !  We therefore want BCOEF(J) = B(LEFT-K+J)(TAUI) to go into
-   !  A(I,LEFT-K+J), that is, into Q(I-(LEFT+J)+2*K,(LEFT+J)-K) since
-   !  A(I+J,J) is to go into Q(I+K,J), for all I, J, if we consider Q
-   !  as a two-dimensional array, with  2*K-1 rows.  See comments in
-   !  BANFAC.
-   !
-   !  In the present program, we treat Q as an equivalent
-   !  one-dimensional array, because of fortran restrictions on
-   !  dimension statements.
-   !
-   !  We therefore want  BCOEF(J) to go into the entry of Q with index:
-   !
-   !    I -(LEFT+J)+2*K + ((LEFT+J)-K-1)*(2*K-1)
-   !    =  begin_ligne +  (begin_col -1) * number_coef_different_0
-   !   = I-LEFT+1+(LEFT -K)*(2*K-1) + (2*K-2)*J
-   !
-   jj = i - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
+    call bsplvd( deboor, t, k, taui_der, left, a, bcoef_der, 2)
+
+    l = l + 1
+    jj = i - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
    
-   do j = 1, k
+    do j = 1, k
       jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
-      q(jj) = bcoef(j)
-   end do
-
-   bcoef_spline(i+ l-1) = gtau(i)
-   if ( tau_der(l) == i ) then   
-      taui_der = taui
-      
-      call bsplvd( deboor, t, k, taui_der, left, a, bcoef_der, 2)
-
-      l = l + 1
-      jj = i - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
-   
-      do j = 1, k
-         jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
-         q(jj) = bcoef_der(j,2)
-      end do
-   bcoef_spline(i+ l-1) = gtau_der(l-1)
-   end if
-   
+      q(jj) = bcoef_der(j,2)
+    end do
+    bcoef_spline(i+ l-1) = gtau_der(l-1)
+  end if
 
 end do
-
 
 taui = tau(n)
 call interv( deboor, t, n+m+k, taui, left, mflag )
 if ( tau_der(l)== n ) then   
-      taui_der = taui
+  taui_der = taui
       
-      call bsplvd( deboor, t, k, taui_der, left, a, bcoef_der, 2)
-
+  call bsplvd( deboor, t, k, taui_der, left, a, bcoef_der, 2)
       
-      jj = n - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
+  jj = n - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
    
-      do j = 1, k
-         jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
-         q(jj) = bcoef_der(j,2)
-      end do
-      bcoef_spline(n+ l-1) = gtau_der(l)
-      l = l + 1
-      
-   end if
-   
-
- call bsplvb ( deboor, t, k, 1, taui, left, bcoef )
- jj = n - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
-   
- do j = 1, k
+  do j = 1, k
     jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
-    q(jj) = bcoef(j)
- end do
- bcoef_spline(n+l-1) = gtau(n)
+    q(jj) = bcoef_der(j,2)
+  end do
+  bcoef_spline(n+ l-1) = gtau_der(l)
+  l = l + 1
+      
+end if
 
-!
+call bsplvb ( deboor, t, k, 1, taui, left, bcoef )
+jj = n - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
+   
+do j = 1, k
+  jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
+  q(jj) = bcoef(j)
+end do
+bcoef_spline(n+l-1) = gtau(n)
+
 !  Obtain factorization of A, stored again in Q.
 !
 call banfac ( q, k+k-1, n+m, k-1, k-1, iflag )
@@ -661,10 +652,10 @@ end subroutine splint_der
   
 !> @brief Interpolation on the points eta using
 !> the arbitrary degree splines interpolator 1d
-!> @details computing the values with the interpolator arbitrary degree splines 1d
-!>  on the points eta of arbitrary degree splines 1d
-!> The parameters are
-!> @param interpolator the type sll_arbitrary_degree_spline_interpolator_1d
+!> @details computing the values with the interpolator 
+!> arbitrary degree splines 1d
+!> on the points eta of arbitrary degree splines 1d
+!> @param[in] interpolator the type sll_arbitrary_degree_spline_interpolator_1d
 !> @param[in] eta1 the point
 !> @return val the values on the points eta
 function interpolate_value_ad1d( interpolator, eta1) result(val)
@@ -694,12 +685,12 @@ end select
 SLL_ASSERT( res >= interpolator%eta_min )
 SLL_ASSERT( res <= interpolator%eta_max )
 
-val = bvalue( interpolator%deboor,                       &
-              interpolator%t(1:interpolator%size_t),     &
-              interpolator%coeff_splines(1:size_coeffs), &
-              size_coeffs,                               &
-              interpolator%spline_degree+1,              &
-              res,                                       &
+val = bvalue( interpolator%deboor,          &
+              interpolator%t,               &
+              interpolator%coeff_splines,   &
+              size_coeffs,                  &
+              interpolator%spline_degree+1, &
+              res,                          &
               0)
 
 end function interpolate_value_ad1d
@@ -707,13 +698,13 @@ end function interpolate_value_ad1d
 
 subroutine interv( deboor, xt, lxt, x, left, mflag )
     
-type(deboor_type)                       :: deboor
-sll_real64, dimension(:), intent(in)    :: xt!(lxt)
-sll_int32,                intent(in)    :: lxt
-sll_real64,               intent(in)    :: x
-sll_int32,                intent(out)   :: left
-sll_int32,                intent(out)   :: mflag
-sll_int32                               :: ihi
+type(deboor_type)                     :: deboor
+sll_real64, dimension(:), intent(in)  :: xt
+sll_int32,                intent(in)  :: lxt
+sll_real64,               intent(in)  :: x
+sll_int32,                intent(out) :: left
+sll_int32,                intent(out) :: mflag
+sll_int32                             :: ihi
 
 sll_int32 :: istep
 sll_int32 :: middle
@@ -786,24 +777,24 @@ if ( xt(lxt) <= x ) go to 110
 !
 ihi = lxt
 
-50  continue
+50 continue
     
 do
    
-   middle = ( deboor%ilo + ihi ) / 2
-   if ( middle == deboor%ilo ) then
-      mflag = 0
-      left = deboor%ilo
-      return
-   end if
-   !
-   !  It is assumed that MIDDLE = ILO in case IHI = ILO+1.
-   !
-   if ( xt(middle) <= x ) then
-      deboor%ilo = middle
-   else
-      ihi = middle
-   end if
+  middle = ( deboor%ilo + ihi ) / 2
+  if ( middle == deboor%ilo ) then
+    mflag = 0
+    left = deboor%ilo
+    return
+  end if
+  !
+  !  It is assumed that MIDDLE = ILO in case IHI = ILO+1.
+  !
+  if ( xt(middle) <= x ) then
+    deboor%ilo = middle
+  else
+    ihi = middle
+  end if
    
 end do
 !
@@ -817,11 +808,10 @@ mflag = 1
 if ( x == xt(lxt) ) mflag = 0
 
 do left = lxt, 1, -1
-   if ( xt(left) < xt(lxt) ) return
+  if ( xt(left) < xt(lxt) ) return
 end do
 
 end subroutine interv
-
 
 subroutine bsplvb ( deboor, t, jhigh, index, x, left, biatx )
 
@@ -885,8 +875,8 @@ implicit none
 type(deboor_type)        :: deboor
 sll_real64               :: bvalue
 
-sll_real64, dimension(:) :: t     !(n+k)
-sll_real64, dimension(:) :: coeff_splines !(n)
+sll_real64, dimension(:) :: t     
+sll_real64, dimension(:) :: coeff_splines 
 sll_int32                :: n
 sll_int32                :: k
 sll_real64               :: x
@@ -926,8 +916,8 @@ if ( mflag /= 0 ) return
 !  If K = 1 (and JDERIV = 0), BVALUE = BCOEF(I).
 !
 if ( k <= 1 ) then
-   bvalue = coeff_splines(i)
-   return
+  bvalue = coeff_splines(i)
+  return
 end if
 !
 !  Store the K B-spline coefficients relevant for the knot interval
@@ -940,21 +930,21 @@ end if
 jcmin = 1
 
 if ( k <= i ) then
-   
-   do j = 1, k-1
-      dl(j) = x - t(i+1-j)
-   end do
+  
+  do j = 1, k-1
+    dl(j) = x - t(i+1-j)
+  end do
    
 else
    
-   jcmin = 1 - ( i - k )
-   do j = 1, i
-      dl(j) = x - t(i+1-j)
-   end do
-   do j = i, k-1
-      aj(k-j) = 0.0_8
-      dl(j) = dl(i)
-   end do
+  jcmin = 1 - ( i - k )
+  do j = 1, i
+    dl(j) = x - t(i+1-j)
+  end do
+  do j = i, k-1
+    aj(k-j) = 0.0_8
+    dl(j) = dl(i)
+  end do
    
 end if
 
@@ -962,37 +952,37 @@ jcmax = k
 
 if ( n < i ) then
    
-   jcmax = k + n - i
-   do j = 1, k + n - i
-      dr(j) = t(i+j) - x
-   end do
+  jcmax = k + n - i
+  do j = 1, k + n - i
+    dr(j) = t(i+j) - x
+  end do
    
-   do j = k+n-i, k-1
-      aj(j+1) = 0.0_8
-      dr(j) = dr(k+n-i)
-   end do
+  do j = k+n-i, k-1
+    aj(j+1) = 0.0_8
+    dr(j) = dr(k+n-i)
+  end do
    
 else
    
-   do j = 1, k-1
-      dr(j) = t(i+j) - x
-   end do
+  do j = 1, k-1
+    dr(j) = t(i+j) - x
+  end do
    
 end if
 
 do jc = jcmin, jcmax
-   aj(jc) = coeff_splines(i-k+jc)
+  aj(jc) = coeff_splines(i-k+jc)
 end do
 !
 !  Difference the coefficients JDERIV times.
 !
 do j = 1, jderiv
    
-   ilo = k - j
-   do jj = 1, k - j
-      aj(jj) = ((aj(jj+1)-aj(jj))/(dl(ilo)+dr(jj)))*(k-j)
-      ilo = ilo - 1
-   end do
+  ilo = k - j
+  do jj = 1, k - j
+    aj(jj) = ((aj(jj+1)-aj(jj))/(dl(ilo)+dr(jj)))*(k-j)
+    ilo = ilo - 1
+  end do
    
 end do
 !
@@ -1000,11 +990,11 @@ end do
 !  given its relevant B-spline coefficients in AJ(1),...,AJ(K-JDERIV).
 !
 do j = jderiv+1, k-1
-   ilo = k-j
-   do jj = 1, k-j
-      aj(jj) = (aj(jj+1)*dl(ilo)+aj(jj)*dr(jj))/(dl(ilo)+dr(jj))
-      ilo = ilo - 1
-   end do
+  ilo = k-j
+  do jj = 1, k-j
+    aj(jj) = (aj(jj+1)*dl(ilo)+aj(jj)*dr(jj))/(dl(ilo)+dr(jj))
+    ilo = ilo - 1
+  end do
 end do
 
 bvalue = aj(1)
@@ -1013,9 +1003,7 @@ return
 
 end function bvalue
   
-
 subroutine splint ( deboor, tau, gtau, t, n, k, q, coeff_splines, iflag )
-  
 implicit none
 
 type(deboor_type)                     :: deboor
@@ -1036,7 +1024,6 @@ sll_int32  :: ilp1mx
 sll_real64 :: taui
 sll_int32  :: i
 
-
 SLL_ASSERT(size(tau)  == n)
 SLL_ASSERT(size(gtau) == n)
 SLL_ASSERT(size(t)    == n+k)
@@ -1049,81 +1036,81 @@ q     = 0.0_f64
 !  Loop over I to construct the N interpolation equations.
 do i = 1, n
    
-   taui = tau(i)
-   ilp1mx = min ( i + k, n + 1 )
-   !
-   !  Find LEFT in the closed interval (I,I+K-1) such that
-   !
-   !    T(LEFT) <= TAU(I) < T(LEFT+1)
-   !
-   !  The matrix is singular if this is not possible.
-   !
-   left = max ( left, i )
-   
-   if ( taui < t(left) ) then
+  taui = tau(i)
+  ilp1mx = min ( i + k, n + 1 )
+  !
+  !  Find LEFT in the closed interval (I,I+K-1) such that
+  !
+  !    T(LEFT) <= TAU(I) < T(LEFT+1)
+  !
+  !  The matrix is singular if this is not possible.
+  !
+  left = max ( left, i )
+  
+  if ( taui < t(left) ) then
+    iflag = 2
+    write ( *, '(a)' ) ' '
+    write ( *, '(a)' ) 'SPLINT - Fatal Error!'
+    write ( *, '(a)' ) '  The linear system is not invertible!'
+    return
+  end if
+
+  do while ( t(left+1) <= taui )
+     
+    left = left + 1
+     
+    if ( left < ilp1mx ) then
+      cycle
+    end if
+     
+    left = left - 1
+     
+    if ( t(left+1) < taui ) then
       iflag = 2
       write ( *, '(a)' ) ' '
       write ( *, '(a)' ) 'SPLINT - Fatal Error!'
       write ( *, '(a)' ) '  The linear system is not invertible!'
       return
-   end if
-
-   do while ( t(left+1) <= taui )
-      
-      left = left + 1
-      
-      if ( left < ilp1mx ) then
-         cycle
-      end if
-      
-      left = left - 1
-      
-      if ( t(left+1) < taui ) then
-         iflag = 2
-         write ( *, '(a)' ) ' '
-         write ( *, '(a)' ) 'SPLINT - Fatal Error!'
-         write ( *, '(a)' ) '  The linear system is not invertible!'
-         return
-      end if
-      
-      exit
-      
-   end do
-   !
-   !  The I-th equation enforces interpolation at TAUI, hence for all J,
-   !
-   !    A(I,J) = B(J,K,T)(TAUI).
-   !
-   !Only the K entries with J = LEFT-K+1,...,LEFT actually might be nonzero.
-   !
-   !These K numbers are returned, in BCOEF 
-   ! (used for temporary storage here),
-   !  by the following.
-   !
-   call bsplvb ( deboor, t, k, 1, taui, left, coeff_splines )
-   !
-   !  We therefore want BCOEF(J) = B(LEFT-K+J)(TAUI) to go into
-   !  A(I,LEFT-K+J), that is, into Q(I-(LEFT+J)+2*K,(LEFT+J)-K) since
-   !  A(I+J,J) is to go into Q(I+K,J), for all I, J, if we consider Q
-   !  as a two-dimensional array, with  2*K-1 rows.  See comments in
-   !  BANFAC.
-   !
-   !  In the present program, we treat Q as an equivalent
-   !  one-dimensional array, because of fortran restrictions on
-   !  dimension statements.
-   !
-   !  We therefore want  BCOEF(J) to go into the entry of Q with index:
-   !
-   !    I -(LEFT+J)+2*K + ((LEFT+J)-K-1)*(2*K-1)
-   !   = I-LEFT+1+(LEFT -K)*(2*K-1) + (2*K-2)*J
-   !
-   jj = i - left + 1 + ( left - k ) * ( k + k - 1 )
-   
-   do j = 1, k
-      jj = jj + kpkm2
-      q(jj) = coeff_splines(j)
-   end do
-   
+    end if
+     
+    exit
+     
+  end do
+  !
+  !  The I-th equation enforces interpolation at TAUI, hence for all J,
+  !
+  !    A(I,J) = B(J,K,T)(TAUI).
+  !
+  !Only the K entries with J = LEFT-K+1,...,LEFT actually might be nonzero.
+  !
+  !These K numbers are returned, in BCOEF 
+  ! (used for temporary storage here),
+  !  by the following.
+  !
+  call bsplvb ( deboor, t, k, 1, taui, left, coeff_splines )
+  !
+  !  We therefore want BCOEF(J) = B(LEFT-K+J)(TAUI) to go into
+  !  A(I,LEFT-K+J), that is, into Q(I-(LEFT+J)+2*K,(LEFT+J)-K) since
+  !  A(I+J,J) is to go into Q(I+K,J), for all I, J, if we consider Q
+  !  as a two-dimensional array, with  2*K-1 rows.  See comments in
+  !  BANFAC.
+  !
+  !  In the present program, we treat Q as an equivalent
+  !  one-dimensional array, because of fortran restrictions on
+  !  dimension statements.
+  !
+  !  We therefore want  BCOEF(J) to go into the entry of Q with index:
+  !
+  !    I -(LEFT+J)+2*K + ((LEFT+J)-K-1)*(2*K-1)
+  !   = I-LEFT+1+(LEFT -K)*(2*K-1) + (2*K-2)*J
+  !
+  jj = i - left + 1 + ( left - k ) * ( k + k - 1 )
+  
+  do j = 1, k
+    jj = jj + kpkm2
+    q(jj) = coeff_splines(j)
+  end do
+  
 end do
 !
 !  Obtain factorization of A, stored again in Q.
@@ -1131,10 +1118,10 @@ end do
 call banfac ( q, k+k-1, n, k-1, k-1, iflag )
 
 if ( iflag == 2 ) then
-   write ( *, '(a)' ) ' '
-   write ( *, '(a)' ) 'SPLINT - Fatal Error!'
-   write ( *, '(a)' ) '  The linear system is not invertible!'
-   return
+  write ( *, '(a)' ) ' '
+  write ( *, '(a)' ) 'SPLINT - Fatal Error!'
+  write ( *, '(a)' ) '  The linear system is not invertible!'
+  return
 end if
 !
 !  Solve 
@@ -1151,315 +1138,184 @@ return
 end subroutine splint
 
 
-  !> @brief initializing the coefficients of splines.
-  !> @details  initializing the coefficients of splines
-  !>  fot the arbitrary degree splines interpolator 1d
-  !> The parameters are
-  !> @param interpolator the type sll_arbitrary_degree_spline_interpolator_1d
-  !> @param[in] coeffs the 1d arrays corresponding of the splines coefficients
-  !> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_1d
+!> @brief initializing the coefficients of splines.
+!> @details  initializing the coefficients of splines
+!>  fot the arbitrary degree splines interpolator 1d
+!> The parameters are
+!> @param interpolator the type sll_arbitrary_degree_spline_interpolator_1d
+!> @param[in] coeffs the 1d arrays corresponding of the splines coefficients
+!> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_1d
 
-  subroutine set_coefficients_ad1d( &
-   interpolator, &
-   coeffs)
+subroutine set_coefficients_ad1d( interpolator, coeffs)
 
-   class(sll_arbitrary_degree_spline_interpolator_1d), intent(inout)  :: interpolator
-   sll_real64, dimension(:), intent(in), optional :: coeffs
-   sll_int32 :: sp_deg
-   sll_int32 :: num_cells
-   sll_int32 :: tmp
-   sll_int32 :: i
-   sll_real64 :: eta_min, eta_max
-   sll_real64 :: delta
-   sll_int32  ::  nb_spline_eta
-   sll_real64 :: eta
+class(sll_arbitrary_degree_spline_interpolator_1d), intent(inout)  :: interpolator
+sll_real64, dimension(:), intent(in), optional :: coeffs
 
+sll_int32  :: sp_deg
+sll_int32  :: num_cells
+sll_int32  :: tmp
+sll_int32  :: i
+sll_real64 :: eta_min
+sll_real64 :: eta_max
+sll_real64 :: delta
+sll_int32  :: nb_spline_eta
+sll_real64 :: eta
 
-   sp_deg    = interpolator%spline_degree
-   num_cells = interpolator%num_pts - 1
-   eta_min   = interpolator%eta_min
-   eta_max   = interpolator%eta_max
-   delta     = (eta_max - eta_min)/num_cells
+sp_deg    = interpolator%spline_degree
+num_cells = interpolator%num_pts - 1
+eta_min   = interpolator%eta_min
+eta_max   = interpolator%eta_max
+delta     = (eta_max - eta_min)/num_cells
 
-   tmp = (sp_deg + 1)/2
+tmp = (sp_deg + 1)/2
 
-   ! The interpretation and further filling of the spline coefficients array
-   ! depends on the boundary conditions.
-   select case (interpolator%bc_selector)
-   case(0) ! periodic
+! The interpretation and further filling of the spline coefficients array
+! depends on the boundary conditions.
+select case (interpolator%bc_selector)
+case(0) ! periodic
 
-      interpolator%size_coeffs =  num_cells + sp_deg
-      interpolator%size_t = 2*sp_deg + num_cells +1
-      if ( size(coeffs) .ne.  num_cells + 1 ) then
-         print*, 'problem in set_coeff_1d_arb_deg_spline '
-         print*, 'size coeffs must be equal to ',num_cells + 1
-         print*, 'and not =', size(coeffs)
-         stop
-      endif
-      ! allocation and definition of knots
-      do i = -sp_deg, num_cells + sp_deg
-         interpolator%t(i+sp_deg+1)=eta_min+i*delta
-      end do
-      do i = 1,num_cells
-         interpolator%coeff_splines(i) = coeffs( i )
-      end do
-      do i = 1, sp_deg
-         interpolator%coeff_splines(num_cells + i ) = coeffs(i )
-      end do
-      do i= 1,sp_deg
-         interpolator%coeff_splines(num_cells +  i ) = &
-              interpolator%coeff_splines(sp_deg-(i-1))
-      end do
+  interpolator%size_coeffs =  num_cells + sp_deg
+  interpolator%size_t = 2*sp_deg + num_cells +1
 
-   case (9) ! 2. dirichlet-left, dirichlet-right
-      interpolator%size_coeffs=  num_cells + sp_deg
-      interpolator%size_t = 2*sp_deg + num_cells + 1
-      nb_spline_eta = num_cells + sp_deg - 2
-      if ( size(coeffs) .ne.  nb_spline_eta ) then
-         print*, 'problem in set_coeff_1d_arb_deg_spline '
-         print*, 'size coeffs must be equal to ',nb_spline_eta
-         print*, 'and not =', size(coeffs)
-         stop
-      endif
-      ! allocation and definition of knots
+  SLL_ASSERT(size(coeffs) == num_cells+1)
 
-      do i = 1, sp_deg + 1
-         interpolator%t(i) = eta_min
-      enddo
-      eta = eta_min
-      do i = sp_deg + 2, num_cells + 1 + sp_deg
-         eta = eta + delta
-         interpolator%t(i) = eta
-      enddo
-      do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
-         interpolator%t(i) = eta
-      enddo
+  do i = -sp_deg, num_cells + sp_deg
+    interpolator%t(i+sp_deg+1)=eta_min+i*delta
+  end do
+  do i = 1,num_cells
+    interpolator%coeff_splines(i) = coeffs( i )
+  end do
+  do i = 1, sp_deg
+    interpolator%coeff_splines(num_cells+i ) = coeffs(i )
+  end do
+  do i= 1,sp_deg
+    interpolator%coeff_splines(num_cells+i) = interpolator%coeff_splines(sp_deg-(i-1))
+  end do
 
+case (9) ! 2. dirichlet-left, dirichlet-right
 
-      do i = 1,nb_spline_eta
+   interpolator%size_coeffs=  num_cells + sp_deg
+   interpolator%size_t = 2*sp_deg + num_cells + 1
+   nb_spline_eta = num_cells + sp_deg - 2
+   SLL_ASSERT( size(coeffs) == nb_spline_eta ) 
 
-         interpolator%coeff_splines(i + 1 ) =  coeffs(i)
-      end do
+   do i = 1, sp_deg + 1
+     interpolator%t(i) = eta_min
+   enddo
+   eta = eta_min
+   do i = sp_deg + 2, num_cells + 1 + sp_deg
+     eta = eta + delta
+     interpolator%t(i) = eta
+   enddo
+   do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
+     interpolator%t(i) = eta
+   enddo
 
-      interpolator%coeff_splines(1)               = interpolator%value_left
-      interpolator%coeff_splines(nb_spline_eta+2) = interpolator%value_right
+   do i = 1,nb_spline_eta
+     interpolator%coeff_splines(i + 1 ) =  coeffs(i)
+   end do
 
-   case(10) ! Neumann - Dirichlet
+   interpolator%coeff_splines(1)               = interpolator%value_left
+   interpolator%coeff_splines(nb_spline_eta+2) = interpolator%value_right
 
-      interpolator%size_coeffs= num_cells + sp_deg
-      interpolator%size_t     = 2*sp_deg + num_cells + 1
-      nb_spline_eta = num_cells + sp_deg - 1
+case(10) ! Neumann - Dirichlet
 
-      if ( size(coeffs) .ne.  nb_spline_eta ) then
-         print*, 'problem in set_coeff_1d_arb_deg_spline '
-         print*, 'size coeffs must be equal to ',nb_spline_eta
-         print*, 'and not =', size(coeffs)
-         stop
-      endif
+   interpolator%size_coeffs= num_cells + sp_deg
+   interpolator%size_t     = 2*sp_deg + num_cells + 1
+   nb_spline_eta = num_cells + sp_deg - 1
 
-      do i = 1, sp_deg + 1
-         interpolator%t(i) = eta_min
-      enddo
-      eta = eta_min
-      do i = sp_deg + 2, num_cells + 1 + sp_deg
-         eta = eta + delta
-         interpolator%t(i) = eta
-      enddo
-      do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
-         interpolator%t(i) = eta
-      enddo
+   SLL_ASSERT( size(coeffs) == nb_spline_eta ) 
 
-      do i = 1,nb_spline_eta
-         interpolator%coeff_splines(i + 1 ) =  coeffs(i)
-      end do
-      interpolator%coeff_splines(nb_spline_eta+2) =  interpolator%value_right
-   case(12) ! Hermitte- Dirichlet
-      interpolator%size_coeffs= num_cells + sp_deg
-      interpolator%size_t     = 2*sp_deg + num_cells + 1
-      nb_spline_eta = num_cells + sp_deg - 1
-      if ( size(coeffs) .ne.  nb_spline_eta ) then
-         print*, 'problem in set_coeff_1d_arb_deg_spline '
-         print*, 'size coeffs must be equal to ',nb_spline_eta
-         print*, 'and not =', size(coeffs)
-         stop
-      endif
-      do i = 1, sp_deg + 1
-         interpolator%t(i) = eta_min
-      enddo
-      eta = eta_min
-      do i = sp_deg + 2, num_cells + 1 + sp_deg
-         eta = eta + delta
-         interpolator%t(i) = eta
-      enddo
-      do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
-         interpolator%t(i) = eta
-      enddo
+   do i = 1, sp_deg + 1
+      interpolator%t(i) = eta_min
+   enddo
+   eta = eta_min
+   do i = sp_deg + 2, num_cells + 1 + sp_deg
+      eta = eta + delta
+      interpolator%t(i) = eta
+   enddo
+   do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
+      interpolator%t(i) = eta
+   enddo
 
-      do i = 1,nb_spline_eta
-         interpolator%coeff_splines(i + 1 ) =  coeffs(i)
-      end do
-      interpolator%coeff_splines(nb_spline_eta+2) = interpolator%value_right
-   case(17) ! Dirichlet-Neumann
+   do i = 1,nb_spline_eta
+      interpolator%coeff_splines(i + 1 ) =  coeffs(i)
+   end do
+   interpolator%coeff_splines(nb_spline_eta+2) =  interpolator%value_right
 
-      interpolator%size_coeffs= num_cells + sp_deg
-      interpolator%size_t     = 2*sp_deg + num_cells + 1
-      nb_spline_eta = num_cells + sp_deg - 1
-      if ( size(coeffs) .ne.  nb_spline_eta ) then
-         print*, 'problem in set_coeff_1d_arb_deg_spline '
-         print*, 'size coeffs must be equal to ',nb_spline_eta
-         print*, 'and not =', size(coeffs)
-         stop
-      endif
+case(12) ! Hermitte- Dirichlet
 
-      do i = 1, sp_deg + 1
-         interpolator%t(i) = eta_min
-      enddo
-      eta = eta_min
-      do i = sp_deg + 2, num_cells + 1 + sp_deg
-         eta = eta + delta
-         interpolator%t(i) = eta
-      enddo
-      do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
-         interpolator%t(i) = eta
-      enddo
+   interpolator%size_coeffs= num_cells + sp_deg
+   interpolator%size_t     = 2*sp_deg + num_cells + 1
+   nb_spline_eta = num_cells + sp_deg - 1
+   SLL_ASSERT( size(coeffs) == nb_spline_eta ) 
+   do i = 1, sp_deg + 1
+      interpolator%t(i) = eta_min
+   enddo
+   eta = eta_min
+   do i = sp_deg + 2, num_cells + 1 + sp_deg
+      eta = eta + delta
+      interpolator%t(i) = eta
+   enddo
+   do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
+      interpolator%t(i) = eta
+   enddo
 
-      do i = 1,nb_spline_eta
-         interpolator%coeff_splines(i + 1 ) =  coeffs(i)
-      end do
-      interpolator%coeff_splines(1) = interpolator%value_left
-   case(18) ! Neumann - Neumann
-      interpolator%size_coeffs= num_cells + sp_deg
-      interpolator%size_t     = 2*sp_deg + num_cells + 1
-      nb_spline_eta = num_cells + sp_deg
-      if ( size(coeffs) .ne.  nb_spline_eta ) then
-         print*, 'problem in set_coeff_1d_arb_deg_spline '
-         print*, 'size coeffs must be equal to ',nb_spline_eta
-         print*, 'and not =', size(coeffs)
-         stop
-      endif
-      do i = 1, sp_deg + 1
-         interpolator%t(i) = eta_min
-      enddo
-      eta = eta_min
-      do i = sp_deg + 2, num_cells + 1 + sp_deg
-         eta = eta + delta
-         interpolator%t(i) = eta
-      enddo
-      do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
-         interpolator%t(i) = eta
-      enddo
+   do i = 1,nb_spline_eta
+      interpolator%coeff_splines(i + 1 ) =  coeffs(i)
+   end do
+   interpolator%coeff_splines(nb_spline_eta+2) = interpolator%value_right
 
-      do i = 1,nb_spline_eta
-         interpolator%coeff_splines(i ) =  coeffs(i)
-      end do
-   case(20) ! Hermite - Neumann
-      interpolator%size_coeffs= num_cells + sp_deg
-      interpolator%size_t     = 2*sp_deg + num_cells + 1
-      nb_spline_eta = num_cells + sp_deg
-      if ( size(coeffs) .ne.  nb_spline_eta ) then
-         print*, 'problem in set_coeff_1d_arb_deg_spline '
-         print*, 'size coeffs must be equal to ',nb_spline_eta
-         print*, 'and not =', size(coeffs)
-         stop
-      endif
-      do i = 1, sp_deg + 1
-         interpolator%t(i) = eta_min
-      enddo
-      eta = eta_min
-      do i = sp_deg + 2, num_cells + 1 + sp_deg
-         eta = eta + delta
-         interpolator%t(i) = eta
-      enddo
-      do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
-         interpolator%t(i) = eta
-      enddo
+case(17) ! Dirichlet-Neumann
 
-      do i = 1,nb_spline_eta
-         interpolator%coeff_splines(i) =  coeffs(i)
-      end do
-   case(33) ! Dirichlet - Hermite
-      interpolator%size_coeffs= num_cells + sp_deg
-      interpolator%size_t     = 2*sp_deg + num_cells + 1
-      nb_spline_eta = num_cells + sp_deg - 1
-      if ( size(coeffs) .ne.  nb_spline_eta ) then
-         print*, 'problem in set_coeff_1d_arb_deg_spline '
-         print*, 'size coeffs must be equal to ',nb_spline_eta
-         print*, 'and not =', size(coeffs)
-         stop
-      endif
-      do i = 1, sp_deg + 1
-         interpolator%t(i) = eta_min
-      enddo
-      eta = eta_min
-      do i = sp_deg + 2, num_cells + 1 + sp_deg
-         eta = eta + delta
-         interpolator%t(i) = eta
-      enddo
-      do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
-         interpolator%t(i) = eta
-      enddo
+   interpolator%size_coeffs= num_cells + sp_deg
+   interpolator%size_t     = 2*sp_deg + num_cells + 1
+   nb_spline_eta = num_cells + sp_deg - 1
+   SLL_ASSERT( size(coeffs) == nb_spline_eta ) 
 
-      do i = 1,nb_spline_eta
-         interpolator%coeff_splines(i + 1 ) =  coeffs(i)
-      end do
-      interpolator%coeff_splines(1) = interpolator%value_left
-   case(34) ! Neumann- Hermite
-      interpolator%size_coeffs= num_cells + sp_deg
-      interpolator%size_t     = 2*sp_deg + num_cells + 1
-      nb_spline_eta = num_cells + sp_deg
-      if ( size(coeffs) .ne.  nb_spline_eta ) then
-         print*, 'problem in set_coeff_1d_arb_deg_spline '
-         print*, 'size coeffs must be equal to ',nb_spline_eta
-         print*, 'and not =', size(coeffs)
-         stop
-      endif
-      do i = 1, sp_deg + 1
-         interpolator%t(i) = eta_min
-      enddo
-      eta = eta_min
-      do i = sp_deg + 2, num_cells + 1 + sp_deg
-         eta = eta + delta
-         interpolator%t(i) = eta
-      enddo
-      do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
-         interpolator%t(i) = eta
-      enddo
+   do i = 1, sp_deg + 1
+      interpolator%t(i) = eta_min
+   enddo
+   eta = eta_min
+   do i = sp_deg + 2, num_cells + 1 + sp_deg
+      eta = eta + delta
+      interpolator%t(i) = eta
+   enddo
+   do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
+      interpolator%t(i) = eta
+   enddo
 
-      do i = 1,nb_spline_eta
-         interpolator%coeff_splines(i) =  coeffs(i)
-      end do
-   case(36)! Hermite - Hermite
+   do i = 1,nb_spline_eta
+      interpolator%coeff_splines(i + 1 ) =  coeffs(i)
+   end do
+   interpolator%coeff_splines(1) = interpolator%value_left
 
-      interpolator%size_coeffs= num_cells + sp_deg
-      interpolator%size_t     = 2*sp_deg + num_cells + 1
-      nb_spline_eta = num_cells + sp_deg
-      if ( size(coeffs) .ne.  nb_spline_eta ) then
-         print*, 'problem in set_coeff_1d_arb_deg_spline '
-         print*, 'size coeffs must be equal to ',nb_spline_eta
-         print*, 'and not =', size(coeffs)
-         stop
-      endif
-      do i = 1, sp_deg + 1
-         interpolator%t(i) = eta_min
-      enddo
-      eta = eta_min
-      do i = sp_deg + 2, num_cells + 1 + sp_deg
-         eta = eta + delta
-         interpolator%t(i) = eta
-      enddo
-      do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
-         interpolator%t(i) = eta
-      enddo
+case default
 
-      do i = 1,nb_spline_eta
-         interpolator%coeff_splines(i ) =  coeffs(i)
-      end do
-   case default
-      print *, 'arbitrary_degree_spline_1d() error: set_spline_coefficients ',&
-           'not recognized.'
-      stop
-   end select
- end subroutine set_coefficients_ad1d
+   interpolator%size_coeffs= num_cells + sp_deg
+   interpolator%size_t     = 2*sp_deg + num_cells + 1
+   nb_spline_eta = num_cells + sp_deg
+
+   SLL_ASSERT( size(coeffs) == nb_spline_eta ) 
+
+   do i = 1, sp_deg+1
+     interpolator%t(i) = eta_min
+   enddo
+   eta = eta_min
+   do i = sp_deg+2, num_cells+1+sp_deg
+     eta = eta + delta
+     interpolator%t(i) = eta
+   enddo
+   do i = num_cells+sp_deg+2, num_cells+1+2*sp_deg
+      interpolator%t(i) = eta
+   enddo
+
+   do i = 1,nb_spline_eta
+      interpolator%coeff_splines(i ) = coeffs(i)
+   end do
+
+end select
+end subroutine set_coefficients_ad1d
 
   
   !> @brief First derivative interpolation on the point eta
