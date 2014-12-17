@@ -278,11 +278,13 @@ contains
     type(sll_hex_mesh_2d), intent(in), pointer :: mesh
     sll_real64, dimension(:,:), intent(out)    :: knots
     sll_int32,  dimension(:,:), intent(out)    :: LM
+    logical,    dimension(:),   allocatable    :: cond1
+    logical,    dimension(:),   allocatable    :: cond2
+    logical,    dimension(:),   allocatable    :: cond3
+    sll_int32,  dimension(:),   allocatable    :: cond123
     sll_real64, dimension(3,10)                :: fekete_tri
     sll_real64, dimension(2, 3)                :: vertices_coo
-    logical,    dimension(10)                  :: cond1
-    logical,    dimension(10)                  :: cond2
-    logical,    dimension(10)                  :: cond3
+
     sll_int32  :: i
     sll_int32  :: ierr
     sll_int32  :: ntri
@@ -300,6 +302,12 @@ contains
        ! plus two fekete points on each edge and one on the middle of each cell
        num_fekete = 2*mesh%num_edges + mesh%num_pts_tot + mesh%num_triangles
 
+       ! Allocation of helper tables:
+       SLL_ALLOCATE(cond1(num_fekete), ierr)
+       SLL_ALLOCATE(cond2(num_fekete), ierr)
+       SLL_ALLOCATE(cond3(num_fekete), ierr)
+       SLL_ALLOCATE(cond123(num_fekete), ierr)
+
        ! Initialitazion tables and counter
        knots(1:3, 1:num_fekete) = 0._f64
        LM(1:mesh%num_triangles, 1:10) = 0
@@ -307,10 +315,11 @@ contains
 
        !We go through each cell (triangle) of the hexagon
        do ntri = 1,mesh%num_triangles
+
           !We fetch the vertices's coordinates for each triangle
           cntrx = mesh%center_cartesian_coord(1, ntri)
           cntry = mesh%center_cartesian_coord(2, ntri)
-          ! mesh%get_cell_vertices_index(cntrx, cntry, vertex1, vertex2, vertex3)
+          call get_cell_vertices_index(cntrx, cntry, mesh, vertex1, vertex2, vertex3)
           vertices_coo(:, 1) = mesh%cartesian_coord(:, vertex1)
           vertices_coo(:, 2) = mesh%cartesian_coord(:, vertex2)
           vertices_coo(:, 3) = mesh%cartesian_coord(:, vertex3)
@@ -327,8 +336,11 @@ contains
                 knots(:, next) = fekete_tri(:, i)
                 next = next + 1
                 LM(ntri, i) = next
-             ! else
-             !    LM(ntri, i) = WHERE(cond1.and.cond2.and.cond3)
+             else
+                cond123 = transfer(cond1.and.cond2.and.cond3, cond123)
+                ! LM(ntri, i) = MAXLOC(cond123)
+                ! where((cond1.and.cond2.and.cond3) .eqv. .true.)
+
              end if
           end do
        end do
@@ -336,5 +348,59 @@ contains
     end if
   end subroutine initialize_knots_hexmesh
 
+  !---------------------------------------------------------------------------
+  !> @brief Writes fekete points coordinates of a hex-mesh reference triangle
+  !> @details Takes the reference triangle of a hexmesh and computes the
+  !> fekete points on it. Then it writes the results in a file following
+  !> CAID nomenclature. 
+  !> Output file : quadrature.txt
+  !> @param[in]  rule integer for the fekete quadrature rule
+  subroutine write_quadrature(rule)
+    sll_int32, intent(in)       :: rule
+    sll_int32, parameter        :: out_unit=20
+    character(len=*), parameter :: name = "quadrature.txt"
+    sll_real64, dimension(2, 3) :: ref_pts
+    sll_real64, dimension(3,10) :: quad_pw
+    sll_int32  :: num_fek
+    sll_int32  :: i
+    sll_real64 :: x
+    sll_real64 :: y
+    sll_real64 :: w
+    ! Definition of reference triangle, such that:
+    !    |
+    !    1  3
+    !    |  | \
+    !    |  |  \2
+    !    |  |   /   same cell that first cell of
+    !    |  |  /    a simple hexagon of radius 1.
+    !    |  | /
+    !    0  1
+    !    |
+    !    +--0-----1-->
+    ref_pts(:,1) = (/ 0._f64,          0.0_f64 /)
+    ref_pts(:,2) = (/ 1./sqrt(3._f64), 0.5_f64 /)
+    ref_pts(:,3) = (/ 0._f64,          1.0_f64 /)
 
+    ! Computing fekete points on that triangle
+    quad_pw = fekete_points_and_weights(ref_pts)
+
+    open (unit=out_unit,file=name,action="write",status="replace")
+    write(out_unit, "(i6)") rule
+
+    if (rule .eq. 1) then
+       num_fek = 10
+    else
+       print *, "Error in write_quadrature : this rule was not implemented"
+       num_fek = 0
+    end if
+
+    do i=1,num_fek
+       x = quad_pw(1,i)
+       y = quad_pw(2,i)
+       w = quad_pw(3,i)
+       write(out_unit, "(3(g13.3,1x))") x, y, w
+    end do
+    close(out_unit)
+
+  end subroutine write_quadrature
 end module fekete_integration
