@@ -107,7 +107,7 @@ goto 15
    q2 = q1*q1
 35 fp = cf(1,i)-cf(1,i+1)
    fp3= 20*p3*fp
-   fp4= 6*p1*fp3
+   fp4=  6*p1*fp3
    dp1= dp1+64*p3
    dp2= dp2-12*p3*a
    dp3= dp2
@@ -121,8 +121,8 @@ goto 15
    if (i>1) goto 50
 
    di1 = ds1
-   di2 = ds2
-   di3 = ds3
+   di2 = ds3
+   di3 = ds2
    di4 = ds4
 
 !Boundary condition at x1
@@ -165,7 +165,7 @@ goto 15
    im=im+6
    i =i +1
    
-   if (i-1) 5,10,5
+   if (i-2) 5,10,5
 
 !Bacward substitution and solution to the algebraic system
 
@@ -196,7 +196,7 @@ sll_real64, intent(inout)  :: cf(1:3,n)  !< ordinates, first and second derivati
 sll_real64, intent(in)     :: xx         !< abscissae where values of the function
                                          !< and its derivatives are computed
 
-sll_real64, intent(out)  :: f(3)         !< 1: value of the interpolating function
+sll_real64, intent(out)    :: f(3)       !< 1: value of the interpolating function
                                          !< 2: value of its first derivative
                                          !< 3: value of its second derivative
 
@@ -215,9 +215,7 @@ sll_real64, intent(out)  :: f(3)         !< 1: value of the interpolating functi
    i = n
    goto 25
 
-20 f(1)=cf(1,i)
-   f(2)=cf(2,i)
-   f(3)=cf(3,i)
+20 f(1:3)=cf(1:3,i)
    goto 30
 
 25 cc   = cf(1,i-1)-cf(1,i)
