@@ -396,53 +396,55 @@ end do
 call sll_delete(ad1d)
 
 
-print*,'--------------------------------------------'
-print*,' Average error in nodes'
-print*,'--------------------------------------------'
-print*,'periodic = ', acc/(NPTS1)
-print*,'dirichlet = ', acc1/(NPTS1)
-print*,'dirichlet non homogene = ', acc2/(NPTS1)
-print*,'Hermite-Hermite = ', acc3/(NPTS1)
-print*,'Neumann-Dirichlet = ', acc4/(NPTS1)
-print*,'Neumann-Neumann = ', acc5/(NPTS1)
-print*,'Hermite-Neumann = ', acc6/(NPTS1)
-print*,'Neumann-Hermite = ', acc7/(NPTS1)
-print*,' '
-print*,'--------------------------------------------'
-print*,' Average error in nodes first derivative'
-print*,'--------------------------------------------'
-print*,'periodic=',acc_der1/(NPTS1)
-print*,'dirichlet=',acc1_der1/(NPTS1)
-print*,'dirichlet non homogene=',acc2_der1/(NPTS1)
-print*,'Hermite-Hermite=',acc3_der1/(NPTS1)
-print*,'Neumann-Dirichlet=',acc4_der1/(NPTS1)
-print*,'Neumann-Neumann=',acc5_der1/(NPTS1)
-print*,'Hermite-Neumann=',acc6_der1/(NPTS1)
-print*,'Neumann-Hermite=',acc7_der1/(NPTS1)
-print*, ' '
-print*,'--------------------------------------------'
-print*,' Norm L2 error '
-print*,'--------------------------------------------'
-print*,'periodic =', sqrt(normL2_0), h1**(SPL_DEG)
-print*,'dirichlet =', sqrt(normL2_1),h1**(SPL_DEG)
-print*,'dirichlet non homogene =', sqrt(normL2_2),h1**(SPL_DEG)
-print*,'Hermite-Hermite =', sqrt(normL2_3),h1**(SPL_DEG)
-print*,'Neumann-dirichlet =', sqrt(normL2_4),h1**(SPL_DEG)
-print*,'Neumann-Neumann =', sqrt(normL2_5),h1**(SPL_DEG)
-print*,'Hermite-Neumann =', sqrt(normL2_6),h1**(SPL_DEG)
-print*,'Neumann-Hermite =', sqrt(normL2_7),h1**(SPL_DEG)
-print*, ' '
-print*,'--------------------------------------------'
-print*,' Norm H1 error '
-print*,'--------------------------------------------'
-print*,'periodic  =', sqrt(normH1_0),h1**(SPL_DEG-2)*(2.0_f64*sll_pi)**2
-print*,'dirichlet =', sqrt(normH1_1),h1**(SPL_DEG-2)*(2.0_f64*sll_pi)**2
-print*,'dirichlet non homogene =', sqrt(normH1_2),h1**(SPL_DEG-2)*(2.0_f64*sll_pi)**2
-print*,'Hermite-Hermite =',sqrt(normH1_3),h1**(SPL_DEG-2)*(2.0_f64*sll_pi)**2
-print*,'Neumann-Dirichlet =',sqrt(normH1_4),h1**(SPL_DEG-2)*(2.0_f64*sll_pi)**2
-print*,'Neumann-Neumann =',sqrt(normH1_5),h1**(SPL_DEG-2)*(2.0_f64*sll_pi)**2
-print*,'Hermite-Neumann =',sqrt(normH1_6),h1**(SPL_DEG-2)*(2.0_f64*sll_pi)**2
-print*,'Neumann-Hermite =',sqrt(normH1_7),h1**(SPL_DEG-2)*(2.0_f64*sll_pi)**2
+write(*,100)'--------------------------------------------'
+write(*,100)' Average error in nodes'
+write(*,100)'--------------------------------------------'
+write(*,100)'periodic               = ', acc/(NPTS1)
+write(*,100)'dirichlet              = ', acc1/(NPTS1)
+write(*,100)'dirichlet non homogene = ', acc2/(NPTS1)
+write(*,100)'Hermite-Hermite        = ', acc3/(NPTS1)
+write(*,100)'Neumann-Dirichlet      = ', acc4/(NPTS1)
+write(*,100)'Neumann-Neumann        = ', acc5/(NPTS1)
+write(*,100)'Hermite-Neumann        = ', acc6/(NPTS1)
+write(*,100)'Neumann-Hermite        = ', acc7/(NPTS1)
+write(*,100)' '
+write(*,100)'--------------------------------------------'
+write(*,100)' Average error in nodes first derivative'
+write(*,100)'--------------------------------------------'
+write(*,100)'periodic               = ', acc_der1/(NPTS1)
+write(*,100)'dirichlet              = ', acc1_der1/(NPTS1)
+write(*,100)'dirichlet non homogene = ', acc2_der1/(NPTS1)
+write(*,100)'Hermite-Hermite        = ', acc3_der1/(NPTS1)
+write(*,100)'Neumann-Dirichlet      = ', acc4_der1/(NPTS1)
+write(*,100)'Neumann-Neumann        = ', acc5_der1/(NPTS1)
+write(*,100)'Hermite-Neumann        = ', acc6_der1/(NPTS1)
+write(*,100)'Neumann-Hermite        = ', acc7_der1/(NPTS1)
+write(*,100) ' '
+write(*,100)'--------------------------------------------'
+write(*,100)' Norm L2 error '
+write(*,100)'--------------------------------------------'
+write(*,100)'periodic               = ', sqrt(normL2_0), h1**(SPL_DEG)
+write(*,100)'dirichlet              = ', sqrt(normL2_1), h1**(SPL_DEG)
+write(*,100)'dirichlet non homogene = ', sqrt(normL2_2), h1**(SPL_DEG)
+write(*,100)'Hermite-Hermite        = ', sqrt(normL2_3), h1**(SPL_DEG)
+write(*,100)'Neumann-dirichlet      = ', sqrt(normL2_4), h1**(SPL_DEG)
+write(*,100)'Neumann-Neumann        = ', sqrt(normL2_5), h1**(SPL_DEG)
+write(*,100)'Hermite-Neumann        = ', sqrt(normL2_6), h1**(SPL_DEG)
+write(*,100)'Neumann-Hermite        = ', sqrt(normL2_7), h1**(SPL_DEG)
+write(*,100) ' '
+write(*,100)'--------------------------------------------'
+write(*,100)' Norm H1 error '
+write(*,100)'--------------------------------------------'
+write(*,100)'periodic               = ', sqrt(normH1_0), h1**(SPL_DEG-2)*(2.0_f64*sll_pi)**2
+write(*,100)'dirichlet              = ', sqrt(normH1_1), h1**(SPL_DEG-2)*(2.0_f64*sll_pi)**2
+write(*,100)'dirichlet non homogene = ', sqrt(normH1_2), h1**(SPL_DEG-2)*(2.0_f64*sll_pi)**2
+write(*,100)'Hermite-Hermite        = ', sqrt(normH1_3), h1**(SPL_DEG-2)*(2.0_f64*sll_pi)**2
+write(*,100)'Neumann-Dirichlet      = ', sqrt(normH1_4), h1**(SPL_DEG-2)*(2.0_f64*sll_pi)**2
+write(*,100)'Neumann-Neumann        = ', sqrt(normH1_5), h1**(SPL_DEG-2)*(2.0_f64*sll_pi)**2
+write(*,100)'Hermite-Neumann        = ', sqrt(normH1_6), h1**(SPL_DEG-2)*(2.0_f64*sll_pi)**2
+write(*,100)'Neumann-Hermite        = ', sqrt(normH1_7), h1**(SPL_DEG-2)*(2.0_f64*sll_pi)**2
+
+100 format(a,2f25.20)
 
 if(( sqrt(normL2_0) <= h1**(SPL_DEG+1)) .AND. &
    ( sqrt(normL2_1) <= h1**(SPL_DEG+1)) .AND. &
