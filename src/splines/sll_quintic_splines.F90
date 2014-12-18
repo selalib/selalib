@@ -66,13 +66,21 @@ im  = 0
 
 i = 1
 goto 15
- 5 di1 = ds1
+ 5 continue
+
+   di1 = ds1
    di2 = ds3
    di3 = ds2
    di4 = ds4
-10 sf1 = fp4
+
+10 continue
+
+   sf1 = fp4
    sf2 = fp3*q1*a
-15 dp1 = 64*p3
+
+15 continue
+
+   dp1 = 64*p3
    dp2 = 12*p2*q1*a
    dp3 = dp2
    dp4 = 3*p1*q2*as
@@ -80,14 +88,23 @@ goto 15
 
 !boundary condition at xn
 
-   if (indn) 20,50,25
-20 dp2 = 0.0_f64
+   if (indn < 0) goto 20
+   if (indn ==0) goto 50
+   if (indn > 0) goto 25
+
+20 continue
+
+   dp2 = 0.0_f64
    dp4 = 1.0_f64
    di2 = 0.0_f64
    di4 = 0.0_f64
    sf2 = cf(3,n)*(x(n)-x(n-1))/a
+
    goto 50
-25 dp1 = 1.0_f64
+
+25 continue
+
+   dp1 = 1.0_f64
    dp2 = 0.0_f64
    dp3 = 0.0_f64
    dp4 = 1.0_f64
@@ -99,7 +116,9 @@ goto 15
    sf2 =  cf(3,n)*(x(n)-x(n-1))/a
    goto 50
 
-30 p1 = 1.0_f64/(x(i+1)-x(i))
+30 continue
+
+   p1 = 1.0_f64/(x(i+1)-x(i))
    p2 = p1*p1
    p3 = p1*p2
    q1 = p1
@@ -107,7 +126,10 @@ goto 15
    if (i >= n-1) goto 35
    q1 = 1.0_f64 / (x(i+2)-x(i+1))
    q2 = q1*q1
-35 fp = cf(1,i)-cf(1,i+1)
+
+35 continue
+
+   fp = cf(1,i)-cf(1,i+1)
    fp3= 20*p3*fp
    fp4=  6*p1*fp3
    dp1= dp1+64*p3
@@ -120,6 +142,7 @@ goto 15
    ds4=    p2*q1*as
    sf1=sf1+fp4
    sf2=sf2-fp3*p1*a
+
    if (i>1) goto 50
 
    di1 = ds1
@@ -129,37 +152,54 @@ goto 15
 
 !Boundary condition at x1
 
-   if (ind1) 40,55,45
+   if (ind1 < 0) then
 
-40 dp2 = 0.0_f64
-   dp4 = 1.0_f64
-   ds2 = 0.0_f64   
-   ds4 = 0.0_f64   
-   sf2 = cf(3,1)*(x(2)-x(1))/a
-   goto 55
-45 dp1 = 1.0_f64
-   dp2 = 0.0_f64
-   dp3 = 0.0_f64
-   dp4 = 1.0_f64
-   ds1 = 0.0_f64
-   ds2 = 0.0_f64
-   ds3 = 0.0_f64
-   ds4 = 0.0_f64
-   sf1 = -cf(2,1)
-   sf2 =  cf(3,1)*(x(2)-x(1))/a
+     dp2 = 0.0_f64
+     dp4 = 1.0_f64
+     ds2 = 0.0_f64   
+     ds4 = 0.0_f64   
+     sf2 = cf(3,1)*(x(2)-x(1))/a
+
+   else if (ind1 > 0) then
+
+     dp1 = 1.0_f64
+     dp2 = 0.0_f64
+     dp3 = 0.0_f64
+     dp4 = 1.0_f64
+     ds1 = 0.0_f64
+     ds2 = 0.0_f64
+     ds3 = 0.0_f64
+     ds4 = 0.0_f64
+     sf1 = -cf(2,1)
+     sf2 =  cf(3,1)*(x(2)-x(1))/a
+
+   end if
+
    goto 55
 
-50 dp1=dp1-di1*h(im-3)-di3*h(im-2)
+50 continue
+
+   dp1=dp1-di1*h(im-3)-di3*h(im-2)
    dp2=dp2-di2*h(im-3)-di4*h(im-2)
    dp3=dp3-di1*h(im-1)-di3*h(im)
    dp4=dp4-di2*h(im-1)-di4*h(im)
-55 det=dp1*dp4-dp2*dp3
-   if(i==1) goto 60
-   sf1=sf1+di1*h(im-5)+di3*h(im-4)
-   sf2=sf2+di2*h(im-5)+di4*h(im-4)
-60 h(im+1)=( dp4*sf1-dp3*sf2)/det
+
+55 continue
+
+   det=dp1*dp4-dp2*dp3
+
+   if (i/=1) then
+
+     sf1=sf1+di1*h(im-5)+di3*h(im-4)
+     sf2=sf2+di2*h(im-5)+di4*h(im-4)
+
+   end if
+
+   h(im+1)=( dp4*sf1-dp3*sf2)/det
    h(im+2)=(-dp2*sf1+dp1*sf2)/det
+
    if(i>=n) goto 65
+
    h(im+3)=(+dp4*ds1-dp3*ds2)/det
    h(im+4)=(-dp2*ds1+dp1*ds2)/det
    h(im+5)=(+dp4*ds3-dp3*ds4)/det
@@ -167,26 +207,28 @@ goto 15
    im=im+6
    i =i +1
    
-   if (i-2) 5,10,5
+   if (i < 2) goto 5
+   if (i ==2) goto 10
+   if (i > 2) goto 5
 
-!Bacward substitution and solution to the algebraic system
+   !Backward substitution and solution to the algebraic system
 
-65 cf(2,n) = -h(im+1)
+65 continue
+
+   cf(2,n) = -h(im+1)
    dpd1    =  h(im+2)*a
    cf(3,n) = dpd1/(x(n)-x(n-1))
    im      = im-6
 
-   do 70 i=2,n
+   do i=2,n
      k=n+1-i
-     cf(2,k)=-h(im+1)+h(im+3)*cf(2,k+1)-h(im+5)*dpd1/a
-     dpd2   = h(im+2)*a-h(im+4)*cf(2,k+1)*a+h(im+6)*dpd1
-     cf(3,k)= dpd2/(x(k+1)-x(k))
-     dpd1   = dpd2
-     im     = im-6
-70 end do
+     cf(2,k) = -h(im+1)+h(im+3)*cf(2,k+1)-h(im+5)*dpd1/a
+     dpd2    =  h(im+2)*a-h(im+4)*cf(2,k+1)*a+h(im+6)*dpd1
+     cf(3,k) =  dpd2/(x(k+1)-x(k))
+     dpd1    =  dpd2
+     im      =  im-6
+   end do
 
-   return
-   
 end subroutine inspl5
 
 !> Calculation of the values of an interpolating quintic pline
@@ -206,21 +248,30 @@ sll_real64, intent(out)    :: f(3)       !< 1: value of the interpolating functi
 
    i  = 1
    xn = xx-x(1)
-   if (xn) 5,20,10
-5  i=2
+   if (xn <  0.0_f64) goto 5
+   if (xn == 0.0_f64) goto 20
+   if (xn >  0.0_f64) goto 10
+5  continue
+   i=2
    goto 25
 
-10 do 15 i=2,n
+10 continue
+   do 15 i=2,n
      xn = xx-x(i)
-     if (xn) 25,20,15
+     if (xn <  0.0_f64) goto 25
+     if (xn == 0.0_f64) goto 20
+     if (xn >  0.0_f64) goto 15
 15 continue
    i = n
    goto 25
 
-20 f(1:3)=cf(1:3,i)
-   goto 30
+20 continue
+   f(1:3)=cf(1:3,i)
+   return
 
-25 cc   = cf(1,i-1)-cf(1,i)
+25 continue
+
+   cc   = cf(1,i-1)-cf(1,i)
    h    = x(i)-x(i-1)
    xn   = xx-x(i-1)
    xr1  = xn/h
@@ -263,8 +314,6 @@ sll_real64, intent(out)    :: f(3)       !< 1: value of the interpolating functi
           +cf(3,i  )*(+ 3.0_f64+xr1*(-12.0_f64+ xn))*xr1 
 
    f(3) = (y/h+xr1*w)*6.0_f64/h+u
-
-30 return
 
 end subroutine splin5
 
