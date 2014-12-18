@@ -84,50 +84,46 @@ goto 15
    dp2 = 12*p2*q1*a
    dp3 = dp2
    dp4 = 3*p1*q2*as
-   if (i<n) goto 30
 
-!boundary condition at xn
+   if (i >= n) then !boundary condition at xn
 
-   if (indn < 0) goto 20
-   if (indn ==0) goto 50
-   if (indn > 0) goto 25
+     if (indn < 0) then
 
-20 continue
+       dp2 = 0.0_f64
+       dp4 = 1.0_f64
+       di2 = 0.0_f64
+       di4 = 0.0_f64
+       sf2 = cf(3,n)*(x(n)-x(n-1))/a
 
-   dp2 = 0.0_f64
-   dp4 = 1.0_f64
-   di2 = 0.0_f64
-   di4 = 0.0_f64
-   sf2 = cf(3,n)*(x(n)-x(n-1))/a
+     else if (indn > 0) then
 
-   goto 50
+       dp1 = 1.0_f64
+       dp2 = 0.0_f64
+       dp3 = 0.0_f64
+       dp4 = 1.0_f64
+       di1 = 0.0_f64
+       di2 = 0.0_f64
+       di3 = 0.0_f64
+       di4 = 0.0_f64
+       sf1 = -cf(2,n)
+       sf2 =  cf(3,n)*(x(n)-x(n-1))/a
 
-25 continue
+     endif
 
-   dp1 = 1.0_f64
-   dp2 = 0.0_f64
-   dp3 = 0.0_f64
-   dp4 = 1.0_f64
-   di1 = 0.0_f64
-   di2 = 0.0_f64
-   di3 = 0.0_f64
-   di4 = 0.0_f64
-   sf1 = -cf(2,n)
-   sf2 =  cf(3,n)*(x(n)-x(n-1))/a
-   goto 50
+     goto 50
 
-30 continue
+   end if
 
    p1 = 1.0_f64/(x(i+1)-x(i))
    p2 = p1*p1
    p3 = p1*p2
    q1 = p1
    q2 = p2
-   if (i >= n-1) goto 35
-   q1 = 1.0_f64 / (x(i+2)-x(i+1))
-   q2 = q1*q1
 
-35 continue
+   if (i < n-1) then
+     q1 = 1.0_f64 / (x(i+2)-x(i+1))
+     q2 = q1*q1
+   end if
 
    fp = cf(1,i)-cf(1,i+1)
    fp3= 20*p3*fp
