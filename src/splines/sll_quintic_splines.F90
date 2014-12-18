@@ -48,6 +48,8 @@ sll_int32,  intent(in)     :: ind1, indn !< boundary conditions switches at x=1 
                                          !< =-1 type 3
 sll_real64, intent(out)  :: h(6*n-3)     !< auxiliary vector
 
+h = 0.0_f64
+
 as  = 64.0_f64/ 3.0_f64
 a   = sqrt(as)
 p1  = 0.0_f64
@@ -156,7 +158,7 @@ goto 15
    sf1=sf1+di1*h(im-5)+di3*h(im-4)
    sf2=sf2+di2*h(im-5)+di4*h(im-4)
 60 h(im+1)=( dp4*sf1-dp3*sf2)/det
-   h(im+2)=(-dp2*sf1-dp1*sf2)/det
+   h(im+2)=(-dp2*sf1+dp1*sf2)/det
    if(i>=n) goto 65
    h(im+3)=(+dp4*ds1-dp3*ds2)/det
    h(im+4)=(-dp2*ds1+dp1*ds2)/det
@@ -224,29 +226,41 @@ sll_real64, intent(out)    :: f(3)       !< 1: value of the interpolating functi
    xr1  = xn/h
    xr2  = xr1*xr1
    xr3  = xr2*xr1
+
    y    = cf(1,i-1)+cc*xr3*(-10.0_f64+xr1*(+15.0_f64-6*xr1))
+
    w    = cf(2,i-1)*xr1 &
          +cf(2,i-1)*xr3*(-6.0_f64+xr1*(+8.0_f64-3*xr1)) &
          -cf(2,i  )*xr3*(+4.0_f64+xr1*(-7.0_f64+3*xr1))
+
    u    = cf(3,i-1)*xr2 &
          +cf(3,i-1)*xr3*(-3.0_f64+xr1*(+3.0_f64-  xr1)) &
          +cf(3,i  )*xr3*(+1.0_f64+xr1*(-2.0_f64+  xr1)) 
+
    f(1) = y+h*(w+h*u*0.5_f64)
+
    y    =      30*cc*xr2*(-1.0_f64+xr1*(+2.0_f64-  xr1)) 
-   w    = cf(2,i-1)*xr1 &
+
+   w    = cf(2,i-1)     &
          +cf(2,i-1)*xr2*(-18.0_f64+xr1*(+32.0_f64-15*xr1)) &
          -cf(2,i  )*xr2*(+12.0_f64+xr1*(-28.0_f64+15*xr1))
+
    u    = cf(3,i-1)*xr1*2.0_f64 &
          +cf(3,i-1)*xr2*(- 9.0_f64+xr1*(+12.0_f64- 5*xr1)) &
          +cf(3,i  )*xr2*(+ 3.0_f64+xr1*(- 8.0_f64+ 5*xr1)) 
-   f(2) =y/h+w+h*u*0.5_f64
+
+   f(2) = y/h+w+h*u*0.5_f64
+
    xn   = 10*xr1
+
    y    = cc*xn*(-1.0_f64+xr1*(+3.0_f64-2*xr1))
+
    w    = +cf(2,i-1)*(-6.0_f64+xr1*(+16.0_f64-xn)) &
           -cf(2,i  )*(+4.0_f64+xr1*(-14.0_f64+xn))
+
    u    =  cf(3,i-1) &
-          +cf(3,i-1)*(- 9.0_f64+xr1*(+18.0_f64- xn)) &
-          +cf(3,i  )*(+ 3.0_f64+xr1*(-12.0_f64+ xn)) 
+          +cf(3,i-1)*(- 9.0_f64+xr1*(+18.0_f64- xn))*xr1 &
+          +cf(3,i  )*(+ 3.0_f64+xr1*(-12.0_f64+ xn))*xr1 
 
    f(3) = (y/h+xr1*w)*6.0_f64/h+u
 
