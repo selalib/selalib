@@ -28,9 +28,9 @@ print*, 'Test quintic splines low level function'
 dx = (x_max-x_min)/(n-1)
 do i = 1, n
   x(i)    = x_min + (i-1)*dx
-  cf(1,i) =  g(x(i))
-  cf(2,i) =  dg(x(i))
-  cf(3,i) =  ddg(x(i))
+  cf(1,i) = g(x(i))
+  cf(2,i) = dg(x(i))
+  cf(3,i) = ddg(x(i))
 end do
 
 ind1 = -1
