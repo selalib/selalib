@@ -67,6 +67,7 @@ im  = 0
 
 i = 1
 goto 15
+
  5 continue
 
    di1 = ds1
@@ -204,9 +205,9 @@ goto 15
    im=im+6
    i =i +1
    
-   if (i < 2) goto 5
    if (i ==2) goto 10
-   if (i > 2) goto 5
+
+   goto 5
 
    !Backward substitution and solution to the algebraic system
 
@@ -238,79 +239,63 @@ sll_real64, intent(in)  :: xx         !< abscissae where values of the function
                                          !< and its derivatives are computed
 
 sll_real64, intent(out) :: f(3)       !< 1: value of the interpolating function
-                                         !< 2: value of its first derivative
-                                         !< 3: value of its second derivative
+                                      !< 2: value of its first derivative
+                                      !< 3: value of its second derivative
 
-   f = 0.0_f64
+f = 0.0_f64
 
-   i  = 1
-   xn = xx-x(1)
-   if (xn <  0.0_f64) goto 5
-   if (xn == 0.0_f64) goto 20
-   if (xn >  0.0_f64) goto 10
-5  continue
-   i=2
-   goto 25
+xn = (xx-x(1))/(x(n)-x(1))*(n-1)
 
-10 continue
-   do 15 i=2,n
-     xn = xx-x(i)
-     if (xn <  0.0_f64) goto 25
-     if (xn == 0.0_f64) goto 20
-     if (xn >  0.0_f64) goto 15
-15 continue
-   i = n
-   goto 25
+i = ceiling(xn)+1
 
-20 continue
-   f(1:3)=cf(1:3,i)
-   return
+if ( xx - x(i) == 0.0_f64 ) then
+  f(1:3)=cf(1:3,i)
+  return
+end if
 
-25 continue
+cc   = cf(1,i-1)-cf(1,i)
+h    = x(i)-x(i-1)
+xn   = xx-x(i-1)
+xr1  = xn/h
+xr2  = xr1*xr1
+xr3  = xr2*xr1
 
-   cc   = cf(1,i-1)-cf(1,i)
-   h    = x(i)-x(i-1)
-   xn   = xx-x(i-1)
-   xr1  = xn/h
-   xr2  = xr1*xr1
-   xr3  = xr2*xr1
+y    = cf(1,i-1)+cc*xr3*(-10.0_f64+xr1*(+15.0_f64-6*xr1))
 
-   y    = cf(1,i-1)+cc*xr3*(-10.0_f64+xr1*(+15.0_f64-6*xr1))
+w    = cf(2,i-1)*xr1 &
+      +cf(2,i-1)*xr3*(-6.0_f64+xr1*(+8.0_f64-3*xr1)) &
+      -cf(2,i  )*xr3*(+4.0_f64+xr1*(-7.0_f64+3*xr1))
 
-   w    = cf(2,i-1)*xr1 &
-         +cf(2,i-1)*xr3*(-6.0_f64+xr1*(+8.0_f64-3*xr1)) &
-         -cf(2,i  )*xr3*(+4.0_f64+xr1*(-7.0_f64+3*xr1))
+u    = cf(3,i-1)*xr2 &
+      +cf(3,i-1)*xr3*(-3.0_f64+xr1*(+3.0_f64-  xr1)) &
+      +cf(3,i  )*xr3*(+1.0_f64+xr1*(-2.0_f64+  xr1)) 
 
-   u    = cf(3,i-1)*xr2 &
-         +cf(3,i-1)*xr3*(-3.0_f64+xr1*(+3.0_f64-  xr1)) &
-         +cf(3,i  )*xr3*(+1.0_f64+xr1*(-2.0_f64+  xr1)) 
+f(1) = y+h*(w+h*u*0.5_f64)
 
-   f(1) = y+h*(w+h*u*0.5_f64)
+y    =      30*cc*xr2*(-1.0_f64+xr1*(+2.0_f64-  xr1)) 
 
-   y    =      30*cc*xr2*(-1.0_f64+xr1*(+2.0_f64-  xr1)) 
+w    = cf(2,i-1)     &
+      +cf(2,i-1)*xr2*(-18.0_f64+xr1*(+32.0_f64-15*xr1)) &
+      -cf(2,i  )*xr2*(+12.0_f64+xr1*(-28.0_f64+15*xr1))
 
-   w    = cf(2,i-1)     &
-         +cf(2,i-1)*xr2*(-18.0_f64+xr1*(+32.0_f64-15*xr1)) &
-         -cf(2,i  )*xr2*(+12.0_f64+xr1*(-28.0_f64+15*xr1))
+u    = cf(3,i-1)*xr1*2.0_f64 &
+      +cf(3,i-1)*xr2*(- 9.0_f64+xr1*(+12.0_f64- 5*xr1)) &
+      +cf(3,i  )*xr2*(+ 3.0_f64+xr1*(- 8.0_f64+ 5*xr1)) 
 
-   u    = cf(3,i-1)*xr1*2.0_f64 &
-         +cf(3,i-1)*xr2*(- 9.0_f64+xr1*(+12.0_f64- 5*xr1)) &
-         +cf(3,i  )*xr2*(+ 3.0_f64+xr1*(- 8.0_f64+ 5*xr1)) 
+f(2) = y/h+w+h*u*0.5_f64
 
-   f(2) = y/h+w+h*u*0.5_f64
+xn   = 10*xr1
 
-   xn   = 10*xr1
+y    = cc*xn*(-1.0_f64+xr1*(+3.0_f64-2*xr1))
 
-   y    = cc*xn*(-1.0_f64+xr1*(+3.0_f64-2*xr1))
+w    = +cf(2,i-1)*(-6.0_f64+xr1*(+16.0_f64-xn)) &
+       -cf(2,i  )*(+4.0_f64+xr1*(-14.0_f64+xn))
 
-   w    = +cf(2,i-1)*(-6.0_f64+xr1*(+16.0_f64-xn)) &
-          -cf(2,i  )*(+4.0_f64+xr1*(-14.0_f64+xn))
+u    =  cf(3,i-1) &
+       +cf(3,i-1)*(- 9.0_f64+xr1*(+18.0_f64- xn))*xr1 &
+       +cf(3,i  )*(+ 3.0_f64+xr1*(-12.0_f64+ xn))*xr1 
 
-   u    =  cf(3,i-1) &
-          +cf(3,i-1)*(- 9.0_f64+xr1*(+18.0_f64- xn))*xr1 &
-          +cf(3,i  )*(+ 3.0_f64+xr1*(-12.0_f64+ xn))*xr1 
-
-   f(3) = (y/h+xr1*w)*6.0_f64/h+u
+f(3) = (y/h+xr1*w)*6.0_f64/h+u
 
 end subroutine splin5
 
