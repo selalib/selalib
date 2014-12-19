@@ -18,10 +18,10 @@
 !------------------------------------------------------------------------------
 module sll_triangular_meshes
 #include "sll_working_precision.h"
+#include "sll_constants.h"
 #include "sll_memory.h"
+#include "sll_utilities.h"
 
-use sll_constants
-use sll_utilities
 use sll_meshes_base
 use sll_tri_mesh_xmf
 
@@ -76,24 +76,113 @@ use sll_tri_mesh_xmf
 
 contains
 
-  subroutine initialize_triangular_mesh_2d( mesh,     &
-                                            nc_eta1,  &
-                                            eta1_min, &
-                                            eta1_max, &
-                                            nc_eta2,  &
-                                            eta2_min, &
-                                            eta2_max)
+subroutine initialize_triangular_mesh_2d( mesh,     &
+                                           nc_eta1,  &
+                                           eta1_min, &
+                                           eta1_max, &
+                                           nc_eta2,  &
+                                           eta2_min, &
+                                           eta2_max)
 
 
-    type(sll_triangular_mesh_2d) :: mesh
-    sll_int32,  intent(in) :: nc_eta1
-    sll_real64, intent(in) :: eta1_min
-    sll_real64, intent(in) :: eta1_max
-    sll_int32,  intent(in) :: nc_eta2
-    sll_real64, intent(in) :: eta2_min
-    sll_real64, intent(in) :: eta2_max
+type(sll_triangular_mesh_2d) :: mesh
+sll_int32,  intent(in) :: nc_eta1
+sll_real64, intent(in) :: eta1_min
+sll_real64, intent(in) :: eta1_max
+sll_int32,  intent(in) :: nc_eta2
+sll_real64, intent(in) :: eta2_min
+sll_real64, intent(in) :: eta2_max
 
- end subroutine initialize_triangular_mesh_2d
+!*-----------------------------------------------------------------------
+!*  Generation du maillage pour une plaque rectangulaire dans le plan xOy.
+!*  Maillage regulier de type TRIANGLES P1 - Q4T.
+!*-----------------------------------------------------------------------
+
+sll_int32 :: i
+sll_int32 :: nd1, nd2, nd3
+sll_int32 :: nelt, nlp, nhp
+sll_int32 :: l, l1, ll1, ll2
+sll_int32 :: in, iin, n, noeud, nsom, nxm, nym, neltot, ndd
+sll_int32 :: nbox, nboy, iel, iev
+
+real(8) :: xx1, xx2, pasx0, pasx1, pasy0, pasy1
+real(8) :: alx, aly, y
+real(8) :: x_min, x_max, y_min, y_max
+
+mesh%eta1_min = eta1_min
+mesh%eta1_max = eta1_max
+mesh%eta2_min = eta2_min
+mesh%eta2_max = eta2_max
+
+nbox = nc_eta1+1
+nboy = nc_eta2+1
+ndd = max0(nbox,nboy)
+alx = eta1_max-eta1_min
+aly = eta2_max-eta2_min
+
+!*---- Determination de quelques utilitaires
+
+nxm    = nbox - 1      !nombre de quadrangles sur l'axe Ox du maillage
+nym    = nboy - 1      !nombre de quadrangles sur l'axe Oy du maillage
+neltot = 2 * nxm * nym !nombre total de triangles du maillage 
+nsom   = nbox * nboy   !nombre de "sommets" du maillage quadrangulaire
+noeud  = nsom          !nombre total de noeuds
+
+mesh%num_cells = neltot
+mesh%num_nodes = noeud
+allocate(mesh%coord(1:2,noeud))
+allocate(mesh%nodes(1:3,1:neltot))
+
+!*---- Ecriture des coordonnees des sommets ----*!
+                  
+pasx0 = alx / nxm                   !pas le long de OX
+pasx1 = pasx0 * 0.5                 !demi - pas       
+pasy0 = aly / nym                   !pas le long de OY
+pasy1 = pasy0 * 0.5                 !demi - pas       
+
+do n = 0 , nym       !Coordonnees des noeuds
+   in = nbox * n
+   do i = 1 , nbox
+      iin = in + i                  !numero du noeud
+      xx1 = x_min + alx - (i - 1) * pasx0   !coordonnees du noeud
+      xx2 = y_min + n * pasy0 
+      mesh%coord(1,iin) = xx1
+      mesh%coord(2,iin) = xx2
+   end do
+end do
+
+!*---- Table de connectivite ----*!
+
+nelt = 0                        !initialisation
+do l = 1 , nym                  !boucle sur les lignes
+
+   l1  = l - 1
+   ll1 = l1 * nbox
+   ll2 = l  * nbox 
+
+   do i = 1 , nxm               !boucle sur les colonnes
+
+      nd1 = ll1 + i             
+      nd2 = ll2 + i             
+      nd3 = ll2 + i + 1         
+
+      nelt = nelt + 1           !premier e.f. du "quadrangle"
+
+      mesh%nodes(1,nelt) = nd1       !premier  noeud
+      mesh%nodes(2,nelt) = nd2       !deuxieme noeud
+      mesh%nodes(3,nelt) = nd1 + 1   !troisieme noeud
+
+      nelt = nelt + 1           !second e.f. du "quadrangle"
+       
+      mesh%nodes(1,nelt) = nd1 + 1       !premier noeud        
+      mesh%nodes(2,nelt) = nd2       !deuxieme noeud
+      mesh%nodes(3,nelt) = nd3       !troisieme noeud
+
+   end do
+
+end do
+
+end subroutine initialize_triangular_mesh_2d
 
 !  function eta1_node_triangular(mesh, i, j) result(res)
 !    ! The coordinates (i, j) correspond to the (r1, r2) basis
@@ -109,8 +198,8 @@ contains
 !  !> @brief Computes the second coordinate of a given point
 !  !> @details Computes the second coordinate on the cartesian system 
 !  !> of a point which has for hexagonal coordinates (i,j)
-!  !> @param i integer denoting the first hexagonal coordinate of a point
-!  !> @param j integer denoting the second hexagonal coordinate of a point
+!  !> @param i sll_int32 denoting the first hexagonal coordinate of a point
+!  !> @param j sll_int32 denoting the second hexagonal coordinate of a point
 !  !> returns res real containing the coordinate "eta2"
 !  function eta2_node_triangular(mesh, i, j) result(res)
 !    ! The coordinates (k1, k2) correspond to the (r1, r2) basis
@@ -229,25 +318,25 @@ contains
          mesh%eta2_max
 
   end subroutine display_triangular_mesh_2d
-!
-!
+
+
 !  subroutine write_triangular_mesh_2d(mesh, name)
 !    ! Writes the mesh information in a file named "name"
 !    type(sll_triangular_mesh_2d), pointer :: mesh
 !    character(len=*) :: name
 !    sll_int32  :: i
-!    sll_int32  :: num_pts_tot
+!    sll_int32  :: num_nodes
 !    sll_int32  :: k1, k2
 !    sll_int32, parameter :: out_unit=20
 !
 !    open (unit=out_unit,file=name,action="write",status="replace")
 !
-!    num_pts_tot = mesh%num_pts_tot
+!    num_nodes = mesh%num_nodes
 !
 !    ! Optional writing every mesh point and its cartesian coordinates :
 !    !    write(*,"(/,(a))") 'hex mesh : num_pnt    x1     x2'
 !
-!    do i=1, num_pts_tot
+!    do i=1, num_nodes
 !       k1 = mesh%global_to_hex1(i)
 !       k2 = mesh%global_to_hex2(i)
 !       write (out_unit, "(3(i6,1x),2(g13.3,1x))") i,                &
@@ -267,14 +356,14 @@ contains
 !    sll_real64,dimension(:) :: field
 !    character(len=*) :: name
 !    sll_int32  :: i
-!    sll_int32  :: num_pts_tot
+!    sll_int32  :: num_nodes
 !    sll_real64 :: x1, x2
 !    sll_int32, parameter :: out_unit=20
 !
 !    open (unit=out_unit,file=name,action="write",status="replace")
 !
-!    num_pts_tot = mesh%num_pts_tot
-!    do i=1, num_pts_tot
+!    num_nodes = mesh%num_nodes
+!    do i=1, num_nodes
 !       x1 = mesh%global_to_x1(i)
 !       x2 = mesh%global_to_x2(i)
 !       write (out_unit, "(3(g13.3,1x))") x1, &
@@ -292,192 +381,174 @@ contains
 !    sll_real64,dimension(:) :: field
 !    character(len=*) :: name
 !    sll_int32  :: i
-!    sll_int32  :: num_triangles
-!    sll_int32  :: num_pts_tot
+!    sll_int32  :: num_cells
+!    sll_int32  :: num_nodes
 !    sll_int32  :: out_unit
-!    sll_real64, allocatable :: coor(:,:)
-!    sll_int32,  allocatable :: ntri(:,:)
+!    sll_real64, allocatable :: coord(:,:)
+!    sll_int32,  allocatable :: nodes(:,:)
 !    sll_int32  :: error
 !    sll_real64 :: x1, x2
 !
 !    call sll_new_file_id(out_unit, error)
 !
-!    num_pts_tot = mesh%num_pts_tot
-!    num_triangles = mesh%num_triangles
-!    SLL_ALLOCATE(coor(2,num_pts_tot),error)
-!    SLL_ALLOCATE(ntri(3,num_triangles),error)
+!    num_nodes = mesh%num_nodes
+!    num_cells = mesh%num_cells
+!    SLL_ALLOCATE(coord(2,num_nodes),error)
+!    SLL_ALLOCATE(nodes(3,num_cells),error)
 !
-!    do i=1, num_pts_tot
-!       coor(1,i) = mesh%global_to_x1(i)
-!       coor(2,i) = mesh%global_to_x2(i)
+!    do i=1, num_nodes
+!       coord(1,i) = mesh%global_to_x1(i)
+!       coord(2,i) = mesh%global_to_x2(i)
 !    end do
 !
-!    do i=1, num_triangles
+!    do i=1, num_cells
 !       x1      = mesh%center_cartesian_coord(1, i)
 !       x2      = mesh%center_cartesian_coord(2, i)
-!       call get_cell_vertices_index( x1, x2, mesh, ntri(1,i), ntri(2,i), ntri(3,i))
+!       call get_cell_vertices_index( x1, x2, mesh, nodes(1,i), nodes(2,i), nodes(3,i))
 !    end do
 !
-!    call write_tri_mesh_xmf(name, coor, ntri, num_pts_tot, num_triangles, field, 'values')
+!    call write_tri_mesh_xmf(name, coor, nodes, num_pts_tot, num_cells, field, 'values')
 !
 !    close(out_unit)
 !
 !  end subroutine write_field_triangular_mesh_xmf
 !
 !
-!  subroutine write_triangular_mesh_mtv(mesh, mtv_file)
-!
-!    type(sll_triangular_mesh_2d), pointer :: mesh
-!    sll_real64                 :: coor(2,mesh%num_pts_tot)
-!    sll_int32                  :: ntri(3,mesh%num_triangles)
-!    sll_real64                 :: x1
-!    sll_real64                 :: y1
-!    sll_int32                  :: is1
-!    sll_int32                  :: is2
-!    sll_int32                  :: is3
-!    character(len=*)           :: mtv_file
-!    sll_int32                  :: out_unit
-!    sll_int32                  :: error
-!    sll_int32                  :: i
-!    
-!    call sll_new_file_id(out_unit, error)
-!
-!    open( out_unit, file=mtv_file)
-!    
-!    !--- Trace du maillage ---
-!    
-!    write(out_unit,"(a)")"$DATA=CURVE3D"
-!    write(out_unit,"(a)")"%equalscale=T"
-!    write(out_unit,"(a)")"%toplabel='Maillage' "
-!    
-!    do i = 1, mesh%num_triangles
-!    
-!       x1 = mesh%center_cartesian_coord(1, i)
-!       y1 = mesh%center_cartesian_coord(2, i)
-!    
-!       call get_cell_vertices_index( x1, y1, mesh, is1, is2, is3)
-!    
-!       ntri(1,i) = is1
-!       ntri(2,i) = is2
-!       ntri(3,i) = is3
-!    
-!       coor(1,is1) = mesh%global_to_x1(is1)
-!       coor(2,is1) = mesh%global_to_x2(is1)
-!       coor(1,is2) = mesh%global_to_x1(is2)
-!       coor(2,is2) = mesh%global_to_x2(is2)
-!       coor(1,is3) = mesh%global_to_x1(is3)
-!       coor(2,is3) = mesh%global_to_x2(is3)
-!    
-!       write(out_unit,"(3f10.5)")coor(:,ntri(1,i)),0.
-!       write(out_unit,"(3f10.5)")coor(:,ntri(2,i)),0.
-!       write(out_unit,"(3f10.5)")coor(:,ntri(3,i)),0.
-!       write(out_unit,"(3f10.5)")coor(:,ntri(1,i)),0.
-!       write(out_unit,*)
-!    
-!    end do
-!    
-!    !--- Numeros des noeuds et des triangles
-!    
-!    write(out_unit,"(a)")"$DATA=CURVE3D"
-!    write(out_unit,"(a)")"%equalscale=T"
-!    write(out_unit,"(a)")"%toplabel='Numeros des noeuds et des triangles' "
-!    
-!    do i = 1, mesh%num_triangles
-!       write(out_unit,"(3f10.5)")coor(:,ntri(1,i)),0.
-!       write(out_unit,"(3f10.5)")coor(:,ntri(2,i)),0.
-!       write(out_unit,"(3f10.5)")coor(:,ntri(3,i)),0.
-!       write(out_unit,"(3f10.5)")coor(:,ntri(1,i)),0.
-!       write(out_unit,*)
-!    end do
-!    
-!    do i = 1, mesh%num_triangles
-!       x1 = (  coor(1,ntri(1,i))  &
-!             + coor(1,ntri(2,i))  &
-!         + coor(1,ntri(3,i))    )/3.
-!       y1 = (  coor(2,ntri(1,i))  &
-!             + coor(2,ntri(2,i))  &
-!         + coor(2,ntri(3,i))    )/3.
-!       write(out_unit,"(a)"   , advance="no")"@text x1="
-!       write(out_unit,"(f8.5)", advance="no") x1
-!       write(out_unit,"(a)"   , advance="no")" y1="
-!       write(out_unit,"(f8.5)", advance="no") y1
-!       write(out_unit,"(a)"   , advance="no")" z1=0. lc=4 ll='"
-!       write(out_unit,"(i4)"  , advance="no") i
-!       write(out_unit,"(a)")"'"
-!    end do
-!    
-!    do i = 1, mesh%num_pts_tot
-!       x1 = coor(1,i)
-!       y1 = coor(2,i)
-!       write(out_unit,"(a)"   , advance="no")"@text x1="
-!       write(out_unit,"(g15.3)", advance="no") x1
-!       write(out_unit,"(a)"   , advance="no")" y1="
-!       write(out_unit,"(g15.3)", advance="no") y1
-!       write(out_unit,"(a)"   , advance="no")" z1=0. lc=5 ll='"
-!       write(out_unit,"(i4)"  , advance="no") i
-!       write(out_unit,"(a)")"'"
-!    end do
-!    
-!    !--- Numeros des noeuds 
-!    
-!    write(out_unit,*)"$DATA=CURVE3D"
-!    write(out_unit,*)"%equalscale=T"
-!    write(out_unit,*)"%toplabel='Numeros des noeuds' "
-!    
-!    do i = 1, mesh%num_triangles
-!       write(out_unit,"(3f10.5)")coor(:,ntri(1,i)),0.
-!       write(out_unit,"(3f10.5)")coor(:,ntri(2,i)),0.
-!       write(out_unit,"(3f10.5)")coor(:,ntri(3,i)),0.
-!       write(out_unit,"(3f10.5)")coor(:,ntri(1,i)),0.
-!       write(out_unit,*)
-!    end do
-!    
-!    do i = 1, mesh%num_pts_tot
-!       x1 = coor(1,i)
-!       y1 = coor(2,i)
-!       write(out_unit,"(a)"   , advance="no")"@text x1="
-!       write(out_unit,"(g15.3)", advance="no") x1
-!       write(out_unit,"(a)"   , advance="no")" y1="
-!       write(out_unit,"(g15.3)", advance="no") y1
-!       write(out_unit,"(a)"   , advance="no")" z1=0. lc=5 ll='"
-!       write(out_unit,"(i4)"  , advance="no") i
-!       write(out_unit,"(a)")"'"
-!    end do
-!    
-!    !--- Numeros des triangles
-!    
-!    write(out_unit,*)"$DATA=CURVE3D"
-!    write(out_unit,*)"%equalscale=T"
-!    write(out_unit,*)"%toplabel='Numeros des triangles' "
-!    
-!    do i = 1, mesh%num_triangles
-!       write(out_unit,"(3f10.5)")coor(:,ntri(1,i)),0.
-!       write(out_unit,"(3f10.5)")coor(:,ntri(2,i)),0.
-!       write(out_unit,"(3f10.5)")coor(:,ntri(3,i)),0.
-!       write(out_unit,"(3f10.5)")coor(:,ntri(1,i)),0.
-!       write(out_unit,*)
-!    end do
-!    
-!    do i = 1, mesh%num_triangles
-!       x1 = (  coor(1,ntri(1,i))  &
-!             + coor(1,ntri(2,i))  &
-!         + coor(1,ntri(3,i))    )/3.
-!       y1 = (  coor(2,ntri(1,i))  &
-!             + coor(2,ntri(2,i))  &
-!         + coor(2,ntri(3,i))    )/3.
-!       write(out_unit,"(a)"   , advance="no")"@text x1="
-!       write(out_unit,"(g15.3)", advance="no") x1
-!       write(out_unit,"(a)"   , advance="no")" y1="
-!       write(out_unit,"(g15.3)", advance="no") y1
-!       write(out_unit,"(a)"   , advance="no")" z1=0. lc=4 ll='"
-!       write(out_unit,"(i4)"  , advance="no") i
-!       write(out_unit,"(a)")"'"
-!    end do
-!    
-!    write(out_unit,*)"$END"
-!    close(out_unit)
-!   
-!end subroutine write_triangular_mesh_mtv
+  subroutine write_triangular_mesh_mtv(mesh, mtv_file)
+
+    type(sll_triangular_mesh_2d) :: mesh
+    sll_real64                   :: x1
+    sll_real64                   :: y1
+    sll_int32                    :: is1
+    sll_int32                    :: is2
+    sll_int32                    :: is3
+    character(len=*)             :: mtv_file
+    sll_int32                    :: out_unit
+    sll_int32                    :: error
+    sll_int32                    :: i
+    
+    call sll_new_file_id(out_unit, error)
+
+    open( out_unit, file=mtv_file)
+    
+    !--- Trace du maillage ---
+    
+    write(out_unit,"(a)")"$DATA=CURVE3D"
+    write(out_unit,"(a)")"%equalscale=T"
+    write(out_unit,"(a)")"%toplabel='Maillage' "
+    
+    do i = 1, mesh%num_cells
+    
+       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
+       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(2,i)),0.
+       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(3,i)),0.
+       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
+       write(out_unit,*)
+    
+    end do
+    
+    !--- Numeros des noeuds et des triangles
+    
+    write(out_unit,"(a)")"$DATA=CURVE3D"
+    write(out_unit,"(a)")"%equalscale=T"
+    write(out_unit,"(a)")"%toplabel='Numeros des noeuds et des triangles' "
+    
+    do i = 1, mesh%num_cells
+       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
+       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(2,i)),0.
+       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(3,i)),0.
+       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
+       write(out_unit,*)
+    end do
+    
+    do i = 1, mesh%num_cells
+       x1 = (  mesh%coord(1,mesh%nodes(1,i))  &
+             + mesh%coord(1,mesh%nodes(2,i))  &
+         + mesh%coord(1,mesh%nodes(3,i))    )/3.
+       y1 = (  mesh%coord(2,mesh%nodes(1,i))  &
+             + mesh%coord(2,mesh%nodes(2,i))  &
+         + mesh%coord(2,mesh%nodes(3,i))    )/3.
+       write(out_unit,"(a)"   , advance="no")"@text x1="
+       write(out_unit,"(f8.5)", advance="no") x1
+       write(out_unit,"(a)"   , advance="no")" y1="
+       write(out_unit,"(f8.5)", advance="no") y1
+       write(out_unit,"(a)"   , advance="no")" z1=0. lc=4 ll='"
+       write(out_unit,"(i4)"  , advance="no") i
+       write(out_unit,"(a)")"'"
+    end do
+    
+    do i = 1, mesh%num_nodes
+       x1 = mesh%coord(1,i)
+       y1 = mesh%coord(2,i)
+       write(out_unit,"(a)"   , advance="no")"@text x1="
+       write(out_unit,"(g15.3)", advance="no") x1
+       write(out_unit,"(a)"   , advance="no")" y1="
+       write(out_unit,"(g15.3)", advance="no") y1
+       write(out_unit,"(a)"   , advance="no")" z1=0. lc=5 ll='"
+       write(out_unit,"(i4)"  , advance="no") i
+       write(out_unit,"(a)")"'"
+    end do
+    
+    !--- Numeros des noeuds 
+    
+    write(out_unit,*)"$DATA=CURVE3D"
+    write(out_unit,*)"%equalscale=T"
+    write(out_unit,*)"%toplabel='Numeros des noeuds' "
+    
+    do i = 1, mesh%num_cells
+       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
+       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(2,i)),0.
+       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(3,i)),0.
+       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
+       write(out_unit,*)
+    end do
+    
+    do i = 1, mesh%num_nodes
+       x1 = mesh%coord(1,i)
+       y1 = mesh%coord(2,i)
+       write(out_unit,"(a)"   , advance="no")"@text x1="
+       write(out_unit,"(g15.3)", advance="no") x1
+       write(out_unit,"(a)"   , advance="no")" y1="
+       write(out_unit,"(g15.3)", advance="no") y1
+       write(out_unit,"(a)"   , advance="no")" z1=0. lc=5 ll='"
+       write(out_unit,"(i4)"  , advance="no") i
+       write(out_unit,"(a)")"'"
+    end do
+    
+    !--- Numeros des triangles
+    
+    write(out_unit,*)"$DATA=CURVE3D"
+    write(out_unit,*)"%equalscale=T"
+    write(out_unit,*)"%toplabel='Numeros des triangles' "
+    
+    do i = 1, mesh%num_cells
+       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
+       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(2,i)),0.
+       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(3,i)),0.
+       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
+       write(out_unit,*)
+    end do
+    
+    do i = 1, mesh%num_cells
+       x1 = (  mesh%coord(1,mesh%nodes(1,i))  &
+             + mesh%coord(1,mesh%nodes(2,i))  &
+         + mesh%coord(1,mesh%nodes(3,i))    )/3.
+       y1 = (  mesh%coord(2,mesh%nodes(1,i))  &
+             + mesh%coord(2,mesh%nodes(2,i))  &
+         + mesh%coord(2,mesh%nodes(3,i))    )/3.
+       write(out_unit,"(a)"   , advance="no")"@text x1="
+       write(out_unit,"(g15.3)", advance="no") x1
+       write(out_unit,"(a)"   , advance="no")" y1="
+       write(out_unit,"(g15.3)", advance="no") y1
+       write(out_unit,"(a)"   , advance="no")" z1=0. lc=4 ll='"
+       write(out_unit,"(i4)"  , advance="no") i
+       write(out_unit,"(a)")"'"
+    end do
+    
+    write(out_unit,*)"$END"
+    close(out_unit)
+   
+end subroutine write_triangular_mesh_mtv
 
 
 subroutine delete_triangular_mesh_2d( mesh )
