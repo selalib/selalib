@@ -41,15 +41,18 @@ private
 !> Quintic spline interpolator 1d
 type, extends(sll_interpolator_1d_base), public :: sll_quintic_spline_interpolator_1d
 
-  sll_real64, dimension(:),   pointer  :: x         !< points position
-  sll_int32                            :: n         !< number of points
-  sll_int32                            :: ind1      !< number of points
-  sll_int32                            :: indn      !< number of points
-  sll_real64, dimension(:,:), pointer  :: cf        !< values and derivatives
-  sll_real64, dimension(:),   pointer  :: h         !< work array
-  sll_int32                            :: bc_type   !< boundary condition
+  sll_real64, dimension(:),   pointer  :: x        !< points position
+  sll_int32                            :: n        !< number of points
+  sll_int32                            :: ind1     !< number of points
+  sll_int32                            :: indn     !< number of points
+  sll_real64, dimension(:,:), pointer  :: cf       !< values and derivatives
+  sll_real64, dimension(:),   pointer  :: h        !< work array
+  sll_int32                            :: bc_min   !< boundary condition
+  sll_int32                            :: bc_max   !< boundary condition
   sll_real64                           :: xmin
   sll_real64                           :: xmax
+  sll_real64                           :: slope_min
+  sll_real64                           :: slope_max
 
 contains
 
@@ -97,6 +100,93 @@ public sll_delete
 
 contains  ! ****************************************************************
 
+
+function new_quintic_spline_interpolator_1d( num_points, &
+                                             xmin,       &
+                                             xmax,       &
+                                             bc_min,     &
+                                             bc_max,     &
+                                             slope_min,  &
+                                             slope_max ) result(res)
+
+  sll_interpolator,  pointer           :: res
+
+  sll_int32,  intent(in)               :: num_points
+  sll_real64, intent(in)               :: xmin
+  sll_real64, intent(in)               :: xmax
+  sll_int32,  intent(in)               :: bc_min
+  sll_int32,  intent(in)               :: bc_max
+  sll_real64, intent(in), optional     :: slope_min
+  sll_real64, intent(in), optional     :: slope_max
+
+  sll_int32                            :: ierr
+
+  call initialize_1d_interpolator( res,        &
+                                   num_points, &
+                                   xmin,       &
+                                   xmax,       &
+                                   bc_min,     &
+                                   bc_max,     &
+                                   slope_min,  &
+                                   slope_max )
+
+end function new_quintic_spline_interpolator_1d
+
+!---------------------------------------------------------------------------
+
+subroutine initialize_interpolator( interpolator, &
+                                    num_points,   &
+                                    xmin,         &
+                                    xmax,         &
+                                    bc_min,       &
+                                    bc_max,       &
+                                    slope_min,    &
+                                    slope_max )
+
+  sll_interpolator,  intent(inout) :: interpolator
+
+  sll_int32,  intent(in)           :: num_points
+  sll_real64, intent(in)           :: xmin
+  sll_real64, intent(in)           :: xmax
+  sll_int32,  intent(in)           :: bc_min
+  sll_int32,  intent(in)           :: bc_max
+  sll_real64, intent(in), optional :: slope_min
+  sll_real64, intent(in), optional :: slope_max
+  sll_int32                        :: ierr
+  sll_int32                        :: i
+  sll_real64                       :: delta
+
+  interpolator%n      = num_points
+  interpolator%xmin   = xmin
+  interpolator%xmax   = xmax
+  interpolator%bc_min = bc_min
+  interpolator%bc_max = bc_max
+
+  if (present(slope_min) .and. present(slope_max)) then
+    interpolator%slope_min = slope_min
+    interpolator%slope_max = slope_max
+  else
+    interpolator%slope_min = 0.0_f64
+    interpolator%slope_max = 0.0_f64
+  end if
+
+  SLL_ALLOCATE(interpolator%x(num_points),ierr)
+  delta = (xmax - xmin) / (num_points - 1)
+  do i = 1, num_points
+     interpolator%x(i) = xmin + (i-1)*delta
+  end do
+
+  interpolator%ind1 = -1
+  interpolator%indn = -1
+
+  SLL_ALLOCATE(interpolator%h(6*num_points-3),ierr)
+
+  SLL_ALLOCATE(interpolator%cf(3,num_points),ierr)
+
+end subroutine
+
+!---------------------------------------------------------------------------
+
 function spline_interpolate1d(this,        &
                               num_points,  &
                               data,        &
@@ -108,7 +198,22 @@ sll_real64, dimension(:), intent(in) :: coordinates
 sll_real64, dimension(:), intent(in) :: data
 sll_real64, dimension(num_points)    :: f_interp
 
-SLL_WARNING("interpolate_array is not implemented")
+sll_real64, allocatable :: c(:,:)
+sll_real64, allocatable :: h(:)
+sll_int32               :: ierr
+sll_real64              :: f(3)
+sll_int32               :: i
+
+SLL_ALLOCATE(c(3,this%n),ierr)
+SLL_ALLOCATE(h(6*this%n-3),ierr)
+
+call inspl5(this%n, this%x, this%ind1, this%indn, c, h)
+
+do i = 1, num_points
+  call splin5(this%n, this%x, c, coordinates(i), f(1:3))
+  f_interp(i) = f(1)
+end do
+
 
 end function
 
@@ -129,10 +234,14 @@ sll_real64, dimension(num_points)            :: coordinates
 
 sll_real64                           :: delta
 sll_real64                           :: length
-sll_real64                           :: xmin
-sll_real64                           :: xmax
 sll_int32                            :: i
 sll_real64                           :: x
+sll_real64                           :: dx
+
+dx = (this%xmax-this%xmin)/(num_points-1)
+do i = 1, num_points
+  coordinates(i) = this%xmin + (i-1)*dx
+end do
 
 do i = 1, num_points
   x = coordinates(i) - alpha
@@ -140,7 +249,7 @@ do i = 1, num_points
   SLL_ASSERT(x <= this%xmax)
 end do
 
-SLL_WARNING("interpolate_array_disp is not implemented")
+SLL_ERROR("not implemented")
 
 end function
 
@@ -158,7 +267,7 @@ sll_int32, intent(in),optional                 :: size_eta_coords
 
 if(present(eta_coords) .or. present(size_eta_coords))then
 
-  SLL_ERROR('Not implemented yet')
+  SLL_ERROR('Not implemented')
 
 else
 
@@ -185,6 +294,11 @@ subroutine interpolate_values_1d( interpolator,        &
   sll_real64,        intent(in)  :: vals_to_interpolate(:)
   sll_real64,        intent(out) :: output_array(:)
 
+  sll_int32                      :: i
+
+  do i = 1, num_pts
+    output_array(i) = interpolate_value_1d(interpolator,vals_to_interpolate(i))
+  end do
 
 end subroutine interpolate_values_1d
 
@@ -263,76 +377,6 @@ function interpolate_deriv1_1d( interpolator, eta1 ) result(val)
   
 end function interpolate_deriv1_1d
 
-!---------------------------------------------------------------------------
-
-function new_quintic_spline_interpolator_1d( num_points, &
-                                             xmin,       &
-                                             xmax,       &
-                                             bc_type,    &
-                                             slope_left, &
-                                             slope_right ) result(res)
-
-  sll_interpolator,  pointer           :: res
-
-  sll_int32,  intent(in)               :: num_points
-  sll_real64, intent(in)               :: xmin
-  sll_real64, intent(in)               :: xmax
-  sll_int32,  intent(in)               :: bc_type
-  sll_real64, intent(in), optional     :: slope_left
-  sll_real64, intent(in), optional     :: slope_right
-
-  sll_int32                            :: ierr
-
-  call initialize_1d_interpolator( res,        &
-                                   num_points, &
-                                   xmin,       &
-                                   xmax,       &
-                                   bc_type,    &
-                                   slope_left, &
-                                   slope_right )
-
-end function new_quintic_spline_interpolator_1d
-
-!---------------------------------------------------------------------------
-
-subroutine initialize_interpolator( interpolator, &
-                                    num_points,   &
-                                    xmin,         &
-                                    xmax,         &
-                                    bc_type,      &
-                                    slope_left,   &
-                                    slope_right )
-
-  sll_interpolator,  intent(inout)     :: interpolator
-
-  sll_int32,  intent(in)               :: num_points
-  sll_real64, intent(in)               :: xmin
-  sll_real64, intent(in)               :: xmax
-  sll_int32,  intent(in)               :: bc_type
-  sll_real64, intent(in), optional     :: slope_left
-  sll_real64, intent(in), optional     :: slope_right
-  sll_int32                            :: ierr
-  sll_int32  :: i
-  sll_real64 :: delta
-
-  interpolator%n = num_points
-
-  SLL_ALLOCATE(interpolator%x(num_points),ierr)
-  delta = (xmax - xmin) / (num_points - 1)
-  do i = 1, num_points
-     interpolator%x(i) = xmin + (i-1)*delta
-  end do
-
-  interpolator%bc_type = bc_type
-
-  interpolator%ind1 = -1
-  interpolator%indn = -1
-
-  SLL_ALLOCATE(interpolator%h(6*num_points-3),ierr)
-
-  SLL_ALLOCATE(interpolator%cf(3,num_points),ierr)
-
-end subroutine
 
 !---------------------------------------------------------------------------
 
