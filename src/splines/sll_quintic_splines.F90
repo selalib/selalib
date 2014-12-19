@@ -37,16 +37,17 @@ contains
 
 !> Calculation of the parameters of an interpolating quintic splines
 subroutine inspl5(n,x,ind1,indn,cf,h)
-sll_int32,  intent(in)     :: n          !< number of interpolation points
-sll_real64, intent(in)     :: x(n)       !< vector of abscissae
-sll_real64, intent(inout)  :: cf(1:3,n)  !< ordinates, first and second derivatives
-sll_int32,  intent(in)     :: ind1, indn !< boundary conditions switches at x=1 and n.
-                                         !< for both switches one 
-                                         !< has the correspondance
-                                         !< = 1 type 1
-                                         !< = 0 type 2
-                                         !< =-1 type 3
-sll_real64, intent(out)  :: h(6*n-3)     !< auxiliary vector
+
+sll_int32,  intent(in)    :: n          !< number of interpolation points
+sll_real64, intent(in)    :: x(n)       !< vector of abscissae
+sll_real64, intent(inout) :: cf(1:3,n)  !< ordinates, first and second derivatives
+sll_int32,  intent(in)    :: ind1, indn !< boundary conditions switches at x=1 and n.
+                                        !< for both switches one 
+                                        !< has the correspondance
+                                        !< = 1 type 1
+                                        !< = 0 type 2
+                                        !< =-1 type 3
+sll_real64, intent(out)   :: h(6*n-3)   !< auxiliary vector
 
 h = 0.0_f64
 
@@ -230,13 +231,13 @@ end subroutine inspl5
 !> Calculation of the values of an interpolating quintic pline
 !> and of its first and second derivatives at any point xx
 subroutine splin5(n,x,cf,xx,f)
-sll_int32,  intent(in)     :: n          !< number of interpolation points
-sll_real64, intent(in)     :: x(n)       !< vector of abscissae
-sll_real64, intent(inout)  :: cf(1:3,n)  !< ordinates, first and second derivatives
-sll_real64, intent(in)     :: xx         !< abscissae where values of the function
+sll_int32,  intent(in)  :: n          !< number of interpolation points
+sll_real64, intent(in)  :: x(n)       !< vector of abscissae
+sll_real64, intent(in)  :: cf(1:3,n)  !< ordinates, first and second derivatives
+sll_real64, intent(in)  :: xx         !< abscissae where values of the function
                                          !< and its derivatives are computed
 
-sll_real64, intent(out)    :: f(3)       !< 1: value of the interpolating function
+sll_real64, intent(out) :: f(3)       !< 1: value of the interpolating function
                                          !< 2: value of its first derivative
                                          !< 3: value of its second derivative
 
