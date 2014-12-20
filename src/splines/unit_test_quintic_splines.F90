@@ -46,7 +46,9 @@ do j = -1,1
   do i = 1, 1000
   
     xx = x_min + (i-1)/999.*(x_max-x_min)
-    call splin5(n,x,cf,xx,f(1:3))
+    call splin5(n,x,cf,xx,0,f(1))
+    call splin5(n,x,cf,xx,1,f(2))
+    call splin5(n,x,cf,xx,2,f(3))
   
     err(1) = err(1) + ( g(xx)   - f(1))**2 
     err(2) = err(2) + ( dg(xx)  - f(2))**2 
