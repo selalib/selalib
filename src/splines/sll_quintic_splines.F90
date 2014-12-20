@@ -231,16 +231,17 @@ end subroutine inspl5
 
 !> Calculation of the values of an interpolating quintic pline
 !> and of its first and second derivatives at any point xx
-subroutine splin5(n,x,cf,xx,f)
+subroutine splin5(n,x,cf,xx,order,f)
 sll_int32,  intent(in)  :: n          !< number of interpolation points
 sll_real64, intent(in)  :: x(n)       !< vector of abscissae
 sll_real64, intent(in)  :: cf(1:3,n)  !< ordinates, first and second derivatives
 sll_real64, intent(in)  :: xx         !< abscissae where values of the function
                                          !< and its derivatives are computed
 
-sll_real64, intent(out) :: f(3)       !< 1: value of the interpolating function
-                                      !< 2: value of its first derivative
-                                      !< 3: value of its second derivative
+sll_int32,  intent(in)  :: order      !< order of derivative
+sll_real64, intent(out) :: f          !< 0: value of the interpolating function
+                                      !< 1: value of its first derivative
+                                      !< 2: value of its second derivative
 
 f = 0.0_f64
 
@@ -249,53 +250,67 @@ xn = (xx-x(1))/(x(n)-x(1))*(n-1)
 i = ceiling(xn)+1
 
 if ( xx - x(i) == 0.0_f64 ) then
-  f(1:3)=cf(1:3,i)
-  return
+
+  f = cf(order+1,i)
+
+else
+
+
+  cc   = cf(1,i-1)-cf(1,i)
+  h    = x(i)-x(i-1)
+  xn   = xx-x(i-1)
+  xr1  = xn/h
+  xr2  = xr1*xr1
+  xr3  = xr2*xr1
+  
+  select case(order)
+
+  case(0)
+
+    y = cf(1,i-1)+cc*xr3*(-10.0_f64+xr1*(+15.0_f64-6*xr1))
+    
+    w = cf(2,i-1)*xr1 &
+       +cf(2,i-1)*xr3*(-6.0_f64+xr1*(+8.0_f64-3*xr1)) &
+       -cf(2,i  )*xr3*(+4.0_f64+xr1*(-7.0_f64+3*xr1))
+    
+    u = cf(3,i-1)*xr2 &
+       +cf(3,i-1)*xr3*(-3.0_f64+xr1*(+3.0_f64-  xr1)) &
+       +cf(3,i  )*xr3*(+1.0_f64+xr1*(-2.0_f64+  xr1)) 
+    
+    f = y+h*(w+h*u*0.5_f64)
+  
+  case(1) 
+  
+    y =      30*cc*xr2*(-1.0_f64+xr1*(+2.0_f64-  xr1)) 
+    
+    w = cf(2,i-1)     &
+       +cf(2,i-1)*xr2*(-18.0_f64+xr1*(+32.0_f64-15*xr1)) &
+       -cf(2,i  )*xr2*(+12.0_f64+xr1*(-28.0_f64+15*xr1))
+    
+    u = cf(3,i-1)*xr1*2.0_f64 &
+       +cf(3,i-1)*xr2*(- 9.0_f64+xr1*(+12.0_f64- 5*xr1)) &
+       +cf(3,i  )*xr2*(+ 3.0_f64+xr1*(- 8.0_f64+ 5*xr1)) 
+    
+    f = y/h+w+h*u*0.5_f64
+  
+  case(2)
+  
+    xn= 10*xr1
+  
+    y = cc*xn*(-1.0_f64+xr1*(+3.0_f64-2*xr1))
+    
+    w = +cf(2,i-1)*(-6.0_f64+xr1*(+16.0_f64-xn)) &
+        -cf(2,i  )*(+4.0_f64+xr1*(-14.0_f64+xn))
+    
+    u =  cf(3,i-1) &
+        +cf(3,i-1)*(- 9.0_f64+xr1*(+18.0_f64- xn))*xr1 &
+        +cf(3,i  )*(+ 3.0_f64+xr1*(-12.0_f64+ xn))*xr1 
+    
+    f = (y/h+xr1*w)*6.0_f64/h+u
+
+  end select
+
 end if
-
-cc   = cf(1,i-1)-cf(1,i)
-h    = x(i)-x(i-1)
-xn   = xx-x(i-1)
-xr1  = xn/h
-xr2  = xr1*xr1
-xr3  = xr2*xr1
-
-y    = cf(1,i-1)+cc*xr3*(-10.0_f64+xr1*(+15.0_f64-6*xr1))
-
-w    = cf(2,i-1)*xr1 &
-      +cf(2,i-1)*xr3*(-6.0_f64+xr1*(+8.0_f64-3*xr1)) &
-      -cf(2,i  )*xr3*(+4.0_f64+xr1*(-7.0_f64+3*xr1))
-
-u    = cf(3,i-1)*xr2 &
-      +cf(3,i-1)*xr3*(-3.0_f64+xr1*(+3.0_f64-  xr1)) &
-      +cf(3,i  )*xr3*(+1.0_f64+xr1*(-2.0_f64+  xr1)) 
-
-f(1) = y+h*(w+h*u*0.5_f64)
-
-y    =      30*cc*xr2*(-1.0_f64+xr1*(+2.0_f64-  xr1)) 
-
-w    = cf(2,i-1)     &
-      +cf(2,i-1)*xr2*(-18.0_f64+xr1*(+32.0_f64-15*xr1)) &
-      -cf(2,i  )*xr2*(+12.0_f64+xr1*(-28.0_f64+15*xr1))
-
-u    = cf(3,i-1)*xr1*2.0_f64 &
-      +cf(3,i-1)*xr2*(- 9.0_f64+xr1*(+12.0_f64- 5*xr1)) &
-      +cf(3,i  )*xr2*(+ 3.0_f64+xr1*(- 8.0_f64+ 5*xr1)) 
-
-f(2) = y/h+w+h*u*0.5_f64
-
-xn   = 10*xr1
-
-y    = cc*xn*(-1.0_f64+xr1*(+3.0_f64-2*xr1))
-
-w    = +cf(2,i-1)*(-6.0_f64+xr1*(+16.0_f64-xn)) &
-       -cf(2,i  )*(+4.0_f64+xr1*(-14.0_f64+xn))
-
-u    =  cf(3,i-1) &
-       +cf(3,i-1)*(- 9.0_f64+xr1*(+18.0_f64- xn))*xr1 &
-       +cf(3,i  )*(+ 3.0_f64+xr1*(-12.0_f64+ xn))*xr1 
-
-f(3) = (y/h+xr1*w)*6.0_f64/h+u
 
 end subroutine splin5
 
