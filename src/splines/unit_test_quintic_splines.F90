@@ -23,13 +23,14 @@ sll_int32            :: j
 sll_real64           :: dx
 sll_real64           :: x_min = 0.0_f64
 sll_real64           :: x_max = 1.0_f64
-sll_real64           :: err(3)
+sll_real64           :: err(4)
 
 print*, 'Test quintic splines low level function'
 
+dx = (x_max-x_min)/(n-1)
+
 do j = -1,1
 
-  dx = (x_max-x_min)/(n-1)
   do i = 1, n
     x(i)    = x_min + (i-1)*dx
     cf(1,i) = g(x(i))
@@ -62,24 +63,51 @@ do j = -1,1
 
 end do
 
+do i = 1, n
+
+  cf(1,i) = sin(2*sll_pi*x(i))
+  cf(2,i) = cos(2*sll_pi*x(i))
+
+end do
+
+call inspl5_periodic(n,dx,cf,h)
+
+err(4) = 0.0_f64
+do i = 1, 1000
+  xx = x_min + (i-1)/999.*(x_max-x_min)
+  call splin5_periodic(n,x,cf,xx,0,f(1))
+  err(4) = err(4) + ( sin(2*sll_pi*xx) - f(1))**2 
+  write(44,*) xx, f(1), sin(2.*sll_pi*xx)
+end do
+
+print"(' periodic : error on interpolated value ',f25.20)", sqrt(err(4))
+
 print*, 'PASSED'
 
 contains
 
 function g(x)
-sll_real64 :: x
-sll_real64 :: g
+  sll_real64 :: x
+  sll_real64 :: g
+
   g =  exp(x)
+
 end function g
+
 function dg(x)
-sll_real64 :: x
-sll_real64 :: dg
+  sll_real64 :: x
+  sll_real64 :: dg
+
   dg = exp(x)
+
 end function dg
+
 function ddg(x)
-sll_real64 :: x
-sll_real64 :: ddg
+  sll_real64 :: x
+  sll_real64 :: ddg
+
   ddg = exp(x)
+
 end function ddg
 
 end program test_quintic_splines
