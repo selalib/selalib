@@ -75,7 +75,7 @@ call inspl5_periodic(n,dx,cf,h)
 err(4) = 0.0_f64
 do i = 1, 1000
   xx = x_min + (i-1)/999.*(x_max-x_min)
-  call splin5_periodic(n,x,cf,xx,0,f(1))
+  call splin5(n,x,cf,xx,0,f(1))
   err(4) = err(4) + ( sin(2*sll_pi*xx) - f(1))**2 
   write(44,*) xx, f(1), sin(2.*sll_pi*xx)
 end do
