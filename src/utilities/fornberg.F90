@@ -39,38 +39,39 @@ module fornberg
 
 contains
 
+  !> Apply finite difference formula to compute derivative
+  !> @param[in] nin number of points where the function is evaluated
+  !> @param[in] maxorder maximum order of the derivative
+  !> @param[in] xdata abscissae vector
+  !> @param[in] ydata ordinates vector
+  !> @param[in] xtgt position where the derivatives will be evaluated
+  !> @param[out] out(0:n) values of n th derivatives at xtgt
   subroutine apply_fd(nin, maxorder, xdata, ydata, xtgt, out)
     sll_int32,  intent(in)  :: nin, maxorder
-    sll_real64, intent(in)  :: xdata(0:), ydata(0:), xtgt
-    sll_real64, intent(out) :: out(0:)
+    sll_real64, intent(in)  :: xdata(0:nin-1), ydata(0:), xtgt
+    sll_real64, intent(out) :: out(0:maxorder)
 
     sll_int32 :: j
     sll_real64 :: c(0:nin-1, 0:maxorder)
 
     call populate_weights(xtgt, xdata, nin-1, maxorder, c)
-    forall(j=0:maxorder) out(j) = sum(c(:, j)*ydata)
+    forall(j=0:maxorder) out(j) = sum(c(0:, j)*ydata)
   end subroutine
 
-
+  !> @param[in] z location where approximations are to be accurate,
+  !> @param[in] x(0:nd) grid point locations, found in x(0:n)
+  !> @param[in] nd dimension of x- and c-arrays in calling
+  !>  program x(0:nd) and c(0:nd,0:m), respectively,
+  !> @param[in]  m highest derivative for which weights are sought,
+  !> @param[out] c(0:nd,0:m) weights at grid locations x(0:n) for
+  !>  derivatives of order 0:m, found in c(0:nd,0:m)
+  !>
+  !> @details
+  !>  See:
+  !>      Generation of Finite Difference Formulas on Arbitrarily
+  !>          Spaced Grids, Bengt Fornberg,
+  !>          Mathematics of compuation, 51, 184, 1988, 699-706
   subroutine populate_weights (z, x, nd, m, c)
-    !
-    !  Input Parameters
-    !    z            -  location where approximations are to be
-    !                    accurate,
-    !    x(0:nd)      -  grid point locations, found in x(0:n)
-    !    nd           -  dimension of x- and c-arrays in calling
-    !                    program x(0:nd) and c(0:nd,0:m), respectively,
-    !    m            -  highest derivative for which weights are
-    !                    sought,
-    !
-    !  Output Parameter
-    !    c(0:nd,0:m)  -  weights at grid locations x(0:n) for
-    !                    derivatives of order 0:m, found in c(0:nd,0:m)
-    !
-    !  Reference:
-    !      Generation of Finite Difference Formulas on Arbitrarily
-    !          Spaced Grids, Bengt Fornberg,
-    !          Mathematics of compuation, 51, 184, 1988, 699-706
 
     sll_real64, intent(in)  :: z
     sll_int32,  intent(in)  :: nd, m

@@ -2,81 +2,57 @@ program cubic_spline_interpolator_1d
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-  use sll_constants
-  use util_constants
+#include "sll_constants.h"
 
-  use sll_module_interpolators_1d_base
-  use sll_module_cubic_spline_interpolator_1d
-  use sll_module_cubic_spline_interpolator_1d_nonuniform
- ! use sll_module_periodic_interpolator_1d
-  implicit none
+use util_constants
+use sll_module_interpolators_1d_base
+use sll_module_cubic_spline_interpolator_1d
+use sll_module_cubic_spline_interpolator_1d_nonuniform
+use sll_module_periodic_interpolator_1d
+implicit none
 
-  class(sll_interpolator_1d_base), pointer     :: interp
+class(sll_interpolator_1d_base),        pointer :: interp
+type(sll_cubic_spline_interpolator_1d), target  :: spline
 
-  type(sll_cubic_spline_interpolator_1d), target   :: spline
-  !type(sll_cubic_spline_interpolator_1d_nonuniform), target  :: cubic_nonunif_spline
+sll_real64                            :: error
+sll_real64, allocatable, dimension(:) :: points
+sll_real64, allocatable, dimension(:) :: data  
+sll_real64, allocatable, dimension(:) :: out
+sll_real64, allocatable, dimension(:) :: coords
+sll_real64, allocatable, dimension(:) :: data_interp
 
-  sll_real64                            :: error
-  sll_real64                            :: phase
-  sll_real64, allocatable, dimension(:) :: interpolation_points
-  sll_real64, allocatable, dimension(:) :: data  
-  sll_real64, allocatable, dimension(:) :: out
-  sll_real64, allocatable, dimension(:) :: coordinates_d
-  sll_real64, allocatable, dimension(:) :: data_interp
+sll_int32, parameter :: n = 512
+sll_int32            :: ierr, i
+sll_real64           :: x_min, x_max, delta
 
-  sll_int32 :: ierr, i
-  sll_int32, parameter :: n = 512
-  sll_real64  :: x_min, x_max, delta
+SLL_ALLOCATE(data(n), ierr)
+SLL_ALLOCATE(out(n), ierr)
+SLL_ALLOCATE(points(n), ierr)
+SLL_ALLOCATE(coords(n), ierr)
+SLL_ALLOCATE(data_interp(n), ierr)
 
-  SLL_ALLOCATE(data(n), ierr)
-  SLL_ALLOCATE(out(n), ierr)
-  SLL_ALLOCATE(interpolation_points(n), ierr)
-  SLL_ALLOCATE(coordinates_d(n), ierr)
-  SLL_ALLOCATE(data_interp(n), ierr)
+print *, 'initialize data and points array'
+x_min = 0.0_f64
+x_max = 2.0_f64 * sll_pi
+delta = (x_max - x_min ) / real(n-1,f64) 
 
-  print *, 'initialize data and interpolation_points array'
-  x_min = 0.0_f64
-  x_max = 2.0_f64 * sll_pi
-  delta = (x_max - x_min ) / real(n-1,f64) 
-  phase = 0.0_f64
-  do i=1,n
-     coordinates_d(i) = (i-1)*delta
-     interpolation_points(i) = modulo(coordinates_d(i) - delta/3.0_f64,2.0_f64 * sll_pi)
-     data(i)        = 2.0_f64*(sin(coordinates_d(i)) + 2.5_f64 + cos(coordinates_d(i)))
-     data_interp(i) = 2.0_f64*(sin(interpolation_points(i)) + 2.5_f64 &
-          + cos(interpolation_points(i)))
-  end do
+do i=1,n
+  coords(i) = (i-1)*delta
+  points(i) = modulo(coords(i) - delta/3.0_f64,2.0_f64 * sll_pi)
+  data(i)        = 2.0_f64*(sin(coords(i)) + 2.5_f64 + cos(coords(i)))
+  data_interp(i) = 2.0_f64*(sin(points(i)) + 2.5_f64 + cos(points(i)))
+end do
 
-  print*, 'Cubic spline interpolation'
-  call spline%initialize(n, x_min, x_max, SLL_PERIODIC )
-  !call cubic_nonunif_spline%initialize(n, x_min, x_max, SLL_PERIODIC )
+print*, 'Cubic spline interpolation'
+call spline%initialize(n, x_min, x_max, SLL_PERIODIC )
 
-  interp =>  spline
-!  interp =>  cubic_nonunif_spline
-  out = interp%interpolate_array(n, data, interpolation_points)
+interp =>  spline
+out = interp%interpolate_array(n, data, points)
 
+error = maxval(abs(data_interp - out))
+print*, '    error=',error
 
-  error = 0.0_f64
-  do i=1,n   
-     error = max(error, abs(data_interp(i) - out(i)))
-    ! print*, i, interpolation_points(i), data_interp(i) - out(i)
-  end do
-  print*, '    error=',error
-
-!!$  print*, 'WENO interpolation'
-!!$  weno = new_WENO_1D( n, x_min, x_max )
-!!$  interp => weno
-!!$  out = interp%interpolate_array(n, data, interpolation_points)
-!!$  !print*, 'delta ', delta , interp%weno%delta, x_min, coordinates_d(1), x_max, coordinates_d(n)
-!!$  error = 0.0_f64
-!!$  do i=1,n   
-!!$     error = max(error, abs(data_interp(i) - out(i)))
-!!$     !print*, i, interpolation_points(i), data_interp(i) - out(i)
-!!$  end do
-!!$  
-!!$  print*, '    error=',error
-
-  print *, 'Successful, exiting program.'
-  print *, 'PASSED'
+print *, 'Successful, exiting program.'
+print *, 'PASSED'
 
 end program cubic_spline_interpolator_1d
