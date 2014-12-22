@@ -4,6 +4,9 @@ SET(LIBS sll_interpolators sll_remap sll_file_io_parallel sll_file_io)
 ADD_EXECUTABLE(advection_1d1d_cubic_splines advection_1d1d_cubic_splines.F90)
 TARGET_LINK_LIBRARIES(advection_1d1d_cubic_splines ${LIBS})
 
+ADD_EXECUTABLE(advection_1d1d_quintic_splines advection_1d1d_quintic_splines.F90)
+TARGET_LINK_LIBRARIES(advection_1d1d_quintic_splines ${LIBS})
+
 ADD_EXECUTABLE(advection_1d1d_arbitrary_degree_splines advection_1d1d_arbitrary_degree_splines.F90)
 TARGET_LINK_LIBRARIES(advection_1d1d_arbitrary_degree_splines ${LIBS})
 

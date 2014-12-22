@@ -255,7 +255,6 @@ if ( xx - x(i) == 0.0_f64 ) then
 
 else
 
-
   cc   = cf(1,i-1)-cf(1,i)
   h    = x(i)-x(i-1)
   xn   = xx-x(i-1)
@@ -321,6 +320,7 @@ sll_real64, intent(in)    :: dx         !< vector of abscissae
 sll_real64, intent(inout) :: cf(1:3,n)  !< ordinates, first and second derivatives
 sll_real64, intent(out)   :: h(6*n-3)   !< auxiliary vector
 
+
 h = 0.0_f64
 
 as  = 64.0_f64/ 3.0_f64
@@ -337,22 +337,24 @@ im  = 0
 !Forward elimination procedure for Choleskys algorithm
 !applied to block-tridiagonal systems of algebraic equations.
 
-i = 1
-goto 15
+do i = 1, n
 
- 5 continue
+   if (i>1) then
 
-   di1 = ds1
-   di2 = ds3
-   di3 = ds2
-   di4 = ds4
+     sf1 = fp4
+     sf2 = fp3*q1*a
 
-10 continue
+   end if
 
-   sf1 = fp4
-   sf2 = fp3*q1*a
+   if (i>2) then
 
-15 continue
+     di1 = ds1
+     di2 = ds3
+     di3 = ds2
+     di4 = ds4
+
+   end if
+
 
    dp1 = 64*p3
    dp2 = 12*p2*q1*a
@@ -377,10 +379,10 @@ goto 15
    q1 = p1
    q2 = p2
 
-   if (i < n-1) then
+!   if (i < n-1) then
      q1 = 1.0_f64 / dx
      q2 = q1*q1
-   end if
+!   end if
 
    i1 = modulo(i-1,n-1)+1
    i2 = modulo(i,n-1)+1
@@ -424,7 +426,7 @@ goto 15
 
    det=dp1*dp4-dp2*dp3
 
-   if (i/=1) then
+   if (i>1) then
 
      sf1=sf1+di1*h(im-5)+di3*h(im-4)
      sf2=sf2+di2*h(im-5)+di4*h(im-4)
@@ -434,22 +436,19 @@ goto 15
    h(im+1)=( dp4*sf1-dp3*sf2)/det
    h(im+2)=(-dp2*sf1+dp1*sf2)/det
 
-   if(i>=n) goto 65
+   if (i<n) then
 
-   h(im+3)=(+dp4*ds1-dp3*ds2)/det
-   h(im+4)=(-dp2*ds1+dp1*ds2)/det
-   h(im+5)=(+dp4*ds3-dp3*ds4)/det
-   h(im+6)=(-dp2*ds3+dp1*ds4)/det
-   im=im+6
-   i =i +1
-   
-   if (i ==2) goto 10
+     h(im+3)=(+dp4*ds1-dp3*ds2)/det
+     h(im+4)=(-dp2*ds1+dp1*ds2)/det
+     h(im+5)=(+dp4*ds3-dp3*ds4)/det
+     h(im+6)=(-dp2*ds3+dp1*ds4)/det
+     im=im+6
 
-   goto 5
+   end if
+
+ end do
 
    !Backward substitution and solution to the algebraic system
-
-65 continue
 
    cf(2,n) = -h(im+1)
    dpd1    =  h(im+2)*a

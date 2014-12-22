@@ -2,6 +2,7 @@ program test_quintic_splines
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_constants.h"
+#include "sll_utilities.h"
 
 use sll_quintic_splines
 implicit none
@@ -66,9 +67,12 @@ end do
 do i = 1, n
 
   cf(1,i) = sin(2*sll_pi*x(i))
-  cf(2,i) = cos(2*sll_pi*x(i))
 
 end do
+
+call apply_fd(5, 2, x(n-4:n), cf(1,n-4:n), x(n), cf(1:3,1))
+
+cf(:,n) = cf(:,1)
 
 call inspl5_periodic(n,dx,cf,h)
 
@@ -87,6 +91,7 @@ print*, 'PASSED'
 contains
 
 function g(x)
+
   sll_real64 :: x
   sll_real64 :: g
 
@@ -95,6 +100,7 @@ function g(x)
 end function g
 
 function dg(x)
+
   sll_real64 :: x
   sll_real64 :: dg
 
@@ -103,6 +109,7 @@ function dg(x)
 end function dg
 
 function ddg(x)
+
   sll_real64 :: x
   sll_real64 :: ddg
 
