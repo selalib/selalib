@@ -277,10 +277,11 @@ contains
     logical,    dimension(:),   allocatable    :: cond1
     logical,    dimension(:),   allocatable    :: cond2
     logical,    dimension(:),   allocatable    :: cond3
-    sll_int32,  dimension(:),   allocatable    :: cond123
+    sll_int32,  dimension(:),   allocatable    :: indices
     sll_real64, dimension(3,10)                :: fekete_tri
     sll_real64, dimension(2, 3)                :: vertices_coo
-
+    sll_int32,  dimension(1)                   :: temp
+    
     sll_int32  :: i
     sll_int32  :: ierr
     sll_int32  :: ntri
@@ -302,11 +303,12 @@ contains
        SLL_ALLOCATE(cond1(num_fekete), ierr)
        SLL_ALLOCATE(cond2(num_fekete), ierr)
        SLL_ALLOCATE(cond3(num_fekete), ierr)
-       SLL_ALLOCATE(cond123(num_fekete), ierr)
+       SLL_ALLOCATE(indices(num_fekete), ierr)
 
        ! Initialitazion tables and counter
        knots(1:3, 1:num_fekete) = 0._f64
        LM(1:mesh%num_triangles, 1:10) = 0
+       indices(1:num_fekete) = (/ (i, i = 1,num_fekete) /)
        next = 1
 
        !We go through each cell (triangle) of the hexagon
@@ -330,17 +332,20 @@ contains
              cond3 = abs(knots(3,:)-fekete_tri(3,i)).le.0.1E-14
              if ( .not.( ANY(cond1.and.cond2.and.cond3) ) ) then
                 knots(:, next) = fekete_tri(:, i)
-                next = next + 1
                 LM(ntri, i) = next
+                next = next + 1
              else
-                cond123 = transfer(cond1.and.cond2.and.cond3, cond123, num_fekete)
-                ! LM(ntri, i) = MAXLOC(cond123)
-                ! where((cond1.and.cond2.and.cond3) .eqv. .true.)
+                temp = MAXLOC(indices, MASK = cond1.and.cond2.and.cond3)
+                LM(ntri, i) = temp(1)
              end if
           end do
        end do
-
     end if
+
+    ! do ntri = 1,mesh%num_triangles
+    !    print *, ntri
+    !    print *, LM(ntri, :)
+    ! end do
   end subroutine initialize_knots_hexmesh
 
   !---------------------------------------------------------------------------
@@ -400,4 +405,5 @@ contains
     close(out_unit)
 
   end subroutine write_quadrature
+
 end module fekete_integration
