@@ -41,44 +41,37 @@ private
 !> Quintic spline interpolator 1d
 type, extends(sll_interpolator_1d_base), public :: sll_quintic_spline_interpolator_1d
 
-  sll_real64, dimension(:),   pointer  :: x         !< points position
-  sll_int32                            :: n         !< number of points
-  sll_int32                            :: ind1      !< number of points
-  sll_int32                            :: indn      !< number of points
-  sll_real64, dimension(:,:), pointer  :: cf        !< values and derivatives
-  sll_real64, dimension(:),   pointer  :: h         !< work array
-  sll_int32                            :: bc_type   !< boundary condition
-  sll_real64                           :: xmin
-  sll_real64                           :: xmax
+  sll_real64, dimension(:),   pointer  :: x        !< points position
+  sll_int32                            :: n        !< number of points
+  sll_int32                            :: ind1     !< number of points
+  sll_int32                            :: indn     !< number of points
+  sll_real64, dimension(:,:), pointer  :: cf       !< values and derivatives
+  sll_real64, dimension(:),   pointer  :: h        !< work array
+  sll_int32                            :: bc_min   !< boundary condition
+  sll_int32                            :: bc_max   !< boundary condition
+  sll_real64                           :: x_min
+  sll_real64                           :: x_max
+  sll_real64                           :: value_min
+  sll_real64                           :: value_max
+  sll_real64                           :: slope_min
+  sll_real64                           :: slope_max
+  sll_real64                           :: dx
 
 contains
 
-  !> PLEASE ADD DOCUMENTATION
-  procedure, pass(interpolator) :: initialize => initialize_interpolator
-  !> PLEASE ADD DOCUMENTATION
-  procedure :: compute_interpolants => compute_interpolants_1d
-  !> PLEASE ADD DOCUMENTATION
-  procedure :: interpolate_value => interpolate_value_1d
-  !> PLEASE ADD DOCUMENTATION
-  procedure :: interpolate_derivative_eta1 => interpolate_deriv1_1d
-  !> PLEASE ADD DOCUMENTATION
-  procedure :: interpolate_array_values => interpolate_values_1d
-  !> PLEASE ADD DOCUMENTATION
-  procedure :: interpolate_pointer_values => interpolate_pointer_values_1d
-  !> PLEASE ADD DOCUMENTATION
-  procedure :: interpolate_array_derivatives => interpolate_derivatives_1d
-  !> PLEASE ADD DOCUMENTATION
-  procedure :: interpolate_pointer_derivatives => interpolate_pointer_derivatives_1d
-  !> PLEASE ADD DOCUMENTATION
-  procedure :: interpolate_array => spline_interpolate1d
-  !> PLEASE ADD DOCUMENTATION
-  procedure :: interpolate_array_disp => spline_interpolate1d_disp
-  !> PLEASE ADD DOCUMENTATION
-  procedure :: reconstruct_array => reconstruct_array_1d 
-  !> PLEASE ADD DOCUMENTATION
-  procedure :: set_coefficients => set_coefficients_1d
-  !> PLEASE ADD DOCUMENTATION
-  procedure :: get_coefficients => get_coefficients_1d
+  procedure :: initialize 
+  procedure :: compute_interpolants 
+  procedure :: interpolate_value 
+  procedure :: interpolate_derivative_eta1 
+  procedure :: interpolate_array_values 
+  procedure :: interpolate_pointer_values 
+  procedure :: interpolate_array_derivatives 
+  procedure :: interpolate_pointer_derivatives 
+  procedure :: interpolate_array 
+  procedure :: interpolate_array_disp 
+  procedure :: reconstruct_array 
+  procedure :: set_coefficients 
+  procedure :: get_coefficients
 
 end type sll_quintic_spline_interpolator_1d
 
@@ -97,233 +90,62 @@ public sll_delete
 
 contains  ! ****************************************************************
 
-function spline_interpolate1d(this,        &
-                              num_points,  &
-                              data,        &
-                              coordinates) result(f_interp)
-
-sll_interpolator,  intent(in)        :: this
-sll_int32,  intent(in)               :: num_points
-sll_real64, dimension(:), intent(in) :: coordinates
-sll_real64, dimension(:), intent(in) :: data
-sll_real64, dimension(num_points)    :: f_interp
-
-SLL_WARNING("interpolate_array is not implemented")
-
-end function
-
-!---------------------------------------------------------------------------
-
-function spline_interpolate1d_disp(this,        &
-                                   num_points,  &
-                                   data,        &
-                                   alpha) result(f_interp)
-
-sll_interpolator,                 intent(in) :: this
-
-sll_real64, intent(in)                       :: alpha
-sll_real64, dimension(:),         intent(in) :: data
-sll_int32,                        intent(in) :: num_points
-sll_real64, dimension(num_points)            :: f_interp
-sll_real64, dimension(num_points)            :: coordinates
-
-sll_real64                           :: delta
-sll_real64                           :: length
-sll_real64                           :: xmin
-sll_real64                           :: xmax
-sll_int32                            :: i
-sll_real64                           :: x
-
-do i = 1, num_points
-  x = coordinates(i) - alpha
-  SLL_ASSERT(x >= this%xmin)
-  SLL_ASSERT(x <= this%xmax)
-end do
-
-SLL_WARNING("interpolate_array_disp is not implemented")
-
-end function
-
-!---------------------------------------------------------------------------
-
-subroutine compute_interpolants_1d( interpolator, &
-                                    data_array,   &
-                                    eta_coords,   &
-                                    size_eta_coords)
-
-sll_interpolator, intent(inout)                :: interpolator
-sll_real64, dimension(:), intent(in)           :: data_array
-sll_real64, dimension(:), intent(in), optional :: eta_coords
-sll_int32, intent(in),optional                 :: size_eta_coords
-
-if(present(eta_coords) .or. present(size_eta_coords))then
-
-  SLL_ERROR('Not implemented yet')
-
-else
-
-  call inspl5(interpolator%n,    &
-              interpolator%x,    &
-              interpolator%ind1, &
-              interpolator%indn, &
-              interpolator%cf,   &
-              interpolator%h)
-
-endif
-
-end subroutine compute_interpolants_1d
-
-!---------------------------------------------------------------------------
-
-subroutine interpolate_values_1d( interpolator,        &
-                                  num_pts,             &
-                                  vals_to_interpolate, &
-                                  output_array )
-
-  sll_interpolator,  intent(in)  :: interpolator
-  sll_int32,         intent(in)  :: num_pts
-  sll_real64,        intent(in)  :: vals_to_interpolate(:)
-  sll_real64,        intent(out) :: output_array(:)
-
-
-end subroutine interpolate_values_1d
-
-!---------------------------------------------------------------------------
-
-subroutine interpolate_pointer_values_1d( interpolator,        &
-                                          num_pts,             &
-                                          vals_to_interpolate, &
-                                          output )
-
-  sll_interpolator,    intent(in)    :: interpolator
-  sll_int32,           intent(in)    :: num_pts
-  sll_real64, pointer                :: vals_to_interpolate(:)
-  sll_real64, pointer                :: output(:)
-
-
-end subroutine interpolate_pointer_values_1d
-
-!---------------------------------------------------------------------------
-
-subroutine interpolate_derivatives_1d( interpolator,        &
-                                       num_pts,             &
-                                       vals_to_interpolate, &
-                                       output_array )
-
-  sll_interpolator,         intent(in)  :: interpolator
-  sll_int32,                intent(in)  :: num_pts
-  sll_real64, dimension(:), intent(in)  :: vals_to_interpolate
-  sll_real64, dimension(:), intent(out) :: output_array
-
-
-end subroutine interpolate_derivatives_1d
-
-!---------------------------------------------------------------------------
-
-subroutine interpolate_pointer_derivatives_1d( interpolator,        &
-                                               num_pts,             &
-                                               vals_to_interpolate, &
-                                               output )
-
-  sll_interpolator,  intent(in)       :: interpolator
-  sll_int32,  intent(in)              :: num_pts
-  sll_real64, dimension(:), pointer   :: vals_to_interpolate
-  sll_real64, dimension(:), pointer   :: output
-
-
-end subroutine interpolate_pointer_derivatives_1d
-
-!---------------------------------------------------------------------------
-
-function interpolate_value_1d( interpolator, eta1 ) result(val)
-
-  sll_interpolator, intent(in) :: interpolator
-  sll_real64,       intent(in) :: eta1
-  sll_real64                   :: val
-
-  sll_real64                   :: f(3)
-
-  call splin5(interpolator%n,  &
-              interpolator%x,  &
-              interpolator%cf, &
-              eta1,            &
-              f(1:3))
-
-  val = f(1)
-
-end function
-
-!---------------------------------------------------------------------------
-
-function interpolate_deriv1_1d( interpolator, eta1 ) result(val)
-  sll_interpolator, intent(in) :: interpolator
-  sll_real64             :: val
-  sll_real64, intent(in) :: eta1
-
-  
-end function interpolate_deriv1_1d
-
-!---------------------------------------------------------------------------
 
 function new_quintic_spline_interpolator_1d( num_points, &
-                                             xmin,       &
-                                             xmax,       &
-                                             bc_type,    &
-                                             slope_left, &
-                                             slope_right ) result(res)
+                                             x_min,      &
+                                             x_max,      &
+                                             bc_min,     &
+                                             bc_max ) result(res)
 
-  sll_interpolator,  pointer           :: res
+  sll_interpolator,  pointer       :: res
 
-  sll_int32,  intent(in)               :: num_points
-  sll_real64, intent(in)               :: xmin
-  sll_real64, intent(in)               :: xmax
-  sll_int32,  intent(in)               :: bc_type
-  sll_real64, intent(in), optional     :: slope_left
-  sll_real64, intent(in), optional     :: slope_right
+  sll_int32,  intent(in)           :: num_points
+  sll_real64, intent(in)           :: x_min
+  sll_real64, intent(in)           :: x_max
+  sll_int32,  intent(in)           :: bc_min
+  sll_int32,  intent(in)           :: bc_max
 
-  sll_int32                            :: ierr
-
-  call initialize_1d_interpolator( res,        &
-                                   num_points, &
-                                   xmin,       &
-                                   xmax,       &
-                                   bc_type,    &
-                                   slope_left, &
-                                   slope_right )
+  call initialize( res,        &
+                   num_points, &
+                   x_min,      &
+                   x_max,      &
+                   bc_min,     &
+                   bc_max)
 
 end function new_quintic_spline_interpolator_1d
 
 !---------------------------------------------------------------------------
 
-subroutine initialize_interpolator( interpolator, &
-                                    num_points,   &
-                                    xmin,         &
-                                    xmax,         &
-                                    bc_type,      &
-                                    slope_left,   &
-                                    slope_right )
+subroutine initialize( interpolator, &
+                       num_points,   &
+                       x_min,        &
+                       x_max,        &
+                       bc_min,       &
+                       bc_max)
 
-  sll_interpolator,  intent(inout)     :: interpolator
+  sll_interpolator,  intent(inout) :: interpolator
 
-  sll_int32,  intent(in)               :: num_points
-  sll_real64, intent(in)               :: xmin
-  sll_real64, intent(in)               :: xmax
-  sll_int32,  intent(in)               :: bc_type
-  sll_real64, intent(in), optional     :: slope_left
-  sll_real64, intent(in), optional     :: slope_right
-  sll_int32                            :: ierr
-  sll_int32  :: i
-  sll_real64 :: delta
+  sll_int32,  intent(in)           :: num_points
+  sll_real64, intent(in)           :: x_min
+  sll_real64, intent(in)           :: x_max
+  sll_int32,  intent(in)           :: bc_min
+  sll_int32,  intent(in)           :: bc_max
+  sll_int32                        :: ierr
+  sll_int32                        :: i
+  sll_real64                       :: dx
 
-  interpolator%n = num_points
+  interpolator%n      = num_points
+  interpolator%x_min  = x_min
+  interpolator%x_max  = x_max
+  interpolator%bc_min = bc_min
+  interpolator%bc_max = bc_max
 
   SLL_ALLOCATE(interpolator%x(num_points),ierr)
-  delta = (xmax - xmin) / (num_points - 1)
+  dx = (x_max - x_min) / (num_points - 1)
   do i = 1, num_points
-     interpolator%x(i) = xmin + (i-1)*delta
+     interpolator%x(i) = x_min + (i-1)*dx
   end do
-
-  interpolator%bc_type = bc_type
+  interpolator%dx = dx
 
   interpolator%ind1 = -1
   interpolator%indn = -1
@@ -332,22 +154,291 @@ subroutine initialize_interpolator( interpolator, &
 
   SLL_ALLOCATE(interpolator%cf(3,num_points),ierr)
 
+  interpolator%value_min = 0.0_f64
+  interpolator%value_max = 0.0_f64
+  interpolator%slope_min = 0.0_f64
+  interpolator%slope_max = 0.0_f64
+
 end subroutine
+
+!> Initialization of the boundary for interpolator arbitrary degree splines 1d.
+!> @param[in]  value_min  contains the value in the min
+!> @param[in]  value_max contains the value in the max
+!> @param[in]  slope_min  contains the value in the min for derivative
+!> @param[in]  slope_max contains the value in the max for derivative
+!> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_1d
+subroutine set_values_at_boundary( interpolator, &
+                                   value_min,    &
+                                   value_max,    &
+                                   slope_min,    &
+                                   slope_max)
+
+sll_interpolator, intent(inout)  :: interpolator
+
+sll_real64, intent(in), optional :: value_min
+sll_real64, intent(in), optional :: value_max
+sll_real64, intent(in), optional :: slope_min
+sll_real64, intent(in), optional :: slope_max
+
+sll_int32 :: n
+
+if (present(value_min)) interpolator%value_min = value_min
+if (present(value_max)) interpolator%value_max = value_max
+if (present(slope_min)) interpolator%slope_min = slope_min
+if (present(slope_max)) interpolator%slope_max = slope_max
+
+n = interpolator%n
+
+interpolator%cf(1,1) = interpolator%value_min
+interpolator%cf(1,n) = interpolator%value_max
+interpolator%cf(2,1) = interpolator%slope_min
+interpolator%cf(2,n) = interpolator%slope_max 
+
+
+end subroutine set_values_at_boundary
+
+!--------------------------------------------------------------------------
+
+
+subroutine compute_interpolants( interpolator, &
+                                 data_array,   &
+                                 eta_coords,   &
+                                 size_eta_coords)
+
+sll_interpolator, intent(inout)        :: interpolator
+sll_real64,       intent(in)           :: data_array(:)
+sll_real64,       intent(in), optional :: eta_coords(:)
+sll_int32,        intent(in), optional :: size_eta_coords
+sll_int32                              :: n
+
+!if(present(eta_coords) .or. present(size_eta_coords))then
+!
+!  SLL_ERROR('Not implemented')
+!
+!else
+!
+!  SLL_ASSERT(size(data_array) == interpolator%n)
+!  interpolator%cf(1,:) = data_array
+!
+!  if (interpolator%bc_min == SLL_PERIODIC .or. &
+!      interpolator%bc_max == SLL_PERIODIC) then
+!
+!    n = interpolator%n
+!    call apply_fd(5,                        &
+!                  2,                        &
+!                  interpolator%x(n-4:n),    &
+!                  interpolator%cf(1,n-4:n), &
+!                  interpolator%x_max,       &
+!                  interpolator%cf(1:3,1))
+!
+!    interpolator%cf(:,n) = interpolator%cf(:,1)
+!
+!    call inspl5_periodic(interpolator%n,  &
+!                         interpolator%dx, &
+!                         interpolator%cf, &
+!                         interpolator%h)
+!
+!  else
+!
+    call inspl5(interpolator%n,    &
+                interpolator%x,    &
+                interpolator%ind1, &
+                interpolator%indn, &
+                interpolator%cf,   &
+                interpolator%h)
+!  end if
+
+!endif
+
+end subroutine compute_interpolants
 
 !---------------------------------------------------------------------------
 
-function reconstruct_array_1d(this, num_points, data) result(res)
+function interpolate_value( interpolator, eta1 ) result(val)
+
+  sll_interpolator, intent(in) :: interpolator
+  sll_real64,       intent(in) :: eta1
+  sll_real64                   :: val
+  sll_real64                   :: res
+
+  if (interpolator%bc_min == SLL_PERIODIC .or. &
+      interpolator%bc_max == SLL_PERIODIC) then
+
+    if ( eta1 < interpolator%x_min) then
+      res = eta1 + interpolator%x_max-interpolator%x_min
+    else if ( eta1 > interpolator%x_max) then
+      res = eta1 + interpolator%x_min-interpolator%x_max
+    end if
+
+  end if
+
+  call splin5(interpolator%n,  &
+              interpolator%x,  &
+              interpolator%cf, &
+              res,             &
+              0,               &
+              val)
+
+end function
+
+!---------------------------------------------------------------------------
+
+function interpolate_array(this,        &
+                           num_points,  &
+                           data,        &
+                           coordinates) result(f_interp)
+
+sll_interpolator,  intent(in)        :: this
+sll_int32,  intent(in)               :: num_points
+sll_real64, dimension(:), intent(in) :: coordinates
+sll_real64, dimension(:), intent(in) :: data
+sll_real64, dimension(num_points)    :: f_interp
+
+sll_real64, allocatable :: c(:,:)
+sll_real64, allocatable :: h(:)
+sll_int32               :: ierr
+sll_int32               :: i
+
+SLL_CLEAR_ALLOCATE(c(1:3,1:this%n),ierr)
+SLL_CLEAR_ALLOCATE(h(1:6*this%n-3),ierr)
+
+SLL_ASSERT(size(data) == this%n)
+c(1,:) = data
+
+call inspl5(this%n, this%x, this%ind1, this%indn, c, h)
+do i = 1, num_points
+  call splin5(this%n, this%x, c, coordinates(i), 0, f_interp(i))
+end do
+
+end function
+
+!---------------------------------------------------------------------------
+
+subroutine interpolate_pointer_derivatives( interpolator,        &
+                                            num_pts,             &
+                                            vals_to_interpolate, &
+                                            output )
+
+  sll_interpolator,  intent(in)       :: interpolator
+  sll_int32,  intent(in)              :: num_pts
+  sll_real64, dimension(:), pointer   :: vals_to_interpolate
+  sll_real64, dimension(:), pointer   :: output
+
+!  call interpolate_derivatives_eta1( interpolator,        &
+!                                   num_pts,             &
+!                                   vals_to_interpolate, &
+!                                   output )
+
+  print*, num_pts, interpolator%n
+  print*, vals_to_interpolate
+  output = 0.0_f64
+  SLL_ERROR('not implemented')
+
+end subroutine interpolate_pointer_derivatives
+
+!---------------------------------------------------------------------------
+
+function interpolate_derivative_eta1( interpolator, eta1 ) result(val)
+
+  sll_interpolator, intent(in) :: interpolator
+  sll_real64             :: val
+  sll_real64, intent(in) :: eta1
+
+  call splin5(interpolator%n,  &
+              interpolator%x,  &
+              interpolator%cf, &
+              eta1,            &
+              1,               &
+              val)
+
+end function interpolate_derivative_eta1
+
+
+!---------------------------------------------------------------------------
+
+function reconstruct_array(this, num_points, data) result(res)
 
   sll_interpolator, intent(in) :: this
   sll_int32, intent(in)                :: num_points
   sll_real64, dimension(:), intent(in) :: data
   sll_real64, dimension(num_points)    :: res
 
+  print*, this%n, num_points
+  print*, size(data)
   res(:) = 0.0_f64
 
   SLL_WARNING('#warning reconstruct_array is dummy')
 
-end function reconstruct_array_1d
+end function reconstruct_array
+
+!---------------------------------------------------------------------------
+
+subroutine interpolate_array_values( interpolator,        &
+                                     num_pts,             &
+                                     vals_to_interpolate, &
+                                     output_array )
+
+  sll_interpolator,  intent(in)  :: interpolator
+  sll_int32,         intent(in)  :: num_pts
+  sll_real64,        intent(in)  :: vals_to_interpolate(:)
+  sll_real64,        intent(out) :: output_array(:)
+
+  sll_int32                      :: i
+
+  do i = 1, num_pts
+    output_array(i) = interpolate_value(interpolator,vals_to_interpolate(i))
+  end do
+
+end subroutine interpolate_array_values
+
+!---------------------------------------------------------------------------
+
+subroutine interpolate_pointer_values( interpolator,        &
+                                       num_pts,             &
+                                       vals_to_interpolate, &
+                                       output )
+
+  sll_interpolator,    intent(in) :: interpolator
+  sll_int32,           intent(in) :: num_pts
+  sll_real64, pointer             :: vals_to_interpolate(:)
+  sll_real64, pointer             :: output(:)
+  sll_int32                       :: i
+
+  do i = 1, num_pts
+    output(i) = interpolate_value(interpolator,vals_to_interpolate(i))
+  end do
+
+end subroutine interpolate_pointer_values
+
+!---------------------------------------------------------------------------
+
+subroutine interpolate_array_derivatives( interpolator,        &
+                                          num_pts,             &
+                                          vals_to_interpolate, &
+                                          output_array )
+
+  sll_interpolator,         intent(in)  :: interpolator
+  sll_int32,                intent(in)  :: num_pts
+  sll_real64, dimension(:), intent(in)  :: vals_to_interpolate
+  sll_real64, dimension(:), intent(out) :: output_array
+
+  sll_real64, dimension(:,:), allocatable :: c
+  sll_real64, dimension(:),   allocatable :: h
+  sll_int32                               :: ierr
+  sll_int32                               :: i
+
+  SLL_ALLOCATE(c(3,num_pts),ierr)
+  SLL_ALLOCATE(h(6*num_pts-3),ierr)
+  
+  c(1,:) = vals_to_interpolate
+
+  call inspl5(num_pts, interpolator%x, interpolator%ind1, interpolator%indn, c, h)
+
+  do i = 1, num_pts
+    call splin5(num_pts, interpolator%x, c, interpolator%x(i), 1, output_array(i))
+  end do
+
+end subroutine interpolate_array_derivatives
 
 !---------------------------------------------------------------------------
 
@@ -355,12 +446,15 @@ subroutine delete_1d( this )
 
   sll_interpolator :: this
 
+  deallocate(this%x)
+  deallocate(this%cf)
+  deallocate(this%h)
 
 end subroutine delete_1d
 
 !---------------------------------------------------------------------------
 
-subroutine set_coefficients_1d( interpolator, coeffs )
+subroutine set_coefficients( interpolator, coeffs )
 
   sll_interpolator,  intent(inout) :: interpolator
   sll_real64, dimension(:), intent(in), optional :: coeffs
@@ -369,20 +463,47 @@ subroutine set_coefficients_1d( interpolator, coeffs )
     print*, interpolator%n
   end if
 
-  SLL_ERROR('set_coefficients_1d() not implemented yet.')
+  SLL_ERROR('set_coefficients() not implemented yet.')
 
-end subroutine set_coefficients_1d
+end subroutine set_coefficients
 
 !---------------------------------------------------------------------------
 
-function get_coefficients_1d(interpolator)
+function get_coefficients(interpolator)
 
   sll_interpolator,  intent(in)      :: interpolator
-  sll_real64, dimension(:), pointer  :: get_coefficients_1d
+  sll_real64, dimension(:), pointer  :: get_coefficients
 
-  get_coefficients_1d = interpolator%x
-  SLL_ERROR('get_coefficients_1d() not been implemented yet.')
+  get_coefficients = interpolator%x
+  SLL_ERROR('get_coefficients() not been implemented yet.')
 
-end function get_coefficients_1d
+end function get_coefficients
+
+!---------------------------------------------------------------------------
+
+function interpolate_array_disp(this,        &
+                                num_points,  &
+                                data,        &
+                                alpha) result(f_interp)
+
+sll_interpolator, intent(in) :: this
+sll_real64,       intent(in) :: alpha
+sll_real64,       intent(in) :: data(:)
+sll_int32,        intent(in) :: num_points
+sll_real64                   :: f_interp(num_points)
+sll_int32                    :: i
+sll_real64                   :: x
+
+!call compute_interpolants( this, data )
+print*, size(data)
+
+do i = 1, num_points
+  x = this%x(i) - alpha
+  f_interp(i) =  interpolate_value( this, x ) 
+end do
+
+SLL_ERROR('Not implemented')
+
+end function
 
 end module sll_module_quintic_spline_interpolator_1d
