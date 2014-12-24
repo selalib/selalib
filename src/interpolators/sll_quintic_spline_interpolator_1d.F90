@@ -299,8 +299,8 @@ sll_real64, allocatable :: h(:)
 sll_int32               :: ierr
 sll_int32               :: i
 
-SLL_ALLOCATE(c(3,this%n),ierr)
-SLL_ALLOCATE(h(6*this%n-3),ierr)
+SLL_CLEAR_ALLOCATE(c(1:3,1:this%n),ierr)
+SLL_CLEAR_ALLOCATE(h(1:6*this%n-3),ierr)
 
 SLL_ASSERT(size(data) == this%n)
 c(1,:) = data
