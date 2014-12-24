@@ -1073,7 +1073,7 @@ contains
     if (edge_index3 == -1 ) print*, "problem in get_edge_index  l", __LINE__
 
   end subroutine get_edge_index
-
+  
 
   subroutine display_hex_mesh_2d(mesh)
     ! Displays mesh information on the terminal
@@ -1118,6 +1118,7 @@ contains
     close(out_unit)
   end subroutine write_hex_mesh_2d
 
+  
   subroutine write_field_hex_mesh(mesh, field, name)
     ! Writes the points cartesian coordinates and
     ! field(vector) values in a file named "name"
@@ -1143,6 +1144,7 @@ contains
     close(out_unit)
   end subroutine write_field_hex_mesh
 
+  
   subroutine write_field_hex_mesh_xmf(mesh, field, name)
     ! Writes the points cartesian coordinates and
     ! field(vector) values in a file named "name"
@@ -1202,11 +1204,11 @@ contains
 
     open( out_unit, file=mtv_file)
     
-    !--- Trace du maillage ---
+    !--- Drawing mesh ---
     
     write(out_unit,"(a)")"$DATA=CURVE3D"
     write(out_unit,"(a)")"%equalscale=T"
-    write(out_unit,"(a)")"%toplabel='Maillage' "
+    write(out_unit,"(a)")"%toplabel='Mesh' "
     
     do i = 1, mesh%num_triangles
     
@@ -1234,11 +1236,11 @@ contains
     
     end do
     
-    !--- Numeros des noeuds et des triangles
+    !--- Number of knots and triangles
     
     write(out_unit,"(a)")"$DATA=CURVE3D"
     write(out_unit,"(a)")"%equalscale=T"
-    write(out_unit,"(a)")"%toplabel='Numeros des noeuds et des triangles' "
+    write(out_unit,"(a)")"%toplabel='Numeber of knots and triangles' "
     
     do i = 1, mesh%num_triangles
        write(out_unit,"(3f10.5)")coor(:,ntri(1,i)),0.
@@ -1276,11 +1278,11 @@ contains
        write(out_unit,"(a)")"'"
     end do
     
-    !--- Numeros des noeuds 
+    !--- Knots' number
     
     write(out_unit,*)"$DATA=CURVE3D"
     write(out_unit,*)"%equalscale=T"
-    write(out_unit,*)"%toplabel='Numeros des noeuds' "
+    write(out_unit,*)"%toplabel='Knots number' "
     
     do i = 1, mesh%num_triangles
        write(out_unit,"(3f10.5)")coor(:,ntri(1,i)),0.
@@ -1302,11 +1304,11 @@ contains
        write(out_unit,"(a)")"'"
     end do
     
-    !--- Numeros des triangles
+    !--- Triangles' number
     
     write(out_unit,*)"$DATA=CURVE3D"
     write(out_unit,*)"%equalscale=T"
-    write(out_unit,*)"%toplabel='Numeros des triangles' "
+    write(out_unit,*)"%toplabel='Triangles number' "
     
     do i = 1, mesh%num_triangles
        write(out_unit,"(3f10.5)")coor(:,ntri(1,i)),0.
