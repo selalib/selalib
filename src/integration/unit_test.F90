@@ -7,6 +7,7 @@ program integration_tester
 use gauss_legendre_integration
 use gauss_lobatto_integration
 use fekete_integration
+use sll_box_splines, only: write_connectivity
 use test_function_module, only: one, test_func, one_2D, test_func_2D
 
 implicit none
@@ -155,6 +156,7 @@ call initialize_knots_hexmesh(rule, mesh, knots, LM)
 
 ! Writing file for CAID:
 call write_quadrature(1)
+call write_connectivity(mesh, 1)
 ! ---------------------------------------
 
 
