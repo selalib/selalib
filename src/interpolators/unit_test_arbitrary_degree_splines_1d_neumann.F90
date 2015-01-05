@@ -35,10 +35,10 @@ x = x * (XMAX-XMIN)
   
 call interpolator%initialize(NPTS,XMIN,XMAX,SLL_NEUMANN,SLL_NEUMANN,SPL_DEG)
 
-call set_values_at_boundary1d(interpolator,          &
-                              value_left=1.0_f64,    &
-                              value_right=1.0_f64,   &
-                              slope_left=0.0_f64,  &
+call set_values_at_boundary1d(interpolator,         &
+                              value_left =1.0_f64,  &
+                              value_right=1.0_f64,  &
+                              slope_left =0.0_f64,  &
                               slope_right=0.0_f64)
 
 call interpolator%compute_interpolants(y)
@@ -73,12 +73,14 @@ if(( sqrt(normL2) <= 1e-6) .AND. &
    ( sqrt(normH1) <= 1e-4)) then
   print *, 'PASSED'
 else
-  print *, 'PASSED'
+  print *, 'FAILED'
 end if
 
 call sll_delete(interpolator)
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 function f(x)
 

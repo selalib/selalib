@@ -25,8 +25,8 @@ TARGET_LINK_LIBRARIES( sll_interpolators sll_splines
 
 # Ctests
 IF(BUILD_TESTING)
-  SLL_TEST( cubic_spline_interpolator_1d sll_interpolators )
-  SLL_TEST( cubic_spline_interpolator_2d sll_interpolators )
+  SLL_TEST( cubic_spline_interpolator_1d            sll_interpolators )
+  SLL_TEST( cubic_spline_interpolator_2d            sll_interpolators )
   SLL_TEST( arbitrary_degree_spline_interpolator_1d sll_interpolators sll_file_io )
   SLL_TEST( arbitrary_degree_spline_interpolator_2d sll_interpolators sll_file_io )
   SLL_TEST( periodic_interpolator_1d sll_interpolators )
