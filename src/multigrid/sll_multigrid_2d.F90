@@ -10,16 +10,16 @@ implicit none
 
 type, public :: multigrid_2d
 
-   sll_int32  :: sx
-   sll_int32  :: ex
-   sll_int32  :: sy
-   sll_int32  :: ey
-   sll_real64 :: xl
-   sll_real64 :: yl
-   sll_int32  :: comm2d
-   sll_int32  :: pdims(2)
-   sll_int32  :: coords(2)
-   sll_int32  :: neighbor(8)
+   sll_int32           :: sx
+   sll_int32           :: ex
+   sll_int32           :: sy
+   sll_int32           :: ey
+   sll_real64          :: xl
+   sll_real64          :: yl
+   sll_int32           :: comm2d
+   sll_int32           :: pdims(2)
+   sll_int32           :: coords(2)
+   sll_int32           :: neighbor(8)
    sll_real64, pointer :: work(:)
 
 end type multigrid_2d
@@ -70,96 +70,96 @@ subroutine initialize_multigrid_2d_periodic( this,     &
                                              comm2d,   &
                                              neighbor  )
 
-   type(multigrid_2d)     :: this
+  type(multigrid_2d)     :: this
 
-   sll_int32, intent(in)  :: sx
-   sll_int32, intent(in)  :: ex
-   sll_int32, intent(in)  :: sy
-   sll_int32, intent(in)  :: ey
+  sll_int32, intent(in)  :: sx
+  sll_int32, intent(in)  :: ex
+  sll_int32, intent(in)  :: sy
+  sll_int32, intent(in)  :: ey
 
-   sll_real64, intent(in) :: xl
-   sll_real64, intent(in) :: yl
+  sll_real64, intent(in) :: xl
+  sll_real64, intent(in) :: yl
 
-   sll_int32, intent(in)  :: nxprocs
-   sll_int32, intent(in)  :: nyprocs
+  sll_int32, intent(in)  :: nxprocs
+  sll_int32, intent(in)  :: nyprocs
 
-   sll_int32, intent(in)  :: nc_x
-   sll_int32, intent(in)  :: nc_y
-   sll_int32, intent(in)  :: comm2d
-   sll_int32, intent(in)  :: neighbor(8)
+  sll_int32, intent(in)  :: nc_x
+  sll_int32, intent(in)  :: nc_y
+  sll_int32, intent(in)  :: comm2d
+  sll_int32, intent(in)  :: neighbor(8)
 
-   sll_int32 :: nxdim
-   sll_int32 :: nydim
-   sll_int32 :: ixp
-   sll_int32 :: jyq 
+  sll_int32 :: nxdim
+  sll_int32 :: nydim
+  sll_int32 :: ixp
+  sll_int32 :: jyq 
 
-   sll_int32  :: iex, jey
+  sll_int32  :: iex, jey
 
-   sll_int32  :: ibdry
-   sll_int32  :: jbdry
-   sll_int32  :: nwork
-   sll_int32  :: ierr
+  sll_int32  :: ibdry
+  sll_int32  :: jbdry
+  sll_int32  :: nwork
+  sll_int32  :: ierr
 
-   sll_real64, dimension(4) :: vbc
+  sll_real64, dimension(4) :: vbc
 
-   this%xl = xl
-   this%yl = yl
+  this%xl = xl
+  this%yl = yl
 
-   nx = nc_x
-   ny = nc_y
+  nx = nc_x
+  ny = nc_y
 
-   ixp = 4*nxprocs 
-   jyq = 4*nyprocs
+  ixp = 4*nxprocs 
+  jyq = 4*nyprocs
 
-   iex   = ceiling(log((nx-1.)/ixp)/log(2.))+1
-   jey   = ceiling(log((ny-1.)/jyq)/log(2.))+1
-   ngrid = max(iex,jey)
+  iex   = ceiling(log((nx-1.)/ixp)/log(2.))+1
+  jey   = ceiling(log((ny-1.)/jyq)/log(2.))+1
+  ngrid = max(iex,jey)
 
-   nwork = (4*nx*ny*8)/(3*nxprocs*nyprocs)+(64*(nx+ny))/3+(32*4)/3
-   nxdim = int(float(nx)/float(nxprocs)+0.99)+2
-   nydim = int(float(ny)/float(nyprocs)+0.99)+2
+  nwork = (4*nx*ny*8)/(3*nxprocs*nyprocs)+(64*(nx+ny))/3+(32*4)/3
+  nxdim = int(float(nx)/float(nxprocs)+0.99)+2
+  nydim = int(float(ny)/float(nyprocs)+0.99)+2
 
-   call MPI_COMM_RANK(MPI_COMM_WORLD,myid,ierr)
+  call MPI_COMM_RANK(MPI_COMM_WORLD,myid,ierr)
 
-   vbc(1:4) = 0.0d0
+  vbc(1:4) = 0.0d0
 
-   ibdry    = 0
-   jbdry    = 0
+  ibdry    = 0
+  jbdry    = 0
 
-   bd(1:8)  = 0
+  bd(1:8)  = 0
 
-   this%neighbor = neighbor
+  this%neighbor = neighbor
 
-   call mgdinit(   vbc,         &
-                   phibc,       &
-                   ixp,         &
-                   jyq,         &
-                   iex,         &
-                   jey,         &
-                   ngrid,       &
-                   nx+2,        &
-                   ny+2,        &
-                   sx,          &
-                   ex,          &
-                   sy,          &
-                   ey,          &
-                   MPI_REAL8,   &
-                   nxprocs,     &
-                   nyprocs,     &
-                   nwork,       &
-                   ibdry,       &
-                   jbdry,       &
-                   myid,        &
-                   IOUT,        &
-                   nerror)
+  call mgdinit(   vbc,         &
+                  phibc,       &
+                  ixp,         &
+                  jyq,         &
+                  iex,         &
+                  jey,         &
+                  ngrid,       &
+                  nx+2,        &
+                  ny+2,        &
+                  sx,          &
+                  ex,          &
+                  sy,          &
+                  ey,          &
+                  MPI_REAL8,   &
+                  nxprocs,     &
+                  nyprocs,     &
+                  nwork,       &
+                  ibdry,       &
+                  jbdry,       &
+                  myid,        &
+                  IOUT,        &
+                  nerror)
 
-   SLL_CLEAR_ALLOCATE(this%work(1:nwork),ierr)
+  SLL_CLEAR_ALLOCATE(this%work(1:nwork),ierr)
 
-   this%ex     = ex
-   this%sx     = sx
-   this%ey     = ey
-   this%sy     = sy
-   this%comm2d = comm2d
+  this%ex     = ex
+  this%sx     = sx
+  this%ey     = ey
+  this%sy     = sy
+  this%comm2d = comm2d
 
 end subroutine initialize_multigrid_2d_periodic
 
@@ -170,74 +170,74 @@ subroutine initialize_multigrid_2d( this,                         &
                                     bcvalue_xmin, bcvalue_xmax,   &
                                     bcvalue_ymin, bcvalue_ymax  )
 
-   type(multigrid_2d)     :: this
+  type(multigrid_2d)     :: this
 
-   sll_real64, intent(in) :: x_min
-   sll_real64, intent(in) :: x_max
-   sll_real64, intent(in) :: y_min
-   sll_real64, intent(in) :: y_max
+  sll_real64, intent(in) :: x_min
+  sll_real64, intent(in) :: x_max
+  sll_real64, intent(in) :: y_min
+  sll_real64, intent(in) :: y_max
 
-   sll_int32, intent(in)  :: nxprocs
-   sll_int32, intent(in)  :: nyprocs
+  sll_int32, intent(in)  :: nxprocs
+  sll_int32, intent(in)  :: nyprocs
 
-   sll_int32, intent(in)  :: nc_x
-   sll_int32, intent(in)  :: nc_y
+  sll_int32, intent(in)  :: nc_x
+  sll_int32, intent(in)  :: nc_y
 
-   sll_int32              :: bctype_x
-   sll_int32              :: bctype_y
+  sll_int32              :: bctype_x
+  sll_int32              :: bctype_y
 
-   sll_real64, optional   :: bcvalue_xmin
-   sll_real64, optional   :: bcvalue_xmax
-   sll_real64, optional   :: bcvalue_ymin
-   sll_real64, optional   :: bcvalue_ymax
+  sll_real64, optional   :: bcvalue_xmin
+  sll_real64, optional   :: bcvalue_xmax
+  sll_real64, optional   :: bcvalue_ymin
+  sll_real64, optional   :: bcvalue_ymax
 
-   sll_int32 :: nxdim
-   sll_int32 :: nydim
-   sll_int32 :: ixp
-   sll_int32 :: jyq 
+  sll_int32 :: nxdim
+  sll_int32 :: nydim
+  sll_int32 :: ixp
+  sll_int32 :: jyq 
 
-   logical    :: periods(2)
+  logical    :: periods(2)
 
-   sll_int32  :: iex, jey
+  sll_int32  :: iex, jey
 
-   sll_int32  :: numprocs
-   sll_int32  :: ibdry
-   sll_int32  :: jbdry
-   sll_int32  :: nbrright
-   sll_int32  :: nbrbottom
-   sll_int32  :: nbrleft
-   sll_int32  :: nbrtop
-   sll_int32  :: nwork
-   sll_int32  :: ierr
+  sll_int32  :: numprocs
+  sll_int32  :: ibdry
+  sll_int32  :: jbdry
+  sll_int32  :: nbrright
+  sll_int32  :: nbrbottom
+  sll_int32  :: nbrleft
+  sll_int32  :: nbrtop
+  sll_int32  :: nwork
+  sll_int32  :: ierr
 
-   sll_int32  :: sx
-   sll_int32  :: ex
-   sll_int32  :: sy
-   sll_int32  :: ey
-   sll_int32  :: comm2d
-   sll_int32  :: coords(2)
+  sll_int32  :: sx
+  sll_int32  :: ex
+  sll_int32  :: sy
+  sll_int32  :: ey
+  sll_int32  :: comm2d
+  sll_int32  :: coords(2)
 
-   sll_real64, dimension(4) :: vbc
+  sll_real64, dimension(4) :: vbc
 #ifdef DEBUG
    sll_int32 :: iproc, prank, psize
 #endif
 
-   nx = nc_x
-   ny = nc_y
+  nx = nc_x
+  ny = nc_y
 
-   ixp = 4*nxprocs 
-   jyq = 4*nyprocs
+  ixp = 4*nxprocs 
+  jyq = 4*nyprocs
 
-   iex   = ceiling(log((nx-1.)/ixp)/log(2.))+1
-   jey   = ceiling(log((ny-1.)/jyq)/log(2.))+1
-   ngrid = max(iex,jey)
+  iex   = ceiling(log((nx-1.)/ixp)/log(2.))+1
+  jey   = ceiling(log((ny-1.)/jyq)/log(2.))+1
+  ngrid = max(iex,jey)
 
-   nwork = (4*nx*ny*8)/(3*nxprocs*nyprocs)+(64*(nx+ny))/3+(32*4)/3
-   nxdim = int(float(nx)/float(nxprocs)+0.99)+2
-   nydim = int(float(ny)/float(nyprocs)+0.99)+2
+  nwork = (4*nx*ny*8)/(3*nxprocs*nyprocs)+(64*(nx+ny))/3+(32*4)/3
+  nxdim = int(float(nx)/float(nxprocs)+0.99)+2
+  nydim = int(float(ny)/float(nyprocs)+0.99)+2
 
-   this%xl = x_max - x_min
-   this%yl = y_max - y_min
+  this%xl = x_max - x_min
+  this%yl = y_max - y_min
    
 !-----------------------------------------------------------------------
 ! initialize MPI and create a datatype for real numbers
@@ -377,7 +377,6 @@ subroutine initialize_multigrid_2d( this,                         &
       nerror=1
       write(IOUT,"(/,'ERROR in multigrid code : 178',/)")
    end if
-
    if ((ey-sy+3) > nydim) then
       write(IOUT,120) myid,nydim,ey-sy+3
       nerror=1
