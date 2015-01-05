@@ -44,7 +44,7 @@ end do
 print*, 'Quintic spline interpolation'
 call spline%initialize(n, x_min, x_max, SLL_PERIODIC, SLL_PERIODIC )
 
-interp =>  spline
+interp => spline
 out = interp%interpolate_array(n, data, inte_points)
 
 error = maxval(abs(data_interp-out))
