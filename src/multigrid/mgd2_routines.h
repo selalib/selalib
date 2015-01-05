@@ -1,7 +1,6 @@
 
       subroutine mgdbdry(sxm,exm,sym,eym,phi,bd,phibc,IOUT)
 #include "compdir.inc"
-      include "mpif.h"
       integer sxm,exm,sym,eym,bd(8),IOUT
       REALN phi(sxm-1:exm+1,sym-1:eym+1),phibc(4)
 c------------------------------------------------------------------------
@@ -66,7 +65,6 @@ c
      1                  sxc,exc,syc,eyc,nxc,nyc,phic,
      2                  sx1,ex1,sy1,ey1,bd,phibc,IOUT)
 #include "compdir.inc"
-      include "mpif.h"
       integer sxf,exf,syf,eyf,nxf,nyf,IOUT
       integer sxc,exc,syc,eyc,nxc,nyc,sx1,ex1,sy1,ey1,bd(8)
       REALN phif(sxf-1:exf+1,syf-1:eyf+1)
@@ -222,7 +220,6 @@ c
 
       subroutine mgdend(ngrid)
 #include "compdir.inc"
-      include "mpif.h"
       integer ngrid
 c
 c common for multigrid indices and datatypes
@@ -272,7 +269,6 @@ c
 
       subroutine mgderr(relmax,sxm,exm,sym,eym,phio,phin,comm2d,IOUT)
 #include "compdir.inc"
-      include "mpif.h"
       integer sxm,exm,sym,eym,comm2d,IOUT
       integer ierr
       REALN relmax
@@ -337,7 +333,6 @@ c
      1                   sx,ex,sy,ey,realtype,nxprocs,nyprocs,nwork,
      3                   ibdry,jbdry,myid,IOUT,nerror)
 #include "compdir.inc"
-      include "mpif.h"
       integer ixp,jyq,iex,jey,ngrid,nxp2,nyp2,sx,ex,sy,ey
       integer realtype,nxprocs,nyprocs,nwork,ibdry,jbdry
       integer myid,IOUT,nerror
@@ -840,7 +835,6 @@ c
       subroutine mgdkcyc(work,res,kcur,kcycle,iprer,ipost,iresw,
      1                   comm2d,myid,neighbor,bd,phibc,IOUT)
 #include "compdir.inc"
-      include "mpif.h"
       integer kcur,kcycle,iprer,ipost,iresw,IOUT
       integer comm2d,myid,neighbor(8),bd(8)
       REALN work(*),res(*),phibc(4,*)
@@ -1095,7 +1089,6 @@ c
 
       subroutine mgdpfpde(sxf,exf,syf,eyf,nxf,nyf,cof,r,xl,yl,bd,IOUT)
 #include "compdir.inc"
-      include "mpif.h"
       integer sxf,exf,syf,eyf,nxf,nyf,bd(8),IOUT
       REALN cof(sxf-1:exf+1,syf-1:eyf+1,6)
       REALN r(sxf-1:exf+1,syf-1:eyf+1),xl,yl
@@ -1181,7 +1174,6 @@ c
       subroutine mgdphpde(sxm,exm,sym,eym,nxm,nym,cof,
      1                    sx,ex,sy,ey,nxf,nyf,r,bd,xl,yl,IOUT)
 #include "compdir.inc"
-      include "mpif.h"
       integer sxm,exm,sym,eym,nxm,nym,sx,ex,sy,ey,nxf,nyf,bd(8),IOUT
       REALN cof(sxm-1:exm+1,sym-1:eym+1,6)
       REALN r(sx-1:ex+1,sy-1:ey+1),xl,yl
@@ -1284,7 +1276,6 @@ c
       subroutine mgdppde(sxm,exm,sym,eym,nxm,nym,cof,
      1                   sxf,exf,syf,eyf,rf,xl,yl,bd,IOUT)
 #include "compdir.inc"
-      include "mpif.h"
       integer sxm,exm,sym,eym,nxm,nym,sxf,exf,syf,eyf,bd(8),IOUT
       REALN cof(sxm-1:exm+1,sym-1:eym+1,6)
       REALN rf(sxf-1:exf+1,syf-1:eyf+1),xl,yl
@@ -1348,7 +1339,6 @@ c
       subroutine mgdrelax(sxm,exm,sym,eym,phi,cof,iters,comm2d,myid,
      1                    neighbor,bd,phibc,itype,jtype,IOUT)
 #include "compdir.inc"
-      include "mpif.h"
       integer sxm,exm,sym,eym,iters,IOUT
       integer comm2d,myid,neighbor(8),bd(8),itype,jtype
       REALN phi(sxm-1:exm+1,sym-1:eym+1)
@@ -1418,7 +1408,6 @@ c
      2                    resf,iresw,comm2d,myid,neighbor,bd,
      3                    itype,jtype,ijtype,IOUT)
 #include "compdir.inc"
-      include "mpif.h"
       integer sxc,exc,syc,eyc,nxc,nyc,iresw
       integer sxf,exf,syf,eyf,nxf,nyf,IOUT
       integer comm2d,myid,neighbor(8),bd(8),itype,jtype,ijtype
@@ -1566,7 +1555,6 @@ c
 
       subroutine mgdrpde(sxm,exm,sym,eym,nxm,nym,cof,xl,yl,bd,IOUT)
 #include "compdir.inc"
-      include "mpif.h"
       integer sxm,exm,sym,eym,nxm,nym,bd(8),IOUT
       REALN cof(sxm-1:exm+1,sym-1:eym+1,6),xl,yl
 c------------------------------------------------------------------------
@@ -1649,7 +1637,6 @@ c
 
       subroutine mgdrsetf(sxf,exf,syf,eyf,rf,r,IOUT)
 #include "compdir.inc"
-      include "mpif.h"
       integer sxf,exf,syf,eyf,IOUT
       REALN rf(sxf-1:exf+1,syf-1:eyf+1),r(sxf-1:exf+1,syf-1:eyf+1)
 c------------------------------------------------------------------------
@@ -1683,7 +1670,6 @@ c
      1                    sxf,exf,syf,eyf,nxf,nyf,rf,
      2                    comm2d,myid,neighbor,bd,itype,jtype,IOUT)
 #include "compdir.inc"
-      include "mpif.h"
       integer sxc,exc,syc,eyc,nxc,nyc,sxf,exf,syf,eyf,nxf,nyf,IOUT
       integer comm2d,myid,neighbor(8),bd(8),itype,jtype
       REALN rc(sxc-1:exc+1,syc-1:eyc+1)
@@ -1742,7 +1728,6 @@ c
 
       subroutine mgdsetf(sxf,exf,syf,eyf,phi,rhs,phif,rhsf,IOUT)
 #include "compdir.inc"
-      include "mpif.h"
       integer sxf,exf,syf,eyf,IOUT
       REALN phi(sxf-1:exf+1,syf-1:eyf+1)
       REALN rhs(sxf-1:exf+1,syf-1:eyf+1)
@@ -1780,7 +1765,6 @@ c
      2                     xl,yl,rro,nx,ny,comm2d,myid,neighbor,
      3                     bd,phibc,iter,nprscr,IOUT,nerror)
 #include "compdir.inc"
-      include "mpif.h"
       integer isol,sx,ex,sy,ey,ngrid,nx,ny,IOUT
       integer maxcy,kcycle,iprer,ipost,iresw
       REALN phif(sx-1:ex+1,sy-1:ey+1),rhsf(sx-1:ex+1,sy-1:ey+1)
@@ -2059,7 +2043,6 @@ c
       subroutine grid1_type(itype,jtype,ijtype,realtype,sx,ex,sy,ey,
      1                      IOUT)
 #include "compdir.inc"
-      include "mpif.h"
       integer ierr
       integer itype,jtype,ijtype,realtype,sx,ex,sy,ey,IOUT
 c------------------------------------------------------------------------
@@ -2101,7 +2084,6 @@ c
       subroutine gxch1cor(a,comm2d,sx,ex,sy,ey,neighbor,bd,
      1                    ijdatatype,IOUT)
 #include "compdir.inc"
-      include "mpif.h"
       integer sx,ex,sy,ey,IOUT
       REALN a(sx-1:ex+1,sy-1:ey+1)
       integer comm2d,neighbor(8),bd(8),ijdatatype
@@ -2262,7 +2244,6 @@ c
       subroutine gxch1lin(a,comm2d,sx,ex,sy,ey,neighbor,bd,
      1                    idatatype,jdatatype,IOUT)
 #include "compdir.inc"
-      include "mpif.h"
       integer sx,ex,sy,ey,IOUT
       REALN a(sx-1:ex+1,sy-1:ey+1)
       integer comm2d,neighbor(8),bd(8),idatatype,jdatatype
@@ -2425,7 +2406,6 @@ c
 
       subroutine gscale(sx,ex,sy,ey,a,avo,acorr,comm2d,nx,ny,IOUT)
 # include "compdir.inc"
-      include "mpif.h"
       integer sx,ex,sy,ey,nx,ny,IOUT
       REALN a(sx-1:ex+1,sy-1:ey+1),avo,acorr
       integer comm2d
