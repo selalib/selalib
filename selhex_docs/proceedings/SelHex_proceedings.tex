@@ -18,7 +18,7 @@
 %%-----------------------------
 %%      the top matter
 %%-----------------------------
-\title{A semi-Lagrangian solver for the guiding center model on a regular hexagonal mesh}%\thanks{...}\thanks{...}% At most 5 thanks
+\title{Solving the Vlasov-Poisson equation\\on a regular hexagonal mesh}%\thanks{...}\thanks{...}% At most 5 thanks
 %
 \author{Michel Mehrenberger} \address{IRMA, Universit\'e de Strasbourg, 7, rue Ren\'e Descartes, 67084 Strasbourg \& INRIA-Nancy Grand-Est, projet TONUS, 
 \email{mehrenbe@math.unistra.fr}}
@@ -29,11 +29,20 @@
 %\dedicated{\it Dedicated to Maurice Dupont} %if necessary
 %
 
-\begin{abstract} ... \end{abstract}
-%TODO
-\begin{resume} ... \end{resume}
-%TODO
 
+%%-----------------------------
+%%          Abstract
+%%-----------------------------
+%% English version ............
+\begin{abstract} 
+This paper introduces a Semi-Lagrangian solver for the Vlasov-Poisson equation on a regular hexagonal mesh. The latter is composed of equilateral triangles, thus it doesn't contain any singularities, unlike polar meshes. We focus on the guiding center model: a Vlasov equation, where the parallel velocity and the first two component of the magnetic field have been neglected; coupled with a Poisson equation. A Poisson solver for the hexagonal mesh was developed. For the interpolation step of the Semi-Lagrangian scheme, a comparaison was made between using box-splines and Hermite finite elements. The scheme was successfully adapted to mesh using both interpolation methods, with different performances. We expect to adapt it to more complex models and geometries.
+\end{abstract}
+
+%% French version ............
+\begin{resume} ... \end{resume}
+
+
+%% Making the title ..........
 \maketitle
 
 
@@ -42,24 +51,26 @@
 %%-----------------------------
 \section*{Introduction}
 
-{\color{red}{
-[A REVOIR: Toute l'intro me semble dure a lire, pas "fluide", il n'y a pas de transitions et il faudrait aussi présenter les parties].\par}}
 
 There are three kinds of regular pavings of the plane: using squares, triangles or hexagons. When considering meshes, the dual mesh of a square mesh is a shifted square mesh and the regular triangle mesh is the dual of the regular hexagonal mesh.
 
-In magnetic fusion applications the embedded magnetic flux surfaces play an important role and introduce an important anisotropy. For this reason one gets favourable numerical properties when grid points align on the concentric magnetic flux surfaces. When trying to do this with a mapped cartesian grid, one ends up with a polar coordinates mesh (when the flux surfaces are circles) or something topologically equivalent. This yields cells that are smaller and smaller when getting closer to the center and a singularity at the center. This is numerically far from optimal. 
+In magnetic fusion applications the embedded magnetic flux surfaces play an important role and introduce an important anisotropy\cite{Angelino2009}. For this reason one gets favourable numerical properties when grid points align on the concentric magnetic flux surfaces. When trying to do this with a mapped cartesian grid, one ends up with a polar coordinates mesh (when the flux surfaces are circles) or something topologically equivalent. This yields cells that are smaller and smaller when getting closer to the center and a singularity at the center. This is numerically far from optimal. 
 
 However, tiling a regular hexagon into triangles yields a mesh of equilateral triangles having all the same area, plus the grid can be easily mapped to a circle by slightly stretching the edges of the hexagon. This yields a nice mesh of a disk with slightly stretched triangles of almost the same size and there is no singularity in any point on the domain. 
 Moreover, such a mesh has a clear structure with three privileged directions, thus it is completely straightforward to localise points within this mesh. The derivatives along the three directions can also be nicely computed using finite differencing along uniform lines. And last but not least, there is a spline construct on this mesh, called box spline. These splines have a hexagonal support and are invariant by translations along the three directions of the mesh.
+
+In this work, we focus on adapting the Semi-Lagrangian scheme to this hexagonal mesh. A simplified Vlasov-Poisson model is considered. This scheme consists basically on two steps: computing the characteristics feet and interpolating on these points. For the latter, we compare two different approaches: one using box-splines and the second approach using Hermite Finite Elements. Both interpolation methods, as well as the mesh, are presented in section~\ref{sec:interpolation}. In section~\ref{sec:poisson_eqn}, we present a Poisson solver adapted to the hexagonal mesh. We present the guiding center model, a simplified Vlasov-Poisson system, and the Semi-Lagrangian scheme to solve it, on section~\ref{sec:BSL_scheme}. Finally, on section~\ref{sec:results} we compare the results of the scheme using box splines with the ones using Hermite finite elements, we also compare them to more traditional meshes, such as the polar mesh. Besides the guiding center model, different advection models have been simulated in this section.
+
 
 %%-----------------------------
 %% Interpolation 
 %%-----------------------------
 \section{Interpolation on regular hexagonal mesh}
+\label{sec:interpolation}
 %%-----------------------------
 \subsection{The hexagonal mesh}
 
-The unit vectors in each direction are
+The hexagonal mesh is obtained by tiling a regular hexagon into equilateral triangles. The mesh obtained can be generated by three vectors. These unit vectors are
 
 \begin{equation}
 	\mathbf{r_1} = \begin{pmatrix}\sqrt{3}/2 \\  1/2
@@ -70,7 +81,7 @@ The unit vectors in each direction are
 		\end{pmatrix}
 \end{equation}
 
-The 2D lattice sites are thus obtained by the product $\mathbf{Rk}$ where $\mathbf{R} = [\mathbf{r_1 r_2}]$ and $\mathbf{k} = [k_1, k_2]^T \in \xZ$.  To obtain exactly the mesh as in Figure \ref{fig:hexmesh}, we need to define a few extra parameters : an origin -- denoted $P_0(x_0, y_0)$, a radius $L$ which is the fance between the origin and an external node and the number of cells $N$ on an edge of the exterior hexagon (or in a demi-diagonal).
+The 2D lattice sites are obtained by the product $\mathbf{Rk}$ where $\mathbf{R} = [\mathbf{r_1 r_2}]$ and $\mathbf{k} = [k_1, k_2]^T \in \xZ$.  To obtain exactly the mesh as in Figure \ref{fig:hexmesh}, we need to define a few extra parameters : an origin -- denoted $P_0(x_0, y_0)$, a radius $L$ which is the distance between the origin and an external node and the number of cells $N$ on an edge of the exterior hexagon (or in a demi-diagonal).
 
 
 \begin{figure}[h!]
@@ -125,28 +136,23 @@ The 2D lattice sites are thus obtained by the product $\mathbf{Rk}$ where $\math
 \end{figure}
 
 
-The mesh is based on uniform hexagons of the first type (see \cite{Ulichney87}). For local and global notations we will use the following convention : the point at the center will be the point of index $0$. Following the direction $\mathbf{r_1}$ the next point will be indexed $1$, and the notations will follow in a counter-clockwise motion for the points on the same ring. And so on, until all the points of the domain have been indexed. See Figure \ref{fig:hexmesh}. We will note $H_i$ the unit hexagon cell that is centred at the point of global index $i$.
+The mesh is based on uniform hexagons of the first type (see \cite{Ulichney87}). For local and global notations we will use the following convention : the point at the center will be the point of index $0$. Following the direction $\mathbf{r_1}$ the next point will be indexed $1$, and the notations will follow in a counter-clockwise motion. And so on, until all the points of the domain have been indexed. See Figure \ref{fig:hexmesh}. We will note $H_i$ the unit hexagon cell that is centred at the point of global index $i$.
+
+Besides the fact that the hexagonal mesh contains no singularities, its regularity allow us to localise effortlessly the characteristic feet for the Semi-Lagrangian scheme. Nevertheless, the accuracy of the method depends heavily on the interpolation method chosen. For example, for a cartesian grid, it is common to use cubic splines which have shown to give accurate results in an efficient manner (\textcolor{red}{see [look for a ref]}). In our problem, with the hexagonal lattice, B-splines don't exploit the isotropy of the mesh (for more information see \cite{Mersereau79-IEEE}) and are defined by a convolution on 2D, which cannot be done for our mesh. Therefore, we need to use another approach. On the following two sub-sections we present two different strategies: one using box splines and a second one using Hermite Finite Elements.
 
 
 %%-----------------------------
 \subsection{Box Splines quasi-interpolation}
 
-The accuracy of the Semi-Lagrangian method depends heavily on the interpolation method chosen. For example, for a cartesian grid, it is common to use cubic splines which have shown to give accurate results in an efficient manner. In our problem, with the hexagonal lattice, B-splines don't exploit the isotropy of the mesh (for more information see \cite{Mersereau79-IEEE}) and therefore we need a solution better adapted.  There are mainly two splines families that take advantage of the geometry's properties : hex-splines and the three directional box-splines. For a detailed comparison between these two types of splines we will refer to \cite{Condat2007}. Based on the latter, we have chosen to use box splines.
+There are mainly two splines families that take advantage of the geometry's properties : hex-splines and the three directional box-splines. For a detailed comparison between these two types of splines we will refer to \cite{Condat2007}. Based on the latter, we have chosen to use box splines, as the results are more stable. Moreover, also based on the previously cited paper, we decide to use a quasi-interpolation method.
 
-Let us describe such a model : we are given an initial sample $s[\mathbf{k}] = f_0(\mathbf{R} \mathbf{k})$, where the points $\mathbf{R} \mathbf{k}$ belong to our hexagonal mesh, and we need to know the values $f(X,V)$ where $(X,V) \notin \mathbf{R} \mathbf{k}$. We want a spline surface $f(\mathbf{x}) = \sum c[\mathbf{k}] \chi^n(\mathbf{x} - \mathbf{R}\mathbf{k})$ such that $f(\mathbf{x})$ approximates $f_0(x,v)$ and where $\chi^n$ are the box-splines of compact hexagonal support and $c[\mathbf{k}]$ are the box-splines coefficients which are obtained by \cite{Condat2006a}
-
-\begin{equation}
-\label{eqn:coefs}
- c = s * p
-\end{equation}
-
-where $*$ is the convolution operator, $s$ is the initial sample data and $p$ is a prefilter which will be defined later on.
-
+%%..............................
 \subsubsection{Box-Splines: General Definition}
-To construct the box-splines we will use the generator vectors $\mathbf{r_1, r_2, r_3}$ of the hexagonal lattice and we will introduce the box-splines basis functions $\varphi_{\Xi}(\mathbf{x})$ where $\Xi = [\mathbf{v}_1 \mathbf{v}_2]$ which are defined as follows (\cite{Condat2006, Boor1993}):
+
+Box-splines are a generalisation of the more known spline's family: B-splines. They are also piecewise polynomial and they share some properties, as: compact support, positiveness, symmetry and partition of unity. But, on the contrary to B-splines, box-splines are defined from a generator matrix $\Xi$. Therefore, to construct them on the hexagonal lattice, we will use the generator vectors $\mathbf{r_1, r_2, r_3}$. The general definition is \cite{Boor1993, Condat2006}:
 
 \begin{equation}
-	\varphi_{\Xi} (\mathbf{x}) = \left\{
+	\chi_{\Xi}^1 (\mathbf{x}) = \left\{
   	\begin{array}{l l}
     \dfrac{1}{\lvert \det(\Xi)\rvert} & \quad \text{if $\Xi^{-1}\mathbf{x} \in [0,1)^2$ }\\
     0 & \quad \text{otherwise}
@@ -156,8 +162,23 @@ To construct the box-splines we will use the generator vectors $\mathbf{r_1, r_2
 and, for higher orders
 
 \begin{equation} \label{eqn:boxsplines_basis}
-\varphi_{\Xi \cup [v]}(\mathbf{x}) = \int_0^ 1 \varphi_\Xi(\mathbf{x}-t\mathbf{v})dt
+\chi^N_{\Xi \cup [v]}(\mathbf{x}) = \int_0^ 1 \chi^{N-1}_\Xi(\mathbf{x}-t\mathbf{v})dt
 \end{equation}
+
+\textcolor{red}{Below, some representation of the first two box-splines.}
+
+%%..............................
+\subsubsection{The quasi-interpolation scheme}
+
+Let us describe the method: we are given an initial sample $s[\mathbf{k}] = f_0(\mathbf{R} \mathbf{k})$, where the points $\mathbf{R} \mathbf{k}$ belong to our hexagonal mesh, and we need to know the values $f(\mathbf{x})$ where $\mathbf{x} \notin \mathbf{R} \mathbf{k}$. We want a spline surface $f(\mathbf{x}) = \sum c[\mathbf{k}] \chi^N(\mathbf{x} - \mathbf{R}\mathbf{k})$, where $\chi^N$ are the box-splines and $c[\mathbf{k}]$ are the coefficients associated to them. The reconstruction is defined such that $f(\mathbf{x})$ approximates $f_0(x)$ to a certain order $N$ or, in other words, the approximation is exact only if $f_0(x)$ is a polynomial of degree $N-1$ or less. This is different to the classic interpolation method, where the reconstruction is exact on mesh points in any case. The $c[\mathbf{k}]$ coefficients are the box-splines coefficients, to compute them we cannot longer solve a matrix-vector system because of the extra degree of freedom given by the quasi-interpolation method. Thus, the  $c[\mathbf{k}]$ coefficients are obtained by discrete filtering\cite{Condat2006a}
+
+\begin{equation}
+\label{eqn:coefs}
+ c = s * p
+\end{equation}
+
+where $*$ is the convolution operator, $s$ is the initial sample data and $p$ is a pre-filter which will be defined later on.
+
 
 \subsubsection{Box splines coefficients}
 
@@ -176,42 +197,30 @@ p_{IIR2} [i] = \left\{
   \end{array} \right.
 \end{equation}
 
-Or for the splines of order 3 :
+%Or for the splines of order 3 :
+%
+%\begin{equation}
+%\label{eqn:filterIIR3}
+%p_{IIR2} [i] = \left\{
+%  \begin{array}{l l}
+%    244301/460800\text{,} & \quad \text{if } i = 0\\
+%    42269/576000\text{,} & \quad \text{if } 0<i<7\\
+%    -11809/6912000\text{,} & \quad \text{if } 6<i<19 \text{ and $i$ odd}\\
+%    1067/144000\text{,} & \quad \text{if } 6<i<19 \text{ and $i$ even}\\
+%    -23/576000\text{,} & \quad \text{if } 18<i<37 \text{ and ($k_1 = 0$ or $k_2 = 0$ or $k_1 = k_2$) }\\
+%    -109/288000\text{,} & \quad \text{if } 18<i<37 \\
+%    	-1/13824000\text{,} & \quad \text{if } 36<i<61 \text{ and ($k_1 = 0$ or $k_2 = 0$ or $k_1 = k_2$) }\\
+%    	97/6912000\text{,} & \quad \text{if } 36<i<61 \text{ and ($|k_1| = 2$ or $|k_2| = 2$) }\\
+%    	1/576000\text{,} & \quad \text{if } 36<i<61\\    		
+%    0 & \quad \text{otherwise}
+%  \end{array} \right.
+%\end{equation}
 
-\begin{equation}
-\label{eqn:filterIIR3}
-p_{IIR2} [i] = \left\{
-  \begin{array}{l l}
-    244301/460800\text{,} & \quad \text{if } i = 0\\
-    42269/576000\text{,} & \quad \text{if } 0<i<7\\
-    -11809/6912000\text{,} & \quad \text{if } 6<i<19 \text{ and $i$ odd}\\
-    1067/144000\text{,} & \quad \text{if } 6<i<19 \text{ and $i$ even}\\
-    -23/576000\text{,} & \quad \text{if } 18<i<37 \text{ and ($k_1 = 0$ or $k_2 = 0$ or $k_1 = k_2$) }\\
-    -109/288000\text{,} & \quad \text{if } 18<i<37 \\
-    	-1/13824000\text{,} & \quad \text{if } 36<i<61 \text{ and ($k_1 = 0$ or $k_2 = 0$ or $k_1 = k_2$) }\\
-    	97/6912000\text{,} & \quad \text{if } 36<i<61 \text{ and ($|k_1| = 2$ or $|k_2| = 2$) }\\
-    	1/576000\text{,} & \quad \text{if } 36<i<61\\    		
-    0 & \quad \text{otherwise}
-  \end{array} \right.
-\end{equation}
-
-In details, let's give the exact formula for the coefficients. We suppose we have the functions $global(k_1, k_2) = i$ and $local(i,i_0) = j$ that give respectively the global index of $\mathbf{x} = \mathbf{R} \mathbf{k}$ and the local index of that point regarding the point at position $i_0$.
-
-\begin{equation}
-c[\mathbf{k}] = \sum_{\mathbf{m} \in \xZ^2} s[\mathbf{m}] \cdot p_{IIR}[local(\mathbf{m} - \mathbf{k}, \mathbf{k})]
-\end{equation}
-
-and using \eqref{eqn:filterIIR2} we obtain
-
-\begin{align}
-\label{eqn:coef_algo}
-c[\mathbf{k}] = \sum_{local(\mathbf{m} - \mathbf{k}, \mathbf{k}) = 0}^{18} s[\mathbf{m}] \cdot p_{IIR}[local(\mathbf{m} - \mathbf{k}, \mathbf{k})]
-\end{align}
-
+For higher orders, we refer to the previously mentioned papers.
 
 \subsubsection{Optimizing the evaluation}
 
-For the present state we have all the elements for the approximation of a function $f$ with second order box splines
+At the present state we have all the elements for the approximation of a function $f$ with second order box-splines
 
 \begin{equation}
 \tilde{f}(\mathbf{x}) = \sum_{\mathbf{k} \in \xZ^2} c[\mathbf{k}] \chi^2(\mathbf{x} - \mathbf{R}\mathbf{k})
@@ -227,7 +236,7 @@ Even if we limit our sum to the vector $\mathbf{k}$ that defines our domain, we 
 	&+ c[\mathbf{k}_0 +[1,1]]\; \chi^2(\mathbf{x} - \mathbf{R}\mathbf{k}_0 - \mathbf{R}_1 - \mathbf{R}_2)
 \end{align}
 
-\rmrk  As the $\chi^2$ spline has a support of radius a unity, one of the elements of \eqref{eqn:chi2_fct_interpol} is null. But this formula allow us to keep a short general formula for all points on the mesh without having to compute the indices of the Voronoi cell to which $x$ belongs to.
+\rmrk  As the $\chi^2$ spline has a support of radius a unity, one of the elements of \eqref{eqn:chi2_fct_interpol} is null. But this formula allow us to keep a short general formula for all points on the mesh without having to compute the indices of the cell to which $x$ belongs to.
 
 
 %%-----------------------------
@@ -281,9 +290,14 @@ At the vertexes the values are given and $f(G) = \frac{f(S_1)+f(S_2)+f(S_3)}{3}$
 %% Poisson 
 %%-----------------------------
 \section{The Poisson equation}
+\label{sec:poisson_eqn}
+%%-----------------------------
 \subsection{Finite Differences Solver}
+%%-----------------------------
 \subsection{Finite Elements Solver}
+%%-----------------------------
 \subsubsection{Box-spline basis functions}
+%%-----------------------------
 \subsubsection{Finite-Element basis functions}
 
 
@@ -291,7 +305,11 @@ At the vertexes the values are given and $f(G) = \frac{f(S_1)+f(S_2)+f(S_3)}{3}$
 %% BSL
 %%-----------------------------
 \section{The Backward Semi-Lagrangian Scheme}
+\label{sec:BSL_scheme}
+%%-----------------------------
 \subsection{The Guiding Center Model}
+
+%%-----------------------------
 \subsection{General Algorithm}
 
 
@@ -299,6 +317,8 @@ At the vertexes the values are given and $f(G) = \frac{f(S_1)+f(S_2)+f(S_3)}{3}$
 %% Results
 %%-----------------------------
 \section{Results}
+\label{sec:results}
+
 
 
 %%-----------------------------
