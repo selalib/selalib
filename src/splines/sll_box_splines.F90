@@ -743,4 +743,58 @@ contains  ! ****************************************************************
 
   end subroutine write_basis_values
 
+
+  
+  !---------------------------------------------------------------------------
+  !> @brief Writes connectivity for CAID
+  !> @details 
+  !> 
+  !> Output file : boxsplines_connectivity.txt
+  !> @param[in]  deg integer designing boxsplines degree
+  subroutine write_connectivity(mesh, deg)
+    type(sll_hex_mesh_2d), pointer :: mesh
+    sll_int32, intent(in)          :: deg
+    sll_int32                      :: out_unit
+    character(len=24), parameter   :: name = "bezier_connectivity.txt"
+    sll_int32,  dimension(:,:), allocatable :: LM
+    sll_real64, dimension(:,:), allocatable :: knots
+    sll_int32  :: num_fek
+    sll_int32  :: num_quad
+    sll_int32  :: num_ele
+    sll_int32  :: non_zero
+    sll_int32  :: ierr
+
+    num_quad = 2*mesh%num_edges + mesh%num_pts_tot + mesh%num_triangles
+    
+    ! Number of non Zero splines depends on the degree
+    non_zero = 0
+    if (deg .eq. 1) then
+       non_zero = 3
+       SLL_ALLOCATE(knots(3, num_quad), ierr)
+       SLL_ALLOCATE(LM(mesh%num_triangles, 10), ierr)
+       call initialize_knots_hexmesh(1, mesh, knots, LM)
+    end if
+    
+    ! We open file
+    call sll_new_file_id(out_unit, ierr)
+    open (unit=out_unit,file=name,action="write",status="replace")
+    ! We write total number of cells
+    write(out_unit, "(i6)") mesh%num_triangles
+
+    do num_ele = 1,mesh%num_triangles
+       ! We write cell ID number
+       write(out_unit, "(i6)") num_ele
+       ! We write number of non zero
+       write(out_unit, "(i6)") non_zero
+       
+       do num_fek = 1,10
+          write(out_unit, "(i6)", advance="no") LM(num_ele, num_fek)
+       end do
+
+       write(out_unit,"(a)")""
+    end do
+  end subroutine write_connectivity
+
+
+  
 end module sll_box_splines
