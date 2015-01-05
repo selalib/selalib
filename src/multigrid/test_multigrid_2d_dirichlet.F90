@@ -36,150 +36,160 @@ implicit none
 !
 !-----------------------------------------------------------------------
 
-   sll_real64, dimension(:,:), allocatable :: p
-   sll_real64, dimension(:,:), allocatable :: q
-   sll_real64, dimension(:,:), allocatable :: f
-   sll_real64, dimension(:,:), allocatable :: r
-   sll_real64, dimension(:,:), allocatable :: x
-   sll_real64, dimension(:,:), allocatable :: y
+sll_real64, dimension(:,:), allocatable :: p
+sll_real64, dimension(:,:), allocatable :: q
+sll_real64, dimension(:,:), allocatable :: f
+sll_real64, dimension(:,:), allocatable :: r
+sll_real64, dimension(:,:), allocatable :: x
+sll_real64, dimension(:,:), allocatable :: y
 
-   sll_real64 :: err, errloc
+sll_real64 :: err, errloc
 
-   type(multigrid_2d) :: solver
+type(multigrid_2d) :: solver
 
-   sll_int32 :: prank
-   sll_int32 :: narg
-   sll_int32 :: psize
-   sll_int32 :: error
-   sll_int32 :: i, j, sx, ex, sy, ey
+sll_int32 :: prank
+sll_int32 :: narg
+sll_int32 :: psize
+sll_int32 :: error
+sll_int32 :: i, j, sx, ex, sy, ey
 
 !
 ! parameters
 !
-   sll_int32             :: nxprocs
-   sll_int32             :: nyprocs 
-   sll_int32,  parameter :: nx = 64
-   sll_int32,  parameter :: ny = 64
-   sll_real64, parameter :: x_min = -1.0_f64
-   sll_real64, parameter :: x_max = +1.0_f64
-   sll_real64, parameter :: y_min = -1.0_f64
-   sll_real64, parameter :: y_max = +1.0_f64
-   character(len=4)      :: buffer
+sll_int32             :: nxprocs
+sll_int32             :: nyprocs 
+sll_int32,  parameter :: nx = 64
+sll_int32,  parameter :: ny = 64
+sll_real64, parameter :: x_min = -1.0_f64
+sll_real64, parameter :: x_max = +1.0_f64
+sll_real64, parameter :: y_min = -1.0_f64
+sll_real64, parameter :: y_max = +1.0_f64
+character(len=4)      :: buffer
 
-   sll_real64 :: delta_x
-   sll_real64 :: delta_y
+sll_real64 :: delta_x
+sll_real64 :: delta_y
 
-   sll_real64 :: start_time, end_time, total_time
+sll_real64 :: start_time, end_time, total_time
 
-   call sll_boot_collective() 
+call sll_boot_collective() 
 
-   prank = sll_get_collective_rank(sll_world_collective)
-   psize = sll_get_collective_size(sll_world_collective)
+prank = sll_get_collective_rank(sll_world_collective)
+psize = sll_get_collective_size(sll_world_collective)
 
-   narg = command_argument_count()
+narg = command_argument_count()
 
-   if (narg /= 2) then
-      if (prank == MPI_MASTER) then
-         print*, 'give nxprocs and nyprocs'
-         print*, 'try'
-         print*, 'mpirun -np 4 test_multigrid_2d_dirichlet 2 2 '
-      end if
-      call sll_halt_collective()
-      stop
+if (narg /= 2) then
+   if (prank == MPI_MASTER) then
+      print*, 'give nxprocs and nyprocs'
+      print*, 'try'
+      print*, 'mpirun -np 4 test_multigrid_2d_dirichlet 2 2 '
    end if
-
-   call get_command_argument(1, buffer); read(buffer,"(i4)") nxprocs
-   call get_command_argument(2, buffer); read(buffer,"(i4)") nyprocs
-
-   start_time = MPI_WTIME() 
-
-   call sll_create( solver,                               &
-                    x_min, x_max, y_min, y_max,           &
-                    nxprocs, nyprocs, nx, ny,             &
-                    SLL_DIRICHLET, SLL_DIRICHLET,         &
-                    0.0_f64, 0.0_f64, 0.0_f64, 0.0_f64)
-
-   call write_topology( solver )
-
-   sx = solver%sx
-   ex = solver%ex
-   sy = solver%sy
-   ey = solver%ey
-
-   SLL_CLEAR_ALLOCATE(p(sx-1:ex+1,sy-1:ey+1),error)
-   SLL_CLEAR_ALLOCATE(q(sx-1:ex+1,sy-1:ey+1),error)
-   SLL_CLEAR_ALLOCATE(f(sx-1:ex+1,sy-1:ey+1),error)
-   SLL_CLEAR_ALLOCATE(r(sx-1:ex+1,sy-1:ey+1),error)
-   SLL_CLEAR_ALLOCATE(x(sx-1:ex+1,sy-1:ey+1),error)
-   SLL_CLEAR_ALLOCATE(y(sx-1:ex+1,sy-1:ey+1),error)
-
-   ! initialize problem
-   ! xl,yl are the dimensions of the domain
-   ! wk is the wavenumber (must be an integer value)
-   ! rro is the average density
-   ! 1/hxi,1/hyi are the spatial resolutions
-
-   !-----------------------------------------------------------------------
-   ! Initialize the pressure, density, and right-hand side of the
-   ! elliptic equation div(1/r*grad(p))=f
-   !-----------------------------------------------------------------------
-
-   r    =  1.0_f64
-
-   delta_x = (x_max - x_min) / nx
-   delta_y = (y_max - y_min) / ny
-
-   do j=sy-1, ey+1
-     do i=sx-1, ex+1
-       x(i,j) = x_min + (i-1.5d0)*delta_x
-       y(i,j) = y_min + (j-1.5d0)*delta_y
-     end do
-   end do
-
-   q = exp(-(x*x+y*y)/0.04_f64)
-
-   do j=sy, ey
-     do i=sx, ex
-        f(i,j) = (q(i-1,j)-2.*q(i,j)+q(i+1,j))/(delta_x*delta_x) + &
-                 (q(i,j-1)-2.*q(i,j)+q(i,j+1))/(delta_y*delta_y)
-     end do
-   end do
-
-   p = 0.0_f64
-   call gp_plot2d(f,x,y,sx,ex,sy,ey,'f')
-
-   call sll_solve(solver, p, f, r)
-
-   end_time = MPI_WTIME() 
-
-   call MPI_ALLREDUCE(end_time-start_time,total_time,1,MPI_REAL8,MPI_SUM, &
-                      solver%comm2d,error)
-
-   call gp_plot2d(p,  x,y,sx,ex,sy,ey,'p')
-   call gp_plot2d(q,  x,y,sx,ex,sy,ey,'q')
-   call gp_plot2d(p-q,x,y,sx,ex,sy,ey,'e')
-   call gp_plot2d(f,  x,y,sx,ex,sy,ey,'r')
-
-   !-----------------------------------------------------------------------
-   ! Calculate the error between the numerical and exact solution to
-   ! the test problem.
-   !-----------------------------------------------------------------------
-
-   errloc=sum(abs(p(sx:ex,sy:ey)-q(sx:ex,sy:ey)))
-   
-   ! calculate global error
-   call MPI_ALLREDUCE(errloc,err,1,MPI_DOUBLE_PRECISION,MPI_SUM, &
-                      solver%comm2d,error)
-
-   write(*,100) errloc/float(nx*ny),err/float(nx*ny)
-
-   call flush(6)
-   if (prank == MPI_MASTER) &
-   write(*,"('proc:',i3,' time: ', f12.4)") prank, total_time
-   call flush(6)
    call sll_halt_collective()
-
    stop
+end if
+
+call get_command_argument(1, buffer); read(buffer,"(i4)") nxprocs
+call get_command_argument(2, buffer); read(buffer,"(i4)") nyprocs
+
+start_time = MPI_WTIME() 
+
+call sll_create( solver,                               &
+                 x_min, x_max, y_min, y_max,           &
+                 nxprocs, nyprocs, nx, ny,             &
+                 SLL_DIRICHLET, SLL_DIRICHLET,         &
+                 0.0_f64, 0.0_f64, 0.0_f64, 0.0_f64)
+
+call write_topology( solver )
+
+sx = solver%sx
+ex = solver%ex
+sy = solver%sy
+ey = solver%ey
+
+SLL_CLEAR_ALLOCATE(p(sx-1:ex+1,sy-1:ey+1),error)
+SLL_CLEAR_ALLOCATE(q(sx-1:ex+1,sy-1:ey+1),error)
+SLL_CLEAR_ALLOCATE(f(sx-1:ex+1,sy-1:ey+1),error)
+SLL_CLEAR_ALLOCATE(r(sx-1:ex+1,sy-1:ey+1),error)
+SLL_CLEAR_ALLOCATE(x(sx-1:ex+1,sy-1:ey+1),error)
+SLL_CLEAR_ALLOCATE(y(sx-1:ex+1,sy-1:ey+1),error)
+
+! initialize problem
+! xl,yl are the dimensions of the domain
+! wk is the wavenumber (must be an integer value)
+! rro is the average density
+! 1/hxi,1/hyi are the spatial resolutions
+
+!-----------------------------------------------------------------------
+! Initialize the pressure, density, and right-hand side of the
+! elliptic equation div(1/r*grad(p))=f
+!-----------------------------------------------------------------------
+
+r    =  1.0_f64
+
+delta_x = (x_max - x_min) / nx
+delta_y = (y_max - y_min) / ny
+
+do j=sy-1, ey+1
+  do i=sx-1, ex+1
+    x(i,j) = x_min + (i-1.5d0)*delta_x
+    y(i,j) = y_min + (j-1.5d0)*delta_y
+  end do
+end do
+
+q = exp(-(x*x+y*y)/0.04_f64)
+
+do j=sy, ey
+  do i=sx, ex
+     f(i,j) = (q(i-1,j)-2.*q(i,j)+q(i+1,j))/(delta_x*delta_x) + &
+              (q(i,j-1)-2.*q(i,j)+q(i,j+1))/(delta_y*delta_y)
+  end do
+end do
+
+p = 0.0_f64
+call gp_plot2d(f,x,y,sx,ex,sy,ey,'f')
+
+call sll_solve(solver, p, f, r)
+
+end_time = MPI_WTIME() 
+
+call MPI_ALLREDUCE(end_time-start_time,  &
+                   total_time,           &
+                   1,                    &
+                   MPI_REAL8,            &
+                   MPI_SUM,              &
+                   solver%comm2d,        &
+                   error)
+
+call gp_plot2d(p,  x,y,sx,ex,sy,ey,'p')
+call gp_plot2d(q,  x,y,sx,ex,sy,ey,'q')
+call gp_plot2d(p-q,x,y,sx,ex,sy,ey,'e')
+call gp_plot2d(f,  x,y,sx,ex,sy,ey,'r')
+
+!-----------------------------------------------------------------------
+! Calculate the error between the numerical and exact solution to
+! the test problem.
+!-----------------------------------------------------------------------
+
+errloc=sum(abs(p(sx:ex,sy:ey)-q(sx:ex,sy:ey)))
+
+! calculate global error
+call MPI_ALLREDUCE(errloc,        &
+                   err,           &
+                   1,             &
+                   MPI_REAL8,     &
+                   MPI_SUM,       &
+                   solver%comm2d, &
+                   error)
+
+write(*,100) errloc/float(nx*ny),err/float(nx*ny)
+
+call flush(6)
+if (prank == MPI_MASTER) &
+  write(*,"('proc:',i3,' time: ', f12.4)") prank, total_time
+call flush(6)
+call sll_halt_collective()
+
+stop
 
 100 format(/,'Local error: ',e13.6,'  total error: ',e13.6,/)
 
