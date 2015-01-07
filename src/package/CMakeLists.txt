@@ -60,6 +60,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/characteristics/sll_characteristics_2d_base.F90
     ${SLL_DIR}/utilities/sll_utilities.F90
     ${SLL_DIR}/utilities/tridiagonal.F90
+    ${SLL_DIR}/utilities/fornberg.F90
     ${SLL_DIR}/utilities/sll_toeplitz_penta_diagonal.F90
     ${SLL_DIR}/lagrange_interpolation/sll_lagrange_interpolation.F90
     ${SLL_DIR}/file_io/sll_binary_io.F90
