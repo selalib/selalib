@@ -173,14 +173,14 @@ program test_hex_hermite
 
            inside = .true.
            h1 =  xx*r11 + yy*r12
-           h2 =  xx*r21 + yy*r22 
+           h2 =  xx*r21 + yy*r22
 
            if ( abs(h1) >  radius-mesh%delta .or. abs(h2) >  radius-mesh%delta ) inside = .false.
            if ( abs(xx) > (radius-mesh%delta)*sqrt(3._f64)*0.5_f64) inside = .false.
 
            if ( inside ) then
               rho_tn1(i) = hex_interpolate_value(mesh, xx, yy, spline, deg)
-           else 
+           else
               rho_tn1(i) = 0._f64 ! dirichlet boundary condition
            endif
 
@@ -336,7 +336,7 @@ contains
 
     ! à optimiser quand ce sera validé
 
-    do i = 1,mesh%num_cells!mesh%num_pts_tot 
+    do i = 1,mesh%num_cells!mesh%num_pts_tot
        do k = 1,6*i
           j  = 6*i*(2*i-1)+2*k
           i1 = 1+(i-1)*6+k
@@ -344,8 +344,7 @@ contains
 
        enddo
 
-       do k = 1,i 
-          
+       do k = 1,i
           ! first edge
           j  = 6*i*(2*i-1)+2*k
           i1 = 1+3*i*(i-1)+k
@@ -378,7 +377,7 @@ contains
           rho2(j+1) = rho_edge(i2)
 
        enddo
-       
+
        if (i<mesh%num_cells) then
 
           !corners
@@ -392,7 +391,7 @@ contains
           rho2(j) = rho_edge(i2)
 
 
-          do k = 2,i-1 
+          do k = 2,i-1
 
              ! first edge
              j  = 6*i*(2*i-1)+2*k
