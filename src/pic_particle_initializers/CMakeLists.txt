@@ -22,18 +22,12 @@ TARGET_LINK_LIBRARIES( sll_pic_initializers
   sll_memory
   sll_random_deviate_generators )
 
-IF(MPI_MODULE_ENABLED)
-ADD_EXECUTABLE(test_pic_initializers unit_test.F90  )
-
-TARGET_LINK_LIBRARIES(test_pic_initializers
-  sll_pic_initializers
-#  sll_visu_pic
- sll_collective
- # sll_file_io )
-)
-
 # Ctest
-ADD_TEST( NAME pic_initializers COMMAND test_pic_initializers )
-SET_TESTS_PROPERTIES( pic_initializers PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-
-ENDIF(MPI_MODULE_ENABLED)
+IF(MPI_ENABLED AND BUILD_TESTING)
+  ADD_EXECUTABLE( test_pic_initializers unit_test.F90 )
+  TARGET_LINK_LIBRARIES( test_pic_initializers
+    sll_pic_initializers
+    sll_collective )
+  ADD_TEST( NAME pic_initializers COMMAND test_pic_initializers )
+  SET_TESTS_PROPERTIES( pic_initializers PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+ENDIF(MPI_ENABLED AND BUILD_TESTING)
