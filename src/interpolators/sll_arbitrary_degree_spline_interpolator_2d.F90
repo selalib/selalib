@@ -3641,7 +3641,6 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
     sll_real64                     :: val
     sll_int32 :: size_coeffs1
     sll_int32 :: size_coeffs2
-    sll_int32 :: partint
     !sll_real64 :: bvalue2d
     !integer  :: li_i, li_j, li_mflag, li_lefty
     sll_real64 :: res1,res2
@@ -3661,82 +3660,36 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
     case (0) ! periodic-periodic
 
        if( res1 < interpolator%eta1_min ) then
-          partint = &
-               AINT(abs(res1)/(interpolator%eta1_max-interpolator%eta1_min))
-          res1 = res1 + &
-               (partint+1) *( interpolator%eta1_max-interpolator%eta1_min)
+          res1 = res1 + (interpolator%eta1_max-interpolator%eta1_min)
        else if( res1 >  interpolator%eta1_max ) then
-          partint = &
-               AINT(abs(res1)/(interpolator%eta2_max-interpolator%eta2_min))
-          res1 = res1 + partint*(interpolator%eta2_min-interpolator%eta2_max)
+          res1 = res1 + (interpolator%eta2_min-interpolator%eta2_max)
        end if
        if( res2 < interpolator%eta2_min ) then
-          partint = &
-               AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
-          res2 = res2 + &
-               (partint+1) *(interpolator%eta2_max-interpolator%eta2_min)
+          res2 = res2 + (interpolator%eta2_max-interpolator%eta2_min)
        else if( res2 >  interpolator%eta2_max ) then
-          partint = &
-               AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
-          res2 = res2 + partint*(interpolator%eta2_min-interpolator%eta2_max)
+          res2 = res2 + (interpolator%eta2_min-interpolator%eta2_max)
        end if
-       
 
     case (9) ! 2. dirichlet-left, dirichlet-right, periodic
 
-
        if( res2 < interpolator%eta2_min ) then
-          partint = &
-               AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
-          res2 = res2 + &
-               (partint+1) *(interpolator%eta2_max-interpolator%eta2_min)
+          res2 = res2 + (interpolator%eta2_max-interpolator%eta2_min)
        else if( res2 >  interpolator%eta2_max ) then
-          partint = &
-               AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
-          res2 = res2 + partint*(interpolator%eta2_min-interpolator%eta2_max)
+          res2 = res2 + (interpolator%eta2_min-interpolator%eta2_max)
        end if
 
        SLL_ASSERT( res1 >= interpolator%eta1_min )
        SLL_ASSERT( res1 <= interpolator%eta1_max )
-       if ( res1 > interpolator%eta1_max) then 
-          print*, 'problem  x > eta1_max'
-          !res1 =  interpolator%eta1_max
-          stop
-       end if
-       if ( res1 < interpolator%eta1_min) then 
-          print*, 'problem  x < eta1_min'
-          !res1 =  interpolator%eta1_min
-          !print*, res1,interpolator%eta1_min 
-          stop
-       end if
-      
   
     case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
 
-
-
        if( res1 < interpolator%eta1_min ) then
-          partint = &
-               AINT(abs(res1)/(interpolator%eta1_max-interpolator%eta1_min))
-          res1 = res1 + &
-               (partint+1) *( interpolator%eta1_max-interpolator%eta1_min)
+          res1 = res1 + ( interpolator%eta1_max-interpolator%eta1_min)
        else if( res1 >  interpolator%eta1_max ) then
-          partint = &
-               AINT(abs(res1)/(interpolator%eta2_max-interpolator%eta2_min))
-          res1 = res1 + partint*(interpolator%eta2_min-interpolator%eta2_max)
+          res1 = res1 + (interpolator%eta2_min-interpolator%eta2_max)
        end if
        SLL_ASSERT( res2 >= interpolator%eta2_min )
        SLL_ASSERT( res2 <= interpolator%eta2_max )
-       if ( res2 > interpolator%eta2_max) then 
-          print*, 'problem  y > eta2_max'
-          stop
-       end if
-       if ( res2 < interpolator%eta2_min) then 
-          print*, 'problem  y < eta2_min'
-  
-          stop
-       end if
-       
  
     end select
 
@@ -3744,29 +3697,11 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
     SLL_ASSERT( res1 <= interpolator%eta1_max )
     SLL_ASSERT( res2 >= interpolator%eta2_min )
     SLL_ASSERT( res2 <= interpolator%eta2_max )
-    if ( res1 > interpolator%eta1_max) then 
-       print*, 'ERROR, interpolate_value_ad2d(): problem  x > eta1_max'
-       stop
-    end if
-    if ( res1 < interpolator%eta1_min) then 
-       print*, 'ERROR, interpolate_value_ad2d(): problem  x < eta1_min'
-    end if
-    if ( res2 > interpolator%eta2_max) then 
-       print*, 'ERROR, interpolate_value_ad2d(): problem  y > eta2_max'
-       print*, res2, interpolator%eta2_min,interpolator%eta2_max
-    end if
-    if ( res2 < interpolator%eta2_min) then 
-       print*, 'ERROR, interpolate_value_ad2d(): problem  y < eta2_min'
-    end if
 
     tmp_tx => interpolator%t1(1:interpolator%size_t1)
-    !print*, 't1',tmp_tx
     tmp_ty => interpolator%t2(1:interpolator%size_t2)
-    !print*, 't2',tmp_ty
     tmp_coeff =>interpolator%coeff_splines(1:size_coeffs1,1:size_coeffs2)
-    !print*, 'coef',tmp_coeff
-    !call interv( tmp_ty, interpolator%size_t2, res2, li_lefty, li_mflag )
-  !  call set_time_mark(t0)
+
     call bvalue2d( &
          res1, &
          res2, &
@@ -3778,8 +3713,7 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
          tmp_tx, &
          tmp_ty,&
          val)
-    ! time = time_elapsed_since(t0)
-   !  print *, 'time elapsed since t0 : ',time
+
   end function interpolate_value_ad2d
 
 
@@ -3810,7 +3744,6 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
     sll_real64, dimension(:),pointer :: knot2_tmp
     sll_real64, dimension(:,:),pointer :: tmp_coeff
     !sll_int32 :: ierr
-    sll_int32 :: partint
 
     SLL_ASSERT( eta1 .ge. interpolator%eta1_min )
     SLL_ASSERT( eta1 .le. interpolator%eta1_max )
@@ -3827,18 +3760,14 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
     case (0) ! periodic-periodic
 
        if( res1 < interpolator%eta1_min ) then
-          partint = AINT(abs(res1)/(interpolator%eta1_max-interpolator%eta1_min))
-          res1 = res1+ (partint+1) *( interpolator%eta1_max-interpolator%eta1_min)
+          res1 = res1 + ( interpolator%eta1_max-interpolator%eta1_min)
        else if( res1 >  interpolator%eta1_max ) then
-          partint = AINT(abs(res1)/(interpolator%eta2_max-interpolator%eta2_min))
-          res1 = res1 + partint*(interpolator%eta2_min-interpolator%eta2_max)
+          res1 = res1 + (interpolator%eta2_min-interpolator%eta2_max)
        end if
        if( res2 < interpolator%eta2_min ) then
-          partint = AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
-          res2 = res2 + (partint+1) *(interpolator%eta2_max-interpolator%eta2_min)
+          res2 = res2 + (interpolator%eta2_max-interpolator%eta2_min)
        else if( res2 >  interpolator%eta2_max ) then
-          partint = AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
-          res2 = res2 + partint*(interpolator%eta2_min-interpolator%eta2_max)
+          res2 = res2 + (interpolator%eta2_min-interpolator%eta2_max)
        end if
        
 
@@ -3846,45 +3775,24 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
 
       
        if( res2 < interpolator%eta2_min ) then
-          partint = AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
-          res2 = res2 + (partint+1) *(interpolator%eta2_max-interpolator%eta2_min)
+          res2 = res2 + (interpolator%eta2_max-interpolator%eta2_min)
        else if( res2 >  interpolator%eta2_max ) then
-          partint = AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
-          res2 = res2 + partint*(interpolator%eta2_min-interpolator%eta2_max)
+          res2 = res2 + (interpolator%eta2_min-interpolator%eta2_max)
        end if
 
        SLL_ASSERT( res1 >= interpolator%eta1_min )
        SLL_ASSERT( res1 <= interpolator%eta1_max )
-       if ( res1 > interpolator%eta1_max) then 
-          print*, 'problem  x > eta1_max'
-          stop
-       end if
-       if ( res1 < interpolator%eta1_min) then 
-          print*, 'problem  x < eta1_min'
-          stop
-       end if
        
     case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
 
        if( res1 < interpolator%eta1_min ) then
-          partint = AINT(abs(res1)/(interpolator%eta1_max-interpolator%eta1_min))
-          res1 = res1+ (partint+1) *( interpolator%eta1_max-interpolator%eta1_min)
+          res1 = res1 + (interpolator%eta1_max-interpolator%eta1_min)
        else if( res1 >  interpolator%eta1_max ) then
-          partint = AINT(abs(res1)/(interpolator%eta2_max-interpolator%eta2_min))
-          res1 = res1 + partint*(interpolator%eta2_min-interpolator%eta2_max)
+          res1 = res1 + (interpolator%eta2_min-interpolator%eta2_max)
        end if
-
 
        SLL_ASSERT( res2 >= interpolator%eta2_min )
        SLL_ASSERT( res2 <= interpolator%eta2_max )
-       if ( res2 > interpolator%eta2_max) then 
-          print*, 'problem  y > eta2_max'
-          stop
-       end if
-       if ( res2 < interpolator%eta2_min) then 
-          print*, 'problem  y < eta2_min'
-          stop
-       end if
        
     end select
 
@@ -3892,24 +3800,7 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
     SLL_ASSERT( res1 <= interpolator%eta1_max )
     SLL_ASSERT( res2 >= interpolator%eta2_min )
     SLL_ASSERT( res2 <= interpolator%eta2_max )
-    if ( res1 > interpolator%eta1_max) then 
-       print*, 'problem  x > eta1_max'
-       stop
-    end if
-    if ( res1 < interpolator%eta1_min) then 
-       print*, 'problem  x < eta1_min'
-       stop
-    end if
-    if ( res2 > interpolator%eta2_max) then 
-       print*, 'problem  y > eta2_max'
-       stop
-    end if
-    if ( res2 < interpolator%eta2_min) then 
-       print*, 'problem  y < eta2_min'
-       stop
-    end if
-    !SLL_ALLOCATE(knot1_tmp(interpolator%size_t1),ierr)
-    !SLL_ALLOCATE(knot2_tmp(interpolator%size_t2),ierr)
+
     knot1_tmp => interpolator%t1(1:interpolator%size_t1)
     knot2_tmp => interpolator%t2(1:interpolator%size_t2)
     tmp_coeff => interpolator%coeff_splines(1:size_coeffs1,1:size_coeffs2)
@@ -3953,10 +3844,7 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
     sll_real64                     :: val
     sll_int32 :: size_coeffs1
     sll_int32 :: size_coeffs2
-    sll_int32 :: partint
-    !sll_real64 :: dvalue2d
     sll_real64 :: res1,res2
-    !sll_int32 :: ierr
     sll_real64, dimension(:),pointer :: knot1_tmp
     sll_real64, dimension(:),pointer :: knot2_tmp
     sll_real64, dimension(:,:),pointer :: tmp_coeff
@@ -3975,87 +3863,44 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
     case (0) ! periodic-periodic
        
        if( res1 < interpolator%eta1_min ) then
-          partint = AINT(abs(res1)/(interpolator%eta1_max-interpolator%eta1_min))
-          res1 = res1+ (partint+1) *( interpolator%eta1_max-interpolator%eta1_min)
+          res1 = res1 + (interpolator%eta1_max-interpolator%eta1_min)
        else if( res1 >  interpolator%eta1_max ) then
-          partint = AINT(abs(res1)/(interpolator%eta2_max-interpolator%eta2_min))
-          res1 = res1 + partint*(interpolator%eta2_min-interpolator%eta2_max)
+          res1 = res1 + (interpolator%eta2_min-interpolator%eta2_max)
        end if
        if( res2 < interpolator%eta2_min ) then
-          partint = AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
-          res2 = res2 + (partint+1) *(interpolator%eta2_max-interpolator%eta2_min)
+          res2 = res2 + (interpolator%eta2_max-interpolator%eta2_min)
        else if( res2 >  interpolator%eta2_max ) then
-          partint = AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
-          res2 = res2 + partint*(interpolator%eta2_min-interpolator%eta2_max)
+          res2 = res2 + (interpolator%eta2_min-interpolator%eta2_max)
        end if
           
     case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        
       
        if( res2 < interpolator%eta2_min ) then
-          partint = AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
-          res2 = res2 + (partint+1) *(interpolator%eta2_max-interpolator%eta2_min)
+          res2 = res2 + (interpolator%eta2_max-interpolator%eta2_min)
        else if( res2 >  interpolator%eta2_max ) then
-          partint = AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
-          res2 = res2 + partint*(interpolator%eta2_min-interpolator%eta2_max)
+          res2 = res2 + (interpolator%eta2_min-interpolator%eta2_max)
        end if
        SLL_ASSERT( res1 >= interpolator%eta1_min )
        SLL_ASSERT( res1 <= interpolator%eta1_max )
-       if ( res1 > interpolator%eta1_max) then 
-          print*,'problem  x > eta1_max'
-          stop
-       end if
-       if ( res1 < interpolator%eta1_min) then 
-          print*, 'problem  x < eta1_min'
-          stop
-       end if
        
     case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
        
        if( res1 < interpolator%eta1_min ) then
-          partint = AINT(abs(res1)/(interpolator%eta1_max-interpolator%eta1_min))
-          res1 = res1+ (partint+1) *( interpolator%eta1_max-interpolator%eta1_min)
+          res1 = res1+ ( interpolator%eta1_max-interpolator%eta1_min)
        else if( res1 >  interpolator%eta1_max ) then
-          partint = AINT(abs(res1)/(interpolator%eta2_max-interpolator%eta2_min))
-          res1 = res1 + partint*(interpolator%eta2_min-interpolator%eta2_max)
+          res1 = res1 + (interpolator%eta2_min-interpolator%eta2_max)
        end if
 
-       
        SLL_ASSERT( res2 >= interpolator%eta2_min )
        SLL_ASSERT( res2 <= interpolator%eta2_max )
-       if ( res2 > interpolator%eta2_max) then 
-          print*, 'problem  y > eta2_max'
-          stop
-       end if
-       if ( res2 < interpolator%eta2_min) then 
-          print*, 'problem  y < eta2_min'
-          stop
-       end if
-       
 
     end select
     SLL_ASSERT( res1 >= interpolator%eta1_min )
     SLL_ASSERT( res1 <= interpolator%eta1_max )
     SLL_ASSERT( res2 >= interpolator%eta2_min )
     SLL_ASSERT( res2 <= interpolator%eta2_max )
-    if ( res1 > interpolator%eta1_max) then 
-       print*, 'problem  x > eta1_max'
-       stop
-    end if
-    if ( res1 < interpolator%eta1_min) then 
-       print*, 'problem  x < eta1_min'
-       stop
-    end if
-    if ( res2 > interpolator%eta2_max) then 
-       print*, 'problem  y > eta2_max'
-       stop
-    end if
-    if ( res2 < interpolator%eta2_min) then 
-       print*, 'problem  y < eta2_min'
-       stop
-    end if
-   ! SLL_ALLOCATE(knot1_tmp(interpolator%size_t1),ierr)
-   ! SLL_ALLOCATE(knot2_tmp(interpolator%size_t2),ierr)
+
     knot1_tmp => interpolator%t1(1:interpolator%size_t1)
     knot2_tmp => interpolator%t2(1:interpolator%size_t2)
     tmp_coeff =>interpolator%coeff_splines(1:size_coeffs1,1:size_coeffs2)

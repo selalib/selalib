@@ -51,7 +51,7 @@ contains
     num_particles =  p_group%number_particles
     p             => p_group%p_list
 
-    !$omp parallel default(SHARED) PRIVATE(thread_id, tmp1, tmp2, q_accum)
+    !$omp parallel PRIVATE(thread_id, tmp1, tmp2, q_accum)
 #ifdef _OPENMP
     thread_id = OMP_GET_THREAD_NUM()
 #else
