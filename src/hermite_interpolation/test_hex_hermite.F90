@@ -13,11 +13,12 @@ program test_hex_hermite
   sll_real64, dimension(:,:), allocatable :: deriv
 
   sll_int32    :: num_cells, n_points, n_triangle, n_edge
-  sll_int32    :: i
+  sll_int32    :: i, k_min, n_min
   sll_int32    :: num_method = 10
   character(len = 5) ::name_test = "gauss"!"dioco"!"gauss"!
   sll_int32    :: nloops,ierr, EXTRA_TABLES = 1 ! put 1 for num_method = 15
   ! initial distribution
+  sll_real64   :: r_min
   sll_real64   :: gauss_x2
   sll_real64   :: gauss_x1
   sll_real64   :: gauss_sig
@@ -69,6 +70,8 @@ program test_hex_hermite
   center_mesh_x2 = 0._f64
 
   radius = 8._f64
+  r_min  = 0._f64   ! beware there are some restrictions to respect 
+
 
   call print_method(num_method)
 
@@ -79,6 +82,13 @@ program test_hex_hermite
   do num_cells = 20,20,20 ! -> loop on the size of the mesh 
   
      
+     ! finding the hexagone corresponding to r_min
+
+     k_min = int(r_min/radius*real(num_cells)+1e-6)
+     if (k_min>0) then
+        n_min = 1+3*k_min*(k_min-1)
+     endif
+
      !*********************************************************
      !             allocation
      !*********************************************************
@@ -277,7 +287,7 @@ program test_hex_hermite
         ! with p the degree of the approximation
         !*********************************************************
 
-        call  der_finite_difference( f_tn, p, step, mesh, deriv )
+        call  der_finite_difference( f_tn, p, step, mesh, deriv, n_min, k_min )
 
         t = t + dt
         !*********************************************************
@@ -318,7 +328,7 @@ program test_hex_hermite
 
               if ( inside ) then
                  call hermite_interpolation(i, xx, yy, f_tn, center_values_tn,&
-                      edge_values_tn, center_values_tn1, mesh, deriv, aire,& 
+                      edge_values_tn, center_values_tn1, mesh, deriv, aire, n_min, k_min,& 
                  num_method)
               else 
                  center_values_tn1(i) = 0._f64 ! dirichlet boundary condition
@@ -395,7 +405,7 @@ program test_hex_hermite
 
               if ( inside ) then
                  call hermite_interpolation(i, xx, yy, f_tn, center_values_tn,&
-                      edge_values_tn, edge_values_tn1, mesh, deriv, aire,& 
+                      edge_values_tn, edge_values_tn1, mesh, deriv, aire, n_min, k_min,& 
                  num_method)
               else 
                  edge_values_tn1(i) = 0._f64 ! dirichlet boundary condition
@@ -486,7 +496,7 @@ program test_hex_hermite
            if ( inside ) then
 
               call hermite_interpolation(i, xx, yy, f_tn, center_values_tn,&
-                   edge_values_tn, f_tn1, mesh, deriv, aire,& 
+                   edge_values_tn, f_tn1, mesh, deriv, aire, n_min, k_min,& 
                    num_method)
            else 
 

@@ -1,9 +1,7 @@
 #############################################################################
 ###      Parallel simulations
 #############################################################################
-SET(PROCS 4 CACHE STRING "Number of processors used for parallel tests" )
-
-IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
+IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
 
    ADD_LIBRARY( sll_simulations_parallel STATIC ../simulation_base_class.F90)
 
@@ -76,3 +74,6 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
 
 ENDIF()
 
+IF(MPI_ENABLED)
+   ADD_SUBDIRECTORY(bsl_examples)
+ENDIF(MPI_ENABLED)
