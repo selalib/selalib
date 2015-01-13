@@ -1,12 +1,14 @@
 program analytic_field_2d_cartesian
-  use sll_simulation_2d_analytic_field_cartesian_module
+  use sll_simulation_2d_analytic_field_cartesian_module, only : &
+              sll_simulation_base_class, new_analytic_field_2d_cartesian
   implicit none
-  class(sll_simulation_base_class), pointer :: sim
+  
+  class( sll_simulation_base_class ), pointer :: sim
   character(len=256) :: filename
   character(len=256) :: filename_local
 
-  call get_command_argument(1, filename)
-  if (len_trim(filename) == 0)then
+  call get_command_argument( 1, filename )
+  if (len_trim(filename) == 0) then
     sim => new_analytic_field_2d_cartesian( )
   else
     filename_local = trim(filename)
@@ -16,3 +18,4 @@ program analytic_field_2d_cartesian
   print *,'#PASSED'
 
 end program analytic_field_2d_cartesian
+

@@ -84,7 +84,7 @@ contains
     n_thread  = 1
     thread_id = 0
 
-    !$omp parallel default(SHARED) PRIVATE(thread_id)
+    !$omp parallel PRIVATE(thread_id)
 #ifdef _OPENMP
     thread_id = OMP_GET_THREAD_NUM()
     if (thread_id ==0) then
@@ -97,7 +97,7 @@ contains
     SLL_ALLOCATE( res%p_guard(1:n_thread), ierr)
     SLL_ALLOCATE( res%num_postprocess_particles(1:n_thread), ierr)
 
-    !$omp parallel default(SHARED) PRIVATE(thread_id)
+    !$omp parallel PRIVATE(thread_id)
 #ifdef _OPENMP
     thread_id = OMP_GET_THREAD_NUM()
 #endif

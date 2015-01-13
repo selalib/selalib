@@ -21,12 +21,12 @@ Software engineering
 Post-Docs
 ---------
 * `Aurore BACK (IEC Nancy) <https://sites.google.com/site/siteauroreback/>`_
-* `Morgane BERGOT (ICJ Lyon) <http://math.univ-lyon1.fr/~bergot/>`_
+* `Celine CALDINI-QUEIROS (IPP Garching) <http://ccaldini.perso.math.cnrs.fr>`_
 * `Yaman GÜCLÜ (IPP Garching) <https://www.linkedin.com/pub/yaman-güçlü/70/805/852>`_
 * `Katharina KORMANN (IPP Garching) <http://www-m16.ma.tum.de/Allgemeines/KatharinaKormann>`_
 
 Ph.D. students
--------------
+--------------
 * Thi Trang Nhung PHAM (IRMA Strasbourg)
 * Laura MENDOZA (IPP Garching)
 * Charles PROUVEUR (ICJ Lyon)
@@ -40,3 +40,4 @@ Past members
 * `Aliou DIOUF <http://www.linkedin.com/pub/aliou-diouf/4a/932/28a>`_
 * `Adnane HAMIAZ <http://www.linkedin.com/pub/hamiaz-adnane/59/11b/671>`_
 * `Eric MADAULE <https://www.linkedin.com/pub/éric-madaule/68/302/1b3>`_
+* `Morgane BERGOT (ICJ Lyon) <http://math.univ-lyon1.fr/~bergot/>`_
