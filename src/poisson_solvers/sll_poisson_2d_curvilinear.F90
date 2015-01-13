@@ -22,11 +22,11 @@ type, public :: poisson_2d_curvilinear
   sll_int32 :: num_cells2
   sll_real64, dimension(:), pointer :: node_positions1
   sll_real64, dimension(:), pointer :: node_positions2
-  sll_real64, dimension(:), pointer :: quadrature_points1
+  sll_real64, dimension(:), pointer, public :: quadrature_points1
   sll_real64, dimension(:), pointer :: quadrature_points2
-  sll_real64, dimension(:), pointer :: quadrature_weights1
+  sll_real64, dimension(:), pointer, public :: quadrature_weights1
   sll_real64, dimension(:), pointer :: quadrature_weights2
-  sll_int32 :: num_quadrature_points1
+  sll_int32, public :: num_quadrature_points1
   sll_int32 :: num_quadrature_points2  
   sll_int32 :: spline_degree1
   sll_int32 :: spline_degree2
@@ -50,6 +50,11 @@ end type poisson_2d_curvilinear
 sll_int32, parameter, public :: POISSON_GAUSS_LEGENDRE = 0
 !> For the integration mode.  
 sll_int32, parameter, public :: POISSON_GAUSS_LOBATTO = 1
+
+!> For the knots defined on the boundary  
+sll_int32, parameter, public :: SLL_POISSON_PERIODIC_KNOTS = 0
+!> For the knots defined on the boundary  
+sll_int32, parameter, public :: SLL_POISSON_OPEN_KNOTS = 1
 
 
 public new_poisson_2d_curvilinear
@@ -90,6 +95,14 @@ contains
 !>            normalized to [0,1] in the direction eta2
 !> @param[in] num_quadrature_points1 the number of quadrature weights in direction eta1
 !> @param[in] num_quadrature_points2 the number of quadrature weights in direction eta2
+!> @param[in] bc_knots_min1 type of boundary condition at eta1_min for knots dir eta1
+!> @param[in] bc_knots_max1 type of boundary condition at eta1_max for knots dir eta1
+!> @param[in] bc_knots_min2 type of boundary condition at eta2_min for knots dir eta2
+!> @param[in] bc_knots_max2 type of boundary condition at eta2_max for knots dir eta2
+!> @param[in] knots_min1 knots at eta1_min in direction eta1
+!> @param[in] knots_max1 knots at eta1_max in direction eta1
+!> @param[in] knots_min2 knots at eta2_min in direction eta2
+!> @param[in] knots_max2 knots at eta2_max in direction eta2
 !> @return the type poisson_2d_curvilinear as a pointer
 
 function new_poisson_2d_curvilinear( &
@@ -114,7 +127,15 @@ function new_poisson_2d_curvilinear( &
   quadrature_weights1, &
   quadrature_weights2, &
   num_quadrature_points1, &
-  num_quadrature_points2 &  
+  num_quadrature_points2, &
+  bc_knots_min1, &
+  bc_knots_max1, &
+  bc_knots_min2, &
+  bc_knots_max2, &
+  knots_min1, &
+  knots_max1, &
+  knots_min2, &
+  knots_max2 &  
   ) result(poisson)
 
   type(poisson_2d_curvilinear), pointer :: poisson
@@ -140,6 +161,15 @@ function new_poisson_2d_curvilinear( &
   sll_real64, dimension(:), intent(in), optional :: quadrature_weights2
   sll_int32, intent(in), optional :: num_quadrature_points1
   sll_int32, intent(in), optional :: num_quadrature_points2
+  sll_int32, intent(in), optional :: bc_knots_min1
+  sll_int32, intent(in), optional :: bc_knots_max1
+  sll_int32, intent(in), optional :: bc_knots_min2
+  sll_int32, intent(in), optional :: bc_knots_max2
+  sll_real64, dimension(:), intent(in), optional :: knots_min1
+  sll_real64, dimension(:), intent(in), optional :: knots_max1
+  sll_real64, dimension(:), intent(in), optional :: knots_min2
+  sll_real64, dimension(:), intent(in), optional :: knots_max2
+  
   sll_int32 :: ierr
 
 
@@ -167,7 +197,15 @@ function new_poisson_2d_curvilinear( &
     quadrature_weights1, &
     quadrature_weights2, &
     num_quadrature_points1, &
-    num_quadrature_points2)
+    num_quadrature_points2, &
+    bc_knots_min1, &
+    bc_knots_max1, &
+    bc_knots_min2, &
+    bc_knots_max2, &
+    knots_min1, &
+    knots_max1, &
+    knots_min2, &
+    knots_max2 )
    
 end function new_poisson_2d_curvilinear
 
@@ -178,6 +216,7 @@ end function new_poisson_2d_curvilinear
 !> @brief Initialization of poisson 2d curvilinear solver
 !> @details 
 !> The parameters are
+!> @param[out] poisson the type general_coordinate_elliptic_solver
 !> @param[in] spline_degree1 the degre of B-spline in the direction eta1
 !> @param[in] spline_degree2 the degre of B-spline in the direction eta2
 !> @param[in] num_cells1 the number of cells in the direction eta1
@@ -204,7 +243,14 @@ end function new_poisson_2d_curvilinear
 !>            normalized to [0,1] in the direction eta2
 !> @param[in] num_quadrature_points1 the number of quadrature weights in direction eta1
 !> @param[in] num_quadrature_points2 the number of quadrature weights in direction eta2
-!> @param[out] the type general_coordinate_elliptic_solver
+!> @param[in] bc_knots_min1 type of boundary condition at eta1_min for knots dir eta1
+!> @param[in] bc_knots_max1 type of boundary condition at eta1_max for knots dir eta1
+!> @param[in] bc_knots_min2 type of boundary condition at eta2_min for knots dir eta2
+!> @param[in] bc_knots_max2 type of boundary condition at eta2_max for knots dir eta2
+!> @param[in] knots_min1 knots at eta1_min in direction eta1
+!> @param[in] knots_max1 knots at eta1_max in direction eta1
+!> @param[in] knots_min2 knots at eta2_min in direction eta2
+!> @param[in] knots_max2 knots at eta2_max in direction eta2
 subroutine initialize_poisson_2d_curvilinear( &
   poisson, &
   spline_degree1, &
@@ -228,7 +274,15 @@ subroutine initialize_poisson_2d_curvilinear( &
   quadrature_weights1, &
   quadrature_weights2, &
   num_quadrature_points1, &
-  num_quadrature_points2) 
+  num_quadrature_points2, &
+  bc_knots_min1, &
+  bc_knots_max1, &
+  bc_knots_min2, &
+  bc_knots_max2, &
+  knots_min1, &
+  knots_max1, &
+  knots_min2, &
+  knots_max2 )
     
   type(poisson_2d_curvilinear), intent(out) :: poisson
   sll_int32,  intent(in) :: spline_degree1
@@ -253,14 +307,16 @@ subroutine initialize_poisson_2d_curvilinear( &
   sll_real64, dimension(:), intent(in), optional :: quadrature_weights2
   sll_int32, intent(in), optional :: num_quadrature_points1
   sll_int32, intent(in), optional :: num_quadrature_points2
+  sll_int32, intent(in), optional :: bc_knots_min1
+  sll_int32, intent(in), optional :: bc_knots_max1
+  sll_int32, intent(in), optional :: bc_knots_min2
+  sll_int32, intent(in), optional :: bc_knots_max2
+  sll_real64, dimension(:), intent(in), optional :: knots_min1
+  sll_real64, dimension(:), intent(in), optional :: knots_max1
+  sll_real64, dimension(:), intent(in), optional :: knots_min2
+  sll_real64, dimension(:), intent(in), optional :: knots_max2
   
   sll_int32 :: ierr
-  sll_int32 :: i
-  sll_int32 :: j
-  sll_real64 :: eta1_min_value
-  sll_real64 :: eta1_max_value
-  sll_real64 :: eta2_min_value
-  sll_real64 :: eta2_max_value
   
   sll_int32 :: dim1
   sll_int32 :: dim2
@@ -275,176 +331,165 @@ subroutine initialize_poisson_2d_curvilinear( &
   sll_real64, dimension(:,:), allocatable :: splines_at_points2
   sll_real64, dimension(:,:), allocatable :: output
   
+  sll_int32 :: num_nz
   
+  
+  poisson%spline_degree1 = spline_degree1
+  poisson%spline_degree2 = spline_degree2
   
   poisson%num_cells1 = num_cells1
   poisson%num_cells2 = num_cells2
   
+  poisson%node_positions1 => new_node_positions( &
+    num_cells1, &
+    node_positions1, &
+    eta1_min, &
+    eta1_max)
+
+  poisson%node_positions2 => new_node_positions( &
+    num_cells2, &
+    node_positions2, &
+    eta2_min, &
+    eta2_max)
+
+  call new_quadrature( &
+    spline_degree1, &
+    quadrature_type1, &
+    quadrature_points1, &
+    quadrature_weights1, &
+    num_quadrature_points1, &
+    poisson%quadrature_points1, &
+    poisson%quadrature_weights1, &
+    poisson%num_quadrature_points1)  
+
+  call new_quadrature( &
+    spline_degree2, &
+    quadrature_type2, &
+    quadrature_points2, &
+    quadrature_weights2, &
+    num_quadrature_points2, &
+    poisson%quadrature_points2, &
+    poisson%quadrature_weights2, &
+    poisson%num_quadrature_points2)  
+
+  poisson%knots1 => new_knots( &
+    poisson%node_positions1, &
+    num_cells1, &
+    spline_degree1, &
+    bc_knots_min1, &
+    bc_knots_max1, &
+    knots_min1, &
+    knots_max1 )  
+    
+  poisson%knots2 => new_knots( &
+    poisson%node_positions2, &
+    num_cells2, &
+    spline_degree2, &
+    bc_knots_min2, &
+    bc_knots_max2, &
+    knots_min2, &
+    knots_max2 )  
+
+
+
+
+  dim1 = (spline_degree1+1)*(spline_degree2+1)
+  dim2 = num_cells1*num_cells2
+  SLL_CLEAR_ALLOCATE(poisson%local_spline_indices(1:dim1,1:dim2),ierr)
+  SLL_CLEAR_ALLOCATE(poisson%local_to_global_spline_indices(1:dim1,1:dim2),ierr)
+  num_spl1=num_cells1+spline_degree1
+  num_spl2=num_cells2+spline_degree2
+  SLL_CLEAR_ALLOCATE(poisson%global_spline_indices(num_spl1*num_spl2),ierr)
+
+  call compute_local_splines_indices( &
+    num_cells1, &
+    num_cells2, &
+    spline_degree1, &
+    spline_degree2, &
+    poisson%local_spline_indices)
+
+  SLL_ALLOCATE(poisson%bc_indices1(num_spl1),ierr)
+  SLL_ALLOCATE(poisson%bc_indices2(num_spl2),ierr)
+
+  call compute_bc_indices(num_cells1,spline_degree1,bc_min1,bc_max1,poisson%bc_indices1)
+  call compute_bc_indices(num_cells2,spline_degree2,bc_min2,bc_max2,poisson%bc_indices2)
+  call compute_global_splines_indices( &
+    num_spl1, &
+    num_spl2, &
+    poisson%bc_indices1, &
+    poisson%bc_indices2, &
+    poisson%global_spline_indices)
+  call compute_local_to_global_splines_indices( &
+    num_cells1, &
+    num_cells2, &
+    spline_degree1, &
+    spline_degree2, &
+    poisson%local_spline_indices, &
+    poisson%global_spline_indices, &
+    poisson%local_to_global_spline_indices)
+
+  poisson%solution_size1 = compute_solution_size( &
+    bc_min1, &
+    bc_max1, &
+    num_cells1, &
+    spline_degree1)
+  poisson%solution_size2 = compute_solution_size( &
+    bc_min2, &
+    bc_max2, &
+    num_cells2, &
+    spline_degree2)
   
-  SLL_ALLOCATE(poisson%node_positions1(num_cells1+1),ierr)
-  SLL_ALLOCATE(poisson%node_positions2(num_cells2+1),ierr)
-  
-  if(present(node_positions1))then
-    if(size(node_positions1)<num_cells1+1)then
-      print *,'#bad size for node_positions1=',size(node_positions1)
-      print *,'#num_cells1+1=',num_cells1+1
-      print *,'#at line/file ',__LINE__,__FILE__
-      stop
-    endif
-    poisson%node_positions1(1:num_cells1+1) = node_positions1(1:num_cells1+1)
-    if(present(eta1_min)) then
-      if(eta1_min /= node_positions1(1))then
-        print *,'#Warning bad value for eta1_min=',eta1_min
-        print *,'#should be equal to node_positions1(1)',node_positions1(1)
-        print *,'#at line/file ',__LINE__,__FILE__
-        print *,'#eta1_min is not used'       
-      endif
-    endif
-    if(present(eta1_max)) then
-      if(eta1_max /= node_positions1(num_cells1+1))then
-        print *,'#Warning bad value for eta1_max=',eta1_max
-        print *,'#should be equal to node_positions1(num_cells1+1)', &
-          node_positions1(num_cells1+1)
-        print *,'#at line/file ',__LINE__,__FILE__        
-        print *,'#eta1_max is not used'       
-      endif
-    endif    
-  else
-    eta1_min_value = 0._f64
-    if(present(eta1_min))then
-      eta1_min_value = eta1_min
-    endif
-    eta1_max_value = 1._f64  
-    if(present(eta1_max))then
-      eta1_max_value = eta1_max
-    endif
-    do i=1,num_cells1+1
-      poisson%node_positions1(i) = &
-        eta1_min_value+real(i-1,f64)*(eta1_max_value-eta1_min_value)/real(num_cells1,f64)
-    enddo  
-  endif
-  
-  
-!  poisson%eta1_min = eta1_min
-!  poisson%eta1_max = eta1_max
-!  poisson%eta2_min = eta2_min
-!  poisson%eta2_max = eta2_max
-!  
-!  poisson%spline_degree1 = spline_degree1
-!  poisson%spline_degree2 = spline_degree2
-!  
+  solution_size = poisson%solution_size1*poisson%solution_size2
+  total_num_splines_loc = (spline_degree1+1)*(spline_degree2+1)
+
+  num_nz = compute_nz( &
+    num_cells1, &
+    num_cells2, &
+    spline_degree1, &
+    spline_degree2, &
+    poisson%global_spline_indices)
+ 
+  print*,'#num_nz=',num_nz
+
+  poisson%sll_csr_mat => new_csr_matrix( &
+    solution_size, &
+    solution_size, &
+    num_cells1*num_cells2, &
+    poisson%local_to_global_spline_indices, &
+    total_num_splines_loc, &
+    poisson%local_to_global_spline_indices, &
+    total_num_splines_loc)
+
+
+  print *,'#begin of sll_factorize_csr_matrix'
+  call sll_factorize_csr_matrix(poisson%sll_csr_mat)
+  print *,'#end of sll_factorize_csr_matrix'
+
+!  if (es%perper) then
 !
-!  select case(quadrature_type1)
-!    case (POISSON_GAUSS_LEGENDRE)
-!      SLL_ALLOCATE(poisson%gauss_pts1(2,spline_degree1+2),ierr)
-!      poisson%gauss_pts1(:,:) = 0.0_f64
-!      poisson%gauss_pts1(:,:) = gauss_legendre_points_and_weights(spline_degree1+2)
-!    case (POISSON_GAUSS_LOBATTO)
-!      SLL_ALLOCATE(poisson%gauss_pts1(2,spline_degree1+2),ierr)
-!      poisson%gauss_pts1(:,:) = gauss_lobatto_points_and_weights(spline_degree1+2)
-!    case default
-!      print *, '#initialize_poisson_2d_curvilinear: '
-!      print *, '#bad choice for quadrature_type1'
-!      print *,'#error at line',__LINE__,'in file',__FILE__
-!      stop       
-!  end select
-!
-!  select case(quadrature_type2)
-!    case (POISSON_GAUSS_LEGENDRE)
-!      SLL_ALLOCATE(poisson%gauss_pts2(2,spline_degree2+2),ierr)
-!      poisson%gauss_pts2(:,:) = 0.0_f64
-!      poisson%gauss_pts2(:,:) = gauss_legendre_points_and_weights(spline_degree2+2)
-!    case (POISSON_GAUSS_LOBATTO)
-!      SLL_ALLOCATE(poisson%gauss_pts1(2,spline_degree2+2),ierr)
-!      poisson%gauss_pts2(:,:) = gauss_lobatto_points_and_weights(spline_degree2+2)
-!    case default
-!      print *, '#initialize_poisson_2d_curvilinear: '
-!      print *, '#bad choice for quadrature_type2'
-!      print *,'#error at line',__LINE__,'in file',__FILE__
-!      stop       
-!  end select
-!  
-!  
-!  poisson%knot_size1 = compute_knot_size(bc_left, bc_right, num_cells1, spline_degree1)
-!  poisson%knot_size2 = compute_knot_size(bc_bottom, bc_top, num_cells2, spline_degree2)
-!  
-!  SLL_ALLOCATE(poisson%knots1(poisson%knot_size1),ierr)
-!  SLL_ALLOCATE(poisson%knots2(poisson%knot_size2),ierr)
-!  
-!  call compute_knots(bc_left, &
-!    bc_right, &
-!    num_cells1, &
-!    eta1_min, &
-!    eta1_max, &
-!    spline_degree1, &
-!    poisson%knots1)
-!
-!  call compute_knots(bc_bottom, &
-!    bc_top, &
-!    num_cells2, &
-!    eta2_min, &
-!    eta2_max, &
-!    spline_degree2, &
-!    poisson%knots2)
+!   es%sll_csr_mat_with_constraint => new_csr_matrix_with_constraint(es%sll_csr_mat)  
 !
 !
-!  dim1 = (spline_degree1+1)*(spline_degree2+1)
-!  dim2 = num_cells1*num_cells2
-!  SLL_CLEAR_ALLOCATE(poisson%local_spline_indices(1:dim1,1:dim2),ierr)
-!  SLL_CLEAR_ALLOCATE(poisson%local_to_global_spline_indices(1:dim1,1:dim2),ierr)
-!  num_spl1=num_cells1+spline_degree1
-!  num_spl2=num_cells2+spline_degree2
-!  SLL_CLEAR_ALLOCATE(poisson%global_spline_indices(num_spl1*num_spl2),ierr)
+!   call csr_add_one_constraint( &
+!    es%sll_csr_mat%opi_ia, & 
+!    es%sll_csr_mat%opi_ja, &
+!    es%sll_csr_mat%opr_a, &
+!    es%sll_csr_mat%num_rows, &
+!    es%sll_csr_mat%num_nz, &
+!    es%masse, &
+!    es%sll_csr_mat_with_constraint%opi_ia, &
+!    es%sll_csr_mat_with_constraint%opi_ja, &
+!    es%sll_csr_mat_with_constraint%opr_a)  
 !
-!  call compute_local_splines_indices( &
-!    num_cells1, &
-!    num_cells2, &
-!    spline_degree1, &
-!    spline_degree2, &
-!    poisson%local_spline_indices)
-!
-!  SLL_ALLOCATE(poisson%bc_indices1(num_spl1),ierr)
-!  SLL_ALLOCATE(poisson%bc_indices2(num_spl2),ierr)
-!
-!  call compute_bc_indices(num_cells1,spline_degree1,bc_left,bc_right,poisson%bc_indices1)
-!  call compute_bc_indices(num_cells2,spline_degree2,bc_bottom,bc_top,poisson%bc_indices2)
-!  call compute_global_splines_indices( &
-!    num_spl1, &
-!    num_spl2, &
-!    poisson%bc_indices1, &
-!    poisson%bc_indices2, &
-!    poisson%global_spline_indices)
-!  call compute_local_to_global_splines_indices( &
-!    num_cells1, &
-!    num_cells2, &
-!    spline_degree1, &
-!    spline_degree2, &
-!    poisson%local_spline_indices, &
-!    poisson%global_spline_indices, &
-!    poisson%local_to_global_spline_indices)
-!
-!  poisson%solution_size1 = compute_solution_size( &
-!    bc_left, &
-!    bc_right, &
-!    num_cells1, &
-!    spline_degree1)
-!  poisson%solution_size2 = compute_solution_size( &
-!    bc_bottom, &
-!    bc_top, &
-!    num_cells2, &
-!    spline_degree2)
-!  
-!  solution_size = poisson%solution_size1*poisson%solution_size2
-!  total_num_splines_loc = (spline_degree1+1)*(spline_degree2+1)
-!
-!!  poisson%sll_csr_mat => new_csr_matrix( &
-!!    solution_size, &
-!!    solution_size, &
-!!    num_cells1*num_cells2, &
-!!    poisson%local_to_global_spline_indices, &
-!!    total_num_splines_loc, &
-!!    poisson%local_to_global_spline_indices, &
-!!    total_num_splines_loc)
+!    print *,'#begin of sll_factorize_csr_matrix'
+!    call sll_factorize_csr_matrix(es%sll_csr_mat_with_constraint)
+!    print *,'#end of sll_factorize_csr_matrix'
+!  else   
+!    print *,'#begin of sll_factorize_csr_matrix'
+!    call sll_factorize_csr_matrix(es%sll_csr_mat)
+!    print *,'#end of sll_factorize_csr_matrix'
+!  end if 
+
 !
 !
 !!  call compute_composite_quadrature_points( &
@@ -496,62 +541,279 @@ subroutine initialize_poisson_2d_curvilinear( &
 
 end subroutine initialize_poisson_2d_curvilinear
 
-function compute_knot_size(bc_left,bc_right,num_cells, spline_degree) result(res)
-  sll_int32, intent(in) :: bc_left
-  sll_int32, intent(in) :: bc_right
+function new_node_positions( &
+  num_cells, &
+  node_positions, &  
+  eta_min, &
+  eta_max) result(res)
+  sll_real64, dimension(:), pointer :: res
   sll_int32, intent(in) :: num_cells
-  sll_int32, intent(in) :: spline_degree
-  sll_int32 :: res   
+  sll_real64, dimension(:), intent(in), optional :: node_positions
+  sll_real64, intent(in), optional :: eta_min
+  sll_real64, intent(in), optional :: eta_max
   
-  if((bc_left==SLL_PERIODIC).and.(bc_right==SLL_PERIODIC))then
-    res = 2*spline_degree+2
+  sll_int32 :: ierr
+  sll_int32 :: i
+  sll_real64 :: eta_min_value
+  sll_real64 :: eta_max_value
+  sll_real64 :: delta
+
+  SLL_ALLOCATE(res(num_cells+1),ierr)
+  
+  if(present(node_positions))then
+    if(size(node_positions)<num_cells+1)then
+      print *,'#bad size for node_positions=',size(node_positions)
+      print *,'#num_cells+1=',num_cells+1
+      print *,'#at line/file ',__LINE__,__FILE__
+      stop
+    endif
+    res(1:num_cells+1) = node_positions(1:num_cells+1)
+    if(present(eta_min)) then
+      if(eta_min /= node_positions(1))then
+        print *,'#Warning bad value for eta_min=',eta_min
+        print *,'#should be equal to node_positions(1)',node_positions(1)
+        print *,'#at line/file ',__LINE__,__FILE__
+        print *,'#eta1_min is not used'       
+      endif
+    endif
+    if(present(eta_max)) then
+      if(eta_max /= node_positions(num_cells+1))then
+        print *,'#Warning bad value for eta_max=',eta_max
+        print *,'#should be equal to node_positions(num_cells+1)', &
+          node_positions(num_cells+1)
+        print *,'#at line/file ',__LINE__,__FILE__        
+        print *,'#eta_max is not used'       
+      endif
+    endif    
   else
-    res = 2*spline_degree+num_cells+1
+    eta_min_value = 0._f64
+    if(present(eta_min))then
+      eta_min_value = eta_min
+    endif
+    eta_max_value = 1._f64  
+    if(present(eta_max))then
+      eta_max_value = eta_max
+    endif
+    delta = (eta_max_value-eta_min_value)/real(num_cells,f64)
+    do i=1,num_cells+1
+      res(i) = eta_min_value+real(i-1,f64)*delta
+    enddo  
   endif
 
-end function compute_knot_size
+end function new_node_positions
+  
 
-subroutine compute_knots( &
-  bc_left, &
-  bc_right, &
+subroutine new_quadrature( &
+  degree, &
+  quadrature_type, &
+  quadrature_points, &
+  quadrature_weights, &
+  num_quadrature_points, &
+  quadrature_points_out, &
+  quadrature_weights_out, &
+  num_quadrature_points_out)  
+  sll_int32, intent(in) :: degree
+  sll_int32,  intent(in), optional :: quadrature_type
+  sll_real64, dimension(:), intent(in), optional :: quadrature_points
+  sll_real64, dimension(:), intent(in), optional :: quadrature_weights
+  sll_int32, intent(in), optional :: num_quadrature_points
+  sll_real64, dimension(:), pointer :: quadrature_points_out
+  sll_real64, dimension(:), pointer :: quadrature_weights_out
+  sll_int32, intent(out) :: num_quadrature_points_out
+  
+  sll_real64, dimension(:,:), allocatable :: pts_and_weights
+  sll_int32 :: ierr
+  sll_int32 :: quadrature_type_value
+  
+  num_quadrature_points_out = degree+2
+  if(present(num_quadrature_points))then
+    num_quadrature_points_out = num_quadrature_points
+  endif
+  
+  
+  SLL_ALLOCATE(quadrature_points_out(num_quadrature_points_out),ierr)
+  SLL_ALLOCATE(quadrature_weights_out(num_quadrature_points_out),ierr)
+
+  if((present(quadrature_points).or.present(quadrature_weights))) then
+    
+    if(.not.(present(quadrature_points).and.present(quadrature_weights)))then
+      print *,'#quadrature_points and quadrature_weights'
+      print *,'#should be provided'
+      print *,'#at line/file',__LINE__,__FILE__
+      stop
+    endif
+    if(size(quadrature_points)<num_quadrature_points_out) then
+      print *,'#bad size for quadrature_points'
+      print *,'#at line/file',__LINE__,__FILE__
+    endif
+    if(size(quadrature_weights)<num_quadrature_points_out) then
+      print *,'#bad size for quadrature_weights'
+      print *,'#at line/file',__LINE__,__FILE__
+      stop
+    endif
+    quadrature_points_out(1:num_quadrature_points_out) &
+      = quadrature_points(1:num_quadrature_points_out)
+    quadrature_weights_out(1:num_quadrature_points_out) &
+      = quadrature_weights(1:num_quadrature_points_out)
+    if(present(quadrature_type))then
+      print *,'#Warning: quadrature_type is ignored',quadrature_type
+      print *,'#as quadrature_points and quadrature_weights'
+      print *,'#are provided'
+    endif
+  else
+    quadrature_type_value = POISSON_GAUSS_LEGENDRE
+    if(present(quadrature_type))then
+      quadrature_type_value = quadrature_type
+    endif
+    SLL_ALLOCATE(pts_and_weights(2,num_quadrature_points_out),ierr)
+    select case(quadrature_type_value)
+	  case (POISSON_GAUSS_LEGENDRE)
+	    pts_and_weights(1:2,1:num_quadrature_points_out) = &
+		  gauss_legendre_points_and_weights(num_quadrature_points_out,0._f64,1._f64)
+	  case (POISSON_GAUSS_LOBATTO)
+	    pts_and_weights(1:2,1:num_quadrature_points_out) = &
+	      gauss_lobatto_points_and_weights(num_quadrature_points_out,0._f64,1._f64)
+	  case default
+	    print *, '#bad choice for quadrature_type'
+	    print *,'#error at line',__LINE__,'in file',__FILE__
+	    stop       
+    end select
+    quadrature_points_out(1:num_quadrature_points_out) &
+      = pts_and_weights(1,1:num_quadrature_points_out)
+    quadrature_weights_out(1:num_quadrature_points_out) &
+      = pts_and_weights(2,1:num_quadrature_points_out)
+    
+  endif  
+
+  
+
+end subroutine new_quadrature
+
+
+function new_knots( &
+  node_positions, &
   num_cells, &
-  eta_min, &
-  eta_max, &
   spline_degree, &
-  knots)
-  sll_int32, intent(in) :: bc_left
-  sll_int32, intent(in) :: bc_right
+  bc_min, &
+  bc_max, &
+  knots_min, &
+  knots_max ) &  
+  result(knots)
+  sll_real64, dimension(:), intent(in) :: node_positions
   sll_int32, intent(in) :: num_cells
-  sll_real64, intent(in) :: eta_min
-  sll_real64, intent(in) :: eta_max
   sll_int32, intent(in) :: spline_degree
-  sll_real64, dimension(:), intent(out) :: knots
+  sll_int32, intent(in), optional :: bc_min
+  sll_int32, intent(in), optional :: bc_max
+  sll_real64, dimension(:), intent(in), optional :: knots_min
+  sll_real64, dimension(:), intent(in), optional :: knots_max
+  sll_real64, dimension(:), pointer :: knots
+
   sll_real64 :: delta
   sll_int32 :: i
+  sll_int32 :: ierr
+  sll_real64 :: L
+  sll_real64 :: val
+  sll_int32 :: bc_min_value
+  sll_int32 :: bc_max_value
   
-  delta = (eta_max - eta_min)/real(num_cells,f64)
+  if(num_cells<1)then
+    print *,'#num_cells should be>0',num_cells
+    print *,'#at line/file',__LINE__,__FILE__
+    stop
+  endif
+  if(spline_degree<1)then
+    print *,'#spline_degree should be>0',spline_degree
+  endif
+  
+  if(size(node_positions)<num_cells+1)then
+    print *,'#Problem for size of node_positions',size(node_positions),num_cells+1
+    print *,'#at line/file',__LINE__,__FILE__
+    stop
+  endif
+  
+  do i=1,num_cells-1
+    val = node_positions(i+1)-node_positions(i)
+    if(val<=0)then
+      print *,'#node_positions should be strictly increasing'
+      stop
+    endif
+  enddo
   
   
-  if((bc_left==SLL_PERIODIC).and.(bc_right==SLL_PERIODIC))then
-    do i = -spline_degree, spline_degree+1
-      knots(i+spline_degree+1) = real(i,f64)*delta 
-    end do    
+  
+  L = node_positions(num_cells+1)-node_positions(1)
+  
+  
+  SLL_ALLOCATE(knots(num_cells+2*spline_degree+1),ierr)
+  
+  knots(spline_degree+1:num_cells+spline_degree+1) = node_positions(1:num_cells+1)
+  
+  if(present(knots_min))then
+    if(size(knots_min)<spline_degree)then
+      print *,'#Problem of size of knots_min',size(knots_min),spline_degree
+      print *,'#at line/file',__LINE__,__FILE__
+      stop
+    endif
+    knots(1:spline_degree) = knots_min(1:spline_degree)
+    if(present(bc_min))then
+      print *,'#Warning knots_min is present'
+      print *,'#bc_min=',bc_min
+      print *,'is ignored at line/file',__LINE__,__FILE__
+    endif
   else
-    !repeated left point
-    do i = 1, spline_degree + 1
-      knots(i) = eta_min
-    enddo
-    !interior points
-    do i = spline_degree+2, num_cells+spline_degree
-      knots(i) = eta_min+real(i-spline_degree-1,f64)*delta
-    enddo
-    !repeated right point
-    do i = num_cells+spline_degree+1, num_cells+1+2*spline_degree
-      knots(i) = eta_max
-    enddo
+    bc_min_value = SLL_POISSON_OPEN_KNOTS
+    if(present(bc_min))then
+      bc_min_value = bc_min
+    endif
+    select case (bc_min_value)
+	  case (SLL_POISSON_OPEN_KNOTS)
+	    knots(1:spline_degree) = knots(spline_degree+1)
+	  case (SLL_POISSON_PERIODIC_KNOTS)
+	    knots(1:spline_degree) = knots(num_cells+1:num_cells+spline_degree)-L
+	  case default
+	    print *, '#bad choice for bc_min'
+	    print *,'#error at line',__LINE__,'in file',__FILE__
+	    stop       
+    end select  
+  endif
+  
+
+  if(present(knots_max))then
+    if(size(knots_max)<spline_degree)then
+      print *,'#Problem of size of knots_max',size(knots_max),spline_degree
+      print *,'#at line/file',__LINE__,__FILE__
+      stop
+    endif
+    knots(num_cells+spline_degree+2:num_cells+2*spline_degree+1) &
+      = knots_max(1:spline_degree)
+    if(present(bc_max))then
+      print *,'#Warning knots_max is present'
+      print *,'#bc_max=',bc_max
+      print *,'is ignored at line/file',__LINE__,__FILE__
+    endif
+  else
+    bc_max_value = SLL_POISSON_OPEN_KNOTS
+    if(present(bc_max))then
+      bc_max_value = bc_max
+    endif
+    select case (bc_max_value)
+	  case (SLL_POISSON_OPEN_KNOTS)
+	    knots(num_cells+spline_degree+2:num_cells+2*spline_degree+1) &
+	      = knots(num_cells+spline_degree+1)
+	  case (SLL_POISSON_PERIODIC_KNOTS)
+	    knots(num_cells+spline_degree+2:num_cells+2*spline_degree+1) &
+	      = knots(spline_degree+2:2*spline_degree+1)+L
+	  case default
+	    print *, '#bad choice for bc_max'
+	    print *,'#error at line',__LINE__,'in file',__FILE__
+	    stop       
+    end select  
   endif
 
-end subroutine compute_knots
+end function new_knots
+
+
+
 
 
 subroutine compute_local_splines_indices( &
@@ -585,17 +847,15 @@ subroutine compute_local_splines_indices( &
         end do
       end do
     end do
-  end do
-
-  
+  end do  
   
 end subroutine compute_local_splines_indices
 
-subroutine compute_bc_indices(num_cells,spline_degree,bc_left,bc_right,index)
+subroutine compute_bc_indices(num_cells,spline_degree,bc_min,bc_max,index)
   sll_int32, intent(in) :: num_cells
   sll_int32, intent(in) :: spline_degree
-  sll_int32, intent(in) :: bc_left
-  sll_int32, intent(in) :: bc_right
+  sll_int32, intent(in) :: bc_min
+  sll_int32, intent(in) :: bc_max
   sll_int32, dimension(:), intent(out) :: index
   
   sll_int32 :: i
@@ -604,15 +864,15 @@ subroutine compute_bc_indices(num_cells,spline_degree,bc_left,bc_right,index)
     index(i) = i
   enddo
   
-  !left boundary correction  
-  select case (bc_left)
+  !eta_min boundary correction  
+  select case (bc_min)
     case (SLL_DIRICHLET)
       index(1) = 0
     case default     
   end select
       
-  !right boundary correction
-  select case (bc_right)
+  !eta_max boundary correction
+  select case (bc_max)
     case (SLL_DIRICHLET)
       index(num_cells+spline_degree) = 0
     case (SLL_PERIODIC)
@@ -671,6 +931,8 @@ subroutine compute_global_splines_indices( &
 
 end subroutine compute_global_splines_indices
 
+
+
 subroutine compute_local_to_global_splines_indices( &
   num_cells1,&
   num_cells2,&
@@ -700,22 +962,93 @@ subroutine compute_local_to_global_splines_indices( &
 end subroutine compute_local_to_global_splines_indices
 
 
-function compute_solution_size(bc_left,bc_right,num_cells, spline_degree) result(res)
-  sll_int32, intent(in) :: bc_left
-  sll_int32, intent(in) :: bc_right
+function compute_nz( &
+  num_cells1, &
+  num_cells2, &
+  spline_degree1, &
+  spline_degree2, &
+  global_spline_indices &
+  ) result(nz)
+  sll_int32, intent(in) :: num_cells1
+  sll_int32, intent(in) :: num_cells2
+  sll_int32, intent(in) :: spline_degree1
+  sll_int32, intent(in) :: spline_degree2
+  sll_int32, dimension(:), intent(in) :: global_spline_indices
+  sll_int32 :: nz
+
+  sll_int32 :: i
+  sll_int32 :: j
+  sll_int32 :: i_loc
+  sll_int32 :: j_loc
+  sll_int32 :: i_glob
+  sll_int32 :: j_glob
+  sll_int32 :: num_spl1
+  sll_int32 :: num_spl2
+  sll_int32 :: index1
+  sll_int32 :: index2
+  sll_int32 :: li_A
+  sll_int32 :: li_B
+  !sll_int32, dimension(:,:,:), allocatable :: work
+  sll_int32, dimension(:), allocatable :: flag
+  sll_int32 :: ierr
+  sll_int32 :: count
+  
+  num_spl1 = num_cells1+spline_degree1
+  num_spl2 = num_cells2+spline_degree2
+
+  !SLL_CLEAR_ALLOCATE(work(-degree_spline1:degree_spline1,-degree_spline2:degree_spline2,num_spl1*num_spl2),ierr)
+  SLL_CLEAR_ALLOCATE(flag(0:num_spl1*num_spl2),ierr)
+
+  count = 0
+  do j_glob=1,num_spl2
+    do i_glob=1,num_spl1
+      li_A = global_spline_indices(i_glob+num_spl1*(j_glob-1))
+      if(li_A/=0)then
+      !if((flag(li_A)==0))then
+        do j_loc = -spline_degree2,spline_degree2
+          j = j_glob+j_loc
+          if(j>0.and.j<=num_spl2)then
+            do i_loc = -spline_degree1,spline_degree1
+              i = i_glob+i_loc
+              if(i>0.and.i<=num_spl1)then
+                li_B = global_spline_indices(i+num_spl1*(j-1))
+                if(li_B/=0)then
+                  flag(li_A) = flag(li_A)+1
+                  count = count+1
+                endif
+              endif          
+            enddo
+          endif  
+        enddo
+      !endif
+      endif  
+    enddo
+  enddo  
+  
+  nz = count
+  
+  print *,maxval(flag),minval(flag)
+  print *,'#val=',num_spl1*num_spl2*(2*spline_degree1+1)*(2*spline_degree2+1)
+
+end function  compute_nz 
+  
+
+function compute_solution_size(bc_min,bc_max,num_cells, spline_degree) result(res)
+  sll_int32, intent(in) :: bc_min
+  sll_int32, intent(in) :: bc_max
   sll_int32, intent(in) :: num_cells
   sll_int32, intent(in) :: spline_degree
   sll_int32 :: res   
   
-  if((bc_left==SLL_PERIODIC).and.(bc_right==SLL_PERIODIC))then
+  if((bc_min==SLL_PERIODIC).and.(bc_max==SLL_PERIODIC))then
     res = num_cells
   else
     res = num_cells+spline_degree
   endif
-  if(bc_left==SLL_DIRICHLET)then
+  if(bc_min==SLL_DIRICHLET)then
     res = res-1
   endif
-  if(bc_right==SLL_DIRICHLET)then
+  if(bc_max==SLL_DIRICHLET)then
     res = res-1
   endif
   

@@ -157,7 +157,8 @@ contains
     lpi_columns(:,:) = 0
     lpi_occ(:) = 0
     ! COUNTING NON ZERO ELEMENTS
-
+    
+    
     num_nz = sll_count_non_zero_elts( &
       num_rows, &
       num_cols, &
@@ -188,8 +189,9 @@ contains
     
     mat%opr_a(:) = 0.0_f64
     
-    !print *,umfpack_control
-    !stop
+!    print *,mat%num_nz
+!    !print *,umfpack_control
+!    stop
     
     SLL_ALLOCATE(mat%umf_control(umfpack_control),ierr)
     SLL_ALLOCATE(mat%Ai(num_nz),ierr)

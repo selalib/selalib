@@ -60,6 +60,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/characteristics/sll_characteristics_2d_base.F90
     ${SLL_DIR}/utilities/sll_utilities.F90
     ${SLL_DIR}/utilities/tridiagonal.F90
+    ${SLL_DIR}/utilities/fornberg.F90
     ${SLL_DIR}/utilities/sll_toeplitz_penta_diagonal.F90
     ${SLL_DIR}/lagrange_interpolation/sll_lagrange_interpolation.F90
     ${SLL_DIR}/file_io/sll_binary_io.F90
@@ -82,7 +83,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/splines/sll_cubic_splines.F90
     ${SLL_DIR}/splines/sll_arbitrary_degree_splines.F90
     ${SLL_DIR}/splines/cubic_nonuniform_splines.F90
-    ${SLL_DIR}/deboor_splines/banded_linear_system_solver.F90  
+    ${SLL_DIR}/deboor_splines/banfac.f90
+    ${SLL_DIR}/deboor_splines/banslv.f90
     ${SLL_DIR}/deboor_splines/knots.f90
     #${SLL_DIR}/deboor_splines/splopt.f90
     ${SLL_DIR}/deboor_splines/sll_module_deboor_splines_1d.F90
