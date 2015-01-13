@@ -6,7 +6,6 @@ program parallel_advection
 #include "sll_utilities.h"
 use sll_gnuplot_parallel
 use sll_remapper
-
 use sll_collective
 #define MPI_MASTER 0
 
@@ -38,7 +37,7 @@ sll_real64 :: eta2
 sll_int32  :: offset(2)
 sll_real64 :: offset_eta1, offset_eta2
 
-!###########################################################
+!#########################################################
 !Simulation parameters and geometry sizes                !
                                                          !
 sll_int32,  parameter :: nc_eta1 = 64                    !
@@ -49,10 +48,10 @@ sll_real64, parameter :: eta2_min = - 5.0_f64            !
 sll_real64, parameter :: eta2_max = + 5.0_f64            !
 sll_real64 :: delta_eta1 = (eta1_max-eta1_min)/nc_eta1   !
 sll_real64 :: delta_eta2 = (eta2_max-eta2_min)/nc_eta2   !
-sll_real64, parameter :: delta_t = 0.01_f64              !
-sll_int32,  parameter :: n_step  = 200                  !
-                                                           !
-!###########################################################
+sll_real64, parameter :: delta_t = 0.05_f64              !
+sll_int32,  parameter :: n_step  = 200                   !
+                                                         !
+!#########################################################
 
 sll_int32  :: i, j
 
@@ -70,10 +69,10 @@ if (.not. is_power_of_two(psize)) then
 end if
 
 call spl_eta1%initialize(nc_eta1+1, eta1_min, eta1_max, &
-                         SLL_PERIODIC, SLL_PERIODIC, 2)
-
+                         SLL_PERIODIC, SLL_PERIODIC, 5)
 call spl_eta2%initialize(nc_eta2+1, eta2_min, eta2_max, &
-                         SLL_PERIODIC, SLL_PERIODIC, 2)
+                         SLL_PERIODIC, SLL_PERIODIC, 5)
+
 
 interp_eta1 => spl_eta1
 interp_eta2 => spl_eta2
@@ -119,15 +118,15 @@ end do
 end do
 
 call apply_remap_2D( eta2_to_eta1, f_eta2, f_eta1 )
-call advection_eta1(0.5*delta_t)
 
-offset = local_to_global(layout_eta1,(/1,1/)) 
+!Compute offset for gnuplot call
+offset = local_to_global(layout_eta2,(/1,1/)) 
 offset_eta1 = (offset(1)-1)*delta_eta1
 offset_eta2 = (offset(2)-1)*delta_eta2
 
-do i_step=1, n_step
+call advection_eta1(0.5*delta_t)
 
-  call apply_remap_2D( eta1_to_eta2, f_eta1, f_eta2 )
+do i_step=1, 3*n_step
 
   call advection_eta2(delta_t)
 
@@ -135,13 +134,16 @@ do i_step=1, n_step
 
   call advection_eta1(delta_t)
 
+  call apply_remap_2D( eta1_to_eta2, f_eta1, f_eta2 )
+
   call sll_gnuplot_2d_parallel( offset_eta1, delta_eta1, &
-                                  offset_eta2, delta_eta2, &
-                                  size(f_eta1,1), size(f_eta1,2), &
-                                  f_eta1, 'f_parallel', &
-                                  i_step, error)
+                                offset_eta2, delta_eta2, &
+                                size(f_eta2,1), size(f_eta2,2), &
+                                f_eta2, 'f_parallel', &
+                                i_step, error)
+
   if (prank == MPI_MASTER) &
-     write(*,"(//10x,' time = ', G15.3, ' sec' )") i_step*delta_t
+     write(*,"(10x,' time = ', G15.3, ' sec' )") i_step*delta_t
 
 end do
 
@@ -189,12 +191,10 @@ subroutine advection_eta2(dt)
   do i=1,loc_sz_i
 
      alpha = dt
-     call interp_eta1%compute_interpolants( f_eta2(i,:) )
+     call interp_eta2%compute_interpolants( f_eta2(i,:) )
 
      do j = 1, loc_sz_j
-        print*, i, j
-        eta2 = eta2_min + modulo((j-1)*delta_eta2 - alpha, eta2_max-eta2_min)
-        print*, eta2
+        eta2 = eta2_min + (j-1)*delta_eta2 - alpha
         f_eta2(i,j) = interp_eta2%interpolate_value(eta2)
      end do
 
