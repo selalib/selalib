@@ -255,7 +255,6 @@ if ( xx - x(i) == 0.0_f64 ) then
 
 else
 
-
   cc   = cf(1,i-1)-cf(1,i)
   h    = x(i)-x(i-1)
   xn   = xx-x(i-1)
@@ -313,5 +312,158 @@ else
 end if
 
 end subroutine splin5
+
+subroutine inspl5_periodic(n,dx,cf,h)
+
+sll_int32,  intent(in)    :: n          !< number of interpolation points
+sll_real64, intent(in)    :: dx         !< vector of abscissae
+sll_real64, intent(inout) :: cf(1:3,n)  !< ordinates, first and second derivatives
+sll_real64, intent(out)   :: h(6*n-3)   !< auxiliary vector
+
+
+h = 0.0_f64
+
+as  = 64.0_f64/ 3.0_f64
+a   = sqrt(as)
+p1  = 0.0_f64
+p2  = 0.0_f64
+p3  = 0.0_f64
+q1  = 0.0_f64
+q2  = 0.0_f64
+sf1 = 0.0_f64
+sf2 = 0.0_f64
+im  = 0
+
+!Forward elimination procedure for Choleskys algorithm
+!applied to block-tridiagonal systems of algebraic equations.
+
+do i = 1, n
+
+   if (i>1) then
+
+     sf1 = fp4
+     sf2 = fp3*q1*a
+
+   end if
+
+   if (i>2) then
+
+     di1 = ds1
+     di2 = ds3
+     di3 = ds2
+     di4 = ds4
+
+   end if
+
+
+   dp1 = 64*p3
+   dp2 = 12*p2*q1*a
+   dp3 = dp2
+   dp4 = 3*p1*q2*as
+
+   if (i >= n) then !boundary condition at xn
+
+     dp2 = 0.0_f64
+     dp4 = 1.0_f64
+     di2 = 0.0_f64
+     di4 = 0.0_f64
+     sf2 = cf(3,n)*dx/a
+
+     goto 50
+
+   end if
+
+   p1 = 1.0_f64/dx
+   p2 = p1*p1
+   p3 = p1*p2
+   q1 = p1
+   q2 = p2
+
+!   if (i < n-1) then
+     q1 = 1.0_f64 / dx
+     q2 = q1*q1
+!   end if
+
+   i1 = modulo(i-1,n-1)+1
+   i2 = modulo(i,n-1)+1
+   fp = cf(1,i1)-cf(1,i2)
+   fp3= 20*p3*fp
+   fp4=  6*p1*fp3
+   dp1= dp1+64*p3
+   dp2= dp2-12*p3*a
+   dp3= dp2
+   dp4= dp4+3*p3*as
+   ds1=-56*p3
+   ds2= 8*p3*a
+   ds3= -8*p2*q1*a
+   ds4=    p2*q1*as
+   sf1=sf1+fp4
+   sf2=sf2-fp3*p1*a
+
+   if (i>1) goto 50
+
+   di1 = ds1
+   di2 = ds3
+   di3 = ds2
+   di4 = ds4
+
+   dp2 = 0.0_f64
+   dp4 = 1.0_f64
+   ds2 = 0.0_f64   
+   ds4 = 0.0_f64   
+   sf2 = cf(3,1)*dx/a
+
+   goto 55
+
+50 continue
+
+   dp1=dp1-di1*h(im-3)-di3*h(im-2)
+   dp2=dp2-di2*h(im-3)-di4*h(im-2)
+   dp3=dp3-di1*h(im-1)-di3*h(im)
+   dp4=dp4-di2*h(im-1)-di4*h(im)
+
+55 continue
+
+   det=dp1*dp4-dp2*dp3
+
+   if (i>1) then
+
+     sf1=sf1+di1*h(im-5)+di3*h(im-4)
+     sf2=sf2+di2*h(im-5)+di4*h(im-4)
+
+   end if
+
+   h(im+1)=( dp4*sf1-dp3*sf2)/det
+   h(im+2)=(-dp2*sf1+dp1*sf2)/det
+
+   if (i<n) then
+
+     h(im+3)=(+dp4*ds1-dp3*ds2)/det
+     h(im+4)=(-dp2*ds1+dp1*ds2)/det
+     h(im+5)=(+dp4*ds3-dp3*ds4)/det
+     h(im+6)=(-dp2*ds3+dp1*ds4)/det
+     im=im+6
+
+   end if
+
+ end do
+
+   !Backward substitution and solution to the algebraic system
+
+   cf(2,n) = -h(im+1)
+   dpd1    =  h(im+2)*a
+   cf(3,n) = dpd1/dx
+   im      = im-6
+
+   do i=2,n
+     k=n+1-i
+     cf(2,k) = -h(im+1)+h(im+3)*cf(2,k+1)-h(im+5)*dpd1/a
+     dpd2    =  h(im+2)*a-h(im+4)*cf(2,k+1)*a+h(im+6)*dpd1
+     cf(3,k) =  dpd2/dx
+     dpd1    =  dpd2
+     im      =  im-6
+   end do
+
+end subroutine inspl5_periodic
 
 end module sll_quintic_splines

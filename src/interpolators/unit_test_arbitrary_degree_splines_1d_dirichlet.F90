@@ -68,7 +68,7 @@ if(( sqrt(normL2) <= h**(SPL_DEG+1)) .AND. &
    ( sqrt(normH1) <= h**(SPL_DEG-3))) then
   print *, 'PASSED'
 else
-  print *, 'PASSED'
+  print *, 'FAILED'
 end if
 
 call sll_delete(interpolator)
