@@ -151,8 +151,8 @@ subroutine initialize( interpolator, &
   end do
   interpolator%dx = dx
 
-  interpolator%ind1 = -1
-  interpolator%indn = -1
+  interpolator%ind1 = +1
+  interpolator%indn = +1
 
   SLL_ALLOCATE(interpolator%h(6*num_points-3),ierr)
   SLL_ALLOCATE(interpolator%cf(3,num_points),ierr)
@@ -172,26 +172,16 @@ subroutine set_values_at_boundary( interpolator, &
                                    slope_max)
 
   sll_interpolator, intent(inout)  :: interpolator
-  
   sll_real64, intent(in), optional :: value_min
   sll_real64, intent(in), optional :: value_max
   sll_real64, intent(in), optional :: slope_min
   sll_real64, intent(in), optional :: slope_max
   
-  sll_int32 :: n
+  if (present(value_min)) interpolator%value_min = value_min
+  if (present(value_max)) interpolator%value_max = value_max
+  if (present(slope_min)) interpolator%slope_min = slope_min
+  if (present(slope_max)) interpolator%slope_max = slope_max
   
-  interpolator%value_min = merge(value_min, 0.0_f64, present(value_min))
-  interpolator%value_max = merge(value_max, 0.0_f64, present(value_max))
-  interpolator%slope_min = merge(slope_min, 0.0_f64, present(slope_min))
-  interpolator%slope_max = merge(slope_max, 0.0_f64, present(slope_max))
-  
-  n = interpolator%n
-  
-  interpolator%cf(1,1) = interpolator%value_min
-  interpolator%cf(1,n) = interpolator%value_max
-  interpolator%cf(2,1) = interpolator%slope_min
-  interpolator%cf(2,n) = interpolator%slope_max 
-
 end subroutine set_values_at_boundary
 
 !--------------------------------------------------------------------------
@@ -208,29 +198,35 @@ subroutine compute_interpolants( interpolator, &
   sll_int32,        intent(in), optional :: size_eta_coords
   sll_int32                              :: n
   
-  if(present(eta_coords) .or. present(size_eta_coords))then
-  
-    SLL_ERROR('Not implemented')
- 
-  else
-  
-    n = interpolator%n
-    SLL_ASSERT(size(data_array) == interpolator%n)
-    interpolator%cf(1,:) = data_array
-  
-  end if
-
+  n = interpolator%n
+  interpolator%cf(1,:) = data_array(:)
   interpolator%cf(1,1) = interpolator%value_min
   interpolator%cf(1,n) = interpolator%value_max
   interpolator%cf(2,1) = interpolator%slope_min
   interpolator%cf(2,n) = interpolator%slope_max 
+
+  if(present(eta_coords) .and. present(size_eta_coords))then
   
-  call inspl5(interpolator%n,    &
-              interpolator%x,    &
-              interpolator%ind1, &
-              interpolator%indn, &
-              interpolator%cf,   &
-              interpolator%h)
+    call inspl5(size_eta_coords,  &
+                eta_coords,       &
+                1,                &
+                1,                &
+                interpolator%cf,  &
+                interpolator%h)
+
+     interpolator%n = size_eta_coords
+     interpolator%x = eta_coords
+ 
+  else
+  
+    call inspl5(interpolator%n,    &
+                interpolator%x,    &
+                interpolator%ind1, &
+                interpolator%indn, &
+                interpolator%cf,   &
+                interpolator%h)
+
+  end if
 
 end subroutine compute_interpolants
 
@@ -262,7 +258,7 @@ end function
 
 !---------------------------------------------------------------------------
 
-function interpolate_array(this,&
+function interpolate_array(this,        &
                            num_points,  &
                            data,        &
                            coordinates) result(f_interp)
