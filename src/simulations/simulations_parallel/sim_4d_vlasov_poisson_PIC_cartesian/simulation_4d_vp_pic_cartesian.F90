@@ -145,7 +145,8 @@ contains
                                    ALPHA, KX, sim%m2d,     &
                                    sim%ions_number,        &
                                    pa_gr, &
-                                   rand_seed, sim%my_rank  ) 
+                                   rand_seed, sim%my_rank, &
+                                   sim%world_size  )
     SLL_DEALLOCATE_ARRAY( rand_seed, ierr )
     !$omp parallel
     !$omp do
