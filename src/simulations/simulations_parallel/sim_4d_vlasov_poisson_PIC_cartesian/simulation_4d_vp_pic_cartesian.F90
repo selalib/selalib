@@ -329,7 +329,7 @@ contains
 
     open(65,file='logE_vals.dat')
 !!$    call sll_set_time_mark(t2)    
-    t2 = omp_get_wtime()
+!$    t2 = omp_get_wtime()
 !  -------------------------
 !  ------  TIME LOOP  ------
 !  -------------------------
@@ -371,7 +371,7 @@ contains
        ! *******************************************************************
        some_val = 0.0_f64
 !!$       call sll_set_time_mark(t3)
-       t3 = omp_get_wtime()
+!$       t3 = omp_get_wtime()
        if (sim%use_cubic_splines) then 
 
           !$omp parallel default(SHARED) PRIVATE(x,y,x1,y1,Ex,Ey,Ex1,Ey1,gi,tmp1,tmp2,tmp3,tmp4,temp,ttmp1,ttmp2,off_x,off_y,ic_x,ic_y,thread_id,p_guard,q_accum_CS)
@@ -419,7 +419,7 @@ contains
           !$omp end parallel
 !       diag_TOTenergy(mod(counter,save_nb)) = some_val
 !!$          ttime = sll_time_elapsed_since(t3)
-          ttime = omp_get_wtime()
+!$          ttime = omp_get_wtime()
           diag_AccMem(it,:) = (/ (it+1)*dt, (32*sim%ions_number*2 + gi*2*8 + &
                2*128*ncx*ncy + 2*128*ncx*ncy)/(ttime-t3)/1e9 /)! access to memory in GB/sec
 !!$            2*sizeof(sim%q_accumulator_CS%q_acc) + sizeof(sim%E_accumulator_CS%e_acc))
@@ -497,7 +497,7 @@ contains
 !       diag_TOTenergy(mod(counter,save_nb)) = some_val
 
 !!$          ttime = sll_time_elapsed_since(t3)
-          ttime = omp_get_wtime()
+!$          ttime = omp_get_wtime()
           diag_AccMem(it,:) = (/ (it+1)*dt, (32*sim%ions_number*2 + gi*2*8 + &
                2*32*ncx*ncy + 2*32*ncx*ncy)/(ttime-t3)/1e9 /)! access to memory in GB/sec
 !!$            2*sizeof(sim%q_accumulator%q_acc) + sizeof(sim%E_accumulator%e_acc))
@@ -571,7 +571,7 @@ contains
 !  ---  ---  - - -   END TIME LOOP  - - -  --- -----
 
 !!$    time = sll_time_elapsed_since(t2)
-    time = omp_get_wtime()
+!$    time = omp_get_wtime()
     close(65)
 
 
