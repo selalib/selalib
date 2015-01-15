@@ -176,9 +176,18 @@ Box-splines are a generalisation of the more known spline's family: B-splines. T
 		\chi_{\Xi \cup \mathbf{v}}(\mathbf{x}) = \int_0^ 1 \chi_\Xi(\mathbf{x}-t\mathbf{v})dt
 	\end{equation}
 
-	\textcolor{red}{Below, some representation of the first two box-splines.}
-
 \end{dfntn}
+
+\begin{figure}[h!]
+	\includegraphics[scale=0.15]{figures/boxsplines3d.png}
+	\includegraphics[scale=0.15]{figures/boxsplines2d.png}
+	\caption{On the left: Box splines representation of $\Xi_[e_1, e_2]$, $\Xi_[e_1, e_2, e3]$, and $\Xi_[e_1, e_2, e_3, e_4]$. Where $e_1 = ( 0, 1 )^T$ , $e_2 = ( 1, 0)^T$, $e_3 = e_1 + e_2$, and $e_4 = e_1 - e_2$. On the right: the 2d projection of the box-splines to the $x$ plane.}
+	\label{fig:boxsplines3d}
+\end{figure}
+
+	
+
+
 %%..............................
 \subsubsection{The quasi-interpolation scheme}
 
