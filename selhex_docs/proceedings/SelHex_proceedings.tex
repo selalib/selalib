@@ -262,6 +262,179 @@ Even if we limit our sum to the vector $\mathbf{k}$ that defines our domain, we 
 
 %%-----------------------------
 \subsection{Hermite Finite Elements interpolation}
+
+To interpolate at a point X of barycentric coordinates $(\lambda_1,\lambda_2,\lambda_3)$ in the triangle T of vertices $S_1$, $S_2$, and $S_3$, we need a finite element with a local interpolation operator $\Pi_T $. This operator can be defined with the product of a set of degrees of freedom $\Sigma_T$ with a set of basis functions $\Xi$ which depends on the barycentric coordinates.\\
+
+Several elements have been tested here:
+The Z2 and Z3 Zienkiewicz elements, the Hsieh-Clough-Tocher reduced (HCT-r) and complete (HCT-c), and the Ganev-Dimitrov element. These elements can be found in \cite{z} and \cite{b1} . Here we show specifically how the hexagonal structure simplifies the interpolation with these elements.\\
+
+\subsubsection{The Z2 and Z3 Zienkiewicz elements}
+Z2 uses 9 degrees of freedom which are the values at the vertices of the triangle and the values of the derivatives in the direction of the edges at every vertices:
+\begin{equation*}
+ \Sigma_T = \lbrace \forall i \in [|1;3|], f(S_i),\partial_x(S_i),\partial_v(S_i) \rbrace 
+\end{equation*}
+
+ \noindent Z3 uses one more degree of freedom which is the value at the center of the triangle:
+\begin{equation*}
+ \Sigma_T = \lbrace \forall i \in [|1;3|], f(S_i),\partial_x(S_i),\partial_v(S_i); f(C) \rbrace 
+\end{equation*}
+
+ \noindent The advantage is the interpolation is of order 3 instead of order 2 for Z2. Of course this precision comes with a price : for a hexagonal mesh there are 2 times more centers than vertices. Therefore the number of points which must be computed is tripled. 
+
+\noindent let us define the basis functions needed to interpolate with the element Z2 : \\
+\begin{equation*}
+\phi = \lambda_1 \lambda_2 \lambda_3 
+\end{equation*}
+\begin{equation*}
+\xi _i= \lambda_i^3 - \phi ~\text{and}~ \xi_{ij}= \lambda_{i}^2 \lambda_j + \frac{\phi}{2} 
+\end{equation*}
+\begin{equation*}
+\phi_i = 3\lambda_{i}^2 -2 \xi_i ~\text{and} ~\phi_{ij} = h_{ij} \xi_{ij}=h \xi_{ij}
+\end{equation*}
+
+
+\noindent The fact that T is equilateral is exploited here by replacing $h_{ij}$ with h since the length of $ [S_iS_j]$ is constant. Finally for Z2 we have :
+\begin{equation*}
+ \Pi (X) = \sum \limits_{\substack{i=1 }}^{3}{ [f(S_i).\phi_i + \sum \limits_{\substack{j\neq i }}^{}{ \frac{\partial f(S_i)}{\partial  \overrightarrow{ S_i S_j } }.\phi_{ij} } ] } 
+\end{equation*}
+
+\noindent In the same manner, let us define the basis functions needed to interpolate with Z3: 
+\begin{equation*}
+\phi_i = 3\lambda_{i}^2 -2 \xi_i - 9 \phi
+\end{equation*}
+\begin{equation*}
+\phi_{ij} = h_{ij} (\xi_{ij} -\frac{3}{2}\phi)=h (\xi_{ij} -\frac{3}{2}\phi)
+\end{equation*}
+\begin{equation*}
+\phi_{123}=27\phi
+\end{equation*}
+
+\noindent therefore for $Z_3$ we have :
+\begin{equation*}
+ \Pi (X) = \sum \limits_{\substack{i=1 }}^{3}{ [f(S_i).\phi_i + \sum \limits_{\substack{j\neq i }}^{}{ \frac{\partial f(S_i)}{\partial  \overrightarrow{ S_i S_j } }.\phi_{ij} } ] } + f(C).\phi_{123}
+\end{equation*}
+
+\subsubsection{The HTC elements}
+The HCT-r element only uses 9 degrees of freedom and gives quasi-identical results compared to Z2. The only difference with Z2 is that HCT-r divides the triangle into 3 sub-triangles, therefore the basis function changes depending on which sub-triangle X is.
+
+Let $S_i$ be a vertex of the triangle T, then we define respectively $l_i$ and $m_i$ as the length and the middle of the edge opposite to $S_i$. Let G be the barycenter of T, then $K_l$ is the sub-triangle made with $G$, $S_j$ and $S_k$. The local interpolation operator is:
+\begin{equation*}
+\Pi_{K_l} (X) = \sum \limits_{\substack{i=l }}^{3}{ [f(S_i).\phi_i +  \frac{\partial f(S_i)}{\partial  \overrightarrow{ S_i S_j } }.\phi_{ij} } ].
+\end{equation*} 
+The basis function are defined by:
+\begin{equation*}
+\Xi_l =  \Sigma_l \Lambda_l,
+\end{equation*} 
+
+ \noindent with:
+\begin{equation*}
+  \Xi_l=(\Psi_{l,i}^0, \Psi_{l,j}^0, \Psi_{l,k}^0, \Psi_{l,i,k}^1,\Psi_{l,i,j}^1,\Psi_{l,j,i}^1,\Psi_{l,j,k}^1 ,\Psi_{l,k,j}^1,\Psi_{l,k,i}^1)^T,
+\end{equation*} 
+
+\begin{equation*}
+  \Lambda_l = ( \lambda_i^3,\lambda_j^3,\lambda_k^3,\lambda_i^2\lambda_k,\lambda_i^2\lambda_j,\lambda_j^2\lambda_i,\lambda_j^2\lambda_k,\lambda_k^2\lambda_j,\lambda_k^2\lambda_i,\lambda_i\lambda_j\lambda_k)^T,
+\end{equation*} 
+  \noindent The matrices $\Sigma_l$ are defined with the excentricity of each edge of the triangle T: 
+\begin{equation*}
+j=i[3]+1 ~,~ k=j[3]+1~,~ e_i = \frac{l_k^2 - l_j^2}{l_i^2}.
+\end{equation*} 
+For an equilateral triangle, the excentricity is null which simplifies a lot $\Sigma_l$.
+\begin{equation*}
+\Sigma_l = 
+\begin{pmatrix}
+	0 & 0 & 0 & \frac{9}{2} & \frac{9}{2} & 0 & 0 & 0 & 0 & 0  \\
+	\frac{1}{2} & 1 & 0 & \frac{-3}{2} & 0 & 3 & 3 & 0 & 0 & 3 \\
+	\frac{1}{2} & 0 & 1 & 0 & \frac{-3}{2} & 0 & 0 & 3 & 3 & 3 \\	 
+	\frac{-1}{4} & 0 & 0 & \frac{ 5}{4} & \frac{ 1}{2} & 0 & 0 & 0 & 0 & 0 \\	 
+	\frac{-1}{4} & 0 & 0 & \frac{ 1}{2} & \frac{ 5}{4} & 0 & 0 & 0 & 0 & 0 \\
+	\frac{ 1}{4} & 0 & 0 & \frac{-1}{2} & \frac{-1}{4} & 1 & 0 & 0 & 0 & 1 \\
+	0 & 0 & 0 & \frac{-1}{4} & \frac{ 1}{4} & 0 & 1 & 0 & 0 & \frac{1}{2} \\
+	0 & 0 & 0 & \frac{ 1}{4} & \frac{-1}{4} & 0 & 0 & 1 & 0 & \frac{1}{2} \\
+	\frac{1}{4} & 0 & 0 & \frac{-1}{4} & \frac{-1}{2} & 0 & 0 & 0 & 1 & 1 
+\end{pmatrix}
+\end{equation*} 
+
+   
+ 
+The element HCT-c uses the same degrees of freedom as HCT-r plus the values of the derivatives in the normal direction of the edges at the middle of the respective edge, which adds up to twelve degrees of freedom.
+\begin{equation*}
+\Pi_{K_l} (X) = \sum \limits_{\substack{i=l }}^{3}{ [f(S_i).\phi_i +  \frac{\partial f(S_i)}{\partial  \overrightarrow{ S_i S_j } }.\phi_{ij} } ]  + f(C).\phi_{123}
+\end{equation*} 
+
+The basis function are defined by 
+\begin{equation*}
+\Xi_l =  \Sigma_l \Lambda_l,
+\end{equation*} 
+ \noindent with:
+\begin{equation*}
+  \Xi_l=(\Psi_{l,i}^0, \Psi_{l,j}^0, \Psi_{l,k}^0, \Psi_{l,i,k}^1,\Psi_{l,i,j}^1,\Psi_{l,j,i}^1,\Psi_{l,j,k}^1 ,\Psi_{l,k,j}^1,\Psi_{l,k,i}^1)^T,
+\end{equation*} 
+\begin{equation*}
+  \Lambda_l = ( \lambda_i^3,\lambda_j^3,\lambda_k^3,\lambda_i^2\lambda_k,\lambda_i^2\lambda_j,\lambda_j^2\lambda_i,\lambda_j^2\lambda_k,\lambda_k^2\lambda_j,\lambda_k^2\lambda_i,\lambda_i\lambda_j\lambda_k)^T.
+\end{equation*}  
+\begin{equation*}
+\Sigma_l = 
+\begin{pmatrix}
+	0 & 0 & 0 & \frac{9}{2} & \frac{9}{2} & 0 & 0 & 0 & 0 & 0  \\
+	\frac{1}{2} & 1 & 0 & \frac{-3}{2} & 0 & 3 & 3 & 0 & 0 & 3 \\
+	\frac{1}{2} & 0 & 1 & 0 & \frac{-3}{2} & 0 & 0 & 3 & 3 & 3 \\	 
+	\frac{-1}{12} & 0 & 0 & \frac{ 5}{4} & \frac{ 1}{2} & 0 & 0 & 0 & 0 & 0 \\	 
+	\frac{ 1}{12} & 0 & 0 & \frac{ 1}{2} & \frac{ 5}{4} & 0 & 0 & 0 & 0 & 0 \\
+	\frac{-7}{12} & 0 & 0 & \frac{-1}{2} & \frac{-1}{4} & 1 & 0 & 0 & 0 & 1 \\
+    \frac{ 2}{3}& 0 & 0 & \frac{-1}{4} & \frac{ 1}{4} & 0 & 1 & 0 & 0 & \frac{1}{2} \\
+	\frac{ 2}{3}& 0 & 0 & \frac{ 1}{4} & \frac{-1}{4} & 0 & 0 & 1 & 0 & \frac{1}{2} \\
+    \frac{-7}{12} & 0 & 0 & \frac{ 1}{4} & \frac{-1}{4} & 0 & 0 & 1 & 0 & \frac{1}{2} \\
+	\frac{ 2}{3}& 0 & 0 & \frac{ 1}{4} & \frac{-1}{4} & 0 & 0 & 1 & 0 & \frac{1}{2} \\
+    \frac{-7}{12} & 0 & 0 & \frac{ 1}{4} & \frac{-1}{4} & 0 & 0 & 1 & 0 & \frac{1}{2} \\
+	\frac{1}{4} & 0 & 0 & \frac{-1}{4} & \frac{-1}{2} & 0 & 0 & 0 & 1 & 1 
+\end{pmatrix}
+\end{equation*}
+
+The advantage of HCT-c and HCT-r is that they don't require more points than what is already included into the hexagonal mesh.
+
+\subsubsection{The Ganev-Dimitrov element}
+The Ganev-Dimitrov element is of order 4 and uses 15 degrees of freedom which are the values of the function at the vertices and at the middle of the edges, plus the value of the derivatives at the vertices in the direction of the other two vertices. The computational cost for this element is four times higher than the HTC-r interpolation because of the computations needed at the middle of the edges: there are on average 3 times more edges than vertices. As a matter of fact, the vertices and the middle of the edges form another hexagonal mesh twice as fine as the original mesh. 
+
+\noindent The local interpolation operator is:
+
+\begin{equation*}
+ \Pi_{K_l} (X) = \sum \limits_{\substack{i=l }}^{3}{ [f(S_i).\phi_i +  \frac{\partial f(S_i)}{\partial  \overrightarrow{ S_i S_j } }.\phi_{ij} } ]  + f(C).\phi_{123}
+\end{equation*}
+\noindent The basis function are defined by: 
+\begin{equation*}
+\Xi =  \Sigma \Lambda,
+\end{equation*} 
+ \noindent with:\\
+\begin{equation*}
+\Xi=(\Psi_1^0, \Psi_2^0, \Psi_3^0, \Psi_{1,3}^1,\Psi_{1,2}^1,\Psi_{2,1}^1,\Psi_{2,3}^1 ,\Psi_{3,2}^1,\Psi_{3,1}^1,\Psi_1^{0,\perp} ,\Psi_2^{0,\perp},\Psi_3^{0,\perp},\Psi_1^{1,\perp},\Psi_2^{1,\perp},\Psi_3^{1,\perp})^T,
+\end{equation*} 
+\begin{equation*}
+\Lambda = ( \lambda_1^4,\lambda_2^4,\lambda_3^4,\lambda_1^3\lambda_3,\lambda_1^3\lambda_2,\lambda_2^3\lambda_1,\lambda_2^3\lambda_3 ,\lambda_3^3\lambda_2,\lambda_3^3\lambda_1,\lambda_2^2\lambda_3^2,\lambda_3^2\lambda_1^2,\lambda_1^2\lambda_2^2,\lambda_1^2\lambda_2\lambda_3,\lambda_1\lambda_2^2\lambda_3,\lambda_1\lambda_2\lambda_3^2).
+\end{equation*} 
+  
+
+
+\begin{equation*}
+\Sigma = 
+\begin{pmatrix}
+	1 & 0 & 0 & 4 & 4 & 0 & 0 & 0 & 0 & 0 & -5 & -5 & -4 & 0 & 0  \\
+	0 & 1 & 0 & 0 & 0 & 4 & 4 & 0 & 0 & -5 & 0 & -5 & 0 & -4 & 0  \\
+	0 & 0 & 1 & 0 & 0 & 0 & 0 & 4 & 4 & -5 & -5 & 0 & 0 & 0 & -4  \\
+	0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 & \frac{-1}{2} & \frac{-1}{2} & \frac{1}{2}  \\
+	0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & -1 & \frac{-1}{2} & \frac{-1}{2} & \frac{1}{2}  \\
+	0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & -1 & \frac{-1}{2} & \frac{-1}{2} & \frac{1}{2}  \\
+	0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 & -1 & 0 & 0 & \frac{-1}{2} & \frac{-1}{2} & \frac{1}{2}  \\
+	0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 & -1 & 0 & 0 & \frac{-1}{2} & \frac{1}{2} & \frac{-1}{2}  \\
+	0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 & -1 & 0 & \frac{1}{2} & \frac{-1}{2} & \frac{-1}{2}  \\
+	0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 16 & 0 & 0 &-16 & 16 & 16 \\
+	0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 16 & 0 & 16 &-16 & 16 \\
+	0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 16 & 16 & 16 &-16 \\
+	0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &-4 & 4 & 4  \\
+	0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 4 &-4 & 4  \\
+	0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 4 & 4 &-4  
+\end{pmatrix}
+\end{equation*}
+
 Another possible way to interpolate is to use a 2d Hermite finite element \cite{zie}   
 
 After the root $(X,V)$ of a characteristic is found and  the triangle in which it is located has been identified... 
@@ -314,6 +487,35 @@ At the vertexes the values are given and $f(G) = \frac{f(S_1)+f(S_2)+f(S_3)}{3}$
 \label{sec:poisson_eqn}
 %%-----------------------------
 \subsection{Finite Differences Solver}
+
+%\subection{Solving the Poisson equation on an hexagonal mesh}
+
+%One step of the semi Lagragian  method is the computation of the solution of the Poisson equation:
+%\begin{equation*}
+%	- \Delta \phi = \rho .
+%\end{equation*}
+
+Since the mesh here is hexagonal, an seven point stencil is used. It is composed of the six vertices of an hexagon plus its center. 
+% as it can be seen on figure \ref{fig:stencil}
+ This stencil has the particularity to give a fourth order scheme at little cost \cite{p} :
+\begin{equation*}
+-(\phi_1 + \phi_2 + \phi_3 + \phi_4 +\phi_5 + \phi_6 - 6 \phi_0)  = \frac{3h^2}{4} \rho_0 + \frac{h^2}{24}(\rho_1+\rho_2+\rho_3+\rho_4+\rho_5+\rho_6).
+\end{equation*} 
+%
+%\begin{figure}[!]
+%	\includegraphics[width=5cm]{hexagone1.png}
+%  	\caption{\label{fig:stencil} Hexagonal stencil} 
+%\end{figure}
+
+Indeed, the only difference with the second order scheme on the same stencil is the second terme:  
+\begin{equation*}
+-(\phi_1 + \phi_2 + \phi_3 + \phi_4 +\phi_5 + \phi_6 - 6 \phi_0)  = h^2 \rho_0.
+\end{equation*} 
+
+Considering the gain of two order of precision at such little cost, we have used this fourth order scheme to compute $\phi$.
+
+
+
 %%-----------------------------
 \subsection{Finite Elements Solver}
 %%-----------------------------
