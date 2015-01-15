@@ -343,7 +343,9 @@ contains
 !    enddo
 
     if (sim%my_rank ==0) open(65,file='logE_vals.dat')
+#ifdef _OPENMP
     t2 = omp_get_wtime()!!   call sll_set_time_mark(t2)
+#endif
 
 !  -------------------------
 !  ------  TIME LOOP  ------
@@ -435,7 +437,9 @@ contains
           !$omp end parallel
 !       diag_TOTenergy(mod(counter,save_nb)) = some_val
 !!$          ttime = sll_time_elapsed_since(t3)
+#ifdef _OPENMP
           ttime = omp_get_wtime()
+#endif
           diag_AccMem(it,:) = (/ (it+1)*dt, (32*sim%ions_number*2 + gi*2*8 + &
                2*128*ncx*ncy + 2*128*ncx*ncy)/(ttime-t3)/1e9 /)! access to memory in GB/sec
 !!$            2*sizeof(sim%q_accumulator_CS%q_acc) + sizeof(sim%E_accumulator_CS%e_acc))
@@ -583,7 +587,9 @@ contains
     enddo
 !  ---  ---  - - -   END TIME LOOP  - - -  --- -----
 
+#ifdef _OPENMP
     time = omp_get_wtime()!! time = sll_time_elapsed_since(t2)
+#endif
 
     if (sim%my_rank ==0) then 
        close(65)
