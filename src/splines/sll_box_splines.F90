@@ -730,7 +730,8 @@ contains  ! ****************************************************************
                 x = quad_pw(1, ind_fek) + disp_vec(1, ind_nZ)
                 y = quad_pw(2, ind_fek) + disp_vec(2, ind_nZ)
                 val = boxspline_val_der(x, y, deg, idx, idy)
-                write(out_unit, "(1(g13.3,1x))", advance='no') val
+                write(out_unit, "(1(g13.3))", advance='no') val
+                write(out_unit, "(1(a,1x))", advance='no') ","
                 write(*, "(1(g13.3,1x))", advance='no') val
              end do
           end do

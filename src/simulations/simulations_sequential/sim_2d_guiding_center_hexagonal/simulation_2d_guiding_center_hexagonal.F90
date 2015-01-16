@@ -213,16 +213,15 @@ program test_hex_hermite
         !*********************************************************
         !                  writing diagostics
         !*********************************************************
-!        print *, " BEFORE DIAG ************************************************"
         call hex_diagnostics(rho_tn,t,mesh,uxn,uyn,nloops)
-        ! if (count == 10.and.nloops<10000) then
-        !    call int2string(nloops,filenum)
-        !    filename  = "center_guide_rho"//trim(filenum)
-        !    call write_field_hex_mesh_xmf(mesh, rho_tn1, trim(filename))
-        !    filename  = "center_guide_phi"//trim(filenum)
-        !    call write_field_hex_mesh_xmf(mesh, phi, trim(filename))
-        !    count = 0
-        ! endif
+        if (count == 10.and.nloops<10000) then
+           call int2string(nloops,filenum)
+           filename  = "center_guide_rho"//trim(filenum)
+           call write_field_hex_mesh_xmf(mesh, rho_tn1, trim(filename))
+           filename  = "center_guide_phi"//trim(filenum)
+           call write_field_hex_mesh_xmf(mesh, phi, trim(filename))
+           count = 0
+        endif
 
         rho_tn = rho_tn1
 
