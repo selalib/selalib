@@ -202,7 +202,7 @@ contains
        enddo
 
        do i = n_min+1,n_min+6*k_min
-          
+
           k1 = mesh%hex_coord(1, i)
           k2 = mesh%hex_coord(2, i)
           call index_hex_to_global(mesh, k1, k2, index_tab)
