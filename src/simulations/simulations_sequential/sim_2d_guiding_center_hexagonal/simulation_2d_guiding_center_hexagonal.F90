@@ -29,7 +29,7 @@ program test_hex_hermite
   sll_real64, dimension(:),   allocatable :: x1_char
   sll_real64, dimension(:),   allocatable :: x2_char
 
-  sll_int32    :: deg = 2, k_min, n_min
+  sll_int32    :: deg = 2, k_min=0, n_min=0
   sll_real64   :: r_min
   sll_int32    :: i,j, k1, k2, index_tab
   sll_int32    :: l1,l2
