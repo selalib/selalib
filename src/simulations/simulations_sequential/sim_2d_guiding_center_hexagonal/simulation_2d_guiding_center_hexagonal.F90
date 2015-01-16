@@ -29,7 +29,7 @@ program test_hex_hermite
   sll_real64, dimension(:),   allocatable :: x1_char
   sll_real64, dimension(:),   allocatable :: x2_char
 
-  sll_int32    :: deg = 2, k_min, n_min
+  sll_int32    :: deg = 2, k_min=0, n_min=0
   sll_real64   :: r_min
   sll_int32    :: i,j, k1, k2, index_tab
   sll_int32    :: l1,l2
@@ -58,7 +58,7 @@ program test_hex_hermite
   do num_cells = 80,80,40
 
      t = 0._f64
-     tmax  = 200._f64
+     tmax  = 10._f64
      dt    = 0.1_f64!*20._f64 !/ real(num_cells,f64)
      !cfl   = radius * dt / ( radius / real(num_cells,f64)  )
      nloops = 0
