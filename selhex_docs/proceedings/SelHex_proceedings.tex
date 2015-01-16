@@ -615,7 +615,35 @@ Below, we summarize the full algorithm to compute the distribution function $f^{
 \section{Results}
 \label{sec:results}
 
+\subsection{Circular advection}
 
+In order to compare the two families' performances:
+	\begin{equation}
+		\partial_t f + y\partial_x f - x \partial_y f = 0 
+	\end{equation}
+	
+	Taking a gaussian pulse as an initial distribution function
+	\begin{equation}
+	 f^{n} = exp  \left( -\dfrac{1}{2} \left( \dfrac{(x^n - x_c)^2}{\sigma_x^2} + \dfrac{(y^n - y_c)^2}{\sigma_y^2  } \right)   \right ) 
+	\end{equation}
+	Constant CFL (	$CFL = 2$ )  ,  $\sigma_x = \sigma_y = \frac{1}{2\sqrt{2}}$ , hexagonal radius : 8. \\
+	Null Dirichlet boundary condition .
+	
+\begin{figure}[h!]
+	\includegraphics[scale=0.35]{figures/l2.png}
+	\includegraphics[scale=0.35]{figures/efficiency.png}
+	\includegraphics[scale=0.35]{figures/inf_l.png}
+	\includegraphics[scale=0.35]{figures/time_norm.png}
+\end{figure}
+
+\subsection{Guiding-center}
+\begin{figure}[h!]
+	\includegraphics[scale=0.15]{figures/gc_spl_1.png}
+	\includegraphics[scale=0.15]{figures/gc_spl_2.png}
+	\includegraphics[scale=0.15]{figures/gc_spl_3.png}
+	\includegraphics[scale=0.15]{figures/gc_spl_4.png}
+	\includegraphics[scale=0.15]{figures/gc_spl_5.png}
+\end{figure}
 
 %%-----------------------------
 %%      your bibliography

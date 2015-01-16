@@ -58,7 +58,7 @@ program test_hex_hermite
   do num_cells = 80,80,40
 
      t = 0._f64
-     tmax  = 200._f64
+     tmax  = 10._f64
      dt    = 0.1_f64!*20._f64 !/ real(num_cells,f64)
      !cfl   = radius * dt / ( radius / real(num_cells,f64)  )
      nloops = 0
@@ -213,16 +213,16 @@ program test_hex_hermite
         !*********************************************************
         !                  writing diagostics
         !*********************************************************
-
+!        print *, " BEFORE DIAG ************************************************"
         call hex_diagnostics(rho_tn,t,mesh,uxn,uyn,nloops)
-        if (count == 10.and.nloops<10000) then
-           call int2string(nloops,filenum)
-           filename  = "center_guide_rho"//trim(filenum)
-           call write_field_hex_mesh_xmf(mesh, rho_tn1, trim(filename))
-           filename  = "center_guide_phi"//trim(filenum)
-           call write_field_hex_mesh_xmf(mesh, phi, trim(filename))
-           count = 0
-        endif
+        ! if (count == 10.and.nloops<10000) then
+        !    call int2string(nloops,filenum)
+        !    filename  = "center_guide_rho"//trim(filenum)
+        !    call write_field_hex_mesh_xmf(mesh, rho_tn1, trim(filename))
+        !    filename  = "center_guide_phi"//trim(filenum)
+        !    call write_field_hex_mesh_xmf(mesh, phi, trim(filename))
+        !    count = 0
+        ! endif
 
         rho_tn = rho_tn1
 
@@ -284,6 +284,7 @@ contains
     sll_int32 ,intent(in)   :: nloop
     sll_real64              :: mass,rho_min,norm_l1,norm_l2,norm_linf,energy
     sll_int32               :: i
+    sll_int32               :: out_unit
     character(len = 50)     :: filename
     character(len = 4)      :: filenum
 
@@ -296,10 +297,12 @@ contains
 
     call int2string(mesh%num_cells,filenum)
     filename  = "hex_diag_"//trim(filenum)//".dat"
+
+    call sll_new_file_id(out_unit, ierr)
     if (nloop == 0) then
-       open(unit = 11, file=filename, action="write", status="replace")
+       open(unit = out_unit, file=filename, action="write", status="replace")
     else
-       open(unit = 11, file=filename, action="write", status="old",position = "append")
+       open(unit = out_unit, file=filename, action="write", status="old",position = "append")
     endif
 
     do i = 1,mesh%num_pts_tot
@@ -317,9 +320,15 @@ contains
     norm_l1 = norm_l1 * mesh%delta**2
     norm_l2 = sqrt(norm_l2 * mesh%delta**2)
 
-    write(11,*) t,mass,rho_min,norm_l1,norm_l2,norm_linf,energy
+    write(out_unit,"(7(g13.3,1x))") t, &
+                                    mass, &
+                                    rho_min, &
+                                    norm_l1, &
+                                    norm_l2, &
+                                    norm_linf, &
+                                    energy
 
-    close(11)
+    close(out_unit)
 
   end subroutine hex_diagnostics
 
