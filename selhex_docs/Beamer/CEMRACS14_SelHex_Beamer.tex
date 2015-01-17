@@ -1,5 +1,6 @@
 \documentclass[]{beamer}
 \usepackage{lmodern}
+\usepackage{datetime}
 \usepackage{wrapfig}
 \usepackage{tikz}
 \usetikzlibrary{arrows,shapes}
@@ -28,12 +29,15 @@
 \setbeamertemplate{navigation symbols}{}
 % --------------------------------------
 
+% ------ Date definition ------------------
+\newdate{date}{9}{9}{2014}
+% -----------------------------------------
 
 \title{Solving the guiding center model using the Semi-Lagrangian scheme on a 2D hexagonal mesh (SelHex)}  
 \author{Michel Mehrenberger, Laura Mendoza, Charles Prouveur,\\ Eric Sonnendr\"{u}cker}
 \institute[SelHex (CEMRACS 2014)]
 {
-}\date{\today} 
+}\date{\displaydate{date}} 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
