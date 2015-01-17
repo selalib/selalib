@@ -14,17 +14,22 @@ program test_hex_hermite
 
   type(sll_hex_mesh_2d),   pointer        :: mesh
   type(sll_box_spline_2d), pointer        :: spline
-  sll_real64, dimension(:),   allocatable :: dxuxn,dyuxn,dxuyn,dyuyn
-  sll_real64, dimension(:),   allocatable :: second_term, phi,uxn,uyn,phi_interm
-  sll_real64, dimension(:),   allocatable :: second_term2, phi2,uxn2,uyn2,phi2_interm,rho2
+  sll_real64, dimension(:),   allocatable :: dxuxn, dyuxn
+  sll_real64, dimension(:),   allocatable :: dxuyn, dyuyn
+  sll_real64, dimension(:),   allocatable :: second_term, second_term2
+  sll_real64, dimension(:),   allocatable :: phi, phi2
+  sll_real64, dimension(:),   allocatable :: uxn, uxn2
+  sll_real64, dimension(:),   allocatable :: uyn, uyn2
+  sll_real64, dimension(:),   allocatable :: phi_interm, phi2_interm
+  sll_real64, dimension(:),   allocatable :: rho2
   sll_real64, dimension(:),   allocatable :: dxuxn2,dyuxn2,dxuyn2,dyuyn2
   sll_real64, dimension(:,:), allocatable :: matrix_poisson, l, u
   sll_real64, dimension(:),   allocatable :: rho_tn   ! distribution at time n
-  sll_real64, dimension(:),   allocatable :: rho_tn1  ! distribution at time n + 1
+  sll_real64, dimension(:),   allocatable :: rho_tn1  ! distribution at time n+1
   sll_real64, dimension(:),   allocatable :: x1_char
   sll_real64, dimension(:),   allocatable :: x2_char
 
-  sll_int32    :: deg = 2, k_min, n_min
+  sll_int32    :: deg = 2, k_min=0, n_min=0
   sll_real64   :: r_min
   sll_int32    :: i,j, k1, k2, index_tab
   sll_int32    :: l1,l2
@@ -40,7 +45,7 @@ program test_hex_hermite
   sll_real64   :: step , aire, h1, h2, f_min, x ,y,xx, yy
   sll_real64   :: r11,r12,r21,r22,det
   logical      :: inside
-  sll_int32    :: p = 6!-> degree of the approximation for the derivative 
+  sll_int32    :: p = 6!-> degree of the approximation for the derivative
   character(len = 50) :: filename
   character(len = 4)  :: filenum
 
@@ -49,12 +54,12 @@ program test_hex_hermite
 
   radius = 14._f64
 
-  
-  do num_cells = 80,80,40 
-     
+
+  do num_cells = 80,80,40
+
      t = 0._f64
-     tmax  = 200._f64
-     dt    = 0.1_f64!*20._f64 !/ real(num_cells,f64)  
+     tmax  = 10._f64
+     dt    = 0.1_f64!*20._f64 !/ real(num_cells,f64)
      !cfl   = radius * dt / ( radius / real(num_cells,f64)  )
      nloops = 0
      count  = 0
@@ -65,7 +70,7 @@ program test_hex_hermite
 
      ! Mesh creation -------------------------
      mesh => new_hex_mesh_2d( num_cells, center_mesh_x1, center_mesh_x2,&
-          radius=radius, EXTRA_TABLES = EXTRA_TABLES )         
+         radius=radius, EXTRA_TABLES = EXTRA_TABLES )
 
      n_points   = mesh%num_pts_tot
      n_triangle = mesh%num_triangles
@@ -99,9 +104,9 @@ program test_hex_hermite
      SLL_ALLOCATE(dyuxn( n_points),ierr)
      SLL_ALLOCATE(dyuyn( n_points ),ierr)
 
-     SLL_ALLOCATE(second_term( n_points),ierr)    
-     SLL_ALLOCATE(phi( n_points),ierr)           
-     SLL_ALLOCATE(phi_interm( n_points),ierr)    
+     SLL_ALLOCATE(second_term( n_points),ierr)
+     SLL_ALLOCATE(phi( n_points),ierr)
+     SLL_ALLOCATE(phi_interm( n_points),ierr)
      SLL_ALLOCATE(matrix_poisson( n_points,1 + 4*num_cells + 2 ) , ierr)
      SLL_ALLOCATE(l( n_points,1 + 4*num_cells + 2 ) , ierr)
      SLL_ALLOCATE(u( n_points,1 + 4*num_cells + 2), ierr)
@@ -109,13 +114,13 @@ program test_hex_hermite
      call cpu_time(t_init)
 
      !*********************************************************
-     !  Distribution function & density initialization   
+     !  Distribution function & density initialization
      !*********************************************************
 
      ! Spline initialization -----------------
      spline => new_box_spline_2d(mesh, SLL_DIRICHLET)
      ! ---------------------------------------
-     
+
      ! Initial distribution ------------------
      call init_distr(rho_tn,mesh)
      ! ---------------------------------------
@@ -126,15 +131,15 @@ program test_hex_hermite
      call hex_second_terme_poisson( second_term, mesh, rho_tn, n_min, k_min )
      call solvlub_bande(l,u,phi_interm,second_term,n_points,l1,l2)
 
-     do i = 1, mesh%num_pts_tot 
+     do i = 1, mesh%num_pts_tot
         k1 = mesh%hex_coord(1, i)
         k2 = mesh%hex_coord(2, i)
         call index_hex_to_global(mesh, k1, k2, index_tab)
         phi(i) = phi_interm(index_tab)
      enddo
      call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi, n_min, k_min)
-     ! ---------------------------------------     
-      
+     ! ---------------------------------------
+
      call hex_diagnostics(rho_tn,t,mesh,uxn,uyn,nloops)
 
 
@@ -143,7 +148,7 @@ program test_hex_hermite
      !*********************************************************
 
      call cpu_time(t3)
-     
+
      print*,"fin init",t3 - t_init
 
      do while (t .lt. tmax)
@@ -159,7 +164,7 @@ program test_hex_hermite
 
         call compute_box_spline_2d( rho_tn, deg, spline )
 
-        do i=1, n_points 
+        do i=1, n_points
 
            x = mesh%cartesian_coord(1,i)
            y = mesh%cartesian_coord(2,i)
@@ -173,14 +178,14 @@ program test_hex_hermite
 
            inside = .true.
            h1 =  xx*r11 + yy*r12
-           h2 =  xx*r21 + yy*r22 
+           h2 =  xx*r21 + yy*r22
 
            if ( abs(h1) >  radius-mesh%delta .or. abs(h2) >  radius-mesh%delta ) inside = .false.
            if ( abs(xx) > (radius-mesh%delta)*sqrt(3._f64)*0.5_f64) inside = .false.
 
            if ( inside ) then
               rho_tn1(i) = hex_interpolate_value(mesh, xx, yy, spline, deg)
-           else 
+           else
               rho_tn1(i) = 0._f64 ! dirichlet boundary condition
            endif
 
@@ -191,12 +196,11 @@ program test_hex_hermite
         !      computing the solution of the poisson equation
         !*********************************************************
 
-        
         call hex_second_terme_poisson( second_term, mesh, rho_tn, n_min, k_min )
 
         call solvlub_bande(l,u,phi_interm,second_term,n_points,l1,l2)
 
-        do i = 1, mesh%num_pts_tot    ! need to re-index phi : 
+        do i = 1, mesh%num_pts_tot    ! need to re-index phi :
            k1 = mesh%hex_coord(1, i)
            k2 = mesh%hex_coord(2, i)
            call index_hex_to_global(mesh, k1, k2, index_tab)
@@ -209,7 +213,6 @@ program test_hex_hermite
         !*********************************************************
         !                  writing diagostics
         !*********************************************************
-
         call hex_diagnostics(rho_tn,t,mesh,uxn,uyn,nloops)
         if (count == 10.and.nloops<10000) then
            call int2string(nloops,filenum)
@@ -221,12 +224,12 @@ program test_hex_hermite
         endif
 
         rho_tn = rho_tn1
-        
+
      enddo
 
-     SLL_DEALLOCATE_ARRAY(second_term,ierr)        
-     SLL_DEALLOCATE_ARRAY(phi,ierr)        
-     SLL_DEALLOCATE_ARRAY(phi_interm,ierr)  
+     SLL_DEALLOCATE_ARRAY(second_term,ierr)
+     SLL_DEALLOCATE_ARRAY(phi,ierr)
+     SLL_DEALLOCATE_ARRAY(phi_interm,ierr)
      SLL_DEALLOCATE_ARRAY(rho_tn,ierr)
      SLL_DEALLOCATE_ARRAY(rho_tn1,ierr)
      SLL_DEALLOCATE_ARRAY(uxn,ierr)
@@ -242,7 +245,7 @@ program test_hex_hermite
 
   end do
 
-  
+
 contains
 
   !*********initialization**************
@@ -270,7 +273,7 @@ contains
 
 
   end subroutine init_distr
-  
+
   !********** diagnostics **************
 
   subroutine hex_diagnostics(rho,t,mesh,uxn,uyn,nloop)
@@ -280,6 +283,7 @@ contains
     sll_int32 ,intent(in)   :: nloop
     sll_real64              :: mass,rho_min,norm_l1,norm_l2,norm_linf,energy
     sll_int32               :: i
+    sll_int32               :: out_unit
     character(len = 50)     :: filename
     character(len = 4)      :: filenum
 
@@ -292,10 +296,12 @@ contains
 
     call int2string(mesh%num_cells,filenum)
     filename  = "hex_diag_"//trim(filenum)//".dat"
+
+    call sll_new_file_id(out_unit, ierr)
     if (nloop == 0) then
-       open(unit = 11, file=filename, action="write", status="replace")
+       open(unit = out_unit, file=filename, action="write", status="replace")
     else
-       open(unit = 11, file=filename, action="write", status="old",position = "append")
+       open(unit = out_unit, file=filename, action="write", status="old",position = "append")
     endif
 
     do i = 1,mesh%num_pts_tot
@@ -313,9 +319,15 @@ contains
     norm_l1 = norm_l1 * mesh%delta**2
     norm_l2 = sqrt(norm_l2 * mesh%delta**2)
 
-    write(11,*) t,mass,rho_min,norm_l1,norm_l2,norm_linf,energy
+    write(out_unit,"(7(g13.3,1x))") t, &
+                                    mass, &
+                                    rho_min, &
+                                    norm_l1, &
+                                    norm_l2, &
+                                    norm_linf, &
+                                    energy
 
-    close(11)
+    close(out_unit)
 
   end subroutine hex_diagnostics
 
@@ -336,7 +348,7 @@ contains
 
     ! à optimiser quand ce sera validé
 
-    do i = 1,mesh%num_cells!mesh%num_pts_tot 
+    do i = 1,mesh%num_cells!mesh%num_pts_tot
        do k = 1,6*i
           j  = 6*i*(2*i-1)+2*k
           i1 = 1+(i-1)*6+k
@@ -344,8 +356,7 @@ contains
 
        enddo
 
-       do k = 1,i 
-          
+       do k = 1,i
           ! first edge
           j  = 6*i*(2*i-1)+2*k
           i1 = 1+3*i*(i-1)+k
@@ -378,7 +389,7 @@ contains
           rho2(j+1) = rho_edge(i2)
 
        enddo
-       
+
        if (i<mesh%num_cells) then
 
           !corners
@@ -392,7 +403,7 @@ contains
           rho2(j) = rho_edge(i2)
 
 
-          do k = 2,i-1 
+          do k = 2,i-1
 
              ! first edge
              j  = 6*i*(2*i-1)+2*k
@@ -454,16 +465,16 @@ contains
 
     rho(1) = rho2(1)
 
-    do i = 1,mesh%num_cells!mesh2%num_pts_tot 
+    do i = 1,mesh%num_cells!mesh2%num_pts_tot
        i1 = 2*i
-       i2 = 2*i + 1 
-       ! cas i impair (hexagone de pt milieu)
-       do k = 1,i2 
+       i2 = 2*i + 1
+       ! for i even (hexagone of middle point)
+       do k = 1,i2
           rho_edge(j) = rho(j1)
        enddo
 
-       ! cas i pair (hexagone mix)
-       do k = 1,i 
+       ! for i odd (hexagone mix)
+       do k = 1,i
           rho(j1) = rho2(j)
           rho_edge(j2) = rho(j+1)
 
