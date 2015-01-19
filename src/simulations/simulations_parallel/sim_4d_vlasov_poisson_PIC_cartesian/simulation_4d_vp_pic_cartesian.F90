@@ -388,9 +388,10 @@ contains
        !
        ! *******************************************************************
        some_val = 0.0_f64
-
+! #ifdef _OPENMP
  !      t3 = omp_get_wtime()!!  call sll_set_time_mark(t3)
-       if (sim%use_cubic_splines) then 
+! #endif
+      if (sim%use_cubic_splines) then 
 
           !$omp parallel default(SHARED) PRIVATE(x,y,x1,y1,Ex,Ey,Ex1,Ey1,gi,tmp1,tmp2,tmp3,tmp4,temp,ttmp1,ttmp2,off_x,off_y,ic_x,ic_y,thread_id,p_guard,q_accum_CS)
           !$&omp FIRSTPRIVATE(qoverm,dt,ncx,xmin,ymin,rdx,rdy)
@@ -514,8 +515,9 @@ contains
           sim%part_group%num_postprocess_particles(thread_id+1) = gi
           !$omp end parallel
 !       diag_TOTenergy(mod(counter,save_nb)) = some_val
-
- !          ttime = omp_get_wtime()!! ttime = sll_time_elapsed_since(t3)
+!#ifdef _OPENMP
+!          ttime = omp_get_wtime()!! ttime = sll_time_elapsed_since(t3)
+!#endif
  !         diag_AccMem(it,:) = (/ (it+1)*dt, (32*sim%ions_number*2 + gi*2*8 + &
  !              2*32*ncx*ncy + 2*32*ncx*ncy)/(ttime-t3)/1e9 /)! access to memory in GB/sec
 !!$            2*sizeof(sim%q_accumulator%q_acc) + sizeof(sim%E_accumulator%e_acc))
@@ -589,7 +591,6 @@ contains
 
 #ifdef _OPENMP
     time = omp_get_wtime()!! time = sll_time_elapsed_since(t2)
-#endif
 
     if (sim%my_rank ==0) then 
        close(65)
@@ -598,6 +599,7 @@ contains
        write(93,*) sim%n_threads, time-t2, int(sim%num_iterations,i64)*int(sim%ions_number,i64)/(time-t2)
        close(93)
     endif
+#endif
     
 !      if (sim%my_rank==0 .and. thread_id==0) then
 !         open(65,file='AccesstoMemory_rk0.dat')! URGENT d'utiliser the rank_name !
