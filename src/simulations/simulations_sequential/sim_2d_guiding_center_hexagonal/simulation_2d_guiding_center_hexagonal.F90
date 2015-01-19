@@ -58,7 +58,7 @@ program test_hex_hermite
   do num_cells = 80,80,40
 
      t = 0._f64
-     tmax  = 10._f64
+     tmax  = 200._f64
      dt    = 0.1_f64!*20._f64 !/ real(num_cells,f64)
      !cfl   = radius * dt / ( radius / real(num_cells,f64)  )
      nloops = 0
