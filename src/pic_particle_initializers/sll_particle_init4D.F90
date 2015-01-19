@@ -41,7 +41,7 @@ contains
               m2d,                     &
               num_particles,           &
               p_group,                 &
-              rand_seed, rank )
+              rand_seed, rank, worldsize )
     sll_real64, intent(in) :: thermal_speed, alpha, k
     type(sll_cartesian_mesh_2d), intent(in) :: m2d
     sll_int32, intent(in)  :: num_particles
@@ -53,7 +53,7 @@ contains
     sll_real32 :: off_x,off_y
     sll_real64 :: tmp1, tmp2
     sll_int32, dimension(:), intent(in), optional  :: rand_seed
-    sll_int32, optional  :: rank
+    sll_int32, optional  :: rank, worldsize
 !!$    character(len=8)  :: rank_name
 !!$    character(len=40) :: nomfile
     sll_real64 :: coco
@@ -63,7 +63,7 @@ contains
     endif
 
     coco = (m2d%eta1_max - m2d%eta1_min) * &
-           (m2d%eta2_max - m2d%eta2_min)/real(num_particles,f64)
+           (m2d%eta2_max - m2d%eta2_min)/real(worldsize*num_particles,f64)
     weight = real(coco,f32)
 
     rdx = 1._f64/m2d%delta_eta1
