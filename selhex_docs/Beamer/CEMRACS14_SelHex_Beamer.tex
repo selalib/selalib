@@ -306,36 +306,40 @@ Five in total have been implemented and tested:
 	\end{equation}
 	Constant CFL (	$CFL = 2$ )  ,  $\sigma_x = \sigma_y = \frac{1}{2\sqrt{2}}$ , hexagonal radius : 8. \\
 	Null Dirichlet boundary condition .
-%	\textbf{Box-splines ($deg  = 2$) scheme:}
-%	\begin{center}
-%	\begin{tabular}{|c|c|c|c|c|c|c|}
-%		\hline
-%		 \textbf{Points} & \textbf{dt} & \textbf{loops}  & $L_2$ \textbf{error} & $L_\infty $ \textbf{error} & points/$\mu$-seconds \\
-%		\hline
-%		40   & 0.5         & 60   & 3.53E-2 & 7.74E-2  & 0.105 \\
-%		80   & 0.025    & 120 & 1.88E-3 & 4.66E-3 & 0.105 \\
-%		160 & 0.0125 & 240  & 6.77E-5 & 1.35E-4 & 0.105 \\
-%		\hline
-%	\end{tabular}
-%	\end{center}
 	
-%	\textbf{Hermite FE scheme:}
-%	\begin{center}
-%	\begin{tabular}{|c|c|c|c|c|c|c|}
-%		\hline
-%		 \textbf{Points} & \textbf{dt} & \textbf{loops} & \textbf{CFL} & $L_2$ \textbf{error} & $L_\infty $ \textbf{error} & points/$\mu$-seconds \\
-%		\hline
-%		%20   & dt & numloops  & error1 & error2 & seconds  \\
-%		40   & dt & numloops & 1.28E-2 & error2  & seconds \\
-%		%60   & dt & numloops & error1 & error2 & seconds \\
-%		80   & dt & numloops & 3.43E-4& error2 & seconds \\
-%		%100 & dt & numloops & error1 & error2  & seconds\\
-%		%120 & dt & numloops  & error1 & error2  & seconds \\
-%		%140 & dt & numloops  & error1 & error2  & seconds\\
-%		160 & dt & numloops & 6E-6 & error2  & seconds \\
-%		\hline
-%	\end{tabular}
-%	\end{center}
+\end{frame}
+\begin{frame}
+
+	\textbf{Box-splines ($deg  = 2$) scheme:}
+	\begin{center}
+	\begin{tabular}{|c|c|c|c|c|c|c|}
+		\hline
+		 \textbf{Points} & \textbf{dt} & \textbf{loops}  & $L_2$ \textbf{error} & $L_\infty $ \textbf{error} & points/$\mu$-seconds \\
+		\hline
+		40   & 0.5         & 60   & 3.53E-2 & 7.74E-2  & 0.105 \\
+		80   & 0.025    & 120 & 1.88E-3 & 4.66E-3 & 0.105 \\
+		160 & 0.0125 & 240  & 6.77E-5 & 1.35E-4 & 0.105 \\
+		\hline
+	\end{tabular}
+	\end{center}
+	
+	\textbf{Hermite FE scheme:}
+	\begin{center}
+	\begin{tabular}{|c|c|c|c|c|c|c|}
+		\hline
+		 \textbf{Points} & \textbf{dt} & \textbf{loops} & \textbf{CFL} & $L_2$ \textbf{error} & $L_\infty $ \textbf{error} & points/$\mu$-seconds \\
+		\hline
+		%20   & dt & numloops  & error1 & error2 & seconds  \\
+		40   & dt & numloops & 1.28E-2 & error2  & seconds \\
+		%60   & dt & numloops & error1 & error2 & seconds \\
+		80   & dt & numloops & 3.43E-4& error2 & seconds \\
+		%100 & dt & numloops & error1 & error2  & seconds\\
+		%120 & dt & numloops  & error1 & error2  & seconds \\
+		%140 & dt & numloops  & error1 & error2  & seconds\\
+		160 & dt & numloops & 6E-6 & error2  & seconds \\
+		\hline
+	\end{tabular}
+	\end{center}
 
 \end{frame}
 

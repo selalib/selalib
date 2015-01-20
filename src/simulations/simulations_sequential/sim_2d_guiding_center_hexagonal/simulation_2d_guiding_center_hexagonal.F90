@@ -29,12 +29,15 @@ program test_hex_hermite
   sll_real64, dimension(:),   allocatable :: x1_char
   sll_real64, dimension(:),   allocatable :: x2_char
 
-  sll_int32    :: deg = 2, k_min=0, n_min=0
+  sll_int32    :: deg = 2, k_min=0, n_min=1
   sll_real64   :: r_min
   sll_int32    :: i,j, k1, k2, index_tab
   sll_int32    :: l1,l2
   sll_int32    :: i1,i2,i3
   sll_int32    :: num_cells, n_points, n_triangle, n_points2
+  sll_int32    :: cells_max
+  sll_int32    :: cells_min
+  sll_int32    :: cells_stp
   sll_real64   :: center_mesh_x1, center_mesh_x2, radius
   sll_int32    :: nloops,count, ierr, EXTRA_TABLES = 0
   sll_real64   :: dt
@@ -54,12 +57,21 @@ program test_hex_hermite
 
   radius = 14._f64
 
+  cells_min = 80
+  cells_max = 80
+  cells_stp = 20
 
-  do num_cells = 80,80,40
+  do num_cells = cells_min,cells_max,cells_stp
+
+     print*," ********************************* "
+     print*,"     Guiding Center Simulation"
+     print*,"        on a Hexagonal mesh"
+     print*,"   using boxsplines of deg =",deg
+     print*," ********************************* "
 
      t = 0._f64
-     tmax  = 200._f64
-     dt    = 0.1_f64!*20._f64 !/ real(num_cells,f64)
+     tmax  = 100._f64
+     dt    = 0.05_f64
      !cfl   = radius * dt / ( radius / real(num_cells,f64)  )
      nloops = 0
      count  = 0
@@ -71,6 +83,7 @@ program test_hex_hermite
      ! Mesh creation -------------------------
      mesh => new_hex_mesh_2d( num_cells, center_mesh_x1, center_mesh_x2,&
          radius=radius, EXTRA_TABLES = EXTRA_TABLES )
+     call display_hex_mesh_2d(mesh)
 
      n_points   = mesh%num_pts_tot
      n_triangle = mesh%num_triangles
@@ -140,7 +153,7 @@ program test_hex_hermite
      call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi, n_min, k_min)
      ! ---------------------------------------
 
-     call hex_diagnostics(rho_tn,t,mesh,uxn,uyn,nloops)
+     call hex_diagnostics(rho_tn,t,mesh,uxn,uyn,nloops,deg,tmax,cells_min,cells_max)
 
 
      !*********************************************************
@@ -213,8 +226,8 @@ program test_hex_hermite
         !*********************************************************
         !                  writing diagostics
         !*********************************************************
-        call hex_diagnostics(rho_tn,t,mesh,uxn,uyn,nloops)
-        if (count == 10.and.nloops<10000) then
+        call hex_diagnostics(rho_tn,t,mesh,uxn,uyn,nloops,deg,tmax,cells_min,cells_max)
+        if (count == 10.and.nloops<10000.and.num_cells == cells_max) then
            call int2string(nloops,filenum)
            filename  = "center_guide_rho"//trim(filenum)
            call write_field_hex_mesh_xmf(mesh, rho_tn1, trim(filename))
@@ -227,13 +240,19 @@ program test_hex_hermite
 
      enddo
 
+     SLL_DEALLOCATE_ARRAY(rho_tn,ierr)
+     SLL_DEALLOCATE_ARRAY(rho_tn1,ierr)
+     SLL_DEALLOCATE_ARRAY(x1_char,ierr)
+     SLL_DEALLOCATE_ARRAY(x2_char,ierr)
+     SLL_DEALLOCATE_ARRAY(uxn,ierr)
+     SLL_DEALLOCATE_ARRAY(uyn,ierr)
+     SLL_DEALLOCATE_ARRAY(dxuxn,ierr)
+     SLL_DEALLOCATE_ARRAY(dxuyn,ierr)
+     SLL_DEALLOCATE_ARRAY(dyuxn,ierr)
+     SLL_DEALLOCATE_ARRAY(dyuyn,ierr)
      SLL_DEALLOCATE_ARRAY(second_term,ierr)
      SLL_DEALLOCATE_ARRAY(phi,ierr)
      SLL_DEALLOCATE_ARRAY(phi_interm,ierr)
-     SLL_DEALLOCATE_ARRAY(rho_tn,ierr)
-     SLL_DEALLOCATE_ARRAY(rho_tn1,ierr)
-     SLL_DEALLOCATE_ARRAY(uxn,ierr)
-     SLL_DEALLOCATE_ARRAY(uyn,ierr)
      deallocate(matrix_poisson)
      deallocate(l)
      deallocate(u)
@@ -253,7 +272,7 @@ contains
   subroutine init_distr(f_tn,mesh)
     type(sll_hex_mesh_2d), pointer :: mesh
     sll_real64, dimension(:)       :: f_tn
-    sll_real64 :: x, y, epsilon = 0.1_f64
+    sll_real64 :: x, y, epsilon = 0.001_f64
     sll_real64 :: rho
     sll_real64 :: r
     sll_int32  :: i
@@ -274,18 +293,46 @@ contains
 
   end subroutine init_distr
 
-  !********** diagnostics **************
 
-  subroutine hex_diagnostics(rho,t,mesh,uxn,uyn,nloop)
-    type(sll_hex_mesh_2d), pointer :: mesh
-    sll_real64,dimension(:) :: rho,uxn,uyn
-    sll_real64,intent(in)   :: t
-    sll_int32 ,intent(in)   :: nloop
-    sll_real64              :: mass,rho_min,norm_l1,norm_l2,norm_linf,energy
-    sll_int32               :: i
-    sll_int32               :: out_unit
-    character(len = 50)     :: filename
-    character(len = 4)      :: filenum
+  !-------------------------------------------------------------------------
+  !> @brief Writes diagnostics files
+  !> @param Write two sort of documents: "diag_gc_spline*_*.dat" and 
+  !> "diag_gc_spline*_nc.dat". Where important values (i.e. time of sim, errors, number
+  !> of cells, etc) are written in order to compute diagnostics. The first file is for
+  !> time evolutions, the second one is regarding the space discretization.
+  !> @param rho real: contains the value of the density of the gc at time t
+  !> @param t real: time of the simulation
+  !> @param mesh sll_hex_mesh_2d: hexagonal mesh where the simulation is made
+  !> @param uxn real:
+  !> @param uyn real:
+  !> @param nloop int: number of loops done
+  !> @param deg int: degree of the splines used for the interpolation method
+  !> @param tmax: maximum time that the will simulation will run
+  !> @param cells_min int: min number of cells the mesh will have during this simulation
+  !> @param cells_max int: max number of cells the mesh will have during this simulation
+  !> return 
+  subroutine hex_diagnostics(rho,t,mesh,uxn,uyn,nloop,deg,tmax,cells_min,cells_max)
+    type(sll_hex_mesh_2d),  pointer  :: mesh
+    sll_real64, dimension(:) :: rho
+    sll_real64, dimension(:) :: uxn
+    sll_real64, dimension(:) :: uyn
+    sll_real64, intent(in)   :: t
+    sll_real64, intent(in)   :: tmax
+    sll_int32 , intent(in)   :: nloop
+    sll_int32 , intent(in)   :: deg
+    sll_int32 , intent(in)   :: cells_max
+    sll_int32 , intent(in)   :: cells_min
+    sll_real64 :: mass
+    sll_real64 :: rho_min
+    sll_real64 :: norm_l1
+    sll_real64 :: norm_l2
+    sll_real64 :: norm_linf
+    sll_real64 :: energy
+    sll_int32  :: i
+    sll_int32  :: out_unit
+    character(len = 50) :: filename
+    character(len =  4) :: filenum
+    character(len =  4) :: splinedeg
 
     energy    = 0._f64
     mass      = 0._f64
@@ -294,8 +341,12 @@ contains
     norm_l2   = 0._f64
     norm_linf = 0._f64
 
+    ! --------------------------------------------------
+    ! Writing file in respect to time...................
+
     call int2string(mesh%num_cells,filenum)
-    filename  = "hex_diag_"//trim(filenum)//".dat"
+    call int2string(deg,splinedeg)
+    filename  = "diag_gc_spline"//trim(splinedeg)//"_t"//trim(filenum)//".dat"
 
     call sll_new_file_id(out_unit, ierr)
     if (nloop == 0) then
@@ -327,8 +378,44 @@ contains
                                     norm_linf, &
                                     energy
 
-    close(out_unit)
+    ! --------------------------------------------------
+    ! Writing file in respect to num_cells..............
+    if (t.gt.tmax) then !We write on this file only if it is the last time step
+       filename  = "diag_gc_spline"//trim(splinedeg)//"_nc.dat"
 
+       call sll_new_file_id(out_unit, ierr)
+       if (mesh%num_cells == cells_min) then
+          open(unit = out_unit, file=filename, action="write", status="replace")
+       else
+          open(unit = out_unit, file=filename, action="write", status="old",position = "append")
+       endif
+       
+       do i = 1,mesh%num_pts_tot
+          mass = mass + rho(i)
+          norm_l1 = norm_l1 + abs(rho(i))
+          norm_l2 = norm_l2 + rho(i)**2
+          energy = energy + uxn(i)**2 + uyn(i)**2
+          if ( abs(rho(i)) > norm_linf ) norm_linf = rho(i)
+          if ( rho(i) < rho_min  ) rho_min  = rho(i)
+       enddo
+
+       energy  = sqrt(energy * mesh%delta**2)
+       mass    = mass * mesh%delta**2
+       norm_l1 = norm_l1 * mesh%delta**2
+       norm_l2 = sqrt(norm_l2 * mesh%delta**2)
+
+       write(out_unit,"((i6,1x),7(g13.3,1x))") mesh%num_cells, &
+                                               t, &
+                                               mass, &
+                                               rho_min, &
+                                               norm_l1, &
+                                               norm_l2, &
+                                               norm_linf, &
+                                               energy
+
+
+       close(out_unit)
+    end if
   end subroutine hex_diagnostics
 
 
