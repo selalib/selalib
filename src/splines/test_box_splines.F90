@@ -180,7 +180,7 @@ do num_cells = 20,100,40
    !    chi1(i) = chi_gen_val(x1_basis, x2_basis, 1)
    !    chi2(i) = chi_gen_val(x1_basis, x2_basis, 2)
    !    chi3(i) = chi_gen_val(x1_basis, x2_basis, 3)
-      
+
    ! end do
 
 
@@ -205,9 +205,9 @@ do num_cells = 20,100,40
          ! Approximation
          ! ******************
          f_tn(i) = hex_interpolate_value(mesh, x1_char(i), x2_char(i), spline, deg)
-         
+
          ! ******************
-         ! Analytical value 
+         ! Analytical value
          ! ******************
          ! Computing characteristics
          ! if (which_advec .eq. 0) then
