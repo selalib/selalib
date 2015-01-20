@@ -10,46 +10,78 @@ use sll_module_quintic_spline_interpolator_1d
 
 implicit none
 
-class(sll_interpolator_1d_base), pointer         :: interp
-type(sll_quintic_spline_interpolator_1d), target :: spline
+type(sll_quintic_spline_interpolator_1d) :: spline
 
 sll_real64                            :: error
-sll_real64, allocatable, dimension(:) :: inte_points
-sll_real64, allocatable, dimension(:) :: data  
-sll_real64, allocatable, dimension(:) :: out
-sll_real64, allocatable, dimension(:) :: coordinates
-sll_real64, allocatable, dimension(:) :: data_interp
+sll_real64, allocatable, dimension(:) :: point
+sll_real64, allocatable, dimension(:) :: pdata  
+sll_real64, allocatable, dimension(:) :: fdata
+sll_real64, allocatable, dimension(:) :: coord
+sll_real64, allocatable, dimension(:) :: gdata
 
 sll_int32 :: ierr, i
-sll_int32, parameter :: n = 512
+sll_int32, parameter :: n = 32
+sll_int32, parameter :: m = 512
 sll_real64  :: x_min, x_max, delta
 
-SLL_ALLOCATE(data(n), ierr)
-SLL_ALLOCATE(out(n), ierr)
-SLL_ALLOCATE(inte_points(n), ierr)
-SLL_ALLOCATE(coordinates(n), ierr)
-SLL_ALLOCATE(data_interp(n), ierr)
+SLL_ALLOCATE(coord(n), ierr)
+SLL_ALLOCATE(pdata(n), ierr)
+SLL_ALLOCATE(fdata(m), ierr)
+SLL_ALLOCATE(gdata(m), ierr)
+SLL_ALLOCATE(point(m), ierr)
 
 print *, 'initialize data and interpolation_points array'
 x_min = 0.0_f64
-x_max = 2.0_f64 * sll_pi
+x_max = 1.0_f64
 delta = (x_max - x_min ) / real(n-1,f64) 
 do i=1,n
-  coordinates(i) = (i-1)*delta
-  inte_points(i) = modulo(coordinates(i) - delta/3.0_f64,2.0_f64 * sll_pi)
-  data(i)        = 2.0_f64*(sin(coordinates(i)) + 2.5_f64 + cos(coordinates(i)))
-  data_interp(i) = 2.0_f64*(sin(inte_points(i)) + 2.5_f64 + cos(inte_points(i)))
+  coord(i) = x_min + (i-1)*delta
+  pdata(i) = f(coord(i))
 end do
 
 print*, 'Quintic spline interpolation'
-call spline%initialize(n, x_min, x_max, SLL_PERIODIC, SLL_PERIODIC )
+call spline%initialize(n, x_min, x_max, SLL_DIRICHLET, SLL_DIRICHLET )
 
-interp => spline
-out = interp%interpolate_array(n, data, inte_points)
+call set_values_at_boundary( spline,     &
+                             f( x_min),  &
+                             f( x_max),  &
+                             df(x_min),  &
+                             df(x_max))
 
-error = maxval(abs(data_interp-out))
+call spline%compute_interpolants(pdata, coord, n )
+  
+
+delta = (x_max - x_min ) / real(m-1,f64) 
+do i=1,m
+  point(i) = x_min + (i-1)*delta
+  gdata(i) = f(point(i))
+  fdata(i) = spline%interpolate_value(point(i))
+  write(47,*) point(i), fdata(i), gdata(i)
+end do
+
+error = maxval(abs(fdata-gdata))
 print*, 'Error=',error
 print*, 'Successful, exiting program.'
 print*, 'PASSED'
+
+contains
+
+function f(x)
+
+  real(8) :: x
+  real(8) :: f
+  
+  f = exp(x)
+  
+end function
+
+function df(x)
+
+  real(8) :: x
+  real(8) :: df
+  
+  df = exp(x)
+  
+end function
 
 end program quintic_spline_interpolator_1d
