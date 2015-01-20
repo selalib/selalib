@@ -1,3 +1,5 @@
+      use mpi
+
       implicit none
 
 #if cdebug
