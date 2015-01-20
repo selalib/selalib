@@ -763,14 +763,14 @@ contains
 
 
   function cells_to_origin(k1, k2) result(val)
-    ! Takes the coordinates (k1,k2) on the (r1,r2) basis and 
+    ! Takes the coordinates (k1,k2) on the (r1,r2) basis and
     ! returns the number of cells between that point and
     ! the origin. If (k1, k2) = 0, val = 0
     sll_int32, intent(in)   :: k1
     sll_int32, intent(in)   :: k2
     sll_int32               :: val
 
-    ! We compute the number of cells from point to center 
+    ! We compute the number of cells from point to center
     if (k1*k2 .gt. 0) then
        val = max(abs(k1),abs(k2))
     else
@@ -781,7 +781,7 @@ contains
 
 
   function hex_to_global(mesh, k1, k2) result(val)
-    ! Takes the coordinates (k1,k2) on the (r1,r2) basis and 
+    ! Takes the coordinates (k1,k2) on the (r1,r2) basis and
     ! returns global index of that mesh point.
     ! By default the index of the center of the mesh is 0
     ! Then following the r1 direction and a counter-clockwise motion
@@ -792,7 +792,7 @@ contains
     sll_int32               :: distance
     sll_int32               :: index_tab
     sll_int32               :: val
-    
+
     distance = cells_to_origin(k1,k2)
 
     ! Test if we are in domain
@@ -810,7 +810,7 @@ contains
 
   function global_to_hex1(mesh, index) result(k1)
     ! Takes the global index of the point (see hex_to_global(...) for conventions)
-    ! returns the first coordinate (k1) on the (r1,r2) basis 
+    ! returns the first coordinate (k1) on the (r1,r2) basis
     class(sll_hex_mesh_2d) :: mesh
     sll_int32 :: index
     sll_int32 :: k1
@@ -820,7 +820,7 @@ contains
 
   function global_to_hex2(mesh, index) result(k2)
     ! Takes the global index of the point (see hex_to_global(...) for conventions)
-    ! returns the second coordinate (k2) on the (r1,r2) basis 
+    ! returns the second coordinate (k2) on the (r1,r2) basis
     class(sll_hex_mesh_2d) :: mesh
     sll_int32 :: index
     sll_int32 :: k2
@@ -830,7 +830,7 @@ contains
 
   function global_to_x1(mesh, index) result(x1)
     ! Takes the global index of the point (see hex_to_global(...) for conventions)
-    ! returns the first coordinate (x1) on the cartesian basis 
+    ! returns the first coordinate (x1) on the cartesian basis
     class(sll_hex_mesh_2d) :: mesh
     sll_int32  :: index
     sll_real64 :: x1
@@ -840,7 +840,7 @@ contains
 
   function global_to_x2(mesh, index) result(x2)
     ! Takes the global index of the point (see hex_to_global(...) for conventions)
-    ! returns the second coordinate (x2) on the cartesian basis 
+    ! returns the second coordinate (x2) on the cartesian basis
     class(sll_hex_mesh_2d) :: mesh
     sll_int32  :: index
     sll_real64 :: x2
@@ -850,7 +850,7 @@ contains
 
 
   function cart_to_hex1(mesh, x1, x2) result(k1)
-    ! Takes the coordinates (x1,x2) on the cartesian basis and 
+    ! Takes the coordinates (x1,x2) on the cartesian basis and
     ! returns the first coordinate (k1) on the (r1, r2) basis
     class(sll_hex_mesh_2d) :: mesh
     sll_real64 :: x1
@@ -863,7 +863,7 @@ contains
   end function cart_to_hex1
 
   function cart_to_hex2(mesh, x1, x2) result(k2)
-    ! Takes the coordinates (x1,x2) on the cartesian basis and 
+    ! Takes the coordinates (x1,x2) on the cartesian basis and
     ! returns the second coordinate (k2) on the (r1, r2) basis
     class(sll_hex_mesh_2d) :: mesh
     sll_real64 :: x1
@@ -877,7 +877,7 @@ contains
 
   function global_to_local(mesh, ref_index, global) result(local)
     ! In the same manner we assign global indices (see hex_to_global(...))
-    ! we assign local indices, but this time the initial point is 
+    ! we assign local indices, but this time the initial point is
     ! the point which index is ref_index
     ! ie. local_index(i,i) = 1
     class(sll_hex_mesh_2d) :: mesh
@@ -933,7 +933,7 @@ contains
   function local_hex_to_global(mesh, k1_ref, k2_ref, local) result(global)
     ! returns the global index of the point which has as
     ! local index local_index in the ref_index system
-    ! (see gloval_index(...) and global_to_local(...) for conventions) 
+    ! (see gloval_index(...) and global_to_local(...) for conventions)
     ! ie. local_to_global(1, i) = i
     class(sll_hex_mesh_2d) :: mesh
     sll_int32 :: k1_ref, k2_ref
@@ -944,7 +944,7 @@ contains
 
     k1_loc = mesh%global_to_hex1(local)
     k2_loc = mesh%global_to_hex2(local)
-    
+
     if (cells_to_origin(k1_ref + k1_loc, k2_ref + k2_loc).lt.mesh%num_cells) then
        global = mesh%hex_to_global(k1_ref + k1_loc, k2_ref + k2_loc)
     else
@@ -1073,7 +1073,7 @@ contains
     if (edge_index3 == -1 ) print*, "problem in get_edge_index  l", __LINE__
 
   end subroutine get_edge_index
-  
+
 
   subroutine display_hex_mesh_2d(mesh)
     ! Displays mesh information on the terminal
@@ -1118,7 +1118,73 @@ contains
     close(out_unit)
   end subroutine write_hex_mesh_2d
 
-  
+
+  !> @brief Writes files for CAID
+  !> @details Writes the files elements.txt and nodes.txt describing
+  !> the mesh's cells and edges in the format of CAID and pigasus.
+  !> This is was written in order to have a Poisson solver for the hex-mesh
+  !> @param mesh hex-mesh that will be described
+  subroutine write_caid_files(mesh)
+    type(sll_hex_mesh_2d), pointer :: mesh
+    character(len=9),    parameter :: name_nodes = "nodes.txt"
+    character(len=12),   parameter :: name_elemt = "elements.txt"
+    sll_real64 :: x1
+    sll_real64 :: y1
+    sll_int32  :: e1
+    sll_int32  :: e2
+    sll_int32  :: e3
+    sll_int32  :: i
+    sll_int32  :: j
+    sll_int32  :: spline_deg
+    sll_int32  :: num_pts_tot
+    sll_int32  :: num_ele
+    sll_int32, parameter :: out_unit=20
+
+    ! Writing the nodes file....................
+    open (unit=out_unit,file=name_nodes,action="write",status="replace")
+
+    ! We first write the total number of points/nodes:
+    num_pts_tot = mesh%num_pts_tot
+    write(out_unit, "(i6)") num_pts_tot
+    ! For every node...
+    do i=1, num_pts_tot
+       !... we write the coordinates
+       write (out_unit, "((i6),(a,1x),(g13.3),(a,1x),(g13.3))") i, &
+            ",", &
+            mesh%global_to_x1(i), &
+            ",", &
+            mesh%global_to_x2(i)
+    end do
+    close(out_unit)
+
+
+    ! Writing the elements file....................
+    open (unit=out_unit,file=name_elemt,action="write",status="replace")
+
+    ! We first write the total number of cells/elements:
+    num_ele = mesh%num_triangles
+    write(out_unit, "(i6)") num_ele
+
+    ! We write the (maximum) spline degree
+    spline_deg = 1
+
+    ! For every element...
+    do i=1, num_ele
+       !... we write its global number
+       write (out_unit, "(i6)") i
+       !... we write the spline degree
+       write(out_unit, "((i6),(a,1x),(i6))") spline_deg, ",", spline_deg
+       !... we write the indices of the edges
+       x1 = mesh%center_cartesian_coord(1, i)
+       y1 = mesh%center_cartesian_coord(2, i)
+       call get_cell_vertices_index(x1, y1, mesh, e1, e2, e3)
+       write(out_unit, "((i6),(a,1x),(i6),(a,1x),(i6))") e1, ",",e2,",", e3
+    end do
+    close(out_unit)
+
+  end subroutine write_caid_files
+
+
   subroutine write_field_hex_mesh(mesh, field, name)
     ! Writes the points cartesian coordinates and
     ! field(vector) values in a file named "name"
@@ -1144,7 +1210,7 @@ contains
     close(out_unit)
   end subroutine write_field_hex_mesh
 
-  
+
   subroutine write_field_hex_mesh_xmf(mesh, field, name)
     ! Writes the points cartesian coordinates and
     ! field(vector) values in a file named "name"
