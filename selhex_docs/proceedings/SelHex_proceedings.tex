@@ -43,12 +43,12 @@
 %%-----------------------------
 %% English version ............
 \begin{abstract} 
-This paper introduces a Semi-Lagrangian solver for the Vlasov-Poisson equation on a regular hexagonal mesh. The latter is composed of equilateral triangles, thus it doesn't contain any singularities, unlike polar meshes. We focus on the guiding center model. A Poisson solver for the hexagonal mesh is developed. For the interpolation step of the Semi-Lagrangian scheme, a comparison is made between using box-splines and Hermite finite elements. The scheme is successfully adapted to the mesh using both interpolation methods, with different performances. We expect to adapt it to more complex models and geometries.
+This paper introduces a Semi-Lagrangian solver for the Vlasov-Poisson equation on a regular hexagonal mesh. The latter is composed of equilateral triangles, thus it doesn't contain any singularities, unlike polar meshes. We focus on the guiding-center model. A Poisson solver for the hexagonal mesh is developed. For the interpolation step of the Semi-Lagrangian scheme, a comparison is made between using box-splines and Hermite finite elements. \textcolor{blue}{The scheme is successfully adapted to the mesh using both interpolation methods, with different performances.} We expect to adapt it to more complex models and geometries.
 \end{abstract}
 
 %% French version ............
 \begin{resume} 
-...
+Dans cet article nous introduisons un solveur semi-Lagrangien pour l'\'equation de Vlasov-Poisson sur un maillage hexagonale r\'egulier. Ce dernier est compos\'e de triangles \'equilat\'eraux, ainsi il ne pr\'esente aucune singularit\'e, contrairement au maillage polaire. Nous nous concentrons ici sur le mod\`ele centre-guide. \'A cette fin nous avons d\'evelopp\'e un solveur de l'\'equation de Poisson pour maillage hexagonale. Au regard de l'interpolation, nous comparons les r\'esultats obtenus avec des \'el\'ements finis d'Hermite et des box-splines. \textcolor{blue}{Chaque m\'ethode d'interpolation est donc adapt\'ee au maillage.} Dans le future, ce code sera adapt\'e \`a des g\'eom\'etries et mod\`eles plus complexes.  
 \end{resume}
 
 
@@ -69,7 +69,7 @@ In magnetic fusion applications the embedded magnetic flux surfaces play an impo
 However, tiling a regular hexagon into triangles yields a mesh of equilateral triangles having all the same area, plus the grid can be easily mapped to a circle by slightly stretching the edges of the hexagon. This yields a nice mesh of a disk with slightly stretched triangles of almost the same size and there is no singularity in any point on the domain. 
 Additionally, such a mesh has a clear structure with three privileged directions, thus it is completely straightforward to localise points within this mesh. The derivatives along the three directions can also be nicely computed using finite differencing along uniform lines. And last but not least, there is a spline construction on this mesh, called box spline. These splines have a hexagonal support and are invariant by translations along the three directions of the mesh. Different strategies have been implemented to avoid this singularities, we can cite among others: the isoparametric analysis approach done by J. Abiteboul et al. \cite{abiteboul2011solving}, N. Besse and E. Sonnendr\"{u}cker's work with non-structured meshes\cite{Besse2003341}. The work presented on these papers is particularly interesting as not only it avoids singularities but it is also extremely flexible and can be easily adapted to more complex geometries. However, some limitations are the numerical complexity, the advection of the derivatives, and the localisation of the feet of the characteristics. This advantages are not present when dealing with the simple and straightforward hexagonal mesh. Regarding the computational efficiency, all our simulations include an analysis and comparison with more common methods. And last but not least, we suggest this scheme as an introduction to treat more complex geometries. Indeed by a simple mapping it will be easy to work with curvilinear coordinates.
 
-In this work, we focus on adapting the Semi-Lagrangian scheme to this hexagonal mesh. The guiding center model is considered. This scheme consists basically on two steps: computing the characteristics' origins and interpolating on these points. For the latter, we compare two different approaches: one using box-splines and the second approach using Hermite Finite Elements. Both interpolation methods, as well as the mesh, are presented in section~\ref{sec:interpolation}. In section~\ref{sec:poisson_eqn}, we present a Poisson solver adapted to the hexagonal mesh. We present a guiding center approximation of the 2D Vlasov Poisson system\cite{Golse1998865}, and the Semi-Lagrangian scheme to solve it, on section~\ref{sec:BSL_scheme}. Finally, on section~\ref{sec:results} we compare the results of the scheme using box splines with the ones using Hermite finite elements, we also compare them to more traditional meshes, such as the polar mesh. Besides the guiding center model, different advection models have been simulated in this section.
+In this work, we focus on adapting the Semi-Lagrangian scheme to this hexagonal mesh. The guiding-center model is considered. This scheme consists basically on two steps: computing the characteristics' origins and interpolating on these points. For the latter, we compare two different approaches: one using box-splines and the second approach using Hermite Finite Elements. Both interpolation methods, as well as the mesh, are presented in section~\ref{sec:interpolation}. In section~\ref{sec:poisson_eqn}, we present a Poisson solver adapted to the hexagonal mesh. We present a guiding-center approximation of the 2D Vlasov Poisson system\cite{Golse1998865}, and the Semi-Lagrangian scheme to solve it, on section~\ref{sec:BSL_scheme}. Finally, on section~\ref{sec:results} we compare the results of the scheme using box splines with the ones using Hermite finite elements, we also compare them to more traditional meshes, such as the polar mesh. Besides the guiding-center model, different advection models have been simulated in this section.
 
 
 %%-----------------------------
@@ -539,8 +539,8 @@ are discretized. The downside of this type of method is the dissipation (\textco
 With the intention of neglecting the pitfalls of the method, the Semi-Lagrangian method was introduced, first in numerical weather prediction, but since then, it has been introduced for plasma simulations \cite{sonnendrucker:inria-00073296, Cheng1976330} and it's getting more and more popular. This scheme consists on fixing an Eulerian grid in phase-space and following the trajectory of the equation's characteristics in time to compute the evolution of the distribution function. The advantages of this scheme are the possibility of taking large time steps and its stability. However, it is important to note that it's very computationally costly to go to high dimensions. Thus, it is typically used with 1D and 2D models. Lastly, we can point out that there are many types of Semi-Lagrangian solvers (\emph{e.g.} depending on the trajectories: Backward or Forward;  depending on the elements on which is based: grid's point, integrated cell..). We have chosen here to use the classical Backward Semi-Lagrangian method. 
 
 %%-----------------------------
-\subsection{The Guiding Center Model}
-We consider here a guiding center approximation of the 2D Vlasov-Poisson system, where the parallel velocity has been neglected and the magnetic field is set to $B = \begin{pmatrix} 0 & 0 & 1 \end{pmatrix}^T$. Furthermore, we consider the model in 2D in space and 1D in time. The reduced gyrokinetic model obtained\cite{filbet:hal-01068223} is
+\subsection{The Guiding-Center Model}
+We consider here a guiding-center approximation of the 2D Vlasov-Poisson system, where the parallel velocity has been neglected and the magnetic field is set to $B = \begin{pmatrix} 0 & 0 & 1 \end{pmatrix}^T$. Furthermore, we consider the model in 2D in space and 1D in time. The reduced gyrokinetic model obtained\cite{filbet:hal-01068223} is
 
 \begin{subnumcases}{\label{eqn:guiding_center}}
 	\dfrac{\partial f}{\partial t} + E_{\perp} \cdot \nabla_{\mathbf{x}} f(\mathbf{x}, t) = 0\label{eqn:gc_vlasov}\\
@@ -594,7 +594,7 @@ The initial distribution function is only known on the mesh points, and the char
 	\caption{Semi-Lagrangian step: Tracing back characteristics.}
 \end{figure}
 
-Below, we summarize the full algorithm to compute the distribution function $f^{n+1}$ solution of the guiding center model \eqref{eqn:guiding_center}.
+Below, we summarize the full algorithm to compute the distribution function $f^{n+1}$ solution of the guiding-center model \eqref{eqn:guiding_center}.
 
 \begin{description}
 	\item[Initialization] At time $t=0$, we suppose that $f(\mathbf{x}, 0)$ is given. We compute the \underline{electric field $E$} by solving the poisson equation \eqref{eqn:gc_poisson}.
@@ -643,7 +643,7 @@ In order to compare the two families' performances:
 	\includegraphics[scale=0.15]{figures/gc_spl_3.png}
 	\includegraphics[scale=0.15]{figures/gc_spl_4.png}
 	\includegraphics[scale=0.15]{figures/gc_spl_5.png}
-	\caption{Time evolution of the guiding center model, at times = }
+	\caption{Time evolution of the guiding-center model, at times = }
 \end{figure}
 
 %%-----------------------------

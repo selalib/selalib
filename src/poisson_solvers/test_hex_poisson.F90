@@ -23,11 +23,11 @@ program test_hex_poisson
   sll_real64                              :: erreur1, erreur2, erreur3
   sll_real64                              :: t_init,t_inter, t_end, residu
 
-  num_cells = 50
+  num_cells = 80
 
-  radius = 1._f64
-  r_min  = 0.1_f64
-  n_min = 0
+  radius = 1._f64 !> radius of hex
+  r_min  = 0._f64 !> radius of internal "empty" hexagon
+  n_min = 0 !> index of first point
   n_points  = 1 + 3 * num_cells * (num_cells + 1) 
   
   k_min = int(r_min/radius*real(num_cells)+1e-6)
@@ -64,27 +64,27 @@ program test_hex_poisson
      y = mesh%cartesian_coord(2,i)
      r = sqrt( x**2 + y**2 )
 
-     ! rho(i) = -(2._f64*(x**2+y**2)**2 + 6._f64*(1._f64-2._f64*x**2-2._f64*y**2))
+!      rho(i) = -(2._f64*(x**2+y**2)**2 + 6._f64*(1._f64-2._f64*x**2-2._f64*y**2))
 
-     ! sol(i) = x**2*y**4 - 2._f64/3._f64*x**4*y**2 - 0.75_f64 - 1.5_f64*x**2*&
-     !      y**2 + x**6/9._f64 - 0.75_f64*(x**4 + y**4) + 1.5_f64*(x**2 + y**2)
-     !   = (x**2-0.75_f64) * ( y**2 - (x/sqrt(3._f64)-1._f64)**2 )* &
-     !     ( y**2 - (x/sqrt(3._f64)+1._f64)**2)
+!      sol(i) = x**2*y**4 - 2._f64/3._f64*x**4*y**2 - 0.75_f64 - 1.5_f64*x**2*&
+!           y**2 + x**6/9._f64 - 0.75_f64*(x**4 + y**4) + 1.5_f64*(x**2 + y**2)
+!        = (x**2-0.75_f64) * ( y**2 - (x/sqrt(3._f64)-1._f64)**2 )* &
+!          ( y**2 - (x/sqrt(3._f64)+1._f64)**2)
 
-     ! rho(i) = -(4._f64*(x**2+y**2)*36._f64**2-4._f64*36._f64)*exp( - (x**2 + y**2)*36._f64 )
-     ! sol(i) = +exp( - (x**2 + y**2)*36._f64 )
+     rho(i) = -(4._f64*(x**2+y**2)*36._f64**2-4._f64*36._f64)*exp( - (x**2 + y**2)*36._f64 )
+     sol(i) = +exp( - (x**2 + y**2)*36._f64 )
 
      
-     if ( r >= 0.2_f64  .and. r <= 0.9_f64 ) then
-        sol(i) = exp( -200._f64*(r-0.6_f64)**2)
-     else
-        sol(i) = 0._f64
-     endif
-     if ( r >= 0.2_f64  .and. r <= 0.9_f64 ) then
-        rho(i) = -(16e4_f64*(r-0.6)**2 - 4e2_f64*( 1._f64 + (r-0.6_f64)/r ) )*exp( -200._f64*(r-0.6_f64)**2)
-     else
-        rho(i) = 0._f64
-     endif
+!      if ( r >= 0.2_f64  .and. r <= 0.9_f64 ) then
+!         sol(i) = exp( -200._f64*(r-0.6_f64)**2)
+!      else
+!         sol(i) = 0._f64
+!      endif
+!      if ( r >= 0.2_f64  .and. r <= 0.9_f64 ) then
+!         rho(i) = -(16e4_f64*(r-0.6)**2 - 4e2_f64*( 1._f64 + (r-0.6_f64)/r ) )*exp( -200._f64*(r-0.6_f64)**2)
+!      else
+!         rho(i) = 0._f64
+!      endif
 
   enddo
 
@@ -145,10 +145,12 @@ program test_hex_poisson
      x = mesh%cartesian_coord(1,i)
      y = mesh%cartesian_coord(2,i)
      r = sqrt(x**2+y**2) 
-     ! erreur1 = erreur1 + abs(-(2._f64*x*36._f64)*exp( - (x**2 + y**2)*36._f64 ) - uyn(i) )**2
-     ! erreur2 = erreur2 + abs(-(2._f64*y*36._f64)*exp( - (x**2 + y**2)*36._f64 ) + uxn(i) )**2
-     erreur1 = erreur1 + abs( -2._f64*2e2_f64*(r-0.6_f64)*x/r*exp( -200._f64*(r-0.6_f64)**2 ) - uyn(i) )**2
-     erreur2 = erreur2 + abs( -2._f64*2e2_f64*(r-0.6_f64)*y/r*exp( -200._f64*(r-0.6_f64)**2 ) + uxn(i) )**2
+
+     erreur1 = erreur1 + abs(-(2._f64*x*36._f64)*exp( - (x**2 + y**2)*36._f64 ) - uyn(i) )**2
+     erreur2 = erreur2 + abs(-(2._f64*y*36._f64)*exp( - (x**2 + y**2)*36._f64 ) + uxn(i) )**2
+
+!      erreur1 = erreur1 + abs( -2._f64*2e2_f64*(r-0.6_f64)*x/r*exp( -200._f64*(r-0.6_f64)**2 ) - uyn(i) )**2
+!      erreur2 = erreur2 + abs( -2._f64*2e2_f64*(r-0.6_f64)*y/r*exp( -200._f64*(r-0.6_f64)**2 ) + uxn(i) )**2
   enddo
   print*, "erreur sur dx(phi)", sqrt(erreur1/real(num_cells,f64)**2)
   print*, "erreur sur dy(phi)", sqrt(erreur2/real(num_cells,f64)**2)
@@ -165,18 +167,20 @@ program test_hex_poisson
      x = mesh%cartesian_coord(1,i)
      y = mesh%cartesian_coord(2,i)
      r = sqrt(x**2+y**2) 
-     ! erreur1 = erreur1 + abs(-(72._f64-(72._f64*x)**2)*&
-     !      exp( - (x**2 + y**2)*36._f64 ) - dxuyn(i) )**2 
-     ! erreur2 = erreur2 + abs(-(72._f64-(72._f64*y)**2)*&
-     !      exp( - (x**2 + y**2)*36._f64 ) + dyuxn(i) )**2
-     ! erreur3 = erreur3 + abs(+(2._f64*36._f64*2._f64*y*x*36._f64)*&
-     !      exp( - (x**2 + y**2)*36._f64 ) + dxuxn(i) )**2
-     erreur1 = erreur1 + abs( (16e4_f64*(r-0.6)**2*x**2/r**2 + 4e2_f64*( x**2/r**3*(r-0.6_f64) - &
-          (r-0.6_f64)/r - x**2/r**2 ) )*exp( -200._f64*(r-0.6_f64)**2) - dxuyn(i) )**2 
-     erreur2 = erreur2 + abs( (16e4_f64*(r-0.6)**2*y**2/r**2 + 4e2_f64*( y**2/r**3*(r-0.6_f64) - &
-          (r-0.6_f64)/r - y**2/r**2 ) )*exp( -200._f64*(r-0.6_f64)**2) + dyuxn(i) )**2
-     erreur3 = erreur3 + abs( (16e4_f64*(r-0.6)**2*x*y /r**2 + 4e2_f64*( x*y /r**3*(r-0.6_f64) - &
-            x*y/r**2 ) )*exp( -200._f64*(r-0.6_f64)**2) + dxuxn(i) )**2
+
+     erreur1 = erreur1 + abs(-(72._f64-(72._f64*x)**2)*&
+          exp( - (x**2 + y**2)*36._f64 ) - dxuyn(i) )**2 
+     erreur2 = erreur2 + abs(-(72._f64-(72._f64*y)**2)*&
+          exp( - (x**2 + y**2)*36._f64 ) + dyuxn(i) )**2
+     erreur3 = erreur3 + abs(+(2._f64*36._f64*2._f64*y*x*36._f64)*&
+          exp( - (x**2 + y**2)*36._f64 ) + dxuxn(i) )**2
+
+!      erreur1 = erreur1 + abs( (16e4_f64*(r-0.6)**2*x**2/r**2 + 4e2_f64*( x**2/r**3*(r-0.6_f64) - &
+!           (r-0.6_f64)/r - x**2/r**2 ) )*exp( -200._f64*(r-0.6_f64)**2) - dxuyn(i) )**2 
+!      erreur2 = erreur2 + abs( (16e4_f64*(r-0.6)**2*y**2/r**2 + 4e2_f64*( y**2/r**3*(r-0.6_f64) - &
+!           (r-0.6_f64)/r - y**2/r**2 ) )*exp( -200._f64*(r-0.6_f64)**2) + dyuxn(i) )**2
+!      erreur3 = erreur3 + abs( (16e4_f64*(r-0.6)**2*x*y /r**2 + 4e2_f64*( x*y /r**3*(r-0.6_f64) - &
+!             x*y/r**2 ) )*exp( -200._f64*(r-0.6_f64)**2) + dxuxn(i) )**2
   enddo
 
   print*, "erreur sur dxx(phi)", sqrt(erreur1/real(num_cells,f64)**2)
