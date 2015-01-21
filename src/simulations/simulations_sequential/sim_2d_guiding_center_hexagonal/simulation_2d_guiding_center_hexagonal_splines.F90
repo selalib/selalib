@@ -1,4 +1,4 @@
-program test_hex_hermite
+program sim2d_gc_hex_splines
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -67,8 +67,8 @@ program test_hex_hermite
      print*," ********************************* "
 
      t = 0._f64
-     tmax  = 10._f64
-     dt    = 0.1_f64
+     tmax  = 100._f64
+     dt    = 0.05_f64
      !cfl   = radius * dt / ( radius / real(num_cells,f64)  )
      nloops = 0
      count  = 0
@@ -617,4 +617,4 @@ contains
   end subroutine write_center
 
 
-end program
+end program sim2d_gc_hex_splines
