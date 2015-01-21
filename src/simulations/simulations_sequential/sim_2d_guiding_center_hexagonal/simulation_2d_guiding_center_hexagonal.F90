@@ -16,14 +16,13 @@ program test_hex_hermite
   type(sll_box_spline_2d), pointer        :: spline
   sll_real64, dimension(:),   allocatable :: dxuxn, dyuxn
   sll_real64, dimension(:),   allocatable :: dxuyn, dyuyn
-  sll_real64, dimension(:),   allocatable :: second_term, second_term2
-  sll_real64, dimension(:),   allocatable :: phi, phi2
-  sll_real64, dimension(:),   allocatable :: uxn, uxn2
-  sll_real64, dimension(:),   allocatable :: uyn, uyn2
-  sll_real64, dimension(:),   allocatable :: phi_interm, phi2_interm
-  sll_real64, dimension(:),   allocatable :: rho2
-  sll_real64, dimension(:),   allocatable :: dxuxn2,dyuxn2,dxuyn2,dyuyn2
+  sll_real64, dimension(:),   allocatable :: second_term
+  sll_real64, dimension(:),   allocatable :: phi
+  sll_real64, dimension(:),   allocatable :: uxn, uxn_1
+  sll_real64, dimension(:),   allocatable :: uyn, uyn_1
+  sll_real64, dimension(:),   allocatable :: phi_interm
   sll_real64, dimension(:,:), allocatable :: matrix_poisson, l, u
+  sll_real64, dimension(:),   allocatable :: rho_tn_1   ! distribution at time n-1
   sll_real64, dimension(:),   allocatable :: rho_tn   ! distribution at time n
   sll_real64, dimension(:),   allocatable :: rho_tn1  ! distribution at time n+1
   sll_real64, dimension(:),   allocatable :: x1_char
@@ -34,7 +33,7 @@ program test_hex_hermite
   sll_int32    :: l1,l2
   sll_int32    :: i1,i2,i3
   sll_int32    :: num_cells, n_points, n_triangle, n_points2
-  sll_int32    :: cells_max
+  sll_int32    :: cells_min, cells_max
   sll_int32    :: cells_stp
   sll_real64   :: center_mesh_x1, center_mesh_x2, radius
   sll_int32    :: nloops,count, ierr, EXTRA_TABLES = 0
@@ -55,10 +54,11 @@ program test_hex_hermite
 
   radius = 14._f64
 
+  cells_min = 80
   cells_max = 80
   cells_stp = 20
 
-  do num_cells = 1,cells_max,cells_stp
+  do num_cells = cells_min,cells_max,cells_stp
 
      print*," ********************************* "
      print*,"     Guiding Center Simulation"
@@ -101,6 +101,7 @@ program test_hex_hermite
      step = radius / real(num_cells,f64)
      aire = step**2*sqrt(3._f64)*0.25_f64
 
+     SLL_ALLOCATE(rho_tn_1( n_points),ierr)
      SLL_ALLOCATE(rho_tn( n_points),ierr)
      SLL_ALLOCATE(rho_tn1( n_points ),ierr)
      SLL_ALLOCATE(x1_char( n_points ),ierr)
@@ -108,6 +109,8 @@ program test_hex_hermite
 
      SLL_ALLOCATE(uxn( n_points),ierr)
      SLL_ALLOCATE(uyn( n_points ),ierr)
+     SLL_ALLOCATE(uxn_1( n_points),ierr)
+     SLL_ALLOCATE(uyn_1( n_points ),ierr)
 
      SLL_ALLOCATE(dxuxn( n_points),ierr)
      SLL_ALLOCATE(dxuyn( n_points ),ierr)
@@ -182,10 +185,21 @@ program test_hex_hermite
            !*************************************************
            !       computation of the characteristics
            !*************************************************
+           
+           if ( t <= dt + 1e-6 ) then ! first step with euler
 
-           call compute_characteristic_euler_2d_hex( &
-                x,y,uxn,uyn,i,xx,yy,dt )
+              call compute_characteristic_euler_2d_hex( &
+                   x,y,uxn,uyn,i,xx,yy,dt )
 
+           else !the rest is done with Adams 2 
+
+
+              call compute_characteristic_adams2_2d_hex( x,y,uxn,uyn,uxn_1,uyn_1,&
+                   dxuxn,dyuxn,dxuyn,dyuyn,i,xx,yy,dt)
+
+           endif
+           
+           
            inside = .true.
            h1 =  xx*r11 + yy*r12
            h2 =  xx*r21 + yy*r22
@@ -199,14 +213,21 @@ program test_hex_hermite
               rho_tn1(i) = 0._f64 ! dirichlet boundary condition
            endif
 
+
         end do ! end of the computation of the mesh points
 
+
+        rho_tn_1 = rho_tn
+        rho_tn = rho_tn1
+
+        uxn_1 = uxn
+        uyn_1 = uyn
 
         !*********************************************************
         !      computing the solution of the poisson equation
         !*********************************************************
 
-        call hex_second_terme_poisson( second_term, mesh, rho_tn )
+        call hex_second_terme_poisson( second_term, mesh, rho_tn ) ! found an error here as it is at times tn+1 and not tn -> corrected by changing where rho_tn = rho_tn1
 
         call solvlub_bande(l,u,phi_interm,second_term,n_points,l1,l2)
 
@@ -233,7 +254,6 @@ program test_hex_hermite
            count = 0
         endif
 
-        rho_tn = rho_tn1
 
      enddo
 
@@ -405,9 +425,10 @@ contains
                                                norm_linf, &
                                                energy
 
-
-       close(out_unit)
     end if
+
+    close(out_unit) 
+
   end subroutine hex_diagnostics
 
 

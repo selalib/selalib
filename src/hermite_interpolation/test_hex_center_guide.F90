@@ -93,7 +93,7 @@ program test_hex_hermite
 
      t = 0._f64
      tmax  = 100._f64
-     dt    = 0.1_f64!*20._f64 !/ real(num_cells,f64)  
+     dt    = 0.05_f64!*20._f64 !/ real(num_cells,f64)  
      !cfl   = radius * dt / ( radius / real(num_cells,f64)  )
      nloops = 0
      count  = 0
