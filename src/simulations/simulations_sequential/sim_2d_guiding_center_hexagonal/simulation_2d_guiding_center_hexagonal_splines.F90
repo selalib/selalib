@@ -361,42 +361,44 @@ contains
     ! --------------------------------------------------
     ! Writing file in respect to time...................
 
-    call int2string(mesh%num_cells,filenum)
-    call int2string(deg,splinedeg)
-    filename  = "diag_gc_spline"//trim(splinedeg)//"_t"//trim(filenum)//".dat"
+    if (mesh%num_cells == cells_max) then
+       call int2string(mesh%num_cells,filenum)
+       call int2string(deg,splinedeg)
+       filename  = "diag_gc_spline"//trim(splinedeg)//"_tmax"//trim(filenum)//".dat"
+       
+       call sll_new_file_id(out_unit, ierr)
+       if (nloop == 0) then
+          open(unit = out_unit, file=filename, action="write", status="replace")
+       else
+          open(unit = out_unit, file=filename, action="write", status="old",position = "append")
+       endif
 
-    call sll_new_file_id(out_unit, ierr)
-    if (nloop == 0) then
-       open(unit = out_unit, file=filename, action="write", status="replace")
-    else
-       open(unit = out_unit, file=filename, action="write", status="old",position = "append")
-    endif
+       do i = 1,mesh%num_pts_tot
+          mass = mass + rho(i)
+          norm_l1 = norm_l1 + abs(rho(i))
+          norm_l2 = norm_l2 + rho(i)**2
+          energy = energy + uxn(i)**2 + uyn(i)**2
+          if ( abs(rho(i)) > norm_linf ) norm_linf = rho(i)
+          if ( rho(i) < rho_min  ) rho_min  = rho(i)
+       enddo
 
-    do i = 1,mesh%num_pts_tot
-       mass = mass + rho(i)
-       norm_l1 = norm_l1 + abs(rho(i))
-       norm_l2 = norm_l2 + rho(i)**2
-       energy = energy + uxn(i)**2 + uyn(i)**2
-       if ( abs(rho(i)) > norm_linf ) norm_linf = rho(i)
-       if ( rho(i) < rho_min  ) rho_min  = rho(i)
-    enddo
+       print*,"diagnostic for t = ",t
+       energy  = sqrt(energy * mesh%delta**2)
+       mass    = mass * mesh%delta**2
+       norm_l1 = norm_l1 * mesh%delta**2
+       norm_l2 = sqrt(norm_l2 * mesh%delta**2)
 
-    print*,"diagnostic for t = ",t
-    energy  = sqrt(energy * mesh%delta**2)
-    mass    = mass * mesh%delta**2
-    norm_l1 = norm_l1 * mesh%delta**2
-    norm_l2 = sqrt(norm_l2 * mesh%delta**2)
+       write(out_unit,"(7(g13.3,1x))") t, &
+                                       mass, &
+                                       rho_min, &
+                                       norm_l1, &
+                                       norm_l2, &
+                                       norm_linf, &
+                                       energy
 
-    write(out_unit,"(7(g13.3,1x))") t, &
-                                    mass, &
-                                    rho_min, &
-                                    norm_l1, &
-                                    norm_l2, &
-                                    norm_linf, &
-                                    energy
+       close(out_unit)
 
-    close(out_unit)
-
+    end if
     ! --------------------------------------------------
     ! Writing file in respect to num_cells..............
     if (t.gt.tmax) then !We write on this file only if it is the last time step
