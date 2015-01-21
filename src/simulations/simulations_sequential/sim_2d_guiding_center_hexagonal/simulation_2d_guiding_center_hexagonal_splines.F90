@@ -1,4 +1,4 @@
-program test_hex_hermite
+program sim2d_gc_hex_splines
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -617,4 +617,4 @@ contains
   end subroutine write_center
 
 
-end program
+end program sim2d_gc_hex_splines
