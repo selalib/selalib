@@ -67,7 +67,7 @@ program test_hex_hermite
      print*," ********************************* "
 
      t = 0._f64
-     tmax  = 5._f64
+     tmax  = 100._f64
      dt    = 0.05_f64
      !cfl   = radius * dt / ( radius / real(num_cells,f64)  )
      nloops = 0
@@ -153,7 +153,7 @@ program test_hex_hermite
      call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type=1)
      ! ---------------------------------------
 
-     call hex_diagnostics(rho_tn,t,mesh,uxn,uyn,nloops,deg,tmax,cells_max)
+     call hex_diagnostics(rho_tn,t,mesh,uxn,uyn,nloops,deg,tmax,cells_min,cells_max)
 
 
      !*********************************************************
@@ -223,11 +223,12 @@ program test_hex_hermite
         uxn_1 = uxn
         uyn_1 = uyn
 
+
         !*********************************************************
-        !      computing the solution of the poisson equation
+        !      computing the solution of the poisson equation 
         !*********************************************************
 
-        call hex_second_terme_poisson( second_term, mesh, rho_tn ) ! found an error here as it is at times tn+1 and not tn -> corrected by changing where rho_tn = rho_tn1
+        call hex_second_terme_poisson( second_term, mesh, rho_tn ) 
 
         call solvlub_bande(l,u,phi_interm,second_term,n_points,l1,l2)
 
@@ -244,7 +245,7 @@ program test_hex_hermite
         !*********************************************************
         !                  writing diagostics
         !*********************************************************
-        call hex_diagnostics(rho_tn,t,mesh,uxn,uyn,nloops,deg,tmax,cells_max)
+        call hex_diagnostics(rho_tn,t,mesh,uxn,uyn,nloops,deg,tmax,cells_min,cells_max)
         if (count == 10.and.nloops<10000.and.num_cells == cells_max) then
            call int2string(nloops,filenum)
            filename  = "center_guide_rho"//trim(filenum)
@@ -328,7 +329,7 @@ contains
   !> @param cells_min int: min number of cells the mesh will have during this simulation
   !> @param cells_max int: max number of cells the mesh will have during this simulation
   !> return 
-  subroutine hex_diagnostics(rho,t,mesh,uxn,uyn,nloop,deg,tmax,cells_max)
+  subroutine hex_diagnostics(rho,t,mesh,uxn,uyn,nloop,deg,tmax,cells_min,cells_max)
     type(sll_hex_mesh_2d),  pointer  :: mesh
     sll_real64, dimension(:) :: rho
     sll_real64, dimension(:) :: uxn
@@ -337,7 +338,7 @@ contains
     sll_real64, intent(in)   :: tmax
     sll_int32 , intent(in)   :: nloop
     sll_int32 , intent(in)   :: deg
-    sll_int32 , intent(in)   :: cells_max
+    sll_int32 , intent(in)   :: cells_min, cells_max
     sll_real64 :: mass
     sll_real64 :: rho_min
     sll_real64 :: norm_l1
@@ -394,13 +395,24 @@ contains
                                     norm_linf, &
                                     energy
 
+    close(out_unit)
+
     ! --------------------------------------------------
     ! Writing file in respect to num_cells..............
     if (t.gt.tmax) then !We write on this file only if it is the last time step
        filename  = "diag_gc_spline"//trim(splinedeg)//"_nc.dat"
 
-       call sll_new_file_id(out_unit, ierr)
-       open(unit = out_unit, file=filename, action="write", status="old",position = "append")
+       if ( mesh%num_cells == cells_min ) then
+
+          call sll_new_file_id(out_unit, ierr)
+          open(unit = out_unit, file=filename, action="write", status="replace")
+
+       else
+          
+          call sll_new_file_id(out_unit, ierr)
+          open(unit = out_unit, file=filename, action="write", status="old",position = "append")
+          
+       endif
        
        do i = 1,mesh%num_pts_tot
           mass = mass + rho(i)
@@ -425,9 +437,10 @@ contains
                                                norm_linf, &
                                                energy
 
+    close(out_unit) 
+
     end if
 
-    close(out_unit) 
 
   end subroutine hex_diagnostics
 
