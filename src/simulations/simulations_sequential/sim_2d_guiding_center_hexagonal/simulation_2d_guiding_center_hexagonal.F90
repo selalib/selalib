@@ -29,14 +29,12 @@ program test_hex_hermite
   sll_real64, dimension(:),   allocatable :: x1_char
   sll_real64, dimension(:),   allocatable :: x2_char
 
-  sll_int32    :: deg = 2, k_min=0, n_min=1
-  sll_real64   :: r_min
-  sll_int32    :: i,j, k1, k2, index_tab
+  sll_int32    :: deg = 2
+  sll_int32    :: i,j, k1, k2, index_tab, type
   sll_int32    :: l1,l2
   sll_int32    :: i1,i2,i3
   sll_int32    :: num_cells, n_points, n_triangle, n_points2
   sll_int32    :: cells_max
-  sll_int32    :: cells_min
   sll_int32    :: cells_stp
   sll_real64   :: center_mesh_x1, center_mesh_x2, radius
   sll_int32    :: nloops,count, ierr, EXTRA_TABLES = 0
@@ -57,11 +55,10 @@ program test_hex_hermite
 
   radius = 14._f64
 
-  cells_min = 80
   cells_max = 80
   cells_stp = 20
 
-  do num_cells = cells_min,cells_max,cells_stp
+  do num_cells = 1,cells_max,cells_stp
 
      print*," ********************************* "
      print*,"     Guiding Center Simulation"
@@ -139,9 +136,9 @@ program test_hex_hermite
      ! ---------------------------------------
 
      ! Poisson solver ------------------------
-     call hex_matrix_poisson( matrix_poisson, mesh, n_min, k_min)
+     call hex_matrix_poisson( matrix_poisson, mesh,type=1)
      call factolub_bande(matrix_poisson,l,u,n_points,l1,l2)
-     call hex_second_terme_poisson( second_term, mesh, rho_tn, n_min, k_min )
+     call hex_second_terme_poisson( second_term, mesh, rho_tn )
      call solvlub_bande(l,u,phi_interm,second_term,n_points,l1,l2)
 
      do i = 1, mesh%num_pts_tot
@@ -150,10 +147,10 @@ program test_hex_hermite
         call index_hex_to_global(mesh, k1, k2, index_tab)
         phi(i) = phi_interm(index_tab)
      enddo
-     call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi, n_min, k_min)
+     call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type=1)
      ! ---------------------------------------
 
-     call hex_diagnostics(rho_tn,t,mesh,uxn,uyn,nloops,deg,tmax,cells_min,cells_max)
+     call hex_diagnostics(rho_tn,t,mesh,uxn,uyn,nloops,deg,tmax,cells_max)
 
 
      !*********************************************************
@@ -209,7 +206,7 @@ program test_hex_hermite
         !      computing the solution of the poisson equation
         !*********************************************************
 
-        call hex_second_terme_poisson( second_term, mesh, rho_tn, n_min, k_min )
+        call hex_second_terme_poisson( second_term, mesh, rho_tn )
 
         call solvlub_bande(l,u,phi_interm,second_term,n_points,l1,l2)
 
@@ -220,13 +217,13 @@ program test_hex_hermite
            phi(i) = phi_interm(index_tab)
         enddo
 
-        call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi, n_min, k_min)
+        call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type=1)
 
 
         !*********************************************************
         !                  writing diagostics
         !*********************************************************
-        call hex_diagnostics(rho_tn,t,mesh,uxn,uyn,nloops,deg,tmax,cells_min,cells_max)
+        call hex_diagnostics(rho_tn,t,mesh,uxn,uyn,nloops,deg,tmax,cells_max)
         if (count == 10.and.nloops<10000.and.num_cells == cells_max) then
            call int2string(nloops,filenum)
            filename  = "center_guide_rho"//trim(filenum)
@@ -311,7 +308,7 @@ contains
   !> @param cells_min int: min number of cells the mesh will have during this simulation
   !> @param cells_max int: max number of cells the mesh will have during this simulation
   !> return 
-  subroutine hex_diagnostics(rho,t,mesh,uxn,uyn,nloop,deg,tmax,cells_min,cells_max)
+  subroutine hex_diagnostics(rho,t,mesh,uxn,uyn,nloop,deg,tmax,cells_max)
     type(sll_hex_mesh_2d),  pointer  :: mesh
     sll_real64, dimension(:) :: rho
     sll_real64, dimension(:) :: uxn
@@ -321,7 +318,6 @@ contains
     sll_int32 , intent(in)   :: nloop
     sll_int32 , intent(in)   :: deg
     sll_int32 , intent(in)   :: cells_max
-    sll_int32 , intent(in)   :: cells_min
     sll_real64 :: mass
     sll_real64 :: rho_min
     sll_real64 :: norm_l1
@@ -384,11 +380,7 @@ contains
        filename  = "diag_gc_spline"//trim(splinedeg)//"_nc.dat"
 
        call sll_new_file_id(out_unit, ierr)
-       if (mesh%num_cells == cells_min) then
-          open(unit = out_unit, file=filename, action="write", status="replace")
-       else
-          open(unit = out_unit, file=filename, action="write", status="old",position = "append")
-       endif
+       open(unit = out_unit, file=filename, action="write", status="old",position = "append")
        
        do i = 1,mesh%num_pts_tot
           mass = mass + rho(i)
