@@ -48,27 +48,30 @@ program sim2d_gc_hex_splines
   sll_int32    :: p = 6!-> degree of the approximation for the derivative
   character(len = 50) :: filename
   character(len = 4)  :: filenum
+  character(len = 4)  :: degnum
 
   center_mesh_x1 = 0._f64
   center_mesh_x2 = 0._f64
 
   radius = 14._f64
 
-  cells_min = 80
-  cells_max = 80
+  cells_min = 20
+  cells_max = 160
   cells_stp = 20
 
   do num_cells = cells_min,cells_max,cells_stp
 
+     call int2string(deg,degnum)
+     print ""
      print*," ********************************* "
-     print*,"     Guiding Center Simulation"
+     print*,"     Guiding-Center Simulation"
      print*,"        on a Hexagonal mesh"
-     print*,"   using boxsplines of deg =",deg
+     print*,"   using boxsplines of deg =", degnum
      print*," ********************************* "
 
      t = 0._f64
      tmax  = 100._f64
-     dt    = 0.05_f64
+     dt    = 0.1_f64
      !cfl   = radius * dt / ( radius / real(num_cells,f64)  )
      nloops = 0
      count  = 0
@@ -217,12 +220,13 @@ program sim2d_gc_hex_splines
         end do ! end of the computation of the mesh points
 
 
+        ! Updating the new field values ............
         rho_tn_1 = rho_tn
         rho_tn = rho_tn1
 
         uxn_1 = uxn
         uyn_1 = uyn
-
+        ! ...........................................
 
         !*********************************************************
         !      computing the solution of the poisson equation 
@@ -258,12 +262,15 @@ program sim2d_gc_hex_splines
 
      enddo
 
+     SLL_DEALLOCATE_ARRAY(rho_tn_1,ierr)
      SLL_DEALLOCATE_ARRAY(rho_tn,ierr)
      SLL_DEALLOCATE_ARRAY(rho_tn1,ierr)
      SLL_DEALLOCATE_ARRAY(x1_char,ierr)
      SLL_DEALLOCATE_ARRAY(x2_char,ierr)
      SLL_DEALLOCATE_ARRAY(uxn,ierr)
      SLL_DEALLOCATE_ARRAY(uyn,ierr)
+     SLL_DEALLOCATE_ARRAY(uxn_1,ierr)
+     SLL_DEALLOCATE_ARRAY(uyn_1,ierr)
      SLL_DEALLOCATE_ARRAY(dxuxn,ierr)
      SLL_DEALLOCATE_ARRAY(dxuyn,ierr)
      SLL_DEALLOCATE_ARRAY(dyuxn,ierr)
@@ -402,18 +409,16 @@ contains
     ! --------------------------------------------------
     ! Writing file in respect to num_cells..............
     if (t.gt.tmax) then !We write on this file only if it is the last time step
+
+       call int2string(deg,splinedeg)
        filename  = "diag_gc_spline"//trim(splinedeg)//"_nc.dat"
 
        if ( mesh%num_cells == cells_min ) then
-
           call sll_new_file_id(out_unit, ierr)
           open(unit = out_unit, file=filename, action="write", status="replace")
-
        else
-          
           call sll_new_file_id(out_unit, ierr)
           open(unit = out_unit, file=filename, action="write", status="old",position = "append")
-          
        endif
        
        do i = 1,mesh%num_pts_tot
