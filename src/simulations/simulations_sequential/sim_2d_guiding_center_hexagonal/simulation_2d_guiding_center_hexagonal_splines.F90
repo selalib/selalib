@@ -62,7 +62,7 @@ program sim2d_gc_hex_splines
   do num_cells = cells_min,cells_max,cells_stp
 
      call int2string(deg,degnum)
-     print ""
+     print*, ""
      print*," ********************************* "
      print*,"     Guiding-Center Simulation"
      print*,"        on a Hexagonal mesh"
