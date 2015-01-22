@@ -94,6 +94,10 @@ module sll_simulation_2d_vlasov_poisson_cartesian
    procedure(sll_scalar_initializer_2d), nopass, pointer :: init_func
    sll_real64, dimension(:), pointer :: params
    sll_real64 :: nrj0
+
+   !ES equilibrium function
+   procedure(sll_scalar_initializer_2d), nopass, pointer :: equil_func
+   sll_real64, dimension(:), pointer :: equil_func_params
    
    !time_iterations
    sll_real64 :: dt
@@ -186,6 +190,37 @@ contains
     enddo
     
   end subroutine change_initial_function_vp2d_par_cart
+
+  !ES enable externally defined equilibrium function  
+  subroutine change_equilibrium_function_vp2d_par_cart( sim, equil_func, params, num_params)
+    class(sll_simulation_2d_vlasov_poisson_cart), intent(inout) :: sim
+    procedure(sll_scalar_initializer_2d), pointer :: equil_func
+    sll_real64, dimension(:), pointer :: params
+    sll_int32, intent(in) :: num_params
+    !local variables
+    sll_int32 :: ierr
+    sll_int32 :: i
+    
+    sim%equil_func => equil_func
+    if(associated(sim%equil_func_params))then
+      SLL_DEALLOCATE(sim%equil_func_params,ierr)
+    endif
+    if(num_params<1)then
+      print *,'#num_params should be >=1 in change_equilibrium_function_vp2d_par_cart'
+      stop
+    endif
+    SLL_ALLOCATE(sim%equil_func_params(num_params),ierr)
+    if(size(params)<num_params)then
+      print *,'#size of params is not good in change_equilibrium_function_vp2d_par_cart'
+      stop
+    endif
+    do i=1,num_params
+      sim%equil_func_params(i) = params(i)
+    enddo
+    
+  end subroutine change_equilibrium_function_vp2d_par_cart
+
+
 
   subroutine init_vp2d_par_cart( sim, filename )
     class(sll_simulation_2d_vlasov_poisson_cart), intent(inout) :: sim
@@ -610,6 +645,14 @@ contains
         print *,'#in init_vp2d_par_cart'  
         stop
     end select
+
+    !ES Equilibrium is initialised to unperturbed normalised Maxwellian by default
+    sim%equil_func => sll_landau_initializer_2d
+    SLL_ALLOCATE(sim%equil_func_params(2),ierr)
+    sim%equil_func_params(1) = sim%kx
+    sim%equil_func_params(2) = 0._f64
+
+    ! restart file
     sim%time_init_from_restart_file = time_init_from_restart_file
     sim%restart_file = restart_file
     
@@ -813,16 +856,6 @@ contains
         stop 
     end select
 
-
-
-
-
-    
-
-
-    
-     
-    
     if(sll_get_collective_rank(sll_world_collective)==0)then
             
       !to be compatible with VPpostprocessing_drive_KEEN.f
@@ -876,7 +909,7 @@ contains
 
   subroutine run_vp2d_cartesian(sim)
     class(sll_simulation_2d_vlasov_poisson_cart), intent(inout) :: sim
-    sll_real64,dimension(:,:),pointer :: f_x1,f_x2,f_x1_init
+    sll_real64,dimension(:,:),pointer :: f_x1,f_x2,f_x1_equil
     sll_real64,dimension(:),pointer :: rho,efield,e_app,rho_loc
     !sll_real64, dimension(:), allocatable :: rho_split
     !sll_real64, dimension(:), allocatable :: rho_full
@@ -1019,7 +1052,7 @@ contains
 
     global_indices(1:2) = local_to_global( layout_x1, (/1, 1/) )
     SLL_ALLOCATE(f_x1(local_size_x1,local_size_x2),ierr)    
-    SLL_ALLOCATE(f_x1_init(local_size_x1,local_size_x2),ierr)    
+    SLL_ALLOCATE(f_x1_equil(local_size_x1,local_size_x2),ierr)    
     SLL_ALLOCATE(f_x1_buf1d(local_size_x1*local_size_x2),ierr)    
 
 
@@ -1142,17 +1175,22 @@ contains
     !call sll_binary_write_array_2d(restart_id,f_x1(1:local_size_x1,1:local_size_x2),ierr)
     !call sll_binary_file_close(restart_id,ierr)    
 
-
-    
+    !ES initialise f_x1_equil that is used to define deltaf: deltaf =  f_x1 - f_x1_equil
     call sll_2d_parallel_array_initializer_cartesian( &
        layout_x1, &
        sim%x1_array, &
        node_positions_x2, &
-       f_x1_init, &
-       sll_landau_initializer_2d, &
-       (/ sim%kx,0._f64 /))
-    
-    
+       f_x1_equil, &
+       sim%equil_func, &
+       sim%equil_func_params)
+!!$    call sll_2d_parallel_array_initializer_cartesian( &
+!!$       layout_x1, &
+!!$       sim%x1_array, &
+!!$       node_positions_x2, &
+!!$       f_x1_equil, &
+!!$       sll_landau_initializer_2d, &
+!!$       (/ sim%kx,0._f64 /))
+        
     call compute_displacements_array_2d( &
       layout_x1, &
       collective_size, &
@@ -1161,8 +1199,10 @@ contains
       layout_x1, &
       collective_size )
 
-    call load_buffer_2d( layout_x1, f_x1, f_x1_buf1d )
-    
+    !ES replace f_x1 by f_x1_equil and write f_x1_equil into f0.bdat instead of f_x1  
+!    call load_buffer_2d( layout_x1, f_x1, f_x1_buf1d )
+    call load_buffer_2d( layout_x1, f_x1_equil, f_x1_buf1d )
+
     call sll_collective_gatherv_real64( &
       sll_world_collective, &
       f_x1_buf1d, &
@@ -1171,10 +1211,7 @@ contains
       collective_displs, &
       0, &
       f_visu_buf1d )
-    
-    
-      
-      
+        
     f_visu = reshape(f_visu_buf1d, shape(f_visu))
     if(sll_get_collective_rank(sll_world_collective)==0)then
       call sll_binary_file_create('f0.bdat', file_id, ierr)
@@ -1216,14 +1253,6 @@ contains
 !        time_init, &
 !        layout_x1)
 !
-    
-    
-    
-    
-
-
-    
-    
     
     call initialize(poisson_1d,sim%mesh2d%eta1_min,sim%mesh2d%eta1_max,np_x1-1,ierr)
 
@@ -1279,7 +1308,7 @@ contains
     
     
     !write also initial deltaf function
-    call load_buffer_2d( layout_x1, f_x1-f_x1_init, f_x1_buf1d )
+    call load_buffer_2d( layout_x1, f_x1-f_x1_equil, f_x1_buf1d )
     call sll_collective_gatherv_real64( &
       sll_world_collective, &
       f_x1_buf1d, &
@@ -1528,7 +1557,7 @@ contains
         if (mod(istep,sim%freq_diag)==0) then          
           !we substract f0
           !we gather in one file
-          call load_buffer_2d( layout_x1, f_x1-f_x1_init, f_x1_buf1d )
+          call load_buffer_2d( layout_x1, f_x1-f_x1_equil, f_x1_buf1d )
           call sll_collective_gatherv_real64( &
             sll_world_collective, &
             f_x1_buf1d, &
