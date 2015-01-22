@@ -79,66 +79,16 @@ if (num_param == 2):
     if(len(param_loc)!=len(param_nml_loc)):
       print("param_loc and param_nml_loc have not same size:",len(param_loc),len(param_nml_loc))
       sys.exit()
+
+
   i=[0 for j in range(num_loops)]
   s=-1
-  if(num_loops==1):
-    for i[0] in run[0]:      
-      for k in range(len(param[0])):
-        nml_dict[param_nml[0][k]][param[0][k]] = eval(i[0][k])      
-      s=s+1
-      nml_dict.write(str(sys.argv[1])+'_'+str(s)+'.nml')
-  elif(num_loops==2):
-    for i[0],i[1] in itertools.product(run[0],run[1]):      
-      for j in range(num_loops):
-        for k in range(len(param[j])):
-          nml_dict[param_nml[j][k]][param[j][k]] = eval(i[j][k])       
-      s=s+1
-      nml_dict.write(str(sys.argv[1])+'_'+str(s)+'.nml')
-  elif(num_loops==3):
-    for i[0],i[1],i[2] in itertools.product(run[0],run[1],run[2]):      
-      for j in range(num_loops):
-        for k in range(len(param[j])):
-          nml_dict[param_nml[j][k]][param[j][k]] = eval(i[j][k])       
-      s=s+1
-      nml_dict.write(str(sys.argv[1])+'_'+str(s)+'.nml')
-  elif(num_loops==4):
-    for i[0],i[1],i[2],i[3] in itertools.product(run[0],run[1],run[2],run[3]):      
-      for j in range(num_loops):
-        for k in range(len(param[j])):
-          nml_dict[param_nml[j][k]][param[j][k]] = eval(i[j][k])       
-      s=s+1
-      nml_dict.write(str(sys.argv[1])+'_'+str(s)+'.nml')
-  elif(num_loops==5):
-    for i[0],i[1],i[2],i[3],i[4] in itertools.product(run[0],run[1],run[2],run[3],run[4]):      
-      for j in range(num_loops):
-        for k in range(len(param[j])):
-          nml_dict[param_nml[j][k]][param[j][k]] = eval(i[j][k])       
-      s=s+1
-      nml_dict.write(str(sys.argv[1])+'_'+str(s)+'.nml')
-  elif(num_loops==6):
-    for i[0],i[1],i[2],i[3],i[4],i[5] in itertools.product(run[0],run[1],run[2],run[3],run[4],run[5]):      
-      for j in range(num_loops):
-        for k in range(len(param[j])):
-          nml_dict[param_nml[j][k]][param[j][k]] = eval(i[j][k])       
-      s=s+1
-      nml_dict.write(str(sys.argv[1])+'_'+str(s)+'.nml')
-  elif(num_loops==7):
-    for i[0],i[1],i[2],i[3],i[4],i[5],i[6] in itertools.product(run[0],run[1],run[2],run[3],run[4],run[5],run[6]):      
-      for j in range(num_loops):
-        for k in range(len(param[j])):
-          nml_dict[param_nml[j][k]][param[j][k]] = eval(i[j][k])       
-      s=s+1
-      nml_dict.write(str(sys.argv[1])+'_'+str(s)+'.nml')
-  elif(num_loops==8):
-    for i[0],i[1],i[2],i[3],i[4],i[5],i[6],i[7] in itertools.product(run[0],run[1],run[2],run[3],run[4],run[5],run[6],run[7]):      
-      for j in range(num_loops):
-        for k in range(len(param[j])):
-          nml_dict[param_nml[j][k]][param[j][k]] = eval(i[j][k])       
-      s=s+1
-      nml_dict.write(str(sys.argv[1])+'_'+str(s)+'.nml')
-  else:
-    print("num_loops="+str(num_loops)+" not implemented")
-    sys.exit()                     
+  for i in itertools.product(*run):
+    for j in range(num_loops):
+      for k in range(len(param[j])):
+        nml_dict[param_nml[j][k]][param[j][k]] = eval(i[j][k])       
+    s=s+1
+    nml_dict.write(str(sys.argv[1])+'_'+str(s)+'.nml')
 else:
   print("syntax: python /Users/mehrenbe/prog/f90nml-0.10.2/test/my_test.py filename")
   print("we suppose that filename.nml exists")
