@@ -553,8 +553,26 @@ We consider here a guiding-center approximation of the 2D Vlasov-Poisson system,
 
 with $E = (E_x, E_y) = - \nabla \phi $ and $E_\perp = (-E_y, E_x)$.
 
+We recall that this system verifies the following properties:
 
-\textcolor{red}{Explain the importance of this model. Why are we studying this model ?}
+\begin{enumerate}
+	\item Maximum principle (if $f$ is smooth):
+		\begin{equation}
+		0 \leq f(\mathbf{x},t) \leq \max(f(\mathbf{x}, 0))
+		\end{equation}
+	\item Energy conservation: $\partial_t \mathcal{E} (t) = 0$, where
+		\begin{equation}
+		\mathcal{E} (t) = \int_\Omega \mid \partial_x \phi \mid^2 + 
+		 	\mid \partial_y \phi \mid^2 \mathrm{d} \mathbf{x}
+		\end{equation}
+	\item Mass conservation:
+		\begin{equation}
+		\mathcal{M} (t) = \int_\Omega f(\mathbf{x}, t) \mathrm{d}\mathbf{x}
+		\end{equation}
+\end{enumerate}
+
+
+This model, is commonly used in 2D simulations to study the particle density, as it describes highly magnetized plasmas in the poloidal plane of a tokamak.
 
 %%-----------------------------
 \subsection{General Algorithm}
@@ -616,27 +634,34 @@ Below, we summarize the full algorithm to compute the distribution function $f^{
 %%-----------------------------
 %% Results
 %%-----------------------------
-\section{Results}
+\section{Numerical results}
 \label{sec:results}
+In this section we present the effectuated numerical simulations and their results. With the aim of studying the convergence, the dissipation, and the  efficiency of the methods, we first study the circular advection test case. To study the accuracy of the results, we compare them to a known solution. Then we proceed to the guiding-center simulation. As there is no model solution for this test case, we study properties of the system that we know should be conserved.
+
 
 \subsection{Circular advection}
 
-In order to compare the two families' performances:
+We focus here on the circular advection test case. The model is defined by:
+
 	\begin{equation}
-		\partial_t f + y\partial_x f - x \partial_y f = 0 
+		\partial_t f(x,y,t) + y\,\partial_x f(x,y,t) - x \,\partial_y f(x,y,t) = 0 
 	\end{equation}
-	
-	Taking a gaussian pulse as an initial distribution function
-	\begin{equation}
-	 f^{n} = exp  \left( -\dfrac{1}{2} \left( \dfrac{(x^n - x_c)^2}{\sigma_x^2} + \dfrac{(y^n - y_c)^2}{\sigma_y^2  } \right)   \right ) 
-	\end{equation}
-	Constant CFL (	$CFL = 2$ )  ,  $\sigma_x = \sigma_y = \frac{1}{2\sqrt{2}}$ , hexagonal radius : 8. \\
-	Null Dirichlet boundary condition .
-	
+
+As this equation is not coupled to Poisson model, with can study in detail the difference between the interpolations methods previously presented.	Additionally, finding the analytical solution is trivial and therefore we can study the convergence of our methods. Here, we take a Gaussian pulse as initial distribution function:
+
+\begin{equation}
+	 f(x,y,t_n) = exp  \left( -\dfrac{1}{2} \left( \dfrac{(x - x_c)^2}{\sigma_x^2} + \dfrac{(y - y_c)^2}{\sigma_y^2  } \right)   \right ) 
+\end{equation}
+
+On a hexagonal mesh centered at the origin of radius $8$, we take  $\sigma_x = \sigma_y = \frac{1}{2\sqrt{2}}$ (amplitude of the gaussian). Where is the initial pulse centred is irrelevant (the advection is circular) but let us set here $x_c = 2$ and $y_c = 2$. To study the convergence in space we took $N = 20, 40, 60, ..., 160$. We recall that $N$ is the number of cells on the radius $L$. With the maximum time of evaluation, $t_{max}$, at $6 \pi$, we chose to keep a constant CFL at $2$.
+
 \begin{figure}[h!]
 	\includegraphics[scale=0.35]{figures/l2.png}
-	\includegraphics[scale=0.35]{figures/efficiency.png}
 	\includegraphics[scale=0.35]{figures/inf_l.png}
+\end{figure}
+
+\begin{figure}[h!]
+	\includegraphics[scale=0.35]{figures/efficiency.png}
 	\includegraphics[scale=0.35]{figures/time_norm.png}
 \end{figure}
 
