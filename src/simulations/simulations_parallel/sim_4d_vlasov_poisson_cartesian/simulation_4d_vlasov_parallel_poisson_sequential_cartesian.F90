@@ -421,6 +421,8 @@ contains
         sim%split => new_time_splitting_coeff(SLL_ORDER6VPnew1_VTV,dt=dt)
       case ("SLL_ORDER6VP2D_VTV") 
         sim%split => new_time_splitting_coeff(SLL_ORDER6VP2D_VTV,dt=dt)
+      case ("SLL_ORDER6VPOT_VTV") 
+        sim%split => new_time_splitting_coeff(SLL_ORDER6VPOT_VTV,dt=dt)
       case ("SLL_ORDER6VPnew2_VTV") 
         sim%split => new_time_splitting_coeff(SLL_ORDER6VPnew2_VTV,dt=dt)
       case default
@@ -552,6 +554,8 @@ contains
     sll_real64, dimension(:,:), allocatable :: intfdx_full
     sll_real64, dimension(:,:), allocatable :: E_x1
     sll_real64, dimension(:,:), allocatable :: E_x2
+    sll_real64, dimension(:,:,:), allocatable :: field_x1
+    sll_real64, dimension(:,:,:), allocatable :: field_x2
     sll_real64, dimension(:,:), allocatable :: jacobian_E
     sll_real64, dimension(:), allocatable :: send_buf_x1x2
     sll_real64, dimension(:), allocatable :: recv_buf_x1x2
@@ -582,6 +586,7 @@ contains
     sll_int32 :: istep
     logical :: split_T
     sll_int32 :: split_istep
+    sll_int32 :: split_isubstep
     sll_real64, dimension(:), allocatable     :: f1d
     sll_int32 :: nc_max
     sll_real64 :: alpha
@@ -600,6 +605,8 @@ contains
     sll_real64 :: tmp
     sll_real64 :: ekin0
     sll_real64 :: nrj0
+    sll_real64 :: nrj_jac
+    sll_int32 :: ii
     
     world_size = sll_get_collective_size(sll_world_collective)
     my_rank    = sll_get_collective_rank(sll_world_collective)
@@ -675,6 +682,8 @@ contains
     SLL_ALLOCATE(intfdx_full(nc_x3+1,nc_x4+1),ierr)
     SLL_ALLOCATE(E_x1(nc_x1+1,nc_x2+1),ierr)
     SLL_ALLOCATE(E_x2(nc_x1+1,nc_x2+1),ierr)
+    SLL_ALLOCATE(field_x1(nc_x1+1,nc_x2+1,sim%split%dim_split_V),ierr)
+    SLL_ALLOCATE(field_x2(nc_x1+1,nc_x2+1,sim%split%dim_split_V),ierr)
     SLL_ALLOCATE(jacobian_E(nc_x1+1,nc_x2+1),ierr)
     SLL_ALLOCATE(recv_buf_x1x2((nc_x1+1)*(nc_x2+1)),ierr)
     SLL_ALLOCATE(recv_buf_x3x4((nc_x3+1)*(nc_x4+1)),ierr)
@@ -784,6 +793,12 @@ contains
       sim%stencil_s, &
       jacobian_E)
     !call solve(sim%poisson,E_x1,E_x2,jacobian_E,nrj)
+    field_x1(:,:,1) = E_x1(:,:)
+    field_x2(:,:,1) = E_x2(:,:)
+    nrj_jac = 0._f64
+    if(sim%split%dim_split_V==2)then            
+      call solve(sim%poisson,field_x1(:,:,2),field_x2(:,:,2),jacobian_E,nrj_jac)
+    endif
 
 
     seqx3x4_to_seqx1x2 => &
@@ -811,6 +826,73 @@ contains
       call sll_binary_write_array_2d(E_x1_id,E_x1(1:nc_x1,1:nc_x2),ierr)  
       call sll_binary_write_array_2d(E_x2_id,E_x2(1:nc_x1,1:nc_x2),ierr)  
       call sll_binary_write_array_2d(intfdx_id,intfdx_full(1:nc_x3+1,1:nc_x4+1),ierr)  
+      if(sim%split%dim_split_V==2)then
+	    call sll_gnuplot_corect_2d( &
+		  sim%mesh_x1%eta_min, &
+		  sim%mesh_x1%eta_max, &
+		  nc_x1+1, &
+		  sim%mesh_x2%eta_min, &
+		  sim%mesh_x2%eta_max, &
+		  nc_x2+1, &
+		  field_x1(:,:,1), &
+		  "E_x1", &
+		  0, &
+		  ierr)
+	    call sll_gnuplot_corect_2d( &
+		  sim%mesh_x1%eta_min, &
+		  sim%mesh_x1%eta_max, &
+		  nc_x1+1, &
+		  sim%mesh_x2%eta_min, &
+		  sim%mesh_x2%eta_max, &
+		  nc_x2+1, &
+		  field_x2(:,:,1), &
+		  "E_x2", &
+		  0, &
+		  ierr)
+		  
+	    call sll_gnuplot_corect_2d( &
+		  sim%mesh_x1%eta_min, &
+		  sim%mesh_x1%eta_max, &
+		  nc_x1+1, &
+		  sim%mesh_x2%eta_min, &
+		  sim%mesh_x2%eta_max, &
+		  nc_x2+1, &
+		  field_x1(:,:,2), &
+		  "dK_x1", &
+		  0, &
+		  ierr)
+		call sll_gnuplot_corect_2d( &
+		  sim%mesh_x1%eta_min, &
+		  sim%mesh_x1%eta_max, &
+		  nc_x1+1, &
+		  sim%mesh_x2%eta_min, &
+		  sim%mesh_x2%eta_max, &
+		  nc_x2+1, &
+		  field_x2(:,:,2), &
+		  "dK_x2", &
+		  0, &
+		  ierr)
+        call compute_jacobian( &
+          E_x1, &
+          E_x2, &
+          nc_x1, &
+          nc_x2, &
+          4._f64/(delta1*delta2), &
+          sim%stencil_r, &
+          sim%stencil_s, &
+          jacobian_E)
+		call sll_gnuplot_corect_2d( &
+		  sim%mesh_x1%eta_min, &
+		  sim%mesh_x1%eta_max, &
+		  nc_x1+1, &
+		  sim%mesh_x2%eta_min, &
+		  sim%mesh_x2%eta_max, &
+		  nc_x2+1, &
+		  jacobian_E(:,:), &
+		  "jacobian_E", &
+		  0, &
+		  ierr)
+      endif
       write(th_diag_id,'(f12.5,5g20.12)') time, nrj,ekin,nrj0,ekin0,maxval(abs(jacobian_E))!0.5*nrj+ekin
     endif
 
@@ -830,17 +912,19 @@ contains
         endif
       endif  
       
-      split_T = sim%split%split_begin_T      
+      split_T = sim%split%split_begin_T
+      split_isubstep = 0      
       do split_istep=1,sim%split%nb_split_step
         if(split_T)then
           !T advection
+          split_isubstep = split_isubstep+1               
           global_indices(1:4) = local_to_global( sequential_x1x2, (/1, 1, 1, 1/) )
           do i4=1,loc_sz_x4
             do i3=1,loc_sz_x3
               !advection in x1
               ig=global_indices(3)
               alpha = (sim%mesh_x3%eta_min + real(i3+ig-2,f64) * delta3) &
-                * sim%split%split_step(split_istep)
+                * sim%split%split_step(split_isubstep)
               do i2=1,nc_x2+1
                 f1d(1:nc_x1+1)=f_seq_x1x2(1:nc_x1+1,i2,i3,i4) 
                 call sim%advect_x1%advect_1d_constant(&
@@ -853,7 +937,7 @@ contains
               !advection in x2
               ig=global_indices(4)
               alpha = (sim%mesh_x4%eta_min + real(i4+ig-2,f64) * delta4) &
-                * sim%split%split_step(split_istep)
+                * sim%split%split_step(split_isubstep)
               do i1=1,nc_x1+1
                 f1d(1:nc_x2+1)=f_seq_x1x2(i1,1:nc_x2+1,i3,i4) 
                 call sim%advect_x2%advect_1d_constant(&
@@ -911,9 +995,12 @@ contains
             jacobian_E)
           !end compute poisson 
           
-          
-          
-          
+          field_x1(:,:,1) = E_x1(:,:)
+          field_x2(:,:,1) = E_x2(:,:)
+          nrj_jac = 0._f64
+          if(sim%split%dim_split_V==2)then            
+            call solve(sim%poisson,field_x1(:,:,2),field_x2(:,:,2),jacobian_E,nrj_jac)
+          endif
           
           
           global_indices(1:4) = local_to_global( sequential_x3x4, (/1, 1, 1, 1/) ) 
@@ -921,8 +1008,13 @@ contains
             do i1=1,loc_sz_x1
 
               !advection in x3
-              alpha = E_x1(i1-1+global_indices(1),i2-1+global_indices(2)) &
-                * sim%split%split_step(split_istep)
+              alpha = 0._f64
+              do ii=1,sim%split%dim_split_V
+                alpha = alpha+field_x1(i1-1+global_indices(1),i2-1+global_indices(2),ii) &
+                  * sim%split%split_step(split_isubstep+ii)
+              enddo
+              
+              
               do i4=1,nc_x4+1
                 f1d(1:nc_x3+1)=f_seq_x3x4(i1,i2,1:nc_x3+1,i4) 
                 call sim%advect_x3%advect_1d_constant(&
@@ -933,8 +1025,11 @@ contains
                 f_seq_x3x4(i1,i2,1:nc_x3+1,i4)=f1d(1:nc_x3+1)
               enddo
               !advection in x4
-              alpha = E_x2(i1-1+global_indices(1),i2-1+global_indices(2)) &
-                * sim%split%split_step(split_istep)
+              alpha = 0._f64
+              do ii=1,sim%split%dim_split_v
+                alpha = alpha+field_x2(i1-1+global_indices(1),i2-1+global_indices(2),ii) &
+                  * sim%split%split_step(split_isubstep+ii)
+              enddo    
               do i3=1,nc_x3+1
                 f1d(1:nc_x4+1)=f_seq_x3x4(i1,i2,i3,1:nc_x4+1) 
                 call sim%advect_x4%advect_1d_constant(&
@@ -956,10 +1051,11 @@ contains
 
           call apply_remap_4D( seqx3x4_to_seqx1x2, f_seq_x3x4, f_seq_x1x2 )
           call compute_local_sizes( sequential_x1x2, &
-           loc_sz_x1, &
-           loc_sz_x2, &
-           loc_sz_x3, &
-           loc_sz_x4 )
+            loc_sz_x1, &
+            loc_sz_x2, &
+            loc_sz_x3, &
+            loc_sz_x4 )
+          split_isubstep = split_isubstep+sim%split%dim_split_V
         endif
         split_T = .not.(split_T)  
       enddo
@@ -1020,13 +1116,14 @@ contains
         
         
         if(sll_get_collective_rank(sll_world_collective)==0) then
-          write(th_diag_id,'(f12.5,5g20.12)') &
+          write(th_diag_id,'(f12.5,6g20.12)') &
             time, &
             nrj, &
             ekin, &
             nrj0, &
             ekin0, &
-            maxval(abs(jacobian_E))!,ekin+0.5_f64*nrj
+            maxval(abs(jacobian_E)), &
+            nrj_jac!,ekin+0.5_f64*nrj
         endif
       endif
       if (mod(istep,sim%freq_diag)==0) then
@@ -1034,6 +1131,77 @@ contains
           call sll_binary_write_array_2d(rho_id,rho_full(1:nc_x1,1:nc_x2),ierr)  
           call sll_binary_write_array_2d(E_x1_id,E_x1(1:nc_x1,1:nc_x2),ierr)  
           call sll_binary_write_array_2d(E_x2_id,E_x2(1:nc_x1,1:nc_x2),ierr)  
+
+      if(sim%split%dim_split_V==2)then
+	    call sll_gnuplot_corect_2d( &
+		  sim%mesh_x1%eta_min, &
+		  sim%mesh_x1%eta_max, &
+		  nc_x1+1, &
+		  sim%mesh_x2%eta_min, &
+		  sim%mesh_x2%eta_max, &
+		  nc_x2+1, &
+		  field_x1(:,:,1), &
+		  "E_x1", &
+		  istep, &
+		  ierr)
+	    call sll_gnuplot_corect_2d( &
+		  sim%mesh_x1%eta_min, &
+		  sim%mesh_x1%eta_max, &
+		  nc_x1+1, &
+		  sim%mesh_x2%eta_min, &
+		  sim%mesh_x2%eta_max, &
+		  nc_x2+1, &
+		  field_x2(:,:,1), &
+		  "E_x2", &
+		  istep, &
+		  ierr)
+		  
+	    call sll_gnuplot_corect_2d( &
+		  sim%mesh_x1%eta_min, &
+		  sim%mesh_x1%eta_max, &
+		  nc_x1+1, &
+		  sim%mesh_x2%eta_min, &
+		  sim%mesh_x2%eta_max, &
+		  nc_x2+1, &
+		  field_x1(:,:,2), &
+		  "dK_x1", &
+		  istep, &
+		  ierr)
+		call sll_gnuplot_corect_2d( &
+		  sim%mesh_x1%eta_min, &
+		  sim%mesh_x1%eta_max, &
+		  nc_x1+1, &
+		  sim%mesh_x2%eta_min, &
+		  sim%mesh_x2%eta_max, &
+		  nc_x2+1, &
+		  field_x2(:,:,2), &
+		  "dK_x2", &
+		  istep, &
+		  ierr)
+        call compute_jacobian( &
+          E_x1, &
+          E_x2, &
+          nc_x1, &
+          nc_x2, &
+          4._f64/(delta1*delta2), &
+          sim%stencil_r, &
+          sim%stencil_s, &
+          jacobian_E)
+		call sll_gnuplot_corect_2d( &
+		  sim%mesh_x1%eta_min, &
+		  sim%mesh_x1%eta_max, &
+		  nc_x1+1, &
+		  sim%mesh_x2%eta_min, &
+		  sim%mesh_x2%eta_max, &
+		  nc_x2+1, &
+		  jacobian_E(:,:), &
+		  "jacobian_E", &
+		  istep, &
+		  ierr)
+
+      endif
+
+
         endif
 
 
@@ -1069,8 +1237,8 @@ contains
     call compute_w_hermite(w,r,s)
     
     
-    do j=1,nc_x1+1
-      do i=1,nc_x2+1
+    do j=1,nc_x2+1
+      do i=1,nc_x1+1
         g = 0._f64
         do k=r,s
           g(1,1) = g(1,1)+w(k)*E_x1(modulo(i+k-1+nc_x1,nc_x1)+1,j)
