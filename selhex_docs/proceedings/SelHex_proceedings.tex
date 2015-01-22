@@ -652,21 +652,22 @@ On a hexagonal mesh centered at the origin, of radius $8$,  we take  $\sigma_x =
 
 
 \begin{figure}[h!]
+	\label{fig:circ_convergence}
 	\includegraphics[scale=0.35]{figures/l2.png}
 	\includegraphics[scale=0.35]{figures/inf_l.png}
-
 	\caption{Order of convergence}
 \end{figure}
 
-
+In Figure~\ref{fig:circ_convergence} we can see that for coarse meshes only the Ganev-Dimitrov method had a worst accuracy than the splines of degree $2$. Nonetheless, for finer grids, the splines obtain results better or as good as all the finite elements methods. Regarding the latter, we notice that there is little to no difference between Zienkiewicz-9 and the H-C-T-R method. 
 
 \begin{figure}[h!]
+	\label{fig:circ_performance}
 	\includegraphics[scale=0.35]{figures/efficiency.png}
 	\includegraphics[scale=0.35]{figures/time_norm.png}
-	
 	\caption{Comparison of performances }
 \end{figure}
 
+Figure~\ref{fig:circ_performance} we can see that the level of performance of all the methods convergences quite quickly. It is also pretty obvious that even if the splines obtained more accuracy, the cost is more expensive than most of the Hermite Finite Element methods.
 
 \subsection{Guiding-center}
 
@@ -694,16 +695,24 @@ with $\theta=\text{atan2}(y,x)$.
 	\caption{Time evolution of the guiding-center model, at times = }
 \end{figure}
 
-%\begin{figure}[h!]
-%	\includegraphics[scale=0.15]{figures/Mass_evolution_time_evol.png}
-%	\caption{Time evolution of the mass}
-%\end{figure}
-%
-%
-%\begin{figure}[h!]
-%	\includegraphics[scale=0.15]{figures/Minimum_value_time_evol.png}
-%	\caption{Time evolution of the minimum of the density}
-%\end{figure}
+\begin{figure}[h!]
+	\includegraphics[scale=0.15]{figures/Mass_evolution_time_evol.png}
+	\caption{Time evolution of the mass}
+\end{figure}
+
+
+\begin{figure}[h!]
+	\includegraphics[scale=0.15]{figures/Minimum_value_time_evol.png}
+	\caption{Time evolution of the minimum of the density}
+\end{figure}
+
+
+
+%%-----------------------------
+%% Conclusion
+%%-----------------------------
+\section{Conclusion}
+\label{sec:conclusion}
 
 %%-----------------------------
 %%      your bibliography
