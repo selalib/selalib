@@ -8,7 +8,7 @@ TARGET_LINK_LIBRARIES( hex_hermite sll_hermite_interpolation sll_hex_meshes )
 
 
 ADD_LIBRARY ( euler_2d_hex STATIC euler_2d_hex.F90)
-TARGET_LINK_LIBRARIES( euler_2d_hex )
+TARGET_LINK_LIBRARIES( euler_2d_hex sll_utilities)
 
 # Tests
 IF(BUILD_TESTING)
