@@ -55,7 +55,7 @@ program sim2d_gc_hex_splines
 
   radius = 14._f64
 
-  cells_min = 20
+  cells_min = 160
   cells_max = 160
   cells_stp = 20
 
@@ -70,7 +70,7 @@ program sim2d_gc_hex_splines
      print*," ********************************* "
 
      t = 0._f64
-     tmax  = 100._f64
+     tmax  = 200._f64
      dt    = 0.1_f64
      !cfl   = radius * dt / ( radius / real(num_cells,f64)  )
      nloops = 0
@@ -223,9 +223,6 @@ program sim2d_gc_hex_splines
         ! Updating the new field values ............
         rho_tn_1 = rho_tn
         rho_tn = rho_tn1
-
-        uxn_1 = uxn
-        uyn_1 = uyn
         ! ...........................................
 
         !*********************************************************
@@ -243,8 +240,13 @@ program sim2d_gc_hex_splines
            phi(i) = phi_interm(index_tab)
         enddo
 
+
         call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type=1)
 
+        ! Updating the new field values ............
+        uxn_1 = uxn
+        uyn_1 = uyn
+        ! ...........................................
 
         !*********************************************************
         !                  writing diagostics
@@ -395,13 +397,13 @@ contains
        norm_l1 = norm_l1 * mesh%delta**2
        norm_l2 = sqrt(norm_l2 * mesh%delta**2)
 
-       write(out_unit,"(7(g13.3,1x))") t, &
-                                       mass, &
-                                       rho_min, &
-                                       norm_l1, &
-                                       norm_l2, &
-                                       norm_linf, &
-                                       energy
+       write(out_unit,"(7(g18.10,1x))") t, &
+            mass, &
+            rho_min, &
+            norm_l1, &
+            norm_l2, &
+            norm_linf, &
+            energy
 
        close(out_unit)
 
@@ -435,14 +437,14 @@ contains
        norm_l1 = norm_l1 * mesh%delta**2
        norm_l2 = sqrt(norm_l2 * mesh%delta**2)
 
-       write(out_unit,"((i6,1x),7(g13.3,1x))") mesh%num_cells, &
-                                               t, &
-                                               mass, &
-                                               rho_min, &
-                                               norm_l1, &
-                                               norm_l2, &
-                                               norm_linf, &
-                                               energy
+       write(out_unit,"((i6,1x),7(g18.10,1x))") mesh%num_cells, &
+            t, &
+            mass, &
+            rho_min, &
+            norm_l1, &
+            norm_l2, &
+            norm_linf, &
+            energy
 
     close(out_unit) 
 
