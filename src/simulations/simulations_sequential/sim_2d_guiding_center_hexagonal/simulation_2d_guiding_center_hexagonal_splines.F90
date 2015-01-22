@@ -151,9 +151,6 @@ program sim2d_gc_hex_splines
      print*," ********************************* "
 
      t = 0._f64
-     tmax  = 200._f64
-     dt    = 0.1_f64
-     !cfl   = radius * dt / ( radius / real(num_cells,f64)  )
      nloops = 0
      count  = 0
 
