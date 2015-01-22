@@ -1,6 +1,7 @@
 # Whole simulation :
 set( TEST_NAME 2d_gc_hex )
 set( INSTALL_DIR "${INSTALL_DIR}/${TEST_NAME}" )
+set( INPUT_FILE sim2d_gc_hex_input.nml )
 
 # First test :
 set( TEST_NAME1  2d_gc_hex_splines )
@@ -34,7 +35,7 @@ TARGET_LINK_LIBRARIES( ${EXECUTABLE2} sll_simulations_sequential ${SIM_LIBS}
 # Installing simulations
 INSTALL( TARGETS ${EXECUTABLE1} DESTINATION ${INSTALL_DIR} )
 INSTALL( TARGETS ${EXECUTABLE2} DESTINATION ${INSTALL_DIR} )
-INSTALL( FILES   README  DESTINATION ${INSTALL_DIR} )
+INSTALL( FILES   ${INPUT_FILE}  README  DESTINATION ${INSTALL_DIR} )
 
 
 # Ctest
