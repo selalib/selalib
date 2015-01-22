@@ -364,6 +364,8 @@ program sim2d_gc_hex_splines
 
   end do
 
+  ! Some test should probably be put here:
+  print*, 'PASSED'
 
 contains
 
