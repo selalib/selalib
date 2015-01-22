@@ -84,7 +84,7 @@ if (num_param == 2):
   if(num_loops==1):
     for i[0] in run[0]:      
       for k in range(len(param[0])):
-        nml_dict[param_nml[0][k]][param[0][k]] = eval(i[j][k])      
+        nml_dict[param_nml[0][k]][param[0][k]] = eval(i[0][k])      
       s=s+1
       nml_dict.write(str(sys.argv[1])+'_'+str(s)+'.nml')
   elif(num_loops==2):
