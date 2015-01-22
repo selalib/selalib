@@ -452,7 +452,7 @@ contains
     if (mesh%num_cells == cells_max) then
        call int2string(mesh%num_cells,filenum)
        call int2string(deg,splinedeg)
-       filename  = "diag_gc_spline"//trim(splinedeg)//"_tmax"//trim(filenum)//".dat"
+       filename  = "diag_gc_hermite"//trim(splinedeg)//"_tmax"//trim(filenum)//".dat"
        
        call sll_new_file_id(out_unit, ierr)
        if (nloop == 0) then
@@ -493,7 +493,7 @@ contains
     if (t.gt.tmax) then !We write on this file only if it is the last time step
 
        call int2string(deg,splinedeg)
-       filename  = "diag_gc_spline"//trim(splinedeg)//"_nc.dat"
+       filename  = "diag_gc_hermite"//trim(splinedeg)//"_nc.dat"
 
        if ( mesh%num_cells == cells_min ) then
           call sll_new_file_id(out_unit, ierr)
