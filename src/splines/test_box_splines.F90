@@ -77,7 +77,7 @@ character(len = 4)  :: filenum
 
 ! sum_chi = 0._f64
 
-do num_cells = 20,100,40
+do num_cells = 20,160,20
 
    ! Mesh initialization
    mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, &
@@ -151,7 +151,7 @@ do num_cells = 20,100,40
    ! if : which_advec = 1 => circular advection
    which_advec = 1
    advec = 0.0_f64!25_f64!5_f64
-   tmax  = 3.0_f64
+   tmax  = 100.0_f64
    dt    = 0.1_f64 * 20._f64/num_cells
    t     = 0._f64
  
