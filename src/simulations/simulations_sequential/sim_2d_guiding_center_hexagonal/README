@@ -6,10 +6,11 @@
 
 Directory structure
 ===================
-   sim2d_gc_hex_splines     -- executable
-   sim2d_gc_hex_hermite     -- executable
-   README                   -- info (this file)
-   run/                     -- directory
+   README                     -- info (this file)
+   test_2d_gc_hex_splines     -- executable
+   test_2d_gc_hex_hermite     -- executable
+   sim2d_gc_hex_input.nml     -- input namelist file
+   run/                       -- directory
 Description
 ===========
 Using the SL we solve the guiding center simulation on a hexagonal mesh
@@ -29,13 +30,19 @@ HOWTO
      $ mkdir run
      $ cd run
 
+
 1. Run simulation(s) within directory
-     $ ../sim2d_gc_hex_hermite
-     $ ../sim2d_gc_hex_splines
+     $ ../test_2d_gc_hex_hermite sim2d_gx_hex_input.nml
+     $ ../test_2d_gc_hex_splines sim2d_gx_hex_input.nml
+
+   You can also run the simulation without an input file
+
 
 2. Open *.xmf database with Visit (*) to visualize density over time
 
+
 3. Plot diagnostics using gnuplot and *.dat files
+
 
 (*) Make sure that the Xdmf plugin is installed!
 
