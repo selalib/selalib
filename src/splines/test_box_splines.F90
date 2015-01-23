@@ -14,8 +14,11 @@ implicit none
 type(sll_hex_mesh_2d),   pointer  :: mesh
 type(sll_box_spline_2d), pointer  :: spline
 sll_int32    :: num_cells
+sll_int32    :: cells_min
+sll_int32    :: cells_max
+sll_int32    :: cells_stp
 sll_int32    :: i
-sll_int32    :: deg = 2
+sll_int32    :: deg = 3
 sll_int32    :: nloops
 sll_int32    :: ierr
 ! initial distribution
@@ -23,12 +26,6 @@ sll_real64   :: gauss_x2
 sll_real64   :: gauss_x1
 sll_real64   :: gauss_sig
 sll_real64   :: gauss_amp
-sll_real64   :: dioco_rminus
-sll_real64   :: dioco_rplus
-sll_real64   :: dioco_eps
-sll_real64   :: dioco_kmode
-sll_real64   :: dioco_r
-sll_real64   :: dioco_theta
 sll_real64,dimension(:),allocatable :: x1
 sll_real64,dimension(:),allocatable :: x2
 sll_real64,dimension(:),allocatable :: f_init
@@ -61,23 +58,26 @@ sll_real64   :: x1_temp
 sll_int32    :: k1_error
 sll_int32    :: k2_error
 ! Output variables
-sll_int32    :: WRITE_TIME_ERROR = 0
+sll_int32    :: WRITE_TIME_ERROR = 1
 sll_int32    :: WRITE_TIME_DIST = 1
-sll_int32    :: WRITE_SPLINES = 0
+sll_int32    :: WRITE_SPLINES = 1
 sll_int32    :: WRITE_CELLS_ERROR = 1
-sll_int32    :: WRITE_TIME_EFF = 0
+sll_int32    :: WRITE_TIME_EFF = 1
 character(len = 50) :: filename
 character(len = 50) :: filename2
 character(len = 4)  :: filenum
 
-! sll_real64              :: sum_chi
+
 ! sll_int32               :: k1
 ! sll_int32               :: k2
 
+sll_real64              :: sum_chi
+sum_chi = 0._f64
 
-! sum_chi = 0._f64
-
-do num_cells = 20,160,20
+cells_min = 20
+cells_max = 20
+cells_stp = 20
+do num_cells = cells_min, cells_max, cells_stp
 
    ! Mesh initialization
    mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, &
@@ -85,7 +85,7 @@ do num_cells = 20,160,20
                                     !0.5_f64,  sqrt(3.)/2._f64, &
                                     !1.0_f64,  0._f64, &
                                     radius = 8._f64)
-  
+
    call sll_display(mesh)
    print*,"num_pts : ", mesh%num_pts_tot
    print*,"spl deg : ", deg
@@ -108,37 +108,17 @@ do num_cells = 20,160,20
    gauss_x2  = 2._f64
    gauss_sig = 1.0_f64/sqrt(2._f64)/2._f64
    gauss_amp = 1.0_f64
-   ! Diocotron parameters :
-   dioco_rminus = 2._f64
-   dioco_rplus  = 3._f64
-   dioco_eps    = 0.0001_f64
-   dioco_kmode  = 3._f64
 
    do i=1, mesh%num_pts_tot
-      
+
       x1(i) = mesh%global_to_x1(i)
       x2(i) = mesh%global_to_x2(i)
-      
-      !--------- GAUSSIAN PULSE : 
+
+      !--------- GAUSSIAN PULSE :
       f_init(i) = gauss_amp * &
            exp(-0.5_f64*((x1(i)-gauss_x1)**2 / gauss_sig**2 &
            + (x2(i)-gauss_x2)**2 / gauss_sig**2))
-      !--------- DIOCOTRON : 
-!       dioco_r= sqrt(x1(i)**2+x2(i)**2)
-!       if (dioco_r.eq.0._f64) then
-!          dioco_theta = 0._f64
-!       elseif (x2(i)>=0) then
-!          dioco_theta = acos(x1(i)/dioco_r)
-!       else
-!          dioco_theta = 2._f64*sll_pi-acos(x1(i)/dioco_r)
-!       endif
-
-!       if((dioco_r>=dioco_rminus).and.(dioco_r<=dioco_rplus))then
-!          f_init(i) = 1.0_f64+dioco_eps*cos(dioco_kmode*dioco_theta)
-!       else
-!          f_init(i) = 0._f64  
-!       endif
-      !-------------------------
+      ! Handling, really small values:
       if (exponent(f_init(i)) .lt. -17) then
          f_init(i) = 0._f64
       end if
@@ -154,35 +134,34 @@ do num_cells = 20,160,20
    tmax  = 100.0_f64
    dt    = 0.1_f64 * 20._f64/num_cells
    t     = 0._f64
- 
+
    ! ! Computing characteristics
-   ! if (which_advec .eq. 0) then
-   !    ! linear advection
-   !    x1_char(:) = x1(:) - advec*dt
-   !    x2_char(:) = x2(:) - advec*dt
-   ! else
+   if (which_advec .eq. 0) then
+      ! linear advection
+      x1_char(:) = x1(:) - advec*dt
+      x2_char(:) = x2(:) - advec*dt
+   else
       ! Circular advection
       x1_char(1) = 0._f64
       x2_char(1) = 0._f64
       x1_char(2:) = x1(2:)*cos(2._f64*sll_pi*dt) - x2(2:)*sin(2._f64*sll_pi*dt)
       x2_char(2:) = x1(2:)*sin(2._f64*sll_pi*dt) + x2(2:)*cos(2._f64*sll_pi*dt)
-   ! end if
+   end if
 
- 
+
    ! Time loop
    nloops = 0
 
    spline => new_box_spline_2d(mesh, SLL_DIRICHLET)
 
-   ! do i=1, mesh%num_pts_tot
-   !    x1_basis = change_basis_x1(spline, x1(i), x2(i))
-   !    x2_basis = change_basis_x2(spline, x1(i), x2(i))
-   !    chi1(i) = chi_gen_val(x1_basis, x2_basis, 1)
-   !    chi2(i) = chi_gen_val(x1_basis, x2_basis, 2)
-   !    chi3(i) = chi_gen_val(x1_basis, x2_basis, 3)
-
-   ! end do
-
+   ! Just for test purpose of test only : computing splines
+   do i=1, mesh%num_pts_tot
+      x1_basis = change_basis_x1(spline, x1(i), x2(i))
+      x2_basis = change_basis_x2(spline, x1(i), x2(i))
+      chi1(i) = chi_gen_val(x1_basis, x2_basis, 1)
+      chi2(i) = chi_gen_val(x1_basis, x2_basis, 2)
+      chi3(i) = chi_gen_val(x1_basis, x2_basis, 3)
+   end do
 
    call cpu_time(t_init)
 
@@ -223,7 +202,7 @@ do num_cells = 20,160,20
          x1(i)   = x1_temp
          ! end if
 
-         !--------- GAUSSIAN PULSE : 
+         !--------- GAUSSIAN PULSE :
          f_fin(i) = gauss_amp * &
               exp(-0.5_f64*((x1(i)-gauss_x1)**2/gauss_sig**2 &
               + (x2(i)-gauss_x2)**2 / gauss_sig**2))
@@ -231,48 +210,28 @@ do num_cells = 20,160,20
             f_fin(i) = 0._f64
          end if
 
-         !--------- DIOCOTRON : 
-!          dioco_r= sqrt(x1(i)**2+x2(i)**2)
-!          if (dioco_r.eq.0._f64) then
-!             dioco_theta = 0._f64
-!          elseif (x2(i)>=0) then
-!             dioco_theta = acos(x1(i)/dioco_r)
-!          else
-!             dioco_theta = 2._f64*sll_pi-acos(x1(i)/dioco_r)
-!          endif
-!          if((dioco_r>=dioco_rminus).and.(dioco_r<=dioco_rplus))then
-!             f_fin(i) = (1.0_f64+dioco_eps*cos(dioco_kmode*dioco_theta))
-!          else
-!             f_fin(i) = 0._f64  
-!          endif
-
-         
          ! Relative error
-         ! k1 = mesh%global_to_hex1(i)
-         ! k2 = mesh%global_to_hex2(i)
-         ! if (cells_to_origin(k1, k2).lt.num_cells-deg-1) then
-            if (diff_error .lt. abs(f_fin(i) - f_tn(i)) ) then
-               diff_error = abs(f_fin(i) - f_tn(i))
-               where_error = i
-            end if
-            ! Norm2 error :
-            norm2_error = norm2_error + &
-                 sll_sqrt3*0.5_f64*mesh%delta**2 * (f_fin(i) - f_tn(i))**2
-         ! end if
+         if (diff_error .lt. abs(f_fin(i) - f_tn(i)) ) then
+            diff_error = abs(f_fin(i) - f_tn(i))
+            where_error = i
+         end if
+         ! Norm2 error :
+         norm2_error = norm2_error + &
+              sll_sqrt3*0.5_f64*mesh%delta**2 * (f_fin(i) - f_tn(i))**2
       end do
 
-!    if (WRITE_SPLINES.eq.1) then 
-!       call write_field_hex_mesh_xmf(mesh, chi1, "chi1")
-!       call write_field_hex_mesh_xmf(mesh, chi2, "chi2")
-!       call write_field_hex_mesh_xmf(mesh, chi3, "chi3")
-!       call write_field_hex_mesh(mesh, chi1, "chi1.txt")
-!       call write_field_hex_mesh(mesh, chi2, "chi2.txt")
-!       call write_field_hex_mesh(mesh, chi3, "chi3.txt")
-!    end if
+   if (WRITE_SPLINES.eq.1) then
+      call write_field_hex_mesh_xmf(mesh, chi1, "chi1")
+      call write_field_hex_mesh_xmf(mesh, chi2, "chi2")
+      call write_field_hex_mesh_xmf(mesh, chi3, "chi3")
+      call write_field_hex_mesh(mesh, chi1, "chi1.txt")
+      call write_field_hex_mesh(mesh, chi2, "chi2.txt")
+      call write_field_hex_mesh(mesh, chi3, "chi3.txt")
+   end if
 
       ! Norm2 error :
       norm2_error = sqrt(norm2_error)
-      
+
       ! Printing error
 !       k1_error = mesh%global_to_hex1(where_error)
 !       k2_error = mesh%global_to_hex2(where_error)
@@ -285,30 +244,30 @@ do num_cells = 20,160,20
 
 
       !WRITING ERROR REGARDING TIME STEP
-!       if (WRITE_TIME_ERROR.eq.1) then 
-!          if (t .eq. dt) then
-!             open (unit=12,file="err_chi2_gauss_cstadv.txt", &
-!                  action="write",status="replace")
-!             write (12, "(3(g13.3,1x))") t, diff_error, norm2_error
-!             close(12)
-!          else 
-!             open (unit=12,file="err_chi2_gauss_cstadv.txt", &
-!                  action="write",status="old", position="append")
-!             write (12, "(3(g13.3,1x))") t, diff_error, norm2_error
-!             close(12)
-!          end if
-!       end if
-       
+      if (WRITE_TIME_ERROR.eq.1) then
+         if (t .eq. dt) then
+            open (unit=12,file="err_chi2_gauss_cstadv.txt", &
+                 action="write",status="replace")
+            write (12, "(3(g13.3,1x))") t, diff_error, norm2_error
+            close(12)
+         else
+            open (unit=12,file="err_chi2_gauss_cstadv.txt", &
+                 action="write",status="old", position="append")
+            write (12, "(3(g13.3,1x))") t, diff_error, norm2_error
+            close(12)
+         end if
+      end if
 
-      ! if (WRITE_TIME_DIST.eq.1) then 
-      !    call int2string(nloops,filenum)
-      !    filename2 = "./time_files/analytical/ana_dist"//trim(filenum)!//".txt"
-      !    filename  = "./time_files/numerical/num_dist"//trim(filenum)!//".txt"
-      !    ! print*,filename
-      !    ! print*,filename2
-      !    call write_field_hex_mesh_xmf(mesh, f_tn, trim(filename))
-      !    call write_field_hex_mesh_xmf(mesh, f_fin, trim(filename2))
-      ! end if
+
+      if (WRITE_TIME_DIST.eq.1) then
+         call int2string(nloops,filenum)
+         filename2 = "./time_files/analytical/ana_dist"//trim(filenum)!//".txt"
+         filename  = "./time_files/numerical/num_dist"//trim(filenum)!//".txt"
+         ! print*,filename
+         ! print*,filename2
+         call write_field_hex_mesh_xmf(mesh, f_tn, trim(filename))
+         call write_field_hex_mesh_xmf(mesh, f_fin, trim(filename2))
+      end if
 
 
    end do
@@ -322,52 +281,61 @@ do num_cells = 20,160,20
 
    !WRITING ERROR REGARDING NUMBER OF POINTS
    if (WRITE_CELLS_ERROR.eq.1) then
-      if (num_cells .eq. 20) then 
+      if (num_cells .eq. cells_min) then
          !NEW FILE :
-         open (unit=12,file="error_file.txt",action="write",&
-              status="replace")
-         !write (12, "(3(g13.3,1x))") num_cells, diff_error, norm2_error
-         write(12,*) num_cells, mesh%num_pts_tot, dt, cfl,  norm2_error, diff_error, f_min, t_end - t_init,&
-                nloops * 3._f64*real(num_cells + 1, f64)*real(num_cells, f64)/(t_end - t_init)/ 1e6_f64   
+         open (unit=12,file="error_file.txt",action="write", status="replace")
+         write(12,*) num_cells, &
+              mesh%num_pts_tot, &
+              dt, &
+              cfl, &
+              norm2_error, &
+              diff_error, &
+              f_min, &
+              t_end - t_init, &
+              nloops * 3._f64*real(num_cells + 1, f64)*real(num_cells, f64)/(t_end - t_init)/1e6_f64
       close(12)
       else
          !WRITE
-         open (unit=12,file="error_file.txt",action="write",&
-              status="old", position="append") 
-!         write (12, "(3(g13.3,1x))") num_cells, diff_error, norm2_error
-         write(12,*) num_cells, mesh%num_pts_tot, dt, cfl,  norm2_error, diff_error, f_min, t_end - t_init,&
-                nloops * 3._f64*real(num_cells + 1, f64)*real(num_cells, f64)/(t_end - t_init)/ 1e6_f64
+         open (unit=12,file="error_file.txt",action="write", &
+              status="old", position="append")
+         write(12,*) num_cells, &
+              mesh%num_pts_tot, &
+              dt, &
+              cfl, &
+              norm2_error, &
+              diff_error, &
+              f_min, &
+              t_end - t_init, &
+              nloops * 3._f64*real(num_cells + 1, f64)*real(num_cells, f64)/(t_end - t_init)/ 1e6_f64
          close(12)
       end if
    end if
 
 
-!    if (WRITE_TIME_EFF.eq.1) then
+   if (WRITE_TIME_EFF.eq.1) then
+      !WRITING CPU TIME
+      if (num_cells .eq. cells_min ) then
+         !NEW FILE :
+         open (unit=12,file="cpu_time.txt",action="write",&
+              status="replace")
+         write (12, "(3(G15.3,1x))") num_cells, mesh%num_pts_tot, t_end-t_init
+         close(12)
+      else
+         !WRITE
+         open (unit=12,file="cpu_time.txt",action="write",&
+              status="old", position="append")
+         write (12, "(3(G15.3,1x))") num_cells, mesh%num_pts_tot, t_end-t_init
+         close(12)
+      end if
+   end if
 
-!       !WRITING CPU TIME
-!       if (num_cells .eq. 10 ) then 
-!          !NEW FILE :
-!          open (unit=12,file="cpu_time.txt",action="write",&
-!               status="replace")
-!          write (12, "(3(G15.3,1x))") num_cells, mesh%num_pts_tot, t_end-t_init
-!          close(12)
-!       else
-!          !WRITE
-!          open (unit=12,file="cpu_time.txt",action="write",&
-!               status="old", position="append") 
-!          write (12, "(3(G15.3,1x))") num_cells, mesh%num_pts_tot, t_end-t_init
-!          close(12)
-!       end if
-!    end if
 
-
-   ! sum_chi = sum(chi1)
-   ! print*, "sum_chi1 = ", sum_chi
-   ! sum_chi = sum(chi2)
-   ! print*, "sum_chi2 = ", sum_chi
-   ! sum_chi = sum(chi3)
-   ! print*, "sum_chi3 = ", sum_chi
-   
+   sum_chi = sum(chi1)
+   print*, "sum_chi1 = ", sum_chi
+   sum_chi = sum(chi2)
+   print*, "sum_chi2 = ", sum_chi
+   sum_chi = sum(chi3)
+   print*, "sum_chi3 = ", sum_chi
 
    SLL_DEALLOCATE_ARRAY(spline%coeffs,ierr)
    SLL_DEALLOCATE_ARRAY(f_init,ierr)
@@ -387,6 +355,4 @@ do num_cells = 20,160,20
 end do
 
 
-
 end program test_box_splines
-
