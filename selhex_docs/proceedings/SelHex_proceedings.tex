@@ -48,7 +48,7 @@ This paper introduces a Semi-Lagrangian solver for the Vlasov-Poisson equation o
 
 %% French version ............
 \begin{resume} 
-Dans cet article nous introduisons un solveur semi-Lagrangien pour l'\'equation de Vlasov-Poisson sur un maillage hexagonale r\'egulier. Ce dernier est compos\'e de triangles \'equilat\'eraux, ainsi il ne pr\'esente aucune singularit\'e, contrairement au maillage polaire. Nous nous concentrons ici sur le mod\`ele centre-guide. \'A cette fin nous avons d\'evelopp\'e un solveur de l'\'equation de Poisson pour maillage hexagonale. Au regard de l'interpolation, nous comparons les r\'esultats obtenus avec des \'el\'ements finis d'Hermite et des box-splines. \textcolor{blue}{Chaque m\'ethode d'interpolation est donc adapt\'ee au maillage.} Dans le future, ce code sera adapt\'e \`a des g\'eom\'etries et mod\`eles plus complexes.  
+Dans cet article nous introduisons un solveur semi-Lagrangien pour l'\'equation de Vlasov-Poisson sur un maillage \textcolor{blue}{hexagonale ... sans "e"} r\'egulier. Ce dernier est compos\'e de triangles \'equilat\'eraux, ainsi il ne pr\'esente aucune singularit\'e, contrairement au maillage polaire. Nous nous concentrons ici sur le mod\`ele centre-guide. \`A cette fin nous avons d\'evelopp\'e un solveur de l'\'equation de Poisson pour maillage hexagonale \textcolor{blue}{hexagonale .... sans "e"}. Au regard de l'interpolation, nous comparons les r\'esultats obtenus avec des \'el\'ements finis d'Hermite et des box-splines. \textcolor{blue}{Chaque m\'ethode d'interpolation est donc adapt\'ee au maillage.} Dans le future \textcolor{blue}{plutot: \`A l'avenir}, ce code sera adapt\'e \`a des g\'eom\'etries et mod\`eles plus complexes.  
 \end{resume}
 
 
@@ -95,7 +95,7 @@ The hexagonal mesh is obtained by tiling a regular hexagon into equilateral tria
 		\end{pmatrix}
 \end{equation}
 
-The 2D lattice sites are obtained by the product $\mathbf{Rk}$ where $\mathbf{R} = [\mathbf{r_1 r_2}]$ and $\mathbf{k} = [k_1, k_2]^T \in \xZ$.  To obtain exactly the mesh as in Figure \ref{fig:hexmesh}, we need to define a few extra parameters : an origin -- denoted $P_0(x_0, y_0)$, a radius $L$ which is the distance between the origin and an external node and the number of cells $N$ on an edge of the exterior hexagon (or in a demi-diagonal).
+The 2D lattice sites are obtained by the product $\mathbf{Rk}$ where $\mathbf{R} = [\mathbf{r_1 r_2}]$ and $\mathbf{k} = [k_1, k_2]^T \in \xZ$.  To obtain exactly the mesh as in Figure \ref{fig:hexmesh}, we need to define a few extra parameters : an origin -- denoted $P_0(x_0, y_0)$, a radius $L$ which is the distance between the origin and an external node and the number of cells $N_c$ on an edge of the exterior hexagon (or in a demi-diagonal).
 
 
 \begin{figure}[h!]
@@ -167,7 +167,7 @@ Box-splines are a generalisation of the more known spline's family: B-splines. T
 
 \begin{dfntn}[Box-splines]
 
-	Let $\Xi$ be a $d \times N$ matrix with non-null columns in  $\xR^d$. A box-spline $\chi_\Xi$ associated to the matrix $\Xi$, is a multivariate function $\chi_\Xi : \xR^d \longrightarrow \xR$. If $\Xi$ is a square invertible matrix, \emph{i.e.} when $N = d$ and $\det(\Xi) \neq 0$, we define a box spline with the formula below
+	Let $\Xi$ be a $d \times m$ matrix with non-null columns in  $\xR^d$. A box-spline $\chi_\Xi$ associated to the matrix $\Xi$, is a multivariate function $\chi_\Xi : \xR^d \longrightarrow \xR$. If $\Xi$ is a square invertible matrix, \emph{i.e.} when $m = d$ and $\det(\Xi) \neq 0$, we define a box spline with the formula below
 	\begin{equation}
 		\chi_{\Xi} (\mathbf{x}) = \left\{
   		\begin{array}{l l}
@@ -176,12 +176,20 @@ Box-splines are a generalisation of the more known spline's family: B-splines. T
   		\end{array} \right.
 	\end{equation}
 
-	If $\Xi \cup \mathbf{v}$ is a $d \times (N + 1)$ matrix, composed by the $N$ columns vectors from $\Xi$ to which we append the vector $\mathbf{v}$, we define the box-spline $\chi_{\Xi \cup \mathbf{v}}$ by recursion:
+	If $\Xi \cup \mathbf{v}$ is a $d \times (m + 1)$ matrix, composed by the $m$ columns vectors from $\Xi$ to which we append the vector $\mathbf{v}$, we define the box-spline $\chi_{\Xi \cup \mathbf{v}}$ by recursion:
 
 	\begin{equation} 
 	\label{eqn:boxsplines_basis}
 		\chi_{\Xi \cup \mathbf{v}}(\mathbf{x}) = \int_0^ 1 \chi_\Xi(\mathbf{x}-t\mathbf{v})dt
 	\end{equation}
+
+\end{dfntn}
+
+\rmrk The box-splines can have different degree on each direction. Thus, it exists different definitions on the degree. We will adopt the definition below.
+
+\begin{dfntn}[Degree of a Box-spline]
+Let $\Xi$ be a $dxd$ matrix with non-null columns in $\xR^d$. The column vectors of $\Xi$ form a generating basis of $\xR^d$ and linearly independent. Then, the box-spline of degree $N$ of generating matrix $\Xi$, $\chi^N_\Xi$, is the box-spline associated to $\Xi$, where all the generating vectors have multiplicity $N$. This yields, that $\chi^N_\Xi$ is piecewise polynomial of degree $N$.
+
 
 \end{dfntn}
 
@@ -198,7 +206,7 @@ Box-splines are a generalisation of the more known spline's family: B-splines. T
 %%..............................
 \subsubsection{The quasi-interpolation scheme}
 
-Let us describe the method: we are given an initial sample $s[\mathbf{k}] = f_0(\mathbf{R} \mathbf{k})$, where the points $\mathbf{R} \mathbf{k}$ belong to our hexagonal mesh, and we need to know the values $f(\mathbf{x})$ where $\mathbf{x} \notin \mathbf{R} \mathbf{k}$. We want a spline surface $f(\mathbf{x}) = \sum c[\mathbf{k}] \chi^N(\mathbf{x} - \mathbf{R}\mathbf{k})$, where $\chi^N$ are the box-splines and $c[\mathbf{k}]$ are the coefficients associated to them. The reconstruction is defined such that $f(\mathbf{x})$ approximates $f_0(x)$ to a certain order $N$ or, in other words, the approximation is exact only if $f_0(x)$ is a polynomial of degree $N-1$ or less. This is different to the classic interpolation method, where the reconstruction is exact on mesh points in any case. The $c[\mathbf{k}]$ coefficients are the box-splines coefficients, to compute them we cannot longer solve a matrix-vector system because of the extra degree of freedom given by the quasi-interpolation method. Thus, the  $c[\mathbf{k}]$ coefficients are obtained by discrete filtering\cite{Condat2006a}
+Let us describe the method: we are given an initial sample $s[\mathbf{k}] = f_0(\mathbf{R} \mathbf{k})$, where the points $\mathbf{R} \mathbf{k}$ belong to our hexagonal mesh, and we need to know the values $f(\mathbf{x})$ where $\mathbf{x} \notin \mathbf{R} \mathbf{k}$. We want a spline surface $f(\mathbf{x}) = \sum c[\mathbf{k}] \chi^N(\mathbf{x} - \mathbf{R}\mathbf{k})$, where $\chi^N$ are the box-splines of degree $N$ of matrix $\mathbf{R}$ and $c[\mathbf{k}]$ are the coefficients associated to them. The reconstruction is defined such that $f(\mathbf{x})$ approximates $f_0(x)$ to a certain order $N$ or, in other words, the approximation is exact only if $f_0(x)$ is a polynomial of degree $N-1$ or less. This is different to the classic interpolation method, where the reconstruction is exact on mesh points in any case. The $c[\mathbf{k}]$ coefficients are the box-splines coefficients, to compute them we cannot longer solve a matrix-vector system because of the extra degree of freedom given by the quasi-interpolation method. Thus, the  $c[\mathbf{k}]$ coefficients are obtained by discrete filtering\cite{Condat2006a}
 
 \begin{equation}
 \label{eqn:coefs}
@@ -254,29 +262,31 @@ At the present state we have all the elements for the approximation of a functio
 \tilde{f}(\mathbf{x}) = \sum_{\mathbf{k} \in \xZ^2} c[\mathbf{k}] \chi^2(\mathbf{x} - \mathbf{R}\mathbf{k})
 \end{equation}
 
-Even if we limit our sum to the vector $\mathbf{k}$ that defines our domain, we would like to take advantage of the fact that the splines $\chi^2$ are only non-zeros in a limited number of points. Therefore we need to know the indices $\mathbf{k}$ such that $\chi^2(\mathbf{x} - \mathbf{R} \mathbf{x}) \neq 0$. For this purpose we will use the strategy suggested in \cite{Condat2007} : to start we need to obtain the indices on the coordinate system generated by $\mathbf{R}$ : $\mathbf{k}_0 = \left[ \lfloor u \rfloor \; \lfloor v \rfloor \right]$ where $\left[ u \; v \right]^T = \mathbf{R}^ {-1} \mathbf{x} $. Thus, in our case, with splines $\chi^2$ we only need 4 terms associated to the encapsulating rhomboid's vertices : $\mathbf{R}\mathbf{k}_0$, $\mathbf{R}\mathbf{k}_0 + \mathbf{R}_1$, $\mathbf{R}\mathbf{k}_0 + \mathbf{R}_2$ and $\mathbf{R}\mathbf{k}_0 + \mathbf{R}_1 + \mathbf{R}_2$. Finally we obtain :
+Even if we limit our sum to the vector $\mathbf{k}$ that defines our domain, we would like to take advantage of the fact that the splines $\chi^2$ are only non-zeros in a limited number of points. Therefore we need to know the indices $\mathbf{k}$ such that $\chi^2(\mathbf{x} - \mathbf{R} \mathbf{x}) \neq 0$. For this purpose we will use the strategy suggested in \cite{Condat2007} : to start we need to obtain the indices on the coordinate system generated by $\mathbf{R}$ : $\mathbf{k}_0 = \left[ \lfloor u \rfloor \; \lfloor v \rfloor \right]$ where $\left[ u \; v \right]^T = \mathbf{R}^ {-1} \mathbf{x} $. Thus, in our case, with splines $\chi^2$ we only need 4 terms associated to the encapsulating rhomboid's vertices : $\mathbf{R}\mathbf{k}_0$, $\mathbf{R}\mathbf{k}_0 + \mathbf{r_1}$, $\mathbf{R}\mathbf{k}_0 + \mathbf{r_2}$ and $\mathbf{R}\mathbf{k}_0 + \mathbf{r_1} + \mathbf{r_2}$. Finally we obtain :
 
 \begin{align}
 \label{eqn:chi2_fct_interpol}
 \tilde{f}(\mathbf{x}) =& \;\;\;\;\; c[\mathbf{k}_0] \; \chi^2(\mathbf{x} - \mathbf{R}\mathbf{k}_0) \nonumber\\
-	&+ c[\mathbf{k}_0 +[1,0]]\; \chi^2(\mathbf{x} - \mathbf{R}\mathbf{k}_0 - \mathbf{R}_1) \nonumber\\
-	&+ c[\mathbf{k}_0 +[0,1]]\; \chi^2(\mathbf{x} - \mathbf{R}\mathbf{k}_0 - \mathbf{R}_2) \nonumber\\
-	&+ c[\mathbf{k}_0 +[1,1]]\; \chi^2(\mathbf{x} - \mathbf{R}\mathbf{k}_0 - \mathbf{R}_1 - \mathbf{R}_2)
+	&+ c[\mathbf{k}_0 +[1,0]]\; \chi^2(\mathbf{x} - \mathbf{R}\mathbf{k}_0 - \mathbf{r_1}) \nonumber\\
+	&+ c[\mathbf{k}_0 +[0,1]]\; \chi^2(\mathbf{x} - \mathbf{R}\mathbf{k}_0 - \mathbf{r_2}) \nonumber\\
+	&+ c[\mathbf{k}_0 +[1,1]]\; \chi^2(\mathbf{x} - \mathbf{R}\mathbf{k}_0 - \mathbf{r_1} - \mathbf{r_2})
 \end{align}
 
-\rmrk  As the $\chi^2$ spline has a support of radius a unity, one of the elements of \eqref{eqn:chi2_fct_interpol} is null. But this formula allow us to keep a short general formula for all points on the mesh without having to compute the indices of the cell to which $x$ belongs to.
+\rmrk  As the $\chi^2$ spline has a support of radius a unity, one of the elements of \eqref{eqn:chi2_fct_interpol} is null. But this formula allow us to keep a short general formula for all points on the mesh without having to compute the indices of the cell to which $\mathbf{x}$ belongs to.
 
 
 %%-----------------------------
 \subsection{Hermite Finite Elements interpolation}
 
+\textcolor{blue}{Peut etre j'aurai ajoute une courte phrase d'introduction... mais peut etre ce n'est pas necessaire}
 To interpolate at a point X of barycentric coordinates $(\lambda_1,\lambda_2,\lambda_3)$ in the triangle T of vertices $S_1$, $S_2$, and $S_3$, we need a finite element with a local interpolation operator $\Pi_T $. This operator can be defined with the product of a set of degrees of freedom $\Sigma_T$ with a set of basis functions $\Xi$ which depends on the barycentric coordinates.\\
 
 Several elements have been tested here:
 The Z2 and Z3 Zienkiewicz elements, the Hsieh-Clough-Tocher reduced (HCT-r) and complete (HCT-c), and the Ganev-Dimitrov element. These elements can be found in \cite{z} and \cite{b1} . Here we show specifically how the hexagonal structure simplifies the interpolation with these elements.\\
 
 \subsubsection{The Z2 and Z3 Zienkiewicz elements}
-Z2 uses 9 degrees of freedom which are the values at the vertices of the triangle and the values of the derivatives in the direction of the edges at every vertices:
+\textcolor{red}{Pour cette partie, surtout au debut, je trouve qu'il manque des phrases/des mots pour le contexte, pour expliquer pourquoi on presente deux elements, pour les notations et juste pour faciliter la lecture}
+Z2 \textcolor{blue}{plutot: the Z2 approach, ou qqchose, ajouter un nom} uses 9 degrees of freedom which are the values at the vertices of the triangle and the values of the derivatives in the direction of the edges at every vertices \textcolor{blue}{au singulier, je pense}:
 \begin{equation*}
  \Sigma_T = \lbrace \forall i \in [|1;3|], f(S_i),\partial_x(S_i),\partial_v(S_i) \rbrace 
 \end{equation*}
@@ -286,9 +296,11 @@ Z2 uses 9 degrees of freedom which are the values at the vertices of the triangl
  \Sigma_T = \lbrace \forall i \in [|1;3|], f(S_i),\partial_x(S_i),\partial_v(S_i); f(C) \rbrace 
 \end{equation*}
 
- \noindent The advantage is the interpolation is of order 3 instead of order 2 for Z2. Of course this precision comes with a price : for a hexagonal mesh there are 2 times more centers than vertices. Therefore the number of points which must be computed is tripled. 
+ \noindent The advantage is \textcolor{blue}{that} the interpolation is of order 3 instead of order 2 for Z2 \textcolor{blue}{The advantage of what ???}. \textcolor{red}{Of course this precision comes with a price: j'aime pas...} for a hexagonal mesh there are 2 times more centers than vertices. Therefore the number of points which must be computed is tripled. 
+ 
+Let us define the basis functions needed to interpolate with the element Z2 : \\
+\textcolor{red}{je trouve que c'est extremement difficile a suivre, pas de notes sur les notations, et c'est quoi les "i" et les "i,j". Meme niveau esthetique, c'est pas mieux de mettre ca sous un autre format ?}
 
-\noindent let us define the basis functions needed to interpolate with the element Z2 : \\
 \begin{equation*}
 \phi = \lambda_1 \lambda_2 \lambda_3 
 \end{equation*}
@@ -322,13 +334,15 @@ Z2 uses 9 degrees of freedom which are the values at the vertices of the triangl
 \end{equation*}
 
 \subsubsection{The HTC elements}
-The HCT-r element only uses 9 degrees of freedom and gives quasi-identical results compared to Z2. The only difference with Z2 is that HCT-r divides the triangle into 3 sub-triangles, therefore the basis function changes depending on which sub-triangle X is.
+The HCT-r element only uses 9 degrees of freedom and gives quasi-identical results compared to Z2 \textcolor{red}{ils utilisent les memes degres de liberte ?}. The only difference with Z2 is that HCT-r divides the triangle into 3 sub-triangles, therefore the basis function changes depending on which sub-triangle X is.
 
 Let $S_i$ be a vertex of the triangle T, then we define respectively $l_i$ and $m_i$ as the length and the middle of the edge opposite to $S_i$. Let G be the barycenter of T, then $K_l$ is the sub-triangle made with $G$, $S_j$ and $S_k$. The local interpolation operator is:
 \begin{equation*}
 \Pi_{K_l} (X) = \sum \limits_{\substack{i=l }}^{3}{ [f(S_i).\phi_i +  \frac{\partial f(S_i)}{\partial  \overrightarrow{ S_i S_j } }.\phi_{ij} } ].
 \end{equation*} 
 The basis function are defined by:
+
+\textcolor{red}{c'est quoi psi ? c'est quoi i,j,k ? c'est assez difficile à lire, c'est pas possible de le mettre en forme de fomule ?, aussi juste ici je n'irai pas a la ligne pour la definition de xi, c'est trois caracteres, autant rester sur la meme ligne non ? } 
 \begin{equation*}
 \Xi_l =  \Sigma_l \Lambda_l,
 \end{equation*} 
@@ -400,7 +414,7 @@ The basis function are defined by
 The advantage of HCT-c and HCT-r is that they don't require more points than what is already included into the hexagonal mesh.
 
 \subsubsection{The Ganev-Dimitrov element}
-The Ganev-Dimitrov element is of order 4 and uses 15 degrees of freedom which are the values of the function at the vertices and at the middle of the edges, plus the value of the derivatives at the vertices in the direction of the other two vertices. The computational cost for this element is four times higher than the HTC-r interpolation because of the computations needed at the middle of the edges: there are on average 3 times more edges than vertices. As a matter of fact, the vertices and the middle of the edges form another hexagonal mesh twice as fine as the original mesh. 
+The Ganev-Dimitrov element is of order 4 and uses 15 degrees of freedom which are the values of the function at the vertices and at the middle of the edges, plus the value of the derivatives at the vertices in the direction of the other two vertices. The computational cost for this element is four times higher than the HTC-r interpolation because of the computations needed at the middle of the edges: there are on average 3 times more edges than vertices. As a matter of fact, the vertices and the middle of the edges form another hexagonal mesh twice as fine as the original mesh. \textcolor{red}{ce paragraphe est largement meilleur et plus facile a lire, il faudrait  quand meme expose le pq on veut faire ces elements meme si ils sont aussi chers}
 
 \noindent The local interpolation operator is:
 
@@ -441,10 +455,11 @@ The Ganev-Dimitrov element is of order 4 and uses 15 degrees of freedom which ar
 \end{pmatrix}
 \end{equation*}
 
+\textcolor{red}{tu sais ce que je pense ici....}
+
 Another possible way to interpolate is to use a 2d Hermite finite element \cite{zie}   
 
-After the root $(X,V)$ of a characteristic is found and  the triangle in which it is located has been identified... 
-
+After the root $(X,V)$ of a characteristic is found and  the triangle in which it is located has been identified... \textcolor{red}{... quoi ? les espacements qui suivent sont tres bizarres... un dessin me semble pas mal}
 There are ten degrees of freedom which are:
 \begin{itemize}
 \item[-] the values at the vertex of the triangle 
@@ -454,6 +469,7 @@ There are ten degrees of freedom which are:
 
 
 % mettre un dessin ici des degrés de liberté
+\textcolor{red}{rapport entre en haut et en bas ? }
 
 \begin{equation}
 \begin{cases}  
@@ -464,7 +480,7 @@ There are ten degrees of freedom which are:
 \end{cases}
 \end{equation}
 
-With $H_1$ et $H_2$ the  hexaedric coordinates. Since   
+With $H_1$ et $H_2$ the  hexaedric \textcolor{blue}{hexaedric ?} coordinates. Since   
 
 \begin{equation}
 \begin{cases}  
@@ -483,8 +499,9 @@ We obtain :
 \end{cases}	
 \end{equation}
 
-At the vertexes the values are given and $f(G) = \frac{f(S_1)+f(S_2)+f(S_3)}{3}$. As for the values of the derivatives, we use the finite difference method along the hexagonal directions as it can be seen in figure (?)
+At the vertexes \textcolor{blue}{vertices} the values are given and $f(G) = \frac{f(S_1)+f(S_2)+f(S_3)}{3}$. As for the values of the derivatives, we use the finite difference method along the hexagonal directions as it can be seen in figure (?) 
 
+\textcolor{red}{je sais pas si tu as fini ici ou pas...}
 
 %%-----------------------------
 %% Poisson 
