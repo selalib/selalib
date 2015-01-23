@@ -66,14 +66,14 @@ There are three kinds of regular pavings of the plane: using squares, triangles 
 
 In magnetic fusion applications the embedded magnetic flux surfaces play an important role and introduce an important anisotropy\cite{Angelino2009}. For this reason one gets favourable numerical properties when grid points align on the concentric magnetic flux surfaces. When trying to do this with a mapped cartesian grid, one ends up with a polar coordinates mesh (when the flux surfaces are circles) or something topologically equivalent. This yields cells that are smaller and smaller when getting closer to the center and a singularity at the center. This is numerically far from optimal. 
 
-Different strategies have been implemented to avoid this singularities, we can cite among others: the isoparametric analysis approach done by J. Abiteboul et al. \cite{abiteboul2011solving} IGA approach or N. Besse and E. Sonnendr\"{u}cker's work with non-structured meshes\cite{Besse2003341}. Both of the works presented on these papers are particularly interesting as not only they avoid singularities but they are also extremely flexible and can be easily adapted to more complex geometries. However, some limitations are the numerical complexity, the advection of the derivatives and, the localisation of the feet of the characteristics. 
+Different strategies have been implemented to avoid \textcolor{blue}{this} singularities, we can cite among others: the isoparametric analysis approach done by J. Abiteboul et al. \cite{abiteboul2011solving} IGA approach or N. Besse and E. Sonnendr\"{u}cker's work with non-structured meshes\cite{Besse2003341}. Both of the works presented on these papers are particularly interesting as not only they avoid singularities but they are also extremely flexible and can be easily adapted to more complex geometries. However, some limitations are the numerical complexity, the advection of the derivatives and, the localisation of the feet of the characteristics. 
 
 Tiling a regular hexagon into triangles yields a mesh of equilateral triangles having all the same area, plus the grid can be easily mapped to a circle by slightly stretching the edges of the hexagon. This yields a nice mesh of a disk with slightly stretched triangles of almost the same size and there is no singularity in any point of the domain. 
 Additionally, such a mesh has a clear structure with three privileged directions, thus it is completely straightforward to localise points within this mesh. The derivatives along the three directions can also be nicely computed using finite differencing along uniform lines. And last but not least, there is a spline construction on this mesh, called box spline. These splines have a hexagonal support and are invariant by translations along the three directions of the mesh. 
 
 The disadvantages previously mentioned, are not present when dealing with the simple and straightforward hexagonal mesh. Regarding the computational efficiency, all our simulations include an analysis and comparison with more common methods. And last but not least, we suggest this scheme as an introduction to treat more complex geometries. Indeed by a simple mapping it will be easy to work with curvilinear coordinates.
 
-In this work, we focus on adapting the Semi-Lagrangian scheme to this hexagonal mesh. The guiding-center model is considered. This scheme consists basically on two steps: computing the characteristics' origins and interpolating on these points. For the latter, we compare two different approaches: one using box-splines and the second approach using Hermite Finite Elements. Both interpolation methods, as well as the mesh, are presented in section~\ref{sec:interpolation}. In section~\ref{sec:poisson_eqn}, we present a Poisson solver adapted to the hexagonal mesh. We present a guiding-center approximation of the 2D Vlasov Poisson system\cite{Golse1998865}, and the Semi-Lagrangian scheme to solve it, on section~\ref{sec:BSL_scheme}. Finally, on section~\ref{sec:results} we compare the results of the scheme using box splines with the ones using Hermite finite elements, we also compare them to more traditional meshes, such as the polar mesh. Besides the guiding-center model, different advection models have been simulated in this section.
+In this work, we focus on adapting the Semi-Lagrangian scheme to this hexagonal mesh. \textcolor{blue}{The guiding-center model is considered}. This scheme consists basically on two steps: computing the characteristics' origins and interpolating on these points. For the latter, we compare two different approaches: one using box-splines and the second approach using Hermite Finite Elements. Both interpolation methods, as well as the mesh, are presented in section~\ref{sec:interpolation}. In section~\ref{sec:poisson_eqn}, we present a Poisson solver adapted to the hexagonal mesh. We present a guiding-center approximation of the 2D Vlasov Poisson system\cite{Golse1998865}, and the Semi-Lagrangian scheme to solve it, on section~\ref{sec:BSL_scheme}. Finally, on section~\ref{sec:results} we compare the results of the scheme using box splines with the ones using Hermite finite elements, we also compare them to more traditional meshes, such as the polar mesh. Besides the guiding-center model, different advection models have been simulated in this section.
 
 
 %%-----------------------------
@@ -163,7 +163,7 @@ There are mainly two splines families that take advantage of the geometry's prop
 %%..............................
 \subsubsection{Box-Splines: General Definition}
 
-Box-splines are a generalisation of the more known spline's family: B-splines. They are also piecewise polynomial and they share some properties, as: compact support, positiveness, symmetry and partition of unity. But, on the contrary to B-splines, box-splines are defined from a generator matrix $\Xi$. Therefore, to construct them on the hexagonal lattice, we will use the generator vectors $\mathbf{r_1, r_2, r_3}$. The general definition is \cite{Boor1993, Condat2006}:
+Box-splines are a generalisation of the more known spline's family: B-splines. They are also piecewise polynomial and they share some properties,\textcolor{blue}{such} as: compact support, positiveness, symmetry and partition of unity. But, \textcolor{blue}{on the contrary to} B-splines, box-splines are defined from a generator matrix $\Xi$. Therefore, to construct them on the hexagonal lattice, we will use the generator vectors $\mathbf{r_1, r_2, r_3}$. The general definition is \cite{Boor1993, Condat2006}:
 
 \begin{dfntn}[Box-splines]
 
@@ -519,7 +519,7 @@ One step of the semi-Lagragian method is the computation of the solution of the 
 \end{equation*}
  $\phi$ being the potential and $\rho$ the density.
 Since the mesh here is hexagonal, a seven point stencil is used as shown in figure \ref{fig:hexmesh}. It is composed of the six vertices of an hexagon plus its center. To compute  $\phi_0$, the value of $\phi$ at the center $0$, the rest of the vertices of the hexagon are used. 
- This particular stencil has the property to give a fourth order scheme at little cost \cite{p}. Here is the said scheme:
+ This particular stencil has the property to give a fourth order scheme at little cost \cite{poisson}. Here is the said scheme:
 \begin{equation*}
 -(\phi_1 + \phi_2 + \phi_3 + \phi_4 +\phi_5 + \phi_6 - 6 \phi_0)  = \frac{3h^2}{4} \rho_0 + \frac{h^2}{24}(\rho_1+\rho_2+\rho_3+\rho_4+\rho_5+\rho_6).
 \end{equation*} 
@@ -688,6 +688,38 @@ Figure~\ref{fig:circ_performance} we can see that the level of performance of al
 
 \subsection{Guiding-center}
 
+
+The guiding center model describes highly magnetized plasma.
+\begin{equation}
+\left\{
+\begin{array}{l}
+ \frac{\partial \rho}{\partial t}+\mathbf{A}\cdot\nabla\rho=0,\\[3mm]
+ -\Delta\phi=\rho.
+\end{array}
+\right.
+   \label{eq:guiding_center}
+  \end{equation}
+where the velocity $\mathbf{A} = (-\partial_y\phi, \partial_x\phi)  $
+By neglecting the effect of boundary conditions, the  guiding center model verifies the following properties:
+\begin{enumerate}
+ \item Positivity of density $\rho$
+ \begin{equation*}
+  0\leq\rho(t,x,y).  
+ \end{equation*}
+ \item Mass conservation
+ \begin{equation*}
+  \frac{d}{dt}\left(\int_{D}\rho dx dy\right)=0.
+ \end{equation*}
+ \item $L^p$ norm conservation, for $1\leq p\leq\infty$
+ \begin{equation*}
+  \frac{d}{dt}||\rho||_{L^p(D)}=0.
+ \end{equation*}
+\item Energy conservation
+\begin{equation*}
+ \frac{d}{dt}\left(\int_{D}|\nabla\phi|^2dx dy\right)=0.
+\end{equation*}
+\end{enumerate}
+
 The initial density is given by :
 \begin{equation*}
  \rho_0(\mathbf{x}_\bot)=
@@ -700,7 +732,7 @@ The initial density is given by :
 \end{equation*}
 with $\theta=\text{atan2}(y,x)$.
 
-\noindent In the following tests, we take $\varepsilon=0.001$, $r^-=5$, $r^+=8$, $\ell=7$, furthermore $dt=0.1$.\\ 
+\noindent In the following tests, we take $\varepsilon=0.001$, $r^-=5$, $r^+=8$, $\ell=6$, furthermore $dt=0.1$.\\ 
 
 
 \begin{figure}[h!]
@@ -713,16 +745,24 @@ with $\theta=\text{atan2}(y,x)$.
 \end{figure}
 
 \begin{figure}[h!]
-	\includegraphics[scale=0.15]{figures/Mass_evolution_time_evol.png}
+	\includegraphics[scale=0.4]{figures/Relative_error_of_mass_160.png}
 	\caption{Time evolution of the mass}
 \end{figure}
 
 
 \begin{figure}[h!]
-	\includegraphics[scale=0.15]{figures/Minimum_value_time_evol.png}
-	\caption{Time evolution of the minimum of the density}
+	\includegraphics[scale=0.3]{figures/l1norm_160.png}
+	\includegraphics[scale=0.3]{figures/l2norm_160.png}
+	\caption{Relative error of $L^1$ and $L^2$ norms}
 \end{figure}
 
+
+\begin{figure}[h!]
+	\includegraphics[scale=0.4]{figures/min_density_160.png}
+	\caption{Time evolution of the density's minimum}
+\end{figure}
+
+Both intepolation methods give similar results in terms of energy conservation and positivity conservation. One notices if the boxsplines better conserves the mass, the hermite element conserves better the norms.  
 
 
 %%-----------------------------
