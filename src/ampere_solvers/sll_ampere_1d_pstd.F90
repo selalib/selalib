@@ -51,7 +51,7 @@ end type sll_ampere_1d_pstd
 
 !> Initialize ampere solver 2d cartesian periodic with PSTD scheme
 interface sll_create
- module procedure new_ampere_1d_pstd
+ module procedure initialize_ampere_1d_pstd
 end interface sll_create
 
 !> Solve ampere solver 2d cartesian periodic with PSTD scheme
@@ -67,13 +67,34 @@ end interface sll_delete
 public sll_create
 public sll_delete
 public sll_solve
+public new_ampere_1d_pstd
 
 private
 
 contains
 
 !> Initialize 2d ampere solver on cartesian mesh with PSTD scheme
-subroutine new_ampere_1d_pstd(self,xmin,xmax,nc_x)
+function new_ampere_1d_pstd(xmin,xmax,nc_x) result(self)
+
+   type(sll_ampere_1d_pstd), pointer :: self    !< Solver object
+   sll_real64, intent(in)            :: xmin    !< x min
+   sll_real64, intent(in)            :: xmax    !< x max
+   sll_int32,  intent(in)            :: nc_x    !< x cells number
+
+   sll_int32                         :: error   !< error code
+   sll_real64                        :: dx      !< x space step
+   sll_real64                        :: kx0
+   sll_int32                         :: i
+
+   self%nc_eta1 = nc_x
+
+   self%e_0  = 1._f64
+   self%mu_0 = 1._f64
+
+end function new_ampere_1d_pstd
+
+!> Initialize 2d ampere solver on cartesian mesh with PSTD scheme
+subroutine initialize_ampere_1d_pstd(self,xmin,xmax,nc_x) 
 
    type(sll_ampere_1d_pstd) :: self    !< Solver object
    sll_real64, intent(in)   :: xmin    !< x min
@@ -90,14 +111,24 @@ subroutine new_ampere_1d_pstd(self,xmin,xmax,nc_x)
    self%e_0  = 1._f64
    self%mu_0 = 1._f64
 
-end subroutine new_ampere_1d_pstd
+end subroutine initialize_ampere_1d_pstd
+
 
 !> Solve \f$ \frac{\partial E_x}{\partial_t} + J_x = 0 \f$
 subroutine solve_ampere_1d_pstd(self, ex, dt, jx)
+
    type(sll_ampere_1d_pstd),intent(inout)  :: self   !< Solver object
    sll_real64, dimension(:), intent(inout) :: ex     !< E field x
    sll_real64 , intent(in)                 :: dt     !< time step
    sll_real64, dimension(:), optional      :: jx     !< J current x
+
+   sll_real64  :: dt_e
+
+   dt_e = dt / self%e_0
+
+   if (present(jx)) then
+      ex = ex - dt_e * jx 
+   end if
 
 end subroutine solve_ampere_1d_pstd
 
