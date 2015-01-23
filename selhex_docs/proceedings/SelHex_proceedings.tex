@@ -372,7 +372,7 @@ For an equilateral triangle, the excentricity is null which simplifies a lot $\S
 
 The element HCT-c uses the same degrees of freedom as HCT-r plus the values of the derivatives in the normal direction of the edges at the middle of the respective edge, which adds up to twelve degrees of freedom.
 \begin{equation*}
-\Pi_{K_l} (X) = \sum \limits_{\substack{i=l }}^{3}{ [f(S_i).\phi_i +  \frac{\partial f(S_i)}{\partial  \overrightarrow{ S_i S_j } }.\phi_{ij} } ]  + 
+\Pi_{K_l} (X) = \sum \limits_{\substack{i=l }}^{3}{ [f(S_i).\phi_i +  \frac{\partial f(S_i)}{\partial  \overrightarrow{ S_i S_j } }.\phi_{ij} }   - ni \frac{\partial f}{\partial \nu_i}(m_i) \Phi_{\perp,l,i}]
 \end{equation*} 
 
 The basis function are defined by 
@@ -412,7 +412,7 @@ The Ganev-Dimitrov element is of order 4 and uses 15 degrees of freedom which ar
 \noindent The local interpolation operator is:
 
 \begin{equation*}
- \Pi_{K_l} (X) = \sum \limits_{\substack{i=l }}^{3}{ [f(S_i).\phi_i +  \frac{\partial f(S_i)}{\partial  \overrightarrow{ S_i S_j } }.\phi_{ij} } ]  + 
+ \Pi_{K_l} (X) = \sum \limits_{\substack{i=l }}^{3}{ [f(S_i).\Psi_i +  \frac{\partial f(S_i)}{\partial  \overrightarrow{ S_i S_j } }.\Psi_{ij} } + f(m_i).\Psi^{\perp,0}_i  - ni \frac{\partial f}{\partial \nu_i}(m_i) \Psi^{\perp,1}_i] 
 \end{equation*}
 \noindent The basis function are defined by: 
 \begin{equation*}
@@ -420,7 +420,7 @@ The Ganev-Dimitrov element is of order 4 and uses 15 degrees of freedom which ar
 \end{equation*} 
  \noindent with:\\
 \begin{equation*}
-\Xi=(\Psi_1^0, \Psi_2^0, \Psi_3^0, \Psi_{1,3}^1,\Psi_{1,2}^1,\Psi_{2,1}^1,\Psi_{2,3}^1 ,\Psi_{3,2}^1,\Psi_{3,1}^1,\Psi_1^{0,\perp} ,\Psi_2^{0,\perp},\Psi_3^{0,\perp},\Psi_1^{1,\perp},\Psi_2^{1,\perp},\Psi_3^{1,\perp})^T,
+\Xi=(\Psi_1, \Psi_2, \Psi_3, \Psi_{1,3},\Psi_{1,2},\Psi_{2,1},\Psi_{2,3} ,\Psi_{3,2},\Psi_{3,1},\Psi_1^{\perp,0} ,\Psi_2^{\perp,0},\Psi_3^{\perp,0},\Psi_1^{\perp,1},\Psi_2^{\perp,1},\Psi_3^{\perp,1})^T,
 \end{equation*} 
 \begin{equation*}
 \Lambda = ( \lambda_1^4,\lambda_2^4,\lambda_3^4,\lambda_1^3\lambda_3,\lambda_1^3\lambda_2,\lambda_2^3\lambda_1,\lambda_2^3\lambda_3 ,\lambda_3^3\lambda_2,\lambda_3^3\lambda_1,\lambda_2^2\lambda_3^2,\lambda_3^2\lambda_1^2,\lambda_1^2\lambda_2^2,\lambda_1^2\lambda_2\lambda_3,\lambda_1\lambda_2^2\lambda_3,\lambda_1\lambda_2\lambda_3^2).
