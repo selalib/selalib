@@ -163,7 +163,7 @@ There are mainly two splines families that take advantage of the geometry's prop
 %%..............................
 \subsubsection{Box-Splines: General Definition}
 
-Box-splines are a generalisation of the more known spline's family: B-splines. They are also piecewise polynomial and they share some properties,\textcolor{blue}{such} as: compact support, positiveness, symmetry and partition of unity. But, \textcolor{blue}{on the contrary to} B-splines, box-splines are defined from a generator matrix $\Xi$. Therefore, to construct them on the hexagonal lattice, we will use the generator vectors $\mathbf{r_1, r_2, r_3}$. The general definition is \cite{Boor1993, Condat2006}:
+Box-splines are a generalisation of the more known spline's family: B-splines. They are also piecewise polynomial and they share some properties, such as: compact support, positiveness, symmetry and partition of unity. But, unlike B-splines, box-splines are defined from a generator matrix $\Xi$. Therefore, to construct them on the hexagonal lattice, we will use the generator vectors $\mathbf{r_1, r_2, r_3}$. The general definition is \cite{Boor1993, Condat2006}:
 
 \begin{dfntn}[Box-splines]
 
@@ -518,8 +518,9 @@ One step of the semi-Lagragian method is the computation of the solution of the 
 	- \Delta \phi = \rho .
 \end{equation*}
  $\phi$ being the potential and $\rho$ the density.
-Since the mesh here is hexagonal, a seven point stencil is used as shown in figure \ref{fig:hexmesh}. It is composed of the six vertices of an hexagon plus its center. To compute  $\phi_0$, the value of $\phi$ at the center $0$, the rest of the vertices of the hexagon are used. 
- This particular stencil has the property to give a fourth order scheme at little cost \cite{poisson}. Here is the said scheme:
+ \textcolor{blue}{j'ajouterai: In order to solve this equation/model/problem, we have developed a finite differences scheme.}
+Since the mesh here is hexagonal, a seven point stencil is used as shown in Figure~\ref{fig:hexmesh}. It is composed of the six vertices of an hexagon plus its center. To compute  $\phi_0$, the value of $\phi$ at the center $0$, \textcolor{blue}{the rest of the --- the remaining} vertices of the hexagon are used. 
+ This particular stencil has the property to give a fourth order scheme at little cost \cite{poisson}. \textcolor{blue}{Here is the said scheme -- c'est du franglais ca, je dirai "Here is the previously mentioned/described scheme"}:
 \begin{equation*}
 -(\phi_1 + \phi_2 + \phi_3 + \phi_4 +\phi_5 + \phi_6 - 6 \phi_0)  = \frac{3h^2}{4} \rho_0 + \frac{h^2}{24}(\rho_1+\rho_2+\rho_3+\rho_4+\rho_5+\rho_6).
 \end{equation*} 
@@ -531,7 +532,8 @@ Compared to the second order scheme on the same stencil, one notices the only di
 
 Considering the gain of two order of precision at such little cost, we have used this fourth order scheme to compute $\phi$.
 
- \rmrk One difficulty that arises here is to define a numerotation that allows the resolution of a ``computational-friendly" linear system, i.e. an almost empty matrix with the non-null terms close to the diagonal. This is done by assigning a number following one hexagonal direction, row after row, similarily to how one proceeds on a cartesian mesh. Here however the difeerence is that the rows are of variable width. Therefore the matrix here is not constitued of 7 diagonals which makes the Poisson computation longer than on cartesian mesh.  
+ \rmrk One difficulty that arises here is to define a numerotation that allows the resolution of a ``computational-friendly" linear system, i.e. an almost empty matrix with the non-null terms close to the diagonal. This is done by assigning a number following one hexagonal direction, row after row, similarily to how one proceeds on a cartesian mesh. Here however the difference is that the rows are of variable width. Therefore the matrix here \textcolor{blue}{is not constituted of --- doesn't consist of -- ou je sais pas???} 7 diagonals which makes the Poisson computation longer than on cartesian mesh.  
+\textcolor{red}{est-ce que la largeur des lignes change vraiment ? ou c'est une question d'arrangement de la matrice, peut etre on peut parler sinon du rayon de la matrice, sinon regarde Band Matrix sur wiki...}
 
 %%%-----------------------------
 %\subsection{Finite Elements Solver}
