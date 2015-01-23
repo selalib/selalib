@@ -91,7 +91,7 @@ program test_hex_hermite
 
   open(unit =111,  file="perf", action="write", status="replace")
 
-  do num_cells = 20,40,20 
+  do num_cells = 20,160,20 
 
      t = 0._f64
      tmax  = 100._f64
