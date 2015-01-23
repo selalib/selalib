@@ -18,7 +18,7 @@ sll_int32    :: cells_min
 sll_int32    :: cells_max
 sll_int32    :: cells_stp
 sll_int32    :: i
-sll_int32    :: deg = 3
+sll_int32    :: deg = 1
 sll_int32    :: nloops
 sll_int32    :: ierr
 ! initial distribution
@@ -75,7 +75,7 @@ sll_real64              :: sum_chi
 sum_chi = 0._f64
 
 cells_min = 20
-cells_max = 20
+cells_max = 160
 cells_stp = 20
 do num_cells = cells_min, cells_max, cells_stp
 
@@ -131,7 +131,7 @@ do num_cells = cells_min, cells_max, cells_stp
    ! if : which_advec = 1 => circular advection
    which_advec = 1
    advec = 0.0_f64!25_f64!5_f64
-   tmax  = 100.0_f64
+   tmax  = 3.0_f64
    dt    = 0.1_f64 * 20._f64/num_cells
    t     = 0._f64
 
