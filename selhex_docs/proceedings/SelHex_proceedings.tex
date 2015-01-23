@@ -278,15 +278,18 @@ Even if we limit our sum to the vector $\mathbf{k}$ that defines our domain, we 
 %%-----------------------------
 \subsection{Hermite Finite Elements interpolation}
 
-\textcolor{blue}{Peut etre j'aurai ajoute une courte phrase d'introduction... mais peut etre ce n'est pas necessaire}
-To interpolate at a point X of barycentric coordinates $(\lambda_1,\lambda_2,\lambda_3)$ in the triangle T of vertices $S_1$, $S_2$, and $S_3$, we need a finite element with a local interpolation operator $\Pi_T $. This operator can be defined with the product of a set of degrees of freedom $\Sigma_T$ with a set of basis functions $\Xi$ which depends on the barycentric coordinates.\\
+Another family of finite elements used to interpolate is the Hermite's one.
+To interpolate at a point X of barycentric coordinates $(\lambda_1,\lambda_2,\lambda_3)$ in the triangle T of vertices $S_1$, $S_2j$, and $S_3$, we need a finite element with a local interpolation operator $\Pi_T $. This operator can be defined with the product of a set of degrees of freedom $\Sigma_T$ with a set of basis functions $\Xi$ which depends on the barycentric coordinates.\\
+For this part we define the indices i, j and k with the following relations:
+\begin{equation*}
+j=i[3]+1 ~,~ k=j[3]+1.
+\end{equation*}  
 
 Several elements have been tested here:
 The Z2 and Z3 Zienkiewicz elements, the Hsieh-Clough-Tocher reduced (HCT-r) and complete (HCT-c), and the Ganev-Dimitrov element. These elements can be found in \cite{z} and \cite{b1} . Here we show specifically how the hexagonal structure simplifies the interpolation with these elements.\\
 
 \subsubsection{The Z2 and Z3 Zienkiewicz elements}
-\textcolor{red}{Pour cette partie, surtout au debut, je trouve qu'il manque des phrases/des mots pour le contexte, pour expliquer pourquoi on presente deux elements, pour les notations et juste pour faciliter la lecture}
-Z2 \textcolor{blue}{plutot: the Z2 approach, ou qqchose, ajouter un nom} uses 9 degrees of freedom which are the values at the vertices of the triangle and the values of the derivatives in the direction of the edges at every vertices \textcolor{blue}{au singulier, je pense}:
+Z2 approach uses 9 degrees of freedom which are the values at the vertices of the triangle and the values of the derivatives in the direction of the edges at every vertex.
 \begin{equation*}
  \Sigma_T = \lbrace \forall i \in [|1;3|], f(S_i),\partial_x(S_i),\partial_v(S_i) \rbrace 
 \end{equation*}
@@ -296,11 +299,9 @@ Z2 \textcolor{blue}{plutot: the Z2 approach, ou qqchose, ajouter un nom} uses 9 
  \Sigma_T = \lbrace \forall i \in [|1;3|], f(S_i),\partial_x(S_i),\partial_v(S_i); f(C) \rbrace 
 \end{equation*}
 
- \noindent The advantage is \textcolor{blue}{that} the interpolation is of order 3 instead of order 2 for Z2 \textcolor{blue}{The advantage of what ???}. \textcolor{red}{Of course this precision comes with a price: j'aime pas...} for a hexagonal mesh there are 2 times more centers than vertices. Therefore the number of points which must be computed is tripled. 
+ \noindent The advantage of using the Z3 element is the gain of one order of precision with an order 3 instead of an order 2 for the Z2 approach. Let us note that although adding one degree of liberty seems harmless enough, the center points for a hexagonal mesh represents a computional cost multiplied by 3. Indeed they are  2 times more centers than vertices. Therefore the number of points which must be computed is tripled. 
  
-Let us define the basis functions needed to interpolate with the element Z2 : \\
-\textcolor{red}{je trouve que c'est extremement difficile a suivre, pas de notes sur les notations, et c'est quoi les "i" et les "i,j". Meme niveau esthetique, c'est pas mieux de mettre ca sous un autre format ?}
-
+Let us define the basis functions needed to interpolate with the element Z2 : 
 \begin{equation*}
 \phi = \lambda_1 \lambda_2 \lambda_3 
 \end{equation*}
@@ -312,7 +313,8 @@ Let us define the basis functions needed to interpolate with the element Z2 : \\
 \end{equation*}
 
 
-\noindent The fact that T is equilateral is exploited here by replacing $h_{ij}$ with h since the length of $ [S_iS_j]$ is constant. Finally for Z2 we have :
+\noindent $\phi_i$ is the basis function associated with the value of the function at $S_i$ while $\phi_ij$ are associated with the derivatives in the direction of the edges.    
+The fact that T is equilateral is exploited here by replacing $h_{ij}$ with h since the length of $ [S_iS_j]$ is constant. Finally for Z2 we have :
 \begin{equation*}
  \Pi (X) = \sum \limits_{\substack{i=1 }}^{3}{ [f(S_i).\phi_i + \sum \limits_{\substack{j\neq i }}^{}{ \frac{\partial f(S_i)}{\partial  \overrightarrow{ S_i S_j } }.\phi_{ij} } ] } 
 \end{equation*}
@@ -334,24 +336,17 @@ Let us define the basis functions needed to interpolate with the element Z2 : \\
 \end{equation*}
 
 \subsubsection{The HTC elements}
-The HCT-r element only uses 9 degrees of freedom and gives quasi-identical results compared to Z2 \textcolor{red}{ils utilisent les memes degres de liberte ?}. The only difference with Z2 is that HCT-r divides the triangle into 3 sub-triangles, therefore the basis function changes depending on which sub-triangle X is.
+The HTC elements were tested as well because of their particularity, that is the separate the triangle into three subtriangles. That is the only difference between the interpolation with the HCT-r element and the  Z2 approach as they both uses the same 9 degrees of freedom. Unsurprisingly, it gives quasi-identical results compared to Z2, therefore.
 
 Let $S_i$ be a vertex of the triangle T, then we define respectively $l_i$ and $m_i$ as the length and the middle of the edge opposite to $S_i$. Let G be the barycenter of T, then $K_l$ is the sub-triangle made with $G$, $S_j$ and $S_k$. The local interpolation operator is:
 \begin{equation*}
 \Pi_{K_l} (X) = \sum \limits_{\substack{i=l }}^{3}{ [f(S_i).\phi_i +  \frac{\partial f(S_i)}{\partial  \overrightarrow{ S_i S_j } }.\phi_{ij} } ].
 \end{equation*} 
-The basis function are defined by:
-
-\textcolor{red}{c'est quoi psi ? c'est quoi i,j,k ? c'est assez difficile à lire, c'est pas possible de le mettre en forme de fomule ?, aussi juste ici je n'irai pas a la ligne pour la definition de xi, c'est trois caracteres, autant rester sur la meme ligne non ? } 
-\begin{equation*}
-\Xi_l =  \Sigma_l \Lambda_l,
-\end{equation*} 
-
+The basis function are defined by: $~~~~~~~~~~~~~~~~~~~~é\Xi_l =  \Sigma_l \Lambda_l$
  \noindent with:
 \begin{equation*}
   \Xi_l=(\Psi_{l,i}^0, \Psi_{l,j}^0, \Psi_{l,k}^0, \Psi_{l,i,k}^1,\Psi_{l,i,j}^1,\Psi_{l,j,i}^1,\Psi_{l,j,k}^1 ,\Psi_{l,k,j}^1,\Psi_{l,k,i}^1)^T,
 \end{equation*} 
-
 \begin{equation*}
   \Lambda_l = ( \lambda_i^3,\lambda_j^3,\lambda_k^3,\lambda_i^2\lambda_k,\lambda_i^2\lambda_j,\lambda_j^2\lambda_i,\lambda_j^2\lambda_k,\lambda_k^2\lambda_j,\lambda_k^2\lambda_i,\lambda_i\lambda_j\lambda_k)^T,
 \end{equation*} 
@@ -375,11 +370,9 @@ For an equilateral triangle, the excentricity is null which simplifies a lot $\S
 \end{pmatrix}
 \end{equation*} 
 
-   
- 
 The element HCT-c uses the same degrees of freedom as HCT-r plus the values of the derivatives in the normal direction of the edges at the middle of the respective edge, which adds up to twelve degrees of freedom.
 \begin{equation*}
-\Pi_{K_l} (X) = \sum \limits_{\substack{i=l }}^{3}{ [f(S_i).\phi_i +  \frac{\partial f(S_i)}{\partial  \overrightarrow{ S_i S_j } }.\phi_{ij} } ]  + f(C).\phi_{123}
+\Pi_{K_l} (X) = \sum \limits_{\substack{i=l }}^{3}{ [f(S_i).\phi_i +  \frac{\partial f(S_i)}{\partial  \overrightarrow{ S_i S_j } }.\phi_{ij} } ]  + 
 \end{equation*} 
 
 The basis function are defined by 
@@ -411,15 +404,15 @@ The basis function are defined by
 \end{pmatrix}
 \end{equation*}
 
-The advantage of HCT-c and HCT-r is that they don't require more points than what is already included into the hexagonal mesh.
+The advantage of HCT-c and HCT-r is that they don't require more points than what is already included into the hexagonal mesh which is not the case for the the Z3 approach.
 
 \subsubsection{The Ganev-Dimitrov element}
-The Ganev-Dimitrov element is of order 4 and uses 15 degrees of freedom which are the values of the function at the vertices and at the middle of the edges, plus the value of the derivatives at the vertices in the direction of the other two vertices. The computational cost for this element is four times higher than the HTC-r interpolation because of the computations needed at the middle of the edges: there are on average 3 times more edges than vertices. As a matter of fact, the vertices and the middle of the edges form another hexagonal mesh twice as fine as the original mesh. \textcolor{red}{ce paragraphe est largement meilleur et plus facile a lire, il faudrait  quand meme expose le pq on veut faire ces elements meme si ils sont aussi chers}
+The Ganev-Dimitrov element is of order 4 and uses 15 degrees of freedom which are the values of the function at the vertices and at the middle of the edges, plus the value of the derivatives at the vertices in the direction of the other two vertices. The computational cost for this element is four times higher than the HTC-r interpolation because of the computations needed at the middle of the edges: there are on average 3 times more edges than vertices. As a matter of fact, the vertices and the middle of the edges form another hexagonal mesh twice as fine as the original mesh. The reason why we tested such an computational expensive element is to observe whether or not the gain in precision is interesting compared to the extra computing time allocated. 
 
 \noindent The local interpolation operator is:
 
 \begin{equation*}
- \Pi_{K_l} (X) = \sum \limits_{\substack{i=l }}^{3}{ [f(S_i).\phi_i +  \frac{\partial f(S_i)}{\partial  \overrightarrow{ S_i S_j } }.\phi_{ij} } ]  + f(C).\phi_{123}
+ \Pi_{K_l} (X) = \sum \limits_{\substack{i=l }}^{3}{ [f(S_i).\phi_i +  \frac{\partial f(S_i)}{\partial  \overrightarrow{ S_i S_j } }.\phi_{ij} } ]  + 
 \end{equation*}
 \noindent The basis function are defined by: 
 \begin{equation*}
@@ -454,54 +447,52 @@ The Ganev-Dimitrov element is of order 4 and uses 15 degrees of freedom which ar
 	0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &  0 &  0 &  0 & 4 & 4 &-4  
 \end{pmatrix}
 \end{equation*}
-
-\textcolor{red}{tu sais ce que je pense ici....}
-
-Another possible way to interpolate is to use a 2d Hermite finite element \cite{zie}   
-
-After the root $(X,V)$ of a characteristic is found and  the triangle in which it is located has been identified... \textcolor{red}{... quoi ? les espacements qui suivent sont tres bizarres... un dessin me semble pas mal}
-There are ten degrees of freedom which are:
-\begin{itemize}
-\item[-] the values at the vertex of the triangle 
-\item[-] the values of the derivatives 
-\item[-] the values at the center of the triangle 
-\end{itemize}
-
-
-% mettre un dessin ici des degrés de liberté
-\textcolor{red}{rapport entre en haut et en bas ? }
-
-\begin{equation}
-\begin{cases}  
-
-\partial _x f(x,y) = \partial _{H_1} f(x,y).   \partial _x H_1 +   \partial _{H_2} f(x,y).   \partial _x H_2  \\
-\partial _y f(x,y) = \partial _{H_1} f(x,y).   \partial _y H_1 +   \partial _{H_2} f(x,y).   \partial _y H_2             
-
-\end{cases}
-\end{equation}
-
-With $H_1$ et $H_2$ the  hexaedric \textcolor{blue}{hexaedric ?} coordinates. Since   
-
-\begin{equation}
-\begin{cases}  
-
-\displaystyle{x = \frac{ H_1 - H_2 }{\sqrt{3}} },  \\[2mm]
-\displaystyle{y =  H_1 + H_2 },        
-
-\end{cases}
-\end{equation}
-
-We obtain :
-\begin{equation}
-	\begin{cases}  
-       \displaystyle{  \partial _x H_1 = \frac{\sqrt{3}}{ 2} ~;~  \partial _y H_1 = \frac{1}{ 2}  }\\[2mm]
-       \displaystyle{  \partial _x H_2 = \frac{-\sqrt{3}}{2} ~;~  \partial _y H_2 = \frac{1}{ 2}  } . 
-\end{cases}	
-\end{equation}
-
-At the vertexes \textcolor{blue}{vertices} the values are given and $f(G) = \frac{f(S_1)+f(S_2)+f(S_3)}{3}$. As for the values of the derivatives, we use the finite difference method along the hexagonal directions as it can be seen in figure (?) 
-
-\textcolor{red}{je sais pas si tu as fini ici ou pas...}
+%
+%Another possible way to interpolate is to use a 2d Hermite finite element \cite{zie}   
+%
+%After the root $(X,V)$ of a characteristic is found and  the triangle in which it is located has been identified... \textcolor{red}{... quoi ? les espacements qui suivent sont tres bizarres... un dessin me semble pas mal}
+%There are ten degrees of freedom which are:
+%\begin{itemize}
+%\item[-] the values at the vertex of the triangle 
+%\item[-] the values of the derivatives 
+%\item[-] the values at the center of the triangle 
+%\end{itemize}
+%
+%
+%% mettre un dessin ici des degrés de liberté
+%\textcolor{red}{rapport entre en haut et en bas ? }
+%
+%\begin{equation}
+%\begin{cases}  
+%
+%\partial _x f(x,y) = \partial _{H_1} f(x,y).   \partial _x H_1 +   \partial _{H_2} f(x,y).   \partial _x H_2  \\
+%\partial _y f(x,y) = \partial _{H_1} f(x,y).   \partial _y H_1 +   \partial _{H_2} f(x,y).   \partial _y H_2             
+%
+%\end{cases}
+%\end{equation}
+%
+%With $H_1$ et $H_2$ the  hexaedric \textcolor{blue}{hexaedric ?} coordinates. Since   
+%
+%\begin{equation}
+%\begin{cases}  
+%
+%\displaystyle{x = \frac{ H_1 - H_2 }{\sqrt{3}} },  \\[2mm]
+%\displaystyle{y =  H_1 + H_2 },        
+%
+%\end{cases}
+%\end{equation}
+%
+%We obtain :
+%\begin{equation}
+%	\begin{cases}  
+%       \displaystyle{  \partial _x H_1 = \frac{\sqrt{3}}{ 2} ~;~  \partial _y H_1 = \frac{1}{ 2}  }\\[2mm]
+%       \displaystyle{  \partial _x H_2 = \frac{-\sqrt{3}}{2} ~;~  \partial _y H_2 = \frac{1}{ 2}  } . 
+%\end{cases}	
+%\end{equation}
+%
+%At the vertexes \textcolor{blue}{vertices} the values are given and $f(G) = \frac{f(S_1)+f(S_2)+f(S_3)}{3}$. As for the values of the derivatives, we use the finite difference method along the hexagonal directions as it can be seen in figure (?) 
+%
+%\textcolor{red}{je sais pas si tu as fini ici ou pas...}
 
 %%-----------------------------
 %% Poisson 
