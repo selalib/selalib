@@ -8,12 +8,14 @@ use sll_vlasov2d_base
 use sll_vlasov2d_spectral_charge
 use sll_poisson_1d_periodic  
 use sll_module_poisson_1d_periodic_solver
+use sll_module_ampere_1d_pstd
 
 implicit none
 
 type(vlasov2d_spectral_charge)                 :: vlasov2d 
 type(sll_cubic_spline_interpolator_1d), target :: spl_x2
-class(sll_poisson_1d_base), pointer            :: poisson 
+class(sll_poisson_1d_base), pointer            :: poisson
+type(sll_ampere_1d_pstd),   pointer            :: ampere 
 
 
 sll_int32  :: iter 
@@ -37,45 +39,39 @@ end if
 call initlocal()
 
 !f --> ft
-!PN call transposexv(vlasov2d)
+call transposexv(vlasov2d)
 
 call compute_charge(vlasov2d)
-!call solve(poisson,vlasov2d%ex,vlasov2d%rho)
+call poisson%compute_E_from_rho( vlasov2d%ex, vlasov2d%rho )
 
 vlasov2d%exn=vlasov2d%ex
 
 !ft --> f
-!PN call transposevx(vlasov2d)
+call transposevx(vlasov2d)
 
 mass0=sum(vlasov2d%rho)*vlasov2d%delta_eta1
 
 print *,'mass init',mass0
 
-!###############
-!TIME LOOP
-!###############
-
 do iter=1,vlasov2d%nbiter
 
    if (iter ==1 .or. mod(iter,vlasov2d%fdiag) == 0) then 
-      !PN call write_xmf_file(vlasov2d,iter/vlasov2d%fdiag)
+      call write_xmf_file(vlasov2d,iter/vlasov2d%fdiag)
    end if
 
    if ( vlasov2d%va == VA_VALIS .or. vlasov2d%va == VA_CLASSIC) then 
 
       !f --> ft, current (this%jx,this%jy), ft-->f
-      !PN call transposexv(vlasov2d)
+      call transposexv(vlasov2d)
 
       !compute this%jx, this%jy (zero average) at time tn
       call compute_current(vlasov2d)
 
-      !PN call transposevx(vlasov2d)
+      call transposevx(vlasov2d)
 
       !compute vlasov2d%bz=B^{n+1/2} from Ex^n, Ey^n, B^{n-1/2}  
       !!!!Attention initialisation B^{-1/2}
 
-      call solve_faraday(vlasov2d%dt)  
-      
       !compute vlasov2d%bzn=B^n=0.5(B^{n+1/2}+B^{n-1/2})          
       vlasov2d%exn=vlasov2d%ex
       
@@ -96,18 +92,18 @@ do iter=1,vlasov2d%nbiter
    !advec y + compute this%jy1
    call advection_x2(vlasov2d,0.5_f64*vlasov2d%dt)
 
-   !PN call transposexv(vlasov2d)
+   call transposexv(vlasov2d)
 
    if (vlasov2d%va == VA_OLD_FUNCTION) then 
 
       !compute rho^{n+1}
       call compute_charge(vlasov2d)
       !compute E^{n+1} via Poisson
-      !PN call solve(poisson,vlasov2d%ex,vlasov2d%rho)
+      call poisson%compute_E_from_rho( vlasov2d%ex, vlasov2d%rho )
 
    endif
 
-   !PN call transposevx(vlasov2d)
+   call transposevx(vlasov2d)
 
    !copy jy^{**}
    call advection_x2(vlasov2d,0.5_f64*vlasov2d%dt)
@@ -136,11 +132,11 @@ do iter=1,vlasov2d%nbiter
    else if (vlasov2d%va == VA_CLASSIC) then 
 
       !f --> ft, current (this%jx,this%jy), ft-->f
-      !PN call transposexv(vlasov2d)
+      call transposexv(vlasov2d)
       !compute this%jx, this%jy (zero average) at time tn
       call compute_current(vlasov2d)
 
-      !PN call transposevx(vlasov2d)
+      call transposevx(vlasov2d)
 
       !compute J^{n+1/2}=0.5*(J^n+J^{n+1})
       vlasov2d%jx=0.5_f64*(vlasov2d%jx+vlasov2d%jx3)
@@ -153,15 +149,15 @@ do iter=1,vlasov2d%nbiter
       !copy ex and ey at t^n for the next loop
       vlasov2d%exn = vlasov2d%ex
 
-   else if (vlasov2d%va == VA_VALIS) then 
+   else if (vlasov2d%va == VA_VLASOV_POISSON) then 
 
-      !PN call transposexv(vlasov2d)
+      call transposexv(vlasov2d)
       !compute rho^{n+1}
       call compute_charge(vlasov2d)
-      !PN call transposevx(vlasov2d)
+      call transposevx(vlasov2d)
 
       !compute E^{n+1} via Poisson
-      !PN call solve(poisson,vlasov2d%ex,vlasov2d%rho)
+      call poisson%compute_E_from_rho( vlasov2d%ex, vlasov2d%rho )
 
       !print *,'verif charge conservation', &
       !             maxval(vlasov2d%exn-vlasov2d%ex), &
@@ -170,12 +166,12 @@ do iter=1,vlasov2d%nbiter
    else if (vlasov2d%va==VA_OLD_FUNCTION) then 
 
       !recompute the electric field at time (n+1) for diagnostics
-      !PN call transposexv(vlasov2d)
+      call transposexv(vlasov2d)
       !compute rho^{n+1}
       call compute_charge(vlasov2d)
-      !PN call transposevx(vlasov2d)
+      call transposevx(vlasov2d)
       !compute E^{n+1} via Poisson
-      !PN call solve(poisson,vlasov2d%ex,vlasov2d%rho)
+      call poisson%compute_E_from_rho( vlasov2d%ex, vlasov2d%rho )
    endif
 
    if (mod(iter,vlasov2d%fthdiag) == 0) then 
@@ -254,13 +250,13 @@ subroutine initlocal()
      end do
   end do
   
-!  call sll_create(maxwell, &
-!       vlasov2d%eta1_min, vlasov2d%eta1_max, vlasov2d%nc_eta1, &
-!       vlasov2d%eta2_min, vlasov2d%eta2_max, vlasov2d%nc_eta2, TE_POLARIZATION)
-!  
-!  call initialize(poisson, &
-!       vlasov2d%eta1_min, vlasov2d%eta1_max, vlasov2d%nc_eta1, &
-!       vlasov2d%eta2_min, vlasov2d%eta2_max, vlasov2d%nc_eta2, error)
+   ampere => new_ampere_1d_pstd( vlasov2d%eta1_min,  &
+                                 vlasov2d%eta1_max,  &
+                                 vlasov2d%nc_eta1)
+  
+   poisson => new_poisson_1d_periodic_solver( vlasov2d%eta1_min, &
+                                              vlasov2d%eta1_max, &
+                                              vlasov2d%nc_eta1)
   
   
 end subroutine initlocal
@@ -269,17 +265,9 @@ subroutine solve_ampere(dt)
 
   sll_real64, intent(in)    :: dt
   
-!  call sll_solve_ampere(maxwell, vlasov2d%ex, vlasov2d%ey, &
-!              vlasov2d%bzn, dt, vlasov2d%jx, vlasov2d%jy)
+  print*, 'solve ampere'
+  call sll_solve(ampere, vlasov2d%ex, dt, vlasov2d%jx)
 
 end subroutine solve_ampere
 
-subroutine solve_faraday(dt)
-
-  sll_real64, intent(in)    :: dt
-  
-!  call sll_solve_faraday(maxwell, vlasov2d%exn, vlasov2d%eyn, vlasov2d%bz, dt)
-  
-end subroutine solve_faraday
-  
 end program vm2d_spectral_charge

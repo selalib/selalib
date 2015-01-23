@@ -21,6 +21,7 @@ public :: initialize_vlasov2d_base, free_vlasov2d_base
 public :: compute_charge, compute_current
 public :: write_energy
 public :: read_input_file
+public :: transposexv, transposevx, write_xmf_file
 
 type, public :: vlasov2d_base
   logical                                  :: transposed      
@@ -287,19 +288,119 @@ subroutine thdiag(this,nrj,t)
 
 end subroutine thdiag
 
-!subroutine write_fx1x2(this,cplot)
-!
-!  use sll_hdf5_io_serial
-!  class(vlasov2d_base),intent(in)     :: this
-!  character(len=*)                    :: cplot
-!  sll_int32                           :: error
-!  sll_int32                           :: file_id
-!  
-!  call sll_hdf5_file_create('fx1x2_'//cplot//".h5",file_id,error)
-!  call sll_hdf5_write_array(file_id,this%f,"/values",error)
-!  call sll_hdf5_file_close(file_id, error)
-!
-!end subroutine write_fx1x2
+subroutine transposexv(this)
+
+  class(vlasov2d_base),intent(inout) :: this
+
+  SLL_ASSERT(.not. this%transposed)
+  call apply_remap_2D( this%x_to_v, this%f, this%ft )
+  this%transposed = .true.
+
+end subroutine transposexv
+
+subroutine transposevx(this)
+
+  class(vlasov2d_base),intent(inout) :: this
+
+  SLL_ASSERT(this%transposed)
+  call apply_remap_2D( this%v_to_x, this%ft, this%f )
+  this%transposed = .false.
+
+end subroutine transposevx
+
+subroutine write_xmf_file(this, iplot)
+
+  use hdf5
+  use sll_hdf5_io_serial
+
+  class(vlasov2d_base),intent(in) :: this
+  sll_int32, intent(in)           :: iplot
+  sll_int32                       :: error
+  character(len=4)                :: cplot
+  sll_int32                       :: prank
+  sll_int32, parameter            :: one = 1
+  sll_int32                       :: file_id
+  sll_int32                       :: nx1, nx2
+
+  call int2string(iplot,cplot)
+  call write_fx1x2(this,cplot)
+
+  prank = sll_get_collective_rank(sll_world_collective)
+  if (prank == MPI_MASTER) then
+
+     nx1 = this%np_eta1
+     nx2 = this%np_eta2
+
+     call sll_xml_file_create("fvalues_"//cplot//".xmf",file_id,error)
+     call write_grid(file_id,nx1,nx2,"x1","x2",cplot)
+     write(file_id,"(a)")"</Domain>"
+     write(file_id,"(a)")"</Xdmf>"
+     close(file_id)
+
+  endif
+
+ end subroutine write_xmf_file
+
+ subroutine write_grid(file_id,nx,ny,xname,yname,cplot)
+
+  sll_int32 :: file_id, nx, ny
+  character(len=*) :: cplot, xname, yname
+
+  write(file_id,"(a)")"<Grid Name='"//xname//yname//"' GridType='Uniform'>"
+  write(file_id, &
+   "(a,2i5,a)")"<Topology TopologyType='2DRectMesh' NumberOfElements='",ny,nx,"'/>"
+  write(file_id,"(a)")"<Geometry GeometryType='VXVY'>"
+  write(file_id,"(a,i5,a)")"<DataItem Dimensions='",nx, &
+                           "' NumberType='Float' Precision='8' Format='HDF'>"
+  write(file_id,"(a)")"mesh2d.h5:/"//xname
+  write(file_id,"(a)")"</DataItem>"
+  write(file_id,"(a,i5,a)")"<DataItem Dimensions='",ny, &
+                           "' NumberType='Float' Precision='8' Format='HDF'>"
+  write(file_id,"(a)")"mesh2d.h5:/"//yname
+  write(file_id,"(a)")"</DataItem>"
+  write(file_id,"(a)")"</Geometry>"
+  call write_attribute(file_id,nx,ny,"df",cplot,xname,yname)
+  write(file_id,"(a)")"</Grid>"
+
+ end subroutine write_grid
+
+ subroutine write_attribute(file_id,nx,ny,fname,cplot,xname,yname)
+
+  sll_int32                    :: file_id
+  sll_int32                    :: nx
+  sll_int32                    :: ny
+  character(len=*), intent(in) :: fname
+  character(len=*), intent(in) :: cplot
+  character(len=*), optional   :: xname
+  character(len=*), optional   :: yname
+
+  write(file_id,"(a)") &
+     "<Attribute Name='"//fname//"' AttributeType='Scalar' Center='Node'>"
+  write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",ny,nx, &
+                            "' NumberType='Float' Precision='8' Format='HDF'>"
+  if( present(xname) .and. present(yname)) then
+     write(file_id,"(a)")fname//xname//yname//"_"//cplot//".h5:/values"
+  else
+     write(file_id,"(a)")fname//"_"//cplot//".h5:/values"
+  end if
+  write(file_id,"(a)")"</DataItem>"
+  write(file_id,"(a)")"</Attribute>"
+
+ end subroutine write_attribute
+
+subroutine write_fx1x2(this,cplot)
+
+  use sll_hdf5_io_serial
+  class(vlasov2d_base),intent(in)     :: this
+  character(len=*)                    :: cplot
+  sll_int32                           :: error
+  sll_int32                           :: file_id
+  
+  call sll_hdf5_file_create('dfx1x2_'//cplot//".h5",file_id,error)
+  call sll_hdf5_write_array(file_id,this%f,"/values",error)
+  call sll_hdf5_file_close(file_id, error)
+
+end subroutine write_fx1x2
 
 subroutine write_energy(this, time)
 
