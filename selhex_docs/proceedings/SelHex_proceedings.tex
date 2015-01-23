@@ -48,7 +48,7 @@ This paper introduces a Semi-Lagrangian solver for the Vlasov-Poisson equation o
 
 %% French version ............
 \begin{resume} 
-Dans cet article nous introduisons un solveur semi-Lagrangien pour l'\'equation de Vlasov-Poisson sur un maillage \textcolor{blue}{hexagonale ... sans "e"} r\'egulier. Ce dernier est compos\'e de triangles \'equilat\'eraux, ainsi il ne pr\'esente aucune singularit\'e, contrairement au maillage polaire. Nous nous concentrons ici sur le mod\`ele centre-guide. \`A cette fin nous avons d\'evelopp\'e un solveur de l'\'equation de Poisson pour maillage hexagonale \textcolor{blue}{hexagonale .... sans "e"}. Au regard de l'interpolation, nous comparons les r\'esultats obtenus avec des \'el\'ements finis d'Hermite et des box-splines. \textcolor{blue}{Chaque m\'ethode d'interpolation est donc adapt\'ee au maillage.} Dans le future \textcolor{blue}{plutot: \`A l'avenir}, ce code sera adapt\'e \`a des g\'eom\'etries et mod\`eles plus complexes.  
+Dans cet article nous introduisons un solveur semi-Lagrangien pour l'\'equation de Vlasov-Poisson sur un maillage hexagonal r\'egulier. Ce dernier est compos\'e de triangles \'equilat\'eraux, ainsi il ne pr\'esente aucune singularit\'e, contrairement au maillage polaire. Nous nous concentrons ici sur le mod\`ele centre-guide. \`A cette fin nous avons d\'evelopp\'e un solveur de l'\'equation de Poisson pour maillage hexagonal. Au regard de l'interpolation, nous comparons les r\'esultats obtenus avec des \'el\'ements finis d'Hermite et des box-splines. \textcolor{blue}{Chaque m\'ethode d'interpolation est donc adapt\'ee au maillage.}  \`A l'avenir, ce code sera adapt\'e \`a des g\'eom\'etries et mod\`eles plus complexes.  
 \end{resume}
 
 
@@ -509,9 +509,8 @@ One step of the semi-Lagragian method is the computation of the solution of the 
 	- \Delta \phi = \rho .
 \end{equation*}
  $\phi$ being the potential and $\rho$ the density.
- \textcolor{blue}{j'ajouterai: In order to solve this equation/model/problem, we have developed a finite differences scheme.}
-Since the mesh here is hexagonal, a seven point stencil is used as shown in Figure~\ref{fig:hexmesh}. It is composed of the six vertices of an hexagon plus its center. To compute  $\phi_0$, the value of $\phi$ at the center $0$, \textcolor{blue}{the rest of the --- the remaining} vertices of the hexagon are used. 
- This particular stencil has the property to give a fourth order scheme at little cost \cite{poisson}. \textcolor{blue}{Here is the said scheme -- c'est du franglais ca, je dirai "Here is the previously mentioned/described scheme"}:
+ In order to solve this equation/model/problem, we have developed a finite differences scheme. Since the mesh here is hexagonal, a seven point stencil is used as shown in Figure~\ref{fig:hexmesh}. It is composed of the six vertices of an hexagon plus its center. To compute  $\phi_0$, the value of $\phi$ at the center $0$,  the remaining vertices of the hexagon are used. 
+ This particular stencil has the property to give a fourth order scheme at little cost \cite{poisson}. Here is the previously described scheme:
 \begin{equation*}
 -(\phi_1 + \phi_2 + \phi_3 + \phi_4 +\phi_5 + \phi_6 - 6 \phi_0)  = \frac{3h^2}{4} \rho_0 + \frac{h^2}{24}(\rho_1+\rho_2+\rho_3+\rho_4+\rho_5+\rho_6).
 \end{equation*} 
@@ -523,8 +522,7 @@ Compared to the second order scheme on the same stencil, one notices the only di
 
 Considering the gain of two order of precision at such little cost, we have used this fourth order scheme to compute $\phi$.
 
- \rmrk One difficulty that arises here is to define a numerotation that allows the resolution of a ``computational-friendly" linear system, i.e. an almost empty matrix with the non-null terms close to the diagonal. This is done by assigning a number following one hexagonal direction, row after row, similarily to how one proceeds on a cartesian mesh. Here however the difference is that the rows are of variable width. Therefore the matrix here \textcolor{blue}{is not constituted of --- doesn't consist of -- ou je sais pas???} 7 diagonals which makes the Poisson computation longer than on cartesian mesh.  
-\textcolor{red}{est-ce que la largeur des lignes change vraiment ? ou c'est une question d'arrangement de la matrice, peut etre on peut parler sinon du rayon de la matrice, sinon regarde Band Matrix sur wiki...}
+ \rmrk One difficulty that arises here is to define a numerotation that allows the resolution of a ``computational-friendly" linear system, i.e. an almost empty matrix with the non-null terms close to the diagonal. This is done by assigning a number following one hexagonal direction, row after row, similarily to how one proceeds on a cartesian mesh. Here however the difference is that the rows are of variable width resulting in a band matrix. Therefore the matrix here is not constituted of 7 diagonals which makes the Poisson computation longer than on a cartesian mesh. The width of the band is directly proportional to the number of cells in the hexagonal domain.  
 
 %%%-----------------------------
 %\subsection{Finite Elements Solver}
@@ -713,6 +711,7 @@ By neglecting the effect of boundary conditions, the  guiding center model verif
 \end{equation*}
 \end{enumerate}
 
+We chose here to study the diocotron instability \cite{madaule:hal-00841504}}.
 The initial density is given by :
 \begin{equation*}
  \rho_0(\mathbf{x}_\bot)=
@@ -725,8 +724,7 @@ The initial density is given by :
 \end{equation*}
 with $\theta=\text{atan2}(y,x)$.
 
-\noindent In the following tests, we take $\varepsilon=0.001$, $r^-=5$, $r^+=8$, $\ell=6$, furthermore $dt=0.1$.\\ 
-\textcolor{red}{c'est un choix qu'on a fait. Et ce test case s'appelle "diocotron instability" j'aime bien comment c'est presente ici : \cite{madaule:hal-00841504}}
+\noindent In the following tests, we take $\varepsilon=0.001$, $r^-=5$, $r^+=8$, $\ell=6$, furthermore $dt=0.1$.
 
 \begin{figure}[h!]
 	\includegraphics[scale=0.15]{figures/gc_spl_1.png}
