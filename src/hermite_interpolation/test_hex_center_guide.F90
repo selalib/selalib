@@ -76,7 +76,7 @@ program test_hex_hermite
   sll_int32    :: p = 6!-> degree of the approximation for the derivative 
   ! distribution at time n
 
-  sll_int32    :: num_method = 15
+  sll_int32    :: num_method = 9
 
   logical      :: inside
   character(len = 50) :: filename
@@ -91,7 +91,7 @@ program test_hex_hermite
 
   open(unit =111,  file="perf", action="write", status="replace")
 
-  do num_cells = 20,40,20 
+  do num_cells = 20,160,20 
 
      t = 0._f64
      tmax  = 100._f64
