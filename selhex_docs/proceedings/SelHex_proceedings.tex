@@ -711,7 +711,7 @@ By neglecting the effect of boundary conditions, the  guiding center model verif
 \end{equation*}
 \end{enumerate}
 
-We chose here to study the diocotron instability \cite{madaule:hal-00841504}}.
+We chose here to study the diocotron instability \cite{madaule:hal-00841504}.
 The initial density is given by :
 \begin{equation*}
  \rho_0(\mathbf{x}_\bot)=
@@ -726,6 +726,7 @@ with $\theta=\text{atan2}(y,x)$.
 
 \noindent In the following tests, we take $\varepsilon=0.001$, $r^-=5$, $r^+=8$, $\ell=6$, furthermore $dt=0.1$.
 
+\textcolor{red}{peut etre un paragraphe sur l'evolution de la densite, les 6 modes retrouves qqsoit eps, etc, commenter la figure 6}
 \begin{figure}[h!]
 	\includegraphics[scale=0.15]{figures/gc_spl_1.png}
 	\includegraphics[scale=0.15]{figures/gc_spl_2.png}
@@ -753,9 +754,19 @@ with $\theta=\text{atan2}(y,x)$.
 	\caption{Time evolution of the density's minimum}
 \end{figure}
 
+
+
+
 Both intepolation methods give similar results in terms of energy conservation and positivity conservation. One notices that if the box-splines conserve better the mass, the hermite element conserves better the norms.  
 
 
+
+\begin{figure}[h!]
+	\includegraphics[width=0.35\textwidth]{figures/oscillations_hermite.png}
+	\includegraphics[width=0.35\textwidth]{figures/oscillations_splines.png}
+	\caption{Comparaison of oscillations: on the left with Hermite Finite Elements and on the right with splines}
+\end{figure}
+\textcolor{red}{commenter les oscillations}
 %%-----------------------------
 %% Conclusion
 %%-----------------------------
