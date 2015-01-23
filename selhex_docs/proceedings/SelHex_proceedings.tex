@@ -31,7 +31,8 @@
 \author{Michel Mehrenberger} \address{IRMA, Universit\'e de Strasbourg, 7, rue Ren\'e Descartes, 67084 Strasbourg \& INRIA-Nancy Grand-Est, projet TONUS, 
 \email{mehrenbe@math.unistra.fr}}
 \author{Laura S. Mendoza} \address{Max-Planck-Institut f\"{u}r Plasmaphysik, Boltzmannstr. 2, D-85748 Garching, \email{mela@ipp.mpg.de\ \&\ sonnen@ipp.mpg.de}} 
-\author{Charles Prouveur}\address{...} %TODO
+\author{Charles Prouveur}\address{Universit\'e de Lyon, UMR5208, Institut Camille Jordan,
+43 boulevard 11 novembre 1918, F-69622 Villeurbanne cedex,  FRANCE}
 \author{Eric Sonnendr\"{u}cker}\sameaddress{2}
 %
 %\dedicated{\it Dedicated to Maurice Dupont} %if necessary
@@ -772,9 +773,6 @@ Both intepolation methods give similar results in terms of energy conservation a
 %%-----------------------------
 \section{Conclusion}
 \label{sec:conclusion}
-
-In this paper we presented two Semi-Lagrangian schemes adapted to an hexagonal mesh. The strategies differentiated in the type of interpolation used: on the one hand, we developed an interpolation method based on box-splines --spline basis specific to the hexagonal mesh-- and on the other hand, we introduced an interpolation method based on Hermite Finite Elements. Furthermore, we presented a poisson solver based on finite differences on this mesh. The first simulations were made on the circular advection test case. This allowed to compare the order of the methods, as well as the efficiency. The splines approached seemed to be more accurate for finer grids, but a higher cost. Next, we simulated the 2D guiding-center model. The two method yield comparable results. Some minor differences could be observable when studying the mass conservation (where box-splines gave better results) and the conservation of the norms (where hermite finite elements yield more accurate solutions). Lastly, when comparing the densities, we perceived some noise, specially when working with Finite Elements.
-
 
 %%-----------------------------
 %%      your bibliography
