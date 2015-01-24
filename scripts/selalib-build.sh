@@ -21,13 +21,7 @@ fi
 if [[ "$HOST" = *-navaro* ]]; then
    WORKDIR="/tmp"
    HOMEDIR="${HOME}/Codes"
-elif [[ "$HOST" =~ "vpn-irma" ]]; then
-   HOMEDIR="${HOME}/Codes"
-   WORKDIR="/tmp"
-elif [[ "$HOST" =~ "doct" || "$HOST" =~ "reserve" ]]; then
-   WORKDIR="/Users/irma"
-   HOMEDIR="/Users/irma"
-elif [[ "$HOST" = irma-gpu3 ]]; then
+elif [[ "$HOST" = irma-gpu* ]]; then
    WORKDIR="/scratch/navaro"
    HOMEDIR=${HOME}
 elif [[ "$HOST" = *irma-* ]]; then
@@ -74,7 +68,7 @@ cd build; {
 ${CMAKE} \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DHDF5_PARALLEL_ENABLED=ON \
-	${HOMEDIR}/selalib/prototype/src 
+	${HOMEDIR}/selalib/src 
 make NightlyUpdate
 make NightlyConfigure
 make NightlyBuild
