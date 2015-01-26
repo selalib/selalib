@@ -30,10 +30,11 @@
 %
 \author{Michel Mehrenberger} \address{IRMA, Universit\'e de Strasbourg, 7, rue Ren\'e Descartes, 67084 Strasbourg \& INRIA-Nancy Grand-Est, projet TONUS, 
 \email{mehrenbe@math.unistra.fr}}
-\author{Laura S. Mendoza} \address{Max-Planck-Institut f\"{u}r Plasmaphysik, Boltzmannstr. 2, D-85748 Garching, \email{mela@ipp.mpg.de\ \&\ sonnen@ipp.mpg.de}} 
+\author{Laura S. Mendoza} \address{Max-Planck-Institut f\"{u}r Plasmaphysik, Boltzmannstr. 2, D-85748 Garching bei M\"unchen, Germany. \email{mela@ipp.mpg.de\ \&\ sonnen@ipp.mpg.de}} 
+\secondaddress{Technische Universit\"at M\"unchen, Boltzmannstr. 3, D-85748 Garching, Germany.}
 \author{Charles Prouveur}\address{Universit\'e de Lyon, UMR5208, Institut Camille Jordan,
 43 boulevard 11 novembre 1918, F-69622 Villeurbanne cedex,  FRANCE}
-\author{Eric Sonnendr\"{u}cker}\sameaddress{2}
+\author{Eric Sonnendr\"{u}cker}\sameaddress{2,3}
 %
 %\dedicated{\it Dedicated to Maurice Dupont} %if necessary
 %
@@ -49,7 +50,7 @@ This paper introduces a Semi-Lagrangian solver for the Vlasov-Poisson equation o
 
 %% French version ............
 \begin{resume} 
-Dans cet article nous introduisons un solveur semi-Lagrangien pour l'\'equation de Vlasov-Poisson sur un maillage hexagonal r\'egulier. Ce dernier est compos\'e de triangles \'equilat\'eraux, ainsi il ne pr\'esente aucune singularit\'e, contrairement au maillage polaire. Nous nous concentrons ici sur le mod\`ele centre-guide. \`A cette fin nous avons d\'evelopp\'e un solveur de l'\'equation de Poisson pour maillage hexagonal. Au regard de l'interpolation, nous comparons les r\'esultats obtenus avec des \'el\'ements finis d'Hermite et des box-splines. \textcolor{blue}{Chaque m\'ethode d'interpolation est donc adapt\'ee au maillage.}  \`A l'avenir, ce code sera adapt\'e \`a des g\'eom\'etries et mod\`eles plus complexes.  
+Dans cet article nous introduisons un solveur semi-Lagrangien pour l'\'equation de Vlasov-Poisson sur un maillage hexagonal r\'egulier. Ce dernier est compos\'e de triangles \'equilat\'eraux, ainsi il ne pr\'esente aucune singularit\'e, contrairement au maillage polaire. Nous nous concentrons ici sur le mod\`ele centre-guide. \`A cette fin nous avons d\'evelopp\'e un solveur de l'\'equation de Poisson pour maillage hexagonal. Au regard de l'interpolation, nous comparons les r\'esultats obtenus avec des \'el\'ements finis d'Hermite et des box-splines. \textcolor{blue}{Chaque m\'ethode d'interpolation est donc adapt\'ee au maillage.}  Dans l'avenir, ce code sera adapt\'e \`a des g\'eom\'etries et mod\`eles plus complexes.  
 \end{resume}
 
 
@@ -74,7 +75,7 @@ Additionally, such a mesh has a clear structure with three privileged directions
 
 The disadvantages previously mentioned, are not present when dealing with the simple and straightforward hexagonal mesh. Regarding the computational efficiency, all our simulations include an analysis and comparison with more common methods. Lastly, we suggest this scheme as an introduction to treat more complex geometries. Indeed by a simple mapping it will be easy to work with curvilinear coordinates.
 
-In this work, we focus on adapting the Semi-Lagrangian scheme to this hexagonal mesh. \textcolor{blue}{The guiding-center model is considered}. This scheme consists basically of two steps: computing the characteristics' origins and interpolating on these points. For the latter, we compare two different approaches: one using box-splines and the second approach using Hermite Finite Elements. Both interpolation methods, as well as the mesh, are presented in section~\ref{sec:interpolation}. In section~\ref{sec:poisson_eqn}, we present a Poisson solver adapted to the hexagonal mesh. We present a guiding-center approximation of the 2D Vlasov Poisson system\cite{Golse1998865}, and the Semi-Lagrangian scheme to solve it, on section~\ref{sec:BSL_scheme}. Finally, on section~\ref{sec:results} we compare the results of the scheme using box splines with the ones using Hermite finite elements, we also compare them to more traditional meshes, such as the polar mesh. Besides the guiding-center model, different advection models have been simulated in this section.
+In this work, we focus on adapting the Semi-Lagrangian scheme to this hexagonal mesh. \textcolor{blue}{The guiding-center model is considered}. This scheme consists basically of two steps: computing the characteristics' origins and interpolating at these points. For the latter, we compare two different approaches: one using box-splines and the second approach using Hermite Finite Elements. Both interpolation methods, as well as the mesh, are presented in section~\ref{sec:interpolation}. In section~\ref{sec:poisson_eqn}, we present a Poisson solver adapted to the hexagonal mesh. We present a guiding-center approximation of the 2D Vlasov Poisson system\cite{Golse1998865}, and the Semi-Lagrangian scheme to solve it, in section~\ref{sec:BSL_scheme}. Finally, in section~\ref{sec:results} we compare the results of the scheme using box splines with the ones using Hermite finite elements, we also compare them to more traditional meshes, such as the polar mesh. Besides the guiding-center model, different advection models have been simulated in this section.
 
 
 %%-----------------------------
@@ -96,7 +97,7 @@ The hexagonal mesh is obtained by tiling a regular hexagon into equilateral tria
 		\end{pmatrix}
 \end{equation}
 
-The 2D lattice sites are obtained by the product $\mathbf{Rk}$ where $\mathbf{R} = [\mathbf{r_1 r_2}]$ and $\mathbf{k} = [k_1, k_2]^T \in \xZ$.  To obtain exactly the mesh as in Figure \ref{fig:hexmesh}, we need to define a few extra parameters : an origin -- denoted $P_0(x_0, y_0)$, a radius $L$ which is the distance between the origin and an external node and the number of cells $N_c$ on an edge of the exterior hexagon (or in a demi-diagonal).
+The 2D lattice sites are obtained by the product $\mathbf{Rk}$ where $\mathbf{R} = [\mathbf{r_1 r_2}]$ and $\mathbf{k} = [k_1, k_2]^T \in \xZ$.  To obtain exactly the mesh as in Figure \ref{fig:hexmesh}, we need to define a few extra parameters : an origin -- denoted $P_0(x_0, y_0)$, a radius $L$ which is the distance between the origin and an external node and the number of cells $N_c$ on any radius.
 
 
 \begin{figure}[h!]
@@ -159,12 +160,12 @@ Besides the fact that the hexagonal mesh contains no singularities, its regulari
 %%-----------------------------
 \subsection{Box Splines quasi-interpolation}
 
-There are mainly two splines families that take advantage of the geometry's properties : hex-splines and the three directional box-splines. For a detailed comparison between these two types of splines we will refer to \cite{Condat2007}. Based on the latter, we have chosen to use box splines, as the results are more stable. And lastly, also based on the previously cited paper, we decide to use a quasi-interpolation method.
+There are mainly two splines' families that take advantage of the geometry's properties : hex-splines and the three directional box-splines. For a detailed comparison between these two types of splines we will refer to \cite{Condat2007}. Based on the latter, we have chosen to use box splines, as the results are more stable. And lastly, also based on the previously cited paper, we decide to use a quasi-interpolation method.
 
 %%..............................
 \subsubsection{Box-Splines: General Definition}
 
-Box-splines are a generalisation of the more known spline's family: B-splines. They are also piecewise polynomial and they share some properties, such as: compact support, positiveness, symmetry and partition of unity. But, unlike B-splines, box-splines are defined from a generator matrix $\Xi$. Therefore, to construct them on the hexagonal lattice, we will use the generator vectors $\mathbf{r_1, r_2, r_3}$. The general definition is \cite{Boor1993, Condat2006}:
+Box-splines are a generalisation of the more known splines' family: B-splines. They are also piecewise polynomial and they share some properties, such as: compact support, positiveness, symmetry and partition of unity. But, unlike B-splines, box-splines are defined from a generator matrix $\Xi$. Therefore, to construct them on the hexagonal lattice, we will use the generator vectors $\mathbf{r_1, r_2, r_3}$. The general definition is \cite{Boor1993, Condat2006}:
 
 \begin{dfntn}[Box-splines]
 
@@ -186,10 +187,10 @@ Box-splines are a generalisation of the more known spline's family: B-splines. T
 
 \end{dfntn}
 
-\rmrk The box-splines can have different degree on each direction. Thus, it exists different definitions on the degree. We will adopt the definition below.
+\rmrk The box-splines can have different degrees in each direction. Thus, there are different definitions of the degree. We will adopt the definition below.
 
 \begin{dfntn}[Degree of a Box-spline]
-Let $\Xi$ be a $dxd$ matrix with non-null columns in $\xR^d$. The column vectors of $\Xi$ form a generating basis of $\xR^d$ and linearly independent. Then, the box-spline of degree $N$ of generating matrix $\Xi$, $\chi^N_\Xi$, is the box-spline associated to $\Xi$, where all the generating vectors have multiplicity $N$. This yields, that $\chi^N_\Xi$ is piecewise polynomial of degree $N$.
+Let $\Xi$ be a $d \times d$ matrix with non-null columns in $\xR^d$. The column vectors of $\Xi$ form a generating basis of $\xR^d$ and linearly independent. Then, the box-spline of degree $N$ of generating matrix $\Xi$, $\chi^N_\Xi$, is the box-spline associated to $\Xi$, where all the generating vectors have multiplicity $N$. This yields, that $\chi^N_\Xi$ is piecewise polynomial of degree $N$.
 
 
 \end{dfntn}
@@ -285,6 +286,8 @@ For this part we define the indices i, j and k with the following relations:
 \begin{equation*}
 j=i[3]+1 ~,~ k=j[3]+1.
 \end{equation*}  
+
+\textcolor{red}{c'est quoi i[3], j[3] ?}
 
 Several elements have been tested here:
 The Z2 and Z3 Zienkiewicz elements, the Hsieh-Clough-Tocher reduced (HCT-r) and complete (HCT-c), and the Ganev-Dimitrov element. These elements can be found in \cite{z} and \cite{b1} . Here we show specifically how the hexagonal structure simplifies the interpolation with these elements.\\
@@ -498,10 +501,9 @@ The Ganev-Dimitrov element is of order 4 and uses 15 degrees of freedom which ar
 %%-----------------------------
 %% Poisson 
 %%-----------------------------
-\section{The Poisson equation}
+\section{The Poisson finite-difference solver}
 \label{sec:poisson_eqn}
 %%-----------------------------
-\subsection{Finite Differences Solver}
 
 %\subection{Solving the Poisson equation on an hexagonal mesh}
 
@@ -540,8 +542,8 @@ Considering the gain of two order of precision at such little cost, we have used
 \label{sec:BSL_scheme}
 
 %%-----------------------------
-When solving a Vlasov equation, one usually think in Lagrangian methods such as PIC. Unfortunately, the drawback of these schemes is that it's vulnerable to numerical noise (\textcolor{red}{see [look for a ref]}). Furthermore, this noise is unpredictable as it is the statistical error of a Monte Carlo integration. Looking for other possible schemes to solve the Vlasov equation, one might think of Eulerian methods, where the operators 
-are discretized. The downside of this type of method is the dissipation (\textcolor{red}{see [look for a ref]}).
+When solving a Vlasov equation, one usually think in Lagrangian methods such as PIC. Unfortunately, the drawback of these schemes is that it's vulnerable to numerical noise. Furthermore, this noise is unpredictable as it is the statistical error of a Monte Carlo integration. Looking for other possible schemes to solve the Vlasov equation, one might think of Eulerian methods, where the operators 
+are discretized. The downside of this type of method is the dissipation.
 
 With the intention of neglecting the pitfalls of the method, the Semi-Lagrangian method was introduced, first in numerical weather prediction, but since then, it has been introduced for plasma simulations \cite{sonnendrucker:inria-00073296, Cheng1976330} and it's getting more and more popular. This scheme consists on fixing an Eulerian grid in phase-space and following the trajectory of the equation's characteristics in time to compute the evolution of the distribution function. The advantages of this scheme are the possibility of taking large time steps and its stability. However, it is important to note that it's very computationally costly to go to high dimensions. Thus, it is typically used with 1D and 2D models. Lastly, we can point out that there are many types of Semi-Lagrangian solvers (\emph{e.g.} depending on the trajectories: Backward or Forward;  depending on the elements on which is based: grid's point, integrated cell..). We have chosen here to use the classical Backward Semi-Lagrangian method. 
 
@@ -617,7 +619,7 @@ The initial distribution function is only known on the mesh points, and the char
 \begin{figure}[h!]
 	\label{fig:SL}
 	\centering
-	\includegraphics[scale=0.5]{figures/SL.png} 
+	\includegraphics[scale=0.5]{figures/SL_hex.png} 
 	\caption{Semi-Lagrangian step: Tracing back characteristics.}
 \end{figure}
 
@@ -754,6 +756,7 @@ Both intepolation methods give similar results in terms of energy conservation a
 %%-----------------------------
 \section{Conclusion}
 \label{sec:conclusion}
+In this paper we presented two Semi-Lagrangian schemes adapted to an hexagonal mesh. The strategies differentiated in the type of interpolation used: on the one hand, we developed an interpolation method based on box-splines --spline basis specific to the hexagonal mesh-- and on the other hand, we introduced an interpolation method based on Hermite Finite Elements. Furthermore, we presented a poisson solver based on finite differences on this mesh. The first simulations were made on the circular advection test case. This allowed to compare the order of the methods, as well as the efficiency. The splines approached seemed to be more accurate for finer grids, but a higher cost. Next, we simulated the 2D guiding-center model. The two method yield comparable results. Some minor differences could be observable when studying the mass conservation (where box-splines gave better results) and the conservation of the norms (where hermite finite elements yield more accurate solutions). Lastly, when comparing the densities, we perceived some noise, specially when working with Finite Elements.
 
 %%-----------------------------
 %%      your bibliography
