@@ -98,7 +98,7 @@ do num_cells = cells_min, cells_max, cells_stp
    SLL_ALLOCATE(x2(mesh%num_pts_tot),ierr)
    SLL_ALLOCATE(x1_char(mesh%num_pts_tot),ierr)
    SLL_ALLOCATE(x2_char(mesh%num_pts_tot),ierr)
-   if (WRITE_SPLINES) then
+   if (WRITE_SPLINES.eq.1) then
       SLL_ALLOCATE(chi1(mesh%num_pts_tot),ierr)
       SLL_ALLOCATE(chi2(mesh%num_pts_tot),ierr)
       SLL_ALLOCATE(chi3(mesh%num_pts_tot),ierr)
@@ -160,7 +160,7 @@ do num_cells = cells_min, cells_max, cells_stp
    do i=1, mesh%num_pts_tot
       x1_basis = change_basis_x1(spline, x1(i), x2(i))
       x2_basis = change_basis_x2(spline, x1(i), x2(i))
-      if (WRITE_SPLINES) then
+      if (WRITE_SPLINES.eq.1) then
          chi1(i) = chi_gen_val(x1_basis, x2_basis, 1)
          chi2(i) = chi_gen_val(x1_basis, x2_basis, 2)
          chi3(i) = chi_gen_val(x1_basis, x2_basis, 3)
@@ -334,7 +334,7 @@ do num_cells = cells_min, cells_max, cells_stp
    end if
 
 
-   if (WRITE_SPLINES) then
+   if (WRITE_SPLINES.eq.1) then
       sum_chi = sum(chi1)
       print*, "sum_chi1 = ", sum_chi
       sum_chi = sum(chi2)
@@ -352,7 +352,7 @@ do num_cells = cells_min, cells_max, cells_stp
    SLL_DEALLOCATE_ARRAY(x1_char,ierr)
    SLL_DEALLOCATE_ARRAY(x2_char,ierr)
    SLL_DEALLOCATE(spline,ierr)
-   if (WRITE_SPLINES) then
+   if (WRITE_SPLINES.eq.1) then
       SLL_DEALLOCATE_ARRAY(chi1,ierr)
       SLL_DEALLOCATE_ARRAY(chi2,ierr)
       SLL_DEALLOCATE_ARRAY(chi3,ierr)
