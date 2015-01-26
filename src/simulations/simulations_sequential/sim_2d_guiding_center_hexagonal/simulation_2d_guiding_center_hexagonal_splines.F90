@@ -110,7 +110,7 @@ program sim2d_gc_hex_splines
   cells_stp = 20
   ! Initial function :
   epsilon = 0.001_f64
-  ! Time :
+  ! Time iterations:
   tmax  = 20._f64
   dt    = 0.1_f64
   ! Interpolation
@@ -132,6 +132,7 @@ program sim2d_gc_hex_splines
      read(input_file, geometry)
      read(input_file, initial_function)
      read(input_file, time_iterations)
+     read(input_file, interpolation)
      ! read(input_file, advector)
      ! read(input_file, poisson)
      close(input_file)

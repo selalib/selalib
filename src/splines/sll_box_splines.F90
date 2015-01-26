@@ -149,9 +149,11 @@ contains  ! ****************************************************************
     sll_int32, intent(in)                         :: deg
     sll_int32  :: num_pts_tot
     sll_int32  :: k1_ref, k2_ref
-    sll_int32  :: i,k
+    sll_int32  :: k
+    sll_int32  :: i
     sll_int32  :: nei
     sll_int32  :: num_pts_radius
+    sll_real64 :: filter
 
     num_pts_tot = spline%mesh%num_pts_tot
     ! we will work on a radius of 'deg' cells
@@ -167,10 +169,18 @@ contains  ! ****************************************************************
        ! We don't need to fo through all points, just till a certain radius
        ! which depends on the degree of the spline we are evaluating
        do k = 1, num_pts_radius
+          if (deg .le. 2) then
+             filter = pre_filter_pfir(spline%mesh, k, deg)
+          elseif (deg .eq. 3) then
+             filter = pre_filter_int(spline%mesh, k, deg)
+          else
+             filter = 0._f64
+             print *, "Error in compute_box_spline_2d_diri: Filter not yet defined"
+             STOP
+          end if
           nei = spline%mesh%local_hex_to_global(k1_ref, k2_ref, k)
           if ((nei .lt. num_pts_tot).and.(nei .gt. 0)) then
-             spline%coeffs(i) = spline%coeffs(i) + data(nei) * &
-                                pre_filter_pfir(spline%mesh, k, deg)
+             spline%coeffs(i) = spline%coeffs(i) + data(nei) * filter
           else
              ! Boundary conditions (BC) to be treated here :
              ! With dirichlet boundary conditions data(out_of_domain) = 0
@@ -544,7 +554,7 @@ contains  ! ****************************************************************
              !! TREAT HERE BC
              ! TODO @LM
              if (spline%bc_type .eq. SLL_DIRICHLET) then
-                val = val
+                val = val !no update
                 ind = spline%mesh%hex_to_global(k1_asso, k2_asso)
              else
                 print *, "Error : Boundary condition type not yet implemented"

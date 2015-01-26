@@ -550,28 +550,30 @@ With the intention of neglecting the pitfalls of the method, the Semi-Lagrangian
 We consider here a guiding-center approximation of the 2D Vlasov-Poisson system, where the parallel velocity has been neglected and the magnetic field is set to $B = \begin{pmatrix} 0 & 0 & 1 \end{pmatrix}^T$. Furthermore, we consider the model in 2D in space and 1D in time. The reduced gyrokinetic model obtained\cite{filbet:hal-01068223} is
 
 \begin{subnumcases}{\label{eqn:guiding_center}}
-	\dfrac{\partial f}{\partial t} + E_{\perp} \cdot \nabla_{\mathbf{x}} f(\mathbf{x}, t) = 0\label{eqn:gc_vlasov}\\
-	- \Delta \phi = \nabla \cdot E = f(\mathbf{x}, t) \label{eqn:gc_poisson}
+	\dfrac{\partial \rho}{\partial t} + E_{\perp} \cdot \nabla_{\mathbf{x}} \rho(\mathbf{x}, t) = 0\label{eqn:gc_vlasov}\\
+	- \Delta \phi = \nabla \cdot E = \rho(\mathbf{x}, t) \label{eqn:gc_poisson}
 \end{subnumcases}
 
 with $E = (E_x, E_y) = - \nabla \phi $ and $E_\perp = (-E_y, E_x)$.
 
-We recall that this system verifies the following properties:
-
+By neglecting the effect of boundary conditions, the  guiding center model verifies the following properties:
 \begin{enumerate}
-	\item Maximum principle (if $f$ is smooth):
-		\begin{equation}
-		0 \leq f(\mathbf{x},t) \leq \max(f(\mathbf{x}, 0))
-		\end{equation}
-	\item Energy conservation: $\partial_t \mathcal{E} (t) = 0$, where
-		\begin{equation}
-		\mathcal{E} (t) = \int_\Omega \mid \partial_x \phi \mid^2 + 
-		 	\mid \partial_y \phi \mid^2 \mathrm{d} \mathbf{x}
-		\end{equation}
-	\item Mass conservation:
-		\begin{equation}
-		\mathcal{M} (t) = \int_\Omega f(\mathbf{x}, t) \mathrm{d}\mathbf{x}
-		\end{equation}
+	\item Positivity of density $\rho$
+ 	\begin{equation*}
+	 	 0\leq\rho(t,x,y).  
+ 	\end{equation*}
+	\item Mass conservation
+	\begin{equation*}
+		\frac{d}{dt}\left(\int_{D}\rho dx dy\right)=0.
+	\end{equation*}
+	\item $L^p$ norm conservation, for $1\leq p\leq\infty$
+	\begin{equation*}
+		\frac{d}{dt}||\rho||_{L^p(D)}=0.
+	\end{equation*}
+	\item Energy conservation
+	\begin{equation*}
+		\frac{d}{dt}\left(\int_{D}|\nabla\phi|^2dx dy\right)=0.
+	\end{equation*}
 \end{enumerate}
 
 
@@ -681,36 +683,15 @@ Figure~\ref{fig:circ_performance} we can see that the level of performance of al
 \subsection{Guiding-center}
 
 
-The guiding center model describes a highly magnetized plasma.
-\begin{equation}
-\left\{
-\begin{array}{l}
- \frac{\partial \rho}{\partial t}+\mathbf{A}\cdot\nabla\rho=0,\\[3mm]
- -\Delta\phi=\rho.
-\end{array}
-\right.
-   \label{eq:guiding_center}
-  \end{equation}
-where the velocity $\mathbf{A} = (-\partial_y\phi, \partial_x\phi)$.
-By neglecting the effect of boundary conditions, the  guiding center model verifies the following properties:
-\begin{enumerate}
- \item Positivity of density $\rho$
- \begin{equation*}
-  0\leq\rho(t,x,y).  
- \end{equation*}
- \item Mass conservation
- \begin{equation*}
-  \frac{d}{dt}\left(\int_{D}\rho dx dy\right)=0.
- \end{equation*}
- \item $L^p$ norm conservation, for $1\leq p\leq\infty$
- \begin{equation*}
-  \frac{d}{dt}||\rho||_{L^p(D)}=0.
- \end{equation*}
-\item Energy conservation
-\begin{equation*}
- \frac{d}{dt}\left(\int_{D}|\nabla\phi|^2dx dy\right)=0.
-\end{equation*}
-\end{enumerate}
+We recall the guiding-center model
+
+\begin{subnumcases}{\label{eqn:guiding_center}}
+	\dfrac{\partial \rho}{\partial t} + E_{\perp} \cdot \nabla_{\mathbf{x}} \rho(\mathbf{x}, t) = 0\label{eqn:gc_vlasov}\\
+	- \Delta \phi = \nabla \cdot E = \rho(\mathbf{x}, t) \label{eqn:gc_poisson}
+\end{subnumcases}
+
+with $E = (E_x, E_y) = - \nabla \phi $ and $E_\perp = (-E_y, E_x)$.
+
 
 We chose here to study the diocotron instability \cite{madaule:hal-00841504}.
 The initial density is given by :

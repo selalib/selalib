@@ -18,7 +18,7 @@ sll_int32    :: cells_min
 sll_int32    :: cells_max
 sll_int32    :: cells_stp
 sll_int32    :: i
-sll_int32    :: deg = 1
+sll_int32    :: deg = 3
 sll_int32    :: nloops
 sll_int32    :: ierr
 ! initial distribution
@@ -60,7 +60,7 @@ sll_int32    :: k2_error
 ! Output variables
 sll_int32    :: WRITE_TIME_ERROR = 1
 sll_int32    :: WRITE_TIME_DIST = 1
-sll_int32    :: WRITE_SPLINES = 1
+sll_int32    :: WRITE_SPLINES = 0
 sll_int32    :: WRITE_CELLS_ERROR = 1
 sll_int32    :: WRITE_TIME_EFF = 1
 character(len = 50) :: filename
@@ -74,8 +74,8 @@ character(len = 4)  :: filenum
 sll_real64              :: sum_chi
 sum_chi = 0._f64
 
-cells_min = 20
-cells_max = 160
+cells_min = 40
+cells_max = 40
 cells_stp = 20
 do num_cells = cells_min, cells_max, cells_stp
 
@@ -98,9 +98,11 @@ do num_cells = cells_min, cells_max, cells_stp
    SLL_ALLOCATE(x2(mesh%num_pts_tot),ierr)
    SLL_ALLOCATE(x1_char(mesh%num_pts_tot),ierr)
    SLL_ALLOCATE(x2_char(mesh%num_pts_tot),ierr)
-   SLL_ALLOCATE(chi1(mesh%num_pts_tot),ierr)
-   SLL_ALLOCATE(chi2(mesh%num_pts_tot),ierr)
-   SLL_ALLOCATE(chi3(mesh%num_pts_tot),ierr)
+   if (WRITE_SPLINES) then
+      SLL_ALLOCATE(chi1(mesh%num_pts_tot),ierr)
+      SLL_ALLOCATE(chi2(mesh%num_pts_tot),ierr)
+      SLL_ALLOCATE(chi3(mesh%num_pts_tot),ierr)
+   end if
 
    ! Distribution initialization
    ! Gaussian parameters :
@@ -158,9 +160,11 @@ do num_cells = cells_min, cells_max, cells_stp
    do i=1, mesh%num_pts_tot
       x1_basis = change_basis_x1(spline, x1(i), x2(i))
       x2_basis = change_basis_x2(spline, x1(i), x2(i))
-      chi1(i) = chi_gen_val(x1_basis, x2_basis, 1)
-      chi2(i) = chi_gen_val(x1_basis, x2_basis, 2)
-      chi3(i) = chi_gen_val(x1_basis, x2_basis, 3)
+      if (WRITE_SPLINES) then
+         chi1(i) = chi_gen_val(x1_basis, x2_basis, 1)
+         chi2(i) = chi_gen_val(x1_basis, x2_basis, 2)
+         chi3(i) = chi_gen_val(x1_basis, x2_basis, 3)
+      end if
    end do
 
    call cpu_time(t_init)
@@ -330,12 +334,14 @@ do num_cells = cells_min, cells_max, cells_stp
    end if
 
 
-   sum_chi = sum(chi1)
-   print*, "sum_chi1 = ", sum_chi
-   sum_chi = sum(chi2)
-   print*, "sum_chi2 = ", sum_chi
-   sum_chi = sum(chi3)
-   print*, "sum_chi3 = ", sum_chi
+   if (WRITE_SPLINES) then
+      sum_chi = sum(chi1)
+      print*, "sum_chi1 = ", sum_chi
+      sum_chi = sum(chi2)
+      print*, "sum_chi2 = ", sum_chi
+      sum_chi = sum(chi3)
+      print*, "sum_chi3 = ", sum_chi
+   end if
 
    SLL_DEALLOCATE_ARRAY(spline%coeffs,ierr)
    SLL_DEALLOCATE_ARRAY(f_init,ierr)
@@ -346,10 +352,11 @@ do num_cells = cells_min, cells_max, cells_stp
    SLL_DEALLOCATE_ARRAY(x1_char,ierr)
    SLL_DEALLOCATE_ARRAY(x2_char,ierr)
    SLL_DEALLOCATE(spline,ierr)
-   SLL_DEALLOCATE_ARRAY(chi1,ierr)
-   SLL_DEALLOCATE_ARRAY(chi2,ierr)
-   SLL_DEALLOCATE_ARRAY(chi3,ierr)
-
+   if (WRITE_SPLINES) then
+      SLL_DEALLOCATE_ARRAY(chi1,ierr)
+      SLL_DEALLOCATE_ARRAY(chi2,ierr)
+      SLL_DEALLOCATE_ARRAY(chi3,ierr)
+   end if
    call delete(mesh)
 
 end do
