@@ -17,7 +17,7 @@ use sll_vlasov2d_base
 implicit none
 private
 public :: initialize, free, densite_courantx, &
-          advection_x1, advection_x2
+          advection_x1, advection_x, advection_v
 
 type, public, extends(vlasov2d_base) :: vlasov2d_spectral_charge
 
@@ -34,13 +34,11 @@ type, public, extends(vlasov2d_base) :: vlasov2d_spectral_charge
   sll_real64, dimension(:,:),  pointer     :: f_star
   sll_real64, dimension(:,:),  pointer     :: ft_star
 
-  class(sll_interpolator_1d_base), pointer :: interp_x2
+  class(sll_interpolator_1d_base), pointer :: interp_x
+  class(sll_interpolator_1d_base), pointer :: interp_v
 
 end type vlasov2d_spectral_charge
 
-sll_int32, private :: i, j
-sll_int32, private :: global_indices(2), gi, gj
-sll_int32, private :: ierr
 
 include 'fftw3.f03'
 
@@ -54,7 +52,8 @@ end interface free
 contains
 
  subroutine initialize_vlasov2d_spectral_charge(this,      &
-                                                interp_x2, &
+                                                interp_x, &
+                                                interp_v, &
                                                 error)
 
   use sll_hdf5_io_serial
@@ -66,10 +65,13 @@ contains
   fftw_int    :: sz_tmp_x
   sll_int32   :: psize, prank, comm
   sll_int32   :: loc_sz_i,loc_sz_j
+  sll_int32   :: i
 
-  class(sll_interpolator_1d_base), target :: interp_x2
+  class(sll_interpolator_1d_base), target :: interp_x
+  class(sll_interpolator_1d_base), target :: interp_v
 
-  this%interp_x2 => interp_x2
+  this%interp_x => interp_x
+  this%interp_v => interp_v
 
   call initialize_vlasov2d_base(this)
 
@@ -102,21 +104,27 @@ contains
   this%kx(1) = 1.0_f64
 
   call compute_local_sizes(this%layout_x,loc_sz_i,loc_sz_j)
-  SLL_CLEAR_ALLOCATE(this%f_star(1:loc_sz_i,1:loc_sz_j),ierr)
+  SLL_CLEAR_ALLOCATE(this%f_star(1:loc_sz_i,1:loc_sz_j),error)
+
+  SLL_CLEAR_ALLOCATE(this%ex( 1:loc_sz_i),error)
+  SLL_CLEAR_ALLOCATE(this%jx( 1:loc_sz_i),error)
+  SLL_CLEAR_ALLOCATE(this%rho(1:loc_sz_i),error)
 
   call compute_local_sizes(this%layout_v,loc_sz_i,loc_sz_j)
-  SLL_CLEAR_ALLOCATE(this%ft_star(1:loc_sz_i,1:loc_sz_j),ierr)
+  SLL_CLEAR_ALLOCATE(this%ft_star(1:loc_sz_i,1:loc_sz_j),error)
+
 
  end subroutine initialize_vlasov2d_spectral_charge
 
  subroutine free_vlasov2d_spectral_charge(this)
 
   class(vlasov2d_spectral_charge) :: this
+  sll_int32                       :: error
 
   call sll_delete(this%layout_x)
   call sll_delete(this%layout_v)
-  SLL_DEALLOCATE_ARRAY(this%f, ierr)
-  SLL_DEALLOCATE_ARRAY(this%ft, ierr)
+  SLL_DEALLOCATE_ARRAY(this%f,error) 
+  SLL_DEALLOCATE_ARRAY(this%ft, error)
 
 #ifdef FFTW_F2003
   if (c_associated(this%p_tmp_x)) call fftw_free(this%p_tmp_x)
@@ -135,6 +143,9 @@ contains
   sll_real64 :: vx, x2_min, delta_x2
   sll_int32  :: loc_sz_i,loc_sz_j
   sll_int32  :: nc_x1
+  sll_int32  :: j
+  sll_int32  :: gj
+  sll_int32  :: global_indices(2)
 
   ! verifier que la transposition est a jours
   SLL_ASSERT( .not. this%transposed) 
@@ -183,28 +194,64 @@ contains
 
  end subroutine advection_x1
 
- subroutine advection_x2(this,dt)
+ subroutine advection_x(this,dt)
 
   class(vlasov2d_spectral_charge),intent(inout) :: this
-  sll_real64, intent(in) :: dt
-  sll_real64             :: alpha
-  sll_int32              :: loc_sz_i,loc_sz_j
+  sll_real64, intent(in)                        :: dt
+  sll_real64                                    :: alpha
+  sll_int32                                     :: loc_sz_i
+  sll_int32                                     :: loc_sz_j
+  sll_int32                                     :: j
+  sll_int32                                     :: gj
+  sll_int32                                     :: global_indices(2)
 
   SLL_ASSERT( .not. this%transposed)
 
   call compute_local_sizes(this%layout_x,loc_sz_i,loc_sz_j)
 
-  do i=1,loc_sz_i
+  do j=1,loc_sz_j
 
-    global_indices = local_to_global(this%layout_x,(/1,1/)) 
+    global_indices = local_to_global(this%layout_x,(/1,j/)) 
     gj = global_indices(2)
-    alpha = (this%eta2_min +(gj-1)*this%delta_eta2)*dt
+    alpha = (this%eta2_min + (gj-1)*this%delta_eta2)*dt
 
-    this%f(i,:) = this%interp_x2%interpolate_array_disp(loc_sz_j,this%f(i,:),alpha)
+    this%f(:,j) = this%interp_x%interpolate_array_disp(loc_sz_i,this%f(:,j),alpha)
 
   end do
 
- end subroutine advection_x2
+ end subroutine advection_x
+
+ subroutine advection_v(this,dt)
+
+  class(vlasov2d_spectral_charge),intent(inout) :: this
+  sll_real64, intent(in)                        :: dt
+  sll_real64                                    :: alpha
+  sll_int32                                     :: loc_sz_i
+  sll_int32                                     :: loc_sz_j
+  sll_int32                                     :: i
+  sll_int32                                     :: gi
+  sll_int32                                     :: global_indices(2)
+
+  SLL_ASSERT(this%transposed)
+
+  call compute_local_sizes(this%layout_v,loc_sz_i,loc_sz_j)
+
+  do i=1,loc_sz_i
+
+    global_indices = local_to_global(this%layout_v,(/i,1/)) 
+    gi = global_indices(1)
+    print*, i, gi, size(this%ex)
+    alpha = this%ex(gi) *dt
+    alpha = 0.0_f64
+    print*, "alpha = ", alpha
+
+    print*, size(this%ft,1), size(this%ft,2)
+    print*, loc_sz_i, loc_sz_j
+    this%ft(i,:) = this%interp_v%interpolate_array_disp(loc_sz_j,this%ft(i,:),alpha)
+
+  end do
+
+ end subroutine advection_v
 
 
  subroutine densite_courantx(this,star)
@@ -221,6 +268,7 @@ contains
    sll_real64, dimension(this%np_eta1) :: locjx
    sll_int32  :: loc_sz_i
    sll_int32  :: loc_sz_j
+   sll_int32  :: i, j, gi, gj, global_indices(2)
 
    if( present(star)) then
       df => this%ft_star
