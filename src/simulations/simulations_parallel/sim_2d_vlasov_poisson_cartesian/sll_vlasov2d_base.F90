@@ -191,6 +191,7 @@ subroutine initialize_vlasov2d_base(this)
  
   call compute_local_sizes(this%layout_x, loc_sz_i,loc_sz_j)        
   SLL_CLEAR_ALLOCATE(this%f(1:loc_sz_i,1:loc_sz_j),ierr)
+
  
   this%layout_v => new_layout_2d( sll_world_collective )
   call initialize_layout_with_distributed_array( &
@@ -236,15 +237,32 @@ subroutine free_vlasov2d_base(this)
 end subroutine free_vlasov2d_base
 
 subroutine compute_charge(this)
-
   class(vlasov2d_base),intent(inout) :: this
-  sll_real64                         :: dvx
 
-  dvx = this%delta_eta2
+   sll_int32                             :: comm
+   sll_real64, dimension(this%np_eta2+1) :: locrho
+   sll_int32                             :: loc_sz_i
+   sll_int32                             :: loc_sz_j
+   sll_int32                             :: gi
+   sll_int32                             :: gj
+   sll_int32                             :: global_indices(2)
+   sll_int32                             :: error
 
-  this%rho = sum(this%f(:,:))*dvx 
+   call compute_local_sizes(this%layout_v,loc_sz_i,loc_sz_j)        
+   
+   locrho = 0.0_f64
+   do i=1,loc_sz_i
+      global_indices = local_to_global(this%layout_v,(/i,1/)) 
+      gi = global_indices(1)
+      gj = global_indices(2)
+      locrho(gi) = sum(this%ft(i,:))*this%delta_eta2 
+   end do
+   this%rho = 0.0_f64
+   comm  = sll_world_collective%comm
+   call mpi_barrier(comm,error)
+   call mpi_allreduce(locrho,this%rho,this%np_eta1,MPI_REAL8,MPI_SUM,comm,error)
 
-end subroutine compute_charge
+ end subroutine compute_charge
 
 subroutine compute_current(this)
 

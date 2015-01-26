@@ -1,7 +1,11 @@
 program vm2d_spectral_charge
 
 #define MPI_MASTER 0
-#include "selalib-mpi.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+#include "sll_utilities.h"
+#include "sll_constants.h"
+#include "sll_interpolators.h"
 
 use init_functions
 use sll_vlasov2d_base
@@ -9,10 +13,13 @@ use sll_vlasov2d_spectral_charge
 use sll_poisson_1d_periodic  
 use sll_module_poisson_1d_periodic_solver
 use sll_module_ampere_1d_pstd
+use sll_collective
+use sll_remapper
 
 implicit none
 
-type(vlasov2d_spectral_charge)                 :: vlasov2d 
+type(vlasov2d_spectral_charge)                 :: vlasov 
+type(sll_cubic_spline_interpolator_1d), target :: spl_x1
 type(sll_cubic_spline_interpolator_1d), target :: spl_x2
 class(sll_poisson_1d_base), pointer            :: poisson
 type(sll_ampere_1d_pstd),   pointer            :: ampere 
@@ -25,6 +32,8 @@ sll_int32  :: prank, comm
 sll_int64  :: psize
 
 sll_int32  :: loc_sz_i, loc_sz_j
+
+sll_int32  :: i
 
 call sll_boot_collective()
 prank = sll_get_collective_rank(sll_world_collective)
@@ -39,143 +48,165 @@ end if
 call initlocal()
 
 !f --> ft
-call transposexv(vlasov2d)
+call transposexv(vlasov)
+call compute_charge(vlasov)
+call poisson%compute_E_from_rho( vlasov%ex, vlasov%rho )
 
-call compute_charge(vlasov2d)
-call poisson%compute_E_from_rho( vlasov2d%ex, vlasov2d%rho )
 
-vlasov2d%exn=vlasov2d%ex
+!vlasov%exn=vlasov%ex
 
 !ft --> f
-call transposevx(vlasov2d)
+call transposevx(vlasov)
+!call advection_x(vlasov, 0.5*vlasov%dt)
 
-mass0=sum(vlasov2d%rho)*vlasov2d%delta_eta1
+call transposexv(vlasov)
+call advection_v(vlasov, vlasov%dt)
+call compute_charge(vlasov)
+do i = 1, vlasov%np_eta1 
+   write(17,*) vlasov%eta1_min+(i-1)*vlasov%delta_eta1, vlasov%rho(i)
+end do
+stop
+
+mass0=sum(vlasov%rho)*vlasov%delta_eta1
 
 print *,'mass init',mass0
 
-do iter=1,vlasov2d%nbiter
+do iter=1,vlasov%nbiter
 
-   if (iter ==1 .or. mod(iter,vlasov2d%fdiag) == 0) then 
-      call write_xmf_file(vlasov2d,iter/vlasov2d%fdiag)
+   if (iter ==1 .or. mod(iter,vlasov%fdiag) == 0) then 
+      call write_xmf_file(vlasov,iter/vlasov%fdiag)
    end if
 
-   if ( vlasov2d%va == VA_VALIS .or. vlasov2d%va == VA_CLASSIC) then 
+   call transposexv(vlasov)
 
-      !f --> ft, current (this%jx,this%jy), ft-->f
-      call transposexv(vlasov2d)
+   call compute_charge(vlasov)
 
-      !compute this%jx, this%jy (zero average) at time tn
-      call compute_current(vlasov2d)
+   call poisson%compute_E_from_rho( vlasov%ex, vlasov%rho )
 
-      call transposevx(vlasov2d)
+   call advection_v(vlasov, vlasov%dt)
 
-      !compute vlasov2d%bz=B^{n+1/2} from Ex^n, Ey^n, B^{n-1/2}  
-      !!!!Attention initialisation B^{-1/2}
+   call transposevx(vlasov)
 
-      !compute vlasov2d%bzn=B^n=0.5(B^{n+1/2}+B^{n-1/2})          
-      vlasov2d%exn=vlasov2d%ex
-      
-      !compute (vlasov2d%ex,vlasov2d%ey)=E^{n+1/2} from vlasov2d%bzn=B^n
-      call solve_ampere(0.5_f64*vlasov2d%dt) 
+   call advection_x(vlasov, vlasov%dt)
 
-      if (vlasov2d%va == VA_CLASSIC) then 
 
-         vlasov2d%jx3=vlasov2d%jx
+!   if ( vlasov%va == VA_VALIS .or. vlasov%va == VA_CLASSIC) then 
+!
+!      !f --> ft, current (this%jx,this%jy), ft-->f
+!      call transposexv(vlasov)
+!
+!      !compute this%jx, this%jy (zero average) at time tn
+!      call compute_current(vlasov)
+!
+!      call transposevx(vlasov)
+!
+!      !compute vlasov%bz=B^{n+1/2} from Ex^n, Ey^n, B^{n-1/2}  
+!      !!!!Attention initialisation B^{-1/2}
+!
+!      !compute vlasov%bzn=B^n=0.5(B^{n+1/2}+B^{n-1/2})          
+!      vlasov%exn=vlasov%ex
+!      
+!      !compute (vlasov%ex,vlasov%ey)=E^{n+1/2} from vlasov%bzn=B^n
+!      call solve_ampere(0.5_f64*vlasov%dt) 
+!
+!      if (vlasov%va == VA_CLASSIC) then 
+!
+!         vlasov%jx3=vlasov%jx
+!
+!      endif
+!
+!   endif
+!
+!   !advec x + compute this%jx1
+!   call advection_x1(vlasov,0.5_f64*vlasov%dt)
+!
+!   !advec y + compute this%jy1
+!   call advection_x2(vlasov,0.5_f64*vlasov%dt)
+!
+!   call transposexv(vlasov)
+!
+!   if (vlasov%va == VA_OLD_FUNCTION) then 
+!
+!      !compute rho^{n+1}
+!      call compute_charge(vlasov)
+!      !compute E^{n+1} via Poisson
+!      call poisson%compute_E_from_rho( vlasov%ex, vlasov%rho )
+!
+!   endif
+!
+!   call transposevx(vlasov)
+!
+!   !copy jy^{**}
+!   call advection_x2(vlasov,0.5_f64*vlasov%dt)
+!   
+!   !copy jx^*
+!   vlasov%jx=vlasov%jx1
+!   !advec x + compute this%jx1
+!   call advection_x1(vlasov,0.5_f64*vlasov%dt)
+!
+!   if (vlasov%va == VA_VALIS) then 
+!
+!      !compute the good jx current
+!      vlasov%jx=0.5_f64*(vlasov%jx+vlasov%jx1)
+!      print *,'sum jx ', &
+!         sum(vlasov%jx)*vlasov%delta_eta1*vlasov%delta_eta2, &
+!         maxval(vlasov%jx)
+!
+!      !compute E^{n+1} from B^{n+1/2}, vlasov%jx, vlasov%jy, E^n
+!      vlasov%ex  = vlasov%exn
+!      
+!      call solve_ampere(vlasov%dt) 
+!
+!      !copy ex and ey at t^n for the next loop
+!      vlasov%exn = vlasov%ex
+!
+!   else if (vlasov%va == VA_CLASSIC) then 
+!
+!      !f --> ft, current (this%jx,this%jy), ft-->f
+!      call transposexv(vlasov)
+!      !compute this%jx, this%jy (zero average) at time tn
+!      call compute_current(vlasov)
+!
+!      call transposevx(vlasov)
+!
+!      !compute J^{n+1/2}=0.5*(J^n+J^{n+1})
+!      vlasov%jx=0.5_f64*(vlasov%jx+vlasov%jx3)
+!
+!      !compute E^{n+1} from B^{n+1/2}, vlasov%jx, vlasov%jy, E^n
+!      vlasov%ex  = vlasov%exn
+!      
+!      call solve_ampere(vlasov%dt) 
+!
+!      !copy ex and ey at t^n for the next loop
+!      vlasov%exn = vlasov%ex
+!
+!   else if (vlasov%va == VA_VLASOV_POISSON) then 
+!
+!      call transposexv(vlasov)
+!      !compute rho^{n+1}
+!      call compute_charge(vlasov)
+!      call transposevx(vlasov)
+!
+!      !compute E^{n+1} via Poisson
+!      call poisson%compute_E_from_rho( vlasov%ex, vlasov%rho )
+!
+!      !print *,'verif charge conservation', &
+!      !             maxval(vlasov%exn-vlasov%ex), &
+!      !             maxval(vlasov%eyn-vlasov%ey)
+!   
+!   else if (vlasov%va==VA_OLD_FUNCTION) then 
+!
+!      !recompute the electric field at time (n+1) for diagnostics
+!      call transposexv(vlasov)
+!      !compute rho^{n+1}
+!      call compute_charge(vlasov)
+!      call transposevx(vlasov)
+!      !compute E^{n+1} via Poisson
+!      call poisson%compute_E_from_rho( vlasov%ex, vlasov%rho )
+!   endif
 
-      endif
-
-   endif
-
-   !advec x + compute this%jx1
-   call advection_x1(vlasov2d,0.5_f64*vlasov2d%dt)
-
-   !advec y + compute this%jy1
-   call advection_x2(vlasov2d,0.5_f64*vlasov2d%dt)
-
-   call transposexv(vlasov2d)
-
-   if (vlasov2d%va == VA_OLD_FUNCTION) then 
-
-      !compute rho^{n+1}
-      call compute_charge(vlasov2d)
-      !compute E^{n+1} via Poisson
-      call poisson%compute_E_from_rho( vlasov2d%ex, vlasov2d%rho )
-
-   endif
-
-   call transposevx(vlasov2d)
-
-   !copy jy^{**}
-   call advection_x2(vlasov2d,0.5_f64*vlasov2d%dt)
-   
-   !copy jx^*
-   vlasov2d%jx=vlasov2d%jx1
-   !advec x + compute this%jx1
-   call advection_x1(vlasov2d,0.5_f64*vlasov2d%dt)
-
-   if (vlasov2d%va == VA_VALIS) then 
-
-      !compute the good jx current
-      vlasov2d%jx=0.5_f64*(vlasov2d%jx+vlasov2d%jx1)
-      print *,'sum jx ', &
-         sum(vlasov2d%jx)*vlasov2d%delta_eta1*vlasov2d%delta_eta2, &
-         maxval(vlasov2d%jx)
-
-      !compute E^{n+1} from B^{n+1/2}, vlasov2d%jx, vlasov2d%jy, E^n
-      vlasov2d%ex  = vlasov2d%exn
-      
-      call solve_ampere(vlasov2d%dt) 
-
-      !copy ex and ey at t^n for the next loop
-      vlasov2d%exn = vlasov2d%ex
-
-   else if (vlasov2d%va == VA_CLASSIC) then 
-
-      !f --> ft, current (this%jx,this%jy), ft-->f
-      call transposexv(vlasov2d)
-      !compute this%jx, this%jy (zero average) at time tn
-      call compute_current(vlasov2d)
-
-      call transposevx(vlasov2d)
-
-      !compute J^{n+1/2}=0.5*(J^n+J^{n+1})
-      vlasov2d%jx=0.5_f64*(vlasov2d%jx+vlasov2d%jx3)
-
-      !compute E^{n+1} from B^{n+1/2}, vlasov2d%jx, vlasov2d%jy, E^n
-      vlasov2d%ex  = vlasov2d%exn
-      
-      call solve_ampere(vlasov2d%dt) 
-
-      !copy ex and ey at t^n for the next loop
-      vlasov2d%exn = vlasov2d%ex
-
-   else if (vlasov2d%va == VA_VLASOV_POISSON) then 
-
-      call transposexv(vlasov2d)
-      !compute rho^{n+1}
-      call compute_charge(vlasov2d)
-      call transposevx(vlasov2d)
-
-      !compute E^{n+1} via Poisson
-      call poisson%compute_E_from_rho( vlasov2d%ex, vlasov2d%rho )
-
-      !print *,'verif charge conservation', &
-      !             maxval(vlasov2d%exn-vlasov2d%ex), &
-      !             maxval(vlasov2d%eyn-vlasov2d%ey)
-   
-   else if (vlasov2d%va==VA_OLD_FUNCTION) then 
-
-      !recompute the electric field at time (n+1) for diagnostics
-      call transposexv(vlasov2d)
-      !compute rho^{n+1}
-      call compute_charge(vlasov2d)
-      call transposevx(vlasov2d)
-      !compute E^{n+1} via Poisson
-      call poisson%compute_E_from_rho( vlasov2d%ex, vlasov2d%rho )
-   endif
-
-   if (mod(iter,vlasov2d%fthdiag) == 0) then 
-      call write_energy(vlasov2d, iter*vlasov2d%dt)
+   if (mod(iter,vlasov%fthdiag) == 0) then 
+      call write_energy(vlasov, iter*vlasov%dt)
    endif
 
 end do
@@ -214,49 +245,54 @@ subroutine initlocal()
   psize = sll_get_collective_size(sll_world_collective)
   comm  = sll_world_collective%comm
 
-  call read_input_file(vlasov2d)
+  call read_input_file(vlasov)
 
-  call spl_x2%initialize(vlasov2d%np_eta2,  &
-                         vlasov2d%eta2_min, &
-                         vlasov2d%eta2_max, &
+  call spl_x1%initialize(vlasov%np_eta1,  &
+                         vlasov%eta1_min, &
+                         vlasov%eta1_max, &
+                         SLL_PERIODIC)
+
+  call spl_x2%initialize(vlasov%np_eta2,  &
+                         vlasov%eta2_min, &
+                         vlasov%eta2_max, &
                          SLL_PERIODIC)
 
 
-  call initialize(vlasov2d,spl_x2,error)
+  call initialize(vlasov,spl_x1,spl_x2,error)
 
-  call compute_local_sizes(vlasov2d%layout_x,loc_sz_i,loc_sz_j)        
+  call compute_local_sizes(vlasov%layout_x,loc_sz_i,loc_sz_j)        
 
-  kx  = 2_f64*sll_pi/(vlasov2d%nc_eta1*vlasov2d%delta_eta1)
+  kx  = 2_f64*sll_pi/(vlasov%nc_eta1*vlasov%delta_eta1)
 
   do j=1,loc_sz_j
      do i=1,loc_sz_i
         
-        global_indices = local_to_global(vlasov2d%layout_x,(/i,j/)) 
+        global_indices = local_to_global(vlasov%layout_x,(/i,j/)) 
         gi = global_indices(1)
         gj = global_indices(2)
         
-        x  = vlasov2d%eta1_min+(gi-1)*vlasov2d%delta_eta1
-        vx = vlasov2d%eta2_min+(gj-1)*vlasov2d%delta_eta2
+        x  = vlasov%eta1_min+(gi-1)*vlasov%delta_eta1
+        vx = vlasov%eta2_min+(gj-1)*vlasov%delta_eta2
         
         v2 = vx*vx
 
-        select case(vlasov2d%num_case)
+        select case(vlasov%num_case)
         case(LANDAU_X_CASE)
-            vlasov2d%f(i,j)= landau_1d(vlasov2d%eps,kx,x,v2)
+            vlasov%f(i,j)= landau_1d(vlasov%eps,kx,x,v2)
         case(TSI_CASE)
-            vlasov2d%f(i,j)= tsi(vlasov2d%eps,kx,x,vx,v2)
+            vlasov%f(i,j)= tsi(vlasov%eps,kx,x,vx,v2)
         end select
         
      end do
   end do
   
-   ampere => new_ampere_1d_pstd( vlasov2d%eta1_min,  &
-                                 vlasov2d%eta1_max,  &
-                                 vlasov2d%nc_eta1)
+   ampere => new_ampere_1d_pstd( vlasov%eta1_min,  &
+                                 vlasov%eta1_max,  &
+                                 vlasov%nc_eta1)
   
-   poisson => new_poisson_1d_periodic_solver( vlasov2d%eta1_min, &
-                                              vlasov2d%eta1_max, &
-                                              vlasov2d%nc_eta1)
+   poisson => new_poisson_1d_periodic_solver( vlasov%eta1_min, &
+                                              vlasov%eta1_max, &
+                                              vlasov%nc_eta1)
   
   
 end subroutine initlocal
@@ -266,7 +302,7 @@ subroutine solve_ampere(dt)
   sll_real64, intent(in)    :: dt
   
   print*, 'solve ampere'
-  call sll_solve(ampere, vlasov2d%ex, dt, vlasov2d%jx)
+  call sll_solve(ampere, vlasov%ex, dt, vlasov%jx)
 
 end subroutine solve_ampere
 
