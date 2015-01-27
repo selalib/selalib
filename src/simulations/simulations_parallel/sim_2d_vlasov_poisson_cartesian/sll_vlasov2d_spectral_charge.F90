@@ -22,18 +22,18 @@ public :: initialize, free, densite_courantx, &
 
 type, public, extends(vlasov2d_base) :: vlasov2d_spectral_charge
 
-  sll_real64, dimension(:), pointer        :: exn
-  sll_real64, dimension(:), pointer        :: jx1,jx2,jx3
-  sll_real64, dimension(:), pointer        :: jy1,jy2,jy3
-  sll_real64, dimension(:), allocatable    :: d_dx
-  sll_real64, dimension(:), allocatable    :: kx
+  sll_real64, dimension(:),        pointer :: exn
+  sll_real64, dimension(:),        pointer :: jx1,jx2,jx3
+  sll_real64, dimension(:),        pointer :: jy1,jy2,jy3
+  sll_real64, dimension(:),        pointer :: d_dx
+  sll_real64, dimension(:),        pointer :: kx
   fftw_plan                                :: fwx
   fftw_plan                                :: bwx
   fftw_plan                                :: p_tmp_x
-  fftw_comp,  dimension(:),    pointer     :: tmp_x
+  fftw_comp,  dimension(:),        pointer :: tmp_x
 
-  sll_real64, dimension(:,:),  pointer     :: f_star
-  sll_real64, dimension(:,:),  pointer     :: ft_star
+  sll_real64, dimension(:,:),      pointer :: f_star
+  sll_real64, dimension(:,:),      pointer :: ft_star
 
   class(sll_interpolator_1d_base), pointer :: interp_x
   class(sll_interpolator_1d_base), pointer :: interp_v
@@ -80,10 +80,10 @@ contains
   comm  = sll_world_collective%comm
 
   SLL_CLEAR_ALLOCATE(this%ex(1:this%np_eta1),error)
-  SLL_CLEAR_ALLOCATE(this%exn(1:this%np_eta1),error)
   SLL_CLEAR_ALLOCATE(this%rho(1:this%np_eta1),error)
   SLL_CLEAR_ALLOCATE(this%jx(1:this%np_eta1),error)
 
+  SLL_CLEAR_ALLOCATE(this%exn(1:this%np_eta1),error)
   SLL_CLEAR_ALLOCATE(this%jx1(1:this%np_eta1),error)
   SLL_CLEAR_ALLOCATE(this%jx2(1:this%np_eta1),error)
   SLL_CLEAR_ALLOCATE(this%jx3(1:this%np_eta1),error)
@@ -98,10 +98,10 @@ contains
    
   kx0 = 2._f64*sll_pi/(this%nc_eta1*this%delta_eta1)
 
-  do i=1,this%nc_eta1/2+1
+  this%kx(1) = 1.0_f64
+  do i=2,this%nc_eta1/2+1
      this%kx(i) = (i-1)*kx0
   end do
-  this%kx(1) = 1.0_f64
 
   call compute_local_sizes(this%layout_x,loc_sz_i,loc_sz_j)
   SLL_CLEAR_ALLOCATE(this%f_star(1:loc_sz_i,1:loc_sz_j),error)
@@ -140,18 +140,18 @@ contains
   class(vlasov2d_spectral_charge), intent(inout) :: this
 
   sll_real64, intent(in) :: dt
-  sll_real64 :: vx, x2_min, delta_x2
+  sll_real64 :: v, v_min, delta_v
   sll_int32  :: loc_sz_i,loc_sz_j
-  sll_int32  :: nc_x1
+  sll_int32  :: nc_x
   sll_int32  :: j
   sll_int32  :: gj
   sll_int32  :: global_indices(2)
 
   SLL_ASSERT( .not. this%transposed) 
 
-  nc_x1    = this%nc_eta1
-  x2_min   = this%eta2_min
-  delta_x2 = this%delta_eta2
+  nc_x    = this%nc_eta1
+  v_min   = this%eta2_min
+  delta_v = this%delta_eta2
 
   call compute_local_sizes(this%layout_x,loc_sz_i,loc_sz_j)
   
@@ -159,22 +159,24 @@ contains
 
      global_indices = local_to_global(this%layout_x,(/1,j/)) 
      gj = global_indices(2)
-     vx = (x2_min +(gj-1)*delta_x2)*dt
+     v  = (v_min +(gj-1)*delta_v)*dt
 
-     call fftw_execute_dft_r2c(this%fwx, this%f(1:nc_x1,j),this%tmp_x)
+     this%d_dx = this%f(1:nc_x,j)
 
-     !exact : f* = f^n exp(-i kx vx dt)
+     call fftw_execute_dft_r2c(this%fwx, this%d_dx,this%tmp_x)
+
+     !exact : f = f^n exp(-i kx vx dt)
 
      this%tmp_x = this%tmp_x &
-                 * (1._f64-exp(-cmplx(0.0_f64,1,kind=f64)*vx*this%kx)) &
+                 * (1._f64-exp(-cmplx(0.0_f64,1,kind=f64)*v*this%kx)) &
                  * cmplx(0.0_f64,-1._f64,kind=f64)/(dt*this%kx)
 
      call fftw_execute_dft_c2r(this%bwx, this%tmp_x, this%d_dx)
-           this%f(1:nc_x1,j)= this%d_dx / nc_x1
+     this%f(1:nc_x,j)= this%d_dx / nc_x
 
   end do
 
-  this%f(nc_x1+1,:) = this%f(1,:)
+  this%f(nc_x+1,:) = this%f(1,:)
 
 !  global_indices = local_to_global(this%layout_x,(/1,1/)) 
 !  gj = global_indices(2)

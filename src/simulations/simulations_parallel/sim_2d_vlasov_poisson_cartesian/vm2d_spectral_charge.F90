@@ -56,7 +56,6 @@ call poisson%compute_E_from_rho( vlasov%ex, vlasov%rho )
 !ft --> f
 call transposevx(vlasov)
 call spectral_advection_x(vlasov, 0.5*vlasov%dt)
-stop
 
 mass0=sum(vlasov%rho)*vlasov%delta_eta1
 
