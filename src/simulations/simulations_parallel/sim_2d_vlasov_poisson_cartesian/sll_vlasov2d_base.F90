@@ -24,6 +24,7 @@ public :: read_input_file
 public :: transposexv, transposevx, write_xmf_file
 
 type, public :: vlasov2d_base
+
   logical                                  :: transposed      
   type(sll_cartesian_mesh_1d), pointer     :: geomx
   type(sll_cartesian_mesh_1d), pointer     :: geomv

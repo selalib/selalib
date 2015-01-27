@@ -18,7 +18,7 @@ use fftw3
 implicit none
 private
 public :: initialize, free, densite_courantx, &
-          advection_x1, advection_x, advection_v
+          spectral_advection_x, advection_x, advection_v
 
 type, public, extends(vlasov2d_base) :: vlasov2d_spectral_charge
 
@@ -135,7 +135,7 @@ contains
 
  end subroutine free_vlasov2d_spectral_charge
 
- subroutine advection_x1(this,dt)
+ subroutine spectral_advection_x(this,dt)
 
   class(vlasov2d_spectral_charge), intent(inout) :: this
 
@@ -147,7 +147,6 @@ contains
   sll_int32  :: gj
   sll_int32  :: global_indices(2)
 
-  ! verifier que la transposition est a jours
   SLL_ASSERT( .not. this%transposed) 
 
   nc_x1    = this%nc_eta1
@@ -156,43 +155,63 @@ contains
 
   call compute_local_sizes(this%layout_x,loc_sz_i,loc_sz_j)
   
-  global_indices = local_to_global(this%layout_x,(/1,1/)) 
-  gj = global_indices(2)
-  vx = (x2_min +(gj-1)*delta_x2)*dt
   do j=1,loc_sz_j
+
+     global_indices = local_to_global(this%layout_x,(/1,j/)) 
+     gj = global_indices(2)
+     vx = (x2_min +(gj-1)*delta_x2)*dt
+
      call fftw_execute_dft_r2c(this%fwx, this%f(1:nc_x1,j),this%tmp_x)
+
      !exact : f* = f^n exp(-i kx vx dt)
-     !calcul du flux
+
      this%tmp_x = this%tmp_x &
                  * (1._f64-exp(-cmplx(0.0_f64,1,kind=f64)*vx*this%kx)) &
                  * cmplx(0.0_f64,-1._f64,kind=f64)/(dt*this%kx)
+
      call fftw_execute_dft_c2r(this%bwx, this%tmp_x, this%d_dx)
-           this%f_star(1:nc_x1,j)= this%d_dx / nc_x1
-  end do
+           this%f(1:nc_x1,j)= this%d_dx / nc_x1
 
-  this%f_star(nc_x1+1,:) = this%f_star(1,:)
-
-  call apply_remap_2d( this%x_to_v, this%f_star, this%ft_star) 
-
-  !calculer le courant avec la formule 
-  ! f^* = f^n *exp(-ik vx dt) = f^n - vx * dt * ik f^n (1-exp(-ik vx dt))/(ik*dt*vx)
-  ! jx^* = int ik f^n (1-exp(-ik vx dt))/(ik*dt) dvxdvy
-  call densite_courantx(this, "*")
-
-  do j=1,loc_sz_j
-    global_indices = local_to_global(this%layout_x,(/1,1/)) 
-    gj = global_indices(2)
-    vx = (x2_min +(gj-1)*delta_x2)*dt
-    call fftw_execute_dft_r2c(this%fwx, this%f(1:nc_x1,j),this%tmp_x)
-    !exact : f* = f^n exp(-i kx vx dt)
-    this%tmp_x = this%tmp_x * exp(-cmplx(0.0_f64,this%kx,kind=f64)*vx)
-    call fftw_execute_dft_c2r(this%bwx, this%tmp_x, this%d_dx)
-    this%f(1:nc_x1,j)= this%d_dx / nc_x1
   end do
 
   this%f(nc_x1+1,:) = this%f(1,:)
 
- end subroutine advection_x1
+!  global_indices = local_to_global(this%layout_x,(/1,1/)) 
+!  gj = global_indices(2)
+!  vx = (x2_min +(gj-1)*delta_x2)*dt
+!  do j=1,loc_sz_j
+!     call fftw_execute_dft_r2c(this%fwx, this%f(1:nc_x1,j),this%tmp_x)
+!     !exact : f* = f^n exp(-i kx vx dt)
+!     this%tmp_x = this%tmp_x &
+!                 * (1._f64-exp(-cmplx(0.0_f64,1,kind=f64)*vx*this%kx)) &
+!                 * cmplx(0.0_f64,-1._f64,kind=f64)/(dt*this%kx)
+!     call fftw_execute_dft_c2r(this%bwx, this%tmp_x, this%d_dx)
+!           this%f_star(1:nc_x1,j)= this%d_dx / nc_x1
+!  end do
+!
+!  this%f_star(nc_x1+1,:) = this%f_star(1,:)
+!
+!  call apply_remap_2d( this%x_to_v, this%f_star, this%ft_star) 
+!
+!  !calculer le courant avec la formule 
+!  ! f^* = f^n *exp(-ik vx dt) = f^n - vx * dt * ik f^n (1-exp(-ik vx dt))/(ik*dt*vx)
+!  ! jx^* = int ik f^n (1-exp(-ik vx dt))/(ik*dt) dvxdvy
+!  call densite_courantx(this, "*")
+!
+!  do j=1,loc_sz_j
+!    global_indices = local_to_global(this%layout_x,(/1,1/)) 
+!    gj = global_indices(2)
+!    vx = (x2_min +(gj-1)*delta_x2)*dt
+!    call fftw_execute_dft_r2c(this%fwx, this%f(1:nc_x1,j),this%tmp_x)
+!    !exact : f* = f^n exp(-i kx vx dt)
+!    this%tmp_x = this%tmp_x * exp(-cmplx(0.0_f64,this%kx,kind=f64)*vx)
+!    call fftw_execute_dft_c2r(this%bwx, this%tmp_x, this%d_dx)
+!    this%f(1:nc_x1,j)= this%d_dx / nc_x1
+!  end do
+!
+!  this%f(nc_x1+1,:) = this%f(1,:)
+
+ end subroutine spectral_advection_x
 
  subroutine advection_x(this,dt)
 
@@ -240,13 +259,7 @@ contains
 
     global_indices = local_to_global(this%layout_v,(/i,1/)) 
     gi = global_indices(1)
-    print*, i, gi, size(this%ex)
     alpha = this%ex(gi) *dt
-    alpha = 0.0_f64
-    print*, "alpha = ", alpha
-
-    print*, size(this%ft,1), size(this%ft,2)
-    print*, loc_sz_i, loc_sz_j
     this%ft(i,:) = this%interp_v%interpolate_array_disp(loc_sz_j,this%ft(i,:),alpha)
 
   end do
