@@ -86,10 +86,13 @@ function new_ampere_1d_pstd(xmin,xmax,nc_x) result(self)
    sll_real64                        :: kx0
    sll_int32                         :: i
 
+   SLL_ALLOCATE(self, error)
    self%nc_eta1 = nc_x
 
    self%e_0  = 1._f64
    self%mu_0 = 1._f64
+
+   call initialize_ampere_1d_pstd(self,xmin,xmax,nc_x) 
 
 end function new_ampere_1d_pstd
 

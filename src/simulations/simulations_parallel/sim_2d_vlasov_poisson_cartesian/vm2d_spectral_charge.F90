@@ -18,11 +18,11 @@ use sll_remapper
 
 implicit none
 
-type(vlasov2d_spectral_charge)                 :: vlasov 
-type(sll_cubic_spline_interpolator_1d), target :: spl_x1
-type(sll_cubic_spline_interpolator_1d), target :: spl_x2
-class(sll_poisson_1d_base), pointer            :: poisson
-type(sll_ampere_1d_pstd),   pointer            :: ampere 
+type(vlasov2d_spectral_charge)                  :: vlasov 
+type(sll_cubic_spline_interpolator_1d), target  :: spl_x1
+type(sll_cubic_spline_interpolator_1d), target  :: spl_x2
+class(sll_poisson_1d_base),             pointer :: poisson
+type(sll_ampere_1d_pstd),               pointer :: ampere 
 
 
 sll_int32  :: iter 
@@ -32,8 +32,6 @@ sll_int32  :: prank, comm
 sll_int64  :: psize
 
 sll_int32  :: loc_sz_i, loc_sz_j
-
-sll_int32  :: i
 
 call sll_boot_collective()
 prank = sll_get_collective_rank(sll_world_collective)
@@ -57,15 +55,7 @@ call poisson%compute_E_from_rho( vlasov%ex, vlasov%rho )
 
 !ft --> f
 call transposevx(vlasov)
-!call advection_x(vlasov, 0.5*vlasov%dt)
-
-call transposexv(vlasov)
-call advection_v(vlasov, vlasov%dt)
-call compute_charge(vlasov)
-do i = 1, vlasov%np_eta1 
-   write(17,*) vlasov%eta1_min+(i-1)*vlasov%delta_eta1, vlasov%rho(i)
-end do
-stop
+call spectral_advection_x(vlasov, 0.5*vlasov%dt)
 
 mass0=sum(vlasov%rho)*vlasov%delta_eta1
 
@@ -87,7 +77,7 @@ do iter=1,vlasov%nbiter
 
    call transposevx(vlasov)
 
-   call advection_x(vlasov, vlasov%dt)
+   call spectral_advection_x(vlasov, vlasov%dt)
 
 
 !   if ( vlasov%va == VA_VALIS .or. vlasov%va == VA_CLASSIC) then 
@@ -286,13 +276,13 @@ subroutine initlocal()
      end do
   end do
   
-   ampere => new_ampere_1d_pstd( vlasov%eta1_min,  &
-                                 vlasov%eta1_max,  &
-                                 vlasov%nc_eta1)
+  ampere => new_ampere_1d_pstd( vlasov%eta1_min,  &
+                                vlasov%eta1_max,  &
+                                vlasov%nc_eta1)
   
-   poisson => new_poisson_1d_periodic_solver( vlasov%eta1_min, &
-                                              vlasov%eta1_max, &
-                                              vlasov%nc_eta1)
+  poisson => new_poisson_1d_periodic_solver( vlasov%eta1_min, &
+                                             vlasov%eta1_max, &
+                                             vlasov%nc_eta1)
   
   
 end subroutine initlocal
