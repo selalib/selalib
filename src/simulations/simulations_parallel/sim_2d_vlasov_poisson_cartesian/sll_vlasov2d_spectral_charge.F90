@@ -13,6 +13,7 @@ use sll_constants
 
 use, intrinsic :: iso_c_binding
 use sll_vlasov2d_base
+use fftw3
 
 implicit none
 private
@@ -40,7 +41,6 @@ type, public, extends(vlasov2d_base) :: vlasov2d_spectral_charge
 end type vlasov2d_spectral_charge
 
 
-include 'fftw3.f03'
 
 interface initialize
    module procedure initialize_vlasov2d_spectral_charge
