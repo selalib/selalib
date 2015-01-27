@@ -162,14 +162,11 @@ contains
      v  = (v_min +(gj-1)*delta_v)*dt
 
      this%d_dx = this%f(1:nc_x,j)
-
      call fftw_execute_dft_r2c(this%fwx, this%d_dx,this%tmp_x)
 
      !exact : f = f^n exp(-i kx vx dt)
 
-     this%tmp_x = this%tmp_x &
-                 * (1._f64-exp(-cmplx(0.0_f64,1,kind=f64)*v*this%kx)) &
-                 * cmplx(0.0_f64,-1._f64,kind=f64)/(dt*this%kx)
+     this%tmp_x = this%tmp_x*exp(-cmplx(0.0_f64,this%kx,kind=f64)*v)
 
      call fftw_execute_dft_c2r(this%bwx, this%tmp_x, this%d_dx)
      this%f(1:nc_x,j)= this%d_dx / nc_x
