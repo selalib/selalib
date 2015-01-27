@@ -39,8 +39,7 @@ type, public, extends(vlasov2d_base) :: vlasov2d_spectral_charge
 
 end type vlasov2d_spectral_charge
 
-
-include 'fftw3.f03'
+use fftw3
 
 interface initialize
    module procedure initialize_vlasov2d_spectral_charge
