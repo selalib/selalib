@@ -680,21 +680,17 @@ In Figure~\ref{fig:circ_convergence} we can see that for coarse meshes only the 
 
 Figure~\ref{fig:circ_performance} we can see that the level of performance of all the methods convergences quite quickly. It is also pretty obvious that even if the splines obtained more accuracy, the cost is more expensive than most of the Hermite Finite Element methods.
 
-\subsection{Guiding-center}
+\subsection{Diocotron instability test case}
 
+%
+%\begin{subnumcases}{\label{eqn:guiding_center}}
+%	\dfrac{\partial \rho}{\partial t} + E_{\perp} \cdot \nabla_{\mathbf{x}} \rho(\mathbf{x}, t) = 0\label{eqn:gc_vlasov}\\
+%	- \Delta \phi = \nabla \cdot E = \rho(\mathbf{x}, t) \label{eqn:gc_poisson}
+%\end{subnumcases}
+%
+%with $E = (E_x, E_y) = - \nabla \phi $ and $E_\perp = (-E_y, E_x)$.
 
-We recall the guiding-center model
-
-\begin{subnumcases}{\label{eqn:guiding_center}}
-	\dfrac{\partial \rho}{\partial t} + E_{\perp} \cdot \nabla_{\mathbf{x}} \rho(\mathbf{x}, t) = 0\label{eqn:gc_vlasov}\\
-	- \Delta \phi = \nabla \cdot E = \rho(\mathbf{x}, t) \label{eqn:gc_poisson}
-\end{subnumcases}
-
-with $E = (E_x, E_y) = - \nabla \phi $ and $E_\perp = (-E_y, E_x)$.
-
-
-We chose here to study the diocotron instability \cite{madaule:hal-00841504}.
-The initial density is given by :
+We recall the guiding-center model and choose the following initial density:
 \begin{equation*}
  \rho_0(\mathbf{x}_\bot)=
  \left\{
@@ -706,7 +702,11 @@ The initial density is given by :
 \end{equation*}
 with $\theta=\text{atan2}(y,x)$.
 
-\noindent In the following tests, we take $\varepsilon=0.001$, $r^-=5$, $r^+=8$, $\ell=6$, furthermore $dt=0.1$.
+With this we can study the diocotron instability test case \cite{madaule:hal-00841504}.
+
+\noindent As for the parameters, we take $\varepsilon=0.001$, $r^-=5$, $r^+=8$, $\ell=6$, furthermore $dt=0.1$.
+
+Let us note that as illustrated by figure \ref{fig:mode9} with epsilon big enough ( i.e. at least 0.1 ) the other modes can be visble for a time but they are not stable and we see the fusion or the apparition of vortexes until they are six modes. Here we can see the 9 modes turning into the 6 modes by fusion of vortexes. 
 
 \textcolor{red}{peut etre un paragraphe sur l'evolution de la densite, les 6 modes retrouves qqsoit eps, etc, commenter la figure 6}
 \begin{figure}[h!]
@@ -715,40 +715,34 @@ with $\theta=\text{atan2}(y,x)$.
 	\includegraphics[scale=0.15]{figures/gc_spl_3.png}
 	\includegraphics[scale=0.15]{figures/gc_spl_4.png}
 	\includegraphics[scale=0.15]{figures/gc_spl_5.png}
-	\caption{Time evolution of the guiding-center model, at times = }
+	\caption{\label{fig:mode9}  evolution of the guiding-center model, at times = }
 \end{figure}
 
 \begin{figure}[h!]
-	\includegraphics[scale=0.4]{figures/Relative_error_of_mass_160.png}
+	\includegraphics[scale=0.4]{figures/mass_cg.png}
 	\caption{Time evolution of the mass}
 \end{figure}
 
-
 \begin{figure}[h!]
-	\includegraphics[scale=0.3]{figures/l1norm_160.png}
-	\includegraphics[scale=0.3]{figures/l2norm_160.png}
+	\includegraphics[scale=0.3]{figures/l1norm_cg.png}
+	\includegraphics[scale=0.3]{figures/l2norm_cg.png}
 	\caption{Relative error of $L^1$ and $L^2$ norms}
 \end{figure}
 
-
 \begin{figure}[h!]
-	\includegraphics[scale=0.4]{figures/min_density_160.png}
+	\includegraphics[scale=0.4]{figures/min_cg.png}
 	\caption{Time evolution of the density's minimum}
 \end{figure}
 
-
-
-
 Both intepolation methods give similar results in terms of energy conservation and positivity conservation. One notices that if the box-splines conserve better the mass, the hermite element conserves better the norms.  
-
-
 
 \begin{figure}[h!]
 	\includegraphics[width=0.35\textwidth]{figures/oscillations_hermite.png}
 	\includegraphics[width=0.35\textwidth]{figures/oscillations_splines.png}
-	\caption{Comparaison of oscillations: on the left with Hermite Finite Elements and on the right with splines}
+	\caption{\label{fig:comp_osci} Comparaison of oscillations: on the left with Hermite Finite Elements and on the right with splines}
 \end{figure}
-\textcolor{red}{commenter les oscillations}
+No obvious differences are visible on figure \ref{fig:comp_osci} to the naked eye which makes the diagnostics all the more important to compare the results computed.
+
 %%-----------------------------
 %% Conclusion
 %%-----------------------------
