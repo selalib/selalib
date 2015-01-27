@@ -203,36 +203,38 @@ contains
       k1 = mesh%global_to_hex1(local_index)
       k2 = mesh%global_to_hex2(local_index)
 
-
-      if (deg .eq. 2) then 
-          ! prefiltre int for box-splines chi2
-          if (local_index .eq. 1) then
-              weight = 0.5_f64
-          else if (local_index .le. 7) then
-              weight = 1._f64/12._f64
-          else
-              weight = 0._f64
-          end if
-       elseif (deg .eq. 3) then 
-          print *, "here"
-          ! prefiltre int for box-splines chi3
-          ! with coefficients h0 = 3/4 and h1 = 1/24
-          if (local_index .eq. 1) then
-             weight = 5._f64/12._f64!1._f64/3._f64
-          else if (local_index .le. 7) then
-             weight = 1._f64/18._f64
-          else if (local_index .le. 19) then
-             weight = 1._f64/28._f64!1._f64/26._f64
-          else
-             weight = 0._f64
-          end if
-
+      if (deg .eq. 1) then
+         if (local_index.eq.1) then
+            weight = 1._f64
+         else
+            weight = 0._f64
+         end if
+      else if (deg .eq. 2) then 
+         ! prefiltre int for box-splines chi2
+         if (local_index .eq. 1) then
+            weight = 0.5_f64
+         else if (local_index .le. 7) then
+            weight = 1._f64/12._f64
+         else
+            weight = 0._f64
+         end if
+      elseif (deg .eq. 3) then 
+         ! prefiltre int for box-splines chi3
+         ! with coefficients h0 = 3/4 and h1 = 1/24
+         if (local_index .eq. 1) then
+            weight = 5._f64/12._f64!1._f64/3._f64
+         else if (local_index .le. 7) then
+            weight = 1._f64/18._f64
+         else if (local_index .le. 19) then
+            weight = 1._f64/28._f64!1._f64/26._f64
+         else
+            weight = 0._f64
+         end if
       else if (deg .gt. 3) then 
-       print *, 'ERROR: pre_filter_int(...): ', &
-            '     function not implemented for degree > 2 splines '
-       print *, "Exiting..."
-       STOP
-
+         print *, 'ERROR: pre_filter_int(...): ', &
+              '     function not implemented for degree > 2 splines '
+         print *, "Exiting..."
+         STOP
       end if
    end function pre_filter_int
 
