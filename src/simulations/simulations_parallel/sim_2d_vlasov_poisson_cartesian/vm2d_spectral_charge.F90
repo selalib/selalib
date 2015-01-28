@@ -50,7 +50,6 @@ call transposexv(vlasov)
 call compute_charge(vlasov)
 call poisson%compute_E_from_rho( vlasov%ex, vlasov%rho )
 
-
 !vlasov%exn=vlasov%ex
 
 !ft --> f
@@ -77,7 +76,7 @@ do iter=1,vlasov%nbiter
 
    call transposevx(vlasov)
 
-   call spectral_advection_x(vlasov, vlasov%dt)
+   call spectral_advection_charge_x(vlasov, vlasov%dt)
 
 
 !   if ( vlasov%va == VA_VALIS .or. vlasov%va == VA_CLASSIC) then 
@@ -113,7 +112,6 @@ do iter=1,vlasov%nbiter
 !   !advec y + compute this%jy1
 !   call advection_x2(vlasov,0.5_f64*vlasov%dt)
 !
-!   call transposexv(vlasov)
 !
 !   if (vlasov%va == VA_OLD_FUNCTION) then 
 !

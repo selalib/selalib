@@ -263,24 +263,43 @@ subroutine compute_charge(this)
    call mpi_barrier(comm,error)
    call mpi_allreduce(locrho,this%rho,this%np_eta1,MPI_REAL8,MPI_SUM,comm,error)
 
- end subroutine compute_charge
+end subroutine compute_charge
 
 subroutine compute_current(this)
 
   class(vlasov2d_base),intent(inout) :: this
-  sll_real64                         :: vx
-  sll_real64                         :: dvx
-  sll_int32                          :: i
-  sll_int32                          :: j
 
-  dvx = this%delta_eta2
-  this%jx = 0.0_f64
-  do j = 1, this%np_eta2
-  do i = 1, this%np_eta1
-     vx = this%eta2_min+(j-1)*this%delta_eta2
-     this%jx(i) = this%jx(i) + dvx * this%f(i,j) * vx
-  end do
-  end do
+   sll_int32                             :: comm
+   sll_real64, dimension(this%np_eta2+1) :: locjx
+   sll_int32                             :: loc_sz_i
+   sll_int32                             :: loc_sz_j
+   sll_int32                             :: gi
+   sll_int32                             :: global_indices(2)
+   sll_int32                             :: error
+   sll_int32                             :: nc_x
+   sll_real64                            :: v
+   sll_real64                            :: v_min
+   sll_real64                            :: delta_v
+
+   nc_x    = this%nc_eta1
+   v_min   = this%eta2_min
+   delta_v = this%delta_eta2
+
+   call compute_local_sizes(this%layout_v,loc_sz_i,loc_sz_j)        
+   
+   locjx = 0.0_f64
+   do i=1,loc_sz_i
+     global_indices = local_to_global(this%layout_v,(/i,1/)) 
+     gi = global_indices(1)
+     do j = 1, loc_sz_j
+       v  = v_min +(j-1)*delta_v
+       locjx(gi) = locjx(gi)+this%ft(i,j) * this%delta_eta2 * v
+     end do
+   end do
+   this%jx = 0.0_f64
+   comm  = sll_world_collective%comm
+   call mpi_barrier(comm,error)
+   call mpi_allreduce(locjx,this%jx,this%np_eta1,MPI_REAL8,MPI_SUM,comm,error)
 
 end subroutine compute_current
 
