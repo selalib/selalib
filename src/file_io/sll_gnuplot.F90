@@ -35,6 +35,10 @@ use sll_utilities, only: sll_new_file_id, int2string
 implicit none
 
 !> write file plotable by gnuplot to visualize 2d field
+interface sll_gnuplot_1d
+   module procedure  sll_gnuplot_write_1d
+   module procedure  sll_gnuplot_write
+end interface
 interface sll_gnuplot_2d
    module procedure sll_gnuplot_corect_2d
    module procedure sll_gnuplot_rect_2d
@@ -47,37 +51,23 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !> write an array
-subroutine sll_gnuplot_write(array,array_name,error)
+subroutine sll_gnuplot_write(array, array_name, iplot)
 
   sll_real64, dimension(:), intent(in) :: array      !< data
-  character(len=*), intent(in)         :: array_name !< field name
-  sll_int32, intent(out)               :: error      !< error code
+  character(len=*),         intent(in) :: array_name !< field name
+  sll_int32,                optional   :: iplot      !< plot counter
   sll_int32                            :: file_id    !< file unit number
   sll_int32                            :: npoints
   sll_int32                            :: ipoints    
   logical                              :: lopen
+  character(len=4)                     :: cplot
+  sll_int32                            :: error
   
   npoints = size(array)
 
-  error=0
+  call sll_new_file_id(file_id, error)
 
-  do 100 file_id=20,99
-
-     inquire(unit=file_id,opened=lopen)
-     if(lopen) then
-        cycle
-     else
-        open(file_id,status='SCRATCH',err=100)
-        close(file_id,status='DELETE',err=100)
-        goto 200
-     end if
-
-  100 continue
-  error=1
-  200 continue
-  error=0
-
-  open(file_id,FILE=trim(array_name)//".gnu",FORM='FORMATTED',IOSTAT=error)
+  open(file_id,file=trim(array_name)//".gnu",form='FORMATTED',iostat=error)
   rewind(file_id)
 
   write(file_id,"(a)")"plot '-' t '"//trim(array_name)//"' with linesp"
@@ -88,28 +78,24 @@ subroutine sll_gnuplot_write(array,array_name,error)
   write(file_id,"(a)")"pause -1 'Hit return to quit'"
   close(file_id)
 
-
-  open(file_id,FILE=trim(array_name)//".dat",FORM='FORMATTED',IOSTAT=error)
+  if(present(iplot)) then
+    call int2string(iplot,cplot)
+    open(file_id,file=trim(array_name)//cplot//".dat",form='FORMATTED',iostat=error)
+  else
+    open(file_id,file=trim(array_name)//".dat",form='FORMATTED',iostat=error)
+  end if
   rewind(file_id)
 
-  !write(file_id,"(a)")"plot '-' t '"//trim(array_name)//"' with linesp"
   do ipoints = 1, npoints
-     write(file_id,*) array(ipoints)
+     write(file_id,*) sngl(array(ipoints))
   end do
-  !write(file_id,"(a)")"e"
-  !write(file_id,"(a)")"pause -1 'Hit return to quit'"
   close(file_id)
-
 
 end subroutine sll_gnuplot_write
 
 
 !> This subroutine write a data file to plot a 1d curve
-subroutine sll_gnuplot_write_1d( &
-  y_array, &
-  x_array, &
-  array_name, &
-  iplot)
+subroutine sll_gnuplot_write_1d( y_array, x_array, array_name, iplot)
 
   sll_real64, dimension(:), intent(in) :: y_array    !< Y data
   sll_real64, dimension(:), intent(in) :: x_array    !< X data
@@ -125,39 +111,19 @@ subroutine sll_gnuplot_write_1d( &
   
   npoints = size(x_array)
 
-  error=0
+  call sll_new_file_id(file_id, error)
 
-  do 100 file_id=20,99
-
-     inquire(unit=file_id,opened=lopen)
-     if(lopen) then
-        cycle
-     else
-        open(file_id,status='SCRATCH',err=100)
-        close(file_id,status='DELETE',err=100)
-        goto 200
-     end if
-
-  100 continue
-  error=1
-  200 continue
-  error=0
   if(present(iplot))then
     call int2string(iplot,cplot)
-    open(file_id,FILE=trim(array_name)//cplot//".dat",FORM='FORMATTED',IOSTAT=error)
+    open(file_id,file=trim(array_name)//cplot//".dat",form='FORMATTED',iostat=error)
   else
-    open(file_id,FILE=trim(array_name)//".dat",FORM='FORMATTED',IOSTAT=error)
+    open(file_id,file=trim(array_name)//".dat",form='FORMATTED',iostat=error)
   endif
   rewind(file_id)
-
-  !write(file_id,"(a)")"plot '-' t '"//trim(array_name)//"' with linesp"
   do ipoints = 1, npoints
      write(file_id,*) sngl(x_array(ipoints)), sngl(y_array(ipoints))
   end do
-  !write(file_id,"(a)")"e"
-  !write(file_id,"(a)")"pause -1 'Hit return to quit'"
   close(file_id)
-
 
 end subroutine sll_gnuplot_write_1d
 
@@ -194,7 +160,6 @@ subroutine sll_gnuplot_corect_2d(xmin, xmax, nx, ymin, ymax, ny, &
   write(gnu_id,*)"splot '"//array_name//"_"//fin//".dat' w l"
   close(gnu_id)
   
-  !print*, size(array,1), size(array,2), nx, ny
   call sll_ascii_file_create(array_name//'_'//fin//'.dat', file_id, error )
   dx = (xmax-xmin)/(nx-1)
   dy = (ymax-ymin)/(ny-1)
@@ -202,7 +167,6 @@ subroutine sll_gnuplot_corect_2d(xmin, xmax, nx, ymin, ymax, ny, &
   do i=1,nx
      y = ymin
      do j=1,ny
-        !print*, i, j, x, y, array(i,j)
         write(file_id,*) sngl(x),sngl(y),sngl(array(i,j))
         y = y + dy
      end do
@@ -317,7 +281,6 @@ subroutine sll_gnuplot_curv_2d( nx, ny, x, y,&
   end if
   
   open(gnu_id,file=array_name//".gnu", position="append")
-  !write(gnu_id,"(a)")"set pm3d"
   write(gnu_id,*)"set output '"//array_name//"_"//fin//".png'"
   write(gnu_id,*)"splot '"//array_name//"_"//fin//".dat' w l"
   close(gnu_id)
