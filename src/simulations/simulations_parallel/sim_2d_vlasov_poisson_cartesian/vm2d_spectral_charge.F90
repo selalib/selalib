@@ -6,6 +6,7 @@ program vm2d_spectral_charge
 #include "sll_utilities.h"
 #include "sll_constants.h"
 #include "sll_interpolators.h"
+#include "sll_fftw.h"
 
 use init_functions
 use sll_vlasov2d_base
@@ -290,7 +291,7 @@ subroutine solve_ampere(dt)
   sll_real64, intent(in)    :: dt
   
   print*, 'solve ampere'
-  call sll_solve(ampere, vlasov%ex, dt, vlasov%jx)
+  call sll_solve(ampere, dt, vlasov%jx, vlasov%ex)
 
 end subroutine solve_ampere
 
