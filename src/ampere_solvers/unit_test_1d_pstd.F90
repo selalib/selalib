@@ -9,6 +9,7 @@ program test_ampere_1d_pstd
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_constants.h"
+#include "sll_file_io.h"
 
 use sll_module_ampere_1d_pstd
 
@@ -57,26 +58,27 @@ time  = 0.
 
 w = 2 * sll_pi
 
-SLL_ALLOCATE(ex(nc_x+1), error)
-SLL_ALLOCATE(jx(nc_x+1), error)
-SLL_ALLOCATE(ex_exact(nc_x+1), error)
-SLL_ALLOCATE(rho(nc_x+1), error)
+SLL_ALLOCATE(ex(1:nc_x+1),       error)
+SLL_ALLOCATE(jx(1:nc_x+1),       error)
+SLL_ALLOCATE(ex_exact(1:nc_x+1), error)
+SLL_ALLOCATE(rho(1:nc_x+1),      error)
 
 call sll_create(ampere, x_min, x_max, nc_x)
 
 do istep = 1, nstep !*** Loop over time
 
-  ex  = w*sin(time*w)*sin(sll_pi*x)
   rho = -w*w*cos(time*w)*sin(sll_pi*x)
   jx  = sll_pi*w*cos(sll_pi*x)*sin(time*w)
-  ex_exact = ex
+  ex_exact = w*sin(time*w)*sin(sll_pi*x)
   time = time + 0.5_f64*dt
 
   write(*,"(10x,' istep = ',I6)",advance="no") istep
   write(*,"(' time = ',g12.3,' sec')",advance="no") time
   write(*,"(' erreurs TM,TE = ',g15.5)") maxval(abs(ex - ex_exact))
 
-  call sll_solve(ampere, ex, dt, jx)
+  call sll_solve(ampere, dt, jx, ex)
+  
+  call sll_gnuplot_1d( ex, 'ex', istep)
 
   time = time + 0.5_f64*dt
 
