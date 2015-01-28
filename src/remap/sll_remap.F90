@@ -559,19 +559,19 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
   interface sll_delete
      module procedure delete_layout_2D, delete_layout_3D, delete_layout_4D, &
           delete_layout_5D, delete_layout_6D, &
-          delete_remap_2D_int32, &
+          delete_remap_2D_int32,  &
           delete_remap_2D_real64, &
           delete_remap_2D_comp64, &
-          delete_remap_3D_int32, &
+          delete_remap_3D_int32,  &
           delete_remap_3D_real64, &
           delete_remap_3D_comp64, &
-          delete_remap_4D_int32, &
+          delete_remap_4D_int32,  &
           delete_remap_4D_real64, &
           delete_remap_4D_comp64, &
-          delete_remap_5D_int32, &
+          delete_remap_5D_int32,  &
           delete_remap_5D_real64, &
           delete_remap_5D_comp64, &
-          delete_remap_6D_int32, &
+          delete_remap_6D_int32,  &
           delete_remap_6D_real64, &
           delete_remap_6D_comp64
   end interface sll_delete
