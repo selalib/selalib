@@ -38,7 +38,7 @@
 &advector
   advect2d_case = "SLL_BSL"    
   f_interp2d_case = "SLL_CUBIC_SPLINES"
-  phi_interp2d_case = "SLL_CUBIC_SPLINES"
+  !phi_interp2d_case = "SLL_CUBIC_SPLINES"
   !charac2d_case = "SLL_EULER"
   charac2d_case = "SLL_VERLET"
   A_interp_case = "SLL_CUBIC_SPLINES"
