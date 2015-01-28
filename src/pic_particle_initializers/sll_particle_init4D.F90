@@ -62,8 +62,13 @@ contains
        call random_seed (put=rand_seed)
     endif
 
-    coco = (m2d%eta1_max - m2d%eta1_min) * &
-           (m2d%eta2_max - m2d%eta2_min)/real(worldsize*num_particles,f64)
+    if( present(worldsize) ) then
+       coco = (m2d%eta1_max - m2d%eta1_min) * &
+            (m2d%eta2_max - m2d%eta2_min)/real(worldsize*num_particles,f64)
+    else
+       coco = (m2d%eta1_max - m2d%eta1_min) * &
+            (m2d%eta2_max - m2d%eta2_min)/real(num_particles,f64)
+    endif
     weight = real(coco,f32)
 
     rdx = 1._f64/m2d%delta_eta1
@@ -105,10 +110,6 @@ contains
 !!$    close(90)
 
   end subroutine sll_initial_particles_4d
-
-!!$  subroutine sll_initial_one_particle
-!!$
-!!$  end subroutine sll_initial_one_particle
 
   
 !!$  subroutine sll_initialize_some4Dfunction( &
