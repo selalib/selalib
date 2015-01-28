@@ -17,8 +17,9 @@ use fftw3
 
 implicit none
 private
-public :: initialize, free, densite_courantx, &
-          spectral_advection_x, advection_x, advection_v
+public :: initialize, free, densite_courantx,             &
+          spectral_advection_x, advection_x, advection_v, &
+          spectral_advection_charge_x
 
 type, public, extends(vlasov2d_base) :: vlasov2d_spectral_charge
 
@@ -175,42 +176,76 @@ contains
 
   this%f(nc_x+1,:) = this%f(1,:)
 
-!  global_indices = local_to_global(this%layout_x,(/1,1/)) 
-!  gj = global_indices(2)
-!  vx = (x2_min +(gj-1)*delta_x2)*dt
-!  do j=1,loc_sz_j
-!     call fftw_execute_dft_r2c(this%fwx, this%f(1:nc_x1,j),this%tmp_x)
-!     !exact : f* = f^n exp(-i kx vx dt)
-!     this%tmp_x = this%tmp_x &
-!                 * (1._f64-exp(-cmplx(0.0_f64,1,kind=f64)*vx*this%kx)) &
-!                 * cmplx(0.0_f64,-1._f64,kind=f64)/(dt*this%kx)
-!     call fftw_execute_dft_c2r(this%bwx, this%tmp_x, this%d_dx)
-!           this%f_star(1:nc_x1,j)= this%d_dx / nc_x1
-!  end do
-!
-!  this%f_star(nc_x1+1,:) = this%f_star(1,:)
-!
-!  call apply_remap_2d( this%x_to_v, this%f_star, this%ft_star) 
-!
-!  !calculer le courant avec la formule 
-!  ! f^* = f^n *exp(-ik vx dt) = f^n - vx * dt * ik f^n (1-exp(-ik vx dt))/(ik*dt*vx)
-!  ! jx^* = int ik f^n (1-exp(-ik vx dt))/(ik*dt) dvxdvy
-!  call densite_courantx(this, "*")
-!
-!  do j=1,loc_sz_j
-!    global_indices = local_to_global(this%layout_x,(/1,1/)) 
-!    gj = global_indices(2)
-!    vx = (x2_min +(gj-1)*delta_x2)*dt
-!    call fftw_execute_dft_r2c(this%fwx, this%f(1:nc_x1,j),this%tmp_x)
-!    !exact : f* = f^n exp(-i kx vx dt)
-!    this%tmp_x = this%tmp_x * exp(-cmplx(0.0_f64,this%kx,kind=f64)*vx)
-!    call fftw_execute_dft_c2r(this%bwx, this%tmp_x, this%d_dx)
-!    this%f(1:nc_x1,j)= this%d_dx / nc_x1
-!  end do
-!
-!  this%f(nc_x1+1,:) = this%f(1,:)
-
  end subroutine spectral_advection_x
+
+ subroutine spectral_advection_charge_x(this,dt)
+
+  class(vlasov2d_spectral_charge), intent(inout) :: this
+
+  sll_real64, intent(in)                         :: dt
+  sll_real64                                     :: v
+  sll_real64                                     :: v_min
+  sll_real64                                     :: delta_v
+  sll_int32                                      :: loc_sz_i
+  sll_int32                                      :: loc_sz_j
+  sll_int32                                      :: nc_x
+  sll_int32                                      :: j
+  sll_int32                                      :: gj
+  sll_int32                                      :: global_indices(2)
+
+  SLL_ASSERT( .not. this%transposed) 
+
+  nc_x    = this%nc_eta1
+  v_min   = this%eta2_min
+  delta_v = this%delta_eta2
+
+  call compute_local_sizes(this%layout_x,loc_sz_i,loc_sz_j)
+
+  do j=1,loc_sz_j
+
+    global_indices = local_to_global(this%layout_x,(/1,j/)) 
+    gj             = global_indices(2)
+    v              = (v_min +(gj-1)*delta_v)*dt
+    this%d_dx      = this%f(1:nc_x,j)
+
+    call fftw_execute_dft_r2c(this%fwx, this%d_dx,this%tmp_x)
+     
+    this%tmp_x = this%tmp_x &
+                 * (1._f64-exp(-cmplx(0.0_f64,1,kind=f64)*v*this%kx)) &
+                 * cmplx(0.0_f64,-1._f64,kind=f64)/(dt*this%kx)
+    call fftw_execute_dft_c2r(this%bwx, this%tmp_x, this%d_dx)
+    this%f_star(1:nc_x,j)= this%d_dx / nc_x
+
+  end do
+
+  this%f_star(nc_x+1,:) = this%f_star(1,:)
+
+  call apply_remap_2d( this%x_to_v, this%f_star, this%ft_star) 
+
+  !calculer le courant avec la formule 
+  ! f^* = f^n *exp(-ik vx dt) = f^n - vx * dt * ik f^n (1-exp(-ik vx dt))/(ik*dt*vx)
+  ! jx^* = int ik f^n (1-exp(-ik vx dt))/(ik*dt) dvxdvy
+
+  call densite_courantx(this, "*")
+
+  do j=1,loc_sz_j
+
+    global_indices = local_to_global(this%layout_x,(/1,j/)) 
+    gj = global_indices(2)
+    v  = (v_min +(gj-1)*delta_v)*dt
+
+    this%d_dx = this%f_star(1:nc_x,j)
+    call fftw_execute_dft_r2c(this%fwx, this%d_dx, this%tmp_x)
+    
+    this%tmp_x = this%tmp_x * exp(-cmplx(0.0_f64,this%kx,kind=f64)*v)
+    call fftw_execute_dft_c2r(this%bwx, this%tmp_x, this%d_dx)
+    this%f(1:nc_x,j)= this%d_dx / nc_x
+
+  end do
+
+  this%f(nc_x+1,:) = this%f(1,:)
+
+ end subroutine spectral_advection_charge_x
 
  subroutine advection_x(this,dt)
 
@@ -268,28 +303,33 @@ contains
 
  subroutine densite_courantx(this,star)
 
-   class(vlasov2d_spectral_charge),intent(inout)  :: this
-   character(len=1), optional                     :: star
-   sll_real64, dimension(:,:), pointer            :: df
+   class(vlasov2d_spectral_charge),intent(inout) :: this
+   character(len=1), optional                    :: star
+   sll_real64, dimension(:,:), pointer           :: df
 
-   sll_int32  :: error
-   sll_int32  :: c
-   sll_int32  :: comm
-   sll_real64 :: dvx
-   sll_real64 :: vx 
-   sll_real64, dimension(this%np_eta1) :: locjx
-   sll_int32  :: loc_sz_i
-   sll_int32  :: loc_sz_j
-   sll_int32  :: i, j, gi, gj, global_indices(2)
+   sll_real64, dimension(this%np_eta1)           :: locjx
+
+   sll_int32                                     :: error
+   sll_int32                                     :: c
+   sll_int32                                     :: comm
+   sll_int32                                     :: loc_sz_i
+   sll_int32                                     :: loc_sz_j
+   sll_int32                                     :: i
+   sll_int32                                     :: j
+   sll_int32                                     :: gi
+   sll_int32                                     :: gj
+   sll_int32                                     :: global_indices(2)
+   sll_real64                                    :: dvx
+   sll_real64                                    :: vx 
 
    if( present(star)) then
       df => this%ft_star
    else
       df => this%ft
+      SLL_ASSERT(this%transposed)
    end if
    
    dvx = this%delta_eta2
-   SLL_ASSERT(this%transposed)
 
    call compute_local_sizes(this%layout_v, loc_sz_i, loc_sz_j) 
 
@@ -304,12 +344,18 @@ contains
       end do
    end do
 
-   this%jx1 = 0._f64
    comm     = sll_world_collective%comm
-   c        = this%np_eta1*this%np_eta2
+   c        = this%np_eta1
    
-   call mpi_barrier(comm,error)
-   call mpi_allreduce(locjx,this%jx1,c,MPI_REAL8,MPI_SUM,comm,error)
+   if( present(star)) then
+     this%jx1 = 0._f64
+     call mpi_barrier(comm,error)
+     call mpi_allreduce(locjx,this%jx1,c,MPI_REAL8,MPI_SUM,comm,error)
+   else
+     this%jx = 0._f64
+     call mpi_barrier(comm,error)
+     call mpi_allreduce(locjx,this%jx,c,MPI_REAL8,MPI_SUM,comm,error)
+   end if
    
  end subroutine densite_courantx
 
