@@ -18,7 +18,7 @@ sll_int32    :: cells_min
 sll_int32    :: cells_max
 sll_int32    :: cells_stp
 sll_int32    :: i
-sll_int32    :: deg = 3
+sll_int32    :: deg = 1
 sll_int32    :: nloops
 sll_int32    :: ierr
 ! initial distribution
@@ -74,8 +74,8 @@ character(len = 4)  :: filenum
 sll_real64              :: sum_chi
 sum_chi = 0._f64
 
-cells_min = 40
-cells_max = 40
+cells_min = 20
+cells_max = 260
 cells_stp = 20
 do num_cells = cells_min, cells_max, cells_stp
 
@@ -157,15 +157,15 @@ do num_cells = cells_min, cells_max, cells_stp
    spline => new_box_spline_2d(mesh, SLL_DIRICHLET)
 
    ! Just for test purpose of test only : computing splines
-   do i=1, mesh%num_pts_tot
-      x1_basis = change_basis_x1(spline, x1(i), x2(i))
-      x2_basis = change_basis_x2(spline, x1(i), x2(i))
-      if (WRITE_SPLINES.eq.1) then
+   if (WRITE_SPLINES.eq.1) then
+      do i=1, mesh%num_pts_tot
+         x1_basis = change_basis_x1(spline, x1(i), x2(i))
+         x2_basis = change_basis_x2(spline, x1(i), x2(i))
          chi1(i) = chi_gen_val(x1_basis, x2_basis, 1)
          chi2(i) = chi_gen_val(x1_basis, x2_basis, 2)
          chi3(i) = chi_gen_val(x1_basis, x2_basis, 3)
-      end if
-   end do
+      end do
+   end if
 
    call cpu_time(t_init)
 
@@ -236,15 +236,13 @@ do num_cells = cells_min, cells_max, cells_stp
       ! Norm2 error :
       norm2_error = sqrt(norm2_error)
 
-      ! Printing error
+!      ! Printing error
 !       k1_error = mesh%global_to_hex1(where_error)
 !       k2_error = mesh%global_to_hex2(where_error)
 !       print*,"  nt =", nloops, "    | error_Linf = ", diff_error
 !       print*,"                       | at hex =", cells_to_origin(k1_error, k2_error), where_error
 !       print*,"                       | error_L2   = ", norm2_error
 !       print*," Center error = ", f_fin(1)-f_tn(1)
-
-
 
 
       !WRITING ERROR REGARDING TIME STEP
@@ -262,7 +260,6 @@ do num_cells = cells_min, cells_max, cells_stp
          end if
       end if
 
-
       if (WRITE_TIME_DIST.eq.1) then
          call int2string(nloops,filenum)
          filename2 = "./time_files/analytical/ana_dist"//trim(filenum)!//".txt"
@@ -272,7 +269,6 @@ do num_cells = cells_min, cells_max, cells_stp
          call write_field_hex_mesh_xmf(mesh, f_tn, trim(filename))
          call write_field_hex_mesh_xmf(mesh, f_fin, trim(filename2))
       end if
-
 
    end do
 
