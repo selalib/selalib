@@ -54,6 +54,7 @@ module sll_simulation_4d_vlasov_parallel_poisson_sequential_cartesian
 
   use sll_simulation_base
   use sll_time_splitting_coeff_module
+  use sll_utilities, only: int2string
   implicit none
 
 
@@ -78,6 +79,7 @@ module sll_simulation_4d_vlasov_parallel_poisson_sequential_cartesian
    sll_int32  :: freq_diag
    sll_int32  :: freq_diag_time
    type(splitting_coeff), pointer :: split
+   character(len=256)      :: thdiag_filename
    
    !advector
    class(sll_advection_1d_base), pointer    :: advect_x1
@@ -104,26 +106,31 @@ contains
   
   
   function new_vlasov_par_poisson_seq_cart( &
-    filename ) &
+    filename, &
+    num_run ) &
     result(sim)    
     type(sll_simulation_4d_vlasov_par_poisson_seq_cart), pointer :: sim    
     character(len=*), intent(in), optional                                :: filename
+    sll_int32, intent(in), optional :: num_run
     sll_int32 :: ierr   
 
     SLL_ALLOCATE(sim,ierr)            
     call initialize_vlasov_par_poisson_seq_cart( &
       sim, &
-      filename)
+      filename, &
+      num_run)
        
   end function new_vlasov_par_poisson_seq_cart
 
 
   subroutine initialize_vlasov_par_poisson_seq_cart( &
     sim, &
-    filename)
+    filename, &
+    num_run)
         
     class(sll_simulation_4d_vlasov_par_poisson_seq_cart), intent(inout) :: sim
     character(len=*), intent(in), optional                                :: filename
+    sll_int32, intent(in), optional :: num_run
     intrinsic :: trim
     sll_int32             :: IO_stat
     sll_int32, parameter  :: input_file = 99
@@ -168,7 +175,7 @@ contains
     sll_int32             :: ierr
     sll_int32 :: stencil_r
     sll_int32 :: stencil_s
-    
+    character(len=256)      :: str_num_run
       
     ! namelists for data input
     namelist / geometry /   &
@@ -261,8 +268,13 @@ contains
     !split_case = "SLL_ORDER6VPnew2_VTV" 
     !split_case = "SLL_ORDER6_VTV"
     !split_case = "SLL_LIE_TV"
-
-
+    if(present(num_run))then
+      call int2string(num_run, str_num_run)
+      sim%thdiag_filename = "thdiag_"//str_num_run//".dat"
+    else      
+      sim%thdiag_filename = "thdiag.dat"
+    endif
+        
 
     !advector
     advector_x1 = "SLL_LAGRANGE"
@@ -817,7 +829,7 @@ contains
     
      
     if(sll_get_collective_rank(sll_world_collective)==0) then
-      call sll_ascii_file_create('thdiag.dat', th_diag_id, ierr)
+      call sll_ascii_file_create(sim%thdiag_filename, th_diag_id, ierr)
       call sll_binary_file_create('rho.bdat', rho_id, ierr)
       call sll_binary_file_create('E_x1.bdat', E_x1_id, ierr)
       call sll_binary_file_create('E_x2.bdat', E_x2_id, ierr)
@@ -1254,6 +1266,12 @@ contains
   end subroutine compute_jacobian  
   
   
+  subroutine delete_vp4d_par_cart( sim )
+    class(sll_simulation_4d_vlasov_par_poisson_seq_cart) :: sim
+    !sll_int32 :: ierr
+    
+    
+  end subroutine delete_vp4d_par_cart
   
   
   
