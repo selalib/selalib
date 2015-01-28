@@ -164,6 +164,7 @@ ADD_SUBDIRECTORY(advection)
 ADD_SUBDIRECTORY(fcisl)
 ADD_SUBDIRECTORY(gyroaverage)
 ADD_SUBDIRECTORY(maxwell_solvers)
+ADD_SUBDIRECTORY(ampere_solvers)
 ADD_SUBDIRECTORY(quasi_neutral_solvers)
 
 

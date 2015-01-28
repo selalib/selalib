@@ -86,7 +86,7 @@ omega = sqrt( (mode*sll_pi/(nc_eta1*delta_eta1))**2   &
 SLL_ALLOCATE(hx(nc_eta1+1,nc_eta2+1), error)
 SLL_ALLOCATE(hy(nc_eta1+1,nc_eta2+1), error)
 SLL_ALLOCATE(ez(nc_eta1+1,nc_eta2+1), error)
-SLL_ALLOCATE(ez_exact(nc_eta2+1,nc_eta2+1), error)
+SLL_ALLOCATE(ez_exact(nc_eta1+1,nc_eta2+1), error)
 
 call sll_create(maxwell_TM, eta1_min, eta1_max, nc_eta1, &
          eta2_min, eta2_max, nc_eta2, TM_POLARIZATION)
@@ -94,7 +94,7 @@ call sll_create(maxwell_TM, eta1_min, eta1_max, nc_eta1, &
 SLL_ALLOCATE(ex(nc_eta1+1,nc_eta2+1), error)
 SLL_ALLOCATE(ey(nc_eta1+1,nc_eta2+1), error)
 SLL_ALLOCATE(hz(nc_eta1+1,nc_eta2+1), error)
-SLL_ALLOCATE(hz_exact(nc_eta2+1,nc_eta2+1), error)
+SLL_ALLOCATE(hz_exact(nc_eta1+1,nc_eta2+1), error)
 
 call sll_create(maxwell_TE, eta1_min, eta1_max, nc_eta1, &
          eta2_min, eta2_max, nc_eta2, TE_POLARIZATION)
