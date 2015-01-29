@@ -450,6 +450,8 @@ The Ganev-Dimitrov element is of order 4 and uses 15 degrees of freedom which ar
 	0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &  0 &  0 &  0 & 4 & 4 &-4  
 \end{pmatrix}
 \end{equation*}
+
+\rmrk Here the derivatives are not computed exactly. They are approximated with finite differences of order 6 with the values at the mesh points. Results have been found to be better with this order and no significant improvement were noticed with a higher order difference scheme.
 %
 %Another possible way to interpolate is to use a 2d Hermite finite element \cite{zie}   
 %
@@ -637,6 +639,31 @@ Below, we summarize the full algorithm to compute the distribution function $f^{
 \end{description}
 
 
+\subsection{Time scheme}
+We use a second order scheme which is the implicit Adams-Moulton scheme of order two: 
+
+ \begin{equation*}
+ 	 \displaystyle{ \frac{\textbf{X}^{n+1}-\textbf{X}^{n}}{ \Delta t } =\frac{1}{2} ~( \textbf{A}^{n+1}+\textbf{A}^{n} ) }.
+ \end{equation*} 
+ 
+\noindent The difficulty here is that  $\textbf{A}(t^{n+1},\textbf{X}^{n+1})$ is unknown, thus an approximation $\overset{*}{\textbf{A}}$ of    $\textbf{A}$ at time $t^{n+1}$ is made thanks to previous computations:
+ 
+ \begin{equation*}
+\overset{*}{\textbf{A}}= 2~\textbf{A}(t^{n},\textbf{X}^{n+1}) -  \textbf{A}(t^{n-1},\textbf{X}^{n+1}).
+ \end{equation*} 
+ 
+\noindent The unknown $\textbf{X}^{n}$ is found by solving:
+ 
+ 
+ \begin{equation*}
+ 	\begin{cases}
+ 	 \displaystyle{ \frac{\textbf{X}^{n+1}-\textbf{X}^{n}}{ \Delta t } =\frac{1}{2} ~(\overset{*}{\textbf{A}}+\textbf{A}^{n} ) },\\[3.5mm]
+ 	 \textbf{X}^{n+1}=\textbf{x}_i .
+ 	\end{cases}
+ \end{equation*} 
+ 
+A final remark: since we need $\textbf{A}(t^{n-1}$, the first step is done using the euler implicit time scheme. 
+ 
 %%-----------------------------
 %% Results
 %%-----------------------------
@@ -706,8 +733,8 @@ with $\theta=\text{atan2}(y,x)$.
 With this we can study the diocotron instability test case \cite{madaule:hal-00841504}.
 
 \noindent As for the parameters, we take $\varepsilon=0.001$, $r^-=5$, $r^+=8$, $\ell=6$, furthermore $dt=0.1$.
-
-Let us note that 6 vortexes is the main mode. If one takes $\ell\neq6$, but with epsilon small enough, one still sees the mode 6. With epsilon big enough, i.e. at least 0.1, the modes different from 6 can be visible for a time but they are not stable and we see the fusion or the apparition of vortexes until there is the sixth mode. Here we can see the ninth mode turning into the sixth mode by fusion of vortexes as illustrated by figure \ref{fig:mode9}. 
+In this part, we won't test the Z3 approach as it requires a special resolution of the Poisson equation that has not been implemented. Indeed, computing the values of the field at the center of the triangles can't be combined with the resolution at the vertices. 
+Let us note that 6 vortices is the main mode. If one takes $\ell\neq6$, but with epsilon small enough, one still sees the mode 6. With epsilon big enough, i.e. at least 0.1, the modes different from 6 can be visible for a time but they are not stable and we see the fusion or the apparition of vortices until there is the sixth mode. Here we can see the ninth mode turning into the sixth mode by fusion of vortices as illustrated by figure \ref{fig:mode9}. 
 
 %\textcolor{red}{peut etre un paragraphe sur l'evolution de la densite, les 6 modes retrouves qqsoit eps, etc, commenter la figure 6}
 \begin{figure}[h!]
@@ -735,7 +762,7 @@ Let us note that 6 vortexes is the main mode. If one takes $\ell\neq6$, but with
 	\caption{Time evolution of the density's minimum}
 \end{figure}
 
-Both intepolation methods give similar results in terms of energy conservation and positivity conservation. One notices that if the box-splines conserve better the mass, the hermite element conserves better the norms.  
+tThe interpolation methods give similar results in terms of positivity conservation. One notices that if the box-splines conserve better the mass, the Z2 approach conserves better the $L^1$ norm. Also we note the box splines and the HCTC element give close results.  
 
 \begin{figure}[h!]
 	\includegraphics[width=0.35\textwidth]{figures/oscillations_hermite.png}
