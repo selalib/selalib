@@ -76,7 +76,7 @@ program test_hex_hermite
   sll_int32    :: p = 6!-> degree of the approximation for the derivative 
   ! distribution at time n
 
-  sll_int32    :: num_method = 9
+  sll_int32    :: num_method = 12
 
   logical      :: inside
   character(len = 50) :: filename

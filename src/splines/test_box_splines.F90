@@ -18,7 +18,7 @@ sll_int32    :: cells_min
 sll_int32    :: cells_max
 sll_int32    :: cells_stp
 sll_int32    :: i
-sll_int32    :: deg = 1
+sll_int32    :: deg = 2
 sll_int32    :: nloops
 sll_int32    :: ierr
 ! initial distribution
