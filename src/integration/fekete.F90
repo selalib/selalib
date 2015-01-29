@@ -400,7 +400,7 @@ contains
        x = quad_pw(1,i)
        y = quad_pw(2,i)
        w = quad_pw(3,i)
-       write(out_unit, "(3(g13.3,1x))") x, y, w
+       write(out_unit, "(2(g13.3,a,1x),(g13.3))") x, ",", y, ",", w
     end do
     close(out_unit)
 
