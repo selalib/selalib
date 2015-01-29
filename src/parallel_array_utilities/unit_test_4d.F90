@@ -6,11 +6,14 @@ program unit_test_initializers_4d
   use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
   use sll_parallel_array_initializer_module
+  use sll_parallel_array_output_module
+
   implicit none
 
   ! logical meshes
   type(sll_cartesian_mesh_2d), pointer :: mx
   type(sll_cartesian_mesh_2d), pointer :: mv
+  type(sll_cartesian_mesh_4d), pointer :: mesh_4d
   ! coordinate transformations (test transforming spatial coordinates only)
   class(sll_coordinate_transformation_2d_base), pointer :: tx
   sll_real64, dimension(2) :: params_identity
@@ -36,6 +39,10 @@ program unit_test_initializers_4d
 
   ! THIS TEST NEEDS TO BE FINISHED IN A COMPLETE WAY. FOR NOW, THE MODULE
   ! WILL BE PARTIALLY TESTED ON A SIMULATION...
+
+  mesh_4d = mx * mv
+
+  call write_mesh_4d(mesh_4d)
 
   print *, 'PASSED'
 

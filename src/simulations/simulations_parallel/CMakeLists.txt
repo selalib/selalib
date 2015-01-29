@@ -10,10 +10,11 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
                          sll_distribution_function_multipatch
                          sll_general_coordinate_elliptic_solvers_multipatch
                          sll_scalar_field_multipatch
-                         sll_parallel_array_initializers
+                         sll_parallel_array_utilities
                          sll_advection
                          sll_parallel_utilities
                          sll_poisson_solvers
+                         sll_ampere_solvers
                          sll_time_splitting
                          sll_file_io_parallel
                          sll_poisson_parallel

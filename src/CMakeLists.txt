@@ -8,6 +8,7 @@ ENDIF()
 
 IF(OPTIONS_FILE)
    INCLUDE(${OPTIONS_FILE})
+   MESSAGE("OPTIONS_FILE ARE READ")
 ENDIF()
 
 PROJECT(SeLaLib)
@@ -189,7 +190,7 @@ ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers)
 ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers_multipatch)
 ADD_SUBDIRECTORY(poisson_solvers)
 
-ADD_SUBDIRECTORY(parallel_array_initializers)
+ADD_SUBDIRECTORY(parallel_array_utilities)
    
 ADD_SUBDIRECTORY(multigrid)
 ADD_SUBDIRECTORY(visu_pic)
