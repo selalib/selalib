@@ -136,8 +136,8 @@ subroutine initialize_ampere_1d_pstd(self,xmin,xmax,nc_x)
 
 end subroutine initialize_ampere_1d_pstd
 
-
 !> Solve \f$ \frac{\partial E_x}{\partial_t} + J_x = 0 \f$
+!> using spectral method
 subroutine solve_ampere_1d_pstd(self, dt, jx, ex)
 
    type(sll_ampere_1d_pstd), intent(inout) :: self   !< Solver object
@@ -163,7 +163,16 @@ end subroutine solve_ampere_1d_pstd
 
 !> delete ampere solver object
 subroutine free_ampere_1d_pstd(self)
-type(sll_ampere_1d_pstd) :: self
+
+   type(sll_ampere_1d_pstd) :: self
+   
+   #ifdef FFTW_F2003
+   if (c_associated(self%p_ek)) call fftw_free(self%p_ek)
+   if (c_associated(self%p_jk)) call fftw_free(self%p_jk)
+   #endif
+   
+   call fftw_destroy_plan(self%fwx)
+   call fftw_destroy_plan(self%bwx)
 
 end subroutine free_ampere_1d_pstd
 
