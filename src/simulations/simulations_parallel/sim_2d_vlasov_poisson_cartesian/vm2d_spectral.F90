@@ -27,7 +27,7 @@ type(sll_ampere_1d_pstd),               pointer :: ampere
 
 
 sll_int32  :: iter 
-sll_real64 :: tcpu1, tcpu2, mass0
+sll_real64 :: tcpu1, tcpu2
 
 sll_int32  :: prank, comm
 sll_int64  :: psize
@@ -46,20 +46,11 @@ end if
 
 call initlocal()
 
-!f --> ft
 call transposexv(vlasov)
 call compute_charge(vlasov)
 call poisson%compute_E_from_rho( vlasov%ex, vlasov%rho )
-
-!vlasov%exn=vlasov%ex
-
-!ft --> f
 call transposevx(vlasov)
 call spectral_advection_x(vlasov, 0.5*vlasov%dt)
-
-mass0=sum(vlasov%rho)*vlasov%delta_eta1
-
-print *,'mass init',mass0
 
 do iter=1,vlasov%nbiter
 
@@ -69,9 +60,9 @@ do iter=1,vlasov%nbiter
 
    call transposexv(vlasov)
 
-   call compute_charge(vlasov)
+   call compute_current(vlasov)
 
-   call poisson%compute_E_from_rho( vlasov%ex, vlasov%rho )
+   call solve_ampere(vlasov%dt)
 
    call advection_v(vlasov, vlasov%dt)
 
@@ -175,7 +166,6 @@ subroutine solve_ampere(dt)
 
   sll_real64, intent(in)    :: dt
   
-  print*, 'solve ampere'
   call sll_solve(ampere, dt, vlasov%jx, vlasov%ex)
 
 end subroutine solve_ampere
