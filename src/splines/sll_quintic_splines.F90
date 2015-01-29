@@ -38,16 +38,17 @@ contains
 !> Calculation of the parameters of an interpolating quintic splines
 subroutine inspl5(n,x,ind1,indn,cf,h)
 
-sll_int32,  intent(in)    :: n          !< number of interpolation points
-sll_real64, intent(in)    :: x(n)       !< vector of abscissae
-sll_real64, intent(inout) :: cf(1:3,n)  !< ordinates, first and second derivatives
-sll_int32,  intent(in)    :: ind1, indn !< boundary conditions switches at x=1 and n.
-                                        !< for both switches one 
-                                        !< has the correspondance
-                                        !< = 1 type 1
-                                        !< = 0 type 2
-                                        !< =-1 type 3
-sll_real64, intent(out)   :: h(6*n-3)   !< auxiliary vector
+sll_int32,  intent(in)    :: n         !< number of interpolation points
+sll_real64, intent(in)    :: x(n)      !< vector of abscissae
+sll_real64, intent(inout) :: cf(1:3,n) !< ordinates, first and second derivatives
+sll_int32,  intent(in)    :: ind1      !< boundary conditions switches at x=1.
+sll_int32,  intent(in)    :: indn      !< boundary conditions switches at x=n.
+                                       !< for both switches one 
+                                       !< has the correspondance
+                                       !< = 1 type 1
+                                       !< = 0 type 2
+                                       !< =-1 type 3
+sll_real64, intent(out)   :: h(6*n-3)  !< auxiliary vector
 
 h = 0.0_f64
 
