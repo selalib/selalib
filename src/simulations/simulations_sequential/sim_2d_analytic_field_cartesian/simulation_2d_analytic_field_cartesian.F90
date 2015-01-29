@@ -238,6 +238,10 @@ contains
       time_period
 
 
+
+
+
+
     !! set default parameters
     
     !geometry
@@ -249,12 +253,20 @@ contains
     num_cells_x2 = 32
     x2_min = 0.0_f64
     x2_max = 2._f64*sll_pi
+
+
     
     !initial function
     initial_function_case="SLL_KHP1"
     kmode_x1 = 0.5_f64
     kmode_x2 = 1._f64
     eps = 0.015_f64
+    sigma_1 = 0.70710678118654752440
+    sigma_2 = 0.70710678118654752440
+    !initial_function_case="SLL_COS_BELL"
+    xc_1 = 1.
+    xc_2 = -0.2
+
     
     
     !time_iterations
@@ -281,6 +293,8 @@ contains
     !charac1d_x2_case = "SLL_TRAPEZOID"
     f_interp1d_x1_case = "SLL_CUBIC_SPLINES"
     f_interp1d_x2_case = "SLL_CUBIC_SPLINES"
+    time_period = 1.5
+
    
     
     !! If available, load data from input file (parameters organized
