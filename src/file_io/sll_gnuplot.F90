@@ -38,6 +38,7 @@ implicit none
 interface sll_gnuplot_1d
    module procedure  sll_gnuplot_write_1d
    module procedure  sll_gnuplot_write
+   module procedure  sll_gnuplot_write_2
 end interface
 interface sll_gnuplot_2d
    module procedure sll_gnuplot_corect_2d
@@ -55,43 +56,67 @@ subroutine sll_gnuplot_write(array, array_name, iplot)
 
   sll_real64, dimension(:), intent(in) :: array      !< data
   character(len=*),         intent(in) :: array_name !< field name
-  sll_int32,                optional   :: iplot      !< plot counter
+  sll_int32                            :: iplot      !< plot counter
   sll_int32                            :: file_id    !< file unit number
   sll_int32                            :: npoints
   sll_int32                            :: ipoints    
-  logical                              :: lopen
   character(len=4)                     :: cplot
   sll_int32                            :: error
   
   npoints = size(array)
 
   call sll_new_file_id(file_id, error)
+  call int2string(iplot,cplot)
 
-  open(file_id,file=trim(array_name)//".gnu",form='FORMATTED',iostat=error)
-  rewind(file_id)
-
-  write(file_id,"(a)")"plot '-' t '"//trim(array_name)//"' with linesp"
-  do ipoints = 1, npoints
-     write(file_id,"(g15.3)") array(ipoints)
-  end do
-  write(file_id,"(a)")"e"
-  write(file_id,"(a)")"pause -1 'Hit return to quit'"
+  open(file_id,file=trim(array_name)//".gnu", &
+               position="append",             &
+               form='FORMATTED',iostat=error)
+  if (iplot == 1) rewind(file_id)
+  write(file_id,"(a)")"plot '"//trim(array_name)//cplot//".dat' with linesp"
   close(file_id)
 
-  if(present(iplot)) then
-    call int2string(iplot,cplot)
-    open(file_id,file=trim(array_name)//cplot//".dat",form='FORMATTED',iostat=error)
-  else
-    open(file_id,file=trim(array_name)//".dat",form='FORMATTED',iostat=error)
-  end if
-  rewind(file_id)
-
+  open(file_id,file=trim(array_name)//cplot//".dat",form='FORMATTED',iostat=error)
   do ipoints = 1, npoints
      write(file_id,*) sngl(array(ipoints))
   end do
   close(file_id)
 
 end subroutine sll_gnuplot_write
+
+!> write an array
+subroutine sll_gnuplot_write_2(array_name, array1, array2, iplot)
+
+  sll_real64, dimension(:), intent(in) :: array1     !< data
+  sll_real64, dimension(:), intent(in) :: array2     !< data
+  character(len=*),         intent(in) :: array_name !< field name
+  sll_int32                            :: iplot      !< plot counter
+  sll_int32                            :: file_id    !< file unit number
+  sll_int32                            :: n
+  sll_int32                            :: i
+  character(len=4)                     :: cplot
+  sll_int32                            :: error
+  
+  n = size(array1)
+  SLL_ASSERT(size(array2) == n)
+
+  call sll_new_file_id(file_id, error)
+  call int2string(iplot,cplot)
+
+  open(file_id,file=trim(array_name)//".gnu", &
+               position="append",             &
+               form='FORMATTED',iostat=error)
+  if (iplot == 1) rewind(file_id)
+  write(file_id,"(a)")"plot '"//trim(array_name)//cplot//".dat' with linesp, &
+                      & '"//trim(array_name)//cplot//".dat' u 1:3 w l"
+  close(file_id)
+
+  open(file_id,file=trim(array_name)//cplot//".dat",form='FORMATTED',iostat=error)
+  do i = 1, n
+     write(file_id,*) i, sngl(array1(i)), sngl(array2(i))
+  end do
+  close(file_id)
+
+end subroutine sll_gnuplot_write_2
 
 
 !> This subroutine write a data file to plot a 1d curve
@@ -106,7 +131,6 @@ subroutine sll_gnuplot_write_1d( y_array, x_array, array_name, iplot)
   sll_int32                            :: file_id    !< file unit number
   sll_int32                            :: npoints
   sll_int32                            :: ipoints    
-  logical                              :: lopen
   character(len=4)                     :: cplot
   
   npoints = size(x_array)
