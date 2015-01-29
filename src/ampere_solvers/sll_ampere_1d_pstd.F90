@@ -169,10 +169,10 @@ subroutine free_ampere_1d_pstd(self)
 
    type(sll_ampere_1d_pstd) :: self
    
-   #ifdef FFTW_F2003
+#ifdef FFTW_F2003
    if (c_associated(self%p_ek)) call fftw_free(self%p_ek)
    if (c_associated(self%p_jk)) call fftw_free(self%p_jk)
-   #endif
+#endif
    
    call fftw_destroy_plan(self%fwx)
    call fftw_destroy_plan(self%bwx)
