@@ -800,6 +800,7 @@ contains  ! ****************************************************************
 
        do num_fek = 1,10
           write(out_unit, "(i6)", advance="no") LM(num_ele, num_fek)
+          write(out_unit, "(a)", advance="no") ","
        end do
 
        write(out_unit,"(a)")""
