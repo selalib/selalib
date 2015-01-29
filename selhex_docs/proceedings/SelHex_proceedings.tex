@@ -662,7 +662,7 @@ We use a second order scheme which is the implicit Adams-Moulton scheme of order
  	\end{cases}
  \end{equation*} 
  
-A final remark: since we need $\textbf{A}(t^{n-1}$, the first step is done using the euler implicit time scheme. 
+A final remark: since we need $\textbf{A}(t^{n-1})$, the first step is done using the euler implicit time scheme. 
  
 %%-----------------------------
 %% Results
@@ -708,7 +708,7 @@ In Figure~\ref{fig:circ_convergence} we can see that for coarse meshes only the 
 
 Figure~\ref{fig:circ_performance} we can see that the level of performance of all the methods convergences quite quickly. It is also pretty obvious that even if the splines obtained more accuracy, the cost is more expensive than most of the Hermite Finite Element methods.
 
-\subsection{Guiding-center model}
+\subsection{Guiding-center model - Diocotron instability}
 
 
 We consider here a guiding-center approximation of the 2D Vlasov-Poisson system, where the parallel velocity has been neglected and the magnetic field is set to $B = \begin{pmatrix} 0 & 0 & 1 \end{pmatrix}^T$. Furthermore, we consider the model in 2D in space and 1D in time. The reduced gyrokinetic model obtained\cite{filbet:hal-01068223} is
@@ -750,14 +750,12 @@ The initial density is given by :
  \rho_0(\mathbf{x}_\bot)=
  \left\{
  \begin{array}{ll}
-  (1+\varepsilon\cos(\ell\theta))\exp{(-4(r-6.5)^2)},&\text{if  } r^-\leq\sqrt{x^2+y^2}\leq r^+,\\[3mm]
+  (1+\varepsilon\cos(\ell\theta))\exp{(-4(r-6.5)^2)},&\text{if  } r^-\leq\sqrt{x^2+y^2}\leq r^+,~ \text{with} ~\theta=\text{atan2}(y,x).\\[3mm]
   0,&\text{otherwise},
  \end{array}
  \right.
 \end{equation*}
 with $\theta=\text{atan2}(y,x)$.
-
-\noindent In the following tests, we take $\varepsilon=0.001$, $r^-=5$, $r^+=8$, $\ell=6$, furthermore $dt=0.1$.
 
 \noindent As for the parameters, we take $\varepsilon=0.001$, $r^-=5$, $r^+=8$, $\ell=6$, furthermore $dt=0.1$ and the hexagonal step is $\frac{14}{160}$ with a radius of 14 and and an hexagonal parameter $nc =160$.
 In this part, we won't test the Z3 approach as it requires a special resolution of the Poisson equation that has not been implemented. Indeed, computing the values of the field at the center of the triangles can't be combined with the resolution at the vertices. 
@@ -787,7 +785,7 @@ Visualisation of the results. The six vortices are developping with time without
 \begin{figure}[h!]
 	\includegraphics[scale=0.3]{figures/mass_cg.png}
 	\includegraphics[scale=0.3]{figures/energy_cg.png}
-	\caption{Time evolution of the relative of mass and energy}
+	\caption{Time evolution of the relative error of mass and energy}
 \end{figure}
 
 \begin{figure}[h!]
