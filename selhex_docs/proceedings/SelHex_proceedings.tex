@@ -45,12 +45,12 @@
 %%-----------------------------
 %% English version ............
 \begin{abstract} 
-This paper introduces a Semi-Lagrangian solver for the Vlasov-Poisson equation on a regular hexagonal mesh. The latter is composed of equilateral triangles, thus it doesn't contain any singularities, unlike polar meshes. We focus on the guiding-center model. Thus, a Poisson solver for the hexagonal mesh is developed. For the interpolation step of the Semi-Lagrangian scheme, a comparison is made between using box-splines and Hermite finite elements. \textcolor{blue}{The scheme is successfully adapted to the mesh using both interpolation methods, with different performances.} We expect to adapt it to more complex models and geometries.
+This paper introduces a Semi-Lagrangian solver for the Vlasov-Poisson equation on a regular hexagonal mesh. The latter is composed of equilateral triangles, thus it doesn't contain any singularities, unlike polar meshes. We focus on the guiding-center model. Thus, a Poisson solver for the hexagonal mesh is developed. For the interpolation step of the Semi-Lagrangian scheme, a comparison is made between using box-splines and Hermite finite elements. We expect to adapt it to more complex models and geometries.
 \end{abstract}
 
 %% French version ............
 \begin{resume} 
-Dans cet article nous introduisons un solveur semi-Lagrangien pour l'\'equation de Vlasov-Poisson sur un maillage hexagonal r\'egulier. Ce dernier est compos\'e de triangles \'equilat\'eraux, ainsi il ne pr\'esente aucune singularit\'e, contrairement au maillage polaire. Nous nous concentrons ici sur le mod\`ele centre-guide. \`A cette fin nous avons d\'evelopp\'e un solveur de l'\'equation de Poisson pour maillage hexagonal. Au regard de l'interpolation, nous comparons les r\'esultats obtenus avec des \'el\'ements finis d'Hermite et des box-splines. \textcolor{blue}{Chaque m\'ethode d'interpolation est donc adapt\'ee au maillage.}  Dans l'avenir, ce code sera adapt\'e \`a des g\'eom\'etries et mod\`eles plus complexes.  
+Dans cet article nous introduisons un solveur semi-Lagrangien pour l'\'equation de Vlasov-Poisson sur un maillage hexagonal r\'egulier. Ce dernier est compos\'e de triangles \'equilat\'eraux, ainsi il ne pr\'esente aucune singularit\'e, contrairement au maillage polaire. Nous nous concentrons ici sur le mod\`ele centre-guide. \`A cette fin nous avons d\'evelopp\'e un solveur de l'\'equation de Poisson pour maillage hexagonal. Au regard de l'interpolation, nous comparons les r\'esultats obtenus avec des \'el\'ements finis d'Hermite et des box-splines.   Dans l'avenir, ce code sera adapt\'e \`a des g\'eom\'etries et mod\`eles plus complexes.  
 \end{resume}
 
 
@@ -68,14 +68,14 @@ There are three kinds of regular pavings of the plane: using squares, triangles 
 
 In magnetic fusion applications the embedded magnetic flux surfaces play an important role and introduce an important anisotropy\cite{Angelino2009}. For this reason one gets favourable numerical properties when grid points align on the concentric magnetic flux surfaces. When trying to do this with a mapped cartesian grid, one ends up with a polar coordinates mesh (when the flux surfaces are circles) or something topologically equivalent. This yields smaller and smaller cells when getting closer to the center as well as a singularity at the center. This is numerically far from optimal. 
 
-Different strategies have been implemented to avoid these singularities, we can cite among others: the isoparametric analysis approach done by J. Abiteboul et al. \cite{abiteboul2011solving} IGA approach or N. Besse and E. Sonnendr\"{u}cker's work with non-structured meshes\cite{Besse2003341}. Both of the works presented on these papers are particularly interesting as not only they avoid singularities but they are also extremely flexible and can be easily adapted to more complex geometries. However, some limitations are the numerical complexity, the advection of the derivatives and, the localisation of the feet of the characteristics. 
+Different strategies have been implemented to avoid these singularities, we can cite among others: the isoparametric analysis approach done by J. Abiteboul et al. \cite{abiteboul2011solving} and A. Ratnani \cite{ratnani2011isogeometric} or N. Besse and E. Sonnendr\"{u}cker's work with non-structured meshes\cite{Besse2003341}. Both of the works presented on these papers are particularly interesting as not only they avoid singularities but they are also extremely flexible and can be easily adapted to more complex geometries. However, some limitations are the numerical complexity, the advection of the derivatives and, the localisation of the feet of the characteristics. 
 
 Tiling a regular hexagon into triangles yields a mesh of equilateral triangles having all the same area. This grid can be easily mapped to a circle by slightly stretching the edges of the hexagon. This yields a nice mesh of a disk with slightly stretched triangles of almost the same size and there is no singularity in any point of the domain. 
 Additionally, such a mesh has a clear structure with three privileged directions, thus it is completely straightforward to localise points within this mesh. The derivatives along the three directions can also be nicely computed using finite differencing along uniform lines. And last but not least, there is a spline construction on this mesh, called box spline. These splines have a hexagonal support and are invariant by translations along the three directions of the mesh. 
 
 The disadvantages previously mentioned, are not present when dealing with the simple and straightforward hexagonal mesh. Regarding the computational efficiency, all our simulations include an analysis and comparison with more common methods. Lastly, we suggest this scheme as an introduction to treat more complex geometries. Indeed by a simple mapping it will be easy to work with curvilinear coordinates.
 
-In this work, we focus on adapting the Semi-Lagrangian scheme to this hexagonal mesh. \textcolor{blue}{The guiding-center model is considered}. This scheme consists basically of two steps: computing the characteristics' origins and interpolating at these points. For the latter, we compare two different approaches: one using box-splines and the second approach using Hermite Finite Elements. Both interpolation methods, as well as the mesh, are presented in section~\ref{sec:interpolation}. In section~\ref{sec:poisson_eqn}, we present a Poisson solver adapted to the hexagonal mesh. We present a guiding-center approximation of the 2D Vlasov Poisson system\cite{Golse1998865}, and the Semi-Lagrangian scheme to solve it, in section~\ref{sec:BSL_scheme}. Finally, in section~\ref{sec:results} we compare the results of the scheme using box splines with the ones using Hermite finite elements, we also compare them to more traditional meshes, such as the polar mesh. Besides the guiding-center model, different advection models have been simulated in this section.
+In this work, we focus on adapting the Semi-Lagrangian scheme to this hexagonal mesh. This scheme consists basically of two steps: computing the characteristics' origins and interpolating at these points. For the latter, we compare two different approaches: one using box-splines and the second approach using Hermite Finite Elements. Both interpolation methods, as well as the mesh, are presented in section~\ref{sec:interpolation}. In section~\ref{sec:poisson_eqn}, we present a Poisson solver adapted to the hexagonal mesh. We present a guiding-center approximation of the 2D Vlasov Poisson system\cite{Golse1998865}, and the Semi-Lagrangian scheme to solve it, in section~\ref{sec:BSL_scheme}. Finally, in section~\ref{sec:results} we compare the results of the scheme using box splines with the ones using Hermite finite elements, we also compare them to more traditional meshes, such as the polar mesh. Besides the guiding-center model, different advection models have been simulated in this section.
 
 
 %%-----------------------------
@@ -190,7 +190,7 @@ Box-splines are a generalisation of the more known splines' family: B-splines. T
 \rmrk The box-splines can have different degrees in each direction. Thus, there are different definitions of the degree. We will adopt the definition below.
 
 \begin{dfntn}[Degree of a Box-spline]
-Let $\Xi$ be a $d \times d$ matrix with non-null columns in $\xR^d$. The column vectors of $\Xi$ form a generating basis of $\xR^d$ and linearly independent. Then, the box-spline of degree $N$ of generating matrix $\Xi$, $\chi^N_\Xi$, is the box-spline associated to $\Xi$, where all the generating vectors have multiplicity $N$. This yields, that $\chi^N_\Xi$ is piecewise polynomial of degree $N$.
+Let $\Xi$ be a $d \times d$ matrix with non-null columns in $\xR^d$. The column vectors of $\Xi$ form a generating basis of $\xR^d$ and are linearly independent. Then, the box-spline of degree $N$ of generating matrix $\Xi$, $\chi^N_\Xi$, is the box-spline associated to $\Xi$, where all the generating vectors have multiplicity $N+1$. This yields, that $\chi^N_\Xi$ is piecewise polynomial of degree $N$.
 
 
 \end{dfntn}
@@ -220,7 +220,7 @@ where $*$ is the convolution operator, $s$ is the initial sample data and $p$ is
 
 \subsubsection{Box splines coefficients}
 
-How we determine the splines coefficients is almost as important as the splines themselves. We recall we have the formula \eqref{eqn:coefs}. Based on the literature available (notably \cite{Condat2007}) we have chosen for second-order box-splines the quasi-interpolation pre-filters $p_{IIR2}$ which seem to give the better results within a competitive time. The pre-filter $p_{IIR2}[i]$ of the point of local index $i$, for splines of order 2, is defined as follows : 
+How we determine the splines coefficients is almost as important as the splines themselves. We recall we have the formula \eqref{eqn:coefs}. Based on the literature available (notably \cite{Condat2007}) we have chosen for second-order box-splines the quasi-interpolation pre-filters $p_{IIR2}$ which seem to give better results within a competitive time. The pre-filter $p_{IIR2}[i]$ of the point of local index $i$, for splines of order 2, is defined as follows : 
 
 
 \begin{equation}
@@ -264,17 +264,17 @@ At the present state we have all the elements for the approximation of a functio
 \tilde{f}(\mathbf{x}) = \sum_{\mathbf{k} \in \xZ^2} c[\mathbf{k}] \chi^2(\mathbf{x} - \mathbf{R}\mathbf{k})
 \end{equation}
 
-Even if we limit our sum to the vector $\mathbf{k}$ that defines our domain, we would like to take advantage of the fact that the splines $\chi^2$ are only non-zeros in a limited number of points. Therefore we need to know the indices $\mathbf{k}$ such that $\chi^2(\mathbf{x} - \mathbf{R} \mathbf{x}) \neq 0$. For this purpose we will use the strategy suggested in \cite{Condat2007} : to start we need to obtain the indices on the coordinate system generated by $\mathbf{R}$ : $\mathbf{k}_0 = \left[ \lfloor u \rfloor \; \lfloor v \rfloor \right]$ where $\left[ u \; v \right]^T = \mathbf{R}^ {-1} \mathbf{x} $. Thus, in our case, with splines $\chi^2$ we only need 4 terms associated to the encapsulating rhomboid's vertices : $\mathbf{R}\mathbf{k}_0$, $\mathbf{R}\mathbf{k}_0 + \mathbf{r_1}$, $\mathbf{R}\mathbf{k}_0 + \mathbf{r_2}$ and $\mathbf{R}\mathbf{k}_0 + \mathbf{r_1} + \mathbf{r_2}$. Finally we obtain :
+Even if we limit our sum to the vector $\mathbf{k}$ that defines our domain, we would like to take advantage of the fact that the splines $\chi^1$ are only non-zeros in a limited number of points. Therefore we need to know the indices $\mathbf{k}$ such that $\chi^1(\mathbf{x} - \mathbf{R} \mathbf{x}) \neq 0$. For this purpose we will use the strategy suggested in \cite{Condat2007} : to start we need to obtain the indices on the coordinate system generated by $\mathbf{R}$ : $\mathbf{k}_0 = \left[ \lfloor u \rfloor \; \lfloor v \rfloor \right]$ where $\left[ u \; v \right]^T = \mathbf{R}^ {-1} \mathbf{x} $. Thus, in our case, with splines $\chi^2$ we only need 4 terms associated to the encapsulating rhomboid's vertices : $\mathbf{R}\mathbf{k}_0$, $\mathbf{R}\mathbf{k}_0 + \mathbf{r_1}$, $\mathbf{R}\mathbf{k}_0 + \mathbf{r_2}$ and $\mathbf{R}\mathbf{k}_0 + \mathbf{r_1} + \mathbf{r_2}$. Finally we obtain :
 
 \begin{align}
 \label{eqn:chi2_fct_interpol}
-\tilde{f}(\mathbf{x}) =& \;\;\;\;\; c[\mathbf{k}_0] \; \chi^2(\mathbf{x} - \mathbf{R}\mathbf{k}_0) \nonumber\\
-	&+ c[\mathbf{k}_0 +[1,0]]\; \chi^2(\mathbf{x} - \mathbf{R}\mathbf{k}_0 - \mathbf{r_1}) \nonumber\\
-	&+ c[\mathbf{k}_0 +[0,1]]\; \chi^2(\mathbf{x} - \mathbf{R}\mathbf{k}_0 - \mathbf{r_2}) \nonumber\\
-	&+ c[\mathbf{k}_0 +[1,1]]\; \chi^2(\mathbf{x} - \mathbf{R}\mathbf{k}_0 - \mathbf{r_1} - \mathbf{r_2})
+\tilde{f}(\mathbf{x}) =& \;\;\;\;\; c[\mathbf{k}_0] \; \chi^1(\mathbf{x} - \mathbf{R}\mathbf{k}_0) \nonumber\\
+	&+ c[\mathbf{k}_0 +[1,0]]\; \chi^1(\mathbf{x} - \mathbf{R}\mathbf{k}_0 - \mathbf{r_1}) \nonumber\\
+	&+ c[\mathbf{k}_0 +[0,1]]\; \chi^1(\mathbf{x} - \mathbf{R}\mathbf{k}_0 - \mathbf{r_2}) \nonumber\\
+	&+ c[\mathbf{k}_0 +[1,1]]\; \chi^1(\mathbf{x} - \mathbf{R}\mathbf{k}_0 - \mathbf{r_1} - \mathbf{r_2})
 \end{align}
 
-\rmrk  As the $\chi^2$ spline has a support of radius the unity, one of the elements of \eqref{eqn:chi2_fct_interpol} is null. But this formula allows us to keep a short general formula for all points on the mesh without having to compute the indices of the cell to which $\mathbf{x}$ belongs to.
+\rmrk  As the $\chi^1$ spline has a support of radius the unity, one of the elements of \eqref{eqn:chi2_fct_interpol} is null. But this formula allows us to keep a short general formula for all points on the mesh without having to compute the indices of the cell to which $\mathbf{x}$ belongs to.
 
 
 %%-----------------------------
@@ -286,7 +286,8 @@ For this part we define the indices i, j and k with the following relations:
 \begin{equation*}
 j=i[3]+1 ~,~ k=j[3]+1.
 \end{equation*}  
-Here $i[3]$ is the rest of the euclidian division of $i$ by $3$.
+
+\textcolor{red}{c'est quoi i[3], j[3] ?}
 
 Several elements have been tested here:
 The Z2 and Z3 Zienkiewicz elements, the Hsieh-Clough-Tocher reduced (HCT-r) and complete (HCT-c), and the Ganev-Dimitrov element. These elements can be found in \cite{z} and \cite{b1} . Here we show specifically how the hexagonal structure simplifies the interpolation with these elements.\\
@@ -450,8 +451,6 @@ The Ganev-Dimitrov element is of order 4 and uses 15 degrees of freedom which ar
 	0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &  0 &  0 &  0 & 4 & 4 &-4  
 \end{pmatrix}
 \end{equation*}
-
-\rmrk Here the derivatives are not computed exactly. They are approximated with finite differences of order 6 with the values at the mesh points. Results have been found to be better with this order and no significant improvement were noticed with a higher order difference scheme.
 %
 %Another possible way to interpolate is to use a 2d Hermite finite element \cite{zie}   
 %
@@ -543,13 +542,148 @@ Considering the gain of two order of precision at such little cost, we have used
 \label{sec:BSL_scheme}
 
 %%-----------------------------
-When solving a Vlasov equation, one usually think in Lagrangian methods such as PIC. Unfortunately, the drawback of these schemes is that it's vulnerable to numerical noise. Furthermore, this noise is unpredictable as it is the statistical error of a Monte Carlo integration. Looking for other possible schemes to solve the Vlasov equation, one might think of Eulerian methods, where the operators 
+When solving a Vlasov equation, one usually think in Lagrangian methods such as PIC\cite{Birdsall:1985:PPV:577251}. Unfortunately, the drawback of these schemes is that it's vulnerable to numerical noise. Furthermore, this noise is unpredictable as it is the statistical error of a Monte Carlo integration. Looking for other possible schemes to solve the Vlasov equation, one might think of Eulerian methods, where the operators 
 are discretized. The downside of this type of method is the dissipation.
 
 With the intention of neglecting the pitfalls of the method, the Semi-Lagrangian method was introduced, first in numerical weather prediction, but since then, it has been introduced for plasma simulations \cite{sonnendrucker:inria-00073296, Cheng1976330} and it's getting more and more popular. This scheme consists on fixing an Eulerian grid in phase-space and following the trajectory of the equation's characteristics in time to compute the evolution of the distribution function. The advantages of this scheme are the possibility of taking large time steps and its stability. However, it is important to note that it's very computationally costly to go to high dimensions. Thus, it is typically used with 1D and 2D models. Lastly, we can point out that there are many types of Semi-Lagrangian solvers (\emph{e.g.} depending on the trajectories: Backward or Forward;  depending on the elements on which is based: grid's point, integrated cell..). We have chosen here to use the classical Backward Semi-Lagrangian method. 
 
 %%-----------------------------
-\subsection{The Guiding-Center Model}
+\subsection{The non-constant advection equation}
+
+As an example, we take the non-constant advection equation, which can be written in general form
+
+\begin{equation}
+	\dfrac{\partial \rho}{\partial t} + \mathbf{A} \cdot \nabla_{\mathbf{x}} \rho(\mathbf{x}, t)  = 0
+	\label{eqn:noncst_advec}
+\end{equation}
+
+where $\mathbf{A}$ is divergence free (\emph{i.e.} $\nabla \cdot \mathbf{A} = 0$) and the density $\rho$ is known at the initial time (\emph{i.e.} $\rho(\mathbf{x}, 0) = \rho_0(\mathbf{x})$ is known). This equation is generally considered the simplest form of the Vlasov equation. We will apply the backward Semi-Lagrangian scheme to solve it.
+
+
+We consider the model \eqref{eqn:noncst_advec} on a 2D hexagonal domain, discretized with the hexagonal mesh. The points of the lattice are denoted $\mathbf{x}=(x_1, x_2)$. The distribution function $\rho(\mathbf{x},t)$ is known on all mesh points at the initial time $t=0$. In other words, $\rho_0(\mathbf{x})$ is given. Let $A_x$ and $A_y$ be respectively, the first and second components of $\mathbf{A}$. We proceed to apply the BSL to the Vlasov equation \eqref{eqn:gc_vlasov}: First, we apply the characteristics' method. We obtain for a given $s \in \xR $
+
+\begin{equation}
+	\label{eqn:charac_sys}
+	\left\lbrace
+	\begin{array}{lcl}
+	\displaystyle \dfrac{d \mathbf{X}}{dt} &=& \mathbf{A}\\[0.3cm]
+	\displaystyle \mathbf{X}(s) &=& \mathbf{x}
+	\end{array}\right.
+~~\Longleftrightarrow ~~
+	\left\lbrace
+	\begin{array}{lcl}
+	\displaystyle \dfrac{d \mathbf{X_1}}{dt} &=& A_x\\[0.3cm]
+	\displaystyle \dfrac{d \mathbf{X_2}}{dt} &=& A_y\\[0.3cm]
+	\displaystyle X_1(s) &=& x_1, \quad   X_2(s) = x_2
+	\end{array}\right.
+\end{equation}
+
+The solutions ($X_1, X_2$) of \eqref{eqn:charac_sys}, obtained by any ODE solver, are called the characteristics of \eqref{eqn:charac_sys}. Besides, we know that the density $\rho$ is conserved along these characteristics and therefore we can write:
+
+\begin{equation}
+	\rho(\mathbf{x}, dt) = \rho(\mathbf{X}, 0)
+\end{equation}
+
+Or for any given time $t^{n+1}$ when $\rho^n$, the distribution function at the previous time step, is known
+
+\begin{equation}
+\label{eqn:SL_eqn}
+	\rho(\mathbf{x}, t^{n+1}) = \rho^n(\mathbf{X}^{n+1})
+\end{equation}
+
+The initial distribution function is only known on the mesh points, and the characteristic's origin $X^{n+1}$ are probably not on a mesh point (see figure~\ref{fig:SL_hex}). Therefore, we can use any interpolation method to compute $f^n$ on the characteristic's origin, \emph{i.e.} to approximate the solution of the equation \eqref{eqn:SL_eqn}, using the the known data on the mesh points at its vicinity.
+
+
+%%-----------------------------
+\subsection{Localizing the characteristics' origins}
+
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[scale=0.5]{figures/SL_hex.png} 
+	\caption{Semi-Lagrangian step: Tracing back characteristics.}
+	\label{fig:SL_hex}
+\end{figure}
+
+
+One of the advantages of the hexagonal mesh is its regularity. Indeed, even if the mesh is not Cartesian, localizing the characteristics' origin requires almost no computation. Let $(X_1, X_2)$ the Cartesian coordinates of the characteristics' origin, obtained by solving \eqref{eqn:charac_sys}. Then to obtain the hexagonal coordinates $(k_1, k_2)$ of the lowest point of the rhomboid encapsulating the point, we simply need to solve the system $\mathbf{x} = \mathbf{R} \mathbf{k}$, we get
+
+\begin{equation}
+	\label{eqn:k1k2}
+	\left\lbrace
+	\begin{array}{lclcl}
+	k_1 &=&  \dfrac{\lfloor r_{22} X_1 - r_{21} X_2 \rfloor}{r_{11}*r_{22} - r_{12} r_{21}} & = &  \;\;\;\dfrac{1}{\sqrt{3}} X_1 + X_2\\[0.3cm]
+	k_2 &=&  \dfrac{\lfloor r_{11} X_2 - r_{12} X_1 \rfloor}{r_{11}*r_{22} - r_{12} r_{21}} & = &  -\dfrac{1}{\sqrt{3}} X_1 + X_2
+	\end{array}\right.
+\end{equation}
+
+After obtaining $(k_1, k_2)$, we know the rhomboid (composed by two cells) containing the characteristics' origin. To determine the exact cell on which the origin is located, we only need to verify if the abscissa of the point is greater than the abscissa of the mesh point at $(k_1, k_2)$ or not. In the first case the point belongs to the cell at the right, else to the cell at the left.
+
+
+%%-----------------------------
+\subsection{General Algorithm}
+
+Below, we summarize the full algorithm to compute the distribution function $\rho^{n+1}$ solution of the non-constant advection equation \eqref{eqn:noncst_advec}.
+
+\begin{description}
+	\item[Initialization] At time $t=0$, we suppose that $\rho(\mathbf{x}, 0)$ is given.
+	\item[Time Loop] Incrementation of a given time step $\Delta t$, such that: $t^{n+1} = t^n + \Delta t$
+		\begin{itemize}
+		\item Compute the \underline{characteristics' origins} using an ODE solver for \eqref{eqn:charac_sys};
+		\item Interpolate the \underline{distribution function $\rho^n$} on that point using the mesh points in the vicinity;
+		\item Update the known values: $\rho^n = \rho^{n+1}$.
+		\end{itemize}
+	\item[Remark] the boundary conditions will intervene in between the first and the second steps of the time loop (\emph{i.e.} before the interpolation step). On this paper we focus only on null Dirichlet boundary conditions.
+\end{description}
+
+
+%%-----------------------------
+%% Results
+%%-----------------------------
+\section{Numerical results}
+\label{sec:results}
+In this section we present the effectuated numerical simulations and their results. With the aim of studying the convergence, the dissipation, and the  efficiency of the methods, we first study the circular advection test case. To study the accuracy of the results, we compare them to a known solution. Then we proceed to the guiding-center simulation. As there is no model solution for this test case, we study properties of the system that we know should be conserved.
+
+
+\subsection{Circular advection}
+
+We focus here on the circular advection test case. The model is defined by:
+
+	\begin{equation}
+		\partial_t f(x,y,t) + y\,\partial_x f(x,y,t) - x \,\partial_y f(x,y,t) = 0 
+	\end{equation}
+
+As this equation is not coupled to Poisson model, we can study in detail the differences between the interpolation methods previously presented.	Additionally, finding the analytical solution is trivial and therefore we can study the convergence of our methods. Here, we take a Gaussian pulse as initial distribution function:
+
+	\begin{equation}
+	 f_0(x,y) = exp  \left( -\dfrac{1}{2} \left( \dfrac{(x - x_c)^2}{\sigma_x^2} + \dfrac{(y - y_c)^2}{\sigma_y^2  } \right)   \right ), 
+	\end{equation}
+
+On a hexagonal mesh centered at the origin, of radius $8$,  we take  $\sigma_x = \sigma_y = \frac{1}{2\sqrt{2}}$ (amplitude of the gaussian). Let us set here $x_c = 2$ and $y_c = 2$. The distance from the pulse to the limit of the domain makes the boundary effects negligeable, thus we can take a null Dirichlet boundary condition.  To study the convergence in space we took $N = 20, 40, 60, ..., 160$. We recall that $N$ is the number of cells on the radius $L$. With the maximum time of evaluation, $t_{max}$, at $6 \pi$, we chose to keep a constant CFL at $2$.
+
+
+
+\begin{figure}[h!]
+	\label{fig:circ_convergence}
+	\includegraphics[width=0.45\textwidth]{figures/l2.png}
+	\includegraphics[width=0.45\textwidth]{figures/inf_l.png}
+	\caption{Order of convergence}
+\end{figure}
+
+In Figure~\ref{fig:circ_convergence} we can see that for coarse meshes only the Ganev-Dimitrov method had a worst accuracy than the splines of degree $2$. Nonetheless, for finer grids, the splines obtain results better or as good as all the finite elements methods. Regarding the latter, we notice that there is little to no difference between Zienkiewicz-9 and the H-C-T-R method. 
+
+\begin{figure}[h!]
+	\label{fig:circ_performance}
+	\includegraphics[scale=0.35]{figures/efficiency.png}
+	\includegraphics[scale=0.35]{figures/time_norm.png}
+	\caption{Comparison of performances }
+\end{figure}
+
+Figure~\ref{fig:circ_performance} we can see that the level of performance of all the methods convergences quite quickly. It is also pretty obvious that even if the splines obtained more accuracy, the cost is more expensive than most of the Hermite Finite Element methods.
+
+\subsection{Guiding-center}
+
+
 We consider here a guiding-center approximation of the 2D Vlasov-Poisson system, where the parallel velocity has been neglected and the magnetic field is set to $B = \begin{pmatrix} 0 & 0 & 1 \end{pmatrix}^T$. Furthermore, we consider the model in 2D in space and 1D in time. The reduced gyrokinetic model obtained\cite{filbet:hal-01068223} is
 
 \begin{subnumcases}{\label{eqn:guiding_center}}
@@ -582,143 +716,9 @@ By neglecting the effect of boundary conditions, the  guiding center model verif
 
 This model, is commonly used in 2D simulations to study the particle density, as it describes highly magnetized plasmas in the poloidal plane of a tokamak.
 
-%%-----------------------------
-\subsection{General Algorithm}
-We consider the model \eqref{eqn:guiding_center} on a 2D hexagonal domain, discretized with the hexagonal mesh. The points of the lattice are denoted $\mathbf{x}=(x_1, x_2)$. The distribution function $f(\mathbf{x},t)$ is known on all mesh points at the initial time $t=0$. In other words, $f_0(\mathbf{x})$ is given. To obtain the initial electric field, we solve \eqref{eqn:gc_poisson} using either poisson solver defined in \ref{sec:poisson_eqn}. We proceed to apply the BSL to the Vlasov equation \eqref{eqn:gc_vlasov}: First, we apply the characteristic method, we obtain for a given $s \in \xR $
 
-\begin{equation}
-	\label{eqn:charac_sys}
-	\left\lbrace
-	\begin{array}{lcl}
-	\displaystyle \dfrac{d \mathbf{X}}{dt} &=& E_\perp\\[0.3cm]
-	\displaystyle \mathbf{X}(s) &=& \mathbf{x}
-	\end{array}\right.
-~~\Longleftrightarrow ~~
-	\left\lbrace
-	\begin{array}{lcl}
-	\displaystyle \dfrac{d \mathbf{X_1}}{dt} &=& -E_y\\[0.3cm]
-	\displaystyle \dfrac{d \mathbf{X_2}}{dt} &=& E_x\\[0.3cm]
-	\displaystyle X_1(s) &=& x_1, \quad   X_2(s) = x_2
-	\end{array}\right.
-\end{equation}
-
-The solutions ($X_1, X_2$) of \eqref{eqn:charac_sys}, obtained by any ODE solver, are called the characteristics of \eqref{eqn:charac_sys}. Besides, we know that the density $f$ is conserved along these characteristics and therefore we can write:
-
-\begin{equation}
-	f(\mathbf{x}, dt) = f(\mathbf{X}, 0)
-\end{equation}
-
-Or for any given time $t^{n+1}$ when $f^n$, the distribution function at the previous time, is known
-
-\begin{equation}
-\label{eqn:SL_eqn}
-	f(\mathbf{x}, t^{n+1}) = f^n(\mathbf{X}^{n+1})
-\end{equation}
-
-The initial distribution function is only known on the mesh points, and the characteristic's origin $X^{n+1}$ are probably not on a mesh point (see figure~\ref{fig:SL}). Therefore, we can use any interpolation method to compute $f^n$ on the characteristic's origin, \emph{i.e.} to approximate the solution of the equation \eqref{eqn:SL_eqn}.
-
-\begin{figure}[h!]
-	\label{fig:SL}
-	\centering
-	\includegraphics[scale=0.5]{figures/SL_hex.png} 
-	\caption{Semi-Lagrangian step: Tracing back characteristics.}
-\end{figure}
-
-Below, we summarize the full algorithm to compute the distribution function $f^{n+1}$ solution of the guiding-center model \eqref{eqn:guiding_center}.
-
-\begin{description}
-	\item[Initialization] At time $t=0$, we suppose that $f(\mathbf{x}, 0)$ is given. We compute the \underline{electric field $E$} by solving the poisson equation \eqref{eqn:gc_poisson}.
-	\item[Time Loop] Incrementation of a given time step $\Delta t$, such that: $t^{n+1} = t^n + \Delta t$
-		\begin{itemize}
-		\item Compute the \underline{characteristics' origins} using an ODE solver for \eqref{eqn:charac_sys};
-		\item Interpolate the \underline{distribution function $f^n$} on that point using the mesh points in the vicinity;
-		\item Solve the poisson equation to find the \underline{electric field $E^{n+1}$};
-		\item Update the known values: $f^n = f^{n+1}$, $E^{n+1}=E^n$.
-		\end{itemize}
-	\item[Remark] the boundary conditions will intervene in between the first and the second steps of the time loop (\emph{i.e.} before the interpolation step). On this paper we focus only on null Dirichlet boundary conditions.
-\end{description}
-
-
-\subsection{Time scheme}
-We use a second order scheme which is the implicit Adams-Moulton scheme of order two: 
-
- \begin{equation*}
- 	 \displaystyle{ \frac{\textbf{X}^{n+1}-\textbf{X}^{n}}{ \Delta t } =\frac{1}{2} ~( \textbf{A}^{n+1}+\textbf{A}^{n} ) }.
- \end{equation*} 
- 
-\noindent The difficulty here is that  $\textbf{A}(t^{n+1},\textbf{X}^{n+1})$ is unknown, thus an approximation $\overset{*}{\textbf{A}}$ of    $\textbf{A}$ at time $t^{n+1}$ is made thanks to previous computations:
- 
- \begin{equation*}
-\overset{*}{\textbf{A}}= 2~\textbf{A}(t^{n},\textbf{X}^{n+1}) -  \textbf{A}(t^{n-1},\textbf{X}^{n+1}).
- \end{equation*} 
- 
-\noindent The unknown $\textbf{X}^{n}$ is found by solving:
- 
- 
- \begin{equation*}
- 	\begin{cases}
- 	 \displaystyle{ \frac{\textbf{X}^{n+1}-\textbf{X}^{n}}{ \Delta t } =\frac{1}{2} ~(\overset{*}{\textbf{A}}+\textbf{A}^{n} ) },\\[3.5mm]
- 	 \textbf{X}^{n+1}=\textbf{x}_i .
- 	\end{cases}
- \end{equation*} 
- 
-A final remark: since we need $\textbf{A}(t^{n-1}$, the first step is done using the euler implicit time scheme. 
- 
-%%-----------------------------
-%% Results
-%%-----------------------------
-\section{Numerical results}
-\label{sec:results}
-In this section we present the effectuated numerical simulations and their results. With the aim of studying the convergence, the dissipation, and the  efficiency of the methods, we first study the circular advection test case. To study the accuracy of the results, we compare them to a known solution. Then we proceed to the guiding-center simulation. As there is no model solution for this test case, we study properties of the system that we know should be conserved.
-
-
-\subsection{Circular advection}
-
-We focus here on the circular advection test case. The model is defined by:
-
-	\begin{equation}
-		\partial_t f(x,y,t) + y\,\partial_x f(x,y,t) - x \,\partial_y f(x,y,t) = 0 
-	\end{equation}
-
-As this equation is not coupled to Poisson model, we can study in detail the differences between the interpolation methods previously presented.	Additionally, finding the analytical solution is trivial and therefore we can study the convergence of our methods. Here, we take a Gaussian pulse as initial distribution function:
-
-	\begin{equation}
-	 f_0(x,y) = exp  \left( -\dfrac{1}{2} \left( \dfrac{(x - x_c)^2}{\sigma_x^2} + \dfrac{(y - y_c)^2}{\sigma_y^2  } \right)   \right ), 
-	\end{equation}
-
-On a hexagonal mesh centered at the origin, of radius $8$,  we take  $\sigma_x = \sigma_y = \frac{1}{2\sqrt{2}}$ (amplitude of the gaussian). Let us set here $x_c = 2$ and $y_c = 2$. The distance from the pulse to the limit of the domain makes the boundary effects negligeable, thus we can take a null Dirichlet boundary condition.  To study the convergence in space we took $N = 20, 40, 60, ..., 160$. We recall that $N$ is the number of cells on the radius $L$. With the maximum time of evaluation, $t_{max}$, at $6 \pi$, we chose to keep a constant CFL at $2$.
-
-
-
-\begin{figure}[h!]
-	\label{fig:circ_convergence}
-	\includegraphics[scale=0.35]{figures/l2.png}
-	\includegraphics[scale=0.35]{figures/inf_l.png}
-	\caption{Order of convergence}
-\end{figure}
-
-In Figure~\ref{fig:circ_convergence} we can see that for coarse meshes only the Ganev-Dimitrov method had a worst accuracy than the splines of degree $2$. Nonetheless, for finer grids, the splines obtain results better or as good as all the finite elements methods. Regarding the latter, we notice that there is little to no difference between Zienkiewicz-9 and the H-C-T-R method. 
-
-\begin{figure}[h!]
-	\label{fig:circ_performance}
-	\includegraphics[scale=0.35]{figures/efficiency.png}
-	\includegraphics[scale=0.35]{figures/time_norm.png}
-	\caption{Comparison of performances }
-\end{figure}
-
-Figure~\ref{fig:circ_performance} we can see that the level of performance of all the methods convergences quite quickly. It is also pretty obvious that even if the splines obtained more accuracy, the cost is more expensive than most of the Hermite Finite Element methods.
-
-\subsection{Diocotron instability test case}
-
-%
-%\begin{subnumcases}{\label{eqn:guiding_center}}
-%	\dfrac{\partial \rho}{\partial t} + E_{\perp} \cdot \nabla_{\mathbf{x}} \rho(\mathbf{x}, t) = 0\label{eqn:gc_vlasov}\\
-%	- \Delta \phi = \nabla \cdot E = \rho(\mathbf{x}, t) \label{eqn:gc_poisson}
-%\end{subnumcases}
-%
-%with $E = (E_x, E_y) = - \nabla \phi $ and $E_\perp = (-E_y, E_x)$.
-
-We recall the guiding-center model and choose the following initial density:
+We chose here to study the diocotron instability \cite{madaule:hal-00841504}.
+The initial density is given by :
 \begin{equation*}
  \rho_0(\mathbf{x}_\bot)=
  \left\{
@@ -730,47 +730,49 @@ We recall the guiding-center model and choose the following initial density:
 \end{equation*}
 with $\theta=\text{atan2}(y,x)$.
 
-With this we can study the diocotron instability test case \cite{madaule:hal-00841504}.
+\noindent In the following tests, we take $\varepsilon=0.001$, $r^-=5$, $r^+=8$, $\ell=6$, furthermore $dt=0.1$.
 
-\noindent As for the parameters, we take $\varepsilon=0.001$, $r^-=5$, $r^+=8$, $\ell=6$, furthermore $dt=0.1$.
-In this part, we won't test the Z3 approach as it requires a special resolution of the Poisson equation that has not been implemented. Indeed, computing the values of the field at the center of the triangles can't be combined with the resolution at the vertices. 
-Let us note that 6 vortices is the main mode. If one takes $\ell\neq6$, but with epsilon small enough, one still sees the mode 6. With epsilon big enough, i.e. at least 0.1, the modes different from 6 can be visible for a time but they are not stable and we see the fusion or the apparition of vortices until there is the sixth mode. Here we can see the ninth mode turning into the sixth mode by fusion of vortices as illustrated by figure \ref{fig:mode9}. 
-
-%\textcolor{red}{peut etre un paragraphe sur l'evolution de la densite, les 6 modes retrouves qqsoit eps, etc, commenter la figure 6}
+\textcolor{red}{peut etre un paragraphe sur l'evolution de la densite, les 6 modes retrouves qqsoit eps, etc, commenter la figure 6}
 \begin{figure}[h!]
-	\includegraphics[scale=0.15]{figures/gc_spl_1.png}
-	\includegraphics[scale=0.15]{figures/gc_spl_2.png}
-	\includegraphics[scale=0.15]{figures/gc_spl_3.png}
-	\includegraphics[scale=0.15]{figures/gc_spl_4.png}
-	\includegraphics[scale=0.15]{figures/gc_spl_5.png}
-	\caption{\label{fig:mode9}  evolution of the guiding-center model, at times = }
+	\includegraphics[width=0.3\textwidth]{figures/gc_spl_1.png}
+	\includegraphics[width=0.3\textwidth]{figures/gc_spl_2.png}
+	\includegraphics[width=0.3\textwidth]{figures/gc_spl_3.png}
+	\includegraphics[width=0.3\textwidth]{figures/gc_spl_4.png}
+	\includegraphics[width=0.3\textwidth]{figures/gc_spl_5.png}
+	\caption{Time evolution of the guiding-center model, at times = }
 \end{figure}
 
 \begin{figure}[h!]
-	\includegraphics[scale=0.4]{figures/mass_cg.png}
+	\includegraphics[scale=0.4]{figures/Relative_error_of_mass_160.png}
 	\caption{Time evolution of the mass}
 \end{figure}
 
+
 \begin{figure}[h!]
-	\includegraphics[scale=0.3]{figures/l1norm_cg.png}
-	\includegraphics[scale=0.3]{figures/l2norm_cg.png}
+	\includegraphics[scale=0.3]{figures/l1norm_160.png}
+	\includegraphics[scale=0.3]{figures/l2norm_160.png}
 	\caption{Relative error of $L^1$ and $L^2$ norms}
 \end{figure}
 
+
 \begin{figure}[h!]
-	\includegraphics[scale=0.4]{figures/min_cg.png}
+	\includegraphics[scale=0.4]{figures/min_density_160.png}
 	\caption{Time evolution of the density's minimum}
 \end{figure}
 
-The interpolation methods give similar results in terms of positivity conservation. One notices that if the box-splines conserve better the mass, the Z2 approach conserves better the $L^1$ norm. Also we note the box splines and the HCTC element give close results.  
+
+
+
+Both intepolation methods give similar results in terms of energy conservation and positivity conservation. One notices that if the box-splines conserve better the mass, the hermite element conserves better the norms.  
+
+
 
 \begin{figure}[h!]
 	\includegraphics[width=0.35\textwidth]{figures/oscillations_hermite.png}
 	\includegraphics[width=0.35\textwidth]{figures/oscillations_splines.png}
-	\caption{\label{fig:comp_osci} Comparaison of oscillations: on the left with Hermite Finite Elements and on the right with splines}
+	\caption{Comparaison of oscillations: on the left with Hermite Finite Elements and on the right with splines}
 \end{figure}
-No obvious differences are visible on figure \ref{fig:comp_osci} to the naked eye which makes the diagnostics all the more important to compare the results computed.
-
+\textcolor{red}{commenter les oscillations}
 %%-----------------------------
 %% Conclusion
 %%-----------------------------
