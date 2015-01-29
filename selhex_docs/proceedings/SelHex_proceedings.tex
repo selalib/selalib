@@ -451,6 +451,8 @@ The Ganev-Dimitrov element is of order 4 and uses 15 degrees of freedom which ar
 	0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &  0 &  0 &  0 & 4 & 4 &-4  
 \end{pmatrix}
 \end{equation*}
+
+\rmrk Here the derivatives are not computed exactly. They are approximated with finite differences of order 6 with the values at the mesh points. Results have been found to be better with this order and no significant improvement were noticed with a higher order difference scheme.
 %
 %Another possible way to interpolate is to use a 2d Hermite finite element \cite{zie}   
 %
@@ -637,6 +639,31 @@ Below, we summarize the full algorithm to compute the distribution function $\rh
 \end{description}
 
 
+\subsection{Time scheme}
+We use a second order scheme which is the implicit Adams-Moulton scheme of order two: 
+
+ \begin{equation*}
+ 	 \displaystyle{ \frac{\textbf{X}^{n+1}-\textbf{X}^{n}}{ \Delta t } =\frac{1}{2} ~( \textbf{A}^{n+1}+\textbf{A}^{n} ) }.
+ \end{equation*} 
+ 
+\noindent The difficulty here is that  $\textbf{A}(t^{n+1},\textbf{X}^{n+1})$ is unknown, thus an approximation $\overset{*}{\textbf{A}}$ of    $\textbf{A}$ at time $t^{n+1}$ is made thanks to previous computations:
+ 
+ \begin{equation*}
+\overset{*}{\textbf{A}}= 2~\textbf{A}(t^{n},\textbf{X}^{n+1}) -  \textbf{A}(t^{n-1},\textbf{X}^{n+1}).
+ \end{equation*} 
+ 
+\noindent The unknown $\textbf{X}^{n}$ is found by solving:
+ 
+ 
+ \begin{equation*}
+ 	\begin{cases}
+ 	 \displaystyle{ \frac{\textbf{X}^{n+1}-\textbf{X}^{n}}{ \Delta t } =\frac{1}{2} ~(\overset{*}{\textbf{A}}+\textbf{A}^{n} ) },\\[3.5mm]
+ 	 \textbf{X}^{n+1}=\textbf{x}_i .
+ 	\end{cases}
+ \end{equation*} 
+ 
+A final remark: since we need $\textbf{A}(t^{n-1}$, the first step is done using the euler implicit time scheme. 
+ 
 %%-----------------------------
 %% Results
 %%-----------------------------
@@ -681,7 +708,7 @@ In Figure~\ref{fig:circ_convergence} we can see that for coarse meshes only the 
 
 Figure~\ref{fig:circ_performance} we can see that the level of performance of all the methods convergences quite quickly. It is also pretty obvious that even if the splines obtained more accuracy, the cost is more expensive than most of the Hermite Finite Element methods.
 
-\subsection{Guiding-center}
+\subsection{Guiding-center model}
 
 
 We consider here a guiding-center approximation of the 2D Vlasov-Poisson system, where the parallel velocity has been neglected and the magnetic field is set to $B = \begin{pmatrix} 0 & 0 & 1 \end{pmatrix}^T$. Furthermore, we consider the model in 2D in space and 1D in time. The reduced gyrokinetic model obtained\cite{filbet:hal-01068223} is
@@ -732,7 +759,12 @@ with $\theta=\text{atan2}(y,x)$.
 
 \noindent In the following tests, we take $\varepsilon=0.001$, $r^-=5$, $r^+=8$, $\ell=6$, furthermore $dt=0.1$.
 
-\textcolor{red}{peut etre un paragraphe sur l'evolution de la densite, les 6 modes retrouves qqsoit eps, etc, commenter la figure 6}
+\noindent As for the parameters, we take $\varepsilon=0.001$, $r^-=5$, $r^+=8$, $\ell=6$, furthermore $dt=0.1$ and the hexagonal step is $\frac{14}{160}$ with a radius of 14 and and an hexagonal parameter $nc =160$.
+In this part, we won't test the Z3 approach as it requires a special resolution of the Poisson equation that has not been implemented. Indeed, computing the values of the field at the center of the triangles can't be combined with the resolution at the vertices. 
+Moreover to even the commputational time of each method we chose to take $nc=80$ for the Ganev Dimitrov element as it results in the computations on a mesh with $nc =160$ ; see remark on the Ganev Dimitrov element in he paragraph on Hermite Finite element solver.\\
+Let us note that 6 vortices is the main mode. If one takes $\ell\neq6$, but with epsilon small enough, one still sees the mode 6. With epsilon big enough, i.e. at least 0.1, the modes different from 6 can be visible for a time but they are not stable and we see the fusion or the apparition of vortices until there is the sixth mode. For instance,as illustrated by figure \ref{fig:mode9}, we can see the ninth mode turning into the sixth mode by fusion of vortices.
+
+%\textcolor{red}{peut etre un paragraphe sur l'evolution de la densite, les 6 modes retrouves qqsoit eps, etc, commenter la figure 6}
 \begin{figure}[h!]
 	\includegraphics[width=0.3\textwidth]{figures/gc_spl_1.png}
 	\includegraphics[width=0.3\textwidth]{figures/gc_spl_2.png}
@@ -740,39 +772,38 @@ with $\theta=\text{atan2}(y,x)$.
 	\includegraphics[width=0.3\textwidth]{figures/gc_spl_4.png}
 	\includegraphics[width=0.3\textwidth]{figures/gc_spl_5.png}
 	\caption{Time evolution of the guiding-center model, at times = }
-\end{figure}
-
-\begin{figure}[h!]
-	\includegraphics[scale=0.4]{figures/Relative_error_of_mass_160.png}
-	\caption{Time evolution of the mass}
+	\label{fig:mode9} 
 \end{figure}
 
 
+Visualisation of the results. The six vortices are developping with time without losing any symetry. No obvious differences are visible on figure \ref{fig:comp_osci} to the naked eye which makes the diagnostics all the more important to compare the results computed.
+
 \begin{figure}[h!]
-	\includegraphics[scale=0.3]{figures/l1norm_160.png}
-	\includegraphics[scale=0.3]{figures/l2norm_160.png}
+	\includegraphics[width=0.35\textwidth]{figures/oscillations_hermite.png}
+	\includegraphics[width=0.35\textwidth]{figures/oscillations_splines.png}
+	\caption{\label{fig:comp_osci} Comparaison of oscillations: on the left with Hermite Finite Elements and on the right with splines}
+\end{figure}
+
+\begin{figure}[h!]
+	\includegraphics[scale=0.3]{figures/mass_cg.png}
+	\includegraphics[scale=0.3]{figures/energy_cg.png}
+	\caption{Time evolution of the relative of mass and energy}
+\end{figure}
+
+\begin{figure}[h!]
+	\includegraphics[scale=0.3]{figures/l1norm_cg.png}
+	\includegraphics[scale=0.3]{figures/l2norm_cg.png}
 	\caption{Relative error of $L^1$ and $L^2$ norms}
 \end{figure}
 
 
 \begin{figure}[h!]
-	\includegraphics[scale=0.4]{figures/min_density_160.png}
+	\includegraphics[scale=0.4]{figures/min_cg.png}
 	\caption{Time evolution of the density's minimum}
 \end{figure}
+After comparison of the diagnostics we see that the various interpolation methods give close results overall. They are similar in terms of positivity conservation. One notices that if the box-splines conserve better the mass, the Z2 approach conserves better the $L^1$ norm. Also we note the box splines and the HCTC element give very near results whichever the diagnostic considered.  
 
 
-
-
-Both intepolation methods give similar results in terms of energy conservation and positivity conservation. One notices that if the box-splines conserve better the mass, the hermite element conserves better the norms.  
-
-
-
-\begin{figure}[h!]
-	\includegraphics[width=0.35\textwidth]{figures/oscillations_hermite.png}
-	\includegraphics[width=0.35\textwidth]{figures/oscillations_splines.png}
-	\caption{Comparaison of oscillations: on the left with Hermite Finite Elements and on the right with splines}
-\end{figure}
-\textcolor{red}{commenter les oscillations}
 %%-----------------------------
 %% Conclusion
 %%-----------------------------
