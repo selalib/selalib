@@ -40,9 +40,9 @@ program unit_test_initializers_4d
   ! THIS TEST NEEDS TO BE FINISHED IN A COMPLETE WAY. FOR NOW, THE MODULE
   ! WILL BE PARTIALLY TESTED ON A SIMULATION...
 
-  mesh_4d = mx * mv
+  !mesh_4d = mx * mv
 
-  call write_mesh_4d(mesh_4d)
+  !call write_mesh_4d(mesh_4d)
 
   print *, 'PASSED'
 
