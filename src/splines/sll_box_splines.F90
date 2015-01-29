@@ -1,12 +1,14 @@
+!>@ingroup splines
 !**************************************************************
-!  This module defines box splines (of arbitrary degree)
-!  on a hexagonal mesh subdivided in equilateral triangles
-!  Reference :
-!     @Condat2006 "Three-directional box splines"
-!  Author : 
-!     Laura Mendoza (mela@ipp.mpg.de)
-!************************************************************** 
-
+!> @brief
+!>  This module defines box splines (of arbitrary degree)
+!> @details
+!>  on a hexagonal mesh subdivided in equilateral triangles
+!>  Reference :
+!>     Condat2006 "Three-directional box splines"
+!>  @author 
+!>     Laura Mendoza (mela@ipp.mpg.de)
+!**************************************************************
 module sll_box_splines
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -19,11 +21,13 @@ use sll_hex_meshes
 
 implicit none
 
+!> Derived type with data for box splines
 type sll_box_spline_2d
+   !> Hexagonal mesh 
    type(sll_hex_mesh_2d), pointer  :: mesh
-   ! Boundary conditions definition
+   !> Boundary conditions definition
    sll_int32 SLL_PRIV :: bc_type
-   ! Spline coefficients
+   !> Spline coefficients
    sll_real64, dimension(:), pointer :: coeffs
 end type sll_box_spline_2d
 
