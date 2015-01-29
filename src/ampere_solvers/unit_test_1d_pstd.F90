@@ -9,6 +9,7 @@ program test_ampere_1d_pstd
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_constants.h"
+#include "sll_file_io.h"
 
 use sll_module_ampere_1d_pstd
 
@@ -32,13 +33,12 @@ sll_real64, dimension(:), allocatable :: x
 sll_real64, dimension(:), allocatable :: ex
 sll_real64, dimension(:), allocatable :: ex_exact
 sll_real64, dimension(:), allocatable :: jx
-sll_real64, dimension(:), allocatable :: rho
 
 sll_real64 :: tstart, tend
 
 call cpu_time(tstart)
 
-x_min = .0_f64; x_max = 1.0_f64
+x_min = .0_f64; x_max = 2.0_f64
 
 nc_x = 127
 
@@ -51,32 +51,32 @@ do i = 1, nc_x+1
 end do
 
 dt = cfl  / sqrt(1./(delta_x*delta_x))
-nstep = 100
+nstep = 1000
 
 time  = 0.
 
-w = 2 * sll_pi
+w = 1.0_f64
 
-SLL_ALLOCATE(ex(nc_x+1), error)
-SLL_ALLOCATE(jx(nc_x+1), error)
-SLL_ALLOCATE(ex_exact(nc_x+1), error)
-SLL_ALLOCATE(rho(nc_x+1), error)
+SLL_CLEAR_ALLOCATE(ex(1:nc_x+1),       error)
+SLL_CLEAR_ALLOCATE(jx(1:nc_x+1),       error)
+SLL_CLEAR_ALLOCATE(ex_exact(1:nc_x+1), error)
 
 call sll_create(ampere, x_min, x_max, nc_x)
 
 do istep = 1, nstep !*** Loop over time
 
-  ex  = w*sin(time*w)*sin(sll_pi*x)
-  rho = -w*w*cos(time*w)*sin(sll_pi*x)
-  jx  = sll_pi*w*cos(sll_pi*x)*sin(time*w)
-  ex_exact = ex
-  time = time + 0.5_f64*dt
+  ex_exact = w*sin(time*w)*sin(sll_pi*x)
+  time     = time + 0.5_f64*dt
+  jx       = -w*w*cos(time*w)*sin(sll_pi*x)
 
   write(*,"(10x,' istep = ',I6)",advance="no") istep
   write(*,"(' time = ',g12.3,' sec')",advance="no") time
-  write(*,"(' erreurs TM,TE = ',g15.5)") maxval(abs(ex - ex_exact))
+  write(*,"(' error max = ',g15.5)") maxval(abs(ex - ex_exact))
 
-  call sll_solve(ampere, ex, dt, jx)
+  call sll_solve(ampere, dt, jx, ex)
+  ex(nc_x+1) = ex(1)
+  
+  call sll_gnuplot_1d( 'ex', ex, ex_exact, istep)
 
   time = time + 0.5_f64*dt
 
@@ -86,9 +86,6 @@ call cpu_time(tend)
 print"('CPU time : ',g15.3)", tend-tstart
 print*,'PASSED'
 
-DEALLOCATE(ex)
-DEALLOCATE(jx)
-DEALLOCATE(rho)
-DEALLOCATE(ex_exact)
+deallocate(ex,jx,ex_exact)
 
 end program test_ampere_1d_pstd

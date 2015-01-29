@@ -86,17 +86,17 @@ call dfftw_plan_dft_c2r_2d(plan,n1,n2,in,out,FFTW_PATIENT)
 #define fftw_comp  sll_comp64
 #define fftw_int   sll_int32
 
-#define fftw_plan_dft_1d dfftw_plan_dft_1d
+#define fftw_plan_dft_1d     dfftw_plan_dft_1d
 #define fftw_plan_dft_c2r_1d dfftw_plan_dft_c2r_1d
 #define fftw_plan_dft_r2c_1d dfftw_plan_dft_r2c_1d
-#define fftw_plan_dft_2d dfftw_plan_dft_2d
+#define fftw_plan_dft_2d     dfftw_plan_dft_2d
 #define fftw_plan_dft_c2r_2d dfftw_plan_dft_c2r_2d
 #define fftw_plan_dft_r2c_2d dfftw_plan_dft_r2c_2d
 
-#define fftw_execute_dft dfftw_execute_dft
+#define fftw_execute_dft     dfftw_execute_dft
 #define fftw_execute_dft_r2c dfftw_execute_dft_r2c
 #define fftw_execute_dft_c2r dfftw_execute_dft_c2r
-#define fftw_execute_r2r dfftw_execute_r2r
+#define fftw_execute_r2r     dfftw_execute_r2r
 
 #define fftw_destroy_plan    dfftw_destroy_plan
 
