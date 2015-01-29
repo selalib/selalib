@@ -26,9 +26,9 @@ contains
   !> An Algorithm for Computing Fekete Points in the Triangle,
   !> SIAM Journal on Numerical Analysis,
   !> Volume 38, Number 5, 2000, pages 1707-1720.
-  !> @param[IN]  pxy array of dimesion (2,3) containg the coordinates 
+  !> @param[in]  pxy array of dimesion (2,3) containg the coordinates 
   !>             of the edges of the triangle
-  !> @param[OUT] wxy array of dimesion (3,10) containg the fekete points
+  !> @return     wxy array of dimesion (3,10) containg the fekete points
   !>             and weights using rule 1. wx(1,:) contains the x coordinates
   !>             of the fekete points, wx(2, :) the y coordinates and
   !>             wx(3, :) contains the associated weights.
