@@ -18,3 +18,10 @@
 	YMIN   = 0.0
 	YMAX   = 1.0
 /
+
+&elec_params
+	er      = 0.3677
+	psi     = 0.536245
+	omega_r	= 1.4156
+ 	omega_i = -0.1533
+/
