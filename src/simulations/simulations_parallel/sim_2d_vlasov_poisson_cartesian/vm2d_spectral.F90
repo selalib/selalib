@@ -5,10 +5,12 @@ program vm2d_spectral
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
 #include "sll_constants.h"
-#include "sll_interpolators.h"
+
+use sll_boundary_condition_descriptors
+use sll_module_cubic_spline_interpolator_1d
+ 
 #include "sll_fftw.h"
 
-use init_functions
 use sll_vlasov2d_base
 use sll_vlasov2d_spectral
 use sll_poisson_1d_periodic  
@@ -16,6 +18,7 @@ use sll_module_poisson_1d_periodic_solver
 use sll_module_ampere_1d_pstd
 use sll_collective
 use sll_remapper
+use init_functions, only: landau_1d, tsi, TSI_CASE, LANDAU_X_CASE
 
 implicit none
 
@@ -55,7 +58,9 @@ call spectral_advection_x(vlasov, 0.5*vlasov%dt)
 do iter=1,vlasov%nbiter
 
    if (iter ==1 .or. mod(iter,vlasov%fdiag) == 0) then 
+#ifndef __INTEL_COMPILER
       call write_xmf_file(vlasov,iter/vlasov%fdiag)
+#endif
    end if
 
    call transposexv(vlasov)
@@ -68,7 +73,7 @@ do iter=1,vlasov%nbiter
 
    call transposevx(vlasov)
 
-   call spectral_advection_x(vlasov, vlasov%dt)
+  call spectral_advection_x(vlasov, vlasov%dt)
 
    if (mod(iter,vlasov%fthdiag) == 0) then 
       call write_energy(vlasov, iter*vlasov%dt)
