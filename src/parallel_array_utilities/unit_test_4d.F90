@@ -1,49 +1,53 @@
 program unit_test_initializers_4d
 #include "sll_working_precision.h"
-  use sll_cartesian_meshes
-  use sll_coordinate_transformation_2d_base_module
-  use sll_module_coordinate_transformations_2d
-  use sll_common_coordinate_transformations
-  use sll_common_array_initializers_module
-  use sll_parallel_array_initializer_module
-  use sll_parallel_array_output_module
+#include "sll_utilities.h"
 
-  implicit none
+use sll_cartesian_meshes
+use sll_coordinate_transformation_2d_base_module
+use sll_module_coordinate_transformations_2d
+use sll_common_coordinate_transformations
+use sll_common_array_initializers_module
+use sll_parallel_array_initializer_module
+use sll_parallel_array_output_module
 
-  ! logical meshes
-  type(sll_cartesian_mesh_2d), pointer :: mx
-  type(sll_cartesian_mesh_2d), pointer :: mv
-  type(sll_cartesian_mesh_4d), pointer :: mesh_4d
-  ! coordinate transformations (test transforming spatial coordinates only)
-  class(sll_coordinate_transformation_2d_base), pointer :: tx
-  sll_real64, dimension(2) :: params_identity
+implicit none
 
-  params_identity(:) = (/0.0_f64, 0.0_f64/) ! for identity this can be whatever
-  ! initialize the logical meshes
-  mx => new_cartesian_mesh_2d(64,64)
-  mv => new_cartesian_mesh_2d(64,64)
+! logical meshes
+type(sll_cartesian_mesh_2d), pointer :: mx
+type(sll_cartesian_mesh_2d), pointer :: mv
+type(sll_cartesian_mesh_4d), pointer :: mesh_4d
+! coordinate transformations (test transforming spatial coordinates only)
+class(sll_coordinate_transformation_2d_base), pointer :: tx
+sll_real64, dimension(2) :: params_identity
 
-  ! initialize the transformation
-  tx => new_coordinate_transformation_2d_analytic( &
-       "identity_transformation", &
-       mx, &
-       identity_x1, &
-       identity_x2, &
-       identity_jac11, &
-       identity_jac12, &
-       identity_jac21, &
-       identity_jac22, &
-       params_identity )
+params_identity(:) = (/0.0_f64, 0.0_f64/) ! for identity this can be whatever
+! initialize the logical meshes
+mx => new_cartesian_mesh_2d(64,64)
+mv => new_cartesian_mesh_2d(64,64)
 
-  ! initialize the array
+! initialize the transformation
+tx => new_coordinate_transformation_2d_analytic( &
+     "identity_transformation",                  &
+     mx,                                         &
+     identity_x1,                                &
+     identity_x2,                                &
+     identity_jac11,                             &
+     identity_jac12,                             &
+     identity_jac21,                             &
+     identity_jac22,                             &
+     params_identity )
 
-  ! THIS TEST NEEDS TO BE FINISHED IN A COMPLETE WAY. FOR NOW, THE MODULE
-  ! WILL BE PARTIALLY TESTED ON A SIMULATION...
+! initialize the array
 
-  !mesh_4d = mx * mv
+! THIS TEST NEEDS TO BE FINISHED IN A COMPLETE WAY. FOR NOW, THE MODULE
+! WILL BE PARTIALLY TESTED ON A SIMULATION...
 
-  !call write_mesh_4d(mesh_4d)
+mesh_4d => mx * mv
 
-  print *, 'PASSED'
+call sll_display(mesh_4d)
+
+call write_mesh_4d(mesh_4d)
+
+print *, 'PASSED'
 
 end program unit_test_initializers_4d

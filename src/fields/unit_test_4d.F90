@@ -38,22 +38,22 @@ kx = 2.0_f64 * sll_pi / (mx%num_cells1*mx%delta_eta1)
 ky = 2.0_f64 * sll_pi / (mx%num_cells2*mx%delta_eta2)
 
 do l=1,n4
-do k=1,n3
-do j=1,n2
-do i=1,n1
-
-     x  = mxv%eta1_min+(i-1)*mxv%delta_eta1
-     y  = mxv%eta2_min+(j-1)*mxv%delta_eta2
-     vx = mxv%eta3_min+(k-1)*mxv%delta_eta3
-     vy = mxv%eta4_min+(l-1)*mxv%delta_eta4
-
-     v2 = vx*vx+vy*vy
-
-     f(i,j,k,l) = landau_cos_prod(eps, kx, ky, x, y, v2)
-
-end do
-end do
-end do
+  do k=1,n3
+    do j=1,n2
+      do i=1,n1
+      
+        x  = mxv%eta1_min+(i-1)*mxv%delta_eta1
+        y  = mxv%eta2_min+(j-1)*mxv%delta_eta2
+        vx = mxv%eta3_min+(k-1)*mxv%delta_eta3
+        vy = mxv%eta4_min+(l-1)*mxv%delta_eta4
+      
+        v2 = vx*vx+vy*vy
+      
+        f(i,j,k,l) = landau_cos_prod(eps, kx, ky, x, y, v2)
+      
+      end do
+    end do
+  end do
 end do
 
 call write_projection_2d(mxv, f, 'f_x1x2', SLL_X1X2, [32,32], iplot)
@@ -64,7 +64,6 @@ call write_projection_2d(mxv, f, 'f_x2x4', SLL_X2X4, [32,32], iplot)
 call write_projection_2d(mxv, f, 'f_x3x4', SLL_X3X4, [32,32], iplot)
 
 call sll_delete(mxv)
-
 call sll_delete(mx)
 call sll_delete(mv)
 
