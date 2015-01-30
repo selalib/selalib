@@ -46,12 +46,12 @@
 %%-----------------------------
 %% English version ............
 \begin{abstract} 
-This paper introduces a Semi-Lagrangian solver for the Vlasov-Poisson equation on a regular hexagonal mesh. The latter is composed of equilateral triangles, thus it doesn't contain any singularities, unlike polar meshes. We focus on the guiding-center model. Thus, a Poisson solver for the hexagonal mesh is developed. For the interpolation step of the Semi-Lagrangian scheme, a comparison is made between using box-splines and Hermite finite elements. We expect to adapt it to more complex models and geometries.
+This paper introduces a Semi-Lagrangian solver for the Vlasov-Poisson equations on a regular hexagonal mesh. The latter is composed of equilateral triangles, thus it doesn't contain any singularities, unlike polar meshes. We focus on the guiding-center model, for which we need in addition to the Vlasov solver a Poisson solver for the hexagonal mesh is developed. For the interpolation step of the Semi-Lagrangian scheme, a comparison is made between using box-splines and Hermite finite elements. The code will be adapted  to more complex models and geometries in the future.
 \end{abstract}
 
 %% French version ............
 \begin{resume} 
-Dans cet article nous introduisons un solveur semi-Lagrangien pour l'\'equation de Vlasov-Poisson sur un maillage hexagonal r\'egulier. Ce dernier est compos\'e de triangles \'equilat\'eraux, ainsi il ne pr\'esente aucune singularit\'e, contrairement au maillage polaire. Nous nous concentrons ici sur le mod\`ele centre-guide. \`A cette fin nous avons d\'evelopp\'e un solveur de l'\'equation de Poisson pour maillage hexagonal. Au regard de l'interpolation, nous comparons les r\'esultats obtenus avec des \'el\'ements finis d'Hermite et des box-splines.   Dans l'avenir, ce code sera adapt\'e \`a des g\'eom\'etries et mod\`eles plus complexes.  
+Dans cet article nous présentons un solveur semi-Lagrangien pour les \'equations de Vlasov-Poisson sur un maillage hexagonal r\'egulier. Ce dernier est compos\'e de triangles \'equilat\'eraux, ainsi il ne pr\'esente aucune singularit\'e, contrairement au maillage polaire. Nous nous concentrons ici sur le mod\`ele centre-guide. \`A cette fin nous avons d\'evelopp\'e en plus du solveur pour Vlasov, un solveur de l'\'equation de Poisson pour maillage hexagonal. Nous comparons les r\'esultats obtenus avec une interpolation par  \'el\'ements finis d'Hermite et par des box-splines.   Dans l'avenir, ce code sera adapt\'e \`a des g\'eom\'etries et mod\`eles plus complexes.  
 \end{resume}
 
 %% Making the title ..........
@@ -68,16 +68,20 @@ There are three kinds of regular pavings of the plane: using squares, triangles 
 
 In magnetic fusion applications the embedded magnetic flux surfaces play an important role and introduce an important anisotropy\cite{Angelino2009}. For this reason one gets favourable numerical properties when grid points align on the concentric magnetic flux surfaces. When trying to do this with a mapped cartesian grid, one ends up with a polar coordinates mesh (when the flux surfaces are circles) or something topologically equivalent. This yields smaller and smaller cells when getting closer to the center as well as a singularity at the center. This is numerically far from optimal. 
 
-Different strategies have been implemented to avoid these singularities, we can cite among others: the isoparametric analysis approach done by J. Abiteboul et al. \cite{abiteboul2011solving} and A. Ratnani \cite{ratnani2011isogeometric} or N. Besse and E. Sonnendr\"{u}cker's work with non-structured meshes\cite{Besse2003341}. The works presented on these papers are particularly interesting as not only they avoid singularities but they are also extremely flexible and can be easily adapted to more complex geometries. However, even if the approach is different in every paper, some limitations are the numerical complexity, the advection of the derivatives and, the localisation of the feet of the characteristics. 
-A recent study was made by T. Nguyen et al.\cite{axioms3020280} to compare different Poisson solvers on the disk. 
+Different strategies have been implemented to avoid these singularities, we can cite among others: the isoparametric analysis approach done by J. Abiteboul et al. \cite{abiteboul2011solving} and A. Ratnani \cite{ratnani2011isogeometric} or N. Besse and E. Sonnendr\"{u}cker's work with unstructured meshes\cite{Besse2003341}. The methods presented in these papers are particularly interesting as  they not only avoid singularities but they are also extremely flexible and can be easily adapted to more complex geometries. However, even if these two approaches are different, they share the limitations due to the numerical complexity, the advection of the derivatives and, the localisation of the feet of the characteristics. 
+As for the Poisson equation, a recent study relevant to our problem was made by T. Nguyen et al.\cite{axioms3020280} to compare different solvers on the disk. 
 
-Tiling a regular hexagon into triangles yields a mesh of equilateral triangles having all the same area\cite{Sadourny1968}. This grid can be easily mapped to a circle by slightly stretching the edges of the hexagon. This yields a nice mesh of a disk with slightly stretched triangles of almost the same size and there is no singularity in any point of the domain. 
-Additionally, such a mesh has a clear structure with three privileged directions, thus it is completely straightforward to localise points within this mesh. The derivatives along the three directions can also be nicely computed using finite differencing along uniform lines. 
+Tiling a regular hexagon into triangles yields a mesh of equilateral triangles having all the same area.
+Such a mesh was first introduce in \cite{Sadourny1968} for numerical simulations. An application to particle methods is proposed in \cite{chatelain2008isotropic}.
+This grid can be easily mapped to a circle by slightly stretching the edges of the hexagon. This yields a nice mesh of a disk with slightly stretched triangles of almost the same size and there is no singularity in any point of the domain. 
+Additionally, such a mesh has a structure with three privileged directions, and uniform steps in each direction, thus it is completely straightforward to localise points within this mesh. The derivatives along the three directions can also be nicely computed using regular finite differencing along the three directions. 
 And last but not least, there is a spline construction on this mesh, called box-spline \cite{Condat2008}. These splines have a hexagonal support and are invariant by translations along the three directions of the mesh. 
 
-The disadvantages previously mentioned, are not present when dealing with the simple and straightforward hexagonal mesh. Regarding the computational efficiency, all our simulations include an analysis and comparison with more common methods. Lastly, we suggest this scheme as an introduction to handle more complex geometries. Indeed by a simple mapping it will be easy to work with curvilinear coordinates.
+The difficulties mentioned for previous approaches, are not present when dealing with this uniform hexagonal mesh. Regarding the computational efficiency, all our simulations include an analysis and comparison with more common methods. 
+Moreover a simple and non singular mapping from this mesh can be used  to handle more complex settings
+like the surface aligned meshes needed for tokamak simulations. This point will be left for further studies.
 
-In this work, we focus on adapting the Semi-Lagrangian scheme to this hexagonal mesh. This scheme consists basically of two steps: computing the characteristics' origins and interpolating at these points. For the latter, we compare two different approaches: one using box-splines and the second approach using Hermite Finite Elements. Both interpolation methods, as well as the mesh, are presented in section~\ref{sec:interpolation}. In section~\ref{sec:poisson_eqn}, we present a Poisson solver adapted to the hexagonal mesh. We present a guiding-center approximation of the 2D Vlasov Poisson system\cite{Golse1998865}, and the Semi-Lagrangian scheme to solve it, in section~\ref{sec:BSL_scheme}. Finally, in section~\ref{sec:results} we compare the results of the scheme using box splines with the ones using Hermite finite elements, we also compare them to more traditional meshes, such as the polar mesh. Besides the guiding-center model, different advection models have been simulated in this section.
+In this work, we focus on adapting the Semi-Lagrangian scheme to this hexagonal mesh. This scheme consists basically of two steps: computing the characteristics' origins and interpolating at these points. For the latter, we compare two different approaches: one using box-splines and the second approach using Hermite Finite Elements. Both interpolation methods, as well as the mesh, are presented in section~\ref{sec:interpolation}. In section~\ref{sec:poisson_eqn}, we present a simple finite difference Poisson solver adapted to the hexagonal mesh. We introduce a guiding-center approximation of the 2D Vlasov Poisson system\cite{Golse1998865}, and the Semi-Lagrangian scheme to solve it, in section~\ref{sec:BSL_scheme}. Finally, in section~\ref{sec:results} we compare the results of the scheme using box splines with the ones using Hermite finite elements, we also compare them to more traditional meshes, such as the polar mesh. Besides the guiding-center model, different linear advection models are used to compare the numerical methods.
 
 
 %%-----------------------------
@@ -99,7 +103,7 @@ The hexagonal mesh is obtained by tiling a regular hexagon into equilateral tria
 		\end{pmatrix}
 \end{equation}
 
-The 2D lattice sites are obtained by the product $\mathbf{Rk}$ where $\mathbf{R} = [\mathbf{r_1 r_2}]$ and $\mathbf{k} = [k_1, k_2]^T \in \xZ$.  To obtain exactly the mesh as in Figure \ref{fig:hexmesh}, we need to define a few extra parameters : an origin -- denoted $P_0(x_0, y_0)$, a radius $L$ which is the distance between the origin and an external node and the number of cells $N_c$ on any radius.
+The 2D lattice sites are obtained by the product $\mathbf{Rk}$ where $\mathbf{R} = [\mathbf{r_1 r_2}]$ and $\mathbf{k} = [k_1, k_2]^T \in \xZ$.  To obtain exactly the mesh as in Figure \ref{fig:hexmesh}, we need to define a few extra parameters: an origin, denoted by $P_0(x_0, y_0)$, a radius $L$ which is the distance between the origin and any external vertex of the hexagon and the number of cells $N_c$ on any radius.
 
 
 \begin{figure}[h!]
@@ -154,20 +158,20 @@ The 2D lattice sites are obtained by the product $\mathbf{Rk}$ where $\mathbf{R}
 \end{figure}
 
 
-The mesh is based on uniform hexagons of the first type (see \cite{Ulichney87}). For local and global notations we will use the following convention : the point at the center will be the point of index $0$. Following the direction $\mathbf{r_1}$ the next point will be indexed $1$, and the notations will follow in a counter-clockwise motion. And so on, until all the points of the domain have been indexed. See Figure \ref{fig:hexmesh}. We will denote $H_i$ the unit hexagon cell that is centred at the point of global index $i$.
+The mesh is based on uniform hexagons of the first type (see \cite{Ulichney87}). For local and global notations we will use the following convention: the point at the center will be the point of index $0$. Following the direction $\mathbf{r_1}$ the next point will be indexed $1$, and the notations will follow in a counter-clockwise motion. And so on, until all the points of the domain have been indexed. See Figure \ref{fig:hexmesh}. We will denote $H_i$ the unit hexagon cell that is centred at the point of global index $i$.
 
-Besides the fact that the hexagonal mesh contains no singularities, its regularity allows us to localise effortlessly the characteristic's origin for the Semi-Lagrangian scheme. Nevertheless, the accuracy of the method depends heavily on the interpolation method chosen. For example, for a Cartesian grid, it is common to use cubic splines which have shown to give accurate results in an efficient manner \cite{sonnendrucker:inria-00073296}. In our problem, with the hexagonal lattice, B-splines do not exploit the isotropy of the mesh (for more information see \cite{Mersereau79-IEEE}) and are defined by a convolution on 2D, which cannot be done for our mesh. Therefore, we need to use another approach. On the following two sub-sections we present two different strategies: one using box splines and a second one using Hermite Finite Elements.
+Besides the fact that the hexagonal mesh contains no singularities, its regularity allows us to localise by taking three integer values, instead of two on a uniform cartesian grid, the characteristic's origin for the Semi-Lagrangian scheme. Nevertheless, the accuracy of the method depends heavily on the interpolation method chosen. For example, for a Cartesian grid, it is common to use cubic splines which have shown to give accurate results in an efficient manner \cite{Sonnendrucker1999201}. In our problem, with the hexagonal lattice, B-splines do not exploit the isotropy of the mesh (for more information see \cite{Mersereau79-IEEE}) and are defined by a convolution in 2D, which cannot be done for our mesh. Therefore, we need to use another approach. In the following two sub-sections we present two different strategies: one using box splines and a second one using Hermite Finite Elements.
 
 
 %%-----------------------------
 \subsection{Box Splines quasi-interpolation}
 
-There are mainly two splines' families that take advantage of the geometry's properties : hex-splines and the three directional box-splines. For a detailed comparison between these two types of splines we will refer to \cite{Condat2007}. Based on the latter, we have chosen to use box splines, as the results are more stable. And lastly, also based on the previously cited paper, we decide to use a quasi-interpolation method.
+There are mainly two families of  splines that take advantage of the geometry's properties: hex-splines and the three directional box-splines. For a detailed comparison between these two types of splines we will refer to \cite{Condat2007}. Based on the latter, we have chosen to use box splines, as the results are more stable. And lastly, also based on the previously cited paper, we decide to use a quasi-interpolation method.
 
 %%..............................
 \subsubsection{Box-Splines: General Definition}
 
-Box-splines are a generalisation of the more known splines' family: B-splines. They are also piecewise polynomial and they share some properties, such as: compact support, positiveness, symmetry and partition of unity. But, unlike B-splines, box-splines are defined from a generator matrix $\Xi$. Therefore, to construct them on the hexagonal lattice, we will use the generator vectors $\mathbf{r_1, r_2, r_3}$. The general definition is \cite{Boor1993, Condat2006}:
+Box-splines are a generalisation of the well known B-splines. They are also piecewise polynomial and they share some properties, such as: compact support, positiveness, symmetry and partition of unity. But, unlike B-splines, box-splines are defined from a generator matrix $\Xi$. Therefore, to construct them on the hexagonal lattice, we will use the generator vectors $\mathbf{r_1, r_2, r_3}$. The general definition is \cite{Boor1993, Condat2006}:
 
 \begin{dfntn}[Box-splines]
 
@@ -184,7 +188,7 @@ Box-splines are a generalisation of the more known splines' family: B-splines. T
 
 	\begin{equation} 
 	\label{eqn:boxsplines_basis}
-		\chi_{\Xi \cup \mathbf{v}}(\mathbf{x}) = \int_0^ 1 \chi_\Xi(\mathbf{x}-t\mathbf{v})dt
+		\chi_{\Xi \cup \mathbf{v}}(\mathbf{x}) = \int_0^ 1 \chi_\Xi(\mathbf{x}-t\mathbf{v}) \, dt
 	\end{equation}
 
 \end{dfntn}
@@ -192,7 +196,7 @@ Box-splines are a generalisation of the more known splines' family: B-splines. T
 \rmrk The box-splines can have different degrees in each direction. Thus, there are different definitions of the degree. We will adopt the definition below.
 
 \begin{dfntn}[Degree of a Box-spline]
-Let $\Xi$ be a $d \times d$ matrix with non-null columns in $\xR^d$. The column vectors of $\Xi$ form a generating basis of $\xR^d$ and are linearly independent. Then, the box-spline of degree $N$ of generating matrix $\Xi$, $\chi^N_\Xi$, is the box-spline associated to $\Xi$, where all the generating vectors have multiplicity $N+1$. This yields, that $\chi^N_\Xi$ is piecewise polynomial of degree $N$.
+Let $\Xi$ be a $d \times d$ matrix with non-null columns in $\xR^d$ such that the column vectors of $\Xi$ form a generating basis of $\xR^d$ and are linearly independent. Then, the box-spline of degree $N$ of generating matrix $\Xi$, $\chi^N_\Xi$, is the box-spline associated to $\Xi$, where all the generating vectors have multiplicity $N+1$. This yields, that $\chi^N_\Xi$ is piecewise polynomial of degree $N$.
 
 
 \end{dfntn}
@@ -210,19 +214,18 @@ Let $\Xi$ be a $d \times d$ matrix with non-null columns in $\xR^d$. The column 
 %%..............................
 \subsubsection{The quasi-interpolation scheme}
 
-Let us describe the method: we are given an initial sample $s[\mathbf{k}] = f_0(\mathbf{R} \mathbf{k})$, where the points $\mathbf{R} \mathbf{k}$ belong to our hexagonal mesh, and we need to know the values $f(\mathbf{x})$ where $\mathbf{x} \notin \mathbf{R} \mathbf{k}$. We want a spline surface $f(\mathbf{x}) = \sum c[\mathbf{k}] \chi^N(\mathbf{x} - \mathbf{R}\mathbf{k})$, where $\chi^N$ are the box-splines of degree $N$ of matrix $\mathbf{R}$ and $c[\mathbf{k}]$ are the coefficients associated to them. The reconstruction is defined such that $f(\mathbf{x})$ approximates $f_0(x)$ to a certain order $N$ or, in other words, the approximation is exact only if $f_0(x)$ is a polynomial of degree $N-1$ or less. This is different to the classic interpolation method, where the reconstruction is exact on mesh points in any case. The $c[\mathbf{k}]$ coefficients are the box-splines coefficients, to compute them we cannot longer solve a matrix-vector system because of the extra degree of freedom given by the quasi-interpolation method. Thus, the  $c[\mathbf{k}]$ coefficients are obtained by discrete filtering\cite{Condat2006a}
+Let us describe the method: we are given an initial sample $s[\mathbf{k}] = f_0(\mathbf{R} \mathbf{k})$, where the points $\mathbf{R} \mathbf{k}$ belong to our hexagonal mesh, and we need to know the values $f(\mathbf{x})$ where $\mathbf{x} \notin \mathbf{R} \mathbf{k}$. We want a spline surface $f(\mathbf{x}) = \sum c[\mathbf{k}] \chi^N(\mathbf{x} - \mathbf{R}\mathbf{k})$, where $\chi^N$ are the box-splines of degree $N$ of matrix $\mathbf{R}$ and $c[\mathbf{k}]$ are the coefficients associated to them. The reconstruction is defined such that $f(\mathbf{x})$ approximates $f_0(x)$ to a certain order $N$ or, in other words, the approximation is exact only if $f_0(x)$ is a polynomial of degree $N-1$ or less. This is different from the classical interpolation method, where the reconstruction is exact on grid points for all smooth functions. The $c[\mathbf{k}]$ coefficients are the box-splines coefficients, to compute them we cannot longer solve a matrix-vector system because of the extra degree of freedom given by the quasi-interpolation method. Thus, the  $c[\mathbf{k}]$ coefficients are obtained by discrete filtering\cite{Condat2006a}
 
 \begin{equation}
 \label{eqn:coefs}
  c = s * p
 \end{equation}
-
 where $*$ is the convolution operator, $s$ is the initial sample data and $p$ is a pre-filter which will be defined later on.
 
 
 \subsubsection{Box splines coefficients}
 
-How we determine the splines coefficients is almost as important as the splines themselves. We recall we have the formula \eqref{eqn:coefs}. Based on the literature available (notably \cite{Condat2007}) we have chosen for second-order box-splines the quasi-interpolation pre-filters $p_{IIR2}$ which seem to give better results within a competitive time. The pre-filter $p_{IIR2}[i]$ of the point of local index $i$, for splines of order 2, is defined as follows : 
+How we determine the splines coefficients is almost as important as the splines themselves. We recall we have the formula \eqref{eqn:coefs}. Based on the literature available (notably \cite{Condat2007}) we have chosen for second-order box-splines the quasi-interpolation pre-filters $p_{IIR2}$ which seem to give better results within a competitive time. The pre-filter $p_{IIR2}[i]$ of the point of local index $i$, for splines of order 2, is defined as follows: 
 
 
 \begin{equation}
@@ -237,7 +240,7 @@ p_{IIR2} [i] = \left\{
   \end{array} \right.
 \end{equation}
 
-%Or for the splines of order 3 :
+%Or for the splines of order 3:
 %
 %\begin{equation}
 %\label{eqn:filterIIR3}
@@ -266,7 +269,7 @@ At the present state we have all the elements for the approximation of a functio
 \tilde{f}(\mathbf{x}) = \sum_{\mathbf{k} \in \xZ^2} c[\mathbf{k}] \chi^2(\mathbf{x} - \mathbf{R}\mathbf{k})
 \end{equation}
 
-Even if we limit our sum to the vector $\mathbf{k}$ that defines our domain, we would like to take advantage of the fact that the splines $\chi^1$ are only non-zeros in a limited number of points. Therefore we need to know the indices $\mathbf{k}$ such that $\chi^1(\mathbf{x} - \mathbf{R} \mathbf{x}) \neq 0$. For this purpose we will use the strategy suggested in \cite{Condat2007} : to start we need to obtain the indices on the coordinate system generated by $\mathbf{R}$ : $\mathbf{k}_0 = \left[ \lfloor u \rfloor \; \lfloor v \rfloor \right]$ where $\left[ u \; v \right]^T = \mathbf{R}^ {-1} \mathbf{x} $. Thus, in our case, with splines $\chi^2$ we only need 4 terms associated to the encapsulating rhomboid's vertices : $\mathbf{R}\mathbf{k}_0$, $\mathbf{R}\mathbf{k}_0 + \mathbf{r_1}$, $\mathbf{R}\mathbf{k}_0 + \mathbf{r_2}$ and $\mathbf{R}\mathbf{k}_0 + \mathbf{r_1} + \mathbf{r_2}$. Finally we obtain :
+Even if we limit our sum to the vector $\mathbf{k}$ that defines our domain, we would like to take advantage of the fact that the splines $\chi^1$ are only non-zeros in a limited number of points. Therefore we need to know the indices $\mathbf{k}$ such that $\chi^1(\mathbf{x} - \mathbf{R} \mathbf{x}) \neq 0$. For this purpose we will use the strategy suggested in \cite{Condat2007}: to start we need to obtain the indices on the coordinate system generated by $\mathbf{R}$: $\mathbf{k}_0 = \left[ \lfloor u \rfloor \; \lfloor v \rfloor \right]$ where $\left[ u \; v \right]^T = \mathbf{R}^ {-1} \mathbf{x} $. Thus, in our case, with splines $\chi^2$ we only need 4 terms associated to the encapsulating rhomboid's vertices: $\mathbf{R}\mathbf{k}_0$, $\mathbf{R}\mathbf{k}_0 + \mathbf{r_1}$, $\mathbf{R}\mathbf{k}_0 + \mathbf{r_2}$ and $\mathbf{R}\mathbf{k}_0 + \mathbf{r_1} + \mathbf{r_2}$. Finally we obtain:
 
 \begin{align}
 \label{eqn:chi2_fct_interpol}
@@ -306,9 +309,9 @@ Z2 approach uses 9 degrees of freedom which are the values at the vertices of th
  \Sigma_T = \lbrace \forall i \in [|1;3|], f(S_i),\partial_x(S_i),\partial_v(S_i); f(C) \rbrace 
 \end{equation*}
 
- \noindent The advantage of using the Z3 element is the gain of one order of precision with an order 3 instead of an order 2 for the Z2 approach. Let us note that although adding one degree of liberty seems harmless enough, the center points for a hexagonal mesh represents a computational cost multiplied by 3. Indeed they are  2 times more centers than vertices. Therefore the number of points which must be computed is tripled. 
+ \noindent The advantage of using the Z3 element is the gain of one order of precision with an order 3 instead of an order 2 for the Z2 approach. Let us note that although adding one degree of freedom seems harmless enough, the center points for a hexagonal mesh represents a computational cost multiplied by 3. Indeed they are  2 times more centers than vertices. Therefore the number of points which must be computed is tripled. 
  
-Let us define the basis functions needed to interpolate with the element Z2 : 
+Let us define the basis functions needed to interpolate with the element Z2: 
 \begin{equation*}
 \phi = \lambda_1 \lambda_2 \lambda_3 
 \end{equation*}
@@ -320,8 +323,8 @@ Let us define the basis functions needed to interpolate with the element Z2 :
 \end{equation*}
 
 
-\noindent $\phi_i$ is the basis function associated with the value of the function at $S_i$ while $\phi_ij$ are associated with the derivatives in the direction of the edges.    
-The fact that T is equilateral is exploited here by replacing $h_{ij}$ with h since the length of $ [S_iS_j]$ is constant. Finally for Z2 we have :
+\noindent $\phi_i$ is the basis function associated with the value of the function at $S_i$ while $\phi_{ij}$ are associated with the derivatives in the direction of the edges.    
+The fact that T is equilateral is exploited here by replacing $h_{ij}$ with h since the length of $ [S_iS_j]$ is constant. Finally for Z2 we have:
 \begin{equation*}
  \Pi (X) = \sum \limits_{\substack{i=1 }}^{3}{ [f(S_i).\phi_i + \sum \limits_{\substack{j\neq i }}^{}{ \frac{\partial f(S_i)}{\partial  \overrightarrow{ S_i S_j } }.\phi_{ij} } ] } 
 \end{equation*}
@@ -337,7 +340,7 @@ The fact that T is equilateral is exploited here by replacing $h_{ij}$ with h si
 \phi_{123}=27\phi
 \end{equation*}
 
-\noindent therefore for $Z_3$ we have :
+\noindent therefore for $Z_3$ we have:
 \begin{equation*}
  \Pi (X) = \sum \limits_{\substack{i=1 }}^{3}{ [f(S_i).\phi_i + \sum \limits_{\substack{j\neq i }}^{}{ \frac{\partial f(S_i)}{\partial  \overrightarrow{ S_i S_j } }.\phi_{ij} } ] } + f(C).\phi_{123}
 \end{equation*}
@@ -386,7 +389,7 @@ Let $S_i$ be a vertex of the triangle T, then we define respectively $l_i$ and $
 
 
 \begin{equation*}
-\Pi_{K_l} (X) = \sum \limits_{\substack{i=l }}^{3}{ [f(S_i).\phi_i +  \frac{\partial f(S_i)}{\partial  \overrightarrow{ S_i S_j } }.\phi_{ij} }   - ni \frac{\partial f}{\partial \nu_i}(m_i) \Phi_{\perp,l,i}]
+\Pi_{K_l} (X) = \sum \limits_{\substack{i=l }}^{3}{ [f(S_i).\phi_i +  \frac{\partial f(S_i)}{\partial  \overrightarrow{ S_i S_j } }.\phi_{ij} }   - ni \frac{\partial f}{\partial \nu_i}(m_i) \Phi_{\perp,l,i}].
 \end{equation*} 
 
 The basis function are defined by 
@@ -423,12 +426,12 @@ For an equilateral triangle, the excentricity is null which simplifies a lot $\S
 \end{pmatrix}
 \end{equation*}
 
-The advantage of HCT-c and HCT-r is that they don't require more points than what is already included into the hexagonal mesh which is not the case for the the Z3 approach.
+The advantage of HCT-c and HCT-r is that they don't require more points than what is already included in the hexagonal mesh which is not the case for the the Z3 approach.
 
 \subsubsection{The Ganev-Dimitrov element}
 \label{subsubsec:ganevdimitrov}
 The Ganev-Dimitrov element is of order 4 and uses 15 degrees of freedom which are the values of the function at the vertices and at the middle of the edges, plus the value of the derivatives at the vertices in the direction of the other two vertices. 
-The computational cost for this element is four times higher than the HCT-r interpolation because of the computations needed at the middle of the edges: there are on average 3 times more edges than vertices. As a matter of fact, the vertices and the middle of the edges form another hexagonal mesh twice as fine as the original mesh. The reason why we tested such a computational expensive element is to observe whether or not the gain in precision is interesting compared to the extra computing time allocated. 
+The computational cost for this element is four times higher than the HCT-r interpolation because of the computations needed at the middle of the edges: there are on average 3 times more edges than vertices. As a matter of fact, the vertices and the middle of the edges form another hexagonal mesh twice as fine as the original mesh. The reason why we tested such a computationally expensive element is to observe whether or not the gain in precision is interesting compared to the extra computing time allocated. 
 
 \noindent The local interpolation operator is:
 
@@ -505,7 +508,7 @@ The computational cost for this element is four times higher than the HCT-r inte
 %\end{cases}
 %\end{equation}
 %
-%We obtain :
+%We obtain:
 %\begin{equation}
 %	\begin{cases}  
 %       \displaystyle{  \partial _x H_1 = \frac{\sqrt{3}}{ 2} ~;~  \partial _y H_1 = \frac{1}{ 2}  }\\[2mm]
@@ -526,25 +529,25 @@ The computational cost for this element is four times higher than the HCT-r inte
 
 %\subection{Solving the Poisson equation on an hexagonal mesh}
 
-One step of the semi-Lagragian method is the computation of the solution of the Poisson equation
+When computing the origins of the characteristics with the semi-Lagragian method for the Vlasov-Poisson or guiding center models we need to compute the solution of the Poisson equation
 \begin{equation*}
-	- \Delta \phi = \rho .
+	- \Delta \phi = \rho ,
 \end{equation*}
  $\phi$ being the potential and $\rho$ the density.
- In order to solve this equation, we have developed a finite differences scheme. Since the mesh here is hexagonal, a seven point stencil is used as shown in Figure~\ref{fig:hexmesh}. It is composed of the six vertices of an hexagon plus its center. To compute  $\phi_0$, the value of $\phi$ at the center $0$,  the remaining vertices of the hexagon are used. 
+ In order to solve this equation, we use a simple a finite differences scheme. Since the mesh here is hexagonal, a seven point stencil is used as shown in Figure~\ref{fig:hexmesh}. It is composed of the six vertices of an hexagon plus its center. To compute  $\phi_0$, the value of $\phi$ at the center $0$,  the remaining vertices of the hexagon are used. 
  This particular stencil has the property to give a fourth order scheme at little cost \cite{poisson}. Here is the previously described scheme:
 \begin{equation*}
 -(\phi_1 + \phi_2 + \phi_3 + \phi_4 +\phi_5 + \phi_6 - 6 \phi_0)  = \frac{3h^2}{4} \rho_0 + \frac{h^2}{24}(\rho_1+\rho_2+\rho_3+\rho_4+\rho_5+\rho_6).
 \end{equation*} 
 
-Compared to the second order scheme on the same stencil, we notice the only difference to be the second term of the equality :  
+Compared to the second order scheme on the same stencil, we notice the only difference to be the second term of the equality:  
 \begin{equation*}
 -(\phi_1 + \phi_2 + \phi_3 + \phi_4 +\phi_5 + \phi_6 - 6 \phi_0)  = h^2 \rho_0.
 \end{equation*} 
 
 Considering the gain of two order of precision at such little cost, we have used this fourth order scheme to compute $\phi$.
 
- \rmrk One difficulty that arises here is to define a numerotation that allows the resolution of a ``computational-friendly" linear system, i.e. an almost empty matrix with the non-null terms close to the diagonal. This is done by assigning a number following one hexagonal direction, row after row, similarily to how one proceeds on a cartesian mesh. Here however the difference is that the rows are of variable width resulting in a band matrix. Therefore the matrix here is not constituted of 7 diagonals which makes the Poisson computation longer than on a cartesian mesh. The width of the band is directly proportional to the number of cells in the hexagonal domain.  
+ \rmrk One difficulty that arises here is to define a numerotation that allows the resolution of a ``computational-friendly" linear system, i.e. a sparse matrix with the non-null terms close to the diagonal to minimise filling in a Cholesky decomposition. This is done by assigning a number following one hexagonal direction, row after row, similarily to how one proceeds on a cartesian mesh. Here however the difference is that the rows are of variable width resulting in a banded matrix. Therefore the matrix here is not constituted of 7 diagonals which makes the Poisson computation longer than on a cartesian mesh. The width of the band is directly proportional to the number of cells in the hexagonal domain.  
 
 %%%-----------------------------
 %\subsection{Finite Elements Solver}
@@ -561,11 +564,12 @@ Considering the gain of two order of precision at such little cost, we have used
 \label{sec:BSL_scheme}
 
 %%-----------------------------
-When solving a Vlasov equation, one usually thinks in Lagrangian methods such as PIC\cite{Birdsall:1985:PPV:577251}. Unfortunately, the drawback of these schemes is that it's vulnerable to numerical noise. Furthermore, this noise is unpredictable as it is the statistical error of a Monte Carlo integration. Looking for other possible schemes to solve the Vlasov equation, one might think of Eulerian methods, where the operators 
-are discretized \cite{Zaki1988184}. The downside of this type of method is the dissipation.
+When solving a Vlasov equation, one usually thinks of Lagrangian methods such as PIC\cite{Birdsall:1985:PPV:577251}. However  these schemes are prone to numerical noise and converge slowly in $1/\sqrt{N}$ as the number of particles increases, typical of a Monte Carlo integration. Another option to solve the Vlasov equation, are Eulerian methods like Finite Difference, Finite Element or Finite Volume methods
+ \cite{filbet2003, Zaki1988184, banks2010}. The downside of this type of method is that there is a numerical limit on the type step
 
-With the intention of neglecting the pitfalls of these methods, the Semi-Lagrangian method was introduced, first in numerical weather prediction (see \cite{Kalnay03atmosphericmodeling} and articles cited within it), but since then, it has been introduced for plasma simulations \cite{Sonnendrucker1999201, Cheng1976330} and it's getting more and more popular. 
-This scheme consists on fixing an Eulerian grid in phase-space and following the trajectory of the equation's characteristics in time to compute the evolution of the distribution function. The advantages of this scheme are the possibility of taking large time steps and its stability. However, it is important to note that it's very computationally costly to go to high dimensions. Thus, it is typically used with 1D and 2D models. Lastly, we can point out that there are many types of Semi-Lagrangian solvers (\emph{e.g.} depending on the trajectories: Backward or Forward;  depending on the elements on which is based: grid's point, integrated cell..). We have chosen here to use the classical Backward Semi-Lagrangian method. 
+With the intent of overcoming  the pitfalls of these methods, the Semi-Lagrangian method was introduced, first in numerical weather prediction (see \cite{Kalnay03atmosphericmodeling} and articles cited within it), and then   for plasma simulations \cite{Sonnendrucker1999201, Cheng1976330} and is used also for gyrokinetic simulations of plasma turbulence \cite{grandgirard2006,kwon2015}.
+This scheme consists in fixing a Eulerian grid in phase-space and following the trajectory of the equation's characteristics in time to compute the evolution of the distribution function. The advantages of this scheme are the possibility of taking large time steps and its stability. However it is still quite costly in  high dimensions (5 or 6D phase space) where PIC method still largely dominate.
+ Lastly, we can point out that there are many types of Semi-Lagrangian solvers (\emph{e.g.} depending on the trajectories: Backward or Forward;  depending on the elements on which is based: grid's point, integrated cell..). We have chosen here to use the classical Backward Semi-Lagrangian method. 
 
 %%-----------------------------
 \subsection{The non-constant advection equation}
@@ -764,7 +768,7 @@ This model, is commonly used in 2D simulations to study the particle density, as
 
 
 We chose here to study the diocotron instability \cite{madaule:hal-00841504}.
-The initial density is given by :
+The initial density is given by:
 \begin{equation*}
  \rho_0(\mathbf{x}_\bot)=
  \left\{
