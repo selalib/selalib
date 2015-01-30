@@ -425,6 +425,7 @@ For an equilateral triangle, the excentricity is null which simplifies a lot $\S
 The advantage of HCT-c and HCT-r is that they don't require more points than what is already included into the hexagonal mesh which is not the case for the the Z3 approach.
 
 \subsubsection{The Ganev-Dimitrov element}
+\label{subsubsec:ganevdimitrov}
 The Ganev-Dimitrov element is of order 4 and uses 15 degrees of freedom which are the values of the function at the vertices and at the middle of the edges, plus the value of the derivatives at the vertices in the direction of the other two vertices. 
 The computational cost for this element is four times higher than the HCT-r interpolation because of the computations needed at the middle of the edges: there are on average 3 times more edges than vertices. As a matter of fact, the vertices and the middle of the edges form another hexagonal mesh twice as fine as the original mesh. The reason why we tested such a computational expensive element is to observe whether or not the gain in precision is interesting compared to the extra computing time allocated. 
 
@@ -562,7 +563,7 @@ Considering the gain of two order of precision at such little cost, we have used
 When solving a Vlasov equation, one usually thinks in Lagrangian methods such as PIC\cite{Birdsall:1985:PPV:577251}. Unfortunately, the drawback of these schemes is that it's vulnerable to numerical noise. Furthermore, this noise is unpredictable as it is the statistical error of a Monte Carlo integration. Looking for other possible schemes to solve the Vlasov equation, one might think of Eulerian methods, where the operators 
 are discretized \cite{Zaki1988184}. The downside of this type of method is the dissipation.
 
-With the intention of neglecting the pitfalls of the method, the Semi-Lagrangian method was introduced, first in numerical weather prediction (see \cite{Kalnay03atmosphericmodeling} and articles cited within it), but since then, it has been introduced for plasma simulations \cite{sonnendrucker:inria-00073296, Cheng1976330} and it's getting more and more popular. This scheme consists on fixing an Eulerian grid in phase-space and following the trajectory of the equation's characteristics in time to compute the evolution of the distribution function. The advantages of this scheme are the possibility of taking large time steps and its stability. However, it is important to note that it's very computationally costly to go to high dimensions. Thus, it is typically used with 1D and 2D models. Lastly, we can point out that there are many types of Semi-Lagrangian solvers (\emph{e.g.} depending on the trajectories: Backward or Forward;  depending on the elements on which is based: grid's point, integrated cell..). We have chosen here to use the classical Backward Semi-Lagrangian method. 
+With the intention of neglecting the pitfalls of these methods, the Semi-Lagrangian method was introduced, first in numerical weather prediction (see \cite{Kalnay03atmosphericmodeling} and articles cited within it), but since then, it has been introduced for plasma simulations \cite{sonnendrucker:inria-00073296, Cheng1976330} and it's getting more and more popular. This scheme consists on fixing an Eulerian grid in phase-space and following the trajectory of the equation's characteristics in time to compute the evolution of the distribution function. The advantages of this scheme are the possibility of taking large time steps and its stability. However, it is important to note that it's very computationally costly to go to high dimensions. Thus, it is typically used with 1D and 2D models. Lastly, we can point out that there are many types of Semi-Lagrangian solvers (\emph{e.g.} depending on the trajectories: Backward or Forward;  depending on the elements on which is based: grid's point, integrated cell..). We have chosen here to use the classical Backward Semi-Lagrangian method. 
 
 %%-----------------------------
 \subsection{The non-constant advection equation}
@@ -577,7 +578,7 @@ As an example, we take the non-constant advection equation, which can be written
 where $\mathbf{A}$ is divergence free (\emph{i.e.} $\nabla \cdot \mathbf{A} = 0$) and the density $\rho$ is known at the initial time (\emph{i.e.} $\rho(\mathbf{x}, 0) = \rho_0(\mathbf{x})$ is known). This equation is generally considered the simplest form of the Vlasov equation. We will apply the backward Semi-Lagrangian scheme to solve it.
 
 
-We consider the model \eqref{eqn:noncst_advec} on a 2D hexagonal domain, discretized with the hexagonal mesh. The points of the lattice are denoted $\mathbf{x}=(x_1, x_2)$. The distribution function $\rho(\mathbf{x},t)$ is known on all mesh points at the initial time $t=0$. In other words, $\rho_0(\mathbf{x})$ is given. Let $A_x$ and $A_y$ be respectively, the first and second components of $\mathbf{A}$. We proceed to apply the BSL to the Vlasov equation \eqref{eqn:gc_vlasov}: First, we apply the characteristics' method. We obtain for a given $s \in \xR $
+We consider the model \eqref{eqn:noncst_advec} on a 2D hexagonal domain, discretized with the hexagonal mesh. The points of the lattice are denoted $\mathbf{x}=(x_1, x_2)$. The distribution function $\rho(\mathbf{x},t)$ is known on all mesh points at the initial time $t=0$. In other words, $\rho_0(\mathbf{x})$ is given. Let $A_{x_1}$ and $A_{x_2}$ be respectively, the first and second components of $\mathbf{A}$. We proceed to apply the BSL to the Vlasov equation \eqref{eqn:gc_vlasov}: First, we apply the characteristics' method. We obtain for a given $s \in \xR $
 
 \begin{equation}
 	\label{eqn:charac_sys}
@@ -589,8 +590,8 @@ We consider the model \eqref{eqn:noncst_advec} on a 2D hexagonal domain, discret
 ~~\Longleftrightarrow ~~
 	\left\lbrace
 	\begin{array}{lcl}
-	\displaystyle \dfrac{d \mathbf{X_1}}{dt} &=& A_x\\[0.3cm]
-	\displaystyle \dfrac{d \mathbf{X_2}}{dt} &=& A_y\\[0.3cm]
+	\displaystyle \dfrac{d \mathbf{X_1}}{dt} &=& A_{x_1}\\[0.3cm]
+	\displaystyle \dfrac{d \mathbf{X_2}}{dt} &=& A_{x_2}\\[0.3cm]
 	\displaystyle X_1(s) &=& x_1, \quad   X_2(s) = x_2
 	\end{array}\right.
 \end{equation}
@@ -706,19 +707,19 @@ On a hexagonal mesh centered at the origin, of radius $8$,  we take  $\sigma_x =
 
 
 \begin{figure}[h!]
-	\label{fig:circ_convergence}
 	\includegraphics[width=0.45\textwidth]{figures/l2.png}
 	\includegraphics[width=0.45\textwidth]{figures/inf_l.png}
 	\caption{Order of convergence}
+	\label{fig:circ_convergence}
 \end{figure}
 
 In Figure~\ref{fig:circ_convergence} we can see that for coarse meshes only the Ganev-Dimitrov method had a worst accuracy than the splines of degree $2$. Nonetheless, for finer grids, the splines obtain results better or as good as all the finite elements methods. Regarding the latter, we notice that there is little to no difference between Zienkiewicz-9 and the H-C-T-R method. 
 
 \begin{figure}[h!]
-	\label{fig:circ_performance}
 	\includegraphics[scale=0.35]{figures/efficiency.png}
 	\includegraphics[scale=0.35]{figures/time_norm.png}
-	\caption{Comparison of performances }
+	\caption{Comparison of performances for the circular advection test case.}
+	\label{fig:circ_performance}
 \end{figure}
 
 Figure~\ref{fig:circ_performance} we can see that the level of performance of all the methods convergences quite quickly. It is also pretty obvious that even if the splines obtained more accuracy, the cost is more expensive than most of the Hermite Finite Element methods.
@@ -771,10 +772,11 @@ The initial density is given by :
  \right.
 \end{equation*}
 
-\noindent As for the parameters, we take $\varepsilon=0.001$, $r^-=5$, $r^+=8$, $\ell=6$, furthermore $dt=0.1$ and the hexagonal step is $\frac{14}{160}$ with a radius of 14 and and an hexagonal parameter $nc =160$.
+\noindent As for the parameters, we take $\varepsilon=0.001$, $r^-=5$, $r^+=8$, $\ell=6$, $dt=0.1$ and the hexagonal step is $\frac{14}{160}$ with a radius of 14 and and an hexagonal parameter $N_c =160$.
 In this part, we won't test the Z3 approach as it requires a special resolution of the Poisson equation that has not been implemented. Indeed, computing the values of the field at the center of the triangles can't be combined with the resolution at the vertices. 
-Moreover to even the commputational time of each method we chose to take $nc=80$ for the Ganev Dimitrov element as it results in the computations on a mesh with $nc =160$ ; see remark on the Ganev Dimitrov element in he paragraph on Hermite Finite element solver.\\
-Let us note that 6 vortices is the main mode. If we take $\ell\neq6$, with epsilon small enough, we still see the mode 6. With epsilon big enough, i.e. at least 0.1, the modes different from 6 can be visible for a time but they are not stable and we see the fusion or the apparition of vortices until there is the sixth mode. For instance,as illustrated by figure \ref{fig:mode9}, we can see the ninth mode turning into the sixth mode by fusion of vortices.
+Moreover to even the computational time of each method we chose to take $N_c=80$ for the Ganev Dimitrov element as it results in the computations on a mesh with $N_c =160$ (see Section~\ref{subsubsec:ganevdimitrov}).
+
+Let us note that 6 vortices is the main mode. If we take $\ell\neq6$, with epsilon small enough, we still see the mode 6. With epsilon big enough, i.e. at least 0.1, the modes different from 6 can be visible for a time but they are not stable and we see the fusion or the apparition of vortices until there is the sixth mode. For instance,as illustrated by Figure~\ref{fig:mode9}, we can see the ninth mode turning into the sixth mode by fusion of vortices.
 
 %\textcolor{red}{peut etre un paragraphe sur l'evolution de la densite, les 6 modes retrouves qqsoit eps, etc, commenter la figure 6}
 \begin{figure}[h!]
@@ -813,6 +815,7 @@ Visualisation of the results. The six vortices are developing with time without 
 	\includegraphics[scale=0.3]{figures/min_cg.png}
 	\caption{Time evolution of the density's minimum}
 \end{figure}
+
 After comparison of the diagnostics we see that the various interpolation methods give close results overall. They are similar in terms of positivity conservation. We notice that if the box-splines conserve better the mass, the Z2 approach conserves better the $L^1$ norm. Also we note the box splines and the HCTC element give very near results whichever the diagnostic considered.  
 
 
@@ -821,7 +824,7 @@ After comparison of the diagnostics we see that the various interpolation method
 %%-----------------------------
 \section{Conclusion}
 \label{sec:conclusion}
-In this paper we presented two Semi-Lagrangian schemes adapted to an hexagonal mesh. The strategies differentiated in the type of interpolation used: on the one hand, we developed an interpolation method based on box-splines --spline basis specific to the hexagonal mesh-- and on the other hand, we introduced an interpolation method based on Hermite Finite Elements. Furthermore, we presented a poisson solver based on finite differences on this mesh. The first simulations were made on the circular advection test case. This allowed to compare the order of the methods, as well as the efficiency. The splines approached seemed to be more accurate for finer grids, but a higher cost. Next, we simulated the 2D guiding-center model. The two method yield comparable results. Some minor differences could be observable when studying the mass conservation (where box-splines gave better results) and the conservation of the norms (where hermite finite elements yield more accurate solutions). Lastly, when comparing the densities, we perceived some noise, specially when working with Finite Elements.
+In this paper we presented two Semi-Lagrangian schemes adapted to an hexagonal mesh. The strategies differentiated in the type of interpolation used: on the one hand, we developed an interpolation method based on box-splines --spline basis specific to the hexagonal mesh-- and on the other hand, we introduced an interpolation method based on Hermite Finite Elements. Furthermore, we presented a Poisson solver based on finite differences on this mesh. The first simulations were made on the circular advection test case. This allowed to compare the order of the methods, as well as the efficiency. The splines approached seemed to be more accurate for finer grids, but a higher cost. Next, we simulated the 2D guiding-center model. The two method yield comparable results. Some minor differences could be observable when studying the mass conservation (where box-splines gave better results) and the conservation of the norms (where hermite finite elements yield more accurate solutions). Lastly, when comparing the densities, we perceived some noise, specially when working with Finite Elements.
 
 %%-----------------------------
 %%      your bibliography
