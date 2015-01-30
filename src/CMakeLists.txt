@@ -17,7 +17,7 @@ ENABLE_LANGUAGE(Fortran)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 SET(OPENMP_ENABLED        OFF CACHE BOOL "Enable use of OpenMP library")
-SET(MPI_ENABLED    ON  CACHE BOOL "Enable use of MPI library")
+SET(MPI_ENABLED           ON  CACHE BOOL "Enable use of MPI library")
 SET(HDF5_ENABLED          ON  CACHE BOOL "Use HDF5 library for data output")
 SET(HDF5_PARALLEL_ENABLED OFF CACHE BOOL "Use Parallel HDF5")
 SET(FFTW_ENABLED          ON  CACHE BOOL "Enable use of FFTW library")

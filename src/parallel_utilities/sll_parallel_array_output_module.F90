@@ -7,7 +7,10 @@ module sll_parallel_array_output_module
 use sll_collective
 use sll_remapper
 use sll_xml_io
+
+#ifndef NOHDF5
 use hdf5, only: hid_t, hssize_t, hsize_t
+#endif
 
 #define MPI_MASTER 0
 
@@ -15,7 +18,9 @@ contains
 
 subroutine write_mesh_4d(mesh)
 
+#ifndef NOHDF5
   use sll_hdf5_io_serial
+#endif
 
   type(sll_cartesian_mesh_4d), intent(in) :: mesh
   sll_int32                               :: error
@@ -45,12 +50,14 @@ subroutine write_mesh_4d(mesh)
      eta4(l) = mesh%eta4_min + (l-1)*mesh%delta_eta4
   end do
  
+#ifndef NOHDF5
   call sll_hdf5_file_create("mesh4d.h5",file_id,error)
   call sll_hdf5_write_array(file_id,eta1,"/x1",error)
   call sll_hdf5_write_array(file_id,eta2,"/x2",error)
   call sll_hdf5_write_array(file_id,eta3,"/x3",error)
   call sll_hdf5_write_array(file_id,eta4,"/x4",error)
   call sll_hdf5_file_close(file_id, error)
+#endif
 
 end subroutine write_mesh_4d
 
@@ -150,7 +157,10 @@ end subroutine write_attribute
 
 subroutine write_fx1x2(f, layout, cplot)
 
+#ifndef NOHDF5
   use sll_hdf5_io_serial
+#endif
+
   sll_real64, dimension(:,:,:,:)          :: f
   type(layout_4D), pointer                :: layout
   character(len=*)                        :: cplot
@@ -171,17 +181,21 @@ subroutine write_fx1x2(f, layout, cplot)
         call mpi_reduce(sumloc,fij(i,j),1,MPI_REAL8,MPI_SUM,MPI_MASTER,comm,error)
      end do
   end do
+#ifndef NOHDF5
   if (prank == MPI_MASTER) then
      call sll_hdf5_file_create('fx1x2_'//cplot//".h5",file_id,error)
      call sll_hdf5_write_array(file_id,fij,"/values",error)
      call sll_hdf5_file_close(file_id, error)
   end if
+#endif
 
 end subroutine write_fx1x2
 
 subroutine write_fx1x3(f, layout, cplot)
 
+#ifndef NOHDF5
   use sll_hdf5_io_serial
+#endif
   sll_real64, dimension(:,:,:,:)          :: f
   type(layout_4D), pointer                :: layout
   character(len=*)                        :: cplot
@@ -202,17 +216,21 @@ subroutine write_fx1x3(f, layout, cplot)
         call mpi_reduce(sumloc,fik(i,k),1,MPI_REAL8,MPI_SUM,MPI_MASTER,comm,error)
      end do
   end do
+#ifndef NOHDF5
   if (prank == MPI_MASTER) then
      call sll_hdf5_file_create('fx1x3_'//cplot//".h5",file_id,error)
      call sll_hdf5_write_array(file_id,fik,"/values",error)
      call sll_hdf5_file_close(file_id, error)
   end if
+#endif
 
 end subroutine write_fx1x3
 
 subroutine write_fx2x4(f, layout, cplot)
 
+#ifndef NOHDF5
   use sll_hdf5_io_parallel
+#endif
 
   sll_real64, dimension(:,:,:,:)          :: f
   type(layout_4D), pointer                :: layout
@@ -239,9 +257,12 @@ subroutine write_fx2x4(f, layout, cplot)
   global_dims(2) = int(get_layout_global_size_l(layout),HSIZE_T)
   offset(1) = get_layout_j_min(layout,prank)-1
   offset(2) = get_layout_l_min(layout,prank)-1
+
+#ifndef NOHDF5
   call sll_hdf5_file_create('fx2x4_'//cplot//".h5",comm,pfile_id,error)
   call sll_hdf5_write_array_2d(pfile_id,global_dims,offset,fjl,"/values",error)
   call sll_hdf5_file_close(pfile_id, error)
+#endif
 
 end subroutine write_fx2x4
 
@@ -275,9 +296,11 @@ subroutine write_fx3x4(f, layout, cplot)
   offset(1) = get_layout_k_min(layout,prank)-1
   offset(2) = get_layout_l_min(layout,prank)-1
 
+#ifndef NOHDF5
   call sll_hdf5_file_create('fx3x4_'//cplot//".h5",comm,pfile_id,error)
   call sll_hdf5_write_array_2d(pfile_id,global_dims,offset,fkl,"/values",error)
   call sll_hdf5_file_close(pfile_id, error)
+#endif
 
 end subroutine write_fx3x4
 
