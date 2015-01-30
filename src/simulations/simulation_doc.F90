@@ -12,7 +12,7 @@
 !> @defgroup simulation sll_simulation 
 !> @brief 
 !> Description of simulation library (72 characters)
-!> @author Selalib team 
+!> @author Selalib team. 
 !> You can add a contact, do not put your email to prevent spam.
 !> @details
 !> Long description of  simulation, you can add some references or math equations.
@@ -30,7 +30,7 @@
 !> - Add <code> use sll_simulation </code>
 !>
 !> <b> Examples </b>
-!> -Add some fortran lines to explain how ti use the library
+!> -Add some fortran lines to explain how to use the library
 !> \code
 !> call initialize(my_type, arg_1, arg_2)
 !> call solve(my_type, your_result)
