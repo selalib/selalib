@@ -715,7 +715,8 @@ On a hexagonal mesh centered at the origin, of radius $8$,  we take  $\sigma_x =
 	\label{fig:circ_convergence}
 \end{figure}
 
-In Figure~\ref{fig:circ_convergence} we can see that for coarse meshes only the Ganev-Dimitrov method had a worst accuracy than the splines of degree $2$. Nonetheless, for finer grids, the splines obtain results better or as good as all the finite elements methods. Regarding the latter, we notice that there is little to no difference between Zienkiewicz-9 and the H-C-T-R method. 
+
+In Figure~\ref{fig:circ_convergence}, we plotted the $L_2$ and $L_\infty$ norms for different space discretizations. We can see that for coarse meshes, all the methods are globally the same, with a slightly better accuracy for elements Z10 and Ganev-Dimitrov. But as the mesh gets finer, we can quickly see that the splines converge quicker to better results. Only the Ganev-Dimitrov elements are more precise. 
 
 \begin{figure}[h!]
 	\includegraphics[scale=0.35]{figures/efficiency.png}
@@ -724,7 +725,7 @@ In Figure~\ref{fig:circ_convergence} we can see that for coarse meshes only the 
 	\label{fig:circ_performance}
 \end{figure}
 
-Figure~\ref{fig:circ_performance} we can see that the level of performance of all the methods convergences quite quickly. It is also pretty obvious that, even if the splines obtained more accuracy, the cost is more expensive than most of the Hermite Finite Element methods.
+Figure~\ref{fig:circ_performance} we can see that the performance convergences quite quickly, for all the methods. It is also pretty obvious that, even if the splines are more accurate, the cost is higher than most of the Hermite Finite Element methods.
 
 \subsection{Guiding-center model - Diocotron instability test case}
 
