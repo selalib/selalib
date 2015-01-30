@@ -33,7 +33,7 @@
 \author{Laura S. Mendoza} \address{Max-Planck-Institut f\"{u}r Plasmaphysik, Boltzmannstr. 2, D-85748 Garching bei M\"unchen, Germany. \email{mela@ipp.mpg.de\ \&\ sonnen@ipp.mpg.de}} 
 \secondaddress{Technische Universit\"at M\"unchen, Boltzmannstr. 3, D-85748 Garching, Germany.}
 \author{Charles Prouveur}\address{Universit\'e de Lyon, UMR5208, Institut Camille Jordan,
-43 boulevard 11 novembre 1918, F-69622 Villeurbanne cedex, France}
+43 boulevard 11 novembre 1918, F-69622 Villeurbanne cedex, France. \mail {prouveur@math.univ-lyon1.fr}}
 \author{Eric Sonnendr\"{u}cker}\sameaddress{2,3}
 %
 %\dedicated{\it Dedicated to Maurice Dupont} %if necessary
@@ -768,8 +768,6 @@ The initial density is given by :
  \end{array}
  \right.
 \end{equation*}
-with $\theta=\text{atan2}(y,x)$.
-
 \noindent As for the parameters, we take $\varepsilon=0.001$, $r^-=5$, $r^+=8$, $\ell=6$, furthermore $dt=0.1$ and the hexagonal step is $\frac{14}{160}$ with a radius of 14 and and an hexagonal parameter $nc =160$.
 In this part, we won't test the Z3 approach as it requires a special resolution of the Poisson equation that has not been implemented. Indeed, computing the values of the field at the center of the triangles can't be combined with the resolution at the vertices. 
 Moreover to even the commputational time of each method we chose to take $nc=80$ for the Ganev Dimitrov element as it results in the computations on a mesh with $nc =160$ ; see remark on the Ganev Dimitrov element in he paragraph on Hermite Finite element solver.\\
