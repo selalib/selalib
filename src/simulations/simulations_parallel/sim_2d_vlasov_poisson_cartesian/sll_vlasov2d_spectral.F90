@@ -3,12 +3,11 @@ module sll_vlasov2d_spectral
 #define MPI_MASTER 0
 #include "sll_working_precision.h"
 #include "sll_assert.h"
+#include "sll_constants.h"
 #include "sll_memory.h"
 use sll_module_interpolators_1d_base
-use sll_module_interpolators_2d_base
 use sll_collective
 use sll_remapper
-use sll_constants
 #include "sll_fftw.h"
 
 use, intrinsic :: iso_c_binding
@@ -56,8 +55,6 @@ contains
                                          interp_x, &
                                          interp_v, &
                                          error)
-
-  use sll_hdf5_io_serial
 
   class(vlasov2d_spectral),intent(inout)   :: this
   sll_int32                                :: error
