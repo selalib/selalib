@@ -30,6 +30,7 @@ SET(SLL_MACROS
     ${SLL_DIR}/multigrid/compdir.inc
     ${SLL_DIR}/multigrid/mgd2_routines.h
     ${SLL_DIR}/remap/sll_remap.h
+    ${SLL_DIR}/parallel_utilities/sll_parallel_utilities.h
 )
 
 FILE(COPY ${SLL_MACROS} DESTINATION ${CMAKE_BINARY_DIR}/include)
