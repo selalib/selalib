@@ -21,7 +21,6 @@ IF(MPI_ENABLED)
 
   ADD_LIBRARY(sll_parallel_array_utilities STATIC 
               sll_parallel_array_initializer_module.F90
-              sll_parallel_array_output_module.F90
               sll_common_array_initializers_module.F90 )
 
   TARGET_LINK_LIBRARIES(sll_parallel_array_utilities 
@@ -32,9 +31,10 @@ IF(MPI_ENABLED)
                         sll_utilities
                         sll_meshes)
 
-  IF(BUILD_TESTING)
+  IF(BUILD_TESTING AND HDF5_ENABLED AND HDF5_PARALLEL_ENABLED)
+    ADD_EXECUTABLE( test_parallel_array_initializer unit_test_4d.F90
+              sll_parallel_array_output_module.F90)
 
-    ADD_EXECUTABLE( test_parallel_array_initializer unit_test_4d.F90 )
     TARGET_LINK_LIBRARIES( test_parallel_array_initializer 
                            sll_parallel_array_utilities )
 
@@ -44,6 +44,6 @@ IF(MPI_ENABLED)
     SET_TESTS_PROPERTIES( parallel_array_initializers
       PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
-  ENDIF(BUILD_TESTING)
+  ENDIF()
 
-ENDIF(MPI_ENABLED)
+ENDIF()
