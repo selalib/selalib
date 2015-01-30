@@ -17,14 +17,16 @@ IF(MPI_ENABLED)
                          sll_remap
                          sll_coordinate_transformations
                          sll_file_io_parallel
+                         sll_file_io
+                         sll_utilities
                          sll_meshes)
 
   # Ctest
-  IF(BUILD_TESTING AND (PROCESSOR_COUNT GREATER 1))
+  IF(BUILD_TESTING)
 
     ADD_EXECUTABLE( test_parallel_array_initializer unit_test_4d.F90 )
     TARGET_LINK_LIBRARIES( test_parallel_array_initializer 
-      sll_parallel_array_utilities )
+                           sll_parallel_array_utilities )
 
     SET( ARGS " " )
     ADD_MPI_TEST( parallel_array_initializers 
@@ -32,6 +34,6 @@ IF(MPI_ENABLED)
     SET_TESTS_PROPERTIES( parallel_array_initializers
       PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
-  ENDIF(BUILD_TESTING AND (PROCESSOR_COUNT GREATER 1))
+  ENDIF(BUILD_TESTING)
 
 ENDIF(MPI_ENABLED)
