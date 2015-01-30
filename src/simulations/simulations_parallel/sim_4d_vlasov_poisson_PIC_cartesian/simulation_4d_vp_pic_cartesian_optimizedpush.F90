@@ -202,20 +202,22 @@ contains
   end subroutine init_4d_pic_cartesian
 
   subroutine run_4d_pic_cartesian( sim )
+    intrinsic :: trim
 !!!   calls of routines with '_CS' mean use of Cubic Splines  !!!
 !     for deposition or interpolation step                      !
     class(sll_pic_simulation_4d_cartesian), intent(inout)  :: sim
     sll_int32  :: ierr, it, jj, counter
     sll_int32  :: i, j
-    sll_real32 :: tmp5, tmp6, temp
-    sll_real32 :: ttmp(1:4,1:2)
+    sll_real64 :: tmp5, tmp6, temp
+    sll_real64 :: ttmp(1:4,1:2)
     sll_real64, dimension(:,:), pointer :: phi
     sll_int32  :: ncx, ncy, ic_x,ic_y
     sll_int32  :: ic_x1,ic_y1
-    sll_real64 :: xmin, ymin, rdx, rdy
+    sll_real64 :: xmin, ymin
+    sll_real64 :: dtrdx, dtrdy
     sll_int32  :: gi ! counter index for guard list
     sll_real64 :: Ex, Ey
-    sll_real64 :: qoverm
+    sll_real64 :: dtqom! dt * qoverm
     sll_real64 :: x, x1 ! for global position
     sll_real64 :: y, y1 ! for global position
     sll_real64 :: dt, ttime
@@ -241,7 +243,9 @@ contains
     sll_real64 :: some_val, une_cst
     sll_real64 :: valeur, val2, exact_logE_val
     sll_real64 :: omega_i, omega_r, psi
-
+    character(len=2) :: nom_thnb
+    sll_real64 :: meanval_AtM
+    
     ncx = sim%m2d%num_cells1
     ncy = sim%m2d%num_cells2
     n_threads = sim%n_threads
@@ -262,13 +266,16 @@ contains
 
     sort_nb = 10
     p => sim%part_group%p_list
-    qoverm = sim%part_group%qoverm
 !!!    p_guard => sim%part_group%p_guard
     dt = sim%dt
+    dtqom = dt*sim%part_group%qoverm! qoverm = sim%part_group%qoverm
     xmin = sim%m2d%eta1_min
     ymin = sim%m2d%eta2_min
-    rdx = 1._f64/sim%m2d%delta_eta1
-    rdy = 1._f64/sim%m2d%delta_eta2
+!!$    rdx = 1._f64/sim%m2d%delta_eta1
+!!$    rdy = 1._f64/sim%m2d%delta_eta2
+    dtrdx = dt/sim%m2d%delta_eta1
+    dtrdy = dt/sim%m2d%delta_eta2
+
 
     if (sim%use_cubic_splines) then
        accumE_CS => sim%E_accumulator_CS%e_acc
@@ -314,13 +321,13 @@ contains
        call reset_field_accumulator_CS_to_zero( sim%E_accumulator_CS )
        call sll_accumulate_field_CS( sim%E1, sim%E2, sim%E_accumulator_CS )
        !$omp parallel do PRIVATE (pp_vx, pp_vy, Ex, Ey, ttmp)
-       !$&omp FIRSTPRIVATE(qoverm, dt)
+       !$&omp FIRSTPRIVATE(dtqom)
        do i = 1, sim%ions_number
           pp_vx = p(i)%vx
           pp_vy = p(i)%vy
           SLL_INTERPOLATE_FIELD_CS(Ex,Ey,accumE_CS,p(i),ttmp)
-          p(i)%vx = pp_vx - 0.5_f64 *dt* Ex* qoverm
-          p(i)%vy = pp_vy - 0.5_f64 *dt* Ey* qoverm
+          p(i)%vx = pp_vx - 0.5_f64 * dtqom * Ex
+          p(i)%vy = pp_vy - 0.5_f64 * dtqom * Ey
        end do! half-step advection of the velocities by -dt/2 here
        !$omp end parallel do
 
@@ -329,13 +336,13 @@ contains
        call reset_field_accumulator_to_zero( sim%E_accumulator )
        call sll_accumulate_field( sim%E1, sim%E2, sim%E_accumulator )
        !$omp parallel do PRIVATE (pp_vx, pp_vy, Ex, Ey, tmp5, tmp6)
-       !$&omp FIRSTPRIVATE(qoverm, dt)
+       !$&omp FIRSTPRIVATE(dtqom)
        do i = 1, sim%ions_number
           pp_vx = p(i)%vx
           pp_vy = p(i)%vy
           SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,p(i),tmp5,tmp6)
-          p(i)%vx = pp_vx - 0.5_f64 *dt* Ex* qoverm
-          p(i)%vy = pp_vy - 0.5_f64 *dt* Ey* qoverm
+          p(i)%vx = pp_vx - 0.5_f64 * dtqom * Ex
+          p(i)%vy = pp_vy - 0.5_f64 * dtqom * Ey
        enddo
        !$omp end parallel do   
     endif
@@ -351,7 +358,11 @@ contains
     omega_r = sim%elec_params(5)
     psi = sim%elec_params(4)
 
-    if (sim%my_rank ==0) open(65,file='logE_vals_newOPT.dat')
+    if (sim%my_rank ==0) then
+       write(nom_thnb,'(i2.2)') n_threads
+       nom_thnb = trim(nom_thnb)
+       open(65,file='logE_OptPush_th'//nom_thnb//'.dat')
+    endif
     t2 = omp_get_wtime()!!  call sll_set_time_mark(t2)    
 
 !  -------------------------
@@ -368,23 +379,24 @@ contains
                                  sim%m2d%delta_eta1, sim%m2d%delta_eta2 )
           counter = 1 + mod(it,save_nb)
           diag_energy(counter,:) = (/ it*sim%dt, valeur, exact_logE_val /)
-          valeur = 0.0_f64
-          !       val2   = 0.0_f64
-          do i = 1,ncx
-             do j = 1,ncy
-                valeur  = valeur + sim%E1(i,j)*sim%rho(i,j)
-                !             val2 = val2 + sim%E1(i,j)**2 + sim%E2(i,j)**2
-             enddo
-          enddo
-          diag_TOTmoment(counter) = valeur
+!!$          valeur = 0.0_f64
+!!$          !       val2   = 0.0_f64
+!!$          do i = 1,ncx
+!!$             do j = 1,ncy
+!!$                valeur  = valeur + sim%E1(i,j)*sim%rho(i,j)
+!!$                !             val2 = val2 + sim%E1(i,j)**2 + sim%E2(i,j)**2
+!!$             enddo
+!!$          enddo
+!!$          diag_TOTmoment(counter) = valeur
+
 !       diag_TOTenergy(counter) = 0.5_f64 *(sim%m2d%eta1_max - sim%m2d%eta1_min) * &
 !            (sim%m2d%eta2_max - sim%m2d%eta2_min)/sim%ions_number * &
 !            diag_TOTenergy(mod(counter-1,save_nb)) + &
 !            0.5_f64 * val2 *sim%m2d%delta_eta1*sim%m2d%delta_eta2
                     
-          if (mod(it+1,save_nb)==0 .and. (sim%my_rank == 0)) then
+          if (mod(it+1,save_nb)==0) then
              do jj=1,save_nb
-                write(65,*) diag_energy(jj,:), diag_TOTmoment(jj)!, diag_TOTenergy(jj)
+                write(65,*) diag_energy(jj,:)!, diag_TOTmoment(jj)!, diag_TOTenergy(jj)
              enddo
           endif
        endif
@@ -400,11 +412,11 @@ contains
        ! *******************************************************************
        some_val = 0.0_f64
 
- !      t3 = omp_get_wtime()!!  call sll_set_time_mark(t3)
+       t3 = omp_get_wtime()!!  call sll_set_time_mark(t3)
        if (sim%use_cubic_splines) then 
 
           !$omp parallel PRIVATE(x,y,x1,y1,Ex,Ey,gi,temp,ttmp,ic_x,ic_y,thread_id,p_guard,q_accum_CS)
-          !$&omp FIRSTPRIVATE(qoverm,dt,ncx,ncy,xmin,ymin,rdx,rdy)
+          !$&omp FIRSTPRIVATE(dtqom,ncx,ncy,xmin,ymin,dtrdx,dtrdy)
 #ifdef _OPENMP
           thread_id = OMP_GET_THREAD_NUM()
 #endif
@@ -415,22 +427,22 @@ contains
           !$omp do!!  reduction(+:some_val)
           do i = 1, sim%ions_number,2
              SLL_INTERPOLATE_FIELD_CS(Ex,Ey,accumE_CS,p(i),ttmp)
-             p(i)%vx = p(i)%vx + dt * Ex* qoverm
-             p(i)%vy = p(i)%vy + dt * Ey* qoverm
+             p(i)%vx = p(i)%vx + dtqom * Ex
+             p(i)%vy = p(i)%vy + dtqom * Ey
              SLL_INTERPOLATE_FIELD_CS(Ex,Ey,accumE_CS,p(i+1),ttmp)
-             p(i+1)%vx = p(i+1)%vx + dt * Ex* qoverm
-             p(i+1)%vy = p(i+1)%vy + dt * Ey* qoverm
+             p(i+1)%vx = p(i+1)%vx + dtqom * Ex
+             p(i+1)%vy = p(i+1)%vy + dtqom * Ey
              !some_val = some_val + p(i)%vx*p(i)%vx + p(i)%vy*p(i)%vy &
              !              + p(i+1)%vx*p(i+1)%vx + p(i+1)%vy*p(i+1)%vy
              ic_x  = mod( p(i)%ic-1, ncx  )
              ic_y  = int( (p(i)%ic-1)/ncx )
-             x = real(ic_x, f64) + p(i)%dx + (dt*rdx) * p(i)%vx! the PUSH
-             y = real(ic_y, f64) + p(i)%dy + (dt*rdy) * p(i)%vy
+             x = real(ic_x, f64) + p(i)%dx + dtrdx * p(i)%vx! the PUSH
+             y = real(ic_y, f64) + p(i)%dy + dtrdy * p(i)%vy
              !
              ic_x  = mod( p(i+1)%ic-1, ncx)
              ic_y  = int( (p(i+1)%ic-1)/ncx)
-             x1 = real(ic_x, f64) + p(i+1)%dx + (dt*rdx) * p(i+1)%vx! the PUSH
-             y1 = real(ic_y, f64) + p(i+1)%dy + (dt*rdy) * p(i+1)%vy
+             x1 = real(ic_x, f64) + p(i+1)%dx + dtrdx * p(i+1)%vx! the PUSH
+             y1 = real(ic_y, f64) + p(i+1)%dy + dtrdy * p(i+1)%vy
 !
              if (in_bounds(x, y, ncx, ncy)) then ! finish push
                 ic_x = int(x)
@@ -470,7 +482,7 @@ contains
           ! destruction of particles is needed, so this is simple.
           
           !$omp parallel PRIVATE(x,y,ic_x,ic_y,ttmp,temp,p_guard,q_accum_CS,thread_id,i)
-          !$&omp FIRSTPRIVATE(dt,ncx,ncy,xmin,ymin,rdx,rdy)
+          !$&omp FIRSTPRIVATE(ncx,ncy,xmin,ymin,dtrdx,dtrdy)
 #ifdef _OPENMP
           thread_id = OMP_GET_THREAD_NUM()
 #endif
@@ -480,8 +492,8 @@ contains
           do i=1, sim%part_group%num_postprocess_particles(thread_id+1)
              ic_x  = mod( p_guard(i)%p%ic-1, ncx )
              ic_y  = int( (p_guard(i)%p%ic-1)/ncx)
-             x = real(ic_x, f64) + p_guard(i)%p%dx + (dt*rdx) * p_guard(i)%p%vx! the push
-             y = real(ic_y, f64) + p_guard(i)%p%dy + (dt*rdy) * p_guard(i)%p%vy    
+             x = real(ic_x, f64) + p_guard(i)%p%dx + dtrdx * p_guard(i)%p%vx! the push
+             y = real(ic_y, f64) + p_guard(i)%p%dy + dtrdy * p_guard(i)%p%vy    
              call apply_periodic_bc( x, y, ncx, ncy)
              ic_x = int(x)
              ic_y = int(y)
@@ -497,7 +509,7 @@ contains
        else 
 
           !$omp parallel PRIVATE(x,y,x1,y1,Ex,Ey,gi,tmp5,tmp6,ic_x,ic_y,thread_id,p_guard,q_accum)
-          !$&omp FIRSTPRIVATE(qoverm,dt,ncx,ncy,xmin,ymin,rdx,rdy)
+          !$&omp FIRSTPRIVATE(dtqom,ncx,ncy,xmin,ymin,dtrdx,dtrdy)
 #ifdef _OPENMP
           thread_id = OMP_GET_THREAD_NUM()
 #endif
@@ -508,22 +520,22 @@ contains
           !$omp do!! reduction(+:some_val)
           do i = 1, sim%ions_number,2
              SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,p(i),tmp5,tmp6)
-             p(i)%vx = p(i)%vx + dt * Ex* qoverm
-             p(i)%vy = p(i)%vy + dt * Ey* qoverm
+             p(i)%vx = p(i)%vx + dtqom * Ex
+             p(i)%vy = p(i)%vy + dtqom * Ey
              SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,p(i+1),tmp5,tmp6)
-             p(i+1)%vx = p(i+1)%vx + dt * Ex* qoverm
-             p(i+1)%vy = p(i+1)%vy + dt * Ey* qoverm
+             p(i+1)%vx = p(i+1)%vx + dtqom * Ex
+             p(i+1)%vy = p(i+1)%vy + dtqom * Ey
              !some_val = some_val + p(i)%vx*p(i)%vx + p(i)%vy*p(i)%vy &
              !              + p(i+1)%vx*p(i+1)%vx + p(i+1)%vy*p(i+1)%vy
              ic_x  = mod( p(i)%ic-1, ncx  )
              ic_y  = int( (p(i)%ic-1)/ncx )
-             x = real(ic_x, f64) + p(i)%dx + (dt*rdx) * p(i)%vx! the PUSH
-             y = real(ic_y, f64) + p(i)%dy + (dt*rdy) * p(i)%vy
+             x = real(ic_x, f64) + p(i)%dx + dtrdx * p(i)%vx! the PUSH
+             y = real(ic_y, f64) + p(i)%dy + dtrdy * p(i)%vy
              !
              ic_x  = mod( p(i+1)%ic-1, ncx)
              ic_y  = int( (p(i+1)%ic-1)/ncx)
-             x1 = real(ic_x, f64) + p(i+1)%dx + (dt*rdx) * p(i+1)%vx! the PUSH
-             y1 = real(ic_y, f64) + p(i+1)%dy + (dt*rdy) * p(i+1)%vy
+             x1 = real(ic_x, f64) + p(i+1)%dx + dtrdx * p(i+1)%vx! the PUSH
+             y1 = real(ic_y, f64) + p(i+1)%dy + dtrdy * p(i+1)%vy
              !
              if (in_bounds(x, y, ncx, ncy)) then ! finish push
                 ic_x = int(x)
@@ -553,9 +565,9 @@ contains
           !$omp end parallel
 !       diag_TOTenergy(mod(counter,save_nb)) = some_val
 
- !         ttime = omp_get_wtime()!! ttime = sll_time_elapsed_since(t3)
- !         diag_AccMem(it,:) = (/ (it+1)*dt, (32*sim%ions_number*2 + gi*2*8 + &
- !              4*32*ncx*ncy)/(ttime-t3)/1e9 /)! access to memory in GB/sec
+          ttime = omp_get_wtime()!! ttime = sll_time_elapsed_since(t3)
+          diag_AccMem(it,:) = (/ (it+1)*dt, (real(32*sim%ions_number*2,f64)+real(gi*2*8,f64) + &
+               real(4*32*ncx*ncy,f64) )/(ttime-t3)*real(1e-9,f64) /)! access to memory in GB/sec
 !!$            2*sizeof(sim%q_accumulator%q_acc) + sizeof(sim%E_accumulator%e_acc))
           
 
@@ -563,7 +575,7 @@ contains
           ! destruction of particles is needed, so this is simple.
 
           !$omp parallel PRIVATE(x,y,ic_x,ic_y,tmp5,tmp6,p_guard,q_accum,thread_id)
-          !$&omp FIRSTPRIVATE(dt,ncx,ncy,xmin,ymin,rdx,rdy)
+          !$&omp FIRSTPRIVATE(ncx,ncy,xmin,ymin,dtrdx,dtrdy)
 #ifdef _OPENMP
           thread_id = OMP_GET_THREAD_NUM()
 #endif
@@ -572,8 +584,8 @@ contains
           do i=1, sim%part_group%num_postprocess_particles(thread_id+1)
              ic_x  = mod( p_guard(i)%p%ic-1, ncx )
              ic_y  = int( (p_guard(i)%p%ic-1)/ncx)
-             x = real(ic_x, f64) + p_guard(i)%p%dx + (dt*rdx) * p_guard(i)%p%vx! the push
-             y = real(ic_y, f64) + p_guard(i)%p%dy + (dt*rdy) * p_guard(i)%p%vy    
+             x = real(ic_x, f64) + p_guard(i)%p%dx + dtrdx * p_guard(i)%p%vx! the push
+             y = real(ic_y, f64) + p_guard(i)%p%dy + dtrdy * p_guard(i)%p%vy    
              call apply_periodic_bc( x, y, ncx, ncy)
              ic_x = int(x)
              ic_y = int(y)
@@ -634,27 +646,35 @@ contains
 
     if (sim%my_rank ==0) then 
        close(65)
-       open(93,file='time_parts_sec_newOPT_omp.dat',position='append')
+       open(93,file='time_OptPush_omp.dat',position='append')
        write(93,*) '# Nb of threads   ||   time (sec)   ||   average pushes/sec'
-       write(93,*) sim%n_threads, time-t2, int(sim%num_iterations,i64)*int(sim%ions_number,i64)/(time-t2)
+       write(93,*) n_threads, time-t2, int(sim%num_iterations,i64)*int(sim%ions_number,i64)/(time-t2)
        close(93)
     endif
 
-!      if (sim%my_rank==0 .and. thread_id==0) then
-!         open(65,file='AccesstoMemory_rk0.dat')! URGENT d'utiliser the rank_name !
+    if (sim%my_rank==0) then! .and. thread_id==0) then
+       write(nom_thnb,'(i2.2)') n_threads
+       nom_thnb = trim(nom_thnb)
+       open(65,file='AccesstoMemory_rk0_th'//nom_thnb//'.dat')
 !    !!$    if (sim%my_rank==1) open(66,file='AccesstoMemory_rk1.dat')
-!         do jj = 0, sim%num_iterations-1
-!            if ( mod(jj+1,sort_nb) == 0 ) then
-!               write(65,*) diag_AccMem(jj,:), diag_AccMem(jj,2)
+       write(65,*) diag_AccMem(0,:), diag_AccMem(0,2)
+       meanval_AtM = diag_AccMem(0,2)
+       do jj = 1, sim%num_iterations-1
+          if ( mod(jj+1,sort_nb) == 0 ) then
+             write(65,*) diag_AccMem(jj,:), diag_AccMem(jj,2)
+             meanval_AtM = meanval_AtM + diag_AccMem(jj,2)
 !    !!$          if (sim%my_rank==1) write(66,*) diag_AccMem(jj,:), diag_AccMem(jj,2)
-!            else
-!               write(65,*) diag_AccMem(jj,:)
+          else
+             write(65,*) diag_AccMem(jj,:)
+             meanval_AtM = meanval_AtM + diag_AccMem(jj,2)
 !    !!$          if (sim%my_rank==1) write(66,*) diag_AccMem(jj,:)
-!            endif
-!         enddo
-!         close(65) 
+          endif
+       enddo
+       write(65,*) '#The mean val over',sim%num_iterations, &
+            'iters of AcctoMem is', meanval_AtM/real(sim%num_iterations,f64),'GB/sec'
+       close(65) 
 !    !!$       close(66)
-!      endif
+    endif
 
     SLL_DEALLOCATE(sim%rho,   ierr)
     SLL_DEALLOCATE(sim%E1,    ierr)

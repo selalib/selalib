@@ -35,6 +35,13 @@ use sll_utilities, only: sll_new_file_id, int2string
 implicit none
 
 !> write file plotable by gnuplot to visualize 2d field
+interface sll_gnuplot_1d
+   module procedure  sll_gnuplot_write_1d
+   module procedure  sll_gnuplot_write
+   module procedure  sll_gnuplot_write_2
+end interface
+
+!> Write file for gnuplot to display 2d field.
 interface sll_gnuplot_2d
    module procedure sll_gnuplot_corect_2d
    module procedure sll_gnuplot_rect_2d
@@ -46,70 +53,80 @@ end interface
 contains  
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-!> write an array
-subroutine sll_gnuplot_write(array,array_name,error)
+!> Write an array to display with gnuplot
+subroutine sll_gnuplot_write(array, array_name, iplot)
 
   sll_real64, dimension(:), intent(in) :: array      !< data
-  character(len=*), intent(in)         :: array_name !< field name
-  sll_int32, intent(out)               :: error      !< error code
+  character(len=*),         intent(in) :: array_name !< field name
+  sll_int32                            :: iplot      !< plot counter
   sll_int32                            :: file_id    !< file unit number
   sll_int32                            :: npoints
   sll_int32                            :: ipoints    
-  logical                              :: lopen
+  character(len=4)                     :: cplot
+  sll_int32                            :: error
   
   npoints = size(array)
 
-  error=0
+  call sll_new_file_id(file_id, error)
+  call int2string(iplot,cplot)
 
-  do 100 file_id=20,99
-
-     inquire(unit=file_id,opened=lopen)
-     if(lopen) then
-        cycle
-     else
-        open(file_id,status='SCRATCH',err=100)
-        close(file_id,status='DELETE',err=100)
-        goto 200
-     end if
-
-  100 continue
-  error=1
-  200 continue
-  error=0
-
-  open(file_id,FILE=trim(array_name)//".gnu",FORM='FORMATTED',IOSTAT=error)
-  rewind(file_id)
-
-  write(file_id,"(a)")"plot '-' t '"//trim(array_name)//"' with linesp"
-  do ipoints = 1, npoints
-     write(file_id,"(g15.3)") array(ipoints)
-  end do
-  write(file_id,"(a)")"e"
-  write(file_id,"(a)")"pause -1 'Hit return to quit'"
+  open(file_id,file=trim(array_name)//".gnu", &
+               position="append",             &
+               form='FORMATTED',iostat=error)
+  if (iplot == 1) rewind(file_id)
+  write(file_id,"(a)")"plot '"//trim(array_name)//cplot//".dat' with linesp"
   close(file_id)
 
-
-  open(file_id,FILE=trim(array_name)//".dat",FORM='FORMATTED',IOSTAT=error)
-  rewind(file_id)
-
-  !write(file_id,"(a)")"plot '-' t '"//trim(array_name)//"' with linesp"
+  open(file_id,file=trim(array_name)//cplot//".dat",form='FORMATTED',iostat=error)
   do ipoints = 1, npoints
-     write(file_id,*) array(ipoints)
+     write(file_id,*) sngl(array(ipoints))
   end do
-  !write(file_id,"(a)")"e"
-  !write(file_id,"(a)")"pause -1 'Hit return to quit'"
   close(file_id)
-
 
 end subroutine sll_gnuplot_write
 
+!> Write two arrays to display with gnuplot
+subroutine sll_gnuplot_write_2(array_name, array1, array2, iplot)
+
+  sll_real64, dimension(:), intent(in) :: array1     !< data
+  sll_real64, dimension(:), intent(in) :: array2     !< data
+  character(len=*),         intent(in) :: array_name !< field name
+  sll_int32                            :: iplot      !< plot counter
+  sll_int32                            :: file_id    !< file unit number
+  sll_int32                            :: n
+  sll_int32                            :: i
+  character(len=4)                     :: cplot
+  sll_int32                            :: error
+  
+  n = size(array1)
+  SLL_ASSERT(size(array2) == n)
+
+  call sll_new_file_id(file_id, error)
+  call int2string(iplot,cplot)
+
+  open(file_id,file=trim(array_name)//".gnu", &
+               position="append",             &
+               form='formatted',iostat=error)
+  if (iplot == 1) rewind(file_id)
+  write(file_id,"(a)")"plot '"//trim(array_name)//cplot//".dat' with linesp, &
+                      & '"//trim(array_name)//cplot//".dat' u 1:3 w l"
+  close(file_id)
+
+  open(file_id,file=trim(array_name)//cplot//".dat",form='formatted',iostat=error)
+  do i = 1, n
+     write(file_id,*) i, sngl(array1(i)), sngl(array2(i))
+  end do
+  close(file_id)
+
+end subroutine sll_gnuplot_write_2
+
 
 !> This subroutine write a data file to plot a 1d curve
-subroutine sll_gnuplot_write_1d( &
-  y_array, &
-  x_array, &
-  array_name, &
-  iplot)
+!> @param  y_array     Y data
+!> @param  x_array     X data
+!> @param  array_name  field name
+!> @param  iplot       Plot index 
+subroutine sll_gnuplot_write_1d( y_array, x_array, array_name, iplot)
 
   sll_real64, dimension(:), intent(in) :: y_array    !< Y data
   sll_real64, dimension(:), intent(in) :: x_array    !< X data
@@ -120,63 +137,56 @@ subroutine sll_gnuplot_write_1d( &
   sll_int32                            :: file_id    !< file unit number
   sll_int32                            :: npoints
   sll_int32                            :: ipoints    
-  logical                              :: lopen
   character(len=4)                     :: cplot
   
   npoints = size(x_array)
 
-  error=0
+  call sll_new_file_id(file_id, error)
 
-  do 100 file_id=20,99
-
-     inquire(unit=file_id,opened=lopen)
-     if(lopen) then
-        cycle
-     else
-        open(file_id,status='SCRATCH',err=100)
-        close(file_id,status='DELETE',err=100)
-        goto 200
-     end if
-
-  100 continue
-  error=1
-  200 continue
-  error=0
   if(present(iplot))then
     call int2string(iplot,cplot)
-    open(file_id,FILE=trim(array_name)//cplot//".dat",FORM='FORMATTED',IOSTAT=error)
+    open(file_id,file=trim(array_name)//cplot//".dat",form='FORMATTED',iostat=error)
   else
-    open(file_id,FILE=trim(array_name)//".dat",FORM='FORMATTED',IOSTAT=error)
+    open(file_id,file=trim(array_name)//".dat",form='FORMATTED',iostat=error)
   endif
   rewind(file_id)
-
-  !write(file_id,"(a)")"plot '-' t '"//trim(array_name)//"' with linesp"
   do ipoints = 1, npoints
      write(file_id,*) sngl(x_array(ipoints)), sngl(y_array(ipoints))
   end do
-  !write(file_id,"(a)")"e"
-  !write(file_id,"(a)")"pause -1 'Hit return to quit'"
   close(file_id)
-
 
 end subroutine sll_gnuplot_write_1d
 
 
-!> write a data file plotable by gnuplot to visualize a 2d field.
+!> @brief
+!> Write a data file plotable by gnuplot to visualize a 2d field.
+!> @details
 !> Axis are rectangular and spacing is constant
-subroutine sll_gnuplot_corect_2d(xmin, xmax, nx, ymin, ymax, ny, &
-                               array, array_name, iplot, error)  
+!> @param  xmin        Box corners
+!> @param  xmax        Box corners
+!> @param  ymin        Box corners
+!> @param  ymax        Box corners
+!> @param  nx          x points number
+!> @param  ny          y points number
+!> @param  array(:,:)  data
+!> @param  array_name  field name
+!> @param  iplot       plot counter
+!> @param  error       error code
+subroutine sll_gnuplot_corect_2d(xmin, xmax, nx,    &
+                                 ymin, ymax, ny,    &
+                                 array, array_name, &
+                                 iplot, error)  
 
-  sll_real64,       intent(in)  :: xmin       !< Box corners
-  sll_real64,       intent(in)  :: xmax       !< Box corners
-  sll_real64,       intent(in)  :: ymin       !< Box corners
-  sll_real64,       intent(in)  :: ymax       !< Box corners
-  sll_int32,        intent(in)  :: nx         !< x points number
-  sll_int32,        intent(in)  :: ny         !< y points number
-  sll_real64,       intent(in)  :: array(:,:) !< data
-  character(len=*), intent(in)  :: array_name !< field name
-  sll_int32,        intent(in)  :: iplot      !< plot counter
-  sll_int32,        intent(out) :: error      !< error code
+  sll_real64,       intent(in)  :: xmin
+  sll_real64,       intent(in)  :: xmax
+  sll_real64,       intent(in)  :: ymin
+  sll_real64,       intent(in)  :: ymax
+  sll_int32,        intent(in)  :: nx
+  sll_int32,        intent(in)  :: ny
+  sll_real64,       intent(in)  :: array(:,:)
+  character(len=*), intent(in)  :: array_name
+  sll_int32,        intent(in)  :: iplot
+  sll_int32,        intent(out) :: error
   
   character(len=4)  :: fin   
   sll_int32, save   :: gnu_id
@@ -194,7 +204,6 @@ subroutine sll_gnuplot_corect_2d(xmin, xmax, nx, ymin, ymax, ny, &
   write(gnu_id,*)"splot '"//array_name//"_"//fin//".dat' w l"
   close(gnu_id)
   
-  !print*, size(array,1), size(array,2), nx, ny
   call sll_ascii_file_create(array_name//'_'//fin//'.dat', file_id, error )
   dx = (xmax-xmin)/(nx-1)
   dy = (ymax-ymin)/(ny-1)
@@ -202,7 +211,6 @@ subroutine sll_gnuplot_corect_2d(xmin, xmax, nx, ymin, ymax, ny, &
   do i=1,nx
      y = ymin
      do j=1,ny
-        !print*, i, j, x, y, array(i,j)
         write(file_id,*) sngl(x),sngl(y),sngl(array(i,j))
         y = y + dy
      end do
@@ -213,19 +221,28 @@ subroutine sll_gnuplot_corect_2d(xmin, xmax, nx, ymin, ymax, ny, &
 
 end subroutine sll_gnuplot_corect_2d
 
-!> write a data file plotable by gnuplot to visualize a 2d field on structured
+!> Write a data file plotable by gnuplot to visualize a 2d field on structured
 !> rectangular mesh where spacing is not constant
+!> @param nx            x points number
+!> @param ny            y points number
+!> @param xvec(nx)      x coordinates
+!> @param yvec(ny)      y coordiantes
+!> @param array(nx,ny)  data
+!> @param array_name    field name
+!> @param iplot         plot counter
+!> @param error         error code
+  
 subroutine sll_gnuplot_rect_2d( nx, xvec, ny, yvec,&
                                array, array_name, iplot, error)  
 
-  sll_int32,        intent(in)  :: nx           !< x points number
-  sll_int32,        intent(in)  :: ny           !< y points number
-  sll_real64,       intent(in)  :: xvec(nx)     !< x coordinates
-  sll_real64,       intent(in)  :: yvec(ny)     !< y coordiantes
-  sll_real64,       intent(in)  :: array(nx,ny) !< data
-  character(len=*), intent(in)  :: array_name   !< field name
-  sll_int32,        intent(in)  :: iplot        !< plot counter
-  sll_int32,        intent(out) :: error        !< error code
+  sll_int32,        intent(in)  :: nx
+  sll_int32,        intent(in)  :: ny
+  sll_real64,       intent(in)  :: xvec(nx)
+  sll_real64,       intent(in)  :: yvec(ny)
+  sll_real64,       intent(in)  :: array(nx,ny)
+  character(len=*), intent(in)  :: array_name
+  sll_int32,        intent(in)  :: iplot
+  sll_int32,        intent(out) :: error
   
   character(len=4)  :: fin   
   sll_int32, save   :: gnu_id
@@ -257,34 +274,42 @@ subroutine sll_gnuplot_rect_2d( nx, xvec, ny, yvec,&
 
 end subroutine sll_gnuplot_rect_2d
 
-!> write a data file plotable by gnuplot to visualize a 2d curvilinear mesh
+!> Write a data file plotable by gnuplot to visualize a 2d curvilinear mesh
+!> @param nx          x points number
+!> @param ny          y points number
+!> @param xcoord      x coordinates
+!> @param ycoord      y coordiantes
+!> @param array_name  field name
+!> @param error       error code
 subroutine sll_gnuplot_mesh_2d( nx, ny, xcoord, ycoord, array_name, error)  
-sll_int32                    :: nx         !< x points number
-sll_int32                    :: ny         !< y points number
-sll_real64, dimension(nx,ny) :: xcoord     !< x coordinates
-sll_real64, dimension(nx,ny) :: ycoord     !< y coordiantes
-character(len=*)             :: array_name !< field name
-sll_int32, save :: gnu_id
-sll_int32 :: file_id
-sll_int32 :: error                         !< error code
-sll_int32 :: i, j
 
-call sll_new_file_id(gnu_id, error)
+  sll_int32,                    intent(in)  :: nx         !< x points number
+  sll_int32,                    intent(in)  :: ny         !< y points number
+  sll_real64, dimension(nx,ny), intent(in)  :: xcoord     !< x coordinates
+  sll_real64, dimension(nx,ny), intent(in)  :: ycoord     !< y coordiantes
+  character(len=*)            , intent(in)  :: array_name !< field name
+  sll_int32                   , intent(out) :: error      !< error code
 
-open(gnu_id,file=array_name//".gnu")
-write(gnu_id,*)"set view 0,0"
-write(gnu_id,*)"splot '"//array_name//"_mesh.dat' with lines"
-close(gnu_id)
-
-call sll_ascii_file_create(array_name//'_mesh.dat', file_id, error )
-do i=1,nx
-   do j=1,ny
-      write(file_id,*) sngl(xcoord(i,j)), &
-                       sngl(ycoord(i,j)), 0.0_f32
-   end do
-   write(file_id,*)
-enddo
-close(file_id)
+  sll_int32, save :: gnu_id
+  sll_int32 :: file_id
+  sll_int32 :: i, j
+  
+  call sll_new_file_id(gnu_id, error)
+  
+  open(gnu_id,file=array_name//".gnu")
+  write(gnu_id,*)"set view 0,0"
+  write(gnu_id,*)"splot '"//array_name//"_mesh.dat' with lines"
+  close(gnu_id)
+  
+  call sll_ascii_file_create(array_name//'_mesh.dat', file_id, error )
+  do i=1,nx
+     do j=1,ny
+        write(file_id,*) sngl(xcoord(i,j)), &
+                         sngl(ycoord(i,j)), 0.0_f32
+     end do
+     write(file_id,*)
+  enddo
+  close(file_id)
 
 end subroutine sll_gnuplot_mesh_2d
 
@@ -293,17 +318,24 @@ end subroutine sll_gnuplot_mesh_2d
 !> write a data file plotable by gnuplot.
 !> @details
 !> We visualize a 2d field on structured curvilinear mesh
-subroutine sll_gnuplot_curv_2d( nx, ny, x, y,&
-                                array, array_name, iplot, error)  
+!< $param nx           x points number
+!> @param ny           y points number
+!> @param x(nx,ny)     x coordinates
+!> @param y(nx,ny)     y coordiantes
+!> @param array(nx,ny) data
+!> @param array_name   field name
+!> @param iplot        plot counter
+!> @param error        error code
+subroutine sll_gnuplot_curv_2d( nx, ny, x, y, array, array_name, iplot, error)  
 
-  sll_int32,        intent(in)  :: nx           !< x points number
-  sll_int32,        intent(in)  :: ny           !< y points number
-  sll_real64,       intent(in)  :: x(nx,ny)     !< x coordinates
-  sll_real64,       intent(in)  :: y(nx,ny)     !< y coordiantes
-  sll_real64,       intent(in)  :: array(nx,ny) !< data
-  character(len=*), intent(in)  :: array_name   !< field name
-  sll_int32,        intent(in)  :: iplot        !< plot counter
-  sll_int32,        intent(out) :: error        !< error code
+  sll_int32,        intent(in)  :: nx           
+  sll_int32,        intent(in)  :: ny           
+  sll_real64,       intent(in)  :: x(nx,ny)
+  sll_real64,       intent(in)  :: y(nx,ny)
+  sll_real64,       intent(in)  :: array(nx,ny) 
+  character(len=*), intent(in)  :: array_name   
+  sll_int32,        intent(in)  :: iplot        
+  sll_int32,        intent(out) :: error        
   
   sll_int32, save  :: gnu_id
   sll_int32        :: file_id
@@ -317,7 +349,6 @@ subroutine sll_gnuplot_curv_2d( nx, ny, x, y,&
   end if
   
   open(gnu_id,file=array_name//".gnu", position="append")
-  !write(gnu_id,"(a)")"set pm3d"
   write(gnu_id,*)"set output '"//array_name//"_"//fin//".png'"
   write(gnu_id,*)"splot '"//array_name//"_"//fin//".dat' w l"
   close(gnu_id)
