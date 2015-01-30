@@ -3,7 +3,7 @@ program unit_test_initializers_4d
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
 #include "sll_meshes.h"
-#include "sll_coordinates_transformations.h"
+#include "sll_coordinate_transformations.h"
 #include "sll_parallel_utilities.h"
 
 
@@ -20,10 +20,10 @@ sll_real64, dimension(2)                              :: params_identity
 sll_real64, dimension(:,:,:,:), allocatable           :: f
 
 
-sll_int32  :: prank, comm
+sll_int32  :: prank
+sll_int32  :: comm
 sll_int32  :: loc_sz_i, loc_sz_j, loc_sz_k, loc_sz_l
 sll_int64  :: psize
-sll_real64 :: tcpu1, tcpu2
 sll_int32  :: i,j,k,l,error
 sll_real64 :: vx,vy,v2,x,y
 sll_real64 :: kx, ky, eps = 0.1_f64
@@ -60,7 +60,7 @@ tx => new_coordinate_transformation_2d_analytic( &
 
 mesh_4d => mx * mv
 
-call sll_display(mesh_4d)
+if (prank == MPI_MASTER) call sll_display(mesh_4d)
 
 call write_mesh_4d(mesh_4d)
 
@@ -79,7 +79,6 @@ call flush(6)
 
 call compute_local_sizes(layout,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 SLL_CLEAR_ALLOCATE(f(1:loc_sz_i,1:loc_sz_j,1:loc_sz_k,1:loc_sz_l), error)
-
 
 kx  = 2_f64*sll_pi/(mx%eta1_max-mx%eta1_min)
 ky  = 2_f64*sll_pi/(mx%eta2_max-mx%eta2_min)
