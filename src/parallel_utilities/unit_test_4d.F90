@@ -38,8 +38,8 @@ comm  = sll_world_collective%comm
 
 params_identity(:) = (/0.0_f64, 0.0_f64/) ! for identity this can be whatever
 ! initialize the logical meshes
-mx => new_cartesian_mesh_2d(64,64)
-mv => new_cartesian_mesh_2d(64,64)
+mx => new_cartesian_mesh_2d(63,63)
+mv => new_cartesian_mesh_2d(63,63)
 
 ! initialize the transformation
 tx => new_coordinate_transformation_2d_analytic( &
@@ -67,10 +67,10 @@ call write_mesh_4d(mesh_4d)
 !Layout for plotting
 layout => new_layout_4D( sll_world_collective )
 
-call initialize_layout_with_distributed_array( mx%num_cells1,      &
-                                               mx%num_cells2,      &
-                                               mv%num_cells1,      &
-                                               mv%num_cells2,      &
+call initialize_layout_with_distributed_array( mx%num_cells1+1,    &
+                                               mx%num_cells2+1,    &
+                                               mv%num_cells1+1,    &
+                                               mv%num_cells2+1,    &
                                                1,1,1,int(psize,4), &
                                                layout)
 
