@@ -342,41 +342,41 @@ The fact that T is equilateral is exploited here by replacing $h_{ij}$ with h si
 \end{equation*}
 
 \subsubsection{The HTC elements}
-The HTC elements were tested as well because of their particularity, that is the separate the triangle into three subtriangles. That is the only difference between the interpolation with the HCT-r element and the  Z2 approach as they both uses the same 9 degrees of freedom. Unsurprisingly, it gives quasi-identical results compared to Z2, therefore.
+The HTC elements were tested as well because of their specificity which is to use a division of the triangle into three subtriangles. This caracteristic is the only difference between the interpolation with the HCT-r element and the  Z2 approach as they both uses the same 9 degrees of freedom. Unsurprisingly, they give quasi-identical results which is why we won't detail the interpolation with HTC-r and focus and on HTC-c.
 
-Let $S_i$ be a vertex of the triangle T, then we define respectively $l_i$ and $m_i$ as the length and the middle of the edge opposite to $S_i$. Let G be the barycenter of T, then $K_l$ is the sub-triangle made with $G$, $S_j$ and $S_k$. The local interpolation operator is:
-\begin{equation*}
-\Pi_{K_l} (X) = \sum \limits_{\substack{i=l }}^{3}{ [f(S_i).\phi_i +  \frac{\partial f(S_i)}{\partial  \overrightarrow{ S_i S_j } }.\phi_{ij} } ].
-\end{equation*} 
-The basis function are defined by: $~~~~~~~~~~~~~~~~~~~~é\Xi_l =  \Sigma_l \Lambda_l$
- \noindent with:
-\begin{equation*}
-  \Xi_l=(\Psi_{l,i}^0, \Psi_{l,j}^0, \Psi_{l,k}^0, \Psi_{l,i,k}^1,\Psi_{l,i,j}^1,\Psi_{l,j,i}^1,\Psi_{l,j,k}^1 ,\Psi_{l,k,j}^1,\Psi_{l,k,i}^1)^T,
-\end{equation*} 
-\begin{equation*}
-  \Lambda_l = ( \lambda_i^3,\lambda_j^3,\lambda_k^3,\lambda_i^2\lambda_k,\lambda_i^2\lambda_j,\lambda_j^2\lambda_i,\lambda_j^2\lambda_k,\lambda_k^2\lambda_j,\lambda_k^2\lambda_i,\lambda_i\lambda_j\lambda_k)^T,
-\end{equation*} 
-  \noindent The matrices $\Sigma_l$ are defined with the excentricity of each edge of the triangle T: 
-\begin{equation*}
-j=i[3]+1 ~,~ k=j[3]+1~,~ e_i = \frac{l_k^2 - l_j^2}{l_i^2}.
-\end{equation*} 
-For an equilateral triangle, the excentricity is null which simplifies a lot $\Sigma_l$.
-\begin{equation*}
-\Sigma_l = 
-\begin{pmatrix}
-	0 & 0 & 0 & \frac{9}{2} & \frac{9}{2} & 0 & 0 & 0 & 0 & 0  \\
-	\frac{1}{2} & 1 & 0 & \frac{-3}{2} & 0 & 3 & 3 & 0 & 0 & 3 \\
-	\frac{1}{2} & 0 & 1 & 0 & \frac{-3}{2} & 0 & 0 & 3 & 3 & 3 \\	 
-	\frac{-1}{4} & 0 & 0 & \frac{ 5}{4} & \frac{ 1}{2} & 0 & 0 & 0 & 0 & 0 \\	 
-	\frac{-1}{4} & 0 & 0 & \frac{ 1}{2} & \frac{ 5}{4} & 0 & 0 & 0 & 0 & 0 \\
-	\frac{ 1}{4} & 0 & 0 & \frac{-1}{2} & \frac{-1}{4} & 1 & 0 & 0 & 0 & 1 \\
-	0 & 0 & 0 & \frac{-1}{4} & \frac{ 1}{4} & 0 & 1 & 0 & 0 & \frac{1}{2} \\
-	0 & 0 & 0 & \frac{ 1}{4} & \frac{-1}{4} & 0 & 0 & 1 & 0 & \frac{1}{2} \\
-	\frac{1}{4} & 0 & 0 & \frac{-1}{4} & \frac{-1}{2} & 0 & 0 & 0 & 1 & 1 
-\end{pmatrix}
-\end{equation*} 
+The HCT-c  element uses the same degrees of freedom as HCT-r plus the values of the derivatives in the normal direction of the edges at the middle of the respective edge, which adds up to twelve degrees of freedom. Let us now define its interpolation operator
 
-The element HCT-c uses the same degrees of freedom as HCT-r plus the values of the derivatives in the normal direction of the edges at the middle of the respective edge, which adds up to twelve degrees of freedom.
+Let $S_i$ be a vertex of the triangle T, then we define respectively $l_i$ and $m_i$ as the length and the middle of the edge opposite to $S_i$. Let G be the barycenter of T, then $K_l$ is the sub-triangle made with $G$, $S_j$ and $S_k$.% The local interpolation operator is:
+%\begin{equation*}
+%\Pi_{K_l} (X) = \sum \limits_{\substack{i=l }}^{3}{ [f(S_i).\phi_i +  \frac{\partial f(S_i)}{\partial  \overrightarrow{ S_i S_j } }.\phi_{ij} } ].
+%\end{equation*} 
+%The basis function are defined by: $~~~~~~~~~~~~~~~~~~~~é\Xi_l =  \Sigma_l \Lambda_l$
+% \noindent with:
+%\begin{equation*}
+%  \Xi_l=(\Psi_{l,i}^0, \Psi_{l,j}^0, \Psi_{l,k}^0, \Psi_{l,i,k}^1,\Psi_{l,i,j}^1,\Psi_{l,j,i}^1,\Psi_{l,j,k}^1 ,\Psi_{l,k,j}^1,\Psi_{l,k,i}^1)^T,
+%\end{equation*} 
+%\begin{equation*}
+%  \Lambda_l = ( \lambda_i^3,\lambda_j^3,\lambda_k^3,\lambda_i^2\lambda_k,\lambda_i^2\lambda_j,\lambda_j^2\lambda_i,\lambda_j^2\lambda_k,\lambda_k^2\lambda_j,\lambda_k^2\lambda_i,\lambda_i\lambda_j\lambda_k)^T,
+%\end{equation*} 
+%  \noindent The matrices $\Sigma_l$ are defined with the excentricity of each edge of the triangle T: 
+%\begin{equation*}
+%j=i[3]+1 ~,~ k=j[3]+1~,~ e_i = \frac{l_k^2 - l_j^2}{l_i^2}.
+%\end{equation*} 
+%For an equilateral triangle, the excentricity is null which simplifies a lot $\Sigma_l$.
+%\begin{equation*}
+%\Sigma_l = 
+%\begin{pmatrix}
+%	0 & 0 & 0 & \frac{9}{2} & \frac{9}{2} & 0 & 0 & 0 & 0 & 0  \\
+%	\frac{1}{2} & 1 & 0 & \frac{-3}{2} & 0 & 3 & 3 & 0 & 0 & 3 \\
+%	\frac{1}{2} & 0 & 1 & 0 & \frac{-3}{2} & 0 & 0 & 3 & 3 & 3 \\	 
+%	\frac{-1}{4} & 0 & 0 & \frac{ 5}{4} & \frac{ 1}{2} & 0 & 0 & 0 & 0 & 0 \\	 
+%	\frac{-1}{4} & 0 & 0 & \frac{ 1}{2} & \frac{ 5}{4} & 0 & 0 & 0 & 0 & 0 \\
+%	\frac{ 1}{4} & 0 & 0 & \frac{-1}{2} & \frac{-1}{4} & 1 & 0 & 0 & 0 & 1 \\
+%	0 & 0 & 0 & \frac{-1}{4} & \frac{ 1}{4} & 0 & 1 & 0 & 0 & \frac{1}{2} \\
+%	0 & 0 & 0 & \frac{ 1}{4} & \frac{-1}{4} & 0 & 0 & 1 & 0 & \frac{1}{2} \\
+%	\frac{1}{4} & 0 & 0 & \frac{-1}{4} & \frac{-1}{2} & 0 & 0 & 0 & 1 & 1 
+%\end{pmatrix}
+%\end{equation*} 
 \begin{equation*}
 \Pi_{K_l} (X) = \sum \limits_{\substack{i=l }}^{3}{ [f(S_i).\phi_i +  \frac{\partial f(S_i)}{\partial  \overrightarrow{ S_i S_j } }.\phi_{ij} }   - ni \frac{\partial f}{\partial \nu_i}(m_i) \Phi_{\perp,l,i}]
 \end{equation*} 
