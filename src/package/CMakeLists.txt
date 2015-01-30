@@ -214,8 +214,8 @@ IF(MPI_ENABLED)
   ${SLL_DIR}/poisson_solvers_parallel/sll_poisson_2d_periodic_cartesian_par.F90
   ${SLL_DIR}/poisson_solvers_parallel/sll_poisson_polar_parallel.F90
   ${SLL_DIR}/simulations/simulation_base_class.F90
-  ${SLL_DIR}/parallel_array_utilities/sll_common_array_initializers_module.F90
-  ${SLL_DIR}/parallel_array_utilities/sll_parallel_array_initializer_module.F90
+  ${SLL_DIR}/parallel_utilities/sll_common_array_initializers_module.F90
+  ${SLL_DIR}/parallel_utilities/sll_parallel_array_initializer_module.F90
   ${SLL_DIR}/parallel_utilities/buffer_loader_utilities.F90
   ${SLL_DIR}/file_io_parallel/sll_gnuplot_parallel.F90)
 ENDIF(MPI_ENABLED)
