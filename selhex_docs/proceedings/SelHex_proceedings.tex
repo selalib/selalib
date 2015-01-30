@@ -30,7 +30,7 @@
 %
 \author{Michel Mehrenberger} \address{IRMA, Universit\'e de Strasbourg, 7, rue Ren\'e Descartes, 67084 Strasbourg \& INRIA-Nancy Grand-Est, projet TONUS, 
 \email{mehrenbe@math.unistra.fr}}
-\author{Laura S. Mendoza} \address{Max-Planck-Institut f\"{u}r Plasmaphysik, Boltzmannstr. 2, D-85748 Garching bei M\"unchen, Germany. \email{mela@ipp.mpg.de\ \&\ sonnen@ipp.mpg.de}} 
+\author{Laura S. Mendoza} \address{Max-Planck-Institut f\"{u}r Plasmaphysik, Boltzmannstr. 2, D-85748 Garching, Germany. \email{mela@ipp.mpg.de\ \&\ sonnen@ipp.mpg.de}} 
 \secondaddress{Technische Universit\"at M\"unchen, Boltzmannstr. 3, D-85748 Garching, Germany.}
 \author{Charles Prouveur}\address{Universit\'e de Lyon, UMR5208, Institut Camille Jordan,
 43 boulevard 11 novembre 1918, F-69622 Villeurbanne cedex, France. \mail {prouveur@math.univ-lyon1.fr}}
@@ -52,7 +52,6 @@ This paper introduces a Semi-Lagrangian solver for the Vlasov-Poisson equation o
 \begin{resume} 
 Dans cet article nous introduisons un solveur semi-Lagrangien pour l'\'equation de Vlasov-Poisson sur un maillage hexagonal r\'egulier. Ce dernier est compos\'e de triangles \'equilat\'eraux, ainsi il ne pr\'esente aucune singularit\'e, contrairement au maillage polaire. Nous nous concentrons ici sur le mod\`ele centre-guide. \`A cette fin nous avons d\'evelopp\'e un solveur de l'\'equation de Poisson pour maillage hexagonal. Au regard de l'interpolation, nous comparons les r\'esultats obtenus avec des \'el\'ements finis d'Hermite et des box-splines.   Dans l'avenir, ce code sera adapt\'e \`a des g\'eom\'etries et mod\`eles plus complexes.  
 \end{resume}
-
 
 %% Making the title ..........
 \maketitle
@@ -156,7 +155,7 @@ The 2D lattice sites are obtained by the product $\mathbf{Rk}$ where $\mathbf{R}
 
 The mesh is based on uniform hexagons of the first type (see \cite{Ulichney87}). For local and global notations we will use the following convention : the point at the center will be the point of index $0$. Following the direction $\mathbf{r_1}$ the next point will be indexed $1$, and the notations will follow in a counter-clockwise motion. And so on, until all the points of the domain have been indexed. See Figure \ref{fig:hexmesh}. We will denote $H_i$ the unit hexagon cell that is centred at the point of global index $i$.
 
-Besides the fact that the hexagonal mesh contains no singularities, its regularity allows us to localise effortlessly the characteristic's origin for the Semi-Lagrangian scheme. Nevertheless, the accuracy of the method depends heavily on the interpolation method chosen. For example, for a cartesian grid, it is common to use cubic splines which have shown to give accurate results in an efficient manner \cite{Sonnendrücker1999201}. In our problem, with the hexagonal lattice, B-splines do not exploit the isotropy of the mesh (for more information see \cite{Mersereau79-IEEE}) and are defined by a convolution on 2D, which cannot be done for our mesh. Therefore, we need to use another approach. On the following two sub-sections we present two different strategies: one using box splines and a second one using Hermite Finite Elements.
+Besides the fact that the hexagonal mesh contains no singularities, its regularity allows us to localise effortlessly the characteristic's origin for the Semi-Lagrangian scheme. Nevertheless, the accuracy of the method depends heavily on the interpolation method chosen. For example, for a cartesian grid, it is common to use cubic splines which have shown to give accurate results in an efficient manner \cite{Sonnendrucker1999201}. In our problem, with the hexagonal lattice, B-splines do not exploit the isotropy of the mesh (for more information see \cite{Mersereau79-IEEE}) and are defined by a convolution on 2D, which cannot be done for our mesh. Therefore, we need to use another approach. On the following two sub-sections we present two different strategies: one using box splines and a second one using Hermite Finite Elements.
 
 
 %%-----------------------------
@@ -200,7 +199,7 @@ Let $\Xi$ be a $d \times d$ matrix with non-null columns in $\xR^d$. The column 
 \begin{figure}[h!]
 	\includegraphics[scale=0.15]{figures/boxsplines3d.png}
 	\includegraphics[scale=0.15]{figures/boxsplines2d.png}
-	\caption{On the left: Box splines representation of $\Xi_[e_1, e_2]$, $\Xi_[e_1, e_2, e3]$, and $\Xi_[e_1, e_2, e_3, e_4]$. Where $e_1 = ( 0, 1 )^T$ , $e_2 = ( 1, 0)^T$, $e_3 = e_1 + e_2$, and $e_4 = e_1 - e_2$. On the right: the 2d projection of the box-splines to the $x$ plane.}
+	\caption{On the left: Box splines representation of $\Xi_[e_1, e_2]$, $\Xi_[e_1, e_2, e3]$, and $\Xi_[e_1, e_2, e_3, e_4]$. Where $e_1 = ( 0, 1 )^T$ , $e_2 = ( 1, 0)^T$, $e_3 = e_1 + e_2$, and $e_4 = e_1 - e_2$. On the right: the 2d projection of the box-splines onto the $x$ plane.}
 	\label{fig:boxsplines3d}
 \end{figure}
 
@@ -280,11 +279,12 @@ Even if we limit our sum to the vector $\mathbf{k}$ that defines our domain, we 
 
 \rmrk For the box-splines of degree $2$, there are $12$ coefficients to compute (see Figure~\ref{fig:SL_hex}). Numerically, we can take the encapsulating rhomboid of edge length $3$ (instead of 1). Thus, the number of null terms for the interpolation with $\chi^2$ is $4$.
 
+
 %%-----------------------------
 \subsection{Hermite Finite Elements interpolation}
 
 Another family of finite elements used to interpolate is the Hermite's one.
-To interpolate at a point X of barycentric coordinates $(\lambda_1,\lambda_2,\lambda_3)$ in the triangle T of vertices $S_1$, $S_2j$, and $S_3$, we need a finite element with a local interpolation operator $\Pi_T $. This operator can be defined with the product of a set of degrees of freedom $\Sigma_T$ with a set of basis functions $\Xi$ which depends on the barycentric coordinates.\\
+To interpolate at a point X of barycentric coordinates $(\lambda_1,\lambda_2,\lambda_3)$ in the triangle T of vertices $S_1$, $S_2$, and $S_3$, we need a finite element with a local interpolation operator $\Pi_T $. This operator can be defined with the product of a set of degrees of freedom $\Sigma_T$ with a set of basis functions $\Xi$ which depends on the barycentric coordinates.\\
 For this part we define the indices i, j and k with the following relations:
 \begin{equation*}
 j=i[3]+1 ~,~ k=j[3]+1.
@@ -305,7 +305,7 @@ Z2 approach uses 9 degrees of freedom which are the values at the vertices of th
  \Sigma_T = \lbrace \forall i \in [|1;3|], f(S_i),\partial_x(S_i),\partial_v(S_i); f(C) \rbrace 
 \end{equation*}
 
- \noindent The advantage of using the Z3 element is the gain of one order of precision with an order 3 instead of an order 2 for the Z2 approach. Let us note that although adding one degree of liberty seems harmless enough, the center points for a hexagonal mesh represents a computional cost multiplied by 3. Indeed they are  2 times more centers than vertices. Therefore the number of points which must be computed is tripled. 
+ \noindent The advantage of using the Z3 element is the gain of one order of precision with an order 3 instead of an order 2 for the Z2 approach. Let us note that although adding one degree of liberty seems harmless enough, the center points for a hexagonal mesh represents a computational cost multiplied by 3. Indeed they are  2 times more centers than vertices. Therefore the number of points which must be computed is tripled. 
  
 Let us define the basis functions needed to interpolate with the element Z2 : 
 \begin{equation*}
@@ -341,14 +341,15 @@ The fact that T is equilateral is exploited here by replacing $h_{ij}$ with h si
  \Pi (X) = \sum \limits_{\substack{i=1 }}^{3}{ [f(S_i).\phi_i + \sum \limits_{\substack{j\neq i }}^{}{ \frac{\partial f(S_i)}{\partial  \overrightarrow{ S_i S_j } }.\phi_{ij} } ] } + f(C).\phi_{123}
 \end{equation*}
 
-\subsubsection{The HTC elements}
-The HTC elements were tested as well because of their specificity which is to use a division of the triangle into three subtriangles. This caracteristic is the only difference between the interpolation with the HCT-r element and the  Z2 approach as they both uses the same 9 degrees of freedom. Unsurprisingly, they give quasi-identical results which is why we won't detail the interpolation with HTC-r and focus and on HTC-c.
+\subsubsection{The HCT elements}
+The HCT elements were tested as well because of their original feature which is to use a division of the triangle into three sub-triangles.
+This characteristic is the only difference between the interpolation with the HCT-r element and the  Z2 approach is that they both use the same 9 degrees of freedom. Unsurprisingly, they give quasi-identical results which is why we won't detail the interpolation with HCT-r and focus on HCT-c.
 
-The HCT-c  element uses the same degrees of freedom as HCT-r plus the values of the derivatives in the normal direction of the edges at the middle of the respective edge, which adds up to twelve degrees of freedom. Let us now define its interpolation operator
+The HCT-c  element uses the same degrees of freedom as HCT-r plus the values of the derivatives in the normal direction of the edges at the middle of the respective edge, which adds up to twelve degrees of freedom. Let us now define its interpolation operator.
 
-Let $S_i$ be a vertex of the triangle T, then we define respectively $l_i$ and $m_i$ as the length and the middle of the edge opposite to $S_i$. Let G be the barycenter of T, then $K_l$ is the sub-triangle made with $G$, $S_j$ and $S_k$.
+Let $S_i$ be a vertex of the triangle T, then we define respectively $l_i$ and $m_i$ as the length and the middle of the edge opposite to $S_i$. Let G be the barycentre of T, then $K_l$ is the sub-triangle made with $G$, $S_j$ and $S_k$.
 
-%-------------------------------- htcr----------------------
+%-------------------------------- hctr----------------------
 
 % The local interpolation operator is:
 %\begin{equation*}
@@ -391,7 +392,7 @@ The basis function are defined by
 \begin{equation*}
 \Xi_l =  \Sigma_l \Lambda_l,
 \end{equation*} 
- \noindent with:
+ \noindent with
 \begin{equation*}
   \Xi_l=(\Psi_{l,i}^0, \Psi_{l,j}^0, \Psi_{l,k}^0, \Psi_{l,i,k}^1,\Psi_{l,i,j}^1,\Psi_{l,j,i}^1,\Psi_{l,j,k}^1 ,\Psi_{l,k,j}^1,\Psi_{l,k,i}^1)^T,
 \end{equation*} 
@@ -424,7 +425,8 @@ For an equilateral triangle, the excentricity is null which simplifies a lot $\S
 The advantage of HCT-c and HCT-r is that they don't require more points than what is already included into the hexagonal mesh which is not the case for the the Z3 approach.
 
 \subsubsection{The Ganev-Dimitrov element}
-The Ganev-Dimitrov element is of order 4 and uses 15 degrees of freedom which are the values of the function at the vertices and at the middle of the edges, plus the value of the derivatives at the vertices in the direction of the other two vertices. The computational cost for this element is four times higher than the HTC-r interpolation because of the computations needed at the middle of the edges: there are on average 3 times more edges than vertices. As a matter of fact, the vertices and the middle of the edges form another hexagonal mesh twice as fine as the original mesh. The reason why we tested such an computational expensive element is to observe whether or not the gain in precision is interesting compared to the extra computing time allocated. 
+The Ganev-Dimitrov element is of order 4 and uses 15 degrees of freedom which are the values of the function at the vertices and at the middle of the edges, plus the value of the derivatives at the vertices in the direction of the other two vertices. 
+The computational cost for this element is four times higher than the HCT-r interpolation because of the computations needed at the middle of the edges: there are on average 3 times more edges than vertices. As a matter of fact, the vertices and the middle of the edges form another hexagonal mesh twice as fine as the original mesh. The reason why we tested such a computational expensive element is to observe whether or not the gain in precision is interesting compared to the extra computing time allocated. 
 
 \noindent The local interpolation operator is:
 
@@ -465,7 +467,7 @@ The Ganev-Dimitrov element is of order 4 and uses 15 degrees of freedom which ar
 \end{pmatrix}
 \end{equation*}
 
-\rmrk Here the derivatives are not computed exactly. They are approximated with finite differences of order 6 with the values at the mesh points. Results have been found to be better with this order and no significant improvement were noticed with a higher order difference scheme.
+\rmrk Here the derivatives are not computed exactly. They are approximated with finite differences of order 6 with the values at the mesh points. Results have been found to be better with this order and no significant improvement was noticed with a higher order difference scheme.
 %
 %Another possible way to interpolate is to use a 2d Hermite finite element \cite{zie}   
 %
@@ -527,13 +529,13 @@ One step of the semi-Lagragian method is the computation of the solution of the 
 	- \Delta \phi = \rho .
 \end{equation*}
  $\phi$ being the potential and $\rho$ the density.
- In order to solve this equation/model/problem, we have developed a finite differences scheme. Since the mesh here is hexagonal, a seven point stencil is used as shown in Figure~\ref{fig:hexmesh}. It is composed of the six vertices of an hexagon plus its center. To compute  $\phi_0$, the value of $\phi$ at the center $0$,  the remaining vertices of the hexagon are used. 
+ In order to solve this equation, we have developed a finite differences scheme. Since the mesh here is hexagonal, a seven point stencil is used as shown in Figure~\ref{fig:hexmesh}. It is composed of the six vertices of an hexagon plus its center. To compute  $\phi_0$, the value of $\phi$ at the center $0$,  the remaining vertices of the hexagon are used. 
  This particular stencil has the property to give a fourth order scheme at little cost \cite{poisson}. Here is the previously described scheme:
 \begin{equation*}
 -(\phi_1 + \phi_2 + \phi_3 + \phi_4 +\phi_5 + \phi_6 - 6 \phi_0)  = \frac{3h^2}{4} \rho_0 + \frac{h^2}{24}(\rho_1+\rho_2+\rho_3+\rho_4+\rho_5+\rho_6).
 \end{equation*} 
 
-Compared to the second order scheme on the same stencil, one notices the only difference to be the second term of the equality :  
+Compared to the second order scheme on the same stencil, we notice the only difference to be the second term of the equality :  
 \begin{equation*}
 -(\phi_1 + \phi_2 + \phi_3 + \phi_4 +\phi_5 + \phi_6 - 6 \phi_0)  = h^2 \rho_0.
 \end{equation*} 
@@ -557,7 +559,7 @@ Considering the gain of two order of precision at such little cost, we have used
 \label{sec:BSL_scheme}
 
 %%-----------------------------
-When solving a Vlasov equation, one usually think in Lagrangian methods such as PIC\cite{Birdsall:1985:PPV:577251}. Unfortunately, the drawback of these schemes is that it's vulnerable to numerical noise. Furthermore, this noise is unpredictable as it is the statistical error of a Monte Carlo integration. Looking for other possible schemes to solve the Vlasov equation, one might think of Eulerian methods, where the operators 
+When solving a Vlasov equation, one usually thinks in Lagrangian methods such as PIC\cite{Birdsall:1985:PPV:577251}. Unfortunately, the drawback of these schemes is that it's vulnerable to numerical noise. Furthermore, this noise is unpredictable as it is the statistical error of a Monte Carlo integration. Looking for other possible schemes to solve the Vlasov equation, one might think of Eulerian methods, where the operators 
 are discretized \cite{Zaki1988184}. The downside of this type of method is the dissipation.
 
 With the intention of neglecting the pitfalls of the method, the Semi-Lagrangian method was introduced, first in numerical weather prediction (see \cite{Kalnay03atmosphericmodeling} and articles cited within it), but since then, it has been introduced for plasma simulations \cite{sonnendrucker:inria-00073296, Cheng1976330} and it's getting more and more popular. This scheme consists on fixing an Eulerian grid in phase-space and following the trajectory of the equation's characteristics in time to compute the evolution of the distribution function. The advantages of this scheme are the possibility of taking large time steps and its stability. However, it is important to note that it's very computationally costly to go to high dimensions. Thus, it is typically used with 1D and 2D models. Lastly, we can point out that there are many types of Semi-Lagrangian solvers (\emph{e.g.} depending on the trajectories: Backward or Forward;  depending on the elements on which is based: grid's point, integrated cell..). We have chosen here to use the classical Backward Semi-Lagrangian method. 
@@ -764,14 +766,15 @@ The initial density is given by :
  \left\{
  \begin{array}{ll}
   (1+\varepsilon\cos(\ell\theta))\exp{(-4(r-6.5)^2)},&\text{if  } r^-\leq\sqrt{x^2+y^2}\leq r^+,~ \text{with} ~\theta=\text{atan2}(y,x).\\[3mm]
-  0,&\text{otherwise},
+  0,&\text{otherwise}.
  \end{array}
  \right.
 \end{equation*}
+
 \noindent As for the parameters, we take $\varepsilon=0.001$, $r^-=5$, $r^+=8$, $\ell=6$, furthermore $dt=0.1$ and the hexagonal step is $\frac{14}{160}$ with a radius of 14 and and an hexagonal parameter $nc =160$.
 In this part, we won't test the Z3 approach as it requires a special resolution of the Poisson equation that has not been implemented. Indeed, computing the values of the field at the center of the triangles can't be combined with the resolution at the vertices. 
 Moreover to even the commputational time of each method we chose to take $nc=80$ for the Ganev Dimitrov element as it results in the computations on a mesh with $nc =160$ ; see remark on the Ganev Dimitrov element in he paragraph on Hermite Finite element solver.\\
-Let us note that 6 vortices is the main mode. If one takes $\ell\neq6$, but with epsilon small enough, one still sees the mode 6. With epsilon big enough, i.e. at least 0.1, the modes different from 6 can be visible for a time but they are not stable and we see the fusion or the apparition of vortices until there is the sixth mode. For instance,as illustrated by figure \ref{fig:mode9}, we can see the ninth mode turning into the sixth mode by fusion of vortices.
+Let us note that 6 vortices is the main mode. If we take $\ell\neq6$, with epsilon small enough, we still see the mode 6. With epsilon big enough, i.e. at least 0.1, the modes different from 6 can be visible for a time but they are not stable and we see the fusion or the apparition of vortices until there is the sixth mode. For instance,as illustrated by figure \ref{fig:mode9}, we can see the ninth mode turning into the sixth mode by fusion of vortices.
 
 %\textcolor{red}{peut etre un paragraphe sur l'evolution de la densite, les 6 modes retrouves qqsoit eps, etc, commenter la figure 6}
 \begin{figure}[h!]
@@ -807,10 +810,10 @@ Visualisation of the results. The six vortices are developing with time without 
 
 
 \begin{figure}[h!]
-	\includegraphics[scale=0.4]{figures/min_cg.png}
+	\includegraphics[scale=0.3]{figures/min_cg.png}
 	\caption{Time evolution of the density's minimum}
 \end{figure}
-After comparison of the diagnostics we see that the various interpolation methods give close results overall. They are similar in terms of positivity conservation. One notices that if the box-splines conserve better the mass, the Z2 approach conserves better the $L^1$ norm. Also we note the box splines and the HCTC element give very near results whichever the diagnostic considered.  
+After comparison of the diagnostics we see that the various interpolation methods give close results overall. They are similar in terms of positivity conservation. We notice that if the box-splines conserve better the mass, the Z2 approach conserves better the $L^1$ norm. Also we note the box splines and the HCTC element give very near results whichever the diagnostic considered.  
 
 
 %%-----------------------------
