@@ -8,12 +8,10 @@ module sll_vlasov2d_base
 #include "sll_constants.h"
 #include "sll_interpolators.h"
 #include "sll_utilities.h"
-
-use sll_remapper
-use sll_xml_io
-use init_functions
 use sll_collective
 use sll_remapper
+!use sll_xml_io
+use init_functions, only: VA_VALIS, PSTD, METH_BSL_CUBIC_SPLINES, SPECTRAL
 
 implicit none
 

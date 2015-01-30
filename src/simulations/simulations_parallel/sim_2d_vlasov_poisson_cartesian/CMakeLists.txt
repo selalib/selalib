@@ -11,12 +11,14 @@ ADD_EXECUTABLE( ${EXECUTABLE} simulation_${SIM_NAME}.F90
 
 TARGET_LINK_LIBRARIES( ${EXECUTABLE} sll_simulations_parallel )
 
-ADD_EXECUTABLE( vm2d_spectral sll_vlasov2d_base.F90
-                              sll_vlasov2d_spectral.F90
-                              init_functions.F90
-                              vm2d_spectral.F90)
+IF(Fortran_COMPILER MATCHES gfortran)
+  ADD_EXECUTABLE( vm2d_spectral sll_vlasov2d_base.F90
+                                sll_vlasov2d_spectral.F90
+                                init_functions.F90
+                                vm2d_spectral.F90)
 
-TARGET_LINK_LIBRARIES( vm2d_spectral sll_simulations_parallel )
+  TARGET_LINK_LIBRARIES( vm2d_spectral sll_simulations_parallel )
+ENDIF(Fortran_COMPILER MATCHES gfortran)
 
 INSTALL( TARGETS ${EXECUTABLE}                     DESTINATION ${INSTALL_DIR} )
 INSTALL( FILES  ${INPUT_FILES} README ${POST_PROC} DESTINATION ${INSTALL_DIR} )
