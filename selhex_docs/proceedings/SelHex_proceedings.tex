@@ -34,7 +34,7 @@
 \author{Laura S. Mendoza} \address{Max-Planck-Institut f\"{u}r Plasmaphysik, Boltzmannstr. 2, D-85748 Garching, Germany. \email{mela@ipp.mpg.de\ \&\ sonnen@ipp.mpg.de}} 
 \secondaddress{Technische Universit\"at M\"unchen, Boltzmannstr. 3, D-85748 Garching, Germany.}
 \author{Charles Prouveur}\address{Universit\'e de Lyon, UMR5208, Institut Camille Jordan,
-43 boulevard 11 novembre 1918, F-69622 Villeurbanne cedex, France}
+43 boulevard 11 novembre 1918, F-69622 Villeurbanne cedex, France. \email{prouveur@math.univ-lyon1.fr} }
 \author{Eric Sonnendr\"{u}cker}\sameaddress{2,3}
 %
 %\dedicated{\it Dedicated to Maurice Dupont} %if necessary
@@ -66,7 +66,7 @@ Dans cet article nous introduisons un solveur semi-Lagrangien pour l'\'equation 
 
 There are three kinds of regular pavings of the plane: using squares, triangles or hexagons. When considering meshes, the dual mesh of a square mesh is a shifted square mesh and the regular triangle mesh is the dual of the regular hexagonal mesh.
 
-In magnetic fusion applications the embedded magnetic flux surfaces play an important role and introduce an important anisotropy\cite{Angelino2009}. For this reason one gets favourable numerical properties when grid points align on the concentric magnetic flux surfaces. When trying to do this with a mapped Cartesian grid, one ends up with a polar coordinates mesh (when the flux surfaces are circles) or something topologically equivalent. This yields smaller and smaller cells when getting closer to the center as well as a singularity at the center. This is numerically far from optimal. 
+In magnetic fusion applications the embedded magnetic flux surfaces play an important role and introduce an important anisotropy\cite{Angelino2009}. For this reason one gets favourable numerical properties when grid points align on the concentric magnetic flux surfaces. When trying to do this with a mapped cartesian grid, one ends up with a polar coordinates mesh (when the flux surfaces are circles) or something topologically equivalent. This yields smaller and smaller cells when getting closer to the center as well as a singularity at the center. This is numerically far from optimal. 
 
 Different strategies have been implemented to avoid these singularities, we can cite among others: the isoparametric analysis approach done by J. Abiteboul et al. \cite{abiteboul2011solving} and A. Ratnani \cite{ratnani2011isogeometric} or N. Besse and E. Sonnendr\"{u}cker's work with non-structured meshes\cite{Besse2003341}. The works presented on these papers are particularly interesting as not only they avoid singularities but they are also extremely flexible and can be easily adapted to more complex geometries. However, even if the approach is different in every paper, some limitations are the numerical complexity, the advection of the derivatives and, the localisation of the feet of the characteristics. 
 A recent study was made by T. Nguyen et al.\cite{axioms3020280} to compare different Poisson solvers on the disk. 
