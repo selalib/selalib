@@ -10,6 +10,7 @@
 %%-----------------------------
 \usepackage{tikz}
 \usepackage{cases}
+\usepackage{url}
 \setcounter{MaxMatrixCols}{20}
 
 %
@@ -563,7 +564,8 @@ Considering the gain of two order of precision at such little cost, we have used
 When solving a Vlasov equation, one usually thinks in Lagrangian methods such as PIC\cite{Birdsall:1985:PPV:577251}. Unfortunately, the drawback of these schemes is that it's vulnerable to numerical noise. Furthermore, this noise is unpredictable as it is the statistical error of a Monte Carlo integration. Looking for other possible schemes to solve the Vlasov equation, one might think of Eulerian methods, where the operators 
 are discretized \cite{Zaki1988184}. The downside of this type of method is the dissipation.
 
-With the intention of neglecting the pitfalls of these methods, the Semi-Lagrangian method was introduced, first in numerical weather prediction (see \cite{Kalnay03atmosphericmodeling} and articles cited within it), but since then, it has been introduced for plasma simulations \cite{sonnendrucker:inria-00073296, Cheng1976330} and it's getting more and more popular. This scheme consists on fixing an Eulerian grid in phase-space and following the trajectory of the equation's characteristics in time to compute the evolution of the distribution function. The advantages of this scheme are the possibility of taking large time steps and its stability. However, it is important to note that it's very computationally costly to go to high dimensions. Thus, it is typically used with 1D and 2D models. Lastly, we can point out that there are many types of Semi-Lagrangian solvers (\emph{e.g.} depending on the trajectories: Backward or Forward;  depending on the elements on which is based: grid's point, integrated cell..). We have chosen here to use the classical Backward Semi-Lagrangian method. 
+With the intention of neglecting the pitfalls of these methods, the Semi-Lagrangian method was introduced, first in numerical weather prediction (see \cite{Kalnay03atmosphericmodeling} and articles cited within it), but since then, it has been introduced for plasma simulations \cite{Sonnendrucker1999201, Cheng1976330} and it's getting more and more popular. 
+This scheme consists on fixing an Eulerian grid in phase-space and following the trajectory of the equation's characteristics in time to compute the evolution of the distribution function. The advantages of this scheme are the possibility of taking large time steps and its stability. However, it is important to note that it's very computationally costly to go to high dimensions. Thus, it is typically used with 1D and 2D models. Lastly, we can point out that there are many types of Semi-Lagrangian solvers (\emph{e.g.} depending on the trajectories: Backward or Forward;  depending on the elements on which is based: grid's point, integrated cell..). We have chosen here to use the classical Backward Semi-Lagrangian method. 
 
 %%-----------------------------
 \subsection{The non-constant advection equation}
