@@ -75,7 +75,7 @@ Tiling a regular hexagon into triangles yields a mesh of equilateral triangles h
 Additionally, such a mesh has a clear structure with three privileged directions, thus it is completely straightforward to localise points within this mesh. The derivatives along the three directions can also be nicely computed using finite differencing along uniform lines. 
 And last but not least, there is a spline construction on this mesh, called box-spline \cite{Condat2008}. These splines have a hexagonal support and are invariant by translations along the three directions of the mesh. 
 
-The disadvantages previously mentioned, are not present when dealing with the simple and straightforward hexagonal mesh. Regarding the computational efficiency, all our simulations include an analysis and comparison with more common methods. Lastly, we suggest this scheme as an introduction to treat more complex geometries. Indeed by a simple mapping it will be easy to work with curvilinear coordinates.
+The disadvantages previously mentioned, are not present when dealing with the simple and straightforward hexagonal mesh. Regarding the computational efficiency, all our simulations include an analysis and comparison with more common methods. Lastly, we suggest this scheme as an introduction to handle more complex geometries. Indeed by a simple mapping it will be easy to work with curvilinear coordinates.
 
 In this work, we focus on adapting the Semi-Lagrangian scheme to this hexagonal mesh. This scheme consists basically of two steps: computing the characteristics' origins and interpolating at these points. For the latter, we compare two different approaches: one using box-splines and the second approach using Hermite Finite Elements. Both interpolation methods, as well as the mesh, are presented in section~\ref{sec:interpolation}. In section~\ref{sec:poisson_eqn}, we present a Poisson solver adapted to the hexagonal mesh. We present a guiding-center approximation of the 2D Vlasov Poisson system\cite{Golse1998865}, and the Semi-Lagrangian scheme to solve it, in section~\ref{sec:BSL_scheme}. Finally, in section~\ref{sec:results} we compare the results of the scheme using box splines with the ones using Hermite finite elements, we also compare them to more traditional meshes, such as the polar mesh. Besides the guiding-center model, different advection models have been simulated in this section.
 
@@ -704,7 +704,7 @@ As this equation is not coupled to Poisson model, we can study in detail the dif
 	 f_0(x,y) = exp  \left( -\dfrac{1}{2} \left( \dfrac{(x - x_c)^2}{\sigma_x^2} + \dfrac{(y - y_c)^2}{\sigma_y^2  } \right)   \right ), 
 	\end{equation}
 
-On a hexagonal mesh centered at the origin, of radius $8$,  we take  $\sigma_x = \sigma_y = \frac{1}{2\sqrt{2}}$ (amplitude of the gaussian). Let us set here $x_c = 2$ and $y_c = 2$. The distance from the pulse to the limit of the domain makes the boundary effects negligeable, thus we can take a null Dirichlet boundary condition.  To study the convergence in space we took $N = 20, 40, 60, ..., 160$. We recall that $N$ is the number of cells on the radius $L$. With the maximum time of evaluation, $t_{max}$, at $6 \pi$, we chose to keep a constant CFL at $2$.
+On a hexagonal mesh centered at the origin, of radius $8$,  we take  $\sigma_x = \sigma_y = \frac{1}{2\sqrt{2}}$ (amplitude of the gaussian). Let us set here $x_c = 2$ and $y_c = 2$. The distance from the pulse to the limit of the domain makes the boundary effects negligeable, thus we can take a null Dirichlet boundary condition.  To study the convergence in space we took $N_c = 20, 40, 60, ..., 160$. We recall that $N_c$ is the number of cells on the radius $L$. With the maximum time of evaluation, $t_{max}$, at $6 \pi$, we chose to keep a constant CFL at $2$.
 
 
 
@@ -724,7 +724,7 @@ In Figure~\ref{fig:circ_convergence} we can see that for coarse meshes only the 
 	\label{fig:circ_performance}
 \end{figure}
 
-Figure~\ref{fig:circ_performance} we can see that the level of performance of all the methods convergences quite quickly. It is also pretty obvious that even if the splines obtained more accuracy, the cost is more expensive than most of the Hermite Finite Element methods.
+Figure~\ref{fig:circ_performance} we can see that the level of performance of all the methods convergences quite quickly. It is also pretty obvious that, even if the splines obtained more accuracy, the cost is more expensive than most of the Hermite Finite Element methods.
 
 \subsection{Guiding-center model - Diocotron instability test case}
 
@@ -826,7 +826,7 @@ After comparison of the diagnostics we see that the various interpolation method
 %%-----------------------------
 \section{Conclusion}
 \label{sec:conclusion}
-In this paper we presented two Semi-Lagrangian schemes adapted to an hexagonal mesh. The strategies differentiated in the type of interpolation used: on the one hand, we developed an interpolation method based on box-splines --spline basis specific to the hexagonal mesh-- and on the other hand, we introduced an interpolation method based on Hermite Finite Elements. Furthermore, we presented a Poisson solver based on finite differences on this mesh. The first simulations were made on the circular advection test case. This allowed to compare the order of the methods, as well as the efficiency. The splines approached seemed to be more accurate for finer grids, but a higher cost. Next, we simulated the 2D guiding-center model. The two methods yield comparable results. Some minor differences could be observable when studying the mass conservation (where box-splines gave better results) and the conservation of the norms (where hermite finite elements yield more accurate solutions). Lastly, when comparing the densities, we perceived some noise, specially when working with Finite Elements.
+In this paper we presented two Semi-Lagrangian schemes adapted to an hexagonal mesh. The strategies differentiated in the type of interpolation used: on the one hand, we developed an interpolation method based on box-splines --spline basis specific to the hexagonal mesh-- and on the other hand, we introduced an interpolation method based on Hermite Finite Elements. Furthermore, we presented a Poisson solver based on finite differences on this mesh. The first simulations were made on the circular advection test case. This allowed to compare the order of the methods, as well as the efficiency. The splines approached seemed to be more accurate for finer grids, but at higher cost. Next, we simulated the 2D guiding-center model. The two methods yield comparable results. Some minor differences could be observable when studying the mass conservation (where box-splines gave better results) and the conservation of the norms (where hermite finite elements yield more accurate solutions). Lastly, when comparing the densities, we perceived some noise, specially when working with Finite Elements.
 
 %%-----------------------------
 %%      your bibliography
