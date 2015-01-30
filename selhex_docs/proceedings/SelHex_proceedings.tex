@@ -200,7 +200,7 @@ Let $\Xi$ be a $d \times d$ matrix with non-null columns in $\xR^d$. The column 
 \begin{figure}[h!]
 	\includegraphics[scale=0.15]{figures/boxsplines3d.png}
 	\includegraphics[scale=0.15]{figures/boxsplines2d.png}
-	\caption{On the left: Box splines representation of $\Xi_[e_1, e_2]$, $\Xi_[e_1, e_2, e3]$, and $\Xi_[e_1, e_2, e_3, e_4]$. Where $e_1 = ( 0, 1 )^T$ , $e_2 = ( 1, 0)^T$, $e_3 = e_1 + e_2$, and $e_4 = e_1 - e_2$. On the right: the 2d projection of the box-splines onto the $x$ plane.}
+	\caption{On the left: Box splines representation of $\Xi_[e_1, e_2]$, $\Xi_[e_1, e_2, e3]$, and $\Xi_[e_1, e_2, e_3, e_4]$. Where $e_1 = ( 0, 1 )^T$ , $e_2 = ( 1, 0)^T$, $e_3 = e_1 + e_2$, and $e_4 = e_1 - e_2$. On the right: the 2d projection of the box-splines to the $x$ plane.}
 	\label{fig:boxsplines3d}
 \end{figure}
 
@@ -346,7 +346,11 @@ The HTC elements were tested as well because of their specificity which is to us
 
 The HCT-c  element uses the same degrees of freedom as HCT-r plus the values of the derivatives in the normal direction of the edges at the middle of the respective edge, which adds up to twelve degrees of freedom. Let us now define its interpolation operator
 
-Let $S_i$ be a vertex of the triangle T, then we define respectively $l_i$ and $m_i$ as the length and the middle of the edge opposite to $S_i$. Let G be the barycenter of T, then $K_l$ is the sub-triangle made with $G$, $S_j$ and $S_k$.% The local interpolation operator is:
+Let $S_i$ be a vertex of the triangle T, then we define respectively $l_i$ and $m_i$ as the length and the middle of the edge opposite to $S_i$. Let G be the barycenter of T, then $K_l$ is the sub-triangle made with $G$, $S_j$ and $S_k$.
+
+%-------------------------------- htcr----------------------
+
+% The local interpolation operator is:
 %\begin{equation*}
 %\Pi_{K_l} (X) = \sum \limits_{\substack{i=l }}^{3}{ [f(S_i).\phi_i +  \frac{\partial f(S_i)}{\partial  \overrightarrow{ S_i S_j } }.\phi_{ij} } ].
 %\end{equation*} 
@@ -377,6 +381,8 @@ Let $S_i$ be a vertex of the triangle T, then we define respectively $l_i$ and $
 %	\frac{1}{4} & 0 & 0 & \frac{-1}{4} & \frac{-1}{2} & 0 & 0 & 0 & 1 & 1 
 %\end{pmatrix}
 %\end{equation*} 
+
+
 \begin{equation*}
 \Pi_{K_l} (X) = \sum \limits_{\substack{i=l }}^{3}{ [f(S_i).\phi_i +  \frac{\partial f(S_i)}{\partial  \overrightarrow{ S_i S_j } }.\phi_{ij} }   - ni \frac{\partial f}{\partial \nu_i}(m_i) \Phi_{\perp,l,i}]
 \end{equation*} 
@@ -392,6 +398,11 @@ The basis function are defined by
 \begin{equation*}
   \Lambda_l = ( \lambda_i^3,\lambda_j^3,\lambda_k^3,\lambda_i^2\lambda_k,\lambda_i^2\lambda_j,\lambda_j^2\lambda_i,\lambda_j^2\lambda_k,\lambda_k^2\lambda_j,\lambda_k^2\lambda_i,\lambda_i\lambda_j\lambda_k)^T.
 \end{equation*}  
+  \noindent The matrices $\Sigma_l$ are defined with the excentricity of each edge of the triangle T: 
+\begin{equation*}
+j=i[3]+1 ~,~ k=j[3]+1~,~ e_i = \frac{l_k^2 - l_j^2}{l_i^2}.
+\end{equation*} 
+For an equilateral triangle, the excentricity is null which simplifies a lot $\Sigma_l$.
 \begin{equation*}
 \Sigma_l = 
 \begin{pmatrix}
@@ -815,7 +826,7 @@ In this paper we presented two Semi-Lagrangian schemes adapted to an hexagonal m
 %%      your bibliography
 %%-----------------------------
 
-\newpage
+%\newpage
 \bibliographystyle{plain}
 \bibliography{SelHex_proceedings.bib}
 
