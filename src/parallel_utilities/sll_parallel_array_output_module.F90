@@ -9,6 +9,8 @@ use sll_remapper
 use sll_xml_io
 use hdf5, only: hid_t, hssize_t, hsize_t
 
+#define MPI_MASTER 0
+
 contains
 
 subroutine write_mesh_4d(mesh)
@@ -37,10 +39,10 @@ subroutine write_mesh_4d(mesh)
      eta2(j) = mesh%eta2_min + (j-1)*mesh%delta_eta2
   end do
   do k = 1, mesh%num_cells3+1
-     eta1(k) = mesh%eta3_min + (k-1)*mesh%delta_eta3
+     eta3(k) = mesh%eta3_min + (k-1)*mesh%delta_eta3
   end do
   do l = 1, mesh%num_cells4+1
-     eta2(l) = mesh%eta4_min + (l-1)*mesh%delta_eta4
+     eta4(l) = mesh%eta4_min + (l-1)*mesh%delta_eta4
   end do
  
   call sll_hdf5_file_create("mesh4d.h5",file_id,error)
@@ -77,10 +79,10 @@ subroutine write_xmf_file(mesh, f, layout, iplot)
   prank = sll_get_collective_rank(sll_world_collective)
   if ( prank == 0) then
 
-     nx1 = mesh%num_cells1
-     nx2 = mesh%num_cells2
-     nx3 = mesh%num_cells3
-     nx4 = mesh%num_cells4
+     nx1 = mesh%num_cells1+1
+     nx2 = mesh%num_cells2+1
+     nx3 = mesh%num_cells3+1
+     nx4 = mesh%num_cells4+1
 
      call sll_xml_file_create("fvalues_"//cplot//".xmf",file_id,error)
      call write_grid(file_id,nx1,nx2,"x1","x2",cplot)
@@ -117,7 +119,7 @@ subroutine write_grid(file_id,nx,ny,xname,yname,cplot)
   write(file_id,"(a)")"mesh4d.h5:/"//yname
   write(file_id,"(a)")"</DataItem>"
   write(file_id,"(a)")"</Geometry>"
-  call write_attribute(file_id,nx,ny,"df",cplot,xname,yname)
+  call write_attribute(file_id,nx,ny,"f",cplot,xname,yname)
   write(file_id,"(a)")"</Grid>"
 
 end subroutine write_grid
