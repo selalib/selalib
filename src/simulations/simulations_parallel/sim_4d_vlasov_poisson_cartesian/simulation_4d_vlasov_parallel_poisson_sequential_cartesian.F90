@@ -1271,6 +1271,38 @@ contains
     !sll_int32 :: ierr
     
     
+   if(associated(sim%mesh_x1)) then
+     nullify(sim%mesh_x1)
+   endif
+   if(associated(sim%mesh_x2)) then
+     nullify(sim%mesh_x2)
+   endif
+   if(associated(sim%mesh_x3)) then
+     nullify(sim%mesh_x3)
+   endif
+   if(associated(sim%mesh_x4)) then
+     nullify(sim%mesh_x4)
+   endif
+   if(associated(sim%advect_x1)) then
+     nullify(sim%advect_x1)
+   endif
+   if(associated(sim%advect_x2)) then
+     nullify(sim%advect_x2)
+   endif
+   if(associated(sim%advect_x3)) then
+     nullify(sim%advect_x3)
+   endif
+   if(associated(sim%advect_x4)) then
+     nullify(sim%advect_x4)
+   endif
+   if(associated(sim%poisson)) then
+     nullify(sim%poisson)
+   endif
+   if(associated(sim%poisson_for_K)) then
+     nullify(sim%poisson_for_K)
+   endif
+    
+    
   end subroutine delete_vp4d_par_cart
   
   

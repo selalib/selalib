@@ -9,7 +9,7 @@ program vlasov_poisson_4d
   use sll_simulation_4d_vlasov_parallel_poisson_sequential_cartesian
   use sll_collective
   use sll_timer
-  implicit none
+  implicit none 
 
 !  character(len=256) :: filename
 !  character(len=256) :: filename_local
@@ -23,7 +23,9 @@ program vlasov_poisson_4d
   character(len=256) :: filename
   character(len=256) :: filename_local
   type(sll_time_mark)  :: t0
-
+  sll_int32 :: count
+  sll_int32 :: num
+  character(len=256) :: str
   call sll_boot_collective()
   if(sll_get_collective_rank(sll_world_collective)==0)then
     print *, '#Start time mark t0'
@@ -31,13 +33,22 @@ program vlasov_poisson_4d
     print *, '#Booting parallel environment...'
   endif
 
-
+  count = command_argument_count()
+              print *, count
   call get_command_argument(1, filename)
   if (len_trim(filename) == 0)then
     sim => new_vlasov_par_poisson_seq_cart( )
+    call sim%run( )
   else
     filename_local = trim(filename)
-    sim => new_vlasov_par_poisson_seq_cart( filename_local )
+    call get_command_argument(2, str)
+    if(len_trim(str) == 0)then
+      sim => new_vlasov_par_poisson_seq_cart( filename_local )
+      call sim%run( )
+    else
+      read(str , *) num
+      print *,num
+    endif    
   endif
   call sim%run( )
 
