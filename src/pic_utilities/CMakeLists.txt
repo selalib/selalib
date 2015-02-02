@@ -1,6 +1,7 @@
 
 add_library( sll_pic_utilities STATIC
              sll_pic_utilities.F90
+             lt_pic_4d_utilities.F90
              sll_representation_conversion.F90 
              sll_charge_to_density.F90
              sll_pic_particle_sort.F90 )
@@ -27,6 +28,7 @@ target_link_libraries(test_lt_pic_4d_bsl_remap
   sll_pic_initializers
   sll_pic_particles
   sll_memory
+  sll_timer
   sll_constants
   sll_working_precision
   sll_assert
