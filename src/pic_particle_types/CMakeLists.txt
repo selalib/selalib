@@ -1,7 +1,11 @@
 ADD_LIBRARY( sll_pic_particles STATIC 
   particle_representation.F90
   particle_group_2d.F90 
-  particle_group_4d.F90 )
+  particle_group_4d.F90
+  lt_pic_4d_particle.F90
+  lt_pic_4d_group.F90
+  ${MLT_PIC_SRC_LIST}
+  )
 
 TARGET_LINK_LIBRARIES( sll_pic_particles
   sll_memory
