@@ -30,6 +30,9 @@ Portindex*
 *.toc
 *.out
 
+# PyCharm files
+.idea/
+
 # Python bytecode
 *.pyc
 
