@@ -90,9 +90,9 @@ contains
     j=1
     !Rejection sampling for the function x --> 1+alpha*cos(k*x)
     do while ( j <= num_particles )
-       call random_number(x)
+       x = vandercorput(j,5,3)! call random_number(x)
        x = (m2d%eta1_max - xmin)*x + xmin
-       call random_number(y)
+       y = vandercorput(j,3,2)! call random_number(y)
        y = 2._f64 * y !(2._f64*alpha)*y + 1._f64 - alpha!  
        if (eval_landau(alpha, k, x) >= y ) then
           y = (m2d%eta2_max - ymin)*suite_hamm(j,3) + ymin
