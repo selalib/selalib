@@ -176,6 +176,7 @@ contains
     sll_int32 :: stencil_r
     sll_int32 :: stencil_s
     character(len=256)      :: str_num_run
+    character(len=256)      :: filename_loc
       
     ! namelists for data input
     namelist / geometry /   &
@@ -269,8 +270,10 @@ contains
     !split_case = "SLL_ORDER6_VTV"
     !split_case = "SLL_LIE_TV"
     if(present(num_run))then
-      call int2string(num_run, str_num_run)
-      sim%thdiag_filename = "thdiag_"//str_num_run//".dat"
+      !call int2string(num_run, str_num_run)
+      write(str_num_run, *) num_run
+      str_num_run = adjustl(str_num_run) 
+      sim%thdiag_filename = "thdiag_"//trim(str_num_run)//".dat"
     else      
       sim%thdiag_filename = "thdiag.dat"
     endif
@@ -291,16 +294,27 @@ contains
     stencil_s = 2
  
     if(present(filename))then
- 
-      open(unit = input_file, file=trim(filename)//'.nml',IOStat=IO_stat)
+      
+      filename_loc = filename
+      filename_loc = adjustl(filename_loc)
+      
+      if(present(num_run)) then
+        filename_loc = trim(filename)//"_"//trim(str_num_run)
+        !filename_loc = adjustl(filename_loc)
+        print *,'filename_loc=',filename_loc
+      endif
+      
+      
+      
+      open(unit = input_file, file=trim(filename_loc)//'.nml',IOStat=IO_stat)
       if( IO_stat /= 0 ) then
         print *, '#initialize_vlasov_par_poisson_seq_cart() failed to open file ', &
-          trim(filename)//'.nml'
+          trim(filename_loc)//'.nml'
         stop
       end if
       if(sll_get_collective_rank(sll_world_collective)==0)then
         print *,'#initialization with filename:'
-        print *,'#',trim(filename)//'.nml'
+        print *,'#',trim(filename_loc)//'.nml'
       endif      
       read(input_file, geometry) 
       read(input_file, initial_function)
@@ -1269,6 +1283,38 @@ contains
   subroutine delete_vp4d_par_cart( sim )
     class(sll_simulation_4d_vlasov_par_poisson_seq_cart) :: sim
     !sll_int32 :: ierr
+    
+    
+   if(associated(sim%mesh_x1)) then
+     nullify(sim%mesh_x1)
+   endif
+   if(associated(sim%mesh_x2)) then
+     nullify(sim%mesh_x2)
+   endif
+   if(associated(sim%mesh_x3)) then
+     nullify(sim%mesh_x3)
+   endif
+   if(associated(sim%mesh_x4)) then
+     nullify(sim%mesh_x4)
+   endif
+   if(associated(sim%advect_x1)) then
+     nullify(sim%advect_x1)
+   endif
+   if(associated(sim%advect_x2)) then
+     nullify(sim%advect_x2)
+   endif
+   if(associated(sim%advect_x3)) then
+     nullify(sim%advect_x3)
+   endif
+   if(associated(sim%advect_x4)) then
+     nullify(sim%advect_x4)
+   endif
+   if(associated(sim%poisson)) then
+     nullify(sim%poisson)
+   endif
+   if(associated(sim%poisson_for_K)) then
+     nullify(sim%poisson_for_K)
+   endif
     
     
   end subroutine delete_vp4d_par_cart
