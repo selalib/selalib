@@ -86,7 +86,7 @@ program lt_pic_4d_init_tester
 
   sll_int64 :: j, j_x, j_y, j_vx, j_vy
   sll_int32 :: part_array_size, part_guard_size
-  sll_real64 :: x, y, thermal_speed, alpha, c_aux, error, tolerance, f_target
+  sll_real64 :: x, y, thermal_speed, error, tolerance, f_target
   sll_real64 :: f_j
   sll_int64 :: number_nodes_x
   sll_int64 :: number_nodes_y
@@ -112,11 +112,13 @@ program lt_pic_4d_init_tester
   sll_real64 :: r_y 
   sll_real64 :: r_vx
   sll_real64 :: r_vy
-  sll_real64 :: max_f
-  sll_real64 :: inv_r_x  
-  sll_real64 :: inv_r_y  
-  sll_real64 :: inv_r_vx 
-  sll_real64 :: inv_r_vy 
+  sll_real64 :: hat_shift
+  sll_real64 :: basis_height
+!  sll_real64 :: max_f
+!  sll_real64 :: inv_r_x
+!  sll_real64 :: inv_r_y
+!  sll_real64 :: inv_r_vx
+!  sll_real64 :: inv_r_vy
 !  sll_real32 :: d_vol
 
   m2d => new_cartesian_mesh_2d( NC_X, NC_Y, &
@@ -147,11 +149,6 @@ program lt_pic_4d_init_tester
         DOMAIN_IS_Y_PERIODIC, &
         m2d )
 
-  ! parameters for f_target(x,y,vx,vy) = 1
-  thermal_speed = 1. 
-  c_aux = 0.
-  alpha = 0.
-   
   x0    =  0.5 * (X_MAX +X_MIN )
   y0    =  0.5 * (Y_MAX +Y_MIN )
   vx0   =  0.5 * ((REMAP_GRID_VX_MAX)+(REMAP_GRID_VX_MIN))
@@ -160,10 +157,13 @@ program lt_pic_4d_init_tester
   r_y   =  0.5 * (Y_MAX -Y_MIN )                     
   r_vx  =  0.5 * ((REMAP_GRID_VX_MAX)-(REMAP_GRID_VX_MIN))
   r_vy  =  0.5 * ((REMAP_GRID_VY_MAX)-(REMAP_GRID_VY_MIN))
-  max_f =  1.
+
+  hat_shift = 1.
+  basis_height = 0.
+    !  max_f =  1.
   
-  call sll_lt_pic_4d_init_hat_f (                       &
-             x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, max_f,    &
+  call sll_lt_pic_4d_init_hat_f (                                           &
+             x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, hat_shift, basis_height,      &
              part_group )
 
   print*, "[lt_pic_4d_init_tester]  calling sll_lt_pic_4d_write_f_on_remap_grid..."
@@ -185,10 +185,10 @@ program lt_pic_4d_init_tester
   nodes_vx_min   = part_group%remapping_grid%eta3_min
   nodes_vy_min   = part_group%remapping_grid%eta4_min
 
-  inv_r_x  = 1./r_x   
-  inv_r_y  = 1./r_y
-  inv_r_vx = 1./r_vx
-  inv_r_vy = 1./r_vy
+    !  inv_r_x  = 1./r_x
+    !  inv_r_y  = 1./r_y
+    !  inv_r_vx = 1./r_vx
+    !  inv_r_vy = 1./r_vy
 
   open(80,file='target_values_test_init4D.dat')
   error = 0
@@ -201,12 +201,13 @@ program lt_pic_4d_init_tester
         vy_j = nodes_vy_min
         do j_vy = 1, number_nodes_vy
           f_j = real( part_group%target_values(j_x,j_y,j_vx,j_vy) ,f32)
-          f_target = max_f * max(0._f64, 1.-inv_r_x*abs(x_j-x0) )       &
-                           * max(0._f64, 1.-inv_r_y*abs(y_j-y0) )       &
-                           * max(0._f64, 1.-inv_r_vx*abs(vx_j-vx0) )    &
-                           * max(0._f64, 1.-inv_r_vy*abs(vy_j-vy0) )
+          f_target = eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, hat_shift, x_j, y_j, vx_j, vy_j)
+            !          f_target = max_f * max(0._f64, 1.-inv_r_x*abs(x_j-x0) )       &
+            !                           * max(0._f64, 1.-inv_r_y*abs(y_j-y0) )       &
+            !                           * max(0._f64, 1.-inv_r_vx*abs(vx_j-vx0) )    &
+            !                           * max(0._f64, 1.-inv_r_vy*abs(vy_j-vy0) )
           error = max( error, abs( f_j - f_target ) )
-          write(80,*) x_j, y_j, vx_j, vy_j, f_j, abs( f_j - f_target )
+          write(80,*) x_j, y_j, vx_j, vy_j, f_j, f_target, abs( f_j - f_target )
           vy_j = vy_j + h_nodes_vy
         end do
         vx_j = vx_j + h_nodes_vx
