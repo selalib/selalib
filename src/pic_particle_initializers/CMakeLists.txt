@@ -33,7 +33,10 @@ endif()
 
 ADD_LIBRARY( sll_pic_initializers STATIC 
   sll_particle_init4D.F90 
-  sll_particle_init2D.F90 )
+  sll_particle_init2D.F90
+  lt_pic_4d_init.F90 
+  ${MLT_PIC_SRC_LIST}
+  )
 
 TARGET_LINK_LIBRARIES( sll_pic_initializers
   sll_pic_utilities
@@ -45,20 +48,21 @@ TARGET_LINK_LIBRARIES( sll_pic_initializers
   sll_memory
   sll_random_deviate_generators )
 
-ADD_EXECUTABLE(lt_pic_4d_init_tester unit_test_lt_pic_4d_init.F90  )
+# [[file:unit_test_lt_pic_4d_init.F90]]
+IF(BUILD_TESTING)
+  ADD_EXECUTABLE(lt_pic_4d_init_tester unit_test_lt_pic_4d_init.F90  )
 
-    TARGET_LINK_LIBRARIES(lt_pic_4d_init_tester
-  sll_pic_initializers
-  sll_pic_utilities
-#  sll_lt_pic_4d_utilities
-  )
+  TARGET_LINK_LIBRARIES(lt_pic_4d_init_tester
+    sll_pic_initializers
+    sll_pic_utilities
+    #  sll_lt_pic_4d_utilities
+    sll_timer
+    )
 
-#ADD_TEST(NAME lt_pic_init4D COMMAND lt_pic_4d_init_tester)   # -- old test name 
-ADD_TEST(NAME lt_pic_4d_init COMMAND lt_pic_4d_init_tester)
-
-SET_TESTS_PROPERTIES(lt_pic_4d_init PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 20)
-
-
+  ADD_TEST(NAME lt_pic_4d_init COMMAND lt_pic_4d_init_tester)
+  SET_TESTS_PROPERTIES(lt_pic_4d_init PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 20)
+ENDIF(BUILD_TESTING)
+  
 # Ctest
 IF(MPI_ENABLED AND BUILD_TESTING)
   ADD_EXECUTABLE( test_pic_initializers unit_test.F90 )
@@ -67,4 +71,5 @@ IF(MPI_ENABLED AND BUILD_TESTING)
     sll_collective )
   ADD_TEST( NAME pic_initializers COMMAND test_pic_initializers )
   SET_TESTS_PROPERTIES( pic_initializers PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+
 ENDIF(MPI_ENABLED AND BUILD_TESTING)

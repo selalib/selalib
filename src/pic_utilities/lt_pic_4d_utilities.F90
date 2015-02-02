@@ -1318,11 +1318,6 @@ end subroutine get_ltp_deformation_matrix
   end subroutine sll_lt_pic_4d_write_f_on_remap_grid
 
 
-
-
-
-  aaa
-  
 !  subroutine plot_lt_pic_density_on_2d_grid( &              ! old name
   subroutine sll_lt_pic_4d_plot_f_on_2d_grid( &
       file_name,        &
