@@ -53,7 +53,6 @@ use sll_simulation_base
 use sll_time_splitting_coeff_module
 use sll_module_poisson_1d_periodic_solver
 use sll_module_poisson_1d_polar_solver
-use sll_module_ampere_1d_pstd
 
 #ifdef _OPENMP
 use omp_lib
@@ -130,7 +129,6 @@ use omp_lib
    sll_real64 :: factor_x2_1
 
    class(sll_poisson_1d_base), pointer :: poisson 
-   class(sll_ampere_1d_pstd),  pointer :: ampere
            
    contains !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -693,13 +691,14 @@ contains
     !advector
     SLL_ALLOCATE(sim%advect_x1(num_threads),ierr)
     SLL_ALLOCATE(sim%advect_x2(num_threads),ierr)
-    tid = 1
 
     !$OMP PARALLEL DEFAULT(SHARED) &
     !$OMP PRIVATE(tid)
 
 #ifdef _OPENMP
     tid = omp_get_thread_num()+1
+#else
+    tid = 1
 #endif
 
 
@@ -722,14 +721,6 @@ contains
           x1_max,                                           &
           LAGRANGE,                                         & 
           order_x1)
-
-      case("SLL_SPECTRAL") ! spectral advection BC must be periodic
-
-        sim%advect_x1(tid)%ptr => new_spectral_1d_advector( &
-          num_cells_x1,                                     &
-          x1_min,                                           &
-          x1_max,                                           &
-          SLL_PERIODIC)
 
       case default
 
@@ -825,11 +816,6 @@ contains
           num_cells_x1)
       case ("SLL_POLAR")
         sim%poisson => new_poisson_1d_polar_solver( &
-          x1_min, &
-          x1_max, &
-          num_cells_x1)
-      case ("SLL_AMPERE_PSTD")
-        sim%ampere => new_ampere_1d_pstd( &
           x1_min, &
           x1_max, &
           num_cells_x1)
@@ -958,7 +944,6 @@ contains
     sll_real64                          :: tmp_loc(5)
     sll_real64                          :: tmp(5)
     sll_int32                           :: i
-    sll_int32                           :: j
     sll_int32                           :: istep
     sll_int32                           :: ig
     sll_int32                           :: k
@@ -1340,50 +1325,25 @@ contains
 
           t_step = t_step+sim%split%split_step(split_istep)
 
-            stop
-          if (associated(sim%ampere)) then
-            !Compute current
-            rho_loc = 0._f64
-            do i=1,np_x1
-              do j= 1, local_size_x2
-                global_indices = local_to_global( layout_x1, (/i, j/) )
-                rho_loc(i)=rho_loc(i)                                &
-                +f_x1(i,j)*sim%integration_weight(global_indices(2)) &
-                *node_positions_x2(global_indices(2))
-              end do
-            end do
-                
-            call sll_collective_allreduce( sll_world_collective, &
-                                           rho_loc,              &
-                                           np_x1,                &
-                                           MPI_SUM,              &
-                                           current )
-
-            call sim%ampere%compute_e_from_j( sim%dt, current, efield )
-
-          else
-
-            !computation of electric field
-            rho_loc = 0._f64
-            ig = global_indices(2)-1
-            do i=1,np_x1
-              rho_loc(i)=rho_loc(i)                              &
-                +sum(f_x1(i,1:local_size_x2)                     &
-                *sim%integration_weight(1+ig:local_size_x2+ig))
-            end do
-                
-            call sll_collective_allreduce( sll_world_collective, &
-                                           rho_loc,              &
-                                           np_x1,                &
-                                           MPI_SUM,              &
-                                           rho )
+          !computation of electric field
+          rho_loc = 0._f64
+          ig = global_indices(2)-1
+          do i=1,np_x1
+            rho_loc(i)=rho_loc(i)                              &
+              +sum(f_x1(i,1:local_size_x2)                     &
+              *sim%integration_weight(1+ig:local_size_x2+ig))
+          end do
+              
+          call sll_collective_allreduce( sll_world_collective, &
+                                         rho_loc,              &
+                                         np_x1,                &
+                                         MPI_SUM,              &
+                                         rho )
   
-            rho = sim%factor_x2_1*1._f64-sim%factor_x2_rho*rho
+          rho = sim%factor_x2_1*1._f64-sim%factor_x2_rho*rho
   
-            call sim%poisson%compute_E_from_rho( efield, rho )
+          call sim%poisson%compute_E_from_rho( efield, rho )
 
-          end if
-          
           if (sim%driven) then
 
             call PFenvelope(adr,                     &
