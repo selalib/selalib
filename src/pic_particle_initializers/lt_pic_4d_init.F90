@@ -59,13 +59,13 @@ contains
   ! initialize the particle density with a tensor product hat function with max value f_max attained at (x0,y0,vx0,vy0)
 !  subroutine sll_init_lt_particles_4d_hat_f (           &          ! old name
   subroutine sll_lt_pic_4d_init_hat_f (           &
-             x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, max_f,    &
+             x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, hat_shift,    &
              p_group )
 
-    sll_real64, intent(in)                                  :: x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, max_f
+    sll_real64, intent(in)                                  :: x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, hat_shift
     type(sll_lt_pic_4d_group), pointer, intent(inout)  :: p_group
 
-    call write_hat_density_on_remap_grid( x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, max_f, p_group )
+    call write_hat_density_on_remap_grid( x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, hat_shift, p_group )
 !    call plot_2d_slice_remapping_grid("init_values_on_rg.dat", p_group )
     call sll_lt_pic_4d_compute_new_particles( p_group )
     
@@ -177,18 +177,41 @@ contains
 
   end subroutine write_landau_density_on_remap_grid
     
+  function eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, hat_shift, x, y, vx, vy)
+    sll_real64 :: x0,y0,vx0,vy0             ! centers of the hat
+    sll_real64 :: r_x,r_y,r_vx,r_vy         ! radii of the hat
+    sll_real64 :: basis_height, hat_shift
+    sll_real64 :: x, y, vx, vy
+    sll_real64 :: eval_hat_function
+    
+    sll_real64 :: inv_r_x 
+    sll_real64 :: inv_r_y 
+    sll_real64 :: inv_r_vx
+    sll_real64 :: inv_r_vy
+    
+    inv_r_x  = 1./r_x
+    inv_r_y  = 1./r_y
+    inv_r_vx = 1./r_vx
+    inv_r_vy = 1./r_vy
 
+    eval_hat_function = basis_height + hat_shift * max(0._f64, 1. - inv_r_x*abs(x-x0) )             &
+                                                 * max(0._f64, 1. - inv_r_y*abs(y-y0) )             &
+                                                 * max(0._f64, 1. - inv_r_vx*abs(vx-vx0) )          &
+                                                 * max(0._f64, 1. - inv_r_vy*abs(vy-vy0) )
+  end function eval_hat_function
+  
+  
 
   subroutine write_hat_density_on_remap_grid ( &
-        x0,y0,vx0,vy0,      &
-        r_x,r_y,r_vx,r_vy,  &
-        max_f,              &
-        p_group             &
+        x0,y0,vx0,vy0,          &
+        r_x,r_y,r_vx,r_vy,      &
+        basis_height, hat_shift,&
+        p_group                 &
       )
 
     sll_real64, intent(in)                                  :: x0,y0,vx0,vy0
     sll_real64, intent(in)                                  :: r_x,r_y,r_vx,r_vy
-    sll_real64, intent(in)                                  :: max_f
+    sll_real64, intent(in)                                  :: basis_height, hat_shift
     type(sll_lt_pic_4d_group), pointer, intent(inout)       :: p_group
     sll_int64 :: j_x
     sll_int64 :: j_y
@@ -211,20 +234,20 @@ contains
     sll_real64 :: y_j
     sll_real64 :: vx_j
     sll_real64 :: vy_j
-    sll_real64 :: inv_r_x
-    sll_real64 :: inv_r_y
-    sll_real64 :: inv_r_vx
-    sll_real64 :: inv_r_vy
+!    sll_real64 :: inv_r_x
+!    sll_real64 :: inv_r_y
+!    sll_real64 :: inv_r_vx
+!    sll_real64 :: inv_r_vy
     type(sll_cartesian_mesh_2d),      pointer  :: m2d
     sll_real64 :: f_x, f_y, f_vx, f_vy
 
     number_particles = p_group%number_particles
     
-    inv_r_x  = 1./r_x
-    inv_r_y  = 1./r_y
-    inv_r_vx = 1./r_vx
-    inv_r_vy = 1./r_vy
-    
+!    inv_r_x  = 1./r_x
+!    inv_r_y  = 1./r_y
+!    inv_r_vx = 1./r_vx
+!    inv_r_vy = 1./r_vy
+!    
     number_parts_x  = p_group%number_parts_x
     number_parts_y  = p_group%number_parts_y
     number_parts_vx = p_group%number_parts_vx
@@ -246,17 +269,20 @@ contains
     ! compute the values of f0 on the (cartesian, phase-space) remapping grid
     x_j = parts_x_min
     do j_x = 1, number_parts_x
-      f_x =  max(0._f64, 1.-inv_r_x*abs(x_j-x0) )
+!      f_x =  max(0._f64, 1.-inv_r_x*abs(x_j-x0) )
       y_j = parts_y_min
       do j_y = 1, number_parts_y
-        f_y =  max(0._f64, 1.-inv_r_y*abs(y_j-y0) )
+!        f_y =  max(0._f64, 1.-inv_r_y*abs(y_j-y0) )
         vx_j = parts_vx_min
         do j_vx = 1, number_parts_vx
-          f_vx = max(0._f64, 1.-inv_r_vx*abs(vx_j-vx0) )
+!          f_vx = max(0._f64, 1.-inv_r_vx*abs(vx_j-vx0) )
           vy_j = parts_vy_min
           do j_vy = 1, number_parts_vy
-            f_vy = max(0._f64, 1.-inv_r_vy*abs(vy_j-vy0) )
-            p_group%target_values(j_x,j_y,j_vx,j_vy) = max_f * f_x * f_y * f_vx * f_vy
+!            f_vy = max(0._f64, 1.-inv_r_vy*abs(vy_j-vy0) )
+!            p_group%target_values(j_x,j_y,j_vx,j_vy) = max_f * f_x * f_y * f_vx * f_vy     ! MCP: old implementation
+            p_group%target_values(j_x,j_y,j_vx,j_vy) = eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, &
+                                                                         basis_height, hat_shift,         &
+                                                                         x_j, y_j, vx_j, vy_j)
             vy_j = vy_j + h_parts_vy
           end do
           vx_j = vx_j + h_parts_vx
