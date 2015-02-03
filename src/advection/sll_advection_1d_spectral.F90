@@ -100,6 +100,7 @@ subroutine initialize( adv, npts, eta_min, eta_max, bc)
 
   sll_int32      :: i
   sll_int32      :: ierr
+  sll_int32      :: tmp_size
   sll_real64     :: kx0
   fftw_int       :: sz_tmp_x
   
@@ -114,14 +115,16 @@ subroutine initialize( adv, npts, eta_min, eta_max, bc)
   else
     adv%bc = bc
   endif     
+  
+  tmp_size = (npts-1)/2+1
 
-  FFTW_ALLOCATE(adv%tmp_x,adv%num_cells/2+1,sz_tmp_x,adv%p_tmp_x)
+  FFTW_ALLOCATE(adv%tmp_x,tmp_size,sz_tmp_x,adv%p_tmp_x)
   SLL_CLEAR_ALLOCATE(adv%d_dx(1:adv%num_cells), ierr)
 
   NEW_FFTW_PLAN_R2C_1D(adv%fwx, adv%num_cells, adv%d_dx,  adv%tmp_x)
   NEW_FFTW_PLAN_C2R_1D(adv%bwx, adv%num_cells, adv%tmp_x, adv%d_dx)
 
-  SLL_CLEAR_ALLOCATE(adv%kx(1:adv%num_cells/2+1), ierr)
+  SLL_CLEAR_ALLOCATE(adv%kx(1:tmp_size), ierr)
    
   kx0 = 2._f64*sll_pi/(adv%num_cells*adv%delta_eta)
 
