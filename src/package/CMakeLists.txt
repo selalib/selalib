@@ -184,7 +184,7 @@ ENDIF()
 # this is not the case. ECG
 IF(FFTW_ENABLED)
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
-    ${SLL_DIR}/fft/fftw3/fftw3.F90
+    ${SLL_DIR}/fft/fftw3.F90
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_pstd.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_fftw.F90
     ${SLL_DIR}/multigrid/sll_multigrid_2d.F90
