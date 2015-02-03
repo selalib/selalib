@@ -734,7 +734,6 @@ contains
       case default
 
         SLL_ERROR('#advector in x1 '//advector_x1//' not implemented')
-        stop 
 
     end select    
 
@@ -1103,9 +1102,7 @@ contains
         node_positions_x2(1:num_dof_x2) = x2_array_middle(1:num_dof_x2)
       case default
         print *,'#sim%advection_form_x2=',sim%advection_form_x2
-        print *,'#not implemented'
-        print *,'#in run_vp2d_cartesian'
-        stop
+        SLL_ERROR('#not implemented')
     end select  
         
 
@@ -1343,12 +1340,13 @@ contains
 
           t_step = t_step+sim%split%split_step(split_istep)
 
+            stop
           if (associated(sim%ampere)) then
             !Compute current
             rho_loc = 0._f64
             do i=1,np_x1
               do j= 1, local_size_x2
-                global_indices(1:2) = local_to_global( layout_x1, (/i, j/) )
+                global_indices = local_to_global( layout_x1, (/i, j/) )
                 rho_loc(i)=rho_loc(i)                                &
                 +f_x1(i,j)*sim%integration_weight(global_indices(2)) &
                 *node_positions_x2(global_indices(2))
@@ -1990,8 +1988,7 @@ contains
 
     if (s /= light_size) then
       print *,'#bad value of light_size',light_size,s
-      print *,'#in compute_light_mesh'
-      stop
+      SLL_ERROR( '#bad value of light_size')
     endif
     
           
