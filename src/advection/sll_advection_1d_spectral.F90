@@ -141,7 +141,6 @@ subroutine advect_1d( adv, a, dt, input, output )
   sll_real64, dimension(:), intent(out) :: output      
 
   sll_int32  :: nx
-  sll_real64 :: j               
     
   nx = adv%num_cells
 
