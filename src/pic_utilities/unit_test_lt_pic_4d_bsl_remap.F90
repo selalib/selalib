@@ -244,6 +244,7 @@ program unit_test_lt_pic_bsl_remap
   ! remap au choix
   call getarg(1,remap_type)
   if(remap_type == 'ltp') then
+     ! remap with [[file:lt_pic_4d_utilities.F90::sll_lt_pic_4d_write_f_on_remap_grid]]
      print*, "[lt_pic_4d_init_tester]  calling sll_lt_pic_4d_write_f_on_remap_grid..."
      call sll_lt_pic_4d_write_f_on_remap_grid( part_group )
   else if (remap_type == 'ltp_bsl') then
@@ -307,6 +308,11 @@ program unit_test_lt_pic_bsl_remap
   end do
 
   close(80)
+
+  ! uses [[file:~/mcp/selalib/src/fields/sll_array_plotting_module.F90::write_projection_2d]] developed by PN (cf
+  ! example in [[file:~/mcp/selalib/src/fields/unit_test_4d.F90::write_projection_2d]])
+
+  !aaa
 
   plotting_m2d =>  new_cartesian_mesh_2d( NC_X1_PLOT, NC_X2_PLOT, &
          X1_MIN_PLOT, X1_MAX_PLOT, X2_MIN_PLOT, X2_MAX_PLOT )

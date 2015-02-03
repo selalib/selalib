@@ -864,6 +864,11 @@ end subroutine get_ltp_deformation_matrix
                         part_radius_vy                             &
                         )
 
+                   !print *,"deformation matrix: ",d11,d12,d13,d14 !aaa
+                   !print *,"deformation matrix: ",d21,d22,d23,d24 !aaa
+                   !print *,"deformation matrix: ",d31,d32,d33,d34 !aaa
+                   !print *,"deformation matrix: ",d41,d42,d43,d44 !aaa
+                   
                    ! <<loop_on_virtual_particles_in_one_virtual_cell>>
                    ! [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:find_f0_for_each_virtual_particle]] Loop over all
                    ! virtual particles in the cell to compute the value of f0 at that point (Following
@@ -904,6 +909,12 @@ end subroutine get_ltp_deformation_matrix
                                     + d43 * (vx - vx_k)     &
                                     + d44 * (vy - vy_k)
 
+                               print *,"x-x_k=",x-x_k," x_aux=",x_aux  !aaa
+                               print *,"y-y_k=",y-y_k," y_aux=",y_aux  !aaa
+                               print *,"vx-vx_k=",vx-vx_k," vx_aux=",vx_aux  !aaa
+                               print *,"vy-vy_k=",vy-vy_k," vy_aux=",vy_aux  !aaa
+                               print *,"------------------------"
+                               
                                ! [[file:~/mcp/maltpic/ltpic-bsl.tex::neighbors-grid-0]] find the neighbours of the
                                ! virtual particle (ivirt,jvirt,lvirt,mvirt) at time 0 through the "logical neighbours"
                                ! pointers of particle k. To reduce the amount of code, start with finding the closest
@@ -1049,6 +1060,7 @@ end subroutine get_ltp_deformation_matrix
     end do
   end subroutine sll_lt_pic_4d_write_bsl_f_on_remap_grid
 
+  ! <<sll_lt_pic_4d_write_f_on_remap_grid>>
   ! write the density on the (phase-space) remapping grid
   ! Note: the (x,y)-projection of the remapping grid may be larger than the "Poisson" 2d mesh associated with the particle group
   ! (in particular if the (x,y) domain is not periodic)

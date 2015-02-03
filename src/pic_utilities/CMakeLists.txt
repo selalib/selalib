@@ -16,11 +16,11 @@ target_link_libraries( sll_pic_utilities
 # ALH - <<test_lt_pic_4d_bsl_remap>> BSL remapping unit test
 #
 # source: [[file:unit_test_lt_pic_4d_bsl_remap.F90]]
-# compile: [[elisp:(compile "cd ../../../build && make test_lt_pic_4d_bsl_remap")]]
-# single ltp run: [[elisp:(compile "cd ../../../build && make test_lt_pic_4d_bsl_remap && bin/test_lt_pic_4d_bsl_remap ltp")]]
-# single ltp_bsl run: [[elisp:(compile "cd ../../../build && make test_lt_pic_4d_bsl_remap && bin/test_lt_pic_4d_bsl_remap ltp_bsl")]]
-# debug: [[elisp:(gdb "gdb --annotate=3 ../../../build/bin/test_lt_pic_4d_bsl_remap")]]
-# ctest run: [[elisp:(compile "cd ../../../build && ctest -R lt_pic_4d_bsl_remap")]]
+# compile: [[elisp:(compile "cd ../../build && make test_lt_pic_4d_bsl_remap")]]
+# single ltp run: [[elisp:(compile "cd ../../build && make test_lt_pic_4d_bsl_remap && bin/test_lt_pic_4d_bsl_remap ltp")]]
+# single ltp_bsl run: [[elisp:(compile "cd ../../build && make test_lt_pic_4d_bsl_remap && bin/test_lt_pic_4d_bsl_remap ltp_bsl")]]
+# debug: [[elisp:(gdb "gdb --annotate=3 ../../build/bin/test_lt_pic_4d_bsl_remap")]]
+# ctest run: [[elisp:(compile "cd ../../build && ctest -R lt_pic_4d_bsl_remap")]]
 
 ADD_EXECUTABLE(test_lt_pic_4d_bsl_remap unit_test_lt_pic_4d_bsl_remap.F90)
 target_link_libraries(test_lt_pic_4d_bsl_remap
