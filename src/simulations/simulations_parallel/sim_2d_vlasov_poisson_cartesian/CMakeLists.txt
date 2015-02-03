@@ -43,10 +43,16 @@ IF(FFTW_FOUND AND FFTW_ENABLED)
   SET( INSTALL_DIR "${INSTALL_DIR}/${TEST_NAME}" )
   
   ADD_EXECUTABLE( ${EXECUTABLE} simulation_${SIM_NAME}.F90
-                                simulation_2d_vlasov_poisson_cartesian.F90
                                 unit_test_${TEST_NAME}.F90 )
     
   TARGET_LINK_LIBRARIES( ${EXECUTABLE} sll_simulations_parallel sll_ampere_solvers )
+
+  IF(BUILD_TESTING)
+    FILE( COPY ${INPUT_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
+    SET(  ARGS ${CMAKE_CURRENT_BINARY_DIR}/vasim2d_cartesian_input )
+    ADD_MPI_TEST( ${TEST_NAME} ${EXECUTABLE} ${PROCS} ${ARGS} )
+    SET_TESTS_PROPERTIES( ${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+  ENDIF(BUILD_TESTING)
   
   ADD_EXECUTABLE( vm2d_spectral sll_vlasov2d_base.F90
                                 sll_vlasov2d_spectral.F90
