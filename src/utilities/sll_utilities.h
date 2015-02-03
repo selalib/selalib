@@ -58,5 +58,6 @@
 use sll_utilities
 use sll_tridiagonal
 use fornberg
+use sll_primitives
 
 #endif

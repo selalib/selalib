@@ -342,14 +342,14 @@ endif
       call sll_binary_write_array_2d(file_id,f_visu(1:np_x1-1,1:np_x2-1),ierr)
       call sll_binary_file_close(file_id,ierr)
 
-      call plot_f_cartesian( iplot,             &
-                             f_visu,            &
-                             sim%x1_array,      &
-                             np_x1,             &
-                             node_positions_x2, &
-                             sim%num_dof_x2,    &
-                             'f',               &
-                             time_init )        
+      call sll_plot_f_cartesian( iplot,             &
+                                 f_visu,            &
+                                 sim%x1_array,      &
+                                 np_x1,             &
+                                 node_positions_x2, &
+                                 sim%num_dof_x2,    &
+                                 'f',               &
+                                 time_init )        
 
       print *,'#maxf',maxval(f_visu), minval(f_visu) 
 
@@ -731,14 +731,14 @@ endif
             call sll_binary_write_array_2d(deltaf_id,           &
                                            f_visu(1:np_x1-1,1:np_x2-1),ierr)  
 
-            call plot_f_cartesian( &
-              iplot,               &
-              f_visu,              &
-              sim%x1_array,        &
-              np_x1,               &
-              node_positions_x2,   &
-              sim%num_dof_x2,      &
-              'deltaf',time)                    
+            call sll_plot_f_cartesian( &
+                  iplot,               &
+                  f_visu,              &
+                  sim%x1_array,        &
+                  np_x1,               &
+                  node_positions_x2,   &
+                  sim%num_dof_x2,      &
+                  'deltaf',time)                    
           
           
           endif
@@ -772,13 +772,13 @@ endif
               node_positions_x2(1:num_dof_x2), &
               'intfdx')
 
-            call plot_f_cartesian( iplot,             &
-                                   f_visu,            &
-                                   sim%x1_array,      &
-                                   np_x1,             &
-                                   node_positions_x2, &
-                                   sim%num_dof_x2,    &
-                                   'f', time)                    
+            call sll_plot_f_cartesian( iplot,             &
+                                       f_visu,            &
+                                       sim%x1_array,      &
+                                       np_x1,             &
+                                       node_positions_x2, &
+                                       sim%num_dof_x2,    &
+                                       'f', time)                    
           endif
 
           iplot = iplot+1  
