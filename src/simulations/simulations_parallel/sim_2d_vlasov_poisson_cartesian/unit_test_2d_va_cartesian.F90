@@ -157,436 +157,237 @@ if (init_from_unit_test) then
 
 endif
 
+if (sll_get_collective_rank(sll_world_collective)==0) then
+  MPI_MASTER = .true.
+else
+  MPI_MASTER = .false.
+end if
 
+iplot = 1
 
-    if (sll_get_collective_rank(sll_world_collective)==0) then
-      MPI_MASTER = .true.
-    else
-      MPI_MASTER = .false.
-    end if
-
-    iplot = 1
-
-    nb_mode          = sim%nb_mode
-    time_init        = sim%time_init
-    np_x1            = sim%mesh2d%num_cells1+1
-    np_x2            = sim%mesh2d%num_cells2+1
-    num_dof_x2       = sim%num_dof_x2
+nb_mode          = sim%nb_mode
+time_init        = sim%time_init
+np_x1            = sim%mesh2d%num_cells1+1
+np_x2            = sim%mesh2d%num_cells2+1
+num_dof_x2       = sim%num_dof_x2
     
-    if (MPI_MASTER) then
+collective_size = sll_get_collective_size(sll_world_collective)
+if (MPI_MASTER) then
 
-      print *,'#collective_size=',sll_get_collective_size(sll_world_collective)
-      SLL_ALLOCATE(f_visu(np_x1,num_dof_x2),ierr)
-      SLL_ALLOCATE(f_visu_buf1d(np_x1*num_dof_x2),ierr)
+  print *,'#collective_size=',collective_size
+  SLL_ALLOCATE(f_visu(np_x1,num_dof_x2),ierr)
+  SLL_ALLOCATE(f_visu_buf1d(np_x1*num_dof_x2),ierr)
 
-    else
+else
 
-      SLL_ALLOCATE(f_visu(1:1,1:1),ierr)          
-      SLL_ALLOCATE(f_visu_buf1d(1:1),ierr)
+  SLL_ALLOCATE(f_visu(1:1,1:1),ierr)          
+  SLL_ALLOCATE(f_visu_buf1d(1:1),ierr)
 
-    endif
+endif
     
-    collective_size = sll_get_collective_size(sll_world_collective)
-    SLL_ALLOCATE(collective_displs(collective_size),ierr)
-    SLL_ALLOCATE(collective_recvcnts(collective_size),ierr)
+SLL_ALLOCATE(collective_displs(collective_size),ierr)
+SLL_ALLOCATE(collective_recvcnts(collective_size),ierr)
 
-    SLL_ALLOCATE(buf_fft(np_x1-1),ierr)
-    pfwd => fft_new_plan(np_x1-1,buf_fft,buf_fft,FFT_FORWARD,FFT_NORMALIZE)
-    SLL_ALLOCATE(rho_mode(0:nb_mode),ierr)      
+SLL_ALLOCATE(buf_fft(np_x1-1),ierr)
+pfwd => fft_new_plan(np_x1-1,buf_fft,buf_fft,FFT_FORWARD,FFT_NORMALIZE)
+SLL_ALLOCATE(rho_mode(0:nb_mode),ierr)      
 
-    layout_x1       => new_layout_2D( sll_world_collective )
-    layout_x2       => new_layout_2D( sll_world_collective )    
-    nproc_x1 = sll_get_collective_size( sll_world_collective )
-    nproc_x2 = 1
-    call initialize_layout_with_distributed_array( &
-      np_x1, num_dof_x2, nproc_x1, nproc_x2, layout_x2 )
-    call initialize_layout_with_distributed_array( &
-      np_x1, num_dof_x2, nproc_x2, nproc_x1, layout_x1 )
+layout_x1 => new_layout_2D( sll_world_collective )
+layout_x2 => new_layout_2D( sll_world_collective )    
 
-    call sll_view_lims( layout_x1 )
-    call sll_view_lims( layout_x2 )
+nproc_x1 = sll_get_collective_size( sll_world_collective )
+nproc_x2 = 1
+
+call initialize_layout_with_distributed_array( &
+  np_x1, num_dof_x2, nproc_x1, nproc_x2, layout_x2 )
+call initialize_layout_with_distributed_array( &
+  np_x1, num_dof_x2, nproc_x2, nproc_x1, layout_x1 )
+
+call sll_view_lims( layout_x1 )
+call sll_view_lims( layout_x2 )
     
-    call compute_local_sizes( layout_x2, local_size_x1, local_size_x2 )
-    SLL_ALLOCATE(f_x2(local_size_x1,local_size_x2),ierr)
+call compute_local_sizes( layout_x2, local_size_x1, local_size_x2 )
+SLL_ALLOCATE(f_x2(local_size_x1,local_size_x2),ierr)
 
-    call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
-    global_indices(1:2) = local_to_global( layout_x1, (/1, 1/) )
-    SLL_ALLOCATE(f_x1(local_size_x1,local_size_x2),ierr)    
-    SLL_ALLOCATE(f_x1_equil(local_size_x1,local_size_x2),ierr)    
-    SLL_ALLOCATE(f_x1_buf1d(local_size_x1*local_size_x2),ierr)    
+call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
+global_indices(1:2) = local_to_global( layout_x1, (/1, 1/) )
+SLL_ALLOCATE(f_x1(local_size_x1,local_size_x2),ierr)    
+SLL_ALLOCATE(f_x1_equil(local_size_x1,local_size_x2),ierr)    
+SLL_ALLOCATE(f_x1_buf1d(local_size_x1*local_size_x2),ierr)    
 
-    remap_plan_x1_x2 => NEW_REMAP_PLAN(layout_x1, layout_x2, f_x1)
-    remap_plan_x2_x1 => NEW_REMAP_PLAN(layout_x2, layout_x1, f_x2)
+remap_plan_x1_x2 => NEW_REMAP_PLAN(layout_x1, layout_x2, f_x1)
+remap_plan_x2_x1 => NEW_REMAP_PLAN(layout_x2, layout_x1, f_x2)
     
-    SLL_ALLOCATE(rho(np_x1),ierr)
-    SLL_ALLOCATE(rho_loc(np_x1),ierr)
-    SLL_ALLOCATE(current(np_x1),ierr)
-    SLL_ALLOCATE(efield(np_x1),ierr)
-    SLL_ALLOCATE(e_app(np_x1),ierr)
-    SLL_ALLOCATE(f1d(max(np_x1,np_x2)),ierr)
-    SLL_ALLOCATE(f1d_omp(max(np_x1,np_x2),sim%num_threads),ierr)
-    SLL_ALLOCATE(f1d_omp_in(max(np_x1,np_x2),sim%num_threads),ierr)
-    SLL_ALLOCATE(f1d_omp_out(max(np_x1,np_x2),sim%num_threads),ierr)
-    SLL_ALLOCATE(x2_array_unit(np_x2),ierr)
-    SLL_ALLOCATE(x2_array_middle(np_x2),ierr)
-    SLL_ALLOCATE(node_positions_x2(num_dof_x2),ierr)
-    SLL_ALLOCATE(f_hat_x2_loc(nb_mode+1),ierr)
-    SLL_ALLOCATE(f_hat_x2(nb_mode+1),ierr)
+SLL_ALLOCATE(rho(np_x1),ierr)
+SLL_ALLOCATE(rho_loc(np_x1),ierr)
+SLL_ALLOCATE(current(np_x1),ierr)
+SLL_ALLOCATE(efield(np_x1),ierr)
+SLL_ALLOCATE(e_app(np_x1),ierr)
+SLL_ALLOCATE(f1d(max(np_x1,np_x2)),ierr)
+SLL_ALLOCATE(f1d_omp(max(np_x1,np_x2),sim%num_threads),ierr)
+SLL_ALLOCATE(f1d_omp_in(max(np_x1,np_x2),sim%num_threads),ierr)
+SLL_ALLOCATE(f1d_omp_out(max(np_x1,np_x2),sim%num_threads),ierr)
+SLL_ALLOCATE(x2_array_unit(np_x2),ierr)
+SLL_ALLOCATE(x2_array_middle(np_x2),ierr)
+SLL_ALLOCATE(node_positions_x2(num_dof_x2),ierr)
+SLL_ALLOCATE(f_hat_x2_loc(nb_mode+1),ierr)
+SLL_ALLOCATE(f_hat_x2(nb_mode+1),ierr)
 
-    x2_array_unit(1:np_x2) = &
+x2_array_unit(1:np_x2) = &
       (sim%x2_array(1:np_x2)-sim%x2_array(1))/(sim%x2_array(np_x2)-sim%x2_array(1))
-    do i = 1, np_x2-1
-       x2_array_middle(i) = 0.5_f64*(sim%x2_array(i)+sim%x2_array(i+1))
-    end do
-    x2_array_middle(np_x2) = x2_array_middle(1)+sim%x2_array(np_x2)-sim%x2_array(1)
-    
-    select case (sim%advection_form_x2)
-      case (SLL_ADVECTIVE)
-        node_positions_x2(1:num_dof_x2) = sim%x2_array(1:num_dof_x2)
-      case (SLL_CONSERVATIVE)
-        node_positions_x2(1:num_dof_x2) = x2_array_middle(1:num_dof_x2)
-      case default
-        print *,'#sim%advection_form_x2=',sim%advection_form_x2
-        SLL_ERROR('#not implemented')
-    end select  
+do i = 1, np_x2-1
+   x2_array_middle(i) = 0.5_f64*(sim%x2_array(i)+sim%x2_array(i+1))
+end do
+x2_array_middle(np_x2) = x2_array_middle(1)+sim%x2_array(np_x2)-sim%x2_array(1)
+
+select case (sim%advection_form_x2)
+  case (SLL_ADVECTIVE)
+    node_positions_x2(1:num_dof_x2) = sim%x2_array(1:num_dof_x2)
+  case (SLL_CONSERVATIVE)
+    node_positions_x2(1:num_dof_x2) = x2_array_middle(1:num_dof_x2)
+  case default
+    print *,'#sim%advection_form_x2=',sim%advection_form_x2
+    SLL_ERROR('#not implemented')
+end select  
         
+if (MPI_MASTER) then
 
-    if (MPI_MASTER) then
+  call sll_binary_file_create("x.bdat", file_id, ierr)
+  call sll_binary_write_array_1d(file_id,sim%x1_array(1:np_x1-1),ierr)
+  call sll_binary_file_close(file_id,ierr)                    
+  call sll_binary_file_create("v.bdat", file_id, ierr)
+  call sll_binary_write_array_1d(file_id,node_positions_x2(1:np_x2-1),ierr)
+  call sll_binary_file_close(file_id,ierr)                                             
 
-      call sll_binary_file_create("x.bdat", file_id, ierr)
-      call sll_binary_write_array_1d(file_id,sim%x1_array(1:np_x1-1),ierr)
-      call sll_binary_file_close(file_id,ierr)                    
-      call sll_binary_file_create("v.bdat", file_id, ierr)
-      call sll_binary_write_array_1d(file_id,node_positions_x2(1:np_x2-1),ierr)
-      call sll_binary_file_close(file_id,ierr)                                             
-    endif
+endif
 
-    call sll_2d_parallel_array_initializer_cartesian( &
-       layout_x1,                                     &
-       sim%x1_array,                                  &
-       node_positions_x2,                             &
-       f_x1,                                          &
-       sim%init_func,                                 &
-       sim%params)
+call sll_2d_parallel_array_initializer_cartesian( &
+   layout_x1,                                     &
+   sim%x1_array,                                  &
+   node_positions_x2,                             &
+   f_x1,                                          &
+   sim%init_func,                                 &
+   sim%params)
 
-    iproc = sll_get_collective_rank(sll_world_collective)
-    call int2string(iproc, cproc)
-    call int2string(iplot, cplot)    
+iproc = sll_get_collective_rank(sll_world_collective)
+call int2string(iproc, cproc)
+call int2string(iplot, cplot)    
 
-    if (trim(sim%restart_file) /= "no_restart_file" ) then
 
-      INQUIRE(FILE=trim(sim%restart_file)//'_proc_'//cproc//'.rst', EXIST=file_exists)
+call check_restart()
 
-      if (.not. file_exists) then
-        SLL_ERROR('#file '//trim(sim%restart_file)//'_proc_'//cproc//'.rst &
-                  & does not exist')
-      endif
+time_init = sim%time_init
 
-      open(unit=restart_id, &
-           file=trim(sim%restart_file)//'_proc_'//cproc//'.rst', ACCESS="STREAM", &
-           form='unformatted', IOStat=ierr)      
+!ES initialise f_x1_equil that is used to define deltaf: 
+!ES deltaf =  f_x1 - f_x1_equil
+call sll_2d_parallel_array_initializer_cartesian( &
+   layout_x1,                                     &
+   sim%x1_array,                                  &
+   node_positions_x2,                             &
+   f_x1_equil,                                    &
+   sim%equil_func,                                &
+   sim%equil_func_params)
 
-      if ( ierr .ne. 0 ) then
-        SLL_ERROR('ERROR while opening file &
-                   &'//trim(sim%restart_file)//'_proc_'//cproc//'.rst &
-                   & Called from run_vp2d_cartesian().')
-      end if
+call compute_displacements_array_2d( layout_x1,       &
+                                     collective_size, &
+                                     collective_displs )
 
-      print *,'#read restart file '//trim(sim%restart_file)//'_proc_'//cproc//'.rst'      
-      call sll_binary_read_array_0d(restart_id,time_init,ierr)
-      call sll_binary_read_array_2d(restart_id,f_x1,ierr)
-      call sll_binary_file_close(restart_id,ierr)
+collective_recvcnts = receive_counts_array_2d( layout_x1, &
+                                               collective_size )
 
-    endif      
+!ES replace f_x1 by f_x1_equil and write f_x1_equil into 
+!ES f0.bdat instead of f_x1  
+
+call load_buffer_2d( layout_x1, f_x1_equil, f_x1_buf1d )
+
+call sll_collective_gatherv_real64( sll_world_collective,        &
+                                    f_x1_buf1d,                  &
+                                    local_size_x1*local_size_x2, &
+                                    collective_recvcnts,         &
+                                    collective_displs,           &
+                                    0,                           &
+                                    f_visu_buf1d )
     
-    if (sim%time_init_from_restart_file .eqv. .true.) then
-      sim%time_init = time_init  
-    endif
-    time_init = sim%time_init
+f_visu = reshape(f_visu_buf1d, shape(f_visu))
 
-    !ES initialise f_x1_equil that is used to define deltaf: 
-    !ES deltaf =  f_x1 - f_x1_equil
-    call sll_2d_parallel_array_initializer_cartesian( &
-       layout_x1,                                     &
-       sim%x1_array,                                  &
-       node_positions_x2,                             &
-       f_x1_equil,                                    &
-       sim%equil_func,                                &
-       sim%equil_func_params)
+if (MPI_MASTER) then
 
-    call compute_displacements_array_2d( layout_x1,       &
-                                         collective_size, &
-                                         collective_displs )
+   call plot_initial_distribution()
 
-    collective_recvcnts = receive_counts_array_2d( layout_x1, &
-                                                   collective_size )
+end if
 
-    !ES replace f_x1 by f_x1_equil and write f_x1_equil into 
-    !ES f0.bdat instead of f_x1  
+call initialize(poisson_1d,sim%mesh2d%eta1_min,sim%mesh2d%eta1_max,np_x1-1,ierr)
 
-    call load_buffer_2d( layout_x1, f_x1_equil, f_x1_buf1d )
-
-    call sll_collective_gatherv_real64( sll_world_collective,        &
-                                        f_x1_buf1d,                  &
-                                        local_size_x1*local_size_x2, &
-                                        collective_recvcnts,         &
-                                        collective_displs,           &
-                                        0,                           &
-                                        f_visu_buf1d )
-        
-    f_visu = reshape(f_visu_buf1d, shape(f_visu))
-
-    if (MPI_MASTER) then
-
-      call sll_binary_file_create('f0.bdat', file_id, ierr)
-      call sll_binary_write_array_2d(file_id,f_visu(1:np_x1-1,1:np_x2-1),ierr)
-      call sll_binary_file_close(file_id,ierr)
-
-      call sll_plot_f_cartesian( iplot,             &
-                                 f_visu,            &
-                                 sim%x1_array,      &
-                                 np_x1,             &
-                                 node_positions_x2, &
-                                 sim%num_dof_x2,    &
-                                 'f',               &
-                                 time_init )        
-
-      print *,'#maxf',maxval(f_visu), minval(f_visu) 
-
-    endif
-
-    call initialize(poisson_1d,sim%mesh2d%eta1_min,sim%mesh2d%eta1_max,np_x1-1,ierr)
-
-    !computation of electric field
-    rho_loc = 0._f64
-    ig = global_indices(2)-1
-    do i=1,np_x1
-      rho_loc(i) = rho_loc(i)&
-        +sum(f_x1(i,:)*sim%integration_weight(1+ig:local_size_x2+ig))
-    end do
-
-    call sll_collective_allreduce( sll_world_collective, &
-                                   rho_loc,              &
-                                   np_x1,                &
-                                   MPI_SUM,              &
-                                   rho )
-
-    rho = sim%factor_x2_1*1._f64-sim%factor_x2_rho*rho        
+call compute_rho()
     
-    call sim%poisson%compute_E_from_rho( efield, rho )
+call sim%poisson%compute_E_from_rho( efield, rho )
         
-    ! Ponderomotive force at initial time. We use a sine wave
-    ! with parameters k_dr and omega_dr.
-    istep = 0
-    e_app = 0._f64
+! Ponderomotive force at initial time. We use a sine wave
+! with parameters k_dr and omega_dr.
+istep = 0
+e_app = 0._f64
 
-    if (sim%driven) then
+if (sim%driven) then !Keen wave case
 
-      call PFenvelope(adr,                    &
-                      time_init+istep*sim%dt, &
-                      sim%tflat,              &
-                      sim%tL,                 &
-                      sim%tR,                 &
-                      sim%twL,                &
-                      sim%twR,                &
-                      sim%t0,                 &
-                      sim%turn_drive_off)
+  call set_e_app(real(istep,f64))
 
-      do i = 1, np_x1
-        e_app(i) = sim%Edrmax*adr*sim%kx                          &
-                 * sin(sim%kx*real(i-1,f64)*sim%mesh2d%delta_eta1 &
-                 - sim%omegadr*(time_init+real(istep,f64)*sim%dt))
-      enddo
+endif
 
+if (MPI_MASTER) then
+
+  call initial_diagnostics()
+
+endif
+    
+call write_initial_deltaf() 
+
+iplot = iplot+1  
+
+do istep = 1, sim%num_iterations
+
+  if (mod(istep,sim%freq_diag)==0) then
+    if (MPI_MASTER) then        
+      print *,'#step=',istep,time_init+real(istep,f64)*sim%dt,'iplot=',iplot
     endif
+  endif  
 
-    if (MPI_MASTER) then
+  split_T = sim%split%split_begin_T
+  t_step = real(istep-1,f64)
 
-      call sll_ascii_file_create('thdiag.dat', th_diag_id, ierr)
+  do split_istep=1,sim%split%nb_split_step
 
-      call sll_binary_file_create('deltaf.bdat', deltaf_id, ierr)
-      call sll_binary_file_create('rhotot.bdat', rhotot_id, ierr)
-      call sll_binary_file_create('efield.bdat', efield_id, ierr)
-      call sll_binary_file_create('t.bdat', t_id, ierr)
-      call sll_binary_write_array_1d(efield_id,efield(1:np_x1-1),ierr)
-      call sll_binary_write_array_1d(rhotot_id,rho(1:np_x1-1),ierr)
-      call sll_binary_write_array_0d(t_id,real(istep,f64)*sim%dt,ierr)
+    if (split_T) then ! T ADVECTION 
+
+      call advection_x()
+
+      t_step = t_step+sim%split%split_step(split_istep)
+
+      call compute_rho()
+
+      call sim%poisson%compute_E_from_rho( efield, rho )
 
       if (sim%driven) then
-        call sll_binary_file_create('adr.bdat', adr_id, ierr)
-        call sll_binary_file_create('Edr.bdat', Edr_id, ierr)
-        call sll_binary_write_array_1d(Edr_id,e_app(1:np_x1-1),ierr)
-        call sll_binary_write_array_0d(adr_id,adr,ierr)
-      endif                    
+
+         call set_e_app(t_step)
+
+      endif
+
+    else  !  V ADVECTION 
+
+      call transpose_xv()
+
+
+      call advection_v()
+
+      call transpose_vx()
+
 
     endif
-    
-    !write also initial deltaf function
-    call load_buffer_2d( layout_x1, f_x1-f_x1_equil, f_x1_buf1d )
 
-    call sll_collective_gatherv_real64( sll_world_collective,        &
-                                        f_x1_buf1d,                  &
-                                        local_size_x1*local_size_x2, &
-                                        collective_recvcnts,         &
-                                        collective_displs,           &
-                                        0,                           &
-                                        f_visu_buf1d )
+    split_T = .not.(split_T)
 
-    f_visu = reshape(f_visu_buf1d, shape(f_visu))
-
-    if (MPI_MASTER) then
-      call sll_binary_write_array_2d(deltaf_id,f_visu(1:np_x1-1,1:np_x2-1),ierr)
-      print *,'#step=',0,time_init+real(0,f64)*sim%dt,'iplot=',iplot
-    endif
-
-    iplot = iplot+1  
-
-    do istep = 1, sim%num_iterations
-
-      if (mod(istep,sim%freq_diag)==0) then
-        if (MPI_MASTER) then        
-          print *,'#step=',istep,time_init+real(istep,f64)*sim%dt,'iplot=',iplot
-        endif
-      endif  
-
-      split_T = sim%split%split_begin_T
-      t_step = real(istep-1,f64)
-
-      do split_istep=1,sim%split%nb_split_step
-
-        if (split_T) then
-          !! T ADVECTION 
-          tid=1          
-          !$OMP PARALLEL DEFAULT(SHARED) &
-          !$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid) 
-          !advection in x
-#ifdef _OPENMP
-          tid = omp_get_thread_num()+1
-#endif
-          !$OMP DO
-          do i_omp = 1, local_size_x2
-
-            ig_omp    = i_omp+global_indices(2)-1
-            alpha_omp = sim%factor_x1*node_positions_x2(ig_omp) &
-                      * sim%split%split_step(split_istep) 
-            f1d_omp_in(1:np_x1,tid) = f_x1(1:np_x1,i_omp)
-            
-            call sim%advect_x1(tid)%ptr%advect_1d_constant(  &
-              alpha_omp,                                     &
-              sim%dt,                                        &
-              f1d_omp_in(1:np_x1,tid),                       &
-              f1d_omp_out(1:np_x1,tid))
-
-            f_x1(1:np_x1,i_omp)=f1d_omp_out(1:np_x1,tid)
-
-          end do
-          !$OMP END DO          
-          !$OMP END PARALLEL
-
-          t_step = t_step+sim%split%split_step(split_istep)
-
-          !computation of electric field
-          rho_loc = 0._f64
-          ig = global_indices(2)-1
-          do i=1,np_x1
-            rho_loc(i)=rho_loc(i)                              &
-              +sum(f_x1(i,1:local_size_x2)                     &
-              *sim%integration_weight(1+ig:local_size_x2+ig))
-          end do
-              
-          call sll_collective_allreduce( sll_world_collective, &
-                                         rho_loc,              &
-                                         np_x1,                &
-                                         MPI_SUM,              &
-                                         rho )
-  
-          rho = sim%factor_x2_1*1._f64-sim%factor_x2_rho*rho
-  
-          call sim%poisson%compute_E_from_rho( efield, rho )
-
-          if (sim%driven) then
-
-            call PFenvelope(adr,                     &
-                            time_init+t_step*sim%dt, &
-                            sim%tflat,               &
-                            sim%tL,                  &
-                            sim%tR,                  &
-                            sim%twL,                 &
-                            sim%twR,                 &
-                            sim%t0,                  &
-                            sim%turn_drive_off)
-
-            do i = 1, np_x1
-              e_app(i) = sim%Edrmax*adr*sim%kx      &
-                       * sin(sim%kx*real(i-1,f64)   &
-                       * sim%mesh2d%delta_eta1      &
-                       - sim%omegadr*(time_init+t_step*sim%dt))
-            enddo
-
-          endif
-
-        else
-
-          !! V ADVECTION 
-          !transposition
-          call apply_remap_2D( remap_plan_x1_x2, f_x1, f_x2 )
-          call compute_local_sizes( layout_x2, local_size_x1, local_size_x2 )
-          global_indices(1:2) = local_to_global( layout_x2, (/1, 1/) )
-          tid = 1
-
-          !$OMP PARALLEL DEFAULT(SHARED) &
-          !$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid,mean_omp,f1d) 
-          !advection in v
-#ifdef _OPENMP
-          tid = omp_get_thread_num()+1
-#endif
-          !advection in v
-          !$OMP DO
-          do i_omp = 1,local_size_x1
-
-            ig_omp=i_omp+global_indices(1)-1
-
-            alpha_omp = -(efield(ig_omp)+e_app(ig_omp)) &
-                      * sim%split%split_step(split_istep)
-
-            f1d_omp_in(1:num_dof_x2,tid) = f_x2(i_omp,1:num_dof_x2)
-
-            if (sim%advection_form_x2==SLL_CONSERVATIVE) then
-
-              call function_to_primitive(f1d_omp_in(:,tid),    &
-                                         x2_array_unit,        &
-                                         np_x2-1,mean_omp)
-            endif
-
-            call sim%advect_x2(tid)%ptr%advect_1d_constant(    &
-              alpha_omp,                                       &
-              sim%dt,                                          &
-              f1d_omp_in(1:num_dof_x2,tid),                    &
-              f1d_omp_out(1:num_dof_x2,tid))
-
-            if (sim%advection_form_x2==SLL_CONSERVATIVE) then
-
-              call primitive_to_function(f1d_omp_out(:,tid),   &
-                                         x2_array_unit,        &
-                                         np_x2-1,              &
-                                         mean_omp)
-            endif
-            f_x2(i_omp,1:num_dof_x2) = f1d_omp_out(1:num_dof_x2,tid)
-          end do
-          !$OMP END DO          
-          !$OMP END PARALLEL
-
-          !transposition
-          call apply_remap_2D( remap_plan_x2_x1, f_x2, f_x1 )
-          call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
-          global_indices(1:2) = local_to_global( layout_x1, (/1, 1/) )
-
-        endif
-        !split_x= 1-split_x
-        split_T = .not.(split_T)
-      enddo
+  enddo
       
-     !!DIAGNOSTICS
      if (mod(istep,sim%freq_diag_time)==0) then
 
         time             = time_init+real(istep,f64)*sim%dt
@@ -811,5 +612,240 @@ if(sll_get_collective_rank(sll_world_collective)==0)then
 endif
 
 call sll_halt_collective()
+
+contains
+
+
+subroutine check_restart()
+
+if (trim(sim%restart_file) /= "no_restart_file" ) then
+
+  INQUIRE(FILE=trim(sim%restart_file)//'_proc_'//cproc//'.rst', EXIST=file_exists)
+
+  if (.not. file_exists) then
+    SLL_ERROR('#file '//trim(sim%restart_file)//'_proc_'//cproc//'.rst &
+              & does not exist')
+  endif
+
+  open(unit=restart_id, &
+       file=trim(sim%restart_file)//'_proc_'//cproc//'.rst', ACCESS="STREAM", &
+       form='unformatted', IOStat=ierr)      
+
+  if ( ierr .ne. 0 ) then
+    SLL_ERROR('ERROR while opening file &
+               &'//trim(sim%restart_file)//'_proc_'//cproc//'.rst &
+               & Called from run_vp2d_cartesian().')
+  end if
+
+  print *,'#read restart file '//trim(sim%restart_file)//'_proc_'//cproc//'.rst'      
+  call sll_binary_read_array_0d(restart_id,time_init,ierr)
+  call sll_binary_read_array_2d(restart_id,f_x1,ierr)
+  call sll_binary_file_close(restart_id,ierr)
+
+endif      
+
+if (sim%time_init_from_restart_file .eqv. .true.) then
+  sim%time_init = time_init  
+endif
+
+end subroutine check_restart
+
+subroutine plot_initial_distribution()
+
+call sll_binary_file_create('f0.bdat', file_id, ierr)
+call sll_binary_write_array_2d(file_id,f_visu(1:np_x1-1,1:np_x2-1),ierr)
+call sll_binary_file_close(file_id,ierr)
+
+call sll_plot_f_cartesian( iplot,             &
+                           f_visu,            &
+                           sim%x1_array,      &
+                           np_x1,             &
+                           node_positions_x2, &
+                           sim%num_dof_x2,    &
+                           'f',               &
+                           time_init )        
+
+print *,'#maxf',maxval(f_visu), minval(f_visu) 
+
+end subroutine plot_initial_distribution
+
+subroutine compute_rho()
+
+rho_loc = 0._f64
+ig = global_indices(2)-1
+do i=1,np_x1
+  rho_loc(i) = rho_loc(i)+sum(f_x1(i,:)*sim%integration_weight(1+ig:local_size_x2+ig))
+end do
+
+call sll_collective_allreduce( sll_world_collective, &
+                               rho_loc,              &
+                               np_x1,                &
+                               MPI_SUM,              &
+                               rho )
+
+rho = sim%factor_x2_1*1._f64-sim%factor_x2_rho*rho        
+
+end subroutine compute_rho
+
+subroutine set_e_app(step)
+
+sll_real64 :: step
+
+  call PFenvelope(adr,                   &
+                  time_init+step*sim%dt, &
+                  sim%tflat,             &
+                  sim%tL,                &
+                  sim%tR,                &
+                  sim%twL,               &
+                  sim%twR,               &
+                  sim%t0,                &
+                  sim%turn_drive_off)
+
+  do i = 1, np_x1
+    e_app(i) = sim%Edrmax*adr*sim%kx                          &
+             * sin(sim%kx*real(i-1,f64)*sim%mesh2d%delta_eta1 &
+             - sim%omegadr*(time_init+step*sim%dt))
+  enddo
+
+end subroutine set_e_app
+
+subroutine initial_diagnostics()
+
+call sll_ascii_file_create('thdiag.dat', th_diag_id, ierr)
+
+call sll_binary_file_create('deltaf.bdat', deltaf_id, ierr)
+call sll_binary_file_create('rhotot.bdat', rhotot_id, ierr)
+call sll_binary_file_create('efield.bdat', efield_id, ierr)
+call sll_binary_file_create('t.bdat', t_id, ierr)
+call sll_binary_write_array_1d(efield_id,efield(1:np_x1-1),ierr)
+call sll_binary_write_array_1d(rhotot_id,rho(1:np_x1-1),ierr)
+call sll_binary_write_array_0d(t_id,real(istep,f64)*sim%dt,ierr)
+
+if (sim%driven) then
+  call sll_binary_file_create('adr.bdat', adr_id, ierr)
+  call sll_binary_file_create('Edr.bdat', Edr_id, ierr)
+  call sll_binary_write_array_1d(Edr_id,e_app(1:np_x1-1),ierr)
+  call sll_binary_write_array_0d(adr_id,adr,ierr)
+endif                    
+
+end subroutine initial_diagnostics
+
+subroutine write_initial_deltaf()
+
+call load_buffer_2d( layout_x1, f_x1-f_x1_equil, f_x1_buf1d )
+
+call sll_collective_gatherv_real64( sll_world_collective,        &
+                                    f_x1_buf1d,                  &
+                                    local_size_x1*local_size_x2, &
+                                    collective_recvcnts,         &
+                                    collective_displs,           &
+                                    0,                           &
+                                    f_visu_buf1d )
+
+f_visu = reshape(f_visu_buf1d, shape(f_visu))
+
+if (MPI_MASTER) then
+  call sll_binary_write_array_2d(deltaf_id,f_visu(1:np_x1-1,1:np_x2-1),ierr)
+  print *,'#step=',0,time_init+real(0,f64)*sim%dt,'iplot=',iplot
+endif
+
+end subroutine write_initial_deltaf
+
+subroutine advection_x()
+
+!$OMP PARALLEL DEFAULT(SHARED) &
+!$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid) 
+!advection in x
+#ifdef _OPENMP
+      tid = omp_get_thread_num()+1
+#else
+      tid=1          
+#endif
+
+!$OMP DO
+do i_omp = 1, local_size_x2
+
+  ig_omp    = i_omp+global_indices(2)-1
+  alpha_omp = sim%factor_x1*node_positions_x2(ig_omp) &
+            * sim%split%split_step(split_istep) 
+  f1d_omp_in(1:np_x1,tid) = f_x1(1:np_x1,i_omp)
+      
+  call sim%advect_x1(tid)%ptr%advect_1d_constant(  &
+    alpha_omp,                                     &
+    sim%dt,                                        &
+    f1d_omp_in(1:np_x1,tid),                       &
+    f1d_omp_out(1:np_x1,tid))
+
+  f_x1(1:np_x1,i_omp)=f1d_omp_out(1:np_x1,tid)
+
+end do
+!$OMP END DO          
+!$OMP END PARALLEL
+
+end subroutine advection_x
+
+subroutine advection_v()
+
+!$OMP PARALLEL DEFAULT(SHARED) &
+!$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid,mean_omp,f1d) 
+!advection in v
+#ifdef _OPENMP
+tid = omp_get_thread_num()+1
+#else
+tid = 1
+#endif
+    
+!$OMP DO
+do i_omp = 1,local_size_x1
+
+  ig_omp=i_omp+global_indices(1)-1
+
+  alpha_omp = -(efield(ig_omp)+e_app(ig_omp)) &
+                * sim%split%split_step(split_istep)
+
+  f1d_omp_in(1:num_dof_x2,tid) = f_x2(i_omp,1:num_dof_x2)
+
+  if (sim%advection_form_x2==SLL_CONSERVATIVE) then
+
+    call function_to_primitive(f1d_omp_in(:,tid),    &
+                               x2_array_unit,        &
+                               np_x2-1,mean_omp)
+  endif
+
+  call sim%advect_x2(tid)%ptr%advect_1d_constant(    &
+    alpha_omp,                                       &
+    sim%dt,                                          &
+    f1d_omp_in(1:num_dof_x2,tid),                    &
+    f1d_omp_out(1:num_dof_x2,tid))
+
+  if (sim%advection_form_x2==SLL_CONSERVATIVE) then
+
+    call primitive_to_function(f1d_omp_out(:,tid),   &
+                               x2_array_unit,        &
+                               np_x2-1,              &
+                               mean_omp)
+  endif
+      f_x2(i_omp,1:num_dof_x2) = f1d_omp_out(1:num_dof_x2,tid)
+end do
+!$OMP END DO          
+!$OMP END PARALLEL
+
+end subroutine advection_v
+
+subroutine transpose_xv()
+
+call apply_remap_2D( remap_plan_x1_x2, f_x1, f_x2 )
+call compute_local_sizes( layout_x2, local_size_x1, local_size_x2 )
+global_indices(1:2) = local_to_global( layout_x2, (/1, 1/) )
+
+end subroutine transpose_xv
+
+subroutine transpose_vx()
+
+call apply_remap_2D( remap_plan_x2_x1, f_x2, f_x1 )
+call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
+global_indices(1:2) = local_to_global( layout_x1, (/1, 1/) )
+
+end subroutine transpose_vx
 
 end program vlasov_ampere_2d
