@@ -113,6 +113,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_polar_solver.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_base.F90
     ${SLL_DIR}/fft/sll_fft_utils.F90
+    ${SLL_DIR}/integration/rectangle.F90
+    ${SLL_DIR}/integration/trapz.F90
     ${SLL_DIR}/integration/gauss_legendre.F90
     ${SLL_DIR}/integration/gauss_lobatto.F90
     ${SLL_DIR}/simulations/simulations_sequential/sim_CG_polar/sll_polar_operators.F90
