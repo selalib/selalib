@@ -1374,46 +1374,6 @@ contains
     f_equilibrium = 1.0_f64/sqrt(2*sll_pi)*exp(-0.5_f64*v*v)
   end function f_equilibrium
 
-  subroutine PFenvelope(S, t, tflat, tL, tR, twL, twR, t0, &
-       turn_drive_off)
-
-    ! DESCRIPTION
-    ! -----------
-    ! S: the wave form at a given point in time. This wave form is 
-    !    not scaled (its maximum value is 1).
-    ! t: the time at which the envelope is being evaluated
-    ! tflat, tL, tR, twL, twR, tstart, t0: the parameters defining the
-    !    envelope, defined in the main portion of this program.
-    ! turn_drive_off: 1 if the drive should be turned off after a time
-    !    tflat, and 0 otherwise
-
-    sll_real64, intent(in) :: t, tflat, tL, tR, twL, twR, t0
-    sll_real64, intent(out) :: S
-    logical, intent(in) :: turn_drive_off
-    ! local variables
-    !sll_int32 :: i 
-    sll_real64 :: epsilon
-
-    ! The envelope function is defined such that it is zero at t0,
-    ! rises to 1 smoothly, stay constant for tflat, and returns
-    ! smoothly to zero.
-    if(turn_drive_off) then
-       epsilon = 0.5*(tanh((t0-tL)/twL) - tanh((t0-tR)/twR))
-       S = 0.5*(tanh((t-tL)/twL) - tanh((t-tR)/twR)) - epsilon
-       S = S / (1-epsilon)
-    else
-       epsilon = 0.5*(tanh((t0-tL)/twL) + 1)
-       S = 0.5*(tanh((t-tL)/twL) + 1) - epsilon
-       S = S / (1-epsilon)
-    endif
-    if(S<0) then
-       S = 0.
-    endif
-    S = S+0._f64*tflat ! just to remove unused tflat
-    return
-  end subroutine PFenvelope
-
-
 #ifndef NOHDF5
 !*********************
 !*********************

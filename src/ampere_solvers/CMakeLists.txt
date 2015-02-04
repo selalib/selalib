@@ -1,12 +1,11 @@
 IF(FFTW_FOUND AND FFTW_ENABLED)
 
-  ADD_LIBRARY(sll_ampere_solvers STATIC ../fft/fftw3/fftw3.F90
-                                         sll_ampere_1d_pstd.F90)
+  ADD_LIBRARY(sll_ampere_solvers STATIC sll_ampere_1d_pstd.F90)
 
   TARGET_LINK_LIBRARIES(sll_ampere_solvers 
                         sll_boundary_condition_descriptors
                         sll_utilities
-                        ${FFTW_LIBRARIES})
+                        sll_fft)
 
   IF(BUILD_TESTING)
      ADD_EXECUTABLE(test_ampere_1d_pstd unit_test_1d_pstd.F90 )
