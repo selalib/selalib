@@ -121,7 +121,13 @@ init_from_unit_test = .false.
 
 call sll_boot_collective()
 
-if(sll_get_collective_rank(sll_world_collective)==0)then
+if (sll_get_collective_rank(sll_world_collective)==0) then
+  MPI_MASTER = .true.
+else
+  MPI_MASTER = .false.
+end if
+
+if (MPI_MASTER) then
 
   print *, '#Start time mark t0'
   call sll_set_time_mark(t0)
@@ -157,11 +163,6 @@ if (init_from_unit_test) then
 
 endif
 
-if (sll_get_collective_rank(sll_world_collective)==0) then
-  MPI_MASTER = .true.
-else
-  MPI_MASTER = .false.
-end if
 
 iplot = 1
 
@@ -249,16 +250,8 @@ select case (sim%advection_form_x2)
     SLL_ERROR('#not implemented')
 end select  
         
-if (MPI_MASTER) then
 
-  call sll_binary_file_create("x.bdat", file_id, ierr)
-  call sll_binary_write_array_1d(file_id,sim%x1_array(1:np_x1-1),ierr)
-  call sll_binary_file_close(file_id,ierr)                    
-  call sll_binary_file_create("v.bdat", file_id, ierr)
-  call sll_binary_write_array_1d(file_id,node_positions_x2(1:np_x2-1),ierr)
-  call sll_binary_file_close(file_id,ierr)                                             
 
-endif
 
 call sll_2d_parallel_array_initializer_cartesian( &
    layout_x1,                                     &
@@ -485,6 +478,12 @@ end subroutine save_for_restart
 
 subroutine plot_initial_distribution()
 
+call sll_binary_file_create("x.bdat", file_id, ierr)
+call sll_binary_write_array_1d(file_id,sim%x1_array(1:np_x1-1),ierr)
+call sll_binary_file_close(file_id,ierr)                    
+call sll_binary_file_create("v.bdat", file_id, ierr)
+call sll_binary_write_array_1d(file_id,node_positions_x2(1:np_x2-1),ierr)
+call sll_binary_file_close(file_id,ierr)                                             
 call sll_binary_file_create('f0.bdat', file_id, ierr)
 call sll_binary_write_array_2d(file_id,f_visu(1:np_x1-1,1:np_x2-1),ierr)
 call sll_binary_file_close(file_id,ierr)
@@ -503,6 +502,7 @@ print *,'#maxf',maxval(f_visu), minval(f_visu)
 end subroutine plot_initial_distribution
 
 subroutine compute_rho()
+
 sll_int32 :: global_indices(2)
 sll_int32 :: local_size_x1
 sll_int32 :: local_size_x2
@@ -528,6 +528,7 @@ rho = sim%factor_x2_1*1._f64-sim%factor_x2_rho*rho
 end subroutine compute_rho
 
 subroutine compute_current()
+
 sll_int32  :: global_indices(2)
 sll_int32  :: local_size_x1
 sll_int32  :: local_size_x2
