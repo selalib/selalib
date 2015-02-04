@@ -46,6 +46,7 @@ use sll_common_array_initializers_module
 use sll_parallel_array_initializer_module
 use sll_module_advection_1d_periodic
 use sll_module_advection_1d_non_uniform_cubic_splines
+use sll_module_advection_1d_spectral
 use sll_poisson_1d_periodic  
 use sll_fft
 use sll_simulation_base
@@ -72,8 +73,6 @@ use omp_lib
    sll_real64, dimension(:),   pointer  :: x1_array
    sll_real64, dimension(:),   pointer  :: x2_array
    sll_real64, dimension(:,:), pointer  :: x2_array_omp
-   sll_real64, dimension(:),   pointer  :: x1_array_light
-   sll_real64, dimension(:),   pointer  :: x2_array_light
    sll_real64, dimension(:),   pointer  :: integration_weight
    sll_int32,  dimension(:),   pointer  :: every_x1
    sll_int32,  dimension(:),   pointer  :: every_x2
@@ -81,9 +80,6 @@ use omp_lib
    sll_int32                            :: num_bloc_x2
    sll_int32,  dimension(:),   pointer  :: bloc_index_x1
    sll_int32,  dimension(:),   pointer  :: bloc_index_x2
-   sll_int32                            :: light_size_x1
-   sll_int32                            :: light_size_x2
-   sll_int32                            :: num_dof_x2_light
    
    sll_real64                 :: kx
    sll_real64                 :: eps
@@ -127,7 +123,7 @@ use omp_lib
    sll_real64 :: factor_x2_rho
    sll_real64 :: factor_x2_1
 
-   class(sll_poisson_1d_base), pointer   :: poisson 
+   class(sll_poisson_1d_base), pointer :: poisson 
            
    contains !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -506,14 +502,6 @@ contains
 
     sim%every_x1(1) = every_x1
     sim%bloc_index_x1(sim%num_bloc_x1) = num_cells_x1+1
-    sim%light_size_x1 = compute_light_size(num_cells_x1+1,every_x1)   
-    SLL_ALLOCATE(sim%x1_array_light(sim%light_size_x1),ierr)
-
-    call compute_light_mesh( num_cells_x1+1,     &
-                             sim%x1_array,       &
-                             sim%x1_array_light, &
-                             sim%light_size_x1,  &
-                             every_x1 )
         
     select case (mesh_case_x2)
 
@@ -529,15 +517,6 @@ contains
         SLL_ALLOCATE(sim%bloc_index_x2(sim%num_bloc_x2),ierr)
         sim%every_x2(1) = every_x2
         sim%bloc_index_x2(sim%num_bloc_x2) = num_cells_x2+1
-        sim%light_size_x2 = compute_light_size(num_cells_x2+1,every_x2)   
-        !sim%light_size_x1 = compute_light_size_bloc(sim%bloc_index_x1,sim%every_x1)   
-        SLL_ALLOCATE(sim%x2_array_light(sim%light_size_x2),ierr)
-
-        call compute_light_mesh( num_cells_x2+1,     &
-                                 sim%x2_array,       & 
-                                 sim%x2_array_light, &
-                                 sim%light_size_x2,  &
-                                 every_x2 )
 
       case ("SLL_TWO_GRID_MESH")
 
@@ -564,14 +543,7 @@ contains
         sim%every_x2(1) = every_x2_min_to_x2_fine_min
         sim%every_x2(2) = every_x2_fine_min_to_x2_fine_max
         sim%every_x2(3) = every_x2_fine_max_to_x2_max
-        sim%light_size_x2 = compute_light_size_3_bloc( bloc_index, sim%every_x2 )
-        SLL_ALLOCATE(sim%x2_array_light(sim%light_size_x2),ierr)
 
-        call compute_light_mesh_3_bloc( bloc_index,         &
-                                        sim%x2_array,       &
-                                        sim%x2_array_light, &
-                                        sim%light_size_x2,  &
-                                        sim%every_x2 )
       case default
 
         SLL_ERROR('#mesh_case_x2 '//mesh_case_x2//' not implemented')
@@ -690,13 +662,14 @@ contains
     !advector
     SLL_ALLOCATE(sim%advect_x1(num_threads),ierr)
     SLL_ALLOCATE(sim%advect_x2(num_threads),ierr)
-    tid = 1
 
     !$OMP PARALLEL DEFAULT(SHARED) &
     !$OMP PRIVATE(tid)
 
 #ifdef _OPENMP
     tid = omp_get_thread_num()+1
+#else
+    tid = 1
 #endif
 
 
@@ -723,7 +696,6 @@ contains
       case default
 
         SLL_ERROR('#advector in x1 '//advector_x1//' not implemented')
-        stop 
 
     end select    
 
@@ -770,11 +742,9 @@ contains
       case ("SLL_ADVECTIVE")
         sim%advection_form_x2 = SLL_ADVECTIVE
         sim%num_dof_x2        = num_cells_x2+1
-        sim%num_dof_x2_light  = sim%light_size_x2
       case ("SLL_CONSERVATIVE")
         sim%advection_form_x2 = SLL_CONSERVATIVE
         sim%num_dof_x2        = num_cells_x2
-        sim%num_dof_x2_light  = sim%light_size_x2-1
       case default
         SLL_ERROR('#advection_form_x2 '//advection_form_x2//' not implemented')
     end select  
@@ -910,6 +880,7 @@ contains
     sll_real64, dimension(:),   pointer :: efield
     sll_real64, dimension(:),   pointer :: e_app
     sll_real64, dimension(:),   pointer :: rho_loc
+    sll_real64, dimension(:),   pointer :: current
     
     sll_int32 :: rhotot_id
     sll_int32 :: efield_id     
@@ -930,7 +901,6 @@ contains
     sll_real64, dimension(:,:), pointer :: f1d_omp_out
     sll_int32                           :: np_x1
     sll_int32                           :: np_x2
-    sll_int32                           :: np_x1_light
     sll_int32                           :: nproc_x1
     sll_int32                           :: nproc_x2
     sll_int32                           :: global_indices(2)
@@ -952,7 +922,6 @@ contains
     sll_real64, dimension(:), allocatable :: x2_array_unit
     sll_real64, dimension(:), allocatable :: x2_array_middle
     sll_real64, dimension(:), allocatable :: node_positions_x2
-    sll_real64, dimension(:), allocatable :: node_positions_x2_light
 
     sll_int32                             :: file_id
     
@@ -965,7 +934,6 @@ contains
     sll_real64 :: time_init
     sll_int32  :: split_istep
     sll_int32  :: num_dof_x2 
-    sll_int32  :: num_dof_x2_light
      
     logical :: split_T
     
@@ -974,7 +942,6 @@ contains
     sll_int32, dimension(:),   allocatable :: collective_displs
     sll_int32, dimension(:),   allocatable :: collective_recvcnts
     sll_real64,dimension(:,:), pointer     :: f_visu 
-    sll_real64,dimension(:,:), pointer     :: f_visu_light 
     sll_real64,dimension(:),   pointer     :: f_visu_buf1d
     sll_real64,dimension(:),   pointer     :: f_x1_buf1d
     sll_real64,dimension(:),   pointer     :: f_hat_x2_loc
@@ -1005,21 +972,16 @@ contains
     np_x1            = sim%mesh2d%num_cells1+1
     np_x2            = sim%mesh2d%num_cells2+1
     num_dof_x2       = sim%num_dof_x2
-    num_dof_x2_light = sim%num_dof_x2_light
-    np_x1_light      = sim%light_size_x1
-    
     if (MPI_MASTER) then
 
       print *,'#collective_size=',sll_get_collective_size(sll_world_collective)
       SLL_ALLOCATE(f_visu(np_x1,num_dof_x2),ierr)
       SLL_ALLOCATE(f_visu_buf1d(np_x1*num_dof_x2),ierr)
-      SLL_ALLOCATE(f_visu_light(np_x1_light,num_dof_x2_light),ierr)
 
     else
 
       SLL_ALLOCATE(f_visu(1:1,1:1),ierr)          
       SLL_ALLOCATE(f_visu_buf1d(1:1),ierr)
-      SLL_ALLOCATE(f_visu_light(1:1,1:1),ierr)          
 
     endif
     
@@ -1057,6 +1019,7 @@ contains
     
     SLL_ALLOCATE(rho(np_x1),ierr)
     SLL_ALLOCATE(rho_loc(np_x1),ierr)
+    SLL_ALLOCATE(current(np_x1),ierr)
     SLL_ALLOCATE(efield(np_x1),ierr)
     SLL_ALLOCATE(e_app(np_x1),ierr)
     SLL_ALLOCATE(f1d(max(np_x1,np_x2)),ierr)
@@ -1066,7 +1029,6 @@ contains
     SLL_ALLOCATE(x2_array_unit(np_x2),ierr)
     SLL_ALLOCATE(x2_array_middle(np_x2),ierr)
     SLL_ALLOCATE(node_positions_x2(num_dof_x2),ierr)
-    SLL_ALLOCATE(node_positions_x2_light(num_dof_x2),ierr)
     SLL_ALLOCATE(f_hat_x2_loc(nb_mode+1),ierr)
     SLL_ALLOCATE(f_hat_x2(nb_mode+1),ierr)
 
@@ -1084,9 +1046,7 @@ contains
         node_positions_x2(1:num_dof_x2) = x2_array_middle(1:num_dof_x2)
       case default
         print *,'#sim%advection_form_x2=',sim%advection_form_x2
-        print *,'#not implemented'
-        print *,'#in run_vp2d_cartesian'
-        stop
+        SLL_ERROR('#not implemented')
     end select  
         
 
@@ -1181,14 +1141,14 @@ contains
       call sll_binary_write_array_2d(file_id,f_visu(1:np_x1-1,1:np_x2-1),ierr)
       call sll_binary_file_close(file_id,ierr)
 
-      call plot_f_cartesian( iplot,             &
-                             f_visu,            &
-                             sim%x1_array,      &
-                             np_x1,             &
-                             node_positions_x2, &
-                             sim%num_dof_x2,    &
-                             'f',               &
-                             time_init )        
+      call sll_plot_f_cartesian( iplot,             &
+                                 f_visu,            &
+                                 sim%x1_array,      &
+                                 np_x1,             &
+                                 node_positions_x2, &
+                                 sim%num_dof_x2,    &
+                                 'f',               &
+                                 time_init )        
 
       print *,'#maxf',maxval(f_visu), minval(f_visu) 
 
@@ -1338,11 +1298,11 @@ contains
                                          np_x1,                &
                                          MPI_SUM,              &
                                          rho )
-
+  
           rho = sim%factor_x2_1*1._f64-sim%factor_x2_rho*rho
-
+  
           call sim%poisson%compute_E_from_rho( efield, rho )
-          
+
           if (sim%driven) then
 
             call PFenvelope(adr,                     &
@@ -1570,14 +1530,14 @@ contains
             call sll_binary_write_array_2d(deltaf_id,           &
                                            f_visu(1:np_x1-1,1:np_x2-1),ierr)  
 
-            call plot_f_cartesian( &
-              iplot,               &
-              f_visu,              &
-              sim%x1_array,        &
-              np_x1,               &
-              node_positions_x2,   &
-              sim%num_dof_x2,      &
-              'deltaf',time)                    
+            call sll_plot_f_cartesian( &
+                  iplot,               &
+                  f_visu,              &
+                  sim%x1_array,        &
+                  np_x1,               &
+                  node_positions_x2,   &
+                  sim%num_dof_x2,      &
+                  'deltaf',time)                    
           
           
           endif
@@ -1611,13 +1571,13 @@ contains
               node_positions_x2(1:num_dof_x2), &
               'intfdx')
 
-            call plot_f_cartesian( iplot,             &
-                                   f_visu,            &
-                                   sim%x1_array,      &
-                                   np_x1,             &
-                                   node_positions_x2, &
-                                   sim%num_dof_x2,    &
-                                   'f', time)                    
+            call sll_plot_f_cartesian( iplot,             &
+                                       f_visu,            &
+                                       sim%x1_array,      &
+                                       np_x1,             &
+                                       node_positions_x2, &
+                                       sim%num_dof_x2,    &
+                                       'f', time)                    
           endif
 
           iplot = iplot+1  
@@ -1651,456 +1611,6 @@ contains
     
   end subroutine delete_vp2d_par_cart
 
-  subroutine function_to_primitive(f,node_positions,N,M)
-
-    sll_real64,dimension(:),intent(inout) :: f
-    sll_real64,dimension(:),intent(in)    :: node_positions
-    sll_int32,              intent(in)    :: N
-    sll_real64,             intent(out)   :: M
-
-    sll_int32  :: i
-    sll_real64 :: dx,tmp,tmp2
-
-    dx = 1._f64/real(N,f64)
-        
-    !from f compute the mean
-    M=0._f64
-    do i=1,N
-      M=M+f(i)*(node_positions(i+1)-node_positions(i))
-    enddo
-    
-    f(1)=(f(1)-M)*(node_positions(2)-node_positions(1))
-    tmp=f(1)
-    f(1)=0._f64
-    do i=2,N!+1
-      f(i)=(f(i)-M)*(node_positions(i+1)-node_positions(i))
-      tmp2=f(i)
-      f(i)=f(i-1)+tmp
-      tmp=tmp2
-    enddo    
-    f(N+1)=f(N)+tmp
-
-  end subroutine function_to_primitive
-
-  subroutine primitive_to_function(f,node_positions,N,M)
-    sll_real64, dimension(:), intent(inout) :: f
-    sll_real64, dimension(:), intent(in)    :: node_positions
-    sll_int32,                intent(in)    :: N
-    sll_real64,               intent(in)    :: M
-
-    sll_int32                               :: i
-    sll_real64                              :: tmp
-    sll_real64                              :: dx 
-
-    dx = 1._f64/real(N,f64)
-    
-    tmp=f(1)
-    do i=1,N-1
-      f(i)=f(i+1)-f(i)+M*(node_positions(i+1)-node_positions(i))
-    enddo
-    f(N)=tmp-f(N)+M*(node_positions(1)+1._f64-node_positions(N))
-
-    !from mean compute f
-    do i=1,N
-      f(i)=f(i)/(node_positions(i+1)-node_positions(i))
-    enddo
-
-    f(N+1) = f(1)
-
-  end subroutine primitive_to_function
-
-  ! Input: 
-  !  a=bloc_coord(1) b=bloc_coord(2)
-  !  (a,b) \subset (0,1) is the refine zone
-  !  bloc_index(1) = density of points in (0,a) 
-  !  bloc_index(2) = density of points in (a,b) 
-  !  bloc_index(3) = density of points in (b,1)
-  !
-  ! Output:
-  !  0<=i1<i1+N_fine<=N and x(i1)=a, x(i1+N_fine)=b (approx), x(0)=0, x(N)=1
-  !  bloc_coord(1) = x(i1)
-  !  bloc_coord(2) = x(i1+N_fine)
-  !  bloc_index(1) = i1 
-  !  bloc_index(2) = N_fine 
-  !  bloc_index(3) = N-i1-N_fine
-
-  subroutine compute_bloc(bloc_coord,bloc_index,N)
-
-    sll_real64, intent(inout)  :: bloc_coord(2)
-    sll_int32,  intent(inout)  :: bloc_index(3)
-    sll_int32,  intent(in)     :: N
-
-    sll_real64 :: a,b
-    sll_int32  :: i1,i2,N_coarse,N_local,N_fine
-    
-    a=bloc_coord(1)
-    b=bloc_coord(2)
-    
-    !case of uniform mesh with refined zone
-    !we have a coarse mesh with N_coarse
-    !N=i1+N_local*(i2-i1)+N_coarse-i2
-    !N_fine=N_local*(i2-i1)
-    !x(i1)=i1/N_coarse x(i1+N_fine)=i2/N_coarse
-
-    if ((bloc_index(1)==1).and.(bloc_index(3)==1)) then      
-
-      N_local = bloc_index(2)
-      N_coarse = floor(real(N,f64)/(1._f64+(b-a)*(real(N_local,f64)-1._f64)))
-      if (N_local/=1) then
-        i2 = (N-N_coarse)/(N_local-1)
-      else
-        i2 = floor((b-a)*N_coarse)  
-      endif   
-      N_coarse      = N-i2*(N_local-1)
-      i1            = floor(a*N_coarse)
-      i2            = i2+i1
-      bloc_index(1) = i1
-      N_fine        = N_local*(i2-i1)
-      bloc_index(2) = N_fine
-      bloc_index(3) = N-i1-N_fine
-      bloc_coord(1) = real(i1,f64)/real(N_coarse,f64)
-      bloc_coord(2) = real(i2,f64)/real(N_coarse,f64)
-           
-      print *,'#uniform fine mesh would be:',N_coarse*N_local
-      print *,'#N_coarse=',N_coarse
-      print *,'#saving:',real(N,f64)/real(N_coarse*N_local,f64)
-      print *,'#new x(i1),x(i1+N_fine)=',bloc_coord(1),bloc_coord(2)
-      print *,'#error for x(i1),x(i1+N_fine)=',bloc_coord(1)-a,bloc_coord(2)-b
-      print *,'#i1,i1+N_fine,N_fine,N=',i1,i1+N_fine,N_fine,N
-
-    else
-
-      SLL_ERROR('case in compute_bloc not implemented yet')
-
-    endif
-    
-    
-  end subroutine compute_bloc
-  
-  
-  !Input:   
-  !  x1=bloc_coord(1),x2=bloc_coord(2)
-  !  with 0<i1<i2<N i1=bloc_index(1), i2=i1+bloc_index(2)
-  !  N=bloc_index(1)+bloc_index(2)+bloc_index(3)
-  !
-  !Output:  
-  !  node_positions(1:N+1)
-  !  with constraints node_positions(i1+1)=x1,node_positions(i2+1)=x2
-  !  node_positions(1)=0, node_positions(N+1)=1
-  subroutine compute_mesh_from_bloc(bloc_coord,bloc_index,node_positions)
-
-    sll_int32,               intent(in)  :: bloc_index(3)
-    sll_real64,              intent(in)  :: bloc_coord(2)
-    sll_real64,dimension(:), intent(out) :: node_positions
-
-    sll_int32  :: i, i1, i2, N
-    sll_real64 :: dx
-    
-    N                     = bloc_index(1)+bloc_index(2)+bloc_index(3)
-    i1                    = bloc_index(1)
-    i2                    = i1+bloc_index(2)
-    node_positions(1:N+1) = -1._f64
-    node_positions(1)     = 0._f64
-    node_positions(i1+1)  = bloc_coord(1)
-    node_positions(i2+1)  = bloc_coord(2)
-    node_positions(N+1)   = 1._f64
-    
-    !piecewise linear mapping (maybe enhanced like in complete mesh)
-    dx=bloc_coord(1)/real(bloc_index(1),f64)
-    do i=2,bloc_index(1)
-       node_positions(i) = (real(i,f64)-1._f64)*dx
-    enddo
-    dx=(bloc_coord(2)-bloc_coord(1))/real(bloc_index(2),f64)
-    do i=2,bloc_index(2)
-      node_positions(i+i1)=bloc_coord(1)+(real(i,f64)-1._f64)*dx
-    enddo
-    dx=(1._f64-bloc_coord(2))/real(bloc_index(3),f64)
-    do i=2,bloc_index(3)
-      node_positions(i+i2)=bloc_coord(2)+(real(i,f64)-1._f64)*dx
-    enddo
-          
-  end subroutine compute_mesh_from_bloc
-
-  function compute_light_size( bloc_index, every ) result(light_size)
-
-    sll_int32, intent(in) :: bloc_index
-    sll_int32, intent(in) :: every
-
-    sll_int32 :: light_size
-    sll_int32 :: i
-    sll_int32 :: s
-        
-    s = 1
-    do i=1,bloc_index-1,every
-      s = s+1
-    enddo
-    light_size = s      
-
-  end function compute_light_size
-
-  function compute_light_size_3_bloc( bloc_index, every ) result(light_size)
-
-    sll_int32, intent(in) :: bloc_index(3)
-    sll_int32, intent(in) :: every(3)
-
-    sll_int32 :: light_size
-    sll_int32 :: i1
-    sll_int32 :: i2
-    sll_int32 :: i
-    sll_int32 :: s
-        
-    i1 = bloc_index(1)
-    i2 = i1 + bloc_index(2)
-    s = 0
-    do i=1,bloc_index(1)-1,every(1)
-      s = s+1
-    enddo
-    s = s+1 !for bloc_index(1)
-    do i=2,bloc_index(2)-1,every(2)
-      s = s+1
-    enddo
-    s = s+1 !for bloc_index(2)
-    do i=2,bloc_index(3)-1,every(3)
-      s = s+1
-    enddo
-    s = s+1 !for bloc_index(3)
-    light_size = s      
-
-  end function compute_light_size_3_bloc
-
-  function compute_light_size_bloc( bloc_index, num_bloc, every ) result(light_size)
-
-    sll_int32, dimension(:), intent(in) :: bloc_index
-    sll_int32,               intent(in) :: num_bloc 
-    sll_int32, dimension(:), intent(in) :: every
-
-    sll_int32 :: light_size
-    sll_int32 :: i
-    sll_int32 :: j
-    sll_int32 :: s
-    
-    if (size(bloc_index)<num_bloc) then
-      print *,'#bad size for every',size(bloc_index),num_bloc
-      SLL_ERROR( '#in function compute_light_size_bloc')
-    endif
-
-    if (size(every)<num_bloc) then
-      print *,'#bad size for every',size(every),num_bloc
-      SLL_ERROR( '#in function compute_light_size_bloc')
-    endif
-
-    s = 0
-    do j=1,num_bloc
-      do i=1,bloc_index(j)-1,every(j)
-        s = s+1
-      enddo    
-      s = s+1 !for bloc_index(1)
-    enddo  
-    light_size = s      
-
-  end function compute_light_size_bloc
-
-  subroutine compute_light_mesh_3_bloc( bloc_index,           &
-                                        node_positions,       &
-                                        light_node_positions, &
-                                        light_size,           &
-                                        every )
-
-    sll_int32,                intent(in)  :: bloc_index(3)
-    sll_real64, dimension(:), intent(in)  :: node_positions
-    sll_real64, dimension(:), intent(out) :: light_node_positions
-    sll_int32,                intent(in)  :: light_size
-    sll_int32,                intent(in)  :: every(3)
-
-    sll_int32                             :: i,i1,i2,s
-    
-    if (size(light_node_positions)<light_size) then
-      print *,'#bad value of light_size',light_size
-      print *,'#or allocation of light_node_positions',size(light_node_positions)
-      SLL_ERROR('#in compute_light_mesh')
-    endif
-    i1=bloc_index(1)
-    i2=i1+bloc_index(2)
-
-    s = 0
-    do i=1,bloc_index(1)-1,every(1)
-      s = s+1
-      light_node_positions(s) = node_positions(i)
-    enddo
-    i=bloc_index(1)
-    s = s+1
-    light_node_positions(s) = node_positions(i)
-    do i=2,bloc_index(2)-1,every(2)
-      s = s+1
-      light_node_positions(s) = node_positions(i+i1)
-    enddo
-    i=bloc_index(2)
-    s = s+1
-    light_node_positions(s) = node_positions(i+i1)
-    do i=2,bloc_index(3)-1,every(3)
-      s = s+1
-      light_node_positions(s) = node_positions(i+i2)
-    enddo
-    i=bloc_index(3)
-    s = s+1 !for bloc_index(3)
-    light_node_positions(s) = node_positions(i+i2)
-
-    if (s /= light_size) then
-      print *,'#bad value of light_size',light_size,s
-      print *,'#in compute_light_mesh'
-      stop
-    endif
-    
-          
-  end subroutine compute_light_mesh_3_bloc
-
-
-  subroutine compute_light_mesh_bloc( bloc_index,           &
-                                      num_bloc,             &
-                                      node_positions,       & 
-                                      light_node_positions, &
-                                      light_size,           &
-                                      every )
-
-    sll_int32,  dimension(:), intent(in)  :: bloc_index
-    sll_int32                             :: num_bloc
-    sll_real64, dimension(:), intent(in)  :: node_positions
-    sll_real64, dimension(:), intent(out) :: light_node_positions
-    sll_int32,                intent(in)  :: light_size
-    sll_int32,  dimension(:), intent(in)  :: every
-
-    sll_int32 :: i, i1, s, j
-
-    if (size(light_node_positions)<light_size) then
-      print *,'#bad value of light_size',light_size
-      print *,'#or allocation of light_node_positions',size(light_node_positions)
-      SLL_ERROR('#in compute_light_mesh')
-    endif
-    
-    s = 0    
-    do i=1,bloc_index(1)-1,every(1)
-      s = s+1
-      light_node_positions(s) = node_positions(i)
-    enddo
-    i=bloc_index(1)
-    s = s+1
-    light_node_positions(s) = node_positions(i)
-    i1=0
-    do j=2,num_bloc
-      i1 = i1+bloc_index(j-1)
-      do i=2,bloc_index(j)-1,every(j)
-        s = s+1
-        light_node_positions(s) = node_positions(i+i1)
-      enddo
-      i=bloc_index(j)
-      s = s+1
-      light_node_positions(s) = node_positions(i+i1)
-    enddo  
-
-    if (s /= light_size) then
-      print *,'#bad value of light_size',light_size,s
-      print *,'#in compute_light_mesh'
-      stop
-    endif
-    
-  end subroutine compute_light_mesh_bloc
-
-  subroutine compute_light_mesh( bloc_index,           &
-                                 node_positions,       &
-                                 light_node_positions, &
-                                 light_size,           &
-                                 every                 )
-
-    sll_int32,                intent(in)  :: bloc_index
-    sll_real64, dimension(:), intent(in)  :: node_positions
-    sll_real64, dimension(:), intent(out) :: light_node_positions
-    sll_int32, intent(in)                 :: light_size
-    sll_int32, intent(in)                 :: every
-    sll_int32::i,s
-    
-    if (size(light_node_positions)<light_size) then
-      print *,'#bad value of light_size',light_size
-      print *,'#or allocation of light_node_positions',size(light_node_positions)
-      print *,'#in compute_light_mesh'
-      stop
-    endif
-    s = 0
-    do i=1,bloc_index-1,every
-      s = s+1
-      light_node_positions(s) = node_positions(i)
-    enddo
-    i=bloc_index
-    s = s+1
-    light_node_positions(s) = node_positions(i)
-
-    if (s /= light_size) then
-      print *,'#bad value of light_size',light_size,s
-      print *,'#in compute_light_mesh'
-      stop
-    endif
-          
-  end subroutine compute_light_mesh
-  
-  subroutine compute_full_to_light_2d( bloc_index_x1, &
-                                       every_x1,      &
-                                       num_bloc_x1,   &
-                                       bloc_index_x2, &
-                                       every_x2,      &
-                                       num_bloc_x2,   &
-                                       f_full,        &
-                                       np_x1,         &
-                                       np_x2,         &
-                                       f_light,       &
-                                       light_size_x1, &
-                                       light_size_x2  )
-
-    sll_int32,  dimension(:),   intent(in)  :: bloc_index_x1
-    sll_int32,  dimension(:),   intent(in)  :: every_x1
-    sll_int32,                  intent(in)  :: num_bloc_x1
-    sll_int32,  dimension(:),   intent(in)  :: bloc_index_x2
-    sll_int32,  dimension(:),   intent(in)  :: every_x2
-    sll_int32,                  intent(in)  :: num_bloc_x2
-    sll_real64, dimension(:,:), intent(in)  :: f_full
-    sll_int32,                  intent(in)  :: np_x1
-    sll_int32,                  intent(in)  :: np_x2
-    sll_real64, dimension(:,:), intent(out) :: f_light
-    sll_int32,                  intent(in)  :: light_size_x1
-    sll_int32,                  intent(in)  :: light_size_x2
-
-    if ((size(f_full,1)<np_x1).or.(size(f_full,2)<np_x2)) then
-      print *,'#bad size for f_full 1',size(f_full,1)<np_x1
-      print *,'f_full 2',size(f_full,1)<np_x1
-      SLL_ERROR('#in compute_full_to_light_2d')
-    endif
-
-    if ((size(f_light,1)<light_size_x1).or.(size(f_light,2)<light_size_x2)) then
-      print *,'#bad size for f_light 1',size(f_light,1)<light_size_x1
-      print *,'f_light 2',size(f_light,2)<light_size_x2
-      SLL_ERROR('#in compute_full_to_light_2d')
-    endif
-
-    if (size(bloc_index_x1)<num_bloc_x1) then
-      print *,'#bad size for bloc_index_x1',bloc_index_x1,num_bloc_x1
-      SLL_ERROR('#in compute_full_to_light_2d')
-    endif
-
-    if (size(bloc_index_x2)<num_bloc_x2) then
-      print *,'#bad size for bloc_index_x2',bloc_index_x2,num_bloc_x2
-      SLL_ERROR('#in compute_full_to_light_2d')
-    endif
-
-    if (size(every_x1)<num_bloc_x1) then
-      print *,'#bad size for every_x1',every_x1,num_bloc_x1
-      SLL_ERROR('#in compute_full_to_light_2d')
-    endif
-
-    if (size(every_x2)<num_bloc_x2) then
-      print *,'#bad size for every_x2',every_x2,num_bloc_x2
-      SLL_ERROR('#in compute_full_to_light_2d')
-    endif
-    
-  end subroutine compute_full_to_light_2d
-  
   elemental function f_equilibrium(v)
 
     sll_real64, intent(in) :: v
@@ -2109,125 +1619,5 @@ contains
     f_equilibrium = 1.0_f64/sqrt(2*sll_pi)*exp(-0.5_f64*v*v)
 
   end function f_equilibrium
-
-  ! DESCRIPTION
-  ! -----------
-  ! S: the wave form at a given point in time. This wave form is 
-  !    not scaled (its maximum value is 1).
-  ! t: the time at which the envelope is being evaluated
-  ! tflat, tL, tR, twL, twR, tstart, t0: the parameters defining the
-  !    envelope, defined in the main portion of this program.
-  ! turn_drive_off: 1 if the drive should be turned off after a time
-  !    tflat, and 0 otherwise
-  subroutine PFenvelope(S,               &
-                        t,               &
-                        tflat,           &
-                        tL,              &
-                        tR,              &
-                        twL,             &
-                        twR,             &
-                        t0,              &
-                        turn_drive_off)
-
-    sll_real64, intent(in)  :: t
-    sll_real64, intent(in)  :: tflat
-    sll_real64, intent(in)  :: tL
-    sll_real64, intent(in)  :: tR
-    sll_real64, intent(in)  :: twL
-    sll_real64, intent(in)  :: twR
-    sll_real64, intent(in)  :: t0
-    sll_real64, intent(out) :: S
-    logical,    intent(in)  :: turn_drive_off
-
-    sll_real64 :: epsilon
-
-    ! The envelope function is defined such that it is zero at t0,
-    ! rises to 1 smoothly, stay constant for tflat, and returns
-    ! smoothly to zero.
-    if (turn_drive_off) then
-       epsilon = 0.5*(tanh((t0-tL)/twL) - tanh((t0-tR)/twR))
-       S = 0.5*(tanh((t-tL)/twL) - tanh((t-tR)/twR)) - epsilon
-       S = S / (1-epsilon)
-    else
-       epsilon = 0.5*(tanh((t0-tL)/twL) + 1)
-       S = 0.5*(tanh((t-tL)/twL) + 1) - epsilon
-       S = S / (1-epsilon)
-    endif
-    if (S<0) then
-       S = 0.
-    endif
-    S = S + 0.*tflat ! for use of unused
-    return
-
-  end subroutine PFenvelope
-
-  !---------------------------------------------------
-  ! Save the mesh structure
-  !---------------------------------------------------
-  subroutine plot_f_cartesian( iplot,             &
-                               f,                 &
-                               node_positions_x1, &
-                               nnodes_x1,         &
-                               node_positions_x2, &
-                               nnodes_x2,         &
-                               array_name,        &
-                               time)    
-
-    use sll_xdmf
-    use sll_hdf5_io_serial
-
-    sll_int32,                  intent(in) :: iplot
-    sll_real64, dimension(:,:), intent(in) :: f
-    sll_real64, dimension(:),   intent(in) :: node_positions_x1
-    sll_int32,                  intent(in) :: nnodes_x1
-    sll_real64, dimension(:),   intent(in) :: node_positions_x2    
-    sll_int32,                  intent(in) :: nnodes_x2
-    character(len=*),           intent(in) :: array_name 
-    sll_real64                             :: time
-
-    sll_int32                               :: file_id
-    sll_int32                               :: error
-    sll_real64, dimension(:,:), allocatable :: x1
-    sll_real64, dimension(:,:), allocatable :: x2
-    sll_int32                               :: i
-    sll_int32                               :: j
-    character(len=4)                        :: cplot
-    
-    if (iplot == 1) then
-
-      SLL_ALLOCATE(x1(nnodes_x1,nnodes_x2), error)
-      SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
-      do j = 1,nnodes_x2
-        do i = 1,nnodes_x1
-          x1(i,j) = node_positions_x1(i) !x1_min+real(i-1,f32)*dx1
-          x2(i,j) = node_positions_x2(j) !x2_min+real(j-1,f32)*dx2
-        end do
-      end do
-
-#ifndef NOHDF5
-      call sll_hdf5_file_create("cartesian_mesh-x1.h5",file_id,error)
-      call sll_hdf5_write_array(file_id,x1,"/x1",error)
-      call sll_hdf5_file_close(file_id, error)
-      call sll_hdf5_file_create("cartesian_mesh-x2.h5",file_id,error)
-      call sll_hdf5_write_array(file_id,x2,"/x2",error)
-      call sll_hdf5_file_close(file_id, error)
-#endif
-
-      deallocate(x1)
-      deallocate(x2)
-
-    end if
-
-    call int2string(iplot,cplot)
-    call sll_xdmf_open(trim(array_name)//cplot//".xmf","cartesian_mesh", &
-                       nnodes_x1,nnodes_x2,file_id,error)
-
-    write(file_id,"(a,f8.3,a)") "<Time Value='",time,"'/>"
-
-    call sll_xdmf_write_array(trim(array_name)//cplot,f,"values", &
-                              error,file_id,"Node")
-    call sll_xdmf_close(file_id,error)
-
-  end subroutine plot_f_cartesian
 
 end module sll_simulation_2d_vlasov_poisson_cartesian
