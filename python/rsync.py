@@ -1,8 +1,12 @@
 ## save RUNDIR_curie and RUNDIR_local in environment
-## that is save e.g. in .bash_profile and do source .bash_profile
+## that is save e.g. in .bash_profile something similar to following lines 
+## export RUNDIR_curie=/ccc/scratch/cont003/gen7387/mehrenbm
+## export RUNDIR_local=/Users/mehrenbe/scratch
+## export sll_py=/Users/mehrenbe/selalib_mac/selalib/python
+## source ~/.bash_profile
 ## if curie is DIST_ROOT and local is LOCAL_ROOT
 ## suppose that this present file is called splitvp_curie.backup
-## python $SELALIB_DIR/selalib/python/rsync.py splitvp_curie
+## python $sll_py/selalib/python/rsync.py splitvp_curie
 ## will dot the following transfers:
 ## suppose that LOCAL_FILES are splitvp_*.nml
 ## and DIST_FILES are thdiag_*.dat
@@ -13,6 +17,63 @@
 ## synchronisation from $RUNDIR_curie/splitvp/run1/thdiag_*.dat 
 ## to $RUNDIR_local/curie/splitvp/run1/.
 ## note that a lign that begin with "## " is a commented
+## Example of file (here LOCAL_FILES are commented)
+## Begin of file splitvp_curie.backup (same format should be used)
+## ## here commands of different scripts are recalled
+## ## generate splitvp.nml and splitvp.param in some directories, let say for example:
+## ## run8g run10g run11g run12g run13g run14g
+## ## splitvp.nml can be copied from run8f run10f run11f run12f run13f run14f
+## ## splitvp.param should be updated to new test, for example, change initial condition
+## ## for generating several dt use 
+## ## python $sll_py/multi_dt.py dt_min=0.1 dt_max=4 num_dt=100 T_max=60
+## ## adapt job_file.sh and put together with splitvp.param to run8g run10g run11g run12g run13g run14g
+## ## old_runs=( run8f run10f run11f run12f run13f run14f )
+## ## runs=( run8g run10g run11g run12g run13g run14g )
+## ## for (( i=0; i<${#runs[@]};i++ ));do cp ${old_runs[$i]}/splitvp.nml ${runs[$i]}/.;done 
+## ## for i in ${runs[@]};do cp job*.sh splitvp.param $i/.;done
+## ## generate the splitvp_num.nml in each directory
+## ## python $sll_py/map2dir.py "python $sll_py/multi_nml.py splitvp" run8g run10g run11g run12g run13g run14g
+## ## copy to dist computer (here curie; uncomment LOCAL_FILES; comment DIST_FILES)
+## ## python $sll_py/rsync.py $RUNDIR_local/splitvp_curie
+## ## do the submission on dist computer
+## ## check before that following line is in ~/.bash_profile or ~/.bashrc (on dist computer)
+## ## export sll_py=$HOME/selalib_mac/selalib/python
+## ## python $sll_py/map2dir.py "ccc_msub job*.sh" run8g run10g run11g run12g run13g run14g
+## ## copy from dist computer (here curie; uncomment LOCAL_FILES; comment DIST_FILES)
+## ## python $sll_py/rsync.py $RUNDIR_local/splitvp_curie
+## ## do a post-processing diag
+## ## python $sll_py/map2dir.py "python $sll_py/multi_thdiag.py thdiag 0 99 6 15 30 50" run8g run10g run11g run12g run13g run14g
+## 
+## # DIST_ROOT
+## curie
+##
+## # LOCAL_ROOT
+## local
+##
+## # RUN_NAME
+## splitvp
+##
+##
+## # RUN_DIRS
+## run8g
+## run10g
+## run11g
+## run12g
+## run13g
+## run14g
+##
+##
+## # LOCAL_FILES
+## ## splitvp_*.nml
+## ## splitvp.param
+## ## job*.sh
+##
+##
+## # DIST_FILES
+## thdiag_*.dat
+## End of file splitvp_.backup
+## In ~/.bashrc or ~/.bash_profile, add following type of lines (example)
+
 import os
 import sys
 
