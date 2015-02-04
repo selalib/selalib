@@ -103,6 +103,7 @@ use omp_lib
    sll_real64 :: time_init
 
    type(splitting_coeff), pointer :: split
+   character(len=256)      :: thdiag_filename
   
    logical    :: driven 
    sll_real64 :: t0
@@ -138,15 +139,16 @@ use omp_lib
 
 contains
 
-  function new_vp2d_par_cart( filename ) result(sim)    
+  function new_vp2d_par_cart( filename, num_run ) result(sim)    
 
     type(sll_simulation_2d_vlasov_poisson_cart), pointer :: sim    
     character(len=*), intent(in), optional               :: filename
+    sll_int32, intent(in), optional                      :: num_run
 
     sll_int32                                            :: ierr
 
     SLL_ALLOCATE(sim, ierr)
-    call init_vp2d_par_cart( sim, filename)
+    call init_vp2d_par_cart( sim, filename, num_run )
        
   end function new_vp2d_par_cart
 
@@ -217,10 +219,11 @@ contains
     
   end subroutine change_equilibrium_function_vp2d_par_cart
 
-  subroutine init_vp2d_par_cart( sim, filename )
+  subroutine init_vp2d_par_cart( sim, filename, num_run )
 
     class(sll_simulation_2d_vlasov_poisson_cart) :: sim
     character(len=*), optional                   :: filename
+    sll_int32, intent(in), optional :: num_run
 
     character(len=256) :: mesh_case_x1
     sll_int32          :: num_cells_x1
@@ -297,6 +300,10 @@ contains
     sll_int32                            :: i
     sll_int32                            :: num_threads
     sll_int32                            :: tid
+    character(len=256)      :: str_num_run
+    character(len=256)      :: filename_loc
+
+
   
     namelist /geometry/                   &
       mesh_case_x1,                       &
@@ -454,18 +461,40 @@ contains
     !keen_Edrmax         = 0.2
     !keen_omegadr        = 0.37	
 
+
+    if(present(num_run))then
+      !call int2string(num_run, str_num_run)
+      write(str_num_run, *) num_run
+      str_num_run = adjustl(str_num_run) 
+      sim%thdiag_filename = "thdiag_"//trim(str_num_run)//".dat"
+    else      
+      sim%thdiag_filename = "thdiag.dat"
+    endif
+
+
+
     if (present(filename)) then
+
+      filename_loc = filename
+      filename_loc = adjustl(filename_loc)
+      
+      if(present(num_run)) then
+        filename_loc = trim(filename)//"_"//trim(str_num_run)
+        !filename_loc = adjustl(filename_loc)
+        !print *,'filename_loc=',filename_loc
+      endif
+
 
       call sll_new_file_id(input_file, ierr)
 
-      open(unit = input_file, file=trim(filename)//'.nml',IOStat=IO_stat)
+      open(unit = input_file, file=trim(filename_loc)//'.nml',IOStat=IO_stat)
       if ( IO_stat /= 0 ) then
-        SLL_ERROR( 'failed to open file '//trim(filename)//'.nml')
+        SLL_ERROR( 'failed to open file '//trim(filename_loc)//'.nml')
       end if
 
       if (sll_get_collective_rank(sll_world_collective)==0) then
         print *,'#initialization with filename:'
-        print *,'#',trim(filename)//'.nml'
+        print *,'#',trim(filename_loc)//'.nml'
       endif
 
       read(input_file, geometry) 
@@ -1201,7 +1230,7 @@ contains
 
     if (MPI_MASTER) then
 
-      call sll_ascii_file_create('thdiag.dat', th_diag_id, ierr)
+      call sll_ascii_file_create(sim%thdiag_filename, th_diag_id, ierr)
 
       call sll_binary_file_create('deltaf.bdat', deltaf_id, ierr)
       call sll_binary_file_create('rhotot.bdat', rhotot_id, ierr)
@@ -1605,10 +1634,18 @@ contains
   subroutine delete_vp2d_par_cart( sim )
 
     class(sll_simulation_2d_vlasov_poisson_cart) :: sim
+    sll_int32 :: ierr
     
-    print *,sim%dt
-    SLL_WARNING('#delete_vp2d_par_cart not implemented')
     
+   if(associated(sim%x1_array)) then
+     SLL_DEALLOCATE(sim%x1_array,ierr)
+     nullify(sim%x1_array)
+   endif
+   if(associated(sim%x2_array)) then
+     SLL_DEALLOCATE(sim%x2_array,ierr)
+     nullify(sim%x2_array)
+   endif
+        
   end subroutine delete_vp2d_par_cart
 
   elemental function f_equilibrium(v)
