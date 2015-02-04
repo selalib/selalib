@@ -23,9 +23,9 @@ IF(HDF5_ENABLED)
          sll_advection_2d_CSL.F90
          sll_advection_2d_base.F90)
 
-  IF (FFTW_FOUND)
+  IF (FFTW_FOUND AND FFTW_ENABLED)
     SET( ADVECTION_SRC_FILES ${ADVECTION_SRC_FILES} sll_advection_1d_spectral.F90)
-  ENDIF (FFTW_FOUND)
+  ENDIF (FFTW_FOUND AND FFTW_ENABLED)
 
   ADD_LIBRARY( sll_advection STATIC ${ADVECTION_SRC_FILES})
 
@@ -35,17 +35,18 @@ IF(HDF5_ENABLED)
                          sll_interpolators
                          sll_periodic_interpolation
                          sll_splines
+                         sll_fft
                          sll_boundary_condition_descriptors
                          sll_utilities)
 
   IF(BUILD_TESTING)
 
-    IF (FFTW_FOUND)
+    IF (FFTW_FOUND AND FFTW_ENABLED)
       ADD_EXECUTABLE( test_advection_1d_spectral unit_test_advection_1d_spectral.F90)
       TARGET_LINK_LIBRARIES( test_advection_1d_spectral sll_advection 
                                                         sll_file_io
-                                                        ${FFTW_LIBRARIES})
-    ENDIF (FFTW_FOUND)
+                                                        sll_fft)
+    ENDIF (FFTW_FOUND AND FFTW_ENABLED)
   
     ADD_EXECUTABLE( test_advection_1d_periodic unit_test_advection_1d_periodic.F90)
     TARGET_LINK_LIBRARIES( test_advection_1d_periodic sll_advection)

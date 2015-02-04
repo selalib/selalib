@@ -60,6 +60,7 @@ type, public :: sll_ampere_1d_pstd
 
 contains
 
+   !> Compute electric field from current
    procedure :: compute_e_from_j => solve_ampere_1d_pstd
 
 
@@ -86,6 +87,7 @@ public sll_solve
 public new_ampere_1d_pstd
 
 private
+sll_int32 :: error !< error code
 
 contains
 
@@ -97,7 +99,6 @@ function new_ampere_1d_pstd(xmin,xmax,nc_x) result(self)
    sll_real64, intent(in)            :: xmax    !< x max
    sll_int32,  intent(in)            :: nc_x    !< x cells number
 
-   sll_int32                         :: error   !< error code
 
    SLL_ALLOCATE(self, error)
 
@@ -124,8 +125,8 @@ subroutine initialize_ampere_1d_pstd(self,xmin,xmax,nc_x)
 
    allocate(tmp(nc_x))
 
-   FFTW_ALLOCATE(self%ek,nc_x/2+1,self%sz_ek,self%p_ek)
-   FFTW_ALLOCATE(self%jk,nc_x/2+1,self%sz_jk,self%p_jk)
+   FFTW_ALLOCATE(self%ek,(nc_x/2+1),self%sz_ek,self%p_ek)
+   FFTW_ALLOCATE(self%jk,(nc_x/2+1),self%sz_jk,self%p_jk)
 
    NEW_FFTW_PLAN_R2C_1D(self%fwx, nc_x, tmp,  self%ek)
    NEW_FFTW_PLAN_C2R_1D(self%bwx, nc_x, self%jk,  tmp)
