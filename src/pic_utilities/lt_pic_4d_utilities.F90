@@ -507,62 +507,58 @@ contains
         
 end subroutine get_ltp_deformation_matrix
 
-  ! <<onestep>> utility function for finding the neighbours of a particle, used by [[ONESTEPMACRO]]
+  ! <<onestep>> utility function for finding the neighbours of a particle, used by [[ONESTEPMACRO]]. "dim" corresponds
+  ! to one of x,y,vx,vy.
 
   subroutine onestep(       &
-       dim_aux,             &
+       dim_t0,              &
        neighbour,           &
        ngb_dim_right_index, &
        ngb_dim_left_index,  &
-       isperiodic,          &
        n_virtual,           &
        h_parts_dim,         &
        kprime,              &
        moved)
 
-    sll_real64 :: dim_aux ! dim = x,y,vx,vy
+    sll_real64 :: dim_t0
     sll_int64 :: neighbour
     sll_int64 :: ngb_dim_right_index
     sll_int64 :: ngb_dim_left_index
-    logical :: isperiodic
     sll_int32 :: n_virtual
     sll_real64 :: h_parts_dim
     sll_int64 :: kprime
     logical :: moved
 
-    if (dim_aux < 0) then
-       neighbour = ngb_dim_right_index
+    ! Move to a closer neighbour only if dim_t0 is not located in a cell of size h_parts_dim and with a left bound of
+    ! dim_t0
 
-       ! roll back to the right of the domain
-       if (neighbour == 0) then
-          if (isperiodic) then
-             dim_aux = dim_aux - n_virtual*h_parts_dim
-          else
-             kprime = 0
-          end if
-       else
-          kprime=neighbour
-          dim_aux = dim_aux+h_parts_dim
-          moved = .true.
-       end if
-    end if
-    
-    if (dim_aux > h_parts_dim) then
+    !print *,"dim_t0 = ",dim_t0 !aaa
+
+    ! dim_t0 < 0 means that the virtual particle is at the left of kprime (dim_t0 is a relative coordinate)
+    if (dim_t0 < 0) then
        neighbour = ngb_dim_left_index
-
-       ! roll back to the right of the domain
        if (neighbour == 0) then
-          if (isperiodic) then
-             dim_aux = dim_aux + n_virtual*h_parts_dim
-          else
-             kprime = 0
-          end if
+          kprime = 0
        else
           kprime = neighbour
-          dim_aux = dim_aux-h_parts_dim
+          dim_t0 = dim_t0 + h_parts_dim
           moved = .true.
        end if
+    else
+       
+       ! dim_t0 > h_parts_dim means that the virtual particle is too far to the right of kprime
+       if (dim_t0 >= h_parts_dim) then
+          neighbour = ngb_dim_right_index
+          if (neighbour == 0) then
+             kprime = 0
+          else
+             kprime = neighbour
+             dim_t0 = dim_t0 - h_parts_dim
+             moved = .true.
+          end if
+       end if
     end if
+    !SLL_ASSERT(.not. moved)!aaa
   end subroutine onestep
 
   ! <<sll_lt_pic_4d_write_bsl_f_on_remap_grid>> <<ALH>> write the density on the (phase-space) remapping
@@ -644,8 +640,7 @@ end subroutine get_ltp_deformation_matrix
     sll_int :: l ! vx dimension
     sll_int :: m ! vy dimension
 
-    sll_int64 :: k0000,k0001,k0010,k0011,k0100,k0101,k0110,k0111
-    sll_int64 :: k1000,k1001,k1010,k1011,k1100,k1101,k1110,k1111
+    sll_int64,dimension(2,2,2,2) :: hcube
 
     ! indices in a virtual cell (go from 1 to [[n_virtual]])
 
@@ -689,13 +684,19 @@ end subroutine get_ltp_deformation_matrix
 
     ! coordinates of a virtual particle at time 0 relative to the coordinates of one real particle
 
-    sll_real64 :: x_aux,y_aux,vx_aux,vy_aux
+    sll_real64 :: x_t0,y_t0,vx_t0,vy_t0
 
     sll_int32 :: part_degree
 
     sll_int32 :: ierr
 
     logical :: moved
+
+    !aaa
+    sll_real64 :: x_aux
+    sll_real64 :: y_aux
+    sll_real64 :: vx_aux
+    sll_real64 :: vy_aux
 
     ! --- end of declarations
 
@@ -772,9 +773,9 @@ end subroutine get_ltp_deformation_matrix
        ! what is the distance from this particle to the virtual cell center? Speed things up a bit by skipping the
        ! square root calculation that will not change the final comparison of distances.
 
-       tmp = (dx - h_virtual_cell_x/2)**2&
-            + (dy - h_virtual_cell_y/2)**2&
-            + (dvx - h_virtual_cell_vx/2)**2&
+       tmp =  (dx -  h_virtual_cell_x /2)**2    &
+            + (dy -  h_virtual_cell_y /2)**2    &
+            + (dvx - h_virtual_cell_vx/2)**2    &
             + (dvy - h_virtual_cell_vy/2)**2
 
        ! if new particle is closer to center, keep the new one
@@ -833,8 +834,8 @@ end subroutine get_ltp_deformation_matrix
 
                    ! [[file:~/mcp/maltpic/ltpic-bsl.tex::hat-bz*]] Compute backward image of l-th virtual node by the
                    ! k-th backward flow. MCP -> oui, avec la matrice de deformation calculée avec la fonction
-                   ! [[get_ltp_deformation_matrix]] pour la particule k. Call parameters inspired from
-                   ! [[sll_lt_pic_4d_write_f_on_remap_grid-get_ltp_deformation_matrix]]
+                   ! [[get_ltp_deformation_matrix]] pour la particule k. Calling [[get_ltp_deformation_matrix]]
+                   ! with parameters inspired from [[sll_lt_pic_4d_write_f_on_remap_grid-get_ltp_deformation_matrix]]
     
                    call get_ltp_deformation_matrix (               &
                         k,                                         &    
@@ -879,75 +880,6 @@ end subroutine get_ltp_deformation_matrix
                          do lvirt = 1,n_virtual
                             do mvirt = 1,n_virtual
 
-                               ! Location of virtual particle (ivirt,jvirt,lvirt,mvirt) at time n
-
-                               x =  parts_x_min  + (i-1)*h_virtual_cell_x  + (ivirt-1)*h_parts_x
-                               y =  parts_y_min  + (j-1)*h_virtual_cell_y  + (jvirt-1)*h_parts_y
-                               vx = parts_vx_min + (l-1)*h_virtual_cell_vx + (lvirt-1)*h_parts_vx
-                               vy = parts_vy_min + (m-1)*h_virtual_cell_vy + (mvirt-1)*h_parts_vy
-
-                               ! Location of virtual particle (ivirt,jvirt,lvirt,mvirt) at time 0 relative to the
-                               ! position of particle k at time 0 according to flow deformation
-
-                               x_aux =   d11 * (x - x_k)    &
-                                    + d12 * (y - y_k)       &
-                                    + d13 * (vx - vx_k)     &
-                                    + d14 * (vy - vy_k)
-                                 
-                               y_aux =   d21 * (x - x_k)    &
-                                    + d22 * (y - y_k)       &
-                                    + d23 * (vx - vx_k)     &
-                                    + d24 * (vy - vy_k)
-                         
-                               vx_aux =  d31 * (x - x_k)    &
-                                    + d32 * (y - y_k)       &
-                                    + d33 * (vx - vx_k)     &
-                                    + d34 * (vy - vy_k)
-                                 
-                               vy_aux =  d41 * (x - x_k)    &
-                                    + d42 * (y - y_k)       &
-                                    + d43 * (vx - vx_k)     &
-                                    + d44 * (vy - vy_k)
-
-                               print *,"x-x_k=",x-x_k," x_aux=",x_aux  !aaa
-                               print *,"y-y_k=",y-y_k," y_aux=",y_aux  !aaa
-                               print *,"vx-vx_k=",vx-vx_k," vx_aux=",vx_aux  !aaa
-                               print *,"vy-vy_k=",vy-vy_k," vy_aux=",vy_aux  !aaa
-                               print *,"------------------------"
-                               
-                               ! [[file:~/mcp/maltpic/ltpic-bsl.tex::neighbors-grid-0]] find the neighbours of the
-                               ! virtual particle (ivirt,jvirt,lvirt,mvirt) at time 0 through the "logical neighbours"
-                               ! pointers of particle k. To reduce the amount of code, start with finding the closest
-                               ! neighbour which has lower coordinates in all directions.
-
-                               kprime = k
-                               moved = .true.
-                               do while (moved .and. kprime /= 0)
-
-                                  moved = .false.
-
-                                  ! Calls [[onestep]]. "dim" can be x,y,vx,vy. cf
-                                  ! [[file:../pic_particle_types/lt_pic_4d_particle.F90::sll_lt_pic_4d_particle]] for
-                                  ! pointers to neighbours.
-
-#define ONESTEPMACRO(dim,isperiodic)                                                 \
-                                  call onestep(dim/**/_aux,                          \
-                                  neighbour,                                         \
-                                  p_group%p_list(kprime)%ngb_/**/dim/**/right_index, \
-                                  p_group%p_list(kprime)%ngb_/**/dim/**/left_index,  \
-                                  isperiodic,                                        \
-                                  n_virtual,                                         \
-                                  h_parts_/**/dim,                                   \
-                                  kprime,                                            \
-                                  moved)
-
-                                  ONESTEPMACRO(x,domain_is_x_periodic)
-                                  ONESTEPMACRO(y,domain_is_y_periodic)
-                                  ONESTEPMACRO(vx,.false.)
-                                  ONESTEPMACRO(vy,.false.)
-
-                               end do
-
                                ! real index of the virtual particle in
                                ! [[file:../pic_particle_types/lt_pic_4d_group.F90::target_values]]
 
@@ -969,6 +901,77 @@ end subroutine get_ltp_deformation_matrix
                                     .and. i_vx<=p_group%number_parts_vx  &
                                     .and. i_vy<=p_group%number_parts_vy) then
                                   
+                                  ! Location of virtual particle (ivirt,jvirt,lvirt,mvirt) at time n
+                                  
+                                  x =  parts_x_min  + (i-1)*h_virtual_cell_x  + (ivirt-1)*h_parts_x
+                                  y =  parts_y_min  + (j-1)*h_virtual_cell_y  + (jvirt-1)*h_parts_y
+                                  vx = parts_vx_min + (l-1)*h_virtual_cell_vx + (lvirt-1)*h_parts_vx
+                                  vy = parts_vy_min + (m-1)*h_virtual_cell_vy + (mvirt-1)*h_parts_vy
+
+                                  ! Location of virtual particle (ivirt,jvirt,lvirt,mvirt) at time 0 _relative_ to the
+                                  ! position of particle k at time 0 according to flow deformation
+
+                                  x_t0  = d11 * (x - x_k) + d12 * (y - y_k) + d13 * (vx - vx_k) + d14 * (vy - vy_k)
+                                  y_t0  = d21 * (x - x_k) + d22 * (y - y_k) + d23 * (vx - vx_k) + d24 * (vy - vy_k)
+                                  vx_t0 = d31 * (x - x_k) + d32 * (y - y_k) + d33 * (vx - vx_k) + d34 * (vy - vy_k)
+                                  vy_t0 = d41 * (x - x_k) + d42 * (y - y_k) + d43 * (vx - vx_k) + d44 * (vy - vy_k)
+
+                                  !print *,"x-x_k=",x-x_k," x_t0=",x_t0  !aaa
+                                  !print *,"y-y_k=",y-y_k," y_t0=",y_t0  !aaa
+                                  !print *,"vx-vx_k=",vx-vx_k," vx_t0=",vx_t0  !aaa
+                                  !print *,"vy-vy_k=",vy-vy_k," vy_t0=",vy_t0  !aaa
+                                  !print *,"x_k=",x_k," y_k=",y_k," vx_k=",vx_k," vy_k=",vy_k!aaa
+                                  !print *,"x_t0=",x_t0," y_t0=",y_t0," vx_t0=",vx_t0," vy_t0=",vy_t0!aaa
+                                  print *,"------------------------"!aaa
+                                  
+                                  ! [[file:~/mcp/maltpic/ltpic-bsl.tex::neighbors-grid-0]] find the neighbours of the
+                                  ! virtual particle (ivirt,jvirt,lvirt,mvirt) at time 0 through the "logical
+                                  ! neighbours" pointers of particle k. To reduce the amount of code, start with finding
+                                  ! the closest neighbour which has lower coordinates in all directions. The particle
+                                  ! located at (x_t0,y_t0,vx_t0,vy_t0) (coordinates relative to particle k to start
+                                  ! with) gets progressively closer to kprime step by step (ie from neighbour to
+                                  ! neighbour).
+
+                                  kprime = k
+                                  moved = .true.
+                                  do while (moved .and. kprime /= 0)
+
+                                     moved = .false.
+
+                                     ! Calls [[onestep]]. "dim" can be x,y,vx,vy. cf
+                                     ! [[file:../pic_particle_types/lt_pic_4d_particle.F90::sll_lt_pic_4d_particle]] for
+                                     ! pointers to neighbours.
+
+#define ONESTEPMACRO(dim)                                                               \
+                                     call onestep(                                      \
+                                     dim/**/_t0,                                        \
+                                     neighbour,                                         \
+                                     p_group%p_list(kprime)%ngb_/**/dim/**/right_index, \
+                                     p_group%p_list(kprime)%ngb_/**/dim/**/left_index,  \
+                                     n_virtual,                                         \
+                                     h_parts_/**/dim,                                   \
+                                     kprime,                                            \
+                                     moved)
+
+                                     ONESTEPMACRO(x)
+                                     ONESTEPMACRO(y)
+                                     ONESTEPMACRO(vx)
+                                     ONESTEPMACRO(vy)
+
+                                     !print *,"k = ",k," kprime = ",kprime!aaa
+                                     !SLL_ASSERT(k==kprime)!aaa
+                                  end do
+
+                                  !aaa real-world coordinates for kprime
+                                  call cell_offset_to_global(p_group%p_list(kprime)%dx, &
+                                       p_group%p_list(kprime)%dy, &
+                                       p_group%p_list(kprime)%ic, &
+                                       p_group%mesh,x_aux,y_aux)
+                                  vx_aux = p_group%p_list(kprime)%vx
+                                  vy_aux = p_group%p_list(kprime)%vy
+                                  print *,"x_kprime=",x_aux," y_kprime=",y_aux," vx_kprime=",vx_aux," vy_kprime=",vy_aux
+                                  print *,"x=",x," y=",y," vx=",vx," vy=",vy
+                                  
                                   ! If we end up with kprime == 0, it means that we have not found a cell that contains
                                   ! the particle so we just set that particle value to zero
 
@@ -980,39 +983,48 @@ end subroutine get_ltp_deformation_matrix
                                      ! through the neighbour pointers in
                                      ! [[file:../pic_particle_types/lt_pic_4d_particle.F90::neighbour_pointers]]
 
-                                     k0000 = kprime
+                                     hcube(1,1,1,1) = kprime
 
-                                     k1000 = p_group%p_list(kprime)%ngb_xright_index ! 1 step
-                                     k0100 = p_group%p_list(kprime)%ngb_yright_index
-                                     k0010 = p_group%p_list(kprime)%ngb_vxright_index
-                                     k0001 = p_group%p_list(kprime)%ngb_vyright_index
+                                     hcube(2,1,1,1) = p_group%p_list(kprime)%ngb_xright_index ! 1 step
+                                     hcube(1,2,1,1) = p_group%p_list(kprime)%ngb_yright_index
+                                     hcube(1,1,2,1) = p_group%p_list(kprime)%ngb_vxright_index
+                                     hcube(1,1,1,2) = p_group%p_list(kprime)%ngb_vyright_index
 
                                      ! if any of the first four vertices is undefined, it means that we reached the mesh
                                      ! border. just set the value of f for that particle as zero as before.
 
-                                     if (k1000 == 0 .or. k0100 == 0 .or. k0010 == 0 .or. k0001 == 0) then
+                                     if (hcube(2,1,1,1) == 1 .or. hcube(1,2,1,1) == 0 .or. hcube(1,1,2,1) == 1 .or. hcube(1,1,1,2) == 0) then
                                         p_group%target_values(i_x,i_y,i_vx,i_vy) = 0
                                      else
 
                                         ! remaining vertices of the hypercube. they should all exist now that the first
                                         ! 4 vertices are checked.
 
-                                        k1100 = p_group%p_list(k1000)%ngb_yright_index ! 1 step in x + 1 other step
-                                        k1010 = p_group%p_list(k1000)%ngb_vxright_index
-                                        k1001 = p_group%p_list(k1000)%ngb_vyright_index
+                                        ! 1 step in x + 1 other step
+                                        hcube(2,2,1,1) = p_group%p_list(hcube(2,1,1,1))%ngb_yright_index
+                                        hcube(2,1,2,1) = p_group%p_list(hcube(2,1,1,1))%ngb_vxright_index
+                                        hcube(2,1,1,2) = p_group%p_list(hcube(2,1,1,1))%ngb_vyright_index
 
-                                        k0110 = p_group%p_list(k0100)%ngb_vxright_index ! 1 step in y + 1 other step
-                                        k0101 = p_group%p_list(k0100)%ngb_vyright_index
+                                        ! 1 step in y + 1 other step
+                                        hcube(1,2,2,1) = p_group%p_list(hcube(1,2,1,1))%ngb_vxright_index
+                                        hcube(1,2,1,2) = p_group%p_list(hcube(1,2,1,1))%ngb_vyright_index
 
-                                        k0011 = p_group%p_list(k0010)%ngb_vyright_index ! 1 step in vx + 1 other step
+                                        ! 1 step in vx + 1 other step
+                                        hcube(1,1,2,2) = p_group%p_list(hcube(1,1,2,1))%ngb_vyright_index
 
-                                        k0111 = p_group%p_list(k0110)%ngb_vyright_index ! all combinations of 3 steps
-                                        k1011 = p_group%p_list(k1010)%ngb_vyright_index
-                                        k1101 = p_group%p_list(k1100)%ngb_vyright_index
-                                        k1110 = p_group%p_list(k1100)%ngb_vxright_index
+                                        ! all combinations of 3 steps
+                                        hcube(1,2,2,2) = p_group%p_list(hcube(1,2,2,1))%ngb_vyright_index
+                                        hcube(2,1,2,2) = p_group%p_list(hcube(2,1,2,1))%ngb_vyright_index
+                                        hcube(2,2,1,2) = p_group%p_list(hcube(2,2,1,1))%ngb_vyright_index
+                                        hcube(2,2,2,1) = p_group%p_list(hcube(2,2,1,1))%ngb_vxright_index
 
-                                        k1111 = p_group%p_list(k1110)%ngb_xright_index ! 4 steps
+                                        ! 4 steps
+                                        hcube(2,2,2,2) = p_group%p_list(hcube(2,2,2,1))%ngb_xright_index
 
+                                        !print *,k,hcube(1,1,1,1),hcube(2,1,1,1),hcube(1,2,1,1),hcube(1,1,2,1),hcube(1,1,1,2),hcube(2,2,1,1),hcube(2,1,2,1),hcube(2,1,1,2),hcube(1,2,2,1),hcube(1,2,1,2),hcube(1,1,2,2),hcube(1,2,2,2),hcube(2,1,2,2),hcube(2,2,1,2),hcube(2,2,2,1),hcube(2,2,2,2)!aaa
+
+                                        !SLL_ASSERT(k == hcube(1,1,1,1) .or. k == hcube(2,1,1,1) .or. k == hcube(1,2,1,1) .or. k == hcube(1,1,2,1) .or. k == hcube(1,1,1,2) .or. k == hcube(2,2,1,1) .or. k == hcube(2,1,2,1) .or. k == hcube(2,1,1,2) .or. k == hcube(1,2,2,1) .or. k == hcube(1,2,1,2) .or. k == hcube(1,1,2,2) .or. k == hcube(1,2,2,2) .or. k == hcube(2,1,2,2) .or. k == hcube(2,2,1,2) .or. k == hcube(2,2,2,1) .or. k == hcube(2,2,2,2))!aaa
+                                        
                                         ! [[file:~/mcp/maltpic/ltpic-bsl.tex::affine-fn*]] use the values of f0 at these
                                         ! neighbours to interpolate the value of f0 at
                                         ! [[file:~/mcp/maltpic/ltpic-bsl.tex::hat-bz*]]. MCP -> oui. Ici si tu utilises
@@ -1021,7 +1033,7 @@ end subroutine get_ltp_deformation_matrix
                                         ! qui est utilisée dans la fonction sll_lt_pic_4d_write_f_on_remap_grid, mais
                                         ! sans faire intervenir la matrice de déformation à l'intérieur des splines.
 
-#define RIGHT(dim) h_parts_/**/dim - dim/**/_aux
+#define RIGHT(dim) h_parts_/**/dim - dim/**/_t0
 #define COMPONENT(k,x,y,vx,vy) p_group%p_list(k)%q                                                \
                                         * sll_pic_shape(part_degree,x,y,vx,vy,                    \
                                         inv_h_parts_x,inv_h_parts_y,inv_h_parts_vx,inv_h_parts_vy)
@@ -1029,23 +1041,23 @@ end subroutine get_ltp_deformation_matrix
                                         ! place the resulting value of f on the virtual particle in
                                         ! p_group%target_values
                                      
-                                        p_group%target_values(i_x,i_y,i_vx,i_vy) =                 &
-                                             + COMPONENT(k0000,x_aux,y_aux,vx_aux,vy_aux)          &
-                                             + COMPONENT(k1000,RIGHT(x),y_aux,vx_aux,vy_aux)       &
-                                             + COMPONENT(k0100,x_aux,RIGHT(y),vx_aux,vy_aux)       &
-                                             + COMPONENT(k0010,x_aux,y_aux,RIGHT(vx),vy_aux)       &
-                                             + COMPONENT(k0001,x_aux,y_aux,vx_aux,RIGHT(vy))       &
-                                             + COMPONENT(k1100,RIGHT(x),RIGHT(y),vx_aux,vy_aux)    &
-                                             + COMPONENT(k1010,RIGHT(x),y_aux,RIGHT(vx),vy_aux)    &
-                                             + COMPONENT(k1001,RIGHT(x),y_aux,vx_aux,RIGHT(vy))    &
-                                             + COMPONENT(k0110,x_aux,RIGHT(y),RIGHT(vx),vy_aux)    &
-                                             + COMPONENT(k0101,x_aux,RIGHT(y),vx_aux,RIGHT(vy))    &
-                                             + COMPONENT(k0011,x_aux,y_aux,RIGHT(vx),RIGHT(vy))    &
-                                             + COMPONENT(k0111,x_aux,RIGHT(y),RIGHT(vx),RIGHT(vy)) &
-                                             + COMPONENT(k1011,RIGHT(x),y_aux,RIGHT(vx),RIGHT(vy)) &
-                                             + COMPONENT(k1101,RIGHT(x),RIGHT(y),vx_aux,RIGHT(vy)) &
-                                             + COMPONENT(k1110,RIGHT(x),RIGHT(y),RIGHT(vx),vy_aux) &
-                                             + COMPONENT(k1111,RIGHT(x),RIGHT(y),RIGHT(vx),RIGHT(vy))
+                                        p_group%target_values(i_x,i_y,i_vx,i_vy) =                          &
+                                             + COMPONENT(hcube(1,1,1,1),x_t0,y_t0,vx_t0,vy_t0)              &
+                                             + COMPONENT(hcube(2,1,1,1),RIGHT(x),y_t0,vx_t0,vy_t0)          &
+                                             + COMPONENT(hcube(1,2,1,1),x_t0,RIGHT(y),vx_t0,vy_t0)          &
+                                             + COMPONENT(hcube(1,1,2,1),x_t0,y_t0,RIGHT(vx),vy_t0)          &
+                                             + COMPONENT(hcube(1,1,1,2),x_t0,y_t0,vx_t0,RIGHT(vy))          &
+                                             + COMPONENT(hcube(2,2,1,1),RIGHT(x),RIGHT(y),vx_t0,vy_t0)      &
+                                             + COMPONENT(hcube(2,1,2,1),RIGHT(x),y_t0,RIGHT(vx),vy_t0)      &
+                                             + COMPONENT(hcube(2,1,1,2),RIGHT(x),y_t0,vx_t0,RIGHT(vy))      &
+                                             + COMPONENT(hcube(1,2,2,1),x_t0,RIGHT(y),RIGHT(vx),vy_t0)      &
+                                             + COMPONENT(hcube(1,2,1,2),x_t0,RIGHT(y),vx_t0,RIGHT(vy))      &
+                                             + COMPONENT(hcube(1,1,2,2),x_t0,y_t0,RIGHT(vx),RIGHT(vy))      &
+                                             + COMPONENT(hcube(1,2,2,2),x_t0,RIGHT(y),RIGHT(vx),RIGHT(vy))  &
+                                             + COMPONENT(hcube(2,1,2,2),RIGHT(x),y_t0,RIGHT(vx),RIGHT(vy))  &
+                                             + COMPONENT(hcube(2,2,1,2),RIGHT(x),RIGHT(y),vx_t0,RIGHT(vy))  &
+                                             + COMPONENT(hcube(2,2,2,1),RIGHT(x),RIGHT(y),RIGHT(vx),vy_t0)  &
+                                             + COMPONENT(hcube(2,2,2,2),RIGHT(x),RIGHT(y),RIGHT(vx),RIGHT(vy))
                                      end if
                                   end if
                                end if
