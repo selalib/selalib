@@ -41,37 +41,37 @@ private
 !> Quintic spline interpolator 1d
 type, extends(sll_interpolator_1d_base), public :: sll_quintic_spline_interpolator_1d
 
-  sll_real64, dimension(:),   pointer  :: x        !< points position
-  sll_int32                            :: n        !< number of points
-  sll_int32                            :: ind1     !< number of points
-  sll_int32                            :: indn     !< number of points
-  sll_real64, dimension(:,:), pointer  :: cf       !< values and derivatives
-  sll_real64, dimension(:),   pointer  :: h        !< work array
-  sll_int32                            :: bc_min   !< boundary condition
-  sll_int32                            :: bc_max   !< boundary condition
-  sll_real64                           :: x_min
-  sll_real64                           :: x_max
-  sll_real64                           :: value_min
-  sll_real64                           :: value_max
-  sll_real64                           :: slope_min
-  sll_real64                           :: slope_max
-  sll_real64                           :: dx
+  sll_real64, dimension(:),   pointer  :: x          !< points position
+  sll_int32                            :: n          !< number of points
+  sll_int32                            :: ind1       !< number of points
+  sll_int32                            :: indn       !< number of points
+  sll_real64, dimension(:,:), pointer  :: cf         !< values and derivatives
+  sll_real64, dimension(:),   pointer  :: h          !< work array
+  sll_int32                            :: bc_min     !< boundary condition
+  sll_int32                            :: bc_max     !< boundary condition
+  sll_real64                           :: x_min      !< left boundary
+  sll_real64                           :: x_max      !< right boundary
+  sll_real64                           :: value_min  !< left boundary value
+  sll_real64                           :: value_max  !< right boundary value
+  sll_real64                           :: slope_min  !< left boundary derivative
+  sll_real64                           :: slope_max  !< right boundary derivative
+  sll_real64                           :: dx         !< size step
 
 contains
 
-  procedure :: initialize 
-  procedure :: compute_interpolants 
-  procedure :: interpolate_value 
-  procedure :: interpolate_derivative_eta1 
-  procedure :: interpolate_array_values 
-  procedure :: interpolate_pointer_values 
-  procedure :: interpolate_array_derivatives 
-  procedure :: interpolate_pointer_derivatives 
-  procedure :: interpolate_array 
-  procedure :: interpolate_array_disp 
-  procedure :: reconstruct_array 
-  procedure :: set_coefficients 
-  procedure :: get_coefficients
+  procedure :: initialize                       !< Initialize
+  procedure :: compute_interpolants             !< Compute splines
+  procedure :: interpolate_value                !< Interpolate single value
+  procedure :: interpolate_derivative_eta1      !< Compute derivative
+  procedure :: interpolate_array_values         !< Interpolate array values
+  procedure :: interpolate_pointer_values       !< Interpolate and return a pointer
+  procedure :: interpolate_array_derivatives    !< Return derivatives
+  procedure :: interpolate_pointer_derivatives  !< Return a pointer to derivatives
+  procedure :: interpolate_array                !< Interpolate an array
+  procedure :: interpolate_array_disp           !< Return an array after displacement
+  procedure :: reconstruct_array                !< Not implemented
+  procedure :: set_coefficients                 !< Not implemented
+  procedure :: get_coefficients                 !< Not implemented
 
 end type sll_quintic_spline_interpolator_1d
 
@@ -91,6 +91,7 @@ public set_values_at_boundary
 
 contains  ! ****************************************************************
 
+!> Create a new quintic splines interpolator
 function new_quintic_spline_interpolator_1d( num_points, &
                                              x_min,      &
                                              x_max,      &

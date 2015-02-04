@@ -677,20 +677,31 @@ close(file_id)
 error = 0
 end subroutine sll_xdmf_close
 
-subroutine sll_plot_f_cartesian( iplot,             &
-                                 f,                 &
-                                 node_positions_x1, &
-                                 nnodes_x1,         &
-                                 node_positions_x2, &
-                                 nnodes_x2,         &
-                                 array_name,        &
+!> Plot 2d distribution function for VisIt
+!> @param[in]  iplot      plot counter.
+!> @param[in]  f          function values .
+!> @param[in]  vec_x1     node positions on x1.
+!> @param[in]  nnodes_x1  nodes number on x1.
+!> @param[in]  vec_x2     node positions on x2.
+!> @param[in]  nnodes_x2  nodes number on x2.
+!> @param[in]  array_name file name.
+!> @param[in]  time       Add time value on plot title.
+!> @details
+!> This routine will create a file named array_name_[iplot].xmf
+subroutine sll_plot_f_cartesian( iplot,      &
+                                 f,          &
+                                 vec_x1,     &
+                                 nnodes_x1,  &
+                                 vec_x2,     &
+                                 nnodes_x2,  &
+                                 array_name, &
                                  time)    
 
   sll_int32,                  intent(in) :: iplot
   sll_real64, dimension(:,:), intent(in) :: f
-  sll_real64, dimension(:),   intent(in) :: node_positions_x1
+  sll_real64, dimension(:),   intent(in) :: vec_x1
   sll_int32,                  intent(in) :: nnodes_x1
-  sll_real64, dimension(:),   intent(in) :: node_positions_x2    
+  sll_real64, dimension(:),   intent(in) :: vec_x2    
   sll_int32,                  intent(in) :: nnodes_x2
   character(len=*),           intent(in) :: array_name 
   sll_real64                             :: time
@@ -709,8 +720,8 @@ subroutine sll_plot_f_cartesian( iplot,             &
     SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
     do j = 1,nnodes_x2
       do i = 1,nnodes_x1
-        x1(i,j) = node_positions_x1(i) !x1_min+real(i-1,f32)*dx1
-        x2(i,j) = node_positions_x2(j) !x2_min+real(j-1,f32)*dx2
+        x1(i,j) = vec_x1(i) !x1_min+real(i-1,f32)*dx1
+        x2(i,j) = vec_x2(j) !x2_min+real(j-1,f32)*dx2
       end do
     end do
 
