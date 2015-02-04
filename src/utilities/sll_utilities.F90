@@ -441,21 +441,20 @@ subroutine PFenvelope(S,               &
 
 end subroutine PFenvelope
 
-! Input: 
-!  a=bloc_coord(1) b=bloc_coord(2)
-!  (a,b) \subset (0,1) is the refine zone
-!  bloc_index(1) = density of points in (0,a) 
-!  bloc_index(2) = density of points in (a,b) 
-!  bloc_index(3) = density of points in (b,1)
-!
-! Output:
-!  0<=i1<i1+N_fine<=N and x(i1)=a, x(i1+N_fine)=b (approx), x(0)=0, x(N)=1
-!  bloc_coord(1) = x(i1)
-!  bloc_coord(2) = x(i1+N_fine)
-!  bloc_index(1) = i1 
-!  bloc_index(2) = N_fine 
-!  bloc_index(3) = N-i1-N_fine
-
+!> - Input: 
+!>  + a=bloc_coord(1) b=bloc_coord(2)
+!>  + (a,b) subset (0,1) is the refine zone
+!>  + bloc_index(1) = density of points in (0,a) 
+!>  + bloc_index(2) = density of points in (a,b) 
+!>  + bloc_index(3) = density of points in (b,1)
+!>
+!> - Output:
+!>  + 0<=i1<i1+N_fine<=N and x(i1)=a, x(i1+N_fine)=b (approx), x(0)=0, x(N)=1
+!>  + bloc_coord(1) = x(i1)
+!>  + bloc_coord(2) = x(i1+N_fine)
+!>  + bloc_index(1) = i1 
+!>  + bloc_index(2) = N_fine 
+!>  + bloc_index(3) = N-i1-N_fine
 subroutine compute_bloc(bloc_coord,bloc_index,N)
 
   sll_real64, intent(inout)  :: bloc_coord(2)
@@ -510,15 +509,15 @@ subroutine compute_bloc(bloc_coord,bloc_index,N)
 end subroutine compute_bloc
 
 
-!Input:   
-!  x1=bloc_coord(1),x2=bloc_coord(2)
-!  with 0<i1<i2<N i1=bloc_index(1), i2=i1+bloc_index(2)
-!  N=bloc_index(1)+bloc_index(2)+bloc_index(3)
-!
-!Output:  
-!  node_positions(1:N+1)
-!  with constraints node_positions(i1+1)=x1,node_positions(i2+1)=x2
-!  node_positions(1)=0, node_positions(N+1)=1
+!> - Input:   
+!>   + x1=bloc_coord(1),x2=bloc_coord(2)
+!>   + with 0<i1<i2<N i1=bloc_index(1), i2=i1+bloc_index(2)
+!>   + N=bloc_index(1)+bloc_index(2)+bloc_index(3)
+!> 
+!> Output:  
+!>   + node_positions(1:N+1)
+!>   + with constraints node_positions(i1+1)=x1,node_positions(i2+1)=x2
+!>   + node_positions(1)=0, node_positions(N+1)=1
 subroutine compute_mesh_from_bloc(bloc_coord,bloc_index,node_positions)
 
   sll_int32,               intent(in)  :: bloc_index(3)
