@@ -46,7 +46,6 @@ use sll_common_array_initializers_module
 use sll_parallel_array_initializer_module
 use sll_module_advection_1d_periodic
 use sll_module_advection_1d_non_uniform_cubic_splines
-use sll_module_advection_1d_spectral
 use sll_poisson_1d_periodic  
 use sll_fft
 use sll_simulation_base
