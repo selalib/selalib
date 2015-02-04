@@ -58,6 +58,10 @@ type, public :: sll_ampere_1d_pstd
    fftw_int            :: sz_ek        !< size for memory allocation
    fftw_int            :: sz_jk        !< size for memory allocation
 
+contains
+
+   procedure :: compute_e_from_j => solve_ampere_1d_pstd
+
 
 end type sll_ampere_1d_pstd
 
@@ -94,15 +98,8 @@ function new_ampere_1d_pstd(xmin,xmax,nc_x) result(self)
    sll_int32,  intent(in)            :: nc_x    !< x cells number
 
    sll_int32                         :: error   !< error code
-   sll_real64                        :: dx      !< x space step
-   sll_real64                        :: kx0
-   sll_int32                         :: i
 
    SLL_ALLOCATE(self, error)
-   self%nc_eta1 = nc_x
-
-   self%e_0  = 1._f64
-   self%mu_0 = 1._f64
 
    call initialize_ampere_1d_pstd(self,xmin,xmax,nc_x) 
 
@@ -116,13 +113,11 @@ subroutine initialize_ampere_1d_pstd(self,xmin,xmax,nc_x)
    sll_real64, intent(in)   :: xmax    !< x max
    sll_int32,  intent(in)   :: nc_x    !< x cells number
 
-   sll_int32                :: error   !< error code
-   sll_real64               :: dx      !< x space step
-   sll_real64               :: kx0
-   sll_int32                :: i
    sll_real64, allocatable  :: tmp(:)
 
    self%nc_eta1 = nc_x
+   self%eta1_min = xmin
+   self%eta1_max = xmax
 
    self%e_0  = 1._f64
    self%mu_0 = 1._f64
@@ -143,10 +138,10 @@ end subroutine initialize_ampere_1d_pstd
 !> using spectral method
 subroutine solve_ampere_1d_pstd(self, dt, jx, ex)
 
-   type(sll_ampere_1d_pstd), intent(inout) :: self   !< Solver object
-   sll_real64,               intent(in)    :: dt     !< time step
-   sll_real64, dimension(:), intent(inout) :: jx     !< J current x
-   sll_real64, dimension(:), intent(inout) :: ex     !< E field x
+   class(sll_ampere_1d_pstd), intent(inout) :: self   !< Solver object
+   sll_real64,               intent(in)     :: dt     !< time step
+   sll_real64, dimension(:), intent(inout)  :: jx     !< J current x
+   sll_real64, dimension(:), intent(inout)  :: ex     !< E field x
 
    sll_int32   :: nc_x
    sll_real64  :: dt_e
