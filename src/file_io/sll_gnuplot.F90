@@ -38,7 +38,7 @@ implicit none
 interface sll_gnuplot_1d
    module procedure  sll_gnuplot_write_1d
    module procedure  sll_gnuplot_write
-   module procedure  sll_gnuplot_write_2
+   module procedure  sll_gnuplot_write_two_arrays_1d
 end interface
 
 !> Write file for gnuplot to display 2d field.
@@ -86,7 +86,7 @@ subroutine sll_gnuplot_write(array, array_name, iplot)
 end subroutine sll_gnuplot_write
 
 !> Write two arrays to display with gnuplot
-subroutine sll_gnuplot_write_2(array_name, array1, array2, iplot)
+subroutine sll_gnuplot_write_two_arrays_1d(array_name, array1, array2, iplot)
 
   sll_real64, dimension(:), intent(in) :: array1     !< data
   sll_real64, dimension(:), intent(in) :: array2     !< data
@@ -118,7 +118,7 @@ subroutine sll_gnuplot_write_2(array_name, array1, array2, iplot)
   end do
   close(file_id)
 
-end subroutine sll_gnuplot_write_2
+end subroutine sll_gnuplot_write_two_arrays_1d
 
 
 !> This subroutine write a data file to plot a 1d curve
