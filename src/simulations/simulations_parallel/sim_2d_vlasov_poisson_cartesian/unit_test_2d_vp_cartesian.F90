@@ -22,12 +22,18 @@ character(len=256)  :: filename_local
 type(sll_time_mark) :: t0
 sll_real64          :: time
 sll_int32           :: ierr
+sll_int32           :: i
+sll_int32           :: num_min
+sll_int32           :: num_max
+character(len=256)  :: str
 
 procedure(sll_scalar_initializer_2d), pointer :: init_func
 
 sll_real64, dimension(:), pointer :: params
 sll_int32                         :: num_params
 logical                           :: init_from_unit_test  
+
+
 
 init_from_unit_test = .false.
 
@@ -41,35 +47,59 @@ if(sll_get_collective_rank(sll_world_collective)==0)then
 
 endif
 
-call get_command_argument(1, filename)
 
-print *,'#filename=',filename
+  call get_command_argument(1, filename)
+  if (len_trim(filename) == 0)then
+    sim => new_vp2d_par_cart( )
+    call sim%run( )
+  else
+    filename_local = trim(filename)
+    call get_command_argument(2, str)
+    if(len_trim(str) == 0)then
+      sim => new_vp2d_par_cart( filename_local )
+      
+      if (init_from_unit_test) then
 
-if (len_trim(filename) == 0) then
-  sim => new_vp2d_par_cart( )
-else
-  filename_local = trim(filename)
-  sim => new_vp2d_par_cart( filename_local )
-endif
+        print *,'#Warning: init_function is redefined form unit_test'
+        init_func => sll_landau_initializer_2d
+        num_params = 2
+        SLL_ALLOCATE(params(num_params),ierr)  
+        params(1) = 0.26_f64
+        params(2) = 100._f64  
 
-if (init_from_unit_test) then
+        call change_initial_function_vp2d_par_cart( &
+          sim,                                      &
+          init_func,                                &
+          params,                                   &
+          num_params)
+        
+      endif
 
-  print *,'#Warning: init_function is redefined form unit_test'
-  init_func => sll_landau_initializer_2d
-  num_params = 2
-  SLL_ALLOCATE(params(num_params),ierr)  
-  params(1) = 0.26_f64
-  params(2) = 100._f64  
+      
+      
+      
+      call sim%run( )
+    else
+      read(str , *) num_max
+      num_min = 0
+      call get_command_argument(3, str)
+      if(len_trim(str) .ne. 0)then
+        num_min = num_max
+        read(str , *) num_max
+      endif
+      !print *,'#num=',num_min,num_max
+      do i=num_min,num_max
+        sim => new_vp2d_par_cart( filename_local, i)
+        call sim%run( )
+        call delete_vp2d_par_cart( sim )
+        nullify( sim )
+      enddo  
+    endif    
+  endif
 
-  call change_initial_function_vp2d_par_cart( &
-    sim,                                      &
-    init_func,                                &
-    params,                                   &
-    num_params)
 
-endif
 
-call sim%run( )
+
 
 if(sll_get_collective_rank(sll_world_collective)==0)then
 
