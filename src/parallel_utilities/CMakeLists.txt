@@ -46,7 +46,7 @@ IF(MPI_ENABLED)
 
   ENDIF()
 
-  ADD_EXECUTABLE(local_to_global local_to_global.F90)
-  ADD_EXECUTABLE(scatter scatter.F90)
+  #ADD_EXECUTABLE(local_to_global local_to_global.F90)
+  #ADD_EXECUTABLE(scatter scatter.F90)
 
 ENDIF()
