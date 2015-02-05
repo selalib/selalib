@@ -30,9 +30,9 @@ implicit none
 !> 2D Box spline type, containing the mesh information, the
 !> boundary condition, and the spline coefficients
 type sll_box_spline_2d
-   type(sll_hex_mesh_2d), pointer  :: mesh !> Hexagonal mesh
-   sll_int32 SLL_PRIV :: bc_type !> Boundary conditions definition
-   sll_real64, dimension(:), pointer :: coeffs !> Spline coefficients
+   type(sll_hex_mesh_2d), pointer  :: mesh !< Hexagonal mesh
+   sll_int32 SLL_PRIV :: bc_type !< Boundary conditions definition
+   sll_real64, dimension(:), pointer :: coeffs !< Spline coefficients
 end type sll_box_spline_2d
 
 
