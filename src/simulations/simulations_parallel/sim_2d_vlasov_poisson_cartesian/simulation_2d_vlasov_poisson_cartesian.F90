@@ -804,7 +804,6 @@ contains
         SLL_ERROR('#integration_case not implemented')
     end select  
     
-    !poisson
     select case (poisson_solver)
       case ("SLL_FFT")
         sim%poisson => new_poisson_1d_periodic_solver( &
@@ -935,7 +934,6 @@ contains
     sll_int32                           :: ierr
     sll_int32                           :: local_size_x1
     sll_int32                           :: local_size_x2
-    type(poisson_1d_periodic)           :: poisson_1d
     sll_real64                          :: adr
     sll_real64                          :: tmp_loc(5)
     sll_real64                          :: tmp(5)
@@ -1181,8 +1179,6 @@ contains
       print *,'#maxf',maxval(f_visu), minval(f_visu) 
 
     endif
-
-    call initialize(poisson_1d,sim%mesh2d%eta1_min,sim%mesh2d%eta1_max,np_x1-1,ierr)
 
     !computation of electric field
     rho_loc = 0._f64
