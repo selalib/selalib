@@ -366,14 +366,13 @@ subroutine init_vp2d_par_cart( sim, filename )
     keen_Edrmax,                        &
     keen_omegadr
 
-  num_threads = 1
 
 #ifdef _OPENMP
   !$OMP PARALLEL SHARED(num_threads)
-  if (omp_get_thread_num()==0) then
-    num_threads =  omp_get_num_threads()      
-  endif
+  num_threads =  omp_get_num_threads()      
   !$OMP END PARALLEL
+#else
+  num_threads = 1
 #endif
 
   sim%num_threads = num_threads
@@ -647,14 +646,14 @@ subroutine init_vp2d_par_cart( sim, filename )
   SLL_ALLOCATE(sim%advect_x1(num_threads),ierr)
   SLL_ALLOCATE(sim%advect_x2(num_threads),ierr)
 
+#ifdef _OPENMP
   !$OMP PARALLEL DEFAULT(SHARED) &
   !$OMP PRIVATE(tid)
-
-#ifdef _OPENMP
-    tid = omp_get_thread_num()+1
+  tid = omp_get_thread_num()+1
 #else
-    tid = 1
+  tid = 1
 #endif
+  write(*,*) " tid = ", tid
 
 
   select case (advector_x1)
@@ -690,6 +689,7 @@ subroutine init_vp2d_par_cart( sim, filename )
       SLL_ERROR('#advector in x1 '//advector_x1//' not implemented')
 
   end select    
+
 
   select case (advector_x2)
 
@@ -760,7 +760,6 @@ subroutine init_vp2d_par_cart( sim, filename )
       SLL_ERROR('#integration_case not implemented')
   end select  
   
-  !poisson
   select case (poisson_solver)
     case ("SLL_FFT")
       sim%poisson => new_poisson_1d_periodic_solver(x1_min,x1_max,num_cells_x1)
@@ -828,6 +827,7 @@ subroutine init_vp2d_par_cart( sim, filename )
       write(param_out, *) x2_min                         !vxmin
       write(param_out, *) num_cells_x1                   !N
       write(param_out, *) num_cells_x2                   !Nv
+
       ! KEEN drive
       write(param_out, *) sim%tL                         !tL
       write(param_out, *) sim%tR                         !tR

@@ -11,28 +11,4 @@
 
 !> @defgroup simulation sll_simulation 
 !> @brief 
-!> Description of simulation library (72 characters)
-!> @author Selalib team. 
-!> You can add a contact, do not put your email to prevent spam.
-!> @details
-!> Long description of  simulation, you can add some references or math equations.
-!>
-!> <b> Headers file available </b>
-!>  - sll_simulation.h
-!>
-!> <b> Modules available </b>
-!>  List fortran module available
-!>  - sll_simulation
-!>
-!> <b> How to use it </b>
-!> - Header file : \code #include 'sll_simulation.h' \endcode
-!> - Link with   <code>-lsll_%s</code>
-!> - Add <code> use sll_simulation </code>
-!>
-!> <b> Examples </b>
-!> -Add some fortran lines to explain how to use the library
-!> \code
-!> call initialize(my_type, arg_1, arg_2)
-!> call solve(my_type, your_result)
-!> \endcode
-!>
+!> Simulation library 

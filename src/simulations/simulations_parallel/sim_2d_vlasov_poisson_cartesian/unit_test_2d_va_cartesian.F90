@@ -619,17 +619,17 @@ subroutine advection_x()
 
 sll_int32 :: global_indices(2)
 
-global_indices = local_to_global( layout_x1, (/1, 1/) )
 
 !$OMP PARALLEL DEFAULT(SHARED) &
 !$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid) 
 !advection in x
 #ifdef _OPENMP
-      tid = omp_get_thread_num()+1
+tid  = omp_get_thread_num()+1
 #else
-      tid=1          
+tid  = 1          
 #endif
 
+global_indices = local_to_global( layout_x1, (/1, 1/) )
 
 !$OMP DO
 do i_omp = 1, local_size_x2
