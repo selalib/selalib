@@ -9,7 +9,7 @@
 !> The only boundary condition supported right now
 !> is dirichlet.
 !>  Reference :
-!>     @Condat2006 "Three-directional box splines"
+!>     \@Condat2006 "Three-directional box splines"
 
 module sll_box_splines
 #include "sll_working_precision.h"
@@ -55,6 +55,7 @@ contains  ! ****************************************************************
   !> @param[in] mesh Hexagonal mesh on which the box spline will be defined
   !> @param[in] bc_type Integer defining the boundary condition, usual values
   !> are SLL_PERIODIC, SLL_DIRICHLET, ...
+  !> @return box spline element
   function new_box_spline_2d( &
        mesh,         &
        bc_type)
@@ -263,7 +264,7 @@ contains  ! ****************************************************************
   !> @details Computes the value of the box spline (chi) of degree deg
   !> on the point of cartesian coordiantes (x1, x2). The algorithm is specific
   !> to the hexagonal mesh and has been optimized for degree 2 splines.
-  !> Reference : @Condat and Van De Ville (2006)
+  !> Reference : \@Condat and Van De Ville (2006)
   !>             "Three directional Box Splines:
   !>             Characterization and Efficient Evaluation."
   !> @param[in] x1_in real containing first coordinate of point
@@ -271,6 +272,7 @@ contains  ! ****************************************************************
   !> @param[in] x2_in real containing second coordinate of point
   !> where spline is to be evaluated
   !> @param[in] deg integer containing the degree of the spline
+  !> @return chi_gen_val  value of the box spline
   function chi_gen_val(x1_in,x2_in,deg) result(val)
     sll_real64, intent(in) :: x1_in
     sll_real64, intent(in) :: x2_in
@@ -761,7 +763,8 @@ contains  ! ****************************************************************
   !> @details write connectivity info for CAID/Pigasus. This function was
   !> intented to couple Pigasus poisson solver to the hex-mesh.
   !> Output file : boxsplines_connectivity.txt
-  !> @param[in]  deg integer designing boxsplines degree
+  !> @param[in]  mesh pointer to the hexagonal mesh
+  !> @param[in]  deg  integer designing boxsplines degree
   subroutine write_connectivity(mesh, deg)
     type(sll_hex_mesh_2d), pointer :: mesh
     sll_int32, intent(in)          :: deg
