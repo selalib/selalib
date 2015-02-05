@@ -17,12 +17,10 @@
 !
 ! Vlasov-Poisson simulation in 1Dx1D
 ! Landau and KEEN waves test cases
+! modified copy of simulation_2d_vlasov_poisson_cartesian.F90
 !
 ! contact: Pierre Navaro (navaro AT unistra.fr)
 !
-! current investigations:
-!   High order splitting in time
-!   KEEN waves with uniform and non uniform grid in velocity
 
 module sll_simulation_2d_vlasov_ampere_cartesian
 
@@ -32,6 +30,7 @@ module sll_simulation_2d_vlasov_ampere_cartesian
 #include "sll_field_2d.h"
 #include "sll_utilities.h"
 #include "sll_poisson_solvers.h"
+#include "sll_integration.h"
 
 use sll_collective
 use sll_remapper
@@ -750,17 +749,9 @@ subroutine init_vp2d_par_cart( sim, filename )
 
   select case (integration_case)
     case ("SLL_RECTANGLE")
-      do i=1,num_cells_x2
-        sim%integration_weight(i) = sim%x2_array(i+1)-sim%x2_array(i)
-      enddo
-      sim%integration_weight(num_cells_x2+1) = 0._f64   
+      sim%integration_weight = rectangle_weights(num_cells_x1+1,sim%x2_array)
     case ("SLL_TRAPEZOID")
-      sim%integration_weight(1)=0.5_f64*(sim%x2_array(2)-sim%x2_array(1))
-      do i=2,num_cells_x2
-        sim%integration_weight(i) = 0.5_f64*(sim%x2_array(i+1)-sim%x2_array(i-1))
-      enddo  
-      sim%integration_weight(num_cells_x2+1) = &
-        0.5_f64*(sim%x2_array(num_cells_x2+1)-sim%x2_array(num_cells_x2))
+      sim%integration_weight = trapz_weights(num_cells_x1+1,sim%x2_array)
     case ("SLL_CONSERVATIVE")
       do i=1,num_cells_x2
         sim%integration_weight(i)=sim%x2_array(i+1)-sim%x2_array(i)
@@ -772,15 +763,9 @@ subroutine init_vp2d_par_cart( sim, filename )
   !poisson
   select case (poisson_solver)
     case ("SLL_FFT")
-      sim%poisson => new_poisson_1d_periodic_solver( &
-        x1_min, &
-        x1_max, &
-        num_cells_x1)
+      sim%poisson => new_poisson_1d_periodic_solver(x1_min,x1_max,num_cells_x1)
     case ("SLL_POLAR")
-      sim%poisson => new_poisson_1d_polar_solver( &
-        x1_min, &
-        x1_max, &
-        num_cells_x1)
+      sim%poisson => new_poisson_1d_polar_solver(x1_min,x1_max,num_cells_x1)
     case default
       SLL_ERROR('#poisson_solver '//poisson_solver//' not implemented')
   end select

@@ -60,6 +60,7 @@ type, public :: sll_ampere_1d_pstd
 
 contains
 
+   !> Compute electric field from current
    procedure :: compute_e_from_j => solve_ampere_1d_pstd
 
 
@@ -86,7 +87,7 @@ public sll_solve
 public new_ampere_1d_pstd
 
 private
-sll_int32 :: error
+sll_int32 :: error !< error code
 
 contains
 
