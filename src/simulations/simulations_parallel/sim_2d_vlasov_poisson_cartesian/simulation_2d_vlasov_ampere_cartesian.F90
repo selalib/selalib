@@ -126,6 +126,7 @@ use omp_lib
    sll_real64 :: factor_x2_1
 
    class(sll_poisson_1d_base), pointer :: poisson 
+   class(sll_ampere_1d_pstd),  pointer :: ampere 
            
    contains !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -830,6 +831,14 @@ contains
       case default
         SLL_ERROR('#poisson_solver '//poisson_solver//' not implemented')
     end select
+
+  select case (ampere_solver)
+    case ("SLL_PSTD")
+      sim%ampere => new_ampere_1d_pstd(x1_min, x1_max, num_cells_x1)
+    case default
+      SLL_ERROR('#ampere_solver '//ampere_solver//' not implemented')
+  end select
+
     
     select case (drive_type)
 
