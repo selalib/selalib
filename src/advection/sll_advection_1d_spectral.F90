@@ -22,15 +22,13 @@ module sll_module_advection_1d_spectral
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_fftw.h"
 #include "sll_utilities.h"
 #include "sll_constants.h"
 
 use sll_boundary_condition_descriptors
 use sll_module_advection_1d_base
 use sll_module_interpolators_1d_base
-use, intrinsic :: iso_c_binding
-use fftw3
+use sll_fft
 
 implicit none
 
@@ -39,17 +37,15 @@ private
 type,extends(sll_advection_1d_base), public :: spectral_1d_advector
   
   sll_int32                          :: num_cells
-  sll_int32                          :: num_points
   sll_real64                         :: eta_min
   sll_real64                         :: eta_max
   sll_int32                          :: bc
   sll_real64                         :: delta_eta
   sll_real64, dimension(:),  pointer :: d_dx
   sll_real64, dimension(:),  pointer :: kx
-  fftw_plan                          :: fwx
-  fftw_plan                          :: bwx
-  fftw_plan                          :: p_tmp_x
-  fftw_comp,  dimension(:),  pointer :: tmp_x
+  type(sll_fft_plan), pointer        :: fwx
+  type(sll_fft_plan), pointer        :: bwx
+  sll_comp64,  dimension(:), pointer :: tmp_x
 
 contains
 
@@ -66,14 +62,14 @@ public ::  new_spectral_1d_advector
 contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-function new_spectral_1d_advector( npts,     &
-                                   eta_min,  &
-                                   eta_max,  &
+function new_spectral_1d_advector( num_cells, &
+                                   eta_min,   &
+                                   eta_max,   &
                                    bc ) result(adv)      
 
   type(spectral_1d_advector), pointer :: adv
 
-  sll_int32,  intent(in)              :: npts
+  sll_int32,  intent(in)              :: num_cells
   sll_real64, intent(in), optional    :: eta_min
   sll_real64, intent(in), optional    :: eta_max
   sll_int32,  intent(in)              :: bc
@@ -82,33 +78,26 @@ function new_spectral_1d_advector( npts,     &
   
   SLL_ALLOCATE(adv,error)
       
-  call initialize( adv,        &
-                   npts,       &
-                   eta_min,    &
-                   eta_max,    &
-                   bc)    
+  call initialize( adv, num_cells, eta_min, eta_max, bc)    
   
 end function new_spectral_1d_advector
 
-subroutine initialize( adv, npts, eta_min, eta_max, bc)    
+subroutine initialize( adv, num_cells, eta_min, eta_max, bc)    
 
   class(spectral_1d_advector), intent(inout) :: adv
-  sll_int32,                   intent(in)    :: npts
+  sll_int32,                   intent(in)    :: num_cells
   sll_real64,        optional, intent(in)    :: eta_min
   sll_real64,        optional, intent(in)    :: eta_max
   sll_int32                                  :: bc
 
   sll_int32      :: i
   sll_int32      :: error
-  sll_int32      :: tmp_size
   sll_real64     :: kx0
-  fftw_int       :: sz_tmp_x
   
-  adv%num_points = npts
   adv%eta_min    = eta_min
   adv%eta_max    = eta_max
-  adv%num_cells  = npts-1
-  adv%delta_eta  = (eta_max-eta_min) / (npts-1)
+  adv%num_cells  = num_cells
+  adv%delta_eta  = (eta_max-eta_min) / num_cells
 
   if( bc /= SLL_PERIODIC) then
     SLL_ERROR ('Boundary conditions for spectral advection must be periodic')
@@ -116,20 +105,18 @@ subroutine initialize( adv, npts, eta_min, eta_max, bc)
     adv%bc = bc
   endif     
   
-  tmp_size = (npts-1)/2+1
+  SLL_CLEAR_ALLOCATE(adv%d_dx(1:num_cells), error)
+  SLL_CLEAR_ALLOCATE(adv%tmp_x(1:num_cells/2+1), error)
 
-  FFTW_ALLOCATE(adv%tmp_x,tmp_size,sz_tmp_x,adv%p_tmp_x)
-  SLL_CLEAR_ALLOCATE(adv%d_dx(1:adv%num_cells), error)
+  adv%fwx => fft_new_plan(num_cells, adv%d_dx,  adv%tmp_x)
+  adv%bwx => fft_new_plan(num_cells, adv%tmp_x, adv%d_dx)
 
-  NEW_FFTW_PLAN_R2C_1D(adv%fwx, adv%num_cells, adv%d_dx,  adv%tmp_x)
-  NEW_FFTW_PLAN_C2R_1D(adv%bwx, adv%num_cells, adv%tmp_x, adv%d_dx)
-
-  SLL_CLEAR_ALLOCATE(adv%kx(1:tmp_size), error)
+  SLL_CLEAR_ALLOCATE(adv%kx(1:num_cells/2+1), error)
    
-  kx0 = 2._f64*sll_pi/(adv%num_cells*adv%delta_eta)
+  kx0 = 2._f64*sll_pi/(eta_max-eta_min)
 
   adv%kx(1) = 1.0_f64
-  do i=2,adv%num_cells/2+1
+  do i=2,num_cells/2+1
      adv%kx(i) = (i-1)*kx0
   end do
         
@@ -148,13 +135,13 @@ subroutine advect_1d( adv, a, dt, input, output )
   nx = adv%num_cells
 
   adv%d_dx = input(1:nx)
-  call fftw_execute_dft_r2c(adv%fwx, adv%d_dx, adv%tmp_x)
+  call fft_apply_plan(adv%fwx, adv%d_dx, adv%tmp_x)
 
   !f = f^n exp(-i kx vx dt)
 
   adv%tmp_x = adv%tmp_x*cmplx(cos(adv%kx*a*dt),-sin(adv%kx*a*dt),kind=f64)
 
-  call fftw_execute_dft_c2r(adv%bwx, adv%tmp_x, adv%d_dx)
+  call fft_apply_plan(adv%bwx, adv%tmp_x, adv%d_dx)
   output(1:nx)= adv%d_dx / nx
 
   output(nx+1) = output(1)
@@ -174,13 +161,13 @@ subroutine advect_1d_constant( adv, a, dt, input, output )
   nx = adv%num_cells
 
   adv%d_dx = input(1:nx)
-  call fftw_execute_dft_r2c(adv%fwx, adv%d_dx, adv%tmp_x)
+  call fft_apply_plan(adv%fwx, adv%d_dx, adv%tmp_x)
 
   !f = f^n exp(-i kx vx dt)
 
   adv%tmp_x = adv%tmp_x*cmplx(cos(adv%kx*a*dt),-sin(adv%kx*a*dt),kind=f64)
 
-  call fftw_execute_dft_c2r(adv%bwx, adv%tmp_x, adv%d_dx)
+  call fft_apply_plan(adv%bwx, adv%tmp_x, adv%d_dx)
   output(1:nx)= adv%d_dx / nx
 
   output(nx+1) = output(1)
@@ -191,12 +178,8 @@ subroutine delete(adv)
 
   class(spectral_1d_advector), intent(inout) :: adv
 
-#ifdef FFTW_F2003
-  if (c_associated(adv%p_tmp_x)) call fftw_free(adv%p_tmp_x)
-#endif
-
-  call fftw_destroy_plan(adv%fwx)
-  call fftw_destroy_plan(adv%bwx)
+  call fft_delete_plan(adv%fwx)
+  call fft_delete_plan(adv%bwx)
 
 end subroutine delete
 
