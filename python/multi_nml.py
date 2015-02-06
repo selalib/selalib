@@ -1,4 +1,5 @@
-#python3 my_test.py
+#python my_test.py
+#
 import os
 import sys
 import unittest
