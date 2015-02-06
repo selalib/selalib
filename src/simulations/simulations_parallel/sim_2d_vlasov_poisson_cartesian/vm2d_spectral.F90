@@ -15,7 +15,7 @@ use sll_vlasov2d_base
 use sll_vlasov2d_spectral
 use sll_poisson_1d_periodic  
 use sll_module_poisson_1d_periodic_solver
-use sll_module_ampere_1d_pstd
+use sll_module_ampere_vlasov_1d
 use sll_collective
 use sll_remapper
 use init_functions, only: landau_1d, tsi, TSI_CASE, LANDAU_X_CASE
@@ -26,7 +26,7 @@ type(vlasov2d_spectral)                         :: vlasov
 type(sll_cubic_spline_interpolator_1d), target  :: spl_x1
 type(sll_cubic_spline_interpolator_1d), target  :: spl_x2
 class(sll_poisson_1d_base),             pointer :: poisson
-type(sll_ampere_1d_pstd),               pointer :: ampere 
+type(sll_ampere_1d),                    pointer :: ampere 
 
 
 sll_int32  :: iter 
@@ -73,7 +73,7 @@ do iter=1,vlasov%nbiter
 
    call transposevx(vlasov)
 
-  call spectral_advection_x(vlasov, vlasov%dt)
+   call spectral_advection_x(vlasov, vlasov%dt)
 
    if (mod(iter,vlasov%fthdiag) == 0) then 
       call write_energy(vlasov, iter*vlasov%dt)
@@ -156,9 +156,9 @@ subroutine initlocal()
      end do
   end do
   
-  ampere => new_ampere_1d_pstd( vlasov%eta1_min,  &
-                                vlasov%eta1_max,  &
-                                vlasov%nc_eta1)
+  ampere => new_ampere_1d( vlasov%eta1_min,  &
+                           vlasov%eta1_max,  &
+                           vlasov%nc_eta1)
   
   poisson => new_poisson_1d_periodic_solver( vlasov%eta1_min, &
                                              vlasov%eta1_max, &
