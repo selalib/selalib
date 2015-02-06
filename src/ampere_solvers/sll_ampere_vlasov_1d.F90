@@ -71,6 +71,7 @@ type, extends(sll_ampere_1d), public :: sll_ampere_vlasov_1d
    fftw_int            :: sz_fk        !< size for memory allocation
    fftw_int            :: sz_rk        !< size for memory allocation
    sll_real64, pointer :: kx(:)        !< wave number
+   sll_real64, pointer :: df_dx(:)     !< f derivative x
 
 contains
 
@@ -187,16 +188,14 @@ subroutine initialize_ampere_vlasov_1d(self,             &
    self%e_0  = 1._f64
    self%mu_0 = 1._f64
 
-   allocate(tmp(nc_x))
-
    FFTW_ALLOCATE(self%ek,(nc_x/2+1),self%sz_ek,self%p_ek)
    FFTW_ALLOCATE(self%rk,(nc_x/2+1),self%sz_rk,self%p_rk)
    FFTW_ALLOCATE(self%fk,(nc_x/2+1),self%sz_fk,self%p_fk)
 
-   NEW_FFTW_PLAN_R2C_1D(self%fwx, nc_x, tmp,  self%ek)
-   NEW_FFTW_PLAN_C2R_1D(self%bwx, nc_x, self%rk,  tmp)
+   SLL_CLEAR_ALLOCATE(self%df_dx(1:nc_x), error)
 
-   deallocate(tmp)
+   NEW_FFTW_PLAN_R2C_1D(self%fwx, nc_x, self%df_dx,  self%ek)
+   NEW_FFTW_PLAN_C2R_1D(self%bwx, nc_x, self%rk,  self%df_dx)
 
    SLL_CLEAR_ALLOCATE(self%kx(1:nc_x/2+1), error)
     
@@ -245,26 +244,28 @@ subroutine solve_ampere_vlasov_1d(self, dt, f, ex)
 
    sll_int32   :: j
    sll_int32   :: nc_x, nc_y
-   sll_real64  :: dt_e, v
+   sll_real64  :: dt_e, a
 
    dt_e = dt / self%e_0
    nc_x = self%nc_eta1 
    nc_y = self%nc_eta2
 
-   self%rk = cmplx(0.0,0.0,kind=f64)
-   do j = 1, nc_y
-     v = self%eta2_min + (j-1) * self%delta_eta2
-     call fftw_execute_dft_r2c(self%fwx, f(1:nc_x,j), self%fk)
-     self%rk = self%rk + self%delta_eta2 * self%fk
-     self%fk = self%fk*cmplx(cos(self%kx*v*dt),sin(self%kx*v*dt),kind=f64)
-     call fftw_execute_dft_c2r(self%bwx, self%fk, f(1:nc_x,j))
-     f(1:nc_x,j) = f(1:nc_x,j) / nc_x
+   !self%rk = cmplx(0.0,0.0,kind=f64)
+   do j = 1, nc_y+1
+     a = (self%eta2_min + (j-1) * self%delta_eta2)*dt
+     self%df_dx = f(1:nc_x,j)
+     call fftw_execute_dft_r2c(self%fwx, self%df_dx, self%fk)
+     !self%rk = self%rk + self%delta_eta2 * self%fk
+     self%fk = self%fk*cmplx(cos(self%kx*a),-sin(self%kx*a),kind=f64)
+     call fftw_execute_dft_c2r(self%bwx, self%fk, self%df_dx)
+     f(1:nc_x,j) = self%df_dx / nc_x
      f(nc_x+1,j) = f(1,j)
    end do
 
-   self%ek = self%rk / cmplx(cos(self%kx*self%e_0),sin(self%kx*self%e_0),kind=f64)
-   call fftw_execute_dft_c2r(self%bwx, self%ek, ex)
-   ex = ex / nc_x
+
+   !self%ek = self%rk / cmplx(cos(self%kx*self%e_0),sin(self%kx*self%e_0),kind=f64)
+   !call fftw_execute_dft_c2r(self%bwx, self%ek, ex)
+   !ex = ex / nc_x
 
 end subroutine solve_ampere_vlasov_1d
 

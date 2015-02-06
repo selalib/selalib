@@ -22,7 +22,7 @@ sll_int32  :: nc_x
 sll_int32  :: error
 
 type(sll_ampere_1d)        :: ampere
-type(sll_ampere_vlasov_1d) :: solver
+type(sll_ampere_vlasov_1d) :: ampere_vlasov
 sll_int32                  :: i
 sll_int32                  :: j
 sll_real64                 :: w
@@ -86,7 +86,6 @@ w = 1.0_f64
 SLL_CLEAR_ALLOCATE(ex(1:nc_x+1),       error)
 SLL_CLEAR_ALLOCATE(jx(1:nc_x+1),       error)
 SLL_CLEAR_ALLOCATE(ex_exact(1:nc_x+1), error)
-SLL_CLEAR_ALLOCATE(ex_exact(1:nc_x+1), error)
 
 call sll_create(ampere, x_min, x_max, nc_x)
 
@@ -96,9 +95,9 @@ do istep = 1, nstep !*** Loop over time
   time     = time + 0.5_f64*dt
   jx       = -w*w*cos(time*w)*sin(sll_pi*x)
 
-  write(*,"(10x,' istep = ',I6)",advance="no") istep
-  write(*,"(' time = ',g12.3,' sec')",advance="no") time
-  write(*,"(' error max = ',g15.5)") maxval(abs(ex - ex_exact))
+  !write(*,"(10x,' istep = ',I6)",advance="no") istep
+  !write(*,"(' time = ',g12.3,' sec')",advance="no") time
+  !write(*,"(' error max = ',g15.5)") maxval(abs(ex - ex_exact))
 
   call sll_solve(ampere, dt, jx, ex)
   ex(nc_x+1) = ex(1)
@@ -116,11 +115,11 @@ interp_v => spline_v
 
 eta1_min = 0.0_f64
 eta1_max = 4.0_f64*sll_pi
-nc_eta1  = 256
+nc_eta1  = 32
 
 eta2_min = -6.0_f64
 eta2_max = +6.0_f64
-nc_eta2  = 256
+nc_eta2  = 64
 
 SLL_ALLOCATE(rho(nc_eta1+1),error)
 SLL_ALLOCATE(ex(nc_eta1+1),error)
@@ -149,24 +148,25 @@ do j=1, nc_eta2+1
 end do
 
 time = 0.0_f64
-n_step = 1000
-delta_t = 0.05_f64
+n_step = 600
+delta_t = 0.1_f64
 SLL_ALLOCATE(nrj(n_step), error)
 print*, "set title'", delta_eta1, delta_eta2,"'"
 print*, 'set term x11'
 
-call advection_x(0.5*delta_t)
+call sll_create(ampere_vlasov,               &
+                eta1_min, eta1_max, nc_eta1, &
+                eta2_min, eta2_max, nc_eta2)
+              
+
+call advection_poisson_x(0.5*delta_t)
 
 do i_step = 1, n_step
 
-   do i = 1, nc_eta1+1
-      rho(i) = sum(df(i,:))*delta_eta2
-   end do
-
-   call solve(poisson, ex , rho)
-
    call advection_v(delta_t)
-   call advection_x(delta_t)
+
+   !call sll_solve(ampere_vlasov, delta_t, df, ex) 
+   call advection_poisson_x(delta_t)
    
    nrj(i_step) = 0.5_f64*log(sum(ex*ex)*delta_eta1)
    
@@ -185,24 +185,28 @@ do i_step = 1, n_step
 
 end do
 
-print*,'PASSED'
+print*,'#PASSED'
 100 format('p [',f5.1,':',f5.1,'][',f6.1,':',f6.1,'] ''-'' w l')
 
 
 call cpu_time(tend)
-print"('CPU time : ',g15.3)", tend-tstart
-print*,'PASSED'
+print"('#CPU time : ',g15.3)", tend-tstart
+print*,'#PASSED'
 
 deallocate(ex,jx,ex_exact)
 
 contains
 
-   subroutine advection_x(dt)
+   subroutine advection_poisson_x(dt)
     sll_real64, intent(in) :: dt
     do j = 1, nc_eta2+1
       df(:,j) = interp_x%interpolate_array_disp(nc_eta1+1,df(:,j),dt*eta2(j))
     end do
-   end subroutine advection_x
+    do i = 1, nc_eta1+1
+      rho(i) = sum(df(i,:))*delta_eta2
+    end do
+    call solve(poisson, ex , rho)
+   end subroutine advection_poisson_x
 
    subroutine advection_v(dt)
     sll_real64, intent(in) :: dt
