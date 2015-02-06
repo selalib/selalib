@@ -3,13 +3,13 @@
 ! - 1Dx1D cartesian: x1=x, x2=vx
 ! - parallel
 
-program vlasov_poisson_2d
+program vlasov_ampere_2d
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_utilities.h"
 
-use sll_simulation_2d_vlasov_poisson_cartesian
+use sll_simulation_2d_vlasov_ampere_cartesian
 use sll_common_array_initializers_module
 use sll_collective
 use sll_timer
@@ -318,10 +318,11 @@ do istep = 1, sim%num_iterations
 
        call advection_x(sim%split%split_step(split_istep)*sim%dt)
        t_step = t_step+sim%split%split_step(split_istep)
-       call compute_rho()
-       call sim%poisson%compute_E_from_rho( efield, rho )
-       !call compute_current()
-       !call sim%ampere%compute_E_from_J( sim%dt, current, efield)
+       !call compute_rho()
+       !call sim%poisson%compute_E_from_rho( efield, rho )
+       call compute_current()
+       call sim%ampere%compute_E_from_J(sim%split%split_step(split_istep)*sim%dt, &
+                                        current, efield)
      else
 
        if (sim%driven) call set_e_app(time_init+(istep-1)*sim%dt)
@@ -799,4 +800,4 @@ endif
 
 end subroutine check_restart
 
-end program vlasov_poisson_2d
+end program vlasov_ampere_2d
