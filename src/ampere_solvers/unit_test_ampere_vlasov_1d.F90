@@ -33,10 +33,10 @@ sll_real64                 :: cfl = 0.5
 
 sll_int32,  parameter      :: mode = 2
 
-sll_real64, dimension(:),   allocatable :: x
-sll_real64, dimension(:),   allocatable :: ex
-sll_real64, dimension(:),   allocatable :: ex_exact
-sll_real64, dimension(:),   allocatable :: jx
+sll_real64, dimension(:), allocatable :: x
+sll_real64, dimension(:), allocatable :: ex
+sll_real64, dimension(:), allocatable :: ex_exact
+sll_real64, dimension(:), allocatable :: jx
   
 sll_int32  :: i_step, n_step, j_step
 sll_int32  :: nc_eta1, nc_eta2
@@ -158,15 +158,14 @@ call sll_create(ampere_vlasov,               &
                 eta1_min, eta1_max, nc_eta1, &
                 eta2_min, eta2_max, nc_eta2)
               
-
-call advection_poisson_x(0.5*delta_t)
+call advection_poisson(0.5*delta_t)
 
 do i_step = 1, n_step
 
    call advection_v(delta_t)
 
-   !call sll_solve(ampere_vlasov, delta_t, df, ex) 
-   call advection_poisson_x(delta_t)
+   call sll_solve(ampere_vlasov, delta_t, df, ex) 
+   !call advection_poisson(0.0_f64*delta_t)
    
    nrj(i_step) = 0.5_f64*log(sum(ex*ex)*delta_eta1)
    
@@ -197,7 +196,7 @@ deallocate(ex,jx,ex_exact)
 
 contains
 
-   subroutine advection_poisson_x(dt)
+   subroutine advection_poisson(dt)
     sll_real64, intent(in) :: dt
     do j = 1, nc_eta2+1
       df(:,j) = interp_x%interpolate_array_disp(nc_eta1+1,df(:,j),dt*eta2(j))
@@ -206,7 +205,7 @@ contains
       rho(i) = sum(df(i,:))*delta_eta2
     end do
     call solve(poisson, ex , rho)
-   end subroutine advection_poisson_x
+   end subroutine advection_poisson
 
    subroutine advection_v(dt)
     sll_real64, intent(in) :: dt
