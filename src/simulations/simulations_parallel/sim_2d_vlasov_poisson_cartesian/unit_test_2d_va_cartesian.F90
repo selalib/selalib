@@ -214,6 +214,8 @@ do i = 1, np_x2-1
 end do
 x2_array_middle(np_x2) = x2_array_middle(1)+sim%x2_array(np_x2)-sim%x2_array(1)
 
+
+
 select case (sim%advection_form_x2)
   case (SLL_ADVECTIVE)
     node_positions_x2(1:num_dof_x2) = sim%x2_array(1:num_dof_x2)
@@ -318,10 +320,14 @@ do istep = 1, sim%num_iterations
 
        call advection_x(sim%split%split_step(split_istep)*sim%dt)
        t_step = t_step+sim%split%split_step(split_istep)
-       call compute_rho()
-       call sim%poisson%compute_E_from_rho( efield, rho )
-       !call compute_current()
-       !call sim%ampere%compute_E_from_J( sim%dt, current, efield)
+       !call compute_rho()
+       !call sim%poisson%compute_E_from_rho( efield, rho )
+       call compute_current()
+       efield = efield +sim%split%split_step(split_istep)*sim%dt*current
+!       call sim%ampere%compute_E_from_J( &
+!         sim%split%split_step(split_istep)*sim%dt, &
+!         current, &
+!         efield)
      else
 
        if (sim%driven) call set_e_app(time_init+(istep-1)*sim%dt)
