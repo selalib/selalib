@@ -1,10 +1,10 @@
 !> @ingroup integration
 !> @brief 
-!> Rectangle integration
+!> Trapezoid formula for numerical integration
 !> @details
 !> Low-level mathematical utility 
 !> that applies the 
-!> Rectangle method to compute numeric integrals.
+!> Trapezoid formula to compute numeric integrals.
 module trapz_integration
 #include "sll_working_precision.h"
 #include "sll_assert.h"
