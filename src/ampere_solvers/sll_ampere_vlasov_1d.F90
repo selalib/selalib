@@ -50,8 +50,11 @@ type, public :: sll_ampere_1d
    sll_real64          :: eta1_min     !< left side 
    sll_real64          :: eta1_max     !< right side
    sll_real64          :: delta_eta1   !< step size
+
 contains
+
    procedure :: compute_e_from_j => solve_ampere_1d
+
 end type sll_ampere_1d
 
 type, extends(sll_ampere_1d), public :: sll_ampere_vlasov_1d
@@ -173,13 +176,15 @@ subroutine initialize_ampere_vlasov_1d(self,             &
    sll_real64, intent(in)     :: vmax    !< v max
    sll_int32,  intent(in)     :: nc_v    !< v cells number
 
-   sll_real64, allocatable    :: tmp(:)
    sll_int32                  :: i
    sll_real64                 :: kx0
 
    self%nc_eta1  = nc_x
    self%eta1_min = xmin
    self%eta1_max = xmax
+
+   self%delta_eta1 = (xmax-xmin)/nc_x
+   self%delta_eta2 = (vmax-vmin)/nc_v
 
    self%nc_eta2  = nc_v
    self%eta2_min = vmin
@@ -250,22 +255,22 @@ subroutine solve_ampere_vlasov_1d(self, dt, f, ex)
    nc_x = self%nc_eta1 
    nc_y = self%nc_eta2
 
-   !self%rk = cmplx(0.0,0.0,kind=f64)
+   self%rk = cmplx(0.0,0.0,kind=f64)
    do j = 1, nc_y+1
      a = (self%eta2_min + (j-1) * self%delta_eta2)*dt
      self%df_dx = f(1:nc_x,j)
      call fftw_execute_dft_r2c(self%fwx, self%df_dx, self%fk)
-     !self%rk = self%rk + self%delta_eta2 * self%fk
      self%fk = self%fk*cmplx(cos(self%kx*a),-sin(self%kx*a),kind=f64)
+     self%rk = self%rk + self%delta_eta2 * self%fk
      call fftw_execute_dft_c2r(self%bwx, self%fk, self%df_dx)
      f(1:nc_x,j) = self%df_dx / nc_x
      f(nc_x+1,j) = f(1,j)
    end do
 
-
-   !self%ek = self%rk / cmplx(cos(self%kx*self%e_0),sin(self%kx*self%e_0),kind=f64)
-   !call fftw_execute_dft_c2r(self%bwx, self%ek, ex)
-   !ex = ex / nc_x
+   self%ek = self%rk / cmplx(0.0_f64,self%kx*self%e_0,kind=f64)
+   call fftw_execute_dft_c2r(self%bwx, self%ek, ex)
+   ex = ex / nc_x
+   ex(nc_x+1) = ex(1)
 
 end subroutine solve_ampere_vlasov_1d
 
