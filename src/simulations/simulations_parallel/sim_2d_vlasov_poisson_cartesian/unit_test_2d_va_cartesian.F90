@@ -225,7 +225,6 @@ select case (sim%advection_form_x2)
     SLL_ERROR('#not implemented')
 end select  
     
-
 call sll_2d_parallel_array_initializer_cartesian( &
    layout_x1,                                     &
    sim%x1_array,                                  &
@@ -238,35 +237,7 @@ iproc = sll_get_collective_rank(sll_world_collective)
 call int2string(iproc, cproc)
 call int2string(iplot, cplot)    
 
-if (trim(sim%restart_file) /= "no_restart_file" ) then
-
-  INQUIRE(FILE=trim(sim%restart_file)//'_proc_'//cproc//'.rst', EXIST=file_exists)
-
-  if (.not. file_exists) then
-    SLL_ERROR('#file '//trim(sim%restart_file)//'_proc_'//cproc//'.rst &
-              & does not exist')
-  endif
-
-  open(unit=restart_id, &
-       file=trim(sim%restart_file)//'_proc_'//cproc//'.rst', ACCESS="STREAM", &
-       form='unformatted', IOStat=ierr)      
-
-  if ( ierr .ne. 0 ) then
-    SLL_ERROR('ERROR while opening file &
-               &'//trim(sim%restart_file)//'_proc_'//cproc//'.rst &
-               & Called from run_vp2d_cartesian().')
-  end if
-
-  print *,'#read restart file '//trim(sim%restart_file)//'_proc_'//cproc//'.rst'      
-  call sll_binary_read_array_0d(restart_id,time_init,ierr)
-  call sll_binary_read_array_2d(restart_id,f_x1,ierr)
-  call sll_binary_file_close(restart_id,ierr)
-
-endif      
-
-if (sim%time_init_from_restart_file .eqv. .true.) then
-  sim%time_init = time_init  
-endif
+call check_restart()
 time_init = sim%time_init
 
 !ES initialise f_x1_equil that is used to define deltaf: 
@@ -301,7 +272,6 @@ call sll_collective_gatherv_real64( sll_world_collective,        &
     
 f_visu = reshape(f_visu_buf1d, shape(f_visu))
 
-
 call compute_rho()
 
 call sim%poisson%compute_E_from_rho( efield, rho )
@@ -309,20 +279,14 @@ call sim%poisson%compute_E_from_rho( efield, rho )
 ! Ponderomotive force at initial time. We use a sine wave
 ! with parameters k_dr and omega_dr.
 istep = 0
-e_app = 0._f64
 
 if (sim%driven) then
+  call set_e_app(time_init)
+else
+  e_app = 0._f64
+end if
 
-  call set_e_app(time_init+real(istep,f64)*sim%dt)
-
-endif
-
-if (MPI_MASTER) then
-
-  call write_init_files()
-
-
-endif
+if (MPI_MASTER) call write_init_files()
 
 !write also initial deltaf function
 call load_buffer_2d( layout_x1, f_x1-f_x1_equil, f_x1_buf1d )
@@ -339,7 +303,7 @@ f_visu = reshape(f_visu_buf1d, shape(f_visu))
 
 if (MPI_MASTER) then
   call sll_binary_write_array_2d(deltaf_id,f_visu(1:np_x1-1,1:np_x2-1),ierr)
-  print *,'#step=',0,time_init+real(0,f64)*sim%dt,'iplot=',iplot
+  print *,'#step=',0,time_init,'iplot=',iplot
 endif
 
 iplot = iplot+1  
@@ -350,16 +314,10 @@ call advection_v(0.5*sim%dt)
 
 do istep = 1, sim%num_iterations
 
-  if (mod(istep,sim%freq_diag)==0) then
-    if (MPI_MASTER) then        
-      print *,'#step=',istep,time_init+real(istep,f64)*sim%dt,'iplot=',iplot
-    endif
-  endif  
-
   call transpose_vx()
   call compute_rho()
   call sim%poisson%compute_E_from_rho( efield, rho )
-  call compute_current()
+  !call compute_current()
   !call sim%ampere%compute_E_from_J( sim%dt, current, efield)
 
   call advection_x(sim%dt)
@@ -375,11 +333,13 @@ do istep = 1, sim%num_iterations
     
     if (mod(istep,sim%freq_diag_restart)==0) then          
       call save_for_restart()
-
     endif 
 
-      
     if (mod(istep,sim%freq_diag)==0) then          
+
+      if (MPI_MASTER) then        
+        print *,'#step=',istep,time_init+real(istep,f64)*sim%dt,'iplot=',iplot
+      endif
 
       call gnuplot_write(f_x1-f_x1_equil, 'deltaf', 'intdeltafdx')
       call gnuplot_write(f_x1,                 'f',      'intfdx')
@@ -427,6 +387,8 @@ tid=1
 !$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid) 
 !advection in x
 !$ tid = omp_get_thread_num()+1
+call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
+global_indices = local_to_global( layout_x1, (/1, 1/) )
 !$OMP DO
 do i_omp = 1, local_size_x2
 
@@ -506,14 +468,14 @@ subroutine advection_v(delta_t)
 sll_real64 :: delta_t
 
 tid = 1
-call compute_local_sizes( layout_x2, local_size_x1, local_size_x2 )
-global_indices = local_to_global( layout_x2, (/1, 1/) )
 !$OMP PARALLEL DEFAULT(SHARED) &
 !$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid,mean_omp,f1d) 
 !advection in v
 !$ tid = omp_get_thread_num()+1
 !advection in v
 !$OMP DO
+call compute_local_sizes( layout_x2, local_size_x1, local_size_x2 )
+global_indices = local_to_global( layout_x2, (/1, 1/) )
 do i_omp = 1,local_size_x1
 
   ig_omp=i_omp+global_indices(1)-1
@@ -617,6 +579,9 @@ end subroutine gnuplot_write
 
 subroutine diagnostics()
 
+call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
+global_indices = local_to_global( layout_x1, (/1, 1/) )
+
 time             = time_init+real(istep,f64)*sim%dt
 mass             = 0._f64
 momentum         = 0._f64
@@ -627,8 +592,6 @@ potential_energy = 0._f64
 tmp_loc          = 0._f64
 ig               = global_indices(2)-1               
 
-call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
-global_indices = local_to_global( layout_x1, (/1, 1/) )
 
 do i = 1, np_x1-1        
   tmp_loc(1)= tmp_loc(1)+sum(f_x1(i,1:local_size_x2) &
@@ -794,4 +757,40 @@ subroutine save_for_restart()
   call sll_binary_file_close(restart_id,ierr)    
 
 end subroutine save_for_restart
+
+subroutine check_restart()
+
+if (trim(sim%restart_file) /= "no_restart_file" ) then
+
+
+  INQUIRE(FILE=trim(sim%restart_file)//'_proc_'//cproc//'.rst', EXIST=file_exists)
+
+  if (.not. file_exists) then
+    SLL_ERROR('#file '//trim(sim%restart_file)//'_proc_'//cproc//'.rst &
+              & does not exist')
+  endif
+
+  open(unit=restart_id, &
+       file=trim(sim%restart_file)//'_proc_'//cproc//'.rst', ACCESS="STREAM", &
+       form='unformatted', IOStat=ierr)      
+
+  if ( ierr .ne. 0 ) then
+    SLL_ERROR('ERROR while opening file &
+               &'//trim(sim%restart_file)//'_proc_'//cproc//'.rst &
+               & Called from run_vp2d_cartesian().')
+  end if
+
+  print *,'#read restart file '//trim(sim%restart_file)//'_proc_'//cproc//'.rst'      
+  call sll_binary_read_array_0d(restart_id,time_init,ierr)
+  call sll_binary_read_array_2d(restart_id,f_x1,ierr)
+  call sll_binary_file_close(restart_id,ierr)
+
+endif      
+
+if (sim%time_init_from_restart_file .eqv. .true.) then
+  sim%time_init = time_init  
+endif
+
+end subroutine check_restart
+
 end program vlasov_poisson_2d
