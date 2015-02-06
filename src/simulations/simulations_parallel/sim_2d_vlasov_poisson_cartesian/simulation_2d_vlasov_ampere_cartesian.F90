@@ -726,6 +726,16 @@ contains
           LAGRANGE,                                         & 
           order_x1)
 
+      case("SLL_TRIGO") ! spectral periodic advection
+
+        sim%advect_x1(tid)%ptr => new_periodic_1d_advector( &
+          num_cells_x1,                                     &
+          x1_min,                                           &
+          x1_max,                                           &
+          TRIGO,                                       &
+          order_x1)
+
+
       case("SLL_SPECTRAL") ! spectral periodic advection
 
         sim%advect_x1(tid)%ptr => new_spectral_1d_advector( &
