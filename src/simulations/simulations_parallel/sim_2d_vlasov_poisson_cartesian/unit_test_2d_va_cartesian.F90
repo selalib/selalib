@@ -89,7 +89,6 @@ sll_real64, dimension(:), allocatable :: buf_fft
 sll_comp64,dimension(:),allocatable   :: rho_mode
 
 sll_int32  :: nb_mode 
-sll_real64 :: t_step
 sll_real64 :: time_init
 sll_int32  :: split_istep
 sll_int32  :: num_dof_x2 
@@ -345,6 +344,10 @@ endif
 
 iplot = iplot+1  
 
+call transpose_xv()
+ 
+call advection_v(0.5*sim%dt)
+
 do istep = 1, sim%num_iterations
 
   if (mod(istep,sim%freq_diag)==0) then
@@ -353,57 +356,26 @@ do istep = 1, sim%num_iterations
     endif
   endif  
 
-  split_T = sim%split%split_begin_T
-  t_step = real(istep-1,f64)
+  call transpose_vx()
+  call compute_rho()
+  call sim%poisson%compute_E_from_rho( efield, rho )
+  call compute_current()
+  !call sim%ampere%compute_E_from_J( sim%dt, current, efield)
 
-  do split_istep=1,sim%split%nb_split_step
+  call advection_x(sim%dt)
 
-    if (split_T) then
+  if (sim%driven) call set_e_app(time_init+(istep-1)*sim%dt)
 
-      call advection_x()
+  call transpose_xv()
+  call advection_v(sim%dt)
 
-      t_step = t_step+sim%split%split_step(split_istep)
-
-      call compute_rho()
-      !call sim%poisson%compute_E_from_rho( efield, rho )
-      call compute_current()
-      call sim%ampere%compute_E_from_J( sim%split%split_step(split_istep), current, efield)
-
-      if (sim%driven) then
-
-         call set_e_app(time_init+t_step*sim%dt)
-
-      endif
-
-    else
-
-      call transpose_xv()
-
-
-      call advection_v()
-
-
-      call transpose_vx()
-
-    endif
-    !split_x= 1-split_x
-    split_T = .not.(split_T)
-  enddo
-  
- !!DIAGNOSTICS
- if (mod(istep,sim%freq_diag_time)==0) then
+  if (mod(istep,sim%freq_diag_time)==0) then
 
     call diagnostics()
-
     
     if (mod(istep,sim%freq_diag_restart)==0) then          
-      call int2string(iplot,cplot) 
-      call sll_binary_file_create('f_plot_'//cplot//'_proc_'//cproc//'.rst', &
-                                  restart_id, ierr )
-      call sll_binary_write_array_0d(restart_id,time,ierr)
-      call sll_binary_write_array_2d(restart_id, &
-                                     f_x1(1:local_size_x1,1:local_size_x2),ierr)
-      call sll_binary_file_close(restart_id,ierr)    
+      call save_for_restart()
+
     endif 
 
       
@@ -446,7 +418,8 @@ call sll_halt_collective()
 contains
 
 
-subroutine advection_x()
+subroutine advection_x(delta_t)
+sll_real64 :: delta_t
 
 !! T ADVECTION 
 tid=1          
@@ -458,13 +431,12 @@ tid=1
 do i_omp = 1, local_size_x2
 
   ig_omp    = i_omp+global_indices(2)-1
-  alpha_omp = sim%factor_x1*node_positions_x2(ig_omp) &
-            * sim%split%split_step(split_istep) 
+  alpha_omp = sim%factor_x1*node_positions_x2(ig_omp)
   f1d_omp_in(1:np_x1,tid) = f_x1(1:np_x1,i_omp)
   
   call sim%advect_x1(tid)%ptr%advect_1d_constant(  &
     alpha_omp,                                     &
-    sim%dt,                                        &
+    delta_t,                                       &
     f1d_omp_in(1:np_x1,tid),                       &
     f1d_omp_out(1:np_x1,tid))
 
@@ -478,6 +450,8 @@ end subroutine advection_x
 
 subroutine compute_rho()
 
+call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
+global_indices = local_to_global( layout_x1, (/1, 1/) )
 !computation of electric field
 rho_loc = 0._f64
 ig = global_indices(2)-1
@@ -507,6 +481,7 @@ sll_int32  :: j
 sll_int32  :: gj
 
 call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
+global_indices = local_to_global( layout_x1, (/1, 1/) )
 
 do i = 1,local_size_x1
   rho_loc(i) = 0._f64
@@ -527,9 +502,12 @@ call sll_collective_allreduce( sll_world_collective, &
 end subroutine compute_current
 
 
-subroutine advection_v()
+subroutine advection_v(delta_t)
+sll_real64 :: delta_t
 
 tid = 1
+call compute_local_sizes( layout_x2, local_size_x1, local_size_x2 )
+global_indices = local_to_global( layout_x2, (/1, 1/) )
 !$OMP PARALLEL DEFAULT(SHARED) &
 !$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid,mean_omp,f1d) 
 !advection in v
@@ -540,8 +518,7 @@ do i_omp = 1,local_size_x1
 
   ig_omp=i_omp+global_indices(1)-1
 
-  alpha_omp = -(efield(ig_omp)+e_app(ig_omp)) &
-            * sim%split%split_step(split_istep)
+  alpha_omp = -(efield(ig_omp)+e_app(ig_omp))
 
   f1d_omp_in(1:num_dof_x2,tid) = f_x2(i_omp,1:num_dof_x2)
 
@@ -554,7 +531,7 @@ do i_omp = 1,local_size_x1
 
   call sim%advect_x2(tid)%ptr%advect_1d_constant(    &
     alpha_omp,                                       &
-    sim%dt,                                          &
+    delta_t,                                         &
     f1d_omp_in(1:num_dof_x2,tid),                    &
     f1d_omp_out(1:num_dof_x2,tid))
 
@@ -574,19 +551,13 @@ end subroutine advection_v
 
 subroutine transpose_xv()
 
-!! V ADVECTION 
-!transposition
 call apply_remap_2D( remap_plan_x1_x2, f_x1, f_x2 )
-call compute_local_sizes( layout_x2, local_size_x1, local_size_x2 )
-global_indices(1:2) = local_to_global( layout_x2, (/1, 1/) )
 
 end subroutine transpose_xv
 
 subroutine transpose_vx()
-      !transposition
-      call apply_remap_2D( remap_plan_x2_x1, f_x2, f_x1 )
-      call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
-      global_indices(1:2) = local_to_global( layout_x1, (/1, 1/) )
+
+call apply_remap_2D( remap_plan_x2_x1, f_x2, f_x1 )
 
 end subroutine transpose_vx
 
@@ -655,6 +626,9 @@ kinetic_energy   = 0._f64
 potential_energy = 0._f64
 tmp_loc          = 0._f64
 ig               = global_indices(2)-1               
+
+call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
+global_indices = local_to_global( layout_x1, (/1, 1/) )
 
 do i = 1, np_x1-1        
   tmp_loc(1)= tmp_loc(1)+sum(f_x1(i,1:local_size_x2) &
@@ -809,4 +783,15 @@ sll_real64 :: t
 
 end subroutine set_e_app
 
+subroutine save_for_restart()
+
+  call int2string(iplot,cplot) 
+  call sll_binary_file_create('f_plot_'//cplot//'_proc_'//cproc//'.rst', &
+                              restart_id, ierr )
+  call sll_binary_write_array_0d(restart_id,time,ierr)
+  call sll_binary_write_array_2d(restart_id, &
+                                 f_x1(1:local_size_x1,1:local_size_x2),ierr)
+  call sll_binary_file_close(restart_id,ierr)    
+
+end subroutine save_for_restart
 end program vlasov_poisson_2d
