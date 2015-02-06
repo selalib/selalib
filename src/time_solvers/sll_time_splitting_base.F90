@@ -1,6 +1,6 @@
 !> \brief 
 !> The time splitting module provides a generic implementation of
-!> time splitting algorithms of different order 
+!> time splitting algorithms of different order for two operators
 module sll_time_splitting
 #include "sll_working_precision.h"
 #include "sll_memory.h"
