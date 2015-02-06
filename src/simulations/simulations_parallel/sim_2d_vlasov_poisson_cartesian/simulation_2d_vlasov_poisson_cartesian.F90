@@ -1540,13 +1540,13 @@ contains
               f_visu_buf1d(i) = sum(f_visu(1:np_x1-1,i))*sim%mesh2d%delta_eta1
             enddo
 
-            call sll_gnuplot_write_1d(         &
+            call sll_gnuplot_1d(         &
               f_visu_buf1d(1:num_dof_x2),      &
               node_positions_x2(1:num_dof_x2), &
               'intdeltafdx',                   &
               iplot )
 
-            call sll_gnuplot_write_1d(         &
+            call sll_gnuplot_1d(         &
               f_visu_buf1d(1:num_dof_x2),      &
               node_positions_x2(1:num_dof_x2), &
               'intdeltafdx')                        
@@ -1584,13 +1584,13 @@ contains
               f_visu_buf1d(i) = sum(f_visu(1:np_x1-1,i))*sim%mesh2d%delta_eta1
             enddo
 
-            call sll_gnuplot_write_1d(         &
+            call sll_gnuplot_1d(         &
               f_visu_buf1d(1:num_dof_x2),      &
               node_positions_x2(1:num_dof_x2), &
               'intfdx',                        &
               iplot )
 
-            call sll_gnuplot_write_1d(         &
+            call sll_gnuplot_1d(         &
               f_visu_buf1d(1:num_dof_x2),      &
               node_positions_x2(1:num_dof_x2), &
               'intfdx')
