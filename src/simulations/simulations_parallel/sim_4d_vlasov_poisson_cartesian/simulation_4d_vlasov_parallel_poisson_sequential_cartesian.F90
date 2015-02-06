@@ -854,7 +854,7 @@ contains
       call sll_binary_write_array_2d(E_x2_id,E_x2(1:nc_x1,1:nc_x2),ierr)  
       call sll_binary_write_array_2d(intfdx_id,intfdx_full(1:nc_x3+1,1:nc_x4+1),ierr)  
       if(sim%split%dim_split_V==2)then
-	    call sll_gnuplot_corect_2d( &
+	    call sll_gnuplot_2d( &
 		  sim%mesh_x1%eta_min, &
 		  sim%mesh_x1%eta_max, &
 		  nc_x1+1, &
@@ -865,7 +865,7 @@ contains
 		  "E_x1", &
 		  0, &
 		  ierr)
-	    call sll_gnuplot_corect_2d( &
+	    call sll_gnuplot_2d( &
 		  sim%mesh_x1%eta_min, &
 		  sim%mesh_x1%eta_max, &
 		  nc_x1+1, &
@@ -877,7 +877,7 @@ contains
 		  0, &
 		  ierr)
 		  
-	    call sll_gnuplot_corect_2d( &
+	    call sll_gnuplot_2d( &
 		  sim%mesh_x1%eta_min, &
 		  sim%mesh_x1%eta_max, &
 		  nc_x1+1, &
@@ -888,7 +888,7 @@ contains
 		  "dK_x1", &
 		  0, &
 		  ierr)
-		call sll_gnuplot_corect_2d( &
+		call sll_gnuplot_2d( &
 		  sim%mesh_x1%eta_min, &
 		  sim%mesh_x1%eta_max, &
 		  nc_x1+1, &
@@ -908,7 +908,7 @@ contains
           sim%stencil_r, &
           sim%stencil_s, &
           jacobian_E)
-		call sll_gnuplot_corect_2d( &
+		call sll_gnuplot_2d( &
 		  sim%mesh_x1%eta_min, &
 		  sim%mesh_x1%eta_max, &
 		  nc_x1+1, &
@@ -1167,7 +1167,7 @@ contains
           call sll_binary_write_array_2d(E_x2_id,E_x2(1:nc_x1,1:nc_x2),ierr)  
 
       if(sim%split%dim_split_V==2)then
-	    call sll_gnuplot_corect_2d( &
+	    call sll_gnuplot_2d( &
 		  sim%mesh_x1%eta_min, &
 		  sim%mesh_x1%eta_max, &
 		  nc_x1+1, &
@@ -1178,7 +1178,7 @@ contains
 		  "E_x1", &
 		  istep, &
 		  ierr)
-	    call sll_gnuplot_corect_2d( &
+	    call sll_gnuplot_2d( &
 		  sim%mesh_x1%eta_min, &
 		  sim%mesh_x1%eta_max, &
 		  nc_x1+1, &
@@ -1190,7 +1190,7 @@ contains
 		  istep, &
 		  ierr)
 		  
-	    call sll_gnuplot_corect_2d( &
+	    call sll_gnuplot_2d( &
 		  sim%mesh_x1%eta_min, &
 		  sim%mesh_x1%eta_max, &
 		  nc_x1+1, &
@@ -1201,7 +1201,7 @@ contains
 		  "dK_x1", &
 		  istep, &
 		  ierr)
-		call sll_gnuplot_corect_2d( &
+		call sll_gnuplot_2d( &
 		  sim%mesh_x1%eta_min, &
 		  sim%mesh_x1%eta_max, &
 		  nc_x1+1, &
@@ -1221,7 +1221,7 @@ contains
           sim%stencil_r, &
           sim%stencil_s, &
           jacobian_E)
-		call sll_gnuplot_corect_2d( &
+		call sll_gnuplot_2d( &
 		  sim%mesh_x1%eta_min, &
 		  sim%mesh_x1%eta_max, &
 		  nc_x1+1, &
