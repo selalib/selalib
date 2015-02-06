@@ -91,6 +91,7 @@ sll_comp64,dimension(:),allocatable   :: rho_mode
 sll_int32  :: nb_mode 
 sll_real64 :: time_init
 sll_int32  :: split_istep
+sll_real64 :: t_step
 sll_int32  :: num_dof_x2 
  
 logical :: split_T
@@ -116,8 +117,6 @@ sll_real64                             :: alpha_omp
 sll_real64                             :: mean_omp
 
 logical                                :: MPI_MASTER
-
-
 
 init_from_unit_test = .false.
 
@@ -308,24 +307,31 @@ endif
 
 iplot = iplot+1  
 
-call transpose_xv()
- 
-call advection_v(0.5*sim%dt)
-
 do istep = 1, sim%num_iterations
 
-  call transpose_vx()
-  call compute_rho()
-  call sim%poisson%compute_E_from_rho( efield, rho )
-  !call compute_current()
-  !call sim%ampere%compute_E_from_J( sim%dt, current, efield)
+   split_T = sim%split%split_begin_T
+   t_step = real(istep-1,f64)
 
-  call advection_x(sim%dt)
+   do split_istep=1,sim%split%nb_split_step
 
-  if (sim%driven) call set_e_app(time_init+(istep-1)*sim%dt)
+     if (split_T) then
 
-  call transpose_xv()
-  call advection_v(sim%dt)
+       call advection_x(sim%split%split_step(split_istep)*sim%dt)
+       t_step = t_step+sim%split%split_step(split_istep)
+       call compute_rho()
+       call sim%poisson%compute_E_from_rho( efield, rho )
+       !call compute_current()
+       !call sim%ampere%compute_E_from_J( sim%dt, current, efield)
+     else
+
+       if (sim%driven) call set_e_app(time_init+(istep-1)*sim%dt)
+       call transpose_xv()
+       call advection_v(sim%split%split_step(split_istep)*sim%dt)
+       call transpose_vx()
+
+     endif
+     split_T = .not.(split_T)
+   enddo
 
   if (mod(istep,sim%freq_diag_time)==0) then
 
@@ -548,13 +554,13 @@ if (MPI_MASTER) then
     f_visu_buf1d(i) = sum(f_visu(1:np_x1-1,i))*sim%mesh2d%delta_eta1
   enddo
 
-  call sll_gnuplot_write_1d(         &
+  call sll_gnuplot_1d(         &
     f_visu_buf1d(1:num_dof_x2),      &
     node_positions_x2(1:num_dof_x2), &
     intfname,                        &
     iplot )
 
-  call sll_gnuplot_write_1d(         &
+  call sll_gnuplot_1d(         &
     f_visu_buf1d(1:num_dof_x2),      &
     node_positions_x2(1:num_dof_x2), &
     intfname )                        

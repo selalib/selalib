@@ -34,6 +34,8 @@ use sll_utilities, only: sll_new_file_id, int2string
 
 implicit none
 
+private
+
 !> write file plotable by gnuplot to visualize 2d field
 interface sll_gnuplot_1d
    module procedure  sll_gnuplot_write_1d
@@ -48,6 +50,8 @@ interface sll_gnuplot_2d
    module procedure sll_gnuplot_curv_2d
    module procedure sll_gnuplot_mesh_2d
 end interface
+
+public sll_gnuplot_1d, sll_gnuplot_2d
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains  
@@ -135,6 +139,7 @@ subroutine sll_gnuplot_write_1d( y_array, x_array, array_name, iplot)
 
   sll_int32                            :: error      !< error code
   sll_int32                            :: file_id    !< file unit number
+  sll_int32                            :: fgnu_id    !< file unit number
   sll_int32                            :: npoints
   sll_int32                            :: ipoints    
   character(len=4)                     :: cplot
@@ -146,6 +151,13 @@ subroutine sll_gnuplot_write_1d( y_array, x_array, array_name, iplot)
   if(present(iplot))then
     call int2string(iplot,cplot)
     open(file_id,file=trim(array_name)//cplot//".dat",form='FORMATTED',iostat=error)
+    call sll_new_file_id(fgnu_id, error)
+    open(fgnu_id,file=trim(array_name)//".gnu", &
+                 position="append",             &
+                 form='formatted',iostat=error)
+    if (iplot == 1) rewind(file_id)
+    write(fgnu_id,"(a)")"plot '"//trim(array_name)//cplot//".dat' with linesp"
+    close(fgnu_id)
   else
     open(file_id,file=trim(array_name)//".dat",form='FORMATTED',iostat=error)
   endif
