@@ -23,12 +23,16 @@ use sll_module_advection_1d_base
 use sll_module_advection_1d_spectral
 use sll_boundary_condition_descriptors
 
+!$ use omp_lib
+
 implicit none
   
-class(sll_advection_1d_base), pointer :: adv
+type(sll_advection_1d_base_ptr), pointer  :: adv(:)
+
 sll_real64                            :: xmin
 sll_real64                            :: xmax
 sll_int32                             :: num_cells
+sll_real64, dimension(:), allocatable :: x
 sll_real64, dimension(:), allocatable :: input
 sll_real64, dimension(:), allocatable :: output
 sll_real64, dimension(:), allocatable :: solution
@@ -36,27 +40,52 @@ sll_real64                            :: dt
 sll_real64                            :: a
 sll_real64                            :: err
 sll_int32                             :: ierr
+sll_int32                             :: prank = 0
+sll_int32                             :: psize = 1
+sll_int32                             :: istep
+sll_int32                             :: i
+sll_int32                             :: nstep = 100
 
 xmin      = 0.0_f64
 xmax      = 1.0_f64
 num_cells = 32
 a         = 1._f64
-dt        = 0.1_f64
-
+dt        = 0.01_f64
+SLL_ALLOCATE(x(num_cells+1),    ierr)
+SLL_ALLOCATE(solution(num_cells+1),    ierr)
 SLL_ALLOCATE(input(num_cells+1),    ierr)
 SLL_ALLOCATE(output(num_cells+1),   ierr)
-SLL_ALLOCATE(solution(num_cells+1), ierr)
 
-input = 1.0_f64 
+do i = 1, num_cells+1
+  x(i) = xmin + (i-1)*(xmax-xmin)/num_cells - 0.5
+end do
 
-adv => new_spectral_1d_advector(num_cells+1, xmin, xmax, SLL_PERIODIC) 
+!$OMP PARALLEL
+!$ prank = OMP_GET_THREAD_NUM()
+!$ print*, ' prank = ', prank
+!$ psize = OMP_GET_NUM_THREADS()
+!$ print*, ' psize = ', psize, xmin, xmax, num_cells
 
-call adv%advect_1d_constant( a, dt, input, output)
-err = maxval(abs(output-input))
+SLL_ALLOCATE(adv(psize),            ierr)
+
+solution = exp(-(x*x)/0.01)
+input = solution
+
+adv(prank+1)%ptr => new_spectral_1d_advector(num_cells, xmin, xmax, SLL_PERIODIC) 
+
+do istep = 1, nstep
+   call adv(prank+1)%ptr%advect_1d_constant( a, dt, input, output)
+   input = output
+   call sll_gnuplot_1d(output, x, 'f_spectral', istep)
+end do
+
+err = maxval(abs(solution-input))
 
 print *,'# err=',err
-if(err == 0.0)then  
-  print *,'#PASSED' 
+if(err <= 1e-3)then  
+  print *,'PASSED' 
 endif
+
+!$OMP END PARALLEL
 
 end program unit_test_advection_1d_spectral

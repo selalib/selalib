@@ -71,7 +71,7 @@
 !> <td> real </td>
 !> <td> complex </td>
 !> <td> n </td>
-!> <td> n/2 </td>
+!> <td> n/2+1 </td>
 !> <td> ----- </td>
 !> <td> FFT_NORMALIZE </td>
 !> </tr>
@@ -79,7 +79,7 @@
 !> <td> n </td>
 !> <td> complex </td>
 !> <td> real </td>
-!> <td> n/2 </td>
+!> <td> n/2+1 </td>
 !> <td> n </td>
 !> <td> ----- </td>
 !> <td> FFT_NORMALIZE </td>
