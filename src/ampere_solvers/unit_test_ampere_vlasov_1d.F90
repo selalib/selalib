@@ -164,8 +164,8 @@ do i_step = 1, n_step
 
    call advection_v(delta_t)
 
-   call sll_solve(ampere_vlasov, delta_t, df, ex) 
-   !call advection_poisson(0.0_f64*delta_t)
+   call advection_ampere(delta_t) 
+   !call advection_poisson(delta_t)
    
    nrj(i_step) = 0.5_f64*log(sum(ex*ex)*delta_eta1)
    
@@ -206,6 +206,13 @@ contains
     end do
     call solve(poisson, ex , rho)
    end subroutine advection_poisson
+
+   subroutine advection_ampere(dt)
+   sll_real64, intent(in) :: dt
+
+   call sll_solve(ampere_vlasov, dt, df, ex) 
+
+   end subroutine advection_ampere
 
    subroutine advection_v(dt)
     sll_real64, intent(in) :: dt
