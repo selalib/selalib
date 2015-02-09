@@ -52,7 +52,7 @@ This paper introduces a Semi-Lagrangian solver for the Vlasov-Poisson equations 
 
 %% French version ............
 \begin{resume} 
-Dans cet article nous présentons un solveur semi-Lagrangien pour les \'equations de Vlasov-Poisson sur un maillage hexagonal r\'egulier. Ce dernier est compos\'e de triangles \'equilat\'eraux, ainsi il ne pr\'esente aucune singularit\'e, contrairement au maillage polaire. Nous nous concentrons ici sur le mod\`ele center-guide. \`A cette fin nous avons d\'evelopp\'e en plus du solveur pour Vlasov, un solveur de l'\'equation de Poisson pour maillage hexagonal. Nous comparons les r\'esultats obtenus avec une interpolation par  \'el\'ements finis d'Hermite et par des box-splines.   Dans l'avenir, ce code sera adapt\'e \`a des g\'eom\'etries et mod\`eles plus complexes.  
+Dans cet article nous pr\'esentons un solveur semi-Lagrangien pour les \'equations de Vlasov-Poisson sur un maillage hexagonal r\'egulier. Ce dernier est compos\'e de triangles \'equilat\'eraux, ainsi il ne pr\'esente aucune singularit\'e, contrairement au maillage polaire. Nous nous concentrons ici sur le mod\`ele centre-guide. \`A cette fin nous avons d\'evelopp\'e en plus du solveur pour Vlasov, un solveur de l'\'equation de Poisson pour maillage hexagonal. Nous comparons les r\'esultats obtenus avec une interpolation par  \'el\'ements finis d'Hermite et par des box-splines.   Dans l'avenir, ce code sera adapt\'e \`a des g\'eom\'etries et mod\`eles plus complexes.  
 \end{resume}
 
 %% Making the title ..........
@@ -69,20 +69,20 @@ There are three kinds of regular pavings of the plane: using squares, triangles 
 
 In magnetic fusion applications the embedded magnetic flux surfaces play an important role and introduce an important anisotropy\cite{Angelino2009}. For this reason one gets favourable numerical properties when grid points align on the concentric magnetic flux surfaces. When trying to do this with a mapped cartesian grid, one ends up with a polar coordinates mesh (when the flux surfaces are circles) or something topologically equivalent. This yields smaller and smaller cells when getting closer to the center as well as a singularity at the center. This is numerically far from optimal. 
 
-Different strategies have been implemented to avoid these singularities, we can cite among others: the isoparametric analysis approach done by J. Abiteboul et al. \cite{abiteboul2011solving} and A. Ratnani \cite{ratnani2011isogeometric} or N. Besse and E. Sonnendr\"{u}cker's work with unstructured meshes\cite{Besse2003341}. The methods presented in these papers are particularly interesting as  they not only avoid singularities but they are also extremely flexible and can be easily adapted to more complex geometries. However, even if these two approaches are different, they share the limitations due to the numerical complexity, the advection of the derivatives and, the localisation of the feet of the characteristics. 
+Different strategies have been implemented to avoid these singularities, we can cite among others: the isoparametric analysis approach done by J. Abiteboul et al. \cite{abiteboul2011solving} and A. Ratnani \cite{ratnani2011isogeometric} or N. Besse and E. Sonnendr\"{u}cker's work with unstructured meshes\cite{Besse2003341}. The methods presented in these papers are particularly interesting as  they not only avoid singularities but they are also extremely flexible and can be easily adapted to more complex geometries. However, even if these two approaches are different, they share the limitations due to the numerical complexity, the advection of the derivatives and, the localization of the feet of the characteristics. 
 As for the Poisson equation, a recent study relevant to our problem was made by T. Nguyen et al.\cite{axioms3020280} to compare different solvers on the disk. 
 
 Tiling a regular hexagon into triangles yields a mesh of equilateral triangles having all the same area.
 Such a mesh was first introduce in \cite{Sadourny1968} for numerical simulations. An application to particle methods is proposed in \cite{chatelain2008isotropic}.
 This grid can be easily mapped to a circle by slightly stretching the edges of the hexagon. This yields a nice mesh of a disk with slightly stretched triangles of almost the same size and there is no singularity in any point of the domain. 
-Additionally, such a mesh has a structure with three privileged directions, and uniform steps in each direction, thus it is completely straightforward to localise points within this mesh. The derivatives along the three directions can also be nicely computed using regular finite differencing along the three directions. 
+Additionally, such a mesh has a structure with three privileged directions, and uniform steps in each direction, thus it is completely straightforward to localize points within this mesh. The derivatives along the three directions can also be nicely computed using regular finite differencing along the three directions. 
 And last but not least, there is a spline construction on this mesh, called box-spline \cite{Condat2008}. These splines have a hexagonal support and are invariant by translations along the three directions of the mesh. 
 
 The difficulties mentioned for previous approaches, are not present when dealing with this uniform hexagonal mesh. Regarding the computational efficiency, all our simulations include an analysis and comparison with more common methods. 
 Moreover a simple and non singular mapping from this mesh can be used  to handle more complex settings
 like the surface aligned meshes needed for tokamak simulations. This point will be left for further studies.
 
-In this work, we focus on adapting the Semi-Lagrangian scheme to this hexagonal mesh. This scheme consists basically of two steps: computing the characteristics' origins and interpolating at these points. For the latter, we compare two different approaches: one using box-splines and the second approach using Hermite Finite Elements. Both interpolation methods, as well as the mesh, are presented in section~\ref{sec:interpolation}. In section~\ref{sec:poisson_eqn}, we present a simple finite difference Poisson solver adapted to the hexagonal mesh. We introduce a guiding-center approximation of the 2D Vlasov Poisson system\cite{Golse1998865}, and the Semi-Lagrangian scheme to solve it, in section~\ref{sec:BSL_scheme}. Finally, in section~\ref{sec:results} we compare the results of the scheme using box splines with the ones using Hermite finite elements, we also compare them to more traditional meshes, such as the polar mesh. Besides the guiding-center model, different linear advection models are used to compare the numerical methods.
+In this work, we focus on adapting the Semi-Lagrangian scheme to this hexagonal mesh. This scheme consists basically of two steps: computing the characteristics' origins and interpolating at these points. For the latter, we compare two different approaches: one using box-splines and the second approach using Hermite Finite Elements. Both interpolation methods, as well as the mesh, are presented in Section~\ref{sec:interpolation}. In Section~\ref{sec:poisson_eqn}, we present a simple finite difference Poisson solver adapted to the hexagonal mesh. We introduce a guiding-center approximation of the 2D Vlasov Poisson system\cite{Golse1998865}, and the Semi-Lagrangian scheme to solve it, in Section~\ref{sec:BSL_scheme}. Finally, in Section~\ref{sec:results} we compare the results of the scheme using box splines with the ones using Hermite finite elements, we also compare them to more traditional meshes, such as the polar mesh. Besides the guiding-center model, different linear advection models are used to compare the numerical methods.
 
 
 %%-----------------------------
@@ -161,7 +161,7 @@ The 2D lattice sites are obtained by the product $\mathbf{Rk}$ where $\mathbf{R}
 
 The mesh is based on uniform hexagons of the first type (see \cite{Ulichney87}). For local and global notations we will use the following convention: the point at the center will be the point of index $0$. Following the direction $\mathbf{r_1}$ the next point will be indexed $1$, and the notations will follow in a counter-clockwise motion. And so on, until all the points of the domain have been indexed. See Figure \ref{fig:hexmesh}. We will denote $H_i$ the unit hexagon cell that is centerd at the point of global index $i$.
 
-Besides the fact that the hexagonal mesh contains no singularities, its regularity allows us to localise by taking three integer values, instead of two on a uniform cartesian grid, the characteristic's origin for the Semi-Lagrangian scheme. Nevertheless, the accuracy of the method depends heavily on the interpolation method chosen. For example, for a Cartesian grid, it is common to use cubic splines which have shown to give accurate results in an efficient manner \cite{Sonnendrucker1999201}. In our problem, with the hexagonal lattice, B-splines do not exploit the isotropy of the mesh (for more information see \cite{Mersereau79-IEEE}) and are defined by a convolution in 2D, which cannot be done for our mesh. Therefore, we need to use another approach. In the following two sub-sections we present two different strategies: one using box splines and a second one using Hermite Finite Elements.
+Besides the fact that the hexagonal mesh contains no singularities, its regularity allows us to localize by taking three integer values, instead of two on a uniform cartesian grid, the characteristic's origin for the Semi-Lagrangian scheme. Nevertheless, the accuracy of the method depends heavily on the interpolation method chosen. For example, for a Cartesian grid, it is common to use cubic splines which have shown to give accurate results in an efficient manner \cite{Sonnendrucker1999201}. In our problem, with the hexagonal lattice, B-splines do not exploit the isotropy of the mesh (for more information see \cite{Mersereau79-IEEE}) and are defined by a convolution in 2D, which cannot be done for our mesh. Therefore, we need to use another approach. In the following two sub-sections we present two different strategies: one using box splines and a second one using Hermite Finite Elements.
 
 
 %%-----------------------------
@@ -197,7 +197,7 @@ Box-splines are a generalisation of the well known B-splines. They are also piec
 \rmrk The box-splines can have different degrees in each direction. Thus, there are different definitions of the degree. We will adopt the definition below.
 
 \begin{dfntn}[Degree of a Box-spline]
-Let $\Xi$ be a $d \times d$ matrix with non-null columns in $\xR^d$ such that the column vectors of $\Xi$ form a generating basis of $\xR^d$ and are linearly independent. Then, the box-spline of degree $N$ of generating matrix $\Xi$, $\chi^N_\Xi$, is the box-spline associated to $\Xi$, where all the generating vectors have multiplicity $N+1$. This yields, that $\chi^N_\Xi$ is piecewise polynomial of degree $N$.
+Let $\Xi$ be a $d \times d$ matrix with non-null columns in $\xR^d$ such that the column vectors of $\Xi$ form a generating basis of $\xR^d$ and are linearly independent. Then, the box-spline of degree $N$ of generating matrix $\Xi$, $\chi^N_\Xi$, is the box-spline associated to $\Xi$, where all the generating vectors have multiplicity $N+1$. %This yields, that $\chi^N_\Xi$ is piecewise polynomial of degree $N$.
 
 
 \end{dfntn}
@@ -205,7 +205,7 @@ Let $\Xi$ be a $d \times d$ matrix with non-null columns in $\xR^d$ such that th
 \begin{figure}[h!]
 	\includegraphics[scale=0.15]{figures/boxsplines3d.png}
 	\includegraphics[scale=0.15]{figures/boxsplines2d.png}
-	\caption{On the left: Box splines representation of $\Xi_[e_1, e_2]$, $\Xi_[e_1, e_2, e3]$, and $\Xi_[e_1, e_2, e_3, e_4]$. Where $e_1 = ( 0, 1 )^T$ , $e_2 = ( 1, 0)^T$, $e_3 = e_1 + e_2$, and $e_4 = e_1 - e_2$. On the right: the 2d projection of the box-splines onto the $x$ plane.}
+	\caption{On the left: Box splines representation of $\Xi_[e_1, e_2]$, $\Xi_[e_1, e_2, e_3]$, and $\Xi_[e_1, e_2, e_3, e_4]$. Where $e_1 = ( 0, 1 )^T$ , $e_2 = ( 1, 0)^T$, $e_3 = e_1 + e_2$, and $e_4 = e_1 - e_2$. On the right: the 2d projection of the box-splines onto the $x$ plane.}
 	\label{fig:boxsplines3d}
 \end{figure}
 
@@ -215,7 +215,7 @@ Let $\Xi$ be a $d \times d$ matrix with non-null columns in $\xR^d$ such that th
 %%..............................
 \subsubsection{The quasi-interpolation scheme}
 
-Let us describe the method: we are given an initial sample $s[\mathbf{k}] = f_0(\mathbf{R} \mathbf{k})$, where the points $\mathbf{R} \mathbf{k}$ belong to our hexagonal mesh, and we need to know the values $f(\mathbf{x})$ where $\mathbf{x} \notin \mathbf{R} \mathbf{k}$. We want a spline surface $f(\mathbf{x}) = \sum c[\mathbf{k}] \chi^N(\mathbf{x} - \mathbf{R}\mathbf{k})$, where $\chi^N$ are the box-splines of degree $N$ of matrix $\mathbf{R}$ and $c[\mathbf{k}]$ are the coefficients associated to them. The reconstruction is defined such that $f(\mathbf{x})$ approximates $f_0(x)$ to a certain order $N$ or, in other words, the approximation is exact only if $f_0(x)$ is a polynomial of degree $N-1$ or less. This is different from the classical interpolation method, where the reconstruction is exact on grid points for all smooth functions. The $c[\mathbf{k}]$ coefficients are the box-splines coefficients, to compute them we cannot longer solve a matrix-vector system because of the extra degree of freedom given by the quasi-interpolation method. Thus, the  $c[\mathbf{k}]$ coefficients are obtained by discrete filtering\cite{Condat2006a}
+Let us describe the method: we are given an initial sample $s[\mathbf{k}] = f_0(\mathbf{R} \mathbf{k})$, where the points $\mathbf{R} \mathbf{k}$ belong to our hexagonal mesh, and we need to know the values $f(\mathbf{x})$ where $\mathbf{x} \notin \mathbf{R} \mathbf{k}$. We want a spline surface $f(\mathbf{x}) = \sum c[\mathbf{k}] \chi^N(\mathbf{x} - \mathbf{R}\mathbf{k})$, where $\chi^N$ are the box-splines of degree $N$ of matrix $\mathbf{R}$ and $c[\mathbf{k}]$ are the coefficients associated to them. The reconstruction is defined such that $f(\mathbf{x})$ approximates $f_0(x)$ to a certain order $M=2N$ or, in other words, the approximation is exact only if $f_0(x)$ is a polynomial of degree $M-1$ or less. This is different from the classical interpolation method, where the reconstruction is exact on grid points for all smooth functions. The $c[\mathbf{k}]$ coefficients are the box-splines coefficients, to compute them we cannot longer solve a matrix-vector system because of the extra degree of freedom given by the quasi-interpolation method. Thus, the  $c[\mathbf{k}]$ coefficients are obtained by discrete filtering\cite{Condat2006a}
 
 \begin{equation}
 \label{eqn:coefs}
@@ -264,13 +264,13 @@ For higher orders, we refer to the previously mentioned papers.
 
 \subsubsection{Optimizing the evaluation}
 
-At the present state we have all the elements for the approximation of a function $f$ with second order box-splines
+At the present state we have all the elements for the approximation of a function $f$ with box-splines of degree $N$
 
 \begin{equation}
-\tilde{f}(\mathbf{x}) = \sum_{\mathbf{k} \in \xZ^2} c[\mathbf{k}] \chi^2(\mathbf{x} - \mathbf{R}\mathbf{k})
+\tilde{f}(\mathbf{x}) = \sum_{\mathbf{k} \in \xZ^2} c[\mathbf{k}] \chi^N(\mathbf{x} - \mathbf{R}\mathbf{k})
 \end{equation}
 
-Even if we limit our sum to the vector $\mathbf{k}$ that defines our domain, we would like to take advantage of the fact that the splines $\chi^1$ are only non-zeros in a limited number of points. Therefore we need to know the indices $\mathbf{k}$ such that $\chi^1(\mathbf{x} - \mathbf{R} \mathbf{x}) \neq 0$. For this purpose we will use the strategy suggested in \cite{Condat2007}: to start we need to obtain the indices on the coordinate system generated by $\mathbf{R}$: $\mathbf{k}_0 = \left[ \lfloor u \rfloor \; \lfloor v \rfloor \right]$ where $\left[ u \; v \right]^T = \mathbf{R}^ {-1} \mathbf{x} $. Thus, in our case, with splines $\chi^2$ we only need 4 terms associated to the encapsulating rhomboid's vertices: $\mathbf{R}\mathbf{k}_0$, $\mathbf{R}\mathbf{k}_0 + \mathbf{r_1}$, $\mathbf{R}\mathbf{k}_0 + \mathbf{r_2}$ and $\mathbf{R}\mathbf{k}_0 + \mathbf{r_1} + \mathbf{r_2}$. Finally we obtain:
+Even if we limit our sum to the vector $\mathbf{k}$ that defines our domain, we would like to take advantage of the fact that the splines $\chi^N$ are only non-zeros in a limited number of points. Therefore we need to know the indices $\mathbf{k}$ such that $\chi^N(\mathbf{x} - \mathbf{R} \mathbf{x}) \neq 0$. For this purpose we will use the strategy suggested in \cite{Condat2007}: to start we need to obtain the indices on the coordinate system generated by $\mathbf{R}$: $\mathbf{k}_0 = \left[ \lfloor u \rfloor \; \lfloor v \rfloor \right]$ where $\left[ u \; v \right]^T = \mathbf{R}^ {-1} \mathbf{x} $. Thus, for example, in the case $N=1$, we only need 4 terms associated to the encapsulating rhomboid's vertices: $\mathbf{R}\mathbf{k}_0$, $\mathbf{R}\mathbf{k}_0 + \mathbf{r_1}$, $\mathbf{R}\mathbf{k}_0 + \mathbf{r_2}$ and $\mathbf{R}\mathbf{k}_0 + \mathbf{r_1} + \mathbf{r_2}$. Finally we obtain:
 
 \begin{align}
 \label{eqn:chi2_fct_interpol}
@@ -668,11 +668,11 @@ One of the advantages of the hexagonal mesh is that it is a uniform mesh. Indeed
 	\label{eqn:k1k2}
 	\left\lbrace
 	\begin{array}{lclcl}
-	k_1 &=&  \left\lfloor\dfrac{ r_{22} X_1 - r_{21} X_2 }{r_{11}*r_{22} - r_{12} r_{21}}\right\rfloor & = &  \left\lfloor\dfrac{1}{\sqrt{3}} X_1 + X_2\right\rfloor\\[0.3cm]
-	k_2 &=&  \left\lfloor\dfrac{r_{11} X_2 - r_{12} X_1}{r_{11}*r_{22} - r_{12} r_{21}} \right\rfloor& = &\left \lfloor -\dfrac{1}{\sqrt{3}} X_1 + X_2\right\rfloor
+	k_1 &=&  \left\lfloor\dfrac{ r_{22} X_1 - r_{12} X_2 }{r_{11} r_{22} - r_{12} r_{21}}\right\rfloor & = &  \left\lfloor\dfrac{1}{\sqrt{3}} X_1 + X_2\right\rfloor\\[0.3cm]
+	k_2 &=&  \left\lfloor\dfrac{ - r_{21} X_1+r_{11} X_2}{r_{11} r_{22} - r_{12} r_{21}} \right\rfloor& = &\left \lfloor -\dfrac{1}{\sqrt{3}} X_1 + X_2\right\rfloor
 	\end{array}\right.
 \end{equation}
-\blue{The integer values were not correct. I modified them. Please check}
+%\blue{The integer values were not correct. I modified them. Please check. }
 
 After obtaining $(k_1, k_2)$, we know the rhomboid (composed by two cells) containing the characteristics' origin. To determine the exact cell on which the origin is located, we only need to verify if the abscissa of the point is greater than the abscissa of the mesh point at $(k_1, k_2)$ or not. In the first case the point belongs to the cell at the right, else to the cell at the left.
 
@@ -715,7 +715,7 @@ We focus here on the circular advection test case. The model is defined by:
 As this equation is not coupled to a Poisson model, we can study in detail the differences between the interpolation methods previously presented.	Additionally, finding the analytical solution is trivial and therefore we can study the convergence of our methods. Here, we take a Gaussian pulse as initial distribution function:
 
 	\begin{equation}
-	 f_0(x,y) = exp  \left( -\dfrac{1}{2} \left( \dfrac{(x - x_c)^2}{\sigma_x^2} + \dfrac{(y - y_c)^2}{\sigma_y^2  } \right)   \right ), 
+	 f_0(x,y) = \exp  \left( -\dfrac{1}{2} \left( \dfrac{(x - x_c)^2}{\sigma_x^2} + \dfrac{(y - y_c)^2}{\sigma_y^2  } \right)   \right ), 
 	\end{equation}
 
 On a hexagonal mesh centered at the origin, of radius $8$,  we take  $\sigma_x = \sigma_y = \frac{1}{2\sqrt{2}}$. Let us set here $x_c = 2$ and $y_c = 2$. The distance from the pulse to the limit of the domain makes the boundary effects negligeable, thus we can take a null Dirichlet boundary condition.  To study the convergence in space we took $N_c = 20, 40, 60, ..., 160$. We recall that $N_c$ is the number of cells on the radius $L$. With the maximum time of evaluation, $t_{max}$, at $6 \pi$, we chose to keep a constant CFL at $2$.
@@ -844,7 +844,10 @@ After comparison of the diagnostics we see that the various interpolation method
 %%-----------------------------
 \section{Conclusion}
 \label{sec:conclusion}
-In this paper we tested  Semi-Lagrangian schemes adapted to an hexagonal mesh. The strategies differentiated in the type of interpolation used: on the one hand, we developed an interpolation method based on box-splines --spline basis specific to the hexagonal mesh-- and on the other hand, we introduced an interpolation method based on Hermite Finite Elements. Furthermore, we presented a Poisson solver based on finite differences on this mesh. The first simulations were made on the circular advection test case. This allowed to compare the order of the methods, as well as the efficiency. The splines approached seemed to be more accurate for finer grids, but at higher cost. Next, we simulated the 2D guiding-center model. The two methods yield comparable results. Some minor differences could be observable when studying the mass conservation (where box-splines gave better results) and the conservation of the norms (where Hermite finite elements yield more accurate solutions). Lastly, when comparing the densities, we perceived some noise, especially when working with Finite Elements.
+In this paper we tested  Semi-Lagrangian schemes adapted to an hexagonal mesh. The strategies differentiated in the type of interpolation used: on the one hand, we developed an interpolation method based on box-splines --spline basis specific to the hexagonal mesh-- and on the other hand, we introduced an interpolation method based on Hermite Finite Elements. Furthermore, we presented a Poisson solver based on finite differences on this mesh. The first simulations were made on the circular advection test case. This allowed to compare the order of the methods, as well as the efficiency. The splines approached seemed to be more accurate for finer grids, but at higher cost. Next, we simulated the 2D guiding-center model. The two methods yield comparable results; more precisely, the  HCTC element, in the Hermite case has almost as nice conservation properties as the splines.
+
+%if one consider the HCTC element, in the Hermite case.
+%Some minor differences could be observable when studying the mass conservation (where box-splines gave better results) and the conservation of the norms (where Hermite finite elements yield more accurate solutions). Lastly, when comparing the densities, we perceived some noise, especially when working with Finite Elements.
 
 %%-----------------------------
 %%      your bibliography
