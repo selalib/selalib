@@ -479,6 +479,8 @@ end subroutine compute_current
 subroutine advection_v(delta_t)
 sll_real64 :: delta_t
 
+call compute_local_sizes( layout_x2, local_size_x1, local_size_x2 )
+global_indices = local_to_global( layout_x2, (/1, 1/) )
 tid = 1
 !$OMP PARALLEL DEFAULT(SHARED) &
 !$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid,mean_omp,f1d) 
@@ -486,8 +488,6 @@ tid = 1
 !$ tid = omp_get_thread_num()+1
 !advection in v
 !$OMP DO
-call compute_local_sizes( layout_x2, local_size_x1, local_size_x2 )
-global_indices = local_to_global( layout_x2, (/1, 1/) )
 do i_omp = 1,local_size_x1
 
   ig_omp=i_omp+global_indices(1)-1
