@@ -28,7 +28,7 @@ ADD_LIBRARY(sll_pic_1d_field_solver STATIC pic_1d_field_solver.F90
 TARGET_LINK_LIBRARIES(sll_pic_1d_field_solver  sll_constants
 					    sll_working_precision
 					sll_memory
-					sll_logical_meshes
+					sll_meshes
 					sll_boundary_condition_descriptors
 					sll_fft
 					 sll_splines
@@ -56,7 +56,7 @@ TARGET_LINK_LIBRARIES(sll_pic_1d_field_solver  sll_constants
 				      sll_constants
 					sll_working_precision
 					sll_memory
-					sll_logical_meshes
+					sll_meshes
 					sll_boundary_condition_descriptors
 					# sll_poisson_solvers
 					 sll_splines
