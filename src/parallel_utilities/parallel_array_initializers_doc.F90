@@ -9,7 +9,7 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup parallel_array_initializers sll_parallel_array_initializers 
+!> @defgroup parallel_array_utilities sll_parallel_array_utilities 
 !> @brief 
 !> Description of parallel_array_initializers library (72 characters)
 !> @author Selalib team 

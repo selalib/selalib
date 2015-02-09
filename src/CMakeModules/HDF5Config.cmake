@@ -1,32 +1,37 @@
 SET(HDF5_ROOT $ENV{HDF5_ROOT} CACHE PATH "HDF5 location")
 
+MESSAGE(STATUS "HDF5_ROOT IS:${HDF5_ROOT}")
+
 IF(NOT HDF5_FOUND AND HDF5_ENABLED)
 
    SET(HDF5_PATHS $ENV{HDF5_HOME}
                   ${HDF5_ROOT} 
                   $ENV{HDF5ROOT} 
                   /usr 
+                  /usr/include/hdf5/openmpi
+                  /usr/include/openmpi-x86_64 
+                  /usr/include/mpich2-x86_64 
                   /usr/lib64/mpich2 
                   /usr/lib64/openmpi 
                   /usr/local 
                   /opt/local)
 
    FIND_PATH(HDF5_INCLUDE_DIR NAMES H5pubconf.h
-   HINTS ${HDF5_PATHS} $ENV{HDF5_INCLUDEDIR} /usr/include/openmpi-x86_64 /usr/include/mpich2-x86_64 
-   PATH_SUFFIXES / include hdf5/include 
+   HINTS ${HDF5_PATHS} $ENV{HDF5_INCLUDEDIR} 
+   PATH_SUFFIXES / include
    DOC "PATH to H5pubconf.h")
 
    FIND_PATH(HDF5_INCLUDE_DIR_FORTRAN NAMES hdf5.mod
-   HINTS ${HDF5_PATHS} $ENV{HDF5_INCLUDEDIR} /usr/include/openmpi-x86_64 /usr/include/mpich2-x86_64 
+   HINTS ${HDF5_PATHS} $ENV{HDF5_INCLUDEDIR} 
    PATH_SUFFIXES / include hdf5/include include/fortran
    DOC "PATH to hdf5.mod")
 
-   FIND_LIBRARY(HDF5_C_LIBRARY NAMES libhdf5.a hdf5
+   FIND_LIBRARY(HDF5_C_LIBRARY NAMES libhdf5.a hdf5_openmpi hdf5
    HINTS ${HDF5_PATHS} $ENV{HDF5_LIBRARYDIR}
    PATH_SUFFIXES lib hdf5/lib lib/x86_64-linux-gnu
    DOC "PATH TO libhdf5")
 
-   FIND_LIBRARY(HDF5_FORTRAN_LIBRARY NAMES libhdf5_fortran.a hdf5_fortran
+   FIND_LIBRARY(HDF5_FORTRAN_LIBRARY NAMES libhdf5_fortran.a hdf5_openmpi_fortran hdf5_fortran
    HINTS ${HDF5_PATHS} $ENV{HDF5_LIBRARYDIR}
    PATH_SUFFIXES lib hdf5/lib lib/x86_64-linux-gnu
    DOC "PATH TO libhdf5_fortran")

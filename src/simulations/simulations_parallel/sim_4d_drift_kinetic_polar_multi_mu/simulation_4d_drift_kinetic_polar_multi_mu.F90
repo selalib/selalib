@@ -1009,9 +1009,9 @@ contains
       call sll_hdf5_write_array_1d(file_id,sim%Te_r,'Te_r',file_err)
       call sll_hdf5_file_close(file_id,file_err)
       
-      call sll_gnuplot_write(sim%n0_r,'n0_r_init',ierr)
-      call sll_gnuplot_write(sim%Ti_r,'Ti_r_init',ierr)
-      call sll_gnuplot_write(sim%Te_r,'Te_r_init',ierr)
+      call sll_gnuplot_1d(sim%n0_r,'n0_r_init',ierr)
+      call sll_gnuplot_1d(sim%Ti_r,'Ti_r_init',ierr)
+      call sll_gnuplot_1d(sim%Te_r,'Te_r_init',ierr)
 
       
     end if
@@ -1053,19 +1053,19 @@ contains
         print*,'#iteration=',iter
       
         if(iter==1)then
-          call sll_gnuplot_write( &
+          call sll_gnuplot_1d( &
             sim%rho3d_seqx1x2(1:nc_x1+1,1,1)/sim%n0_r(1:nc_x1+1)-1._f64, &
             'rho_0_init', &
             ierr)
         endif
         if(iter==2)then
-          call sll_gnuplot_write( &
+          call sll_gnuplot_1d( &
             sim%rho3d_seqx1x2(1:nc_x1+1,1,1)/sim%n0_r(1:nc_x1+1)-1._f64, &
             'rho_1_init', &
             ierr)
         endif
         if(iter==2)then
-          call sll_gnuplot_write( &
+          call sll_gnuplot_1d( &
             sim%phi3d_seqx1x2(1:nc_x1+1,1,1), &
             'phi_1', &
             ierr)
@@ -1126,7 +1126,7 @@ contains
     
       if(modulo(iter,sim%freq_diag)==0) then
         i_plot = i_plot+1
-        call sll_gnuplot_corect_2d( &
+        call sll_gnuplot_2d( &
           sim%m_x1%eta_min, &
           sim%m_x1%eta_max, &
           nc_x1+1, &
@@ -1148,16 +1148,16 @@ contains
 
     
 !    if(iter==5)then    
-!        call sll_gnuplot_corect_2d(0.1_f64,14.5_f64,32,0._f64,2._f64*sll_pi,32,sim%f4d_seqx1x2x4(:,:,10,30),'fdist',10,ierr)
+!        call sll_gnuplot_2d(0.1_f64,14.5_f64,32,0._f64,2._f64*sll_pi,32,sim%f4d_seqx1x2x4(:,:,10,30),'fdist',10,ierr)
 !    endif
 !    if(iter==400)then    
-!        call sll_gnuplot_corect_2d(0.1_f64,14.5_f64,32,0._f64,2._f64*sll_pi,32,sim%f4d_seqx1x2x4(:,:,10,30),'fdist',800,ierr)
+!        call sll_gnuplot_2d(0.1_f64,14.5_f64,32,0._f64,2._f64*sll_pi,32,sim%f4d_seqx1x2x4(:,:,10,30),'fdist',800,ierr)
 !    endif
 !    if(iter==1000)then    
-!        call sll_gnuplot_corect_2d(0.1_f64,14.5_f64,32,0._f64,2._f64*sll_pi,32,sim%f4d_seqx1x2x4(:,:,10,30),'fdist',2000,ierr)
+!        call sll_gnuplot_2d(0.1_f64,14.5_f64,32,0._f64,2._f64*sll_pi,32,sim%f4d_seqx1x2x4(:,:,10,30),'fdist',2000,ierr)
 !    endif
 !    if(iter==3500)then    
-!        call sll_gnuplot_corect_2d(0.1_f64,14.5_f64,32,0._f64,2._f64*sll_pi,32,sim%f4d_seqx1x2x4(:,:,10,30),'fdist',7000,ierr)
+!        call sll_gnuplot_2d(0.1_f64,14.5_f64,32,0._f64,2._f64*sll_pi,32,sim%f4d_seqx1x2x4(:,:,10,30),'fdist',7000,ierr)
 !    endif
 
     enddo
@@ -1226,11 +1226,11 @@ contains
         nrj
 
       if(step==0)then    
-        call sll_gnuplot_write(sim%phi3d_seqx1x2(:,1,1),'phi_0',ierr)
-        call sll_gnuplot_write(sim%rho3d_seqx1x2(:,1,1)/sim%n0_r(:)-1._f64,'rho_0',ierr)
-        call sll_gnuplot_write(sim%Ti_r(:),'Ti_r',ierr)
-        call sll_gnuplot_write(sim%Te_r(:),'Te_r',ierr)
-        call sll_gnuplot_write(sim%n0_r(:),'n0_r',ierr)
+        call sll_gnuplot_1d(sim%phi3d_seqx1x2(:,1,1),'phi_0',ierr)
+        call sll_gnuplot_1d(sim%rho3d_seqx1x2(:,1,1)/sim%n0_r(:)-1._f64,'rho_0',ierr)
+        call sll_gnuplot_1d(sim%Ti_r(:),'Ti_r',ierr)
+        call sll_gnuplot_1d(sim%Te_r(:),'Te_r',ierr)
+        call sll_gnuplot_1d(sim%n0_r(:),'n0_r',ierr)
       endif
 
 
