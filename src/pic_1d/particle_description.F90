@@ -21,8 +21,6 @@ module sll_particle_1d_description
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use sll_logical_meshes
-
   implicit none
 
 

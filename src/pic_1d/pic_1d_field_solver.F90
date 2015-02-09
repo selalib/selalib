@@ -18,7 +18,7 @@ module sll_pic_1d_field_solver
     use sll_collective
     use sll_module_poisson_1d_periodic_solver
     use sll_poisson_1d_fem !Finite Element Bspline
-    use sll_logical_meshes
+    use sll_cartesian_meshes
     use sll_poisson_1d_fd !Finite difference solver
     use sll_poisson_1d_periodic
     use sll_particle_1d_description
@@ -46,7 +46,7 @@ module sll_pic_1d_field_solver
         sll_real64, dimension(:), allocatable :: poisson_solution
 
 
-        type(sll_logical_mesh_1d),pointer ::  mesh
+        class(sll_cartesian_mesh_1d),pointer ::  mesh
 
         sll_real64, private :: scalar_inhomogenity
         sll_real64, dimension(:), allocatable :: inhomogenity
@@ -183,7 +183,7 @@ contains
         sll_real64, intent(in) :: eta_min, eta_max
         sll_int32, intent(in) :: boundary_type
 
-        type(sll_logical_mesh_1d), pointer :: mesh
+        class(sll_cartesian_mesh_1d), pointer :: mesh
         type(sll_collective_t), pointer , intent(in):: collective
 
         !Pepare collective
@@ -203,7 +203,7 @@ contains
 
 
         !Generate logical mesh
-        mesh=>new_logical_mesh_1d( num_cells, eta_min, eta_max )
+        mesh=>new_cartesian_mesh_1d( num_cells, eta_min, eta_max )
         this%mesh=>mesh
         selectcase (poisson_solver_type)
             case(SLL_SOLVER_FEM)

@@ -9,7 +9,7 @@ module sll_poisson_1d_fd
     use sll_cartesian_meshes
     use sll_arbitrary_degree_splines
     use sll_boundary_condition_descriptors
-    use sll_arbitrary_degree_spline_interpolator_1d_module
+    use sll_module_arbitrary_degree_spline_interpolator_1d
     use sll_fft
     implicit none
     !  private
@@ -27,14 +27,14 @@ module sll_poisson_1d_fd
     !> Structure to solve Poisson equation on 1d domain. Mesh is cartesian and
     !> could be irregular. Numerical method is using finite elements.
     type :: poisson_1d_fd
-        type(sll_logical_mesh_1d), private, pointer  :: logical_mesh
+        class(sll_cartesian_mesh_1d), private, pointer  :: cartesian_mesh
 
         !> Spline basis
         !sll_int32 , private :: fd_degree !<Degree of the Bsplines
         sll_int32 , private :: fd_degree !<Degree of the Bsplines
 
         type(arbitrary_degree_spline_1d), pointer, private :: bspline  !<Bspline object
-        class(sll_arb_deg_1d_interpolator), pointer, private :: interpolator
+        class(sll_arbitrary_degree_spline_interpolator_1d), pointer, private :: interpolator
 
         sll_real64, dimension(:), allocatable :: fd_solution
         sll_real64, dimension(:), allocatable,private :: fd_solution_deriv
@@ -118,22 +118,22 @@ contains
     endsubroutine
 
 
-    function  new_poisson_1d_fd(logical_mesh_1d,fd_degree, bc_type,ierr) &
+    function  new_poisson_1d_fd(cartesian_mesh_1d,fd_degree, bc_type,ierr) &
             result(solver)
         type(poisson_1d_fd), pointer :: solver     !< Solver data structure
-        type(sll_logical_mesh_1d), intent(in),pointer  :: logical_mesh_1d !< Logical mesh
+        class(sll_cartesian_mesh_1d), intent(in),pointer  :: cartesian_mesh_1d !< Logical mesh
         sll_int32, intent(out)                :: ierr    !< error code
         sll_int32, intent(in)                :: fd_degree !<Degree of the finite differences approximation
         sll_int32, intent(in)               :: bc_type !< type of boundary connditions
 
         SLL_ALLOCATE(solver,ierr)
-        call sll_initialize_poisson_1d_fd(solver,  logical_mesh_1d,fd_degree,bc_type,ierr)
+        call sll_initialize_poisson_1d_fd(solver,  cartesian_mesh_1d,fd_degree,bc_type,ierr)
     endfunction
 
 
-    subroutine sll_initialize_poisson_1d_fd(this, logical_mesh_1d,fd_degree,bc_type, ierr)
+    subroutine sll_initialize_poisson_1d_fd(this, cartesian_mesh_1d,fd_degree,bc_type, ierr)
         class(poisson_1d_fd),intent(inout) :: this     !< Solver data structure
-        type(sll_logical_mesh_1d), intent(in),pointer  :: logical_mesh_1d !< Logical mesh
+        class(sll_cartesian_mesh_1d), intent(in),pointer  :: cartesian_mesh_1d !< Logical mesh
         sll_int32, intent(out)                :: ierr    !< error code
         sll_int32, intent(in)                :: fd_degree !<Degree of the bsplines
         sll_int32, intent(in)               :: bc_type !< type of boundary connditions
@@ -141,19 +141,19 @@ contains
         this%boundarycondition=bc_type !SLL_PERIODIC
 
         !scale_matrix_equation=1.0_f64
-        this%logical_mesh=>logical_mesh_1d
-        this%num_cells=this%logical_mesh%num_cells
+        this%cartesian_mesh=>cartesian_mesh_1d
+        this%num_cells=this%cartesian_mesh%num_cells
         this%fd_degree=fd_degree
         !Allocate spline
         selectcase(this%boundarycondition)
             case(SLL_PERIODIC)
                 !this%bspline=>new_arbitrary_degree_spline_1d( fd_degree, &
-                    !sll_mesh_nodes(this%logical_mesh), sll_mesh_num_nodes(this%logical_mesh), &
+                    !sll_mesh_nodes(this%cartesian_mesh), sll_mesh_num_nodes(this%cartesian_mesh), &
                     !PERIODIC_ARBITRARY_DEG_SPLINE)
                 this%problem_size=this%num_cells
                 this%interpolator=>new_arbitrary_degree_1d_interpolator(this%num_cells, &
-                    this%logical_mesh%eta_min, &
-                    this%logical_mesh%eta_max, &
+                    this%cartesian_mesh%eta_min, &
+                    this%cartesian_mesh%eta_max, &
                     SLL_PERIODIC, &
                     SLL_PERIODIC, &
                     1)
@@ -161,8 +161,8 @@ contains
             case(SLL_DIRICHLET)
                 this%problem_size=this%num_cells
                 this%interpolator=>new_arbitrary_degree_1d_interpolator( this%num_cells, &
-                    this%logical_mesh%eta_min, &
-                    this%logical_mesh%eta_max, &
+                    this%cartesian_mesh%eta_min, &
+                    this%cartesian_mesh%eta_max, &
                     SLL_DIRICHLET, &
                     SLL_DIRICHLET, &
                     1)
@@ -209,7 +209,7 @@ contains
         sll_real64, dimension(this%num_cells ) :: rhs !<Right hand side
         sll_int32 :: ierr=0
         sll_real64, dimension(this%num_cells+1) :: evalpoints
-        evalpoints=eval_function(nodes_logical_mesh_1d(this%logical_mesh))
+        evalpoints=eval_function(this%cartesian_mesh%eta1_nodes())
         !Map to right hand side according to boundary condition
 
         rhs=evalpoints(1:this%num_cells)
@@ -235,7 +235,7 @@ contains
         ierr=0
         !Determine dimension of problem
         N=size(circulant_matrix_first_line)
-        SLL_ASSERT(is_power_of_two(int(N,i64)))
+        !!!SLL_ASSERT(is_power_of_two(int(N,i64)))
         !Generate Circulant Seed
 
         !Circulant seed c to generate stiffness matrix as a circular matrix
@@ -311,12 +311,12 @@ contains
             this%fd_solution(1)=0
         endif
 
-            this%fd_solution= this%fd_solution*this%logical_mesh%delta_eta*2
+            this%fd_solution= this%fd_solution*this%cartesian_mesh%delta_eta*2
         !Calculate the Electric field from the Potential
         !Central Difference
          this%fd_solution_deriv=(cshift(this%fd_solution,-1)- &
                                         cshift(this%fd_solution,1))&
-                                     /(2*(this%logical_mesh%delta_eta))
+                                     /(2*(this%cartesian_mesh%delta_eta))
 
         !Set up Interpolation
         call this%interpolator%compute_interpolants(this%fd_solution)
@@ -355,7 +355,7 @@ contains
 
         N=size(rightside)
         SLL_ASSERT(N==this%num_cells)
-        SLL_ASSERT(is_power_of_two(int(N,i64)))
+        !!!SLL_ASSERT(is_power_of_two(int(N,i64)))
 
         SLL_ASSERT(N/2+1==size(matrix_fl_fourier))
 
@@ -410,7 +410,7 @@ contains
 
         realvals=0
 
-        cell=sll_cell(this%logical_mesh, knots_eval)
+        cell=sll_cell(this%cartesian_mesh, knots_eval)
         !cell= bspline_fem_solver_1d_cell_number(knots_mesh, knots_eval(eval_idx))
         !Loop over all points to evaluate
         !This should be vectorizzed
@@ -515,7 +515,7 @@ call poisson_1d_fd_linear_interpol(this, this%fd_solution_deriv,knots_eval, eval
 
             !This is a really bad way to do it
             seminorm=sum(this%fd_solution_deriv**2)/N**2 !&
-                            !/(this%logical_mesh%eta_max -this%logical_mesh%eta_min))/N
+                            !/(this%cartesian_mesh%eta_max -this%cartesian_mesh%eta_min))/N
                             !+(this%fd_solution(1:N-1)-this%fd_solution(2:N))
         endfunction
 !
@@ -561,7 +561,7 @@ call poisson_1d_fd_linear_interpol(this, this%fd_solution_deriv,knots_eval, eval
         npart=size(ppos)
         SLL_ASSERT(size(ppos)==size(pweight))
 
-        knots=nodes_logical_mesh_1d(this%logical_mesh)
+        knots=this%cartesian_mesh%eta1_nodes()
         knotsvals=0
         do idx=1,npart
             knotsvals=shf(ppos(idx), knots)*pweight(idx)
@@ -611,7 +611,7 @@ call poisson_1d_fd_linear_interpol(this, this%fd_solution_deriv,knots_eval, eval
 
         interpolfun=>b_splines_at_x
 
-        cell= sll_cell(this%logical_mesh, ppos)
+        cell= sll_cell(this%cartesian_mesh, ppos)
 
         do idx=1,size(ppos)
 
@@ -672,7 +672,7 @@ call poisson_1d_fd_linear_interpol(this, this%fd_solution_deriv,knots_eval, eval
         sll_real64 :: weight
         SLL_ASSERT(size(knots_eval)==size(eval_solution))
 
-        pw=(knots_eval-this%logical_mesh%eta_min)/this%logical_mesh%delta_eta
+        pw=(knots_eval-this%cartesian_mesh%eta_min)/this%cartesian_mesh%delta_eta
 
         SLL_ASSERT(size(solution)==this%problem_size)
             do idx=1,size(eval_solution)
