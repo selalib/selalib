@@ -162,7 +162,6 @@ contains
             case(SLL_PERIODIC)
                 this%bspline=>new_arbitrary_degree_spline_1d(spline_degree,this%cartesian_mesh%eta1_nodes(), this%cartesian_mesh%num_nodes(), &
                     PERIODIC_ARBITRARY_DEG_SPLINE)
-            
             case(SLL_DIRICHLET)
                 this%bspline=>new_arbitrary_degree_spline_1d( spline_degree, &
                     this%cartesian_mesh%eta1_nodes(), this%cartesian_mesh%num_nodes(), &
@@ -186,13 +185,13 @@ contains
         !------------------------------------------------------------------------------------------
         !Assemble stiffnes matrix
 
+
         call sll_poisson_1d_fem_assemble_stiffn_matrix(this,ierr)
         !prepare fourier transformation for stiffness matrix
 
         SLL_CLEAR_ALLOCATE(this%stiffn_matrix_first_line_fourier(1:this%num_cells/2+1), ierr)
         call sll_poisson_1d_fft_precomputation(this,this%stiffn_matrix_first_line, &
             this%stiffn_matrix_first_line_fourier, ierr)
-
         !Assemble mass matrix for L2-Norm
         call sll_poisson_1d_fem_assemble_mass_matrix(this, ierr)
 
@@ -201,6 +200,7 @@ contains
             this%mass_matrix_first_line_fourier, ierr)
 
         call this%set_tr_stiffinv_massm()
+        
     endsubroutine
 
     subroutine poisson_1d_fem_set_solution(this, solution_vector)
@@ -366,7 +366,6 @@ contains
         integer :: cell
         integer :: i,j
         degree=bspline_arbitrary_degree%degree
-
         !Get Gauss Legendre points and weights to be exact for the selected spline degree
         !Note a Bspline is a piecewise polynom
         if ( .not. present(quadrature_points)) then
@@ -394,7 +393,6 @@ contains
                 !bspline_qpoint_values(:,i) = bspline_qpoint_values((degree+1):1:-1,i)
                 !shift in order to account for intersecting and limited support
                 bspline_qpoint_values(:,i) = eoshift(bspline_qpoint_values(:,i), (cell-1))
-
             enddo
             do j=1,degree+1
                 !forall (j=1:degree+1)
