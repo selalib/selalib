@@ -423,9 +423,9 @@ contains
     if(.not.(present(integration_func)))then
       do i4 = 1,Npts4
         do i3 = 1,Npts3
-          data_2d_mass(i3,i4) = 0._f64 
-          data_2d_l1(i3,i4) = 0._f64 
-          data_2d_l2(i3,i4) = 0._f64 
+          data_mass_2d(i3,i4) = 0._f64 
+          data_l1_2d(i3,i4) = 0._f64 
+          data_l2_2d(i3,i4) = 0._f64 
           i1=1
           tmp = 0.5_f64*(data_4d(i1,1,i3,i4)&
               +data_4d(i1,Npts2,i3,i4))
@@ -441,9 +441,9 @@ contains
           tmp = tmp*delta2
           tmp_l1 = tmp_l1*delta2          
           tmp_l2 = tmp_l2*delta2          
-          data_2d_mass(i3,i4) = data_2d_mass(i3,i4) + 0.5_f64*tmp
-          data_2d_l1(i3,i4) = data_2d_l1(i3,i4) + 0.5_f64*tmp_l1
-          data_2d_l2(i3,i4) = data_2d_l2(i3,i4) + 0.5_f64*tmp_l2
+          data_mass_2d(i3,i4) = data_mass_2d(i3,i4) + 0.5_f64*tmp
+          data_l1_2d(i3,i4) = data_l1_2d(i3,i4) + 0.5_f64*tmp_l1
+          data_l2_2d(i3,i4) = data_l2_2d(i3,i4) + 0.5_f64*tmp_l2
           
           do i1 = 2,Npts1-1            
             tmp = 0.5_f64*(data_4d(i1,1,i3,i4)&
@@ -460,9 +460,9 @@ contains
             tmp = tmp*delta2
             tmp_l1 = tmp_l1*delta2          
             tmp_l2 = tmp_l2*delta2          
-            data_2d_mass(i3,i4) = data_2d_mass(i3,i4) + tmp
-            data_2d_l1(i3,i4) = data_2d_l1(i3,i4) + tmp_l1
-            data_2d_l2(i3,i4) = data_2d_l2(i3,i4) + tmp_l2
+            data_mass_2d(i3,i4) = data_mass_2d(i3,i4) + tmp
+            data_l1_2d(i3,i4) = data_l1_2d(i3,i4) + tmp_l1
+            data_l2_2d(i3,i4) = data_l2_2d(i3,i4) + tmp_l2
           end do
 
           i1=Npts1
@@ -480,13 +480,13 @@ contains
           tmp = tmp*delta2
           tmp_l1 = tmp_l1*delta2          
           tmp_l2 = tmp_l2*delta2          
-          data_2d_mass(i3,i4) = data_2d_mass(i3,i4) + 0.5_f64*tmp
-          data_2d_l1(i3,i4) = data_2d_l1(i3,i4) + 0.5_f64*tmp_l1
-          data_2d_l2(i3,i4) = data_2d_l2(i3,i4) + 0.5_f64*tmp_l2
+          data_mass_2d(i3,i4) = data_mass_2d(i3,i4) + 0.5_f64*tmp
+          data_l1_2d(i3,i4) = data_l1_2d(i3,i4) + 0.5_f64*tmp_l1
+          data_l2_2d(i3,i4) = data_l2_2d(i3,i4) + 0.5_f64*tmp_l2
 
-          data_2d_mass(i3,i4) = data_2d_mass(i3,i4)*delta1
-          data_2d_l1(i3,i4) = data_2d_l1(i3,i4)*delta1
-          data_2d_l2(i3,i4) = data_2d_l2(i3,i4)*delta1
+          data_mass_2d(i3,i4) = data_mass_2d(i3,i4)*delta1
+          data_l1_2d(i3,i4) = data_l1_2d(i3,i4)*delta1
+          data_l2_2d(i3,i4) = data_l2_2d(i3,i4)*delta1
         end do
       end do
     else
@@ -497,7 +497,7 @@ contains
       print *,'#in compute_reduction_4d_to_2d_direction12'
       stop
     endif  
-  end subroutine compute_reduction_4d_to_2d_direction12
+  end subroutine compute_reduction_mass_l1_l2_4d_to_2d_direction12
 
 
 
