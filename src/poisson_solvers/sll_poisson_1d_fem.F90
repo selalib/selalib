@@ -6,7 +6,7 @@ module sll_poisson_1d_fem
 #include "sll_assert.h"
 
     use sll_constants
-    use sll_logical_meshes
+    use sll_cartesian_meshes
     use sll_arbitrary_degree_splines
     use sll_boundary_condition_descriptors
     use gauss_legendre_integration
@@ -28,7 +28,7 @@ module sll_poisson_1d_fem
     !> Structure to solve Poisson equation on 1d domain. Mesh is cartesian and
     !> could be irregular. Numerical method is using finite elements.
     type :: poisson_1d_fem
-        type(sll_logical_mesh_1d), private, pointer  :: logical_mesh
+        class(sll_cartesian_mesh_1d), private, pointer  :: cartesian_mesh
 
         !> Spline basis
         sll_int32 , private :: spline_degree !<Degree of the Bsplines
@@ -130,22 +130,22 @@ contains
     endsubroutine
 
 
-    function  new_poisson_1d_fem(logical_mesh_1d,spline_degree,boundarycondition, ierr) &
+    function  new_poisson_1d_fem(cartesian_mesh_1d,spline_degree,boundarycondition, ierr) &
             result(solver)
         type(poisson_1d_fem), pointer :: solver     !< Solver data structure
-        type(sll_logical_mesh_1d), intent(in),pointer  :: logical_mesh_1d !< Logical mesh
+        class(sll_cartesian_mesh_1d), intent(in),pointer  :: cartesian_mesh_1d !< Logical mesh
         sll_int32, intent(out)                :: ierr    !< error code
         sll_int32, intent(in)                :: spline_degree !<Degree of the bsplines
         sll_int32, intent(in) :: boundarycondition !<Boundary Condition Descriptor
 
         SLL_ALLOCATE(solver,ierr)
-        call sll_initialize_poisson_1d_fem(solver,  logical_mesh_1d,spline_degree,boundarycondition,ierr)
+        call sll_initialize_poisson_1d_fem(solver,  cartesian_mesh_1d,spline_degree,boundarycondition,ierr)
     endfunction
 
 
-    subroutine sll_initialize_poisson_1d_fem(this, logical_mesh_1d,spline_degree,boundarycondition, ierr)
+    subroutine sll_initialize_poisson_1d_fem(this, cartesian_mesh_1d,spline_degree,boundarycondition, ierr)
         class(poisson_1d_fem),intent(inout) :: this     !< Solver data structure
-        type(sll_logical_mesh_1d), intent(in),pointer  :: logical_mesh_1d !< Logical mesh
+        class(sll_cartesian_mesh_1d), intent(in),pointer  :: cartesian_mesh_1d !< Logical mesh
         sll_int32, intent(out)                :: ierr    !< error code
         sll_int32, intent(in)                :: spline_degree !<Degree of the bsplines
         sll_int32, intent(in) :: boundarycondition !<Boundary Condition Descriptor
@@ -154,18 +154,18 @@ contains
         !this%boundarycondition=SLL_DIRICHLET !SLL_PERIODIC
 
         !scale_matrix_equation=1.0_f64
-        this%logical_mesh=>logical_mesh_1d
-        this%num_cells=this%logical_mesh%num_cells
+        this%cartesian_mesh=>cartesian_mesh_1d
+        this%num_cells=this%cartesian_mesh%num_cells
         this%spline_degree=spline_degree
         !Allocate spline
         selectcase(this%boundarycondition)
             case(SLL_PERIODIC)
-                this%bspline=>new_arbitrary_degree_spline_1d( spline_degree, &
-                    sll_mesh_nodes(this%logical_mesh), sll_mesh_num_nodes(this%logical_mesh), &
+                this%bspline=>new_arbitrary_degree_spline_1d(spline_degree,this%cartesian_mesh%eta1_nodes(), this%cartesian_mesh%num_nodes(), &
                     PERIODIC_ARBITRARY_DEG_SPLINE)
+            
             case(SLL_DIRICHLET)
                 this%bspline=>new_arbitrary_degree_spline_1d( spline_degree, &
-                    sll_mesh_nodes(this%logical_mesh), sll_mesh_num_nodes(this%logical_mesh), &
+                    this%cartesian_mesh%eta1_nodes(), this%cartesian_mesh%num_nodes(), &
                     PERIODIC_ARBITRARY_DEG_SPLINE)
             case default
                 print *, "This boundary condition is not supported!"
@@ -248,7 +248,7 @@ contains
 
         !Quadrature for each support cell
         do cell=1, this%num_cells
-            cellmargin=sll_cell_margin(this%logical_mesh, cell)
+            cellmargin=sll_cell_margin(this%cartesian_mesh, cell)
             quadrature_points_weights=gauss_legendre_points_and_weights(n_quadrature_points,&
                 cellmargin(1),cellmargin(2))
             !quadrature_points_weights=gauss_lobatto_points_and_weights(n_quadrature_points, knots_mesh(cell), knots_mesh(cell+1))
@@ -341,7 +341,7 @@ contains
 
         sll_real64, dimension(this%spline_degree+1) :: mass_matrix_period
         mass_matrix_period=sll_gen_fem_bspline_matrix_period ( this%bspline , &
-            sll_mesh_nodes(this%logical_mesh), b_splines_at_x , ierr)
+            this%cartesian_mesh%eta1_nodes(), b_splines_at_x , ierr)
         SLL_CLEAR_ALLOCATE(this%mass_matrix_first_line(1:this%num_cells),ierr)
         !First line of stiffness matrix
         this%mass_matrix_first_line=0.0_f64
@@ -420,7 +420,7 @@ contains
 
         sll_real64, dimension(this%spline_degree+1) :: stiffn_matrix_period
         stiffn_matrix_period=sll_gen_fem_bspline_matrix_period ( this%bspline , &
-            sll_mesh_nodes(this%logical_mesh), b_spline_derivatives_at_x , ierr)
+            this%cartesian_mesh%eta1_nodes(), b_spline_derivatives_at_x , ierr)
         SLL_CLEAR_ALLOCATE(this%stiffn_matrix_first_line(1:this%num_cells),ierr)
         !First line of stiffness matrix
         this%stiffn_matrix_first_line=0.0_f64
@@ -508,7 +508,7 @@ contains
         sll_int32, dimension( this%num_cells ) :: IPIV
 
        femperiod=sll_gen_fem_bspline_matrix_period ( this%bspline , &
-            sll_mesh_nodes(this%logical_mesh), b_spline_derivatives_at_x , ierr)
+            this%cartesian_mesh%eta1_nodes(), b_spline_derivatives_at_x , ierr)
         N=this%num_cells
         KD=this%spline_degree
         this%fem_solution =rhs
@@ -638,7 +638,7 @@ contains
 
         realvals=0
 
-        cell=sll_cell(this%logical_mesh, knots_eval)
+        cell=sll_cell(this%cartesian_mesh, knots_eval)
         !cell= bspline_fem_solver_1d_cell_number(knots_mesh, knots_eval(eval_idx))
         !Loop over all points to evaluate
         !This should be vectorizzed
@@ -846,7 +846,7 @@ contains
         this%tr_stiffinv_massm=2.0_f64*real(sum(data_complex))
 
         !Scale
-        this%tr_stiffinv_massm=this%tr_stiffinv_massm/sll_mesh_area(this%logical_mesh)
+        this%tr_stiffinv_massm=this%tr_stiffinv_massm/sll_mesh_area(this%cartesian_mesh)
     endsubroutine
 
 
@@ -930,7 +930,7 @@ contains
 
         interpolfun=>b_splines_at_x
 
-        cell= sll_cell(this%logical_mesh, ppos)
+        cell= sll_cell(this%cartesian_mesh, ppos)
 
         do idx=1,size(ppos)
 
