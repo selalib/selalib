@@ -52,6 +52,7 @@ sll_real64, parameter :: sll_proton_mass = 1.672621777D-27
 !> @param standard grav. accel., sea level m/s^2 
 sll_real64, parameter :: sll_g = 9.80665D0             
 
+!> @param value of \f$ \sqrt{3} \f$ (needed for hexagonal meshes).
 sll_real64, parameter :: sll_sqrt3 = 1.7320508075688771931766041_f64
 
 !> @param Boltzmann constant J/K

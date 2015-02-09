@@ -22,8 +22,7 @@ SET(POISSON_SRCS sll_poisson_1d_base.F90
                  sll_poisson_1d_fem.F90)
 
 IF(FFTW_ENABLED AND FFTW_FOUND)
-   SET(POISSON_SRCS 
-       "${POISSON_SRCS};../fft/fftw3/fftw3.F90;sll_poisson_2d_periodic_fftw.F90")
+   SET(POISSON_SRCS ${POISSON_SRCS} sll_poisson_2d_periodic_fftw.F90)
 ENDIF()
 
 ADD_LIBRARY( sll_poisson_solvers STATIC ${POISSON_SRCS} )
@@ -36,10 +35,6 @@ TARGET_LINK_LIBRARIES( sll_poisson_solvers
   dfftpack 
   ${LAPACK_LIBRARIES}
   sll_meshes)
-
-IF(FFTW_ENABLED AND FFTW_FOUND)
-   TARGET_LINK_LIBRARIES( sll_poisson_solvers ${FFTW_LIBRARIES} )
-ENDIF()
 
 ADD_LIBRARY( hex_poisson STATIC hex_poisson.F90 )
 TARGET_LINK_LIBRARIES( hex_poisson sll_hex_meshes )
