@@ -8,12 +8,10 @@ module sll_vlasov2d_base
 #include "sll_constants.h"
 #include "sll_interpolators.h"
 #include "sll_utilities.h"
-
-use sll_remapper
-use sll_xml_io
-use init_functions
 use sll_collective
 use sll_remapper
+use sll_xml_io
+use init_functions, only: VA_VALIS, PSTD, METH_BSL_CUBIC_SPLINES, SPECTRAL
 
 implicit none
 
@@ -24,6 +22,7 @@ public :: read_input_file
 public :: transposexv, transposevx, write_xmf_file
 
 type, public :: vlasov2d_base
+
   logical                                  :: transposed      
   type(sll_cartesian_mesh_1d), pointer     :: geomx
   type(sll_cartesian_mesh_1d), pointer     :: geomv
@@ -88,6 +87,9 @@ subroutine read_input_file(this)
   sll_int32  :: num_case         ! test case
   sll_real64 :: eps = 0.05_f64   ! perturbation amplitude
   sll_int32  :: meth             ! method
+  sll_int32  :: psize
+  sll_int32  :: prank
+  sll_int32  :: comm
  
   namelist /time/          dt, nbiter
   namelist /diag/          fdiag, fthdiag
@@ -102,15 +104,57 @@ subroutine read_input_file(this)
   poisson_type = SPECTRAL
   maxwell_type = PSTD
  
-  call initialize_file(idata, ithf)
-  read(idata,NML=time)
-  read(idata,NML=diag)
-  read(idata,NML=phys_space)
-  read(idata,NML=vel_space)
-  read(idata,NML=test_case)
-  read(idata,NML=algo_charge)
-  read(idata,NML=field_solvers)
-  close(idata)
+  prank = sll_get_collective_rank(sll_world_collective)
+  psize = sll_get_collective_size(sll_world_collective)
+  comm  = sll_world_collective%comm
+
+  if (prank == MPI_MASTER) then
+
+    call initialize_file(idata, ithf)
+    read(idata,NML=time)
+    read(idata,NML=diag)
+    read(idata,NML=phys_space)
+    read(idata,NML=vel_space)
+    read(idata,NML=test_case)
+    read(idata,NML=algo_charge)
+    read(idata,NML=field_solvers)
+    close(idata)
+    write(*,*) 'physical space: nx, x0, x1, dx'
+    write(*,"((i3,1x),3(g13.3,1x))")nx, x0, x1, this%delta_eta1
+    write(*,*) 'velocity space: nvx, nvy, vx0, vx1, vy0, vy1, dvx, dvy'
+    write(*,"((i3,1x),3(g13.3,1x))")nvx, vx0, vx1, this%delta_eta2
+    write(*,*) 'dt,nbiter,fdiag,fthdiag'
+    write(*,"(g13.3,1x,3i5)") dt,nbiter,fdiag,fthdiag
+    write(*,*) " Algo charge "
+    select case(va) 
+    case(0)
+       print*, 'Valis' 
+    case(1)
+       print*, 'Vlasov-Poisson'
+    case(2)
+       print*, " diag charge "
+    case(3)
+       print*, "classic algorithm"
+    end select
+
+  end if
+
+  call mpi_bcast(dt,           1, MPI_REAL8  , MPI_MASTER, comm, ierr)
+  call mpi_bcast(nbiter,       1, MPI_INTEGER, MPI_MASTER, comm, ierr)
+  call mpi_bcast(fdiag,        1, MPI_INTEGER, MPI_MASTER, comm, ierr)
+  call mpi_bcast(fthdiag,      1, MPI_INTEGER, MPI_MASTER, comm, ierr)
+  call mpi_bcast(x0,           1, MPI_REAL8  , MPI_MASTER, comm, ierr)
+  call mpi_bcast(x1,           1, MPI_REAL8  , MPI_MASTER, comm, ierr)
+  call mpi_bcast(nx,           1, MPI_INTEGER, MPI_MASTER, comm, ierr)
+  call mpi_bcast(vx0,          1, MPI_REAL8  , MPI_MASTER, comm, ierr)
+  call mpi_bcast(vx1,          1, MPI_REAL8  , MPI_MASTER, comm, ierr)
+  call mpi_bcast(nvx,          1, MPI_INTEGER, MPI_MASTER, comm, ierr)
+  call mpi_bcast(va,           1, MPI_INTEGER, MPI_MASTER, comm, ierr)
+  call mpi_bcast(meth,         1, MPI_INTEGER, MPI_MASTER, comm, ierr)
+  call mpi_bcast(num_case,     1, MPI_INTEGER, MPI_MASTER, comm, ierr)
+  call mpi_bcast(eps,          1, MPI_REAL8  , MPI_MASTER, comm, ierr)
+  call mpi_bcast(poisson_type, 1, MPI_INTEGER, MPI_MASTER, comm, ierr)
+  call mpi_bcast(maxwell_type, 1, MPI_INTEGER, MPI_MASTER, comm, ierr)
  
   this%dt         = dt
   this%nbiter     = nbiter
@@ -139,23 +183,6 @@ subroutine read_input_file(this)
   this%num_case   = num_case
   this%eps        = eps
  
-  write(*,*) 'physical space: nx, x0, x1, dx'
-  write(*,"((i3,1x),3(g13.3,1x))")nx, x0, x1, this%delta_eta1
-  write(*,*) 'velocity space: nvx, nvy, vx0, vx1, vy0, vy1, dvx, dvy'
-  write(*,"((i3,1x),3(g13.3,1x))")nvx, vx0, vx1, this%delta_eta2
-  write(*,*) 'dt,nbiter,fdiag,fthdiag'
-  write(*,"(g13.3,1x,3i5)") dt,nbiter,fdiag,fthdiag
-  write(*,*) " Algo charge "
-  select case(va) 
-  case(0)
-     print*, 'Valis' 
-  case(1)
-     print*, 'Vlasov-Poisson'
-  case(2)
-     print*, " diag charge "
-  case(3)
-     print*, "classic algorithm"
-  end select
  
 end subroutine read_input_file
 
@@ -191,6 +218,7 @@ subroutine initialize_vlasov2d_base(this)
  
   call compute_local_sizes(this%layout_x, loc_sz_i,loc_sz_j)        
   SLL_CLEAR_ALLOCATE(this%f(1:loc_sz_i,1:loc_sz_j),ierr)
+
  
   this%layout_v => new_layout_2d( sll_world_collective )
   call initialize_layout_with_distributed_array( &
@@ -205,21 +233,24 @@ subroutine initialize_vlasov2d_base(this)
   this%x_to_v => new_remap_plan( this%layout_x, this%layout_v, this%f)     
   this%v_to_x => new_remap_plan( this%layout_v, this%layout_x, this%ft)  
  
-  SLL_ALLOCATE(eta1(this%np_eta1),error)
-  SLL_ALLOCATE(eta2(this%np_eta2),error)
+  if (prank == MPI_MASTER) then
+
+    SLL_ALLOCATE(eta1(this%np_eta1),error)
+    SLL_ALLOCATE(eta2(this%np_eta2),error)
+   
+    do i = 1, this%np_eta1
+      eta1(i) = this%eta1_min + (i-1)*this%delta_eta1
+    end do
+   
+    do j = 1, this%np_eta2
+      eta2(j) = this%eta2_min + (j-1)*this%delta_eta2
+    end do
  
-  do i = 1, this%np_eta1
-    eta1(i) = this%eta1_min + (i-1)*this%delta_eta1
-  end do
- 
-  do j = 1, this%np_eta2
-    eta2(j) = this%eta2_min + (j-1)*this%delta_eta2
-  end do
- 
-  call sll_hdf5_file_create("mesh2d.h5",file_id,error)
-  call sll_hdf5_write_array(file_id,eta1,"/x1",error)
-  call sll_hdf5_write_array(file_id,eta2,"/x2",error)
-  call sll_hdf5_file_close(file_id, error)
+    call sll_hdf5_file_create("mesh2d.h5",file_id,error)
+    call sll_hdf5_write_array(file_id,eta1,"/x1",error)
+    call sll_hdf5_write_array(file_id,eta2,"/x2",error)
+    call sll_hdf5_file_close(file_id, error)
+  end if
  
   nullify(this%ex)
   nullify(this%jx)
@@ -236,32 +267,68 @@ subroutine free_vlasov2d_base(this)
 end subroutine free_vlasov2d_base
 
 subroutine compute_charge(this)
-
   class(vlasov2d_base),intent(inout) :: this
-  sll_real64                         :: dvx
 
-  dvx = this%delta_eta2
+   sll_int32                             :: comm
+   sll_real64, dimension(this%np_eta2+1) :: locrho
+   sll_int32                             :: loc_sz_i
+   sll_int32                             :: loc_sz_j
+   sll_int32                             :: gi
+   sll_int32                             :: gj
+   sll_int32                             :: global_indices(2)
+   sll_int32                             :: error
 
-  this%rho = sum(this%f(:,:))*dvx 
+   call compute_local_sizes(this%layout_v,loc_sz_i,loc_sz_j)        
+   
+   locrho = 0.0_f64
+   do i=1,loc_sz_i
+      global_indices = local_to_global(this%layout_v,(/i,1/)) 
+      gi = global_indices(1)
+      gj = global_indices(2)
+      locrho(gi) = sum(this%ft(i,:))*this%delta_eta2 
+   end do
+   this%rho = 0.0_f64
+   comm  = sll_world_collective%comm
+   call mpi_barrier(comm,error)
+   call mpi_allreduce(locrho,this%rho,this%np_eta1,MPI_REAL8,MPI_SUM,comm,error)
 
 end subroutine compute_charge
 
 subroutine compute_current(this)
 
   class(vlasov2d_base),intent(inout) :: this
-  sll_real64                         :: vx
-  sll_real64                         :: dvx
-  sll_int32                          :: i
-  sll_int32                          :: j
 
-  dvx = this%delta_eta2
-  this%jx = 0.0_f64
-  do j = 1, this%np_eta2
-  do i = 1, this%np_eta1
-     vx = this%eta2_min+(j-1)*this%delta_eta2
-     this%jx(i) = this%jx(i) + dvx * this%f(i,j) * vx
-  end do
-  end do
+   sll_int32                             :: comm
+   sll_real64, dimension(this%np_eta2+1) :: locjx
+   sll_int32                             :: loc_sz_i
+   sll_int32                             :: loc_sz_j
+   sll_int32                             :: gi
+   sll_int32                             :: global_indices(2)
+   sll_int32                             :: error
+   sll_int32                             :: nc_x
+   sll_real64                            :: v
+   sll_real64                            :: v_min
+   sll_real64                            :: delta_v
+
+   nc_x    = this%nc_eta1
+   v_min   = this%eta2_min
+   delta_v = this%delta_eta2
+
+   call compute_local_sizes(this%layout_v,loc_sz_i,loc_sz_j)        
+   
+   locjx = 0.0_f64
+   do i=1,loc_sz_i
+     global_indices = local_to_global(this%layout_v,(/i,1/)) 
+     gi = global_indices(1)
+     do j = 1, loc_sz_j
+       v  = v_min +(j-1)*delta_v
+       locjx(gi) = locjx(gi)+this%ft(i,j) * delta_v * v
+     end do
+   end do
+   this%jx = 0.0_f64
+   comm  = sll_world_collective%comm
+   call mpi_barrier(comm,error)
+   call mpi_allreduce(locjx,this%jx,this%np_eta1,MPI_REAL8,MPI_SUM,comm,error)
 
 end subroutine compute_current
 
@@ -395,10 +462,14 @@ subroutine write_fx1x2(this,cplot)
   character(len=*)                    :: cplot
   sll_int32                           :: error
   sll_int32                           :: file_id
+  sll_int32                           :: prank
   
-  call sll_hdf5_file_create('dfx1x2_'//cplot//".h5",file_id,error)
-  call sll_hdf5_write_array(file_id,this%f,"/values",error)
-  call sll_hdf5_file_close(file_id, error)
+  prank = sll_get_collective_rank(sll_world_collective)
+  if (prank == MPI_MASTER) then
+    call sll_hdf5_file_create('dfx1x2_'//cplot//".h5",file_id,error)
+    call sll_hdf5_write_array(file_id,this%f,"/values",error)
+    call sll_hdf5_file_close(file_id, error)
+  end if
 
 end subroutine write_fx1x2
 
