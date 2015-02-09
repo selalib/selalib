@@ -308,14 +308,14 @@ contains
           if(tipj==ti)then
             fac1=0._f64
           elseif (abs(tipj-ti)<1.e-15) then
-            print *,tipj-ti
+            !print *,tipj-ti
           else     
             fac1       = (x - ti)/(tipj - ti)            
           endif  
           if(tipjp1==tip1)then
             fac2=0._f64
           elseif (abs(tipjp1-tip1)<1.e-15) then
-            print *,tipjp1-tip1
+            !print *,tipjp1-tip1
           else
             fac2       = (tipjp1 - x)/(tipjp1 - tip1)
           endif
@@ -591,7 +591,7 @@ contains
        end do
        last = last - 1
     end do
-    print *, 'array to compute derivatives: ',splines(1:last)
+    !print *, 'array to compute derivatives: ',splines(1:last)
     ! At this moment we have an array with values of the splines up to the
     ! order spline_degree - 1. Proceed to compute the derivatives of order
     ! spline_degree.
@@ -671,7 +671,7 @@ contains
     delta_left  = spline_obj%k(2)       - spline_obj%k(1)
     delta_right = spline_obj%k(num_pts) - spline_obj%k(num_pts-1)
 
-    print*, delta, epsilon(1.0_f64), current, num_pts
+    !print*, delta, epsilon(1.0_f64), current, num_pts
     if ( delta < epsilon(1.0_f64) ) then
        if ( current <= 1 ) then
           delta = delta_left
@@ -679,7 +679,7 @@ contains
           delta = delta_right
        end if
     end if
-    print*, delta, current, num_pts
+    !print*, delta, current, num_pts
 
   end subroutine check_if_delta_is_equal_to_zero
 
