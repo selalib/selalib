@@ -6,11 +6,8 @@ module sll_poisson_1d_fourier
 #include "sll_assert.h"
 
     use sll_constants
-    use sll_logical_meshes
-    use sll_arbitrary_degree_splines
+    use sll_cartesian_meshes
     use sll_boundary_condition_descriptors
-    use sll_arbitrary_degree_spline_interpolator_1d_module
-    use sll_fft
     implicit none
     !  private
     !  public :: initialize, new, solve
@@ -27,7 +24,7 @@ module sll_poisson_1d_fourier
     !> Structure to solve Poisson equation on 1d domain. Mesh is cartesian and
     !> could be irregular. Numerical method is using finite elements.
     type :: poisson_1d_fourier
-        type(sll_logical_mesh_1d), private, pointer  :: logical_mesh
+        class(sll_cartesian_mesh_1d), private, pointer  :: cartesian_mesh
 
         !> Fourier modes
         sll_int32 , private :: num_modes !<Number of fourier modes
@@ -86,31 +83,31 @@ contains
     endsubroutine
 
 
-    function  new_poisson_1d_fourier(logical_mesh_1d,num_modes, bc_type,ierr) &
+    function  new_poisson_1d_fourier(cartesian_mesh_1d,num_modes, bc_type,ierr) &
             result(solver)
         type(poisson_1d_fourier), pointer :: solver     !< Solver data structure
-        type(sll_logical_mesh_1d), intent(in),pointer  :: logical_mesh_1d !< Logical mesh
+        class(sll_cartesian_mesh_1d), intent(in),pointer  :: cartesian_mesh_1d !< Logical mesh
         sll_int32, intent(out)                :: ierr    !< error code
         sll_int32, intent(in)                :: num_modes !<Degree of the finite differences approximation
         sll_int32, intent(in)               :: bc_type !< type of boundary connditions
 
         SLL_ALLOCATE(solver,ierr)
-        call sll_initialize_poisson_1d_fourier(solver,  logical_mesh_1d,num_modes,bc_type,ierr)
+        call sll_initialize_poisson_1d_fourier(solver,  cartesian_mesh_1d,num_modes,bc_type,ierr)
     endfunction
 
 
-    subroutine sll_initialize_poisson_1d_fourier(this, logical_mesh_1d,num_modes,bc_type, ierr)
+    subroutine sll_initialize_poisson_1d_fourier(this, cartesian_mesh_1d,num_modes,bc_type, ierr)
         class(poisson_1d_fourier),intent(inout) :: this     !< Solver data structure
-        type(sll_logical_mesh_1d), intent(in),pointer  :: logical_mesh_1d !< Logical mesh
+        class(sll_cartesian_mesh_1d), intent(in),pointer  :: cartesian_mesh_1d !< Logical mesh
         sll_int32, intent(out)                :: ierr    !< error code
         sll_int32, intent(in)                :: num_modes !<Degree of the bsplines
         sll_int32, intent(in)               :: bc_type !< type of boundary connditions
         ierr=0
         !this%boundarycondition=bc_type !SLL_PERIODIC
 
-        this%logical_mesh=>logical_mesh_1d
-        this%Ilength=this%logical_mesh%eta_max-this%logical_mesh%eta_min
-        this%eta_min=this%logical_mesh%eta_min
+        this%cartesian_mesh=>cartesian_mesh_1d
+        this%Ilength=this%cartesian_mesh%eta_max-this%cartesian_mesh%eta_min
+        this%eta_min=this%cartesian_mesh%eta_min
 
         this%num_modes=num_modes
 
@@ -144,7 +141,7 @@ contains
     !        sll_real64, dimension(this%num_cells ) :: rhs !<Right hand side
     !        sll_int32 :: ierr=0
     !        sll_real64, dimension(this%num_cells+1) :: evalpoints
-    !        evalpoints=eval_function(nodes_logical_mesh_1d(this%logical_mesh))
+    !        evalpoints=eval_function(nodes_cartesian_mesh_1d(this%cartesian_mesh))
     !        !Map to right hand side according to boundary condition
     !
     !        rhs=evalpoints(1:this%num_cells)
