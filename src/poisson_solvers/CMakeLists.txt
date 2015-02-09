@@ -17,7 +17,9 @@ SET(POISSON_SRCS sll_poisson_1d_base.F90
                  sll_poisson_3d_base.F90
                  sll_fishpack.F90
                  sll_mudpack.F90
-                 sll_mudpack_curvilinear.F90)
+                 sll_mudpack_curvilinear.F90
+                 sll_poisson_1d_fourier.F90
+                 sll_poisson_1d_fem.F90)
 
 IF(FFTW_ENABLED AND FFTW_FOUND)
    SET(POISSON_SRCS 
@@ -31,7 +33,9 @@ TARGET_LINK_LIBRARIES( sll_poisson_solvers
   sll_assert 
   mudpack
   fishpack
-  dfftpack )
+  dfftpack 
+  ${LAPACK_LIBRARIES}
+  sll_meshes)
 
 IF(FFTW_ENABLED AND FFTW_FOUND)
    TARGET_LINK_LIBRARIES( sll_poisson_solvers ${FFTW_LIBRARIES} )
