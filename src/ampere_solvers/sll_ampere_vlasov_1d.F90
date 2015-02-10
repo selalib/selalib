@@ -81,7 +81,6 @@ contains
    !> Compute electric field from current
    procedure :: compute_e_from_f => solve_ampere_vlasov_1d
 
-
 end type sll_ampere_vlasov_1d
 
 !> Initialize ampere solver 2d cartesian periodic with PSTD scheme
