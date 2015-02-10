@@ -419,14 +419,14 @@ end subroutine advection_poisson_x
 
 subroutine advection_ampere_x(adv, delta_t)
 
-type(ampere_1d_advector), pointer :: adv
+type(ampere_1d_advector), pointer :: adv(:)
 sll_real64 :: delta_t
-sll_int32  :: num_cells
+sll_int32  :: nc_x1
 
 call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
 global_indices = local_to_global( layout_x1, (/1, 1/) )
 
-num_cells = np_x1-1
+nc_x1 = np_x1-1
 
 tid=1          
 !$OMP PARALLEL DEFAULT(SHARED) &
@@ -441,13 +441,14 @@ do i_omp = 1, local_size_x2
   alpha_omp = sim%factor_x1*node_positions_x2(ig_omp)*delta_t
   f1d_omp_in(1:np_x1,tid) = f_x1(1:np_x1,i_omp)
 
-!  tmp_x = f1d_omp_in(1:nc_x1)
-!  call fft_apply_plan(fwx, tmp_x, fk)
-!  fk = fk*cmplx(cos(adv%kx*alpha_omp),-sin(adv%kx*alpha_omp),kind=f64)
+  adv(tid)%d_dx = f1d_omp_in(1:nc_x1,tid)
+  call fft_apply_plan(adv(tid)%fwx, adv(tid)%d_dx, adv(tid)%fk)
+  adv(tid)%fk = adv(tid)%fk & 
+              * cmplx(cos(adv(tid)%kx*alpha_omp),-sin(adv(tid)%kx*alpha_omp),kind=f64)
 !  rk = rk + fk * sim%integration_weight(ig_omp)
-!  call fft_apply_plan(bwx, fk, tmp_x)
-!  f1d_omp_out(1:np_x1-1) = tmp_x / nc_x1
-!  f1d_omp_out(np_x1) = tmp_x(1) / (np_x1-1)
+  call fft_apply_plan(adv(tid)%bwx, adv(tid)%fk, adv(tid)%d_dx)
+  f1d_omp_out(1:nc_x1, tid) = adv(tid)%d_dx    / nc_x1
+  f1d_omp_out(np_x1, tid)   = adv(tid)%d_dx(1) / nc_x1
 
   f_x1(1:np_x1,i_omp)=f1d_omp_out(1:np_x1,tid)
 
