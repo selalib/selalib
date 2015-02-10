@@ -55,6 +55,10 @@ sll_real64, parameter :: sll_g = 9.80665D0
 !> @param value of \f$ \sqrt{3} \f$ (needed for hexagonal meshes).
 sll_real64, parameter :: sll_sqrt3 = 1.7320508075688771931766041_f64
 
+!> @param Boltzmann constant J/K
+sll_real64, parameter :: sll_kb = 1.3806488D-23
 
+!> @param Complex number i=sqrt(-1)
+sll_comp64, parameter :: sll_i1 = (0D0, 1D0)
 
 end module sll_constants

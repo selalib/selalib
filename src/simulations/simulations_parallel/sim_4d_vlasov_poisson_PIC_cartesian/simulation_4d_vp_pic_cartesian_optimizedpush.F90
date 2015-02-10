@@ -315,7 +315,7 @@ contains
 
 !!$    if (sim%my_rank == 0) then
 !!$    it = 0
-!!$    call sll_gnuplot_corect_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
+!!$    call sll_gnuplot_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
 !!$            sim%m2d%eta2_max, ncy+1, &
 !!$            sim%rho, 'rho_init', it, ierr )
 !!$    endif
