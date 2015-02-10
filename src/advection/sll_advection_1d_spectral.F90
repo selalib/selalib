@@ -36,16 +36,16 @@ private
 
 type,extends(sll_advection_1d_base), public :: spectral_1d_advector
   
-  sll_int32                          :: num_cells
-  sll_real64                         :: eta_min
-  sll_real64                         :: eta_max
-  sll_int32                          :: bc
-  sll_real64                         :: delta_eta
-  sll_real64, dimension(:),  pointer :: d_dx
-  sll_real64, dimension(:),  pointer :: kx
-  type(sll_fft_plan), pointer        :: fwx
-  type(sll_fft_plan), pointer        :: bwx
-  sll_comp64,  dimension(:), pointer :: tmp_x
+  sll_int32                         :: num_cells
+  sll_real64                        :: eta_min
+  sll_real64                        :: eta_max
+  sll_int32                         :: bc
+  sll_real64                        :: delta_eta
+  sll_real64, dimension(:), pointer :: d_dx
+  sll_real64, dimension(:), pointer :: kx
+  type(sll_fft_plan),       pointer :: fwx
+  type(sll_fft_plan),       pointer :: bwx
+  sll_comp64, dimension(:), pointer :: tmp_x
 
 contains
 
