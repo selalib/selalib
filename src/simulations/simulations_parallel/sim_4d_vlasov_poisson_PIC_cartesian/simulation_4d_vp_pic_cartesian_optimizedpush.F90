@@ -307,7 +307,7 @@ contains
 
     it = 0
     if (sim%my_rank == 0) then
-    call sll_gnuplot_corect_2d(sim%m2d%eta1_min, sim%m2d%eta1_max, &
+    call sll_gnuplot_2d(sim%m2d%eta1_min, sim%m2d%eta1_max, &
             sim%m2d%num_cells1+1, sim%m2d%eta2_min, &
             sim%m2d%eta2_max, sim%m2d%num_cells2+1, &
             sim%rho, 'rho_init', it, ierr )
@@ -339,7 +339,7 @@ contains
          + tot_ee * 0.5_f64! ATTENTION : resultats faux avec MPI 
     
     if (sim%my_rank == 0) then
-       call sll_gnuplot_corect_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
+       call sll_gnuplot_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
             sim%m2d%eta2_max, ncy+1, &
             sim%E2, 'E2_init', it, ierr )
     endif
