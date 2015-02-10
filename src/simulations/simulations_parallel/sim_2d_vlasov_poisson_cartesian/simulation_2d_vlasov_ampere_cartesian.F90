@@ -744,8 +744,7 @@ contains
         sim%advect_x1(tid)%ptr => new_spectral_1d_advector( &
           num_cells_x1,                                     &
           x1_min,                                           &
-          x1_max,                                           &
-          SLL_PERIODIC)
+          x1_max)
 
       case("SLL_AMPERE") ! ampere periodic advection
 

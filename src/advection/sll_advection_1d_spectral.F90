@@ -39,7 +39,6 @@ type,extends(sll_advection_1d_base), public :: spectral_1d_advector
   sll_int32                         :: num_cells
   sll_real64                        :: eta_min
   sll_real64                        :: eta_max
-  sll_int32                         :: bc
   sll_real64                        :: delta_eta
   sll_real64, dimension(:), pointer :: d_dx
   sll_real64, dimension(:), pointer :: kx
@@ -64,31 +63,29 @@ contains
 
 function new_spectral_1d_advector( num_cells, &
                                    eta_min,   &
-                                   eta_max,   &
-                                   bc ) result(adv)      
+                                   eta_max    &
+                                   ) result(adv)      
 
   type(spectral_1d_advector), pointer :: adv
 
   sll_int32,  intent(in)              :: num_cells
   sll_real64, intent(in), optional    :: eta_min
   sll_real64, intent(in), optional    :: eta_max
-  sll_int32,  intent(in)              :: bc
 
   sll_int32                           :: error
   
   SLL_ALLOCATE(adv,error)
       
-  call initialize( adv, num_cells, eta_min, eta_max, bc)    
+  call initialize( adv, num_cells, eta_min, eta_max)    
   
 end function new_spectral_1d_advector
 
-subroutine initialize( adv, num_cells, eta_min, eta_max, bc)    
+subroutine initialize( adv, num_cells, eta_min, eta_max)    
 
   class(spectral_1d_advector), intent(inout) :: adv
   sll_int32,                   intent(in)    :: num_cells
   sll_real64,        optional, intent(in)    :: eta_min
   sll_real64,        optional, intent(in)    :: eta_max
-  sll_int32                                  :: bc
 
   sll_int32      :: i
   sll_int32      :: error
@@ -99,12 +96,6 @@ subroutine initialize( adv, num_cells, eta_min, eta_max, bc)
   adv%num_cells  = num_cells
   adv%delta_eta  = (eta_max-eta_min) / num_cells
 
-  if( bc /= SLL_PERIODIC) then
-    SLL_ERROR ('Boundary conditions for spectral advection must be periodic')
-  else
-    adv%bc = bc
-  endif     
-  
   SLL_CLEAR_ALLOCATE(adv%d_dx(1:num_cells), error)
   SLL_CLEAR_ALLOCATE(adv%tmp_x(1:num_cells/2+1), error)
 
@@ -116,9 +107,11 @@ subroutine initialize( adv, num_cells, eta_min, eta_max, bc)
   kx0 = 2._f64*sll_pi/(eta_max-eta_min)
 
   adv%kx(1) = 1.0_f64
-  do i=2,num_cells/2+1
-     adv%kx(i) = (i-1)*kx0
+  do i=1,num_cells/2-1
+     adv%kx(i+1)       = i * kx0
   end do
+  adv%kx(num_cells/2+1) = sll_pi / adv%delta_eta
+
         
 end subroutine initialize
 
@@ -165,7 +158,9 @@ subroutine advect_1d_constant( adv, a, dt, input, output )
 
   !f = f^n exp(-i kx vx dt)
 
-  adv%tmp_x = adv%tmp_x*cmplx(cos(adv%kx*a*dt),sin(adv%kx*a*dt),kind=f64)
+  adv%tmp_x = adv%tmp_x* exp(-cmplx(0.0_f64,adv%kx*a*dt,kind=f64))
+
+
 
   call fft_apply_plan(adv%bwx, adv%tmp_x, adv%d_dx)
   output(1:nx)= adv%d_dx / nx
