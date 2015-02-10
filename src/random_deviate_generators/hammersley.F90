@@ -30,5 +30,24 @@ contains
     enddo
     suite_hamm = h 
   end function suite_hamm
+  
+  function vandercorput(n, p1, p2)!  p1>p2  !
+! il génère les premiers n nombres 'aléatoires'
+! de la suite de van der corput. BESOIN de deux bases: p1, p2 !
+    sll_int32, intent(in) :: n
+    sll_int32, intent(in) :: p1, p2
+    sll_real64 :: vandercorput, s
+    sll_int32 :: m
 
+    m=n
+    vandercorput = 0.d0
+    s=1
+    do while (m>0)
+       s=s/p1
+       vandercorput=vandercorput+s*mod(p2*mod(m,p1),p1)
+       m=int(m/p1)
+    enddo
+  end function vandercorput
+
+  
 end module hammersley
