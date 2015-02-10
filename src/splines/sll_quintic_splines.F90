@@ -18,14 +18,15 @@
 !> @ingroup splines 
 !> @brief  
 !> provides capabilities for data and derivative
-!> interpolation with quintic splines and different 
-!> boundary conditions
+!> interpolation with quintic splines 
 !> @details
 !> inspl5 and spln5 routines come from
 !> "An algorithm for the interpolation of functions using quintic splines"
 !> by E.H. Mund, P. Hallet and J.P. Hennart
 !> Journal of COmputational and Applied Mathematics, volume 1, number 4, 1975.
 !>
+!> Periodic boundary conditions are not implemented. You must set function value
+!> and its derivative a the boundary
 module sll_quintic_splines
 #include "sll_working_precision.h"
 #include "sll_memory.h"

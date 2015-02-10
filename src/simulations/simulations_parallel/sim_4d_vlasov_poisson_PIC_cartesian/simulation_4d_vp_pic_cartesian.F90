@@ -303,6 +303,7 @@ contains
           sim%rho(i, j) = rho1d_receive(i+(j-1)*(ncx+1))
        enddo
     enddo
+
     if (sim%my_rank == 0) then
     it = 0
     call sll_gnuplot_corect_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
@@ -602,7 +603,7 @@ contains
        enddo
      
 !       if ( (sim%my_rank == 0).and.mod(it,3)==0) &
-!            call sll_gnuplot_corect_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, sim%m2d%eta2_max, ncy+1, &
+!            call sll_gnuplot_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, sim%m2d%eta2_max, ncy+1, &
 !            sim%rho, 'rhototal', it, ierr )
 !
        call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, -sim%rho )
