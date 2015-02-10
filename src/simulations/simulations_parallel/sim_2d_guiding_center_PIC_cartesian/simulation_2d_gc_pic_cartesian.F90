@@ -289,7 +289,7 @@ contains
     endif
 
     it = 0
-!!$    call sll_gnuplot_corect_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
+!!$    call sll_gnuplot_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
 !!$            sim%m2d%eta2_max, ncy+1, &
 !!$            sim%rho, 'RHO_init', it, ierr )
 
@@ -366,7 +366,7 @@ contains
 !!$             write(50,*) x, y
 !!$          enddo
 !!$          close(50)
-          call sll_gnuplot_corect_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
+          call sll_gnuplot_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
                sim%m2d%eta2_max, ncy+1, &
                sim%rho, 'rho_GC_it', it+1, ierr )
        endif
