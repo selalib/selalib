@@ -270,11 +270,9 @@ contains
     p => sim%part_group%p_list
 !!!    p_guard => sim%part_group%p_guard
     dt = sim%dt
-    dtqom = dt*sim%part_group%qoverm! qoverm = sim%part_group%qoverm
+    dtqom = dt*sim%part_group%qoverm
     xmin = sim%m2d%eta1_min
     ymin = sim%m2d%eta2_min
-!!$    rdx = 1._f64/sim%m2d%delta_eta1
-!!$    rdy = 1._f64/sim%m2d%delta_eta2
     dtrdx = dt/sim%m2d%delta_eta1
     dtrdy = dt/sim%m2d%delta_eta2
 
@@ -312,13 +310,6 @@ contains
             sim%m2d%eta2_max, sim%m2d%num_cells2+1, &
             sim%rho, 'rho_init', it, ierr )
     endif
-
-!!$    if (sim%my_rank == 0) then
-!!$    it = 0
-!!$    call sll_gnuplot_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
-!!$            sim%m2d%eta2_max, ncy+1, &
-!!$            sim%rho, 'rho_init', it, ierr )
-!!$    endif
 
             !!!     REMEMBER: POISSON changes RHO    !!!!
     call sim%poisson%compute_E_from_rho(sim%E1, sim%E2, -sim%rho)
@@ -586,8 +577,9 @@ contains
           ttime = omp_get_wtime()!! ttime = sll_time_elapsed_since(t3)
           diag_AccMem(it,:) = (/ (it+1)*dt, &
                (real(32*sim%ions_number*2,f64)+real(gi*2*8,f64) + real(4*32*ncx*ncy,f64) ) &
-               /(ttime-t3)*real(1e-9,f64) /)! access to memory in GB/sec
-!!$            2*sizeof(sim%q_accumulator%q_acc) + sizeof(sim%E_accumulator%e_acc))
+               /(ttime-t3)/1e9 /)! access to memory in GB/sec
+!          
+!            2*sizeof(sim%q_accumulator%q_acc) + sizeof(sim%E_accumulator%e_acc))
 #endif
 
           ! Process the particles in the guard list. In the periodic case, no
@@ -661,7 +653,8 @@ contains
              SLL_INTERPOLATE_FIELD(Ex1,Ey1,accumE,p(i+1),tmp5,tmp6)
              some_val = some_val + (p(i)%vx + 0.5_f64 * dtqom * Ex)**2 &
                   + (p(i)%vy + 0.5_f64 * dtqom * Ey)**2 &
-                  + (p(i+1)%vx + 0.5_f64*dtqom*Ex1)**2 + (p(i+1)%vy + 0.5_f64*dtqom*Ey1)**2
+                  + (p(i+1)%vx + 0.5_f64 * dtqom * Ex1)**2  &
+                  + (p(i+1)%vy + 0.5_f64 * dtqom * Ey1)**2
           enddo
           !$omp end do
           !$omp end parallel
