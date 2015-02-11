@@ -59,6 +59,6 @@ sll_real64, parameter :: sll_sqrt3 = 1.7320508075688771931766041_f64
 sll_real64, parameter :: sll_kb = 1.3806488D-23
 
 !> @param Complex number i=sqrt(-1)
-sll_comp64, parameter :: sll_i1 = (0D0, 1D0)
+sll_comp64, parameter :: sll_i1 = cmplx(0.0_f64, 1.0_f64, kind=f64)
 
 end module sll_constants

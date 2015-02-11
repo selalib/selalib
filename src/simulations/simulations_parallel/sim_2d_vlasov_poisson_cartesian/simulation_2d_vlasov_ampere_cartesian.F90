@@ -708,7 +708,6 @@ contains
     tid = 1
 #endif
 
-
     select case (advector_x1)
 
       case ("SLL_SPLINES") ! arbitrary order periodic splines
@@ -737,7 +736,6 @@ contains
           x1_max,                                           &
           TRIGO,                                       &
           order_x1)
-
 
       case("SLL_SPECTRAL") ! spectral periodic advection
 
