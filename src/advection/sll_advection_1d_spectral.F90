@@ -40,11 +40,6 @@ type,extends(sll_advection_1d_base), public :: spectral_1d_advector
   sll_real64                        :: eta_min
   sll_real64                        :: eta_max
   sll_real64                        :: delta_eta
-  sll_real64, dimension(:), pointer :: d_dx
-  sll_real64, dimension(:), pointer :: kx
-  type(sll_fft_plan),       pointer :: fwx
-  type(sll_fft_plan),       pointer :: bwx
-  sll_comp64, dimension(:), pointer :: tmp_x
   sll_real64, dimension(:), pointer :: work
 
 contains
@@ -88,32 +83,14 @@ subroutine initialize( adv, num_cells, eta_min, eta_max)
   sll_real64,        optional, intent(in)    :: eta_min
   sll_real64,        optional, intent(in)    :: eta_max
 
-  sll_int32      :: i
   sll_int32      :: error
-  sll_real64     :: kx0
   
   adv%eta_min    = eta_min
   adv%eta_max    = eta_max
   adv%num_cells  = num_cells
-  adv%delta_eta  = (eta_max-eta_min) / num_cells
-
-  SLL_CLEAR_ALLOCATE(adv%d_dx(1:num_cells), error)
-  SLL_CLEAR_ALLOCATE(adv%tmp_x(1:num_cells/2+1), error)
-
-  adv%fwx => fft_new_plan(num_cells, adv%d_dx,  adv%tmp_x)
-  adv%bwx => fft_new_plan(num_cells, adv%tmp_x, adv%d_dx)
-
-  SLL_CLEAR_ALLOCATE(adv%kx(1:num_cells/2+1), error)
-   
-  kx0 = 2._f64*sll_pi/(eta_max-eta_min)
-
-  adv%kx(1) = 1.0_f64
-  do i=1,num_cells/2-1
-     adv%kx(i+1) = i * kx0
-  end do
-  adv%kx(num_cells/2+1) = sll_pi / adv%delta_eta
 
   SLL_CLEAR_ALLOCATE(adv%work(1:2*num_cells+15), error)
+  call dffti(num_cells,adv%work)
 
 end subroutine initialize
 
@@ -129,17 +106,8 @@ subroutine advect_1d( adv, a, dt, input, output )
     
   num_cells = adv%num_cells
 
-  adv%d_dx = input(1:num_cells)
-  call fft_apply_plan(adv%fwx, adv%d_dx, adv%tmp_x)
-
-  !f = f^n exp(-i kx vx dt)
-
-  adv%tmp_x = adv%tmp_x*cmplx(cos(adv%kx*a*dt),sin(adv%kx*a*dt),kind=f64)
-
-  call fft_apply_plan(adv%bwx, adv%tmp_x, adv%d_dx)
-  output(1:num_cells)= adv%d_dx / num_cells
-
-  output(num_cells+1) = output(1)
+  output = input
+  SLL_ERROR("not implemented")
 
 end subroutine advect_1d
 
@@ -166,8 +134,6 @@ subroutine advect_1d_constant( adv, a, dt, input, output )
   x = x - floor(x)
   x = x * 2 * sll_pi 
 
-  output(num_cells+1) = output(1)
-
   call dfftf(num_cells, output, adv%work)
  
   tmp = 1.0_f64 / num_cells
@@ -187,6 +153,7 @@ subroutine advect_1d_constant( adv, a, dt, input, output )
   end if
   
   call dfftb(num_cells, output, adv%work)
+  output(num_cells+1) = output(1)
 
 end subroutine advect_1d_constant
 
@@ -194,8 +161,7 @@ subroutine delete(adv)
 
   class(spectral_1d_advector), intent(inout) :: adv
 
-  call fft_delete_plan(adv%fwx)
-  call fft_delete_plan(adv%bwx)
+  deallocate(adv%work)
 
 end subroutine delete
 
