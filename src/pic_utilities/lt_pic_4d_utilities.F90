@@ -532,7 +532,7 @@ end subroutine get_ltp_deformation_matrix
     ! Move to a closer neighbour only if dim_t0 is not located in a cell of size h_parts_dim and with a left bound of
     ! dim_t0
 
-    !print *,"dim_t0 = ",dim_t0 !aaa
+    print *,"dim_t0 = ",dim_t0, " h_parts_dim = ",h_parts_dim !aaa
 
     ! dim_t0 < 0 means that the virtual particle is at the left of kprime (dim_t0 is a relative coordinate)
     if (dim_t0 < 0) then
@@ -640,8 +640,6 @@ end subroutine get_ltp_deformation_matrix
     sll_int :: l ! vx dimension
     sll_int :: m ! vy dimension
 
-    sll_int64,dimension(2,2,2,2) :: hcube
-
     ! indices in a virtual cell (go from 1 to [[n_virtual]])
 
     sll_int :: ivirt ! x dimension
@@ -692,12 +690,16 @@ end subroutine get_ltp_deformation_matrix
 
     logical :: moved
 
-    !aaa
+    ! temporary workspace
     sll_real64 :: x_aux
     sll_real64 :: y_aux
     sll_real64 :: vx_aux
     sll_real64 :: vy_aux
 
+    ! value 1 or 2 points to each side of an hypercube in direction x,y,vx or vy
+    sll_int :: side_x,side_y,side_vx,side_vy
+    sll_int64,dimension(2,2,2,2) :: hcube
+    
     ! --- end of declarations
 
     g => p_group%remapping_grid
@@ -916,13 +918,13 @@ end subroutine get_ltp_deformation_matrix
                                   vx_t0 = d31 * (x - x_k) + d32 * (y - y_k) + d33 * (vx - vx_k) + d34 * (vy - vy_k)
                                   vy_t0 = d41 * (x - x_k) + d42 * (y - y_k) + d43 * (vx - vx_k) + d44 * (vy - vy_k)
 
-                                  !print *,"x-x_k=",x-x_k," x_t0=",x_t0  !aaa
-                                  !print *,"y-y_k=",y-y_k," y_t0=",y_t0  !aaa
-                                  !print *,"vx-vx_k=",vx-vx_k," vx_t0=",vx_t0  !aaa
-                                  !print *,"vy-vy_k=",vy-vy_k," vy_t0=",vy_t0  !aaa
+                                  print *,"------------------------"!aaa
+                                  print *,"x-x_k=",x-x_k," x_t0=",x_t0  !aaa
+                                  print *,"y-y_k=",y-y_k," y_t0=",y_t0  !aaa
+                                  print *,"vx-vx_k=",vx-vx_k," vx_t0=",vx_t0  !aaa
+                                  print *,"vy-vy_k=",vy-vy_k," vy_t0=",vy_t0  !aaa
                                   !print *,"x_k=",x_k," y_k=",y_k," vx_k=",vx_k," vy_k=",vy_k!aaa
                                   !print *,"x_t0=",x_t0," y_t0=",y_t0," vx_t0=",vx_t0," vy_t0=",vy_t0!aaa
-                                  print *,"------------------------"!aaa
                                   
                                   ! [[file:~/mcp/maltpic/ltpic-bsl.tex::neighbors-grid-0]] find the neighbours of the
                                   ! virtual particle (ivirt,jvirt,lvirt,mvirt) at time 0 through the "logical
@@ -958,26 +960,30 @@ end subroutine get_ltp_deformation_matrix
                                      ONESTEPMACRO(vx)
                                      ONESTEPMACRO(vy)
 
-                                     !print *,"k = ",k," kprime = ",kprime!aaa
+                                     print *,"k = ",k," kprime = ",kprime!aaa
                                      !SLL_ASSERT(k==kprime)!aaa
+
+                                     !aaa real-world coordinates for kprime
+                                     call cell_offset_to_global(p_group%p_list(kprime)%dx, &
+                                          p_group%p_list(kprime)%dy, &
+                                          p_group%p_list(kprime)%ic, &
+                                          p_group%mesh,x_aux,y_aux)
+                                     vx_aux = p_group%p_list(kprime)%vx
+                                     vy_aux = p_group%p_list(kprime)%vy
+                                     print *,"x_kprime=",x_aux," y_kprime=",y_aux, &
+                                          " vx_kprime=",vx_aux," vy_kprime=",vy_aux!aaa
+
                                   end do
 
-                                  !aaa real-world coordinates for kprime
-                                  call cell_offset_to_global(p_group%p_list(kprime)%dx, &
-                                       p_group%p_list(kprime)%dy, &
-                                       p_group%p_list(kprime)%ic, &
-                                       p_group%mesh,x_aux,y_aux)
-                                  vx_aux = p_group%p_list(kprime)%vx
-                                  vy_aux = p_group%p_list(kprime)%vy
-                                  print *,"x_kprime=",x_aux," y_kprime=",y_aux," vx_kprime=",vx_aux," vy_kprime=",vy_aux
-                                  print *,"x=",x," y=",y," vx=",vx," vy=",vy
-                                  
+                                  print *,"x=",x," y=",y," vx=",vx," vy=",vy!aaa
+                                  SLL_ASSERT(abs(x_aux-x)<1e-3 .and. abs(y_aux-y)<1e-3 .and. abs(vx_aux-vx)<1e-3 .and. abs(vy_aux-vy)<1e-3)!aaa
+
+                                  p_group%target_values(i_x,i_y,i_vx,i_vy) = 0
+
                                   ! If we end up with kprime == 0, it means that we have not found a cell that contains
                                   ! the particle so we just set that particle value to zero
 
-                                  if (kprime == 0) then
-                                     p_group%target_values(i_x,i_y,i_vx,i_vy) = 0
-                                  else
+                                  if (kprime /= 0) then
 
                                      ! kprime is the left-most vertex of the hypercube. find all the other vertices
                                      ! through the neighbour pointers in
@@ -993,9 +999,10 @@ end subroutine get_ltp_deformation_matrix
                                      ! if any of the first four vertices is undefined, it means that we reached the mesh
                                      ! border. just set the value of f for that particle as zero as before.
 
-                                     if (hcube(2,1,1,1) == 1 .or. hcube(1,2,1,1) == 0 .or. hcube(1,1,2,1) == 1 .or. hcube(1,1,1,2) == 0) then
-                                        p_group%target_values(i_x,i_y,i_vx,i_vy) = 0
-                                     else
+                                     if (hcube(2,1,1,1) /= 0 &
+                                          .and. hcube(1,2,1,1) /= 0 &
+                                          .and. hcube(1,1,2,1) /= 0 &
+                                          .and. hcube(1,1,1,2) /= 0) then
 
                                         ! remaining vertices of the hypercube. they should all exist now that the first
                                         ! 4 vertices are checked.
@@ -1033,31 +1040,42 @@ end subroutine get_ltp_deformation_matrix
                                         ! qui est utilisée dans la fonction sll_lt_pic_4d_write_f_on_remap_grid, mais
                                         ! sans faire intervenir la matrice de déformation à l'intérieur des splines.
 
-#define RIGHT(dim) h_parts_/**/dim - dim/**/_t0
-#define COMPONENT(k,x,y,vx,vy) p_group%p_list(k)%q                                                \
-                                        * sll_pic_shape(part_degree,x,y,vx,vy,                    \
-                                        inv_h_parts_x,inv_h_parts_y,inv_h_parts_vx,inv_h_parts_vy)
-
                                         ! place the resulting value of f on the virtual particle in
                                         ! p_group%target_values
-                                     
-                                        p_group%target_values(i_x,i_y,i_vx,i_vy) =                          &
-                                             + COMPONENT(hcube(1,1,1,1),x_t0,y_t0,vx_t0,vy_t0)              &
-                                             + COMPONENT(hcube(2,1,1,1),RIGHT(x),y_t0,vx_t0,vy_t0)          &
-                                             + COMPONENT(hcube(1,2,1,1),x_t0,RIGHT(y),vx_t0,vy_t0)          &
-                                             + COMPONENT(hcube(1,1,2,1),x_t0,y_t0,RIGHT(vx),vy_t0)          &
-                                             + COMPONENT(hcube(1,1,1,2),x_t0,y_t0,vx_t0,RIGHT(vy))          &
-                                             + COMPONENT(hcube(2,2,1,1),RIGHT(x),RIGHT(y),vx_t0,vy_t0)      &
-                                             + COMPONENT(hcube(2,1,2,1),RIGHT(x),y_t0,RIGHT(vx),vy_t0)      &
-                                             + COMPONENT(hcube(2,1,1,2),RIGHT(x),y_t0,vx_t0,RIGHT(vy))      &
-                                             + COMPONENT(hcube(1,2,2,1),x_t0,RIGHT(y),RIGHT(vx),vy_t0)      &
-                                             + COMPONENT(hcube(1,2,1,2),x_t0,RIGHT(y),vx_t0,RIGHT(vy))      &
-                                             + COMPONENT(hcube(1,1,2,2),x_t0,y_t0,RIGHT(vx),RIGHT(vy))      &
-                                             + COMPONENT(hcube(1,2,2,2),x_t0,RIGHT(y),RIGHT(vx),RIGHT(vy))  &
-                                             + COMPONENT(hcube(2,1,2,2),RIGHT(x),y_t0,RIGHT(vx),RIGHT(vy))  &
-                                             + COMPONENT(hcube(2,2,1,2),RIGHT(x),RIGHT(y),vx_t0,RIGHT(vy))  &
-                                             + COMPONENT(hcube(2,2,2,1),RIGHT(x),RIGHT(y),RIGHT(vx),vy_t0)  &
-                                             + COMPONENT(hcube(2,2,2,2),RIGHT(x),RIGHT(y),RIGHT(vx),RIGHT(vy))
+
+                                        do side_x = 1,2
+                                           if(side_x == 1)then
+                                              x_aux = x_t0
+                                           else
+                                              x_aux = h_parts_x - x_t0
+                                           end if
+                                           do side_y = 1,2
+                                              if(side_y == 1)then
+                                                 y_aux = y_t0
+                                              else
+                                                 y_aux = h_parts_y - y_t0
+                                              end if
+                                              do side_vx = 1,2
+                                                 if(side_vx == 1)then
+                                                    vx_aux = vx_t0
+                                                 else
+                                                    vx_aux = h_parts_vx - vx_t0
+                                                 end if
+                                                 do side_vy = 1,2
+                                                    if(side_vy == 1)then
+                                                       vy_aux = vy_t0
+                                                    else
+                                                       vy_aux = h_parts_vy - vy_t0
+                                                    end if
+                                                    p_group%target_values(i_x,i_y,i_vx,i_vy) =                    &
+                                                         p_group%target_values(i_x,i_y,i_vx,i_vy)                 &
+                                                         + p_group%p_list(hcube(side_x,side_y,side_vx,side_vy))%q &
+                                                         * sll_pic_shape(part_degree,x_aux,y_aux,vx_aux,vy_aux,   &
+                                                         inv_h_parts_x,inv_h_parts_y,inv_h_parts_vx,inv_h_parts_vy)
+                                                 end do
+                                              end do
+                                           end do
+                                        end do
                                      end if
                                   end if
                                end if
