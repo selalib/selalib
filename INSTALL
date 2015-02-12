@@ -5,14 +5,14 @@ Change the variable CMAKE_BUILD_TYPE to "Release".
 
 Set the variable CMAKE_INSTALL_PREFIX to the path where you want to install selalib.
 
-Set the variable BUILD_PACKAGE to "ON" to reduce the building time.
+Set the variable SLL_BUILD_PACKAGE to "ON" to reduce the building time.
 
 Fortran modules, header files and library will be installed to this path.
 Just type::
 
    cmake -DCMAKE_BUILD_TYPE="Release" \
          -DCMAKE_INSTALL_PREFIX=<install_dir> \
-         -DBUILD_PACKAGE=1 selalib/src
+         -DSLL_BUILD_PACKAGE=1 selalib/prototype/src
    make 
    make install
 
@@ -49,7 +49,7 @@ Be careful, you could have to link with HDF5, FFTW, LAPACK, etc ...
 Il you want to use some macros like SLL_ALLOCATE or SLL_ASSERT with gfortran, just add
 the compilation flag *-ffree-line-length-none*.
 
-Find this example in directory : src/examples
+Find this example in directory : prototype/src/examples
 
 
 CMakeLists.txt
@@ -118,9 +118,9 @@ If selalib is installed in /usr/local::
                       LIBS=['selalib','dfftpack'],
                       F90='ifort',
                       F90FLAGS = ['-O3'],
-                      F90PATH = [SLL_ROOT+'/usr/include'],
+	                   F90PATH = [SLL_ROOT+'/usr/include'],
                       LINK='ifort',
-                      LIBPATH = [SLL_ROOT+'/usr/lib'])
+	                   LIBPATH = [SLL_ROOT+'/usr/lib'])
 
    env.Program('landau', ['landau.F90'])
 

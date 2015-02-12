@@ -1,0 +1,55 @@
+1.0000000000000		# rmin
+10.000000000000		# rmax
+256			# nr
+128			# ntheta
+4.0000000000000		# r1 for distribution 2
+5.0000000000000		# r2 for distribution 2
+1.0e-006		# alpha, amplitude of the perturbation
+3			# mode
+4000			# nb_step
+0.0500000000000		# dt
+20			# visualization step
+
+3			# computation of caracteristics
+3			# computation of gradient
+2			# distribution function
+2			# scheme
+1			# visualization
+CGrestart.dat		# file if f is read in a file
+
+TOP_DIRICHLET		# boundary condition in r_max
+BOT_DIRICHLET		# boundary condition in r_min
+
+scheme to compute caracteristics
+1 : using explicit Euler method
+2 : rotation, rotation speed = -1
+3 : using symplectic Euler with linear interpolation
+4 : using symplectic Verlet with linear interpolation
+5 : using mid point method
+6 : using modified symplectic Euler
+7 : using modified symplectic Verlet
+8 : using modified mid point
+
+scheme to compute gradient
+1 : finit differences in r and theta
+2 : fft in theta, finit differences in r
+3 : splines in r and theta
+
+distribution function
+1 : gaussian in r, constant in theta
+2 : f(r,theta)=1_[r1,r2](r)*(1+cos(theta))
+3 : test distribution for poisson solver
+4 : (gaussian in r)*(1+cos(theta))
+5 : read f in a file with syntax
+
+choose the way to compute
+1 : Semi-Lagrangian scheme order 1
+2 : Semi-Lagrangian scheme order 2
+3 : leap-frog scheme
+
+choose the visualization
+0 : gnuplot
+1 : vtk
+
+boundary conditions can be at TOP_ or BOT_ and take value NEUMANN or DIRICHLET
+ex : TOP_DIRICHLET or BOT_NEUMANN
