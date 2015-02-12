@@ -1,0 +1,26 @@
+Directory structure
+===================
+   test_2d_vp_no_split            -- executable
+   vpsim2d_no_split_beam.nml      -- input file: beam
+   vpsim2d_no_split_beam.gnu      -- gnuplot script
+   vpsim2d_no_split_beam_ref.dat  -- reference results
+   README                         -- info (this file)
+   run/                           -- output directory
+
+HOWTO
+=====
+0. Create output directory if missing, and move into it
+     $ mkdir run
+     $ cd run
+
+1. Run parallel simulation within directory
+     $ mpirun -np 4 ../test_2d_vp_no_split ../vpsim2d_no_split_beam
+
+2. Run included gnuplot script
+     $ gnuplot --persist ../vpsim2d_no_split.gnu
+
+3. Open *.xmf database with Visit (*)
+
+
+(*) Make sure that the Xdmf plugin is installed!
+
