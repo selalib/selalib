@@ -189,14 +189,13 @@ do i_step = 1, n_step
 end do
 
 print*,"plot (2.6e-3*exp(-0.1533*x)),'thf_2d.ref' w l, 'thf_2d.dat' w l"
-!print*,'#PASSED'
 !100 format('p [t=',f5.1,':',f5.1,'][',f6.1,':',f6.1 &
 !           ,'] 2.6e-3*exp(-0.1533*t), ''thf_2d.dat'' w l')
 
 
 call cpu_time(tend)
-!print"('#CPU time : ',g15.3)", tend-tstart
-!print*,'#PASSED'
+print"('#CPU time : ',g15.3)", tend-tstart
+print*,'#PASSED'
 
 deallocate(ex,jx,ex_exact)
 
