@@ -52,7 +52,6 @@ use sll_simulation_base
 use sll_time_splitting_coeff_module
 use sll_module_poisson_1d_periodic_solver
 use sll_module_poisson_1d_polar_solver
-use sll_module_ampere_vlasov_1d
 use sll_module_advection_1d_spectral
 use sll_module_advection_1d_ampere
 
@@ -120,6 +119,7 @@ use omp_lib
 
    type(sll_advection_1d_base_ptr), dimension(:), pointer :: advect_x1 
    type(sll_advection_1d_base_ptr), dimension(:), pointer :: advect_x2
+   type(ampere_1d_advector_ptr),    dimension(:), pointer :: advect_ampere_x1
 
    sll_int32  :: advection_form_x2
    sll_real64 :: factor_x1
@@ -127,7 +127,7 @@ use omp_lib
    sll_real64 :: factor_x2_1
 
    class(sll_poisson_1d_base), pointer :: poisson 
-   class(sll_ampere_1d),       pointer :: ampere 
+   logical :: ampere = .false.
 
    sll_real64 :: L
            
@@ -698,6 +698,7 @@ contains
     !advector
     SLL_ALLOCATE(sim%advect_x1(num_threads),ierr)
     SLL_ALLOCATE(sim%advect_x2(num_threads),ierr)
+    SLL_ALLOCATE(sim%advect_ampere_x1(num_threads),ierr)
 
     !$OMP PARALLEL DEFAULT(SHARED) &
     !$OMP PRIVATE(tid)
@@ -746,7 +747,7 @@ contains
 
       case("SLL_AMPERE") ! ampere periodic advection
 
-        sim%advect_x1(tid)%ptr => new_ampere_1d_advector( &
+        sim%advect_ampere_x1(tid)%ptr => new_ampere_1d_advector( &
           num_cells_x1, x1_min, x1_max )
 
       case default
@@ -848,8 +849,8 @@ contains
     end select
 
   select case (ampere_solver)
-    case ("SLL_PSTD")
-      sim%ampere => new_ampere_1d(x1_min, x1_max, num_cells_x1)
+    case (".TRUE.")
+      sim%ampere = .true.
     case default
       SLL_ERROR('#ampere_solver '//ampere_solver//' not implemented')
   end select
