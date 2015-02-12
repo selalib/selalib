@@ -35,7 +35,6 @@ use sll_hdf5_io_serial
 
 use sll_ascii_io
 use sll_xml_io
-use sll_utilities, only: errout
   
 implicit none
   
