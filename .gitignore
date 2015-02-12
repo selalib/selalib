@@ -1,61 +1,66 @@
-# Mac OS X junk
-.DS_Store
-.AppleDouble
-
-# Linux junk
-*.orig
-*.swp
-*~
-
-# Local port index file for MacPorts
-Portindex*
-
-# Tags databases
-/src/tags
-
-# Objects, libraries, modules and executables (for those who build in place..)
 *.[oa]
-*.so
 *.mod
-*.exe
-
-# Output files (for those who run executables in place..)
+*~
+.sconsign.dblite
+unit_test
+*.swp
 *.h5
 *.xmf
-
-# Latex temporary files (for those who create documentation in place..)
-*.aux
-*.log
-*.gz
-*.toc
-*.out
-
-# Python bytecode
-*.pyc
-
-# Automatic documentation
-/doc/build/
-
-# Default directories for build and install
-/build/
-/usr/
-
-# Geometry input files generated automatically by Python script
-/src/CAID_coordinate_transformations/*/*.nml
-
-# Other stuff (to be removed?)
-#prototype/release/*
-#prototype/documentation/selalib_manual.aux
-#prototype/documentation/selalib_manual.log
-#prototype/documentation/selalib_manual.pdf
-#prototype/documentation/selalib_manual.synctex.gz
-#prototype/documentation/selalib_manual.toc
-#prototype/src/fix-names.py
-#prototype/intel_build/*
-#prototype/doc/selalib_manual.pdf
-#prototype/release_build/*
-#
-#.sconsign.dblite
-#unit_test
+*.exe
+.DS_Store
 ChangeLog
+.AppleDouble
 build*
+_build
+latex
+html
+usr
+Portindex*
+*.out
+prototype/src/coordinate_transformations/circle_5mp_info.nml
+prototype/src/coordinate_transformations_multipatch/identity_mp_info.nml
+prototype/src/coordinate_transformations_multipatch/identity_mp_patch0.nml
+prototype/src/coordinate_transformations_multipatch/identity_mp_patch1.nml
+prototype/src/CAID_coordinate_transformations/circle_mp5/circle_5mp_info.nml
+prototype/src/CAID_coordinate_transformations/circle_mp5/circle_5mp_info.nml
+prototype/src/CAID_coordinate_transformations/circle_mp5/circle_5mp_patch0.nml
+prototype/src/CAID_coordinate_transformations/circle_mp5/circle_5mp_patch1.nml
+prototype/src/CAID_coordinate_transformations/circle_mp5/circle_5mp_patch2.nml
+prototype/src/CAID_coordinate_transformations/circle_mp5/circle_5mp_patch3.nml
+prototype/src/CAID_coordinate_transformations/circle_mp5/circle_5mp_patch4.nml
+prototype/src/CAID_coordinate_transformations/circle_ncells63_deg3/circle_n63_rayon1_info.nml
+prototype/src/CAID_coordinate_transformations/circle_ncells63_deg3/circle_n63_rayon1_patch0.nml
+prototype/src/CAID_coordinate_transformations/identity/identity_info.nml
+prototype/src/CAID_coordinate_transformations/identity/identity_patch0.nml
+prototype/src/CAID_coordinate_transformations/identity_mp/identity_mp_info.nml
+prototype/src/CAID_coordinate_transformations/identity_mp/identity_mp_patch0.nml
+prototype/src/CAID_coordinate_transformations/identity_mp/identity_mp_patch1.nml
+prototype/src/CAID_coordinate_transformations/identity_mp/identity_mp_patch2.nml
+prototype/src/CAID_coordinate_transformations/identity_mp/identity_mp_patch3.nml
+prototype/src/CAID_coordinate_transformations/mhdeq/mhdeq_info.nml
+prototype/src/CAID_coordinate_transformations/mhdeq/mhdeq_patch0.nml
+prototype/src/CAID_coordinate_transformations/square_4p_n10/square_4p_n10_info.nml
+prototype/src/CAID_coordinate_transformations/square_4p_n10/square_4p_n10_patch0.nml
+prototype/src/CAID_coordinate_transformations/square_4p_n10/square_4p_n10_patch1.nml
+prototype/src/CAID_coordinate_transformations/square_4p_n10/square_4p_n10_patch2.nml
+prototype/src/CAID_coordinate_transformations/square_4p_n10/square_4p_n10_patch3.nml
+prototype/src/coordinate_transformations_multipatch/identity_mp_patch2.nml
+prototype/src/coordinate_transformations_multipatch/identity_mp_patch3.nml
+
+prototype/src/CAID_coordinate_transformations/square_4p_n10/square_4p_n10_element_connectivity_main.nml
+
+prototype/src/CAID_coordinate_transformations/square_4p_n10/square_4p_n10_local_indices_patch0.nml
+
+prototype/src/CAID_coordinate_transformations/square_4p_n10/square_4p_n10_local_indices_patch1.nml
+
+prototype/src/CAID_coordinate_transformations/square_4p_n10/square_4p_n10_local_indices_patch2.nml
+
+prototype/src/CAID_coordinate_transformations/square_4p_n10/square_4p_n10_local_indices_patch3.nml
+
+prototype/src/CAID_coordinate_transformations/square_4p_n10/square_4p_n10_local_to_global_patch0.nml
+
+prototype/src/CAID_coordinate_transformations/square_4p_n10/square_4p_n10_local_to_global_patch1.nml
+
+prototype/src/CAID_coordinate_transformations/square_4p_n10/square_4p_n10_local_to_global_patch2.nml
+
+prototype/src/CAID_coordinate_transformations/square_4p_n10/square_4p_n10_local_to_global_patch3.nml

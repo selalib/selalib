@@ -1,0 +1,27 @@
+&time dt=0.01, nbiter=2000/
+&diag fdiag=1, fthdiag=1/
+&phys_space x0=0., x1=24.1660973353061, y0=-9.0, y1=9.0, nx=32, ny=32/
+&vel_space vx0=-6.0, vx1=6.0, vy0=-6.0, vy1=6.0, nvx=32, nvy=32/
+&drive
+t0 = 0.
+tL = 69.   ! Canonical: 69
+tR = 307.  ! Canonical: 307
+twL = 20.  ! Canonical: 20
+twR = 20.  ! Canonical: 20
+tflat = 100. ! Canonical: 100. ! This is the duration of the flat region
+turn_drive_off = .true.  ! .true. or .false. depending if we want to turn the 
+                                     ! drive off after a time 'tflat'.
+Edrmax = 0.2  ! drive amplitude
+! Canonical case is 0.2 for KEEN and 0.005 for EPW
+kdr = 0.26 
+omegadr = 0.37  ! Canonical: 0.37 for kdr = 0.26 (KEEN)       
+ ! This is the EPW frequency obtained from non-driven simulations
+ ! k=0.1 ->     omegadr = 1.0158
+ ! k=0.2 ->     omegadr0 = 1.064
+ ! k=0.22 ->   omegadr0 = 1.079
+ ! k=0.26 ->   omegadr0 = 1.1157
+ ! k=0.3 ->     omegadr0 = 1.1598
+ ! k=0.4 ->     omegadr0 = 1.2851
+ ! k=0.5 ->     omegadr0 = 1.4156
+ /
+
