@@ -1,7 +1,0 @@
-ADD_LIBRARY(sll_advection_field STATIC sll_advection_field.F90)
-
-TARGET_LINK_LIBRARIES(sll_advection_field sll_scalar_field)
-
-ADD_EXECUTABLE(test_advection_field unit_test.F90)
-
-TARGET_LINK_LIBRARIES(test_advection_field sll_advection_field)
