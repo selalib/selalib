@@ -4,51 +4,49 @@ IF(HDF5_ENABLED)
 #so the compiler should be parallel
 #should be changed
  
-  IF(MPI_ENABLED)
-    SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-  ENDIF()
+IF(MPI_ENABLED)
+  SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+ENDIF()
 
-  SET( ADVECTION_SRC_FILES 
-    lagrange_interpolation.F90 
-    sll_advection_1d_periodic.F90
-    sll_advection_1d_non_uniform_cubic_splines.F90
-    sll_advection_1d_BSL.F90
-    sll_advection_1d_CSL.F90
-    sll_advection_1d_PSM.F90
-    sll_advection_1d_base.F90
-    sll_advection_2d_BSL.F90
-    sll_advection_2d_integer_oblic.F90
-    sll_advection_2d_oblic.F90
-    sll_advection_2d_tensor_product.F90
-    sll_advection_2d_CSL.F90
-    sll_advection_2d_base.F90)
+SET( ADVECTION_SRC_FILES 
+       lagrange_interpolation.F90 
+       sll_advection_1d_periodic.F90
+       sll_advection_1d_non_uniform_cubic_splines.F90
+       sll_advection_1d_BSL.F90
+       sll_advection_1d_CSL.F90
+       sll_advection_1d_PSM.F90
+       sll_advection_1d_base.F90
+       sll_advection_2d_BSL.F90
+       sll_advection_2d_integer_oblic.F90
+       sll_advection_2d_oblic.F90
+       sll_advection_2d_tensor_product.F90
+       sll_advection_2d_CSL.F90
+       sll_advection_2d_base.F90
+       sll_advection_1d_spectral.F90
+       sll_advection_1d_ampere.F90)
 
-  ADD_LIBRARY(
-    sll_advection
-    STATIC
-    ${ADVECTION_SRC_FILES})
+ADD_LIBRARY( sll_advection STATIC ${ADVECTION_SRC_FILES})
 
-  TARGET_LINK_LIBRARIES(
-    sll_advection
-    #sll_fcisl
-    sll_meshes
-    sll_characteristics
-    sll_interpolators
-    sll_periodic_interpolation
-    sll_splines
-    sll_boundary_condition_descriptors
-    sll_utilities)
+TARGET_LINK_LIBRARIES( sll_advection
+                       sll_meshes
+                       sll_characteristics
+                       sll_interpolators
+                       sll_periodic_interpolation
+                       sll_splines
+                       sll_fft
+                       sll_boundary_condition_descriptors
+                       sll_utilities)
 
-# Tests
 IF(BUILD_TESTING)
 
-  ADD_EXECUTABLE(
-    test_advection_1d_periodic
-    unit_test_advection_1d_periodic.F90)
+  ADD_EXECUTABLE( test_advection_1d_spectral unit_test_advection_1d_spectral.F90)
+  TARGET_LINK_LIBRARIES( test_advection_1d_spectral sll_advection sll_file_io sll_fft)
 
-  TARGET_LINK_LIBRARIES(
-    test_advection_1d_periodic
-    sll_advection)
+  ADD_EXECUTABLE( test_advection_1d_ampere unit_test_advection_1d_ampere.F90)
+  TARGET_LINK_LIBRARIES( test_advection_1d_ampere sll_advection sll_file_io sll_fft)
+
+  ADD_EXECUTABLE( test_advection_1d_periodic unit_test_advection_1d_periodic.F90)
+  TARGET_LINK_LIBRARIES( test_advection_1d_periodic sll_advection)
 
   ADD_EXECUTABLE(
     test_advection_1d_non_uniform_cubic_splines
@@ -150,27 +148,23 @@ IF(BUILD_TESTING)
 
   ENDIF(MPI_ENABLED)
 
-  ADD_EXECUTABLE(
-    test_rotation_2d
-    rotation_2d.F90)
-
-  TARGET_LINK_LIBRARIES(
-    test_rotation_2d
-    sll_advection)
+  ADD_EXECUTABLE( test_rotation_2d rotation_2d.F90)
+  TARGET_LINK_LIBRARIES( test_rotation_2d sll_advection)
 
   # Ctests
-  ADD_TEST( NAME lagrange                    COMMAND test_lagrange                    )
-  ADD_TEST( NAME advection_1d_periodic       COMMAND test_advection_1d_periodic       )
+  ADD_TEST( NAME lagrange                  COMMAND test_lagrange              )
+  ADD_TEST( NAME advection_1d_periodic     COMMAND test_advection_1d_periodic )
   ADD_TEST( NAME advection_1d_non_uniform_cubic_splines
-                                COMMAND test_advection_1d_non_uniform_cubic_splines )
-  ADD_TEST( NAME advection_1d_BSL            COMMAND test_advection_1d_BSL            )
-  ADD_TEST( NAME advection_1d_CSL            COMMAND test_advection_1d_CSL            )
-  ADD_TEST( NAME advection_1d_PSM            COMMAND test_advection_1d_PSM            )
-  ADD_TEST( NAME advection_2d_BSL            COMMAND test_advection_2d_BSL            )
-  ADD_TEST( NAME advection_2d_CSL            COMMAND test_advection_2d_CSL            )
-  ADD_TEST( NAME advection_2d_tensor_product COMMAND test_advection_2d_tensor_product )
+            COMMAND test_advection_1d_non_uniform_cubic_splines )
+  ADD_TEST( NAME advection_1d_BSL          COMMAND test_advection_1d_BSL      )
+  ADD_TEST( NAME advection_1d_CSL          COMMAND test_advection_1d_CSL      )
+  ADD_TEST( NAME advection_1d_PSM          COMMAND test_advection_1d_PSM      )
+  ADD_TEST( NAME advection_2d_BSL          COMMAND test_advection_2d_BSL      )
+  ADD_TEST( NAME advection_2d_CSL          COMMAND test_advection_2d_CSL      )
+  ADD_TEST( NAME advection_2d_tensor_product 
+            COMMAND test_advection_2d_tensor_product )
 
-  SET_TESTS_PROPERTIES( advection_1d_periodic       PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+  SET_TESTS_PROPERTIES( advection_1d_periodic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
   SET_TESTS_PROPERTIES( advection_1d_non_uniform_cubic_splines
                                                     PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
   SET_TESTS_PROPERTIES( advection_1d_BSL            PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )

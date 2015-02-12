@@ -46,30 +46,30 @@ contains
     type(sll_cartesian_mesh_2d), intent(in) :: m2d
     sll_int32, intent(in)  :: num_particles
     type(sll_particle_group_4d), pointer, intent(inout) :: p_group
-    sll_int32  :: j
+    sll_int32  :: j, ii
     sll_int32  :: ncx, ic_x,ic_y
-    sll_real64 :: x, y, vx, vy, nu, xmin, ymin, rdx, rdy
+    sll_real64 :: x, y, vx, vy, nu
+    sll_real64 :: xmin, ymin, rdx, rdy
     sll_real32 :: weight!  sll_real64 :: weight!
     sll_real32 :: off_x,off_y!  sll_real64 :: off_x,off_y
     sll_real64 :: tmp1, tmp2
     sll_int32, dimension(:), intent(in), optional  :: rand_seed
     sll_int32, optional  :: rank, worldsize
-!!$    character(len=8)  :: rank_name
-!!$    character(len=40) :: nomfile
-    sll_real64 :: coco
+    character(len=8)  :: rank_name
+    character(len=40) :: nomfile
+    sll_real64 :: yo, val(1:2)
 
     if ( present(rand_seed) ) then
        call random_seed (put=rand_seed)
     endif
 
     if( present(worldsize) ) then
-       coco = (m2d%eta1_max - m2d%eta1_min) * &
+       weight = (m2d%eta1_max - m2d%eta1_min) * &
             (m2d%eta2_max - m2d%eta2_min)/real(worldsize*num_particles,f64)
     else
-       coco = (m2d%eta1_max - m2d%eta1_min) * &
+       weight = (m2d%eta1_max - m2d%eta1_min) * &
             (m2d%eta2_max - m2d%eta2_min)/real(num_particles,f64)
     endif
-    weight = real(coco,f32)! coco!
 
     rdx = 1._f64/m2d%delta_eta1
     rdy = 1._f64/m2d%delta_eta2
@@ -88,84 +88,37 @@ contains
 !!$    write(90,*) '#  POSITIONS in 2d    |||    VELOCITIES in 2d'
 
     j=1
+    ii=1
     !Rejection sampling for the function x --> 1+alpha*cos(k*x)
+!Each MPI node initialize 'num_particles' particles in phys space and velocity
     do while ( j <= num_particles )
-       x = vandercorput(j,5,3)! call random_number(x)
+       call random_number(x)
+!!$       x = vandercorput(ii,3,2)! suite_hamm(ii,3)!
+!!$       ii = ii+1
        x = (m2d%eta1_max - xmin)*x + xmin
-       y = vandercorput(j,3,2)! call random_number(y)
-       y = 2._f64 * y !(2._f64*alpha)*y + 1._f64 - alpha!  
+       call random_number(y)
+       y = (1._f64+alpha)*y! 2._f64 * y 
        if (eval_landau(alpha, k, x) >= y ) then
-          y = (m2d%eta2_max - ymin)*suite_hamm(j,3) + ymin
+          call random_number(y)
+          y = (m2d%eta2_max - ymin)*y + ymin
+!!$          y = (m2d%eta2_max - ymin)*vandercorput(j,5,3) + ymin! suite_hamm(j,2)
           !
-          nu = thermal_speed*sqrt( -2.0_f64*log(1.0_f64 - &
-               (real(j,f64)-0.5_f64)/real(num_particles,f64)) )
-          vx = nu * cos(suite_hamm(j,2)*2.0_f64*sll_pi)
-          vy = nu * sin(suite_hamm(j,2)*2.0_f64*sll_pi)
-!!$          write(90,*) x, y, vx, vy 
+!-!          nu = thermal_speed*sqrt( -2.0_f64*log(1.0_f64 - &
+!-!               (real(j,f64)-0.5_f64)/real(num_particles,f64)) )
+!-!          call random_number(yo)
+!-!          vx = nu * cos(yo*2.0_f64*sll_pi)! cos(vandercorput(j,5,2)*2.0_f64*sll_pi)!! yo=suite_hamm(j,5)
+!-!          vy = nu * sin(yo*2.0_f64*sll_pi)! sin(vandercorput(j,5,2)*2.0_f64*sll_pi)!
+          call gaussian_deviate_2D(val)
+          vx = val(1)*thermal_speed
+          vy = val(2)*thermal_speed
+          !if (j<=50000) write(90,*) x, y, vx, vy 
           SET_PARTICLE_VALUES(p_group%p_list(j),x,y,vx,vy,weight,xmin,ymin,ncx,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
           j = j + 1          
        endif
     end do
-!!$    print*, 'nb d essais', j-1
-!!$    close(90)
-
+    !close(90)
   end subroutine sll_initial_particles_4d
 
-  
-!!$  subroutine sll_initialize_some4Dfunction( &
-!!$              thermal_speed, alpha, k, &
-!!$              m2d, &
-!!$              num_particles, &
-!!$              p_group )
-!!$
-!!$    sll_real64, intent(in) :: thermal_speed, alpha, k
-!!$    type(sll_cartesian_mesh_2d), intent(in) :: m2d
-!!$    sll_int64, intent(in)  :: num_particles
-!!$    type(sll_particle_group_2d), pointer, intent(inout) :: p_group
-!!$    sll_int64 :: j
-!!$    sll_int32 :: ierr
-!!$    sll_real64 :: xn, yn, interm_y, nu
-!!$
-!!$!    p_group%p_list(:)%q = 1._f32/real(num_particles,f32) !  CHANGE 8/07
-!!$    p_group%p_list(:)%q = (m2d%eta1_max - m2d%eta1_min) * &
-!!$         (m2d%eta2_max - m2d%eta2_min)/real(num_particles,f32) !  CHANGE 11/07
-!!$
-!!$    do j=1,num_particles! standard Gaussian function in velocity 2D
-!!$       nu = thermal_speed*sqrt( -2.0_f64*log(1.0_f64 - &
-!!$            (real(j,f64)-0.5_f64)/real(num_particles,f64)) )
-!!$       p_group%p_list(j)%vx = nu * cos(suite_hamm(j,2)*2.0_f64*sll_pi)
-!!$       p_group%p_list(j)%vy = nu * sin(suite_hamm(j,2)*2.0_f64*sll_pi)
-!!$    enddo
-!!$! --- Here I should introduce particles by using 
-!!$! --- call initialize_particle_2d()
-!!$! --- in particle_representation.F90. 
-!!$
-!!$    !Rejection sampling for the function x --> 1+alpha*cos(k*x)
-!!$    open(90,file='initial_random_parts.dat')
-!!$    write(90,*) '#  POSITIONS         VITESSES'
-!!$    j=1
-!!$    do while (j<=num_particles)
-!!$       call random_number(xn)
-!!$       xn = (m2d%eta1_max - m2d%eta1_min)*xn + m2d%eta1_min
-!!$       call random_number(yn)
-!!$       yn = 2._f64 * yn! (2._f64*alpha)*yn + 1._f64 - alpha
-!!$       if (eval_landau(alpha, k, xn) >= yn ) then
-!!$          interm_y = (m2d%eta2_max - m2d%eta2_min)*suite_hamm(j,3) & 
-!!$                     + m2d%eta2_min
-!!$          write(90,*) xn, interm_y, p_group%p_list(j)%vx, p_group%p_list(j)%vy 
-!!$          call global_to_cell_offset (  &
-!!$               xn, interm_y, &
-!!$               m2d, &
-!!$               p_group%p_list(j)%ic, &
-!!$               p_group%p_list(j)%dx, &
-!!$               p_group%p_list(j)%dy )
-!!$          j = j + 1          
-!!$       endif
-!!$    enddo
-!!$    print*, 'nb d essais', j
-!!$    close(90)
-!!$    
-!!$  end subroutine sll_initialize_some4Dfunction
 
   function eval_landau(alp, kx, x)
     sll_real64 :: alp, kx, x
