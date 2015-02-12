@@ -5,10 +5,10 @@ structure like this:
                       ________________
                      |    Selalib     |
                      |________________|
-           __________________|___________________________________________
-    ______|________   _______|_________   ______|________   ___|___   __|____
-   |   prototype   | |     selalib     | | gysela_public | | slv2d | | pic2d |
-   |_______________| |_________________| |_______________| |_______| |_______|
+           __________________|___________________
+    ______|________   _______|_________   ______|________ 
+   |   prototype   | |     selalib     | | gysela_public |
+   |_______________| |_________________| |_______________|
 
 The 'prototype' directory will contain the files related with the preliminary
 testing and development of an architecture for Selalib. During the initial
@@ -24,12 +24,6 @@ since the public version of Gysela is derived from the proprietary version
 owned by the CEA, only the CEA personnel will work updating this part of the
 repository.
 
-'slv2d' is a code written by Eric Sonnendrucker that contains all functions
-we need to have in selalib. This part of the code will be used for testing purpose
-
-'pic2d' is a code written by Regine Bartheleme that contains a test case using PIC 
-method. This part of the code will be used for testing purpose of PIC features of selalib.
-
 AVAILABLE BRANCHES:
 
 Our Selalib repository has to hold information that while related, is not 
@@ -38,15 +32,17 @@ the modules of the Selalib library. Maybe even more. At the same time, we have
 only one repository to store all of this information. It would be convenient 
 if we would use Git to apply some level of separation among these entities.
 
-To manage the work for the prototype and selalib components, we have chosen to 
-have for each of them -main and -devel branches. A -main branch should contain 
-the most trusted, least frequently updated set of code and documentation files. In a more advanced state of the project this would represent something like an 
-official release. Merging into a -main branch should be the result of 
-completing some integrity tests, such as whole system builds, test runs and 
-when available, non-regression tests. Non-code files, such as documentation, 
-should be subject to some preliminary review. Only a few individuals should be 
-authorized to merge with the -main branches and do so under certain 
-pre-defined guidelines.
+To manage the work for the prototype and selalib components, we
+have chosen to have for each of them -main and -devel branches. A
+-main branch should contain the most trusted, least frequently
+updated set of code and documentation files. In a more advanced
+state of the project this would represent something like an official
+release. Merging into a -main branch should be the result of
+completing some integrity tests, such as whole system builds, test
+runs and when available, non-regression tests. Non-code files, such
+as documentation, should be subject to some preliminary review.
+Only a few individuals should be authorized to merge with the -main
+branches and do so under certain pre-defined guidelines.
 
 The -devel branches should contain the files that have yet to be put through 
 the integrated tests necessary for merging into the -main branches. To be in a 
@@ -77,7 +73,6 @@ prototype-main
 prototype-devel
 selalib-main
 selalib-devel
-
 
 Downloading the repository implies downloading all the project and all the 
 branches. Specifics as to how to deal with the branching model in Git are

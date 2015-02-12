@@ -101,10 +101,10 @@ case "$OS" in
       if [ -s $PORT ] ; then 
          INFO "macports is installed - configure the library"
          ${CMAKE} -DOPTIONS_FILE:FILEPATH=$SLL_DIR/cmake/macports_config.cmake \
-             $EXTRA_ARGS ${SLL_DIR}/prototype/src 
+             $EXTRA_ARGS ${SLL_DIR}/src 
       else 
-         ${CMAKE} $EXTRA_ARGS ${SLL_DIR}/prototype/src 
+         ${CMAKE} $EXTRA_ARGS ${SLL_DIR}/src 
       fi;;
-   linux)  ${CMAKE} $EXTRA_ARGS ${SLL_DIR}/prototype/src ;;
+   linux)  ${CMAKE} $EXTRA_ARGS ${SLL_DIR}/src ;;
 esac
 
