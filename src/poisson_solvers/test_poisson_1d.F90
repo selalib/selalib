@@ -36,7 +36,7 @@ program test_poisson_1d
   do i=1,nc_eta1+1
      x = (i-1)*delta_eta1
      rho(i)      =  mode**2*sin(mode*x)
-     ex_exact(i) = -mode*cos(mode*x)
+   ex_exact(i) = -mode*cos(mode*x)
   end do
 
   call initialize(poisson, eta1_min, eta1_max, nc_eta1, error) 

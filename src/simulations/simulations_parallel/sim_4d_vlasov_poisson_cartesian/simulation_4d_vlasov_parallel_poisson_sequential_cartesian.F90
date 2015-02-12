@@ -301,7 +301,7 @@ contains
       if(present(num_run)) then
         filename_loc = trim(filename)//"_"//trim(str_num_run)
         !filename_loc = adjustl(filename_loc)
-        print *,'filename_loc=',filename_loc
+        !print *,'filename_loc=',filename_loc
       endif
       
       
@@ -620,7 +620,7 @@ contains
     sll_int32 :: i2
     sll_int32 :: i3
     sll_int32 :: i4
-    sll_real64 :: time = 0.0_f64
+    sll_real64 :: time
     sll_int32 :: th_diag_id
     sll_int32 :: intfdx_id
     sll_int32 :: rho_id
@@ -634,6 +634,7 @@ contains
     sll_real64 :: nrj_jac
     sll_int32 :: ii
     
+    time = 0.0_f64
     world_size = sll_get_collective_size(sll_world_collective)
     my_rank    = sll_get_collective_rank(sll_world_collective)
     
@@ -853,7 +854,7 @@ contains
       call sll_binary_write_array_2d(E_x2_id,E_x2(1:nc_x1,1:nc_x2),ierr)  
       call sll_binary_write_array_2d(intfdx_id,intfdx_full(1:nc_x3+1,1:nc_x4+1),ierr)  
       if(sim%split%dim_split_V==2)then
-	    call sll_gnuplot_corect_2d( &
+	    call sll_gnuplot_2d( &
 		  sim%mesh_x1%eta_min, &
 		  sim%mesh_x1%eta_max, &
 		  nc_x1+1, &
@@ -864,7 +865,7 @@ contains
 		  "E_x1", &
 		  0, &
 		  ierr)
-	    call sll_gnuplot_corect_2d( &
+	    call sll_gnuplot_2d( &
 		  sim%mesh_x1%eta_min, &
 		  sim%mesh_x1%eta_max, &
 		  nc_x1+1, &
@@ -876,7 +877,7 @@ contains
 		  0, &
 		  ierr)
 		  
-	    call sll_gnuplot_corect_2d( &
+	    call sll_gnuplot_2d( &
 		  sim%mesh_x1%eta_min, &
 		  sim%mesh_x1%eta_max, &
 		  nc_x1+1, &
@@ -887,7 +888,7 @@ contains
 		  "dK_x1", &
 		  0, &
 		  ierr)
-		call sll_gnuplot_corect_2d( &
+		call sll_gnuplot_2d( &
 		  sim%mesh_x1%eta_min, &
 		  sim%mesh_x1%eta_max, &
 		  nc_x1+1, &
@@ -907,7 +908,7 @@ contains
           sim%stencil_r, &
           sim%stencil_s, &
           jacobian_E)
-		call sll_gnuplot_corect_2d( &
+		call sll_gnuplot_2d( &
 		  sim%mesh_x1%eta_min, &
 		  sim%mesh_x1%eta_max, &
 		  nc_x1+1, &
@@ -919,7 +920,14 @@ contains
 		  0, &
 		  ierr)
       endif
-      write(th_diag_id,'(f12.5,5g20.12)') time, nrj,ekin,nrj0,ekin0,maxval(abs(jacobian_E))!0.5*nrj+ekin
+      write(th_diag_id,'(7g20.12)') &
+        time, &
+        nrj, &
+        ekin, &
+        nrj0, &
+        ekin0, &
+        maxval(abs(jacobian_E)), &
+        nrj_jac !0.5*nrj+ekin
     endif
 
     
@@ -1142,7 +1150,7 @@ contains
         
         
         if(sll_get_collective_rank(sll_world_collective)==0) then
-          write(th_diag_id,'(f12.5,6g20.12)') &
+          write(th_diag_id,'(7g20.12)') &
             time, &
             nrj, &
             ekin, &
@@ -1159,7 +1167,7 @@ contains
           call sll_binary_write_array_2d(E_x2_id,E_x2(1:nc_x1,1:nc_x2),ierr)  
 
       if(sim%split%dim_split_V==2)then
-	    call sll_gnuplot_corect_2d( &
+	    call sll_gnuplot_2d( &
 		  sim%mesh_x1%eta_min, &
 		  sim%mesh_x1%eta_max, &
 		  nc_x1+1, &
@@ -1170,7 +1178,7 @@ contains
 		  "E_x1", &
 		  istep, &
 		  ierr)
-	    call sll_gnuplot_corect_2d( &
+	    call sll_gnuplot_2d( &
 		  sim%mesh_x1%eta_min, &
 		  sim%mesh_x1%eta_max, &
 		  nc_x1+1, &
@@ -1182,7 +1190,7 @@ contains
 		  istep, &
 		  ierr)
 		  
-	    call sll_gnuplot_corect_2d( &
+	    call sll_gnuplot_2d( &
 		  sim%mesh_x1%eta_min, &
 		  sim%mesh_x1%eta_max, &
 		  nc_x1+1, &
@@ -1193,7 +1201,7 @@ contains
 		  "dK_x1", &
 		  istep, &
 		  ierr)
-		call sll_gnuplot_corect_2d( &
+		call sll_gnuplot_2d( &
 		  sim%mesh_x1%eta_min, &
 		  sim%mesh_x1%eta_max, &
 		  nc_x1+1, &
@@ -1213,7 +1221,7 @@ contains
           sim%stencil_r, &
           sim%stencil_s, &
           jacobian_E)
-		call sll_gnuplot_corect_2d( &
+		call sll_gnuplot_2d( &
 		  sim%mesh_x1%eta_min, &
 		  sim%mesh_x1%eta_max, &
 		  nc_x1+1, &
@@ -1282,37 +1290,49 @@ contains
   
   subroutine delete_vp4d_par_cart( sim )
     class(sll_simulation_4d_vlasov_par_poisson_seq_cart) :: sim
-    !sll_int32 :: ierr
+    sll_int32 :: ierr
     
     
    if(associated(sim%mesh_x1)) then
+     !SLL_DEALLOCATE(sim%mesh_x1,ierr)
      nullify(sim%mesh_x1)
    endif
    if(associated(sim%mesh_x2)) then
+     !SLL_DEALLOCATE(sim%mesh_x2,ierr)
      nullify(sim%mesh_x2)
    endif
    if(associated(sim%mesh_x3)) then
+     !SLL_DEALLOCATE(sim%mesh_x3,ierr)
      nullify(sim%mesh_x3)
    endif
    if(associated(sim%mesh_x4)) then
+     !SLL_DEALLOCATE(sim%mesh_x4,ierr)
      nullify(sim%mesh_x4)
    endif
    if(associated(sim%advect_x1)) then
+     !SLL_DEALLOCATE(sim%advect_x1,ierr)
      nullify(sim%advect_x1)
    endif
    if(associated(sim%advect_x2)) then
+     !SLL_DEALLOCATE(sim%advect_x2,ierr)
      nullify(sim%advect_x2)
    endif
    if(associated(sim%advect_x3)) then
+     !SLL_DEALLOCATE(sim%advect_x3,ierr)
      nullify(sim%advect_x3)
    endif
    if(associated(sim%advect_x4)) then
+     !SLL_DEALLOCATE(sim%advect_x4,ierr)
      nullify(sim%advect_x4)
    endif
    if(associated(sim%poisson)) then
+     !call delete(sim%poisson,ierr)
+     !SLL_DEALLOCATE(sim%poisson,ierr)
      nullify(sim%poisson)
    endif
    if(associated(sim%poisson_for_K)) then
+     !call delete(sim%poisson_for_K,ierr)
+     !SLL_DEALLOCATE(sim%poisson_for_K,ierr)
      nullify(sim%poisson_for_K)
    endif
     
