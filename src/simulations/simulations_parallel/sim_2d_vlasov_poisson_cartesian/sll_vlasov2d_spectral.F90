@@ -141,7 +141,7 @@ contains
   sll_real64 :: v, v_min, delta_v
   sll_int32  :: loc_sz_i,loc_sz_j
   sll_int32  :: nc_x
-  sll_int32  :: j
+  sll_int32  :: i, j
   sll_int32  :: gj
   sll_int32  :: global_indices(2)
 
@@ -164,7 +164,9 @@ contains
 
      !exact : f = f^n exp(-i kx vx dt)
 
-     this%tmp_x = this%tmp_x*exp(-cmplx(0.0_f64,this%kx,kind=f64)*v)
+     do i = 2, nc_x/2+1
+       this%tmp_x(i) = this%tmp_x(i)*exp(-cmplx(0.0_f64,this%kx(i),kind=f64)*v)
+     end do
 
      call fftw_execute_dft_c2r(this%bwx, this%tmp_x, this%d_dx)
      this%f(1:nc_x,j)= this%d_dx / nc_x

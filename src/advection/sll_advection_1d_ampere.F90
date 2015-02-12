@@ -57,6 +57,10 @@ contains
 
 end type ampere_1d_advector
 
+type, public :: ampere_1d_advector_ptr 
+  class(ampere_1d_advector), pointer :: ptr
+end type ampere_1d_advector_ptr
+
 public ::  new_ampere_1d_advector
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -149,7 +153,7 @@ subroutine advect_1d_constant( adv, a, dt, input, output )
   sll_real64, dimension(:), intent(in)  :: input
   sll_real64, dimension(:), intent(out) :: output      
 
-  sll_int32  :: nc_x
+  sll_int32  :: i, nc_x
     
   nc_x = adv%nc_eta1
 
@@ -157,7 +161,9 @@ subroutine advect_1d_constant( adv, a, dt, input, output )
 
   adv%d_dx = input(1:nc_x)
   call fft_apply_plan(adv%fwx, adv%d_dx, adv%fk)
-  adv%fk = adv%fk*cmplx(cos(adv%kx*a*dt),-sin(adv%kx*a*dt),kind=f64)
+  do i = 2, nc_x/2+1
+    adv%fk(i) = adv%fk(i)*cmplx(cos(adv%kx(i)*a*dt),-sin(adv%kx(i)*a*dt),kind=f64)
+  end do
   adv%rk = adv%rk + adv%fk
   call fft_apply_plan(adv%bwx, adv%fk, adv%d_dx)
 

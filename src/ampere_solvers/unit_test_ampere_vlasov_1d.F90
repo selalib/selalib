@@ -16,7 +16,6 @@ program test_ampere_vlasov_1d
 use sll_module_ampere_vlasov_1d
 use sll_poisson_1d_periodic  
 use sll_module_poisson_1d_periodic_solver
-use sll_common_array_initializers_module
 
 implicit none
 
