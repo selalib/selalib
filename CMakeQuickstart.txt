@@ -81,8 +81,8 @@ C) Configuring (Makefile Generator)
         ./do-configure [OTHER OPTIONS] -D<PACKAGE>_ENABLED=ON
 
       where <PACKAGE> FFTW, etc. and SLL_HOME is set to the
-      selalib prototype source base directory (or your can just give it explicitly).
-      (ex: selalib/prototype/src)
+      selalib source base directory (or your can just give it explicitly).
+      (ex: selalib/src)
 
   b) [Recommended] Create a CMake file fragment and point to it.
 
@@ -133,7 +133,7 @@ C) Configuring (Makefile Generator)
       $ ./do-configure \
          -D HDF5_ENABLED:BOOL=ON \
          -D HDF5_PARALLEL_ENABLED:BOOL=ON \
-         -D MPI_MODULE_ENABLED:BOOL=ON \
+         -D MPI_ENABLED:BOOL=ON \
          -D BUILD_TESTS:BOOL=ON
   
   b) Configuring SeLaLib to test all effects of changing a given package(s):
@@ -216,7 +216,7 @@ C) Configuring (Makefile Generator)
 
   MPI is enabled by default, do disable the support you must minimally:
 
-    -D MPI_MODULE_ENABLED:BOOL=OFF
+    -D MPI_ENABLED:BOOL=OFF
 
   a) Configuring build using MPI compiler wrappers:
 
@@ -434,7 +434,8 @@ F) Installing
 (*) Setting the install prefix at configure time
 
     $ ./do-configure \
-      -D CMAKE_INSTALL_PREFIX:PATH=$HOME/local
+      -D CMAKE_INSTALL_PREFIX:PATH=$HOME/local \
+      -D BUILD_PACKAGE:BOOL=ON
 
   NOTE: The script 'do-configure' is just a simple shell script that calls
   CMake as shown above.

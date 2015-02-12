@@ -1,0 +1,449 @@
+\documentclass[11pt,a4paper]{amsart}
+\usepackage[dvips]{epsfig}
+\usepackage{graphics}
+\usepackage{latexsym}
+\usepackage{verbatim}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+%\usepackage{MnSymbol}
+%\usepackage{stmaryrd}
+\usepackage{hyperref}
+\usepackage[]{hyperref}
+\hypersetup{
+    colorlinks=true,%
+    filecolor=black,%
+    linkcolor=black,%
+    urlcolor=black  %
+}
+%%%%%%%%%%% plus plus %%%%%%%%%%%%%
+\usepackage [table]{xcolor}
+%\usepackage{multirow}
+%\usepackage{float}
+%\usepackage{tikz}
+%\usepackage{subfig}
+%\usepackage{algorithm}
+%\usepackage{algpseudocode}
+%\usepackage{algorithm2e}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Global Settings %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\graphicspath{{images/}}	% Root directory of the pictures 
+\tracingstats=2		% Enabled LaTeX logging with conditionals
+
+\setcounter{tocdepth}{2}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Environments    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{remark}[theorem]{Remark}
+
+\def\theproposition {{\arabic{section}.\arabic{theorem}}}
+\def\thetheorem {{\arabic{section}.\arabic{theorem}}}
+\def\thelemma {{\arabic{section}.\arabic{theorem}}}
+\def\thecorollary {{\arabic{section}.\arabic{theorem}}}
+\def\thedefinition {{\arabic{section}.\arabic{theorem}}}
+\def\theremark {{\arabic{section}.\arabic{theorem}}}
+\def\theequation {\arabic{section}.\arabic{equation}}
+\def\Examples{\medskip\noindent{\bf Examples: }}
+\def\Remark{\medskip\noindent{\bf Remark: }}
+\def\Remarks{\medskip\noindent{\bf Remarks: }}
+
+\def\bul{{$\bullet$\hspace*{2mm}}}
+
+
+\newcommand\CC{\hbox{C\kern -.58em {\raise .54ex \hbox{$\scriptscriptstyle |$}}
+  \kern-.55em {\raise .53ex \hbox{$\scriptscriptstyle |$}} }}
+%\newcommand\qed{\hfill$\sqcap\kern-8.0pt\hbox{$\sqcup$}$}
+\newcommand\NN{\hbox{I\kern-.2em\hbox{N}}}
+\newcommand\RR{\mathbb{R}}
+\newcommand\ZZ{{{\rm Z}\kern-.28em{\rm Z}}}
+\newcommand\Gradx{ \nabla_{\mathbf{x}}}
+\newcommand\Gradv{ \nabla_{\mathbf{v}}}
+\newcommand\Div{ \textrm{div}}
+\newcommand\Rot{ \textrm{curl}}
+\newcommand\jj{\mathbf{J}}
+\newcommand\xx{ \mathbf{x} }
+\newcommand\vv{ \mathbf{v} }
+
+%\usepackage{algorithmic}
+\newcommand{\ens}[1]{\mathbb{#1}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\setlength{\oddsidemargin}{.25cm} \setlength{\evensidemargin}{.25cm}
+\setlength{\textwidth}{15.5cm} \setlength{\textheight}{23.5cm}
+\setlength{\topmargin}{0.25cm}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Definitions   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\def\signcy{\bigskip\bigskip\hspace{80mm}
+\vbox{{\sc Charles prouveur \par\vspace{3mm}
+Universit\'e de Lyon,\par
+UMR5208, Institut Camille Jordan,\par
+43 boulevard 11 novembre 1918,\par
+F-69622 Villeurbanne cedex,  FRANCE
+\par\vspace{3mm}e-mail:} prouveur@math.univ-lyon1.fr }}
+
+\input{globals}
+
+\begin{document}
+
+\title[]{ }
+
+\author{}
+
+\maketitle
+
+\begin{abstract}
+
+
+
+\end{abstract}
+
+
+\vspace{0.1cm}
+
+\noindent 
+{\small\sc Keywords.}  {\small Finite difference method; Finite element method;  semi-Lagrangian scheme; Vlasov-Poisson model; Guiding-center model; Plasma physics.}
+
+
+%\tableofcontents
+
+
+\section{Introduction} 
+\setcounter{equation}{0}
+\label{sec:Intro}
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Theory}
+
+%\label{sec:test}
+\subsection{Spline}
+\setcounter{equation}{0}
+
+The accuracy of the Semi-Lagrangian method depends heavily on the interpolation method chosen. For example, for a cartesian grid is common to use cubic splines which have shown to give accurate results in an efficient manner. In our problem, with the hexagonal lattice, B-splines don't exploit the isotropy of the mesh (for more information see \cite{Mersereau79-IEEE}) and therefore we need a solution better adapted.  There are mainly two splines families that take advantage of the geometry's properties : hex-splines and the three directional box-splines. For a detailed comparison between these two types of splines we will refer to \cite{Condat2007}. Based on the latter, we have chosen to use box splines.
+
+Let us describe such a model : we are given an initial sample $s[\veck] = \dist_0(\vecR \veck)$, where the points $\vecR \veck$ belong to our hexagonal mesh, and we need to know the values $f(X,V)$ where $(X,V) \notin \vecR \veck$. We want a spline surface $\dist(\vecx) = \sum c[\veck] \chi^n(\vecx - \vecR\veck)$ such that $f(\vecx)$ approximates $f_0(x,v)$ and where $\chi^n$ are the box-splines of compact hexagonal support and $c[\veck]$ are the box-splines coefficients which are obtained by \cite{Condat2006a}
+
+\begin{equation}
+\label{eqn:coefs}
+ c = s * p
+\end{equation}
+
+where $*$ is the convolution operator, $s$ is the initial sample data and $p$ is a prefilter which will be defined later on.
+
+
+
+\subsubsection{Three directional box-splines}
+
+To construct the box-splines we will use the generator vectors $\mathbf{r_1, r_2, r_3}$ of the hexagonal lattice and we will introduce the box-splines basis functions $\varphi_{\Xi}(\vecx)$ where $\Xi = [\vecv_1 \vecv_2]$ which are defined as follows (\cite{Condat2006, Boor1993}):
+
+\begin{equation}
+\varphi_{\Xi} (\vecx) = \left\{
+  \begin{array}{l l}
+    \dfrac{1}{\lvert \det(\Xi)\rvert} & \quad \text{if $\Xi^{-1}\vecx \in [0,1)^2$ }\\
+    0 & \quad \text{otherwise}
+  \end{array} \right.
+\end{equation}
+
+and, for higher orders
+
+\begin{equation} \label{eqn:boxsplines_basis}
+\varphi_{\Xi \cup [v]}(\vecx) = \int_0^ 1 \varphi_\Xi(\vecx-t\vecv)dt
+\end{equation}
+  
+  
+We can define the Courant element \cite{Boor1993} as $\chi^1 = (\sqrt{3}/2)\varphi_{[\mathbf{r_1 r_2 -r_3}]}$ where $\mathbf{r_1, r_2, r_3}$ are the generator vectors. For higher orders we have the recursive expression : $\chi^n = (2/\sqrt{3})\chi^ {n-1} * \chi^ 1, \;\; n>1$ where the operator $*$ represents the convolution. For a complete analytical expression we refer to \cite{Condat2006} where we find the formula for $\chi^n(\vecx)$, which we have generalized to any hexagonal grid generated by a matrix $\vecR$ such that $\vecR = [\mathbf{r_1 r_2}] = \left[\begin{matrix}
+r_{11}\\ 
+r_{12}
+\end{matrix}
+\quad
+\begin{matrix}
+r_{21}\\  
+r_{22}
+\end{matrix}
+\right]$. The generalized algorithm is as follows
+
+
+\begin{align}
+\label{eqn:boxspline_anal_formula}
+\chi^n (x_1, x_2)  = &\sum_{k_1,k_2 = -n}^n \sum_{i =\max(k_1, k_2,0)}^{\min(k_1 + n, k_2 + n,n)} (-1)^ {k_1+k_2+i} \binom{n}{i-k_1}\binom{n}{i-k_2}\binom{n}{i} \nonumber \\  
+&\sum_{d=0}^{n-1}  \binom{n-1+d}{d} \dfrac{1}{(2n-1+d)!(n-1-d)!} \nonumber \\
+& \left| \dfrac{2}{\sqrt{3}} \left( x_2 - r_{12}k_1 -r_{22}k_2 \right) \right|^{n-1-d} \nonumber\\
+& \left(x_1-r_{11}k_1 -r_{21}k_2 - \dfrac{1}{\sqrt{3}} \left| x_2 - r_{12}k_1 -r_{22}k_2 \right|\right)_+^{2n-1+d}
+\end{align}
+
+where $(x)^n_+ = \{ x^n \text{ for } x>0; \text{ } 0 \text{, otherwise}\}$.
+
+This formula derives from a convolution between a particular Green function and a prefilter. For more information we refer to \cite{Condat2006}. In the latter we find as well an algorithm which exploits the twelve-fold symmetry of the mesh. Unfortunately this algorithm is specific to the second type of hexagon and doesn't take into account an eventual scaling. Nevertheless, if we denote by 
+$\bar{\vecR} = \left[\begin{matrix}
+\frac{1}{2}\\ 
+-\frac{\sqrt{3}}{2}
+\end{matrix}
+\quad
+\begin{matrix}
+\frac{1}{2}\\ 
+\frac{\sqrt{3}}{2}
+\end{matrix}
+\right]$
+ the generating matrix of a second type hexagonal-mesh of spacing $1$, we can re-write the coordinates $\vecx$ in the basis $\vecR$ to the basis $\bar{\vecR}$ by using the formula : 
+
+\begin{equation}
+\label{eqn:change_basis}
+\displaystyle \bar{\vecR}\vecR^{-1}\vecx = \bar{\vecx}
+\end{equation} 
+
+%
+%\begin{verbatim}
+%function val =
+%\end{verbatim}
+
+
+
+
+We will choose the definition in \eqref{eqn:boxspline_anal_formula} mostly for $n=2$ for higher orders we will opt for Box-MOMS (box-splines of maximum order and with minimal support) as presented in \cite{Condat2008}. The results for Box-MOMS of order 4 ($BM_4$) are encouraging specially when compared with normal Box-splines of the same order.
+
+
+
+
+
+\subsubsection{Box splines coefficients}
+
+How we determine the splines coefficients is almost as important as the splines themselves. We recall we have the formula \eqref{eqn:coefs}. Based on the literature available (notably \cite{Condat2007}) we have chosen for second-order box-splines the quasi-interpolation pre-filters $p_{IIR2}$ which seem to give the better results within a competitive time. The pre-filter $p_{IIR2}[i]$ of the point of local index $i$, for splines of order 2, is defined as follows : 
+
+
+\begin{equation}
+\label{eqn:filter}
+p_{IIR2} [i] = \left\{
+  \begin{array}{l l}
+    1775/2304\text{,} & \quad \text{if } i = 0\\
+    253/6912\text{,} & \quad \text{if } 0<i<7\\
+    1/13824\text{,} & \quad \text{if } 6<i<19 \text{ and $i$ odd}\\
+    11/6912\text{,} & \quad \text{if } 6<i<19 \text{ and $i$ even}\\
+    0 & \quad \text{otherwise}
+  \end{array} \right.
+\end{equation}
+
+Or for the splines of order 3 :
+
+\begin{equation}
+\label{eqn:filter}
+p_{IIR2} [i] = \left\{
+  \begin{array}{l l}
+    244301/460800\text{,} & \quad \text{if } i = 0\\
+    42269/576000\text{,} & \quad \text{if } 0<i<7\\
+    -11809/6912000\text{,} & \quad \text{if } 6<i<19 \text{ and $i$ odd}\\
+    1067/144000\text{,} & \quad \text{if } 6<i<19 \text{ and $i$ even}\\
+    -23/576000\text{,} & \quad \text{if } 18<i<37 \text{ and ($k_1 = 0$ or $k_2 = 0$ or $k_1 = k_2$) }\\
+    -109/288000\text{,} & \quad \text{if } 18<i<37 \\
+    	-1/13824000\text{,} & \quad \text{if } 36<i<61 \text{ and ($k_1 = 0$ or $k_2 = 0$ or $k_1 = k_2$) }\\
+    	97/6912000\text{,} & \quad \text{if } 36<i<61 \text{ and ($|k_1| = 2$ or $|k_2| = 2$) }\\
+    	1/576000\text{,} & \quad \text{if } 36<i<61\\    		
+    0 & \quad \text{otherwise}
+  \end{array} \right.
+\end{equation}
+
+In details, let's give the exact formula for the coefficients. We suppose we have the functions $global(k_1, k_2) = i$ and $local(i,i_0) = j$ that give respectively the global index of $\vecx = \vecR \veck$ and the local index of that point regarding the point at position $i_0$.
+
+\begin{equation}
+c[\veck] = \sum_{\vecm \in \ZZd} s[\vecm] \cdot p_{IIR}[local(\vecm - \veck, \veck)]
+\end{equation}
+
+and using \eqref{eqn:filter} we obtain
+
+\begin{align}
+\label{eqn:coef_algo}
+c[\veck] = \sum_{local(\vecm - \veck, \veck) = 0}^{18} s[\vecm] \cdot p_{IIR}[local(\vecm - \veck, \veck)]
+\end{align}
+
+
+
+
+
+\subsubsection{Optimizing the evaluation}
+
+For the present state we have all the elements for the approximation of a function $\dist$ with second order box splines
+
+\begin{equation}
+\tilde{\dist}(\vecx) = \sum_{\veck \in \ZZd} c[\veck] \chi^2(\vecx - \vecR\veck)
+\end{equation}
+
+Even if we limit our sum to the vector $\veck$ that defines our domain, we would like to take advantage of the fact that the splines $\chi^2$ are only non-zeros in a limited number of points. Therefore we need to know the indices $\veck$ such that $\chi^2(\vecx - \vecR \vecx) \neq 0$. For this purpose we will use the strategy suggested in \cite{Condat2007} : to start we need to obtain the indices on the coordinate system generated by $\vecR$ : $\veck_0 = \left[ \lfloor u \rfloor \; \lfloor v \rfloor \right]$ where $\left[ u \; v \right]^T = \vecR^ {-1} \vecx $. Thus, in our case, with splines $\chi^2$ we only need 4 terms associated to the encapsulating rhomboid's vertices : $\vecR\veck_0$, $\vecR\veck_0 + \vecr_1$, $\vecR\veck_0 + \vecr_2$ and $\vecR\veck_0 + \vecr_1 + \vecr_2$. Finally we obtain :
+
+\begin{align}
+\label{eqn:chi2_fct_interpol}
+\tilde{\dist}(\vecx) =& \;\;\;\;\; c[\veck_0] \; \chi^2(\vecx - \vecR\veck_0) \nonumber\\
+	&+ c[\veck_0 +[1,0]]\; \chi^2(\vecx - \vecR\veck_0 - \vecr_1) \nonumber\\
+	&+ c[\veck_0 +[0,1]]\; \chi^2(\vecx - \vecR\veck_0 - \vecr_2) \nonumber\\
+	&+ c[\veck_0 +[1,1]]\; \chi^2(\vecx - \vecR\veck_0 - \vecr_1 - \vecr_2)
+\end{align}
+
+\rmk{1}  As the $\chi^2$ spline has a support of radius a unity, one of the elements of \eqref{eqn:chi2_fct_interpol} is null. But this formula allow us to keep a short general formula for all points on the mesh without having to compute the indices of the Voronoi cell to which $x$ belongs to.
+
+%\begin{figure}[h!]
+%  \begin{center}
+%\begin{tabular}{ccc}
+%
+%\begin{tikzpicture}
+%% Three directions of grid
+%% vertical direction
+%\draw (0,-2) -- (0,2) node[pos = 0.45, below left, text = blue]{};
+%% upward
+%\draw(-1.732,-1) -- (1.732,1);
+%% downwards
+%\draw(-1.732,1) -- (1.732,-1);
+%% Hexagog
+%\draw (0,-2) node[below, text = blue]{} -- (1.732,-1) node[right, text = blue]{} -- (1.732,1) node[right, text = blue]{} -- (0,2) node[above, text = blue]{}-- (-1.732,1) node[left, text = blue]{} -- (-1.732,-1) node[left, text = blue]{} -- (0,-2) ; % size 2
+%%\draw (0,-1) -- (0.866,-.5) -- (0.866,.5) -- (0,1) -- (-.866,.5) -- (-.866,-.5) -- (0,-1) ; % size 1
+%%\draw (0,-.5) -- (0.433,-.25) -- (0.433,.25) -- (0,.5) -- (-.433,.25) -- (-.433,-.25) -- (0,-.5) ; %size 0.5
+%%\draw (0,-1.5) -- (1.3,-.75) -- (1.3,.75) -- (0,1.5) -- (-1.3,.75) -- (-1.3,-.75) -- (0,-1.5) ; % size 1.5
+%\end{tikzpicture}
+%\end{tabular}
+%
+%\end{center}
+%  \caption{}
+%  \label{fig:hex_cells}
+%\end{figure}
+
+\section{General algorithm}
+
+To conclude we want to write the entire procedure.
+
+\subsubsection*{Assumptions and initialization}
+
+\begin{itemize}
+	\item Mesh : defined by the matrix $\vecR$, its center $\vecx_0$ (typically the origin), its radius $L$ and the number of cells $N$;
+	\item Points : The points of the mesh can be initialized as follows $ \vecx_i = \sum_{i} \vecR \veck_i$;
+	\item Initial distribution : We assume we have a sample data such that $s^0[i] = \dist_0(\vecx_i)$ is given on the mesh points;
+	\item Computing the characteristics : as the characteristic's feet are time-independent we can compute at the initialization step. We denote them $\tilde{\vecx}_i$.
+\end{itemize}
+	
+\subsubsection*{Time loop}
+
+\begin{itemize}
+	\item Computing of the spline's coefficient : using the algorithm in \eqref{eqn:coef_algo} we compute the 19 elements sum on each point and pre-compute the spline coefficients using the pre-filter's values and the sample data $s^n$ ;
+	\item Element by element interpolation :
+		\begin{itemize}
+			\item First we compute ${\veck}_0$ such that ${\veck}_0 = {\vecR}^ {-1} \tilde{\vecx}_i$. \rmk{2} We will need a test case to see if ${\veck_0} \in \Omega$ and that uses the boundary conditions to compute a new ${\veck_0}$ otherwise.
+			\item Then we need to change the points' basis, such that they are defined in the spline basis. We use \eqref{eqn:change_basis} to find the coordinates of $\tilde{\vecx}_i$ in the basis of the second-type hexagonal mesh $\bar{\vecR}$, we will denote the solution $\bar{\vecx}_i$
+			\item We use the formula \eqref{eqn:chi2_fct_interpol} to interpolate the value $\tilde{\dist}_0(\bar{\vecx}_i)$, the final formula is given below
+			
+\begin{align}
+\label{eqn:chi2_fct_interpol2}
+\tilde{\dist}_0(\bar{\vecx}_i) =& \;\;\;\;\; c[\veck_0] \; \chi^2(\bar{\vecR}\vecR^{-1}(\tilde{\vecx}_i - \vecR\veck_0)) \nonumber\\
+	&+ c[\veck_0 +[1,0]]\; \chi^2(\bar{\vecR}\vecR^{-1}(\tilde{\vecx}_i - \vecR\veck_0 - \vecr_1)) \nonumber\\
+	&+ c[\veck_0 +[0,1]]\; \chi^2(\bar{\vecR}\vecR^{-1}(\tilde{\vecx}_i - \vecR\veck_0 - \vecr_2)) \nonumber\\
+	&+ c[\veck_0 +[1,1]]\; \chi^2(\bar{\vecR}\vecR^{-1}(\tilde{\vecx}_i - \vecR\veck_0 - \vecr_1 - \vecr_2))
+\end{align}
+
+		\end{itemize}
+\end{itemize}
+
+
+
+
+\subsection{Hermite finite element}
+\setcounter{equation}{0}
+
+Another possible way to interpolate is to use a 2d Hermite finite element \cite{zie}   
+
+After the root $(X,V)$ of a characteristic is found and  the triangle in which it is located has been identified... 
+
+There are ten degrees of freedom which are:
+\begin{itemize}
+\item[-] the values at the vertex of the triangle 
+\item[-] the values of the derivatives 
+\item[-] the values at the center of the triangle 
+\end{itemize}
+
+
+% mettre un dessin ici des degrés de liberté
+
+\begin{equation}
+\begin{cases}  
+
+\partial _x f(x,y) = \partial _{H_1} f(x,y).   \partial _x H_1 +   \partial _{H_2} f(x,y).   \partial _x H_2  \\
+\partial _y f(x,y) = \partial _{H_1} f(x,y).   \partial _y H_1 +   \partial _{H_2} f(x,y).   \partial _y H_2             
+
+\end{cases}
+\end{equation}
+
+With $H_1$ et $H_2$ the  hexaedric coordinates. Since   
+
+\begin{equation}
+\begin{cases}  
+
+\displaystyle{x = \frac{ H_1 - H_2 }{\sqrt{3}} },  \\[2mm]
+\displaystyle{y =  H_1 + H_2 },        
+
+\end{cases}
+\end{equation}
+
+We obtain :
+\begin{equation}
+	\begin{cases}  
+       \displaystyle{  \partial _x H_1 = \frac{\sqrt{3}}{ 2} ~;~  \partial _y H_1 = \frac{1}{ 2}  }\\[2mm]
+       \displaystyle{  \partial _x H_2 = \frac{-\sqrt{3}}{2} ~;~  \partial _y H_2 = \frac{1}{ 2}  } . 
+\end{cases}	
+\end{equation}
+
+At the vertexes the values are given and $f(G) = \frac{f(S_1)+f(S_2)+f(S_3)}{3}$. As for the values of the derivatives, we use the finite difference method along the hexagonal directions as it can be seen in figure (?)
+
+%%%%%%%%%%%%%%&%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Numerical tests}
+%\label{sec:test}
+\setcounter{equation}{0}
+
+
+%\begin{figure}[!]
+%
+% \includegraphics[width=3.5cm]{a02_t5.png}
+%	
+%  \caption{\label{fig:res}}
+%
+%\end{figure}
+
+
+\section{Conclusion and perspectives}
+\label{sec:conc}
+\setcounter{equation}{0}
+
+In this paper 
+
+\bibliographystyle{plain}
+\begin{thebibliography}{99} 
+
+\bibitem{son}
+{\sc E. Sonnendrücker, J. Roche, P. Bertrand, A. Ghizzo } The Semi-Lagrangian Method for the Numerical Resolution of Vlasov Equations, {\it Comput. Phys },{\bf 149, 201–220} (1999)  
+  
+  
+\bibitem{zie}
+{\sc Gustavo Buscaglia, Vitoriano Ruas } Finite element methods for the Stokes system based on a
+Zienkiewicz type N-simplex, {\it Comput. Methods Appl. Mech. Engrg.},{\bf 272, 83-99} (2014)  
+  
+
+\end{thebibliography}
+
+
+
+ 
+
+\end{document}
+
