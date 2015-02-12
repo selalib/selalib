@@ -852,7 +852,7 @@ contains
     case (".TRUE.")
       sim%ampere = .true.
     case default
-      SLL_ERROR('#ampere_solver '//ampere_solver//' not implemented')
+      continue
   end select
 
     
