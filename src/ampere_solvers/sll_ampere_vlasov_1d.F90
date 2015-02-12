@@ -249,7 +249,6 @@ subroutine solve_ampere_vlasov_1d(self, dt, f, ex)
    sll_int32   :: i, j
    sll_int32   :: nc_x, nc_y
    sll_real64  :: dt_e, a
-   sll_real64  :: rea, ima, reb, imb
 
    dt_e = dt / self%e_0
    nc_x = self%nc_eta1 
