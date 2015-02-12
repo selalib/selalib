@@ -201,8 +201,7 @@ contains
     sll_int32  :: i, j
     sll_real64 :: tmp3, tmp4, tmp5, tmp6
     sll_real64 :: tmp7, tmp8
-    sll_real64 :: valeur, val2
-    sll_real64 :: val1f, val2f
+    sll_real64 :: ee_val, enst
     sll_real64, dimension(:,:), pointer :: phi
     sll_int32  :: ncx, ncy, ic_x,ic_y
     sll_int32  :: ic_x1,ic_y1
@@ -225,7 +224,7 @@ contains
     type(field_accumulator_CS), dimension(:), pointer :: accumE_CS
     type(sll_particle_2d_guard), dimension(:), pointer :: p_guard
     sll_real64, dimension(:,:), allocatable  ::  diag_energy! a memory buffer
-    sll_real64, dimension(:),   allocatable  ::  diag_TOTmoment
+    sll_real64, dimension(:),   allocatable  ::  diag_enstrophy
     sll_real64, dimension(:),   allocatable  ::  diag_TOTenergy
 !!$    sll_real64, dimension(:,:), allocatable :: diag_AccMem! a memory buffer
     type(sll_time_mark)  :: t2, t3, t8
@@ -259,8 +258,8 @@ contains
     SLL_ALLOCATE( sim%E2(1:ncx+1,1:ncy+1), ierr )
     SLL_ALLOCATE(phi(1:ncx+1, 1:ncy+1), ierr)
 !!$    SLL_ALLOCATE(diag_energy(1:save_nb, 1:3), ierr)
-!!$    SLL_ALLOCATE(diag_TOTmoment(1:save_nb), ierr)
-!!$    SLL_ALLOCATE(diag_TOTenergy(0:save_nb), ierr)
+    SLL_ALLOCATE(diag_TOTenergy(0:sim%num_iterations-1), ierr)
+    SLL_ALLOCATE(diag_enstrophy(0:sim%num_iterations), ierr)
 !!$    SLL_ALLOCATE(diag_AccMem(0:sim%num_iterations-1, 1:2), ierr)
 
     sort_nb = 10
@@ -297,13 +296,15 @@ contains
        enddo
        endif
        if (sim%my_rank == 0) then
+          call normL2_field(enst,ncx,ncy,sim%rho,sim%m2d%delta_eta1,sim%m2d%delta_eta2)
+          diag_enstrophy(0) = enst
           it = 0
           call sll_gnuplot_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
                sim%m2d%eta2_max, ncy+1, &
                sim%rho, 'RHO_init_CS', it, ierr )
        endif
           ! POISSON changes rho
-       call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
+       call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, -sim%rho )
        call sll_accumulate_field_CS( sim%E1, sim%E2, sim%E_accumulator_CS )
 
     else
@@ -328,23 +329,30 @@ contains
        enddo
        endif
        if (sim%my_rank == 0) then
+          call normL2_field(enst,ncx,ncy,sim%rho,sim%m2d%delta_eta1,sim%m2d%delta_eta2)
+          diag_enstrophy(0) = enst
           it = 0
           call sll_gnuplot_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
                sim%m2d%eta2_max, ncy+1, &
                sim%rho, 'RHO_init', it, ierr )
        endif
        ! POISSON changes rho
-       call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
+       call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, -sim%rho )
        call sll_accumulate_field( sim%E1, sim%E2, sim%E_accumulator )
     endif
-
-
+    
 ! -----------------------------
 ! --------  TIME LOOP  --------
 ! -----------------------------
 !    call sll_set_time_mark( tinit )
     do it = 0, sim%num_iterations-1
 
+       if (sim%world_size == 1 ) then
+          call normL2_field_E(ee_val,ncx,ncy, sim%E1, sim%E2, &
+               sim%m2d%delta_eta1, sim%m2d%delta_eta2)
+          diag_TOTenergy(it) = ee_val
+       endif
+       
        if (mod(it+1,sort_nb)==0) then 
           call sll_sort_gc_particles_2d( sim%sorter, sim%part_group )
        endif
@@ -418,7 +426,7 @@ contains
           enddo
        enddo
        endif
-       call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
+       call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, -sim%rho )
 
        if (sim%use_cubic_splines) then 
           call sll_accumulate_field_CS( sim%E1, sim%E2, sim%E_accumulator_CS )
@@ -485,7 +493,7 @@ contains
        enddo
        endif
 
-       if (mod(it+1, 100)==0 .and. sim%my_rank == 0) then
+       if (mod(it+1, 200)==0 .and. sim%my_rank == 0) then
 !          tfin = sll_time_elapsed_since(tinit)
 !!$          write(it_name,'(i4.4)') it+1
 !!$          nnnom = 'parts_at'//trim(adjustl(it_name))//'.dat'
@@ -497,14 +505,31 @@ contains
 !!$          close(50)
           call sll_gnuplot_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
                sim%m2d%eta2_max, ncy+1, &
-               sim%rho, 'rho_GC2_it', it+1, ierr )
+               sim%rho, 'rhoGCrk2_it', it+1, ierr )
        endif
 
-       call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
+       if (sim%my_rank == 0) then
+          call normL2_field(enst,ncx,ncy,sim%rho,sim%m2d%delta_eta1,sim%m2d%delta_eta2)
+          diag_enstrophy(it+1) = enst
+       endif
+
+       call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, -sim%rho )
 
     enddo
     ! ----------   END TIME LOOP   -----------
     ! ----------------------------------------
+    if (sim%world_size == 1 ) then
+       open(65,file='elecenergy.dat')
+       open(66,file='enstrophy.dat')
+       do it=0,sim%num_iterations-1
+          write(65,*) it*dt,  diag_TOTenergy(it), &
+               (diag_TOTenergy(it)-diag_TOTenergy(0))/diag_TOTenergy(0)
+          write(66,*) it*dt, diag_enstrophy(it), &
+               (diag_enstrophy(it)-diag_enstrophy(0))/diag_enstrophy(0)
+       enddo
+       close(65) ; close(66)
+    endif
+
     SLL_DEALLOCATE_ARRAY(ploc,ierr)    
     SLL_DEALLOCATE(sim%rho,   ierr)
     SLL_DEALLOCATE(sim%E1,    ierr)
@@ -514,8 +539,8 @@ contains
        SLL_DEALLOCATE_ARRAY(rho1d_send, ierr)
        SLL_DEALLOCATE_ARRAY(rho1d_receive, ierr)
     endif
-!!$    SLL_DEALLOCATE_ARRAY(diag_TOTenergy, ierr)
-!!$    SLL_DEALLOCATE_ARRAY(diag_TOTmoment, ierr)
+    SLL_DEALLOCATE_ARRAY(diag_TOTenergy, ierr)
+    SLL_DEALLOCATE_ARRAY(diag_enstrophy, ierr)
 !!$    SLL_DEALLOCATE_ARRAY(diag_energy, ierr)
 
   end subroutine run_2d_pic_cartesian!_RK2
@@ -528,8 +553,6 @@ contains
     sll_int32  :: i, j
     sll_real64 :: tmp3, tmp4, tmp5, tmp6
     sll_real64 :: tmp7, tmp8
-    sll_real64 :: valeur, val2
-    sll_real64 :: val1f, val2f
     sll_real64, dimension(:,:), pointer :: phi
     sll_int32  :: ncx, ncy, ic_x,ic_y
     sll_int32  :: ic_x1,ic_y1
@@ -551,7 +574,6 @@ contains
     type(field_accumulator_CS), dimension(:), pointer :: accumE_CS
     type(sll_particle_2d_guard), dimension(:), pointer :: p_guard
     sll_real64, dimension(:,:), allocatable  ::  diag_energy! a memory buffer
-    sll_real64, dimension(:),   allocatable  ::  diag_TOTmoment
     sll_real64, dimension(:),   allocatable  ::  diag_TOTenergy
 !!$    sll_real64, dimension(:,:), allocatable :: diag_AccMem! a memory buffer
     type(sll_time_mark)  :: t2, t3, t8
@@ -583,7 +605,6 @@ contains
     SLL_ALLOCATE( sim%E2(1:ncx+1,1:ncy+1), ierr )
     SLL_ALLOCATE(phi(1:ncx+1, 1:ncy+1), ierr)
 !!$    SLL_ALLOCATE(diag_energy(1:save_nb, 1:3), ierr)
-!!$    SLL_ALLOCATE(diag_TOTmoment(1:save_nb), ierr)
 !!$    SLL_ALLOCATE(diag_TOTenergy(0:save_nb), ierr)
 !!$    SLL_ALLOCATE(diag_AccMem(0:sim%num_iterations-1, 1:2), ierr)
 
@@ -627,7 +648,7 @@ contains
                sim%rho, 'RHO_init_CS', it, ierr )
        endif
        ! POISSON changes rho
-       call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
+       call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, -sim%rho )
        call sll_accumulate_field_CS( sim%E1, sim%E2, sim%E_accumulator_CS )
     else
        accumE => sim%E_accumulator%e_acc
@@ -656,7 +677,7 @@ contains
                sim%rho, 'RHO_init_CS', it, ierr )
        endif
        ! POISSON changes rho
-       call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
+       call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, -sim%rho )
        call sll_accumulate_field( sim%E1, sim%E2, sim%E_accumulator )
     endif
 
@@ -754,7 +775,7 @@ contains
                sim%m2d%eta2_max, ncy+1, &
                sim%rho, 'rho_GC_eeuler_it', it+1, ierr )
        endif
-       call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
+       call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, -sim%rho )
 
     enddo
     ! ----------   END TIME LOOP   -----------
@@ -769,7 +790,6 @@ contains
        SLL_DEALLOCATE_ARRAY(rho1d_receive, ierr)
     endif
 !!$    SLL_DEALLOCATE_ARRAY(diag_TOTenergy, ierr)
-!!$    SLL_DEALLOCATE_ARRAY(diag_TOTmoment, ierr)
 !!$    SLL_DEALLOCATE_ARRAY(diag_energy, ierr)
 
   end subroutine run_2d_pic_cartesian_ExpEuler
@@ -809,7 +829,7 @@ contains
     res = 0._f64
     do j=1,ny
        do i=1,nx
-          res = res + e(i,j)*e(i,j)
+          res = res + e(i,j)**2
        enddo
     enddo
     res = sqrt(res*dx*dy)
@@ -826,7 +846,7 @@ contains
     res = 0._f64
     do j=1,ny
        do i=1,nx
-          res = res + e1(i,j)*e1(i,j) + e2(i,j)*e2(i,j)
+          res = res + e1(i,j)**2 + e2(i,j)**2
        enddo
     enddo
     res = sqrt(res*dx*dy)
