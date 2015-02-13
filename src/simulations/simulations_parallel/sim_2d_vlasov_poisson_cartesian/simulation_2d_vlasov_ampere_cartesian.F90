@@ -24,7 +24,7 @@
 !   High order splitting in time
 !   KEEN waves with uniform and non uniform grid in velocity
 
-module sll_simulation_2d_vlasov_poisson_cartesian
+module sll_simulation_2d_vlasov_ampere_cartesian
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -52,7 +52,7 @@ use sll_simulation_base
 use sll_time_splitting_coeff_module
 use sll_module_poisson_1d_periodic_solver
 use sll_module_poisson_1d_polar_solver
-use sll_module_ampere_1d_pstd
+use sll_module_ampere_vlasov_1d
 use sll_module_advection_1d_spectral
 
 #ifdef _OPENMP
@@ -126,7 +126,7 @@ use omp_lib
    sll_real64 :: factor_x2_1
 
    class(sll_poisson_1d_base), pointer :: poisson 
-   class(sll_ampere_1d_pstd),  pointer :: ampere 
+   class(sll_ampere_1d),       pointer :: ampere 
            
    contains !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -726,6 +726,16 @@ contains
           LAGRANGE,                                         & 
           order_x1)
 
+      case("SLL_TRIGO") ! spectral periodic advection
+
+        sim%advect_x1(tid)%ptr => new_periodic_1d_advector( &
+          num_cells_x1,                                     &
+          x1_min,                                           &
+          x1_max,                                           &
+          TRIGO,                                       &
+          order_x1)
+
+
       case("SLL_SPECTRAL") ! spectral periodic advection
 
         sim%advect_x1(tid)%ptr => new_spectral_1d_advector( &
@@ -834,7 +844,7 @@ contains
 
   select case (ampere_solver)
     case ("SLL_PSTD")
-      sim%ampere => new_ampere_1d_pstd(x1_min, x1_max, num_cells_x1)
+      sim%ampere => new_ampere_1d(x1_min, x1_max, num_cells_x1)
     case default
       SLL_ERROR('#ampere_solver '//ampere_solver//' not implemented')
   end select
@@ -951,4 +961,4 @@ contains
 
   end function f_equilibrium
 
-end module sll_simulation_2d_vlasov_poisson_cartesian
+end module sll_simulation_2d_vlasov_ampere_cartesian
