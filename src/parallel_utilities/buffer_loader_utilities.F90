@@ -1,3 +1,5 @@
+!> @ingroup parallel_utilities
+
 module sll_buffer_loader_utilities_module
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -10,9 +12,8 @@ implicit none
 
 contains
 
-  ! the objective of this subroutine is to help to prepare data
-  ! for gatherv operations for example
-
+  !> the objective of this subroutine is to help to prepare data
+  !> for gatherv operations for example
   subroutine compute_displacements_array_2d( layout, collective_size, disps )
     type(layout_2D), pointer                           :: layout
     sll_int32, intent(in)                              :: collective_size
@@ -39,10 +40,8 @@ contains
   end subroutine compute_displacements_array_2d
 
   
-  ! this subroutine loads 2D array into a 1D
-  ! buffer for use in collective communications
-
-
+  !> this subroutine loads 2D array into a 1D
+  !> buffer for use in collective communications
   subroutine load_buffer_2d( layout, data, buffer )
     type(layout_2D), pointer   :: layout
     sll_real64, dimension(:,:), intent(in) :: data
@@ -60,7 +59,7 @@ contains
     col => get_layout_collective( layout )
     myrank = sll_get_collective_rank( col )
     data_size = size(data,1)*size(data,2)
-!print *, 'data1: ', size(data,1), 'data2:', size(data,2)
+
     imin = get_layout_i_min( layout, myrank )
     imax = get_layout_i_max( layout, myrank )
     jmin = get_layout_j_min( layout, myrank )
@@ -68,15 +67,6 @@ contains
     size_i = imax - imin + 1
     size_j = jmax - jmin + 1
 
-!!$    if( data_size .ne. size_i*size_j ) then
-!!$       print *, 'function load_buffer():'
-!!$       print *, 'size(data) = ', size(data,1), size(data,2)
-!!$       print *, 'warning from rank ', myrank
-!!$       print *, 'there seems to be a discrepancy between the data size ', &
-!!$            'passed and the size declared in the layout.'
-!!$       print *, 'data size = ', data_size, 'size from layout = ', size_i*size_j
-!!$    end if
-!!$print *, 'size_j', size_j, 'size_i', size_i
     counter=0
     do j=1,size_j
        do i=1,size_i
@@ -104,7 +94,7 @@ contains
     col => get_layout_collective( layout )
     myrank = sll_get_collective_rank( col )
     data_size = size(data,1)*size(data,2)
-!print *, 'data1: ', size(data,1), 'data2:', size(data,2)
+
     imin = get_layout_i_min( layout, myrank )
     imax = get_layout_i_max( layout, myrank )
     jmin = get_layout_j_min( layout, myrank )
@@ -112,15 +102,6 @@ contains
     size_i = imax - imin + 1
     size_j = jmax - jmin + 1
 
-!!$    if( data_size .ne. size_i*size_j ) then
-!!$       print *, 'function load_buffer():'
-!!$       print *, 'size(data) = ', size(data,1), size(data,2)
-!!$       print *, 'warning from rank ', myrank
-!!$       print *, 'there seems to be a discrepancy between the data size ', &
-!!$            'passed and the size declared in the layout.'
-!!$       print *, 'data size = ', data_size, 'size from layout = ', size_i*size_j
-!!$    end if
-!!$print *, 'size_j', size_j, 'size_i', size_i
     counter=0
     do j=1,size_j
        do i=1,size_i
@@ -133,8 +114,8 @@ contains
 
 
 
-  ! this subroutine loads 3D array into a 1D
-  ! buffer for use in collective communications
+  !> this subroutine loads 3D array into a 1D
+  !> buffer for use in collective communications
   subroutine load_buffer_3d( layout, data, buffer )
     type(layout_3D), pointer   :: layout
     sll_real64, dimension(:,:,:), intent(in) :: data
@@ -174,11 +155,8 @@ contains
   end subroutine load_buffer_3d
 
 
-
-
-
-  ! this function is also a helper for collective routines for example gatherv
-  ! should be change into subroutine 
+  !> this function is also a helper for collective routines for example gatherv
+  !> should be change into subroutine 
   function receive_counts_array_2d( layout, n ) result(rc)
     type(layout_2D), pointer :: layout
     sll_int32, intent(in)    :: n
@@ -235,8 +213,8 @@ contains
   end subroutine unload_buffer_2d
 
 
-  !this routine takes 1D array and stores it in a 3D array
-  !warning definition changes are done wrt unload_buffer_2d
+  !> this routine takes 1D array and stores it in a 3D array
+  !> warning definition changes are done wrt unload_buffer_2d
   subroutine unload_buffer_3d( layout, buffer, data )
     type(layout_3D), pointer                :: layout
     sll_real64, dimension(:,:,:), intent(out) :: data
