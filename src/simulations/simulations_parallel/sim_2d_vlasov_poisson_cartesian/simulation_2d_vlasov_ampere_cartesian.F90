@@ -748,7 +748,9 @@ contains
       case("SLL_AMPERE") ! ampere periodic advection
 
         sim%advect_ampere_x1(tid)%ptr => new_ampere_1d_advector( &
-          num_cells_x1, x1_min, x1_max )
+          num_cells_x1, &
+          x1_min,       &
+          x1_max )
 
       case default
 
@@ -848,13 +850,12 @@ contains
         SLL_ERROR('#poisson_solver '//poisson_solver//' not implemented')
     end select
 
-  select case (ampere_solver)
-    case (".TRUE.")
-      sim%ampere = .true.
-    case default
-      continue
-  end select
-
+    select case (ampere_solver)
+      case (".TRUE.")
+        sim%ampere = .true.
+      case default
+        continue
+    end select
     
     select case (drive_type)
 
