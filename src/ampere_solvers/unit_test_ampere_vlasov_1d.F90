@@ -14,6 +14,8 @@ program test_ampere_vlasov_1d
 #include "sll_poisson_solvers.h"
 
 use sll_module_ampere_vlasov_1d
+use sll_poisson_1d_periodic  
+use sll_module_poisson_1d_periodic_solver
 
 implicit none
 
@@ -57,8 +59,8 @@ type(sll_cubic_spline_interpolator_1d), target  :: spline_x
 type(sll_cubic_spline_interpolator_1d), target  :: spline_v
 
 sll_real64, dimension(:), allocatable :: rho
-type (poisson_1d_periodic)            :: poisson
-sll_real64 :: eps, kx
+class(sll_poisson_1d_base), pointer   :: poisson 
+sll_real64 :: eps, kx, t
 
 sll_real64 :: tstart, tend
 
@@ -115,7 +117,7 @@ interp_v => spline_v
 
 eta1_min = 0.0_f64
 eta1_max = 4.0_f64*sll_pi
-nc_eta1  = 32
+nc_eta1  = 64
 
 eta2_min = -6.0_f64
 eta2_max = +6.0_f64
@@ -128,7 +130,8 @@ SLL_ALLOCATE(df(nc_eta1+1,nc_eta2+1),error)
 delta_eta1 = (eta1_max-eta1_min)/nc_eta1
 delta_eta2 = (eta2_max-eta2_min)/nc_eta2
 
-call initialize(poisson, eta1_min, eta2_max, nc_eta1, error) 
+poisson => new_poisson_1d_periodic_solver(eta1_min,eta1_max,nc_eta1)
+
 call spline_x%initialize(nc_eta1+1, eta1_min, eta1_max, SLL_PERIODIC )
 call spline_v%initialize(nc_eta2+1, eta2_min, eta2_max, SLL_PERIODIC )
 
@@ -136,13 +139,13 @@ SLL_ALLOCATE(eta1(nc_eta1+1),error)
 SLL_ALLOCATE(eta2(nc_eta2+1),error)
 
 !Initialize distribution function
-eps = 0.05_f64
+eps = 0.001_f64
 kx  = 0.5_f64 
 do j=1, nc_eta2+1
    eta2(j) = eta2_min + (j-1)*delta_eta2
    do i=1, nc_eta1+1
       eta1(i) = eta1_min + (i-1)*delta_eta1
-      df(i,j)=(1.0_f64+eps*cos(kx*eta1(i)))/(2.0_f64*sll_pi) &
+      df(i,j)=(1.0_f64+eps*cos(kx*eta1(i)))/sqrt(2.0_f64*sll_pi) &
                 * exp(-0.5_f64*eta2(j)*eta2(j))
    end do
 end do
@@ -167,25 +170,27 @@ do i_step = 1, n_step
    call advection_ampere(delta_t) 
    !call advection_poisson(delta_t)
    
-   nrj(i_step) = 0.5_f64*log(sum(ex*ex)*delta_eta1)
+   nrj(i_step) = 0.5_f64*sum(ex(1:nc_eta1)*ex(1:nc_eta1))*delta_eta1
    
    open(11, file='thf_2d.dat', position='append')
    if (i_step == 1) rewind(11)
-   write(11,*) time, nrj(i_step)
+   write(11,*) time, sqrt(nrj(i_step))
    close(11)
 
    time = time + delta_t
 
-   write(*,100) .0,n_step*delta_t,-29.5,0.5
-   do j_step = 1, i_step
-      print*, (j_step-1)*delta_t, nrj(j_step)
-   end do
-   print*, 'e'
+   !write(*,100) .0,n_step*delta_t,-35.,-10.
+   !do j_step = 1, i_step
+   !   t =  (j_step-1)*delta_t
+   !   print*, t, log(nrj(j_step))
+   !end do
+   !print*, 'e'
 
 end do
 
-print*,'#PASSED'
-100 format('p [',f5.1,':',f5.1,'][',f6.1,':',f6.1,'] ''-'' w l')
+print*,"plot (2.6e-3*exp(-0.1533*x)),'thf_2d.ref' w l, 'thf_2d.dat' w l"
+!100 format('p [t=',f5.1,':',f5.1,'][',f6.1,':',f6.1 &
+!           ,'] 2.6e-3*exp(-0.1533*t), ''thf_2d.dat'' w l')
 
 
 call cpu_time(tend)
@@ -204,7 +209,8 @@ contains
     do i = 1, nc_eta1+1
       rho(i) = sum(df(i,:))*delta_eta2
     end do
-    call solve(poisson, ex , rho)
+    !rho = 1.0_f64 - rho
+    call poisson%compute_e_from_rho( ex, rho )
    end subroutine advection_poisson
 
    subroutine advection_ampere(dt)
