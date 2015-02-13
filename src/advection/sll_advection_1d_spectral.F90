@@ -139,7 +139,7 @@ subroutine advect_1d( adv, a, dt, input, output )
 
   !f = f^n exp(-i kx vx dt)
 
-  adv%tmp_x = adv%tmp_x*cmplx(cos(adv%kx*a*dt),-sin(adv%kx*a*dt),kind=f64)
+  adv%tmp_x = adv%tmp_x*cmplx(cos(adv%kx*a*dt),sin(adv%kx*a*dt),kind=f64)
 
   call fft_apply_plan(adv%bwx, adv%tmp_x, adv%d_dx)
   output(1:nx)= adv%d_dx / nx
@@ -165,7 +165,7 @@ subroutine advect_1d_constant( adv, a, dt, input, output )
 
   !f = f^n exp(-i kx vx dt)
 
-  adv%tmp_x = adv%tmp_x*cmplx(cos(adv%kx*a*dt),-sin(adv%kx*a*dt),kind=f64)
+  adv%tmp_x = adv%tmp_x*cmplx(cos(adv%kx*a*dt),sin(adv%kx*a*dt),kind=f64)
 
   call fft_apply_plan(adv%bwx, adv%tmp_x, adv%d_dx)
   output(1:nx)= adv%d_dx / nx
