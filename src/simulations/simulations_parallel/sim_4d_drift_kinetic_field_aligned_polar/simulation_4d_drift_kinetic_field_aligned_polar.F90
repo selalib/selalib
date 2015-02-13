@@ -1124,16 +1124,16 @@ contains
       call sll_hdf5_write_array_1d(file_id,sim%Te_r,'Te_r',file_err)
       call sll_hdf5_file_close(file_id,file_err)
       
-      call sll_gnuplot_write(sim%n0_r,'n0_r_init',ierr)
-      call sll_gnuplot_write(sim%Ti_r,'Ti_r_init',ierr)
-      call sll_gnuplot_write(sim%Te_r,'Te_r_init',ierr)
-      call sll_gnuplot_write(sim%iota_r,'iota_r_init',ierr)
-      call sll_gnuplot_write(sim%b_unit_x2,'b_theta_init',ierr)
-      call sll_gnuplot_write(sim%b_unit_x3,'b_z_init',ierr)
+      call sll_gnuplot_1d(sim%n0_r,'n0_r_init',ierr)
+      call sll_gnuplot_1d(sim%Ti_r,'Ti_r_init',ierr)
+      call sll_gnuplot_1d(sim%Te_r,'Te_r_init',ierr)
+      call sll_gnuplot_1d(sim%iota_r,'iota_r_init',ierr)
+      call sll_gnuplot_1d(sim%b_unit_x2,'b_theta_init',ierr)
+      call sll_gnuplot_1d(sim%b_unit_x3,'b_z_init',ierr)
       !for the moment no use of spaghetti
-      !call sll_gnuplot_write(sim%iota_for_sigma,'iota_for_sigma',ierr)
-      !call sll_gnuplot_write(sim%B_norm_r,'B_norm_r_init',ierr)
-      !call sll_gnuplot_write(sim%Bstar_par_v_r,'Bstar_par_v_r_init',ierr)
+      !call sll_gnuplot_1d(sim%iota_for_sigma,'iota_for_sigma',ierr)
+      !call sll_gnuplot_1d(sim%B_norm_r,'B_norm_r_init',ierr)
+      !call sll_gnuplot_1d(sim%Bstar_par_v_r,'Bstar_par_v_r_init',ierr)
     end if
 
 
@@ -1265,7 +1265,7 @@ contains
           sim%layout4d_parx3x4, &
           (/1,1,1,nc_x4/2+1/))
         if(loc4d(3) > 0) then
-!          call sll_gnuplot_corect_2d( &
+!          call sll_gnuplot_2d( &
 !            sim%m_x1%eta_min, &
 !            sim%m_x1%eta_max, &
 !            nc_x1+1, &
@@ -1592,11 +1592,11 @@ contains
         nrj
 
       if(step==0)then    
-        call sll_gnuplot_write(sim%phi3d_parx3(:,1,1),'phi_0',ierr)
-        !call sll_gnuplot_write(sim%rho3d_seqx1x2(:,1,1)/sim%n0_r(:)-1._f64,'rho_0',ierr)
-        call sll_gnuplot_write(sim%Ti_r(:),'Ti_r',ierr)
-        call sll_gnuplot_write(sim%Te_r(:),'Te_r',ierr)
-        call sll_gnuplot_write(sim%n0_r(:),'n0_r',ierr)
+        call sll_gnuplot_1d(sim%phi3d_parx3(:,1,1),'phi_0',ierr)
+        !call sll_gnuplot_1d(sim%rho3d_seqx1x2(:,1,1)/sim%n0_r(:)-1._f64,'rho_0',ierr)
+        call sll_gnuplot_1d(sim%Ti_r(:),'Ti_r',ierr)
+        call sll_gnuplot_1d(sim%Te_r(:),'Te_r',ierr)
+        call sll_gnuplot_1d(sim%n0_r(:),'n0_r',ierr)
       endif
 
 
