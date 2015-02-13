@@ -15,81 +15,86 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> @ingroup advection
+!> @brief
+!> Abstract class for advection
+!> @details
+!> Solves \f$ \partial_t f + A \partial_x f = 0 \f$
 module sll_module_advection_1d_base
 #include "sll_working_precision.h"
 #include "sll_assert.h"
-  implicit none
-   !solves \partial_t f +A\partial_x f = 0
-   ! A <=> A
-   ! dt <=> dt  
-   ! f(dt) <=> input
-   ! f(0) <=> output
-  type, abstract :: sll_advection_1d_base 
-  contains
-    procedure(signature_advect_1d_constant), deferred, pass(adv) :: &
-      advect_1d_constant
-    procedure(signature_advect_1d), deferred, pass(adv) :: &
-      advect_1d
-    procedure(signature_advect_1d_delete), deferred, pass(adv) :: delete
-  end type sll_advection_1d_base
 
-  type :: sll_advection_1d_base_ptr 
-    class(sll_advection_1d_base), pointer :: ptr
-  end type sll_advection_1d_base_ptr
+implicit none
+
+type, abstract :: sll_advection_1d_base 
+
+contains
+
+  procedure(signature_advect_1d_constant), deferred, pass(adv) :: advect_1d_constant
+  procedure(signature_advect_1d),          deferred, pass(adv) :: advect_1d
+  procedure(signature_advect_1d_delete),   deferred, pass(adv) :: delete
+
+end type sll_advection_1d_base
+
+type :: sll_advection_1d_base_ptr 
+  class(sll_advection_1d_base), pointer :: ptr
+end type sll_advection_1d_base_ptr
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+abstract interface
+
+  subroutine signature_advect_1d_constant( adv,   &
+                                           a,     &
+                                           dt,    &
+                                           input, &
+                                           output)
+
+    use sll_working_precision
+    import sll_advection_1d_base       
+
+    class(sll_advection_1d_base)          :: adv
+    sll_real64,               intent(in)  :: a
+    sll_real64,               intent(in)  :: dt 
+    sll_real64, dimension(:), intent(in)  :: input
+    sll_real64, dimension(:), intent(out) :: output
+
+  end subroutine signature_advect_1d_constant
+
+end interface
+
+abstract interface
+
+  subroutine signature_advect_1d( adv,       &
+                                    A,       &
+                                    dt,      &
+                                    input,   &
+                                    output)
+
+    use sll_working_precision
+    import sll_advection_1d_base       
+
+    class(sll_advection_1d_base)          :: adv
+    sll_real64, dimension(:), intent(in)  :: a
+    sll_real64,               intent(in)  :: dt 
+    sll_real64, dimension(:), intent(in)  :: input
+    sll_real64, dimension(:), intent(out) :: output
+
+  end subroutine signature_advect_1d
+
+end interface
+
+abstract interface
+
+  subroutine signature_advect_1d_delete( adv )
+
+    import sll_advection_1d_base       
+    class(sll_advection_1d_base), intent(inout) :: adv
+
+  end subroutine signature_advect_1d_delete
+
+end interface
 
 
-
-
-
-! For A constant in 1d
-
- abstract interface
-    subroutine signature_advect_1d_constant(&
-      adv, &
-      A, &
-      dt, &
-      input, &
-      output)
-      use sll_working_precision
-      import sll_advection_1d_base       
-      class(sll_advection_1d_base) :: adv
-      sll_real64, intent(in) :: A
-      sll_real64, intent(in) :: dt 
-      sll_real64, dimension(:), intent(in) :: input
-      sll_real64, dimension(:), intent(out) :: output
-    end subroutine signature_advect_1d_constant
-  end interface
-
-! for A non constant in 1d
-
- abstract interface
-    subroutine signature_advect_1d(&
-       adv, &
-       A, &
-       dt, &
-       input, &
-       output)
-      use sll_working_precision
-      import sll_advection_1d_base       
-      class(sll_advection_1d_base) :: adv
-      sll_real64, dimension(:), intent(in) :: A
-      sll_real64, intent(in) :: dt 
-      sll_real64, dimension(:), intent(in) :: input
-      sll_real64, dimension(:), intent(out) :: output
-   end subroutine signature_advect_1d
- end interface
-
-
- abstract interface
-    subroutine signature_advect_1d_delete(&
-       adv )
-      import sll_advection_1d_base       
-      class(sll_advection_1d_base), intent(inout) :: adv
-    end subroutine signature_advect_1d_delete
- end interface
-
-
-
-
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
 end module sll_module_advection_1d_base
