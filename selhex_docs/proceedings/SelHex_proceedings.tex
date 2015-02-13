@@ -310,7 +310,9 @@ Z9 approach uses 9 degrees of freedom which are the values at the vertices of th
  \Sigma_T = \lbrace \forall i \in [|1;3|], f(S_i),\partial_x(S_i),\partial_v(S_i); f(C) \rbrace 
 \end{equation*}
 
- \noindent The advantage of using the Z10 element is the gain of one order of precision with an order 3 instead of an order 2 for the Z9 approach. Let us note that although adding one degree of freedom seems harmless enough, the center points for a hexagonal mesh represents a computational cost multiplied by 3. Indeed they are  2 times more centers than vertices. Therefore the number of points which must be computed is tripled. 
+ \noindent The advantage of using the Z10 element is the gain of one order of precision: polynomials of total degree $\le 3$ (resp. $\le 2$) are reproduced with $Z10$ (resp. $Z9$).
+ %with an order 3 instead of an order 2 for the Z9 approach. 
+ Let us note that although adding one degree of freedom seems harmless enough, the center points for a hexagonal mesh represents a computational cost multiplied by 3. Indeed they are  2 times more centers than vertices. Therefore the number of points which must be computed is tripled. 
  
 Let us define the basis functions needed to interpolate with the element Z9: 
 \begin{equation*}
@@ -431,7 +433,7 @@ The advantage of HCT-c and HCT-r is that they don't require more points than wha
 
 \subsubsection{The Ganev-Dimitrov element}
 \label{subsubsec:ganevdimitrov}
-The Ganev-Dimitrov element is of order 4 and uses 15 degrees of freedom which are the values of the function at the vertices and at the middle of the edges, plus the value of the derivatives at the vertices in the direction of the other two vertices. 
+The Ganev-Dimitrov element reproduces polynomials of total degree $\le4$ and uses 15 degrees of freedom which are the values of the function at the vertices and at the middle of the edges, plus the value of the derivatives at the vertices in the direction of the other two vertices. 
 The computational cost for this element is four times higher than the HCT-r interpolation because of the computations needed at the middle of the edges: there are on average 3 times more edges than vertices. As a matter of fact, the vertices and the middle of the edges form another hexagonal mesh twice as fine as the original mesh. The reason why we tested such a computationally expensive element is to observe whether or not the gain in precision is interesting compared to the extra computing time allocated. 
 
 \noindent The local interpolation operator is:
@@ -530,7 +532,7 @@ The computational cost for this element is four times higher than the HCT-r inte
 
 %\subection{Solving the Poisson equation on an hexagonal mesh}
 
-When computing the origins of the characteristics with the semi-Lagragian method for the Vlasov-Poisson or guiding center models we need to compute the solution of the Poisson equation
+When computing the origins of the characteristics with the semi-Lagrangian method for the Vlasov-Poisson or guiding center models we need to compute the solution of the Poisson equation
 \begin{equation*}
 	- \Delta \phi = \rho ,
 \end{equation*}
