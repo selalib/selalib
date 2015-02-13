@@ -1,20 +1,27 @@
+!> @ingroup operator_splitting
+!> @brief Implements split operators T and V for constant conefficient advection
 module sll_const_coef_advection_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
   use sll_module_interpolators_1d_base
-  use sll_time_splitting
+  use sll_operator_splitting
 
   implicit none
 
-  type, extends(time_splitting) :: const_coef_advection_2d
+ !> @brief 
+  !> Simple operator splitting type for 2D constant coefficient advection
+  !> Extends operator splitting
+  !> @details This should be
+  !> treated as an opaque type. No access to its internals is directly allowed.
+  type, extends(operator_splitting) :: const_coef_advection_2d
      class(sll_interpolator_1d_base), pointer    :: interp1, interp2
      sll_real64, dimension(:,:), pointer :: data
      sll_int32 :: n1, n2
      sll_real64 :: a1, a2
    contains
-     procedure, pass(this) :: operator1 => adv1
-     procedure, pass(this) :: operator2 => adv2
+     procedure, pass(this) :: operatorT => adv1
+     procedure, pass(this) :: operatorV => adv2
   end type const_coef_advection_2d
 
 
