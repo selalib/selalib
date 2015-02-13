@@ -26,14 +26,9 @@ type(sll_time_mark) :: t0
 sll_real64          :: time
 sll_int32           :: ierr
 sll_int32           :: i
-sll_int32           :: num_min
-sll_int32           :: num_max
-character(len=256)  :: str
 
 procedure(sll_scalar_initializer_2d), pointer :: init_func
 
-sll_real64, dimension(:), pointer :: params
-sll_int32                         :: num_params
 logical                           :: init_from_unit_test  
 
 sll_real64, dimension(:,:), pointer :: f_x1
@@ -317,7 +312,11 @@ do istep = 1, sim%num_iterations
 
      if (split_T) then
 
-       call advection_poisson_x(sim%split%split_step(split_istep)*sim%dt)
+       if (sim%ampere) then
+         call advection_ampere_x(sim%split%split_step(split_istep)*sim%dt)
+       else
+         call advection_poisson_x(sim%split%split_step(split_istep)*sim%dt)
+       end if
        t_step = t_step+sim%split%split_step(split_istep)
 
      else
@@ -417,11 +416,11 @@ call sim%poisson%compute_E_from_rho( efield, rho )
 
 end subroutine advection_poisson_x
 
-subroutine advection_ampere_x(adv, delta_t)
+subroutine advection_ampere_x(delta_t)
 
-type(ampere_1d_advector), pointer :: adv(:)
 sll_real64 :: delta_t
 sll_int32  :: nc_x1
+
 
 call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
 global_indices = local_to_global( layout_x1, (/1, 1/) )
@@ -441,25 +440,27 @@ do i_omp = 1, local_size_x2
   alpha_omp = sim%factor_x1*node_positions_x2(ig_omp)*delta_t
   f1d_omp_in(1:np_x1,tid) = f_x1(1:np_x1,i_omp)
 
-  adv(tid)%d_dx = f1d_omp_in(1:nc_x1,tid)
-  call fft_apply_plan(adv(tid)%fwx, adv(tid)%d_dx, adv(tid)%fk)
-  adv(tid)%fk = adv(tid)%fk & 
-              * cmplx(cos(adv(tid)%kx*alpha_omp),-sin(adv(tid)%kx*alpha_omp),kind=f64)
-!  rk = rk + fk * sim%integration_weight(ig_omp)
-  call fft_apply_plan(adv(tid)%bwx, adv(tid)%fk, adv(tid)%d_dx)
-  f1d_omp_out(1:nc_x1, tid) = adv(tid)%d_dx    / nc_x1
-  f1d_omp_out(np_x1, tid)   = adv(tid)%d_dx(1) / nc_x1
+  sim%advect_ampere_x1(tid)%ptr%d_dx = f1d_omp_in(1:nc_x1,tid)
+  call fft_apply_plan(sim%advect_ampere_x1(tid)%ptr%fwx, sim%advect_ampere_x1(tid)%ptr%d_dx, sim%advect_ampere_x1(tid)%ptr%fk)
+  do i = 2, nc_x1/2+1
+    sim%advect_ampere_x1(tid)%ptr%fk(i) = sim%advect_ampere_x1(tid)%ptr%fk(i) & 
+    * cmplx(cos(sim%advect_ampere_x1(tid)%ptr%kx(i)*alpha_omp),-sin(sim%advect_ampere_x1(tid)%ptr%kx(i)*alpha_omp),kind=f64)
+  end do
+  sim%advect_ampere_x1(tid)%ptr%rk = sim%advect_ampere_x1(tid)%ptr%rk + sim%advect_ampere_x1(tid)%ptr%fk * sim%integration_weight(ig_omp)
+  call fft_apply_plan(sim%advect_ampere_x1(tid)%ptr%bwx, sim%advect_ampere_x1(tid)%ptr%fk, sim%advect_ampere_x1(tid)%ptr%d_dx)
+  f1d_omp_out(1:nc_x1, tid) = sim%advect_ampere_x1(tid)%ptr%d_dx    / nc_x1
+  f1d_omp_out(np_x1, tid)   = sim%advect_ampere_x1(tid)%ptr%d_dx(1) / nc_x1
 
   f_x1(1:np_x1,i_omp)=f1d_omp_out(1:np_x1,tid)
 
 end do
 !$OMP END DO          
 
-!do i = 2, num_cells / 2 + 1
-!  ek(i) = rk(i) / (2*sll_pi/sim%L*cmplx(0,1,kind=f64))
-!end do
-!call fft_apply_plan(sim%advect_x1(tid)%ptr%bwx, sim%advect_x1(tid)%ptr%ek, efield)
-efield = efield / (np_x1-1)
+do i = 2, nc_x1 / 2 + 1
+  sim%advect_ampere_x1(tid)%ptr%ek(i) = sim%advect_ampere_x1(tid)%ptr%rk(i) / (2*sll_pi/sim%L*cmplx(0.,1.,kind=f64))
+end do
+call fft_apply_plan(sim%advect_ampere_x1(tid)%ptr%bwx, sim%advect_ampere_x1(tid)%ptr%ek, efield)
+efield = efield / nc_x1
 efield(np_x1) = efield(1)
 
 !$OMP END PARALLEL
