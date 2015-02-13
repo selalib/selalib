@@ -220,6 +220,7 @@ contains
     sll_real64 :: temp
     sll_real64 :: temp1(1:4,1:2), temp2(1:4,1:2)
     type(sll_particle_2d), dimension(:), pointer :: p
+    type(sll_particle_2d), dimension(:), allocatable :: ploc
     type(field_accumulator_cell), dimension(:), pointer :: accumE
     type(field_accumulator_CS), dimension(:), pointer :: accumE_CS
     type(sll_particle_2d_guard), dimension(:), pointer :: p_guard
@@ -248,9 +249,11 @@ contains
     thread_id = 0
     save_nb = sim%num_iterations/2
 
-    SLL_ALLOCATE( rho1d_send(1:(ncx+1)*(ncy+1)),    ierr)
-    SLL_ALLOCATE( rho1d_receive(1:(ncx+1)*(ncy+1)), ierr)
-
+    if (sim%world_size > 1 ) then
+       SLL_ALLOCATE( rho1d_send(1:(ncx+1)*(ncy+1)),    ierr)
+       SLL_ALLOCATE( rho1d_receive(1:(ncx+1)*(ncy+1)), ierr)
+    endif
+    SLL_ALLOCATE(ploc(1:sim%ions_number),ierr )
     SLL_ALLOCATE(sim%rho(1:ncx+1,1:ncy+1),ierr)
     SLL_ALLOCATE( sim%E1(1:ncx+1,1:ncy+1), ierr )
     SLL_ALLOCATE( sim%E2(1:ncx+1,1:ncy+1), ierr )
@@ -277,6 +280,8 @@ contains
        accumE_CS => sim%E_accumulator_CS%e_acc
        call sum_accumulators_CS( sim%q_accumulator_CS, n_threads, ncx*ncy )
        call sll_convert_charge_to_rho_2d_per_per_CS( sim%q_accumulator_CS(1)%q, sim%rho )
+       if (sim%world_size > 1 ) then
+       print*, sim%world_size, 'mpi nodes'
        do j = 1, ncy+1
           do i = 1, ncx+1
              rho1d_send(i+(j-1)*(ncx+1)) = sim%rho(i, j)
@@ -290,6 +295,7 @@ contains
              sim%rho(i, j) = rho1d_receive(i+(j-1)*(ncx+1))
           enddo
        enddo
+       endif
        if (sim%my_rank == 0) then
           it = 0
           call sll_gnuplot_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
@@ -305,6 +311,8 @@ contains
        accumE => sim%E_accumulator%e_acc
        call sum_accumulators( sim%q_accumulator, n_threads, ncx*ncy )
        call sll_convert_charge_to_rho_2d_per_per( sim%q_accumulator(1)%q, sim%rho ) 
+       if (sim%world_size > 1 ) then
+       print*, sim%world_size, 'mpi nodes'
        do j = 1, ncy+1
           do i = 1, ncx+1
              rho1d_send(i+(j-1)*(ncx+1)) = sim%rho(i, j)
@@ -318,6 +326,7 @@ contains
              sim%rho(i, j) = rho1d_receive(i+(j-1)*(ncx+1))
           enddo
        enddo
+       endif
        if (sim%my_rank == 0) then
           it = 0
           call sll_gnuplot_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
@@ -357,6 +366,7 @@ contains
           do i = 1, sim%ions_number
              SLL_INTERPOLATE_FIELD_CS(Ex,Ey,accumE_CS,p(i),temp1)
              GET_PARTICLE_POSITION(p(i),sim%m2d,x,y)
+             ploc(i) = p(i)
              x = modulo(x + 0.5_f64*dt*Ey, xmax - xmin)
              y = modulo(y - 0.5_f64*dt*Ex, ymax - ymin)
              SET_PARTICLE_POSITION(p(i),xmin,ymin,ncx,x,y,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp5,tmp6)
@@ -381,6 +391,7 @@ contains
           do i = 1, sim%ions_number
              SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,p(i),tmp3,tmp4)
              GET_PARTICLE_POSITION(p(i),sim%m2d,x,y)
+             ploc(i) = p(i)
              x = modulo(x + 0.5_f64*dt*Ey, xmax - xmin)
              y = modulo(y - 0.5_f64*dt*Ex, ymax - ymin)
              SET_PARTICLE_POSITION(p(i),xmin,ymin,ncx,x,y,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp5,tmp6)
@@ -392,6 +403,21 @@ contains
           call sll_convert_charge_to_rho_2d_per_per( sim%q_accumulator(1)%q, sim%rho ) 
        endif
 
+       if (sim%world_size > 1 ) then
+       do j = 1, ncy+1
+          do i = 1, ncx+1
+             rho1d_send(i+(j-1)*(ncx+1)) = sim%rho(i, j)
+             rho1d_receive(i+(j-1)*(ncx+1)) = 0._f64
+          enddo
+       enddo
+       call sll_collective_allreduce( sll_world_collective, rho1d_send, (ncx+1)*(ncy+1), &
+            MPI_SUM, rho1d_receive   )
+       do j = 1, ncy+1
+          do i = 1, ncx+1
+             sim%rho(i, j) = rho1d_receive(i+(j-1)*(ncx+1))
+          enddo
+       enddo
+       endif
        call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
 
        if (sim%use_cubic_splines) then 
@@ -406,7 +432,7 @@ contains
           !$omp do
           do i = 1, sim%ions_number
              SLL_INTERPOLATE_FIELD_CS(Ex,Ey,accumE_CS,p(i),temp1)
-             GET_PARTICLE_POSITION(p(i),sim%m2d,x,y)
+             GET_PARTICLE_POSITION(ploc(i),sim%m2d,x,y)
              x = modulo(x + dt*Ey, xmax - xmin)
              y = modulo(y - dt*Ex, ymax - ymin)
              SET_PARTICLE_POSITION(p(i),xmin,ymin,ncx,x,y,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp5,tmp6)
@@ -430,7 +456,7 @@ contains
           !$omp do
           do i = 1, sim%ions_number
              SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,p(i),tmp3,tmp4)
-             GET_PARTICLE_POSITION(p(i),sim%m2d,x,y)
+             GET_PARTICLE_POSITION(ploc(i),sim%m2d,x,y)
              x = modulo(x + dt*Ey, xmax - xmin)
              y = modulo(y - dt*Ex, ymax - ymin)
              SET_PARTICLE_POSITION(p(i),xmin,ymin,ncx,x,y,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp5,tmp6)
@@ -443,7 +469,7 @@ contains
        endif
        ! ----- END PUSH PARTICLES -----
        ! -----------------------------
-
+       if (sim%world_size > 1 ) then
        do j = 1, ncy+1
           do i = 1, ncx+1
              rho1d_send(i+(j-1)*(ncx+1)) = sim%rho(i, j)
@@ -457,21 +483,21 @@ contains
              sim%rho(i, j) = rho1d_receive(i+(j-1)*(ncx+1))
           enddo
        enddo
+       endif
 
-       if (mod(it+1, 100)==0) then! 
+       if (mod(it+1, 100)==0 .and. sim%my_rank == 0) then
 !          tfin = sll_time_elapsed_since(tinit)
-          write(it_name,'(i4.4)') it+1
-!          print*, 'tfin at iter',it_name, 'is', tfin
-          nnnom = 'parts_at'//trim(adjustl(it_name))//'.dat'
-          open(50,file=nnnom)
-          do i = 1, sim%ions_number
-             GET_PARTICLE_POSITION( p(i),sim%m2d,x,y )
-             write(50,*) x, y
-          enddo
-          close(50)
+!!$          write(it_name,'(i4.4)') it+1
+!!$          nnnom = 'parts_at'//trim(adjustl(it_name))//'.dat'
+!!$          open(50,file=nnnom)
+!!$          do i = 1, sim%ions_number
+!!$             GET_PARTICLE_POSITION( p(i),sim%m2d,x,y )
+!!$             write(50,*) x, y
+!!$          enddo
+!!$          close(50)
           call sll_gnuplot_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
                sim%m2d%eta2_max, ncy+1, &
-               sim%rho, 'rho_GC_it', it+1, ierr )
+               sim%rho, 'rho_GC2_it', it+1, ierr )
        endif
 
        call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
@@ -479,20 +505,22 @@ contains
     enddo
     ! ----------   END TIME LOOP   -----------
     ! ----------------------------------------
-    
+    SLL_DEALLOCATE_ARRAY(ploc,ierr)    
     SLL_DEALLOCATE(sim%rho,   ierr)
     SLL_DEALLOCATE(sim%E1,    ierr)
     SLL_DEALLOCATE(sim%E2,    ierr)
     SLL_DEALLOCATE(phi, ierr)
-    SLL_DEALLOCATE_ARRAY(rho1d_send, ierr)
-    SLL_DEALLOCATE_ARRAY(rho1d_receive, ierr)
+    if (sim%world_size > 1 ) then
+       SLL_DEALLOCATE_ARRAY(rho1d_send, ierr)
+       SLL_DEALLOCATE_ARRAY(rho1d_receive, ierr)
+    endif
 !!$    SLL_DEALLOCATE_ARRAY(diag_TOTenergy, ierr)
 !!$    SLL_DEALLOCATE_ARRAY(diag_TOTmoment, ierr)
 !!$    SLL_DEALLOCATE_ARRAY(diag_energy, ierr)
 
-  end subroutine run_2d_pic_cartesian!!_RK2
+  end subroutine run_2d_pic_cartesian!_RK2
 
-  subroutine run_2d_pic_cartesian_ExpEuler( sim )
+  subroutine run_2d_pic_cartesian_ExpEuler( sim )!( sim )!
 !!!   calls of routines with '_CS' mean use of Cubic Splines  !!!
 !     for deposition or interpolation step                      !
     class(sll_pic_simulation_2d_gc_cartesian), intent(inout)  :: sim
@@ -546,10 +574,10 @@ contains
     n_threads = sim%n_threads
     thread_id = 0
     save_nb = sim%num_iterations/2
-
-    SLL_ALLOCATE( rho1d_send(1:(ncx+1)*(ncy+1)),    ierr)
-    SLL_ALLOCATE( rho1d_receive(1:(ncx+1)*(ncy+1)), ierr)
-
+    if (sim%world_size > 1 ) then
+       SLL_ALLOCATE( rho1d_send(1:(ncx+1)*(ncy+1)),    ierr)
+       SLL_ALLOCATE( rho1d_receive(1:(ncx+1)*(ncy+1)), ierr)
+    endif
     SLL_ALLOCATE(sim%rho(1:ncx+1,1:ncy+1),ierr)
     SLL_ALLOCATE( sim%E1(1:ncx+1,1:ncy+1), ierr )
     SLL_ALLOCATE( sim%E2(1:ncx+1,1:ncy+1), ierr )
@@ -576,22 +604,61 @@ contains
        accumE_CS => sim%E_accumulator_CS%e_acc
        call sum_accumulators_CS( sim%q_accumulator_CS, n_threads, ncx*ncy )
        call sll_convert_charge_to_rho_2d_per_per_CS( sim%q_accumulator_CS(1)%q, sim%rho )
-       !
+       if (sim%world_size > 1 ) then
+          print*, sim%world_size, 'mpi nodes'
+          do j = 1, ncy+1
+             do i = 1, ncx+1
+                rho1d_send(i+(j-1)*(ncx+1)) = sim%rho(i, j)
+                rho1d_receive(i+(j-1)*(ncx+1)) = 0._f64
+             enddo
+          enddo
+          call sll_collective_allreduce( sll_world_collective, rho1d_send, (ncx+1)*(ncy+1), &
+               MPI_SUM, rho1d_receive   )
+          do j = 1, ncy+1
+             do i = 1, ncx+1
+                sim%rho(i, j) = rho1d_receive(i+(j-1)*(ncx+1))
+             enddo
+          enddo
+       endif
+       if (sim%my_rank == 0) then
+          it = 0
+          call sll_gnuplot_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
+               sim%m2d%eta2_max, ncy+1, &
+               sim%rho, 'RHO_init_CS', it, ierr )
+       endif
+       ! POISSON changes rho
        call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
        call sll_accumulate_field_CS( sim%E1, sim%E2, sim%E_accumulator_CS )
     else
        accumE => sim%E_accumulator%e_acc
        call sum_accumulators( sim%q_accumulator, n_threads, ncx*ncy )
        call sll_convert_charge_to_rho_2d_per_per( sim%q_accumulator(1)%q, sim%rho ) 
-       !
+       if (sim%world_size > 1 ) then
+          print*, sim%world_size, 'mpi nodes'
+          do j = 1, ncy+1
+             do i = 1, ncx+1
+                rho1d_send(i+(j-1)*(ncx+1)) = sim%rho(i, j)
+                rho1d_receive(i+(j-1)*(ncx+1)) = 0._f64
+             enddo
+          enddo
+          call sll_collective_allreduce( sll_world_collective, rho1d_send, (ncx+1)*(ncy+1), &
+               MPI_SUM, rho1d_receive   )
+          do j = 1, ncy+1
+             do i = 1, ncx+1
+                sim%rho(i, j) = rho1d_receive(i+(j-1)*(ncx+1))
+             enddo
+          enddo
+       endif
+       if (sim%my_rank == 0) then
+          it = 0
+          call sll_gnuplot_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
+               sim%m2d%eta2_max, ncy+1, &
+               sim%rho, 'RHO_init_CS', it, ierr )
+       endif
+       ! POISSON changes rho
        call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
        call sll_accumulate_field( sim%E1, sim%E2, sim%E_accumulator )
     endif
-
-    it = 0
-!!$    call sll_gnuplot_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
-!!$            sim%m2d%eta2_max, ncy+1, &
-!!$            sim%rho, 'RHO_init', it, ierr )
 
 ! -----------------------------
 ! --------  TIME LOOP  --------
@@ -654,10 +721,27 @@ contains
           call sum_accumulators( sim%q_accumulator, n_threads, ncx*ncy )
           call sll_convert_charge_to_rho_2d_per_per( sim%q_accumulator(1)%q, sim%rho ) 
        endif
+       ! ----- END PUSH PARTICLES -----
+       ! -----------------------------
 
-       if (it==sim%num_iterations-1) then !(mod(it+1, 50)==0) then! 
-          tfin = sll_time_elapsed_since(tinit)
-          write(it_name,'(i4.4)') it+1
+       if (sim%world_size > 1 ) then
+          do j = 1, ncy+1
+             do i = 1, ncx+1
+                rho1d_send(i+(j-1)*(ncx+1)) = sim%rho(i, j)
+                rho1d_receive(i+(j-1)*(ncx+1)) = 0._f64
+             enddo
+          enddo
+          call sll_collective_allreduce( sll_world_collective, rho1d_send, (ncx+1)*(ncy+1), &
+               MPI_SUM, rho1d_receive   )
+          do j = 1, ncy+1
+             do i = 1, ncx+1
+                sim%rho(i, j) = rho1d_receive(i+(j-1)*(ncx+1))
+             enddo
+          enddo
+       endif
+       if  (mod(it+1, 100)==0 .and. sim%my_rank == 0) then
+!          tfin = sll_time_elapsed_since(tinit)
+!!$          write(it_name,'(i4.4)') it+1
 !!$          print*, 'tfin at iter',it_name, 'is', tfin
 !!$          nnnom = 'parts_at'//trim(adjustl(it_name))//'.dat'
 !!$          open(50,file=nnnom)
@@ -668,9 +752,10 @@ contains
 !!$          close(50)
           call sll_gnuplot_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
                sim%m2d%eta2_max, ncy+1, &
-               sim%rho, 'rho_GC_it', it+1, ierr )
+               sim%rho, 'rho_GC_eeuler_it', it+1, ierr )
        endif
        call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
+
     enddo
     ! ----------   END TIME LOOP   -----------
     ! ----------------------------------------
@@ -679,8 +764,10 @@ contains
     SLL_DEALLOCATE(sim%E1,    ierr)
     SLL_DEALLOCATE(sim%E2,    ierr)
     SLL_DEALLOCATE(phi, ierr)
-    SLL_DEALLOCATE_ARRAY(rho1d_send, ierr)
-    SLL_DEALLOCATE_ARRAY(rho1d_receive, ierr)
+    if (sim%world_size > 1 ) then
+       SLL_DEALLOCATE_ARRAY(rho1d_send, ierr)
+       SLL_DEALLOCATE_ARRAY(rho1d_receive, ierr)
+    endif
 !!$    SLL_DEALLOCATE_ARRAY(diag_TOTenergy, ierr)
 !!$    SLL_DEALLOCATE_ARRAY(diag_TOTmoment, ierr)
 !!$    SLL_DEALLOCATE_ARRAY(diag_energy, ierr)
