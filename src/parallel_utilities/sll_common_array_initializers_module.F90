@@ -73,7 +73,45 @@ contains
     
   end function sll_cos_bell_initializer_2d
 
+  !rotation flow
+  function sll_rotation_A1_initializer_2d( x_1, x_2, params ) result(res)
+    sll_real64 :: res
+    sll_real64, intent(in) :: x_1
+    sll_real64, intent(in) :: x_2 
+    sll_real64, dimension(:), intent(in), optional :: params
+    if(present(params))then
+      if(size(params)>=100)then
+        print *,'#params needs not to have size >=100'
+      endif
+    endif
+    res = -x_2
+  end function sll_rotation_A1_initializer_2d
 
+  function sll_rotation_A2_initializer_2d( x_1, x_2, params ) result(res)
+    sll_real64 :: res
+    sll_real64, intent(in) :: x_1
+    sll_real64, intent(in) :: x_2 
+    sll_real64, dimension(:), intent(in), optional :: params
+    if(present(params))then
+      if(size(params)>=100)then
+        print *,'#params needs not to have size >=100'
+      endif
+    endif
+    res = x_1
+  end function sll_rotation_A2_initializer_2d
+
+  function sll_constant_time_initializer_1d( t, params ) result(res)
+    sll_real64 :: res
+    sll_real64, intent(in) :: t
+    sll_real64, dimension(:), intent(in), optional :: params
+    
+    res = 1._f64    
+    if(present(params))then
+      res = params(1)
+    endif
+  end function sll_constant_time_initializer_1d
+
+  
 
 
   !swirling deformation flow
