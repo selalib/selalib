@@ -49,8 +49,8 @@ contains
     sll_int32  :: j
     sll_int32  :: ncx, ic_x,ic_y
     sll_real64 :: x, y, vx, vy, nu, xmin, ymin, rdx, rdy
-    sll_real32 :: weight
-    sll_real32 :: off_x,off_y
+    sll_real32 :: weight!  sll_real64 :: weight!
+    sll_real32 :: off_x,off_y!  sll_real64 :: off_x,off_y
     sll_real64 :: tmp1, tmp2
     sll_int32, dimension(:), intent(in), optional  :: rand_seed
     sll_int32, optional  :: rank, worldsize
@@ -69,7 +69,7 @@ contains
        coco = (m2d%eta1_max - m2d%eta1_min) * &
             (m2d%eta2_max - m2d%eta2_min)/real(num_particles,f64)
     endif
-    weight = real(coco,f32)
+    weight = real(coco,f32)! coco!
 
     rdx = 1._f64/m2d%delta_eta1
     rdy = 1._f64/m2d%delta_eta2
