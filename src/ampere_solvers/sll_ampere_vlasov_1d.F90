@@ -254,6 +254,8 @@ subroutine solve_ampere_vlasov_1d(self, dt, f, ex)
    nc_x = self%nc_eta1 
    nc_y = self%nc_eta2
 
+   self%df_dx = ex(1:nc_x)
+   call fftw_execute_dft_r2c(self%fwx, self%df_dx, self%ek)
    self%rk = cmplx(0.0,0.0,kind=f64)
    do j = 1, nc_y+1
      a = (self%eta2_min + (j-1) * self%delta_eta2)*dt
@@ -262,13 +264,14 @@ subroutine solve_ampere_vlasov_1d(self, dt, f, ex)
      do i = 2, nc_x/2+1
        self%fk(i) = self%fk(i) * exp(-cmplx(0.0_f64,self%kx(i)*a,kind=f64))
      end do
-     self%rk = self%rk + self%delta_eta2 * self%fk
+     self%rk(2:nc_x/2+1) = self%rk(2:nc_x/2+1) + self%delta_eta2 * self%fk(2:nc_x/2+1)
      call fftw_execute_dft_c2r(self%bwx, self%fk, self%df_dx)
      f(1:nc_x,j) = self%df_dx / nc_x
      f(nc_x+1,j) = f(1,j)
    end do
 
-   self%ek = self%rk / cmplx(0.0_f64,self%kx*self%e_0,kind=f64)
+   self%ek(2:nc_x/2+1) = self%rk(2:nc_x/2+1) &
+                        / cmplx(0.0_f64,self%kx(2:nc_x/2+1)*self%e_0,kind=f64)
    call fftw_execute_dft_c2r(self%bwx, self%ek, ex)
    ex = ex / nc_x
    ex(nc_x+1) = ex(1)
