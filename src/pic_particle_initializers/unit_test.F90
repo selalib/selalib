@@ -36,11 +36,12 @@ program initialize_tester
 
   m2d =>  new_cartesian_mesh_2d( NC_X, NC_Y, &
        XMIN, XMAX, YMIN, YMAX )
-  
+
   init_group => new_particle_4d_group( &
        NUM_PARTICLES, &
        PARTICLE_ARRAY_SIZE, &
        GUARD_SIZE, QoverM, m2d )
+
   call sll_initial_particles_4d(THERM_SPEED, &
         ALPHA, KX, m2d, NUM_PARTICLES, init_group )
 
