@@ -20,14 +20,16 @@
 #include "sll_fftw.h"
 
 #define D_DX(field)                                                   \
-call fftw_execute_dft_r2c(plan%fwx, field, plan%fft_x_array);         \
-plan%fft_x_array = -cmplx(0.0_f64,plan%kx,kind=f64)*plan%fft_x_array; \
+plan%d_dx = field; \
+call fftw_execute_dft_r2c(plan%fwx, plan%d_dx, plan%fft_x_array);     \
+plan%fft_x_array(2:ncx/2+1) = -cmplx(0.0_f64,plan%kx(2:ncx/2+1),kind=f64)*plan%fft_x_array(2:ncx/2+1); \
 call fftw_execute_dft_c2r(plan%bwx, plan%fft_x_array, plan%d_dx);     \
 plan%d_dx = plan%d_dx / plan%ncx
 
 #define D_DY(field)                                                   \
-call fftw_execute_dft_r2c(plan%fwy, field, plan%fft_y_array);         \
-plan%fft_y_array = -cmplx(0.0_f64,plan%ky,kind=f64)*plan%fft_y_array; \
+plan%d_dy = field; \
+call fftw_execute_dft_r2c(plan%fwy, plan%d_dy, plan%fft_y_array);     \
+plan%fft_y_array(2:ncy/2+1) = -cmplx(0.0_f64,plan%ky(2:ncy/2+1),kind=f64)*plan%fft_y_array(2:ncy/2+1); \
 call fftw_execute_dft_c2r(plan%bwy, plan%fft_y_array, plan%d_dy);     \
 plan%d_dy = plan%d_dy / plan%ncy
 
@@ -200,7 +202,7 @@ contains
 
     call compute_local_sizes(plan%layout_x,nx_loc,ny_loc)
     do j = 1, ny_loc
-       D_DX(ey(:,j))
+       D_DX(ey(1:ncx,j))
        plan%fz_x(:,j) = plan%fz_x(:,j) - dt_mu * plan%d_dx
     end do
 
@@ -208,7 +210,7 @@ contains
 
     call compute_local_sizes(plan%layout_y,nx_loc,ny_loc)
     do i = 1, nx_loc
-       D_DY(ex(i,:))
+       D_DY(ex(i,1:ncy))
        plan%fz_y(i,:) = plan%fz_y(i,:) + dt_mu * plan%d_dy
     end do
       
@@ -231,6 +233,7 @@ contains
 
     sll_real64                                :: dt_e
     sll_int32                                 :: i, j
+    sll_int32                                 :: ncx, ncy
 
     prank = sll_get_collective_rank( sll_world_collective )
     psize = sll_get_collective_size( sll_world_collective )
@@ -241,10 +244,12 @@ contains
 #endif
 
     dt_e = dt / plan%e_0
+    ncx  = plan%ncx
+    ncy  = plan%ncy
 
     call compute_local_sizes(plan%layout_y,nx_loc,ny_loc)
     do i = 1, nx_loc
-       D_DY(plan%fz_y(i,:))
+       D_DY(plan%fz_y(i,1:ncy))
        ex(i,:) = ex(i,:) + dt_e * plan%d_dy
     end do
 
@@ -259,7 +264,7 @@ contains
 
     call compute_local_sizes(plan%layout_x,nx_loc,ny_loc)
     do j = 1, ny_loc
-       D_DX(plan%fz_x(:,j))
+       D_DX(plan%fz_x(1:ncx,j))
        ey(:,j) = ey(:,j) - dt_e * plan%d_dx
     end do
 
@@ -307,7 +312,7 @@ contains
 
     call compute_local_sizes(plan%layout_x,nx_loc,ny_loc)
     do j = 1, ny_loc
-      D_DX(by(:,j))
+      D_DX(by(1:ncx,j))
       plan%fz_x(:,j) = plan%fz_x(:,j) + dt_e * plan%d_dx
     end do
 
@@ -315,7 +320,7 @@ contains
 
     call compute_local_sizes(plan%layout_y,nx_loc,ny_loc)
     do i = 1, nx_loc
-      D_DY(bx(i,:))
+      D_DY(bx(i,1:ncy))
       plan%fz_y(i,:) = plan%fz_y(i,:) - dt_e * plan%d_dy
     end do
 
@@ -343,6 +348,7 @@ contains
 
     sll_real64                                :: dt_mu
     sll_int32                                 :: i, j
+    sll_int32                                 :: ncx, ncy
 
     prank = sll_get_collective_rank( sll_world_collective )
     psize = sll_get_collective_size( sll_world_collective )
@@ -354,9 +360,12 @@ contains
 
     dt_mu = dt / plan%mu_0
 
+    ncx  = plan%ncx
+    ncy  = plan%ncy
+
     call compute_local_sizes(plan%layout_y,nx_loc,ny_loc)
     do i = 1, nx_loc
-       D_DY(plan%fz_y(i,:))
+       D_DY(plan%fz_y(i,1:ncy))
        bx(i,:) = bx(i,:) - dt_mu * plan%d_dy
     end do
 
@@ -364,7 +373,7 @@ contains
 
     call compute_local_sizes(plan%layout_x,nx_loc,ny_loc)
     do j = 1, ny_loc
-       D_DX(plan%fz_x(:,j))
+       D_DX(plan%fz_x(1:ncx,j))
        by(:,j) = by(:,j) + dt_mu * plan%d_dx
     end do
 
