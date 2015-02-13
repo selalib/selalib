@@ -21,16 +21,18 @@ ELSE()
 ENDIF()
 
 IF(FFTW_FOUND AND FFTW_ENABLED)
-  SET(DEPENDENCIES ${FFTW_LIBRARIES})
+  SET(DEPENDENCIES ${DEPENDENCIES} ${FFTW_LIBRARIES})
   SET(FFT_SRC ${FFT_SRC} fftw3.F90)
 ENDIF(FFTW_FOUND AND FFTW_ENABLED)
 
 ADD_LIBRARY(sll_fft STATIC sll_fft_utils.F90 ${FFT_SRC})
 
-TARGET_LINK_LIBRARIES( sll_fft ${DEPENDENCIES} 
-                       sll_utilities sll_memory sll_assert sll_constants )
+TARGET_LINK_LIBRARIES( sll_fft sll_utilities 
+                               sll_memory 
+                               sll_assert 
+                               sll_constants
+                               ${DEPENDENCIES} )
 
-# Ctest
 IF(BUILD_TESTING)
   ADD_EXECUTABLE( test_fft unit_test.F90 )
   TARGET_LINK_LIBRARIES( test_fft sll_fft )
