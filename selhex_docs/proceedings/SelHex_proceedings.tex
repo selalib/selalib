@@ -297,22 +297,22 @@ j=i[3]+1 ~,~ k=j[3]+1.
 Here $i[3]$ (respectively $j[3]$) is the rest of the euclidean division of $i$ (resp. $j$) by $3$.\\
 
 Several elements have been tested here:
-The Z2 and Z3 Zienkiewicz elements, the Hsieh-Clough-Tocher reduced (HCT-r) and complete (HCT-c), and the Ganev-Dimitrov element. These elements can be found in \cite{z} and \cite{b1} . Here we show specifically how the hexagonal structure simplifies the interpolation with these elements.\\
+The Z9 and Z10 Zienkiewicz elements, the Hsieh-Clough-Tocher reduced (HCT-r) and complete (HCT-c), and the Ganev-Dimitrov element. These elements can be found in \cite{z} and \cite{b1} . Here we show specifically how the hexagonal structure simplifies the interpolation with these elements.\\
 
-\subsubsection{The Z2 and Z3 Zienkiewicz elements}
-Z2 approach uses 9 degrees of freedom which are the values at the vertices of the triangle and the values of the derivatives in the direction of the edges at every vertex.
+\subsubsection{The Z9 and Z10 Zienkiewicz elements}
+Z9 approach uses 9 degrees of freedom which are the values at the vertices of the triangle and the values of the derivatives in the direction of the edges at every vertex.
 \begin{equation*}
  \Sigma_T = \lbrace \forall i \in [|1;3|], f(S_i),\partial_x(S_i),\partial_v(S_i) \rbrace 
 \end{equation*}
 
- \noindent Z3 uses one more degree of freedom which is the value at the center of the triangle:
+ \noindent Z10 uses one more degree of freedom which is the value at the center of the triangle:
 \begin{equation*}
  \Sigma_T = \lbrace \forall i \in [|1;3|], f(S_i),\partial_x(S_i),\partial_v(S_i); f(C) \rbrace 
 \end{equation*}
 
- \noindent The advantage of using the Z3 element is the gain of one order of precision with an order 3 instead of an order 2 for the Z2 approach. Let us note that although adding one degree of freedom seems harmless enough, the center points for a hexagonal mesh represents a computational cost multiplied by 3. Indeed they are  2 times more centers than vertices. Therefore the number of points which must be computed is tripled. 
+ \noindent The advantage of using the Z10 element is the gain of one order of precision with an order 3 instead of an order 2 for the Z9 approach. Let us note that although adding one degree of freedom seems harmless enough, the center points for a hexagonal mesh represents a computational cost multiplied by 3. Indeed they are  2 times more centers than vertices. Therefore the number of points which must be computed is tripled. 
  
-Let us define the basis functions needed to interpolate with the element Z2: 
+Let us define the basis functions needed to interpolate with the element Z9: 
 \begin{equation*}
 \phi = \lambda_1 \lambda_2 \lambda_3 
 \end{equation*}
@@ -325,12 +325,12 @@ Let us define the basis functions needed to interpolate with the element Z2:
 
 
 \noindent $\phi_i$ is the basis function associated with the value of the function at $S_i$ while $\phi_{ij}$ are associated with the derivatives in the direction of the edges.    
-The fact that T is equilateral is exploited here by replacing $h_{ij}$ with h since the length of $ [S_iS_j]$ is constant. Finally for Z2 we have:
+The fact that T is equilateral is exploited here by replacing $h_{ij}$ with h since the length of $ [S_iS_j]$ is constant. Finally for Z9 we have:
 \begin{equation*}
  \Pi (X) = \sum \limits_{\substack{i=1 }}^{3}{ [f(S_i).\phi_i + \sum \limits_{\substack{j\neq i }}^{}{ \frac{\partial f(S_i)}{\partial  \overrightarrow{ S_i S_j } }.\phi_{ij} } ] } 
 \end{equation*}
 
-\noindent In the same manner, let us define the basis functions needed to interpolate with Z3: 
+\noindent In the same manner, let us define the basis functions needed to interpolate with Z10: 
 \begin{equation*}
 \phi_i = 3\lambda_{i}^2 -2 \xi_i - 9 \phi
 \end{equation*}
@@ -348,7 +348,7 @@ The fact that T is equilateral is exploited here by replacing $h_{ij}$ with h si
 
 \subsubsection{The HCT elements}
 The HCT elements were tested as well because of their original feature which is to use a division of the triangle into three sub-triangles.
-This characteristic is the only difference between the interpolation with the HCT-r element and the  Z2 approach is that they both use the same 9 degrees of freedom. Unsurprisingly, they give quasi-identical results which is why we won't detail the interpolation with HCT-r and focus on HCT-c.
+This characteristic is the only difference between the interpolation with the HCT-r element and the  Z9 approach is that they both use the same 9 degrees of freedom. Unsurprisingly, they give quasi-identical results which is why we won't detail the interpolation with HCT-r and focus on HCT-c.
 
 The HCT-c  element uses the same degrees of freedom as HCT-r plus the values of the derivatives in the normal direction of the edges at the middle of the respective edge, which adds up to twelve degrees of freedom. Let us now define its interpolation operator.
 
@@ -427,7 +427,7 @@ For an equilateral triangle, the excentricity is null which simplifies a lot $\S
 \end{pmatrix}
 \end{equation*}
 
-The advantage of HCT-c and HCT-r is that they don't require more points than what is already included in the hexagonal mesh which is not the case for the the Z3 approach.
+The advantage of HCT-c and HCT-r is that they don't require more points than what is already included in the hexagonal mesh which is not the case for the the Z10 approach.
 
 \subsubsection{The Ganev-Dimitrov element}
 \label{subsubsec:ganevdimitrov}
@@ -731,18 +731,18 @@ On a hexagonal mesh centered at the origin, of radius $8$,  we take  $\sigma_x =
 
 
 In Figure~\ref{fig:circ_convergence}, we plotted the $L_2$ and $L_\infty$ norms for different space discretizations. We can see that for coarse meshes, all the methods are globally the same, with a slightly better accuracy for elements Z10 and Ganev-Dimitrov. But as the mesh gets finer, we can quickly see that the splines converge quicker to better results. Only the Ganev-Dimitrov elements are more accurate. 
-\blue{What about the order of the methods? The slopes don't seem to correspond to the order: Z10 should be higher order than Z9. Z9 and Z10 were called Z2 and Z3 previously}
-
+%\blue{What about the order of the methods? The slopes don't seem to correspond to the order: Z10 should be higher order than Z9. Z9 and Z10 were called Z9 and Z10 previously}
+% solved : hctr and z9 are very close which makes it hard to read but z9 is indeed of an inferior order
 
 \begin{figure}[h!]
 	\includegraphics[scale=0.35]{figures/efficiency.png}
 	\includegraphics[scale=0.35]{figures/time_norm.png}
-	\caption{\blue{microsecond has no e in english!} Comparison of performances for the circular advection test case.
+	\caption{ Comparison of performances for the circular advection test case.
 	}
 	\label{fig:circ_performance}
 \end{figure}
 
-In Figure~\ref{fig:circ_performance} we can see that the performance convergences quite quickly, for all the methods. It is also pretty obvious that, even if the splines are more accurate, the cost is higher than most of the Hermite Finite Element methods. \blue{Splines seem more a lot more costly than Ganev-Dimitrov which was said to be too costly before}
+In Figure~\ref{fig:circ_performance} we can see that the performance convergences quite quickly, for all the methods. It is also pretty obvious that, even if the splines are more accurate, the cost is higher than most of the Hermite Finite Element methods. %\blue{Splines seem more a lot more costly than Ganev-Dimitrov which was said to be too costly before} -> dimitrov requires a mesh twice as fine which makes it very costly due to poisson resolution
 
 \subsection{Guiding-center model - Diocotron instability test case}
 
@@ -793,7 +793,7 @@ The initial density is given by:
 \end{equation*}
 
 \noindent As for the parameters, we take $\varepsilon=0.001$, $r^-=5$, $r^+=8$, $\ell=6$, $dt=0.1$ and the hexagonal step is $\frac{14}{160}$ with a radius of 14 and and an hexagonal parameter $N_c =160$.
-In this part, we won't test the Z3 approach as it requires a special resolution of the Poisson equation that has not been implemented. Indeed, computing the values of the field at the center of the triangles can't be combined with the resolution at the vertices. 
+In this part, we won't test the Z10 approach as it requires a special resolution of the Poisson equation that has not been implemented. Indeed, computing the values of the field at the center of the triangles can't be combined with the resolution at the vertices. 
 Moreover to even the computational time of each method we chose to take $N_c=80$ for the Ganev Dimitrov element as it results in the computations on a mesh with $N_c =160$ (see Section~\ref{subsubsec:ganevdimitrov}).
 
 Let us note that 6 vortices is the main mode. If we take $\ell\neq6$, with $\varepsilon$ small enough, we still see the mode 6. With $\varepsilon$ big enough, i.e. at least $0.1$, the modes different from 6 can be visible for a time but they are not stable and we see the fusion or the apparition of vortices until there is the sixth mode. For instance, as illustrated by Figure~\ref{fig:mode9}, we can see the ninth mode turning into the sixth mode by fusion of vortices. This instability can be explained with Figure \ref{phi}. The influence of the geometry is clear as the potential is not round, but already deformed as an hexagon. Compared to the results obtained with a polar geometry, our results are different. 
@@ -842,7 +842,7 @@ Visualisation of the results. The six vortices are developing with time without 
 	\caption{Time evolution of the density's minimum}
 \end{figure}
 
-After comparison of the diagnostics we see that the various interpolation methods give close results overall. They are similar in terms of positivity conservation. We notice that if the box-splines conserve better the mass, the Z2 approach conserves better the $L^1$ norm. Also we note the box splines and the HCTC element give very near results whichever the diagnostic considered.  
+After comparison of the diagnostics we see that the various interpolation methods give close results overall. They are similar in terms of positivity conservation. We notice that if the box-splines conserve better the mass, the Z9 approach conserves better the $L^1$ norm. Also we note the box splines and the HCTC element give very near results whichever the diagnostic considered.  
 
 
 %%-----------------------------
