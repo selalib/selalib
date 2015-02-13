@@ -249,7 +249,6 @@ subroutine solve_ampere_vlasov_1d(self, dt, f, ex)
    sll_int32   :: i, j
    sll_int32   :: nc_x, nc_y
    sll_real64  :: dt_e, a
-   sll_real64  :: rea, ima, reb, imb
 
    dt_e = dt / self%e_0
    nc_x = self%nc_eta1 
@@ -261,11 +260,7 @@ subroutine solve_ampere_vlasov_1d(self, dt, f, ex)
      self%df_dx = f(1:nc_x,j)
      call fftw_execute_dft_r2c(self%fwx, self%df_dx, self%fk)
      do i = 2, nc_x/2+1
-       rea = realpart(self%fk(i))
-       ima = imagpart(self%fk(i))
-       reb = cos(self%kx(i)*a)
-       imb = sin(self%kx(i)*a)
-       self%fk(i) = cmplx(rea*reb-ima*imb,rea*imb+reb*ima,kind=f64)
+       self%fk(i) = self%fk(i) * exp(-cmplx(0.0_f64,self%kx(i)*a,kind=f64))
      end do
      self%rk = self%rk + self%delta_eta2 * self%fk
      call fftw_execute_dft_c2r(self%bwx, self%fk, self%df_dx)

@@ -49,5 +49,4 @@ contains
     enddo
   end function vandercorput
 
-  
 end module hammersley
