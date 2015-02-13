@@ -53,3 +53,8 @@
  advector_x4 = "SLL_LAGRANGE"
  order_x4 = 4
 /
+&poisson
+ stencil_r=-3
+ stencil_s=3
+/
+
