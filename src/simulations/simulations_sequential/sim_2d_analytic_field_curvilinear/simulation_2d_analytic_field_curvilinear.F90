@@ -884,6 +884,13 @@ contains
         sim%A_time_func => sll_SDF_time_initializer_1d 
         SLL_ALLOCATE(sim%A_time_func_params(1),ierr)
         sim%A_time_func_params(1) = time_period
+      case ("SLL_ROTATION_FLOW")
+        sim%A1_func => sll_rotation_A1_initializer_2d 
+        sim%A2_func => sll_rotation_A2_initializer_2d 
+        SLL_ALLOCATE(sim%A_func_params(2),ierr)
+        sim%A_time_func => sll_constant_time_initializer_1d 
+        SLL_ALLOCATE(sim%A_time_func_params(1),ierr)
+        sim%A_time_func_params(1) = 1._f64
       case default
         print *,'#bad advect_case',advection_field_case
         print *,'#not implemented'
