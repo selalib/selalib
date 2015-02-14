@@ -73,7 +73,7 @@ Different strategies have been implemented to avoid these singularities, we can 
 As for the Poisson equation, a recent study relevant to our problem was made by T. Nguyen et al.\cite{axioms3020280} to compare different solvers on the disk. 
 
 Tiling a regular hexagon into triangles yields a mesh of equilateral triangles having all the same area.
-Such a mesh was first introduce in \cite{Sadourny1968} for numerical simulations. An application to particle methods is proposed in \cite{chatelain2008isotropic}.
+Such a mesh was first introduced in \cite{Sadourny1968} for numerical simulations. An application to particle methods is proposed in \cite{chatelain2008isotropic}.
 This grid can be easily mapped to a circle by slightly stretching the edges of the hexagon. This yields a nice mesh of a disk with slightly stretched triangles of almost the same size and there is no singularity in any point of the domain. 
 Additionally, such a mesh has a structure with three privileged directions, and uniform steps in each direction, thus it is completely straightforward to localize points within this mesh. The derivatives along the three directions can also be nicely computed using regular finite differencing along the three directions. 
 And last but not least, there is a spline construction on this mesh, called box-spline \cite{Condat2008}. These splines have a hexagonal support and are invariant by translations along the three directions of the mesh. 
@@ -159,7 +159,7 @@ The 2D lattice sites are obtained by the product $\mathbf{Rk}$ where $\mathbf{R}
 \end{figure}
 
 
-The mesh is based on uniform hexagons of the first type (see \cite{Ulichney87}). For local and global notations we will use the following convention: the point at the center will be the point of index $0$. Following the direction $\mathbf{r_1}$ the next point will be indexed $1$, and the notations will follow in a counter-clockwise motion. And so on, until all the points of the domain have been indexed. See Figure \ref{fig:hexmesh}. We will denote $H_i$ the unit hexagon cell that is centerd at the point of global index $i$.
+The mesh is based on uniform hexagons of the first type (see \cite{Ulichney87}). For local and global notations we will use the following convention: the point at the center will be the point of index $0$. Following the direction $\mathbf{r_1}$ the next point will be indexed $1$, and the notations will follow in a counter-clockwise motion. And so on, until all the points of the domain have been indexed. See Figure \ref{fig:hexmesh}. We will denote $H_i$ the unit hexagon cell that is centered at the point of global index $i$.
 
 Besides the fact that the hexagonal mesh contains no singularities, its regularity allows us to localize by taking three integer values, instead of two on a uniform cartesian grid, the characteristic's origin for the Semi-Lagrangian scheme. Nevertheless, the accuracy of the method depends heavily on the interpolation method chosen. For example, for a Cartesian grid, it is common to use cubic splines which have shown to give accurate results in an efficient manner \cite{Sonnendrucker1999201}. In our problem, with the hexagonal lattice, B-splines do not exploit the isotropy of the mesh (for more information see \cite{Mersereau79-IEEE}) and are defined by a convolution in 2D, which cannot be done for our mesh. Therefore, we need to use another approach. In the following two sub-sections we present two different strategies: one using box splines and a second one using Hermite Finite Elements.
 
@@ -327,7 +327,7 @@ Let us define the basis functions needed to interpolate with the element Z9:
 
 
 \noindent $\phi_i$ is the basis function associated with the value of the function at $S_i$ while $\phi_{ij}$ are associated with the derivatives in the direction of the edges.    
-The fact that T is equilateral is exploited here by replacing $h_{ij}$ with h since the length of $ [S_iS_j]$ is constant. Finally for Z9 we have:
+The fact that T is equilateral is exploited here by replacing $h_{ij}$ with $h$ since the length of $ [S_iS_j]$ is constant. Finally for Z9 we have:
 \begin{equation*}
  \Pi (X) = \sum \limits_{\substack{i=1 }}^{3}{ [f(S_i).\phi_i + \sum \limits_{\substack{j\neq i }}^{}{ \frac{\partial f(S_i)}{\partial  \overrightarrow{ S_i S_j } }.\phi_{ij} } ] } 
 \end{equation*}
@@ -343,7 +343,7 @@ The fact that T is equilateral is exploited here by replacing $h_{ij}$ with h si
 \phi_{123}=27\phi
 \end{equation*}
 
-\noindent therefore for $Z_3$ we have:
+\noindent therefore for $Z10$ we have:
 \begin{equation*}
  \Pi (X) = \sum \limits_{\substack{i=1 }}^{3}{ [f(S_i).\phi_i + \sum \limits_{\substack{j\neq i }}^{}{ \frac{\partial f(S_i)}{\partial  \overrightarrow{ S_i S_j } }.\phi_{ij} } ] } + f(C).\phi_{123}
 \end{equation*}
@@ -572,7 +572,7 @@ When solving a Vlasov equation, one usually thinks of Lagrangian methods such as
 
 With the intent of overcoming  the pitfalls of these methods, the Semi-Lagrangian method was introduced, first in numerical weather prediction (see \cite{Kalnay03atmosphericmodeling} and articles cited within it), and then   for plasma simulations \cite{Sonnendrucker1999201, Cheng1976330} and is used also for gyrokinetic simulations of plasma turbulence \cite{grandgirard2006,kwon2015}.
 This scheme consists in fixing a Eulerian grid in phase-space and following the trajectory of the equation's characteristics in time to compute the evolution of the distribution function. The advantages of this scheme are the possibility of taking large time steps and its stability. However it is still quite costly in  high dimensions (5 or 6D phase space) where PIC method still largely dominate.
- Lastly, we can point out that there are many types of Semi-Lagrangian solvers (\emph{e.g.} depending on the trajectories: Backward or Forward;  depending on the elements on which is based: grid's point, integrated cell..). We have chosen here to use the classical Backward Semi-Lagrangian (BSL) method. 
+ Lastly, we can point out that there are many types of Semi-Lagrangian solvers (\emph{e.g.} depending on the trajectories: Backward or Forward;  depending on degrees of freedom on which is based: grid points,  cell average, ...). We have chosen here to use the classical Backward Semi-Lagrangian (BSL) method. 
 
 %%-----------------------------
 \subsection{Our model}
@@ -665,7 +665,7 @@ The distribution function $\rho^n$ is only known on the mesh points, and the ori
 \end{figure}
 
 
-One of the advantages of the hexagonal mesh is that it is a uniform mesh. Indeed, even if the mesh is not Cartesian, localizing the characteristics' origin is computationally  very efficient, unlike the case of unstructured mesh where iterations are generally required. The procedure is as follows. Let $(X_1, X_2)$ the Cartesian coordinates of the characteristics' origin, obtained by solving \eqref{eqn:charac_sys}. Then to obtain the hexagonal coordinates $(k_1, k_2)$ of the lowest point of the rhomboid encapsulating the point, we simply need to solve the system $\mathbf{x} = \mathbf{R} \mathbf{k}$, where $R$ is the matrix whose columns are the unit vectors given in \eqref{eq:unit_vect}, and take the integer value.  Denoting by $(r_{ij})$ the coefficients of the matrix $R$, we get
+One of the advantages of the hexagonal mesh is that it is a uniform mesh. Indeed, even if the mesh is not Cartesian, localizing the characteristics' origin is computationally  very efficient, unlike the case of unstructured mesh where iterations are generally required. The procedure is as follows. Let $(X_1, X_2)$ the Cartesian coordinates of the characteristics' origin, obtained by solving \eqref{eqn:charac_sys}. Then to obtain the hexagonal coordinates $(k_1, k_2)$ of the lowest point of the rhomboid encapsulating the point, we simply need to solve the system $\mathbf{x} = \mathbf{R} \mathbf{k}$, where $\mathbf{R}$ is the matrix whose columns are the unit vectors given in \eqref{eq:unit_vect}, and take the integer value.  Denoting by $(r_{ij})$ the coefficients of the matrix $\mathbf{R}$, we get
 \begin{equation}
 	\label{eqn:k1k2}
 	\left\lbrace
@@ -685,7 +685,7 @@ After obtaining $(k_1, k_2)$, we know the rhomboid (composed by two cells) conta
 Below, we summarize the full algorithm to compute the distribution function $\rho^{n+1}$ solution of the non-constant advection equation \eqref{eqn:noncst_advec}.
 
 \begin{description}
-	\item[Initialization] At time $t=0$, we suppose that $\rho(\mathbf{x}, 0)$ is given.
+	\item[Initialization] At time $t=0$, we suppose that $\rho(\mathbf{x}, 0)$ is given and evaluate it at the grid points.
 	\item[Time Loop] Incrementation of a given time step $\Delta t$, such that: $t^{n+1} = t^n + \Delta t$
 		\begin{itemize}
 		\item Compute the \underline{characteristics' origins} using an ODE solver for \eqref{eqn:charac_sys}, Runge-Kutta or Adams-Moulton as described above;
