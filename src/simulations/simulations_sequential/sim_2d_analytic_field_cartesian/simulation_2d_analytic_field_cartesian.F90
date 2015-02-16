@@ -848,12 +848,12 @@ contains
         do i=1,Nc_x2+1
           f_visu_buf1d(i) = sum(f(1:Nc_x1,i))*delta_x1
         enddo
-        call sll_gnuplot_write_1d( &
+        call sll_gnuplot_1d( &
           f_visu_buf1d(1:Nc_x2+1),    &
           node_positions_x2(1:Nc_x2+1), &
           'intfdx', &
           iplot )
-        call sll_gnuplot_write_1d( &
+        call sll_gnuplot_1d( &
           f_visu_buf1d(1:Nc_x2+1), &
           node_positions_x2(1:Nc_x2+1), &
           'intfdx')
