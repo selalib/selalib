@@ -795,62 +795,103 @@ RECURSIVE              = YES
 # Note that relative paths are relative to the directory from which doxygen is
 # run.
 
-EXCLUDE                = @CMAKE_CURRENT_SOURCE_DIR@/BSL \
-                         @CMAKE_CURRENT_SOURCE_DIR@/CSL \
-                         @CMAKE_CURRENT_SOURCE_DIR@/advection \
-                         @CMAKE_CURRENT_SOURCE_DIR@/advection_field \
-                         @CMAKE_CURRENT_SOURCE_DIR@/characteristics \
-                         @CMAKE_CURRENT_SOURCE_DIR@/collective \
-                         @CMAKE_CURRENT_SOURCE_DIR@/coordinate_transformation_multipatch \
-                         @CMAKE_CURRENT_SOURCE_DIR@/deboor_splines \
-                         @CMAKE_CURRENT_SOURCE_DIR@/distribution_function \
-                         @CMAKE_CURRENT_SOURCE_DIR@/electric_field_accumulators \
-                         @CMAKE_CURRENT_SOURCE_DIR@/fft/fftpack \
-                         @CMAKE_CURRENT_SOURCE_DIR@/fft/fftw3 \
-                         @CMAKE_CURRENT_SOURCE_DIR@/fftpack \
-                         @CMAKE_CURRENT_SOURCE_DIR@/fishpack \
-                         @CMAKE_CURRENT_SOURCE_DIR@/lagrange_interpolation \
-                         @CMAKE_CURRENT_SOURCE_DIR@/linear_solvers \
-                         @CMAKE_CURRENT_SOURCE_DIR@/linearly_transformed_pic \
-                         @CMAKE_CURRENT_SOURCE_DIR@/meshes \
-                         @CMAKE_CURRENT_SOURCE_DIR@/mapped_meshes \
-                         @CMAKE_CURRENT_SOURCE_DIR@/mesh_calculus \
-                         @CMAKE_CURRENT_SOURCE_DIR@/mudpack \
-                         @CMAKE_CURRENT_SOURCE_DIR@/multigrid \
-                         @CMAKE_CURRENT_SOURCE_DIR@/non_linear_solvers \
-                         @CMAKE_CURRENT_SOURCE_DIR@/ode_solvers \
-                         @CMAKE_CURRENT_SOURCE_DIR@/package \
-                         @CMAKE_CURRENT_SOURCE_DIR@/parallel_array_initializers \
-                         @CMAKE_CURRENT_SOURCE_DIR@/parallel_utilities \
-                         @CMAKE_CURRENT_SOURCE_DIR@/periodic_interpolation \
-                         @CMAKE_CURRENT_SOURCE_DIR@/point_to_point_communications \
-                         @CMAKE_CURRENT_SOURCE_DIR@/python_scripts \
-                         @CMAKE_CURRENT_SOURCE_DIR@/quasi_neutral_solvers \
-                         @CMAKE_CURRENT_SOURCE_DIR@/reduction \
-                         @CMAKE_CURRENT_SOURCE_DIR@/time_solvers \
-                         @CMAKE_CURRENT_SOURCE_DIR@/timer \
-                         @CMAKE_CURRENT_SOURCE_DIR@/visu_pic \
-                         @CMAKE_CURRENT_SOURCE_DIR@/eulerian-finite-volume \
-                         @CMAKE_CURRENT_SOURCE_DIR@/CAID_coordinate_transformations \
-                         @CMAKE_CURRENT_SOURCE_DIR@/coordinate_transformations_multipatch \
-                         @CMAKE_CURRENT_SOURCE_DIR@/distribution_function_multipatch \
-                         @CMAKE_CURRENT_SOURCE_DIR@/fcisl \
-                         @CMAKE_CURRENT_SOURCE_DIR@/field_accumulators \
-                         @CMAKE_CURRENT_SOURCE_DIR@/fields \
-                         @CMAKE_CURRENT_SOURCE_DIR@/fields_multipatch \
-                         @CMAKE_CURRENT_SOURCE_DIR@/general_coordinate_elliptic_solvers_multipatch \
-                         @CMAKE_CURRENT_SOURCE_DIR@/gyroaverage \
-                         @CMAKE_CURRENT_SOURCE_DIR@/hermite_interpolation \
-                         @CMAKE_CURRENT_SOURCE_DIR@/meshes_multipatch \
-                         @CMAKE_CURRENT_SOURCE_DIR@/pic_accumulators \
-                         @CMAKE_CURRENT_SOURCE_DIR@/pic_methods \
-                         @CMAKE_CURRENT_SOURCE_DIR@/pic_particle_initializers \
-                         @CMAKE_CURRENT_SOURCE_DIR@/pic_particle_types \
-                         @CMAKE_CURRENT_SOURCE_DIR@/pic_utilities \
-                         @CMAKE_CURRENT_SOURCE_DIR@/random_deviate_generators \
-                         @CMAKE_CURRENT_SOURCE_DIR@/poisson_solvers_parallel \
-                         @CMAKE_CURRENT_SOURCE_DIR@/sparse_matrix_manager \
-#YG                          @CMAKE_CURRENT_SOURCE_DIR@/simulations
+EXCLUDE = \
+@CMAKE_CURRENT_SOURCE_DIR@/BSL \
+@CMAKE_CURRENT_SOURCE_DIR@/CSL \
+@CMAKE_CURRENT_SOURCE_DIR@/advection \
+@CMAKE_CURRENT_SOURCE_DIR@/advection_field \
+@CMAKE_CURRENT_SOURCE_DIR@/characteristics \
+@CMAKE_CURRENT_SOURCE_DIR@/collective \
+@CMAKE_CURRENT_SOURCE_DIR@/coordinate_transformation_multipatch \
+@CMAKE_CURRENT_SOURCE_DIR@/deboor_splines \
+@CMAKE_CURRENT_SOURCE_DIR@/distribution_function \
+@CMAKE_CURRENT_SOURCE_DIR@/electric_field_accumulators \
+@CMAKE_CURRENT_SOURCE_DIR@/fft/fftpack \
+@CMAKE_CURRENT_SOURCE_DIR@/fft/fftw3 \
+@CMAKE_CURRENT_SOURCE_DIR@/fftpack \
+@CMAKE_CURRENT_SOURCE_DIR@/fishpack \
+@CMAKE_CURRENT_SOURCE_DIR@/lagrange_interpolation \
+@CMAKE_CURRENT_SOURCE_DIR@/linear_solvers \
+@CMAKE_CURRENT_SOURCE_DIR@/linearly_transformed_pic \
+@CMAKE_CURRENT_SOURCE_DIR@/meshes \
+@CMAKE_CURRENT_SOURCE_DIR@/mapped_meshes \
+@CMAKE_CURRENT_SOURCE_DIR@/mesh_calculus \
+@CMAKE_CURRENT_SOURCE_DIR@/mudpack \
+@CMAKE_CURRENT_SOURCE_DIR@/multigrid \
+@CMAKE_CURRENT_SOURCE_DIR@/non_linear_solvers \
+@CMAKE_CURRENT_SOURCE_DIR@/ode_solvers \
+@CMAKE_CURRENT_SOURCE_DIR@/package \
+@CMAKE_CURRENT_SOURCE_DIR@/parallel_array_initializers \
+@CMAKE_CURRENT_SOURCE_DIR@/parallel_utilities \
+@CMAKE_CURRENT_SOURCE_DIR@/periodic_interpolation \
+@CMAKE_CURRENT_SOURCE_DIR@/point_to_point_communications \
+@CMAKE_CURRENT_SOURCE_DIR@/python_scripts \
+@CMAKE_CURRENT_SOURCE_DIR@/quasi_neutral_solvers \
+@CMAKE_CURRENT_SOURCE_DIR@/reduction \
+@CMAKE_CURRENT_SOURCE_DIR@/time_solvers \
+@CMAKE_CURRENT_SOURCE_DIR@/timer \
+@CMAKE_CURRENT_SOURCE_DIR@/visu_pic \
+@CMAKE_CURRENT_SOURCE_DIR@/eulerian-finite-volume \
+@CMAKE_CURRENT_SOURCE_DIR@/CAID_coordinate_transformations \
+@CMAKE_CURRENT_SOURCE_DIR@/coordinate_transformations_multipatch \
+@CMAKE_CURRENT_SOURCE_DIR@/distribution_function_multipatch \
+@CMAKE_CURRENT_SOURCE_DIR@/fcisl \
+@CMAKE_CURRENT_SOURCE_DIR@/field_accumulators \
+@CMAKE_CURRENT_SOURCE_DIR@/fields \
+@CMAKE_CURRENT_SOURCE_DIR@/fields_multipatch \
+@CMAKE_CURRENT_SOURCE_DIR@/general_coordinate_elliptic_solvers_multipatch \
+@CMAKE_CURRENT_SOURCE_DIR@/gyroaverage \
+@CMAKE_CURRENT_SOURCE_DIR@/hermite_interpolation \
+@CMAKE_CURRENT_SOURCE_DIR@/meshes_multipatch \
+@CMAKE_CURRENT_SOURCE_DIR@/pic_accumulators \
+@CMAKE_CURRENT_SOURCE_DIR@/pic_methods \
+@CMAKE_CURRENT_SOURCE_DIR@/pic_particle_initializers \
+@CMAKE_CURRENT_SOURCE_DIR@/pic_particle_types \
+@CMAKE_CURRENT_SOURCE_DIR@/pic_utilities \
+@CMAKE_CURRENT_SOURCE_DIR@/random_deviate_generators \
+@CMAKE_CURRENT_SOURCE_DIR@/poisson_solvers_parallel \
+@CMAKE_CURRENT_SOURCE_DIR@/sparse_matrix_manager \
+@CMAKE_CURRENT_SOURCE_DIR@/maxwell_solvers \
+@CMAKE_CURRENT_SOURCE_DIR@/coordinate_transformations \
+@CMAKE_CURRENT_SOURCE_DIR@/general_coordinate_elliptic_solvers \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/bsl_examples \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_2d_guiding_center_PIC_cartesian \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_2d_guiding_center_curvilinear \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_2d_vlasov_poisson_cartesian \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_2d_vlasov_poisson_no_splitting \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_4d \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_4d_drift_kinetic_cartesian \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_4d_drift_kinetic_field_aligned_polar \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_4d_drift_kinetic_hybrid \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_4d_drift_kinetic_polar \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_4d_drift_kinetic_polar_multi_mu \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_4d_drift_kinetic_polar_one_mu \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_4d_mixed_qns_cartesian \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_4d_qns_general \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_4d_qns_general_multipatch \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_4d_vlasov_poisson_PIC_cartesian \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_4d_vlasov_poisson_cartesian \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_4d_vlasov_poisson_general \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_4d_vlasov_poisson_polar \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_6d \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/bsl_examples \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/csl_examples \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_2d_analytic_field_cartesian \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_2d_analytic_field_curvilinear \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_2d_guiding_center_cartesian \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_2d_guiding_center_hexagonal \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_2d_guiding_center_polar \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_CG_curvilinear_2D \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_CG_polar \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_VlasovPoisson1D_cartesian_non_uniform \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_VlasovPoisson1D_curvilinear_analytic \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_VlasovPoisson1D_fourier_FEM \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_VlasovPoisson1D_various_programs \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_curvilinear_SL \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_guiding_center_2D_generalized_coords \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_guiding_center_2D_generalized_coords_mudpack \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_poisson_polar_test \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_polar_SL
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded

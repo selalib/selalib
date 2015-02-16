@@ -1,3 +1,9 @@
+"""
+  Just a simple function to replace a string inside a directory
+   root : directory
+   pattern : searched string
+   replace "pattern" by "replace"
+"""
 import os
 
 def recursive_replace( root, pattern, replace ) :

@@ -6,7 +6,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED A
 
    TARGET_LINK_LIBRARIES(test_4d_vp_eulerian_cartesian_finite_volume 
                          sll_simulations_parallel
-                         sll_parallel_array_initializers
+                         sll_parallel_array_utilities
                          sll_coordinate_transformations
                          sll_poisson_parallel
                          sll_point_to_point_communications 
