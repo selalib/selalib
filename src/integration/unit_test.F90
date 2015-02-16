@@ -4,6 +4,8 @@ program integration_tester
 #include "sll_working_precision.h"
 #include "sll_constants.h"
 
+use rectangle_integration
+use trapz_integration
 use gauss_legendre_integration
 use gauss_lobatto_integration
 use fekete_integration
@@ -32,16 +34,29 @@ sll_real64, dimension(:,:), allocatable     :: knots
 sll_int32,  dimension(:,:), allocatable     :: LM
 
 
-write (*,'(9x, a10, 9x, a10, 5x, a20 )') ' legendre ',' lobatto ', 'Exact value: '
+write (*,'(5x, 5a16 )') &
+'rectangle','trapz','legendre','lobatto', 'Exact value'
 do i=2,10
-   write (*,'(a, i2, a, 3e20.12)') 'n = ', i, ': ', &
-        gauss_legendre_integrate_1d( test_func, 0._f64, sll_pi/2.0, i), &
-        gauss_lobatto_integrate_1d(  test_func, 0._f64, sll_pi/2.0, i), &
-        0.4674011002723395
+  do j = 1, i
+    x(j) = (j-1)*0.5*sll_pi/(i-1)
+  end do
+  write (*,'(a, i2, a, 5f16.12)') 'n = ', i, ': ', &
+   rectangle_integrate_1d( test_func, x, i), &
+   trapz_integrate_1d( test_func, x, i), &
+   gauss_legendre_integrate_1d( test_func, 0._f64, sll_pi/2.0, i), &
+   gauss_lobatto_integrate_1d(  test_func, 0._f64, sll_pi/2.0, i), &
+   0.4674011002723395
 end do
 
+write(*,*)" ------- "
+
 do i=2,10
-   write (*,'(a, i8, a, 2f20.12)') 'case n = ', i, ': ', &
+   do j = 1, i
+     x(j) = (j-1)*1.0_f64/(i-1)
+   end do
+   write (*,'(a, i2, a, 4f16.12)') 'n = ', i, ': ', &
+        rectangle_integrate_1d( one, x, i), &
+        trapz_integrate_1d( one, x, i), &
         gauss_legendre_integrate_1d( one, 0.0_f64, 1.0_f64, i), &
         gauss_lobatto_integrate_1d( one, 0.0_f64, 1.0_f64, i)
 end do
