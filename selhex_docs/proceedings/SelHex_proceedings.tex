@@ -350,7 +350,7 @@ The fact that T is equilateral is exploited here by replacing $h_{ij}$ with $h$ 
 
 \subsubsection{The HCT elements}
 The HCT elements were tested as well because of their original feature which is to use a division of the triangle into three sub-triangles.
-This characteristic is the only difference between the interpolation with the HCT-r element and the  Z9 approach is that they both use the same 9 degrees of freedom. Unsurprisingly, they give quasi-identical results which is why we won't detail the interpolation with HCT-r and focus on HCT-c.
+This characteristic is the only difference between the interpolation with the HCT-r and the Z9 element as they both use the same 9 degrees of freedom. Unsurprisingly, they give quasi-identical results which is why we won't detail the interpolation with HCT-r and focus on HCT-c.
 
 The HCT-c  element uses the same degrees of freedom as HCT-r plus the values of the derivatives in the normal direction of the edges at the middle of the respective edge, which adds up to twelve degrees of freedom. Let us now define its interpolation operator.
 
@@ -550,7 +550,7 @@ Compared to the second order scheme on the same stencil, we notice the only diff
 
 Considering the gain of two order of precision at such little cost, we have used this fourth order scheme to compute $\phi$.
 
- \rmrk One difficulty that arises here is to define a numerotation that allows the resolution of a ``computational-friendly" linear system, i.e. a sparse matrix with the non-null terms close to the diagonal to minimise filling in a Cholesky decomposition. This is done by assigning a number following one hexagonal direction, row after row, similarily to how one proceeds on a cartesian mesh. Here however the difference is that the rows are of variable width resulting in a banded matrix. Therefore the matrix here is not constituted of 7 diagonals which makes the Poisson computation longer than on a cartesian mesh. The width of the band is directly proportional to the number of cells in the hexagonal domain.  
+ \rmrk One difficulty that arises here is to define an indexing that allows the resolution of a ``computational-friendly" linear system, i.e. a sparse matrix with the non-null terms close to the diagonal to minimise filling in a Cholesky decomposition. This is done by assigning a number following one hexagonal direction, row after row, similarly to how one proceeds on a Cartesian mesh. Here however the difference is that the rows are of variable width resulting in a banded matrix. Therefore the matrix here is not constituted of 7 diagonals which makes the Poisson computation longer than on a Cartesian mesh. The width of the band is directly proportional to the number of cells in the hexagonal domain.  
 
 %%%-----------------------------
 %\subsection{Finite Elements Solver}
@@ -721,7 +721,7 @@ Since this equation is not coupled to a Poisson model, we can study in detail th
 	 f_0(x,y) = \exp  \left( -\dfrac{1}{2} \left( \dfrac{(x - x_c)^2}{\sigma_x^2} + \dfrac{(y - y_c)^2}{\sigma_y^2  } \right)   \right ), 
 	\end{equation}
 
-On a hexagonal mesh centered at the origin of radius $8$,  we take  $\sigma_x = \sigma_y = \frac{1}{2\sqrt{2}}$. Let us set here $x_c = 2$ and $y_c = 2$. The distance from the pulse to the limit of the domain makes the boundary effects negligeable, thus we can take a null Dirichlet boundary condition.  To study the convergence in space we took $N_c = 20, 40, 60, ..., 160$. We recall that $N_c$ is the number of cells on the radius $L$. With the maximum time of evaluation, $t_{max}$, at $6 \pi$, we chose to keep a constant CFL at $2$.
+On a hexagonal mesh centered at the origin of radius $8$,  we take  $\sigma_x = \sigma_y = \frac{1}{2\sqrt{2}}$. Let us set here $x_c = 2$ and $y_c = 2$. The distance from the pulse to the limit of the domain makes the boundary effects insignificant, thus we can take a null Dirichlet boundary condition.  To study the convergence in space we took $N_c = 20, 40, 60, ..., 160$. We recall that $N_c$ is the number of cells on the radius $L$. With the maximum time of evaluation, $t_{max}$, at $6 \pi$, we chose to keep a constant CFL at $2$.
 
 
 
