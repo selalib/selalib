@@ -49,6 +49,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/advection/sll_advection_2d_tensor_product.F90
     ${SLL_DIR}/advection/sll_advection_2d_CSL.F90
     ${SLL_DIR}/advection/sll_advection_2d_base.F90
+    ${SLL_DIR}/advection/sll_advection_1d_ampere.F90
+    ${SLL_DIR}/advection/sll_advection_1d_spectral.F90
     ${SLL_DIR}/constants/sll_constants.F90
     ${SLL_DIR}/characteristics/sll_characteristics_1d_explicit_euler.F90
     ${SLL_DIR}/characteristics/sll_characteristics_1d_explicit_euler_conservative.F90

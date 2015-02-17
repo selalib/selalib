@@ -52,8 +52,8 @@ use sll_simulation_base
 use sll_time_splitting_coeff_module
 use sll_module_poisson_1d_periodic_solver
 use sll_module_poisson_1d_polar_solver
-use sll_module_ampere_vlasov_1d
 use sll_module_advection_1d_spectral
+use sll_module_advection_1d_ampere
 
 #ifdef _OPENMP
 use omp_lib
@@ -65,7 +65,7 @@ use omp_lib
   integer, parameter :: SLL_CONSERVATIVE = 1
 
   type, extends(sll_simulation_base_class) :: &
-       sll_simulation_2d_vlasov_poisson_cart
+       sll_simulation_2d_vlasov_ampere_cart
 
    sll_int32                            :: num_threads
    type(sll_cartesian_mesh_2d), pointer :: mesh2d
@@ -119,6 +119,7 @@ use omp_lib
 
    type(sll_advection_1d_base_ptr), dimension(:), pointer :: advect_x1 
    type(sll_advection_1d_base_ptr), dimension(:), pointer :: advect_x2
+   type(ampere_1d_advector_ptr),    dimension(:), pointer :: advect_ampere_x1
 
    sll_int32  :: advection_form_x2
    sll_real64 :: factor_x1
@@ -126,40 +127,42 @@ use omp_lib
    sll_real64 :: factor_x2_1
 
    class(sll_poisson_1d_base), pointer :: poisson 
-   class(sll_ampere_1d),       pointer :: ampere 
+   logical :: ampere = .false.
+
+   sll_real64 :: L
            
    contains !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-     procedure, pass(sim) :: run => run_vp2d_cartesian
-     procedure, pass(sim) :: init_from_file => init_vp2d_fake !init_vp2d_par_cart
+     procedure, pass(sim) :: run => run_va2d_cartesian
+     procedure, pass(sim) :: init_from_file => init_va2d_fake !init_va2d_par_cart
 
-  end type sll_simulation_2d_vlasov_poisson_cart
+  end type sll_simulation_2d_vlasov_ampere_cart
 
   interface delete
-     module procedure delete_vp2d_par_cart
+     module procedure delete_va2d_par_cart
   end interface delete
 
 contains
 
-  function new_vp2d_par_cart( filename, num_run ) result(sim)    
+  function new_va2d_par_cart( filename, num_run ) result(sim)    
 
-    type(sll_simulation_2d_vlasov_poisson_cart), pointer :: sim    
+    type(sll_simulation_2d_vlasov_ampere_cart), pointer :: sim    
     character(len=*), intent(in), optional               :: filename
     sll_int32, intent(in), optional                      :: num_run
 
     sll_int32                                            :: ierr
 
     SLL_ALLOCATE(sim, ierr)
-    call init_vp2d_par_cart( sim, filename, num_run )
+    call init_va2d_par_cart( sim, filename, num_run )
        
-  end function new_vp2d_par_cart
+  end function new_va2d_par_cart
 
-  subroutine change_initial_function_vp2d_par_cart( sim,       &
+  subroutine change_initial_function_va2d_par_cart( sim,       &
                                                     init_func, &
                                                     params,    &
                                                     num_params)
 
-    class(sll_simulation_2d_vlasov_poisson_cart)  :: sim
+    class(sll_simulation_2d_vlasov_ampere_cart)  :: sim
     procedure(sll_scalar_initializer_2d), pointer :: init_func
     sll_real64, dimension(:), pointer             :: params
     sll_int32, intent(in)                         :: num_params
@@ -184,15 +187,15 @@ contains
       sim%params(i) = params(i)
     end do
     
-  end subroutine change_initial_function_vp2d_par_cart
+  end subroutine change_initial_function_va2d_par_cart
 
   !ES enable externally defined equilibrium function  
-  subroutine change_equilibrium_function_vp2d_par_cart( sim,        &
+  subroutine change_equilibrium_function_va2d_par_cart( sim,        &
                                                         equil_func, &
                                                         params,     &
                                                         num_params)
 
-    class(sll_simulation_2d_vlasov_poisson_cart)  :: sim
+    class(sll_simulation_2d_vlasov_ampere_cart)  :: sim
     procedure(sll_scalar_initializer_2d), pointer :: equil_func
     sll_real64, dimension(:), pointer             :: params
     sll_int32, intent(in)                         :: num_params
@@ -219,11 +222,11 @@ contains
       sim%equil_func_params(i) = params(i)
     enddo
     
-  end subroutine change_equilibrium_function_vp2d_par_cart
+  end subroutine change_equilibrium_function_va2d_par_cart
 
-  subroutine init_vp2d_par_cart( sim, filename, num_run )
+  subroutine init_va2d_par_cart( sim, filename, num_run )
 
-    class(sll_simulation_2d_vlasov_poisson_cart) :: sim
+    class(sll_simulation_2d_vlasov_ampere_cart) :: sim
     character(len=*), optional                   :: filename
     sll_int32, intent(in), optional :: num_run
 
@@ -705,7 +708,6 @@ contains
     tid = 1
 #endif
 
-
     select case (advector_x1)
 
       case ("SLL_SPLINES") ! arbitrary order periodic splines
@@ -726,7 +728,7 @@ contains
           LAGRANGE,                                         & 
           order_x1)
 
-      case("SLL_TRIGO") ! spectral periodic advection
+      case("SLL_TRIGO") ! trigo periodic advection
 
         sim%advect_x1(tid)%ptr => new_periodic_1d_advector( &
           num_cells_x1,                                     &
@@ -735,14 +737,13 @@ contains
           TRIGO,                                       &
           order_x1)
 
-
       case("SLL_SPECTRAL") ! spectral periodic advection
 
         sim%advect_x1(tid)%ptr => new_spectral_1d_advector( &
           num_cells_x1,                                     &
           x1_min,                                           &
-          x1_max,                                           &
-          SLL_PERIODIC)
+          x1_max)
+
 
       case default
 
@@ -842,13 +843,25 @@ contains
         SLL_ERROR('#poisson_solver '//poisson_solver//' not implemented')
     end select
 
-  select case (ampere_solver)
-    case ("SLL_PSTD")
-      sim%ampere => new_ampere_1d(x1_min, x1_max, num_cells_x1)
-    case default
-      SLL_ERROR('#ampere_solver '//ampere_solver//' not implemented')
-  end select
-
+    select case (ampere_solver)
+      case ("SLL_VLASOV_AMPERE")
+        print*,'########################'
+        print*,'# Vlasov-Ampere scheme #'
+        print*,'########################'
+        sim%ampere = .true.
+        SLL_ALLOCATE(sim%advect_ampere_x1(num_threads),ierr)
+        tid = 1
+        !$OMP PARALLEL DEFAULT(SHARED) &
+        !$OMP PRIVATE(tid)
+        !$ tid = omp_get_thread_num()+1
+        sim%advect_ampere_x1(tid)%ptr => new_ampere_1d_advector( &
+          num_cells_x1, &
+          x1_min,       &
+          x1_max )
+        !$OMP END PARALLEL
+      case default
+        continue
+    end select
     
     select case (drive_type)
 
@@ -912,32 +925,34 @@ contains
       
     endif
 
-  end subroutine init_vp2d_par_cart
+    sim%L = x1_max - x1_min
 
-  subroutine init_vp2d_fake(sim, filename)
+  end subroutine init_va2d_par_cart
 
-    class(sll_simulation_2d_vlasov_poisson_cart), intent(inout) :: sim
+  subroutine init_va2d_fake(sim, filename)
+
+    class(sll_simulation_2d_vlasov_ampere_cart), intent(inout) :: sim
     character(len=*), intent(in)                                :: filename
   
     print *,sim%dt
     print *,filename
-    SLL_WARNING('# Do not use the routine init_vp2d_fake')
-    SLL_ERROR('#use instead init_vp2d_par_cart')
+    SLL_WARNING('# Do not use the routine init_va2d_fake')
+    SLL_ERROR('#use instead init_va2d_par_cart')
   
-  end subroutine init_vp2d_fake
+  end subroutine init_va2d_fake
 
-  subroutine run_vp2d_cartesian(sim)
+  subroutine run_va2d_cartesian(sim)
 
-    class(sll_simulation_2d_vlasov_poisson_cart), intent(inout) :: sim
+    class(sll_simulation_2d_vlasov_ampere_cart), intent(inout) :: sim
 
     print *,sim%dt
-    SLL_WARNING('# Do not use the routine run_vp2d_fake')
+    SLL_WARNING('# Do not use the routine run_va2d_fake')
 
-  end subroutine run_vp2d_cartesian
+  end subroutine run_va2d_cartesian
 
-  subroutine delete_vp2d_par_cart( sim )
+  subroutine delete_va2d_par_cart( sim )
 
-    class(sll_simulation_2d_vlasov_poisson_cart) :: sim
+    class(sll_simulation_2d_vlasov_ampere_cart) :: sim
     sll_int32 :: ierr
     
     
@@ -950,7 +965,7 @@ contains
      nullify(sim%x2_array)
    endif
         
-  end subroutine delete_vp2d_par_cart
+  end subroutine delete_va2d_par_cart
 
   elemental function f_equilibrium(v)
 
