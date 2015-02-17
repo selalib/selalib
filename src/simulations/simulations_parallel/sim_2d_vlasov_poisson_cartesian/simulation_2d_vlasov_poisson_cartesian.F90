@@ -947,6 +947,7 @@ contains
     sll_real64, dimension(:),   pointer :: efield
     sll_real64, dimension(:),   pointer :: e_app
     sll_real64, dimension(:),   pointer :: rho_loc
+    sll_comp64, dimension(:),   pointer :: rk_loc
     sll_real64, dimension(:),   pointer :: current
     sll_real64, dimension(:),   pointer :: j_loc
     sll_real64, dimension(:),   pointer :: j_glob
@@ -1089,6 +1090,7 @@ contains
 
     SLL_ALLOCATE(rho(np_x1),ierr)
     SLL_ALLOCATE(rho_loc(np_x1),ierr)
+    SLL_ALLOCATE(rk_loc((np_x1-1)/2+1),ierr)
     SLL_ALLOCATE(j_loc(np_x1),ierr)
     SLL_ALLOCATE(j_glob(np_x1),ierr)
     SLL_ALLOCATE(current(np_x1),ierr)
@@ -1398,17 +1400,20 @@ contains
                end do
                !$OMP END DO          
 
-               !$OMP MASTER
+               rk_loc = cmplx(0.0,0.0,kind=f64)
                do i = 2, nc_x1/2+1
-                 s = cmplx(0.0,0.0,kind=f64)
                  do tid = 1, sim%num_threads
-                   s = s + sim%advect_ampere_x1(tid)%ptr%rk(i)
+                   rk_loc(i) = rk_loc(i) + sim%advect_ampere_x1(tid)%ptr%rk(i)
                  end do
-                 sim%advect_ampere_x1(1)%ptr%rk(i) = s
                end do
-               !$OMP END MASTER
                
                !$OMP END PARALLEL
+
+               call sll_collective_allreduce( sll_world_collective, &
+                    rk_loc,                                         &
+                    nc_x1/2+1,                                      &
+                    MPI_SUM,                                        &
+                    sim%advect_ampere_x1(1)%ptr%rk )
                
                sim%advect_ampere_x1(tid)%ptr%d_dx = efield(1:nc_x1)
                call fft_apply_plan(sim%advect_ampere_x1(1)%ptr%fwx,  &
