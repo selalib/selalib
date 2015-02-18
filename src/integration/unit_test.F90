@@ -23,6 +23,16 @@ sll_real64, dimension(:,:), allocatable :: dlag
 
 character(len=18) :: string
 
+! For the fekete quadrature:
+sll_real64, dimension(2, 3) :: pxy1
+sll_real64, dimension(2, 3) :: pxy2
+sll_real64, dimension(3,10) :: xyw
+sll_real64 :: app_res
+sll_int32 :: rule
+type(sll_hex_mesh_2d), pointer :: mesh
+sll_real64, dimension(:,:), allocatable     :: knots
+sll_int32,  dimension(:,:), allocatable     :: LM
+
 
 write (*,'(5x, 5a16 )') &
 'rectangle','trapz','legendre','lobatto', 'Exact value'
