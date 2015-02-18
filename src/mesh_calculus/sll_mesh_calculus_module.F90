@@ -706,6 +706,44 @@ integer :: itab(3,3)
 integer, parameter :: imxref = 9999
 integer, parameter :: iout   = 6
 
+integer, dimension(:),   allocatable :: ipoint
+
+!Variables:
+! Caracteristiques des cotes situes sur les frontieres
+! kelfro - element auquel appartient un cote frontiere
+! kctfro - numero local de cote (1,2,3)                
+! krefro - numero de reference du cote frontiere        
+! ksofro - numeros des 2 sommets extremite du cote       
+! vnofro - composantes du vecteur normal a la frontiere (vers l'interieur)
+
+
+!Variables:
+! Caracteristiques des frontieres internes                   
+! nnofnt - nombre de noeuds sur les frontieres internes   
+! ntrfnt - nombre total de triangles (ceux de droite)      
+! ntrfrn - nombre de triangles par frontiere                
+! ntrfrc - nombre cumule de triangles                        
+! ncdfnt - cotes  Dirichlet sur les frontieres internes (VF)    
+
+integer, dimension(:), allocatable :: ntrfrn, ntrfrc
+integer :: nnofnt
+
+!Variables:
+!  Vecteurs tangeants
+!  vtaux  - composante x des vecteurs tangeants         
+!  vtauy  - composante y des vecteurs tangeants        
+real(8), dimension(:),   allocatable :: vtaux, vtauy
+
+!Variables:
+!  Quantites liees au maillage    
+!  xlml   - limite inferieure x du domaine           
+!  xlmu   - limite superieure x du domaine          
+!  ylml   - limite inferieure y du domaine         
+!  ylmu   - limite superieure y du domaine        
+real(8) :: xlml, xlmu, ylml, ylmu
+
+integer, dimension (:), allocatable :: nctfro, nctfrp
+
 !-----
 !---- itab(isomloc1,isomloc2) est le numero local de l'arete qui a pour
 !---- sommets locaux isomloc1 et isomloc2

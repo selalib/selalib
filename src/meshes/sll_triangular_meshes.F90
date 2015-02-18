@@ -30,15 +30,17 @@ use sll_tri_mesh_xmf
   !> @brief 2d hexagonal mesh
   type ::  sll_triangular_mesh_2d
 
-     sll_int32  :: num_nodes  
-     sll_int32  :: num_cells 
-     sll_int32  :: num_edges     
-     sll_real64, pointer, dimension(:,:) :: coord 
-     sll_int32,  pointer, dimension(:,:) :: nodes 
-     sll_real64 :: eta1_min
-     sll_real64 :: eta1_max
-     sll_real64 :: eta2_min
-     sll_real64 :: eta2_max
+     sll_int32           :: num_nodes  
+     sll_int32           :: num_cells 
+     sll_int32           :: num_edges     
+
+     sll_real64, pointer :: coord(:,:)
+     sll_int32,  pointer :: nodes(:,:)
+
+     sll_real64          :: eta1_min
+     sll_real64          :: eta1_max
+     sll_real64          :: eta2_min
+     sll_real64          :: eta2_max
 
 !   contains
 
@@ -147,61 +149,27 @@ type voronoi
 
    real(8), dimension(:,:), pointer :: coor
    real(8), dimension(:)  , pointer :: aire
-   real(8), dimension(:)  , pointer :: xlcov, xlcod
-   integer, dimension(:)  , pointer :: ncotcu, nugcv
-   integer, dimension(:,:), pointer :: nudac, nuvac
+   real(8), dimension(:)  , pointer :: xlcov
+   real(8), dimension(:)  , pointer :: xlcod
+   integer, dimension(:)  , pointer :: ncotcu
+   integer, dimension(:)  , pointer :: nugcv
+   integer, dimension(:,:), pointer :: nudac
+   integer, dimension(:,:), pointer :: nuvac
    integer, dimension(:,:), pointer :: nugcd
    integer, dimension(:),   pointer :: nbcov
 
 end type voronoi
 
-integer, dimension(:),   allocatable :: ipoint
-
-!Variables:
-! Caracteristiques des cotes situes sur les frontieres
-! kelfro - element auquel appartient un cote frontiere
-! kctfro - numero local de cote (1,2,3)                
-! krefro - numero de reference du cote frontiere        
-! ksofro - numeros des 2 sommets extremite du cote       
-! vnofro - composantes du vecteur normal a la frontiere (vers l'interieur)
-
-
-!Variables:
-! Caracteristiques des frontieres internes                   
-! nnofnt - nombre de noeuds sur les frontieres internes   
-! ntrfnt - nombre total de triangles (ceux de droite)      
-! ntrfrn - nombre de triangles par frontiere                
-! ntrfrc - nombre cumule de triangles                        
-! ncdfnt - cotes  Dirichlet sur les frontieres internes (VF)    
-
-integer, dimension(:), allocatable :: ntrfrn, ntrfrc
-integer :: nnofnt
-
-!Variables:
-!  Vecteurs tangeants
-!  vtaux  - composante x des vecteurs tangeants         
-!  vtauy  - composante y des vecteurs tangeants        
-real(8), dimension(:),   allocatable :: vtaux, vtauy
-
-!Variables:
-!  Quantites liees au maillage    
-!  xlml   - limite inferieure x du domaine           
-!  xlmu   - limite superieure x du domaine          
-!  ylml   - limite inferieure y du domaine         
-!  ylmu   - limite superieure y du domaine        
-real(8) :: xlml, xlmu, ylml, ylmu
-
-integer, dimension (:), allocatable :: nctfro, nctfrp
 
 contains
 
 subroutine initialize_triangular_mesh_2d( mesh,     &
-                                           nc_eta1,  &
-                                           eta1_min, &
-                                           eta1_max, &
-                                           nc_eta2,  &
-                                           eta2_min, &
-                                           eta2_max)
+                                          nc_eta1,  &
+                                          eta1_min, &
+                                          eta1_max, &
+                                          nc_eta2,  &
+                                          eta2_min, &
+                                          eta2_max)
 
 
 type(sll_triangular_mesh_2d) :: mesh
