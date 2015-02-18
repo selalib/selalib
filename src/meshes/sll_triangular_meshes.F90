@@ -53,9 +53,9 @@ use sll_tri_mesh_xmf
 
   end type sll_triangular_mesh_2d
 
-  interface sll_new
+  interface sll_create
      module procedure initialize_triangular_mesh_2d
-  end interface sll_new
+  end interface sll_create
 
   interface sll_delete
      module procedure delete_triangular_mesh_2d
@@ -73,6 +73,125 @@ use sll_tri_mesh_xmf
   !    module procedure eta2_cell_one_arg, eta2_cell_two_arg
   ! end interface eta2_cell
 
+
+!Type: mesh_data
+!Structure du maillage
+!
+!nbs    - nombre de sommets
+!nbt    - nombre de triangles
+!nbtcot - nombre total de cotes
+!nbcoti - nombre de cotes internes
+!nmxfr  - nombre total de frontieres referencees
+!nelfr  - nombre de triangles sur une frontiere
+!coor   - coordonnees des sommets
+!aire   - aires de elements
+!xbas   - integrales des fonctions de base
+!refs   - references des sommets
+!reft   - references des elements
+!ntri   - table de connectivite
+!nvois  - numeros des voisins (solveur)
+!nvoiv  - numeros des voisins (particules)
+!nvoif  - numero local dans le voisin de la face commune
+!nusd   - references du sous-domaine
+!petitl - petite longueur de reference   
+!grandl - grande longueur de reference    
+!ncfrt  - nombre de cotes situes sur une frontiere
+!nbcfli - nombre de cotes internes ne satisfaisant pas la CFL
+!nndfnt - noeuds Dirichlet sur les frontieres internes       
+!noefnt - noeuds Dirichlet sur les frontieres internes 
+!irffnt - numeros de reference de ces noeuds Dirichlet
+!nmxsd  - nombre de sous domaines references
+type mesh_data
+
+   integer :: isolve
+   integer :: nbs, nbt, nbtcot, nbcoti, nmxfr, nelfr, nmxsd   
+   integer :: nctfrt, nbcfli, nndfnt, nbfrax
+
+   real(8) :: petitl, grandl
+   real(8), dimension(:,:), pointer :: coor
+   real(8), dimension(:),   pointer :: aire
+   real(8), dimension(:),   pointer :: xbas
+
+   integer, dimension(:),   pointer :: refs
+   integer, dimension(:),   pointer :: reft
+   integer, dimension(:,:), pointer :: ntri
+   integer, dimension(:,:), pointer :: nvois
+   integer, dimension(:,:), pointer :: nvoiv
+   integer, dimension(:,:), pointer :: nvoif
+   integer, dimension(:),   pointer :: nusd
+   integer, dimension(:),   pointer :: npoel1
+   integer, dimension(:),   pointer :: npoel2
+   integer, dimension(:),   pointer :: krefro
+   integer, dimension(:),   pointer :: kctfro
+   integer, dimension(:),   pointer :: kelfro
+   integer, dimension(:,:), pointer :: ksofro
+   integer, dimension(:)  , pointer :: nctfnt
+   integer, dimension(:)  , pointer :: noefnt
+   integer, dimension(:)  , pointer :: irffnt
+   integer, dimension(:),   pointer :: ifrax
+
+   real(8), dimension(:,:), pointer :: vnofro
+   real(8), dimension(:),   pointer :: xmal1, xmal2, xmal3
+
+end type mesh_data
+
+!  nbcov  - nombres de cotes des Voronoi                   
+!  nuvac  - numeros des PV associes aux cotes                
+!  nudac  - numeros des PD associes aux cotes                 
+!  nugcd  - numeros globaux des cotes des PD                   
+!  nugcv  - numeros globaux des cotes des PV                    
+!  xlcod  - longueurs des cotes des PD(Polygones de Delaunay)    
+!  xlcov  - longueurs des cotes des PV(Polygones de Voronoi)      
+
+type voronoi
+
+   real(8), dimension(:,:), pointer :: coor
+   real(8), dimension(:)  , pointer :: aire
+   real(8), dimension(:)  , pointer :: xlcov, xlcod
+   integer, dimension(:)  , pointer :: ncotcu, nugcv
+   integer, dimension(:,:), pointer :: nudac, nuvac
+   integer, dimension(:,:), pointer :: nugcd
+   integer, dimension(:),   pointer :: nbcov
+
+end type voronoi
+
+integer, dimension(:),   allocatable :: ipoint
+
+!Variables:
+! Caracteristiques des cotes situes sur les frontieres
+! kelfro - element auquel appartient un cote frontiere
+! kctfro - numero local de cote (1,2,3)                
+! krefro - numero de reference du cote frontiere        
+! ksofro - numeros des 2 sommets extremite du cote       
+! vnofro - composantes du vecteur normal a la frontiere (vers l'interieur)
+
+
+!Variables:
+! Caracteristiques des frontieres internes                   
+! nnofnt - nombre de noeuds sur les frontieres internes   
+! ntrfnt - nombre total de triangles (ceux de droite)      
+! ntrfrn - nombre de triangles par frontiere                
+! ntrfrc - nombre cumule de triangles                        
+! ncdfnt - cotes  Dirichlet sur les frontieres internes (VF)    
+
+integer, dimension(:), allocatable :: ntrfrn, ntrfrc
+integer :: nnofnt
+
+!Variables:
+!  Vecteurs tangeants
+!  vtaux  - composante x des vecteurs tangeants         
+!  vtauy  - composante y des vecteurs tangeants        
+real(8), dimension(:),   allocatable :: vtaux, vtauy
+
+!Variables:
+!  Quantites liees au maillage    
+!  xlml   - limite inferieure x du domaine           
+!  xlmu   - limite superieure x du domaine          
+!  ylml   - limite inferieure y du domaine         
+!  ylmu   - limite superieure y du domaine        
+real(8) :: xlml, xlmu, ylml, ylmu
+
+integer, dimension (:), allocatable :: nctfro, nctfrp
 
 contains
 
