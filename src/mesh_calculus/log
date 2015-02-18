@@ -1,0 +1,7 @@
+mv gnuplot_module.f90 gnuplot_module.F90
+mv maillage.f90 maillage.F90
+mv poisson.f90 poisson.F90
+mv solveurs_module.f90 solveurs_module.F90
+mv sorties.f90 sorties.F90
+mv utlib.f90 utlib.F90
+mv zone.f90 zone.F90
