@@ -12,7 +12,7 @@ program unit_test_triangular_mesh
   sll_real64 :: eta2_min=0.0_f64
   sll_real64 :: eta2_max=1.0_f64
 
-  call sll_new(mesh,     &
+  call sll_create(mesh,     &
                nc_eta1,  &
                eta1_min, &
                eta1_max, &
