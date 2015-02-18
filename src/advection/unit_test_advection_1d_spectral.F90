@@ -42,9 +42,7 @@ sll_real64                            :: err
 sll_int32                             :: ierr
 sll_int32                             :: prank = 0
 sll_int32                             :: psize = 1
-sll_int32                             :: istep
 sll_int32                             :: i
-sll_int32                             :: nstep = 100
 
 xmin      = 0.0_f64
 xmax      = 1.0_f64
@@ -66,20 +64,15 @@ end do
 !$ psize = OMP_GET_NUM_THREADS()
 !$ print*, ' psize = ', psize, xmin, xmax, num_cells
 
-SLL_ALLOCATE(adv(psize),            ierr)
+SLL_ALLOCATE(adv(psize),ierr)
 
-solution = exp(-(x*x)/0.01)
-input = solution
+input = 1.0_f64
 
-adv(prank+1)%ptr => new_spectral_1d_advector(num_cells, xmin, xmax, SLL_PERIODIC) 
+adv(prank+1)%ptr => new_spectral_1d_advector(num_cells, xmin, xmax) 
 
-do istep = 1, nstep
-   call adv(prank+1)%ptr%advect_1d_constant( a, dt, input, output)
-   input = output
-   call sll_gnuplot_1d(output, x, 'f_spectral', istep)
-end do
+call adv(prank+1)%ptr%advect_1d_constant( a, dt, input, output)
 
-err = maxval(abs(solution-input))
+err = maxval(abs(output-input))
 
 print *,'# err=',err
 if(err <= 1e-3)then  
