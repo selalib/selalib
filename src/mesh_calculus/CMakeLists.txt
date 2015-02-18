@@ -16,3 +16,14 @@ IF(BUILD_TESTING)
   TARGET_LINK_LIBRARIES( test_mesh_calculus_2d
     sll_mesh_calculus sll_file_io sll_memory ${HDF5_LIBRARIES} )
 ENDIF(BUILD_TESTING)
+
+
+SET(f90_sources poisson.F90 gnuplot_module.F90
+                maillage.F90 solveurs_module.F90 
+                sorties.F90 errout.F90
+                zone.F90 utlib.F90)
+
+ADD_LIBRARY(piscou ${f90_sources})
+ADD_EXECUTABLE(test_piscou picsou.F90)
+TARGET_LINK_LIBRARIES(test_piscou piscou)
+
