@@ -1,4 +1,5 @@
 ADD_LIBRARY(sll_fields STATIC 
+            sll_array_plotting_module.F90
             sll_scalar_field_1d_base.F90
             sll_scalar_field_1d.F90
             sll_scalar_field_2d_base.F90
@@ -59,5 +60,11 @@ IF(BUILD_TESTING)
   TARGET_LINK_LIBRARIES( test_scalar_field_2d sll_fields )
   ADD_TEST( NAME fields_2d COMMAND test_scalar_field_2d )
   SET_TESTS_PROPERTIES( fields_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+
+  ADD_EXECUTABLE( test_plot_array_4d unit_test_4d.F90 )
+  TARGET_LINK_LIBRARIES( test_plot_array_4d sll_fields )
+  ADD_TEST( NAME plot_array_4d COMMAND test_plot_array_4d )
+  SET_TESTS_PROPERTIES( plot_array_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+  
 
 ENDIF(BUILD_TESTING)

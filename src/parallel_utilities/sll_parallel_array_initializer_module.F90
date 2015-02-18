@@ -63,8 +63,12 @@ module sll_parallel_array_initializer_module
     module procedure sll_2d_parallel_array_initializer_cartesian_logical_2d
     module procedure sll_2d_parallel_array_initializer_cartesian_array_1d_1d
   end interface 
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 contains
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
   subroutine sll_2d_parallel_array_initializer_cartesian_logical_2d( &
        layout, &

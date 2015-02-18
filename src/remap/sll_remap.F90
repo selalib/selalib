@@ -559,19 +559,19 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
   interface sll_delete
      module procedure delete_layout_2D, delete_layout_3D, delete_layout_4D, &
           delete_layout_5D, delete_layout_6D, &
-          delete_remap_2D_int32, &
+          delete_remap_2D_int32,  &
           delete_remap_2D_real64, &
           delete_remap_2D_comp64, &
-          delete_remap_3D_int32, &
+          delete_remap_3D_int32,  &
           delete_remap_3D_real64, &
           delete_remap_3D_comp64, &
-          delete_remap_4D_int32, &
+          delete_remap_4D_int32,  &
           delete_remap_4D_real64, &
           delete_remap_4D_comp64, &
-          delete_remap_5D_int32, &
+          delete_remap_5D_int32,  &
           delete_remap_5D_real64, &
           delete_remap_5D_comp64, &
-          delete_remap_6D_int32, &
+          delete_remap_6D_int32,  &
           delete_remap_6D_real64, &
           delete_remap_6D_comp64
   end interface sll_delete
@@ -639,6 +639,12 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
   public :: new_layout_2D_from_layout_4D
   public :: new_layout_3D_from_layout_4D
   public :: write_to_file
+  public :: get_layout_global_size_i
+  public :: get_layout_global_size_j
+  public :: get_layout_global_size_k
+  public :: get_layout_global_size_l
+  public :: get_layout_global_size_m
+  public :: get_layout_global_size_n
 
 contains  !******************************************************************
 

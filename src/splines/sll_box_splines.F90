@@ -9,7 +9,7 @@
 !> The only boundary condition supported right now
 !> is dirichlet.
 !>  Reference :
-!>     @Condat2006 "Three-directional box splines"
+!>     \@Condat2006 "Three-directional box splines"
 
 module sll_box_splines
 #include "sll_working_precision.h"
@@ -30,9 +30,9 @@ implicit none
 !> 2D Box spline type, containing the mesh information, the
 !> boundary condition, and the spline coefficients
 type sll_box_spline_2d
-   type(sll_hex_mesh_2d), pointer  :: mesh !> Hexagonal mesh
-   sll_int32 SLL_PRIV :: bc_type !> Boundary conditions definition
-   sll_real64, dimension(:), pointer :: coeffs !> Spline coefficients
+   type(sll_hex_mesh_2d), pointer  :: mesh !< Hexagonal mesh
+   sll_int32 SLL_PRIV :: bc_type !< Boundary conditions definition
+   sll_real64, dimension(:), pointer :: coeffs !< Spline coefficients
 end type sll_box_spline_2d
 
 
@@ -55,6 +55,7 @@ contains  ! ****************************************************************
   !> @param[in] mesh Hexagonal mesh on which the box spline will be defined
   !> @param[in] bc_type Integer defining the boundary condition, usual values
   !> are SLL_PERIODIC, SLL_DIRICHLET, ...
+  !> @return box spline element
   function new_box_spline_2d( &
        mesh,         &
        bc_type)
@@ -149,9 +150,11 @@ contains  ! ****************************************************************
     sll_int32, intent(in)                         :: deg
     sll_int32  :: num_pts_tot
     sll_int32  :: k1_ref, k2_ref
-    sll_int32  :: i,k
+    sll_int32  :: k
+    sll_int32  :: i
     sll_int32  :: nei
     sll_int32  :: num_pts_radius
+    sll_real64 :: filter
 
     num_pts_tot = spline%mesh%num_pts_tot
     ! we will work on a radius of 'deg' cells
@@ -167,10 +170,18 @@ contains  ! ****************************************************************
        ! We don't need to fo through all points, just till a certain radius
        ! which depends on the degree of the spline we are evaluating
        do k = 1, num_pts_radius
+          if (deg .le. 2) then
+             filter = pre_filter_pfir(spline%mesh, k, deg)
+          elseif (deg .eq. 3) then
+             filter = pre_filter_int(spline%mesh, k, deg)
+          else
+             filter = 0._f64
+             print *, "Error in compute_box_spline_2d_diri: Filter not yet defined"
+             STOP
+          end if
           nei = spline%mesh%local_hex_to_global(k1_ref, k2_ref, k)
           if ((nei .lt. num_pts_tot).and.(nei .gt. 0)) then
-             spline%coeffs(i) = spline%coeffs(i) + data(nei) * &
-                                pre_filter_pfir(spline%mesh, k, deg)
+             spline%coeffs(i) = spline%coeffs(i) + data(nei) * filter
           else
              ! Boundary conditions (BC) to be treated here :
              ! With dirichlet boundary conditions data(out_of_domain) = 0
@@ -253,7 +264,7 @@ contains  ! ****************************************************************
   !> @details Computes the value of the box spline (chi) of degree deg
   !> on the point of cartesian coordiantes (x1, x2). The algorithm is specific
   !> to the hexagonal mesh and has been optimized for degree 2 splines.
-  !> Reference : @Condat and Van De Ville (2006)
+  !> Reference : \@Condat and Van De Ville (2006)
   !>             "Three directional Box Splines:
   !>             Characterization and Efficient Evaluation."
   !> @param[in] x1_in real containing first coordinate of point
@@ -261,6 +272,7 @@ contains  ! ****************************************************************
   !> @param[in] x2_in real containing second coordinate of point
   !> where spline is to be evaluated
   !> @param[in] deg integer containing the degree of the spline
+  !> @return chi_gen_val  value of the box spline
   function chi_gen_val(x1_in,x2_in,deg) result(val)
     sll_real64, intent(in) :: x1_in
     sll_real64, intent(in) :: x2_in
@@ -544,7 +556,7 @@ contains  ! ****************************************************************
              !! TREAT HERE BC
              ! TODO @LM
              if (spline%bc_type .eq. SLL_DIRICHLET) then
-                val = val
+                val = val !no update
                 ind = spline%mesh%hex_to_global(k1_asso, k2_asso)
              else
                 print *, "Error : Boundary condition type not yet implemented"
@@ -751,7 +763,8 @@ contains  ! ****************************************************************
   !> @details write connectivity info for CAID/Pigasus. This function was
   !> intented to couple Pigasus poisson solver to the hex-mesh.
   !> Output file : boxsplines_connectivity.txt
-  !> @param[in]  deg integer designing boxsplines degree
+  !> @param[in]  mesh pointer to the hexagonal mesh
+  !> @param[in]  deg  integer designing boxsplines degree
   subroutine write_connectivity(mesh, deg)
     type(sll_hex_mesh_2d), pointer :: mesh
     sll_int32, intent(in)          :: deg
@@ -790,6 +803,7 @@ contains  ! ****************************************************************
 
        do num_fek = 1,10
           write(out_unit, "(i6)", advance="no") LM(num_ele, num_fek)
+          write(out_unit, "(a)", advance="no") ","
        end do
 
        write(out_unit,"(a)")""
