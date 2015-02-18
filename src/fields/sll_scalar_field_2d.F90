@@ -807,7 +807,7 @@ subroutine write_to_file_discrete_2d( field, tag )
      end do
   end do
 
-  call sll_gnuplot_curv_2d( &
+  call sll_gnuplot_2d( &
          nptsx1, &
          nptsx2, &
          x1coords, &
