@@ -27,11 +27,11 @@ module sll_particle_representations
 
   type :: sll_particle_4d
      sll_int32  :: ic   ! cell index, linearly arranged
-     sll_real32 :: dx!     sll_real64 :: dx
-     sll_real32 :: dy!     sll_real64 :: dy!    
+     sll_real32 :: dx!  sll_real64 :: dx!
+     sll_real32 :: dy!  sll_real64 :: dy
      sll_real64 :: vx
      sll_real64 :: vy
-     sll_real32 :: q
+     sll_real32 :: q!   sll_real64 :: q!      
   end type sll_particle_4d
 
   type :: sll_particle_4d_guard

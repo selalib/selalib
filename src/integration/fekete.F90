@@ -109,7 +109,7 @@ contains
   !> Volume 38, Number 5, 2000, pages 1707-1720.
   !> @param[in]  pxy array of dimesion (2,3) containg the coordinates
   !>             of the edges of the triangle
-  !> @param[out] xyw array of dimesion (3,10) containg the fekete points
+  !> @return     xyw array of dimesion (3,10) containg the fekete points
   !>             and weights using rule 1. wx(1,:) contains the x coordinates
   !>             of the fekete points, wx(2, :) the y coordinates and
   !>             wx(3, :) contains the associated weights.
@@ -263,8 +263,8 @@ contains
   !> connectivity table LM.
   !> @param[in]  rule integer for the fekete quadrature rule
   !> @param[in]  mesh hex_mesh on which we want to evaluate quadrature points
-  !> @param[out]  knots real 2D array to be filled in with fekete points+weights
-  !> @param[out]  connectivity array to pass from local to global indices
+  !> @param[out] knots real 2D array to be filled in with fekete points+weights
+  !> @param[out] LM connectivity array to pass from local to global indices
   subroutine initialize_knots_hexmesh( rule, &
                                        mesh, &
                                        knots, &
@@ -400,7 +400,7 @@ contains
        x = quad_pw(1,i)
        y = quad_pw(2,i)
        w = quad_pw(3,i)
-       write(out_unit, "(3(g13.3,1x))") x, y, w
+       write(out_unit, "(2(g13.3,a,1x),(g13.3))") x, ",", y, ",", w
     end do
     close(out_unit)
 

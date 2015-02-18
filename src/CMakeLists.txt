@@ -8,6 +8,7 @@ ENDIF()
 
 IF(OPTIONS_FILE)
    INCLUDE(${OPTIONS_FILE})
+   MESSAGE("OPTIONS_FILE ARE READ")
 ENDIF()
 
 PROJECT(SeLaLib)
@@ -16,7 +17,7 @@ ENABLE_LANGUAGE(Fortran)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 SET(OPENMP_ENABLED        OFF CACHE BOOL "Enable use of OpenMP library")
-SET(MPI_ENABLED    ON  CACHE BOOL "Enable use of MPI library")
+SET(MPI_ENABLED           ON  CACHE BOOL "Enable use of MPI library")
 SET(HDF5_ENABLED          ON  CACHE BOOL "Use HDF5 library for data output")
 SET(HDF5_PARALLEL_ENABLED OFF CACHE BOOL "Use Parallel HDF5")
 SET(FFTW_ENABLED          ON  CACHE BOOL "Enable use of FFTW library")
@@ -163,6 +164,7 @@ ADD_SUBDIRECTORY(advection)
 ADD_SUBDIRECTORY(fcisl)
 ADD_SUBDIRECTORY(gyroaverage)
 ADD_SUBDIRECTORY(maxwell_solvers)
+ADD_SUBDIRECTORY(ampere_solvers)
 ADD_SUBDIRECTORY(quasi_neutral_solvers)
 
 
@@ -172,13 +174,15 @@ IF(MPI_ENABLED)
    ADD_SUBDIRECTORY(collective)
    ADD_SUBDIRECTORY(file_io_parallel)
    ADD_SUBDIRECTORY(remap)
-   ADD_SUBDIRECTORY(parallel_utilities)
    ADD_SUBDIRECTORY(point_to_point_communications)
    ADD_SUBDIRECTORY(distribution_function_multipatch)
    ADD_SUBDIRECTORY(poisson_solvers_parallel)
+   ADD_SUBDIRECTORY(pic_1d)
+   #PN ADD_SUBDIRECTORY(maxwell_solvers_parallel)
 
 ENDIF()
 
+ADD_SUBDIRECTORY(parallel_utilities)
 ADD_SUBDIRECTORY(fields)
 ADD_SUBDIRECTORY(meshes_multipatch)
 ADD_SUBDIRECTORY(coordinate_transformations_multipatch)
@@ -187,9 +191,6 @@ ADD_SUBDIRECTORY(sparse_matrix_manager)
 ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers)
 ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers_multipatch)
 ADD_SUBDIRECTORY(poisson_solvers)
-
-ADD_SUBDIRECTORY(parallel_array_initializers)
-   
 ADD_SUBDIRECTORY(multigrid)
 ADD_SUBDIRECTORY(visu_pic)
 ADD_SUBDIRECTORY(time_solvers)
@@ -204,7 +205,7 @@ ENDIF(BUILD_PACKAGE)
 
 IF(BUILD_SIMULATIONS)
   GET_FILENAME_COMPONENT( INSTALL_DIR_SIMS "${CMAKE_SOURCE_DIR}/../usr" ABSOLUTE )
-  SET(CMAKE_INSTALL_PREFIX_SIMS ${INSTALL_DIR_SIMS} CACHE PATH
+  SET(CMAKE_INSTALL_PREFIX_SIMS ${INSTALL_DIR_SIMS} CACHE PATH 
     "simulations install dir")
   ADD_SUBDIRECTORY(simulations)
   ADD_SUBDIRECTORY(eulerian-finite-volume)
@@ -231,10 +232,10 @@ MESSAGE(STATUS "####")
 MESSAGE(STATUS "############################################################")
 
 ADD_CUSTOM_TARGET( clean_outputs
-    COMMAND find . -name *.mtv -delete
-    COMMAND find . -name *.gnu -delete
-    COMMAND find . -name *.dat -delete
-    COMMAND find . -name *.xmf -delete
-    COMMAND find . -name *.h5  -delete
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    COMMENT "Delete all .gnu, .dat, .mtv, .h5, .xmf " VERBATIM)
+   COMMAND find . -name *.mtv -delete
+   COMMAND find . -name *.gnu -delete
+   COMMAND find . -name *.dat -delete
+   COMMAND find . -name *.xmf -delete
+   COMMAND find . -name *.h5  -delete
+   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+   COMMENT "Delete all .gnu, .dat, .mtv, .h5, .xmf " VERBATIM)

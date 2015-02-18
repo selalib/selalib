@@ -30,6 +30,7 @@ SET(SLL_MACROS
     ${SLL_DIR}/multigrid/compdir.inc
     ${SLL_DIR}/multigrid/mgd2_routines.h
     ${SLL_DIR}/remap/sll_remap.h
+    ${SLL_DIR}/parallel_utilities/sll_parallel_utilities.h
 )
 
 FILE(COPY ${SLL_MACROS} DESTINATION ${CMAKE_BINARY_DIR}/include)
@@ -48,6 +49,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/advection/sll_advection_2d_tensor_product.F90
     ${SLL_DIR}/advection/sll_advection_2d_CSL.F90
     ${SLL_DIR}/advection/sll_advection_2d_base.F90
+    ${SLL_DIR}/advection/sll_advection_1d_ampere.F90
+    ${SLL_DIR}/advection/sll_advection_1d_spectral.F90
     ${SLL_DIR}/constants/sll_constants.F90
     ${SLL_DIR}/characteristics/sll_characteristics_1d_explicit_euler.F90
     ${SLL_DIR}/characteristics/sll_characteristics_1d_explicit_euler_conservative.F90
@@ -59,6 +62,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/characteristics/sll_characteristics_2d_explicit_euler_conservative.F90
     ${SLL_DIR}/characteristics/sll_characteristics_2d_base.F90
     ${SLL_DIR}/utilities/sll_utilities.F90
+    ${SLL_DIR}/utilities/sll_primitives.F90
     ${SLL_DIR}/utilities/tridiagonal.F90
     ${SLL_DIR}/utilities/fornberg.F90
     ${SLL_DIR}/utilities/sll_toeplitz_penta_diagonal.F90
@@ -111,6 +115,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_polar_solver.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_base.F90
     ${SLL_DIR}/fft/sll_fft_utils.F90
+    ${SLL_DIR}/integration/rectangle.F90
+    ${SLL_DIR}/integration/trapz.F90
     ${SLL_DIR}/integration/gauss_legendre.F90
     ${SLL_DIR}/integration/gauss_lobatto.F90
     ${SLL_DIR}/simulations/simulations_sequential/sim_CG_polar/sll_polar_operators.F90
@@ -182,7 +188,7 @@ ENDIF()
 # this is not the case. ECG
 IF(FFTW_ENABLED)
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
-    ${SLL_DIR}/fft/fftw3/fftw3.F90
+    ${SLL_DIR}/fft/fftw3.F90
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_pstd.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_fftw.F90
     ${SLL_DIR}/multigrid/sll_multigrid_2d.F90
@@ -213,8 +219,8 @@ IF(MPI_ENABLED)
   ${SLL_DIR}/poisson_solvers_parallel/sll_poisson_2d_periodic_cartesian_par.F90
   ${SLL_DIR}/poisson_solvers_parallel/sll_poisson_polar_parallel.F90
   ${SLL_DIR}/simulations/simulation_base_class.F90
-  ${SLL_DIR}/parallel_array_initializers/sll_common_array_initializers_module.F90
-  ${SLL_DIR}/parallel_array_initializers/sll_parallel_array_initializer_module.F90
+  ${SLL_DIR}/parallel_utilities/sll_common_array_initializers_module.F90
+  ${SLL_DIR}/parallel_utilities/sll_parallel_array_initializer_module.F90
   ${SLL_DIR}/parallel_utilities/buffer_loader_utilities.F90
   ${SLL_DIR}/file_io_parallel/sll_gnuplot_parallel.F90)
 ENDIF(MPI_ENABLED)
