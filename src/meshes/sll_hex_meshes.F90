@@ -1246,6 +1246,9 @@ contains
     ! The (maximum) spline degree and scale are fix here
     spline_deg = 1
     scale = 1
+    !... we write its global number
+    write (out_unit, "(i6)") spline_deg
+
     
     ! For every element...
     do i=1, num_ele
