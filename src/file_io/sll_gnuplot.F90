@@ -415,8 +415,9 @@ write(*,"(10x, 'Output file GNUplot ', a)") field_name//'_'//cplot//'.dat'
 
 call sll_new_file_id(gnu_id, ierr)
 open(gnu_id, file = field_name//'.gnu', position="append")
-if ( plot_number == 1 ) rewind(83)
+if (plot_number == 1) rewind(gnu_id)
 write(gnu_id,*)"set title 'Field "//field_name//"'"
+write(gnu_id,*)"splot '"//field_name//'_'//cplot//".dat' w l"
 close(gnu_id)
 
 open(gnu_id, file = field_name//'_'//cplot//'.dat')
@@ -427,12 +428,12 @@ do i = 1, num_cells
   xs2 = sngl(coord(1,nodes(2,i))); ys2 = sngl(coord(2,nodes(2,i)))
   xs3 = sngl(coord(1,nodes(3,i))); ys3 = sngl(coord(2,nodes(3,i)))
 
-  write(94,*)xs1, ys1, field_at_node(nodes(1,i))
-  write(94,*)xs2, ys2, field_at_node(nodes(2,i))
-  write(94,*)xs3, ys3, field_at_node(nodes(3,i))
-  write(94,*)xs1, ys1, field_at_node(nodes(1,i))
-  write(94,*)
-  write(94,*)
+  write(gnu_id,"(3e12.3)") xs1, ys1, field_at_node(nodes(1,i))
+  write(gnu_id,"(3e12.3)") xs2, ys2, field_at_node(nodes(2,i))
+  write(gnu_id,"(3e12.3)") xs3, ys3, field_at_node(nodes(3,i))
+  write(gnu_id,"(3e12.3)") xs1, ys1, field_at_node(nodes(1,i))
+  write(gnu_id,*)
+  write(gnu_id,*)
 
 end do
 
