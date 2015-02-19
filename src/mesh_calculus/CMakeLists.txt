@@ -18,9 +18,9 @@ IF(BUILD_TESTING)
 ENDIF(BUILD_TESTING)
 
 
-SET(f90_sources poisson.F90 gnuplot_module.F90
+SET(f90_sources poisson.F90 
                 maillage.F90 solveurs_module.F90 
-                sorties.F90 errout.F90
+                errout.F90
                 zone.F90 utlib.F90)
 
 ADD_LIBRARY(picsou ${f90_sources})
