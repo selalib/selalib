@@ -1128,8 +1128,8 @@ contains
     type(sll_hex_mesh_2d), pointer :: mesh
     character(len=9),    parameter :: name_nodes = "nodes.txt"
     character(len=12),   parameter :: name_elemt = "elements.txt"
-    sll_real64 :: x1
-    sll_real64 :: y1
+    sll_real64 :: x
+    sll_real64 :: y
     sll_int32  :: e1
     sll_int32  :: e2
     sll_int32  :: e3
@@ -1140,7 +1140,7 @@ contains
     sll_int32  :: num_ele
     sll_int32, parameter :: out_unit=20
 
-    ! Writing the nodes file....................
+    ! Writing the nodes file ----------------------------------
     open (unit=out_unit,file=name_nodes,action="write",status="replace")
 
     ! We first write the total number of points/nodes:
@@ -1148,17 +1148,20 @@ contains
     write(out_unit, "(i6)") num_pts_tot
     ! For every node...
     do i=1, num_pts_tot
+       x = mesh%global_to_x1(i)
+       y = mesh%global_to_x2(i)
        !... we write the coordinates
        write (out_unit, "((i6),(a,1x),(g13.3),(a,1x),(g13.3))") i, &
             ",", &
-            mesh%global_to_x1(i), &
+            x, &
             ",", &
-            mesh%global_to_x2(i)
+            y
     end do
     close(out_unit)
+    ! ---------------------------------------------------------
 
 
-    ! Writing the elements file....................
+    ! Writing the elements file--------------------------------
     open (unit=out_unit,file=name_elemt,action="write",status="replace")
 
     ! We first write the total number of cells/elements:
@@ -1175,12 +1178,13 @@ contains
        !... we write the spline degree
        write(out_unit, "((i6),(a,1x),(i6))") spline_deg, ",", spline_deg
        !... we write the indices of the edges
-       x1 = mesh%center_cartesian_coord(1, i)
-       y1 = mesh%center_cartesian_coord(2, i)
-       call get_cell_vertices_index(x1, y1, mesh, e1, e2, e3)
+       x = mesh%center_cartesian_coord(1, i)
+       y = mesh%center_cartesian_coord(2, i)
+       call get_cell_vertices_index(x, y, mesh, e1, e2, e3)
        write(out_unit, "((i6),(a,1x),(i6),(a,1x),(i6))") e1, ",",e2,",", e3
     end do
     close(out_unit)
+    ! ---------------------------------------------------------
 
   end subroutine write_caid_files
 
