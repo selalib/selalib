@@ -37,10 +37,8 @@
 program PICSOU
                         
 use zone,            only: readin, lmodte, iout, mesh_fields, objet_fonction
-use maillage,        only: calmai, write_mesh, sll_triangular_mesh_2d,    &
-                           voronoi
-
-use solveurs_module, only: lecture_donnees_solveur, mesh_bound
+use maillage,        only: calmai, write_mesh, sll_triangular_mesh_2d
+use solveurs_module, only: lecture_donnees_solveur
 use poisson,         only: poissn, poifrc, init_solveur_poisson, poliss
 
 use sll_triangular_meshes
@@ -50,23 +48,23 @@ use sll_gnuplot
 
 implicit none
 
-integer :: i, j, is1, is2, is3
-integer :: iargc, n, lu, nsolve
+integer :: i
+integer :: n, lu, nsolve
 integer :: istep
 
-real(8) :: tcpu, a, b, xr, yr, rsq, dum1, dum2, sigma
+real(8) :: tcpu
 real(8), dimension(:), allocatable :: rho, phi
 
 character(len=72) :: argv, dirpr
 
 type(mesh_fields)  :: mxw
 type(sll_triangular_mesh_2d)    :: mesh
-type(voronoi)      :: vmsh
-type(mesh_bound)   :: bcnd
-
-character(len=132):: inpfil, smpfil, xcrfil, expfil, trkfil
-character(len=132):: maafil, nopfil, hstfil
+character(len=132):: inpfil
+character(len=132):: maafil
 logical :: lask
+
+integer :: ntypfr(20)
+real(8) :: potfr(20)
 
 n = 1 !iargc()
 do i = 1, n
@@ -80,11 +78,8 @@ end do
 
 lask = .true.; lu = 10
 
-inpfil = trim(argv)//'.inp'; maafil = trim(argv)//'.maa'
-smpfil = trim(argv)//'.smp'; xcrfil = trim(argv)//'.xcr'
-expfil = trim(argv)//'.exp'; trkfil = trim(argv)//'.trk'
-nopfil = trim(argv)//'.nopo'
-hstfil = trim(argv)//'.hst'
+inpfil = trim(argv)//'.inp' 
+maafil = trim(argv)//'.maa'
 
 write(*,"(/10x,'Fichier d''entree : ',a)") inpfil
 
@@ -105,9 +100,10 @@ call readin(trim(argv), dirpr, nsolve)           !Donnees generales
 
 call read_from_file(mesh, maafil)                    !Lecture maillage
 call write_mesh(mesh)                                   !Trace du maillage
-call lecture_donnees_solveur(inpfil, nsolve, bcnd, mesh%nmxfr, mesh%nmxsd)  
+call lecture_donnees_solveur(inpfil, nsolve, ntypfr, & 
+                             potfr,  mesh%nmxfr, mesh%nmxsd)  
 
-call calmai(mesh, vmsh, bcnd)                               !Calcul du maillage
+call calmai(mesh, ntypfr)                               !Calcul du maillage
 
 allocate(mxw%e(3,mesh%num_nodes)); mxw%e=0.0; 
 allocate(mxw%b(3,mesh%num_nodes)); mxw%b=0.0; 
@@ -117,22 +113,20 @@ allocate(phi(mesh%num_nodes)); phi = 0.0
 
 call cpu_time(tcpu)  !Initialisation du temps CPU
 
-call init_solveur_poisson(mesh, bcnd)
+call init_solveur_poisson(mesh, ntypfr)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !   Equation de POISSON - elements finis !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 istep = 1
 
-call poissn(bcnd, mxw, rho, phi, mesh, istep)
-call poliss(phi, mxw, mesh, vmsh)
-call poifrc(mxw, mesh, bcnd)
+call poissn(potfr, mxw, rho, phi, mesh, istep)
+call poliss(phi, mxw, mesh)
+call poifrc(mxw, mesh, ntypfr)
 
 call sll_gnuplot_2d( phi, "phi", mesh%coord, mesh%nodes, 1)
 
-1000 format(A)
 1050 format(/' Read settings from file  ', A, ' ?  Y')
-1600 format(/' Default parameters read in from file  ', A,':' /)
 1700 format(/' New parameters write to file  ', A, /)
 1800 format(/' Settings may have been changed - New title :')
 1900 format(/' Input file  ', A,'  not found')

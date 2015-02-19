@@ -270,9 +270,10 @@ contains
 !Traduction en Fortran 90 de leccha
 !
 !  33-LECCHA  -   Version 1.0  Novembre 1991   A. Adolf  
-subroutine lecture_donnees_solveur(nomfich, nsolve, bcnd, nmxfr, nmxsd)
+subroutine lecture_donnees_solveur(nomfich, nsolve, ntypfr, potfr, nmxfr, nmxsd)
 
-type (mesh_bound),     intent(out) :: bcnd
+
+type (mesh_bound) :: bcnd
 integer, intent(in) :: nmxfr, nmxsd
 integer, intent(in) :: nsolve
 character(len=*), intent(in) :: nomfich
