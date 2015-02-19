@@ -1,9 +1,7 @@
 !File: Module Maillage
 module maillage
 
-use zone, only: nesp, iout, c, dt, pi, nesmx, lmodtm, titre, &
-        ldtfrc, Mx, My
-
+use zone, only: iout
 use sll_triangular_meshes
 
 implicit none
@@ -18,12 +16,12 @@ integer :: imxref=99999999
 
 !Variable: nelin
 !nombre de triangles internes
-integer :: nelin   
+!integer :: nelin   
 !Variable: nefro
 !nombre de triangles ayant 1 noeud sur une frontiere
-integer :: nefro   
-integer :: nelmatf
-integer, dimension(:),   allocatable :: ipoint
+!integer :: nefro   
+!integer :: nelmatf
+!integer, dimension(:),   allocatable :: ipoint
 
 !Variables:
 ! Caracteristiques des cotes situes sur les frontieres
@@ -42,16 +40,12 @@ integer, dimension(:),   allocatable :: ipoint
 ! ntrfrc - nombre cumule de triangles                        
 ! ncdfnt - cotes  Dirichlet sur les frontieres internes (VF)    
 
-integer, dimension(:), allocatable :: ntrfrn, ntrfrc
-integer :: nnofnt
-integer, private, dimension(:),   allocatable :: itrfnt,ictfnt
-integer, private, dimension(:,:), allocatable :: isofnt
+!integer, dimension(:), allocatable :: ntrfrn, ntrfrc
+!integer :: nnofnt
+!integer, private, dimension(:),   allocatable :: itrfnt,ictfnt
+!integer, private, dimension(:,:), allocatable :: isofnt
 
 !Variables:
-!  Vecteurs tangeants
-!  vtaux  - composante x des vecteurs tangeants         
-!  vtauy  - composante y des vecteurs tangeants        
-real(8), dimension(:),   allocatable :: vtaux, vtauy
 
 !Variables:
 !  Quantites liees au maillage    
@@ -59,20 +53,16 @@ real(8), dimension(:),   allocatable :: vtaux, vtauy
 !  xlmu   - limite superieure x du domaine          
 !  ylml   - limite inferieure y du domaine         
 !  ylmu   - limite superieure y du domaine        
-real(8) :: xlml, xlmu, ylml, ylmu
-
-integer, dimension (:), allocatable :: nctfro, nctfrp
-
-!Variables: pour le solveur Galerkine Discontinue
-integer, dimension(:,:), allocatable :: ngareelt
-integer, dimension(:,:), allocatable :: ngnoeelt
-integer, dimension(:,:), allocatable :: nsomare
-real(8), dimension(:), allocatable :: rsf
-integer, dimension (3,4) :: nnoeselt
-
-real(8) :: cfl   !(reel = c*dt)
-
-integer :: nmaill	!Entier caracteristique du maillage
+!
+!
+!!Variables: pour le solveur Galerkine Discontinue
+!integer, dimension(:,:), allocatable :: ngareelt
+!integer, dimension(:,:), allocatable :: ngnoeelt
+!integer, dimension(:,:), allocatable :: nsomare
+!real(8), dimension(:), allocatable :: rsf
+!integer, dimension (3,4) :: nnoeselt
+!
+!integer :: nmaill	!Entier caracteristique du maillage
 
 CONTAINS
 
@@ -158,7 +148,7 @@ integer :: nuct, ktrtmp, nelprm, itrg1, itrg2, itr, ntr
 
 real(8) :: lx1, lx2, ly1, ly2, x1, y1, x2, y2
 real(8) :: det, syca, syba, xa, ya, xb, yb, xc, yc
-real(8) :: dd, xd, yd, xo, yo, xm, ym, xtmp
+real(8) :: dd, xd, yd, xo, yo, xm, ym
 real(8) :: prvc, xt1, xt2, yt1, yt2, xs1, xs2, ys1, ys2
 real(8) :: xcc, ycc, somme, rc, ab, bc
 real(8) :: sina, sinb, sinc, cosa, cosb, cosc, sin2a, sin2b, sin2c
@@ -173,6 +163,7 @@ logical :: lflag0,lflag1,lflag2,lflag3,lerr
 
 integer :: itab(3,3), inoe1, inoe2, inoe3, inoe4, inoe5, inoe6
 real(8) :: coef
+real(8) :: xlml, xlmu, ylml, ylmu
 
 !-----
 !---- itab(isomloc1,isomloc2) est le numero local de l'arete qui a pour
@@ -234,8 +225,6 @@ end do
 if (ldebug) write(iout,*)"*** Calcul des integrales des fonctions de base ***"
 
 allocate(mesh%xbas(mesh%num_nodes)); mesh%xbas=0.0
-
-xtmp = 2. * pi / 6.
 
 do it = 1, mesh%num_cells
 
@@ -503,8 +492,6 @@ end do
 !----------- Nombre de noeuds sur les frontieres internes -------------
 !======================================================================
 
-nnofnt=0
-
 do iel = 1, mesh%num_cells
    do j = 1, 3
    if( mesh%nvois(j,iel) == imxref ) then
@@ -568,8 +555,6 @@ end do
 
 ! ... Verification approchee de la condition CFL sur les triangles
 
-cfl = c*dt
-
 !  nbtcot : nombre total de cotes                           *
 !  nbcoti : nombre de cotes internes                        *
 !  ncotcu : nombre de cotes internes et frontieres          *
@@ -621,8 +606,8 @@ if (ldebug) then
    end do
 end if
 
-allocate(vtaux(mesh%nbtcot),vtauy(mesh%nbtcot))
-vtaux = 0.; vtauy = 0.
+allocate(mesh%vtaux(mesh%nbtcot),mesh%vtauy(mesh%nbtcot))
+mesh%vtaux = 0.; mesh%vtauy = 0.
 
 !==============================================================!
 !--- Calcul complementaires relatifs au lissage des champs ----!
@@ -645,7 +630,7 @@ allocate(nuctfr(mesh%nmxfr)) !tableau temporaire
 
 !Creation du maillage de Voronoi et quantites associees
 
-call poclis(mesh, ncotcu, nuctfr, vtaux, vtauy)
+call poclis(mesh, ncotcu, nuctfr)
 
 !On tue le tableau temporaire         I                      
 
@@ -672,15 +657,15 @@ deallocate(nuctfr)
 
 ! --- Initialisation (numerotation quelconque) -----------------
 
-allocate(nctfrp(0:mesh%nmxfr))
-allocate(nctfro(mesh%nmxfr))
+allocate(mesh%nctfrp(0:mesh%nmxfr))
+allocate(mesh%nctfro(mesh%nmxfr))
 allocate(mesh%kctfro(mesh%nctfrt))
 allocate(mesh%kelfro(mesh%nctfrt))
 allocate(mesh%krefro(mesh%nctfrt))
 allocate(mesh%ksofro(2,mesh%nctfrt))
 allocate(mesh%vnofro(2,mesh%nctfrt))
 
-nctfro = 0
+mesh%nctfro = 0
 
 !*** Premiere numerotation des cotes frontieres ***
 
@@ -698,7 +683,7 @@ do ict=1,3
          mesh%ksofro(1,ifr) = mesh%nodes(ict,iel) !numeros des 2 sommets de ce cote
          mesh%ksofro(2,ifr) = mesh%nodes(mod(ict,3)+1,iel) 
 
-         nctfro(iref)  = nctfro(iref)+1  !nombre de cote par reference
+         mesh%nctfro(iref)  = mesh%nctfro(iref)+1  !nombre de cote par reference
 
       end if 
    end do
@@ -706,9 +691,9 @@ end do
 
 !... Pointeur de tableau .........................................
 
-nctfrp(0)=0
+mesh%nctfrp(0)=0
 do ifr=1,mesh%nmxfr
-   nctfrp(ifr)=nctfrp(ifr-1)+nctfro(ifr)
+   mesh%nctfrp(ifr)=mesh%nctfrp(ifr-1)+mesh%nctfro(ifr)
 end do
 
 !--- Balayage sur les numeros de reference --------------------
@@ -717,7 +702,7 @@ end do
 ictcl=1
 do iref=1,mesh%nmxfr
 
-   nbcot = nctfro(iref)
+   nbcot = mesh%nctfro(iref)
    if (nbcot > 0) then 
 
       ict1 = ictcl
@@ -756,7 +741,7 @@ end do
 
 do iref=1,mesh%nmxfr
 
-   nbcot=nctfro(iref)
+   nbcot=mesh%nctfro(iref)
 
    !Une seule reference pour toute la frontiere ................
 
@@ -800,8 +785,8 @@ do iref=1,mesh%nmxfr
 
   else if (nbcot>1) then 
 
-     ictcl1=nctfrp(iref-1)+1
-     ictcl2=nctfrp(iref)
+     ictcl1=mesh%nctfrp(iref-1)+1
+     ictcl2=mesh%nctfrp(iref)
 
      ! ... Premier cote d'un segment ........................................
 
@@ -916,42 +901,6 @@ end do
 
 deallocate(indc)
 
-901 format(//10x,'Mauvaise reference sur une frontiere interne'     &
-            /10x,'(voir namelist  nlcham)'              &
-            /10x,'Frontiere interne N0 ',I3             &
-            /10x,'Reference            ',I3             &
-            /10x,'Limites autorisees  ',2I4/)
-902 format( /10x,'Noeuds Dirichlet des frontieres de type 1'/)
-903 format( /10x,I3,5X,'N0 ',I7,5X,'Ordonnee',E12.3,5x,'Ref ',I3)
-904 format( /20x,'Aucun noeud de ce type'/)
-905 format( /10x,'Nombre total de triangles sur les frontieres'     &
-            /10x,'internes :',I6)
-906 format( /10x,'N0 de frontiere',I3                   &
-            /15x,'Nb de triangles ',I6,5x,'Nb cumule ',I6       &
-            /15x,'Type            ',I6,5x,'Reference ',I6)
-907 format(//10x,'La frontiere interne',I4,'  est discontinue'      &
-            /10x,'z1frnt :',E12.3,5x,                   &
-            /10x,'r1frnt :',E12.3,5x,                   &
-            /10x,'irefnt :',I4,                     &
-            /10x,'Revoir les donnees ou le maillage'//)
-908 format(//10x,'Detection d''un probleme de voisins'/)
-909 format(//10x,'Aucun triangle ne repose sur les'         &
-            /10x,'frontieres internes'/)
-910 format(//10x,'Aucun triangle ne repose sur la'          &
-            /10x,'frontiere interne No :',I5/)
-911 format( /10x,'*****  FRONTIERES INTERNES  *****'            &
-           //10x,'Nombre max de noeuds sur ces frontieres :',I6/)
-921 format(  10x,'Pb de CFL sur cote',I8,'  Triangle',I8        &
-            /10x,'Frontiere interne No :',I5)
-912 format(//10x,'Mauvaise reference sur une frontiere interne'     &
-            /10x,'pour l espece de particules NO ',I3           &
-            /10x,'(voir namelist  nlcham)'              &
-            /10x,'Frontiere interne N0 ',I3             &
-            /10x,'Reference            ',I3             &
-            /10x,'Limites autorisees  ',2I4/)
-913 format(//10x,'Detection d''un probleme de voisins'/)
-
-
 end subroutine calmai
 
 !**************************************************************
@@ -976,15 +925,12 @@ end subroutine calmai
 !      xmal1  - somme des taux*taux entourant un noeud (/det) 
 !      xmal2  - somme des tauy*tauy entourant un noeud (/det)
 !      xmal3  - somme des taux*tauy entourant un noeud (/det)
-!      vtaux  - composante x des vecteurs tangeants         
-!      vtauy  - composante y des vecteurs tangeants        
 !                                                               
 !Auteur:
 ! A. Adolf - Version 1.0   Septembre 1994  
-subroutine poclis(mesh, ncotcu, nuctfr, vtaux, vtauy)
+subroutine poclis(mesh, ncotcu, nuctfr)
 
 type(sll_triangular_mesh_2d) :: mesh
-double precision, dimension(:) :: vtaux, vtauy
 integer, dimension(:) :: ncotcu
 integer, dimension(:) :: nuctfr
 logical :: lerr
@@ -1099,8 +1045,8 @@ do ic=1,mesh%nbtcot
    s1 = x21*x21
    s2 = y21*y21
    s3 = x21*y21
-   vtaux(ic)=x21
-   vtauy(ic)=y21
+   mesh%vtaux(ic)=x21
+   mesh%vtauy(ic)=y21
    mesh%xmal1(n1)=mesh%xmal1(n1)+s1
    mesh%xmal2(n1)=mesh%xmal2(n1)+s2
    mesh%xmal3(n1)=mesh%xmal3(n1)+s3
@@ -1152,258 +1098,8 @@ end if
  901  format(//10x,'Le nombre de triangles communs a un noeud'  &
               /10x,'est superieur a 12'             &   
               /10x,'Modifiez legerement le maillage'//)
- 902  format(//10x,'Matrices de lissage'            &
-              /10x,'xmal1',7x,'xmal2',7x,'xmal3')
- 903  format(  10x,3e12.3)
- 904  format(//10x,'Composantes des vecteurs tangeants'     &
-              /10x,'vtaux',7x,'vtauy')
- 905  format(  10x,2e12.3)
 
 end subroutine poclis
-
-!-------------------------------------------------------------------------
-
-!Subroutine: write_mesh
-!Ecriture du maillage pour visualisation au format GNUPLOT et PLOTMTV
-subroutine write_mesh(mesh)
-type(sll_triangular_mesh_2d) :: mesh
-double precision :: x1, y1
-integer :: iev, is1, is2, iel
-
-!Trace du maillage
-
-!format gnuplot
-if (titre == "") titre = "dummy"
-open(10,file=trim(titre)//"_mesh.dat")
-do i = 1, mesh%num_cells
-   write(10,*) mesh%coord(1:2,mesh%nodes(1,i)),0.0
-   write(10,*) mesh%coord(1:2,mesh%nodes(2,i)),0.0
-   write(10,*) mesh%coord(1:2,mesh%nodes(3,i)),0.0
-   write(10,*) mesh%coord(1:2,mesh%nodes(1,i)),0.0
-   write(10,*) 
-   write(10,*) 
-end do
-close(10)
-!format plotmtv
-
-
-open( 10, file=trim(titre)//"_mesh.mtv")
-
-!--- Trace du maillage ---
-
-write(10,*)"$DATA=CURVE3D"
-write(10,*)"%equalscale=T"
-write(10,*)"%toplabel='Maillage' "
-
-do i = 1, mesh%num_cells
-   write(10,*)mesh%coord(1:2,mesh%nodes(1,i)),0.0
-   write(10,*)mesh%coord(1:2,mesh%nodes(2,i)),0.0
-   write(10,*)mesh%coord(1:2,mesh%nodes(3,i)),0.0
-   write(10,*)mesh%coord(1:2,mesh%nodes(1,i)),0.0
-   write(10,*)
-end do
-
-!--- Numeros des noeuds et des triangles
-
-write(10,*)"$DATA=CURVE3D"
-write(10,*)"%equalscale=T"
-write(10,*)"%toplabel='Numeros des noeuds et des triangles' "
-
-do i = 1, mesh%num_cells
-   write(10,*)mesh%coord(1:2,mesh%nodes(1,i)),0.0
-   write(10,*)mesh%coord(1:2,mesh%nodes(2,i)),0.0
-   write(10,*)mesh%coord(1:2,mesh%nodes(3,i)),0.0
-   write(10,*)mesh%coord(1:2,mesh%nodes(1,i)),0.0
-   write(10,*)
-end do
-
-do i = 1, mesh%num_cells
-   x1 = (  mesh%coord(1,mesh%nodes(1,i))  &
-         + mesh%coord(1,mesh%nodes(2,i))  &
-     + mesh%coord(1,mesh%nodes(3,i))    )/3.
-   y1 = (  mesh%coord(2,mesh%nodes(1,i))  &
-         + mesh%coord(2,mesh%nodes(2,i))  &
-     + mesh%coord(2,mesh%nodes(3,i))    )/3.
-   write(10,"(a)"   , advance="no")"@text x1="
-   write(10,"(f8.5)", advance="no") x1
-   write(10,"(a)"   , advance="no")" y1="
-   write(10,"(f8.5)", advance="no") y1
-   write(10,"(a)"   , advance="no")" z1=0. lc=4 ll='"
-   write(10,"(i4)"  , advance="no") i
-   write(10,"(a)")"'"
-end do
-
-do i = 1, mesh%num_nodes
-   x1 = mesh%coord(1,i)
-   y1 = mesh%coord(2,i)
-   write(10,"(a)"   , advance="no")"@text x1="
-   write(10,"(g15.3)", advance="no") x1
-   write(10,"(a)"   , advance="no")" y1="
-   write(10,"(g15.3)", advance="no") y1
-   write(10,"(a)"   , advance="no")" z1=0. lc=5 ll='"
-   write(10,"(i4)"  , advance="no") i
-   write(10,"(a)")"'"
-end do
-
-!--- Numeros des noeuds 
-
-write(10,*)"$DATA=CURVE3D"
-write(10,*)"%equalscale=T"
-write(10,*)"%toplabel='Numeros des noeuds' "
-
-do i = 1, mesh%num_cells
-   write(10,*)mesh%coord(1:2,mesh%nodes(1,i)),0.
-   write(10,*)mesh%coord(1:2,mesh%nodes(2,i)),0.
-   write(10,*)mesh%coord(1:2,mesh%nodes(3,i)),0.
-   write(10,*)mesh%coord(1:2,mesh%nodes(1,i)),0.
-   write(10,*)
-end do
-
-do i = 1, mesh%num_nodes
-   x1 = mesh%coord(1,i)
-   y1 = mesh%coord(2,i)
-   write(10,"(a)"   , advance="no")"@text x1="
-   write(10,"(g15.3)", advance="no") x1
-   write(10,"(a)"   , advance="no")" y1="
-   write(10,"(g15.3)", advance="no") y1
-   write(10,"(a)"   , advance="no")" z1=0. lc=5 ll='"
-   write(10,"(i4)"  , advance="no") i
-   write(10,"(a)")"'"
-end do
-
-!--- Numeros des triangles
-
-write(10,*)"$DATA=CURVE3D"
-write(10,*)"%equalscale=T"
-write(10,*)"%toplabel='Numeros des triangles' "
-
-do i = 1, mesh%num_cells
-   write(10,*)mesh%coord(1:2,mesh%nodes(1,i)),0.
-   write(10,*)mesh%coord(1:2,mesh%nodes(2,i)),0.
-   write(10,*)mesh%coord(1:2,mesh%nodes(3,i)),0.
-   write(10,*)mesh%coord(1:2,mesh%nodes(1,i)),0.
-   write(10,*)
-end do
-
-do i = 1, mesh%num_cells
-   x1 = (  mesh%coord(1,mesh%nodes(1,i))  &
-         + mesh%coord(1,mesh%nodes(2,i))  &
-     + mesh%coord(1,mesh%nodes(3,i))    )/3.
-   y1 = (  mesh%coord(2,mesh%nodes(1,i))  &
-         + mesh%coord(2,mesh%nodes(2,i))  &
-     + mesh%coord(2,mesh%nodes(3,i))    )/3.
-   write(10,"(a)"   , advance="no")"@text x1="
-   write(10,"(g15.3)", advance="no") x1
-   write(10,"(a)"   , advance="no")" y1="
-   write(10,"(g15.3)", advance="no") y1
-   write(10,"(a)"   , advance="no")" z1=0. lc=4 ll='"
-   write(10,"(i4)"  , advance="no") i
-   write(10,"(a)")"'"
-end do
-
-!Reference des triangles
-
-write(10,*)"$DATA=CURVE3D"
-write(10,*)"%equalscale=T"
-write(10,*)"%toplabel='References des triangles' "
-
-do i = 1, mesh%num_cells
-   write(10,*)mesh%coord(1:2,mesh%nodes(1,i)),0.
-   write(10,*)mesh%coord(1:2,mesh%nodes(2,i)),0.
-   write(10,*)mesh%coord(1:2,mesh%nodes(3,i)),0.
-   write(10,*)mesh%coord(1:2,mesh%nodes(1,i)),0.
-   write(10,*)
-end do
-
-do i = 1, mesh%num_cells
-   x1 = (  mesh%coord(1,mesh%nodes(1,i))  &
-         + mesh%coord(1,mesh%nodes(2,i))  &
-     + mesh%coord(1,mesh%nodes(3,i))    )/3.
-   y1 = (  mesh%coord(2,mesh%nodes(1,i))  &
-         + mesh%coord(2,mesh%nodes(2,i))  &
-     + mesh%coord(2,mesh%nodes(3,i))    )/3.
-   write(10,"(a)"   , advance="no")"@text x1="
-   write(10,"(g15.3)", advance="no") x1
-   write(10,"(a)"   , advance="no")" y1="
-   write(10,"(g15.3)", advance="no") y1
-   write(10,"(a)"   , advance="no")" z1=0. lc=4 ll='"
-   write(10,"(i4)"  , advance="no") mesh%reft(i)
-   write(10,"(a)")"'"
-end do
-
-!Reference des noeuds 
-write(10,*)"$DATA=CURVE3D"
-write(10,*)"%equalscale=T"
-write(10,*)"%toplabel='References des noeuds ' "
-
-do i = 1, mesh%num_cells
-   write(10,*)mesh%coord(1:2,mesh%nodes(1,i)),0.
-   write(10,*)mesh%coord(1:2,mesh%nodes(2,i)),0.
-   write(10,*)mesh%coord(1:2,mesh%nodes(3,i)),0.
-   write(10,*)mesh%coord(1:2,mesh%nodes(1,i)),0.
-   write(10,*)
-end do
-
-do i = 1, mesh%num_nodes
-   x1 = mesh%coord(1,i)
-   y1 = mesh%coord(2,i)
-   write(10,"(a)"   , advance="no")"@text x1="
-   write(10,"(f8.4)", advance="no") x1
-   write(10,"(a)"   , advance="no")" y1="
-   write(10,"(f8.4)", advance="no") y1
-   write(10,"(a)"   , advance="no")" z1=0. lc="
-   write(10,"(i1)"  , advance="no") mesh%refs(i)
-   write(10,"(a)"   , advance="no")" ll='"
-   write(10,"(i4)"  , advance="no") mesh%refs(i)
-   write(10,"(a)")"'"
-end do
-
-!Reference des frontieres 
-write(10,*)"$DATA=CURVE3D"
-write(10,*)"%equalscale=T"
-write(10,*)"%toplabel='References des frontieres ' "
-
-do iel = 1, mesh%num_cells      !Boucle sur les elements
-   do iev = 1, 3     !Boucle sur les voisins
-
-      if (mesh%nvois(iev,iel)<0) then
-         select case(iev)
-         case(1)
-            is1 = 1; is2 = 2
-         case(2)
-            is1 = 2; is2 = 3
-         case(3)
-            is1 = 3; is2 = 1
-         end select
-         write(10,*)"%linecolor=",-mesh%nvois(iev,iel)
-         write(10,*)mesh%coord(1,mesh%nodes(is1,iel)),&
-                    mesh%coord(2,mesh%nodes(is1,iel)),0.
-         write(10,*)mesh%coord(1,mesh%nodes(is2,iel)), &
-                    mesh%coord(2,mesh%nodes(is2,iel)),0.
-         write(10,*)
-         x1 = 0.5*(  mesh%coord(1,mesh%nodes(is1,iel)) &
-                   + mesh%coord(1,mesh%nodes(is2,iel)))
-         y1 = 0.5*(  mesh%coord(2,mesh%nodes(is1,iel)) &
-                   + mesh%coord(2,mesh%nodes(is2,iel)))
-         write(10,"(a)"   ,advance="no")"@text x1="
-         write(10,"(g15.3)",advance="no") x1
-         write(10,"(a)"   ,advance="no")" y1="
-         write(10,"(g15.3)",advance="no") y1
-         write(10,"(a)"   ,advance="no")" z1=0. ll="
-         write(10,"(i5)") -mesh%nvois(iev,iel)
-         write(10,*)
-      end if
-
-   end do
-end do
-
-
-
-write(10,*)"$end"
-close(10)
-
-end subroutine write_mesh
-
 
 end module maillage
 

@@ -8,7 +8,7 @@ module poisson
 use zone, only: iout, grandx, petitx, time, dt, eps0, &
                 pcharg, mesh_fields, pi, xmu0
 
-use maillage, only: sll_triangular_mesh_2d, vtaux, vtauy
+use maillage, only: sll_triangular_mesh_2d
 
 implicit none
 
@@ -1366,11 +1366,11 @@ do ic=1,mesh%nbtcot
 end do
 
 do ic=1,mesh%nbtcot
-   vtantx(ic)=vtanty(ic)*vtaux(ic)
+   vtantx(ic)=vtanty(ic)*mesh%vtaux(ic)
 end do
 
 do ic=1,mesh%nbtcot
-   vtanty(ic)=vtanty(ic)*vtauy(ic)
+   vtanty(ic)=vtanty(ic)*mesh%vtauy(ic)
 end do
 
 ! --- 2.0 --- Calcul des seconds membres -------------------------------
