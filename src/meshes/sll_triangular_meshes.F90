@@ -25,22 +25,54 @@ module sll_triangular_meshes
 use sll_meshes_base
 use sll_tri_mesh_xmf
 
-  implicit none
+implicit none
 
-  !> @brief 2d hexagonal mesh
-  type ::  sll_triangular_mesh_2d
+!> @brief 2d hexagonal mesh
+type :: sll_triangular_mesh_2d
 
-     sll_int32           :: num_nodes  
-     sll_int32           :: num_cells 
-     sll_int32           :: num_edges     
+  sll_int32           :: num_nodes  
+  sll_int32           :: num_cells 
+  sll_int32           :: num_edges     
+  sll_int32           :: num_bound     
 
-     sll_real64, pointer :: coord(:,:)
-     sll_int32,  pointer :: nodes(:,:)
+  sll_real64, pointer :: coord(:,:)
+  sll_int32,  pointer :: nodes(:,:)
 
-     sll_real64          :: eta1_min
-     sll_real64          :: eta1_max
-     sll_real64          :: eta2_min
-     sll_real64          :: eta2_max
+  sll_real64          :: eta1_min
+  sll_real64          :: eta1_max
+  sll_real64          :: eta2_min
+  sll_real64          :: eta2_max
+
+  sll_int32  :: isolve
+  sll_int32  :: nbs, nbt, nbtcot, nbcoti, nmxfr, nelfr, nmxsd   
+  sll_int32  :: nctfrt, nbcfli, nndfnt, nbfrax
+
+  sll_real64 :: petitl, grandl
+
+  sll_real64, dimension(:,:), pointer :: coor
+  sll_real64, dimension(:),   pointer :: aire
+  sll_real64, dimension(:),   pointer :: xbas
+
+  sll_int32,  dimension(:),   pointer :: refs
+  sll_int32,  dimension(:),   pointer :: reft
+  sll_int32,  dimension(:,:), pointer :: ntri
+  sll_int32,  dimension(:,:), pointer :: nvois
+  sll_int32,  dimension(:,:), pointer :: nvoiv
+  sll_int32,  dimension(:,:), pointer :: nvoif
+  sll_int32,  dimension(:),   pointer :: nusd
+  sll_int32,  dimension(:),   pointer :: npoel1
+  sll_int32,  dimension(:),   pointer :: npoel2
+  sll_int32,  dimension(:),   pointer :: krefro
+  sll_int32,  dimension(:),   pointer :: kctfro
+  sll_int32,  dimension(:),   pointer :: kelfro
+  sll_int32,  dimension(:,:), pointer :: ksofro
+  sll_int32,  dimension(:)  , pointer :: nctfnt
+  sll_int32,  dimension(:)  , pointer :: noefnt
+  sll_int32,  dimension(:)  , pointer :: irffnt
+  sll_int32,  dimension(:),   pointer :: ifrax
+
+  sll_real64, dimension(:,:), pointer :: vnofro
+  sll_real64, dimension(:),   pointer :: xmal1, xmal2, xmal3
 
 !   contains
 
@@ -53,37 +85,37 @@ use sll_tri_mesh_xmf
 !     procedure, pass(mesh) :: display => display_triangular_mesh_2d
 !     procedure, pass(mesh) :: delete => delete_triangular_mesh_2d
 
-  end type sll_triangular_mesh_2d
+end type sll_triangular_mesh_2d
 
-  interface sll_create
-     module procedure initialize_triangular_mesh_2d
-  end interface sll_create
+interface sll_create
+   module procedure initialize_triangular_mesh_2d
+end interface sll_create
 
-  interface sll_delete
-     module procedure delete_triangular_mesh_2d
-  end interface sll_delete
+interface sll_delete
+   module procedure delete_triangular_mesh_2d
+end interface sll_delete
 
-  interface sll_display
-     module procedure display_triangular_mesh_2d
-  end interface sll_display
+interface sll_display
+   module procedure display_triangular_mesh_2d
+end interface sll_display
 
-  ! interface eta1_cell
-  !    module procedure eta1_cell_one_arg, eta1_cell_two_arg
-  ! end interface eta1_cell
+! interface eta1_cell
+!    module procedure eta1_cell_one_arg, eta1_cell_two_arg
+! end interface eta1_cell
 
-  ! interface eta2_cell
-  !    module procedure eta2_cell_one_arg, eta2_cell_two_arg
-  ! end interface eta2_cell
+! interface eta2_cell
+!    module procedure eta2_cell_one_arg, eta2_cell_two_arg
+! end interface eta2_cell
 
 
-!Type: mesh_data
+!Type: sll_triangular_mesh_2d
 !Structure du maillage
 !
 !nbs    - nombre de sommets
 !nbt    - nombre de triangles
 !nbtcot - nombre total de cotes
 !nbcoti - nombre de cotes internes
-!nmxfr  - nombre total de frontieres referencees
+!num_bound  - nombre total de frontieres referencees
 !nelfr  - nombre de triangles sur une frontiere
 !coor   - coordonnees des sommets
 !aire   - aires de elements
@@ -103,39 +135,6 @@ use sll_tri_mesh_xmf
 !noefnt - noeuds Dirichlet sur les frontieres internes 
 !irffnt - numeros de reference de ces noeuds Dirichlet
 !nmxsd  - nombre de sous domaines references
-type mesh_data
-
-   integer :: isolve
-   integer :: nbs, nbt, nbtcot, nbcoti, nmxfr, nelfr, nmxsd   
-   integer :: nctfrt, nbcfli, nndfnt, nbfrax
-
-   real(8) :: petitl, grandl
-   real(8), dimension(:,:), pointer :: coor
-   real(8), dimension(:),   pointer :: aire
-   real(8), dimension(:),   pointer :: xbas
-
-   integer, dimension(:),   pointer :: refs
-   integer, dimension(:),   pointer :: reft
-   integer, dimension(:,:), pointer :: ntri
-   integer, dimension(:,:), pointer :: nvois
-   integer, dimension(:,:), pointer :: nvoiv
-   integer, dimension(:,:), pointer :: nvoif
-   integer, dimension(:),   pointer :: nusd
-   integer, dimension(:),   pointer :: npoel1
-   integer, dimension(:),   pointer :: npoel2
-   integer, dimension(:),   pointer :: krefro
-   integer, dimension(:),   pointer :: kctfro
-   integer, dimension(:),   pointer :: kelfro
-   integer, dimension(:,:), pointer :: ksofro
-   integer, dimension(:)  , pointer :: nctfnt
-   integer, dimension(:)  , pointer :: noefnt
-   integer, dimension(:)  , pointer :: irffnt
-   integer, dimension(:),   pointer :: ifrax
-
-   real(8), dimension(:,:), pointer :: vnofro
-   real(8), dimension(:),   pointer :: xmal1, xmal2, xmal3
-
-end type mesh_data
 
 !  nbcov  - nombres de cotes des Voronoi                   
 !  nuvac  - numeros des PV associes aux cotes                
@@ -147,19 +146,18 @@ end type mesh_data
 
 type voronoi
 
-   real(8), dimension(:,:), pointer :: coor
-   real(8), dimension(:)  , pointer :: aire
-   real(8), dimension(:)  , pointer :: xlcov
-   real(8), dimension(:)  , pointer :: xlcod
-   integer, dimension(:)  , pointer :: ncotcu
-   integer, dimension(:)  , pointer :: nugcv
-   integer, dimension(:,:), pointer :: nudac
-   integer, dimension(:,:), pointer :: nuvac
-   integer, dimension(:,:), pointer :: nugcd
-   integer, dimension(:),   pointer :: nbcov
+  sll_real64, dimension(:,:), pointer :: coor
+  sll_real64, dimension(:)  , pointer :: aire
+  sll_real64, dimension(:)  , pointer :: xlcov
+  sll_real64, dimension(:)  , pointer :: xlcod
+  sll_int32,  dimension(:)  , pointer :: ncotcu
+  sll_int32,  dimension(:)  , pointer :: nugcv
+  sll_int32,  dimension(:,:), pointer :: nudac
+  sll_int32,  dimension(:,:), pointer :: nuvac
+  sll_int32,  dimension(:,:), pointer :: nugcd
+  sll_int32,  dimension(:)  , pointer :: nbcov
 
 end type voronoi
-
 
 contains
 
@@ -171,14 +169,13 @@ subroutine initialize_triangular_mesh_2d( mesh,     &
                                           eta2_min, &
                                           eta2_max)
 
-
 type(sll_triangular_mesh_2d) :: mesh
-sll_int32,  intent(in) :: nc_eta1
-sll_real64, intent(in) :: eta1_min
-sll_real64, intent(in) :: eta1_max
-sll_int32,  intent(in) :: nc_eta2
-sll_real64, intent(in) :: eta2_min
-sll_real64, intent(in) :: eta2_max
+sll_int32,  intent(in)       :: nc_eta1
+sll_real64, intent(in)       :: eta1_min
+sll_real64, intent(in)       :: eta1_max
+sll_int32,  intent(in)       :: nc_eta2
+sll_real64, intent(in)       :: eta2_min
+sll_real64, intent(in)       :: eta2_max
 
 !*-----------------------------------------------------------------------
 !*  Generation du maillage pour une plaque rectangulaire dans le plan xOy.
@@ -187,14 +184,13 @@ sll_real64, intent(in) :: eta2_max
 
 sll_int32 :: i
 sll_int32 :: nd1, nd2, nd3
-sll_int32 :: nelt, nlp, nhp
+sll_int32 :: nelt
 sll_int32 :: l, l1, ll1, ll2
 sll_int32 :: in, iin, n, noeud, nsom, nxm, nym, neltot, ndd
-sll_int32 :: nbox, nboy, iel, iev
+sll_int32 :: nbox, nboy
 
-real(8) :: xx1, xx2, pasx0, pasx1, pasy0, pasy1
-real(8) :: alx, aly, y
-real(8) :: x_min, x_max, y_min, y_max
+sll_real64 :: xx1, xx2, pasx0, pasx1, pasy0, pasy1
+sll_real64 :: alx, aly
 
 mesh%eta1_min = eta1_min
 mesh%eta1_max = eta1_max
@@ -231,8 +227,8 @@ do n = 0 , nym       !Coordonnees des noeuds
    in = nbox * n
    do i = 1 , nbox
       iin = in + i                  !numero du noeud
-      xx1 = x_min + alx - (i - 1) * pasx0   !coordonnees du noeud
-      xx2 = y_min + n * pasy0 
+      xx1 = eta1_min + alx - (i - 1) * pasx0   !coordonnees du noeud
+      xx2 = eta2_min + n * pasy0 
       mesh%coord(1,iin) = xx1
       mesh%coord(2,iin) = xx2
    end do
@@ -261,7 +257,7 @@ do l = 1 , nym                  !boucle sur les lignes
 
       nelt = nelt + 1           !second e.f. du "quadrangle"
        
-      mesh%nodes(1,nelt) = nd1 + 1       !premier noeud        
+      mesh%nodes(1,nelt) = nd1 + 1   !premier noeud        
       mesh%nodes(2,nelt) = nd2       !deuxieme noeud
       mesh%nodes(3,nelt) = nd3       !troisieme noeud
 
@@ -388,24 +384,23 @@ end subroutine initialize_triangular_mesh_2d
 !    end if
 !
 !  end function hex_to_global
-!
-!
-  subroutine display_triangular_mesh_2d(mesh)
-    ! Displays mesh information on the terminal
-    class(sll_triangular_mesh_2d), intent(in) :: mesh
 
-    write(*,"(/,(a))") '2D mesh : num_cells   num_nodes   num_edges '
-    write(*,"(10x,3(i6,9x),4(g13.3,1x))") &
-         mesh%num_cells,  &
-         mesh%num_nodes,  &
-         mesh%num_edges,  &
-         mesh%eta1_min,   &
-         mesh%eta1_max,   &
-         mesh%eta2_min,   &
-         mesh%eta2_max
 
-  end subroutine display_triangular_mesh_2d
+!> Displays mesh information on the terminal
+subroutine display_triangular_mesh_2d(mesh)
+class(sll_triangular_mesh_2d), intent(in) :: mesh
 
+write(*,"(/,(a))") '2D mesh : num_cells   num_nodes   num_edges '
+write(*,"(10x,3(i6,9x),4(g13.3,1x))") &
+     mesh%num_cells,  &
+     mesh%num_nodes,  &
+     mesh%num_edges,  &
+     mesh%eta1_min,   &
+     mesh%eta1_max,   &
+     mesh%eta2_min,   &
+     mesh%eta2_max
+
+end subroutine display_triangular_mesh_2d
 
 !  subroutine write_triangular_mesh_2d(mesh, name)
 !    ! Writes the mesh information in a file named "name"
@@ -500,151 +495,213 @@ end subroutine initialize_triangular_mesh_2d
 !
 !  end subroutine write_field_triangular_mesh_xmf
 !
-!
-  subroutine write_triangular_mesh_mtv(mesh, mtv_file)
 
-    type(sll_triangular_mesh_2d) :: mesh
-    sll_real64                   :: x1
-    sll_real64                   :: y1
-    sll_int32                    :: is1
-    sll_int32                    :: is2
-    sll_int32                    :: is3
-    character(len=*)             :: mtv_file
-    sll_int32                    :: out_unit
-    sll_int32                    :: error
-    sll_int32                    :: i
-    
-    call sll_new_file_id(out_unit, error)
+subroutine write_triangular_mesh_mtv(mesh, mtv_file)
 
-    open( out_unit, file=mtv_file)
-    
-    !--- Trace du maillage ---
-    
-    write(out_unit,"(a)")"$DATA=CURVE3D"
-    write(out_unit,"(a)")"%equalscale=T"
-    write(out_unit,"(a)")"%toplabel='Maillage' "
-    
-    do i = 1, mesh%num_cells
-    
-       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
-       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(2,i)),0.
-       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(3,i)),0.
-       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
-       write(out_unit,*)
-    
-    end do
-    
-    !--- Numeros des noeuds et des triangles
-    
-    write(out_unit,"(a)")"$DATA=CURVE3D"
-    write(out_unit,"(a)")"%equalscale=T"
-    write(out_unit,"(a)")"%toplabel='Numeros des noeuds et des triangles' "
-    
-    do i = 1, mesh%num_cells
-       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
-       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(2,i)),0.
-       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(3,i)),0.
-       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
-       write(out_unit,*)
-    end do
-    
-    do i = 1, mesh%num_cells
-       x1 = (  mesh%coord(1,mesh%nodes(1,i))  &
-             + mesh%coord(1,mesh%nodes(2,i))  &
-         + mesh%coord(1,mesh%nodes(3,i))    )/3.
-       y1 = (  mesh%coord(2,mesh%nodes(1,i))  &
-             + mesh%coord(2,mesh%nodes(2,i))  &
-         + mesh%coord(2,mesh%nodes(3,i))    )/3.
-       write(out_unit,"(a)"   , advance="no")"@text x1="
-       write(out_unit,"(f8.5)", advance="no") x1
-       write(out_unit,"(a)"   , advance="no")" y1="
-       write(out_unit,"(f8.5)", advance="no") y1
-       write(out_unit,"(a)"   , advance="no")" z1=0. lc=4 ll='"
-       write(out_unit,"(i4)"  , advance="no") i
-       write(out_unit,"(a)")"'"
-    end do
-    
-    do i = 1, mesh%num_nodes
-       x1 = mesh%coord(1,i)
-       y1 = mesh%coord(2,i)
-       write(out_unit,"(a)"   , advance="no")"@text x1="
-       write(out_unit,"(g15.3)", advance="no") x1
-       write(out_unit,"(a)"   , advance="no")" y1="
-       write(out_unit,"(g15.3)", advance="no") y1
-       write(out_unit,"(a)"   , advance="no")" z1=0. lc=5 ll='"
-       write(out_unit,"(i4)"  , advance="no") i
-       write(out_unit,"(a)")"'"
-    end do
-    
-    !--- Numeros des noeuds 
-    
-    write(out_unit,*)"$DATA=CURVE3D"
-    write(out_unit,*)"%equalscale=T"
-    write(out_unit,*)"%toplabel='Numeros des noeuds' "
-    
-    do i = 1, mesh%num_cells
-       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
-       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(2,i)),0.
-       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(3,i)),0.
-       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
-       write(out_unit,*)
-    end do
-    
-    do i = 1, mesh%num_nodes
-       x1 = mesh%coord(1,i)
-       y1 = mesh%coord(2,i)
-       write(out_unit,"(a)"   , advance="no")"@text x1="
-       write(out_unit,"(g15.3)", advance="no") x1
-       write(out_unit,"(a)"   , advance="no")" y1="
-       write(out_unit,"(g15.3)", advance="no") y1
-       write(out_unit,"(a)"   , advance="no")" z1=0. lc=5 ll='"
-       write(out_unit,"(i4)"  , advance="no") i
-       write(out_unit,"(a)")"'"
-    end do
-    
-    !--- Numeros des triangles
-    
-    write(out_unit,*)"$DATA=CURVE3D"
-    write(out_unit,*)"%equalscale=T"
-    write(out_unit,*)"%toplabel='Numeros des triangles' "
-    
-    do i = 1, mesh%num_cells
-       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
-       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(2,i)),0.
-       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(3,i)),0.
-       write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
-       write(out_unit,*)
-    end do
-    
-    do i = 1, mesh%num_cells
-       x1 = (  mesh%coord(1,mesh%nodes(1,i))  &
-             + mesh%coord(1,mesh%nodes(2,i))  &
-         + mesh%coord(1,mesh%nodes(3,i))    )/3.
-       y1 = (  mesh%coord(2,mesh%nodes(1,i))  &
-             + mesh%coord(2,mesh%nodes(2,i))  &
-         + mesh%coord(2,mesh%nodes(3,i))    )/3.
-       write(out_unit,"(a)"   , advance="no")"@text x1="
-       write(out_unit,"(g15.3)", advance="no") x1
-       write(out_unit,"(a)"   , advance="no")" y1="
-       write(out_unit,"(g15.3)", advance="no") y1
-       write(out_unit,"(a)"   , advance="no")" z1=0. lc=4 ll='"
-       write(out_unit,"(i4)"  , advance="no") i
-       write(out_unit,"(a)")"'"
-    end do
-    
-    write(out_unit,*)"$END"
-    close(out_unit)
-   
+type(sll_triangular_mesh_2d) :: mesh
+sll_real64                   :: x1
+sll_real64                   :: y1
+character(len=*)             :: mtv_file
+sll_int32                    :: out_unit
+sll_int32                    :: error
+sll_int32                    :: i
+
+call sll_new_file_id(out_unit, error)
+
+open( out_unit, file=mtv_file)
+
+!--- Trace du maillage ---
+
+write(out_unit,"(a)")"$DATA=CURVE3D"
+write(out_unit,"(a)")"%equalscale=T"
+write(out_unit,"(a)")"%toplabel='Maillage' "
+
+do i = 1, mesh%num_cells
+
+   write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
+   write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(2,i)),0.
+   write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(3,i)),0.
+   write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
+   write(out_unit,*)
+
+end do
+
+!--- Numeros des noeuds et des triangles
+
+write(out_unit,"(a)")"$DATA=CURVE3D"
+write(out_unit,"(a)")"%equalscale=T"
+write(out_unit,"(a)")"%toplabel='Numeros des noeuds et des triangles' "
+
+do i = 1, mesh%num_cells
+   write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
+   write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(2,i)),0.
+   write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(3,i)),0.
+   write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
+   write(out_unit,*)
+end do
+
+do i = 1, mesh%num_cells
+   x1 = (  mesh%coord(1,mesh%nodes(1,i))  &
+         + mesh%coord(1,mesh%nodes(2,i))  &
+     + mesh%coord(1,mesh%nodes(3,i))    )/3.
+   y1 = (  mesh%coord(2,mesh%nodes(1,i))  &
+         + mesh%coord(2,mesh%nodes(2,i))  &
+     + mesh%coord(2,mesh%nodes(3,i))    )/3.
+   write(out_unit,"(a)"   , advance="no")"@text x1="
+   write(out_unit,"(f8.5)", advance="no") x1
+   write(out_unit,"(a)"   , advance="no")" y1="
+   write(out_unit,"(f8.5)", advance="no") y1
+   write(out_unit,"(a)"   , advance="no")" z1=0. lc=4 ll='"
+   write(out_unit,"(i4)"  , advance="no") i
+   write(out_unit,"(a)")"'"
+end do
+
+do i = 1, mesh%num_nodes
+   x1 = mesh%coord(1,i)
+   y1 = mesh%coord(2,i)
+   write(out_unit,"(a)"   ,  advance="no")"@text x1="
+   write(out_unit,"(g15.3)", advance="no") x1
+   write(out_unit,"(a)"   ,  advance="no")" y1="
+   write(out_unit,"(g15.3)", advance="no") y1
+   write(out_unit,"(a)"   ,  advance="no")" z1=0. lc=5 ll='"
+   write(out_unit,"(i4)"  ,  advance="no") i
+   write(out_unit,"(a)")"'"
+end do
+
+!--- Numeros des noeuds 
+
+write(out_unit,*)"$DATA=CURVE3D"
+write(out_unit,*)"%equalscale=T"
+write(out_unit,*)"%toplabel='Numeros des noeuds' "
+
+do i = 1, mesh%num_cells
+   write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
+   write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(2,i)),0.
+   write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(3,i)),0.
+   write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
+   write(out_unit,*)
+end do
+
+do i = 1, mesh%num_nodes
+   x1 = mesh%coord(1,i)
+   y1 = mesh%coord(2,i)
+   write(out_unit,"(a)"   ,  advance="no")"@text x1="
+   write(out_unit,"(g15.3)", advance="no") x1
+   write(out_unit,"(a)"   ,  advance="no")" y1="
+   write(out_unit,"(g15.3)", advance="no") y1
+   write(out_unit,"(a)"   ,  advance="no")" z1=0. lc=5 ll='"
+   write(out_unit,"(i4)"  ,  advance="no") i
+   write(out_unit,"(a)")"'"
+end do
+
+!--- Numeros des triangles
+
+write(out_unit,*)"$DATA=CURVE3D"
+write(out_unit,*)"%equalscale=T"
+write(out_unit,*)"%toplabel='Numeros des triangles' "
+
+do i = 1, mesh%num_cells
+   write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
+   write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(2,i)),0.
+   write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(3,i)),0.
+   write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
+   write(out_unit,*)
+end do
+
+do i = 1, mesh%num_cells
+   x1 = (  mesh%coord(1,mesh%nodes(1,i))  &
+         + mesh%coord(1,mesh%nodes(2,i))  &
+     + mesh%coord(1,mesh%nodes(3,i))    )/3.
+   y1 = (  mesh%coord(2,mesh%nodes(1,i))  &
+         + mesh%coord(2,mesh%nodes(2,i))  &
+     + mesh%coord(2,mesh%nodes(3,i))    )/3.
+   write(out_unit,"(a)"   , advance="no")"@text x1="
+   write(out_unit,"(g15.3)", advance="no") x1
+   write(out_unit,"(a)"   , advance="no")" y1="
+   write(out_unit,"(g15.3)", advance="no") y1
+   write(out_unit,"(a)"   , advance="no")" z1=0. lc=4 ll='"
+   write(out_unit,"(i4)"  , advance="no") i
+   write(out_unit,"(a)")"'"
+end do
+
+write(out_unit,*)"$END"
+close(out_unit)
+ 
 end subroutine write_triangular_mesh_mtv
 
-
 subroutine delete_triangular_mesh_2d( mesh )
-  class(sll_triangular_mesh_2d), intent(inout) :: mesh
-  sll_int32 :: ierr
 
-  print*, 'delete mesh'
+class(sll_triangular_mesh_2d), intent(inout) :: mesh
+
+print*, 'delete mesh'
 
 end subroutine delete_triangular_mesh_2d
 
+subroutine read_from_file(mesh, maafil)
+
+type(sll_triangular_mesh_2d) :: mesh
+character(len=*), intent(in)  :: maafil
+
+sll_int32        :: nfmaa = 12
+sll_int32        :: sll_err
+sll_int32        :: i
+sll_int32        :: j
+integer          :: imxref=99999999 
+integer          :: nelin
+integer          :: nefro
+integer          :: nmaill
+integer          :: iout = 6
+
+write(iout,"(/////10x,'>>> Read mesh from file <<<'/)")
+open(nfmaa,file=maafil,status='OLD',err=80)
+write(*,1050,advance='no') trim(maafil)
+
+write(iout,"(10x,'Open the file'                      &
+&        /10x,'Unit number',i3,'    fichier  ',a14)") &
+&        nfmaa,maafil
+
+read(nfmaa,*) 
+read(nfmaa,*) nmaill,imxref
+read(nfmaa,*) mesh%num_nodes, &
+              mesh%num_cells, &
+              mesh%nmxfr,     &
+              mesh%nmxsd,     &
+              nefro,          &
+              nelin,          &
+              mesh%nelfr
+
+SLL_ALLOCATE(mesh%coord(1:2,mesh%num_nodes),   sll_err)
+SLL_ALLOCATE(mesh%nodes(1:3,1:mesh%num_cells), sll_err)
+SLL_ALLOCATE(mesh%refs(mesh%num_nodes),        sll_err)
+SLL_ALLOCATE(mesh%reft(mesh%num_cells),        sll_err)
+SLL_ALLOCATE(mesh%nusd(mesh%num_cells),        sll_err)
+SLL_ALLOCATE(mesh%nvois(3,mesh%num_cells),     sll_err)
+
+read(nfmaa,*) ((mesh%coord(i,j),i=1,2),j=1,mesh%num_nodes)
+read(nfmaa,*)  (mesh%refs(i)   ,i=1,mesh%num_nodes) 
+read(nfmaa,*) ((mesh%nodes(i,j),i=1,3),j=1,mesh%num_cells)
+read(nfmaa,*) ((mesh%nvois(i,j),i=1,3),j=1,mesh%num_cells)
+read(nfmaa,*)  (mesh%nusd(i)   ,i=1,mesh%num_cells) 
+
+close(nfmaa)
+
+write(iout,"(//,10x,'Nb de noeuds                : ',i10/       &
+&              ,10x,'Nb de triangles             : ',i10/       &
+&              ,10x,'Nb max de front referencees : ',i10/       &
+&              ,10x,'Nb max de SD references     : ',i10/       &
+&              ,10x,/'Nb de triangles ayant au moins 1 sommet'  &
+&              ,' sur une frontiere : ',i10/)") mesh%num_nodes, &
+                   mesh%num_cells,mesh%nmxfr,mesh%nmxsd,nefro
+
+write(iout,"(//10x,'Nb d''elements internes     : ',i10/    &
+          &   ,10x,'Nb d''elements frontieres   : ',i10/)") nelin,mesh%nelfr
+
+1050 format(/' Read mesh from file  ', A, ' ?  Y')
+
+return
+80 continue
+SLL_ERROR(' Input file  '//maafil//'  not found')
+
+end subroutine read_from_file
 
 end module sll_triangular_meshes
