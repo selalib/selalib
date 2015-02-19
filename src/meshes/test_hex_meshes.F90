@@ -14,6 +14,7 @@ sll_int32                   :: error
 sll_real64                  :: x1
 sll_real64                  :: x2
 sll_int32                   :: i
+sll_int32                   :: nei1, nei2, nei3
 
 num_cells = 1
 
@@ -32,6 +33,9 @@ do i = 1, mesh%num_pts_tot
    x2 = mesh%global_to_x2(i)
    field(i) = cos(2*sll_pi*x1)*sin(2*sll_pi*x2)
 end do
+
+call get_neighbours(mesh, 1, nei1, nei2, nei3)
+print *, "neis =",nei1, nei2, nei3
 
 call write_field_hex_mesh_xmf(mesh, field, 'field')
 
