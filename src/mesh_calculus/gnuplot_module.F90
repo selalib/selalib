@@ -3,7 +3,7 @@ module gnuplot_module
 
 use zone, only: lmodte, lmodtm, mesh_fields, iout,  &
         lcorrp, titre, time
-use maillage, only: mesh_data, nsomare, ngnoeelt, nnoeselt
+use maillage, only: sll_triangular_mesh_2d, nsomare, ngnoeelt, nnoeselt
 
 implicit none
 
@@ -17,7 +17,7 @@ subroutine champs_gnuplot(ebj, rho, phi, mesh, iplot, dir,  &
 
 type(mesh_fields) :: ebj
 double precision, dimension(:) :: phi, rho
-type(mesh_data) :: mesh
+type(sll_triangular_mesh_2d) :: mesh
 integer :: iplot
 character(len=*) :: dir
 logical, intent(in) :: ltre1, ltre2, ltre3, ltrb1, ltrb2, ltrb3
@@ -73,7 +73,7 @@ end subroutine champs_gnuplot
 
 subroutine chloop(mesh, nomchamp, champ, f_gnu, iplot)
 
-type(mesh_data) :: mesh
+type(sll_triangular_mesh_2d) :: mesh
 character(len=*) :: nomchamp, f_gnu
 double precision, dimension(:) :: champ
 double precision :: xs1, xs2, xs3, ys1, ys2, ys3
@@ -89,16 +89,16 @@ close(83)
 
 open(94, file = nomchamp)
 
-do i = 1, mesh%nbt
+do i = 1, mesh%num_cells
 
-   xs1 = mesh%coor(1,mesh%ntri(1,i)); ys1 = mesh%coor(2,mesh%ntri(1,i))
-   xs2 = mesh%coor(1,mesh%ntri(2,i)); ys2 = mesh%coor(2,mesh%ntri(2,i))
-   xs3 = mesh%coor(1,mesh%ntri(3,i)); ys3 = mesh%coor(2,mesh%ntri(3,i))
+   xs1 = mesh%coord(1,mesh%nodes(1,i)); ys1 = mesh%coord(2,mesh%nodes(1,i))
+   xs2 = mesh%coord(1,mesh%nodes(2,i)); ys2 = mesh%coord(2,mesh%nodes(2,i))
+   xs3 = mesh%coord(1,mesh%nodes(3,i)); ys3 = mesh%coord(2,mesh%nodes(3,i))
 
-   write(94,*)xs1, ys1, champ(mesh%ntri(1,i))
-   write(94,*)xs2, ys2, champ(mesh%ntri(2,i))
-   write(94,*)xs3, ys3, champ(mesh%ntri(3,i))
-   write(94,*)xs1, ys1, champ(mesh%ntri(1,i))
+   write(94,*)xs1, ys1, champ(mesh%nodes(1,i))
+   write(94,*)xs2, ys2, champ(mesh%nodes(2,i))
+   write(94,*)xs3, ys3, champ(mesh%nodes(3,i))
+   write(94,*)xs1, ys1, champ(mesh%nodes(1,i))
    write(94,*)
    write(94,*)
 
@@ -114,7 +114,7 @@ subroutine gnu_output( ebj, rho, phi, mesh, ltre1, ltre2, ltre3     &
 
 type (mesh_fields) :: ebj
 double precision, dimension(:) :: phi, rho
-type (mesh_data) :: mesh
+type (sll_triangular_mesh_2d) :: mesh
 logical, intent(in) :: ltre1, ltre2, ltre3, ltrb1, ltrb2, ltrb3
 logical, intent(in) :: ltrj1, ltrj2, ltrj3
 logical, intent(in) :: ltrpo, ltrrh
@@ -145,7 +145,7 @@ end subroutine gnu_output
 
 subroutine gnu_loop(mesh, nomchamp, champ)
 
-type(mesh_data) :: mesh
+type(sll_triangular_mesh_2d) :: mesh
 character(len=*) :: nomchamp
 double precision, dimension(:) :: champ
 integer :: is1, is2, is3
@@ -155,16 +155,16 @@ write(*,"(/10x,a)")     &
 
 open(27, file = trim(titre)//nomchamp//".dat")
 
-do i = 1, mesh%nbt
+do i = 1, mesh%num_cells
 
-    is1 = mesh%ntri(1,i)
-    is2 = mesh%ntri(2,i)
-    is3 = mesh%ntri(3,i)
+    is1 = mesh%nodes(1,i)
+    is2 = mesh%nodes(2,i)
+    is3 = mesh%nodes(3,i)
 
-    write(27,*)sngl(mesh%coor(1,is1)),sngl(mesh%coor(2,is1)),sngl(champ(is1))
-    write(27,*)sngl(mesh%coor(1,is2)),sngl(mesh%coor(2,is2)),sngl(champ(is2))
-    write(27,*)sngl(mesh%coor(1,is3)),sngl(mesh%coor(2,is3)),sngl(champ(is3))
-    write(27,*)sngl(mesh%coor(1,is1)),sngl(mesh%coor(2,is1)),sngl(champ(is1))
+    write(27,*)sngl(mesh%coord(1,is1)),sngl(mesh%coord(2,is1)),sngl(champ(is1))
+    write(27,*)sngl(mesh%coord(1,is2)),sngl(mesh%coord(2,is2)),sngl(champ(is2))
+    write(27,*)sngl(mesh%coord(1,is3)),sngl(mesh%coord(2,is3)),sngl(champ(is3))
+    write(27,*)sngl(mesh%coord(1,is1)),sngl(mesh%coord(2,is1)),sngl(champ(is1))
     write(27,*)
     write(27,*)
 
@@ -188,7 +188,7 @@ end subroutine gnu_loop
 subroutine vigie( nom, mesh, phi, iplot )
 
 character(len=*) :: nom
-type(mesh_data), intent(in) :: mesh
+type(sll_triangular_mesh_2d), intent(in) :: mesh
 double precision, dimension(:), intent(in) :: phi
 integer, intent(in) :: iplot
 
@@ -235,15 +235,15 @@ if ( minval(phi(:)) /= maxval(phi(:)) ) then
    !  nbs: number of nodes
    !  nbt: number of surface elements
    !  mesh%coor: nodes coordinates
-   !  mesh%ntri: connectivity table
+   !  mesh%nodes: connectivity table
    !  q: unknowns array
 
    nnu  = 1            !  nnu: number of unknowns stored
-   allocate(q(mesh%nbs,nnu))
-   allocate(xx(2,mesh%nbs))
-   do i = 1, mesh%nbs
-      xx(1,i) = sngl(mesh%coor(1,i))
-      xx(2,i) = sngl(mesh%coor(2,i))
+   allocate(q(mesh%num_nodes,nnu))
+   allocate(xx(2,mesh%num_nodes))
+   do i = 1, mesh%num_nodes
+      xx(1,i) = sngl(mesh%coord(1,i))
+      xx(2,i) = sngl(mesh%coord(2,i))
       q(i,1)  = sngl(phi(i))
    end do
 
@@ -251,11 +251,11 @@ if ( minval(phi(:)) /= maxval(phi(:)) ) then
    write (iunit1) nblock
    do nb = 1,nblock
       write(iunit1) itype, nnu
-      write(iunit1) ihmg, mesh%nbs
-      write(iunit1) mesh%nbt, ielemtype
-      write(iunit1) ((xx(l,i),l=1,2),i=1,mesh%nbs)
-      write(iunit1) ((q(i,nu),i=1,mesh%nbs),nu=1,nnu)
-      write(iunit1) ((mesh%ntri(l,i),l=1,nnperel),i=1,mesh%nbt)
+      write(iunit1) ihmg, mesh%num_nodes
+      write(iunit1) mesh%num_cells, ielemtype
+      write(iunit1) ((xx(l,i),l=1,2),i=1,mesh%num_nodes)
+      write(iunit1) ((q(i,nu),i=1,mesh%num_nodes),nu=1,nnu)
+      write(iunit1) ((mesh%nodes(l,i),l=1,nnperel),i=1,mesh%num_cells)
    end do
 
    !write description file
@@ -272,18 +272,18 @@ if ( minval(phi(:)) /= maxval(phi(:)) ) then
 
    open(iunit1,file=trim(titre)//'_'//nom//'_mesh.ascii2d_'//fin//'.dat')
 
-   write(iunit1,*) 'points',mesh%nbs   !ecriture des noeuds
-   do i = 1, mesh%nbs
-      write(iunit1,*) sngl(mesh%coor(1:2,i))
+   write(iunit1,*) 'points',mesh%num_nodes   !ecriture des noeuds
+   do i = 1, mesh%num_nodes
+      write(iunit1,*) sngl(mesh%coord(1:2,i))
    end do
 
-   write(iunit1,*) 'triangles', mesh%nbt   !ecriture des triangles
-   do i = 1 , mesh%nbt
-      write(iunit1,"(3i6)") mesh%ntri(1:3,i)
+   write(iunit1,*) 'triangles', mesh%num_cells   !ecriture des triangles
+   do i = 1 , mesh%num_cells
+      write(iunit1,"(3i6)") mesh%nodes(1:3,i)
    enddo
 
    write(iunit1,*) 'scalars '//nom     !ecriture des variables
-   do i = 1 , mesh%nbs
+   do i = 1 , mesh%num_nodes
       write(iunit1,*) sngl(phi(i))
    enddo
    close(iunit1)
@@ -308,7 +308,7 @@ end subroutine vigie
 subroutine vigie2( nom, mesh, phi, iplot )
 
 character(len=*) :: nom
-type(mesh_data), intent(in) :: mesh
+type(sll_triangular_mesh_2d), intent(in) :: mesh
 double precision, dimension(:), intent(in) :: phi
 integer, intent(in) :: iplot
 
@@ -335,37 +335,37 @@ if ( minval(phi(:)) /= maxval(phi(:)) ) then
    fin = aa//bb//cc//dd
 
    iunit1 = 1
-   allocate(xx(2,mesh%nbs+mesh%nbtcot))
+   allocate(xx(2,mesh%num_nodes+mesh%nbtcot))
    k = 0
-   do i = 1, mesh%nbs
+   do i = 1, mesh%num_nodes
       k = k+1
-      xx(1,k) = sngl(mesh%coor(1,i))
-      xx(2,k) = sngl(mesh%coor(2,i))
+      xx(1,k) = sngl(mesh%coord(1,i))
+      xx(2,k) = sngl(mesh%coord(2,i))
    end do
    do i = 1, mesh%nbtcot
       k = k+1
-      xx(1,k) = sngl(0.5*(mesh%coor(1,nsomare(1,i))+mesh%coor(1,nsomare(2,i))))
-      xx(2,k) = sngl(0.5*(mesh%coor(2,nsomare(1,i))+mesh%coor(2,nsomare(2,i))))
+      xx(1,k) = sngl(0.5*(mesh%coord(1,nsomare(1,i))+mesh%coord(1,nsomare(2,i))))
+      xx(2,k) = sngl(0.5*(mesh%coord(2,nsomare(1,i))+mesh%coord(2,nsomare(2,i))))
    end do
 
    !Sortie Vigie - Fichier ASCII
 
    open(iunit1,file=trim(titre)//'_'//nom//'_mesh.ascii2d_'//fin//'.dat')
 
-   write(iunit1,*) 'points',mesh%nbs+mesh%nbtcot   !ecriture des noeuds
-   do i = 1, mesh%nbs+mesh%nbtcot
+   write(iunit1,*) 'points',mesh%num_nodes+mesh%nbtcot   !ecriture des noeuds
+   do i = 1, mesh%num_nodes+mesh%nbtcot
       write(iunit1,*) xx(1:2,i)
    end do
 
-   write(iunit1,*) 'triangles', 4*mesh%nbt   !ecriture des triangles
-   do i = 1 , mesh%nbt
+   write(iunit1,*) 'triangles', 4*mesh%num_cells   !ecriture des triangles
+   do i = 1 , mesh%num_cells
       do j = 1, 4
          write(iunit1,"(3i6)") (ngnoeelt(nnoeselt(k,j),i),k=1,3)
       end do
    enddo
 
    write(iunit1,*) 'scalars '//nom     !ecriture des variables
-   do i = 1 , mesh%nbs+mesh%nbtcot
+   do i = 1 , mesh%num_nodes+mesh%nbtcot
       write(iunit1,*) sngl(phi(i))
    enddo
    close(iunit1)

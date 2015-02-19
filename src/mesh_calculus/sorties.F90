@@ -8,7 +8,7 @@ use zone, only: mesh_fields, lmodte, lmodtm, nstep,     &
         pi, c, xmu0, petitx, grandx, &
         objet_fonction,mcentr,minter,mexter
 
-use maillage, only: mesh_data, voronoi, nctfrp, nctfro
+use maillage, only: sll_triangular_mesh_2d, voronoi, nctfrp, nctfro
 
 use gnuplot_module, only: gnu_output, champs_gnuplot
 use utlib, only: utunit
@@ -168,7 +168,7 @@ subroutine diagcha( istep, ebj, rho, phi, mesh, dirpr )
 
   integer,        intent(in) :: istep
   type(mesh_fields),  intent(in) :: ebj
-  type(mesh_data),    intent(in) :: mesh
+  type(sll_triangular_mesh_2d),    intent(in) :: mesh
   double precision, dimension(:),     intent(in) :: phi, rho
   character(len=*),   intent(in) :: dirpr
 
