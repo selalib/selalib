@@ -37,11 +37,11 @@
 program PICSOU
                         
 use zone,            only: readin, lmodte, iout, mesh_fields, objet_fonction
-use maillage,        only: calmai
 use solveurs_module, only: lecture_donnees_solveur
 use poisson,         only: poissn, poifrc, init_solveur_poisson, poliss
 
 use sll_triangular_meshes
+use sll_mesh_calculus_2d_module
 use sll_gnuplot
 
 !----------------------------------------------------------------------
@@ -102,7 +102,7 @@ call read_from_file(mesh, maafil)                    !Lecture maillage
 call write_triangular_mesh_mtv(mesh, "picsou.mtv")
 call lecture_donnees_solveur(inpfil,ntypfr, potfr)  
 
-call calmai(mesh, ntypfr)                               !Calcul du maillage
+call analyze_triangular_mesh(mesh, ntypfr) 
 
 allocate(mxw%e(3,mesh%num_nodes)); mxw%e=0.0; 
 allocate(mxw%b(3,mesh%num_nodes)); mxw%b=0.0; 

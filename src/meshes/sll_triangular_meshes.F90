@@ -27,6 +27,8 @@ use sll_tri_mesh_xmf
 
 implicit none
 
+integer :: imxref=99999999 
+
 !> @brief 2d hexagonal mesh
 type :: sll_triangular_mesh_2d
 
@@ -631,7 +633,6 @@ sll_int32        :: nfmaa = 12
 sll_int32        :: sll_err
 sll_int32        :: i
 sll_int32        :: j
-integer          :: imxref=99999999 
 integer          :: nelin
 integer          :: nefro
 integer          :: nmaill
