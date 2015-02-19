@@ -77,6 +77,10 @@ type :: sll_triangular_mesh_2d
   sll_int32,  dimension(:)  , pointer :: nugcv
   sll_int32,  dimension(:)  , pointer :: nbcov
   sll_real64, dimension(:)  , pointer :: xlcod
+!  vtaux  - composante x des vecteurs tangeants         
+!  vtauy  - composante y des vecteurs tangeants        
+  sll_real64, dimension(:),   allocatable :: vtaux, vtauy
+  sll_int32, dimension (:), allocatable :: nctfro, nctfrp
 
 !   contains
 
