@@ -37,7 +37,7 @@
 program PICSOU
                         
 use zone,            only: readin, lmodte, iout, mesh_fields, objet_fonction
-use maillage,        only: calmai, write_mesh, sll_triangular_mesh_2d
+use maillage,        only: calmai
 use solveurs_module, only: lecture_donnees_solveur
 use poisson,         only: poissn, poifrc, init_solveur_poisson, poliss
 
@@ -63,8 +63,8 @@ character(len=132):: inpfil
 character(len=132):: maafil
 logical :: lask
 
-integer :: ntypfr(20)
-real(8) :: potfr(20)
+integer :: ntypfr(5)
+real(8) :: potfr(5)
 
 n = 1 !iargc()
 do i = 1, n
@@ -99,9 +99,8 @@ end if
 call readin(trim(argv), dirpr, nsolve)           !Donnees generales
 
 call read_from_file(mesh, maafil)                    !Lecture maillage
-call write_mesh(mesh)                                   !Trace du maillage
-call lecture_donnees_solveur(inpfil, nsolve, ntypfr, & 
-                             potfr,  mesh%nmxfr, mesh%nmxsd)  
+call write_triangular_mesh_mtv(mesh, "picsou.mtv")
+call lecture_donnees_solveur(inpfil,ntypfr, potfr)  
 
 call calmai(mesh, ntypfr)                               !Calcul du maillage
 
