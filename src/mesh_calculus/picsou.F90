@@ -40,8 +40,6 @@ use zone,            only: readin, lmodte, iout, mesh_fields, objet_fonction
 use maillage,        only: calmai, write_mesh, sll_triangular_mesh_2d,    &
                            voronoi
 
-use sorties,         only: donnees_diag, diagcha, jtrcha
-
 use solveurs_module, only: lecture_donnees_solveur, mesh_bound
 use poisson,         only: poissn, poifrc, init_solveur_poisson, poliss
 
@@ -111,8 +109,6 @@ call lecture_donnees_solveur(inpfil, nsolve, bcnd, mesh%nmxfr, mesh%nmxsd)
 
 call calmai(mesh, vmsh, bcnd)                               !Calcul du maillage
 
-call donnees_diag(inpfil)                                   !Donnees sorties
-
 allocate(mxw%e(3,mesh%num_nodes)); mxw%e=0.0; 
 allocate(mxw%b(3,mesh%num_nodes)); mxw%b=0.0; 
 allocate(mxw%j(3,mesh%num_nodes)); mxw%j=0.0; 
@@ -132,7 +128,6 @@ call poissn(bcnd, mxw, rho, phi, mesh, istep)
 call poliss(phi, mxw, mesh, vmsh)
 call poifrc(mxw, mesh, bcnd)
 
-call diagcha(istep, mxw, rho, phi, mesh, dirpr)
 call sll_gnuplot_2d( phi, "phi", mesh%coord, mesh%nodes, 1)
 
 1000 format(A)
