@@ -73,6 +73,10 @@ type :: sll_triangular_mesh_2d
 
   sll_real64, dimension(:,:), pointer :: vnofro
   sll_real64, dimension(:),   pointer :: xmal1, xmal2, xmal3
+  sll_int32,  dimension(:,:), pointer :: nuvac
+  sll_int32,  dimension(:)  , pointer :: nugcv
+  sll_int32,  dimension(:)  , pointer :: nbcov
+  sll_real64, dimension(:)  , pointer :: xlcod
 
 !   contains
 
@@ -135,29 +139,6 @@ end interface sll_display
 !noefnt - noeuds Dirichlet sur les frontieres internes 
 !irffnt - numeros de reference de ces noeuds Dirichlet
 !nmxsd  - nombre de sous domaines references
-
-!  nbcov  - nombres de cotes des Voronoi                   
-!  nuvac  - numeros des PV associes aux cotes                
-!  nudac  - numeros des PD associes aux cotes                 
-!  nugcd  - numeros globaux des cotes des PD                   
-!  nugcv  - numeros globaux des cotes des PV                    
-!  xlcod  - longueurs des cotes des PD(Polygones de Delaunay)    
-!  xlcov  - longueurs des cotes des PV(Polygones de Voronoi)      
-
-type voronoi
-
-  sll_real64, dimension(:,:), pointer :: coor
-  sll_real64, dimension(:)  , pointer :: aire
-  sll_real64, dimension(:)  , pointer :: xlcov
-  sll_real64, dimension(:)  , pointer :: xlcod
-  sll_int32,  dimension(:)  , pointer :: ncotcu
-  sll_int32,  dimension(:)  , pointer :: nugcv
-  sll_int32,  dimension(:,:), pointer :: nudac
-  sll_int32,  dimension(:,:), pointer :: nuvac
-  sll_int32,  dimension(:,:), pointer :: nugcd
-  sll_int32,  dimension(:)  , pointer :: nbcov
-
-end type voronoi
 
 contains
 
