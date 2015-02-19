@@ -9,7 +9,7 @@ use zone, only: iout,                &
         grandx, petitx, time, dt, eps0,     &
         pcharg, mesh_fields, pi, xmu0
 
-use maillage, only: mesh_data, voronoi, vtaux, vtauy
+use maillage, only: sll_triangular_mesh_2d, voronoi, vtaux, vtauy
 
 use solveurs_module, only: mesh_bound
 
@@ -132,7 +132,7 @@ contains
 ! Tableau donnant le numero du dernier terme de chaque ligne (mors1)
 subroutine init_solveur_poisson(mesh, bcnd)
 
-type(mesh_data),  intent(in) :: mesh
+type(sll_triangular_mesh_2d),  intent(in) :: mesh
 type(mesh_bound), intent(in) :: bcnd
  
 double precision, dimension(:), allocatable :: tmp1
@@ -142,41 +142,41 @@ integer :: nref, nn, ndir
 allocate(sv1(mesh%nbtcot),sv2(mesh%nbtcot)); sv1 = 0.; sv2 = 0.
 allocate(vtantx(mesh%nbtcot),vtanty(mesh%nbtcot));vtantx=0.;vtanty=0.
 
-allocate(mors1(mesh%nbs+1)); mors1 = 0
+allocate(mors1(mesh%num_nodes+1)); mors1 = 0
 
 ! Tableau contenant le numero des termes de chaque ligne (mors2)
 ! on choisit une taille a priori superieure a la taille reelle
 ! de ce tableau.
 
-allocate(mors2(12*mesh%nbs)); mors2 = 0
+allocate(mors2(12*mesh%num_nodes)); mors2 = 0
  
 ! Calcul de mors1,mors2.
 
-call morse(mesh%npoel1,mesh%npoel2,mesh%ntri,mesh%nbt,mesh%nbs,mors1,mors2)
+call morse(mesh%npoel1,mesh%npoel2,mesh%nodes,mesh%num_cells,mesh%num_nodes,mors1,mors2)
  
 ! Ajustement de la taille de mors2.
 ! pas sur que ca fonctionne a tous les coups
-! deallocate(mors2); allocate(mors2(mors1(mesh%nbs+1)))
+! deallocate(mors2); allocate(mors2(mors1(mesh%num_nodes+1)))
 
 ! Adressage des tableaux permettant de stocker des matrices sous forme profil
 
-allocate(iprof(mesh%nbs+1)); iprof = 0
-call profil(mesh%ntri,mesh%nbs,mesh%npoel1,mesh%npoel2)
+allocate(iprof(mesh%num_nodes+1)); iprof = 0
+call profil(mesh%nodes,mesh%num_nodes,mesh%npoel1,mesh%npoel2)
 
 !======================================================================
 !--- 2.0 --- POISSON par une methode d'elements finis -----------------
 !======================================================================
  
 !matrice de masse diagonalisee
-allocate(amass(mesh%nbs)); amass = 0.0 
+allocate(amass(mesh%num_nodes)); amass = 0.0 
  
 !matrice "grad-grad" stockee sous forme profil.
-allocate(grgr(iprof(mesh%nbs+1))); grgr = 0.0
+allocate(grgr(iprof(mesh%num_nodes+1))); grgr = 0.0
  
 !gradx et grady 
 
-allocate(gradx(mors1(mesh%nbs+1))); gradx = 0.0
-allocate(grady(mors1(mesh%nbs+1))); grady = 0.0
+allocate(gradx(mors1(mesh%num_nodes+1))); gradx = 0.0
+allocate(grady(mors1(mesh%num_nodes+1))); grady = 0.0
 
 niem0  = 0
 niemp0 = 0
@@ -184,9 +184,9 @@ niemp0 = 0
 !--- Tableau relatif aux frontieres Dirichlet -------------------------
 
 ndir=0
-allocate(ifron(mesh%nbs)); ifron = 0
+allocate(ifron(mesh%num_nodes)); ifron = 0
 
-do nn=1,mesh%nbs
+do nn=1,mesh%num_nodes
    nref= mesh%refs(nn)
    if (nref > 0) then 
       if (bcnd%ntypfr(nref)==1 .or. bcnd%ntypfr(nref) == 5)then
@@ -206,12 +206,12 @@ call poismc(mesh,bcnd)
 
 !Calcul de la matrice B tel que B*Bt = A dans le cas Cholesky
 
-allocate(tmp1(iprof(mesh%nbs+1))); tmp1 = 0.0
+allocate(tmp1(iprof(mesh%num_nodes+1))); tmp1 = 0.0
 
 write(*,"(//5x,a)")" *** Appel Choleski pour Poisson ***  "
 call choles(iprof,grgr,pivpoi,tmp1)
 
-do i=1,iprof(mesh%nbs+1)
+do i=1,iprof(mesh%num_nodes+1)
    grgr(i)=tmp1(i)
 end do
 
@@ -221,7 +221,7 @@ deallocate(tmp1)
 
 if (ldebug) then
    write(iout,900) 
-   do i=1,mesh%nbs
+   do i=1,mesh%num_nodes
       write(iout,901) i,(mors2(j), j=mors1(i)+1,mors2(i+1))
    end do
    write(iout,902) 
@@ -392,7 +392,7 @@ end subroutine morse
 ! Puertolas - Version 1.0  Octobre  1992  
 subroutine poismc(mesh, bcnd)
 
-type(mesh_data),  intent(in) :: mesh
+type(sll_triangular_mesh_2d),  intent(in) :: mesh
 type(mesh_bound), intent(in) :: bcnd
 double precision, dimension(size(mesh%refs)) :: vectmp
 double precision :: amloc(3),aggloc(9),grxloc(9),gryloc(9)
@@ -403,21 +403,21 @@ integer :: is, il
  
 !Boucle sur les elements.
 
-do iel=1,mesh%nbt
+do iel=1,mesh%num_cells
 
    !Calcul des coefficients dependant de la geometrie du triangle.
 
-   is1t = mesh%ntri(1,iel)
-   is2t = mesh%ntri(2,iel)
-   is3t = mesh%ntri(3,iel)
+   is1t = mesh%nodes(1,iel)
+   is2t = mesh%nodes(2,iel)
+   is3t = mesh%nodes(3,iel)
 
-   x1t  = mesh%coor(1,is1t)
-   x2t  = mesh%coor(1,is2t)
-   x3t  = mesh%coor(1,is3t)
+   x1t  = mesh%coord(1,is1t)
+   x2t  = mesh%coord(1,is2t)
+   x3t  = mesh%coord(1,is3t)
 
-   y1t  = mesh%coor(2,is1t)
-   y2t  = mesh%coor(2,is2t)
-   y3t  = mesh%coor(2,is3t)
+   y1t  = mesh%coord(2,is1t)
+   y2t  = mesh%coord(2,is2t)
+   y3t  = mesh%coord(2,is3t)
 
    dntx1 = y2t-y3t
    dntx2 = y3t-y1t
@@ -499,25 +499,25 @@ end if
 
 if (ldebug) then
    write(iout,900) 
-   do is=1,mesh%nbs
+   do is=1,mesh%num_nodes
       write(iout,901) is,amass(is)
    end do
 
    write(iout,907) 
    write(iout,902) 
-   do is=1,mesh%nbs
+   do is=1,mesh%num_nodes
       nis=iprof(is+1)-iprof(is)
       write(iout,903) is,(grgr(iprof(is)+il),il=1,nis)
    end do
 
    write(iout,904) 
-   do is=1,mesh%nbs
+   do is=1,mesh%num_nodes
       nis=mors1(is+1)-mors1(is)
       write(iout,903) is,(gradx(mors1(is)+il),il=1,nis)
    end do
 
    write(iout,905) 
-   do is=1,mesh%nbs
+   do is=1,mesh%num_nodes
       nis=mors1(is+1)-mors1(is)
       write(iout,903) is,(grady(mors1(is)+il),il=1,nis)
    end do
@@ -583,7 +583,7 @@ end subroutine poismc
 subroutine poissn(bcnd,ebj,rho,phi,mesh,istep)
 
 type (mesh_bound)  :: bcnd
-type (mesh_data)   :: mesh
+type (sll_triangular_mesh_2d)   :: mesh
 type (mesh_fields) :: ebj
 double precision, dimension(:) :: phi, rho
 double precision :: factt, tt0, tt1, tt2, tt3
@@ -599,7 +599,7 @@ integer :: is, istep, nref, iform, iond
 
 !... Calcul du second membre complet ...
 
-do is=1,mesh%nbs
+do is=1,mesh%num_nodes
    sdmb(is)=amass(is)*rho(is)/eps0
 end do
 
@@ -675,22 +675,22 @@ if (bcnd%nbfrnt>0.and.mesh%nndfnt > 0) then
    end do
 end if 
 
-call desrem(iprof, grgr,sdmb,mesh%nbs,phi)
+call desrem(iprof, grgr,sdmb,mesh%num_nodes,phi)
 
 !*** CALCUL DES CHAMPS E1N et E2N:
 
 !*** Second membre pour la composante 1:
 
-call m1p(gradx,mors1,mors2,phi,mesh%nbs,sdmb12)
+call m1p(gradx,mors1,mors2,phi,mesh%num_nodes,sdmb12)
 
-do i=1,mesh%nbs
+do i=1,mesh%num_nodes
    ebj%e(1,i)=sdmb12(i)/amass(i)
 end do
 
 !*** Second membre pour la composante 2:
 
-call m1p(grady,mors1,mors2,phi,mesh%nbs,sdmb12)
-do i=1,mesh%nbs
+call m1p(grady,mors1,mors2,phi,mesh%num_nodes,sdmb12)
+do i=1,mesh%num_nodes
    ebj%e(2,i)=sdmb12(i)/amass(i)
 end do
 
@@ -725,7 +725,7 @@ end subroutine poissn
 ! J. Segre - Version 1.1  Avril    1998 
 subroutine poifrc(ebj,mesh, bcnd)
 
-type(mesh_data)   :: mesh
+type(sll_triangular_mesh_2d)   :: mesh
 type(mesh_bound)  :: bcnd
 type(mesh_fields) :: ebj
 double precision :: pscal, xnor
@@ -738,7 +738,7 @@ integer :: is1, is2, ict
 !!$ ... les noeuds appartenant a la frontiere consideree
 
 if (.not. allocated(vnx)) then 
-   allocate(vnx(mesh%nbs), vny(mesh%nbs), naux(mesh%nbs))
+   allocate(vnx(mesh%num_nodes), vny(mesh%num_nodes), naux(mesh%num_nodes))
 end if 
 
 vnx=0.; vny=0.; naux=0
@@ -767,7 +767,7 @@ end do
 
 !... on impose la condition E.tau=0
 
-do  i=1,mesh%nbs
+do  i=1,mesh%num_nodes
 
    if (naux(i)==1) then 
 
@@ -817,7 +817,7 @@ end do
 
 !!... on impose la condition E.nu=0
 
-do i=1,mesh%nbs
+do i=1,mesh%num_nodes
 
    if (naux(i)==1) then 
 
@@ -1644,7 +1644,7 @@ subroutine poliss(phi,ebj,mesh,vmsh)
 !         On appelle ca un lissage.                        
 
 type(mesh_fields) :: ebj
-type(mesh_data) :: mesh
+type(sll_triangular_mesh_2d) :: mesh
 type(voronoi)   :: vmsh
 double precision, dimension(:) :: phi
 
@@ -1669,7 +1669,7 @@ end do
 
 ! --- 2.0 --- Calcul des seconds membres -------------------------------
   
-do is=1,mesh%nbs
+do is=1,mesh%num_nodes
 
    iac=vmsh%nbcov(is)+1
    nbc=vmsh%nbcov(is+1)-vmsh%nbcov(is)
@@ -1781,7 +1781,7 @@ end if
 
 ! --- 3.0 --- Resolution des systemes lineaires 2*2 --------------------
 
-do is=1,mesh%nbs
+do is=1,mesh%num_nodes
    ebj%e(1,is)=mesh%xmal2(is)*sv1(is)-mesh%xmal3(is)*sv2(is)
    ebj%e(2,is)=mesh%xmal1(is)*sv2(is)-mesh%xmal3(is)*sv1(is)
 end do
@@ -1825,7 +1825,7 @@ end subroutine poliss
 !      Appelant : 61-INIC00                                          *
 ! ==================================================================== *
 subroutine amplim(mesh,inoeuf,ieldir,ictdir)
-type(mesh_data) :: mesh
+type(sll_triangular_mesh_2d) :: mesh
 
 integer :: iel, iref, neldir
 integer :: is1, in1, jn1, ie, je, jel, numel1
@@ -1837,7 +1837,7 @@ logical :: lcomm
  
 neldir=0
 DO iref=1,nnref
-   DO iel=1,mesh%nbt
+   DO iel=1,mesh%num_cells
       IF(mesh%nvois(1,iel).LT.0) THEN
          IF(mesh%krefro(-mesh%nvois(1,iel)).EQ.irefdir(iref)) THEN
             neldir=neldir+1
@@ -1868,14 +1868,14 @@ end do
          DO 20 ie=1,neldir
         iel=ieldir(ie)
         in1=ictdir(ie)
-        is1=mesh%ntri(in1,iel)
+        is1=mesh%nodes(in1,iel)
         lcomm=.FALSE.
         DO 30 je=1,neldir
            IF(je.NE.ie) THEN
               jel=ieldir(je)
               jn1=ictdir(je)
               jn2=mod(jn1+3,3)+1
-              js2=mesh%ntri(jn2,jel)
+              js2=mesh%nodes(jn2,jel)
                   IF(is1.EQ.js2) THEN
              lcomm=.TRUE.
               ENDIF
@@ -1902,8 +1902,8 @@ end do
          ictdir(numel1)=itmp2
      in1=ictdir(1)
      in2=mod(in1+3,3)+1
-     inoeuf(1)=mesh%ntri(in1,ieldir(1))
-     inoeuf(2)=mesh%ntri(in2,ieldir(1))
+     inoeuf(1)=mesh%nodes(in1,ieldir(1))
+     inoeuf(2)=mesh%nodes(in2,ieldir(1))
      nnoeuf=2
      DO 40 ie=1,neldir-1
         iel=ieldir(ie)
@@ -1912,7 +1912,7 @@ end do
             DO 50 je=ie+1,neldir
            jel=ieldir(je)
            jn1=ictdir(je)
-           is1=mesh%ntri(jn1,jel)
+           is1=mesh%nodes(jn1,jel)
            IF(is1.EQ.is2) THEN
                   itmp1=ieldir(ie+1)
                   itmp2=ictdir(ie+1)
@@ -1922,7 +1922,7 @@ end do
                   ictdir(je)=itmp2
               nnoeuf=nnoeuf+1
           jn2=mod(jn1+3,3)+1
-              inoeuf(nnoeuf)=mesh%ntri(jn2,ieldir(ie+1))
+              inoeuf(nnoeuf)=mesh%nodes(jn2,ieldir(ie+1))
            ENDIF
  50         CONTINUE
  40       CONTINUE

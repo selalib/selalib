@@ -37,13 +37,16 @@
 program PICSOU
                         
 use zone,            only: readin, lmodte, iout, mesh_fields, objet_fonction
-use maillage,        only: calmai, lecmai, write_mesh, mesh_data,    &
-                           voronoi, nsomare, rsf
+use maillage,        only: calmai, write_mesh, sll_triangular_mesh_2d,    &
+                           voronoi
 
 use sorties,         only: donnees_diag, diagcha, jtrcha
 
 use solveurs_module, only: lecture_donnees_solveur, mesh_bound
 use poisson,         only: poissn, poifrc, init_solveur_poisson, poliss
+
+use sll_triangular_meshes
+use sll_gnuplot
 
 !----------------------------------------------------------------------
 
@@ -51,7 +54,7 @@ implicit none
 
 integer :: i, j, is1, is2, is3
 integer :: iargc, n, lu, nsolve
-integer :: ltab, istep
+integer :: istep
 
 real(8) :: tcpu, a, b, xr, yr, rsq, dum1, dum2, sigma
 real(8), dimension(:), allocatable :: rho, phi
@@ -59,14 +62,13 @@ real(8), dimension(:), allocatable :: rho, phi
 character(len=72) :: argv, dirpr
 
 type(mesh_fields)  :: mxw
-type(mesh_data)    :: mesh
+type(sll_triangular_mesh_2d)    :: mesh
 type(voronoi)      :: vmsh
 type(mesh_bound)   :: bcnd
 
 character(len=132):: inpfil, smpfil, xcrfil, expfil, trkfil
 character(len=132):: maafil, nopfil, hstfil
-character(len=01):: ans
-logical :: lask, lexistCI, lexistData
+logical :: lask
 
 n = 1 !iargc()
 do i = 1, n
@@ -103,7 +105,7 @@ end if
 
 call readin(trim(argv), dirpr, nsolve)           !Donnees generales
 
-call lecmai(mesh, maafil, nopfil, nsolve)                    !Lecture maillage
+call read_from_file(mesh, maafil)                    !Lecture maillage
 call write_mesh(mesh)                                   !Trace du maillage
 call lecture_donnees_solveur(inpfil, nsolve, bcnd, mesh%nmxfr, mesh%nmxsd)  
 
@@ -111,11 +113,11 @@ call calmai(mesh, vmsh, bcnd)                               !Calcul du maillage
 
 call donnees_diag(inpfil)                                   !Donnees sorties
 
-allocate(mxw%e(3,mesh%nbs)); mxw%e=0.0; 
-allocate(mxw%b(3,mesh%nbs)); mxw%b=0.0; 
-allocate(mxw%j(3,mesh%nbs)); mxw%j=0.0; 
-allocate(rho(mesh%nbs)); rho = 0.0
-allocate(phi(mesh%nbs)); phi = 0.0
+allocate(mxw%e(3,mesh%num_nodes)); mxw%e=0.0; 
+allocate(mxw%b(3,mesh%num_nodes)); mxw%b=0.0; 
+allocate(mxw%j(3,mesh%num_nodes)); mxw%j=0.0; 
+allocate(rho(mesh%num_nodes)); rho = 0.0
+allocate(phi(mesh%num_nodes)); phi = 0.0
 
 call cpu_time(tcpu)  !Initialisation du temps CPU
 
@@ -131,6 +133,7 @@ call poliss(phi, mxw, mesh, vmsh)
 call poifrc(mxw, mesh, bcnd)
 
 call diagcha(istep, mxw, rho, phi, mesh, dirpr)
+call sll_gnuplot_2d( phi, "phi", mesh%coord, mesh%nodes, 1)
 
 1000 format(A)
 1050 format(/' Read settings from file  ', A, ' ?  Y')

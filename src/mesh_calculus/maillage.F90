@@ -5,6 +5,7 @@ use zone, only: nesp, iout, c, dt, pi, nesmx, lmodtm, titre, &
         ldtfrc, Mx, My
 
 use solveurs_module, only: mesh_bound, degrek
+use sll_triangular_meshes
 
 implicit none
 
@@ -23,87 +24,6 @@ integer :: nelin
 !nombre de triangles ayant 1 noeud sur une frontiere
 integer :: nefro   
 integer :: nelmatf
-
-!Type: mesh_data
-!Structure du maillage
-!
-!nbs    - nombre de sommets
-!nbt    - nombre de triangles
-!nbtcot - nombre total de cotes
-!nbcoti - nombre de cotes internes
-!nmxfr  - nombre total de frontieres referencees
-!nelfr  - nombre de triangles sur une frontiere
-!coor   - coordonnees des sommets
-!aire   - aires de elements
-!xbas   - integrales des fonctions de base
-!refs   - references des sommets
-!reft   - references des elements
-!ntri   - table de connectivite
-!nvois  - numeros des voisins (solveur)
-!nvoiv  - numeros des voisins (particules)
-!nvoif  - numero local dans le voisin de la face commune
-!nusd   - references du sous-domaine
-!petitl - petite longueur de reference   
-!grandl - grande longueur de reference    
-!ncfrt  - nombre de cotes situes sur une frontiere
-!nbcfli - nombre de cotes internes ne satisfaisant pas la CFL
-!nndfnt - noeuds Dirichlet sur les frontieres internes       
-!noefnt - noeuds Dirichlet sur les frontieres internes 
-!irffnt - numeros de reference de ces noeuds Dirichlet
-!nmxsd  - nombre de sous domaines references
-type mesh_data
-
-   integer :: isolve
-   integer :: nbs, nbt, nbtcot, nbcoti, nmxfr, nelfr, nmxsd   
-   integer :: nctfrt, nbcfli, nndfnt, nbfrax
-
-   real(8) :: petitl, grandl
-   real(8), dimension(:,:), pointer :: coor
-   real(8), dimension(:),   pointer :: aire
-   real(8), dimension(:),   pointer :: xbas
-
-   integer, dimension(:),   pointer :: refs
-   integer, dimension(:),   pointer :: reft
-   integer, dimension(:,:), pointer :: ntri
-   integer, dimension(:,:), pointer :: nvois
-   integer, dimension(:,:), pointer :: nvoiv
-   integer, dimension(:,:), pointer :: nvoif
-   integer, dimension(:),   pointer :: nusd
-   integer, dimension(:),   pointer :: npoel1, npoel2
-   integer, dimension(:),   pointer :: krefro
-   integer, dimension(:),   pointer :: kctfro
-   integer, dimension(:),   pointer :: kelfro
-   integer, dimension(:,:), pointer :: ksofro
-   integer, dimension(:)  , pointer :: nctfnt
-   integer, dimension(:)  , pointer :: noefnt
-   integer, dimension(:)  , pointer :: irffnt
-   integer, dimension(:),   pointer :: ifrax
-
-   real(8), dimension(:,:), pointer :: vnofro
-   real(8), dimension(:),   pointer :: xmal1, xmal2, xmal3
-
-end type mesh_data
-
-!  nbcov  - nombres de cotes des Voronoi                   
-!  nuvac  - numeros des PV associes aux cotes                
-!  nudac  - numeros des PD associes aux cotes                 
-!  nugcd  - numeros globaux des cotes des PD                   
-!  nugcv  - numeros globaux des cotes des PV                    
-!  xlcod  - longueurs des cotes des PD(Polygones de Delaunay)    
-!  xlcov  - longueurs des cotes des PV(Polygones de Voronoi)      
-
-type voronoi
-
-   real(8), dimension(:,:), pointer :: coor
-   real(8), dimension(:)  , pointer :: aire
-   real(8), dimension(:)  , pointer :: xlcov, xlcod
-   integer, dimension(:)  , pointer :: ncotcu, nugcv
-   integer, dimension(:,:), pointer :: nudac, nuvac
-   integer, dimension(:,:), pointer :: nugcd
-   integer, dimension(:),   pointer :: nbcov
-
-end type voronoi
-
 integer, dimension(:),   allocatable :: ipoint
 
 !Variables:
@@ -156,102 +76,6 @@ real(8) :: cfl   !(reel = c*dt)
 integer :: nmaill	!Entier caracteristique du maillage
 
 CONTAINS
-
-subroutine lecmai (mesh, maafil, nopfil, nsolve)
-
-integer, parameter :: lm = 800000
-real(kind=4), dimension(lm):: xm
-integer, dimension(lm) :: m
-integer :: nwraldy, alloc, iadr1, iadr2
-integer :: nmae, ining
-character(len=*), intent(inout)  :: maafil, nopfil
-type(mesh_data), intent(out) :: mesh
-integer, intent(in) :: nsolve
-
-integer :: nfmaa = 12
-character(len=1) :: ans
-logical :: lask , lerr = .false.
-real(8) :: tmp, x0, y0
-logical :: lnopo
-real(8) :: rmax 
-
-equivalence(m,xm)
-
-!**** Lecture du maillage
-write(iout,"(/////10x,'>>> Lecture du maillage <<<'/)")
-mesh%isolve = nsolve
-
-!Probleme avec le maillage binaire 
-!Lecture du maillage ASCII au format NOPO
-
-70 continue
-
-write(iout,"(10x,'Ouverture de fichier'                      &
-&        /10x,'Unite logique',i3,'    fichier  ',a14)")      &
-&        nfmaa,maafil
-
-!Lecture d'un fichier maillage ASCII issu d'une base MODULEF
-
-lask = .true.
-open(nfmaa,file=maafil,status='OLD',err=80)
-write(*,1050,advance='no') trim(maafil)
-!read(*,1000) ans
-!if(index('Nn',ans).ne.0) then
-!   close(nfmaa)
-!else
-!   write(*,1600) maafil
-   lask = .false.
-!end if
-
-80 continue
-if (lask) then
-   write(*,1900) maafil
-   write(*,1800,advance='no')
-   read(*,"(a)") maafil
-   write(*,1700) trim(maafil)
-   goto 70
-end if
-
-read(nfmaa,*) 
-read(nfmaa,*) nmaill,imxref
-read(nfmaa,*) mesh%nbs,mesh%nbt,mesh%nmxfr,mesh%nmxsd,nefro,nelin,mesh%nelfr
-
-allocate(mesh%coor(1:2,mesh%nbs),mesh%ntri(1:3,1:mesh%nbt))
-allocate(mesh%refs(mesh%nbs),mesh%reft(mesh%nbt))
-allocate(mesh%nusd(mesh%nbt),mesh%nvois(3,mesh%nbt))
-
-read(nfmaa,*) ((mesh%coor(i,j),i=1,2),j=1,mesh%nbs)
-read(nfmaa,*) ( mesh%refs(i),i=1,mesh%nbs)
-read(nfmaa,*) ((mesh%ntri(i,j),i=1,3),j=1,mesh%nbt)
-read(nfmaa,*) ((mesh%nvois(i,j),i=1,3),j=1,mesh%nbt)
-read(nfmaa,*) ( mesh%nusd(i),i=1,mesh%nbt)
-
-if (nmaill == 77) then
-   read(nfmaa,*) Mx
-   read(nfmaa,*) My
-end if
-close(nfmaa)
-
-
-write(iout,"(//,10x,'Nb de noeuds                : ',i10/       &
-&       ,10x,'Nb de triangles             : ',i10/      &
-&       ,10x,'Nb max de front referencees : ',i10/      &
-&       ,10x,'Nb max de SD references     : ',i10/      &
-&       ,10x,/'Nb de triangles ayant au moins 1 sommet'     &
-&       ,' sur une frontiere : ',i10/)") mesh%nbs,      &
-                   mesh%nbt,mesh%nmxfr,mesh%nmxsd,nefro
-
-write(iout,"(//10x,'Nb d''elements internes     : ',i10/    &
-          &   ,10x,'Nb d''elements frontieres   : ',i10/)") nelin,mesh%nelfr
-
-1000 format(A)
-1050 format(/' Read mesh from file  ', A, ' ?  Y')
-1600 format(/' Mesh data read in from file  ', A,':' /)
-1700 format(/' New mesh data write to file  ', A, /)
-1800 format(/' Settings may have been changed - New title :')
-1900 format(/' Input file  ', A,'  not found')
-
-end subroutine lecmai
 
 !========================================================================
 
@@ -307,7 +131,7 @@ end subroutine lecmai
 subroutine calmai(mesh, vmsh, bcnd)
 
 type(mesh_bound), intent(in)   :: bcnd
-type(mesh_data), intent(inout) :: mesh
+type(sll_triangular_mesh_2d), intent(inout) :: mesh
 type(voronoi), intent(out)     :: vmsh
 
 integer, dimension (:), allocatable :: indc
@@ -368,12 +192,12 @@ write(iout,"(/////10x,'>>> Calcul des quantites liees au maillage <<<'/)")
 !*** Calcul des longueurs de reference
 if (ldebug) write(iout,*)"*** Calcul des longueurs de reference ***"
 
-xlml = minval(mesh%coor(1,:))
-xlmu = maxval(mesh%coor(1,:))
-ylml = minval(mesh%coor(2,:))
-ylmu = maxval(mesh%coor(2,:))
+xlml = minval(mesh%coord(1,:))
+xlmu = maxval(mesh%coord(1,:))
+ylml = minval(mesh%coord(2,:))
+ylmu = maxval(mesh%coord(2,:))
 
-mesh%petitl = 1.e-04 * min(xlmu-xlml,ylmu-ylml)/sqrt(float(mesh%nbs))
+mesh%petitl = 1.e-04 * min(xlmu-xlml,ylmu-ylml)/sqrt(float(mesh%num_nodes))
 mesh%grandl = 1.e+04 * max(xlmu-xlml,ylmu-ylmu)
 
 !*** Correction des erreurs de precision ----------------------
@@ -382,25 +206,25 @@ mesh%grandl = 1.e+04 * max(xlmu-xlml,ylmu-ylmu)
 !*** Calcul des aires des triangles
 if (ldebug) write(iout,*)"*** Calcul des aires des triangles ***"
 
-allocate(mesh%aire(mesh%nbt)); mesh%aire=0.0
+allocate(mesh%aire(mesh%num_cells)); mesh%aire=0.0
 
 airtot = 0.
 
-do it = 1, mesh%nbt
+do it = 1, mesh%num_cells
 
-   lx1 = mesh%coor(1,mesh%ntri(2,it))-mesh%coor(1,mesh%ntri(1,it))
-   ly1 = mesh%coor(2,mesh%ntri(3,it))-mesh%coor(2,mesh%ntri(1,it))
-   lx2 = mesh%coor(1,mesh%ntri(3,it))-mesh%coor(1,mesh%ntri(1,it))
-   ly2 = mesh%coor(2,mesh%ntri(2,it))-mesh%coor(2,mesh%ntri(1,it))
+   lx1 = mesh%coord(1,mesh%nodes(2,it))-mesh%coord(1,mesh%nodes(1,it))
+   ly1 = mesh%coord(2,mesh%nodes(3,it))-mesh%coord(2,mesh%nodes(1,it))
+   lx2 = mesh%coord(1,mesh%nodes(3,it))-mesh%coord(1,mesh%nodes(1,it))
+   ly2 = mesh%coord(2,mesh%nodes(2,it))-mesh%coord(2,mesh%nodes(1,it))
 
    mesh%aire(it) = 0.5 * abs(lx1*ly1 - lx2*ly2)
 
    if( mesh%aire(it) <= 0. ) then
      write(iout,*) " Triangle : ", it
-     write(iout,*) mesh%ntri(1,it), ":",mesh%coor(1:2,mesh%ntri(1,it))
-     write(iout,*) mesh%ntri(2,it), ":",mesh%coor(1:2,mesh%ntri(2,it))
-     write(iout,*) mesh%ntri(3,it), ":",mesh%coor(1:2,mesh%ntri(3,it))
-     call errout(iout,"F","maillage.f90","Aire de triangle negative")
+     write(iout,*) mesh%nodes(1,it), ":",mesh%coord(1:2,mesh%nodes(1,it))
+     write(iout,*) mesh%nodes(2,it), ":",mesh%coord(1:2,mesh%nodes(2,it))
+     write(iout,*) mesh%nodes(3,it), ":",mesh%coord(1:2,mesh%nodes(3,it))
+     !call errout(iout,"F","maillage.f90","Aire de triangle negative")
    end if
 
    airtot = airtot + mesh%aire(it)
@@ -410,15 +234,15 @@ end do
 !Calcul des integrales des fonctions de base
 if (ldebug) write(iout,*)"*** Calcul des integrales des fonctions de base ***"
 
-allocate(mesh%xbas(mesh%nbs)); mesh%xbas=0.0
+allocate(mesh%xbas(mesh%num_nodes)); mesh%xbas=0.0
 
 xtmp = 2. * pi / 6.
 
-do it = 1, mesh%nbt
+do it = 1, mesh%num_cells
 
-   is1 = mesh%ntri(1,it) 
-   is2 = mesh%ntri(2,it) 
-   is3 = mesh%ntri(3,it) 
+   is1 = mesh%nodes(1,it) 
+   is2 = mesh%nodes(2,it) 
+   is3 = mesh%nodes(3,it) 
 
    mesh%xbas(is1) = mesh%xbas(is1) + mesh%aire(it)/3.
    mesh%xbas(is2) = mesh%xbas(is2) + mesh%aire(it)/3.
@@ -440,13 +264,13 @@ write(iout,*)"*** Gestion des triangles ayant un noeud en commun ***"
 !     creation du tableau npoel1(i+1)  contenant le nombre de 
 !     triangles ayant le noeud i en commun
 
-allocate(mesh%npoel1(mesh%nbs+1))
+allocate(mesh%npoel1(mesh%num_nodes+1))
 
 mesh%npoel1 = 0
-do i=1,mesh%nbt
-   is1 = mesh%ntri(1,i)
-   is2 = mesh%ntri(2,i)
-   is3 = mesh%ntri(3,i)
+do i=1,mesh%num_cells
+   is1 = mesh%nodes(1,i)
+   is2 = mesh%nodes(2,i)
+   is3 = mesh%nodes(3,i)
    mesh%npoel1(is1+1) = mesh%npoel1(is1+1)+1
    mesh%npoel1(is2+1) = mesh%npoel1(is2+1)+1
    mesh%npoel1(is3+1) = mesh%npoel1(is3+1)+1
@@ -457,7 +281,7 @@ end do
 !     communs a un noeud
 
 mesh%npoel1(1)=0
-do i=3,mesh%nbs+1
+do i=3,mesh%num_nodes+1
    mesh%npoel1(i)=mesh%npoel1(i-1)+mesh%npoel1(i)
 end do
 
@@ -469,14 +293,14 @@ end do
 !     "npoel1(i+1)-npoel1(i)"
 
 
-allocate(mesh%npoel2(mesh%npoel1(mesh%nbs+1)))
-allocate(indc(mesh%nbs))
+allocate(mesh%npoel2(mesh%npoel1(mesh%num_nodes+1)))
+allocate(indc(mesh%num_nodes))
 
 indc   = 1  !Le tableau temporaire indc doit etre initialise a 1
 
-do it = 1,mesh%nbt
+do it = 1,mesh%num_cells
    do k = 1,3
-      is = mesh%ntri(k,it)
+      is = mesh%nodes(k,it)
       mesh%npoel2(mesh%npoel1(is)+indc(is)) = it
       indc(is) = indc(is)+1
    end do
@@ -486,19 +310,19 @@ end do
 
 if (ldebug) then
    write(iout,*)"*** Recherche des numeros des triangles voisins d'un triangle ***"
-   do i = 1, mesh%nbt
+   do i = 1, mesh%num_cells
       write(iout,*) " Triangle ", i, " Voisins :", mesh%nvois(1:3,i)
    end do
 end if
 
 
-do iel=1,mesh%nbt
+do iel=1,mesh%num_cells
 
    ! ... numeros des 3 sommets du triangle
 
-   is1=mesh%ntri(1,iel)
-   is2=mesh%ntri(2,iel)
-   is3=mesh%ntri(3,iel)
+   is1=mesh%nodes(1,iel)
+   is2=mesh%nodes(2,iel)
+   is3=mesh%nodes(3,iel)
 
    ! ... boucles imbriquees sur les elements pointant vers
    !     les 2 noeuds extremites de l'arete consideree
@@ -561,11 +385,11 @@ end do
 
 !Calcul de nvoif : Numero local dans le voisin de la face j commune a l'elt i
 
-allocate(mesh%nvoif(3,mesh%nbt))
+allocate(mesh%nvoif(3,mesh%num_cells))
 mesh%nvoif(1:3,:) = mesh%nvois(1:3,:)
 
-do i = 1, mesh%nbt
-   !write(*,"(/,4i7)") i, mesh%ntri(1:3,i)
+do i = 1, mesh%num_cells
+   !write(*,"(/,4i7)") i, mesh%nodes(1:3,i)
    do j = 1,3
       jel1 = mesh%nvois(j,i)
       if (jel1 > 0) then
@@ -576,7 +400,7 @@ do i = 1, mesh%nbt
                exit
             end if
          end do
-         !write(*,"(5i7)") jel1, mesh%ntri(1:3,jel1), mesh%nvoif(j,i)
+         !write(*,"(5i7)") jel1, mesh%nodes(1:3,jel1), mesh%nvoif(j,i)
       end if
    end do
 end do
@@ -584,7 +408,7 @@ end do
 ! --- Definition de nctfrt: le nombre de cotes frontieres
 
 mesh%nctfrt=0
-do i=1,mesh%nbt
+do i=1,mesh%num_cells
    if (mesh%nvois(1,i) < 0) mesh%nctfrt=mesh%nctfrt+1
    if (mesh%nvois(2,i) < 0) mesh%nctfrt=mesh%nctfrt+1
    if (mesh%nvois(3,i) < 0) mesh%nctfrt=mesh%nctfrt+1
@@ -592,7 +416,7 @@ end do
 
 ! --- Rangement de npoel2 dans l'ordre trigonometrique ---------
 
-do is=1,mesh%nbs
+do is=1,mesh%num_nodes
 
    nel =mesh%npoel1(is+1)-mesh%npoel1(is)
 
@@ -607,7 +431,7 @@ do is=1,mesh%nbs
 
    loop4:do iel=2,nel-1
             do j=1,3
-               if(mesh%ntri(j,iel1) == is) nct=mod(j+1,3)+1
+               if(mesh%nodes(j,iel1) == is) nct=mod(j+1,3)+1
             end do
 
             iel1=mesh%nvois(nct,iel1)
@@ -631,7 +455,7 @@ do is=1,mesh%nbs
    loop5:do id1=1,nel
             iel1=mesh%npoel2(mesh%npoel1(is)+id1)
             do j=1,3
-               if(mesh%nvois(j,iel1).le.0 .and. mesh%ntri(j,iel1) == is) then
+               if(mesh%nvois(j,iel1).le.0 .and. mesh%nodes(j,iel1) == is) then
                   ntmp=mesh%npoel2(mesh%npoel1(is)+1)
                   mesh%npoel2(mesh%npoel1(is)+1)=iel1
                   mesh%npoel2(mesh%npoel1(is)+id1)=ntmp
@@ -649,7 +473,7 @@ do is=1,mesh%nbs
    
       loop6:do iel=2,nel-1
                do j=1,3
-              if(mesh%ntri(j,iel1)==is) then
+              if(mesh%nodes(j,iel1)==is) then
                  nct=mod(j+1,3)+1
               end if
                end do
@@ -687,9 +511,9 @@ if(bcnd%nbfrnt > 0) then
       xfr2=bcnd%z2frnt(ifr)+mesh%petitl
       yfr1=bcnd%r1frnt(ifr)-mesh%petitl
       yfr2=bcnd%r2frnt(ifr)+mesh%petitl
-      do is=1,mesh%nbs
-         xxs=mesh%coor(1,is)
-     yys=mesh%coor(2,is)
+      do is=1,mesh%num_nodes
+         xxs=mesh%coord(1,is)
+     yys=mesh%coord(2,is)
      if( (xxs  > xfr1).and.(xxs.lt.xfr2).and.   &
              (yys  > yfr1).and.(yys.lt.yfr2) ) then
         nnofnt=nnofnt+1
@@ -702,17 +526,17 @@ if(bcnd%nbfrnt > 0) then
       write(iout,"('sur les frontieres internes')")
       write(iout,"(10x,'(Verifier le namelist nlcham ou refaire')")
       write(iout,"(' le maillage)'/)")
-      call errout(iout,"F","maillage.f90","nnofnt < 2")
+      !call errout(iout,"F","maillage.f90","nnofnt < 2")
    end if
 
 end if
 
-do iel = 1, mesh%nbt
+do iel = 1, mesh%num_cells
    do j = 1, 3
    if( mesh%nvois(j,iel) == imxref ) then
       write(iout,*) " Triangle ", iel, " Voisins :", (mesh%nvois(i,iel),i=1,3)
-      write(iout,*) " Coordonnees x =", mesh%coor(1,mesh%ntri(1,iel))
-      write(iout,*) " Coordonnees y =", mesh%coor(2,mesh%ntri(1,iel))
+      write(iout,*) " Coordonnees x =", mesh%coord(1,mesh%nodes(1,iel))
+      write(iout,*) " Coordonnees y =", mesh%coord(2,mesh%nodes(1,iel))
       stop
    end if
    end do
@@ -728,9 +552,9 @@ if (ldebug) write(iout,*)"*** Calcul des voisins pour les particules ***"
 !     particules, alors que dans "nvois" ce chiffre est 
 !     l'oppose du numero de reference de la frontiere concernee
 
-allocate(mesh%nvoiv(3,mesh%nbt))
+allocate(mesh%nvoiv(3,mesh%num_cells))
 
-do i = 1,mesh%nbt
+do i = 1,mesh%num_cells
 
    ! ... Cotes internes
    do j = 1, 3
@@ -785,7 +609,7 @@ write(iout,"(/10x,a,i3)") 'Nombre maximum de frontieres referencees ', mesh%nmxf
 
 !*** Calcul du nb de cotes internes et total (nbcoti,nbtcot)
 
-mesh%nbtcot = (3*mesh%nbt+mesh%nctfrt)/2
+mesh%nbtcot = (3*mesh%num_cells+mesh%nctfrt)/2
 
 write(iout,"( 10x,a,i6)") 'Nombre total de cotes =', mesh%nbtcot
 
@@ -803,7 +627,7 @@ vmsh%ncotcu(1)=mesh%nbcoti
 vmsh%ncotcu(2)=mesh%nbcoti
 
 do ifr=1,mesh%nmxfr
-   do i=1,mesh%nbt
+   do i=1,mesh%num_cells
       do j = 1,3
          if(mesh%nvois(j,i) == -ifr) then
             vmsh%ncotcu(ifr+2) = vmsh%ncotcu(ifr+2) + 1
@@ -838,11 +662,11 @@ allocate(vmsh%nuvac(2,mesh%nbtcot)); vmsh%nuvac = 0
 allocate(vmsh%xlcod(mesh%nbtcot)); vmsh%xlcod = 0.0
 
 !tableaux de lissage et des cotes tangeants 
-allocate(mesh%xmal1(mesh%nbs),mesh%xmal2(mesh%nbs),mesh%xmal3(mesh%nbs))
+allocate(mesh%xmal1(mesh%num_nodes),mesh%xmal2(mesh%num_nodes),mesh%xmal3(mesh%num_nodes))
 mesh%xmal1=0.;mesh%xmal2=0.;mesh%xmal3=0.
 
-allocate(vmsh%nbcov(mesh%nbs+1))  !pointeur des cotes pointant sur le meme noeud
-allocate(vmsh%nugcv(10*mesh%nbs)) !tableau contenant les numeros de ces cotes
+allocate(vmsh%nbcov(mesh%num_nodes+1))  !pointeur des cotes pointant sur le meme noeud
+allocate(vmsh%nugcv(10*mesh%num_nodes)) !tableau contenant les numeros de ces cotes
 allocate(nuctfr(mesh%nmxfr)) !tableau temporaire                              
 
 !Creation du maillage de Voronoi et quantites associees
@@ -888,7 +712,7 @@ nctfro = 0
 
 ifr=0
 do ict=1,3
-   do iel=1,mesh%nbt
+   do iel=1,mesh%num_cells
       if ( mesh%nvois(ict,iel) < 0 ) then 
 
          iref = -mesh%nvois(ict,iel)
@@ -897,8 +721,8 @@ do ict=1,3
          mesh%kelfro(ifr) = iel  !element auquel appartient le cote
          mesh%kctfro(ifr) = ict  !numero local du cote dans cet element
          mesh%krefro(ifr) = iref !reference de ce cote
-         mesh%ksofro(1,ifr) = mesh%ntri(ict,iel) !numeros des 2 sommets de ce cote
-         mesh%ksofro(2,ifr) = mesh%ntri(mod(ict,3)+1,iel) 
+         mesh%ksofro(1,ifr) = mesh%nodes(ict,iel) !numeros des 2 sommets de ce cote
+         mesh%ksofro(2,ifr) = mesh%nodes(mod(ict,3)+1,iel) 
 
          nctfro(iref)  = nctfro(iref)+1  !nombre de cote par reference
 
@@ -1106,10 +930,10 @@ do ict=1,mesh%nctfrt
    is1 = mesh%ksofro(1,ict)
    is2 = mesh%ksofro(2,ict)
 
-   x1 = mesh%coor(1,is1)
-   y1 = mesh%coor(2,is1)
-   x2 = mesh%coor(1,is2)
-   y2 = mesh%coor(2,is2)
+   x1 = mesh%coord(1,is1)
+   y1 = mesh%coord(2,is1)
+   x2 = mesh%coord(1,is2)
+   y2 = mesh%coord(2,is2)
 
    mesh%vnofro(1,ict) = -y2+y1
    mesh%vnofro(2,ict) =  x2-x1
@@ -1153,7 +977,7 @@ if (bcnd%nbfrnt > 0 ) then
       if(bcnd%irefnt(ifr) <= mesh%nmxfr .or. bcnd%irefnt(ifr) > mesh%nmxfr) then
          nmxfrp1=mesh%nmxfr+1
          write(iout,901) ifr,bcnd%irefnt(ifr),nmxfrp1,mesh%nmxfr
-         call errout(iout,"F",'maillage.f90',' ligne 2276 ')
+         !call errout(iout,"F",'maillage.f90',' ligne 2276 ')
       end if
    end do
    
@@ -1171,22 +995,22 @@ if (bcnd%nbfrnt > 0 ) then
    
       ntrfrn(ifr)=0
    
-      do iel=1,mesh%nbt
+      do iel=1,mesh%num_cells
    
          !... numeros des somnmets
    
-         is1=mesh%ntri(1,iel)
-         is2=mesh%ntri(2,iel)
-         is3=mesh%ntri(3,iel)
+         is1=mesh%nodes(1,iel)
+         is2=mesh%nodes(2,iel)
+         is3=mesh%nodes(3,iel)
    
          !... coordonnees des sommets des triangles
    
-         x1s=mesh%coor(1,is1)
-         y1s=mesh%coor(2,is1)
-         x2s=mesh%coor(1,is2)
-         y2s=mesh%coor(2,is2)
-         x3s=mesh%coor(1,is3)
-         y3s=mesh%coor(2,is3)
+         x1s=mesh%coord(1,is1)
+         y1s=mesh%coord(2,is1)
+         x2s=mesh%coord(1,is2)
+         y2s=mesh%coord(2,is2)
+         x3s=mesh%coord(1,is3)
+         y3s=mesh%coord(2,is3)
    
          lflag0=.false.
          lflag1=.false.
@@ -1239,8 +1063,8 @@ if (bcnd%nbfrnt > 0 ) then
    
          if (lflag0) then
             if((mesh%nvois(ict,iel) > 0).and. (             &
-                 (mesh%coor(2,isl1) > mesh%coor(2,isl2)+mesh%petitl).or.    &
-                 (mesh%coor(1,isl1) > mesh%coor(1,isl2)+mesh%petitl) ) ) then
+                 (mesh%coord(2,isl1) > mesh%coord(2,isl2)+mesh%petitl).or.    &
+                 (mesh%coord(1,isl1) > mesh%coord(1,isl2)+mesh%petitl) ) ) then
                ntrfnt=ntrfnt+1
                ntrfrn(ifr)=ntrfrn(ifr)+1
                itrfnt(ntrfnt)=iel
@@ -1263,14 +1087,14 @@ if (bcnd%nbfrnt > 0 ) then
    
    if(ntrfnt == 0) then
       write(iout,909) 
-      call errout(iout,"F",'maillage.f90',' ')
+      !call errout(iout,"F",'maillage.f90',' ')
    end if
    
    do i=1,bcnd%nbfrnt
    
       if(ntrfrn(i) == 0) then
          write(iout,910) 
-         call errout(iout,"F",'maillage.f90',' ')
+         !call errout(iout,"F",'maillage.f90',' ')
       end if
    
       write(iout,906) i,ntrfrn(i),ntrfrc(i),bcnd%itfrnt(i),bcnd%irefnt(i)
@@ -1323,7 +1147,7 @@ if (bcnd%nbfrnt > 0 ) then
 
         if((lflag0).and.(nelprm /= 0)) then
            write(iout,907) ifr,bcnd%z1frnt(ifr),bcnd%r1frnt(ifr),bcnd%irefnt(ifr)
-               call errout(iout,"F",'maillage.f90',' ')
+               !call errout(iout,"F",'maillage.f90',' ')
             end if
 
             !le triangle 1 est bien le plus haut
@@ -1414,7 +1238,7 @@ if (bcnd%nbfrnt > 0 ) then
    enddo
 
    if (lerr) then
-      call errout(iout,"F",'maillage.f90',' ')
+      !call errout(iout,"F",'maillage.f90',' ')
    endif
 
    ! ======================================================================
@@ -1423,7 +1247,7 @@ if (bcnd%nbfrnt > 0 ) then
    write(iout,902)
    if(mesh%nndfnt  > 0) then
       do i=1,mesh%nndfnt
-         write(iout,903) i,mesh%noefnt(i),mesh%coor(2,mesh%noefnt(i)),mesh%irffnt(i)
+         write(iout,903) i,mesh%noefnt(i),mesh%coord(2,mesh%noefnt(i)),mesh%irffnt(i)
       end do
    else
       write(iout,904)
@@ -1452,7 +1276,7 @@ if (bcnd%nbfrnt > 0 ) then
       do ifr=1,bcnd%nbfrnt
          if (bcnd%ipfrnt(ifr,iesp).lt.1.and.bcnd%ipfrnt(ifr,iesp)  > 2) then
              write(iout,912) iesp,ifr,bcnd%ipfrnt(ifr,iesp),1,2
-             call errout(iout,"F","maillage.f90"," ")
+             !call errout(iout,"F","maillage.f90"," ")
          endif
       enddo
 
@@ -1472,9 +1296,9 @@ if (bcnd%nbfrnt > 0 ) then
       
                is=isofnt(1,itr)
       
-               is1=mesh%ntri(1,iel2)
-               is2=mesh%ntri(2,iel2)
-               is3=mesh%ntri(3,iel2)
+               is1=mesh%nodes(1,iel2)
+               is2=mesh%nodes(2,iel2)
+               is3=mesh%nodes(3,iel2)
       
                if (is1 == is) then
                   ict2=3
@@ -1484,7 +1308,7 @@ if (bcnd%nbfrnt > 0 ) then
                   ict2=2
                else
                   write(iout,913)
-                  call errout(iout,"F","maillage.f90",' ')
+                  !call errout(iout,"F","maillage.f90",' ')
                endif
    
                mesh%nvoiv(ict1,iel1)=0
@@ -1564,7 +1388,7 @@ end subroutine calmai
 ! A. Adolf - Version 1.0   Septembre 1994  
 subroutine poclis(mesh, vmsh, nuctfr, vtaux, vtauy)
 
-type(mesh_data) :: mesh
+type(sll_triangular_mesh_2d) :: mesh
 type(voronoi)   :: vmsh
 double precision, dimension(:) :: vtaux, vtauy
 integer, dimension(:) :: nuctfr
@@ -1577,7 +1401,7 @@ integer :: nbti, is
 !======================================================================
 ! --- 1.0 --- Pointeur des numeros de cotes pointant vers un noeud -----
 
-do is=1,mesh%nbs
+do is=1,mesh%num_nodes
    nbti=mesh%npoel1(is+1)-mesh%npoel1(is)
    vmsh%nbcov(is+1)=nbti
    if(mesh%refs(is) /= 0) then
@@ -1586,7 +1410,7 @@ do is=1,mesh%nbs
 end do
 
 vmsh%nbcov(1)=0
-do is=1,mesh%nbs
+do is=1,mesh%num_nodes
    vmsh%nbcov(is+1)=vmsh%nbcov(is)+vmsh%nbcov(is+1)
 end do
 
@@ -1599,14 +1423,14 @@ end do
 ! ======================================================================
 ! --- 2.0 --- Numerotation des cotes -----------------------------------
 
-do iel=1,mesh%nbt
+do iel=1,mesh%num_cells
    do nc=1,3
       ivois=mesh%nvois(nc,iel)
       n1=nc
       n2=mod(nc,3)+1
 
-      num1 =mesh%ntri(n1,iel)
-      num2 =mesh%ntri(n2,iel)
+      num1 =mesh%nodes(n1,iel)
+      num2 =mesh%nodes(n2,iel)
       indn1=mesh%npoel1(num1)
       indn2=mesh%npoel1(num2)
       indv1=vmsh%nbcov(num1)
@@ -1662,10 +1486,10 @@ end do
 !----------- Longueurs des cotes des triangles ------------------------
 
 do ic=1,mesh%nbtcot
-   xa=mesh%coor(1,vmsh%nuvac(1,ic))
-   ya=mesh%coor(2,vmsh%nuvac(1,ic))
-   xb=mesh%coor(1,vmsh%nuvac(2,ic))
-   yb=mesh%coor(2,vmsh%nuvac(2,ic))
+   xa=mesh%coord(1,vmsh%nuvac(1,ic))
+   ya=mesh%coord(2,vmsh%nuvac(1,ic))
+   xb=mesh%coord(1,vmsh%nuvac(2,ic))
+   yb=mesh%coord(2,vmsh%nuvac(2,ic))
    vmsh%xlcod(ic)=sqrt((xa-xb)*(xa-xb)+(ya-yb)*(ya-yb))
 end do
 
@@ -1675,8 +1499,8 @@ end do
 do ic=1,mesh%nbtcot
    n1 = vmsh%nuvac(1,ic)
    n2 = vmsh%nuvac(2,ic)
-   x21= (mesh%coor(1,n2)-mesh%coor(1,n1))/vmsh%xlcod(ic)
-   y21= (mesh%coor(2,n2)-mesh%coor(2,n1))/vmsh%xlcod(ic)
+   x21= (mesh%coord(1,n2)-mesh%coord(1,n1))/vmsh%xlcod(ic)
+   y21= (mesh%coord(2,n2)-mesh%coord(2,n1))/vmsh%xlcod(ic)
    s1 = x21*x21
    s2 = y21*y21
    s3 = x21*y21
@@ -1693,7 +1517,7 @@ end do
 !--- 4.5 --- Normalisation par rapport aux determinants ---------------
 lerr = .false.
 
-do is=1,mesh%nbs
+do is=1,mesh%num_nodes
    det=mesh%xmal1(is)*mesh%xmal2(is)-mesh%xmal3(is)*mesh%xmal3(is)
    if(det /= 0) then
       mesh%xmal1(is)=mesh%xmal1(is)/det
@@ -1706,14 +1530,14 @@ end do
  
 if(lerr) then
    write(iout,900)
-   call errout(iout,"F","poclis","maillage.f90" )
+   !call errout(iout,"F","poclis","maillage.f90" )
 end if
 
 ! ======================================================================
 ! --- 5.0 --- Impression des tableaux ----------------------------------
  
 !write(iout,902)
-!do is=1,mesh%nbs
+!do is=1,mesh%num_nodes
 !   write(iout,903) mesh%xmal1(is),mesh%xmal2(is),mesh%xmal3(is)
 !end do
 
@@ -1724,7 +1548,7 @@ end if
 
 if(lerr) then
    write(iout,901)
-   call errout(iout,"F","poclis","maillage.f90" )
+   !call errout(iout,"F","poclis","maillage.f90" )
 end if
 
  900  format(//10x,'Determinant des coefficients des matrices'  &
@@ -1747,7 +1571,7 @@ end subroutine poclis
 !Subroutine: write_mesh
 !Ecriture du maillage pour visualisation au format GNUPLOT et PLOTMTV
 subroutine write_mesh(mesh)
-type(mesh_data) :: mesh
+type(sll_triangular_mesh_2d) :: mesh
 double precision :: x1, y1
 integer :: iev, is1, is2, iel
 
@@ -1756,11 +1580,11 @@ integer :: iev, is1, is2, iel
 !format gnuplot
 if (titre == "") titre = "dummy"
 open(10,file=trim(titre)//"_mesh.dat")
-do i = 1, mesh%nbt
-   write(10,*) mesh%coor(1:2,mesh%ntri(1,i)),0.0
-   write(10,*) mesh%coor(1:2,mesh%ntri(2,i)),0.0
-   write(10,*) mesh%coor(1:2,mesh%ntri(3,i)),0.0
-   write(10,*) mesh%coor(1:2,mesh%ntri(1,i)),0.0
+do i = 1, mesh%num_cells
+   write(10,*) mesh%coord(1:2,mesh%nodes(1,i)),0.0
+   write(10,*) mesh%coord(1:2,mesh%nodes(2,i)),0.0
+   write(10,*) mesh%coord(1:2,mesh%nodes(3,i)),0.0
+   write(10,*) mesh%coord(1:2,mesh%nodes(1,i)),0.0
    write(10,*) 
    write(10,*) 
 end do
@@ -1776,11 +1600,11 @@ write(10,*)"$DATA=CURVE3D"
 write(10,*)"%equalscale=T"
 write(10,*)"%toplabel='Maillage' "
 
-do i = 1, mesh%nbt
-   write(10,*)mesh%coor(1:2,mesh%ntri(1,i)),0.0
-   write(10,*)mesh%coor(1:2,mesh%ntri(2,i)),0.0
-   write(10,*)mesh%coor(1:2,mesh%ntri(3,i)),0.0
-   write(10,*)mesh%coor(1:2,mesh%ntri(1,i)),0.0
+do i = 1, mesh%num_cells
+   write(10,*)mesh%coord(1:2,mesh%nodes(1,i)),0.0
+   write(10,*)mesh%coord(1:2,mesh%nodes(2,i)),0.0
+   write(10,*)mesh%coord(1:2,mesh%nodes(3,i)),0.0
+   write(10,*)mesh%coord(1:2,mesh%nodes(1,i)),0.0
    write(10,*)
 end do
 
@@ -1790,21 +1614,21 @@ write(10,*)"$DATA=CURVE3D"
 write(10,*)"%equalscale=T"
 write(10,*)"%toplabel='Numeros des noeuds et des triangles' "
 
-do i = 1, mesh%nbt
-   write(10,*)mesh%coor(1:2,mesh%ntri(1,i)),0.0
-   write(10,*)mesh%coor(1:2,mesh%ntri(2,i)),0.0
-   write(10,*)mesh%coor(1:2,mesh%ntri(3,i)),0.0
-   write(10,*)mesh%coor(1:2,mesh%ntri(1,i)),0.0
+do i = 1, mesh%num_cells
+   write(10,*)mesh%coord(1:2,mesh%nodes(1,i)),0.0
+   write(10,*)mesh%coord(1:2,mesh%nodes(2,i)),0.0
+   write(10,*)mesh%coord(1:2,mesh%nodes(3,i)),0.0
+   write(10,*)mesh%coord(1:2,mesh%nodes(1,i)),0.0
    write(10,*)
 end do
 
-do i = 1, mesh%nbt
-   x1 = (  mesh%coor(1,mesh%ntri(1,i))  &
-         + mesh%coor(1,mesh%ntri(2,i))  &
-     + mesh%coor(1,mesh%ntri(3,i))    )/3.
-   y1 = (  mesh%coor(2,mesh%ntri(1,i))  &
-         + mesh%coor(2,mesh%ntri(2,i))  &
-     + mesh%coor(2,mesh%ntri(3,i))    )/3.
+do i = 1, mesh%num_cells
+   x1 = (  mesh%coord(1,mesh%nodes(1,i))  &
+         + mesh%coord(1,mesh%nodes(2,i))  &
+     + mesh%coord(1,mesh%nodes(3,i))    )/3.
+   y1 = (  mesh%coord(2,mesh%nodes(1,i))  &
+         + mesh%coord(2,mesh%nodes(2,i))  &
+     + mesh%coord(2,mesh%nodes(3,i))    )/3.
    write(10,"(a)"   , advance="no")"@text x1="
    write(10,"(f8.5)", advance="no") x1
    write(10,"(a)"   , advance="no")" y1="
@@ -1814,9 +1638,9 @@ do i = 1, mesh%nbt
    write(10,"(a)")"'"
 end do
 
-do i = 1, mesh%nbs
-   x1 = mesh%coor(1,i)
-   y1 = mesh%coor(2,i)
+do i = 1, mesh%num_nodes
+   x1 = mesh%coord(1,i)
+   y1 = mesh%coord(2,i)
    write(10,"(a)"   , advance="no")"@text x1="
    write(10,"(g15.3)", advance="no") x1
    write(10,"(a)"   , advance="no")" y1="
@@ -1832,17 +1656,17 @@ write(10,*)"$DATA=CURVE3D"
 write(10,*)"%equalscale=T"
 write(10,*)"%toplabel='Numeros des noeuds' "
 
-do i = 1, mesh%nbt
-   write(10,*)mesh%coor(1:2,mesh%ntri(1,i)),0.
-   write(10,*)mesh%coor(1:2,mesh%ntri(2,i)),0.
-   write(10,*)mesh%coor(1:2,mesh%ntri(3,i)),0.
-   write(10,*)mesh%coor(1:2,mesh%ntri(1,i)),0.
+do i = 1, mesh%num_cells
+   write(10,*)mesh%coord(1:2,mesh%nodes(1,i)),0.
+   write(10,*)mesh%coord(1:2,mesh%nodes(2,i)),0.
+   write(10,*)mesh%coord(1:2,mesh%nodes(3,i)),0.
+   write(10,*)mesh%coord(1:2,mesh%nodes(1,i)),0.
    write(10,*)
 end do
 
-do i = 1, mesh%nbs
-   x1 = mesh%coor(1,i)
-   y1 = mesh%coor(2,i)
+do i = 1, mesh%num_nodes
+   x1 = mesh%coord(1,i)
+   y1 = mesh%coord(2,i)
    write(10,"(a)"   , advance="no")"@text x1="
    write(10,"(g15.3)", advance="no") x1
    write(10,"(a)"   , advance="no")" y1="
@@ -1858,21 +1682,21 @@ write(10,*)"$DATA=CURVE3D"
 write(10,*)"%equalscale=T"
 write(10,*)"%toplabel='Numeros des triangles' "
 
-do i = 1, mesh%nbt
-   write(10,*)mesh%coor(1:2,mesh%ntri(1,i)),0.
-   write(10,*)mesh%coor(1:2,mesh%ntri(2,i)),0.
-   write(10,*)mesh%coor(1:2,mesh%ntri(3,i)),0.
-   write(10,*)mesh%coor(1:2,mesh%ntri(1,i)),0.
+do i = 1, mesh%num_cells
+   write(10,*)mesh%coord(1:2,mesh%nodes(1,i)),0.
+   write(10,*)mesh%coord(1:2,mesh%nodes(2,i)),0.
+   write(10,*)mesh%coord(1:2,mesh%nodes(3,i)),0.
+   write(10,*)mesh%coord(1:2,mesh%nodes(1,i)),0.
    write(10,*)
 end do
 
-do i = 1, mesh%nbt
-   x1 = (  mesh%coor(1,mesh%ntri(1,i))  &
-         + mesh%coor(1,mesh%ntri(2,i))  &
-     + mesh%coor(1,mesh%ntri(3,i))    )/3.
-   y1 = (  mesh%coor(2,mesh%ntri(1,i))  &
-         + mesh%coor(2,mesh%ntri(2,i))  &
-     + mesh%coor(2,mesh%ntri(3,i))    )/3.
+do i = 1, mesh%num_cells
+   x1 = (  mesh%coord(1,mesh%nodes(1,i))  &
+         + mesh%coord(1,mesh%nodes(2,i))  &
+     + mesh%coord(1,mesh%nodes(3,i))    )/3.
+   y1 = (  mesh%coord(2,mesh%nodes(1,i))  &
+         + mesh%coord(2,mesh%nodes(2,i))  &
+     + mesh%coord(2,mesh%nodes(3,i))    )/3.
    write(10,"(a)"   , advance="no")"@text x1="
    write(10,"(g15.3)", advance="no") x1
    write(10,"(a)"   , advance="no")" y1="
@@ -1888,21 +1712,21 @@ write(10,*)"$DATA=CURVE3D"
 write(10,*)"%equalscale=T"
 write(10,*)"%toplabel='References des triangles' "
 
-do i = 1, mesh%nbt
-   write(10,*)mesh%coor(1:2,mesh%ntri(1,i)),0.
-   write(10,*)mesh%coor(1:2,mesh%ntri(2,i)),0.
-   write(10,*)mesh%coor(1:2,mesh%ntri(3,i)),0.
-   write(10,*)mesh%coor(1:2,mesh%ntri(1,i)),0.
+do i = 1, mesh%num_cells
+   write(10,*)mesh%coord(1:2,mesh%nodes(1,i)),0.
+   write(10,*)mesh%coord(1:2,mesh%nodes(2,i)),0.
+   write(10,*)mesh%coord(1:2,mesh%nodes(3,i)),0.
+   write(10,*)mesh%coord(1:2,mesh%nodes(1,i)),0.
    write(10,*)
 end do
 
-do i = 1, mesh%nbt
-   x1 = (  mesh%coor(1,mesh%ntri(1,i))  &
-         + mesh%coor(1,mesh%ntri(2,i))  &
-     + mesh%coor(1,mesh%ntri(3,i))    )/3.
-   y1 = (  mesh%coor(2,mesh%ntri(1,i))  &
-         + mesh%coor(2,mesh%ntri(2,i))  &
-     + mesh%coor(2,mesh%ntri(3,i))    )/3.
+do i = 1, mesh%num_cells
+   x1 = (  mesh%coord(1,mesh%nodes(1,i))  &
+         + mesh%coord(1,mesh%nodes(2,i))  &
+     + mesh%coord(1,mesh%nodes(3,i))    )/3.
+   y1 = (  mesh%coord(2,mesh%nodes(1,i))  &
+         + mesh%coord(2,mesh%nodes(2,i))  &
+     + mesh%coord(2,mesh%nodes(3,i))    )/3.
    write(10,"(a)"   , advance="no")"@text x1="
    write(10,"(g15.3)", advance="no") x1
    write(10,"(a)"   , advance="no")" y1="
@@ -1917,17 +1741,17 @@ write(10,*)"$DATA=CURVE3D"
 write(10,*)"%equalscale=T"
 write(10,*)"%toplabel='References des noeuds ' "
 
-do i = 1, mesh%nbt
-   write(10,*)mesh%coor(1:2,mesh%ntri(1,i)),0.
-   write(10,*)mesh%coor(1:2,mesh%ntri(2,i)),0.
-   write(10,*)mesh%coor(1:2,mesh%ntri(3,i)),0.
-   write(10,*)mesh%coor(1:2,mesh%ntri(1,i)),0.
+do i = 1, mesh%num_cells
+   write(10,*)mesh%coord(1:2,mesh%nodes(1,i)),0.
+   write(10,*)mesh%coord(1:2,mesh%nodes(2,i)),0.
+   write(10,*)mesh%coord(1:2,mesh%nodes(3,i)),0.
+   write(10,*)mesh%coord(1:2,mesh%nodes(1,i)),0.
    write(10,*)
 end do
 
-do i = 1, mesh%nbs
-   x1 = mesh%coor(1,i)
-   y1 = mesh%coor(2,i)
+do i = 1, mesh%num_nodes
+   x1 = mesh%coord(1,i)
+   y1 = mesh%coord(2,i)
    write(10,"(a)"   , advance="no")"@text x1="
    write(10,"(f8.4)", advance="no") x1
    write(10,"(a)"   , advance="no")" y1="
@@ -1944,7 +1768,7 @@ write(10,*)"$DATA=CURVE3D"
 write(10,*)"%equalscale=T"
 write(10,*)"%toplabel='References des frontieres ' "
 
-do iel = 1, mesh%nbt      !Boucle sur les elements
+do iel = 1, mesh%num_cells      !Boucle sur les elements
    do iev = 1, 3     !Boucle sur les voisins
 
       if (mesh%nvois(iev,iel)<0) then
@@ -1957,15 +1781,15 @@ do iel = 1, mesh%nbt      !Boucle sur les elements
             is1 = 3; is2 = 1
          end select
          write(10,*)"%linecolor=",-mesh%nvois(iev,iel)
-         write(10,*)mesh%coor(1,mesh%ntri(is1,iel)),&
-                    mesh%coor(2,mesh%ntri(is1,iel)),0.
-         write(10,*)mesh%coor(1,mesh%ntri(is2,iel)), &
-                    mesh%coor(2,mesh%ntri(is2,iel)),0.
+         write(10,*)mesh%coord(1,mesh%nodes(is1,iel)),&
+                    mesh%coord(2,mesh%nodes(is1,iel)),0.
+         write(10,*)mesh%coord(1,mesh%nodes(is2,iel)), &
+                    mesh%coord(2,mesh%nodes(is2,iel)),0.
          write(10,*)
-         x1 = 0.5*(  mesh%coor(1,mesh%ntri(is1,iel)) &
-                   + mesh%coor(1,mesh%ntri(is2,iel)))
-         y1 = 0.5*(  mesh%coor(2,mesh%ntri(is1,iel)) &
-                   + mesh%coor(2,mesh%ntri(is2,iel)))
+         x1 = 0.5*(  mesh%coord(1,mesh%nodes(is1,iel)) &
+                   + mesh%coord(1,mesh%nodes(is2,iel)))
+         y1 = 0.5*(  mesh%coord(2,mesh%nodes(is1,iel)) &
+                   + mesh%coord(2,mesh%nodes(is2,iel)))
          write(10,"(a)"   ,advance="no")"@text x1="
          write(10,"(g15.3)",advance="no") x1
          write(10,"(a)"   ,advance="no")" y1="
