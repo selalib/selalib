@@ -4,7 +4,6 @@ module maillage
 use zone, only: nesp, iout, c, dt, pi, nesmx, lmodtm, titre, &
         ldtfrc, Mx, My
 
-use solveurs_module, only: mesh_bound, degrek
 use sll_triangular_meshes
 
 implicit none
@@ -128,14 +127,14 @@ CONTAINS
 !Auteur:
 !
 !A. Adolf / L. Arnaud - Version 1.0  Octobre 1991 
-subroutine calmai(mesh, vmsh, bcnd)
+subroutine calmai(mesh, ntypfr)
 
-type(mesh_bound), intent(in)   :: bcnd
+integer         , intent(in)   :: ntypfr(:)
 type(sll_triangular_mesh_2d), intent(inout) :: mesh
-type(voronoi), intent(out)     :: vmsh
 
 integer, dimension (:), allocatable :: indc
 integer, dimension (:), allocatable :: nuctfr
+integer, dimension (:), allocatable :: ncotcu
 integer, dimension (:), allocatable :: nucfl
 integer, dimension (4) :: ieltmp
 
@@ -505,31 +504,6 @@ end do
 !======================================================================
 
 nnofnt=0
-if(bcnd%nbfrnt > 0) then
-   do ifr=1,bcnd%nbfrnt
-      xfr1=bcnd%z1frnt(ifr)-mesh%petitl
-      xfr2=bcnd%z2frnt(ifr)+mesh%petitl
-      yfr1=bcnd%r1frnt(ifr)-mesh%petitl
-      yfr2=bcnd%r2frnt(ifr)+mesh%petitl
-      do is=1,mesh%num_nodes
-         xxs=mesh%coord(1,is)
-     yys=mesh%coord(2,is)
-     if( (xxs  > xfr1).and.(xxs.lt.xfr2).and.   &
-             (yys  > yfr1).and.(yys.lt.yfr2) ) then
-        nnofnt=nnofnt+1
-         end if
-      end do
-   end do
-
-   if(nnofnt < 2) then
-      write(iout,"(//10x,'On ne trouve aucune arete ')")
-      write(iout,"('sur les frontieres internes')")
-      write(iout,"(10x,'(Verifier le namelist nlcham ou refaire')")
-      write(iout,"(' le maillage)'/)")
-      !call errout(iout,"F","maillage.f90","nnofnt < 2")
-   end if
-
-end if
 
 do iel = 1, mesh%num_cells
    do j = 1, 3
@@ -567,7 +541,7 @@ do i = 1,mesh%num_cells
    do j = 1, 3
       if (mesh%nvois(j,i)<0) then
 
-         select case (bcnd%ntypfr(-mesh%nvois(j,i)))
+         select case (ntypfr(-mesh%nvois(j,i)))
 
          case(0)
             mesh%nvoiv(j,i) = -1
@@ -620,30 +594,30 @@ write(iout,"( 10x,a,i6/)")'Nombre de cotes frontieres =', mesh%nctfrt
  
 !  Calcul du nb de cotes cumules par type de traitement (ncotcu) ....
 
-allocate(vmsh%ncotcu(mesh%nbcoti+mesh%nmxfr*mesh%nctfrt))
+allocate(ncotcu(mesh%nbcoti+mesh%nmxfr*mesh%nctfrt))
 
-vmsh%ncotcu=0
-vmsh%ncotcu(1)=mesh%nbcoti
-vmsh%ncotcu(2)=mesh%nbcoti
+ncotcu=0
+ncotcu(1)=mesh%nbcoti
+ncotcu(2)=mesh%nbcoti
 
 do ifr=1,mesh%nmxfr
    do i=1,mesh%num_cells
       do j = 1,3
          if(mesh%nvois(j,i) == -ifr) then
-            vmsh%ncotcu(ifr+2) = vmsh%ncotcu(ifr+2) + 1
+            ncotcu(ifr+2) = ncotcu(ifr+2) + 1
          end if
       end do
    end do
 end do
 
 do ifr=1,mesh%nmxfr
-   vmsh%ncotcu(ifr+2)=vmsh%ncotcu(ifr+1)+vmsh%ncotcu(ifr+2)
+   ncotcu(ifr+2)=ncotcu(ifr+1)+ncotcu(ifr+2)
 end do
 
 if (ldebug) then
    write(iout,"(10x,'Nombre de cotes cumules a partir de nbcoti :')")
    do ifr=1,mesh%nmxfr
-      write(iout,"(20x,'ref = ',i3,'   ncotcu(i) = ',i6)") ifr,vmsh%ncotcu(ifr+2)
+      write(iout,"(20x,'ref = ',i3,'   ncotcu(i) = ',i6)") ifr,ncotcu(ifr+2)
    end do
 end if
 
@@ -656,22 +630,22 @@ vtaux = 0.; vtauy = 0.
 !==============================================================!
 
 !tableau des numeros des noeuds associes a un cote 
-allocate(vmsh%nuvac(2,mesh%nbtcot)); vmsh%nuvac = 0
+allocate(mesh%nuvac(2,mesh%nbtcot)); mesh%nuvac = 0
 
 !tableau des longueurs des cotes 
-allocate(vmsh%xlcod(mesh%nbtcot)); vmsh%xlcod = 0.0
+allocate(mesh%xlcod(mesh%nbtcot)); mesh%xlcod = 0.0
 
 !tableaux de lissage et des cotes tangeants 
 allocate(mesh%xmal1(mesh%num_nodes),mesh%xmal2(mesh%num_nodes),mesh%xmal3(mesh%num_nodes))
 mesh%xmal1=0.;mesh%xmal2=0.;mesh%xmal3=0.
 
-allocate(vmsh%nbcov(mesh%num_nodes+1))  !pointeur des cotes pointant sur le meme noeud
-allocate(vmsh%nugcv(10*mesh%num_nodes)) !tableau contenant les numeros de ces cotes
+allocate(mesh%nbcov(mesh%num_nodes+1))  !pointeur des cotes pointant sur le meme noeud
+allocate(mesh%nugcv(10*mesh%num_nodes)) !tableau contenant les numeros de ces cotes
 allocate(nuctfr(mesh%nmxfr)) !tableau temporaire                              
 
 !Creation du maillage de Voronoi et quantites associees
 
-call poclis(mesh, vmsh, nuctfr, vtaux, vtauy)
+call poclis(mesh, ncotcu, nuctfr, vtaux, vtauy)
 
 !On tue le tableau temporaire         I                      
 
@@ -815,7 +789,7 @@ do iref=1,mesh%nmxfr
 
                if (ict1<mesh%nctfrt) then 
               ict1=ict1+1
-          GOTO 35
+                goto 35
            end if
 
        end if
@@ -840,9 +814,9 @@ do iref=1,mesh%nmxfr
            if (is1==is2) then 
               ict1=ict2
               if (ict1==ictcl1) then !Test si on tourne en rond ............
-                 GOTO 37
+                 goto 37
               end if
-              GOTO 31
+              goto 31
            end if
         end if
      end do
@@ -899,7 +873,7 @@ do iref=1,mesh%nmxfr
               mesh%ksofro(2,ict2)=ks2tmp
 
               ict1=ict1+1
-              GOTO 33
+              goto 33
            end if
         end if
      end do
@@ -909,7 +883,7 @@ do iref=1,mesh%nmxfr
      if (ict1<ictcl2) then 
         ictcl1=ict1+1
         ict1=ictcl1
-        GOTO 31
+        goto 31
      end if
    end if
 end do
@@ -941,385 +915,6 @@ do ict=1,mesh%nctfrt
 end do
 
 deallocate(indc)
-
-!Event: Frontieres Internes
-!
-!             Mise en oeuvre des frontieres internes. 
-!                - identification des noeuds et cotes          
-!                - modifications des tableaux                   
-!                - traitement des conditions sur les champs      
-!                                                                 
-!             nctfnt - numeros globaux des cotes sur ces frontieres
-!                                                                   
-!             itrfnt - tableau temporaire                            
-!                      (triangle s'appuyant sur une frontiere interne)
-!             ictfnt - tableau temporaire                            
-!                      (numreo local du cote sur la frontiere interne)
-!             isofnt - tableau temporaire                             
-!                      (numreo des 2 sommets de chaque triangle)       
-!
-
-if (bcnd%nbfrnt > 0 ) then
-
-   write(iout,911) nnofnt
- 
-   allocate(mesh%noefnt(nnofnt))
-   allocate(itrfnt(nnofnt))
-   allocate(mesh%nctfnt(nnofnt))
-   allocate(mesh%irffnt(nnofnt))
-   allocate(ictfnt(nnofnt))
-   allocate(isofnt(2,nnofnt))
-   allocate(ntrfrn(bcnd%nbfrnt),ntrfrc(0:bcnd%nbfrnt))
-   
-   !----------- Tests preliminaires --------------------------------------
-   
-   do ifr=1,bcnd%nbfrnt
-      if(bcnd%irefnt(ifr) <= mesh%nmxfr .or. bcnd%irefnt(ifr) > mesh%nmxfr) then
-         nmxfrp1=mesh%nmxfr+1
-         write(iout,901) ifr,bcnd%irefnt(ifr),nmxfrp1,mesh%nmxfr
-         !call errout(iout,"F",'maillage.f90',' ligne 2276 ')
-      end if
-   end do
-   
-   !----------- Determination des triangles sur une frontiere interne ----
-   !            (on ne prend que ceux de droite ou du bas)
-   
-   ntrfnt=0
-   
-   do ifr=1,bcnd%nbfrnt
-   
-      xfr1=bcnd%z1frnt(ifr)-mesh%petitl
-      xfr2=bcnd%z2frnt(ifr)+mesh%petitl
-      yfr1=bcnd%r1frnt(ifr)-mesh%petitl
-      yfr2=bcnd%r2frnt(ifr)+mesh%petitl
-   
-      ntrfrn(ifr)=0
-   
-      do iel=1,mesh%num_cells
-   
-         !... numeros des somnmets
-   
-         is1=mesh%nodes(1,iel)
-         is2=mesh%nodes(2,iel)
-         is3=mesh%nodes(3,iel)
-   
-         !... coordonnees des sommets des triangles
-   
-         x1s=mesh%coord(1,is1)
-         y1s=mesh%coord(2,is1)
-         x2s=mesh%coord(1,is2)
-         y2s=mesh%coord(2,is2)
-         x3s=mesh%coord(1,is3)
-         y3s=mesh%coord(2,is3)
-   
-         lflag0=.false.
-         lflag1=.false.
-         lflag2=.false.
-         lflag3=.false.
-   
-         ! noeud 1 sur la frontiere
-   
-         if( (x1s  > xfr1).and.(x1s <  xfr2).and.   &
-             (y1s  > yfr1).and.(y1s <  yfr2) ) then
-            lflag1=.true.
-         end if
-   
-         ! noeud 2 sur la frontiere
-   
-         if( (x2s  > xfr1).and.(x2s <  xfr2).and.   &
-             (y2s  > yfr1).and.(y2s <  yfr2) ) then
-            lflag2=.true.
-         end if
-   
-         ! noeud 3 sur la frontiere
-   
-         if( (x3s  > xfr1).and.(x3s <  xfr2).and.   &
-             (y3s  > yfr1).and.(y3s <  yfr2) ) then
-               lflag3=.true.
-         end if
-   
-         ! tests si le triangle est sur la frontiere interne
-         ! et reperage des sommets et cotes
-   
-         if(lflag1.and.lflag2) then
-            isl1=is1
-        isl2=is2
-        ict=1
-        lflag0=.true.
-         else if(lflag2.and.lflag3) then
-            isl1=is2
-            isl2=is3
-            ict=2
-            lflag0=.true.
-         else if(lflag3.and.lflag1) then
-            isl1=is3
-            isl2=is1
-            ict=3
-            lflag0=.true.
-         end if
-   
-         ! test si le triangle n'est pas sur une frontiere externe
-         ! et s'il est a droite ou en bas de la frontiere interne
-   
-         if (lflag0) then
-            if((mesh%nvois(ict,iel) > 0).and. (             &
-                 (mesh%coord(2,isl1) > mesh%coord(2,isl2)+mesh%petitl).or.    &
-                 (mesh%coord(1,isl1) > mesh%coord(1,isl2)+mesh%petitl) ) ) then
-               ntrfnt=ntrfnt+1
-               ntrfrn(ifr)=ntrfrn(ifr)+1
-               itrfnt(ntrfnt)=iel
-               ictfnt(ntrfnt)=ict
-               isofnt(1,ntrfnt)=isl1
-               isofnt(2,ntrfnt)=isl2
-            end if
-         end if
-      end do
-   end do
-        
-   !Pointeur (nb de triangles par frontiere)
-   
-   ntrfrc(0)=0
-   do ifr=1,bcnd%nbfrnt
-      ntrfrc(ifr)=ntrfrc(ifr-1)+ntrfrn(ifr)
-   end do
-   
-   write(iout,905) ntrfnt
-   
-   if(ntrfnt == 0) then
-      write(iout,909) 
-      !call errout(iout,"F",'maillage.f90',' ')
-   end if
-   
-   do i=1,bcnd%nbfrnt
-   
-      if(ntrfrn(i) == 0) then
-         write(iout,910) 
-         !call errout(iout,"F",'maillage.f90',' ')
-      end if
-   
-      write(iout,906) i,ntrfrn(i),ntrfrc(i),bcnd%itfrnt(i),bcnd%irefnt(i)
-
-   end do
-   
-   !----------- On ordonne le tableau dans le sens decroissant -----------
-
-   do ifr=1,bcnd%nbfrnt
-      ntr=ntrfrn(ifr)
-      if (ntr > 1) then
-   
-         !numeros locaux des triangles de la frontiere ifr
-   
-         itrg1=ntrfrc(ifr-1)+1
-         itrg2=ntrfrc(ifr)
-   
-         !Recherche du premier triangle pour chaque frontiere
-         !et test de discontinuite
-   
-         nelprm=0
-   
-         do iel1=itrg1,itrg2
-   
-            !sommet du haut (ou de droite) d'un 1er triangle
-   
-        is1=isofnt(1,iel1)
-        lflag0=.true.
-   
-            do iel2=itrg1,itrg2
-   
-           if(iel1 /= iel2) then
-   
-               !sommet du bas (ou de gauche) d'un 2eme triangle
-   
-              is2=isofnt(2,iel2)
-   
-                  !les deux sommets sont identiques donc le triangle 1
-                  !n'est pas le plus haut ou le plus a gauche
-   
-              if(is1 == is2) then
-                 lflag0=.false.
-              end if
-   
-               end if
-            end do
-   
-            !Si on a trouve deux fois un triangle extremite 
-            !alors la frontiere est discontinue (c'est interdit)
-
-        if((lflag0).and.(nelprm /= 0)) then
-           write(iout,907) ifr,bcnd%z1frnt(ifr),bcnd%r1frnt(ifr),bcnd%irefnt(ifr)
-               !call errout(iout,"F",'maillage.f90',' ')
-            end if
-
-            !le triangle 1 est bien le plus haut
-
-        if((lflag0).and.(nelprm == 0)) then
-           nelprm=iel1
-            end if
-
-         end do
-
-         !Permutation pour mettre le triangle 1 en 1ere position
-   
-         ktrtmp=itrfnt(nelprm)
-         kcttmp=ictfnt(nelprm)
-         ks1tmp=isofnt(1,nelprm)
-         ks2tmp=isofnt(2,nelprm)
-
-         itrfnt(nelprm)=itrfnt(itrg1)
-         ictfnt(nelprm)=ictfnt(itrg1)
-         isofnt(1,nelprm)=isofnt(1,itrg1)
-         isofnt(2,nelprm)=isofnt(2,itrg1)
-
-         itrfnt(itrg1)=ktrtmp
-         ictfnt(itrg1)=kcttmp
-         isofnt(1,itrg1)=ks1tmp
-         isofnt(2,itrg1)=ks2tmp
-
-         !Classement des cotes suivants
-
-         iel1=itrg1
-
-         135  continue
-
-         is2=isofnt(2,iel1)
-         do iel2=iel1,itrg2
-            if(iel1 /= iel2) then
-               is1=isofnt(1,iel2)
-               if(is1 == is2) then
-
-                  ktrtmp=itrfnt(iel1+1)
-                  kcttmp=ictfnt(iel1+1)
-                  ks1tmp=isofnt(1,iel1+1)
-                  ks2tmp=isofnt(2,iel1+1)
-   
-                  itrfnt(iel1+1)=itrfnt(iel2)
-                  ictfnt(iel1+1)=ictfnt(iel2)
-                  isofnt(1,iel1+1)=isofnt(1,iel2)
-                  isofnt(2,iel1+1)=isofnt(2,iel2)
-   
-                  itrfnt(iel2)=ktrtmp
-                  ictfnt(iel2)=kcttmp
-                  isofnt(1,iel2)=ks1tmp
-                  isofnt(2,iel2)=ks2tmp
-   
-                  iel1=iel1+1
-              GOTO 135
-               end if
-        end if
-         end do
-
-      end if
-   end do
-
-   ! ----------- Numeros des noeuds et references ( TYPE 1)        --------
-   !             pour les champs
-   lerr   = .false.
-   mesh%nndfnt = 0
-   do ifr=1,bcnd%nbfrnt
-
-      ntr=ntrfrn(ifr)
-   
-      if (ntr  > 0.and.(bcnd%itfrnt(ifr) == 1)) then
-         itrg1=ntrfrc(ifr-1)+1
-         itrg2=ntrfrc(ifr)
-         do iel=itrg1,itrg2 
-            mesh%nndfnt=mesh%nndfnt+1
-            mesh%noefnt(mesh%nndfnt)=isofnt(1,iel)
-            mesh%irffnt(mesh%nndfnt)=bcnd%irefnt(ifr)
-
-            !Numero global des cotes sur une frontiere interne (VF)
-            !avec test CFL pour eviter les couplages entre 2 domaines
-               
-         enddo
-         mesh%nndfnt=mesh%nndfnt+1
-         mesh%noefnt(mesh%nndfnt)=isofnt(2,itrg2)
-         mesh%irffnt(mesh%nndfnt)=bcnd%irefnt(ifr)
-      endif
-   enddo
-
-   if (lerr) then
-      !call errout(iout,"F",'maillage.f90',' ')
-   endif
-
-   ! ======================================================================
-   ! ----------- Ecriture des resultats -----------------------------------
-      
-   write(iout,902)
-   if(mesh%nndfnt  > 0) then
-      do i=1,mesh%nndfnt
-         write(iout,903) i,mesh%noefnt(i),mesh%coord(2,mesh%noefnt(i)),mesh%irffnt(i)
-      end do
-   else
-      write(iout,904)
-   end if
-
-   !Event: Frontieres Internes (suite)
-   !
-   !             Mise en oeuvre des frontieres internes.      
-   !             traitement des conditions sur les particules
-   !                                                        
-   !             itrfnt - tableau temporaire               
-   !                      (triangle s'appuyant sur une frontiere interne) 
-   !             ictfnt - tableau temporaire                             
-   !                      (numreo local du cote sur la frontiere interne)
-   !             isofnt - tableau temporaire                            
-   !                      (numreo des 2 sommets de chaque triangle)    
-   !             nctfrt - Nb total de cotes frontieres                
-   !             nctfro - Nb de cotes frontieres par reference       
-   !             nctfrp - Pointeur de tableau (nb de cote par ref)  
-   !                                                               
-   !
-      
-   do iesp = 1, nesp
-
-      !----------- Tests preliminaires --------------------------------------
-      do ifr=1,bcnd%nbfrnt
-         if (bcnd%ipfrnt(ifr,iesp).lt.1.and.bcnd%ipfrnt(ifr,iesp)  > 2) then
-             write(iout,912) iesp,ifr,bcnd%ipfrnt(ifr,iesp),1,2
-             !call errout(iout,"F","maillage.f90"," ")
-         endif
-      enddo
-
-      !----------- Modifications de nvoiv pour les conditions de conducteur
-      !            parfait pour les champs et des particules absorbees
-      !          
-      do ifr=1,bcnd%nbfrnt
-         ntr=ntrfrn(ifr)
-         if (ntr  > 0.and.bcnd%ipfrnt(ifr,iesp) == 2) then
-            itrg1=ntrfrc(ifr-1)+1
-            itrg2=ntrfrc(ifr)
-            do itr=itrg1,itrg2 
-      
-               iel1=itrfnt(itr)
-               ict1=ictfnt(itr)
-               iel2=mesh%nvois(ict1,iel1)
-      
-               is=isofnt(1,itr)
-      
-               is1=mesh%nodes(1,iel2)
-               is2=mesh%nodes(2,iel2)
-               is3=mesh%nodes(3,iel2)
-      
-               if (is1 == is) then
-                  ict2=3
-               elseif(is2 == is) then
-                  ict2=1
-               elseif(is3 == is) then
-                  ict2=2
-               else
-                  write(iout,913)
-                  !call errout(iout,"F","maillage.f90",' ')
-               endif
-   
-               mesh%nvoiv(ict1,iel1)=0
-               mesh%nvoiv(ict2,iel2)=0
-   
-            enddo
-         endif
-      end do
-   end do
-
-end if  !Fin du traitement lie au frontieres internes
 
 901 format(//10x,'Mauvaise reference sur une frontiere interne'     &
             /10x,'(voir namelist  nlcham)'              &
@@ -1386,11 +981,11 @@ end subroutine calmai
 !                                                               
 !Auteur:
 ! A. Adolf - Version 1.0   Septembre 1994  
-subroutine poclis(mesh, vmsh, nuctfr, vtaux, vtauy)
+subroutine poclis(mesh, ncotcu, nuctfr, vtaux, vtauy)
 
 type(sll_triangular_mesh_2d) :: mesh
-type(voronoi)   :: vmsh
 double precision, dimension(:) :: vtaux, vtauy
+integer, dimension(:) :: ncotcu
 integer, dimension(:) :: nuctfr
 logical :: lerr
 double precision :: det, s1, s2, s3, x21, y21, xa, ya, xb, yb
@@ -1403,15 +998,15 @@ integer :: nbti, is
 
 do is=1,mesh%num_nodes
    nbti=mesh%npoel1(is+1)-mesh%npoel1(is)
-   vmsh%nbcov(is+1)=nbti
+   mesh%nbcov(is+1)=nbti
    if(mesh%refs(is) /= 0) then
-      vmsh%nbcov(is+1)=nbti+1
+      mesh%nbcov(is+1)=nbti+1
    end if
 end do
 
-vmsh%nbcov(1)=0
+mesh%nbcov(1)=0
 do is=1,mesh%num_nodes
-   vmsh%nbcov(is+1)=vmsh%nbcov(is)+vmsh%nbcov(is+1)
+   mesh%nbcov(is+1)=mesh%nbcov(is)+mesh%nbcov(is+1)
 end do
 
 ! --- 1.5 --- Tableau temporaire (cumul des cotes frontieres) ----------
@@ -1433,8 +1028,8 @@ do iel=1,mesh%num_cells
       num2 =mesh%nodes(n2,iel)
       indn1=mesh%npoel1(num1)
       indn2=mesh%npoel1(num2)
-      indv1=vmsh%nbcov(num1)
-      indv2=vmsh%nbcov(num2)
+      indv1=mesh%nbcov(num1)
+      indv2=mesh%nbcov(num2)
       nel1 =mesh%npoel1(num1+1)-mesh%npoel1(num1)
       nel2 =mesh%npoel1(num2+1)-mesh%npoel1(num2)
 
@@ -1448,20 +1043,20 @@ do iel=1,mesh%num_cells
 
          do nm1=1,nel1
             if(mesh%npoel2(indn1+nm1) == ivois) then
-               vmsh%nugcv(indv1+nm1)=nucti
+               mesh%nugcv(indv1+nm1)=nucti
             end if
          end do
 
          do nm2=1,nel2
             if(mesh%npoel2(indn2+nm2) == iel) then
-               vmsh%nugcv(indv2+nm2)=nucti
+               mesh%nugcv(indv2+nm2)=nucti
             end if
          end do
 
          !Numeros des triangles ou polygones associes
 
-         vmsh%nuvac(1,nucti)=num1
-         vmsh%nuvac(2,nucti)=num2
+         mesh%nuvac(1,nucti)=num1
+         mesh%nuvac(2,nucti)=num2
 
          !Cas des cotes frontaliers ........................................
 
@@ -1469,12 +1064,12 @@ do iel=1,mesh%num_cells
 
          ind=-ivois
          nuctfr(ind)=nuctfr(ind)+1
-         nuctf=vmsh%ncotcu(ind+1)+nuctfr(ind)
+         nuctf=ncotcu(ind+1)+nuctfr(ind)
 
-         vmsh%nugcv(indv1+nel1+1)=nuctf
-         vmsh%nugcv(indv2+nel2  )=nuctf
-         vmsh%nuvac(1,nuctf)=num1
-         vmsh%nuvac(2,nuctf)=num2
+         mesh%nugcv(indv1+nel1+1)=nuctf
+         mesh%nugcv(indv2+nel2  )=nuctf
+         mesh%nuvac(1,nuctf)=num1
+         mesh%nuvac(2,nuctf)=num2
 
       end if
 
@@ -1486,21 +1081,21 @@ end do
 !----------- Longueurs des cotes des triangles ------------------------
 
 do ic=1,mesh%nbtcot
-   xa=mesh%coord(1,vmsh%nuvac(1,ic))
-   ya=mesh%coord(2,vmsh%nuvac(1,ic))
-   xb=mesh%coord(1,vmsh%nuvac(2,ic))
-   yb=mesh%coord(2,vmsh%nuvac(2,ic))
-   vmsh%xlcod(ic)=sqrt((xa-xb)*(xa-xb)+(ya-yb)*(ya-yb))
+   xa=mesh%coord(1,mesh%nuvac(1,ic))
+   ya=mesh%coord(2,mesh%nuvac(1,ic))
+   xb=mesh%coord(1,mesh%nuvac(2,ic))
+   yb=mesh%coord(2,mesh%nuvac(2,ic))
+   mesh%xlcod(ic)=sqrt((xa-xb)*(xa-xb)+(ya-yb)*(ya-yb))
 end do
 
 !======================================================================
 !--- 4.0 --- Calcul des matrices de lissage ---------------------------
 
 do ic=1,mesh%nbtcot
-   n1 = vmsh%nuvac(1,ic)
-   n2 = vmsh%nuvac(2,ic)
-   x21= (mesh%coord(1,n2)-mesh%coord(1,n1))/vmsh%xlcod(ic)
-   y21= (mesh%coord(2,n2)-mesh%coord(2,n1))/vmsh%xlcod(ic)
+   n1 = mesh%nuvac(1,ic)
+   n2 = mesh%nuvac(2,ic)
+   x21= (mesh%coord(1,n2)-mesh%coord(1,n1))/mesh%xlcod(ic)
+   y21= (mesh%coord(2,n2)-mesh%coord(2,n1))/mesh%xlcod(ic)
    s1 = x21*x21
    s2 = y21*y21
    s3 = x21*y21

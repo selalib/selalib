@@ -5,15 +5,10 @@
 !
 module poisson
 
-use zone, only: iout,                &
-        grandx, petitx, time, dt, eps0,     &
-        pcharg, mesh_fields, pi, xmu0
+use zone, only: iout, grandx, petitx, time, dt, eps0, &
+                pcharg, mesh_fields, pi, xmu0
 
-use maillage, only: sll_triangular_mesh_2d, voronoi, vtaux, vtauy
-
-use solveurs_module, only: mesh_bound
-
-use utlib, only: utfact
+use maillage, only: sll_triangular_mesh_2d, vtaux, vtauy
 
 implicit none
 
@@ -130,10 +125,10 @@ contains
 
 ! Allocation des tableaux permettant de stocker des matrices sous forme morse
 ! Tableau donnant le numero du dernier terme de chaque ligne (mors1)
-subroutine init_solveur_poisson(mesh, bcnd)
+subroutine init_solveur_poisson(mesh, ntypfr)
 
 type(sll_triangular_mesh_2d),  intent(in) :: mesh
-type(mesh_bound), intent(in) :: bcnd
+integer :: ntypfr(:)
  
 double precision, dimension(:), allocatable :: tmp1
 
@@ -189,7 +184,7 @@ allocate(ifron(mesh%num_nodes)); ifron = 0
 do nn=1,mesh%num_nodes
    nref= mesh%refs(nn)
    if (nref > 0) then 
-      if (bcnd%ntypfr(nref)==1 .or. bcnd%ntypfr(nref) == 5)then
+      if (ntypfr(nref)==1 .or. ntypfr(nref) == 5)then
          ndir=ndir+1
          ifron(ndir)=nn
       end if 
@@ -202,7 +197,7 @@ ndiric=ndir
 
 !--- Calcul des matrices ----------------------------------------------
 
-call poismc(mesh,bcnd)
+call poismc(mesh)
 
 !Calcul de la matrice B tel que B*Bt = A dans le cas Cholesky
 
@@ -390,11 +385,9 @@ end subroutine morse
 !   612-POISMC     
 !
 ! Puertolas - Version 1.0  Octobre  1992  
-subroutine poismc(mesh, bcnd)
+subroutine poismc(mesh)
 
 type(sll_triangular_mesh_2d),  intent(in) :: mesh
-type(mesh_bound), intent(in) :: bcnd
-double precision, dimension(size(mesh%refs)) :: vectmp
 double precision :: amloc(3),aggloc(9),grxloc(9),gryloc(9)
 double precision :: dntx1, dntx2, dntx3, dnty1, dnty2, dnty3 
 double precision :: x1t, x2t, x3t, y1t, y2t, y3t, coef
@@ -475,24 +468,6 @@ do j=1,ndiric
    is=ifron(j)             
    grgr(iprof(is+1))=grandx
 end do
-
-! ======================================================================
-! ... Frontieres internes Dirichlet                           
-
-if (bcnd%nbfrnt>0 .and. mesh%nndfnt>0) then 
-
-   do j=1,mesh%nndfnt
-      is=mesh%noefnt(j)             
-      grgr(iprof(is+1))=grandx
-   end do
-
-   ! ======================================================================
-   ! ... Stockage d'une matrice extraite de "grad-grad": ggop0
-   ! ... Calcul de grgrp0
-   ! ... Transformation de "grad-grad"
-
- 
-end if 
 
 ! ================================================================
 ! ... Ecriture des matrices mass, grgr, gradx et grady
@@ -580,17 +555,15 @@ end subroutine poismc
 !                                                              
 ! Auteur:
 !  E. Puertolas - Version 1.0  Decembre 1991  
-subroutine poissn(bcnd,ebj,rho,phi,mesh,istep)
+subroutine poissn(potfr,ebj,rho,phi,mesh,istep)
 
-type (mesh_bound)  :: bcnd
+double precision :: potfr(:)
 type (sll_triangular_mesh_2d)   :: mesh
 type (mesh_fields) :: ebj
 double precision, dimension(:) :: phi, rho
-double precision :: factt, tt0, tt1, tt2, tt3
 double precision :: sdmb(size(rho)), sdmb12(size(rho))
-double precision :: fonc, e0, phas, freq, omeg
 
-integer :: is, istep, nref, iform, iond
+integer :: is, istep, nref
 
 ! ----------- CALCUL DU POTENTIEL  -------------------------------------
 !
@@ -606,57 +579,9 @@ end do
 !... Condition aux limites Dirichlet homogene avec forme temporelle
 
 do is=1,ndiric
-
    nref=mesh%refs(ifron(is))
-   iform=bcnd%ifopot(nref)
-
-   if (iform>0 .and. iform<=10) then 
-      tt0=bcnd%tdbpot(nref)
-      tt1=tt0+bcnd%tmtpot(nref)
-      tt2=tt1+bcnd%tplpot(nref)
-      tt3=tt2+bcnd%tdspot(nref)
-      factt=utfact(time,dt,tt0,tt1,tt2,tt3,iform)
-   else
-      factt=1.
-   end if 
-
-   iond = bcnd%numond(nref)
-   e0   = bcnd%eleond(iond)
-   freq = bcnd%freond(iond)
-   phas = bcnd%phaond(iond)
-   omeg = 2.*pi*freq
-   fonc = e0 * cos(omeg*time+phas)
-
-   if ( fonc /= 0 ) factt = factt * fonc
-
-   sdmb(ifron(is))=bcnd%potfr(nref)*factt
-
+   sdmb(ifron(is))=potfr(nref)
 end do
-
-!*** Frontiere internes (Noeuds Dirichlet) ***
-
-if (bcnd%nbfrnt>0.and.mesh%nndfnt > 0) then 
-
-   do is=1,mesh%nndfnt
-
-      nref=mesh%irffnt(is)
-      iform=bcnd%ifopot(nref)
-
-      if ( (iform>0).and.(iform<=10) ) then 
-         tt0=bcnd%tdbpot(nref)
-         tt1=tt0+bcnd%tmtpot(nref)
-         tt2=tt1+bcnd%tplpot(nref)
-         tt3=tt2+bcnd%tdspot(nref)
-         factt=utfact(time,dt,tt0,tt1,tt2,tt3,iform)
-      else
-     factt=1.
-      end if 
-
-      sdmb(mesh%noefnt(is))=bcnd%potfr(nref)*factt
-
-   end do
-
-end if 
 
 if (istep==1) then 
    do is=1,niem0
@@ -668,12 +593,6 @@ end if
 do is=1,ndiric
    sdmb(ifron(is))=sdmb(ifron(is))*grandx
 end do
-
-if (bcnd%nbfrnt>0.and.mesh%nndfnt > 0) then 
-   do is=1,mesh%nndfnt
-      sdmb(mesh%noefnt(is))=sdmb(mesh%noefnt(is))*grandx
-   end do
-end if 
 
 call desrem(iprof, grgr,sdmb,mesh%num_nodes,phi)
 
@@ -723,10 +642,10 @@ end subroutine poissn
 !
 ! A. Adolf - Version 1.0  Octobre  1994
 ! J. Segre - Version 1.1  Avril    1998 
-subroutine poifrc(ebj,mesh, bcnd)
+subroutine poifrc(ebj,mesh, ntypfr)
 
 type(sll_triangular_mesh_2d)   :: mesh
-type(mesh_bound)  :: bcnd
+integer, intent(in) :: ntypfr(:)
 type(mesh_fields) :: ebj
 double precision :: pscal, xnor
 integer :: is1, is2, ict
@@ -748,7 +667,7 @@ vnx=0.; vny=0.; naux=0
 
 do  ict=1,mesh%nctfrt
 
-   if (bcnd%ntypfr(mesh%krefro(ict))==1 .or.  bcnd%ntypfr(mesh%krefro(ict))==5) then 
+   if (ntypfr(mesh%krefro(ict))==1 .or.  ntypfr(mesh%krefro(ict))==5) then 
 
      is1=mesh%ksofro(1,ict)
      is2=mesh%ksofro(2,ict)
@@ -798,7 +717,7 @@ vnx=0.; vny=0.; naux=0
 
 do  ict=1,mesh%nctfrt
 
-   if (bcnd%ntypfr(mesh%krefro(ict))==3 .or. bcnd%ntypfr(mesh%krefro(ict))==6) then 
+   if (ntypfr(mesh%krefro(ict))==3 .or. ntypfr(mesh%krefro(ict))==6) then 
 
      is1=mesh%ksofro(1,ict)
      is2=mesh%ksofro(2,ict)
@@ -1425,219 +1344,7 @@ end do
 end subroutine m1p
 
 
-!subroutine: m2p1a
-!
-! Faire l'operation: zvect=xmors1.xvect+xmors2.yvect    
-! ou  "xmors1" et "xmors2" sont deux matrices "morse"  
-! xvect,yvect,zvect des vecteurs.                     
-!
-!          PARAMETRES D'ENTREE :                    
-!
-!          xmors1,xmors2 -    deux matrices  "morse" 
-!          xvect ,yvect  -    deux vecteurs         
-!          mors1 ,mors2  -    tableaux descriptifs des matrices "morse"
-!          nlign         -    nombre de lignes des matrices
-!
-!          PARAMETRE RESULTAT :                         
-!
-!          zvect    -   vecteur resultat              
-! 
-!Auteur:
-!J. Segre - Version 1.0  Aout 1989 
-!                                                                      
-subroutine m2p1a(xmors1,xmors2,mors1,mors2,xvect,yvect,nlign,zvect)
-
-integer :: mors1(*),mors2(*)
-double precision :: xmors1(*),xmors2(*),xvect (*),yvect(*),zvect(*)
-
-integer :: il, nlign, noeui
- 
-! ----------------------------------------------------------------------
-
-do il=1,nlign
-
-   noeui=mors1(il+1)-mors1(il)
-
-   if (noeui == 6) then
-      zvect(il)=xmors1(mors1(il+1)  )*xvect(mors2(mors1(il+1)  ))+  &
-                xmors1(mors1(il+1)-1)*xvect(mors2(mors1(il+1)-1))+  &
-                xmors1(mors1(il+1)-2)*xvect(mors2(mors1(il+1)-2))+  &
-                xmors1(mors1(il+1)-3)*xvect(mors2(mors1(il+1)-3))+  &
-                xmors1(mors1(il+1)-4)*xvect(mors2(mors1(il+1)-4))+  &
-                xmors1(mors1(il+1)-5)*xvect(mors2(mors1(il+1)-5))+  &
-                xmors2(mors1(il+1)  )*yvect(mors2(mors1(il+1)  ))+  &
-                xmors2(mors1(il+1)-1)*yvect(mors2(mors1(il+1)-1))+  &
-                xmors2(mors1(il+1)-2)*yvect(mors2(mors1(il+1)-2))+  &
-                xmors2(mors1(il+1)-3)*yvect(mors2(mors1(il+1)-3))+  &
-                xmors2(mors1(il+1)-4)*yvect(mors2(mors1(il+1)-4))+  &
-                xmors2(mors1(il+1)-5)*yvect(mors2(mors1(il+1)-5))
-
-   else if (noeui == 5) then
-      zvect(il)=xmors1(mors1(il+1)  )*xvect(mors2(mors1(il+1)  ))+  &
-                xmors1(mors1(il+1)-1)*xvect(mors2(mors1(il+1)-1))+  &
-                xmors1(mors1(il+1)-2)*xvect(mors2(mors1(il+1)-2))+  &
-                xmors1(mors1(il+1)-3)*xvect(mors2(mors1(il+1)-3))+  &
-                xmors1(mors1(il+1)-4)*xvect(mors2(mors1(il+1)-4))+  &
-                xmors2(mors1(il+1)  )*yvect(mors2(mors1(il+1)  ))+  &
-                xmors2(mors1(il+1)-1)*yvect(mors2(mors1(il+1)-1))+  &
-                xmors2(mors1(il+1)-2)*yvect(mors2(mors1(il+1)-2))+  &
-                xmors2(mors1(il+1)-3)*yvect(mors2(mors1(il+1)-3))+  &
-                xmors2(mors1(il+1)-4)*yvect(mors2(mors1(il+1)-4))
-
-   else if (noeui == 7) then
-      zvect(il)=xmors1(mors1(il+1)  )*xvect(mors2(mors1(il+1)  ))+  &
-                xmors1(mors1(il+1)-1)*xvect(mors2(mors1(il+1)-1))+  &
-                xmors1(mors1(il+1)-2)*xvect(mors2(mors1(il+1)-2))+  &
-                xmors1(mors1(il+1)-3)*xvect(mors2(mors1(il+1)-3))+  &
-                xmors1(mors1(il+1)-4)*xvect(mors2(mors1(il+1)-4))+  &
-                xmors1(mors1(il+1)-5)*xvect(mors2(mors1(il+1)-5))+  &
-                xmors1(mors1(il+1)-6)*xvect(mors2(mors1(il+1)-6))+  &
-                xmors2(mors1(il+1)  )*yvect(mors2(mors1(il+1)  ))+  &
-                xmors2(mors1(il+1)-1)*yvect(mors2(mors1(il+1)-1))+  &
-                xmors2(mors1(il+1)-2)*yvect(mors2(mors1(il+1)-2))+  &
-                xmors2(mors1(il+1)-3)*yvect(mors2(mors1(il+1)-3))+  &
-                xmors2(mors1(il+1)-4)*yvect(mors2(mors1(il+1)-4))+  &
-                xmors2(mors1(il+1)-5)*yvect(mors2(mors1(il+1)-5))+  &
-                xmors2(mors1(il+1)-6)*yvect(mors2(mors1(il+1)-6))
- 
-   else if (noeui == 4) then
-      zvect(il)=xmors1(mors1(il+1)  )*xvect(mors2(mors1(il+1)  ))+  &
-                xmors1(mors1(il+1)-1)*xvect(mors2(mors1(il+1)-1))+  &
-                xmors1(mors1(il+1)-2)*xvect(mors2(mors1(il+1)-2))+  &
-                xmors1(mors1(il+1)-3)*xvect(mors2(mors1(il+1)-3))+  &
-                xmors2(mors1(il+1)  )*yvect(mors2(mors1(il+1)  ))+  &
-                xmors2(mors1(il+1)-1)*yvect(mors2(mors1(il+1)-1))+  &
-                xmors2(mors1(il+1)-2)*yvect(mors2(mors1(il+1)-2))+  &
-                xmors2(mors1(il+1)-3)*yvect(mors2(mors1(il+1)-3))
-
-   else if (noeui == 8) then
-      zvect(il)=xmors1(mors1(il+1)  )*xvect(mors2(mors1(il+1)  ))+  &
-                xmors1(mors1(il+1)-1)*xvect(mors2(mors1(il+1)-1))+  &
-                xmors1(mors1(il+1)-2)*xvect(mors2(mors1(il+1)-2))+  &
-                xmors1(mors1(il+1)-3)*xvect(mors2(mors1(il+1)-3))+  &
-                xmors1(mors1(il+1)-4)*xvect(mors2(mors1(il+1)-4))+  &
-                xmors1(mors1(il+1)-5)*xvect(mors2(mors1(il+1)-5))+  &
-                xmors1(mors1(il+1)-6)*xvect(mors2(mors1(il+1)-6))+  &
-                xmors1(mors1(il+1)-7)*xvect(mors2(mors1(il+1)-7))+  &
-                xmors2(mors1(il+1)  )*yvect(mors2(mors1(il+1)  ))+  &
-                xmors2(mors1(il+1)-1)*yvect(mors2(mors1(il+1)-1))+  &
-                xmors2(mors1(il+1)-2)*yvect(mors2(mors1(il+1)-2))+  &
-                xmors2(mors1(il+1)-3)*yvect(mors2(mors1(il+1)-3))+  &
-                xmors2(mors1(il+1)-4)*yvect(mors2(mors1(il+1)-4))+  &
-                xmors2(mors1(il+1)-5)*yvect(mors2(mors1(il+1)-5))+  &
-                xmors2(mors1(il+1)-6)*yvect(mors2(mors1(il+1)-6))+  &
-                xmors2(mors1(il+1)-7)*yvect(mors2(mors1(il+1)-7))
-
-   else if (noeui == 3) then
-      zvect(il)=xmors1(mors1(il+1)  )*xvect(mors2(mors1(il+1)  ))+  &
-                xmors1(mors1(il+1)-1)*xvect(mors2(mors1(il+1)-1))+  &
-                xmors1(mors1(il+1)-2)*xvect(mors2(mors1(il+1)-2))+  &
-                xmors2(mors1(il+1)  )*yvect(mors2(mors1(il+1)  ))+  &
-                xmors2(mors1(il+1)-1)*yvect(mors2(mors1(il+1)-1))+  &
-                xmors2(mors1(il+1)-2)*yvect(mors2(mors1(il+1)-2))
-
-   else if (noeui == 9) then
-      zvect(il)=xmors1(mors1(il+1)  )*xvect(mors2(mors1(il+1)  ))+  &
-                xmors1(mors1(il+1)-1)*xvect(mors2(mors1(il+1)-1))+  &
-                xmors1(mors1(il+1)-2)*xvect(mors2(mors1(il+1)-2))+  &
-                xmors1(mors1(il+1)-3)*xvect(mors2(mors1(il+1)-3))+  &
-                xmors1(mors1(il+1)-4)*xvect(mors2(mors1(il+1)-4))+  &
-                xmors1(mors1(il+1)-5)*xvect(mors2(mors1(il+1)-5))+  &
-                xmors1(mors1(il+1)-6)*xvect(mors2(mors1(il+1)-6))+  &
-                xmors1(mors1(il+1)-7)*xvect(mors2(mors1(il+1)-7))+  &
-                xmors1(mors1(il+1)-8)*xvect(mors2(mors1(il+1)-8))+  &
-                xmors2(mors1(il+1)  )*yvect(mors2(mors1(il+1)  ))+  &
-                xmors2(mors1(il+1)-1)*yvect(mors2(mors1(il+1)-1))+  &
-                xmors2(mors1(il+1)-2)*yvect(mors2(mors1(il+1)-2))+  &
-                xmors2(mors1(il+1)-3)*yvect(mors2(mors1(il+1)-3))+  &
-                xmors2(mors1(il+1)-4)*yvect(mors2(mors1(il+1)-4))+  &
-                xmors2(mors1(il+1)-5)*yvect(mors2(mors1(il+1)-5))+  &
-                xmors2(mors1(il+1)-6)*yvect(mors2(mors1(il+1)-6))+  &
-                xmors2(mors1(il+1)-7)*yvect(mors2(mors1(il+1)-7))+  &
-                xmors2(mors1(il+1)-8)*yvect(mors2(mors1(il+1)-8))
-
-   else if (noeui == 10) then
-      zvect(il)=xmors1(mors1(il+1)  )*xvect(mors2(mors1(il+1)  ))+  &
-                xmors1(mors1(il+1)-1)*xvect(mors2(mors1(il+1)-1))+  &
-                xmors1(mors1(il+1)-2)*xvect(mors2(mors1(il+1)-2))+  &
-                xmors1(mors1(il+1)-3)*xvect(mors2(mors1(il+1)-3))+  &
-                xmors1(mors1(il+1)-4)*xvect(mors2(mors1(il+1)-4))+  &
-                xmors1(mors1(il+1)-5)*xvect(mors2(mors1(il+1)-5))+  &
-                xmors1(mors1(il+1)-6)*xvect(mors2(mors1(il+1)-6))+  &
-                xmors1(mors1(il+1)-7)*xvect(mors2(mors1(il+1)-7))+  &
-                xmors1(mors1(il+1)-8)*xvect(mors2(mors1(il+1)-8))+  &
-                xmors1(mors1(il+1)-9)*xvect(mors2(mors1(il+1)-9))+  &
-                xmors2(mors1(il+1)  )*yvect(mors2(mors1(il+1)  ))+  &
-                xmors2(mors1(il+1)-1)*yvect(mors2(mors1(il+1)-1))+  &
-                xmors2(mors1(il+1)-2)*yvect(mors2(mors1(il+1)-2))+  &
-                xmors2(mors1(il+1)-3)*yvect(mors2(mors1(il+1)-3))+  &
-                xmors2(mors1(il+1)-4)*yvect(mors2(mors1(il+1)-4))+  &
-                xmors2(mors1(il+1)-5)*yvect(mors2(mors1(il+1)-5))+  &
-                xmors2(mors1(il+1)-6)*yvect(mors2(mors1(il+1)-6))+  &
-                xmors2(mors1(il+1)-7)*yvect(mors2(mors1(il+1)-7))+  &
-                xmors2(mors1(il+1)-8)*yvect(mors2(mors1(il+1)-8))+  &
-                xmors2(mors1(il+1)-9)*yvect(mors2(mors1(il+1)-9))
-
-   else if (noeui == 11) then
-      zvect(il)=xmors1(mors1(il+1)  )*xvect(mors2(mors1(il+1)  ))+  &
-              xmors1(mors1(il+1)-1)*xvect(mors2(mors1(il+1)-1))+    &
-              xmors1(mors1(il+1)-2)*xvect(mors2(mors1(il+1)-2))+    &
-              xmors1(mors1(il+1)-3)*xvect(mors2(mors1(il+1)-3))+    &
-              xmors1(mors1(il+1)-4)*xvect(mors2(mors1(il+1)-4))+    &
-              xmors1(mors1(il+1)-5)*xvect(mors2(mors1(il+1)-5))+    &
-              xmors1(mors1(il+1)-6)*xvect(mors2(mors1(il+1)-6))+    &
-              xmors1(mors1(il+1)-7)*xvect(mors2(mors1(il+1)-7))+    &
-              xmors1(mors1(il+1)-8)*xvect(mors2(mors1(il+1)-8))+    &
-              xmors1(mors1(il+1)-9)*xvect(mors2(mors1(il+1)-9))+    &
-              xmors1(mors1(il+1)-10)*xvect(mors2(mors1(il+1)-10))
-     zvect(il)=zvect(il)+                       &
-              xmors2(mors1(il+1)  )*yvect(mors2(mors1(il+1)  ))+    &
-              xmors2(mors1(il+1)-1)*yvect(mors2(mors1(il+1)-1))+    &
-              xmors2(mors1(il+1)-2)*yvect(mors2(mors1(il+1)-2))+    &
-              xmors2(mors1(il+1)-3)*yvect(mors2(mors1(il+1)-3))+    &
-              xmors2(mors1(il+1)-4)*yvect(mors2(mors1(il+1)-4))+    &
-              xmors2(mors1(il+1)-5)*yvect(mors2(mors1(il+1)-5))+    &
-              xmors2(mors1(il+1)-6)*yvect(mors2(mors1(il+1)-6))+    &
-              xmors2(mors1(il+1)-7)*yvect(mors2(mors1(il+1)-7))+    &
-              xmors2(mors1(il+1)-8)*yvect(mors2(mors1(il+1)-8))+    &
-              xmors2(mors1(il+1)-9)*yvect(mors2(mors1(il+1)-9))+    &
-              xmors2(mors1(il+1)-10)*yvect(mors2(mors1(il+1)-10))
-
-   else if (noeui == 12) then
-      zvect(il)=xmors1(mors1(il+1)  )*xvect(mors2(mors1(il+1)  ))+  &
-              xmors1(mors1(il+1)-1)*xvect(mors2(mors1(il+1)-1))+    &
-              xmors1(mors1(il+1)-2)*xvect(mors2(mors1(il+1)-2))+    &
-              xmors1(mors1(il+1)-3)*xvect(mors2(mors1(il+1)-3))+    &
-              xmors1(mors1(il+1)-4)*xvect(mors2(mors1(il+1)-4))+    &
-              xmors1(mors1(il+1)-5)*xvect(mors2(mors1(il+1)-5))+    &
-              xmors1(mors1(il+1)-6)*xvect(mors2(mors1(il+1)-6))+    &
-              xmors1(mors1(il+1)-7)*xvect(mors2(mors1(il+1)-7))+    &
-              xmors1(mors1(il+1)-8)*xvect(mors2(mors1(il+1)-8))+    &
-              xmors1(mors1(il+1)-9)*xvect(mors2(mors1(il+1)-9))+    &
-              xmors1(mors1(il+1)-10)*xvect(mors2(mors1(il+1)-10))+  &
-              xmors1(mors1(il+1)-11)*xvect(mors2(mors1(il+1)-11))
-     zvect(il)=zvect(il)+                       &
-              xmors2(mors1(il+1)  )*yvect(mors2(mors1(il+1)  ))+    &
-              xmors2(mors1(il+1)-1)*yvect(mors2(mors1(il+1)-1))+    &
-              xmors2(mors1(il+1)-2)*yvect(mors2(mors1(il+1)-2))+    &
-              xmors2(mors1(il+1)-3)*yvect(mors2(mors1(il+1)-3))+    &
-              xmors2(mors1(il+1)-4)*yvect(mors2(mors1(il+1)-4))+    &
-              xmors2(mors1(il+1)-5)*yvect(mors2(mors1(il+1)-5))+    &
-              xmors2(mors1(il+1)-6)*yvect(mors2(mors1(il+1)-6))+    &
-              xmors2(mors1(il+1)-7)*yvect(mors2(mors1(il+1)-7))+    &
-              xmors2(mors1(il+1)-8)*yvect(mors2(mors1(il+1)-8))+    &
-              xmors2(mors1(il+1)-9)*yvect(mors2(mors1(il+1)-9))+    &
-              xmors2(mors1(il+1)-10)*yvect(mors2(mors1(il+1)-10))+  &
-              xmors2(mors1(il+1)-11)*yvect(mors2(mors1(il+1)-11))
-
-   end if
-
-end do 
-
-end subroutine m2p1a
-
-
-subroutine poliss(phi,ebj,mesh,vmsh)
+subroutine poliss(phi,ebj,mesh)
 
 !  Effectuer le calcul des composantes Ex et Ey du    
 !  ---    champ electrique a partir du potentiel au noeud.
@@ -1645,7 +1352,6 @@ subroutine poliss(phi,ebj,mesh,vmsh)
 
 type(mesh_fields) :: ebj
 type(sll_triangular_mesh_2d) :: mesh
-type(voronoi)   :: vmsh
 double precision, dimension(:) :: phi
 
 integer :: is, ic, nbc, iac
@@ -1656,7 +1362,7 @@ lerr=.FALSE.
 ! --- 1.0 --- Calcul des termes individuels des seconds membres --------
   
 do ic=1,mesh%nbtcot
-   vtanty(ic)=(phi(vmsh%nuvac(1,ic))-phi(vmsh%nuvac(2,ic)))/vmsh%xlcod(ic)
+   vtanty(ic)=(phi(mesh%nuvac(1,ic))-phi(mesh%nuvac(2,ic)))/mesh%xlcod(ic)
 end do
 
 do ic=1,mesh%nbtcot
@@ -1671,102 +1377,102 @@ end do
   
 do is=1,mesh%num_nodes
 
-   iac=vmsh%nbcov(is)+1
-   nbc=vmsh%nbcov(is+1)-vmsh%nbcov(is)
+   iac=mesh%nbcov(is)+1
+   nbc=mesh%nbcov(is+1)-mesh%nbcov(is)
 
    if (nbc == 6) then
-      sv1(is) = vtantx(vmsh%nugcv(iac  ))+vtantx(vmsh%nugcv(iac+1)) &
-              + vtantx(vmsh%nugcv(iac+2))+vtantx(vmsh%nugcv(iac+3)) &
-              + vtantx(vmsh%nugcv(iac+4))+vtantx(vmsh%nugcv(iac+5)) 
-      sv2(is) = vtanty(vmsh%nugcv(iac  ))+vtanty(vmsh%nugcv(iac+1)) &
-              + vtanty(vmsh%nugcv(iac+2))+vtanty(vmsh%nugcv(iac+3)) &
-              + vtanty(vmsh%nugcv(iac+4))+vtanty(vmsh%nugcv(iac+5)) 
+      sv1(is) = vtantx(mesh%nugcv(iac  ))+vtantx(mesh%nugcv(iac+1)) &
+              + vtantx(mesh%nugcv(iac+2))+vtantx(mesh%nugcv(iac+3)) &
+              + vtantx(mesh%nugcv(iac+4))+vtantx(mesh%nugcv(iac+5)) 
+      sv2(is) = vtanty(mesh%nugcv(iac  ))+vtanty(mesh%nugcv(iac+1)) &
+              + vtanty(mesh%nugcv(iac+2))+vtanty(mesh%nugcv(iac+3)) &
+              + vtanty(mesh%nugcv(iac+4))+vtanty(mesh%nugcv(iac+5)) 
    else if (nbc == 5) then
-      sv1(is) = vtantx(vmsh%nugcv(iac  ))+vtantx(vmsh%nugcv(iac+1)) &
-              + vtantx(vmsh%nugcv(iac+2))+vtantx(vmsh%nugcv(iac+3)) &
-              + vtantx(vmsh%nugcv(iac+4))
-      sv2(is) = vtanty(vmsh%nugcv(iac  ))+vtanty(vmsh%nugcv(iac+1)) &
-              + vtanty(vmsh%nugcv(iac+2))+vtanty(vmsh%nugcv(iac+3)) &
-              + vtanty(vmsh%nugcv(iac+4))
+      sv1(is) = vtantx(mesh%nugcv(iac  ))+vtantx(mesh%nugcv(iac+1)) &
+              + vtantx(mesh%nugcv(iac+2))+vtantx(mesh%nugcv(iac+3)) &
+              + vtantx(mesh%nugcv(iac+4))
+      sv2(is) = vtanty(mesh%nugcv(iac  ))+vtanty(mesh%nugcv(iac+1)) &
+              + vtanty(mesh%nugcv(iac+2))+vtanty(mesh%nugcv(iac+3)) &
+              + vtanty(mesh%nugcv(iac+4))
    else if (nbc == 7) then
-      sv1(is) = vtantx(vmsh%nugcv(iac  ))+vtantx(vmsh%nugcv(iac+1)) &
-              + vtantx(vmsh%nugcv(iac+2))+vtantx(vmsh%nugcv(iac+3)) &
-              + vtantx(vmsh%nugcv(iac+4))+vtantx(vmsh%nugcv(iac+5))     &
-              + vtantx(vmsh%nugcv(iac+6))
-      sv2(is) = vtanty(vmsh%nugcv(iac  ))+vtanty(vmsh%nugcv(iac+1)) &
-              + vtanty(vmsh%nugcv(iac+2))+vtanty(vmsh%nugcv(iac+3)) &
-              + vtanty(vmsh%nugcv(iac+4))+vtanty(vmsh%nugcv(iac+5))     &
-              + vtanty(vmsh%nugcv(iac+6))
+      sv1(is) = vtantx(mesh%nugcv(iac  ))+vtantx(mesh%nugcv(iac+1)) &
+              + vtantx(mesh%nugcv(iac+2))+vtantx(mesh%nugcv(iac+3)) &
+              + vtantx(mesh%nugcv(iac+4))+vtantx(mesh%nugcv(iac+5))     &
+              + vtantx(mesh%nugcv(iac+6))
+      sv2(is) = vtanty(mesh%nugcv(iac  ))+vtanty(mesh%nugcv(iac+1)) &
+              + vtanty(mesh%nugcv(iac+2))+vtanty(mesh%nugcv(iac+3)) &
+              + vtanty(mesh%nugcv(iac+4))+vtanty(mesh%nugcv(iac+5))     &
+              + vtanty(mesh%nugcv(iac+6))
    else if (nbc == 4) then
-      sv1(is) = vtantx(vmsh%nugcv(iac  ))+vtantx(vmsh%nugcv(iac+1)) &
-              + vtantx(vmsh%nugcv(iac+2))+vtantx(vmsh%nugcv(iac+3))
-      sv2(is) = vtanty(vmsh%nugcv(iac  ))+vtanty(vmsh%nugcv(iac+1)) &
-              + vtanty(vmsh%nugcv(iac+2))+vtanty(vmsh%nugcv(iac+3))
+      sv1(is) = vtantx(mesh%nugcv(iac  ))+vtantx(mesh%nugcv(iac+1)) &
+              + vtantx(mesh%nugcv(iac+2))+vtantx(mesh%nugcv(iac+3))
+      sv2(is) = vtanty(mesh%nugcv(iac  ))+vtanty(mesh%nugcv(iac+1)) &
+              + vtanty(mesh%nugcv(iac+2))+vtanty(mesh%nugcv(iac+3))
    else if (nbc == 8) then
-      sv1(is) = vtantx(vmsh%nugcv(iac  ))+vtantx(vmsh%nugcv(iac+1)) &
-              + vtantx(vmsh%nugcv(iac+2))+vtantx(vmsh%nugcv(iac+3)) &
-              + vtantx(vmsh%nugcv(iac+4))+vtantx(vmsh%nugcv(iac+5))     &
-              + vtantx(vmsh%nugcv(iac+6))+vtantx(vmsh%nugcv(iac+7)) 
-      sv2(is) = vtanty(vmsh%nugcv(iac  ))+vtanty(vmsh%nugcv(iac+1)) &
-              + vtanty(vmsh%nugcv(iac+2))+vtanty(vmsh%nugcv(iac+3)) &
-              + vtanty(vmsh%nugcv(iac+4))+vtanty(vmsh%nugcv(iac+5))     &
-              + vtanty(vmsh%nugcv(iac+6))+vtanty(vmsh%nugcv(iac+7)) 
+      sv1(is) = vtantx(mesh%nugcv(iac  ))+vtantx(mesh%nugcv(iac+1)) &
+              + vtantx(mesh%nugcv(iac+2))+vtantx(mesh%nugcv(iac+3)) &
+              + vtantx(mesh%nugcv(iac+4))+vtantx(mesh%nugcv(iac+5))     &
+              + vtantx(mesh%nugcv(iac+6))+vtantx(mesh%nugcv(iac+7)) 
+      sv2(is) = vtanty(mesh%nugcv(iac  ))+vtanty(mesh%nugcv(iac+1)) &
+              + vtanty(mesh%nugcv(iac+2))+vtanty(mesh%nugcv(iac+3)) &
+              + vtanty(mesh%nugcv(iac+4))+vtanty(mesh%nugcv(iac+5))     &
+              + vtanty(mesh%nugcv(iac+6))+vtanty(mesh%nugcv(iac+7)) 
    else if (nbc == 3) then
-      sv1(is) = vtantx(vmsh%nugcv(iac  ))+vtantx(vmsh%nugcv(iac+1)) &
-              + vtantx(vmsh%nugcv(iac+2))
-      sv2(is) = vtanty(vmsh%nugcv(iac  ))+vtanty(vmsh%nugcv(iac+1)) &
-              + vtanty(vmsh%nugcv(iac+2))
+      sv1(is) = vtantx(mesh%nugcv(iac  ))+vtantx(mesh%nugcv(iac+1)) &
+              + vtantx(mesh%nugcv(iac+2))
+      sv2(is) = vtanty(mesh%nugcv(iac  ))+vtanty(mesh%nugcv(iac+1)) &
+              + vtanty(mesh%nugcv(iac+2))
    else if (nbc == 9) then
-      sv1(is) = vtantx(vmsh%nugcv(iac  ))+vtantx(vmsh%nugcv(iac+1)) &
-              + vtantx(vmsh%nugcv(iac+2))+vtantx(vmsh%nugcv(iac+3)) &
-              + vtantx(vmsh%nugcv(iac+4))+vtantx(vmsh%nugcv(iac+5))     &
-              + vtantx(vmsh%nugcv(iac+6))+vtantx(vmsh%nugcv(iac+7))     &
-              + vtantx(vmsh%nugcv(iac+8))
-      sv2(is) = vtanty(vmsh%nugcv(iac  ))+vtanty(vmsh%nugcv(iac+1)) &
-              + vtanty(vmsh%nugcv(iac+2))+vtanty(vmsh%nugcv(iac+3)) &
-              + vtanty(vmsh%nugcv(iac+4))+vtanty(vmsh%nugcv(iac+5))     &
-              + vtanty(vmsh%nugcv(iac+6))+vtanty(vmsh%nugcv(iac+7))     &
-              + vtanty(vmsh%nugcv(iac+8))
+      sv1(is) = vtantx(mesh%nugcv(iac  ))+vtantx(mesh%nugcv(iac+1)) &
+              + vtantx(mesh%nugcv(iac+2))+vtantx(mesh%nugcv(iac+3)) &
+              + vtantx(mesh%nugcv(iac+4))+vtantx(mesh%nugcv(iac+5))     &
+              + vtantx(mesh%nugcv(iac+6))+vtantx(mesh%nugcv(iac+7))     &
+              + vtantx(mesh%nugcv(iac+8))
+      sv2(is) = vtanty(mesh%nugcv(iac  ))+vtanty(mesh%nugcv(iac+1)) &
+              + vtanty(mesh%nugcv(iac+2))+vtanty(mesh%nugcv(iac+3)) &
+              + vtanty(mesh%nugcv(iac+4))+vtanty(mesh%nugcv(iac+5))     &
+              + vtanty(mesh%nugcv(iac+6))+vtanty(mesh%nugcv(iac+7))     &
+              + vtanty(mesh%nugcv(iac+8))
    else if (nbc == 2) then
-      sv1(is) = vtantx(vmsh%nugcv(iac  ))+vtantx(vmsh%nugcv(iac+1))
-      sv2(is) = vtanty(vmsh%nugcv(iac  ))+vtanty(vmsh%nugcv(iac+1))
+      sv1(is) = vtantx(mesh%nugcv(iac  ))+vtantx(mesh%nugcv(iac+1))
+      sv2(is) = vtanty(mesh%nugcv(iac  ))+vtanty(mesh%nugcv(iac+1))
    else if (nbc == 10) then
-      sv1(is) = vtantx(vmsh%nugcv(iac  ))+vtantx(vmsh%nugcv(iac+1)) &
-              + vtantx(vmsh%nugcv(iac+2))+vtantx(vmsh%nugcv(iac+3)) &
-              + vtantx(vmsh%nugcv(iac+4))+vtantx(vmsh%nugcv(iac+5))     &
-              + vtantx(vmsh%nugcv(iac+6))+vtantx(vmsh%nugcv(iac+7))     &
-              + vtantx(vmsh%nugcv(iac+8))+vtantx(vmsh%nugcv(iac+9)) 
-      sv2(is) = vtanty(vmsh%nugcv(iac  ))+vtanty(vmsh%nugcv(iac+1)) &
-              + vtanty(vmsh%nugcv(iac+2))+vtanty(vmsh%nugcv(iac+3)) &
-              + vtanty(vmsh%nugcv(iac+4))+vtanty(vmsh%nugcv(iac+5))     &
-              + vtanty(vmsh%nugcv(iac+6))+vtanty(vmsh%nugcv(iac+7))     &
-              + vtanty(vmsh%nugcv(iac+8))+vtanty(vmsh%nugcv(iac+9)) 
+      sv1(is) = vtantx(mesh%nugcv(iac  ))+vtantx(mesh%nugcv(iac+1)) &
+              + vtantx(mesh%nugcv(iac+2))+vtantx(mesh%nugcv(iac+3)) &
+              + vtantx(mesh%nugcv(iac+4))+vtantx(mesh%nugcv(iac+5))     &
+              + vtantx(mesh%nugcv(iac+6))+vtantx(mesh%nugcv(iac+7))     &
+              + vtantx(mesh%nugcv(iac+8))+vtantx(mesh%nugcv(iac+9)) 
+      sv2(is) = vtanty(mesh%nugcv(iac  ))+vtanty(mesh%nugcv(iac+1)) &
+              + vtanty(mesh%nugcv(iac+2))+vtanty(mesh%nugcv(iac+3)) &
+              + vtanty(mesh%nugcv(iac+4))+vtanty(mesh%nugcv(iac+5))     &
+              + vtanty(mesh%nugcv(iac+6))+vtanty(mesh%nugcv(iac+7))     &
+              + vtanty(mesh%nugcv(iac+8))+vtanty(mesh%nugcv(iac+9)) 
    else if (nbc == 11) then
-      sv1(is) = vtantx(vmsh%nugcv(iac  ))+vtantx(vmsh%nugcv(iac+1)) &
-              + vtantx(vmsh%nugcv(iac+2))+vtantx(vmsh%nugcv(iac+3)) &
-              + vtantx(vmsh%nugcv(iac+4))+vtantx(vmsh%nugcv(iac+5))     &
-              + vtantx(vmsh%nugcv(iac+6))+vtantx(vmsh%nugcv(iac+7))     &
-              + vtantx(vmsh%nugcv(iac+8))+vtantx(vmsh%nugcv(iac+9))     &
-              + vtantx(vmsh%nugcv(iac+10))
-      sv2(is) = vtanty(vmsh%nugcv(iac  ))+vtanty(vmsh%nugcv(iac+1)) &
-              + vtanty(vmsh%nugcv(iac+2))+vtanty(vmsh%nugcv(iac+3)) &
-              + vtanty(vmsh%nugcv(iac+4))+vtanty(vmsh%nugcv(iac+5))     &
-              + vtanty(vmsh%nugcv(iac+6))+vtanty(vmsh%nugcv(iac+7))     &
-              + vtanty(vmsh%nugcv(iac+8))+vtanty(vmsh%nugcv(iac+9))     &
-              + vtanty(vmsh%nugcv(iac+10))
+      sv1(is) = vtantx(mesh%nugcv(iac  ))+vtantx(mesh%nugcv(iac+1)) &
+              + vtantx(mesh%nugcv(iac+2))+vtantx(mesh%nugcv(iac+3)) &
+              + vtantx(mesh%nugcv(iac+4))+vtantx(mesh%nugcv(iac+5))     &
+              + vtantx(mesh%nugcv(iac+6))+vtantx(mesh%nugcv(iac+7))     &
+              + vtantx(mesh%nugcv(iac+8))+vtantx(mesh%nugcv(iac+9))     &
+              + vtantx(mesh%nugcv(iac+10))
+      sv2(is) = vtanty(mesh%nugcv(iac  ))+vtanty(mesh%nugcv(iac+1)) &
+              + vtanty(mesh%nugcv(iac+2))+vtanty(mesh%nugcv(iac+3)) &
+              + vtanty(mesh%nugcv(iac+4))+vtanty(mesh%nugcv(iac+5))     &
+              + vtanty(mesh%nugcv(iac+6))+vtanty(mesh%nugcv(iac+7))     &
+              + vtanty(mesh%nugcv(iac+8))+vtanty(mesh%nugcv(iac+9))     &
+              + vtanty(mesh%nugcv(iac+10))
    else if (nbc == 12) then
-      sv1(is) = vtantx(vmsh%nugcv(iac  ))+vtantx(vmsh%nugcv(iac+1)) &
-              + vtantx(vmsh%nugcv(iac+2))+vtantx(vmsh%nugcv(iac+3)) &
-              + vtantx(vmsh%nugcv(iac+4))+vtantx(vmsh%nugcv(iac+5))     &
-              + vtantx(vmsh%nugcv(iac+6))+vtantx(vmsh%nugcv(iac+7))     &
-              + vtantx(vmsh%nugcv(iac+8))+vtantx(vmsh%nugcv(iac+9))     &
-              + vtantx(vmsh%nugcv(iac+10))+vtantx(vmsh%nugcv(iac+11))
-      sv2(is) = vtanty(vmsh%nugcv(iac  ))+vtanty(vmsh%nugcv(iac+1)) &
-              + vtanty(vmsh%nugcv(iac+2))+vtanty(vmsh%nugcv(iac+3)) &
-              + vtanty(vmsh%nugcv(iac+4))+vtanty(vmsh%nugcv(iac+5))     &
-              + vtanty(vmsh%nugcv(iac+6))+vtanty(vmsh%nugcv(iac+7))     &
-              + vtanty(vmsh%nugcv(iac+8))+vtanty(vmsh%nugcv(iac+9))     &
-              + vtanty(vmsh%nugcv(iac+10))+vtanty(vmsh%nugcv(iac+11))
+      sv1(is) = vtantx(mesh%nugcv(iac  ))+vtantx(mesh%nugcv(iac+1)) &
+              + vtantx(mesh%nugcv(iac+2))+vtantx(mesh%nugcv(iac+3)) &
+              + vtantx(mesh%nugcv(iac+4))+vtantx(mesh%nugcv(iac+5))     &
+              + vtantx(mesh%nugcv(iac+6))+vtantx(mesh%nugcv(iac+7))     &
+              + vtantx(mesh%nugcv(iac+8))+vtantx(mesh%nugcv(iac+9))     &
+              + vtantx(mesh%nugcv(iac+10))+vtantx(mesh%nugcv(iac+11))
+      sv2(is) = vtanty(mesh%nugcv(iac  ))+vtanty(mesh%nugcv(iac+1)) &
+              + vtanty(mesh%nugcv(iac+2))+vtanty(mesh%nugcv(iac+3)) &
+              + vtanty(mesh%nugcv(iac+4))+vtanty(mesh%nugcv(iac+5))     &
+              + vtanty(mesh%nugcv(iac+6))+vtanty(mesh%nugcv(iac+7))     &
+              + vtanty(mesh%nugcv(iac+8))+vtanty(mesh%nugcv(iac+9))     &
+              + vtanty(mesh%nugcv(iac+10))+vtanty(mesh%nugcv(iac+11))
 
    else
       lerr=.TRUE.
@@ -1792,121 +1498,5 @@ end do
             /10x,'On a trouve plus de 12 cotes')
 
 end subroutine poliss
-
-
- 
-
-!                                                                      i
-!     asblm3 : Assembler 3 matrices elementaires dans 3 matrices       i
-!              globales stockees sous forme "morse" non symetriques.   i
-!                                                                      i
-subroutine asblm3(aele1,aele2,aele3,mors1,mors2,i1,i2,i3,a1,a2,a3)
-
-! ==================================================================== i
-!                                                                      i
-!          Version 1.0  Aout 1989  J. Segre                            i
-!                                                                      i
-!                                                                      i
-!          BUT :         assembler 3 matrices elementaires             i
-!          -----         dans 3 matrices globales stockees             i
-!                        sous forme "morse" non symetriques            i
-!                                                                      i
-!          PARAMETRES D'ENTREE :                                       i
-!          ---------------------                                       i
-!                                                                      i
-!          aele1,..,aele3 :  Matrices elementaires                     i
-!          mors1          :  Tableau du nombre de termes par           i
-!                            ligne de la matrice morse                 i
-!          mors2          :  Tableau des numeros des termes            i
-!                            de chaque ligne de la matrice morse       i
-!          i1,i2,i3       :  Numeros des sommets de l'element          i
-!                                                                      i
-!          PARAMETRES RESULTATS :                                      i
-!          ---------------------                                       i
-!                                                                      i
-!          a1,..a3        :  Matrices globales stockees                i
-!                            sous forme "morse"                        i
-!                                                                      i
-! ==================================================================== i
- 
-integer :: i1, i2, i3, j1, j2, ind1, ind2, ind3
-double precision, dimension(:) :: aele1,aele2,aele3,a1,a2,a3
-integer, dimension(:) ::  mors1, mors2
-
-! ----------------------------------------------------------------------
-! --- 1.1 --- Rangement des termes diagonaux ---------------------------
-
-ind1=mors1(i1+1)
-a1(ind1)=a1(ind1)+aele1(1)
-a2(ind1)=a2(ind1)+aele2(1)
-a3(ind1)=a3(ind1)+aele3(1)
- 
-ind2=mors1(i2+1)
-a1(ind2)=a1(ind2)+aele1(5)
-a2(ind2)=a2(ind2)+aele2(5)
-a3(ind2)=a3(ind2)+aele3(5)
- 
-ind3=mors1(i3+1)
-a1(ind3)=a1(ind3)+aele1(9)
-a2(ind3)=a2(ind3)+aele2(9)
-a3(ind3)=a3(ind3)+aele3(9)
-
-! --- 1.2 --- Rangement des autres termes ------------------------------
-
-j2=ind1-1
-j1=mors1(i1)+1
- 
-IF(j2.GE.j1) THEN
-   DO j=j1,j2
-      IF(i2.EQ.mors2(j)) THEN
-         a1(j)=a1(j)+aele1(2)
-         a2(j)=a2(j)+aele2(2)
-         a3(j)=a3(j)+aele3(2)
-      ENDIF
-      IF(i3.EQ.mors2(j)) THEN
-         a1(j)=a1(j)+aele1(3)
-         a2(j)=a2(j)+aele2(3)
-         a3(j)=a3(j)+aele3(3)
-      ENDIF
-   end do
-ENDIF
- 
-j2=ind2-1
-j1=mors1(i2)+1
- 
-IF(j2.GE.j1) THEN
-   DO j=j1,j2
-      IF(i1.EQ.mors2(j)) THEN
-         a1(j)=a1(j)+aele1(4)
-         a2(j)=a2(j)+aele2(4)
-         a3(j)=a3(j)+aele3(4)
-      ENDIF
-      IF(i3.EQ.mors2(j)) THEN
-         a1(j)=a1(j)+aele1(6)
-         a2(j)=a2(j)+aele2(6)
-         a3(j)=a3(j)+aele3(6)
-      ENDIF
-   end do
-ENDIF
-
-j2=ind3-1
-j1=mors1(i3)+1
- 
-IF(j2.GE.j1) THEN
-   DO j=j1,j2
-      IF(i1.EQ.mors2(j)) THEN
-         a1(j)=a1(j)+aele1(7)
-         a2(j)=a2(j)+aele2(7)
-         a3(j)=a3(j)+aele3(7)
-      ENDIF
-      IF(i2.EQ.mors2(j)) THEN
-         a1(j)=a1(j)+aele1(8)
-         a2(j)=a2(j)+aele2(8)
-         a3(j)=a3(j)+aele3(8)
-      ENDIF
-   end do
-ENDIF
-
-end subroutine asblm3   
 
 end module poisson
