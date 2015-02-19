@@ -16,7 +16,7 @@ sll_real64                  :: x2
 sll_int32                   :: i
 sll_int32                   :: nei1, nei2, nei3
 
-num_cells = 2
+num_cells = 3
 
 print *, ""
 print *, "Creating a mesh with 40 cells, mesh coordinates written in ./hex_mesh_coo.txt"
