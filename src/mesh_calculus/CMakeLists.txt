@@ -19,10 +19,10 @@ ENDIF(BUILD_TESTING)
 
 
 SET(f90_sources poisson.F90 
-                maillage.F90 solveurs_module.F90 
+                solveurs_module.F90 
                 errout.F90
                 zone.F90 utlib.F90)
 
 ADD_LIBRARY(picsou ${f90_sources})
 ADD_EXECUTABLE(test_picsou picsou.F90)
-TARGET_LINK_LIBRARIES(test_picsou picsou sll_meshes sll_file_io)
+TARGET_LINK_LIBRARIES(test_picsou picsou sll_mesh_calculus sll_file_io)
