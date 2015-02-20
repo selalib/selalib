@@ -302,11 +302,11 @@ end if
 ! ======================================================================
 ! --- 9.0 --- Formats --------------------------------------------------
  
- 900 format(//10x,'Tableau MORS2 pointe par le tableau MORS1'/  &
-               3x,'No de noeud           Noeuds associes'/)
- 901 format(2x,I8,3x,12I8)
- 902 format(//10x,'Noeuds frontiere du type DIRICLET pour POISSON'/)
- 903 format(32000(2x,7I9/)/)
+900 format(//10x,'Tableau MORS2 pointe par le tableau MORS1'/  &
+              3x,'No de noeud           Noeuds associes'/)
+901 format(2x,I8,3x,12I8)
+902 format(//10x,'Noeuds frontiere du type DIRICLET pour POISSON'/)
+903 format(32000(2x,7I9/)/)
 
 end subroutine init_solveur_poisson
 
@@ -344,73 +344,73 @@ mors1(1)=0
  
 do is=1,nbs  !Boucle sur les noeuds
 
-   !Nombre d'elements ayant is comme sommet
+  !Nombre d'elements ayant is comme sommet
 
-   nel=npoel1(is+1)-npoel1(is)
-   nlign=0
+  nel=npoel1(is+1)-npoel1(is)
+  nlign=0
 
-   !Boucle sur ces elements
+  !Boucle sur ces elements
 
-   do  iel=1,nel
+  do  iel=1,nel
 
-      k=k+1
+     k=k+1
 
-      !numero de l'element
+     !numero de l'element
 
-      numel=npoel2(k)
-      is1=ntri(1,numel); is2=ntri(2,numel); is3=ntri(3,numel)
-      if (is1==is) then 
-         js1=is2; js2=is3
-      end if 
-      if (is2==is) then 
-         js1=is3; js2=is1
-      end if 
-      if (is3==is) then 
-         js1=is1; js2=is2
-      end if 
+     numel=npoel2(k)
+     is1=ntri(1,numel); is2=ntri(2,numel); is3=ntri(3,numel)
+     if (is1==is) then 
+        js1=is2; js2=is3
+     end if 
+     if (is2==is) then 
+        js1=is3; js2=is1
+     end if 
+     if (is3==is) then 
+        js1=is1; js2=is2
+     end if 
 
-      !On regarde si les 2 noeuds autres que is de l'element courant ont 
-      !deja ete pris en compte dans l'ensemble des noeuds interagissant 
-      !avec is.
+     !On regarde si les 2 noeuds autres que is de l'element courant ont 
+     !deja ete pris en compte dans l'ensemble des noeuds interagissant 
+     !avec is.
 
-      itest1=0; itest2=0
-      if (nlign.NE.0) then 
-         do l=1,nlign
-            if (js1==ilign(l)) then 
-               itest1=1
-            end if 
-            if (js2==ilign(l)) then 
-               itest2=1
-            end if 
-         end do
-      end if 
+     itest1=0; itest2=0
+     if (nlign.NE.0) then 
+        do l=1,nlign
+           if (js1==ilign(l)) then 
+              itest1=1
+           end if 
+           if (js2==ilign(l)) then 
+              itest2=1
+           end if 
+        end do
+     end if 
 
-      if (itest1==0) then 
-         nlign=nlign+1
-         ilign(nlign)=js1
-      end if 
-      if (itest2==0) then 
-         nlign=nlign+1
-         ilign(nlign)=js2
-      end if 
+     if (itest1==0) then 
+        nlign=nlign+1
+        ilign(nlign)=js1
+     end if 
+     if (itest2==0) then 
+        nlign=nlign+1
+        ilign(nlign)=js2
+     end if 
 
-   end do
- 
-   !Definition de l'adresse du dernier terme de la ligne
+  end do
 
-   mors1(is+1)=mors1(is)+nlign+1
- 
-   !Remplissage du tableau mors2 avec les numeros des termes
-   !de la ligne is.
+  !Definition de l'adresse du dernier terme de la ligne
 
-   if (nlign.NE.0) then 
-      do l=1,nlign
-         im=im+1
-         mors2(im)=ilign(l)
-      end do
-   end if 
-   im=im+1
-   mors2(im)=is
+  mors1(is+1)=mors1(is)+nlign+1
+
+  !Remplissage du tableau mors2 avec les numeros des termes
+  !de la ligne is.
+
+  if (nlign.NE.0) then 
+     do l=1,nlign
+        im=im+1
+        mors2(im)=ilign(l)
+     end do
+  end if 
+  im=im+1
+  mors2(im)=is
 end do
 
 end subroutine morse
@@ -725,18 +725,18 @@ SLL_ALLOCATE(this%naux(1:this%mesh%num_nodes),ierr)
 
 do  ict=1,this%mesh%nctfrt
 
-   if (this%ntypfr(this%mesh%krefro(ict))==1) then 
+  if (this%ntypfr(this%mesh%krefro(ict))==1) then 
 
-     is1=this%mesh%ksofro(1,ict)
-     is2=this%mesh%ksofro(2,ict)
+    is1=this%mesh%ksofro(1,ict)
+    is2=this%mesh%ksofro(2,ict)
 
-     this%vnx(is1)=this%vnx(is1)+this%mesh%vnofro(1,ict)
-     this%vny(is1)=this%vny(is1)+this%mesh%vnofro(2,ict)
-     this%vnx(is2)=this%vnx(is2)+this%mesh%vnofro(1,ict)
-     this%vny(is2)=this%vny(is2)+this%mesh%vnofro(2,ict)
+    this%vnx(is1)=this%vnx(is1)+this%mesh%vnofro(1,ict)
+    this%vny(is1)=this%vny(is1)+this%mesh%vnofro(2,ict)
+    this%vnx(is2)=this%vnx(is2)+this%mesh%vnofro(1,ict)
+    this%vny(is2)=this%vny(is2)+this%mesh%vnofro(2,ict)
 
-     this%naux(is1)=1
-     this%naux(is2)=1
+    this%naux(is1)=1
+    this%naux(is2)=1
 
   end if 
 
@@ -746,19 +746,19 @@ end do
 
 do  i=1,this%mesh%num_nodes
 
-   if (this%naux(i)==1) then 
+  if (this%naux(i)==1) then 
 
-      xnor=SQRT(this%vnx(i)**2+this%vny(i)**2)
-      if (xnor>this%mesh%petitl) then 
-         this%vnx(i)=this%vnx(i)/xnor
-         this%vny(i)=this%vny(i)/xnor
+     xnor=SQRT(this%vnx(i)**2+this%vny(i)**2)
+     if (xnor>this%mesh%petitl) then 
+        this%vnx(i)=this%vnx(i)/xnor
+        this%vny(i)=this%vny(i)/xnor
 
-         pscal=this%vnx(i)*ex(i)+this%vny(i)*ey(i)
-         ex(i)=this%vnx(i)*pscal
-         ey(i)=this%vny(i)*pscal
-      end if 
+        pscal=this%vnx(i)*ex(i)+this%vny(i)*ey(i)
+        ex(i)=this%vnx(i)*pscal
+        ey(i)=this%vny(i)*pscal
+     end if 
 
-   end if 
+  end if 
 
 end do 
 
@@ -773,42 +773,42 @@ this%vnx=0.; this%vny=0.; this%naux=0
 ! ... Boucle sur les cotes frontieres pour construire les normales aux
 ! ... noeuds "Neumann"
 
-do  ict=1,this%mesh%nctfrt
+do ict=1,this%mesh%nctfrt
 
-   if (this%ntypfr(this%mesh%krefro(ict))==3) then 
+  if (this%ntypfr(this%mesh%krefro(ict))==3) then 
 
-     is1=this%mesh%ksofro(1,ict)
-     is2=this%mesh%ksofro(2,ict)
+    is1=this%mesh%ksofro(1,ict)
+    is2=this%mesh%ksofro(2,ict)
 
-     this%vnx(is1)=this%vnx(is1)+this%mesh%vnofro(1,ict)
-     this%vny(is1)=this%vny(is1)+this%mesh%vnofro(2,ict)
-     this%vnx(is2)=this%vnx(is2)+this%mesh%vnofro(1,ict)
-     this%vny(is2)=this%vny(is2)+this%mesh%vnofro(2,ict)
+    this%vnx(is1)=this%vnx(is1)+this%mesh%vnofro(1,ict)
+    this%vny(is1)=this%vny(is1)+this%mesh%vnofro(2,ict)
+    this%vnx(is2)=this%vnx(is2)+this%mesh%vnofro(1,ict)
+    this%vny(is2)=this%vny(is2)+this%mesh%vnofro(2,ict)
 
-     this%naux(is1)=1
-     this%naux(is2)=1
+    this%naux(is1)=1
+    this%naux(is2)=1
 
-   end if 
+  end if 
 
 end do 
 
-!!... on impose la condition E.nu=0
+!... on impose la condition E.nu=0
 
 do i=1,this%mesh%num_nodes
 
-   if (this%naux(i)==1) then 
+  if (this%naux(i)==1) then 
 
-      if (xnor>this%mesh%petitl) then 
-        xnor=SQRT(this%vnx(i)**2+this%vny(i)**2)
-        this%vnx(i)=this%vnx(i)/xnor
-        this%vny(i)=this%vny(i)/xnor
+    if (xnor>this%mesh%petitl) then 
+      xnor=SQRT(this%vnx(i)**2+this%vny(i)**2)
+      this%vnx(i)=this%vnx(i)/xnor
+      this%vny(i)=this%vny(i)/xnor
 
-        pscal=this%vnx(i)*ex(i)+this%vny(i)*ey(i)
-        ex(i)=ex(i)-this%vnx(i)*pscal
-        ey(i)=ey(i)-this%vny(i)*pscal
-      end if 
+      pscal=this%vnx(i)*ex(i)+this%vny(i)*ey(i)
+      ex(i)=ex(i)-this%vnx(i)*pscal
+      ey(i)=ey(i)-this%vny(i)*pscal
+    end if 
 
-   end if 
+  end if 
 
 end do 
 

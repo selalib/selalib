@@ -1,6 +1,5 @@
 ADD_LIBRARY( sll_meshes STATIC sll_meshes_base.F90 
-                               sll_cartesian_meshes.F90 
-                               sll_triangular_meshes.F90 )
+                               sll_cartesian_meshes.F90 )
 
 TARGET_LINK_LIBRARIES( sll_meshes sll_utilities
                                   sll_working_precision 
@@ -14,6 +13,14 @@ TARGET_LINK_LIBRARIES( sll_hex_meshes sll_file_io
 		                          sll_memory
 			                    sll_constants )
 
+ADD_LIBRARY( sll_tri_meshes STATIC sll_meshes_base.F90 sll_triangular_meshes.F90 )
+
+TARGET_LINK_LIBRARIES( sll_tri_meshes sll_hex_meshes
+                                      sll_file_io
+                                      sll_utilities
+                                      sll_working_precision 
+		                          sll_memory
+			                    sll_constants )
 # Tests
 IF(BUILD_TESTING)
 
@@ -28,7 +35,7 @@ IF(BUILD_TESTING)
   TARGET_LINK_LIBRARIES( test_hex_meshes sll_hex_meshes )
 
   ADD_EXECUTABLE( test_triangular_mesh unit_test_triangular_mesh.F90 )
-  TARGET_LINK_LIBRARIES( test_triangular_mesh sll_meshes )
+  TARGET_LINK_LIBRARIES( test_triangular_mesh sll_tri_meshes )
   ADD_TEST( NAME triangular_mesh COMMAND test_triangular_mesh )
 
 ENDIF(BUILD_TESTING)
