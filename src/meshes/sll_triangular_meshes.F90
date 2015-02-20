@@ -30,6 +30,8 @@ implicit none
 integer :: imxref=99999999 
 
 !> @brief 2d hexagonal mesh
+!  vtaux  - composante x des vecteurs tangeants         
+!  vtauy  - composante y des vecteurs tangeants        
 type :: sll_triangular_mesh_2d
 
   sll_int32           :: num_nodes  
@@ -45,22 +47,19 @@ type :: sll_triangular_mesh_2d
   sll_real64          :: eta2_min
   sll_real64          :: eta2_max
 
-  sll_int32  :: isolve
-  sll_int32  :: nbs, nbt, nbtcot, nbcoti, nmxfr, nelfr, nmxsd   
-  sll_int32  :: nctfrt, nbcfli, nndfnt, nbfrax
+  sll_int32           :: nbcoti
+  sll_int32           :: nbtcot
+  sll_int32           :: nmxfr
+  sll_int32           :: nelfr
+  sll_int32           :: nmxsd
+  sll_int32           :: nctfrt
+  sll_real64          :: petitl
+  sll_real64          :: grandl
 
-  sll_real64 :: petitl, grandl
-
-  sll_real64, dimension(:,:), pointer :: coor
   sll_real64, dimension(:),   pointer :: aire
-  sll_real64, dimension(:),   pointer :: xbas
-
   sll_int32,  dimension(:),   pointer :: refs
   sll_int32,  dimension(:),   pointer :: reft
-  sll_int32,  dimension(:,:), pointer :: ntri
   sll_int32,  dimension(:,:), pointer :: nvois
-  sll_int32,  dimension(:,:), pointer :: nvoiv
-  sll_int32,  dimension(:,:), pointer :: nvoif
   sll_int32,  dimension(:),   pointer :: nusd
   sll_int32,  dimension(:),   pointer :: npoel1
   sll_int32,  dimension(:),   pointer :: npoel2
@@ -68,21 +67,19 @@ type :: sll_triangular_mesh_2d
   sll_int32,  dimension(:),   pointer :: kctfro
   sll_int32,  dimension(:),   pointer :: kelfro
   sll_int32,  dimension(:,:), pointer :: ksofro
-  sll_int32,  dimension(:)  , pointer :: nctfnt
-  sll_int32,  dimension(:)  , pointer :: noefnt
-  sll_int32,  dimension(:)  , pointer :: irffnt
-  sll_int32,  dimension(:),   pointer :: ifrax
-
   sll_real64, dimension(:,:), pointer :: vnofro
-  sll_real64, dimension(:),   pointer :: xmal1, xmal2, xmal3
+  sll_real64, dimension(:),   pointer :: xmal1
+  sll_real64, dimension(:),   pointer :: xmal2
+  sll_real64, dimension(:),   pointer :: xmal3
   sll_int32,  dimension(:,:), pointer :: nuvac
-  sll_int32,  dimension(:)  , pointer :: nugcv
-  sll_int32,  dimension(:)  , pointer :: nbcov
-  sll_real64, dimension(:)  , pointer :: xlcod
-!  vtaux  - composante x des vecteurs tangeants         
-!  vtauy  - composante y des vecteurs tangeants        
-  sll_real64, dimension(:),   allocatable :: vtaux, vtauy
-  sll_int32, dimension (:), allocatable :: nctfro, nctfrp
+  sll_int32,  dimension(:),   pointer :: nugcv
+  sll_int32,  dimension(:),   pointer :: nbcov
+  sll_real64, dimension(:),   pointer :: xlcod
+
+  sll_real64, dimension(:),   allocatable :: vtaux
+  sll_real64, dimension(:),   allocatable :: vtauy
+  sll_int32,  dimension (:),  allocatable :: nctfro
+  sll_int32,  dimension (:),  allocatable :: nctfrp
 
 !   contains
 
