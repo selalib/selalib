@@ -1,6 +1,7 @@
 !File: Module Solveurs_Module
 !Definition des solveurs de Maxwell et de Poisson
 module solveurs_module
+#include "sll_utilities.h"
 
 !----------------------------------------------------------------------
 implicit none
@@ -74,7 +75,7 @@ do ifr=1,nfrmx
     write(6,904) ifr
   else
     write(6,910) ifr,ityp
-    call errout(6,"F","initialisation_solveurs"," ")
+    SLL_ERROR(" ")
   end if
 end do
 
