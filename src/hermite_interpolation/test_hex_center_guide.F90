@@ -91,7 +91,7 @@ program test_hex_hermite
 
   open(unit =111,  file="perf", action="write", status="replace")
 
-  do num_cells = 20,160,20 
+  do num_cells = 160,160,20 
 
      t = 0._f64
      tmax  = 100._f64
@@ -376,7 +376,12 @@ program test_hex_hermite
               ! solving with euler
               call compute_characteristic_euler_2d_hex( &
                    x,y,uxn,uyn,i,xx,yy,dt )
-
+              
+           else 
+              call compute_characteristic_adams2_2d_hex( x,y,uxn,uyn,uxn_1,uyn_1,&
+                   dxuxn,dyuxn,dxuyn,dyuyn,i,xx,yy,dt)
+           endif
+           
               inside = .true.
               h1 =  xx*r11 + yy*r12
               h2 =  xx*r21 + yy*r22 
@@ -412,29 +417,29 @@ program test_hex_hermite
            !       rho_tn1(i) = 0._f64 ! dirichlet boundary condition
            !    endif
 
-           else
+           ! else
 
-              ! solving with Adams 2
+           !    ! solving with Adams 2
               
-              call compute_characteristic_adams2_2d_hex( x,y,uxn,uyn,uxn_1,uyn_1,&
-                   dxuxn,dyuxn,dxuyn,dyuyn,i,xx,yy,dt)
+           !    call compute_characteristic_adams2_2d_hex( x,y,uxn,uyn,uxn_1,uyn_1,&
+           !         dxuxn,dyuxn,dxuyn,dyuyn,i,xx,yy,dt)
 
-              inside = .true.
-              h1 =  xx*r11 + yy*r12
-              h2 =  xx*r21 + yy*r22 
+           !    inside = .true.
+           !    h1 =  xx*r11 + yy*r12
+           !    h2 =  xx*r21 + yy*r22 
 
-              if ( abs(h1) >  radius-mesh%delta .or. abs(h2) >  radius-mesh%delta &
-                   .or. abs(xx) > (radius-mesh%delta)*sqrt(3._f64)*0.5_f64) inside = .false.
+           !    if ( abs(h1) >  radius-mesh%delta .or. abs(h2) >  radius-mesh%delta &
+           !         .or. abs(xx) > (radius-mesh%delta)*sqrt(3._f64)*0.5_f64) inside = .false.
 
-              if ( inside ) then
-                 call hermite_interpolation(i, xx, yy, rho_tn, rho_center_tn,&
-                      rho_edge_tn, rho_tn1, mesh, deriv, aire,& 
-                      num_method)
-              else 
-                 rho_tn1(i) = 0._f64 ! dirichlet boundary condition
-              endif
+           !    if ( inside ) then
+           !       call hermite_interpolation(i, xx, yy, rho_tn, rho_center_tn,&
+           !            rho_edge_tn, rho_tn1, mesh, deriv, aire,& 
+           !            num_method)
+           !    else 
+           !       rho_tn1(i) = 0._f64 ! dirichlet boundary condition
+           !    endif
 
-           endif
+           ! endif
 
         end do ! end of the computation of the mesh points
 
@@ -446,9 +451,13 @@ program test_hex_hermite
 
               x = mesh%center_cartesian_coord(1,i)
               y = mesh%center_cartesian_coord(2,i)
-
-              call compute_characteristic_euler_2d_hex( &
+              if (t < 2*dt) then
+                 call compute_characteristic_euler_2d_hex( &
                    x,y,uxn_center,uyn_center,i,xx,yy,dt )
+              else
+                 call compute_characteristic_adams2_2d_hex( x,y,uxn_center,uyn_center,uxn_1,uyn_1,&
+                   dxuxn,dyuxn,dxuyn,dyuyn,i,xx,yy,dt)
+              endif
 
               inside = .true.
               h1 =  xx*r11 + yy*r12
@@ -792,7 +801,7 @@ contains
     type(sll_hex_mesh_2d), pointer :: mesh
     sll_real64,dimension(:)        :: f_tn, center_values_tn, edge_values_tn
     sll_int32  :: num_method
-    sll_real64 :: x, y, epsilon = 0.001_f64
+    sll_real64 :: x, y, epsilon = 0.01_f64
     sll_real64 :: rho
     sll_real64 :: r
     sll_int32  :: i

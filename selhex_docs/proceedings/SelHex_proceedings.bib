@@ -1,27 +1,6 @@
 % This file was created with JabRef 2.7b.
 % Encoding: UTF-8
 
-@INPROCEEDINGS{Condat2008,
-  author = {Condat, Laurent and Ville, Dimitri Van De},
-  title = {New optimized spline functions for interpolation on the hexagonal
-	lattice.},
-  booktitle = {ICIP},
-  year = {2008},
-  pages = {1256-1259},
-  publisher = {IEEE},
-  added-at = {2008-12-29T00:00:00.000+0100},
-  bdsk-url-1 = {http://dblp.uni-trier.de/db/conf/icip/icip2008.html#CondatV08a},
-  biburl = {http://www.bibsonomy.org/bibtex/288f883a392b5a03eca159213621d13e7/dblp},
-  crossref = {conf/icip/2008},
-  date = {2008-12-29},
-  description = {dblp},
-  ee = {http://dx.doi.org/10.1109/ICIP.2008.4711990},
-  interhash = {5593956b56b8ffd9039c68f6d48482a6},
-  intrahash = {88f883a392b5a03eca159213621d13e7},
-  keywords = {dblp},
-  timestamp = {2008-12-29T00:00:00.000+0100},
-  url = {http://dblp.uni-trier.de/db/conf/icip/icip2008.html#CondatV08a}
-}
 
 @ARTICLE{abiteboul2011solving,
   author = {Abiteboul, J and Latu, G and Grandgirard, V and Ratnani, A and Sonnendr{\"u}cker,
@@ -34,6 +13,55 @@
   owner = {mela},
   publisher = {EDP Sciences},
   timestamp = {2015.01.08}
+}
+@article{kwon2015,
+  title={Development of semi-Lagrangian gyrokinetic code for full-f turbulence simulation in general tokamak geometry},
+  author={Kwon, Jae-Min and Yi, Dokkyun and Piao, Xiangfan and Kim, Philsu},
+  journal={Journal of Computational Physics},
+  volume={283},
+  pages={518--540},
+  year={2015},
+  publisher={Elsevier}
+}
+@article{grandgirard2006,
+  title={A drift-kinetic Semi-Lagrangian 4D code for ion turbulence simulation},
+  author={Grandgirard, Virginie and Brunetti, Maura and Bertrand, Pierre and Besse, Nicolas and Garbet, Xavier and Ghendrih, Philippe and Manfredi, Giovanni and Sarazin, Yanick and Sauter, Olivier and Sonnendr{\"u}cker, Eric and others},
+  journal={Journal of Computational Physics},
+  volume={217},
+  number={2},
+  pages={395--423},
+  year={2006},
+  publisher={Elsevier}
+}
+@article{banks2010,
+  title={A new class of nonlinear finite-volume methods for Vlasov simulation},
+  author={Banks, Jeffrey William and Hittinger, Jeffrey Alan Furst},
+  journal={Plasma Science, IEEE Transactions on},
+  volume={38},
+  number={9},
+  pages={2198--2207},
+  year={2010},
+  publisher={IEEE}
+}
+@article{filbet2003,
+  title={Comparison of eulerian Vlasov solvers},
+  author={Filbet, Francis and Sonnendr{\"u}cker, Eric},
+  journal={Computer Physics Communications},
+  volume={150},
+  number={3},
+  pages={247--266},
+  year={2003},
+  publisher={Elsevier}
+}
+@article{chatelain2008isotropic,
+  title={Isotropic compact interpolation schemes for particle methods},
+  author={Chatelain, Philippe and Leonard, Anthony},
+  journal={Journal of Computational Physics},
+  volume={227},
+  number={6},
+  pages={3244--3259},
+  year={2008},
+  publisher={Elsevier}
 }
 
 @ARTICLE{Angelino2009,
@@ -54,11 +82,11 @@
   title = {Methode d'elements finis pour les problemes de coques minces},
   publisher = {Masson editions},
   year = {1994},
-  author = {M. Bernadou}
+  author = {Bernadou, M.}
 }
 
 @ARTICLE{Besse2003341,
-  author = {N. Besse and E. Sonnendr{\"u}cker},
+  author = {Besse, N. and Sonnendr{\"u}cker, E.},
   title = {Semi-Lagrangian schemes for the Vlasov equation on an unstructured
 	mesh of phase space},
   journal = {Journal of Computational Physics},
@@ -97,41 +125,21 @@
   isbn = {0070053715}
 }
 
-@BOOK{Boor1993,
-  title = {Box Splines},
-  publisher = {Springer-Verlag New York, Inc.},
-  year = {1993},
-  author = {de Boor, Carl and H\"{o}llig, Klaus and Riemenschneider, Sherman},
-  address = {New York, NY, USA},
-  isbn = {0-387-94101-0}
+@MISC{poisson,
+  author = {Carlson, E. and Sun, H. and  Smith, D. and Zhang, J.},
+  title = {Third order accuracy of the 4-Point Hexagonal Net Grid Finite Difference Scheme for Solving the 2D Helmholtz Equation},
+  year = {2003},
+  note = {\url{http://www.cs.uky.edu/~jzhang/pub/PAPER/hexgrid3.html}}
 }
 
 @ARTICLE{Cheng1976330,
-  author = {C.Z Cheng and Georg Knorr},
-  title = {The integration of the vlasov equation in configuration space},
+  author = {Cheng, C.Z  and Knorr,  Georg},
+  title = {The integration of the Vlasov equation in configuration space},
   journal = {Journal of Computational Physics},
   year = {1976},
   volume = {22},
   pages = {330 - 351},
   number = {3},
-  abstract = {A convenient, fast, and accurate method of solving the one-dimensional
-	Vlasov equation numerically in configuration space is described.
-	It treats the convective terms in the x and v directions separately
-	and produces a scheme of second order in Δt. The resulting free-streaming
-	and accelerating equations are computed with Fourier interpolation
-	and spline interpolation methods respectively. The numerical method
-	is tested witth linear and nonlinear problems. The method is very
-	accurate and efficient. A new method of smoothing the distribution
-	function is given. It reduces the computational effort by artificially
-	increasing the entropy of the system. As a result, the distribution
-	function is smooth enough to be well represented on a given mesh.
-	The methods can be generalized in a straightforward way to deal with
-	more complicated cases such as problems with nonperiodic spatial
-	boundary conditions, two- and three-dimensional problems with and
-	without external magnetic and/or electric fields. },
-  bdsk-url-1 = {http://www.sciencedirect.com/science/article/pii/002199917690053X},
-  bdsk-url-2 = {http://dx.doi.org/10.1016/0021-9991(76)90053-X},
-  doi = {http://dx.doi.org/10.1016/0021-9991(76)90053-X},
   issn = {0021-9991},
   owner = {mela},
   timestamp = {2015.01.07},
@@ -139,7 +147,7 @@
 }
 
 @ARTICLE{Condat2007,
-  author = {Condat, L. and Van De Ville, D.},
+  author = {Condat, Laurent and Van De Ville, Dimitri},
   title = {Quasi-Interpolating Spline Models for Hexagonally-Sampled Data},
   journal = {IEEE, Transactions on Image Processing},
   year = {2007},
@@ -150,7 +158,7 @@
 }
 
 @ARTICLE{Condat2006,
-  author = {Condat, Laurent and Ville, Dimitri Van De},
+  author = {Condat, Laurent and Van De Ville, Dimitri},
   title = {Three-directional box-splines: characterization and efficient evaluation.},
   journal = {IEEE Signal Process. Lett.},
   year = {2006},
@@ -168,8 +176,20 @@
   url = {http://dblp.uni-trier.de/db/journals/spl/spl13.html#CondatV06}
 }
 
+@INPROCEEDINGS{Condat2008,
+  author = {Condat, Laurent and Ville, Dimitri Van De},
+  title = {New optimized spline functions for interpolation on the hexagonal
+	lattice.},
+  booktitle = {ICIP},
+  year = {2008},
+  pages = {1256-1259},
+  publisher = {IEEE},
+  date = {2008-12-29},
+  keywords = {dblp}
+}
+
 @INPROCEEDINGS{Condat2006a,
-  author = {Condat, Laurent and Ville, Dimitri Van De and Unser, Michael},
+  author = {Condat, Laurent and  Van De Ville, Dimitri and Unser, Michael},
   title = {Efficient Reconstruction of Hexagonally Sampled Data using Three-Directional
 	Box-Splines.},
   booktitle = {ICIP},
@@ -180,36 +200,29 @@
   date-modified = {2014-12-29 16:47:11 +0000}
 }
 
-@ARTICLE{poisson,
-  author = {E. Carlson, H. Sun, D.Smith, J. Zhang},
-  title = {Third order accuracy of the 4-Point Hexagonal Net Grid Finite Difference
-	Scheme for Solving the 2D Helmholtz Equation},
-  year = {2003}
+@BOOK{Boor1993,
+  title = {Box Splines},
+  publisher = {Springer-Verlag New York, Inc.},
+  year = {1993},
+  author = {de Boor, Carl and H\"{o}llig, Klaus and Riemenschneider, Sherman},
+  address = {New York, NY, USA},
+  isbn = {0-387-94101-0}
 }
 
-@UNPUBLISHED{filbet:hal-01068223,
+
+@misc{filbet:hal-01068223,
   author = {Filbet, Francis and Yang, Chang},
-  title = {{Mixed semi-Lagrangian/finite difference methods for plasma simulations}},
+  title = {Mixed semi-Lagrangian/finite difference methods for plasma simulations},
   month = Sep,
   year = {2014},
-  bdsk-url-1 = {https://hal.inria.fr/hal-01068223},
   hal_id = {hal-01068223},
   hal_version = {v1},
-  url = {https://hal.inria.fr/hal-01068223}
+  note = {https://hal.inria.fr/hal-01068223}
 }
 
-@ARTICLE{z,
-  author = {G.Guscaglia, V. Rua},
-  title = {Finite element methods for the Stokes system based on a Zienkiewicz
-	type N-simplex},
-  journal = {Computer Methods in Applied Mechanics and Engineering},
-  year = {2014},
-  volume = {272},
-  pages = {83--99}
-}
 
 @ARTICLE{Golse1998865,
-  author = {Fran{\c c}ois Golse and Laure Saint-Raymond},
+  author = {Golse, Fran{\c c}ois and Saint-Raymond, Laure },
   title = {L'approximation centre-guide pour l'{\'e}quation de Vlasov-Poisson
 	2D},
   journal = {Comptes Rendus de l'Acad{\'e}mie des Sciences - Series I - Mathematics},
@@ -226,10 +239,21 @@
   url = {http://www.sciencedirect.com/science/article/pii/S0764444299800342}
 }
 
+@ARTICLE{z,
+  author = {Guscaglia, G. and Rua, V.},
+  title = {Finite element methods for the Stokes system based on a Zienkiewicz
+	type N-simplex},
+  journal = {Computer Methods in Applied Mechanics and Engineering},
+  year = {2014},
+  volume = {272},
+  pages = {83--99}
+}
+
 @BOOK{Kalnay03atmosphericmodeling,
   title = {Atmospheric Modeling, Data Assimilation and Predictability},
   year = {2003},
-  author = {Eugenia Kalnay}
+  author = {Kalnay, Eugenia},
+publisher={Cambridge university press}
 }
 
 @TECHREPORT{madaule:hal-00841504,
@@ -242,8 +266,9 @@
   bdsk-url-1 = {https://hal.inria.fr/hal-00841504},
   hal_id = {hal-00841504},
   hal_version = {v1},
+  institution = {Inria},
   keywords = {semi-Lagrangian scheme ; guiding center simulation ; polar geometry},
-  url = {https://hal.inria.fr/hal-00841504}
+  note = {\url{https://hal.inria.fr/hal-00841504}}
 }
 
 @ARTICLE{Mersereau79-IEEE,
@@ -251,7 +276,9 @@
   title = {The processing of hexagonally sampled two-dimensional signals},
   year = {1979},
   volume = {67},
+  number={6},
   pages = {930--949},
+  journal={Proceedings of the IEEE},
   citeulike-article-id = {2331122},
   keywords = {bibtex-import, hexagonalsampling},
   posted-at = {2008-02-04 22:04:43},
@@ -338,39 +365,17 @@
   year1 = {1968}
 }
 
-@TECHREPORT{sonnendrucker:inria-00073296,
-  author = {Sonnendr{\"u}cker, Eric and Roche, Jean and Bertrand, Pierre and
-	Ghizzo, Alain},
-  title = {{The Semi-Lagrangian Method for the Numerical Resolution of Vlasov
-	Equations}},
-  year = {1998},
-  type = {Research Report},
-  number = {RR-3393},
-  bdsk-url-1 = {https://hal.inria.fr/inria-00073296},
-  hal_id = {inria-00073296},
-  hal_version = {v1},
-  keywords = {Vlasov equations ; kinetic equations ; semi-Lagrangian method ; time
-	splitting ; Vlasov equations ; kinetic equations ; semi-Lagrangian
-	method ; time splitting},
-  pages = {23},
-  url = {https://hal.inria.fr/inria-00073296}
+@article{Sonnendrucker1999201,
+  title={The semi-Lagrangian method for the numerical resolution of the Vlasov equation},
+  author={Sonnendr{\"u}cker, Eric and Roche, Jean and Bertrand, Pierre and Ghizzo, Alain},
+  journal={Journal of computational physics},
+  volume={149},
+  number={2},
+  pages={201--220},
+  year={1999},
+  publisher={Elsevier}
 }
 
-@ARTICLE{Sonnendrücker1999201,
-  author = {Eric Sonnendrücker and Jean Roche and Pierre Bertrand and Alain Ghizzo},
-  title = {The Semi-Lagrangian Method for the Numerical Resolution of the Vlasov
-	Equation },
-  journal = {Journal of Computational Physics },
-  year = {1999},
-  volume = {149},
-  pages = {201 - 220},
-  number = {2},
-  doi = {http://dx.doi.org/10.1006/jcph.1998.6148},
-  issn = {0021-9991},
-  owner = {mela},
-  timestamp = {2015.01.29},
-  url = {http://www.sciencedirect.com/science/article/pii/S0021999198961484}
-}
 
 @BOOK{Ulichney87,
   title = {Digital Halftoning},
@@ -409,7 +414,7 @@
 }
 
 @ARTICLE{Zaki1988184,
-  author = {S.I Zaki and L.R.T Gardner and T.J.M Boyd},
+  author = {Zaki, S.I  and Gardner, L.R.T  and Boyd, T.J.M},
   title = {A finite element code for the simulation of one-dimensional vlasov
 	plasmas. I. Theory},
   journal = {Journal of Computational Physics },

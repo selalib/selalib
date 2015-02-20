@@ -63,9 +63,9 @@ rhs  = -8*sll_pi**2 * sol + 1.
 
 call solve_mudpack_cartesian(periodic, phi, rhs)
 
-call sll_gnuplot_corect_2d(eta1_min, eta1_max, nc_eta1+1, &
-                           eta2_min, eta2_max, nc_eta2+1, &
-                           phi, "sinsin", 1, error)
+call sll_gnuplot_2d(eta1_min, eta1_max, nc_eta1+1, &
+                    eta2_min, eta2_max, nc_eta2+1, &
+                    phi, "sinsin", 1, error)
 
 !compute and print maximum norm of error
 write(*,201) maxval(abs(phi-sol))
@@ -97,10 +97,9 @@ call initialize_mudpack_cartesian(dirichlet,  &
 
 sol = exp(-(eta1*eta1+eta2*eta2))
 
-call sll_gnuplot_corect_2d(eta1_min, eta1_max, nc_eta1+1, &
-                           eta2_min, eta2_max, nc_eta2+1, &
-                           sol, "sol_dirichlet", 1, error)
-
+call sll_gnuplot_2d(eta1_min, eta1_max, nc_eta1+1, &
+                    eta2_min, eta2_max, nc_eta2+1, &
+                    sol, "sol_dirichlet", 1, error)
 
 do j=2,nc_eta2
    do i=2,nc_eta1
@@ -111,9 +110,9 @@ end do
 
 !rhs = 4 * sol * (eta1*eta1 + eta2*eta2 - 1)
 
-call sll_gnuplot_corect_2d(eta1_min, eta1_max, nc_eta1+1, &
-                           eta2_min, eta2_max, nc_eta2+1, &
-                           rhs, "rhs_dirichlet", 1, error)
+call sll_gnuplot_2d(eta1_min, eta1_max, nc_eta1+1, &
+                    eta2_min, eta2_max, nc_eta2+1, &
+                    rhs, "rhs_dirichlet", 1, error)
 
 !rhs = 4.0_f64
 phi(:,1) = sol(:,1)
@@ -123,9 +122,9 @@ phi(nc_eta2+1,:) = sol(nc_eta2+1,:)
 
 call solve_mudpack_cartesian(dirichlet, phi, rhs)
 
-call sll_gnuplot_corect_2d(eta1_min, eta1_max, nc_eta1+1, &
-                           eta2_min, eta2_max, nc_eta2+1, &
-                           phi, "phi_dirichlet", 1, error)
+call sll_gnuplot_2d(eta1_min, eta1_max, nc_eta1+1, &
+                    eta2_min, eta2_max, nc_eta2+1, &
+                    phi, "phi_dirichlet", 1, error)
 
 !compute and print maximum norm of error
 write(*,201) maxval(abs(phi-sol))

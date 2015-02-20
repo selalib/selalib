@@ -28,3 +28,14 @@ IF(BUILD_TESTING)
   ADD_TEST( NAME pic_accumulator COMMAND test_pic_accumulator )
   SET_TESTS_PROPERTIES( pic_accumulator PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 ENDIF(BUILD_TESTING)
+
+
+ADD_EXECUTABLE(particle_fourier_modes_test  particle_fourier_modes_test.F90)
+TARGET_LINK_LIBRARIES(particle_fourier_modes_test sll_memory 
+						sll_assert
+						sll_working_precision
+						sll_timer)
+ADD_DEPENDENCIES(particle_fourier_modes_test sll_memory 
+						sll_assert
+						sll_working_precision
+						sll_timer)

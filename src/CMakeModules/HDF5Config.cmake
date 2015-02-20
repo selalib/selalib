@@ -1,7 +1,5 @@
 SET(HDF5_ROOT $ENV{HDF5_ROOT} CACHE PATH "HDF5 location")
 
-MESSAGE(STATUS "HDF5_ROOT IS:${HDF5_ROOT}")
-
 IF(NOT HDF5_FOUND AND HDF5_ENABLED)
 
    SET(HDF5_PATHS $ENV{HDF5_HOME}
@@ -31,10 +29,11 @@ IF(NOT HDF5_FOUND AND HDF5_ENABLED)
    PATH_SUFFIXES lib hdf5/lib lib/x86_64-linux-gnu
    DOC "PATH TO libhdf5")
 
-   FIND_LIBRARY(HDF5_FORTRAN_LIBRARY NAMES libhdf5_fortran.a hdf5_openmpi_fortran hdf5_fortran
-   HINTS ${HDF5_PATHS} $ENV{HDF5_LIBRARYDIR}
-   PATH_SUFFIXES lib hdf5/lib lib/x86_64-linux-gnu
-   DOC "PATH TO libhdf5_fortran")
+   FIND_LIBRARY(HDF5_FORTRAN_LIBRARY 
+     NAMES libhdf5_fortran.a hdf5_openmpi_fortran hdf5_fortran
+     HINTS ${HDF5_PATHS} $ENV{HDF5_LIBRARYDIR}
+     PATH_SUFFIXES lib hdf5/lib lib/x86_64-linux-gnu
+     DOC "PATH TO libhdf5_fortran")
 
    FIND_LIBRARY(ZLIB_LIBRARIES NAMES z sz
                 HINTS ${HDF5_PATHS} 
@@ -52,9 +51,7 @@ IF(NOT HDF5_FOUND AND HDF5_ENABLED)
       SET(HDF5_FOUND YES)
    ENDIF()
 
-
 ENDIF()
-
 
 IF(HDF5_FOUND)
 
