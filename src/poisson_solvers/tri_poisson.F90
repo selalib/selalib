@@ -3,24 +3,22 @@
 !
 ! Traduit en Fortran 90 a partir de M2V ou DEGAS2D
 !
-module poisson
+module tri_poisson
+#include "sll_working_precision.h"
+#include "sll_constants.h"
 #include "sll_utilities.h"
-
-use zone, only: iout, grandx, petitx, time, dt, eps0, &
-                mesh_fields, pi, xmu0
-
-use maillage, only: sll_triangular_mesh_2d
-
+use sll_triangular_meshes
 implicit none
 
-integer, public  :: niem0, niemp0
+private
 
-integer, private :: i, j
+interface sll_create
+  module procedure init_solveur_poisson
+end interface sll_create
 
-double precision, dimension(:), allocatable :: vnx, vny
-integer, dimension(:), allocatable :: naux
-double precision, parameter  :: pivpoi = 1.0d-10
-double precision, parameter  :: pivamp = 1.0d-10
+public :: poliss, poifrc, poissn, sll_create
+
+
 
 !    Caracteristiques du maillage triangulaire:         
 !
@@ -28,8 +26,6 @@ double precision, parameter  :: pivamp = 1.0d-10
 !        nbt     - nombre de triangles du maillage     
 !        ndiric  - nombre de noeuds verifiant Dirichlet              
 !        ndirb3  - nombre de noeuds verifiant Dirichlet pour Ampere 
-!        niem0   - nombre de noeuds de la frontiere emettrice      
-!        niemp0  - nombre de noeuds voisins de la frontiere emettrice
 !        nbfrax  - nombre de noeuds a l'intersection axe/frontiere  
 !        nmxfr   - nombre de frontieres referencees max            
 !        nmxsd   - nombre de sous-domaines references max         
@@ -79,32 +75,112 @@ double precision, parameter  :: pivamp = 1.0d-10
 !        nmxcol - nombre de classes des elements                
 !        nclcol - nombre d'elements dans chaque classe         
 !
+sll_real64, parameter :: grandx = 1.e+20
 
-integer :: ndiric, nnref, ndirb3, nnoeuf
+type, public :: sll_triangular_poisson_2d
 
-double precision, private, dimension(:), allocatable :: gradx, grady
-double precision, private, dimension(:), allocatable :: grgr
+  private
+  sll_int32 :: ndiric
+  sll_real64, dimension(:), allocatable :: vnx
+  sll_real64, dimension(:), allocatable :: vny
+  sll_int32,  dimension(:), allocatable :: naux
+  sll_real64, dimension(:), allocatable :: gradx
+  sll_real64, dimension(:), allocatable :: grady
+  sll_real64, dimension(:), allocatable :: grgr
+  sll_int32,  dimension(:), allocatable :: mors1
+  sll_int32,  dimension(:), allocatable :: mors2
+  sll_int32,  dimension(:), allocatable :: iprof
+  sll_int32,  dimension(:), allocatable :: ifron
+  sll_real64, dimension(:), allocatable :: amass
+  sll_real64, dimension(:), allocatable :: vtantx
+  sll_real64, dimension(:), allocatable :: vtanty
+  sll_real64, dimension(:), allocatable :: sv1
+  sll_real64, dimension(:), allocatable :: sv2
 
-integer, dimension(:), allocatable :: iem0, iemp0
-integer, dimension(:), allocatable :: mors1, iprof
-integer, dimension(:), allocatable :: ifron, ifrb3, irefdir
-integer, dimension(:), allocatable :: mors2
-double precision,    dimension(:), allocatable :: rho2, dcr1, dcr2
-double precision,    dimension(:), allocatable :: amass
+  sll_int32  :: ntypfr(5)
+  sll_real64 :: potfr(5)
+  sll_real64 :: eps0 = 8.8542e-12
 
-integer, dimension(:), allocatable :: inoeuf
+end type sll_triangular_poisson_2d
 
+#ifdef DEBUG
+logical :: ldebug = .true.
+#else
 logical :: ldebug = .false.
+#endif /* DEBUG */
 
-double precision, dimension(:), private, allocatable :: vtantx, vtanty
-double precision, dimension(:), private, allocatable :: sv1,   sv2
 
 contains
 
+subroutine lecture_donnees_solveur(nomfich, ntypfr, potfr)
+
+Character(len=*), intent(in) :: nomfich
+sll_int32                      :: ityp
+sll_int32                      :: ifr
+sll_int32                      :: i
+sll_int32                      :: nfrmx
+sll_int32, dimension(:)        :: ntypfr
+sll_real64             :: potfr(:)
+
+NAMELIST/nlcham/ntypfr,potfr
+
+! ----------- Valeurs par defaut et initialisations -------------------t
+write(6,900)
+
+nfrmx  = size(ntypfr)
+ntypfr = 1  
+potfr  = 0.
+
+!--- 2.0 --- Lecture des donnees --------------------------------------
+
+open(10, file = nomfich)
+write(*,*)"Lecture de la namelist nlcham"
+read(10,nlcham,err=100)
+goto 200
+100 continue
+write(*,*)"Erreur de lecture de la namelist nlcham"
+write(*,*)"Valeurs par defaut"
+write(*,nlcham)
+stop
+200 close(10)
+
+!--- 2.5 --- Ecriture des donnees -------------------------------------
+
+write(6,921)
+
+do i=1,nfrmx
+   write(6,922) i,ntypfr(i),potfr(i)
+end do
+
+!--- 3.0 --- Controle des donnees -------------------------------------
+
+write(6,932)
+do ifr=1,nfrmx
+  ityp=ntypfr(ifr)
+  if(ityp == 1) then
+    write(6,902) ifr
+  else if(ityp == 3) then
+    write(6,904) ifr
+  else
+    write(6,910) ifr,ityp
+    SLL_ERROR(" ")
+  end if
+end do
+
+900  format(//10x,'Conditions aux limites sur les frontieres')
+902  format(/10x,'Reference :',i3,5x,'Dirichlet ')
+904  format(/10x,'Reference :',i3,5x,'Neumann')
+910  format(/10x,'Option non disponible'/  &
+    &        10x,'Reference :',i3,5x,'Type :',i3/)
+921  format(//5x,'Frontiere',5x,'ntypfr',7x,'potfr')
+922  format(5x,I3,4x,I10,2E12.3,2I10,E12.3)
+932  format(//10x,'CONDITIONS AUX LIMITES'/)
+
+end subroutine lecture_donnees_solveur
+
 !Subroutine: init_solveur_poisson   
 ! Reservation de tableaux et calcul des 
-! matrices necessaires au solveur electrostatique   
-! et magnetostatique.                               
+! matrices necessaires au solveur de poisson   
 !
 ! amass - matrice de masse diagonale     
 ! mors1 - matrice morse2       
@@ -116,39 +192,37 @@ contains
 ! fron  - noeuds Dirichlet
 ! xaux  - tableaux auxiliaires reels          
 ! iaux  - tableaux auxiliaires entiers       
-! ggp0  - vecteur  "grad-grad * potentiel" sur la frontiere emissive
-! iem0  - tableau des noeuds situes sur la frontiere emissive     
-! iemp0 - tableau des noeuds voisins de la frontiere emissive    
-! rho2  - tableau densite de charge aux noeuds de la frontiere 
-!         emettrice due aux particules crees au cours du pas de tps
-! gg0p0 - matrice de l'operateur "grad-grad" limitee aux noeuds de
-!         la frontiere emettrice et de leurs voisins             
 
 ! Allocation des tableaux permettant de stocker des matrices sous forme morse
 ! Tableau donnant le numero du dernier terme de chaque ligne (mors1)
-subroutine init_solveur_poisson(mesh, ntypfr)
+subroutine init_solveur_poisson(this, mesh, inpfil)
 
+type(sll_triangular_poisson_2d),  intent(out) :: this
 type(sll_triangular_mesh_2d),  intent(in) :: mesh
-integer :: ntypfr(:)
- 
-double precision, dimension(:), allocatable :: tmp1
+character(len=*), intent(in) :: inpfil 
+sll_real64, dimension(:), allocatable :: tmp1
 
-integer :: nref, nn, ndir
+sll_int32 :: nref, nn, ndir
+sll_int32 :: i, j
 
-allocate(sv1(mesh%nbtcot),sv2(mesh%nbtcot)); sv1 = 0.; sv2 = 0.
-allocate(vtantx(mesh%nbtcot),vtanty(mesh%nbtcot));vtantx=0.;vtanty=0.
 
-allocate(mors1(mesh%num_nodes+1)); mors1 = 0
+call lecture_donnees_solveur(inpfil,this%ntypfr, this%potfr)  
+
+
+allocate(this%sv1(mesh%nbtcot),this%sv2(mesh%nbtcot)); this%sv1 = 0.; this%sv2 = 0.
+allocate(this%vtantx(mesh%nbtcot),this%vtanty(mesh%nbtcot));this%vtantx=0.;this%vtanty=0.
+
+allocate(this%mors1(mesh%num_nodes+1)); this%mors1 = 0
 
 ! Tableau contenant le numero des termes de chaque ligne (mors2)
 ! on choisit une taille a priori superieure a la taille reelle
 ! de ce tableau.
 
-allocate(mors2(12*mesh%num_nodes)); mors2 = 0
+allocate(this%mors2(12*mesh%num_nodes)); this%mors2 = 0
  
 ! Calcul de mors1,mors2.
 
-call morse(mesh%npoel1,mesh%npoel2,mesh%nodes,mesh%num_cells,mesh%num_nodes,mors1,mors2)
+call morse(mesh%npoel1,mesh%npoel2,mesh%nodes,mesh%num_cells,mesh%num_nodes,this%mors1,this%mors2)
  
 ! Ajustement de la taille de mors2.
 ! pas sur que ca fonctionne a tous les coups
@@ -156,59 +230,56 @@ call morse(mesh%npoel1,mesh%npoel2,mesh%nodes,mesh%num_cells,mesh%num_nodes,mors
 
 ! Adressage des tableaux permettant de stocker des matrices sous forme profil
 
-allocate(iprof(mesh%num_nodes+1)); iprof = 0
-call profil(mesh%nodes,mesh%num_nodes,mesh%npoel1,mesh%npoel2)
+allocate(this%iprof(mesh%num_nodes+1)); this%iprof = 0
+call profil(mesh%nodes,mesh%num_nodes,mesh%npoel1,mesh%npoel2, this%iprof)
 
 !======================================================================
 !--- 2.0 --- POISSON par une methode d'elements finis -----------------
 !======================================================================
  
 !matrice de masse diagonalisee
-allocate(amass(mesh%num_nodes)); amass = 0.0 
+allocate(this%amass(mesh%num_nodes)); this%amass = 0.0 
  
 !matrice "grad-grad" stockee sous forme profil.
-allocate(grgr(iprof(mesh%num_nodes+1))); grgr = 0.0
+allocate(this%grgr(this%iprof(mesh%num_nodes+1))); this%grgr = 0.0
  
 !gradx et grady 
 
-allocate(gradx(mors1(mesh%num_nodes+1))); gradx = 0.0
-allocate(grady(mors1(mesh%num_nodes+1))); grady = 0.0
-
-niem0  = 0
-niemp0 = 0
+allocate(this%gradx(this%mors1(mesh%num_nodes+1))); this%gradx = 0.0
+allocate(this%grady(this%mors1(mesh%num_nodes+1))); this%grady = 0.0
 
 !--- Tableau relatif aux frontieres Dirichlet -------------------------
 
 ndir=0
-allocate(ifron(mesh%num_nodes)); ifron = 0
+allocate(this%ifron(mesh%num_nodes)); this%ifron = 0
 
 do nn=1,mesh%num_nodes
    nref= mesh%refs(nn)
    if (nref > 0) then 
-      if (ntypfr(nref)==1 .or. ntypfr(nref) == 5)then
+      if (this%ntypfr(nref)==1 .or. this%ntypfr(nref) == 5)then
          ndir=ndir+1
-         ifron(ndir)=nn
+         this%ifron(ndir)=nn
       end if 
    end if 
 end do
 
-ndiric=ndir
+this%ndiric=ndir
 !Ajustement ....
 !deallocate(ifron); allocate(ifron(ndiric))
 
 !--- Calcul des matrices ----------------------------------------------
 
-call poismc(mesh)
+call poismc(this, mesh)
 
 !Calcul de la matrice B tel que B*Bt = A dans le cas Cholesky
 
-allocate(tmp1(iprof(mesh%num_nodes+1))); tmp1 = 0.0
+allocate(tmp1(this%iprof(mesh%num_nodes+1))); tmp1 = 0.0
 
 write(*,"(//5x,a)")" *** Appel Choleski pour Poisson ***  "
-call choles(iprof,grgr,pivpoi,tmp1)
+call choles(this%iprof,this%grgr,tmp1)
 
-do i=1,iprof(mesh%num_nodes+1)
-   grgr(i)=tmp1(i)
+do i=1,this%iprof(mesh%num_nodes+1)
+   this%grgr(i)=tmp1(i)
 end do
 
 deallocate(tmp1)
@@ -216,12 +287,12 @@ deallocate(tmp1)
 ! --- 8.5 --- Ecriture des tableaux ------------------------------------
 
 if (ldebug) then
-   write(iout,900) 
+   write(6,900) 
    do i=1,mesh%num_nodes
-      write(iout,901) i,(mors2(j), j=mors1(i)+1,mors2(i+1))
+      write(6,901) i,(this%mors2(j), j=this%mors1(i)+1,this%mors2(i+1))
    end do
-   write(iout,902) 
-   write(iout,903) (ifron(i),i=1,ndiric)
+   write(6,902) 
+   write(6,903) (this%ifron(i),i=1,this%ndiric)
 end if
 
 ! ======================================================================
@@ -257,13 +328,13 @@ end subroutine init_solveur_poisson
 ! mors2  - tableau des numeros des termes des matrices "morse"         
 subroutine morse(npoel1, npoel2, ntri, nbt, nbs, mors1, mors2)
 
-integer, intent(in) :: nbs, nbt
-integer, dimension(:), intent(in) :: npoel1, npoel2
-integer, dimension(3,nbt), intent(in) :: ntri
-integer, dimension(:),   intent(out):: mors1, mors2
-integer, dimension(20)  :: ilign
-integer :: l, itest1, itest2, js1, js2, is1, is2, is3, numel
-integer :: iel, nlign, nel, is, im = 0, k = 0
+sll_int32, intent(in) :: nbs, nbt
+sll_int32, dimension(:), intent(in) :: npoel1, npoel2
+sll_int32, dimension(3,nbt), intent(in) :: ntri
+sll_int32, dimension(:),   intent(out):: mors1, mors2
+sll_int32, dimension(20)  :: ilign
+sll_int32 :: l, itest1, itest2, js1, js2, is1, is2, is3, numel
+sll_int32 :: iel, nlign, nel, is, im = 0, k = 0
 
 mors1(1)=0
  
@@ -386,14 +457,15 @@ end subroutine morse
 !   612-POISMC     
 !
 ! Puertolas - Version 1.0  Octobre  1992  
-subroutine poismc(mesh)
+subroutine poismc(this, mesh)
 
+type(sll_triangular_poisson_2d),  intent(inout) :: this
 type(sll_triangular_mesh_2d),  intent(in) :: mesh
-double precision :: amloc(3),aggloc(9),grxloc(9),gryloc(9)
-double precision :: dntx1, dntx2, dntx3, dnty1, dnty2, dnty3 
-double precision :: x1t, x2t, x3t, y1t, y2t, y3t, coef
-integer :: is1t, is2t, is3t, iel, nis
-integer :: is, il
+sll_real64 :: amloc(3),aggloc(9),grxloc(9),gryloc(9)
+sll_real64 :: dntx1, dntx2, dntx3, dnty1, dnty2, dnty3 
+sll_real64 :: x1t, x2t, x3t, y1t, y2t, y3t, coef
+sll_int32 :: is1t, is2t, is3t, iel, nis
+sll_int32 :: is, il, j
  
 !Boucle sur les elements.
 
@@ -429,7 +501,7 @@ do iel=1,mesh%num_cells
 
    !Assemblage
 
-   call asbld(amloc,is1t,is2t,is3t,amass)
+   call asbld(amloc,is1t,is2t,is3t,this%amass)
 
    !Contribution a la matrice grad-grad
 
@@ -457,45 +529,45 @@ do iel=1,mesh%num_cells
 
    !Assemblage 
 
-   call asblp(aggloc,is1t,is2t,is3t,grgr)
-   call asblm2(grxloc,gryloc,mors1,mors2,is1t,is2t,is3t,gradx,grady)
+   call asblp(this%iprof, aggloc,is1t,is2t,is3t,this%grgr)
+   call asblm2(grxloc,gryloc,this%mors1,this%mors2,is1t,is2t,is3t,this%gradx,this%grady)
 
 end do
 
 ! ======================================================================
 ! ... Prise en compte des conditions aux limites Dirichlet
 
-do j=1,ndiric
-   is=ifron(j)             
-   grgr(iprof(is+1))=grandx
+do j=1,this%ndiric
+   is=this%ifron(j)             
+   this%grgr(this%iprof(is+1))=grandx
 end do
 
 ! ================================================================
 ! ... Ecriture des matrices mass, grgr, gradx et grady
 
 if (ldebug) then
-   write(iout,900) 
+   write(6,900) 
    do is=1,mesh%num_nodes
-      write(iout,901) is,amass(is)
+      write(6,901) is,this%amass(is)
    end do
 
-   write(iout,907) 
-   write(iout,902) 
+   write(6,907) 
+   write(6,902) 
    do is=1,mesh%num_nodes
-      nis=iprof(is+1)-iprof(is)
-      write(iout,903) is,(grgr(iprof(is)+il),il=1,nis)
+      nis=this%iprof(is+1)-this%iprof(is)
+      write(6,903) is,(this%grgr(this%iprof(is)+il),il=1,nis)
    end do
 
-   write(iout,904) 
+   write(6,904) 
    do is=1,mesh%num_nodes
-      nis=mors1(is+1)-mors1(is)
-      write(iout,903) is,(gradx(mors1(is)+il),il=1,nis)
+      nis=this%mors1(is+1)-this%mors1(is)
+      write(6,903) is,(this%gradx(this%mors1(is)+il),il=1,nis)
    end do
 
-   write(iout,905) 
+   write(6,905) 
    do is=1,mesh%num_nodes
-      nis=mors1(is+1)-mors1(is)
-      write(iout,903) is,(grady(mors1(is)+il),il=1,nis)
+      nis=this%mors1(is+1)-this%mors1(is)
+      write(6,903) is,(this%grady(this%mors1(is)+il),il=1,nis)
    end do
 end if
 
@@ -556,15 +628,14 @@ end subroutine poismc
 !                                                              
 ! Auteur:
 !  E. Puertolas - Version 1.0  Decembre 1991  
-subroutine poissn(potfr,ebj,rho,phi,mesh,istep)
+subroutine poissn(this,ex,ey,rho,phi,mesh)
 
-double precision :: potfr(:)
+type (sll_triangular_poisson_2d)   :: this
 type (sll_triangular_mesh_2d)   :: mesh
-type (mesh_fields) :: ebj
-double precision, dimension(:) :: phi, rho
-double precision :: sdmb(size(rho)), sdmb12(size(rho))
+sll_real64, dimension(:) :: phi, rho, ex, ey
+sll_real64 :: sdmb(size(rho)), sdmb12(size(rho))
 
-integer :: is, istep, nref
+sll_int32 :: i, is, nref
 
 ! ----------- CALCUL DU POTENTIEL  -------------------------------------
 !
@@ -574,44 +645,37 @@ integer :: is, istep, nref
 !... Calcul du second membre complet ...
 
 do is=1,mesh%num_nodes
-   sdmb(is)=amass(is)*rho(is)/eps0
+   sdmb(is)=this%amass(is)*rho(is)/this%eps0
 end do
 
 !... Condition aux limites Dirichlet homogene avec forme temporelle
 
-do is=1,ndiric
-   nref=mesh%refs(ifron(is))
-   sdmb(ifron(is))=potfr(nref)
+do is=1,this%ndiric
+   nref=mesh%refs(this%ifron(is))
+   sdmb(this%ifron(is))=this%potfr(nref)
 end do
 
-if (istep==1) then 
-   do is=1,niem0
-      phi(iem0(is))  = 0.
-      sdmb(iem0(is)) = 0.
-   end do
-end if 
-
-do is=1,ndiric
-   sdmb(ifron(is))=sdmb(ifron(is))*grandx
+do is=1,this%ndiric
+   sdmb(this%ifron(is))=sdmb(this%ifron(is))*grandx
 end do
 
-call desrem(iprof, grgr,sdmb,mesh%num_nodes,phi)
+call desrem(this%iprof, this%grgr,sdmb,mesh%num_nodes,phi)
 
 !*** CALCUL DES CHAMPS E1N et E2N:
 
 !*** Second membre pour la composante 1:
 
-call m1p(gradx,mors1,mors2,phi,mesh%num_nodes,sdmb12)
+call m1p(this%gradx,this%mors1,this%mors2,phi,mesh%num_nodes,sdmb12)
 
 do i=1,mesh%num_nodes
-   ebj%e(1,i)=sdmb12(i)/amass(i)
+   ex(i)=sdmb12(i)/this%amass(i)
 end do
 
 !*** Second membre pour la composante 2:
 
-call m1p(grady,mors1,mors2,phi,mesh%num_nodes,sdmb12)
+call m1p(this%grady,this%mors1,this%mors2,phi,mesh%num_nodes,sdmb12)
 do i=1,mesh%num_nodes
-   ebj%e(2,i)=sdmb12(i)/amass(i)
+   ey(i)=sdmb12(i)/this%amass(i)
 end do
 
 end subroutine poissn
@@ -643,13 +707,14 @@ end subroutine poissn
 !
 ! A. Adolf - Version 1.0  Octobre  1994
 ! J. Segre - Version 1.1  Avril    1998 
-subroutine poifrc(ebj,mesh, ntypfr)
+subroutine poifrc(this, ex, ey, mesh)
 
+type(sll_triangular_poisson_2d)   :: this
 type(sll_triangular_mesh_2d)   :: mesh
-integer, intent(in) :: ntypfr(:)
-type(mesh_fields) :: ebj
-double precision :: pscal, xnor
-integer :: is1, is2, ict
+sll_real64 :: ex(:), ey(:)
+sll_real64 :: pscal, xnor
+sll_int32 :: is1, is2, ict
+sll_int32 :: i
       
 !!$ ======================================================================
 !!$ ... On force E.tau = 0 sur toutes les frontieres Dirichlet 
@@ -657,29 +722,29 @@ integer :: is1, is2, ict
 !!$ ... Initialisation des normales aux noeuds et du tableau indiquant 
 !!$ ... les noeuds appartenant a la frontiere consideree
 
-if (.not. allocated(vnx)) then 
-   allocate(vnx(mesh%num_nodes), vny(mesh%num_nodes), naux(mesh%num_nodes))
+if (.not. allocated(this%vnx)) then 
+   allocate(this%vnx(mesh%num_nodes), this%vny(mesh%num_nodes), this%naux(mesh%num_nodes))
 end if 
 
-vnx=0.; vny=0.; naux=0
+this%vnx=0.; this%vny=0.; this%naux=0
 
 !!$ ... Boucle sur les cotes frontieres pour construire les normales aux
 !!$ ... noeuds "Dirichlet"
 
 do  ict=1,mesh%nctfrt
 
-   if (ntypfr(mesh%krefro(ict))==1 .or.  ntypfr(mesh%krefro(ict))==5) then 
+   if (this%ntypfr(mesh%krefro(ict))==1 .or.  this%ntypfr(mesh%krefro(ict))==5) then 
 
      is1=mesh%ksofro(1,ict)
      is2=mesh%ksofro(2,ict)
 
-     vnx(is1)=vnx(is1)+mesh%vnofro(1,ict)
-     vny(is1)=vny(is1)+mesh%vnofro(2,ict)
-     vnx(is2)=vnx(is2)+mesh%vnofro(1,ict)
-     vny(is2)=vny(is2)+mesh%vnofro(2,ict)
+     this%vnx(is1)=this%vnx(is1)+mesh%vnofro(1,ict)
+     this%vny(is1)=this%vny(is1)+mesh%vnofro(2,ict)
+     this%vnx(is2)=this%vnx(is2)+mesh%vnofro(1,ict)
+     this%vny(is2)=this%vny(is2)+mesh%vnofro(2,ict)
 
-     naux(is1)=1
-     naux(is2)=1
+     this%naux(is1)=1
+     this%naux(is2)=1
 
   end if 
 
@@ -689,16 +754,16 @@ end do
 
 do  i=1,mesh%num_nodes
 
-   if (naux(i)==1) then 
+   if (this%naux(i)==1) then 
 
-      xnor=SQRT(vnx(i)**2+vny(i)**2)
+      xnor=SQRT(this%vnx(i)**2+this%vny(i)**2)
       if (xnor>mesh%petitl) then 
-         vnx(i)=vnx(i)/xnor
-         vny(i)=vny(i)/xnor
+         this%vnx(i)=this%vnx(i)/xnor
+         this%vny(i)=this%vny(i)/xnor
 
-         pscal=vnx(i)*ebj%e(1,i)+vny(i)*ebj%e(2,i)
-         ebj%e(1,i)=vnx(i)*pscal
-         ebj%e(2,i)=vny(i)*pscal
+         pscal=this%vnx(i)*ex(i)+this%vny(i)*ey(i)
+         ex(i)=this%vnx(i)*pscal
+         ey(i)=this%vny(i)*pscal
       end if 
 
    end if 
@@ -711,25 +776,25 @@ end do
 ! ... Initialisation des normales aux noeuds et du tableau indiquant 
 ! ... les noeuds appartenant a la frontiere consideree
 !
-vnx=0.; vny=0.; naux=0
+this%vnx=0.; this%vny=0.; this%naux=0
 
 ! ... Boucle sur les cotes frontieres pour construire les normales aux
 ! ... noeuds "Neumann"
 
 do  ict=1,mesh%nctfrt
 
-   if (ntypfr(mesh%krefro(ict))==3 .or. ntypfr(mesh%krefro(ict))==6) then 
+   if (this%ntypfr(mesh%krefro(ict))==3 .or. this%ntypfr(mesh%krefro(ict))==6) then 
 
      is1=mesh%ksofro(1,ict)
      is2=mesh%ksofro(2,ict)
 
-     vnx(is1)=vnx(is1)+mesh%vnofro(1,ict)
-     vny(is1)=vny(is1)+mesh%vnofro(2,ict)
-     vnx(is2)=vnx(is2)+mesh%vnofro(1,ict)
-     vny(is2)=vny(is2)+mesh%vnofro(2,ict)
+     this%vnx(is1)=this%vnx(is1)+mesh%vnofro(1,ict)
+     this%vny(is1)=this%vny(is1)+mesh%vnofro(2,ict)
+     this%vnx(is2)=this%vnx(is2)+mesh%vnofro(1,ict)
+     this%vny(is2)=this%vny(is2)+mesh%vnofro(2,ict)
 
-     naux(is1)=1
-     naux(is2)=1
+     this%naux(is1)=1
+     this%naux(is2)=1
 
    end if 
 
@@ -739,16 +804,16 @@ end do
 
 do i=1,mesh%num_nodes
 
-   if (naux(i)==1) then 
+   if (this%naux(i)==1) then 
 
       if (xnor>mesh%petitl) then 
-        xnor=SQRT(vnx(i)**2+vny(i)**2)
-        vnx(i)=vnx(i)/xnor
-        vny(i)=vny(i)/xnor
+        xnor=SQRT(this%vnx(i)**2+this%vny(i)**2)
+        this%vnx(i)=this%vnx(i)/xnor
+        this%vny(i)=this%vny(i)/xnor
 
-        pscal=vnx(i)*ebj%e(1,i)+vny(i)*ebj%e(2,i)
-        ebj%e(1,i)=ebj%e(1,i)-vnx(i)*pscal
-        ebj%e(2,i)=ebj%e(2,i)-vny(i)*pscal
+        pscal=this%vnx(i)*ex(i)+this%vny(i)*ey(i)
+        ex(i)=ex(i)-this%vnx(i)*pscal
+        ey(i)=ey(i)-this%vny(i)*pscal
       end if 
 
    end if 
@@ -775,15 +840,17 @@ end subroutine poifrc
 !  programmeur : 
 !  f hecht - juin 84 inria
 !
-subroutine choles(mudl,ae,eps,as)
+subroutine choles(mudl,ae,as)
 
 !**********************************************************************
 
-integer, dimension(:), intent(in) :: mudl
-double precision, dimension(:), intent(in)  :: ae
-double precision, dimension(:), intent(inout) :: as
-integer :: kj, jid, jmi, ij, jj, id, imi, ii, ntest
-double precision    :: s, xii, eps
+sll_int32, dimension(:), intent(in) :: mudl
+sll_real64, dimension(:), intent(in)  :: ae
+sll_real64, dimension(:), intent(inout) :: as
+sll_int32 :: kj, jid, jmi, ij, jj, id, imi, ii, ntest
+sll_real64    :: s, xii
+sll_real64, parameter  :: eps = 1.0d-10
+sll_int32 :: i, j
 
 ntest = 0
 as(1) = sqrt(ae(1))
@@ -816,8 +883,8 @@ do  i=2,size(mudl)
 
    xii = ae(ii)  - xii
    if ( xii  <  eps*abs(ae(ii))) then
-      write(iout,900) i,eps
-      write(iout,901)xii,eps,ae(ii)
+      write(6,900) i,eps
+      write(6,901)xii,eps,ae(ii)
       ntest = 1
    end if
 
@@ -826,7 +893,7 @@ do  i=2,size(mudl)
 end do
 
 if(ntest==1) then 
-   write(iout,902) 
+   write(6,902) 
    SLL_ERROR("choles poisson.f90")
 end if
 
@@ -854,11 +921,13 @@ end subroutine choles
 !f hecht  - juin 84 inria , f. hermeline aout 89 cel/v
 subroutine desrem(mudl,a,be,ntdl,bs)
 
-integer :: ntdl
-integer :: mudl(0:*)
-double precision    :: a(*),be(*),bs(*)
-integer :: ii, ij, kj, il
-double precision :: y
+sll_int32 :: ntdl
+sll_int32 :: mudl(0:*)
+sll_real64    :: a(*),be(*),bs(*)
+sll_int32 :: ii, ij, kj, il
+sll_real64 :: y
+sll_int32 :: i
+sll_int32 :: j
 
 ii = mudl(1)
 
@@ -914,12 +983,13 @@ end subroutine desrem
 !
 !Auteur:
 ! J. Segre - Juillet 89
-subroutine profil(ntri,nbs, npoel1, npoel2)
+subroutine profil(ntri,nbs, npoel1, npoel2, iprof)
 
-integer, dimension(:), intent(in) :: npoel1, npoel2
-integer, dimension(:,:), intent(in) :: ntri
-integer :: in, k, is1, is2, is3, numel, ind, iel, nel
-integer, intent(in) :: nbs      !Nombre de sommets
+sll_int32, dimension(:) :: iprof
+sll_int32, dimension(:), intent(in) :: npoel1, npoel2
+sll_int32, dimension(:,:), intent(in) :: ntri
+sll_int32 :: in, k, is1, is2, is3, numel, ind, iel, nel
+sll_int32, intent(in) :: nbs      !Nombre de sommets
 
 !************************************************************************
 !*
@@ -992,8 +1062,8 @@ end subroutine profil
 !      J. Segre - Version 1.0  Juillet 1989
 subroutine asbld(aele,i1,i2,i3,xmass)
  
-double precision, dimension(:) :: aele, xmass
-integer :: i1, i2, i3
+sll_real64, dimension(:) :: aele, xmass
+sll_int32 :: i1, i2, i3
 
 xmass(i1)=xmass(i1)+aele(1)
 xmass(i2)=xmass(i2)+aele(2)
@@ -1003,50 +1073,6 @@ end subroutine
 
 
  
-!Function: asbldc
-!Assembler une matrice de masse elementaire 
-!relative a une condition limite dans une  
-!matrice globale dans le cas ou elle est diagonale
-!                                                               
-!  Entrees:
-!  aele         -    matrice elementaire diagonale  
-!                   (3 ou 4 termes selon que l'element  
-!                    est un triangle ou un quadrilatere)
-!  indl         -    tableau des numeros des noeuds    
-!                    concernes par la condition limite
-!  nbl          -    nombre de noeuds concernes par la
-!                    condition limite                
-!  i1,i2,i3     -    numeros des sommets de l'element
-!                                                          
-!  Sorties:
-!  xmass    -   matrice globale diagonalisee    
-!
-!  Auteur:
-!  J. Segre - Version 1.0  Juillet 1989
-!                                                      
-subroutine asbldc(aele,indl,i1,i2,i3,nbl,xmass)
-
-integer :: i1, i2, i3, nbl
-double precision,    dimension(:) :: aele, xmass
-integer, dimension(:) :: indl
- 
-! ----------------------------------------------------------------------
-
-do i=1,nbl
-   if (indl(i)==i1) then 
-      xmass(i)=aele(1)
-   end if 
-   if (indl(i)==i2) then 
-      xmass(i)=aele(2)
-   end if 
-   if (indl(i)==i3) then 
-      xmass(i)=aele(3)
-   end if 
-end do
-
-end subroutine
-
-
 !Function: asblm2
 !   
 !          assembler 3 matrices elementaires
@@ -1069,11 +1095,11 @@ end subroutine
 !J. Segre - Version 1.0  Aout 1989  
 subroutine asblm2(aele1,aele2,mors1,mors2,i1,i2,i3,a1,a2)
 
-integer, intent(in) :: i1, i2, i3
-integer, dimension(:), intent(in) :: mors1, mors2
-double precision,    dimension(:), intent(in)  :: aele1, aele2
-double precision,    dimension(:), intent(out) :: a1, a2
-integer :: j1, j2, ind1, ind2, ind3
+sll_int32, intent(in) :: i1, i2, i3
+sll_int32, dimension(:), intent(in) :: mors1, mors2
+sll_real64,    dimension(:), intent(in)  :: aele1, aele2
+sll_real64,    dimension(:), intent(out) :: a1, a2
+sll_int32 :: j, j1, j2, ind1, ind2, ind3
 
 ! --- 1.1 --- Rangement des termes diagonaux ---------------------------
 
@@ -1167,10 +1193,11 @@ end subroutine
 !                                                                    
 !Auteur:
 !       J. Segre - Version 1.0  Aout 1989
-subroutine asblp(aele,i1,i2,i3,xmass)
+subroutine asblp(iprof, aele,i1,i2,i3,xmass)
 
-double precision,    dimension(:) :: aele(*), xmass(*)
-integer :: i1, i2, i3, idiag1, idiag2, idiag3, ind
+sll_int32, dimension(:) :: iprof
+sll_real64,    dimension(:) :: aele(*), xmass(*)
+sll_int32 :: i1, i2, i3, idiag1, idiag2, idiag3, ind
 
 !--- 1.1 --- Rangement des termes diagonaux ---------------------------
  
@@ -1234,9 +1261,9 @@ end subroutine asblp
 !     J. Segre - Version 1.0  Decembre 1989
 subroutine m1p(xmors,mors1,mors2,xvect,nlign,yvect)
 
-double precision    :: xmors(*),xvect(*),yvect(*)
-integer :: mors1(*),mors2(*)
-integer :: il, nlign, noeui
+sll_real64    :: xmors(*),xvect(*),yvect(*)
+sll_int32 :: mors1(*),mors2(*)
+sll_int32 :: il, nlign, noeui
 
 do il=1,nlign
 
@@ -1345,17 +1372,17 @@ end do
 end subroutine m1p
 
 
-subroutine poliss(phi,ebj,mesh)
+subroutine poliss(this, phi, ex, ey, mesh)
 
 !  Effectuer le calcul des composantes Ex et Ey du    
 !  ---    champ electrique a partir du potentiel au noeud.
 !         On appelle ca un lissage.                        
 
-type(mesh_fields) :: ebj
+type(sll_triangular_poisson_2d) :: this
 type(sll_triangular_mesh_2d) :: mesh
-double precision, dimension(:) :: phi
+sll_real64, dimension(:) :: phi, ex, ey
 
-integer :: is, ic, nbc, iac
+sll_int32 :: is, ic, nbc, iac
 LOGICAL :: lerr
 
 lerr=.FALSE.
@@ -1363,15 +1390,15 @@ lerr=.FALSE.
 ! --- 1.0 --- Calcul des termes individuels des seconds membres --------
   
 do ic=1,mesh%nbtcot
-   vtanty(ic)=(phi(mesh%nuvac(1,ic))-phi(mesh%nuvac(2,ic)))/mesh%xlcod(ic)
+   this%vtanty(ic)=(phi(mesh%nuvac(1,ic))-phi(mesh%nuvac(2,ic)))/mesh%xlcod(ic)
 end do
 
 do ic=1,mesh%nbtcot
-   vtantx(ic)=vtanty(ic)*mesh%vtaux(ic)
+   this%vtantx(ic)=this%vtanty(ic)*mesh%vtaux(ic)
 end do
 
 do ic=1,mesh%nbtcot
-   vtanty(ic)=vtanty(ic)*mesh%vtauy(ic)
+   this%vtanty(ic)=this%vtanty(ic)*mesh%vtauy(ic)
 end do
 
 ! --- 2.0 --- Calcul des seconds membres -------------------------------
@@ -1382,98 +1409,98 @@ do is=1,mesh%num_nodes
    nbc=mesh%nbcov(is+1)-mesh%nbcov(is)
 
    if (nbc == 6) then
-      sv1(is) = vtantx(mesh%nugcv(iac  ))+vtantx(mesh%nugcv(iac+1)) &
-              + vtantx(mesh%nugcv(iac+2))+vtantx(mesh%nugcv(iac+3)) &
-              + vtantx(mesh%nugcv(iac+4))+vtantx(mesh%nugcv(iac+5)) 
-      sv2(is) = vtanty(mesh%nugcv(iac  ))+vtanty(mesh%nugcv(iac+1)) &
-              + vtanty(mesh%nugcv(iac+2))+vtanty(mesh%nugcv(iac+3)) &
-              + vtanty(mesh%nugcv(iac+4))+vtanty(mesh%nugcv(iac+5)) 
+      this%sv1(is) = this%vtantx(mesh%nugcv(iac  ))+this%vtantx(mesh%nugcv(iac+1)) &
+              + this%vtantx(mesh%nugcv(iac+2))+this%vtantx(mesh%nugcv(iac+3)) &
+              + this%vtantx(mesh%nugcv(iac+4))+this%vtantx(mesh%nugcv(iac+5)) 
+      this%sv2(is) = this%vtanty(mesh%nugcv(iac  ))+this%vtanty(mesh%nugcv(iac+1)) &
+              + this%vtanty(mesh%nugcv(iac+2))+this%vtanty(mesh%nugcv(iac+3)) &
+              + this%vtanty(mesh%nugcv(iac+4))+this%vtanty(mesh%nugcv(iac+5)) 
    else if (nbc == 5) then
-      sv1(is) = vtantx(mesh%nugcv(iac  ))+vtantx(mesh%nugcv(iac+1)) &
-              + vtantx(mesh%nugcv(iac+2))+vtantx(mesh%nugcv(iac+3)) &
-              + vtantx(mesh%nugcv(iac+4))
-      sv2(is) = vtanty(mesh%nugcv(iac  ))+vtanty(mesh%nugcv(iac+1)) &
-              + vtanty(mesh%nugcv(iac+2))+vtanty(mesh%nugcv(iac+3)) &
-              + vtanty(mesh%nugcv(iac+4))
+      this%sv1(is) = this%vtantx(mesh%nugcv(iac  ))+this%vtantx(mesh%nugcv(iac+1)) &
+              + this%vtantx(mesh%nugcv(iac+2))+this%vtantx(mesh%nugcv(iac+3)) &
+              + this%vtantx(mesh%nugcv(iac+4))
+      this%sv2(is) = this%vtanty(mesh%nugcv(iac  ))+this%vtanty(mesh%nugcv(iac+1)) &
+              + this%vtanty(mesh%nugcv(iac+2))+this%vtanty(mesh%nugcv(iac+3)) &
+              + this%vtanty(mesh%nugcv(iac+4))
    else if (nbc == 7) then
-      sv1(is) = vtantx(mesh%nugcv(iac  ))+vtantx(mesh%nugcv(iac+1)) &
-              + vtantx(mesh%nugcv(iac+2))+vtantx(mesh%nugcv(iac+3)) &
-              + vtantx(mesh%nugcv(iac+4))+vtantx(mesh%nugcv(iac+5))     &
-              + vtantx(mesh%nugcv(iac+6))
-      sv2(is) = vtanty(mesh%nugcv(iac  ))+vtanty(mesh%nugcv(iac+1)) &
-              + vtanty(mesh%nugcv(iac+2))+vtanty(mesh%nugcv(iac+3)) &
-              + vtanty(mesh%nugcv(iac+4))+vtanty(mesh%nugcv(iac+5))     &
-              + vtanty(mesh%nugcv(iac+6))
+      this%sv1(is) = this%vtantx(mesh%nugcv(iac  ))+this%vtantx(mesh%nugcv(iac+1)) &
+              + this%vtantx(mesh%nugcv(iac+2))+this%vtantx(mesh%nugcv(iac+3)) &
+              + this%vtantx(mesh%nugcv(iac+4))+this%vtantx(mesh%nugcv(iac+5))     &
+              + this%vtantx(mesh%nugcv(iac+6))
+      this%sv2(is) = this%vtanty(mesh%nugcv(iac  ))+this%vtanty(mesh%nugcv(iac+1)) &
+              + this%vtanty(mesh%nugcv(iac+2))+this%vtanty(mesh%nugcv(iac+3)) &
+              + this%vtanty(mesh%nugcv(iac+4))+this%vtanty(mesh%nugcv(iac+5))     &
+              + this%vtanty(mesh%nugcv(iac+6))
    else if (nbc == 4) then
-      sv1(is) = vtantx(mesh%nugcv(iac  ))+vtantx(mesh%nugcv(iac+1)) &
-              + vtantx(mesh%nugcv(iac+2))+vtantx(mesh%nugcv(iac+3))
-      sv2(is) = vtanty(mesh%nugcv(iac  ))+vtanty(mesh%nugcv(iac+1)) &
-              + vtanty(mesh%nugcv(iac+2))+vtanty(mesh%nugcv(iac+3))
+      this%sv1(is) = this%vtantx(mesh%nugcv(iac  ))+this%vtantx(mesh%nugcv(iac+1)) &
+              + this%vtantx(mesh%nugcv(iac+2))+this%vtantx(mesh%nugcv(iac+3))
+      this%sv2(is) = this%vtanty(mesh%nugcv(iac  ))+this%vtanty(mesh%nugcv(iac+1)) &
+              + this%vtanty(mesh%nugcv(iac+2))+this%vtanty(mesh%nugcv(iac+3))
    else if (nbc == 8) then
-      sv1(is) = vtantx(mesh%nugcv(iac  ))+vtantx(mesh%nugcv(iac+1)) &
-              + vtantx(mesh%nugcv(iac+2))+vtantx(mesh%nugcv(iac+3)) &
-              + vtantx(mesh%nugcv(iac+4))+vtantx(mesh%nugcv(iac+5))     &
-              + vtantx(mesh%nugcv(iac+6))+vtantx(mesh%nugcv(iac+7)) 
-      sv2(is) = vtanty(mesh%nugcv(iac  ))+vtanty(mesh%nugcv(iac+1)) &
-              + vtanty(mesh%nugcv(iac+2))+vtanty(mesh%nugcv(iac+3)) &
-              + vtanty(mesh%nugcv(iac+4))+vtanty(mesh%nugcv(iac+5))     &
-              + vtanty(mesh%nugcv(iac+6))+vtanty(mesh%nugcv(iac+7)) 
+      this%sv1(is) = this%vtantx(mesh%nugcv(iac  ))+this%vtantx(mesh%nugcv(iac+1)) &
+              + this%vtantx(mesh%nugcv(iac+2))+this%vtantx(mesh%nugcv(iac+3)) &
+              + this%vtantx(mesh%nugcv(iac+4))+this%vtantx(mesh%nugcv(iac+5))     &
+              + this%vtantx(mesh%nugcv(iac+6))+this%vtantx(mesh%nugcv(iac+7)) 
+      this%sv2(is) = this%vtanty(mesh%nugcv(iac  ))+this%vtanty(mesh%nugcv(iac+1)) &
+              + this%vtanty(mesh%nugcv(iac+2))+this%vtanty(mesh%nugcv(iac+3)) &
+              + this%vtanty(mesh%nugcv(iac+4))+this%vtanty(mesh%nugcv(iac+5))     &
+              + this%vtanty(mesh%nugcv(iac+6))+this%vtanty(mesh%nugcv(iac+7)) 
    else if (nbc == 3) then
-      sv1(is) = vtantx(mesh%nugcv(iac  ))+vtantx(mesh%nugcv(iac+1)) &
-              + vtantx(mesh%nugcv(iac+2))
-      sv2(is) = vtanty(mesh%nugcv(iac  ))+vtanty(mesh%nugcv(iac+1)) &
-              + vtanty(mesh%nugcv(iac+2))
+      this%sv1(is) = this%vtantx(mesh%nugcv(iac  ))+this%vtantx(mesh%nugcv(iac+1)) &
+              + this%vtantx(mesh%nugcv(iac+2))
+      this%sv2(is) = this%vtanty(mesh%nugcv(iac  ))+this%vtanty(mesh%nugcv(iac+1)) &
+              + this%vtanty(mesh%nugcv(iac+2))
    else if (nbc == 9) then
-      sv1(is) = vtantx(mesh%nugcv(iac  ))+vtantx(mesh%nugcv(iac+1)) &
-              + vtantx(mesh%nugcv(iac+2))+vtantx(mesh%nugcv(iac+3)) &
-              + vtantx(mesh%nugcv(iac+4))+vtantx(mesh%nugcv(iac+5))     &
-              + vtantx(mesh%nugcv(iac+6))+vtantx(mesh%nugcv(iac+7))     &
-              + vtantx(mesh%nugcv(iac+8))
-      sv2(is) = vtanty(mesh%nugcv(iac  ))+vtanty(mesh%nugcv(iac+1)) &
-              + vtanty(mesh%nugcv(iac+2))+vtanty(mesh%nugcv(iac+3)) &
-              + vtanty(mesh%nugcv(iac+4))+vtanty(mesh%nugcv(iac+5))     &
-              + vtanty(mesh%nugcv(iac+6))+vtanty(mesh%nugcv(iac+7))     &
-              + vtanty(mesh%nugcv(iac+8))
+      this%sv1(is) = this%vtantx(mesh%nugcv(iac  ))+this%vtantx(mesh%nugcv(iac+1)) &
+              + this%vtantx(mesh%nugcv(iac+2))+this%vtantx(mesh%nugcv(iac+3)) &
+              + this%vtantx(mesh%nugcv(iac+4))+this%vtantx(mesh%nugcv(iac+5))     &
+              + this%vtantx(mesh%nugcv(iac+6))+this%vtantx(mesh%nugcv(iac+7))     &
+              + this%vtantx(mesh%nugcv(iac+8))
+      this%sv2(is) = this%vtanty(mesh%nugcv(iac  ))+this%vtanty(mesh%nugcv(iac+1)) &
+              + this%vtanty(mesh%nugcv(iac+2))+this%vtanty(mesh%nugcv(iac+3)) &
+              + this%vtanty(mesh%nugcv(iac+4))+this%vtanty(mesh%nugcv(iac+5))     &
+              + this%vtanty(mesh%nugcv(iac+6))+this%vtanty(mesh%nugcv(iac+7))     &
+              + this%vtanty(mesh%nugcv(iac+8))
    else if (nbc == 2) then
-      sv1(is) = vtantx(mesh%nugcv(iac  ))+vtantx(mesh%nugcv(iac+1))
-      sv2(is) = vtanty(mesh%nugcv(iac  ))+vtanty(mesh%nugcv(iac+1))
+      this%sv1(is) = this%vtantx(mesh%nugcv(iac  ))+this%vtantx(mesh%nugcv(iac+1))
+      this%sv2(is) = this%vtanty(mesh%nugcv(iac  ))+this%vtanty(mesh%nugcv(iac+1))
    else if (nbc == 10) then
-      sv1(is) = vtantx(mesh%nugcv(iac  ))+vtantx(mesh%nugcv(iac+1)) &
-              + vtantx(mesh%nugcv(iac+2))+vtantx(mesh%nugcv(iac+3)) &
-              + vtantx(mesh%nugcv(iac+4))+vtantx(mesh%nugcv(iac+5))     &
-              + vtantx(mesh%nugcv(iac+6))+vtantx(mesh%nugcv(iac+7))     &
-              + vtantx(mesh%nugcv(iac+8))+vtantx(mesh%nugcv(iac+9)) 
-      sv2(is) = vtanty(mesh%nugcv(iac  ))+vtanty(mesh%nugcv(iac+1)) &
-              + vtanty(mesh%nugcv(iac+2))+vtanty(mesh%nugcv(iac+3)) &
-              + vtanty(mesh%nugcv(iac+4))+vtanty(mesh%nugcv(iac+5))     &
-              + vtanty(mesh%nugcv(iac+6))+vtanty(mesh%nugcv(iac+7))     &
-              + vtanty(mesh%nugcv(iac+8))+vtanty(mesh%nugcv(iac+9)) 
+      this%sv1(is) = this%vtantx(mesh%nugcv(iac  ))+this%vtantx(mesh%nugcv(iac+1)) &
+              + this%vtantx(mesh%nugcv(iac+2))+this%vtantx(mesh%nugcv(iac+3)) &
+              + this%vtantx(mesh%nugcv(iac+4))+this%vtantx(mesh%nugcv(iac+5))     &
+              + this%vtantx(mesh%nugcv(iac+6))+this%vtantx(mesh%nugcv(iac+7))     &
+              + this%vtantx(mesh%nugcv(iac+8))+this%vtantx(mesh%nugcv(iac+9)) 
+      this%sv2(is) = this%vtanty(mesh%nugcv(iac  ))+this%vtanty(mesh%nugcv(iac+1)) &
+              + this%vtanty(mesh%nugcv(iac+2))+this%vtanty(mesh%nugcv(iac+3)) &
+              + this%vtanty(mesh%nugcv(iac+4))+this%vtanty(mesh%nugcv(iac+5))     &
+              + this%vtanty(mesh%nugcv(iac+6))+this%vtanty(mesh%nugcv(iac+7))     &
+              + this%vtanty(mesh%nugcv(iac+8))+this%vtanty(mesh%nugcv(iac+9)) 
    else if (nbc == 11) then
-      sv1(is) = vtantx(mesh%nugcv(iac  ))+vtantx(mesh%nugcv(iac+1)) &
-              + vtantx(mesh%nugcv(iac+2))+vtantx(mesh%nugcv(iac+3)) &
-              + vtantx(mesh%nugcv(iac+4))+vtantx(mesh%nugcv(iac+5))     &
-              + vtantx(mesh%nugcv(iac+6))+vtantx(mesh%nugcv(iac+7))     &
-              + vtantx(mesh%nugcv(iac+8))+vtantx(mesh%nugcv(iac+9))     &
-              + vtantx(mesh%nugcv(iac+10))
-      sv2(is) = vtanty(mesh%nugcv(iac  ))+vtanty(mesh%nugcv(iac+1)) &
-              + vtanty(mesh%nugcv(iac+2))+vtanty(mesh%nugcv(iac+3)) &
-              + vtanty(mesh%nugcv(iac+4))+vtanty(mesh%nugcv(iac+5))     &
-              + vtanty(mesh%nugcv(iac+6))+vtanty(mesh%nugcv(iac+7))     &
-              + vtanty(mesh%nugcv(iac+8))+vtanty(mesh%nugcv(iac+9))     &
-              + vtanty(mesh%nugcv(iac+10))
+      this%sv1(is) = this%vtantx(mesh%nugcv(iac  ))+this%vtantx(mesh%nugcv(iac+1)) &
+              + this%vtantx(mesh%nugcv(iac+2))+this%vtantx(mesh%nugcv(iac+3)) &
+              + this%vtantx(mesh%nugcv(iac+4))+this%vtantx(mesh%nugcv(iac+5))     &
+              + this%vtantx(mesh%nugcv(iac+6))+this%vtantx(mesh%nugcv(iac+7))     &
+              + this%vtantx(mesh%nugcv(iac+8))+this%vtantx(mesh%nugcv(iac+9))     &
+              + this%vtantx(mesh%nugcv(iac+10))
+      this%sv2(is) = this%vtanty(mesh%nugcv(iac  ))+this%vtanty(mesh%nugcv(iac+1)) &
+              + this%vtanty(mesh%nugcv(iac+2))+this%vtanty(mesh%nugcv(iac+3)) &
+              + this%vtanty(mesh%nugcv(iac+4))+this%vtanty(mesh%nugcv(iac+5))     &
+              + this%vtanty(mesh%nugcv(iac+6))+this%vtanty(mesh%nugcv(iac+7))     &
+              + this%vtanty(mesh%nugcv(iac+8))+this%vtanty(mesh%nugcv(iac+9))     &
+              + this%vtanty(mesh%nugcv(iac+10))
    else if (nbc == 12) then
-      sv1(is) = vtantx(mesh%nugcv(iac  ))+vtantx(mesh%nugcv(iac+1)) &
-              + vtantx(mesh%nugcv(iac+2))+vtantx(mesh%nugcv(iac+3)) &
-              + vtantx(mesh%nugcv(iac+4))+vtantx(mesh%nugcv(iac+5))     &
-              + vtantx(mesh%nugcv(iac+6))+vtantx(mesh%nugcv(iac+7))     &
-              + vtantx(mesh%nugcv(iac+8))+vtantx(mesh%nugcv(iac+9))     &
-              + vtantx(mesh%nugcv(iac+10))+vtantx(mesh%nugcv(iac+11))
-      sv2(is) = vtanty(mesh%nugcv(iac  ))+vtanty(mesh%nugcv(iac+1)) &
-              + vtanty(mesh%nugcv(iac+2))+vtanty(mesh%nugcv(iac+3)) &
-              + vtanty(mesh%nugcv(iac+4))+vtanty(mesh%nugcv(iac+5))     &
-              + vtanty(mesh%nugcv(iac+6))+vtanty(mesh%nugcv(iac+7))     &
-              + vtanty(mesh%nugcv(iac+8))+vtanty(mesh%nugcv(iac+9))     &
-              + vtanty(mesh%nugcv(iac+10))+vtanty(mesh%nugcv(iac+11))
+      this%sv1(is) = this%vtantx(mesh%nugcv(iac  ))+this%vtantx(mesh%nugcv(iac+1)) &
+              + this%vtantx(mesh%nugcv(iac+2))+this%vtantx(mesh%nugcv(iac+3)) &
+              + this%vtantx(mesh%nugcv(iac+4))+this%vtantx(mesh%nugcv(iac+5))     &
+              + this%vtantx(mesh%nugcv(iac+6))+this%vtantx(mesh%nugcv(iac+7))     &
+              + this%vtantx(mesh%nugcv(iac+8))+this%vtantx(mesh%nugcv(iac+9))     &
+              + this%vtantx(mesh%nugcv(iac+10))+this%vtantx(mesh%nugcv(iac+11))
+      this%sv2(is) = this%vtanty(mesh%nugcv(iac  ))+this%vtanty(mesh%nugcv(iac+1)) &
+              + this%vtanty(mesh%nugcv(iac+2))+this%vtanty(mesh%nugcv(iac+3)) &
+              + this%vtanty(mesh%nugcv(iac+4))+this%vtanty(mesh%nugcv(iac+5))     &
+              + this%vtanty(mesh%nugcv(iac+6))+this%vtanty(mesh%nugcv(iac+7))     &
+              + this%vtanty(mesh%nugcv(iac+8))+this%vtanty(mesh%nugcv(iac+9))     &
+              + this%vtanty(mesh%nugcv(iac+10))+this%vtanty(mesh%nugcv(iac+11))
 
    else
       lerr=.TRUE.
@@ -1482,15 +1509,15 @@ do is=1,mesh%num_nodes
 end do
 
 if (lerr) then
-   write(iout,900)
+   write(6,900)
    stop
 end if
 
 ! --- 3.0 --- Resolution des systemes lineaires 2*2 --------------------
 
 do is=1,mesh%num_nodes
-   ebj%e(1,is)=mesh%xmal2(is)*sv1(is)-mesh%xmal3(is)*sv2(is)
-   ebj%e(2,is)=mesh%xmal1(is)*sv2(is)-mesh%xmal3(is)*sv1(is)
+   ex(is)=mesh%xmal2(is)*this%sv1(is)-mesh%xmal3(is)*this%sv2(is)
+   ey(is)=mesh%xmal1(is)*this%sv2(is)-mesh%xmal3(is)*this%sv1(is)
 end do
 
 ! --- 9.0 --- Formats --------------------------------------------------
@@ -1500,4 +1527,4 @@ end do
 
 end subroutine poliss
 
-end module poisson
+end module tri_poisson

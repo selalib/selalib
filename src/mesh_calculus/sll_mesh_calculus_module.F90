@@ -688,11 +688,10 @@ contains
 !Auteur:
 !
 !A. Adolf / L. Arnaud - Version 1.0  Octobre 1991 
-subroutine analyze_triangular_mesh(mesh, ntypfr)
+subroutine analyze_triangular_mesh(mesh) 
 
 integer, parameter :: iout = 6
 integer          :: i, j, k, ifr
-integer         , intent(in)   :: ntypfr(:)
 type(sll_triangular_mesh_2d), intent(inout) :: mesh
 
 integer, dimension (:), allocatable :: indc
@@ -797,23 +796,6 @@ do it = 1, mesh%num_cells
    end if
 
    airtot = airtot + mesh%aire(it)
-
-end do
-
-!Calcul des integrales des fonctions de base
-if (ldebug) write(iout,*)"*** Calcul des integrales des fonctions de base ***"
-
-allocate(mesh%xbas(mesh%num_nodes)); mesh%xbas=0.0
-
-do it = 1, mesh%num_cells
-
-   is1 = mesh%nodes(1,it) 
-   is2 = mesh%nodes(2,it) 
-   is3 = mesh%nodes(3,it) 
-
-   mesh%xbas(is1) = mesh%xbas(is1) + mesh%aire(it)/3.
-   mesh%xbas(is2) = mesh%xbas(is2) + mesh%aire(it)/3.
-   mesh%xbas(is3) = mesh%xbas(is3) + mesh%aire(it)/3.
 
 end do
 
@@ -950,28 +932,6 @@ do iel=1,mesh%num_cells
      end do loop3
 end do
 
-!Calcul de nvoif : Numero local dans le voisin de la face j commune a l'elt i
-
-allocate(mesh%nvoif(3,mesh%num_cells))
-mesh%nvoif(1:3,:) = mesh%nvois(1:3,:)
-
-do i = 1, mesh%num_cells
-   !write(*,"(/,4i7)") i, mesh%nodes(1:3,i)
-   do j = 1,3
-      jel1 = mesh%nvois(j,i)
-      if (jel1 > 0) then
-         do k = 1,3
-            jel2 = mesh%nvois(k,jel1)
-            if (jel2 == i) then 
-               mesh%nvoif(j,i) = k
-               exit
-            end if
-         end do
-         !write(*,"(5i7)") jel1, mesh%nodes(1:3,jel1), mesh%nvoif(j,i)
-      end if
-   end do
-end do
-
 ! --- Definition de nctfrt: le nombre de cotes frontieres
 
 mesh%nctfrt=0
@@ -1084,53 +1044,6 @@ end do
 
 !Calcul des voisins pour les particules
 if (ldebug) write(iout,*)"*** Calcul des voisins pour les particules ***"
-
-! --- Remplissage de "nvoiv" -----------------------------------
-!     Identique a "nvois" sauf pour les aretes appartenant a 
-!     une frontiere. Le chiffre correspond ici a un code pour 
-!     le traitement des conditions aux limites sur les 
-!     particules, alors que dans "nvois" ce chiffre est 
-!     l'oppose du numero de reference de la frontiere concernee
-
-allocate(mesh%nvoiv(3,mesh%num_cells))
-
-do i = 1,mesh%num_cells
-
-   ! ... Cotes internes
-   do j = 1, 3
-      if (mesh%nvois(j,i)>0) then
-         mesh%nvoiv(j,i) = mesh%nvois(j,i)
-      end if
-   end do
-
-   ! ... Cotes frontieres
-   do j = 1, 3
-      if (mesh%nvois(j,i)<0) then
-
-         select case (ntypfr(-mesh%nvois(j,i)))
-
-         case(0)
-            mesh%nvoiv(j,i) = -1
-         case(1)
-            mesh%nvoiv(j,i) =  0
-         case(2)
-            mesh%nvoiv(j,i) = -1
-         case(3)
-            mesh%nvoiv(j,i) =  0
-         case(4)
-            mesh%nvoiv(j,i) =  0
-         case(5)
-            mesh%nvoiv(j,i) = -1
-         case(6)
-            mesh%nvoiv(j,i) = -1
-         case(7) 
-            mesh%nvoiv(j,i) =  0
-         end select
-
-      end if
-   end do    
-
-end do
 
 ! ... Verification approchee de la condition CFL sur les triangles
 
