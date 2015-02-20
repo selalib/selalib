@@ -145,6 +145,26 @@ end interface sll_display
 
 contains
 
+!> @brief allocates the memory space for a new 1D cartesian mesh on the heap,
+!> initializes it with the given arguments and returns a pointer to the
+!> object.
+!> @param num_cells integer denoting the number of cells.
+!> @param eta_min optional double precision value which represents the 
+!> minimum value of the eta1 parameter in the cartesian mesh.
+!> @param eta_max optional double precision value which represents the 
+!> maximum value of the eta1 parameter in the cartesian mesh.
+!> @return a pointer to the newly allocated object.
+function new_triangular_mesh_2d( maafil ) result(m)
+
+  type(sll_triangular_mesh_2d), pointer :: m
+  character(len=*), intent(in)          :: maafil
+
+  sll_int32 :: ierr
+  SLL_ALLOCATE(m, ierr)
+  call read_from_file(m, maafil)
+
+end function new_triangular_mesh_2d
+
 subroutine initialize_triangular_mesh_2d( mesh,     &
                                           nc_eta1,  &
                                           eta1_min, &
