@@ -5,6 +5,7 @@
 !
 module tri_poisson
 #include "sll_working_precision.h"
+#include "sll_memory.h"
 #include "sll_constants.h"
 #include "sll_utilities.h"
 use sll_triangular_meshes
@@ -80,7 +81,6 @@ sll_real64, parameter :: grandx = 1.e+20
 type, public :: sll_triangular_poisson_2d
 
   private
-  sll_int32 :: ndiric
   sll_real64, dimension(:), allocatable :: vnx
   sll_real64, dimension(:), allocatable :: vny
   sll_int32,  dimension(:), allocatable :: naux
@@ -97,9 +97,12 @@ type, public :: sll_triangular_poisson_2d
   sll_real64, dimension(:), allocatable :: sv1
   sll_real64, dimension(:), allocatable :: sv2
 
+  sll_int32  :: ndiric
   sll_int32  :: ntypfr(5)
   sll_real64 :: potfr(5)
   sll_real64 :: eps0 = 8.8542e-12
+
+  type(sll_triangular_mesh_2d), pointer :: mesh => null()
 
 end type sll_triangular_poisson_2d
 
@@ -114,13 +117,13 @@ contains
 
 subroutine lecture_donnees_solveur(nomfich, ntypfr, potfr)
 
-Character(len=*), intent(in) :: nomfich
+Character(len=*), intent(in)   :: nomfich
 sll_int32                      :: ityp
 sll_int32                      :: ifr
 sll_int32                      :: i
 sll_int32                      :: nfrmx
 sll_int32, dimension(:)        :: ntypfr
-sll_real64             :: potfr(:)
+sll_real64                     :: potfr(:)
 
 NAMELIST/nlcham/ntypfr,potfr
 
@@ -198,13 +201,14 @@ end subroutine lecture_donnees_solveur
 subroutine init_solveur_poisson(this, mesh, inpfil)
 
 type(sll_triangular_poisson_2d),  intent(out) :: this
-type(sll_triangular_mesh_2d),  intent(in) :: mesh
+type(sll_triangular_mesh_2d),  intent(in), target :: mesh
 character(len=*), intent(in) :: inpfil 
 sll_real64, dimension(:), allocatable :: tmp1
 
 sll_int32 :: nref, nn, ndir
 sll_int32 :: i, j
 
+this%mesh => mesh
 
 call lecture_donnees_solveur(inpfil,this%ntypfr, this%potfr)  
 
@@ -269,7 +273,7 @@ this%ndiric=ndir
 
 !--- Calcul des matrices ----------------------------------------------
 
-call poismc(this, mesh)
+call poismc(this)
 
 !Calcul de la matrice B tel que B*Bt = A dans le cas Cholesky
 
@@ -457,10 +461,9 @@ end subroutine morse
 !   612-POISMC     
 !
 ! Puertolas - Version 1.0  Octobre  1992  
-subroutine poismc(this, mesh)
+subroutine poismc(this)
 
 type(sll_triangular_poisson_2d),  intent(inout) :: this
-type(sll_triangular_mesh_2d),  intent(in) :: mesh
 sll_real64 :: amloc(3),aggloc(9),grxloc(9),gryloc(9)
 sll_real64 :: dntx1, dntx2, dntx3, dnty1, dnty2, dnty3 
 sll_real64 :: x1t, x2t, x3t, y1t, y2t, y3t, coef
@@ -469,21 +472,21 @@ sll_int32 :: is, il, j
  
 !Boucle sur les elements.
 
-do iel=1,mesh%num_cells
+do iel=1,this%mesh%num_cells
 
    !Calcul des coefficients dependant de la geometrie du triangle.
 
-   is1t = mesh%nodes(1,iel)
-   is2t = mesh%nodes(2,iel)
-   is3t = mesh%nodes(3,iel)
+   is1t = this%mesh%nodes(1,iel)
+   is2t = this%mesh%nodes(2,iel)
+   is3t = this%mesh%nodes(3,iel)
 
-   x1t  = mesh%coord(1,is1t)
-   x2t  = mesh%coord(1,is2t)
-   x3t  = mesh%coord(1,is3t)
+   x1t  = this%mesh%coord(1,is1t)
+   x2t  = this%mesh%coord(1,is2t)
+   x3t  = this%mesh%coord(1,is3t)
 
-   y1t  = mesh%coord(2,is1t)
-   y2t  = mesh%coord(2,is2t)
-   y3t  = mesh%coord(2,is3t)
+   y1t  = this%mesh%coord(2,is1t)
+   y2t  = this%mesh%coord(2,is2t)
+   y3t  = this%mesh%coord(2,is3t)
 
    dntx1 = y2t-y3t
    dntx2 = y3t-y1t
@@ -495,9 +498,9 @@ do iel=1,mesh%num_cells
 
    !Contribution a la matrice de masse
 
-   amloc(1) = mesh%aire(iel)/3.
-   amloc(2) = mesh%aire(iel)/3.
-   amloc(3) = mesh%aire(iel)/3.
+   amloc(1) = this%mesh%aire(iel)/3.
+   amloc(2) = this%mesh%aire(iel)/3.
+   amloc(3) = this%mesh%aire(iel)/3.
 
    !Assemblage
 
@@ -505,7 +508,7 @@ do iel=1,mesh%num_cells
 
    !Contribution a la matrice grad-grad
 
-   coef=1./(4.*mesh%aire(iel))
+   coef=1./(4.*this%mesh%aire(iel))
 
    aggloc(1)=(dntx1**2   +dnty1**2   )*coef
    aggloc(2)=(dntx1*dntx2+dnty1*dnty2)*coef
@@ -547,25 +550,25 @@ end do
 
 if (ldebug) then
    write(6,900) 
-   do is=1,mesh%num_nodes
+   do is=1,this%mesh%num_nodes
       write(6,901) is,this%amass(is)
    end do
 
    write(6,907) 
    write(6,902) 
-   do is=1,mesh%num_nodes
+   do is=1,this%mesh%num_nodes
       nis=this%iprof(is+1)-this%iprof(is)
       write(6,903) is,(this%grgr(this%iprof(is)+il),il=1,nis)
    end do
 
    write(6,904) 
-   do is=1,mesh%num_nodes
+   do is=1,this%mesh%num_nodes
       nis=this%mors1(is+1)-this%mors1(is)
       write(6,903) is,(this%gradx(this%mors1(is)+il),il=1,nis)
    end do
 
    write(6,905) 
-   do is=1,mesh%num_nodes
+   do is=1,this%mesh%num_nodes
       nis=this%mors1(is+1)-this%mors1(is)
       write(6,903) is,(this%grady(this%mors1(is)+il),il=1,nis)
    end do
@@ -589,13 +592,11 @@ end subroutine poismc
 
 !Function: poissn
 !calculer potentiel et champ electrique de l'equation de
-!Poisson en cartesien ou cylindrique
-!
-!
+!Poisson en cartesien
 ! Variables en argument :                                
 !
-! eb%f1  - e1 projete sur les noeuds        
-! eb%f2  - e2 projete sur les noeuds       
+! ex     - e1 projete sur les noeuds        
+! ey     - e2 projete sur les noeuds       
 ! rho    - densite de charge aux noeuds du maillage 
 ! phi    - potentiel aux noeuds du maillage        
 ! ifron  - tableau des noeuds frontaliers verifiant Dirichlet
@@ -626,12 +627,9 @@ end subroutine poismc
 ! errpoi - precision (max du carre de l'erreur relative)         
 ! nitgc  - nombre max d'iterations du gradient conjugue         
 !                                                              
-! Auteur:
-!  E. Puertolas - Version 1.0  Decembre 1991  
-subroutine poissn(this,ex,ey,rho,phi,mesh)
+subroutine poissn(this,ex,ey,rho,phi)
 
 type (sll_triangular_poisson_2d)   :: this
-type (sll_triangular_mesh_2d)   :: mesh
 sll_real64, dimension(:) :: phi, rho, ex, ey
 sll_real64 :: sdmb(size(rho)), sdmb12(size(rho))
 
@@ -639,19 +637,16 @@ sll_int32 :: i, is, nref
 
 ! ----------- CALCUL DU POTENTIEL  -------------------------------------
 !
-! ... Calcul du facteur temporel pour la frontiere emettrice 
-!     dans le cas Child Langmuir.
-
 !... Calcul du second membre complet ...
 
-do is=1,mesh%num_nodes
+do is=1,this%mesh%num_nodes
    sdmb(is)=this%amass(is)*rho(is)/this%eps0
 end do
 
-!... Condition aux limites Dirichlet homogene avec forme temporelle
+!... Condition aux limites Dirichlet homogene 
 
 do is=1,this%ndiric
-   nref=mesh%refs(this%ifron(is))
+   nref=this%mesh%refs(this%ifron(is))
    sdmb(this%ifron(is))=this%potfr(nref)
 end do
 
@@ -659,22 +654,22 @@ do is=1,this%ndiric
    sdmb(this%ifron(is))=sdmb(this%ifron(is))*grandx
 end do
 
-call desrem(this%iprof, this%grgr,sdmb,mesh%num_nodes,phi)
+call desrem(this%iprof, this%grgr,sdmb,this%mesh%num_nodes,phi)
 
-!*** CALCUL DES CHAMPS E1N et E2N:
+!*** CALCUL DES CHAMPS Ex et Ey:
 
-!*** Second membre pour la composante 1:
+!*** Second membre pour la composante x:
 
-call m1p(this%gradx,this%mors1,this%mors2,phi,mesh%num_nodes,sdmb12)
+call m1p(this%gradx,this%mors1,this%mors2,phi,this%mesh%num_nodes,sdmb12)
 
-do i=1,mesh%num_nodes
+do i=1,this%mesh%num_nodes
    ex(i)=sdmb12(i)/this%amass(i)
 end do
 
-!*** Second membre pour la composante 2:
+!*** Second membre pour la composante y:
 
-call m1p(this%grady,this%mors1,this%mors2,phi,mesh%num_nodes,sdmb12)
-do i=1,mesh%num_nodes
+call m1p(this%grady,this%mors1,this%mors2,phi,this%mesh%num_nodes,sdmb12)
+do i=1,this%mesh%num_nodes
    ey(i)=sdmb12(i)/this%amass(i)
 end do
 
@@ -707,14 +702,13 @@ end subroutine poissn
 !
 ! A. Adolf - Version 1.0  Octobre  1994
 ! J. Segre - Version 1.1  Avril    1998 
-subroutine poifrc(this, ex, ey, mesh)
+subroutine poifrc(this, ex, ey)
 
 type(sll_triangular_poisson_2d)   :: this
-type(sll_triangular_mesh_2d)   :: mesh
 sll_real64 :: ex(:), ey(:)
 sll_real64 :: pscal, xnor
 sll_int32 :: is1, is2, ict
-sll_int32 :: i
+sll_int32 :: i, ierr
       
 !!$ ======================================================================
 !!$ ... On force E.tau = 0 sur toutes les frontieres Dirichlet 
@@ -722,26 +716,24 @@ sll_int32 :: i
 !!$ ... Initialisation des normales aux noeuds et du tableau indiquant 
 !!$ ... les noeuds appartenant a la frontiere consideree
 
-if (.not. allocated(this%vnx)) then 
-   allocate(this%vnx(mesh%num_nodes), this%vny(mesh%num_nodes), this%naux(mesh%num_nodes))
-end if 
-
-this%vnx=0.; this%vny=0.; this%naux=0
+SLL_CLEAR_ALLOCATE(this%vnx(1:this%mesh%num_nodes),ierr)
+SLL_CLEAR_ALLOCATE(this%vny(1:this%mesh%num_nodes),ierr)
+SLL_ALLOCATE(this%naux(1:this%mesh%num_nodes),ierr)
 
 !!$ ... Boucle sur les cotes frontieres pour construire les normales aux
 !!$ ... noeuds "Dirichlet"
 
-do  ict=1,mesh%nctfrt
+do  ict=1,this%mesh%nctfrt
 
-   if (this%ntypfr(mesh%krefro(ict))==1 .or.  this%ntypfr(mesh%krefro(ict))==5) then 
+   if (this%ntypfr(this%mesh%krefro(ict))==1) then 
 
-     is1=mesh%ksofro(1,ict)
-     is2=mesh%ksofro(2,ict)
+     is1=this%mesh%ksofro(1,ict)
+     is2=this%mesh%ksofro(2,ict)
 
-     this%vnx(is1)=this%vnx(is1)+mesh%vnofro(1,ict)
-     this%vny(is1)=this%vny(is1)+mesh%vnofro(2,ict)
-     this%vnx(is2)=this%vnx(is2)+mesh%vnofro(1,ict)
-     this%vny(is2)=this%vny(is2)+mesh%vnofro(2,ict)
+     this%vnx(is1)=this%vnx(is1)+this%mesh%vnofro(1,ict)
+     this%vny(is1)=this%vny(is1)+this%mesh%vnofro(2,ict)
+     this%vnx(is2)=this%vnx(is2)+this%mesh%vnofro(1,ict)
+     this%vny(is2)=this%vny(is2)+this%mesh%vnofro(2,ict)
 
      this%naux(is1)=1
      this%naux(is2)=1
@@ -752,12 +744,12 @@ end do
 
 !... on impose la condition E.tau=0
 
-do  i=1,mesh%num_nodes
+do  i=1,this%mesh%num_nodes
 
    if (this%naux(i)==1) then 
 
       xnor=SQRT(this%vnx(i)**2+this%vny(i)**2)
-      if (xnor>mesh%petitl) then 
+      if (xnor>this%mesh%petitl) then 
          this%vnx(i)=this%vnx(i)/xnor
          this%vny(i)=this%vny(i)/xnor
 
@@ -781,17 +773,17 @@ this%vnx=0.; this%vny=0.; this%naux=0
 ! ... Boucle sur les cotes frontieres pour construire les normales aux
 ! ... noeuds "Neumann"
 
-do  ict=1,mesh%nctfrt
+do  ict=1,this%mesh%nctfrt
 
-   if (this%ntypfr(mesh%krefro(ict))==3 .or. this%ntypfr(mesh%krefro(ict))==6) then 
+   if (this%ntypfr(this%mesh%krefro(ict))==3) then 
 
-     is1=mesh%ksofro(1,ict)
-     is2=mesh%ksofro(2,ict)
+     is1=this%mesh%ksofro(1,ict)
+     is2=this%mesh%ksofro(2,ict)
 
-     this%vnx(is1)=this%vnx(is1)+mesh%vnofro(1,ict)
-     this%vny(is1)=this%vny(is1)+mesh%vnofro(2,ict)
-     this%vnx(is2)=this%vnx(is2)+mesh%vnofro(1,ict)
-     this%vny(is2)=this%vny(is2)+mesh%vnofro(2,ict)
+     this%vnx(is1)=this%vnx(is1)+this%mesh%vnofro(1,ict)
+     this%vny(is1)=this%vny(is1)+this%mesh%vnofro(2,ict)
+     this%vnx(is2)=this%vnx(is2)+this%mesh%vnofro(1,ict)
+     this%vny(is2)=this%vny(is2)+this%mesh%vnofro(2,ict)
 
      this%naux(is1)=1
      this%naux(is2)=1
@@ -802,11 +794,11 @@ end do
 
 !!... on impose la condition E.nu=0
 
-do i=1,mesh%num_nodes
+do i=1,this%mesh%num_nodes
 
    if (this%naux(i)==1) then 
 
-      if (xnor>mesh%petitl) then 
+      if (xnor>this%mesh%petitl) then 
         xnor=SQRT(this%vnx(i)**2+this%vny(i)**2)
         this%vnx(i)=this%vnx(i)/xnor
         this%vny(i)=this%vny(i)/xnor
@@ -1372,15 +1364,16 @@ end do
 end subroutine m1p
 
 
-subroutine poliss(this, phi, ex, ey, mesh)
+subroutine poliss(this, phi, ex, ey)
 
 !  Effectuer le calcul des composantes Ex et Ey du    
 !  ---    champ electrique a partir du potentiel au noeud.
 !         On appelle ca un lissage.                        
 
-type(sll_triangular_poisson_2d) :: this
-type(sll_triangular_mesh_2d) :: mesh
-sll_real64, dimension(:) :: phi, ex, ey
+type(sll_triangular_poisson_2d), intent(inout) :: this
+sll_real64, dimension(:),        intent(in)    :: phi
+sll_real64, dimension(:),        intent(out)   :: ex
+sll_real64, dimension(:),        intent(out)   :: ey
 
 sll_int32 :: is, ic, nbc, iac
 LOGICAL :: lerr
@@ -1389,118 +1382,118 @@ lerr=.FALSE.
 
 ! --- 1.0 --- Calcul des termes individuels des seconds membres --------
   
-do ic=1,mesh%nbtcot
-   this%vtanty(ic)=(phi(mesh%nuvac(1,ic))-phi(mesh%nuvac(2,ic)))/mesh%xlcod(ic)
+do ic=1,this%mesh%nbtcot
+   this%vtanty(ic)=(phi(this%mesh%nuvac(1,ic))-phi(this%mesh%nuvac(2,ic)))/this%mesh%xlcod(ic)
 end do
 
-do ic=1,mesh%nbtcot
-   this%vtantx(ic)=this%vtanty(ic)*mesh%vtaux(ic)
+do ic=1,this%mesh%nbtcot
+   this%vtantx(ic)=this%vtanty(ic)*this%mesh%vtaux(ic)
 end do
 
-do ic=1,mesh%nbtcot
-   this%vtanty(ic)=this%vtanty(ic)*mesh%vtauy(ic)
+do ic=1,this%mesh%nbtcot
+   this%vtanty(ic)=this%vtanty(ic)*this%mesh%vtauy(ic)
 end do
 
 ! --- 2.0 --- Calcul des seconds membres -------------------------------
   
-do is=1,mesh%num_nodes
+do is=1,this%mesh%num_nodes
 
-   iac=mesh%nbcov(is)+1
-   nbc=mesh%nbcov(is+1)-mesh%nbcov(is)
+   iac=this%mesh%nbcov(is)+1
+   nbc=this%mesh%nbcov(is+1)-this%mesh%nbcov(is)
 
    if (nbc == 6) then
-      this%sv1(is) = this%vtantx(mesh%nugcv(iac  ))+this%vtantx(mesh%nugcv(iac+1)) &
-              + this%vtantx(mesh%nugcv(iac+2))+this%vtantx(mesh%nugcv(iac+3)) &
-              + this%vtantx(mesh%nugcv(iac+4))+this%vtantx(mesh%nugcv(iac+5)) 
-      this%sv2(is) = this%vtanty(mesh%nugcv(iac  ))+this%vtanty(mesh%nugcv(iac+1)) &
-              + this%vtanty(mesh%nugcv(iac+2))+this%vtanty(mesh%nugcv(iac+3)) &
-              + this%vtanty(mesh%nugcv(iac+4))+this%vtanty(mesh%nugcv(iac+5)) 
+      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))+this%vtantx(this%mesh%nugcv(iac+1)) &
+              + this%vtantx(this%mesh%nugcv(iac+2))+this%vtantx(this%mesh%nugcv(iac+3)) &
+              + this%vtantx(this%mesh%nugcv(iac+4))+this%vtantx(this%mesh%nugcv(iac+5)) 
+      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))+this%vtanty(this%mesh%nugcv(iac+1)) &
+              + this%vtanty(this%mesh%nugcv(iac+2))+this%vtanty(this%mesh%nugcv(iac+3)) &
+              + this%vtanty(this%mesh%nugcv(iac+4))+this%vtanty(this%mesh%nugcv(iac+5)) 
    else if (nbc == 5) then
-      this%sv1(is) = this%vtantx(mesh%nugcv(iac  ))+this%vtantx(mesh%nugcv(iac+1)) &
-              + this%vtantx(mesh%nugcv(iac+2))+this%vtantx(mesh%nugcv(iac+3)) &
-              + this%vtantx(mesh%nugcv(iac+4))
-      this%sv2(is) = this%vtanty(mesh%nugcv(iac  ))+this%vtanty(mesh%nugcv(iac+1)) &
-              + this%vtanty(mesh%nugcv(iac+2))+this%vtanty(mesh%nugcv(iac+3)) &
-              + this%vtanty(mesh%nugcv(iac+4))
+      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))+this%vtantx(this%mesh%nugcv(iac+1)) &
+              + this%vtantx(this%mesh%nugcv(iac+2))+this%vtantx(this%mesh%nugcv(iac+3)) &
+              + this%vtantx(this%mesh%nugcv(iac+4))
+      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))+this%vtanty(this%mesh%nugcv(iac+1)) &
+              + this%vtanty(this%mesh%nugcv(iac+2))+this%vtanty(this%mesh%nugcv(iac+3)) &
+              + this%vtanty(this%mesh%nugcv(iac+4))
    else if (nbc == 7) then
-      this%sv1(is) = this%vtantx(mesh%nugcv(iac  ))+this%vtantx(mesh%nugcv(iac+1)) &
-              + this%vtantx(mesh%nugcv(iac+2))+this%vtantx(mesh%nugcv(iac+3)) &
-              + this%vtantx(mesh%nugcv(iac+4))+this%vtantx(mesh%nugcv(iac+5))     &
-              + this%vtantx(mesh%nugcv(iac+6))
-      this%sv2(is) = this%vtanty(mesh%nugcv(iac  ))+this%vtanty(mesh%nugcv(iac+1)) &
-              + this%vtanty(mesh%nugcv(iac+2))+this%vtanty(mesh%nugcv(iac+3)) &
-              + this%vtanty(mesh%nugcv(iac+4))+this%vtanty(mesh%nugcv(iac+5))     &
-              + this%vtanty(mesh%nugcv(iac+6))
+      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))+this%vtantx(this%mesh%nugcv(iac+1)) &
+              + this%vtantx(this%mesh%nugcv(iac+2))+this%vtantx(this%mesh%nugcv(iac+3)) &
+              + this%vtantx(this%mesh%nugcv(iac+4))+this%vtantx(this%mesh%nugcv(iac+5))     &
+              + this%vtantx(this%mesh%nugcv(iac+6))
+      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))+this%vtanty(this%mesh%nugcv(iac+1)) &
+              + this%vtanty(this%mesh%nugcv(iac+2))+this%vtanty(this%mesh%nugcv(iac+3)) &
+              + this%vtanty(this%mesh%nugcv(iac+4))+this%vtanty(this%mesh%nugcv(iac+5))     &
+              + this%vtanty(this%mesh%nugcv(iac+6))
    else if (nbc == 4) then
-      this%sv1(is) = this%vtantx(mesh%nugcv(iac  ))+this%vtantx(mesh%nugcv(iac+1)) &
-              + this%vtantx(mesh%nugcv(iac+2))+this%vtantx(mesh%nugcv(iac+3))
-      this%sv2(is) = this%vtanty(mesh%nugcv(iac  ))+this%vtanty(mesh%nugcv(iac+1)) &
-              + this%vtanty(mesh%nugcv(iac+2))+this%vtanty(mesh%nugcv(iac+3))
+      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))+this%vtantx(this%mesh%nugcv(iac+1)) &
+              + this%vtantx(this%mesh%nugcv(iac+2))+this%vtantx(this%mesh%nugcv(iac+3))
+      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))+this%vtanty(this%mesh%nugcv(iac+1)) &
+              + this%vtanty(this%mesh%nugcv(iac+2))+this%vtanty(this%mesh%nugcv(iac+3))
    else if (nbc == 8) then
-      this%sv1(is) = this%vtantx(mesh%nugcv(iac  ))+this%vtantx(mesh%nugcv(iac+1)) &
-              + this%vtantx(mesh%nugcv(iac+2))+this%vtantx(mesh%nugcv(iac+3)) &
-              + this%vtantx(mesh%nugcv(iac+4))+this%vtantx(mesh%nugcv(iac+5))     &
-              + this%vtantx(mesh%nugcv(iac+6))+this%vtantx(mesh%nugcv(iac+7)) 
-      this%sv2(is) = this%vtanty(mesh%nugcv(iac  ))+this%vtanty(mesh%nugcv(iac+1)) &
-              + this%vtanty(mesh%nugcv(iac+2))+this%vtanty(mesh%nugcv(iac+3)) &
-              + this%vtanty(mesh%nugcv(iac+4))+this%vtanty(mesh%nugcv(iac+5))     &
-              + this%vtanty(mesh%nugcv(iac+6))+this%vtanty(mesh%nugcv(iac+7)) 
+      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))+this%vtantx(this%mesh%nugcv(iac+1)) &
+              + this%vtantx(this%mesh%nugcv(iac+2))+this%vtantx(this%mesh%nugcv(iac+3)) &
+              + this%vtantx(this%mesh%nugcv(iac+4))+this%vtantx(this%mesh%nugcv(iac+5))     &
+              + this%vtantx(this%mesh%nugcv(iac+6))+this%vtantx(this%mesh%nugcv(iac+7)) 
+      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))+this%vtanty(this%mesh%nugcv(iac+1)) &
+              + this%vtanty(this%mesh%nugcv(iac+2))+this%vtanty(this%mesh%nugcv(iac+3)) &
+              + this%vtanty(this%mesh%nugcv(iac+4))+this%vtanty(this%mesh%nugcv(iac+5))     &
+              + this%vtanty(this%mesh%nugcv(iac+6))+this%vtanty(this%mesh%nugcv(iac+7)) 
    else if (nbc == 3) then
-      this%sv1(is) = this%vtantx(mesh%nugcv(iac  ))+this%vtantx(mesh%nugcv(iac+1)) &
-              + this%vtantx(mesh%nugcv(iac+2))
-      this%sv2(is) = this%vtanty(mesh%nugcv(iac  ))+this%vtanty(mesh%nugcv(iac+1)) &
-              + this%vtanty(mesh%nugcv(iac+2))
+      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))+this%vtantx(this%mesh%nugcv(iac+1)) &
+              + this%vtantx(this%mesh%nugcv(iac+2))
+      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))+this%vtanty(this%mesh%nugcv(iac+1)) &
+              + this%vtanty(this%mesh%nugcv(iac+2))
    else if (nbc == 9) then
-      this%sv1(is) = this%vtantx(mesh%nugcv(iac  ))+this%vtantx(mesh%nugcv(iac+1)) &
-              + this%vtantx(mesh%nugcv(iac+2))+this%vtantx(mesh%nugcv(iac+3)) &
-              + this%vtantx(mesh%nugcv(iac+4))+this%vtantx(mesh%nugcv(iac+5))     &
-              + this%vtantx(mesh%nugcv(iac+6))+this%vtantx(mesh%nugcv(iac+7))     &
-              + this%vtantx(mesh%nugcv(iac+8))
-      this%sv2(is) = this%vtanty(mesh%nugcv(iac  ))+this%vtanty(mesh%nugcv(iac+1)) &
-              + this%vtanty(mesh%nugcv(iac+2))+this%vtanty(mesh%nugcv(iac+3)) &
-              + this%vtanty(mesh%nugcv(iac+4))+this%vtanty(mesh%nugcv(iac+5))     &
-              + this%vtanty(mesh%nugcv(iac+6))+this%vtanty(mesh%nugcv(iac+7))     &
-              + this%vtanty(mesh%nugcv(iac+8))
+      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))+this%vtantx(this%mesh%nugcv(iac+1)) &
+              + this%vtantx(this%mesh%nugcv(iac+2))+this%vtantx(this%mesh%nugcv(iac+3)) &
+              + this%vtantx(this%mesh%nugcv(iac+4))+this%vtantx(this%mesh%nugcv(iac+5))     &
+              + this%vtantx(this%mesh%nugcv(iac+6))+this%vtantx(this%mesh%nugcv(iac+7))     &
+              + this%vtantx(this%mesh%nugcv(iac+8))
+      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))+this%vtanty(this%mesh%nugcv(iac+1)) &
+              + this%vtanty(this%mesh%nugcv(iac+2))+this%vtanty(this%mesh%nugcv(iac+3)) &
+              + this%vtanty(this%mesh%nugcv(iac+4))+this%vtanty(this%mesh%nugcv(iac+5))     &
+              + this%vtanty(this%mesh%nugcv(iac+6))+this%vtanty(this%mesh%nugcv(iac+7))     &
+              + this%vtanty(this%mesh%nugcv(iac+8))
    else if (nbc == 2) then
-      this%sv1(is) = this%vtantx(mesh%nugcv(iac  ))+this%vtantx(mesh%nugcv(iac+1))
-      this%sv2(is) = this%vtanty(mesh%nugcv(iac  ))+this%vtanty(mesh%nugcv(iac+1))
+      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))+this%vtantx(this%mesh%nugcv(iac+1))
+      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))+this%vtanty(this%mesh%nugcv(iac+1))
    else if (nbc == 10) then
-      this%sv1(is) = this%vtantx(mesh%nugcv(iac  ))+this%vtantx(mesh%nugcv(iac+1)) &
-              + this%vtantx(mesh%nugcv(iac+2))+this%vtantx(mesh%nugcv(iac+3)) &
-              + this%vtantx(mesh%nugcv(iac+4))+this%vtantx(mesh%nugcv(iac+5))     &
-              + this%vtantx(mesh%nugcv(iac+6))+this%vtantx(mesh%nugcv(iac+7))     &
-              + this%vtantx(mesh%nugcv(iac+8))+this%vtantx(mesh%nugcv(iac+9)) 
-      this%sv2(is) = this%vtanty(mesh%nugcv(iac  ))+this%vtanty(mesh%nugcv(iac+1)) &
-              + this%vtanty(mesh%nugcv(iac+2))+this%vtanty(mesh%nugcv(iac+3)) &
-              + this%vtanty(mesh%nugcv(iac+4))+this%vtanty(mesh%nugcv(iac+5))     &
-              + this%vtanty(mesh%nugcv(iac+6))+this%vtanty(mesh%nugcv(iac+7))     &
-              + this%vtanty(mesh%nugcv(iac+8))+this%vtanty(mesh%nugcv(iac+9)) 
+      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))+this%vtantx(this%mesh%nugcv(iac+1)) &
+              + this%vtantx(this%mesh%nugcv(iac+2))+this%vtantx(this%mesh%nugcv(iac+3)) &
+              + this%vtantx(this%mesh%nugcv(iac+4))+this%vtantx(this%mesh%nugcv(iac+5))     &
+              + this%vtantx(this%mesh%nugcv(iac+6))+this%vtantx(this%mesh%nugcv(iac+7))     &
+              + this%vtantx(this%mesh%nugcv(iac+8))+this%vtantx(this%mesh%nugcv(iac+9)) 
+      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))+this%vtanty(this%mesh%nugcv(iac+1)) &
+              + this%vtanty(this%mesh%nugcv(iac+2))+this%vtanty(this%mesh%nugcv(iac+3)) &
+              + this%vtanty(this%mesh%nugcv(iac+4))+this%vtanty(this%mesh%nugcv(iac+5))     &
+              + this%vtanty(this%mesh%nugcv(iac+6))+this%vtanty(this%mesh%nugcv(iac+7))     &
+              + this%vtanty(this%mesh%nugcv(iac+8))+this%vtanty(this%mesh%nugcv(iac+9)) 
    else if (nbc == 11) then
-      this%sv1(is) = this%vtantx(mesh%nugcv(iac  ))+this%vtantx(mesh%nugcv(iac+1)) &
-              + this%vtantx(mesh%nugcv(iac+2))+this%vtantx(mesh%nugcv(iac+3)) &
-              + this%vtantx(mesh%nugcv(iac+4))+this%vtantx(mesh%nugcv(iac+5))     &
-              + this%vtantx(mesh%nugcv(iac+6))+this%vtantx(mesh%nugcv(iac+7))     &
-              + this%vtantx(mesh%nugcv(iac+8))+this%vtantx(mesh%nugcv(iac+9))     &
-              + this%vtantx(mesh%nugcv(iac+10))
-      this%sv2(is) = this%vtanty(mesh%nugcv(iac  ))+this%vtanty(mesh%nugcv(iac+1)) &
-              + this%vtanty(mesh%nugcv(iac+2))+this%vtanty(mesh%nugcv(iac+3)) &
-              + this%vtanty(mesh%nugcv(iac+4))+this%vtanty(mesh%nugcv(iac+5))     &
-              + this%vtanty(mesh%nugcv(iac+6))+this%vtanty(mesh%nugcv(iac+7))     &
-              + this%vtanty(mesh%nugcv(iac+8))+this%vtanty(mesh%nugcv(iac+9))     &
-              + this%vtanty(mesh%nugcv(iac+10))
+      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))+this%vtantx(this%mesh%nugcv(iac+1)) &
+              + this%vtantx(this%mesh%nugcv(iac+2))+this%vtantx(this%mesh%nugcv(iac+3)) &
+              + this%vtantx(this%mesh%nugcv(iac+4))+this%vtantx(this%mesh%nugcv(iac+5))     &
+              + this%vtantx(this%mesh%nugcv(iac+6))+this%vtantx(this%mesh%nugcv(iac+7))     &
+              + this%vtantx(this%mesh%nugcv(iac+8))+this%vtantx(this%mesh%nugcv(iac+9))     &
+              + this%vtantx(this%mesh%nugcv(iac+10))
+      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))+this%vtanty(this%mesh%nugcv(iac+1)) &
+              + this%vtanty(this%mesh%nugcv(iac+2))+this%vtanty(this%mesh%nugcv(iac+3)) &
+              + this%vtanty(this%mesh%nugcv(iac+4))+this%vtanty(this%mesh%nugcv(iac+5))     &
+              + this%vtanty(this%mesh%nugcv(iac+6))+this%vtanty(this%mesh%nugcv(iac+7))     &
+              + this%vtanty(this%mesh%nugcv(iac+8))+this%vtanty(this%mesh%nugcv(iac+9))     &
+              + this%vtanty(this%mesh%nugcv(iac+10))
    else if (nbc == 12) then
-      this%sv1(is) = this%vtantx(mesh%nugcv(iac  ))+this%vtantx(mesh%nugcv(iac+1)) &
-              + this%vtantx(mesh%nugcv(iac+2))+this%vtantx(mesh%nugcv(iac+3)) &
-              + this%vtantx(mesh%nugcv(iac+4))+this%vtantx(mesh%nugcv(iac+5))     &
-              + this%vtantx(mesh%nugcv(iac+6))+this%vtantx(mesh%nugcv(iac+7))     &
-              + this%vtantx(mesh%nugcv(iac+8))+this%vtantx(mesh%nugcv(iac+9))     &
-              + this%vtantx(mesh%nugcv(iac+10))+this%vtantx(mesh%nugcv(iac+11))
-      this%sv2(is) = this%vtanty(mesh%nugcv(iac  ))+this%vtanty(mesh%nugcv(iac+1)) &
-              + this%vtanty(mesh%nugcv(iac+2))+this%vtanty(mesh%nugcv(iac+3)) &
-              + this%vtanty(mesh%nugcv(iac+4))+this%vtanty(mesh%nugcv(iac+5))     &
-              + this%vtanty(mesh%nugcv(iac+6))+this%vtanty(mesh%nugcv(iac+7))     &
-              + this%vtanty(mesh%nugcv(iac+8))+this%vtanty(mesh%nugcv(iac+9))     &
-              + this%vtanty(mesh%nugcv(iac+10))+this%vtanty(mesh%nugcv(iac+11))
+      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))+this%vtantx(this%mesh%nugcv(iac+1)) &
+              + this%vtantx(this%mesh%nugcv(iac+2))+this%vtantx(this%mesh%nugcv(iac+3)) &
+              + this%vtantx(this%mesh%nugcv(iac+4))+this%vtantx(this%mesh%nugcv(iac+5))     &
+              + this%vtantx(this%mesh%nugcv(iac+6))+this%vtantx(this%mesh%nugcv(iac+7))     &
+              + this%vtantx(this%mesh%nugcv(iac+8))+this%vtantx(this%mesh%nugcv(iac+9))     &
+              + this%vtantx(this%mesh%nugcv(iac+10))+this%vtantx(this%mesh%nugcv(iac+11))
+      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))+this%vtanty(this%mesh%nugcv(iac+1)) &
+              + this%vtanty(this%mesh%nugcv(iac+2))+this%vtanty(this%mesh%nugcv(iac+3)) &
+              + this%vtanty(this%mesh%nugcv(iac+4))+this%vtanty(this%mesh%nugcv(iac+5))     &
+              + this%vtanty(this%mesh%nugcv(iac+6))+this%vtanty(this%mesh%nugcv(iac+7))     &
+              + this%vtanty(this%mesh%nugcv(iac+8))+this%vtanty(this%mesh%nugcv(iac+9))     &
+              + this%vtanty(this%mesh%nugcv(iac+10))+this%vtanty(this%mesh%nugcv(iac+11))
 
    else
       lerr=.TRUE.
@@ -1515,9 +1508,9 @@ end if
 
 ! --- 3.0 --- Resolution des systemes lineaires 2*2 --------------------
 
-do is=1,mesh%num_nodes
-   ex(is)=mesh%xmal2(is)*this%sv1(is)-mesh%xmal3(is)*this%sv2(is)
-   ey(is)=mesh%xmal1(is)*this%sv2(is)-mesh%xmal3(is)*this%sv1(is)
+do is=1,this%mesh%num_nodes
+   ex(is)=this%mesh%xmal2(is)*this%sv1(is)-this%mesh%xmal3(is)*this%sv2(is)
+   ey(is)=this%mesh%xmal1(is)*this%sv2(is)-this%mesh%xmal3(is)*this%sv1(is)
 end do
 
 ! --- 9.0 --- Formats --------------------------------------------------

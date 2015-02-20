@@ -14,7 +14,7 @@
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-program PICSOU
+program test_tri_poisson
                         
 use tri_poisson
 use sll_triangular_meshes
@@ -31,12 +31,11 @@ real(8), dimension(:), allocatable :: ex, ey
 
 character(len=72) :: argv
 
-type(sll_triangular_poisson_2d) :: solver
-type(sll_triangular_mesh_2d)    :: mesh
+type(sll_triangular_poisson_2d)       :: solver
+type(sll_triangular_mesh_2d), pointer :: mesh
 character(len=132):: inpfil
 character(len=132):: maafil
 logical :: lask
-
 
 call getarg( 1, argv); write(*,'(1x, a)') argv
 
@@ -65,7 +64,7 @@ if (lask) then
    write(*,1700) trim(inpfil)
 end if
 
-call read_from_file(mesh, maafil)                    !Lecture maillage
+mesh => new_triangular_mesh_2d(maafil) 
 call write_triangular_mesh_mtv(mesh, "picsou.mtv")
 
 call analyze_triangular_mesh(mesh) 
@@ -83,9 +82,9 @@ call sll_create(solver, mesh, inpfil)
 !   Equation de POISSON - elements finis !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-call poissn(solver, ex, ey, rho, phi, mesh)
-call poliss(solver, phi, ex, ey, mesh)
-call poifrc(solver, ex, ey, mesh)
+call poissn(solver, ex, ey, rho, phi)
+call poliss(solver, phi, ex, ey)
+call poifrc(solver, ex, ey)
 
 call sll_gnuplot_2d( phi, "phi", mesh%coord, mesh%nodes, 1)
 
@@ -94,4 +93,4 @@ call sll_gnuplot_2d( phi, "phi", mesh%coord, mesh%nodes, 1)
 1800 format(/' Settings may have been changed - New title :')
 1900 format(/' Input file  ', A,'  not found')
 
-end program PICSOU
+end program test_tri_poisson
