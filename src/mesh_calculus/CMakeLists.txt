@@ -17,12 +17,14 @@ IF(BUILD_TESTING)
     sll_mesh_calculus sll_file_io sll_memory ${HDF5_LIBRARIES} )
 ENDIF(BUILD_TESTING)
 
-
 SET(f90_sources poisson.F90 
                 solveurs_module.F90 
-                errout.F90
-                zone.F90 utlib.F90)
+                zone.F90 
+                utlib.F90)
 
 ADD_LIBRARY(picsou ${f90_sources})
 ADD_EXECUTABLE(test_picsou picsou.F90)
-TARGET_LINK_LIBRARIES(test_picsou picsou sll_mesh_calculus sll_file_io)
+TARGET_LINK_LIBRARIES(test_picsou picsou 
+                                  sll_mesh_calculus 
+                                  sll_file_io
+                                  sll_utilities)
