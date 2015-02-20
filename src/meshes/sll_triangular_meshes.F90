@@ -24,6 +24,7 @@ module sll_triangular_meshes
 
 use sll_meshes_base
 use sll_tri_mesh_xmf
+use sll_hex_meshes
 
 implicit none
 
@@ -106,6 +107,11 @@ interface sll_display
    module procedure display_triangular_mesh_2d
 end interface sll_display
 
+interface new_triangular_mesh_2d
+  module procedure new_triangular_mesh_2d_from_file
+  module procedure new_triangular_mesh_2d_from_hex_mesh
+end interface new_triangular_mesh_2d
+
 ! interface eta1_cell
 !    module procedure eta1_cell_one_arg, eta1_cell_two_arg
 ! end interface eta1_cell
@@ -145,16 +151,12 @@ end interface sll_display
 
 contains
 
-!> @brief allocates the memory space for a new 1D cartesian mesh on the heap,
+!> @brief allocates the memory space for a new 2D triangular mesh on the heap,
 !> initializes it with the given arguments and returns a pointer to the
 !> object.
-!> @param num_cells integer denoting the number of cells.
-!> @param eta_min optional double precision value which represents the 
-!> minimum value of the eta1 parameter in the cartesian mesh.
-!> @param eta_max optional double precision value which represents the 
-!> maximum value of the eta1 parameter in the cartesian mesh.
+!> @param maafil file name with data
 !> @return a pointer to the newly allocated object.
-function new_triangular_mesh_2d( maafil ) result(m)
+function new_triangular_mesh_2d_from_file( maafil ) result(m)
 
   type(sll_triangular_mesh_2d), pointer :: m
   character(len=*), intent(in)          :: maafil
@@ -163,7 +165,59 @@ function new_triangular_mesh_2d( maafil ) result(m)
   SLL_ALLOCATE(m, ierr)
   call read_from_file(m, maafil)
 
-end function new_triangular_mesh_2d
+end function new_triangular_mesh_2d_from_file
+
+!> @brief allocates the memory space for a new 2D triangular mesh on the heap,
+!> initializes it with the given hexagonal mesh and returns a pointer to the
+!> object.
+!> @param hex_mesh hexagonal mesh
+!> @return a pointer to the newly allocated object.
+function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
+
+  type(sll_hex_mesh_2d), intent(in), pointer :: hex_mesh
+  type(sll_triangular_mesh_2d),      pointer :: tri_mesh
+
+  sll_int32                  :: ierr
+  sll_real64                 :: x1
+  sll_real64                 :: y1
+  sll_int32                  :: is1
+  sll_int32                  :: is2
+  sll_int32                  :: is3
+  sll_int32                  :: i
+
+  SLL_ALLOCATE(tri_mesh, ierr)
+
+    
+  tri_mesh%num_nodes = hex_mesh%num_pts_tot
+  tri_mesh%num_cells = hex_mesh%num_triangles
+  tri_mesh%nmxfr     = 1
+  tri_mesh%nmxsd     = 1
+  SLL_ALLOCATE(tri_mesh%coord(1:2,tri_mesh%num_nodes),   ierr)
+  SLL_ALLOCATE(tri_mesh%nodes(1:3,1:tri_mesh%num_cells), ierr)
+  SLL_ALLOCATE(tri_mesh%refs(tri_mesh%num_nodes),        ierr)
+  tri_mesh%refs = 1
+
+  do i = 1, hex_mesh%num_triangles
+    
+    x1 = hex_mesh%center_cartesian_coord(1, i)
+    y1 = hex_mesh%center_cartesian_coord(2, i)
+    
+    call get_cell_vertices_index( x1, y1, hex_mesh, is1, is2, is3)
+    
+    tri_mesh%nodes(1,i) = is1
+    tri_mesh%nodes(2,i) = is2
+    tri_mesh%nodes(3,i) = is3
+    
+    tri_mesh%coord(1,is1) = hex_mesh%global_to_x1(is1)
+    tri_mesh%coord(2,is1) = hex_mesh%global_to_x2(is1)
+    tri_mesh%coord(1,is2) = hex_mesh%global_to_x1(is2)
+    tri_mesh%coord(2,is2) = hex_mesh%global_to_x2(is2)
+    tri_mesh%coord(1,is3) = hex_mesh%global_to_x1(is3)
+    tri_mesh%coord(2,is3) = hex_mesh%global_to_x2(is3)
+    
+  end do
+
+end function new_triangular_mesh_2d_from_hex_mesh
 
 subroutine initialize_triangular_mesh_2d( mesh,     &
                                           nc_eta1,  &
