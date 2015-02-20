@@ -1020,25 +1020,99 @@ contains
 
     global = hex_to_global(mesh,k1,k2)
 
-    if ( x < mesh%cartesian_coord(1,global) ) then
-       triangle_index = mesh%center_index(1,global) !left triangle
-    else
-       triangle_index = mesh%center_index(2,global) !right triangle
-    endif
+    if ((global .gt. 0).and.(global.le.mesh%num_pts_tot)) then 
+       if ( x < mesh%cartesian_coord(1,global) ) then
+          triangle_index = mesh%center_index(1,global) !left triangle
+       else
+          triangle_index = mesh%center_index(2,global) !right triangle
+       endif
+    end if
 
-    if (triangle_index == -1 ) print*, "problem in get_triangle_index at line",&
-         __LINE__
+!     if (triangle_index == -1 ) print*, "problem in get_triangle_index at line",&
+!          __LINE__
 
   end subroutine get_triangle_index
 
 
+  !-------------------------------------------------------------------------
+  !> @brief returns the indices of the neighbouring cells/triangles
+  !> @param mesh: hex_mesh hexagonal mesh
+  !> @param cell_index integer: index of the cell from which we want to know 
+  !>   the neighbours
+  !> @param nei_1 integer intent(out): integer containing the index of the 1st neighbour
+  !> @param nei_2 integer intent(out): integer containing the index of the 2nd neighbour
+  !> @param nei_3 integer intent(out): integer containing the index of the 3rd neighbour
+  subroutine get_neighbours(mesh, cell_index, nei_1, nei_2, nei_3)
+    type(sll_hex_mesh_2d), pointer :: mesh
+    sll_int32, intent(in) :: cell_index
+    sll_real64 :: xc
+    sll_real64 :: yc
+    sll_int32  :: s1
+    sll_int32  :: s2
+    sll_int32  :: s3
+    sll_real64 :: x1, y1
+    sll_real64 :: x2, y2
+    sll_real64 :: x3, y3
+    sll_real64 :: x
+    sll_real64 :: y
+    sll_int32  :: k1
+    sll_int32  :: k2
+    sll_real64 :: coef
+    sll_int32, intent(out) :: nei_1
+    sll_int32, intent(out) :: nei_2
+    sll_int32, intent(out) :: nei_3
+
+    ! Getting the cell's center coordinates:
+    xc = mesh%center_cartesian_coord(1, cell_index)
+    yc = mesh%center_cartesian_coord(2, cell_index)
+    
+    ! Getting the cell's vertices indices:
+    call get_cell_vertices_index(xc, yc, mesh, s1, s2, s3)
+
+    ! Getting the vertex coordinates:
+    x1 = mesh%cartesian_coord(1, s1)
+    y1 = mesh%cartesian_coord(2, s1)
+    x2 = mesh%cartesian_coord(1, s2)
+    y2 = mesh%cartesian_coord(2, s2)
+    x3 = mesh%cartesian_coord(1, s3)
+    y3 = mesh%cartesian_coord(2, s3)
+
+    ! Getting the neighbours' centers coordinates by symmetry to the cell's edges
+    ! First center (symmetry with P1-P2) :
+    coef = 2._f64 * ((xc - x1)*(x2 - x1) + (yc - y1)*(y2 - y1))/((x2-x1)**2 + (y2 - y1)**2)
+    x = coef * (x2 - x1) - (xc - x1) + x1
+    y = coef * (y2 - y1) - (yc - y1) + y1
+    ! Getting its index :
+    k1 = cart_to_hex1(mesh, x, y)
+    k2 = cart_to_hex2(mesh, x, y)
+    call get_triangle_index(k1, k2, mesh, x, nei_1)
+
+    ! Second center (symmetry with P2-P3) :
+    coef = 2._f64 * ((xc - x2)*(x3 - x2) + (yc - y2)*(y3 - y2))/((x3-x2)**2 + (y3 - y2)**2)
+    x = coef * (x3 - x2) - (xc - x2) + x2
+    y = coef * (y3 - y2) - (yc - y2) + y2
+    ! Getting its index :
+    k1 = cart_to_hex1(mesh, x, y)
+    k2 = cart_to_hex2(mesh, x, y)
+    call get_triangle_index(k1, k2, mesh, x, nei_2)
+
+    ! Third center (symmetry with P1-P3) :
+    coef = 2._f64 * ((xc - x1)*(x3 - x1) + (yc - y1)*(y3 - y1))/((x3-x1)**2 + (y3 - y1)**2)
+    x = coef * (x3 - x1) - (xc - x1) + x1
+    y = coef * (y3 - y1) - (yc - y1) + y1
+    ! Getting its index :
+    k1 = cart_to_hex1(mesh, x, y)
+    k2 = cart_to_hex2(mesh, x, y)
+    call get_triangle_index(k1, k2, mesh, x, nei_3)
+
+  end subroutine get_neighbours
 
   subroutine get_edge_index(k1,k2,mesh,x,edge_index1,edge_index2,edge_index3)
     type(sll_hex_mesh_2d), pointer :: mesh
-    sll_real64, intent(in)     :: x !cartessian_abscisse_other_vertice
-    sll_int32, intent(in)      :: k1, k2
-    sll_int32, intent(out)     :: edge_index1,edge_index2,edge_index3
-    sll_int32                  :: global, global2
+    sll_real64, intent(in)         :: x !cartessian_abscisse_other_vertice
+    sll_int32, intent(in)          :: k1, k2
+    sll_int32, intent(out)         :: edge_index1,edge_index2,edge_index3
+    sll_int32                      :: global, global2
 
     ! in short :
     ! returns the three indices of the edge  of the triangle which contains
@@ -1136,9 +1210,13 @@ contains
     sll_int32  :: i
     sll_int32  :: j
     sll_int32  :: spline_deg
+    sll_int32  :: scale
     sll_int32  :: num_pts_tot
     sll_int32  :: num_ele
-    sll_int32, parameter :: out_unit=20
+    sll_int32  :: nei1
+    sll_int32  :: nei2
+    sll_int32  :: nei3
+    sll_int32,  parameter :: out_unit=20
 
     ! Writing the nodes file....................
     open (unit=out_unit,file=name_nodes,action="write",status="replace")
@@ -1165,15 +1243,24 @@ contains
     num_ele = mesh%num_triangles
     write(out_unit, "(i6)") num_ele
 
-    ! We write the (maximum) spline degree
+    ! The (maximum) spline degree and scale are fix here
     spline_deg = 1
+    scale = 1
+    !... we write its global number
+    write (out_unit, "(i6)") spline_deg
 
+    
     ! For every element...
     do i=1, num_ele
        !... we write its global number
        write (out_unit, "(i6)") i
        !... we write the spline degree
        write(out_unit, "((i6),(a,1x),(i6))") spline_deg, ",", spline_deg
+       !... we write the scale of the element
+       write(out_unit, "((i6),(a,1x))",advance='no') scale, ","
+       !... we write its neighbours
+       call get_neighbours(mesh, i, nei1, nei2, nei3)
+       write(out_unit, "(3((i6),(a,1x)))",advance='no') nei1, ",", nei2, ",", nei3, ","
        !... we write the indices of the edges
        x1 = mesh%center_cartesian_coord(1, i)
        y1 = mesh%center_cartesian_coord(2, i)
