@@ -42,6 +42,7 @@ SLL_ALLOCATE(dyf(mesh%num_pts_tot),ierr)
 
 
 do i=1, mesh%num_pts_tot
+
    x1 = mesh%global_to_x1(i)
    x2 = mesh%global_to_x2(i)
 
@@ -54,7 +55,7 @@ do i=1, mesh%num_pts_tot
 end do
 
 !Wrtting on docs:
-call write_field_hex_mesh_xmf(mesh, f, "boxspline2")
+call write_field_hex_mesh_xmf(mesh,   f, "boxspline2")
 call write_field_hex_mesh_xmf(mesh, dxf, "der1_boxspline2")
 call write_field_hex_mesh_xmf(mesh, dyf, "der2_boxspline2")
 
@@ -66,5 +67,6 @@ SLL_DEALLOCATE_ARRAY(dyf, ierr)
 
 !Writing file for CAID:
 call write_basis_values(1)
-
+print *, ""
+print *, "Done writing CAID file : basis_value.txt"
 end program box_spline_tester
