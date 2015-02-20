@@ -5,7 +5,7 @@
      sll_scalar_field_multipatch
      sll_coordinate_transformation_multipatch
      sll_remap
-     sll_parallel_array_initializers
+     sll_parallel_array_utilities
      sll_timer
      sll_meshes_multipatch
      sll_memory)

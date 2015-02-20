@@ -38,8 +38,8 @@ module sll_particle_group_4d_module
      ! to post-process after the main loop
      sll_int32, dimension(:), pointer :: num_postprocess_particles
      sll_real64 :: qoverm 
-     type(sll_cartesian_mesh_2d), pointer                 :: mesh
-     type(sll_particle_4d), dimension(:), pointer       :: p_list
+     type(sll_cartesian_mesh_2d), pointer :: mesh
+     type(sll_particle_4d), dimension(:), pointer           :: p_list
      type(sll_particle_4d_guard_ptr), dimension(:), pointer :: p_guard
   end type sll_particle_group_4d
   

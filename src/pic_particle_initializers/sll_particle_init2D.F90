@@ -53,20 +53,18 @@ contains
     sll_int32, optional  :: rank, worldsize
 !!$    character(len=8)  :: rank_name
 !!$    character(len=40) :: nomfile
-    sll_real64 :: coco
 
     if ( present(rand_seed) ) then
        call random_seed (put=rand_seed)
     endif
     if( present(worldsize) ) then
-       coco = (1.0_f64 + alpha)*(m2d%eta1_max - m2d%eta1_min) * &
+       weight = (1.0_f64 + alpha)*(m2d%eta1_max - m2d%eta1_min) * &
             (m2d%eta2_max - m2d%eta2_min)/real(worldsize*num_particles,f64)
     else
-       coco = (1.0_f64 + alpha)*(m2d%eta1_max - m2d%eta1_min) * &
+       weight = (1.0_f64 + alpha)*(m2d%eta1_max - m2d%eta1_min) * &
             (m2d%eta2_max - m2d%eta2_min)/real(num_particles,f64)
     endif
-    weight = real(coco,f32)
-
+    
     rdx = 1._f64/m2d%delta_eta1
     rdy = 1._f64/m2d%delta_eta2
     xmin = m2d%eta1_min
@@ -91,15 +89,14 @@ contains
        call random_number(y)
        y = (m2d%eta2_max - ymin)*y + ymin
        call random_number(z)
-       z = (2.0_f64 + 2.5_f64*alpha) * z
+       z = (2.0_f64 + 2.0_f64*alpha) * z
        if (eval_KH(alpha, kx, x, y) >= z ) then
-!!$          write(90,*) x, y
+!          write(90,*) x, y
           SET_2DPARTICLE_VALUES(p_group%p_list(j),x,y,weight,xmin,ymin,ncx,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
           j = j + 1          
        endif
     end do
-!!$    print*, 'nb d essais', j-1
-!!$    close(90)
+!    close(90)
 
   end subroutine sll_initial_particles_2d_KH
 
@@ -167,7 +164,6 @@ contains
            j = j + 1          
         endif
      end do
-!!$    print*, 'nb d essais', j-1
 !!$    close(90)
  
    end subroutine sll_initial_particles_2d

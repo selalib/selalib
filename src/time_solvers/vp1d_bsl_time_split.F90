@@ -228,7 +228,7 @@ program VP1d_BSL_time_split
   ! with parameters k_dr and omega_dr.
   istep = 0
   if (driven) then
-     call PFenvelope(adr, istep*dt, params)
+     call PF_envelope(adr, istep*dt, params)
      do i = 1, Ncx + 1
         e_app(i) = Edrmax * adr * kmode * sin(kmode * (i-1) * delta_x)
      enddo

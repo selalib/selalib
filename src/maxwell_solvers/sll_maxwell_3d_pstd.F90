@@ -20,20 +20,23 @@
 #include "sll_fftw.h"
 
 #define D_DX(field)                                           \
-call fftw_execute_dft_r2c(self%fwx, field, self%tmp_x);       \
-self%tmp_x = -cmplx(0.0_f64,self%kx,kind=f64)*self%tmp_x;     \
+self%d_dx = field;                                            \
+call fftw_execute_dft_r2c(self%fwx, self%d_dx, self%tmp_x);   \
+self%tmp_x(2:nc_x/2+1)=-cmplx(0.0_f64,self%kx(2:nc_x/2+1),kind=f64)*self%tmp_x(2:nc_x/2+1);     \
 call fftw_execute_dft_c2r(self%bwx, self%tmp_x, self%d_dx);   \
 self%d_dx = self%d_dx / nc_x
 
 #define D_DY(field)                                           \
-call fftw_execute_dft_r2c(self%fwy, field, self%tmp_y);       \
-self%tmp_y = -cmplx(0.0_f64,self%ky,kind=f64)*self%tmp_y;     \
+self%d_dy = field;                                            \
+call fftw_execute_dft_r2c(self%fwy, self%d_dy, self%tmp_y);   \
+self%tmp_y(2:nc_y/2+1)=-cmplx(0.0_f64,self%ky(2:nc_y/2+1),kind=f64)*self%tmp_y(2:nc_y/2+1);     \
 call fftw_execute_dft_c2r(self%bwy, self%tmp_y, self%d_dy);   \
 self%d_dy = self%d_dy / nc_y
 
 #define D_DZ(field)                                           \
-call fftw_execute_dft_r2c(self%fwz, field, self%tmp_z);       \
-self%tmp_z = -cmplx(0.0_f64,self%kz,kind=f64)*self%tmp_z;     \
+self%d_dz = field;                                            \
+call fftw_execute_dft_r2c(self%fwz, self%d_dz, self%tmp_z);   \
+self%tmp_z(2:nc_z/2+1)=-cmplx(0.0_f64,self%kz(2:nc_z/2+1),kind=f64)*self%tmp_z(2:nc_z/2+1);     \
 call fftw_execute_dft_c2r(self%bwz, self%tmp_z, self%d_dz);   \
 self%d_dz = self%d_dz / nc_z
 
@@ -285,27 +288,27 @@ subroutine faraday(self, hx, hy, hz, ex, ey, ez, dt)
 
    do k = 1, nc_z
       do i = 1, nc_x
-         D_DY(ez(i,:,k))
+         D_DY(ez(i,1:nc_y,k))
          hx(i,:,k) = hx(i,:,k) - dt_mu * self%d_dy
-         D_DY(ex(i,:,k))
+         D_DY(ex(i,1:nc_y,k))
          hz(i,:,k) = hz(i,:,k) + dt_mu * self%d_dy
       end do
    end do
 
    do j = 1, nc_y
       do i = 1, nc_x
-         D_DZ(ey(i,j,:))
+         D_DZ(ey(i,j,1:nc_z))
          hx(i,j,:) = hx(i,j,:) + dt_mu * self%d_dz
-         D_DZ(ex(i,j,:))
+         D_DZ(ex(i,j,1:nc_z))
          hy(i,j,:) = hy(i,j,:) - dt_mu * self%d_dz
       end do
    end do
 
    do k = 1, nc_z
       do j = 1, nc_y
-         D_DX(ez(:,j,k))
+         D_DX(ez(1:nc_x,j,k))
          hy(:,j,k) = hy(:,j,k) + dt_mu * self%d_dx
-         D_DX(ey(:,j,k))
+         D_DX(ey(1:nc_x,j,k))
          hz(:,j,k) = hz(:,j,k) - dt_mu * self%d_dx
       end do
    end do
@@ -342,27 +345,27 @@ subroutine ampere(self, hx, hy, hz, ex, ey, ez, dt, jx, jy, jz)
 
    do k = 1, nc_z
    do i = 1, nc_x
-      D_DY(hz(i,:,k))
+      D_DY(hz(i,1:nc_y,k))
       ex(i,:,k) = ex(i,:,k) + dt_e * self%d_dy
-      D_DY(hx(i,:,k))
+      D_DY(hx(i,1:nc_y,k))
       ez(i,:,k) = ez(i,:,k) - dt_e * self%d_dy
    end do
    end do
 
    do j = 1, nc_y
    do i = 1, nc_x
-      D_DZ(hy(i,j,:))
+      D_DZ(hy(i,j,1:nc_z))
       ex(i,j,:) = ex(i,j,:) - dt_e * self%d_dz
-      D_DZ(hx(i,j,:))
+      D_DZ(hx(i,j,1:nc_z))
       ey(i,j,:) = ey(i,j,:) + dt_e * self%d_dz
    end do
    end do
 
    do k = 1, nc_z
    do j = 1, nc_y
-      D_DX(hz(:,j,k))
+      D_DX(hz(1:nc_x,j,k))
       ey(:,j,k) = ey(:,j,k) - dt_e * self%d_dx
-      D_DX(hy(:,j,k))
+      D_DX(hy(1:nc_x,j,k))
       ez(:,j,k) = ez(:,j,k) + dt_e * self%d_dx
    end do
    end do
