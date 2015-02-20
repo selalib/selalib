@@ -27,7 +27,6 @@ IF(BUILD_TESTING)
   ADD_EXECUTABLE( test_hex_meshes test_hex_meshes.F90 )
   TARGET_LINK_LIBRARIES( test_hex_meshes sll_hex_meshes )
 
-
   ADD_EXECUTABLE( test_triangular_mesh unit_test_triangular_mesh.F90 )
   TARGET_LINK_LIBRARIES( test_triangular_mesh sll_meshes )
   ADD_TEST( NAME triangular_mesh COMMAND test_triangular_mesh )

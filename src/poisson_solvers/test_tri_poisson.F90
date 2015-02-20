@@ -1,45 +1,22 @@
-!File: Program Main
-!*Programme principal*
-!   
-!   PICSOU 
-!
 !   Pierre NAVARO
 !
 !   Institut de Recherche en Mathematique Avancee
 !
-!   IRMA   UMR 7501 CNRS/ULP
+!   IRMA   UMR 7501 CNRS/Unistra
 !
 !   7 rue René Descartes F-67084 Strasbourg Cedex, FRANCE.
 !
 !   http://www-irma.u-strasbg.fr/~navaro
 !
-!   email: navaro@math.u-strasbg.fr
+!   email: navaro@math.cnrs.fr
 !
-!   tel: 03 90 24 01 73
-!
-!Use:
-! - <Module Zone>
-! - <Module Maillage>
-! - <Module Sorties>
-! - <Module Champs_Externes>
-! - <Module Solveurs_Module>
-! - <Module Injections>
-! - <Module Source_Module>
-! - <Module Particules>
-! - <Module Projections>
-! - <Module Interpolations>
-! - <Module Save_Module>
-! - <Module Mpi_Module>
-!
+!   tel: 03 68 85 01 73
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 program PICSOU
                         
-use zone,            only: iout, mesh_fields
-use solveurs_module, only: lecture_donnees_solveur
-use poisson,         only: poissn, poifrc, init_solveur_poisson, poliss
-
+use tri_poisson
 use sll_triangular_meshes
 use sll_mesh_calculus_2d_module
 use sll_gnuplot
@@ -48,42 +25,34 @@ use sll_gnuplot
 
 implicit none
 
-integer :: i
-integer :: n, lu, nsolve
-integer :: istep
-
 real(8) :: tcpu
 real(8), dimension(:), allocatable :: rho, phi
+real(8), dimension(:), allocatable :: ex, ey
 
-character(len=72) :: argv, dirpr
+character(len=72) :: argv
 
-type(mesh_fields)  :: mxw
+type(sll_triangular_poisson_2d) :: solver
 type(sll_triangular_mesh_2d)    :: mesh
 character(len=132):: inpfil
 character(len=132):: maafil
 logical :: lask
 
-integer :: ntypfr(5)
-real(8) :: potfr(5)
 
-n = 1 !iargc()
-do i = 1, n
-   call getarg( i, argv); write(*,'(i2, 1x, a)') i, argv
-end do
+call getarg( 1, argv); write(*,'(1x, a)') argv
 
 !------------------------------------------------------------!
 !     Reads in default parameters from input file (.inp)        !
 !     If LASK=t, ask user if file is to be read.                !
 !------------------------------------------------------------!
 
-lask = .true.; lu = 10
+lask = .true.
 
 inpfil = trim(argv)//'.inp' 
 maafil = trim(argv)//'.maa'
 
 write(*,"(/10x,'Fichier d''entree : ',a)") inpfil
 
-open(lu,file=inpfil,status='OLD',err=80)
+open(10,file=inpfil,status='OLD',err=80)
 write(*,1050,advance='no') trim(inpfil)
 lask = .false.
 
@@ -98,28 +67,25 @@ end if
 
 call read_from_file(mesh, maafil)                    !Lecture maillage
 call write_triangular_mesh_mtv(mesh, "picsou.mtv")
-call lecture_donnees_solveur(inpfil,ntypfr, potfr)  
 
-call analyze_triangular_mesh(mesh, ntypfr) 
+call analyze_triangular_mesh(mesh) 
 
-allocate(mxw%e(3,mesh%num_nodes)); mxw%e=0.0; 
-allocate(mxw%b(3,mesh%num_nodes)); mxw%b=0.0; 
-allocate(mxw%j(3,mesh%num_nodes)); mxw%j=0.0; 
+allocate(ex(mesh%num_nodes)); ex=0.0; 
+allocate(ey(mesh%num_nodes)); ey=0.0; 
 allocate(rho(mesh%num_nodes)); rho = 0.0
 allocate(phi(mesh%num_nodes)); phi = 0.0
 
 call cpu_time(tcpu)  !Initialisation du temps CPU
 
-call init_solveur_poisson(mesh, ntypfr)
+call sll_create(solver, mesh, inpfil)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !   Equation de POISSON - elements finis !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-istep = 1
 
-call poissn(potfr, mxw, rho, phi, mesh, istep)
-call poliss(phi, mxw, mesh)
-call poifrc(mxw, mesh, ntypfr)
+call poissn(solver, ex, ey, rho, phi, mesh)
+call poliss(solver, phi, ex, ey, mesh)
+call poifrc(solver, ex, ey, mesh)
 
 call sll_gnuplot_2d( phi, "phi", mesh%coord, mesh%nodes, 1)
 
