@@ -19,7 +19,7 @@ IF(HDF5_ENABLED)
     sll_utilities )
 
   ADD_LIBRARY( sll_fcisl_toroidal STATIC fcisl_toroidal.F90 )
-  TARGET_LINK_LIBRARIES( sll_fcisl_toroidal sll_advection sll_utilities sll_file_io )
+  TARGET_LINK_LIBRARIES( sll_fcisl_toroidal sll_interpolators sll_utilities sll_file_io )
 
 
   # Tests
