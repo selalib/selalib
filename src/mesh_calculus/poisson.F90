@@ -4,9 +4,10 @@
 ! Traduit en Fortran 90 a partir de M2V ou DEGAS2D
 !
 module poisson
+#include "sll_utilities.h"
 
 use zone, only: iout, grandx, petitx, time, dt, eps0, &
-                pcharg, mesh_fields, pi, xmu0
+                mesh_fields, pi, xmu0
 
 use maillage, only: sll_triangular_mesh_2d
 
@@ -826,7 +827,7 @@ end do
 
 if(ntest==1) then 
    write(iout,902) 
-   call errout(iout,"F","choles","poisson.f90")
+   SLL_ERROR("choles poisson.f90")
 end if
 
 !--- 9.0 --- Formats ---------------------------------------------------
