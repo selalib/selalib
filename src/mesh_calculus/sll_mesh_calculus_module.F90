@@ -697,45 +697,19 @@ type(sll_triangular_mesh_2d), intent(inout) :: mesh
 integer, dimension (:), allocatable :: indc
 integer, dimension (:), allocatable :: nuctfr
 integer, dimension (:), allocatable :: ncotcu
-integer, dimension (:), allocatable :: nucfl
-integer, dimension (4) :: ieltmp
 
-integer :: it, ntmp, id1, nct, iel, ind, iel1, iel2, nel
-integer :: i1, i2, i3, is, is1, is2, is3, iv1, iv2, iv3
+integer :: it, ntmp, id1, nct, iel, ind, iel1, nel
+integer :: i1, i2, i3, is, is1, is2, is3
 integer :: jel1, jel2, jel3, nel1, nel2, nel3
-integer :: jelt, iare, ielt1, jelt1, ielt2, jelt2
-integer :: isom1, isom2, isomloc1, isomloc2
-integer :: nucti, nc, nbti, icot, jcot
-integer :: nm1, nm2, n1, n2, num1, num2, ivois
-integer :: ncv, nuctf, indv1, indv2, indn1, indn2
-integer :: ic, ic1, ic2, itmp, numc1, numc2, icfl
-integer :: nusop, ncndel, nd1, nd2, nv3, nv4
-integer :: ntrobt, ind1, ind2, indv, ntiter, nbcflj, nbcflf
-integer :: ict, ictcl, iref, jref, ntrfnt, nmxfrp1
+integer :: ic
+integer :: ict, ictcl, iref, jref
 integer :: keltmp, kcttmp, kretmp, ks1tmp, ks2tmp
-integer :: nbcot, ict1, ict2, ictcl1, ictcl2, ie, ntrcf
-integer :: iac, nbc, ncot1, ncot2, ncot3, nref
-integer :: itm1, itm2, itm3, iesp, isl1, isl2
-integer :: nuct, ktrtmp, nelprm, itrg1, itrg2, itr, ntr
-
-real(8) :: lx1, lx2, ly1, ly2, x1, y1, x2, y2
-real(8) :: det, syca, syba, xa, ya, xb, yb, xc, yc
-real(8) :: dd, xd, yd, xo, yo, xm, ym
-real(8) :: prvc, xt1, xt2, yt1, yt2, xs1, xs2, ys1, ys2
-real(8) :: xcc, ycc, somme, rc, ab, bc
-real(8) :: sina, sinb, sinc, cosa, cosb, cosc, sin2a, sin2b, sin2c
-real(8) :: xlvnmn, xlvnmx, xldnmn, xldnmx
-real(8) :: ca, cb, cc, pabc, airemn, airemx, airtot, surf
-real(8) :: xl, xr, xtm1, xtm2, yc1, yc2, yc3, yn1, yn2, yn3
-real(8) :: x1s, y1s, x2s, y2s, x3s, y3s, xxs, yys
-real(8) :: xfr1, xfr2, yfr1, yfr2
-
+integer :: nbcot, ict1, ict2, ictcl1, ictcl2, ie
 logical :: ldefr, ltemp, lcalsu, lmainv
-logical :: lflag0,lflag1,lflag2,lflag3,lerr
-
-integer :: itab(3,3), inoe1, inoe2, inoe3, inoe4, inoe5, inoe6
-real(8) :: coef
+integer :: itab(3,3)
 real(8) :: xlml, xlmu, ylml, ylmu
+real(8) :: lx1, lx2, ly1, ly2, x1, y1, x2, y2
+real(8) :: airtot
 
 #ifdef DEBUG
 logical :: ldebug = .true.
