@@ -64,17 +64,25 @@ implicit none
   sll_real64 :: ph
   sll_int32 :: iter
   sll_int32 :: hermite_p
+  sll_int32 :: hermite_r_left
+  sll_int32 :: hermite_r_right
+  sll_int32 :: hermite_s_left
+  sll_int32 :: hermite_s_right
   sll_int32 :: lag_p
   sll_int32 :: lag_r
   sll_int32 :: lag_s
   sll_real64 :: iota  
+  sll_real64, dimension(:,:,:), allocatable :: hermite_w_aligned
+  sll_int32, dimension(:,:), allocatable :: hermite_w_cell_aligned
+  sll_real64, dimension(:,:), allocatable :: theta_pos_left
+  sll_real64, dimension(:,:,:), allocatable :: buf
   
   
   nb_iter = 10
   iota = 0.5_f64
   
   mode_m = 20
-  mode_n = 10
+  mode_n = 20
   
   hermite_p = 6
   lag_p = 9
@@ -92,12 +100,20 @@ implicit none
   xmax=10._f64
   xmin=-xmax
   Npts_x=1000000
-  Npts_phi=32
+  Npts_phi=64
   Npts_theta=512
   
 
   F0=-psipr*R0/(smallr*iota)
-  
+
+
+psipr=4;
+F0=-2.40*psipr;
+R0=10;
+smallr=4; 
+
+iota=-psipr*R0/(smallr*F0)
+print*,"iota=",iota  
   
   SLL_ALLOCATE(time_points(num_time_points),ierr)
   SLL_ALLOCATE(theta_euler(num_time_points),ierr)
@@ -364,7 +380,40 @@ implicit none
   enddo
 
   print *,'#err for aligned method=',err
+
   
+  hermite_r_left = compute_hermite_r_left(hermite_p)
+  hermite_s_left = compute_hermite_s_left(hermite_p)
+  hermite_r_right = compute_hermite_r_right(hermite_p)
+  hermite_s_right = compute_hermite_s_right(hermite_p)
+  
+  SLL_ALLOCATE(hermite_w_aligned(4,hermite_s_left-hermite_r_left,Npts_theta),ierr)  
+  SLL_ALLOCATE(hermite_w_cell_aligned(hermite_s_left-hermite_r_left,Npts_theta),ierr)  
+  SLL_ALLOCATE(theta_pos_left(hermite_s_left-hermite_r_left,Npts_theta),ierr)  
+
+  call compute_w_hermite_aligned( &
+    hermite_w_aligned, &
+    hermite_w_cell_aligned, &
+    Npts_theta, &
+    hermite_r_left, &
+    hermite_s_left, &
+    theta_pos_left, &
+    0._f64, &
+    2._f64*sll_pi )
+
+
+  SLL_ALLOCATE(buf(9,Npts_theta,Npts_phi),ierr)  
+
+  call compute_hermite_derivatives_aligned( &
+    f, &
+    Npts_theta, &
+    Npts_phi, &
+    hermite_p, &
+    hermite_w_aligned, &
+    hermite_w_cell_aligned, &
+    hermite_w_aligned, &
+    hermite_w_cell_aligned, &
+    buf)
   
   print*,'#PASSED'
 
