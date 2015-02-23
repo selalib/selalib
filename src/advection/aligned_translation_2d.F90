@@ -33,6 +33,11 @@ use sll_module_advection_1d_base
 use sll_module_advection_1d_periodic
 use lagrange_interpolation
 use sll_module_advection_2d_oblic
+use sll_timer
+use sll_fcisl_toroidal_module
+use sll_constants
+use sll_module_interpolators_2d_base
+use sll_module_cubic_spline_interpolator_2d
 
 
 implicit none
@@ -92,7 +97,33 @@ implicit none
   sll_real64 :: dt_max2
   sll_int32 :: num_dt1
   sll_int32 :: verbose
-  
+  type(sll_time_mark) :: t0
+  sll_real64 :: time0
+  sll_real64 :: time2
+  sll_real64 :: time3
+  sll_real64 :: time4
+  sll_real64, dimension(:,:), allocatable :: feet_x1
+  sll_real64, dimension(:,:), allocatable :: feet_x2
+  sll_real64 :: dt_max3
+  sll_real64 :: dt_max4
+  sll_real64 :: err3  
+  sll_real64 :: err4  
+  class(sll_interpolator_2d_base), pointer :: interp_classic
+  sll_real64, dimension(:), allocatable :: params_aligned
+  sll_int32 :: hermite_p
+  sll_int32 :: lag_p
+  sll_int32 :: lag_r
+  sll_int32 :: lag_s
+  sll_real64 :: iota  
+  sll_real64 :: R0
+  sll_real64 :: F0
+  sll_real64 :: smallr
+  sll_real64 :: psipr
+
+
+
+
+
    
   ! namelists for data input
   namelist /params/ &
@@ -170,6 +201,27 @@ implicit none
   delta_x2 = (x2_max-x2_min)/real(Nc_x2,f64)  
   r = -(d-1)/2
   s = (d+1)/2
+
+  iota = A1/A2
+
+  hermite_p = 6
+  lag_p = d
+  lag_r = -lag_p/2
+  lag_s = (lag_p+1)/2
+  
+  R0 = 10._f64
+  smallr = 2._f64
+  psipr = 4._f64
+  F0=-psipr*R0/(smallr*iota)
+ 
+
+
+
+
+
+
+
+
   SLL_ALLOCATE(xx(r:s),ierr)
   SLL_ALLOCATE(buf(r:s,Nc_x1+1),ierr)  
   SLL_ALLOCATE(f(Nc_x1+1,Nc_x2+1),ierr)
@@ -178,6 +230,8 @@ implicit none
   SLL_ALLOCATE(f_new(Nc_x1+1,Nc_x2+1),ierr)
   SLL_ALLOCATE(x1_array(Nc_x1+1),ierr)
   SLL_ALLOCATE(x2_array(Nc_x2+1),ierr)
+  SLL_ALLOCATE(feet_x1(Nc_x1+1,Nc_x2+1),ierr)
+  SLL_ALLOCATE(feet_x2(Nc_x1+1,Nc_x2+1),ierr)
   
   do i=1,Nc_x1+1
     x1_array(i) = x1_min+real(i-1,f64)*delta_x1
@@ -215,6 +269,35 @@ implicit none
 !    SPLINE, & 
 !    4) 
 
+
+  interp_classic => new_cubic_spline_interpolator_2d( &
+    Nc_x1+1, &
+    Nc_x2+1, &
+    x1_min, &
+    x1_max, &
+    x2_min, &
+    x2_max, &
+    SLL_PERIODIC, &
+    SLL_PERIODIC)
+
+
+  SLL_ALLOCATE(params_aligned(11),ierr)
+  params_aligned(1) = R0
+  params_aligned(2) = psipr
+  params_aligned(3) = F0 
+  params_aligned(4) = smallr
+  params_aligned(5) = real(hermite_p,f64) 
+  params_aligned(6) = real(lag_r,f64)
+  params_aligned(7) = real(lag_s,f64)
+  params_aligned(8) = 0._f64
+  params_aligned(9) = 2._f64*sll_pi
+  params_aligned(10) = 0._f64
+  params_aligned(11) = 2._f64*sll_pi
+
+
+
+
+
   
   if(verbose==1)then
     print *,'#error fexact-finit=',maxval(f_exact-f_init)
@@ -236,13 +319,16 @@ do istep = 1,num_dt1
     do i1=1,Nc_x1+1
       x1 = x1_min+real(i1-1,f64)*delta_x1
       x2 = x2_min+real(i2-1,f64)*delta_x2
-      f_init(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64)*(-A2_0*x1+A1_0*x2))
+      f_init(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64) &
+        *(-A2_0*(x1-x1_min)/(x1_max-x1_min)+A1_0*(x2-x2_min)/(x2_max-x2_min)))
       x1 = x1 - A1*real(nb_step,f64)*dt_loc
       x2 = x2 - A2*real(nb_step,f64)*dt_loc
-      f_exact(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64)*(-A2_0*x1+A1_0*x2))
+      f_exact(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64) &
+        *(-A2_0*(x1-x1_min)/(x1_max-x1_min)+A1_0*(x2-x2_min)/(x2_max-x2_min)))
     enddo
   enddo
 
+  call sll_set_time_mark(t0)
 
   !classical method with splitting  
   f = f_init    
@@ -257,7 +343,11 @@ do istep = 1,num_dt1
     do i1=1,Nc_x1+1
       call adv_x2%advect_1d_constant(A2, dt_loc, f(i1,1:Nc_x2+1), f(i1,1:Nc_x2+1))
     enddo          
-  enddo  
+  enddo
+  
+  time0 = sll_time_elapsed_since(t0)
+  print*,'#time for classical method', time0
+    
   err = maxval(abs(f-f_exact))
   if(err>err0)then
     dt_max0 = dt_loc
@@ -367,12 +457,17 @@ do istep = 1,num_dt1
     do i1=1,Nc_x1+1
       x1 = x1_min+real(i1-1,f64)*delta_x1
       x2 = x2_min+real(i2-1,f64)*delta_x2
-      f_init(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64)*(-A2_0*x1+A1_0*x2))
+      f_init(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64) &
+        *(-A2_0*(x1-x1_min)/(x1_max-x1_min)+A1_0*(x2-x2_min)/(x2_max-x2_min)))
       x1 = x1 - A1*real(nb_step,f64)*dt_loc
       x2 = x2 - A2*real(nb_step,f64)*dt_loc
-      f_exact(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64)*(-A2_0*x1+A1_0*x2))
+      f_exact(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64) &
+        *(-A2_0*(x1-x1_min)/(x1_max-x1_min)+A1_0*(x2-x2_min)/(x2_max-x2_min)))
+
     enddo
   enddo
+
+  call sll_set_time_mark(t0)
 
 
   do step =1,nb_step
@@ -384,7 +479,12 @@ do istep = 1,num_dt1
       f, &
       f_new)
     f = f_new      
-  enddo  
+  enddo
+
+  time2 = sll_time_elapsed_since(t0)
+  print*,'#time for new method', time2
+  
+    
   err = maxval(abs(f-f_exact))
   if(err>err2)then
     dt_max2 = dt_loc
@@ -394,8 +494,139 @@ enddo
   if(verbose==1)then  
     print *,'#err with new method using oblic advector=',err2
   endif
-  print *,Nc_x1,Nc_x2,d,dt,nb_step,k_mode,A1,A2,A1_0,A2_0,err0,err2,dt_max0,dt_max2
+  
 
+
+
+err3 = 0._f64
+dt_max3 = dt 
+do istep = 1,num_dt1  
+  f = f_init  
+  dt_loc = real(istep,f64)/real(num_dt,f64)*dt
+  if(istep==num_dt+1)then
+    dt_loc = dt_max3
+  endif
+
+  do i2=1,Nc_x2+1
+    x2 = x2_min+real(i2-1,f64)*delta_x2
+    do i1=1,Nc_x1+1
+      x1 = x1_min+real(i1-1,f64)*delta_x1
+      x2 = x2_min+real(i2-1,f64)*delta_x2
+      f_init(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64) &
+        *(-A2_0*(x1-x1_min)/(x1_max-x1_min)+A1_0*(x2-x2_min)/(x2_max-x2_min)))
+      x1 = x1 - A1*real(nb_step,f64)*dt_loc
+      x2 = x2 - A2*real(nb_step,f64)*dt_loc
+      f_exact(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64) &
+        *(-A2_0*(x1-x1_min)/(x1_max-x1_min)+A1_0*(x2-x2_min)/(x2_max-x2_min)))
+      x1 = x1_min+real(i1-1,f64)*delta_x1
+      x2 = x2_min+real(i2-1,f64)*delta_x2
+      x1 = x1 - A1*dt_loc
+      x2 = x2 - A2*dt_loc
+      feet_x1(i1,i2) = x1
+      feet_x2(i1,i2) = x2
+    enddo
+  enddo
+  call compute_modulo_vect2d_inplace(feet_x1,Nc_x1+1,Nc_x2+1,x1_max-x1_min)
+  call compute_modulo_vect2d_inplace(feet_x2,Nc_x1+1,Nc_x2+1,x2_max-x2_min)
+
+  
+  call sll_set_time_mark(t0)
+
+
+  do step =1,nb_step
+    f_new = interp_classic%interpolate_array( &
+      Nc_x1+1, &
+      Nc_x2+1, &
+      f, &
+      feet_x1, &
+      feet_x2)
+    f = f_new      
+  enddo
+
+  time3 = sll_time_elapsed_since(t0)
+  print*,'#time for classical method using charac', time3
+  
+    
+  err = maxval(abs(f-f_exact))
+  if(err>err3)then
+    dt_max3 = dt_loc
+    err3 = err
+  endif
+enddo
+
+
+err4 = 0._f64
+dt_max4 = dt 
+do istep = 1,num_dt1  
+  f = f_init  
+  dt_loc = real(istep,f64)/real(num_dt,f64)*dt
+  if(istep==num_dt+1)then
+    dt_loc = dt_max3
+  endif
+
+  do i2=1,Nc_x2+1
+    x2 = x2_min+real(i2-1,f64)*delta_x2
+    do i1=1,Nc_x1+1
+      x1 = x1_min+real(i1-1,f64)*delta_x1
+      x2 = x2_min+real(i2-1,f64)*delta_x2
+      f_init(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64) &
+        *(-A2_0*(x1-x1_min)/(x1_max-x1_min)+A1_0*(x2-x2_min)/(x2_max-x2_min)))
+      x1 = x1 - A1*real(nb_step,f64)*dt_loc
+      x2 = x2 - A2*real(nb_step,f64)*dt_loc
+      f_exact(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64) &
+        *(-A2_0*(x1-x1_min)/(x1_max-x1_min)+A1_0*(x2-x2_min)/(x2_max-x2_min)))
+      x1 = x1_min+real(i1-1,f64)*delta_x1
+      x2 = x2_min+real(i2-1,f64)*delta_x2
+      x1 = x1 - A1*dt_loc
+      x2 = x2 - A2*dt_loc
+      feet_x1(i1,i2) = x1
+      feet_x2(i1,i2) = x2
+    enddo
+  enddo
+  call compute_modulo_vect2d_inplace(feet_x1,Nc_x1+1,Nc_x2+1,x1_max-x1_min)
+  call compute_modulo_vect2d_inplace(feet_x2,Nc_x1+1,Nc_x2+1,x2_max-x2_min)
+
+  
+  call sll_set_time_mark(t0)
+
+
+  do step =1,nb_step
+    f_new = interpolate2d_toroidal( &
+      Nc_x1+1, &
+      Nc_x2+1, &
+      f, &
+      feet_x1, &
+      feet_x2, &
+      params_aligned)
+    f = f_new      
+  enddo
+
+  time4 = sll_time_elapsed_since(t0)
+  print*,'#time for new method using charac', time4
+  
+    
+  err = maxval(abs(f-f_exact))
+  if(err>err4)then
+    dt_max4 = dt_loc
+    err4 = err
+  endif
+enddo
+
+
+
+
+
+
+  
+  
+  
+  print *,Nc_x1,Nc_x2,d,dt,nb_step,k_mode,A1,A2,A1_0,A2_0,err0,err2,dt_max0,dt_max2
+  
+  print *,"#err1=",err0,time0
+  print *,"#err2=",err2,time2
+  print *,"#err3=",err3,time3
+  print *,"#err4=",err4,time4
+  
 #ifndef NOHDF5
       call plot_f_cartesian( &
         0, &
