@@ -790,7 +790,7 @@ contains  ! ****************************************************************
     type(sll_hex_mesh_2d), pointer :: mesh
     sll_int32, intent(in)          :: deg
     sll_int32                      :: out_unit
-    character(len=24), parameter   :: name = "bezier_connectivity.txt"
+    character(len=28), parameter   :: name = "boxsplines_connectivity.txt"
     sll_int32,  dimension(:,:), allocatable :: LM
     sll_real64, dimension(:,:), allocatable :: knots
     sll_int32  :: num_fek
