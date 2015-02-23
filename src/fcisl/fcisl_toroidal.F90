@@ -2,6 +2,7 @@ module sll_fcisl_toroidal_module
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
+#include "sll_utilities.h"
 use sll_constants
 use sll_parallel_array_initializer_module
 use sll_hermite_interpolation_2d_module
@@ -636,6 +637,146 @@ function interpolate2d_toroidal( &
     enddo
   enddo
 end function interpolate2d_toroidal
+
+subroutine compute_w_hermite_aligned( &
+  w, &
+  w_cell, &
+  num_points1, &
+  r, &
+  s, &
+  eta1_pos, &
+  eta1_min, &
+  eta1_max )
+  sll_real64, dimension(:,:,:), intent(out) :: w
+  sll_int32, dimension(:,:), intent(out) :: w_cell
+  sll_int32, intent(in) :: num_points1
+  sll_int32, intent(in) :: r
+  sll_int32, intent(in) :: s
+  sll_real64, dimension(:,:), intent(in) :: eta1_pos
+  sll_real64, intent(in) :: eta1_min
+  sll_real64, intent(in) :: eta1_max
+  sll_int32 :: i
+  sll_int32 :: j
+  sll_int32 :: ell
+  sll_real64 :: w_loc_tmp(r:s)
+  sll_real64 :: w_loc(s-r)
+  sll_int32 :: i0
+  sll_real64 :: eta1_loc
+  sll_real64 :: w_basis(4)
+  sll_int32 :: ii
+  
+  if(r>0 .or. s<0) then
+    print *,'#r,s=',r,s
+    print *,'#not treated'
+    SLL_ERROR('#bad value of r and s')
+  endif
+  if(size(w,1)<4)then
+    SLL_ERROR('#bad size1 for w')
+  endif
+  if(size(w,2)<s-r)then
+    SLL_ERROR('#bad size2 for w')
+  endif
+  if(size(w,3)<num_points1)then
+    SLL_ERROR('#bad size3 for w')
+  endif
+  if(size(eta1_pos,1)<s-r)then
+    SLL_ERROR('#bad size1 for eta1_pos')
+  endif
+  if(size(eta1_pos,2)<num_points1)then
+    SLL_ERROR('#bad size2 for eta1_pos')
+  endif
+  
+  call compute_w_hermite(w_loc_tmp,r,s)
+  w_loc(1:-r) = w_loc_tmp(r:-1)
+  w_loc(-r+1:s) = w_loc_tmp(1:s)
+  
+  do i=1,num_points1
+    do ell=1,r-s
+      eta1_loc = eta1_pos(ell,i)
+      call localize_per(i0,eta1_loc,eta1_min,eta1_max,num_points1-1)
+      i0=i0+1
+      w_cell(ell,i) = i0
+      w_basis(1)=(2._f64*eta1_loc+1)*(1._f64-eta1_loc)*(1._f64-eta1_loc)
+      w_basis(2)=eta1_loc*eta1_loc*(3._f64-2._f64*eta1_loc)
+      w_basis(3)=eta1_loc*(1._f64-eta1_loc)*(1._f64-eta1_loc)
+      w_basis(4)=eta1_loc*eta1_loc*(eta1_loc-1._f64)        
+      do ii=1,4
+        w(ii,ell,i) = w_loc(ell)*w_basis(ii)
+      enddo  
+    enddo   
+  enddo
+
+end subroutine compute_w_hermite_aligned
+
+
+subroutine compute_hermite_derivatives_aligned( &
+  f, &
+  num_points1, &
+  num_points2, &
+  p1, &
+  w_aligned_left, &
+  w_cell_aligned_left, &
+  w_aligned_right, &
+  w_cell_aligned_right, &
+  buf)
+  sll_real64, dimension(:,:), intent(in) :: f
+  sll_int32, intent(in) :: num_points1
+  sll_int32, intent(in) :: num_points2
+  sll_int32, intent(in) :: p1
+  sll_real64, dimension(:,:,:), intent(in) :: w_aligned_left
+  sll_real64, dimension(:,:,:), intent(in) :: w_aligned_right
+  sll_int32, dimension(:,:), intent(in) :: w_cell_aligned_left
+  sll_int32, dimension(:,:), intent(in) :: w_cell_aligned_right
+  sll_real64, dimension(:,:,:), intent(out) :: buf
+  
+  sll_real64 :: w_left(-p1/2:(p1+1)/2)
+  sll_real64 :: w_right((-p1+1)/2:p1/2+1)
+  sll_int32 :: r_left
+  sll_int32 :: s_left
+  sll_int32 :: r_right
+  sll_int32 :: s_right
+  sll_int32 :: i
+  sll_int32 :: j
+  sll_real64 :: tmp
+  sll_int32 :: ii
+  sll_int32 :: ind
+      
+  r_left=-p1/2
+  s_left=(p1+1)/2
+  r_right=(-p1+1)/2
+  s_right=p1/2+1   
+  call compute_w_hermite(w_left,r_left,s_left)
+  if(((2*p1/2)-p1)==0)then
+    w_right(r_right:s_right) = w_left(r_left:s_left)
+  else
+    w_right(r_right:s_right) = -w_left(s_left:r_left:-1)
+  endif    
+  
+  
+  !first compute \partial_1f(eta1_i,eta2_j)
+  do j=1,num_points2
+    do i=1,num_points1
+      buf(1,i,j) = f(i,j)  !f(0)
+      tmp=0._f64
+      do ii=r_left,s_left
+        ind=modulo(i+ii-2+num_points1,num_points1-1)+1
+        tmp=tmp+w_left(ii)*f(ind,j)
+      enddo
+      buf(2,i,j)=tmp !df(0)
+      tmp=0._f64
+      do ii=r_right,s_right
+        ind=modulo(i+ii-2+num_points1,num_points1-1)+1
+        tmp=tmp+w_right(ii)*f(ind,j)
+      enddo
+      buf(3,i,j)=tmp !df(1)      
+    enddo
+  enddo
+
+  !then compute \partial_aligned f(eta1_i,eta2_j)
+
+  
+end subroutine compute_hermite_derivatives_aligned
+
 
 
 
