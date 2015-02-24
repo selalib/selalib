@@ -65,6 +65,7 @@ contains
     sll_real64, intent(in)                                  :: x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, hat_shift
     type(sll_lt_pic_4d_group), pointer, intent(inout)  :: p_group
 
+    ! [[write_hat_density_on_remap_grid]]
     call write_hat_density_on_remap_grid( x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, hat_shift, p_group )
 !    call plot_2d_slice_remapping_grid("init_values_on_rg.dat", p_group )
     call sll_lt_pic_4d_compute_new_particles( p_group )
@@ -202,6 +203,7 @@ contains
   
   
 
+  ! <<write_hat_density_on_remap_grid>>
   subroutine write_hat_density_on_remap_grid ( &
         x0,y0,vx0,vy0,          &
         r_x,r_y,r_vx,r_vy,      &
