@@ -20,14 +20,16 @@
 #include "sll_fftw.h"
 
 #define D_DX(FIELD)                                           \
-call fftw_execute_dft_r2c(self%fwx, FIELD, self%tmp_x);       \
-self%tmp_x = -cmplx(0.0_f64,self%kx,kind=f64)*self%tmp_x;     \
+self%d_dx = FIELD;                                            \
+call fftw_execute_dft_r2c(self%fwx, self%d_dx, self%tmp_x);   \
+self%tmp_x(2:nc_x/2+1)=-cmplx(0.0_f64,self%kx(2:nc_x/2+1),kind=f64)*self%tmp_x(2:nc_x/2+1); \
 call fftw_execute_dft_c2r(self%bwx, self%tmp_x, self%d_dx);   \
 self%d_dx = self%d_dx / nc_x
 
 #define D_DY(FIELD)                                           \
-call fftw_execute_dft_r2c(self%fwy, FIELD, self%tmp_y);       \
-self%tmp_y = -cmplx(0.0_f64,self%ky,kind=f64)*self%tmp_y;     \
+self%d_dy = FIELD;                                            \
+call fftw_execute_dft_r2c(self%fwy, self%d_dy, self%tmp_y);   \
+self%tmp_y(2:nc_y/2+1)=-cmplx(0.0_f64,self%ky(2:nc_y/2+1),kind=f64)*self%tmp_y(2:nc_y/2+1); \
 call fftw_execute_dft_c2r(self%bwy, self%tmp_y, self%d_dy);   \
 self%d_dy = self%d_dy / nc_y
 

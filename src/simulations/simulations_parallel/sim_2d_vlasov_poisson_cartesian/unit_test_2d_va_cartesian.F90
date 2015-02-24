@@ -1,5 +1,5 @@
 ! Sample computation with the following characteristics:
-! - vlasov-poisson
+! - vlasov-ampere
 ! - 1Dx1D cartesian: x1=x, x2=vx
 ! - parallel
 
@@ -8,15 +8,17 @@ program vlasov_ampere_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_utilities.h"
+#include "sll_constants.h"
 
 use sll_simulation_2d_vlasov_ampere_cartesian
 use sll_common_array_initializers_module
 use sll_collective
 use sll_timer
-use sll_constants
+use sll_module_advection_1d_ampere
+
 implicit none
 
-class(sll_simulation_2d_vlasov_poisson_cart), pointer :: sim
+class(sll_simulation_2d_vlasov_ampere_cart), pointer :: sim
 
 character(len=256)  :: filename
 character(len=256)  :: filename_local
@@ -24,14 +26,9 @@ type(sll_time_mark) :: t0
 sll_real64          :: time
 sll_int32           :: ierr
 sll_int32           :: i
-sll_int32           :: num_min
-sll_int32           :: num_max
-character(len=256)  :: str
 
 procedure(sll_scalar_initializer_2d), pointer :: init_func
 
-sll_real64, dimension(:), pointer :: params
-sll_int32                         :: num_params
 logical                           :: init_from_unit_test  
 
 sll_real64, dimension(:,:), pointer :: f_x1
@@ -86,13 +83,13 @@ sll_int32                             :: file_id
 
 type(sll_fft_plan), pointer           :: pfwd
 sll_real64, dimension(:), allocatable :: buf_fft
-sll_comp64,dimension(:),allocatable   :: rho_mode
+sll_comp64, dimension(:), allocatable :: rho_mode
 
 sll_int32  :: nb_mode 
-sll_real64 :: time_init
 sll_int32  :: split_istep
-sll_real64 :: t_step
 sll_int32  :: num_dof_x2 
+sll_real64 :: time_init
+sll_real64 :: t_step
  
 logical :: split_T
 
@@ -132,7 +129,7 @@ endif
 
 call get_command_argument(1, filename)
 filename_local = trim(filename)
-sim => new_vp2d_par_cart( filename_local )
+sim => new_va2d_par_cart( filename_local )
       
 if (sll_get_collective_rank(sll_world_collective)==0) then
   MPI_MASTER = .true.
@@ -214,8 +211,6 @@ do i = 1, np_x2-1
 end do
 x2_array_middle(np_x2) = x2_array_middle(1)+sim%x2_array(np_x2)-sim%x2_array(1)
 
-
-
 select case (sim%advection_form_x2)
   case (SLL_ADVECTIVE)
     node_positions_x2(1:num_dof_x2) = sim%x2_array(1:num_dof_x2)
@@ -289,7 +284,6 @@ end if
 
 if (MPI_MASTER) call write_init_files()
 
-!write also initial deltaf function
 call load_buffer_2d( layout_x1, f_x1-f_x1_equil, f_x1_buf1d )
 
 call sll_collective_gatherv_real64( sll_world_collective,        &
@@ -318,16 +312,13 @@ do istep = 1, sim%num_iterations
 
      if (split_T) then
 
-       call advection_x(sim%split%split_step(split_istep)*sim%dt)
+       if (sim%ampere) then
+         call advection_ampere_x(sim%split%split_step(split_istep)*sim%dt)
+       else
+         call advection_poisson_x(sim%split%split_step(split_istep)*sim%dt)
+       end if
        t_step = t_step+sim%split%split_step(split_istep)
-       !call compute_rho()
-       !call sim%poisson%compute_E_from_rho( efield, rho )
-       call compute_current()
-       efield = efield +sim%split%split_step(split_istep)*sim%dt*current
-!       call sim%ampere%compute_E_from_J( &
-!         sim%split%split_step(split_istep)*sim%dt, &
-!         current, &
-!         efield)
+
      else
 
        if (sim%driven) call set_e_app(time_init+(istep-1)*sim%dt)
@@ -378,7 +369,7 @@ endif
 
 if(sll_get_collective_rank(sll_world_collective)==0)then
 
-  print *, '#reached end of vp2d test'
+  print *, '#reached end of va2d test'
   time = sll_time_elapsed_since(t0)
   print *, '#time elapsed since t0 : ',time
   print *, '#PASSED'
@@ -390,17 +381,17 @@ call sll_halt_collective()
 contains
 
 
-subroutine advection_x(delta_t)
+subroutine advection_poisson_x(delta_t)
 sll_real64 :: delta_t
 
-!! T ADVECTION 
+call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
+global_indices = local_to_global( layout_x1, (/1, 1/) )
+
 tid=1          
 !$OMP PARALLEL DEFAULT(SHARED) &
 !$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid) 
 !advection in x
 !$ tid = omp_get_thread_num()+1
-call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
-global_indices = local_to_global( layout_x1, (/1, 1/) )
 !$OMP DO
 do i_omp = 1, local_size_x2
 
@@ -420,7 +411,99 @@ end do
 !$OMP END DO          
 !$OMP END PARALLEL
 
-end subroutine advection_x
+call compute_rho()
+call sim%poisson%compute_E_from_rho( efield, rho )
+
+end subroutine advection_poisson_x
+
+subroutine advection_ampere_x(delta_t)
+
+sll_real64 :: delta_t
+sll_int32  :: nc_x1
+sll_comp64 :: s
+
+call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
+global_indices = local_to_global( layout_x1, (/1, 1/) )
+
+nc_x1 = np_x1-1
+
+tid=1          
+
+
+!$OMP PARALLEL DEFAULT(SHARED) &
+!$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid) 
+!advection in x
+!$ tid = omp_get_thread_num()+1
+
+sim%advect_ampere_x1(tid)%ptr%rk = cmplx(0.0,0.0,kind=f64)
+!$OMP DO 
+do i_omp = 1, local_size_x2
+
+  ig_omp    = i_omp+global_indices(2)-1
+  alpha_omp = sim%factor_x1*node_positions_x2(ig_omp)*delta_t
+  f1d_omp_in(1:np_x1,tid) = f_x1(1:np_x1,i_omp)
+  
+  sim%advect_ampere_x1(tid)%ptr%d_dx = f1d_omp_in(1:nc_x1,tid)
+
+  call fft_apply_plan(sim%advect_ampere_x1(tid)%ptr%fwx,  &
+                      sim%advect_ampere_x1(tid)%ptr%d_dx, &
+                      sim%advect_ampere_x1(tid)%ptr%fk)
+  do i = 2, nc_x1/2+1
+    sim%advect_ampere_x1(tid)%ptr%fk(i) = &
+       sim%advect_ampere_x1(tid)%ptr%fk(i) & 
+       * cmplx(cos(sim%advect_ampere_x1(tid)%ptr%kx(i)*alpha_omp), &
+              -sin(sim%advect_ampere_x1(tid)%ptr%kx(i)*alpha_omp),kind=f64)
+  end do
+
+  sim%advect_ampere_x1(tid)%ptr%rk(2:nc_x1/2+1) = &
+       sim%advect_ampere_x1(tid)%ptr%rk(2:nc_x1/2+1) &
+     + sim%advect_ampere_x1(tid)%ptr%fk(2:nc_x1/2+1) * sim%integration_weight(ig_omp)
+
+  call fft_apply_plan(sim%advect_ampere_x1(tid)%ptr%bwx, &
+                      sim%advect_ampere_x1(tid)%ptr%fk,  &
+                      sim%advect_ampere_x1(tid)%ptr%d_dx)
+
+  f1d_omp_out(1:nc_x1, tid) = sim%advect_ampere_x1(tid)%ptr%d_dx/nc_x1
+  f1d_omp_out(np_x1, tid)   = f1d_omp_out(1, tid) 
+
+  f_x1(1:np_x1,i_omp)=f1d_omp_out(1:np_x1,tid)
+
+end do
+!$OMP END DO          
+
+!$OMP END PARALLEL
+
+
+sim%advect_ampere_x1(tid)%ptr%d_dx = efield(1:nc_x1)
+call fft_apply_plan(sim%advect_ampere_x1(1)%ptr%fwx,  &
+                    sim%advect_ampere_x1(1)%ptr%d_dx, &
+                    sim%advect_ampere_x1(1)%ptr%ek)
+
+do i = 2, nc_x1/2+1
+  s = cmplx(0.0,0.0,kind=f64)
+  do tid = 1, sim%num_threads
+    s = s + sim%advect_ampere_x1(tid)%ptr%rk(i)
+  end do
+  sim%advect_ampere_x1(1)%ptr%rk(i) = s
+end do
+
+do i = 2, nc_x1/2+1
+  sim%advect_ampere_x1(1)%ptr%ek(i) =  &
+     - sim%advect_ampere_x1(1)%ptr%rk(i) * sim%L / (2*sll_pi*cmplx(0.,i-1,kind=f64))
+end do
+
+call fft_apply_plan(sim%advect_ampere_x1(1)%ptr%bwx, &
+                    sim%advect_ampere_x1(1)%ptr%ek,  &
+                    efield)
+
+efield(1:nc_x1) = efield(1:nc_x1) / nc_x1
+efield(np_x1) = efield(1)
+
+
+!call compute_rho()
+!call sim%poisson%compute_E_from_rho( efield, rho )
+
+end subroutine advection_ampere_x
 
 subroutine compute_rho()
 
@@ -479,6 +562,8 @@ end subroutine compute_current
 subroutine advection_v(delta_t)
 sll_real64 :: delta_t
 
+call compute_local_sizes( layout_x2, local_size_x1, local_size_x2 )
+global_indices = local_to_global( layout_x2, (/1, 1/) )
 tid = 1
 !$OMP PARALLEL DEFAULT(SHARED) &
 !$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid,mean_omp,f1d) 
@@ -486,8 +571,6 @@ tid = 1
 !$ tid = omp_get_thread_num()+1
 !advection in v
 !$OMP DO
-call compute_local_sizes( layout_x2, local_size_x1, local_size_x2 )
-global_indices = local_to_global( layout_x2, (/1, 1/) )
 do i_omp = 1,local_size_x1
 
   ig_omp=i_omp+global_indices(1)-1
@@ -789,7 +872,7 @@ if (trim(sim%restart_file) /= "no_restart_file" ) then
   if ( ierr .ne. 0 ) then
     SLL_ERROR('ERROR while opening file &
                &'//trim(sim%restart_file)//'_proc_'//cproc//'.rst &
-               & Called from run_vp2d_cartesian().')
+               & Called from run_va2d_cartesian().')
   end if
 
   print *,'#read restart file '//trim(sim%restart_file)//'_proc_'//cproc//'.rst'      
