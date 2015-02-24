@@ -55,6 +55,10 @@ module sll_lt_pic_4d_group_module
      type(sll_cartesian_mesh_4d),               pointer       :: remapping_grid
 !     sll_real64, dimension(:,:,:,:),          pointer       :: remapped_values     ! old name
      sll_real64, dimension(:,:,:,:),          pointer       :: target_values
+
+     ! MCP [DEBUG]
+     sll_real64, dimension(:,:,:,:,:,:),          pointer       :: debug_bsl_remap
+
      sll_real64, dimension(:),                pointer       :: ltpic_interpolation_coefs
 
   end type sll_lt_pic_4d_group
@@ -139,6 +143,9 @@ contains
     SLL_ALLOCATE( res%p_guard(guard_list_size), ierr )
     SLL_ALLOCATE( res%target_values(number_parts_x, number_parts_y, number_parts_vx, number_parts_vy), ierr )
 
+    ! MCP [DEBUG]
+    SLL_ALLOCATE( res%debug_bsl_remap(number_parts_x, number_parts_y, number_parts_vx, number_parts_vy,4,3), ierr )
+
     ! physical mesh, used for Poisson solver
     if (.not.associated(mesh) ) then
        print*, 'sll_lt_pic_4d_group_new(): ERROR, passed mesh not associated'
@@ -202,7 +209,10 @@ contains
     SLL_DEALLOCATE(p_group%p_list, ierr)
     SLL_DEALLOCATE(p_group%p_guard, ierr)
     SLL_DEALLOCATE(p_group%target_values, ierr)
-    
+
+    ! MCP [DEBUG]
+    SLL_DEALLOCATE( p_group%debug_bsl_remap, ierr )
+
     SLL_DEALLOCATE(p_group, ierr)
     
   end subroutine sll_lt_pic_4d_group_delete
