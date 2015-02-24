@@ -26,6 +26,13 @@ IF(BUILD_TESTING)
     hex_hermite 
     sll_hex_meshes 
     sll_constants )
+  # 2nd bis executable ( circular advection )
+  ADD_EXECUTABLE( test_hex_hermite_circ test_hex_hermite_circ.F90 )
+  TARGET_LINK_LIBRARIES( test_hex_hermite_circ
+    sll_hermite_interpolation 
+    hex_hermite 
+    sll_hex_meshes 
+    sll_constants )
 
   # 3rd executable
   ADD_EXECUTABLE( test_hctc test_hctc.F90 )
@@ -39,7 +46,7 @@ IF(BUILD_TESTING)
   ADD_EXECUTABLE( test_hex_center_guide 
     test_hex_center_guide.F90 
     euler_2d_hex.F90
-    ../poisson_solvers/pivotbande.F90 )
+    ../utilities/pivotbande.F90 )
   TARGET_LINK_LIBRARIES( test_hex_center_guide 
     sll_hermite_interpolation 
     hex_hermite 
