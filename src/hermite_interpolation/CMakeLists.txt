@@ -46,7 +46,7 @@ IF(BUILD_TESTING)
   ADD_EXECUTABLE( test_hex_center_guide 
     test_hex_center_guide.F90 
     euler_2d_hex.F90
-    ../poisson_solvers/pivotbande.F90 )
+    ../utilities/pivotbande.F90 )
   TARGET_LINK_LIBRARIES( test_hex_center_guide 
     sll_hermite_interpolation 
     hex_hermite 

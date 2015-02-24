@@ -6,27 +6,44 @@ module hex_poisson
   use sll_hex_meshes
   implicit none
 
-contains
+  !***********************************************************
+  ! this module is used to solve the Poison equation on a hexagonal mesh
+  ! by creating the poisson matrix for the hex mesh : matrix_poisson
+  ! and the second term of the linear equation      : second_term
+  ! therefore we solve with a linear solver : matrix_poisson * X = second_term
+  ! we also compute the fields and it derivatives from the potential we get from
+  ! the Poisson equation
+  ! Precision is of order 4 ( for both poisson solver and fields computation )
+  ! for any question : prouveur@math.univ-lyon1.fr
+  !***********************************************************
 
+contains
+ 
 
   subroutine hex_matrix_poisson( matrix_poisson, mesh,type)
     type(sll_hex_mesh_2d), pointer         :: mesh
     sll_real64, dimension(:,:), intent(out):: matrix_poisson
-    sll_int32,                   intent(in):: type
-    sll_int32                              :: num_cells, global
+
+    sll_int32,                   intent(in):: type ! unused parameter atm
+
+    sll_int32                              :: num_cells ! number of hex cells
+    sll_int32                              :: global    ! global index 
+
+    ! index on the matrix 
     sll_int32                              :: index_tab, index_tabij
     sll_int32                              :: index_tabi_1j, index_tabij_1 
     sll_int32                              :: index_tabij1, index_tabi1j
     sll_int32                              :: index_tabi1j1, index_tabi_1j_1
-    sll_int32                              :: k1, k2, n
+ 
+   sll_int32                              :: k1, k2, n
 
     num_cells = mesh%num_cells
 
     matrix_poisson = 0._f64
 
-    ! indexation de la matrice on rempli ligne par ligne avec 
-    ! j + (i-1)*n(j) l'indice donnée par index_tab
-    ! du coup on a (i-1,j-1), en coordonnées hex, puis (i-1,j)
+    ! indexation of the matrix : we fill row by row with 
+    ! j + (i-1)*n(j) the index given by index_tab
+    ! therefore we get (i-1,j-1), in hex coordinate, then (i-1,j)
     ! (i,j-1) ; (i,j) ; (i,j+1)  
     ! (i+1,j) ; (i,j+1)
 
@@ -326,6 +343,7 @@ contains
 
   end subroutine hex_second_terme_poisson
 
+  ! test to check if a point is inside the mesh or not
   
   function value_if_inside_rho(k1,k2,mesh,rho) result(f)
     type(sll_hex_mesh_2d), pointer :: mesh
@@ -343,6 +361,8 @@ contains
 
   endfunction value_if_inside_rho
 
+! subroutine to compute the fields and its derivatives from the results 
+! of solving the poisson equation . Precision is of order 4
 
 subroutine compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type)
     type(sll_hex_mesh_2d), pointer :: mesh
