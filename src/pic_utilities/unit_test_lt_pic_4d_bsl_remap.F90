@@ -56,8 +56,8 @@ program unit_test_lt_pic_bsl_remap
 !#define YMAX 1._f64
 !#define QoverM 1._f64
 
-#define NUM_PARTS_X 5_i32
-#define NUM_PARTS_Y 5_i32
+#define NUM_PARTS_X 6_i32
+#define NUM_PARTS_Y 6_i32
 #define NUM_PARTS_VX 5_i32
 #define NUM_PARTS_VY 5_i32
 !#define LT_PARTICLE_ARRAY_SIZE 400000_i32
@@ -205,6 +205,9 @@ program unit_test_lt_pic_bsl_remap
   r_vx  =  0.5 * ((REMAP_GRID_VX_MAX)-(REMAP_GRID_VX_MIN))
   r_vy  =  0.5 * ((REMAP_GRID_VY_MAX)-(REMAP_GRID_VY_MIN))
 !  max_f =  1.   -> MCP: old parameter
+
+  !MCP: for a constant (1) function, take hat_shift = 0 and basis_height = 1
+  !MCP: for the std tensor-product hat function, take hat_shift = 1 and basis_height = 0
   hat_shift = 1.
   basis_height = 0.
 
@@ -296,7 +299,7 @@ program unit_test_lt_pic_bsl_remap
         vy_j = nodes_vy_min
         do j_vy = 1, number_nodes_vy
           f_j = real( part_group%target_values(j_x,j_y,j_vx,j_vy) ,f32)
-          call test_backward_push(x_j,y_j,vx_j,vy_j,new_x,new_y,new_vx,new_vy)
+          call test_backward_push(x_j, y_j, vx_j, vy_j, new_x, new_y, new_vx, new_vy)
           if(.not.in_bounds_periodic( new_x, new_y, part_group%mesh,DOMAIN_IS_X_PERIODIC,DOMAIN_IS_Y_PERIODIC )) then
              call apply_periodic_bc( part_group%mesh, new_x, new_y)
           end if
@@ -378,12 +381,14 @@ contains
 
 !#define TRANSLATION_X 1.0
 !#define TRANSLATION_Y 1.0
-!#define COEFF_X_VX 1.0
-!#define COEFF_Y_VY 2.0
 #define TRANSLATION_X 0.0
 #define TRANSLATION_Y 0.0
-#define COEFF_X_VX 0.0
-#define COEFF_Y_VY 0.0
+
+#define COEFF_X_VX 1.0
+#define COEFF_Y_VY 0.05555555555555555
+
+!#define COEFF_X_VX 0.0
+!#define COEFF_Y_VY 0.0
 
   subroutine test_forward_push(x,y,vx,vy,new_x,new_y,new_vx,new_vy)
 
@@ -406,7 +411,7 @@ contains
 
   end subroutine test_forward_push
 
-  subroutine test_backward_push(x,y,vx,vy,new_x,new_y,new_vx,new_vy)
+  subroutine test_backward_push(x, y, vx, vy, new_x, new_y, new_vx, new_vy)
 
     ! [[file:../working_precision/sll_working_precision.h]]
     use sll_working_precision
