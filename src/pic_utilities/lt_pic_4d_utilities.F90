@@ -507,6 +507,75 @@ contains
         
 end subroutine get_ltp_deformation_matrix
 
+  ! <<in_bounds_periodic>> extracted from [[file:../simulation/simulation_4d_vp_lt_pic_cartesian.F90::function
+  ! in_bounds]]
+
+  function in_bounds_periodic( x, y, mesh, x_periodic, y_periodic ) result(res)
+
+    use sll_cartesian_meshes
+
+    ! [[file:../working_precision/sll_working_precision.h]]
+    use sll_working_precision
+
+    logical :: res
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    logical, intent(in) :: x_periodic
+    logical, intent(in) :: y_periodic
+    type(sll_cartesian_mesh_2d), pointer :: mesh
+    if((x >= mesh%eta1_min) &
+         .and. ((x < mesh%eta1_max .and. x_periodic) .or. (x <= mesh%eta1_max .and. .not. x_periodic)) &
+         .and. (y >= mesh%eta2_min) &
+         .and. ((y < mesh%eta2_max .and. y_periodic) .or. (y <= mesh%eta2_max .and. .not. y_periodic))) then
+       res = .true.
+    else
+       res = .false.
+    end if
+  end function in_bounds_periodic
+
+  ! <<apply_periodic_bc>> extracted from [[file:../simulation/simulation_4d_vp_lt_pic_cartesian.F90::subroutine
+  ! apply_periodic_bc]]
+
+  subroutine apply_periodic_bc( mesh, x, y )
+
+    use sll_cartesian_meshes
+
+    ! [[file:../working_precision/sll_working_precision.h]]
+    use sll_working_precision
+
+    type(sll_cartesian_mesh_2d), pointer :: mesh
+    sll_real64, intent(inout) :: x
+    sll_real64, intent(inout) :: y
+    sll_real64 :: xmin
+    sll_real64 :: xmax
+    sll_real64 :: ymin
+    sll_real64 :: ymax
+
+    xmin = mesh%eta1_min
+    xmax = mesh%eta1_max
+    ymin = mesh%eta2_min
+    ymax = mesh%eta2_max
+!    if( x < xmin ) x = x + xmax-xmin
+!    if( x > xmax ) x = x - xmax-xmin
+!    if( y < ymin ) y = y + ymax-ymin
+!    if( y > ymax ) y = y - ymax-ymin
+    do while( x < xmin ) 
+      x = x + (xmax-xmin)
+    end do
+    do while( x >= xmax ) 
+      x = x - (xmax-xmin)
+    end do
+    do while( y < ymin ) 
+      y = y + (ymax-ymin)
+    end do
+    do while( y >= ymax )
+      y = y - (ymax-ymin)
+    end do
+
+    ! and the condition that the particle is in-bounds should trigger some
+    ! alarm as this would not be supposed to happen here!
+  end subroutine apply_periodic_bc
+
   ! <<onestep>> utility function for finding the neighbours of a particle, used by [[ONESTEPMACRO]]. "dim" corresponds
   ! to one of x,y,vx,vy.
 
@@ -534,10 +603,16 @@ end subroutine get_ltp_deformation_matrix
 
     print *,"dim_t0 = ",dim_t0, " h_parts_dim = ",h_parts_dim !aaa
 
-    ! dim_t0 < 0 means that the virtual particle is at the left of kprime (dim_t0 is a relative coordinate)
+    ! dim_t0 < 0 means that the virtual particle is at the left of kprime (dim_t0 is a relative coordinate).
+
     if (dim_t0 < 0) then
        neighbour = ngb_dim_left_index
-       if (neighbour == 0) then
+
+       ! The convention in
+       ! [[file:~/mcp/selalib/src/pic_particle_initializers/lt_pic_4d_init.F90::sll_lt_pic_4d_compute_new_particles]] is
+       ! that if there is no neighbour then a neighbour index is equal to the particle index
+       
+       if (neighbour == kprime) then
           kprime = 0
        else
           kprime = neighbour
@@ -549,7 +624,12 @@ end subroutine get_ltp_deformation_matrix
        ! dim_t0 > h_parts_dim means that the virtual particle is too far to the right of kprime
        if (dim_t0 >= h_parts_dim) then
           neighbour = ngb_dim_right_index
-          if (neighbour == 0) then
+
+          ! The convention in
+          ! [[file:~/mcp/selalib/src/pic_particle_initializers/lt_pic_4d_init.F90::sll_lt_pic_4d_compute_new_particles]]
+          ! is that if there is no neighbour then a neighbour index is equal to the particle index
+       
+          if (neighbour == kprime) then
              kprime = 0
           else
              kprime = neighbour
@@ -558,7 +638,6 @@ end subroutine get_ltp_deformation_matrix
           end if
        end if
     end if
-    !SLL_ASSERT(.not. moved)!aaa
   end subroutine onestep
 
   ! <<sll_lt_pic_4d_write_bsl_f_on_remap_grid>> <<ALH>> write the density on the (phase-space) remapping
@@ -695,7 +774,8 @@ end subroutine get_ltp_deformation_matrix
     sll_real64 :: y_aux
     sll_real64 :: vx_aux
     sll_real64 :: vy_aux
-
+    sll_real64 :: length
+    
     ! value 1 or 2 points to each side of an hypercube in direction x,y,vx or vy
     sll_int :: side_x,side_y,side_vx,side_vy
     sll_int64,dimension(2,2,2,2) :: hcube
@@ -867,11 +947,6 @@ end subroutine get_ltp_deformation_matrix
                         part_radius_vy                             &
                         )
 
-                   !print *,"deformation matrix: ",d11,d12,d13,d14 !aaa
-                   !print *,"deformation matrix: ",d21,d22,d23,d24 !aaa
-                   !print *,"deformation matrix: ",d31,d32,d33,d34 !aaa
-                   !print *,"deformation matrix: ",d41,d42,d43,d44 !aaa
-                   
                    ! <<loop_on_virtual_particles_in_one_virtual_cell>>
                    ! [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:find_f0_for_each_virtual_particle]] Loop over all
                    ! virtual particles in the cell to compute the value of f0 at that point (Following
@@ -925,6 +1000,22 @@ end subroutine get_ltp_deformation_matrix
                                   print *,"vy-vy_k=",vy-vy_k," vy_t0=",vy_t0  !aaa
                                   !print *,"x_k=",x_k," y_k=",y_k," vx_k=",vx_k," vy_k=",vy_k!aaa
                                   !print *,"x_t0=",x_t0," y_t0=",y_t0," vx_t0=",vx_t0," vy_t0=",vy_t0!aaa
+
+                                  ! In the case of periodic boundaries, we can move the virtual particle at time 0 back
+                                  ! into the domain
+
+                                  x_aux = x_k + x_t0
+                                  y_aux = y_k + y_t0
+                                  if(.not.in_bounds_periodic(x_aux,y_aux,p_group%mesh, &
+                                       DOMAIN_IS_X_PERIODIC,DOMAIN_IS_Y_PERIODIC)) then
+                                     
+                                     ! [[apply_periodic_bc]] In the periodic case, no destruction of particles is
+                                     ! needed, so this is simple.
+
+                                     call apply_periodic_bc(p_group%mesh,x_aux,y_aux)
+                                     x_t0 = x_aux - x_k
+                                     y_t0 = y_aux - y_k
+                                  end if
                                   
                                   ! [[file:~/mcp/maltpic/ltpic-bsl.tex::neighbors-grid-0]] find the neighbours of the
                                   ! virtual particle (ivirt,jvirt,lvirt,mvirt) at time 0 through the "logical
@@ -963,20 +1054,20 @@ end subroutine get_ltp_deformation_matrix
                                      print *,"k = ",k," kprime = ",kprime!aaa
                                      !SLL_ASSERT(k==kprime)!aaa
 
-                                     !aaa real-world coordinates for kprime
-                                     call cell_offset_to_global(p_group%p_list(kprime)%dx, &
-                                          p_group%p_list(kprime)%dy, &
-                                          p_group%p_list(kprime)%ic, &
-                                          p_group%mesh,x_aux,y_aux)
-                                     vx_aux = p_group%p_list(kprime)%vx
-                                     vy_aux = p_group%p_list(kprime)%vy
-                                     print *,"x_kprime=",x_aux," y_kprime=",y_aux, &
-                                          " vx_kprime=",vx_aux," vy_kprime=",vy_aux!aaa
+!aaa                                     !aaa real-world coordinates for kprime
+!aaa                                     call cell_offset_to_global(p_group%p_list(kprime)%dx, &
+!aaa                                          p_group%p_list(kprime)%dy, &
+!aaa                                          p_group%p_list(kprime)%ic, &
+!aaa                                          p_group%mesh,x_aux,y_aux)
+!aaa                                     vx_aux = p_group%p_list(kprime)%vx
+!aaa                                     vy_aux = p_group%p_list(kprime)%vy
+!aaa                                     print *,"x_kprime=",x_aux," y_kprime=",y_aux, &
+!aaa                                          " vx_kprime=",vx_aux," vy_kprime=",vy_aux!aaa
 
                                   end do
 
                                   print *,"x=",x," y=",y," vx=",vx," vy=",vy!aaa
-                                  SLL_ASSERT(abs(x_aux-x)<1e-3 .and. abs(y_aux-y)<1e-3 .and. abs(vx_aux-vx)<1e-3 .and. abs(vy_aux-vy)<1e-3)!aaa
+                                  !SLL_ASSERT(abs(x_aux-x)<1e-3 .and. abs(y_aux-y)<1e-3 .and. abs(vx_aux-vx)<1e-3 .and. abs(vy_aux-vy)<1e-3)!aaa
 
                                   p_group%target_values(i_x,i_y,i_vx,i_vy) = 0
 
@@ -996,13 +1087,16 @@ end subroutine get_ltp_deformation_matrix
                                      hcube(1,1,2,1) = p_group%p_list(kprime)%ngb_vxright_index
                                      hcube(1,1,1,2) = p_group%p_list(kprime)%ngb_vyright_index
 
-                                     ! if any of the first four vertices is undefined, it means that we reached the mesh
-                                     ! border. just set the value of f for that particle as zero as before.
+                                     ! if any of the first four vertices is undefined (the convention in
+                                     ! [[file:~/mcp/selalib/src/pic_particle_initializers/lt_pic_4d_init.F90::sll_lt_pic_4d_compute_new_particles]]
+                                     ! is that the neighbour index is then equal to the particle index), it means that
+                                     ! we reached the mesh border. just set the value of f for that particle as zero as
+                                     ! before.
 
-                                     if (hcube(2,1,1,1) /= 0 &
-                                          .and. hcube(1,2,1,1) /= 0 &
-                                          .and. hcube(1,1,2,1) /= 0 &
-                                          .and. hcube(1,1,1,2) /= 0) then
+                                     if (hcube(2,1,1,1) /= kprime        &
+                                          .and. hcube(1,2,1,1) /= kprime &
+                                          .and. hcube(1,1,2,1) /= kprime &
+                                          .and. hcube(1,1,1,2) /= kprime) then
 
                                         ! remaining vertices of the hypercube. they should all exist now that the first
                                         ! 4 vertices are checked.
