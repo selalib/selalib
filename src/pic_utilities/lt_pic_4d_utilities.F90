@@ -601,6 +601,10 @@ end subroutine get_ltp_deformation_matrix
     ! Move to a closer neighbour only if dim_t0 is not located in a cell of size h_parts_dim and with a left bound of
     ! dim_t0
 
+    if(kprime == 0)then
+      return
+    end if
+
     print *,"dim_t0 = ",dim_t0, " h_parts_dim = ",h_parts_dim !aaa
 
     ! dim_t0 < 0 means that the virtual particle is at the left of kprime (dim_t0 is a relative coordinate).
@@ -1028,6 +1032,7 @@ end subroutine get_ltp_deformation_matrix
                                      ! pointers to neighbours.
 
 #define ONESTEPMACRO(dim)                                                               \
+                                    if(kprime/=0)                                       \
                                      call onestep(                                      \
                                      dim/**/_t0,                                        \
                                      neighbour,                                         \
