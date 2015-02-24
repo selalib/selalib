@@ -993,14 +993,6 @@ end subroutine get_ltp_deformation_matrix
                                   vx_t0 = d31 * (x - x_k) + d32 * (y - y_k) + d33 * (vx - vx_k) + d34 * (vy - vy_k)
                                   vy_t0 = d41 * (x - x_k) + d42 * (y - y_k) + d43 * (vx - vx_k) + d44 * (vy - vy_k)
 
-                                  print *,"------------------------"!aaa
-                                  print *,"x-x_k=",x-x_k," x_t0=",x_t0  !aaa
-                                  print *,"y-y_k=",y-y_k," y_t0=",y_t0  !aaa
-                                  print *,"vx-vx_k=",vx-vx_k," vx_t0=",vx_t0  !aaa
-                                  print *,"vy-vy_k=",vy-vy_k," vy_t0=",vy_t0  !aaa
-                                  !print *,"x_k=",x_k," y_k=",y_k," vx_k=",vx_k," vy_k=",vy_k!aaa
-                                  !print *,"x_t0=",x_t0," y_t0=",y_t0," vx_t0=",vx_t0," vy_t0=",vy_t0!aaa
-
                                   ! In the case of periodic boundaries, we can move the virtual particle at time 0 back
                                   ! into the domain
 
@@ -1050,25 +1042,10 @@ end subroutine get_ltp_deformation_matrix
                                      ONESTEPMACRO(y)
                                      ONESTEPMACRO(vx)
                                      ONESTEPMACRO(vy)
-
-                                     print *,"k = ",k," kprime = ",kprime!aaa
-                                     !SLL_ASSERT(k==kprime)!aaa
-
-!aaa                                     !aaa real-world coordinates for kprime
-!aaa                                     call cell_offset_to_global(p_group%p_list(kprime)%dx, &
-!aaa                                          p_group%p_list(kprime)%dy, &
-!aaa                                          p_group%p_list(kprime)%ic, &
-!aaa                                          p_group%mesh,x_aux,y_aux)
-!aaa                                     vx_aux = p_group%p_list(kprime)%vx
-!aaa                                     vy_aux = p_group%p_list(kprime)%vy
-!aaa                                     print *,"x_kprime=",x_aux," y_kprime=",y_aux, &
-!aaa                                          " vx_kprime=",vx_aux," vy_kprime=",vy_aux!aaa
-
                                   end do
 
-                                  print *,"x=",x," y=",y," vx=",vx," vy=",vy!aaa
-                                  !SLL_ASSERT(abs(x_aux-x)<1e-3 .and. abs(y_aux-y)<1e-3 .and. abs(vx_aux-vx)<1e-3 .and. abs(vy_aux-vy)<1e-3)!aaa
-
+                                  SLL_ASSERT(kprime/=0 .or. aaa
+                                  
                                   p_group%target_values(i_x,i_y,i_vx,i_vy) = 0
 
                                   ! If we end up with kprime == 0, it means that we have not found a cell that contains
@@ -1122,10 +1099,6 @@ end subroutine get_ltp_deformation_matrix
                                         ! 4 steps
                                         hcube(2,2,2,2) = p_group%p_list(hcube(2,2,2,1))%ngb_xright_index
 
-                                        !print *,k,hcube(1,1,1,1),hcube(2,1,1,1),hcube(1,2,1,1),hcube(1,1,2,1),hcube(1,1,1,2),hcube(2,2,1,1),hcube(2,1,2,1),hcube(2,1,1,2),hcube(1,2,2,1),hcube(1,2,1,2),hcube(1,1,2,2),hcube(1,2,2,2),hcube(2,1,2,2),hcube(2,2,1,2),hcube(2,2,2,1),hcube(2,2,2,2)!aaa
-
-                                        !SLL_ASSERT(k == hcube(1,1,1,1) .or. k == hcube(2,1,1,1) .or. k == hcube(1,2,1,1) .or. k == hcube(1,1,2,1) .or. k == hcube(1,1,1,2) .or. k == hcube(2,2,1,1) .or. k == hcube(2,1,2,1) .or. k == hcube(2,1,1,2) .or. k == hcube(1,2,2,1) .or. k == hcube(1,2,1,2) .or. k == hcube(1,1,2,2) .or. k == hcube(1,2,2,2) .or. k == hcube(2,1,2,2) .or. k == hcube(2,2,1,2) .or. k == hcube(2,2,2,1) .or. k == hcube(2,2,2,2))!aaa
-                                        
                                         ! [[file:~/mcp/maltpic/ltpic-bsl.tex::affine-fn*]] use the values of f0 at these
                                         ! neighbours to interpolate the value of f0 at
                                         ! [[file:~/mcp/maltpic/ltpic-bsl.tex::hat-bz*]]. MCP -> oui. Ici si tu utilises
