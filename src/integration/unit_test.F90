@@ -28,7 +28,8 @@ sll_real64, dimension(2, 3) :: pxy1
 sll_real64, dimension(2, 3) :: pxy2
 sll_real64, dimension(3,10) :: xyw
 sll_real64 :: app_res
-sll_int32 :: rule
+sll_int32  :: rule
+sll_int32  :: num_cells
 type(sll_hex_mesh_2d), pointer :: mesh
 sll_real64, dimension(:,:), allocatable     :: knots
 sll_int32,  dimension(:,:), allocatable     :: LM
@@ -163,7 +164,8 @@ write (*,"(a, f20.12, a ,/)") " aprox = ", app_res, " (expected = 1.)"
 
 !----------------------------------------
 rule = 1
-mesh => new_hex_mesh_2d(1)
+num_cells = 1
+mesh => new_hex_mesh_2d(num_cells)
 SLL_ALLOCATE(knots(3, mesh%num_pts_tot + 2*mesh%num_edges + mesh%num_triangles), ierr)
 SLL_ALLOCATE(LM(mesh%num_triangles, 10), ierr)
 
