@@ -56,10 +56,10 @@ program unit_test_lt_pic_bsl_remap
 !#define YMAX 1._f64
 !#define QoverM 1._f64
 
-#define NUM_PARTS_X 6_i32
-#define NUM_PARTS_Y 6_i32
-#define NUM_PARTS_VX 5_i32
-#define NUM_PARTS_VY 5_i32
+#define NUM_PARTS_X 25_i32
+#define NUM_PARTS_Y 5_i32
+#define NUM_PARTS_VX 9_i32
+#define NUM_PARTS_VY 9_i32
 !#define LT_PARTICLE_ARRAY_SIZE 400000_i32
 #define SPLINE_DEGREE 1_i32
 
@@ -149,6 +149,24 @@ program unit_test_lt_pic_bsl_remap
   sll_real64 :: r_vy
   sll_real64 :: hat_shift
   sll_real64 :: basis_height
+
+
+  sll_real64 :: x_j_bsl_before_per
+  sll_real64 :: y_j_bsl_before_per
+  sll_real64 :: vx_j_bsl_before_per
+  sll_real64 :: vy_j_bsl_before_per
+
+  sll_real64 :: x_j_bsl
+  sll_real64 :: y_j_bsl
+  sll_real64 :: vx_j_bsl
+  sll_real64 :: vy_j_bsl
+
+  sll_real64 :: x_j_bsl_end
+  sll_real64 :: y_j_bsl_end
+  sll_real64 :: vx_j_bsl_end
+  sll_real64 :: vy_j_bsl_end
+
+
 
 !  sll_real64 :: max_f
 !  sll_real64 :: inv_r_x  
@@ -312,7 +330,29 @@ program unit_test_lt_pic_bsl_remap
 !                           * max(0._f64, 1.-inv_r_vx*abs(new_vx-vx0) )    &
 !                           * max(0._f64, 1.-inv_r_vy*abs(new_vy-vy0) )
           error = max( error, abs( f_j - f_target ) )
-          write(80,*) x_j, y_j, vx_j, vy_j, f_j, f_target, abs( f_j - f_target )
+
+          ! MCP: [DEBUG] print the (computed) absolute initial position of the virtual particles (used in the bsl reconstruction)
+          x_j_bsl_before_per = part_group%debug_bsl_remap(j_x,j_y,j_vx,j_vy,1,1)
+          y_j_bsl_before_per = part_group%debug_bsl_remap(j_x,j_y,j_vx,j_vy,2,1)
+          vx_j_bsl_before_per = part_group%debug_bsl_remap(j_x,j_y,j_vx,j_vy,3,1)
+          vy_j_bsl_before_per = part_group%debug_bsl_remap(j_x,j_y,j_vx,j_vy,4,1)
+
+          x_j_bsl = part_group%debug_bsl_remap(j_x,j_y,j_vx,j_vy,1,2)
+          y_j_bsl = part_group%debug_bsl_remap(j_x,j_y,j_vx,j_vy,2,2)
+          vx_j_bsl = part_group%debug_bsl_remap(j_x,j_y,j_vx,j_vy,3,2)
+          vy_j_bsl = part_group%debug_bsl_remap(j_x,j_y,j_vx,j_vy,4,2)
+
+          x_j_bsl_end = part_group%debug_bsl_remap(j_x,j_y,j_vx,j_vy,1,3)
+          y_j_bsl_end = part_group%debug_bsl_remap(j_x,j_y,j_vx,j_vy,2,3)
+          vx_j_bsl_end = part_group%debug_bsl_remap(j_x,j_y,j_vx,j_vy,3,3)
+          vy_j_bsl_end = part_group%debug_bsl_remap(j_x,j_y,j_vx,j_vy,4,3)
+
+          write(80,*) x_j, y_j, vx_j, vy_j, f_j, f_target, abs( f_j - f_target ) &
+                        , x_j_bsl_before_per, y_j_bsl_before_per, vx_j_bsl_before_per, vy_j_bsl_before_per &      ! MCP : this line to DEBUG only
+                        , x_j_bsl, y_j_bsl, vx_j_bsl, vy_j_bsl &      ! MCP : this line to DEBUG only
+                        , x_j_bsl_end, y_j_bsl_end, vx_j_bsl_end, vy_j_bsl_end       ! MCP : this line to DEBUG only
+
+
           vy_j = vy_j + h_nodes_vy
         end do
         vx_j = vx_j + h_nodes_vx
@@ -384,7 +424,7 @@ contains
 #define TRANSLATION_X 0.0
 #define TRANSLATION_Y 0.0
 
-#define COEFF_X_VX 1.0
+#define COEFF_X_VX 3.0
 #define COEFF_Y_VY 0.05555555555555555
 
 !#define COEFF_X_VX 0.0
