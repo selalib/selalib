@@ -41,7 +41,7 @@ ADD_LIBRARY( hex_poisson STATIC hex_poisson.F90 )
 TARGET_LINK_LIBRARIES( hex_poisson sll_hex_meshes )
 
 
-ADD_LIBRARY ( pivotbande STATIC pivotbande.F90)
+ADD_LIBRARY ( pivotbande STATIC ../utilities/pivotbande.F90)
 TARGET_LINK_LIBRARIES( pivotbande )
 
 
@@ -85,7 +85,7 @@ IF(BUILD_TESTING)
   ADD_EXECUTABLE(test_fishpack test_fishpack.F90)
   TARGET_LINK_LIBRARIES( test_fishpack sll_poisson_solvers) 
 
-  ADD_EXECUTABLE( test_hex_poisson pivotbande.F90 test_hex_poisson.F90 )
+  ADD_EXECUTABLE( test_hex_poisson ../utilities/pivotbande.F90 test_hex_poisson.F90 )
   TARGET_LINK_LIBRARIES( test_hex_poisson hex_poisson sll_constants )
 
   ### BEGIN MACRO ###
