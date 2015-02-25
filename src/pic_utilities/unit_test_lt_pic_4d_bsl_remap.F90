@@ -227,7 +227,8 @@ program unit_test_lt_pic_bsl_remap
   !MCP: for a constant (1) function, take hat_shift = 0 and basis_height = 1
   !MCP: for the std tensor-product hat function, take hat_shift = 1 and basis_height = 0
   hat_shift = 1.
-  basis_height = 0.5
+  !aaabasis_height = 0.
+  basis_height = 0.5!aaa
 
   ! This initializes the particles [[file:../pic_particle_initializers/lt_pic_4d_init.F90::sll_lt_pic_4d_init_hat_f]]
 
