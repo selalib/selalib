@@ -305,6 +305,7 @@ contains
 
     type(sll_lt_pic_4d_group), pointer, intent(inout) :: p_group
     sll_int64 :: k, k_ngb
+    sll_int64 :: k_temp_debug
     sll_int64 :: j_x
     sll_int64 :: j_y
     sll_int64 :: j_vx
@@ -363,7 +364,7 @@ contains
     particle_indices(:,:,:,:) = 0
 
     ! compute the particle weights from the values of f0 on the (cartesian, phase-space) remapping grid
-    k = 0
+    k_temp_debug = 0
     x_j = parts_x_min
     do j_x = 1, number_parts_x
       y_j = parts_y_min
@@ -373,7 +374,14 @@ contains
           vy_j = parts_vy_min
           do j_vy = 1, number_parts_vy
             
-            k = k+1
+            k_temp_debug = k_temp_debug + 1
+            call get_particle_index_from_initial_position_on_cartesian_grid(            &
+                j_x, j_y, j_vx, j_vy,                                                   &
+                number_parts_x, number_parts_y, number_parts_vx, number_parts_vy,       &
+                k                                                                       &
+            )
+            SLL_ASSERT(k == k_temp_debug)
+
             if( p_group%spline_degree == 1 )then
                 w_k = d_vol * real( p_group%target_values(j_x,j_y,j_vx,j_vy) ,f32)
             else if( p_group%spline_degree == 3 )then
