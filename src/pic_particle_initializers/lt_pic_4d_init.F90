@@ -380,7 +380,14 @@ contains
                 number_parts_x, number_parts_y, number_parts_vx, number_parts_vy,       &
                 k                                                                       &
             )
+
             SLL_ASSERT(k == k_temp_debug)
+            SLL_ASSERT(k_temp_debug < 10)
+            if( k /= k_temp_debug) then
+                print *, "ARGH 89756573856 "
+                print *, "k = ", k, " -- k_temp_debug = ", k_temp_debug
+                stop
+            end if
 
             if( p_group%spline_degree == 1 )then
                 w_k = d_vol * real( p_group%target_values(j_x,j_y,j_vx,j_vy) ,f32)
