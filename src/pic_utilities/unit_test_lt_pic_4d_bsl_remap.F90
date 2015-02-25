@@ -57,9 +57,9 @@ program unit_test_lt_pic_bsl_remap
 !#define QoverM 1._f64
 
 #define NUM_PARTS_X 25_i32
-#define NUM_PARTS_Y 5_i32
-#define NUM_PARTS_VX 9_i32
-#define NUM_PARTS_VY 9_i32
+#define NUM_PARTS_Y 25_i32
+#define NUM_PARTS_VX 5_i32
+#define NUM_PARTS_VY 5_i32
 !#define LT_PARTICLE_ARRAY_SIZE 400000_i32
 #define SPLINE_DEGREE 1_i32
 
