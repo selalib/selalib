@@ -831,80 +831,81 @@ end do
  
 ! --- Recherche des numeros des triangles voisins d'un triangle 
 
+
+do iel=1,mesh%num_cells
+
+  ! ... numeros des 3 sommets du triangle
+
+  is1=mesh%nodes(1,iel)
+  is2=mesh%nodes(2,iel)
+  is3=mesh%nodes(3,iel)
+
+  ! ... boucles imbriquees sur les elements pointant vers
+  !     les 2 noeuds extremites de l'arete consideree
+  !     Le voisin est le triangle commun (hormis iel)
+
+  ! ... premiere arete (entre le sommet is1 et is2)
+
+  nel1=mesh%npoel1(is1+1)-mesh%npoel1(is1) !nb de triangles communs a is1
+  nel2=mesh%npoel1(is2+1)-mesh%npoel1(is2) !nb de triangles communs a is2
+
+  loop1:do i1=1,nel1
+    jel1=mesh%npoel2(mesh%npoel1(is1)+i1) !premier triangle is1
+    if(jel1.ne.iel) then
+      do i2=1,nel2
+        jel2=mesh%npoel2(mesh%npoel1(is2)+i2)
+        if(jel2 == jel1) then
+          mesh%nvois(1,iel)  = jel1
+          exit loop1
+        end if
+      end do
+    end if
+  end do loop1
+
+  ! ... deuxieme arete (entre le sommet is2 et is3)
+
+  nel2=mesh%npoel1(is2+1)-mesh%npoel1(is2)
+  nel3=mesh%npoel1(is3+1)-mesh%npoel1(is3)
+
+  loop2:do i2=1,nel2
+    jel2=mesh%npoel2(mesh%npoel1(is2)+i2)
+    if(jel2 /= iel) then
+      do i3=1,nel3
+        jel3=mesh%npoel2(mesh%npoel1(is3)+i3)
+        if(jel3 == jel2) then
+          mesh%nvois(2,iel)=jel2
+          exit loop2
+        end if
+      end do
+    end if
+  end do loop2
+
+  ! ... troisieme arete (entre le sommet is3 et is1)
+
+  nel3=mesh%npoel1(is3+1)-mesh%npoel1(is3)
+  nel1=mesh%npoel1(is1+1)-mesh%npoel1(is1)
+
+  loop3:do i3=1,nel3
+    jel3=mesh%npoel2(mesh%npoel1(is3)+i3)
+    if(jel3 /= iel) then
+      do i1=1,nel1
+        jel1=mesh%npoel2(mesh%npoel1(is1)+i1)
+        if(jel1 == jel3) then
+          mesh%nvois(3,iel)=jel3
+          exit loop3
+        end if
+      end do
+    end if
+  end do loop3
+
+end do
+
 if (ldebug) then
    write(iout,*)"*** Recherche des numeros des triangles voisins d'un triangle ***"
    do i = 1, mesh%num_cells
       write(iout,*) " Triangle ", i, " Voisins :", mesh%nvois(1:3,i)
    end do
 end if
-
-
-do iel=1,mesh%num_cells
-
-   ! ... numeros des 3 sommets du triangle
-
-   is1=mesh%nodes(1,iel)
-   is2=mesh%nodes(2,iel)
-   is3=mesh%nodes(3,iel)
-
-   ! ... boucles imbriquees sur les elements pointant vers
-   !     les 2 noeuds extremites de l'arete consideree
-   !     Le voisin est le triangle commun (hormis iel)
-
-   ! ... premiere arete (entre le sommet is1 et is2)
-
-   nel1=mesh%npoel1(is1+1)-mesh%npoel1(is1) !nb de triangles communs a is1
-   nel2=mesh%npoel1(is2+1)-mesh%npoel1(is2) !nb de triangles communs a is2
-
-   loop1:do i1=1,nel1
-            jel1=mesh%npoel2(mesh%npoel1(is1)+i1) !premier triangle is1
-            if(jel1.ne.iel) then
-               do i2=1,nel2
-                  jel2=mesh%npoel2(mesh%npoel1(is2)+i2)
-                  if(jel2 == jel1) then
-                     mesh%nvois(1,iel)  = jel1
-                     exit loop1
-              end if
-           end do
-            end if
-     end do loop1
-
-   ! ... deuxieme arete (entre le sommet is2 et is3)
-
-   nel2=mesh%npoel1(is2+1)-mesh%npoel1(is2)
-   nel3=mesh%npoel1(is3+1)-mesh%npoel1(is3)
-
-   loop2:do i2=1,nel2
-            jel2=mesh%npoel2(mesh%npoel1(is2)+i2)
-            if(jel2 /= iel) then
-               do i3=1,nel3
-                  jel3=mesh%npoel2(mesh%npoel1(is3)+i3)
-                  if(jel3 == jel2) then
-                     mesh%nvois(2,iel)=jel2
-             exit loop2
-              end if
-           end do
-            end if
-     end do loop2
-
-   ! ... troisieme arete (entre le sommet is3 et is1)
-
-   nel3=mesh%npoel1(is3+1)-mesh%npoel1(is3)
-   nel1=mesh%npoel1(is1+1)-mesh%npoel1(is1)
-
-   loop3:do i3=1,nel3
-            jel3=mesh%npoel2(mesh%npoel1(is3)+i3)
-            if(jel3 /= iel) then
-               do i1=1,nel1
-                  jel1=mesh%npoel2(mesh%npoel1(is1)+i1)
-                  if(jel1 == jel3) then
-                     mesh%nvois(3,iel)=jel3
-             exit loop3
-              end if
-           end do
-            end if
-     end do loop3
-end do
 
 ! --- Definition de nctfrt: le nombre de cotes frontieres
 
@@ -1006,14 +1007,14 @@ end do
 !======================================================================
 
 do iel = 1, mesh%num_cells
-   do j = 1, 3
-   if( mesh%nvois(j,iel) == imxref ) then
+  do j = 1, 3
+    if( mesh%nvois(j,iel) == imxref ) then
       write(iout,*) " Triangle ", iel, " Voisins :", (mesh%nvois(i,iel),i=1,3)
       write(iout,*) " Coordonnees x =", mesh%coord(1,mesh%nodes(1,iel))
       write(iout,*) " Coordonnees y =", mesh%coord(2,mesh%nodes(1,iel))
       stop
-   end if
-   end do
+    end if
+  end do
 end do
 
 !Calcul des voisins pour les particules
