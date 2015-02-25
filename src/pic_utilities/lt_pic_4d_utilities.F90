@@ -2333,20 +2333,23 @@ subroutine get_initial_position_on_cartesian_grid_from_particle_index (k,       
     sll_int64              :: k_aux
 
     k_aux = k-1
-    ! here, k_aux = (j_x-1) + (j_y-1) * n_parts_x + (j_vx-1) * n_parts_x * n_parts_y + (j_vy-1) * n_parts_x * n_parts_y * n_parts_vx
-    j_x = mod(k_aux, n_parts_x) + 1
+    ! ----  here, k_aux = (j_x-1) + (j_y-1) * n_parts_x + (j_vx-1) * n_parts_x * n_parts_y + (j_vy-1) * n_parts_x * n_parts_y * n_parts_vx
+    ! here, k_aux = (j_vy-1) + (j_vx-1) * n_parts_vy + (j_y-1) * n_parts_vy * n_parts_vx + (j_x-1) * n_parts_vy * n_parts_vx * n_parts_y
+    j_vy = mod(k_aux, n_parts_vy) + 1
 
-    k_aux = (k_aux - (j_x-1)) / n_parts_x
-    ! here, k_aux = (j_y-1) + (j_vx-1) * n_parts_y + (j_vy-1) * n_parts_y * n_parts_vx
-    j_y = mod(k_aux, n_parts_y) + 1
-
-    k_aux = (k_aux - (j_y-1)) / n_parts_y
-    ! here, k_aux = (j_vx-1) + (j_vy-1) * n_parts_vx
+    k_aux = (k_aux - (j_vy-1)) / n_parts_vy
+    ! ----- here, k_aux = (j_y-1) + (j_vx-1) * n_parts_y + (j_vy-1) * n_parts_y * n_parts_vx
+    ! here, k_aux = (j_vx-1) + (j_y-1) * n_parts_vx + (j_x-1) * n_parts_vx * n_parts_y
     j_vx = mod(k_aux, n_parts_vx) + 1
 
     k_aux = (k_aux - (j_vx-1)) / n_parts_vx
-    ! here, k_aux = (j_vy-1)
-    j_y = k_aux + 1
+    ! -------   here, k_aux = (j_vx-1) + (j_vy-1) * n_parts_vx
+    ! here, k_aux = (j_y-1) + (j_x-1) * n_parts_y
+    j_y = mod(k_aux, n_parts_y) + 1
+
+    k_aux = (k_aux - (j_y-1)) / n_parts_y
+    ! here, k_aux = (j_x-1)
+    j_x = k_aux + 1
 
 end subroutine
 
@@ -2366,7 +2369,8 @@ subroutine get_particle_index_from_initial_position_on_cartesian_grid (j_x, j_y,
     sll_int64, intent(in) :: n_parts_vy
     sll_int64, intent(out) :: k
 
-    k = 1+ (j_x-1) + (j_y-1) * n_parts_x + (j_vx-1) * n_parts_x * n_parts_y + (j_vy-1) * n_parts_x * n_parts_y * n_parts_vx
+!    k = 1+ (j_x-1) + (j_y-1) * n_parts_x + (j_vx-1) * n_parts_x * n_parts_y + (j_vy-1) * n_parts_x * n_parts_y * n_parts_vx
+    k = 1+ (j_vy-1) + (j_vx-1) * n_parts_vy + (j_y-1) * n_parts_vx * n_parts_vy + (j_x-1) * n_parts_vx * n_parts_vy * n_parts_y
 
 end subroutine
 
