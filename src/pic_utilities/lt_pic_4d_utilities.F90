@@ -616,7 +616,7 @@ end subroutine get_ltp_deformation_matrix
        
        if (neighbour == kprime) then
           kprime = 0
-          print *,"dead end <0"!aaa
+          !print *,"dead end <0"!aaa
        else
           kprime = neighbour
           dim_t0 = dim_t0 + h_parts_dim
@@ -634,7 +634,7 @@ end subroutine get_ltp_deformation_matrix
        
           if (neighbour == kprime) then
              kprime = 0
-             print *,"dead end >=h"!aaa
+             !print *,"dead end >=h"!aaa
           else
              kprime = neighbour
              dim_t0 = dim_t0 - h_parts_dim
@@ -716,12 +716,12 @@ end subroutine get_ltp_deformation_matrix
     sll_int64,dimension(:,:,:,:),allocatable :: closest_particle
     sll_real64,dimension(:,:,:,:),allocatable :: closest_particle_distance
 
-    sll_int :: i ! x dimension
-    sll_int :: j ! y dimension
+    sll_int32 :: i ! x dimension
+    sll_int32 :: j ! y dimension
     sll_int64 :: k,kprime ! particle index
     sll_int64 :: neighbour ! particle index for local use
-    sll_int :: l ! vx dimension
-    sll_int :: m ! vy dimension
+    sll_int32 :: l ! vx dimension
+    sll_int32 :: m ! vy dimension
 
     ! indices in a virtual cell (go from 1 to [[n_virtual]])
 
@@ -808,8 +808,8 @@ end subroutine get_ltp_deformation_matrix
     ! Preparatory work: find out the particle which is closest to each cell center by looping over all particles and
     ! noting which virtual cell contains it. The leftmost virtual cell in each dimension may not be complete.
 
-    num_virtual_cells_x = int(g%num_cells1/n_virtual)+1
-    num_virtual_cells_y = int(g%num_cells2/n_virtual)+1
+    num_virtual_cells_x =  int(g%num_cells1/n_virtual)+1
+    num_virtual_cells_y =  int(g%num_cells2/n_virtual)+1
     num_virtual_cells_vx = int(g%num_cells3/n_virtual)+1
     num_virtual_cells_vy = int(g%num_cells4/n_virtual)+1
 
@@ -867,29 +867,40 @@ end subroutine get_ltp_deformation_matrix
        call compute_cell_and_offset(x,g%eta1_min,1./h_virtual_cell_x,i,dx)
        i=i+1
        SLL_ASSERT(i>0)
+       SLL_ASSERT(dx>=0)
+       SLL_ASSERT(dx<=h_virtual_cell_x)
        call compute_cell_and_offset(y,g%eta2_min,1./h_virtual_cell_y,j,dy)
        j=j+1
        SLL_ASSERT(j>0)
+       SLL_ASSERT(dy>=0)
+       !aaa print *,"y=",y," g%eta2_min=",g%eta2_min," 1./h_virtual_cell_y=",1./h_virtual_cell_y," j=",j," dy=",dy," h_virtual_cell_y=",h_virtual_cell_y!aaa
+       !aaa SLL_ASSERT(dy<=h_virtual_cell_y)
        call compute_cell_and_offset(vx,g%eta3_min,1./h_virtual_cell_vx,l,dvx)
        l=l+1
        SLL_ASSERT(l>0)
+       SLL_ASSERT(dvx>=0)
+       SLL_ASSERT(dvx<=h_virtual_cell_vx)
        call compute_cell_and_offset(vy,g%eta4_min,1./h_virtual_cell_vy,m,dvy)
        m=m+1
        SLL_ASSERT(m>0)
+       SLL_ASSERT(dvy>=0)
+       SLL_ASSERT(dvy<=h_virtual_cell_vy)
 
        ! what is the distance from this particle to the virtual cell center? Speed things up a bit by skipping the
        ! square root calculation that will not change the final comparison of distances.
 
-       tmp =  (dx -  h_virtual_cell_x /2.)**2    &
-            + (dy -  h_virtual_cell_y /2.)**2    &
-            + (dvx - h_virtual_cell_vx/2.)**2    &
-            + (dvy - h_virtual_cell_vy/2.)**2
+       tmp =  (dx -  0.5)**2.    &
+            + (dy -  0.5)**2.    &
+            + (dvx - 0.5)**2.    &
+            + (dvy - 0.5)**2.
 
        ! if new particle is closer to center, keep the new one
 
        if(closest_particle(i,j,l,m) == 0 .or. tmp < closest_particle_distance(i,j,l,m)) then
           closest_particle(i,j,l,m) = k
           closest_particle_distance(i,j,l,m) = tmp
+          !print *,"tmp=",tmp!aaa
+          !SLL_ASSERT(tmp<1)!aaa
        end if
     end do
 
@@ -944,9 +955,10 @@ end subroutine get_ltp_deformation_matrix
                 ! precomputed array [[closest_particle]]. Virtual cells which do not contain any particle are skipped.
 
                 k = closest_particle(i,j,l,m)
-!aaa                print *,"i=",i," j=",j," l=",l," m=",m!aaa
-!aaa                SLL_ASSERT(k/=0 .or. i<5 .or. j<5 .or. i_vx/=3 .or. i_vy/=3)!aaa
 
+!aaa                print *,"i=",i," j=",j," l=",l," m=",m!aaa
+!aaa                SLL_ASSERT(k/=0)!aaa
+                
                 if(k /= 0) then
 
                    ! [[file:~/mcp/maltpic/ltpic-bsl.tex::hat-bz*]] Compute backward image of l-th virtual node by the
@@ -1027,6 +1039,8 @@ end subroutine get_ltp_deformation_matrix
                                     .and. i_y<=p_group%number_parts_y    &
                                     .and. i_vx<=p_group%number_parts_vx  &
                                     .and. i_vy<=p_group%number_parts_vy) then
+
+                                  !aaa print *,"i_x=",i_x," i_y=",i_y," i_vx=",i_vx," i_vy=",i_vy!aaa
                                   
                                   ! Location of virtual particle (ivirt,jvirt,lvirt,mvirt) at time n
                                   
@@ -1045,15 +1059,20 @@ end subroutine get_ltp_deformation_matrix
                                   vy_t0 = d41 * (x - x_k) + d42 * (y - y_k) + d43 * (vx - vx_k) + d44 * (vy - vy_k)
 
                                   !aaa print *,"x_t0=",x_t0," y_t0=",y_t0," vx_t0=",vx_t0," vy_t0=",vy_t0!aaa
+
+                                  !aaa
+                                  if(i_x==10 .and. i_y==10 .and. i_vx==11 .and. i_vy==11)then
+                                     print *,"avant periodic:"
+                                     print *,"x_k=",x_k," y_k=",y_k," vx_k=",vx_k," vy_k=",vy_k!aaa
+                                     print *,"x=",x," y=",y," vx=",vx," vy=",vy!aaa
+                                     print *,"x_t0=",x_t0," y_t0=",y_t0," vx_t0=",vx_t0," vy_t0=",vy_t0!aaa
+                                  end if
                                   
                                   ! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
-                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,1) = x_k + x_t0
-                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,1) = y_k + y_t0
-                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,1) = vx_k + vx_t0
-                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,1) = vy_k + vy_t0
-
-
-
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,1) = x_k_t0 + x_t0
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,1) = y_k_t0 + y_t0
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,1) = vx_k_t0 + vx_t0
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,1) = vy_k_t0 + vy_t0
 
                                   ! In the case of periodic boundaries, we can move the virtual particle at time 0 back
                                   ! into the domain
@@ -1072,10 +1091,10 @@ end subroutine get_ltp_deformation_matrix
                                   end if
 
                                   ! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
-                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,2) = x_k + x_t0
-                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,2) = y_k + y_t0
-                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,2) = vx_k + vx_t0
-                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,2) = vy_k + vy_t0
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,2) = x_k_t0 + x_t0
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,2) = y_k_t0 + y_t0
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,2) = vx_k_t0 + vx_t0
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,2) = vy_k_t0 + vy_t0
 
                                   ! [[file:~/mcp/maltpic/ltpic-bsl.tex::neighbors-grid-0]] find the neighbours of the
                                   ! virtual particle (ivirt,jvirt,lvirt,mvirt) at time 0 through the "logical
@@ -1136,7 +1155,8 @@ end subroutine get_ltp_deformation_matrix
                                   !aaa print *,"moved to x_t0=",x_t0," y_t0=",y_t0," vx_t0=",vx_t0," vy_t0=",vy_t0!aaa
                                   !aaa print *,"found k=",k," kprime=",kprime," i_x=",i_x," i_y=",i_y," i_vx=",i_vx," i_vy=",i_vy!aaa
                                   !aaa SLL_ASSERT(kprime/=0 .or. i_x<5 .or. i_y<5 .or. i_vx/=3 .or.i_vy/=3)!aaa
-
+                                  !aaa SLL_ASSERT(kprime/=0)!aaa
+                                  
                                   ! If we end up with kprime == 0, it means that we have not found a cell that contains
                                   ! the particle so we just set that particle value to zero
 
@@ -1159,6 +1179,8 @@ end subroutine get_ltp_deformation_matrix
                                      ! we reached the mesh border. just set the value of f for that particle as zero as
                                      ! before.
 
+                                     !aaa SLL_ASSERT(hcube(2,1,1,1) /= kprime .and. hcube(1,2,1,1) /= kprime .and. hcube(1,1,2,1) /= kprime .and. hcube(1,1,1,2) /= kprime)!aaa
+                                     
                                      if (hcube(2,1,1,1) /= kprime        &
                                           .and. hcube(1,2,1,1) /= kprime &
                                           .and. hcube(1,1,2,1) /= kprime &
@@ -1251,6 +1273,11 @@ end subroutine get_ltp_deformation_matrix
                                         end do
                                      end if
                                   end if
+
+                                        
+                                  !aaa print *,"i_x=",i_x," i_y=",i_y," i_vx=",i_vx," i_vy=",i_vy!aaa
+                                  !aaa SLL_ASSERT(abs(p_group%target_values(i_x,i_y,i_vx,i_vy))>0.1 .or. i_vx/=4 .or. i_vy/=3)!aaa
+                                  
                                end if
                             end do
                          end do
