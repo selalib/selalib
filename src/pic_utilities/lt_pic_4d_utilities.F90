@@ -868,29 +868,30 @@ end subroutine get_ltp_deformation_matrix
        i=i+1
        SLL_ASSERT(i>0)
        SLL_ASSERT(dx>=0)
-       SLL_ASSERT(dx<=h_virtual_cell_x)
+       SLL_ASSERT(dx<=1)
        call compute_cell_and_offset(y,g%eta2_min,1./h_virtual_cell_y,j,dy)
        j=j+1
        SLL_ASSERT(j>0)
        SLL_ASSERT(dy>=0)
-       !aaa print *,"y=",y," g%eta2_min=",g%eta2_min," 1./h_virtual_cell_y=",1./h_virtual_cell_y," j=",j," dy=",dy," h_virtual_cell_y=",h_virtual_cell_y!aaa
-       !aaa SLL_ASSERT(dy<=h_virtual_cell_y)
+       !print *,"y=",y," g%eta2_min=",g%eta2_min," 1./h_virtual_cell_y=",1./h_virtual_cell_y," j=",j," dy=",dy," h_virtual_cell_y=",h_virtual_cell_y!aaa
+       SLL_ASSERT(dy<=1)
        call compute_cell_and_offset(vx,g%eta3_min,1./h_virtual_cell_vx,l,dvx)
        l=l+1
        SLL_ASSERT(l>0)
        SLL_ASSERT(dvx>=0)
-       SLL_ASSERT(dvx<=h_virtual_cell_vx)
+       SLL_ASSERT(dvx<=1)
        call compute_cell_and_offset(vy,g%eta4_min,1./h_virtual_cell_vy,m,dvy)
        m=m+1
        SLL_ASSERT(m>0)
        SLL_ASSERT(dvy>=0)
-       SLL_ASSERT(dvy<=h_virtual_cell_vy)
+       SLL_ASSERT(dvy<=1)
 
        ! what is the distance from this particle to the virtual cell center? Speed things up a bit by skipping the
-       ! square root calculation that will not change the final comparison of distances.
+       ! square root calculation that will not change the final comparison of distances. Use adimensional values because
+       ! adding values from different dimensions with different units makes little sense.
 
-       tmp =  (dx -  0.5)**2.    &
-            + (dy -  0.5)**2.    &
+       tmp =  (dx - 0.5)**2.    &
+            + (dy - 0.5)**2.    &
             + (dvx - 0.5)**2.    &
             + (dvy - 0.5)**2.
 
@@ -899,8 +900,8 @@ end subroutine get_ltp_deformation_matrix
        if(closest_particle(i,j,l,m) == 0 .or. tmp < closest_particle_distance(i,j,l,m)) then
           closest_particle(i,j,l,m) = k
           closest_particle_distance(i,j,l,m) = tmp
-          !print *,"tmp=",tmp!aaa
-          !SLL_ASSERT(tmp<1)!aaa
+          !print *,"dx=",dx," dy=",dy," dvx=",dvx," dvy=",dvy," tmp=",tmp!aaa
+          !SLL_ASSERT(tmp<=(h_virtual_cell_x**2+h_virtual_cell_y**2+h_virtual_cell_vx**2+h_virtual_cell_vy**2)/4)!aaa
        end if
     end do
 
@@ -1049,6 +1050,16 @@ end subroutine get_ltp_deformation_matrix
                                   vx = parts_vx_min + (l-1)*h_virtual_cell_vx + (lvirt-1)*h_parts_vx
                                   vy = parts_vy_min + (m-1)*h_virtual_cell_vy + (mvirt-1)*h_parts_vy
 
+                                  !print *,"x=",x," y=",y," vx=",vx," vy=",vy!aaa
+                                  !print *,"x_k=",x_k," y_k=",y_k," vx_k=",vx_k," vy_k=",vy_k!aaa
+
+                                  ! particle k has to be inside the current virtual cell
+
+                                  SLL_ASSERT(abs(x-x_k) < h_virtual_cell_x)
+                                  SLL_ASSERT(abs(y-y_k) < h_virtual_cell_y)
+                                  SLL_ASSERT(abs(vx-vx_k) < h_virtual_cell_vx)
+                                  SLL_ASSERT(abs(vy-vy_k) < h_virtual_cell_vy)
+                                  
                                   ! Location of virtual particle (ivirt,jvirt,lvirt,mvirt) at time 0 _relative_ to the
                                   ! position of particle k at time 0 (x_k_t0,y_k_t0,vx_k_t0,vy_k_t0) according to flow
                                   ! deformation
@@ -1098,8 +1109,9 @@ end subroutine get_ltp_deformation_matrix
                                   !aaa print *,"x_t0=",x_t0," y_t0=",y_t0," vx_t0=",vx_t0," vy_t0=",vy_t0!aaa
 
                                   !aaa
-                                  if(i_x==10 .and. i_y==10 .and. i_vx==11 .and. i_vy==11)then
+                                  if(i_x==1 .and. i_y==1 .and. i_vx==11 .and. i_vy==11)then
                                      print *,"avant periodic:"
+                                     print *,"h_virtual_cell_x=",h_virtual_cell_x," h_virtual_cell_y=",h_virtual_cell_y," h_virtual_cell_vx=",h_virtual_cell_vx," h_virtual_cell_vy=",h_virtual_cell_vy!aaa
                                      print *,"x_k=",x_k," y_k=",y_k," vx_k=",vx_k," vy_k=",vy_k!aaa
                                      print *,"x=",x," y=",y," vx=",vx," vy=",vy!aaa
                                      print *,"x_t0=",x_t0," y_t0=",y_t0," vx_t0=",vx_t0," vy_t0=",vy_t0!aaa
