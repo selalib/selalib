@@ -760,8 +760,6 @@ end subroutine get_ltp_deformation_matrix
     sll_real64 :: x_k,y_k,vx_k,vy_k
     sll_real64 :: x_k_t0,y_k_t0,vx_k_t0,vy_k_t0
 
-    sll_real64 :: x_kprime, y_kprime, vx_kprime, vy_kprime    ! MCP [DEBUG only]
-
     sll_real64 :: part_radius_x 
     sll_real64 :: part_radius_y 
     sll_real64 :: part_radius_vx    
@@ -794,7 +792,14 @@ end subroutine get_ltp_deformation_matrix
     ! value 1 or 2 points to each side of an hypercube in direction x,y,vx or vy
     sll_int :: side_x,side_y,side_vx,side_vy
     sll_int64,dimension(2,2,2,2) :: hcube
-    
+
+    sll_int64 :: j_x,j_y,j_vx,j_vy
+
+    sll_int64 :: number_parts_x
+    sll_int64 :: number_parts_y
+    sll_int64 :: number_parts_vx
+    sll_int64 :: number_parts_vy
+
     ! --- end of declarations
 
     g => p_group%remapping_grid
@@ -831,6 +836,11 @@ end subroutine get_ltp_deformation_matrix
     parts_vx_min   = p_group%remapping_grid%eta3_min
     parts_vy_min   = p_group%remapping_grid%eta4_min
 
+    number_parts_x = p_group%number_parts_x
+    number_parts_y = p_group%number_parts_y
+    number_parts_vx = p_group%number_parts_vx
+    number_parts_vy = p_group%number_parts_vy
+    
     ! virtual cell size
 
     h_virtual_cell_x  = n_virtual * h_parts_x
@@ -973,16 +983,17 @@ end subroutine get_ltp_deformation_matrix
                         )
 
                    ! Find position of particle k at time 0
+                   ! [[get_initial_position_on_cartesian_grid_from_particle_index]]
 
-                   call get_position_aaa(k, &
-                        p_group%number_parts_x,p_group%number_parts_y,p_group%number_parts_vx,p_group%number_parts_vy, &
+                   call get_initial_position_on_cartesian_grid_from_particle_index(k, &
+                        number_parts_x,number_parts_y,number_parts_vx,number_parts_vy, &
                         j_x,j_y,j_vx,j_vy)
                    x_k_t0 =  parts_x_min  + (j_x-1)  * h_parts_x
                    y_k_t0 =  parts_y_min  + (j_y-1)  * h_parts_y
                    vx_k_t0 = parts_vx_min + (j_vx-1) * h_parts_vx
                    vy_k_t0 = parts_vy_min + (j_vy-1) * h_parts_vy
 
-                   print *,"x_k_t0=",x_k_t0," y_k_t0=",y_k_t0," vx_k_t0=",vx_k_t0," vy_k_t0=",vy_k_t0!aaa
+                   !aaa print *,"x_k_t0=",x_k_t0," y_k_t0=",y_k_t0," vx_k_t0=",vx_k_t0," vy_k_t0=",vy_k_t0!aaa
 
                    ! <<loop_on_virtual_particles_in_one_virtual_cell>>
                    ! [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:find_f0_for_each_virtual_particle]] Loop over all
@@ -994,7 +1005,7 @@ end subroutine get_ltp_deformation_matrix
                          do lvirt = 1,n_virtual
                             do mvirt = 1,n_virtual
 
-                               print *,"------------------------------------"!aaa
+                               !aaa print *,"------------------------------------"!aaa
                                
                                ! real index of the virtual particle in
                                ! [[file:../pic_particle_types/lt_pic_4d_group.F90::target_values]]
@@ -1033,7 +1044,7 @@ end subroutine get_ltp_deformation_matrix
                                   vx_t0 = d31 * (x - x_k) + d32 * (y - y_k) + d33 * (vx - vx_k) + d34 * (vy - vy_k)
                                   vy_t0 = d41 * (x - x_k) + d42 * (y - y_k) + d43 * (vx - vx_k) + d44 * (vy - vy_k)
 
-                                  print *,"x_t0=",x_t0," y_t0=",y_t0," vx_t0=",vx_t0," vy_t0=",vy_t0!aaa
+                                  !aaa print *,"x_t0=",x_t0," y_t0=",y_t0," vx_t0=",vx_t0," vy_t0=",vy_t0!aaa
                                   
                                   ! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
                                   p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,1) = x_k + x_t0
@@ -1092,7 +1103,7 @@ end subroutine get_ltp_deformation_matrix
 !aaa                                     print *,"x_k=",x_k," y_k=",y_k," vx_k=",vx_k," vy_k=",vy_k!aaa
 !aaa                                     print *,"x_kprime=",x_kprime," y_kprime=",y_kprime," vx_kprime=",vx_kprime," vy_kprime=",vy_kprime!aaa
 
-                                     print *,"moving from x_t0=",x_t0," y_t0=",y_t0," vx_t0=",vx_t0," vy_t0=",vy_t0!aaa
+                                     !aaa print *,"moving from x_t0=",x_t0," y_t0=",y_t0," vx_t0=",vx_t0," vy_t0=",vy_t0!aaa
 
                                      moved = .false.
 
@@ -1112,19 +1123,19 @@ end subroutine get_ltp_deformation_matrix
                                      kprime,                                            \
                                      moved)
 
-                                     print *,"x step"!aaa
+                                     !aaa print *,"x step"!aaa
                                      ONESTEPMACRO(x)
-                                     print *,"y step"!aaa
+                                     !aaa print *,"y step"!aaa
                                      ONESTEPMACRO(y)
-                                     print *,"vx step"!aaa
+                                     !aaa print *,"vx step"!aaa
                                      ONESTEPMACRO(vx)
-                                     print *,"vy step"!aaa
+                                     !aaa print *,"vy step"!aaa
                                      ONESTEPMACRO(vy)
                                   end do
 
-                                  print *,"moved to x_t0=",x_t0," y_t0=",y_t0," vx_t0=",vx_t0," vy_t0=",vy_t0!aaa
-                                  print *,"found k=",k," kprime=",kprime," i_x=",i_x," i_y=",i_y," i_vx=",i_vx," i_vy=",i_vy!aaa
-                                  SLL_ASSERT(kprime/=0 .or. i_x<5 .or. i_y<5 .or. i_vx/=3 .or.i_vy/=3)!aaa
+                                  !aaa print *,"moved to x_t0=",x_t0," y_t0=",y_t0," vx_t0=",vx_t0," vy_t0=",vy_t0!aaa
+                                  !aaa print *,"found k=",k," kprime=",kprime," i_x=",i_x," i_y=",i_y," i_vx=",i_vx," i_vy=",i_vy!aaa
+                                  !aaa SLL_ASSERT(kprime/=0 .or. i_x<5 .or. i_y<5 .or. i_vx/=3 .or.i_vy/=3)!aaa
 
                                   ! If we end up with kprime == 0, it means that we have not found a cell that contains
                                   ! the particle so we just set that particle value to zero
@@ -2304,6 +2315,8 @@ end subroutine get_ltp_deformation_matrix
   end function sll_b_spline
 
 
+  ! <<get_initial_position_on_cartesian_grid_from_particle_index>>
+  
 subroutine get_initial_position_on_cartesian_grid_from_particle_index (k,                                               &
                                                                        n_parts_x, n_parts_y, n_parts_vx, n_parts_vy,    &
                                                                        j_x, j_y, j_vx, j_vy                             &
@@ -2336,6 +2349,8 @@ subroutine get_initial_position_on_cartesian_grid_from_particle_index (k,       
     j_y = k_aux + 1
 
 end subroutine
+
+! <<get_particle_index_from_initial_position_on_cartesian_grid>>
 
 subroutine get_particle_index_from_initial_position_on_cartesian_grid (j_x, j_y, j_vx, j_vy,                            &
                                                                        n_parts_x, n_parts_y, n_parts_vx, n_parts_vy,    &
