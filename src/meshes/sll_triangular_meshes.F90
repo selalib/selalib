@@ -195,7 +195,9 @@ function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
   SLL_ALLOCATE(tri_mesh%coord(1:2,tri_mesh%num_nodes),   ierr)
   SLL_ALLOCATE(tri_mesh%nodes(1:3,1:tri_mesh%num_cells), ierr)
   SLL_ALLOCATE(tri_mesh%refs(tri_mesh%num_nodes),        ierr)
-  tri_mesh%refs = 1
+  SLL_ALLOCATE(tri_mesh%nvois(1:3,1:tri_mesh%num_cells), ierr)
+  tri_mesh%refs  =  1
+  tri_mesh%nvois = -1
 
   do i = 1, hex_mesh%num_triangles
     
