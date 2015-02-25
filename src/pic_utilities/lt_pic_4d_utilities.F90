@@ -760,6 +760,8 @@ end subroutine get_ltp_deformation_matrix
     sll_real64 :: x_k,y_k,vx_k,vy_k
     sll_real64 :: x_k_t0,y_k_t0,vx_k_t0,vy_k_t0
 
+    sll_real64 :: x_kprime, y_kprime, vx_kprime, vy_kprime    ! MCP [DEBUG only]
+
     sll_real64 :: part_radius_x 
     sll_real64 :: part_radius_y 
     sll_real64 :: part_radius_vx    
@@ -908,6 +910,10 @@ end subroutine get_ltp_deformation_matrix
     
     p_group%target_values(:,:,:,:) = 0
 
+    ! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
+    p_group%debug_bsl_remap = -100
+
+
     ! <<loop_on_virtual_cells>> [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:loop_over_all_cells]]
     ! Loop over all cells of indices i,j,l,m which contain at least one particle
 
@@ -1029,6 +1035,15 @@ end subroutine get_ltp_deformation_matrix
 
                                   print *,"x_t0=",x_t0," y_t0=",y_t0," vx_t0=",vx_t0," vy_t0=",vy_t0!aaa
                                   
+                                  ! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,1) = x_k + x_t0
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,1) = y_k + y_t0
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,1) = vx_k + vx_t0
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,1) = vy_k + vy_t0
+
+
+
+
                                   ! In the case of periodic boundaries, we can move the virtual particle at time 0 back
                                   ! into the domain
 
@@ -1044,7 +1059,13 @@ end subroutine get_ltp_deformation_matrix
                                      x_t0 = x_aux - x_k_t0
                                      y_t0 = y_aux - y_k_t0
                                   end if
-                                  
+
+                                  ! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,2) = x_k + x_t0
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,2) = y_k + y_t0
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,2) = vx_k + vx_t0
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,2) = vy_k + vy_t0
+
                                   ! [[file:~/mcp/maltpic/ltpic-bsl.tex::neighbors-grid-0]] find the neighbours of the
                                   ! virtual particle (ivirt,jvirt,lvirt,mvirt) at time 0 through the "logical
                                   ! neighbours" pointers of particle k. To reduce the amount of code, start with finding
@@ -1166,6 +1187,23 @@ end subroutine get_ltp_deformation_matrix
 
                                         ! place the resulting value of f on the virtual particle in
                                         ! p_group%target_values
+
+                                          ! MCP: [BEGIN-DEBUG] store the (computed) absolute initial position of the virtual particle
+
+                                          call cell_offset_to_global( p_group%p_list(kprime)%dx, &
+                                                                      p_group%p_list(kprime)%dy, &
+                                                                      p_group%p_list(kprime)%ic, &
+                                                                      p_group%mesh, x_kprime, y_kprime )
+                                            vx_kprime   = p_group%p_list(kprime)%vx
+                                            vy_kprime   = p_group%p_list(kprime)%vy
+
+                                          p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,3) = x_kprime + x_t0
+                                          p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,3) = y_kprime + y_t0
+                                          p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,3) = vx_kprime + vx_t0
+                                          p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,3) = vy_kprime + vy_t0
+
+                                          ! MCP [END-DEBUG]
+
 
                                         do side_x = 1,2
                                            if(side_x == 1)then
