@@ -14,12 +14,11 @@ implicit none
 private
 
 interface sll_create
-  module procedure init_solveur_poisson
+  module procedure initialize_poisson_solver
+  module procedure initialize_poisson_solver_from_file
 end interface sll_create
 
 public :: poliss, poifrc, poissn, sll_create
-
-
 
 !    Caracteristiques du maillage triangulaire:         
 !
@@ -112,31 +111,57 @@ logical :: ldebug = .true.
 logical :: ldebug = .false.
 #endif /* DEBUG */
 
-
 contains
 
-subroutine lecture_donnees_solveur(nomfich, ntypfr, potfr)
+subroutine read_data_solver(ntypfr, potfr)
 
-Character(len=*), intent(in)   :: nomfich
-sll_int32                      :: ityp
-sll_int32                      :: ifr
-sll_int32                      :: i
-sll_int32                      :: nfrmx
-sll_int32, dimension(:)        :: ntypfr
-sll_real64                     :: potfr(:)
+sll_int32                    :: ityp
+sll_int32                    :: ifr
+sll_int32                    :: i
+sll_int32, parameter         :: nfrmx = 5
+sll_int32,  intent(out)      :: ntypfr(nfrmx)
+sll_real64, intent(out)      :: potfr(nfrmx)
+character(len=72)            :: argv
+character(len=132)           :: inpfil
+logical :: lask
 
 NAMELIST/nlcham/ntypfr,potfr
+
+call getarg( 1, argv); write(*,'(1x, a)') argv
+
+!------------------------------------------------------------!
+!     Reads in default parameters from input file (.inp)        !
+!     If LASK=t, ask user if file is to be read.                !
+!------------------------------------------------------------!
+
+lask = .true.
+
+inpfil = trim(argv)//'.inp' 
+
+write(*,"(/10x,'Fichier d''entree : ',a)") inpfil
+
+open(10,file=inpfil,status='OLD',err=80)
+write(*,1050,advance='no') trim(inpfil)
+lask = .false.
+
+80 continue
+
+if (lask) then
+   write(*,1900) inpfil
+   write(*,1800,advance='no')
+   read(*,"(a)") inpfil
+   write(*,1700) trim(inpfil)
+end if
 
 ! ----------- Valeurs par defaut et initialisations -------------------t
 write(6,900)
 
-nfrmx  = size(ntypfr)
 ntypfr = 1  
 potfr  = 0.
 
 !--- 2.0 --- Lecture des donnees --------------------------------------
 
-open(10, file = nomfich)
+open(10, file = inpfil)
 write(*,*)"Lecture de la namelist nlcham"
 read(10,nlcham,err=100)
 goto 200
@@ -174,12 +199,29 @@ end do
 902  format(/10x,'Reference :',i3,5x,'Dirichlet ')
 904  format(/10x,'Reference :',i3,5x,'Neumann')
 910  format(/10x,'Option non disponible'/  &
-    &        10x,'Reference :',i3,5x,'Type :',i3/)
+     &       10x,'Reference :',i3,5x,'Type :',i3/)
 921  format(//5x,'Frontiere',5x,'ntypfr',7x,'potfr')
 922  format(5x,I3,4x,I10,2E12.3,2I10,E12.3)
 932  format(//10x,'CONDITIONS AUX LIMITES'/)
+1050 format(/' Read settings from file  ', A, ' ?  Y')
+1700 format(/' New parameters write to file  ', A, /)
+1800 format(/' Settings may have been changed - New title :')
+1900 format(/' Input file  ', A,'  not found')
 
-end subroutine lecture_donnees_solveur
+end subroutine read_data_solver
+
+subroutine initialize_poisson_solver_from_file(this, mesh)
+
+type(sll_triangular_poisson_2d),  intent(out)     :: this
+type(sll_triangular_mesh_2d),  intent(in), target :: mesh
+sll_int32                                         :: ntypfr(5)
+sll_real64                                        :: potfr(5)
+
+call read_data_solver(ntypfr, potfr)  
+
+call initialize_poisson_solver(this, mesh, ntypfr, potfr)
+
+end subroutine initialize_poisson_solver_from_file
 
 !Subroutine: init_solveur_poisson   
 ! Reservation de tableaux et calcul des 
@@ -198,11 +240,12 @@ end subroutine lecture_donnees_solveur
 
 ! Allocation des tableaux permettant de stocker des matrices sous forme morse
 ! Tableau donnant le numero du dernier terme de chaque ligne (mors1)
-subroutine init_solveur_poisson(this, mesh, inpfil)
+subroutine initialize_poisson_solver(this, mesh, ntypfr, potfr)
 
 type(sll_triangular_poisson_2d),  intent(out) :: this
 type(sll_triangular_mesh_2d),  intent(in), target :: mesh
-character(len=*), intent(in) :: inpfil 
+sll_int32,  dimension(:), intent(in)  :: ntypfr 
+sll_real64, dimension(:), intent(in)  :: potfr 
 sll_real64, dimension(:), allocatable :: tmp1
 
 sll_int32 :: nref, nn, ndir
@@ -210,8 +253,8 @@ sll_int32 :: i, j
 
 this%mesh => mesh
 
-call lecture_donnees_solveur(inpfil,this%ntypfr, this%potfr)  
-
+this%ntypfr = ntypfr
+this%potfr  = potfr
 
 allocate(this%sv1(mesh%nbtcot),this%sv2(mesh%nbtcot)); this%sv1 = 0.; this%sv2 = 0.
 allocate(this%vtantx(mesh%nbtcot),this%vtanty(mesh%nbtcot));this%vtantx=0.;this%vtanty=0.
@@ -308,7 +351,7 @@ end if
 902 format(//10x,'Noeuds frontiere du type DIRICLET pour POISSON'/)
 903 format(32000(2x,7I9/)/)
 
-end subroutine init_solveur_poisson
+end subroutine initialize_poisson_solver
 
 !======================================================================
 
