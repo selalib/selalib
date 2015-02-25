@@ -2182,10 +2182,6 @@ end subroutine get_ltp_deformation_matrix
 
 
 
-  
-
-
-
   ! added by MCP 
   ! 4d shape function
   function sll_pic_shape( &
@@ -2306,6 +2302,58 @@ end subroutine get_ltp_deformation_matrix
     STOP
     return 
   end function sll_b_spline
+
+
+subroutine get_initial_position_on_cartesian_grid_from_particle_index (k,                                               &
+                                                                       n_parts_x, n_parts_y, n_parts_vx, n_parts_vy,    &
+                                                                       j_x, j_y, j_vx, j_vy                             &
+                                                                       )
+    sll_int64, intent(in) :: k
+    sll_int64, intent(in) :: n_parts_x
+    sll_int64, intent(in) :: n_parts_y
+    sll_int64, intent(in) :: n_parts_vx
+    sll_int64, intent(in) :: n_parts_vy
+    sll_int64, intent(out) :: j_x
+    sll_int64, intent(out) :: j_y
+    sll_int64, intent(out) :: j_vx
+    sll_int64, intent(out) :: j_vy
+    sll_int64              :: k_aux
+
+    k_aux = k-1
+    ! here, k_aux = (j_x-1) + (j_y-1) * n_parts_x + (j_vx-1) * n_parts_x * n_parts_y + (j_vy-1) * n_parts_x * n_parts_y * n_parts_vx
+    j_x = mod(k_aux, n_parts_x) + 1
+
+    k_aux = (k_aux - (j_x-1)) / n_parts_x
+    ! here, k_aux = (j_y-1) + (j_vx-1) * n_parts_y + (j_vy-1) * n_parts_y * n_parts_vx
+    j_y = mod(k_aux, n_parts_y) + 1
+
+    k_aux = (k_aux - (j_y-1)) / n_parts_y
+    ! here, k_aux = (j_vx-1) + (j_vy-1) * n_parts_vx
+    j_vx = mod(k_aux, n_parts_vx) + 1
+
+    k_aux = (k_aux - (j_vx-1)) / n_parts_vx
+    ! here, k_aux = (j_vy-1)
+    j_y = k_aux + 1
+
+end subroutine
+
+subroutine get_particle_index_from_initial_position_on_cartesian_grid (j_x, j_y, j_vx, j_vy,                            &
+                                                                       n_parts_x, n_parts_y, n_parts_vx, n_parts_vy,    &
+                                                                       k                                                &
+                                                                       )
+    sll_int64, intent(in) :: j_x
+    sll_int64, intent(in) :: j_y
+    sll_int64, intent(in) :: j_vx
+    sll_int64, intent(in) :: j_vy
+    sll_int64, intent(in) :: n_parts_x
+    sll_int64, intent(in) :: n_parts_y
+    sll_int64, intent(in) :: n_parts_vx
+    sll_int64, intent(in) :: n_parts_vy
+    sll_int64, intent(out) :: k
+
+    k = 1+ (j_x-1) + (j_y-1) * n_parts_x + (j_vx-1) * n_parts_x * n_parts_y + (j_vy-1) * n_parts_x * n_parts_y * n_parts_vx
+
+end subroutine
 
 
 end module sll_lt_pic_4d_utilities
