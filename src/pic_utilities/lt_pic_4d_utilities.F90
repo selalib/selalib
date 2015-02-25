@@ -616,7 +616,7 @@ end subroutine get_ltp_deformation_matrix
        
        if (neighbour == kprime) then
           kprime = 0
-          print *,"dead end <0"!aaa
+!          print *,"dead end <0"!aaa
        else
           kprime = neighbour
           dim_t0 = dim_t0 + h_parts_dim
@@ -634,7 +634,7 @@ end subroutine get_ltp_deformation_matrix
        
           if (neighbour == kprime) then
              kprime = 0
-             print *,"dead end >=h"!aaa
+!             print *,"dead end >=h"!aaa
           else
              kprime = neighbour
              dim_t0 = dim_t0 - h_parts_dim
@@ -784,10 +784,10 @@ end subroutine get_ltp_deformation_matrix
     sll_real64 :: length
 
     !aaa
-    sll_real64 :: x_kprime
-    sll_real64 :: y_kprime
-    sll_real64 :: vx_kprime
-    sll_real64 :: vy_kprime
+    sll_real64 :: x_kprime_t0
+    sll_real64 :: y_kprime_t0
+    sll_real64 :: vx_kprime_t0
+    sll_real64 :: vy_kprime_t0
 
     ! value 1 or 2 points to each side of an hypercube in direction x,y,vx or vy
     sll_int :: side_x,side_y,side_vx,side_vy
@@ -944,8 +944,12 @@ end subroutine get_ltp_deformation_matrix
                 ! precomputed array [[closest_particle]]. Virtual cells which do not contain any particle are skipped.
 
                 k = closest_particle(i,j,l,m)
+
 !aaa                print *,"i=",i," j=",j," l=",l," m=",m!aaa
 !aaa                SLL_ASSERT(k/=0 .or. i<5 .or. j<5 .or. i_vx/=3 .or. i_vy/=3)!aaa
+
+                k = 1     !!!!! MCP DEBUG  !!!!!!!!!
+
 
                 if(k /= 0) then
 
@@ -1044,13 +1048,50 @@ end subroutine get_ltp_deformation_matrix
                                   vx_t0 = d31 * (x - x_k) + d32 * (y - y_k) + d33 * (vx - vx_k) + d34 * (vy - vy_k)
                                   vy_t0 = d41 * (x - x_k) + d42 * (y - y_k) + d43 * (vx - vx_k) + d44 * (vy - vy_k)
 
+
+                                    if( i_vx == (number_parts_vx+1)/2 .and. i_vy == (number_parts_vy+1)/2       &
+                                                .and. i_x == 1 .and. i_y == 1 )then
+
+                                        print*, "  -------  A  --------- "
+
+                                        print*, "i_x, i_y, i_vx, i_vy = ", i_x, i_y, i_vx, i_vy
+                                        print*, " "
+
+                                        print *,"position (final) of virtual point: "
+                                        print*, "x, y, vx, vy                                                       = "
+                                        print*, "    ",    x, y, vx, vy
+                                        print*, " "
+
+                                        print *,"position (final) of k-th marker: "
+                                        print*, "x_k, y_k, vx_k, vy_k                                               = "
+                                        print*, "    ",   x_k, y_k, vx_k, vy_k
+
+                                        print*, " "
+                                        print *,"initial position of virtual point, relative to k-th marker: "
+                                        print*, "x_t0, y_t0, vx_t0, vy_t0 = "
+                                        print*, "    ",   x_t0, y_t0, vx_t0, vy_t0
+
+                                        print*, " "
+                                        print *,"initial position of virtual point: "
+                                        print*, "x_k_t0 + x_t0,  y_k_t0 + y_t0, vx_k_t0 + vx_t0,  vy_k_t0 + vy_t0   = "
+                                        print*,  "    ",    x_k_t0 + x_t0,  y_k_t0 + y_t0, vx_k_t0 + vx_t0,  vy_k_t0 + vy_t0
+
+                                        print*, " "
+                                        print *,"initial position of k-th marker: "
+                                        print*, "x_k_t0, y_k_t0, vx_k_t0, vy_k_t0 = "
+                                         print*, "    ",   x_k_t0, y_k_t0, vx_k_t0, vy_k_t0
+
+                                    end if
+
+
+
                                   !aaa print *,"x_t0=",x_t0," y_t0=",y_t0," vx_t0=",vx_t0," vy_t0=",vy_t0!aaa
                                   
                                   ! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
-                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,1) = x_k + x_t0
-                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,1) = y_k + y_t0
-                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,1) = vx_k + vx_t0
-                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,1) = vy_k + vy_t0
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,1) = x_k_t0 + x_t0
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,1) = y_k_t0 + y_t0
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,1) = vx_k_t0 + vx_t0
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,1) = vy_k_t0 + vy_t0
 
 
 
@@ -1072,10 +1113,10 @@ end subroutine get_ltp_deformation_matrix
                                   end if
 
                                   ! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
-                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,2) = x_k + x_t0
-                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,2) = y_k + y_t0
-                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,2) = vx_k + vx_t0
-                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,2) = vy_k + vy_t0
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,2) = x_k_t0 + x_t0
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,2) = y_k_t0 + y_t0
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,2) = vx_k_t0 + vx_t0
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,2) = vy_k_t0 + vy_t0
 
                                   ! [[file:~/mcp/maltpic/ltpic-bsl.tex::neighbors-grid-0]] find the neighbours of the
                                   ! virtual particle (ivirt,jvirt,lvirt,mvirt) at time 0 through the "logical
@@ -1140,6 +1181,9 @@ end subroutine get_ltp_deformation_matrix
                                   ! If we end up with kprime == 0, it means that we have not found a cell that contains
                                   ! the particle so we just set that particle value to zero
 
+        !                                  SLL_ASSERT(kprime/=0)
+
+
                                   if (kprime /= 0) then
 
                                      ! kprime is the left-most vertex of the hypercube. find all the other vertices
@@ -1201,17 +1245,18 @@ end subroutine get_ltp_deformation_matrix
 
                                           ! MCP: [BEGIN-DEBUG] store the (computed) absolute initial position of the virtual particle
 
-                                          call cell_offset_to_global( p_group%p_list(kprime)%dx, &
-                                                                      p_group%p_list(kprime)%dy, &
-                                                                      p_group%p_list(kprime)%ic, &
-                                                                      p_group%mesh, x_kprime, y_kprime )
-                                            vx_kprime   = p_group%p_list(kprime)%vx
-                                            vy_kprime   = p_group%p_list(kprime)%vy
+                                           call get_initial_position_on_cartesian_grid_from_particle_index(kprime, &
+                                                number_parts_x,number_parts_y,number_parts_vx,number_parts_vy, &
+                                                j_x,j_y,j_vx,j_vy)
+                                           x_kprime_t0 =  parts_x_min  + (j_x-1)  * h_parts_x
+                                           y_kprime_t0 =  parts_y_min  + (j_y-1)  * h_parts_y
+                                           vx_kprime_t0 = parts_vx_min + (j_vx-1) * h_parts_vx
+                                           vy_kprime_t0 = parts_vy_min + (j_vy-1) * h_parts_vy
 
-                                          p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,3) = x_kprime + x_t0
-                                          p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,3) = y_kprime + y_t0
-                                          p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,3) = vx_kprime + vx_t0
-                                          p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,3) = vy_kprime + vy_t0
+                                           p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,3) = x_kprime_t0 + x_t0
+                                           p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,3) = y_kprime_t0 + y_t0
+                                           p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,3) = vx_kprime_t0 + vx_t0
+                                           p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,3) = vy_kprime_t0 + vy_t0
 
                                           ! MCP [END-DEBUG]
 
@@ -2333,17 +2378,14 @@ subroutine get_initial_position_on_cartesian_grid_from_particle_index (k,       
     sll_int64              :: k_aux
 
     k_aux = k-1
-    ! ----  here, k_aux = (j_x-1) + (j_y-1) * n_parts_x + (j_vx-1) * n_parts_x * n_parts_y + (j_vy-1) * n_parts_x * n_parts_y * n_parts_vx
     ! here, k_aux = (j_vy-1) + (j_vx-1) * n_parts_vy + (j_y-1) * n_parts_vy * n_parts_vx + (j_x-1) * n_parts_vy * n_parts_vx * n_parts_y
     j_vy = mod(k_aux, n_parts_vy) + 1
 
     k_aux = (k_aux - (j_vy-1)) / n_parts_vy
-    ! ----- here, k_aux = (j_y-1) + (j_vx-1) * n_parts_y + (j_vy-1) * n_parts_y * n_parts_vx
     ! here, k_aux = (j_vx-1) + (j_y-1) * n_parts_vx + (j_x-1) * n_parts_vx * n_parts_y
     j_vx = mod(k_aux, n_parts_vx) + 1
 
     k_aux = (k_aux - (j_vx-1)) / n_parts_vx
-    ! -------   here, k_aux = (j_vx-1) + (j_vy-1) * n_parts_vx
     ! here, k_aux = (j_y-1) + (j_x-1) * n_parts_y
     j_y = mod(k_aux, n_parts_y) + 1
 
@@ -2370,7 +2412,7 @@ subroutine get_particle_index_from_initial_position_on_cartesian_grid (j_x, j_y,
     sll_int64, intent(out) :: k
 
 !    k = 1+ (j_x-1) + (j_y-1) * n_parts_x + (j_vx-1) * n_parts_x * n_parts_y + (j_vy-1) * n_parts_x * n_parts_y * n_parts_vx
-    k = 1+ (j_vy-1) + (j_vx-1) * n_parts_vy + (j_y-1) * n_parts_vx * n_parts_vy + (j_x-1) * n_parts_vx * n_parts_vy * n_parts_y
+    k = 1+ (j_vy-1) + (j_vx-1) * n_parts_vy + (j_y-1) * n_parts_vy * n_parts_vx + (j_x-1) * n_parts_vy * n_parts_vx * n_parts_y
 
 end subroutine
 
