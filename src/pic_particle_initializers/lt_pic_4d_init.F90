@@ -382,7 +382,7 @@ contains
                 )
             !aaa print *,"k=",k," k_temp_debug=",k_temp_debug!aaa
             !aaa SLL_ASSERT(k == k_temp_debug)
-            SLL_ASSERT(k_temp_debug < 10)
+            !aaa SLL_ASSERT(k_temp_debug < 10)
             if( k /= k_temp_debug) then
                 print *, "ARGH 89756573856 "
                 print *, "k = ", k, " -- k_temp_debug = ", k_temp_debug
