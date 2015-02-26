@@ -12,13 +12,19 @@ program test_hex_hermite
   use pivotbande
   implicit none
 
+  !*************************************************************
+  ! Test computing the solution of the guiding centre model for 
+  ! a hexagonal mesh
+  ! for any question : prouveur@math.univ-lyon1.fr
+  !*************************************************************
+
   type(sll_hex_mesh_2d), pointer          :: mesh, mesh2
-  sll_int32    :: num_cells, n_points, n_triangle, n_edge
-  sll_real64   :: center_mesh_x1, center_mesh_x2, radius
+  sll_int32    :: num_cells, n_points, n_triangle, n_edge ! number of hexagonal cells, number of vertices, triangles and edges in the mesh
+  sll_real64   :: center_mesh_x1, center_mesh_x2, radius ! parameters of the mesh
 
-  sll_real64, dimension(:,:), allocatable :: deriv
+  sll_real64, dimension(:,:), allocatable :: deriv ! value of the derivatives at the vertices
 
-  ! vertex's variables
+  ! vertex's variables ( density , fields & its derivatives, etc )
   sll_real64, dimension(:),allocatable    :: rho_tn, rho_tn1
   sll_real64, dimension(:),allocatable    :: uxn,uyn,phi,phi_interm,second_term
   sll_real64, dimension(:),allocatable    :: dxuxn,dyuxn,dxuyn,dyuyn
@@ -73,7 +79,7 @@ program test_hex_hermite
   sll_real64   :: step , aire, h1, h2, f_min, x ,y,xx, yy
   sll_real64   :: r11,r12,r21,r22,det
 
-  sll_int32    :: p = 6!-> degree of the approximation for the derivative 
+  sll_int32    :: p = 7!-> degree of the approximation for the derivative 
   ! distribution at time n
 
   sll_int32    :: num_method = 12
@@ -91,11 +97,11 @@ program test_hex_hermite
 
   open(unit =111,  file="perf", action="write", status="replace")
 
-  do num_cells = 160,160,20 
+  do num_cells = 80,80,20 
 
      t = 0._f64
      tmax  = 100._f64
-     dt    = 0.1_f64!*20._f64 !/ real(num_cells,f64)  
+     dt    = 0.01_f64!*20._f64 !/ real(num_cells,f64)  
      cfl   = radius * dt / ( radius / real(num_cells,f64)  )
      nloops = 0
      count  = 0
@@ -118,7 +124,6 @@ program test_hex_hermite
 
      allocate( deriv(1:6,n_points) )
 
-     ! vertex's variables
      SLL_ALLOCATE(rho_tn( n_points),ierr)
      SLL_ALLOCATE(rho_tn1( n_points ),ierr)
      SLL_ALLOCATE(uxn( n_points),ierr)
@@ -369,6 +374,7 @@ program test_hex_hermite
 
            !*************************************************
            !       computation of the characteristics
+           ! ( this is where we tested several ways to compute them ) 
            !*************************************************
            
            if (t < 2*dt) then
@@ -684,6 +690,7 @@ program test_hex_hermite
 
      enddo
 
+     ! deallocation
 
      SLL_DEALLOCATE_ARRAY(rho_tn,ierr)
      SLL_DEALLOCATE_ARRAY(rho_tn1,ierr)
@@ -801,7 +808,7 @@ contains
     type(sll_hex_mesh_2d), pointer :: mesh
     sll_real64,dimension(:)        :: f_tn, center_values_tn, edge_values_tn
     sll_int32  :: num_method
-    sll_real64 :: x, y, epsilon = 0.01_f64
+    sll_real64 :: x, y, epsilon = 0.1_f64
     sll_real64 :: rho
     sll_real64 :: r
     sll_int32  :: i
@@ -858,6 +865,7 @@ contains
   end subroutine init_distr
 
   !********** diagnostics **************
+  ! writing quantities of interest such as the mass, the norms etc ..
 
   subroutine hex_diagnostics(rho,t,mesh,uxn,uyn,nloop, num_method)
     type(sll_hex_mesh_2d), pointer :: mesh
@@ -907,6 +915,9 @@ contains
   end subroutine hex_diagnostics
 
 
+  ! assembling the values at the middle of the edges + the value at 
+  ! the vertices into one common array rho2
+
   subroutine assemble(rho,rho_edge,rho2,mesh,mesh2)
     type(sll_hex_mesh_2d), pointer :: mesh,mesh2
     sll_real64,dimension(:) :: rho,rho_edge,rho2
@@ -950,6 +961,9 @@ contains
 
   end subroutine assemble
 
+  ! deassembling the values at the middle of the edges + the value at 
+  ! the vertices into 2 separate arrays
+
   subroutine deassemble(rho,rho_edge,rho2,mesh,mesh2)
     type(sll_hex_mesh_2d), pointer :: mesh,mesh2
     sll_real64,dimension(:) :: rho,rho_edge,rho2
@@ -991,6 +1005,8 @@ contains
     enddo
 
   end subroutine deassemble
+
+  ! special routine to write the values at the center of the triangles 
 
   subroutine write_center(mesh,rho,name)
     type(sll_hex_mesh_2d), pointer :: mesh
