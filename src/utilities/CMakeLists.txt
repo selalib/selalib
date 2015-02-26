@@ -2,6 +2,7 @@ SET( SRC_UTILITIES
   sll_utilities.F90 
   tridiagonal.F90
   sll_toeplitz_penta_diagonal.F90
+  sll_primitives.F90
   fornberg.F90
   sol.f
   muls.f )
