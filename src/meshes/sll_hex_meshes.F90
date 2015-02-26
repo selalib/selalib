@@ -104,15 +104,6 @@ use sll_tri_mesh_xmf
      module procedure display_hex_mesh_2d
   end interface sll_display
 
-  ! interface eta1_cell
-  !    module procedure eta1_cell_one_arg, eta1_cell_two_arg
-  ! end interface eta1_cell
-
-  ! interface eta2_cell
-  !    module procedure eta2_cell_one_arg, eta2_cell_two_arg
-  ! end interface eta2_cell
-
-
 contains
 
   ! Definition of a fonction to test if an argument is present
@@ -683,8 +674,8 @@ contains
   end subroutine index_hex_to_global
 
 
-  !> @brief Computes the first coordinate of a given point
-  !> @details Computes the first coordinate on the cartesian system 
+  !> @brief Computes the first cartesian coordinate of a given point
+  !> @details Computes the first cartesian coordinate on the cartesian system 
   !> of a point which has for hexagonal coordinates (i,j)
   !> @param i integer denoting the first hexagonal coordinate of a point
   !> @param j integer denoting the second hexagonal coordinate of a point
@@ -700,8 +691,8 @@ contains
     res = mesh%r1_x1*i + mesh%r2_x1*j + mesh%center_x1
   end function eta1_node_hex
 
-  !> @brief Computes the second coordinate of a given point
-  !> @details Computes the second coordinate on the cartesian system 
+  !> @brief Computes the second cartesian coordinate of a given point
+  !> @details Computes the second cartesian coordinate on the cartesian system 
   !> of a point which has for hexagonal coordinates (i,j)
   !> @param i integer denoting the first hexagonal coordinate of a point
   !> @param j integer denoting the second hexagonal coordinate of a point
@@ -718,23 +709,33 @@ contains
   end function eta2_node_hex
 
 
+  !> @brief Computes the first cartesian coordinate of the center of the cell
+  !> @details Computes the first coordinate (eta1) on the cartesian system 
+  !> of the center of the cell which has for global index cell_num
+  !> @param[in] cell_num integer denoting the index of the cell
+  !> returns res real containing the first cartesian coordinate of the cell's center
   function eta1_cell_hex(mesh, cell_num) result(res)
-    ! The index num_ele corresponds to the index of triangle
+    ! The index cell_num corresponds to the index of triangle
     ! This function returns the 1st coordinate on the cartesian system
     ! of the center of the triangle at num_ele
-    class(sll_hex_mesh_2d),intent(in)     :: mesh
-    sll_int32, intent(in)      :: cell_num
+    class(sll_hex_mesh_2d), intent(in) :: mesh
+    sll_int32,              intent(in) :: cell_num
     sll_real64 :: res
 
     res = mesh%center_cartesian_coord(1, cell_num)
   end function eta1_cell_hex
 
+  !> @brief Computes the 2nd cartesian coordinate of the center of the cell
+  !> @details Computes the 2nd coordinate (eta2) on the cartesian system 
+  !> of the center of the cell which has for global index cell_num
+  !> @param[in] cell_num integer denoting the index of the cell
+  !> returns res real containing the 2nd cartesian coordinate of the cell's center
   function eta2_cell_hex(mesh, cell_num) result(res)
     ! The index num_ele corresponds to the index of triangle
     ! This function returns the 2nd coordinate on the cartesian system
     ! of the center of the triangle at num_ele
-    class(sll_hex_mesh_2d),intent(in)     :: mesh
-    sll_int32, intent(in)      :: cell_num
+    class(sll_hex_mesh_2d), intent(in) :: mesh
+    sll_int32,              intent(in) :: cell_num
     sll_real64 :: res
 
     res = mesh%center_cartesian_coord(2, cell_num)
@@ -1194,28 +1195,30 @@ contains
 
 
   !> @brief Writes files for CAID
-  !> @details Writes the files elements.txt and nodes.txt describing
-  !> the mesh's cells and edges in the format of CAID and pigasus.
+  !> @details Writes the files elements.txt, nodes.txt ans dirichlet.txt describing
+  !> resp. the mesh's cells, edges and BC in the format of CAID and pigasus.
   !> This is was written in order to have a Poisson solver for the hex-mesh
   !> @param mesh hex-mesh that will be described
   subroutine write_caid_files(mesh)
     type(sll_hex_mesh_2d), pointer :: mesh
-    character(len=9),    parameter :: name_nodes = "nodes.txt"
-    character(len=12),   parameter :: name_elemt = "elements.txt"
-    sll_real64 :: x1
-    sll_real64 :: y1
-    sll_int32  :: e1
-    sll_int32  :: e2
-    sll_int32  :: e3
-    sll_int32  :: i
-    sll_int32  :: j
+    character(len=20),   parameter :: name_nodes = "boxsplines_nodes.txt"
+    character(len=23),   parameter :: name_elemt = "boxsplines_elements.txt"
+    character(len=24),   parameter :: name_diri  = "boxsplines_dirichlet.txt"
+    sll_real64 :: x1, y1
+    sll_real64 :: x_ver1, y_ver1
+    sll_real64 :: x_ver2, y_ver2
+    sll_real64 :: x_ver3, y_ver3
+    sll_real64 :: a11, a12, a21, a22
+    sll_real64 :: b1, b2
+    sll_real64 :: scale
+    sll_int32  :: e1, e2, e3
+    sll_int32  :: i, j
     sll_int32  :: spline_deg
-    sll_int32  :: scale
+    sll_int32  :: nen
     sll_int32  :: num_pts_tot
     sll_int32  :: num_ele
-    sll_int32  :: nei1
-    sll_int32  :: nei2
-    sll_int32  :: nei3
+    sll_int32  :: nei1, nei2, nei3
+    sll_int32  :: dirichlet
     sll_int32,  parameter :: out_unit=20
 
     ! Writing the nodes file....................
@@ -1233,10 +1236,11 @@ contains
             ",", &
             mesh%global_to_x2(i)
     end do
+
     close(out_unit)
 
-
     ! Writing the elements file....................
+    ! File containing general information about the cells and the transformation
     open (unit=out_unit,file=name_elemt,action="write",status="replace")
 
     ! We first write the total number of cells/elements:
@@ -1245,11 +1249,10 @@ contains
 
     ! The (maximum) spline degree and scale are fix here
     spline_deg = 1
-    scale = 1
+    scale = 1._f64
     !... we write its global number
     write (out_unit, "(i6)") spline_deg
 
-    
     ! For every element...
     do i=1, num_ele
        !... we write its global number
@@ -1257,7 +1260,7 @@ contains
        !... we write the spline degree
        write(out_unit, "((i6),(a,1x),(i6))") spline_deg, ",", spline_deg
        !... we write the scale of the element
-       write(out_unit, "((i6),(a,1x))",advance='no') scale, ","
+       write(out_unit, "((f10.5),(a,1x))",advance='no') scale, ","
        !... we write its neighbours
        call get_neighbours(mesh, i, nei1, nei2, nei3)
        write(out_unit, "(3((i6),(a,1x)))",advance='no') nei1, ",", nei2, ",", nei3, ","
@@ -1266,8 +1269,54 @@ contains
        y1 = mesh%center_cartesian_coord(2, i)
        call get_cell_vertices_index(x1, y1, mesh, e1, e2, e3)
        write(out_unit, "((i6),(a,1x),(i6),(a,1x),(i6))") e1, ",",e2,",", e3
+       !... we write the coordinate transformation (*)
+       x_ver1 = mesh%cartesian_coord(1, e1); y_ver1 = mesh%cartesian_coord(2, e1)
+       x_ver2 = mesh%cartesian_coord(1, e2); y_ver2 = mesh%cartesian_coord(2, e2)
+       x_ver3 = mesh%cartesian_coord(1, e3); y_ver3 = mesh%cartesian_coord(2, e3)
+       a11 = (2._f64 * x_ver2 - x_ver1 - x_ver3) / sll_sqrt3
+       a12 = x_ver3 - x_ver1
+       a21 = (2._f64 * y_ver2 - y_ver1 - y_ver3) / sll_sqrt3
+       a22 = y_ver3 - y_ver1
+       b1  = x_ver1
+       b2  = y_ver1
+       write(out_unit, "(5((f10.5), (a,1x)), (f10.5))") a11, ",", a12, ",", a21, ",", a22, ",", b1, ",", b2
+    end do
+    print *, ""
+    close(out_unit)
+
+    ! (*) The coordinate transformation : Is the transformation from the reference
+    ! element to the current cell. As the reference element is the first cell of an
+    ! hexagonal mesh of radius 1, the transformation is only a rotation followed by
+    ! a translation. Thus we only need 6 values to stock the transformation. 4 values
+    ! for the matrix A and 2 for the vector v, where: Ax + b = x'. x being the 
+    ! reference coordinates and x' the coordinates of the current mesh.
+    ! Reference coordinates: (0,0), (sqrt(3)/2, 0.5), (0,1)
+
+    ! Writing the dirichlet file....................
+    open (unit=out_unit,file=name_diri,action="write",status="replace")
+
+    ! We first write the total number of cells/elements:
+    num_ele = mesh%num_triangles
+    write(out_unit, "(i6)") num_ele
+
+    !The number of elements non-null is fixed here, this should be changed (TODO)
+    nen = 3
+    dirichlet = 1
+
+    ! For every element...
+    do i=1, num_ele
+       !... we write its global number
+       write (out_unit, "(i6)") i
+       !... we write the number of elements non-nul
+       write (out_unit, "(i6)") nen
+       do j=1,nen 
+          !... we write 1 as at the moment they are all dirichlet
+          write(out_unit, "((i6),(a,1x))", advance='no') dirichlet, ","
+       end do
+       write(out_unit, *) ""
     end do
     close(out_unit)
+
 
   end subroutine write_caid_files
 
