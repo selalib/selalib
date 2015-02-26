@@ -1018,8 +1018,6 @@ end subroutine get_ltp_deformation_matrix
                          do lvirt = 1,n_virtual
                             do mvirt = 1,n_virtual
 
-                               !aaa print *,"------------------------------------"!aaa
-                               
                                ! real index of the virtual particle in
                                ! [[file:../pic_particle_types/lt_pic_4d_group.F90::target_values]]
 
@@ -1077,6 +1075,7 @@ end subroutine get_ltp_deformation_matrix
                                      print *,"h_virtual_cell_x=",h_virtual_cell_x," h_virtual_cell_y=",h_virtual_cell_y," h_virtual_cell_vx=",h_virtual_cell_vx," h_virtual_cell_vy=",h_virtual_cell_vy!aaa
                                      print *,"x_k=",x_k," y_k=",y_k," vx_k=",vx_k," vy_k=",vy_k!aaa
                                      print *,"x=",x," y=",y," vx=",vx," vy=",vy!aaa
+                                     print *,"x_k_t0=",x_k_t0," y_k_t0=",y_k_t0," vx_k_t0=",vx_k_t0," vy_k_t0=",vy_k_t0!aaa
                                      print *,"x_t0=",x_t0," y_t0=",y_t0," vx_t0=",vx_t0," vy_t0=",vy_t0!aaa
                                   end if
                                   
