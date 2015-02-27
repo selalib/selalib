@@ -1,5 +1,5 @@
 !> @ingroup operator_splitting
-!> @brief Implements split operators T and V for constant conefficient advection
+!> @brief Implements split operators T and V for constant coefficient advection
 module sll_const_coef_advection_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -9,7 +9,7 @@ module sll_const_coef_advection_2d
 
   implicit none
 
- !> @brief 
+  !> @brief 
   !> Simple operator splitting type for 2D constant coefficient advection
   !> Extends operator splitting
   !> @details This should be
