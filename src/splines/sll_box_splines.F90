@@ -742,8 +742,8 @@ contains  ! ****************************************************************
        !> done to obtain the other non null basis functions
        SLL_ALLOCATE(disp_vec(2, nonZero), ierr)
        disp_vec(:,1) = 0._f64
-       disp_vec(:,2) = ref_pts(:,2) - ref_pts(:,1)
-       disp_vec(:,3) = ref_pts(:,3) - ref_pts(:,1)
+       disp_vec(:,2) = ref_pts(:,1) - ref_pts(:,2)
+       disp_vec(:,3) = ref_pts(:,1) - ref_pts(:,3)
     else
        print *, "ERROR : not implemented yet"
        nonZero = 0
@@ -758,10 +758,10 @@ contains  ! ****************************************************************
 
     do ind_nZ = 1, nonZero
        do ind_fek = 1, num_fek
+          x = quad_pw(1, ind_fek) + disp_vec(1, ind_nZ)
+          y = quad_pw(2, ind_fek) + disp_vec(2, ind_nZ)
           do idx = 0, nderiv
              do idy = 0, nderiv-idx
-                x = quad_pw(1, ind_fek) + disp_vec(1, ind_nZ)
-                y = quad_pw(2, ind_fek) + disp_vec(2, ind_nZ)
                 val = boxspline_val_der(x, y, deg, idx, idy)
                 write(out_unit, "(1(g13.3))", advance='no') val
                 write(out_unit, "(1(a,1x))", advance='no') ","
