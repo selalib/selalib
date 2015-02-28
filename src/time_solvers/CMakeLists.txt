@@ -19,7 +19,7 @@ IF(BUILD_TESTING)
   #TARGET_LINK_LIBRARIES( vp1d_bsl_operator_split sll_operator_splitting )
   ADD_EXECUTABLE( test_linear_pendulum unit_test_linear_pendulum.F90 )
   TARGET_LINK_LIBRARIES( test_linear_pendulum sll_operator_splitting )
-
+  ADD_TEST( NAME linear_pendulum COMMAND test_linear_pendulum )
   # Ctest
   IF(HDF5_ENABLED)
 #    ADD_EXECUTABLE( test_operator_splitting unit_test_const_coef_adv.F90 )
