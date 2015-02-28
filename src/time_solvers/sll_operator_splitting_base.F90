@@ -1,6 +1,6 @@
 !> @ingroup operator_splitting
 !> @brief 
-!> Base class of operator splitting library. Base class of operator splitting library.
+!> Base class of operator splitting library. 
 !>
 !> @detail
 !> The operator splitting module provides a generic implementation of composition algorithms 
@@ -9,8 +9,14 @@
 !> The composition algorithm consists in successive solutions of the split equations 
 !> \f$ \frac{dU}{dt} = T U \f$ and \f$ \frac{dU}{dt} = V U \f$. 
 !> Alternating the two reduced solution operators \f$ \mathcal{S}_{T} \f$ 
-!> and \f$\mathcal{S}_{V} \f$ with adequately chose time increments yields arbitrary 
+!> and \f$\mathcal{S}_{V} \f$ with adequately chosen time increments yields arbitrary 
 !> order in time for the full solution.
+!>
+!> The application of an operator splitting method to a concrete problem is done
+!> by extending the operator_splitting splitting base class by a new type
+!> containing on the one hand the data on which the operators act
+!> and a specific implementation of the two operators
+!>
 module sll_operator_splitting
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -19,23 +25,24 @@ module sll_operator_splitting
   implicit none
 
   ! global variables 
-  sll_int32, parameter :: SLL_USER_DEFINED         = 0 
-  sll_int32, parameter :: SLL_LIE_TV               = 1 
-  sll_int32, parameter :: SLL_LIE_VT               = 2 
-  sll_int32, parameter :: SLL_STRANG_TVT           = 3 
-  sll_int32, parameter :: SLL_STRANG_VTV           = 4 
-  sll_int32, parameter :: SLL_TRIPLE_JUMP_TVT      = 5 
-  sll_int32, parameter :: SLL_TRIPLE_JUMP_VTV      = 6 
-  sll_int32, parameter :: SLL_ORDER6_TVT           = 7 
-  sll_int32, parameter :: SLL_ORDER6_VTV           = 8 
-  sll_int32, parameter :: SLL_ORDER6VP_TVT         = 9 
-  sll_int32, parameter :: SLL_ORDER6VP_VTV         = 10 
-  sll_int32, parameter :: SLL_ORDER6VPNEW_TVT      = 11 
-  sll_int32, parameter :: SLL_ORDER6VPNEW1_VTV     = 12 
-  sll_int32, parameter :: SLL_ORDER6VPNEW2_VTV     = 13 
-  sll_int32, parameter :: SLL_ORDER6VP2D_VTV       = 14 
-  sll_int32, parameter :: SLL_ORDER6VPOT_VTV       = 15 
+  sll_int32, parameter :: SLL_USER_DEFINED      = 0 !< user defined splitting
+  sll_int32, parameter :: SLL_LIE_TV            = 1 !< Lie splitting T first (order 1)
+  sll_int32, parameter :: SLL_LIE_VT            = 2 !< Lie splitting V first x (order 1)
+  sll_int32, parameter :: SLL_STRANG_TVT        = 3 !< Strang splitting T first (order 2)
+  sll_int32, parameter :: SLL_STRANG_VTV        = 4 !< Strang splitting V first (order 2)
+  sll_int32, parameter :: SLL_TRIPLE_JUMP_TVT   = 5 !< Triple jump splitting T first (order 4)
+  sll_int32, parameter :: SLL_TRIPLE_JUMP_VTV   = 6 !< Triple jump splitting V first (order 4)
+  sll_int32, parameter :: SLL_ORDER6_TVT        = 7 !< Order 6 splitting T first (order 6)
+  sll_int32, parameter :: SLL_ORDER6_VTV        = 8 !< Order 6 splitting V first (order 6)
+  sll_int32, parameter :: SLL_ORDER6VP_TVT      = 9 !< Specific Vlasov-Poisson splitting T first (order 6)
+  sll_int32, parameter :: SLL_ORDER6VP_VTV      = 10 !< Specific Vlasov-Poisson splitting V first (order 6)
+  sll_int32, parameter :: SLL_ORDER6VPNEW_TVT   = 11 !< Specific Vlasov-Poisson splitting T first (order 6)
+  sll_int32, parameter :: SLL_ORDER6VPNEW1_VTV  = 12 !< Specific Vlasov-Poisson splitting V first (order 6)
+  sll_int32, parameter :: SLL_ORDER6VPNEW2_VTV  = 13 !< Specific Vlasov-Poisson splitting V first (order 6)
+  sll_int32, parameter :: SLL_ORDER6VP2D_VTV    = 14 !< Specific Vlasov-Poisson splitting V first (order 6)
+  sll_int32, parameter :: SLL_ORDER6VPOT_VTV    = 15 !< Specific Vlasov-Poisson splitting V first (order 6)
 
+ !> operator splitting object
   type :: operator_splitting
      !> current time to be incremented 
      sll_real64 :: current_time = 0.0_f64  
@@ -60,11 +67,9 @@ contains
   !> @brief dummy implementation of an operator_splitting needed to provide the interface. 
   !> The class cannot be abstract because the splitting coefficients are initialised here 
   !> as they are generic for any type of operator.
-  !> @param[inout]	this	operator_splitting object
-  !> @param[in]	dt	the time increment on which the operator is applied
   subroutine operator (this, dt)
-    class(operator_splitting)   :: this
-    sll_real64, intent(in)  :: dt
+    class(operator_splitting), intent(inout)  :: this !< operator_splitting object
+    sll_real64, intent(in)  :: dt !< time increment on which operator is applied
 
     print*, 'This is a dummy implementation for providint the interface  &
          in sll_operator_splitting_base.F90.                             &
