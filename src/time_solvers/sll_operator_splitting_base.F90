@@ -490,7 +490,6 @@ contains
     sll_int32  :: i, istep
 
     ! Straight implementation of Lie splitting in both direction
-print*, 'split%split_case', split%split_case
     if (split%split_case == SLL_LIE_TV) then
        do i = 1, number_time_steps
           call split%operatorT(dt)
@@ -498,7 +497,6 @@ print*, 'split%split_case', split%split_case
           ! Increment current_time
           split%current_time = split%current_time + dt
        end do
-       print*, 'time', split%current_time 
     else if (split%split_case == SLL_LIE_VT) then
        do i = 1, number_time_steps
           call split%operatorV(dt)

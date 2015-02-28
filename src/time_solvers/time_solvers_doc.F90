@@ -28,10 +28,10 @@
 !> <b> Headers file available </b>
 !>  - no header files
 !>
-!> <b> Modules available </b>
-!>  List fortran module available
-!>  - sll_time_splitting
-!>  - sll_operator_splitting
+! !> <b> Modules available </b>
+! !>  List fortran module available
+! !>  - sll_time_splitting
+! !>  - sll_operator_splitting
 !>
 !> <b> How to use it </b>
 !> - Header file : \code #include 'sll_time_solvers.h' \endcode
