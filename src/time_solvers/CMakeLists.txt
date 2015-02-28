@@ -11,6 +11,8 @@ TARGET_LINK_LIBRARIES( sll_operator_splitting
   sll_file_io
   sll_poisson_solvers )
 
+ADD_LIBRARY( sll_time_splitting STATIC
+  sll_time_splitting_coeff.F90 )
 
 # Tests
 IF(BUILD_TESTING)

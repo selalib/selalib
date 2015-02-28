@@ -22,37 +22,41 @@ module sll_linear_pendulum_operators
   type, extends(operator_splitting) :: linear_pendulum_operators
      sll_real64 :: x, v
    contains
-     procedure, pass(this) :: operatorT => push_x
-     procedure, pass(this) :: operatorV => push_v
+     procedure, pass(this) :: operatorT => push_x !< definition of first operator of splitting
+     procedure, pass(this) :: operatorV => push_v !< definition of second operator of splitting
   end type linear_pendulum_operators
 
   ! module global variables
-  sll_real64, parameter :: omega = 2.0_f64       ! frequency
-  sll_real64, parameter :: x0 = 1.0_f64          ! initial x for order checking
-  sll_real64, parameter :: v0 = 2.0_f64          ! initial v for order checking 
-  sll_real64, parameter :: t_final = 1.0_f64     ! final time for order checking 
+  sll_real64, parameter :: omega = 2.0_f64       !< frequency
+  sll_real64, parameter :: x0 = 1.0_f64          !< initial x for order checking
+  sll_real64, parameter :: v0 = 2.0_f64          !< initial v for order checking 
+  sll_real64, parameter :: t_final = 1.0_f64     !< final time for order checking 
 contains
   
+  !> Implements the first operator of splitting for linear pendulum
   subroutine push_x (this, dt)
-    class(linear_pendulum_operators)   :: this
-    sll_real64, intent(in)  :: dt
+    class(linear_pendulum_operators), intent(inout)   :: this !< object
+    sll_real64, intent(in)                            :: dt   !< time step
 
     this%x = this%x + this%v * dt
   end subroutine push_x
 
+  !> Implements the second operator of splitting for linear pendulum
   subroutine push_v (this, dt)
-    class(linear_pendulum_operators)   :: this
-    sll_real64, intent(in)  :: dt
+    class(linear_pendulum_operators), intent(inout)   :: this !< object
+    sll_real64, intent(in)                            :: dt   !< time step            
     
     this%v = this%v -omega**2 * this%x * dt
   end subroutine push_v
 
+  !> checks the order of a splitting method on the linear pendulum.
+  !> used for unit testing.
   subroutine check_order( method, steps_fine, expected_order, test_passed )
-    sll_int32, intent(in)  :: method         ! splitting method to be chosen from those 
-                                             ! implemented in sll_operator_splitting
-    sll_real64, intent(in) :: steps_fine     ! number of steps on fine grid
-    sll_int32, intent(in)  :: expected_order ! expected_order of the method 
-    logical, intent(inout) :: test_passed    ! check if test successful 
+    sll_int32, intent(in)  :: method         !< splitting method to be chosen from those 
+                                             !< implemented in sll_operator_splitting
+    sll_real64, intent(in) :: steps_fine     !< number of steps on fine grid
+    sll_int32, intent(in)  :: expected_order !< expected_order of the method 
+    logical, intent(inout) :: test_passed    !< check if test successful 
 
     ! local variables
     sll_real64 :: dt

@@ -42,7 +42,7 @@ contains
   end subroutine 
 
   subroutine adv1(this, dt)
-    class(const_coef_advection_2d) :: this 
+    class(const_coef_advection_2d), intent(inout) :: this 
     sll_real64, intent(in) :: dt
     ! local variables
     sll_real64, dimension(:), pointer :: f1d
@@ -57,7 +57,7 @@ contains
   end subroutine
 
   subroutine adv2(this, dt)
-    class(const_coef_advection_2d) :: this 
+    class(const_coef_advection_2d), intent(inout) :: this 
     sll_real64, intent(in) :: dt
     ! local variables
     sll_real64, dimension(:), pointer :: f1d
