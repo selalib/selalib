@@ -1,3 +1,4 @@
+!> @ingroup operator_splitting
 !> @brief 
 !> Base class of operator splitting library. Base class of operator splitting library.
 !>
