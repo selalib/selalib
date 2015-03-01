@@ -2,7 +2,7 @@
 !> @brief 
 !> Base class of operator splitting library. 
 !>
-!> @detail
+!> @details
 !> The operator splitting module provides a generic implementation of composition algorithms 
 !> of different order for two operators T and V for solving \f$ \frac{dU}{dt} = (T+V) U \f$. 
 !> The solution on one time step can be written \f$ U(\Delta t) = \mathcal{S}_{T+V} U(0) \f$. 
@@ -100,6 +100,7 @@ contains
   !> @param[in]	nb_split_step	number of split steps in the method
   !> @param[in]	split_begin_T	logical True if T first false else
   !> @param[in]	dt	time step
+  !> @return split a pointer to a heap-allocated operator_splitting object.
   function new_operator_splitting( &
        split_case, &
        split_step, &
@@ -487,7 +488,7 @@ contains
   !> @brief Apply the composition method for given number of times steps.
   !> @param[inout]	split	operator_splitting object
   !> @param[in]	dt	: time step
-  !> @param[in]	number_steps	: number of time steps to be performed
+  !> @param[in]	number_time_steps	: number of time steps to be performed
   subroutine do_split_steps(split, dt, number_time_steps)
     class(operator_splitting)   :: split
     sll_real64, intent(in)  :: dt

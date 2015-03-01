@@ -15,17 +15,24 @@ module sll_const_coef_advection_2d
   !> @details This should be
   !> treated as an opaque type. No access to its internals is directly allowed.
   type, extends(operator_splitting) :: const_coef_advection_2d
-     class(sll_interpolator_1d_base), pointer    :: interp1, interp2
-     sll_real64, dimension(:,:), pointer :: data
-     sll_int32 :: n1, n2
-     sll_real64 :: a1, a2
+     class(sll_interpolator_1d_base), pointer :: interp1 !< x1 1d interpolator
+     class(sll_interpolator_1d_base), pointer :: interp2 !< x2 1d interpolator
+     sll_real64, dimension(:,:), pointer      :: data    !< 2d array
+     sll_int32                                :: n1      !< first dimesnion size
+     sll_int32                                :: n2      !< second dimesnion size
+     sll_real64                               :: a1      !< advection first coefficient 
+     sll_real64                               :: a2      !< advection second coefficient
    contains
+     !> Operator for T advection
      procedure, pass(this) :: operatorT => adv1
+     !> Operator for V advection
      procedure, pass(this) :: operatorV => adv2
   end type const_coef_advection_2d
 
 
 contains
+
+  !> Initialize operator splitting type
   subroutine const_coef_advection_2d_initialize(this, data, n1, n2, a1, a2, interp1, interp2)
     type(const_coef_advection_2d) :: this 
     sll_real64, dimension(:,:), target :: data
@@ -41,6 +48,7 @@ contains
     this%interp2 => interp2
   end subroutine 
 
+  !> Advection along direction x1
   subroutine adv1(this, dt)
     class(const_coef_advection_2d), intent(inout) :: this 
     sll_real64, intent(in) :: dt
@@ -56,6 +64,7 @@ contains
     end do
   end subroutine
 
+  !> Advection along direction x2
   subroutine adv2(this, dt)
     class(const_coef_advection_2d), intent(inout) :: this 
     sll_real64, intent(in) :: dt
