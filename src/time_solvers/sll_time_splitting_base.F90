@@ -1,3 +1,5 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
 !> \brief 
 !> The time splitting: Lie splitting and Strang splitting
 !> 
@@ -69,3 +71,5 @@ module sll_time_splitting
     end subroutine strang_splitting
 
 end module sll_time_splitting
+
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
