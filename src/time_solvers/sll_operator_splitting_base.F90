@@ -46,7 +46,8 @@ module sll_operator_splitting
   type :: operator_splitting
      !> current time to be incremented 
      sll_real64 :: current_time = 0.0_f64  
-     !> defines the splitting method to be chosen from those defined above 
+     !> defines the splitting method to be chosen from those defined as global variables in 
+     !> sll_operator_splitting module
      sll_int32 :: split_case  
      !> number of split steps in the method 
      sll_int32 :: nb_split_step

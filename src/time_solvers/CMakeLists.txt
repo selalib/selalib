@@ -21,12 +21,15 @@ IF(BUILD_TESTING)
   #TARGET_LINK_LIBRARIES( vp1d_bsl_operator_split sll_operator_splitting )
   ADD_EXECUTABLE( test_linear_pendulum unit_test_linear_pendulum.F90 )
   TARGET_LINK_LIBRARIES( test_linear_pendulum sll_operator_splitting )
-  ADD_TEST( NAME linear_pendulum COMMAND test_linear_pendulum )
+  ADD_TEST( NAME splitting_linear_pendulum COMMAND test_linear_pendulum )
   # Ctest
   IF(HDF5_ENABLED)
-#    ADD_EXECUTABLE( test_operator_splitting unit_test_const_coef_adv.F90 )
-#    TARGET_LINK_LIBRARIES( test_operator_splitting sll_operator_splitting )
-#    ADD_TEST( NAME operator_splitting COMMAND test_operator_splitting )
+    ADD_EXECUTABLE( test_const_coef_adv_2d unit_test_const_coef_adv_2d.F90 )
+    TARGET_LINK_LIBRARIES( test_const_coef_adv_2d sll_operator_splitting )
+    ADD_TEST( NAME splitting_const_coef_adv_2d COMMAND test_const_coef_adv_2d )
   ENDIF(HDF5_ENABLED)
 
+SET_TESTS_PROPERTIES( splitting_linear_pendulum
+                      #splitting_const_coef_adv_2d
+                      PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 ENDIF(BUILD_TESTING)

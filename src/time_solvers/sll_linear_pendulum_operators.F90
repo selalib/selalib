@@ -1,5 +1,5 @@
 !> @ingroup operator_splitting
-!> @brief Linear pendulum with operator splitting. 
+!> @brief Implements split operators for linear pendulum 
 !!
 !> @detail Solve linear pendulum problem: \f$ \frac{dx}{dt} = v \f$, 
 !> \f$ \frac{dv}{dt} = - \omega^2 x \f$. The exact solution is
