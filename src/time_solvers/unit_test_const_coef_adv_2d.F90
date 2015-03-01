@@ -1,4 +1,7 @@
-program test_time_splitting
+!> @ingroup operator_splitting
+!> @brief Unit test for operator splitting. Constant coefficient advection.
+!> 
+program test_operator_splitting_const_coef_adv_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -6,16 +9,15 @@ program test_time_splitting
   use sll_const_coef_advection_2d
   use sll_module_cubic_spline_interpolator_1d
   use sll_module_interpolators_1d_base
-  use sll_time_splitting
+  use sll_operator_splitting
   use sll_hdf5_io_serial
   implicit none
 #define N1 50
 #define N2 60
 #define XMIN (-1.0_f64)
 #define XMAX 1.0_f64
-  type(const_coef_advection_2d), target :: const_adv
-  class(time_splitting), pointer :: time_split
-  sll_real64, dimension(N1,N2) :: data
+  class(const_coef_advection_2d), pointer :: split
+  sll_real64, dimension(:,:), pointer :: data
   sll_real64 :: x_1, x_2
   sll_int32 :: i, j
   sll_real64 :: dt
@@ -34,6 +36,7 @@ program test_time_splitting
   interp_eta2_ptr => interp_eta2
 
   ! initialize data
+  SLL_ALLOCATE(data(N1,N2), ierr)
   do j=1, N2
      x_2 = XMIN + (j-1)*(XMAX-XMIN)/(N2-1)
      do i=1, N1
@@ -43,13 +46,12 @@ program test_time_splitting
   end do
 
   ! initialize time splitting method
-  call const_coef_advection_2d_initialize(const_adv, data, N1, N2, 0.1_f64, 0.2_f64, &
-       interp_eta1_ptr, interp_eta2_ptr)
-  time_split => const_adv
+  split => new_const_coef_advection_2d( data, N1, N2, 0.1_f64, 0.2_f64, &
+       interp_eta1_ptr, interp_eta2_ptr, SLL_STRANG_TVT)
 
   ! do some steps of lie_splitting
   dt = 0.5
-  call time_split%lie_splitting(dt, 4)
+  call do_split_steps(split, dt, 4)
 
   ! save results
   filename = "data.h5"
@@ -57,4 +59,4 @@ program test_time_splitting
   call sll_hdf5_write_array_2d(file_id, data, "data", ierr)
   call sll_hdf5_file_close(file_id, ierr)
   
-end program test_time_splitting
+end program test_operator_splitting_const_coef_adv_2d
