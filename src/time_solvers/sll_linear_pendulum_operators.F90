@@ -1,7 +1,7 @@
 !> @ingroup operator_splitting
 !> @brief Linear pendulum with operator splitting. 
 !!
-!> @detail Solve linear pendulum problem: \f$ \frac{dx}{dt} = v \f$, 
+!> @details Solve linear pendulum problem: \f$ \frac{dx}{dt} = v \f$, 
 !> \f$ \frac{dv}{dt} = - \omega^2 x \f$. The exact solution is
 !> \f[ x(t)= x(0)\cos (\omega t) + \frac{v(0)}{\omega}\sin (\omega t), ~~~ 
 !> v(t)= -x(0)\omega\sin (\omega t) + v(0)\cos (\omega t) \f]
@@ -20,7 +20,8 @@ module sll_linear_pendulum_operators
   !> @details This should be
   !> treated as an opaque type. No access to its internals is directly allowed.
   type, extends(operator_splitting) :: linear_pendulum_operators
-     sll_real64 :: x, v
+     sll_real64 :: x  !< x value
+     sll_real64 :: v  !< v value
    contains
      procedure, pass(this) :: operatorT => push_x !< definition of first operator of splitting
      procedure, pass(this) :: operatorV => push_v !< definition of second operator of splitting
