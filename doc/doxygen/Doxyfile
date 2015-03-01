@@ -849,6 +849,7 @@ EXCLUDE = \
 @CMAKE_CURRENT_SOURCE_DIR@/pic_particle_types \
 @CMAKE_CURRENT_SOURCE_DIR@/pic_utilities \
 @CMAKE_CURRENT_SOURCE_DIR@/random_deviate_generators \
+@CMAKE_CURRENT_SOURCE_DIR@/poisson_solvers \
 @CMAKE_CURRENT_SOURCE_DIR@/poisson_solvers_parallel \
 @CMAKE_CURRENT_SOURCE_DIR@/sparse_matrix_manager \
 @CMAKE_CURRENT_SOURCE_DIR@/maxwell_solvers \
