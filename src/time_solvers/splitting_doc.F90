@@ -31,7 +31,7 @@
 !>  - The linear pendulum problem: the type definition is in sll_linear_pendulum_operators.F90
 !>    and the main program performing the unit tests in unit_test_linear_pendulum.F90
 !>  - The Vlasov equation with constant coefficients advection field:
-!> type definition in sll_const_coef_adv_2d.F90 and main program in 
+!> type definition in sll_const_coef_adv_2d.F90 and main program in unit_test_const_coef_adv_2d.F90
 !>  - The non linear Vlasov-Poisson equations in cartesian coordinates   
 !> 
 !> <b> References </b> 

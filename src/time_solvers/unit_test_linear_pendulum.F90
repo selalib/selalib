@@ -95,7 +95,7 @@ program test_operator_splitting_linear_pendulum
      all_tests_passed = .false.
   end if
 
-  if (.not.(test_passed)) call exit(1)
+  if (test_passed) print*, 'PASSED'
 
 end program test_operator_splitting_linear_pendulum
 
