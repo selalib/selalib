@@ -1,3 +1,5 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
 module sll_vp_cartesian_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -162,3 +164,4 @@ contains
   end subroutine PF_envelope
 
 end module sll_vp_cartesian_2d
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
