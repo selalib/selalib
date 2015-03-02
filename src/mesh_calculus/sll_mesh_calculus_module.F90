@@ -654,7 +654,6 @@ contains
 !             refn - numeros de references des noeuds 
 !             ntri - numeros des sommets              
 !             vois - numeros des voisins des triangles
-!             voiv - numeros des voisins des triangles
 !             aire - aires des triangles              
 !             base - integrales des fonctions de base  
 !             nusd - numeros de sous-domaine            
@@ -839,7 +838,7 @@ do iel=1,mesh%num_cells
   is1=mesh%nodes(1,iel)
   is2=mesh%nodes(2,iel)
   is3=mesh%nodes(3,iel)
-
+  
   ! ... boucles imbriquees sur les elements pointant vers
   !     les 2 noeuds extremites de l'arete consideree
   !     Le voisin est le triangle commun (hormis iel)
@@ -903,7 +902,10 @@ end do
 if (ldebug) then
    write(iout,*)"*** Recherche des numeros des triangles voisins d'un triangle ***"
    do i = 1, mesh%num_cells
-      write(iout,*) " Triangle ", i, " Voisins :", mesh%nvois(1:3,i)
+      write(iout,"(a10,i4,a10,3i4,a10,3i4)") &
+        " Triangle ", i,                     &
+        " Nodes   :", mesh%nodes(1:3,i),     &
+        " Voisins :", mesh%nvois(1:3,i)
    end do
 end if
 
@@ -911,92 +913,90 @@ end if
 
 mesh%nctfrt=0
 do i=1,mesh%num_cells
-   if (mesh%nvois(1,i) < 0) mesh%nctfrt=mesh%nctfrt+1
-   if (mesh%nvois(2,i) < 0) mesh%nctfrt=mesh%nctfrt+1
-   if (mesh%nvois(3,i) < 0) mesh%nctfrt=mesh%nctfrt+1
+   if (mesh%nvois(1,i)<0) mesh%nctfrt=mesh%nctfrt+1
+   if (mesh%nvois(2,i)<0) mesh%nctfrt=mesh%nctfrt+1
+   if (mesh%nvois(3,i)<0) mesh%nctfrt=mesh%nctfrt+1
 end do
 
 ! --- Rangement de npoel2 dans l'ordre trigonometrique ---------
 
 do is=1,mesh%num_nodes
 
-   nel =mesh%npoel1(is+1)-mesh%npoel1(is)
+  nel = mesh%npoel1(is+1)-mesh%npoel1(is)
 
-   if ( nel > 1 ) then
+  if ( nel > 1 ) then
 
-      !*** Noeuds internes (Numero de reference nul) ***
+    !*** Noeuds internes (Numero de reference nul) ***
 
-      if( mesh%refs(is) == 0) then
+    if( mesh%refs(is) == 0) then
 
-        ind =1
-        iel1=mesh%npoel2(mesh%npoel1(is)+1)
+      ind =1
+      iel1=mesh%npoel2(mesh%npoel1(is)+1)
 
-   loop4:do iel=2,nel-1
-            do j=1,3
-               if(mesh%nodes(j,iel1) == is) nct=mod(j+1,3)+1
-            end do
+      loop4:do iel=2,nel-1
+        do j=1,3
+          if(mesh%nodes(j,iel1) == is) nct=mod(j+1,3)+1
+        end do
 
-            iel1=mesh%nvois(nct,iel1)
-            do id1=ind+1,nel
-               if(iel1 == mesh%npoel2(mesh%npoel1(is)+id1)) then
-                  ind=ind+1
-                  ntmp=mesh%npoel2(mesh%npoel1(is)+ind)
-                  mesh%npoel2(mesh%npoel1(is)+ind)=iel1
-                  mesh%npoel2(mesh%npoel1(is)+id1)=ntmp
-              cycle loop4
-               end if
-            end do
-         end do loop4
+        iel1=mesh%nvois(nct,iel1)
+        do id1=ind+1,nel
+          if(iel1 == mesh%npoel2(mesh%npoel1(is)+id1)) then
+            ind=ind+1
+            ntmp=mesh%npoel2(mesh%npoel1(is)+ind)
+            mesh%npoel2(mesh%npoel1(is)+ind)=iel1
+            mesh%npoel2(mesh%npoel1(is)+id1)=ntmp
+            cycle loop4
+          end if
+        end do
+      end do loop4
 
-      ! Noeuds frontieres
+     ! Noeuds frontieres
 
-      else 
+     else 
 
-      ! --> Recherche du premier triangle dans l'ordre trigonometrique
+       ! --> Recherche du premier triangle dans l'ordre trigonometrique
+       loop5:do id1=1,nel
+         iel1=mesh%npoel2(mesh%npoel1(is)+id1)
+         do j=1,3
+           if(mesh%nvois(j,iel1).le.0 .and. mesh%nodes(j,iel1) == is) then
+             ntmp=mesh%npoel2(mesh%npoel1(is)+1)
+             mesh%npoel2(mesh%npoel1(is)+1)=iel1
+             mesh%npoel2(mesh%npoel1(is)+id1)=ntmp
+             exit loop5
+           end if
+         end do
+       end do loop5
+           
+       ! --> Rangement des autres triangles dans l'ordre trigonometrique
+       !     (s'il y en a plus que 2) 
+       if(nel  > 2) then
+         ind =1
+         iel1=mesh%npoel2(mesh%npoel1(is)+1)
+  
+         loop6:do iel=2,nel-1
+           do j=1,3
+             if(mesh%nodes(j,iel1)==is) then
+               nct=mod(j+1,3)+1
+             end if
+           end do
 
-   loop5:do id1=1,nel
-            iel1=mesh%npoel2(mesh%npoel1(is)+id1)
-            do j=1,3
-               if(mesh%nvois(j,iel1).le.0 .and. mesh%nodes(j,iel1) == is) then
-                  ntmp=mesh%npoel2(mesh%npoel1(is)+1)
-                  mesh%npoel2(mesh%npoel1(is)+1)=iel1
-                  mesh%npoel2(mesh%npoel1(is)+id1)=ntmp
-              exit loop5
-               end if
-            end do
-         end do loop5
-            
-      ! --> Rangement des autres triangles dans l'ordre trigonometrique
-      !     (s'il y en a plus que 2) 
+           iel1=mesh%nvois(nct,iel1)
+  
+           do id1=ind+1,nel
+             if(iel1 == mesh%npoel2(mesh%npoel1(is)+id1)) then
+               ind=ind+1
+               ntmp=mesh%npoel2(mesh%npoel1(is)+ind)
+               mesh%npoel2(mesh%npoel1(is)+ind)=iel1
+               mesh%npoel2(mesh%npoel1(is)+id1)=ntmp
+               cycle loop6
+             end if
+           end do
 
-         if(nel  > 2) then
-            ind =1
-            iel1=mesh%npoel2(mesh%npoel1(is)+1)
-   
-      loop6:do iel=2,nel-1
-               do j=1,3
-              if(mesh%nodes(j,iel1)==is) then
-                 nct=mod(j+1,3)+1
-              end if
-               end do
+         end do loop6
 
-               iel1=mesh%nvois(nct,iel1)
-   
-               do id1=ind+1,nel
-                  if(iel1 == mesh%npoel2(mesh%npoel1(is)+id1)) then
-                     ind=ind+1
-                     ntmp=mesh%npoel2(mesh%npoel1(is)+ind)
-                     mesh%npoel2(mesh%npoel1(is)+ind)=iel1
-                     mesh%npoel2(mesh%npoel1(is)+id1)=ntmp
-                 cycle loop6
-              end if
-               end do
+      end if
 
-            end do loop6
-
-         end if
-
-     end if
+    end if
 
   end if
 
@@ -1016,9 +1016,6 @@ do iel = 1, mesh%num_cells
     end if
   end do
 end do
-
-!Calcul des voisins pour les particules
-if (ldebug) write(iout,*)"*** Calcul des voisins pour les particules ***"
 
 ! ... Verification approchee de la condition CFL sur les triangles
 
@@ -1088,8 +1085,9 @@ allocate(mesh%nuvac(2,mesh%nbtcot)); mesh%nuvac = 0
 allocate(mesh%xlcod(mesh%nbtcot)); mesh%xlcod = 0.0
 
 !tableaux de lissage et des cotes tangeants 
-allocate(mesh%xmal1(mesh%num_nodes),mesh%xmal2(mesh%num_nodes),mesh%xmal3(mesh%num_nodes))
-mesh%xmal1=0.;mesh%xmal2=0.;mesh%xmal3=0.
+allocate(mesh%xmal1(mesh%num_nodes)); mesh%xmal1=0.
+allocate(mesh%xmal2(mesh%num_nodes)); mesh%xmal2=0.
+allocate(mesh%xmal3(mesh%num_nodes)); mesh%xmal3=0.
 
 allocate(mesh%nbcov(mesh%num_nodes+1))  !pointeur des cotes pointant sur le meme noeud
 allocate(mesh%nugcv(10*mesh%num_nodes)) !tableau contenant les numeros de ces cotes
@@ -1138,21 +1136,21 @@ mesh%nctfro = 0
 
 ifr=0
 do ict=1,3
-   do iel=1,mesh%num_cells
-      if ( mesh%nvois(ict,iel) < 0 ) then 
+  do iel=1,mesh%num_cells
+    if ( mesh%nvois(ict,iel) < 0 ) then 
 
-         iref = -mesh%nvois(ict,iel)
+      iref = -mesh%nvois(ict,iel)
 
-         ifr  = ifr+1
-         mesh%kelfro(ifr) = iel  !element auquel appartient le cote
-         mesh%kctfro(ifr) = ict  !numero local du cote dans cet element
-         mesh%krefro(ifr) = iref !reference de ce cote
-         mesh%ksofro(1,ifr) = mesh%nodes(ict,iel) !numeros des 2 sommets de ce cote
-         mesh%ksofro(2,ifr) = mesh%nodes(mod(ict,3)+1,iel) 
-         mesh%nctfro(iref)  = mesh%nctfro(iref)+1  !nombre de cote par reference
+      ifr  = ifr+1
+      mesh%kelfro(ifr)   = iel  !element auquel appartient le cote
+      mesh%kctfro(ifr)   = ict  !numero local du cote dans cet element
+      mesh%krefro(ifr)   = iref !reference de ce cote
+      mesh%ksofro(1,ifr) = mesh%nodes(ict,iel) !numeros des 2 sommets de ce cote
+      mesh%ksofro(2,ifr) = mesh%nodes(mod(ict,3)+1,iel) 
+      mesh%nctfro(iref)  = mesh%nctfro(iref)+1  !nombre de cote par reference
 
-      end if 
-   end do
+    end if 
+  end do
 end do
 
 !... Pointeur de tableau .........................................
@@ -1168,39 +1166,39 @@ end do
 ictcl=1
 do iref=1,mesh%nmxfr
 
-   nbcot = mesh%nctfro(iref)
-   if (nbcot > 0) then 
+  nbcot = mesh%nctfro(iref)
+  if (nbcot > 0) then 
 
-      ict1 = ictcl
+    ict1 = ictcl
 
-      do ict=ict1,mesh%nctfrt
-         jref = mesh%krefro(ict)
+    do ict=ict1,mesh%nctfrt
+      jref = mesh%krefro(ict)
 
-         if (jref == iref) then 
+      if (jref == iref) then 
 
-            keltmp = mesh%kelfro(ict)
-            kcttmp = mesh%kctfro(ict)
-            kretmp = mesh%krefro(ict)
-            ks1tmp = mesh%ksofro(1,ict)
-            ks2tmp = mesh%ksofro(2,ict)
+        keltmp = mesh%kelfro(ict)
+        kcttmp = mesh%kctfro(ict)
+        kretmp = mesh%krefro(ict)
+        ks1tmp = mesh%ksofro(1,ict)
+        ks2tmp = mesh%ksofro(2,ict)
 
-            mesh%kelfro(ict) = mesh%kelfro(ictcl)
-            mesh%kctfro(ict) = mesh%kctfro(ictcl)
-            mesh%krefro(ict) = mesh%krefro(ictcl)
-            mesh%ksofro(1,ict) = mesh%ksofro(1,ictcl)
-            mesh%ksofro(2,ict) = mesh%ksofro(2,ictcl)
+        mesh%kelfro(ict) = mesh%kelfro(ictcl)
+        mesh%kctfro(ict) = mesh%kctfro(ictcl)
+        mesh%krefro(ict) = mesh%krefro(ictcl)
+        mesh%ksofro(1,ict) = mesh%ksofro(1,ictcl)
+        mesh%ksofro(2,ict) = mesh%ksofro(2,ictcl)
 
-            mesh%kelfro(ictcl) = keltmp
-            mesh%kctfro(ictcl) = kcttmp
-            mesh%krefro(ictcl) = kretmp
-            mesh%ksofro(1,ictcl) = ks1tmp
-            mesh%ksofro(2,ictcl) = ks2tmp
+        mesh%kelfro(ictcl) = keltmp
+        mesh%kctfro(ictcl) = kcttmp
+        mesh%krefro(ictcl) = kretmp
+        mesh%ksofro(1,ictcl) = ks1tmp
+        mesh%ksofro(2,ictcl) = ks2tmp
 
-            ictcl=ictcl+1
+        ictcl=ictcl+1
 
-         end if 
-      end do
-   end if 
+      end if 
+    end do
+  end if 
 end do
 
 ! --- Rangement dans l'ordre trigonometrique -------------------
@@ -1239,11 +1237,11 @@ do iref=1,mesh%nmxfr
                mesh%ksofro(2,ict2) = ks2tmp
 
                if (ict1<mesh%nctfrt) then 
-              ict1=ict1+1
-                goto 35
-           end if
+                 ict1=ict1+1
+                 goto 35
+               end if
 
-       end if
+          end if
         end if
      end do
 
@@ -1374,26 +1372,24 @@ end subroutine analyze_triangular_mesh
 
 !Subroutine: poclis
 !                                               
-!   Calcul des matrices de lissage associees a chaque     
-!   noeud du maillage.                                  
-!   Necessaires au calcul des composantes de E1,E2     
-!   a partir des composantes tangeantielles de E      
-!   connues sur les cotes des triangles.             
-!   Calcul des composantes des vecteurs unitaires tangeants.                                     
-!                                                              
-!   Variables d'entree:                                    
-!  
-!      nuvac  - numeros des PV associes aux cotes          
-!      coor   - coordonnees des noeuds Delaunay           
-!      xlcod  - longueur des cotes Delaunay              
-!      npoel1 - pointeur du tableau npoel2              
-!      npoel2 - numeros des triangles entourant un noeud       
-!      xmal1  - somme des taux*taux entourant un noeud (/det) 
-!      xmal2  - somme des tauy*tauy entourant un noeud (/det)
-!      xmal3  - somme des taux*tauy entourant un noeud (/det)
+!  Calcul des matrices de lissage associees a chaque     
+!  noeud du maillage.                                  
+!  Necessaires au calcul des composantes de E1,E2     
+!  a partir des composantes tangeantielles de E      
+!  connues sur les cotes des triangles.             
+!  Calcul des composantes des vecteurs unitaires tangeants.                                     
+!                                                             
+!  Variables d'entree:                                    
+! 
+!    nuvac  - numeros des PV associes aux cotes          
+!    coor   - coordonnees des noeuds Delaunay           
+!    xlcod  - longueur des cotes Delaunay              
+!    npoel1 - pointeur du tableau npoel2              
+!    npoel2 - numeros des triangles entourant un noeud       
+!    xmal1  - somme des taux*taux entourant un noeud (/det) 
+!    xmal2  - somme des tauy*tauy entourant un noeud (/det)
+!    xmal3  - somme des taux*tauy entourant un noeud (/det)
 !                                                               
-!Auteur:
-! A. Adolf - Version 1.0   Septembre 1994  
 subroutine poclis(mesh, ncotcu, nuctfr)
 
 type(sll_triangular_mesh_2d) :: mesh

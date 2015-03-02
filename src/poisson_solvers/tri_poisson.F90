@@ -291,7 +291,6 @@ allocate(this%amass(mesh%num_nodes)); this%amass = 0.0
 allocate(this%grgr(this%iprof(mesh%num_nodes+1))); this%grgr = 0.0
  
 !gradx et grady 
-
 allocate(this%gradx(this%mors1(mesh%num_nodes+1))); this%gradx = 0.0
 allocate(this%grady(this%mors1(mesh%num_nodes+1))); this%grady = 0.0
 
