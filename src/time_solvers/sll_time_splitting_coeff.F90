@@ -1,3 +1,5 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
 !**************************************************************
 !  Copyright INRIA
 !  Authors : 
@@ -399,3 +401,5 @@ contains
 
 
 end module sll_time_splitting_coeff_module
+
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
