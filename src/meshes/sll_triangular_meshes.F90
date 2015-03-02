@@ -21,6 +21,8 @@ module sll_triangular_meshes
 #include "sll_constants.h"
 #include "sll_memory.h"
 #include "sll_utilities.h"
+#include "sll_assert.h"
+#include "sll_boundary_condition_descriptors.h"
 
 use sll_meshes_base
 use sll_tri_mesh_xmf
@@ -110,6 +112,7 @@ end interface sll_display
 interface new_triangular_mesh_2d
   module procedure new_triangular_mesh_2d_from_file
   module procedure new_triangular_mesh_2d_from_hex_mesh
+  module procedure new_triangular_mesh_2d_from_square
 end interface new_triangular_mesh_2d
 
 ! interface eta1_cell
@@ -196,8 +199,8 @@ function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
   SLL_ALLOCATE(tri_mesh%nodes(1:3,1:tri_mesh%num_cells), ierr)
   SLL_ALLOCATE(tri_mesh%refs(tri_mesh%num_nodes),        ierr)
   SLL_ALLOCATE(tri_mesh%nvois(1:3,1:tri_mesh%num_cells), ierr)
-  tri_mesh%refs  =  1
-  tri_mesh%nvois = -1
+  tri_mesh%refs      =  1
+  tri_mesh%nvois     = -1
 
   do i = 1, hex_mesh%num_triangles
     
@@ -206,10 +209,16 @@ function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
     
     call get_cell_vertices_index( x1, y1, hex_mesh, is1, is2, is3)
     
-    tri_mesh%nodes(1,i) = is1
-    tri_mesh%nodes(2,i) = is2
-    tri_mesh%nodes(3,i) = is3
-    
+    if ( mod(i,2) == 0) then
+      tri_mesh%nodes(1,i) = is1
+      tri_mesh%nodes(2,i) = is2
+      tri_mesh%nodes(3,i) = is3
+    else
+      tri_mesh%nodes(1,i) = is1
+      tri_mesh%nodes(3,i) = is2
+      tri_mesh%nodes(2,i) = is3
+    end if
+
     tri_mesh%coord(1,is1) = hex_mesh%global_to_x1(is1)
     tri_mesh%coord(2,is1) = hex_mesh%global_to_x2(is1)
     tri_mesh%coord(1,is2) = hex_mesh%global_to_x1(is2)
@@ -221,13 +230,63 @@ function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
 
 end function new_triangular_mesh_2d_from_hex_mesh
 
+
+!> @brief
+!> Allocates the memory space for a new 2D triangular mesh on the heap,
+!> @details
+!> initializes it with the given arguments and returns a pointer to the
+!> object.
+!> @param[in] nc_eta1 number of cells along first direction
+!> @param[in] eta1_min left edge first direction
+!> @param[in] eta1_max right edge first direction
+!> @param[in] nc_eta2 number of cells along second direction
+!> @param[in] eta2_min left edge second direction
+!> @param[in] eta2_max right edge second direction
+!> @return a pointer to the newly allocated object.
+function new_triangular_mesh_2d_from_square( nc_eta1,  &
+                                             eta1_min, & 
+                                             eta1_max, & 
+                                             nc_eta2,  & 
+                                             eta2_min, & 
+                                             eta2_max, &
+                                             bc ) result(m)
+
+  type(sll_triangular_mesh_2d), pointer :: m
+  sll_int32,  intent(in)                :: nc_eta1
+  sll_real64, intent(in)                :: eta1_min
+  sll_real64, intent(in)                :: eta1_max
+  sll_int32,  intent(in)                :: nc_eta2
+  sll_real64, intent(in)                :: eta2_min
+  sll_real64, intent(in)                :: eta2_max
+  sll_int32,  optional                  :: bc
+
+  sll_int32 :: ierr
+  SLL_ALLOCATE(m, ierr)
+
+  if (present(bc)) then
+    SLL_ASSERT(bc == SLL_PERIODIC)
+  end if
+ 
+  call initialize_triangular_mesh_2d( m,        &
+                                      nc_eta1,  &
+                                      eta1_min, &
+                                      eta1_max, &
+                                      nc_eta2,  &
+                                      eta2_min, &
+                                      eta2_max)
+
+
+end function new_triangular_mesh_2d_from_square
+
+
 subroutine initialize_triangular_mesh_2d( mesh,     &
                                           nc_eta1,  &
                                           eta1_min, &
                                           eta1_max, &
                                           nc_eta2,  &
                                           eta2_min, &
-                                          eta2_max)
+                                          eta2_max, &
+                                          bc )
 
 type(sll_triangular_mesh_2d) :: mesh
 sll_int32,  intent(in)       :: nc_eta1
@@ -236,13 +295,14 @@ sll_real64, intent(in)       :: eta1_max
 sll_int32,  intent(in)       :: nc_eta2
 sll_real64, intent(in)       :: eta2_min
 sll_real64, intent(in)       :: eta2_max
+sll_int32,  optional         :: bc
 
 !*-----------------------------------------------------------------------
 !*  Generation du maillage pour une plaque rectangulaire dans le plan xOy.
 !*  Maillage regulier de type TRIANGLES P1 - Q4T.
 !*-----------------------------------------------------------------------
 
-sll_int32 :: i
+sll_int32 :: i, j
 sll_int32 :: nd1, nd2, nd3
 sll_int32 :: nelt
 sll_int32 :: l, l1, ll1, ll2
@@ -251,6 +311,9 @@ sll_int32 :: nbox, nboy
 
 sll_real64 :: xx1, xx2, pasx0, pasx1, pasy0, pasy1
 sll_real64 :: alx, aly
+sll_int32  :: iel, iev
+sll_int32  :: nelin, nefro, nelfr, nhp, nlp
+sll_int32, allocatable :: nar(:)
 
 mesh%eta1_min = eta1_min
 mesh%eta1_max = eta1_max
@@ -273,8 +336,10 @@ noeud  = nsom          !nombre total de noeuds
 
 mesh%num_cells = neltot
 mesh%num_nodes = noeud
-allocate(mesh%coord(1:2,noeud))
+allocate(mesh%coord(1:2,1:noeud))
 allocate(mesh%nodes(1:3,1:neltot))
+allocate(mesh%nvois(3,1:neltot))
+allocate(mesh%refs(1:noeud))
 
 !*---- Ecriture des coordonnees des sommets ----*!
                   
@@ -324,6 +389,88 @@ do l = 1 , nym                  !boucle sur les lignes
    end do
 
 end do
+
+!*** Recherche des elements sur la frontiere
+nefro = 4*(nbox-2) + 4*(nboy-2)
+nelfr = 2*(nbox-1) + 2*(nboy-1) - 2
+nelin = neltot - nelfr 
+
+allocate(nar(2*(nbox+nboy)))
+
+!---- Description des frontieres ----
+
+nhp = nbox + 1
+do i = 1 , nbox
+   nar(i) = nhp - i 
+   mesh%refs(nar(i)) = 1
+end do        
+
+nhp = nbox * nym
+do i = 1 , nbox
+   nar(i) = nhp + i 
+   mesh%refs(nar(i)) = 3
+end do        
+
+nlp = nboy + 1
+do i = 1 , nboy
+   nar(i) = nbox * (nlp - i)
+   mesh%refs(nar(i)) = 4
+end do        
+
+do i = 1 , nboy
+   nar(i) = i * nbox - nxm
+   mesh%refs(nar(i)) = 2
+end do        
+
+mesh%nmxfr = 0
+!*** Initialisation des voisins ***
+
+if (present(bc)) then
+
+   do i = 1, nym
+      iel = (i-1) * 2 * nym + 1
+      iev =  iel + 2 * nym - 1 
+      mesh%nvois(1,iel) = iev
+      mesh%nvois(3,iev) = iel
+   end do
+   
+   do i = 1, nxm
+      iel = (i-1) * 2 + 1
+      iev =  iel + 2 * nxm * (nym-1) + 1 
+      mesh%nvois(3,iel) = iev
+      mesh%nvois(2,iev) = iel
+   end do
+
+   nelfr = 0
+   nefro = 0
+
+else
+
+   !*** Voisins en bas et en haut
+   
+   do i = 1, 2*(nbox-1), 2
+      mesh%nvois(3,i      ) = -1
+      mesh%nvois(2,neltot-i+1) = -3
+   end do
+   
+   !*** Voisins de chaque cote lateral
+   
+   mesh%nvois(1,1) = -2
+   nhp = 2*(nbox-1)
+   do i = 1, nboy - 2
+      j = i * nhp
+      mesh%nvois(3,j  ) = -4
+      mesh%nvois(1,j+1) = -2 
+   end do
+   mesh%nvois(3,neltot) = -4
+
+   do i = 1, noeud
+      if (mesh%refs(i) >= mesh%nmxfr) mesh%nmxfr = mesh%nmxfr+1
+   end do
+
+end if
+
+deallocate(nar)
 
 end subroutine initialize_triangular_mesh_2d
 
@@ -559,12 +706,12 @@ end subroutine display_triangular_mesh_2d
 subroutine write_triangular_mesh_mtv(mesh, mtv_file)
 
 type(sll_triangular_mesh_2d) :: mesh
-sll_real64                   :: x1
-sll_real64                   :: y1
+sll_real64                   :: x1, x2
+sll_real64                   :: y1, y2
 character(len=*)             :: mtv_file
 sll_int32                    :: out_unit
 sll_int32                    :: error
-sll_int32                    :: i
+sll_int32                    :: i, j, k, l
 
 call sll_new_file_id(out_unit, error)
 
@@ -683,6 +830,42 @@ do i = 1, mesh%num_cells
    write(out_unit,"(i4)"  , advance="no") i
    write(out_unit,"(a)")"'"
 end do
+
+write(out_unit,*)
+
+write(out_unit,*)"$DATA=CURVE3D"
+write(out_unit,*)"%equalscale=T"
+write(out_unit,*)"%toplabel='References des frontieres' "
+
+do i = 1, mesh%num_cells
+   write(out_unit,*)mesh%coord(1:2,mesh%nodes(1,i)), 0.0
+   write(out_unit,*)mesh%coord(1:2,mesh%nodes(2,i)), 0.0
+   write(out_unit,*)mesh%coord(1:2,mesh%nodes(3,i)), 0.0
+   write(out_unit,*)mesh%coord(1:2,mesh%nodes(1,i)), 0.0
+   write(out_unit,*)
+end do
+
+do i = 1, mesh%num_cells
+  do j = 1, 3
+    if (mesh%nvois(j,i) < 0) then
+      k = mod(j-1,3)+1   !Premier sommet
+      l = mod(j  ,3)+1   !Deuxieme sommet
+      x1 = mesh%coord(1,mesh%nodes(k,i))
+      y1 = mesh%coord(2,mesh%nodes(k,i))
+      x2 = mesh%coord(1,mesh%nodes(l,i))
+      y2 = mesh%coord(2,mesh%nodes(l,i))
+      write(out_unit,"(a)"    , advance="no")"@text x1="
+      write(out_unit,"(g15.3)", advance="no") 0.5*(x1+x2)
+      write(out_unit,"(a)"    , advance="no")" y1="
+      write(out_unit,"(g15.3)", advance="no") 0.5*(y1+y2)
+      write(out_unit,"(a)"    , advance="no")" z1=0. lc=5 ll='"
+      write(out_unit,"(i1)"   , advance="no") -mesh%nvois(j,i)
+      write(out_unit,"(a)")"'"
+    end if
+  end do
+end do
+
+write(10,*)
 
 write(out_unit,*)"$END"
 close(out_unit)
