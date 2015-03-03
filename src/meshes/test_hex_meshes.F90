@@ -14,11 +14,11 @@ sll_int32                   :: error
 sll_real64                  :: x1
 sll_real64                  :: x2
 sll_int32                   :: i
-sll_int32                   :: iv1
-sll_int32                   :: iv2
-sll_int32                   :: iv3
+sll_int32                   :: nei1
+sll_int32                   :: nei2
+sll_int32                   :: nei3
 
-num_cells = 10
+num_cells = 1
 
 print *, ""
 print *, "Creating a mesh with 40 cells, mesh coordinates written in ./hex_mesh_coo.txt"
@@ -42,11 +42,13 @@ call write_caid_files(mesh)
 
 call delete(mesh)
 
-mesh => new_hex_mesh_2d(2)
+! TESTING NEIGHBOURS :
+num_cells = 1
+mesh => new_hex_mesh_2d(num_cells)
 
 do i = 1, mesh%num_triangles
-   call get_neighbours(mesh, i, iv1, iv2, iv3)
-   print"(4i5)", i, iv1, iv2, iv3
+   call get_neighbours(mesh, i, nei1, nei2, nei3)
+   print *, "i =", i, "neighbourcells =", nei1, nei2, nei3
 end do
 
 call delete(mesh)
