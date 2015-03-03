@@ -29,9 +29,12 @@ sll_real64 :: x1_min = 0.0_f64, x1_max = 1.0_f64
 sll_int32  :: nc_x2 = 10
 sll_real64 :: x2_min = 0.0_f64, x2_max = 1.0_f64
 
+sll_int32  :: i
+sll_real64 :: x1, x2
+
 !mesh => new_triangular_mesh_2d("diode.maa") 
 
-num_cells = 2
+num_cells = 10
 
 h_mesh => new_hex_mesh_2d( num_cells, 0._f64, 0._f64) 
   
@@ -50,20 +53,30 @@ allocate(phi(t_mesh%num_nodes)); phi = 0.0_f64
 
 call cpu_time(tcpu)  !Initialisation du temps CPU
 
-ntypfr(1) = 3; potfr(1) = 0.0_f64
+ntypfr(1) = 1; potfr(1) = 0.0_f64
 ntypfr(2) = 1; potfr(2) = 0.0_f64
-ntypfr(3) = 3; potfr(3) = 0.0_f64
-ntypfr(4) = 1; potfr(4) = 1.0_f64
+ntypfr(3) = 1; potfr(3) = 0.0_f64
+ntypfr(4) = 1; potfr(4) = 0.0_f64
 call sll_create(solver, t_mesh, ntypfr, potfr)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!   Equation de POISSON - elements finis !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+
+do i = 1, h_mesh%num_pts_tot
+   x1 = h_mesh%global_to_x1(i)
+   x2 = h_mesh%global_to_x2(i)
+   rho(i) = exp(-(x1*x1+x2*x2)/0.01)
+end do
+
+call write_field_hex_mesh_xmf(h_mesh, rho, 'rho')
+
 call poissn(solver, e_x, e_y, rho, phi)
-call poliss(solver, phi, e_x, e_y)
-call poifrc(solver, e_x, e_y)
+!call poliss(solver, phi, e_x, e_y)
+!call poifrc(solver, e_x, e_y)
 
 call sll_gnuplot_2d( phi, "phi", t_mesh%coord, t_mesh%nodes, 1)
+call write_field_hex_mesh_xmf(h_mesh, phi, 'phi')
 
 end program test_tri_poisson

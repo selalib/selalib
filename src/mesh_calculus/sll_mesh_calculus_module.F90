@@ -1400,14 +1400,15 @@ double precision :: det, s1, s2, s3, x21, y21, xa, ya, xb, yb
 integer :: ic, nuctf, ind, nm1, nm2, nel1, nel2, indv1, indv2
 integer :: indn1, indn2, num1, num2, n1, n2, ivois, nc, iel, nucti
 integer :: nbti, is
-integer :: i
 integer, parameter :: iout=6
      
 !======================================================================
 ! --- 1.0 --- Pointeur des numeros de cotes pointant vers un noeud -----
 
 do is=1,mesh%num_nodes
+   print*, "node = ", is
    nbti=mesh%npoel1(is+1)-mesh%npoel1(is)
+   print*, " nombre de triangles en commun = ", nbti
    mesh%nbcov(is+1)=nbti
    if(mesh%refs(is) /= 0) then
       mesh%nbcov(is+1)=nbti+1
@@ -1420,10 +1421,8 @@ do is=1,mesh%num_nodes
 end do
 
 ! --- 1.5 --- Tableau temporaire (cumul des cotes frontieres) ----------
-nucti=0
-do i=1,mesh%nmxfr
-   nuctfr(i)=0
-end do
+nucti  = 0
+nuctfr = 0
 
 ! ======================================================================
 ! --- 2.0 --- Numerotation des cotes -----------------------------------
@@ -1434,16 +1433,17 @@ do iel=1,mesh%num_cells
       n1=nc
       n2=mod(nc,3)+1
 
-      num1 =mesh%nodes(n1,iel)
-      num2 =mesh%nodes(n2,iel)
-      indn1=mesh%npoel1(num1)
-      indn2=mesh%npoel1(num2)
-      indv1=mesh%nbcov(num1)
-      indv2=mesh%nbcov(num2)
-      nel1 =mesh%npoel1(num1+1)-mesh%npoel1(num1)
-      nel2 =mesh%npoel1(num2+1)-mesh%npoel1(num2)
+      num1  = mesh%nodes(n1,iel)
+      num2  = mesh%nodes(n2,iel)
+      indn1 = mesh%npoel1(num1)
+      indn2 = mesh%npoel1(num2)
+      indv1 = mesh%nbcov(num1)
+      indv2 = mesh%nbcov(num2)
+      nel1  = mesh%npoel1(num1+1)-mesh%npoel1(num1)
+      nel2  = mesh%npoel1(num2+1)-mesh%npoel1(num2)
 
       !Cas des cotes internes ...........................................
+
 
       if(ivois >  iel) then
 
@@ -1468,9 +1468,9 @@ do iel=1,mesh%num_cells
          mesh%nuvac(1,nucti)=num1
          mesh%nuvac(2,nucti)=num2
 
-         !Cas des cotes frontaliers ........................................
+         print"(7i4)", iel, nc, num1, num2, ivois, mesh%nuvac(:,nucti)
 
-      else if(ivois < 0) then
+      else if(ivois < 0) then !Cas des cotes frontaliers 
 
          ind=-ivois
          nuctfr(ind)=nuctfr(ind)+1
@@ -1481,7 +1481,10 @@ do iel=1,mesh%num_cells
          mesh%nuvac(1,nuctf)=num1
          mesh%nuvac(2,nuctf)=num2
 
+         print"(7i4)", iel, nc, num1, num2, ivois, mesh%nuvac(:,nuctf)
+
       end if
+
 
    end do
 
@@ -1491,6 +1494,7 @@ end do
 !----------- Longueurs des cotes des triangles ------------------------
 
 do ic=1,mesh%nbtcot
+   print"(3i4)", ic, mesh%nuvac(:,ic)
    xa=mesh%coord(1,mesh%nuvac(1,ic))
    ya=mesh%coord(2,mesh%nuvac(1,ic))
    xb=mesh%coord(1,mesh%nuvac(2,ic))
@@ -1535,25 +1539,26 @@ end do
  
 if(lerr) then
    write(iout,900)
-   !call errout(iout,"F","poclis","maillage.f90" )
+   stop "poclis"
 end if
 
 ! ======================================================================
 ! --- 5.0 --- Impression des tableaux ----------------------------------
  
-!write(iout,902)
-!do is=1,mesh%num_nodes
-!   write(iout,903) mesh%xmal1(is),mesh%xmal2(is),mesh%xmal3(is)
-!end do
 
-!write(iout,904)
-!do ic=1,mesh%nbtcot
-!   write(iout,905) vtaux(ic),vtauy(ic)
-!end do
+write(iout,902)
+do is=1,mesh%num_nodes
+   write(iout,903) mesh%xmal1(is),mesh%xmal2(is),mesh%xmal3(is)
+end do
+
+write(iout,904)
+do ic=1,mesh%nbtcot
+   write(iout,905) mesh%vtaux(ic),mesh%vtauy(ic)
+end do
 
 if(lerr) then
    write(iout,901)
-   !call errout(iout,"F","poclis","maillage.f90" )
+   stop "poclis"
 end if
 
  900  format(//10x,'Determinant des coefficients des matrices'  &
@@ -1562,6 +1567,12 @@ end if
  901  format(//10x,'Le nombre de triangles communs a un noeud'  &
               /10x,'est superieur a 12'             &   
               /10x,'Modifiez legerement le maillage'//)
+ 902  format(//10x,'Matrices de lissage'            &
+              /10x,'xmal1',7x,'xmal2',7x,'xmal3')
+ 903  format(  10x,3e12.3)
+ 904  format(//10x,'Composantes des vecteurs tangeants'     &
+              /10x,'vtaux',7x,'vtauy')
+ 905  format(  10x,2e12.3)
 
 end subroutine poclis
 
