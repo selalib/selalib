@@ -1015,6 +1015,8 @@ contains
     sll_int32, intent(out)     :: triangle_index
     sll_int32                  :: global
 
+    triangle_index = -1
+    
     ! almost every point is the lowest point of a lozenge , i.e. 2 triangles
     ! we get therefore 2 indices per points
     ! in order to have the correct one we test in which triangle we are 
@@ -1087,7 +1089,7 @@ contains
     k1 = cart_to_hex1(mesh, x, y)
     k2 = cart_to_hex2(mesh, x, y)
     call get_triangle_index(k1, k2, mesh, x, nei_1)
-
+    
     ! Second center (symmetry with P2-P3) :
     coef = 2._f64 * ((xc - x2)*(x3 - x2) + (yc - y2)*(y3 - y2))/((x3-x2)**2 + (y3 - y2)**2)
     x = coef * (x3 - x2) - (xc - x2) + x2
