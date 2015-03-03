@@ -235,8 +235,6 @@ function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
     tri_mesh%coord(1,is3) = hex_mesh%global_to_x1(is3)
     tri_mesh%coord(2,is3) = hex_mesh%global_to_x2(is3)
 
-    print"('triangle :',7i4)", i, tri_mesh%nodes(1:3,i), tri_mesh%nvois(1:3,i)
-
     if (tri_mesh%nvois(1,i) < 0) then
       tri_mesh%refs(tri_mesh%nodes(1,i)) = 1
       tri_mesh%refs(tri_mesh%nodes(2,i)) = 1
@@ -254,9 +252,6 @@ function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
     end if
 
   end do
-
-  print*, 'nctfr = ', nctfr
-  tri_mesh%nvois     =  -1
 
 end function new_triangular_mesh_2d_from_hex_mesh
 
@@ -999,5 +994,32 @@ return
 SLL_ERROR(' Input file  '//maafil//'  not found')
 
 end subroutine read_from_file
+
+subroutine get_cell_center( mesh, iel, x1, x2)
+
+class(sll_triangular_mesh_2d) :: mesh
+sll_int32,  intent(in)        :: iel
+sll_real64, intent(out)       :: x1
+sll_real64, intent(out)       :: x2
+
+sll_real64 :: xa, ya, xb, yb, xc, yc
+sll_real64 :: det, syca, syba
+
+xa = mesh%coord(1,mesh%nodes(1,iel))
+ya = mesh%coord(2,mesh%nodes(1,iel))
+xb = mesh%coord(1,mesh%nodes(2,iel))
+yb = mesh%coord(2,mesh%nodes(2,iel))
+xc = mesh%coord(1,mesh%nodes(3,iel))
+yc = mesh%coord(2,mesh%nodes(3,iel))
+
+det  = 2.*((xb-xa)*(yc-ya)-(xc-xa)*(yb-ya))
+syca = (yc-ya)*(xb*xb-xa*xa+yb*yb-ya*ya)
+syba = (xb-xa)*(xc*xc-xa*xa+yc*yc-ya*ya)
+
+x1 = (syca-(yb-ya)*(xc*xc-xa*xa+yc*yc-ya*ya))/det
+x2 = (syba-(xc-xa)*(xb*xb-xa*xa+yb*yb-ya*ya))/det
+
+end subroutine get_cell_center
+
 
 end module sll_triangular_meshes

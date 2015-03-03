@@ -1442,7 +1442,6 @@ do is=1,this%mesh%num_nodes
 
    iac=this%mesh%nbcov(is)+1
    nbc=this%mesh%nbcov(is+1)-this%mesh%nbcov(is)
-   write(*,*) " iac, nbc = ", iac, nbc, this%mesh%nugcv(iac:iac+nbc-1)
 
    if (nbc == 6) then
 
