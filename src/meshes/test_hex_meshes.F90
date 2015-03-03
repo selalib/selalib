@@ -43,7 +43,7 @@ call write_caid_files(mesh)
 call delete(mesh)
 
 ! TESTING NEIGHBOURS :
-num_cells = 1
+num_cells = 2
 mesh => new_hex_mesh_2d(num_cells)
 
 do i = 1, mesh%num_triangles
