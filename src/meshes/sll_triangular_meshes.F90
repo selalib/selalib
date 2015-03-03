@@ -183,10 +183,11 @@ function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
   sll_int32                  :: ierr
   sll_real64                 :: x1
   sll_real64                 :: y1
-  sll_int32                  :: is1
-  sll_int32                  :: is2
-  sll_int32                  :: is3
+  sll_int32                  :: is1, iv1 
+  sll_int32                  :: is2, iv2
+  sll_int32                  :: is3, iv3
   sll_int32                  :: i
+  sll_int32                  :: nctfr
 
   SLL_ALLOCATE(tri_mesh, ierr)
 
@@ -199,24 +200,32 @@ function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
   SLL_ALLOCATE(tri_mesh%nodes(1:3,1:tri_mesh%num_cells), ierr)
   SLL_ALLOCATE(tri_mesh%refs(tri_mesh%num_nodes),        ierr)
   SLL_ALLOCATE(tri_mesh%nvois(1:3,1:tri_mesh%num_cells), ierr)
-  tri_mesh%refs      =  1
-  tri_mesh%nvois     = -1
+  tri_mesh%refs      =  0
+  tri_mesh%nvois     =  0
 
+  nctfr = 0
   do i = 1, hex_mesh%num_triangles
     
     x1 = hex_mesh%center_cartesian_coord(1, i)
     y1 = hex_mesh%center_cartesian_coord(2, i)
     
     call get_cell_vertices_index( x1, y1, hex_mesh, is1, is2, is3)
+    call get_neighbours(hex_mesh, i, iv1, iv2, iv3)
     
     if ( mod(i,2) == 0) then
       tri_mesh%nodes(1,i) = is1
       tri_mesh%nodes(2,i) = is2
       tri_mesh%nodes(3,i) = is3
+      tri_mesh%nvois(1,i) = iv1
+      tri_mesh%nvois(2,i) = iv2
+      tri_mesh%nvois(3,i) = iv3
     else
       tri_mesh%nodes(1,i) = is1
       tri_mesh%nodes(3,i) = is2
       tri_mesh%nodes(2,i) = is3
+      tri_mesh%nvois(3,i) = iv1
+      tri_mesh%nvois(2,i) = iv2
+      tri_mesh%nvois(1,i) = iv3
     end if
 
     tri_mesh%coord(1,is1) = hex_mesh%global_to_x1(is1)
@@ -225,8 +234,29 @@ function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
     tri_mesh%coord(2,is2) = hex_mesh%global_to_x2(is2)
     tri_mesh%coord(1,is3) = hex_mesh%global_to_x1(is3)
     tri_mesh%coord(2,is3) = hex_mesh%global_to_x2(is3)
-    
+
+    print"('triangle :',7i4)", i, tri_mesh%nodes(1:3,i), tri_mesh%nvois(1:3,i)
+
+    if (tri_mesh%nvois(1,i) < 0) then
+      tri_mesh%refs(tri_mesh%nodes(1,i)) = 1
+      tri_mesh%refs(tri_mesh%nodes(2,i)) = 1
+      nctfr = nctfr+1
+    end if
+    if (tri_mesh%nvois(2,i) < 0) then
+      tri_mesh%refs(tri_mesh%nodes(2,i)) = 1
+      tri_mesh%refs(tri_mesh%nodes(3,i)) = 1
+      nctfr = nctfr+1
+    end if
+    if (tri_mesh%nvois(3,i) < 0) then
+      tri_mesh%refs(tri_mesh%nodes(3,i)) = 1
+      tri_mesh%refs(tri_mesh%nodes(1,i)) = 1
+      nctfr = nctfr+1
+    end if
+
   end do
+
+  print*, 'nctfr = ', nctfr
+  tri_mesh%nvois     =  -1
 
 end function new_triangular_mesh_2d_from_hex_mesh
 
@@ -465,7 +495,7 @@ else
    mesh%nvois(3,neltot) = -4
 
    do i = 1, noeud
-      if (mesh%refs(i) >= mesh%nmxfr) mesh%nmxfr = mesh%nmxfr+1
+      if (mesh%refs(i) > mesh%nmxfr) mesh%nmxfr = mesh%nmxfr+1
    end do
 
 end if
@@ -865,7 +895,31 @@ do i = 1, mesh%num_cells
   end do
 end do
 
-write(10,*)
+write(out_unit,*)
+
+write(out_unit,*)"$DATA=CURVE3D"
+write(out_unit,*)"%equalscale=T"
+write(out_unit,*)"%toplabel='References des noeuds' "
+
+do i = 1, mesh%num_cells
+   write(out_unit,*)mesh%coord(1:2,mesh%nodes(1,i)), 0.0
+   write(out_unit,*)mesh%coord(1:2,mesh%nodes(2,i)), 0.0
+   write(out_unit,*)mesh%coord(1:2,mesh%nodes(3,i)), 0.0
+   write(out_unit,*)mesh%coord(1:2,mesh%nodes(1,i)), 0.0
+   write(out_unit,*)
+end do
+
+do i = 1, mesh%num_nodes
+   x1 = mesh%coord(1,i)
+   y1 = mesh%coord(2,i)
+   write(out_unit,"(a)"    , advance="no")"@text x1="
+   write(out_unit,"(g15.3)", advance="no") x1
+   write(out_unit,"(a)"    , advance="no")" y1="
+   write(out_unit,"(g15.3)", advance="no") y1
+   write(out_unit,"(a)"    , advance="no")" z1=0. lc=5 ll='"
+   write(out_unit,"(i1)"   , advance="no") mesh%refs(i)
+   write(out_unit,"(a)")"'"
+end do
 
 write(out_unit,*)"$END"
 close(out_unit)
