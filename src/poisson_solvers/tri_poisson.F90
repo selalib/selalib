@@ -1442,103 +1442,209 @@ do is=1,this%mesh%num_nodes
 
    iac=this%mesh%nbcov(is)+1
    nbc=this%mesh%nbcov(is+1)-this%mesh%nbcov(is)
+   write(*,*) " iac, nbc = ", iac, nbc, this%mesh%nugcv(iac:iac+nbc-1)
 
    if (nbc == 6) then
-      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))+this%vtantx(this%mesh%nugcv(iac+1)) &
-              + this%vtantx(this%mesh%nugcv(iac+2))+this%vtantx(this%mesh%nugcv(iac+3)) &
-              + this%vtantx(this%mesh%nugcv(iac+4))+this%vtantx(this%mesh%nugcv(iac+5)) 
-      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))+this%vtanty(this%mesh%nugcv(iac+1)) &
-              + this%vtanty(this%mesh%nugcv(iac+2))+this%vtanty(this%mesh%nugcv(iac+3)) &
-              + this%vtanty(this%mesh%nugcv(iac+4))+this%vtanty(this%mesh%nugcv(iac+5)) 
-   else if (nbc == 5) then
-      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))+this%vtantx(this%mesh%nugcv(iac+1)) &
-              + this%vtantx(this%mesh%nugcv(iac+2))+this%vtantx(this%mesh%nugcv(iac+3)) &
-              + this%vtantx(this%mesh%nugcv(iac+4))
-      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))+this%vtanty(this%mesh%nugcv(iac+1)) &
-              + this%vtanty(this%mesh%nugcv(iac+2))+this%vtanty(this%mesh%nugcv(iac+3)) &
-              + this%vtanty(this%mesh%nugcv(iac+4))
-   else if (nbc == 7) then
-      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))+this%vtantx(this%mesh%nugcv(iac+1)) &
-              + this%vtantx(this%mesh%nugcv(iac+2))+this%vtantx(this%mesh%nugcv(iac+3)) &
-              + this%vtantx(this%mesh%nugcv(iac+4))+this%vtantx(this%mesh%nugcv(iac+5))     &
-              + this%vtantx(this%mesh%nugcv(iac+6))
-      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))+this%vtanty(this%mesh%nugcv(iac+1)) &
-              + this%vtanty(this%mesh%nugcv(iac+2))+this%vtanty(this%mesh%nugcv(iac+3)) &
-              + this%vtanty(this%mesh%nugcv(iac+4))+this%vtanty(this%mesh%nugcv(iac+5))     &
-              + this%vtanty(this%mesh%nugcv(iac+6))
-   else if (nbc == 4) then
-      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))+this%vtantx(this%mesh%nugcv(iac+1)) &
-              + this%vtantx(this%mesh%nugcv(iac+2))+this%vtantx(this%mesh%nugcv(iac+3))
-      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))+this%vtanty(this%mesh%nugcv(iac+1)) &
-              + this%vtanty(this%mesh%nugcv(iac+2))+this%vtanty(this%mesh%nugcv(iac+3))
-   else if (nbc == 8) then
-      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))+this%vtantx(this%mesh%nugcv(iac+1)) &
-              + this%vtantx(this%mesh%nugcv(iac+2))+this%vtantx(this%mesh%nugcv(iac+3)) &
-              + this%vtantx(this%mesh%nugcv(iac+4))+this%vtantx(this%mesh%nugcv(iac+5))     &
-              + this%vtantx(this%mesh%nugcv(iac+6))+this%vtantx(this%mesh%nugcv(iac+7)) 
-      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))+this%vtanty(this%mesh%nugcv(iac+1)) &
-              + this%vtanty(this%mesh%nugcv(iac+2))+this%vtanty(this%mesh%nugcv(iac+3)) &
-              + this%vtanty(this%mesh%nugcv(iac+4))+this%vtanty(this%mesh%nugcv(iac+5))     &
-              + this%vtanty(this%mesh%nugcv(iac+6))+this%vtanty(this%mesh%nugcv(iac+7)) 
-   else if (nbc == 3) then
-      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))+this%vtantx(this%mesh%nugcv(iac+1)) &
-              + this%vtantx(this%mesh%nugcv(iac+2))
-      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))+this%vtanty(this%mesh%nugcv(iac+1)) &
-              + this%vtanty(this%mesh%nugcv(iac+2))
-   else if (nbc == 9) then
-      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))+this%vtantx(this%mesh%nugcv(iac+1)) &
-              + this%vtantx(this%mesh%nugcv(iac+2))+this%vtantx(this%mesh%nugcv(iac+3)) &
-              + this%vtantx(this%mesh%nugcv(iac+4))+this%vtantx(this%mesh%nugcv(iac+5))     &
-              + this%vtantx(this%mesh%nugcv(iac+6))+this%vtantx(this%mesh%nugcv(iac+7))     &
-              + this%vtantx(this%mesh%nugcv(iac+8))
-      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))+this%vtanty(this%mesh%nugcv(iac+1)) &
-              + this%vtanty(this%mesh%nugcv(iac+2))+this%vtanty(this%mesh%nugcv(iac+3)) &
-              + this%vtanty(this%mesh%nugcv(iac+4))+this%vtanty(this%mesh%nugcv(iac+5))     &
-              + this%vtanty(this%mesh%nugcv(iac+6))+this%vtanty(this%mesh%nugcv(iac+7))     &
-              + this%vtanty(this%mesh%nugcv(iac+8))
-   else if (nbc == 2) then
-      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))+this%vtantx(this%mesh%nugcv(iac+1))
-      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))+this%vtanty(this%mesh%nugcv(iac+1))
-   else if (nbc == 10) then
-      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))+this%vtantx(this%mesh%nugcv(iac+1)) &
-              + this%vtantx(this%mesh%nugcv(iac+2))+this%vtantx(this%mesh%nugcv(iac+3)) &
-              + this%vtantx(this%mesh%nugcv(iac+4))+this%vtantx(this%mesh%nugcv(iac+5))     &
-              + this%vtantx(this%mesh%nugcv(iac+6))+this%vtantx(this%mesh%nugcv(iac+7))     &
-              + this%vtantx(this%mesh%nugcv(iac+8))+this%vtantx(this%mesh%nugcv(iac+9)) 
-      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))+this%vtanty(this%mesh%nugcv(iac+1)) &
-              + this%vtanty(this%mesh%nugcv(iac+2))+this%vtanty(this%mesh%nugcv(iac+3)) &
-              + this%vtanty(this%mesh%nugcv(iac+4))+this%vtanty(this%mesh%nugcv(iac+5))     &
-              + this%vtanty(this%mesh%nugcv(iac+6))+this%vtanty(this%mesh%nugcv(iac+7))     &
-              + this%vtanty(this%mesh%nugcv(iac+8))+this%vtanty(this%mesh%nugcv(iac+9)) 
-   else if (nbc == 11) then
-      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))+this%vtantx(this%mesh%nugcv(iac+1)) &
-              + this%vtantx(this%mesh%nugcv(iac+2))+this%vtantx(this%mesh%nugcv(iac+3)) &
-              + this%vtantx(this%mesh%nugcv(iac+4))+this%vtantx(this%mesh%nugcv(iac+5))     &
-              + this%vtantx(this%mesh%nugcv(iac+6))+this%vtantx(this%mesh%nugcv(iac+7))     &
-              + this%vtantx(this%mesh%nugcv(iac+8))+this%vtantx(this%mesh%nugcv(iac+9))     &
-              + this%vtantx(this%mesh%nugcv(iac+10))
-      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))+this%vtanty(this%mesh%nugcv(iac+1)) &
-              + this%vtanty(this%mesh%nugcv(iac+2))+this%vtanty(this%mesh%nugcv(iac+3)) &
-              + this%vtanty(this%mesh%nugcv(iac+4))+this%vtanty(this%mesh%nugcv(iac+5))     &
-              + this%vtanty(this%mesh%nugcv(iac+6))+this%vtanty(this%mesh%nugcv(iac+7))     &
-              + this%vtanty(this%mesh%nugcv(iac+8))+this%vtanty(this%mesh%nugcv(iac+9))     &
-              + this%vtanty(this%mesh%nugcv(iac+10))
-   else if (nbc == 12) then
-      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))+this%vtantx(this%mesh%nugcv(iac+1)) &
-              + this%vtantx(this%mesh%nugcv(iac+2))+this%vtantx(this%mesh%nugcv(iac+3)) &
-              + this%vtantx(this%mesh%nugcv(iac+4))+this%vtantx(this%mesh%nugcv(iac+5))     &
-              + this%vtantx(this%mesh%nugcv(iac+6))+this%vtantx(this%mesh%nugcv(iac+7))     &
-              + this%vtantx(this%mesh%nugcv(iac+8))+this%vtantx(this%mesh%nugcv(iac+9))     &
-              + this%vtantx(this%mesh%nugcv(iac+10))+this%vtantx(this%mesh%nugcv(iac+11))
-      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))+this%vtanty(this%mesh%nugcv(iac+1)) &
-              + this%vtanty(this%mesh%nugcv(iac+2))+this%vtanty(this%mesh%nugcv(iac+3)) &
-              + this%vtanty(this%mesh%nugcv(iac+4))+this%vtanty(this%mesh%nugcv(iac+5))     &
-              + this%vtanty(this%mesh%nugcv(iac+6))+this%vtanty(this%mesh%nugcv(iac+7))     &
-              + this%vtanty(this%mesh%nugcv(iac+8))+this%vtanty(this%mesh%nugcv(iac+9))     &
-              + this%vtanty(this%mesh%nugcv(iac+10))+this%vtanty(this%mesh%nugcv(iac+11))
 
+      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))  &
+                   + this%vtantx(this%mesh%nugcv(iac+1))  &
+                   + this%vtantx(this%mesh%nugcv(iac+2))  &
+                   + this%vtantx(this%mesh%nugcv(iac+3))  &
+                   + this%vtantx(this%mesh%nugcv(iac+4))  &
+                   + this%vtantx(this%mesh%nugcv(iac+5))  
+
+      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))  &
+                   + this%vtanty(this%mesh%nugcv(iac+1))  &
+                   + this%vtanty(this%mesh%nugcv(iac+2))  &
+                   + this%vtanty(this%mesh%nugcv(iac+3))  &
+                   + this%vtanty(this%mesh%nugcv(iac+4))  &
+                   + this%vtanty(this%mesh%nugcv(iac+5))  
+
+   else if (nbc == 5) then
+
+      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))  &
+                   + this%vtantx(this%mesh%nugcv(iac+1))  &
+                   + this%vtantx(this%mesh%nugcv(iac+2))  &
+                   + this%vtantx(this%mesh%nugcv(iac+3))  &
+                   + this%vtantx(this%mesh%nugcv(iac+4))
+
+      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))  &
+                   + this%vtanty(this%mesh%nugcv(iac+1))  &
+                   + this%vtanty(this%mesh%nugcv(iac+2))  &
+                   + this%vtanty(this%mesh%nugcv(iac+3))  &
+                   + this%vtanty(this%mesh%nugcv(iac+4))
+
+   else if (nbc == 7) then
+
+      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))  &
+                   + this%vtantx(this%mesh%nugcv(iac+1))  &
+                   + this%vtantx(this%mesh%nugcv(iac+2))  &
+                   + this%vtantx(this%mesh%nugcv(iac+3))  &
+                   + this%vtantx(this%mesh%nugcv(iac+4))  &
+                   + this%vtantx(this%mesh%nugcv(iac+5))  &
+                   + this%vtantx(this%mesh%nugcv(iac+6))
+
+      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))  &
+                   + this%vtanty(this%mesh%nugcv(iac+1))  &
+                   + this%vtanty(this%mesh%nugcv(iac+2))  &
+                   + this%vtanty(this%mesh%nugcv(iac+3))  &
+                   + this%vtanty(this%mesh%nugcv(iac+4))  &
+                   + this%vtanty(this%mesh%nugcv(iac+5))  &
+                   + this%vtanty(this%mesh%nugcv(iac+6))
+
+   else if (nbc == 4) then
+
+      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))  &
+                   + this%vtantx(this%mesh%nugcv(iac+1))  &
+                   + this%vtantx(this%mesh%nugcv(iac+2))  &
+                   + this%vtantx(this%mesh%nugcv(iac+3))
+
+      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))  &
+                   + this%vtanty(this%mesh%nugcv(iac+1))  &
+                   + this%vtanty(this%mesh%nugcv(iac+2))  &
+                   + this%vtanty(this%mesh%nugcv(iac+3))
+
+   else if (nbc == 8) then
+
+      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))  &
+                   + this%vtantx(this%mesh%nugcv(iac+1))  &
+                   + this%vtantx(this%mesh%nugcv(iac+2))  &
+                   + this%vtantx(this%mesh%nugcv(iac+3))  &
+                   + this%vtantx(this%mesh%nugcv(iac+4))  &
+                   + this%vtantx(this%mesh%nugcv(iac+5))  &
+                   + this%vtantx(this%mesh%nugcv(iac+6))  &
+                   + this%vtantx(this%mesh%nugcv(iac+7))  
+
+      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))  &
+                   + this%vtanty(this%mesh%nugcv(iac+1))  &
+                   + this%vtanty(this%mesh%nugcv(iac+2))  &
+                   + this%vtanty(this%mesh%nugcv(iac+3))  &
+                   + this%vtanty(this%mesh%nugcv(iac+4))  &
+                   + this%vtanty(this%mesh%nugcv(iac+5))  &
+                   + this%vtanty(this%mesh%nugcv(iac+6))  &
+                   + this%vtanty(this%mesh%nugcv(iac+7))  
+
+   else if (nbc == 3) then
+
+      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))  &
+                   + this%vtantx(this%mesh%nugcv(iac+1))  &
+                   + this%vtantx(this%mesh%nugcv(iac+2))
+
+      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))  &
+                   + this%vtanty(this%mesh%nugcv(iac+1))  &
+                   + this%vtanty(this%mesh%nugcv(iac+2))
+
+   else if (nbc == 9) then
+
+      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))  &
+                   + this%vtantx(this%mesh%nugcv(iac+1))  &
+                   + this%vtantx(this%mesh%nugcv(iac+2))  &
+                   + this%vtantx(this%mesh%nugcv(iac+3))  &
+                   + this%vtantx(this%mesh%nugcv(iac+4))  &
+                   + this%vtantx(this%mesh%nugcv(iac+5))  &
+                   + this%vtantx(this%mesh%nugcv(iac+6))  &
+                   + this%vtantx(this%mesh%nugcv(iac+7))  &
+                   + this%vtantx(this%mesh%nugcv(iac+8))
+
+      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))  &
+                   + this%vtanty(this%mesh%nugcv(iac+1))  &
+                   + this%vtanty(this%mesh%nugcv(iac+2))  &
+                   + this%vtanty(this%mesh%nugcv(iac+3))  &
+                   + this%vtanty(this%mesh%nugcv(iac+4))  &
+                   + this%vtanty(this%mesh%nugcv(iac+5))  &
+                   + this%vtanty(this%mesh%nugcv(iac+6))  &
+                   + this%vtanty(this%mesh%nugcv(iac+7))  &
+                   + this%vtanty(this%mesh%nugcv(iac+8))
+
+   else if (nbc == 2) then
+
+      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))  &
+                   + this%vtantx(this%mesh%nugcv(iac+1))
+
+      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))  &
+                   + this%vtanty(this%mesh%nugcv(iac+1))
+
+   else if (nbc == 10) then
+
+      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))  &
+                   + this%vtantx(this%mesh%nugcv(iac+1))  &
+                   + this%vtantx(this%mesh%nugcv(iac+2))  &
+                   + this%vtantx(this%mesh%nugcv(iac+3))  &
+                   + this%vtantx(this%mesh%nugcv(iac+4))  &
+                   + this%vtantx(this%mesh%nugcv(iac+5))  &
+                   + this%vtantx(this%mesh%nugcv(iac+6))  &
+                   + this%vtantx(this%mesh%nugcv(iac+7))  &
+                   + this%vtantx(this%mesh%nugcv(iac+8))  &
+                   + this%vtantx(this%mesh%nugcv(iac+9))  
+
+      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))  &
+                   + this%vtanty(this%mesh%nugcv(iac+1))  &
+                   + this%vtanty(this%mesh%nugcv(iac+2))  &
+                   + this%vtanty(this%mesh%nugcv(iac+3))  &
+                   + this%vtanty(this%mesh%nugcv(iac+4))  &
+                   + this%vtanty(this%mesh%nugcv(iac+5))  &
+                   + this%vtanty(this%mesh%nugcv(iac+6))  &
+                   + this%vtanty(this%mesh%nugcv(iac+7))  &
+                   + this%vtanty(this%mesh%nugcv(iac+8))  &
+                   + this%vtanty(this%mesh%nugcv(iac+9)) 
+
+   else if (nbc == 11) then
+
+      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))  &
+                   + this%vtantx(this%mesh%nugcv(iac+1))  &
+                   + this%vtantx(this%mesh%nugcv(iac+2))  &
+                   + this%vtantx(this%mesh%nugcv(iac+3))  &
+                   + this%vtantx(this%mesh%nugcv(iac+4))  &
+                   + this%vtantx(this%mesh%nugcv(iac+5))  &
+                   + this%vtantx(this%mesh%nugcv(iac+6))  &
+                   + this%vtantx(this%mesh%nugcv(iac+7))  &
+                   + this%vtantx(this%mesh%nugcv(iac+8))  &
+                   + this%vtantx(this%mesh%nugcv(iac+9))  &
+                   + this%vtantx(this%mesh%nugcv(iac+10))
+
+      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))  &
+                   + this%vtanty(this%mesh%nugcv(iac+1))  &
+                   + this%vtanty(this%mesh%nugcv(iac+2))  &
+                   + this%vtanty(this%mesh%nugcv(iac+3))  &
+                   + this%vtanty(this%mesh%nugcv(iac+4))  &
+                   + this%vtanty(this%mesh%nugcv(iac+5))  &
+                   + this%vtanty(this%mesh%nugcv(iac+6))  &
+                   + this%vtanty(this%mesh%nugcv(iac+7))  &
+                   + this%vtanty(this%mesh%nugcv(iac+8))  &
+                   + this%vtanty(this%mesh%nugcv(iac+9))  &
+                   + this%vtanty(this%mesh%nugcv(iac+10))
+
+   else if (nbc == 12) then
+
+      this%sv1(is) = this%vtantx(this%mesh%nugcv(iac  ))  &
+                   + this%vtantx(this%mesh%nugcv(iac+1))  &
+                   + this%vtantx(this%mesh%nugcv(iac+2))  &
+                   + this%vtantx(this%mesh%nugcv(iac+3))  &
+                   + this%vtantx(this%mesh%nugcv(iac+4))  &
+                   + this%vtantx(this%mesh%nugcv(iac+5))  &
+                   + this%vtantx(this%mesh%nugcv(iac+6))  &
+                   + this%vtantx(this%mesh%nugcv(iac+7))  &
+                   + this%vtantx(this%mesh%nugcv(iac+8))  &
+                   + this%vtantx(this%mesh%nugcv(iac+9))  &
+                   + this%vtantx(this%mesh%nugcv(iac+10)) &
+                   + this%vtantx(this%mesh%nugcv(iac+11))
+
+      this%sv2(is) = this%vtanty(this%mesh%nugcv(iac  ))  &
+                   + this%vtanty(this%mesh%nugcv(iac+1))  &
+                   + this%vtanty(this%mesh%nugcv(iac+2))  &
+                   + this%vtanty(this%mesh%nugcv(iac+3))  &
+                   + this%vtanty(this%mesh%nugcv(iac+4))  &
+                   + this%vtanty(this%mesh%nugcv(iac+5))  &
+                   + this%vtanty(this%mesh%nugcv(iac+6))  &
+                   + this%vtanty(this%mesh%nugcv(iac+7))  &
+                   + this%vtanty(this%mesh%nugcv(iac+8))  &
+                   + this%vtanty(this%mesh%nugcv(iac+9))  &
+                   + this%vtanty(this%mesh%nugcv(iac+10)) &
+                   + this%vtanty(this%mesh%nugcv(iac+11))
    else
+
       lerr=.TRUE.
+
    end if
 
 end do
