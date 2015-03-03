@@ -1401,14 +1401,14 @@ integer :: ic, nuctf, ind, nm1, nm2, nel1, nel2, indv1, indv2
 integer :: indn1, indn2, num1, num2, n1, n2, ivois, nc, iel, nucti
 integer :: nbti, is
 integer, parameter :: iout=6
+real(8) :: x1, y1
+integer :: i, j, iac, nbc
      
 !======================================================================
 ! --- 1.0 --- Pointeur des numeros de cotes pointant vers un noeud -----
 
 do is=1,mesh%num_nodes
-   print*, "node = ", is
    nbti=mesh%npoel1(is+1)-mesh%npoel1(is)
-   print*, " nombre de triangles en commun = ", nbti
    mesh%nbcov(is+1)=nbti
    if(mesh%refs(is) /= 0) then
       mesh%nbcov(is+1)=nbti+1
@@ -1428,65 +1428,62 @@ nuctfr = 0
 ! --- 2.0 --- Numerotation des cotes -----------------------------------
 
 do iel=1,mesh%num_cells
-   do nc=1,3
-      ivois=mesh%nvois(nc,iel)
-      n1=nc
-      n2=mod(nc,3)+1
 
-      num1  = mesh%nodes(n1,iel)
-      num2  = mesh%nodes(n2,iel)
-      indn1 = mesh%npoel1(num1)
-      indn2 = mesh%npoel1(num2)
-      indv1 = mesh%nbcov(num1)
-      indv2 = mesh%nbcov(num2)
-      nel1  = mesh%npoel1(num1+1)-mesh%npoel1(num1)
-      nel2  = mesh%npoel1(num2+1)-mesh%npoel1(num2)
+  do nc=1,3
 
-      !Cas des cotes internes ...........................................
+    ivois=mesh%nvois(nc,iel)
+    n1=nc
+    n2=mod(nc,3)+1
 
+    num1  = mesh%nodes(n1,iel)
+    num2  = mesh%nodes(n2,iel)
+    indn1 = mesh%npoel1(num1)
+    indn2 = mesh%npoel1(num2)
+    indv1 = mesh%nbcov(num1)
+    indv2 = mesh%nbcov(num2)
+    nel1  = mesh%npoel1(num1+1)-mesh%npoel1(num1)
+    nel2  = mesh%npoel1(num2+1)-mesh%npoel1(num2)
 
-      if(ivois >  iel) then
-
-         nucti=nucti+1
-
-         !Numeros globaux de cotes pointant vers le meme noeud 
-
-         do nm1=1,nel1
-            if(mesh%npoel2(indn1+nm1) == ivois) then
-               mesh%nugcv(indv1+nm1)=nucti
-            end if
-         end do
-
-         do nm2=1,nel2
-            if(mesh%npoel2(indn2+nm2) == iel) then
-               mesh%nugcv(indv2+nm2)=nucti
-            end if
-         end do
-
-         !Numeros des triangles ou polygones associes
-
-         mesh%nuvac(1,nucti)=num1
-         mesh%nuvac(2,nucti)=num2
-
-         print"(7i4)", iel, nc, num1, num2, ivois, mesh%nuvac(:,nucti)
-
-      else if(ivois < 0) then !Cas des cotes frontaliers 
-
-         ind=-ivois
-         nuctfr(ind)=nuctfr(ind)+1
-         nuctf=ncotcu(ind+1)+nuctfr(ind)
-
-         mesh%nugcv(indv1+nel1+1)=nuctf
-         mesh%nugcv(indv2+nel2  )=nuctf
-         mesh%nuvac(1,nuctf)=num1
-         mesh%nuvac(2,nuctf)=num2
-
-         print"(7i4)", iel, nc, num1, num2, ivois, mesh%nuvac(:,nuctf)
-
-      end if
+    !Cas des cotes internes ...........................................
 
 
-   end do
+    if(ivois >  iel) then
+
+       nucti=nucti+1
+
+       !Numeros globaux de cotes pointant vers le meme noeud 
+
+       do nm1=1,nel1
+          if(mesh%npoel2(indn1+nm1) == ivois) then
+             mesh%nugcv(indv1+nm1)=nucti
+          end if
+       end do
+
+       do nm2=1,nel2
+          if(mesh%npoel2(indn2+nm2) == iel) then
+             mesh%nugcv(indv2+nm2)=nucti
+          end if
+       end do
+
+       !Numeros des triangles ou polygones associes
+
+       mesh%nuvac(1,nucti)=num1
+       mesh%nuvac(2,nucti)=num2
+
+    else if(ivois < 0) then !Cas des cotes frontaliers 
+
+       ind         = -ivois
+       nuctfr(ind) = nuctfr(ind)+1
+       nuctf       = ncotcu(ind+1)+nuctfr(ind)
+
+       mesh%nugcv(indv1+nel1+1) = nuctf
+       mesh%nugcv(indv2+nel2  ) = nuctf
+       mesh%nuvac(1,nuctf)      = num1
+       mesh%nuvac(2,nuctf)      = num2
+
+    end if
+
+  end do
 
 end do
 
@@ -1573,6 +1570,48 @@ end if
  904  format(//10x,'Composantes des vecteurs tangeants'     &
               /10x,'vtaux',7x,'vtauy')
  905  format(  10x,2e12.3)
+
+#ifdef DEBUG
+do is=1,mesh%num_cells
+  nbc=mesh%nbcov(is+1)-mesh%nbcov(is)
+  iac=mesh%nbcov(is)
+  write(*,"(i8,2x,10i8)") is,(mesh%nugcv(iac+i),i=1,nbc)
+end do
+#endif
+
+open( 10, file="voronoi.mtv")
+
+write(10,*)"$DATA=CURVE3D"
+write(10,*)"%equalscale=T"
+write(10,*)"%toplabel='Polygones de Voronoi'"
+
+do i = 1, mesh%num_cells
+  write(10,*)"%linetype   = 1 # Solid Linetype (default=1)"
+  write(10,*)"%linewidth  = 1 # Linewidth      (default=1)"
+  write(10,*)"%linecolor  = 1 # Line Color     (default=1)"
+  do j = 1, 3
+    if( mesh%nvois(j,i) > 0 ) then
+  
+      call get_cell_center(mesh, i, x1, y1)
+      write(10,*) x1,y1,0.
+      call get_cell_center(mesh, mesh%nvois(j,i), x1, y1)
+      write(10,*) x1,y1,0.
+      write(10,*)
+
+    end if
+  end do
+end do
+   
+do i = 1, mesh%num_cells
+   write(10,*)"%linetype  = 1 # Solid Linetype (default=1)"
+   write(10,*)"%linewidth = 1 # Linewidth      (default=1)"
+   write(10,*)"%linecolor = 2 # Line Color     (default=1)"
+   write(10,*)mesh%coord(1:2,mesh%nodes(1,i)),0.
+   write(10,*)mesh%coord(1:2,mesh%nodes(2,i)),0.
+   write(10,*)mesh%coord(1:2,mesh%nodes(3,i)),0.
+   write(10,*)mesh%coord(1:2,mesh%nodes(1,i)),0.
+   write(10,*)
+end do
 
 end subroutine poclis
 

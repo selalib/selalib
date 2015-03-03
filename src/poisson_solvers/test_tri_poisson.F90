@@ -34,7 +34,7 @@ sll_real64 :: x1, x2
 
 !mesh => new_triangular_mesh_2d("diode.maa") 
 
-num_cells = 10
+num_cells = 2
 
 h_mesh => new_hex_mesh_2d( num_cells, 0._f64, 0._f64) 
   
@@ -73,8 +73,8 @@ end do
 call write_field_hex_mesh_xmf(h_mesh, rho, 'rho')
 
 call poissn(solver, e_x, e_y, rho, phi)
-!call poliss(solver, phi, e_x, e_y)
-!call poifrc(solver, e_x, e_y)
+call poliss(solver, phi, e_x, e_y)
+call poifrc(solver, e_x, e_y)
 
 call sll_gnuplot_2d( phi, "phi", t_mesh%coord, t_mesh%nodes, 1)
 call write_field_hex_mesh_xmf(h_mesh, phi, 'phi')
