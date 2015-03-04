@@ -2,6 +2,7 @@ module sll_common_array_initializers_module
 #include "sll_assert.h" 
 #include "sll_working_precision.h"
 #include "sll_constants.h"
+#include "sll_utilities.h"
 
   implicit none
 
@@ -99,6 +100,137 @@ contains
     endif
     res = x_1
   end function sll_rotation_A2_initializer_2d
+
+
+  function sll_rotation_A1_exact_charac_2d( t, t0, x0_1, x0_2, params ) result(res)
+    sll_real64 :: res
+    sll_real64, intent(in) :: t
+    sll_real64, intent(in) :: t0
+    sll_real64, intent(in) :: x0_1
+    sll_real64, intent(in) :: x0_2 
+    sll_real64, dimension(:), intent(in), optional :: params
+    if(present(params))then
+      if(size(params)>=100)then
+        print *,'#params needs not to have size >=100'
+      endif
+    endif
+    res = x0_1*cos(t-t0)-x0_2*sin(t-t0)
+  end function sll_rotation_A1_exact_charac_2d
+
+  function sll_rotation_A2_exact_charac_2d( t, t0, x0_1, x0_2, params ) result(res)
+    sll_real64 :: res
+    sll_real64, intent(in) :: t
+    sll_real64, intent(in) :: t0
+    sll_real64, intent(in) :: x0_1
+    sll_real64, intent(in) :: x0_2 
+    sll_real64, dimension(:), intent(in), optional :: params
+    if(present(params))then
+      if(size(params)>=100)then
+        print *,'#params needs not to have size >=100'
+      endif
+    endif
+    res = x0_1*sin(t-t0)+x0_2*cos(t-t0)
+  end function sll_rotation_A2_exact_charac_2d
+
+
+
+
+  function sll_translation_A1_initializer_2d( x_1, x_2, params ) result(res)
+    sll_real64 :: res
+    sll_real64, intent(in) :: x_1
+    sll_real64, intent(in) :: x_2 
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: A1
+    if(.not.(present(params)))then
+      SLL_ERROR("params should be present")
+    endif
+    if(present(params))then
+      if(size(params)<2)then
+        SLL_ERROR("params should be of size >=2")
+        print *,'size(params)',size(params)
+      endif
+      A1=params(1)
+      if(size(params)>=100)then
+        print *,'#params needs not to have size >=100'
+      endif
+    endif
+    res = A1
+  end function sll_translation_A1_initializer_2d
+
+  function sll_translation_A2_initializer_2d( x_1, x_2, params ) result(res)
+    sll_real64 :: res
+    sll_real64, intent(in) :: x_1
+    sll_real64, intent(in) :: x_2 
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: A2
+    if(.not.(present(params)))then
+      SLL_ERROR("params should be present")
+    endif
+    if(present(params))then
+      if(size(params)<2)then
+        SLL_ERROR("params should be of size >=2")
+        print *,'size(params)',size(params)
+      endif
+      A2=params(2)
+      if(size(params)>=100)then
+        print *,'#params needs not to have size >=100'
+      endif
+    endif
+    res = A2
+  end function sll_translation_A2_initializer_2d
+
+
+  function sll_translation_A1_exact_charac_2d( t, t0, x0_1, x0_2, params ) result(res)
+    sll_real64 :: res
+    sll_real64, intent(in) :: t
+    sll_real64, intent(in) :: t0
+    sll_real64, intent(in) :: x0_1
+    sll_real64, intent(in) :: x0_2 
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: A1
+    if(.not.(present(params)))then
+      SLL_ERROR("params should be present")
+    endif
+    if(present(params))then
+      if(size(params)<2)then
+        SLL_ERROR("params should be of size >=2")
+        print *,'size(params)',size(params)
+      endif
+      A1=params(1)
+      if(size(params)>=100)then
+        print *,'#params needs not to have size >=100'
+      endif
+    endif
+    res = x0_1+(t-t0)*A1
+  end function sll_translation_A1_exact_charac_2d
+
+
+  function sll_translation_A2_exact_charac_2d( t, t0, x0_1, x0_2, params ) result(res)
+    sll_real64 :: res
+    sll_real64, intent(in) :: t
+    sll_real64, intent(in) :: t0
+    sll_real64, intent(in) :: x0_1
+    sll_real64, intent(in) :: x0_2 
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: A2
+    if(.not.(present(params)))then
+      SLL_ERROR("params should be present")
+    endif
+    if(present(params))then
+      if(size(params)<2)then
+        SLL_ERROR("params should be of size >=2")
+        print *,'size(params)',size(params)
+      endif
+      A2=params(2)
+      if(size(params)>=100)then
+        print *,'#params needs not to have size >=100'
+      endif
+    endif
+    res = x0_2+(t-t0)*A2
+  end function sll_translation_A2_exact_charac_2d
+
+
+
 
   function sll_constant_time_initializer_1d( t, params ) result(res)
     sll_real64 :: res
