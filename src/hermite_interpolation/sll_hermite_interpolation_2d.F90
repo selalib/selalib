@@ -296,11 +296,11 @@ subroutine compute_w_hermite(w,r,s)
 
 
 subroutine compute_hermite_derivatives_periodic1(f,num_points1,num_points2,p,buf)
-  sll_real64, dimension(:,:), intent(in) :: f
-  sll_int32, intent(in) :: num_points1
-  sll_int32, intent(in) :: num_points2
-  sll_int32, intent(in) :: p
-  sll_real64, dimension(:,:,:), intent(out) :: buf
+  sll_real64, dimension(:,:), intent(in) :: f !> input 2d function
+  sll_int32, intent(in) :: num_points1 !> 
+  sll_int32, intent(in) :: num_points2 !> 
+  sll_int32, intent(in) :: p !> order of finite difference
+  sll_real64, dimension(:,:,:), intent(out) :: buf 
   
   sll_real64 :: w_left(-p/2:(p+1)/2)
   sll_real64 :: w_right((-p+1)/2:p/2+1)
