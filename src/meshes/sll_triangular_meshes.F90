@@ -84,6 +84,8 @@ type :: sll_triangular_mesh_2d
   sll_int32,  dimension (:),  allocatable :: nctfro
   sll_int32,  dimension (:),  allocatable :: nctfrp
 
+  logical :: analyzed = .false.
+
 !   contains
 
 !     procedure, pass(mesh) :: eta1_node => eta1_node_hex
@@ -953,6 +955,8 @@ do i = 1, mesh%num_cells
 
 end do
 
+if (mesh%analyzed) then
+
 write(out_unit,*)
 write(out_unit,*)"$DATA=CURVE3D"
 write(out_unit,*)"%equalscale=T"
@@ -985,7 +989,7 @@ do i = 1, mesh%num_nodes
    write(out_unit,"(a)")"'"
 end do
 
-!--- Numeros des triangles
+end if
 
 write(out_unit,*)"$END"
 close(out_unit)
