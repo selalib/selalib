@@ -251,7 +251,11 @@ sll_real64, dimension(:), allocatable :: tmp1
 sll_int32 :: nref, nn, ndir
 sll_int32 :: i, j
 
-this%mesh => mesh
+if ( mesh%analyzed) then
+  this%mesh => mesh
+else
+  SLL_ERROR("Call analyze_triangular_mesh before initialize poisson solver")
+endif
 
 this%ntypfr = ntypfr
 this%potfr  = potfr
