@@ -1,4 +1,3 @@
-
 IF(FFTW_FOUND AND FFTW_ENABLED)
 
    ADD_LIBRARY(sll_maxwell_parallel STATIC 

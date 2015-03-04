@@ -43,44 +43,58 @@ end type deboor_type
 type, public, extends(sll_interpolator_1d_base) :: &
   sll_arbitrary_degree_spline_interpolator_1d
 
-  sll_int32                         :: num_pts
-  sll_real64                        :: eta_min
-  sll_real64                        :: eta_max
-  sll_int32                         :: bc_left
-  sll_int32                         :: bc_right
-  sll_int32                         :: spline_degree
-  sll_real64, dimension(:), pointer :: eta
-  sll_real64, dimension(:), pointer :: t
-  sll_real64, dimension(:), pointer :: work
-  sll_int32                         :: size_t
-  sll_int64                         :: bc_selector 
-  sll_real64, dimension(:), pointer :: coeff_splines
-  sll_int32                         :: size_coeffs
-  sll_real64                        :: slope_left
-  sll_real64                        :: slope_right
-  sll_real64                        :: value_left
-  sll_real64                        :: value_right
-  logical                           :: compute_slope_left = .TRUE.
-  logical                           :: compute_slope_right= .TRUE.
-  logical                           :: compute_value_left = .TRUE.
-  logical                           :: compute_value_right= .TRUE.
-  type(deboor_type)                 :: deboor
+  sll_int32                         :: num_pts       !< nodes number
+  sll_real64                        :: eta_min       !< left boundary
+  sll_real64                        :: eta_max       !< right boundary
+  sll_int32                         :: bc_left       !< left boundary type
+  sll_int32                         :: bc_right      !< right boundary type
+  sll_int32                         :: spline_degree !< spline degree
+  sll_real64, dimension(:), pointer :: eta           !< node positions
+  sll_real64, dimension(:), pointer :: t             !< knots positions
+  sll_real64, dimension(:), pointer :: work          !< work array to store data
+  sll_int32                         :: size_t        !< knots array size
+  sll_int64                         :: bc_selector   !< boundary condition type
+  sll_real64, dimension(:), pointer :: coeff_splines !< coeffs array
+  sll_int32                         :: size_coeffs   !< coeffs array dimension
+  sll_real64                        :: slope_left    !< left boundary derivative
+  sll_real64                        :: slope_right   !< right boundary derivative
+  sll_real64                        :: value_left    !< left boundary value
+  sll_real64                        :: value_right   !< right boundary value
+  logical                           :: compute_slope_left = .TRUE. !< true
+  logical                           :: compute_slope_right= .TRUE. !< true
+  logical                           :: compute_value_left = .TRUE. !< true
+  logical                           :: compute_value_right= .TRUE. !< true
+  type(deboor_type)                 :: deboor  !< Deboor splines data object
 
 contains
 
+  !> Initialize the interpolator
   procedure :: initialize=>initialize_ad1d_interpolator
+  !> Set spline coefficients
   procedure :: set_coefficients => set_coefficients_ad1d
+  !> Compute interpolants
   procedure :: compute_interpolants => compute_interpolants_ad1d
+  !> Interpolate single value
   procedure :: interpolate_value => interpolate_value_ad1d
+  !> Interpolate an array 
   procedure :: interpolate_array_values => interpolate_values_ad1d
+  !> Interpolate a pointer to array 
   procedure :: interpolate_pointer_values => interpolate_pointer_values_ad1d
+  !> Compute derivatives
   procedure :: interpolate_derivative_eta1 => interpolate_derivative_ad1d
+  !> Compute derivatives array
   procedure :: interpolate_array_derivatives => interpolate_derivatives_ad1d
+  !> Compute derivatives array pointer
   procedure :: interpolate_pointer_derivatives =>interpolate_pointer_derivatives_ad1d
+  !> Interpolate an array
   procedure :: interpolate_array => interpolate_array_ad1d
+  !> Interpolate an array after displacement
   procedure :: interpolate_array_disp => interpolate_1d_array_disp_ad1d
+  !> Get splines coefficients
   procedure :: get_coefficients => get_coefficients_ad1d
+  !> Not implemented
   procedure :: reconstruct_array
+  !> Destory the derived type and free memory
   procedure :: delete => delete_arbitrary_degree_1d_interpolator
 
 end type sll_arbitrary_degree_spline_interpolator_1d
