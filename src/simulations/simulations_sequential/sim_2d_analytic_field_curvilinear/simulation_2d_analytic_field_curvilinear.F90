@@ -60,11 +60,15 @@ module sll_simulation_2d_analytic_field_curvilinear_module
    !initial function
    procedure(sll_scalar_initializer_2d), nopass, pointer :: init_func
    sll_real64, dimension(:), pointer :: params
+   !compute characteristics for rotation and translation case at final time
+   
       
     !advector
    class(sll_advection_2d_base), pointer    :: advect_2d
    procedure(sll_scalar_initializer_2d), nopass, pointer :: A1_func
    procedure(sll_scalar_initializer_2d), nopass, pointer :: A2_func
+   procedure(sll_scalar_initializer_4d), nopass, pointer :: A1_exact_charac_func
+   procedure(sll_scalar_initializer_4d), nopass, pointer :: A2_exact_charac_func
    sll_real64, dimension(:), pointer :: A_func_params
    procedure(sll_scalar_initializer_1d), nopass, pointer :: A_time_func
    sll_real64, dimension(:), pointer :: A_time_func_params
@@ -209,6 +213,8 @@ contains
     sll_real64 :: eta2_max_bis
     sll_int32  :: Nc_eta1_bis
     sll_int32  :: Nc_eta2_bis
+    sll_real64 :: A1 !parameter for translation
+    sll_real64 :: A2 !parameter for translation
 
     !here we do all the initialization
     !in future, we will use namelist file
@@ -254,7 +260,9 @@ contains
       charac1d_x2_case, &
       advect1d_x1_case, &   
       advect1d_x2_case, & 
-      time_period
+      time_period, &
+      A1, &
+      A2
    
       
      namelist /boundaries/ &
@@ -305,6 +313,7 @@ contains
     charac2d_case = "SLL_VERLET"
     A_interp_case = "SLL_CUBIC_SPLINES"
     advection_field_case = "SLL_SWIRLING_DEFORMATION_FLOW"
+    !advection_field_case = "SLL_TRANSLATION_FLOW"
     advect1d_x1_case = "SLL_BSL"
     advect1d_x2_case = "SLL_BSL"
     charac1d_x1_case = "SLL_EULER"
@@ -313,6 +322,8 @@ contains
     !charac1d_x2_case = "SLL_TRAPEZOID"
     f_interp1d_x1_case = "SLL_CUBIC_SPLINES"
     f_interp1d_x2_case = "SLL_CUBIC_SPLINES"
+    A1 = 1._f64
+    A2 = 1._f64
     
     !boundaries conditions
     sim%bc_eta1_left = SLL_PERIODIC
@@ -875,11 +886,16 @@ contains
         print *,'#in initialize_analytic_field_2d__curvilinear'
         stop
     end select
+
+
+
     
     select case(advection_field_case)
       case ("SLL_SWIRLING_DEFORMATION_FLOW")
         sim%A1_func => sll_SDF_A1_initializer_2d 
         sim%A2_func => sll_SDF_A2_initializer_2d 
+        !sim%A1_exact_charac_func => sll_translati_A1_exact_charac_2d 
+        !sim%A2_exact_charac_func => sll_translation_A2_exact_charac_2d 
         SLL_ALLOCATE(sim%A_func_params(2),ierr)
         sim%A_time_func => sll_SDF_time_initializer_1d 
         SLL_ALLOCATE(sim%A_time_func_params(1),ierr)
@@ -887,7 +903,20 @@ contains
       case ("SLL_ROTATION_FLOW")
         sim%A1_func => sll_rotation_A1_initializer_2d 
         sim%A2_func => sll_rotation_A2_initializer_2d 
+        sim%A1_exact_charac_func => sll_rotation_A1_exact_charac_2d 
+        sim%A2_exact_charac_func => sll_rotation_A2_exact_charac_2d 
         SLL_ALLOCATE(sim%A_func_params(2),ierr)
+        sim%A_time_func => sll_constant_time_initializer_1d 
+        SLL_ALLOCATE(sim%A_time_func_params(1),ierr)
+        sim%A_time_func_params(1) = 1._f64
+      case ("SLL_TRANSLATION_FLOW")
+        sim%A1_func => sll_translation_A1_initializer_2d 
+        sim%A2_func => sll_translation_A2_initializer_2d 
+        sim%A1_exact_charac_func => sll_translation_A1_exact_charac_2d 
+        sim%A2_exact_charac_func => sll_translation_A2_exact_charac_2d 
+        SLL_ALLOCATE(sim%A_func_params(2),ierr)
+        sim%A_func_params(1) = A1
+        sim%A_func_params(2) = A2
         sim%A_time_func => sll_constant_time_initializer_1d 
         SLL_ALLOCATE(sim%A_time_func_params(1),ierr)
         sim%A_time_func_params(1) = 1._f64
@@ -973,6 +1002,7 @@ contains
     sll_int32 :: i1 
     sll_int32 :: i2
     sll_real64,dimension(:,:),  pointer :: f
+    sll_real64,dimension(:,:),  pointer :: f_exact
     sll_real64,dimension(:,:),  pointer :: f_old
     sll_real64,dimension(:,:),  pointer :: f_init
     sll_real64,dimension(:,:),  pointer :: phi
@@ -987,7 +1017,10 @@ contains
     sll_int32  :: diag_id = 77
     sll_int32  :: iplot
     sll_real64 :: time_factor
-
+    sll_real64 :: err
+    sll_real64 :: feet1
+    sll_real64 :: feet2
+    sll_real64 :: jac_m(2,2)
 
     Nc_eta1 = sim%mesh_2d%num_cells1
     Nc_eta2 = sim%mesh_2d%num_cells2
@@ -1005,6 +1038,7 @@ contains
     SLL_ALLOCATE(f(Nc_eta1+1,Nc_eta2+1),ierr)
     SLL_ALLOCATE(f_old(Nc_eta1+1,Nc_eta2+1),ierr)
     SLL_ALLOCATE(f_init(Nc_eta1+1,Nc_eta2+1),ierr)
+    SLL_ALLOCATE(f_exact(Nc_eta1+1,Nc_eta2+1),ierr)
     SLL_ALLOCATE(phi(Nc_eta1+1,Nc_eta2+1),ierr)
     SLL_ALLOCATE(A1(Nc_eta1+1,Nc_eta2+1),ierr)
     SLL_ALLOCATE(A2(Nc_eta1+1,Nc_eta2+1),ierr)
@@ -1022,8 +1056,18 @@ contains
           x2 = sim%transformation%x2(eta1,eta2)
           f(i1,i2) =  sim%init_func(x1,x2,sim%params) 
           f_init(i1,i2)  =  sim%init_func(x1,x2,sim%params)
-          A1_init(i1,i2) =  sim%A1_func(x1,x2,sim%A_func_params)
-          A2_init(i1,i2) =  sim%A2_func(x1,x2,sim%A_func_params)
+          jac_m  =  sim%transformation%jacobian_matrix(eta1,eta2)          
+          call compute_curvilinear_field_2d( &
+            sim%A1_func(x1,x2,sim%A_func_params), &
+            sim%A2_func(x1,x2,sim%A_func_params), &
+            A1_init(i1,i2), &
+            A2_init(i1,i2), &
+            jac_m, &
+            sim%transformation%jacobian(eta1,eta2))
+          !A1_init(i1,i2) =  &
+          !  sim%A1_func(x1,x2,sim%A_func_params) !/sim%transformation%jacobian(eta1,eta2)
+          !A2_init(i1,i2) =  &
+          !  sim%A2_func(x1,x2,sim%A_func_params) !/sim%transformation%jacobian(eta1,eta2)
         end do
      end do
         
@@ -1032,6 +1076,8 @@ contains
     
     iplot = 0
 
+    err = 0._f64
+    f_exact = f
     do step=0,nb_step-1
       print*,"step= ", step
       f_old = f
@@ -1066,12 +1112,40 @@ contains
           print *,'#SLL_EULER=',SLL_EULER
           print *,'#SLL_PREDICTOR_CORRECTOR=',SLL_PREDICTOR_CORRECTOR
           
-        end select
+      end select
+      
+      do i2=1,Nc_eta2+1
+        eta2=eta2_min+real(i2-1,f64)*delta_eta2
+        do i1=1,Nc_eta1+1
+          eta1=eta1_min+real(i1-1,f64)*delta_eta1
+          x1 = sim%transformation%x1(eta1,eta2)
+          x2 = sim%transformation%x2(eta1,eta2)
+          feet1 = sim%A1_exact_charac_func( &
+            0._f64, &
+            real(step+1,f64)*sim%dt, &
+            x1, &
+            x2, &
+            sim%A_func_params) 
+          feet2 = sim%A2_exact_charac_func( &
+            0._f64, &
+            real(step+1,f64)*sim%dt, &
+            x1, &
+            x2, &
+            sim%A_func_params)
+          !feet1 = process_outside_point_periodic1( feet1, eta1_min, eta1_max )   
+          !feet2 = process_outside_point_periodic1( feet2, eta2_min, eta2_max )   
+          f_exact(i1,i2) =  sim%init_func(feet1,feet2,sim%params) 
+        end do
+      end do
+      
+      err = max(maxval(abs(f_exact-f)),err)
+      
+      
          
     enddo
     
     close(diag_id)   
-    print *,maxval(abs(f-f_init))    
+    print *,err    
     print *,'#run_af2d_curvilinear PASSED'
     
   end subroutine run_af2d_curvilinear
@@ -1152,6 +1226,43 @@ contains
   end subroutine plot_f_curvilinear
 
 #endif
+
+
+  subroutine compute_curvilinear_field_2d( &
+    input1, &
+    input2, &
+    output1, &
+    output2, &
+    jac_m, &
+    jacobian)
+    sll_real64, intent(in) :: input1
+    sll_real64, intent(in) :: input2
+    sll_real64, intent(out) :: output1
+    sll_real64, intent(out) :: output2
+    sll_real64, intent(in) :: jac_m(2,2)
+    sll_real64, intent(in), optional :: jacobian
+    sll_real64 :: inv_jac
+    sll_real64 :: inv_j11
+    sll_real64 :: inv_j12
+    sll_real64 :: inv_j21
+    sll_real64 :: inv_j22
+    
+    if(present(jacobian))then
+      inv_jac = jacobian
+    else
+      inv_jac = jac_m(1,1)*jac_m(2,2)-jac_m(1,2)*jac_m(2,1)  
+    endif
+    inv_jac = 1._f64/inv_jac
+    
+    inv_j11 =  jac_m(2,2)*inv_jac
+    inv_j12 = -jac_m(1,2)*inv_jac
+    inv_j21 = -jac_m(2,1)*inv_jac
+    inv_j22 =  jac_m(1,1)*inv_jac
+ 
+    output1 = inv_j11*input1+inv_j12*input2 
+    output2 = inv_j21*input1+inv_j22*input2 
+    
+  end subroutine compute_curvilinear_field_2d
 
 
 end module sll_simulation_2d_analytic_field_curvilinear_module
