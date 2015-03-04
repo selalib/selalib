@@ -32,7 +32,7 @@ contains
     sll_real64 :: landau_1d
     sll_real64, intent(in) :: x, kx, v2, eps
 
-    landau_1d = (1._f64+eps*cos(kx*x))/(2*sll_pi)*exp(-0.5_f64*v2)
+    landau_1d = (1._f64+eps*cos(kx*x))/sqrt(2*sll_pi)*exp(-0.5_f64*v2)
 
   end function landau_1d
 
@@ -41,7 +41,7 @@ contains
     sll_real64, intent(in) :: x, kx, vx
     sll_real64, intent(in) :: eps, v2
 
-    tsi = (1._f64+eps*cos(kx*x))/(2*sll_pi)*exp(-0.5_f64*v2)*vx*vx
+    tsi = (1._f64+eps*cos(kx*x))/sqrt(2*sll_pi)*exp(-0.5_f64*v2)*vx*vx
 
   end function tsi
 

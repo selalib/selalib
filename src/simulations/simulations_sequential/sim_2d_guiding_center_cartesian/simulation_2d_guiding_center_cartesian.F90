@@ -1052,8 +1052,8 @@ contains
         A1 = -A1
      end select
 
-     call sll_gnuplot_write(A1(1,:),'A1_init',ierr)
-     call sll_gnuplot_write(A2(1,:),'A2_init',ierr)
+     call sll_gnuplot_1d(A1(1,:),'A1_init',ierr)
+     call sll_gnuplot_1d(A2(1,:),'A2_init',ierr)
     
     
     open(unit = diag_id, file='thdiag.dat',IOStat=IO_stat)

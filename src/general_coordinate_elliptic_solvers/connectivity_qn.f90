@@ -1,11 +1,8 @@
 module connectivity_module
 
   implicit none
-  private
 
   integer, parameter :: CONNECT_PERIODIC = 0, CONNECT_DIRICHLET = 1, CONNECT_NEUMANN = 2
-
-  public initconnectivity
 
 contains
 !----------------------------------------------------------------------------					
