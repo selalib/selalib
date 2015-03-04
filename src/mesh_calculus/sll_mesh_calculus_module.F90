@@ -1365,6 +1365,8 @@ end do
 
 deallocate(indc)
 
+mesh%analyzed = .true.
+
 end subroutine analyze_triangular_mesh
 
 !**************************************************************
