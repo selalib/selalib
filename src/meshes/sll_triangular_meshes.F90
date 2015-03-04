@@ -188,6 +188,10 @@ function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
   sll_int32                  :: is3, iv3
   sll_int32                  :: i
   sll_int32                  :: nctfr
+  sll_real64                 :: xa, xb, xc
+  sll_real64                 :: ya, yb, yc
+  sll_real64                 :: det
+
 
   SLL_ALLOCATE(tri_mesh, ierr)
 
@@ -203,6 +207,11 @@ function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
   tri_mesh%refs      =  0
   tri_mesh%nvois     =  0
 
+  do i = 1, hex_mesh%num_pts_tot
+    tri_mesh%coord(1,i) = hex_mesh%global_to_x1(i)
+    tri_mesh%coord(2,i) = hex_mesh%global_to_x2(i)
+  end do
+
   nctfr = 0
   do i = 1, hex_mesh%num_triangles
     
@@ -211,29 +220,23 @@ function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
     
     call get_cell_vertices_index( x1, y1, hex_mesh, is1, is2, is3)
     call get_neighbours(hex_mesh, i, iv1, iv2, iv3)
-    
-    if ( mod(i,2) == 0) then
-      tri_mesh%nodes(1,i) = is1
-      tri_mesh%nodes(2,i) = is2
-      tri_mesh%nodes(3,i) = is3
-      tri_mesh%nvois(1,i) = iv1
-      tri_mesh%nvois(2,i) = iv2
-      tri_mesh%nvois(3,i) = iv3
-    else
-      tri_mesh%nodes(1,i) = is1
-      tri_mesh%nodes(3,i) = is2
-      tri_mesh%nodes(2,i) = is3
-      tri_mesh%nvois(3,i) = iv1
-      tri_mesh%nvois(2,i) = iv2
-      tri_mesh%nvois(1,i) = iv3
-    end if
 
-    tri_mesh%coord(1,is1) = hex_mesh%global_to_x1(is1)
-    tri_mesh%coord(2,is1) = hex_mesh%global_to_x2(is1)
-    tri_mesh%coord(1,is2) = hex_mesh%global_to_x1(is2)
-    tri_mesh%coord(2,is2) = hex_mesh%global_to_x2(is2)
-    tri_mesh%coord(1,is3) = hex_mesh%global_to_x1(is3)
-    tri_mesh%coord(2,is3) = hex_mesh%global_to_x2(is3)
+    xa = tri_mesh%coord(1,is1)
+    ya = tri_mesh%coord(2,is1)
+    xb = tri_mesh%coord(1,is2)
+    yb = tri_mesh%coord(2,is2)
+    xc = tri_mesh%coord(1,is3)
+    yc = tri_mesh%coord(2,is3)
+   
+    det = 2.*((xb-xa)*(yc-ya)-(xc-xa)*(yb-ya))
+    
+    if ( det > 0) then
+      tri_mesh%nodes(:,i) = [is1,is2,is3]
+      tri_mesh%nvois(:,i) = [iv1,iv2,iv3]
+    else
+      tri_mesh%nodes(:,i) = [is1,is3,is2]
+      tri_mesh%nvois(:,i) = [iv3,iv2,iv1]
+    end if
 
     if (tri_mesh%nvois(1,i) < 0) then
       tri_mesh%refs(tri_mesh%nodes(1,i)) = 1
@@ -915,6 +918,74 @@ do i = 1, mesh%num_nodes
    write(out_unit,"(i1)"   , advance="no") mesh%refs(i)
    write(out_unit,"(a)")"'"
 end do
+
+write(out_unit,*)
+
+write(out_unit,*)"$DATA=CURVE3D"
+write(out_unit,*)"%equalscale=T"
+write(out_unit,*)"%toplabel='Polygones de Voronoi'"
+
+do i = 1, mesh%num_cells
+  write(out_unit,*)"%linetype   = 1 # Solid Linetype (default=1)"
+  write(out_unit,*)"%linewidth  = 1 # Linewidth      (default=1)"
+  write(out_unit,*)"%linecolor  = 1 # Line Color     (default=1)"
+  do j = 1, 3
+    if( mesh%nvois(j,i) > 0 ) then
+      call get_cell_center(mesh, i, x1, y1)
+      write(out_unit,*) x1,y1,0.
+      call get_cell_center(mesh, mesh%nvois(j,i), x1, y1)
+      write(out_unit,*) x1,y1,0.
+      write(out_unit,*)
+    end if
+  end do
+end do
+   
+do i = 1, mesh%num_cells
+
+  write(out_unit,*) "%linetype  = 1 # Solid Linetype (default=1)"
+  write(out_unit,*) "%linewidth = 1 # Linewidth      (default=1)"
+  write(out_unit,*) "%linecolor = 2 # Line Color     (default=1)"
+  write(out_unit,*) mesh%coord(1:2,mesh%nodes(1,i)),0.
+  write(out_unit,*) mesh%coord(1:2,mesh%nodes(2,i)),0.
+  write(out_unit,*) mesh%coord(1:2,mesh%nodes(3,i)),0.
+  write(out_unit,*) mesh%coord(1:2,mesh%nodes(1,i)),0.
+  write(out_unit,*)
+
+end do
+
+write(out_unit,*)
+write(out_unit,*)"$DATA=CURVE3D"
+write(out_unit,*)"%equalscale=T"
+write(out_unit,*)"%toplabel='Numeros des noeuds et des cotes' "
+
+do i = 1, mesh%nbtcot
+   write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nuvac(1,i)),0.
+   write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nuvac(2,i)),0.
+   write(out_unit,*)
+   x1 = 0.5*(mesh%coord(1,mesh%nuvac(1,i))+mesh%coord(1,mesh%nuvac(2,i)))
+   y1 = 0.5*(mesh%coord(2,mesh%nuvac(1,i))+mesh%coord(2,mesh%nuvac(2,i)))
+   write(out_unit,"(a)"   ,  advance="no")"@text x1="
+   write(out_unit,"(g15.3)", advance="no") x1
+   write(out_unit,"(a)"   ,  advance="no")" y1="
+   write(out_unit,"(g15.3)", advance="no") y1
+   write(out_unit,"(a)"   ,  advance="no")" z1=0. lc=5 ll='"
+   write(out_unit,"(i4)"  ,  advance="no") i
+   write(out_unit,"(a)")"'"
+end do
+
+do i = 1, mesh%num_nodes
+   x1 = mesh%coord(1,i)
+   y1 = mesh%coord(2,i)
+   write(out_unit,"(a)"   ,  advance="no")"@text x1="
+   write(out_unit,"(g15.3)", advance="no") x1
+   write(out_unit,"(a)"   ,  advance="no")" y1="
+   write(out_unit,"(g15.3)", advance="no") y1
+   write(out_unit,"(a)"   ,  advance="no")" z1=0. lc=5 ll='"
+   write(out_unit,"(i4)"  ,  advance="no") i
+   write(out_unit,"(a)")"'"
+end do
+
+!--- Numeros des triangles
 
 write(out_unit,*)"$END"
 close(out_unit)
