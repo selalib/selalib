@@ -57,7 +57,7 @@ program vlasov_poisson_4d
         num_min = num_max
         read(str , *) num_max
       endif
-      print *,'#num=',num_min,num_max
+      !print *,'#num=',num_min,num_max
       do i=num_min,num_max
         sim => new_vlasov_par_poisson_seq_cart( filename_local, i)
         call sim%run( )
