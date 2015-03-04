@@ -899,15 +899,6 @@ do iel=1,mesh%num_cells
 
 end do
 
-if (ldebug) then
-   write(iout,*)"*** Recherche des numeros des triangles voisins d'un triangle ***"
-   do i = 1, mesh%num_cells
-      write(iout,"(a10,i4,a10,3i4,a10,3i4)") &
-        " Triangle ", i,                     &
-        " Nodes   :", mesh%nodes(1:3,i),     &
-        " Voisins :", mesh%nvois(1:3,i)
-   end do
-end if
 
 ! --- Definition de nctfrt: le nombre de cotes frontieres
 
@@ -1002,6 +993,15 @@ do is=1,mesh%num_nodes
 
 end do
 
+if (ldebug) then
+   write(iout,*)"*** Recherche des numeros des triangles voisins d'un triangle ***"
+   do i = 1, mesh%num_cells
+      write(iout,"(a10,i4,a10,3i4,a10,3i4)") &
+        " Triangle:", i,                     &
+        " Nodes   :", mesh%nodes(1:3,i),     &
+        " Voisins :", mesh%nvois(1:3,i)
+   end do
+end if
 !======================================================================
 !----------- Nombre de noeuds sur les frontieres internes -------------
 !======================================================================
@@ -1028,17 +1028,17 @@ end do
 !  3 = 2 + nombre de cotes frontieres references 1          *
 !  4 = 3 + nombre de cotes frontieres references 2 , etc... *
 
-write(iout,"(/10x,a,i3)") 'Nombre maximum de frontieres referencees ', mesh%nmxfr
+write(iout,"(/10x,a,i3)") 'Maximum de frontieres referencees ', mesh%nmxfr
 
 !*** Calcul du nb de cotes internes et total (nbcoti,nbtcot)
 
 mesh%nbtcot = (3*mesh%num_cells+mesh%nctfrt)/2
 
-write(iout,"( 10x,a,i6)") 'Nombre total de cotes =', mesh%nbtcot
+write(iout,"( 10x,a,i6)") 'Nombre total de cotes      =', mesh%nbtcot
 
 mesh%nbcoti = mesh%nbtcot - mesh%nctfrt
 
-write(iout,"( 10x,a,i6)") 'Nombre de cotes internes =', mesh%nbcoti
+write(iout,"( 10x,a,i6)") 'Nombre de cotes internes   =', mesh%nbcoti
 write(iout,"( 10x,a,i6/)")'Nombre de cotes frontieres =', mesh%nctfrt
  
 !  Calcul du nb de cotes cumules par type de traitement (ncotcu) ....
@@ -1393,16 +1393,19 @@ end subroutine analyze_triangular_mesh
 subroutine poclis(mesh, ncotcu, nuctfr)
 
 type(sll_triangular_mesh_2d) :: mesh
-integer, dimension(:) :: ncotcu
-integer, dimension(:) :: nuctfr
-logical :: lerr
-double precision :: det, s1, s2, s3, x21, y21, xa, ya, xb, yb
-integer :: ic, nuctf, ind, nm1, nm2, nel1, nel2, indv1, indv2
-integer :: indn1, indn2, num1, num2, n1, n2, ivois, nc, iel, nucti
-integer :: nbti, is
-integer, parameter :: iout=6
-real(8) :: x1, y1
-integer :: i, j, iac, nbc
+integer, dimension(:)        :: ncotcu
+integer, dimension(:)        :: nuctfr
+logical                      :: lerr
+double precision             :: det, s1, s2, s3, x21, y21
+double precision             :: xa, ya, xb, yb
+integer                      :: nel1, nel2, indv1, indv2
+integer                      :: ic, nuctf, ind, nm1, nm2
+integer                      :: indn1, indn2, num1, num2
+integer                      :: n1, n2, ivois, nc, iel, nucti
+integer                      :: nbti, is
+integer, parameter           :: iout=6
+real(8)                      :: x1, y1
+integer                      :: i, j, iac, nbc
      
 !======================================================================
 ! --- 1.0 --- Pointeur des numeros de cotes pointant vers un noeud -----
@@ -1420,6 +1423,11 @@ do is=1,mesh%num_nodes
    mesh%nbcov(is+1)=mesh%nbcov(is)+mesh%nbcov(is+1)
 end do
 
+do is=1,mesh%num_nodes
+  nbc=mesh%nbcov(is+1)-mesh%nbcov(is)
+  iac=mesh%nbcov(is)
+end do
+
 ! --- 1.5 --- Tableau temporaire (cumul des cotes frontieres) ----------
 nucti  = 0
 nuctfr = 0
@@ -1427,13 +1435,13 @@ nuctfr = 0
 ! ======================================================================
 ! --- 2.0 --- Numerotation des cotes -----------------------------------
 
-do iel=1,mesh%num_cells
+do iel = 1, mesh%num_cells
 
-  do nc=1,3
+  do nc = 1, 3
 
-    ivois=mesh%nvois(nc,iel)
-    n1=nc
-    n2=mod(nc,3)+1
+    ivois = mesh%nvois(nc,iel)
+    n1    = nc
+    n2    = mod(nc,3)+1
 
     num1  = mesh%nodes(n1,iel)
     num2  = mesh%nodes(n2,iel)
@@ -1446,52 +1454,58 @@ do iel=1,mesh%num_cells
 
     !Cas des cotes internes ...........................................
 
+    if (ivois >  iel) then
 
-    if(ivois >  iel) then
+      nucti=nucti+1
 
-       nucti=nucti+1
+      !Numeros globaux de cotes pointant vers le meme noeud 
 
-       !Numeros globaux de cotes pointant vers le meme noeud 
+      do nm1=1,nel1
+         if(mesh%npoel2(indn1+nm1) == ivois) then
+            mesh%nugcv(indv1+nm1) = nucti
+         end if
+      end do
 
-       do nm1=1,nel1
-          if(mesh%npoel2(indn1+nm1) == ivois) then
-             mesh%nugcv(indv1+nm1)=nucti
-          end if
-       end do
+      do nm2=1,nel2
+         if(mesh%npoel2(indn2+nm2) == iel) then
+            mesh%nugcv(indv2+nm2) = nucti
+         end if
+      end do
 
-       do nm2=1,nel2
-          if(mesh%npoel2(indn2+nm2) == iel) then
-             mesh%nugcv(indv2+nm2)=nucti
-          end if
-       end do
+      !Numeros des triangles ou polygones associes
 
-       !Numeros des triangles ou polygones associes
+      mesh%nuvac(1,nucti)=num1
+      mesh%nuvac(2,nucti)=num2
 
-       mesh%nuvac(1,nucti)=num1
-       mesh%nuvac(2,nucti)=num2
+    else if (ivois < 0) then !Cas des cotes frontaliers 
 
-    else if(ivois < 0) then !Cas des cotes frontaliers 
-
-       ind         = -ivois
-       nuctfr(ind) = nuctfr(ind)+1
-       nuctf       = ncotcu(ind+1)+nuctfr(ind)
-
-       mesh%nugcv(indv1+nel1+1) = nuctf
-       mesh%nugcv(indv2+nel2  ) = nuctf
-       mesh%nuvac(1,nuctf)      = num1
-       mesh%nuvac(2,nuctf)      = num2
+      ind         = -ivois
+      nuctfr(ind) = nuctfr(ind)+1
+      nuctf       = ncotcu(ind+1)+nuctfr(ind)
+      mesh%nugcv(indv1+nel1+1) = nuctf
+      mesh%nugcv(indv2+nel2  ) = nuctf
+      mesh%nuvac(1,nuctf)      = num1
+      mesh%nuvac(2,nuctf)      = num2
 
     end if
 
   end do
 
+
 end do
+
+#ifdef DEBUG
+do is=1,mesh%num_nodes
+  nbc=mesh%nbcov(is+1)-mesh%nbcov(is)
+  iac=mesh%nbcov(is)
+  write(*,"(i8,2x,10i8)") is, (mesh%nugcv(iac+i),i=1,nbc)
+end do
+#endif
 
 !======================================================================
 !----------- Longueurs des cotes des triangles ------------------------
 
 do ic=1,mesh%nbtcot
-   print"(3i4)", ic, mesh%nuvac(:,ic)
    xa=mesh%coord(1,mesh%nuvac(1,ic))
    ya=mesh%coord(2,mesh%nuvac(1,ic))
    xb=mesh%coord(1,mesh%nuvac(2,ic))
@@ -1571,47 +1585,6 @@ end if
               /10x,'vtaux',7x,'vtauy')
  905  format(  10x,2e12.3)
 
-#ifdef DEBUG
-do is=1,mesh%num_cells
-  nbc=mesh%nbcov(is+1)-mesh%nbcov(is)
-  iac=mesh%nbcov(is)
-  write(*,"(i8,2x,10i8)") is,(mesh%nugcv(iac+i),i=1,nbc)
-end do
-#endif
-
-open( 10, file="voronoi.mtv")
-
-write(10,*)"$DATA=CURVE3D"
-write(10,*)"%equalscale=T"
-write(10,*)"%toplabel='Polygones de Voronoi'"
-
-do i = 1, mesh%num_cells
-  write(10,*)"%linetype   = 1 # Solid Linetype (default=1)"
-  write(10,*)"%linewidth  = 1 # Linewidth      (default=1)"
-  write(10,*)"%linecolor  = 1 # Line Color     (default=1)"
-  do j = 1, 3
-    if( mesh%nvois(j,i) > 0 ) then
-  
-      call get_cell_center(mesh, i, x1, y1)
-      write(10,*) x1,y1,0.
-      call get_cell_center(mesh, mesh%nvois(j,i), x1, y1)
-      write(10,*) x1,y1,0.
-      write(10,*)
-
-    end if
-  end do
-end do
-   
-do i = 1, mesh%num_cells
-   write(10,*)"%linetype  = 1 # Solid Linetype (default=1)"
-   write(10,*)"%linewidth = 1 # Linewidth      (default=1)"
-   write(10,*)"%linecolor = 2 # Line Color     (default=1)"
-   write(10,*)mesh%coord(1:2,mesh%nodes(1,i)),0.
-   write(10,*)mesh%coord(1:2,mesh%nodes(2,i)),0.
-   write(10,*)mesh%coord(1:2,mesh%nodes(3,i)),0.
-   write(10,*)mesh%coord(1:2,mesh%nodes(1,i)),0.
-   write(10,*)
-end do
 
 end subroutine poclis
 

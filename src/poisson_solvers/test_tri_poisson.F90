@@ -24,9 +24,9 @@ sll_int32  :: num_cells
 sll_int32  :: ntypfr(5)
 sll_real64 :: potfr(5)
 
-sll_int32  :: nc_x1 = 10
+sll_int32  :: nc_x1 = 4
 sll_real64 :: x1_min = 0.0_f64, x1_max = 1.0_f64
-sll_int32  :: nc_x2 = 10
+sll_int32  :: nc_x2 = 3
 sll_real64 :: x2_min = 0.0_f64, x2_max = 1.0_f64
 
 sll_int32  :: i
@@ -34,7 +34,7 @@ sll_real64 :: x1, x2
 
 !mesh => new_triangular_mesh_2d("diode.maa") 
 
-num_cells = 2
+num_cells = 10
 
 h_mesh => new_hex_mesh_2d( num_cells, 0._f64, 0._f64) 
   
@@ -42,9 +42,8 @@ t_mesh => new_triangular_mesh_2d(h_mesh)
 
 !t_mesh => new_triangular_mesh_2d(nc_x1, x1_min, x1_max, nc_x2, x2_min, x2_max) 
 
-call write_triangular_mesh_mtv(t_mesh, "test_tri_poisson.mtv")
-
 call analyze_triangular_mesh(t_mesh) 
+call write_triangular_mesh_mtv(t_mesh, "test_tri_poisson.mtv")
 
 allocate(e_x(t_mesh%num_nodes)); e_x = 0.0_f64 
 allocate(e_y(t_mesh%num_nodes)); e_y = 0.0_f64
@@ -63,11 +62,10 @@ call sll_create(solver, t_mesh, ntypfr, potfr)
 !!   Equation de POISSON - elements finis !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-
 do i = 1, h_mesh%num_pts_tot
-   x1 = h_mesh%global_to_x1(i)
-   x2 = h_mesh%global_to_x2(i)
-   rho(i) = exp(-(x1*x1+x2*x2)/0.01)
+  x1 = h_mesh%global_to_x1(i)
+  x2 = h_mesh%global_to_x2(i)
+  rho(i) = exp(-(x1*x1+x2*x2)/0.01)
 end do
 
 call write_field_hex_mesh_xmf(h_mesh, rho, 'rho')
