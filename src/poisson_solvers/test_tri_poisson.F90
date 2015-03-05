@@ -70,11 +70,19 @@ end do
 
 call write_field_hex_mesh_xmf(h_mesh, rho, 'rho')
 
-call poissn(solver, e_x, e_y, rho, phi)
-call poliss(solver, phi, e_x, e_y)
-call poifrc(solver, e_x, e_y)
-
+call sll_compute_phi_from_rho(solver, rho, phi)
 call sll_gnuplot_2d( phi, "phi", t_mesh%coord, t_mesh%nodes, 1)
+call sll_compute_e_from_phi(solver, phi, e_x, e_y)
+call sll_gnuplot_2d( e_x, "e_x", t_mesh%coord, t_mesh%nodes, 1)
+call sll_gnuplot_2d( e_y, "e_y", t_mesh%coord, t_mesh%nodes, 1)
+
+do i = 1, 10
+  rho = rho + i
+  call sll_compute_e_from_rho(solver, rho, phi, e_x, e_y)
+  call sll_gnuplot_2d( e_x, "e_x", t_mesh%coord, t_mesh%nodes, i)
+  call sll_gnuplot_2d( e_y, "e_y", t_mesh%coord, t_mesh%nodes, i)
+end do
+
 call write_field_hex_mesh_xmf(h_mesh, phi, 'phi')
 
 end program test_tri_poisson

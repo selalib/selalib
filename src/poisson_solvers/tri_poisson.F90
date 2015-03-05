@@ -18,7 +18,10 @@ interface sll_create
   module procedure initialize_poisson_solver_from_file
 end interface sll_create
 
-public :: poliss, poifrc, poissn, sll_create
+public :: sll_create
+public :: sll_compute_phi_from_rho
+public :: sll_compute_e_from_rho
+public :: sll_compute_e_from_phi 
 
 !    Caracteristiques du maillage triangulaire:         
 !
@@ -113,17 +116,37 @@ logical :: ldebug = .false.
 
 contains
 
-subroutine sll_compute_e_from_rho( this,  rho, ex, ey)
+subroutine sll_compute_e_from_rho( this, rho, phi, ex, ey)
 type(sll_triangular_poisson_2d) :: this
 sll_real64, intent(in)          :: rho(:)
+sll_real64, intent(out)         :: phi(:)
 sll_real64, intent(out)         :: ex(:)
 sll_real64, intent(out)         :: ey(:)
 
-call poissn(solver, e_x, e_y, rho, phi)
-call poliss(solver, phi, e_x, e_y)
-call poifrc(solver, e_x, e_y)
+call poissn(this, rho, phi, ex, ey)
+call poifrc(this, ex, ey)
 
 end subroutine sll_compute_e_from_rho
+
+subroutine sll_compute_phi_from_rho( this, rho, phi)
+type(sll_triangular_poisson_2d) :: this
+sll_real64, intent(in)          :: rho(:)
+sll_real64, intent(out)         :: phi(:)
+
+call poissn(this, rho, phi)
+
+end subroutine sll_compute_phi_from_rho
+
+subroutine sll_compute_e_from_phi( this, phi, ex, ey)
+type(sll_triangular_poisson_2d) :: this
+sll_real64, intent(in)          :: phi(:)
+sll_real64, intent(out)         :: ex(:)
+sll_real64, intent(out)         :: ey(:)
+
+call poliss(this, phi, ex, ey)
+call poifrc(this, ex, ey)
+
+end subroutine sll_compute_e_from_phi
 
 subroutine read_data_solver(ntypfr, potfr)
 
@@ -262,6 +285,7 @@ sll_real64, dimension(:), allocatable :: tmp1
 
 sll_int32 :: nref, nn, ndir
 sll_int32 :: i, j
+sll_int32 :: ierr
 
 if ( mesh%analyzed) then
   this%mesh => mesh
@@ -345,6 +369,14 @@ do i=1,this%iprof(mesh%num_nodes+1)
 end do
 
 deallocate(tmp1)
+
+!Tableaux pour les conditions limites
+!Initialisation des normales aux noeuds et du tableau indiquant 
+!les noeuds appartenant a la frontiere consideree
+
+SLL_CLEAR_ALLOCATE(this%vnx(1:this%mesh%num_nodes),ierr)
+SLL_CLEAR_ALLOCATE(this%vny(1:this%mesh%num_nodes),ierr)
+SLL_ALLOCATE(this%naux(1:this%mesh%num_nodes),ierr)
 
 ! --- 8.5 --- Ecriture des tableaux ------------------------------------
 
@@ -685,17 +717,24 @@ end subroutine poismc
 ! errpoi - precision (max du carre de l'erreur relative)         
 ! nitgc  - nombre max d'iterations du gradient conjugue         
 !                                                              
-subroutine poissn(this,ex,ey,rho,phi)
+subroutine poissn(this,rho,phi,ex,ey)
 
-type (sll_triangular_poisson_2d)   :: this
-sll_real64, dimension(:) :: phi, rho, ex, ey
-sll_real64 :: sdmb(size(rho)), sdmb12(size(rho))
+type (sll_triangular_poisson_2d)                :: this
+sll_real64, dimension(:), intent(in)            :: rho
+sll_real64, dimension(:), intent(out)           :: phi
+sll_real64, dimension(:), intent(out), optional :: ex
+sll_real64, dimension(:), intent(out), optional :: ey
 
-sll_int32 :: i, is, nref
+sll_real64, dimension(:), allocatable           :: sdmb
+sll_real64, dimension(:), allocatable           :: sdmb12
+
+sll_int32 :: i, is, nref, ierr
 
 ! ----------- CALCUL DU POTENTIEL  -------------------------------------
 !
 !... Calcul du second membre complet ...
+
+SLL_ALLOCATE(sdmb(this%mesh%num_nodes),ierr)
 
 do is=1,this%mesh%num_nodes
    sdmb(is)=this%amass(is)*rho(is)/this%eps0
@@ -716,20 +755,26 @@ call desrem(this%iprof, this%grgr,sdmb,this%mesh%num_nodes,phi)
 
 !*** CALCUL DES CHAMPS Ex et Ey:
 
-!*** Second membre pour la composante x:
+if (present(ex) .and. present(ey)) then
 
-call m1p(this%gradx,this%mors1,this%mors2,phi,this%mesh%num_nodes,sdmb12)
+  SLL_ALLOCATE(sdmb12(this%mesh%num_nodes),ierr)
+  !*** Second membre pour la composante x:
 
-do i=1,this%mesh%num_nodes
-   ex(i)=sdmb12(i)/this%amass(i)
-end do
+  call m1p(this%gradx,this%mors1,this%mors2,phi,this%mesh%num_nodes,sdmb12)
 
-!*** Second membre pour la composante y:
+  do i=1,this%mesh%num_nodes
+     ex(i)=sdmb12(i)/this%amass(i)
+  end do
 
-call m1p(this%grady,this%mors1,this%mors2,phi,this%mesh%num_nodes,sdmb12)
-do i=1,this%mesh%num_nodes
-   ey(i)=sdmb12(i)/this%amass(i)
-end do
+  !*** Second membre pour la composante y:
+
+  call m1p(this%grady,this%mors1,this%mors2,phi,this%mesh%num_nodes,sdmb12)
+
+  do i=1,this%mesh%num_nodes
+     ey(i)=sdmb12(i)/this%amass(i)
+  end do
+
+end if
 
 end subroutine poissn
 
@@ -764,12 +809,6 @@ sll_int32 :: i, ierr
 !!$ ======================================================================
 !!$ ... On force E.tau = 0 sur toutes les frontieres Dirichlet 
 
-!!$ ... Initialisation des normales aux noeuds et du tableau indiquant 
-!!$ ... les noeuds appartenant a la frontiere consideree
-
-SLL_CLEAR_ALLOCATE(this%vnx(1:this%mesh%num_nodes),ierr)
-SLL_CLEAR_ALLOCATE(this%vny(1:this%mesh%num_nodes),ierr)
-SLL_ALLOCATE(this%naux(1:this%mesh%num_nodes),ierr)
 
 !!$ ... Boucle sur les cotes frontieres pour construire les normales aux
 !!$ ... noeuds "Dirichlet"
@@ -1415,11 +1454,11 @@ end do
 end subroutine m1p
 
 
-subroutine poliss(this, phi, ex, ey)
 
 !  Effectuer le calcul des composantes Ex et Ey du    
 !  ---    champ electrique a partir du potentiel au noeud.
 !         On appelle ca un lissage.                        
+subroutine poliss(this, phi, ex, ey)
 
 type(sll_triangular_poisson_2d), intent(inout) :: this
 sll_real64, dimension(:),        intent(in)    :: phi
@@ -1668,6 +1707,7 @@ do is=1,this%mesh%num_nodes
    ex(is)=this%mesh%xmal2(is)*this%sv1(is)-this%mesh%xmal3(is)*this%sv2(is)
    ey(is)=this%mesh%xmal1(is)*this%sv2(is)-this%mesh%xmal3(is)*this%sv1(is)
 end do
+
 
 ! --- 9.0 --- Formats --------------------------------------------------
     
