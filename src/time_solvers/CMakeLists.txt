@@ -15,8 +15,10 @@ TARGET_LINK_LIBRARIES( sll_time_splitting
 # Tests
 IF(BUILD_TESTING)
 
+  IF (MPI_MODULE_ENABLED)
   ADD_EXECUTABLE( vp1d_bsl_time_split vp1d_bsl_time_split.F90 )
   TARGET_LINK_LIBRARIES( vp1d_bsl_time_split sll_time_splitting )
+  ENDIF (MPI_MODULE_ENABLED)
 
   # Ctest
   IF(HDF5_ENABLED)
