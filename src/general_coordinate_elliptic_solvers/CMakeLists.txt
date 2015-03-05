@@ -91,4 +91,4 @@ IF(BUILD_TESTING AND MPI_MODULE_ENABLED)
   ADD_EXECUTABLE( test_lobalap_discrete unit_test_lobalap_discrete.F90 )
   TARGET_LINK_LIBRARIES( test_lobalap_discrete sll_general_coordinate_elliptic_solvers )
 
-ENDIF(BUILD_TESTING AND MPI_MODULE_ENABLED)
+ENDIF(BUILD_TESTING AND MPI_ENABLED)

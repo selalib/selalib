@@ -47,7 +47,7 @@ ADD_LIBRARY ( pivotbande STATIC ../utilities/pivotbande.F90)
 TARGET_LINK_LIBRARIES( pivotbande )
 
 # Tests
-IF(BUILD_TESTING)
+IF(BUILD_TESTING AND MPI_ENABLED)
 
   ADD_EXECUTABLE( test_poisson_2d_dirichlet_cartesian 
     test_poisson_2d_dirichlet_cartesian.F90 )
@@ -117,4 +117,4 @@ IF(BUILD_TESTING)
     SET_TESTS_PROPERTIES( poisson_per_cart_par_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
   ENDIF()
 
-ENDIF(BUILD_TESTING)
+ENDIF(BUILD_TESTING AND MPI_ENABLED)
