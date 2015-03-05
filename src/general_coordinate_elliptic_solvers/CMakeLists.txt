@@ -71,7 +71,7 @@ TARGET_LINK_LIBRARIES( finite_elements_solver
 
 
 # Ctest
-IF(BUILD_TESTING AND MPI_MODULE_ENABLED)
+IF(BUILD_TESTING)
 
   ADD_EXECUTABLE( test_general_coordinates_elliptic_solver 
                   init_functions.F90 unit_test.F90 )
