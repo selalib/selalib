@@ -1,3 +1,4 @@
+IF(MPI_ENABLED)
 # Executables must be linked against following Selalib libraries
 set( DEP_LIBS sll_interpolators
               sll_fft
@@ -30,3 +31,4 @@ file( GLOB INPUT_FILES "*.nml"         )
 file( GLOB   POST_PROC "*.dat" "*.gnu" )
 INSTALL( FILES ${INPUT_FILES} README ${POST_PROC} DESTINATION ${INSTALL_DIR} )
 
+ENDIF(MPI_ENABLED)
