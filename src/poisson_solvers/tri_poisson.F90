@@ -113,6 +113,18 @@ logical :: ldebug = .false.
 
 contains
 
+subroutine sll_compute_e_from_rho( this,  rho, ex, ey)
+type(sll_triangular_poisson_2d) :: this
+sll_real64, intent(in)          :: rho(:)
+sll_real64, intent(out)         :: ex(:)
+sll_real64, intent(out)         :: ey(:)
+
+call poissn(solver, e_x, e_y, rho, phi)
+call poliss(solver, phi, e_x, e_y)
+call poifrc(solver, e_x, e_y)
+
+end subroutine sll_compute_e_from_rho
+
 subroutine read_data_solver(ntypfr, potfr)
 
 sll_int32                    :: ityp
@@ -727,27 +739,20 @@ end subroutine poissn
 !
 ! version qui ne tient pas compte de l'ordre des cotes de la frontiere
 !                                                                    
-!         - E2n=0 sur l'axe                            
-!         - E.tau = 0 sur les frontieres Dirichlets
-!         - E.nu =  0 sur les frontieres Neumann  
+!  - E.tau = 0 sur les frontieres Dirichlets
+!  - E.nu =  0 sur les frontieres Neumann  
 !                                                                
 !Variables en argument:                                        
 !
-!            ksofro  - numeros des 2 sommets extremite du cote 
-!            krefro  - numero de reference du cote            
-!            vnofro  - composantes du vecteur normal (vers l'interieur)
-!        vnx,vny - tableaux temporaires donnant les composantes d'une normale
-!                      aux noeuds                                                
+!  ksofro  - numeros des 2 sommets extremite du cote 
+!  krefro  - numero de reference du cote            
+!  vnofro  - composantes du vecteur normal (vers l'interieur)
+!  vnx,vny - tableaux donnant les composantes d'une normale aux noeuds
 !                                                                   
 !Tableaux auxilliaires:                                           
 !
-! naux   - tableau auxiliaire permettant de reperer les noeuds d'une
-!          frontiere                                                
-!Auteurs:
-!  7711-POifRC   
+! naux   - tableau permettant de reperer les noeuds d'une frontiere
 !
-! A. Adolf - Version 1.0  Octobre  1994
-! J. Segre - Version 1.1  Avril    1998 
 subroutine poifrc(this, ex, ey)
 
 type(sll_triangular_poisson_2d)   :: this
