@@ -8,7 +8,7 @@ IF(FFTW_FOUND AND FFTW_ENABLED)
                         sll_fft)
 
   #PN Do not know why sll_collective is necessary here...
-  IF(BUILD_TESTING AND MPI_MODULE_ENABLED)
+  IF(BUILD_TESTING AND MPI_ENABLED)
      ADD_EXECUTABLE(test_ampere_vlasov_1d unit_test_ampere_vlasov_1d.F90 )
      TARGET_LINK_LIBRARIES(test_ampere_vlasov_1d sll_ampere_solvers 
                                                  sll_interpolators
