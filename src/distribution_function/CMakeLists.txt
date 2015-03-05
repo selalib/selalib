@@ -9,7 +9,7 @@ SET( DISTRIBUTION_SOURCES_LIBRARY
                sll_distribution_function.F90
                scalar_field_initializer_base.F90)
 
-IF(MPI_MODULE_ENABLED)
+IF(MPI_ENABLED)
 
   ADD_LIBRARY(sll_distribution_function STATIC 
                  ${DISTRIBUTION_SOURCES_LIBRARY}
@@ -36,5 +36,5 @@ ELSE()
                                                   sll_meshes
                                                   sll_file_io)
 
-ENDIF(MPI_MODULE_ENABLED)
+ENDIF(MPI_ENABLED)
 
