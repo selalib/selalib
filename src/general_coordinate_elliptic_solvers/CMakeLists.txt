@@ -71,7 +71,7 @@ TARGET_LINK_LIBRARIES( finite_elements_solver
 
 
 # Ctest
-IF(BUILD_TESTING)
+IF(BUILD_TESTING AND MPI_MODULE_ENABLED)
 
   ADD_EXECUTABLE( test_general_coordinates_elliptic_solver 
                   init_functions.F90 unit_test.F90 )
@@ -91,4 +91,4 @@ IF(BUILD_TESTING)
   ADD_EXECUTABLE( test_lobalap_discrete unit_test_lobalap_discrete.F90 )
   TARGET_LINK_LIBRARIES( test_lobalap_discrete sll_general_coordinate_elliptic_solvers )
 
-ENDIF(BUILD_TESTING)
+ENDIF(BUILD_TESTING AND MPI_MODULE_ENABLED)
