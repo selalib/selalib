@@ -3,7 +3,6 @@
 # should propagate to all its clients, even if these were envisioned as
 # sequential modules. visu_pic is an example.
 
-IF(MPI_MODULE_ENABLED)
 IF(HDF5_IS_PARALLEL AND HDF5_ENABLED)
   SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 ENDIF(HDF5_IS_PARALLEL AND HDF5_ENABLED)
@@ -16,12 +15,11 @@ TARGET_LINK_LIBRARIES( sll_visu_pic
   sll_working_precision )
 
 # Ctest
-IF(BUILD_TESTING)
+IF(BUILD_TESTING AND MPI_MODULE_ENABLED)
   ADD_EXECUTABLE( test_visu_pic unit_test.F90 biot_savart.F90 )
   TARGET_LINK_LIBRARIES( test_visu_pic sll_visu_pic )
   SET( PROCS 1 )
   SET( ARGS " ")
   ADD_MPI_TEST( visu_pic test_visu_pic ${PROCS} ${ARGS} )
   SET( visu_pic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-ENDIF(BUILD_TESTING)
-ENDIF(MPI_MODULE_ENABLED)
+ENDIF(BUILD_TESTING AND MPI_MODULE_ENABLED)

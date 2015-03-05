@@ -1,3 +1,4 @@
+IF (MPI_MODULE_ENABLED)
 ADD_LIBRARY(sll_distribution_function STATIC 
                sll_scalar_field_1d_old.F90
                sll_scalar_field_2d_base_old.F90
@@ -23,3 +24,4 @@ IF(BUILD_TESTING)
   TARGET_LINK_LIBRARIES(test_distribution_function sll_distribution_function)
   ADD_TEST( NAME distribution_function COMMAND test_distribution_function )
 ENDIF(BUILD_TESTING)
+ENDIF (MPI_MODULE_ENABLED)
