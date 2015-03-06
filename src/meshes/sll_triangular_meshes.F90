@@ -340,11 +340,12 @@ sll_int32 :: nelt
 sll_int32 :: l, l1, ll1, ll2
 sll_int32 :: in, iin, n, noeud, nsom, nxm, nym, neltot, ndd
 sll_int32 :: nbox, nboy
+sll_int32 :: iel, iev
+sll_int32 :: nelin, nefro, nelfr, nhp, nlp
+sll_int32 :: ierr
 
 sll_real64 :: xx1, xx2, pasx0, pasx1, pasy0, pasy1
 sll_real64 :: alx, aly
-sll_int32  :: iel, iev
-sll_int32  :: nelin, nefro, nelfr, nhp, nlp
 sll_int32, allocatable :: nar(:)
 
 mesh%eta1_min = eta1_min
@@ -368,10 +369,10 @@ noeud  = nsom          !nombre total de noeuds
 
 mesh%num_cells = neltot
 mesh%num_nodes = noeud
-allocate(mesh%coord(1:2,1:noeud))
-allocate(mesh%nodes(1:3,1:neltot))
-allocate(mesh%nvois(3,1:neltot))
-allocate(mesh%refs(1:noeud))
+SLL_CLEAR_ALLOCATE(mesh%coord(1:2,1:noeud),ierr)
+SLL_ALLOCATE(mesh%nodes(1:3,1:neltot),ierr); mesh%nodes = 0
+SLL_ALLOCATE(mesh%nvois(3,1:neltot),ierr); mesh%nvois = 0
+SLL_ALLOCATE(mesh%refs(1:noeud),ierr); mesh%refs = 0
 
 !*---- Ecriture des coordonnees des sommets ----*!
                   
@@ -663,100 +664,6 @@ x2 = mesh%coord(2, i)
 
 end function global_to_x2
 
-!  subroutine write_triangular_mesh_2d(mesh, name)
-!    ! Writes the mesh information in a file named "name"
-!    type(sll_triangular_mesh_2d), pointer :: mesh
-!    character(len=*) :: name
-!    sll_int32  :: i
-!    sll_int32  :: num_nodes
-!    sll_int32  :: k1, k2
-!    sll_int32, parameter :: out_unit=20
-!
-!    open (unit=out_unit,file=name,action="write",status="replace")
-!
-!    num_nodes = mesh%num_nodes
-!
-!    ! Optional writing every mesh point and its cartesian coordinates :
-!    !    write(*,"(/,(a))") 'hex mesh : num_pnt    x1     x2'
-!
-!    do i=1, num_nodes
-!       k1 = mesh%global_to_hex1(i)
-!       k2 = mesh%global_to_hex2(i)
-!       write (out_unit, "(3(i6,1x),2(g13.3,1x))") i,                &
-!            k1,                      &
-!            k2,                      &
-!            mesh%global_to_x1(i), &
-!            mesh%global_to_x2(i)
-!    end do
-!
-!    close(out_unit)
-!  end subroutine write_triangular_mesh_2d
-!
-!  subroutine write_field_triangular_mesh(mesh, field, name)
-!    ! Writes the points cartesian coordinates and
-!    ! field(vector) values in a file named "name"
-!    type(sll_triangular_mesh_2d), pointer :: mesh
-!    sll_real64,dimension(:) :: field
-!    character(len=*) :: name
-!    sll_int32  :: i
-!    sll_int32  :: num_nodes
-!    sll_real64 :: x1, x2
-!    sll_int32, parameter :: out_unit=20
-!
-!    open (unit=out_unit,file=name,action="write",status="replace")
-!
-!    num_nodes = mesh%num_nodes
-!    do i=1, num_nodes
-!       x1 = mesh%global_to_x1(i)
-!       x2 = mesh%global_to_x2(i)
-!       write (out_unit, "(3(g13.3,1x))") x1, &
-!            x2, &
-!            field(i)
-!    end do
-!
-!    close(out_unit)
-!  end subroutine write_field_triangular_mesh
-!
-!  subroutine write_field_triangular_mesh_xmf(mesh, field, name)
-!    ! Writes the points cartesian coordinates and
-!    ! field(vector) values in a file named "name"
-!    type(sll_triangular_mesh_2d), pointer :: mesh
-!    sll_real64,dimension(:) :: field
-!    character(len=*) :: name
-!    sll_int32  :: i
-!    sll_int32  :: num_cells
-!    sll_int32  :: num_nodes
-!    sll_int32  :: out_unit
-!    sll_real64, allocatable :: coord(:,:)
-!    sll_int32,  allocatable :: nodes(:,:)
-!    sll_int32  :: error
-!    sll_real64 :: x1, x2
-!
-!    call sll_new_file_id(out_unit, error)
-!
-!    num_nodes = mesh%num_nodes
-!    num_cells = mesh%num_cells
-!    SLL_ALLOCATE(coord(2,num_nodes),error)
-!    SLL_ALLOCATE(nodes(3,num_cells),error)
-!
-!    do i=1, num_nodes
-!       coord(1,i) = mesh%global_to_x1(i)
-!       coord(2,i) = mesh%global_to_x2(i)
-!    end do
-!
-!    do i=1, num_cells
-!       x1      = mesh%center_cartesian_coord(1, i)
-!       x2      = mesh%center_cartesian_coord(2, i)
-!       call get_cell_vertices_index( x1, x2, mesh, nodes(1,i), nodes(2,i), nodes(3,i))
-!    end do
-!
-!    call write_tri_mesh_xmf(name, coor, nodes, num_pts_tot, num_cells, field, 'values')
-!
-!    close(out_unit)
-!
-!  end subroutine write_field_triangular_mesh_xmf
-!
-
 subroutine write_triangular_mesh_mtv(mesh, mtv_file)
 
 type(sll_triangular_mesh_2d) :: mesh
@@ -892,10 +799,10 @@ write(out_unit,*)"%equalscale=T"
 write(out_unit,*)"%toplabel='References des frontieres' "
 
 do i = 1, mesh%num_cells
-   write(out_unit,*)mesh%coord(1:2,mesh%nodes(1,i)), 0.0
-   write(out_unit,*)mesh%coord(1:2,mesh%nodes(2,i)), 0.0
-   write(out_unit,*)mesh%coord(1:2,mesh%nodes(3,i)), 0.0
-   write(out_unit,*)mesh%coord(1:2,mesh%nodes(1,i)), 0.0
+   write(out_unit,*) mesh%coord(1:2,mesh%nodes(1,i)), 0.0
+   write(out_unit,*) mesh%coord(1:2,mesh%nodes(2,i)), 0.0
+   write(out_unit,*) mesh%coord(1:2,mesh%nodes(3,i)), 0.0
+   write(out_unit,*) mesh%coord(1:2,mesh%nodes(1,i)), 0.0
    write(out_unit,*)
 end do
 
@@ -926,10 +833,10 @@ write(out_unit,*)"%equalscale=T"
 write(out_unit,*)"%toplabel='References des noeuds' "
 
 do i = 1, mesh%num_cells
-   write(out_unit,*)mesh%coord(1:2,mesh%nodes(1,i)), 0.0
-   write(out_unit,*)mesh%coord(1:2,mesh%nodes(2,i)), 0.0
-   write(out_unit,*)mesh%coord(1:2,mesh%nodes(3,i)), 0.0
-   write(out_unit,*)mesh%coord(1:2,mesh%nodes(1,i)), 0.0
+   write(out_unit,*) mesh%coord(1:2,mesh%nodes(1,i)), 0.0
+   write(out_unit,*) mesh%coord(1:2,mesh%nodes(2,i)), 0.0
+   write(out_unit,*) mesh%coord(1:2,mesh%nodes(3,i)), 0.0
+   write(out_unit,*) mesh%coord(1:2,mesh%nodes(1,i)), 0.0
    write(out_unit,*)
 end do
 

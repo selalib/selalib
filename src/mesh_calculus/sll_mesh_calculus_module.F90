@@ -642,51 +642,28 @@ contains
 
 
 
-! Calculer toutes les quantites liees au maillage    
-!                                                           
-! Variables d'entree:                                         
-!
-!             iout - etiquette logique du fichier "listing" 
-!                                                             
-!             nbs  - nombre de noeuds                          
-!             nbt  - nombre de triangles du maillage            
-!             coor - coordonnees des noeuds           
-!             refn - numeros de references des noeuds 
-!             ntri - numeros des sommets              
-!             vois - numeros des voisins des triangles
-!             aire - aires des triangles              
-!             base - integrales des fonctions de base  
-!             nusd - numeros de sous-domaine            
-!
-!             npoel1 - pointeur du tableau "npoel2"       
-!             npoel2 - numero des elements ayant un sommet en commun                       
-!                                                       
-!             nucfl - num de cotes ne satisfaisant pas    
-!                      la condition CFL                           
-!                                                                
-!             petitl - petite longueur de reference         
-!             grandl - grande longueur de reference       
-!             imxref - grand nombre entier de reference  
-!                                                       
-!             nbtcot - nombre total de cotes           
-!             nbcoti - nombre de cotes internes       
-!             nbcfli - nbre de cotes internes ne satisfaisant pas CFL 
-!             ncotcu - nombre de cotes internes et frontieres        
-!             ncotcu - nombre de cotes cumules :                    
-!             - 1 = nombre de cotes internes effectifs             
-!             - 2 = 1 + nombre de cotes internes fictifs          
-!             - 3 = 2 + nombre de cotes frontieres references 1  
-!             - 4 = 3 + nombre de cotes frontieres references 2 , etc... 
-!
-!             nelmatf - nombre d'elements de la matrice profil Laplacien
-!                                                                      
-!             c   - vitesse de la lumiere dans le vide              
-!             dt  - pas de temps                                   
-!             ldtfrc - permet de forcer le calcul si dt trop grand
-!                                                                
-!Auteur:
-!
-!A. Adolf / L. Arnaud - Version 1.0  Octobre 1991 
+!> Compute unstructured mesh quantities
+!>                                                           
+!>  num_nodes - nombre de noeuds                          
+!>  num_cells - nombre de triangles du maillage            
+!>  coord - coordonnees des noeuds           
+!>  refs - numeros de references des noeuds 
+!>  nodes - numeros des sommets              
+!>  nvois - numeros des voisins des triangles
+!>  aire - aires des triangles              
+!>  base - integrales des fonctions de base  
+!>  nusd - numeros de sous-domaine            
+!>
+!>  npoel1 - pointer to "npoel2" array
+!>  npoel2 - triangles indices with same node
+!>                                            
+!>  petitl - small reference length
+!>  grandl - big reference length
+!>                                            
+!>  nbtcot - number of edges
+!>  nbcoti - number of edges not on the boundary
+!>
+!> From subroutine written by A. Adolf / L. Arnaud - Octobre 1991 
 subroutine analyze_triangular_mesh(mesh) 
 
 integer, parameter :: iout = 6
@@ -994,13 +971,13 @@ do is=1,mesh%num_nodes
 end do
 
 !if (ldebug) then
-!   write(iout,*)"*** Recherche des numeros des triangles voisins d'un triangle ***"
-!   do i = 1, mesh%num_cells
-!      write(iout,"(a10,i4,a10,3i4,a10,3i4)") &
-!        " Triangle:", i,                     &
-!        " Nodes   :", mesh%nodes(1:3,i),     &
-!        " Voisins :", mesh%nvois(1:3,i)
-!   end do
+!  write(iout,*)"*** Recherche des numeros des triangles voisins d'un triangle ***"
+!  do i = 1, mesh%num_cells
+!    write(iout,"(a10,i4,a10,3i4,a10,3i4)") &
+!      " Triangle:", i,                     &
+!      " Nodes   :", mesh%nodes(1:3,i),     &
+!      " Voisins :", mesh%nvois(1:3,i)
+!  end do
 !end if
 !======================================================================
 !----------- Nombre de noeuds sur les frontieres internes -------------
@@ -1337,14 +1314,15 @@ do iref=1,mesh%nmxfr
    end if
 end do
 
-!  Modification de nvois ------------------------------------
-! (Numero de reference change par le numero de cote)
- 
-do ict=1,mesh%nctfrt
-   ie=mesh%kelfro(ict)
-   ic=mesh%kctfro(ict)
-   mesh%nvois(ic,ie)=-ict
-end do
+!PN commented out because used by particles
+!!  Modification de nvois ------------------------------------
+!! (Numero de reference change par le numero de cote)
+! 
+!do ict=1,mesh%nctfrt
+!   ie=mesh%kelfro(ict)
+!   ic=mesh%kctfro(ict)
+!   mesh%nvois(ic,ie)=-ict
+!end do
 
 !--- Calcul des composantes du vecteur normal -----------------
 
@@ -1519,13 +1497,13 @@ end do
 !--- 4.0 --- Calcul des matrices de lissage ---------------------------
 
 do ic=1,mesh%nbtcot
-   n1 = mesh%nuvac(1,ic)
-   n2 = mesh%nuvac(2,ic)
-   x21= (mesh%coord(1,n2)-mesh%coord(1,n1))/mesh%xlcod(ic)
-   y21= (mesh%coord(2,n2)-mesh%coord(2,n1))/mesh%xlcod(ic)
-   s1 = x21*x21
-   s2 = y21*y21
-   s3 = x21*y21
+   n1  = mesh%nuvac(1,ic)
+   n2  = mesh%nuvac(2,ic)
+   x21 = (mesh%coord(1,n2)-mesh%coord(1,n1))/mesh%xlcod(ic)
+   y21 = (mesh%coord(2,n2)-mesh%coord(2,n1))/mesh%xlcod(ic)
+   s1  = x21*x21
+   s2  = y21*y21
+   s3  = x21*y21
    mesh%vtaux(ic)=x21
    mesh%vtauy(ic)=y21
    mesh%xmal1(n1)=mesh%xmal1(n1)+s1
