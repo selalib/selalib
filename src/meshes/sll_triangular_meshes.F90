@@ -26,7 +26,6 @@ module sll_triangular_meshes
 
 use sll_meshes_base
 use sll_tri_mesh_xmf
-use sll_hex_meshes
 
 implicit none
 
@@ -86,8 +85,10 @@ type :: sll_triangular_mesh_2d
 
   logical :: analyzed = .false.
 
-!   contains
+contains
 
+   procedure, pass(mesh) :: global_to_x1
+   procedure, pass(mesh) :: global_to_x2
 !     procedure, pass(mesh) :: eta1_node => eta1_node_hex
 !     procedure, pass(mesh) :: eta2_node => eta2_node_hex
 !     procedure, pass(mesh) :: eta1_cell_one_arg => eta1_cell_hex
@@ -179,20 +180,21 @@ end function new_triangular_mesh_2d_from_file
 !> @return a pointer to the newly allocated object.
 function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
 
+  use sll_hex_meshes
   type(sll_hex_mesh_2d), intent(in), pointer :: hex_mesh
   type(sll_triangular_mesh_2d),      pointer :: tri_mesh
 
-  sll_int32                  :: ierr
-  sll_real64                 :: x1
-  sll_real64                 :: y1
-  sll_int32                  :: is1, iv1 
-  sll_int32                  :: is2, iv2
-  sll_int32                  :: is3, iv3
-  sll_int32                  :: i
-  sll_int32                  :: nctfr
-  sll_real64                 :: xa, xb, xc
-  sll_real64                 :: ya, yb, yc
-  sll_real64                 :: det
+  sll_int32  :: ierr
+  sll_int32  :: is1, iv1 
+  sll_int32  :: is2, iv2
+  sll_int32  :: is3, iv3
+  sll_int32  :: i
+  sll_int32  :: nctfr
+  sll_real64 :: x1
+  sll_real64 :: y1
+  sll_real64 :: xa, xb, xc
+  sll_real64 :: ya, yb, yc
+  sll_real64 :: det
 
 
   SLL_ALLOCATE(tri_mesh, ierr)
@@ -638,6 +640,28 @@ write(*,"(10x,3(i6,9x),4(g13.3,1x))") &
      mesh%eta2_max
 
 end subroutine display_triangular_mesh_2d
+
+function global_to_x1(mesh, i) result(x1)
+! Takes the global index of the point (see hex_to_global(...) for conventions)
+! returns the first coordinate (x1) on the cartesian basis
+class(sll_triangular_mesh_2d) :: mesh
+sll_int32  :: i
+sll_real64 :: x1
+
+x1 = mesh%coord(1, i)
+
+end function global_to_x1
+
+function global_to_x2(mesh, i) result(x2)
+! Takes the global index of the point (see hex_to_global(...) for conventions)
+! returns the second coordinate (x2) on the cartesian basis
+class(sll_triangular_mesh_2d) :: mesh
+sll_int32  :: i
+sll_real64 :: x2
+
+x2 = mesh%coord(2, i)
+
+end function global_to_x2
 
 !  subroutine write_triangular_mesh_2d(mesh, name)
 !    ! Writes the mesh information in a file named "name"
