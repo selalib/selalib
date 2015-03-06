@@ -9,6 +9,8 @@ module tri_poisson
 #include "sll_constants.h"
 #include "sll_utilities.h"
 use sll_triangular_meshes
+use choleski
+
 implicit none
 
 private
@@ -35,7 +37,6 @@ public :: sll_compute_e_from_phi
 !        nefro   - nombre d'elements ayant au moins 1 sommet frontiere
 !        nelfr   - nombre d'elements frontieres                      
 !        nelin   - nombre d'elements internes                       
-!        nelmatf - nombre d'elements de la matrice profil du Laplacien
 !        irefdir - references de frontieres Dirichlet non homogenes  
 !        nnoeuf  - nombre de noeuds frontieres Dirichlet non homogenes
 !
@@ -80,18 +81,23 @@ public :: sll_compute_e_from_phi
 !
 sll_real64, parameter :: grandx = 1.e+20
 
+!>@brief
+!> Derived type for Poisson solver on unstructured mesh with triangles.
+!> @details
+!> We using here P1-conformin finite element method.
+!> This program is derived from F. Assous and J. Segre code M2V.
 type, public :: sll_triangular_poisson_2d
 
   private
-  sll_real64, dimension(:), allocatable :: vnx
-  sll_real64, dimension(:), allocatable :: vny
-  sll_int32,  dimension(:), allocatable :: naux
-  sll_real64, dimension(:), allocatable :: gradx
-  sll_real64, dimension(:), allocatable :: grady
-  sll_real64, dimension(:), allocatable :: grgr
-  sll_int32,  dimension(:), allocatable :: mors1
-  sll_int32,  dimension(:), allocatable :: mors2
-  sll_int32,  dimension(:), allocatable :: iprof
+  sll_real64, dimension(:), allocatable :: vnx    !< normal vector on node
+  sll_real64, dimension(:), allocatable :: vny    !< normal vector on node
+  logical,    dimension(:), allocatable :: naux   !< true if the node is on boundary
+  sll_real64, dimension(:), allocatable :: gradx  !< x-grad matrix
+  sll_real64, dimension(:), allocatable :: grady  !< y-grad matrix
+  sll_real64, dimension(:), allocatable :: grgr   !< grad-grad matrix
+  sll_int32,  dimension(:), allocatable :: mors1  !< array to store matrix
+  sll_int32,  dimension(:), allocatable :: mors2  !< array to store matrix
+  sll_int32,  dimension(:), allocatable :: iprof  !< array to store matrix
   sll_int32,  dimension(:), allocatable :: ifron
   sll_real64, dimension(:), allocatable :: amass
   sll_real64, dimension(:), allocatable :: vtantx
@@ -116,6 +122,12 @@ logical :: ldebug = .false.
 
 contains
 
+!> Compute electric field from charge density
+!> @param[in] this solver derived type
+!> @param[in] rho charge density array on nodes
+!> @param[out] phi electric potential on nodes
+!> @param[out] ex electric field x component on nodes
+!> @param[out] ey electric field y component on nodes
 subroutine sll_compute_e_from_rho( this, rho, phi, ex, ey)
 type(sll_triangular_poisson_2d) :: this
 sll_real64, intent(in)          :: rho(:)
@@ -350,12 +362,22 @@ allocate(this%grady(this%mors1(mesh%num_nodes+1))); this%grady = 0.0
 !--- Tableau relatif aux frontieres Dirichlet -------------------------
 
 ndir=0
-allocate(this%ifron(mesh%num_nodes)); this%ifron = 0
-
 do nn=1,mesh%num_nodes
    nref= mesh%refs(nn)
    if (nref > 0) then 
-      if (this%ntypfr(nref)==1 .or. this%ntypfr(nref) == 5)then
+      if (this%ntypfr(nref)==1)then
+         ndir=ndir+1
+      end if 
+   end if 
+end do
+
+allocate(this%ifron(ndir)); this%ifron = 0
+
+ndir=0
+do nn=1,mesh%num_nodes
+   nref= mesh%refs(nn)
+   if (nref > 0) then 
+      if (this%ntypfr(nref)==1)then
          ndir=ndir+1
          this%ifron(ndir)=nn
       end if 
@@ -363,8 +385,6 @@ do nn=1,mesh%num_nodes
 end do
 
 this%ndiric=ndir
-!Ajustement ....
-!deallocate(ifron); allocate(ifron(ndiric))
 
 !--- Calcul des matrices ----------------------------------------------
 
@@ -390,6 +410,7 @@ deallocate(tmp1)
 SLL_CLEAR_ALLOCATE(this%vnx(1:this%mesh%num_nodes),ierr)
 SLL_CLEAR_ALLOCATE(this%vny(1:this%mesh%num_nodes),ierr)
 SLL_ALLOCATE(this%naux(1:this%mesh%num_nodes),ierr)
+this%naux = .false.
 
 ! --- 8.5 --- Ecriture des tableaux ------------------------------------
 
@@ -454,7 +475,7 @@ do is=1,nbs  !Boucle sur les noeuds
 
   !Boucle sur ces elements
 
-  do  iel=1,nel
+  do iel=1,nel
 
      k=k+1
 
@@ -758,9 +779,14 @@ sll_int32 :: i, is, nref, ierr
 
 SLL_ALLOCATE(sdmb(this%mesh%num_nodes),ierr)
 
+!!$OMP PARALLEL DEFAULT(SHARED), PRIVATE(is)
+
+!!$OMP DO SCHEDULE(RUNTIME)
 do is=1,this%mesh%num_nodes
    sdmb(is)=this%amass(is)*rho(is)/this%eps0
 end do
+!!$OMP END DO 
+!!$OMP END PARALLEL
 
 !... Condition aux limites Dirichlet homogene 
 
@@ -772,6 +798,7 @@ end do
 do is=1,this%ndiric
    sdmb(this%ifron(is))=sdmb(this%ifron(is))*grandx
 end do
+
 
 call desrem(this%iprof, this%grgr,sdmb,this%mesh%num_nodes,phi)
 
@@ -834,8 +861,9 @@ sll_int32 :: i, ierr
 
 !!$ ... Boucle sur les cotes frontieres pour construire les normales aux
 !!$ ... noeuds "Dirichlet"
+this%vnx=0.; this%vny=0.; this%naux= .false.
 
-do  ict=1,this%mesh%nctfrt
+do ict=1,this%mesh%nctfrt
 
   if (this%ntypfr(this%mesh%krefro(ict))==1) then 
 
@@ -847,8 +875,8 @@ do  ict=1,this%mesh%nctfrt
     this%vnx(is2)=this%vnx(is2)+this%mesh%vnofro(1,ict)
     this%vny(is2)=this%vny(is2)+this%mesh%vnofro(2,ict)
 
-    this%naux(is1)=1
-    this%naux(is2)=1
+    this%naux(is1)=.true.
+    this%naux(is2)=.true.
 
   end if 
 
@@ -856,9 +884,9 @@ end do
 
 !... on impose la condition E.tau=0
 
-do  i=1,this%mesh%num_nodes
+do i=1,this%mesh%num_nodes
 
-  if (this%naux(i)==1) then 
+  if (this%naux(i)) then 
 
      xnor=SQRT(this%vnx(i)**2+this%vny(i)**2)
      if (xnor>this%mesh%petitl) then 
@@ -880,7 +908,7 @@ end do
 ! ... Initialisation des normales aux noeuds et du tableau indiquant 
 ! ... les noeuds appartenant a la frontiere consideree
 !
-this%vnx=0.; this%vny=0.; this%naux=0
+this%vnx=0.; this%vny=0.; this%naux= .false.
 
 ! ... Boucle sur les cotes frontieres pour construire les normales aux
 ! ... noeuds "Neumann"
@@ -897,8 +925,8 @@ do ict=1,this%mesh%nctfrt
     this%vnx(is2)=this%vnx(is2)+this%mesh%vnofro(1,ict)
     this%vny(is2)=this%vny(is2)+this%mesh%vnofro(2,ict)
 
-    this%naux(is1)=1
-    this%naux(is2)=1
+    this%naux(is1)=.true.
+    this%naux(is2)=.true.
 
   end if 
 
@@ -908,13 +936,12 @@ end do
 
 do i=1,this%mesh%num_nodes
 
-  if (this%naux(i)==1) then 
+  if (this%naux(i)) then 
 
+    xnor=SQRT(this%vnx(i)**2+this%vny(i)**2)
     if (xnor>this%mesh%petitl) then 
-      xnor=SQRT(this%vnx(i)**2+this%vny(i)**2)
       this%vnx(i)=this%vnx(i)/xnor
       this%vny(i)=this%vny(i)/xnor
-
       pscal=this%vnx(i)*ex(i)+this%vny(i)*ey(i)
       ex(i)=ex(i)-this%vnx(i)*pscal
       ey(i)=ey(i)-this%vny(i)*pscal
@@ -926,147 +953,6 @@ end do
 
 end subroutine poifrc
 
-!Function: choles
-!
-!factoriser 'cholesky' la matrice profil "ae" dans "as"
-!
-!in:
-!
-!  mudl,ae      - pointeur,matrice(symetrique definie >0)
-!  eps          - test pour les pivots
-!
-!out:
-!
-!  as           - matrice factorisee
-!  ntest        - = 0 si aucun pivot < eps
-!               - = 1 sinon
-!
-!  programmeur : 
-!  f hecht - juin 84 inria
-!
-subroutine choles(mudl,ae,as)
-
-!**********************************************************************
-
-sll_int32, dimension(:), intent(in) :: mudl
-sll_real64, dimension(:), intent(in)  :: ae
-sll_real64, dimension(:), intent(inout) :: as
-sll_int32 :: kj, jid, jmi, ij, jj, id, imi, ii, ntest
-sll_real64    :: s, xii
-sll_real64, parameter  :: eps = 1.0d-10
-sll_int32 :: i, j
-
-ntest = 0
-as(1) = sqrt(ae(1))
-ii    = mudl(1)
-
-!--- 1.0 --- Matrice symetrique ---------------------------------------
-
-do  i=2,size(mudl)
-
-   xii = 0
-   imi = ii+1
-   ii  = mudl(i)
-   id  = i - ii
-   jj  = mudl(imi+id-1)
-
-   do  ij =imi,ii-1
-      j   = ij+id
-      jmi = jj+1
-      jj  = mudl(j)
-      jid = j - jj -id
-      s = 0
-
-      do  kj = max( jmi , imi-jid )  ,  jj-1
-         s = s + as( kj ) * as( kj + jid )
-      end do
-
-      as(ij) = ( ae(ij) - s ) / as(jj)
-      xii   = xii + as(ij)*as(ij)
-   end do 
-
-   xii = ae(ii)  - xii
-   if ( xii  <  eps*abs(ae(ii))) then
-      write(6,900) i,eps
-      write(6,901)xii,eps,ae(ii)
-      ntest = 1
-   end if
-
-   as(ii) = sqrt ( xii )
-
-end do
-
-if(ntest==1) then 
-   write(6,902) 
-   SLL_ERROR("choles poisson.f90")
-end if
-
-!--- 9.0 --- Formats ---------------------------------------------------
-
- 900 format(/10x,'resultats a verifier : le coefficient diagonal du dl'  &
-             ,i6,' est inferieur au seuil de precision',e14.7)
- 901 format(/10x,'xii:',e14.7,e14.7,e14.7)
- 902 format(/10x,'************  Erreur dans CHOLES *************'/)
-
-end subroutine choles
-
-
-!Function: desrem
-!descente et/ou remontee d'un systeme lineaire ( cholesky )
-!
-! in:
-!  mudl,a,ntdl - pointeur,matrice et son ordre
-!  be          - le second membre
-!
-! out:
-!  bs          - le resultat
-!
-!  programmeur: 
-!f hecht  - juin 84 inria , f. hermeline aout 89 cel/v
-subroutine desrem(mudl,a,be,ntdl,bs)
-
-sll_int32   :: ntdl
-sll_int32   :: mudl(0:*)
-sll_int32   :: ii, ij, kj, il
-sll_int32   :: i
-sll_int32   :: j
-sll_real64  :: a(*),be(*),bs(*)
-sll_real64  :: y
-
-ii = mudl(1)
-
-!**********************************************************************
-! matrice symetrique
-!**********************************************************************
-! descentes
-
-do i=1,ntdl
-   ij = ii + 1
-   ii = mudl(i)
-   kj = i  - ii
-   y  = 0
-   do  il=ij,ii-1
-      y = y +  a(il) * bs(il+kj)
-   end do
-   bs(i) = ( be(i) - y ) / a(ii)
-end do
-
-! remontees
-
-ij = mudl(ntdl) + 1
-
-do i = ntdl , 1 , -1
-   ii = ij - 1
-   ij = mudl(i-1) + 1
-   kj =  ii - i
-   bs(i) =  bs(i) / a(ii)
-   do j = ij-kj , i - 1
-      bs(j) = bs(j) - a(j+kj) * bs(i)
-   end do
-end do
-
-
-end subroutine desrem
 
 !Function: profil
 !determination des numeros des elements situes sur la diagonale
