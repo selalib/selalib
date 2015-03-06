@@ -411,7 +411,7 @@ num_cells = size(nodes,2)
 SLL_ASSERT( size(nodes,1) == 3)
 call int2string(plot_number, cplot)
 
-write(*,"(10x, 'Output file GNUplot ', a)") field_name//'_'//cplot//'.dat'
+write(*,"(/10x, 'Output file GNUplot ',a/)") field_name//'_'//cplot//'.dat'
 
 call sll_new_file_id(gnu_id, ierr)
 open(gnu_id, file = field_name//'.gnu', position="append")
