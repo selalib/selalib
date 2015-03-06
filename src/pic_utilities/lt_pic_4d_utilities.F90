@@ -50,6 +50,28 @@ contains
 
 
   ! <<get_ltp_deformation_matrix>>
+  !> Compute the coefficients of the particle 'deformation' matrix
+  !! which approximates the Jacobian matrix of the exact backward flow
+  !! (defined between the current time and that of the particle initialization -- or the last particle remapping)
+  !! at the current particle position.
+  !! It is computed in two steps:
+  !!    * first we compute a finite-difference approximation of the forward Jacobian matrix by using the fact that the
+  !!      initial (or remapped) particles were located on a cartesian grid in phase space. Specifically, the entries of
+  !!      the forward Jacobian matrix (say, (J^n_k)_xy = d(F^n_x)/dy (z^0_k) -- with z is the phase space coordinate)
+  !!      are approximated by finite differences: here, by  DF / 2*h_y
+  !!      with DF = F^n_x(z^0_k + (0,h_y,0,0)) - F^n_x(z^0_k - (0,h_y,0,0))
+  !!    * then we invert that approximated forward Jacobian matrix
+  !!
+  !! Note: when computing finite differences in a periodic dimension (say x), one must be careful since two values of F_x
+  !!    can be close in the periodic interval but distant by almost L_x in the (stored) [0,L_x[ representation.
+  !!    To account for this (frequent) phenomenon we do the following:
+  !!    when the difference DF (see example above) is larger than L_x/2, we make it smaller by adding +/- L_x to it.
+  !!    Note that here we could very well be making the slope smaller than what it should actually be: indeed if the function
+  !!    F^n_x is having a steep slope at z^0_k which adds one (or several) periods L_x to DF then our modification will
+  !!    artificially lower the slope. But this is impossible to prevent in full generality (indeed: a steep slope crossing the
+  !!    0 or L_x value will be lowered anyway in the [0,L_x[ representation) and should not be frequent (indeed it only happens
+  !!    when F^n_x has high derivatives and the particle grid is coarse, which will lead to bad approximations anyhow).
+
   subroutine get_ltp_deformation_matrix (       &
                         k,                      &    
                         particles_m2d,          &
