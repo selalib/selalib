@@ -728,10 +728,10 @@ ltemp  = .true.
 lcalsu = .false.
 lmainv = .false.
 
-write(iout,"(/////10x,'>>> Calcul des quantites liees au maillage <<<'/)")
+write(iout,"(//10x,'>>> Compute come quantities from mesh <<<'/)")
 
 !*** Calcul des longueurs de reference
-if (ldebug) write(iout,*)"*** Calcul des longueurs de reference ***"
+!if (ldebug) write(iout,*)"*** Calcul des longueurs de reference ***"
 
 xlml = minval(mesh%coord(1,:))
 xlmu = maxval(mesh%coord(1,:))
@@ -745,7 +745,7 @@ mesh%grandl = 1.e+04 * max(xlmu-xlml,ylmu-ylmu)
 !    pour les noeuds sur l'axe en axisymetrique.
       
 !*** Calcul des aires des triangles
-if (ldebug) write(iout,*)"*** Calcul des aires des triangles ***"
+!if (ldebug) write(iout,*)"*** Calcul des aires des triangles ***"
 
 allocate(mesh%aire(mesh%num_cells)); mesh%aire=0.0
 
@@ -765,22 +765,22 @@ do it = 1, mesh%num_cells
      write(iout,*) mesh%nodes(1,it), ":",mesh%coord(1:2,mesh%nodes(1,it))
      write(iout,*) mesh%nodes(2,it), ":",mesh%coord(1:2,mesh%nodes(2,it))
      write(iout,*) mesh%nodes(3,it), ":",mesh%coord(1:2,mesh%nodes(3,it))
-     !call errout(iout,"F","maillage.f90","Aire de triangle negative")
+     stop "Aire de triangle negative"
    end if
 
    airtot = airtot + mesh%aire(it)
 
 end do
 
-write(iout,"(/10x,'Longueurs de reference :',2E15.5/)") mesh%petitl,mesh%grandl
-write(iout,"(/10x,'Limites x du domaine   :',2E15.5/    &
-  &        10x,'Limites y du domaine   :',2E15.5/   &
-  &        10x,'Aire des triangles     :', E15.5/)") xlml,xlmu,ylml,ylmu,airtot
+!write(iout,"(/10x,'Longueurs de reference :',2E15.5/)") mesh%petitl,mesh%grandl
+!write(iout,"(/10x,'Limites x du domaine   :',2E15.5/    &
+  !&        10x,'Limites y du domaine   :',2E15.5/   &
+  !&        10x,'Aire des triangles     :', E15.5/)") xlml,xlmu,ylml,ylmu,airtot
 
 
 ! --- Gestion des triangles ayant un noeud en commun -----------
-if (ldebug) &
-write(iout,*)"*** Gestion des triangles ayant un noeud en commun ***"
+!if (ldebug) &
+!write(iout,*)"*** Gestion des triangles ayant un noeud en commun ***"
  
 ! ... recherche des elements ayant un sommet commun
 !     creation du tableau npoel1(i+1)  contenant le nombre de 
@@ -993,29 +993,29 @@ do is=1,mesh%num_nodes
 
 end do
 
-if (ldebug) then
-   write(iout,*)"*** Recherche des numeros des triangles voisins d'un triangle ***"
-   do i = 1, mesh%num_cells
-      write(iout,"(a10,i4,a10,3i4,a10,3i4)") &
-        " Triangle:", i,                     &
-        " Nodes   :", mesh%nodes(1:3,i),     &
-        " Voisins :", mesh%nvois(1:3,i)
-   end do
-end if
+!if (ldebug) then
+!   write(iout,*)"*** Recherche des numeros des triangles voisins d'un triangle ***"
+!   do i = 1, mesh%num_cells
+!      write(iout,"(a10,i4,a10,3i4,a10,3i4)") &
+!        " Triangle:", i,                     &
+!        " Nodes   :", mesh%nodes(1:3,i),     &
+!        " Voisins :", mesh%nvois(1:3,i)
+!   end do
+!end if
 !======================================================================
 !----------- Nombre de noeuds sur les frontieres internes -------------
 !======================================================================
 
-do iel = 1, mesh%num_cells
-  do j = 1, 3
-    if( mesh%nvois(j,iel) == imxref ) then
-      write(iout,*) " Triangle ", iel, " Voisins :", (mesh%nvois(i,iel),i=1,3)
-      write(iout,*) " Coordonnees x =", mesh%coord(1,mesh%nodes(1,iel))
-      write(iout,*) " Coordonnees y =", mesh%coord(2,mesh%nodes(1,iel))
-      stop
-    end if
-  end do
-end do
+!do iel = 1, mesh%num_cells
+!  do j = 1, 3
+!    if( mesh%nvois(j,iel) == imxref ) then
+!      write(iout,*) " Triangle ", iel, " Voisins :", (mesh%nvois(i,iel),i=1,3)
+!      write(iout,*) " Coordonnees x =", mesh%coord(1,mesh%nodes(1,iel))
+!      write(iout,*) " Coordonnees y =", mesh%coord(2,mesh%nodes(1,iel))
+!      stop
+!    end if
+!  end do
+!end do
 
 ! ... Verification approchee de la condition CFL sur les triangles
 
@@ -1028,18 +1028,18 @@ end do
 !  3 = 2 + nombre de cotes frontieres references 1          *
 !  4 = 3 + nombre de cotes frontieres references 2 , etc... *
 
-write(iout,"(/10x,a,i3)") 'Maximum de frontieres referencees ', mesh%nmxfr
+!write(iout,"(/10x,a,i3)") 'Maximum de frontieres referencees ', mesh%nmxfr
 
 !*** Calcul du nb de cotes internes et total (nbcoti,nbtcot)
 
 mesh%nbtcot = (3*mesh%num_cells+mesh%nctfrt)/2
 
-write(iout,"( 10x,a,i6)") 'Nombre total de cotes      =', mesh%nbtcot
+!write(iout,"( 10x,a,i6)") 'Nombre total de cotes      =', mesh%nbtcot
 
 mesh%nbcoti = mesh%nbtcot - mesh%nctfrt
 
-write(iout,"( 10x,a,i6)") 'Nombre de cotes internes   =', mesh%nbcoti
-write(iout,"( 10x,a,i6/)")'Nombre de cotes frontieres =', mesh%nctfrt
+!write(iout,"( 10x,a,i6)") 'Nombre de cotes internes   =', mesh%nbcoti
+!write(iout,"( 10x,a,i6/)")'Nombre de cotes frontieres =', mesh%nctfrt
  
 !  Calcul du nb de cotes cumules par type de traitement (ncotcu) ....
 
@@ -1063,12 +1063,12 @@ do ifr=1,mesh%nmxfr
    ncotcu(ifr+2)=ncotcu(ifr+1)+ncotcu(ifr+2)
 end do
 
-if (ldebug) then
-   write(iout,"(10x,'Nombre de cotes cumules a partir de nbcoti :')")
-   do ifr=1,mesh%nmxfr
-      write(iout,"(20x,'ref = ',i3,'   ncotcu(i) = ',i6)") ifr,ncotcu(ifr+2)
-   end do
-end if
+!if (ldebug) then
+!   write(iout,"(10x,'Nombre de cotes cumules a partir de nbcoti :')")
+!   do ifr=1,mesh%nmxfr
+!      write(iout,"(20x,'ref = ',i3,'   ncotcu(i) = ',i6)") ifr,ncotcu(ifr+2)
+!   end do
+!end if
 
 allocate(mesh%vtaux(mesh%nbtcot),mesh%vtauy(mesh%nbtcot))
 mesh%vtaux = 0.; mesh%vtauy = 0.
@@ -1497,11 +1497,11 @@ do iel = 1, mesh%num_cells
 end do
 
 #ifdef DEBUG
-do is=1,mesh%num_nodes
-  nbc=mesh%nbcov(is+1)-mesh%nbcov(is)
-  iac=mesh%nbcov(is)
-  write(*,"(i8,2x,10i8)") is, (mesh%nugcv(iac+i),i=1,nbc)
-end do
+!do is=1,mesh%num_nodes
+!  nbc=mesh%nbcov(is+1)-mesh%nbcov(is)
+!  iac=mesh%nbcov(is)
+!  write(*,"(i8,2x,10i8)") is, (mesh%nugcv(iac+i),i=1,nbc)
+!end do
 #endif
 
 !======================================================================
@@ -1559,15 +1559,15 @@ end if
 ! --- 5.0 --- Impression des tableaux ----------------------------------
  
 
-write(iout,902)
-do is=1,mesh%num_nodes
-   write(iout,903) mesh%xmal1(is),mesh%xmal2(is),mesh%xmal3(is)
-end do
-
-write(iout,904)
-do ic=1,mesh%nbtcot
-   write(iout,905) mesh%vtaux(ic),mesh%vtauy(ic)
-end do
+!write(iout,902)
+!do is=1,mesh%num_nodes
+!   write(iout,903) mesh%xmal1(is),mesh%xmal2(is),mesh%xmal3(is)
+!end do
+!
+!write(iout,904)
+!do ic=1,mesh%nbtcot
+!   write(iout,905) mesh%vtaux(ic),mesh%vtauy(ic)
+!end do
 
 if(lerr) then
    write(iout,901)

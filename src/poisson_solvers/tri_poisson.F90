@@ -102,7 +102,7 @@ type, public :: sll_triangular_poisson_2d
   sll_int32  :: ndiric
   sll_int32  :: ntypfr(5)
   sll_real64 :: potfr(5)
-  sll_real64 :: eps0 = 8.8542e-12
+  sll_real64 :: eps0 = 1.0_f64 !8.8542e-12
 
   type(sll_triangular_mesh_2d), pointer :: mesh => null()
 
@@ -296,8 +296,10 @@ endif
 this%ntypfr = ntypfr
 this%potfr  = potfr
 
-allocate(this%sv1(mesh%nbtcot),this%sv2(mesh%nbtcot)); this%sv1 = 0.; this%sv2 = 0.
-allocate(this%vtantx(mesh%nbtcot),this%vtanty(mesh%nbtcot));this%vtantx=0.;this%vtanty=0.
+allocate(this%sv1(mesh%nbtcot));    this%sv1    = 0.
+allocate(this%sv2(mesh%nbtcot));    this%sv2    = 0.
+allocate(this%vtantx(mesh%nbtcot)); this%vtantx = 0.
+allocate(this%vtanty(mesh%nbtcot)); this%vtanty = 0.
 
 allocate(this%mors1(mesh%num_nodes+1)); this%mors1 = 0
 
@@ -309,7 +311,13 @@ allocate(this%mors2(12*mesh%num_nodes)); this%mors2 = 0
  
 ! Calcul de mors1,mors2.
 
-call morse(mesh%npoel1,mesh%npoel2,mesh%nodes,mesh%num_cells,mesh%num_nodes,this%mors1,this%mors2)
+call morse(mesh%npoel1,    &
+           mesh%npoel2,    &
+           mesh%nodes,     &
+           mesh%num_cells, &
+           mesh%num_nodes, &
+           this%mors1,     &
+           this%mors2      )
  
 ! Ajustement de la taille de mors2.
 ! pas sur que ca fonctionne a tous les coups
@@ -318,7 +326,12 @@ call morse(mesh%npoel1,mesh%npoel2,mesh%nodes,mesh%num_cells,mesh%num_nodes,this
 ! Adressage des tableaux permettant de stocker des matrices sous forme profil
 
 allocate(this%iprof(mesh%num_nodes+1)); this%iprof = 0
-call profil(mesh%nodes,mesh%num_nodes,mesh%npoel1,mesh%npoel2, this%iprof)
+
+call profil(mesh%nodes,     &
+            mesh%num_nodes, &
+            mesh%npoel1,    &
+            mesh%npoel2,    &
+            this%iprof      )
 
 !======================================================================
 !--- 2.0 --- POISSON par une methode d'elements finis -----------------
@@ -361,7 +374,7 @@ call poismc(this)
 
 allocate(tmp1(this%iprof(mesh%num_nodes+1))); tmp1 = 0.0
 
-write(*,"(//5x,a)")" *** Appel Choleski pour Poisson ***  "
+!write(*,"(//5x,a)")" *** Appel Choleski pour Poisson ***  "
 call choles(this%iprof,this%grgr,tmp1)
 
 do i=1,this%iprof(mesh%num_nodes+1)
@@ -380,23 +393,23 @@ SLL_ALLOCATE(this%naux(1:this%mesh%num_nodes),ierr)
 
 ! --- 8.5 --- Ecriture des tableaux ------------------------------------
 
-if (ldebug) then
-   write(6,900) 
-   do i=1,mesh%num_nodes
-      write(6,901) i,(this%mors2(j), j=this%mors1(i)+1,this%mors2(i+1))
-   end do
-   write(6,902) 
-   write(6,903) (this%ifron(i),i=1,this%ndiric)
-end if
-
-! ======================================================================
-! --- 9.0 --- Formats --------------------------------------------------
- 
-900 format(//10x,'Tableau MORS2 pointe par le tableau MORS1'/  &
-              3x,'No de noeud           Noeuds associes'/)
-901 format(2x,I8,3x,12I8)
-902 format(//10x,'Noeuds frontiere du type DIRICLET pour POISSON'/)
-903 format(32000(2x,7I9/)/)
+!if (ldebug) then
+!   write(6,900) 
+!   do i=1,mesh%num_nodes
+!      write(6,901) i,(this%mors2(j), j=this%mors1(i)+1,this%mors2(i+1))
+!   end do
+!   write(6,902) 
+!   write(6,903) (this%ifron(i),i=1,this%ndiric)
+!end if
+!
+!! ======================================================================
+!! --- 9.0 --- Formats --------------------------------------------------
+! 
+!900 format(//10x,'Tableau MORS2 pointe par le tableau MORS1'/  &
+!              3x,'No de noeud           Noeuds associes'/)
+!901 format(2x,I8,3x,12I8)
+!902 format(//10x,'Noeuds frontiere du type DIRICLET pour POISSON'/)
+!903 format(32000(2x,7I9/)/)
 
 end subroutine initialize_poisson_solver
 
@@ -564,66 +577,75 @@ sll_int32 :: is, il, j
 
 do iel=1,this%mesh%num_cells
 
-   !Calcul des coefficients dependant de la geometrie du triangle.
+  !Calcul des coefficients dependant de la geometrie du triangle.
 
-   is1t = this%mesh%nodes(1,iel)
-   is2t = this%mesh%nodes(2,iel)
-   is3t = this%mesh%nodes(3,iel)
+  is1t = this%mesh%nodes(1,iel)
+  is2t = this%mesh%nodes(2,iel)
+  is3t = this%mesh%nodes(3,iel)
 
-   x1t  = this%mesh%coord(1,is1t)
-   x2t  = this%mesh%coord(1,is2t)
-   x3t  = this%mesh%coord(1,is3t)
+  x1t  = this%mesh%coord(1,is1t)
+  x2t  = this%mesh%coord(1,is2t)
+  x3t  = this%mesh%coord(1,is3t)
 
-   y1t  = this%mesh%coord(2,is1t)
-   y2t  = this%mesh%coord(2,is2t)
-   y3t  = this%mesh%coord(2,is3t)
+  y1t  = this%mesh%coord(2,is1t)
+  y2t  = this%mesh%coord(2,is2t)
+  y3t  = this%mesh%coord(2,is3t)
 
-   dntx1 = y2t-y3t
-   dntx2 = y3t-y1t
-   dntx3 = y1t-y2t
+  dntx1 = y2t-y3t
+  dntx2 = y3t-y1t
+  dntx3 = y1t-y2t
 
-   dnty1 = x3t-x2t
-   dnty2 = x1t-x3t
-   dnty3 = x2t-x1t
+  dnty1 = x3t-x2t
+  dnty2 = x1t-x3t
+  dnty3 = x2t-x1t
 
-   !Contribution a la matrice de masse
+  !Contribution a la matrice de masse
 
-   amloc(1) = this%mesh%aire(iel)/3.
-   amloc(2) = this%mesh%aire(iel)/3.
-   amloc(3) = this%mesh%aire(iel)/3.
+  amloc(1) = this%mesh%aire(iel)/3.
+  amloc(2) = this%mesh%aire(iel)/3.
+  amloc(3) = this%mesh%aire(iel)/3.
 
-   !Assemblage
+  !Assemblage
 
-   call asbld(amloc,is1t,is2t,is3t,this%amass)
+  call asbld(amloc,is1t,is2t,is3t,this%amass)
 
-   !Contribution a la matrice grad-grad
+  !Contribution a la matrice grad-grad
 
-   coef=1./(4.*this%mesh%aire(iel))
+  coef=1./(4.*this%mesh%aire(iel))
 
-   aggloc(1)=(dntx1**2   +dnty1**2   )*coef
-   aggloc(2)=(dntx1*dntx2+dnty1*dnty2)*coef
-   aggloc(3)=(dntx1*dntx3+dnty1*dnty3)*coef
-   aggloc(4)=(dntx2**2   +dnty2**2   )*coef
-   aggloc(5)=(dntx2*dntx3+dnty2*dnty3)*coef
-   aggloc(6)=(dntx3**2   +dnty3**2   )*coef
+  aggloc(1)=(dntx1**2   +dnty1**2   )*coef
+  aggloc(2)=(dntx1*dntx2+dnty1*dnty2)*coef
+  aggloc(3)=(dntx1*dntx3+dnty1*dnty3)*coef
+  aggloc(4)=(dntx2**2   +dnty2**2   )*coef
+  aggloc(5)=(dntx2*dntx3+dnty2*dnty3)*coef
+  aggloc(6)=(dntx3**2   +dnty3**2   )*coef
 
-   !Contribution aux matrices gradx et grady:
-   !Calcul de matrices locales.
+  !Contribution aux matrices gradx et grady:
+  !Calcul de matrices locales.
 
-   grxloc(1)=-dntx1/6.; gryloc(1)=-dnty1/6.
-   grxloc(2)=-dntx2/6.; gryloc(2)=-dnty2/6.
-   grxloc(3)=-dntx3/6.; gryloc(3)=-dnty3/6.
-   grxloc(4)=-dntx1/6.; gryloc(4)=-dnty1/6.
-   grxloc(5)=-dntx2/6.; gryloc(5)=-dnty2/6.
-   grxloc(6)=-dntx3/6.; gryloc(6)=-dnty3/6.
-   grxloc(7)=-dntx1/6.; gryloc(7)=-dnty1/6.
-   grxloc(8)=-dntx2/6.; gryloc(8)=-dnty2/6.
-   grxloc(9)=-dntx3/6.; gryloc(9)=-dnty3/6.
+  grxloc(1)=-dntx1/6.; gryloc(1)=-dnty1/6.
+  grxloc(2)=-dntx2/6.; gryloc(2)=-dnty2/6.
+  grxloc(3)=-dntx3/6.; gryloc(3)=-dnty3/6.
+  grxloc(4)=-dntx1/6.; gryloc(4)=-dnty1/6.
+  grxloc(5)=-dntx2/6.; gryloc(5)=-dnty2/6.
+  grxloc(6)=-dntx3/6.; gryloc(6)=-dnty3/6.
+  grxloc(7)=-dntx1/6.; gryloc(7)=-dnty1/6.
+  grxloc(8)=-dntx2/6.; gryloc(8)=-dnty2/6.
+  grxloc(9)=-dntx3/6.; gryloc(9)=-dnty3/6.
 
-   !Assemblage 
+  !Assemblage 
 
-   call asblp(this%iprof, aggloc,is1t,is2t,is3t,this%grgr)
-   call asblm2(grxloc,gryloc,this%mors1,this%mors2,is1t,is2t,is3t,this%gradx,this%grady)
+  call asblp(this%iprof, aggloc,is1t,is2t,is3t,this%grgr)
+
+  call asblm2(grxloc,      &
+              gryloc,      &
+              this%mors1,  &
+              this%mors2,  &
+              is1t,        &
+              is2t,        &
+              is3t,        &
+              this%gradx,  &
+              this%grady)
 
 end do
 
@@ -638,45 +660,45 @@ end do
 ! ================================================================
 ! ... Ecriture des matrices mass, grgr, gradx et grady
 
-if (ldebug) then
-   write(6,900) 
-   do is=1,this%mesh%num_nodes
-      write(6,901) is,this%amass(is)
-   end do
-
-   write(6,907) 
-   write(6,902) 
-   do is=1,this%mesh%num_nodes
-      nis=this%iprof(is+1)-this%iprof(is)
-      write(6,903) is,(this%grgr(this%iprof(is)+il),il=1,nis)
-   end do
-
-   write(6,904) 
-   do is=1,this%mesh%num_nodes
-      nis=this%mors1(is+1)-this%mors1(is)
-      write(6,903) is,(this%gradx(this%mors1(is)+il),il=1,nis)
-   end do
-
-   write(6,905) 
-   do is=1,this%mesh%num_nodes
-      nis=this%mors1(is+1)-this%mors1(is)
-      write(6,903) is,(this%grady(this%mors1(is)+il),il=1,nis)
-   end do
-end if
+!if (ldebug) then
+!  write(6,900) 
+!  do is=1,this%mesh%num_nodes
+!     write(6,901) is,this%amass(is)
+!  end do
+!
+!  write(6,907) 
+!  write(6,902) 
+!  do is=1,this%mesh%num_nodes
+!     nis=this%iprof(is+1)-this%iprof(is)
+!     write(6,903) is,(this%grgr(this%iprof(is)+il),il=1,nis)
+!  end do
+!
+!  write(6,904) 
+!  do is=1,this%mesh%num_nodes
+!     nis=this%mors1(is+1)-this%mors1(is)
+!     write(6,903) is,(this%gradx(this%mors1(is)+il),il=1,nis)
+!  end do
+!
+!  write(6,905) 
+!  do is=1,this%mesh%num_nodes
+!     nis=this%mors1(is+1)-this%mors1(is)
+!     write(6,903) is,(this%grady(this%mors1(is)+il),il=1,nis)
+!  end do
+!end if
 
 ! ================================================================
 
- 900 format(//10x,'Matrice de masse'/               &
-              10x,'No de noeud     Terme diagonal'/)
- 901 format(  10x,I10,E15.4)
- 902 format(//10x,'Matrice grad-grad'/              &
-               10x,'No de noeud     Termes de la ligne'/)
- 903 format(  I10,5E12.3/10(10x,5E12.3/)/)
- 904 format(//10x,'Matrice gradx'/              &
-              10x,'No de noeud     Termes de la ligne'/)
- 905 format(//10x,'Matrice grady'/              &
-               10x,'No de noeud     Termes de la ligne'/)
- 907 format(//10x,'Resolution du systeme par Choleski')
+! 900 format(//10x,'Matrice de masse'/               &
+!              10x,'No de noeud     Terme diagonal'/)
+! 901 format(  10x,I10,E15.4)
+! 902 format(//10x,'Matrice grad-grad'/              &
+!               10x,'No de noeud     Termes de la ligne'/)
+! 903 format(  I10,5E12.3/10(10x,5E12.3/)/)
+! 904 format(//10x,'Matrice gradx'/              &
+!              10x,'No de noeud     Termes de la ligne'/)
+! 905 format(//10x,'Matrice grady'/              &
+!               10x,'No de noeud     Termes de la ligne'/)
+! 907 format(//10x,'Resolution du systeme par Choleski')
 
 end subroutine poismc
 
@@ -1003,13 +1025,13 @@ end subroutine choles
 !f hecht  - juin 84 inria , f. hermeline aout 89 cel/v
 subroutine desrem(mudl,a,be,ntdl,bs)
 
-sll_int32 :: ntdl
-sll_int32 :: mudl(0:*)
-sll_real64    :: a(*),be(*),bs(*)
-sll_int32 :: ii, ij, kj, il
-sll_real64 :: y
-sll_int32 :: i
-sll_int32 :: j
+sll_int32   :: ntdl
+sll_int32   :: mudl(0:*)
+sll_int32   :: ii, ij, kj, il
+sll_int32   :: i
+sll_int32   :: j
+sll_real64  :: a(*),be(*),bs(*)
+sll_real64  :: y
 
 ii = mudl(1)
 
@@ -1085,33 +1107,33 @@ sll_int32, intent(in) :: nbs      !Nombre de sommets
 k=0
 do in=1,nbs
       
-   !* nombre d'elements ayant in comme sommet
-   nel=npoel1(in+1)-npoel1(in)
+  !* nombre d'elements ayant in comme sommet
+  nel=npoel1(in+1)-npoel1(in)
 
-   !* boucle sur ces elements
+  !* boucle sur ces elements
 
-   do iel=1,nel
+  do iel=1,nel
 
-      k=k+1
-      !* numero de l'element
-      numel=npoel2(k)
-      is1=ntri(1,numel)
-      ind=is1+1
-      if (iprof(ind).eq.0)then
-         iprof(ind)=is1-in+1
-      end if 
-      is2=ntri(2,numel)
-      ind=is2+1
-      if (iprof(ind).eq.0)then
-         iprof(ind)=is2-in+1
-      end if 
-      is3=ntri(3,numel)
-      ind=is3+1
-      if (iprof(ind).eq.0)then
-         iprof(ind)=is3-in+1
-      end if 
+    k=k+1
+    !* numero de l'element
+    numel=npoel2(k)
+    is1=ntri(1,numel)
+    ind=is1+1
+    if (iprof(ind).eq.0)then
+       iprof(ind)=is1-in+1
+    end if 
+    is2=ntri(2,numel)
+    ind=is2+1
+    if (iprof(ind).eq.0)then
+       iprof(ind)=is2-in+1
+    end if 
+    is3=ntri(3,numel)
+    ind=is3+1
+    if (iprof(ind).eq.0)then
+       iprof(ind)=is3-in+1
+    end if 
 
-   end do
+  end do
 
 end do
 
@@ -1153,8 +1175,6 @@ xmass(i3)=xmass(i3)+aele(3)
 
 end subroutine
 
-
- 
 !Function: asblm2
 !   
 !          assembler 3 matrices elementaires
