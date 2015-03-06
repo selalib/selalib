@@ -1,3 +1,5 @@
+This is an example of file to file in and give with a selalib release
+
 SELALIB version 0.0.1 released on 2013-04-14
 ================================================================================
 
@@ -87,14 +89,14 @@ Bug Fixes since last version
 
 Supported Platforms
 ===================
-    Ubuntu 12.10  	gfortran             
-    Debian testing 	ifort
-    Debian testing	gfortran
+    Ubuntu 12.10     gfortran             
+    Debian testing   ifort
+    Debian testing   gfortran
     Mac OS X Lion    gfortran 4.8.0 and ifort 13.0.
 
     Nightly build reports are listed at this location:     
 
-    http://cdash.inria.fr/CDash/index.php?project=Selalib2
+    http://cdash.inria.fr/CDash/index.php?project=Selalib
 
 
 Known Problems
