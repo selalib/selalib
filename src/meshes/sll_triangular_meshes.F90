@@ -37,7 +37,7 @@ integer :: imxref=99999999
 type :: sll_triangular_mesh_2d
 
   sll_int32           :: num_nodes  
-  sll_int32           :: num_cells 
+  sll_int32           :: num_triangles 
   sll_int32           :: num_edges     
   sll_int32           :: num_bound     
 
@@ -200,14 +200,14 @@ function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
   SLL_ALLOCATE(tri_mesh, ierr)
 
     
-  tri_mesh%num_nodes = hex_mesh%num_pts_tot
-  tri_mesh%num_cells = hex_mesh%num_triangles
-  tri_mesh%nmxfr     = 1
-  tri_mesh%nmxsd     = 1
-  SLL_ALLOCATE(tri_mesh%coord(1:2,tri_mesh%num_nodes),   ierr)
-  SLL_ALLOCATE(tri_mesh%nodes(1:3,1:tri_mesh%num_cells), ierr)
-  SLL_ALLOCATE(tri_mesh%refs(tri_mesh%num_nodes),        ierr)
-  SLL_ALLOCATE(tri_mesh%nvois(1:3,1:tri_mesh%num_cells), ierr)
+  tri_mesh%num_nodes     = hex_mesh%num_pts_tot
+  tri_mesh%num_triangles = hex_mesh%num_triangles
+  tri_mesh%nmxfr         = 1
+  tri_mesh%nmxsd         = 1
+  SLL_ALLOCATE(tri_mesh%coord(1:2,tri_mesh%num_nodes),       ierr)
+  SLL_ALLOCATE(tri_mesh%nodes(1:3,1:tri_mesh%num_triangles), ierr)
+  SLL_ALLOCATE(tri_mesh%refs(tri_mesh%num_nodes),            ierr)
+  SLL_ALLOCATE(tri_mesh%nvois(1:3,1:tri_mesh%num_triangles), ierr)
   tri_mesh%refs      =  0
   tri_mesh%nvois     =  0
 
@@ -367,8 +367,8 @@ neltot = 2 * nxm * nym !nombre total de triangles du maillage
 nsom   = nbox * nboy   !nombre de "sommets" du maillage quadrangulaire
 noeud  = nsom          !nombre total de noeuds
 
-mesh%num_cells = neltot
-mesh%num_nodes = noeud
+mesh%num_triangles = neltot
+mesh%num_nodes     = noeud
 SLL_CLEAR_ALLOCATE(mesh%coord(1:2,1:noeud),ierr)
 SLL_ALLOCATE(mesh%nodes(1:3,1:neltot),ierr); mesh%nodes = 0
 SLL_ALLOCATE(mesh%nvois(3,1:neltot),ierr); mesh%nvois = 0
@@ -507,138 +507,36 @@ deallocate(nar)
 
 end subroutine initialize_triangular_mesh_2d
 
-!  function eta1_node_triangular(mesh, i, j) result(res)
-!    ! The coordinates (i, j) correspond to the (r1, r2) basis
-!    ! This function returns the 1st coordinate on the cartesian system
-!    class(sll_triangular_mesh_2d), intent(in) :: mesh
-!    sll_int32, intent(in)  :: i
-!    sll_int32, intent(in)  :: j
-!    sll_real64 :: res
-!
-!    res = mesh%r1_x1*i + mesh%r2_x1*j + mesh%center_x1
-!  end function eta1_node_triangular
-!
-!  !> @brief Computes the second coordinate of a given point
-!  !> @details Computes the second coordinate on the cartesian system 
-!  !> of a point which has for hexagonal coordinates (i,j)
-!  !> @param i sll_int32 denoting the first hexagonal coordinate of a point
-!  !> @param j sll_int32 denoting the second hexagonal coordinate of a point
-!  !> returns res real containing the coordinate "eta2"
-!  function eta2_node_triangular(mesh, i, j) result(res)
-!    ! The coordinates (k1, k2) correspond to the (r1, r2) basis
-!    ! This function the 2nd coordinate on the cartesian system
-!    class(sll_triangular_mesh_2d), intent(in)     :: mesh
-!    sll_int32, intent(in)  :: i
-!    sll_int32, intent(in)  :: j
-!    sll_real64  :: res
-!
-!    res = mesh%r1_x2*i + mesh%r2_x2*j + mesh%center_x2
-!  end function eta2_node_triangular
-!
-!
-!  function eta1_cell_triangular(mesh, cell_num) result(res)
-!    ! The index num_ele corresponds to the index of triangle
-!    ! This function returns the 1st coordinate on the cartesian system
-!    ! of the center of the triangle at num_ele
-!    class(sll_triangular_mesh_2d),intent(in)     :: mesh
-!    sll_int32, intent(in)      :: cell_num
-!    sll_real64 :: res
-!
-!    res = mesh%center_cartesian_coord(1, cell_num)
-!  end function eta1_cell_triangular
-!
-!  function eta2_cell_triangular(mesh, cell_num) result(res)
-!    ! The index num_ele corresponds to the index of triangle
-!    ! This function returns the 2nd coordinate on the cartesian system
-!    ! of the center of the triangle at num_ele
-!    class(sll_triangular_mesh_2d),intent(in)     :: mesh
-!    sll_int32, intent(in)      :: cell_num
-!    sll_real64 :: res
-!
-!    res = mesh%center_cartesian_coord(2, cell_num)
-!  end function eta2_cell_triangular
-!
-!
-!  function eta1_cell_triangular_two_arg(mesh, i, j) result(res)
-!    class(sll_triangular_mesh_2d),intent(in)     :: mesh
-!    sll_int32, intent(in)      :: i, j
-!    sll_real64 :: res
-!
-!    res = 0.0_f64
-!    print *, "Error : eta1_cell for a triangular mesh only works with ONE parameter (num_cell)"
-!    STOP
-!  end function eta1_cell_triangular_two_arg
-!
-!  function eta2_cell_triangular_two_arg(mesh, i, j) result(res)
-!    class(sll_triangular_mesh_2d),intent(in)     :: mesh
-!    sll_int32, intent(in)      :: i, j
-!    sll_real64 :: res
-!
-!    res = 0.0_f64
-!    print *, "Error : eta2_cell for a triangular mesh only works with ONE parameter (num_cell)"
-!    STOP
-!  end function eta2_cell_triangular_two_arg
-!
-!
-!  function cells_to_origin(k1, k2) result(val)
-!    ! Takes the coordinates (k1,k2) on the (r1,r2) basis and 
-!    ! returns the number of cells between that point and
-!    ! the origin. If (k1, k2) = 0, val = 0
-!    sll_int32, intent(in)   :: k1
-!    sll_int32, intent(in)   :: k2
-!    sll_int32               :: val
-!
-!    ! We compute the number of cells from point to center 
-!    if (k1*k2 .gt. 0) then
-!       val = max(abs(k1),abs(k2))
-!    else
-!       val = abs(k1) + abs(k2)
-!    end if
-!
-!  end function cells_to_origin
-!
-!
-!  function hex_to_global(mesh, k1, k2) result(val)
-!    ! Takes the coordinates (k1,k2) on the (r1,r2) basis and 
-!    ! returns global index of that mesh point.
-!    ! By default the index of the center of the mesh is 0
-!    ! Then following the r1 direction and a counter-clockwise motion
-!    ! we assing an index to every point of the mesh.
-!    class(sll_triangular_mesh_2d)      :: mesh
-!    sll_int32, intent(in)   :: k1
-!    sll_int32, intent(in)   :: k2
-!    sll_int32               :: distance
-!    sll_int32               :: index_tab
-!    sll_int32               :: val
-!    
-!    distance = cells_to_origin(k1,k2)
-!
-!    ! Test if we are in domain
-!    if (distance .le. mesh%num_cells) then
-!
-!       call index_triangular_to_global(mesh, k1, k2,index_tab)
-!       val = mesh%global_indices(index_tab)
-!
-!    else
-!       val = -1
-!    end if
-!
-!  end function hex_to_global
-
-
 !> Displays mesh information on the terminal
 subroutine display_triangular_mesh_2d(mesh)
 class(sll_triangular_mesh_2d), intent(in) :: mesh
 
-write(*,"(/,(a))") '2D mesh : num_cells   num_nodes   num_edges '
-write(*,"(10x,3(i6,9x),4(g13.3,1x))") &
-     mesh%num_cells,  &
-     mesh%num_nodes,  &
-     mesh%num_edges,  &
-     mesh%eta1_min,   &
-     mesh%eta1_max,   &
-     mesh%eta2_min,   &
-     mesh%eta2_max
+sll_real64 :: eta1_min, eta1_max, eta2_min, eta2_max
+sll_int32  :: i, nctfrt, nbtcot
+
+eta1_min = minval(mesh%coord(1,:))
+eta1_max = maxval(mesh%coord(1,:))
+eta2_min = minval(mesh%coord(2,:))
+eta2_max = maxval(mesh%coord(2,:))
+
+nctfrt=0
+do i=1,mesh%num_triangles
+   if (mesh%nvois(1,i)<0) nctfrt=nctfrt+1
+   if (mesh%nvois(2,i)<0) nctfrt=nctfrt+1
+   if (mesh%nvois(3,i)<0) nctfrt=nctfrt+1
+end do
+
+nbtcot = (3*mesh%num_triangles+nctfrt)/2
+
+write(*,"(/,(a))") '2D mesh : num_triangles   num_nodes   num_edges '
+write(*,"(10x,3(i6,9x),/,'Frame',/,4(g13.3,1x))") &
+     mesh%num_triangles,  &
+     mesh%num_nodes,      &
+     nbtcot,              &
+     eta1_min,            &
+     eta1_max,            &
+     eta2_min,            &
+     eta2_max
 
 end subroutine display_triangular_mesh_2d
 
@@ -684,7 +582,7 @@ write(out_unit,"(a)")"$DATA=CURVE3D"
 write(out_unit,"(a)")"%equalscale=T"
 write(out_unit,"(a)")"%toplabel='Maillage' "
 
-do i = 1, mesh%num_cells
+do i = 1, mesh%num_triangles
 
    write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
    write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(2,i)),0.
@@ -700,7 +598,7 @@ write(out_unit,"(a)")"$DATA=CURVE3D"
 write(out_unit,"(a)")"%equalscale=T"
 write(out_unit,"(a)")"%toplabel='Numeros des noeuds et des triangles' "
 
-do i = 1, mesh%num_cells
+do i = 1, mesh%num_triangles
    write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
    write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(2,i)),0.
    write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(3,i)),0.
@@ -708,7 +606,7 @@ do i = 1, mesh%num_cells
    write(out_unit,*)
 end do
 
-do i = 1, mesh%num_cells
+do i = 1, mesh%num_triangles
    x1 = (  mesh%coord(1,mesh%nodes(1,i))  &
          + mesh%coord(1,mesh%nodes(2,i))  &
      + mesh%coord(1,mesh%nodes(3,i))    )/3.
@@ -742,7 +640,7 @@ write(out_unit,*)"$DATA=CURVE3D"
 write(out_unit,*)"%equalscale=T"
 write(out_unit,*)"%toplabel='Numeros des noeuds' "
 
-do i = 1, mesh%num_cells
+do i = 1, mesh%num_triangles
    write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
    write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(2,i)),0.
    write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(3,i)),0.
@@ -768,7 +666,7 @@ write(out_unit,*)"$DATA=CURVE3D"
 write(out_unit,*)"%equalscale=T"
 write(out_unit,*)"%toplabel='Numeros des triangles' "
 
-do i = 1, mesh%num_cells
+do i = 1, mesh%num_triangles
    write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
    write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(2,i)),0.
    write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(3,i)),0.
@@ -776,7 +674,7 @@ do i = 1, mesh%num_cells
    write(out_unit,*)
 end do
 
-do i = 1, mesh%num_cells
+do i = 1, mesh%num_triangles
    x1 = (  mesh%coord(1,mesh%nodes(1,i))  &
          + mesh%coord(1,mesh%nodes(2,i))  &
      + mesh%coord(1,mesh%nodes(3,i))    )/3.
@@ -798,7 +696,7 @@ write(out_unit,*)"$DATA=CURVE3D"
 write(out_unit,*)"%equalscale=T"
 write(out_unit,*)"%toplabel='References des frontieres' "
 
-do i = 1, mesh%num_cells
+do i = 1, mesh%num_triangles
    write(out_unit,*) mesh%coord(1:2,mesh%nodes(1,i)), 0.0
    write(out_unit,*) mesh%coord(1:2,mesh%nodes(2,i)), 0.0
    write(out_unit,*) mesh%coord(1:2,mesh%nodes(3,i)), 0.0
@@ -806,7 +704,7 @@ do i = 1, mesh%num_cells
    write(out_unit,*)
 end do
 
-do i = 1, mesh%num_cells
+do i = 1, mesh%num_triangles
   do j = 1, 3
     if (mesh%nvois(j,i) < 0) then
       k = mod(j-1,3)+1   !Premier sommet
@@ -832,7 +730,7 @@ write(out_unit,*)"$DATA=CURVE3D"
 write(out_unit,*)"%equalscale=T"
 write(out_unit,*)"%toplabel='References des noeuds' "
 
-do i = 1, mesh%num_cells
+do i = 1, mesh%num_triangles
    write(out_unit,*) mesh%coord(1:2,mesh%nodes(1,i)), 0.0
    write(out_unit,*) mesh%coord(1:2,mesh%nodes(2,i)), 0.0
    write(out_unit,*) mesh%coord(1:2,mesh%nodes(3,i)), 0.0
@@ -852,13 +750,15 @@ do i = 1, mesh%num_nodes
    write(out_unit,"(a)")"'"
 end do
 
+if (mesh%analyzed) then
+
 write(out_unit,*)
 
 write(out_unit,*)"$DATA=CURVE3D"
 write(out_unit,*)"%equalscale=T"
 write(out_unit,*)"%toplabel='Polygones de Voronoi'"
 
-do i = 1, mesh%num_cells
+do i = 1, mesh%num_triangles
   write(out_unit,*)"%linetype   = 1 # Solid Linetype (default=1)"
   write(out_unit,*)"%linewidth  = 1 # Linewidth      (default=1)"
   write(out_unit,*)"%linecolor  = 1 # Line Color     (default=1)"
@@ -873,7 +773,7 @@ do i = 1, mesh%num_cells
   end do
 end do
    
-do i = 1, mesh%num_cells
+do i = 1, mesh%num_triangles
 
   write(out_unit,*) "%linetype  = 1 # Solid Linetype (default=1)"
   write(out_unit,*) "%linewidth = 1 # Linewidth      (default=1)"
@@ -886,7 +786,6 @@ do i = 1, mesh%num_cells
 
 end do
 
-if (mesh%analyzed) then
 
 write(out_unit,*)
 write(out_unit,*)"$DATA=CURVE3D"
@@ -959,26 +858,26 @@ write(iout,"(10x,'Open the file'                      &
 
 read(nfmaa,*) 
 read(nfmaa,*) nmaill,imxref
-read(nfmaa,*) mesh%num_nodes, &
-              mesh%num_cells, &
-              mesh%nmxfr,     &
-              mesh%nmxsd,     &
-              nefro,          &
-              nelin,          &
+read(nfmaa,*) mesh%num_nodes,     &
+              mesh%num_triangles, &
+              mesh%nmxfr,         &
+              mesh%nmxsd,         &
+              nefro,              &
+              nelin,              &
               mesh%nelfr
 
-SLL_ALLOCATE(mesh%coord(1:2,mesh%num_nodes),   sll_err)
-SLL_ALLOCATE(mesh%nodes(1:3,1:mesh%num_cells), sll_err)
-SLL_ALLOCATE(mesh%refs(mesh%num_nodes),        sll_err)
-SLL_ALLOCATE(mesh%reft(mesh%num_cells),        sll_err)
-SLL_ALLOCATE(mesh%nusd(mesh%num_cells),        sll_err)
-SLL_ALLOCATE(mesh%nvois(3,mesh%num_cells),     sll_err)
+SLL_ALLOCATE(mesh%coord(1:2,mesh%num_nodes),       sll_err)
+SLL_ALLOCATE(mesh%nodes(1:3,1:mesh%num_triangles), sll_err)
+SLL_ALLOCATE(mesh%refs(mesh%num_nodes),            sll_err)
+SLL_ALLOCATE(mesh%reft(mesh%num_triangles),        sll_err)
+SLL_ALLOCATE(mesh%nusd(mesh%num_triangles),        sll_err)
+SLL_ALLOCATE(mesh%nvois(3,mesh%num_triangles),     sll_err)
 
 read(nfmaa,*) ((mesh%coord(i,j),i=1,2),j=1,mesh%num_nodes)
 read(nfmaa,*)  (mesh%refs(i)   ,i=1,mesh%num_nodes) 
-read(nfmaa,*) ((mesh%nodes(i,j),i=1,3),j=1,mesh%num_cells)
-read(nfmaa,*) ((mesh%nvois(i,j),i=1,3),j=1,mesh%num_cells)
-read(nfmaa,*)  (mesh%nusd(i)   ,i=1,mesh%num_cells) 
+read(nfmaa,*) ((mesh%nodes(i,j),i=1,3),j=1,mesh%num_triangles)
+read(nfmaa,*) ((mesh%nvois(i,j),i=1,3),j=1,mesh%num_triangles)
+read(nfmaa,*)  (mesh%nusd(i)   ,i=1,mesh%num_triangles) 
 
 close(nfmaa)
 
@@ -988,7 +887,7 @@ write(iout,"(//,10x,'Nb de noeuds                : ',i10/       &
 &              ,10x,'Nb max de SD references     : ',i10/       &
 &              ,10x,/'Nb de triangles ayant au moins 1 sommet'  &
 &              ,' sur une frontiere : ',i10/)") mesh%num_nodes, &
-                   mesh%num_cells,mesh%nmxfr,mesh%nmxsd,nefro
+                   mesh%num_triangles,mesh%nmxfr,mesh%nmxsd,nefro
 
 write(iout,"(//10x,'Nb d''elements internes     : ',i10/    &
           &   ,10x,'Nb d''elements frontieres   : ',i10/)") nelin,mesh%nelfr
@@ -1027,5 +926,29 @@ x2 = (syba-(xc-xa)*(xb*xb-xa*xa+yb*yb-ya*ya))/det
 
 end subroutine get_cell_center
 
+!> Map an hexagonal mesh on circle
+!> param[inout] mesh the triangular mesh built fron an hexagonal mesh
+!> param[in]    num_cells is the num_cells parameter of the hexagonal mesh
+subroutine map_to_circle( mesh, num_cells )
+
+class(sll_triangular_mesh_2d), intent(inout) :: mesh
+sll_int32,                     intent(in)    :: num_cells
+
+sll_int32  :: i, j, cell
+sll_real64 :: r, alpha
+
+i = 2
+do cell = 1, num_cells
+  r     = cell * 1.0_f64 / num_cells
+  alpha = sll_pi / 6.0_f64
+  do j = 1, cell*6
+     mesh%coord(1,i+j-1) = r * cos(alpha)
+     mesh%coord(2,i+j-1) = r * sin(alpha)
+     alpha =  alpha + sll_pi / (3.0_f64 * cell)
+  end do
+  i = i + cell*6
+end do
+
+end subroutine map_to_circle
 
 end module sll_triangular_meshes
