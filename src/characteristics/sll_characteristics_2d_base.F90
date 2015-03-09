@@ -107,31 +107,6 @@ contains
   end function process_outside_point_periodic
 
 
-  function process_outside_point_periodic1( eta, eta_min, eta_max ) result(eta_out)
-      use sll_working_precision
-      sll_real64, intent(in)  :: eta
-      sll_real64, intent(in) :: eta_min
-      sll_real64, intent(in) :: eta_max
-      sll_real64 :: eta_out
-
-      eta_out = (eta-eta_min)/(eta_max-eta_min)      
-      eta_out = eta_out-floor(eta_out)
-      if(eta_out==1._f64)then
-        eta_out = 0._f64
-      endif      
-      if(.not.((eta_out>=0).and.(eta_out<1)))then
-        print *,'#eta=',eta
-        print *,'#eta_min=',eta_min
-        print *,'#eta_max=',eta_max
-        print *,'#(eta-eta_min)/(eta_max-eta_min)=',(eta-eta_min)/(eta_max-eta_min)
-        print *,'#floor(-1e-19)',floor(-1e-19)
-        print *,'#eta_out=',eta_out
-      endif      
-      SLL_ASSERT((eta_out>=0).and.(eta_out<1))
-      eta_out = eta_min+eta_out*(eta_max-eta_min) 
-      SLL_ASSERT((eta_out>=eta_min).and.(eta_out<eta_max))      
-      
-  end function process_outside_point_periodic1
 
 
   ! set to limit case
