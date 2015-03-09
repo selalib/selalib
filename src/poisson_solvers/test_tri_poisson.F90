@@ -41,7 +41,7 @@ sll_real64 :: r
 !mesh => new_triangular_mesh_2d("diode.maa") 
 !t_mesh => new_triangular_mesh_2d(nc_x1, x1_min, x1_max, nc_x2, x2_min, x2_max) 
 
-num_cells = 51
+num_cells = 15
 h_mesh => new_hex_mesh_2d( num_cells, 0._f64, 0._f64) 
 t_mesh => new_triangular_mesh_2d(h_mesh) 
 call map_to_circle(t_mesh, num_cells)
@@ -67,6 +67,7 @@ do i = 1, t_mesh%num_nodes
   rho(i) = 4 * sll_pi * f(r)
   sol(i) = u(r)
 end do
+
 call sll_gnuplot_2d( rho, "rho", t_mesh%coord, t_mesh%nodes, 1)
 call sll_gnuplot_2d( sol, "sol", t_mesh%coord, t_mesh%nodes, 1)
 
@@ -122,15 +123,16 @@ print*,'error phi=', maxval(abs(phi-sol))
 contains
 
 !We have the equation :
-! -4 pi rho(r) = Laplacian(f(r))
+! -4 pi f(r) = Laplacian(u(r))
+!If
+!  f(r) = rho                    for 0   <= r <= 0.2
+!  f(r) = 0.0                    for 0.2 <  r <= 1
+!Then
+!  u(r) = -pi * rho * r^2 + a_1  for 0   <= r <= 0.2
+!  u(r) = a_2 * ln(r)            for 0.2 <  r <= 1
 !
-!  f(r) = -pi * rho(r) * r^2 + a_0 * ln(r) + a_1  for 0 <= r <= 0.2
-!  f(r) = a_2 * ln(r) + a_3                       for 0.2 < r <= 1
-!
-!  a_0 = 0
-!  a_1 = 0.04 * pi * rho(r) * (-2*ln(0.2)+1)
-!  a_2 = -0.08* pi * rho(r)
-!  a_3 = 0
+!  a_1 =  0.04 * pi * rho * (-2*ln(0.2)+1)
+!  a_2 = -0.08 * pi * rho
 
 function u(r)
 
