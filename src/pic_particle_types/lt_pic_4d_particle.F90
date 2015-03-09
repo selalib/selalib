@@ -26,6 +26,13 @@ module sll_lt_pic_particle_module
 
   implicit none
 
+!> @typedef sll_lt_pic_4d_particle
+!! particles of type sll_lt_pic_4d_particle know their neighbors in the cartesian grid used to initialize or remap the particles
+!! ** in every non-periodic dimension: the first and last particles have no neighbors and by convention the ngb_index is the
+!! particle own index.
+!! ** in the periodic dimensions: the first and last particles are neighbors to each other, so that we can travel through the
+!! 'periodic boundaries'
+
   type :: sll_lt_pic_4d_particle
 !  type :: sll_lt_particle_4d  ! old name
      sll_int32  :: ic   ! cell index, linearly arranged
