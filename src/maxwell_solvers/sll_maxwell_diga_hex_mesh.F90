@@ -50,13 +50,13 @@ end type maxwell_dg_hex_mesh
 
 sll_int32, private :: iplot
 
-interface initialize
+interface sll_create
    module procedure init_gd_solver_2d
-end interface initialize
+end interface sll_create
 
-interface solve
+interface sll_solve
    module procedure gd_solver_2d_te
-end interface solve
+end interface sll_solve
 
 public :: initialize, solve
 
@@ -243,17 +243,17 @@ do iel=1,mesh%num_triangles
    nel2=npoel1(is2+1)-npoel1(is2) !nb de triangles communs a is2
 
    loop1:do i1=1,nel1
-            jel1=npoel2(npoel1(is1)+i1) !premier triangle is1
-            if(jel1.ne.iel) then
-               do i2=1,nel2
-                  jel2=npoel2(npoel1(is2)+i2)
-                  if(jel2 == jel1) then
-                     this%nvois(1,iel)  = jel1
-                     exit loop1
-              end if
-           end do
-            end if
-     end do loop1
+     jel1=npoel2(npoel1(is1)+i1) !premier triangle is1
+     if(jel1.ne.iel) then
+       do i2=1,nel2
+         jel2=npoel2(npoel1(is2)+i2)
+         if(jel2 == jel1) then
+           this%nvois(1,iel)  = jel1
+           exit loop1
+         end if
+       end do
+     end if
+   end do loop1
 
    ! ... deuxieme arete (entre le sommet is2 et is3)
 
@@ -261,17 +261,17 @@ do iel=1,mesh%num_triangles
    nel3=npoel1(is3+1)-npoel1(is3)
 
    loop2:do i2=1,nel2
-            jel2=npoel2(npoel1(is2)+i2)
-            if(jel2 /= iel) then
-               do i3=1,nel3
-                  jel3=npoel2(npoel1(is3)+i3)
-                  if(jel3 == jel2) then
-                     this%nvois(2,iel)=jel2
-             exit loop2
-              end if
-           end do
-            end if
-     end do loop2
+     jel2=npoel2(npoel1(is2)+i2)
+     if(jel2 /= iel) then
+       do i3=1,nel3
+         jel3=npoel2(npoel1(is3)+i3)
+         if(jel3 == jel2) then
+           this%nvois(2,iel)=jel2
+           exit loop2
+         end if
+       end do
+     end if
+   end do loop2
 
    ! ... troisieme arete (entre le sommet is3 et is1)
 
@@ -279,17 +279,17 @@ do iel=1,mesh%num_triangles
    nel1=npoel1(is1+1)-npoel1(is1)
 
    loop3:do i3=1,nel3
-            jel3=npoel2(npoel1(is3)+i3)
-            if(jel3 /= iel) then
-               do i1=1,nel1
-                  jel1=npoel2(npoel1(is1)+i1)
-                  if(jel1 == jel3) then
-                     this%nvois(3,iel)=jel3
-             exit loop3
-              end if
-           end do
-            end if
-     end do loop3
+     jel3=npoel2(npoel1(is3)+i3)
+     if(jel3 /= iel) then
+       do i1=1,nel1
+         jel1=npoel2(npoel1(is1)+i1)
+         if(jel1 == jel3) then
+           this%nvois(3,iel)=jel3
+           exit loop3
+         end if
+       end do
+     end if
+   end do loop3
 
 end do
 
@@ -298,18 +298,18 @@ end do
 this%nvoif = this%nvois
 
 do i = 1, mesh%num_triangles
-   do j = 1,3
-      jel1 = this%nvois(j,i)
-      if (jel1 > 0) then
-         do k = 1,3
-            jel2 = this%nvois(k,jel1)
-            if (jel2 == i) then 
-               this%nvoif(j,i) = k
-               exit
-            end if
-         end do
-      end if
-   end do
+  do j = 1,3
+    jel1 = this%nvois(j,i)
+    if (jel1 > 0) then
+      do k = 1,3
+        jel2 = this%nvois(k,jel1)
+        if (jel2 == i) then 
+          this%nvoif(j,i) = k
+          exit
+        end if
+      end do
+    end if
+  end do
 end do
 
 end subroutine init_gd_solver_2d
@@ -335,78 +335,77 @@ n_ddl = (this%degree+1)*(this%degree+2)/2
 
 do iel = 1, mesh%num_triangles   !Boucle sur les elements
 
-   this%D_Ex(:,iel) = c*c*( - matmul(this%DyP(:,:,iel),this%Bz(:,iel)) &
-                    + xi*xi * matmul(this%DxP(:,:,iel),this%Po(:,iel)))
-   this%D_Ey(:,iel) = c*c*( + matmul(this%DxP(:,:,iel),this%Bz(:,iel)) &
-                    + xi*xi * matmul(this%DyP(:,:,iel),this%Po(:,iel)))
-   this%D_Bz(:,iel) =    -    matmul(this%DyP(:,:,iel),this%Ex(:,iel)) &
-                         +    matmul(this%DxP(:,:,iel),this%Ey(:,iel))
-   this%D_Po(:,iel) = xi*xi * matmul(this%DxP(:,:,iel),this%Ex(:,iel)) &
-                    + xi*xi * matmul(this%DyP(:,:,iel),this%Ey(:,iel))
+  this%D_Ex(:,iel) = c*c*( - matmul(this%DyP(:,:,iel),this%Bz(:,iel)) &
+                   + xi*xi * matmul(this%DxP(:,:,iel),this%Po(:,iel)))
+  this%D_Ey(:,iel) = c*c*( + matmul(this%DxP(:,:,iel),this%Bz(:,iel)) &
+                   + xi*xi * matmul(this%DyP(:,:,iel),this%Po(:,iel)))
+  this%D_Bz(:,iel) =    -    matmul(this%DyP(:,:,iel),this%Ex(:,iel)) &
+                        +    matmul(this%DxP(:,:,iel),this%Ey(:,iel))
+  this%D_Po(:,iel) = xi*xi * matmul(this%DxP(:,:,iel),this%Ex(:,iel)) &
+                   + xi*xi * matmul(this%DyP(:,:,iel),this%Ey(:,iel))
 
-   this%Ro(:,iel)   = matmul(this%DxP(:,:,iel),this%Ex(:,iel)) &
-                    + matmul(this%DyP(:,:,iel),this%Ey(:,iel))
+  this%Ro(:,iel)   = matmul(this%DxP(:,:,iel),this%Ex(:,iel)) &
+                   + matmul(this%DyP(:,:,iel),this%Ey(:,iel))
 
-   xs(1) = mesh%global_to_x1(this%ntri(1,iel))
-   ys(1) = mesh%global_to_x2(this%ntri(1,iel))
-   xs(2) = mesh%global_to_x1(this%ntri(2,iel))
-   ys(2) = mesh%global_to_x2(this%ntri(2,iel))
-   xs(3) = mesh%global_to_x1(this%ntri(3,iel))
-   ys(3) = mesh%global_to_x2(this%ntri(3,iel))
+  xs(1) = mesh%global_to_x1(this%ntri(1,iel))
+  ys(1) = mesh%global_to_x2(this%ntri(1,iel))
+  xs(2) = mesh%global_to_x1(this%ntri(2,iel))
+  ys(2) = mesh%global_to_x2(this%ntri(2,iel))
+  xs(3) = mesh%global_to_x1(this%ntri(3,iel))
+  ys(3) = mesh%global_to_x2(this%ntri(3,iel))
 
-   do ifl = 1, 3   !Boucle sur les faces
+  do ifl = 1, 3   !Boucle sur les faces
 
-      i1 = mod(ifl-1,3)+1   !Premier sommet
-      i2 = mod(ifl  ,3)+1   !Deuxieme sommet
-      
-      n1  = ys(i2)-ys(i1)
-      n2  = xs(i1)-xs(i2)
-
-      A_p(1,:) = [ (n2*n2+xi*n1*n1)*c,     n2*n1*(xi-1)*c,  -n2*c*c, n1*c*c]
-      A_p(2,:) = [     n2*n1*(xi-1)*c, (n1*n1+xi*n2*n2)*c,   n1*c*c, n2*c*c]
-      A_p(3,:) = [                -n2,                 n1,        c,    0d0]
-      A_p(4,:) = [           n1*xi*xi,           n2*xi*xi,      0d0,   xi*c]
-
-      A_m(1,:) = [-(n2*n2+xi*n1*n1)*c,    -n2*n1*(xi-1)*c,  -n2*c*c, n1*c*c]
-      A_m(2,:) = [    -n2*n1*(xi-1)*c,-(n1*n1+xi*n2*n2)*c,   n1*c*c, n2*c*c]
-      A_m(3,:) = [                -n2,                 n1,       -c,    0d0]
-      A_m(4,:) = [           n1*xi*xi,           n2*xi*xi,      0d0,  -xi*c]
-
-      A_p = 0.5 * A_p
-      A_m = 0.5 * A_m
-
-      iev = this%nvois(ifl,iel)         !Numero du voisin
-      ifv = this%nvoif(ifl,iel)         !Numero de face dans le voisin
-
-      if ( iev > 0 ) then               !Cote interne
-
-         do idl = 1, this%degree+1                !Boucle sur les D.D.L.
+    i1 = mod(ifl-1,3)+1   !Premier sommet
+    i2 = mod(ifl  ,3)+1   !Deuxieme sommet
      
-            jdl = iddl_local(ifl,idl,this%degree)   !indice local du DDL
+    n1  = ys(i2)-ys(i1)
+    n2  = xs(i1)-xs(i2)
+
+    A_p(1,:) = [ (n2*n2+xi*n1*n1)*c,     n2*n1*(xi-1)*c,  -n2*c*c, n1*c*c]
+    A_p(2,:) = [     n2*n1*(xi-1)*c, (n1*n1+xi*n2*n2)*c,   n1*c*c, n2*c*c]
+    A_p(3,:) = [                -n2,                 n1,        c,    0d0]
+    A_p(4,:) = [           n1*xi*xi,           n2*xi*xi,      0d0,   xi*c]
+
+    A_m(1,:) = [-(n2*n2+xi*n1*n1)*c,    -n2*n1*(xi-1)*c,  -n2*c*c, n1*c*c]
+    A_m(2,:) = [    -n2*n1*(xi-1)*c,-(n1*n1+xi*n2*n2)*c,   n1*c*c, n2*c*c]
+    A_m(3,:) = [                -n2,                 n1,       -c,    0d0]
+    A_m(4,:) = [           n1*xi*xi,           n2*xi*xi,      0d0,  -xi*c]
+
+    A_p = 0.5 * A_p
+    A_m = 0.5 * A_m
+
+    iev = this%nvois(ifl,iel)         !Numero du voisin
+    ifv = this%nvoif(ifl,iel)         !Numero de face dans le voisin
+
+    if ( iev > 0 ) then               !Cote interne
+
+      do idl = 1, this%degree+1                !Boucle sur les D.D.L.
+    
+        jdl = iddl_local(ifl,idl,this%degree)   !indice local du DDL
      
-            W_l(1) = this%Ex(jdl,iel)
-            W_l(2) = this%Ey(jdl,iel)
-            W_l(3) = this%Bz(jdl,iel)
-            W_l(4) = this%Po(jdl,iel)
+        W_l(1) = this%Ex(jdl,iel)
+        W_l(2) = this%Ey(jdl,iel)
+        W_l(3) = this%Bz(jdl,iel)
+        W_l(4) = this%Po(jdl,iel)
 
-            jdv = iddl_voisin(ifv,idl,this%degree)  !indice dans le voisin 
+        jdv = iddl_voisin(ifv,idl,this%degree)  !indice dans le voisin 
 
-            W_r(1) = this%Ex(jdv,iev)
-            W_r(2) = this%Ey(jdv,iev)
-            W_r(3) = this%Bz(jdv,iev)
-            W_r(4) = this%Po(jdv,iev)
+        W_r(1) = this%Ex(jdv,iev)
+        W_r(2) = this%Ey(jdv,iev)
+        W_r(3) = this%Bz(jdv,iev)
+        W_r(4) = this%Po(jdv,iev)
 
-            flux(idl,:) = matmul(A_p,w_l)+matmul(A_m,w_r)
- 
-            Esn(idl) = 0.5*(n1*(W_l(1)+W_r(1))+n2*(W_l(2)+W_r(2)))
+        flux(idl,:) = matmul(A_p,w_l)+matmul(A_m,w_r)
+        Esn(idl) = 0.5*(n1*(W_l(1)+W_r(1))+n2*(W_l(2)+W_r(2)))
 
-         end do
+      end do
 
-      else      !Cote frontiere
+    else      !Cote frontiere
 
-         ief = 1 !- iev
+      ief = 1 !- iev
 
-         do idl = 1, this%degree+1
+      do idl = 1, this%degree+1
 
             jdl = iddl_local(ifl,idl,this%degree)   !indice local du DDL
 
