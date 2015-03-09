@@ -1219,6 +1219,7 @@ contains
     sll_int32  :: num_ele
     sll_int32  :: nei1, nei2, nei3
     sll_int32  :: dirichlet
+    sll_int32  :: bc_code
     sll_int32,  parameter :: out_unit=20
 
     ! Writing the nodes file....................
@@ -1226,11 +1227,12 @@ contains
 
     ! We first write the total number of points/nodes:
     num_pts_tot = mesh%num_pts_tot
+    bc_code = 0 ! code for boundary conditions
     write(out_unit, "(i6)") num_pts_tot
     ! For every node...
     do i=1, num_pts_tot
        !... we write the coordinates
-       write (out_unit, "((i6),(a,1x),(g13.3),(a,1x),(g13.3))") i, &
+       write (out_unit, "((i6),(a,1x),(g13.3),(a,1x),(g13.3))") bc_code, &
             ",", &
             mesh%global_to_x1(i), &
             ",", &
