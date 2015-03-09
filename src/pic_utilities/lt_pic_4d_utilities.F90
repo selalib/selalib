@@ -50,6 +50,28 @@ contains
 
 
   ! <<get_ltp_deformation_matrix>>
+  !> Compute the coefficients of the particle 'deformation' matrix
+  !! which approximates the Jacobian matrix of the exact backward flow
+  !! (defined between the current time and that of the particle initialization -- or the last particle remapping)
+  !! at the current particle position.
+  !! It is computed in two steps:
+  !!    * first we compute a finite-difference approximation of the forward Jacobian matrix by using the fact that the
+  !!      initial (or remapped) particles were located on a cartesian grid in phase space. Specifically, the entries of
+  !!      the forward Jacobian matrix (say, (J^n_k)_xy = d(F^n_x)/dy (z^0_k) -- with z is the phase space coordinate)
+  !!      are approximated by finite differences: here, by  DF / 2*h_y
+  !!      with DF = F^n_x(z^0_k + (0,h_y,0,0)) - F^n_x(z^0_k - (0,h_y,0,0))
+  !!    * then we invert that approximated forward Jacobian matrix
+  !!
+  !! Note: when computing finite differences in a periodic dimension (say x), one must be careful since two values of F_x
+  !!    can be close in the periodic interval but distant by almost L_x in the (stored) [0,L_x[ representation.
+  !!    To account for this (frequent) phenomenon we do the following:
+  !!    when the difference DF (see example above) is larger than L_x/2, we make it smaller by adding +/- L_x to it.
+  !!    Note that here we could very well be making the slope smaller than what it should actually be: indeed if the function
+  !!    F^n_x is having a steep slope at z^0_k which adds one (or several) periods L_x to DF then our modification will
+  !!    artificially lower the slope. But this is impossible to prevent in full generality (indeed: a steep slope crossing the
+  !!    0 or L_x value will be lowered anyway in the [0,L_x[ representation) and should not be frequent (indeed it only happens
+  !!    when F^n_x has high derivatives and the particle grid is coarse, which will lead to bad approximations anyhow).
+
   subroutine get_ltp_deformation_matrix (       &
                         k,                      &    
                         particles_m2d,          &
@@ -810,10 +832,10 @@ end subroutine get_ltp_deformation_matrix
     sll_real64 :: length
 
     !aaa
-    sll_real64 :: x_kprime
-    sll_real64 :: y_kprime
-    sll_real64 :: vx_kprime
-    sll_real64 :: vy_kprime
+    sll_real64 :: x_kprime_t0
+    sll_real64 :: y_kprime_t0
+    sll_real64 :: vx_kprime_t0
+    sll_real64 :: vy_kprime_t0
 
     ! value 1 or 2 points to each side of an hypercube in direction x,y,vx or vy
     sll_int :: side_x,side_y,side_vx,side_vy
@@ -1079,6 +1101,43 @@ end subroutine get_ltp_deformation_matrix
                                   vx_t0 = d31 * (x - x_k) + d32 * (y - y_k) + d33 * (vx - vx_k) + d34 * (vy - vy_k)
                                   vy_t0 = d41 * (x - x_k) + d42 * (y - y_k) + d43 * (vx - vx_k) + d44 * (vy - vy_k)
 
+
+                                    if( i_vx == (number_parts_vx+1)/2 .and. i_vy == (number_parts_vy+1)/2       &
+                                                .and. i_x == 1 .and. i_y == 1 )then
+
+                                        print*, "  -------  A  --------- "
+
+                                        print*, "i_x, i_y, i_vx, i_vy = ", i_x, i_y, i_vx, i_vy
+                                        print*, " "
+
+                                        print *,"position (final) of virtual point: "
+                                        print*, "x, y, vx, vy                                                       = "
+                                        print*, "    ",    x, y, vx, vy
+                                        print*, " "
+
+                                        print *,"position (final) of k-th marker: "
+                                        print*, "x_k, y_k, vx_k, vy_k                                               = "
+                                        print*, "    ",   x_k, y_k, vx_k, vy_k
+
+                                        print*, " "
+                                        print *,"initial position of virtual point, relative to k-th marker: "
+                                        print*, "x_t0, y_t0, vx_t0, vy_t0 = "
+                                        print*, "    ",   x_t0, y_t0, vx_t0, vy_t0
+
+                                        print*, " "
+                                        print *,"initial position of virtual point: "
+                                        print*, "x_k_t0 + x_t0,  y_k_t0 + y_t0, vx_k_t0 + vx_t0,  vy_k_t0 + vy_t0   = "
+                                        print*,  "    ",    x_k_t0 + x_t0,  y_k_t0 + y_t0, vx_k_t0 + vx_t0,  vy_k_t0 + vy_t0
+
+                                        print*, " "
+                                        print *,"initial position of k-th marker: "
+                                        print*, "x_k_t0, y_k_t0, vx_k_t0, vy_k_t0 = "
+                                         print*, "    ",   x_k_t0, y_k_t0, vx_k_t0, vy_k_t0
+
+                                    end if
+
+
+
                                   ! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
                                   p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,1) = x_k_t0 + x_t0
                                   p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,1) = y_k_t0 + y_t0
@@ -1200,17 +1259,18 @@ end subroutine get_ltp_deformation_matrix
 
                                           ! MCP: [BEGIN-DEBUG] store the (computed) absolute initial position of the virtual particle
 
-                                          call cell_offset_to_global( p_group%p_list(kprime)%dx, &
-                                                                      p_group%p_list(kprime)%dy, &
-                                                                      p_group%p_list(kprime)%ic, &
-                                                                      p_group%mesh, x_kprime, y_kprime )
-                                            vx_kprime   = p_group%p_list(kprime)%vx
-                                            vy_kprime   = p_group%p_list(kprime)%vy
+                                           call get_initial_position_on_cartesian_grid_from_particle_index(kprime, &
+                                                number_parts_x,number_parts_y,number_parts_vx,number_parts_vy, &
+                                                j_x,j_y,j_vx,j_vy)
+                                           x_kprime_t0 =  parts_x_min  + (j_x-1)  * h_parts_x
+                                           y_kprime_t0 =  parts_y_min  + (j_y-1)  * h_parts_y
+                                           vx_kprime_t0 = parts_vx_min + (j_vx-1) * h_parts_vx
+                                           vy_kprime_t0 = parts_vy_min + (j_vy-1) * h_parts_vy
 
-                                          p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,3) = x_kprime + x_t0
-                                          p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,3) = y_kprime + y_t0
-                                          p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,3) = vx_kprime + vx_t0
-                                          p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,3) = vy_kprime + vy_t0
+                                           p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,3) = x_kprime_t0 + x_t0
+                                           p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,3) = y_kprime_t0 + y_t0
+                                           p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,3) = vx_kprime_t0 + vx_t0
+                                           p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,3) = vy_kprime_t0 + vy_t0
 
                                           ! MCP [END-DEBUG]
 
@@ -1250,10 +1310,6 @@ end subroutine get_ltp_deformation_matrix
                                         end do
                                      end if
                                   end if
-                                        
-                                  !aaa print *,"i_x=",i_x," i_y=",i_y," i_vx=",i_vx," i_vy=",i_vy!aaa
-                                  !aaa SLL_ASSERT(abs(p_group%target_values(i_x,i_y,i_vx,i_vy))>0.1 .or. i_vx/=4 .or. i_vy/=3)!aaa
-                                  
                                end if
                             end do
                          end do
@@ -2336,17 +2392,14 @@ subroutine get_initial_position_on_cartesian_grid_from_particle_index (k,       
     sll_int64              :: k_aux
 
     k_aux = k-1
-    ! ----  here, k_aux = (j_x-1) + (j_y-1) * n_parts_x + (j_vx-1) * n_parts_x * n_parts_y + (j_vy-1) * n_parts_x * n_parts_y * n_parts_vx
     ! here, k_aux = (j_vy-1) + (j_vx-1) * n_parts_vy + (j_y-1) * n_parts_vy * n_parts_vx + (j_x-1) * n_parts_vy * n_parts_vx * n_parts_y
     j_vy = mod(k_aux, n_parts_vy) + 1
 
     k_aux = (k_aux - (j_vy-1)) / n_parts_vy
-    ! ----- here, k_aux = (j_y-1) + (j_vx-1) * n_parts_y + (j_vy-1) * n_parts_y * n_parts_vx
     ! here, k_aux = (j_vx-1) + (j_y-1) * n_parts_vx + (j_x-1) * n_parts_vx * n_parts_y
     j_vx = mod(k_aux, n_parts_vx) + 1
 
     k_aux = (k_aux - (j_vx-1)) / n_parts_vx
-    ! -------   here, k_aux = (j_vx-1) + (j_vy-1) * n_parts_vx
     ! here, k_aux = (j_y-1) + (j_x-1) * n_parts_y
     j_y = mod(k_aux, n_parts_y) + 1
 
@@ -2373,7 +2426,7 @@ subroutine get_particle_index_from_initial_position_on_cartesian_grid (j_x, j_y,
     sll_int64, intent(out) :: k
 
 !    k = 1+ (j_x-1) + (j_y-1) * n_parts_x + (j_vx-1) * n_parts_x * n_parts_y + (j_vy-1) * n_parts_x * n_parts_y * n_parts_vx
-    k = 1+ (j_vy-1) + (j_vx-1) * n_parts_vy + (j_y-1) * n_parts_vx * n_parts_vy + (j_x-1) * n_parts_vx * n_parts_vy * n_parts_y
+    k = 1+ (j_vy-1) + (j_vx-1) * n_parts_vy + (j_y-1) * n_parts_vy * n_parts_vx + (j_x-1) * n_parts_vy * n_parts_vx * n_parts_y
 
 end subroutine
 
