@@ -47,6 +47,8 @@ module sll_simulation_2d_analytic_field_curvilinear_module
   sll_int32, parameter :: SLL_EULER = 0 
   sll_int32, parameter :: SLL_PREDICTOR_CORRECTOR = 1 
   sll_int32, parameter :: SLL_LEAP_FROG = 2 
+  sll_int32, parameter :: SLL_COMPUTE_FIELD_FROM_PHI = 0 
+  sll_int32, parameter :: SLL_COMPUTE_FIELD_FROM_ANALYTIC = 1 
 
   type, extends(sll_simulation_base_class) :: &
     sll_simulation_2d_analytic_field_curvilinear
@@ -60,11 +62,14 @@ module sll_simulation_2d_analytic_field_curvilinear_module
    !initial function
    procedure(sll_scalar_initializer_2d), nopass, pointer :: init_func
    sll_real64, dimension(:), pointer :: params
-   !compute characteristics for rotation and translation case at final time
+   !set boundary functions for characteristics
+   procedure(signature_process_outside_point), nopass, pointer :: process_outside_point1_func
+   procedure(signature_process_outside_point), nopass, pointer :: process_outside_point2_func
    
       
     !advector
    class(sll_advection_2d_base), pointer    :: advect_2d
+   procedure(sll_scalar_initializer_2d), nopass, pointer :: phi_func
    procedure(sll_scalar_initializer_2d), nopass, pointer :: A1_func
    procedure(sll_scalar_initializer_2d), nopass, pointer :: A2_func
    procedure(sll_scalar_initializer_4d), nopass, pointer :: A1_exact_charac_func
@@ -86,6 +91,8 @@ module sll_simulation_2d_analytic_field_curvilinear_module
 
    !time_loop
    sll_int32 :: time_loop_case
+   
+   sll_int32 :: compute_field_case
      
    !boundaries conditions 
    sll_int32  :: bc_eta1_left
@@ -172,6 +179,7 @@ contains
     character(len=256) :: charac1d_x2_case
     character(len=256) :: f_interp1d_x1_case
     character(len=256) :: f_interp1d_x2_case
+    character(len=256) ::  compute_field_case
     sll_real64 :: time_period
 
  
@@ -262,7 +270,8 @@ contains
       advect1d_x2_case, & 
       time_period, &
       A1, &
-      A2
+      A2, &
+      compute_field_case
    
       
      namelist /boundaries/ &
@@ -324,6 +333,7 @@ contains
     f_interp1d_x2_case = "SLL_CUBIC_SPLINES"
     A1 = 1._f64
     A2 = 1._f64
+    compute_field_case = "SLL_COMPUTE_FIELD_FROM_ANALYTIC"
     
     !boundaries conditions
     sim%bc_eta1_left = SLL_PERIODIC
@@ -457,15 +467,17 @@ contains
       case ("SLL_PERIODIC")
         print*,"#bc_charac2d_eta1= SLL_PERIODIC" 
         sim%bc_charac2d_eta1= SLL_PERIODIC
-      case ("SLL_DIRICHLET")
-        print*,"#bc_charac2d_eta1 = SLL_DIRICHLET"  
-        sim%bc_charac2d_eta1= SLL_DIRICHLET
-      case ("SLL_HERMITE")
-        print*,"#bc_charac2d_eta1 = SLL_HERMITE"  
-        sim%bc_charac2d_eta1= SLL_HERMITE 
+        sim%process_outside_point1_func => process_outside_point_periodic1            
+      !case ("SLL_DIRICHLET")
+      !  print*,"#bc_charac2d_eta1 = SLL_DIRICHLET"  
+      !  sim%bc_charac2d_eta1= SLL_DIRICHLET
+      !case ("SLL_HERMITE")
+      !  print*,"#bc_charac2d_eta1 = SLL_HERMITE"  
+      !  sim%bc_charac2d_eta1= SLL_HERMITE 
       case ("SLL_SET_TO_LIMIT")
         print*,"#bc_charac2d_eta1 = SLL_SET_TO_LIMIT"  
-        sim%bc_charac2d_eta1= SLL_SET_TO_LIMIT    
+        sim%bc_charac2d_eta1= SLL_SET_TO_LIMIT
+        sim%process_outside_point1_func => process_outside_point_set_to_limit1    
       case default
         print *,'#bad bc_charac2d_eta1',bc_charac2d_eta1
         print *,'#not implemented'
@@ -477,15 +489,17 @@ contains
       case ("SLL_PERIODIC")
         print*,"#bc_charac2d_eta2= SLL_PERIODIC" 
         sim%bc_charac2d_eta2= SLL_PERIODIC
-      case ("SLL_DIRICHLET")
-        print*,"#bc_charac2d_eta2= SLL_DIRICHLET"  
-        sim%bc_charac2d_eta2= SLL_DIRICHLET
-      case ("SLL_HERMITE")
-        print*,"#bc_charac2d_eta2 = SLL_HERMITE"  
-        sim%bc_charac2d_eta2= SLL_HERMITE 
+        sim%process_outside_point2_func => process_outside_point_periodic1
+      !case ("SLL_DIRICHLET")
+      !  print*,"#bc_charac2d_eta2= SLL_DIRICHLET"  
+      !  sim%bc_charac2d_eta2= SLL_DIRICHLET
+      !case ("SLL_HERMITE")
+      !  print*,"#bc_charac2d_eta2 = SLL_HERMITE"  
+      !  sim%bc_charac2d_eta2= SLL_HERMITE 
       case ("SLL_SET_TO_LIMIT")
         print*,"#bc_charac2d_eta2 = SLL_SET_TO_LIMIT"  
-        sim%bc_charac2d_eta2= SLL_SET_TO_LIMIT   
+        sim%bc_charac2d_eta2= SLL_SET_TO_LIMIT
+        sim%process_outside_point2_func => process_outside_point_set_to_limit1   
       case default
         print *,'#bad bc_charac2d_eta2',bc_charac2d_eta2
         print *,'#not implemented'
@@ -892,15 +906,17 @@ contains
     
     select case(advection_field_case)
       case ("SLL_SWIRLING_DEFORMATION_FLOW")
+        sim%phi_func => sll_SDF_phi_initializer_2d 
         sim%A1_func => sll_SDF_A1_initializer_2d 
         sim%A2_func => sll_SDF_A2_initializer_2d 
-        !sim%A1_exact_charac_func => sll_translati_A1_exact_charac_2d 
-        !sim%A2_exact_charac_func => sll_translation_A2_exact_charac_2d 
+        sim%A1_exact_charac_func => sll_SDF_A1_exact_charac_2d 
+        sim%A2_exact_charac_func => sll_SDF_A2_exact_charac_2d 
         SLL_ALLOCATE(sim%A_func_params(2),ierr)
         sim%A_time_func => sll_SDF_time_initializer_1d 
         SLL_ALLOCATE(sim%A_time_func_params(1),ierr)
         sim%A_time_func_params(1) = time_period
       case ("SLL_ROTATION_FLOW")
+        sim%phi_func => sll_rotation_phi_initializer_2d 
         sim%A1_func => sll_rotation_A1_initializer_2d 
         sim%A2_func => sll_rotation_A2_initializer_2d 
         sim%A1_exact_charac_func => sll_rotation_A1_exact_charac_2d 
@@ -910,6 +926,7 @@ contains
         SLL_ALLOCATE(sim%A_time_func_params(1),ierr)
         sim%A_time_func_params(1) = 1._f64
       case ("SLL_TRANSLATION_FLOW")
+        sim%phi_func => sll_translation_phi_initializer_2d 
         sim%A1_func => sll_translation_A1_initializer_2d 
         sim%A2_func => sll_translation_A2_initializer_2d 
         sim%A1_exact_charac_func => sll_translation_A1_exact_charac_2d 
@@ -971,6 +988,20 @@ contains
         print *,'#in initialize_analytic_field_2d_curvilinear'
         stop
     end select
+
+
+    select case(compute_field_case)
+      case ("SLL_COMPUTE_FIELD_FROM_ANALYTIC")
+        print*,"#compute_field_case = SLL_COMPUTE_FIELD_FROM_ANALYTIC " 
+        sim%compute_field_case = SLL_COMPUTE_FIELD_FROM_ANALYTIC
+      case ("SLL_COMPUTE_FIELD_FROM_PHI")
+        print*,"#compute_field_case = SLL_COMPUTE_FIELD_FROM_PHI " 
+        sim%compute_field_case = SLL_COMPUTE_FIELD_FROM_PHI
+      case default
+        SLL_ERROR("bad compute_field_case")
+        stop
+    end select
+
     
    
   end subroutine initialize_analytic_field_2d_curvilinear
@@ -1010,11 +1041,13 @@ contains
     sll_real64,dimension(:,:),  pointer :: A2
     sll_real64,dimension(:,:),  pointer :: A1_init !advection fields
     sll_real64,dimension(:,:),  pointer :: A2_init
+    sll_real64,dimension(:,:),  pointer :: div
     sll_int32  :: ierr
     sll_int32  :: nb_step
     sll_int32  :: step
     sll_real64 :: dt
-    sll_int32  :: diag_id = 77
+    !sll_int32  :: diag_id = 77
+    sll_int32 :: thdiag_id
     sll_int32  :: iplot
     sll_real64 :: time_factor
     sll_real64 :: err
@@ -1044,6 +1077,7 @@ contains
     SLL_ALLOCATE(A2(Nc_eta1+1,Nc_eta2+1),ierr)
     SLL_ALLOCATE(A1_init(Nc_eta1+1,Nc_eta2+1),ierr)
     SLL_ALLOCATE(A2_init(Nc_eta1+1,Nc_eta2+1),ierr)
+    SLL_ALLOCATE(div(Nc_eta1+1,Nc_eta2+1),ierr)
     
 
     
@@ -1056,6 +1090,7 @@ contains
           x2 = sim%transformation%x2(eta1,eta2)
           f(i1,i2) =  sim%init_func(x1,x2,sim%params) 
           f_init(i1,i2)  =  sim%init_func(x1,x2,sim%params)
+          phi(i1,i2) = sim%phi_func(x1,x2,sim%A_func_params)
           jac_m  =  sim%transformation%jacobian_matrix(eta1,eta2)          
           call compute_curvilinear_field_2d( &
             sim%A1_func(x1,x2,sim%A_func_params), &
@@ -1070,36 +1105,46 @@ contains
           !  sim%A2_func(x1,x2,sim%A_func_params) !/sim%transformation%jacobian(eta1,eta2)
         end do
      end do
-        
+    
+    if(sim%compute_field_case==SLL_COMPUTE_FIELD_FROM_PHI) then   
+      call compute_field_from_phi_2d_curvilinear( &
+        phi, &
+        sim%mesh_2d, &
+        sim%transformation, &
+        A1_init, &
+        A2_init, &
+        sim%phi_interp2d)
+    endif           
 
-    call sll_ascii_file_create('thdiag.dat', diag_id, ierr)
+    call sll_ascii_file_create('thdiag.dat', thdiag_id, ierr)
     
     iplot = 0
 
     err = 0._f64
     f_exact = f
-    do step=0,nb_step-1
+
+ 
+
+
+    do step=1,nb_step
       print*,"step= ", step
       f_old = f
     
-#ifndef NOHDF5
-      if(modulo(step-1,sim%freq_diag)==0)then
-        call plot_f_curvilinear(iplot,f,sim%mesh_2d,sim%transformation)
-        iplot = iplot+1  
-      endif            
-#endif  
+
+
+
 
       select case (sim%time_loop_case)
         case (SLL_EULER)
           time_factor = sim%A_time_func( &
-            real(step,f64)*sim%dt, &
+            real(step-1,f64)*sim%dt, &
             sim%A_time_func_params )
           A1 = time_factor*A1_init
           A2 = time_factor*A2_init          
           call sim%advect_2d%advect_2d(A1, A2, sim%dt, f_old, f)
         case (SLL_PREDICTOR_CORRECTOR)
           time_factor = sim%A_time_func( &
-            (real(step,f64)+0.5_f64)*sim%dt, &
+            (real(step-1,f64)+0.5_f64)*sim%dt, &
             sim%A_time_func_params )
           A1 = time_factor*A1_init
           A2 = time_factor*A2_init          
@@ -1122,18 +1167,18 @@ contains
           x2 = sim%transformation%x2(eta1,eta2)
           feet1 = sim%A1_exact_charac_func( &
             0._f64, &
-            real(step+1,f64)*sim%dt, &
+            real(step,f64)*sim%dt, &
             x1, &
             x2, &
             sim%A_func_params) 
           feet2 = sim%A2_exact_charac_func( &
             0._f64, &
-            real(step+1,f64)*sim%dt, &
+            real(step,f64)*sim%dt, &
             x1, &
             x2, &
             sim%A_func_params)
-          !feet1 = process_outside_point_periodic1( feet1, eta1_min, eta1_max )   
-          !feet2 = process_outside_point_periodic1( feet2, eta2_min, eta2_max )   
+          feet1 = sim%process_outside_point1_func( feet1, eta1_min, eta1_max )   
+          feet2 = sim%process_outside_point2_func( feet2, eta2_min, eta2_max )   
           f_exact(i1,i2) =  sim%init_func(feet1,feet2,sim%params) 
         end do
       end do
@@ -1141,10 +1186,42 @@ contains
       err = max(maxval(abs(f_exact-f)),err)
       
       
+      
+      call compute_divergence_2d_curvilinear( &
+        div, &
+        sim%mesh_2d, &
+        sim%transformation, &
+        A1, &
+        A2, &
+        sim%phi_interp2d)
+
+
+#ifndef NOHDF5
+      if(modulo(step,sim%freq_diag)==0)then
+        call plot_f_curvilinear(iplot,div,sim%mesh_2d,sim%transformation)
+        iplot = iplot+1  
+      endif            
+#endif  
+
+
+      if(modulo(step,sim%freq_diag_time)==0)then
+        call time_history_diagnostic_curvilinear( &
+          thdiag_id , &    
+          step, &
+          dt, &
+          sim%mesh_2d, &
+          sim%transformation, &
+          f, &
+          phi, &
+          A1, &
+          A2)
+      endif            
+      
+      
          
     enddo
     
-    close(diag_id)   
+    close(thdiag_id)   
     print *,err    
     print *,'#run_af2d_curvilinear PASSED'
     
@@ -1263,6 +1340,299 @@ contains
     output2 = inv_j21*input1+inv_j22*input2 
     
   end subroutine compute_curvilinear_field_2d
+
+  subroutine compute_field_from_phi_2d_curvilinear(phi,mesh_2d,transformation,A1,A2,interp2d)
+    sll_real64, dimension(:,:), intent(in) :: phi
+    sll_real64, dimension(:,:), intent(out) :: A1
+    sll_real64, dimension(:,:), intent(out) :: A2
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
+    class(sll_coordinate_transformation_2d_base), pointer :: transformation
+    class(sll_interpolator_2d_base), pointer   :: interp2d
+    sll_int32 :: Nc_eta1
+    sll_int32 :: Nc_eta2
+    sll_real64 :: eta1_min
+    sll_real64 :: eta2_min
+    sll_real64 :: delta_eta1
+    sll_real64 :: delta_eta2
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_int32 :: i1
+    sll_int32 :: i2
+    
+    Nc_eta1 = mesh_2d%num_cells1
+    Nc_eta2 = mesh_2d%num_cells2
+    eta1_min = mesh_2d%eta1_min
+    eta2_min = mesh_2d%eta2_min
+    delta_eta1 = mesh_2d%delta_eta1
+    delta_eta2 = mesh_2d%delta_eta2
+
+    call interp2d%compute_interpolants(phi)
+    A1 = 0._f64
+    A2 = 0._f64
+    do i2=1,Nc_eta2+1
+      eta2=eta2_min+real(i2-1,f64)*delta_eta2
+      do i1=1,Nc_eta1+1
+        eta1=eta1_min+real(i1-1,f64)*delta_eta1
+        A1(i1,i2)=interp2d%interpolate_derivative_eta2(eta1,eta2)/transformation%jacobian(eta1,eta2)
+        A2(i1,i2)=-interp2d%interpolate_derivative_eta1(eta1,eta2)/transformation%jacobian(eta1,eta2)
+      end do
+    end do
+   
+    
+  end subroutine compute_field_from_phi_2d_curvilinear
+
+
+  subroutine compute_divergence_2d_curvilinear(div,mesh_2d,transformation,A1,A2,interp2d)
+    sll_real64, dimension(:,:), intent(out) :: div
+    sll_real64, dimension(:,:), intent(in) :: A1
+    sll_real64, dimension(:,:), intent(in) :: A2
+    sll_real64, dimension(:,:), allocatable :: tmp
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
+    class(sll_coordinate_transformation_2d_base), pointer :: transformation
+    class(sll_interpolator_2d_base), pointer   :: interp2d
+    sll_int32 :: Nc_eta1
+    sll_int32 :: Nc_eta2
+    sll_real64 :: eta1_min
+    sll_real64 :: eta2_min
+    sll_real64 :: delta_eta1
+    sll_real64 :: delta_eta2
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_int32 :: i1
+    sll_int32 :: i2
+    sll_int32 :: ierr
+    
+    Nc_eta1 = mesh_2d%num_cells1
+    Nc_eta2 = mesh_2d%num_cells2
+    eta1_min = mesh_2d%eta1_min
+    eta2_min = mesh_2d%eta2_min
+    delta_eta1 = mesh_2d%delta_eta1
+    delta_eta2 = mesh_2d%delta_eta2
+    
+    SLL_ALLOCATE(tmp(Nc_eta1+1,Nc_eta2+1),ierr)
+
+    do i2=1,Nc_eta2+1
+      eta2=eta2_min+real(i2-1,f64)*delta_eta2
+      do i1=1,Nc_eta1+1
+        eta1=eta1_min+real(i1-1,f64)*delta_eta1
+        tmp(i1,i2)=A1(i1,i2)*transformation%jacobian(eta1,eta2)
+      end do
+    end do
+    call interp2d%compute_interpolants(tmp)
+    do i2=1,Nc_eta2+1
+      eta2=eta2_min+real(i2-1,f64)*delta_eta2
+      do i1=1,Nc_eta1+1
+        eta1=eta1_min+real(i1-1,f64)*delta_eta1
+        div(i1,i2)=interp2d%interpolate_derivative_eta1(eta1,eta2)
+      end do
+    end do
+
+    do i2=1,Nc_eta2+1
+      eta2=eta2_min+real(i2-1,f64)*delta_eta2
+      do i1=1,Nc_eta1+1
+        eta1=eta1_min+real(i1-1,f64)*delta_eta1
+        tmp(i1,i2)=A2(i1,i2)*transformation%jacobian(eta1,eta2)
+      end do
+    end do
+    call interp2d%compute_interpolants(tmp)
+    do i2=1,Nc_eta2+1
+      eta2=eta2_min+real(i2-1,f64)*delta_eta2
+      do i1=1,Nc_eta1+1
+        eta1=eta1_min+real(i1-1,f64)*delta_eta1
+        div(i1,i2)=div(i1,i2)+interp2d%interpolate_derivative_eta2(eta1,eta2)
+      end do
+    end do
+
+   
+    
+  end subroutine compute_divergence_2d_curvilinear
+
+
+  subroutine time_history_diagnostic_curvilinear( &
+    file_id, &    
+    step, &
+    dt, &
+    mesh_2d, &
+    transformation,&
+    f, &
+    phi, &
+    A1, &
+    A2)
+    sll_int32, intent(in) :: file_id
+    sll_int32, intent(in) :: step
+    sll_real64, intent(in) :: dt
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
+    class(sll_coordinate_transformation_2d_base), pointer :: transformation
+    sll_real64, dimension(:,:), intent(in) :: f
+    sll_real64, dimension(:,:), intent(in) :: phi
+    sll_real64, dimension(:,:), intent(in) :: A1
+    sll_real64, dimension(:,:), intent(in) :: A2 
+    sll_real64 :: mass
+    sll_real64 :: linf
+    sll_real64 :: l1
+    sll_real64 :: l2
+    sll_real64 :: e
+    
+    sll_real64, dimension(:), allocatable :: mass_array
+    sll_real64, dimension(:), allocatable  :: l1_array
+    sll_real64, dimension(:), allocatable  :: l2_array
+    sll_real64, dimension(:), allocatable  :: e_array
+    
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_real64, dimension(:),allocatable :: data
+    sll_real64, dimension(1:2,1:2) :: jac_m
+    sll_int32 :: i1
+    sll_int32 :: i2
+    sll_int32 :: Nc_eta1
+    sll_int32 :: Nc_eta2
+    sll_real64 :: eta1_min
+    sll_real64 :: eta1_max
+    sll_real64 :: eta2_min
+    sll_real64 :: eta2_max
+    sll_real64 :: delta_eta1
+    sll_real64 :: delta_eta2
+    sll_real64 :: dphi_eta1
+    sll_real64 :: dphi_eta2
+    sll_int32 :: ierr 
+
+    
+    Nc_eta1 = mesh_2d%num_cells1
+    Nc_eta2 = mesh_2d%num_cells2
+    
+    
+    eta1_min = mesh_2d%eta1_min
+    eta1_max = mesh_2d%eta1_max
+    eta2_min = mesh_2d%eta2_min
+    eta2_max = mesh_2d%eta2_max
+    delta_eta1 = mesh_2d%delta_eta1
+    delta_eta2 = mesh_2d%delta_eta2
+
+    SLL_ALLOCATE(data(Nc_eta1+1),ierr)
+    SLL_ALLOCATE(mass_array(Nc_eta2+1),ierr)
+    SLL_ALLOCATE(l1_array(Nc_eta2+1),ierr)
+    SLL_ALLOCATE(l2_array(Nc_eta2+1),ierr)
+    SLL_ALLOCATE(e_array(Nc_eta2+1),ierr)
+ 
+    linf  = 0.0_f64
+    !l1    = 0.0_f64
+    !l2    = 0.0_f64
+    !mass  = 0.0_f64
+     !e     = 0.0_f64
+    
+    do i2 = 1, Nc_eta2+1
+      eta2 = eta2_min + (i2-1)* delta_eta2 
+      do i1=1,Nc_eta1+1
+        eta1 = eta1_min + (i1-1)* delta_eta1
+        data(i1) = f(i1,i2)*abs(transformation%jacobian(eta1,eta2))
+      enddo
+      mass_array(i2) = compute_integral_trapezoid_1d(data, Nc_eta1+1, delta_eta1)
+
+      do i1=1,Nc_eta1+1
+        eta1 = eta1_min + (i1-1)* delta_eta1
+        data(i1) = abs(f(i1,i2))*abs(transformation%jacobian(eta1,eta2))
+      enddo
+      l1_array(i2) = compute_integral_trapezoid_1d(data, Nc_eta1+1, delta_eta1)
+
+      do i1=1,Nc_eta1+1
+        eta1 = eta1_min + (i1-1)* delta_eta1
+        data(i1) = (f(i1,i2))**2 *abs(transformation%jacobian(eta1,eta2))
+      enddo
+      l2_array(i2) = compute_integral_trapezoid_1d(data, Nc_eta1+1, delta_eta1)
+
+      do i1=1,Nc_eta1+1
+        eta1 = eta1_min + (i1-1)* delta_eta1
+        jac_m  =  transformation%jacobian_matrix(eta1,eta2)
+        dphi_eta1 = -A2(i1,i2)* transformation%jacobian(eta1,eta2)
+        dphi_eta2 = A1(i1,i2)* transformation%jacobian(eta1,eta2)
+        data(i1) = (( jac_m(2,2)*dphi_eta1 - jac_m(2,1)*dphi_eta2 )**2 + &
+        ( -jac_m(1,2)*dphi_eta1 + jac_m(1,1)*dphi_eta2 )**2) &
+        /abs(transformation%jacobian(eta1,eta2)) 
+      enddo
+      e_array(i2) = compute_integral_trapezoid_1d(data, Nc_eta1+1, delta_eta1)
+
+      do i1=1,Nc_eta1+1
+       linf = max(linf,abs(f(i1,i2)))
+      enddo
+         
+    enddo     
+
+    mass = compute_integral_trapezoid_1d(mass_array, Nc_eta2+1, delta_eta2)
+    l1 = compute_integral_trapezoid_1d(l1_array, Nc_eta2+1, delta_eta2)
+    l2 = compute_integral_trapezoid_1d(l2_array, Nc_eta2+1, delta_eta2)
+    l2 = sqrt(l2)
+    e = compute_integral_trapezoid_1d(e_array, Nc_eta2+1, delta_eta2)
+
+    !mass = mass*delta_eta2
+    !l1 = l1*delta_eta2
+    !l2 = sqrt(l2*delta_eta2)
+    !e  = e*delta_eta2
+    
+    write(file_id,*) &
+      dt*real(step,f64), &
+      linf, &
+      l1, &
+      l2, &
+      mass, &
+      e, &
+      maxval(abs(phi(1:Nc_eta1+1,1:Nc_eta2+1)))
+   
+    
+  end subroutine time_history_diagnostic_curvilinear
+
+  ! periodic case
+  ! called when bc_type = SLL_PERIODIC
+  function process_outside_point_periodic1( eta, eta_min, eta_max ) result(eta_out)
+      use sll_working_precision
+      sll_real64, intent(in)  :: eta
+      sll_real64, intent(in) :: eta_min
+      sll_real64, intent(in) :: eta_max
+      sll_real64 :: eta_out
+
+      eta_out = (eta-eta_min)/(eta_max-eta_min)      
+      eta_out = eta_out-floor(eta_out)
+      if(eta_out==1._f64)then
+        eta_out = 0._f64
+      endif      
+      if(.not.((eta_out>=0).and.(eta_out<1)))then
+        print *,'#eta=',eta
+        print *,'#eta_min=',eta_min
+        print *,'#eta_max=',eta_max
+        print *,'#(eta-eta_min)/(eta_max-eta_min)=',(eta-eta_min)/(eta_max-eta_min)
+        print *,'#floor(-1e-19)',floor(-1e-19)
+        print *,'#eta_out=',eta_out
+      endif      
+      SLL_ASSERT((eta_out>=0).and.(eta_out<1))
+      eta_out = eta_min+eta_out*(eta_max-eta_min) 
+      SLL_ASSERT((eta_out>=eta_min).and.(eta_out<eta_max))      
+      
+  end function process_outside_point_periodic1
+
+  ! set to limit case
+  ! called when bc_type = SLL_SET_TO_LIMIT
+  
+  function process_outside_point_set_to_limit1( eta, eta_min, eta_max ) result(eta_out)
+      use sll_working_precision
+      sll_real64, intent(in)  :: eta
+      sll_real64, intent(in) :: eta_min
+      sll_real64, intent(in) :: eta_max
+      sll_real64 :: eta_out
+      
+      eta_out = (eta-eta_min)/(eta_max-eta_min)      
+      if(eta_out>1)then
+        eta_out = 1._f64
+      endif
+      if(eta_out<0)then
+        eta_out = 0._f64
+      endif
+      SLL_ASSERT((eta_out>=0).and.(eta_out<=1))      
+      eta_out = eta_min+eta_out*(eta_max-eta_min) 
+      SLL_ASSERT((eta_out>=eta_min).and.(eta_out<=eta_max))      
+      
+  end function process_outside_point_set_to_limit1
+
+
+
 
 
 end module sll_simulation_2d_analytic_field_curvilinear_module
