@@ -75,6 +75,21 @@ contains
   end function sll_cos_bell_initializer_2d
 
   !rotation flow
+  function sll_rotation_phi_initializer_2d( x_1, x_2, params ) result(res)
+    sll_real64 :: res
+    sll_real64, intent(in) :: x_1
+    sll_real64, intent(in) :: x_2 
+    sll_real64, dimension(:), intent(in), optional :: params
+    if(present(params))then
+      if(size(params)>=100)then
+        print *,'#params needs not to have size >=100'
+      endif
+    endif
+    res = -0.5_f64*(x_1**2+x_2**2)
+  end function sll_rotation_phi_initializer_2d
+
+
+
   function sll_rotation_A1_initializer_2d( x_1, x_2, params ) result(res)
     sll_real64 :: res
     sll_real64, intent(in) :: x_1
@@ -132,6 +147,31 @@ contains
     res = x0_1*sin(t-t0)+x0_2*cos(t-t0)
   end function sll_rotation_A2_exact_charac_2d
 
+
+
+  function sll_translation_phi_initializer_2d( x_1, x_2, params ) result(res)
+    sll_real64 :: res
+    sll_real64, intent(in) :: x_1
+    sll_real64, intent(in) :: x_2 
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: A1
+    sll_real64 :: A2
+    if(.not.(present(params)))then
+      SLL_ERROR("params should be present")
+    endif
+    if(present(params))then
+      if(size(params)<2)then
+        SLL_ERROR("params should be of size >=2")
+        print *,'size(params)',size(params)
+      endif
+      A1=params(1)
+      A2=params(2)
+      if(size(params)>=100)then
+        print *,'#params needs not to have size >=100'
+      endif
+    endif
+    res = -A2*x_1+A1*x_2
+  end function sll_translation_phi_initializer_2d
 
 
 
@@ -247,6 +287,21 @@ contains
 
 
   !swirling deformation flow
+  function sll_SDF_phi_initializer_2d( x_1, x_2, params ) result(res)
+    sll_real64 :: res
+    sll_real64, intent(in) :: x_1
+    sll_real64, intent(in) :: x_2 
+    sll_real64, dimension(:), intent(in), optional :: params
+    if(present(params))then
+      if(size(params)>=100)then
+        print *,'#params needs not to have size >=100'
+      endif
+    endif
+    res = 2._f64*cos(0.5_f64*x_1)**2*cos(0.5_f64*x_2)**2
+  end function sll_SDF_phi_initializer_2d
+
+
+
 
   function sll_SDF_A1_initializer_2d( x_1, x_2, params ) result(res)
     sll_real64 :: res
@@ -273,6 +328,46 @@ contains
     endif    
     res = cos(0.5_f64*x_2)**2*sin(x_1)
   end function sll_SDF_A2_initializer_2d
+
+
+  function sll_SDF_A1_exact_charac_2d( t, t0, x0_1, x0_2, params ) result(res)
+    sll_real64 :: res
+    sll_real64, intent(in) :: t
+    sll_real64, intent(in) :: t0
+    sll_real64, intent(in) :: x0_1
+    sll_real64, intent(in) :: x0_2 
+    sll_real64, dimension(:), intent(in), optional :: params
+    if(.not.(present(params)))then
+      SLL_ERROR("params should be present")
+    endif
+    if(present(params))then
+      if(size(params)>=100)then
+        print *,'#params needs not to have size >=100'
+      endif
+    endif
+    res = x0_1 !for the moment we take the same point
+  end function sll_SDF_A1_exact_charac_2d
+
+
+  function sll_SDF_A2_exact_charac_2d( t, t0, x0_1, x0_2, params ) result(res)
+    sll_real64 :: res
+    sll_real64, intent(in) :: t
+    sll_real64, intent(in) :: t0
+    sll_real64, intent(in) :: x0_1
+    sll_real64, intent(in) :: x0_2 
+    sll_real64, dimension(:), intent(in), optional :: params
+    if(.not.(present(params)))then
+      SLL_ERROR("params should be present")
+    endif
+    if(present(params))then
+      if(size(params)>=100)then
+        print *,'#params needs not to have size >=100'
+      endif
+    endif
+    res = x0_2 !for the moment we take the same point
+  end function sll_SDF_A2_exact_charac_2d
+
+
 
 
   function sll_SDF_time_initializer_1d( t, params ) result(res)
