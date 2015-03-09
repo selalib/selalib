@@ -271,17 +271,12 @@ contains
     ! compute the values of f0 on the (cartesian, phase-space) remapping grid
     x_j = parts_x_min
     do j_x = 1, number_parts_x
-!      f_x =  max(0._f64, 1.-inv_r_x*abs(x_j-x0) )
       y_j = parts_y_min
       do j_y = 1, number_parts_y
-!        f_y =  max(0._f64, 1.-inv_r_y*abs(y_j-y0) )
         vx_j = parts_vx_min
         do j_vx = 1, number_parts_vx
-!          f_vx = max(0._f64, 1.-inv_r_vx*abs(vx_j-vx0) )
           vy_j = parts_vy_min
           do j_vy = 1, number_parts_vy
-!            f_vy = max(0._f64, 1.-inv_r_vy*abs(vy_j-vy0) )
-!            p_group%target_values(j_x,j_y,j_vx,j_vy) = max_f * f_x * f_y * f_vx * f_vy     ! MCP: old implementation
             p_group%target_values(j_x,j_y,j_vx,j_vy) = eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, &
                                                                          basis_height, hat_shift,         &
                                                                          x_j, y_j, vx_j, vy_j)
@@ -299,7 +294,7 @@ contains
 
   ! position the particle on the cartesian remapping grid
   ! and compute new weights in order to approximate the point values stored in the remapping grid
-!  subroutine sll_compute_new_lt_particles_4d( &        ! old name
+  !  subroutine sll_compute_new_lt_particles_4d( &        ! old name
   subroutine sll_lt_pic_4d_compute_new_particles( &
               p_group )
 
@@ -379,15 +374,9 @@ contains
                 j_x, j_y, j_vx, j_vy,                                                   &
                 number_parts_x, number_parts_y, number_parts_vx, number_parts_vy,       &
                 k                                                                       &
-                )
-            !aaa print *,"k=",k," k_temp_debug=",k_temp_debug!aaa
-            !aaa SLL_ASSERT(k == k_temp_debug)
-            !aaa SLL_ASSERT(k_temp_debug < 10)
-            if( k /= k_temp_debug) then
-                print *, "ARGH 89756573856 "
-                print *, "k = ", k, " -- k_temp_debug = ", k_temp_debug
-                stop
-            end if
+            )
+
+            SLL_ASSERT(k == k_temp_debug)
 
             if( p_group%spline_degree == 1 )then
                 w_k = d_vol * real( p_group%target_values(j_x,j_y,j_vx,j_vy) ,f32)
@@ -438,19 +427,10 @@ contains
                         ' is invalid: ', p_group%spline_degree
                STOP
             end if
-!            print *, '-- -- -- sll_lt_pic_initialize_some4Dfunction(): ', &
-!                        'number_parts_x, j_x = ', number_parts_x, j_x, &
-!                        'number_parts_y, j_y = ', number_parts_y, j_y
-!            print *, 'm2d%eta1_max, p_group%remapping_grid%eta1_max , x_j = ', &
-!                        m2d%eta1_max, p_group%remapping_grid%eta1_max , x_j
-!            print *, 'm2d%eta2_max, p_group%remapping_grid%eta2_max , y_j = ', &
-!                        m2d%eta2_max, p_group%remapping_grid%eta2_max , y_j
-                        
-!            if( w_k > 0 )then
+
             p_group%p_list(k)%q = w_k
             particle_indices(j_x,j_y,j_vx,j_vy) = k
-!            end if
-            
+
             call global_to_cell_offset (  &
                  x_j, y_j, &
                  m2d, &
@@ -462,42 +442,70 @@ contains
 
             ! set the particle connectivity
             if(j_x == 1)then
+                ! [neighbor index = own index] means: no neighbor
+                ! in the x-periodic case this will be changed when dealing the last particle in the x dimension
                 p_group%p_list(k)%ngb_xleft_index = k
             else
+                ! set the connectivity (in both directions) with left neighbor
                 k_ngb = particle_indices(j_x-1,j_y,j_vx,j_vy)
                 p_group%p_list(k)%ngb_xleft_index = k_ngb
                 p_group%p_list(k_ngb)%ngb_xright_index = k
                 if(j_x == number_parts_x)then
-                    p_group%p_list(k)%ngb_xright_index = k
+                    if( p_group%domain_is_x_periodic )then
+                        ! set the connectivity (in both directions) with right neighbor
+                        k_ngb = particle_indices(1,j_y,j_vx,j_vy)
+                        p_group%p_list(k)%ngb_xright_index = k_ngb
+                        p_group%p_list(k_ngb)%ngb_xleft_index = k
+                    else
+                        ! [neighbor index = own index] means: no neighbor
+                        p_group%p_list(k)%ngb_xright_index = k
+                    end if
                 end if
             end if
             if(j_y == 1)then
+                ! [neighbor index = own index] means: no neighbor
+                ! in the y-periodic case this will be changed when dealing the last particle in the y dimension
                 p_group%p_list(k)%ngb_yleft_index = k
             else
+                ! set the connectivity (in both directions) with left neighbor
                 k_ngb = particle_indices(j_x,j_y-1,j_vx,j_vy)
                 p_group%p_list(k)%ngb_yleft_index = k_ngb
                 p_group%p_list(k_ngb)%ngb_yright_index = k
                 if(j_y == number_parts_y)then
-                    p_group%p_list(k)%ngb_yright_index = k
+                    if( p_group%domain_is_y_periodic )then
+                        ! set the connectivity (in both directions) with right neighbor
+                        k_ngb = particle_indices(j_x,1,j_vx,j_vy)
+                        p_group%p_list(k)%ngb_yright_index = k_ngb
+                        p_group%p_list(k_ngb)%ngb_yleft_index = k
+                    else
+                        ! [neighbor index = own index] means: no neighbor
+                        p_group%p_list(k)%ngb_yright_index = k
+                    end if
                 end if
             end if
             if(j_vx == 1)then
+                ! [neighbor index = own index] means: no neighbor
                 p_group%p_list(k)%ngb_vxleft_index = k
             else
+                ! set the connectivity (in both directions) with left neighbor
                 k_ngb = particle_indices(j_x,j_y,j_vx-1,j_vy)
                 p_group%p_list(k)%ngb_vxleft_index = k_ngb
                 p_group%p_list(k_ngb)%ngb_vxright_index = k
                 if(j_vx == number_parts_vx)then
+                    ! [neighbor index = own index] means: no neighbor
                     p_group%p_list(k)%ngb_vxright_index = k
                 end if
             end if
             if(j_vy == 1)then
+                ! [neighbor index = own index] means: no neighbor
                 p_group%p_list(k)%ngb_vyleft_index = k
             else
+                ! set the connectivity (in both directions) with left neighbor
                 k_ngb = particle_indices(j_x,j_y,j_vx,j_vy-1)
                 p_group%p_list(k)%ngb_vyleft_index = k_ngb
                 p_group%p_list(k_ngb)%ngb_vyright_index = k
                 if(j_vy == number_parts_vy)then
+                    ! [neighbor index = own index] means: no neighbor
                     p_group%p_list(k)%ngb_vyright_index = k
                 end if
             end if
