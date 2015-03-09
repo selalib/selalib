@@ -19,6 +19,7 @@ real(8), dimension(:), pointer        :: x1
 real(8), dimension(:), pointer        :: x2
 real(8), dimension(:), allocatable    :: rho
 real(8), dimension(:), allocatable    :: phi
+real(8), dimension(:), allocatable    :: sol
 real(8), dimension(:), allocatable    :: e_x
 real(8), dimension(:), allocatable    :: e_y
 type(sll_triangular_poisson_2d)       :: solver
@@ -35,64 +36,66 @@ sll_int32  :: nc_x2 = 100
 sll_real64 :: x2_min = -1.0_f64, x2_max = 1.0_f64
 
 sll_int32  :: i, ierr
+sll_real64 :: r
 
 !mesh => new_triangular_mesh_2d("diode.maa") 
+!t_mesh => new_triangular_mesh_2d(nc_x1, x1_min, x1_max, nc_x2, x2_min, x2_max) 
 
-num_cells = 10
-
+num_cells = 51
 h_mesh => new_hex_mesh_2d( num_cells, 0._f64, 0._f64) 
-  
-!t_mesh => new_triangular_mesh_2d(h_mesh) 
-
-t_mesh => new_triangular_mesh_2d(nc_x1, x1_min, x1_max, nc_x2, x2_min, x2_max) 
-
+t_mesh => new_triangular_mesh_2d(h_mesh) 
+call map_to_circle(t_mesh, num_cells)
 call analyze_triangular_mesh(t_mesh) 
-
-!call write_triangular_mesh_mtv(t_mesh, "test_tri_poisson.mtv")
+call write_triangular_mesh_mtv(t_mesh, "test_tri_poisson.mtv")
 
 SLL_CLEAR_ALLOCATE(e_x(1:t_mesh%num_nodes),ierr)
 SLL_CLEAR_ALLOCATE(e_y(1:t_mesh%num_nodes),ierr)
 SLL_CLEAR_ALLOCATE(rho(1:t_mesh%num_nodes),ierr)
 SLL_CLEAR_ALLOCATE(phi(1:t_mesh%num_nodes),ierr)
+SLL_CLEAR_ALLOCATE(sol(1:t_mesh%num_nodes),ierr)
 
-ntypfr(1) = 3; potfr(1) =  0.0_f64
-ntypfr(2) = 1; potfr(2) = +1.0_f64
-ntypfr(3) = 3; potfr(3) =  0.0_f64
-ntypfr(4) = 1; potfr(4) = -1.0_f64
+ntypfr(1) = 1
+potfr(1)  = 0.0_f64
 
 call sll_create(solver, t_mesh, ntypfr, potfr)
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!   Equation de POISSON - elements finis !!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 x1 => t_mesh%coord(1,:)
 x2 => t_mesh%coord(2,:)
 
-rho = 0.0_f64
+do i = 1, t_mesh%num_nodes
+  r = sqrt(x1(i)*x1(i)+x2(i)*x2(i))
+  rho(i) = 4 * sll_pi * f(r)
+  sol(i) = u(r)
+end do
+call sll_gnuplot_2d( rho, "rho", t_mesh%coord, t_mesh%nodes, 1)
+call sll_gnuplot_2d( sol, "sol", t_mesh%coord, t_mesh%nodes, 1)
 
 call sll_compute_phi_from_rho(solver, rho, phi)
 
+call sll_gnuplot_2d( phi, "phi", t_mesh%coord, t_mesh%nodes, 1)
 
+print*,'error phi=', maxval(abs(phi-sol))
 
-call sll_compute_e_from_phi(solver, phi, e_x, e_y)
-
-print*,'error phi=', maxval(abs(phi-x1))
-print*,'error e_x=', maxval(abs(e_x+1.0_f64))
-print*,'error e_y=', maxval(abs(e_y))
-
-call sll_set_time_mark(t0)
-do i = 1, 100
-  call sll_compute_e_from_rho(solver, rho, phi, e_x, e_y)
-end do
-call sll_set_time_mark(t1)
-print *, 'Time elapsed to solve Poisson ', sll_time_elapsed_between(t0,t1)
-
-
-print*,'error phi=', maxval(abs(phi-x1))
-print*,'error e_x=', maxval(abs(e_x+1.0_f64))
-print*,'error e_y=', maxval(abs(e_y))
-
+!call sll_compute_e_from_phi(solver, phi, e_x, e_y)
+!
+!print*,'error phi=', maxval(abs(phi-x1))
+!print*,'error e_x=', maxval(abs(e_x+1.0_f64))
+!print*,'error e_y=', maxval(abs(e_y))
+!
+!call sll_set_time_mark(t0)
+!do i = 1, 100
+!  call sll_compute_e_from_rho(solver, rho, phi, e_x, e_y)
+!end do
+!call sll_set_time_mark(t1)
+!print *, 'Time elapsed to solve Poisson ', sll_time_elapsed_between(t0,t1)
+!
+!
+!print*,'error phi=', maxval(abs(phi-x1))
+!print*,'error e_x=', maxval(abs(e_x+1.0_f64))
+!print*,'error e_y=', maxval(abs(e_y))
+!ntypfr(2) = 1; potfr(2) = +1.0_f64
+!ntypfr(3) = 3; potfr(3) =  0.0_f64
+!ntypfr(4) = 1; potfr(4) = -1.0_f64
 !call sll_gnuplot_2d( phi, "phi", t_mesh%coord, t_mesh%nodes, 1)
 !call sll_gnuplot_2d( e_x, "e_x", t_mesh%coord, t_mesh%nodes, 1)
 !call sll_gnuplot_2d( e_y, "e_y", t_mesh%coord, t_mesh%nodes, 1)
@@ -115,5 +118,54 @@ print*,'error e_y=', maxval(abs(e_y))
 !call sll_gnuplot_2d( phi, "phi", t_mesh%coord, t_mesh%nodes, 1)
 !call sll_gnuplot_2d( e_x, "e_x", t_mesh%coord, t_mesh%nodes, 1)
 !call sll_gnuplot_2d( e_y, "e_y", t_mesh%coord, t_mesh%nodes, 1)
+
+contains
+
+!We have the equation :
+! -4 pi rho(r) = Laplacian(f(r))
+!
+!  f(r) = -pi * rho(r) * r^2 + a_0 * ln(r) + a_1  for 0 <= r <= 0.2
+!  f(r) = a_2 * ln(r) + a_3                       for 0.2 < r <= 1
+!
+!  a_0 = 0
+!  a_1 = 0.04 * pi * rho(r) * (-2*ln(0.2)+1)
+!  a_2 = -0.08* pi * rho(r)
+!  a_3 = 0
+
+function u(r)
+
+  real(8) :: u
+  real(8) :: r
+  real(8) :: pi 
+  real(8), parameter :: one = 1d0 
+  real(8) :: a_0, a_1, a_2, a_3
+
+  pi  =  4d0 * atan(1d0)
+  a_1 =  0.04 * pi * one * (-2*log(0.2d0)+1)
+  a_2 = -0.08 * pi * one
+
+  if ( 0d0 <= r .and. r <= 0.2d0 ) then
+    u = -pi * r*r + a_1 
+  else if ( 0.2d0 < r .and. r <= 1d0) then
+    u = a_2 * log(r) 
+  else 
+    u = 0.0d0
+  end if
+
+end function u
+
+function f(r)
+
+  real(8) :: f
+  real(8) :: r
+  real(8), parameter :: one = 1d0 
+
+  if ( 0d0 <= r .and. r <= 0.2d0 ) then
+    f = one
+  else 
+    f = 0.0d0
+  end if
+
+end function f
 
 end program test_tri_poisson
