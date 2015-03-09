@@ -33,12 +33,21 @@ ADD_LIBRARY(sll_dg_fields STATIC sll_dg_fields_2d.F90
 TARGET_LINK_LIBRARIES(sll_dg_fields sll_coordinate_transformations 
                                     sll_integration)
 
+ADD_LIBRARY(sll_fem_fields STATIC sll_fem_fields_2d.F90 
+                                 init_function_module.F90)		
+
+TARGET_LINK_LIBRARIES(sll_fem_fields sll_coordinate_transformations 
+                                    sll_integration)
+
+
 # Tests
 IF(BUILD_TESTING)
 
-  # Executable not added to ctest
+  # Executables not added to ctest
   ADD_EXECUTABLE(test_dg_fields unit_test_dg_fields.F90)
   TARGET_LINK_LIBRARIES(test_dg_fields sll_dg_fields)
+  ADD_EXECUTABLE(test_fem_fields unit_test_fem_fields.F90)
+  TARGET_LINK_LIBRARIES(test_fem_fields sll_fem_fields)
 
   # Ctest 1D
   ADD_EXECUTABLE( test_scalar_field_1d unit_test_1d.F90  )

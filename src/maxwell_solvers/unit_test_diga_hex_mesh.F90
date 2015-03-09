@@ -16,25 +16,25 @@ use sll_maxwell_diga_hex_mesh
 
 implicit none
 
-type(maxwell_dg_hex_mesh)   :: maxwell
-type(sll_hex_mesh_2d), pointer  :: mesh
-sll_int32                   :: num_cells
-sll_int32                   :: error
-sll_int32                   :: i, k
-sll_int32                   :: degree
-sll_real64                  :: A(5)
-sll_real64                  :: B(5)
-sll_real64                  :: C(5)
-sll_int32                   :: istep
-sll_int32                   :: nstep = 1000
-sll_real64                  :: cfl, dt 
-sll_real64                  :: time
-sll_real64, pointer         :: S_Ex(:,:)
-sll_real64, pointer         :: X_Ex(:,:)
-sll_real64, pointer         :: tmp_Ex(:,:)
-sll_real64, pointer         :: tmp_Ey(:,:)
-sll_real64, pointer         :: tmp_Bz(:,:)
-sll_real64, pointer         :: tmp_Po(:,:)
+type(maxwell_dg_hex_mesh)      :: maxwell
+type(sll_hex_mesh_2d), pointer :: mesh
+sll_int32                      :: num_cells
+sll_int32                      :: error
+sll_int32                      :: i, k
+sll_int32                      :: degree
+sll_real64                     :: A(5)
+sll_real64                     :: B(5)
+sll_real64                     :: C(5)
+sll_int32                      :: istep
+sll_int32                      :: nstep = 1000
+sll_real64                     :: cfl, dt 
+sll_real64                     :: time
+sll_real64, pointer            :: S_Ex(:,:)
+sll_real64, pointer            :: X_Ex(:,:)
+sll_real64, pointer            :: tmp_Ex(:,:)
+sll_real64, pointer            :: tmp_Ey(:,:)
+sll_real64, pointer            :: tmp_Bz(:,:)
+sll_real64, pointer            :: tmp_Po(:,:)
 
 num_cells = 10
 
@@ -58,7 +58,7 @@ print *, ""
 
 degree = 2
 
-call initialize(maxwell, mesh, degree)
+call sll_create(maxwell, mesh, degree)
 
 cfl = 0.2
 dt = cfl/sqrt(2./(mesh%delta/(degree+1))**2)
@@ -129,7 +129,7 @@ do istep = 1, nstep
       !tmp_Po = maxwell%D_Po !+ maxwell%Ro
 
       ! Compute D_Ex, D_Ey, D_Bz, D_Po
-      call solve(maxwell, mesh)
+      call sll_solve(maxwell, mesh)
       !call set_charge_and_currents(time+C(k)*dt)
 
       maxwell%D_Ex = A(k)*tmp_Ex + dt * (maxwell%D_Ex - maxwell%Jx)
@@ -204,7 +204,7 @@ end subroutine rkstep
 subroutine plot_simple( this, mesh )
 
    type(maxwell_dg_hex_mesh), intent(in) :: this
-   type(sll_hex_mesh_2d),         intent(in) :: mesh
+   type(sll_hex_mesh_2d),     intent(in) :: mesh
    sll_int32, save                       :: iplot = 0
    sll_int32                             :: idl
    sll_int32                             :: iel
@@ -374,10 +374,10 @@ end do
 do i = 1, mesh%num_triangles
    x1 = (  coor(1,ntri(1,i))  &
          + coor(1,ntri(2,i))  &
-     + coor(1,ntri(3,i))    )/3.
+         + coor(1,ntri(3,i))    )/3.
    y1 = (  coor(2,ntri(1,i))  &
          + coor(2,ntri(2,i))  &
-     + coor(2,ntri(3,i))    )/3.
+         + coor(2,ntri(3,i))    )/3.
    write(10,"(a)"   , advance="no")"@text x1="
    write(10,"(f8.5)", advance="no") x1
    write(10,"(a)"   , advance="no")" y1="
