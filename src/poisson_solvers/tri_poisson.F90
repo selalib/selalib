@@ -323,13 +323,13 @@ allocate(this%mors2(12*mesh%num_nodes)); this%mors2 = 0
  
 ! Calcul de mors1,mors2.
 
-call morse(mesh%npoel1,    &
-           mesh%npoel2,    &
-           mesh%nodes,     &
-           mesh%num_cells, &
-           mesh%num_nodes, &
-           this%mors1,     &
-           this%mors2      )
+call morse(mesh%npoel1,        &
+           mesh%npoel2,        &
+           mesh%nodes,         &
+           mesh%num_triangles, &
+           mesh%num_nodes,     &
+           this%mors1,         &
+           this%mors2          )
  
 ! Ajustement de la taille de mors2.
 ! pas sur que ca fonctionne a tous les coups
@@ -596,7 +596,7 @@ sll_int32 :: is, il, j
  
 !Boucle sur les elements.
 
-do iel=1,this%mesh%num_cells
+do iel=1,this%mesh%num_triangles
 
   !Calcul des coefficients dependant de la geometrie du triangle.
 

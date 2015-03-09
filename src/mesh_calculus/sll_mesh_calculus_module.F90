@@ -724,11 +724,11 @@ mesh%grandl = 1.e+04 * max(xlmu-xlml,ylmu-ylmu)
 !*** Calcul des aires des triangles
 !if (ldebug) write(iout,*)"*** Calcul des aires des triangles ***"
 
-allocate(mesh%aire(mesh%num_cells)); mesh%aire=0.0
+allocate(mesh%aire(mesh%num_triangles)); mesh%aire=0.0
 
 airtot = 0.
 
-do it = 1, mesh%num_cells
+do it = 1, mesh%num_triangles
 
    lx1 = mesh%coord(1,mesh%nodes(2,it))-mesh%coord(1,mesh%nodes(1,it))
    ly1 = mesh%coord(2,mesh%nodes(3,it))-mesh%coord(2,mesh%nodes(1,it))
@@ -766,7 +766,7 @@ end do
 allocate(mesh%npoel1(mesh%num_nodes+1))
 
 mesh%npoel1 = 0
-do i=1,mesh%num_cells
+do i=1,mesh%num_triangles
    is1 = mesh%nodes(1,i)
    is2 = mesh%nodes(2,i)
    is3 = mesh%nodes(3,i)
@@ -797,7 +797,7 @@ allocate(indc(mesh%num_nodes))
 
 indc   = 1  !Le tableau temporaire indc doit etre initialise a 1
 
-do it = 1,mesh%num_cells
+do it = 1,mesh%num_triangles
    do k = 1,3
       is = mesh%nodes(k,it)
       mesh%npoel2(mesh%npoel1(is)+indc(is)) = it
@@ -808,7 +808,7 @@ end do
 ! --- Recherche des numeros des triangles voisins d'un triangle 
 
 
-do iel=1,mesh%num_cells
+do iel=1,mesh%num_triangles
 
   ! ... numeros des 3 sommets du triangle
 
@@ -880,7 +880,7 @@ end do
 ! --- Definition de nctfrt: le nombre de cotes frontieres
 
 mesh%nctfrt=0
-do i=1,mesh%num_cells
+do i=1,mesh%num_triangles
    if (mesh%nvois(1,i)<0) mesh%nctfrt=mesh%nctfrt+1
    if (mesh%nvois(2,i)<0) mesh%nctfrt=mesh%nctfrt+1
    if (mesh%nvois(3,i)<0) mesh%nctfrt=mesh%nctfrt+1
@@ -972,7 +972,7 @@ end do
 
 !if (ldebug) then
 !  write(iout,*)"*** Recherche des numeros des triangles voisins d'un triangle ***"
-!  do i = 1, mesh%num_cells
+!  do i = 1, mesh%num_triangles
 !    write(iout,"(a10,i4,a10,3i4,a10,3i4)") &
 !      " Triangle:", i,                     &
 !      " Nodes   :", mesh%nodes(1:3,i),     &
@@ -983,7 +983,7 @@ end do
 !----------- Nombre de noeuds sur les frontieres internes -------------
 !======================================================================
 
-!do iel = 1, mesh%num_cells
+!do iel = 1, mesh%num_triangles
 !  do j = 1, 3
 !    if( mesh%nvois(j,iel) == imxref ) then
 !      write(iout,*) " Triangle ", iel, " Voisins :", (mesh%nvois(i,iel),i=1,3)
@@ -1009,7 +1009,7 @@ end do
 
 !*** Calcul du nb de cotes internes et total (nbcoti,nbtcot)
 
-mesh%nbtcot = (3*mesh%num_cells+mesh%nctfrt)/2
+mesh%nbtcot = (3*mesh%num_triangles+mesh%nctfrt)/2
 
 !write(iout,"( 10x,a,i6)") 'Nombre total de cotes      =', mesh%nbtcot
 
@@ -1027,7 +1027,7 @@ ncotcu(1)=mesh%nbcoti
 ncotcu(2)=mesh%nbcoti
 
 do ifr=1,mesh%nmxfr
-   do i=1,mesh%num_cells
+   do i=1,mesh%num_triangles
       do j = 1,3
          if(mesh%nvois(j,i) == -ifr) then
             ncotcu(ifr+2) = ncotcu(ifr+2) + 1
@@ -1113,7 +1113,7 @@ mesh%nctfro = 0
 
 ifr=0
 do ict=1,3
-  do iel=1,mesh%num_cells
+  do iel=1,mesh%num_triangles
     if ( mesh%nvois(ict,iel) < 0 ) then 
 
       iref = -mesh%nvois(ict,iel)
@@ -1415,7 +1415,7 @@ nuctfr = 0
 ! ======================================================================
 ! --- 2.0 --- Numerotation des cotes -----------------------------------
 
-do iel = 1, mesh%num_cells
+do iel = 1, mesh%num_triangles
 
   do nc = 1, 3
 
