@@ -54,7 +54,6 @@ call write_triangular_mesh_mtv(square, "tri_square.mtv")
 ntypfr(1:4) = [3,1,3,1]
 potfr(1:4)  = [0.0_f64,1.0_f64,0.0_f64,-1.0_f64]
 
-
 SLL_CLEAR_ALLOCATE(e_x(1:square%num_nodes),ierr)
 SLL_CLEAR_ALLOCATE(e_y(1:square%num_nodes),ierr)
 SLL_CLEAR_ALLOCATE(rho(1:square%num_nodes),ierr)
@@ -65,27 +64,26 @@ rho = 0.0_f64
 !Create the Poisson solver on unstructured mesh
 poisson => new_triangular_poisson_2d(square, ntypfr, potfr)
 !We compute phi
-!call sll_compute_phi_from_rho(poisson, rho, phi)
+call sll_compute_phi_from_rho(poisson, rho, phi)
 
 !Check result
 print*,'error phi=', maxval(abs(phi-square%coord(1,:)))
-!
-!!We compute ex and ey from phi
-!call sll_compute_e_from_phi(poisson, phi, e_x, e_y)
-!
-!!Check result
-!print*,'error e_x=', maxval(abs(e_x+1.0_f64))
-!print*,'error e_y=', maxval(abs(e_y))
-!
-!nullify(x1,x2)
+
+!We compute ex and ey from phi
+call sll_compute_e_from_phi(poisson, phi, e_x, e_y)
+
+!Check result
+print*,'error e_x=', maxval(abs(e_x+1.0_f64))
+print*,'error e_y=', maxval(abs(e_y))
+
 deallocate(e_x,e_y,phi,rho)
-!
-!call sll_delete(square)
-!call sll_delete(poisson)
+
+call sll_delete(square)
+call sll_delete(poisson)
 
 !Second test, the unstructured mesh is created from an hexagonal mesh.
 
-num_cells = 10
+num_cells = 20
 h_mesh => new_hex_mesh_2d( num_cells, 0._f64, 0._f64) 
 t_mesh => new_triangular_mesh_2d(h_mesh) 
 
@@ -93,10 +91,6 @@ t_mesh => new_triangular_mesh_2d(h_mesh)
 call map_to_circle(t_mesh, num_cells)
 call analyze_triangular_mesh(t_mesh) 
 call write_triangular_mesh_mtv(t_mesh, "hex_circle.mtv")
-
-!Positions of nodes
-x1 => t_mesh%coord(1,:)
-x2 => t_mesh%coord(2,:)
 
 SLL_CLEAR_ALLOCATE(e_x(1:t_mesh%num_nodes),ierr)
 SLL_CLEAR_ALLOCATE(e_y(1:t_mesh%num_nodes),ierr)
@@ -112,6 +106,9 @@ potfr(1)  = 0.0_f64
 solver => new_triangular_poisson_2d(t_mesh, ntypfr, potfr)
 
 !We set the RHS and analytic solution (see functions below)
+!Positions of nodes
+x1 => t_mesh%coord(1,:)
+x2 => t_mesh%coord(2,:)
 do i = 1, t_mesh%num_nodes
   r = sqrt(x1(i)*x1(i)+x2(i)*x2(i))
   rho(i) = 4 * sll_pi * f(r)
@@ -130,6 +127,9 @@ print *, 'Time elapsed to solve Poisson ', sll_time_elapsed_between(t0,t1)
 call sll_gnuplot_2d( phi, "phi", t_mesh%coord, t_mesh%nodes, 1)
 
 print*,'error phi=', maxval(abs(phi-sol))
+
+call sll_delete(t_mesh)
+call sll_delete(solver)
 
 contains
 

@@ -488,7 +488,10 @@ sll_int32, dimension(3,nbt), intent(in) :: ntri
 sll_int32, dimension(:),   intent(out):: mors1, mors2
 sll_int32, dimension(20)  :: ilign
 sll_int32 :: l, itest1, itest2, js1, js2, is1, is2, is3, numel
-sll_int32 :: iel, nlign, nel, is, im = 0, k = 0
+sll_int32 :: iel, nlign, nel, is, im, k
+
+im = 0
+k  = 0
 
 mors1(1)=0
  
