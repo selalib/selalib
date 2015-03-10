@@ -2,39 +2,62 @@ program lagrange_test
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
- use sll_lagrange_interpolation
- use sll_constants
+use sll_lagrange_interpolation
+use sll_constants
+
 implicit none
-sll_int32  :: i,d,num_points
-sll_real64 :: diff,alpha,xmin,xmax,l
-sll_real64,dimension(:),allocatable ::xi,fi,coord
-type(sll_lagrange_interpolation_1D),pointer ::l_i
 
-d=2
-num_points=100
-alpha=0.2_f64
-allocate(xi(1:num_points))
-allocate(fi(1:num_points))
-allocate(coord(1:num_points))
+sll_int32  :: i
+sll_int32  :: ierr
+sll_int32  :: d
+sll_int32  :: n
+sll_real64 :: diff
+sll_real64 :: alpha
+sll_real64 :: xmin
+sll_real64 :: xmax
+sll_real64 :: dx
+
+sll_real64, dimension(:), allocatable :: xi
+sll_real64, dimension(:), allocatable :: yi
+sll_real64, dimension(:), allocatable :: xp
+sll_real64, dimension(:), allocatable :: yp
+
+type(sll_lagrange_interpolation_1D), pointer :: l_i
+
+d     = 2
+n     = 100
+alpha = 0.2_f64
+
+SLL_ALLOCATE(xi(1:n), ierr)
+SLL_ALLOCATE(yi(1:n), ierr)
+SLL_ALLOCATE(xp(1:n), ierr)
+SLL_ALLOCATE(yp(1:n), ierr)
+
 !data initialization
-xmin=0.0_f64
-xmax=num_points-1.0_f64
-l=xmax-xmin
-do i=1,num_points
- xi(i)=i-1
- fi(i)=f(xi(i),num_points)
- coord(i)=xi(i)+alpha
-end do 
-diff=0.0_f64
+xmin = 0.0_f64
+xmax = 1.0_f64
+dx   = (xmax - xmin) / (n-1)
 
-l_i => new_lagrange_interpolation_1D(num_points,xmin,xmax,PERIODIC_LAGRANGE,d)
-call compute_lagrange_interpolation_1D(alpha,l_i)
-call interpolate_array_values(fi,l_i)
-do i=1,num_points
- !print*,"interpolated value = ", l_i%data_out(i), " , Correct value = ",f(coord(i),num_points)
- diff=max(diff,abs(f(coord(i),num_points)-l_i%data_out(i)))
+do i=1,n
+ xi(i) = (i-1)*dx
+ yi(i) = f(xi(i))
+ xp(i) = xi(i)+alpha*dx
+ yp(i) = f(xp(i))
 end do
 
+diff = 0.0_f64
+
+l_i => new_lagrange_interpolation_1D(n,                 &
+                                     xmin,              &
+                                     xmax,              &
+                                     PERIODIC_LAGRANGE, &
+                                     d)
+
+call compute_lagrange_interpolation_1D(alpha,l_i)
+
+call interpolate_array_values(yi,l_i)
+
+diff = maxval(abs(yp-l_i%data_out))
 
 if(diff<0.0001) then
  print *, ""
@@ -47,16 +70,20 @@ else
 end if
 
 deallocate(xi)
-deallocate(fi)
-deallocate(coord)
+deallocate(yi)
+deallocate(xp)
+deallocate(yp)
 
 contains 
 
-function f(x,num_points)
-sll_int32 :: num_points
-sll_real64 :: x,f
-f=cos(2*sll_pi*x/(num_points-1.0))
-end function
+function f(x)
+
+  sll_real64 :: f
+  sll_real64 :: x
+  
+  f=cos(2*sll_pi*x)
+
+end function f
 
 end program
 
