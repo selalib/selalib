@@ -804,6 +804,8 @@ do it = 1,mesh%num_triangles
       indc(is) = indc(is)+1
    end do
 end do
+
+deallocate(indc)
  
 ! --- Recherche des numeros des triangles voisins d'un triangle 
 
@@ -1341,7 +1343,6 @@ do ict=1,mesh%nctfrt
 
 end do
 
-deallocate(indc)
 
 mesh%analyzed = .true.
 
