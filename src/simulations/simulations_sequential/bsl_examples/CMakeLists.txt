@@ -12,8 +12,9 @@ TARGET_LINK_LIBRARIES(bsl_1d_cubic_nonuniform_periodic sll_interpolators)
 ADD_EXECUTABLE(bsl_1d_cubic_nonuniform_compact test_1d_cubic_nonuniform_compact.F90)
 TARGET_LINK_LIBRARIES(bsl_1d_cubic_nonuniform_compact sll_interpolators)
 
+IF(MPI_ENABLED)
+
 ADD_EXECUTABLE(bsl_2d_omp unit_test_2d_omp.F90)
-#YG ADD_DEPENDENCIES(bsl_2d_omp sll_interpolators)
 TARGET_LINK_LIBRARIES(bsl_2d_omp sll_interpolators)
 
 ADD_EXECUTABLE(bsl_landau_1d landau_1d.F90)
@@ -37,6 +38,8 @@ IF(FFTW_ENABLED AND FFTW_FOUND)
                                         sll_maxwell_solvers)
 
 ENDIF(FFTW_ENABLED AND FFTW_FOUND)
+
+ENDIF(MPI_ENABLED)
 
 ADD_TEST( NAME bsl_1d_uniform_periodic    COMMAND bsl_1d_cubic_uniform_periodic    )
 ADD_TEST( NAME bsl_1d_uniform_compact     COMMAND bsl_1d_cubic_uniform_compact     )
