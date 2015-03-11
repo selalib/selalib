@@ -436,11 +436,6 @@ contains
 
 
 
-  !---------------------------------------------------------------------------
-  !> @brief <BRIEF_DESCRIPTION>
-  !> @details <DETAILED_DESCRIPTION>
-  !> @param[<IN or OUT or INOUT>] <PARAM1> <DESCRIPTION>
-  !> @param[<IN or OUT or INOUT>] <PARAM2> <DESCRIPTION>
   subroutine init_center_points_triangle(mesh)
     class(sll_hex_mesh_2d) :: mesh
     sll_int32          :: center_index, global
@@ -534,11 +529,6 @@ contains
 
 
 
-  !---------------------------------------------------------------------------
-  !> @brief <BRIEF_DESCRIPTION>
-  !> @details <DETAILED_DESCRIPTION>
-  !> @param[<IN or OUT or INOUT>] <PARAM1> <DESCRIPTION>
-  !> @param[<IN or OUT or INOUT>] <PARAM2> <DESCRIPTION>
   subroutine init_edge_center_triangle(mesh)
     class(sll_hex_mesh_2d) :: mesh
     sll_int32          :: edge_index
@@ -806,11 +796,6 @@ contains
   end function cells_to_origin
 
 
-!---------------------------------------------------------------------------
-!> @brief <BRIEF_DESCRIPTION>
-!> @details <DETAILED_DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM1> <DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM2> <DESCRIPTION>
   function hex_to_global(mesh, k1, k2) result(val)
     ! Takes the coordinates (k1,k2) on the (r1,r2) basis and
     ! returns global index of that mesh point.
@@ -839,11 +824,6 @@ contains
   end function hex_to_global
 
 
-!---------------------------------------------------------------------------
-!> @brief <BRIEF_DESCRIPTION>
-!> @details <DETAILED_DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM1> <DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM2> <DESCRIPTION>
   function global_to_hex1(mesh, index) result(k1)
     ! Takes the global index of the point (see hex_to_global(...) for conventions)
     ! returns the first coordinate (k1) on the (r1,r2) basis
@@ -854,11 +834,6 @@ contains
     k1 = mesh%hex_coord(1,index)
   end function global_to_hex1
 
-!---------------------------------------------------------------------------
-!> @brief <BRIEF_DESCRIPTION>
-!> @details <DETAILED_DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM1> <DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM2> <DESCRIPTION>
   function global_to_hex2(mesh, index) result(k2)
     ! Takes the global index of the point (see hex_to_global(...) for conventions)
     ! returns the second coordinate (k2) on the (r1,r2) basis
@@ -869,11 +844,6 @@ contains
     k2 = mesh%hex_coord(2,index)
   end function global_to_hex2
 
-!---------------------------------------------------------------------------
-!> @brief <BRIEF_DESCRIPTION>
-!> @details <DETAILED_DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM1> <DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM2> <DESCRIPTION>
   function global_to_x1(mesh, index) result(x1)
     ! Takes the global index of the point (see hex_to_global(...) for conventions)
     ! returns the first coordinate (x1) on the cartesian basis
@@ -884,11 +854,6 @@ contains
     x1 = mesh%cartesian_coord(1, index)
   end function global_to_x1
 
-!---------------------------------------------------------------------------
-!> @brief <BRIEF_DESCRIPTION>
-!> @details <DETAILED_DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM1> <DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM2> <DESCRIPTION>
   function global_to_x2(mesh, index) result(x2)
     ! Takes the global index of the point (see hex_to_global(...) for conventions)
     ! returns the second coordinate (x2) on the cartesian basis
@@ -900,11 +865,6 @@ contains
   end function global_to_x2
 
 
-!---------------------------------------------------------------------------
-!> @brief <BRIEF_DESCRIPTION>
-!> @details <DETAILED_DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM1> <DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM2> <DESCRIPTION>
   function cart_to_hex1(mesh, x1, x2) result(k1)
     ! Takes the coordinates (x1,x2) on the cartesian basis and
     ! returns the first coordinate (k1) on the (r1, r2) basis
@@ -918,11 +878,6 @@ contains
     k1 = floor((mesh%r2_x2 * x1 - mesh%r2_x1 * x2)/jacob)
   end function cart_to_hex1
 
-!---------------------------------------------------------------------------
-!> @brief <BRIEF_DESCRIPTION>
-!> @details <DETAILED_DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM1> <DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM2> <DESCRIPTION>
   function cart_to_hex2(mesh, x1, x2) result(k2)
     ! Takes the coordinates (x1,x2) on the cartesian basis and
     ! returns the second coordinate (k2) on the (r1, r2) basis
@@ -936,11 +891,6 @@ contains
     k2 = floor((mesh%r1_x1 * x2 - mesh%r1_x2 * x1)/jacob)
   end function cart_to_hex2
 
-!---------------------------------------------------------------------------
-!> @brief <BRIEF_DESCRIPTION>
-!> @details <DETAILED_DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM1> <DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM2> <DESCRIPTION>
   function global_to_local(mesh, ref_index, global) result(local)
     ! In the same manner we assign global indices (see hex_to_global(...))
     ! we assign local indices, but this time the initial point is
@@ -970,11 +920,6 @@ contains
   end function global_to_local
 
 
-!---------------------------------------------------------------------------
-!> @brief <BRIEF_DESCRIPTION>
-!> @details <DETAILED_DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM1> <DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM2> <DESCRIPTION>
   function local_to_global(mesh, ref_index, local) result(global)
     ! returns the global index of the point which has as
     ! local index local_index in the ref_index system
@@ -1001,11 +946,6 @@ contains
 
   end function local_to_global
 
-!---------------------------------------------------------------------------
-!> @brief <BRIEF_DESCRIPTION>
-!> @details <DETAILED_DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM1> <DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM2> <DESCRIPTION>
   function local_hex_to_global(mesh, k1_ref, k2_ref, local) result(global)
     ! returns the global index of the point which has as
     ! local index local_index in the ref_index system
@@ -1031,11 +971,6 @@ contains
   end function local_hex_to_global
 
 
-!---------------------------------------------------------------------------
-!> @brief <BRIEF_DESCRIPTION>
-!> @details <DETAILED_DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM1> <DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM2> <DESCRIPTION>
   subroutine get_cell_vertices_index( x, y, mesh, s1, s2, s3 )
     type(sll_hex_mesh_2d), pointer            :: mesh
     sll_real64, intent(in)                :: x, y
@@ -1088,11 +1023,6 @@ contains
   end subroutine get_cell_vertices_index
 
 
-!---------------------------------------------------------------------------
-!> @brief <BRIEF_DESCRIPTION>
-!> @details <DETAILED_DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM1> <DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM2> <DESCRIPTION>
   subroutine get_triangle_index(k1,k2,mesh,x,triangle_index)
     type(sll_hex_mesh_2d), pointer :: mesh
     sll_real64, intent(in)     :: x !cartessian_abscisse_other_vertice
@@ -1195,11 +1125,6 @@ contains
 
   end subroutine get_neighbours
 
-!---------------------------------------------------------------------------
-!> @brief <BRIEF_DESCRIPTION>
-!> @details <DETAILED_DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM1> <DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM2> <DESCRIPTION>
   subroutine get_edge_index(k1,k2,mesh,x,edge_index1,edge_index2,edge_index3)
     type(sll_hex_mesh_2d), pointer :: mesh
     sll_real64, intent(in)         :: x !cartessian_abscisse_other_vertice
@@ -1242,11 +1167,6 @@ contains
   end subroutine get_edge_index
 
 
-!---------------------------------------------------------------------------
-!> @brief <BRIEF_DESCRIPTION>
-!> @details <DETAILED_DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM1> <DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM2> <DESCRIPTION>
   subroutine display_hex_mesh_2d(mesh)
     ! Displays mesh information on the terminal
     class(sll_hex_mesh_2d), intent(in) :: mesh
@@ -1261,11 +1181,6 @@ contains
   end subroutine display_hex_mesh_2d
 
 
-!---------------------------------------------------------------------------
-!> @brief <BRIEF_DESCRIPTION>
-!> @details <DETAILED_DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM1> <DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM2> <DESCRIPTION>
   subroutine write_hex_mesh_2d(mesh, name)
     ! Writes the mesh information in a file named "name"
     type(sll_hex_mesh_2d), pointer :: mesh
@@ -1297,7 +1212,7 @@ contains
 
 
   !> @brief Writes files for CAID
-  !> @details Writes the files elements.txt, nodes.txt ans dirichlet.txt describing
+  !> @details Writes the files elements.txt, nodes.txt and dirichlet.txt describing
   !> resp. the mesh's cells, edges and BC in the format of CAID and pigasus.
   !> This is was written in order to have a Poisson solver for the hex-mesh
   !> @param mesh hex-mesh that will be described
@@ -1433,11 +1348,6 @@ contains
   end subroutine write_caid_files
 
 
-!---------------------------------------------------------------------------
-!> @brief <BRIEF_DESCRIPTION>
-!> @details <DETAILED_DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM1> <DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM2> <DESCRIPTION>
   subroutine write_field_hex_mesh(mesh, field, name)
     ! Writes the points cartesian coordinates and
     ! field(vector) values in a file named "name"
@@ -1464,11 +1374,6 @@ contains
   end subroutine write_field_hex_mesh
 
 
-!---------------------------------------------------------------------------
-!> @brief <BRIEF_DESCRIPTION>
-!> @details <DETAILED_DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM1> <DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM2> <DESCRIPTION>
   subroutine write_field_hex_mesh_xmf(mesh, field, name)
     ! Writes the points cartesian coordinates and
     ! field(vector) values in a file named "name"
@@ -1509,11 +1414,6 @@ contains
   end subroutine write_field_hex_mesh_xmf
 
 
-!---------------------------------------------------------------------------
-!> @brief <BRIEF_DESCRIPTION>
-!> @details <DETAILED_DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM1> <DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM2> <DESCRIPTION>
   subroutine write_hex_mesh_mtv(mesh, mtv_file)
 
     type(sll_hex_mesh_2d), pointer :: mesh
@@ -1669,11 +1569,6 @@ contains
 end subroutine write_hex_mesh_mtv
 
 
-!---------------------------------------------------------------------------
-!> @brief <BRIEF_DESCRIPTION>
-!> @details <DETAILED_DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM1> <DESCRIPTION>
-!> @param[<IN or OUT or INOUT>] <PARAM2> <DESCRIPTION>
 subroutine delete_hex_mesh_2d( mesh )
   class(sll_hex_mesh_2d), intent(inout) :: mesh
   sll_int32 :: ierr
