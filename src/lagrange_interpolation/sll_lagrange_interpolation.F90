@@ -2,7 +2,7 @@ module sll_lagrange_interpolation
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-use sll_module_interpolators_1d_base
+use sll_boundary_condition_descriptors
 
 implicit none
 
