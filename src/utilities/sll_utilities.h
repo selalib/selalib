@@ -40,9 +40,14 @@
 #define XSTRNG( x ) STRNG( x )
 
 
-#define SLL_ERROR(msg) call errout( 6, 'F', msg, __LINE__, __FILE__ )
+!#define SLL_ERROR(msg)   call errout( 6, 'F', msg, __LINE__, __FILE__ )
+!#define SLL_WARNING(msg) call errout( 6, 'W', msg, __LINE__, __FILE__ )
 
-#define SLL_WARNING(msg) call errout( 6, 'W', msg, __LINE__, __FILE__ )
+
+use, intrinsic :: iso_fortran_env, only: error_unit
+#define SLL_ERROR(msg)   call errout( error_unit,'F',__FILE__,__LINE__,msg )
+#define SLL_WARNING(msg) call errout( error_unit,'W',__FILE__,__LINE__,msg )
+
 
 ! BYTE_SIZEOF() uses the byte_size, which is defined in sll_utilities.F90. This
 ! macro returns the size of 'var' measured in bytes.
