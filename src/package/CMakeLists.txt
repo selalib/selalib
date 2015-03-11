@@ -140,6 +140,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.F90
     ${SLL_DIR}/meshes/sll_meshes_base.F90
     ${SLL_DIR}/meshes/sll_cartesian_meshes.F90
+    ${SLL_DIR}/meshes/sll_triangular_meshes.F90
     ${SLL_DIR}/fields/scalar_field_initializer_base.F90
     ${SLL_DIR}/distribution_function/sll_scalar_field_2d_old.F90
     ${SLL_DIR}/coordinate_transformations/sll_common_coordinate_transformations.F90
