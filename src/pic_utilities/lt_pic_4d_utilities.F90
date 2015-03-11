@@ -1101,43 +1101,6 @@ end subroutine get_ltp_deformation_matrix
                                   vx_t0 = d31 * (x - x_k) + d32 * (y - y_k) + d33 * (vx - vx_k) + d34 * (vy - vy_k)
                                   vy_t0 = d41 * (x - x_k) + d42 * (y - y_k) + d43 * (vx - vx_k) + d44 * (vy - vy_k)
 
-
-                                    if( i_vx == (number_parts_vx+1)/2 .and. i_vy == (number_parts_vy+1)/2       &
-                                                .and. i_x == 1 .and. i_y == 1 )then
-
-                                        print*, "  -------  A  --------- "
-
-                                        print*, "i_x, i_y, i_vx, i_vy = ", i_x, i_y, i_vx, i_vy
-                                        print*, " "
-
-                                        print *,"position (final) of virtual point: "
-                                        print*, "x, y, vx, vy                                                       = "
-                                        print*, "    ",    x, y, vx, vy
-                                        print*, " "
-
-                                        print *,"position (final) of k-th marker: "
-                                        print*, "x_k, y_k, vx_k, vy_k                                               = "
-                                        print*, "    ",   x_k, y_k, vx_k, vy_k
-
-                                        print*, " "
-                                        print *,"initial position of virtual point, relative to k-th marker: "
-                                        print*, "x_t0, y_t0, vx_t0, vy_t0 = "
-                                        print*, "    ",   x_t0, y_t0, vx_t0, vy_t0
-
-                                        print*, " "
-                                        print *,"initial position of virtual point: "
-                                        print*, "x_k_t0 + x_t0,  y_k_t0 + y_t0, vx_k_t0 + vx_t0,  vy_k_t0 + vy_t0   = "
-                                        print*,  "    ",    x_k_t0 + x_t0,  y_k_t0 + y_t0, vx_k_t0 + vx_t0,  vy_k_t0 + vy_t0
-
-                                        print*, " "
-                                        print *,"initial position of k-th marker: "
-                                        print*, "x_k_t0, y_k_t0, vx_k_t0, vy_k_t0 = "
-                                         print*, "    ",   x_k_t0, y_k_t0, vx_k_t0, vy_k_t0
-
-                                    end if
-
-
-
                                   ! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
                                   p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,1) = x_k_t0 + x_t0
                                   p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,1) = y_k_t0 + y_t0
