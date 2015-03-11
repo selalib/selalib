@@ -10,9 +10,10 @@ Set the variable BUILD_PACKAGE to "ON" to reduce the building time.
 Fortran modules, header files and library will be installed to this path.
 Just type::
 
+   mkdir build; cd build
    cmake -DCMAKE_BUILD_TYPE="Release" \
          -DCMAKE_INSTALL_PREFIX=<install_dir> \
-         -DBUILD_PACKAGE=1 selalib/src
+         -DBUILD_PACKAGE=1 ../src
    make 
    make install
 
@@ -49,7 +50,7 @@ Be careful, you could have to link with HDF5, FFTW, LAPACK, etc ...
 Il you want to use some macros like SLL_ALLOCATE or SLL_ASSERT with gfortran, just add
 the compilation flag *-ffree-line-length-none*.
 
-Find this example in directory : src/examples
+Find this example in directory : src/package/examples
 
 
 CMakeLists.txt
@@ -71,9 +72,6 @@ Find config files for selalib and fftpack in directory called "cmake"::
                                 ${FFTPACK_LIBRARIES})
 
 
-
-
-
 Makefile
 ========
 
@@ -83,7 +81,7 @@ SLL_ROOT is the path equal to the variable CMAKE_INSTALL_PREFIX::
    F90 = gfortran
    OPT = -O3
    
-   F90FLAGS= -I${SLL_ROOT}/include 
+   F90FLAGS= -I${SLL_ROOT}/include/selalib -ffree-line-length-none
    LDFLAGS=-L${SLL_ROOT}/lib 
    LIBS= -lselalib -ldfftpack
 
@@ -123,4 +121,3 @@ If selalib is installed in /usr/local::
                       LIBPATH = [SLL_ROOT+'/usr/lib'])
 
    env.Program('landau', ['landau.F90'])
-

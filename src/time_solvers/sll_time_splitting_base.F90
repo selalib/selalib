@@ -1,6 +1,8 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
 !> \brief 
-!> The time splitting module provides a generic implementation of
-!> time splitting algorithms of different order 
+!> The time splitting: Lie splitting and Strang splitting
+!> 
 module sll_time_splitting
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -69,3 +71,5 @@ module sll_time_splitting
     end subroutine strang_splitting
 
 end module sll_time_splitting
+
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
