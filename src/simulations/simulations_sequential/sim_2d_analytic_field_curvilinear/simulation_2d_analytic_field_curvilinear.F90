@@ -1091,6 +1091,8 @@ contains
           f(i1,i2) =  sim%init_func(x1,x2,sim%params) 
           f_init(i1,i2)  =  sim%init_func(x1,x2,sim%params)
           phi(i1,i2) = sim%phi_func(x1,x2,sim%A_func_params)
+          !warning specific change for colella mesh
+          phi(i1,i2) = phi(i1,i2)-sim%A_func_params(1)*eta2+sim%A_func_params(2)*eta1
           jac_m  =  sim%transformation%jacobian_matrix(eta1,eta2)          
           call compute_curvilinear_field_2d( &
             sim%A1_func(x1,x2,sim%A_func_params), &
@@ -1114,6 +1116,14 @@ contains
         A1_init, &
         A2_init, &
         sim%phi_interp2d)
+      do i2=1,Nc_eta2+1
+        eta2=eta2_min+real(i2-1,f64)*delta_eta2
+        do i1=1,Nc_eta1+1
+          eta1=eta1_min+real(i1-1,f64)*delta_eta1
+          A1_init(i1,i2) =  A1_init(i1,i2)+sim%A_func_params(1)/sim%transformation%jacobian(eta1,eta2)
+          A2_init(i1,i2) =  A2_init(i1,i2)+sim%A_func_params(2)/sim%transformation%jacobian(eta1,eta2)
+        enddo
+      enddo    
     endif           
 
     call sll_ascii_file_create('thdiag.dat', thdiag_id, ierr)
@@ -1373,8 +1383,14 @@ contains
       eta2=eta2_min+real(i2-1,f64)*delta_eta2
       do i1=1,Nc_eta1+1
         eta1=eta1_min+real(i1-1,f64)*delta_eta1
-        A1(i1,i2)=interp2d%interpolate_derivative_eta2(eta1,eta2)/transformation%jacobian(eta1,eta2)
-        A2(i1,i2)=-interp2d%interpolate_derivative_eta1(eta1,eta2)/transformation%jacobian(eta1,eta2)
+        A1(i1,i2) = phi(i1,modulo(i2+1-1+Nc_eta2,Nc_eta2)+1)-phi(i1,modulo(i2-1+Nc_eta2,Nc_eta2)+1)
+        A1(i1,i2) = A1(i1,i2)/(delta_eta2)
+        A1(i1,i2) = A1(i1,i2)/transformation%jacobian(eta1,eta2)
+        A2(i1,i2) = phi(modulo(i1+1-1+Nc_eta1,Nc_eta1)+1,i2)-phi(modulo(i1-1+Nc_eta1,Nc_eta1)+1,i2)
+        A2(i1,i2) = A2(i1,i2)/(delta_eta1)
+        A2(i1,i2) = -A2(i1,i2)/transformation%jacobian(eta1,eta2)
+        !A1(i1,i2)=interp2d%interpolate_derivative_eta2(eta1,eta2)/transformation%jacobian(eta1,eta2)
+        !A2(i1,i2)=-interp2d%interpolate_derivative_eta1(eta1,eta2)/transformation%jacobian(eta1,eta2)
       end do
     end do
    
