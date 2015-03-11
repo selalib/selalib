@@ -598,27 +598,24 @@ end subroutine get_ltp_deformation_matrix
     ! alarm as this would not be supposed to happen here!
   end subroutine apply_periodic_bc
 
-  ! <<onestep>> utility function for finding the neighbours of a particle, used by [[ONESTEPMACRO]]. "dim" corresponds
-  ! to one of x,y,vx,vy.
+  ! <<onestep>> <<ALH>> utility function for finding the neighbours of a particle, used by [[ONESTEPMACRO]]. "dim"
+  ! corresponds to one of x,y,vx,vy.
 
-  subroutine onestep(       &
-       dim_t0,              &
-       neighbour,           &
-       ngb_dim_right_index, &
-       ngb_dim_left_index,  &
-       n_virtual,           &
-       h_parts_dim,         &
-       kprime,              &
-       moved)
+  subroutine onestep(dim,dim_t0,kprime,p_list,h_parts_dim)
 
+    sll_int :: dim
     sll_real64 :: dim_t0
     sll_int64 :: neighbour
+
+    ! [[file:~/mcp/selalib/src/pic_particle_types/lt_pic_4d_group.F90::sll_lt_pic_4d_group-p_list]]
+    type(sll_lt_pic_4d_particle), dimension(:), pointer,intent(in) :: p_list
+    
     sll_int64 :: ngb_dim_right_index
     sll_int64 :: ngb_dim_left_index
-    sll_int32 :: n_virtual
     sll_real64 :: h_parts_dim
     sll_int64 :: kprime
-    logical :: moved
+    sll_int32 :: j,jumps
+    logical :: up
 
     ! Move to a closer neighbour only if dim_t0 is not located in a cell of size h_parts_dim and with a left bound of
     ! dim_t0
@@ -627,43 +624,74 @@ end subroutine get_ltp_deformation_matrix
       return
     end if
 
-    ! dim_t0 < 0 means that the virtual particle is at the left of kprime (dim_t0 is a relative coordinate).
+    ! How many jumps do we need to do in that direction to reduce the distance 'dim_t0' to a minimum?
 
-    if (dim_t0 < 0) then
-       neighbour = ngb_dim_left_index
+    jumps = int(abs(dim_t0/h_parts_dim))
+    
+    ! dim_t0 < 0 means that the virtual particle is at the left of kprime (dim_t0 is a relative coordinate). If dim_t0
+    ! is negative, add one step to move to a positive relative signed distance between dim_t0 and kprime.
+    
+    up = .true.
+    if(dim_t0 < 0) then
+       jumps = jumps + 1
+       up = .false.
+    end if
+
+    ! resulting signed distance between marker at t0 and kprime
+    
+    if(up) then
+       dim_t0 = dim_t0 - jumps * h_parts_dim
+    else
+       dim_t0 = dim_t0 + jumps * h_parts_dim
+    endif
+
+    ! do as many jumps as required through the neighbour pointers in the given dimension (1:x, 2:y, 3:vx, 4:vy)
+    j = 1
+    do while(j<jumps .and. kprime/=0)
+       
+       ! going through neighbours
+       ! [[file:~/mcp/selalib/src/pic_particle_types/lt_pic_4d_particle.F90::neighbour_pointers]]
+       
+       select case (dim)
+       case(1)
+          if(up) then
+             neighbour = p_list(kprime)%ngb_xright_index
+          else
+             neighbour = p_list(kprime)%ngb_xleft_index
+          endif
+       case(2)
+          if(up) then
+             neighbour = p_list(kprime)%ngb_yright_index
+          else
+             neighbour = p_list(kprime)%ngb_yleft_index
+             endif
+       case(3)
+          if(up) then
+             neighbour = p_list(kprime)%ngb_vxright_index
+          else
+             neighbour = p_list(kprime)%ngb_vxleft_index
+          endif
+       case(4)
+          if(up) then
+             neighbour = p_list(kprime)%ngb_vyright_index
+          else
+             neighbour = p_list(kprime)%ngb_vyleft_index
+          endif
+       case default
+          SLL_ASSERT(.false.)
+       end select
 
        ! The convention in
        ! [[file:~/mcp/selalib/src/pic_particle_initializers/lt_pic_4d_init.F90::sll_lt_pic_4d_compute_new_particles]] is
        ! that if there is no neighbour then a neighbour index is equal to the particle index
-       
-       if (neighbour == kprime) then
-          kprime = 0
-          !print *,"dead end <0"!aaa
-       else
+          
+       if(neighbour/=kprime) then
           kprime = neighbour
-          dim_t0 = dim_t0 + h_parts_dim
-          moved = .true.
-       end if
-    else
-       
-       ! dim_t0 > h_parts_dim means that the virtual particle is too far to the right of kprime
-       if (dim_t0 >= h_parts_dim) then
-          neighbour = ngb_dim_right_index
-
-          ! The convention in
-          ! [[file:~/mcp/selalib/src/pic_particle_initializers/lt_pic_4d_init.F90::sll_lt_pic_4d_compute_new_particles]]
-          ! is that if there is no neighbour then a neighbour index is equal to the particle index
-       
-          if (neighbour == kprime) then
-             kprime = 0
-             !print *,"dead end >=h"!aaa
-          else
-             kprime = neighbour
-             dim_t0 = dim_t0 - h_parts_dim
-             moved = .true.
-          end if
-       end if
-    end if
+       else
+          kprime = 0
+       endif
+       j = j + 1
+    end do
   end subroutine onestep
 
   ! <<sll_lt_pic_4d_write_bsl_f_on_remap_grid>> <<ALH>> write the density on the (phase-space) remapping
@@ -795,8 +823,6 @@ end subroutine get_ltp_deformation_matrix
 
     sll_int32 :: ierr
 
-    logical :: moved
-
     ! temporary workspace
     sll_real64 :: x_aux
     sll_real64 :: y_aux
@@ -895,7 +921,6 @@ end subroutine get_ltp_deformation_matrix
        j=j+1
        SLL_ASSERT(j>0)
        SLL_ASSERT(dy>=0)
-       !print *,"y=",y," g%eta2_min=",g%eta2_min," 1./h_virtual_cell_y=",1./h_virtual_cell_y," j=",j," dy=",dy," h_virtual_cell_y=",h_virtual_cell_y!aaa
        SLL_ASSERT(dy<=1)
        call compute_cell_and_offset(vx,g%eta3_min,1./h_virtual_cell_vx,l,dvx)
        l=l+1
@@ -922,8 +947,6 @@ end subroutine get_ltp_deformation_matrix
        if(closest_particle(i,j,l,m) == 0 .or. tmp < closest_particle_distance(i,j,l,m)) then
           closest_particle(i,j,l,m) = k
           closest_particle_distance(i,j,l,m) = tmp
-          !print *,"dx=",dx," dy=",dy," dvx=",dvx," dvy=",dvy," tmp=",tmp!aaa
-          !SLL_ASSERT(tmp<=(h_virtual_cell_x**2+h_virtual_cell_y**2+h_virtual_cell_vx**2+h_virtual_cell_vy**2)/4)!aaa
        end if
     end do
 
@@ -978,10 +1001,6 @@ end subroutine get_ltp_deformation_matrix
                 ! precomputed array [[closest_particle]]. Virtual cells which do not contain any particle are skipped.
 
                 k = closest_particle(i,j,l,m)
-
-!aaa                print *,"i=",i," j=",j," l=",l," m=",m!aaa
-!aaa                SLL_ASSERT(k/=0)!aaa
-                
                 if(k /= 0) then
 
                    ! [[file:~/mcp/maltpic/ltpic-bsl.tex::hat-bz*]] Compute backward image of l-th virtual node by the
@@ -1028,8 +1047,6 @@ end subroutine get_ltp_deformation_matrix
                    vx_k_t0 = parts_vx_min + (j_vx-1) * h_parts_vx
                    vy_k_t0 = parts_vy_min + (j_vy-1) * h_parts_vy
 
-                   !aaa print *,"x_k_t0=",x_k_t0," y_k_t0=",y_k_t0," vx_k_t0=",vx_k_t0," vy_k_t0=",vy_k_t0!aaa
-
                    ! <<loop_on_virtual_particles_in_one_virtual_cell>>
                    ! [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:find_f0_for_each_virtual_particle]] Loop over all
                    ! virtual particles in the cell to compute the value of f0 at that point (Following
@@ -1061,17 +1078,12 @@ end subroutine get_ltp_deformation_matrix
                                     .and. i_vx<=p_group%number_parts_vx  &
                                     .and. i_vy<=p_group%number_parts_vy) then
 
-                                  !aaa print *,"i_x=",i_x," i_y=",i_y," i_vx=",i_vx," i_vy=",i_vy!aaa
-                                  
                                   ! Location of virtual particle (ivirt,jvirt,lvirt,mvirt) at time n
                                   
                                   x =  parts_x_min  + (i-1)*h_virtual_cell_x  + (ivirt-1)*h_parts_x
                                   y =  parts_y_min  + (j-1)*h_virtual_cell_y  + (jvirt-1)*h_parts_y
                                   vx = parts_vx_min + (l-1)*h_virtual_cell_vx + (lvirt-1)*h_parts_vx
                                   vy = parts_vy_min + (m-1)*h_virtual_cell_vy + (mvirt-1)*h_parts_vy
-
-                                  !print *,"x=",x," y=",y," vx=",vx," vy=",vy!aaa
-                                  !print *,"x_k=",x_k," y_k=",y_k," vx_k=",vx_k," vy_k=",vy_k!aaa
 
                                   ! particle k has to be inside the current virtual cell
 
@@ -1089,77 +1101,34 @@ end subroutine get_ltp_deformation_matrix
                                   vx_t0 = d31 * (x - x_k) + d32 * (y - y_k) + d33 * (vx - vx_k) + d34 * (vy - vy_k)
                                   vy_t0 = d41 * (x - x_k) + d42 * (y - y_k) + d43 * (vx - vx_k) + d44 * (vy - vy_k)
 
-
-                                    if( i_vx == (number_parts_vx+1)/2 .and. i_vy == (number_parts_vy+1)/2       &
-                                                .and. i_x == 1 .and. i_y == 1 )then
-
-                                        print*, "  -------  A  --------- "
-
-                                        print*, "i_x, i_y, i_vx, i_vy = ", i_x, i_y, i_vx, i_vy
-                                        print*, " "
-
-                                        print *,"position (final) of virtual point: "
-                                        print*, "x, y, vx, vy                                                       = "
-                                        print*, "    ",    x, y, vx, vy
-                                        print*, " "
-
-                                        print *,"position (final) of k-th marker: "
-                                        print*, "x_k, y_k, vx_k, vy_k                                               = "
-                                        print*, "    ",   x_k, y_k, vx_k, vy_k
-
-                                        print*, " "
-                                        print *,"initial position of virtual point, relative to k-th marker: "
-                                        print*, "x_t0, y_t0, vx_t0, vy_t0 = "
-                                        print*, "    ",   x_t0, y_t0, vx_t0, vy_t0
-
-                                        print*, " "
-                                        print *,"initial position of virtual point: "
-                                        print*, "x_k_t0 + x_t0,  y_k_t0 + y_t0, vx_k_t0 + vx_t0,  vy_k_t0 + vy_t0   = "
-                                        print*,  "    ",    x_k_t0 + x_t0,  y_k_t0 + y_t0, vx_k_t0 + vx_t0,  vy_k_t0 + vy_t0
-
-                                        print*, " "
-                                        print *,"initial position of k-th marker: "
-                                        print*, "x_k_t0, y_k_t0, vx_k_t0, vy_k_t0 = "
-                                         print*, "    ",   x_k_t0, y_k_t0, vx_k_t0, vy_k_t0
-
-                                    end if
-
-
-
-                                  !aaa print *,"x_t0=",x_t0," y_t0=",y_t0," vx_t0=",vx_t0," vy_t0=",vy_t0!aaa
-
-                                  !aaa
-                                  if(i_x==1 .and. i_y==1 .and. i_vx==11 .and. i_vy==11)then
-                                     print *,"avant periodic:"
-                                     print *,"h_virtual_cell_x=",h_virtual_cell_x," h_virtual_cell_y=",h_virtual_cell_y," h_virtual_cell_vx=",h_virtual_cell_vx," h_virtual_cell_vy=",h_virtual_cell_vy!aaa
-                                     print *,"x_k=",x_k," y_k=",y_k," vx_k=",vx_k," vy_k=",vy_k!aaa
-                                     print *,"x=",x," y=",y," vx=",vx," vy=",vy!aaa
-                                     print *,"x_k_t0=",x_k_t0," y_k_t0=",y_k_t0," vx_k_t0=",vx_k_t0," vy_k_t0=",vy_k_t0!aaa
-                                     print *,"x_t0=",x_t0," y_t0=",y_t0," vx_t0=",vx_t0," vy_t0=",vy_t0!aaa
-                                  end if
-                                  
                                   ! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
                                   p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,1) = x_k_t0 + x_t0
                                   p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,1) = y_k_t0 + y_t0
                                   p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,1) = vx_k_t0 + vx_t0
                                   p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,1) = vy_k_t0 + vy_t0
 
-                                  ! In the case of periodic boundaries, we can move the virtual particle at time 0 back
-                                  ! into the domain
+                                  ! Minimize the path to take along periodic boundaries
 
-                                  x_aux = x_k_t0 + x_t0
-                                  y_aux = y_k_t0 + y_t0
-                                  if(.not.in_bounds_periodic(x_aux,y_aux,p_group%mesh, &
-                                       DOMAIN_IS_X_PERIODIC,DOMAIN_IS_Y_PERIODIC)) then
-                                     
-                                     ! [[apply_periodic_bc]] In the periodic case, no destruction of particles is
-                                     ! needed, so this is simple.
-
-                                     call apply_periodic_bc(p_group%mesh,x_aux,y_aux)
-                                     x_t0 = x_aux - x_k_t0
-                                     y_t0 = y_aux - y_k_t0
-                                  end if
-
+                                  if(domain_is_x_periodic) then
+                                     if(x_t0 > mesh_period_x/2) then
+                                        x_t0 = x_t0 - mesh_period_x
+                                     else
+                                        if(x_t0 < -mesh_period_x/2) then
+                                           x_t0 = x_t0 + mesh_period_x
+                                        end if
+                                     end if
+                                  endif
+                                  
+                                  if(domain_is_y_periodic) then
+                                     if(y_t0 > mesh_period_y/2) then
+                                        y_t0 = y_t0 - mesh_period_y
+                                     else
+                                        if(y_t0 < -mesh_period_y/2) then
+                                           y_t0 = y_t0 + mesh_period_y
+                                        end if
+                                     end if
+                                  endif
+                                  
                                   ! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
                                   p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,2) = x_k_t0 + x_t0
                                   p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,2) = y_k_t0 + y_t0
@@ -1175,57 +1144,19 @@ end subroutine get_ltp_deformation_matrix
                                   ! neighbour).
 
                                   kprime = k
-                                  moved = .true.
-                                  do while (moved .and. kprime /= 0)
+                                  
+                                  ! Calls [[onestep]]. "dim" can be x,y,vx,vy. cf
+                                  ! [[file:../pic_particle_types/lt_pic_4d_particle.F90::sll_lt_pic_4d_particle]] for
+                                  ! pointers to neighbours.
 
-!aaa                                     ! MCP: [BEGIN-DEBUG] store the (computed) absolute initial position of the virtual particle
-!aaa                                     call cell_offset_to_global( & 
-!aaa                                     p_group%p_list(kprime)%dx, &
-!aaa                                          p_group%p_list(kprime)%dy, &
-!aaa                                          p_group%p_list(kprime)%ic, &
-!aaa                                          p_group%mesh, x_kprime, y_kprime )
-!aaa                                     vx_kprime   = p_group%p_list(kprime)%vx
-!aaa                                     vy_kprime   = p_group%p_list(kprime)%vy
-!aaa
-!aaa                                     ! MCP [END-DEBUG]
-!aaa                                     
-!aaa                                     print *,"x_k=",x_k," y_k=",y_k," vx_k=",vx_k," vy_k=",vy_k!aaa
-!aaa                                     print *,"x_kprime=",x_kprime," y_kprime=",y_kprime," vx_kprime=",vx_kprime," vy_kprime=",vy_kprime!aaa
+#define ONESTEPMACRO(dimpos,dimname) call onestep(dimpos,dimname/**/_t0,kprime,p_group%p_list,h_parts_/**/dimname)
 
-                                     !aaa print *,"moving from x_t0=",x_t0," y_t0=",y_t0," vx_t0=",vx_t0," vy_t0=",vy_t0!aaa
-
-                                     moved = .false.
-
-                                     ! Calls [[onestep]]. "dim" can be x,y,vx,vy. cf
-                                     ! [[file:../pic_particle_types/lt_pic_4d_particle.F90::sll_lt_pic_4d_particle]] for
-                                     ! pointers to neighbours.
-
-#define ONESTEPMACRO(dim)                                                               \
-                                  if(kprime/=0)                                         \
-                                     call onestep(                                      \
-                                     dim/**/_t0,                                        \
-                                     neighbour,                                         \
-                                     p_group%p_list(kprime)%ngb_/**/dim/**/right_index, \
-                                     p_group%p_list(kprime)%ngb_/**/dim/**/left_index,  \
-                                     n_virtual,                                         \
-                                     h_parts_/**/dim,                                   \
-                                     kprime,                                            \
-                                     moved)
-
-                                     !aaa print *,"x step"!aaa
-                                     ONESTEPMACRO(x)
-                                     !aaa print *,"y step"!aaa
-                                     ONESTEPMACRO(y)
-                                     !aaa print *,"vx step"!aaa
-                                     ONESTEPMACRO(vx)
-                                     !aaa print *,"vy step"!aaa
-                                     ONESTEPMACRO(vy)
-                                  end do
+                                  ONESTEPMACRO(1,x)
+                                  ONESTEPMACRO(2,y)
+                                  ONESTEPMACRO(3,vx)
+                                  ONESTEPMACRO(4,vy)
 
                                   !aaa print *,"moved to x_t0=",x_t0," y_t0=",y_t0," vx_t0=",vx_t0," vy_t0=",vy_t0!aaa
-                                  !aaa print *,"found k=",k," kprime=",kprime," i_x=",i_x," i_y=",i_y," i_vx=",i_vx," i_vy=",i_vy!aaa
-                                  !aaa SLL_ASSERT(kprime/=0 .or. i_x<5 .or. i_y<5 .or. i_vx/=3 .or.i_vy/=3)!aaa
-                                  !aaa SLL_ASSERT(kprime/=0)!aaa
                                   
                                   ! If we end up with kprime == 0, it means that we have not found a cell that contains
                                   ! the particle so we just set that particle value to zero
@@ -1249,8 +1180,6 @@ end subroutine get_ltp_deformation_matrix
                                      ! we reached the mesh border. just set the value of f for that particle as zero as
                                      ! before.
 
-                                     !aaa SLL_ASSERT(hcube(2,1,1,1) /= kprime .and. hcube(1,2,1,1) /= kprime .and. hcube(1,1,2,1) /= kprime .and. hcube(1,1,1,2) /= kprime)!aaa
-                                     
                                      if (hcube(2,1,1,1) /= kprime        &
                                           .and. hcube(1,2,1,1) /= kprime &
                                           .and. hcube(1,1,2,1) /= kprime &
@@ -1344,6 +1273,10 @@ end subroutine get_ltp_deformation_matrix
                                         end do
                                      end if
                                   end if
+                                        
+                                  !aaa print *,"i_x=",i_x," i_y=",i_y," i_vx=",i_vx," i_vy=",i_vy!aaa
+                                  !aaa SLL_ASSERT(abs(p_group%target_values(i_x,i_y,i_vx,i_vy))>0.1 .or. i_vx/=4 .or. i_vy/=3)!aaa
+                                  
                                end if
                             end do
                          end do
