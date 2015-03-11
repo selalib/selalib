@@ -615,14 +615,15 @@ end subroutine get_ltp_deformation_matrix
     sll_real64 :: h_parts_dim
     sll_int64 :: kprime
     sll_int32 :: j,jumps
+
+    ! <<up>> means that kprime needs to go up ie increase in coordinate
+    
     logical :: up
 
     ! Move to a closer neighbour only if dim_t0 is not located in a cell of size h_parts_dim and with a left bound of
     ! dim_t0
 
-    if(kprime == 0)then
-      return
-    end if
+    if(kprime == 0)return
 
     ! How many jumps do we need to do in that direction to reduce the distance 'dim_t0' to a minimum?
 
@@ -645,9 +646,11 @@ end subroutine get_ltp_deformation_matrix
        dim_t0 = dim_t0 + jumps * h_parts_dim
     endif
 
-    ! do as many jumps as required through the neighbour pointers in the given dimension (1:x, 2:y, 3:vx, 4:vy)
+    ! do as many jumps as required through the neighbour pointers in the given dimension (1:x, 2:y, 3:vx, 4:vy). kprime
+    ! can become zero (ie fall out of the domain) in non-periodic dimensions.
+    
     j = 1
-    do while(j<jumps .and. kprime/=0)
+    do while(j<=jumps .and. kprime/=0)
        
        ! going through neighbours
        ! [[file:~/mcp/selalib/src/pic_particle_types/lt_pic_4d_particle.F90::neighbour_pointers]]
