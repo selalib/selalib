@@ -53,6 +53,8 @@ private
    module procedure delete_li1d
  end interface
 
+ public new_lagrange_interpolator_1d
+
 contains  !**********************************************************
 
 subroutine initialize_li1d_interpolator(interpolator,num_points,xmin,xmax,bc_type,d)
@@ -66,7 +68,35 @@ subroutine initialize_li1d_interpolator(interpolator,num_points,xmin,xmax,bc_typ
            xmax, &
            bc_type, &
            d)
+    call compute_lagrange_interpolation_1D(interpolator%lagrange)
 end subroutine
+
+function new_lagrange_interpolator_1d( &
+    num_points, &
+    xmin, &
+    xmax, &
+    bc_type, &
+    d) result(res)
+
+    type(sll_lagrange_interpolator_1d),  pointer :: res
+    sll_int32,  intent(in)               :: num_points
+    sll_real64, intent(in)               :: xmin
+    sll_real64, intent(in)               :: xmax
+    sll_int32,  intent(in)               :: bc_type
+    sll_int32, intent(in)               :: d
+    sll_int32 :: ierr
+    SLL_ALLOCATE(res,ierr)
+    call initialize_li1d_interpolator( &
+         res, &
+         num_points, &
+         xmin, &
+         xmax, &
+         bc_type, &
+         d )
+
+  end function new_lagrange_interpolator_1d
+
+
 
 function interpolate_array_disp_li1d(this, num_points, data, alpha) result(data_out)
   class(sll_lagrange_interpolator_1d), intent(in)     :: this
@@ -74,8 +104,8 @@ function interpolate_array_disp_li1d(this, num_points, data, alpha) result(data_
   sll_int32, intent(in)  :: num_points    ! size of output array
   sll_real64, dimension(:), intent(in) :: data  ! data to be interpolated points where output is desired
   sll_real64, dimension(1:num_points)    :: data_out
-call compute_lagrange_interpolation_1D(alpha,this%lagrange)
-call interpolate_array_values(data,this%lagrange)
+
+call interpolate_array_values(data,alpha,this%lagrange)
 data_out=this%lagrange%data_out
 
 end function
