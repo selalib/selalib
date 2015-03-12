@@ -15,8 +15,7 @@ sll_real64   :: x1_max = 1.0_f64
 sll_int32    :: nc_x2  = 4
 sll_real64   :: x2_min = 0.0_f64
 sll_real64   :: x2_max = 1.0_f64
-sll_int32    :: istart, cell, is, num_cells
-sll_real64   :: r, alpha
+sll_int32    :: num_cells
 
 !Create a triangular mesh from square
 t_mesh => new_triangular_mesh_2d(nc_x1, x1_min, x1_max, nc_x2, x2_min, x2_max) 
