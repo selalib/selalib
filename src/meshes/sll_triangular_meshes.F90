@@ -997,7 +997,7 @@ write(iout,"(//10x,'Nb d''elements internes     : ',i10/    &
 
 return
 80 continue
-SLL_ERROR(' Input file  '//maafil//'  not found')
+SLL_ERROR( 'Read from file', 'Input file  '//maafil//'  not found.' )
 
 end subroutine read_from_file
 
