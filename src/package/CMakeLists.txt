@@ -7,6 +7,7 @@ SET(SLL_MACROS
     ${SLL_DIR}/working_precision/sll_working_precision.h
     ${SLL_DIR}/assert/sll_assert.h
     ${SLL_DIR}/constants/sll_constants.h
+    ${SLL_DIR}/utilities/sll_errors.h
     ${SLL_DIR}/utilities/sll_utilities.h
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_solvers_macros.h
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_solvers.h
@@ -61,6 +62,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/characteristics/sll_characteristics_2d_explicit_euler.F90
     ${SLL_DIR}/characteristics/sll_characteristics_2d_explicit_euler_conservative.F90
     ${SLL_DIR}/characteristics/sll_characteristics_2d_base.F90
+    ${SLL_DIR}/utilities/sll_errors.F90
     ${SLL_DIR}/utilities/sll_utilities.F90
     ${SLL_DIR}/utilities/sll_primitives.F90
     ${SLL_DIR}/utilities/tridiagonal.F90
@@ -74,6 +76,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/file_io/sll_ascii_io.F90
     ${SLL_DIR}/file_io/sll_xml_io.F90
     ${SLL_DIR}/file_io/sll_plotmtv.F90
+    ${SLL_DIR}/file_io/sll_tri_mesh_xmf.F90
     ${SLL_DIR}/visu_pic/sll_visu_pic.F90
     ${SLL_DIR}/timer/sll_timer.F90
     ${SLL_DIR}/fields/sll_scalar_field_1d_base.F90
@@ -141,6 +144,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/meshes/sll_meshes_base.F90
     ${SLL_DIR}/meshes/sll_cartesian_meshes.F90
     ${SLL_DIR}/meshes/sll_triangular_meshes.F90
+    ${SLL_DIR}/meshes/sll_hex_meshes.F90
     ${SLL_DIR}/fields/scalar_field_initializer_base.F90
     ${SLL_DIR}/distribution_function/sll_scalar_field_2d_old.F90
     ${SLL_DIR}/coordinate_transformations/sll_common_coordinate_transformations.F90
