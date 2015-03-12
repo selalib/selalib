@@ -18,6 +18,7 @@ implicit none
    sll_real64, dimension(:), pointer  :: wj
    sll_real64, dimension(:), pointer  :: wj_scale
    sll_real64, dimension(:), pointer    :: data_out !result=p(x) where p is the polynomial of interpolation
+   sll_int32                            :: periodic_last !< \a periodic_last indicates if the input data repeats the first point at the end if we have periodic data. It takes the values 0 (not repeated) or 1 (repeated).  Default : 1.
  end type sll_lagrange_interpolation_1D
 
 ! integer, parameter :: SLL_PERIODIC = 0, SLL_HERMITE = 3
@@ -29,10 +30,11 @@ end interface
 contains  !*****************************************************************************
 
 
-function new_lagrange_interpolation_1D(num_points,xmin,xmax,bc_type,d)
+function new_lagrange_interpolation_1D(num_points,xmin,xmax,bc_type,d, periodic_last)
  type(sll_lagrange_interpolation_1D), pointer :: new_lagrange_interpolation_1D
  sll_int32 ::ierr
  sll_int32,intent(in) :: d, num_points,bc_type
+ sll_int32, intent(in), optional :: periodic_last !< \a periodic_last indicates if the input data repeats the first point at the end if we have periodic data. It takes the values 0 (not repeated) or 1 (repeated).  Default : 1.
  sll_real64 :: xmin,xmax
  
  SLL_ALLOCATE( new_lagrange_interpolation_1D, ierr )
@@ -46,7 +48,13 @@ function new_lagrange_interpolation_1D(num_points,xmin,xmax,bc_type,d)
  new_lagrange_interpolation_1D%xmax=xmax
  new_lagrange_interpolation_1D%nb_cell=num_points-1
  new_lagrange_interpolation_1D%bc_type=bc_type
- new_lagrange_interpolation_1D%deta = (xmax-xmin)/(new_lagrange_interpolation_1D%nb_cell) 
+ new_lagrange_interpolation_1D%deta = (xmax-xmin)/(new_lagrange_interpolation_1D%nb_cell)
+ if (present(periodic_last)) then
+    new_lagrange_interpolation_1D%periodic_last = periodic_last
+ else
+    new_lagrange_interpolation_1D%periodic_last = 1
+ end if
+
 
 end function new_lagrange_interpolation_1D
 
@@ -105,7 +113,7 @@ end if
 if (beta==0.0_f64) then
    select case(lagrange%bc_type)
    case (SLL_PERIODIC)
-      do j=1,lagrange%nb_cell+1
+      do j=1,lagrange%nb_cell+lagrange%periodic_last
          lagrange%data_out(j) = fi(modulo(index_gap+j-1,lagrange%nb_cell)+1);
       end do
    case(SLL_HERMITE)
@@ -125,7 +133,7 @@ end do
 select case(lagrange%bc_type)
 case (SLL_PERIODIC)
  
- do i=1,lagrange%nb_cell+1
+ do i=1,lagrange%nb_cell+lagrange%periodic_last
  sum1=0.0_f64
   do j=1,lagrange%d*2
    sum1=sum1+lagrange%wj_scale(j)*fi(modulo(index_gap+(i-1)+(j-1)-(lagrange%d-1),lagrange%nb_cell)+1)
