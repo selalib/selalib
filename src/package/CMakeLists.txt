@@ -76,6 +76,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/file_io/sll_ascii_io.F90
     ${SLL_DIR}/file_io/sll_xml_io.F90
     ${SLL_DIR}/file_io/sll_plotmtv.F90
+    ${SLL_DIR}/file_io/sll_tri_mesh_xmf.F90
     ${SLL_DIR}/visu_pic/sll_visu_pic.F90
     ${SLL_DIR}/timer/sll_timer.F90
     ${SLL_DIR}/fields/sll_scalar_field_1d_base.F90
@@ -142,6 +143,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.F90
     ${SLL_DIR}/meshes/sll_meshes_base.F90
     ${SLL_DIR}/meshes/sll_cartesian_meshes.F90
+    ${SLL_DIR}/meshes/sll_triangular_meshes.F90
+    ${SLL_DIR}/meshes/sll_hex_meshes.F90
     ${SLL_DIR}/fields/scalar_field_initializer_base.F90
     ${SLL_DIR}/distribution_function/sll_scalar_field_2d_old.F90
     ${SLL_DIR}/coordinate_transformations/sll_common_coordinate_transformations.F90
