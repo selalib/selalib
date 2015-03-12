@@ -23,7 +23,7 @@ TARGET_LINK_LIBRARIES( example_tridiagonal sll_utilities )
 
 # Example (tridiagonal solver)
 ADD_EXECUTABLE( test_fornberg test_fornberg.F90 )
-TARGET_LINK_LIBRARIES( test_fornberg sll_utilities )
+TARGET_LINK_LIBRARIES( test_fornberg sll_utilities sll_constants )
 
 # Example (SLL_WARNING and SLL_ERROR macros)
 ADD_EXECUTABLE( test_crash test_crash.F90 )
