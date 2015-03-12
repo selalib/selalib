@@ -392,7 +392,7 @@ contains
     if (rule .eq. 1) then
        num_fek = 10
     else
-       SLL_WARNING("Error in write_quadrature : this rule was not implemented")
+       SLL_WARNING( "write_quadrature", "Required rule is not implemented." )
        num_fek = 0
     end if
 
