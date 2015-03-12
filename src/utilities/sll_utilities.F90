@@ -72,9 +72,11 @@ contains
 
   !> Check if an integer is equal to \f[2^n\f]
   function is_power_of_two( n )
-    intrinsic             :: not, iand
     sll_int64, intent(in) :: n
     logical               :: is_power_of_two
+
+    intrinsic :: not, iand
+
     if( (n>0) .and. (0 .eq. (iand(n,(n-1)))) ) then
        is_power_of_two = .true.
     else
@@ -82,11 +84,14 @@ contains
     end if
   end function is_power_of_two
 
+
   !> Check if an integer is even
   function is_even( n )
-    intrinsic             :: modulo    
     sll_int32, intent(in) :: n
     logical               :: is_even
+
+    intrinsic :: modulo
+
     if( modulo(n,2) .eq. 0 ) then
        is_even = .true.
     else
@@ -94,12 +99,14 @@ contains
     end if
   end function is_even
 
+
   !> It would have been nice to declare the next functions as 'pure' functions,
   !> but it is safer to be able to indicate when their arguments have fallen
   !> out of range as this number is so limited anyway.
   function factorial_int32(n) result(fac)
-    sll_int64 :: fac
     sll_int32, intent(in) :: n
+    sll_int64             :: fac
+
     sll_int64 :: acc
     sll_int64 :: i
 
@@ -118,12 +125,14 @@ contains
     fac = acc
   end function factorial_int32
 
+
   !> It would have been nice to declare the next functions as 'pure' functions,
   !> but it is safer to be able to indicate when their arguments have fallen
   !> out of range as this number is so limited anyway.
   function factorial_int64(n) result(fac)
-    sll_int64 :: fac
     sll_int64, intent(in) :: n
+    sll_int64             :: fac
+
     sll_int64 :: acc
     sll_int64 :: i
 
@@ -143,12 +152,13 @@ contains
   end function factorial_int64
 
 
-!> Convert an integer < 9999 to a 4 characters string
+  !> Convert an integer < 9999 to a 4 characters string
   subroutine int2string( istep, cstep )
-    integer, intent(in) :: istep             !< input integer
+    integer         , intent(in ) :: istep   !< input integer
     character(len=4), intent(out) :: cstep   !< output string
-    character(len=1) :: aa,bb,cc,dd
-    integer :: kk1, kk2, kk3, kk4
+
+    character(len=1) :: aa, bb, cc, dd
+    integer          :: kk1, kk2, kk3, kk4
 
     if ( istep >= 0 .and. istep < 10000) then
        kk1 = istep/1000
@@ -169,12 +179,12 @@ contains
   end subroutine int2string
 
 
-!> Get a file unit number free before creating a file
-  subroutine sll_new_file_id(file_id, error)
-   
-    sll_int32, intent(out) :: error     !< error code
+  !> Get a file unit number free before creating a file
+  subroutine sll_new_file_id( file_id, error )
     sll_int32, intent(out) :: file_id   !< file unit number
-    logical                :: lopen    
+    sll_int32, intent(out) :: error     !< error code
+
+    logical :: lopen
       
     error=1
 
@@ -196,14 +206,14 @@ contains
    
   end subroutine sll_new_file_id
 
-  !> Display a vector to screen
-  subroutine display_vector_real(array, real_format)
 
-   sll_real64, dimension(:) :: array
-   character(len=*)         :: real_format
-   character(len=20)        :: display_format
-   sll_int32                :: n
-   sll_int32                :: i
+  !> Display a vector to screen
+  subroutine display_vector_real( array, real_format )
+   sll_real64, dimension(:), intent(in) :: array
+   character(len=*)        , intent(in) :: real_format
+
+   character(len=20) :: display_format
+   sll_int32         :: n, i
 
    n = size(array,1)
 
@@ -215,14 +225,14 @@ contains
 
   end subroutine display_vector_real
 
-  !> Display a vector to screen
-  subroutine display_vector_integer(array, integer_format)
 
-   sll_int32, dimension(:) :: array
-   character(len=*)        :: integer_format
-   character(len=20)       :: display_format
-   sll_int32               :: n
-   sll_int32               :: i
+  !> Display a vector to screen
+  subroutine display_vector_integer( array, integer_format )
+   sll_int32, dimension(:), intent(in) :: array
+   character(len=*)       , intent(in) :: integer_format
+
+   character(len=20) :: display_format
+   sll_int32         :: n, i
 
    n = size(array)
 
@@ -236,15 +246,12 @@ contains
 
 
   !> Display matrix to screen
-  subroutine display_matrix_2d_real(array, real_format)
+  subroutine display_matrix_2d_real( array, real_format )
+   sll_real64, dimension(:,:), intent(in) :: array
+   character(len=*)          , intent(in) :: real_format
 
-   sll_real64, dimension(:,:) :: array
-   character(len=*)           :: real_format
-   character(len=20)          :: display_format
-   sll_int32                  :: n1
-   sll_int32                  :: n2
-   sll_int32                  :: i
-   sll_int32                  :: j
+   character(len=20) :: display_format
+   sll_int32         :: n1, n2, i, j
 
    n1 = size(array,1)
    n2 = size(array,2)
@@ -259,16 +266,14 @@ contains
 
   end subroutine display_matrix_2d_real
 
-  !> Display matrix to screen
-  subroutine display_matrix_2d_integer(array, integer_format)
 
-   sll_int32, dimension(:,:) :: array
-   character(len=*)          :: integer_format
-   character(len=20)         :: display_format
-   sll_int32                 :: n1
-   sll_int32                 :: n2
-   sll_int32                 :: i
-   sll_int32                 :: j
+  !> Display matrix to screen
+  subroutine display_matrix_2d_integer( array, integer_format )
+   sll_int32, dimension(:,:), intent(in) :: array
+   character(len=*)         , intent(in) :: integer_format
+
+   character(len=20) :: display_format
+   sll_int32         :: n1, n2, i, j
 
    n1 = size(array,1)
    n2 = size(array,2)
@@ -283,7 +288,7 @@ contains
 
   end subroutine display_matrix_2d_integer
 
-! 
+
 ! !> Outputs an error message:
 ! !>   - PRTFIL : unit number for print-out
 ! !>   - SEVRTY : 'W' - Warning 'F' - Fatal
@@ -376,13 +381,15 @@ end subroutine errout
 
 !> Subroutine to open data file for slv2d and
 !> create the thf.dat file to write results
-subroutine initialize_file(data_file_id, thf_file_id)
-  sll_int32 :: data_file_id !< namelist file for slv2d
-  sll_int32 :: thf_file_id  !< thf file for energy plot
-  sll_int32 :: error
-  character(len=72) :: filename
-  integer :: IO_stat 
-    
+subroutine initialize_file( data_file_id, thf_file_id )
+  sll_int32, intent(out) :: data_file_id !< namelist file for slv2d
+  sll_int32, intent(out) :: thf_file_id  !< thf file for energy plot
+
+  character(len=*), parameter :: this_sub_name = "initialize_file"
+  character(len=72)           :: filename
+  integer                     :: IO_stat
+  sll_int32                   :: error
+
   call getarg( 1, filename)
 
   call sll_new_file_id(data_file_id, error)
@@ -392,17 +399,19 @@ subroutine initialize_file(data_file_id, thf_file_id)
   call sll_new_file_id(thf_file_id, error)
   open(thf_file_id,file="thf.dat",IOStat=IO_stat, position='append')
   if (IO_stat/=0) STOP "erreur d'ouverture du fichier thf.dat"
+
   rewind(thf_file_id)
   close(thf_file_id)
 
 end subroutine initialize_file
-  
+ 
+
 !> Routine from slv2d to write diagnostics
-subroutine time_history(file_id, desc, fformat, array)
-   sll_int32 :: file_id !< file unit number
-   character(3) :: desc !< name of the diagnostics
-   character(14) :: fformat !< fortran output format
-   sll_real64, dimension(:) :: array !< data array
+subroutine time_history( file_id, desc, fformat, array )
+   sll_int32               , intent(in) :: file_id !< file unit number
+   character(3)            , intent(in) :: desc    !< name of the diagnostics
+   character(14)           , intent(in) :: fformat !< fortran output format
+   sll_real64, dimension(:), intent(in) :: array   !< data array
     
    if (desc(1:3)=="thf") then
       open(file_id,file="thf.dat",position='append')
@@ -427,12 +436,15 @@ end subroutine time_history
 !>  product decomposition.  The values returned assume a "global" domain 
 !>  in [1:n]
 !------------------------------------------------------------------------
-subroutine mpe_decomp1d(n,numprocs,myid,s,e)
+subroutine mpe_decomp1d( n, numprocs, myid, s, e)
+   sll_int32, intent(in)  :: n
+   sll_int32, intent(in)  :: numprocs
+   sll_int32, intent(in)  :: myid
+   sll_int32, intent(out) :: s
+   sll_int32, intent(out) :: e
 
-   sll_int32 :: n, numprocs, myid, s, e
    sll_int32 :: nlocal
    sll_int32 :: deficit
-
 
    nlocal  = n / numprocs
    s       = myid * nlocal + 1
@@ -445,6 +457,7 @@ subroutine mpe_decomp1d(n,numprocs,myid,s,e)
    if (e  >  n .or. myid == numprocs-1) e = n
 
 end subroutine mpe_decomp1d
+
 
 !> S: the wave form at a given point in time. This wave form is 
 !>    not scaled (its maximum value is 1).
@@ -463,6 +476,7 @@ subroutine PFenvelope(S,               &
                       t0,              &
                       turn_drive_off)
 
+  sll_real64, intent(out) :: S
   sll_real64, intent(in)  :: t
   sll_real64, intent(in)  :: tflat
   sll_real64, intent(in)  :: tL
@@ -470,7 +484,6 @@ subroutine PFenvelope(S,               &
   sll_real64, intent(in)  :: twL
   sll_real64, intent(in)  :: twR
   sll_real64, intent(in)  :: t0
-  sll_real64, intent(out) :: S
   logical,    intent(in)  :: turn_drive_off
 
   sll_real64 :: epsilon
@@ -495,6 +508,7 @@ subroutine PFenvelope(S,               &
 
 end subroutine PFenvelope
 
+
 !> - Input: 
 !>  + a=bloc_coord(1) b=bloc_coord(2)
 !>  + (a,b) subset (0,1) is the refine zone
@@ -509,7 +523,7 @@ end subroutine PFenvelope
 !>  + bloc_index(1) = i1 
 !>  + bloc_index(2) = N_fine 
 !>  + bloc_index(3) = N-i1-N_fine
-subroutine compute_bloc(bloc_coord,bloc_index,N)
+subroutine compute_bloc( bloc_coord, bloc_index, N )
 
   sll_real64, intent(inout)  :: bloc_coord(2)
   sll_int32,  intent(inout)  :: bloc_index(3)
@@ -559,7 +573,6 @@ subroutine compute_bloc(bloc_coord,bloc_index,N)
 
   endif
   
-  
 end subroutine compute_bloc
 
 
@@ -572,11 +585,11 @@ end subroutine compute_bloc
 !>   + node_positions(1:N+1)
 !>   + with constraints node_positions(i1+1)=x1,node_positions(i2+1)=x2
 !>   + node_positions(1)=0, node_positions(N+1)=1
-subroutine compute_mesh_from_bloc(bloc_coord,bloc_index,node_positions)
+subroutine compute_mesh_from_bloc( bloc_coord, bloc_index, node_positions )
 
-  sll_int32,               intent(in)  :: bloc_index(3)
-  sll_real64,              intent(in)  :: bloc_coord(2)
-  sll_real64,dimension(:), intent(out) :: node_positions
+  sll_real64,               intent(in)  :: bloc_coord(2)
+  sll_int32,                intent(in)  :: bloc_index(3)
+  sll_real64, dimension(:), intent(out) :: node_positions
 
   sll_int32  :: i, i1, i2, N
   sll_real64 :: dx
