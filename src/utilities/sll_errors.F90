@@ -84,7 +84,7 @@ contains
         'Error handler (ERROUT) called with unknown severity level: ', severity
     end select
 
-    write( line_num_str,* ), line_num
+    write( line_num_str,* ) line_num
     line_num_str = adjustl( line_num_str )
 
     write( out_unit,"(/10x,a)") &
