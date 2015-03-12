@@ -526,7 +526,7 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
      sll_int32,  intent(in)                 :: n    ! matrix size
      sll_real64, dimension(1:7*n), target   :: cts  ! 7*n size allocation
      sll_int32,  dimension(1:n), intent(in) :: ipiv
-     sll_real64, target                     :: b(n)
+     sll_real64, target                     :: b(:)!(n)
      sll_real64, target                     :: x(n)  
      sll_real64, pointer, dimension(:)                    :: bptr
      sll_real64, pointer, dimension(:)                    :: xptr  
@@ -553,14 +553,15 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
      !  print *,'duvqrlm=',i,d(i),u(i),v(i),q(i),r(i),l(i),m(i) 
      !enddo     
 
-     bptr =>b(1:n)
-     xptr =>x(1:n)
+     !bptr =>b(1:n)
+     !xptr =>x(1:n)
      ! FIX: ADD SOME ERROR CHECKING ON ARGUMENTS
-     if( .not. associated(xptr, target=bptr) ) then
-        do i=1,n
+     !if( .not. associated(xptr, target=bptr) ) then
+        do i=1,n-1
            x(i) = b(i)
         end do
-     end if
+        x(n) = b(1)
+     !end if
      ! 'x' contains now the informatin in 'b', in case that it was given as 
      ! a different array.
      !
