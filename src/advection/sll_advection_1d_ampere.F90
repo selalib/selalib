@@ -128,11 +128,12 @@ subroutine advect_1d( adv, a, dt, input, output )
   sll_real64, dimension(:), intent(in)  :: input
   sll_real64, dimension(:), intent(out) :: output      
 
-  sll_int32 :: num_cells
+  character(len=*), parameter :: this_sub_name = 'advect_1d'
+  sll_int32                   :: num_cells
 
   num_cells = adv%nc_eta1
   output(1:num_cells) = a(1:num_cells) * input(1:num_cells) * dt
-  SLL_ERROR(" ampere advect_1d not implemented ")
+  SLL_ERROR( this_sub_name, "ampere advect_1d not implemented." )
 
 end subroutine advect_1d
 
