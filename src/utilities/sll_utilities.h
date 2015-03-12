@@ -39,16 +39,6 @@
 ! nice to have.
 #define XSTRNG( x ) STRNG( x )
 
-
-!#define SLL_ERROR(msg)   call errout( 6, 'F', msg, __LINE__, __FILE__ )
-!#define SLL_WARNING(msg) call errout( 6, 'W', msg, __LINE__, __FILE__ )
-
-
-use, intrinsic :: iso_fortran_env, only: error_unit
-#define SLL_ERROR(msg)   call errout( error_unit,'F',__FILE__,__LINE__,msg )
-#define SLL_WARNING(msg) call errout( error_unit,'W',__FILE__,__LINE__,msg )
-
-
 ! BYTE_SIZEOF() uses the byte_size, which is defined in sll_utilities.F90. This
 ! macro returns the size of 'var' measured in bytes.
 ! INT32_SIZEOF() uses i32, which is defined in the basic numeric types:
@@ -59,6 +49,11 @@ use, intrinsic :: iso_fortran_env, only: error_unit
 #define INT32_SIZEOF( var ) size(transfer(var, (/1_i32/)))
 
 #define SWAP(A,B) A = A + B; B = A - B; A = A - B
+
+!=========================================================================
+! Error handling facilities
+#include "sll_errors.h"
+!=========================================================================
 
 use sll_utilities
 use sll_tridiagonal
