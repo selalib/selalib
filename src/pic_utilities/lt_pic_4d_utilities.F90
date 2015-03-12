@@ -656,25 +656,29 @@ end subroutine get_ltp_deformation_matrix
        ! [[file:~/mcp/selalib/src/pic_particle_types/lt_pic_4d_particle.F90::neighbour_pointers]]
        
        select case (dim)
-       case(1)
+#define ALONG_X 1
+       case(ALONG_X)
           if(up) then
              neighbour = p_list(kprime)%ngb_xright_index
           else
              neighbour = p_list(kprime)%ngb_xleft_index
           endif
-       case(2)
+#define ALONG_Y 2
+       case(ALONG_Y)
           if(up) then
              neighbour = p_list(kprime)%ngb_yright_index
           else
              neighbour = p_list(kprime)%ngb_yleft_index
-             endif
-       case(3)
+          endif
+#define ALONG_VX 3
+       case(ALONG_VX)
           if(up) then
              neighbour = p_list(kprime)%ngb_vxright_index
           else
              neighbour = p_list(kprime)%ngb_vxleft_index
           endif
-       case(4)
+#define ALONG_VY 4
+       case(ALONG_VY)
           if(up) then
              neighbour = p_list(kprime)%ngb_vyright_index
           else
@@ -850,7 +854,7 @@ end subroutine get_ltp_deformation_matrix
     sll_int64 :: number_parts_y
     sll_int64 :: number_parts_vx
     sll_int64 :: number_parts_vy
-
+    
     ! --- end of declarations
 
     g => p_group%remapping_grid
@@ -1154,13 +1158,11 @@ end subroutine get_ltp_deformation_matrix
 
 #define ONESTEPMACRO(dimpos,dimname) call onestep(dimpos,dimname/**/_t0,kprime,p_group%p_list,h_parts_/**/dimname)
 
-                                  ONESTEPMACRO(1,x)
-                                  ONESTEPMACRO(2,y)
-                                  ONESTEPMACRO(3,vx)
-                                  ONESTEPMACRO(4,vy)
+                                  ONESTEPMACRO(ALONG_X,x)
+                                  ONESTEPMACRO(ALONG_Y,y)
+                                  ONESTEPMACRO(ALONG_VX,vx)
+                                  ONESTEPMACRO(ALONG_VY,vy)
 
-                                  !aaa print *,"moved to x_t0=",x_t0," y_t0=",y_t0," vx_t0=",vx_t0," vy_t0=",vy_t0!aaa
-                                  
                                   ! If we end up with kprime == 0, it means that we have not found a cell that contains
                                   ! the particle so we just set that particle value to zero
 
@@ -1210,7 +1212,7 @@ end subroutine get_ltp_deformation_matrix
                                         hcube(2,2,2,1) = p_group%p_list(hcube(2,2,1,1))%ngb_vxright_index
 
                                         ! 4 steps
-                                        hcube(2,2,2,2) = p_group%p_list(hcube(2,2,2,1))%ngb_xright_index
+                                        hcube(2,2,2,2) = p_group%p_list(hcube(2,2,2,1))%ngb_vyright_index
 
                                         ! [[file:~/mcp/maltpic/ltpic-bsl.tex::affine-fn*]] use the values of f0 at these
                                         ! neighbours to interpolate the value of f0 at
@@ -1224,7 +1226,7 @@ end subroutine get_ltp_deformation_matrix
                                         ! p_group%target_values
 
                                           ! MCP: [BEGIN-DEBUG] store the (computed) absolute initial position of the virtual particle
-
+                                        ! [[get_initial_position_on_cartesian_grid_from_particle_index]]
                                            call get_initial_position_on_cartesian_grid_from_particle_index(kprime, &
                                                 number_parts_x,number_parts_y,number_parts_vx,number_parts_vy, &
                                                 j_x,j_y,j_vx,j_vy)
@@ -1265,6 +1267,8 @@ end subroutine get_ltp_deformation_matrix
                                                     else
                                                        vy_aux = h_parts_vy - vy_t0
                                                     end if
+
+                                                    ! uses [[sll_pic_shape]]
                                                     p_group%target_values(i_x,i_y,i_vx,i_vy) =                    &
                                                          p_group%target_values(i_x,i_y,i_vx,i_vy)                 &
                                                          + p_group%p_list(hcube(side_x,side_y,side_vx,side_vy))%q &
@@ -2220,6 +2224,7 @@ end subroutine get_ltp_deformation_matrix
 
   ! added by MCP 
   ! 4d shape function
+  ! <<sll_pic_shape>>
   function sll_pic_shape( &
     degree,             &
     x, y, vx, vy,       &
@@ -2234,6 +2239,7 @@ end subroutine get_ltp_deformation_matrix
 !    sll_int32 :: nc_eta2
 !    sll_int32 :: ierr
 
+    ! uses [[sll_b_spline]]
     shape =   inv_hx  * sll_b_spline(degree,inv_hx  * x ) &
             * inv_hy  * sll_b_spline(degree,inv_hy  * y ) &
             * inv_hvx * sll_b_spline(degree,inv_hvx * vx) &
@@ -2262,6 +2268,7 @@ end subroutine get_ltp_deformation_matrix
   
   ! added by MCP
   ! univariate centered (reference) B-splines. Support is ( -(degree+1)/2, (degree+1)/2 )
+  ! <<sll_b_spline>>
   function sll_b_spline( &
     degree, &
     x       &
@@ -2275,7 +2282,7 @@ end subroutine get_ltp_deformation_matrix
     res = 0
     if ( degree == 1 ) then
         ! pw affine spline
-        if ( x <= -1 .or. x >= 1 ) then
+       if ( x <= -1 .or. x >= 1 ) then
             return 
         end if
         if ( x < 0 ) then
