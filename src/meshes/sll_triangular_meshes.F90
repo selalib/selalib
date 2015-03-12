@@ -143,7 +143,6 @@ end interface new_triangular_mesh_2d
 !reft   - references des elements
 !ntri   - table de connectivite
 !nvois  - numeros des voisins (solveur)
-!nvoiv  - numeros des voisins (particules)
 !nvoif  - numero local dans le voisin de la face commune
 !nusd   - references du sous-domaine
 !petitl - petite longueur de reference   
@@ -170,6 +169,8 @@ function new_triangular_mesh_2d_from_file( maafil ) result(m)
   sll_int32 :: ierr
   SLL_ALLOCATE(m, ierr)
   call read_from_file(m, maafil)
+
+  call compute_aires( m )
 
 end function new_triangular_mesh_2d_from_file
 
@@ -260,6 +261,8 @@ function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
 
   end do
 
+  call compute_aires( tri_mesh )
+
 end function new_triangular_mesh_2d_from_hex_mesh
 
 
@@ -307,6 +310,7 @@ function new_triangular_mesh_2d_from_square( nc_eta1,  &
                                       eta2_min, &
                                       eta2_max)
 
+  call compute_aires( m )
 
 end function new_triangular_mesh_2d_from_square
 
@@ -950,5 +954,933 @@ do cell = 1, num_cells
 end do
 
 end subroutine map_to_circle
+
+
+
+
+
+!> @brief 
+!> Compute characterisitic origin in triangular mesh
+!> @details
+!! Localisation de l'origine de la caracteristique le maillage       
+!! et application des conditions aux limites.         
+!!              Les numeros des particules a retirer sont          
+!!              contenus dans le tableau numpt                     
+!!              (Numero d'element et de cote dans nelet et ncott)  
+!!                                                                      
+!!            pos1   - position x des particules                       
+!!            pos2   - position y des particules                       
+!!            vit1   - vitesse vx des particules                       
+!!            vit2   - vitesse vy des particules                       
+!!            xlm1   - 1ere coordonnee barycentrique                   
+!!            xlm2   - 2eme coordonnee barycentrique                   
+!!            xlm3   - 3eme coordonnee barycentrique                   
+!!            nlpa   - numero des elements contenant les particules    
+!!                                                                      
+!!            coor   - coordonnees des noeuds                          
+!!            ntri   - numero des sommets des triangles                
+!!            nvois  - numero des voisins des elements                 
+!!            aire   - aire de chaque element                          
+!!                                                                      
+!!            coef1  - tableau temporaire des determinants             
+!!            coef2  - tableau temporaire des determinants             
+!!            coef3  - tableau temporaire des determinants             
+!!            coef4  - tableau temporaire                              
+!!                                                                      
+!!            p1loc  - tableau temporaire des nouvelles positions      
+!!            p2loc  - tableau temporaire des nouvelles positions     
+!!            v1loc  - tableau temporaire des nouvelles vitesses      
+!!            v2loc  - tableau temporaire des nouvelles vitesses     
+!!                                                                      
+!!            numpt  - tableau auxiliaire contenant les numeros des    
+!!                      particules a eliminer                           
+!!            nelet  - tableau auxiliaire contenant les numeros des   
+!!                      elements qui contenaient ces particules         
+!!            ncott  - tableau auxiliaire contenant les numeros des    
+!!                      cotes qui ont absorbe ces particules            
+!!            v1pert, v2pert  - composantes des vitesses des particules  absorbees
+!!                                                                      
+!!             nlmloc - tableau auxiliaire contenant les numeros des    
+!!                      elements ou l'on cherche les particules         
+!!             numres - tableau auxiliaire contenant les numeros des    
+!!                      particules non encore localisees                
+!!                                                                      
+!!             itest  - tableau auxiliaire pour preciser le            
+!!                      comportement d'une particule :                  
+!!            - si  itest=0 la particules reste dans son triangle       
+!!            - si  itest=1,2,3 la particule traverse le cote 1,2ou3   
+!!                               mais ne traverse pas de frontiere      
+!!            - si  itest=11,12,13 la particule est absorbee par le     
+!!                                 cote frontiere 1,2,3                
+!!            - si  itest=21,22,23 la particule est reflechie par       
+!!                                 le cote frontiere 1,2,3             
+!!          Dans tous les cas le chiffre des unites de itest designe    
+!!          le numero du cote traverse par la particule.                
+!!          Le type de frontiere est defini dans le tableau nvoiv       
+!!          qui a ete cree dans "RECVOI" :                              
+!!            - si nvoiv(i,n) > 0  le cote i n'est pas une frontiere    
+!!            - si nvoiv(i,n) = 0  le cote i absorbe les particules     
+!!            - si nvoiv(i,n) =-1  le cote i reflechit les particules  
+!!                                                                      
+!!            nbpert - nombre de particules a eliminer                 
+!!            nbp    - nombre de particules de l'espece consideree     
+!!                                                                      
+!!                                                                      
+!!Auteurs:
+!!    731-POSPAR      
+!!
+!! J. Segre - Version 1.0  Juillet 1988  
+!! L. Arnaud/A. Adolf - Version 2.0  Octobre 1991 
+!!                                 (ordre trigo + optimisation)         
+!!----------------------------------------------------------------------
+subroutine positions(mesh, f, ex, ey, dt )
+
+type(sll_triangular_mesh_2d), intent(in)    :: mesh !< mesh
+real(8), dimension(:),        intent(inout) :: f    !< distribution function on nodes
+real(8), dimension(:),        intent(in)    :: ex   !< electric field in x1
+real(8), dimension(:),        intent(in)    :: ey   !< electric field in x2
+real(8),                      intent(in)    :: dt   !< time step
+
+real(8) :: eps
+integer :: nbpert
+integer :: nbpres
+integer :: nbp
+integer :: num
+integer :: nrest
+integer :: nfin
+integer :: nbpr
+!integer :: nlpatmp, nbpr, nrest, nfin, num
+
+integer, dimension(:), allocatable :: numres
+
+integer :: ip
+integer :: jp
+!integer :: i, j, k
+!integer :: it, is, ifro, ict
+!
+!integer, dimension(:), allocatable :: nbpama
+!integer, dimension(:), allocatable :: iad1
+!integer, dimension(:), allocatable :: indice
+!integer, dimension(:), allocatable :: itabor
+integer, dimension(:), allocatable :: itest
+integer, dimension(:), allocatable :: nlmloc
+integer, dimension(:), allocatable :: nlpa
+!integer, dimension(:), allocatable :: ncott
+integer, dimension(:), allocatable :: numpt
+!integer, dimension(:), allocatable :: nelet
+!integer, dimension(:), allocatable :: newps
+!integer, dimension(:), allocatable :: ndecl
+!integer, dimension(:), allocatable :: ntrkr
+!
+real(8), dimension(:,:), allocatable :: xlm
+!real(8), dimension(:), allocatable :: v1pert
+!real(8), dimension(:), allocatable :: v2pert
+!real(8), dimension(:), allocatable :: v1loc, v2loc
+!real(8), dimension(:), allocatable :: p1loc, p2loc
+!
+real(8), dimension(:,:), allocatable :: coef
+real(8), dimension(:),   allocatable :: xp
+real(8), dimension(:),   allocatable :: yp
+
+real(8) :: pa1x, pa1y, pa2x, pa2y, pa3x, pa3y
+!real(8) :: poidtmp, vit1tmp, vit2tmp, vit3tmp
+!real(8) :: pos1tmp, pos2tmp
+!
+
+!if(.not. allocated(itest)) then 
+!
+!   allocate(nlmloc(spc%nbpam),numres(spc%nbpam),v1pert(spc%nbpam),v2pert(spc%nbpam))
+!   allocate(v1loc(spc%nbpam),v2loc(spc%nbpam),p1loc( spc%nbpam),p2loc(spc%nbpam))
+!   allocate(ncott(spc%nbpam),newps(spc%nbpam),numpt(spc%nbpam),nelet(spc%nbpam))
+!   allocate(ndecl(spc%nbpam),ntrkr(spc%nbpam))
+!
+!end if
+
+
+eps    = -mesh%petitl**2
+nbp    = mesh%num_nodes
+nbpres = nbp
+nbpert = 0
+num    = 0
+
+allocate(itest(nbp)); itest = 0
+allocate(coef(4,nbp))
+allocate(xlm(3,nbp))
+allocate(nlpa(nbp))
+allocate(numres(nbp))
+allocate(numpt(nbp))
+allocate(nlmloc(nbp))
+allocate(xp(nbp))
+allocate(yp(nbp))
+
+do ip = 1, nbp
+   xp(ip)     = mesh%coord(1,ip) - ex(ip) * dt
+   yp(ip)     = mesh%coord(2,ip) - ey(ip) * dt
+   nlpa(ip)   = mesh%npoel2(mesh%npoel1(ip)+1)
+   numres(ip) = ip
+end do
+nlmloc = nlpa
+
+do while( nbpres > 0 )
+
+   !*** Premiere boucle 
+   !*** dans le meme element
+
+   nfin  = 0
+   nrest = 0
+   num   = num + 1
+
+   if ( num == 100 ) then
+
+      write(*,"(//2x,'Arret dans POSITIONS:')",advance='no')
+      write(*,"('on n''arrive pas a positionner ')",advance='no')
+      write(*,"(i4)",advance='no')nbpres
+      write(*,"('  particules')",advance='no')
+      write(*,"(/2x,'Particules non positionnees :')",advance='no')
+      write(*,"(5x,'numero - position - vitesse - element'/)") 
+      do ip=1,min(50,nbpres)
+         write(*,"(i10,2x,4e12.4,i10)") numres(ip), ip
+      end do
+      write(*,"(/5x,a)") & 
+      'Il y a certainement un probleme avec le solveur de champ'
+      write(*,"(/5x,'(en general la CFL n''est pas verifiee)'/)")
+
+      stop
+
+   end if
+
+   write(*,*) " nbpres = ", nbpres 
+   do ip = 1, nbpres    
+
+      jp = numres(ip)
+
+      pa1x = mesh%coord(1,mesh%nodes(1,nlmloc(jp)))
+      pa1y = mesh%coord(2,mesh%nodes(1,nlmloc(jp)))
+      pa2x = mesh%coord(1,mesh%nodes(2,nlmloc(jp)))
+      pa2y = mesh%coord(2,mesh%nodes(2,nlmloc(jp)))
+      pa3x = mesh%coord(1,mesh%nodes(3,nlmloc(jp)))
+      pa3y = mesh%coord(2,mesh%nodes(3,nlmloc(jp)))
+
+      write(*,*) "iel, jp, xp, yp = ", nlmloc(ip), jp, xp(jp), yp(jp)
+
+      pa1x = pa1x - xp(jp)
+      pa1y = pa1y - yp(jp)
+      pa2x = pa2x - xp(jp)
+      pa2y = pa2y - yp(jp)
+      pa3x = pa3x - xp(jp)
+      pa3y = pa3y - yp(jp)
+
+      coef(1,ip) = pa1x*pa2y - pa1y*pa2x
+      coef(2,ip) = pa2x*pa3y - pa2y*pa3x
+      coef(3,ip) = pa3x*pa1y - pa3y*pa1x
+
+   end do
+
+   do ip = 1, nbpres
+
+      if(      coef(1,ip) >= eps    &
+         .and. coef(2,ip) >= eps    &
+         .and. coef(3,ip) >= eps ) then
+
+         nfin = nfin + 1
+         jp = numres(ip)
+
+         xlm(1,jp) = 0.5 * coef(1,ip) / mesh%aire(nlmloc(ip))
+         xlm(2,jp) = 0.5 * coef(2,ip) / mesh%aire(nlmloc(ip))
+         xlm(3,jp) = 0.5 * coef(3,ip) / mesh%aire(nlmloc(ip))
+
+         nlpa(jp)  = nlmloc(ip)
+         itest(ip) = 0
+         
+         write(*,*) ip, ' found in ', nlmloc(ip)
+
+      end if
+
+   end do
+
+   !*** Deuxieme boucle pour celles qui sont sorties
+
+   nbpr = nbpres - nfin
+
+   if( nbpr .ne. 0 ) then
+
+      do ip = 1, nbpres
+
+         jp = numres(ip)
+
+         if (       coef(1,ip) <  eps   &
+              .and. coef(2,ip) >= eps   &
+              .and. coef(3,ip) >= eps   ) then
+
+            !La particule a traverse le cote 1 = (A1-A2)
+            itest(ip) = 11
+
+         end if
+
+         if (       coef(1,ip) >= eps   &
+              .and. coef(2,ip) <  eps   &
+              .and. coef(3,ip) >= eps   ) then
+   
+            !La particule a traverse le cote 2 = (A2-A3)
+            itest(ip) = 12 
+ 
+         end if
+   
+         if (       coef(1,ip) >= eps   &
+              .and. coef(2,ip) >= eps   &
+              .and. coef(3,ip) <  eps   ) then
+   
+            !La particule a traverse le cote 3 = (A3-A1)
+            itest(ip) = 13
+
+         end if
+      
+         if (       coef(1,ip) < eps    &
+              .and. coef(2,ip) < eps )  then
+
+            !La particule a traverse le cote 1 ou 2 
+
+            pa2x = mesh%coord(1,mesh%nodes(2,nlmloc(ip)))-xp(jp)
+            pa2y = mesh%coord(2,mesh%nodes(2,nlmloc(ip)))-yp(jp)
+       
+            coef(4,ip) = pa2x*ey(jp) - pa2y*ex(jp)
+
+            itest(ip) = 1 + max(0,nint(sign(1d0,coef(4,ip))))
+            itest(ip) = itest(ip) + 11
+
+         end if
+
+         if (       coef(2,ip) < eps     &
+              .and. coef(3,ip) < eps )  then
+
+            !La particule a traverse le cote 2 ou 3 
+
+            pa3x = mesh%coord(1,mesh%nodes(3,nlmloc(ip)))-xp(jp)
+            pa3y = mesh%coord(2,mesh%nodes(3,nlmloc(ip)))-yp(jp)
+   
+            coef(4,ip) = pa3x*ey(jp) - pa3y*ex(jp)
+
+            itest(ip) = 2 + max(0,nint(sign(1d0,coef(4,ip))))
+            itest(ip) = itest(ip) + 11
+         end if
+
+         if (        coef(3,ip) < eps    &
+               .and. coef(1,ip) < eps )  then
+
+            !La particule a traverse le cote 3 ou 1 
+
+            pa1x = mesh%coord(1,mesh%nodes(1,nlmloc(jp)))-xp(jp)
+            pa1y = mesh%coord(2,mesh%nodes(1,nlmloc(jp)))-yp(jp)
+
+            coef(4,ip) = pa1x*ey(jp) - pa1y*ex(jp)
+
+            itest(ip) = 1 +mod(2+max(0,nint(sign(1d0,coef(4,ip)))),3)
+            itest(ip) = itest(ip) + 11
+
+         end if
+
+      end do
+
+      !*** Particules absorbees par une frontiere -------------------
+     
+      do ip=1,nbpres
+   
+        if( itest(ip) > 10 .and. itest(ip) < 14 )  then
+           nbpert         = nbpert + 1
+           numpt(nbpert)  = numres(ip)
+           !nelet(nbpert)  = nlmloc(ip)
+           !ncott(nbpert)  = itest(ip)-10
+        end if
+   
+      end do
+   
+      !*** Reorganisation des tableaux temporaires ------------------
+      !    Particules traversant un cote interne ou reflechie
+   
+      do ip=1,nbpres
+   
+        if( (itest(ip) >  0 .and. itest(ip) <  4) .or.     &
+            (itest(ip) > 20 .and. itest(ip) < 24)) then
+          nrest = nrest + 1
+          numres(nrest) = numres(ip)
+          if (itest(ip)> 20) then
+            nlmloc(nrest) = mesh%nvois(itest(ip)-20,nlmloc(ip))  &
+                            * max(0,sign(1,10-itest(ip)))    &
+                            + nlmloc(ip)* max(0,sign(1,itest(ip)-20))    
+          else
+            nlmloc(nrest) = mesh%nvois(itest(ip),nlmloc(ip)) &
+                            * max(0,sign(1,10-itest(ip)))    &
+                            + nlmloc(ip)* max(0,sign(1,itest(ip)-20))    
+          end if
+        end if
+   
+      end do
+
+   end if
+
+   nbpres = nrest
+
+end do
+!
+!if( nbpert > 0 ) then
+!
+!   !*** Calcul du courant total absorbe ------------------
+!   cour=0
+!   DO ip=1,nbpert
+!      cour=cour+spc%poid(numpt(ip))*spc%pcharg/dt
+!   end do 
+!
+!   !******************************************************
+!   !* Supression dans les tableaux caracterisant les     *
+!   !* particules, des elements dont les numeros sont     *
+!   !* contenus dans le tableau numpt.                    *
+!   !* Ces particules sont perdues aux frontieres.        *
+!   !******************************************************
+!      
+!   !*** Il n'existe qu'une particule et on la retire -------------
+!
+!   if(spc%nbpart == 1) then
+!
+!      spc%nbpart   = 0   
+!
+!   else
+!
+!      nbp = spc%nbpart
+!
+!      !*** Calcul des tableaux newps et de ndecl -----------
+!
+!      !Initialisation
+!
+!      do ip=1,nbp
+!         newps(ip) = 1
+!      end do
+!         
+!      !Mise a 0 des indices de newps correspondant 
+!      !aux termes a eliminer
+!   
+!      do ip=1,nbpert
+!         newps(numpt(ip)) = 0
+!      end do
+!   
+!      !en cumulant les indices de newps on obtient les 
+!      !nouvelles positions
+!      
+!      do ip=2,nbp
+!         newps(ip) = newps(ip) + newps(ip-1)
+!      end do
+!   
+!      !la nouvelle place des termes a eliminer est la derniere
+!   
+!      do ip=1,nbpert
+!         newps(numpt(ip)) = nbp
+!      end do
+!   
+!      !On tasse les tableaux caracterisant les particules
+!      !Les dernieres valeurs des tableaux sont sauvegardees
+!   
+!      pos1tmp = spc%pos(1,nbp); pos2tmp = spc%pos(2,nbp)
+!      vit1tmp = spc%vit(1,nbp); vit2tmp = spc%vit(2,nbp); vit3tmp = spc%vit(3,nbp)
+!      xlm1tmp = spc%xlm(1,nbp); xlm2tmp = spc%xlm(2,nbp); xlm3tmp = spc%xlm(3,nbp)
+!      poidtmp = spc%poid(nbp); nlpatmp = spc%nlpa(nbp)
+!      
+!      !Rearrangement des tableaux
+!   
+!      do ip=1,nbp
+!         j=newps(ip)
+!         spc%pos(1:2,j) = spc%pos(1:2,ip)
+!         spc%vit(1:3,j) = spc%vit(1:3,ip)
+!         spc%xlm(1:3,j) = spc%xlm(1:3,ip)
+!         spc%poid(j)    = spc%poid(ip)
+!         spc%nlpa(j)    = spc%nlpa(ip)
+!      end do
+!      
+!      !Les dernieres valeurs des tableaux sont reprises    
+!      
+!      j=newps(nbp)
+!      spc%pos(1,j) = pos1tmp
+!      spc%pos(2,j) = pos2tmp
+!      spc%vit(1,j) = vit1tmp
+!      spc%vit(2,j) = vit2tmp
+!      spc%vit(3,j) = vit3tmp
+!      spc%poid(j)  = poidtmp
+!      spc%xlm(1,j) = xlm1tmp
+!      spc%xlm(2,j) = xlm2tmp
+!      spc%xlm(3,j) = xlm3tmp
+!      spc%nlpa(j)  = nlpatmp
+!      
+!      !Nouveau nombre de particules de l'espece 1
+!      
+!      spc%nbpart=spc%nbpart-nbpert
+!      
+!   end if
+!
+!end if
+
+      
+end subroutine positions
+!   
+!!Function: calcul_sources
+!!
+!!     Calcul de la densite de charge et des composantes de la  
+!!     densite de courant particulaire connaissant la          
+!!     repartition et les vitesses des particules.            
+!!                                                           
+!!      Variables en arguments:                             
+!!    
+!!             vit1   - vitesse vx des particules                     
+!!             vit2   - vitesse vy des particules                    
+!!             vit3   - vitesse vz des particules                   
+!!             poid   - poids      des particules                  
+!!             xlm1   - 1ere coordonnee barycentrique des particules 
+!!             xlm2   - 2eme coordonnee barycentrique des particules
+!!             xlm3   - 3eme coordonnee barycentrique des particules 
+!!             nlpa   - numeros des triangles contenant les particules
+!!             coor   - coordonnees des noeuds du maillage        
+!!             ntri   - numero des sommets des triangles            
+!!             xbas   - integrales des fonctions de base           
+!!             cur1   - 1ere composante de la densite de courant     
+!!             cur2   - 2eme composante de la densite de courant      
+!!             cur3   - 3eme composante de la densite de courant
+!!             rho    - densite de charge                        
+!!             ad1    - tableau temporaire (adresse de la 1ere    
+!!                      particule de chaque maille dans le tableau 
+!!                      ordonne des particules)                     
+!!             indice - tableau temporaire (incrementation du nombre 
+!!                      de particules dja reperees)               
+!!             itabor - tableau temporaire (numeros des particules 
+!!                      ordonnes suivant les numeros des mailles)
+!!             nbpama - tableau temporaire (nombre de particules  
+!!                      par maille)                                 
+!!             xaux1,xaux4 - tableaux auxiliaires utilises pour assurer la
+!!                          continuite pour les frontieres internes      
+!!                          "doubles" transparentes             
+!!                                                            
+!!             nflst  - etiquette logique du fichier "listing" 
+!!             petitl - petite longueur de reference             
+!!             nbt    - nombre de triangle du maillage             
+!!             nbs    - nombre de noeuds   du maillage              
+!!                                                                  
+!!             nbpa   - nombre de particules par espece              
+!!             pcharg - charge d'une particule elementaire de l'espece
+!!             alprjt - Coefficient de compensation de charge d'espace 
+!!                      par particule a appliquer a la projection       
+!!             ldbprj - Activation du debugger en ligne             
+!!             idbprj - Iteration pour le debut des impressions      
+!!             jdbprj - Frequence des impressions                     
+!!             kdbprj - Increment sur les noeuds du maillage           
+!!                                                                      
+!!Auteur:
+!!   751-DENCOU  
+!!
+!! J. Segre         - Version 1.0  Septembre 1989 
+!! L.Arnaud/A.Adolf - Version 1.1  Juillet   1991  
+!subroutine calcul_sources(mxw, spc, mesh )
+!     
+!type(maxwell), intent(inout) :: mxw
+!type(mesh_data), intent(in) :: mesh
+!type(particle), intent(in) :: spc
+!
+!real(8) :: phi1, phi2, phi3
+!real(8) :: xm11, xm21, xm31
+!real(8) :: xm12, xm22, xm32
+!real(8) :: xm13, xm23, xm33
+!real(8) :: charge
+!
+!integer :: nprest
+!integer :: mpa, inum, ip1, ip2, ks, ind
+!
+!!Recherche du nombre de particules de chaque maille -------
+!if( .not. allocated(nbpama) ) allocate(nbpama(mesh%nbt))
+!
+!charge = spc%pcharg*(1.-spc%alprjt)
+!
+!nbpama = 0
+!do ip = 1 , spc%nbpart
+!   mpa         = spc%nlpa(ip)
+!   nbpama(mpa) = nbpama(mpa) + 1
+!end do
+!
+!!--- Determination de l'adresse de la premiere particule 
+!!    de chaque maille dans le tableau ordonne
+!
+!if( .not. allocated(iad1) ) allocate(iad1(mesh%nbt))
+!
+!iad1 = 0
+!ks = 1
+!do it = 1 , mesh%nbt
+!   if ( nbpama(it) .ne. 0 )  then
+!      iad1(it) = ks
+!      ks       = ks + nbpama(it)
+!   end if
+!end do
+!
+!!--- Construction du tableau ordonne des particules -----------
+!
+!if( .not. allocated(indice) ) allocate(indice(mesh%nbt))
+!if( .not. allocated(itabor) ) allocate(itabor(spc%nbpam))
+!
+!indice = 0; itabor = 0
+!
+!do ip = 1 , spc%nbpart
+!
+!   if( spc%nlpa(ip) <= 0 ) then
+!     write(*,*)"Dans calcul_source"
+!     write(*,*)"Particules a l'exterieur du domaine"
+!     call errout(6,"F","projections.f90"," ")
+!   end if
+!
+!   mpa         = spc%nlpa(ip)
+!   ind         = iad1(mpa) + indice(mpa)
+!   itabor(ind) = ip
+!   indice(mpa) = indice(mpa) + 1
+!
+!end do
+!
+!nprest = spc%nbpart
+!
+!!--- Boucle sur les triangles pour le calcul des moments ------
+!mxw%Ro = 0d0
+!mxw%Jx = 0d0
+!mxw%Jy = 0d0
+!
+!do it = 1 , mesh%nbt
+!      
+!   xm11 = 0.; xm21 = 0.; xm31 = 0.
+!   xm12 = 0.; xm22 = 0.; xm32 = 0.
+!   xm13 = 0.; xm23 = 0.; xm33 = 0.
+!
+!   !nbpama(it)  !Nombre de particules dans la maille numero it
+!            
+!   if ( nbpama(it) .ne. 0 )  then
+!
+!      ip1 = iad1(it)
+!      ip2 = ip1 + nbpama(it) - 1
+!
+!      !Boucle sur les particules situees dans la maille courante
+!
+!      do ip = ip1 , ip2 
+!            
+!         inum = itabor(ip)
+!       
+!         phi1 = spc%xlm(2,inum) * spc%poid(inum) * charge
+!         phi2 = spc%xlm(3,inum) * spc%poid(inum) * charge
+!         phi3 = spc%xlm(1,inum) * spc%poid(inum) * charge
+!               
+!         xm11 = xm11 + phi1
+!         xm21 = xm21 + phi1 * spc%vit(1,inum)
+!         xm31 = xm31 + phi1 * spc%vit(2,inum)
+!               
+!         xm12 = xm12 + phi2
+!         xm22 = xm22 + phi2 * spc%vit(1,inum)
+!         xm32 = xm32 + phi2 * spc%vit(2,inum)
+!       
+!         xm13 = xm13 + phi3
+!         xm23 = xm23 + phi3 * spc%vit(1,inum)
+!         xm33 = xm33 + phi3 * spc%vit(2,inum)
+!
+!      end do
+!
+!      mxw%ro(1,it) = mxw%ro(1,it) + xm11 
+!      mxw%ro(2,it) = mxw%ro(2,it) + xm12 
+!      mxw%ro(3,it) = mxw%ro(3,it) + xm13 
+!   
+!      mxw%jx(1,it) = mxw%jx(1,it) + xm21 
+!      mxw%jy(1,it) = mxw%jy(1,it) + xm31 
+!               
+!      mxw%jx(2,it) = mxw%jx(2,it) + xm22 
+!      mxw%jy(2,it) = mxw%jy(2,it) + xm32 
+!   
+!      mxw%jx(3,it) = mxw%jx(3,it) + xm23 
+!      mxw%jy(3,it) = mxw%jy(3,it) + xm33 
+!
+!      if (nbpama(it) == nprest ) exit
+!
+!      nprest = nprest - nbpama(it)
+!
+!   end if
+!
+!end do
+!
+!end subroutine calcul_sources
+
+!=======================================================================
+
+
+subroutine compute_aires( mesh )
+
+type(sll_triangular_mesh_2d), intent(inout) :: mesh !< mesh
+
+integer, dimension(:), allocatable :: indc
+
+sll_int32 :: i, j, k
+sll_int32 :: it, is, is1, is2, is3
+sll_int32 :: ntmp, id1, nct, iel, ind, iel1, nel
+sll_int32 :: i1, i2, i3
+sll_int32 :: jel1, jel2, jel3, nel1, nel2, nel3
+
+real(8)   :: airtot
+real(8)   :: xlml, xlmu, ylml, ylmu
+real(8)   :: lx1, lx2, ly1, ly2
+
+!*** Calcul des longueurs de reference
+#ifdef DEBUG
+write(6,*)"*** Calcul des longueurs de reference ***"
+#endif /* DEBUG */
+
+xlml = minval(mesh%coord(1,:))
+xlmu = maxval(mesh%coord(1,:))
+ylml = minval(mesh%coord(2,:))
+ylmu = maxval(mesh%coord(2,:))
+
+mesh%petitl = 1.e-04 * min(xlmu-xlml,ylmu-ylml)/sqrt(float(mesh%num_nodes))
+mesh%grandl = 1.e+04 * max(xlmu-xlml,ylmu-ylmu)
+
+!*** Calcul des aires des triangles
+#ifdef DEBUG
+write(6,*)"*** Calcul des aires des triangles ***"
+#endif /* DEBUG */
+
+allocate(mesh%aire(mesh%num_triangles)); mesh%aire=0.0
+
+airtot = 0.
+
+do it = 1, mesh%num_triangles
+
+   lx1 = mesh%coord(1,mesh%nodes(2,it))-mesh%coord(1,mesh%nodes(1,it))
+   ly1 = mesh%coord(2,mesh%nodes(3,it))-mesh%coord(2,mesh%nodes(1,it))
+   lx2 = mesh%coord(1,mesh%nodes(3,it))-mesh%coord(1,mesh%nodes(1,it))
+   ly2 = mesh%coord(2,mesh%nodes(2,it))-mesh%coord(2,mesh%nodes(1,it))
+
+   mesh%aire(it) = 0.5 * abs(lx1*ly1 - lx2*ly2)
+
+   if( mesh%aire(it) <= 0. ) then
+     write(6,*) " Triangle : ", it
+     write(6,*) mesh%nodes(1,it), ":",mesh%coord(1:2,mesh%nodes(1,it))
+     write(6,*) mesh%nodes(2,it), ":",mesh%coord(1:2,mesh%nodes(2,it))
+     write(6,*) mesh%nodes(3,it), ":",mesh%coord(1:2,mesh%nodes(3,it))
+     stop "Aire de triangle negative"
+   end if
+
+   airtot = airtot + mesh%aire(it)
+
+end do
+
+#ifdef DEBUG
+write(6,"(/10x,'Longueurs de reference :',2E15.5/)") mesh%petitl,mesh%grandl
+write(6,"(/10x,'Limites x du domaine   :',2E15.5/   &
+&          10x,'Limites y du domaine   :',2E15.5/   &
+&          10x,'Aire des triangles     :',E15.5 /)") xlml,xlmu,ylml,ylmu,airtot
+
+write(6,*)"*** Calcul des voisins pour les particules ***"
+#endif /* DEBUG */
+
+! --- Gestion des triangles ayant un noeud en commun -----------
+!if (ldebug) &
+!write(iout,*)"*** Gestion des triangles ayant un noeud en commun ***"
+ 
+! ... recherche des elements ayant un sommet commun
+!     creation du tableau npoel1(i+1)  contenant le nombre de 
+!     triangles ayant le noeud i en commun
+
+allocate(mesh%npoel1(mesh%num_nodes+1))
+
+mesh%npoel1 = 0
+do i=1,mesh%num_triangles
+   is1 = mesh%nodes(1,i)
+   is2 = mesh%nodes(2,i)
+   is3 = mesh%nodes(3,i)
+   mesh%npoel1(is1+1) = mesh%npoel1(is1+1)+1
+   mesh%npoel1(is2+1) = mesh%npoel1(is2+1)+1
+   mesh%npoel1(is3+1) = mesh%npoel1(is3+1)+1
+end do
+
+! ... le tableau npoel1 devient le tableau donnant l'adresse 
+!     dans npoel2 du dernier element dans la suite des triangles
+!     communs a un noeud
+
+mesh%npoel1(1)=0
+do i=3,mesh%num_nodes+1
+   mesh%npoel1(i)=mesh%npoel1(i-1)+mesh%npoel1(i)
+end do
+
+! ... creation du tableau npoel2 contenant sequentiellement les 
+!     numeros des triangles ayant un noeud en commun      
+!     le premier triangle s'appuyant sur le noeud i est
+!     adresse par "npoel1(i)+1" 
+!     le nombre de triangles ayant le noeud i en commun est
+!     "npoel1(i+1)-npoel1(i)"
+
+
+allocate(mesh%npoel2(mesh%npoel1(mesh%num_nodes+1)))
+allocate(indc(mesh%num_nodes))
+
+indc   = 1  !Le tableau temporaire indc doit etre initialise a 1
+
+do it = 1,mesh%num_triangles
+   do k = 1,3
+      is = mesh%nodes(k,it)
+      mesh%npoel2(mesh%npoel1(is)+indc(is)) = it
+      indc(is) = indc(is)+1
+   end do
+end do
+
+deallocate(indc)
+
+! --- Recherche des numeros des triangles voisins d'un triangle 
+
+do iel=1,mesh%num_triangles
+
+  ! ... numeros des 3 sommets du triangle
+
+  is1=mesh%nodes(1,iel)
+  is2=mesh%nodes(2,iel)
+  is3=mesh%nodes(3,iel)
+  
+  ! ... boucles imbriquees sur les elements pointant vers
+  !     les 2 noeuds extremites de l'arete consideree
+  !     Le voisin est le triangle commun (hormis iel)
+
+  ! ... premiere arete (entre le sommet is1 et is2)
+
+  nel1=mesh%npoel1(is1+1)-mesh%npoel1(is1) !nb de triangles communs a is1
+  nel2=mesh%npoel1(is2+1)-mesh%npoel1(is2) !nb de triangles communs a is2
+
+  loop1:do i1=1,nel1
+    jel1=mesh%npoel2(mesh%npoel1(is1)+i1) !premier triangle is1
+    if(jel1.ne.iel) then
+      do i2=1,nel2
+        jel2=mesh%npoel2(mesh%npoel1(is2)+i2)
+        if(jel2 == jel1) then
+          mesh%nvois(1,iel)  = jel1
+          exit loop1
+        end if
+      end do
+    end if
+  end do loop1
+
+  ! ... deuxieme arete (entre le sommet is2 et is3)
+
+  nel2=mesh%npoel1(is2+1)-mesh%npoel1(is2)
+  nel3=mesh%npoel1(is3+1)-mesh%npoel1(is3)
+
+  loop2:do i2=1,nel2
+    jel2=mesh%npoel2(mesh%npoel1(is2)+i2)
+    if(jel2 /= iel) then
+      do i3=1,nel3
+        jel3=mesh%npoel2(mesh%npoel1(is3)+i3)
+        if(jel3 == jel2) then
+          mesh%nvois(2,iel)=jel2
+          exit loop2
+        end if
+      end do
+    end if
+  end do loop2
+
+  ! ... troisieme arete (entre le sommet is3 et is1)
+
+  nel3=mesh%npoel1(is3+1)-mesh%npoel1(is3)
+  nel1=mesh%npoel1(is1+1)-mesh%npoel1(is1)
+
+  loop3:do i3=1,nel3
+    jel3=mesh%npoel2(mesh%npoel1(is3)+i3)
+    if(jel3 /= iel) then
+      do i1=1,nel1
+        jel1=mesh%npoel2(mesh%npoel1(is1)+i1)
+        if(jel1 == jel3) then
+          mesh%nvois(3,iel)=jel3
+          exit loop3
+        end if
+      end do
+    end if
+  end do loop3
+
+end do
+
+
+! --- Rangement de npoel2 dans l'ordre trigonometrique ---------
+
+do is=1,mesh%num_nodes
+
+  nel = mesh%npoel1(is+1)-mesh%npoel1(is)
+
+  if ( nel > 1 ) then
+
+    !*** Noeuds internes (Numero de reference nul) ***
+
+    if( mesh%refs(is) == 0) then
+
+      ind =1
+      iel1=mesh%npoel2(mesh%npoel1(is)+1)
+
+      loop4:do iel=2,nel-1
+        do j=1,3
+          if(mesh%nodes(j,iel1) == is) nct=mod(j+1,3)+1
+        end do
+
+        iel1=mesh%nvois(nct,iel1)
+        do id1=ind+1,nel
+          if(iel1 == mesh%npoel2(mesh%npoel1(is)+id1)) then
+            ind=ind+1
+            ntmp=mesh%npoel2(mesh%npoel1(is)+ind)
+            mesh%npoel2(mesh%npoel1(is)+ind)=iel1
+            mesh%npoel2(mesh%npoel1(is)+id1)=ntmp
+            cycle loop4
+          end if
+        end do
+      end do loop4
+
+     ! Noeuds frontieres
+
+     else 
+
+       ! --> Recherche du premier triangle dans l'ordre trigonometrique
+       loop5:do id1=1,nel
+         iel1=mesh%npoel2(mesh%npoel1(is)+id1)
+         do j=1,3
+           if(mesh%nvois(j,iel1).le.0 .and. mesh%nodes(j,iel1) == is) then
+             ntmp=mesh%npoel2(mesh%npoel1(is)+1)
+             mesh%npoel2(mesh%npoel1(is)+1)=iel1
+             mesh%npoel2(mesh%npoel1(is)+id1)=ntmp
+             exit loop5
+           end if
+         end do
+       end do loop5
+           
+       ! --> Rangement des autres triangles dans l'ordre trigonometrique
+       !     (s'il y en a plus que 2) 
+       if(nel  > 2) then
+         ind =1
+         iel1=mesh%npoel2(mesh%npoel1(is)+1)
+  
+         loop6:do iel=2,nel-1
+           do j=1,3
+             if(mesh%nodes(j,iel1)==is) then
+               nct=mod(j+1,3)+1
+             end if
+           end do
+
+           iel1=mesh%nvois(nct,iel1)
+  
+           do id1=ind+1,nel
+             if(iel1 == mesh%npoel2(mesh%npoel1(is)+id1)) then
+               ind=ind+1
+               ntmp=mesh%npoel2(mesh%npoel1(is)+ind)
+               mesh%npoel2(mesh%npoel1(is)+ind)=iel1
+               mesh%npoel2(mesh%npoel1(is)+id1)=ntmp
+               cycle loop6
+             end if
+           end do
+
+         end do loop6
+
+      end if
+
+    end if
+
+  end if
+
+end do
+ 
+end subroutine compute_aires
 
 end module sll_triangular_meshes

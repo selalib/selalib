@@ -667,216 +667,21 @@ contains
 subroutine analyze_triangular_mesh(mesh) 
 
 integer, parameter :: iout = 6
-integer          :: i, j, k, ifr
+integer            :: i, j, ifr
 type(sll_triangular_mesh_2d), intent(inout) :: mesh
 
-integer, dimension (:), allocatable :: indc
 integer, dimension (:), allocatable :: nuctfr
 integer, dimension (:), allocatable :: ncotcu
 
-integer :: it, ntmp, id1, nct, iel, ind, iel1, nel
-integer :: i1, i2, i3, is, is1, is2, is3
-integer :: jel1, jel2, jel3, nel1, nel2, nel3
-integer :: ic
+integer :: iel, is1, is2
 integer :: ict, ictcl, iref, jref
 integer :: keltmp, kcttmp, kretmp, ks1tmp, ks2tmp
-integer :: nbcot, ict1, ict2, ictcl1, ictcl2, ie
-logical :: ldefr, ltemp, lcalsu, lmainv
-integer :: itab(3,3)
-real(8) :: xlml, xlmu, ylml, ylmu
-real(8) :: lx1, lx2, ly1, ly2, x1, y1, x2, y2
-real(8) :: airtot
-
-#ifdef DEBUG
-logical :: ldebug = .true.
-#else
-logical :: ldebug = .false.
-#endif /* DEBUG */
+integer :: nbcot, ict1, ict2, ictcl1, ictcl2
+real(8) :: x1, y1, x2, y2
 
 !-----
-!---- itab(isomloc1,isomloc2) est le numero local de l'arete qui a pour
-!---- sommets locaux isomloc1 et isomloc2
-!-----
-
-itab = reshape(source=(/0,1,3,1,0,2,3,2,0/), shape=(/3,3/))
-
-ldefr  = .false.
-ltemp  = .true.
-lcalsu = .false.
-lmainv = .false.
 
 write(iout,"(//10x,'>>> Compute come quantities from mesh <<<'/)")
-
-!*** Calcul des longueurs de reference
-!if (ldebug) write(iout,*)"*** Calcul des longueurs de reference ***"
-
-xlml = minval(mesh%coord(1,:))
-xlmu = maxval(mesh%coord(1,:))
-ylml = minval(mesh%coord(2,:))
-ylmu = maxval(mesh%coord(2,:))
-
-mesh%petitl = 1.e-04 * min(xlmu-xlml,ylmu-ylml)/sqrt(float(mesh%num_nodes))
-mesh%grandl = 1.e+04 * max(xlmu-xlml,ylmu-ylmu)
-
-!*** Correction des erreurs de precision ----------------------
-!    pour les noeuds sur l'axe en axisymetrique.
-      
-!*** Calcul des aires des triangles
-!if (ldebug) write(iout,*)"*** Calcul des aires des triangles ***"
-
-allocate(mesh%aire(mesh%num_triangles)); mesh%aire=0.0
-
-airtot = 0.
-
-do it = 1, mesh%num_triangles
-
-   lx1 = mesh%coord(1,mesh%nodes(2,it))-mesh%coord(1,mesh%nodes(1,it))
-   ly1 = mesh%coord(2,mesh%nodes(3,it))-mesh%coord(2,mesh%nodes(1,it))
-   lx2 = mesh%coord(1,mesh%nodes(3,it))-mesh%coord(1,mesh%nodes(1,it))
-   ly2 = mesh%coord(2,mesh%nodes(2,it))-mesh%coord(2,mesh%nodes(1,it))
-
-   mesh%aire(it) = 0.5 * abs(lx1*ly1 - lx2*ly2)
-
-   if( mesh%aire(it) <= 0. ) then
-     write(iout,*) " Triangle : ", it
-     write(iout,*) mesh%nodes(1,it), ":",mesh%coord(1:2,mesh%nodes(1,it))
-     write(iout,*) mesh%nodes(2,it), ":",mesh%coord(1:2,mesh%nodes(2,it))
-     write(iout,*) mesh%nodes(3,it), ":",mesh%coord(1:2,mesh%nodes(3,it))
-     stop "Aire de triangle negative"
-   end if
-
-   airtot = airtot + mesh%aire(it)
-
-end do
-
-!write(iout,"(/10x,'Longueurs de reference :',2E15.5/)") mesh%petitl,mesh%grandl
-!write(iout,"(/10x,'Limites x du domaine   :',2E15.5/    &
-  !&        10x,'Limites y du domaine   :',2E15.5/   &
-  !&        10x,'Aire des triangles     :', E15.5/)") xlml,xlmu,ylml,ylmu,airtot
-
-
-! --- Gestion des triangles ayant un noeud en commun -----------
-!if (ldebug) &
-!write(iout,*)"*** Gestion des triangles ayant un noeud en commun ***"
- 
-! ... recherche des elements ayant un sommet commun
-!     creation du tableau npoel1(i+1)  contenant le nombre de 
-!     triangles ayant le noeud i en commun
-
-allocate(mesh%npoel1(mesh%num_nodes+1))
-
-mesh%npoel1 = 0
-do i=1,mesh%num_triangles
-   is1 = mesh%nodes(1,i)
-   is2 = mesh%nodes(2,i)
-   is3 = mesh%nodes(3,i)
-   mesh%npoel1(is1+1) = mesh%npoel1(is1+1)+1
-   mesh%npoel1(is2+1) = mesh%npoel1(is2+1)+1
-   mesh%npoel1(is3+1) = mesh%npoel1(is3+1)+1
-end do
-
-! ... le tableau npoel1 devient le tableau donnant l'adresse 
-!     dans npoel2 du dernier element dans la suite des triangles
-!     communs a un noeud
-
-mesh%npoel1(1)=0
-do i=3,mesh%num_nodes+1
-   mesh%npoel1(i)=mesh%npoel1(i-1)+mesh%npoel1(i)
-end do
-
-! ... creation du tableau npoel2 contenant sequentiellement les 
-!     numeros des triangles ayant un noeud en commun      
-!     le premier triangle s'appuyant sur le noeud i est
-!     adresse par "npoel1(i)+1" 
-!     le nombre de triangles ayant le noeud i en commun est
-!     "npoel1(i+1)-npoel1(i)"
-
-
-allocate(mesh%npoel2(mesh%npoel1(mesh%num_nodes+1)))
-allocate(indc(mesh%num_nodes))
-
-indc   = 1  !Le tableau temporaire indc doit etre initialise a 1
-
-do it = 1,mesh%num_triangles
-   do k = 1,3
-      is = mesh%nodes(k,it)
-      mesh%npoel2(mesh%npoel1(is)+indc(is)) = it
-      indc(is) = indc(is)+1
-   end do
-end do
-
-deallocate(indc)
- 
-! --- Recherche des numeros des triangles voisins d'un triangle 
-
-
-do iel=1,mesh%num_triangles
-
-  ! ... numeros des 3 sommets du triangle
-
-  is1=mesh%nodes(1,iel)
-  is2=mesh%nodes(2,iel)
-  is3=mesh%nodes(3,iel)
-  
-  ! ... boucles imbriquees sur les elements pointant vers
-  !     les 2 noeuds extremites de l'arete consideree
-  !     Le voisin est le triangle commun (hormis iel)
-
-  ! ... premiere arete (entre le sommet is1 et is2)
-
-  nel1=mesh%npoel1(is1+1)-mesh%npoel1(is1) !nb de triangles communs a is1
-  nel2=mesh%npoel1(is2+1)-mesh%npoel1(is2) !nb de triangles communs a is2
-
-  loop1:do i1=1,nel1
-    jel1=mesh%npoel2(mesh%npoel1(is1)+i1) !premier triangle is1
-    if(jel1.ne.iel) then
-      do i2=1,nel2
-        jel2=mesh%npoel2(mesh%npoel1(is2)+i2)
-        if(jel2 == jel1) then
-          mesh%nvois(1,iel)  = jel1
-          exit loop1
-        end if
-      end do
-    end if
-  end do loop1
-
-  ! ... deuxieme arete (entre le sommet is2 et is3)
-
-  nel2=mesh%npoel1(is2+1)-mesh%npoel1(is2)
-  nel3=mesh%npoel1(is3+1)-mesh%npoel1(is3)
-
-  loop2:do i2=1,nel2
-    jel2=mesh%npoel2(mesh%npoel1(is2)+i2)
-    if(jel2 /= iel) then
-      do i3=1,nel3
-        jel3=mesh%npoel2(mesh%npoel1(is3)+i3)
-        if(jel3 == jel2) then
-          mesh%nvois(2,iel)=jel2
-          exit loop2
-        end if
-      end do
-    end if
-  end do loop2
-
-  ! ... troisieme arete (entre le sommet is3 et is1)
-
-  nel3=mesh%npoel1(is3+1)-mesh%npoel1(is3)
-  nel1=mesh%npoel1(is1+1)-mesh%npoel1(is1)
-
-  loop3:do i3=1,nel3
-    jel3=mesh%npoel2(mesh%npoel1(is3)+i3)
-    if(jel3 /= iel) then
-      do i1=1,nel1
-        jel1=mesh%npoel2(mesh%npoel1(is1)+i1)
-        if(jel1 == jel3) then
-          mesh%nvois(3,iel)=jel3
-          exit loop3
-        end if
-      end do
-    end if
-  end do loop3
-
-end do
 
 
 ! --- Definition de nctfrt: le nombre de cotes frontieres
@@ -888,89 +693,6 @@ do i=1,mesh%num_triangles
    if (mesh%nvois(3,i)<0) mesh%nctfrt=mesh%nctfrt+1
 end do
 
-! --- Rangement de npoel2 dans l'ordre trigonometrique ---------
-
-do is=1,mesh%num_nodes
-
-  nel = mesh%npoel1(is+1)-mesh%npoel1(is)
-
-  if ( nel > 1 ) then
-
-    !*** Noeuds internes (Numero de reference nul) ***
-
-    if( mesh%refs(is) == 0) then
-
-      ind =1
-      iel1=mesh%npoel2(mesh%npoel1(is)+1)
-
-      loop4:do iel=2,nel-1
-        do j=1,3
-          if(mesh%nodes(j,iel1) == is) nct=mod(j+1,3)+1
-        end do
-
-        iel1=mesh%nvois(nct,iel1)
-        do id1=ind+1,nel
-          if(iel1 == mesh%npoel2(mesh%npoel1(is)+id1)) then
-            ind=ind+1
-            ntmp=mesh%npoel2(mesh%npoel1(is)+ind)
-            mesh%npoel2(mesh%npoel1(is)+ind)=iel1
-            mesh%npoel2(mesh%npoel1(is)+id1)=ntmp
-            cycle loop4
-          end if
-        end do
-      end do loop4
-
-     ! Noeuds frontieres
-
-     else 
-
-       ! --> Recherche du premier triangle dans l'ordre trigonometrique
-       loop5:do id1=1,nel
-         iel1=mesh%npoel2(mesh%npoel1(is)+id1)
-         do j=1,3
-           if(mesh%nvois(j,iel1).le.0 .and. mesh%nodes(j,iel1) == is) then
-             ntmp=mesh%npoel2(mesh%npoel1(is)+1)
-             mesh%npoel2(mesh%npoel1(is)+1)=iel1
-             mesh%npoel2(mesh%npoel1(is)+id1)=ntmp
-             exit loop5
-           end if
-         end do
-       end do loop5
-           
-       ! --> Rangement des autres triangles dans l'ordre trigonometrique
-       !     (s'il y en a plus que 2) 
-       if(nel  > 2) then
-         ind =1
-         iel1=mesh%npoel2(mesh%npoel1(is)+1)
-  
-         loop6:do iel=2,nel-1
-           do j=1,3
-             if(mesh%nodes(j,iel1)==is) then
-               nct=mod(j+1,3)+1
-             end if
-           end do
-
-           iel1=mesh%nvois(nct,iel1)
-  
-           do id1=ind+1,nel
-             if(iel1 == mesh%npoel2(mesh%npoel1(is)+id1)) then
-               ind=ind+1
-               ntmp=mesh%npoel2(mesh%npoel1(is)+ind)
-               mesh%npoel2(mesh%npoel1(is)+ind)=iel1
-               mesh%npoel2(mesh%npoel1(is)+id1)=ntmp
-               cycle loop6
-             end if
-           end do
-
-         end do loop6
-
-      end if
-
-    end if
-
-  end if
-
-end do
 
 !if (ldebug) then
 !  write(iout,*)"*** Recherche des numeros des triangles voisins d'un triangle ***"
@@ -1385,8 +1107,7 @@ integer                      :: indn1, indn2, num1, num2
 integer                      :: n1, n2, ivois, nc, iel, nucti
 integer                      :: nbti, is
 integer, parameter           :: iout=6
-real(8)                      :: x1, y1
-integer                      :: i, j, iac, nbc
+integer                      :: iac, nbc
      
 !======================================================================
 ! --- 1.0 --- Pointeur des numeros de cotes pointant vers un noeud -----
@@ -1559,12 +1280,12 @@ end if
  901  format(//10x,'Le nombre de triangles communs a un noeud'  &
               /10x,'est superieur a 12'             &   
               /10x,'Modifiez legerement le maillage'//)
- 902  format(//10x,'Matrices de lissage'            &
-              /10x,'xmal1',7x,'xmal2',7x,'xmal3')
- 903  format(  10x,3e12.3)
- 904  format(//10x,'Composantes des vecteurs tangeants'     &
-              /10x,'vtaux',7x,'vtauy')
- 905  format(  10x,2e12.3)
+! 902  format(//10x,'Matrices de lissage'            &
+!              /10x,'xmal1',7x,'xmal2',7x,'xmal3')
+! 903  format(  10x,3e12.3)
+! 904  format(//10x,'Composantes des vecteurs tangeants'     &
+!              /10x,'vtaux',7x,'vtauy')
+! 905  format(  10x,2e12.3)
 
 
 end subroutine poclis
