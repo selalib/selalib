@@ -647,7 +647,7 @@ end subroutine get_ltp_deformation_matrix
 
     ! do as many jumps as required through the neighbour pointers in the given dimension (1:x, 2:y, 3:vx, 4:vy)
     j = 1
-    do while(j<jumps .and. kprime/=0)
+    do while(j<=jumps .and. kprime/=0)
        
        ! going through neighbours
        ! [[file:~/mcp/selalib/src/pic_particle_types/lt_pic_4d_particle.F90::neighbour_pointers]]
@@ -2219,8 +2219,18 @@ end subroutine get_ltp_deformation_matrix
 
 
 
-  ! added by MCP 
-  ! 4d shape function
+  !> sll_pic_shape(degree, x, y, vx, vy, inv_hx, inv_hy, inv_hvx, inv_hvy)
+  !! computes the value of the 4d B-spline particle shape (no particle transformation here)
+  !!
+  !! note:
+  !!  - inv_hx, inv_hy, inv_hvx, inv_hvy are the inverse
+  !!    of the inter-particle distances (hx, hy, hvx, hvy) on the initial (or remapping) grid
+  !!
+  !!  - x, y, vx, vy are phase-space coordinates relative to the particle center
+  !!    and they are not scaled: for instance if degree = 1 (resp. if degree = 3),
+  !!    and |x| >= hx (resp. |x| >= 2*hx), then sll_pic_shape returns 0
+  !!    (and similarly for y, vx, vy)
+
   function sll_pic_shape( &
     degree,             &
     x, y, vx, vy,       &
@@ -2242,9 +2252,9 @@ end subroutine get_ltp_deformation_matrix
   end function sll_pic_shape
 
 
-  ! added by MCP 
-  ! 4d-reference shape, function support is [-part_cp, part_cp]^4
-  ! with part_cp = (degree +1)/2
+  !> added by MCP
+  !! 4d-reference B-spline shape function (independent of the grid resolution), function support is [-part_cp, part_cp]^4
+  !! with part_cp = (degree +1)/2
   function sll_ref_pic_shape( &
     degree,     &
     x,y,vx,vy &
@@ -2261,8 +2271,7 @@ end subroutine get_ltp_deformation_matrix
   end function sll_ref_pic_shape
   
   
-  ! added by MCP
-  ! univariate centered (reference) B-splines. Support is ( -(degree+1)/2, (degree+1)/2 )
+  ! univariate centered (and reference, ie independent of the grid resolution) B-splines. Support is ( -(degree+1)/2, (degree+1)/2 )
   function sll_b_spline( &
     degree, &
     x       &
