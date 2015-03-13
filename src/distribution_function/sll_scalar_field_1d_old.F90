@@ -67,10 +67,13 @@ contains   ! *i****************************************************************
     init_function)
 
     class(scalar_field_1d), intent(inout)   :: this
-    class(sll_cartesian_mesh_1d), pointer   :: mesh
-    procedure(scalar_function_1D), optional :: init_function
     character(len=*), intent(in)            :: field_name
+    class(sll_cartesian_mesh_1d), pointer   :: mesh
     sll_int32, intent(in)                   :: data_position
+    procedure(scalar_function_1D), optional :: init_function
+
+    character(len=*), parameter :: this_sub_name = 'initialize_scalar_field_1d'
+
     sll_int32  :: ierr
     sll_int32  :: num_cells1
     sll_int32  :: num_pts1
@@ -78,7 +81,8 @@ contains   ! *i****************************************************************
     sll_real64 :: eta1
     sll_real64 :: delta1
 
-    SLL_WARNING('This scalar field 1d object is deprecated')
+    SLL_WARNING( this_sub_name, 'This scalar field 1d object is deprecated.' )
+
     this%mesh => mesh
     this%name  = trim(field_name)
     num_cells1 = mesh%num_cells

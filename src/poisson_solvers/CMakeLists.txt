@@ -17,7 +17,10 @@ SET(POISSON_SRCS sll_poisson_1d_base.F90
                  sll_poisson_3d_base.F90
                  sll_fishpack.F90
                  sll_mudpack.F90
-                 sll_mudpack_curvilinear.F90)
+                 sll_mudpack_curvilinear.F90
+                 sll_poisson_1d_fourier.F90
+                 sll_poisson_1d_fem.F90
+                 sll_poisson_1d_fd.F90)
 
 IF(FFTW_ENABLED AND FFTW_FOUND)
    SET(POISSON_SRCS ${POISSON_SRCS} sll_poisson_2d_periodic_fftw.F90)
@@ -30,18 +33,21 @@ TARGET_LINK_LIBRARIES( sll_poisson_solvers
   sll_assert 
   mudpack
   fishpack
-  dfftpack )
+  dfftpack 
+  ${LAPACK_LIBRARIES}
+  sll_meshes)
 
 ADD_LIBRARY( hex_poisson STATIC hex_poisson.F90 )
 TARGET_LINK_LIBRARIES( hex_poisson sll_hex_meshes )
 
+ADD_LIBRARY( tri_poisson STATIC tri_poisson.F90 )
+TARGET_LINK_LIBRARIES( tri_poisson sll_tri_meshes )
 
-ADD_LIBRARY ( pivotbande STATIC pivotbande.F90)
+ADD_LIBRARY ( pivotbande STATIC ../utilities/pivotbande.F90)
 TARGET_LINK_LIBRARIES( pivotbande )
 
-
 # Tests
-IF(BUILD_TESTING)
+IF(BUILD_TESTING AND MPI_ENABLED)
 
   ADD_EXECUTABLE( test_poisson_2d_dirichlet_cartesian 
     test_poisson_2d_dirichlet_cartesian.F90 )
@@ -80,8 +86,11 @@ IF(BUILD_TESTING)
   ADD_EXECUTABLE(test_fishpack test_fishpack.F90)
   TARGET_LINK_LIBRARIES( test_fishpack sll_poisson_solvers) 
 
-  ADD_EXECUTABLE( test_hex_poisson pivotbande.F90 test_hex_poisson.F90 )
+  ADD_EXECUTABLE( test_hex_poisson ../utilities/pivotbande.F90 test_hex_poisson.F90 )
   TARGET_LINK_LIBRARIES( test_hex_poisson hex_poisson sll_constants )
+
+  ADD_EXECUTABLE( test_tri_poisson test_tri_poisson.F90 )
+  TARGET_LINK_LIBRARIES( test_tri_poisson tri_poisson sll_mesh_calculus sll_file_io )
 
   ### BEGIN MACRO ###
   MACRO(ADD_MUDPACK_PROGRAM TEST_NAME)
@@ -108,4 +117,4 @@ IF(BUILD_TESTING)
     SET_TESTS_PROPERTIES( poisson_per_cart_par_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
   ENDIF()
 
-ENDIF(BUILD_TESTING)
+ENDIF(BUILD_TESTING AND MPI_ENABLED)

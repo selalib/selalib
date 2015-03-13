@@ -650,25 +650,38 @@ contains  ! ****************************************************************
     sll_real64, intent(in)  :: x1
     sll_real64, intent(in)  :: x2
     sll_real64 :: val
+    sll_real64 :: x1_basis
+    sll_real64 :: x2_basis
+    sll_int32  :: ierr
+    type(sll_hex_mesh_2d),   pointer  :: mesh
+    type(sll_box_spline_2d), pointer  :: spline
+
+    mesh => new_hex_mesh_2d(1)
+    spline => new_box_spline_2d(mesh, SLL_DIRICHLET)
+    x1_basis = change_basis_x1(spline, x1, x2)
+    x2_basis = change_basis_x2(spline, x1, x2)
 
     val = 0._f64
-
+    
     if (nderiv1.eq.0) then
        if (nderiv2.eq.0) then
-          val = chi_gen_val(x1, x2, deg)
+          val = chi_gen_val(x1_basis, x2_basis, deg)
        else if (nderiv2.eq.1) then
-          val = boxspline_x2_derivative(x1, x2, deg)
+          val = boxspline_x2_derivative(x1_basis, x2_basis, deg)
        else
           print *, "Error in boxspline_val_der : cannot compute this derivative"
        end if
     else if (nderiv1.eq.1) then
        if (nderiv2.eq.0) then
-          val = boxspline_x1_derivative(x1, x2, deg)
+          val = boxspline_x1_derivative(x1_basis, x2_basis, deg)
        else
           print *, "Error in boxspline_val_der : cannot compute this derivative"
        end if
     end if
 
+    SLL_DEALLOCATE_ARRAY(spline%coeffs,ierr)
+    SLL_DEALLOCATE(spline,ierr)
+    call delete(mesh)
   end function boxspline_val_der
 
 
@@ -688,6 +701,10 @@ contains  ! ****************************************************************
     character(len=*), parameter :: name = "basis_values.txt"
     sll_real64  :: x
     sll_real64  :: y
+    sll_real64  :: a11
+    sll_real64  :: a12
+    sll_real64  :: a21
+    sll_real64  :: a22
     sll_real64  :: val
     sll_int32   :: ierr
     sll_int32   :: nonZero
@@ -708,17 +725,21 @@ contains  ! ****************************************************************
     !    0  1
     !    |
     !    +--0-----1-->
-    ref_pts(:,1) = (/ 0._f64,          0.0_f64 /)
-    ref_pts(:,2) = (/ 1./sqrt(3._f64), 0.5_f64 /)
-    ref_pts(:,3) = (/ 0._f64,          1.0_f64 /)
-
-    ! Computing fekete points on that triangle
+    ref_pts(:,1) = (/ 0._f64,               0.0_f64 /)
+    ref_pts(:,2) = (/ sqrt(3._f64)*0.5_f64, 0.5_f64 /)
+    ref_pts(:,3) = (/ 0._f64,               1.0_f64 /)
+    
+    ! Computing fekete points on equilateral reference triangle
+    ! ie. triangle of vertices : (0,0) (0,1) and (1,0)
+    ! see $SELALIB/src/integration/fekete.F90 for more info
     quad_pw = fekete_points_and_weights(ref_pts)
 
     if (deg .eq. 1) then
-       nonZero = 3
-       nderiv  = 1
-       num_fek = 10
+       nonZero = 3 !> Number of non null box splines on a cell
+       nderiv  = 1 !> Number of derivatives to be computed
+       num_fek = 10 !> Number of fekete points on a cell
+       !> The displament vector correspond to the translation
+       !> done to obtain the other non null basis functions
        SLL_ALLOCATE(disp_vec(2, nonZero), ierr)
        disp_vec(:,1) = 0._f64
        disp_vec(:,2) = ref_pts(:,1) - ref_pts(:,2)
@@ -737,10 +758,10 @@ contains  ! ****************************************************************
 
     do ind_nZ = 1, nonZero
        do ind_fek = 1, num_fek
+          x = quad_pw(1, ind_fek) + disp_vec(1, ind_nZ)
+          y = quad_pw(2, ind_fek) + disp_vec(2, ind_nZ)
           do idx = 0, nderiv
              do idy = 0, nderiv-idx
-                x = quad_pw(1, ind_fek) + disp_vec(1, ind_nZ)
-                y = quad_pw(2, ind_fek) + disp_vec(2, ind_nZ)
                 val = boxspline_val_der(x, y, deg, idx, idy)
                 write(out_unit, "(1(g13.3))", advance='no') val
                 write(out_unit, "(1(a,1x))", advance='no') ","
@@ -769,7 +790,7 @@ contains  ! ****************************************************************
     type(sll_hex_mesh_2d), pointer :: mesh
     sll_int32, intent(in)          :: deg
     sll_int32                      :: out_unit
-    character(len=24), parameter   :: name = "bezier_connectivity.txt"
+    character(len=28), parameter   :: name = "boxsplines_connectivity.txt"
     sll_int32,  dimension(:,:), allocatable :: LM
     sll_real64, dimension(:,:), allocatable :: knots
     sll_int32  :: num_fek

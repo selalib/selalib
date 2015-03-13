@@ -27,4 +27,3 @@
 !> <b> How to use it </b>
 !> - Header file : \code #include 'sll_constants.h' \endcode
 !> - Link with   <code>-lsll_constants</code>
-!>
