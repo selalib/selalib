@@ -69,7 +69,8 @@ TARGET_LINK_LIBRARIES(sll_csr_one_constraint sll_utilities sll_memory)
 
 
 # Tests
-IF(BUILD_TESTING)
+#PN Do not know why sll_collective is necessary here...
+IF(BUILD_TESTING AND MPI_ENABLED)
 
   ADD_EXECUTABLE( test_sparse_matrix unit_test_sparse_matrix.F90 )
   TARGET_LINK_LIBRARIES( test_sparse_matrix sll_sparse_matrix sll_collective )
@@ -83,4 +84,4 @@ IF(BUILD_TESTING)
   ADD_EXECUTABLE( test_gmres test_gmres_driver.F90 dPackgmres.f )
   TARGET_LINK_LIBRARIES( test_gmres ${BLAS_LIBRARIES} )
 
-ENDIF(BUILD_TESTING)
+ENDIF(BUILD_TESTING AND MPI_ENABLED)
