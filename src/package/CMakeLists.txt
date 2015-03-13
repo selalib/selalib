@@ -7,7 +7,7 @@ SET(SLL_MACROS
     ${SLL_DIR}/working_precision/sll_working_precision.h
     ${SLL_DIR}/assert/sll_assert.h
     ${SLL_DIR}/constants/sll_constants.h
-    ${SLL_DIR}/utilities/sll_errors.h
+    ${SLL_DIR}/errors/sll_errors.h
     ${SLL_DIR}/utilities/sll_utilities.h
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_solvers_macros.h
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_solvers.h
@@ -62,7 +62,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/characteristics/sll_characteristics_2d_explicit_euler.F90
     ${SLL_DIR}/characteristics/sll_characteristics_2d_explicit_euler_conservative.F90
     ${SLL_DIR}/characteristics/sll_characteristics_2d_base.F90
-    ${SLL_DIR}/utilities/sll_errors.F90
+    ${SLL_DIR}/errors/sll_errors.F90
     ${SLL_DIR}/utilities/sll_utilities.F90
     ${SLL_DIR}/utilities/sll_primitives.F90
     ${SLL_DIR}/utilities/tridiagonal.F90
