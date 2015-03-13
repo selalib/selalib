@@ -165,6 +165,9 @@ contains
     sll_real64, dimension(:), pointer             :: params
     sll_int32, intent(in)                         :: num_params
 
+    character(len=*), parameter :: this_sub_name = &
+      'change_initial_function_vp2d_par_cart'
+
     sll_int32 :: ierr
     sll_int32 :: i
     
@@ -172,13 +175,13 @@ contains
     if (associated(sim%params)) SLL_DEALLOCATE(sim%params,ierr)
 
     if (num_params<1) then
-      SLL_ERROR('#num_params should be >=1')
+      SLL_ERROR( this_sub_name, '#num_params should be >=1' )
     endif
 
     SLL_ALLOCATE(sim%params(num_params),ierr)
 
     if (size(params)<num_params) then
-      SLL_ERROR('#size of params is not good')
+      SLL_ERROR( this_sub_name, '#size of params is not good' )
     endif
 
     do i=1,num_params
@@ -198,6 +201,9 @@ contains
     sll_real64, dimension(:), pointer             :: params
     sll_int32, intent(in)                         :: num_params
 
+    character(len=*), parameter :: this_sub_name = &
+      'change_equilibrium_function_vp2d_par_cart'
+
     sll_int32 :: ierr
     sll_int32 :: i
     
@@ -207,13 +213,13 @@ contains
     end if
 
     if (num_params<1) then
-      SLL_ERROR('#num_params should be >=1')
+      SLL_ERROR( this_sub_name, '#num_params should be >=1' )
     endif
 
     SLL_ALLOCATE(sim%equil_func_params(num_params),ierr)
 
     if (size(params)<num_params) then
-      SLL_ERROR('#size of params is not good')
+      SLL_ERROR( this_sub_name, '#size of params is not good' )
     endif
 
     do i=1,num_params
@@ -227,6 +233,9 @@ contains
     class(sll_simulation_2d_vlasov_poisson_cart) :: sim
     character(len=*), optional                   :: filename
     sll_int32, intent(in), optional :: num_run
+
+    character(len=*), parameter :: this_sub_name = 'init_vp2d_par_cart'
+    character(len=128)          :: err_msg
 
     character(len=256) :: mesh_case_x1
     sll_int32          :: num_cells_x1
@@ -492,7 +501,8 @@ contains
 
       open(unit = input_file, file=trim(filename_loc)//'.nml',IOStat=IO_stat)
       if ( IO_stat /= 0 ) then
-        SLL_ERROR( 'failed to open file '//trim(filename_loc)//'.nml')
+        err_msg = 'failed to open file '//trim(filename_loc)//'.nml'
+        SLL_ERROR( this_sub_name, err_msg )
       end if
 
       if (sll_get_collective_rank(sll_world_collective)==0) then
@@ -525,7 +535,8 @@ contains
         mesh_x1 => new_cartesian_mesh_1d(num_cells_x1,eta_min=x1_min, eta_max=x1_max)  
         call get_node_positions( mesh_x1, sim%x1_array )
       case default
-        SLL_ERROR('#mesh_case_x1 '//mesh_case_x1//' not implemented')
+        err_msg = '#mesh_case_x1 '//mesh_case_x1//' not implemented'
+        SLL_ERROR( this_sub_name, err_msg )
     end select
 
     sim%num_bloc_x1 = 1
@@ -578,7 +589,8 @@ contains
 
       case default
 
-        SLL_ERROR('#mesh_case_x2 '//mesh_case_x2//' not implemented')
+        err_msg = '#mesh_case_x2 '//mesh_case_x2//' not implemented'
+        SLL_ERROR( this_sub_name, err_msg )
 
     end select
 
@@ -634,7 +646,7 @@ contains
 
       case default
 
-        SLL_ERROR('#init_func_case not implemented')
+        SLL_ERROR( this_sub_name, '#init_func_case not implemented' )
 
     end select
 
@@ -658,8 +670,8 @@ contains
     sim%time_init         = time_init
     
     if (sim%nb_mode<0) then
-      print *,'#bad value of nb_mode=',nb_mode      
-      SLL_ERROR('#should be >=0')
+      write( err_msg,* ) '#bad value of nb_mode=', nb_mode, '; #should be >=0'
+      SLL_ERROR( this_sub_name, err_msg )
     endif
     
     select case (split_case)    
@@ -688,7 +700,7 @@ contains
       case ("SLL_ORDER6VPnew2_VTV") 
         sim%split => new_time_splitting_coeff(SLL_ORDER6VPnew2_VTV,dt=dt)
       case default
-        SLL_ERROR('#split_case not defined')
+        SLL_ERROR( this_sub_name, '#split_case not defined' )
     end select
 
     !advector
@@ -731,7 +743,8 @@ contains
 
       case default
 
-        SLL_ERROR('#advector in x1 '//advector_x1//' not implemented')
+        err_msg = '#advector in x1 '//advector_x1//' not implemented'
+        SLL_ERROR( this_sub_name, err_msg )
 
     end select    
 
@@ -769,7 +782,8 @@ contains
 
       case default
 
-        SLL_ERROR('#advector in x2 '//advector_x2//' not implemented')
+        err_msg = '#advector in x2 '//advector_x2//' not implemented'
+        SLL_ERROR( this_sub_name, err_msg )
 
     end select
 
@@ -799,7 +813,8 @@ contains
         sim%advection_form_x2 = SLL_CONSERVATIVE
         sim%num_dof_x2        = num_cells_x2
       case default
-        SLL_ERROR('#advection_form_x2 '//advection_form_x2//' not implemented')
+        err_msg = '#advection_form_x2 '//advection_form_x2//' not implemented'
+        SLL_ERROR( this_sub_name, err_msg )
     end select  
     
     sim%factor_x1     = factor_x1
@@ -826,7 +841,7 @@ contains
           sim%integration_weight(i)=sim%x2_array(i+1)-sim%x2_array(i)
         enddo  
       case default
-        SLL_ERROR('#integration_case not implemented')
+        SLL_ERROR( this_sub_name, '#integration_case not implemented' )
     end select  
     
     select case (poisson_solver)
@@ -841,7 +856,8 @@ contains
           x1_max, &
           num_cells_x1)
       case default
-        SLL_ERROR('#poisson_solver '//poisson_solver//' not implemented')
+        err_msg = '#poisson_solver '//poisson_solver//' not implemented'
+        SLL_ERROR( this_sub_name, err_msg )
     end select
     
     select case (drive_type)
@@ -886,7 +902,8 @@ contains
         sim%omegadr        = 0.    
 
       case default
-        SLL_ERROR('#drive_type '//drive_type//' not implemented')
+        err_msg = '#drive_type '//drive_type//' not implemented'
+        SLL_ERROR( this_sub_name, err_msg )
 
     end select
 
@@ -928,16 +945,23 @@ contains
     class(sll_simulation_2d_vlasov_poisson_cart), intent(inout) :: sim
     character(len=*), intent(in)                                :: filename
   
+    character(len=*), parameter :: this_sub_name = 'init_vp2d_fake'
+    character(len=128)          :: err_msg
+
     print *,sim%dt
     print *,filename
-    SLL_WARNING('# Do not use the routine init_vp2d_fake')
-    SLL_ERROR('#use instead init_vp2d_par_cart')
+    err_msg = '# Do not use the routine init_vp2d_fake\n'// & 
+              '# Use instead init_vp2d_par_cart'
+    SLL_ERROR( this_sub_name, err_msg )
   
   end subroutine init_vp2d_fake
 
   subroutine run_vp2d_cartesian(sim)
 
     class(sll_simulation_2d_vlasov_poisson_cart), intent(inout) :: sim
+
+    character(len=*), parameter         :: this_sub_name = 'run_vp2d_cartesian'
+    character(len=128)                  :: err_msg
 
     sll_real64, dimension(:,:), pointer :: f_x1
     sll_real64, dimension(:,:), pointer :: f_x2
@@ -1119,8 +1143,9 @@ contains
     case (SLL_CONSERVATIVE)
        node_positions_x2(1:num_dof_x2) = x2_array_middle(1:num_dof_x2)
     case default
-       print *,'#sim%advection_form_x2=',sim%advection_form_x2
-       SLL_ERROR('#not implemented')
+       write(err_msg,*) '#sim%advection_form_x2 ', sim%advection_form_x2, &
+                        ' not implemented'
+       SLL_ERROR( this_sub_name, err_msg )
     end select
 
 
@@ -1151,8 +1176,9 @@ contains
        INQUIRE(FILE=trim(sim%restart_file)//'_proc_'//cproc//'.rst', EXIST=file_exists)
 
        if (.not. file_exists) then
-          SLL_ERROR('#file '//trim(sim%restart_file)//'_proc_'//cproc//'.rst &
-               & does not exist')
+          err_msg = '#file '//trim(sim%restart_file)//'_proc_'//cproc//'.rst &
+               & does not exist'
+          SLL_ERROR( this_sub_name, err_msg )
        endif
 
        open(unit=restart_id, &
@@ -1160,9 +1186,10 @@ contains
             form='unformatted', IOStat=ierr)      
 
        if ( ierr .ne. 0 ) then
-          SLL_ERROR('ERROR while opening file &
+          err_msg = 'ERROR while opening file &
                &'//trim(sim%restart_file)//'_proc_'//cproc//'.rst &
-               & Called from run_vp2d_cartesian().')
+               & Called from run_vp2d_cartesian().'
+          SLL_ERROR( this_sub_name, err_msg )
        end if
 
        print *,'#read restart file '//trim(sim%restart_file)//'_proc_'//cproc//'.rst'      
