@@ -1114,11 +1114,12 @@ allocate(xp(nbp))
 allocate(yp(nbp))
 
 do ip = 1, nbp
-   xp(ip)     = mesh%coord(1,ip) - ex(ip) * dt
-   yp(ip)     = mesh%coord(2,ip) - ey(ip) * dt
+   xp(ip)     = mesh%coord(1,ip) + ex(ip) * dt
+   yp(ip)     = mesh%coord(2,ip) + ey(ip) * dt
    nlpa(ip)   = mesh%npoel2(mesh%npoel1(ip)+1)
    numres(ip) = ip
 end do
+
 nlmloc = nlpa
 
 do while( nbpres > 0 )
@@ -1149,26 +1150,16 @@ do while( nbpres > 0 )
 
    end if
 
-   write(*,*) " nbpres = ", nbpres 
    do ip = 1, nbpres    
 
       jp = numres(ip)
 
-      pa1x = mesh%coord(1,mesh%nodes(1,nlmloc(jp)))
-      pa1y = mesh%coord(2,mesh%nodes(1,nlmloc(jp)))
-      pa2x = mesh%coord(1,mesh%nodes(2,nlmloc(jp)))
-      pa2y = mesh%coord(2,mesh%nodes(2,nlmloc(jp)))
-      pa3x = mesh%coord(1,mesh%nodes(3,nlmloc(jp)))
-      pa3y = mesh%coord(2,mesh%nodes(3,nlmloc(jp)))
-
-      write(*,*) "iel, jp, xp, yp = ", nlmloc(ip), jp, xp(jp), yp(jp)
-
-      pa1x = pa1x - xp(jp)
-      pa1y = pa1y - yp(jp)
-      pa2x = pa2x - xp(jp)
-      pa2y = pa2y - yp(jp)
-      pa3x = pa3x - xp(jp)
-      pa3y = pa3y - yp(jp)
+      pa1x = mesh%coord(1,mesh%nodes(1,nlmloc(jp))) - xp(jp)
+      pa1y = mesh%coord(2,mesh%nodes(1,nlmloc(jp))) - yp(jp)
+      pa2x = mesh%coord(1,mesh%nodes(2,nlmloc(jp))) - xp(jp)
+      pa2y = mesh%coord(2,mesh%nodes(2,nlmloc(jp))) - yp(jp)
+      pa3x = mesh%coord(1,mesh%nodes(3,nlmloc(jp))) - xp(jp)
+      pa3y = mesh%coord(2,mesh%nodes(3,nlmloc(jp))) - yp(jp)
 
       coef(1,ip) = pa1x*pa2y - pa1y*pa2x
       coef(2,ip) = pa2x*pa3y - pa2y*pa3x
@@ -1201,6 +1192,7 @@ do while( nbpres > 0 )
    !*** Deuxieme boucle pour celles qui sont sorties
 
    nbpr = nbpres - nfin
+   write(*,*) " nfin, nbpres = ", nfin, nbpres 
 
    if( nbpr .ne. 0 ) then
 
@@ -1212,25 +1204,21 @@ do while( nbpres > 0 )
               .and. coef(2,ip) >= eps   &
               .and. coef(3,ip) >= eps   ) then
 
-            !La particule a traverse le cote 1 = (A1-A2)
+            print*,"La particule a traverse le cote 1 = (A1-A2)"
             itest(ip) = 11
 
-         end if
-
-         if (       coef(1,ip) >= eps   &
+         else if (  coef(1,ip) >= eps   &
               .and. coef(2,ip) <  eps   &
               .and. coef(3,ip) >= eps   ) then
    
-            !La particule a traverse le cote 2 = (A2-A3)
+            print*,"La particule a traverse le cote 2 = (A2-A3)"
             itest(ip) = 12 
  
-         end if
-   
-         if (       coef(1,ip) >= eps   &
+         else if (  coef(1,ip) >= eps   &
               .and. coef(2,ip) >= eps   &
               .and. coef(3,ip) <  eps   ) then
    
-            !La particule a traverse le cote 3 = (A3-A1)
+            print*,"La particule a traverse le cote 3 = (A3-A1)"
             itest(ip) = 13
 
          end if
@@ -1238,7 +1226,7 @@ do while( nbpres > 0 )
          if (       coef(1,ip) < eps    &
               .and. coef(2,ip) < eps )  then
 
-            !La particule a traverse le cote 1 ou 2 
+            print*,"La particule a traverse le cote 1 ou 2 "
 
             pa2x = mesh%coord(1,mesh%nodes(2,nlmloc(ip)))-xp(jp)
             pa2y = mesh%coord(2,mesh%nodes(2,nlmloc(ip)))-yp(jp)
@@ -1253,7 +1241,7 @@ do while( nbpres > 0 )
          if (       coef(2,ip) < eps     &
               .and. coef(3,ip) < eps )  then
 
-            !La particule a traverse le cote 2 ou 3 
+            print*,"La particule a traverse le cote 2 ou 3 "
 
             pa3x = mesh%coord(1,mesh%nodes(3,nlmloc(ip)))-xp(jp)
             pa3y = mesh%coord(2,mesh%nodes(3,nlmloc(ip)))-yp(jp)
@@ -1267,7 +1255,7 @@ do while( nbpres > 0 )
          if (        coef(3,ip) < eps    &
                .and. coef(1,ip) < eps )  then
 
-            !La particule a traverse le cote 3 ou 1 
+            print*, "La particule a traverse le cote 3 ou 1 "
 
             pa1x = mesh%coord(1,mesh%nodes(1,nlmloc(jp)))-xp(jp)
             pa1y = mesh%coord(2,mesh%nodes(1,nlmloc(jp)))-yp(jp)
@@ -1319,6 +1307,7 @@ do while( nbpres > 0 )
    end if
 
    nbpres = nrest
+   print*, "nbpres =", nbpres
 
 end do
 !
