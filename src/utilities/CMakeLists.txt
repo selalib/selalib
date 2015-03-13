@@ -1,5 +1,4 @@
 SET( SRC_UTILITIES
-  sll_errors.F90
   sll_utilities.F90
   tridiagonal.F90
   sll_toeplitz_penta_diagonal.F90
@@ -15,7 +14,8 @@ IF(Fortran_COMPILER MATCHES IBM)
 ENDIF()
 
 ADD_LIBRARY( sll_utilities STATIC ${SRC_UTILITIES} )
-TARGET_LINK_LIBRARIES( sll_utilities sll_memory sll_assert sll_working_precision )
+TARGET_LINK_LIBRARIES( sll_utilities
+  sll_errors sll_memory sll_assert sll_working_precision )
 
 # Example (tridiagonal solver)
 ADD_EXECUTABLE( example_tridiagonal example.F90 )
@@ -24,10 +24,6 @@ TARGET_LINK_LIBRARIES( example_tridiagonal sll_utilities )
 # Example (tridiagonal solver)
 ADD_EXECUTABLE( test_fornberg test_fornberg.F90 )
 TARGET_LINK_LIBRARIES( test_fornberg sll_utilities sll_constants )
-
-# Example (SLL_WARNING and SLL_ERROR macros)
-ADD_EXECUTABLE( test_crash test_crash.F90 )
-TARGET_LINK_LIBRARIES( test_crash sll_utilities )
 
 # Ctests
 IF(BUILD_TESTING)
