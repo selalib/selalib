@@ -62,6 +62,7 @@ type :: sll_triangular_mesh_2d
   sll_int32,  dimension(:),   pointer :: refs
   sll_int32,  dimension(:),   pointer :: reft
   sll_int32,  dimension(:,:), pointer :: nvois
+  sll_int32,  dimension(:,:), pointer :: nvoiv
   sll_int32,  dimension(:),   pointer :: nusd
   sll_int32,  dimension(:),   pointer :: npoel1
   sll_int32,  dimension(:),   pointer :: npoel2
@@ -141,7 +142,7 @@ end interface new_triangular_mesh_2d
 !xbas   - integrales des fonctions de base
 !refs   - references des sommets
 !reft   - references des elements
-!ntri   - table de connectivite
+!nodes   - table de connectivite
 !nvois  - numeros des voisins (solveur)
 !nvoif  - numero local dans le voisin de la face commune
 !nusd   - references du sous-domaine
@@ -930,6 +931,7 @@ x2 = (syba-(xc-xa)*(xb*xb-xa*xa+yb*yb-ya*ya))/det
 
 end subroutine get_cell_center
 
+
 !> Map an hexagonal mesh on circle
 !> param[inout] mesh the triangular mesh built fron an hexagonal mesh
 !> param[in]    num_cells is the num_cells parameter of the hexagonal mesh
@@ -978,7 +980,7 @@ end subroutine map_to_circle
 !!            nlpa   - numero des elements contenant les particules    
 !!                                                                      
 !!            coor   - coordonnees des noeuds                          
-!!            ntri   - numero des sommets des triangles                
+!!            nodes   - numero des sommets des triangles                
 !!            nvois  - numero des voisins des elements                 
 !!            aire   - aire de chaque element                          
 !!                                                                      
@@ -1000,12 +1002,12 @@ end subroutine map_to_circle
 !!                      cotes qui ont absorbe ces particules            
 !!            v1pert, v2pert  - composantes des vitesses des particules  absorbees
 !!                                                                      
-!!             nlmloc - tableau auxiliaire contenant les numeros des    
+!!            nlmloc - tableau auxiliaire contenant les numeros des    
 !!                      elements ou l'on cherche les particules         
-!!             numres - tableau auxiliaire contenant les numeros des    
+!!            numres - tableau auxiliaire contenant les numeros des    
 !!                      particules non encore localisees                
 !!                                                                      
-!!             itest  - tableau auxiliaire pour preciser le            
+!!            itest  - tableau auxiliaire pour preciser le            
 !!                      comportement d'une particule :                  
 !!            - si  itest=0 la particules reste dans son triangle       
 !!            - si  itest=1,2,3 la particule traverse le cote 1,2ou3   
@@ -1066,7 +1068,7 @@ integer, dimension(:), allocatable :: itest
 integer, dimension(:), allocatable :: nlmloc
 integer, dimension(:), allocatable :: nlpa
 !integer, dimension(:), allocatable :: ncott
-integer, dimension(:), allocatable :: numpt
+!integer, dimension(:), allocatable :: numpt
 !integer, dimension(:), allocatable :: nelet
 !integer, dimension(:), allocatable :: newps
 !integer, dimension(:), allocatable :: ndecl
@@ -1096,9 +1098,19 @@ real(8) :: pa1x, pa1y, pa2x, pa2y, pa3x, pa3y
 !
 !end if
 
+allocate(nlpa(mesh%num_nodes));   nlpa = 0
+allocate(numres(mesh%num_nodes)); numres = 0
 
-eps    = -mesh%petitl**2
-nbp    = mesh%num_nodes
+eps   = -mesh%petitl**2
+nbp   = 0
+do ip = 1, mesh%num_nodes
+  if (mesh%refs(ip) == 0) then
+    nbp         = nbp+1
+    numres(nbp) = ip
+    nlpa(nbp)   = mesh%npoel2(mesh%npoel1(ip)+1)
+  end if
+end do
+     
 nbpres = nbp
 nbpert = 0
 num    = 0
@@ -1106,21 +1118,18 @@ num    = 0
 allocate(itest(nbp)); itest = 0
 allocate(coef(4,nbp))
 allocate(xlm(3,nbp))
-allocate(nlpa(nbp))
-allocate(numres(nbp))
-allocate(numpt(nbp))
 allocate(nlmloc(nbp))
 allocate(xp(nbp))
 allocate(yp(nbp))
 
 do ip = 1, nbp
-   xp(ip)     = mesh%coord(1,ip) + ex(ip) * dt
-   yp(ip)     = mesh%coord(2,ip) + ey(ip) * dt
-   nlpa(ip)   = mesh%npoel2(mesh%npoel1(ip)+1)
-   numres(ip) = ip
+   if (mesh%refs(ip) == 0) then
+     jp         = numres(ip)
+     xp(ip)     = mesh%coord(1,jp) + ex(jp) * dt
+     yp(ip)     = mesh%coord(2,jp) + ey(jp) * dt
+     nlmloc(ip) = nlpa(jp)
+   end if
 end do
-
-nlmloc = nlpa
 
 do while( nbpres > 0 )
 
@@ -1154,27 +1163,22 @@ do while( nbpres > 0 )
 
       jp = numres(ip)
 
-      pa1x = mesh%coord(1,mesh%nodes(1,nlmloc(jp))) - xp(jp)
-      pa1y = mesh%coord(2,mesh%nodes(1,nlmloc(jp))) - yp(jp)
-      pa2x = mesh%coord(1,mesh%nodes(2,nlmloc(jp))) - xp(jp)
-      pa2y = mesh%coord(2,mesh%nodes(2,nlmloc(jp))) - yp(jp)
-      pa3x = mesh%coord(1,mesh%nodes(3,nlmloc(jp))) - xp(jp)
-      pa3y = mesh%coord(2,mesh%nodes(3,nlmloc(jp))) - yp(jp)
+      pa1x = mesh%coord(1,mesh%nodes(1,nlmloc(ip))) - xp(ip)
+      pa1y = mesh%coord(2,mesh%nodes(1,nlmloc(ip))) - yp(ip)
+      pa2x = mesh%coord(1,mesh%nodes(2,nlmloc(ip))) - xp(ip)
+      pa2y = mesh%coord(2,mesh%nodes(2,nlmloc(ip))) - yp(ip)
+      pa3x = mesh%coord(1,mesh%nodes(3,nlmloc(ip))) - xp(ip)
+      pa3y = mesh%coord(2,mesh%nodes(3,nlmloc(ip))) - yp(ip)
 
       coef(1,ip) = pa1x*pa2y - pa1y*pa2x
       coef(2,ip) = pa2x*pa3y - pa2y*pa3x
       coef(3,ip) = pa3x*pa1y - pa3y*pa1x
-
-   end do
-
-   do ip = 1, nbpres
 
       if(      coef(1,ip) >= eps    &
          .and. coef(2,ip) >= eps    &
          .and. coef(3,ip) >= eps ) then
 
          nfin = nfin + 1
-         jp = numres(ip)
 
          xlm(1,jp) = 0.5 * coef(1,ip) / mesh%aire(nlmloc(ip))
          xlm(2,jp) = 0.5 * coef(2,ip) / mesh%aire(nlmloc(ip))
@@ -1192,7 +1196,6 @@ do while( nbpres > 0 )
    !*** Deuxieme boucle pour celles qui sont sorties
 
    nbpr = nbpres - nfin
-   write(*,*) " nfin, nbpres = ", nfin, nbpres 
 
    if( nbpr .ne. 0 ) then
 
@@ -1204,29 +1207,33 @@ do while( nbpres > 0 )
               .and. coef(2,ip) >= eps   &
               .and. coef(3,ip) >= eps   ) then
 
-            print*,"La particule a traverse le cote 1 = (A1-A2)"
-            itest(ip) = 11
+            !La particule a traverse le cote 1 = (A1-A2)
+            itest(ip) = 1 + 10*(1-min(1,mesh%nvoiv(1,nlmloc(ip))))
 
-         else if (  coef(1,ip) >= eps   &
+         end if
+
+         if (       coef(1,ip) >= eps   &
               .and. coef(2,ip) <  eps   &
               .and. coef(3,ip) >= eps   ) then
    
-            print*,"La particule a traverse le cote 2 = (A2-A3)"
-            itest(ip) = 12 
+            !La particule a traverse le cote 2 = (A2-A3)
+            itest(ip) = 2 + 10*(1-min(1,mesh%nvoiv(2,nlmloc(ip))))
  
-         else if (  coef(1,ip) >= eps   &
+         end if
+   
+         if (       coef(1,ip) >= eps   &
               .and. coef(2,ip) >= eps   &
               .and. coef(3,ip) <  eps   ) then
    
-            print*,"La particule a traverse le cote 3 = (A3-A1)"
-            itest(ip) = 13
+            !La particule a traverse le cote 3 = (A3-A1)
+            itest(ip) = 3 + 10*(1-min(1,mesh%nvoiv(3,nlmloc(ip))))
 
          end if
       
-         if (       coef(1,ip) < eps    &
-              .and. coef(2,ip) < eps )  then
+         if (   coef(1,ip) < eps    &
+          .and. coef(2,ip) < eps )  then
 
-            print*,"La particule a traverse le cote 1 ou 2 "
+            !La particule a traverse le cote 1 ou 2 
 
             pa2x = mesh%coord(1,mesh%nodes(2,nlmloc(ip)))-xp(jp)
             pa2y = mesh%coord(2,mesh%nodes(2,nlmloc(ip)))-yp(jp)
@@ -1234,36 +1241,39 @@ do while( nbpres > 0 )
             coef(4,ip) = pa2x*ey(jp) - pa2y*ex(jp)
 
             itest(ip) = 1 + max(0,nint(sign(1d0,coef(4,ip))))
-            itest(ip) = itest(ip) + 11
+            itest(ip) = itest(ip)  &
+             + 10*(1-min(1,mesh%nvoiv(itest(ip),nlmloc(ip))))
 
          end if
 
-         if (       coef(2,ip) < eps     &
-              .and. coef(3,ip) < eps )  then
+         if (   coef(2,ip) < eps     &
+          .and. coef(3,ip) < eps )  then
 
-            print*,"La particule a traverse le cote 2 ou 3 "
+            !La particule a traverse le cote 2 ou 3 
 
-            pa3x = mesh%coord(1,mesh%nodes(3,nlmloc(ip)))-xp(jp)
-            pa3y = mesh%coord(2,mesh%nodes(3,nlmloc(ip)))-yp(jp)
+            pa3x = mesh%coord(1,mesh%nodes(3,nlmloc(ip)))-xp(ip) 
+            pa3y = mesh%coord(2,mesh%nodes(3,nlmloc(ip)))-yp(ip)
    
             coef(4,ip) = pa3x*ey(jp) - pa3y*ex(jp)
 
             itest(ip) = 2 + max(0,nint(sign(1d0,coef(4,ip))))
-            itest(ip) = itest(ip) + 11
+            itest(ip) = itest(ip)  &
+                + 10*(1-min(1,mesh%nvoiv(itest(ip),nlmloc(ip))))
          end if
 
-         if (        coef(3,ip) < eps    &
-               .and. coef(1,ip) < eps )  then
+         if (    coef(3,ip) < eps    &
+           .and. coef(1,ip) < eps )  then
 
-            print*, "La particule a traverse le cote 3 ou 1 "
+            !La particule a traverse le cote 3 ou 1 
 
-            pa1x = mesh%coord(1,mesh%nodes(1,nlmloc(jp)))-xp(jp)
-            pa1y = mesh%coord(2,mesh%nodes(1,nlmloc(jp)))-yp(jp)
+            pa1x = mesh%coord(1,mesh%nodes(1,nlmloc(ip)))-xp(ip) 
+            pa1y = mesh%coord(2,mesh%nodes(1,nlmloc(ip)))-yp(ip)
 
             coef(4,ip) = pa1x*ey(jp) - pa1y*ex(jp)
 
             itest(ip) = 1 +mod(2+max(0,nint(sign(1d0,coef(4,ip)))),3)
-            itest(ip) = itest(ip) + 11
+            itest(ip) = itest(ip)   &
+                + 10*(1-min(1,mesh%nvoiv(itest(ip),nlmloc(ip))))
 
          end if
 
@@ -1274,10 +1284,7 @@ do while( nbpres > 0 )
       do ip=1,nbpres
    
         if( itest(ip) > 10 .and. itest(ip) < 14 )  then
-           nbpert         = nbpert + 1
-           numpt(nbpert)  = numres(ip)
-           !nelet(nbpert)  = nlmloc(ip)
-           !ncott(nbpert)  = itest(ip)-10
+           nbpert = nbpert + 1
         end if
    
       end do
@@ -1307,7 +1314,6 @@ do while( nbpres > 0 )
    end if
 
    nbpres = nrest
-   print*, "nbpres =", nbpres
 
 end do
 !
@@ -1425,7 +1431,7 @@ end subroutine positions
 !!             xlm3   - 3eme coordonnee barycentrique des particules 
 !!             nlpa   - numeros des triangles contenant les particules
 !!             coor   - coordonnees des noeuds du maillage        
-!!             ntri   - numero des sommets des triangles            
+!!             nodes  - numero des sommets des triangles            
 !!             xbas   - integrales des fonctions de base           
 !!             cur1   - 1ere composante de la densite de courant     
 !!             cur2   - 2eme composante de la densite de courant      
@@ -1869,7 +1875,25 @@ do is=1,mesh%num_nodes
   end if
 
 end do
- 
+
+! --- Remplissage de "nvoiv" -----------------------------------
+!     Identique a "nvois" sauf pour les aretes appartenant a 
+!     une frontiere. Le chiffre correspond ici a un code pour 
+!     le traitement des conditions aux limites sur les 
+!     particules, alors que dans "nvois" ce chiffre est 
+!     l'oppose du numero de reference de la frontiere concernee
+
+allocate(mesh%nvoiv(3,mesh%num_triangles))
+do i = 1,mesh%num_triangles
+  do j = 1, 3
+    if (mesh%nvois(j,i)>0) then
+      mesh%nvoiv(j,i) = mesh%nvois(j,i)
+    else
+      mesh%nvoiv(j,i) =  0
+    end if
+  end do    
+end do
+
 end subroutine compute_aires
 
 end module sll_triangular_meshes
