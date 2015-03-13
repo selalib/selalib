@@ -57,17 +57,26 @@ private
 
 contains  !**********************************************************
 
-subroutine initialize_li1d_interpolator(interpolator,num_points,xmin,xmax,bc_type,d)
+subroutine initialize_li1d_interpolator(interpolator,num_points,xmin,xmax,bc_type,d, periodic_last)
   class(sll_lagrange_interpolator_1d), intent(inout) :: interpolator
     sll_int32, intent(in)                        :: d,num_points,bc_type
     sll_real64, intent(in)                       :: xmin,xmax
+    sll_int32, intent(in), optional              :: periodic_last
+    sll_int32                                    :: last
+
+    if (present(periodic_last)) then
+       last  = periodic_last
+    else
+       last = 1
+    end if
 
     interpolator%lagrange => new_lagrange_interpolation_1D( &
            num_points, &
            xmin, &
            xmax, &
            bc_type, &
-           d)
+           d, &
+           last)
     call compute_lagrange_interpolation_1D(interpolator%lagrange)
 end subroutine
 
@@ -76,7 +85,8 @@ function new_lagrange_interpolator_1d( &
     xmin, &
     xmax, &
     bc_type, &
-    d) result(res)
+    d, &
+    periodic_last) result(res)
 
     type(sll_lagrange_interpolator_1d),  pointer :: res
     sll_int32,  intent(in)               :: num_points
@@ -85,14 +95,25 @@ function new_lagrange_interpolator_1d( &
     sll_int32,  intent(in)               :: bc_type
     sll_int32, intent(in)               :: d
     sll_int32 :: ierr
+    sll_int32, intent(in), optional              :: periodic_last
+    sll_int32                                    :: last
+
     SLL_ALLOCATE(res,ierr)
+
+    if (present(periodic_last)) then
+       last  = periodic_last
+    else
+       last = 1
+    end if
+
     call initialize_li1d_interpolator( &
          res, &
          num_points, &
          xmin, &
          xmax, &
          bc_type, &
-         d )
+         d, &
+         last)
 
   end function new_lagrange_interpolator_1d
 
