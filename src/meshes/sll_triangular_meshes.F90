@@ -1026,6 +1026,29 @@ end subroutine map_to_circle
 !!                                                                      
 !!            nbpert - nombre de particules a eliminer                 
 !!            nbp    - nombre de particules de l'espece consideree     
+!!            xlm1   - 1ere coordonnee barycentrique des particules 
+!!            xlm2   - 2eme coordonnee barycentrique des particules
+!!            xlm3   - 3eme coordonnee barycentrique des particules 
+!!            nlpa   - numeros des triangles contenant les particules
+!!            coor   - coordonnees des noeuds du maillage        
+!!            nodes  - numero des sommets des triangles            
+!!            xbas   - integrales des fonctions de base           
+!!            rho    - densite de charge                        
+!!            ad1    - tableau temporaire (adresse de la 1ere    
+!!                     particule de chaque maille dans le tableau 
+!!                     ordonne des particules)                     
+!!            indice - tableau temporaire (incrementation du nombre 
+!!                     de particules dja reperees)               
+!!            itabor - tableau temporaire (numeros des particules 
+!!                     ordonnes suivant les numeros des mailles)
+!!            nbpama - tableau temporaire (nombre de particules  
+!!                     par maille)                                 
+!!                                                           
+!!            nflst  - etiquette logique du fichier "listing" 
+!!            petitl - petite longueur de reference             
+!!            nbt    - nombre de triangle du maillage             
+!!            nbs    - nombre de noeuds   du maillage              
+!!                                                                  
 !!                                                                      
 !!                                                                      
 !!Auteurs:
@@ -1068,8 +1091,15 @@ real(8), dimension(:,:), allocatable :: xlm
 real(8), dimension(:,:), allocatable :: coef
 real(8), dimension(:),   allocatable :: xp
 real(8), dimension(:),   allocatable :: yp
+real(8), dimension(:,:), allocatable :: f_out
 
 real(8) :: pa1x, pa1y, pa2x, pa2y, pa3x, pa3y
+
+real(8) :: phi1, phi2, phi3
+real(8) :: xm11, xm12, xm13
+integer :: nprest
+integer :: mpa, inum, ip1, ip2, ks, ind
+integer :: it
 
 eps   = -mesh%petitl**2
 allocate(numres(mesh%num_nodes)); numres = 0
@@ -1294,57 +1324,11 @@ do while( nbpres > 0 )
    nbpres = nrest
 
 end do
+stop
 
       
-!!             xlm1   - 1ere coordonnee barycentrique des particules 
-!!             xlm2   - 2eme coordonnee barycentrique des particules
-!!             xlm3   - 3eme coordonnee barycentrique des particules 
-!!             nlpa   - numeros des triangles contenant les particules
-!!             coor   - coordonnees des noeuds du maillage        
-!!             nodes  - numero des sommets des triangles            
-!!             xbas   - integrales des fonctions de base           
-!!             rho    - densite de charge                        
-!!             ad1    - tableau temporaire (adresse de la 1ere    
-!!                      particule de chaque maille dans le tableau 
-!!                      ordonne des particules)                     
-!!             indice - tableau temporaire (incrementation du nombre 
-!!                      de particules dja reperees)               
-!!             itabor - tableau temporaire (numeros des particules 
-!!                      ordonnes suivant les numeros des mailles)
-!!             nbpama - tableau temporaire (nombre de particules  
-!!                      par maille)                                 
-!!             xaux1,xaux4 - tableaux auxiliaires utilises pour assurer la
-!!                          continuite pour les frontieres internes      
-!!                          "doubles" transparentes             
-!!                                                            
-!!             nflst  - etiquette logique du fichier "listing" 
-!!             petitl - petite longueur de reference             
-!!             nbt    - nombre de triangle du maillage             
-!!             nbs    - nombre de noeuds   du maillage              
-!!                                                                  
-!!             nbpa   - nombre de particules par espece              
-!!             pcharg - charge d'une particule elementaire de l'espece
-!!             alprjt - Coefficient de compensation de charge d'espace 
-!!                      par particule a appliquer a la projection       
-!!             ldbprj - Activation du debugger en ligne             
-!!             idbprj - Iteration pour le debut des impressions      
-!!             jdbprj - Frequence des impressions                     
-!!             kdbprj - Increment sur les noeuds du maillage           
-!!                                                                      
-!!Auteur:
-!!   751-DENCOU  
-!!
-!
-!real(8) :: phi1, phi2, phi3
-!real(8) :: xm11, xm21, xm31
-!real(8) :: xm12, xm22, xm32
-!real(8) :: xm13, xm23, xm33
-!real(8) :: charge
-!
-!integer :: nprest
-!integer :: mpa, inum, ip1, ip2, ks, ind
-!
-!!Recherche du nombre de particules de chaque maille -------
+
+!Recherche du nombre de particules de chaque maille -------
 allocate(nbpama(mesh%num_triangles))
 
 nbpama = 0
@@ -1385,9 +1369,9 @@ end do
 
 nprest = nbp
 
-f_out  = 0d0
+allocate(f_out(3,mesh%num_nodes)); f_out  = 0d0
 
-do it = 1 , mesh%nbt
+do it = 1 , mesh%num_triangles
       
    xm11 = 0.
    xm12 = 0.
@@ -1431,7 +1415,6 @@ end do
 end subroutine positions
 
 !=======================================================================
-
 
 subroutine compute_aires( mesh )
 
