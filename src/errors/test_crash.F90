@@ -1,6 +1,6 @@
 program test_crash
 
-#include "sll_utilities.h"
+#include "sll_errors.h"
 
   implicit none
   character( len=* ), parameter :: my_name = "test_crash"
