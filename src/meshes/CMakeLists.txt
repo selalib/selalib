@@ -38,7 +38,4 @@ IF(BUILD_TESTING)
   TARGET_LINK_LIBRARIES( test_triangular_mesh sll_tri_meshes )
   #ADD_TEST( NAME triangular_mesh COMMAND test_triangular_mesh )
 
-  ADD_EXECUTABLE( test_positions_mesh unit_test_positions.F90 )
-  TARGET_LINK_LIBRARIES( test_positions_mesh sll_tri_meshes )
-
 ENDIF(BUILD_TESTING)
