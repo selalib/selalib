@@ -51,7 +51,7 @@ sll_int32 :: npart, npart_loc
 sll_int32 :: time_integrator_order
 sll_int32 :: collisions=SLL_COLLISIONS_NONE
 sll_int32 :: controlvariate=SLL_CONTROLVARIATE_NONE      !SLL_CONTROLVARIATE_MAXWELLIAN
-sll_int32 :: SOBOL_OFFSET   = 10    !Default sobol offset, skip zeros
+sll_int32 :: RND_OFFSET   = 10    !Default sobol offset, skip zeros
 sll_int32 :: num_modes = 1
 !results
 sll_real64, dimension(:),allocatable :: kineticenergy,fieldenergy, energy,energy_error,weight_sum,weight_var,moment_error
@@ -175,13 +175,13 @@ end subroutine run_generalvp_pif
   sll_real64 :: dt
  sll_int32 :: NUM_TIMESTEPS, NUM_MODES, NUM_PARTICLES, DIMENSION, TIME_INTEGRATOR_ORDER
  sll_real32 :: QoverM, EPSILON
- sll_int32 :: CONTROLVARIATE
+ sll_int32 :: CONTROLVARIATE, RND_OFFSET
      
      sll_int32, parameter  :: input_file = 99
      sll_int32             :: IO_stat
  
      namelist /sim_params/ dt, NUM_PARTICLES, DIMENSION, NUM_TIMESTEPS, &
-                          NUM_MODES, QoverM, EPSILON, CONTROLVARIATE, TIME_INTEGRATOR_ORDER
+                          NUM_MODES, QoverM, EPSILON, CONTROLVARIATE, TIME_INTEGRATOR_ORDER,RND_OFFSET
      
      open(unit = input_file, file=trim(filename),IOStat=IO_stat)
      if( IO_stat /= 0 ) then
@@ -202,6 +202,7 @@ end subroutine run_generalvp_pif
      sim%time_integrator_order=TIME_INTEGRATOR_ORDER
      sim%boxlen=4*sll_pi
      sim%num_modes=NUM_MODES
+     sim%RND_OFFSET=RND_OFFSET
 
   end subroutine init_file_generalvp_pif
 
@@ -216,9 +217,9 @@ sll_int64 :: seed
 SLL_ALLOCATE(sim%particle(2*sim%dimx+1,sim%npart_loc),ierr)
 
 !Generate random numbers
-seed=sim%SOBOL_OFFSET + sim%coll_rank*sim%npart_loc
+seed=10+ sim%RND_OFFSET + sim%coll_rank*sim%npart_loc
 do idx=1,sim%npart_loc
-!call i8_sobol_generate ( int(dimx,8) , npart, SOBOL_OFFSET , particle(1:2*dimx,:))            
+!call i8_sobol_generate ( int(dimx,8) , npart, RND_OFFSET , particle(1:2*dimx,:))            
 call i8_sobol( int(2*sim%dimx,8), seed, sim%particle(1:2*sim%dimx,idx))
 end do
 end subroutine init_particle_generalvp_pif
@@ -260,7 +261,10 @@ call sll_collective_globalsum(sll_world_collective, sim%moment(:,sim%tstep))
 sim%moment_error(sim%tstep)=sqrt(sum((sim%moment(:,1)-sim%moment(:,sim%tstep))**2))
 
 sim%weight_sum(sim%tstep)=sum(sim%particle(sim%maskw,:))/sim%npart
-call sll_collective_globalsum(sll_world_collective, sim%weight_sum,0)
+call sll_collective_globalsum(sll_world_collective, sim%weight_sum(sim%tstep))
+
+sim%weight_var(sim%tstep)=sum( (sim%particle(sim%maskw,:)-sim%weight_sum(sim%tstep))**2)/sim%npart
+call sll_collective_globalsum(sll_world_collective, sim%weight_var(sim%tstep))
 
 end subroutine calculate_diagnostics_generalvp_pif
 
@@ -499,7 +503,14 @@ subroutine write_result_generalvp_pif(sim)
           write(file_id,*) "e"
           write(file_id,*) "   "
           
-          
+          write(file_id,*) "set term x11 5"
+          write(file_id,*) "set logscale y"
+          write(file_id,*) "plot '-' using 1:2 title 'Sum of weights' with lines"
+          do idx = 1, sim%tsteps
+            write(file_id,*)  (idx-1)*sim%dt,  sim%weight_sum(idx)
+          end do
+          write(file_id,*) "e"
+          write(file_id,*) "   "
           close(file_id)
         
         endif
