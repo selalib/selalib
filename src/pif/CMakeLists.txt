@@ -20,7 +20,9 @@ TARGET_LINK_LIBRARIES(sll_pif_general sll_pif_fieldsolver
 					      sll_sobol
 					      sll_prob
 					      sll_visu_pic
-					      sll_collective)
+					      sll_collective
+					      sll_moment_matching
+					      sll_pic_utilities)
 
 					      
 # Ctest

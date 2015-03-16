@@ -5,8 +5,10 @@ target_link_libraries( sll_random_deviate_generators
 ADD_SUBDIRECTORY(sobol) #sobol sequence
 ADD_SUBDIRECTORY(prob) #Probability density functions
 
-  
-  
+add_library( sll_moment_matching STATIC moment_matching.F90)
+target_link_libraries(sll_moment_matching sll_assert
+					    sll_memory
+					sll_working_precision)	
 # Test
 IF(BUILD_TESTING)
   add_executable( test_random_deviate_generators unit_test.F90 )
