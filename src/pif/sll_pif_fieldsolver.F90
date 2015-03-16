@@ -1,3 +1,7 @@
+!**************************************************************
+!  Author: Jakob Ameres, jakob.ameres@tum.de
+!**************************************************************
+
 module sll_pif_fieldsolver
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -20,20 +24,36 @@ implicit none
     procedure,  pass(this) :: set_box_len=>sll_pif_fieldsolver_set_box_len
     !sets user defined edge length in every direction
     procedure,  pass(this) :: set_box_lens=>sll_pif_fieldsolver_set_box_lens
-    procedure, pass(this) :: problemsize=>sll_pif_fieldsolver_init_get_problemsize
+    procedure, pass(this) :: problemsize=>sll_pif_fieldsolver_get_problemsize
+    
     procedure,  pass(this) :: get_fourier_modes=>get_fourier_modes
+    procedure,  pass(this) :: get_fourier_modes_chunk=>get_fourier_modes_chunk
+    procedure,  pass(this) :: calc_fourier_modes=>calc_fourier_modes
+    
+    
     procedure,  pass(this) :: get_fourier_modes2=>get_fourier_modes2
     procedure, pass(this) :: calc_fourier_modes2=>calc_fourier_modes2
     procedure,  pass(this) :: get_fourier_modes2_chunk=>get_fourier_modes2_chunk
     procedure, pass(this) :: calc_fourier_modes2_chunk=>calc_fourier_modes2_chunk
+    
     procedure, pass(this) :: solve_poisson=>sll_pif_fieldsolver_solve_poisson
     procedure, pass(this) :: solve_mass=>sll_pif_fieldsolver_solve_mass
      procedure, pass(this) ::  eval_gradient=>sll_pif_fieldsolver_eval_gradient
       procedure, pass(this) ::  eval_solution=>sll_pif_fieldsolver_eval_solution
      procedure, pass(this) :: get_rhs_particle=>get_fourier_modes
+     
  end type pif_fieldsolver
 
 contains
+pure function sll_pif_fieldsolver_get_problemsize(this) result(sz)
+ class(pif_fieldsolver), intent(in) :: this
+ sll_int32 :: sz
+ if (allocated(this%allmodes)) then
+ sz=size(this%allmodes,2)
+ else
+ sz=0
+ endif
+end function sll_pif_fieldsolver_get_problemsize
 
 subroutine sll_pif_fieldsolver_init(this,maxmode)
  class(pif_fieldsolver), intent(inout) :: this
@@ -53,15 +73,7 @@ subroutine sll_pif_fieldsolver_init(this,maxmode)
 end subroutine  sll_pif_fieldsolver_init
 
 
-pure function sll_pif_fieldsolver_init_get_problemsize(this) result(sz)
- class(pif_fieldsolver), intent(in) :: this
- sll_int32 :: sz
- if (allocated(this%allmodes)) then
- sz=size(this%allmodes,2)
- else
- sz=0
- endif
-end function sll_pif_fieldsolver_init_get_problemsize
+
 
 
 subroutine sll_pif_fieldsolver_set_box_len(this, length)
@@ -252,16 +264,49 @@ function sll_pif_fieldsolver_eval_solution(this, pos,fouriermodes) result(fun)
  end do
 end function sll_pif_fieldsolver_eval_solution
 
+
+
+function get_fourier_modes_chunk(this, particle, chunksize) result(fouriermodes)
+  class(pif_fieldsolver), intent(in) :: this
+  sll_real64, dimension(:,:), intent(in)  :: particle !particle vector (x,weight)
+  sll_comp64, dimension(:), allocatable  :: fouriermodes
+  sll_int32, intent(in) :: chunksize
+  sll_int32 :: num, ierr, chunk
+  sll_comp64,  dimension(this%problemsize()) :: fmodechunk
+  
+   SLL_ALLOCATE(fouriermodes(1:this%problemsize()),ierr)
+
+  num=size(particle,2)
+  fouriermodes=0
+do chunk=1,ceiling(real(num/chunksize,8))
+  call this%calc_fourier_modes&
+      (particle(:, (chunk-1)*chunksize+1:min(chunk*chunksize,num)), fmodechunk)
+  fouriermodes=fouriermodes+fmodechunk;
+enddo
+end function get_fourier_modes_chunk
+
+
+
+subroutine calc_fourier_modes(this, particle, fouriermodes) 
+ class(pif_fieldsolver), intent(in) :: this
+ sll_real64, dimension(:,:), intent(in)  :: particle !particle vector (x,weight)
+ sll_comp64, dimension(:), intent(out) :: fouriermodes
+ sll_int32 :: idx
+
+do idx=1, this%problemsize()
+  fouriermodes(idx)=sum(exp(-sll_i1*matmul(this%allmodes(:,idx)*this%unitmode,particle(1:this%dimx,:)))*particle(this%dimx+1,:))
+ end do
+ 
+end subroutine calc_fourier_modes
+
 function get_fourier_modes(this, particle) result(fouriermodes)
  class(pif_fieldsolver), intent(in) :: this
  sll_real64, dimension(:,:), intent(in)  :: particle !particle vector (x,weight)
  sll_comp64, dimension(:), allocatable :: fouriermodes
- sll_int32 :: ierr, idx
+ sll_int32 :: ierr
  
  SLL_ALLOCATE(fouriermodes(1:this%problemsize()),ierr)
-  do idx=1, this%problemsize()
-  fouriermodes(idx)=sum(exp(-sll_i1*matmul(this%allmodes(:,idx)*this%unitmode,particle(1:this%dimx,:)))*particle(this%dimx+1,:))
- end do
+ call this%calc_fourier_modes(particle,fouriermodes)
 end function get_fourier_modes
  
  

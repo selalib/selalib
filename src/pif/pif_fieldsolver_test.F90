@@ -1,3 +1,7 @@
+!**************************************************************
+!  Author: Jakob Ameres, jakob.ameres@tum.de
+!**************************************************************
+
 program pif_fieldsolver_test
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -28,7 +32,7 @@ sll_int32, dimension(:),allocatable :: stenx,stenv,stenxw
 sll_int32 :: stenw
 
 
-dimx=3;
+dimx=2;
 
 !allocate stencils
 SLL_ALLOCATE(stenx(dimx),ierr)
@@ -54,11 +58,13 @@ SOLVER%dimx=dimx
 
 
 call SOLVER%set_box_len(boxlen)
-call SOLVER%init(2)
+call SOLVER%init(15)
  call display_matrix_2d_integer(transpose(SOLVER%allmodes),'i8')
 
 
 npart=1e5
+
+call speed_test()
 
 do idx=1,SOLVER%problemsize()
 
@@ -139,11 +145,11 @@ end subroutine
 
 
 subroutine speed_test()
-sll_int32 :: npart
-sll_comp64, dimension(:), allocatable :: rhs1,rhs2,rhs3
+sll_int32 :: npart, chunksize
+sll_comp64, dimension(:), allocatable :: rhs1,rhs2,rhs3,rhs4
 
 print *,"Test for small number of particles"
-npart=1e5 
+npart=1e5
 SLL_CLEAR_ALLOCATE(x(2*dimx+1, 1:npart), ierr)
 call random_number(x);
 x=x*boxlen
@@ -154,25 +160,35 @@ x(stenw,:)=(1+0.5_f64*sin(1*x(1,:)-x(2,:)))*boxlen**dimx
 SLL_ALLOCATE(rhs1(SOLVER%problemsize()),ierr)
 SLL_ALLOCATE(rhs2(SOLVER%problemsize()),ierr)
 SLL_ALLOCATE(rhs3(SOLVER%problemsize()),ierr)
+SLL_ALLOCATE(rhs4(SOLVER%problemsize()),ierr)
 
 print *,"---------------------------------------------------"
 
-do idx=1,2
+chunksize=256
+print *, "Chunk size is set to: ", chunksize
+
+do idx=1,4
 call sll_set_time_mark(tstart)
 rhs1=SOLVER%get_fourier_modes(x(stenxw,:))/npart
 call sll_set_time_mark(tstop)
-print *, 'Standard:        ', sll_time_elapsed_between(tstart,tstop)
+print *, 'Standard          ', sll_time_elapsed_between(tstart,tstop)
+
+call sll_set_time_mark(tstart)
+rhs1=SOLVER%get_fourier_modes_chunk(x(stenxw,:),chunksize)/npart
+call sll_set_time_mark(tstop)
+print *, 'Standard chunked: ', sll_time_elapsed_between(tstart,tstop)
+
 
 call sll_set_time_mark(tstart)
 rhs2=SOLVER%get_fourier_modes2(x(stenxw,:))/npart
 !print *, abs(SOLVER%get_fourier_modes2(x(stenxw,:)))/npart
 call sll_set_time_mark(tstop)
-print *, 'Fast2:        ', sll_time_elapsed_between(tstart,tstop)
+print *, 'Fast2:            ', sll_time_elapsed_between(tstart,tstop)
 
 call sll_set_time_mark(tstart)
-rhs2=SOLVER%get_fourier_modes2_chunk(x(stenxw,:),500)/npart
+rhs2=SOLVER%get_fourier_modes2_chunk(x(stenxw,:),chunksize)/npart
 call sll_set_time_mark(tstop)
-print *, 'Fast2 chunked:        ', sll_time_elapsed_between(tstart,tstop)
+print *, 'Fast2 chunked:    ', sll_time_elapsed_between(tstart,tstop)
 end do
 
 end subroutine speed_test
