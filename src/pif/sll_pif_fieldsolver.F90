@@ -41,7 +41,7 @@ implicit none
      procedure, pass(this) ::  eval_gradient=>sll_pif_fieldsolver_eval_gradient
       procedure, pass(this) ::  eval_solution=>sll_pif_fieldsolver_eval_solution
      procedure, pass(this) :: get_rhs_particle=>get_fourier_modes
-     
+     procedure, pass(this) :: visu_info=>visu_info_sll_pif_fieldsolver
  end type pif_fieldsolver
 
 contains
@@ -73,7 +73,14 @@ subroutine sll_pif_fieldsolver_init(this,maxmode)
 end subroutine  sll_pif_fieldsolver_init
 
 
+subroutine visu_info_sll_pif_fieldsolver(this)
+ class(pif_fieldsolver), intent(inout) :: this
 
+print *,"Spatial Dimensions (x)", this%dimx
+print *,"Number of Fourier modes: ", this%problemsize()
+print *,"Domain length", 1.0/this%unitmode/sll_pi/2.0
+
+end subroutine
 
 
 subroutine sll_pif_fieldsolver_set_box_len(this, length)
@@ -315,7 +322,6 @@ recursive function generate_exponents(min_exponents, max_exponents) result(list)
  sll_int32, dimension(:,:), allocatable :: list
  sll_int32, dimension(:,:), allocatable :: sublist
  sll_int32 :: dim, idx, sz, dz, num,subsz
- sll_int32, dimension(size(min_exponents)) :: a
 sll_int32 :: ierr
  dim=size(min_exponents);
  
