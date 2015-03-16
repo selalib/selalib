@@ -5,7 +5,8 @@ ADD_LIBRARY( sll_pic_particles STATIC
 
 TARGET_LINK_LIBRARIES( sll_pic_particles
   sll_memory
-  sll_assert )
+  sll_assert
+  sll_meshes )
 
 # Ctest
 IF(BUILD_TESTING)
