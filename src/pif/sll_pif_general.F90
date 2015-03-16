@@ -25,7 +25,6 @@ implicit none
 sll_int32, parameter :: SOBOL_OFFSET   = 10    !Default sobol offset, skip zeros
 
 
-
 !------type--------
 sll_real64, dimension(:,:), allocatable :: particle
 sll_real64, dimension(:), allocatable :: weight_const, prior_weight !initial weight if needed
