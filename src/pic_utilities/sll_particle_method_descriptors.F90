@@ -30,7 +30,7 @@ module sll_particle_method_descriptors
   
   !-------------- RANDOM NUMBERS -----------------------------
   !> No Control Variate - also known as full-f
-  sll_int32, parameter :: SLL_HAMMERSLEY = 2
+  sll_int32, parameter :: SLL_HAMMERSLEY = 1
   
   sll_int32, parameter :: SLL_RANDOM_SOBOL = 2
   
