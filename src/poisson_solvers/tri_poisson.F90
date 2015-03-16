@@ -162,15 +162,17 @@ end subroutine sll_compute_e_from_phi
 
 subroutine read_data_solver(ntypfr, potfr)
 
-sll_int32                    :: ityp
-sll_int32                    :: ifr
-sll_int32                    :: i
-sll_int32, parameter         :: nfrmx = 5
-sll_int32,  intent(out)      :: ntypfr(nfrmx)
-sll_real64, intent(out)      :: potfr(nfrmx)
-character(len=72)            :: argv
-character(len=132)           :: inpfil
-logical :: lask
+sll_int32,  parameter       :: nfrmx = 5
+sll_int32,  intent(out)     :: ntypfr(nfrmx)
+sll_real64, intent(out)     :: potfr(nfrmx)
+
+sll_int32                   :: ityp
+sll_int32                   :: ifr
+sll_int32                   :: i
+character(len=72)           :: argv
+character(len=132)          :: inpfil
+logical                     :: lask
+character(len=*), parameter :: this_sub_name = 'read_data_solver'
 
 NAMELIST/nlcham/ntypfr,potfr
 
@@ -238,7 +240,7 @@ do ifr=1,nfrmx
     write(6,904) ifr
   else
     write(6,910) ifr,ityp
-    SLL_ERROR(" ")
+    SLL_ERROR( this_sub_name, "Unspecified error.")
   end if
 end do
 
@@ -287,13 +289,16 @@ end subroutine initialize_poisson_solver_from_file
 
 ! Allocation des tableaux permettant de stocker des matrices sous forme morse
 ! Tableau donnant le numero du dernier terme de chaque ligne (mors1)
-subroutine initialize_poisson_solver(this, mesh, ntypfr, potfr)
+subroutine initialize_poisson_solver( this, mesh, ntypfr, potfr )
 
-type(sll_triangular_poisson_2d),  intent(out) :: this
-type(sll_triangular_mesh_2d),  intent(in), target :: mesh
-sll_int32,  dimension(:), intent(in)  :: ntypfr 
-sll_real64, dimension(:), intent(in)  :: potfr 
-sll_real64, dimension(:), allocatable :: tmp1
+type(sll_triangular_poisson_2d), intent(out)         :: this
+type(sll_triangular_mesh_2d)   , intent(in ), target :: mesh
+sll_int32                      , intent(in )         :: ntypfr(:)
+sll_real64                     , intent(in )         :: potfr(:)
+
+sll_real64, allocatable     :: tmp1(:)
+character(len=*), parameter :: this_sub_name = 'read_data_solver'
+character(len=128)          :: err_msg
 
 sll_int32 :: nref, nn, ndir
 sll_int32 :: i, j
@@ -302,7 +307,8 @@ sll_int32 :: ierr
 if ( mesh%analyzed) then
   this%mesh => mesh
 else
-  SLL_ERROR("Call analyze_triangular_mesh before initialize poisson solver")
+  err_msg = "Call analyze_triangular_mesh before initialize_poisson_solver."
+  SLL_ERROR( this_sub_name, err_msg )
 endif
 
 this%ntypfr = ntypfr

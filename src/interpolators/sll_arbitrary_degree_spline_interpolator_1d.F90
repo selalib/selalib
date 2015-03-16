@@ -190,19 +190,20 @@ subroutine initialize_ad1d_interpolator( interpolator, &
                                          spline_degree)
 
 class(sll_arbitrary_degree_spline_interpolator_1d), intent(inout) :: interpolator
+sll_int32,       intent(in) :: num_pts
+sll_real64,      intent(in) :: eta_min
+sll_real64,      intent(in) :: eta_max
+sll_int32,       intent(in) :: bc_left
+sll_int32,       intent(in) :: bc_right
+sll_int32,       intent(in) :: spline_degree
 
-sll_int32,  intent(in) :: num_pts
-sll_real64, intent(in) :: eta_min
-sll_real64, intent(in) :: eta_max
-sll_int32,  intent(in) :: bc_left
-sll_int32,  intent(in) :: bc_right
-sll_int32,  intent(in) :: spline_degree
-sll_int32              :: ierr
-sll_int32              :: tmp
-sll_int64              :: bc_selector
-sll_int32              :: i, k
-sll_real64             :: delta_eta
-sll_int32              :: deriv
+sll_int32                   :: ierr
+sll_int32                   :: tmp
+sll_int64                   :: bc_selector
+sll_int32                   :: i, k
+sll_real64                  :: delta_eta
+sll_int32                   :: deriv
+character(len=*), parameter :: this_sub_name = 'initialize_ad1d_interpolator'
 
 ! do some argument checking...
 if(((bc_left == SLL_PERIODIC).and.(bc_right.ne. SLL_PERIODIC))) then
@@ -295,7 +296,7 @@ case default
    if (num_pts+deriv+k == num_pts+2*(k-1)) then
      interpolator%t(k+1:num_pts+deriv) = interpolator%eta(2:num_pts-1)
    else
-     SLL_ERROR('Problem with knots settings') 
+     SLL_ERROR( this_sub_name, 'Problem with knots settings') 
    end if
 
 end select
@@ -372,21 +373,23 @@ subroutine compute_interpolants_ad1d( interpolator,    &
                                       eta_coords,      &
                                       size_eta_coords)
 
-class(sll_arbitrary_degree_spline_interpolator_1d), intent(inout)  :: interpolator
+class(sll_arbitrary_degree_spline_interpolator_1d), &
+            intent(inout)           :: interpolator
+sll_real64, intent(in   )           :: data_array(:)
+sll_real64, intent(in   ), optional :: eta_coords(:)
+sll_int32,  intent(in   ), optional :: size_eta_coords
 
-sll_real64, dimension(:), intent(in)           :: data_array
-sll_real64, dimension(:), intent(in), optional :: eta_coords
-sll_int32,                intent(in), optional :: size_eta_coords
-sll_int32, parameter                           :: sz_deriv = 2
-sll_int32,  dimension(sz_deriv)                :: point_locate_eta_derivative
-sll_real64, dimension(sz_deriv)                :: data_array_derivative
-sll_int32                                      :: sz
-sll_real64                                     :: period
-sll_int32                                      :: order
-sll_int32                                      :: ierr
+character(len=*), parameter :: this_sub_name = 'compute_interpolants_ad1d'
+sll_int32       , parameter :: sz_deriv = 2
+sll_int32                   :: point_locate_eta_derivative( sz_deriv )
+sll_real64                  :: data_array_derivative      ( sz_deriv )
+sll_int32                   :: sz
+sll_real64                  :: period
+sll_int32                   :: order
+sll_int32                   :: ierr
 
 if(present(eta_coords) .or. present(size_eta_coords)) then
-   SLL_ERROR('This case is not yet implemented')
+   SLL_ERROR( this_sub_name, 'This case is not yet implemented' )
 end if
 
 sz = interpolator%num_pts
