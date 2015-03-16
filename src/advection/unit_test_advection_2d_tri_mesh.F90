@@ -3,11 +3,13 @@ program unit_test_positions
 #include "sll_memory.h"
 use sll_hex_meshes
 use sll_triangular_meshes
+use sll_advection_2d_tri_mesh
 
 implicit none
 
 type(sll_triangular_mesh_2d), pointer :: t_mesh
 type(sll_hex_mesh_2d), pointer        :: h_mesh
+type(sll_advection_tri_mesh), pointer :: t_adv
 
 sll_real64, dimension(:), allocatable :: df
 sll_real64, dimension(:), allocatable :: ex 
@@ -35,7 +37,8 @@ call write_triangular_mesh_mtv(t_mesh, "positions_mesh.mtv")
 
 ex = 1.0_f64
 
-call positions(t_mesh, df, ex, ey, dt)
+t_adv => new_advection_2d_tri_mesh(t_mesh)
+call positions(t_adv, df, ex, ey, dt)
 
 call sll_delete(t_mesh)
 
