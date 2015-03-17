@@ -19,6 +19,7 @@ ADD_LIBRARY( sll_general_coordinate_elliptic_solvers_multipatch STATIC
   linpack.f90)
 
 TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers_multipatch 
+  sll_general_coordinate_elliptic_solvers
   sll_scalar_field_multipatch
   sll_fields
   sll_coordinate_transformation_multipatch
