@@ -378,9 +378,9 @@ contains
     !    0  1
     !    |
     !    +--0-----1-->
-    ref_pts(:,1) = (/ 0._f64,          0.0_f64 /)
-    ref_pts(:,2) = (/ 1./sqrt(3._f64), 0.5_f64 /)
-    ref_pts(:,3) = (/ 0._f64,          1.0_f64 /)
+    ref_pts(:,1) = (/ 0._f64,               0.0_f64 /)
+    ref_pts(:,2) = (/ sqrt(3._f64)*0.5_f64, 0.5_f64 /)
+    ref_pts(:,3) = (/ 0._f64,               1.0_f64 /)
 
     ! Computing fekete points on that triangle
     quad_pw = fekete_points_and_weights(ref_pts)
