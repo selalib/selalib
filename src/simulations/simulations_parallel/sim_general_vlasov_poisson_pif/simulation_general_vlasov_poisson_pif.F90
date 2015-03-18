@@ -19,11 +19,28 @@ use sll_moment_matching
 use sll_pic_utilities
 use sll_particle_method_descriptors
 use sll_simulation_base
-
+use sll_wedge_product_generaldim
 implicit none
 
-
-
+! abstract interface
+!         function electric_field_general(x,t) result(E)
+!             use sll_working_precision
+!             sll_real64, dimension(:,:),intent(in) :: x 
+!             sll_real64, dimension(:),intent(in) :: t
+!             sll_real64, dimension(size(x,1),size(x,2)) :: E
+!         endfunction
+! endinterface
+! 
+!  
+! !Dummy zero field
+! function zero_electric_field_general(x,t) result(E)
+! 	    sll_real64, dimension(:,:),intent(in) :: x 
+!             sll_real64, dimension(:),intent(in) :: t
+!             sll_real64, dimension(size(x,1),size(x,2)) :: E
+!             E=0
+! end function
+!  
+ 
 type, extends(sll_simulation_base_class) :: &
                 sll_simulation_general_vlasov_poisson_pif
      
@@ -77,11 +94,92 @@ sll_int32 :: coll_rank, coll_size
      procedure, pass(sim) :: symplectic_rungekutta=>symplectic_rungekutta_generalvp_pif
      procedure, pass(sim) :: calculate_diagnostics=>calculate_diagnostics_generalvp_pif
      procedure, pass(sim) :: control_variate=>control_variate_generalvp_pif
+       procedure, pass(sim) :: vxB=>v_cross_B_generalvp_pif
+     !Magnetic field, can be changed
+      procedure, pass(sim) :: B=>Bzero_generalvp_pif
+      procedure, pass(sim) :: E=>Ezero_generalvp_pif !Electric field
+     
 end type
 
 !--------------------------------------------------------------
 contains
 
+!Gives back the v cross B
+function v_cross_B_generalvp_pif(sim, x,v, time) result(vxB)
+ class(sll_simulation_general_vlasov_poisson_pif), intent(in) :: sim
+ sll_real64, dimension(:,:), intent(in) :: x !position for B
+ sll_real64, dimension(:,:), intent(in) :: v !
+ sll_real64, intent(in) :: time
+ sll_real64, dimension(size(v,1),size(v,2)) :: vxB
+ 
+ SELECT CASE (sim%dimx)
+   CASE (1)
+    vxB=0
+   CASE (2)
+      !det( [v;B])*v
+      vxB=cross_product_2D(v, sim%B(x,time))      
+   CASE (3)   
+      vxB=cross_product_3D(v, sim%B(x,time))     
+   CASE default
+   vxB=0
+END SELECT
+ 
+end function
+
+
+!Define standard zero fields
+function Bzero_generalvp_pif(sim, x, time) result(B)
+ class(sll_simulation_general_vlasov_poisson_pif), intent(in) :: sim
+ sll_real64, dimension(:,:), intent(in) :: x !position for B
+ sll_real64, intent(in) :: time
+ sll_real64, dimension(size(x,1),size(x,2)) :: B
+ B=0
+end function
+
+function Ezero_generalvp_pif(sim, x, time) result(E)
+ class(sll_simulation_general_vlasov_poisson_pif), intent(in) :: sim
+ sll_real64, dimension(:,:), intent(in) :: x !position for B
+ sll_real64, intent(in) :: time
+ sll_real64, dimension(size(x,1),size(x,2)) :: E
+ E=0
+end function
+
+
+function E_KEENWAVE_2D(sim, x, time) result(E)
+ class(sll_simulation_general_vlasov_poisson_pif), intent(in) :: sim
+ sll_real64, dimension(:,:), intent(in) :: x !position for B
+ sll_real64, intent(in) :: time
+ sll_real64, dimension(size(x,1),size(x,2)) :: E
+
+ sll_real64 :: t0=0
+ sll_real64 :: tL=69
+ sll_real64 :: tR=307
+ sll_real64 :: tomegaL=20
+ sll_real64 :: tomegaR=20
+ sll_real64 :: omega=0.37
+ sll_real64 :: Emax=0.2
+ 
+ sll_real64 :: k=0.26
+ sll_real64 :: L
+ sll_real64 :: KEENeps
+ tomegaR=tomegaL;
+ L=2*sll_pi/k;
+ KEENeps=0.5*(tanh( (t0-tL)/tomegaL) - tanh( (t0-tR)/tomegaR))
+ E=Emax*k*(0.5*(tanh( (time-tL)/tomegaL) -tanh( (time-tR)/tomegaR)) -KEENeps)*sin(k*x - omega*time)/(1-KEENeps);
+end function
+
+
+
+
+function Bstandard_generalvp_pif(sim, x, time) result(B)
+ class(sll_simulation_general_vlasov_poisson_pif), intent(in) :: sim
+ sll_real64, dimension(:,:), intent(in) :: x !position for B
+ sll_real64, intent(in) :: time
+ sll_real64, dimension(size(x,1),size(x,2)) :: B
+
+ !leads in three dimensions to (0,0,1) 
+ B(sim%dimx,:)=1
+end function
 
 subroutine run_generalvp_pif(sim)
   class(sll_simulation_general_vlasov_poisson_pif), intent(inout) :: sim
@@ -309,6 +407,7 @@ subroutine symplectic_rungekutta_generalvp_pif(sim)
   
     
   !Loop over all stages
+   t=(sim%tstep-1)*sim%dt
     do rkidx=1, size(sim%rk_d);
      
      !Set control variate if used
@@ -326,14 +425,14 @@ subroutine symplectic_rungekutta_generalvp_pif(sim)
      endif
 
      sim%particle(sim%maskv,:)=sim%particle(sim%maskv,:) -  &
-          sim%rk_c(rkidx)*sim%dt*sim%qm*(-sim%SOLVER%eval_gradient(sim%particle(sim%maskx,:),sim%solution));
+          sim%rk_c(rkidx)*sim%dt*sim%qm*&
+         ( sim%vxB(sim%particle(sim%maskx,:),sim%particle(sim%maskv,:),t)   +   &  !magnetic field
+          sim%E(sim%particle(sim%maskx,:),t)     + &                          ! Electric field external
+         (-sim%SOLVER%eval_gradient(sim%particle(sim%maskx,:),sim%solution)) ); !Electric field selfconsistent
      sim%particle(sim%maskx,:)=sim%particle(sim%maskx,:) +  sim%rk_d(rkidx)*sim%dt*sim%particle(sim%maskv,:);
         
-     !   xx=mod(xx,repmat(L,1,npart));
-        
-      !  CV_new=CV(xx,vx);
-       ! weight=forward_weight_CV(weight, CV_old, CV_new);CV_old=CV_new;
-        
+     ! xx=mod(xx,repmat(L,1,npart));
+      
          t=(sim%tstep-1)*sim%dt+sum(sim%rk_d(1:rkidx))*sim%dt;
     end do
      t=(sim%tstep)*sim%dt;
@@ -515,5 +614,7 @@ subroutine write_result_generalvp_pif(sim)
         
         endif
 end subroutine write_result_generalvp_pif
+
+
 
 end module sll_general_vlasov_poisson_pif
