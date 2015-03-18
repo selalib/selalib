@@ -41,8 +41,8 @@ IMPLICIT NONE
     END TYPE MATRIX
     !***************************************************
 
-    INTEGER, PRIVATE                                 :: mi_nmatrices
-    TYPE(MATRIX), DIMENSION(:), POINTER, PRIVATE     :: mpo_M
+    INTEGER, PRIVATE                                 :: mi_nmatrices_basic
+    TYPE(MATRIX), DIMENSION(:), POINTER, PRIVATE     :: mpo_M_basic
     INTEGER(KIND=SPM_INTS_KIND), DIMENSION(:,:), POINTER, PRIVATE     :: mpi_iparam_solver
     REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:,:), POINTER, PRIVATE     :: mpr_rparam_solver
 
@@ -56,14 +56,14 @@ INTEGER(KIND=SPM_INTS_KIND),      INTENT(OUT) :: IERROR
 ! LOCAL
 INTEGER :: ID
 
-mi_nmatrices = nmatrices
-ALLOCATE ( mpo_M(0:nmatrices - 1) )
+mi_nmatrices_basic = nmatrices
+ALLOCATE ( mpo_M_basic(0:nmatrices - 1) )
 ALLOCATE ( mpi_iparam_solver(0:nmatrices - 1,SPM_NIPARAM_SOLVER ) )
 ALLOCATE ( mpr_rparam_solver(0:nmatrices - 1,SPM_NRPARAM_SOLVER ) )
 
 DO ID = 0, nmatrices-1
-mpo_M (ID) % oi_fmt = SPM_NULL_FMT
-mpo_M (ID) % ol_assolver = .FALSE.
+mpo_M_basic (ID) % oi_fmt = SPM_NULL_FMT
+mpo_M_basic (ID) % ol_assolver = .FALSE.
 END DO
 
 
@@ -78,7 +78,7 @@ IMPLICIT NONE
 INTEGER(KIND=SPM_INTS_KIND),      INTENT(OUT) :: IERROR
 ! LOCAL
 
-DEALLOCATE ( mpo_M )
+DEALLOCATE ( mpo_M_basic )
 IERROR = SPM_SUCCESS 
 
 END SUBROUTINE SPM_FINALIZE
@@ -206,24 +206,24 @@ INTEGER(KIND=SPM_INTS_KIND),                    INTENT(OUT) :: IERROR
 ! LOCAL
 INTEGER :: NR, NC, NNZ
 PRINT *, 'SPM_GraphGlobalCSC: not yet implemented'
-!M => mpo_M ( ID )
+!M => mpo_M_basic ( ID )
 
 NNZ     = SIZE (INDICES, 1)
 NC      = SIZE (INDPTR, 1) - 1 
 NR      = N
 
-mpo_M ( ID ) % oi_fmt = SPM_CSC_FMT
-mpo_M ( ID ) % oi_nnz = NNZ 
-mpo_M ( ID ) % oi_nR  = NR
-mpo_M ( ID ) % oi_nC  = NC
+mpo_M_basic ( ID ) % oi_fmt = SPM_CSC_FMT
+mpo_M_basic ( ID ) % oi_nnz = NNZ 
+mpo_M_basic ( ID ) % oi_nR  = NR
+mpo_M_basic ( ID ) % oi_nC  = NC
 
-ALLOCATE ( mpo_M ( ID ) % opi_indices(1:NNZ) )
-ALLOCATE ( mpo_M ( ID ) % opi_indptr  (1:NC+1) )
-ALLOCATE ( mpo_M ( ID ) % opr_a     (1:NNZ) )
+ALLOCATE ( mpo_M_basic ( ID ) % opi_indices(1:NNZ) )
+ALLOCATE ( mpo_M_basic ( ID ) % opi_indptr  (1:NC+1) )
+ALLOCATE ( mpo_M_basic ( ID ) % opr_a     (1:NNZ) )
 
-mpo_M ( ID ) % opi_indices (1:NNZ)     = INDICES (1:NNZ) 
-mpo_M ( ID ) % opi_indptr   (1:NR+1)    = INDPTR   (1:NR+1) 
-mpo_M ( ID ) % opr_a                  = 0.0
+mpo_M_basic ( ID ) % opi_indices (1:NNZ)     = INDICES (1:NNZ) 
+mpo_M_basic ( ID ) % opi_indptr   (1:NR+1)    = INDPTR   (1:NR+1) 
+mpo_M_basic ( ID ) % opr_a                  = 0.0
 
 IERROR = SPM_SUCCESS
 END SUBROUTINE SPM_GraphGlobalCSC
@@ -241,24 +241,24 @@ INTEGER(KIND=SPM_INTS_KIND),                    INTENT(OUT) :: IERROR
 ! LOCAL
 INTEGER :: NR, NC, NNZ
 
-!M => mpo_M ( ID )
+!M => mpo_M_basic ( ID )
 
 NNZ     = SIZE (INDICES, 1)
 NR      = SIZE (INDPTR, 1) - 1 
 NC      = N
 
-mpo_M ( ID ) % oi_fmt = SPM_CSR_FMT
-mpo_M ( ID ) % oi_nnz = NNZ 
-mpo_M ( ID ) % oi_nR  = NR
-mpo_M ( ID ) % oi_nC  = NC
+mpo_M_basic ( ID ) % oi_fmt = SPM_CSR_FMT
+mpo_M_basic ( ID ) % oi_nnz = NNZ 
+mpo_M_basic ( ID ) % oi_nR  = NR
+mpo_M_basic ( ID ) % oi_nC  = NC
 
-ALLOCATE ( mpo_M ( ID ) % opi_indices(1:NNZ) )
-ALLOCATE ( mpo_M ( ID ) % opi_indptr  (1:NR+1) )
-ALLOCATE ( mpo_M ( ID ) % opr_a     (1:NNZ) )
+ALLOCATE ( mpo_M_basic ( ID ) % opi_indices(1:NNZ) )
+ALLOCATE ( mpo_M_basic ( ID ) % opi_indptr  (1:NR+1) )
+ALLOCATE ( mpo_M_basic ( ID ) % opr_a     (1:NNZ) )
 
-mpo_M ( ID ) % opi_indices (1:NNZ)     = INDICES (1:NNZ) 
-mpo_M ( ID ) % opi_indptr   (1:NR+1)    = INDPTR   (1:NR+1) 
-mpo_M ( ID ) % opr_a                  = 0.0
+mpo_M_basic ( ID ) % opi_indices (1:NNZ)     = INDICES (1:NNZ) 
+mpo_M_basic ( ID ) % opi_indptr   (1:NR+1)    = INDPTR   (1:NR+1) 
+mpo_M_basic ( ID ) % opr_a                  = 0.0
 
 IERROR = SPM_SUCCESS
 END SUBROUTINE SPM_GraphGlobalCSR
@@ -275,7 +275,7 @@ INTEGER(KIND=SPM_INTS_KIND),                    INTENT(OUT) :: IERROR
 ! LOCAL
 TYPE(MATRIX), POINTER :: M
 
-M => mpo_M ( ID )
+M => mpo_M_basic ( ID )
 
 M % oi_fmt = SPM_IJV_FMT
 M % oi_nnz = -1 
@@ -303,7 +303,7 @@ INTEGER(KIND=SPM_INTS_KIND),      INTENT(OUT) :: IERROR
 ! LOCAL
 TYPE(MATRIX), POINTER :: M
 
-M => mpo_M ( ID )
+M => mpo_M_basic ( ID )
 
 ! we free the solver if used
 IF ( M % ol_assolver ) THEN
@@ -339,7 +339,7 @@ INTEGER(KIND=SPM_INTS_KIND),      INTENT(OUT) :: IERROR
 INTEGER  :: ID
 
 
-DO ID = 0, mi_nmatrices-1
+DO ID = 0, mi_nmatrices_basic-1
 CALL SPM_CLEAN(ID, IERROR)
 END DO
 
@@ -356,7 +356,7 @@ INTEGER(KIND=SPM_INTS_KIND),      INTENT(OUT) :: IERROR
 ! LOCAL
 TYPE(MATRIX), POINTER :: M
 
-M => mpo_M ( ID )
+M => mpo_M_basic ( ID )
 
 IF (M % oi_fmt==SPM_COO_FMT) THEN
         PRINT *, 'SPM_CLEAN - SPM_COO_FMT : Not done yet'
@@ -391,7 +391,7 @@ INTEGER(KIND=SPM_INTS_KIND),      INTENT(OUT) :: IERROR
 ! LOCAL
 TYPE(MATRIX), POINTER :: M
 
-M => mpo_M ( ID )
+M => mpo_M_basic ( ID )
 
 IERROR = SPM_SUCCESS
 END SUBROUTINE SPM_ASSEMBLYBEGIN
@@ -407,7 +407,7 @@ INTEGER(KIND=SPM_INTS_KIND),      INTENT(OUT) :: IERROR
 ! LOCAL
 TYPE(MATRIX), POINTER :: M
 
-M => mpo_M ( ID )
+M => mpo_M_basic ( ID )
 
 IF (M % oi_fmt==SPM_COO_FMT) THEN
 PRINT *, 'SPM_ASSEMBLYSETVALUE : Not Yet Implemented.'
@@ -448,7 +448,7 @@ INTEGER(KIND=SPM_INTS_KIND),      INTENT(IN)  :: ID
 INTEGER(KIND=SPM_INTS_KIND),      INTENT(OUT) :: VALUE
 INTEGER(KIND=SPM_INTS_KIND),      INTENT(OUT) :: IERROR
 
-VALUE = mpo_M (ID) % oi_nR
+VALUE = mpo_M_basic (ID) % oi_nR
 
 IERROR = SPM_SUCCESS
 END SUBROUTINE SPM_GetnR
@@ -461,7 +461,7 @@ INTEGER(KIND=SPM_INTS_KIND),      INTENT(IN)  :: ID
 INTEGER(KIND=SPM_INTS_KIND),      INTENT(OUT) :: VALUE
 INTEGER(KIND=SPM_INTS_KIND),      INTENT(OUT) :: IERROR
 
-VALUE = mpo_M (ID) % oi_nC
+VALUE = mpo_M_basic (ID) % oi_nC
 
 IERROR = SPM_SUCCESS
 END SUBROUTINE SPM_GetnC
@@ -474,7 +474,7 @@ INTEGER(KIND=SPM_INTS_KIND),      INTENT(IN)  :: ID
 INTEGER(KIND=SPM_INTL_KIND),      INTENT(OUT) :: VALUE
 INTEGER(KIND=SPM_INTS_KIND),      INTENT(OUT) :: IERROR
 
-VALUE = mpo_M (ID) % oi_nnz
+VALUE = mpo_M_basic (ID) % oi_nnz
 
 IERROR = SPM_SUCCESS
 END SUBROUTINE SPM_Getnnz
@@ -490,7 +490,7 @@ INTEGER(KIND=SPM_INTS_KIND)                     , INTENT(OUT) :: IERROR
 ! LOCAL
 TYPE(MATRIX), POINTER :: M
 
-M => mpo_M ( ID )
+M => mpo_M_basic ( ID )
 
 IF ( (M % oi_fmt/=SPM_CSC_FMT) &
 .AND. (M % oi_fmt/=SPM_CSR_FMT) )THEN
@@ -513,7 +513,7 @@ INTEGER(KIND=SPM_INTS_KIND)                     , INTENT(OUT) :: IERROR
 ! LOCAL
 TYPE(MATRIX), POINTER :: M
 
-M => mpo_M ( ID )
+M => mpo_M_basic ( ID )
 
 IF ( (M % oi_fmt/=SPM_CSC_FMT) &
 .AND. (M % oi_fmt/=SPM_CSR_FMT) )THEN
@@ -536,7 +536,7 @@ INTEGER(KIND=SPM_INTS_KIND)                     , INTENT(OUT) :: IERROR
 ! LOCAL
 TYPE(MATRIX), POINTER :: M
 
-M => mpo_M ( ID )
+M => mpo_M_basic ( ID )
 
 IF ( (M % oi_fmt/=SPM_CSC_FMT) &
 .AND. (M % oi_fmt/=SPM_CSR_FMT) )THEN
@@ -559,7 +559,7 @@ INTEGER(KIND=SPM_INTS_KIND)                     , INTENT(OUT) :: IERROR
 ! LOCAL
 TYPE(MATRIX), POINTER :: M
 
-M => mpo_M ( ID )
+M => mpo_M_basic ( ID )
 
 IF ( (M % oi_fmt/=SPM_CSC_FMT) &
 .AND. (M % oi_fmt/=SPM_CSR_FMT) )THEN
@@ -584,7 +584,7 @@ INTEGER(KIND=SPM_INTS_KIND)                     , INTENT(OUT)   :: IERROR
 ! LOCAL
 TYPE(MATRIX), POINTER :: M
 
-M => mpo_M ( ID )
+M => mpo_M_basic ( ID )
 
 IF (M % oi_fmt/=SPM_IJV_FMT) THEN
 RETURN
@@ -611,7 +611,7 @@ INTEGER(KIND=SPM_INTS_KIND)                     , INTENT(OUT)   :: IERROR
 ! LOCAL
 TYPE(MATRIX), POINTER :: M
 
-M => mpo_M ( ID )
+M => mpo_M_basic ( ID )
 
 IF (M % oi_fmt/=SPM_IJV_FMT) THEN
 RETURN
@@ -633,7 +633,7 @@ INTEGER(KIND=SPM_INTS_KIND),                             INTENT(OUT)    :: IERRO
 ! LOCAL
 TYPE(MATRIX), POINTER :: M
 
-M => mpo_M ( ID )
+M => mpo_M_basic ( ID )
 
 IF (M % oi_fmt==SPM_COO_FMT) THEN
 PRINT *, 'SPM_GEMV: SPM_COO_FMT Not Yet Implemented.'
@@ -663,7 +663,7 @@ INTEGER(KIND=SPM_INTS_KIND),                             INTENT(OUT)    :: IERRO
 ! LOCAL
 TYPE(MATRIX), POINTER :: M
 
-M => mpo_M ( ID )
+M => mpo_M_basic ( ID )
 
 IF (M % oi_fmt==SPM_COO_FMT) THEN
 PRINT *, 'SPM_MV: Not Yet Implemented.'
@@ -689,7 +689,7 @@ INTEGER(KIND=SPM_INTS_KIND),                             INTENT(OUT)    :: IERRO
 ! LOCAL
 TYPE(MATRIX), POINTER :: M
 
-M => mpo_M ( ID )
+M => mpo_M_basic ( ID )
 
 M % ol_assolver = .TRUE.
 
@@ -728,7 +728,7 @@ INTEGER(KIND=SPM_INTS_KIND),                             INTENT(OUT)    :: IERRO
 ! LOCAL
 TYPE(MATRIX), POINTER :: M
 
-M => mpo_M ( ID )
+M => mpo_M_basic ( ID )
 
 IF (M % oi_fmt==SPM_CSR_FMT) THEN
 ! *******************************************
@@ -771,7 +771,7 @@ INTEGER(KIND=SPM_INTS_KIND) :: li_maxiter
 INTEGER(KIND=SPM_INTS_KIND) :: li_niter
 REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:), POINTER  :: lpr_err
 
-M => mpo_M ( ID )
+M => mpo_M_basic ( ID )
 
 li_maxiter      = mpi_iparam_solver (ID, SPM_IPARAM_SOLVER_MAXITER)
 lr_tol          = mpr_rparam_solver (ID, SPM_RPARAM_SOLVER_RTOL)
@@ -848,13 +848,13 @@ CALL cusp_bicgstab(M % opi_indptr, M % opi_indices, M % opr_a, lpi_param, lpr_pa
 ! *******************************************
 !               BASIC-CG CONJUGATE GRADIENT
 ! *******************************************
-case ( SPM_SOLVER_BASIC_CG )
-ALLOCATE(lpr_err(li_maxiter))
-CALL BASIC_CG ( M % oi_nR, M % opr_a, M % opi_indices, M % opi_indptr &
-, li_maxiter, lr_tol, X, Y, li_niter, lr_resnorm, lpr_err )
-mpi_iparam_solver (ID, SPM_IPARAM_SOLVER_NITER) = li_niter
-mpr_rparam_solver (ID, SPM_RPARAM_SOLVER_RESNORM) = lr_resnorm
-DEALLOCATE(lpr_err)
+! case ( SPM_SOLVER_BASIC_CG )
+! ALLOCATE(lpr_err(li_maxiter))
+! CALL BASIC_CG ( M % oi_nR, M % opr_a, M % opi_indices, M % opi_indptr &
+! , li_maxiter, lr_tol, X, Y, li_niter, lr_resnorm, lpr_err )
+! mpi_iparam_solver (ID, SPM_IPARAM_SOLVER_NITER) = li_niter
+! mpr_rparam_solver (ID, SPM_RPARAM_SOLVER_RESNORM) = lr_resnorm
+! DEALLOCATE(lpr_err)
 ! *******************************************
 
 ! *******************************************
