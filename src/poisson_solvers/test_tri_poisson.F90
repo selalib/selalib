@@ -151,7 +151,7 @@ function u(r)
   real(8) :: r
   real(8) :: pi 
   real(8), parameter :: one = 1d0 
-  real(8) :: a_0, a_1, a_2, a_3
+  real(8) :: a_1, a_2
 
   pi  =  4d0 * atan(1d0)
   a_1 =  0.04 * pi * one * (-2*log(0.2d0)+1)
