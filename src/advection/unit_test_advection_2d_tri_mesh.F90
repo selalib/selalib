@@ -4,6 +4,7 @@ program unit_test_positions
 use sll_hex_meshes
 use sll_triangular_meshes
 use sll_advection_2d_tri_mesh
+use sll_gnuplot
 
 implicit none
 
@@ -15,10 +16,14 @@ sll_real64, dimension(:), allocatable :: df
 sll_real64, dimension(:), allocatable :: ex 
 sll_real64, dimension(:), allocatable :: ey
 
+sll_real64, dimension(:), pointer :: x1
+sll_real64, dimension(:), pointer :: x2
+
 sll_int32 :: num_cells
 sll_int32 :: ierr
+sll_int32 :: istep
 
-sll_real64 :: dt = 0.1
+sll_real64 :: dt = 0.01
 
 !Create a triangular mesh from an hex mesh
 !Reference on the boundary is set to "one"
@@ -35,10 +40,19 @@ call map_to_circle(t_mesh, num_cells)
 
 call write_triangular_mesh_mtv(t_mesh, "positions_mesh.mtv")
 
-ex = 1.0_f64
+x1 => t_mesh%coord(1,:)
+x2 => t_mesh%coord(2,:)
+
+df = 1.0 !exp(-((x1-0.5)**2+x2*x2)/0.04_f64)
+ex = 0.0 !- x2
+ey = 0.0 !+ x1
 
 t_adv => new_advection_2d_tri_mesh(t_mesh)
-call positions(t_adv, df, ex, ey, dt)
+
+do istep = 1, 1
+  call positions(t_adv, df, ex, ey, dt)
+  call sll_gnuplot_2d( df, "f_tri", t_mesh%coord, t_mesh%nodes, istep)
+end do
 
 call sll_delete(t_mesh)
 

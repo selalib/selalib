@@ -42,6 +42,7 @@ type :: sll_advection_tri_mesh
   sll_int32,  dimension(:),     pointer :: itabor
   sll_int32,  dimension(:),     pointer :: itest
   sll_int32,  dimension(:),     pointer :: nlmloc
+  sll_real64, dimension(:),     pointer :: xbas
   sll_real64, dimension(:,:),   pointer :: xlm
   sll_real64, dimension(:,:),   pointer :: coef
   sll_real64, dimension(:),     pointer :: xp
@@ -68,7 +69,7 @@ function new_advection_2d_tri_mesh( mesh ) result(adv)
   sll_int32  :: ierr
   sll_int32  :: i
   sll_int32  :: j
-
+  sll_int32  :: is1, is2, is3
 
   SLL_ALLOCATE(adv, ierr)
 
@@ -110,6 +111,20 @@ function new_advection_2d_tri_mesh( mesh ) result(adv)
   allocate(adv%indice(mesh%num_triangles))
   allocate(adv%itabor(mesh%num_nodes))
   allocate(adv%f_out(mesh%num_nodes))
+  allocate(adv%nbpama(mesh%num_triangles))
+  allocate(adv%xbas(mesh%num_nodes))
+  
+  do i = 1, mesh%num_triangles
+  
+     is1 = mesh%nodes(1,i) 
+     is2 = mesh%nodes(2,i) 
+     is3 = mesh%nodes(3,i) 
+  
+     adv%xbas(is1) = adv%xbas(is1) + mesh%aire(i)/3.
+     adv%xbas(is2) = adv%xbas(is2) + mesh%aire(i)/3.
+     adv%xbas(is3) = adv%xbas(is3) + mesh%aire(i)/3.
+  end do
+
 
 end function new_advection_2d_tri_mesh
 
@@ -302,13 +317,24 @@ do while( nbpres > 0 )
 
        nfin = nfin + 1
 
+       lx1 = mesh%coord(1,mesh%nodes(2,it))-mesh%coord(1,mesh%nodes(1,it))
+       ly1 = mesh%coord(2,mesh%nodes(3,it))-mesh%coord(2,mesh%nodes(1,it))
+       lx2 = mesh%coord(1,mesh%nodes(3,it))-mesh%coord(1,mesh%nodes(1,it))
+       ly2 = mesh%coord(2,mesh%nodes(2,it))-mesh%coord(2,mesh%nodes(1,it))
+
+       aire(it) = 0.5 * abs(lx1*ly1 - lx2*ly2)
+
+
+
        adv%xlm(1,jp) = 0.5 * adv%coef(1,ip) / adv%mesh%aire(adv%nlmloc(ip))
        adv%xlm(2,jp) = 0.5 * adv%coef(2,ip) / adv%mesh%aire(adv%nlmloc(ip))
        adv%xlm(3,jp) = 0.5 * adv%coef(3,ip) / adv%mesh%aire(adv%nlmloc(ip))
 
-       adv%nlpa(jp)  = adv%nlmloc(ip)
-       adv%itest(ip)      = 0
-       adv%inzone(jp)     = .true.
+       adv%nlpa(jp)   = adv%nlmloc(ip)
+       adv%itest(ip)  = 0
+       adv%inzone(jp) = .true.
+
+       print*, sum(adv%xlm(:,jp))
        
 
     end if
@@ -329,7 +355,6 @@ do while( nbpres > 0 )
            .and. adv%coef(2,ip) >= eps   &
            .and. adv%coef(3,ip) >= eps   ) then
 
-         print*,jp, 'crossed side 1 '
          adv%itest(ip) = 1 + 10*(1-min(1,adv%nvoiv(1,adv%nlmloc(ip))))
 
       end if
@@ -338,7 +363,6 @@ do while( nbpres > 0 )
            .and. adv%coef(2,ip) <  eps   &
            .and. adv%coef(3,ip) >= eps   ) then
  
-         print*,jp, 'crossed side 2 '
          adv%itest(ip) = 2 + 10*(1-min(1,adv%nvoiv(2,adv%nlmloc(ip))))
 
       end if
@@ -347,7 +371,6 @@ do while( nbpres > 0 )
            .and. adv%coef(2,ip) >= eps   &
            .and. adv%coef(3,ip) <  eps   ) then
  
-         print*,jp, 'crossed side 3 '
          adv%itest(ip) = 3 + 10*(1-min(1,adv%nvoiv(3,adv%nlmloc(ip))))
 
       end if
@@ -355,7 +378,6 @@ do while( nbpres > 0 )
       if (   adv%coef(1,ip) < eps    &
        .and. adv%coef(2,ip) < eps )  then
 
-         print*,jp, 'crossed side 1 or 2 '
          pa2x = adv%mesh%coord(1,adv%mesh%nodes(2,adv%nlmloc(ip)))-adv%xp(jp)
          pa2y = adv%mesh%coord(2,adv%mesh%nodes(2,adv%nlmloc(ip)))-adv%yp(jp)
      
@@ -370,7 +392,6 @@ do while( nbpres > 0 )
       if (       adv%coef(2,ip) < eps     &
            .and. adv%coef(3,ip) < eps )  then
 
-         print*,jp, 'crossed side 2 or 3 '
          pa3x = adv%mesh%coord(1,adv%mesh%nodes(3,adv%nlmloc(ip)))-adv%xp(jp) 
          pa3y = adv%mesh%coord(2,adv%mesh%nodes(3,adv%nlmloc(ip)))-adv%yp(jp)
  
@@ -383,8 +404,6 @@ do while( nbpres > 0 )
 
       if (       adv%coef(3,ip) < eps    &
            .and. adv%coef(1,ip) < eps )  then
-
-         print*,jp, 'crossed side 3 or 1 '
 
          pa1x = adv%mesh%coord(1,adv%mesh%nodes(1,adv%nlmloc(ip)))-adv%xp(jp) 
          pa1y = adv%mesh%coord(2,adv%mesh%nodes(1,adv%nlmloc(ip)))-adv%yp(jp)
@@ -404,7 +423,6 @@ do while( nbpres > 0 )
     do ip=1,nbpres
   
       if( adv%itest(ip) > 10 .and. adv%itest(ip) < 14 )  then
-         print*, adv%numres(ip), 'absorbee'
          nbpert = nbpert + 1
       end if
   
@@ -430,8 +448,6 @@ do while( nbpres > 0 )
                           + adv%nlmloc(ip)* max(0,sign(1,adv%itest(ip)-20))    
         end if
 
-        print*,'**** ', adv%numres(ip), adv%nlmloc(nrest), ' ****'
-
       end if
   
     end do
@@ -443,12 +459,11 @@ do while( nbpres > 0 )
 end do
 
 !Recherche du nombre de particules de chaque maille -------
-allocate(adv%nbpama(adv%mesh%num_triangles))
 
 adv%nbpama = 0
 do ip = 1 , nbp
   if (adv%inzone(ip)) then
-    mpa         = adv%nlpa(ip)
+    mpa             = adv%nlpa(ip)
     adv%nbpama(mpa) = adv%nbpama(mpa) + 1
   end if
 end do
@@ -475,8 +490,8 @@ adv%itabor = 0
 do ip = 1, nbp
 
    if (adv%inzone(ip)) then
-     mpa         = adv%nlpa(ip)
-     ind         = adv%iad1(mpa) + adv%indice(mpa)
+     mpa             = adv%nlpa(ip)
+     ind             = adv%iad1(mpa) + adv%indice(mpa)
      adv%itabor(ind) = ip
      adv%indice(mpa) = adv%indice(mpa) + 1
    end if
@@ -485,6 +500,7 @@ end do
 
 nprest = nbp
 
+adv%f_out = 0.0_f64
 
 do it = 1 , adv%mesh%num_triangles
       
@@ -530,6 +546,8 @@ do it = 1 , adv%mesh%num_triangles
    end if
 
 end do
+
+f_in = adv%f_out
 
 end subroutine positions
 
