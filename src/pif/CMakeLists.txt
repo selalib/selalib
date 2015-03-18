@@ -7,22 +7,29 @@ TARGET_LINK_LIBRARIES( sll_pif_fieldsolver
   sll_constants
   sll_utilities)
 
+ADD_LIBRARY( sll_wedge_product_generaldim STATIC sll_wedge_product_generaldim.F90 )
+TARGET_LINK_LIBRARIES( sll_wedge_product_generaldim
+  sll_memory
+  sll_assert
+  sll_working_precision)
+  
+  
 ADD_EXECUTABLE(pif_fieldsolver_test  pif_fieldsolver_test.F90)
 TARGET_LINK_LIBRARIES(pif_fieldsolver_test sll_pif_fieldsolver
 					      sll_timer)
 
-ADD_EXECUTABLE(sll_pif_general  sll_pif_general.F90)
-TARGET_LINK_LIBRARIES(sll_pif_general sll_pif_fieldsolver
-					      sll_timer 
-					      sll_memory
-					      sll_utilities
-					      sll_constants
-					      sll_sobol
-					      sll_prob
-					      sll_visu_pic
-					      sll_collective
-					      sll_moment_matching
-					      sll_pic_utilities)
+# ADD_EXECUTABLE(sll_pif_general  sll_pif_general.F90)
+# TARGET_LINK_LIBRARIES(sll_pif_general sll_pif_fieldsolver
+# 					      sll_timer 
+# 					      sll_memory
+# 					      sll_utilities
+# 					      sll_constants
+# 					      sll_sobol
+# 					      sll_prob
+# 					      sll_visu_pic
+# 					      sll_collective
+# 					      sll_moment_matching
+# 					      sll_pic_utilities)
 
 					      
 # Ctest
