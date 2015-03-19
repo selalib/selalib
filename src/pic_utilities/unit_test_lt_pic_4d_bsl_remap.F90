@@ -41,6 +41,7 @@ program unit_test_lt_pic_bsl_remap
 !  use sll_particle_initializers
   use sll_cartesian_meshes
   use sll_representation_conversion_module
+  use sll_timer
 
 !#define THERM_SPEED 1._f64
 !#define NUM_PARTICLES 100000_i32
@@ -166,7 +167,9 @@ program unit_test_lt_pic_bsl_remap
   sll_real64 :: vx_j_bsl_end
   sll_real64 :: vy_j_bsl_end
 
-
+  ! Benchmarking remap performance
+  type(sll_time_mark) :: remapstart
+  sll_real64 :: remaptime
 
 !  sll_real64 :: max_f
 !  sll_real64 :: inv_r_x  
@@ -179,7 +182,7 @@ program unit_test_lt_pic_bsl_remap
 
   sll_real64 :: new_x,new_y,new_vx,new_vy
 
-  character(len=32) :: remap_type
+  character(len=10) :: remap_type
 
   ! --- end of declarations
 
@@ -273,6 +276,7 @@ program unit_test_lt_pic_bsl_remap
 
   ! remap au choix
   call getarg(1,remap_type)
+  call sll_set_time_mark(remapstart)
   if(remap_type == 'ltp') then
      ! remap with [[file:lt_pic_4d_utilities.F90::sll_lt_pic_4d_write_f_on_remap_grid]]
      print*, "[lt_pic_4d_init_tester]  calling sll_lt_pic_4d_write_f_on_remap_grid..."
@@ -284,7 +288,11 @@ program unit_test_lt_pic_bsl_remap
      print*, 'ERROR (code=765536864562b): option is ltp or ltp_bsl'
      stop
   end if
+  remaptime = sll_time_elapsed_since(remapstart)
 
+  ! formats at [[http://www.cs.mtu.edu/~shene/COURSES/cs201/NOTES/chap05/format.html]]
+  write(*,'(A,A,ES8.2,A)') trim(remap_type),' remap time = ',remaptime,' sec'
+  
   ! result should still be exact on the new grid because all the transformations have been linear
 
   number_nodes_x  = part_group%number_parts_x
