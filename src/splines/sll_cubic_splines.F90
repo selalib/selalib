@@ -557,7 +557,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     sll_real64                        :: d1
     sll_int32                         :: i
     sll_int32                         :: np
-    SLL_ASSERT( size(f) .ge. num_pts )
+    SLL_ASSERT( size(f) .ge. num_pts-1 )
     SLL_ASSERT( size(d) .ge. num_pts )
     SLL_ASSERT( size(coeffs) .ge. num_pts )
     SLL_ASSERT( num_pts .gt. NUM_TERMS)
@@ -682,11 +682,11 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
             'uninitialized spline object passed as argument. Exiting... '
        STOP
     end if
-    if( .not. (size(f) .ge. spline%n_points ) ) then
+    if( .not. (size(f) .ge. spline%n_points-1 ) ) then
        ! FIXME: THROW ERROR
        print *, 'ERROR: compute_spline_1D_periodic(): '
        write (*,'(a, i8, a, i8)') 'spline object needs data of size >= ', &
-            spline%n_points, ' . Passed size: ', size(f)
+            spline%n_points-1, ' . Passed size: ', size(f)
        STOP
     end if
     np = spline%n_points
