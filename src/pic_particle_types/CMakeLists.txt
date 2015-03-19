@@ -9,7 +9,8 @@ ADD_LIBRARY( sll_pic_particles STATIC
 
 TARGET_LINK_LIBRARIES( sll_pic_particles
   sll_memory
-  sll_assert )
+  sll_assert
+  sll_meshes )
 
 # <<MLT_PIC_OPTION>> - ALH - mlt_pic developments are only conditionnally compiled for the moment to allow unfinished
 # program files to be exchanged with MCP without breaking the regression test procedure.  Activating MLT_PIC: cmake
