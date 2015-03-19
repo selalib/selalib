@@ -179,6 +179,7 @@ IF(MPI_ENABLED)
    ADD_SUBDIRECTORY(distribution_function_multipatch)
    ADD_SUBDIRECTORY(poisson_solvers_parallel)
    ADD_SUBDIRECTORY(pic_1d)
+   ADD_SUBDIRECTORY(pif)
    #PN ADD_SUBDIRECTORY(maxwell_solvers_parallel)
 
 ENDIF()
