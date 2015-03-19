@@ -76,6 +76,7 @@
 &drive
   !drive_type = "SLL_NO_DRIVE"
   drive_type = "SLL_KEEN_DRIVE"  
+  !drive_type = "SLL_AMPERE" 	  
     keen_t0 = 0.
     keen_tL = 69.
     keen_tR = 307.
