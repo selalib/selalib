@@ -96,7 +96,7 @@ sll_int32 :: coll_rank, coll_size
      procedure, pass(sim) :: control_variate=>control_variate_generalvp_pif
        procedure, pass(sim) :: vxB=>v_cross_B_generalvp_pif
      !Magnetic field, can be changed
-      procedure, pass(sim) :: B=>Bzero_generalvp_pif
+      procedure, pass(sim) :: B=>Bstandard_generalvp_pif
       procedure, pass(sim) :: E=>Ezero_generalvp_pif !Electric field
      
 end type
@@ -228,7 +228,9 @@ call sim%init_particle_prior_maxwellian()
 
 
 !Set weights for strong landau damping
-sim%particle(sim%maskw,:)=(1-sim%eps*sum(cos(0.5*sim%particle(sim%maskx,:) +sll_pi/3.0),1))
+!sim%particle(sim%maskw,:)=(1-sim%eps*sum(cos(0.5*sim%particle(sim%maskx,:) +sll_pi/3.0),1))
+sim%particle(sim%maskw,:)=1+sim%eps*cos(0.5*sim%particle(sim%maskx(1),:))*cos(0.5*sim%particle(sim%maskx(2),:))   
+
 sim%particle(sim%maskw,:)=sim%particle(sim%maskw,:)/sim%prior_weight
 
 SLL_ALLOCATE(sim%weight_const(sim%npart_loc),ierr)
