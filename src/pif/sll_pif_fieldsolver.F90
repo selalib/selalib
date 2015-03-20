@@ -332,6 +332,7 @@ sll_int32 :: ierr
  
  !allocate memory
  SLL_ALLOCATE(list(dim,1:sz),ierr)
+ SLL_ALLOCATE(sublist(dim-1, subsz),ierr)
  
  if (dim>1) then
  sublist=generate_exponents(min_exponents(2:dim),max_exponents(2:dim))
