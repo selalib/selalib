@@ -301,10 +301,42 @@ subroutine calc_fourier_modes(this, particle, fouriermodes)
  sll_int32 :: idx
 
 do idx=1, this%problemsize()
-  fouriermodes(idx)=sum(exp(-sll_i1*matmul(this%allmodes(:,idx)*this%unitmode,particle(1:this%dimx,:)))*particle(this%dimx+1,:))
+  fouriermodes(idx)=kahan_sum_comp64(exp(-sll_i1*matmul(this%allmodes(:,idx)*this%unitmode,particle(1:this%dimx,:)))*particle(this%dimx+1,:))
  end do
  
 end subroutine calc_fourier_modes
+
+function kahan_sum_comp64(summands) result(sum)
+ sll_comp64, dimension(:), intent(in) :: summands
+ sll_comp64 :: sum, c,t,y
+ sll_int32 :: idx
+ sum=0
+ c=0
+ t=0
+    do idx = 1,size(summands)
+        y = summands(idx) - c  
+        t = sum + y         
+        c = (t - sum) - y 
+        sum = t 
+  end do
+end function
+
+
+function kahan_sum_real64(summands) result(sum)
+ sll_real64, dimension(:), intent(in) :: summands
+ sll_real64 :: sum, c,t,y
+ sll_int32 :: idx
+ sum=0
+ c=0
+ t=0
+    do idx = 1,size(summands)
+        y = summands(idx) - c  
+        t = sum + y         
+        c = (t - sum) - y 
+        sum = t 
+  end do
+end function
+
 
 function get_fourier_modes(this, particle) result(fouriermodes)
  class(pif_fieldsolver), intent(in) :: this
@@ -332,6 +364,7 @@ sll_int32 :: ierr
  
  !allocate memory
  SLL_ALLOCATE(list(dim,1:sz),ierr)
+ SLL_ALLOCATE(sublist(dim-1, subsz),ierr)
  
  if (dim>1) then
  sublist=generate_exponents(min_exponents(2:dim),max_exponents(2:dim))
