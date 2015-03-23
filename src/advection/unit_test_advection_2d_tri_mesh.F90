@@ -28,7 +28,7 @@ sll_real64 :: dt = 0.01
 !Create a triangular mesh from an hex mesh
 !Reference on the boundary is set to "one"
 
-num_cells = 2
+num_cells = 40
 h_mesh => new_hex_mesh_2d( num_cells, 0._f64, 0._f64) 
 t_mesh => new_triangular_mesh_2d(h_mesh) 
 
@@ -43,13 +43,13 @@ call write_triangular_mesh_mtv(t_mesh, "positions_mesh.mtv")
 x1 => t_mesh%coord(1,:)
 x2 => t_mesh%coord(2,:)
 
-df = 1.0 !exp(-((x1-0.5)**2+x2*x2)/0.04_f64)
-ex = 0.0 !- x2
-ey = 0.0 !+ x1
+df = exp(-((x1-0.5)**2+x2*x2)/0.04_f64)
+ex = - x2
+ey = + x1
 
 t_adv => new_advection_2d_tri_mesh(t_mesh)
 
-do istep = 1, 1
+do istep = 1, 100
   call positions(t_adv, df, ex, ey, dt)
   call sll_gnuplot_2d( df, "f_tri", t_mesh%coord, t_mesh%nodes, istep)
 end do

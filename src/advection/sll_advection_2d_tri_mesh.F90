@@ -247,6 +247,7 @@ real(8) :: xm11, xm12, xm13
 integer :: nprest
 integer :: mpa, inum, ip1, ip2, ks, ind
 integer :: it, is1, is2, is3
+real(8) :: x1, x2, x3, y1, y2, y3, det
 
 eps = -adv%mesh%petitl**2
 
@@ -299,13 +300,21 @@ do while( nbpres > 0 )
   do ip = 1, nbpres    
 
     jp = adv%numres(ip)
+    it = adv%nlmloc(ip)
 
-    pa1x = adv%mesh%coord(1,adv%mesh%nodes(1,adv%nlmloc(ip))) - adv%xp(jp)
-    pa1y = adv%mesh%coord(2,adv%mesh%nodes(1,adv%nlmloc(ip))) - adv%yp(jp)
-    pa2x = adv%mesh%coord(1,adv%mesh%nodes(2,adv%nlmloc(ip))) - adv%xp(jp)
-    pa2y = adv%mesh%coord(2,adv%mesh%nodes(2,adv%nlmloc(ip))) - adv%yp(jp)
-    pa3x = adv%mesh%coord(1,adv%mesh%nodes(3,adv%nlmloc(ip))) - adv%xp(jp)
-    pa3y = adv%mesh%coord(2,adv%mesh%nodes(3,adv%nlmloc(ip))) - adv%yp(jp)
+    x1 = adv%mesh%coord(1,adv%mesh%nodes(1,it))
+    y1 = adv%mesh%coord(2,adv%mesh%nodes(1,it))
+    x2 = adv%mesh%coord(1,adv%mesh%nodes(2,it))
+    y2 = adv%mesh%coord(2,adv%mesh%nodes(2,it))
+    x3 = adv%mesh%coord(1,adv%mesh%nodes(3,it))
+    y3 = adv%mesh%coord(2,adv%mesh%nodes(3,it))
+
+    pa1x = x1 - adv%xp(jp)
+    pa1y = y1 - adv%yp(jp)
+    pa2x = x2 - adv%xp(jp)
+    pa2y = y2 - adv%yp(jp)
+    pa3x = x3 - adv%xp(jp)
+    pa3y = y3 - adv%yp(jp)
 
     adv%coef(1,ip) = pa1x*pa2y - pa1y*pa2x
     adv%coef(2,ip) = pa2x*pa3y - pa2y*pa3x
@@ -317,25 +326,15 @@ do while( nbpres > 0 )
 
        nfin = nfin + 1
 
-       lx1 = mesh%coord(1,mesh%nodes(2,it))-mesh%coord(1,mesh%nodes(1,it))
-       ly1 = mesh%coord(2,mesh%nodes(3,it))-mesh%coord(2,mesh%nodes(1,it))
-       lx2 = mesh%coord(1,mesh%nodes(3,it))-mesh%coord(1,mesh%nodes(1,it))
-       ly2 = mesh%coord(2,mesh%nodes(2,it))-mesh%coord(2,mesh%nodes(1,it))
+       det = (x2-x1)*(y3-y1)-(x3-x1)*(y2-y1)
 
-       aire(it) = 0.5 * abs(lx1*ly1 - lx2*ly2)
-
-
-
-       adv%xlm(1,jp) = 0.5 * adv%coef(1,ip) / adv%mesh%aire(adv%nlmloc(ip))
-       adv%xlm(2,jp) = 0.5 * adv%coef(2,ip) / adv%mesh%aire(adv%nlmloc(ip))
-       adv%xlm(3,jp) = 0.5 * adv%coef(3,ip) / adv%mesh%aire(adv%nlmloc(ip))
+       adv%xlm(1,jp) = adv%coef(1,ip) / det
+       adv%xlm(2,jp) = adv%coef(2,ip) / det
+       adv%xlm(3,jp) = adv%coef(3,ip) / det
 
        adv%nlpa(jp)   = adv%nlmloc(ip)
        adv%itest(ip)  = 0
        adv%inzone(jp) = .true.
-
-       print*, sum(adv%xlm(:,jp))
-       
 
     end if
 
