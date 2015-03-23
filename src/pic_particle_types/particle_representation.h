@@ -9,7 +9,7 @@
   do; \
     tmp = (x - xmin)*rdelta; \
     icell  = int(tmp); \
-    offset = tmp - real(icell,f32); \
+    offset = tmp - real(icell,f64); \
     exit; \
  end do
 
@@ -46,8 +46,8 @@
 
 #define GET_PARTICLE_POSITION(p,m2d,x,y) \
   do; \
-     x = m2d%delta_eta1*(p%dx + real( mod(p%ic-1,m2d%num_cells1), f64) ); \
-     y = m2d%delta_eta2*(p%dy + real( int( (p%ic-1)/m2d%num_cells1 ), f64)); \
+     x = m2d%delta_eta1*(real(p%dx,f64) + real( mod(p%ic-1,m2d%num_cells1), f64) ); \
+     y = m2d%delta_eta2*(real(p%dy,f64) + real( int( (p%ic-1)/m2d%num_cells1 ), f64)); \
     exit; \
  end do
 

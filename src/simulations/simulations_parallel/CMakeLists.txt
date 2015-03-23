@@ -1,8 +1,7 @@
 #############################################################################
 ###      Parallel simulations
 #############################################################################
-
-IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
+IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
 
    ADD_LIBRARY( sll_simulations_parallel STATIC ../simulation_base_class.F90)
 
@@ -11,7 +10,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
                          sll_distribution_function_multipatch
                          sll_general_coordinate_elliptic_solvers_multipatch
                          sll_scalar_field_multipatch
-                         sll_parallel_array_initializers
+                         sll_parallel_array_utilities
                          sll_advection
                          sll_parallel_utilities
                          sll_poisson_solvers
@@ -72,6 +71,10 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
     ADD_SUBDIRECTORY( sim_4d_qns_general                       )
     ADD_SUBDIRECTORY( sim_4d_qns_general_multipatch            )
     ADD_SUBDIRECTORY( sim_6d                                   )
+    ADD_SUBDIRECTORY( sim_general_vlasov_poisson_pif           )
 
 ENDIF()
 
+IF(MPI_ENABLED)
+   ADD_SUBDIRECTORY(bsl_examples)
+ENDIF(MPI_ENABLED)

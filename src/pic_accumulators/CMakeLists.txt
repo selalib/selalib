@@ -8,27 +8,34 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL)
   SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 ENDIF(HDF5_ENABLED AND HDF5_IS_PARALLEL)
 
-
-
-ADD_LIBRARY( sll_pic_accumulators STATIC 
-  sll_accumulators.F90 )
-
-TARGET_LINK_LIBRARIES(sll_pic_accumulators
+ADD_LIBRARY( sll_pic_accumulators STATIC sll_accumulators.F90 )
+TARGET_LINK_LIBRARIES( sll_pic_accumulators
   sll_meshes
   sll_memory
   sll_assert
   sll_working_precision )
 
+# Ctest
+IF(BUILD_TESTING)
+  ADD_EXECUTABLE( test_pic_accumulator unit_test.F90 )
+  TARGET_LINK_LIBRARIES( test_pic_accumulator
+    sll_pic_utilities
+    sll_pic_initializers
+    sll_pic_accumulators
+    sll_pic_particles
+    sll_meshes
+    sll_assert )
+  ADD_TEST( NAME pic_accumulator COMMAND test_pic_accumulator )
+  SET_TESTS_PROPERTIES( pic_accumulator PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+ENDIF(BUILD_TESTING)
 
-ADD_EXECUTABLE(test_pic_accumulator unit_test.F90  )
 
-TARGET_LINK_LIBRARIES(test_pic_accumulator
-  sll_pic_utilities
-  sll_pic_initializers
-  sll_pic_accumulators
-  sll_pic_particles
-  sll_meshes
-  sll_assert )
-#  sll_pic_particles
-#  sll_pic_initializers )
-
+ADD_EXECUTABLE(particle_fourier_modes_test  particle_fourier_modes_test.F90)
+TARGET_LINK_LIBRARIES(particle_fourier_modes_test sll_memory 
+						sll_assert
+						sll_working_precision
+						sll_timer)
+ADD_DEPENDENCIES(particle_fourier_modes_test sll_memory 
+						sll_assert
+						sll_working_precision
+						sll_timer)

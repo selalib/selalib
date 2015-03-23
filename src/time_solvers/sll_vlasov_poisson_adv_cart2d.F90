@@ -1,3 +1,5 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
 module sll_vp_cartesian_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -98,7 +100,7 @@ contains
     rho = 1.0_f64 - delta_v * sum(FIELD_DATA(this%dist_func), DIM = 2)
     call solve(this%poisson_1d, efield, rho)
     if (this%params%driven) then
-       call PFenvelope(adr, time, this%params)
+       call PF_envelope(adr, time, this%params)
        do i = 1, this%Ncx + 1
           arg = this%params%kmode * real(i-1,8) * delta_x - this%params%omegadr*time
           e_app(i) = this%params%Edrmax * adr * this%params%kmode * sin(arg)
@@ -119,7 +121,7 @@ contains
     f_equilibrium = 1.0_f64/sqrt(2*sll_pi)*exp(-0.5_f64*v*v)
   end function f_equilibrium
 
-  subroutine PFenvelope(S, t, params)
+  subroutine PF_envelope(S, t, params)
 
     ! DESCRIPTION
     ! -----------
@@ -159,6 +161,7 @@ contains
        S = 0.
     endif
     return
-  end subroutine PFenvelope
+  end subroutine PF_envelope
 
 end module sll_vp_cartesian_2d
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

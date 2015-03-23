@@ -64,9 +64,9 @@ interface solve
    module procedure solve_e_fields_poisson_2d_periodic_fftpack
 end interface
 
-!interface delete
-   !module procedure free_poisson_2d_periodic_fftpack
-!end interface
+interface delete
+   module procedure free_poisson_2d_periodic_fftpack
+end interface
 
 interface fft
    module procedure doubfft, doubcfft
@@ -75,7 +75,7 @@ interface fftinv
    module procedure doubfftinv,  doubcfftinv
 end interface
 
-public :: initialize, new, solve
+public :: initialize, new, solve, delete
 
 contains
 
@@ -107,6 +107,34 @@ contains
   end function new_poisson_2d_periodic_fftpack 
 
 
+!> delete poisson_2d_periodic_fftpack
+subroutine free_poisson_2d_periodic_fftpack( this, error )
+   type(poisson_2d_periodic_fftpack) :: this   !< self object
+   sll_int32,  intent(out)   :: error  !< error code
+
+   SLL_DEALLOCATE(this%rhst, error)
+   SLL_DEALLOCATE(this%ext, error)
+   SLL_DEALLOCATE(this%eyt, error)
+   SLL_DEALLOCATE(this%kx, error)
+   SLL_DEALLOCATE(this%ky, error)
+   SLL_DEALLOCATE(this%k2, error)
+   
+   SLL_DEALLOCATE(this%fftx%coefc, error)
+   SLL_DEALLOCATE(this%fftx%work, error)
+   SLL_DEALLOCATE(this%fftx%workc, error)
+   SLL_DEALLOCATE(this%fftx%coefd, error)
+   SLL_DEALLOCATE(this%fftx%workd, error)
+   SLL_DEALLOCATE(this%fftx%coefcd, error)
+
+   SLL_DEALLOCATE(this%ffty%coefc, error)
+   SLL_DEALLOCATE(this%ffty%work, error)
+   SLL_DEALLOCATE(this%ffty%workc, error)
+   SLL_DEALLOCATE(this%ffty%coefd, error)
+   SLL_DEALLOCATE(this%ffty%workd, error)
+   SLL_DEALLOCATE(this%ffty%coefcd, error)
+
+      
+end subroutine free_poisson_2d_periodic_fftpack
 
 !> Create an object to solve Poisson equation on 2D mesh with periodic
 !> boundary conditions:

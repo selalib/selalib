@@ -86,7 +86,8 @@
 
   <!-- Layout definition for a namespace page -->
   <namespace>
-    <briefdescription visible="yes"/>
+    <briefdescription visible="no"/>
+    <detaileddescription title="Description"/>
     <memberdecl>
       <nestednamespaces visible="yes" title=""/>
       <constantgroups visible="yes" title=""/>
@@ -105,7 +106,6 @@
       <variables title=""/>
     </memberdef>
     <authorsection visible="no"/>
-    <detaileddescription title=""/>
   </namespace>
 
   <!-- Layout definition for a file page -->
@@ -140,8 +140,9 @@
 
   <!-- Layout definition for a group page -->
   <group>
-    <briefdescription visible="yes"/>
-    <authorsection visible="no"/>
+    <briefdescription visible="no"/>
+    <detaileddescription title="Description"/>
+    <authorsection visible="yes"/>
     <groupgraph visible="$GROUP_GRAPHS"/>
     <memberdecl>
       <nestedgroups visible="yes" title="Pierre"/>
@@ -181,7 +182,6 @@
       <properties title=""/>
       <friends title=""/>
     </memberdef>
-    <detaileddescription title=""/>
   </group>
 
   <!-- Layout definition for a directory page -->
