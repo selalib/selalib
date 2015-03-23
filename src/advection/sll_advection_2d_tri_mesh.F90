@@ -49,7 +49,7 @@ type :: sll_advection_tri_mesh
   sll_real64, dimension(:),     pointer :: yp
   sll_real64, dimension(:),     pointer :: f_out
   logical,    dimension(:),     pointer :: inzone
-  integer, dimension(:),        pointer :: numres
+  sll_int32, dimension(:),        pointer :: numres
 
 end type sll_advection_tri_mesh
 
@@ -132,137 +132,98 @@ end function new_advection_2d_tri_mesh
 !> @brief 
 !> Compute characterisitic origin in triangular mesh
 !> @details
-!! Localisation de l'origine de la caracteristique le maillage       
-!! et application des conditions aux limites.         
-!!              Les numeros des particules a retirer sont          
-!!              contenus dans le tableau numpt                     
-!!              (Numero d'element et de cote dans nelet et ncott)  
-!!                                                                      
-!!            pos1   - position x des particules                       
-!!            pos2   - position y des particules                       
-!!            vit1   - vitesse vx des particules                       
-!!            vit2   - vitesse vy des particules                       
-!!            xlm1   - 1ere coordonnee barycentrique                   
-!!            xlm2   - 2eme coordonnee barycentrique                   
-!!            xlm3   - 3eme coordonnee barycentrique                   
-!!            nlpa   - numero des elements contenant les particules    
-!!                                                                      
-!!            coor   - coordonnees des noeuds                          
-!!            nodes   - numero des sommets des triangles                
-!!            nvois  - numero des voisins des elements                 
-!!            aire   - aire de chaque element                          
-!!                                                                      
-!!            coef1  - tableau temporaire des determinants             
-!!            coef2  - tableau temporaire des determinants             
-!!            coef3  - tableau temporaire des determinants             
-!!            coef4  - tableau temporaire                              
-!!                                                                      
-!!            p1loc  - tableau temporaire des nouvelles positions      
-!!            p2loc  - tableau temporaire des nouvelles positions     
-!!            v1loc  - tableau temporaire des nouvelles vitesses      
-!!            v2loc  - tableau temporaire des nouvelles vitesses     
-!!                                                                      
-!!            numpt  - tableau auxiliaire contenant les numeros des    
-!!                      particules a eliminer                           
-!!            nelet  - tableau auxiliaire contenant les numeros des   
-!!                      elements qui contenaient ces particules         
-!!            ncott  - tableau auxiliaire contenant les numeros des    
-!!                      cotes qui ont absorbe ces particules            
-!!            v1pert, v2pert  - composantes des vitesses des particules  absorbees
-!!                                                                      
-!!            nlmloc - tableau auxiliaire contenant les numeros des    
-!!                      elements ou l'on cherche les particules         
-!!            numres - tableau auxiliaire contenant les numeros des    
-!!                      particules non encore localisees                
-!!                                                                      
-!!            itest  - tableau auxiliaire pour preciser le            
-!!                      comportement d'une particule :                  
-!!            - si  itest=0 la particules reste dans son triangle       
-!!            - si  itest=1,2,3 la particule traverse le cote 1,2ou3   
-!!                               mais ne traverse pas de frontiere      
-!!            - si  itest=11,12,13 la particule est absorbee par le     
-!!                                 cote frontiere 1,2,3                
-!!            - si  itest=21,22,23 la particule est reflechie par       
-!!                                 le cote frontiere 1,2,3             
-!!          Dans tous les cas le chiffre des unites de itest designe    
-!!          le numero du cote traverse par la particule.                
-!!          Le type de frontiere est defini dans le tableau nvoiv       
-!!          qui a ete cree dans "RECVOI" :                              
-!!            - si nvoiv(i,n) > 0  le cote i n'est pas une frontiere    
-!!            - si nvoiv(i,n) = 0  le cote i absorbe les particules     
-!!            - si nvoiv(i,n) =-1  le cote i reflechit les particules  
-!!                                                                      
-!!            nbpert - nombre de particules a eliminer                 
-!!            nbp    - nombre de particules de l'espece consideree     
-!!            xlm1   - 1ere coordonnee barycentrique des particules 
-!!            xlm2   - 2eme coordonnee barycentrique des particules
-!!            xlm3   - 3eme coordonnee barycentrique des particules 
-!!            nlpa   - numeros des triangles contenant les particules
-!!            coor   - coordonnees des noeuds du maillage        
-!!            nodes  - numero des sommets des triangles            
-!!            xbas   - integrales des fonctions de base           
-!!            rho    - densite de charge                        
-!!            ad1    - tableau temporaire (adresse de la 1ere    
-!!                     particule de chaque maille dans le tableau 
-!!                     ordonne des particules)                     
-!!            indice - tableau temporaire (incrementation du nombre 
-!!                     de particules dja reperees)               
-!!            itabor - tableau temporaire (numeros des particules 
-!!                     ordonnes suivant les numeros des mailles)
-!!            nbpama - tableau temporaire (nombre de particules  
-!!                     par maille)                                 
-!!                                                           
-!!            nflst  - etiquette logique du fichier "listing" 
-!!            petitl - petite longueur de reference             
-!!            nbt    - nombre de triangle du maillage             
-!!            nbs    - nombre de noeuds   du maillage              
-!!                                                                  
-!!----------------------------------------------------------------------
+!!    xlm1   - 1ere coordonnee barycentrique                   
+!!    xlm2   - 2eme coordonnee barycentrique                   
+!!    xlm3   - 3eme coordonnee barycentrique                   
+!!                                                              
+!!    coord  - coordonnees des noeuds                          
+!!    nodes  - numero des sommets des triangles                
+!!    nvois  - numero des voisins des elements                 
+!!    aire   - aire de chaque element                          
+!!                                                              
+!!    coef1  - tableau temporaire des determinants             
+!!    coef2  - tableau temporaire des determinants             
+!!    coef3  - tableau temporaire des determinants             
+!!    coef4  - tableau temporaire                              
+!!                                                              
+!!    numpt  - tableau auxiliaire contenant les numeros des    
+!!              particules a eliminer                           
+!!    nelet  - tableau auxiliaire contenant les numeros des   
+!!              elements qui contenaient ces particules         
+!!    nlmloc - tableau auxiliaire contenant les numeros des    
+!!              elements ou l'on cherche les particules         
+!!    numres - tableau auxiliaire contenant les numeros des    
+!!              particules non encore localisees                
+!!                                                              
+!!    itest  - tableau auxiliaire pour preciser le comportement:            
+!!    - si  itest=0 la particules reste dans son triangle       
+!!    - si  itest=1,2,3 la particule traverse le cote 1,2ou3   
+!!                       mais ne traverse pas de frontiere      
+!!    - si  itest=11,12,13 la particule est absorbee par le     
+!!                         cote frontiere 1,2,3                
+!!    - si  itest=21,22,23 la particule est reflechie par       
+!!                         le cote frontiere 1,2,3             
+!!  Dans tous les cas le chiffre des unites de itest designe    
+!!  le numero du cote traverse par la particule.                
+!!  Le type de frontiere est defini dans le tableau nvoiv       
+!!    - si nvoiv(i,n) > 0  le cote i n'est pas une frontiere    
+!!    - si nvoiv(i,n) = 0  le cote i absorbe les particules     
+!!    - si nvoiv(i,n) =-1  le cote i reflechit les particules  
+!!                                                              
+!!    nbpert - nombre de particules a eliminer                 
+!!    rho    - densite de charge                        
+!!    ad1    - tableau temporaire (adresse de la 1ere    
+!!             particule de chaque maille dans le tableau 
+!!             ordonne des particules)                     
+!!    indice - tableau temporaire (incrementation du nombre 
+!!             de particules dja reperees)               
+!!    itabor - tableau temporaire (numeros des particules 
+!!             ordonnes suivant les numeros des mailles)
+!!    nbpama - tableau temporaire (nombre de particules  
+!!             par maille)                                 
+!!                                                   
+!!    petitl - petite longueur de reference             
+!<
 subroutine positions(adv, f_in, ex, ey, dt )
 
 type(sll_advection_tri_mesh), intent(inout) :: adv  !< mesh
-real(8), dimension(:),        intent(inout) :: f_in !< distribution function on nodes
-real(8), dimension(:),        intent(in)    :: ex   !< electric field in x1
-real(8), dimension(:),        intent(in)    :: ey   !< electric field in x2
-real(8),                      intent(in)    :: dt   !< time step
+sll_real64, dimension(:),     intent(inout) :: f_in !< distribution function on nodes
+sll_real64, dimension(:),     intent(in)    :: ex   !< electric field on x1
+sll_real64, dimension(:),     intent(in)    :: ey   !< electric field on x2
+sll_real64,                   intent(in)    :: dt   !< time step
 
-real(8) :: eps
-integer :: nbpert
-integer :: nbpres
-integer :: nbp
-integer :: num
-integer :: nrest
-integer :: nfin
-integer :: nbpr
+sll_real64 :: eps
+sll_int32  :: nbpert
+sll_int32  :: nbpres
+sll_int32  :: num
+sll_int32  :: nrest
+sll_int32  :: nfin
+sll_int32  :: nbpr
 
+sll_int32 :: ip
+sll_int32 :: jp
 
-integer :: ip
-integer :: jp
+sll_real64 :: pa1x, pa1y, pa2x, pa2y, pa3x, pa3y
 
-
-real(8) :: pa1x, pa1y, pa2x, pa2y, pa3x, pa3y
-
-real(8) :: phi1, phi2, phi3
-real(8) :: xm11, xm12, xm13
-integer :: nprest
-integer :: mpa, inum, ip1, ip2, ks, ind
-integer :: it, is1, is2, is3
-real(8) :: x1, x2, x3, y1, y2, y3, det
+sll_real64 :: phi1, phi2, phi3
+sll_real64 :: xm11, xm12, xm13
+sll_int32  :: nprest
+sll_int32  :: mpa, inum, ip1, ip2, ks, ind
+sll_int32  :: it, is1, is2, is3
+sll_real64 :: x1, x2, x3, y1, y2, y3, det
 
 eps = -adv%mesh%petitl**2
 
-!Compute number of nodes inside the domain
-nbp = adv%mesh%num_nodes
-
-!Set arbitrary the position of the characteristic origin
-do ip = 1, nbp
+!Set the position of the characteristic origin
+!Cell is arbitrary set in one of the cell close to the ip vertex.
+do ip = 1, adv%mesh%num_nodes
   adv%numres(ip) = ip
   adv%xp(ip)     = adv%mesh%coord(1,ip) + ex(ip) * dt
   adv%yp(ip)     = adv%mesh%coord(2,ip) + ey(ip) * dt
   adv%nlmloc(ip) = adv%nlpa(ip)
 end do
      
-nbpres = nbp
+nbpres = adv%mesh%num_nodes
 nbpert = 0
 num    = 0
 
@@ -349,12 +310,13 @@ do while( nbpres > 0 )
     do ip = 1, nbpres
 
       jp = adv%numres(ip)
+      it = adv%nlmloc(ip)
 
       if (       adv%coef(1,ip) <  eps   &
            .and. adv%coef(2,ip) >= eps   &
            .and. adv%coef(3,ip) >= eps   ) then
 
-         adv%itest(ip) = 1 + 10*(1-min(1,adv%nvoiv(1,adv%nlmloc(ip))))
+         adv%itest(ip) = 1 + 10*(1-min(1,adv%nvoiv(1,it)))
 
       end if
 
@@ -362,7 +324,7 @@ do while( nbpres > 0 )
            .and. adv%coef(2,ip) <  eps   &
            .and. adv%coef(3,ip) >= eps   ) then
  
-         adv%itest(ip) = 2 + 10*(1-min(1,adv%nvoiv(2,adv%nlmloc(ip))))
+         adv%itest(ip) = 2 + 10*(1-min(1,adv%nvoiv(2,it)))
 
       end if
  
@@ -370,48 +332,46 @@ do while( nbpres > 0 )
            .and. adv%coef(2,ip) >= eps   &
            .and. adv%coef(3,ip) <  eps   ) then
  
-         adv%itest(ip) = 3 + 10*(1-min(1,adv%nvoiv(3,adv%nlmloc(ip))))
+         adv%itest(ip) = 3 + 10*(1-min(1,adv%nvoiv(3,it)))
 
       end if
     
       if (   adv%coef(1,ip) < eps    &
        .and. adv%coef(2,ip) < eps )  then
 
-         pa2x = adv%mesh%coord(1,adv%mesh%nodes(2,adv%nlmloc(ip)))-adv%xp(jp)
-         pa2y = adv%mesh%coord(2,adv%mesh%nodes(2,adv%nlmloc(ip)))-adv%yp(jp)
+         pa2x = adv%mesh%coord(1,adv%mesh%nodes(2,it))-adv%xp(jp)
+         pa2y = adv%mesh%coord(2,adv%mesh%nodes(2,it))-adv%yp(jp)
      
          adv%coef(4,ip) = pa2x*ey(jp) - pa2y*ex(jp)
 
          adv%itest(ip) = 1 + max(0,nint(sign(1d0,adv%coef(4,ip))))
-         adv%itest(ip) = adv%itest(ip)  &
-          + 10*(1-min(1,adv%nvoiv(adv%itest(ip),adv%nlmloc(ip))))
+         adv%itest(ip) = adv%itest(ip)+10*(1-min(1,adv%nvoiv(adv%itest(ip),it)))
 
       end if
 
       if (       adv%coef(2,ip) < eps     &
            .and. adv%coef(3,ip) < eps )  then
 
-         pa3x = adv%mesh%coord(1,adv%mesh%nodes(3,adv%nlmloc(ip)))-adv%xp(jp) 
-         pa3y = adv%mesh%coord(2,adv%mesh%nodes(3,adv%nlmloc(ip)))-adv%yp(jp)
+         pa3x = adv%mesh%coord(1,adv%mesh%nodes(3,it))-adv%xp(jp) 
+         pa3y = adv%mesh%coord(2,adv%mesh%nodes(3,it))-adv%yp(jp)
  
          adv%coef(4,ip) = pa3x*ey(jp) - pa3y*ex(jp)
 
          adv%itest(ip) = 2 + max(0,nint(sign(1d0,adv%coef(4,ip))))
-         adv%itest(ip) = adv%itest(ip)  &
-             + 10*(1-min(1,adv%nvoiv(adv%itest(ip),adv%nlmloc(ip))))
+         adv%itest(ip) = adv%itest(ip)+10*(1-min(1,adv%nvoiv(adv%itest(ip),it)))
+
       end if
 
       if (       adv%coef(3,ip) < eps    &
            .and. adv%coef(1,ip) < eps )  then
 
-         pa1x = adv%mesh%coord(1,adv%mesh%nodes(1,adv%nlmloc(ip)))-adv%xp(jp) 
-         pa1y = adv%mesh%coord(2,adv%mesh%nodes(1,adv%nlmloc(ip)))-adv%yp(jp)
+         pa1x = adv%mesh%coord(1,adv%mesh%nodes(1,it))-adv%xp(jp) 
+         pa1y = adv%mesh%coord(2,adv%mesh%nodes(1,it))-adv%yp(jp)
 
          adv%coef(4,ip) = pa1x*ey(jp) - pa1y*ex(jp)
 
          adv%itest(ip) = 1 +mod(2+max(0,nint(sign(1d0,adv%coef(4,ip)))),3)
-         adv%itest(ip) = adv%itest(ip)   &
-             + 10*(1-min(1,adv%nvoiv(adv%itest(ip),adv%nlmloc(ip))))
+         adv%itest(ip) = adv%itest(ip)+10*(1-min(1,adv%nvoiv(adv%itest(ip),it)))
 
       end if
 
@@ -460,7 +420,7 @@ end do
 !Recherche du nombre de particules de chaque maille -------
 
 adv%nbpama = 0
-do ip = 1 , nbp
+do ip = 1 , adv%mesh%num_nodes
   if (adv%inzone(ip)) then
     mpa             = adv%nlpa(ip)
     adv%nbpama(mpa) = adv%nbpama(mpa) + 1
@@ -476,7 +436,7 @@ ks = 1
 do it = 1 , adv%mesh%num_triangles
    if ( adv%nbpama(it) .ne. 0 )  then
      adv%iad1(it) = ks
-     ks       = ks + adv%nbpama(it)
+     ks           = ks + adv%nbpama(it)
    end if
 end do
 
@@ -486,7 +446,7 @@ end do
 adv%indice = 0
 adv%itabor = 0
 
-do ip = 1, nbp
+do ip = 1, adv%mesh%num_nodes
 
    if (adv%inzone(ip)) then
      mpa             = adv%nlpa(ip)
@@ -497,15 +457,13 @@ do ip = 1, nbp
 
 end do
 
-nprest = nbp
+nprest = adv%mesh%num_nodes
 
 adv%f_out = 0.0_f64
 
 do it = 1 , adv%mesh%num_triangles
       
-   xm11 = 0.
-   xm12 = 0.
-   xm13 = 0.
+   xm11 = 0.; xm12 = 0.; xm13 = 0.
 
    !nbpama(it)  !Nombre de particules dans la maille numero it
             
