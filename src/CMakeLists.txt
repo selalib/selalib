@@ -167,6 +167,7 @@ ADD_SUBDIRECTORY(gyroaverage)
 ADD_SUBDIRECTORY(maxwell_solvers)
 ADD_SUBDIRECTORY(ampere_solvers)
 ADD_SUBDIRECTORY(quasi_neutral_solvers)
+ADD_SUBDIRECTORY(descriptors)
 
 
 IF(MPI_ENABLED)
