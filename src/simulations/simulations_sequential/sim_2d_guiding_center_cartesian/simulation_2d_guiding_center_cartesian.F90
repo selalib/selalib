@@ -1052,8 +1052,8 @@ contains
         A1 = -A1
      end select
 
-     call sll_gnuplot_write(A1(1,:),'A1_init',ierr)
-     call sll_gnuplot_write(A2(1,:),'A2_init',ierr)
+     call sll_gnuplot_1d(A1(1,:),'A1_init',ierr)
+     call sll_gnuplot_1d(A2(1,:),'A2_init',ierr)
     
     
     open(unit = diag_id, file='thdiag.dat',IOStat=IO_stat)
@@ -1221,6 +1221,12 @@ contains
     !sll_real64 :: x1
     sll_int32 :: ierr 
     !type(sll_fft_plan), pointer         :: pfwd
+    sll_real64, dimension(:), allocatable :: mass_array
+    sll_real64, dimension(:), allocatable  :: l1_array
+    sll_real64, dimension(:), allocatable  :: l2_array
+    sll_real64, dimension(:), allocatable  :: e_array
+
+
     
     Nc_x1 = mesh_2d%num_cells1
     Nc_x2 = mesh_2d%num_cells2
@@ -1233,33 +1239,37 @@ contains
     delta_x2 = mesh_2d%delta_eta2
 
     SLL_ALLOCATE(data(Nc_x1+1),ierr)
+    SLL_ALLOCATE(mass_array(Nc_x2+1),ierr)
+    SLL_ALLOCATE(l1_array(Nc_x2+1),ierr)
+    SLL_ALLOCATE(l2_array(Nc_x2+1),ierr)
+    SLL_ALLOCATE(e_array(Nc_x2+1),ierr)
  
     linf  = 0.0_f64
     l1    = 0.0_f64
     l2    = 0.0_f64
     mass  = 0.0_f64
      e     = 0.0_f64
-    
+ 
     do i2 = 1, Nc_x2+1
       do i1=1,Nc_x1+1
         data(i1) = f(i1,i2)
       enddo
-      mass = mass + compute_integral_trapezoid_1d(data, Nc_x1+1, delta_x1)
+      mass_array(i2) = compute_integral_trapezoid_1d(data, Nc_x1+1, delta_x1)
 
       do i1=1,Nc_x1+1
         data(i1) = abs(f(i1,i2))
       enddo
-      l1 = l1 + compute_integral_trapezoid_1d(data, Nc_x1+1, delta_x1)
+      l1_array(i2) = compute_integral_trapezoid_1d(data, Nc_x1+1, delta_x1)
 
       do i1=1,Nc_x1+1
         data(i1) = (f(i1,i2))**2
       enddo
-      l2 = l2 + compute_integral_trapezoid_1d(data, Nc_x1+1, delta_x1)
+      l2_array(i2) = compute_integral_trapezoid_1d(data, Nc_x1+1, delta_x1)
 
       do i1=1,Nc_x1+1
         data(i1) = A2(i1,i2)**2+A1(i1,i2)**2
       enddo
-      e = e + compute_integral_trapezoid_1d(data, Nc_x1+1, delta_x1)
+      e_array(i2) = compute_integral_trapezoid_1d(data, Nc_x1+1, delta_x1)
 
       do i1=1,Nc_x1+1
        linf = max(linf,abs(f(i1,i2)))
@@ -1267,10 +1277,15 @@ contains
          
     enddo     
 
-    mass = mass*delta_x2
-    l1 = l1*delta_x2
-    l2 = sqrt(l2*delta_x2)
-    e  = e*delta_x2
+    mass = compute_integral_trapezoid_1d(mass_array, Nc_x2+1, delta_x2)
+    l1 = compute_integral_trapezoid_1d(l1_array, Nc_x2+1, delta_x2)
+    l2 = compute_integral_trapezoid_1d(l2_array, Nc_x2+1, delta_x2)
+    e = compute_integral_trapezoid_1d(e_array, Nc_x2+1, delta_x2)
+
+    !mass =mass*delta_x2
+    !l1 = l1*delta_x2
+    !l2 = sqrt(l2*delta_x2)
+    !e  = e*delta_x2
 
 
     

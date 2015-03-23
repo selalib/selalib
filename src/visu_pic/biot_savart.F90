@@ -21,7 +21,7 @@ contains
 !> Compute particles velocities
 subroutine vitesse (nbpart, xp, yp, op, up, vp, delta, time)
 implicit none
-integer,  intent(in)     :: nbpart      !< particles number
+integer,  intent(in)    :: nbpart      !< particles number
 real(8), intent(in)     :: xp(nbpart)  !< particles x position
 real(8), intent(in)     :: yp(nbpart)  !< particles y position
 real(8), intent(in)     :: op(nbpart)  !< particles strength
@@ -140,7 +140,7 @@ nstep = 200
 dt    = 0.02
 imov  = 1
 amach = 0.1 !0.56
-nray  = 20 !50
+nray  = 10 !50
 r0    = 0.5
 delta = 0.01
 

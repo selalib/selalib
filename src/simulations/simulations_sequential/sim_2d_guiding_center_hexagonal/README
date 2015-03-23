@@ -1,0 +1,48 @@
+***************************************************************************
+*       README FILE FOR sim_2d_guiding_center_hexagonal DIRECTORY
+*                     author  : Laura Mendoza
+*                     modified: 19 Nov. 2014
+***************************************************************************
+
+Directory structure
+===================
+   README                     -- info (this file)
+   test_2d_gc_hex_splines     -- executable
+   test_2d_gc_hex_hermite     -- executable
+   sim2d_gc_hex_input.nml     -- input namelist file
+   run/                       -- directory
+Description
+===========
+Using the SL we solve the guiding center simulation on a hexagonal mesh
+(regular quilateral triangle lattice with hexagonal shape).
+Two simulations for the guiding center on a hexagonal mesh are available,
+depending on the interpolation method used :
+
+    1. Box-splines
+    2. Hermite Finite Elements
+
+They were developped in order to compare both interpolation methods.
+
+
+HOWTO
+=====
+0. Create "run/" directory and move to it
+     $ mkdir run
+     $ cd run
+
+
+1. Run simulation(s) within directory
+     $ ../test_2d_gc_hex_hermite sim2d_gx_hex_input.nml
+     $ ../test_2d_gc_hex_splines sim2d_gx_hex_input.nml
+
+   You can also run the simulation without an input file
+
+
+2. Open *.xmf database with Visit (*) to visualize density over time
+
+
+3. Plot diagnostics using gnuplot and *.dat files
+
+
+(*) Make sure that the Xdmf plugin is installed!
+

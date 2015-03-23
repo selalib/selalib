@@ -122,11 +122,11 @@ contains  ! ****************************************************************
     ! compute the interpolating spline coefficients
     call compute_cubic_spline_1D( data, this%spline )
     ! compute array of coordinates where interpolation is performed from displacement
-    length = this%interpolation_points(num_points) - &
+    length = this%interpolation_points(this%num_points) - &
              this%interpolation_points(1)
     delta = this%interpolation_points(2) - this%interpolation_points(1)
     xmin = this%interpolation_points(1)
-    xmax = this%interpolation_points(num_points)
+    xmax = this%interpolation_points(this%num_points)
     if (this%bc_type == SLL_PERIODIC) then
        ! The case alpha = 0.0 is problematic. We need to further try to make
        ! this computation in general m re efficient, minimize the use of modulo
@@ -330,6 +330,7 @@ contains  ! ****************************************************************
        interpolator%spline => &
             new_cubic_spline_1D(num_points, xmin, xmax, bc_type)
     end if
+
   end subroutine
 
   function reconstruct_array(this, num_points, data) result(res)

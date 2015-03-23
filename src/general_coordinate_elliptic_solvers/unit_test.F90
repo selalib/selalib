@@ -1080,7 +1080,7 @@ do k = itest1, itest2
   end do
 
   call phi%set_field_data(values)
-  call phi%write_to_file(0)
+  !call phi%write_to_file(0)
 
   call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
      SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
@@ -1411,9 +1411,9 @@ call sll_set_time_mark(t_reference)
 values = 0.0_f64
 call phi%set_field_data(values)
 call phi%update_interpolation_coefficients()
-call rho%write_to_file(0)
+!call rho%write_to_file(0)
 call sll_solve( es, rho, phi)
-call phi%write_to_file(0)
+!call phi%write_to_file(0)
 
 te = sll_time_elapsed_since(t_reference)
 

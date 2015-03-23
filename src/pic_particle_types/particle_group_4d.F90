@@ -38,8 +38,8 @@ module sll_particle_group_4d_module
      ! to post-process after the main loop
      sll_int32, dimension(:), pointer :: num_postprocess_particles
      sll_real64 :: qoverm 
-     type(sll_cartesian_mesh_2d), pointer                 :: mesh
-     type(sll_particle_4d), dimension(:), pointer       :: p_list
+     type(sll_cartesian_mesh_2d), pointer :: mesh
+     type(sll_particle_4d), dimension(:), pointer           :: p_list
      type(sll_particle_4d_guard_ptr), dimension(:), pointer :: p_guard
   end type sll_particle_group_4d
   
@@ -84,7 +84,7 @@ contains
     n_thread  = 1
     thread_id = 0
 
-    !$omp parallel default(SHARED) PRIVATE(thread_id)
+    !$omp parallel PRIVATE(thread_id)
 #ifdef _OPENMP
     thread_id = OMP_GET_THREAD_NUM()
     if (thread_id ==0) then
@@ -97,7 +97,7 @@ contains
     SLL_ALLOCATE( res%p_guard(1:n_thread), ierr)
     SLL_ALLOCATE( res%num_postprocess_particles(1:n_thread), ierr)
 
-    !$omp parallel default(SHARED) PRIVATE(thread_id)
+    !$omp parallel PRIVATE(thread_id)
 #ifdef _OPENMP
     thread_id = OMP_GET_THREAD_NUM()
 #endif

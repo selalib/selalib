@@ -12,13 +12,19 @@ program test_hex_hermite
   use pivotbande
   implicit none
 
+  !*************************************************************
+  ! Test computing the solution of the guiding centre model for 
+  ! a hexagonal mesh
+  ! for any question : prouveur@math.univ-lyon1.fr
+  !*************************************************************
+
   type(sll_hex_mesh_2d), pointer          :: mesh, mesh2
-  sll_int32    :: num_cells, n_points, n_triangle, n_edge
-  sll_real64   :: center_mesh_x1, center_mesh_x2, radius
+  sll_int32    :: num_cells, n_points, n_triangle, n_edge ! number of hexagonal cells, number of vertices, triangles and edges in the mesh
+  sll_real64   :: center_mesh_x1, center_mesh_x2, radius ! parameters of the mesh
 
-  sll_real64, dimension(:,:), allocatable :: deriv
+  sll_real64, dimension(:,:), allocatable :: deriv ! value of the derivatives at the vertices
 
-  ! vertex's variables
+  ! vertex's variables ( density , fields & its derivatives, etc )
   sll_real64, dimension(:),allocatable    :: rho_tn, rho_tn1
   sll_real64, dimension(:),allocatable    :: uxn,uyn,phi,phi_interm,second_term
   sll_real64, dimension(:),allocatable    :: dxuxn,dyuxn,dxuyn,dyuyn
@@ -65,7 +71,7 @@ program test_hex_hermite
   sll_int32    :: i,j, k1, k2, index_tab, type
   sll_int32    :: i1,i2,i3
   sll_int32    :: nloops,count, ierr, EXTRA_TABLES = 1 ! put 1 for num_method = 15
-  sll_real64   :: dt
+  sll_real64   :: dt, cfl
   sll_real64   :: tmax
   sll_real64   :: t
   sll_real64   :: t_init, t_end
@@ -73,10 +79,10 @@ program test_hex_hermite
   sll_real64   :: step , aire, h1, h2, f_min, x ,y,xx, yy
   sll_real64   :: r11,r12,r21,r22,det
 
-  sll_int32    :: p = 6!-> degree of the approximation for the derivative 
+  sll_int32    :: p = 7!-> degree of the approximation for the derivative 
   ! distribution at time n
 
-  sll_int32    :: num_method = 9
+  sll_int32    :: num_method = 12
 
   logical      :: inside
   character(len = 50) :: filename
@@ -89,12 +95,14 @@ program test_hex_hermite
 
   call print_method(num_method)
 
-  do num_cells = 80,80,40 
+  open(unit =111,  file="perf", action="write", status="replace")
+
+  do num_cells = 80,80,20 
 
      t = 0._f64
      tmax  = 100._f64
-     dt    = 0.05_f64!*20._f64 !/ real(num_cells,f64)  
-     !cfl   = radius * dt / ( radius / real(num_cells,f64)  )
+     dt    = 0.01_f64!*20._f64 !/ real(num_cells,f64)  
+     cfl   = radius * dt / ( radius / real(num_cells,f64)  )
      nloops = 0
      count  = 0
 
@@ -116,7 +124,6 @@ program test_hex_hermite
 
      allocate( deriv(1:6,n_points) )
 
-     ! vertex's variables
      SLL_ALLOCATE(rho_tn( n_points),ierr)
      SLL_ALLOCATE(rho_tn1( n_points ),ierr)
      SLL_ALLOCATE(uxn( n_points),ierr)
@@ -367,6 +374,7 @@ program test_hex_hermite
 
            !*************************************************
            !       computation of the characteristics
+           ! ( this is where we tested several ways to compute them ) 
            !*************************************************
            
            if (t < 2*dt) then
@@ -374,7 +382,12 @@ program test_hex_hermite
               ! solving with euler
               call compute_characteristic_euler_2d_hex( &
                    x,y,uxn,uyn,i,xx,yy,dt )
-
+              
+           else 
+              call compute_characteristic_adams2_2d_hex( x,y,uxn,uyn,uxn_1,uyn_1,&
+                   dxuxn,dyuxn,dxuyn,dyuyn,i,xx,yy,dt)
+           endif
+           
               inside = .true.
               h1 =  xx*r11 + yy*r12
               h2 =  xx*r21 + yy*r22 
@@ -410,31 +423,29 @@ program test_hex_hermite
            !       rho_tn1(i) = 0._f64 ! dirichlet boundary condition
            !    endif
 
-           else
+           ! else
 
-              ! solving with Adams 2
+           !    ! solving with Adams 2
               
-              call compute_characteristic_adams2_2d_hex( x,y,uxn,uyn,uxn_1,uyn_1,&
-                   dxuxn,dyuxn,dxuyn,dyuyn,i,xx,yy,dt)
+           !    call compute_characteristic_adams2_2d_hex( x,y,uxn,uyn,uxn_1,uyn_1,&
+           !         dxuxn,dyuxn,dxuyn,dyuyn,i,xx,yy,dt)
 
-              !print*,x,y,xx,yy,uxn(200),uyn(200),uxn_1(200),uyn_1(200)
+           !    inside = .true.
+           !    h1 =  xx*r11 + yy*r12
+           !    h2 =  xx*r21 + yy*r22 
 
-              inside = .true.
-              h1 =  xx*r11 + yy*r12
-              h2 =  xx*r21 + yy*r22 
+           !    if ( abs(h1) >  radius-mesh%delta .or. abs(h2) >  radius-mesh%delta &
+           !         .or. abs(xx) > (radius-mesh%delta)*sqrt(3._f64)*0.5_f64) inside = .false.
 
-              if ( abs(h1) >  radius-mesh%delta .or. abs(h2) >  radius-mesh%delta &
-                   .or. abs(xx) > (radius-mesh%delta)*sqrt(3._f64)*0.5_f64) inside = .false.
+           !    if ( inside ) then
+           !       call hermite_interpolation(i, xx, yy, rho_tn, rho_center_tn,&
+           !            rho_edge_tn, rho_tn1, mesh, deriv, aire,& 
+           !            num_method)
+           !    else 
+           !       rho_tn1(i) = 0._f64 ! dirichlet boundary condition
+           !    endif
 
-              if ( inside ) then
-                 call hermite_interpolation(i, xx, yy, rho_tn, rho_center_tn,&
-                      rho_edge_tn, rho_tn1, mesh, deriv, aire,& 
-                      num_method)
-              else 
-                 rho_tn1(i) = 0._f64 ! dirichlet boundary condition
-              endif
-
-           endif
+           ! endif
 
         end do ! end of the computation of the mesh points
 
@@ -446,9 +457,13 @@ program test_hex_hermite
 
               x = mesh%center_cartesian_coord(1,i)
               y = mesh%center_cartesian_coord(2,i)
-
-              call compute_characteristic_euler_2d_hex( &
+              if (t < 2*dt) then
+                 call compute_characteristic_euler_2d_hex( &
                    x,y,uxn_center,uyn_center,i,xx,yy,dt )
+              else
+                 call compute_characteristic_adams2_2d_hex( x,y,uxn_center,uyn_center,uxn_1,uyn_1,&
+                   dxuxn,dyuxn,dxuyn,dyuyn,i,xx,yy,dt)
+              endif
 
               inside = .true.
               h1 =  xx*r11 + yy*r12
@@ -477,9 +492,14 @@ program test_hex_hermite
 
               x = mesh%edge_center_cartesian_coord(1,i)
               y = mesh%edge_center_cartesian_coord(2,i) 
-
-              call compute_characteristic_euler_2d_hex( &
-                   x,y,uxn_edge,uyn_edge,i,xx,yy,dt )
+              
+              if (t < 2*dt) then
+                 call compute_characteristic_euler_2d_hex( &
+                      x,y,uxn_edge,uyn_edge,i,xx,yy,dt )
+              else
+                 call compute_characteristic_adams2_2d_hex( x,y,uxn_edge,uyn_edge,uxn_1_edge,uyn_1_edge,&
+                      dxuxn_edge,dyuxn_edge,dxuyn_edge,dyuyn_edge,i,xx,yy,dt)
+              endif
 
               inside = .true.
               h1 =  xx*r11 + yy*r12
@@ -503,59 +523,26 @@ program test_hex_hermite
 
 
 
-        uxn_2 = uxn_1
-        uxn_1 = uxn
-        uyn_2 = uyn_1
-        uyn_1 = uyn
-
-        dxuxn_2 = dxuxn_1
-        dyuxn_2 = dyuxn_1
-        dxuyn_2 = dxuyn_1
-        dyuyn_2 = dyuyn_1
-
-        dxuxn_1 = dxuxn
-        dyuxn_1 = dyuxn
-        dxuyn_1 = dxuyn
-        dyuyn_1 = dyuyn
-
+        rho_tn_2 = rho_tn_1
+        rho_tn_1 = rho_tn
+        rho_tn   = rho_tn1
 
         if ( num_method == 10 ) then
 
-           uxn_2_center = uxn_1_center
-           uxn_1_center = uxn_center
-           uyn_2_center = uyn_1_center
-           uyn_1_center = uyn_center
-
-           dxuxn_2_center = dxuxn_1_center
-           dyuxn_2_center = dyuxn_1_center
-           dxuyn_2_center = dxuyn_1_center
-           dyuyn_2_center = dyuyn_1_center
-
-           dxuxn_1_center = dxuxn_center
-           dyuxn_1_center = dyuxn_center
-           dxuyn_1_center = dxuyn_center
-           dyuyn_1_center = dyuyn_center
+           rho_center_tn_2 = rho_center_tn_1
+           rho_center_tn_1 = rho_center_tn
+           rho_center_tn   = rho_center_tn1
 
         endif
 
         if ( num_method == 15 ) then
 
-           uxn_2_edge = uxn_1_edge
-           uxn_1_edge = uxn_edge
-           uyn_2_edge = uyn_1_edge
-           uyn_1_edge = uyn_edge
-
-           dxuxn_2_edge = dxuxn_1_edge
-           dyuxn_2_edge = dyuxn_1_edge
-           dxuyn_2_edge = dxuyn_1_edge
-           dyuyn_2_edge = dyuyn_1_edge
-
-           dxuxn_1_edge = dxuxn_edge
-           dyuxn_1_edge = dyuxn_edge
-           dxuyn_1_edge = dxuyn_edge
-           dyuyn_1_edge = dyuyn_edge
+           rho_edge_tn_2 = rho_edge_tn_1
+           rho_edge_tn_1 = rho_edge_tn
+           rho_edge_tn   = rho_edge_tn1
 
         endif
+
 
         !*********************************************************
         !      computing the solution of the poisson equation
@@ -616,7 +603,7 @@ program test_hex_hermite
 
 
         !*********************************************************
-        !                  writing diagostics
+        !                  writing diagnostics
         !*********************************************************
         if ( num_method /= 15 ) then
            call hex_diagnostics(rho_tn,t,mesh,uxn,uyn,nloops, num_method)
@@ -645,28 +632,65 @@ program test_hex_hermite
            count = 0
         endif
 
-        rho_tn_2 = rho_tn_1
-        rho_tn_1 = rho_tn
-        rho_tn   = rho_tn1
+
+
+        uxn_2 = uxn_1
+        uxn_1 = uxn
+        uyn_2 = uyn_1
+        uyn_1 = uyn
+
+        dxuxn_2 = dxuxn_1
+        dyuxn_2 = dyuxn_1
+        dxuyn_2 = dxuyn_1
+        dyuyn_2 = dyuyn_1
+
+        dxuxn_1 = dxuxn
+        dyuxn_1 = dyuxn
+        dxuyn_1 = dxuyn
+        dyuyn_1 = dyuyn
+
 
         if ( num_method == 10 ) then
 
-           rho_center_tn_2 = rho_center_tn_1
-           rho_center_tn_1 = rho_center_tn
-           rho_center_tn   = rho_center_tn1
+           uxn_2_center = uxn_1_center
+           uxn_1_center = uxn_center
+           uyn_2_center = uyn_1_center
+           uyn_1_center = uyn_center
+
+           dxuxn_2_center = dxuxn_1_center
+           dyuxn_2_center = dyuxn_1_center
+           dxuyn_2_center = dxuyn_1_center
+           dyuyn_2_center = dyuyn_1_center
+
+           dxuxn_1_center = dxuxn_center
+           dyuxn_1_center = dyuxn_center
+           dxuyn_1_center = dxuyn_center
+           dyuyn_1_center = dyuyn_center
 
         endif
 
         if ( num_method == 15 ) then
 
-           rho_edge_tn_2 = rho_edge_tn_1
-           rho_edge_tn_1 = rho_edge_tn
-           rho_edge_tn   = rho_edge_tn1
+           uxn_2_edge = uxn_1_edge
+           uxn_1_edge = uxn_edge
+           uyn_2_edge = uyn_1_edge
+           uyn_1_edge = uyn_edge
+
+           dxuxn_2_edge = dxuxn_1_edge
+           dyuxn_2_edge = dyuxn_1_edge
+           dxuyn_2_edge = dxuyn_1_edge
+           dyuyn_2_edge = dyuyn_1_edge
+
+           dxuxn_1_edge = dxuxn_edge
+           dyuxn_1_edge = dyuxn_edge
+           dxuyn_1_edge = dxuyn_edge
+           dyuyn_1_edge = dyuyn_edge
 
         endif
 
      enddo
 
+     ! deallocation
 
      SLL_DEALLOCATE_ARRAY(rho_tn,ierr)
      SLL_DEALLOCATE_ARRAY(rho_tn1,ierr)
@@ -679,6 +703,26 @@ program test_hex_hermite
      SLL_DEALLOCATE_ARRAY(dxuyn,ierr)
      SLL_DEALLOCATE_ARRAY(dyuxn,ierr)
      SLL_DEALLOCATE_ARRAY(dyuyn,ierr)
+
+
+
+     SLL_DEALLOCATE_ARRAY(rho_tn_1,ierr)
+     SLL_DEALLOCATE_ARRAY(uxn_1,ierr)
+     SLL_DEALLOCATE_ARRAY(uyn_1,ierr)
+     SLL_DEALLOCATE_ARRAY(dxuxn_1,ierr)
+     SLL_DEALLOCATE_ARRAY(dxuyn_1,ierr)
+     SLL_DEALLOCATE_ARRAY(dyuxn_1,ierr)
+     SLL_DEALLOCATE_ARRAY(dyuyn_1,ierr)
+
+     SLL_DEALLOCATE_ARRAY(rho_tn_2,ierr)
+     SLL_DEALLOCATE_ARRAY(uxn_2,ierr)
+     SLL_DEALLOCATE_ARRAY(uyn_2,ierr)
+     SLL_DEALLOCATE_ARRAY(dxuxn_2,ierr)
+     SLL_DEALLOCATE_ARRAY(dxuyn_2,ierr)
+     SLL_DEALLOCATE_ARRAY(dyuxn_2,ierr)
+     SLL_DEALLOCATE_ARRAY(dyuyn_2,ierr)
+
+
      deallocate(l,u,deriv,matrix_poisson)
 
      if  ( num_method == 10 )  then
@@ -709,6 +753,23 @@ program test_hex_hermite
         SLL_DEALLOCATE_ARRAY(dyuxn_edge,ierr)
         SLL_DEALLOCATE_ARRAY(dyuyn_edge,ierr)
 
+        SLL_DEALLOCATE_ARRAY(rho_edge_tn_1,ierr)
+        SLL_DEALLOCATE_ARRAY(uxn_1_edge,ierr)
+        SLL_DEALLOCATE_ARRAY(uyn_1_edge,ierr)
+        SLL_DEALLOCATE_ARRAY(dxuxn_1_edge,ierr)
+        SLL_DEALLOCATE_ARRAY(dxuyn_1_edge,ierr)
+        SLL_DEALLOCATE_ARRAY(dyuxn_1_edge,ierr)
+        SLL_DEALLOCATE_ARRAY(dyuyn_1_edge,ierr)
+
+        SLL_DEALLOCATE_ARRAY(rho_edge_tn_2,ierr)
+        SLL_DEALLOCATE_ARRAY(uxn_2_edge,ierr)
+        SLL_DEALLOCATE_ARRAY(uyn_2_edge,ierr)
+        SLL_DEALLOCATE_ARRAY(dxuxn_2_edge,ierr)
+        SLL_DEALLOCATE_ARRAY(dxuyn_2_edge,ierr)
+        SLL_DEALLOCATE_ARRAY(dyuxn_2_edge,ierr)
+        SLL_DEALLOCATE_ARRAY(dyuyn_2_edge,ierr)
+
+
         SLL_DEALLOCATE_ARRAY(second_term2,ierr)  
         SLL_DEALLOCATE_ARRAY(phi2,ierr)        
         SLL_DEALLOCATE_ARRAY(phi2_interm,ierr)  
@@ -724,14 +785,20 @@ program test_hex_hermite
      endif
 
 
-     call delete_hex_mesh_2d( mesh )
-     if  ( num_method == 15 ) call delete_hex_mesh_2d( mesh2 )
-
      call cpu_time(t_end)
      print*, "time used =", t_end - t_init
 
+    write(111,*) num_cells, mesh%num_pts_tot, dt, cfl, t_end - t_init,&
+               nloops * 3._f64*real(num_cells + 1, f64)*real(num_cells, f64)/(t_end - t_init)/ 1e6_f64
+
+     call delete_hex_mesh_2d( mesh )
+     if  ( num_method == 15 ) call delete_hex_mesh_2d( mesh2 )
+
+
+
   end do
 
+  close(111)
 
 contains
 
@@ -798,6 +865,7 @@ contains
   end subroutine init_distr
 
   !********** diagnostics **************
+  ! writing quantities of interest such as the mass, the norms etc ..
 
   subroutine hex_diagnostics(rho,t,mesh,uxn,uyn,nloop, num_method)
     type(sll_hex_mesh_2d), pointer :: mesh
@@ -847,6 +915,9 @@ contains
   end subroutine hex_diagnostics
 
 
+  ! assembling the values at the middle of the edges + the value at 
+  ! the vertices into one common array rho2
+
   subroutine assemble(rho,rho_edge,rho2,mesh,mesh2)
     type(sll_hex_mesh_2d), pointer :: mesh,mesh2
     sll_real64,dimension(:) :: rho,rho_edge,rho2
@@ -890,6 +961,9 @@ contains
 
   end subroutine assemble
 
+  ! deassembling the values at the middle of the edges + the value at 
+  ! the vertices into 2 separate arrays
+
   subroutine deassemble(rho,rho_edge,rho2,mesh,mesh2)
     type(sll_hex_mesh_2d), pointer :: mesh,mesh2
     sll_real64,dimension(:) :: rho,rho_edge,rho2
@@ -931,6 +1005,8 @@ contains
     enddo
 
   end subroutine deassemble
+
+  ! special routine to write the values at the center of the triangles 
 
   subroutine write_center(mesh,rho,name)
     type(sll_hex_mesh_2d), pointer :: mesh
