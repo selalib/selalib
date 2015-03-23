@@ -7,6 +7,7 @@ SET(SLL_MACROS
     ${SLL_DIR}/working_precision/sll_working_precision.h
     ${SLL_DIR}/assert/sll_assert.h
     ${SLL_DIR}/constants/sll_constants.h
+    ${SLL_DIR}/errors/sll_errors.h
     ${SLL_DIR}/utilities/sll_utilities.h
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_solvers_macros.h
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_solvers.h
@@ -29,6 +30,8 @@ SET(SLL_MACROS
     ${SLL_DIR}/pic_particle_types/particle_representation.h
     ${SLL_DIR}/multigrid/compdir.inc
     ${SLL_DIR}/multigrid/mgd2_routines.h
+    ${SLL_DIR}/remap/sll_remap.h
+    ${SLL_DIR}/parallel_utilities/sll_parallel_utilities.h
 )
 
 FILE(COPY ${SLL_MACROS} DESTINATION ${CMAKE_BINARY_DIR}/include)
@@ -47,6 +50,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/advection/sll_advection_2d_tensor_product.F90
     ${SLL_DIR}/advection/sll_advection_2d_CSL.F90
     ${SLL_DIR}/advection/sll_advection_2d_base.F90
+    ${SLL_DIR}/advection/sll_advection_1d_ampere.F90
+    ${SLL_DIR}/advection/sll_advection_1d_spectral.F90
     ${SLL_DIR}/constants/sll_constants.F90
     ${SLL_DIR}/characteristics/sll_characteristics_1d_explicit_euler.F90
     ${SLL_DIR}/characteristics/sll_characteristics_1d_explicit_euler_conservative.F90
@@ -57,8 +62,11 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/characteristics/sll_characteristics_2d_explicit_euler.F90
     ${SLL_DIR}/characteristics/sll_characteristics_2d_explicit_euler_conservative.F90
     ${SLL_DIR}/characteristics/sll_characteristics_2d_base.F90
+    ${SLL_DIR}/errors/sll_errors.F90
     ${SLL_DIR}/utilities/sll_utilities.F90
+    ${SLL_DIR}/utilities/sll_primitives.F90
     ${SLL_DIR}/utilities/tridiagonal.F90
+    ${SLL_DIR}/utilities/fornberg.F90
     ${SLL_DIR}/utilities/sll_toeplitz_penta_diagonal.F90
     ${SLL_DIR}/lagrange_interpolation/sll_lagrange_interpolation.F90
     ${SLL_DIR}/file_io/sll_binary_io.F90
@@ -68,6 +76,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/file_io/sll_ascii_io.F90
     ${SLL_DIR}/file_io/sll_xml_io.F90
     ${SLL_DIR}/file_io/sll_plotmtv.F90
+    ${SLL_DIR}/file_io/sll_tri_mesh_xmf.F90
     ${SLL_DIR}/visu_pic/sll_visu_pic.F90
     ${SLL_DIR}/timer/sll_timer.F90
     ${SLL_DIR}/fields/sll_scalar_field_1d_base.F90
@@ -81,7 +90,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/splines/sll_cubic_splines.F90
     ${SLL_DIR}/splines/sll_arbitrary_degree_splines.F90
     ${SLL_DIR}/splines/cubic_nonuniform_splines.F90
-    ${SLL_DIR}/deboor_splines/banded_linear_system_solver.F90  
+    ${SLL_DIR}/deboor_splines/banfac.f90
+    ${SLL_DIR}/deboor_splines/banslv.f90
     ${SLL_DIR}/deboor_splines/knots.f90
     #${SLL_DIR}/deboor_splines/splopt.f90
     ${SLL_DIR}/deboor_splines/sll_module_deboor_splines_1d.F90
@@ -108,6 +118,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_polar_solver.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_base.F90
     ${SLL_DIR}/fft/sll_fft_utils.F90
+    ${SLL_DIR}/integration/rectangle.F90
+    ${SLL_DIR}/integration/trapz.F90
     ${SLL_DIR}/integration/gauss_legendre.F90
     ${SLL_DIR}/integration/gauss_lobatto.F90
     ${SLL_DIR}/simulations/simulations_sequential/sim_CG_polar/sll_polar_operators.F90
@@ -131,6 +143,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.F90
     ${SLL_DIR}/meshes/sll_meshes_base.F90
     ${SLL_DIR}/meshes/sll_cartesian_meshes.F90
+    ${SLL_DIR}/meshes/sll_triangular_meshes.F90
+    ${SLL_DIR}/meshes/sll_hex_meshes.F90
     ${SLL_DIR}/fields/scalar_field_initializer_base.F90
     ${SLL_DIR}/distribution_function/sll_scalar_field_2d_old.F90
     ${SLL_DIR}/coordinate_transformations/sll_common_coordinate_transformations.F90
@@ -179,7 +193,7 @@ ENDIF()
 # this is not the case. ECG
 IF(FFTW_ENABLED)
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
-    ${SLL_DIR}/fft/fftw3/fftw3.F90
+    ${SLL_DIR}/fft/fftw3.F90
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_pstd.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_fftw.F90
     ${SLL_DIR}/multigrid/sll_multigrid_2d.F90
@@ -202,7 +216,7 @@ ELSE()
 
 ENDIF(SUITESPARSE_ENABLED)
 
-IF(MPI_MODULE_ENABLED)
+IF(MPI_ENABLED)
  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
   ${SLL_DIR}/collective/sll_collective.F90
   ${SLL_DIR}/remap/sll_remap.F90
@@ -210,11 +224,11 @@ IF(MPI_MODULE_ENABLED)
   ${SLL_DIR}/poisson_solvers_parallel/sll_poisson_2d_periodic_cartesian_par.F90
   ${SLL_DIR}/poisson_solvers_parallel/sll_poisson_polar_parallel.F90
   ${SLL_DIR}/simulations/simulation_base_class.F90
-  ${SLL_DIR}/parallel_array_initializers/sll_common_array_initializers_module.F90
-  ${SLL_DIR}/parallel_array_initializers/sll_parallel_array_initializer_module.F90
+  ${SLL_DIR}/parallel_utilities/sll_common_array_initializers_module.F90
+  ${SLL_DIR}/parallel_utilities/sll_parallel_array_initializer_module.F90
   ${SLL_DIR}/parallel_utilities/buffer_loader_utilities.F90
   ${SLL_DIR}/file_io_parallel/sll_gnuplot_parallel.F90)
-ENDIF(MPI_MODULE_ENABLED)
+ENDIF(MPI_ENABLED)
 
 IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
@@ -230,7 +244,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
 ENDIF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
-IF(SLL_BUILD_PACKAGE)
+IF(BUILD_PACKAGE)
 
  SET(BUILD_SHARED_LIBRARY  OFF CACHE BOOL "build shared library")
   IF(BUILD_SHARED_LIBRARY)
@@ -263,23 +277,23 @@ IF(SLL_BUILD_PACKAGE)
   COMMAND ${CMAKE_COMMAND} -E copy 
           ${CMAKE_CURRENT_SOURCE_DIR}/../../doc/sphinx/_static/logo2.png 
           ${CMAKE_BINARY_DIR}/${DIST_NAME}/
-   COMMAND ${CMAKE_COMMAND} -E copy_directory 
-           ${CMAKE_CURRENT_SOURCE_DIR}/../fftpack 
-           ${CMAKE_BINARY_DIR}/${DIST_NAME}/fftpack
-   COMMAND ${CMAKE_COMMAND} -E copy_directory 
-           ${CMAKE_CURRENT_SOURCE_DIR}/../mudpack 
-           ${CMAKE_BINARY_DIR}/${DIST_NAME}/mudpack
-   COMMAND ${CMAKE_COMMAND} -E copy_directory 
-           ${CMAKE_CURRENT_SOURCE_DIR}/examples 
-           ${CMAKE_BINARY_DIR}/${DIST_NAME}/examples
-   COMMAND ${CMAKE_COMMAND} -E remove_directory 
-           ${CMAKE_BINARY_DIR}/${DIST_NAME}/CMakeFiles
-   COMMAND ${CMAKE_COMMAND} -E remove 
-           ${CMAKE_BINARY_DIR}/${DIST_NAME}/CMakeCache.txt
-   COMMAND ${CMAKE_COMMAND} -E tar zcf ${DIST_NAME}.tar.gz 
-           ${CMAKE_BINARY_DIR}/${DIST_NAME}
-   COMMAND ${CMAKE_COMMAND} -E md5sum ${DIST_NAME}.tar.gz
-   COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/${DIST_NAME}
+  COMMAND ${CMAKE_COMMAND} -E copy_directory 
+          ${CMAKE_CURRENT_SOURCE_DIR}/../fftpack 
+          ${CMAKE_BINARY_DIR}/${DIST_NAME}/fftpack
+  COMMAND ${CMAKE_COMMAND} -E copy_directory 
+          ${CMAKE_CURRENT_SOURCE_DIR}/../mudpack 
+          ${CMAKE_BINARY_DIR}/${DIST_NAME}/mudpack
+  COMMAND ${CMAKE_COMMAND} -E copy_directory 
+          ${CMAKE_CURRENT_SOURCE_DIR}/examples 
+          ${CMAKE_BINARY_DIR}/${DIST_NAME}/examples
+  COMMAND ${CMAKE_COMMAND} -E remove_directory 
+          ${CMAKE_BINARY_DIR}/${DIST_NAME}/CMakeFiles
+  COMMAND ${CMAKE_COMMAND} -E remove 
+          ${CMAKE_BINARY_DIR}/${DIST_NAME}/CMakeCache.txt
+  COMMAND ${CMAKE_COMMAND} -E tar zcf ${DIST_NAME}.tar.gz 
+          ${CMAKE_BINARY_DIR}/${DIST_NAME}
+  COMMAND ${CMAKE_COMMAND} -E md5sum ${DIST_NAME}.tar.gz
+  COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/${DIST_NAME}
            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
            COMMENT "Generating Release" VERBATIM)
    
@@ -300,4 +314,4 @@ IF(SLL_BUILD_PACKAGE)
    
    INSTALL(FILES ${SLL_MACROS}  DESTINATION include/selalib  )
 
-ENDIF(SLL_BUILD_PACKAGE)
+ENDIF(BUILD_PACKAGE)

@@ -338,7 +338,7 @@ contains
     call sll_delete(spline)
   end subroutine test_nonuniform_arb_deg_splines_open
 
-  ! given an array of values ordered in ascending order and a value 'x', 
+  ! given an array of values ordered in ascending order and a value 'x',
   ! find index returns the index 'i' of the array such that:
   !                  array(i) <= x <= array(i+1)
   ! fortran-indexing is assumed. If x is not between array(1) and array(n),
