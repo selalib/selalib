@@ -245,13 +245,16 @@ end do
 !Initial field solve
 SLL_ALLOCATE(sim%rhs(sim%SOLVER%problemsize()),ierr)  
 SLL_ALLOCATE(sim%solution(sim%SOLVER%problemsize()),ierr)
-  
-if (sim%coll_rank==0)print *, "# TIME                          IMPULSE ERR.(abs.)       ENERGY ERROR(rel.)"
+
+call sll_collective_barrier(sll_world_collective)
+if (sim%coll_rank==0)print *, "# TIME        |IMPULSE ERR.(abs.) | ENERGY ERROR(rel.) | FIELDENERGY"
+
+
 do tstep=1,sim%tsteps
  sim%tstep=tstep
   call sim%symplectic_rungekutta()
-        if (sim%coll_rank==0) print *,"#", sim%dt*(sim%tstep-1), &
-                           abs(sim%moment(1,sim%tstep))/sim%npart, sim%energy_error(sim%tstep)
+        if (sim%coll_rank==0) write(*,'(A2, G10.4,  G20.8,  G20.8, G20.8)') '#', sim%dt*(sim%tstep-1), &
+                           abs(sim%moment(1,sim%tstep))/sim%npart, sim%energy_error(sim%tstep), sim%fieldenergy(sim%tstep)
       !if ( (gnuplot_inline_output.eqv. .true.) .AND. coll_rank==0 .AND. mod(timestep-1,timesteps/100)==0  ) then
 !                    call energies_electrostatic_gnuplot_inline(kineticenergy(1:tstep), fieldenergy(1:tstep),&
 !   			  moment_error(1:tstep),dt)
@@ -272,7 +275,7 @@ end subroutine run_generalvp_pif
   character(len=*), intent(in)                                :: filename
   sll_real64 :: dt
  sll_int32 :: NUM_TIMESTEPS, NUM_MODES, NUM_PARTICLES, DIMENSION, TIME_INTEGRATOR_ORDER
- sll_real32 :: QoverM, EPSILON
+ sll_real64 :: QoverM, EPSILON
  sll_int32 :: CONTROLVARIATE, RND_OFFSET
      
      sll_int32, parameter  :: input_file = 99
@@ -344,7 +347,7 @@ subroutine calculate_diagnostics_generalvp_pif(sim)
 sll_int32 :: idx
 
 sim%kineticenergy(sim%tstep)=sum(sum(sim%particle(sim%maskv,:)**2,1)*sim%particle(sim%maskw,:))/sim%npart
-call sll_collective_globalsum(sll_world_collective, sim%kineticenergy)
+call sll_collective_globalsum(sll_world_collective, sim%kineticenergy(sim%tstep))
 
 sim%fieldenergy(sim%tstep)=abs(dot_product(sim%solution,sim%rhs))
 ! fieldenergy(tstep)=abs(Efield)
@@ -352,8 +355,10 @@ sim%energy(sim%tstep)=sim%kineticenergy(sim%tstep)+sim%fieldenergy(sim%tstep)
 sim%energy_error(sim%tstep)=abs(sim%energy(2)-sim%energy(sim%tstep))/abs(sim%energy(1))
 
 do idx=1,size(sim%particle,2)
-sim%moment(:,sim%tstep)=sim%moment(:,sim%tstep)+(sim%particle(sim%maskv,idx)*sim%particle(sim%maskw,idx))
+ sim%moment(:,sim%tstep)=sim%moment(:,sim%tstep)+(sim%particle(sim%maskv,idx)*sim%particle(sim%maskw,idx))
 end do
+! normalize
+sim%moment(:,sim%tstep)=sim%moment(:,sim%tstep)/sim%npart
 call sll_collective_globalsum(sll_world_collective, sim%moment(:,sim%tstep))
 
 sim%moment_error(sim%tstep)=sqrt(sum((sim%moment(:,1)-sim%moment(:,sim%tstep))**2))
@@ -385,7 +390,7 @@ end do
 !set temperature and impulse
  do idx=1, size(sim%maskv)
 ! print *, sum(sim%particle(sim%maskv(idx),:))/sim%npart
- call match_moment_1D_linear_real64(sim%particle(sim%maskv(idx),:), 0.0_f64, 1.0_f64)
+ !call match_moment_1D_linear_real64(sim%particle(sim%maskv(idx),:), 0.0_f64, 1.0_f64)
 ! print *, sum(sim%particle(sim%maskv(idx),:))/sim%npart
   end do
 
