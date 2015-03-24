@@ -1069,19 +1069,19 @@ end do
 end subroutine profil
 
 !Function: asbld
-!     Assembler une matrice elementaire    
-!     dans une matrice globale dans          
-!     le cas ou elle est diagonale            
+!  Assembler une matrice elementaire    
+!  dans une matrice globale dans          
+!  le cas ou elle est diagonale            
 !                                                                 
 !Parametres d'entree: 
 !                                 
-!          aele         -    Matrice elementaire diagonale           
-!                           (3 termes pour un element triangulaire)
-!          i1,i2,i3     -    numeros des sommets de l'element      
+!  aele         -    Matrice elementaire diagonale           
+!                    (3 termes pour un element triangulaire)
+!  i1,i2,i3     -    numeros des sommets de l'element      
 !                                                                 
 !Parametre resultat:                                     
 !                                                              
-!          xmass    -   matrice globale diagonalisee          
+!  xmass    -   matrice globale diagonalisee          
 !
 !Auteur:
 !      J. Segre - Version 1.0  Juillet 1989

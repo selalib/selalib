@@ -54,14 +54,6 @@ program test_paralution_solver
   character(len=128) :: arg
 
 
-  ! Get command line option to read file
-  do i = 1, iargc()
-    call getarg(i, arg)
-  end do
-  open( unit = infile, file = arg, action = 'read', status = 'old' )
-
-  call mminfo( infile, rep, field, symm, n, m, fnz )
-
   nnz = fnz
   if ( symm .eq. 'symmetric' .or. symm .eq. 'hermitian' ) then
     nnz = 2 * ( fnz - n ) + n
@@ -71,16 +63,6 @@ program test_paralution_solver
   ! Allocate memory for COO format specific arrays
   allocate( rows(nnz), cols(nnz) )
   allocate( ival(nnz), rval(nnz), cval(nnz) )
-
-  ! Read COO matrix in matrix market format
-  call mmread( infile, rep, field, symm, n, m, fnz, nnz, &
-  &            rows, cols, ival, rval, cval )
-
-  ! Close file
-  close( unit = infile )
-
-  ! Deallocate arrays we do not use
-  deallocate( ival, cval )
 
   ! Fill 2nd half of matrix if symmetric
   if ( sym ) then
@@ -155,3 +137,59 @@ program test_paralution_solver
   deallocate( rows, cols, rval, rhs, x )
 
 end program test_paralution_solver
+
+subroutine uni2d(m,f,a,ja,ia)
+!
+! Fill a matrix in COO format corresponding to a constant coefficient
+! five-point stencil on a square grid
+!
+implicit none
+real (kind(0d0)) :: f(*),a(*)
+integer :: m,ia(*),ja(*)
+integer :: k,l,i,j
+real (kind(0d0)), parameter :: zero=0.0d0,cx=-1.0d0,cy=-1.0d0, cd=4.0d0
+!
+k=0
+l=0
+ia(1)=1
+do i=1,m
+  do j=1,m
+    k=k+1
+    l=l+1
+    a(l)=cd
+    ja(l)=k
+    f(k)=zero
+    if(j < m) then
+       l=l+1
+       a(l)=cx
+       ja(l)=k+1
+      else
+       f(k)=f(k)-cx
+    end if
+    if(i < m) then
+       l=l+1
+       a(l)=cy
+       ja(l)=k+m
+      else
+       f(k)=f(k)-cy
+    end if
+    if(j > 1) then
+       l=l+1
+       a(l)=cx
+       ja(l)=k-1
+      else
+       f(k)=f(k)-cx
+    end if
+    if(i >  1) then
+       l=l+1
+       a(l)=cy
+       ja(l)=k-m
+      else
+       f(k)=f(k)-cy
+    end if
+    ia(k+1)=l+1
+  end do
+end do
+
+return
+end subroutine uni2D

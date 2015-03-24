@@ -6,10 +6,18 @@ module sll_pastix
 #include "sll_memory.h"
 
 use sll_collective
-use sll_sparse
 
 implicit none
 private
+
+!> Matrix in CSC format
+type, public :: sll_csc_matrix
+    sll_int32           :: n             !< Matrix dimension
+    sll_int32           :: nnzeros       !< Number of non-zeros
+    sll_int32, pointer  :: colptr(:)     !< CSC format colum pointer
+    sll_int32, pointer  :: row(:)        !< CSC format row indices
+    sll_real64, pointer :: avals(:)      !< non zeros values
+end type sll_csc_matrix
 
 type, public :: pastix_solver
  pastix_data_ptr_t        :: pastix_data !< PaStiX structure (0 for first call)
@@ -49,6 +57,41 @@ end interface delete
 public :: initialize, factorize, solve, delete
 
 contains
+
+subroutine initialize_csc_matrix(self, n, nnzeros, error)
+
+   type(sll_csc_matrix)   :: self
+   sll_int32, intent(in)  :: n         !< Matrix dimension
+   sll_int32, intent(in)  :: nnzeros   !< Number of non-zeros
+   sll_int32, intent(out) :: error
+
+   self%n       = n
+   self%nnzeros = nnzeros
+   SLL_ALLOCATE(self%colptr(n+1), error)
+   SLL_ALLOCATE(self%row(nnzeros), error)
+   SLL_CLEAR_ALLOCATE(self%avals(1:nnzeros), error)
+
+end subroutine initialize_csc_matrix
+
+subroutine csc_todense( this, dense_matrix)
+
+   type(sll_csc_matrix)       :: this
+   sll_real64, dimension(:,:) :: dense_matrix
+   sll_int32                  :: i
+   sll_int32                  :: j
+   sll_int32                  :: k
+   sll_int32                  :: l
+
+   l = 0
+   do j = 1, this%n 
+      do k = this%colptr(j),this%colptr(j+1)-1 
+         l = l + 1
+         i = this%row(l)
+         dense_matrix(i,j) = this%avals(l)
+      end do
+   end do
+
+end subroutine csc_todense
 
 subroutine initialize_pastix(this,n,nnzeros)
 

@@ -16,7 +16,7 @@ TARGET_LINK_LIBRARIES(dagmg_seq mumps_agmg lapack_agmg blas_agmg)
 ADD_EXECUTABLE(test_dagmg_seq Example_seq.F90)
 TARGET_LINK_LIBRARIES(test_dagmg_seq dagmg_seq sll_working_precision)
 
-IF(MPI_MODULE_ENABLED)
+IF(MPI_ENABLED)
 
   SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 
