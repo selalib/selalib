@@ -3,8 +3,8 @@ IF(PASTIX_FOUND)
   SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
   INCLUDE_DIRECTORIES(${PASTIX_INCLUDE_DIRS})
   ADD_LIBRARY(sll_sparse_matrix STATIC 
-                sll_sparse.F90
-                sll_pastix.F90
+              sll_sparse.F90
+              sll_pastix.F90
   	        sll_sparse_matrix_pastix_module.F90
 	        sll_sparse_matrix_mp_module.F90)
 
@@ -19,6 +19,7 @@ IF(PASTIX_FOUND)
 ELSEIF(SUITESPARSE_FOUND)
 
   INCLUDE_DIRECTORIES(${SUITESPARSE_INCLUDE_DIRS})
+
   ADD_LIBRARY(sll_sparse_matrix STATIC 
   	        sll_sparse_matrix_umfpack_module.F90
 	        sll_sparse_matrix_mp_module.F90)
