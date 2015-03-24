@@ -29,9 +29,11 @@ iprint=6
 !
 !         first allocate the vectors with correct size
 N=(nhinv-1)**2
+allocate(mat)
 allocate (mat%opr_a(5*N),mat%opi_ja(5*N),mat%opi_ia(N+1),f(N),x(N))
 !         next call subroutine to set entries
 call uni2d(nhinv-1,f,mat%opr_a,mat%opi_ja,mat%opi_ia)
+
 mat%num_rows = nhinv-1
 mat%num_cols = nhinv-1
 !
