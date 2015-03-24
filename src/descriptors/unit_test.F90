@@ -5,12 +5,16 @@ use sll_descriptors
 implicit none
 
 sll_int32 :: idx
+type(sll_vlasovpoisson_sim) :: testcase
 
-do idx=1, 5
-print *, sll_vp_descriptor_key(idx)
 
-end do
+call testcase%parse('  SLL_LANDAU_DIAG       ')
+ print *, testcase%name()
+ print *, SLL_LANDAU_DIAG%name()
 
 print *, "PASSED"
+
+print *, trim('  SLL_LANDAU_DIAG       ')
+
 
 end program
