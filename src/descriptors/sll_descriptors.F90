@@ -14,12 +14,12 @@ module sll_descriptors
  
   !>Vlasov - Poisson simulation descriptors
   type sll_vlasovpoisson_sim
-    sll_int32        , private :: pid
+    sll_int32                  :: id
     character(len=32), private :: pname
   contains
-    procedure                  :: id=>id_sll_vlasovpoisson_sim
-    procedure                  :: name=>name_sll_vlasovpoisson_sim
-    procedure                  :: parse=>parse_sll_vlasovpoisson_sim
+    !procedure, pass(self)      :: id=>id_sll_vlasovpoisson_sim
+    procedure, pass(self)      :: name=>name_sll_vlasovpoisson_sim
+    procedure, pass(self)      :: parse=>parse_sll_vlasovpoisson_sim
   end type sll_vlasovpoisson_sim
 
   type(sll_vlasovpoisson_sim), parameter :: SLL_LANDAU_DIAG = sll_vlasovpoisson_sim(1,'SLL_LANDAU_DIAG' )
@@ -31,11 +31,11 @@ module sll_descriptors
 !==============================================================================
 contains
 !==============================================================================
-  pure function id_sll_vlasovpoisson_sim( self ) result( r )
-    class( sll_vlasovpoisson_sim ), intent( in ) :: self
-    sll_int32 :: r
-    r = self%pid
-  end function id_sll_vlasovpoisson_sim
+!   function id_sll_vlasovpoisson_sim( self ) result( r )
+!     class( sll_vlasovpoisson_sim ), intent( in ) :: self
+!     sll_int32 :: r
+!     r = self%pid
+!   end function id_sll_vlasovpoisson_sim
 
   !----------------------------------------------------------------------------
   pure function name_sll_vlasovpoisson_sim( self ) result( r )
@@ -54,19 +54,19 @@ contains
       strc=adjustl(trim(str))
       
       if (strc .eq. SLL_LANDAU_DIAG%name()) then
-        self%pid=SLL_LANDAU_DIAG%pid
+        self%id=SLL_LANDAU_DIAG%id
         self%pname=SLL_LANDAU_DIAG%pname
       elseif (strc .eq. SLL_LANDAU_SUM%name()) then
-        self%pid=SLL_LANDAU_SUM%pid
+        self%id=SLL_LANDAU_SUM%id
         self%pname=SLL_LANDAU_SUM%pname
       elseif (strc .eq. SLL_LANDAU_PROD%name()) then
-        self%pid=SLL_LANDAU_PROD%pid
+        self%id=SLL_LANDAU_PROD%id
         self%pname=SLL_LANDAU_PROD%pname
       elseif (strc .eq. SLL_TWOSTREAM%name()) then
-        self%pid=SLL_TWOSTREAM%pid
+        self%id=SLL_TWOSTREAM%id
         self%pname=SLL_TWOSTREAM%pname
       elseif (strc .eq. SLL_BUMPONTAIL%name()) then
-        self%pid=SLL_BUMPONTAIL%pid
+        self%id=SLL_BUMPONTAIL%id
         self%pname=SLL_BUMPONTAIL%pname
 !       elseif (str .eq. %name()) then
 !         self%pid= %pid
