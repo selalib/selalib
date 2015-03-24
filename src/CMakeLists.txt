@@ -25,6 +25,8 @@ SET(PASTIX_ENABLED        OFF CACHE BOOL "Build PasTiX solvers ")
 SET(SUITESPARSE_ENABLED   OFF CACHE BOOL "Enable UMFpack solvers")
 SET(BUILD_SIMULATIONS     ON  CACHE BOOL "Build selalib simulations")
 SET(BUILD_PACKAGE         OFF CACHE BOOL "Build selalib package")
+SET(BUILD_PARALUTION      OFF CACHE BOOL "Build paralution library")
+SET(BUILD_JOREK           OFF CACHE BOOL "Build jorek django solver")
 SET(PROCS                 4   CACHE STRING
     "Number of MPI processes used in parallel tests")
 
@@ -219,6 +221,27 @@ IF(BUILD_SIMULATIONS)
 #YG      ENDIF()
 #YG   ENDIF()
 ENDIF(BUILD_SIMULATIONS)
+
+IF(BUILD_PARALUTION)
+  INCLUDE(ExternalProject)
+  EXTERNALPROJECT_ADD(
+     paralution-1.0.0
+     URL  http://www.paralution.com/downloads/paralution-1.0.0.tar.gz
+     CMAKE_ARGS -DSUPPORT_CUDA=OFF -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/paralution
+  )
+ENDIF()
+
+IF(BUILD_JOREK)
+  INCLUDE(ExternalProject)
+  EXTERNALPROJECT_ADD(
+     jorek
+     GIT_REPOSITORY git+ssh://scm.gforge.inria.fr/gitroot/jorek/jorek.git
+     GIT_TAG django-devel
+     CMAKE_ARGS -DCMAKE_Fortran_COMPILER=${MPI_Fortran_COMPILER}
+     INSTALL_COMMAND ""
+  )
+ENDIF()
+
 
 MESSAGE(STATUS "############################################################")
 MESSAGE(STATUS "####")

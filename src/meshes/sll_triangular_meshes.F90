@@ -29,7 +29,6 @@ use sll_tri_mesh_xmf
 
 implicit none
 
-integer :: imxref=99999999 
 
 !> @brief 2d hexagonal mesh
 !  vtaux  - composante x des vecteurs tangeants         
@@ -37,7 +36,7 @@ integer :: imxref=99999999
 type :: sll_triangular_mesh_2d
 
   sll_int32           :: num_nodes  
-  sll_int32           :: num_cells 
+  sll_int32           :: num_triangles 
   sll_int32           :: num_edges     
   sll_int32           :: num_bound     
 
@@ -78,10 +77,10 @@ type :: sll_triangular_mesh_2d
   sll_int32,  dimension(:),   pointer :: nbcov
   sll_real64, dimension(:),   pointer :: xlcod
 
-  sll_real64, dimension(:),   allocatable :: vtaux
-  sll_real64, dimension(:),   allocatable :: vtauy
-  sll_int32,  dimension (:),  allocatable :: nctfro
-  sll_int32,  dimension (:),  allocatable :: nctfrp
+  sll_real64, dimension(:),   pointer :: vtaux
+  sll_real64, dimension(:),   pointer :: vtauy
+  sll_int32,  dimension (:),  pointer :: nctfro
+  sll_int32,  dimension (:),  pointer :: nctfrp
 
   logical :: analyzed = .false.
 
@@ -141,9 +140,8 @@ end interface new_triangular_mesh_2d
 !xbas   - integrales des fonctions de base
 !refs   - references des sommets
 !reft   - references des elements
-!ntri   - table de connectivite
+!nodes   - table de connectivite
 !nvois  - numeros des voisins (solveur)
-!nvoiv  - numeros des voisins (particules)
 !nvoif  - numero local dans le voisin de la face commune
 !nusd   - references du sous-domaine
 !petitl - petite longueur de reference   
@@ -170,6 +168,8 @@ function new_triangular_mesh_2d_from_file( maafil ) result(m)
   sll_int32 :: ierr
   SLL_ALLOCATE(m, ierr)
   call read_from_file(m, maafil)
+
+  call compute_aires( m )
 
 end function new_triangular_mesh_2d_from_file
 
@@ -200,14 +200,14 @@ function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
   SLL_ALLOCATE(tri_mesh, ierr)
 
     
-  tri_mesh%num_nodes = hex_mesh%num_pts_tot
-  tri_mesh%num_cells = hex_mesh%num_triangles
-  tri_mesh%nmxfr     = 1
-  tri_mesh%nmxsd     = 1
-  SLL_ALLOCATE(tri_mesh%coord(1:2,tri_mesh%num_nodes),   ierr)
-  SLL_ALLOCATE(tri_mesh%nodes(1:3,1:tri_mesh%num_cells), ierr)
-  SLL_ALLOCATE(tri_mesh%refs(tri_mesh%num_nodes),        ierr)
-  SLL_ALLOCATE(tri_mesh%nvois(1:3,1:tri_mesh%num_cells), ierr)
+  tri_mesh%num_nodes     = hex_mesh%num_pts_tot
+  tri_mesh%num_triangles = hex_mesh%num_triangles
+  tri_mesh%nmxfr         = 1
+  tri_mesh%nmxsd         = 1
+  SLL_ALLOCATE(tri_mesh%coord(1:2,tri_mesh%num_nodes),       ierr)
+  SLL_ALLOCATE(tri_mesh%nodes(1:3,1:tri_mesh%num_triangles), ierr)
+  SLL_ALLOCATE(tri_mesh%refs(tri_mesh%num_nodes),            ierr)
+  SLL_ALLOCATE(tri_mesh%nvois(1:3,1:tri_mesh%num_triangles), ierr)
   tri_mesh%refs      =  0
   tri_mesh%nvois     =  0
 
@@ -260,6 +260,8 @@ function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
 
   end do
 
+  call compute_aires( tri_mesh )
+
 end function new_triangular_mesh_2d_from_hex_mesh
 
 
@@ -307,6 +309,7 @@ function new_triangular_mesh_2d_from_square( nc_eta1,  &
                                       eta2_min, &
                                       eta2_max)
 
+  call compute_aires( m )
 
 end function new_triangular_mesh_2d_from_square
 
@@ -367,8 +370,8 @@ neltot = 2 * nxm * nym !nombre total de triangles du maillage
 nsom   = nbox * nboy   !nombre de "sommets" du maillage quadrangulaire
 noeud  = nsom          !nombre total de noeuds
 
-mesh%num_cells = neltot
-mesh%num_nodes = noeud
+mesh%num_triangles = neltot
+mesh%num_nodes     = noeud
 SLL_CLEAR_ALLOCATE(mesh%coord(1:2,1:noeud),ierr)
 SLL_ALLOCATE(mesh%nodes(1:3,1:neltot),ierr); mesh%nodes = 0
 SLL_ALLOCATE(mesh%nvois(3,1:neltot),ierr); mesh%nvois = 0
@@ -507,138 +510,36 @@ deallocate(nar)
 
 end subroutine initialize_triangular_mesh_2d
 
-!  function eta1_node_triangular(mesh, i, j) result(res)
-!    ! The coordinates (i, j) correspond to the (r1, r2) basis
-!    ! This function returns the 1st coordinate on the cartesian system
-!    class(sll_triangular_mesh_2d), intent(in) :: mesh
-!    sll_int32, intent(in)  :: i
-!    sll_int32, intent(in)  :: j
-!    sll_real64 :: res
-!
-!    res = mesh%r1_x1*i + mesh%r2_x1*j + mesh%center_x1
-!  end function eta1_node_triangular
-!
-!  !> @brief Computes the second coordinate of a given point
-!  !> @details Computes the second coordinate on the cartesian system 
-!  !> of a point which has for hexagonal coordinates (i,j)
-!  !> @param i sll_int32 denoting the first hexagonal coordinate of a point
-!  !> @param j sll_int32 denoting the second hexagonal coordinate of a point
-!  !> returns res real containing the coordinate "eta2"
-!  function eta2_node_triangular(mesh, i, j) result(res)
-!    ! The coordinates (k1, k2) correspond to the (r1, r2) basis
-!    ! This function the 2nd coordinate on the cartesian system
-!    class(sll_triangular_mesh_2d), intent(in)     :: mesh
-!    sll_int32, intent(in)  :: i
-!    sll_int32, intent(in)  :: j
-!    sll_real64  :: res
-!
-!    res = mesh%r1_x2*i + mesh%r2_x2*j + mesh%center_x2
-!  end function eta2_node_triangular
-!
-!
-!  function eta1_cell_triangular(mesh, cell_num) result(res)
-!    ! The index num_ele corresponds to the index of triangle
-!    ! This function returns the 1st coordinate on the cartesian system
-!    ! of the center of the triangle at num_ele
-!    class(sll_triangular_mesh_2d),intent(in)     :: mesh
-!    sll_int32, intent(in)      :: cell_num
-!    sll_real64 :: res
-!
-!    res = mesh%center_cartesian_coord(1, cell_num)
-!  end function eta1_cell_triangular
-!
-!  function eta2_cell_triangular(mesh, cell_num) result(res)
-!    ! The index num_ele corresponds to the index of triangle
-!    ! This function returns the 2nd coordinate on the cartesian system
-!    ! of the center of the triangle at num_ele
-!    class(sll_triangular_mesh_2d),intent(in)     :: mesh
-!    sll_int32, intent(in)      :: cell_num
-!    sll_real64 :: res
-!
-!    res = mesh%center_cartesian_coord(2, cell_num)
-!  end function eta2_cell_triangular
-!
-!
-!  function eta1_cell_triangular_two_arg(mesh, i, j) result(res)
-!    class(sll_triangular_mesh_2d),intent(in)     :: mesh
-!    sll_int32, intent(in)      :: i, j
-!    sll_real64 :: res
-!
-!    res = 0.0_f64
-!    print *, "Error : eta1_cell for a triangular mesh only works with ONE parameter (num_cell)"
-!    STOP
-!  end function eta1_cell_triangular_two_arg
-!
-!  function eta2_cell_triangular_two_arg(mesh, i, j) result(res)
-!    class(sll_triangular_mesh_2d),intent(in)     :: mesh
-!    sll_int32, intent(in)      :: i, j
-!    sll_real64 :: res
-!
-!    res = 0.0_f64
-!    print *, "Error : eta2_cell for a triangular mesh only works with ONE parameter (num_cell)"
-!    STOP
-!  end function eta2_cell_triangular_two_arg
-!
-!
-!  function cells_to_origin(k1, k2) result(val)
-!    ! Takes the coordinates (k1,k2) on the (r1,r2) basis and 
-!    ! returns the number of cells between that point and
-!    ! the origin. If (k1, k2) = 0, val = 0
-!    sll_int32, intent(in)   :: k1
-!    sll_int32, intent(in)   :: k2
-!    sll_int32               :: val
-!
-!    ! We compute the number of cells from point to center 
-!    if (k1*k2 .gt. 0) then
-!       val = max(abs(k1),abs(k2))
-!    else
-!       val = abs(k1) + abs(k2)
-!    end if
-!
-!  end function cells_to_origin
-!
-!
-!  function hex_to_global(mesh, k1, k2) result(val)
-!    ! Takes the coordinates (k1,k2) on the (r1,r2) basis and 
-!    ! returns global index of that mesh point.
-!    ! By default the index of the center of the mesh is 0
-!    ! Then following the r1 direction and a counter-clockwise motion
-!    ! we assing an index to every point of the mesh.
-!    class(sll_triangular_mesh_2d)      :: mesh
-!    sll_int32, intent(in)   :: k1
-!    sll_int32, intent(in)   :: k2
-!    sll_int32               :: distance
-!    sll_int32               :: index_tab
-!    sll_int32               :: val
-!    
-!    distance = cells_to_origin(k1,k2)
-!
-!    ! Test if we are in domain
-!    if (distance .le. mesh%num_cells) then
-!
-!       call index_triangular_to_global(mesh, k1, k2,index_tab)
-!       val = mesh%global_indices(index_tab)
-!
-!    else
-!       val = -1
-!    end if
-!
-!  end function hex_to_global
-
-
 !> Displays mesh information on the terminal
 subroutine display_triangular_mesh_2d(mesh)
 class(sll_triangular_mesh_2d), intent(in) :: mesh
 
-write(*,"(/,(a))") '2D mesh : num_cells   num_nodes   num_edges '
-write(*,"(10x,3(i6,9x),4(g13.3,1x))") &
-     mesh%num_cells,  &
-     mesh%num_nodes,  &
-     mesh%num_edges,  &
-     mesh%eta1_min,   &
-     mesh%eta1_max,   &
-     mesh%eta2_min,   &
-     mesh%eta2_max
+sll_real64 :: eta1_min, eta1_max, eta2_min, eta2_max
+sll_int32  :: i, nctfrt, nbtcot
+
+eta1_min = minval(mesh%coord(1,:))
+eta1_max = maxval(mesh%coord(1,:))
+eta2_min = minval(mesh%coord(2,:))
+eta2_max = maxval(mesh%coord(2,:))
+
+nctfrt=0
+do i=1,mesh%num_triangles
+   if (mesh%nvois(1,i)<0) nctfrt=nctfrt+1
+   if (mesh%nvois(2,i)<0) nctfrt=nctfrt+1
+   if (mesh%nvois(3,i)<0) nctfrt=nctfrt+1
+end do
+
+nbtcot = (3*mesh%num_triangles+nctfrt)/2
+
+write(*,"(/,(a))") '2D mesh : num_triangles   num_nodes   num_edges '
+write(*,"(10x,3(i6,9x),/,'Frame',/,4(g13.3,1x))") &
+     mesh%num_triangles,  &
+     mesh%num_nodes,      &
+     nbtcot,              &
+     eta1_min,            &
+     eta1_max,            &
+     eta2_min,            &
+     eta2_max
 
 end subroutine display_triangular_mesh_2d
 
@@ -684,7 +585,7 @@ write(out_unit,"(a)")"$DATA=CURVE3D"
 write(out_unit,"(a)")"%equalscale=T"
 write(out_unit,"(a)")"%toplabel='Maillage' "
 
-do i = 1, mesh%num_cells
+do i = 1, mesh%num_triangles
 
    write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
    write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(2,i)),0.
@@ -700,7 +601,7 @@ write(out_unit,"(a)")"$DATA=CURVE3D"
 write(out_unit,"(a)")"%equalscale=T"
 write(out_unit,"(a)")"%toplabel='Numeros des noeuds et des triangles' "
 
-do i = 1, mesh%num_cells
+do i = 1, mesh%num_triangles
    write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
    write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(2,i)),0.
    write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(3,i)),0.
@@ -708,7 +609,7 @@ do i = 1, mesh%num_cells
    write(out_unit,*)
 end do
 
-do i = 1, mesh%num_cells
+do i = 1, mesh%num_triangles
    x1 = (  mesh%coord(1,mesh%nodes(1,i))  &
          + mesh%coord(1,mesh%nodes(2,i))  &
      + mesh%coord(1,mesh%nodes(3,i))    )/3.
@@ -742,7 +643,7 @@ write(out_unit,*)"$DATA=CURVE3D"
 write(out_unit,*)"%equalscale=T"
 write(out_unit,*)"%toplabel='Numeros des noeuds' "
 
-do i = 1, mesh%num_cells
+do i = 1, mesh%num_triangles
    write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
    write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(2,i)),0.
    write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(3,i)),0.
@@ -768,7 +669,7 @@ write(out_unit,*)"$DATA=CURVE3D"
 write(out_unit,*)"%equalscale=T"
 write(out_unit,*)"%toplabel='Numeros des triangles' "
 
-do i = 1, mesh%num_cells
+do i = 1, mesh%num_triangles
    write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(1,i)),0.
    write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(2,i)),0.
    write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nodes(3,i)),0.
@@ -776,7 +677,7 @@ do i = 1, mesh%num_cells
    write(out_unit,*)
 end do
 
-do i = 1, mesh%num_cells
+do i = 1, mesh%num_triangles
    x1 = (  mesh%coord(1,mesh%nodes(1,i))  &
          + mesh%coord(1,mesh%nodes(2,i))  &
      + mesh%coord(1,mesh%nodes(3,i))    )/3.
@@ -798,7 +699,7 @@ write(out_unit,*)"$DATA=CURVE3D"
 write(out_unit,*)"%equalscale=T"
 write(out_unit,*)"%toplabel='References des frontieres' "
 
-do i = 1, mesh%num_cells
+do i = 1, mesh%num_triangles
    write(out_unit,*) mesh%coord(1:2,mesh%nodes(1,i)), 0.0
    write(out_unit,*) mesh%coord(1:2,mesh%nodes(2,i)), 0.0
    write(out_unit,*) mesh%coord(1:2,mesh%nodes(3,i)), 0.0
@@ -806,7 +707,7 @@ do i = 1, mesh%num_cells
    write(out_unit,*)
 end do
 
-do i = 1, mesh%num_cells
+do i = 1, mesh%num_triangles
   do j = 1, 3
     if (mesh%nvois(j,i) < 0) then
       k = mod(j-1,3)+1   !Premier sommet
@@ -832,7 +733,7 @@ write(out_unit,*)"$DATA=CURVE3D"
 write(out_unit,*)"%equalscale=T"
 write(out_unit,*)"%toplabel='References des noeuds' "
 
-do i = 1, mesh%num_cells
+do i = 1, mesh%num_triangles
    write(out_unit,*) mesh%coord(1:2,mesh%nodes(1,i)), 0.0
    write(out_unit,*) mesh%coord(1:2,mesh%nodes(2,i)), 0.0
    write(out_unit,*) mesh%coord(1:2,mesh%nodes(3,i)), 0.0
@@ -852,13 +753,15 @@ do i = 1, mesh%num_nodes
    write(out_unit,"(a)")"'"
 end do
 
+if (mesh%analyzed) then
+
 write(out_unit,*)
 
 write(out_unit,*)"$DATA=CURVE3D"
 write(out_unit,*)"%equalscale=T"
 write(out_unit,*)"%toplabel='Polygones de Voronoi'"
 
-do i = 1, mesh%num_cells
+do i = 1, mesh%num_triangles
   write(out_unit,*)"%linetype   = 1 # Solid Linetype (default=1)"
   write(out_unit,*)"%linewidth  = 1 # Linewidth      (default=1)"
   write(out_unit,*)"%linecolor  = 1 # Line Color     (default=1)"
@@ -873,7 +776,7 @@ do i = 1, mesh%num_cells
   end do
 end do
    
-do i = 1, mesh%num_cells
+do i = 1, mesh%num_triangles
 
   write(out_unit,*) "%linetype  = 1 # Solid Linetype (default=1)"
   write(out_unit,*) "%linewidth = 1 # Linewidth      (default=1)"
@@ -886,7 +789,6 @@ do i = 1, mesh%num_cells
 
 end do
 
-if (mesh%analyzed) then
 
 write(out_unit,*)
 write(out_unit,*)"$DATA=CURVE3D"
@@ -948,6 +850,7 @@ integer          :: nelin
 integer          :: nefro
 integer          :: nmaill
 integer          :: iout = 6
+integer          :: imxref
 
 write(iout,"(/////10x,'>>> Read mesh from file <<<'/)")
 open(nfmaa,file=maafil,status='OLD',err=80)
@@ -959,26 +862,26 @@ write(iout,"(10x,'Open the file'                      &
 
 read(nfmaa,*) 
 read(nfmaa,*) nmaill,imxref
-read(nfmaa,*) mesh%num_nodes, &
-              mesh%num_cells, &
-              mesh%nmxfr,     &
-              mesh%nmxsd,     &
-              nefro,          &
-              nelin,          &
+read(nfmaa,*) mesh%num_nodes,     &
+              mesh%num_triangles, &
+              mesh%nmxfr,         &
+              mesh%nmxsd,         &
+              nefro,              &
+              nelin,              &
               mesh%nelfr
 
-SLL_ALLOCATE(mesh%coord(1:2,mesh%num_nodes),   sll_err)
-SLL_ALLOCATE(mesh%nodes(1:3,1:mesh%num_cells), sll_err)
-SLL_ALLOCATE(mesh%refs(mesh%num_nodes),        sll_err)
-SLL_ALLOCATE(mesh%reft(mesh%num_cells),        sll_err)
-SLL_ALLOCATE(mesh%nusd(mesh%num_cells),        sll_err)
-SLL_ALLOCATE(mesh%nvois(3,mesh%num_cells),     sll_err)
+SLL_ALLOCATE(mesh%coord(1:2,mesh%num_nodes),       sll_err)
+SLL_ALLOCATE(mesh%nodes(1:3,1:mesh%num_triangles), sll_err)
+SLL_ALLOCATE(mesh%refs(mesh%num_nodes),            sll_err)
+SLL_ALLOCATE(mesh%reft(mesh%num_triangles),        sll_err)
+SLL_ALLOCATE(mesh%nusd(mesh%num_triangles),        sll_err)
+SLL_ALLOCATE(mesh%nvois(3,mesh%num_triangles),     sll_err)
 
 read(nfmaa,*) ((mesh%coord(i,j),i=1,2),j=1,mesh%num_nodes)
 read(nfmaa,*)  (mesh%refs(i)   ,i=1,mesh%num_nodes) 
-read(nfmaa,*) ((mesh%nodes(i,j),i=1,3),j=1,mesh%num_cells)
-read(nfmaa,*) ((mesh%nvois(i,j),i=1,3),j=1,mesh%num_cells)
-read(nfmaa,*)  (mesh%nusd(i)   ,i=1,mesh%num_cells) 
+read(nfmaa,*) ((mesh%nodes(i,j),i=1,3),j=1,mesh%num_triangles)
+read(nfmaa,*) ((mesh%nvois(i,j),i=1,3),j=1,mesh%num_triangles)
+read(nfmaa,*)  (mesh%nusd(i)   ,i=1,mesh%num_triangles) 
 
 close(nfmaa)
 
@@ -988,7 +891,7 @@ write(iout,"(//,10x,'Nb de noeuds                : ',i10/       &
 &              ,10x,'Nb max de SD references     : ',i10/       &
 &              ,10x,/'Nb de triangles ayant au moins 1 sommet'  &
 &              ,' sur une frontiere : ',i10/)") mesh%num_nodes, &
-                   mesh%num_cells,mesh%nmxfr,mesh%nmxsd,nefro
+                   mesh%num_triangles,mesh%nmxfr,mesh%nmxsd,nefro
 
 write(iout,"(//10x,'Nb d''elements internes     : ',i10/    &
           &   ,10x,'Nb d''elements frontieres   : ',i10/)") nelin,mesh%nelfr
@@ -1027,5 +930,307 @@ x2 = (syba-(xc-xa)*(xb*xb-xa*xa+yb*yb-ya*ya))/det
 
 end subroutine get_cell_center
 
+
+!> Map an hexagonal mesh on circle
+!> param[inout] mesh the triangular mesh built fron an hexagonal mesh
+!> param[in]    num_cells is the num_cells parameter of the hexagonal mesh
+subroutine map_to_circle( mesh, num_cells )
+
+class(sll_triangular_mesh_2d), intent(inout) :: mesh
+sll_int32,                     intent(in)    :: num_cells
+
+sll_int32  :: i, j, cell
+sll_real64 :: r, alpha
+
+i = 2
+do cell = 1, num_cells
+  r     = cell * 1.0_f64 / num_cells
+  alpha = sll_pi / 6.0_f64
+  do j = 1, cell*6
+     mesh%coord(1,i+j-1) = r * cos(alpha)
+     mesh%coord(2,i+j-1) = r * sin(alpha)
+     alpha =  alpha + sll_pi / (3.0_f64 * cell)
+  end do
+  i = i + cell*6
+end do
+
+end subroutine map_to_circle
+
+!=======================================================================
+
+subroutine compute_aires( mesh )
+
+type(sll_triangular_mesh_2d), intent(inout) :: mesh !< mesh
+
+integer, dimension(:), allocatable :: indc
+
+sll_int32 :: i, j, k
+sll_int32 :: it, is, is1, is2, is3
+sll_int32 :: ntmp, id1, nct, iel, ind, iel1, nel
+sll_int32 :: i1, i2, i3
+sll_int32 :: jel1, jel2, jel3, nel1, nel2, nel3
+
+real(8)   :: airtot
+real(8)   :: xlml, xlmu, ylml, ylmu
+real(8)   :: lx1, lx2, ly1, ly2
+
+!*** Calcul des longueurs de reference
+#ifdef DEBUG
+write(6,*)"*** Calcul des longueurs de reference ***"
+#endif /* DEBUG */
+
+xlml = minval(mesh%coord(1,:))
+xlmu = maxval(mesh%coord(1,:))
+ylml = minval(mesh%coord(2,:))
+ylmu = maxval(mesh%coord(2,:))
+
+mesh%petitl = 1.e-04 * min(xlmu-xlml,ylmu-ylml)/sqrt(float(mesh%num_nodes))
+mesh%grandl = 1.e+04 * max(xlmu-xlml,ylmu-ylmu)
+
+!*** Calcul des aires des triangles
+#ifdef DEBUG
+write(6,*)"*** Calcul des aires des triangles ***"
+#endif /* DEBUG */
+
+allocate(mesh%aire(mesh%num_triangles)); mesh%aire=0.0
+
+airtot = 0.
+
+do it = 1, mesh%num_triangles
+
+   lx1 = mesh%coord(1,mesh%nodes(2,it))-mesh%coord(1,mesh%nodes(1,it))
+   ly1 = mesh%coord(2,mesh%nodes(3,it))-mesh%coord(2,mesh%nodes(1,it))
+   lx2 = mesh%coord(1,mesh%nodes(3,it))-mesh%coord(1,mesh%nodes(1,it))
+   ly2 = mesh%coord(2,mesh%nodes(2,it))-mesh%coord(2,mesh%nodes(1,it))
+
+   mesh%aire(it) = 0.5 * abs(lx1*ly1 - lx2*ly2)
+
+   if( mesh%aire(it) <= 0. ) then
+     write(6,*) " Triangle : ", it
+     write(6,*) mesh%nodes(1,it), ":",mesh%coord(1:2,mesh%nodes(1,it))
+     write(6,*) mesh%nodes(2,it), ":",mesh%coord(1:2,mesh%nodes(2,it))
+     write(6,*) mesh%nodes(3,it), ":",mesh%coord(1:2,mesh%nodes(3,it))
+     stop "Aire de triangle negative"
+   end if
+
+   airtot = airtot + mesh%aire(it)
+
+end do
+
+#ifdef DEBUG
+write(6,"(/10x,'Longueurs de reference :',2E15.5/)") mesh%petitl,mesh%grandl
+write(6,"(/10x,'Limites x du domaine   :',2E15.5/   &
+&          10x,'Limites y du domaine   :',2E15.5/   &
+&          10x,'Aire des triangles     :',E15.5 /)") xlml,xlmu,ylml,ylmu,airtot
+
+#endif /* DEBUG */
+
+! --- Gestion des triangles ayant un noeud en commun -----------
+!if (ldebug) &
+!write(iout,*)"*** Gestion des triangles ayant un noeud en commun ***"
+ 
+! ... recherche des elements ayant un sommet commun
+!     creation du tableau npoel1(i+1)  contenant le nombre de 
+!     triangles ayant le noeud i en commun
+
+allocate(mesh%npoel1(mesh%num_nodes+1))
+
+mesh%npoel1 = 0
+do i=1,mesh%num_triangles
+   is1 = mesh%nodes(1,i)
+   is2 = mesh%nodes(2,i)
+   is3 = mesh%nodes(3,i)
+   mesh%npoel1(is1+1) = mesh%npoel1(is1+1)+1
+   mesh%npoel1(is2+1) = mesh%npoel1(is2+1)+1
+   mesh%npoel1(is3+1) = mesh%npoel1(is3+1)+1
+end do
+
+! ... le tableau npoel1 devient le tableau donnant l'adresse 
+!     dans npoel2 du dernier element dans la suite des triangles
+!     communs a un noeud
+
+mesh%npoel1(1)=0
+do i=3,mesh%num_nodes+1
+   mesh%npoel1(i)=mesh%npoel1(i-1)+mesh%npoel1(i)
+end do
+
+! ... creation du tableau npoel2 contenant sequentiellement les 
+!     numeros des triangles ayant un noeud en commun      
+!     le premier triangle s'appuyant sur le noeud i est
+!     adresse par "npoel1(i)+1" 
+!     le nombre de triangles ayant le noeud i en commun est
+!     "npoel1(i+1)-npoel1(i)"
+
+
+allocate(mesh%npoel2(mesh%npoel1(mesh%num_nodes+1)))
+allocate(indc(mesh%num_nodes))
+
+indc   = 1  !Le tableau temporaire indc doit etre initialise a 1
+
+do it = 1,mesh%num_triangles
+   do k = 1,3
+      is = mesh%nodes(k,it)
+      mesh%npoel2(mesh%npoel1(is)+indc(is)) = it
+      indc(is) = indc(is)+1
+   end do
+end do
+
+deallocate(indc)
+
+! --- Recherche des numeros des triangles voisins d'un triangle 
+
+do iel=1,mesh%num_triangles
+
+  ! ... numeros des 3 sommets du triangle
+
+  is1=mesh%nodes(1,iel)
+  is2=mesh%nodes(2,iel)
+  is3=mesh%nodes(3,iel)
+  
+  ! ... boucles imbriquees sur les elements pointant vers
+  !     les 2 noeuds extremites de l'arete consideree
+  !     Le voisin est le triangle commun (hormis iel)
+
+  ! ... premiere arete (entre le sommet is1 et is2)
+
+  nel1=mesh%npoel1(is1+1)-mesh%npoel1(is1) !nb de triangles communs a is1
+  nel2=mesh%npoel1(is2+1)-mesh%npoel1(is2) !nb de triangles communs a is2
+
+  loop1:do i1=1,nel1
+    jel1=mesh%npoel2(mesh%npoel1(is1)+i1) !premier triangle is1
+    if(jel1.ne.iel) then
+      do i2=1,nel2
+        jel2=mesh%npoel2(mesh%npoel1(is2)+i2)
+        if(jel2 == jel1) then
+          mesh%nvois(1,iel)  = jel1
+          exit loop1
+        end if
+      end do
+    end if
+  end do loop1
+
+  ! ... deuxieme arete (entre le sommet is2 et is3)
+
+  nel2=mesh%npoel1(is2+1)-mesh%npoel1(is2)
+  nel3=mesh%npoel1(is3+1)-mesh%npoel1(is3)
+
+  loop2:do i2=1,nel2
+    jel2=mesh%npoel2(mesh%npoel1(is2)+i2)
+    if(jel2 /= iel) then
+      do i3=1,nel3
+        jel3=mesh%npoel2(mesh%npoel1(is3)+i3)
+        if(jel3 == jel2) then
+          mesh%nvois(2,iel)=jel2
+          exit loop2
+        end if
+      end do
+    end if
+  end do loop2
+
+  ! ... troisieme arete (entre le sommet is3 et is1)
+
+  nel3=mesh%npoel1(is3+1)-mesh%npoel1(is3)
+  nel1=mesh%npoel1(is1+1)-mesh%npoel1(is1)
+
+  loop3:do i3=1,nel3
+    jel3=mesh%npoel2(mesh%npoel1(is3)+i3)
+    if(jel3 /= iel) then
+      do i1=1,nel1
+        jel1=mesh%npoel2(mesh%npoel1(is1)+i1)
+        if(jel1 == jel3) then
+          mesh%nvois(3,iel)=jel3
+          exit loop3
+        end if
+      end do
+    end if
+  end do loop3
+
+end do
+
+! --- Rangement de npoel2 dans l'ordre trigonometrique ---------
+
+do is=1,mesh%num_nodes
+
+  nel = mesh%npoel1(is+1)-mesh%npoel1(is)
+
+  if ( nel > 1 ) then
+
+    !*** Noeuds internes (Numero de reference nul) ***
+
+    if( mesh%refs(is) == 0) then
+
+      ind =1
+      iel1=mesh%npoel2(mesh%npoel1(is)+1)
+
+      loop4:do iel=2,nel-1
+        do j=1,3
+          if(mesh%nodes(j,iel1) == is) nct=mod(j+1,3)+1
+        end do
+
+        iel1=mesh%nvois(nct,iel1)
+        do id1=ind+1,nel
+          if(iel1 == mesh%npoel2(mesh%npoel1(is)+id1)) then
+            ind=ind+1
+            ntmp=mesh%npoel2(mesh%npoel1(is)+ind)
+            mesh%npoel2(mesh%npoel1(is)+ind)=iel1
+            mesh%npoel2(mesh%npoel1(is)+id1)=ntmp
+            cycle loop4
+          end if
+        end do
+      end do loop4
+
+     ! Noeuds frontieres
+
+     else 
+
+       ! --> Recherche du premier triangle dans l'ordre trigonometrique
+       loop5:do id1=1,nel
+         iel1=mesh%npoel2(mesh%npoel1(is)+id1)
+         do j=1,3
+           if(mesh%nvois(j,iel1).le.0 .and. mesh%nodes(j,iel1) == is) then
+             ntmp=mesh%npoel2(mesh%npoel1(is)+1)
+             mesh%npoel2(mesh%npoel1(is)+1)=iel1
+             mesh%npoel2(mesh%npoel1(is)+id1)=ntmp
+             exit loop5
+           end if
+         end do
+       end do loop5
+           
+       ! --> Rangement des autres triangles dans l'ordre trigonometrique
+       !     (s'il y en a plus que 2) 
+       if(nel  > 2) then
+         ind =1
+         iel1=mesh%npoel2(mesh%npoel1(is)+1)
+  
+         loop6:do iel=2,nel-1
+           do j=1,3
+             if(mesh%nodes(j,iel1)==is) then
+               nct=mod(j+1,3)+1
+             end if
+           end do
+
+           iel1=mesh%nvois(nct,iel1)
+  
+           do id1=ind+1,nel
+             if(iel1 == mesh%npoel2(mesh%npoel1(is)+id1)) then
+               ind=ind+1
+               ntmp=mesh%npoel2(mesh%npoel1(is)+ind)
+               mesh%npoel2(mesh%npoel1(is)+ind)=iel1
+               mesh%npoel2(mesh%npoel1(is)+id1)=ntmp
+               cycle loop6
+             end if
+           end do
+
+         end do loop6
+
+      end if
+
+    end if
+
+  end if
+
+end do
+
+end subroutine compute_aires
 
 end module sll_triangular_meshes
