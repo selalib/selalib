@@ -226,8 +226,7 @@ IF(BUILD_PARALUTION)
   EXTERNALPROJECT_ADD(
      paralution-1.0.0
      URL  http://www.paralution.com/downloads/paralution-1.0.0.tar.gz
-     CMAKE_ARGS -DSUPPORT_CUDA=OFF 
-     INSTALL_COMMAND ""
+     CMAKE_ARGS -DSUPPORT_CUDA=OFF -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/paralution
   )
 ENDIF()
 
@@ -236,9 +235,9 @@ IF(BUILD_JOREK)
   EXTERNALPROJECT_ADD(
      jorek
      GIT_REPOSITORY git+ssh://scm.gforge.inria.fr/gitroot/jorek/jorek.git
-     CONFIGURE_COMMAND ${CMAKE_COMMAND} src -DCMAKE_Fortran_COMPILER=${MPI_Fortran_COMPILER}
+     GIT_TAG django-devel
+     CMAKE_ARGS -DCMAKE_Fortran_COMPILER=${MPI_Fortran_COMPILER}
      INSTALL_COMMAND ""
-     BUILD_IN_SOURCE ON
   )
 ENDIF()
 
