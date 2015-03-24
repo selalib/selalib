@@ -214,20 +214,16 @@ IF(BUILD_SIMULATIONS)
     "simulations install dir")
   ADD_SUBDIRECTORY(simulations)
   ADD_SUBDIRECTORY(eulerian-finite-volume)
-#YG   IF(NOT BUILD_PACKAGE AND BUILD_TESTING)
-#YG      INCLUDE(SequentialTests)
-#YG      IF(MPI_ENABLED)
-#YG         INCLUDE(ParallelTests)
-#YG      ENDIF()
-#YG   ENDIF()
 ENDIF(BUILD_SIMULATIONS)
 
 IF(BUILD_PARALUTION)
   INCLUDE(ExternalProject)
   EXTERNALPROJECT_ADD(
-     paralution-1.0.0
+     paralution
+     SOURCE_DIR ${CMAKE_BINARY_DIR}/paralution
      URL  http://www.paralution.com/downloads/paralution-1.0.0.tar.gz
-     CMAKE_ARGS -DSUPPORT_CUDA=OFF -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/paralution
+     CMAKE_ARGS -DSUPPORT_CUDA=OFF
+     INSTALL_COMMAND ""
   )
 ENDIF()
 
@@ -241,7 +237,6 @@ IF(BUILD_JOREK)
      INSTALL_COMMAND ""
   )
 ENDIF()
-
 
 MESSAGE(STATUS "############################################################")
 MESSAGE(STATUS "####")

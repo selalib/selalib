@@ -3,7 +3,6 @@ IF(PASTIX_FOUND)
   SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
   INCLUDE_DIRECTORIES(${PASTIX_INCLUDE_DIRS})
   ADD_LIBRARY(sll_sparse_matrix STATIC 
-              sll_sparse.F90
               sll_pastix.F90
   	        sll_sparse_matrix_pastix_module.F90
 	        sll_sparse_matrix_mp_module.F90)
@@ -42,8 +41,6 @@ ELSE()
 
 ENDIF()
 
-ADD_LIBRARY(sll_csr_one_constraint STATIC sll_csr_one_constraint_module.F90)
-TARGET_LINK_LIBRARIES(sll_csr_one_constraint sll_utilities sll_memory)
 
 #PN Do not know why sll_collective is necessary here...
 IF(BUILD_TESTING AND MPI_ENABLED)
@@ -51,6 +48,8 @@ IF(BUILD_TESTING AND MPI_ENABLED)
   ADD_EXECUTABLE( test_sparse_matrix unit_test_sparse_matrix.F90 )
   TARGET_LINK_LIBRARIES( test_sparse_matrix sll_sparse_matrix sll_collective )
 
+  ADD_LIBRARY(sll_csr_one_constraint STATIC sll_csr_one_constraint_module.F90)
+  TARGET_LINK_LIBRARIES(sll_csr_one_constraint sll_utilities sll_memory)
   ADD_EXECUTABLE( test_csr_one_constraint unit_test_csr_one_constraint.F90 )
   TARGET_LINK_LIBRARIES( test_csr_one_constraint sll_csr_one_constraint )
 
@@ -60,10 +59,16 @@ IF(BUILD_TESTING AND MPI_ENABLED)
   ADD_EXECUTABLE( test_gmres test_gmres_driver.F90 dPackgmres.f )
   TARGET_LINK_LIBRARIES( test_gmres ${BLAS_LIBRARIES} )
 
+  ADD_EXECUTABLE(test_csr_matrix unit_test_csr_matrix.F90)
+  TARGET_LINK_LIBRARIES( test_csr_matrix sll_sparse_matrix dagmg_seq)
+
 ENDIF(BUILD_TESTING AND MPI_ENABLED)
 
-IF(BUILD_PARALUTION)
-
-  ADD_EXECUTABLE(paralution_solver paralution_solver.f90)
-
-ENDIF(BUILD_PARALUTION)
+#IF(BUILD_PARALUTION)
+#
+#  INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/paralution/src)
+#  ADD_EXECUTABLE(paralution_solver 
+#                  ${CMAKE_BINARY_DIR}/paralution/src/plug-ins/paralution_fortran.cpp
+#                  sll_paralution.f90)
+#
+#ENDIF(BUILD_PARALUTION)
