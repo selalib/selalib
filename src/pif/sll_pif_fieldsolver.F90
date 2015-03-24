@@ -78,7 +78,7 @@ subroutine visu_info_sll_pif_fieldsolver(this)
 
 print *,"Spatial Dimensions (x)", this%dimx
 print *,"Number of Fourier modes: ", this%problemsize()
-print *,"Domain length", 1.0/this%unitmode/sll_pi/2.0
+print *,"Domain length", 1.0/this%unitmode*sll_pi*2.0
 
 end subroutine
 
@@ -99,14 +99,16 @@ end subroutine sll_pif_fieldsolver_set_box_len
  
 subroutine sll_pif_fieldsolver_set_box_lens(this, lengths)
  class(pif_fieldsolver), intent(inout) :: this
- sll_real64, intent(in) :: lengths
+ sll_real64, intent(in),dimension(:) :: lengths
  sll_int32 :: ierr 
-
+ 
+ SLL_ASSERT(size(lengths)==this%dimx)
+ 
  if (.not. allocated(this%unitmode)) then
  SLL_ALLOCATE(this%unitmode(this%dimx),ierr)
  endif
  
- this%unitmode=2*sll_pi/lengths
+ this%unitmode(:)=2*sll_pi/lengths(:)
 end subroutine sll_pif_fieldsolver_set_box_lens
 
 
@@ -301,7 +303,7 @@ subroutine calc_fourier_modes(this, particle, fouriermodes)
  sll_int32 :: idx
 
 do idx=1, this%problemsize()
-  fouriermodes(idx)=kahan_sum_comp64(exp(-sll_i1*matmul(this%allmodes(:,idx)*this%unitmode,particle(1:this%dimx,:)))*particle(this%dimx+1,:))
+  fouriermodes(idx)=sum(exp(-sll_i1*matmul(this%allmodes(:,idx)*this%unitmode,particle(1:this%dimx,:)))*particle(this%dimx+1,:))
  end do
  
 end subroutine calc_fourier_modes
