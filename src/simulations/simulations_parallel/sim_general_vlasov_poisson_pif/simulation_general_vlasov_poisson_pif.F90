@@ -62,6 +62,7 @@ sll_real64, dimension(:), allocatable :: boxlen !L
 sll_real64 :: qm
 sll_real64, dimension(:), allocatable :: kmode !k
 sll_real64 :: eps !size of disturbance
+sll_real64, dimension(:), allocatable :: B0 !constant magentic field vector
 
 !----Solver parameters----
 sll_real64 :: dt
@@ -71,7 +72,7 @@ sll_int32 :: time_integrator_order
 sll_int32 :: collisions=SLL_COLLISIONS_NONE
 sll_int32 :: controlvariate=SLL_CONTROLVARIATE_NONE      !SLL_CONTROLVARIATE_MAXWELLIAN
 sll_int32 :: momentmatch=SLL_MOMENT_MATCH_NONE
-sll_int32 :: testcase=SLL_LANDAU_SUM
+type(sll_vlasovpoisson_sim) :: testcase=SLL_LANDAU_SUM
 sll_int32 :: RND_OFFSET   = 10    !Default sobol offset, skip zeros
 sll_int32 :: num_modes = 1
 !results
@@ -100,7 +101,7 @@ sll_int32 :: coll_rank, coll_size
      procedure, pass(sim) :: control_variate=>control_variate_generalvp_pif
        procedure, pass(sim) :: vxB=>v_cross_B_generalvp_pif
      !Magnetic field, can be changed
-      procedure, pass(sim) :: B=>Bzero_generalvp_pif !Bstandard_generalvp_pif
+      procedure, pass(sim) :: B=>Bstandard_generalvp_pif
       procedure, pass(sim) :: E=>Ezero_generalvp_pif !Electric field
      
      !Loading
@@ -185,9 +186,17 @@ function Bstandard_generalvp_pif(sim, x, time) result(B)
  sll_real64, dimension(:,:), intent(in) :: x !position for B
  sll_real64, intent(in) :: time
  sll_real64, dimension(size(x,1),size(x,2)) :: B
-
- !leads in three dimensions to (0,0,1) 
- B(sim%dimx,:)=1
+sll_int32 :: idx
+ if (allocated(sim%B0)) then
+   do idx=1,size(x,2)
+     B(:,idx)=sim%B0(:)
+   end do
+ else
+   B=0
+ endif
+ 
+!  !leads in three dimensions to (0,0,1) 
+!  B(sim%dimx,:)=1
 end function
 
 subroutine run_generalvp_pif(sim)
@@ -235,16 +244,18 @@ call sim%init_particle_prior_maxwellian()
 
 
 !Load particles
-SELECT CASE ( sim%testcase )
+SELECT CASE ( sim%testcase%id)
 
- CASE(SLL_LANDAU_SUM)
+ CASE(SLL_LANDAU_SUM%id)
    call sim%load_landau_sum()
- CASE(SLL_LANDAU_PROD)
+ CASE(SLL_LANDAU_PROD%id)
    call sim%load_landau_prod()
- CASE(SLL_LANDAU_DIAG)
+ CASE(SLL_LANDAU_DIAG%id)
    call sim%load_landau_diag()
  CASE DEFAULT
 END SELECT
+
+if (sim%coll_rank==0) print *, "TESTCASE: ", sim%testcase%name()
 
 SLL_ALLOCATE(sim%weight_const(sim%npart_loc),ierr)
 sim%weight_const=sim%particle(sim%maskw,:)
@@ -314,15 +325,17 @@ end subroutine
   sll_real64 :: dt
  sll_int32 :: NUM_TIMESTEPS, NUM_MODES, NUM_PARTICLES, DIMENSION, TIME_INTEGRATOR_ORDER
  sll_real64 :: QoverM, EPSILON
- sll_real64, dimension(10) :: K,L
+ sll_real64, dimension(10) :: K=0,L=0, B0=0
  sll_int32 :: CONTROLVARIATE, RND_OFFSET
+ character(len=32) :: TESTCASE
      
      sll_int32, parameter  :: input_file = 99
      sll_int32             :: IO_stat,ierr,idx
  
      namelist /sim_params/ dt, NUM_PARTICLES, DIMENSION, NUM_TIMESTEPS, &
                           NUM_MODES, QoverM, EPSILON, CONTROLVARIATE, &
-                          TIME_INTEGRATOR_ORDER,RND_OFFSET,K,L
+                          TIME_INTEGRATOR_ORDER,RND_OFFSET,K,L,B0,&
+                          TESTCASE
      
      open(unit = input_file, file=trim(filename),IOStat=IO_stat)
      if( IO_stat /= 0 ) then
@@ -345,6 +358,8 @@ end subroutine
      sim%num_modes=NUM_MODES
      sim%RND_OFFSET=RND_OFFSET
 
+     call sim%testcase%parse(TESTCASE)
+     
      SLL_ALLOCATE(sim%kmode(sim%dimx),ierr)
      SLL_ALLOCATE(sim%boxlen(sim%dimx),ierr)
  
@@ -355,6 +370,15 @@ end subroutine
         sim%boxlen=2*sll_pi/K(1:sim%dimx)
        endif
      end do
+     
+     if (sum(abs(B0(1:sim%dimx)))/=0) then
+          SLL_ALLOCATE(sim%B0(sim%dimx),ierr)
+         sim%B0=B0(1:sim%dimx)
+         print *, "Constant B-Field set to", sim%B0
+     endif
+     
+     
+     
 !      elseif (size(K)==0) then
 !         print *, "k-vector not given"   
 !         sim%kmode=0.5_f64
