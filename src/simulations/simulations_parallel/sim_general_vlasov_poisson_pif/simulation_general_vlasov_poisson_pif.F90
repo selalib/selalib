@@ -20,6 +20,7 @@ use sll_pic_utilities
 use sll_particle_method_descriptors
 use sll_simulation_base
 use sll_wedge_product_generaldim
+use sll_descriptors
 implicit none
 
 ! abstract interface
@@ -57,8 +58,9 @@ sll_int32 :: tstep
 
 !----Problem parameter----
 sll_int32 :: dimx
-sll_real64 :: boxlen
+sll_real64, dimension(:), allocatable :: boxlen !L
 sll_real64 :: qm
+sll_real64, dimension(:), allocatable :: kmode !k
 sll_real64 :: eps !size of disturbance
 
 !----Solver parameters----
@@ -68,6 +70,8 @@ sll_int32 :: npart, npart_loc
 sll_int32 :: time_integrator_order
 sll_int32 :: collisions=SLL_COLLISIONS_NONE
 sll_int32 :: controlvariate=SLL_CONTROLVARIATE_NONE      !SLL_CONTROLVARIATE_MAXWELLIAN
+sll_int32 :: momentmatch=SLL_MOMENT_MATCH_NONE
+sll_int32 :: testcase=SLL_LANDAU_SUM
 sll_int32 :: RND_OFFSET   = 10    !Default sobol offset, skip zeros
 sll_int32 :: num_modes = 1
 !results
@@ -78,7 +82,7 @@ sll_comp64, dimension(:), allocatable :: rhs, solution
 
 !------MPI---------
 sll_int32 :: coll_rank, coll_size
-!------MPI----------
+!------MPI---------
 
    contains
      
@@ -96,12 +100,17 @@ sll_int32 :: coll_rank, coll_size
      procedure, pass(sim) :: control_variate=>control_variate_generalvp_pif
        procedure, pass(sim) :: vxB=>v_cross_B_generalvp_pif
      !Magnetic field, can be changed
-      procedure, pass(sim) :: B=>Bstandard_generalvp_pif
+      procedure, pass(sim) :: B=>Bzero_generalvp_pif !Bstandard_generalvp_pif
       procedure, pass(sim) :: E=>Ezero_generalvp_pif !Electric field
      
+     !Loading
+     procedure, pass(sim) :: load_landau_sum=>load_landau_sum_generalvp_pif
+     procedure, pass(sim) :: load_landau_prod=>load_landau_prod_generalvp_pif
+     procedure, pass(sim) :: load_landau_diag=>load_landau_diag_generalvp_pif
 end type
 
 !--------------------------------------------------------------
+
 contains
 
 !Gives back the v cross B
@@ -213,8 +222,7 @@ call sim%init_particle_masks()
 sim%SOLVER%dimx=sim%dimx
 !Load some particles
 
-
-call sim%SOLVER%set_box_len(sim%boxlen)
+call sim%SOLVER%set_box_lens(sim%boxlen)
 call sim%SOLVER%init(sim%num_modes)
 
 if  (sim%coll_rank==0) call sim%SOLVER%visu_info()
@@ -226,37 +234,43 @@ call sim%init_particle()
 call sim%init_particle_prior_maxwellian()
 
 
+!Load particles
+SELECT CASE ( sim%testcase )
 
-!Set weights for strong landau damping
-!sim%particle(sim%maskw,:)=(1-sim%eps*sum(cos(0.5*sim%particle(sim%maskx,:) +sll_pi/3.0),1))
-sim%particle(sim%maskw,:)=1+sim%eps*cos(0.5*sim%particle(sim%maskx(1),:))*cos(0.5*sim%particle(sim%maskx(2),:))   
-
-sim%particle(sim%maskw,:)=sim%particle(sim%maskw,:)/sim%prior_weight
+ CASE(SLL_LANDAU_SUM)
+   call sim%load_landau_sum()
+ CASE(SLL_LANDAU_PROD)
+   call sim%load_landau_prod()
+ CASE(SLL_LANDAU_DIAG)
+   call sim%load_landau_diag()
+ CASE DEFAULT
+END SELECT
 
 SLL_ALLOCATE(sim%weight_const(sim%npart_loc),ierr)
 sim%weight_const=sim%particle(sim%maskw,:)
 
 !Match some moments
+if (sim%momentmatch==SLL_MOMENT_MATCH_INITIAL) then
 do idx=1, size(sim%maskv)
  call match_moment_1D_weight_linear_real64(sim%particle(sim%maskv(idx),:), &
                 sim%particle(sim%maskw,:),0.0_f64, 1.0_f64,sim%npart)
 end do
-
-
+endif
   
 !Initial field solve
 SLL_ALLOCATE(sim%rhs(sim%SOLVER%problemsize()),ierr)  
 SLL_ALLOCATE(sim%solution(sim%SOLVER%problemsize()),ierr)
 
 call sll_collective_barrier(sll_world_collective)
-if (sim%coll_rank==0)print *, "# TIME        |IMPULSE ERR.(abs.) | ENERGY ERROR(rel.) | FIELDENERGY"
+if (sim%coll_rank==0) print *, "# TIME        |IMPULSE ERR.(abs.) | ENERGY ERROR(rel.) | FIELDENERGY | MOMENTUM"
 
 
 do tstep=1,sim%tsteps
  sim%tstep=tstep
   call sim%symplectic_rungekutta()
-        if (sim%coll_rank==0) write(*,'(A2, G10.4,  G20.8,  G20.8, G20.8)') '#', sim%dt*(sim%tstep-1), &
-                           abs(sim%moment(1,sim%tstep))/sim%npart, sim%energy_error(sim%tstep), sim%fieldenergy(sim%tstep)
+        if (sim%coll_rank==0) write(*,'(A2, G10.4,  G20.8,  G20.8, G20.8, G20.8)') '#', sim%dt*(sim%tstep-1), &
+                           abs(sim%moment(1,sim%tstep))/sim%npart, sim%energy_error(sim%tstep), &
+                           sim%fieldenergy(sim%tstep), sqrt(sum(sim%moment(:,tstep)**2))
       !if ( (gnuplot_inline_output.eqv. .true.) .AND. coll_rank==0 .AND. mod(timestep-1,timesteps/100)==0  ) then
 !                    call energies_electrostatic_gnuplot_inline(kineticenergy(1:tstep), fieldenergy(1:tstep),&
 !   			  moment_error(1:tstep),dt)
@@ -270,6 +284,28 @@ call sim%write_result()
 
 end subroutine run_generalvp_pif
 
+subroutine load_landau_sum_generalvp_pif(sim)
+  class(sll_simulation_general_vlasov_poisson_pif), intent(inout) :: sim 
+  sim%particle(sim%maskw,:)=(1.0+sim%eps*sum(cos(diag_dot_matrix_real64(sim%kmode,sim%particle(sim%maskx,:))),1))
+  sim%particle(sim%maskw,:)=sim%particle(sim%maskw,:)/sim%prior_weight(:)  
+  print *, "Load landau sum"
+end subroutine
+
+subroutine load_landau_prod_generalvp_pif(sim)
+  class(sll_simulation_general_vlasov_poisson_pif), intent(inout) :: sim
+  sll_int32 :: idx
+  do idx=1, sim%npart_loc
+    sim%particle(sim%maskw,idx)=1+sim%eps*product(cos(sim%kmode(:)*sim%particle(sim%maskx,idx)),1)  
+  end do
+    sim%particle(sim%maskw,:)=sim%particle(sim%maskw,:)/sim%prior_weight  
+end subroutine
+
+subroutine load_landau_diag_generalvp_pif(sim)
+  class(sll_simulation_general_vlasov_poisson_pif), intent(inout) :: sim
+!     sim%particle(sim%maskw,:)=(1+sim%eps*product(cos(0.5*sim%particle(sim%maskx,:))))
+!     sim%particle(sim%maskw,:)=sim%particle(sim%maskw,:)/sim%prior_weight  
+end subroutine
+
 
  subroutine init_file_generalvp_pif( sim, filename )
   intrinsic :: trim
@@ -278,13 +314,15 @@ end subroutine run_generalvp_pif
   sll_real64 :: dt
  sll_int32 :: NUM_TIMESTEPS, NUM_MODES, NUM_PARTICLES, DIMENSION, TIME_INTEGRATOR_ORDER
  sll_real64 :: QoverM, EPSILON
+ sll_real64, dimension(10) :: K,L
  sll_int32 :: CONTROLVARIATE, RND_OFFSET
      
      sll_int32, parameter  :: input_file = 99
-     sll_int32             :: IO_stat
+     sll_int32             :: IO_stat,ierr,idx
  
      namelist /sim_params/ dt, NUM_PARTICLES, DIMENSION, NUM_TIMESTEPS, &
-                          NUM_MODES, QoverM, EPSILON, CONTROLVARIATE, TIME_INTEGRATOR_ORDER,RND_OFFSET
+                          NUM_MODES, QoverM, EPSILON, CONTROLVARIATE, &
+                          TIME_INTEGRATOR_ORDER,RND_OFFSET,K,L
      
      open(unit = input_file, file=trim(filename),IOStat=IO_stat)
      if( IO_stat /= 0 ) then
@@ -303,10 +341,32 @@ end subroutine run_generalvp_pif
      sim%controlvariate=CONTROLVARIATE
      sim%eps=EPSILON
      sim%time_integrator_order=TIME_INTEGRATOR_ORDER
-     sim%boxlen=4*sll_pi
+     
      sim%num_modes=NUM_MODES
      sim%RND_OFFSET=RND_OFFSET
 
+     SLL_ALLOCATE(sim%kmode(sim%dimx),ierr)
+     SLL_ALLOCATE(sim%boxlen(sim%dimx),ierr)
+ 
+     sim%kmode=K(1:sim%dimx)
+     sim%boxlen=L(1:sim%dimx)
+     do idx=1,sim%dimx
+       if (sim%boxlen(idx)==0 .and. K(idx)/=0) then
+        sim%boxlen=2*sll_pi/K(1:sim%dimx)
+       endif
+     end do
+!      elseif (size(K)==0) then
+!         print *, "k-vector not given"   
+!         sim%kmode=0.5_f64
+!        else
+!        print *, "k-vector has wrong size"   
+!         sim%kmode=1
+!         sim%kmode(1:size(K))=K   
+!      endif
+!      
+!      print *, K
+     !      print *, sim%boxlen
+     
   end subroutine init_file_generalvp_pif
 
   
@@ -331,15 +391,15 @@ end subroutine init_particle_generalvp_pif
 subroutine init_diagnostics_generalvp_pif(sim)
   class(sll_simulation_general_vlasov_poisson_pif), intent(inout) :: sim
 sll_int32 :: ierr
-  SLL_CLEAR_ALLOCATE(sim%kineticenergy(sim%tsteps),ierr)
-SLL_CLEAR_ALLOCATE(sim%fieldenergy(sim%tsteps),ierr)
-SLL_CLEAR_ALLOCATE(sim%energy(sim%tsteps),ierr)
-SLL_CLEAR_ALLOCATE(sim%energy_error(sim%tsteps),ierr)
-SLL_CLEAR_ALLOCATE(sim%moment(sim%dimx,sim%tsteps),ierr)
-SLL_CLEAR_ALLOCATE(sim%moment_error(sim%tsteps),ierr)
-SLL_CLEAR_ALLOCATE(sim%moment_var(sim%dimx,sim%tsteps),ierr)
-SLL_CLEAR_ALLOCATE(sim%weight_sum(sim%tsteps),ierr)
-SLL_CLEAR_ALLOCATE(sim%weight_var(sim%tsteps),ierr)
+  SLL_CLEAR_ALLOCATE(sim%kineticenergy(1:sim%tsteps),ierr)
+SLL_CLEAR_ALLOCATE(sim%fieldenergy(1:sim%tsteps),ierr)
+SLL_CLEAR_ALLOCATE(sim%energy(1:sim%tsteps),ierr)
+SLL_CLEAR_ALLOCATE(sim%energy_error(1:sim%tsteps),ierr)
+SLL_CLEAR_ALLOCATE(sim%moment(1:sim%dimx,1:sim%tsteps),ierr)
+SLL_CLEAR_ALLOCATE(sim%moment_error(1:sim%tsteps),ierr)
+SLL_CLEAR_ALLOCATE(sim%moment_var(1:sim%dimx,1:sim%tsteps),ierr)
+SLL_CLEAR_ALLOCATE(sim%weight_sum(1:sim%tsteps),ierr)
+SLL_CLEAR_ALLOCATE(sim%weight_var(1:sim%tsteps),ierr)
 end subroutine init_diagnostics_generalvp_pif
  
 !reads tstep
@@ -381,7 +441,10 @@ subroutine init_particle_prior_maxwellian_generalvp_pif(sim)
 sll_int32 :: idx,jdx,ierr
 
 !scale to boxlength
-sim%particle(sim%maskx,:)=sim%particle(sim%maskx,:)*sim%boxlen
+do idx=1,sim%npart_loc
+sim%particle(sim%maskx,idx)=sim%boxlen*sim%particle(sim%maskx,idx)
+end do
+
 !load gaussian profile
 do idx=1,size(sim%particle,2)
  do jdx=1, size(sim%maskv)
@@ -396,10 +459,11 @@ end do
 ! print *, sum(sim%particle(sim%maskv(idx),:))/sim%npart
   end do
 
+ !print *,minval(sim%particle(sim%maskx,:)), maxval(sim%particle(sim%maskx,:))
+ !  print *,minval(sim%particle(sim%maskv,:)), maxval(sim%particle(sim%maskv,:))
   
 SLL_ALLOCATE(sim%prior_weight(1:sim%npart_loc),ierr)
-sim%prior_weight=1.0/sim%boxlen**sim%dimx
-
+sim%prior_weight=1.0/product(sim%boxlen)
 
 end subroutine init_particle_prior_maxwellian_generalvp_pif
 
@@ -621,6 +685,8 @@ subroutine write_result_generalvp_pif(sim)
         
         endif
 end subroutine write_result_generalvp_pif
+
+
 
 
 
