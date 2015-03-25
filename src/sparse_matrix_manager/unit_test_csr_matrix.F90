@@ -30,9 +30,9 @@ iprint=6
 !         first allocate the vectors with correct size
 N=(nhinv-1)**2
 allocate(mat)
-allocate (mat%opr_a(5*N),mat%opi_ja(5*N),mat%opi_ia(N+1),f(N),x(N))
+allocate (mat%val(5*N),mat%col_ind(5*N),mat%row_ptr(N+1),f(N),x(N))
 !         next call subroutine to set entries
-call uni2d(nhinv-1,f,mat%opr_a,mat%opi_ja,mat%opi_ia)
+call uni2d(nhinv-1,f,mat%val,mat%col_ind,mat%row_ptr)
 
 mat%num_rows = nhinv-1
 mat%num_cols = nhinv-1
@@ -42,7 +42,7 @@ mat%num_cols = nhinv-1
 !         argument 7 (nrest) is 1 because we want to use flexible CG
 !                            (the matrix is symmetric positive definite)
 !
-call dagmg(N,mat%opr_a,mat%opi_ja,mat%opi_ia,f,x,0,iprint,1,iter,tol)
+call dagmg(N,mat%val,mat%col_ind,mat%row_ptr,f,x,0,iprint,1,iter,tol)
 !
 !      uncomment the following lines to write solution on disk for checking
 !
