@@ -30,10 +30,10 @@ IF(NOT HDF5_FOUND AND HDF5_ENABLED)
    DOC "PATH TO libhdf5")
 
    FIND_LIBRARY(HDF5_FORTRAN_LIBRARY 
-     NAMES libhdf5_fortran.a hdf5_openmpi_fortran hdf5_fortran
-     HINTS ${HDF5_PATHS} $ENV{HDF5_LIBRARYDIR}
-     PATH_SUFFIXES lib hdf5/lib lib/x86_64-linux-gnu
-     DOC "PATH TO libhdf5_fortran")
+   NAMES libhdf5_fortran.a hdf5_openmpi_fortran hdf5_fortran
+   HINTS ${HDF5_PATHS} $ENV{HDF5_LIBRARYDIR}
+   PATH_SUFFIXES lib hdf5/lib lib/x86_64-linux-gnu
+   DOC "PATH TO libhdf5_fortran")
 
    FIND_LIBRARY(ZLIB_LIBRARIES NAMES z sz
                 HINTS ${HDF5_PATHS} 
