@@ -56,12 +56,6 @@ contains
     
   end subroutine delete_csr_matrix
 
-
-
-
-!contains
-
-
   !> @brief allocates the memory space for a new CSR type on the heap,
   !> initializes it with the given arguments and returns a pointer to the
   !> object.
