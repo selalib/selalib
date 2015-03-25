@@ -25,7 +25,7 @@ mode = 3.0_f64
 L = xmax - xmin
 
 error = 1.0_f64
-print*, 'Testing order of periodic interpolation'
+print*, 'Testing order of periodic interpolation (SPLINE)'
 N = N0
 do p=1,4
    N= 2*N 
@@ -47,9 +47,33 @@ do p=1,4
    print*, 'N=',N, 'error=', error, 'numerical order=', log(old_error/error)/log(2.0_f64)
 end do
 
+error = 1.0_f64
+print*, 'Testing order of periodic interpolation (LAGRANGE)'
+N = N0
+do p=1,4
+   N= 2*N 
+   ! Interpolate non trivial smooth periodic function
+   do i=0, N
+     xi = xmin+real(i,f64)*L/real(N,f64)
+     u(i+1) = 1.0_f64 / (2.0_f64 + sin(mode*2._f64*sll_pi/L*xi))
+     u_exact(i+1) =  1.0_f64 / (2.0_f64 + sin(mode*2._f64*sll_pi/L*(xi-alpha)))
+!    u(i+1) = cos(mode*twopi*i/N)
+!    u_exact(i+1) = cos(mode*twopi*(i-alpha)/N)
+   end do
+   print*, 'p=', p
+   call interp_per%initialize( N+1, xmin, xmax, LAGRANGE, 12)
+   interp => interp_per
+   u_out(1:N+1)=interp%interpolate_array_disp(N+1, u(1:N+1), alpha)
+   old_error = error
+   error = maxval(abs(u_out(1:N+1)-u_exact(1:N+1)))
+   print *, "error =", error
+   print*, 'N=',N, 'error=', error, 'numerical order=', log(old_error/error)/log(2.0_f64)
+end do
+
+
   error = 1.0_8
   print*,""
-  print*, 'Testing order of lagrange interpolation'
+  print*, 'Testing order of lagrange interpolation (periodic)'
   ! loop on N 
   N = N0
   do p=1,4
@@ -64,9 +88,9 @@ end do
 !        u_exact(i+1) = cos(mode*twopi*(i-alpha)/N)
      end do
 
-     call interp_lagrange%initialize( N+1,xmin,xmax,PERIODIC_LAGRANGE,6)
+     call interp_lagrange%initialize( N+1,xmin,xmax,SLL_PERIODIC,6)
      interp => interp_lagrange
-     u_out(1:N+1)=interp%interpolate_array_disp(N+1, u(1:N+1), -alpha)
+     u_out(1:N+1)=interp%interpolate_array_disp(N+1, u(1:N+1), alpha)
 
      old_error = error
      error = maxval(abs(u_out(1:N+1)-u_exact(1:N+1)))
