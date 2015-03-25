@@ -53,9 +53,9 @@ contains
     sll_int32 :: ierr
 
     nullify(csr_mat)
-   ! SLL_DEALLOCATE_ARRAY(csr_mat%opi_ia,ierr)
-   ! SLL_DEALLOCATE_ARRAY(csr_mat%opi_ja,ierr)
-   ! SLL_DEALLOCATE_ARRAY(csr_mat%opr_a,ierr)
+   ! SLL_DEALLOCATE_ARRAY(csr_mat%row_ptr,ierr)
+   ! SLL_DEALLOCATE_ARRAY(csr_mat%col_ind,ierr)
+   ! SLL_DEALLOCATE_ARRAY(csr_mat%val,ierr)
    ! SLL_DEALLOCATE_ARRAY(csr_mat%opi_i,ierr)
     
     
@@ -173,9 +173,9 @@ contains
     mat%num_rows = num_rows
     mat%num_cols = num_cols
     mat%num_nz = num_nz
-    SLL_ALLOCATE(mat%opi_ia(num_rows + 1),ierr)
-    SLL_ALLOCATE(mat%opi_ja(num_nz),ierr)
-    SLL_ALLOCATE(mat%opr_a(num_nz),ierr)
+    SLL_ALLOCATE(mat%row_ptr(num_rows + 1),ierr)
+    SLL_ALLOCATE(mat%col_ind(num_nz),ierr)
+    SLL_ALLOCATE(mat%val(num_nz),ierr)
     
     call sll_init_SparseMatrix( &
       mat, &
@@ -187,7 +187,7 @@ contains
       lpi_columns, &
       lpi_occ)
     
-    mat%opr_a(:) = 0.0_f64
+    mat%val(:) = 0.0_f64
     
 !    print *,mat%num_nz
 !    !print *,umfpack_control
@@ -230,10 +230,10 @@ contains
     print*,'num_cols mat, num_cols mat_tot',mat_a%num_cols , mat%num_cols 
 
     
-    SLL_ALLOCATE(mat%opi_ia(mat%num_rows + 1),ierr)
-    SLL_ALLOCATE(mat%opi_ja(mat%num_nz),ierr)
-    SLL_ALLOCATE(mat%opr_a(mat%num_nz),ierr)
-    mat%opr_a(:) = 0.0_f64
+    SLL_ALLOCATE(mat%row_ptr(mat%num_rows + 1),ierr)
+    SLL_ALLOCATE(mat%col_ind(mat%num_nz),ierr)
+    SLL_ALLOCATE(mat%val(mat%num_nz),ierr)
+    mat%val(:) = 0.0_f64
     
     
     SLL_ALLOCATE(mat%umf_control(umfpack_control),ierr)
@@ -345,8 +345,8 @@ contains
     sll_int32 :: ierr
     
     
-    mat%Ap = mat%opi_ia(:) - 1
-    mat%Ai = mat%opi_ja(:) - 1
+    mat%Ap = mat%row_ptr(:) - 1
+    mat%Ai = mat%col_ind(:) - 1
 
     ! pre-order and symbolic analysis
     call umf4sym( &
@@ -354,7 +354,7 @@ contains
       mat%num_cols, &
       mat%Ap, &
       mat%Ai, &
-      mat%opr_a, &
+      mat%val, &
       mat%umf_symbolic, &
       mat%umf_control, &
       info)
@@ -364,7 +364,7 @@ contains
     call umf4num( &
       mat%Ap, &
       mat%Ai, &
-      mat%opr_a, &
+      mat%val, &
       mat%umf_symbolic, &
       mat%umf_numeric, &
       mat%umf_control, &
@@ -408,7 +408,7 @@ contains
     sll_int32 :: li_k
 
 
-    ! THE CURRENT LINE IS self%opi_ia(ai_A)
+    ! THE CURRENT LINE IS self%row_ptr(ai_A)
     do li_k = mat % opi_ia(ai_A), mat % opi_ia(ai_A + 1) - 1
       li_j = mat % opi_ja(li_k)
       if (li_j == ai_Aprime) then

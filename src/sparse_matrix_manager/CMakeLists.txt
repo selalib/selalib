@@ -43,10 +43,12 @@ ENDIF()
 
 
 #PN Do not know why sll_collective is necessary here...
-IF(BUILD_TESTING AND MPI_ENABLED)
+IF(BUILD_TESTING)
 
-  ADD_EXECUTABLE( test_sparse_matrix unit_test_sparse_matrix.F90 )
-  TARGET_LINK_LIBRARIES( test_sparse_matrix sll_sparse_matrix sll_collective )
+  IF(MPI_ENABLED)
+    ADD_EXECUTABLE( test_sparse_matrix unit_test_sparse_matrix.F90 )
+    TARGET_LINK_LIBRARIES( test_sparse_matrix sll_sparse_matrix sll_collective )
+  ENDIF(MPI_ENABLED)
 
   ADD_LIBRARY(sll_csr_one_constraint STATIC sll_csr_one_constraint_module.F90)
   TARGET_LINK_LIBRARIES(sll_csr_one_constraint sll_utilities sll_memory)
@@ -62,7 +64,7 @@ IF(BUILD_TESTING AND MPI_ENABLED)
   ADD_EXECUTABLE(test_csr_matrix unit_test_csr_matrix.F90)
   TARGET_LINK_LIBRARIES( test_csr_matrix sll_sparse_matrix dagmg_seq)
 
-ENDIF(BUILD_TESTING AND MPI_ENABLED)
+ENDIF(BUILD_TESTING)
 
 #IF(BUILD_PARALUTION)
 #
