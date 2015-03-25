@@ -28,9 +28,9 @@ type sll_csr_matrix
   sll_int32,  public          :: num_rows !< rows, public
   sll_int32,  public          :: num_cols !< columns
   sll_int32,  public          :: num_nz   !< non zeros
-  sll_int32,  public, pointer :: opi_ia(:)
-  sll_int32,  public, pointer :: opi_ja(:)
-  sll_real64, public, pointer :: opr_a(:)
+  sll_int32,  public, pointer :: row_ptr(:)
+  sll_int32,  public, pointer :: col_ind(:)
+  sll_real64, public, pointer :: val(:)
 end type sll_csr_matrix
 
 interface sll_delete
@@ -217,14 +217,14 @@ subroutine initialize_csr_matrix( &
   print *,'#num_rows=',num_rows
   print *,'#num_nz=',num_nz
 
-  SLL_ALLOCATE(mat%opi_ia(num_rows + 1),ierr)
-  SLL_ALLOCATE(mat%opi_ja(num_nz),ierr)
-  SLL_ALLOCATE(mat%opr_a(num_nz),ierr)
+  SLL_ALLOCATE(mat%row_ptr(num_rows + 1),ierr)
+  SLL_ALLOCATE(mat%col_ind(num_nz),ierr)
+  SLL_ALLOCATE(mat%val(num_nz),ierr)
   
-  mat%opi_ia(1) = 1
+  mat%row_ptr(1) = 1
 
   do i = 1, mat%num_rows
-    mat%opi_ia(i + 1) = mat%opi_ia(1) + SUM(lpi_occ(1: i))
+    mat%row_ptr(i + 1) = mat%row_ptr(1) + SUM(lpi_occ(1: i))
   end do
 
   do e = 1, num_elements
@@ -241,7 +241,7 @@ subroutine initialize_csr_matrix( &
       call QsortC(lpi_columns(A_1, 1: sz))
 
       do i = 1, sz
-         mat%opi_ja(mat%opi_ia(A_1)+i-1) = lpi_columns(A_1,i)
+         mat%col_ind(mat%row_ptr(A_1)+i-1) = lpi_columns(A_1,i)
       end do
 
       lpi_columns(A_1, 0) = 0
@@ -250,7 +250,7 @@ subroutine initialize_csr_matrix( &
 
    end do
 
-  mat%opr_a(:) = 0.0_f64
+  mat%val(:) = 0.0_f64
   SLL_DEALLOCATE_ARRAY(lpi_columns,ierr)
   SLL_DEALLOCATE_ARRAY(lpi_occ,ierr)
 
@@ -269,9 +269,9 @@ subroutine initialize_csr_matrix_with_constraint( mat, mat_a)
   mat%num_cols = mat_a%num_cols  +  1
   print*,'num_cols mat, num_cols mat_tot',mat_a%num_cols , mat%num_cols 
 
-  SLL_ALLOCATE(mat%opi_ia(mat%num_rows+1),ierr)
-  SLL_ALLOCATE(mat%opi_ja(mat%num_nz),ierr)
-  SLL_CLEAR_ALLOCATE(mat%opr_a(1:mat%num_nz),ierr)
+  SLL_ALLOCATE(mat%row_ptr(mat%num_rows+1),ierr)
+  SLL_ALLOCATE(mat%col_ind(mat%num_nz),ierr)
+  SLL_CLEAR_ALLOCATE(mat%val(1:mat%num_nz),ierr)
 
 end subroutine initialize_csr_matrix_with_constraint
 
@@ -392,11 +392,11 @@ subroutine sll_mult_csr_matrix_vector(mat, input, output)
 
   do i = 1, mat%num_rows
 
-    k_1 = mat%opi_ia(i)
-    k_2 = mat%opi_ia(i+1)-1
+    k_1 = mat%row_ptr(i)
+    k_2 = mat%row_ptr(i+1)-1
 
     output(i) = & 
-      dot_product(mat%opr_a(k_1:k_2),input(mat%opi_ja(k_1:k_2)))
+      dot_product(mat%val(k_1:k_2),input(mat%col_ind(k_1:k_2)))
             
   end do
 
@@ -412,11 +412,11 @@ subroutine sll_add_to_csr_matrix(mat, val, ai_A, ai_Aprime)
   sll_int32 :: j
   sll_int32 :: k
 
-  ! THE CURRENT LINE IS self%opi_ia(ai_A)
-  do k = mat%opi_ia(ai_A), mat%opi_ia(ai_A+1) - 1
-    j = mat%opi_ja(k)
+  ! THE CURRENT LINE IS self%row_ptr(ai_A)
+  do k = mat%row_ptr(ai_A), mat%row_ptr(ai_A+1) - 1
+    j = mat%col_ind(k)
     if (j == ai_Aprime) then
-      mat%opr_a(k) = mat%opr_a(k) + val
+      mat%val(k) = mat%val(k) + val
       exit
     end if
   end do
