@@ -712,6 +712,9 @@ end subroutine get_ltp_deformation_matrix
   ! Note: the (x,y)-projection of the remapping grid may be larger than the "Poisson" 2d mesh associated with the
   ! particle group (in particular if the (x,y) domain is not periodic)
 
+  ! note (March 25): a new version of this routine is being written, that also allows to deposit the charge
+  !       when finished the new routine (called sll_lt_pic_4d_remap_or_deposit_f) should replace this one.
+
   subroutine sll_lt_pic_4d_write_bsl_f_on_remap_grid (p_group)
 
     ! [[file:../pic_particle_types/lt_pic_4d_group.F90::sll_lt_pic_4d_group]] p_group contains both the existing
@@ -2412,6 +2415,771 @@ subroutine get_particle_index_from_initial_position_on_cartesian_grid (j_x, j_y,
     k = 1+ (j_vy-1) + (j_vx-1) * n_parts_vy + (j_y-1) * n_parts_vy * n_parts_vx + (j_x-1) * n_parts_vy * n_parts_vx * n_parts_y
 
 end subroutine
+
+
+
+
+
+  ! <<sll_lt_pic_4d_write_f_on_grid_or_deposit>> <<ALH>> has two scenarios:
+  !  - 1.  write the density on the (phase-space) remapping grid, using the method described
+  !        in the "BSL-remapping" notes (version of december 2, 2014) cf
+  !        [[file:~/mcp/maltpic/ltpic-bsl.tex::BSL_remapping]] and more precisely
+  !        [[file:~/mcp/maltpic/ltpic-bsl.tex::BSL_remapping_step_1]].  Algorithm from
+  !        [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr]] (but without the deposition step)
+  !
+  !        -- this function should be a faster alternative to [[sll_lt_pic_4d_write_f_on_remap_grid]] --
+  !
+  !        Note: the (x,y)-projection of the remapping grid may be larger than the "Poisson" 2d mesh associated with the
+  !        particle group (in particular if the (x,y) domain is not periodic)
+  !
+  !  - 2.  deposit the charge on the Poisson cells given in the given accumulator structure
+  !
+  !  In every case, this routine computes (approximated) values of the density f(t_n) on 'virtual' nodes (sometimes called
+  !  'virtual particles') located on a cartesian grid of the 4d phase-space.
+  !  For different reasons, these virtual nodes are gathered in 'virtual' cells, and the given argument
+  !  n_virtual is the number of virtual nodes per virtual cell, in every dimension
+  !
+  !  -> in the "remapping" scenario, these virtual nodes are in fact the nodes of the remapping grid (hence not really virtual)
+  !     but the virtual cells are really virtual in the sense that they are just a way to gather the computations
+  !  -> in the "charge deposition" scenario, the virtual nodes are really virtual: they correspond to temporary particles which
+  !     are deposited with a standard PIC procedure. And the virtual cells are "half-virtual" in the sense that their (x,y)
+  !     projection coincides with the cells of the Poisson mesh, whereas in the velocity dimensions they are created to gather
+  !     the computations, just as in the "remapping" scenario
+  !
+  !     In particular, taking a larger value for n_virtual has the following effect:
+  !     -> in the  "remapping" scenario, larger virtual cells will be used to compute the approximated values of f(t_n) on the
+  !        nodes of the remapping grid. This will speed-up the code and is morally ok if the characteristic flow is smooth
+  !     -> in the "charge deposition" scenario, finer grids of virtual point particles will be (temporarily) created and
+  !        deposited. This will slow down the code and is morally required if the density f(t_n) is not locally smooth
+  !
+  !  Note: This routine is an evolution from sll_lt_pic_4d_write_bsl_f_on_remap_grid (which will be eventually discarded)
+
+  ! todo: treat the non-peridodic case
+
+  subroutine sll_lt_pic_4d_write_f_on_grid_or_deposit (p_group, q_accumulator, scenario_is_deposition, )
+
+    ! [[file:../pic_particle_types/lt_pic_4d_group.F90::sll_lt_pic_4d_group]] p_group contains both the existing
+    ! particles and the virtual remapping grid
+    type(sll_lt_pic_4d_group),pointer,intent(inout) :: p_group
+    type(sll_charge_accumulator_2d), pointer, intent(inout) :: q_accumulator
+    logical, intent(in) :: scenario_is_deposition            ! if false, then scenario is remapping
+    sll_int32, intent(in) :: n_virtual ! <<n_virtual>>      ! see comments above for the meaning
+
+    ! cf [[file:~/mcp/maltpic/ltpic-bsl.tex::N*]]
+
+    sll_int32 :: num_virtual_cells_x
+    sll_int32 :: num_virtual_cells_y
+    sll_int32 :: num_virtual_cells_vx
+    sll_int32 :: num_virtual_cells_vy
+
+    ! [[file:~/mcp/maltpic/ltpic-bsl.tex::h_parts_x]] and h_parts_y, h_parts_vx, h_parts_vy
+
+    sll_real64 :: h_parts_x
+    sll_real64 :: h_parts_y
+    sll_real64 :: h_parts_vx
+    sll_real64 :: h_parts_vy
+
+    sll_real64 :: inv_h_parts_x
+    sll_real64 :: inv_h_parts_y
+    sll_real64 :: inv_h_parts_vx
+    sll_real64 :: inv_h_parts_vy
+
+    sll_real64 :: h_virtual_parts_x
+    sll_real64 :: h_virtual_parts_y
+    sll_real64 :: h_virtual_parts_vx
+    sll_real64 :: h_virtual_parts_vy
+
+    sll_real64 :: inv_h_virtual_parts_x
+    sll_real64 :: inv_h_virtual_parts_y
+    sll_real64 :: inv_h_virtual_parts_vx
+    sll_real64 :: inv_h_virtual_parts_vy
+
+    sll_real64 :: phase_space_virtual_dvol
+
+    sll_real64 :: parts_x_min
+    sll_real64 :: parts_y_min
+    sll_real64 :: parts_vx_min
+    sll_real64 :: parts_vy_min
+
+    sll_real64 :: virtual_parts_x_min
+    sll_real64 :: virtual_parts_y_min
+    sll_real64 :: virtual_parts_vx_min
+    sll_real64 :: virtual_parts_vy_min
+
+    ! same as \delta{x,y,vx,vy} in [[file:~/mcp/maltpic/ltpic-bsl.tex::h_parts_x]]
+    sll_real64 :: h_virtual_cell_x
+    sll_real64 :: h_virtual_cell_y
+    sll_real64 :: h_virtual_cell_vx
+    sll_real64 :: h_virtual_cell_vy
+
+    sll_real64 :: x
+    sll_real64 :: y
+    sll_real64 :: vx
+    sll_real64 :: vy
+
+    ! working values (offsets in virtual cell)
+
+    sll_real32 :: dx
+    sll_real32 :: dy
+    sll_real32 :: dvx
+    sll_real32 :: dvy
+
+    ! working space
+
+    sll_real64 :: tmp
+
+    ! index of particle closest to the center of each virtual cell. Array dimensions defined by the contents of
+    ! [[file:../pic_particle_types/lt_pic_4d_group.F90::sll_lt_pic_4d_group-remapping_grid]]. If [[n_virtual]] is
+    ! greater than 1, the size of this array is smaller than the number of real remapping_grid cells.
+
+    sll_int64,dimension(:,:,:,:),allocatable :: closest_particle
+    sll_real64,dimension(:,:,:,:),allocatable :: closest_particle_distance
+
+    sll_int32 :: i ! x dimension
+    sll_int32 :: j ! y dimension
+    sll_int64 :: k,kprime ! particle index
+    sll_int64 :: neighbour ! particle index for local use
+    sll_int32 :: l ! vx dimension
+    sll_int32 :: m ! vy dimension
+
+    ! indices in a virtual cell (go from 1 to [[n_virtual]])
+
+    sll_int :: ivirt ! x dimension
+    sll_int :: jvirt ! y dimension
+    sll_int :: lvirt ! vx dimension
+    sll_int :: mvirt ! vy dimension
+
+    sll_int :: i_x,i_y,i_vx,i_vy
+
+    ! particle pointer [[file:../pic_particle_types/lt_pic_4d_particle.F90::sll_lt_pic_4d_particle]]
+    type(sll_lt_pic_4d_particle),pointer :: particle
+
+    ! <<g>> cartesian grid pointer to
+    ! [[file:../pic_particle_types/lt_pic_4d_group.F90::sll_lt_pic_4d_group-remapping_grid]]
+
+    type(sll_cartesian_mesh_4d),pointer :: g
+
+    ! periodicity
+
+    LOGICAL :: domain_is_x_periodic
+    LOGICAL :: domain_is_y_periodic
+    sll_real64 :: mesh_period_x
+    sll_real64 :: mesh_period_y
+    sll_real64 :: inv_period_x
+    sll_real64 :: inv_period_y
+
+    ! results from [[get_ltp_deformation_matrix]]
+
+    sll_real64 :: d11,d12,d13,d14 ! coefs of matrix D (backward Jacobian)
+    sll_real64 :: d21,d22,d23,d24
+    sll_real64 :: d31,d32,d33,d34
+    sll_real64 :: d41,d42,d43,d44
+
+    ! coordinates of particle k at time n and time 0
+    sll_real64 :: x_k,y_k,vx_k,vy_k
+    sll_real64 :: x_k_t0,y_k_t0,vx_k_t0,vy_k_t0
+
+    sll_real64 :: part_radius_x
+    sll_real64 :: part_radius_y
+    sll_real64 :: part_radius_vx
+    sll_real64 :: part_radius_vy
+
+    sll_real64 :: dx_in_virtual_cell
+    sll_real64 :: dy_in_virtual_cell
+
+    ! coordinates of a virtual particle at time 0 relative to the coordinates of one real particle
+
+    sll_real64 :: x_t0,y_t0,vx_t0,vy_t0
+
+    sll_int32 :: part_degree
+
+    sll_int32 :: ierr
+    sll_int32 :: i_cell
+
+    ! temporary workspace
+    sll_real64 :: x_aux
+    sll_real64 :: y_aux
+    sll_real64 :: vx_aux
+    sll_real64 :: vy_aux
+
+    sll_real64 :: length
+
+    !aaa
+    sll_real64 :: x_kprime_t0
+    sll_real64 :: y_kprime_t0
+    sll_real64 :: vx_kprime_t0
+    sll_real64 :: vy_kprime_t0
+
+    ! value 1 or 2 points to each side of an hypercube in direction x,y,vx or vy
+    sll_int :: side_x,side_y,side_vx,side_vy
+    sll_int64,dimension(2,2,2,2) :: hcube
+
+    sll_int64 :: j_x,j_y,j_vx,j_vy
+
+    sll_int64 :: number_parts_x
+    sll_int64 :: number_parts_y
+    sll_int64 :: number_parts_vx
+    sll_int64 :: number_parts_vy
+
+    ! --- end of declarations
+
+    ! -- creating g the virtual grid [begin] --
+
+    if scenario_is_deposition then
+        if p_group%domain_is_x_periodic then
+            num_virtual_cells_x = p_group%mesh%num_cells1
+            virtual_grid_x_min = p_group%mesh%eta1_min
+            virtual_grid_x_max = p_group%mesh%eta1_max
+        else
+            ! an extra cell is needed outside (in every direction) so that the approximation of f(t_n) by regular
+            ! splines located at the virtual nodes is accurate close to the domain boundaries
+            num_virtual_cells_x = p_group%mesh%num_cells1 + 2
+            virtual_grid_x_min = p_group%mesh%eta1_min - p_group%mesh%delta_eta1
+            virtual_grid_x_max = p_group%mesh%eta1_max + p_group%mesh%delta_eta1
+        end if
+
+        if p_group%domain_is_y_periodic then
+            num_virtual_cells_y = p_group%mesh%num_cells2
+            virtual_grid_y_min = p_group%mesh%eta2_min
+            virtual_grid_y_max = p_group%mesh%eta2_max
+        else
+            ! same reason than for num_virtual_cells_x
+            num_virtual_cells_y = p_group%mesh%num_cells2 + 2
+            virtual_grid_y_min = p_group%mesh%eta2_min - p_group%mesh%delta_eta2
+            virtual_grid_y_max = p_group%mesh%eta2_max + p_group%mesh%delta_eta2
+        end if
+
+        ! Because the Poisson mesh does not prescribe any resolution in velocity
+        ! the resolution of the 'virtual' grid in the velocity dimensions is inferred from the remapping grid
+        num_virtual_cells_vx = int(p_group%remapping_grid%num_cells3/n_virtual)
+        virtual_grid_vx_min = p_group%remapping_grid%eta3_min
+        virtual_grid_vx_max = p_group%remapping_grid%eta3_max
+
+        num_virtual_cells_vy = int(p_group%remapping_grid%num_cells4/n_virtual)
+        virtual_grid_vy_min = p_group%remapping_grid%eta4_min
+        virtual_grid_vy_max = p_group%remapping_grid%eta4_max
+
+        number_virtual_particles_along_x = n_virtual * num_virtual_cells_x
+        number_virtual_particles_along_y = n_virtual * num_virtual_cells_y
+        number_virtual_particles_along_vx = n_virtual * num_virtual_cells_vx
+        number_virtual_particles_along_vy = n_virtual * num_virtual_cells_vy
+
+        g => new_cartesian_mesh_4d( number_virtual_particles_along_x,        &
+                                    number_virtual_particles_along_y,        &
+                                    number_virtual_particles_along_vx,       &
+                                    number_virtual_particles_along_vy,       &
+                                    virtual_grid_x_min,   &
+                                    virtual_grid_x_max,   &
+                                    virtual_grid_y_min,   &
+                                    virtual_grid_y_max,   &
+                                    virtual_grid_vx_min,  &
+                                    virtual_grid_vx_max,  &
+                                    virtual_grid_vy_min,  &
+                                    virtual_grid_vy_max   &
+                                   )
+
+    else
+        g => p_group%remapping_grid
+        ! we add one virtual cell at the end to avoid missing the last remapping node (will not be used if periodic)
+        ! question: should we modify the grid max values ? todo: check
+        num_virtual_cells_x =  int(g%num_cells1/n_virtual)+1
+        num_virtual_cells_y =  int(g%num_cells2/n_virtual)+1
+        num_virtual_cells_vx = int(p_group%remapping_grid%num_cells3/n_virtual)+1
+        num_virtual_cells_vy = int(p_group%remapping_grid%num_cells4/n_virtual)+1
+
+        ! initialize [[file:../pic_particle_types/lt_pic_4d_group.F90::target_values]]
+        p_group%target_values(:,:,:,:) = 0
+
+    end if
+
+    ! -- creating g the virtual grid [end] --
+
+
+    part_degree = p_group%spline_degree
+
+    ! Preparatory work: find out the particle which is closest to each cell center by looping over all particles and
+    ! noting which virtual cell contains it. The leftmost virtual cell in each dimension may not be complete.
+
+    SLL_ALLOCATE(closest_particle(num_virtual_cells_x,num_virtual_cells_y,num_virtual_cells_vx,num_virtual_cells_vy),ierr)
+    closest_particle(:,:,:,:) = 0
+
+    SLL_ALLOCATE(closest_particle_distance(num_virtual_cells_x,num_virtual_cells_y,num_virtual_cells_vx,num_virtual_cells_vy),ierr)
+    closest_particle_distance(:,:,:,:) = 0
+
+    ! remapping grid cell size - same as in [[write_f_on_remap_grid-h_parts_x]]
+
+    h_parts_x    = p_group%remapping_grid%delta_eta1
+    h_parts_y    = p_group%remapping_grid%delta_eta2
+    h_parts_vx   = p_group%remapping_grid%delta_eta3
+    h_parts_vy   = p_group%remapping_grid%delta_eta4
+
+    inv_h_parts_x  = 1./h_parts_x
+    inv_h_parts_y  = 1./h_parts_y
+    inv_h_parts_vx = 1./h_parts_vx
+    inv_h_parts_vy = 1./h_parts_vy
+
+    h_virtual_parts_x    = g%delta_eta1
+    h_virtual_parts_y    = g%delta_eta2
+    h_virtual_parts_vx   = g%delta_eta3
+    h_virtual_parts_vy   = g%delta_eta4
+
+    inv_h_virtual_parts_x  = 1./h_virtual_parts_x
+    inv_h_virtual_parts_y  = 1./h_virtual_parts_y
+    inv_h_virtual_parts_vx = 1./h_virtual_parts_vx
+    inv_h_virtual_parts_vy = 1./h_virtual_parts_vy
+
+    phase_space_virtual_dvol = h_virtual_parts_x * h_virtual_parts_y * h_virtual_parts_vx * h_virtual_parts_vy
+
+    parts_x_min    = p_group%remapping_grid%eta1_min
+    parts_y_min    = p_group%remapping_grid%eta2_min
+    parts_vx_min   = p_group%remapping_grid%eta3_min
+    parts_vy_min   = p_group%remapping_grid%eta4_min
+
+    virtual_parts_x_min    = g%eta1_min
+    virtual_parts_y_min    = g%eta2_min
+    virtual_parts_vx_min   = g%eta3_min
+    virtual_parts_vy_min   = g%eta4_min
+
+    number_parts_x = p_group%number_parts_x
+    number_parts_y = p_group%number_parts_y
+    number_parts_vx = p_group%number_parts_vx
+    number_parts_vy = p_group%number_parts_vy
+
+    ! virtual cell size
+
+    h_virtual_cell_x  = n_virtual * h_virtual_parts_x
+    h_virtual_cell_y  = n_virtual * h_virtual_parts_y
+    h_virtual_cell_vx = n_virtual * h_virtual_parts_vx
+    h_virtual_cell_vy = n_virtual * h_virtual_parts_vy
+
+    ! preparatory loop to fill the [[closest_particle]] array containing the particle closest to the center of each
+    ! virtual cell
+
+    do k=1,p_group%number_particles ! [[file:../pic_particle_types/lt_pic_4d_group.F90::number_particles]]
+       particle => p_group%p_list(k)
+
+       ! find absolute (x,y,vx,vy) coordinates for this particle. Uses
+       ! [[file:sll_representation_conversion.F90::cell_offset_to_global]]
+
+       call cell_offset_to_global(particle%dx,particle%dy,particle%ic,p_group%mesh,x,y)
+       vx = particle%vx
+       vy = particle%vy
+
+       ! which _virtual_ cell is this particle in? uses
+       ! [[file:sll_representation_conversion.F90::compute_cell_and_offset]] and [[g]]
+
+       call compute_cell_and_offset(x,g%eta1_min,1./h_virtual_cell_x,i,dx)
+       i=i+1
+       SLL_ASSERT(i>0)
+       SLL_ASSERT(dx>=0)
+       SLL_ASSERT(dx<=1)
+       call compute_cell_and_offset(y,g%eta2_min,1./h_virtual_cell_y,j,dy)
+       j=j+1
+       SLL_ASSERT(j>0)
+       SLL_ASSERT(dy>=0)
+       SLL_ASSERT(dy<=1)
+       call compute_cell_and_offset(vx,g%eta3_min,1./h_virtual_cell_vx,l,dvx)
+       l=l+1
+       SLL_ASSERT(l>0)
+       SLL_ASSERT(dvx>=0)
+       SLL_ASSERT(dvx<=1)
+       call compute_cell_and_offset(vy,g%eta4_min,1./h_virtual_cell_vy,m,dvy)
+       m=m+1
+       SLL_ASSERT(m>0)
+       SLL_ASSERT(dvy>=0)
+       SLL_ASSERT(dvy<=1)
+
+       ! what is the distance from this particle to the virtual cell center? Speed things up a bit by skipping the
+       ! square root calculation that will not change the final comparison of distances. Use adimensional values because
+       ! adding values from different dimensions with different units makes little sense.
+
+       tmp =  (dx - 0.5)**2.    &
+            + (dy - 0.5)**2.    &
+            + (dvx - 0.5)**2.    &
+            + (dvy - 0.5)**2.
+
+       ! if new particle is closer to center, keep the new one
+
+       if(closest_particle(i,j,l,m) == 0 .or. tmp < closest_particle_distance(i,j,l,m)) then
+          closest_particle(i,j,l,m) = k
+          closest_particle_distance(i,j,l,m) = tmp
+       end if
+    end do
+
+    ! Periodicity treatments copied from [[sll_lt_pic_4d_write_f_on_remap_grid-periodicity]]
+
+    domain_is_x_periodic = .true.   ! temp --- todo: treat the general case
+    domain_is_y_periodic = .true.   ! temp
+
+    if(domain_is_x_periodic) then
+      ! here the domain corresponds to the Poisson mesh
+      mesh_period_x = p_group%mesh%eta1_max - p_group%mesh%eta1_min
+      inv_period_x = 1./mesh_period_x
+    else
+      mesh_period_x = 0
+      inv_period_x = 0
+    end if
+
+    if(domain_is_y_periodic) then
+      ! here the domain corresponds to the Poisson mesh
+      mesh_period_y = p_group%mesh%eta2_max - p_group%mesh%eta2_min
+      inv_period_y = 1./mesh_period_y
+    else
+      mesh_period_y = 0
+      inv_period_y = 0
+    end if
+
+    ! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
+    p_group%debug_bsl_remap = -100
+
+    ! <<loop_on_virtual_cells>> [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:loop_over_all_cells]]
+    ! Loop over all cells of indices i,j,l,m which contain at least one particle
+
+    do i = 1,num_virtual_cells_x
+       do j = 1,num_virtual_cells_y
+          do l = 1,num_virtual_cells_vx
+             do m = 1,num_virtual_cells_vy
+
+                ! [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:create_virtual_particles]] Create a temporary set of
+                ! virtual particles inside the cell.
+                ! Note: as written above in the remapping scenario the virtual particles coincide with the existing
+                ! remapping_grid [[file:../pic_particle_types/lt_pic_4d_group.F90::sll_lt_pic_4d_group-remapping_grid]]
+                ! defined in p_group [[file:../pic_particle_types/lt_pic_4d_group.F90::sll_lt_pic_4d_group]].
+                ! In the deposition scenario the virtual particles are used to deposit the charge and they are not stored.
+                ! So nothing more to do.
+
+                ! [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:find_closest_real_particle]] Find the real particle
+                ! which is closest to the cell center.  Note: speed-wise, it may be necessary to find a way not to scan
+                ! all the particles for every cell.  We avoid scanning all the particles for each cell by using the
+                ! precomputed array [[closest_particle]]. Virtual cells which do not contain any particle are skipped.
+
+                k = closest_particle(i,j,l,m)
+                if(k /= 0) then
+
+                   i_cell = p_group%p_list(k)%ic
+
+                   ! [[file:~/mcp/maltpic/ltpic-bsl.tex::hat-bz*]] Compute backward image of l-th virtual node by the
+                   ! k-th backward flow. MCP -> oui, avec la matrice de deformation calculée avec la fonction
+                   ! [[get_ltp_deformation_matrix]] pour la particule k. Calling [[get_ltp_deformation_matrix]]
+                   ! with parameters inspired from [[sll_lt_pic_4d_write_f_on_remap_grid-get_ltp_deformation_matrix]]
+
+                   call get_ltp_deformation_matrix (               &
+                        k,                                         &
+                        p_group%mesh,                              &
+                        p_group%p_list,                            &
+                        domain_is_x_periodic,                      &
+                        domain_is_y_periodic,                      &
+                        mesh_period_x,                             &
+                        mesh_period_y,                             &
+                        h_parts_x,                                 &
+                        h_parts_y,                                 &
+                        h_parts_vx,                                &
+                        h_parts_vy,                                &
+                        inv_h_parts_x,                             &
+                        inv_h_parts_y,                             &
+                        inv_h_parts_vx,                            &
+                        inv_h_parts_vy,                            &
+                        0.5_f64*(part_degree+1),                   &
+                        x_k,y_k,vx_k,vy_k,                         &
+                        d11,d12,d13,d14,                           &
+                        d21,d22,d23,d24,                           &
+                        d31,d32,d33,d34,                           &
+                        d41,d42,d43,d44,                           &
+                        part_radius_x,                             &
+                        part_radius_y,                             &
+                        part_radius_vx,                            &
+                        part_radius_vy                             &
+                        )
+
+                   ! Find position of particle k at time 0
+                   ! [[get_initial_position_on_cartesian_grid_from_particle_index]]
+
+                   call get_initial_position_on_cartesian_grid_from_particle_index(k, &
+                        number_parts_x,number_parts_y,number_parts_vx,number_parts_vy, &
+                        j_x,j_y,j_vx,j_vy)
+                   x_k_t0 =  parts_x_min  + (j_x-1)  * h_parts_x
+                   y_k_t0 =  parts_y_min  + (j_y-1)  * h_parts_y
+                   vx_k_t0 = parts_vx_min + (j_vx-1) * h_parts_vx
+                   vy_k_t0 = parts_vy_min + (j_vy-1) * h_parts_vy
+
+                   ! <<loop_on_virtual_particles_in_one_virtual_cell>>
+                   ! [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:find_f0_for_each_virtual_particle]] Loop over all
+                   ! virtual particles in the cell to compute the value of f0 at that point (Following
+                   ! [[file:~/mcp/maltpic/ltpic-bsl.tex::BSL_remapping_algo]])
+
+                   do ivirt = 1,n_virtual
+                      dx_in_virtual_cell = (ivirt-1)/n_virtual
+                      do jvirt = 1,n_virtual
+                         dy_in_virtual_cell = (jvirt-1)/n_virtual
+                         do lvirt = 1,n_virtual
+                            do mvirt = 1,n_virtual
+
+                               ! real index of the virtual particle in
+                               ! [[file:../pic_particle_types/lt_pic_4d_group.F90::target_values]]
+
+                               i_x =  (i-1)*n_virtual + ivirt
+                               SLL_ASSERT(i_x>0)
+                               i_y =  (j-1)*n_virtual + jvirt
+                               SLL_ASSERT(i_y>0)
+                               i_vx = (l-1)*n_virtual + lvirt
+                               SLL_ASSERT(i_vx>0)
+                               i_vy = (m-1)*n_virtual + mvirt
+                               SLL_ASSERT(i_vy>0)
+
+                               ! The index may go out of the domain for higher values of x,y,vx,vy in each dimension
+                               ! (because the corners of the corresponding virtual cell do not correspond to existing
+                               ! real particles). In that case, just ignore that value.
+
+                               if( scenario_is_deposition                           &
+                                    .or. (i_x <= number_parts_x                     &
+                                          .and. i_y <= number_parts_y               &
+                                          .and. i_vx <=number_parts_vx              &
+                                          .and. i_vy <= number_parts_vy) ) then
+
+                                  ! Location of virtual particle (ivirt,jvirt,lvirt,mvirt) at time n
+
+                                  x =  virtual_parts_x_min  + (i_x-1)*h_virtual_parts_x
+                                  y =  virtual_parts_y_min  + (i_y-1)*h_virtual_parts_y
+                                  vx = virtual_parts_vx_min + (i_vx-1)*h_virtual_parts_vx
+                                  vy = virtual_parts_vy_min + (i_vy-1)*h_virtual_parts_vy
+
+!                                  x =  virtual_parts_x_min  + (i-1)*h_virtual_cell_x  + (ivirt-1)*h_virtual_parts_x
+!                                  y =  virtual_parts_y_min  + (j-1)*h_virtual_cell_y  + (jvirt-1)*h_virtual_parts_y
+!                                  vx = virtual_parts_vx_min + (l-1)*h_virtual_cell_vx + (lvirt-1)*h_virtual_parts_vx
+!                                  vy = virtual_parts_vy_min + (m-1)*h_virtual_cell_vy + (mvirt-1)*h_virtual_parts_vy
+
+                                  ! particle k has to be inside the current virtual cell
+
+                                  SLL_ASSERT(abs(x-x_k) < h_virtual_cell_x)
+                                  SLL_ASSERT(abs(y-y_k) < h_virtual_cell_y)
+                                  SLL_ASSERT(abs(vx-vx_k) < h_virtual_cell_vx)
+                                  SLL_ASSERT(abs(vy-vy_k) < h_virtual_cell_vy)
+
+                                  ! Location of virtual particle (ivirt,jvirt,lvirt,mvirt) at time 0 _relative_ to the
+                                  ! position of particle k at time 0 (x_k_t0,y_k_t0,vx_k_t0,vy_k_t0) according to flow
+                                  ! deformation
+
+                                  x_t0  = d11 * (x - x_k) + d12 * (y - y_k) + d13 * (vx - vx_k) + d14 * (vy - vy_k)
+                                  y_t0  = d21 * (x - x_k) + d22 * (y - y_k) + d23 * (vx - vx_k) + d24 * (vy - vy_k)
+                                  vx_t0 = d31 * (x - x_k) + d32 * (y - y_k) + d33 * (vx - vx_k) + d34 * (vy - vy_k)
+                                  vy_t0 = d41 * (x - x_k) + d42 * (y - y_k) + d43 * (vx - vx_k) + d44 * (vy - vy_k)
+
+                                  ! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,1) = x_k_t0 + x_t0
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,1) = y_k_t0 + y_t0
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,1) = vx_k_t0 + vx_t0
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,1) = vy_k_t0 + vy_t0
+
+                                  ! Minimize the path to take along periodic boundaries
+
+                                  if(domain_is_x_periodic) then
+                                     if(x_t0 > mesh_period_x/2) then
+                                        x_t0 = x_t0 - mesh_period_x
+                                     else
+                                        if(x_t0 < -mesh_period_x/2) then
+                                           x_t0 = x_t0 + mesh_period_x
+                                        end if
+                                     end if
+                                  endif
+
+                                  if(domain_is_y_periodic) then
+                                     if(y_t0 > mesh_period_y/2) then
+                                        y_t0 = y_t0 - mesh_period_y
+                                     else
+                                        if(y_t0 < -mesh_period_y/2) then
+                                           y_t0 = y_t0 + mesh_period_y
+                                        end if
+                                     end if
+                                  endif
+
+                                  ! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,2) = x_k_t0 + x_t0
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,2) = y_k_t0 + y_t0
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,2) = vx_k_t0 + vx_t0
+                                  p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,2) = vy_k_t0 + vy_t0
+
+                                  ! [[file:~/mcp/maltpic/ltpic-bsl.tex::neighbors-grid-0]] find the neighbours of the
+                                  ! virtual particle (ivirt,jvirt,lvirt,mvirt) at time 0 through the "logical
+                                  ! neighbours" pointers of particle k. To reduce the amount of code, start with finding
+                                  ! the closest neighbour which has lower coordinates in all directions. The particle
+                                  ! located at (x_t0,y_t0,vx_t0,vy_t0) (coordinates relative to particle k to start
+                                  ! with) gets progressively closer to kprime step by step (ie from neighbour to
+                                  ! neighbour).
+
+                                  kprime = k
+
+                                  ! Calls [[onestep]]. "dim" can be x,y,vx,vy. cf
+                                  ! [[file:../pic_particle_types/lt_pic_4d_particle.F90::sll_lt_pic_4d_particle]] for
+                                  ! pointers to neighbours.
+
+#define ONESTEPMACRO(dimpos,dimname) call onestep(dimpos,dimname/**/_t0,kprime,p_group%p_list,h_parts_/**/dimname)
+
+                                  ONESTEPMACRO(ALONG_X,x)
+                                  ONESTEPMACRO(ALONG_Y,y)
+                                  ONESTEPMACRO(ALONG_VX,vx)
+                                  ONESTEPMACRO(ALONG_VY,vy)
+
+                                  ! If we end up with kprime == 0, it means that we have not found a cell that contains
+                                  ! the particle so we just set that particle value to zero
+
+                                  if (kprime /= 0) then
+
+                                     ! kprime is the left-most vertex of the hypercube. find all the other vertices
+                                     ! through the neighbour pointers in
+                                     ! [[file:../pic_particle_types/lt_pic_4d_particle.F90::neighbour_pointers]]
+
+                                     hcube(1,1,1,1) = kprime
+
+                                     hcube(2,1,1,1) = p_group%p_list(kprime)%ngb_xright_index ! 1 step
+                                     hcube(1,2,1,1) = p_group%p_list(kprime)%ngb_yright_index
+                                     hcube(1,1,2,1) = p_group%p_list(kprime)%ngb_vxright_index
+                                     hcube(1,1,1,2) = p_group%p_list(kprime)%ngb_vyright_index
+
+                                     ! if any of the first four vertices is undefined (the convention in
+                                     ! [[file:~/mcp/selalib/src/pic_particle_initializers/lt_pic_4d_init.F90::sll_lt_pic_4d_compute_new_particles]]
+                                     ! is that the neighbour index is then equal to the particle index), it means that
+                                     ! we reached the mesh border. just set the value of f for that particle as zero as
+                                     ! before.
+
+                                     if (hcube(2,1,1,1) /= kprime        &
+                                          .and. hcube(1,2,1,1) /= kprime &
+                                          .and. hcube(1,1,2,1) /= kprime &
+                                          .and. hcube(1,1,1,2) /= kprime) then
+
+                                        ! remaining vertices of the hypercube. they should all exist now that the first
+                                        ! 4 vertices are checked.
+
+                                        ! 1 step in x + 1 other step
+                                        hcube(2,2,1,1) = p_group%p_list(hcube(2,1,1,1))%ngb_yright_index
+                                        hcube(2,1,2,1) = p_group%p_list(hcube(2,1,1,1))%ngb_vxright_index
+                                        hcube(2,1,1,2) = p_group%p_list(hcube(2,1,1,1))%ngb_vyright_index
+
+                                        ! 1 step in y + 1 other step
+                                        hcube(1,2,2,1) = p_group%p_list(hcube(1,2,1,1))%ngb_vxright_index
+                                        hcube(1,2,1,2) = p_group%p_list(hcube(1,2,1,1))%ngb_vyright_index
+
+                                        ! 1 step in vx + 1 other step
+                                        hcube(1,1,2,2) = p_group%p_list(hcube(1,1,2,1))%ngb_vyright_index
+
+                                        ! all combinations of 3 steps
+                                        hcube(1,2,2,2) = p_group%p_list(hcube(1,2,2,1))%ngb_vyright_index
+                                        hcube(2,1,2,2) = p_group%p_list(hcube(2,1,2,1))%ngb_vyright_index
+                                        hcube(2,2,1,2) = p_group%p_list(hcube(2,2,1,1))%ngb_vyright_index
+                                        hcube(2,2,2,1) = p_group%p_list(hcube(2,2,1,1))%ngb_vxright_index
+
+                                        ! 4 steps
+                                        hcube(2,2,2,2) = p_group%p_list(hcube(2,2,2,1))%ngb_vyright_index
+
+                                          ! MCP: [BEGIN-DEBUG] store the (computed) absolute initial position of the virtual particle
+                                          ! [[get_initial_position_on_cartesian_grid_from_particle_index]]
+                                           call get_initial_position_on_cartesian_grid_from_particle_index(kprime, &
+                                                number_parts_x,number_parts_y,number_parts_vx,number_parts_vy, &
+                                                j_x,j_y,j_vx,j_vy)
+                                           x_kprime_t0 =  parts_x_min  + (j_x-1)  * h_parts_x
+                                           y_kprime_t0 =  parts_y_min  + (j_y-1)  * h_parts_y
+                                           vx_kprime_t0 = parts_vx_min + (j_vx-1) * h_parts_vx
+                                           vy_kprime_t0 = parts_vy_min + (j_vy-1) * h_parts_vy
+
+                                           p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,3) = x_kprime_t0 + x_t0
+                                           p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,3) = y_kprime_t0 + y_t0
+                                           p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,3) = vx_kprime_t0 + vx_t0
+                                           p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,3) = vy_kprime_t0 + vy_t0
+
+                                          ! MCP [END-DEBUG]
+
+                                        ! [[file:~/mcp/maltpic/ltpic-bsl.tex::affine-fn*]] use the values of f0 at these
+                                        ! neighbours to interpolate the value of f0 at
+                                        ! [[file:~/mcp/maltpic/ltpic-bsl.tex::hat-bz*]]. MCP -> oui. Ici si tu utilises
+                                        ! des particules affines (part_deg = 1) la valeur de f0 se déduit de celle du
+                                        ! poids de la particule.  En fait tu peux utiliser une formule semblable à celle
+                                        ! qui est utilisée dans la fonction sll_lt_pic_4d_write_f_on_remap_grid, mais
+                                        ! sans faire intervenir la matrice de déformation à l'intérieur des splines.
+
+                                        ! place the resulting value of f on the virtual particle in
+                                        ! p_group%target_values
+
+                                        f_value_on_virtual_particle = 0
+
+                                        do side_x = 1,2
+                                           if(side_x == 1)then
+                                              x_aux = x_t0
+                                           else
+                                              x_aux = h_parts_x - x_t0
+                                           end if
+                                           do side_y = 1,2
+                                              if(side_y == 1)then
+                                                 y_aux = y_t0
+                                              else
+                                                 y_aux = h_parts_y - y_t0
+                                              end if
+                                              do side_vx = 1,2
+                                                 if(side_vx == 1)then
+                                                    vx_aux = vx_t0
+                                                 else
+                                                    vx_aux = h_parts_vx - vx_t0
+                                                 end if
+                                                 do side_vy = 1,2
+                                                    if(side_vy == 1)then
+                                                       vy_aux = vy_t0
+                                                    else
+                                                       vy_aux = h_parts_vy - vy_t0
+                                                    end if
+
+                                                    ! uses [[sll_pic_shape]]
+                                                    f_value_on_virtual_particle =                                                  &
+                                                        f_value_on_virtual_particle                                                &
+                                                         + p_group%p_list(hcube(side_x,side_y,side_vx,side_vy))%q                  &
+                                                         * sll_pic_shape(part_degree,x_aux,y_aux,vx_aux,vy_aux,                    &
+                                                                         inv_h_parts_x,inv_h_parts_y,inv_h_parts_vx,inv_h_parts_vy)
+
+                                                 end do
+                                              end do
+                                           end do
+                                        end do
+
+                                        virtual_charge = f_value_on_virtual_particle * phase_space_virtual_dvol
+
+                                        if( scenario_is_deposition )then
+
+                                            tmp1 = (1.0_f64 - dx_in_virtual_cell)
+                                            tmp2 = (1.0_f64 - dy_in_virtual_cell)
+
+                                            q_accumulator%q_acc(i_cell)%q_sw = q_accumulator%q_acc(i_cell)%q_sw             &
+                                                    + virtual_charge * tmp1 * tmp2
+
+                                            q_accumulator%q_acc(i_cell)%q_se = q_accumulator%q_acc(i_cell)%q_se             &
+                                                    + virtual_charge *  dx_in_virtual_cell * tmp2
+
+                                            q_accumulator%q_acc(i_cell)%q_nw = q_accumulator%q_acc(i_cell)%q_nw             &
+                                                    + virtual_charge * tmp1 *  dy_in_virtual_cell
+
+                                            q_accumulator%q_acc(i_cell)%q_ne = q_accumulator%q_acc(i_cell)%q_ne             &
+                                                    + virtual_charge *  dx_in_virtual_cell *  dy_in_virtual_cell
+
+                                        else
+
+                                            p_group%target_values(i_x,i_y,i_vx,i_vy) = f_value_on_virtual_particle
+
+                                        end if
+                                     end if
+                                  end if
+                               end if
+                            end do
+                         end do
+                      end do
+                   end do
+                end if
+             end do
+          end do
+       end do
+    end do
+  end subroutine sll_lt_pic_4d_write_f_on_grid_or_deposit
+
+
+
+
+
+
 
 
 end module sll_lt_pic_4d_utilities
