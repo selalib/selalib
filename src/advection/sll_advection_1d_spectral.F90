@@ -147,13 +147,14 @@ subroutine advect_1d( adv, a, dt, input, output )
   sll_real64, dimension(:), intent(in)  :: input
   sll_real64, dimension(:), intent(out) :: output      
 
-  sll_int32  :: num_cells
+  character(len=*), parameter :: this_sub_name = 'advect_1d'
+  sll_int32                   :: num_cells
     
   num_cells = adv%num_cells
 
   output = input
   print*, size(a), dt
-  SLL_ERROR("not implemented")
+  SLL_ERROR( this_sub_name, "Not implemented." )
 
 end subroutine advect_1d
 
