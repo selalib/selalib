@@ -55772,9 +55772,9 @@
            SUMR_LOC = ZERO
           ENDIF
           IF ( id%MYID .eq. MASTER ) THEN
-              CALL AGMG_COPY( SUMR_LOC, SUMR,                        id%N, AGMG_MPF_DOUBLE_PRECISION, IERR)
+              CALL AGMG_COPY( SUMR_LOC, SUMR, id%N, AGMG_MPF_DOUBLE_PRECISION, IERR)
           ELSE
-              CALL AGMG_COPY( SUMR_LOC, DUMMY,                       id%N, AGMG_MPF_DOUBLE_PRECISION, IERR)
+              CALL AGMG_COPY( SUMR_LOC, DUMMY,id%N, AGMG_MPF_DOUBLE_PRECISION, IERR)
           END IF
         DEALLOCATE (SUMR_LOC)
       ENDIF
