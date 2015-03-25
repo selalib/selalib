@@ -13,7 +13,7 @@ ADD_LIBRARY(mumps_agmg STATIC dagmg_mumps.f90)
 ADD_LIBRARY(dagmg_seq STATIC dagmg.f90 )
 TARGET_LINK_LIBRARIES(dagmg_seq mumps_agmg lapack_agmg blas_agmg) 
 
-ADD_EXECUTABLE(test_dagmg_seq Example_seq.F90)
+ADD_EXECUTABLE(test_dagmg_seq example_seq.f90)
 TARGET_LINK_LIBRARIES(test_dagmg_seq dagmg_seq sll_working_precision)
 
 IF(MPI_ENABLED)
@@ -51,7 +51,7 @@ IF(MPI_ENABLED)
 
   IF(MUMPS_FOUND)
     ADD_LIBRARY(dagmg_par STATIC dagmg_par.f90)
-    ADD_EXECUTABLE(test_dagmg_par Example_par.f90)
+    ADD_EXECUTABLE(test_dagmg_par example_par.f90)
     TARGET_LINK_LIBRARIES(test_dagmg_par dagmg_par ${MUMPS_LIBRARIES} lapack_agmg blas_agmg)
     MARK_AS_ADVANCED(MUMPS_LIBRARIES)
   ENDIF(MUMPS_FOUND)
