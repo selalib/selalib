@@ -184,7 +184,7 @@ end function new_advection_2d_tri_mesh
 !!                                                   
 !!    petitl - petite longueur de reference             
 !<
-subroutine positions(adv, f_in, ex, ey, dt )
+subroutine advection_2d(adv, f_in, ex, ey, dt )
 
 type(sll_advection_tri_mesh), intent(inout) :: adv  !< mesh
 sll_real64, dimension(:),     intent(inout) :: f_in !< distribution function on nodes
@@ -506,6 +506,6 @@ end do
 
 f_in = adv%f_out
 
-end subroutine positions
+end subroutine advection_2d
 
 end module sll_advection_2d_tri_mesh
