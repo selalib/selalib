@@ -231,6 +231,7 @@ IF(BUILD_JOREK)
   INCLUDE(ExternalProject)
   EXTERNALPROJECT_ADD(
      jorek
+     SOURCE_DIR ${CMAKE_BINARY_DIR}/jorek
      GIT_REPOSITORY git+ssh://scm.gforge.inria.fr/gitroot/jorek/jorek.git
      GIT_TAG django-devel
      CMAKE_ARGS -DCMAKE_Fortran_COMPILER=${MPI_Fortran_COMPILER}
