@@ -31,7 +31,6 @@ type sll_csr_matrix
   sll_int32,  public, pointer :: opi_ia(:)
   sll_int32,  public, pointer :: opi_ja(:)
   sll_real64, public, pointer :: opr_a(:)
-  sll_int32,  pointer         :: opi_i(:)
 end type sll_csr_matrix
 
 interface sll_delete
@@ -689,5 +688,22 @@ subroutine sll_solve_csr_matrix_perper ( this, B,U,Masse_tot )
   deallocate(Ux)
   deallocate(one)
 end subroutine sll_solve_csr_matrix_perper
+
+!subroutine csr_todense( this, dense_matrix)
+!
+!   type(sll_csr_matrix)       :: this
+!   sll_real64, dimension(:,:) :: dense_matrix
+!
+!   l = 0
+!   do i = 1, this%n 
+!      do k = this%rowptr(i),this%rowptr(i+1)-1 
+!         l = l + 1
+!         j = this%col(l)
+!         dense_matrix(i,j) = this%avals(l)
+!      end do
+!   end do
+!
+!end subroutine csr_todense
+
 
 end module sll_sparse_matrix_module
