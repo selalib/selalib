@@ -28,9 +28,9 @@ use mod_umfpack
     sll_int32 :: num_rows !< number of rows
     sll_int32 :: num_cols !< number of columns
     sll_int32 :: num_nz !< number of non zero elements
-    sll_int32, dimension(:), pointer :: opi_ia
-    sll_int32, dimension(:), pointer :: opi_ja
-    sll_real64, dimension(:), pointer :: opr_a
+    sll_int32, dimension(:), pointer :: row_ptr
+    sll_int32, dimension(:), pointer :: col_ind
+    sll_real64, dimension(:), pointer :: val
         !................
     !logical :: ol_use_mm_format
     sll_int32, dimension(:), pointer :: opi_i
@@ -386,10 +386,10 @@ contains
 
     do li_i = 1, mat % num_rows
 
-      li_k_1 = mat % opi_ia(li_i)
-      li_k_2 = mat % opi_ia(li_i + 1) - 1
+      li_k_1 = mat % row_ptr(li_i)
+      li_k_2 = mat % row_ptr(li_i + 1) - 1
       output(li_i) = &
-        DOT_PRODUCT(mat % opr_a(li_k_1: li_k_2), input(mat % opi_ja(li_k_1: li_k_2)))
+        DOT_PRODUCT(mat % val(li_k_1: li_k_2), input(mat % col_ind(li_k_1: li_k_2)))
             
     end do
 
@@ -409,10 +409,10 @@ contains
 
 
     ! THE CURRENT LINE IS self%row_ptr(ai_A)
-    do li_k = mat % opi_ia(ai_A), mat % opi_ia(ai_A + 1) - 1
-      li_j = mat % opi_ja(li_k)
+    do li_k = mat % row_ptr(ai_A), mat % row_ptr(ai_A + 1) - 1
+      li_j = mat % col_ind(li_k)
       if (li_j == ai_Aprime) then
-        mat % opr_a(li_k) = mat % opr_a(li_k) + val 
+        mat % val(li_k) = mat % val(li_k) + val 
         exit
       end if
     end do
@@ -554,11 +554,11 @@ contains
         sll_int32, dimension(:), pointer :: lpr_tmp
 
         ! INITIALIZING ia
-        self % opi_ia(1) = 1
+        self % row_ptr(1) = 1
 
         do li_i = 1, self % num_rows
 
-            self % opi_ia(li_i + 1) = self % opi_ia(1) + SUM(api_occ(1: li_i))
+            self % row_ptr(li_i + 1) = self % row_ptr(1) + SUM(api_occ(1: li_i))
 
         end do
 
@@ -588,7 +588,7 @@ contains
 
                 do li_i = 1, li_size
 
-                    self % opi_ja(self % opi_ia(li_A_1) + li_i - 1) =  ( lpr_tmp(li_i))
+                    self % col_ind(self % row_ptr(li_A_1) + li_i - 1) =  ( lpr_tmp(li_i))
 
                 end do
 
