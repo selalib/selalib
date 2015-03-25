@@ -22,7 +22,7 @@ end type sll_csc_matrix
 type, public :: pastix_solver
  pastix_data_ptr_t        :: pastix_data !< PaStiX structure (0 for first call)
  pastix_int_t             :: ncols       !< Number of columns in the matrix
- pastix_int_t   , pointer :: colptr(:)   !< Index of first elt of each col in ja and avals
+ pastix_int_t   , pointer :: colptr(:)   !< Index of first elt of each col in avals
  pastix_int_t   , pointer :: row(:)      !< Row of each element
  pastix_float_t , pointer :: avals(:)    !< Value of each element
  pastix_int_t   , pointer :: perm(:)     !< permutation tabular

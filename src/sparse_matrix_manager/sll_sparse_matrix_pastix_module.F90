@@ -48,9 +48,9 @@ contains
     sll_int32 :: ierr
 
     nullify(csr_mat)
-   ! SLL_DEALLOCATE_ARRAY(csr_mat%opi_ia,ierr)
-   ! SLL_DEALLOCATE_ARRAY(csr_mat%opi_ja,ierr)
-   ! SLL_DEALLOCATE_ARRAY(csr_mat%opr_a,ierr)
+   ! SLL_DEALLOCATE_ARRAY(csr_mat%row_ptr,ierr)
+   ! SLL_DEALLOCATE_ARRAY(csr_mat%col_ind,ierr)
+   ! SLL_DEALLOCATE_ARRAY(csr_mat%val,ierr)
    ! SLL_DEALLOCATE_ARRAY(csr_mat%opi_i,ierr)
     
     
@@ -366,7 +366,7 @@ contains
     sll_int32 :: li_k
 
 
-    ! THE CURRENT LINE IS self%opi_ia(ai_A)
+    ! THE CURRENT LINE IS self%row_ptr(ai_A)
     do li_k = mat%linear_solver%colptr(ai_A), mat%linear_solver%colptr(ai_A + 1) - 1
       li_j = mat%linear_solver%row(li_k)
       if (li_j == ai_Aprime) then
