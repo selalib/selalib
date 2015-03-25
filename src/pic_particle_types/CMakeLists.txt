@@ -9,6 +9,7 @@ ADD_LIBRARY( sll_pic_particles STATIC
 
 TARGET_LINK_LIBRARIES( sll_pic_particles
   sll_memory
+  sll_working_precision
   sll_assert )
 
 # <<MLT_PIC_OPTION>> - ALH - mlt_pic developments are only conditionnally compiled for the moment to allow unfinished
