@@ -368,11 +368,9 @@ contains
 
 
 
-  subroutine compute_reduction_mass_l1_l2_4d_to_2d_direction12(&
+  subroutine compute_reduction_diag_4d_to_2d_direction12(&
     data_4d, &
-    data_mass_2d, &
-    data_l1_2d, &
-    data_l2_2d, &
+    data_diag_2d, &
     Npts1, &
     Npts2, &
     Npts3, &
@@ -383,9 +381,7 @@ contains
     integration_func_params)
     
     sll_real64, dimension(:,:,:,:), intent(in)    :: data_4d
-    sll_real64, dimension(:,:)  , intent(out) :: data_mass_2d
-    sll_real64, dimension(:,:)  , intent(out) :: data_l1_2d
-    sll_real64, dimension(:,:)  , intent(out) :: data_l2_2d
+    sll_real64, dimension(:,:,:)  , intent(out) :: data_diag_2d
     sll_int32, intent(in)  :: Npts1
     sll_int32, intent(in)  :: Npts2
     sll_int32, intent(in)  :: Npts3
@@ -423,9 +419,7 @@ contains
     if(.not.(present(integration_func)))then
       do i4 = 1,Npts4
         do i3 = 1,Npts3
-          data_mass_2d(i3,i4) = 0._f64 
-          data_l1_2d(i3,i4) = 0._f64 
-          data_l2_2d(i3,i4) = 0._f64 
+          data_diag_2d(i3,i4,1:3) = 0._f64 
           i1=1
           tmp = 0.5_f64*(data_4d(i1,1,i3,i4)&
               +data_4d(i1,Npts2,i3,i4))
@@ -441,9 +435,9 @@ contains
           tmp = tmp*delta2
           tmp_l1 = tmp_l1*delta2          
           tmp_l2 = tmp_l2*delta2          
-          data_mass_2d(i3,i4) = data_mass_2d(i3,i4) + 0.5_f64*tmp
-          data_l1_2d(i3,i4) = data_l1_2d(i3,i4) + 0.5_f64*tmp_l1
-          data_l2_2d(i3,i4) = data_l2_2d(i3,i4) + 0.5_f64*tmp_l2
+          data_diag_2d(i3,i4,1) = data_diag_2d(i3,i4,1) + 0.5_f64*tmp
+          data_diag_2d(i3,i4,2) = data_diag_2d(i3,i4,2) + 0.5_f64*tmp_l1
+          data_diag_2d(i3,i4,3) = data_diag_2d(i3,i4,3) + 0.5_f64*tmp_l2
           
           do i1 = 2,Npts1-1            
             tmp = 0.5_f64*(data_4d(i1,1,i3,i4)&
@@ -460,9 +454,9 @@ contains
             tmp = tmp*delta2
             tmp_l1 = tmp_l1*delta2          
             tmp_l2 = tmp_l2*delta2          
-            data_mass_2d(i3,i4) = data_mass_2d(i3,i4) + tmp
-            data_l1_2d(i3,i4) = data_l1_2d(i3,i4) + tmp_l1
-            data_l2_2d(i3,i4) = data_l2_2d(i3,i4) + tmp_l2
+            data_diag_2d(i3,i4,1) = data_diag_2d(i3,i4,1) + tmp
+            data_diag_2d(i3,i4,2) = data_diag_2d(i3,i4,2) + tmp_l1
+            data_diag_2d(i3,i4,3) = data_diag_2d(i3,i4,3) + tmp_l2
           end do
 
           i1=Npts1
@@ -480,13 +474,11 @@ contains
           tmp = tmp*delta2
           tmp_l1 = tmp_l1*delta2          
           tmp_l2 = tmp_l2*delta2          
-          data_mass_2d(i3,i4) = data_mass_2d(i3,i4) + 0.5_f64*tmp
-          data_l1_2d(i3,i4) = data_l1_2d(i3,i4) + 0.5_f64*tmp_l1
-          data_l2_2d(i3,i4) = data_l2_2d(i3,i4) + 0.5_f64*tmp_l2
+          data_diag_2d(i3,i4,1) = data_diag_2d(i3,i4,1) + 0.5_f64*tmp
+          data_diag_2d(i3,i4,2) = data_diag_2d(i3,i4,2) + 0.5_f64*tmp_l1
+          data_diag_2d(i3,i4,3) = data_diag_2d(i3,i4,3) + 0.5_f64*tmp_l2
 
-          data_mass_2d(i3,i4) = data_mass_2d(i3,i4)*delta1
-          data_l1_2d(i3,i4) = data_l1_2d(i3,i4)*delta1
-          data_l2_2d(i3,i4) = data_l2_2d(i3,i4)*delta1
+          data_diag_2d(i3,i4,1:3) = data_diag_2d(i3,i4,1:3)*delta1
         end do
       end do
     else
@@ -497,7 +489,7 @@ contains
       print *,'#in compute_reduction_4d_to_2d_direction12'
       stop
     endif  
-  end subroutine compute_reduction_mass_l1_l2_4d_to_2d_direction12
+  end subroutine compute_reduction_diag_4d_to_2d_direction12
 
 
 
