@@ -13,6 +13,10 @@ module sll_simulation_4d_vp_lt_pic_cartesian_module
   use sll_cartesian_meshes
   use sll_timer
   use sll_particle_group_4d_module
+
+  use sll_lt_pic_4d_group_module
+  use sll_lt_pic_4d_init
+
   use sll_particle_initializers_4d
   use sll_particle_sort_module
   use sll_charge_to_density_module
@@ -72,7 +76,7 @@ contains
 
   subroutine init_4d_lt_pic_cartesian( sim, filename )
     intrinsic :: trim
-    class(sll_pic_simulation_4d_cartesian), intent(inout) :: sim
+    class(sll_simulation_4d_vp_lt_pic_cartesian), intent(inout) :: sim
     character(len=*), intent(in)                          :: filename
     sll_int32   :: IO_stat
     sll_int32   :: ierr
@@ -165,6 +169,9 @@ contains
             SPLINE_DEGREE = 1
         end if
 
+        print *, 'tmp debug 65373654 -- REMAP_GRID_VX_MIN, REMAP_GRID_VX_MAX = ', REMAP_GRID_VX_MIN, REMAP_GRID_VX_MAX
+        print *, 'tmp debug 98536536 -- REMAP_GRID_VY_MIN, REMAP_GRID_VY_MAX = ', REMAP_GRID_VY_MIN, REMAP_GRID_VY_MAX
+
         sim%part_group => sll_lt_pic_4d_group_new(    &
             SPLINE_DEGREE,                            &
             NUM_PARTS_X,                              &
@@ -190,41 +197,45 @@ contains
     else
         !! initialize the group of PIC particles
 
-        sim%part_group => new_particle_4d_group(    &
-            NUM_PARTICLES,                          &
-            PARTICLE_ARRAY_SIZE,                    &
-            GUARD_SIZE,                             &
-            QoverM,                                 &
-            sim%mesh_2d )
+        !! -- PIC_VERSION begin
+        !        sim%part_group => new_particle_4d_group(    &
+        !            NUM_PARTICLES,                          &
+        !            PARTICLE_ARRAY_SIZE,                    &
+        !            GUARD_SIZE,                             &
+        !            QoverM,                                 &
+        !            sim%mesh_2d )
+        !
+        !        call random_seed (SIZE=rand_seed_size)
+        !
+        !        SLL_ALLOCATE( rand_seed(1:rand_seed_size), ierr )
+        !        do j=1, rand_seed_size
+        !           rand_seed(j) = (-1)**j*(100 + 15*j)*(2*sim%my_rank + 1)
+        !        enddo
+        !
+        !        pa_gr => sim%part_group
+        !        call sll_initial_particles_4d( sim%thermal_speed_ions,          &
+        !                                       ALPHA, KX_LANDAU, sim%mesh_2d,   &
+        !                                       sim%ions_number,                 &
+        !                                       pa_gr,                           &
+        !                                       rand_seed, sim%my_rank,          &
+        !                                       sim%world_size  )
+        !        SLL_DEALLOCATE_ARRAY( rand_seed, ierr )
+        !
+        !        !$omp parallel
+        !        !$omp do
+        !        do j=1,sim%ions_number
+        !           sim%part_group%p_list(j) = pa_gr%p_list(j)
+        !        enddo
+        !        !$omp end do
+        !
+        !        !$omp single
+        !        call sll_sort_particles_2d( sim%sorter, sim%part_group )
+        !        sim%n_threads =  1
+        !        !$omp end single
+        !        !$omp end parallel
 
-        call random_seed (SIZE=rand_seed_size)
+        !! -- PIC_VERSION end
 
-        SLL_ALLOCATE( rand_seed(1:rand_seed_size), ierr )
-        do j=1, rand_seed_size
-           rand_seed(j) = (-1)**j*(100 + 15*j)*(2*sim%my_rank + 1)
-        enddo
-
-        pa_gr => sim%part_group
-        call sll_initial_particles_4d( sim%thermal_speed_ions,          &
-                                       ALPHA, KX_LANDAU, sim%mesh_2d,   &
-                                       sim%ions_number,                 &
-                                       pa_gr,                           &
-                                       rand_seed, sim%my_rank,          &
-                                       sim%world_size  )
-        SLL_DEALLOCATE_ARRAY( rand_seed, ierr )
-
-        !$omp parallel
-        !$omp do
-        do j=1,sim%ions_number
-           sim%part_group%p_list(j) = pa_gr%p_list(j)
-        enddo
-        !$omp end do
-
-        !$omp single
-        call sll_sort_particles_2d( sim%sorter, sim%part_group )
-        sim%n_threads =  1
-        !$omp end single
-        !$omp end parallel
     end if
 
 
@@ -262,8 +273,8 @@ contains
            call sll_lt_pic_4d_deposit_charge_on_2d_mesh( sim%part_group, &
                                                          sim%q_accumulator_ptr(1)%q, sim%n_virtual_for_deposition)
        else
-
-           call sll_first_charge_accumulation_2d( sim%part_group, sim%q_accumulator_ptr)!(1)%q )
+           !! -- PIC_VERSION
+           !                   call sll_first_charge_accumulation_2d( sim%part_group, sim%q_accumulator_ptr)!(1)%q )
 
        end if
 
@@ -284,16 +295,14 @@ contains
   !!
   !! note 2: use of cubic spline particles (routines with _CS) is disabled for now
   !!
-  !! todo 1: write the ltp_bsl charge deposition algorithm in place of the simple "pic" charge deposition algorithm
+  !! todo 1: run the code and later write a (non-virtual) remapping step with adequate frequency
   !!
-  !! todo 2: check that the remaining procedures are correct with ltp particles
-  !!
-  !! todo 3: run the code and later write a (non-virtual) remapping step with adequate frequency
+  !! todo 2: use a common type for PIC and LT_PIC (commented calls to PIC structures are labelled with "PIC_VERSION"
   !!
   !! this version written by MCP, ALH
 
   subroutine run_4d_lt_pic_cartesian( sim )
-    class(sll_pic_simulation_4d_cartesian), intent(inout)  :: sim
+    class(sll_simulation_4d_vp_lt_pic_cartesian), intent(inout)  :: sim
     sll_int32  :: ierr, it, jj, counter
     sll_int32  :: i, j, k
     sll_real64 :: tmp1, tmp2, tmp3, tmp4
@@ -522,7 +531,7 @@ contains
        !! -- --  sort particles  -- --
        if( .not. sim%use_lt_pic_scheme )then
            if (mod(it+1,sort_nb)==0) then
-              call sll_sort_particles_2d( sim%sorter, sim%part_group )
+            !  PIC_VERSION            call sll_sort_particles_2d( sim%sorter, sim%part_group )
            endif
        end if
 
@@ -580,7 +589,9 @@ contains
              !! -- --  LTPIC: put outside particles back in domain                              [begin]  -- --
              !! -- --  PIC: deposit charge (if particle is inside, otherwise reserve it)        [begin]  -- --
 
-             if (in_bounds( x, y, sim%mesh_2d )) then ! finish push
+             if (in_bounds_periodic( x, y, sim%mesh_2d,                         &
+                                     sim%part_group%domain_is_x_periodic,       &
+                                     sim%part_group%domain_is_y_periodic )) then ! finish push
                 SET_PARTICLE_POSITION(particles(k),xmin,ymin,ncx,x,y,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
                 if( .not. sim%use_lt_pic_scheme )then
                     SLL_ACCUMULATE_PARTICLE_CHARGE(q_accum,particles(k),tmp5,tmp6)
@@ -626,9 +637,9 @@ contains
 
               !$omp parallel PRIVATE(x,y,ic_x,ic_y,off_x,off_y,tmp1,tmp2,tmp5,tmp6,p_guard,q_accum,p,thread_id)
               !$&omp FIRSTPRIVATE(dt,ncx,xmin,ymin,rdx,rdy)
-    #ifdef _OPENMP
+#ifdef _OPENMP
               thread_id = OMP_GET_THREAD_NUM()
-    #endif
+#endif
               q_accum => sim%q_accumulator_ptr(thread_id+1)%q
               p_guard => sim%part_group%p_guard(thread_id+1)%g_list
                 ! !  !          p => sim%part_group%p_list
@@ -759,7 +770,7 @@ contains
 
 
   subroutine delete_4d_lt_pic_cartesian( sim )
-    type(sll_pic_simulation_4d_cartesian) :: sim
+    type(sll_simulation_4d_vp_lt_pic_cartesian) :: sim
   end subroutine delete_4d_lt_pic_cartesian
 
 
@@ -773,14 +784,14 @@ contains
           (y >= mesh%eta2_min) .and. (y <= mesh%eta2_max)
   end function in_bounds
 
-  subroutine apply_periodic_bc( mesh, x, y )
-    type(sll_cartesian_mesh_2d), pointer :: mesh
-    sll_real64, intent(inout) :: x
-    sll_real64, intent(inout) :: y
-
-    x = modulo(x,mesh%eta1_max - mesh%eta1_min)! Ca marche quand xmin=ymin=0
-    y = modulo(y,mesh%eta2_max - mesh%eta2_min)! Sinon, il faut modulo(...) + xmin/mesh%delta_x
-  end subroutine apply_periodic_bc
+!  subroutine apply_periodic_bc( mesh, x, y )
+!    type(sll_cartesian_mesh_2d), pointer :: mesh
+!    sll_real64, intent(inout) :: x
+!    sll_real64, intent(inout) :: y
+!
+!    x = modulo(x,mesh%eta1_max - mesh%eta1_min)! Ca marche quand xmin=ymin=0
+!    y = modulo(y,mesh%eta2_max - mesh%eta2_min)! Sinon, il faut modulo(...) + xmin/mesh%delta_x
+!  end subroutine apply_periodic_bc
 
   subroutine normL2_field_Ex (lee,ee,nx,ny,e,dx,dy)
     sll_real64, intent(out) :: lee, ee
