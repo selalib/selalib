@@ -1,4 +1,4 @@
-module sll_pic_simulation_4d_cartesian_module
+module sll_simulation_4d_vp_lt_pic_cartesian_module
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -28,36 +28,40 @@ module sll_pic_simulation_4d_cartesian_module
 #endif
   implicit none
 
-  type, extends(sll_simulation_base_class) :: sll_pic_simulation_4d_cartesian
-     ! Physics/numerical parameters
-     sll_real64 :: dt
-     sll_int32  :: num_iterations
-     sll_real64 :: thermal_speed_ions
-     sll_int32  :: ions_number
-     sll_int32  :: guard_size
-     sll_int32  :: array_size
-     sll_real64, dimension(1:6) :: elec_params
-     type(sll_particle_group_4d),  pointer :: part_group
-     type(sll_cartesian_mesh_2d),    pointer :: m2d
-     type(sll_particle_sorter_2d), pointer :: sorter
-     type(sll_charge_accumulator_2d_ptr), dimension(:), pointer  :: q_accumulator
-     type(electric_field_accumulator), pointer :: E_accumulator
-     logical :: use_cubic_splines
-     type(sll_charge_accumulator_2d_CS_ptr), dimension(:), pointer  :: q_accumulator_CS
-     type(electric_field_accumulator_CS), pointer :: E_accumulator_CS
-     sll_real64, dimension(:,:), pointer :: rho
-     type(poisson_2d_fft_solver), pointer :: poisson
-     sll_real64, dimension(:,:), pointer :: E1, E2
-     sll_int32 :: my_rank
-     sll_int32 :: world_size
-     sll_int32 :: n_threads
-   contains
-     procedure, pass(sim) :: init_from_file => init_4d_pic_cartesian
-     procedure, pass(sim) :: run => run_4d_pic_cartesian
-  end type sll_pic_simulation_4d_cartesian
+  type, extends(sll_simulation_base_class) :: sll_simulation_4d_vp_lt_pic_cartesian
+    ! Physics/numerical parameters
+    sll_real64 :: dt
+    sll_int32  :: num_iterations
+    sll_real64 :: thermal_speed_ions
+    sll_int32  :: ions_number
+    sll_int32  :: guard_size
+    sll_int32  :: array_size
+    sll_real64, dimension(1:6) :: elec_params
+    !!!!   note (march 26): to start with we use only lt_pic particles. When the simulation runs fine, try using a common type
+    type(sll_lt_pic_4d_group),  pointer :: part_group
+    !     type(sll_particle_group_4d),  pointer :: part_group           !! pic case
+    type(sll_cartesian_mesh_2d),    pointer :: mesh_2d
+    type(sll_particle_sorter_2d), pointer :: sorter
+    type(sll_charge_accumulator_2d_ptr), dimension(:), pointer  :: q_accumulator_ptr      ! called q_accumulator in Sever simulation
+    type(electric_field_accumulator), pointer :: E_accumulator
+    logical :: use_cubic_splines        ! disabled for now (will raise an error if true)
+    logical :: use_lt_pic_scheme        ! if false then use pic scheme
+    type(sll_charge_accumulator_2d_CS_ptr), dimension(:), pointer  :: q_accumulator_CS
+    type(electric_field_accumulator_CS), pointer :: E_accumulator_CS
+    sll_real64, dimension(:,:), pointer :: rho
+    sll_int32 :: n_virtual_for_deposition
+    type(poisson_2d_fft_solver), pointer :: poisson
+    sll_real64, dimension(:,:), pointer :: E1, E2
+    sll_int32 :: my_rank
+    sll_int32 :: world_size
+    sll_int32 :: n_threads
+  contains
+    procedure, pass(sim) :: init_from_file => init_4d_lt_pic_cartesian
+    procedure, pass(sim) :: run => run_4d_lt_pic_cartesian
+  end type sll_simulation_4d_vp_lt_pic_cartesian
 
   interface sll_delete
-     module procedure delete_4d_pic_cart
+     module procedure delete_4d_lt_pic_cartesian
   end interface sll_delete
 
 !!$  interface initialize
@@ -66,7 +70,7 @@ module sll_pic_simulation_4d_cartesian_module
 
 contains
 
-  subroutine init_4d_pic_cartesian( sim, filename )
+  subroutine init_4d_lt_pic_cartesian( sim, filename )
     intrinsic :: trim
     class(sll_pic_simulation_4d_cartesian), intent(inout) :: sim
     character(len=*), intent(in)                          :: filename
@@ -79,8 +83,15 @@ contains
     sll_real64  :: THERM_SPEED
     sll_real64  :: QoverM, ALPHA
     logical     :: UseCubicSplines
+    logical     :: UseLtPicScheme
+    logical     :: DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC
     sll_int32   :: NC_X,  NC_Y
-    sll_real64  :: XMIN, KX, XMAX, YMIN, YMAX
+    sll_real64  :: XMIN, KX_LANDAU, XMAX, YMIN, YMAX
+    sll_int32   :: NUM_PARTS_X, NUM_PARTS_Y, NUM_PARTS_VX, NUM_PARTS_VY
+    sll_real64  :: REMAP_GRID_VX_MIN, REMAP_GRID_VX_MAX
+    sll_real64  :: REMAP_GRID_VY_MIN, REMAP_GRID_VY_MAX
+    sll_int32   :: SPLINE_DEGREE
+    sll_int32   :: NVirtualForDeposition
     sll_real64  :: er, psi, omega_i, omega_r
     sll_int32, parameter  :: input_file = 99
     sll_int32, dimension(:), allocatable  :: rand_seed
@@ -88,12 +99,22 @@ contains
     sll_int32  :: thread_id
     type(sll_particle_group_4d), pointer  :: pa_gr
 
-    namelist /sim_params/ NUM_PARTICLES, GUARD_SIZE, &
-                          PARTICLE_ARRAY_SIZE, &
-                          THERM_SPEED, dt, number_iterations, &
-                          QoverM, ALPHA, UseCubicSplines
-    namelist /grid_dims/  NC_X, NC_Y, XMIN, KX, YMIN, YMAX
-    namelist /elec_params/ er, psi, omega_r, omega_i
+    namelist /sim_params/   NUM_PARTICLES, GUARD_SIZE, &
+                            PARTICLE_ARRAY_SIZE, &
+                            THERM_SPEED, dt, number_iterations, &
+                            QoverM, ALPHA, UseCubicSplines, UseLtPicScheme
+    namelist /grid_dims/    NC_X, NC_Y, XMIN, KX_LANDAU, YMIN, YMAX, &
+                            DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC
+    namelist /lt_pic_params/NUM_PARTS_X,        &
+                            NUM_PARTS_Y,        &
+                            NUM_PARTS_VX,       &
+                            NUM_PARTS_VY,       &
+                            REMAP_GRID_VX_MIN,  &
+                            REMAP_GRID_VX_MAX,  &
+                            REMAP_GRID_VY_MIN,  &
+                            REMAP_GRID_VY_MAX,  &
+                            NVirtualForDeposition
+    namelist /elec_params/  er, psi, omega_r, omega_i
     open(unit = input_file, file=trim(filename),IOStat=IO_stat)
     if( IO_stat /= 0 ) then
        print *, 'init_vp4d_par_cart() failed to open file ', filename
@@ -109,8 +130,10 @@ contains
     
     print*, 'sim%world_size=',sim%world_size, ' sim%my_rank=', sim%my_rank
 
-    XMAX = (2._f64*sll_pi/KX)
+    XMAX = (2._f64*sll_pi/KX_LANDAU)
     sim%use_cubic_splines = UseCubicSplines
+    sim%use_lt_pic_scheme = UseLtPicScheme
+    sim%n_virtual_for_deposition = NVirtualForDeposition
     sim%thermal_speed_ions = THERM_SPEED
     sim%ions_number = NUM_PARTICLES
     sim%guard_size = GUARD_SIZE  
@@ -118,60 +141,101 @@ contains
     sim%dt = dt
     sim%num_iterations = number_iterations
 
-    sim%elec_params = (/KX, ALPHA, er, psi, omega_r, omega_i /)
+    sim%elec_params = (/KX_LANDAU, ALPHA, er, psi, omega_r, omega_i /)
     
-    sim%m2d =>  new_cartesian_mesh_2d( NC_X, NC_Y, &
-                XMIN, XMAX, YMIN, YMAX )
+    sim%mesh_2d =>  new_cartesian_mesh_2d( NC_X, NC_Y, &
+                                           XMIN, XMAX, YMIN, YMAX )
 
-    sim%part_group => new_particle_4d_group( &
-         NUM_PARTICLES, &
-         PARTICLE_ARRAY_SIZE, &
-         GUARD_SIZE, &
-         QoverM,     &
-         sim%m2d )
+    sim%poisson => new_poisson_2d_fft_solver( sim%mesh_2d%eta1_min,    &
+                                              sim%mesh_2d%eta1_max,    &
+                                              sim%mesh_2d%num_cells1,  &
+                                              sim%mesh_2d%eta2_min,    &
+                                              sim%mesh_2d%eta2_max,    &
+                                              sim%mesh_2d%num_cells2   )
 
-    sim%sorter => sll_new_particle_sorter_2d( sim%m2d )
+    sim%sorter => sll_new_particle_sorter_2d( sim%mesh_2d )
 
-    sim%poisson => new_poisson_2d_fft_solver( sim%m2d%eta1_min,    &
-                                              sim%m2d%eta1_max,    & 
-                                              sim%m2d%num_cells1,  &
-                                              sim%m2d%eta2_min,    &
-                                              sim%m2d%eta2_max,    &
-                                              sim%m2d%num_cells2   )
+    if( sim%use_lt_pic_scheme )then
+        !! initialize the group of PIC particles
 
-    call random_seed (SIZE=rand_seed_size)
+        if( sim%use_cubic_splines )then
+            SPLINE_DEGREE = 3
+            print *, "Error (7634876568576) -- cubic spline particles not implemented yet"
+        else
+            SPLINE_DEGREE = 1
+        end if
 
-    SLL_ALLOCATE( rand_seed(1:rand_seed_size), ierr )
-    do j=1, rand_seed_size
-       rand_seed(j) = (-1)**j*(100 + 15*j)*(2*sim%my_rank + 1)
-    enddo
+        sim%part_group => sll_lt_pic_4d_group_new(    &
+            SPLINE_DEGREE,                            &
+            NUM_PARTS_X,                              &
+            NUM_PARTS_Y,                              &
+            NUM_PARTS_VX,                             &
+            NUM_PARTS_VY,                             &
+            REMAP_GRID_VX_MIN,                        &
+            REMAP_GRID_VX_MAX,                        &
+            REMAP_GRID_VY_MIN,                        &
+            REMAP_GRID_VY_MAX,                        &
+            PARTICLE_ARRAY_SIZE,                      &       ! MCP: problems if this value too small ?
+            GUARD_SIZE,                               &       ! MCP: problems if this value too small ?
+            QoverM,                                   &
+            DOMAIN_IS_X_PERIODIC,                     &
+            DOMAIN_IS_Y_PERIODIC,                     &
+            sim%mesh_2d )
 
-    pa_gr => sim%part_group
-    call sll_initial_particles_4d( sim%thermal_speed_ions, & 
-                                   ALPHA, KX, sim%m2d,     &
-                                   sim%ions_number,        &
-                                   pa_gr, &
-                                   rand_seed, sim%my_rank, &
-                                   sim%world_size  )
-    SLL_DEALLOCATE_ARRAY( rand_seed, ierr )
+        call sll_lt_pic_4d_init_landau (                &
+            sim%thermal_speed_ions,                     &
+            ALPHA, KX_LANDAU,                           &
+            sim%part_group )
+
+    else
+        !! initialize the group of PIC particles
+
+        sim%part_group => new_particle_4d_group(    &
+            NUM_PARTICLES,                          &
+            PARTICLE_ARRAY_SIZE,                    &
+            GUARD_SIZE,                             &
+            QoverM,                                 &
+            sim%mesh_2d )
+
+        call random_seed (SIZE=rand_seed_size)
+
+        SLL_ALLOCATE( rand_seed(1:rand_seed_size), ierr )
+        do j=1, rand_seed_size
+           rand_seed(j) = (-1)**j*(100 + 15*j)*(2*sim%my_rank + 1)
+        enddo
+
+        pa_gr => sim%part_group
+        call sll_initial_particles_4d( sim%thermal_speed_ions,          &
+                                       ALPHA, KX_LANDAU, sim%mesh_2d,   &
+                                       sim%ions_number,                 &
+                                       pa_gr,                           &
+                                       rand_seed, sim%my_rank,          &
+                                       sim%world_size  )
+        SLL_DEALLOCATE_ARRAY( rand_seed, ierr )
+
+        !$omp parallel
+        !$omp do
+        do j=1,sim%ions_number
+           sim%part_group%p_list(j) = pa_gr%p_list(j)
+        enddo
+        !$omp end do
+
+        !$omp single
+        call sll_sort_particles_2d( sim%sorter, sim%part_group )
+        sim%n_threads =  1
+        !$omp end single
+        !$omp end parallel
+    end if
+
+
     !$omp parallel
-    !$omp do
-    do j=1,sim%ions_number
-       sim%part_group%p_list(j) = pa_gr%p_list(j)
-    enddo
-    !$omp end do
-
-    !$omp single
-    call sll_sort_particles_2d( sim%sorter, sim%part_group )
-    sim%n_threads =  1
-    !$omp end single
-
 #ifdef _OPENMP
     if (OMP_GET_THREAD_NUM() == 0) then
        sim%n_threads =  OMP_GET_NUM_THREADS()
     endif
 #endif
     !$omp end parallel
+
     print*, 'number of threads is ', sim%n_threads
 
     if (sim%use_cubic_splines) then
@@ -180,19 +244,34 @@ contains
 
     else
        
-       SLL_ALLOCATE(sim%q_accumulator(1:sim%n_threads), ierr)
+       SLL_ALLOCATE(sim%q_accumulator_ptr(1:sim%n_threads), ierr)
        thread_id = 0
        !$omp parallel PRIVATE(thread_id)
 #ifdef _OPENMP
        thread_id = OMP_GET_THREAD_NUM()
 #endif 
-       sim%q_accumulator(thread_id+1)%q => new_charge_accumulator_2d( sim%m2d )
+       sim%q_accumulator_ptr(thread_id+1)%q => new_charge_accumulator_2d( sim%mesh_2d )
        !$omp end parallel
-       sim%E_accumulator => new_field_accumulator_2d( sim%m2d )
-       call sll_first_charge_accumulation_2d( sim%part_group, sim%q_accumulator)!(1)%q )
+       sim%E_accumulator => new_field_accumulator_2d( sim%mesh_2d )
+
+       !! -- --  First charge deposition [begin]  -- --
+
+       if( sim%use_lt_pic_scheme )then
+
+           SLL_ASSERT(thread_id == 0)
+           call sll_lt_pic_4d_deposit_charge_on_2d_mesh( sim%part_group, &
+                                                         sim%q_accumulator_ptr(1)%q, sim%n_virtual_for_deposition)
+       else
+
+           call sll_first_charge_accumulation_2d( sim%part_group, sim%q_accumulator_ptr)!(1)%q )
+
+       end if
+
+       !! -- --  First charge deposition [end]  -- --
+
     endif
     
-  end subroutine init_4d_pic_cartesian
+  end subroutine init_4d_lt_pic_cartesian
 
 
 
@@ -216,7 +295,7 @@ contains
   subroutine run_4d_lt_pic_cartesian( sim )
     class(sll_pic_simulation_4d_cartesian), intent(inout)  :: sim
     sll_int32  :: ierr, it, jj, counter
-    sll_int32  :: i, j
+    sll_int32  :: i, j, k
     sll_real64 :: tmp1, tmp2, tmp3, tmp4
     sll_real32 :: tmp5, tmp6, temp
     sll_real32 :: ttmp(1:4,1:2), ttmp1(1:4,1:2), ttmp2(1:4,1:2)
@@ -234,10 +313,12 @@ contains
     sll_real64 :: y, y1  ! for global position
     sll_real64 :: dt, ttime
     sll_real64 :: pp_vx, pp_vy
-    type(sll_particle_4d), dimension(:), pointer :: p
+    type(sll_lt_pic_4d_particle), dimension(:), pointer :: particles        !! todo: use a common class later
+    !    type(sll_particle_4d), dimension(:), pointer :: p
     type(field_accumulator_cell), dimension(:), pointer :: accumE
     type(field_accumulator_CS), dimension(:), pointer :: accumE_CS
-    type(sll_particle_4d_guard), dimension(:), pointer :: p_guard
+    type(sll_lt_pic_4d_particle_guard), dimension(:), pointer :: p_guard     !! todo: use a common type when you feel ready :-)
+    !  type(sll_particle_4d_guard), dimension(:), pointer :: p_guard
     sll_real64, dimension(:,:), allocatable  ::  diag_energy
     sll_real64, dimension(:),   allocatable  ::  diag_TOTmoment
     sll_real64, dimension(:),   allocatable  ::  diag_TOTenergy
@@ -259,8 +340,8 @@ contains
     sll_real64 :: omega_i, omega_r, psi
     sll_real64 :: bors
     
-    ncx = sim%m2d%num_cells1
-    ncy = sim%m2d%num_cells2
+    ncx = sim%mesh_2d%num_cells1
+    ncy = sim%mesh_2d%num_cells2
     n_threads = sim%n_threads
     thread_id = 0
     save_nb = sim%num_iterations/2
@@ -282,10 +363,10 @@ contains
     dt_q_over_m = dt * sim%part_group%qoverm
     !!!    p_guard => sim%part_group%p_guard
     dt = sim%dt
-    xmin = sim%m2d%eta1_min
-    ymin = sim%m2d%eta2_min
-    rdx = 1._f64/sim%m2d%delta_eta1
-    rdy = 1._f64/sim%m2d%delta_eta2
+    xmin = sim%mesh_2d%eta1_min
+    ymin = sim%mesh_2d%eta2_min
+    rdx = 1._f64/sim%mesh_2d%delta_eta1
+    rdy = 1._f64/sim%mesh_2d%delta_eta2
 
     !  ----------------------------------------------------------------------------------------------------
     !  ------
@@ -307,8 +388,8 @@ contains
       stop
     else
        accumE => sim%E_accumulator%e_acc
-       call sum_accumulators( sim%q_accumulator, n_threads, ncx*ncy )
-       call sll_convert_charge_to_rho_2d_per_per( sim%q_accumulator(1)%q, sim%rho )     ! this name not clear enough
+       call sum_accumulators( sim%q_accumulator_ptr, n_threads, ncx*ncy )
+       call sll_convert_charge_to_rho_2d_per_per( sim%q_accumulator_ptr(1)%q, sim%rho )     ! this name not clear enough
     endif
 
     !! -- --  ?? [end]  -- --
@@ -336,8 +417,8 @@ contains
 
     if (sim%my_rank == 0) then
     it = 0
-    call sll_gnuplot_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin,            &
-                        sim%m2d%eta2_max, ncy+1,                        &
+    call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
+                        sim%mesh_2d%eta2_max, ncy+1,                        &
                         sim%rho, 'rho_init_standPUSH', it, ierr )
     endif
 
@@ -348,19 +429,18 @@ contains
 
     !! -- --  diagnostics: compute energy [begin]  -- --
 
-    call electric_energy( tot_ee, sim%E1, sim%E2, sim%m2d%num_cells1, &
-         sim%m2d%num_cells2, sim%m2d%eta1_max, sim%m2d%eta2_max )
+    call electric_energy( tot_ee, sim%E1, sim%E2, sim%mesh_2d%num_cells1, &
+         sim%mesh_2d%num_cells2, sim%mesh_2d%eta1_max, sim%mesh_2d%eta2_max )
     bors = 0.0_f64
     !$omp parallel
     !$omp do reduction(+:bors)
-    do i =1, sim%ions_number,2
-       bors = bors + particles(i)%vx**2 + particles(i)%vy**2 &
-              + particles(i+1)%vx**2 + particles(i+1)%vy**2
+    do k = 1, sim%ions_number
+       bors = bors + particles(k)%vx**2 + particles(k)%vy**2
     enddo
     !$omp end do
     !$omp end parallel
-    diag_TOTenergy(0) = bors * 0.5_f64*(sim%m2d%eta1_max - sim%m2d%eta1_min)  &
-         * (sim%m2d%eta2_max - sim%m2d%eta2_min)/( sim%world_size*sim%ions_number)  &
+    diag_TOTenergy(0) = bors * 0.5_f64*(sim%mesh_2d%eta1_max - sim%mesh_2d%eta1_min)  &
+         * (sim%mesh_2d%eta2_max - sim%mesh_2d%eta2_min)/( sim%world_size*sim%ions_number)  &
          + tot_ee * 0.5_f64
 
     !! -- --  diagnostics [end]  -- --
@@ -378,12 +458,12 @@ contains
        call sll_accumulate_field( sim%E1, sim%E2, sim%E_accumulator )
        !$omp parallel do PRIVATE (pp_vx, pp_vy, Ex, Ey, tmp5, tmp6)
        !$&omp FIRSTPRIVATE(dt_q_over_m)
-       do i = 1, sim%ions_number
-          pp_vx = particles(i)%vx
-          pp_vy = particles(i)%vy
-          SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,particles(i),tmp5,tmp6)
-          particles(i)%vx = pp_vx - 0.5_f64 * dt_q_over_m * Ex
-          particles(i)%vy = pp_vy - 0.5_f64 * dt_q_over_m * Ey
+       do k = 1, sim%ions_number
+          pp_vx = particles(k)%vx
+          pp_vy = particles(k)%vy
+          SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,particles(k),tmp5,tmp6)
+          particles(k)%vx = pp_vx - 0.5_f64 * dt_q_over_m * Ex
+          particles(k)%vy = pp_vy - 0.5_f64 * dt_q_over_m * Ey
        enddo
        !$omp end parallel do   
     endif
@@ -391,7 +471,7 @@ contains
     !! -- --  half v-push  [end]  -- --
 
     une_cst = 16._f64*(sim%elec_params(2))**2 *(sim%elec_params(3))**2 &
-         * sll_pi/sim%elec_params(1) !pi/KX*(4._f64*ALPHA*er)**2
+         * sll_pi/sim%elec_params(1) !pi/KX_LANDAU*(4._f64*ALPHA*er)**2
     omega_i = sim%elec_params(6)
     omega_r = sim%elec_params(5)
     psi = sim%elec_params(4)
@@ -423,9 +503,9 @@ contains
        if (sim%my_rank == 0) then
           exval_ee = une_cst * exp(2._f64*omega_i*real(it,f64)*sim%dt) * &
              ( 0.5_f64 + 0.5_f64*cos(2._f64*(omega_r*real(it,f64)*sim%dt-psi)) )
-          call normL2_field_Ex ( val_lee, val_ee, ncx, ncy, &
-                                 sim%E1,  &
-                                 sim%m2d%delta_eta1, sim%m2d%delta_eta2 )
+          call normL2_field_Ex ( val_lee, val_ee, ncx, ncy,                         &
+                                 sim%E1,                                            &
+                                 sim%mesh_2d%delta_eta1, sim%mesh_2d%delta_eta2 )
           counter = 1 + mod(it,save_nb)
           diag_energy(counter,:) = (/ it*sim%dt, val_lee, log(sqrt(exval_ee)), &
                val_ee, exval_ee /)
@@ -440,10 +520,11 @@ contains
        !! -- --  diagnostics [end]  -- --
 
        !! -- --  sort particles  -- --
-
-       if (mod(it+1,sort_nb)==0) then 
-          call sll_sort_particles_2d( sim%sorter, sim%part_group )
-       endif
+       if( .not. sim%use_lt_pic_scheme )then
+           if (mod(it+1,sort_nb)==0) then
+              call sll_sort_particles_2d( sim%sorter, sim%part_group )
+           endif
+       end if
 
        !  ------------------------------------------------------------------
        !  ------
@@ -465,92 +546,107 @@ contains
 #ifdef _OPENMP
           thread_id = OMP_GET_THREAD_NUM()
 #endif
-          call reset_charge_accumulator_to_zero ( sim%q_accumulator(thread_id+1)%q )
-          q_accum => sim%q_accumulator(thread_id+1)%q
+          call reset_charge_accumulator_to_zero ( sim%q_accumulator_ptr(thread_id+1)%q )
+          q_accum => sim%q_accumulator_ptr(thread_id+1)%q
           p_guard => sim%part_group%p_guard(thread_id+1)%g_list
           gi = 0
           !$omp do!! reduction(+:some_val)
 
           !! -- --  particle loop: treat the particles by pair for faster treatment ?  -- --
-          do i = 1, sim%ions_number,2
+
+          do k = 1, sim%ions_number
 
              !! -- --  v-push (v^{n-1/2} -> v^{n+1/2}  using  E^n)  [begin]  -- --
 
-             SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,particles(i),tmp5,tmp6)
-             particles(i)%vx = particles(i)%vx + dt_q_over_m * Ex
-             particles(i)%vy = particles(i)%vy + dt_q_over_m * Ey
-             SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,particles(i+1),tmp5,tmp6)
-             particles(i+1)%vx = particles(i+1)%vx + dt_q_over_m * Ex
-             particles(i+1)%vy = particles(i+1)%vy + dt_q_over_m * Ey
+             SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,particles(k),tmp5,tmp6)
+             particles(k)%vx = particles(k)%vx + dt_q_over_m * Ex
+             particles(k)%vy = particles(k)%vy + dt_q_over_m * Ey
 
              !! -- --  v-push [end]  -- --
 
              !! -- --  x-push (x^n -> x^{n+1} using v^{n+1/2})  [begin]  -- --
 
-             GET_PARTICLE_POSITION(particles(i),sim%m2d,x,y)
-             x = x + dt * particles(i)%vx
-             y = y + dt * particles(i)%vy
-             GET_PARTICLE_POSITION(particles(i+1),sim%m2d,x1,y1)
-             x1 = x1 + dt * particles(i+1)%vx
-             y1 = y1 + dt * particles(i+1)%vy
+             GET_PARTICLE_POSITION(particles(k),sim%mesh_2d,x,y)
+             x = x + dt * particles(k)%vx
+             y = y + dt * particles(k)%vy
 
              !! -- --  x-push [end]  -- --
 
 
-             !! )) -- here with the ltp_bsl charge deposition we will not be able to deposit the charge of the "just-pushed" particles
-             !! ))    since we need to first compute the weights of the virtual particles (with the remapping algorithm)
+             !! note: with the ltp_bsl charge deposition we will not be able to deposit the charge of the "just-pushed" particles
+             !!       since we need to first compute the weights of the virtual particles (with the remapping algorithm)
 
-             !! -- --  deposit charge (if particle is inside, otherwise reserve it) [begin]  -- --
 
-             if (in_bounds( x, y, sim%m2d )) then ! finish push
-                SET_PARTICLE_POSITION(particles(i),xmin,ymin,ncx,x,y,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
-                SLL_ACCUMULATE_PARTICLE_CHARGE(q_accum,particles(i),tmp5,tmp6)
-             else ! store reference for later processing
-                gi = gi + 1
-                p_guard(gi)%p => particles(i)
+             !! -- --  LTPIC: put outside particles back in domain                              [begin]  -- --
+             !! -- --  PIC: deposit charge (if particle is inside, otherwise reserve it)        [begin]  -- --
+
+             if (in_bounds( x, y, sim%mesh_2d )) then ! finish push
+                SET_PARTICLE_POSITION(particles(k),xmin,ymin,ncx,x,y,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
+                if( .not. sim%use_lt_pic_scheme )then
+                    SLL_ACCUMULATE_PARTICLE_CHARGE(q_accum,particles(k),tmp5,tmp6)
+                end if
+             else
+                ! particle outside domain
+                if( sim%use_lt_pic_scheme )then
+                     call apply_periodic_bc( sim%mesh_2d, x, y)
+                     SET_PARTICLE_POSITION(particles(k),xmin,ymin,ncx,x,y,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
+                else
+                  ! store reference for later processing
+                  gi = gi + 1
+                  p_guard(gi)%p => particles(k)
+                end if
              end if
-             if (in_bounds( x1, y1, sim%m2d )) then ! finish push
-                SET_PARTICLE_POSITION(particles(i+1),xmin,ymin,ncx,x1,y1,ic_x1,ic_y1,off_x1,off_y1,rdx,rdy,tmp1,tmp2)
-                SLL_ACCUMULATE_PARTICLE_CHARGE(q_accum,particles(i+1),tmp5,tmp6)
-             else ! store reference for later processing
-                gi = gi + 1
-                p_guard(gi)%p => particles(i+1)
-             end if
 
-             !! -- --  deposit charge [end]  -- --
+             !! -- --  LTPIC: put outside particles back in domain                              [end]  -- --
+             !! -- --  PIC: deposit charge (if particle is inside, otherwise reserve it)        [end]  -- --
 
           enddo
 
-          !! -- --  process the reserved particles (in the guard list) [begin]  -- --
 
-          !$omp end do
-          sim%part_group%num_postprocess_particles(thread_id+1) = gi
-          !$omp end parallel
+          !! -- --  deposit charge LTPIC [begin]  -- --
 
-          ! Process the particles in the guard list. In the periodic case, no
-          ! destruction of particles is needed, so this is simple.
+          if( sim%use_lt_pic_scheme )then
+              SLL_ASSERT(thread_id == 0)
+              call sll_lt_pic_4d_deposit_charge_on_2d_mesh( sim%part_group, &
+                                                            sim%q_accumulator_ptr(1)%q, sim%n_virtual_for_deposition)
+          else
+              ! nothing to do, charge already deposited in the push loop
+          end if
+          !! -- --  deposit charge LTPIC [end]  -- --
 
-          !$omp parallel PRIVATE(x,y,ic_x,ic_y,off_x,off_y,tmp1,tmp2,tmp5,tmp6,p_guard,q_accum,p,thread_id)
-          !$&omp FIRSTPRIVATE(dt,ncx,xmin,ymin,rdx,rdy)
-#ifdef _OPENMP
-          thread_id = OMP_GET_THREAD_NUM()
-#endif
-          q_accum => sim%q_accumulator(thread_id+1)%q
-          p_guard => sim%part_group%p_guard(thread_id+1)%g_list
-! !  !          p => sim%part_group%p_list
-          do i=1, sim%part_group%num_postprocess_particles(thread_id+1)
-             GET_PARTICLE_POSITION(p_guard(i)%p,sim%m2d,x,y)
-             x = x + dt * p_guard(i)%p%vx
-             y = y + dt * p_guard(i)%p%vy
-             call apply_periodic_bc( sim%m2d, x, y)
-             SET_PARTICLE_POSITION(p_guard(i)%p,xmin,ymin,ncx,x,y,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
-             SLL_ACCUMULATE_PARTICLE_CHARGE(q_accum,p_guard(i)%p,tmp5,tmp6)
-          end do
-          !$omp end parallel
-          !       ! reset any counters
-          gi = 0
+          !! -- --  [PIC ONLY] process the reserved particles (in the guard list) [begin]  -- --
 
-          !! -- --  process the reserved particles [end]  -- --
+          if( .not. sim%use_lt_pic_scheme )then
+              !$omp end do
+              sim%part_group%num_postprocess_particles(thread_id+1) = gi
+              !$omp end parallel
+
+              ! Process the particles in the guard list. In the periodic case, no
+              ! destruction of particles is needed, so this is simple.
+
+              !$omp parallel PRIVATE(x,y,ic_x,ic_y,off_x,off_y,tmp1,tmp2,tmp5,tmp6,p_guard,q_accum,p,thread_id)
+              !$&omp FIRSTPRIVATE(dt,ncx,xmin,ymin,rdx,rdy)
+    #ifdef _OPENMP
+              thread_id = OMP_GET_THREAD_NUM()
+    #endif
+              q_accum => sim%q_accumulator_ptr(thread_id+1)%q
+              p_guard => sim%part_group%p_guard(thread_id+1)%g_list
+                ! !  !          p => sim%part_group%p_list
+              do k = 1, sim%part_group%num_postprocess_particles(thread_id+1)
+                 GET_PARTICLE_POSITION(p_guard(k)%p,sim%mesh_2d,x,y)
+                 x = x + dt * p_guard(k)%p%vx
+                 y = y + dt * p_guard(k)%p%vy
+                 call apply_periodic_bc( sim%mesh_2d, x, y)
+                 SET_PARTICLE_POSITION(p_guard(k)%p,xmin,ymin,ncx,x,y,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
+                 SLL_ACCUMULATE_PARTICLE_CHARGE(q_accum,p_guard(k)%p,tmp5,tmp6)
+              end do
+              !$omp end parallel
+              !       ! reset any counters
+              gi = 0
+          else
+              ! nothing to do, particles have been put back in the periodic domain already
+          end if
+          !! -- --  [PIC ONLY] process the reserved particles [end]  -- --
 
        endif
 
@@ -567,8 +663,8 @@ contains
          stop
 
        else
-          call sum_accumulators( sim%q_accumulator, n_threads, ncx*ncy )
-          call sll_convert_charge_to_rho_2d_per_per( sim%q_accumulator(1)%q, sim%rho )     ! this name not clear enough
+          call sum_accumulators( sim%q_accumulator_ptr, n_threads, ncx*ncy )
+          call sll_convert_charge_to_rho_2d_per_per( sim%q_accumulator_ptr(1)%q, sim%rho )     ! this name not clear enough
        endif
        do j = 1, ncy+1
           do i = 1, ncx+1
@@ -605,20 +701,18 @@ contains
           some_val = 0.0_f64
           !$omp parallel PRIVATE(Ex,Ey,Ex1,Ey1,tmp5,tmp6)
           !$omp do reduction(+:some_val)
-          do i =1,sim%ions_number,2
-             SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,particles(i),tmp5,tmp6)
-             SLL_INTERPOLATE_FIELD(Ex1,Ey1,accumE,particles(i+1),tmp5,tmp6)
-             some_val = some_val + (particles(i)%vx + 0.5_f64 * dt_q_over_m * Ex)**2 &
-                  + (particles(i)%vy + 0.5_f64 * dt_q_over_m * Ey)**2 &
-                  + (particles(i+1)%vx + 0.5_f64 * dt_q_over_m * Ex1)**2  &
-                  + (particles(i+1)%vy + 0.5_f64 * dt_q_over_m * Ey1)**2
+          do k = 1, sim%ions_number
+             SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,particles(k),tmp5,tmp6)
+             some_val = some_val &
+                    + (particles(k)%vx + 0.5_f64 * dt_q_over_m * Ex)**2 &
+                    + (particles(k)%vy + 0.5_f64 * dt_q_over_m * Ey)**2
           enddo
           !$omp end do
           !$omp end parallel
-          call electric_energy( tot_ee, sim%E1, sim%E2, sim%m2d%num_cells1, &
-               sim%m2d%num_cells2, sim%m2d%eta1_max, sim%m2d%eta2_max )
-          diag_TOTenergy(it) = some_val* 0.5_f64 *(sim%m2d%eta1_max - sim%m2d%eta1_min) * &
-               (sim%m2d%eta2_max - sim%m2d%eta2_min)/( sim%world_size*sim%ions_number)  &
+          call electric_energy( tot_ee, sim%E1, sim%E2, sim%mesh_2d%num_cells1, &
+               sim%mesh_2d%num_cells2, sim%mesh_2d%eta1_max, sim%mesh_2d%eta2_max )
+          diag_TOTenergy(it) = some_val* 0.5_f64 *(sim%mesh_2d%eta1_max - sim%mesh_2d%eta1_min) * &
+               (sim%mesh_2d%eta2_max - sim%mesh_2d%eta2_min)/( sim%world_size*sim%ions_number)  &
                + tot_ee * 0.5_f64
        endif
 
@@ -664,23 +758,9 @@ contains
   end subroutine run_4d_lt_pic_cartesian
 
 
-
-
-
-!!$  ! Note that the following function has no local variables, which is silly...
-!!$  ! This just happened since the guts of the unit test were transplanted here
-!!$  ! directly, but this should be cleaned up.
-!!$  subroutine run_4d_pic_cart(sim)
-!!$    class(sll_pic_simulation_4d_cartesian), intent(inout) :: sim
-!!$
-!!$
-!!$
-!!$  end subroutine run_4d_pic_cart
-
-
-  subroutine delete_4d_pic_cart( sim )
+  subroutine delete_4d_lt_pic_cartesian( sim )
     type(sll_pic_simulation_4d_cartesian) :: sim
-  end subroutine delete_4d_pic_cart
+  end subroutine delete_4d_lt_pic_cartesian
 
 
   function in_bounds( x, y, mesh ) result(res)
@@ -738,4 +818,4 @@ contains
   end subroutine electric_energy
 
     
-end module sll_pic_simulation_4d_cartesian_module
+end module sll_simulation_4d_vp_lt_pic_cartesian_module

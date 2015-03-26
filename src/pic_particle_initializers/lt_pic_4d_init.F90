@@ -44,13 +44,12 @@ contains
 !  subroutine sll_init_lt_particles_4d_landau (       &  ! old name
   subroutine sll_lt_pic_4d_init_landau (       &
               thermal_speed, alpha, k_landau,   &
-              p_group, c_aux_given )
+              p_group)
 
     sll_real64, intent(in)                                  :: thermal_speed, alpha, k_landau
     type(sll_lt_pic_4d_group), pointer, intent(inout)       :: p_group
-    sll_real64, intent(in), optional                        :: c_aux_given
 
-    call write_landau_density_on_remap_grid( thermal_speed, alpha, k_landau, p_group, c_aux_given )
+    call write_landau_density_on_remap_grid( thermal_speed, alpha, k_landau, p_group)
 !    call plot_2d_slice_remapping_grid("init_values_on_rg.dat", p_group )
     call sll_lt_pic_4d_compute_new_particles( p_group )
     
@@ -93,12 +92,11 @@ contains
 
   subroutine write_landau_density_on_remap_grid(    &
               thermal_speed, alpha, k_landau,       &
-              p_group, c_aux_given                  &
+              p_group                               &
               )
 
     sll_real64, intent(in)                                  :: thermal_speed, alpha, k_landau
     type(sll_lt_pic_4d_group), pointer, intent(inout)       :: p_group
-    sll_real64, intent(in), optional                        :: c_aux_given
     sll_int64 :: j_x
     sll_int64 :: j_y
     sll_int64 :: j_vx
@@ -122,15 +120,8 @@ contains
     sll_real64 :: y_j
     sll_real64 :: vx_j
     sll_real64 :: vy_j
-    sll_real64 :: c_aux
     type(sll_cartesian_mesh_2d),      pointer  :: m2d
     sll_real64 :: f_x, f_y, f_vx, f_vy
-
-    if ( present(c_aux_given) ) then
-       c_aux = c_aux_given
-    else
-       c_aux = 1.
-    endif
 
     number_particles = p_group%number_particles
     one_over_thermal_velocity = 1./thermal_speed   
@@ -162,10 +153,10 @@ contains
       do j_y = 1, number_parts_y
         vx_j = parts_vx_min
         do j_vx = 1, number_parts_vx
-          f_vx = one_over_thermal_velocity * exp(-0.5*(vx_j*one_over_thermal_velocity)**2 * c_aux)
+          f_vx = one_over_thermal_velocity * exp(-0.5*(vx_j*one_over_thermal_velocity)**2)
           vy_j = parts_vy_min
           do j_vy = 1, number_parts_vy
-            f_vy = one_over_thermal_velocity * exp(-0.5*(vy_j*one_over_thermal_velocity)**2 * c_aux)
+            f_vy = one_over_thermal_velocity * exp(-0.5*(vy_j*one_over_thermal_velocity)**2)
             p_group%target_values(j_x,j_y,j_vx,j_vy) = one_over_two_pi * f_x * f_vx * f_vy
             vy_j = vy_j + h_parts_vy
           end do

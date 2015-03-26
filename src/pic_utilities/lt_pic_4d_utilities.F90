@@ -2418,6 +2418,27 @@ end subroutine
 
 
 
+  subroutine sll_lt_pic_4d_deposit_charge_on_2d_mesh( p_group, q_accumulator, n_virtual_for_deposition)
+
+    type(sll_lt_pic_4d_group),pointer,intent(inout) :: p_group
+    type(sll_charge_accumulator_2d), pointer, intent(inout) :: q_accumulator
+    sll_int32, intent(in) :: n_virtual_for_deposition
+
+    call sll_lt_pic_4d_write_f_on_grid_or_deposit (p_group, q_accumulator, .true., n_virtual_for_deposition)
+
+  end subroutine sll_lt_pic_4d_deposit_charge_on_2d_mesh
+
+
+  subroutine sll_lt_pic_4d_write_f_on_remapping_grid( p_group, n_virtual_for_remapping)
+
+    type(sll_lt_pic_4d_group),pointer,intent(inout) :: p_group
+    sll_int32, intent(in) :: n_virtual_for_remapping
+    type(sll_charge_accumulator_2d), pointer :: dummy_q_accumulator
+
+    nullify(dummy_q_accumulator)
+    call sll_lt_pic_4d_write_f_on_grid_or_deposit (p_group, dummy_q_accumulator, .false., n_virtual_for_remapping)
+
+  end subroutine sll_lt_pic_4d_write_f_on_remapping_grid
 
 
   ! <<sll_lt_pic_4d_write_f_on_grid_or_deposit>> <<ALH>> has two scenarios:
@@ -2456,7 +2477,7 @@ end subroutine
 
   ! todo: treat the non-peridodic case
 
-  subroutine sll_lt_pic_4d_write_f_on_grid_or_deposit (p_group, q_accumulator, scenario_is_deposition, )
+  subroutine sll_lt_pic_4d_write_f_on_grid_or_deposit (p_group, q_accumulator, scenario_is_deposition, n_virtual)
 
     ! [[file:../pic_particle_types/lt_pic_4d_group.F90::sll_lt_pic_4d_group]] p_group contains both the existing
     ! particles and the virtual remapping grid
