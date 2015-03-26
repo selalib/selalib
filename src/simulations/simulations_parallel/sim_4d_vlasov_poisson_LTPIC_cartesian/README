@@ -28,10 +28,11 @@ Parameter file:
 	[[file:../../../../usr/simulations/simulations_parallel/4d_vp_pic_cartesian/params_lt_pic_4d.nml]]
 
 Configuring:
-	[[elisp:(compile "cd ../../../../build && cmake -DHDF5_PARALLEL_ENABLED=ON -DCMAKE_VERBOSE_MAKEFILE=TRUE ../src")]]
+	- some configuration options are required for [[file:../CMakeLists.txt]] to allow parallel tests
+	- OPENMP_ENABLED=OFF is forced to OFF until further speed tests
 
-	(note: [[file:../CMakeLists.txt]] has a list of required features for activating parallel tests)
-	
+	[[elisp:(compile "cd ../../../../build && cmake -DHDF5_PARALLEL_ENABLED=ON -DCMAKE_VERBOSE_MAKEFILE=TRUE -DOPENMP_ENABLED=OFF ../src")]]
+
 Compiling:
 
 	First complete initial make (to solve missing dependencies issues)
