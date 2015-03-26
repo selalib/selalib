@@ -64,13 +64,14 @@ IF(BUILD_TESTING)
   ADD_EXECUTABLE(test_csr_matrix unit_test_csr_matrix.F90)
   TARGET_LINK_LIBRARIES( test_csr_matrix sll_sparse_matrix dagmg_seq)
 
-ENDIF(BUILD_TESTING)
+  IF(BUILD_PARALUTION)
 
-#IF(BUILD_PARALUTION)
-#
-#  INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/paralution/src)
-#  ADD_EXECUTABLE(paralution_solver 
-#                  ${CMAKE_BINARY_DIR}/paralution/src/plug-ins/paralution_fortran.cpp
-#                  sll_paralution.f90)
-#
-#ENDIF(BUILD_PARALUTION)
+    INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/paralution-prefix/src/paralution/src/)
+    LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/paralution-prefix/src/paralution-build/lib/)
+    ADD_DEFINITIONS(-lstdc++)
+    ADD_EXECUTABLE(paralution_solver paralution_fortran.cpp sll_paralution.f90)
+    TARGET_LINK_LIBRARIES(paralution_solver paralution)
+
+  ENDIF(BUILD_PARALUTION)
+
+ENDIF(BUILD_TESTING)

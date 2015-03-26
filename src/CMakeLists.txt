@@ -218,11 +218,10 @@ ENDIF(BUILD_SIMULATIONS)
 
 IF(BUILD_PARALUTION)
   INCLUDE(ExternalProject)
-  EXTERNALPROJECT_ADD(
-     paralution
-     SOURCE_DIR ${CMAKE_BINARY_DIR}/paralution
-     URL  http://www.paralution.com/downloads/paralution-1.0.0.tar.gz
-     CMAKE_ARGS -DSUPPORT_CUDA=OFF
+  SET(PARALUTION_VERSION 1.0.0 CACHE STRING "Paralution version number")
+  EXTERNALPROJECT_ADD( paralution
+     URL  http://www.paralution.com/downloads/paralution-${PARALUTION_VERSION}.tar.gz
+     CMAKE_ARGS -DSUPPORT_CUDA=OFF -DBUILD_EXAMPLES=OFF
      INSTALL_COMMAND ""
   )
 ENDIF()
