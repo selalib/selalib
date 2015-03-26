@@ -558,7 +558,7 @@ end subroutine get_ltp_deformation_matrix
   ! <<apply_periodic_bc>> extracted from [[file:../simulation/simulation_4d_vp_lt_pic_cartesian.F90::subroutine
   ! apply_periodic_bc]]
 
-  subroutine apply_periodic_bc( mesh, x, y )
+  subroutine apply_periodic_bc_old( mesh, x, y )
 
     use sll_cartesian_meshes
 
@@ -596,7 +596,23 @@ end subroutine get_ltp_deformation_matrix
 
     ! and the condition that the particle is in-bounds should trigger some
     ! alarm as this would not be supposed to happen here!
+  end subroutine apply_periodic_bc_old
+
+  subroutine apply_periodic_bc( mesh, x, y )
+
+    use sll_cartesian_meshes
+
+    ! [[file:../working_precision/sll_working_precision.h]]
+    use sll_working_precision
+
+    type(sll_cartesian_mesh_2d), pointer :: mesh
+    sll_real64, intent(inout) :: x
+    sll_real64, intent(inout) :: y
+
+    x = mesh%eta1_min + modulo(x - mesh%eta1_min, mesh%eta1_max - mesh%eta1_min)
+    y = mesh%eta2_min + modulo(y - mesh%eta2_min, mesh%eta2_max - mesh%eta2_min)
   end subroutine apply_periodic_bc
+
 
   ! <<onestep>> <<ALH>> utility function for finding the neighbours of a particle, used by [[ONESTEPMACRO]]. "dim"
   ! corresponds to one of x,y,vx,vy.
@@ -2493,6 +2509,11 @@ end subroutine
     sll_int32 :: num_virtual_cells_vx
     sll_int32 :: num_virtual_cells_vy
 
+    sll_int32 :: number_virtual_particles_along_x
+    sll_int32 :: number_virtual_particles_along_y
+    sll_int32 :: number_virtual_particles_along_vx
+    sll_int32 :: number_virtual_particles_along_vy
+
     ! [[file:~/mcp/maltpic/ltpic-bsl.tex::h_parts_x]] and h_parts_y, h_parts_vx, h_parts_vy
 
     sll_real64 :: h_parts_x
@@ -2527,6 +2548,15 @@ end subroutine
     sll_real64 :: virtual_parts_vx_min
     sll_real64 :: virtual_parts_vy_min
 
+    sll_real64 :: virtual_grid_x_min
+    sll_real64 :: virtual_grid_x_max
+    sll_real64 :: virtual_grid_y_min
+    sll_real64 :: virtual_grid_y_max
+    sll_real64 :: virtual_grid_vx_min
+    sll_real64 :: virtual_grid_vx_max
+    sll_real64 :: virtual_grid_vy_min
+    sll_real64 :: virtual_grid_vy_max
+
     ! same as \delta{x,y,vx,vy} in [[file:~/mcp/maltpic/ltpic-bsl.tex::h_parts_x]]
     sll_real64 :: h_virtual_cell_x
     sll_real64 :: h_virtual_cell_y
@@ -2547,7 +2577,7 @@ end subroutine
 
     ! working space
 
-    sll_real64 :: tmp
+    sll_real64 :: tmp, tmp1, tmp2
 
     ! index of particle closest to the center of each virtual cell. Array dimensions defined by the contents of
     ! [[file:../pic_particle_types/lt_pic_4d_group.F90::sll_lt_pic_4d_group-remapping_grid]]. If [[n_virtual]] is
@@ -2608,6 +2638,9 @@ end subroutine
     sll_real64 :: dx_in_virtual_cell
     sll_real64 :: dy_in_virtual_cell
 
+    sll_real64 :: f_value_on_virtual_particle
+    sll_real64 :: virtual_charge
+
     ! coordinates of a virtual particle at time 0 relative to the coordinates of one real particle
 
     sll_real64 :: x_t0,y_t0,vx_t0,vy_t0
@@ -2646,8 +2679,8 @@ end subroutine
 
     ! -- creating g the virtual grid [begin] --
 
-    if scenario_is_deposition then
-        if p_group%domain_is_x_periodic then
+    if( scenario_is_deposition )then
+        if( p_group%domain_is_x_periodic )then
             num_virtual_cells_x = p_group%mesh%num_cells1
             virtual_grid_x_min = p_group%mesh%eta1_min
             virtual_grid_x_max = p_group%mesh%eta1_max
@@ -2659,7 +2692,7 @@ end subroutine
             virtual_grid_x_max = p_group%mesh%eta1_max + p_group%mesh%delta_eta1
         end if
 
-        if p_group%domain_is_y_periodic then
+        if( p_group%domain_is_y_periodic )then
             num_virtual_cells_y = p_group%mesh%num_cells2
             virtual_grid_y_min = p_group%mesh%eta2_min
             virtual_grid_y_max = p_group%mesh%eta2_max
