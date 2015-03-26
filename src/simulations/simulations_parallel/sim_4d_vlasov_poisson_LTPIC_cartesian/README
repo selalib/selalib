@@ -1,0 +1,68 @@
+| 
+| 4d_vp_lt_pic_cartesian simulation
+| 
+| ======================================================================
+| MCP and ALH
+| ======================================================================
+| headeralh authors="MCP and ALH" brief="4d_vp_lt_pic_cartesian simulation" default=0 plain
+
+Directory structure
+===================
+
+(Same directory structure as [[file:../sim_4d_vlasov_poisson_PIC_cartesian]])
+
+   test_4d_vp_lt_pic_cartesian   -- executable
+   params_lt_pic_4d.nml          -- input file
+   README                        -- info (this file)
+   run/                          -- output directory
+
+HOWTO
+=====
+
+Source location:
+        [[file:simulation_4d_vp_lt_pic_cartesian.F90]]
+	[[file:unit_test_4d_vp_lt_pic_cartesian.F90]]
+	
+Parameter file:
+	[[file:params_lt_pic_4d.nml]]
+	[[file:../../../../usr/simulations/simulations_parallel/4d_vp_pic_cartesian/params_lt_pic_4d.nml]]
+
+Configuring:
+	- some configuration options are required for [[file:../CMakeLists.txt]] to allow parallel tests
+	- OPENMP_ENABLED=OFF is forced to OFF until further speed tests
+
+	[[elisp:(compile "cd ../../../../build && cmake -DHDF5_PARALLEL_ENABLED=ON -DCMAKE_VERBOSE_MAKEFILE=TRUE -DOPENMP_ENABLED=OFF ../src")]]
+
+Compiling:
+
+	First complete initial make (to solve missing dependencies issues)
+		[[elisp:(compile "cd ../../../../build && make")]]
+
+	Next makes
+		[[elisp:(compile "cd ../../../../build && make test_4d_vp_lt_pic_cartesian && make install")]]
+
+Running:
+	- Create output directory if missing, and move into it
+	     $ mkdir run
+	     $ cd run
+
+	     [[elisp:(compile "mkdir ../../../../usr/simulations/simulations_parallel/4d_vp_pic_cartesian/run")]]
+
+	- Run parallel simulation within directory
+	     $ mpirun -np 4 ../test_4d_vp_pic_cartesian ../params_pic_4d.nml
+
+	     [[elisp:(compile "cd ../../../../usr/simulations/simulations_parallel/4d_vp_pic_cartesian/run && mpirun -np 4 ../test_4d_vp_lt_pic_cartesian ../params_lt_pic_4d.nml)]]
+
+	- Run gnuplot script generated at runtime
+	     $ gnuplot --persist rho_init.gnu
+
+Ctest:
+	[[elisp:(compile "cd ../../build && ctest -R 4d_vp_lt_pic_cartesian")]]
+
+clean:
+	[[elisp:(compile "cd ../../../../build && make clean")]]
+
+| Local Variables:
+| ispell-local-dictionary:"british"
+| coding:utf-8
+| End:
