@@ -27,10 +27,10 @@
     NUM_PARTS_Y         = 10
     NUM_PARTS_VX        = 10
     NUM_PARTS_VY        = 10
-    REMAP_GRID_VX_MIN   = -6.
-    REMAP_GRID_VX_MAX   = 6.
-    REMAP_GRID_VY_MIN   = -6.
-    REMAP_GRID_VY_MAX   = 6.
+    REMAP_GRID_VX_MIN   = -6.0
+    REMAP_GRID_VX_MAX   = 6.0
+    REMAP_GRID_VY_MIN   = -6.0
+    REMAP_GRID_VY_MAX   = 6.0
     NVirtualForDeposition = 2
 /
 
