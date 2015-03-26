@@ -1,8 +1,10 @@
-program pic_4d_cartesian
+program unit_test_4d_vp_lt_pic_cartesian
 
 #include "sll_working_precision.h"
 
-  use sll_pic_simulation_4d_cartesian_module
+  ! [[file:simulation_4d_vp_lt_pic_cartesian.F90::sll_simulation_4d_vp_lt_pic_cartesian_module]]
+  use sll_simulation_4d_vp_lt_pic_cartesian_module
+  
   use sll_collective 
   use sll_timer
 
@@ -38,4 +40,4 @@ program pic_4d_cartesian
   call sll_halt_collective()
 
   ! call sim%delete()
-end program pic_4d_cartesian
+end program unit_test_4d_vp_lt_pic_cartesian
