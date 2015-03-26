@@ -9,6 +9,7 @@ ADD_LIBRARY( sll_pic_particles STATIC
 
 TARGET_LINK_LIBRARIES( sll_pic_particles
   sll_memory
+  sll_working_precision
   sll_assert
   sll_meshes )
 
