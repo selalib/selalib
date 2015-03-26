@@ -1,4 +1,4 @@
-module sll_pic_simulation_4d_cartesian_module
+module sll_simulation_4d_vp_lt_pic_cartesian_module
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
