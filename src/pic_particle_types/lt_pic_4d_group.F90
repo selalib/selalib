@@ -49,7 +49,8 @@ module sll_lt_pic_4d_group_module
 
      ! <<sll_lt_pic_4d_group-p_list>> uses [[file:lt_pic_4d_particle.F90::sll_lt_pic_4d_particle]]
      type(sll_lt_pic_4d_particle), dimension(:), pointer        :: p_list
-     type(sll_lt_pic_4d_particle_guard), dimension(:), pointer  :: p_guard
+     type(sll_lt_pic_4d_particle_guard_ptr), dimension(:), pointer :: p_guard
+
      ! num_postprocess_particles: an array indexed by the thread number (if any),
      ! of the number of particles to post-process after the main loop
      sll_int32, dimension(:), pointer :: num_postprocess_particles

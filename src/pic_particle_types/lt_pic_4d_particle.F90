@@ -54,9 +54,12 @@ module sll_lt_pic_particle_module
 
 
   type :: sll_lt_pic_4d_particle_guard
-!  type :: sll_lt_particle_4d_guard  ! old name
      type(sll_lt_pic_4d_particle), pointer :: p
   end type sll_lt_pic_4d_particle_guard
+
+  type :: sll_lt_pic_4d_particle_guard_ptr
+     type(sll_lt_pic_4d_particle_guard), dimension(:), pointer :: g_list
+  end type sll_lt_pic_4d_particle_guard_ptr
 
 
 end module sll_lt_pic_particle_module

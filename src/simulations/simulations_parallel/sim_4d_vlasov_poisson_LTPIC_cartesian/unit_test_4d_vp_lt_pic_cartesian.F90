@@ -8,9 +8,9 @@ program unit_test_4d_vp_lt_pic_cartesian
   use sll_collective 
   use sll_timer
 
-  type(sll_pic_simulation_4d_cartesian) :: sim
-  character(len=256)                    :: filename
-  integer                               :: rank, size
+  type(sll_simulation_4d_vp_lt_pic_cartesian) :: sim
+  character(len=256)                          :: filename
+  integer                                     :: rank, size
   type(sll_time_mark)  ::  t1
   sll_real64           :: time
 
@@ -25,11 +25,11 @@ program unit_test_4d_vp_lt_pic_cartesian
 
   if (rank==0) then
      print*, size, 'mpi nodes X', sim%ions_number, 'particles', &
-          sim%m2d%num_cells1, 'X',sim%m2d%num_cells2,'cells'
-     print*, (real(size,f64)/real(sim%m2d%num_cells1*sim%m2d%num_cells2,f64)) &
+          sim%mesh_2d%num_cells1, 'X',sim%mesh_2d%num_cells2,'cells'
+     print*, (real(size,f64)/real(sim%mesh_2d%num_cells1 * sim%mesh_2d%num_cells2, f64)) &
           * sim%ions_number, 'particles per cell'
   endif
-  
+
   call sim%run()
 
   if (rank==0) then

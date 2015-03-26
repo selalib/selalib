@@ -8,15 +8,30 @@
 	QoverM = -1.0
 	ALPHA  = 0.1
 	UseCubicSplines = .false.
+	UseLtPicScheme = .true.
 /
 
 &grid_dims
 	NC_X = 128
 	NC_Y = 32
 	XMIN   = 0.0
-	KX     = 0.5
+	KX_LANDAU = 0.5
 	YMIN   = 0.0
 	YMAX   = 1.0
+	DOMAIN_IS_X_PERIODIC = .true.
+	DOMAIN_IS_Y_PERIODIC = .true.
+/
+
+&lt_pic_params
+    NUM_PARTS_X         = 10
+    NUM_PARTS_Y         = 10
+    NUM_PARTS_VX        = 10
+    NUM_PARTS_VY        = 10
+    REMAP_GRID_VX_MIN   = -6.
+    REMAP_GRID_VX_MAX   = 6.
+    REMAP_GRID_VY_MIN   = -6.
+    REMAP_GRID_VY_MAX   = 6.
+    NVirtualForDeposition = 2
 /
 
 &elec_params
