@@ -23,14 +23,13 @@ module sll_sparse_matrix_module
 implicit none
 
 !> @brief type for CSR format
-type sll_csr_matrix
-  private
-  sll_int32,  public          :: num_rows !< rows, public
-  sll_int32,  public          :: num_cols !< columns
-  sll_int32,  public          :: num_nz   !< non zeros
-  sll_int32,  public, pointer :: row_ptr(:)
-  sll_int32,  public, pointer :: col_ind(:)
-  sll_real64, public, pointer :: val(:)
+type :: sll_csr_matrix
+  sll_int32           :: num_rows !< rows, public
+  sll_int32           :: num_cols !< columns
+  sll_int32           :: num_nz   !< non zeros
+  sll_int32,  pointer :: row_ptr(:)
+  sll_int32,  pointer :: col_ind(:)
+  sll_real64, pointer :: val(:)
 end type sll_csr_matrix
 
 interface sll_delete
@@ -691,20 +690,87 @@ end subroutine sll_solve_csr_matrix_perper
 
 subroutine csr_todense( this, dense_matrix)
 
-   type(sll_csr_matrix)       :: this
-   sll_real64, dimension(:,:) :: dense_matrix
-   sll_int32                  :: i, j, k, l
+  type(sll_csr_matrix)       :: this
+  sll_real64, dimension(:,:) :: dense_matrix
+  sll_int32                  :: i, j, k, l
 
-   l = 0
-   do i = 1, this%num_rows 
-      do k = this%row_ptr(i),this%row_ptr(i+1)-1 
-         l = l + 1
-         j = this%col_ind(l)
-         dense_matrix(i,j) = this%val(l)
-      end do
-   end do
+  l = 0
+  do i = 1, this%num_rows 
+     do k = this%row_ptr(i),this%row_ptr(i+1)-1 
+        l = l + 1
+        j = this%col_ind(l)
+        dense_matrix(i,j) = this%val(l)
+     end do
+  end do
 
 end subroutine csr_todense
 
+!> @brief
+!> Test function to initialize a CSR matrix
+!> @details
+!> Fill a matrix in CSR format corresponding to a constant coefficient
+!> five-point stencil on a square grid
+subroutine uni2d(this,f)
+type(sll_csr_matrix) :: this
+sll_real64           :: f(:)
+sll_real64, pointer  :: a(:)
+sll_int32            :: m
+sll_int32, pointer   :: ia(:),ja(:)
+integer              :: k,l,i,j
+
+real (kind(0d0)), parameter :: zero=0.0d0,cx=-1.0d0,cy=-1.0d0, cd=4.0d0
+
+a  => this%val
+ia => this%row_ptr
+ja => this%col_ind
+
+m = this%num_rows
+
+k=0
+l=0
+ia(1)=1
+do i=1,m
+  do j=1,m
+    k=k+1
+    l=l+1
+    a(l)=cd
+    ja(l)=k
+    f(k)=zero
+    if(j < m) then
+       l=l+1
+       a(l)=cx
+       ja(l)=k+1
+      else
+       f(k)=f(k)-cx
+    end if
+    if(i < m) then
+       l=l+1
+       a(l)=cy
+       ja(l)=k+m
+      else
+       f(k)=f(k)-cy
+    end if
+    if(j > 1) then
+       l=l+1
+       a(l)=cx
+       ja(l)=k-1
+      else
+       f(k)=f(k)-cx
+    end if
+    if(i >  1) then
+       l=l+1
+       a(l)=cy
+       ja(l)=k-m
+      else
+       f(k)=f(k)-cy
+    end if
+    ia(k+1)=l+1
+  end do
+end do
+
+this%num_nz = l
+
+return
+end subroutine uni2D
 
 end module sll_sparse_matrix_module

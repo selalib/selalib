@@ -7,13 +7,15 @@ program test_paralution_solver
                                           C_NULL_CHAR, &
                                           C_LOC
 
+  use sll_sparse_matrix_module
+
   implicit none
 
   interface
 
-    subroutine paralution_fortran_solve_coo( n, m, nnz, solver,       &
+    subroutine paralution_fortran_solve_csr( n, m, nnz, solver,       &
                                              mformat, preconditioner, &
-                                             pformat, rows, cols,     &
+                                             pformat, rows_ptr, cols, &
                                              rval, rhs, atol, rtol,   &
                                              div, maxiter, basis,     &
                                              p, q, x, iter, resnorm,  &
@@ -25,70 +27,66 @@ program test_paralution_solver
     real(kind=C_DOUBLE), value, intent(in)  :: atol, rtol, div
     integer(kind=C_INT),        intent(out) :: iter, ierr
     real(kind=C_DOUBLE),        intent(out) :: resnorm
-    type(C_PTR),         value, intent(in)  :: rows, cols, rval, rhs
+    type(C_PTR),         value, intent(in)  :: rows_ptr, cols, rval, rhs
     type(C_PTR),         value              :: x
     character(kind=C_CHAR)                  :: solver
     character(kind=C_CHAR)                  :: mformat
     character(kind=C_CHAR)                  :: preconditioner
     character(kind=C_CHAR)                  :: pformat
 
-    end subroutine paralution_fortran_solve_coo
+    end subroutine paralution_fortran_solve_csr
 
   end interface
 
-  !> @brief type for CSR format
-  type sll_coo_matrix
-    integer(kind=C_INT)              :: num_rows    !< rows, public
-    integer(kind=C_INT)              :: num_cols    !< columns
-    integer(kind=C_INT)              :: num_nz      !< non zeros
-    integer(kind=C_INT), allocatable :: row_ind(:)
-    integer(kind=C_INT), allocatable :: col_ind(:)
-    real(kind=C_DOUBLE), allocatable :: val(:)
-  end type sll_coo_matrix
-
   integer, parameter    :: infile = 10
-  integer(kind=C_INT)   :: n, m, nnz, fnz, i, j, iter, ierr
+  integer(kind=C_INT)   :: n, m, nnz, i, j, iter, ierr
   real(kind=C_DOUBLE)   :: resnorm
   integer, dimension(8) :: tbegin, tend
   real(kind=8)          :: tsolver
+  integer               :: nhinv
 
   logical               :: sym = .false.
 
-  real(kind=C_DOUBLE), allocatable, target :: rhs(:), x(:)
+  real(kind=C_DOUBLE), allocatable, target :: x(:)
+  real(kind=C_DOUBLE), allocatable, target :: rhs(:)
+
 
   character(len=10)  :: rep
   character(len=7)   :: field
   character(len=19)  :: symm
   character(len=128) :: arg
 
-  type(sll_coo_matrix) :: mat
+  type(sll_csr_matrix), pointer :: mat
 
+  nhinv = 500
+  n=(nhinv-1)**2
+  allocate(mat)
+  allocate (mat%val(5*N),mat%col_ind(5*N),mat%row_ptr(N+1),rhs(N),x(N))
 
-  nnz = fnz
-  if ( symm .eq. 'symmetric' .or. symm .eq. 'hermitian' ) then
-    nnz = 2 * ( fnz - n ) + n
-    sym = .true.
-  end if
-
-  ! Allocate memory for COO format specific arrays
-  allocate( mat%row_ind(nnz), mat%col_ind(nnz), mat%val(nnz))
+  ! Allocate memory for CSR format specific arrays
+  mat%num_rows = n
+  mat%num_cols = m
+  mat%num_nz   = nnz
 
   ! Allocate and initialize rhs and solution vector
-  allocate( rhs(n), x(n) )
-  do i = 1, n
-    rhs(i) = 1._C_DOUBLE
-    x(i)   = 0._C_DOUBLE
-  end do
+  !do i = 1, n
+  !  rhs(i) = 1._C_DOUBLE
+  !  x(i)   = 0._C_DOUBLE
+  !end do
+  rhs = 1.
+  x   = 0.
+
+  call uni2d(mat, rhs)
 
   ! Print L2 norm of solution vector
   write(*,fmt='(A,F0.2)') '(Fortran) Initial L2 Norm(x) = ', sqrt( sum( x**2 ) )
 
   call date_and_time(values = tbegin)
 
-!  ! Run paralution C function for COO matrices
-!  ! Doing a GMRES with MultiColored ILU(1,2) preconditioner
-!  ! Check paralution documentation for a detailed argument explanation
-!  call paralution_fortran_solve_coo(       &
+  ! Run paralution C function for CSR matrices
+  ! Doing a GMRES with MultiColored ILU(1,2) preconditioner
+  ! Check paralution documentation for a detailed argument explanation
+!  call paralution_fortran_solve_csr(       &
 !    n,                                     &
 !    m,                                     &
 !    nnz,                                   &
