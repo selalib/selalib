@@ -39,6 +39,11 @@ ELSE()
   	        sll_sparse_matrix_module.F90
 	        sll_sparse_matrix_mp_module.F90 )
 
+  TARGET_LINK_LIBRARIES( sll_sparse_matrix sll_working_precision
+                                           sll_memory
+                                           sll_assert)
+
+
 ENDIF()
 
 
@@ -70,7 +75,7 @@ IF(BUILD_TESTING)
     LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/paralution-prefix/src/paralution-build/lib/)
     ADD_DEFINITIONS(-lstdc++)
     ADD_EXECUTABLE(paralution_solver paralution_fortran.cpp sll_paralution.f90)
-    TARGET_LINK_LIBRARIES(paralution_solver paralution)
+    TARGET_LINK_LIBRARIES(paralution_solver sll_sparse_matrix paralution)
 
   ENDIF(BUILD_PARALUTION)
 
