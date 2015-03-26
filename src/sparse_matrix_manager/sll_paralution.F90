@@ -36,6 +36,16 @@ program test_paralution_solver
 
   end interface
 
+  !> @brief type for CSR format
+  type sll_coo_matrix
+    integer(kind=C_INT)              :: num_rows    !< rows, public
+    integer(kind=C_INT)              :: num_cols    !< columns
+    integer(kind=C_INT)              :: num_nz      !< non zeros
+    integer(kind=C_INT), allocatable :: row_ind(:)
+    integer(kind=C_INT), allocatable :: col_ind(:)
+    real(kind=C_DOUBLE), allocatable :: val(:)
+  end type sll_coo_matrix
+
   integer, parameter    :: infile = 10
   integer(kind=C_INT)   :: n, m, nnz, fnz, i, j, iter, ierr
   real(kind=C_DOUBLE)   :: resnorm
@@ -44,14 +54,14 @@ program test_paralution_solver
 
   logical               :: sym = .false.
 
-  integer(kind=C_INT), allocatable, target :: rows(:), cols(:)
-  real(kind=C_DOUBLE), allocatable, target :: ival(:), rval(:), cval(:)
   real(kind=C_DOUBLE), allocatable, target :: rhs(:), x(:)
 
   character(len=10)  :: rep
   character(len=7)   :: field
   character(len=19)  :: symm
   character(len=128) :: arg
+
+  type(sll_coo_matrix) :: mat
 
 
   nnz = fnz
@@ -61,21 +71,7 @@ program test_paralution_solver
   end if
 
   ! Allocate memory for COO format specific arrays
-  allocate( rows(nnz), cols(nnz) )
-  allocate( ival(nnz), rval(nnz), cval(nnz) )
-
-  ! Fill 2nd half of matrix if symmetric
-  if ( sym ) then
-    j = fnz + 1
-    do i = 1, fnz
-      if ( rows(i) .ne. cols(i) ) then
-        rows(j) = cols(i)
-        cols(j) = rows(i)
-        rval(j) = rval(i)
-        j = j + 1
-      end if
-    end do
-  end if
+  allocate( mat%row_ind(nnz), mat%col_ind(nnz), mat%val(nnz))
 
   ! Allocate and initialize rhs and solution vector
   allocate( rhs(n), x(n) )
@@ -89,52 +85,52 @@ program test_paralution_solver
 
   call date_and_time(values = tbegin)
 
-  ! Run paralution C function for COO matrices
-  ! Doing a GMRES with MultiColored ILU(1,2) preconditioner
-  ! Check paralution documentation for a detailed argument explanation
-  call paralution_fortran_solve_coo(       &
-    n,                                     &
-    m,                                     &
-    nnz,                                   &
-    'CG' // C_NULL_CHAR,                   &
-    'CSR' // C_NULL_CHAR,                  & 
-    'MultiColoredILU' // C_NULL_CHAR,      &
-    'CSR' // C_NULL_CHAR,                  &
-    C_LOC(rows),                           &
-    C_LOC(cols),                           &
-    C_LOC(rval),                           &
-    C_LOC(rhs),                            &
-    1e-15_C_DOUBLE,                        &
-    1e-8_C_DOUBLE,                         &
-    1e+8_C_DOUBLE,                         &
-    5000,                                  &
-    30,                                    &
-    0,                                     &
-    1,                                     &
-    C_LOC(x),                              &
-    iter,                                  &
-    resnorm,                               &
-    ierr )
-
-  call date_and_time(values = tend)
-
-  tbegin = tend - tbegin
-  tsolver = 0.001 * tbegin(8) + tbegin(7) + 60 * tbegin(6) + 3600 * tbegin(5)
-  write(*,fmt='(A,F0.2,A)') '(Fortran) Solver ended after ', tsolver,'sec.'
-
-  ! Print solver details
-  if ( ierr .eq. 0 ) then
-    write(*,fmt='(A,I0,A,E11.5,A)') '(Fortran) Solver took ', iter, ' iterations with residual norm ', resnorm, '.'
-    write(*,fmt='(A,F0.2)') '(Fortran) Final L2 Norm(x)   = ', sqrt( sum( x**2 ) )
-  else
-    write(*,fmt='(A,I0)') '(Fortran) Solver returned status code ', ierr
-  end if
-
-  do i=1,n
-    write(10,*) x(i)
-  end do
-
-  deallocate( rows, cols, rval, rhs, x )
+!  ! Run paralution C function for COO matrices
+!  ! Doing a GMRES with MultiColored ILU(1,2) preconditioner
+!  ! Check paralution documentation for a detailed argument explanation
+!  call paralution_fortran_solve_coo(       &
+!    n,                                     &
+!    m,                                     &
+!    nnz,                                   &
+!    'CG' // C_NULL_CHAR,                   &
+!    'CSR' // C_NULL_CHAR,                  & 
+!    'MultiColoredILU' // C_NULL_CHAR,      &
+!    'CSR' // C_NULL_CHAR,                  &
+!    C_LOC(rows),                           &
+!    C_LOC(cols),                           &
+!    C_LOC(rval),                           &
+!    C_LOC(rhs),                            &
+!    1e-15_C_DOUBLE,                        &
+!    1e-8_C_DOUBLE,                         &
+!    1e+8_C_DOUBLE,                         &
+!    5000,                                  &
+!    30,                                    &
+!    0,                                     &
+!    1,                                     &
+!    C_LOC(x),                              &
+!    iter,                                  &
+!    resnorm,                               &
+!    ierr )
+!
+!  call date_and_time(values = tend)
+!
+!  tbegin = tend - tbegin
+!  tsolver = 0.001 * tbegin(8) + tbegin(7) + 60 * tbegin(6) + 3600 * tbegin(5)
+!  write(*,fmt='(A,F0.2,A)') '(Fortran) Solver ended after ', tsolver,'sec.'
+!
+!  ! Print solver details
+!  if ( ierr .eq. 0 ) then
+!    write(*,fmt='(A,I0,A,E11.5,A)') '(Fortran) Solver took ', iter, ' iterations with residual norm ', resnorm, '.'
+!    write(*,fmt='(A,F0.2)') '(Fortran) Final L2 Norm(x)   = ', sqrt( sum( x**2 ) )
+!  else
+!    write(*,fmt='(A,I0)') '(Fortran) Solver returned status code ', ierr
+!  end if
+!
+!  do i=1,n
+!    write(10,*) x(i)
+!  end do
+!
+!  deallocate( rows, cols, rval, rhs, x )
 
 end program test_paralution_solver
 
@@ -187,7 +183,7 @@ do i=1,m
       else
        f(k)=f(k)-cy
     end if
-    ia(k+1)=l+1
+    ia(l)=l+1
   end do
 end do
 
