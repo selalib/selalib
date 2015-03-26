@@ -126,6 +126,7 @@ contains
     end if
     read(input_file, sim_params)
     read(input_file, grid_dims)
+    read(input_file, lt_pic_params)
     read(input_file, elec_params)
     close(input_file)
 
