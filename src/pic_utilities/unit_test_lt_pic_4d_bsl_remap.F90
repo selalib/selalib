@@ -240,8 +240,8 @@ program unit_test_lt_pic_bsl_remap
 !             x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, max_f,    &
 !             part_group )
 
-  call sll_lt_pic_4d_init_hat_f (                       &
-             x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, hat_shift,    &
+  call sll_lt_pic_4d_init_hat_f (                                           &
+             x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, hat_shift,      &
              part_group )
 
   ! push particles with a measure-preserving affine flow
