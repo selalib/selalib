@@ -123,6 +123,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/integration/gauss_lobatto.F90
     ${SLL_DIR}/simulations/simulations_sequential/sim_CG_polar/sll_polar_operators.F90
     ${SLL_DIR}/simulations/simulations_sequential/sim_CG_polar/sll_advection_polar.F90
+    ${SLL_DIR}/sparse_matrix_manager/partition.F90
     ${SLL_DIR}/sparse_matrix_manager/sll_sparse_matrix_module.F90
     ${SLL_DIR}/time_solvers/sll_time_splitting_coeff.F90
     ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.F90
