@@ -998,7 +998,7 @@ contains
         print*,"#compute_field_case = SLL_COMPUTE_FIELD_FROM_PHI " 
         sim%compute_field_case = SLL_COMPUTE_FIELD_FROM_PHI
       case default
-        SLL_ERROR("bad compute_field_case")
+        SLL_ERROR("initialize_analytic_field_2d_curvilinear","bad compute_field_case")
         stop
     end select
 

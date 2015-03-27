@@ -3,6 +3,7 @@ module sll_common_array_initializers_module
 #include "sll_working_precision.h"
 #include "sll_constants.h"
 #include "sll_utilities.h"
+#include "sll_errors.h"
 
   implicit none
 
@@ -157,11 +158,11 @@ contains
     sll_real64 :: A1
     sll_real64 :: A2
     if(.not.(present(params)))then
-      SLL_ERROR("params should be present")
+      SLL_ERROR("sll_translation_phi_initializer_2d","params should be present")
     endif
     if(present(params))then
       if(size(params)<2)then
-        SLL_ERROR("params should be of size >=2")
+        SLL_ERROR("sll_translation_phi_initializer_2d","params should be of size >=2")
         print *,'size(params)',size(params)
       endif
       A1=params(1)
@@ -182,11 +183,11 @@ contains
     sll_real64, dimension(:), intent(in), optional :: params
     sll_real64 :: A1
     if(.not.(present(params)))then
-      SLL_ERROR("params should be present")
+      SLL_ERROR("sll_translation_A1_initializer_2d","params should be present")
     endif
     if(present(params))then
       if(size(params)<2)then
-        SLL_ERROR("params should be of size >=2")
+        SLL_ERROR("sll_translation_A1_initializer_2d","params should be of size >=2")
         print *,'size(params)',size(params)
       endif
       A1=params(1)
@@ -204,11 +205,11 @@ contains
     sll_real64, dimension(:), intent(in), optional :: params
     sll_real64 :: A2
     if(.not.(present(params)))then
-      SLL_ERROR("params should be present")
+      SLL_ERROR("sll_translation_A2_initializer_2d","params should be present")
     endif
     if(present(params))then
       if(size(params)<2)then
-        SLL_ERROR("params should be of size >=2")
+        SLL_ERROR("sll_translation_A2_initializer_2d","params should be of size >=2")
         print *,'size(params)',size(params)
       endif
       A2=params(2)
@@ -229,11 +230,11 @@ contains
     sll_real64, dimension(:), intent(in), optional :: params
     sll_real64 :: A1
     if(.not.(present(params)))then
-      SLL_ERROR("params should be present")
+      SLL_ERROR("sll_translation_A1_exact_charac_2d","params should be present")
     endif
     if(present(params))then
       if(size(params)<2)then
-        SLL_ERROR("params should be of size >=2")
+        SLL_ERROR("sll_translation_A1_exact_charac_2d","params should be of size >=2")
         print *,'size(params)',size(params)
       endif
       A1=params(1)
@@ -254,11 +255,11 @@ contains
     sll_real64, dimension(:), intent(in), optional :: params
     sll_real64 :: A2
     if(.not.(present(params)))then
-      SLL_ERROR("params should be present")
+      SLL_ERROR("sll_translation_A2_exact_charac_2d","params should be present")
     endif
     if(present(params))then
       if(size(params)<2)then
-        SLL_ERROR("params should be of size >=2")
+        SLL_ERROR("sll_translation_A2_exact_charac_2d","params should be of size >=2")
         print *,'size(params)',size(params)
       endif
       A2=params(2)
@@ -338,7 +339,7 @@ contains
     sll_real64, intent(in) :: x0_2 
     sll_real64, dimension(:), intent(in), optional :: params
     if(.not.(present(params)))then
-      SLL_ERROR("params should be present")
+      SLL_ERROR("sll_SDF_A1_exact_charac_2d","params should be present")
     endif
     if(present(params))then
       if(size(params)>=100)then
@@ -357,7 +358,7 @@ contains
     sll_real64, intent(in) :: x0_2 
     sll_real64, dimension(:), intent(in), optional :: params
     if(.not.(present(params)))then
-      SLL_ERROR("params should be present")
+      SLL_ERROR("sll_SDF_A2_exact_charac_2d","params should be present")
     endif
     if(present(params))then
       if(size(params)>=100)then
