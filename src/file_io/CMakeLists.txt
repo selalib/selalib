@@ -1,10 +1,9 @@
-MESSAGE(STATUS "HDF5_IS_PARALLEL:${HDF5_IS_PARALLEL}")
-IF(HDF5_ENABLED AND HDF5_IS_PARALLEL)
+IF(HDF5_IS_PARALLEL)
    MESSAGE(STATUS "Switch to MPI fortran Wrapper to build sll_file_io library")
    SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 ELSE()
    MESSAGE(STATUS "Serial version of HDF5 is installed")
-ENDIF(HDF5_ENABLED AND HDF5_IS_PARALLEL)
+ENDIF(HDF5_IS_PARALLEL)
 
 SET(IO_SRC sll_ascii_io.F90 
            sll_binary_io.F90 
@@ -37,8 +36,7 @@ IF(BUILD_TESTING)
   ADD_TEST( NAME gnuplot_file_io COMMAND test_gnuplot )
   SET_TESTS_PROPERTIES( gnuplot_file_io PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
-  ADD_EXECUTABLE( test_io_tri_mesh unit_test_tri_mesh.F90 
-                                sll_generate_tri_mesh.F90 )
+  ADD_EXECUTABLE( test_io_tri_mesh unit_test_tri_mesh.F90 sll_generate_tri_mesh.F90 )
   TARGET_LINK_LIBRARIES( test_io_tri_mesh sll_file_io )
 
 ENDIF(BUILD_TESTING)

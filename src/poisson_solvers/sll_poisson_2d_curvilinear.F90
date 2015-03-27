@@ -471,15 +471,15 @@ subroutine initialize_poisson_2d_curvilinear( &
 !
 !
 !   call csr_add_one_constraint( &
-!    es%sll_csr_mat%opi_ia, & 
-!    es%sll_csr_mat%opi_ja, &
-!    es%sll_csr_mat%opr_a, &
+!    es%sll_csr_mat%row_ptr, & 
+!    es%sll_csr_mat%col_ind, &
+!    es%sll_csr_mat%val, &
 !    es%sll_csr_mat%num_rows, &
 !    es%sll_csr_mat%num_nz, &
 !    es%masse, &
-!    es%sll_csr_mat_with_constraint%opi_ia, &
-!    es%sll_csr_mat_with_constraint%opi_ja, &
-!    es%sll_csr_mat_with_constraint%opr_a)  
+!    es%sll_csr_mat_with_constraint%row_ptr, &
+!    es%sll_csr_mat_with_constraint%col_ind, &
+!    es%sll_csr_mat_with_constraint%val)  
 !
 !    print *,'#begin of sll_factorize_csr_matrix'
 !    call sll_factorize_csr_matrix(es%sll_csr_mat_with_constraint)

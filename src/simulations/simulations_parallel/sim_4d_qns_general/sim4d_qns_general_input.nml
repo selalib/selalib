@@ -1,12 +1,12 @@
-&sim_params	
+&sim_params
   dt = 0.1
   number_iterations = 0
 /
 &grid_dims
   num_cells_x1 = 64
   num_cells_x2 = 64
-  num_cells_x3 = 64
-  num_cells_x4 = 64
+  num_cells_x3 = 32
+  num_cells_x4 = 32
 /
 &mesh_grid
   eta1_min = 0.0
@@ -31,7 +31,7 @@
   bc_vy_1 = 1
 /
 &diagnostics
-   diag2D_step = 0.1 
+   diag2D_step = 0.1
 /
 &spline_degree
    deg_eta1 = 3
@@ -39,11 +39,3 @@
    deg_vx   = 3
    deg_vy   = 3
 /
-
-
-
-
-
-
-
-
