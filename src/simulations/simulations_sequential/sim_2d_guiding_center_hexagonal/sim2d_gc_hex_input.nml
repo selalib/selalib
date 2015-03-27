@@ -1,0 +1,35 @@
+!ctest --verbose -R sim2d_gc_hex
+!or
+!./bin/test_2d_gc_hex_splines ../selalib/src/simulations/simulations_sequential/sim2d_gc_hex_input.nml
+!gnuplot ../selalib/src/simulations/simulations_sequential/plot_diagnostics.gnu
+
+
+&geometry
+ center_mesh_x1 = 0.0 ! mesh origin, fist coordinate
+ center_mesh_x2 = 0.0 ! mesh origin, second coordinate
+ radius = 14.0        ! mesh radius
+ ! If you want to compare different space discretizations :
+ ! cells_min = smallest discretization number of cells on a hex edge
+ ! cells_max = largest discretization number of cells on a hex edge
+ ! cells_stp = step of incrementation between cells_min and cells_max
+ ! ie. cells_min = 20 cells_max = 60 cells_step = 20
+ ! => 3 simulation w/ num_cells = 20, 40 and 60
+ ! ie2. cells_min = cells_max (and cells_step = any number)
+ ! => 1 simulation w num_cells = cells_mins = cells_max 
+ cells_min = 30
+ cells_max = 30
+ cells_stp = 20
+/
+
+&initial_function
+  epsilon = 0.001
+/
+
+&time_iterations
+  dt = 0.1
+  tmax = 10
+/
+
+&interpolation
+  spline_degree = 2
+/

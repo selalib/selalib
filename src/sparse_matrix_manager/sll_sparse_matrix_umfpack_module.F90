@@ -28,9 +28,9 @@ use mod_umfpack
     sll_int32 :: num_rows !< number of rows
     sll_int32 :: num_cols !< number of columns
     sll_int32 :: num_nz !< number of non zero elements
-    sll_int32, dimension(:), pointer :: opi_ia
-    sll_int32, dimension(:), pointer :: opi_ja
-    sll_real64, dimension(:), pointer :: opr_a
+    sll_int32, dimension(:), pointer :: row_ptr
+    sll_int32, dimension(:), pointer :: col_ind
+    sll_real64, dimension(:), pointer :: val
         !................
     !logical :: ol_use_mm_format
     sll_int32, dimension(:), pointer :: opi_i
@@ -53,9 +53,9 @@ contains
     sll_int32 :: ierr
 
     nullify(csr_mat)
-   ! SLL_DEALLOCATE_ARRAY(csr_mat%opi_ia,ierr)
-   ! SLL_DEALLOCATE_ARRAY(csr_mat%opi_ja,ierr)
-   ! SLL_DEALLOCATE_ARRAY(csr_mat%opr_a,ierr)
+   ! SLL_DEALLOCATE_ARRAY(csr_mat%row_ptr,ierr)
+   ! SLL_DEALLOCATE_ARRAY(csr_mat%col_ind,ierr)
+   ! SLL_DEALLOCATE_ARRAY(csr_mat%val,ierr)
    ! SLL_DEALLOCATE_ARRAY(csr_mat%opi_i,ierr)
     
     
@@ -173,9 +173,9 @@ contains
     mat%num_rows = num_rows
     mat%num_cols = num_cols
     mat%num_nz = num_nz
-    SLL_ALLOCATE(mat%opi_ia(num_rows + 1),ierr)
-    SLL_ALLOCATE(mat%opi_ja(num_nz),ierr)
-    SLL_ALLOCATE(mat%opr_a(num_nz),ierr)
+    SLL_ALLOCATE(mat%row_ptr(num_rows + 1),ierr)
+    SLL_ALLOCATE(mat%col_ind(num_nz),ierr)
+    SLL_ALLOCATE(mat%val(num_nz),ierr)
     
     call sll_init_SparseMatrix( &
       mat, &
@@ -187,7 +187,7 @@ contains
       lpi_columns, &
       lpi_occ)
     
-    mat%opr_a(:) = 0.0_f64
+    mat%val(:) = 0.0_f64
     
 !    print *,mat%num_nz
 !    !print *,umfpack_control
@@ -230,10 +230,10 @@ contains
     print*,'num_cols mat, num_cols mat_tot',mat_a%num_cols , mat%num_cols 
 
     
-    SLL_ALLOCATE(mat%opi_ia(mat%num_rows + 1),ierr)
-    SLL_ALLOCATE(mat%opi_ja(mat%num_nz),ierr)
-    SLL_ALLOCATE(mat%opr_a(mat%num_nz),ierr)
-    mat%opr_a(:) = 0.0_f64
+    SLL_ALLOCATE(mat%row_ptr(mat%num_rows + 1),ierr)
+    SLL_ALLOCATE(mat%col_ind(mat%num_nz),ierr)
+    SLL_ALLOCATE(mat%val(mat%num_nz),ierr)
+    mat%val(:) = 0.0_f64
     
     
     SLL_ALLOCATE(mat%umf_control(umfpack_control),ierr)
@@ -345,8 +345,8 @@ contains
     sll_int32 :: ierr
     
     
-    mat%Ap = mat%opi_ia(:) - 1
-    mat%Ai = mat%opi_ja(:) - 1
+    mat%Ap = mat%row_ptr(:) - 1
+    mat%Ai = mat%col_ind(:) - 1
 
     ! pre-order and symbolic analysis
     call umf4sym( &
@@ -354,7 +354,7 @@ contains
       mat%num_cols, &
       mat%Ap, &
       mat%Ai, &
-      mat%opr_a, &
+      mat%val, &
       mat%umf_symbolic, &
       mat%umf_control, &
       info)
@@ -364,7 +364,7 @@ contains
     call umf4num( &
       mat%Ap, &
       mat%Ai, &
-      mat%opr_a, &
+      mat%val, &
       mat%umf_symbolic, &
       mat%umf_numeric, &
       mat%umf_control, &
@@ -386,10 +386,10 @@ contains
 
     do li_i = 1, mat % num_rows
 
-      li_k_1 = mat % opi_ia(li_i)
-      li_k_2 = mat % opi_ia(li_i + 1) - 1
+      li_k_1 = mat % row_ptr(li_i)
+      li_k_2 = mat % row_ptr(li_i + 1) - 1
       output(li_i) = &
-        DOT_PRODUCT(mat % opr_a(li_k_1: li_k_2), input(mat % opi_ja(li_k_1: li_k_2)))
+        DOT_PRODUCT(mat % val(li_k_1: li_k_2), input(mat % col_ind(li_k_1: li_k_2)))
             
     end do
 
@@ -408,11 +408,11 @@ contains
     sll_int32 :: li_k
 
 
-    ! THE CURRENT LINE IS self%opi_ia(ai_A)
-    do li_k = mat % opi_ia(ai_A), mat % opi_ia(ai_A + 1) - 1
-      li_j = mat % opi_ja(li_k)
+    ! THE CURRENT LINE IS self%row_ptr(ai_A)
+    do li_k = mat % row_ptr(ai_A), mat % row_ptr(ai_A + 1) - 1
+      li_j = mat % col_ind(li_k)
       if (li_j == ai_Aprime) then
-        mat % opr_a(li_k) = mat % opr_a(li_k) + val 
+        mat % val(li_k) = mat % val(li_k) + val 
         exit
       end if
     end do
@@ -554,11 +554,11 @@ contains
         sll_int32, dimension(:), pointer :: lpr_tmp
 
         ! INITIALIZING ia
-        self % opi_ia(1) = 1
+        self % row_ptr(1) = 1
 
         do li_i = 1, self % num_rows
 
-            self % opi_ia(li_i + 1) = self % opi_ia(1) + SUM(api_occ(1: li_i))
+            self % row_ptr(li_i + 1) = self % row_ptr(1) + SUM(api_occ(1: li_i))
 
         end do
 
@@ -588,7 +588,7 @@ contains
 
                 do li_i = 1, li_size
 
-                    self % opi_ja(self % opi_ia(li_A_1) + li_i - 1) =  ( lpr_tmp(li_i))
+                    self % col_ind(self % row_ptr(li_A_1) + li_i - 1) =  ( lpr_tmp(li_i))
 
                 end do
 
