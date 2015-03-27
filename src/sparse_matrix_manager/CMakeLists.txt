@@ -4,6 +4,7 @@ IF(PASTIX_FOUND)
   INCLUDE_DIRECTORIES(${PASTIX_INCLUDE_DIRS})
   ADD_LIBRARY(sll_sparse_matrix STATIC 
               sll_pastix.F90
+              partition.F90
   	        sll_sparse_matrix_pastix_module.F90
 	        sll_sparse_matrix_mp_module.F90)
 
@@ -20,6 +21,7 @@ ELSEIF(SUITESPARSE_FOUND)
   INCLUDE_DIRECTORIES(${SUITESPARSE_INCLUDE_DIRS})
 
   ADD_LIBRARY(sll_sparse_matrix STATIC 
+              partition.F90
   	        sll_sparse_matrix_umfpack_module.F90
 	        sll_sparse_matrix_mp_module.F90)
 
@@ -36,6 +38,7 @@ ELSEIF(SUITESPARSE_FOUND)
 ELSE()
 
   ADD_LIBRARY(sll_sparse_matrix STATIC 
+              partition.F90
   	        sll_sparse_matrix_module.F90
 	        sll_sparse_matrix_mp_module.F90 )
 
@@ -74,9 +77,22 @@ IF(BUILD_TESTING)
     INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/paralution-prefix/src/paralution/src/)
     LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/paralution-prefix/src/paralution-build/lib/)
     ADD_DEFINITIONS(-lstdc++)
-    ADD_EXECUTABLE(paralution_solver paralution_fortran.cpp sll_paralution.f90)
-    TARGET_LINK_LIBRARIES(paralution_solver sll_sparse_matrix paralution)
+    ADD_LIBRARY(sll_paralution paralution_fortran.cpp sll_paralution.f90)
+    ADD_EXECUTABLE(paralution_solver unit_test_paralution.F90) 
+    TARGET_LINK_LIBRARIES(paralution_solver sll_sparse_matrix sll_paralution paralution)
 
   ENDIF(BUILD_PARALUTION)
+
+  IF(PASTIX_FOUND)
+    
+    ADD_EXECUTABLE(test_pastix sll_pastix.F90 unit_test_pastix.F90)
+    TARGET_LINK_LIBRARIES(test_pastix sll_collective
+                                      sll_memory
+                                      ${PASTIX_LIBRARIES} 
+                                      ${PTSCOTCH_LIBRARIES}
+                                      ${SCOTCH_LIBRARIES}
+                                      ${BLAS_LIBRARIES})
+
+  ENDIF(PASTIX_FOUND)
 
 ENDIF(BUILD_TESTING)

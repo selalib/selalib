@@ -20,6 +20,8 @@ module sll_sparse_matrix_module
 #include "sll_memory.h"
 #include "sll_assert.h"
 
+use qsort_partition
+
 implicit none
 
 !> @brief type for CSR format
@@ -525,53 +527,6 @@ subroutine sll_solve_csr_matrix(mat, B, U)
 end subroutine sll_solve_csr_matrix
 
 
-recursive subroutine QsortC(A)
-  sll_int32, intent(inout), dimension(:) :: A
-  sll_int32 :: iq
-
-  if(size(A) > 1) then
-     call Partition(A, iq)
-     call QsortC(A(:iq-1))
-     call QsortC(A(iq:))
-  endif
-end subroutine QsortC
-
-subroutine Partition(A, marker)
-  sll_int32, intent(inout), dimension(:) :: A
-  sll_int32, intent(out) :: marker
-  sll_int32 :: i, j
-  real(f64) :: temp
-  real(f64) :: x      ! pivot point
-  x = A(1)
-  i= 0
-  j= size(A) + 1
-
-  do
-     j = j-1
-     do
-        if (A(j) <= x) exit
-        j = j-1
-     end do
-     i = i+1
-     do
-        if (A(i) >= x) exit
-        i = i+1
-     end do
-     if (i < j) then
-        ! exchange A(i) and A(j)
-        temp = A(i)
-        A(i) = A(j)
-        A(j) = temp
-     elseif (i == j) then
-        marker = i+1
-        return
-     else
-        marker = i
-        return
-     endif
-  end do
-
-end subroutine Partition
 
 subroutine sll_solve_csr_matrix_perper ( this, B,U,Masse_tot )
   type(sll_csr_matrix) :: this
@@ -715,7 +670,8 @@ type(sll_csr_matrix) :: this
 sll_real64           :: f(:)
 sll_real64, pointer  :: a(:)
 sll_int32            :: m
-sll_int32, pointer   :: ia(:),ja(:)
+sll_int32, pointer   :: ia(:)
+sll_int32, pointer   :: ja(:)
 integer              :: k,l,i,j
 
 real (kind(0d0)), parameter :: zero=0.0d0,cx=-1.0d0,cy=-1.0d0, cd=4.0d0
