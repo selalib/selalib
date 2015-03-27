@@ -50,7 +50,6 @@ program test_paralution_solver
   real(kind=C_DOUBLE), allocatable, target :: x(:)
   real(kind=C_DOUBLE), allocatable, target :: rhs(:)
 
-
   character(len=10)  :: rep
   character(len=7)   :: field
   character(len=19)  :: symm
@@ -132,58 +131,3 @@ program test_paralution_solver
 
 end program test_paralution_solver
 
-subroutine uni2d(m,f,a,ja,ia)
-!
-! Fill a matrix in COO format corresponding to a constant coefficient
-! five-point stencil on a square grid
-!
-implicit none
-real (kind(0d0)) :: f(*),a(*)
-integer :: m,ia(*),ja(*)
-integer :: k,l,i,j
-real (kind(0d0)), parameter :: zero=0.0d0,cx=-1.0d0,cy=-1.0d0, cd=4.0d0
-!
-k=0
-l=0
-ia(1)=1
-do i=1,m
-  do j=1,m
-    k=k+1
-    l=l+1
-    a(l)=cd
-    ja(l)=k
-    f(k)=zero
-    if(j < m) then
-       l=l+1
-       a(l)=cx
-       ja(l)=k+1
-      else
-       f(k)=f(k)-cx
-    end if
-    if(i < m) then
-       l=l+1
-       a(l)=cy
-       ja(l)=k+m
-      else
-       f(k)=f(k)-cy
-    end if
-    if(j > 1) then
-       l=l+1
-       a(l)=cx
-       ja(l)=k-1
-      else
-       f(k)=f(k)-cx
-    end if
-    if(i >  1) then
-       l=l+1
-       a(l)=cy
-       ja(l)=k-m
-      else
-       f(k)=f(k)-cy
-    end if
-    ia(l)=l+1
-  end do
-end do
-
-return
-end subroutine uni2D
