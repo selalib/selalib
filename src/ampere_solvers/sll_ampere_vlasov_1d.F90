@@ -53,6 +53,7 @@ type, public :: sll_ampere_1d
 
 contains
 
+   !> Solve \f$ dE / dt = - J \f$
    procedure :: compute_e_from_j => solve_ampere_1d
 
 end type sll_ampere_1d

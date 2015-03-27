@@ -18,6 +18,9 @@ use sll_module_advection_1d_ampere
 
 implicit none
 
+character(len=*), parameter :: this_prog_name = 'vlasov_ampere_2d'
+character(len=128)          :: err_msg
+
 class(sll_simulation_2d_vlasov_ampere_cart), pointer :: sim
 
 character(len=256)  :: filename
@@ -217,8 +220,9 @@ select case (sim%advection_form_x2)
   case (SLL_CONSERVATIVE)
     node_positions_x2(1:num_dof_x2) = x2_array_middle(1:num_dof_x2)
   case default
-    print *,'#sim%advection_form_x2=',sim%advection_form_x2
-    SLL_ERROR('#not implemented')
+    write(err_msg,*) '#sim%advection_form_x2=', sim%advection_form_x2, &
+                     ' not implemented'
+    SLL_ERROR( this_prog_name, err_msg )
 end select  
     
 call sll_2d_parallel_array_initializer_cartesian( &
@@ -854,6 +858,7 @@ subroutine save_for_restart()
 end subroutine save_for_restart
 
 subroutine check_restart()
+  character(len=*), parameter :: this_sub_name = 'check_restart'
 
 if (trim(sim%restart_file) /= "no_restart_file" ) then
 
@@ -861,8 +866,9 @@ if (trim(sim%restart_file) /= "no_restart_file" ) then
   INQUIRE(FILE=trim(sim%restart_file)//'_proc_'//cproc//'.rst', EXIST=file_exists)
 
   if (.not. file_exists) then
-    SLL_ERROR('#file '//trim(sim%restart_file)//'_proc_'//cproc//'.rst &
-              & does not exist')
+    err_msg = '#file '//trim(sim%restart_file)//'_proc_'//cproc//'.rst &
+              & does not exist'
+    SLL_ERROR( this_sub_name, err_msg )
   endif
 
   open(unit=restart_id, &
@@ -870,9 +876,10 @@ if (trim(sim%restart_file) /= "no_restart_file" ) then
        form='unformatted', IOStat=ierr)      
 
   if ( ierr .ne. 0 ) then
-    SLL_ERROR('ERROR while opening file &
+    err_msg = 'ERROR while opening file &
                &'//trim(sim%restart_file)//'_proc_'//cproc//'.rst &
-               & Called from run_va2d_cartesian().')
+               & Called from run_va2d_cartesian().'
+    SLL_ERROR( this_sub_name, err_msg )
   end if
 
   print *,'#read restart file '//trim(sim%restart_file)//'_proc_'//cproc//'.rst'      
