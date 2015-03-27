@@ -15,7 +15,7 @@ module sll_wedge_product_generaldim
  contains
 
 !This is just an arbitrary definition
-function cross_product_2D(v,w) result(cross)
+pure function cross_product_2D(v,w) result(cross)
 sll_real64, dimension(:,:), intent(in) :: v,w
  sll_real64, dimension(2,size(v,2)):: cross
   sll_real64, dimension(size(v,2)):: determinante
@@ -29,7 +29,7 @@ sll_real64, dimension(:,:), intent(in) :: v,w
 end function
 
 
-function cross_product_3D( v, w) result(cross)
+pure function cross_product_3D( v, w) result(cross)
  sll_real64, dimension(:,:), intent(in) :: v,w
  sll_real64, dimension(3,size(v,2)):: cross
   SLL_ASSERT(size(v,1)==3)
