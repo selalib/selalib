@@ -18,6 +18,7 @@ implicit none
     sll_int32 :: dimx !spatial dimensions
     sll_real64, allocatable, dimension(:) :: unitmode !normalized to domain fourier mode
     sll_int32, allocatable, dimension(:,:) :: allmodes
+    sll_comp64, allocatable, dimension(:) :: rhs_one ! 1 
     contains
     procedure,  pass(this) :: init =>sll_pif_fieldsolver_init
     !sets the domain to be a d-dimensional cube with constant edge length
@@ -38,10 +39,13 @@ implicit none
     
     procedure, pass(this) :: solve_poisson=>sll_pif_fieldsolver_solve_poisson
     procedure, pass(this) :: solve_mass=>sll_pif_fieldsolver_solve_mass
+    procedure, pass(this) :: solve_quasineutral=>sll_pif_fieldsolver_solve_quasineutral
      procedure, pass(this) ::  eval_gradient=>sll_pif_fieldsolver_eval_gradient
       procedure, pass(this) ::  eval_solution=>sll_pif_fieldsolver_eval_solution
      procedure, pass(this) :: get_rhs_particle=>get_fourier_modes
      procedure, pass(this) :: visu_info=>visu_info_sll_pif_fieldsolver
+     
+     procedure, pass(this) :: l2norm=>l2norm_sll_pif_fieldsolver
  end type pif_fieldsolver
 
 contains
@@ -55,11 +59,26 @@ pure function sll_pif_fieldsolver_get_problemsize(this) result(sz)
  endif
 end function sll_pif_fieldsolver_get_problemsize
 
+!>Returns the squared l2norm for a coefficient vector of a solution
+function l2norm_sll_pif_fieldsolver(this, solution) result(l2norm)
+ class(pif_fieldsolver), intent(in) :: this
+ sll_comp64, dimension(:), intent(in) :: solution
+!  sll_int32 :: idx
+ sll_real64 :: l2norm
+ 
+ SLL_ASSERT(size(solution)==this%problemsize())
+ 
+ l2norm=dot_product(solution, solution)
+ 
+end function l2norm_sll_pif_fieldsolver
+
+
+
 subroutine sll_pif_fieldsolver_init(this,maxmode)
  class(pif_fieldsolver), intent(inout) :: this
  sll_int32, intent(in) :: maxmode
  sll_int32, allocatable, dimension(:) :: maxmodes,minmodes
- sll_int32 :: ierr 
+ sll_int32 :: ierr,idx
   
  SLL_ALLOCATE(maxmodes(1:this%dimx),ierr)
  SLL_ALLOCATE(minmodes(1:this%dimx),ierr)
@@ -70,6 +89,13 @@ subroutine sll_pif_fieldsolver_init(this,maxmode)
   SLL_ALLOCATE(this%allmodes(1:this%dimx,1:product(maxmodes-minmodes+1)),ierr)
   this%allmodes=generate_exponents(minmodes,maxmodes)
   
+ !Define the one  
+ SLL_ALLOCATE(this%rhs_one(1:this%problemsize()),ierr)
+ do idx=1,size(this%allmodes,2)
+   if (sum(abs(this%allmodes(:,idx)))==0) then
+      this%rhs_one(idx)=product((2*sll_pi/this%unitmode))
+   endif
+ end do
 end subroutine  sll_pif_fieldsolver_init
 
 
@@ -238,7 +264,27 @@ function sll_pif_fieldsolver_solve_mass(this, rhs) result(solution)
  end do
 end function sll_pif_fieldsolver_solve_mass
 
-
+!Get rho from the right hand side
+function sll_pif_fieldsolver_solve_quasineutral(this, rhs) result(solution)
+ class(pif_fieldsolver), intent(in) :: this
+ sll_comp64, dimension(:), intent(in) :: rhs
+ sll_comp64, dimension(size(rhs)) :: solution
+ sll_int32 :: idx
+ 
+ SLL_ASSERT(size(rhs)==this%problemsize())
+ 
+ solution=rhs*product(this%unitmode/sll_pi/2)
+ do idx=1,this%problemsize()
+  if ( .not. this%allmodes(1,idx)==0) then
+   solution(idx)=solution(idx)*2
+  endif
+  
+  !Remove constant mode, could also be a dimensional average
+  if (sum(abs(this%allmodes(:,idx)))==0) then
+    solution(idx)=0
+  endif
+ end do
+end function sll_pif_fieldsolver_solve_quasineutral
 
 function sll_pif_fieldsolver_eval_gradient(this, pos,fouriermodes) result(gradient)
  class(pif_fieldsolver), intent(in) :: this

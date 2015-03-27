@@ -28,6 +28,10 @@ module sll_descriptors
   type(sll_vlasovpoisson_sim), parameter :: SLL_TWOSTREAM   = sll_vlasovpoisson_sim(4,'SLL_TWOSTREAM' )
   type(sll_vlasovpoisson_sim), parameter :: SLL_BUMPONTAIL  = sll_vlasovpoisson_sim(5,'SLL_BUMPONTAIL' )
 
+  interface operator(.eq.)
+    module procedure sll_vlasovpoisson_sim_compare
+  end interface
+  
 !==============================================================================
 contains
 !==============================================================================
@@ -44,6 +48,16 @@ contains
     r = self%pname
   end function name_sll_vlasovpoisson_sim
   !----------------------------------------------------------------------------
+  
+   pure function sll_vlasovpoisson_sim_compare(bc1,bc2) result(compare)
+  type(sll_vlasovpoisson_sim), intent(in) :: bc1, bc2
+  logical :: compare
+
+   compare = bc1%id .eq. bc2%id
+
+ end function sll_vlasovpoisson_sim_compare
+  
+  
   
   subroutine parse_sll_vlasovpoisson_sim(self, str)
       class( sll_vlasovpoisson_sim ), intent( inout ) :: self
@@ -86,6 +100,9 @@ contains
   end subroutine parse_sll_vlasovpoisson_sim
   
 end module sll_descriptors
+
+
+
 
 !==============================================================================
   
