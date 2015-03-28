@@ -52,7 +52,7 @@ contains
 subroutine uni2d(mat,f)
 type(sll_paralution_solver) :: mat
 real(kind=C_DOUBLE)         :: f(:)
-integer                     :: m,k,l,i,j
+integer                     :: i, j, k, l, m
 
 real(kind(0d0)), parameter :: zero =  0.0d0
 real(kind(0d0)), parameter :: cx   = -1.0d0
