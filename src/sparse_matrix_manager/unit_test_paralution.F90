@@ -66,9 +66,9 @@ call paralution_fortran_solve_csr(       &
   'CSR' // C_NULL_CHAR,                  & 
   'MultiColoredILU' // C_NULL_CHAR,      &
   'CSR' // C_NULL_CHAR,                  &
-  C_LOC(mat%row_ptr),                    &
-  C_LOC(mat%col_ind),                    &
-  C_LOC(mat%val),                        &
+  C_LOC(mat%row_ptr(1)),                 &
+  C_LOC(mat%col_ind(1)),                 &
+  C_LOC(mat%val(1)),                     &
   C_LOC(rhs),                            &
   1e-15_C_DOUBLE,                        &
   1e-8_C_DOUBLE,                         &
