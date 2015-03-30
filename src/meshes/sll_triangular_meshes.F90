@@ -934,23 +934,30 @@ end subroutine get_cell_center
 !> Map an hexagonal mesh on circle
 !> param[inout] mesh the triangular mesh built fron an hexagonal mesh
 !> param[in]    num_cells is the num_cells parameter of the hexagonal mesh
-subroutine map_to_circle( mesh, num_cells )
+!> param[in]    order, optional if order=1 we move only points on the
+!> boundary
+subroutine map_to_circle( mesh, num_cells, order )
 
 class(sll_triangular_mesh_2d), intent(inout) :: mesh
 sll_int32,                     intent(in)    :: num_cells
+sll_int32, optional                          :: order
 
 sll_int32  :: i, j, cell
 sll_real64 :: r, alpha
 
+if(.not. present(order)) order = num_cells
+
 i = 2
 do cell = 1, num_cells
-  r     = cell * 1.0_f64 / num_cells
-  alpha = sll_pi / 6.0_f64
-  do j = 1, cell*6
-     mesh%coord(1,i+j-1) = r * cos(alpha)
-     mesh%coord(2,i+j-1) = r * sin(alpha)
-     alpha =  alpha + sll_pi / (3.0_f64 * cell)
-  end do
+  if (cell > num_cells - order) then
+    r     = cell * 1.0_f64 / num_cells
+    alpha = sll_pi / 6.0_f64
+    do j = 1, cell*6
+      mesh%coord(1,i+j-1) = r * cos(alpha)
+      mesh%coord(2,i+j-1) = r * sin(alpha)
+      alpha =  alpha + sll_pi / (3.0_f64 * cell)
+    end do
+  end if
   i = i + cell*6
 end do
 
