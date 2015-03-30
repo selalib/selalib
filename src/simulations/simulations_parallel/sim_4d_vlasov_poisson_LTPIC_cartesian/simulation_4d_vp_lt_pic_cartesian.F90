@@ -195,8 +195,10 @@ contains
             ALPHA, KX_LANDAU,                           &
             sim%part_group )
 
-    sim%ions_number = sim%part_group%number_particles
-    SLL_ASSERT( sim%ions_number == NUM_PARTS_X * NUM_PARTS_Y * NUM_PARTS_VX * NUM_PARTS_VY)
+        sim%ions_number = sim%part_group%number_particles
+        SLL_ASSERT( sim%ions_number == NUM_PARTS_X * NUM_PARTS_Y * NUM_PARTS_VX * NUM_PARTS_VY)
+
+        print *, "sim%ions_number  = ", sim%ions_number
 
     else
         !! initialize the group of PIC particles
@@ -476,7 +478,7 @@ contains
        do k = 1, sim%ions_number
           pp_vx = particles(k)%vx
           pp_vy = particles(k)%vy
-          print *,"aaa",k,particles(k)%ic
+            !          print *,"aaa",k,particles(k)%ic
           SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,particles(k),tmp5,tmp6)
           particles(k)%vx = pp_vx - 0.5_f64 * dt_q_over_m * Ex
           particles(k)%vy = pp_vy - 0.5_f64 * dt_q_over_m * Ey
