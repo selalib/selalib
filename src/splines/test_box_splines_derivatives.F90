@@ -32,8 +32,8 @@ sll_real64, dimension(:), allocatable :: dyf
 
 
 ! Mesh initialization
-num_cells = 100
-mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, radius = 8._f64)
+num_cells = 50
+mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, radius = 2._f64)
 call sll_display(mesh)
 
 ! Allocations for boxsplines and derivatives :
@@ -50,8 +50,8 @@ do i=1, mesh%num_pts_tot
    ! Computing boxsplines of degree 2:
    f(i) = chi_gen_val(x1, x2, 2)
    ! And derivatives :
-   dxf(i) = boxspline_x1_derivative(x1, x2, 2)
-   dyf(i) = boxspline_x2_derivative(x1, x2, 2)
+   dxf(i) = boxspline_val_der(x1, x2, 1, 1, 0)!boxspline_x1_derivative(x1, x2, 1)
+   dyf(i) = boxspline_val_der(x1, x2, 1, 0, 1)!boxspline_x2_derivative(x1, x2, 1)
 
 end do
 

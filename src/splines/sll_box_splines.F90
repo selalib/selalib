@@ -591,12 +591,12 @@ contains  ! ****************************************************************
     h = max(10.*sll_epsilon_0*abs(x1), sll_epsilon_0)
 
     ! Finite difference method of order 5
-    fm2h = chi_gen_val(x1-2.0*h, x2, deg)
-    fm1h = chi_gen_val(x1 - h,   x2, deg)
-    fp2h = chi_gen_val(x1+2.0*h, x2, deg)
-    fp1h = chi_gen_val(x1 + h,   x2, deg)
+    fm2h = chi_gen_val(x1-2.0_f64*h, x2, deg)
+    fm1h = chi_gen_val(x1 - h,       x2, deg)
+    fp2h = chi_gen_val(x1+2.0_f64*h, x2, deg)
+    fp1h = chi_gen_val(x1 + h,       x2, deg)
 
-    val = 0.25/3._f64/h * ( - fp2h + 8._f64 * fp1h - 8._f64 * fm1h + fm2h)
+    val = 0.25_f64/3._f64/h * ( - fp2h + 8._f64 * fp1h - 8._f64 * fm1h + fm2h)
 
   end function boxspline_x1_derivative
 
@@ -665,13 +665,16 @@ contains  ! ****************************************************************
     
     if (nderiv1.eq.0) then
        if (nderiv2.eq.0) then
+          !> no derivative to compute
           val = chi_gen_val(x1_basis, x2_basis, deg)
        else if (nderiv2.eq.1) then
+          !> derivative with respect to the second coo
           val = boxspline_x2_derivative(x1_basis, x2_basis, deg)
        else
           print *, "Error in boxspline_val_der : cannot compute this derivative"
        end if
     else if (nderiv1.eq.1) then
+       ! derivative with respecto to the first coo
        if (nderiv2.eq.0) then
           val = boxspline_x1_derivative(x1_basis, x2_basis, deg)
        else
@@ -726,8 +729,8 @@ contains  ! ****************************************************************
     !    |
     !    +--0-----1-->
     ref_pts(:,1) = (/ 0._f64,               0.0_f64 /)
-    ref_pts(:,2) = (/ sqrt(3._f64)*0.5_f64, 0.5_f64 /)
-    ref_pts(:,3) = (/ 0._f64,               1.0_f64 /)
+    ref_pts(:,2) = (/ 0._f64,               1.0_f64 /)
+    ref_pts(:,3) = (/ sqrt(3._f64)*0.5_f64, 0.5_f64 /)
     
     ! Computing fekete points on equilateral reference triangle
     ! ie. triangle of vertices : (0,0) (0,1) and (1,0)
@@ -763,9 +766,9 @@ contains  ! ****************************************************************
           do idx = 0, nderiv
              do idy = 0, nderiv-idx
                 val = boxspline_val_der(x, y, deg, idx, idy)
-                write(out_unit, "(1(g13.3))", advance='no') val
+                write(out_unit, "(1(g20.10))", advance='no') val
                 write(out_unit, "(1(a,1x))", advance='no') ","
-                write(*, "(1(g13.3,1x))", advance='no') val
+                write(*, "(1(g20.10,1x))", advance='no') val
              end do
           end do
           write(out_unit, *) ""

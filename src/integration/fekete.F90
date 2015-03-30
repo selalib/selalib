@@ -379,8 +379,9 @@ contains
     !    |
     !    +--0-----1-->
     ref_pts(:,1) = (/ 0._f64,               0.0_f64 /)
-    ref_pts(:,2) = (/ sqrt(3._f64)*0.5_f64, 0.5_f64 /)
-    ref_pts(:,3) = (/ 0._f64,               1.0_f64 /)
+    ref_pts(:,2) = (/ 0._f64,               1.0_f64 /)
+    ref_pts(:,3) = (/ sqrt(3._f64)*0.5_f64, 0.5_f64 /)
+    
 
     ! Computing fekete points on that triangle
     quad_pw = fekete_points_and_weights(ref_pts)
@@ -400,7 +401,7 @@ contains
        x = quad_pw(1,i)
        y = quad_pw(2,i)
        w = quad_pw(3,i)
-       write(out_unit, "(2(g13.3,a,1x),(g13.3))") x, ",", y, ",", w
+       write(out_unit, "(2(g22.17,a,1x),(g22.17))") x, ",", y, ",", w
     end do
     close(out_unit)
 
