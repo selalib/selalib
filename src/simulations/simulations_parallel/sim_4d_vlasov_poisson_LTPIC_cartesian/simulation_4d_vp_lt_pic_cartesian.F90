@@ -248,6 +248,8 @@ contains
     if (OMP_GET_THREAD_NUM() == 0) then
        sim%n_threads =  OMP_GET_NUM_THREADS()
     endif
+#else
+    sim%n_threads =  1
 #endif
     !$omp end parallel
 
@@ -474,6 +476,7 @@ contains
        do k = 1, sim%ions_number
           pp_vx = particles(k)%vx
           pp_vy = particles(k)%vy
+          print *,"aaa",k,particles(k)%ic
           SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,particles(k),tmp5,tmp6)
           particles(k)%vx = pp_vx - 0.5_f64 * dt_q_over_m * Ex
           particles(k)%vy = pp_vy - 0.5_f64 * dt_q_over_m * Ey
