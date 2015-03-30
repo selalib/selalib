@@ -12,8 +12,8 @@
 /
 
 &grid_dims
-        NC_X = 10
-        NC_Y = 5
+        NC_X = 128
+        NC_Y = 32
         XMIN   = 0.0
         KX_LANDAU = 0.5
         YMIN   = 0.0
@@ -23,10 +23,10 @@
 /
 
 &lt_pic_params
-    NUM_PARTS_X         = 20
-    NUM_PARTS_Y         = 10
-    NUM_PARTS_VX        = 5
-    NUM_PARTS_VY        = 5
+    NUM_PARTS_X         = 100
+    NUM_PARTS_Y         = 30
+    NUM_PARTS_VX        = 10
+    NUM_PARTS_VY        = 10
     REMAP_GRID_VX_MIN   = -6.0
     REMAP_GRID_VX_MAX   = 6.0
     REMAP_GRID_VY_MIN   = -6.0

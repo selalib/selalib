@@ -950,30 +950,38 @@ end subroutine get_ltp_deformation_matrix
        SLL_ASSERT(dy<=1)
        call compute_cell_and_offset(vx,g%eta3_min,1./h_virtual_cell_vx,l,dvx)
        l=l+1
-       SLL_ASSERT(l>0)
+       !
+       !       SLL_ASSERT(l>0)    ! disabling this assert because the moving particles can take any velocity after a push
        SLL_ASSERT(dvx>=0)
        SLL_ASSERT(dvx<=1)
        call compute_cell_and_offset(vy,g%eta4_min,1./h_virtual_cell_vy,m,dvy)
        m=m+1
-       SLL_ASSERT(m>0)
+       !       SLL_ASSERT(m>0)  ! disabling this assert because the moving particles can take any velocity after a push
        SLL_ASSERT(dvy>=0)
        SLL_ASSERT(dvy<=1)
 
-       ! what is the distance from this particle to the virtual cell center? Speed things up a bit by skipping the
-       ! square root calculation that will not change the final comparison of distances. Use adimensional values because
-       ! adding values from different dimensions with different units makes little sense.
+       ! discard particles with velocities off-bounds since the corresponding virtual cells will never be treated
+       if(  l >= 1 .and. l <= num_virtual_cells_vx .and. &
+            m >= 1 .and. m <= num_virtual_cells_vy  )then
 
-       tmp =  (dx - 0.5)**2.    &
-            + (dy - 0.5)**2.    &
-            + (dvx - 0.5)**2.    &
-            + (dvy - 0.5)**2.
+           ! what is the distance from this particle to the virtual cell center? Speed things up a bit by skipping the
+           ! square root calculation that will not change the final comparison of distances. Use adimensional values because
+           ! adding values from different dimensions with different units makes little sense.
 
-       ! if new particle is closer to center, keep the new one
+           tmp =  (dx - 0.5)**2.    &
+                + (dy - 0.5)**2.    &
+                + (dvx - 0.5)**2.    &
+                + (dvy - 0.5)**2.
 
-       if(closest_particle(i,j,l,m) == 0 .or. tmp < closest_particle_distance(i,j,l,m)) then
-          closest_particle(i,j,l,m) = k
-          closest_particle_distance(i,j,l,m) = tmp
-       end if
+           ! if new particle is closer to center, keep the new one
+
+           if(closest_particle(i,j,l,m) == 0 .or. tmp < closest_particle_distance(i,j,l,m)) then
+              closest_particle(i,j,l,m) = k
+              closest_particle_distance(i,j,l,m) = tmp
+           end if
+
+        end if
+
     end do
 
     ! Periodicity treatments copied from [[sll_lt_pic_4d_write_f_on_remap_grid-periodicity]]
@@ -2704,12 +2712,15 @@ end subroutine
         end if
 
         ! Because the Poisson mesh does not prescribe any resolution in velocity
-        ! the resolution of the 'virtual' grid in the velocity dimensions is inferred from the remapping grid
-        num_virtual_cells_vx = int(p_group%remapping_grid%num_cells3/n_virtual)
+        ! the resolution of the 'virtual' cells in the velocity dimensions is inferred from the remapping (or initial) grid
+        num_virtual_cells_vx = p_group%number_parts_vx
+!        remapping_grid%num_cells3
+!                int(p_group%remapping_grid%num_cells3/n_virtual)
         virtual_grid_vx_min = p_group%remapping_grid%eta3_min
         virtual_grid_vx_max = p_group%remapping_grid%eta3_max
 
-        num_virtual_cells_vy = int(p_group%remapping_grid%num_cells4/n_virtual)
+        num_virtual_cells_vy = p_group%number_parts_vy
+!        num_virtual_cells_vy = int(p_group%remapping_grid%num_cells4/n_virtual)
         virtual_grid_vy_min = p_group%remapping_grid%eta4_min
         virtual_grid_vy_max = p_group%remapping_grid%eta4_max
 
@@ -2834,30 +2845,37 @@ end subroutine
        SLL_ASSERT(dy<=1)
        call compute_cell_and_offset(vx,g%eta3_min,1./h_virtual_cell_vx,l,dvx)
        l=l+1
-       SLL_ASSERT(l>0)
+        !       SLL_ASSERT(l>0)     ! disabling this assert because the moving particles can take any velocity after a push
        SLL_ASSERT(dvx>=0)
        SLL_ASSERT(dvx<=1)
        call compute_cell_and_offset(vy,g%eta4_min,1./h_virtual_cell_vy,m,dvy)
        m=m+1
-       SLL_ASSERT(m>0)
+        !      SLL_ASSERT(m>0)      ! disabling this assert because the moving particles can take any velocity after a push
        SLL_ASSERT(dvy>=0)
        SLL_ASSERT(dvy<=1)
 
-       ! what is the distance from this particle to the virtual cell center? Speed things up a bit by skipping the
-       ! square root calculation that will not change the final comparison of distances. Use adimensional values because
-       ! adding values from different dimensions with different units makes little sense.
+       ! discard particles with velocities off-bounds since the corresponding virtual cells will never be treated
+       if(  l >= 1 .and. l <= num_virtual_cells_vx .and. &
+            m >= 1 .and. m <= num_virtual_cells_vy  )then
 
-       tmp =  (dx - 0.5)**2.    &
-            + (dy - 0.5)**2.    &
-            + (dvx - 0.5)**2.    &
-            + (dvy - 0.5)**2.
+           ! what is the distance from this particle to the virtual cell center? Speed things up a bit by skipping the
+           ! square root calculation that will not change the final comparison of distances. Use adimensional values because
+           ! adding values from different dimensions with different units makes little sense.
 
-       ! if new particle is closer to center, keep the new one
+           tmp =  (dx - 0.5)**2.    &
+                + (dy - 0.5)**2.    &
+                + (dvx - 0.5)**2.    &
+                + (dvy - 0.5)**2.
 
-       if(closest_particle(i,j,l,m) == 0 .or. tmp < closest_particle_distance(i,j,l,m)) then
-          closest_particle(i,j,l,m) = k
-          closest_particle_distance(i,j,l,m) = tmp
-       end if
+           ! if new particle is closer to center, keep the new one
+
+           if(closest_particle(i,j,l,m) == 0 .or. tmp < closest_particle_distance(i,j,l,m)) then
+              closest_particle(i,j,l,m) = k
+              closest_particle_distance(i,j,l,m) = tmp
+           end if
+
+        end if
+
     end do
 
     ! Periodicity treatments copied from [[sll_lt_pic_4d_write_f_on_remap_grid-periodicity]]
