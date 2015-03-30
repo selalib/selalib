@@ -85,7 +85,7 @@ program lt_pic_4d_init_tester
   character(5)      :: ncx_name, ncy_name
 
   sll_int64 :: j, j_x, j_y, j_vx, j_vy
-  sll_int32 :: part_array_size, part_guard_size
+!  sll_int32 :: part_array_size, part_guard_size
   sll_real64 :: x, y, thermal_speed, error, tolerance, f_target
   sll_real64 :: f_j
   sll_int64 :: number_nodes_x
@@ -129,8 +129,8 @@ program lt_pic_4d_init_tester
 !       PARTICLE_ARRAY_SIZE, &
 !       GUARD_SIZE, QoverM, m2d )
 
-  part_array_size = NUM_PARTS_X * NUM_PARTS_Y * NUM_PARTS_VX * NUM_PARTS_VY
-  part_guard_size = part_array_size / 10
+!  part_array_size = NUM_PARTS_X * NUM_PARTS_Y * NUM_PARTS_VX * NUM_PARTS_VY
+!  part_guard_size = part_array_size / 10
 
   part_group => sll_lt_pic_4d_group_new( &
         SPLINE_DEGREE, &
@@ -142,12 +142,13 @@ program lt_pic_4d_init_tester
         REMAP_GRID_VX_MAX, &
         REMAP_GRID_VY_MIN, &
         REMAP_GRID_VY_MAX, &
-        part_array_size, &       ! MCP: pbms can appear with small values here...
-        part_guard_size, &       ! MCP: pbms can appear with small values here...
         QOVERM, &
         DOMAIN_IS_X_PERIODIC, &
         DOMAIN_IS_Y_PERIODIC, &
         m2d )
+
+        !        part_array_size, &       ! MCP: pbms can appear with small values here...
+        !        part_guard_size, &       ! MCP: pbms can appear with small values here...
 
   x0    =  0.5 * (X_MAX +X_MIN )
   y0    =  0.5 * (Y_MAX +Y_MIN )
