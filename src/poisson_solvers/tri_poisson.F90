@@ -326,7 +326,7 @@ character(len=*), parameter :: this_sub_name = 'read_data_solver'
 character(len=128)          :: err_msg
 
 sll_int32 :: nref, nn, ndir
-sll_int32 :: i, j
+sll_int32 :: i
 sll_int32 :: ierr
 
 if ( mesh%analyzed) then
@@ -626,8 +626,8 @@ type(sll_triangular_poisson_2d),  intent(inout) :: this
 sll_real64 :: amloc(3),aggloc(9),grxloc(9),gryloc(9)
 sll_real64 :: dntx1, dntx2, dntx3, dnty1, dnty2, dnty3 
 sll_real64 :: x1t, x2t, x3t, y1t, y2t, y3t, coef
-sll_int32 :: is1t, is2t, is3t, iel, nis
-sll_int32 :: is, il, j
+sll_int32 :: is1t, is2t, is3t, iel
+sll_int32 :: is, j
  
 !Boucle sur les elements.
 

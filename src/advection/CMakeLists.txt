@@ -127,7 +127,7 @@ IF(BUILD_TESTING)
 
   ADD_EXECUTABLE(test_advection_2d_tri_mesh unit_test_advection_2d_tri_mesh.F90)
 
-  TARGET_LINK_LIBRARIES(test_advection_2d_tri_mesh sll_advection)
+  TARGET_LINK_LIBRARIES(test_advection_2d_tri_mesh sll_advection sll_mesh_calculus)
 
 
   IF(MPI_ENABLED)

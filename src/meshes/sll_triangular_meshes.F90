@@ -942,14 +942,18 @@ class(sll_triangular_mesh_2d), intent(inout) :: mesh
 sll_int32,                     intent(in)    :: num_cells
 sll_int32, optional                          :: order
 
-sll_int32  :: i, j, cell
+sll_int32  :: i, j, cell, layer
 sll_real64 :: r, alpha
 
-if(.not. present(order)) order = num_cells
+if (present(order)) then
+  layer = order
+else 
+  layer = num_cells
+end if
 
 i = 2
 do cell = 1, num_cells
-  if (cell > num_cells - order) then
+  if (cell > num_cells - layer) then
     r     = cell * 1.0_f64 / num_cells
     alpha = sll_pi / 6.0_f64
     do j = 1, cell*6
