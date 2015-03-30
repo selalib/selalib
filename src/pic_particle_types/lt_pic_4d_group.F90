@@ -87,8 +87,8 @@ contains
         remap_grid_vx_max, &
         remap_grid_vy_min, &
         remap_grid_vy_max, &       
-        particle_array_size, &
-        guard_list_size,     &
+        !        particle_array_size, &
+        !        guard_list_size,     &
         qoverm,              &
         domain_is_x_periodic,&
         domain_is_y_periodic,&
@@ -105,12 +105,15 @@ contains
     sll_real64, intent(in)  :: remap_grid_vx_max   
     sll_real64, intent(in)  :: remap_grid_vy_min   
     sll_real64, intent(in)  :: remap_grid_vy_max   
-    sll_int32, intent(in)   :: particle_array_size
-    sll_int32, intent(in)   :: guard_list_size
     sll_real64, intent(in)  :: qoverm
     logical, intent(in)      :: domain_is_x_periodic
     logical, intent(in)      :: domain_is_y_periodic
     
+    !        sll_int32, intent(in)   :: particle_array_size
+    !        sll_int32, intent(in)   :: guard_list_size
+    sll_int32   :: particle_array_size
+    sll_int32   :: guard_list_size
+
     type(sll_cartesian_mesh_2d), pointer :: mesh
     sll_int32   :: ierr
     sll_int32   :: number_particles
@@ -124,12 +127,14 @@ contains
     sll_real64  :: remap_grid_y_max   
         
     number_particles = number_parts_x * number_parts_y * number_parts_vx * number_parts_vy
-    if( number_particles > particle_array_size ) then
-       print *, 'sll_lt_pic_4d_group_new(): ERROR (code=6454357),  number_particles should not ', &
-            'be greater than the requested memory size, particle_array_size.'
-       print *, 'note: number_particles, particle_array_size = ', number_particles, particle_array_size
-       STOP
-    end if
+    particle_array_size = number_particles
+    guard_list_size = number_particles
+    !    if( number_particles > particle_array_size ) then
+    !       print *, 'sll_lt_pic_4d_group_new(): ERROR (code=6454357),  number_particles should not ', &
+    !            'be greater than the requested memory size, particle_array_size.'
+    !       print *, 'note: number_particles, particle_array_size = ', number_particles, particle_array_size
+    !       STOP
+    !    end if
 
     SLL_ALLOCATE( res, ierr )
     res%spline_degree = spline_degree

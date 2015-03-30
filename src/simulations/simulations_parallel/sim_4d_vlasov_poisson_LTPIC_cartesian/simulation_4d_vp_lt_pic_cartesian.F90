@@ -38,8 +38,8 @@ module sll_simulation_4d_vp_lt_pic_cartesian_module
     sll_int32  :: num_iterations
     sll_real64 :: thermal_speed_ions
     sll_int32  :: ions_number
-    sll_int32  :: guard_size
-    sll_int32  :: array_size
+!    sll_int32  :: guard_size
+!    sll_int32  :: array_size
     sll_real64, dimension(1:6) :: elec_params
     !!!!   note (march 26): to start with we use only lt_pic particles. When the simulation runs fine, try using a common type
     type(sll_lt_pic_4d_group),  pointer :: part_group
@@ -140,9 +140,8 @@ contains
     sim%use_lt_pic_scheme = UseLtPicScheme
     sim%n_virtual_for_deposition = NVirtualForDeposition
     sim%thermal_speed_ions = THERM_SPEED
-    sim%ions_number = NUM_PARTICLES
-    sim%guard_size = GUARD_SIZE  
-    sim%array_size = PARTICLE_ARRAY_SIZE
+!    sim%guard_size = GUARD_SIZE
+!    sim%array_size = PARTICLE_ARRAY_SIZE
     sim%dt = dt
     sim%num_iterations = number_iterations
 
@@ -183,17 +182,21 @@ contains
             REMAP_GRID_VX_MAX,                        &
             REMAP_GRID_VY_MIN,                        &
             REMAP_GRID_VY_MAX,                        &
-            PARTICLE_ARRAY_SIZE,                      &       ! MCP: problems if this value too small ?
-            GUARD_SIZE,                               &       ! MCP: problems if this value too small ?
             QoverM,                                   &
             DOMAIN_IS_X_PERIODIC,                     &
             DOMAIN_IS_Y_PERIODIC,                     &
             sim%mesh_2d )
 
+            !            PARTICLE_ARRAY_SIZE,                      &       ! MCP: problems if this value too small ?
+            !            GUARD_SIZE,                               &       ! MCP: problems if this value too small ?
+
         call sll_lt_pic_4d_init_landau (                &
             sim%thermal_speed_ions,                     &
             ALPHA, KX_LANDAU,                           &
             sim%part_group )
+
+    sim%ions_number = sim%part_group%number_particles
+    SLL_ASSERT( sim%ions_number == NUM_PARTS_X * NUM_PARTS_Y * NUM_PARTS_VX * NUM_PARTS_VY)
 
     else
         !! initialize the group of PIC particles

@@ -121,7 +121,7 @@ program unit_test_lt_pic_bsl_remap
 
   sll_int64 :: i
   sll_int64 :: j, j_x, j_y, j_vx, j_vy
-  sll_int32 :: part_array_size, part_guard_size
+!  sll_int32 :: part_array_size, part_guard_size
   sll_real64 :: x, y, error, tolerance, f_target
   sll_real64 :: f_j
   sll_int64 :: number_nodes_x
@@ -194,8 +194,8 @@ program unit_test_lt_pic_bsl_remap
 !       PARTICLE_ARRAY_SIZE, &
 !       GUARD_SIZE, QoverM, m2d )
 
-  part_array_size = NUM_PARTS_X * NUM_PARTS_Y * NUM_PARTS_VX * NUM_PARTS_VY
-  part_guard_size = part_array_size / 10
+!  part_array_size = NUM_PARTS_X * NUM_PARTS_Y * NUM_PARTS_VX * NUM_PARTS_VY
+!  part_guard_size = part_array_size / 10
 
   part_group => sll_lt_pic_4d_group_new( &
         SPLINE_DEGREE, &
@@ -207,13 +207,13 @@ program unit_test_lt_pic_bsl_remap
         REMAP_GRID_VX_MAX, &
         REMAP_GRID_VY_MIN, &
         REMAP_GRID_VY_MAX, &
-        part_array_size, &       ! MCP: pbms can appear with small values here...
-        part_guard_size, &       ! MCP: pbms can appear with small values here...
         QOVERM, &
         DOMAIN_IS_X_PERIODIC, &
         DOMAIN_IS_Y_PERIODIC, &
         m2d )
 
+        !        part_array_size, &       ! MCP: pbms can appear with small values here...
+        !        part_guard_size, &       ! MCP: pbms can appear with small values here...
 
   ! MCP: parameters for f_target (a hat function, with given centers and radius in every dimension)
   
