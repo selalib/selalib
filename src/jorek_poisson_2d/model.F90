@@ -5,7 +5,6 @@ MODULE MODEL
   USE SPM
   USE Assembly
   USE Evaluator 
-  USE SOLVER
   USE OUTPUT 
   USE DIRICHLET_MOD
   USE ELEMENT_CONTRIBUTION
@@ -29,6 +28,8 @@ CONTAINS
     INTEGER                     :: li_i
     INTEGER, DIMENSION(:), ALLOCATABLE  :: lpi_rvars
     INTEGER, DIMENSION(:), ALLOCATABLE  :: lpi_cvars
+    INTEGER                     :: li_n_nodes_global
+    INTEGER, PARAMETER          :: N_DIM = 2
 
     ALLOCATE(lpi_rvars(0:n_var_sys))
     ALLOCATE(lpi_cvars(0:n_var_sys))
@@ -43,24 +44,30 @@ CONTAINS
        lpi_cvars(li_i) = li_i
     END DO
 
-    CALL CONTEXT_INITIALIZE(CONTEXT, n_var_sys,n_var_unknown)
-    CALL INITIALIZE_MATRIX(Matrix_ID, TheNodes, Elmts2D, CONTEXT, lpi_rvars, lpi_cvars)
+    CALL INITIALIZE_MATRIX(Matrix_A_ID, Mesh2D, lpi_rvars, lpi_cvars)
 
     ! ... Get the new size of the matrix 
-    CALL SPM_GetnR(Matrix_ID, nRows, ierr)
-    CALL SPM_GetnC(Matrix_ID, nCols, ierr)
+    CALL SPM_GetnR(Matrix_A_ID, nRows, ierr)
+    CALL SPM_GetnC(Matrix_A_ID, nCols, ierr)
     ! ...
+
+    li_n_nodes_global = Mesh2D % oi_n_nodes
 
     ALLOCATE(Global_Rhs(nCols))
     ALLOCATE(Global_Unknown(nCols))
 
-    ALLOCATE(Var(n_order_pol * n_var_unknown, N_Nodes_Glob) )
-     Allocate(Diagnostics(N_diag,mi_nstep_max+1))
+    ALLOCATE(Var(Mesh2D% oi_n_max_order * n_var_unknown, li_n_nodes_global) )
+    Allocate(Diagnostics(N_diag,mi_nstep_max+1))
 
     Global_Rhs     = 0.0
     Global_Unknown = 0.0
     Var            = 0.0
     Diagnostics    = 0.0
+
+    CALL CREATE_GREENBOX(GBox2D, &
+            & n_var_unknown, &
+            & n_var_sys, &
+            & Mesh2D % ptr_quad % oi_n_points)
 
   END SUBROUTINE INITIALIZE_MODEL
   ! ..................................................
@@ -71,7 +78,9 @@ CONTAINS
     DEALLOCATE(Global_Rhs)
     DEALLOCATE(Global_Unknown)
     DEALLOCATE(Var)
-     DEALLOCATE(Diagnostics)
+    DEALLOCATE(Diagnostics)
+
+    CALL FREE_GREENBOX(GBox2D)
   END SUBROUTINE FREE_MODEL
   ! ..................................................
 
@@ -109,7 +118,7 @@ CONTAINS
       CALL MPI_Comm_rank ( MPI_COMM_WORLD, li_myRank, ierr)
 #endif
 
-     CALL SPM_GetnR(Matrix_ID, nRows, ierr)
+     CALL SPM_GetnR(Matrix_A_ID, nRows, ierr)
 
      write(ls_msg,*) li_myRank
      ls_stamp_default = "-proc_" // TRIM ( ADJUSTL ( ls_msg ) )
@@ -119,8 +128,8 @@ CONTAINS
 
      ! ... Loop over elements 
      CALL CPU_TIME(T_deb)
-     CALL Loop_On_Elmts(li_myRank, &
-             & TheNodes, Elmts2D, &
+     CALL Loop_On_Elmts(Matrix_A_ID, li_myRank, &
+             & Mesh2D, GBox2D, &
              & RHS_for_Vi, Matrix_for_Vi_Vj, &
              & Global_Unknown, Var, Global_Rhs, &
              & lpi_rvars, lpi_cvars)
@@ -130,26 +139,28 @@ CONTAINS
 !     print *, "RHS ", Global_Rhs(1:6)
 
      ! ... example of solver calls
-     CALL INITIALIZE_SOLVER( )
-     CALL SOLVE(Global_Rhs, Global_Unknown) 
-     CALL FREE_SOLVER( )
+     CALL LINEAR_SOLVER_NEW_WITH_MATRIX_ID(Solver, Matrix_A_ID)
+     CALL LINEAR_SOLVER_SOLVE(Solver, Global_Rhs, Global_Unknown) 
+     CALL LINEAR_SOLVER_FREE(Solver)
      ! ...
 
      ALLOCATE(lpr_Y(nRows))
      lpr_Y=0.d0 
-     CALL SPM_MATMULT(Matrix_ID, Global_Unknown, lpr_Y, ierr)
+     CALL SPM_MATMULT(Matrix_A_ID, Global_Unknown, lpr_Y, ierr)
 
      PRINT *, MAXVAL(lpr_Y-Global_Rhs), MINVAL(lpr_Y-Global_Rhs) 
 
 !     print *, "UNKNOWN ", Global_Unknown
 
      ! ... Evaluate unknowns on vertecies and compte model norms 
-     CALL Evaluate_On_Elmts(li_myRank, TheNodes,Elmts2D, Global_Unknown, Var, ANALYTICAL_MODEL, &
-          Assembly_Diagnostics,Plot_Diagnostics, &
-          & lpi_rvars, lpi_cvars,0)
+     CALL Evaluate_On_Elmts(Matrix_A_ID, li_myRank, &
+             & Mesh2D, GBox2D, &
+             & Global_Unknown, Var, ANALYTICAL_MODEL, &
+             & Assembly_Diagnostics,Plot_Diagnostics, &
+             & lpi_rvars, lpi_cvars,0)
 
       filename = TRIM(filename) 
-     CALL SaveMeshes(TheNodes, Elmts2D, Var, ANALYTICAL_MODEL, filename,0)
+     CALL SaveMeshes(Mesh2D, GBox2D, Var, ANALYTICAL_MODEL, filename,0)
 
      ! ...
      OPEN(UNIT=12, FILE=TRIM ("RHS" // ADJUSTL ( ADJUSTR ( ls_stamp_default ) ) )  // ".txt"&
@@ -166,7 +177,7 @@ CONTAINS
      CLOSE(13)
      OPEN(UNIT=14, FILE=TRIM ("VAR" // ADJUSTL ( ADJUSTR ( ls_stamp_default ) ) )  // ".txt"&
              & , ACTION="write", STATUS="replace")
-     DO li_i=1,N_Nodes_Glob
+     DO li_i=1, Mesh2D % oi_n_nodes
         WRITE(14,*) Var(:,li_i) 
      END DO
      CLOSE(14)
