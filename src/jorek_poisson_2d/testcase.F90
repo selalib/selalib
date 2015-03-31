@@ -14,7 +14,7 @@ CONTAINS
   !!             - Dirichet or periodic boundary condition
   !!             - f(x,y)= 8pi**2 * SIN(2pi*R)*SIN(2pi*Z)
 
-   !! Test case 2 : validate this case
+  !! Test case 2 : validate this case
 
   !! Test case 3 : validate this case
   
@@ -26,9 +26,10 @@ CONTAINS
   !!             - f(x,y)= 8pi**2 * cos(2pi*R)*cos(2pi*Z)
 
   
-  FUNCTION ANALYTICAL_RHS()
+  FUNCTION ANALYTICAL_RHS(ao_BBox2D)
   IMPLICIT NONE
      REAL(KIND=RK) :: ANALYTICAL_RHS 
+     TYPE(DEF_BLACKBOX_2D) :: ao_BBox2D
      REAL(KIND=RK) :: lr_R, lr_Z
      ! LOCAL
      REAL(KIND=RK) :: lr_k1
@@ -38,13 +39,16 @@ CONTAINS
      REAL(KIND=RK) :: lr_R0
      REAL(KIND=RK) :: lr_a
      REAL(KIND=RK) :: lr_acenter
+     INTEGER       :: ijg
+
+     ijg = ao_BBox2D%ijg
+
+     lr_R   = ao_BBox2D%Xp_0(1,ijg)
+     lr_Z   = ao_BBox2D%Xp_0(2,ijg)
 
      lr_R0         = mr_R0 
      lr_a          = mr_a
      lr_acenter    = mr_acenter    
-
-     lr_R   = Xp_0(1,ijg)
-     lr_Z   = Xp_0(2,ijg)
     
      lr_k1 = 2.0 * PI * FLOAT(mi_mode_m1)
      lr_k2 = 2.0 * PI * FLOAT(mi_mode_n1)
@@ -76,11 +80,11 @@ CONTAINS
   ! ..................................................
   SUBROUTINE ANALYTICAL_MODEL(apr_x, apr_v,apr_info,api_info,n_variable,n_dimension)
   IMPLICIT NONE
+     INTEGER                            :: n_variable,n_dimension
      REAL(KIND=8), DIMENSION(n_dimension), INTENT(IN)  :: apr_x
      REAL(KIND=8), DIMENSION(N_variable, n_dimension+1), INTENT(OUT) :: apr_v
      REAL(KIND=8), DIMENSION(10), INTENT(IN)  :: apr_info
      INTEGER, DIMENSION(10), INTENT(IN) :: api_info
-     INTEGER                            :: n_variable,n_dimension
      ! LOCAL
      REAL(KIND=RK) :: lr_R
      REAL(KIND=RK) :: lr_Z

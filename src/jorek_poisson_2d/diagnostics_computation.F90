@@ -10,45 +10,50 @@ MODULE DIAGNOSTICS_COMPUTATION
 CONTAINS
 
  ! .........................................
-SUBROUTINE Assembly_Diagnostics(ai_ijg, ai_kg,ar_weight,nstep)
+SUBROUTINE Assembly_Diagnostics(ao_BBox2D, ao_GBox2D,nstep)
 IMPLICIT NONE
-INTEGER :: mi_COORDINATES_POLOIDAL,ierr, ai_ijg, ai_kg  , nstep
-REAL(KIND=8) ::ar_weight
+TYPE(DEF_BLACKBOX_2D) :: ao_BBox2D
+TYPE(DEF_GREENBOX_2D)                :: ao_GBox2D
+INTEGER :: mi_COORDINATES_POLOIDAL,ierr, ijg, kg  , nstep
+REAL(KIND=RK) ::wVol
 
-IF(nstep .ge. 0) THEN
+  IF(nstep .ge. 0) THEN
+
+       ijg   = ao_BBox2D % ijg
+       wVol  = ao_BBox2D % wVol(ijg)
  
-           Diagnostics(1,nstep+1) = Diagnostics(1,nstep+1) + &
-		  & VarN_0(1, ai_ijg, 1) * &
-		  & ar_weight
+       Diagnostics(1,nstep+1) = Diagnostics(1,nstep+1) + &
+		  & ao_GBox2D%VarN_0(1, ijg) * &
+		  & wVol
 
-           Diagnostics(2,nstep+1) = Diagnostics(2,nstep+1) + &
-		  & VarN_0(1, ai_ijg, 1) * &
-		  & VarN_0(1, ai_ijg, 1) * &
-		  & ar_weight
+       Diagnostics(2,nstep+1) = Diagnostics(2,nstep+1) + &
+		  & ao_GBox2D%VarN_0(1, ijg) * &
+		  & ao_GBox2D%VarN_0(1, ijg) * &
+		  & wVol
 
-           Diagnostics(3,nstep+1) = Diagnostics(3,nstep+1) + &
-                  & VarN_R(1, ai_ijg, 1) * &
-		  & VarN_R(1, ai_ijg, 1) * &
-		  & ar_weight  + &
-		  & VarN_Z(1, ai_ijg, 1) * &
-		  & VarN_Z(1, ai_ijg, 1) * &
-		  & ar_weight 
+       Diagnostics(3,nstep+1) = Diagnostics(3,nstep+1) + &
+                  & ao_GBox2D%VarN_x1(1, ijg) * &
+		  & ao_GBox2D%VarN_x1(1, ijg) * &
+		  & wVol  + &
+		  & ao_GBox2D%VarN_x2(1, ijg) * &
+		  & ao_GBox2D%VarN_x2(1, ijg) * &
+		  & wVol 
 
-	   !... Diff norms
-           Diagnostics(4,nstep+1) = Diagnostics(4,nstep+1) + &
-                & ( VarN_0(1, ai_ijg, 1) - Sol_analytical_2D(ai_ijg, 1, 1) ) * &
-		  & ( VarN_0(1, ai_ijg, 1) - Sol_analytical_2D(ai_ijg, 1, 1) ) * &
-		  & ar_weight 
+       !... Diff norms
+       Diagnostics(4,nstep+1) = Diagnostics(4,nstep+1) + &
+                  & ( ao_GBox2D%VarN_0(1, ijg) - ao_GBox2D%Sol_analytical(ijg, 1, 1) ) * &
+		  & ( ao_GBox2D%VarN_0(1, ijg) - ao_GBox2D%Sol_analytical(ijg, 1, 1) ) * &
+		  & wVol 
 
-          Diagnostics(5,nstep+1) = Diagnostics(5,nstep+1) + &
-		  & ( VarN_R(1, ai_ijg, 1) - Sol_analytical_2D(ai_ijg, 1, 2) ) * &
-		  & ( VarN_R(1, ai_ijg, 1) - Sol_analytical_2D(ai_ijg, 1, 2) ) * &
-		  & ar_weight + &
-		  & ( VarN_Z(1, ai_ijg, 1) - Sol_analytical_2D(ai_ijg, 1, 3) ) * &
-		  & ( VarN_Z(1, ai_ijg, 1) - Sol_analytical_2D(ai_ijg, 1, 3) ) * &
-		  & ar_weight 
+       Diagnostics(5,nstep+1) = Diagnostics(5,nstep+1) + &
+		  & ( ao_GBox2D%VarN_x1(1, ijg) - ao_GBox2D%Sol_analytical(ijg, 1, 2) ) * &
+		  & ( ao_GBox2D%VarN_x1(1, ijg) - ao_GBox2D%Sol_analytical(ijg, 1, 2) ) * &
+		  & wVol + &
+		  & ( ao_GBox2D%VarN_x2(1, ijg) - ao_GBox2D%Sol_analytical(ijg, 1, 3) ) * &
+		  & ( ao_GBox2D%VarN_x2(1, ijg) - ao_GBox2D%Sol_analytical(ijg, 1, 3) ) * &
+		  & wVol 
 
-          END IF
+  END IF
   
   RETURN 
 

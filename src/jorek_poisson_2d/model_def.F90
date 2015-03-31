@@ -2,29 +2,37 @@ MODULE MODEL_DEF
   USE TypeDef
   USE SPM_DEF
   USE INDICES_DEF
-  USE JOREK_CONTEXT_DEF
-  USE JOREK_CONTEXT
   USE JOREK_PARAM_DEF
   USE JOREK_PARAM
+  USE MESH_DEF
+  USE BLACKBOX_DEF
+  USE GREENBOX_DEF
+  USE QUADRATURES 
+  USE LINEAR_SOLVER_DEF
+  USE LINEAR_SOLVER
   IMPLICIT NONE
 
-  TYPE(Def_Node)              :: TheNodes
-  TYPE(Def_Elmt2D)            :: Elmts2D
+  TYPE(DEF_MESH_2D)              :: Mesh2D
+  TYPE(DEF_GREENBOX_2D)   :: GBox2D
+  TYPE(DEF_QUADRATURE_SQUARE), TARGET    :: Quad
+  TYPE(DEF_LINEAR_SOLVER)   :: Solver
+
+  INTEGER :: n_var_sys 
+  INTEGER :: n_var_unknown
 
   REAL(KIND=RK), DIMENSION(:), ALLOCATABLE  :: Global_Rhs 
   REAL(KIND=RK), DIMENSION(:), ALLOCATABLE  :: Global_Unknown
   REAL(KIND=RK), DIMENSION(:,:), ALLOCATABLE       :: Var
+  REAL(KIND=RK), DIMENSION(:,:), POINTER  :: Diagnostics
 
   INTEGER(KIND=JOREK_INTS_KIND) :: mi_nstep_max 
   
-!  INTEGER, PARAMETER          :: Matrix_ID              = 0
   INTEGER, PARAMETER, PRIVATE :: mi_dtllevel_base       = 0
 
   INTEGER, PARAMETER	      :: mi_nvar	        = 1
 
   INTEGER, PARAMETER          :: Matrix_A_ID              = 0
 
-  TYPE(CONTEXT_DEF) :: CONTEXT
   INTEGER :: mi_mode_m1
   INTEGER :: mi_mode_n1
 
@@ -37,9 +45,8 @@ CONTAINS
   ! ..................................................
   SUBROUTINE DEFINE_MODEL( )
   IMPLICIT NONE
+    INTEGER, PARAMETER          :: N_DIM = 2
     INTEGER :: ierr
-
-    n_dim               = 2
 
     current_model       = 1
 
@@ -67,6 +74,9 @@ CONTAINS
     CALL JOREK_Param_GETReal(REAL_ACENTER_ID,mr_acenter,ierr)
     CALL JOREK_Param_GETInt(INT_NSTEP_MAX_ID,mi_nstep_max,ierr)
 
+    CALL CREATE_QUADRATURE(Quad, N_DIM, 0, 3, 3)
+
+    Mesh2D % ptr_quad => Quad
   END SUBROUTINE DEFINE_MODEL
   ! ..................................................
 
