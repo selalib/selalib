@@ -25,6 +25,8 @@ SET(PASTIX_ENABLED        OFF CACHE BOOL "Build PasTiX solvers ")
 SET(SUITESPARSE_ENABLED   OFF CACHE BOOL "Enable UMFpack solvers")
 SET(BUILD_SIMULATIONS     ON  CACHE BOOL "Build selalib simulations")
 SET(BUILD_PACKAGE         OFF CACHE BOOL "Build selalib package")
+SET(BUILD_PARALUTION      OFF CACHE BOOL "Build paralution library")
+SET(BUILD_JOREK           OFF CACHE BOOL "Build jorek django solver")
 SET(PROCS                 4   CACHE STRING
     "Number of MPI processes used in parallel tests")
 
@@ -179,6 +181,7 @@ IF(MPI_ENABLED)
    ADD_SUBDIRECTORY(distribution_function_multipatch)
    ADD_SUBDIRECTORY(poisson_solvers_parallel)
    ADD_SUBDIRECTORY(pic_1d)
+   ADD_SUBDIRECTORY(pif)
    #PN ADD_SUBDIRECTORY(maxwell_solvers_parallel)
 
 ENDIF()
@@ -188,6 +191,7 @@ ADD_SUBDIRECTORY(fields)
 ADD_SUBDIRECTORY(meshes_multipatch)
 ADD_SUBDIRECTORY(coordinate_transformations_multipatch)
 ADD_SUBDIRECTORY(fields_multipatch)
+ADD_SUBDIRECTORY(AGMG)
 ADD_SUBDIRECTORY(sparse_matrix_manager)
 ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers)
 ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers_multipatch)
@@ -210,13 +214,30 @@ IF(BUILD_SIMULATIONS)
     "simulations install dir")
   ADD_SUBDIRECTORY(simulations)
   ADD_SUBDIRECTORY(eulerian-finite-volume)
-#YG   IF(NOT BUILD_PACKAGE AND BUILD_TESTING)
-#YG      INCLUDE(SequentialTests)
-#YG      IF(MPI_ENABLED)
-#YG         INCLUDE(ParallelTests)
-#YG      ENDIF()
-#YG   ENDIF()
 ENDIF(BUILD_SIMULATIONS)
+
+IF(BUILD_PARALUTION)
+  INCLUDE(ExternalProject)
+  EXTERNALPROJECT_ADD(
+     paralution
+     SOURCE_DIR ${CMAKE_BINARY_DIR}/paralution
+     URL  http://www.paralution.com/downloads/paralution-1.0.0.tar.gz
+     CMAKE_ARGS -DSUPPORT_CUDA=OFF
+     INSTALL_COMMAND ""
+  )
+ENDIF()
+
+IF(BUILD_JOREK)
+  INCLUDE(ExternalProject)
+  EXTERNALPROJECT_ADD(
+     jorek
+     SOURCE_DIR ${CMAKE_BINARY_DIR}/jorek
+     GIT_REPOSITORY git+ssh://scm.gforge.inria.fr/gitroot/jorek/jorek.git
+     GIT_TAG django-devel
+     CMAKE_ARGS -DCMAKE_Fortran_COMPILER=${MPI_Fortran_COMPILER} -DBUILD_TESTING=OFF
+     INSTALL_COMMAND ""
+  )
+ENDIF()
 
 MESSAGE(STATUS "############################################################")
 MESSAGE(STATUS "####")

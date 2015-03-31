@@ -251,7 +251,7 @@ contains
 
     endsubroutine
 
-    function pic_1d_field_solver_get_problemsize(this) &
+    pure function pic_1d_field_solver_get_problemsize(this) &
             result(problemsize)
         class(pic_1d_field_solver), intent(in) :: this
         sll_int32 :: problemsize
