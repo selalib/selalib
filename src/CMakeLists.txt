@@ -227,15 +227,9 @@ IF(BUILD_PARALUTION)
 ENDIF()
 
 IF(BUILD_JOREK)
-  SET(GIT_LOGIN $ENV{USER} CACHE STRING "GForge login")
-  INCLUDE(ExternalProject)
-  EXTERNALPROJECT_ADD(
-     jorek
-     GIT_REPOSITORY git+ssh://${GIT_LOGIN}@scm.gforge.inria.fr/gitroot/jorek/jorek.git
-     GIT_TAG django-devel
-     CMAKE_ARGS -DBUILD_TESTING=OFF
-     INSTALL_COMMAND ""
-  )
+
+  ADD_SUBDIRECTORY(jorek_poisson_2d)
+
 ENDIF()
 
 MESSAGE(STATUS "############################################################")
