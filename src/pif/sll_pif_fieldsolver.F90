@@ -291,11 +291,22 @@ function sll_pif_fieldsolver_eval_gradient(this, pos,fouriermodes) result(gradie
  sll_real64, dimension(:,:), intent(in)  :: pos !pos vector (x), no weights
  sll_comp64, dimension(:), intent(in) :: fouriermodes
  sll_real64, dimension(size(pos,1),size(pos,2)) ::  gradient
+ !sll_comp64 :: partmode
  sll_comp64, dimension(size(pos,2)) :: partmode
  sll_int32 :: idx, jdx
  gradient=0
- do idx=1,this%problemsize()
  
+!   do jdx=1,size(pos,2)
+!   
+!    do idx=1,this%problemsize()
+!        partmode=sll_i1*exp(sll_i1*(dot_product(this%allmodes(:,idx)*this%unitmode(:),pos(1:this%dimx,jdx))  ))
+!  
+!        gradient(:,jdx)=gradient(:,jdx)+(real(partmode)*real(fouriermodes(idx))-imag(partmode)*imag(fouriermodes(idx)))*&
+!                               (this%allmodes(:,idx)*this%unitmode(:))
+!    end do
+!  end do
+ 
+ do idx=1,this%problemsize()
  partmode=sll_i1*exp(sll_i1*matmul(this%allmodes(:,idx)*this%unitmode(:), pos(1:this%dimx,:)))
  do jdx=1,size(partmode)
       gradient(:,jdx)=gradient(:,jdx)+(real(partmode(jdx))*real(fouriermodes(idx))-imag(partmode(jdx))*imag(fouriermodes(idx)))*&
