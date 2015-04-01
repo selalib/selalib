@@ -45,7 +45,6 @@ end type sll_advection_tri_mesh
 !    sll_real64 :: epsilon
 ! end type sll_degree_of_freedom
 
-
 contains
 
 !> @brief allocates the memory space for a new 2D advection
@@ -145,7 +144,19 @@ subroutine compute_derivatives(f_val, f_der, f_der2, degree, epsilon)
   end do
 end subroutine compute_derivatives
 
-
+!> @brief computes the coordinates of the poisition of the degrees of freedom (dof)
+!> @details computes the coordinates of the poisition of the degrees of freedom (dof)
+!> in respect to a point (advected or not). These positions won't be really advected
+!> because they are at a small distance from the meshes nodes
+!> @param x1_adv real first coordinate of a mesh point (advected or not)
+!> @param x2_adv real second coordinate of a mesh point (advected or not)
+!> @param x1_coo real vector first coordinates of neighbouring vertices
+!> @param x2_coo real vector second coordinates of neighbouring vertices
+!> @param degree int containing the degree of the triangulation (ie the number of cells
+!> that have the point (x1_adv, x2_adv).
+!> @param epsilon real containting the small displacement of the dof
+!> @param x1_dof real vector containing the computed first coordinates of the dof
+!> @param x2_dof real vector containing the computed second coordinates of the dof
 subroutine compute_coordinates_dof(x1_adv, x2_adv, x1_coo, x2_coo, degree, epsilon, x1_dof, x2_dof)
   sll_real64, intent(in)  :: x1_adv
   sll_real64, intent(in)  :: x2_adv 
@@ -158,10 +169,9 @@ subroutine compute_coordinates_dof(x1_adv, x2_adv, x1_coo, x2_coo, degree, epsil
   sll_int32 :: i
   sll_int32 :: i1
   sll_int32 :: i2
-  sll_int32 :: i3
 
-  x_dof(1)=x1_adv
-  y_dof(1)=x2_adv
+  x1_dof(1)=x1_adv
+  x2_dof(1)=x2_adv
   i1 = 2 !>
   i2 = 3 !>
 
@@ -191,7 +201,6 @@ function eval_at_lambda(lam, func_loc, der_loc, der2_loc) result(out)
   sll_real64, dimension(6), intent(in) :: der_loc
   sll_real64, dimension(3), intent(in) :: der2_loc
   sll_real64 :: out
-  sll_int32  :: i
 
   !> Sum over functions at edges
   !> func_loc = [f1, f2, f3]
@@ -205,37 +214,22 @@ function eval_at_lambda(lam, func_loc, der_loc, der2_loc) result(out)
   !> der_loc = [df12, df13, df23, df21, df31, df32]
   !> fomula : out += dfij * lamb(i)**2 * lam(j) * (1 + 2 * lam(k))
   !> where i, j, k are the edges of the cell/triangle
-  out = out +  lam(1)**2*lam(2)*(1+2*lam(3)) * der_loc[1] !df12
-  out = out +  lam(1)**2*lam(3)*(1+2*lam(2)) * der_loc[2] !df13
-  out = out +  lam(2)**2*lam(3)*(1+2*lam(1)) * der_loc[3] !df23
-  out = out +  lam(2)**2*lam(1)*(1+2*lam(3)) * der_loc[4] !df21
-  out = out +  lam(3)**2*lam(1)*(1+2*lam(2)) * der_loc[5] !df31
-  out = out +  lam(3)**2*lam(2)*(1+2*lam(1)) * der_loc[6] !df32
+  out = out +  lam(1)**2*lam(2)*(1+2*lam(3)) * der_loc(1) !df12
+  out = out +  lam(1)**2*lam(3)*(1+2*lam(2)) * der_loc(2) !df13
+  out = out +  lam(2)**2*lam(3)*(1+2*lam(1)) * der_loc(3) !df23
+  out = out +  lam(2)**2*lam(1)*(1+2*lam(3)) * der_loc(4) !df21
+  out = out +  lam(3)**2*lam(1)*(1+2*lam(2)) * der_loc(5) !df31
+  out = out +  lam(3)**2*lam(2)*(1+2*lam(1)) * der_loc(6) !df32
 
   !> Sum over second derivatives
   !> func_loc = [d2f1, d2f2, d2f3]
   !> formula: out += d2fi * lam(i)**2 * lam(j) * lam(k)
   !> where i, j, k are the edges of the cell/triangle
-  out = out + lam(1)**2*lam(2)*lam(3)
-  out = out + lam(2)**2*lam(3)*lam(1)
-  out = out + lam(3)**2*lam(1)*lam(2)
+  out = out + lam(1)**2*lam(2)*lam(3) * der2_loc(1)
+  out = out + lam(2)**2*lam(3)*lam(1) * der2_loc(2)
+  out = out + lam(3)**2*lam(1)*lam(2) * der2_loc(3)
   
 end function eval_at_lambda
-
-def base_dfbis(lam):
-return lam[1]**2*lam[0]*(1+2*lam[2])
-def base_d2f(lam):
-return lam[0]**2*lam[1]*lam[2]
-
-for i in range(3):
-tmp = tmp+base_df(next(lam,-i))*dof[s]
-s=s+1
-tmp = tmp+base_dfbis(next(lam,-i))*dof[s]
-s=s+1
-for i in range(3):
-tmp = tmp+base_d2f(next(lam,-i))*dof[s]
-s =s+1
-  return tmp
 
 subroutine interpolation_mitchell()
   
@@ -329,8 +323,8 @@ eps = -adv%mesh%petitl**2
 !Cell is arbitrary set in one of the cell close to the ip vertex.
 do ip = 1, adv%mesh%num_nodes
   adv%numres(ip) = ip
-  adv%xp(ip)     = adv%mesh%coord(1,ip) + 0.1!ex(ip) * dt
-  adv%yp(ip)     = adv%mesh%coord(2,ip) + 0.1!ey(ip) * dt
+  adv%xp(ip)     = adv%mesh%coord(1,ip) + ex(ip) * dt
+  adv%yp(ip)     = adv%mesh%coord(2,ip) + ey(ip) * dt
   adv%nlmloc(ip) = adv%nlpa(ip)
 end do
      
