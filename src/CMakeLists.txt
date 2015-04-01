@@ -228,7 +228,17 @@ ENDIF()
 
 IF(BUILD_JOREK)
 
-  ADD_SUBDIRECTORY(jorek_poisson_2d)
+  SET(GIT_LOGIN $ENV{USER} CACHE STRING "INRIA GForge login")
+  INCLUDE(ExternalProject)
+  EXTERNALPROJECT_ADD(
+    jorek
+    GIT_REPOSITORY git+ssh://${GIT_LOGIN}@scm.gforge.inria.fr/gitroot/jorek/jorek.git
+    GIT_TAG global-devel
+    CMAKE_ARGS -DBUILD_TESTING=OFF
+    INSTALL_COMMAND "")
+  
+  FIND_PACKAGE(PETSc)
+  ADD_SUBDIRECTORY(jorek)
 
 ENDIF()
 
