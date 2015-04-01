@@ -49,6 +49,10 @@ implicit none
  sll_int32, parameter :: PIF_INTEGRATOR_RK4S=4
  sll_int32, parameter :: PIF_INTEGRATOR_BORIS1=4
  
+ sll_int32, parameter :: PIF_POISSON=1
+ sll_int32, parameter :: PIF_QUASINEUTRAL_RHO=2
+ 
+ 
  
 type, extends(sll_simulation_base_class) :: &
                 sll_simulation_general_vlasov_poisson_pif
@@ -292,8 +296,8 @@ do tstep=1,sim%tsteps
   
   SELECT CASE (sim%dimx)
    CASE(3)
-  ! call sim%symplectic_rungekutta()
-  call sim%YSun_g2h()
+!  call sim%symplectic_rungekutta()
+   call sim%YSun_g2h()
    CASE DEFAULT
   call sim%symplectic_rungekutta()
   end SELECT
@@ -559,7 +563,7 @@ end subroutine symplectic_rungekutta_generalvp_pif
 
 subroutine YSun_g2h_generalvp_pif(sim)
   class(sll_simulation_general_vlasov_poisson_pif), intent(inout) :: sim
-  sll_real64, dimension(sim%dimx, sim%npart_loc) :: E
+  sll_real64, dimension(sim%dimx, sim%npart_loc) :: E,B
   sll_int32 :: rkidx
   sll_real64 :: t, h !time
   sll_real64, parameter :: gamma1=1.0_f64/(2.0_f64-2.0_f64**(1.0_f64/3.0_f64))
@@ -569,14 +573,10 @@ subroutine YSun_g2h_generalvp_pif(sim)
     gamma(1)=gamma1
     gamma(2)=gamma0
     gamma(3)=gamma1
-    
-     
+         
   !Loop over all stages
     t=(sim%tstep-1)*sim%dt
      do rkidx=1, size(gamma);
-     
-     
-     
      !Set control variate if used
      call sim%update_weight()
      
@@ -594,12 +594,19 @@ subroutine YSun_g2h_generalvp_pif(sim)
       h=gamma(rkidx)*sim%dt
     
       E= sim%E(sim%particle(sim%maskx,:),t) + &  ! Electric field external
-           (-sim%SOLVER%eval_gradient(sim%particle(sim%maskx,:),sim%solution)) !Electric field selfconsistent
-         
-       sim%particle(sim%maskv,:)=exp_skew_product(-h*sim%qm*sim%B(sim%particle(sim%maskx,:), t) , &
-                       sim%particle(sim%maskv,:) + h*sim%qm/2*E) + h*sim%qm/2*E
-    
-     sim%particle(sim%maskv,:)=sim%particle(sim%maskv,:) +  h*(sim%qm)*(sim%vxB(sim%particle(sim%maskx,:),sim%particle(sim%maskv,:),t)+  E);
+           (sim%SOLVER%eval_gradient(sim%particle(sim%maskx,:),sim%solution)) !Electric field selfconsistent
+          
+      B=sim%B(sim%particle(sim%maskx,:), t) !External magnetic field
+      
+      
+         sim%particle(sim%maskv,:)=exp_skew_product2( B, &
+                         sim%particle(sim%maskv,:) + h*sim%qm/2*E, h*(-sim%qm)*l2norm(B) ) + h*sim%qm/2*E
+
+!        sim%particle(sim%maskv,:)=sim%particle(sim%maskv,:)- h*sim%qm*E
+       
+!        sim%particle(sim%maskv,:)=exp_skew_product(h*sim%qm*sim%B(sim%particle(sim%maskx,:), t) , &
+!                        sim%particle(sim%maskv,:) + h*sim%qm/2*E) + h*sim%qm/2*E
+     !sim%particle(sim%maskv,:)=sim%particle(sim%maskv,:) +  h*(sim%qm)*(sim%vxB(sim%particle(sim%maskx,:),sim%particle(sim%maskv,:),t)+  E);
     
     !x_{k+1}= x_k + dt*v_{k+1}
     sim%particle(sim%maskx,:)=sim%particle(sim%maskx,:) +  h*sim%particle(sim%maskv,:);
@@ -610,26 +617,77 @@ subroutine YSun_g2h_generalvp_pif(sim)
      
 end subroutine YSun_g2h_generalvp_pif
  
+ function l2norm(x) result(norm)
+   sll_real64, dimension(:,:), intent(in) :: x
+   sll_real64, dimension(size(x,2)) :: norm
+ norm=sqrt(sum(x**2,1))
+ end function
  
- 
-!  
-  pure function exp_skew_product( v, w) result(c)
+! expm(omega*(v \times) ) w
+  function exp_skew_product2( v, w , omega) result(c)
+  sll_real64, dimension(:,:), intent(in) :: v, w
+  sll_real64, dimension(3,size(v,2)) :: c
+  sll_real64, dimension(:), intent(in) :: omega
+     
+   c(1,:) = w(3,:)*(v(3,:)*sin(omega) + (v(1,:)*v(3,:)*sin(omega/2)**2)/8) - w(2,:)*(v(3,:)*sin(omega) - (v(1,:)*v(3,:)*sin(omega/2)**2)/8) - w(1,:)*((sin(omega/2)**2*(v(3,:)**2 + v(3,:)**2))/8 - 1)
+   c(2,:)=w(1,:)*(v(3,:)*sin(omega) + (v(1,:)*v(3,:)*sin(omega/2)**2)/8) - w(2,:)*((sin(omega/2)**2*(v(1,:)**2 + v(3,:)**2))/8 - 1) - w(3,:)*(v(1,:)*sin(omega) - (v(3,:)*v(3,:)*sin(omega/2)**2)/8)
+   c(3,:)=w(2,:)*(v(1,:)*sin(omega) + (v(3,:)*v(3,:)*sin(omega/2)**2)/8) - w(1,:)*(v(3,:)*sin(omega) - (v(1,:)*v(3,:)*sin(omega/2)**2)/8) - w(3,:)*((sin(omega/2)**2*(v(1,:)**2 + v(3,:)**2))/8 - 1) 
+     
+!         c(1,:) = -w(1,:)*(sin(omega*(1.0D0/2.0D0))**2*(1.0D0/8.0D0)-1.0D0)-w(2,:)*sin(omega)
+!         c(2,:) = -w(2,:)*(sin(omega*(1.0D0/2.0D0))**2*(1.0D0/8.0D0)-1.0D0)+w(1,:)*sin(omega)
+!         c(3,:) = w(3,:)
+!       
+!      
+!      c(1,:) = w(1,:)*cos(omega)-w(2,:)*sin(omega)
+!       c(2,:) = w(2,:)*cos(omega)+w(1,:)*sin(omega)
+!       c(3,:) = w(3,:)
+!   
+  end function
+
+
+  function exp_skew_product( v, w) result(c)
   sll_real64, dimension(:,:), intent(in) :: v, w
   sll_real64, dimension(3,size(v,2)) :: c
   sll_comp64, dimension(size(v,2)) :: s
+  sll_real64, dimension(size(v,2)) :: vv
+  sll_comp64, dimension(size(v,2)) :: sqrtvv
   
-
- 
-   c(1,:) = w(1,:)
-      c(2,:) = w(2,:)*5.403023058681397D-1-w(3,:)*8.414709848078966D-1
-      c(3,:) = w(2,:)*8.414709848078965D-1+w(3,:)*5.403023058681398D-1
-!   
-!     s(:)=sll_i1*sqrt(v(1,:)**2+v(2,:)**2+v(3,:)**2)  
-!   c(1,:) =real( (w(1,:)*exp(-s)*(v(1,:)**2*exp(s)*2.0D0+v(2,:)**2*exp(s*2.0D0)+v(3,:)**2*exp(s*2.0D0)+v(2,:)**2+v(3,:)**2)*&
-!           (1.0D0/2.0D0))/(v(1,:)**2+v(2,:)**2+v(3,:)**2)+w(2,:)*exp(s)*(exp(s)-1.0D0)*1.0D0/(-v(1,:)**2-v(2,:)**2&
-!           -v(3,:)**2)**(3.0D0/2.0D0)*(v(3,:)**3*exp(s)+v(1,:)**2*v(3,:)+v(2,:)**2*v(3,:)+v(3,:)**3+v(1,:)**2*v(3,:)*exp(s)+&
-!           v(2,:)**2*v(3,:)*exp(s)-s*v(1,:)*v(2,:)+s*v(1,:)*v(2,:)*exp(s))*(1.0D0/2.0D0)-(w(3,:)*exp(s)*(exp(s)-1.0D0)*(s*v(2,:)&
-!           -v(1,:)*v(3,:)+s*v(2,:)*exp(s)+v(1,:)*v(3,:)*exp(s))*(1.0D0/2.0D0))/(v(1,:)**2+v(2,:)**2+v(3,:)**2))
+  
+  vv=-(v(1,:)**2+v(2,:)**2+v(3,:)**2)
+  sqrtvv=sll_i1*sqrt(-vv)
+  
+     
+     c(1,:) = real((w(1,:)*exp(-sqrtvv)*(v(1,:)**2*exp(sqrtvv)*2.0D0+v(3,:)**2*exp(sqrtvv*2.0D0)+v(3,:)**2*exp(sqrtvv*2.0D0)+v(3,:)**2+v(3,:)**2)*&
+     (-1.0D0/2.0D0))/vv+1.0D0/sqrtvv**(3.0D0)*w(2,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0D0)*&
+     (v(3,:)**3*exp(sqrtvv)+v(1,:)**2*v(3,:)+v(3,:)**2*v(3,:)+v(3,:)**3+v(1,:)**2*v(3,:)*&
+     exp(sqrtvv)+v(3,:)**2*v(3,:)*exp(sqrtvv)-sqrtvv*v(1,:)*v(3,:)+sqrtvv*v(1,:)*v(3,:)*exp(sqrtvv))*(1.0D0/2.0D0)+(w(3,:)*&
+     exp(-sqrtvv)*(exp(sqrtvv)-1.0D0)*(sqrtvv*v(3,:)-v(1,:)*v(3,:)+sqrtvv*v(3,:)*exp(sqrtvv)+v(1,:)*v(3,:)*exp(sqrtvv))*(1.0D0/2.0D0))/vv)
+  
+     c(2,:) =real( (w(2,:)*exp(-sqrtvv)*(v(3,:)**2*exp(sqrtvv)*2.0D0+v(1,:)**2*exp(sqrtvv*2.0D0)+v(3,:)**2*exp(sqrtvv*2.0D0)+v(1,:)**2+v(3,:)**2)*&
+     (-1.0D0/2.0D0))/vv-1.0D0/sqrtvv**(3.0D0)*w(1,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0D0)*(v(3,:)**3*&
+     exp(sqrtvv)+v(1,:)**2*v(3,:)+v(3,:)**2*v(3,:)+v(3,:)**3+v(1,:)**2*v(3,:)*exp(sqrtvv)+v(3,:)**2*v(3,:)*&
+     exp(sqrtvv)+sqrtvv*v(1,:)*v(3,:)-sqrtvv*v(1,:)*v(3,:)*exp(sqrtvv))*(1.0D0/2.0D0)-&
+     (w(3,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0D0)*(sqrtvv*v(1,:)+v(3,:)*v(3,:)+sqrtvv*v(1,:)*&
+     exp(sqrtvv)-v(3,:)*v(3,:)*exp(sqrtvv))*(1.0D0/2.0D0))/vv)
+     
+     
+     c(3,:) = real((w(3,:)*exp(-sqrtvv)*(v(3,:)**2*exp(sqrtvv)*2.0D0+v(1,:)**2*exp(sqrtvv*2.0D0)+v(3,:)**2*exp(sqrtvv*2.0D0)+v(1,:)**2+v(3,:)**2)*(-1.0D0/2.0D0))/&
+     vv-1.0D0/sqrtvv**(3.0D0)*w(2,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0D0)*(v(1,:)**3*exp(sqrtvv)+v(1,:)*v(3,:)**2+v(1,:)*v(3,:)**2+v(1,:)**3+v(1,:)&
+     *v(3,:)**2*exp(sqrtvv)+v(1,:)*v(3,:)**2*exp(sqrtvv)+sqrtvv*v(3,:)*v(3,:)-sqrtvv*v(3,:)*v(3,:)*exp(sqrtvv))*(1.0D0/2.0D0)+&
+     1.0D0/sqrtvv**(3.0D0)*w(1,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0D0)*(v(3,:)**3*exp(sqrtvv)+v(1,:)**2*v(3,:)+v(3,:)*v(3,:)**2+&
+     v(3,:)**3+v(1,:)**2*v(3,:)*exp(sqrtvv)+v(3,:)*v(3,:)**2*exp(sqrtvv)-sqrtvv*v(1,:)*v(3,:)+sqrtvv*v(1,:)*v(3,:)*exp(sqrtvv))*(1.0D0/2.0D0))
+  
+  
+!    c(1,:) = w(1,:)*5.403023058681397D-1-w(2,:)*8.414709848078966D-1
+!    c(2,:) = w(1,:)*8.414709848078965D-1+w(2,:)*5.403023058681398D-1
+!    c(3,:) = w(3,:)
+!     c=0
+!      s(:)=sll_i1*sqrt(v(1,:)**2+v(2,:)**2+v(3,:)**2)  
+!    c(1,:) =real( (w(1,:)*exp(-s)*(v(1,:)**2*exp(s)*2.0D0+v(2,:)**2*exp(s*2.0D0)+v(3,:)**2*exp(s*2.0D0)+v(2,:)**2+v(3,:)**2)*&
+!            (1.0D0/2.0D0))/(v(1,:)**2+v(2,:)**2+v(3,:)**2)+w(2,:)*exp(s)*(exp(s)-1.0D0)*1.0D0/ &
+!            sll_i1**3/sqrt(v(1,:)**2+v(2,:)**2+ v(3,:)**2)**(3.0D0)*(v(3,:)**3*exp(s)+v(1,:)**2*v(3,:)+v(2,:)**2*v(3,:)+v(3,:)**3+v(1,:)**2*v(3,:)*exp(s)+&
+!            v(2,:)**2*v(3,:)*exp(s)-s*v(1,:)*v(2,:)+s*v(1,:)*v(2,:)*exp(s))*(1.0D0/2.0D0)-(w(3,:)*exp(s)*(exp(s)-1.0D0)*(s*v(2,:)&
+!            -v(1,:)*v(3,:)+s*v(2,:)*exp(s)+v(1,:)*v(3,:)*exp(s))*(1.0D0/2.0D0))/(v(1,:)**2+v(2,:)**2+v(3,:)**2))
 
 !   c(2,:) =real( (w(2,:)*exp(-sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2))*(v(1,:)**2*exp(sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2)*2.0D0)+v(3,:)**2*exp(sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2)*2.0D0)+v(1,:)**2+v(3,:)**2+v(2,:)**2*exp(sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2))*2.0D0)*(1.0D0/2.0D0))&
 !   /(v(1,:)**2+v(2,:)**2+v(3,:)**2)+(w(3,:)*exp(-sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2))*&

@@ -20,7 +20,7 @@ sll_real64, dimension(:,:), intent(in) :: v,w
  sll_real64, dimension(2,size(v,2)):: cross
   sll_real64, dimension(size(v,2)):: determinante
   
-  SLL_ASSERT(size(v,1)==2)
+ !! SLL_ASSERT(size(v,1)==2)
   
    determinante(:)=v(1,:)*w(2,:) - v(2,:)*w(1,:)
 !   cross=v*(v(1,:)*w(2,:) - v(2,:)*w(1,:))
@@ -32,7 +32,7 @@ end function
 pure function cross_product_3D( v, w) result(cross)
  sll_real64, dimension(:,:), intent(in) :: v,w
  sll_real64, dimension(3,size(v,2)):: cross
-  SLL_ASSERT(size(v,1)==3)
+ !! SLL_ASSERT(size(v,1)==3)
   
   cross(1,:) = v(2,:) * w(3,:) - v(3,:) * w(2,:)
   cross(2,:) = v(3,:) * w(1,:) - v(1,:) * w(3,:)
