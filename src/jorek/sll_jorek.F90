@@ -1,15 +1,15 @@
 module sll_jorek
 #include "sll_working_precision.h"
 
-  use TypeDef
-  use MeshGen
-  use FEBasis
-  use SPM_DEF
-  use MODEL
-  use JOREK_PARAM
-  use JOREK_PARAM_DEF
-  use COORDINATES_DEF
-  use COORDINATES
+  use typedef
+  use meshgen
+  use febasis
+  use spm_def
+  use model
+  use jorek_param
+  use jorek_param_def
+  use coordinates_def
+  use coordinates
 
   ! ------------------------------ 
   IMPLICIT NONE
@@ -20,35 +20,18 @@ contains
 subroutine initialize_jorek()
 
   sll_int32 :: nb_args
-  sll_int32 :: is, ie, il, i1, i2, is1, is2
-  sll_int32 :: imesh=1, Nrefine
-  sll_int32 :: iv, iv_Pol, ipol, Ns_3D
+  sll_int32 :: imesh=1
   sll_int32 :: ierr
-  sll_int32 :: TraceLogDetail 
-  sll_int32 :: TraceLogOutput
 
-  sll_int32, dimension(:,:), pointer     :: Nu
-  sll_int32, dimension(:,:), allocatable :: Ok
-  sll_int32(kind=SPM_INTS_KIND)          :: nRows !NUMBER OF ROWS
-  sll_int32(kind=SPM_INTS_KIND)          :: nCols !NUMBER OF COLUMNS
-
-  real(kind=RK)    :: T_fin, T_deb
-
-  real(kind=RK), dimension(:,:), pointer :: Coor  
-
-  character(len = 1024)         :: exec
-  character(len = 1024)         :: rootname
+  character(len = 1024) :: exec
+  character(len = 1024) :: rootname
+  character(len = 1024) :: flag
   character(len = *), parameter :: mod_name = "poisson_2d"
-
-  LOGICAL :: ll_stdoutput
-  sll_int32 :: li_assembly_proc
-  sll_int32 :: li_toroidal_basis
   character filename_parameter*1024
-  character(len = 1024)           :: argname
   sll_int32 :: li_n_Gauss_Rp, li_n_Gauss_Zp
 
-  argname = "--parameters"
-  call jorek_get_arguments(argname, filename_parameter, ierr)
+  flag = "--parameters"
+  call jorek_get_arguments(flag, filename_parameter, ierr)
 
   call initialize_jorek_parameters(filename_parameter)
 
@@ -63,7 +46,7 @@ subroutine initialize_jorek()
   call define_model( )
 
   ! ... Define Basis Functions 
-  call InitBasis( mesh2d%oi_n_max_order,         &
+  call initbasis( mesh2d%oi_n_max_order,         &
                   mesh2d%oi_n_max_order,         &
                   mesh2d%oi_n_max_vtex_per_elmt, &
                   mesh2d%oi_n_max_vtex_per_elmt, &
@@ -71,9 +54,9 @@ subroutine initialize_jorek()
                   li_n_Gauss_Zp,                 &
                   mesh2d%ptr_quad%oi_n_points)
 
-  call JOREK_Param_GETInt(INT_TYPEMESH_ID,imesh,ierr)
+  call jorek_paral_getint(int_typemesh_id,imesh,ierr)
 
-  call InitGrid(mesh2d,                          &
+  call initgrid(mesh2d,                          &
                 imesh,                           &
                 mesh2d%oi_n_Nodes,               &
                 mesh2d%oi_n_elmts,               &
@@ -86,26 +69,23 @@ subroutine initialize_jorek()
                 mesh2d%oi_n_nzero_Bloc,          &
                 mesh2d%ptr_quad%oi_n_points      )
 
-  ! output file
-  open(unit=li_file_stream_norm, file='output_Var_diag.dat', status='unknown')
-  open(unit=li_file_stream_visu, file='output_Var_visu.dat', status='unknown')
- 
-  call SPM_INITIALIZE(nmatrices, ierr)
+  call spm_initialize(nmatrices, ierr)
 
-  call INITIALIZE_MODEL()
+  call initialize_model()
 
-  call COORDINATES_INITIALIZE(2, mesh2d % ptr_quad % oi_n_points, ierr)
+  call coordinates_initialize(2, mesh2d%ptr_quad%oi_n_points, ierr)
 
-  call RUN_MODEL()
+  call run_model()
   
-  call FREE_MODEL()
-
-  close(li_file_stream_norm)
-  close(li_file_stream_visu)
-  
-  call SPM_CLEANALL(ierr)
-  call SPM_FINALIZE(ierr)
-
 end subroutine initialize_jorek
+
+subroutine delete_jorek()
+  sll_int32 :: ierr
+
+  call free_model()
+  call spm_cleanall(ierr)
+  call spm_finalize(ierr)
+
+end subroutine delete_jorek
 
 end module sll_jorek
