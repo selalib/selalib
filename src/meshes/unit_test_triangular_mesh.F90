@@ -32,12 +32,13 @@ call sll_delete(t_mesh)
 
 !Create a triangular mesh from an hex mesh
 !Reference on the boundary is set to "one"
-num_cells = 10
+num_cells = 3
 h_mesh => new_hex_mesh_2d( num_cells, 0._f64, 0._f64) 
 t_mesh => new_triangular_mesh_2d(h_mesh) 
 
-call map_to_circle(t_mesh, num_cells)
+call map_to_circle(t_mesh, num_cells, 1)
 call write_triangular_mesh_mtv(t_mesh, "circle_hex_mesh.mtv")
+
 
 call sll_delete(t_mesh)
 

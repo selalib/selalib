@@ -1,7 +1,7 @@
 program test_csr_matrix
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use sll_sparse_matrix_module, only: sll_csr_matrix
+use sll_sparse_matrix_module
 !
 !  Solves the discrete Laplacian on the unit square by simple call to agmg.
 !  The right-hand-side is such that the exact solution is the vector of all 1.
@@ -32,10 +32,13 @@ N=(nhinv-1)**2
 allocate(mat)
 allocate (mat%val(5*N),mat%col_ind(5*N),mat%row_ptr(N+1),f(N),x(N))
 !         next call subroutine to set entries
-call uni2d(nhinv-1,f,mat%val,mat%col_ind,mat%row_ptr)
+
 
 mat%num_rows = nhinv-1
 mat%num_cols = nhinv-1
+
+call uni_laplace_2d(nhinv-1,f,mat%val,mat%col_ind,mat%row_ptr)
+
 !
 !       call agmg
 !         argument 5 (ijob)  is 0 because we want a complete solve
@@ -51,8 +54,7 @@ call dagmg(N,mat%val,mat%col_ind,mat%row_ptr,f,x,0,iprint,1,iter,tol)
 !       close(10)
 end program test_csr_matrix
 !----------------------------------------------------------------------
-
-subroutine uni2d(m,f,a,ja,ia)
+subroutine uni_laplace_2d(m,f,a,ja,ia)
 !
 ! Fill a matrix in CSR format corresponding to a constant coefficient
 ! five-point stencil on a square grid
@@ -106,4 +108,6 @@ do i=1,m
 end do
 
 return
-end subroutine uni2D
+end subroutine uni_laplace_2D
+
+

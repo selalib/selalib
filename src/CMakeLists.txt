@@ -218,25 +218,28 @@ ENDIF(BUILD_SIMULATIONS)
 
 IF(BUILD_PARALUTION)
   INCLUDE(ExternalProject)
-  EXTERNALPROJECT_ADD(
-     paralution
-     SOURCE_DIR ${CMAKE_BINARY_DIR}/paralution
-     URL  http://www.paralution.com/downloads/paralution-1.0.0.tar.gz
-     CMAKE_ARGS -DSUPPORT_CUDA=OFF
+  SET(PARALUTION_VERSION 1.0.0 CACHE STRING "Paralution version number")
+  EXTERNALPROJECT_ADD( paralution
+     URL  http://www.paralution.com/downloads/paralution-${PARALUTION_VERSION}.tar.gz
+     CMAKE_ARGS -DSUPPORT_CUDA=OFF -DBUILD_EXAMPLES=OFF
      INSTALL_COMMAND ""
   )
 ENDIF()
 
 IF(BUILD_JOREK)
+
+  SET(GIT_LOGIN $ENV{USER} CACHE STRING "INRIA GForge login")
   INCLUDE(ExternalProject)
   EXTERNALPROJECT_ADD(
-     jorek
-     SOURCE_DIR ${CMAKE_BINARY_DIR}/jorek
-     GIT_REPOSITORY git+ssh://scm.gforge.inria.fr/gitroot/jorek/jorek.git
-     GIT_TAG django-devel
-     CMAKE_ARGS -DCMAKE_Fortran_COMPILER=${MPI_Fortran_COMPILER} -DBUILD_TESTING=OFF
-     INSTALL_COMMAND ""
-  )
+    jorek
+    GIT_REPOSITORY git+ssh://${GIT_LOGIN}@scm.gforge.inria.fr/gitroot/jorek/jorek.git
+    GIT_TAG global-devel
+    CMAKE_ARGS -DBUILD_TESTING=OFF
+    INSTALL_COMMAND "")
+  
+  FIND_PACKAGE(PETSc)
+  ADD_SUBDIRECTORY(jorek)
+
 ENDIF()
 
 MESSAGE(STATUS "############################################################")

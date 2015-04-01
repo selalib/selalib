@@ -1,195 +1,112 @@
-program test_paralution_solver
+module sll_paralution
+use, intrinsic :: ISO_C_BINDING
 
-  use, intrinsic :: ISO_C_BINDING, only : C_INT,       &
-                                          C_PTR,       &
-                                          C_DOUBLE,    &
-                                          C_CHAR,      &
-                                          C_NULL_CHAR, &
-                                          C_LOC
-
-  implicit none
-
-  interface
-
-    subroutine paralution_fortran_solve_coo( n, m, nnz, solver,       &
-                                             mformat, preconditioner, &
-                                             pformat, rows, cols,     &
-                                             rval, rhs, atol, rtol,   &
-                                             div, maxiter, basis,     &
-                                             p, q, x, iter, resnorm,  &
-                                             ierr ) BIND(C)
-
-    use, intrinsic :: ISO_C_BINDING, only : C_INT, C_PTR, C_DOUBLE, C_CHAR
-
-    integer(kind=C_INT), value, intent(in)  :: n, m, nnz, maxiter, basis, p, q
-    real(kind=C_DOUBLE), value, intent(in)  :: atol, rtol, div
-    integer(kind=C_INT),        intent(out) :: iter, ierr
-    real(kind=C_DOUBLE),        intent(out) :: resnorm
-    type(C_PTR),         value, intent(in)  :: rows, cols, rval, rhs
-    type(C_PTR),         value              :: x
-    character(kind=C_CHAR)                  :: solver
-    character(kind=C_CHAR)                  :: mformat
-    character(kind=C_CHAR)                  :: preconditioner
-    character(kind=C_CHAR)                  :: pformat
-
-    end subroutine paralution_fortran_solve_coo
-
-  end interface
-
-  integer, parameter    :: infile = 10
-  integer(kind=C_INT)   :: n, m, nnz, fnz, i, j, iter, ierr
-  real(kind=C_DOUBLE)   :: resnorm
-  integer, dimension(8) :: tbegin, tend
-  real(kind=8)          :: tsolver
-
-  logical               :: sym = .false.
-
-  integer(kind=C_INT), allocatable, target :: rows(:), cols(:)
-  real(kind=C_DOUBLE), allocatable, target :: ival(:), rval(:), cval(:)
-  real(kind=C_DOUBLE), allocatable, target :: rhs(:), x(:)
-
-  character(len=10)  :: rep
-  character(len=7)   :: field
-  character(len=19)  :: symm
-  character(len=128) :: arg
-
-
-  nnz = fnz
-  if ( symm .eq. 'symmetric' .or. symm .eq. 'hermitian' ) then
-    nnz = 2 * ( fnz - n ) + n
-    sym = .true.
-  end if
-
-  ! Allocate memory for COO format specific arrays
-  allocate( rows(nnz), cols(nnz) )
-  allocate( ival(nnz), rval(nnz), cval(nnz) )
-
-  ! Fill 2nd half of matrix if symmetric
-  if ( sym ) then
-    j = fnz + 1
-    do i = 1, fnz
-      if ( rows(i) .ne. cols(i) ) then
-        rows(j) = cols(i)
-        cols(j) = rows(i)
-        rval(j) = rval(i)
-        j = j + 1
-      end if
-    end do
-  end if
-
-  ! Allocate and initialize rhs and solution vector
-  allocate( rhs(n), x(n) )
-  do i = 1, n
-    rhs(i) = 1._C_DOUBLE
-    x(i)   = 0._C_DOUBLE
-  end do
-
-  ! Print L2 norm of solution vector
-  write(*,fmt='(A,F0.2)') '(Fortran) Initial L2 Norm(x) = ', sqrt( sum( x**2 ) )
-
-  call date_and_time(values = tbegin)
-
-  ! Run paralution C function for COO matrices
-  ! Doing a GMRES with MultiColored ILU(1,2) preconditioner
-  ! Check paralution documentation for a detailed argument explanation
-  call paralution_fortran_solve_coo(       &
-    n,                                     &
-    m,                                     &
-    nnz,                                   &
-    'CG' // C_NULL_CHAR,                   &
-    'CSR' // C_NULL_CHAR,                  & 
-    'MultiColoredILU' // C_NULL_CHAR,      &
-    'CSR' // C_NULL_CHAR,                  &
-    C_LOC(rows),                           &
-    C_LOC(cols),                           &
-    C_LOC(rval),                           &
-    C_LOC(rhs),                            &
-    1e-15_C_DOUBLE,                        &
-    1e-8_C_DOUBLE,                         &
-    1e+8_C_DOUBLE,                         &
-    5000,                                  &
-    30,                                    &
-    0,                                     &
-    1,                                     &
-    C_LOC(x),                              &
-    iter,                                  &
-    resnorm,                               &
-    ierr )
-
-  call date_and_time(values = tend)
-
-  tbegin = tend - tbegin
-  tsolver = 0.001 * tbegin(8) + tbegin(7) + 60 * tbegin(6) + 3600 * tbegin(5)
-  write(*,fmt='(A,F0.2,A)') '(Fortran) Solver ended after ', tsolver,'sec.'
-
-  ! Print solver details
-  if ( ierr .eq. 0 ) then
-    write(*,fmt='(A,I0,A,E11.5,A)') '(Fortran) Solver took ', iter, ' iterations with residual norm ', resnorm, '.'
-    write(*,fmt='(A,F0.2)') '(Fortran) Final L2 Norm(x)   = ', sqrt( sum( x**2 ) )
-  else
-    write(*,fmt='(A,I0)') '(Fortran) Solver returned status code ', ierr
-  end if
-
-  do i=1,n
-    write(10,*) x(i)
-  end do
-
-  deallocate( rows, cols, rval, rhs, x )
-
-end program test_paralution_solver
-
-subroutine uni2d(m,f,a,ja,ia)
-!
-! Fill a matrix in COO format corresponding to a constant coefficient
-! five-point stencil on a square grid
-!
 implicit none
-real (kind(0d0)) :: f(*),a(*)
-integer :: m,ia(*),ja(*)
-integer :: k,l,i,j
-real (kind(0d0)), parameter :: zero=0.0d0,cx=-1.0d0,cy=-1.0d0, cd=4.0d0
-!
+
+type sll_paralution_solver
+
+  integer(kind=C_INT)          :: num_rows
+  integer(kind=C_INT)          :: num_cols
+  integer(kind=C_INT)          :: num_nz
+  integer(kind=C_INT), pointer :: row_ptr(:)
+  integer(kind=C_INT), pointer :: col_ind(:)
+  real(kind=C_DOUBLE), pointer :: val(:)
+
+end type sll_paralution_solver
+
+interface
+
+  subroutine paralution_fortran_solve_csr( n, m, nnz, solver,       &
+                                           mformat, preconditioner, &
+                                           pformat, rows, cols, &
+                                           rval, rhs, atol, rtol,   &
+                                           div, maxiter, basis,     &
+                                           p, q, x, iter, resnorm,  &
+                                           ierr ) BIND(C)
+
+  use, intrinsic :: ISO_C_BINDING, only : C_INT, C_PTR, C_DOUBLE, C_CHAR
+
+  integer(kind=C_INT), value, intent(in)  :: n, m, nnz, maxiter, basis, p, q
+  real(kind=C_DOUBLE), value, intent(in)  :: atol, rtol, div
+  integer(kind=C_INT),        intent(out) :: iter, ierr
+  real(kind=C_DOUBLE),        intent(out) :: resnorm
+  type(C_PTR),         value, intent(in)  :: rows, cols, rval, rhs
+  type(C_PTR),         value              :: x
+  character(kind=C_CHAR)                  :: solver
+  character(kind=C_CHAR)                  :: mformat
+  character(kind=C_CHAR)                  :: preconditioner
+  character(kind=C_CHAR)                  :: pformat
+
+  end subroutine paralution_fortran_solve_csr
+
+end interface
+
+contains
+
+!> @brief
+!> Test function to initialize a CSR matrix
+!> @details
+!> Fill a matrix in CSR format corresponding to a constant coefficient
+!> five-point stencil on a square grid
+!> RHS is set to get solution = 1
+subroutine uni2d(mat,f)
+type(sll_paralution_solver) :: mat
+real(kind=C_DOUBLE)         :: f(:)
+integer                     :: i, j, k, l, m
+
+real(kind(0d0)), parameter :: zero =  0.0d0
+real(kind(0d0)), parameter :: cx   = -1.0d0
+real(kind(0d0)), parameter :: cy   = -1.0d0
+real(kind(0d0)), parameter :: cd   =  4.0d0
+
+m = mat%num_rows
+
 k=0
 l=0
-ia(1)=1
+mat%row_ptr(1)=1
 do i=1,m
   do j=1,m
     k=k+1
     l=l+1
-    a(l)=cd
-    ja(l)=k
+    mat%val(l)=cd
+    mat%col_ind(l)=k
     f(k)=zero
     if(j < m) then
        l=l+1
-       a(l)=cx
-       ja(l)=k+1
+       mat%val(l)=cx
+       mat%col_ind(l)=k+1
       else
        f(k)=f(k)-cx
     end if
     if(i < m) then
        l=l+1
-       a(l)=cy
-       ja(l)=k+m
+       mat%val(l)=cy
+       mat%col_ind(l)=k+m
       else
        f(k)=f(k)-cy
     end if
     if(j > 1) then
        l=l+1
-       a(l)=cx
-       ja(l)=k-1
+       mat%val(l)=cx
+       mat%col_ind(l)=k-1
       else
        f(k)=f(k)-cx
     end if
     if(i >  1) then
        l=l+1
-       a(l)=cy
-       ja(l)=k-m
+       mat%val(l)=cy
+       mat%col_ind(l)=k-m
       else
        f(k)=f(k)-cy
     end if
-    ia(k+1)=l+1
+    mat%row_ptr(k+1)=l+1
   end do
 end do
 
+mat%num_nz = l
+
 return
 end subroutine uni2D
+
+end module sll_paralution
+
