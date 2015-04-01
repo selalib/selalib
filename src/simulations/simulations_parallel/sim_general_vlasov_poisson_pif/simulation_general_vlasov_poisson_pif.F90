@@ -802,7 +802,6 @@ SELECT CASE (sim%controlvariate)
      !This should not happen
       cv=1
     CASE (SLL_CONTROLVARIATE_STANDARD)
-#pragma vector always
       cv=sqrt(2*sll_pi)**(-size(sim%maskv))*exp(-0.5*sum(sim%particle(sim%maskv,:),1)**2)
     CASE (SLL_CONTROLVARIATE_MAXWELLIAN)
       cv=sqrt(2*sll_pi)**(-size(sim%maskv))*exp(-0.5*sum(sim%particle(sim%maskv,:),1)**2)
