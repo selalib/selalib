@@ -1,21 +1,5 @@
-!------------------------------------------------------------------------------
-! SELALIB
-!------------------------------------------------------------------------------
-! MODULE: sll_triangular_meshes
-!
-! DESCRIPTION:
-!> @file sll_triangular_meshes.F90
-!>
-!> @author
-!> - Aurore Back
-!> - Pierre Navaro
-!>
-!> @brief
-!>  This module defines a triangular mesh.
-!>
-!> @details
-!>  Triangular mesh 
-!------------------------------------------------------------------------------
+!> This fortran module is dedicated to advection on
+!> triangular mesh.
 module sll_advection_2d_tri_mesh
 #include "sll_working_precision.h"
 #include "sll_constants.h"
@@ -49,7 +33,7 @@ type :: sll_advection_tri_mesh
   sll_real64, dimension(:),     pointer :: yp
   sll_real64, dimension(:),     pointer :: f_out
   logical,    dimension(:),     pointer :: inzone
-  sll_int32, dimension(:),        pointer :: numres
+  sll_int32, dimension(:),      pointer :: numres
 
 end type sll_advection_tri_mesh
 
@@ -184,7 +168,7 @@ end function new_advection_2d_tri_mesh
 !!                                                   
 !!    petitl - petite longueur de reference             
 !<
-subroutine positions(adv, f_in, ex, ey, dt )
+subroutine advection_2d(adv, f_in, ex, ey, dt )
 
 type(sll_advection_tri_mesh), intent(inout) :: adv  !< mesh
 sll_real64, dimension(:),     intent(inout) :: f_in !< distribution function on nodes
@@ -506,6 +490,6 @@ end do
 
 f_in = adv%f_out
 
-end subroutine positions
+end subroutine advection_2d
 
 end module sll_advection_2d_tri_mesh

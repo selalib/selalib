@@ -218,24 +218,18 @@ ENDIF(BUILD_SIMULATIONS)
 
 IF(BUILD_PARALUTION)
   INCLUDE(ExternalProject)
-  EXTERNALPROJECT_ADD(
-     paralution
-     SOURCE_DIR ${CMAKE_BINARY_DIR}/paralution
-     URL  http://www.paralution.com/downloads/paralution-1.0.0.tar.gz
-     CMAKE_ARGS -DSUPPORT_CUDA=OFF
+  SET(PARALUTION_VERSION 1.0.0 CACHE STRING "Paralution version number")
+  EXTERNALPROJECT_ADD( paralution
+     URL  http://www.paralution.com/downloads/paralution-${PARALUTION_VERSION}.tar.gz
+     CMAKE_ARGS -DSUPPORT_CUDA=OFF -DBUILD_EXAMPLES=OFF
      INSTALL_COMMAND ""
   )
 ENDIF()
 
 IF(BUILD_JOREK)
-  INCLUDE(ExternalProject)
-  EXTERNALPROJECT_ADD(
-     jorek
-     GIT_REPOSITORY git+ssh://scm.gforge.inria.fr/gitroot/jorek/jorek.git
-     GIT_TAG django-devel
-     CMAKE_ARGS -DCMAKE_Fortran_COMPILER=${MPI_Fortran_COMPILER}
-     INSTALL_COMMAND ""
-  )
+
+  ADD_SUBDIRECTORY(jorek_poisson_2d)
+
 ENDIF()
 
 MESSAGE(STATUS "############################################################")
