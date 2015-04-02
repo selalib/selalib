@@ -7,14 +7,8 @@ SET(CMAKE_Fortran_MODULE_DIRECTORY "${BINARY_DIR}/modules")
 LINK_DIRECTORIES(${BINARY_DIR}/lib)
 
 SET(JOREK_MODEL   poisson_2d)
-ADD_EXECUTABLE(jorek_${JOREK_MODEL} 
-   model_def.F90
-   testcase.F90
-   element_contribution.F90
-   diagnostics_computation.F90
-   model.F90
-   sll_jorek.F90 
-   unit_test_jorek.F90)
+ADD_EXECUTABLE(jorek_${JOREK_MODEL} sll_jorek.F90 
+                                    unit_test_jorek.F90)
   
 ADD_DEPENDENCIES(jorek_${JOREK_MODEL} jorek)
   
