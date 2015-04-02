@@ -11,12 +11,16 @@ program general_vlasov_poisson_pif
    character(len=256) :: filename
    character(len=256) :: filename_local
    type(sll_simulation_general_vlasov_poisson_pif) :: simulation
-
+   integer :: coll_rank
 
    print *, 'Booting parallel environment for simulation...'
    call sll_boot_collective() ! Wrap this up in something else
+  
+   coll_rank=sll_get_collective_rank( sll_world_collective )
  
-   print *, 'Proceed to run simulation.'
+   if (coll_rank == 0) then
+       print *, 'Proceed to run simulation.'
+   endif
    call flush(6)
    
   ! In this test, the name of the file to open is provided as a command line
