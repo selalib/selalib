@@ -1,8 +1,5 @@
-module sll_jorek
-#include "sll_working_precision.h"
+module jorek_data
 #include "sll_jorek.h"
-
-implicit none
 
   type(def_mesh_2d)                          :: mesh2d
   type(def_greenbox_2d)                      :: gbox2d
@@ -15,9 +12,9 @@ implicit none
   real(kind=rk), dimension(:,:), allocatable :: var
   real(kind=rk), dimension(:,:), pointer     :: diagnostics
   integer(kind=jorek_ints_kind)              :: nstep_max 
-  integer                                    :: dtllevel_base = 0
-  integer                                    :: nvar = 1
-  integer                                    :: matrix_a_id = 0
+  integer, parameter                         :: dtllevel_base = 0
+  integer, parameter                         :: nvar = 1
+  integer, parameter                         :: matrix_a_id = 0
   integer                                    :: mode_m1
   integer                                    :: mode_n1
   real(kind=jorek_coef_kind)                 :: a
@@ -25,41 +22,117 @@ implicit none
   real(kind=jorek_coef_kind)                 :: r0
   real(kind=jorek_coef_kind)                 :: z0
 
+end module jorek_data
+
+module sll_jorek
+
+#include "sll_working_precision.h"
+
+use jorek_data
+
+implicit none
+
+type, public :: sll_jorek_solver
+
+  character(len=1024) :: filename_parameter
+
+end type sll_jorek_solver
+
+interface sll_create
+  module procedure :: initialize_jorek
+end interface sll_create
+
+interface sll_solve
+  module procedure :: solve_jorek
+end interface sll_solve
+
+interface sll_delete
+  module procedure :: delete_jorek
+end interface sll_delete
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 contains
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine initialize_jorek()
 
-  sll_int32 :: nb_args
-  sll_int32 :: imesh=1
+subroutine solve_jorek(this)
+  
+  type(sll_jorek_solver) :: this
+
+  call run_model()
+
+end subroutine solve_jorek
+
+subroutine delete_jorek(this)
+
+  type(sll_jorek_solver) :: this
   sll_int32 :: ierr
 
-  character(len=1024) :: exec
-  character(len=1024) :: rootname
-  character(len=1024) :: flag
-  character(len=1024) :: filename_parameter*1024
+  deallocate(global_rhs)
+  deallocate(global_unknown)
+  deallocate(var)
+  deallocate(diagnostics)
 
-  character(len=*), parameter :: mod_name = "poisson_2d"
-  sll_int32                   :: n_gauss_rp
-  sll_int32                   :: n_gauss_zp
+  call free_greenbox(gbox2d)
+
+  call spm_cleanall(ierr)
+  call spm_finalize(ierr)
+
+end subroutine delete_jorek
+
+subroutine initialize_jorek(this)
+
+  type(sll_jorek_solver)             :: this
+  character(len=1024)                :: filename_parameter
+
+  sll_int32                          :: imesh=1
+  sll_int32                          :: ierr
+  integer, parameter                 :: n_dim = 2
+
+  character(len=*), parameter        :: mod_name = "poisson_2d"
+  sll_int32                          :: n_gauss_rp
+  sll_int32                          :: n_gauss_zp
+  character(len=1024)                :: flag 
+  integer(kind=spm_ints_kind)        :: nrows 
+  integer(kind=spm_ints_kind)        :: ncols
+  integer                            :: i
+  integer, dimension(:), allocatable :: rvars
+  integer, dimension(:), allocatable :: cvars
+  integer                            :: n_nodes_global
 
   flag = "--parameters"
   call jorek_get_arguments(flag, filename_parameter, ierr)
 
   call initialize_jorek_parameters(filename_parameter)
 
-  call getarg(0, exec)
-  rootname = "output"
-
-  nb_args = iargc()
-
-  print*, "runname : ", trim(exec)
- 
   ! ... define model parameters 
-  call define_model()
+
+  current_model = 1
+  n_var_unknown = 1
+  n_var_sys     = 1
+  i_vp_rho      = 1
+  nmatrices     = 1
+  i_vu_rho      = 1 
+
+  allocate(namesvaru(n_var_unknown)) 
+  namesvaru(i_vu_rho)  = "density"
+  allocate(namesvarp(n_var_unknown)) 
+  namesvarp(i_vp_rho)  = "density"
+
+  call jorek_param_getint(int_modes_m1_id, mode_m1, ierr)
+  call jorek_param_getint(int_modes_n1_id, mode_n1, ierr)
+
+  call jorek_param_getreal(real_rgeo_id,r0,ierr)
+  call jorek_param_getreal(real_zgeo_id,z0,ierr)
+  call jorek_param_getreal(real_amin_id,a,ierr) 
+  call jorek_param_getreal(real_acenter_id,acenter,ierr)
+  call jorek_param_getint(int_nstep_max_id,nstep_max,ierr)
+
+  call create_quadrature(quad, n_dim, 0, 3, 3)
+
+  mesh2d%ptr_quad => quad
 
   ! ... define basis functions 
   call initbasis( mesh2d%oi_n_max_order,         &
@@ -87,66 +160,6 @@ subroutine initialize_jorek()
 
   call spm_initialize(nmatrices, ierr)
 
-  call initialize_model()
-
-  call coordinates_initialize(2, mesh2d%ptr_quad%oi_n_points, ierr)
-
-  call run_model()
-  
-end subroutine initialize_jorek
-
-subroutine delete_jorek()
-
-  sll_int32 :: ierr
-
-  call free_model()
-  call spm_cleanall(ierr)
-  call spm_finalize(ierr)
-
-end subroutine delete_jorek
-
-subroutine define_model()
-
-  integer, parameter :: n_dim = 2
-  integer            :: ierr
-
-  current_model = 1
-  n_var_unknown = 1
-  n_var_sys     = 1
-  i_vp_rho      = 1
-  nmatrices     = 1
-  i_vu_rho      = 1 
-
-  allocate(namesvaru(n_var_unknown)) 
-  namesvaru(i_vu_rho)  = "density"
-  allocate(namesvarp(n_var_unknown)) 
-  namesvarp(i_vp_rho)  = "density"
-
-  call jorek_param_getint(int_modes_m1_id, mode_m1, ierr)
-  call jorek_param_getint(int_modes_n1_id, mode_n1, ierr)
-
-  call jorek_param_getreal(real_rgeo_id,r0,ierr)
-  call jorek_param_getreal(real_zgeo_id,z0,ierr)
-  call jorek_param_getreal(real_amin_id,a,ierr) 
-  call jorek_param_getreal(real_acenter_id,acenter,ierr)
-  call jorek_param_getint(int_nstep_max_id,nstep_max,ierr)
-
-  call create_quadrature(quad, n_dim, 0, 3, 3)
-
-  mesh2d%ptr_quad => quad
-
-end subroutine define_model
-
-subroutine initialize_model()
-
-  integer                            :: ierr
-  integer(kind=spm_ints_kind)        :: nrows 
-  integer(kind=spm_ints_kind)        :: ncols
-  integer                            :: i
-  integer, dimension(:), allocatable :: rvars
-  integer, dimension(:), allocatable :: cvars
-  integer                            :: n_nodes_global
-  integer, parameter                 :: n_dim = 2
 
   allocate(rvars(0:n_var_sys))
   allocate(cvars(0:n_var_sys))
@@ -180,23 +193,14 @@ subroutine initialize_model()
   var            = 0.0
   diagnostics    = 0.0
 
-  call create_greenbox(gbox2d, &
-          & n_var_unknown, &
-          & n_var_sys, &
-          & mesh2d % ptr_quad % oi_n_points)
+  call create_greenbox(gbox2d,                      &
+                       n_var_unknown,               &
+                       n_var_sys,                   &
+                       mesh2d%ptr_quad%oi_n_points)
 
-end subroutine initialize_model
+  call coordinates_initialize(2, mesh2d%ptr_quad%oi_n_points, ierr)
 
-subroutine free_model()
-  
-  deallocate(global_rhs)
-  deallocate(global_unknown)
-  deallocate(var)
-  deallocate(diagnostics)
-
-  call free_greenbox(gbox2d)
-
-end subroutine free_model
+end subroutine initialize_jorek
 
 subroutine run_model( )
 
@@ -512,7 +516,7 @@ subroutine plot_diagnostics(nstep)
 
 end subroutine plot_diagnostics
 
-subroutine  rhs_for_vi(bbox2di, gbox2d)
+subroutine rhs_for_vi(bbox2di, gbox2d)
 
   type(def_blackbox_2d) :: bbox2di
   type(def_greenbox_2d) :: gbox2d

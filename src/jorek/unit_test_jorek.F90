@@ -15,9 +15,14 @@
 program test_jorek 
 
   use sll_jorek
+  type(sll_jorek_solver) :: jorek_solver
+  character(len=1024)    :: parameters
+  character(len=1024)    :: geometry
 
-  call initialize_jorek()
-  call delete_jorek()
+          
+  call sll_create(jorek_solver)
+  call sll_solve(jorek_solver)
+  call sll_delete(jorek_solver)
 
 end program test_jorek
 
