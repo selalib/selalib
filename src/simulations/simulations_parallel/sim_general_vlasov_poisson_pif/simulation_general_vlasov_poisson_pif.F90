@@ -87,6 +87,7 @@ sll_int32 :: momentmatch=SLL_MOMENT_MATCH_NONE
 type(sll_vlasovpoisson_sim) :: testcase=SLL_LANDAU_SUM
 sll_int32 :: RND_OFFSET   = 10    !Default sobol offset, skip zeros
 sll_int32 :: num_modes = 1
+sll_int32, dimension(2) :: plot2d_idx ! Contains 2 indicies of the dimensions to be plotted
 !results
 sll_real64, dimension(:),allocatable :: kineticenergy,fieldenergy, energy,energy_error,&
                weight_sum,weight_var,moment_error, l2potential
@@ -237,6 +238,9 @@ sim%npart_loc=sim%npart/sim%coll_size
 !print*, "#Core ", coll_rank, " handles particles", coll_rank*nparticles +1, "-", (coll_rank+1)*nparticles
 !call sll_collective_barrier(sll_world_collective)
 if (sim%coll_rank==0) print*, "#Total Number of particles: ", sim%npart_loc*sim%coll_size
+if (allocated(sim%B0)) then
+ if (sim%coll_rank==0) print *, "Constant B-Field set to", sim%B0
+endif
 
 
 
@@ -322,7 +326,7 @@ subroutine load_landau_sum_generalvp_pif(sim)
   class(sll_simulation_general_vlasov_poisson_pif), intent(inout) :: sim 
   sim%particle(sim%maskw,:)=(1.0+sim%eps*sum(cos(diag_dot_matrix_real64(sim%kmode,sim%particle(sim%maskx,:))),1))
   sim%particle(sim%maskw,:)=sim%particle(sim%maskw,:)/sim%prior_weight(:)  
-  print *, "Load landau sum"
+  if (sim%coll_rank==0) print *, "Load landau sum"
 end subroutine
 
 subroutine load_landau_prod_generalvp_pif(sim)
@@ -350,6 +354,7 @@ end subroutine
  sll_real64 :: QoverM, EPSILON
  sll_real64, dimension(10) :: K=0,L=0, B0=0
  sll_int32 :: CONTROLVARIATE, RND_OFFSET
+ sll_int32, dimension(2) :: PLOT2D_IDX=0
  character(len=32) :: TESTCASE
      
      sll_int32, parameter  :: input_file = 99
@@ -358,7 +363,7 @@ end subroutine
      namelist /sim_params/ dt, NUM_PARTICLES, DIMENSION, NUM_TIMESTEPS, &
                           NUM_MODES, QoverM, EPSILON, CONTROLVARIATE, &
                           TIME_INTEGRATOR_ORDER,RND_OFFSET,K,L,B0,&
-                          TESTCASE
+                          TESTCASE,PLOT2D_IDX
      
      open(unit = input_file, file=trim(filename),IOStat=IO_stat)
      if( IO_stat /= 0 ) then
@@ -395,12 +400,17 @@ end subroutine
      end do
      
      if (sum(abs(B0(1:sim%dimx)))/=0) then
-          SLL_ALLOCATE(sim%B0(sim%dimx),ierr)
+         SLL_ALLOCATE(sim%B0(sim%dimx),ierr)
          sim%B0=B0(1:sim%dimx)
-         print *, "Constant B-Field set to", sim%B0
      endif
      
-     
+     if (sum(abs(PLOT2D_IDX))/=0) then
+         if (maxval(PLOT2D_IDX)>sim%dimx*2+1) then
+           print *, "PLOT2D_IDX is out of bound:",  PLOT2D_IDX
+           else
+           sim%plot2d_idx=PLOT2D_IDX
+         endif
+     endif
      
 !      elseif (size(K)==0) then
 !         print *, "k-vector not given"   
@@ -530,7 +540,7 @@ subroutine symplectic_rungekutta_generalvp_pif(sim)
     
   !Loop over all stages
    t=(sim%tstep-1)*sim%dt
-    do rkidx=1, size(sim%rk_d);
+    do rkidx=1, size(sim%rk_d)
      
      !Set control variate if used
      call sim%update_weight()
@@ -581,11 +591,12 @@ subroutine YSun_g2h_generalvp_pif(sim)
      call sim%update_weight()
      
      !Charge assignement, get right hand side
-     sim%rhs=sim%SOLVER%get_rhs_particle(sim%particle(sim%maskxw,:))/sim%npart
+      sim%rhs=sim%SOLVER%get_rhs_particle(sim%particle(sim%maskxw,:))/sim%npart
      !mpi allreduce
      call sll_collective_globalsum(sll_world_collective, sim%rhs)
      !sim%solution=sim%SOLVER%solve_poisson(sim%rhs)
-     sim%solution=sim%SOLVER%solve_quasineutral(sim%rhs)
+!     sim%rhs=0
+      sim%solution=sim%SOLVER%solve_quasineutral(sim%rhs)
     
        if (rkidx==1) then
          call sim%calculate_diagnostics()
@@ -593,21 +604,13 @@ subroutine YSun_g2h_generalvp_pif(sim)
 
       h=gamma(rkidx)*sim%dt
     
-      E= sim%E(sim%particle(sim%maskx,:),t) + &  ! Electric field external
-           (sim%SOLVER%eval_gradient(sim%particle(sim%maskx,:),sim%solution)) !Electric field selfconsistent
-          
+       E= sim%E(sim%particle(sim%maskx,:),t) + &  ! Electric field external
+            (sim%SOLVER%eval_gradient(sim%particle(sim%maskx,:),sim%solution)) !Electric field selfconsistent
+!       E=0    
       B=sim%B(sim%particle(sim%maskx,:), t) !External magnetic field
       
-      
-         sim%particle(sim%maskv,:)=exp_skew_product2( B, &
-                         sim%particle(sim%maskv,:) + h*sim%qm/2*E, h*(-sim%qm)*l2norm(B) ) + h*sim%qm/2*E
-
-!        sim%particle(sim%maskv,:)=sim%particle(sim%maskv,:)- h*sim%qm*E
-       
-!        sim%particle(sim%maskv,:)=exp_skew_product(h*sim%qm*sim%B(sim%particle(sim%maskx,:), t) , &
-!                        sim%particle(sim%maskv,:) + h*sim%qm/2*E) + h*sim%qm/2*E
-     !sim%particle(sim%maskv,:)=sim%particle(sim%maskv,:) +  h*(sim%qm)*(sim%vxB(sim%particle(sim%maskx,:),sim%particle(sim%maskv,:),t)+  E);
-    
+     sim%particle(sim%maskv,:)=exp_skew_product2( B, &
+                      sim%particle(sim%maskv,:) + h*sim%qm/2.0*E, h*(-sim%qm)*l2norm(B) ) + h*sim%qm/2.0*E    
     !x_{k+1}= x_k + dt*v_{k+1}
     sim%particle(sim%maskx,:)=sim%particle(sim%maskx,:) +  h*sim%particle(sim%maskv,:);
       
@@ -628,20 +631,16 @@ end subroutine YSun_g2h_generalvp_pif
   sll_real64, dimension(:,:), intent(in) :: v, w
   sll_real64, dimension(3,size(v,2)) :: c
   sll_real64, dimension(:), intent(in) :: omega
-     
-   c(1,:) = w(3,:)*(v(3,:)*sin(omega) + (v(1,:)*v(3,:)*sin(omega/2)**2)/8) - w(2,:)*(v(3,:)*sin(omega) - (v(1,:)*v(3,:)*sin(omega/2)**2)/8) - w(1,:)*((sin(omega/2)**2*(v(3,:)**2 + v(3,:)**2))/8 - 1)
-   c(2,:)=w(1,:)*(v(3,:)*sin(omega) + (v(1,:)*v(3,:)*sin(omega/2)**2)/8) - w(2,:)*((sin(omega/2)**2*(v(1,:)**2 + v(3,:)**2))/8 - 1) - w(3,:)*(v(1,:)*sin(omega) - (v(3,:)*v(3,:)*sin(omega/2)**2)/8)
-   c(3,:)=w(2,:)*(v(1,:)*sin(omega) + (v(3,:)*v(3,:)*sin(omega/2)**2)/8) - w(1,:)*(v(3,:)*sin(omega) - (v(1,:)*v(3,:)*sin(omega/2)**2)/8) - w(3,:)*((sin(omega/2)**2*(v(1,:)**2 + v(3,:)**2))/8 - 1) 
-     
-!         c(1,:) = -w(1,:)*(sin(omega*(1.0D0/2.0D0))**2*(1.0D0/8.0D0)-1.0D0)-w(2,:)*sin(omega)
-!         c(2,:) = -w(2,:)*(sin(omega*(1.0D0/2.0D0))**2*(1.0D0/8.0D0)-1.0D0)+w(1,:)*sin(omega)
-!         c(3,:) = w(3,:)
-!       
-!      
-!      c(1,:) = w(1,:)*cos(omega)-w(2,:)*sin(omega)
-!       c(2,:) = w(2,:)*cos(omega)+w(1,:)*sin(omega)
-!       c(3,:) = w(3,:)
-!   
+   
+   c(1,:) = w(1,:) + w(1,:)*(v(3,:)**2 + v(3,:)**2)*(cos(omega) - 1) + v(3,:)*w(3,:)*sin(omega) - v(3,:)*w(2,:)*sin(omega) - v(1,:)*v(3,:)*w(2,:)*(cos(omega) - 1) - v(1,:)*v(3,:)*w(3,:)*(cos(omega) - 1) 
+  c(2,:) = w(2,:) + w(2,:)*(v(1,:)**2 + v(3,:)**2)*(cos(omega) - 1) - v(1,:)*w(3,:)*sin(omega) + v(3,:)*w(1,:)*sin(omega) - v(1,:)*v(3,:)*w(1,:)*(cos(omega) - 1) - v(3,:)*v(3,:)*w(3,:)*(cos(omega) - 1) 
+  c(3,:) = w(3,:) + w(3,:)*(v(1,:)**2 + v(3,:)**2)*(cos(omega) - 1) + v(1,:)*w(2,:)*sin(omega) - v(3,:)*w(1,:)*sin(omega) - v(1,:)*v(3,:)*w(1,:)*(cos(omega) - 1) - v(3,:)*v(3,:)*w(2,:)*(cos(omega) - 1) 
+   
+   
+!   c(1,:) = w(1,:) + w(1,:)*(cos(omega) - 1) - w(2,:)*sin(omega) 
+!  c(2,:) = w(2,:) + w(2,:)*(cos(omega) - 1) + w(1,:)*sin(omega) 
+!  c(3,:) = w(3,:) 
+
   end function
 
 
@@ -743,9 +742,9 @@ SELECT CASE (rk_order)
       sim%rk_c=(/ rk4sx + 0.5 , -rk4sx, -rk4sx, rk4sx +0.5 /) 
 END SELECT
 
-print *, "Symplectic Runge Kutta of order:", rk_order
-print *, "D_COEFFS:", sim%rk_d
-print *, "C_COEFFS:", sim%rk_c
+if (sim%coll_rank==0) print *, "Symplectic Runge Kutta of order:", rk_order
+! print *, "D_COEFFS:", sim%rk_d
+! print *, "C_COEFFS:", sim%rk_c
 
 end subroutine set_symplectic_rungekutta_coeffs_generalvp_pif
 
