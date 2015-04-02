@@ -6,8 +6,10 @@ IF(NOT HDF5_FOUND AND HDF5_ENABLED)
                   ${HDF5_ROOT} 
                   $ENV{HDF5ROOT} 
                   $ENV{HDF5_BASE}
+                  $ENV{HDF5_DIR}
                   $ENV{SZIP_LIB}
                   $ENV{SZIP_LIBDIR}
+                  $ENV{HDF5_BASE}
                   /usr 
                   /usr/include/hdf5/openmpi
                   /usr/include/openmpi-x86_64 
