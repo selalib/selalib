@@ -6,14 +6,14 @@
         dt     =  0.1
         number_iterations   = 100
         QoverM = -1.0
-        ALPHA  = 0.1
+        ALPHA  = 0.001
         UseCubicSplines = .false.
         UseLtPicScheme = .true.
 /
 
 &grid_dims
-        NC_X = 10
-        NC_Y = 5
+        NC_X = 32
+        NC_Y = 8
         XMIN   = 0.0
         KX_LANDAU = 0.5
         YMIN   = 0.0
@@ -23,8 +23,8 @@
 /
 
 &lt_pic_params
-    NUM_PARTS_X         = 20
-    NUM_PARTS_Y         = 10
+    NUM_PARTS_X         = 10
+    NUM_PARTS_Y         = 5
     NUM_PARTS_VX        = 5
     NUM_PARTS_VY        = 5
     REMAP_GRID_VX_MIN   = -6.0
