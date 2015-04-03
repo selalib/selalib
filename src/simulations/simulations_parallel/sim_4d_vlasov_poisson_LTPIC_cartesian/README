@@ -48,7 +48,7 @@
      [[elisp:(compile "cd ../../../../build && make test_4d_vp_lt_pic_cartesian && make install")]]
 
    - "install" depends on everything else:
-		[[elisp:(compile "cd ../../../../build && make -j $NCPU install")]]
+     [[elisp:(compile "cd ../../../../build && make -j $NCPU install")]]
 
 ** Running
    - Create output directory if missing
