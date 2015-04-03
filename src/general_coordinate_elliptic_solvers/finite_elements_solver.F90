@@ -133,51 +133,53 @@ contains ! =============================================================
 
 
   function new_finite_elements_solver( &
-       mesh, &
-       spline_degree, &
-       quadrature_type, &
-       bc_left, &
-       bc_right, &
-       bc_bottom, &
+       mesh,                           &
+       spline_degree,                  &
+       quadrature_type,                &
+       bc_left,                        &
+       bc_right,                       &
+       bc_bottom,                      &
        bc_top ) result(solv)
 
-    type(finite_elements_solver),          pointer :: solv
+    type(finite_elements_solver),            pointer :: solv
     type(sll_cartesian_mesh_2d), intent(in), pointer :: mesh
+
     sll_int32,  intent(in) :: spline_degree
     sll_int32,  intent(in) :: bc_left
     sll_int32,  intent(in) :: bc_right
     sll_int32,  intent(in) :: bc_bottom
     sll_int32,  intent(in) :: bc_top
     sll_int32,  intent(in) :: quadrature_type
+
     sll_int32 :: ierr
 
     SLL_ALLOCATE(solv, ierr)
-    call initialize( &
-         solv, &
-         mesh, &
-         spline_degree, &
+    call initialize(      &
+         solv,            &
+         mesh,            &
+         spline_degree,   &
          quadrature_type, &
-         bc_left, &
-         bc_right, &
-         bc_bottom, &
+         bc_left,         &
+         bc_right,        &
+         bc_bottom,       &
          bc_top)
 
   end function new_finite_elements_solver
 
 
   subroutine initialize_finite_elements_solver( &
-       solv, &
-       mesh, &
-       spline_degree, &
-       quadrature_type, &
-       bc_left, &
-       bc_right, &
-       bc_bottom, &
-       bc_top, &
+       solv,                                    &
+       mesh,                                    &
+       spline_degree,                           &
+       quadrature_type,                         &
+       bc_left,                                 &
+       bc_right,                                &
+       bc_bottom,                               &
+       bc_top,                                  &
        user_qpts_weights)
 
     type(finite_elements_solver), intent(out)         :: solv
-    type(sll_cartesian_mesh_2d),    intent(in), pointer :: mesh
+    type(sll_cartesian_mesh_2d),  intent(in), pointer :: mesh
     sll_int32,  intent(in) :: spline_degree
     sll_int32,  intent(in) :: bc_left
     sll_int32,  intent(in) :: bc_right
@@ -254,21 +256,21 @@ contains ! =============================================================
     SLL_ALLOCATE(solv%knots2(knots2_size),ierr)
 
     call initialize_knots( &
-         spline_degree, &
-         mesh%num_cells1, &
-         mesh%eta1_min, &
-         mesh%eta1_max, &
-         bc_left, &
-         bc_right, &
+         spline_degree,    &
+         mesh%num_cells1,  &
+         mesh%eta1_min,    &
+         mesh%eta1_max,    &
+         bc_left,          &
+         bc_right,         &
          solv%knots1 )
 
     call initialize_knots( &
-         spline_degree, &
-         mesh%num_cells2, &
-         mesh%eta2_min, &
-         mesh%eta2_max, &
-         bc_bottom, &
-         bc_top, &
+         spline_degree,    &
+         mesh%num_cells2,  &
+         mesh%eta2_min,    &
+         mesh%eta2_max,    &
+         bc_bottom,        &
+         bc_top,           &
          solv%knots2 )
 
     ! Now the same but for the source term (unknown boundary conditions) :
@@ -276,17 +278,17 @@ contains ! =============================================================
     SLL_ALLOCATE(solv%knots2_source(mesh%num_cells2 + spline_degree + 2),ierr)
 
     call initialize_knots_source( &
-         spline_degree, &
-         mesh%num_cells1, &
-         mesh%eta1_min, &
-         mesh%eta1_max, &
+         spline_degree,           &
+         mesh%num_cells1,         &
+         mesh%eta1_min,           &
+         mesh%eta1_max,           &
          solv%knots1_source )
 
     call initialize_knots_source( &
-         spline_degree, &
-         mesh%num_cells2, &
-         mesh%eta2_min, &
-         mesh%eta2_max, &
+         spline_degree,           &
+         mesh%num_cells2,         &
+         mesh%eta2_min,           &
+         mesh%eta2_max,           &
          solv%knots2_source )
 
     ! ----------------------- END ALLOCATION AND INITIALIZATION OF SPLINES KNOTS
@@ -313,14 +315,14 @@ contains ! =============================================================
     SLL_ALLOCATE(solv%values_jacobian(solv%num_quad_pts), ierr)
     SLL_ALLOCATE(solv%tab_index_coeff(solv%num_cells),ierr)
 
-    solv%values_basis_val_val(1:solv%num_splines_loc,1:solv%num_quad_pts) = 0.0_f64
-    solv%values_basis_der_val(1:solv%num_splines_loc,1:solv%num_quad_pts) = 0.0_f64
-    solv%values_basis_val_der(1:solv%num_splines_loc,1:solv%num_quad_pts) = 0.0_f64
-    solv%values_basis_source_val_val(1:solv%num_splines_loc,1:solv%num_quad_pts) = 0.0_f64
-    solv%values_basis_source_der_val(1:solv%num_splines_loc,1:solv%num_quad_pts) = 0.0_f64
-    solv%values_basis_source_val_der(1:solv%num_splines_loc,1:solv%num_quad_pts) = 0.0_f64
-    solv%values_jacobian(1:solv%num_quad_pts) = 0.0_f64
-    solv%tab_index_coeff(1:solv%num_cells)  = -1
+    solv%values_basis_val_val        = 0.0_f64
+    solv%values_basis_der_val        = 0.0_f64
+    solv%values_basis_val_der        = 0.0_f64
+    solv%values_basis_source_val_val = 0.0_f64
+    solv%values_basis_source_der_val = 0.0_f64
+    solv%values_basis_source_val_der = 0.0_f64
+    solv%values_jacobian             = 0.0_f64
+    solv%tab_index_coeff             = -1
 
     ! ------------------------------------------------ END ALLOCATION SPLINES TABLES
     ! ------------------------------------------------------------------------------
@@ -372,10 +374,10 @@ contains ! =============================================================
     endif
 
     solv%source_vec(:) = 0.0_f64
-    solv%phi_vec(:) = 0.0_f64
-    solv%masse(:)   = 0.0_f64
-    solv%stiff(:)   = 0.0_f64
-    solv%intjac     = 0.0_f64
+    solv%phi_vec(:)    = 0.0_f64
+    solv%masse(:)      = 0.0_f64
+    solv%stiff(:)      = 0.0_f64
+    solv%intjac        = 0.0_f64
     
     ! --------------------------- END ALLOCATION VECTORS MASS STIFFNESS SOURCE
     ! ------------------------------------ AND SPARSE MATRIX CREATION AND SIZING
@@ -384,25 +386,25 @@ contains ! =============================================================
     ! --------------------------------------------------------------------------
     ! ---------------------------- BEGIN COMPUTING OF CONNECTIVITY BETWEEN KNOTS
       
-    call initconnectivity( &
-         mesh%num_cells1, &
-         mesh%num_cells2, &
-         spline_degree, &
-         spline_degree, &
-         bc_left, &
-         bc_right, &
-         bc_bottom, &
-         bc_top, &
-         solv%local_spline_indices, &
-         solv%global_spline_indices, &
+    call initconnectivity(                   &
+         mesh%num_cells1,                    &
+         mesh%num_cells2,                    &
+         spline_degree,                      &
+         spline_degree,                      &
+         bc_left,                            &
+         bc_right,                           &
+         bc_bottom,                          &
+         bc_top,                             &
+         solv%local_spline_indices,          &
+         solv%global_spline_indices,         &
          solv%local_to_global_spline_indices )
     
-    solv%sll_csr_mat => new_csr_matrix( &
-         solv%num_splines_tot, &
-         solv%num_splines_tot, &
-         solv%num_cells, &
+    solv%sll_csr_mat => new_csr_matrix(       &
+         solv%num_splines_tot,                &
+         solv%num_splines_tot,                &
+         solv%num_cells,                      &
          solv%local_to_global_spline_indices, &
-         solv%num_splines_loc, &
+         solv%num_splines_loc,                &
          solv%local_to_global_spline_indices, &
          solv%num_splines_loc)
         
@@ -418,18 +420,19 @@ contains ! =============================================================
     ! at local_index at the element num_ele
     
     type(finite_elements_solver), intent(in) :: solv
-    sll_int32, intent(in) :: num_ele
-    sll_int32, intent(in) :: local_index
-    sll_int32             :: global
+    sll_int32,                    intent(in) :: num_ele
+    sll_int32,                    intent(in) :: local_index
+    sll_int32                                :: global
 
     global = (num_ele - 1) * solv%num_quad_pts_loc + local_index
+
   end function global_index_quad
 
   
-  subroutine initialize_quad_points_weights(&
-       solv, & 
-       quadrature_type, &
-       num_quad_loc_1d, &
+  subroutine initialize_quad_points_weights( &
+       solv,                                 & 
+       quadrature_type,                      &
+       num_quad_loc_1d,                      &
        user_qpts_weights)
 
     type(finite_elements_solver), intent(inout) :: solv
@@ -675,15 +678,16 @@ contains ! =============================================================
   end subroutine initialize_basis_functions
 
 
-  subroutine assembly_mat_solv(&
-       solv, &
-       a11_field_mat, &
-       a12_field_mat,&
-       a21_field_mat,&
-       a22_field_mat,&
-       b1_field_vect,&
-       b2_field_vect,&
+  subroutine assembly_mat_solv( &
+       solv,                    &
+       a11_field_mat,           &
+       a12_field_mat,           &
+       a21_field_mat,           &
+       a22_field_mat,           &
+       b1_field_vect,           &
+       b2_field_vect,           &
        c_field)
+
     type(finite_elements_solver),intent(inout) :: solv
     class(sll_scalar_field_2d_base), pointer   :: a11_field_mat
     class(sll_scalar_field_2d_base), pointer   :: a12_field_mat
@@ -692,6 +696,7 @@ contains ! =============================================================
     class(sll_scalar_field_2d_base), pointer   :: b1_field_vect
     class(sll_scalar_field_2d_base), pointer   :: b2_field_vect
     class(sll_scalar_field_2d_base), pointer   :: c_field
+
     sll_real64, dimension(:,:), allocatable :: M_c_loc
     sll_real64, dimension(:,:), allocatable :: K_a11_loc
     sll_real64, dimension(:,:), allocatable :: K_a12_loc
@@ -703,6 +708,7 @@ contains ! =============================================================
     sll_real64, dimension(:),   allocatable :: Masse_loc
     sll_real64, dimension(:),   allocatable :: Stiff_loc
     sll_real64, dimension(:,:,:), pointer   :: Source_loc
+
     sll_int32 :: num_splines_loc
     sll_int32 :: ierr
     sll_int32 :: cell_index

@@ -32,13 +32,13 @@ SET(JOREK_LIBRARIES  assembly
   
 TARGET_LINK_LIBRARIES(jorek_${JOREK_MODEL} ${JOREK_LIBRARIES} ${PETSC_LIBRARIES})
   
-SET(PROCS 1)
+SET(PROCS 4)
 SET(PARAMETERS ${SOURCE_DIR}/models/${JOREK_MODEL}/parameter.txt)
-SET(GEOMETRY  ${SOURCE_DIR}/geometries/square_periodic/n4x4)
+SET(GEOMETRY   ${SOURCE_DIR}/geometries/square_periodic/n16x16)
 ADD_TEST( NAME jorek
           COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS}
-                    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/jorek_${JOREK_MODEL} 
-                       --parameters ${PARAMETERS}
-                       --geometry   ${GEOMETRY} )
+            ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/jorek_${JOREK_MODEL} 
+              --parameters ${PARAMETERS}
+              --geometry   ${GEOMETRY} )
 
-SET_TESTS_PROPERTIES( jorek PROPERTIES TIMEOUT 5 )
+SET_TESTS_PROPERTIES( jorek PROPERTIES TIMEOUT 30 )

@@ -21,6 +21,8 @@ module jorek_data
   real(kind=jorek_coef_kind)                 :: acenter
   real(kind=jorek_coef_kind)                 :: r0
   real(kind=jorek_coef_kind)                 :: z0
+  integer,       dimension(:), allocatable   :: rvars
+  integer,       dimension(:), allocatable   :: cvars
 
 end module jorek_data
 
@@ -34,7 +36,6 @@ implicit none
 
 type, public :: sll_jorek_solver
 
-  character(len=1024) :: filename_parameter
 
 end type sll_jorek_solver
 
@@ -59,9 +60,86 @@ contains
 
 subroutine solve_jorek(this)
   
-  type(sll_jorek_solver) :: this
+  type(sll_jorek_solver)                   :: this
+  real(kind=rk)                            :: t_fin
+  real(kind=rk)                            :: t_deb
+  character(len = 1024)                    :: filename
+  integer(kind=spm_ints_kind)              :: nrows 
+  integer                                  :: ierr
+  integer                                  :: myrank
+  character(len=20)                        :: stamp_default
+  character(len=20)                        :: msg
+  integer                                  :: i   
 
-  call run_model()
+  call mpi_comm_rank ( mpi_comm_world, myrank, ierr)
+
+  call spm_getnr(matrix_a_id, nrows, ierr)
+
+  write(msg,*) myrank
+  stamp_default = "-proc_"//trim(adjustl(msg))
+  stamp_default = trim(adjustl(adjustr(stamp_default)))
+
+  call getarg(0, filename)
+
+  ! ... loop over elements 
+  call cpu_time(t_deb)
+  call loop_on_elmts( matrix_a_id,      &
+                      myrank,           &
+                      mesh2d,           & 
+                      gbox2d,           &
+                      rhs_for_vi,       &
+                      matrix_for_vi_vj, &
+                      global_unknown,   &
+                      var,              &
+                      global_rhs,       &
+                      rvars,            &
+                      cvars)
+
+  call cpu_time(t_fin)
+
+  print *, "rhs ", global_rhs(1:6)
+
+  ! ... example of solver calls
+  call linear_solver_new_with_matrix_id(solver, matrix_a_id)
+  call linear_solver_solve(solver, global_rhs, global_unknown) 
+  call linear_solver_free(solver)
+
+  print *, "unknown ", global_unknown(1:6)
+
+  ! ... evaluate unknowns on verticies and compute model norms 
+  call evaluate_on_elmts(matrix_a_id,          &
+                         myrank,               &
+                         mesh2d,               &
+                         gbox2d,               &
+                         global_unknown,       &
+                         var,                  &
+                         analytical_model,     &
+                         assembly_diagnostics, &
+                         plot_diagnostics,     &
+                         rvars,                &
+                         cvars,0)
+
+  filename = trim(filename) 
+  call savemeshes(mesh2d, gbox2d, var, analytical_model, filename,0)
+
+  open(unit=12, file=trim("rhs"//adjustl(adjustr(stamp_default)))//".txt"&
+            & , action="write", status="replace")
+  do i=1,nrows
+     write(12,*) global_rhs(i) 
+  end do
+  close(12)
+  open(unit=13, file=trim("unknown"//adjustl(adjustr(stamp_default)))//".txt"&
+            & , action="write", status="replace")
+  do i=1,nrows
+     write(13,*) global_unknown(i) 
+  end do
+  close(13)
+  open(unit=14, file=trim("var"//adjustl(adjustr(stamp_default)))//".txt"&
+            & , action="write", status="replace")
+  do i=1, mesh2d%oi_n_nodes
+     write(14,*) var(:,i) 
+  end do
+  close(14)
 
 end subroutine solve_jorek
 
@@ -76,7 +154,6 @@ subroutine delete_jorek(this)
   deallocate(diagnostics)
 
   call free_greenbox(gbox2d)
-
   call spm_cleanall(ierr)
   call spm_finalize(ierr)
 
@@ -98,8 +175,6 @@ subroutine initialize_jorek(this)
   integer(kind=spm_ints_kind)        :: nrows 
   integer(kind=spm_ints_kind)        :: ncols
   integer                            :: i
-  integer, dimension(:), allocatable :: rvars
-  integer, dimension(:), allocatable :: cvars
   integer                            :: n_nodes_global
 
   flag = "--parameters"
@@ -160,7 +235,6 @@ subroutine initialize_jorek(this)
 
   call spm_initialize(nmatrices, ierr)
 
-
   allocate(rvars(0:n_var_sys))
   allocate(cvars(0:n_var_sys))
 
@@ -185,7 +259,7 @@ subroutine initialize_jorek(this)
 
   allocate(global_rhs(ncols))
   allocate(global_unknown(ncols))
-  allocate(var(mesh2d% oi_n_max_order * n_var_unknown, n_nodes_global) )
+  allocate(var(mesh2d%oi_n_max_order*n_var_unknown, n_nodes_global) )
   allocate(diagnostics(n_diag,nstep_max+1))
 
   global_rhs     = 0.0
@@ -202,104 +276,6 @@ subroutine initialize_jorek(this)
 
 end subroutine initialize_jorek
 
-subroutine run_model( )
-
-  real(kind=rk)                            :: t_fin
-  real(kind=rk)                            :: t_deb
-  character(len = 1024)                    :: filename
-  integer(kind=spm_ints_kind)              :: nrows 
-  integer                                  :: ierr
-  integer                                  :: myrank
-  character(len=20)                        :: stamp_default
-  character(len=20)                        :: msg
-  real(kind=rk), dimension(:), allocatable :: y
-  integer,       dimension(:), allocatable :: rvars
-  integer,       dimension(:), allocatable :: cvars
-  integer                                  :: i   
-
-  allocate(rvars(0:n_var_sys))
-  allocate(cvars(0:n_var_sys))
-
-  rvars(0) = n_var_sys
-  do i = 1, n_var_sys
-     rvars(i) = i
-  end do
-
-  cvars(0) = n_var_sys
-  do i = 1, n_var_sys
-     cvars(i) = i
-  end do
-
-  call mpi_comm_rank ( mpi_comm_world, myrank, ierr)
-
-  call spm_getnr(matrix_a_id, nrows, ierr)
-
-  write(msg,*) myrank
-  stamp_default = "-proc_"//trim(adjustl(msg))
-  stamp_default = trim(adjustl(adjustr(stamp_default)))
-
-  call getarg(0, filename)
-
-  ! ... loop over elements 
-  call cpu_time(t_deb)
-  call loop_on_elmts(matrix_a_id, myrank, &
-          & mesh2d, gbox2d, &
-          & rhs_for_vi, matrix_for_vi_vj, &
-          & global_unknown, var, global_rhs, &
-          & rvars, cvars)
-  call cpu_time(t_fin)
-
-  print *, "rhs ", global_rhs(1:6)
-
-  ! ... example of solver calls
-  call linear_solver_new_with_matrix_id(solver, matrix_a_id)
-  call linear_solver_solve(solver, global_rhs, global_unknown) 
-  call linear_solver_free(solver)
-
-  allocate(y(nrows))
-  y=0.d0 
-  call spm_matmult(matrix_a_id, global_unknown, y, ierr)
-
-  print *, maxval(y-global_rhs), minval(y-global_rhs) 
-
-  print *, "unknown ", global_unknown
-
-  ! ... evaluate unknowns on verticies and compte model norms 
-  call evaluate_on_elmts(matrix_a_id,          &
-                         myrank,               &
-                         mesh2d,               &
-                         gbox2d,               &
-                         global_unknown,       &
-                         var,                  &
-                         analytical_model,     &
-                         assembly_diagnostics, &
-                         plot_diagnostics,     &
-                         rvars,                &
-                         cvars,0)
-
-   filename = trim(filename) 
-  call savemeshes(mesh2d, gbox2d, var, analytical_model, filename,0)
-
-  open(unit=12, file=trim("rhs"//adjustl(adjustr(stamp_default)))//".txt"&
-            & , action="write", status="replace")
-  do i=1,nrows
-     write(12,*) global_rhs(i) 
-  end do
-  close(12)
-  open(unit=13, file=trim("unknown"//adjustl(adjustr(stamp_default)))//".txt"&
-            & , action="write", status="replace")
-  do i=1,nrows
-     write(13,*) global_unknown(i) 
-  end do
-  close(13)
-  open(unit=14, file=trim("var"//adjustl(adjustr(stamp_default)))//".txt"&
-            & , action="write", status="replace")
-  do i=1, mesh2d % oi_n_nodes
-     write(14,*) var(:,i) 
-  end do
-  close(14)
-
-end subroutine run_model
 
 
 !! test case 1 :
@@ -338,23 +314,21 @@ function analytical_rhs(bbox2d)
   k2 = 2.0 * pi * float(mode_n1)
  
   call jorek_param_getint(int_testcase_id, testcase, ierr)
-  if(testcase .eq. 1) then
+
+  select case (testcase)
+
+  case(1) 
      analytical_rhs = (k1**2+k2**2)*sin(k1*r)*sin(k2*z)
-  endif    
-  if(testcase .eq. 2) then
+  case(2)
      analytical_rhs = 4.0*(r**2+z**2)*sin(1.0-r**2-z**2) &
    	            & + 4.0*cos(1.0-r**2-z**2) 
-  endif
-  if(testcase .eq. 3) then
+  case(3)
     analytical_rhs =8*z**2/a**2-4+2*(2*r-2*r0)**2/a**2 &
                  & +4*(z**2+(r-r0)**2)/a**2            &
                  & +4*(z**2-acenter**2+(r-r0)**2)/a**2
-  endif
-
-  ! periodic but not dirichet homogeneous
-  if(testcase .eq. 4) then
-    analytical_rhs = (k1**2 + k2**2) * cos(k1*r)*cos(k2*z)
-  endif 
+  case(4)
+    analytical_rhs = (k1**2 + k2**2) * cos(k1*r)*cos(k2*z) ! periodic but not dirichet homogeneous
+  end select
    
 end function analytical_rhs
 
@@ -369,7 +343,7 @@ subroutine analytical_model( x,          &
   integer                                          :: n_dimension
   real(kind=8), dimension(n_dimension), intent(in) :: x
   real(kind=8), dimension(n_variable, n_dimension+1), intent(out) :: v
-  real(kind=8), dimension(10), intent(in)  :: apr_info
+  real(kind=8), dimension(10), intent(in) :: apr_info
   integer,      dimension(10), intent(in) :: api_info
 
   real(kind=rk) :: r
@@ -386,7 +360,9 @@ subroutine analytical_model( x,          &
   k2 = 2.0 * pi * float(mode_n1)
 
   call jorek_param_getint(int_testcase_id, testcase, ierr)
-  if(testcase .eq. 1) then
+
+  select case(testcase)
+  case(1)
      ! ... u
      v(1,1) = sin(k1*r)*sin(k2*z)
      ! ... u_r
@@ -394,8 +370,7 @@ subroutine analytical_model( x,          &
      ! ... u_z
      v(1,3) = k2*sin(k1*r)*cos(k2*z)
      ! ...
-  endif    
-  if(testcase .eq. 2) then
+  case(2)
      ! ... u
      v(1,1) = sin(1.0-r**2-z**2)
      ! ... u_r
@@ -403,8 +378,7 @@ subroutine analytical_model( x,          &
      ! ... u_z
      v(1,3) = -2.0*z*cos(1.0-r**2-z**2)
      ! ...
-  endif
-  if(testcase .eq. 3) then
+  case(3)
      ! ... u
      v(1,1) = (1-(z**2+(r-r0)**2)/a**2)*(z**2-acenter**2+(r-r0)**2)
      ! ... u_r
@@ -414,10 +388,8 @@ subroutine analytical_model( x,          &
      v(1,3) = 2*z*(1-(z**2+(r-r0)**2)/a**2) &
    	    & - 2*z*(z**2-acenter**2+(r-r0)**2)/a**2
      ! ...
-  endif
 
-  ! periodic but not dirichet homogeneous
-  if(testcase .eq. 4) then
+  case(4) ! periodic but not dirichet homogeneous
      ! ... u
      v(1,1) = cos(k1*r)*cos(k2*z)
      ! ... u_r
@@ -425,9 +397,8 @@ subroutine analytical_model( x,          &
      ! ... u_z
      v(1,3) = -k2*cos(k1*r)*sin(k2*z)
      ! ...
-  endif    
+  end select
   
-
 end subroutine analytical_model
 
 subroutine assembly_diagnostics(bbox2d, gbox2d,nstep)
@@ -545,7 +516,7 @@ subroutine rhs_for_vi(bbox2di, gbox2d)
   vi_zz = bbox2di%b_x2x2(ijg)
 
   ! ... add l2 contribution
-  f_rhs       = analytical_rhs(bbox2di)
+  f_rhs = analytical_rhs(bbox2di)
 
   contribution                = vi_0 *wvol*f_rhs
   rhs_contribution(i_vu_rho)  =  contribution 
