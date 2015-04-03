@@ -50,6 +50,7 @@ module sll_simulation_4d_vp_lt_pic_cartesian_module
     type(electric_field_accumulator), pointer :: E_accumulator
     logical :: use_cubic_splines        ! disabled for now (will raise an error if true)
     logical :: use_lt_pic_scheme        ! if false then use pic scheme
+    logical :: use_exact_f0             ! if false, interpolate f0 from its values on the initial particle grid
     type(sll_charge_accumulator_2d_CS_ptr), dimension(:), pointer  :: q_accumulator_CS
     type(electric_field_accumulator_CS), pointer :: E_accumulator_CS
     sll_real64, dimension(:,:), pointer :: rho
@@ -96,6 +97,7 @@ contains
     sll_real64  :: REMAP_GRID_VY_MIN, REMAP_GRID_VY_MAX
     sll_int32   :: SPLINE_DEGREE
     sll_int32   :: NVirtualForDeposition
+    logical     :: UseExactF0
     sll_real64  :: er, psi, omega_i, omega_r
     sll_int32, parameter  :: input_file = 99
     sll_int32, dimension(:), allocatable  :: rand_seed
@@ -109,15 +111,16 @@ contains
                             QoverM, ALPHA, UseCubicSplines, UseLtPicScheme
     namelist /grid_dims/    NC_X, NC_Y, XMIN, KX_LANDAU, YMIN, YMAX, &
                             DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC
-    namelist /lt_pic_params/NUM_PARTS_X,        &
-                            NUM_PARTS_Y,        &
-                            NUM_PARTS_VX,       &
-                            NUM_PARTS_VY,       &
-                            REMAP_GRID_VX_MIN,  &
-                            REMAP_GRID_VX_MAX,  &
-                            REMAP_GRID_VY_MIN,  &
-                            REMAP_GRID_VY_MAX,  &
-                            NVirtualForDeposition
+    namelist /lt_pic_params/NUM_PARTS_X,            &
+                            NUM_PARTS_Y,            &
+                            NUM_PARTS_VX,           &
+                            NUM_PARTS_VY,           &
+                            REMAP_GRID_VX_MIN,      &
+                            REMAP_GRID_VX_MAX,      &
+                            REMAP_GRID_VY_MIN,      &
+                            REMAP_GRID_VY_MAX,      &
+                            NVirtualForDeposition,  &
+                            UseExactF0
     namelist /elec_params/  er, psi, omega_r, omega_i
     open(unit = input_file, file=trim(filename),IOStat=IO_stat)
     if( IO_stat /= 0 ) then
@@ -138,6 +141,7 @@ contains
     XMAX = (2._f64*sll_pi/KX_LANDAU)
     sim%use_cubic_splines = UseCubicSplines
     sim%use_lt_pic_scheme = UseLtPicScheme
+    sim%use_exact_f0      = UseExactF0
     sim%n_virtual_for_deposition = NVirtualForDeposition
     sim%thermal_speed_ions = THERM_SPEED
 !    sim%guard_size = GUARD_SIZE
@@ -169,8 +173,8 @@ contains
             SPLINE_DEGREE = 1
         end if
 
-        print *, 'tmp debug 65373654 -- REMAP_GRID_VX_MIN, REMAP_GRID_VX_MAX = ', REMAP_GRID_VX_MIN, REMAP_GRID_VX_MAX
-        print *, 'tmp debug 98536536 -- REMAP_GRID_VY_MIN, REMAP_GRID_VY_MAX = ', REMAP_GRID_VY_MIN, REMAP_GRID_VY_MAX
+!        print *, 'tmp debug 65373654 -- REMAP_GRID_VX_MIN, REMAP_GRID_VX_MAX = ', REMAP_GRID_VX_MIN, REMAP_GRID_VX_MAX
+!        print *, 'tmp debug 98536536 -- REMAP_GRID_VY_MIN, REMAP_GRID_VY_MAX = ', REMAP_GRID_VY_MIN, REMAP_GRID_VY_MAX
 
         sim%part_group => sll_lt_pic_4d_group_new(    &
             SPLINE_DEGREE,                            &
@@ -189,6 +193,13 @@ contains
 
             !            PARTICLE_ARRAY_SIZE,                      &       ! MCP: problems if this value too small ?
             !            GUARD_SIZE,                               &       ! MCP: problems if this value too small ?
+
+
+        print *, "WARNING 65373654 -- writing landau parameters in the particle group -- this is temporary..."
+
+        sim%part_group%thermal_speed = sim%thermal_speed_ions
+        sim%part_group%alpha_landau = ALPHA
+        sim%part_group%k_landau = KX_LANDAU
 
         call sll_lt_pic_4d_init_landau (                &
             sim%thermal_speed_ions,                     &
@@ -279,7 +290,8 @@ contains
 
            SLL_ASSERT(thread_id == 0)
            call sll_lt_pic_4d_deposit_charge_on_2d_mesh( sim%part_group, &
-                                                         sim%q_accumulator_ptr(1)%q, sim%n_virtual_for_deposition)
+                                                         sim%q_accumulator_ptr(1)%q, sim%n_virtual_for_deposition, &
+                                                         sim%use_exact_f0 )
        else
            !! -- PIC_VERSION
            !                   call sll_first_charge_accumulation_2d( sim%part_group, sim%q_accumulator_ptr)!(1)%q )
@@ -629,7 +641,8 @@ contains
           if( sim%use_lt_pic_scheme )then
               SLL_ASSERT(thread_id == 0)
               call sll_lt_pic_4d_deposit_charge_on_2d_mesh( sim%part_group, &
-                                                            sim%q_accumulator_ptr(1)%q, sim%n_virtual_for_deposition)
+                                                            sim%q_accumulator_ptr(1)%q, sim%n_virtual_for_deposition, &
+                                                            sim%use_exact_f0 )
           else
               ! nothing to do, charge already deposited in the push loop
           end if

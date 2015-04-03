@@ -22,6 +22,8 @@ module sll_lt_pic_4d_utilities
 #include "sll_assert.h"
 #include "sll_accumulators.h" 
 #include "particle_representation.h"
+
+  use sll_constants, only: sll_pi
   use sll_lt_pic_4d_group_module
   use sll_representation_conversion_module
   use sll_timer
@@ -2425,13 +2427,14 @@ end subroutine
 
 
 
-  subroutine sll_lt_pic_4d_deposit_charge_on_2d_mesh( p_group, q_accumulator, n_virtual_for_deposition)
+  subroutine sll_lt_pic_4d_deposit_charge_on_2d_mesh( p_group, q_accumulator, n_virtual_for_deposition, use_exact_f0)
 
     type(sll_lt_pic_4d_group),pointer,intent(inout) :: p_group
     type(sll_charge_accumulator_2d), pointer, intent(inout) :: q_accumulator
     sll_int32, intent(in) :: n_virtual_for_deposition
+    logical, intent(in) :: use_exact_f0
 
-    call sll_lt_pic_4d_write_f_on_grid_or_deposit (p_group, q_accumulator, .true., n_virtual_for_deposition)
+    call sll_lt_pic_4d_write_f_on_grid_or_deposit (p_group, q_accumulator, .true., n_virtual_for_deposition, use_exact_f0)
 
   end subroutine sll_lt_pic_4d_deposit_charge_on_2d_mesh
 
@@ -2443,7 +2446,7 @@ end subroutine
     type(sll_charge_accumulator_2d), pointer :: dummy_q_accumulator
 
     nullify(dummy_q_accumulator)
-    call sll_lt_pic_4d_write_f_on_grid_or_deposit (p_group, dummy_q_accumulator, .false., n_virtual_for_remapping)
+    call sll_lt_pic_4d_write_f_on_grid_or_deposit (p_group, dummy_q_accumulator, .false., n_virtual_for_remapping, .false.)
 
   end subroutine sll_lt_pic_4d_write_f_on_remapping_grid
 
@@ -2484,7 +2487,7 @@ end subroutine
 
   ! todo: treat the non-peridodic case
 
-  subroutine sll_lt_pic_4d_write_f_on_grid_or_deposit (p_group, q_accumulator, scenario_is_deposition, n_virtual)
+  subroutine sll_lt_pic_4d_write_f_on_grid_or_deposit (p_group, q_accumulator, scenario_is_deposition, n_virtual, use_exact_f0)
 
     ! [[file:../pic_particle_types/lt_pic_4d_group.F90::sll_lt_pic_4d_group]] p_group contains both the existing
     ! particles and the virtual remapping grid
@@ -2492,6 +2495,7 @@ end subroutine
     type(sll_charge_accumulator_2d), pointer, intent(inout) :: q_accumulator
     logical, intent(in) :: scenario_is_deposition            ! if false, then scenario is remapping
     sll_int32, intent(in) :: n_virtual ! <<n_virtual>>      ! see comments above for the meaning
+    logical, intent(in) :: use_exact_f0
 
     ! cf [[file:~/mcp/maltpic/ltpic-bsl.tex::N*]]
 
@@ -2677,6 +2681,11 @@ end subroutine
     sll_int64 :: number_parts_vx
     sll_int64 :: number_parts_vy
 
+    sll_real64 :: one_over_two_pi
+    sll_real64 :: one_over_thermal_velocity_squared
+    sll_real64 :: alpha_landau
+    sll_real64 :: k_landau
+
     ! --- end of declarations
 
     ! -- creating g the virtual grid [begin] --
@@ -2758,7 +2767,6 @@ end subroutine
 
     ! -- creating g the virtual grid [end] --
 
-
     part_degree = p_group%spline_degree
 
     ! Preparatory work: find out the particle which is closest to each cell center by looping over all particles and
@@ -2815,6 +2823,13 @@ end subroutine
     h_virtual_cell_y  = n_virtual * h_virtual_parts_y
     h_virtual_cell_vx = n_virtual * h_virtual_parts_vx
     h_virtual_cell_vy = n_virtual * h_virtual_parts_vy
+
+    !! WARNING: this is only ok for the Landau damping case !!
+
+    one_over_two_pi = 1./(2*sll_pi)
+    one_over_thermal_velocity_squared = (1./p_group%thermal_speed)**2
+    alpha_landau = p_group%alpha_landau
+    k_landau = p_group%k_landau
 
     ! preparatory loop to fill the [[closest_particle]] array containing the particle closest to the center of each
     ! virtual cell
@@ -3107,188 +3122,208 @@ end subroutine
                               vx_t0 = d31 * (x - x_k) + d32 * (y - y_k) + d33 * (vx - vx_k) + d34 * (vy - vy_k)
                               vy_t0 = d41 * (x - x_k) + d42 * (y - y_k) + d43 * (vx - vx_k) + d44 * (vy - vy_k)
 
-                              ! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
-                              if(.not. scenario_is_deposition)then
-                                 p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,1) = x_k_t0 + x_t0
-                                 p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,1) = y_k_t0 + y_t0
-                                 p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,1) = vx_k_t0 + vx_t0
-                                 p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,1) = vy_k_t0 + vy_t0
-                              endif
+                              if( use_exact_f0 )then
 
-                              ! Minimize the path to take along periodic boundaries
+                                ! WARNING -- this is only valid for the landau damping case...
 
-                              if(domain_is_x_periodic) then
-                                 if(x_t0 > mesh_period_x/2) then
-                                    x_t0 = x_t0 - mesh_period_x
-                                 else
-                                    if(x_t0 < -mesh_period_x/2) then
-                                       x_t0 = x_t0 + mesh_period_x
-                                    end if
-                                 end if
-                              endif
+                                f_value_on_virtual_particle = one_over_two_pi                   &
+                                    * (1._f64 + alpha_landau * cos(k_landau * (x_k_t0 + x_t0))) &
+                                    * one_over_thermal_velocity_squared                         &
+                                    * exp(-0.5 * one_over_thermal_velocity_squared              &
+                                          * ((vx_k_t0 + vx_t0)**2 + (vy_k_t0 + vy_t0)**2)       &
+                                         )
 
-                              if(domain_is_y_periodic) then
-                                 if(y_t0 > mesh_period_y/2) then
-                                    y_t0 = y_t0 - mesh_period_y
-                                 else
-                                    if(y_t0 < -mesh_period_y/2) then
-                                       y_t0 = y_t0 + mesh_period_y
-                                    end if
-                                 end if
-                              endif
+                              else
 
-                              ! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
-                              if(.not. scenario_is_deposition)then
-                                 p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,2) = x_k_t0 + x_t0
-                                 p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,2) = y_k_t0 + y_t0
-                                 p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,2) = vx_k_t0 + vx_t0
-                                 p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,2) = vy_k_t0 + vy_t0
-                              endif
+                                  ! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
+                                  if(.not. scenario_is_deposition)then
+                                     p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,1) = x_k_t0 + x_t0
+                                     p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,1) = y_k_t0 + y_t0
+                                     p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,1) = vx_k_t0 + vx_t0
+                                     p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,1) = vy_k_t0 + vy_t0
+                                  endif
 
-                              ! [[file:~/mcp/maltpic/ltpic-bsl.tex::neighbors-grid-0]] find the neighbours of the
-                              ! virtual particle (ivirt,jvirt,lvirt,mvirt) at time 0 through the "logical
-                              ! neighbours" pointers of particle k. To reduce the amount of code, start with finding
-                              ! the closest neighbour which has lower coordinates in all directions. The particle
-                              ! located at (x_t0,y_t0,vx_t0,vy_t0) (coordinates relative to particle k to start
-                              ! with) gets progressively closer to kprime step by step (ie from neighbour to
-                              ! neighbour).
+                                  ! Minimize the path to take along periodic boundaries
 
-                              kprime = k
+                                  if(domain_is_x_periodic) then
+                                     if(x_t0 > mesh_period_x/2) then
+                                        x_t0 = x_t0 - mesh_period_x
+                                     else
+                                        if(x_t0 < -mesh_period_x/2) then
+                                           x_t0 = x_t0 + mesh_period_x
+                                        end if
+                                     end if
+                                  endif
 
-                              ! Calls [[onestep]]. "dim" can be x,y,vx,vy. cf
-                              ! [[file:../pic_particle_types/lt_pic_4d_particle.F90::sll_lt_pic_4d_particle]] for
-                              ! pointers to neighbours.
+                                  if(domain_is_y_periodic) then
+                                     if(y_t0 > mesh_period_y/2) then
+                                        y_t0 = y_t0 - mesh_period_y
+                                     else
+                                        if(y_t0 < -mesh_period_y/2) then
+                                           y_t0 = y_t0 + mesh_period_y
+                                        end if
+                                     end if
+                                  endif
+
+                                  ! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
+                                  if(.not. scenario_is_deposition)then
+                                     p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,2) = x_k_t0 + x_t0
+                                     p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,2) = y_k_t0 + y_t0
+                                     p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,2) = vx_k_t0 + vx_t0
+                                     p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,2) = vy_k_t0 + vy_t0
+                                  endif
+
+                                  ! [[file:~/mcp/maltpic/ltpic-bsl.tex::neighbors-grid-0]] find the neighbours of the
+                                  ! virtual particle (ivirt,jvirt,lvirt,mvirt) at time 0 through the "logical
+                                  ! neighbours" pointers of particle k. To reduce the amount of code, start with finding
+                                  ! the closest neighbour which has lower coordinates in all directions. The particle
+                                  ! located at (x_t0,y_t0,vx_t0,vy_t0) (coordinates relative to particle k to start
+                                  ! with) gets progressively closer to kprime step by step (ie from neighbour to
+                                  ! neighbour).
+
+                                  kprime = k
+
+                                  ! Calls [[onestep]]. "dim" can be x,y,vx,vy. cf
+                                  ! [[file:../pic_particle_types/lt_pic_4d_particle.F90::sll_lt_pic_4d_particle]] for
+                                  ! pointers to neighbours.
 
 #define ONESTEPMACRO(dimpos,dimname) call onestep(dimpos,dimname/**/_t0,kprime,p_group%p_list,h_parts_/**/dimname)
 
-                              ONESTEPMACRO(ALONG_X,x)
-                              ONESTEPMACRO(ALONG_Y,y)
-                              ONESTEPMACRO(ALONG_VX,vx)
-                              ONESTEPMACRO(ALONG_VY,vy)
+                                  ONESTEPMACRO(ALONG_X,x)
+                                  ONESTEPMACRO(ALONG_Y,y)
+                                  ONESTEPMACRO(ALONG_VX,vx)
+                                  ONESTEPMACRO(ALONG_VY,vy)
 
-                              ! If we end up with kprime == 0, it means that we have not found a cell that contains
-                              ! the particle so we just set that particle value to zero
+                                  ! If we end up with kprime == 0, it means that we have not found a cell that contains
+                                  ! the particle so we just set that (virtual) particle value to zero
 
-                              if (kprime /= 0) then
+                                  f_value_on_virtual_particle = 0
 
-                                 ! kprime is the left-most vertex of the hypercube. find all the other vertices
-                                 ! through the neighbour pointers in
-                                 ! [[file:../pic_particle_types/lt_pic_4d_particle.F90::neighbour_pointers]]
+                                  if (kprime /= 0) then
 
-                                 hcube(1,1,1,1) = kprime
+                                     ! kprime is the left-most vertex of the hypercube. find all the other vertices
+                                     ! through the neighbour pointers in
+                                     ! [[file:../pic_particle_types/lt_pic_4d_particle.F90::neighbour_pointers]]
 
-                                 hcube(2,1,1,1) = p_group%p_list(kprime)%ngb_xright_index ! 1 step
-                                 hcube(1,2,1,1) = p_group%p_list(kprime)%ngb_yright_index
-                                 hcube(1,1,2,1) = p_group%p_list(kprime)%ngb_vxright_index
-                                 hcube(1,1,1,2) = p_group%p_list(kprime)%ngb_vyright_index
+                                     hcube(1,1,1,1) = kprime
 
-                                 ! if any of the first four vertices is undefined (the convention in
-                                 ! [[file:~/mcp/selalib/src/pic_particle_initializers/lt_pic_4d_init.F90::sll_lt_pic_4d_compute_new_particles]]
-                                 ! is that the neighbour index is then equal to the particle index), it means that
-                                 ! we reached the mesh border. just set the value of f for that particle as zero as
-                                 ! before.
+                                     hcube(2,1,1,1) = p_group%p_list(kprime)%ngb_xright_index ! 1 step
+                                     hcube(1,2,1,1) = p_group%p_list(kprime)%ngb_yright_index
+                                     hcube(1,1,2,1) = p_group%p_list(kprime)%ngb_vxright_index
+                                     hcube(1,1,1,2) = p_group%p_list(kprime)%ngb_vyright_index
 
-                                 if (hcube(2,1,1,1) /= kprime        &
-                                      .and. hcube(1,2,1,1) /= kprime &
-                                      .and. hcube(1,1,2,1) /= kprime &
-                                      .and. hcube(1,1,1,2) /= kprime) then
+                                     ! if any of the first four vertices is undefined (the convention in
+                                     ! [[file:~/mcp/selalib/src/pic_particle_initializers/lt_pic_4d_init.F90::sll_lt_pic_4d_compute_new_particles]]
+                                     ! is that the neighbour index is then equal to the particle index), it means that
+                                     ! we reached the mesh border. just set the value of f for that particle as zero as
+                                     ! before.
 
-                                    ! remaining vertices of the hypercube. they should all exist now that the first
-                                    ! 4 vertices are checked.
+                                     if (hcube(2,1,1,1) /= kprime        &
+                                          .and. hcube(1,2,1,1) /= kprime &
+                                          .and. hcube(1,1,2,1) /= kprime &
+                                          .and. hcube(1,1,1,2) /= kprime) then
 
-                                    ! 1 step in x + 1 other step
-                                    hcube(2,2,1,1) = p_group%p_list(hcube(2,1,1,1))%ngb_yright_index
-                                    hcube(2,1,2,1) = p_group%p_list(hcube(2,1,1,1))%ngb_vxright_index
-                                    hcube(2,1,1,2) = p_group%p_list(hcube(2,1,1,1))%ngb_vyright_index
+                                        ! remaining vertices of the hypercube. they should all exist now that the first
+                                        ! 4 vertices are checked.
 
-                                    ! 1 step in y + 1 other step
-                                    hcube(1,2,2,1) = p_group%p_list(hcube(1,2,1,1))%ngb_vxright_index
-                                    hcube(1,2,1,2) = p_group%p_list(hcube(1,2,1,1))%ngb_vyright_index
+                                        ! 1 step in x + 1 other step
+                                        hcube(2,2,1,1) = p_group%p_list(hcube(2,1,1,1))%ngb_yright_index
+                                        hcube(2,1,2,1) = p_group%p_list(hcube(2,1,1,1))%ngb_vxright_index
+                                        hcube(2,1,1,2) = p_group%p_list(hcube(2,1,1,1))%ngb_vyright_index
 
-                                    ! 1 step in vx + 1 other step
-                                    hcube(1,1,2,2) = p_group%p_list(hcube(1,1,2,1))%ngb_vyright_index
+                                        ! 1 step in y + 1 other step
+                                        hcube(1,2,2,1) = p_group%p_list(hcube(1,2,1,1))%ngb_vxright_index
+                                        hcube(1,2,1,2) = p_group%p_list(hcube(1,2,1,1))%ngb_vyright_index
 
-                                    ! all combinations of 3 steps
-                                    hcube(1,2,2,2) = p_group%p_list(hcube(1,2,2,1))%ngb_vyright_index
-                                    hcube(2,1,2,2) = p_group%p_list(hcube(2,1,2,1))%ngb_vyright_index
-                                    hcube(2,2,1,2) = p_group%p_list(hcube(2,2,1,1))%ngb_vyright_index
-                                    hcube(2,2,2,1) = p_group%p_list(hcube(2,2,1,1))%ngb_vxright_index
+                                        ! 1 step in vx + 1 other step
+                                        hcube(1,1,2,2) = p_group%p_list(hcube(1,1,2,1))%ngb_vyright_index
 
-                                    ! 4 steps
-                                    hcube(2,2,2,2) = p_group%p_list(hcube(2,2,2,1))%ngb_vyright_index
+                                        ! all combinations of 3 steps
+                                        hcube(1,2,2,2) = p_group%p_list(hcube(1,2,2,1))%ngb_vyright_index
+                                        hcube(2,1,2,2) = p_group%p_list(hcube(2,1,2,1))%ngb_vyright_index
+                                        hcube(2,2,1,2) = p_group%p_list(hcube(2,2,1,1))%ngb_vyright_index
+                                        hcube(2,2,2,1) = p_group%p_list(hcube(2,2,1,1))%ngb_vxright_index
 
-                                      ! MCP: [BEGIN-DEBUG] store the (computed) absolute initial position of the virtual particle
-                                      ! [[get_initial_position_on_cartesian_grid_from_particle_index]]
-                                       call get_initial_position_on_cartesian_grid_from_particle_index(kprime, &
-                                            number_parts_x,number_parts_y,number_parts_vx,number_parts_vy, &
-                                            j_x,j_y,j_vx,j_vy)
-                                       x_kprime_t0 =  parts_x_min  + (j_x-1)  * h_parts_x
-                                       y_kprime_t0 =  parts_y_min  + (j_y-1)  * h_parts_y
-                                       vx_kprime_t0 = parts_vx_min + (j_vx-1) * h_parts_vx
-                                       vy_kprime_t0 = parts_vy_min + (j_vy-1) * h_parts_vy
+                                        ! 4 steps
+                                        hcube(2,2,2,2) = p_group%p_list(hcube(2,2,2,1))%ngb_vyright_index
 
-                                       if(.not. scenario_is_deposition)then
-                                          p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,3) = x_kprime_t0 + x_t0
-                                          p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,3) = y_kprime_t0 + y_t0
-                                          p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,3) = vx_kprime_t0 + vx_t0
-                                          p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,3) = vy_kprime_t0 + vy_t0
-                                       endif
+                                          ! MCP: [BEGIN-DEBUG] store the (computed) absolute initial position of the virtual particle
+                                          ! [[get_initial_position_on_cartesian_grid_from_particle_index]]
+                                           call get_initial_position_on_cartesian_grid_from_particle_index(kprime, &
+                                                number_parts_x,number_parts_y,number_parts_vx,number_parts_vy, &
+                                                j_x,j_y,j_vx,j_vy)
+                                           x_kprime_t0 =  parts_x_min  + (j_x-1)  * h_parts_x
+                                           y_kprime_t0 =  parts_y_min  + (j_y-1)  * h_parts_y
+                                           vx_kprime_t0 = parts_vx_min + (j_vx-1) * h_parts_vx
+                                           vy_kprime_t0 = parts_vy_min + (j_vy-1) * h_parts_vy
 
-                                      ! MCP [END-DEBUG]
+                                           if(.not. scenario_is_deposition)then
+                                              p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,3) = x_kprime_t0 + x_t0
+                                              p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,3) = y_kprime_t0 + y_t0
+                                              p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,3) = vx_kprime_t0 + vx_t0
+                                              p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,3) = vy_kprime_t0 + vy_t0
+                                           endif
 
-                                    ! [[file:~/mcp/maltpic/ltpic-bsl.tex::affine-fn*]] use the values of f0 at these
-                                    ! neighbours to interpolate the value of f0 at
-                                    ! [[file:~/mcp/maltpic/ltpic-bsl.tex::hat-bz*]]. MCP -> oui. Ici si tu utilises
-                                    ! des particules affines (part_deg = 1) la valeur de f0 se déduit de celle du
-                                    ! poids de la particule.  En fait tu peux utiliser une formule semblable à celle
-                                    ! qui est utilisée dans la fonction sll_lt_pic_4d_write_f_on_remap_grid, mais
-                                    ! sans faire intervenir la matrice de déformation à l'intérieur des splines.
+                                          ! MCP [END-DEBUG]
 
-                                    ! place the resulting value of f on the virtual particle in
-                                    ! p_group%target_values
+                                        ! [[file:~/mcp/maltpic/ltpic-bsl.tex::affine-fn*]] use the values of f0 at these
+                                        ! neighbours to interpolate the value of f0 at
+                                        ! [[file:~/mcp/maltpic/ltpic-bsl.tex::hat-bz*]]. MCP -> oui. Ici si tu utilises
+                                        ! des particules affines (part_deg = 1) la valeur de f0 se déduit de celle du
+                                        ! poids de la particule.  En fait tu peux utiliser une formule semblable à celle
+                                        ! qui est utilisée dans la fonction sll_lt_pic_4d_write_f_on_remap_grid, mais
+                                        ! sans faire intervenir la matrice de déformation à l'intérieur des splines.
 
-                                    f_value_on_virtual_particle = 0
+                                        ! place the resulting value of f on the virtual particle in
+                                        ! p_group%target_values
 
-                                    do side_x = 1,2
-                                       if(side_x == 1)then
-                                          x_aux = x_t0
-                                       else
-                                          x_aux = h_parts_x - x_t0
-                                       end if
-                                       do side_y = 1,2
-                                          if(side_y == 1)then
-                                             y_aux = y_t0
-                                          else
-                                             y_aux = h_parts_y - y_t0
-                                          end if
-                                          do side_vx = 1,2
-                                             if(side_vx == 1)then
-                                                vx_aux = vx_t0
-                                             else
-                                                vx_aux = h_parts_vx - vx_t0
-                                             end if
-                                             do side_vy = 1,2
-                                                if(side_vy == 1)then
-                                                   vy_aux = vy_t0
-                                                else
-                                                   vy_aux = h_parts_vy - vy_t0
-                                                end if
+                                        do side_x = 1,2
+                                           if(side_x == 1)then
+                                              x_aux = x_t0
+                                           else
+                                              x_aux = h_parts_x - x_t0
+                                           end if
+                                           do side_y = 1,2
+                                              if(side_y == 1)then
+                                                 y_aux = y_t0
+                                              else
+                                                 y_aux = h_parts_y - y_t0
+                                              end if
+                                              do side_vx = 1,2
+                                                 if(side_vx == 1)then
+                                                    vx_aux = vx_t0
+                                                 else
+                                                    vx_aux = h_parts_vx - vx_t0
+                                                 end if
+                                                 do side_vy = 1,2
+                                                    if(side_vy == 1)then
+                                                       vy_aux = vy_t0
+                                                    else
+                                                       vy_aux = h_parts_vy - vy_t0
+                                                    end if
 
-                                                ! uses [[sll_pic_shape]]
-                                                f_value_on_virtual_particle =                                                  &
-                                                    f_value_on_virtual_particle                                                &
-                                                     + p_group%p_list(hcube(side_x,side_y,side_vx,side_vy))%q                  &
-                                                     * sll_pic_shape(part_degree,x_aux,y_aux,vx_aux,vy_aux,                    &
-                                                                     inv_h_parts_x,inv_h_parts_y,inv_h_parts_vx,inv_h_parts_vy)
+                                                    ! uses [[sll_pic_shape]]
+                                                    f_value_on_virtual_particle =                                                  &
+                                                        f_value_on_virtual_particle                                                &
+                                                          + p_group%p_list(hcube(side_x,side_y,side_vx,side_vy))%q                  &
+                                                         * sll_pic_shape(part_degree,x_aux,y_aux,vx_aux,vy_aux,                    &
+                                                                         inv_h_parts_x,inv_h_parts_y,inv_h_parts_vx,inv_h_parts_vy)
 
-                                             end do
-                                          end do
-                                       end do
-                                    end do
+                                                 end do
+                                              end do
+                                           end do
+                                        end do
+                                     end if     ! test to see whether the hyper cube was inside initial particle grid
+                                  end if     ! test on (k_prime \=0 )
+                              end if    ! test on (use_exact_f0)
 
-                                    virtual_charge = f_value_on_virtual_particle * phase_space_virtual_dvol
+                              ! now f_value_on_virtual_particle has been computed we can use it
+
+                              if( f_value_on_virtual_particle /= 0 )then
 
                                     if( scenario_is_deposition )then
+
+                                        virtual_charge = f_value_on_virtual_particle * phase_space_virtual_dvol
 
                                         tmp1 = (1.0_f64 - dx_in_virtual_cell)
                                         tmp2 = (1.0_f64 - dy_in_virtual_cell)
@@ -3310,8 +3345,9 @@ end subroutine
                                         p_group%target_values(i_x,i_y,i_vx,i_vy) = f_value_on_virtual_particle
 
                                     end if
-                                 end if
+
                               end if
+
                            end if
                         end do
                      end do
