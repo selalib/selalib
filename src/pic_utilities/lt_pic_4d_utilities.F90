@@ -2496,7 +2496,7 @@ end subroutine
     logical, intent(in) :: scenario_is_deposition            ! if false, then scenario is remapping
     sll_int32, intent(in) :: n_virtual ! <<n_virtual>>      ! see comments above for the meaning
     logical, intent(in) :: use_exact_f0
-
+    type(charge_accumulator_cell_2d), pointer :: charge_accumulator_cell
     ! cf [[file:~/mcp/maltpic/ltpic-bsl.tex::N*]]
 
     sll_int32 :: num_virtual_cells_x
@@ -2931,7 +2931,7 @@ end subroutine
 
               ! simpler value below should work too
               SLL_ASSERT( i_cell == i + (j-1) * p_group%mesh%num_cells1 )
-
+              charge_accumulator_cell => q_accumulator%q_acc(i_cell)
           end if
 
 
@@ -3328,16 +3328,16 @@ end subroutine
                                         tmp1 = (1.0_f64 - dx_in_virtual_cell)
                                         tmp2 = (1.0_f64 - dy_in_virtual_cell)
 
-                                        q_accumulator%q_acc(i_cell)%q_sw = q_accumulator%q_acc(i_cell)%q_sw             &
+                                        charge_accumulator_cell%q_sw = charge_accumulator_cell%q_sw             &
                                                 + virtual_charge * tmp1 * tmp2
 
-                                        q_accumulator%q_acc(i_cell)%q_se = q_accumulator%q_acc(i_cell)%q_se             &
+                                        charge_accumulator_cell%q_se = charge_accumulator_cell%q_se             &
                                                 + virtual_charge *  dx_in_virtual_cell * tmp2
 
-                                        q_accumulator%q_acc(i_cell)%q_nw = q_accumulator%q_acc(i_cell)%q_nw             &
+                                        charge_accumulator_cell%q_nw = charge_accumulator_cell%q_nw             &
                                                 + virtual_charge * tmp1 *  dy_in_virtual_cell
 
-                                        q_accumulator%q_acc(i_cell)%q_ne = q_accumulator%q_acc(i_cell)%q_ne             &
+                                        charge_accumulator_cell%q_ne = charge_accumulator_cell%q_ne             &
                                                 + virtual_charge *  dx_in_virtual_cell *  dy_in_virtual_cell
 
                                     else
