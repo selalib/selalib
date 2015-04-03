@@ -1227,7 +1227,7 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
   sll_int32, intent(in) :: bc_eta1_max
   sll_int32, intent(in) :: bc_eta2_max
 
-  a11_field_mat => new_scalar_field_2d_analytic( &
+  a11_field_mat => new_scalar_field_2d_analytic(     &
     func_one,                                        &
     "a11",                                           &
     T,                                               &
@@ -1237,7 +1237,7 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
     bc_eta2_max,                                     &
     whatever  ) 
   
-  a12_field_mat => new_scalar_field_2d_analytic( &
+  a12_field_mat => new_scalar_field_2d_analytic(     &
     func_zero,                                       &
     "a12",                                           &
     T,                                               &
@@ -1247,7 +1247,7 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
     bc_eta2_max,                                     &
     whatever )
   
-  a21_field_mat => new_scalar_field_2d_analytic( &
+  a21_field_mat => new_scalar_field_2d_analytic(     &
     func_zero,                                       &
     "a21",                                           &
     T,                                               &
@@ -1257,7 +1257,7 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
     bc_eta2_max,                                     &
     whatever ) 
   
-  a22_field_mat => new_scalar_field_2d_analytic( &
+  a22_field_mat => new_scalar_field_2d_analytic(     &
     func_one,                                        &
     "a22",                                           &
     T,                                               &
@@ -1267,7 +1267,7 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
     bc_eta2_max,                                     &
     whatever)
 
-  b1_field_vect => new_scalar_field_2d_analytic( &
+  b1_field_vect => new_scalar_field_2d_analytic(     &
     func_zero,                                       &
     "b1",                                            &
     T,                                               &
@@ -1279,7 +1279,7 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
     first_deriv_eta1 = func_zero,                    &
     first_deriv_eta2 = func_zero) 
 
-  b2_field_vect => new_scalar_field_2d_analytic( &
+  b2_field_vect => new_scalar_field_2d_analytic(     &
     func_zero,                                       &
     "b2",                                            &
     T,                                               &
@@ -1291,7 +1291,7 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
     first_deriv_eta1 = func_zero,                    &
     first_deriv_eta2 = func_zero)
 
-  c_field => new_scalar_field_2d_analytic(       &
+  c_field => new_scalar_field_2d_analytic(           &
     func_zero,                                       &
     "c_field",                                       &
     T,                                               &
@@ -1331,7 +1331,7 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
     SPLINE_DEG1,                                     &
     SPLINE_DEG2 )
 
-  phi => new_scalar_field_2d_discrete(           &
+  phi => new_scalar_field_2d_discrete(               &
     "phi_"//ccase,                                   &
     interp_2d,                                       &
     T,                                               &
@@ -1394,6 +1394,16 @@ call sll_create(       &
   ETA2MIN,             &
   ETA2MAX              )
  
+!call factorize_mat_es( &
+!  es,                  &
+!  a11_field_mat,       &
+!  a12_field_mat,       &
+!  a21_field_mat,       &
+!  a22_field_mat,       &
+!  b1_field_vect,       &
+!  b2_field_vect,       &
+!  c_field              )
+
 call factorize_mat_es( &
   es,                  &
   a11_field_mat,       &

@@ -108,7 +108,7 @@ public sll_delete,                          &
        sll_create,                          &
        sll_solve,                           &
        new_general_elliptic_solver,         &
-       factorize_mat_es,                     & 
+       factorize_mat_es,                    & 
        assemble_mat_es
 
 private
@@ -708,15 +708,14 @@ end subroutine assemble_mat_es
 !> @param[in] c_field the field corresponding to the coefficient B(1) of the scalar C
 !> @return the type general_coordinate_elliptic_solver contains the matrix 
 !> to solve the equation
-subroutine factorize_mat_es(&
-       es, &
-       a11_field_mat, &
-       a12_field_mat,&
-       a21_field_mat,&
-       a22_field_mat,&
-       b1_field_vect,&
-       b2_field_vect,&
-       c_field)
+subroutine factorize_mat_es( es,            &
+                             a11_field_mat, &
+                             a12_field_mat, &
+                             a21_field_mat, &
+                             a22_field_mat, &
+                             b1_field_vect, &
+                             b2_field_vect, &
+                             c_field)
 
   type(general_coordinate_elliptic_solver),intent(inout) :: es
 
@@ -728,17 +727,17 @@ subroutine factorize_mat_es(&
   class(sll_scalar_field_2d_base), pointer :: b2_field_vect
   class(sll_scalar_field_2d_base), pointer :: c_field
 
-  sll_real64, dimension(:,:), allocatable :: M_c_loc
-  sll_real64, dimension(:,:), allocatable :: K_a11_loc
-  sll_real64, dimension(:,:), allocatable :: K_a12_loc
-  sll_real64, dimension(:,:), allocatable :: K_a21_loc
-  sll_real64, dimension(:,:), allocatable :: K_a22_loc
-  sll_real64, dimension(:,:), allocatable :: M_b_vect_loc
-  sll_real64, dimension(:,:), allocatable :: S_b1_loc
-  sll_real64, dimension(:,:), allocatable :: S_b2_loc  
-  sll_real64, dimension(:),   allocatable :: Masse_loc
-  sll_real64, dimension(:),   allocatable :: Stiff_loc
-  sll_real64, dimension(:,:,:), pointer   :: Source_loc
+  sll_real64, dimension(:,:),   allocatable :: M_c_loc
+  sll_real64, dimension(:,:),   allocatable :: K_a11_loc
+  sll_real64, dimension(:,:),   allocatable :: K_a12_loc
+  sll_real64, dimension(:,:),   allocatable :: K_a21_loc
+  sll_real64, dimension(:,:),   allocatable :: K_a22_loc
+  sll_real64, dimension(:,:),   allocatable :: M_b_vect_loc
+  sll_real64, dimension(:,:),   allocatable :: S_b1_loc
+  sll_real64, dimension(:,:),   allocatable :: S_b2_loc  
+  sll_real64, dimension(:),     allocatable :: Masse_loc
+  sll_real64, dimension(:),     allocatable :: Stiff_loc
+  sll_real64, dimension(:,:,:), pointer     :: Source_loc
 
   sll_int32 :: total_num_splines_loc
   sll_int32 :: ierr
@@ -756,29 +755,27 @@ subroutine factorize_mat_es(&
   bc_right  = es%bc_right
   bc_bottom = es%bc_bottom
   bc_top    = es%bc_top
+
   total_num_splines_loc = es%total_num_splines_loc
-  if( (bc_left == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
-      (bc_bottom == SLL_PERIODIC) .and. (bc_top == SLL_PERIODIC) ) then
+
+  if( (bc_left   == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
+      (bc_bottom == SLL_PERIODIC) .and. (bc_top   == SLL_PERIODIC) ) then
      es%perper = .true.
   else
      es%perper = .false.  
   end if   
-  SLL_ALLOCATE(Source_loc(es%num_cells1*es%num_cells2,total_num_splines_loc,total_num_splines_loc),ierr)
-  SLL_ALLOCATE(M_c_loc(total_num_splines_loc,total_num_splines_loc),ierr)
-  SLL_ALLOCATE(K_a11_loc(total_num_splines_loc,total_num_splines_loc),ierr)
-  SLL_ALLOCATE(K_a12_loc(total_num_splines_loc,total_num_splines_loc),ierr)
-  SLL_ALLOCATE(K_a21_loc(total_num_splines_loc,total_num_splines_loc),ierr)
-  SLL_ALLOCATE(K_a22_loc(total_num_splines_loc,total_num_splines_loc),ierr)
-  SLL_ALLOCATE(S_b1_loc(total_num_splines_loc,total_num_splines_loc),ierr)
-  SLL_ALLOCATE(S_b2_loc(total_num_splines_loc,total_num_splines_loc),ierr)
-  SLL_ALLOCATE(M_b_vect_loc(total_num_splines_loc,total_num_splines_loc),ierr)
-  SLL_ALLOCATE(Masse_loc(total_num_splines_loc),ierr)
-  SLL_ALLOCATE(Stiff_loc(total_num_splines_loc),ierr)
 
-  Masse_loc(:) = 0.0_f64
-  Stiff_loc(:) = 0.0_f64
-  Source_loc(:,:,:) = 0.0_f64
-  
+  SLL_CLEAR_ALLOCATE(Source_loc(1:es%num_cells1*es%num_cells2,1:total_num_splines_loc,1:total_num_splines_loc),ierr)
+  SLL_CLEAR_ALLOCATE(M_c_loc(1:total_num_splines_loc,1:total_num_splines_loc),ierr)
+  SLL_CLEAR_ALLOCATE(K_a11_loc(1:total_num_splines_loc,1:total_num_splines_loc),ierr)
+  SLL_CLEAR_ALLOCATE(K_a12_loc(1:total_num_splines_loc,1:total_num_splines_loc),ierr)
+  SLL_CLEAR_ALLOCATE(K_a21_loc(1:total_num_splines_loc,1:total_num_splines_loc),ierr)
+  SLL_CLEAR_ALLOCATE(K_a22_loc(1:total_num_splines_loc,1:total_num_splines_loc),ierr)
+  SLL_CLEAR_ALLOCATE(S_b1_loc(1:total_num_splines_loc,1:total_num_splines_loc),ierr)
+  SLL_CLEAR_ALLOCATE(S_b2_loc(1:total_num_splines_loc,1:total_num_splines_loc),ierr)
+  SLL_CLEAR_ALLOCATE(M_b_vect_loc(1:total_num_splines_loc,1:total_num_splines_loc),ierr)
+  SLL_CLEAR_ALLOCATE(Masse_loc(1:total_num_splines_loc),ierr)
+  SLL_CLEAR_ALLOCATE(Stiff_loc(1:total_num_splines_loc),ierr)
 
   do j=1,es%num_cells2
     do i=1,es%num_cells1
@@ -836,17 +833,15 @@ subroutine factorize_mat_es(&
 
    es%sll_csr_mat_with_constraint => new_csr_matrix_with_constraint(es%sll_csr_mat)  
 
-
-   call csr_add_one_constraint( &
-    es%sll_csr_mat%row_ptr, & 
-    es%sll_csr_mat%col_ind, &
-    es%sll_csr_mat%val, &
-    es%sll_csr_mat%num_rows, &
-    es%sll_csr_mat%num_nz, &
-    es%masse, &
-    es%sll_csr_mat_with_constraint%row_ptr, &
-    es%sll_csr_mat_with_constraint%col_ind, &
-    es%sll_csr_mat_with_constraint%val)  
+   call csr_add_one_constraint( es%sll_csr_mat%row_ptr,                 &  
+                                es%sll_csr_mat%col_ind,                 &
+                                es%sll_csr_mat%val,                     &
+                                es%sll_csr_mat%num_rows,                &
+                                es%sll_csr_mat%num_nz,                  &
+                                es%masse,                               &
+                                es%sll_csr_mat_with_constraint%row_ptr, &
+                                es%sll_csr_mat_with_constraint%col_ind, &
+                                es%sll_csr_mat_with_constraint%val)  
 
 !    es%sll_csr_mat_with_constraint => es%sll_csr_mat
 !
@@ -867,18 +862,15 @@ subroutine factorize_mat_es(&
     print *,'#end of sll_factorize_csr_matrix'
   end if 
  
-  
- 
-  es%sll_csr_mat_source => new_csr_matrix( &
-         size(es%masse,1), &
-         (es%num_cells1+1)*(es%num_cells2+1),&
-         es%num_cells1*es%num_cells2, &
-         es%local_to_global_spline_indices_source_bis, &
-         es%total_num_splines_loc, &
-         es%local_to_global_spline_indices_source, &
-         es%total_num_splines_loc )
+  es%sll_csr_mat_source => new_csr_matrix( size(es%masse,1),          &
+                        (es%num_cells1+1)*(es%num_cells2+1),          &
+                        es%num_cells1*es%num_cells2,                  &
+                        es%local_to_global_spline_indices_source_bis, &
+                        es%total_num_splines_loc,                     &
+                        es%local_to_global_spline_indices_source,     &
+                        es%total_num_splines_loc )
 
-  call compute_Source_matrice(es,Source_loc)
+  call compute_source_matrice(es,source_loc)
     
   SLL_DEALLOCATE_ARRAY(Source_loc,ierr)
   SLL_DEALLOCATE_ARRAY(M_c_loc,ierr)
