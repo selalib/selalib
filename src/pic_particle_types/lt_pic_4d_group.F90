@@ -65,6 +65,12 @@ module sll_lt_pic_4d_group_module
 
      sll_real64, dimension(:),                pointer       :: ltpic_interpolation_coefs
 
+    ! temp fields (landau damping)
+    sll_real64 :: thermal_speed
+    sll_real64 :: alpha_landau
+    sll_real64 :: k_landau
+
+
   end type sll_lt_pic_4d_group
 
 
