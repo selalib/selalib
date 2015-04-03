@@ -60,6 +60,7 @@ module sll_simulation_4d_vp_lt_pic_cartesian_module
     sll_int32 :: world_size
     sll_int32 :: n_threads
   contains
+    ! [[
     procedure, pass(sim) :: init_from_file => init_4d_lt_pic_cartesian
     procedure, pass(sim) :: run => run_4d_lt_pic_cartesian
   end type sll_simulation_4d_vp_lt_pic_cartesian
