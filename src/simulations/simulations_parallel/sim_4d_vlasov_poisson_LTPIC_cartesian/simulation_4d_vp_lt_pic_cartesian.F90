@@ -521,6 +521,7 @@ contains
        if (sim%my_rank == 0) then
           exval_ee = une_cst * exp(2._f64*omega_i*real(it,f64)*sim%dt) * &
              ( 0.5_f64 + 0.5_f64*cos(2._f64*(omega_r*real(it,f64)*sim%dt-psi)) )
+          exval_ee = max(exval_ee, 1e-30_f64)    ! to avoid taking the log of 0
           call normL2_field_Ex ( val_lee, val_ee, ncx, ncy,                         &
                                  sim%E1,                                            &
                                  sim%mesh_2d%delta_eta1, sim%mesh_2d%delta_eta2 )
