@@ -148,7 +148,7 @@ contains
     ! compute the values of f0 on the (cartesian, phase-space) remapping grid
     x_j = parts_x_min
     do j_x = 1, number_parts_x
-      f_x = eval_landau(alpha, k_landau, x_j)
+      f_x = eval_landau_fx(alpha, k_landau, x_j)
       y_j = parts_y_min
       do j_y = 1, number_parts_y
         vx_j = parts_vx_min
@@ -512,15 +512,11 @@ contains
 
   end subroutine sll_lt_pic_4d_compute_new_particles
     
-  
 
-
-  function eval_landau(alpha, kx, x)
+  function eval_landau_fx(alpha, kx, x)
     sll_real64 :: alpha, kx, x
-    sll_real64 :: eval_landau
-    eval_landau = 1._f64 + alpha * cos(kx * x)
-  end function eval_landau
-
-
+    sll_real64 :: eval_landau_fx
+    eval_landau_fx = 1._f64 + alpha * cos(kx * x)
+  end function eval_landau_fx
 
 end module sll_lt_pic_4d_init
