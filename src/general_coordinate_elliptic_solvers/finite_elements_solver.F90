@@ -33,7 +33,9 @@ module finite_elements_solver_module
 
   implicit none
 
-  type :: finite_elements_solver
+  private
+
+  type, public :: finite_elements_solver
 
      ! Associated mesh (contains : eta1min, eta1max, delta1, ...)
      type(sll_cartesian_mesh_2d),  pointer :: mesh
@@ -118,7 +120,9 @@ module finite_elements_solver_module
   end type finite_elements_solver
 
   ! For the integration mode.
-  sll_int32, parameter :: ES_GAUSS_LEGENDRE = 0, ES_GAUSS_LOBATTO = 1, ES_USER = 2
+  sll_int32, public,  parameter :: ES_GAUSS_LEGENDRE = 0
+  sll_int32, public,  parameter :: ES_GAUSS_LOBATTO  = 1
+  sll_int32, public,  parameter :: ES_USER           = 2
 
   interface sll_delete
      module procedure delete_solver
@@ -127,6 +131,9 @@ module finite_elements_solver_module
   interface initialize
      module procedure initialize_finite_elements_solver
   end interface initialize
+
+  public :: sll_delete, initialize, assembly_mat_solv
+  public :: solve_general_coordinates_elliptic_eq
 
 
 contains ! =============================================================
