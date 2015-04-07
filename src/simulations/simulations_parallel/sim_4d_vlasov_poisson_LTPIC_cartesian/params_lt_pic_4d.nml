@@ -23,10 +23,10 @@
 /
 
 &lt_pic_params
-    NUM_PARTS_X         = 20
+    NUM_PARTS_X         = 40
     NUM_PARTS_Y         = 10
-    NUM_PARTS_VX        = 6
-    NUM_PARTS_VY        = 6
+    NUM_PARTS_VX        = 10
+    NUM_PARTS_VY        = 10
     REMAP_GRID_VX_MIN   = -6.0
     REMAP_GRID_VX_MAX   = 6.0
     REMAP_GRID_VY_MIN   = -6.0
