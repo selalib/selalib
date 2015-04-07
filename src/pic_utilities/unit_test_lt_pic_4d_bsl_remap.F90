@@ -291,7 +291,8 @@ program unit_test_lt_pic_bsl_remap
   remaptime = sll_time_elapsed_since(remapstart)
 
   ! formats at [[http://www.cs.mtu.edu/~shene/COURSES/cs201/NOTES/chap05/format.html]]
-  write(*,'(A,A,ES8.2,A)') trim(remap_type),' remap time = ',remaptime,' sec'
+  write(*,'(A,A,ES8.2,A,A,ES8.2,A)') trim(remap_type),' remap time = ',remaptime,' sec',&
+       ' ie ',part_group%number_particles/remaptime,' remapped-ptc/sec'
   
   ! result should still be exact on the new grid because all the transformations have been linear
 
