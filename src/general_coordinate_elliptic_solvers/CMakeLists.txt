@@ -21,8 +21,7 @@ TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers
                        sll_timer
                        sll_assert
                        sll_memory
-                       sll_working_precision
-                       deboor_splines)
+                       sll_working_precision)
 
 ADD_LIBRARY( finite_elements_solver STATIC connectivity_qn.f90
                                            finite_elements_solver.F90
