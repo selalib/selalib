@@ -73,7 +73,6 @@ cd build; {
 ${CMAKE} \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DHDF5_PARALLEL_ENABLED=ON \
-        -DBUILD_PARALUTION=ON \
 	${HOMEDIR}/selalib/src 
 make NightlyUpdate
 make NightlyConfigure
