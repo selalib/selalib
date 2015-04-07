@@ -35,7 +35,7 @@ else
 fi
 
 echo "HOMEDIR:$HOMEDIR"
-echo "WORDIR:$WORKDIR"
+echo "WORKDIR:$WORKDIR"
 
 if [[ $(($(stat -f --format="%a*%S" $WORKDIR))) == 0 ]]; then
    cd /tmp
@@ -73,7 +73,7 @@ cd build; {
 ${CMAKE} \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DHDF5_PARALLEL_ENABLED=ON \
-        -DBUILD_PARALUTION=ON
+        -DBUILD_PARALUTION=ON \
 	${HOMEDIR}/selalib/src 
 make NightlyUpdate
 make NightlyConfigure
