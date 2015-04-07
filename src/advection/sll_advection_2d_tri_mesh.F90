@@ -121,6 +121,18 @@ function new_advection_2d_tri_mesh( mesh ) result(adv)
 end function new_advection_2d_tri_mesh
 
 !> @brief Computes degrees of freedom on one point
+!> @details Computes on a point the degrees of freedom (dof):
+!> For every annexing triangle we compute the first derivatives (following the triangle
+!> edges e1, e2, and e3) and the crossed derivatives (following e1+e2, e2+e3, and e1+e3).
+!> they are computed using the values of the function at the vertices. 
+!> @params f_val [intent IN] real vector containing the function values
+!> at the vertices of annexing triangles
+!> @params f_der [intent OUT] real vector containing the values of the first
+!> derivatives following the vertices
+!> @params f_der2 [intent OUT] real vector containing the values of the second
+!> derivatives aka. crossed derivatives (see details)
+!> @params degree [intent IN] integer value of the number of cells parting from the point
+!> @params epsilon [intent IN] real value of the small distance to compute the dof
 subroutine compute_derivatives(f_val, f_der, f_der2, degree, epsilon)
   sll_real64, dimension(:),  intent(in)  :: f_val  !> values of the distribution function
   sll_real64, dimension(:),  intent(out) :: f_der  !> values of the derivatives of the distribution
