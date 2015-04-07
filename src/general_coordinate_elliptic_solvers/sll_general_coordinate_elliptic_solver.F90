@@ -84,19 +84,22 @@ type, public :: general_coordinate_elliptic_solver
   sll_real64, dimension(:,:), pointer :: values_jacobian
   sll_int32 , dimension(:)  , pointer :: tab_index_coeff1
   sll_int32 , dimension(:)  , pointer :: tab_index_coeff2
-  type(sll_csr_matrix), pointer :: sll_csr_mat
-  type(sll_csr_matrix), pointer :: sll_csr_mat_with_constraint
-  type(sll_csr_matrix), pointer :: sll_csr_mat_source
-  sll_real64, dimension(:), pointer :: rho_vec
-  sll_real64, dimension(:), pointer :: phi_vec
-  sll_real64, dimension(:), pointer :: tmp_rho_vec
-  sll_real64, dimension(:), pointer :: tmp_phi_vec
-  sll_real64, dimension(:), pointer :: masse
-  sll_real64, dimension(:), pointer :: stiff
+  type(sll_csr_matrix), pointer       :: sll_csr_mat
+  type(sll_csr_matrix), pointer       :: sll_csr_mat_with_constraint
+  type(sll_csr_matrix), pointer       :: sll_csr_mat_source
+  sll_real64, dimension(:), pointer   :: rho_vec
+  sll_real64, dimension(:), pointer   :: phi_vec
+  sll_real64, dimension(:), pointer   :: tmp_rho_vec
+  sll_real64, dimension(:), pointer   :: tmp_phi_vec
+  sll_real64, dimension(:), pointer   :: masse
+  sll_real64, dimension(:), pointer   :: stiff
   sll_real64, dimension(:),   pointer :: rho_coeff_1d
   sll_real64, dimension(:,:), pointer :: rho_at_gauss
   sll_real64, dimension(:), pointer   :: M_rho_loc
   logical                             :: perper
+  !save variables for deboor splines (bsplvd, bsplvb)
+  sll_int32                           :: ilo = 1
+  sll_int32                           :: jlo = 1
 end type general_coordinate_elliptic_solver
 
 !> For the integration mode.  
@@ -121,11 +124,6 @@ public sll_delete,                          &
        sll_solve,                           &
        new_general_elliptic_solver,         &
        factorize_mat_es
-
-
-
-! *******************************************************************
-sll_int32 :: ilo = 1
 
 contains 
 
@@ -515,22 +513,21 @@ function new_general_elliptic_solver( &
 
 
   SLL_ALLOCATE(es,ierr)
-  call sll_create( &
-        es, &
-        spline_degree1, &
-        spline_degree2, &
-        num_cells1, &
-        num_cells2, &
-        quadrature_type1, &
-        quadrature_type2, &
-        bc_left, &
-        bc_right, &
-        bc_bottom, &
-        bc_top, &
-        eta1_min, &
-        eta1_max, &
-        eta2_min, &
-        eta2_max )
+  call sll_create( es,               &
+                   spline_degree1,   &
+                   spline_degree2,   &
+                   num_cells1,       &
+                   num_cells2,       &
+                   quadrature_type1, &
+                   quadrature_type2, &
+                   bc_left,          &
+                   bc_right,         &
+                   bc_bottom,        &
+                   bc_top,           &
+                   eta1_min,         &
+                   eta1_max,         &
+                   eta2_min,         &
+                   eta2_max )
    
 end function new_general_elliptic_solver
 
@@ -961,15 +958,8 @@ subroutine solve_general_coordinates_elliptic_eq( es, rho, phi)
 
 end subroutine solve_general_coordinates_elliptic_eq
   
-! This is based on the assumption that all the input fields have the same
-! boundary conditions. TO DO: put all the boundary condition parameters in
-! a single module called 'boundary_condition_convention' or something, which
-! can be used library-wide, this way we could extract this information 
-! directly from the fields without any difficulties. 
-
-!> PLEASE ADD DOCUMENTATION
 subroutine build_local_matrices( &
-       obj,                      &
+       es,                       &
        cell_index,               &
        cell_i,                   &
        cell_j,                   &
@@ -992,7 +982,7 @@ subroutine build_local_matrices( &
        S_b2_loc,                 &
        Source_loc)
 
-  class(general_coordinate_elliptic_solver) :: obj
+  class(general_coordinate_elliptic_solver) :: es  
   sll_int32, intent(in) :: cell_i
   sll_int32, intent(in) :: cell_j
   sll_int32, intent(in) :: cell_index
@@ -1042,12 +1032,12 @@ subroutine build_local_matrices( &
   sll_int32  :: local_spline_index2
   sll_int32  :: index1
   sll_int32  :: index2
-  sll_real64, dimension(obj%spline_degree1+1,obj%spline_degree1+1) :: work1
-  sll_real64, dimension(obj%spline_degree2+1,obj%spline_degree2+1) :: work2
-  sll_real64, dimension(obj%spline_degree1+1,2) :: dbiatx1
-  sll_real64, dimension(obj%spline_degree2+1,2) :: dbiatx2
-  sll_real64, dimension(obj%spline_degree1+1,2) :: dbiatx1_rho
-  sll_real64, dimension(obj%spline_degree2+1,2) :: dbiatx2_rho
+  sll_real64, dimension(es%spline_degree1+1,es%spline_degree1+1) :: work1
+  sll_real64, dimension(es%spline_degree2+1,es%spline_degree2+1) :: work2
+  sll_real64, dimension(es%spline_degree1+1,2) :: dbiatx1
+  sll_real64, dimension(es%spline_degree2+1,2) :: dbiatx2
+  sll_real64, dimension(es%spline_degree1+1,2) :: dbiatx1_rho
+  sll_real64, dimension(es%spline_degree2+1,2) :: dbiatx2_rho
   sll_real64 :: val_c
   sll_real64 :: val_a11
   sll_real64 :: val_a12
@@ -1086,18 +1076,18 @@ subroutine build_local_matrices( &
   work1(:,:)        = 0.0_f64
   work2(:,:)        = 0.0_f64
   ! The supposition is that all fields use the same logical mesh
-  delta1    = obj%delta_eta1 !mesh2d%delta_eta1
-  delta2    = obj%delta_eta2 !! mesh2d%delta_eta2
-  eta1_min  = obj%eta1_min  
-  eta2_min  = obj%eta2_min  
-  tmp1      = (obj%spline_degree1 + 1)/2
-  tmp2      = (obj%spline_degree2 + 1)/2
-  bc_left   = obj%bc_left
-  bc_right  = obj%bc_right
-  bc_bottom = obj%bc_bottom
-  bc_top    = obj%bc_top
-  num_pts_g1 = size(obj%gauss_pts1,2)
-  num_pts_g2 = size(obj%gauss_pts2,2)
+  delta1    = es%delta_eta1 !mesh2d%delta_eta1
+  delta2    = es%delta_eta2 !! mesh2d%delta_eta2
+  eta1_min  = es%eta1_min  
+  eta2_min  = es%eta2_min  
+  tmp1      = (es%spline_degree1 + 1)/2
+  tmp2      = (es%spline_degree2 + 1)/2
+  bc_left   = es%bc_left
+  bc_right  = es%bc_right
+  bc_bottom = es%bc_bottom
+  bc_top    = es%bc_top
+  num_pts_g1 = size(es%gauss_pts1,2)
+  num_pts_g2 = size(es%gauss_pts2,2)
     
   eta1  = eta1_min + (cell_i-1)*delta1
   eta2  = eta2_min + (cell_j-1)*delta2
@@ -1105,23 +1095,24 @@ subroutine build_local_matrices( &
   do j=1,num_pts_g2
     ! rescale Gauss points to be in interval [eta2 ,eta2 +delta_eta2]
     ! the bottom edge of the cell.
-    gpt2  = eta2  + 0.5_f64*delta2 * ( obj%gauss_pts2(1,j) + 1.0_f64 )
-    wgpt2 = 0.5_f64*delta2*obj%gauss_pts2(2,j) !ATTENTION 0.5
+    gpt2  = eta2  + 0.5_f64*delta2 * ( es%gauss_pts2(1,j) + 1.0_f64 )
+    wgpt2 = 0.5_f64*delta2*es%gauss_pts2(2,j) !ATTENTION 0.5
        
-    if ((obj%bc_bottom==SLL_PERIODIC).and.(obj%bc_top==SLL_PERIODIC))then
+    if ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC))then
       ! rescale gauss point in interval [0,delta2]
-      gtmp2 = 0.5_f64*delta2*( obj%gauss_pts2(1,j) + 1.0_f64) !ATTENTION 0.5
-      local_spline_index2 = obj%spline_degree2 + 1
+      gtmp2 = 0.5_f64*delta2*( es%gauss_pts2(1,j) + 1.0_f64) !ATTENTION 0.5
+      local_spline_index2 = es%spline_degree2 + 1
           
-    else if ((obj%bc_bottom == SLL_DIRICHLET).and.&
-             (obj%bc_top    == SLL_DIRICHLET)) then
+    else if ((es%bc_bottom == SLL_DIRICHLET).and.&
+             (es%bc_top    == SLL_DIRICHLET)) then
       gtmp2 = gpt2
-      local_spline_index2 = obj%spline_degree2 + cell_j
+      local_spline_index2 = es%spline_degree2 + cell_j
     end if
        
     call bsplvd(                  &
-           obj%knots2,            &
-           obj%spline_degree2+1,  &
+           es,                   & 
+           es%knots2,            &
+           es%spline_degree2+1,  &
            gtmp2,                 &
            local_spline_index2,   &
            work2,                 &
@@ -1129,13 +1120,15 @@ subroutine build_local_matrices( &
            2)
 
     call interv(                                    &
-           obj%knots2_rho,                          &
-           obj%num_cells2 + obj%spline_degree2+ 2,  &
+           es,                                     & 
+           es%knots2_rho,                          &
+           es%num_cells2 + es%spline_degree2+ 2,  &
            gpt2, left_y, mflag_y )
 
     call bsplvd(                                  &
-         obj%knots2_rho,                          &
-         obj%spline_degree2+1,                    &
+         es,                                     & 
+         es%knots2_rho,                          &
+         es%spline_degree2+1,                    &
          gpt2,                                    &
          left_y,                                  &
          work2,                                   &
@@ -1143,52 +1136,55 @@ subroutine build_local_matrices( &
          2)
       
     ! we stock values of spline to construct the source term
-    obj%values_splines2(cell_j + obj%num_cells2*(j-1),:) = dbiatx2(:,1)
-    obj%values_splines_gauss2(cell_j+obj%num_cells2*(j-1),:)=dbiatx2_rho(:,1)
-    obj%tab_index_coeff2(cell_j + obj%num_cells2*(j-1)) = left_y
+    es%values_splines2(cell_j + es%num_cells2*(j-1),:) = dbiatx2(:,1)
+    es%values_splines_gauss2(cell_j+es%num_cells2*(j-1),:)=dbiatx2_rho(:,1)
+    es%tab_index_coeff2(cell_j + es%num_cells2*(j-1)) = left_y
 
     do i=1,num_pts_g1
       ! rescale Gauss points to be in interval [eta1,eta1+delta1]
-      gpt1  = eta1  + 0.5_f64*delta1 * ( obj%gauss_pts1(1,i) + 1.0_f64 )
-      wgpt1 = 0.5_f64*delta1*obj%gauss_pts1(2,i)
+      gpt1  = eta1  + 0.5_f64*delta1 * ( es%gauss_pts1(1,i) + 1.0_f64 )
+      wgpt1 = 0.5_f64*delta1*es%gauss_pts1(2,i)
           
-      if((obj%bc_left_interp==SLL_PERIODIC).and.(obj%bc_right==SLL_PERIODIC)) then 
+      if((es%bc_left_interp==SLL_PERIODIC).and.(es%bc_right==SLL_PERIODIC)) then 
              
-        gtmp1   = 0.5_f64*delta1*( obj%gauss_pts1(1,i) + 1.0_f64)! ATTENTION 0.5 
-        local_spline_index1 = obj%spline_degree1 + 1
+        gtmp1   = 0.5_f64*delta1*( es%gauss_pts1(1,i) + 1.0_f64)! ATTENTION 0.5 
+        local_spline_index1 = es%spline_degree1 + 1
              
-      else if ((obj%bc_left_interp  == SLL_DIRICHLET).and.&
-        (obj%bc_right == SLL_DIRICHLET) ) then
+      else if ((es%bc_left_interp  == SLL_DIRICHLET).and.&
+        (es%bc_right == SLL_DIRICHLET) ) then
            
         gtmp1   = gpt1
-        local_spline_index1 = obj%spline_degree1 + cell_i
+        local_spline_index1 = es%spline_degree1 + cell_i
              
       end if
     
       call bsplvd(                   &
-             obj%knots1,             &
-             obj%spline_degree1+1,   &
+             es,                    & 
+             es%knots1,             &
+             es%spline_degree1+1,   &
              gtmp1,                  &
              local_spline_index1,    &
              work1,                  &
              dbiatx1,                &
              2 )
 
-      call interv( obj%knots1_rho,  &
-                   obj%num_cells1 + obj%spline_degree1+ 2, gpt1, &
+      call interv( es,              &
+                   es%knots1_rho,   &
+                   es%num_cells1 + es%spline_degree1+ 2, gpt1, &
                    left_x, mflag_x )
      
-      call bsplvd( obj%knots1_rho,         &
-                   obj%spline_degree1+1,   &
+      call bsplvd( es,                    &
+                   es%knots1_rho,         &
+                   es%spline_degree1+1,   &
                    gpt1,                   &
                    left_x,                 &
                    work1,                  &
                    dbiatx1_rho,            &
                    2 )
 
-      obj%values_splines1(cell_i + obj%num_cells1*(i-1),:) = dbiatx1(:,1)
-      obj%values_splines_gauss1(cell_i + obj%num_cells1*(i-1),:) = dbiatx1_rho(:,1)
-      obj%tab_index_coeff1(cell_i + obj%num_cells1*(i-1)) = left_x
+      es%values_splines1(cell_i + es%num_cells1*(i-1),:) = dbiatx1(:,1)
+      es%values_splines_gauss1(cell_i + es%num_cells1*(i-1),:) = dbiatx1_rho(:,1)
+      es%tab_index_coeff1(cell_i + es%num_cells1*(i-1)) = left_x
 
       val_c        = c_field%value_at_point(gpt1,gpt2)
       val_a11      = a11_field_mat%value_at_point(gpt1,gpt2)
@@ -1207,10 +1203,10 @@ subroutine build_local_matrices( &
       jac_mat(:,:) = c_field%get_jacobian_matrix(gpt1,gpt2)
       val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)
 
-      obj%values_jacobian(cell_i + obj%num_cells1*(i-1),cell_j &
-                                 + obj%num_cells2*(j-1)) = val_jac
+      es%values_jacobian(cell_i + es%num_cells1*(i-1),cell_j &
+                                 + es%num_cells2*(j-1)) = val_jac
         
-      obj%intjac = obj%intjac + wgpt2*wgpt1*val_jac
+      es%intjac = es%intjac + wgpt2*wgpt1*val_jac
       ! The B matrix is  by (J^(-1)) A^T (J^(-1))^T 
       B11 = jac_mat(2,2)*jac_mat(2,2)*val_a11 - &
             jac_mat(2,2)*jac_mat(1,2)*(val_a12+val_a21) + &
@@ -1244,10 +1240,10 @@ subroutine build_local_matrices( &
       ! loop over the splines supported in the cell that are different than
       ! zero at the point (gpt1,gpt2) (there are spline_degree+1 splines in
       ! each direction.
-      do ii = 0,obj%spline_degree1
-         do jj = 0,obj%spline_degree2
+      do ii = 0,es%spline_degree1
+         do jj = 0,es%spline_degree2
               
-           index1  =  jj * ( obj%spline_degree1 + 1 ) + ii + 1
+           index1  =  jj * ( es%spline_degree1 + 1 ) + ii + 1
               
            Masse_loc(index1) = &
              Masse_loc(index1) + &
@@ -1260,10 +1256,10 @@ subroutine build_local_matrices( &
              (dbiatx1(ii+1,2)*dbiatx2(jj+1,1)+&
              dbiatx1(ii+1,1)*dbiatx2(jj+1,2))
              
-           do iii = 0,obj%spline_degree1
-             do jjj = 0,obj%spline_degree2
+           do iii = 0,es%spline_degree1
+             do jjj = 0,es%spline_degree2
                     
-               index2 =  jjj*(obj%spline_degree1 + 1) + iii + 1
+               index2 =  jjj*(es%spline_degree1 + 1) + iii + 1
               
                Source_loc(cell_index,index1, index2) = &
                  Source_loc(cell_index,index1, index2) + &
@@ -1331,9 +1327,9 @@ subroutine build_local_matrices( &
 
 end subroutine build_local_matrices
   
-subroutine build_local_matrices_rho( obj, cell_i, cell_j)
+subroutine build_local_matrices_rho( es, cell_i, cell_j)
 
-  class(general_coordinate_elliptic_solver) :: obj
+  class(general_coordinate_elliptic_solver) :: es
   sll_int32, intent(in) :: cell_i
   sll_int32, intent(in) :: cell_j
   sll_int32 :: bc_left    
@@ -1357,31 +1353,31 @@ subroutine build_local_matrices_rho( obj, cell_i, cell_j)
   sll_real64 :: wgpt1
   sll_real64 :: wgpt2
   sll_int32  :: index1
-  sll_real64, dimension(obj%spline_degree1+1,obj%spline_degree1+1) :: work1
-  sll_real64, dimension(obj%spline_degree2+1,obj%spline_degree2+1) :: work2
-  sll_real64, dimension(obj%spline_degree1+1,2) :: dbiatx1
-  sll_real64, dimension(obj%spline_degree2+1,2) :: dbiatx2
+  sll_real64, dimension(es%spline_degree1+1,es%spline_degree1+1) :: work1
+  sll_real64, dimension(es%spline_degree2+1,es%spline_degree2+1) :: work2
+  sll_real64, dimension(es%spline_degree1+1,2) :: dbiatx1
+  sll_real64, dimension(es%spline_degree2+1,2) :: dbiatx2
   sll_real64 :: val_f
   sll_real64 :: val_jac,spline1,spline2
     
-  obj%M_rho_loc(:)  = 0.0_f64
+  es%M_rho_loc(:)  = 0.0_f64
   dbiatx1(:,:)  = 0.0_f64
   dbiatx2(:,:)  = 0.0_f64
   work1(:,:)    = 0.0_f64
   work2(:,:)    = 0.0_f64
   ! The supposition is that all fields use the same logical mesh
-  delta1    = obj%delta_eta1
-  delta2    = obj%delta_eta2
-  eta1_min  = obj%eta1_min
-  eta2_min  = obj%eta2_min
-  tmp1      = (obj%spline_degree1 + 1)/2
-  tmp2      = (obj%spline_degree2 + 1)/2
-  bc_left   = obj%bc_left
-  bc_right  = obj%bc_right
-  bc_bottom = obj%bc_bottom
-  bc_top    = obj%bc_top
-  num_pts_g1 = size(obj%gauss_pts1,2)
-  num_pts_g2 = size(obj%gauss_pts2,2)
+  delta1    = es%delta_eta1
+  delta2    = es%delta_eta2
+  eta1_min  = es%eta1_min
+  eta2_min  = es%eta2_min
+  tmp1      = (es%spline_degree1 + 1)/2
+  tmp2      = (es%spline_degree2 + 1)/2
+  bc_left   = es%bc_left
+  bc_right  = es%bc_right
+  bc_bottom = es%bc_bottom
+  bc_top    = es%bc_top
+  num_pts_g1 = size(es%gauss_pts1,2)
+  num_pts_g2 = size(es%gauss_pts2,2)
     
   eta1  = eta1_min + (cell_i-1)*delta1
   eta2  = eta2_min + (cell_j-1)*delta2
@@ -1389,29 +1385,29 @@ subroutine build_local_matrices_rho( obj, cell_i, cell_j)
   do j=1,num_pts_g2
     ! rescale Gauss points to be in interval [eta2 ,eta2 +delta_eta2]
     ! the bottom edge of the cell.
-    gpt2  = eta2  + 0.5_f64*delta2 * ( obj%gauss_pts2(1,j) + 1.0_f64 )
-    wgpt2 = 0.5_f64*delta2*obj%gauss_pts2(2,j) !ATTENTION 0.5
+    gpt2  = eta2  + 0.5_f64*delta2 * ( es%gauss_pts2(1,j) + 1.0_f64 )
+    wgpt2 = 0.5_f64*delta2*es%gauss_pts2(2,j) !ATTENTION 0.5
 
     do i=1,num_pts_g1
       ! rescale Gauss points to be in interval [eta1,eta1+delta1]
-      gpt1  = eta1  + 0.5_f64*delta1 * ( obj%gauss_pts1(1,i) + 1.0_f64 )
-      wgpt1 = 0.5_f64*delta1*obj%gauss_pts1(2,i)
+      gpt1  = eta1  + 0.5_f64*delta1 * ( es%gauss_pts1(1,i) + 1.0_f64 )
+      wgpt1 = 0.5_f64*delta1*es%gauss_pts1(2,i)
   
-      val_f = obj%rho_at_gauss(i+(cell_i-1)*num_pts_g1, j + (cell_j-1)*num_pts_g2)
+      val_f = es%rho_at_gauss(i+(cell_i-1)*num_pts_g1, j + (cell_j-1)*num_pts_g2)
       val_jac = &
-        obj%values_jacobian(cell_i+obj%num_cells1*(i-1),cell_j+obj%num_cells2*(j-1))
+        es%values_jacobian(cell_i+es%num_cells1*(i-1),cell_j+es%num_cells2*(j-1))
 
      ! loop over the splines supported in the cell that are different than
      ! zero at the point (gpt1,gpt2) (there are spline_degree+1 splines in
      ! each direction.
-      do ii = 0,obj%spline_degree1
-        do jj = 0,obj%spline_degree2
+      do ii = 0,es%spline_degree1
+        do jj = 0,es%spline_degree2
                 
-          spline1 = obj%values_splines1(cell_i + obj%num_cells1*(i-1),ii+1)
-          spline2 = obj%values_splines2(cell_j + obj%num_cells2*(j-1),jj+1)
+          spline1 = es%values_splines1(cell_i + es%num_cells1*(i-1),ii+1)
+          spline2 = es%values_splines2(cell_j + es%num_cells2*(j-1),jj+1)
                
-          index1  =  jj * ( obj%spline_degree1 + 1 ) + ii + 1
-          obj%M_rho_loc(index1)= obj%M_rho_loc(index1) + &
+          index1  =  jj * ( es%spline_degree1 + 1 ) + ii + 1
+          es%M_rho_loc(index1)= es%M_rho_loc(index1) + &
                     val_f*val_jac*wgpt1*wgpt2*spline1*spline2
                 
         end do
@@ -1778,8 +1774,10 @@ subroutine compute_Source_matrice(es,Source_loc)
 
 end subroutine compute_Source_matrice
 
-subroutine interv( xt, lxt, x, left, mflag )
+subroutine interv( es, xt, lxt, x, left, mflag )
     
+    type(general_coordinate_elliptic_solver) :: es
+
     sll_int32,intent(in):: lxt
     sll_int32,intent(out):: left
     sll_int32,intent(out):: mflag
@@ -1790,7 +1788,7 @@ subroutine interv( xt, lxt, x, left, mflag )
     sll_real64,dimension(:):: xt!(lxt)
 
     
-    ihi = ilo + 1
+    ihi = es%ilo + 1
     
     if ( lxt <= ihi ) then
        
@@ -1804,7 +1802,7 @@ subroutine interv( xt, lxt, x, left, mflag )
           return
        end if
        
-       ilo = lxt - 1
+       es%ilo = lxt - 1
        ihi = lxt
        
     end if
@@ -1813,9 +1811,9 @@ subroutine interv( xt, lxt, x, left, mflag )
        go to 20
     end if
     
-    if ( xt(ilo) <= x ) then
+    if ( xt(es%ilo) <= x ) then
        mflag = 0
-       left = ilo
+       left = es%ilo
        return
     end if
     !
@@ -1825,18 +1823,18 @@ subroutine interv( xt, lxt, x, left, mflag )
     
 10  continue
     
-    ihi = ilo
-    ilo = ihi - istep
+    ihi = es%ilo
+    es%ilo = ihi - istep
     
-    if ( 1 < ilo ) then
-       if ( xt(ilo) <= x ) then
+    if ( 1 < es%ilo ) then
+       if ( xt(es%ilo) <= x ) then
           go to 50
        end if
        istep = istep * 2
        go to 10
     end if
     
-    ilo = 1
+    es%ilo = 1
     
     if ( x < xt(1) ) then
        mflag = -1
@@ -1854,8 +1852,8 @@ subroutine interv( xt, lxt, x, left, mflag )
     
 30  continue
     
-    ilo = ihi
-    ihi = ilo + istep
+    es%ilo = ihi
+    ihi = es%ilo + istep
     
     if ( ihi < lxt ) then
        
@@ -1880,18 +1878,18 @@ subroutine interv( xt, lxt, x, left, mflag )
     
     do
        
-       middle = ( ilo + ihi ) / 2
+       middle = ( es%ilo + ihi ) / 2
        
-       if ( middle == ilo ) then
+       if ( middle == es%ilo ) then
           mflag = 0
-          left = ilo
+          left = es%ilo
           return
        end if
        !
        !  It is assumed that MIDDLE = ILO in case IHI = ILO+1.
        !
        if ( xt(middle) <= x ) then
-          ilo = middle
+          es%ilo = middle
        else
           ihi = middle
        end if
@@ -1920,8 +1918,9 @@ subroutine interv( xt, lxt, x, left, mflag )
 
   end subroutine interv
 
- subroutine bsplvd ( t, k, x, left, a, dbiatx, nderiv )
+ subroutine bsplvd ( es, t, k, x, left, a, dbiatx, nderiv )
 
+    type(general_coordinate_elliptic_solver) :: es
     sll_int32 :: k
     sll_int32 :: left
     sll_int32 :: nderiv
@@ -1948,7 +1947,7 @@ subroutine interv( xt, lxt, x, left, mflag )
     !
     !  MHIGH is usually equal to NDERIV.
     !
-    call bsplvb ( t, k+1-mhigh, 1, x, left, dbiatx )
+    call bsplvb ( es, t, k+1-mhigh, 1, x, left, dbiatx )
     
     if ( mhigh == 1 ) then
        return
@@ -1969,7 +1968,7 @@ subroutine interv( xt, lxt, x, left, mflag )
        end do
        ideriv = ideriv - 1
        
-       call bsplvb ( t, k+1-ideriv, 2, x, left, dbiatx )
+       call bsplvb ( es, t, k+1-ideriv, 2, x, left, dbiatx )
        
     end do
     !
@@ -2038,8 +2037,9 @@ subroutine interv( xt, lxt, x, left, mflag )
   end subroutine bsplvd
 
 
- subroutine bsplvb ( t, jhigh, index, x, left, biatx )
+ subroutine bsplvb ( es, t, jhigh, index, x, left, biatx )
 
+    type(general_coordinate_elliptic_solver) :: es
     sll_int32, parameter :: jmax = 20
     
     sll_int32:: jhigh
@@ -2049,7 +2049,6 @@ subroutine interv( xt, lxt, x, left, mflag )
     sll_real64, save, dimension ( jmax ) :: deltar
     sll_int32:: i
     sll_int32:: index
-    sll_int32, save :: j = 1
     sll_int32:: left
     sll_real64:: saved
     sll_real64,dimension(left+jhigh):: t!() left+jhigh
@@ -2057,9 +2056,9 @@ subroutine interv( xt, lxt, x, left, mflag )
     sll_real64:: x
     
     if ( index == 1 ) then
-       j = 1
+       es%jlo = 1
        biatx(1) = 1.0_8
-       if ( jhigh <= j ) then
+       if ( jhigh <= es%jlo ) then
           return
        end if
     end if
@@ -2077,29 +2076,24 @@ subroutine interv( xt, lxt, x, left, mflag )
     
     do
        
-       deltar(j) = t(left+j) - x
-       deltal(j) = x - t(left+1-j)
+       deltar(es%jlo) = t(left+es%jlo) - x
+       deltal(es%jlo) = x - t(left+1-es%jlo)
        
        saved = 0.0_f64
-       do i = 1, j
-          term = biatx(i) / ( deltar(i) + deltal(j+1-i) )
+       do i = 1, es%jlo
+          term = biatx(i) / ( deltar(i) + deltal(es%jlo+1-i) )
           biatx(i) = saved + deltar(i) * term
-          saved = deltal(j+1-i) * term
+          saved = deltal(es%jlo+1-i) * term
        end do
     
-       biatx(j+1) = saved
-       j = j + 1
+       biatx(es%jlo+1) = saved
+       es%jlo = es%jlo + 1
        
-       if ( jhigh <= j ) then
-          
-          exit
-       end if
+       if ( jhigh <= es%jlo ) exit
     
     end do
     
-    return
   end subroutine bsplvb
-
 
 
 end module sll_general_coordinate_elliptic_solver_module
