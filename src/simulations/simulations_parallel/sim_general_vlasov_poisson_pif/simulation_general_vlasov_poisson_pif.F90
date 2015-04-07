@@ -51,7 +51,10 @@ implicit none
  
  sll_int32, parameter :: PIF_POISSON=1
  sll_int32, parameter :: PIF_QUASINEUTRAL_RHO=2
- 
+ sll_int32, parameter :: PIF_QUASINEUTRAL_RHO_WO_ZONALFLOW=3
+ sll_int32, parameter :: PIF_QUASINEUTRAL=4
+ sll_int32, parameter :: PIF_QUASINEUTRAL_WO_ZONALFLOW=5
+
  
  
 type, extends(sll_simulation_base_class) :: &
@@ -84,6 +87,7 @@ sll_int32 :: time_integrator_order
 sll_int32 :: collisions=SLL_COLLISIONS_NONE
 sll_int32 :: controlvariate=SLL_CONTROLVARIATE_NONE      !SLL_CONTROLVARIATE_MAXWELLIAN
 sll_int32 :: momentmatch=SLL_MOMENT_MATCH_NONE
+sll_int32 :: FIELDSOLVER=PIF_QUASINEUTRAL_RHO_WO_ZONALFLOW
 type(sll_vlasovpoisson_sim) :: testcase=SLL_LANDAU_SUM
 sll_int32 :: RND_OFFSET   = 10    !Default sobol offset, skip zeros
 sll_int32 :: num_modes = 1
@@ -112,6 +116,7 @@ sll_int32 :: coll_rank, coll_size
      procedure, pass(sim) :: set_symplectic_rungekutta_coeffs=>set_symplectic_rungekutta_coeffs_generalvp_pif
      procedure, pass(sim) :: symplectic_rungekutta=>symplectic_rungekutta_generalvp_pif
      procedure, pass(sim) :: YSun_g2h=>YSun_g2h_generalvp_pif
+     procedure, pass(sim) :: heun=>heun_generalvp_pif
      procedure, pass(sim) :: calculate_diagnostics=>calculate_diagnostics_generalvp_pif
      procedure, pass(sim) :: control_variate=>control_variate_generalvp_pif
        procedure, pass(sim) :: vxB=>v_cross_B_generalvp_pif
@@ -120,6 +125,9 @@ sll_int32 :: coll_rank, coll_size
      !>Unit vector of B
 !      procedure, pass(sim) :: Bunit=
       procedure, pass(sim) :: E=>Ezero_generalvp_pif !Electric field
+     
+     !wrapper for Field solve
+     procedure, pass(sim) :: solve_field=>solve_field_sum_generalvp_pif
      
      !Loading
      procedure, pass(sim) :: load_landau_sum=>load_landau_sum_generalvp_pif
@@ -216,6 +224,33 @@ sll_int32 :: idx
 !  B(sim%dimx,:)=1
 end function
 
+
+
+
+function solve_field_sum_generalvp_pif(sim, rhs) result(solution)
+ class(sll_simulation_general_vlasov_poisson_pif), intent(inout) :: sim
+ sll_comp64, dimension(:), intent(in) :: rhs
+ sll_comp64, dimension(size(rhs)) :: solution
+ 
+ SELECT CASE (sim%FIELDSOLVER)
+ 
+    CASE(PIF_POISSON)
+      solution=sim%SOLVER%solve_poisson(rhs)
+    CASE(PIF_QUASINEUTRAL_RHO)
+      solution=sim%SOLVER%solve_quasineutral(rhs)
+    CASE(PIF_QUASINEUTRAL_RHO_WO_ZONALFLOW)
+      solution=sim%SOLVER%solve_qn_rho_wo_zonalflow(rhs)
+ END SELECT
+ 
+end function solve_field_sum_generalvp_pif
+
+
+
+
+
+
+
+
 subroutine run_generalvp_pif(sim)
   class(sll_simulation_general_vlasov_poisson_pif), intent(inout) :: sim
   sll_int32 ::ierr , idx, tstep
@@ -301,7 +336,8 @@ do tstep=1,sim%tsteps
   SELECT CASE (sim%dimx)
    CASE(3)
 !  call sim%symplectic_rungekutta()
-   call sim%YSun_g2h()
+   !call sim%heun()
+    call sim%YSun_g2h()
    CASE DEFAULT
   call sim%symplectic_rungekutta()
   end SELECT
@@ -550,8 +586,7 @@ subroutine symplectic_rungekutta_generalvp_pif(sim)
      !mpi allreduce
      call sll_collective_globalsum(sll_world_collective, sim%rhs)
 
-     !sim%solution=sim%SOLVER%solve_poisson(sim%rhs)
-     sim%solution=sim%SOLVER%solve_quasineutral(sim%rhs)
+     sim%solution=sim%solve_field(sim%rhs)
      
      if (rkidx==1) then
       call sim%calculate_diagnostics()
@@ -594,9 +629,7 @@ subroutine YSun_g2h_generalvp_pif(sim)
       sim%rhs=sim%SOLVER%get_rhs_particle(sim%particle(sim%maskxw,:))/sim%npart
      !mpi allreduce
      call sll_collective_globalsum(sll_world_collective, sim%rhs)
-     !sim%solution=sim%SOLVER%solve_poisson(sim%rhs)
-!     sim%rhs=0
-      sim%solution=sim%SOLVER%solve_quasineutral(sim%rhs)
+     sim%solution=sim%solve_field(sim%rhs)
     
        if (rkidx==1) then
          call sim%calculate_diagnostics()
@@ -619,7 +652,137 @@ subroutine YSun_g2h_generalvp_pif(sim)
      t=(sim%tstep)*sim%dt;
      
 end subroutine YSun_g2h_generalvp_pif
- 
+
+
+subroutine heun_generalvp_pif(sim)
+    class(sll_simulation_general_vlasov_poisson_pif), intent(inout) :: sim
+    sll_real64 :: t
+    sll_real64, dimension(2*sim%dimx,sim%npart_loc) :: xv0
+    sll_real64, dimension(sim%dimx, sim%npart_loc) :: E
+     t=(sim%tstep-1)*sim%dt;
+
+     xv0(1:sim%dimx,:)=sim%particle(sim%maskx,:)
+     xv0(sim%dimx+1:2*sim%dimx,:)=sim%particle(sim%maskv,:)
+     
+    
+     call sim%update_weight()
+     sim%rhs=sim%SOLVER%get_rhs_particle(sim%particle(sim%maskxw,:))/sim%npart
+     call sll_collective_globalsum(sll_world_collective, sim%rhs)
+     sim%solution=sim%solve_field(sim%rhs)
+     E= sim%E(sim%particle(sim%maskx,:),t) + (sim%SOLVER%eval_gradient(sim%particle(sim%maskx,:),sim%solution)) 
+     call sim%calculate_diagnostics()
+
+     !Stage 1
+     sim%particle(sim%maskv,:)=sim%particle(sim%maskv,:)+ sim%dt*sim%qm*(sim%vxB(sim%particle(sim%maskx,:),sim%particle(sim%maskv,:),t) + E) 
+     sim%particle(sim%maskx,:)=sim%particle(sim%maskx,:)+ sim%dt*sim%particle(sim%maskv,:)
+     !stage 2
+     call sim%update_weight()
+     sim%rhs=sim%SOLVER%get_rhs_particle(sim%particle(sim%maskxw,:))/sim%npart
+     call sll_collective_globalsum(sll_world_collective, sim%rhs)
+     sim%solution=sim%solve_field(sim%rhs)
+     E= sim%E(sim%particle(sim%maskx,:),t) + (sim%SOLVER%eval_gradient(sim%particle(sim%maskx,:),sim%solution)) 
+     
+     sim%particle(sim%maskv ,:)=xv0(sim%dimx+1:2*sim%dimx,:)/2.0 +  sim%particle(sim%maskv,:)/2.0+  &
+              sim%dt*sim%qm*(sim%vxB(sim%particle(sim%maskx,:),sim%particle(sim%maskv,:),t) + E)/2 
+
+     sim%particle(sim%maskx,:)=xv0(1:sim%dimx,:)/2.0 +  sim%particle(sim%maskx,:)/2.0 + &
+                                          sim%dt*sim%particle(sim%maskv,:)/2.0
+
+end subroutine heun_generalvp_pif
+
+
+
+
+subroutine rk4_generalvp_pif(sim)
+    class(sll_simulation_general_vlasov_poisson_pif), intent(inout) :: sim
+    sll_real64 :: t
+    sll_real64, dimension(sim%dimx,sim%npart_loc) :: k1_xx, k1_vx,k2_xx, &
+                    k2_vx,k3_xx, k3_vx,E,k4_xx,k4_vx, xx_up,vx_up
+    t=(sim%tstep-1)*sim%dt
+! 
+
+!      
+!     
+!             k1_xx=sim%dt*sim%particle(sim%maskv,:);
+!             k1_vx=sim%dt*fx*qm;
+!             !Stage 2
+!             xx_up=sim%particle(sim%maskx,:)+0.5*k1_xx
+!             vx_up=sim%particle(sim%maskv,:)+0.5*k1_vx;
+!             
+!             call sim%update_weight()
+!      sim%rhs=sim%SOLVER%get_rhs_particle(sim%particle(sim%maskxw,:))/sim%npart
+!      call sll_collective_globalsum(sll_world_collective, sim%rhs)
+!      sim%solution=sim%SOLVER%solve_quasineutral(sim%rhs)
+!             
+!             
+!             
+!             k2_xx=sim%dt*vx_up;
+!             k2_vx=sim%dt*fx*qm;
+!             %Stage 3
+!             xx_up=sim%particle(sim%maskx,:)+0.5*k2_xx
+!             vx_up=sim%particle(sim%maskv,:)+0.5*k2_vx;
+!             rhs(:,tstep+1)=fieldsolver.rhs_particle(xx_up,weight,pcell);
+!             solution(:,tstep+1)=fieldsolver.solve_poisson(rhs(:,tstep+1)+rhs_CV-rhs_ION);
+!             fx=fieldsolver.eval_gradient(solution(:,tstep+1),xx_up,pcell)+E_ext(xx,t+0.5*dt);
+!             CV_new=CV(xx_up,vx_up);
+!             weight=forward_weight_CV(weight, weight_const, CV_old, CV_new);CV_old=CV_new;
+!             
+!             k3_xx=sim%dt*vx_up;
+!             k3_vx=sim%dt*fx*qm;
+!             %Stage 4
+!             xx_up=sim%particle(sim%maskx,:)+k3_xx
+!             vx_up=sim%particle(sim%maskv,:)+k3_vx;
+!             [rhs(:,tstep+1)]=fieldsolver.rhs_particle(xx_up,weight,pcell);
+!             solution(:,tstep+1)=fieldsolver.solve_poisson(rhs(:,tstep+1)+rhs_CV-rhs_ION);
+!             fx=fieldsolver.eval_gradient(solution(:,tstep+1),xx_up,pcell)+E_ext(xx,t+sim%dt);
+!             CV_new=CV(xx_up,vx_up);
+!             weight=forward_weight_CV(weight, weight_const, CV_old, CV_new);CV_old=CV_new;
+!             
+!             k4_xx=sim%dt*vx_up;
+!             k4_vx=sim%dt*fx*qm;
+!             sim%particle(sim%maskx,:)=sim%particle(sim%maskx,:)+(k1_xx + 2*k2_xx+2*k3_xx+ k4_xx)/6.0
+!             sim%particle(sim%maskv,:)=sim%particle(sim%maskv,:)+(k1_vx + 2*k2_vx+2*k3_vx+ k4_vx)/6;
+!             
+!             
+!             
+!             
+!             
+!             
+!             
+!             
+!             
+!             
+!             
+!             
+!             
+!             CV_new=CV(xx_up,vx_up);
+!             weight=forward_weight_CV(weight, weight_const, CV_old, CV_new);CV_old=CV_new;
+!             
+!             if (COVAR==0)
+!                 [rhs(:,tstep+1)]=fieldsolver.rhs_particle(xx_up,weight,pcell);
+!             else
+!                 [rhs(:,tstep+1),rhs_cov(:,:,tstep+1)]=fieldsolver.rhs_particle(xx_up,weight,pcell);
+!             end
+!             solution(:,tstep+1)=fieldsolver.solve_poisson(rhs(:,tstep+1)+rhs_CV-rhs_ION);
+!             fx=fieldsolver.eval_gradient(solution(:,tstep+1),xx_up,pcell)+E_ext(xx,t+dt);
+!             xx=xx_up;
+!             vx=vx_up;
+! 
+! 
+
+
+end subroutine rk4_generalvp_pif
+
+
+
+
+
+
+
+
+
+
+
  function l2norm(x) result(norm)
    sll_real64, dimension(:,:), intent(in) :: x
    sll_real64, dimension(size(x,2)) :: norm
@@ -801,9 +964,9 @@ SELECT CASE (sim%controlvariate)
      !This should not happen
       cv=1
     CASE (SLL_CONTROLVARIATE_STANDARD)
-      cv=sqrt(2*sll_pi)**(-size(sim%maskv))*exp(-0.5*sum(sim%particle(sim%maskv,:),1)**2)
+      cv=sqrt(2.0_f64*sll_pi)**(-size(sim%maskv))*exp(-0.5_f64*sum(sim%particle(sim%maskv,:),1)**2)
     CASE (SLL_CONTROLVARIATE_MAXWELLIAN)
-      cv=sqrt(2*sll_pi)**(-size(sim%maskv))*exp(-0.5*sum(sim%particle(sim%maskv,:),1)**2)
+      cv=sqrt(2.0_f64*sll_pi)**(-size(sim%maskv))*exp(-0.5_f64*sum(sim%particle(sim%maskv,:),1)**2)
 END SELECT
 
 end function control_variate_generalvp_pif
@@ -885,7 +1048,6 @@ subroutine write_result_generalvp_pif(sim)
           end do
           write(file_id,*) "e"
           write(file_id,*) "   "
-          close(file_id)
         
           write(file_id,*) "set term x11 6"
           write(file_id,*) "set logscale y"
@@ -895,7 +1057,9 @@ subroutine write_result_generalvp_pif(sim)
           end do
           write(file_id,*) "e"
           write(file_id,*) "   "
-        
+          
+          close(file_id)
+
         
         endif
 end subroutine write_result_generalvp_pif
