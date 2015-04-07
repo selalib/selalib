@@ -40,10 +40,11 @@ implicit none
     procedure, pass(this) :: solve_poisson=>sll_pif_fieldsolver_solve_poisson
     procedure, pass(this) :: solve_mass=>sll_pif_fieldsolver_solve_mass
     procedure, pass(this) :: solve_quasineutral=>sll_pif_fieldsolver_solve_quasineutral
-     procedure, pass(this) ::  eval_gradient=>sll_pif_fieldsolver_eval_gradient
-      procedure, pass(this) ::  eval_solution=>sll_pif_fieldsolver_eval_solution
-     procedure, pass(this) :: get_rhs_particle=>get_fourier_modes
-     procedure, pass(this) :: visu_info=>visu_info_sll_pif_fieldsolver
+    procedure, pass(this) ::  solve_qn_rho_wo_zonalflow=>sll_pif_fieldsolver_solve_qn_rho_wo_zonalflow
+    procedure, pass(this) ::  eval_gradient=>sll_pif_fieldsolver_eval_gradient
+    procedure, pass(this) ::  eval_solution=>sll_pif_fieldsolver_eval_solution
+    procedure, pass(this) :: get_rhs_particle=>get_fourier_modes
+    procedure, pass(this) :: visu_info=>visu_info_sll_pif_fieldsolver
      
      procedure, pass(this) :: l2norm=>l2norm_sll_pif_fieldsolver
  end type pif_fieldsolver
@@ -246,6 +247,45 @@ function sll_pif_fieldsolver_solve_poisson(this, rhs) result(solution)
   endif
  end do
 end function sll_pif_fieldsolver_solve_poisson
+
+
+
+
+function sll_pif_fieldsolver_solve_qn_rho_wo_zonalflow(this, rhs) result(solution)
+ class(pif_fieldsolver), intent(in) :: this
+ sll_comp64, dimension(:), intent(in) :: rhs
+ sll_comp64, dimension(size(rhs)) :: solution
+ sll_int32 :: idx
+ sll_int32 :: zonaldim=3
+ 
+ SLL_ASSERT(size(rhs)==this%problemsize())
+ do idx=1,size(rhs)
+ !intermit constant mode
+  if (sum(abs(this%allmodes(:,idx)))/=0) then
+   solution(idx)=rhs(idx)/sum((this%allmodes(:,idx)*this%unitmode(:))**2)&
+                 *product(this%unitmode/sll_pi/2)
+  else
+       solution(idx)=0
+  endif
+  
+  !remove Zonal flow in zonaldim
+  if (this%allmodes(zonaldim,idx)==0) then
+    solution(idx)=0
+  endif
+  
+ end do
+ 
+  do idx=1,this%problemsize()
+  if ( .not. this%allmodes(1,idx)==0) then
+   solution(idx)=solution(idx)*2
+  endif
+ end do
+end function sll_pif_fieldsolver_solve_qn_rho_wo_zonalflow
+
+
+
+
+
 
 !Get rho from the right hand side
 function sll_pif_fieldsolver_solve_mass(this, rhs) result(solution)
