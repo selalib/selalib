@@ -16,19 +16,18 @@ PROJECT(SeLaLib)
 ENABLE_LANGUAGE(Fortran)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
-SET(OPENMP_ENABLED        OFF CACHE BOOL "Enable use of OpenMP library")
-SET(MPI_ENABLED           ON  CACHE BOOL "Enable use of MPI library")
-SET(HDF5_ENABLED          ON  CACHE BOOL "Use HDF5 library for data output")
-SET(HDF5_PARALLEL_ENABLED OFF CACHE BOOL "Use Parallel HDF5")
-SET(FFTW_ENABLED          ON  CACHE BOOL "Enable use of FFTW library")
-SET(PASTIX_ENABLED        OFF CACHE BOOL "Build PasTiX solvers ")
-SET(SUITESPARSE_ENABLED   OFF CACHE BOOL "Enable UMFpack solvers")
-SET(BUILD_SIMULATIONS     ON  CACHE BOOL "Build selalib simulations")
-SET(BUILD_PACKAGE         OFF CACHE BOOL "Build selalib package")
-SET(BUILD_PARALUTION      OFF CACHE BOOL "Build paralution library")
-SET(BUILD_JOREK           OFF CACHE BOOL "Build jorek django solver")
-SET(PROCS                 4   CACHE STRING
-    "Number of MPI processes used in parallel tests")
+SET(OPENMP_ENABLED        OFF CACHE BOOL   "Enable use of OpenMP library")
+SET(MPI_ENABLED           ON  CACHE BOOL   "Enable use of MPI library")
+SET(HDF5_ENABLED          ON  CACHE BOOL   "Use HDF5 library for data output")
+SET(HDF5_PARALLEL_ENABLED OFF CACHE BOOL   "Use Parallel HDF5")
+SET(FFTW_ENABLED          ON  CACHE BOOL   "Enable use of FFTW library")
+SET(PASTIX_ENABLED        OFF CACHE BOOL   "Build PasTiX solvers ")
+SET(SUITESPARSE_ENABLED   OFF CACHE BOOL   "Enable UMFpack solvers")
+SET(BUILD_SIMULATIONS     ON  CACHE BOOL   "Build selalib simulations")
+SET(BUILD_PACKAGE         OFF CACHE BOOL   "Build selalib package")
+SET(BUILD_PARALUTION      OFF CACHE BOOL   "Build paralution library")
+SET(BUILD_JOREK           OFF CACHE BOOL   "Build jorek django solver")
+SET(PROCS                 4   CACHE STRING "Number of MPI processes for tests")
 
 IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   GET_FILENAME_COMPONENT(INSTALL_DIR "${CMAKE_SOURCE_DIR}/../usr" ABSOLUTE)
@@ -234,7 +233,7 @@ IF(BUILD_JOREK)
     jorek
     GIT_REPOSITORY git+ssh://${GIT_LOGIN}@scm.gforge.inria.fr/gitroot/jorek/jorek.git
     GIT_TAG global-devel
-    CMAKE_ARGS -DBUILD_TESTING=OFF
+    CMAKE_ARGS -DBUILD_TESTING=OFF -DJOREK_DEBUG_TRACE=OFF -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DJOREK_SAVE_MATRIX=OFF
     INSTALL_COMMAND "")
   
   FIND_PACKAGE(PETSc)
