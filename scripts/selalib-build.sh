@@ -12,7 +12,7 @@ if [[ `hostname` == "irma-hpc" ]]; then
   source /opt/intel/impi/4.1.0.024/intel64/bin/mpivars.sh
   export FC=ifort
   export CC=icc
-  export CC=icpc
+  export CXX=icpc
   export I_MPI_F90=ifort
   export I_MPI_CC=icc
   export I_MPI_CXX=icpc
