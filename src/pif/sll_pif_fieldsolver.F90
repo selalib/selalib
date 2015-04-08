@@ -60,7 +60,7 @@ pure function sll_pif_fieldsolver_get_problemsize(this) result(sz)
  endif
 end function sll_pif_fieldsolver_get_problemsize
 
-!>Returns the squared l2norm for a coefficient vector of a solution
+!>Returns the l2norm for a coefficient vector of a solution
 function l2norm_sll_pif_fieldsolver(this, solution) result(l2norm)
  class(pif_fieldsolver), intent(in) :: this
  sll_comp64, dimension(:), intent(in) :: solution
@@ -69,7 +69,7 @@ function l2norm_sll_pif_fieldsolver(this, solution) result(l2norm)
  
  SLL_ASSERT(size(solution)==this%problemsize())
  
- l2norm=dot_product(solution, solution)
+ l2norm=sqrt(dot_product(solution, solution))
  
 end function l2norm_sll_pif_fieldsolver
 

@@ -17,6 +17,7 @@ TARGET_LINK_LIBRARIES( ${EXECUTABLE}        sll_simulations_parallel
 					      sll_sobol
 					      sll_prob
 					      sll_visu_pic
+					      sll_visu_pic_coll
 					      sll_collective
 					      sll_moment_matching
 					      sll_pic_utilities 
