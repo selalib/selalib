@@ -28,6 +28,7 @@ SET(BUILD_PACKAGE         OFF CACHE BOOL   "Build selalib package")
 SET(BUILD_PARALUTION      OFF CACHE BOOL   "Build paralution library")
 SET(BUILD_JOREK           OFF CACHE BOOL   "Build jorek django solver")
 SET(PROCS                 4   CACHE STRING "Number of MPI processes for tests")
+SET(JOREK_GIT_BRANCH      global-devel CACHE STRING "Jorek branch to clone")
 
 IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   GET_FILENAME_COMPONENT(INSTALL_DIR "${CMAKE_SOURCE_DIR}/../usr" ABSOLUTE)
@@ -232,7 +233,7 @@ IF(BUILD_JOREK)
   EXTERNALPROJECT_ADD(
     jorek
     GIT_REPOSITORY git+ssh://${GIT_LOGIN}@scm.gforge.inria.fr/gitroot/jorek/jorek.git
-    GIT_TAG global-devel
+    GIT_TAG ${JOREK_GIT_BRANCH}
     CMAKE_ARGS -DBUILD_TESTING=OFF -DJOREK_DEBUG_TRACE=OFF -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DJOREK_SAVE_MATRIX=OFF
     INSTALL_COMMAND "")
   
