@@ -2427,14 +2427,25 @@ end subroutine
 
 
 
-  subroutine sll_lt_pic_4d_deposit_charge_on_2d_mesh( p_group, q_accumulator, n_virtual_for_deposition, use_exact_f0)
+  subroutine sll_lt_pic_4d_deposit_charge_on_2d_mesh( p_group, q_accumulator,       &
+                                                      n_virtual_for_deposition,     &
+                                                      use_exact_f0, given_total_density)
 
     type(sll_lt_pic_4d_group),pointer,intent(inout) :: p_group
     type(sll_charge_accumulator_2d), pointer, intent(inout) :: q_accumulator
     sll_int32, intent(in) :: n_virtual_for_deposition
     logical, intent(in) :: use_exact_f0
+    sll_real64, intent(in), optional :: given_total_density
 
-    call sll_lt_pic_4d_write_f_on_grid_or_deposit (p_group, q_accumulator, .true., n_virtual_for_deposition, use_exact_f0)
+    if( present(given_total_density) )then
+        call sll_lt_pic_4d_write_f_on_grid_or_deposit (p_group, q_accumulator, .true., &
+                                                       n_virtual_for_deposition, &
+                                                       use_exact_f0, given_total_density)
+    else
+        call sll_lt_pic_4d_write_f_on_grid_or_deposit (p_group, q_accumulator, .true., &
+                                                       n_virtual_for_deposition, &
+                                                       use_exact_f0)
+    end if
 
   end subroutine sll_lt_pic_4d_deposit_charge_on_2d_mesh
 
@@ -2483,11 +2494,16 @@ end subroutine
   !     -> in the "charge deposition" scenario, finer grids of virtual point particles will be (temporarily) created and
   !        deposited. This will slow down the code and is morally required if the density f(t_n) is not locally smooth
   !
+  !  - given_total_density is an optional argument that is given to make the deposition method conservative
+  !    (note: it may be used also in the 'write_f' scenario, but one has to define what conservative means in this case)
+  !
   !  Note: This routine is an evolution from sll_lt_pic_4d_write_bsl_f_on_remap_grid (which will be eventually discarded)
 
   ! todo: treat the non-peridodic case
 
-  subroutine sll_lt_pic_4d_write_f_on_grid_or_deposit (p_group, q_accumulator, scenario_is_deposition, n_virtual, use_exact_f0)
+  subroutine sll_lt_pic_4d_write_f_on_grid_or_deposit (p_group, q_accumulator,              &
+                                                       scenario_is_deposition, n_virtual,   &
+                                                       use_exact_f0, given_total_density)
 
     ! [[file:../pic_particle_types/lt_pic_4d_group.F90::sll_lt_pic_4d_group]] p_group contains both the existing
     ! particles and the virtual remapping grid
@@ -2496,6 +2512,10 @@ end subroutine
     logical, intent(in) :: scenario_is_deposition            ! if false, then scenario is remapping
     sll_int32, intent(in) :: n_virtual ! <<n_virtual>>      ! see comments above for the meaning
     logical, intent(in) :: use_exact_f0
+    sll_real64, intent(in), optional :: given_total_density
+
+    sll_real64 :: deposited_density, missing_charge_per_cell_corner
+
     type(charge_accumulator_cell_2d), pointer :: charge_accumulator_cell
     ! cf [[file:~/mcp/maltpic/ltpic-bsl.tex::N*]]
 
@@ -2750,6 +2770,10 @@ end subroutine
                                     virtual_grid_vy_min,  &
                                     virtual_grid_vy_max   &
                                    )
+
+        if( present(given_total_density) )then
+            deposited_density = 0
+        end if
 
     else
         g => p_group%remapping_grid
@@ -3340,6 +3364,11 @@ end subroutine
                                         charge_accumulator_cell%q_ne = charge_accumulator_cell%q_ne             &
                                                 + virtual_charge *  dx_in_virtual_cell *  dy_in_virtual_cell
 
+                                        if( present(given_total_density) )then
+                                            deposited_density = deposited_density + virtual_charge
+                                        end if
+
+
                                     else
 
                                         p_group%target_values(i_x,i_y,i_vx,i_vy) = f_value_on_virtual_particle
@@ -3358,6 +3387,36 @@ end subroutine
           end do
        end do
     end do
+    if( scenario_is_deposition .and. present(given_total_density) )then
+
+        missing_charge_per_cell_corner = (given_total_density - deposited_density) / (4 * num_virtual_cells_x * num_virtual_cells_y)
+
+        do i = 1,num_virtual_cells_x
+           do j = 1,num_virtual_cells_y
+
+              ! determining the index of the Poisson cell from i and j
+              x_center_virtual_cell = virtual_grid_x_min + (i - 0.5) * h_virtual_cell_x
+              y_center_virtual_cell = virtual_grid_y_min + (j - 0.5) * h_virtual_cell_y
+              call global_to_cell_offset( x_center_virtual_cell, y_center_virtual_cell, &
+                                          p_group%mesh,   &
+                                          i_cell, &
+                                          tmp_dx, tmp_dy)
+
+              ! simpler value below should work too
+              SLL_ASSERT( i_cell == i + (j-1) * p_group%mesh%num_cells1 )
+
+              charge_accumulator_cell => q_accumulator%q_acc(i_cell)
+
+              charge_accumulator_cell%q_sw = charge_accumulator_cell%q_sw + missing_charge_per_cell_corner
+              charge_accumulator_cell%q_se = charge_accumulator_cell%q_se + missing_charge_per_cell_corner
+              charge_accumulator_cell%q_nw = charge_accumulator_cell%q_nw + missing_charge_per_cell_corner
+              charge_accumulator_cell%q_ne = charge_accumulator_cell%q_ne + missing_charge_per_cell_corner
+
+           end do
+        end do
+
+    end if
+
   end subroutine sll_lt_pic_4d_write_f_on_grid_or_deposit
 
 
