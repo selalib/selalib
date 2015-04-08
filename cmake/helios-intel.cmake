@@ -32,6 +32,7 @@ SET(MPI_C_COMPILER "mpicc")
 SET(MPI_CXX_COMPILER "mpiicpc")
 
 SET(USE_MKL ON CACHE BOOL "" FORCE)
+SET(CMAKE_Fortran_FLAGS_RELEASE "-nowarn -O3 -xHost -ip -fpic -g" CACHE STRING "Enable -g to analyse with vtune " FORCE)
 
 # SET(CMAKE_BUILD_TYPE "Release" CACHE STRING "We chose Release" FORCE)
 # SET(CMAKE_Fortran_COMPILER "/opt/intel/composer_xe_2013_sp1.4.211/bin/intel64/ifort")
