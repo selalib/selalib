@@ -1,9 +1,8 @@
-
 ExternalProject_Get_Property(jorek SOURCE_DIR)
 ExternalProject_Get_Property(jorek BINARY_DIR)
 
-SET(CMAKE_Fortran_MODULE_DIRECTORY "${BINARY_DIR}/modules")
-
+SET(CMAKE_Fortran_MODULE_DIRECTORY ${BINARY_DIR}/modules)
+INCLUDE_DIRECTORIES(${PETSC_INCLUDE_DIR})
 LINK_DIRECTORIES(${BINARY_DIR}/lib)
 
 SET(JOREK_MODEL   poisson_2d)
