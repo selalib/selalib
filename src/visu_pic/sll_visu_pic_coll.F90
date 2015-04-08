@@ -66,7 +66,6 @@ call compute_df_cic(x, v, w, xmin, xmax, nx, vmin, vmax, nv, df_local)
   if ( sll_get_collective_rank( collective ) == root_rank) then
     call sll_xdmf_corect2d_nodes( plot_name//'_'//fin, df, "density", xmin, delta_x, vmin, delta_v)
   endif       
-         
      else
        !Write the result to all nodes, and use parallel io
        
