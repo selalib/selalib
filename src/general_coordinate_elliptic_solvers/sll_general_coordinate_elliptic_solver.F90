@@ -982,7 +982,7 @@ subroutine build_local_matrices( &
        S_b2_loc,                 &
        Source_loc)
 
-  class(general_coordinate_elliptic_solver) :: es  
+  type(general_coordinate_elliptic_solver) :: es  
   sll_int32, intent(in) :: cell_i
   sll_int32, intent(in) :: cell_j
   sll_int32, intent(in) :: cell_index
