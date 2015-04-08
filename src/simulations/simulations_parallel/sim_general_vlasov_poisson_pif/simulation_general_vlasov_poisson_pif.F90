@@ -374,8 +374,8 @@ subroutine visu_phasespace(sim)
   class(sll_simulation_general_vlasov_poisson_pif), intent(in) :: sim 
   
   if  (all(sim%plot2d_idx/=0)) then
-    call distribution_xdmf_coll("pif2d",  sim%particle(sim%plot2d_idx(1),:), sim%particle(sim%plot2d_idx(2),:), &
-	      sim%particle(sim%maskw,:), &
+    call distribution_xdmf_coll("pif_plot2d",  sim%particle(sim%plot2d_idx(1),:), sim%particle(sim%plot2d_idx(2),:), &
+	      sim%particle(sim%maskw,:)/sim%npart, &
               sim%visu_bound_low(sim%plot2d_idx(1)),sim%visu_bound_up(sim%plot2d_idx(1)), sim%plot2d_bin(1), &
               sim%visu_bound_low(sim%plot2d_idx(2)),sim%visu_bound_up(sim%plot2d_idx(2)), sim%plot2d_bin(2), sim%tstep,&
               sll_world_collective, 0)
@@ -484,8 +484,8 @@ end subroutine
         sim%boxlen=2*sll_pi/K(1:sim%dimx)
        endif
      end do
-     
-     if (all(B0(1:sim%dimx)/=0)) then
+
+     if (any(B0(1:sim%dimx)/=0)) then
          SLL_ALLOCATE(sim%B0(sim%dimx),ierr)
          sim%B0=B0(1:sim%dimx)
      endif
