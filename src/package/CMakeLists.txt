@@ -32,6 +32,7 @@ SET(SLL_MACROS
     ${SLL_DIR}/multigrid/mgd2_routines.h
     ${SLL_DIR}/remap/sll_remap.h
     ${SLL_DIR}/parallel_utilities/sll_parallel_utilities.h
+    ${SLL_DIR}/jorek/sll_jorek.h
 )
 
 FILE(COPY ${SLL_MACROS} DESTINATION ${CMAKE_BINARY_DIR}/include)
@@ -93,7 +94,6 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/deboor_splines/banfac.f90
     ${SLL_DIR}/deboor_splines/banslv.f90
     ${SLL_DIR}/deboor_splines/knots.f90
-    #${SLL_DIR}/deboor_splines/splopt.f90
     ${SLL_DIR}/deboor_splines/sll_module_deboor_splines_1d.F90
     ${SLL_DIR}/deboor_splines/sll_module_deboor_splines_2d.F90
     ${SLL_DIR}/hermite_interpolation/sll_hermite_interpolation_2d.F90
@@ -124,21 +124,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/integration/gauss_lobatto.F90
     ${SLL_DIR}/simulations/simulations_sequential/sim_CG_polar/sll_polar_operators.F90
     ${SLL_DIR}/simulations/simulations_sequential/sim_CG_polar/sll_advection_polar.F90
-#    ${SLL_DIR}/sparse_matrix_manager/basic_cg.F90
-    ${SLL_DIR}/sparse_matrix_manager/gauss_seidel.F90
-    ${SLL_DIR}/sparse_matrix_manager/getdia.F90
-    ${SLL_DIR}/sparse_matrix_manager/getl.F90
-    ${SLL_DIR}/sparse_matrix_manager/getu.F90
-    ${SLL_DIR}/sparse_matrix_manager/lsol.F90
-    ${SLL_DIR}/sparse_matrix_manager/remove_zeros.F90
+    ${SLL_DIR}/sparse_matrix_manager/partition.F90
     ${SLL_DIR}/sparse_matrix_manager/sll_sparse_matrix_module.F90
-#    ${SLL_DIR}/sparse_matrix_manager/sll_sparse_matrix_module_basic.F90
-    ${SLL_DIR}/sparse_matrix_manager/spm_basic.F90
-    ${SLL_DIR}/sparse_matrix_manager/spm_def.F90
-#    ${SLL_DIR}/sparse_matrix_manager/spm_mkl.F90
-#    ${SLL_DIR}/sparse_matrix_manager/spm_murge.F90
-#    ${SLL_DIR}/sparse_matrix_manager/spm_template.F90
-    ${SLL_DIR}/sparse_matrix_manager/spm_tools.F90
     ${SLL_DIR}/time_solvers/sll_time_splitting_coeff.F90
     ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.F90
     ${SLL_DIR}/meshes/sll_meshes_base.F90
@@ -210,10 +197,6 @@ IF(SUITESPARSE_ENABLED)
         ${SLL_DIR}/sparse_matrix_manager/spm_umfpack.F90
 	${SLL_DIR}/sparse_matrix_manager/sll_sparse_matrix_umfpack_module.F90
   )
-ELSE()
-  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
-      ${SLL_DIR}/sparse_matrix_manager/basic_cg.F90)
-
 ENDIF(SUITESPARSE_ENABLED)
 
 IF(MPI_ENABLED)
