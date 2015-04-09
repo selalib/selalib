@@ -147,7 +147,9 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/distribution_function/distribution_function_initializer_4d.F90
     ${SLL_DIR}/distribution_function/sll_fdistribu4d_DK.F90
     ${SLL_DIR}/reduction/sll_reduction.F90
-
+    ${SLL_DIR}/random_deviate_generators/gaussian.F90
+    ${SLL_DIR}/random_deviate_generators/hammersley.F90
+    ${SLL_DIR}/random_deviate_generators/moment_matching.F90
  )
 
 IF(Fortran_COMPILER MATCHES "IBM")
