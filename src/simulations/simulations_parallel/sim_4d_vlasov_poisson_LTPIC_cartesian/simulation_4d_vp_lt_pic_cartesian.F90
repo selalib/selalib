@@ -25,7 +25,6 @@ module sll_simulation_4d_vp_lt_pic_cartesian_module
   use sll_module_poisson_2d_base
   use sll_representation_conversion_module
   use sll_gnuplot
-  use sll_timer
   use sll_collective 
 #ifdef _OPENMP
   use omp_lib
@@ -44,7 +43,7 @@ module sll_simulation_4d_vp_lt_pic_cartesian_module
     !!!!   note (march 26): to start with we use only lt_pic particles. When the simulation runs fine, try using a common type
     type(sll_lt_pic_4d_group),  pointer :: part_group
     !     type(sll_particle_group_4d),  pointer :: part_group           !! pic case
-    type(sll_cartesian_mesh_2d),    pointer :: mesh_2d
+    type(sll_cartesian_mesh_2d),    pointer :: mesh_2d ! [[file:~/mcp/selalib/src/meshes/sll_cartesian_meshes.F90::sll_cartesian_mesh_2d]]
     type(sll_particle_sorter_2d), pointer :: sorter
     type(sll_charge_accumulator_2d_ptr), dimension(:), pointer  :: q_accumulator_ptr      ! called q_accumulator in Sever simulation
     type(electric_field_accumulator), pointer :: E_accumulator
@@ -292,7 +291,9 @@ contains
 
        if( sim%use_lt_pic_scheme )then
 
-           SLL_ASSERT(thread_id == 0)
+          SLL_ASSERT(thread_id == 0)
+
+          ! [[file:~/mcp/selalib/src/pic_utilities/lt_pic_4d_utilities.F90::sll_lt_pic_4d_deposit_charge_on_2d_mesh]]
            call sll_lt_pic_4d_deposit_charge_on_2d_mesh( sim%part_group, &
                                                          sim%q_accumulator_ptr(1)%q, sim%n_virtual_for_deposition, &
                                                          sim%use_exact_f0, sim%total_density )
@@ -344,7 +345,7 @@ contains
     sll_real64 :: dt_q_over_m ! dt * qoverm
     sll_real64 :: x, x1  ! for global position
     sll_real64 :: y, y1  ! for global position
-    sll_real64 :: dt, ttime
+    sll_real64 :: dt
     sll_real64 :: pp_vx, pp_vy
     type(sll_lt_pic_4d_particle), dimension(:), pointer :: particles        !! todo: use a common class later
     !    type(sll_particle_4d), dimension(:), pointer :: p
@@ -372,7 +373,13 @@ contains
     sll_real64 :: tot_ee, val_ee
     sll_real64 :: omega_i, omega_r, psi
     sll_real64 :: bors
+
+    ! Timings and statistics
+    sll_real64 :: deposit_time,loop_time
+    type(sll_time_mark) :: deposit_time_mark,loop_time_mark
     
+    ! ------------------------------
+
     ncx = sim%mesh_2d%num_cells1
     ncy = sim%mesh_2d%num_cells2
     n_threads = sim%n_threads
@@ -494,7 +501,6 @@ contains
        do k = 1, sim%ions_number
           pp_vx = particles(k)%vx
           pp_vy = particles(k)%vy
-            !          print *,"aaa",k,particles(k)%ic
           SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,particles(k),tmp5,tmp6)
           particles(k)%vx = pp_vx - 0.5_f64 * dt_q_over_m * Ex
           particles(k)%vy = pp_vy - 0.5_f64 * dt_q_over_m * Ey
@@ -529,6 +535,10 @@ contains
     !  ------
     !  ----------------------------------------------------------------------------------------------------
 
+    ! Time statistics
+    call sll_set_time_mark(loop_time_mark)
+    deposit_time=0
+    
     do it = 0, sim%num_iterations-1
 
        !! -- --  diagnostics (computing energy) [begin]  -- --
@@ -643,9 +653,13 @@ contains
 
           if( sim%use_lt_pic_scheme )then
               SLL_ASSERT(thread_id == 0)
+             
+              ! [[file:~/mcp/selalib/src/pic_utilities/lt_pic_4d_utilities.F90::sll_lt_pic_4d_deposit_charge_on_2d_mesh]]
+              call sll_set_time_mark(deposit_time_mark)
               call sll_lt_pic_4d_deposit_charge_on_2d_mesh( sim%part_group, &
                                                             sim%q_accumulator_ptr(1)%q, sim%n_virtual_for_deposition, &
-                                                            sim%use_exact_f0, sim%total_density )
+                                                            sim%use_exact_f0 )
+              deposit_time=deposit_time+sll_time_elapsed_since(deposit_time_mark)
           else
               ! nothing to do, charge already deposited in the push loop
           end if
@@ -779,7 +793,18 @@ contains
        close(65)
     endif
 #endif
+
+    ! ALH - Time statistics. The number of deposits is computed separately to take the number of LTP BSL virtual
+    ! particles into account.
     
+    loop_time=sll_time_elapsed_since(loop_time_mark)
+    write(*,'(A,ES8.2,A)') 'sim stats: ',1 / loop_time * sim%num_iterations * sim%ions_number,' pushes/sec '
+    if(sim%use_lt_pic_scheme)then
+       write(*,'(A,ES8.2,A)') 'lt_pic stats: ',                                       &
+            1 / deposit_time * sim%num_iterations * sim%n_virtual_for_deposition ** 2 &
+            * sim%mesh_2d%num_cells1 * sim%mesh_2d%num_cells2,                        &
+            ' deposits/sec'
+    end if
 
     SLL_DEALLOCATE(sim%rho,   ierr)
     SLL_DEALLOCATE(sim%E1,    ierr)
