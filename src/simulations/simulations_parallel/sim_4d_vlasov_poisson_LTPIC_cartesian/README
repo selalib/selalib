@@ -62,8 +62,17 @@
    - Run simulation within directory (NB: mpirun is not required at the moment)
      [[elisp:(compile "cd ../../../../usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/run && ../test_4d_vp_lt_pic_cartesian ../params_lt_pic_4d.nml")]]
 
-   - complete make install + run:
+   - complete make install + run in [[file:~/mcp/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/run]]
+
      [[elisp:(compile "cd ../../../../build && make -j $NCPU install && cd ../usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/run && ../test_4d_vp_lt_pic_cartesian ../params_lt_pic_4d.nml")]]
+
+   - (9/4/15 debug)
+
+     OK: [[elisp:(compile "cd ../../../../build && make -j $NCPU install && cd ~/mcp/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/run && ../test_4d_vp_lt_pic_cartesian ~/desk/tmp/mcp/150409/params_ok.nml")]]
+
+     KO: [[elisp:(compile "cd ../../../../build && make -j $NCPU install && cd ~/mcp/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/run && ../test_4d_vp_lt_pic_cartesian ~/desk/tmp/mcp/150409/params_no_ok.nml")]]
+
+     gdb ([[http://linux.die.net/man/1/gdb]]): [[elisp:(gdb "gdb -i=mi -cd=~/mcp/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/run --args /home/alh/mcp/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/test_4d_vp_lt_pic_cartesian /home/alh/desk/tmp/mcp/150409/params_no_ok.nml")]]
 
    - for later mpi runs: mpirun -np 4 ../test_4d_vp_lt_pic_cartesian ../params_pic_4d.nml
 
