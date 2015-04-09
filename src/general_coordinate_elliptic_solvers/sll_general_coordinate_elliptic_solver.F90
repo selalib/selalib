@@ -80,9 +80,7 @@ type, public :: general_coordinate_elliptic_solver
   !!! contains the values of all splines in all gauss points
   sll_real64, dimension(:,:,:), pointer :: values_splines1
   sll_real64, dimension(:,:,:), pointer :: values_splines2
-  sll_real64, dimension(:,:,:), pointer :: values_splines_gauss1
-  sll_real64, dimension(:,:,:), pointer :: values_splines_gauss2
-  sll_real64, dimension(:,:), pointer :: values_jacobian
+  sll_real64, dimension(:,:,:,:), pointer :: val_jac
   sll_int32 , dimension(:)  , pointer :: tab_index_coeff1
   sll_int32 , dimension(:)  , pointer :: tab_index_coeff2
   type(sll_csr_matrix), pointer       :: sll_csr_mat
@@ -435,14 +433,10 @@ subroutine initialize_general_elliptic_solver( &
  es%values_splines1 = 0.0_f64
  SLL_ALLOCATE(es%values_splines2(num_cells2,spline_degree2+2,spline_degree2+1),ierr)
  es%values_splines2 = 0.0_f64
- SLL_ALLOCATE(es%values_jacobian(num_cells1*(spline_degree1+2),num_cells2*(spline_degree2+2)),ierr)
- es%values_jacobian = 0.0_f64
- SLL_ALLOCATE(es%values_splines_gauss1(num_cells1,spline_degree1+2,spline_degree1+1),ierr)
- es%values_splines_gauss1 = 0.0_f64
- SLL_ALLOCATE(es%values_splines_gauss2(num_cells2,spline_degree2+2,spline_degree2+1),ierr)
- es%values_splines_gauss2 = 0.0_f64
- SLL_ALLOCATE(es%tab_index_coeff1(num_cells1*(spline_degree1+2)),ierr)
- SLL_ALLOCATE(es%tab_index_coeff2(num_cells2*(spline_degree2+2)),ierr)
+ SLL_ALLOCATE(es%val_jac(spline_degree1+2,spline_degree2+2,num_cells1,num_cells2),ierr)
+ es%val_jac = 0.0_f64
+ SLL_ALLOCATE(es%tab_index_coeff1(num_cells1),ierr)
+ SLL_ALLOCATE(es%tab_index_coeff2(num_cells2),ierr)
 
  num_pts_g1 = size(es%gauss_pts1,2)
  num_pts_g2 = size(es%gauss_pts2,2)
@@ -572,9 +566,7 @@ subroutine delete_elliptic( es )
   SLL_DEALLOCATE(es%knots2_rho,ierr)
   SLL_DEALLOCATE(es%values_splines1,ierr)
   SLL_DEALLOCATE(es%values_splines2,ierr)
-  SLL_DEALLOCATE(es%values_jacobian,ierr)
-  SLL_DEALLOCATE(es%values_splines_gauss1,ierr)
-  SLL_DEALLOCATE(es%values_splines_gauss2,ierr)
+  SLL_DEALLOCATE(es%val_jac,ierr)
   SLL_DEALLOCATE(es%tab_index_coeff1,ierr)
   SLL_DEALLOCATE(es%tab_index_coeff2,ierr)
 
@@ -622,10 +614,10 @@ class(sll_scalar_field_2d_base), pointer :: b2_field_vect
 class(sll_scalar_field_2d_base), pointer :: c_field
 
 sll_real64, dimension(:,:),   allocatable :: M_c
-sll_real64, dimension(:,:),   allocatable :: K_a11
-sll_real64, dimension(:,:),   allocatable :: K_a12
-sll_real64, dimension(:,:),   allocatable :: K_a21
-sll_real64, dimension(:,:),   allocatable :: K_a22
+sll_real64, dimension(:,:),   allocatable :: K_11
+sll_real64, dimension(:,:),   allocatable :: K_12
+sll_real64, dimension(:,:),   allocatable :: K_21
+sll_real64, dimension(:,:),   allocatable :: K_22
 sll_real64, dimension(:,:),   allocatable :: M_bv
 sll_real64, dimension(:,:),   allocatable :: S_b1
 sll_real64, dimension(:,:),   allocatable :: S_b2  
@@ -698,7 +690,7 @@ sll_real64 :: C2
 sll_int32 :: left_x,left_y
 sll_int32 :: mflag_x, mflag_y
 sll_int32 :: index3, index4
-sll_int32 :: index_coef1,index_coef2,index
+sll_int32 :: index_coef1,index_coef2
 sll_int32 :: mm, nn, b, bprime,x,y
 sll_int32 :: a, aprime
 sll_real64 :: elt_mat_global
@@ -726,8 +718,8 @@ nc_2       = es%num_cells2
 
 nspl = es%total_num_splines_loc
 
-if( (bc_left   == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
-    (bc_bottom == SLL_PERIODIC) .and. (bc_top   == SLL_PERIODIC) ) then
+if( bc_left   == SLL_PERIODIC .and. bc_right == SLL_PERIODIC .and. &
+    bc_bottom == SLL_PERIODIC .and. bc_top   == SLL_PERIODIC ) then
    es%perper = .true.
 else
    es%perper = .false.  
@@ -735,10 +727,10 @@ end if
 
 SLL_CLEAR_ALLOCATE(source(1:nc_1*nc_2,1:nspl,1:nspl),ierr)
 SLL_CLEAR_ALLOCATE(M_c(1:nspl,1:nspl),ierr)
-SLL_CLEAR_ALLOCATE(K_a11(1:nspl,1:nspl),ierr)
-SLL_CLEAR_ALLOCATE(K_a12(1:nspl,1:nspl),ierr)
-SLL_CLEAR_ALLOCATE(K_a21(1:nspl,1:nspl),ierr)
-SLL_CLEAR_ALLOCATE(K_a22(1:nspl,1:nspl),ierr)
+SLL_CLEAR_ALLOCATE(K_11(1:nspl,1:nspl),ierr)
+SLL_CLEAR_ALLOCATE(K_12(1:nspl,1:nspl),ierr)
+SLL_CLEAR_ALLOCATE(K_21(1:nspl,1:nspl),ierr)
+SLL_CLEAR_ALLOCATE(K_22(1:nspl,1:nspl),ierr)
 SLL_CLEAR_ALLOCATE(S_b1(1:nspl,1:nspl),ierr)
 SLL_CLEAR_ALLOCATE(S_b2(1:nspl,1:nspl),ierr)
 SLL_CLEAR_ALLOCATE(M_bv(1:nspl,1:nspl),ierr)
@@ -755,10 +747,10 @@ do cell_i = 1, nc_1
   mass  = 0.0_f64
   stiff = 0.0_f64
   M_c   = 0.0_f64
-  K_a11 = 0.0_f64
-  K_a12 = 0.0_f64
-  K_a21 = 0.0_f64
-  K_a22 = 0.0_f64
+  K_11  = 0.0_f64
+  K_12  = 0.0_f64
+  K_21  = 0.0_f64
+  K_22  = 0.0_f64
   M_bv  = 0.0_f64
   S_b1  = 0.0_f64
   S_b2  = 0.0_f64
@@ -797,8 +789,7 @@ do cell_i = 1, nc_1
     
     ! we stock values of spline to construct the source term
     es%values_splines2(cell_j,j,:) = dbs2(:,1)
-    es%values_splines_gauss2(cell_j,j,:)  = dbs2_rho(:,1)
-    es%tab_index_coeff2(l)         = left_y
+    if (j==1) es%tab_index_coeff2(cell_j) = left_y
   
     do i=1,num_pts_g1
     
@@ -809,13 +800,13 @@ do cell_i = 1, nc_1
       if(es%bc_left_interp == SLL_PERIODIC .and. &
          es%bc_right       == SLL_PERIODIC) then 
              
-        gtmp1   = es%gauss_pts1(1,i)
+        gtmp1 = es%gauss_pts1(1,i)
         ispl1 = spl_deg_1+1
              
       else if (es%bc_left_interp  == SLL_DIRICHLET .and.&
                es%bc_right        == SLL_DIRICHLET) then
            
-        gtmp1   = xg
+        gtmp1 = xg
         ispl1 = spl_deg_1 + cell_i
              
       end if
@@ -830,8 +821,7 @@ do cell_i = 1, nc_1
                    left_x, work1, dbs1_rho, 2 )
 
       es%values_splines1(cell_i,i,:)       = dbs1(:,1)
-      es%values_splines_gauss1(cell_i,i,:) = dbs1_rho(:,1)
-      es%tab_index_coeff1(k)        = left_x
+      if (i==1) es%tab_index_coeff1(cell_i) = left_x
 
       val_c        = c_field%value_at_point(xg,yg)
       val_a11      = a11_field_mat%value_at_point(xg,yg)
@@ -850,7 +840,7 @@ do cell_i = 1, nc_1
       jac_mat = c_field%get_jacobian_matrix(xg,yg)
       val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)
 
-      es%values_jacobian(k,l) = val_jac
+      es%val_jac(i,j,cell_i,cell_j) = val_jac
         
       es%intjac = es%intjac + wyg*wxg*val_jac
 
@@ -907,16 +897,16 @@ do cell_i = 1, nc_1
             val_c*val_jac*wxg*wyg*dbs1(ii+1,1)*dbs1(kk+1,1)*  &
                                   dbs2(jj+1,1)*dbs2(ll+1,1)
                
-          K_a11(mm,nn) = K_a11(mm,nn) + B11*wxg*wyg/val_jac* &
+          K_11(mm,nn) = K_11(mm,nn) + B11*wxg*wyg/val_jac* &
             dbs1(ii+1,2)*dbs1(kk+1,2) * dbs2(jj+1,1)*dbs2(ll+1,1)
               
-          K_a22(mm,nn) = K_a22(mm,nn) + B22*wxg*wyg/val_jac*  &
+          K_22(mm,nn) = K_22(mm,nn) + B22*wxg*wyg/val_jac*  &
             dbs1(ii+1,1)*dbs1(kk+1,1) * dbs2(jj+1,2)*dbs2(ll+1,2)
                
-          K_a12(mm, nn) = K_a12(mm,nn) + B12*wxg*wyg/val_jac*  &
+          K_12(mm, nn) = K_12(mm,nn) + B12*wxg*wyg/val_jac*  &
             dbs1(ii+1,2)*dbs1(kk+1,1) * dbs2(jj+1,1)*dbs2(ll+1,2)
                
-          K_a21(mm,nn) = K_a21(mm, nn) + B21*wxg*wyg/val_jac*  &
+          K_21(mm,nn) = K_21(mm, nn) + B21*wxg*wyg/val_jac*  &
             dbs1(ii+1,1)*dbs1(kk+1,2) * dbs2(jj+1,2)*dbs2(ll+1,1)
 
           M_bv(mm,nn) = M_bv(mm,nn) + &
@@ -938,96 +928,87 @@ do cell_i = 1, nc_1
     end do
   end do
 
-  do mm = 0,spl_deg_2
+  do mm = 0, spl_deg_2
 
     index3 = cell_j + mm
     
-    if ((bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC) ) then 
+    if (bc_bottom==SLL_PERIODIC .and. bc_top==SLL_PERIODIC) then 
       if ( index3 > es%total_num_splines2) then
         index3 = index3 - es%total_num_splines2
       end if
     end if
      
-  do i = 0,spl_deg_1
+    do i = 0,spl_deg_1
         
-    index1 = cell_i + i
-    if ( (bc_left==SLL_PERIODIC).and.(bc_right== SLL_PERIODIC)) then 
-      if ( index1 > es%total_num_splines1) then
-              
-        index1 = index1 - es%total_num_splines1
-        
-      end if
-      nbsp = es%total_num_splines1
-           
-    else if ( (bc_left  == SLL_DIRICHLET).and.&
-              (bc_right == SLL_DIRICHLET) ) then
-      nbsp = nc_1 + spl_deg_1
-    end if
+      index1 = cell_i + i
 
-    x            =  index1 + (index3-1)*nbsp
-    b            =  mm * ( spl_deg_1 + 1 ) + i + 1
-    a         =  es%local_to_global_spline_indices(b, icell)
-       
-    es%masse(x) = es%masse(x) + mass(b)
-    es%stiff(x) = es%stiff(x) + stiff(b)
-
-    index_coef1 = es%tab_index_coeff1(cell_i)- spl_deg_1 + i
-    index_coef2 = es%tab_index_coeff2(cell_j)- spl_deg_2+ mm
-    index = index_coef1 + (index_coef2-1)*(nc_1+1)
-
-    es%local_to_global_spline_indices_source(b,icell)= index
-
-    do nn = 0,spl_deg_2
-           
-      index4 = cell_j + nn
-           
-      if ( (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC))then
-        if ( index4 > es%total_num_splines2) then
-          index4 = index4 - es%total_num_splines2
+      if (bc_left==SLL_PERIODIC .and. bc_right==SLL_PERIODIC) then 
+        if ( index1 > es%total_num_splines1) then
+          index1 = index1 - es%total_num_splines1
         end if
+        nbsp = es%total_num_splines1
+      else if (bc_left==SLL_DIRICHLET .and. bc_right==SLL_DIRICHLET) then
+        nbsp = nc_1 + spl_deg_1
       end if
-           
-      do j = 0,spl_deg_1
-              
-        index2 = cell_i + j
-        if((bc_left==SLL_PERIODIC).and.(bc_right==SLL_PERIODIC))then
-                 
-         if ( index2 > es%total_num_splines1) then
-           index2 = index2 - es%total_num_splines1
-         end if
-         nbsp1 = es%total_num_splines1
-                 
-      else if ( (bc_left  == SLL_DIRICHLET) .and.&
-                (bc_right == SLL_DIRICHLET) ) then
-        nbsp1 = nc_1 + spl_deg_1
-      end if
-              
-      y         = index2 + (index4-1)*nbsp1
-      bprime    =  nn * ( spl_deg_1 + 1 ) + j + 1
-      aprime = es%local_to_global_spline_indices(bprime,icell)
-      elt_mat_global = &
-                   M_c(b, bprime)     - &
-                   K_a11(b, bprime)   - &
-                   K_a12(b, bprime)   - &
-                   K_a21(b, bprime)   - &
-                   K_a22(b, bprime)   - &
-                   M_bv(b,bprime) - &
-                   S_b1( b, bprime)   - &
-                   S_b2( b, bprime)
-      es%local_to_global_spline_indices_source_bis(bprime,icell)= y!index_phi
 
-      if ( (a > 0) .and. (aprime > 0) ) then
-                 
-        call sll_add_to_csr_matrix(   &
-                      es%sll_csr_mat, &
-                      elt_mat_global, &
-                      a, &
-                      aprime)   
+      x = index1 + (index3-1)*nbsp
+      b = mm * ( spl_deg_1 + 1 ) + i + 1
+      a = es%local_to_global_spline_indices(b, icell)
+         
+      es%masse(x) = es%masse(x) + mass(b)
+      es%stiff(x) = es%stiff(x) + stiff(b)
 
-      end if
+      index_coef1 = es%tab_index_coeff1(cell_i) - spl_deg_1 + i
+      index_coef2 = es%tab_index_coeff2(cell_j) - spl_deg_2 + mm
+
+      es%local_to_global_spline_indices_source(b,icell)= &
+              index_coef1 + (index_coef2-1)*(nc_1+1)
+
+      do nn = 0,spl_deg_2
+             
+        index4 = cell_j + nn
+             
+        if ( (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC))then
+          if ( index4 > es%total_num_splines2) then
+            index4 = index4 - es%total_num_splines2
+          end if
+        end if
+             
+        do j = 0,spl_deg_1
+                
+          index2 = cell_i + j
+          if((bc_left==SLL_PERIODIC).and.(bc_right==SLL_PERIODIC))then
+                   
+           if ( index2 > es%total_num_splines1) then
+             index2 = index2 - es%total_num_splines1
+           end if
+           nbsp1 = es%total_num_splines1
+                   
+        else if ( (bc_left  == SLL_DIRICHLET) .and.&
+                  (bc_right == SLL_DIRICHLET) ) then
+          nbsp1 = nc_1 + spl_deg_1
+        end if
+                
+        y      = index2 + (index4-1)*nbsp1
+        bprime =  nn * ( spl_deg_1 + 1 ) + j + 1
+        aprime = es%local_to_global_spline_indices(bprime,icell)
+
+        elt_mat_global = M_c(b, bprime)   - &
+                         K_11(b, bprime) - &
+                         K_12(b, bprime) - &
+                         K_21(b, bprime) - &
+                         K_22(b, bprime) - &
+                         M_bv(b,bprime)   - &
+                         S_b1( b, bprime) - &
+                         S_b2( b, bprime)
+
+        es%local_to_global_spline_indices_source_bis(bprime,icell)= y
+
+        if ( (a > 0) .and. (aprime > 0) ) then
+          call sll_add_to_csr_matrix(es%sll_csr_mat, elt_mat_global, a, aprime)   
+        end if
               
-    end do
-           
+      end do
   end do
 end do
 end do
@@ -1095,10 +1076,10 @@ end do
 
 SLL_DEALLOCATE_ARRAY(source,ierr)
 SLL_DEALLOCATE_ARRAY(M_c,ierr)
-SLL_DEALLOCATE_ARRAY(K_a11,ierr)
-SLL_DEALLOCATE_ARRAY(K_a12,ierr)
-SLL_DEALLOCATE_ARRAY(K_a21,ierr)
-SLL_DEALLOCATE_ARRAY(K_a22,ierr)
+SLL_DEALLOCATE_ARRAY(K_11,ierr)
+SLL_DEALLOCATE_ARRAY(K_12,ierr)
+SLL_DEALLOCATE_ARRAY(K_21,ierr)
+SLL_DEALLOCATE_ARRAY(K_22,ierr)
 SLL_DEALLOCATE_ARRAY(M_bv,ierr)
 SLL_DEALLOCATE_ARRAY(S_b1,ierr)
 SLL_DEALLOCATE_ARRAY(S_b2,ierr)
@@ -1198,8 +1179,7 @@ subroutine solve_general_coordinates_elliptic_eq( es, rho, phi)
              wgpt1 = es%gauss_pts1(2,ig)
              ig1 = ig + (i-1)*num_pts_g1
              es%rho_at_gauss(ig1,ig2)   = rho%value_at_point(gpt1,gpt2)
-             val_jac = &
-               es%values_jacobian(i+es%num_cells1*(ig-1),j+es%num_cells2*(jg-1))
+             val_jac = es%val_jac(ig,jg,i,j)
              int_rho = int_rho + &
                        rho%value_at_point(gpt1,gpt2)*wgpt2*wgpt1*val_jac 
              int_jac = int_jac + wgpt2*wgpt1*val_jac
@@ -1242,8 +1222,7 @@ subroutine solve_general_coordinates_elliptic_eq( es, rho, phi)
              wgpt1 = es%gauss_pts1(2,ig)
              ig1 = ig + (i-1)*num_pts_g1
              es%rho_at_gauss(ig1,ig2)   = rho%value_at_point(gpt1,gpt2)
-             val_jac = &
-               es%values_jacobian(i+es%num_cells1*(ig-1),j+es%num_cells2*(jg-1))
+             val_jac = es%val_jac(ig,jg,i,j)
              int_rho = int_rho &
                + rho%value_at_point(gpt1,gpt2)*wgpt2*wgpt1*val_jac 
              int_jac = int_jac + wgpt2*wgpt1*val_jac
@@ -1340,8 +1319,7 @@ subroutine build_local_matrices_rho( es, cell_i, cell_j)
       wgpt1 = es%gauss_pts1(2,i)
   
       val_f = es%rho_at_gauss(i+(cell_i-1)*num_pts_g1, j + (cell_j-1)*num_pts_g2)
-      val_jac = &
-        es%values_jacobian(cell_i+es%num_cells1*(i-1),cell_j+es%num_cells2*(j-1))
+      val_jac = es%val_jac(i,j,cell_i,cell_j)
 
      ! loop over the splines supported in the cell that are different than
      ! zero at the point (gpt1,gpt2) (there are spline_degree+1 splines in
