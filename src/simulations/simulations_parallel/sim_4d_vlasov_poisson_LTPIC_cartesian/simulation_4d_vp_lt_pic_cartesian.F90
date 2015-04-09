@@ -363,6 +363,7 @@ contains
     sll_real64, dimension(:), allocatable :: rho1d_receive
     sll_real64   :: t_init, t_fin, time
     sll_int32 :: save_nb
+    sll_int32 :: plot_e_period
     sll_int32 :: thread_id
     sll_int32 :: n_threads
     type(sll_charge_accumulator_2d),    pointer :: q_accum
@@ -385,6 +386,7 @@ contains
     n_threads = sim%n_threads
     thread_id = 0
     save_nb = sim%num_iterations/2
+    plot_e_period = sim%num_iterations/10
 
     SLL_ALLOCATE( rho1d_send(1:(ncx+1)*(ncy+1)),    ierr)
     SLL_ALLOCATE( rho1d_receive(1:(ncx+1)*(ncy+1)), ierr)
@@ -466,11 +468,24 @@ contains
 
     call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, -sim%rho )         !  I don't like this - sign...
 
+    if (sim%my_rank == 0) then
+    it = 0
+    print *, "writing Ex, Ey in gnuplot format for iteration # it = ", it
+    call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
+                        sim%mesh_2d%eta2_max, ncy+1,                        &
+                        sim%E1, 'Ex', it, ierr )
+
+    call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
+                        sim%mesh_2d%eta2_max, ncy+1,                        &
+                        sim%E2, 'Ey', it, ierr )
+
+    endif
+
 
     !! -- --  diagnostics: compute energy [begin]  -- --
 
-    call electric_energy( tot_ee, sim%E1, sim%E2, sim%mesh_2d%num_cells1, &
-         sim%mesh_2d%num_cells2, sim%mesh_2d%eta1_max, sim%mesh_2d%eta2_max )
+    call electric_energy( tot_ee, sim%E1, sim%E2, ncx, &
+         ncy, sim%mesh_2d%eta1_max, sim%mesh_2d%eta2_max )
     bors = 0.0_f64
     !$omp parallel
     !$omp do reduction(+:bors)
@@ -739,6 +754,21 @@ contains
 
        call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, -sim%rho )      !  I don't like this - sign...
 
+       !! -- --  diagnostics (plotting E ) [begin]  -- --
+
+        if (sim%my_rank == 0 .and. mod(it+1, plot_e_period)==0 ) then
+
+            print *, "writing Ex, Ey in gnuplot format for iteration # it = ", it+1, " / ", sim%num_iterations
+            call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
+                                sim%mesh_2d%eta2_max, ncy+1,                        &
+                                sim%E1, 'Ex', it+1, ierr )
+
+            call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
+                                sim%mesh_2d%eta2_max, ncy+1,                        &
+                                sim%E2, 'Ey', it+1, ierr )
+        endif
+
+       !! -- --  diagnostics (plotting E ) [end]  -- --
 
        !! -- --  diagnostics (computing energy) [begin]  -- --
 
@@ -760,8 +790,8 @@ contains
           enddo
           !$omp end do
           !$omp end parallel
-          call electric_energy( tot_ee, sim%E1, sim%E2, sim%mesh_2d%num_cells1, &
-               sim%mesh_2d%num_cells2, sim%mesh_2d%eta1_max, sim%mesh_2d%eta2_max )
+          call electric_energy( tot_ee, sim%E1, sim%E2, ncx, &
+               ncy, sim%mesh_2d%eta1_max, sim%mesh_2d%eta2_max )
           diag_TOTenergy(it) = some_val* 0.5_f64 *(sim%mesh_2d%eta1_max - sim%mesh_2d%eta1_min) * &
                (sim%mesh_2d%eta2_max - sim%mesh_2d%eta2_min)/( sim%world_size*sim%ions_number)  &
                + tot_ee * 0.5_f64

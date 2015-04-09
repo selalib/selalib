@@ -2655,6 +2655,12 @@ end subroutine
     sll_real64 :: x_k,y_k,vx_k,vy_k
     sll_real64 :: x_k_t0,y_k_t0,vx_k_t0,vy_k_t0
 
+    sll_real64 :: x_to_xk, y_to_yk, vx_to_vxk, vy_to_vyk
+    sll_real64 :: d1_x, d1_y, d1_vx, d1_vy
+    sll_real64 :: d2_x, d2_y, d2_vx, d2_vy
+    sll_real64 :: d3_x, d3_y, d3_vx, d3_vy
+    sll_real64 :: d4_x, d4_y, d4_vx, d4_vy
+
     sll_real64 :: part_radius_x
     sll_real64 :: part_radius_y
     sll_real64 :: part_radius_vx
@@ -3098,24 +3104,73 @@ end subroutine
                ! virtual particles in the cell to compute the value of f0 at that point (Following
                ! [[file:~/mcp/maltpic/ltpic-bsl.tex::BSL_remapping_algo]])
 
+
+               ! x, y, vx, vy = will be the location of the virtual particle at time n
+
+               i_x = (i-1)*n_virtual    ! this index is needed in the remapping scenario
+               x =  virtual_parts_x_min  + (i_x-1) * h_virtual_parts_x
+               x_to_xk = x - x_k
                do ivirt = 1,n_virtual
+                  i_x = i_x + 1
+                  x =       x       + h_virtual_parts_x
+                  x_to_xk = x_to_xk + h_virtual_parts_x
+
                   dx_in_virtual_cell = (ivirt-1)/n_virtual
+
+                  d1_x = d11 * x_to_xk
+                  d2_x = d21 * x_to_xk
+                  d3_x = d31 * x_to_xk
+                  d4_x = d41 * x_to_xk
+
+                  i_y = (j-1)*n_virtual     ! this index is needed in the remapping scenario
+                  y =  virtual_parts_y_min + (i_y-1)*h_virtual_parts_y
+                  y_to_yk = y - y_k
                   do jvirt = 1,n_virtual
+                     i_y = i_y + 1
+                     y =       y       + h_virtual_parts_y
+                     y_to_yk = y_to_yk + h_virtual_parts_y
+
                      dy_in_virtual_cell = (jvirt-1)/n_virtual
+
+                     d1_y = d12 * y_to_yk
+                     d2_y = d22 * y_to_yk
+                     d3_y = d32 * y_to_yk
+                     d4_y = d42 * y_to_yk
+
+                     i_vx = (l-1)*n_virtual     ! this index is needed in the remapping scenario
+                     vx = virtual_parts_vx_min + (i_vx-1)*h_virtual_parts_vx
+                     vx_to_vxk = vx - vx_k
                      do lvirt = 1,n_virtual
+                        i_vx = i_vx + 1
+                        vx =        vx        + h_virtual_parts_vx
+                        vx_to_vxk = vx_to_vxk + h_virtual_parts_vx
+
+                        d1_vx = d13 * vx_to_vxk
+                        d2_vx = d23 * vx_to_vxk
+                        d3_vx = d33 * vx_to_vxk
+                        d4_vx = d43 * vx_to_vxk
+
+
+                        i_vy = (m-1)*n_virtual      ! this index is needed in the remapping scenario
+                        vy = virtual_parts_vy_min + (i_vy-1)*h_virtual_parts_vy
+                        vy_to_vyk = vy - vy_k
                         do mvirt = 1,n_virtual
+                           i_vy = i_vy + 1
+                           vy =        vy        + h_virtual_parts_vy
+                           vy_to_vyk = vy_to_vyk + h_virtual_parts_vy
+
+                           d1_vy = d14 * vy_to_vyk
+                           d2_vy = d24 * vy_to_vyk
+                           d3_vy = d34 * vy_to_vyk
+                           d4_vy = d44 * vy_to_vyk
 
                            ! real index of the virtual particle in
                            ! [[file:../pic_particle_types/lt_pic_4d_group.F90::target_values]]
 
-                           i_x =  (i-1)*n_virtual + ivirt
-                           SLL_ASSERT(i_x>0)
-                           i_y =  (j-1)*n_virtual + jvirt
-                           SLL_ASSERT(i_y>0)
-                           i_vx = (l-1)*n_virtual + lvirt
-                           SLL_ASSERT(i_vx>0)
-                           i_vy = (m-1)*n_virtual + mvirt
-                           SLL_ASSERT(i_vy>0)
+!                           SLL_ASSERT( i_x == (i-1)*n_virtual + ivirt )
+!                           SLL_ASSERT( i_y == (j-1)*n_virtual + jvirt )
+!                           SLL_ASSERT( i_vx == (l-1)*n_virtual + lvirt )
+!                           SLL_ASSERT( i_vy == (m-1)*n_virtual + mvirt )
 
                            ! The index may go out of the domain for higher values of x,y,vx,vy in each dimension
                            ! (because the corners of the corresponding virtual cell do not correspond to existing
@@ -3127,13 +3182,6 @@ end subroutine
                                       .and. i_vx <=number_parts_vx              &
                                       .and. i_vy <= number_parts_vy) ) then
 
-                              ! Location of virtual particle (ivirt,jvirt,lvirt,mvirt) at time n
-
-                              x =  virtual_parts_x_min  + (i_x-1)*h_virtual_parts_x
-                              y =  virtual_parts_y_min  + (i_y-1)*h_virtual_parts_y
-                              vx = virtual_parts_vx_min + (i_vx-1)*h_virtual_parts_vx
-                              vy = virtual_parts_vy_min + (i_vy-1)*h_virtual_parts_vy
-
 !                                  x =  virtual_parts_x_min  + (i-1)*h_virtual_cell_x  + (ivirt-1)*h_virtual_parts_x
 !                                  y =  virtual_parts_y_min  + (j-1)*h_virtual_cell_y  + (jvirt-1)*h_virtual_parts_y
 !                                  vx = virtual_parts_vx_min + (l-1)*h_virtual_cell_vx + (lvirt-1)*h_virtual_parts_vx
@@ -3143,23 +3191,40 @@ end subroutine
                               ! position of particle k at time 0 (x_k_t0,y_k_t0,vx_k_t0,vy_k_t0) according to flow
                               ! deformation
 
-                              x_t0  = d11 * (x - x_k) + d12 * (y - y_k) + d13 * (vx - vx_k) + d14 * (vy - vy_k)
-                              y_t0  = d21 * (x - x_k) + d22 * (y - y_k) + d23 * (vx - vx_k) + d24 * (vy - vy_k)
-                              vx_t0 = d31 * (x - x_k) + d32 * (y - y_k) + d33 * (vx - vx_k) + d34 * (vy - vy_k)
-                              vy_t0 = d41 * (x - x_k) + d42 * (y - y_k) + d43 * (vx - vx_k) + d44 * (vy - vy_k)
+
+!                              x_t0  = d11 * (x - x_k) + d12 * (y - y_k) + d13 * (vx - vx_k) + d14 * (vy - vy_k)
+!                              y_t0  = d21 * (x - x_k) + d22 * (y - y_k) + d23 * (vx - vx_k) + d24 * (vy - vy_k)
+!                              vx_t0 = d31 * (x - x_k) + d32 * (y - y_k) + d33 * (vx - vx_k) + d34 * (vy - vy_k)
+!                              vy_t0 = d41 * (x - x_k) + d42 * (y - y_k) + d43 * (vx - vx_k) + d44 * (vy - vy_k)
+
 
                               if( use_exact_f0 )then
+
+                                ! here (x_t0, y_t0, vx_t0, vy_t0) is the (approx) position of the virtual particle at time t=0
+
+                                x_t0  = d1_x + d1_y + d1_vx + d1_vy + x_k_t0
+                                y_t0  = d2_x + d2_y + d2_vx + d2_vy + y_k_t0
+                                vx_t0 = d3_x + d3_y + d3_vx + d3_vy + vx_k_t0
+                                vy_t0 = d4_x + d4_y + d4_vx + d4_vy + vy_k_t0
 
                                 ! WARNING -- this is only valid for the landau damping case...
 
                                 f_value_on_virtual_particle = one_over_two_pi                   &
-                                    * (1._f64 + alpha_landau * cos(k_landau * (x_k_t0 + x_t0))) &
+                                    * (1._f64 + alpha_landau * cos(k_landau * (x_t0))) &
                                     * one_over_thermal_velocity_squared                         &
                                     * exp(-0.5 * one_over_thermal_velocity_squared              &
-                                          * ((vx_k_t0 + vx_t0)**2 + (vy_k_t0 + vy_t0)**2)       &
+                                          * (vx_t0**2 + vy_t0**2)       &
                                          )
 
                               else
+
+                                  ! here (x_t0, y_t0, vx_t0, vy_t0) is the (approx) position of the virtual particle at time t=0,
+                                  ! RELATIVE to the k-th particle (marker) position at time t=0
+
+                                  x_t0  = d1_x + d1_y + d1_vx + d1_vy
+                                  y_t0  = d1_x + d1_y + d1_vx + d1_vy
+                                  vx_t0 = d1_x + d1_y + d1_vx + d1_vy
+                                  vy_t0 = d1_x + d1_y + d1_vx + d1_vy
 
                                   ! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
                                   if(.not. scenario_is_deposition)then
