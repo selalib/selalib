@@ -829,11 +829,12 @@ contains
     lee = 0._f64
     do j=1,ny
        do i=1,nx
-          lee = lee + e(i,j)**2!*e(i,j)
+          lee = lee + e(i,j)**2 !*e(i,j)
        enddo
     enddo
     lee = lee*dx*dy
     ee = lee
+    lee = max(lee, 1e-30_f64)    ! to avoid taking the log of 0
     lee = log(lee)*0.5_f64
   end subroutine normL2_field_Ex
   
