@@ -2979,30 +2979,30 @@ end subroutine
 
                 k = closest_particle(i,j,l,m)
 
-#define UPDATE_CLOSEST_PARTICLE_ARRAYS_USING_NEIGHBOR_CELLS(di,dj,dl,dm)                     \
-    do ;\
-        k_neighbor = closest_particle(i+(di), j+(dj), l+(dl), m+(dm))           ;\
-                                                                                            ;\
-        if(k_neighbor /= 0) then;  do          ; \
-            particle => p_group%p_list(k_neighbor)                                  ;\
-            call cell_offset_to_global(particle%dx,particle%dy,particle%ic,p_group%mesh,x,y) ;\
-            vx = particle%vx                                                                    ;\
-            vy = particle%vy               ;\
-            x_aux = x - g%eta1_min               ;\
-            y_aux = y - g%eta2_min                           ;\
-            vx_aux = vx - g%eta3_min                           ;\
-            vy_aux = vy - g%eta4_min               ;\
-            call update_closest_particle_arrays(k_neighbor,                                       \
-                                                x_aux, y_aux, vx_aux, vy_aux,                     \
-                                                i, j, l, m,                                       \
-                                                h_virtual_cell_x, h_virtual_cell_y,               \
-                                                h_virtual_cell_vx, h_virtual_cell_vy,             \
-                                                closest_particle,                                 \
-                                                closest_particle_distance)                       ;\
-        exit ;\
-        end do ;\
-        end if ;\
-    exit ;\
+#define UPDATE_CLOSEST_PARTICLE_ARRAYS_USING_NEIGHBOR_CELLS(di,dj,dl,dm)                      \
+    do;                                                                                       \
+        k_neighbor = closest_particle(i+(di), j+(dj), l+(dl), m+(dm));                        \
+;                                                                                             \
+        if(k_neighbor /= 0) then;  do;                                                        \
+            particle => p_group%p_list(k_neighbor);                                           \
+            call cell_offset_to_global(particle%dx,particle%dy,particle%ic,p_group%mesh,x,y); \
+            vx = particle%vx;                                                                 \
+            vy = particle%vy;                                                                 \
+            x_aux = x - g%eta1_min;                                                           \
+            y_aux = y - g%eta2_min;                                                           \
+            vx_aux = vx - g%eta3_min;                                                         \
+            vy_aux = vy - g%eta4_min;                                                         \
+            call update_closest_particle_arrays(k_neighbor,                                   \
+                                                x_aux, y_aux, vx_aux, vy_aux,                 \
+                                                i, j, l, m,                                   \
+                                                h_virtual_cell_x, h_virtual_cell_y,           \
+                                                h_virtual_cell_vx, h_virtual_cell_vy,         \
+                                                closest_particle,                             \
+                                                closest_particle_distance);                   \
+        exit;                                                                                 \
+        end do;                                                                               \
+        end if;                                                                               \
+    exit;                                                                                     \
     end do
 
 
