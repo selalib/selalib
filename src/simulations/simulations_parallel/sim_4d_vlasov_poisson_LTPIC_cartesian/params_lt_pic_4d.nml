@@ -12,8 +12,8 @@
 /
 
 &grid_dims
-        NC_X = 16
-        NC_Y = 8
+        NC_X = 64
+        NC_Y = 16
         XMIN   = 0.0
         KX_LANDAU = 0.5
         YMIN   = 0.0
@@ -23,15 +23,15 @@
 /
 
 &lt_pic_params
-    NUM_PARTS_X         = 20
-    NUM_PARTS_Y         = 10
-    NUM_PARTS_VX        = 10
-    NUM_PARTS_VY        = 10
+    NUM_PARTS_X         = 40
+    NUM_PARTS_Y         = 8
+    NUM_PARTS_VX        = 8
+    NUM_PARTS_VY        = 8
     REMAP_GRID_VX_MIN   = -6.0
     REMAP_GRID_VX_MAX   = 6.0
     REMAP_GRID_VY_MIN   = -6.0
     REMAP_GRID_VY_MAX   = 6.0
-    NVirtualForDeposition = 2
+    NVirtualForDeposition = 4
     UseExactF0          = .true.
 /
 
