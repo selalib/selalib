@@ -268,9 +268,11 @@ function sll_pif_fieldsolver_solve_qn_rho_wo_zonalflow(this, rhs) result(solutio
        solution(idx)=0
   endif
   
+  if (this%dimx==3) then
   !remove Zonal flow in zonaldim
   if (this%allmodes(zonaldim,idx)==0) then
     solution(idx)=0
+  endif
   endif
   
  end do

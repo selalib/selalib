@@ -93,8 +93,12 @@ sll_int32 :: FIELDSOLVER=PIF_QUASINEUTRAL_RHO_WO_ZONALFLOW
 type(sll_vlasovpoisson_sim) :: testcase=SLL_LANDAU_SUM
 sll_int32 :: RND_OFFSET   = 10    !Default sobol offset, skip zeros
 sll_int32 :: num_modes = 1
+
+!Plots
 sll_int32, dimension(2) :: plot2d_idx ! Contains 2 indicies of the dimensions to be plotted
 sll_int32, dimension(2) :: plot2d_bin ! Contains number of bins for each dimension
+sll_int32 :: num_visu_particles = 0
+
 !results
 sll_real64, dimension(:),allocatable :: kineticenergy,fieldenergy, energy,energy_error,&
                weight_sum,weight_var,moment_error, l2potential
@@ -375,11 +379,38 @@ subroutine visu_phasespace(sim)
   
   if  (all(sim%plot2d_idx/=0)) then
     call distribution_xdmf_coll("pif_plot2d",  sim%particle(sim%plot2d_idx(1),:), sim%particle(sim%plot2d_idx(2),:), &
-	      sim%particle(sim%maskw,:)/sim%npart, &
+              sim%particle(sim%maskw,:)/sim%npart, &
               sim%visu_bound_low(sim%plot2d_idx(1)),sim%visu_bound_up(sim%plot2d_idx(1)), sim%plot2d_bin(1), &
               sim%visu_bound_low(sim%plot2d_idx(2)),sim%visu_bound_up(sim%plot2d_idx(2)), sim%plot2d_bin(2), sim%tstep,&
               sll_world_collective, 0)
   end if
+  
+  
+  !characteristics
+  if (sim%coll_rank==0 .and. sim%num_visu_particles/=0 ) then
+  SELECT CASE(sim%dimx)
+  CASE(1)
+  call plot_format_points3d("pif_xw", &
+               sim%particle(sim%maskx(1),1:sim%num_visu_particles), &
+               sim%particle(sim%maskx(2),1:sim%num_visu_particles), &
+               sim%particle(sim%maskw,1:sim%num_visu_particles), &
+               sim%tstep)
+  CASE(2)
+  call plot_format_points3d("pif_xyw", &
+               sim%particle(sim%maskx(1),1:sim%num_visu_particles), &
+               sim%particle(sim%maskx(2),1:sim%num_visu_particles), &
+               sim%particle(sim%maskw,1:sim%num_visu_particles), &
+               sim%tstep)
+  CASE(3)
+  call plot_format_points3d("pif_xyzw", &
+               sim%particle(sim%maskx(1),1:sim%num_visu_particles), &
+               sim%particle(sim%maskx(2),1:sim%num_visu_particles), &
+               sim%particle(sim%maskx(3),1:sim%num_visu_particles), &
+               sim%particle(sim%maskw,1:sim%num_visu_particles), &
+               sim%tstep)
+  END SELECT
+  endif
+  
 end subroutine 
 
 
@@ -439,8 +470,9 @@ end subroutine
  sll_real64 :: QoverM, EPSILON
  sll_real64, dimension(10) :: K=0,L=0, B0=0
  sll_int32 :: CONTROLVARIATE, RND_OFFSET
- sll_int32, dimension(2) :: PLOT2D_IDX=0, PLOT2D_BIN=50
  
+ sll_int32, dimension(2) :: PLOT2D_IDX=0, PLOT2D_BIN=50
+ sll_int32 :: NUM_VISU_PARTICLES=0
  character(len=32) :: TESTCASE
      
      sll_int32, parameter  :: input_file = 99
@@ -449,7 +481,8 @@ end subroutine
      namelist /sim_params/ dt, NUM_PARTICLES, DIMENSION, NUM_TIMESTEPS, &
                           NUM_MODES, QoverM, EPSILON, CONTROLVARIATE, &
                           TIME_INTEGRATOR_ORDER,RND_OFFSET,K,L,B0,&
-                          TESTCASE,PLOT2D_IDX,PLOT2D_BIN
+                          TESTCASE,&
+                          PLOT2D_IDX,PLOT2D_BIN, NUM_VISU_PARTICLES
      
      open(unit = input_file, file=trim(filename),IOStat=IO_stat)
      if( IO_stat /= 0 ) then
@@ -499,7 +532,7 @@ end subroutine
          endif
      endif
      
-     
+     sim%num_visu_particles=NUM_VISU_PARTICLES
      
 !      elseif (size(K)==0) then
 !         print *, "k-vector not given"   

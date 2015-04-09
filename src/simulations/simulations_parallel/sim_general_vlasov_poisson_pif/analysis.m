@@ -1,17 +1,20 @@
  %Octave/Matlab script to analyse results of PIF
  
-cd '/tmp'
+cd '/tmp/landau_sum'
 clear all;
 
-DATA = csvread('pif_result.csv',1);
+DATA = csvread('pif_resultB1sum.csv',2);
+DATA = csvread('pif_result.csv',2);
+%DATA = csvread('pif_resultB0.csv',2);
 time=DATA(:,1);
 l2potential=DATA(:,6);
 
 
 gamma=-0.4531;
+gamma=-0.4531;
 
 semilogy(time, l2potential); hold on;
-semilogy(time, l2potential(1)*exp(gamma.*time))
+semilogy(time, l2potential(1)*exp(0.5*gamma.*time))
 
 % close all;
 % figure;

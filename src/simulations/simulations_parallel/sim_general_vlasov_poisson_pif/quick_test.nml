@@ -13,7 +13,8 @@
 	TESTCASE = "SLL_LANDAU_SUM"
 	PLOT2D_IDX = 1 3 
 	PLOT2D_BIN = 20 20 
-/    
+	NUM_VISU_PARTICLES = 100
+	/    
 
 
 
