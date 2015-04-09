@@ -36,7 +36,7 @@ Configuring:
 Compiling:
 
 	First complete initial make (to solve missing dependencies issues)
-		[[elisp:(compile "cd ../../../../build && make")]]
+		[[elisp:(compile "cd ../../../../build && make install")]]
 
 	Next makes
 		[[elisp:(compile "cd ../../../../build && make test_4d_vp_lt_pic_cartesian && make install")]]
