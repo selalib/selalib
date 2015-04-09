@@ -2426,6 +2426,8 @@ subroutine get_particle_index_from_initial_position_on_cartesian_grid (j_x, j_y,
 end subroutine
 
 
+  ! <<sll_lt_pic_4d_deposit_charge_on_2d_mesh>>
+  subroutine sll_lt_pic_4d_deposit_charge_on_2d_mesh( p_group, q_accumulator, n_virtual_for_deposition, use_exact_f0)
 
   subroutine sll_lt_pic_4d_deposit_charge_on_2d_mesh( p_group, q_accumulator,       &
                                                       n_virtual_for_deposition,     &
