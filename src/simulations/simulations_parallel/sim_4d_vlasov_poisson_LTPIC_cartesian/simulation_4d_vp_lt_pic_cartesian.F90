@@ -658,7 +658,7 @@ contains
               call sll_set_time_mark(deposit_time_mark)
               call sll_lt_pic_4d_deposit_charge_on_2d_mesh( sim%part_group, &
                                                             sim%q_accumulator_ptr(1)%q, sim%n_virtual_for_deposition, &
-                                                            sim%use_exact_f0 )
+                                                            sim%use_exact_f0, sim%total_density )
               deposit_time=deposit_time+sll_time_elapsed_since(deposit_time_mark)
           else
               ! nothing to do, charge already deposited in the push loop
@@ -800,9 +800,10 @@ contains
     loop_time=sll_time_elapsed_since(loop_time_mark)
     write(*,'(A,ES8.2,A)') 'sim stats: ',1 / loop_time * sim%num_iterations * sim%ions_number,' pushes/sec '
     if(sim%use_lt_pic_scheme)then
-       write(*,'(A,ES8.2,A)') 'lt_pic stats: ',                                       &
-            1 / deposit_time * sim%num_iterations * sim%n_virtual_for_deposition ** 2 &
-            * sim%mesh_2d%num_cells1 * sim%mesh_2d%num_cells2,                        &
+       write(*,'(A,ES8.2,A)') 'lt_pic stats: ',                                                                     &
+            1 / deposit_time * sim%num_iterations                                                                   &
+            * sim%n_virtual_for_deposition ** 2 * sim%mesh_2d%num_cells1 * sim%mesh_2d%num_cells2                   &
+            * sim%n_virtual_for_deposition ** 2 * sim%part_group%number_parts_vx * sim%part_group%number_parts_vy,  &
             ' deposits/sec'
     end if
 
