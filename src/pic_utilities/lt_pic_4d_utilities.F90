@@ -2714,6 +2714,21 @@ end subroutine
     sll_real64 :: alpha_landau
     sll_real64 :: k_landau
 
+    ! pw-affine approximations of exp and cos for fast (?) evaluations
+    sll_int32 :: i_table, ncells_table
+    sll_real64, dimension(:),allocatable :: cos_table, exp_table
+    sll_real64 :: s, s_aux
+    sll_real64 :: hs_cos_table, hs_exp_table
+    sll_real64 :: ds_cos_table, ds_exp_table, ds_table
+    sll_real64 :: smin_cos_table, smax_cos_table
+    sll_real64 :: smin_exp_table, smax_exp_table
+    sll_real64 :: si_cos, si_exp
+
+    sll_real64 :: cos_approx, exp_approx
+
+
+
+
     ! --- end of declarations
 
     ! -- creating g the virtual grid [begin] --
@@ -2944,6 +2959,36 @@ end subroutine
     ! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
     p_group%debug_bsl_remap = -100
 
+    if( use_exact_f0 )then
+
+        ! create two tables for fast evaluation of cosine and exponential
+        ! -- THIS IS USEFUL FOR THE LANDAU f0 AND MAYBE NOT FOR OTHER INITIAL DENSITIES --
+
+        ncells_table = 50000
+        SLL_ALLOCATE(cos_table(0:ncells_table),ierr)
+        SLL_ALLOCATE(exp_table(0:ncells_table),ierr)
+
+        !  cos table range is [0, 2 pi]
+        smin_cos_table = 0.
+        smax_cos_table = 2 * sll_pi
+        hs_cos_table = (smax_cos_table - smin_cos_table) / ncells_table
+
+        !  exp table range is [-100, 100]
+        smin_exp_table = -100.
+        smax_exp_table =  100.
+        hs_exp_table = (smax_exp_table - smin_exp_table) / ncells_table
+
+        si_cos = smin_cos_table
+        si_exp = smin_exp_table
+        do i_table = 0, ncells_table
+            cos_table(i_table) = cos(si_cos)
+            exp_table(i_table) = exp(si_exp)
+            si_cos = si_cos + hs_cos_table
+            si_exp = si_exp + hs_exp_table
+        end do
+
+    end if
+
     ! <<loop_on_virtual_cells>> [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:loop_over_all_cells]]
     ! Loop over all cells of indices i,j,l,m which contain at least one particle
 
@@ -3048,12 +3093,8 @@ end subroutine
 
                 end if
 
-
-! A REMETTRE :
                 k = closest_particle(i,j,l,m)
                 SLL_ASSERT(k /= 0)
-
-!               if(k /= 0) then     ! A ENLEVER
 
                ! [[file:~/mcp/maltpic/ltpic-bsl.tex::hat-bz*]] Compute backward image of l-th virtual node by the
                ! k-th backward flow. MCP -> oui, avec la matrice de deformation calculée avec la fonction
@@ -3209,12 +3250,35 @@ end subroutine
 
                                 ! WARNING -- this is only valid for the landau damping case...
 
+                                ! -- fast (?) approximation of cos(x_t0)
+
+                                ! s = smin_table + hs_table * (i_table + ds_table) with integer i_table >= 0 and 0 <= ds_table <1
+                                s = modulo( k_landau * x_t0, 2*sll_pi)
+                                s_aux =  s / hs_cos_table       ! because xmin_cos_table = 0
+                                i_table = int(s_aux)
+                                SLL_ASSERT(i_table < ncells_table)
+                                ds_table = s_aux - i_table
+                                cos_approx = (1-ds_table) * cos_table(i_table) + ds_table * cos_table(i_table+1)
+
+                                ! -- fast (?) approximation of exp(vx_t0**2 + vy_t0**2)
+                                s = -0.5 * one_over_thermal_velocity_squared * (vx_t0**2 + vy_t0**2)
+                                s_aux = (s - smin_exp_table) / hs_exp_table
+                                i_table = int(s_aux)
+                                SLL_ASSERT(i_table < ncells_table)
+                                ds_table = s_aux - i_table
+                                exp_approx = (1-ds_table) * exp_table(i_table) + ds_table * exp_table(i_table+1)
+
                                 f_value_on_virtual_particle = one_over_two_pi                   &
-                                    * (1._f64 + alpha_landau * cos(k_landau * (x_t0))) &
+                                    * (1._f64 + alpha_landau * cos_approx)                      &
                                     * one_over_thermal_velocity_squared                         &
-                                    * exp(-0.5 * one_over_thermal_velocity_squared              &
-                                          * (vx_t0**2 + vy_t0**2)       &
-                                         )
+                                    * exp_approx
+
+                                !f_value_on_virtual_particle = one_over_two_pi                   &
+                                !    * (1._f64 + alpha_landau * cos(k_landau * (x_t0))) &
+                                !    * one_over_thermal_velocity_squared                         &
+                                !    * exp(-0.5 * one_over_thermal_velocity_squared              &
+                                !          * (vx_t0**2 + vy_t0**2)       &
+                                !         )
 
                               else
 
