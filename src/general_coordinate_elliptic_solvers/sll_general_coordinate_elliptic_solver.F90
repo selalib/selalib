@@ -444,11 +444,11 @@ subroutine initialize_general_elliptic_solver( &
  SLL_ALLOCATE(es%tab_index_coeff1(num_cells1*(spline_degree1+2)),ierr)
  SLL_ALLOCATE(es%tab_index_coeff2(num_cells2*(spline_degree2+2)),ierr)
 
-  num_pts_g1 = size(es%gauss_pts1,2)
-  num_pts_g2 = size(es%gauss_pts2,2)
-  SLL_ALLOCATE(es%rho_at_gauss(num_cells1*num_pts_g1,num_cells2*num_pts_g2),ierr)
-  SLL_ALLOCATE(es%rho_coeff_1d((num_cells1+1)*(num_cells2+1)),ierr)
-  SLL_ALLOCATE(es%M_rho_loc(es%total_num_splines_loc),ierr)
+ num_pts_g1 = size(es%gauss_pts1,2)
+ num_pts_g2 = size(es%gauss_pts2,2)
+ SLL_ALLOCATE(es%rho_at_gauss(num_cells1*num_pts_g1,num_cells2*num_pts_g2),ierr)
+ SLL_ALLOCATE(es%rho_coeff_1d((num_cells1+1)*(num_cells2+1)),ierr)
+ SLL_ALLOCATE(es%M_rho_loc(es%total_num_splines_loc),ierr)
 
 end subroutine initialize_general_elliptic_solver
   
@@ -478,23 +478,24 @@ end subroutine initialize_general_elliptic_solver
 !> @param[in] eta2_min the minimun in the direction eta2
 !> @param[in] eta2_max the maximun in the direction eta2
 !> @return the type general_coordinate_elliptic_solver such that a pointer
-function new_general_elliptic_solver( &
-  spline_degree1, &
-  spline_degree2, &
-  num_cells1, &
-  num_cells2, &
-  quadrature_type1, &
-  quadrature_type2, &
-  bc_left, &
-  bc_right, &
-  bc_bottom, &
-  bc_top, &
-  eta1_min, &
-  eta1_max, &
-  eta2_min, &
-  eta2_max ) result(es)
+
+function new_general_elliptic_solver( spline_degree1,   &
+                                      spline_degree2,   &
+                                      num_cells1,       &
+                                      num_cells2,       &
+                                      quadrature_type1, &
+                                      quadrature_type2, &
+                                      bc_left,          &
+                                      bc_right,         &
+                                      bc_bottom,        &
+                                      bc_top,           &
+                                      eta1_min,         &
+                                      eta1_max,         &
+                                      eta2_min,         &
+                                      eta2_max ) result(es)
 
   type(general_coordinate_elliptic_solver), pointer :: es
+
   sll_int32,  intent(in) :: spline_degree1
   sll_int32,  intent(in) :: spline_degree2
   sll_int32,  intent(in) :: num_cells1
@@ -509,8 +510,8 @@ function new_general_elliptic_solver( &
   sll_real64, intent(in) :: eta1_max
   sll_real64, intent(in) :: eta2_min
   sll_real64, intent(in) :: eta2_max
-  sll_int32 :: ierr
 
+  sll_int32 :: ierr
 
   SLL_ALLOCATE(es,ierr)
   call sll_create( es,               &
@@ -580,7 +581,6 @@ subroutine delete_elliptic( es )
 end subroutine delete_elliptic
 
 
-
 !> @brief Assemble the matrix for elliptic solver.
 !> @details To have the function phi such that 
 !> \f[
@@ -621,19 +621,18 @@ class(sll_scalar_field_2d_base), pointer :: b1_field_vect
 class(sll_scalar_field_2d_base), pointer :: b2_field_vect
 class(sll_scalar_field_2d_base), pointer :: c_field
 
-sll_real64, dimension(:,:),   allocatable :: M_c_loc
-sll_real64, dimension(:,:),   allocatable :: K_a11_loc
-sll_real64, dimension(:,:),   allocatable :: K_a12_loc
-sll_real64, dimension(:,:),   allocatable :: K_a21_loc
-sll_real64, dimension(:,:),   allocatable :: K_a22_loc
-sll_real64, dimension(:,:),   allocatable :: M_b_vect_loc
-sll_real64, dimension(:,:),   allocatable :: S_b1_loc
-sll_real64, dimension(:,:),   allocatable :: S_b2_loc  
-sll_real64, dimension(:),     allocatable :: m_loc
-sll_real64, dimension(:),     allocatable :: d_loc
-sll_real64, dimension(:,:,:), pointer     :: Source_loc
+sll_real64, dimension(:,:),   allocatable :: M_c
+sll_real64, dimension(:,:),   allocatable :: K_a11
+sll_real64, dimension(:,:),   allocatable :: K_a12
+sll_real64, dimension(:,:),   allocatable :: K_a21
+sll_real64, dimension(:,:),   allocatable :: K_a22
+sll_real64, dimension(:,:),   allocatable :: M_b_vect
+sll_real64, dimension(:,:),   allocatable :: S_b1
+sll_real64, dimension(:,:),   allocatable :: S_b2  
+sll_real64, dimension(:),     allocatable :: mass
+sll_real64, dimension(:),     allocatable :: stiff
+sll_real64, dimension(:,:,:), pointer     :: source
 
-sll_int32 :: total_num_splines_loc
 sll_int32 :: ierr
 sll_int32 :: i
 sll_int32 :: j
@@ -666,8 +665,8 @@ sll_real64 :: xg, wxg
 sll_real64 :: yg, wyg
 sll_real64 :: gtmp1
 sll_real64 :: gtmp2
-sll_int32  :: local_spline_index1
-sll_int32  :: local_spline_index2
+sll_int32  :: ispl1
+sll_int32  :: ispl2
 sll_int32  :: index1
 sll_int32  :: index2
 sll_real64, dimension(es%spline_degree1+1,es%spline_degree1+1) :: work1
@@ -687,7 +686,7 @@ sll_real64 :: val_b1_der2=0
 sll_real64 :: val_b2=0
 sll_real64 :: val_b2_der1=0
 sll_real64 :: val_b2_der2=0
-sll_real64, dimension(2,2) :: jac_mat
+sll_real64 :: jac_mat(2,2)
 sll_real64 :: val_jac
 sll_real64 :: B11
 sll_real64 :: B12
@@ -701,10 +700,12 @@ sll_int32 :: mflag_x, mflag_y
 sll_int32 :: index3, index4
 sll_int32 :: index_coef1,index_coef2,index
 sll_int32 :: mm, nn, b, bprime,x,y
-sll_int32 :: li_A, li_Aprime
+sll_int32 :: a, aprime
 sll_real64 :: elt_mat_global
 sll_int32  :: nspl, nbsp,nbsp1
 sll_int32 :: spl_deg_1, spl_deg_2, nc_1, nc_2
+sll_int32 :: ideg2,ideg1
+sll_int32 :: jdeg2,jdeg1
 
 bc_left    = es%bc_left
 bc_right   = es%bc_right
@@ -732,17 +733,17 @@ else
    es%perper = .false.  
 end if   
 
-SLL_CLEAR_ALLOCATE(Source_loc(1:nc_1*nc_2,1:nspl,1:nspl),ierr)
-SLL_CLEAR_ALLOCATE(M_c_loc(1:nspl,1:nspl),ierr)
-SLL_CLEAR_ALLOCATE(K_a11_loc(1:nspl,1:nspl),ierr)
-SLL_CLEAR_ALLOCATE(K_a12_loc(1:nspl,1:nspl),ierr)
-SLL_CLEAR_ALLOCATE(K_a21_loc(1:nspl,1:nspl),ierr)
-SLL_CLEAR_ALLOCATE(K_a22_loc(1:nspl,1:nspl),ierr)
-SLL_CLEAR_ALLOCATE(S_b1_loc(1:nspl,1:nspl),ierr)
-SLL_CLEAR_ALLOCATE(S_b2_loc(1:nspl,1:nspl),ierr)
-SLL_CLEAR_ALLOCATE(M_b_vect_loc(1:nspl,1:nspl),ierr)
-SLL_CLEAR_ALLOCATE(m_loc(1:nspl),ierr)
-SLL_CLEAR_ALLOCATE(d_loc(1:nspl),ierr)
+SLL_CLEAR_ALLOCATE(source(1:nc_1*nc_2,1:nspl,1:nspl),ierr)
+SLL_CLEAR_ALLOCATE(M_c(1:nspl,1:nspl),ierr)
+SLL_CLEAR_ALLOCATE(K_a11(1:nspl,1:nspl),ierr)
+SLL_CLEAR_ALLOCATE(K_a12(1:nspl,1:nspl),ierr)
+SLL_CLEAR_ALLOCATE(K_a21(1:nspl,1:nspl),ierr)
+SLL_CLEAR_ALLOCATE(K_a22(1:nspl,1:nspl),ierr)
+SLL_CLEAR_ALLOCATE(S_b1(1:nspl,1:nspl),ierr)
+SLL_CLEAR_ALLOCATE(S_b2(1:nspl,1:nspl),ierr)
+SLL_CLEAR_ALLOCATE(M_b_vect(1:nspl,1:nspl),ierr)
+SLL_CLEAR_ALLOCATE(mass(1:nspl),ierr)
+SLL_CLEAR_ALLOCATE(stiff(1:nspl),ierr)
 
 do cell_j = 1, nc_2
 do cell_i = 1, nc_1
@@ -751,18 +752,18 @@ do cell_i = 1, nc_1
   eta2  = eta2_min + (cell_j-1)*delta2
   icell = cell_i+nc_1*(cell_j-1)
     
-  m_loc(:)      = 0.0_f64
-  d_loc(:)      = 0.0_f64
-  M_c_loc(:,:)      = 0.0_f64
-  K_a11_loc(:,:)    = 0.0_f64
-  K_a12_loc(:,:)    = 0.0_f64
-  K_a21_loc(:,:)    = 0.0_f64
-  K_a22_loc(:,:)    = 0.0_f64
-  M_b_vect_loc(:,:) = 0.0_f64
-  S_b1_loc(:,:)     = 0.0_f64
-  S_b2_loc(:,:)     = 0.0_f64
-  dbs1(:,:)      = 0.0_f64
-  dbs2(:,:)      = 0.0_f64
+  mass(:)          = 0.0_f64
+  stiff(:)          = 0.0_f64
+  M_c(:,:)      = 0.0_f64
+  K_a11(:,:)    = 0.0_f64
+  K_a12(:,:)    = 0.0_f64
+  K_a21(:,:)    = 0.0_f64
+  K_a22(:,:)    = 0.0_f64
+  M_b_vect(:,:) = 0.0_f64
+  S_b1(:,:)     = 0.0_f64
+  S_b2(:,:)     = 0.0_f64
+  dbs1(:,:)         = 0.0_f64
+  dbs2(:,:)         = 0.0_f64
   work1(:,:)        = 0.0_f64
   work2(:,:)        = 0.0_f64
 
@@ -777,16 +778,16 @@ do cell_i = 1, nc_1
         es%bc_top    == SLL_PERIODIC) then
    
       gtmp2 = es%gauss_pts2(1,j)
-      local_spline_index2 = spl_deg_2 + 1
+      ispl2 = spl_deg_2 + 1
         
     else if (es%bc_bottom == SLL_DIRICHLET .and.&
              es%bc_top    == SLL_DIRICHLET) then
       gtmp2 = yg
-      local_spline_index2 = spl_deg_2 + cell_j
+      ispl2 = spl_deg_2 + cell_j
     end if
      
     call bsplvd( es, es%knots2, spl_deg_2+1, gtmp2, &
-                 local_spline_index2, work2, dbs2, 2)
+                 ispl2, work2, dbs2, 2)
 
     call interv( es, es%knots2_rho, nc_2+spl_deg_2+2,  &
                  yg, left_y, mflag_y )
@@ -809,18 +810,18 @@ do cell_i = 1, nc_1
          es%bc_right       == SLL_PERIODIC) then 
              
         gtmp1   = es%gauss_pts1(1,i)
-        local_spline_index1 = spl_deg_1+1
+        ispl1 = spl_deg_1+1
              
       else if (es%bc_left_interp  == SLL_DIRICHLET .and.&
                es%bc_right        == SLL_DIRICHLET) then
            
         gtmp1   = xg
-        local_spline_index1 = spl_deg_1 + cell_i
+        ispl1 = spl_deg_1 + cell_i
              
       end if
   
       call bsplvd( es, es%knots1, spl_deg_1+1, gtmp1, &
-                   local_spline_index1, work1, dbs1, 2 )
+                   ispl1, work1, dbs1, 2 )
 
       call interv( es, es%knots1_rho, nc_1+spl_deg_1+2, xg, &
                    left_x, mflag_x )
@@ -888,9 +889,9 @@ do cell_i = 1, nc_1
               
         mm = jj*(spl_deg_1+1)+ii+1
               
-        m_loc(mm) = m_loc(mm)+val_jac*wxg*wyg*(dbs1(ii+1,1)*dbs2(jj+1,1))
+        mass(mm) = mass(mm)+val_jac*wxg*wyg*(dbs1(ii+1,1)*dbs2(jj+1,1))
 
-        d_loc(mm) = d_loc(mm)+val_jac*wxg*wyg*(dbs1(ii+1,2)*dbs2(jj+1,1)+&
+        stiff(mm) = stiff(mm)+val_jac*wxg*wyg*(dbs1(ii+1,2)*dbs2(jj+1,1)+&
                                         dbs1(ii+1,1)*dbs2(jj+1,2))
              
         do kk = 0,spl_deg_1
@@ -898,68 +899,54 @@ do cell_i = 1, nc_1
                     
           nn =  ll*(spl_deg_1+1)+kk+1
          
-          Source_loc(icell,mm,nn) = Source_loc(icell,mm,nn) +     &
+          source(icell,mm,nn) = source(icell,mm,nn) +     &
             val_jac*wxg*wyg*dbs1_rho(ii+1,1)*dbs1(kk+1,1)*  &
                             dbs2_rho(jj+1,1)*dbs2(ll+1,1)
                
-          M_c_loc(mm,nn) = M_c_loc(mm, nn) + &
+          M_c(mm,nn) = M_c(mm, nn) + &
             val_c*val_jac*wxg*wyg*dbs1(ii+1,1)*dbs1(kk+1,1)*  &
                                   dbs2(jj+1,1)*dbs2(ll+1,1)
                
-          K_a11_loc(mm,nn) = K_a11_loc(mm,nn) + &
-            B11*wxg*wyg/val_jac* &
-            dbs1(ii+1,2)*dbs1(kk+1,2)* &
-            dbs2(jj+1,1)*dbs2(ll+1,1)
+          K_a11(mm,nn) = K_a11(mm,nn) + B11*wxg*wyg/val_jac* &
+            dbs1(ii+1,2)*dbs1(kk+1,2) * dbs2(jj+1,1)*dbs2(ll+1,1)
               
-          K_a22_loc(mm,nn) = K_a22_loc(mm,nn) + &
-            B22*wxg*wyg/val_jac*  &
-            dbs1(ii+1,1)*dbs1(kk+1,1)*   &
-            dbs2(jj+1,2)*dbs2(ll+1,2)
+          K_a22(mm,nn) = K_a22(mm,nn) + B22*wxg*wyg/val_jac*  &
+            dbs1(ii+1,1)*dbs1(kk+1,1) * dbs2(jj+1,2)*dbs2(ll+1,2)
                
-          K_a12_loc(mm, nn) = K_a12_loc(mm,nn) + &
-            B12*wxg*wyg/val_jac*  &
-            dbs1(ii+1,2)*dbs1(kk+1,1) *&
-            dbs2(jj+1,1)*dbs2(ll+1,2)
+          K_a12(mm, nn) = K_a12(mm,nn) + B12*wxg*wyg/val_jac*  &
+            dbs1(ii+1,2)*dbs1(kk+1,1) * dbs2(jj+1,1)*dbs2(ll+1,2)
                
-          K_a21_loc(mm,nn) = K_a21_loc(mm, nn) +&
-            B21*wxg*wyg/val_jac*  &
-            dbs1(ii+1,1)*dbs1(kk+1,2)*   &
-            dbs2(jj+1,2)*dbs2(ll+1,1)
+          K_a21(mm,nn) = K_a21(mm, nn) + B21*wxg*wyg/val_jac*  &
+            dbs1(ii+1,1)*dbs1(kk+1,2) * dbs2(jj+1,2)*dbs2(ll+1,1)
 
-          M_b_vect_loc(mm,nn) = M_b_vect_loc(mm,nn) + &
-            MC*wxg*wyg *  &
-            dbs1(ii+1,1)*dbs1(kk+1,1)*   &
-            dbs2(jj+1,1)*dbs2(ll+1,1)
+          M_b_vect(mm,nn) = M_b_vect(mm,nn) + &
+            MC*wxg*wyg * dbs1(ii+1,1)*dbs1(kk+1,1) * dbs2(jj+1,1)*dbs2(ll+1,1)
                
           ! A revoir 
-          S_b1_loc(mm,nn) = S_b1_loc(mm,nn) + &
-            C1*wxg*wyg *  &
-            dbs1(ii+1,1)*dbs1(kk+1,2)*   &
-            dbs2(jj+1,1)*dbs2(ll+1,1)
+          S_b1(mm,nn) = S_b1(mm,nn) + C1*wxg*wyg *  &
+            dbs1(ii+1,1)*dbs1(kk+1,2) * dbs2(jj+1,1)*dbs2(ll+1,1)
 
           ! A revoir 
-          S_b2_loc(mm,nn) = S_b2_loc(mm,nn) + &
-            C2*wxg*wyg *  &
-            dbs1(ii+1,1)*dbs1(kk+1,1)*   &
-            dbs2(jj+1,1)*dbs2(ll+1,2)
+          S_b2(mm,nn) = S_b2(mm,nn) + C2*wxg*wyg *  &
+            dbs1(ii+1,1)*dbs1(kk+1,1) * dbs2(jj+1,1)*dbs2(ll+1,2)
 
-          end do
+        end do
         end do
       end do
+      end do
+
     end do
   end do
-end do
 
-do mm = 0,spl_deg_2
-  index3 = cell_j + mm
+  do mm = 0,spl_deg_2
+
+    index3 = cell_j + mm
     
-  if ((bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC) ) then 
-        
-    if ( index3 > es%total_num_splines2) then
-      index3 = index3 - es%total_num_splines2
+    if ((bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC) ) then 
+      if ( index3 > es%total_num_splines2) then
+        index3 = index3 - es%total_num_splines2
+      end if
     end if
-        
-  end if
      
   do i = 0,spl_deg_1
         
@@ -979,10 +966,10 @@ do mm = 0,spl_deg_2
 
     x            =  index1 + (index3-1)*nbsp
     b            =  mm * ( spl_deg_1 + 1 ) + i + 1
-    li_A         =  es%local_to_global_spline_indices(b, icell)
+    a         =  es%local_to_global_spline_indices(b, icell)
        
-    es%masse(x) = es%masse(x) + m_loc(b)
-    es%stiff(x) = es%stiff(x) + d_loc(b)
+    es%masse(x) = es%masse(x) + mass(b)
+    es%stiff(x) = es%stiff(x) + stiff(b)
 
     index_coef1 = es%tab_index_coeff1(cell_i)- spl_deg_1 + i
     index_coef2 = es%tab_index_coeff2(cell_j)- spl_deg_2+ mm
@@ -1017,25 +1004,25 @@ do mm = 0,spl_deg_2
               
       y         = index2 + (index4-1)*nbsp1
       bprime    =  nn * ( spl_deg_1 + 1 ) + j + 1
-      li_Aprime = es%local_to_global_spline_indices(bprime,icell)
+      aprime = es%local_to_global_spline_indices(bprime,icell)
       elt_mat_global = &
-                   M_c_loc(b, bprime)     - &
-                   K_a11_loc(b, bprime)   - &
-                   K_a12_loc(b, bprime)   - &
-                   K_a21_loc(b, bprime)   - &
-                   K_a22_loc(b, bprime)   - &
-                   M_b_vect_loc(b,bprime) - &
-                   S_b1_loc( b, bprime)   - &
-                   S_b2_loc( b, bprime)
+                   M_c(b, bprime)     - &
+                   K_a11(b, bprime)   - &
+                   K_a12(b, bprime)   - &
+                   K_a21(b, bprime)   - &
+                   K_a22(b, bprime)   - &
+                   M_b_vect(b,bprime) - &
+                   S_b1( b, bprime)   - &
+                   S_b2( b, bprime)
       es%local_to_global_spline_indices_source_bis(bprime,icell)= y!index_phi
 
-      if ( (li_A > 0) .and. (li_Aprime > 0) ) then
+      if ( (a > 0) .and. (aprime > 0) ) then
                  
         call sll_add_to_csr_matrix(   &
                       es%sll_csr_mat, &
                       elt_mat_global, &
-                      li_A, &
-                      li_Aprime)   
+                      a, &
+                      aprime)   
 
       end if
               
@@ -1069,27 +1056,54 @@ end if
 
 print *,'#end of sll_factorize_csr_matrix'
 
-es%sll_csr_mat_source => new_csr_matrix( size(es%masse,1),          &
-                      (nc_1+1)*(nc_2+1),          &
-                      nc_1*nc_2,                  &
-                      es%local_to_global_spline_indices_source_bis, &
-                      nspl,                     &
-                      es%local_to_global_spline_indices_source,     &
-                      nspl )
+es%sll_csr_mat_source => new_csr_matrix( size(es%masse,1),                 &
+                      (nc_1+1)*(nc_2+1), nc_1*nc_2,                        &
+                      es%local_to_global_spline_indices_source_bis,        &
+                      nspl, es%local_to_global_spline_indices_source, nspl )
 
-call compute_source_matrice(es,source_loc)
-  
-SLL_DEALLOCATE_ARRAY(Source_loc,ierr)
-SLL_DEALLOCATE_ARRAY(M_c_loc,ierr)
-SLL_DEALLOCATE_ARRAY(K_a11_loc,ierr)
-SLL_DEALLOCATE_ARRAY(K_a12_loc,ierr)
-SLL_DEALLOCATE_ARRAY(K_a21_loc,ierr)
-SLL_DEALLOCATE_ARRAY(K_a22_loc,ierr)
-SLL_DEALLOCATE_ARRAY(M_b_vect_loc,ierr)
-SLL_DEALLOCATE_ARRAY(S_b1_loc,ierr)
-SLL_DEALLOCATE_ARRAY(S_b2_loc,ierr)
-SLL_DEALLOCATE_ARRAY(d_loc,ierr) 
-SLL_DEALLOCATE_ARRAY(m_loc,ierr) 
+do cell_j=1,es%num_cells2
+do cell_i=1,es%num_cells1
+      
+  icell = cell_i+es%num_cells1*(cell_j-1)
+      
+  do ideg2 = 0,es%spline_degree2
+  do ideg1 = 0,es%spline_degree1
+            
+    b = ideg2 * ( es%spline_degree1 + 1 ) + ideg1 + 1
+    a = es%local_to_global_spline_indices_source_bis(b, icell)
+        
+    do jdeg2 = 0,es%spline_degree2
+    do jdeg1 = 0,es%spline_degree1
+              
+      bprime = jdeg2 * ( es%spline_degree1 + 1 ) + jdeg1 + 1
+      aprime = es%local_to_global_spline_indices_source(bprime,icell)
+           
+      elt_mat_global = source(icell,bprime,b)
+
+      if ( a > 0 .and. aprime > 0) then
+        call sll_add_to_csr_matrix(es%sll_csr_mat_source,elt_mat_global,a,aprime)
+      end if
+              
+    end do
+    end do
+
+  end do
+  end do
+
+end do
+end do
+
+SLL_DEALLOCATE_ARRAY(source,ierr)
+SLL_DEALLOCATE_ARRAY(M_c,ierr)
+SLL_DEALLOCATE_ARRAY(K_a11,ierr)
+SLL_DEALLOCATE_ARRAY(K_a12,ierr)
+SLL_DEALLOCATE_ARRAY(K_a21,ierr)
+SLL_DEALLOCATE_ARRAY(K_a22,ierr)
+SLL_DEALLOCATE_ARRAY(M_b_vect,ierr)
+SLL_DEALLOCATE_ARRAY(S_b1,ierr)
+SLL_DEALLOCATE_ARRAY(S_b2,ierr)
+SLL_DEALLOCATE_ARRAY(stiff,ierr) 
+SLL_DEALLOCATE_ARRAY(mass,ierr) 
    
 end subroutine factorize_mat_es
   
@@ -1292,8 +1306,6 @@ subroutine build_local_matrices_rho( es, cell_i, cell_j)
   sll_real64 :: wgpt1
   sll_real64 :: wgpt2
   sll_int32  :: index1
-  sll_real64, dimension(es%spline_degree1+1,es%spline_degree1+1) :: work1
-  sll_real64, dimension(es%spline_degree2+1,es%spline_degree2+1) :: work2
   sll_real64, dimension(es%spline_degree1+1,2) :: dbiatx1
   sll_real64, dimension(es%spline_degree2+1,2) :: dbiatx2
   sll_real64 :: val_f
@@ -1302,8 +1314,6 @@ subroutine build_local_matrices_rho( es, cell_i, cell_j)
   es%M_rho_loc(:)  = 0.0_f64
   dbiatx1(:,:)  = 0.0_f64
   dbiatx2(:,:)  = 0.0_f64
-  work1(:,:)    = 0.0_f64
-  work2(:,:)    = 0.0_f64
   ! The supposition is that all fields use the same logical mesh
   delta1    = es%delta_eta1
   delta2    = es%delta_eta2
@@ -1508,57 +1518,6 @@ subroutine solve_linear_system( es )
 
 end subroutine solve_linear_system
   
-subroutine compute_Source_matrice(es,Source_loc)
-
-  type(general_coordinate_elliptic_solver),intent(inout) :: es
-  sll_real64, dimension(:,:,:), pointer :: Source_loc
-  sll_int32 :: cell_j,cell_i
-  sll_int32 :: icell
-  sll_int32 :: ideg2,ideg1
-  sll_int32 :: jdeg2,jdeg1
-  sll_int32 :: b, bprime
-  sll_int32 :: li_A,li_Aprime
-  sll_real64:: elt_mat_global
-
-  do cell_j=1,es%num_cells2
-    do cell_i=1,es%num_cells1
-        
-      icell = cell_i+es%num_cells1*(cell_j-1)
-        
-      do ideg2 = 0,es%spline_degree2
-           
-        do ideg1 = 0,es%spline_degree1
-              
-          b    = ideg2 * ( es%spline_degree1 + 1 ) + ideg1 + 1
-          li_A = es%local_to_global_spline_indices_source_bis(b, icell)
-              
-          do jdeg2 = 0,es%spline_degree2
-               
-             do jdeg1 = 0,es%spline_degree1
-                    
-               bprime    =  jdeg2 * ( es%spline_degree1 + 1 ) + jdeg1 + 1
-               li_Aprime = es%local_to_global_spline_indices_source(bprime,icell)
-                    
-               elt_mat_global = Source_loc(icell,bprime,b)
-
-               if ( (li_A > 0) .and. (li_Aprime > 0)) then
-
-                  call sll_add_to_csr_matrix( &
-                       es%sll_csr_mat_source, &
-                       elt_mat_global, &
-                       li_A, &
-                       li_Aprime)
-
-               end if
-                    
-             end do
-           end do
-         end do
-       end do
-     end do
-  end do
-
-end subroutine compute_Source_matrice
 
 subroutine interv( es, xt, lxt, x, left, mflag )
     
@@ -1707,11 +1666,12 @@ subroutine interv( es, xt, lxt, x, left, mflag )
  subroutine bsplvd ( es, t, k, x, left, a, dbiatx, nderiv )
 
     type(general_coordinate_elliptic_solver) :: es
-    sll_int32 :: k
-    sll_int32 :: left
-    sll_int32 :: nderiv
+
+    sll_int32  :: k
+    sll_int32  :: left
+    sll_int32  :: nderiv
     
-    sll_real64, dimension(k,k):: a!(k,k)
+    sll_real64 :: a(:,:)
     sll_real64,dimension(k,nderiv), intent(out) :: dbiatx!(k,nderiv)
     sll_real64:: factor
     sll_real64:: fkp1mm
