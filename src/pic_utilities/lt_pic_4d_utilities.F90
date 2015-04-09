@@ -2514,9 +2514,11 @@ end subroutine
     logical, intent(in) :: use_exact_f0
     sll_real64, intent(in), optional :: given_total_density
 
-    sll_real64 :: deposited_density, missing_charge_per_cell_corner
-
     type(charge_accumulator_cell_2d), pointer :: charge_accumulator_cell
+
+    sll_real64 :: deposited_density
+    sll_real64 :: charge_correction_factor
+
     ! cf [[file:~/mcp/maltpic/ltpic-bsl.tex::N*]]
 
     sll_int32 :: num_virtual_cells_x
@@ -3389,32 +3391,36 @@ end subroutine
     end do
     if( scenario_is_deposition .and. present(given_total_density) )then
 
-        missing_charge_per_cell_corner = (given_total_density - deposited_density) / (4 * num_virtual_cells_x * num_virtual_cells_y)
+        if( deposited_density == 0 )then
+            print *, "WARNING (76576537475) -- total deposited charge is zero, which is strange..."
+            print *, "                      -- (no charge correction in this case) "
 
-        do i = 1,num_virtual_cells_x
-           do j = 1,num_virtual_cells_y
+        else
+            charge_correction_factor = given_total_density / deposited_density
 
-              ! determining the index of the Poisson cell from i and j
-              x_center_virtual_cell = virtual_grid_x_min + (i - 0.5) * h_virtual_cell_x
-              y_center_virtual_cell = virtual_grid_y_min + (j - 0.5) * h_virtual_cell_y
-              call global_to_cell_offset( x_center_virtual_cell, y_center_virtual_cell, &
-                                          p_group%mesh,   &
-                                          i_cell, &
-                                          tmp_dx, tmp_dy)
+            do i = 1,num_virtual_cells_x
+               do j = 1,num_virtual_cells_y
 
-              ! simpler value below should work too
-              SLL_ASSERT( i_cell == i + (j-1) * p_group%mesh%num_cells1 )
+                  ! determining the index of the Poisson cell from i and j
+                  x_center_virtual_cell = virtual_grid_x_min + (i - 0.5) * h_virtual_cell_x
+                  y_center_virtual_cell = virtual_grid_y_min + (j - 0.5) * h_virtual_cell_y
+                  call global_to_cell_offset( x_center_virtual_cell, y_center_virtual_cell, &
+                                              p_group%mesh,   &
+                                              i_cell, &
+                                              tmp_dx, tmp_dy)
 
-              charge_accumulator_cell => q_accumulator%q_acc(i_cell)
+                  ! simpler value below should work too
+                  SLL_ASSERT( i_cell == i + (j-1) * p_group%mesh%num_cells1 )
 
-              charge_accumulator_cell%q_sw = charge_accumulator_cell%q_sw + missing_charge_per_cell_corner
-              charge_accumulator_cell%q_se = charge_accumulator_cell%q_se + missing_charge_per_cell_corner
-              charge_accumulator_cell%q_nw = charge_accumulator_cell%q_nw + missing_charge_per_cell_corner
-              charge_accumulator_cell%q_ne = charge_accumulator_cell%q_ne + missing_charge_per_cell_corner
+                  charge_accumulator_cell => q_accumulator%q_acc(i_cell)
 
-           end do
-        end do
-
+                  charge_accumulator_cell%q_sw = charge_accumulator_cell%q_sw * charge_correction_factor
+                  charge_accumulator_cell%q_se = charge_accumulator_cell%q_se * charge_correction_factor
+                  charge_accumulator_cell%q_nw = charge_accumulator_cell%q_nw * charge_correction_factor
+                  charge_accumulator_cell%q_ne = charge_accumulator_cell%q_ne * charge_correction_factor
+               end do
+            end do
+        end if
     end if
 
   end subroutine sll_lt_pic_4d_write_f_on_grid_or_deposit
