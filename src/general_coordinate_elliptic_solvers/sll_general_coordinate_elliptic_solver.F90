@@ -78,10 +78,10 @@ type, public :: general_coordinate_elliptic_solver
   sll_int32, dimension(:,:), pointer :: local_to_global_spline_indices_source_bis
 
   !!! contains the values of all splines in all gauss points
-  sll_real64, dimension(:,:), pointer :: values_splines1
-  sll_real64, dimension(:,:), pointer :: values_splines2
-  sll_real64, dimension(:,:), pointer :: values_splines_gauss1
-  sll_real64, dimension(:,:), pointer :: values_splines_gauss2
+  sll_real64, dimension(:,:,:), pointer :: values_splines1
+  sll_real64, dimension(:,:,:), pointer :: values_splines2
+  sll_real64, dimension(:,:,:), pointer :: values_splines_gauss1
+  sll_real64, dimension(:,:,:), pointer :: values_splines_gauss2
   sll_real64, dimension(:,:), pointer :: values_jacobian
   sll_int32 , dimension(:)  , pointer :: tab_index_coeff1
   sll_int32 , dimension(:)  , pointer :: tab_index_coeff2
@@ -431,15 +431,15 @@ subroutine initialize_general_elliptic_solver( &
 
  !! allocation of the table containning all values of splines in each direction 
  !! in each gauss points
- SLL_ALLOCATE(es%values_splines1(num_cells1*(spline_degree1+2),spline_degree1+1),ierr)
+ SLL_ALLOCATE(es%values_splines1(num_cells1,spline_degree1+2,spline_degree1+1),ierr)
  es%values_splines1 = 0.0_f64
- SLL_ALLOCATE(es%values_splines2(num_cells2*(spline_degree2+2),spline_degree2+1),ierr)
+ SLL_ALLOCATE(es%values_splines2(num_cells2,spline_degree2+2,spline_degree2+1),ierr)
  es%values_splines2 = 0.0_f64
  SLL_ALLOCATE(es%values_jacobian(num_cells1*(spline_degree1+2),num_cells2*(spline_degree2+2)),ierr)
  es%values_jacobian = 0.0_f64
- SLL_ALLOCATE(es%values_splines_gauss1(num_cells1*(spline_degree1+2),spline_degree1+1),ierr)
+ SLL_ALLOCATE(es%values_splines_gauss1(num_cells1,spline_degree1+2,spline_degree1+1),ierr)
  es%values_splines_gauss1 = 0.0_f64
- SLL_ALLOCATE(es%values_splines_gauss2(num_cells2*(spline_degree2+2),spline_degree2+1),ierr)
+ SLL_ALLOCATE(es%values_splines_gauss2(num_cells2,spline_degree2+2,spline_degree2+1),ierr)
  es%values_splines_gauss2 = 0.0_f64
  SLL_ALLOCATE(es%tab_index_coeff1(num_cells1*(spline_degree1+2)),ierr)
  SLL_ALLOCATE(es%tab_index_coeff2(num_cells2*(spline_degree2+2)),ierr)
@@ -626,7 +626,7 @@ sll_real64, dimension(:,:),   allocatable :: K_a11
 sll_real64, dimension(:,:),   allocatable :: K_a12
 sll_real64, dimension(:,:),   allocatable :: K_a21
 sll_real64, dimension(:,:),   allocatable :: K_a22
-sll_real64, dimension(:,:),   allocatable :: M_b_vect
+sll_real64, dimension(:,:),   allocatable :: M_bv
 sll_real64, dimension(:,:),   allocatable :: S_b1
 sll_real64, dimension(:,:),   allocatable :: S_b2  
 sll_real64, dimension(:),     allocatable :: mass
@@ -741,7 +741,7 @@ SLL_CLEAR_ALLOCATE(K_a21(1:nspl,1:nspl),ierr)
 SLL_CLEAR_ALLOCATE(K_a22(1:nspl,1:nspl),ierr)
 SLL_CLEAR_ALLOCATE(S_b1(1:nspl,1:nspl),ierr)
 SLL_CLEAR_ALLOCATE(S_b2(1:nspl,1:nspl),ierr)
-SLL_CLEAR_ALLOCATE(M_b_vect(1:nspl,1:nspl),ierr)
+SLL_CLEAR_ALLOCATE(M_bv(1:nspl,1:nspl),ierr)
 SLL_CLEAR_ALLOCATE(mass(1:nspl),ierr)
 SLL_CLEAR_ALLOCATE(stiff(1:nspl),ierr)
 
@@ -752,20 +752,20 @@ do cell_i = 1, nc_1
   eta2  = eta2_min + (cell_j-1)*delta2
   icell = cell_i+nc_1*(cell_j-1)
     
-  mass(:)          = 0.0_f64
-  stiff(:)          = 0.0_f64
-  M_c(:,:)      = 0.0_f64
-  K_a11(:,:)    = 0.0_f64
-  K_a12(:,:)    = 0.0_f64
-  K_a21(:,:)    = 0.0_f64
-  K_a22(:,:)    = 0.0_f64
-  M_b_vect(:,:) = 0.0_f64
-  S_b1(:,:)     = 0.0_f64
-  S_b2(:,:)     = 0.0_f64
-  dbs1(:,:)         = 0.0_f64
-  dbs2(:,:)         = 0.0_f64
-  work1(:,:)        = 0.0_f64
-  work2(:,:)        = 0.0_f64
+  mass  = 0.0_f64
+  stiff = 0.0_f64
+  M_c   = 0.0_f64
+  K_a11 = 0.0_f64
+  K_a12 = 0.0_f64
+  K_a21 = 0.0_f64
+  K_a22 = 0.0_f64
+  M_bv  = 0.0_f64
+  S_b1  = 0.0_f64
+  S_b2  = 0.0_f64
+  dbs1  = 0.0_f64
+  dbs2  = 0.0_f64
+  work1 = 0.0_f64
+  work2 = 0.0_f64
 
   do j=1,num_pts_g2
   
@@ -796,9 +796,9 @@ do cell_i = 1, nc_1
                  left_y, work2, dbs2_rho, 2)
     
     ! we stock values of spline to construct the source term
-    es%values_splines2(l,:)       = dbs2(:,1)
-    es%values_splines_gauss2(l,:) = dbs2_rho(:,1)
-    es%tab_index_coeff2(l)        = left_y
+    es%values_splines2(cell_j,j,:) = dbs2(:,1)
+    es%values_splines_gauss2(cell_j,j,:)  = dbs2_rho(:,1)
+    es%tab_index_coeff2(l)         = left_y
   
     do i=1,num_pts_g1
     
@@ -829,8 +829,8 @@ do cell_i = 1, nc_1
       call bsplvd( es, es%knots1_rho, spl_deg_1+1, xg, &
                    left_x, work1, dbs1_rho, 2 )
 
-      es%values_splines1(k,:)       = dbs1(:,1)
-      es%values_splines_gauss1(k,:) = dbs1_rho(:,1)
+      es%values_splines1(cell_i,i,:)       = dbs1(:,1)
+      es%values_splines_gauss1(cell_i,i,:) = dbs1_rho(:,1)
       es%tab_index_coeff1(k)        = left_x
 
       val_c        = c_field%value_at_point(xg,yg)
@@ -919,7 +919,7 @@ do cell_i = 1, nc_1
           K_a21(mm,nn) = K_a21(mm, nn) + B21*wxg*wyg/val_jac*  &
             dbs1(ii+1,1)*dbs1(kk+1,2) * dbs2(jj+1,2)*dbs2(ll+1,1)
 
-          M_b_vect(mm,nn) = M_b_vect(mm,nn) + &
+          M_bv(mm,nn) = M_bv(mm,nn) + &
             MC*wxg*wyg * dbs1(ii+1,1)*dbs1(kk+1,1) * dbs2(jj+1,1)*dbs2(ll+1,1)
                
           ! A revoir 
@@ -1011,7 +1011,7 @@ do cell_i = 1, nc_1
                    K_a12(b, bprime)   - &
                    K_a21(b, bprime)   - &
                    K_a22(b, bprime)   - &
-                   M_b_vect(b,bprime) - &
+                   M_bv(b,bprime) - &
                    S_b1( b, bprime)   - &
                    S_b2( b, bprime)
       es%local_to_global_spline_indices_source_bis(bprime,icell)= y!index_phi
@@ -1099,7 +1099,7 @@ SLL_DEALLOCATE_ARRAY(K_a11,ierr)
 SLL_DEALLOCATE_ARRAY(K_a12,ierr)
 SLL_DEALLOCATE_ARRAY(K_a21,ierr)
 SLL_DEALLOCATE_ARRAY(K_a22,ierr)
-SLL_DEALLOCATE_ARRAY(M_b_vect,ierr)
+SLL_DEALLOCATE_ARRAY(M_bv,ierr)
 SLL_DEALLOCATE_ARRAY(S_b1,ierr)
 SLL_DEALLOCATE_ARRAY(S_b2,ierr)
 SLL_DEALLOCATE_ARRAY(stiff,ierr) 
@@ -1349,8 +1349,8 @@ subroutine build_local_matrices_rho( es, cell_i, cell_j)
       do ii = 0,es%spline_degree1
         do jj = 0,es%spline_degree2
                 
-          spline1 = es%values_splines1(cell_i + es%num_cells1*(i-1),ii+1)
-          spline2 = es%values_splines2(cell_j + es%num_cells2*(j-1),jj+1)
+          spline1 = es%values_splines1(cell_i,i,ii+1)
+          spline2 = es%values_splines2(cell_j,j,jj+1)
                
           index1  =  jj * ( es%spline_degree1 + 1 ) + ii + 1
           es%M_rho_loc(index1)= es%M_rho_loc(index1) + &
