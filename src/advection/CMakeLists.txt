@@ -23,12 +23,14 @@ SET( ADVECTION_SRC_FILES
        sll_advection_2d_CSL.F90
        sll_advection_2d_base.F90
        sll_advection_1d_spectral.F90
-       sll_advection_1d_ampere.F90)
+       sll_advection_1d_ampere.F90
+       sll_advection_2d_tri_mesh.F90)
 
 ADD_LIBRARY( sll_advection STATIC ${ADVECTION_SRC_FILES})
 
 TARGET_LINK_LIBRARIES( sll_advection
                        sll_meshes
+                       sll_tri_meshes
                        sll_characteristics
                        sll_interpolators
                        sll_periodic_interpolation
@@ -123,6 +125,11 @@ IF(BUILD_TESTING)
     test_advection_2d_CSL
     sll_advection)
 
+  ADD_EXECUTABLE(test_advection_2d_tri_mesh unit_test_advection_2d_tri_mesh.F90)
+
+  TARGET_LINK_LIBRARIES(test_advection_2d_tri_mesh sll_advection sll_mesh_calculus)
+
+
   IF(MPI_ENABLED)
 
      #ADD_EXECUTABLE(
@@ -166,12 +173,12 @@ IF(BUILD_TESTING)
 
   SET_TESTS_PROPERTIES( advection_1d_periodic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
   SET_TESTS_PROPERTIES( advection_1d_non_uniform_cubic_splines
-                                                    PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-  SET_TESTS_PROPERTIES( advection_1d_BSL            PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-#  SET_TESTS_PROPERTIES( advection_1d_CSL            PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" ) # ISSUE
-#  SET_TESTS_PROPERTIES( advection_1d_PSM            PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" ) # ISSUE
-  SET_TESTS_PROPERTIES( advection_2d_BSL            PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-#  SET_TESTS_PROPERTIES( advection_2d_CSL            PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" ) # ISSUE
+                          PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+  SET_TESTS_PROPERTIES( advection_1d_BSL  PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+#  SET_TESTS_PROPERTIES( advection_1d_CSL PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" ) # ISSUE
+#  SET_TESTS_PROPERTIES( advection_1d_PSM PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" ) # ISSUE
+  SET_TESTS_PROPERTIES( advection_2d_BSL  PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+#  SET_TESTS_PROPERTIES( advection_2d_CSL PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" ) # ISSUE
   SET_TESTS_PROPERTIES( advection_2d_tensor_product PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 ENDIF(BUILD_TESTING)

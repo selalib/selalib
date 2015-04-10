@@ -71,6 +71,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
     ADD_SUBDIRECTORY( sim_4d_qns_general                       )
     ADD_SUBDIRECTORY( sim_4d_qns_general_multipatch            )
     ADD_SUBDIRECTORY( sim_6d                                   )
+    ADD_SUBDIRECTORY( sim_general_vlasov_poisson_pif           )
 
 ENDIF()
 
