@@ -35,8 +35,10 @@ module sll_simulation_4d_vp_lt_pic_cartesian_module
     ! Physics/numerical parameters
     sll_real64 :: dt
     sll_int32  :: num_iterations
+    sll_int32  :: plot_period
     sll_real64 :: thermal_speed_ions
     sll_int32  :: ions_number
+    sll_int32  :: virtual_particle_number
 !    sll_int32  :: guard_size
 !    sll_int32  :: array_size
     sll_real64, dimension(1:6) :: elec_params
@@ -53,7 +55,8 @@ module sll_simulation_4d_vp_lt_pic_cartesian_module
     type(sll_charge_accumulator_2d_CS_ptr), dimension(:), pointer  :: q_accumulator_CS
     type(electric_field_accumulator_CS), pointer :: E_accumulator_CS
     sll_real64, dimension(:,:), pointer :: rho
-    sll_int32 :: n_virtual_for_deposition
+    sll_int32 :: n_virtual_x_for_deposition, n_virtual_y_for_deposition
+    sll_int32 :: n_virtual_vx_for_deposition, n_virtual_vy_for_deposition
     type(poisson_2d_fft_solver), pointer :: poisson
     sll_real64 :: total_density
 
@@ -84,7 +87,7 @@ contains
     sll_int32   :: ierr
     sll_int32   :: j
     sll_real64  :: dt
-    sll_int32   :: number_iterations
+    sll_int32   :: number_iterations, plot_period
     sll_int32   :: NUM_PARTICLES, GUARD_SIZE, PARTICLE_ARRAY_SIZE
     sll_real64  :: THERM_SPEED
     sll_real64  :: QoverM, ALPHA
@@ -97,7 +100,11 @@ contains
     sll_real64  :: REMAP_GRID_VX_MIN, REMAP_GRID_VX_MAX
     sll_real64  :: REMAP_GRID_VY_MIN, REMAP_GRID_VY_MAX
     sll_int32   :: SPLINE_DEGREE
-    sll_int32   :: NVirtualForDeposition
+    sll_int32   :: NVirtual_X_ForDeposition
+    sll_int32   :: NVirtual_Y_ForDeposition
+    sll_int32   :: NVirtual_VX_ForDeposition
+    sll_int32   :: NVirtual_VY_ForDeposition
+
     logical     :: UseExactF0
     sll_real64  :: er, psi, omega_i, omega_r
     sll_int32, parameter  :: input_file = 99
@@ -108,7 +115,7 @@ contains
 
     namelist /sim_params/   NUM_PARTICLES, GUARD_SIZE, &
                             PARTICLE_ARRAY_SIZE, &
-                            THERM_SPEED, dt, number_iterations, &
+                            THERM_SPEED, dt, number_iterations, plot_period, &
                             QoverM, ALPHA, UseCubicSplines, UseLtPicScheme
     namelist /grid_dims/    NC_X, NC_Y, XMIN, KX_LANDAU, YMIN, YMAX, &
                             DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC
@@ -120,7 +127,10 @@ contains
                             REMAP_GRID_VX_MAX,      &
                             REMAP_GRID_VY_MIN,      &
                             REMAP_GRID_VY_MAX,      &
-                            NVirtualForDeposition,  &
+                            NVirtual_X_ForDeposition,   &
+                            NVirtual_Y_ForDeposition,   &
+                            NVirtual_VX_ForDeposition,  &
+                            NVirtual_VY_ForDeposition,  &
                             UseExactF0
     namelist /elec_params/  er, psi, omega_r, omega_i
     open(unit = input_file, file=trim(filename),IOStat=IO_stat)
@@ -143,7 +153,10 @@ contains
     sim%use_cubic_splines = UseCubicSplines
     sim%use_lt_pic_scheme = UseLtPicScheme
     sim%use_exact_f0      = UseExactF0
-    sim%n_virtual_for_deposition = NVirtualForDeposition
+    sim%n_virtual_x_for_deposition = NVirtual_X_ForDeposition
+    sim%n_virtual_y_for_deposition = NVirtual_Y_ForDeposition
+    sim%n_virtual_vx_for_deposition = NVirtual_VX_ForDeposition
+    sim%n_virtual_vy_for_deposition = NVirtual_VY_ForDeposition
     sim%thermal_speed_ions = THERM_SPEED
 !    sim%guard_size = GUARD_SIZE
 !    sim%array_size = PARTICLE_ARRAY_SIZE
@@ -151,7 +164,7 @@ contains
 
     sim%dt = dt
     sim%num_iterations = number_iterations
-
+    sim%plot_period = plot_period
     sim%elec_params = (/KX_LANDAU, ALPHA, er, psi, omega_r, omega_i /)
     
     sim%mesh_2d =>  new_cartesian_mesh_2d( NC_X, NC_Y, &
@@ -212,7 +225,15 @@ contains
         sim%ions_number = sim%part_group%number_particles
         SLL_ASSERT( sim%ions_number == NUM_PARTS_X * NUM_PARTS_Y * NUM_PARTS_VX * NUM_PARTS_VY)
 
-        print *, "sim%ions_number  = ", sim%ions_number
+        print *, "sim%ions_number (pushed markers) = ", sim%ions_number
+
+        sim%virtual_particle_number =                                               &
+              sim%n_virtual_x_for_deposition * sim%mesh_2d%num_cells1               &
+            * sim%n_virtual_y_for_deposition * sim%mesh_2d%num_cells2               &
+            * sim%n_virtual_vx_for_deposition * sim%part_group%number_parts_vx      &
+            * sim%n_virtual_vy_for_deposition * sim%part_group%number_parts_vy
+
+        print *, "sim%virtual_particle_number (deposited particles) = ", sim%virtual_particle_number
 
     else
         !! initialize the group of PIC particles
@@ -294,8 +315,12 @@ contains
           SLL_ASSERT(thread_id == 0)
 
           ! [[file:~/mcp/selalib/src/pic_utilities/lt_pic_4d_utilities.F90::sll_lt_pic_4d_deposit_charge_on_2d_mesh]]
-           call sll_lt_pic_4d_deposit_charge_on_2d_mesh( sim%part_group, &
-                                                         sim%q_accumulator_ptr(1)%q, sim%n_virtual_for_deposition, &
+           call sll_lt_pic_4d_deposit_charge_on_2d_mesh( sim%part_group,                    &
+                                                         sim%q_accumulator_ptr(1)%q,        &
+                                                         sim%n_virtual_x_for_deposition,    &
+                                                         sim%n_virtual_y_for_deposition,    &
+                                                         sim%n_virtual_vx_for_deposition,   &
+                                                         sim%n_virtual_vy_for_deposition,   &
                                                          sim%use_exact_f0, sim%total_density )
        else
            !! -- PIC_VERSION
@@ -363,7 +388,6 @@ contains
     sll_real64, dimension(:), allocatable :: rho1d_receive
     sll_real64   :: t_init, t_fin, time
     sll_int32 :: save_nb
-    sll_int32 :: plot_e_period
     sll_int32 :: thread_id
     sll_int32 :: n_threads
     type(sll_charge_accumulator_2d),    pointer :: q_accum
@@ -386,7 +410,6 @@ contains
     n_threads = sim%n_threads
     thread_id = 0
     save_nb = sim%num_iterations/2
-    plot_e_period = sim%num_iterations/10
 
     SLL_ALLOCATE( rho1d_send(1:(ncx+1)*(ncy+1)),    ierr)
     SLL_ALLOCATE( rho1d_receive(1:(ncx+1)*(ncy+1)), ierr)
@@ -671,8 +694,12 @@ contains
              
               ! [[file:~/mcp/selalib/src/pic_utilities/lt_pic_4d_utilities.F90::sll_lt_pic_4d_deposit_charge_on_2d_mesh]]
               call sll_set_time_mark(deposit_time_mark)
-              call sll_lt_pic_4d_deposit_charge_on_2d_mesh( sim%part_group, &
-                                                            sim%q_accumulator_ptr(1)%q, sim%n_virtual_for_deposition, &
+              call sll_lt_pic_4d_deposit_charge_on_2d_mesh( sim%part_group,                     &
+                                                            sim%q_accumulator_ptr(1)%q,         &
+                                                            sim%n_virtual_x_for_deposition,     &
+                                                            sim%n_virtual_y_for_deposition,     &
+                                                            sim%n_virtual_vx_for_deposition,    &
+                                                            sim%n_virtual_vy_for_deposition,    &
                                                             sim%use_exact_f0, sim%total_density )
               deposit_time=deposit_time+sll_time_elapsed_since(deposit_time_mark)
           else
@@ -754,11 +781,37 @@ contains
 
        call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, -sim%rho )      !  I don't like this - sign...
 
-       !! -- --  diagnostics (plotting E ) [begin]  -- --
+       !! -- --  diagnostics (plotting) [begin]  -- --
 
-        if (sim%my_rank == 0 .and. mod(it+1, plot_e_period)==0 ) then
+        if (sim%my_rank == 0 .and. mod(it, sim%plot_period)==0 ) then
 
-            print *, "writing Ex, Ey in gnuplot format for iteration # it = ", it+1, " / ", sim%num_iterations
+            print *, "writing f slice in gnuplot format for iteration # it = ", it, " / ", sim%num_iterations
+!            call plot_f_slice(sim%part_group, "f_slice", it)
+
+            call plot_f_slice_x_vx(sim%part_group,           &
+                                   sim%part_group%remapping_grid%eta1_min,   &
+                                   sim%part_group%remapping_grid%eta1_max,   &
+                                   sim%part_group%remapping_grid%eta2_min,   &
+                                   sim%part_group%remapping_grid%eta2_max,   &
+                                   sim%part_group%remapping_grid%eta3_min,   &
+                                   sim%part_group%remapping_grid%eta3_max,   &
+                                   sim%part_group%remapping_grid%eta4_min,   &
+                                   sim%part_group%remapping_grid%eta4_max,   &
+                                   sim%part_group%remapping_grid%num_cells1, &
+                                   sim%part_group%remapping_grid%num_cells2, &
+                                   sim%part_group%remapping_grid%num_cells3, &
+                                   sim%part_group%remapping_grid%num_cells4, &
+                                   sim%n_virtual_x_for_deposition,    &
+                                   sim%n_virtual_y_for_deposition,    &
+                                   sim%n_virtual_vx_for_deposition,   &
+                                   sim%n_virtual_vy_for_deposition,   &
+                                   "f_slice", it)
+
+        end if
+
+        if (sim%my_rank == 0 .and. mod(it+1, sim%plot_period)==0 ) then
+
+            print *, "writing Ex, Ey  in gnuplot format for iteration # it = ", it+1, " / ", sim%num_iterations
             call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
                                 sim%mesh_2d%eta2_max, ncy+1,                        &
                                 sim%E1, 'Ex', it+1, ierr )
@@ -830,10 +883,8 @@ contains
     loop_time=sll_time_elapsed_since(loop_time_mark)
     write(*,'(A,ES8.2,A)') 'sim stats: ',1 / loop_time * sim%num_iterations * sim%ions_number,' pushes/sec '
     if(sim%use_lt_pic_scheme)then
-       write(*,'(A,ES8.2,A)') 'lt_pic stats: ',                                                                     &
-            1 / deposit_time * sim%num_iterations                                                                   &
-            * sim%n_virtual_for_deposition ** 2 * sim%mesh_2d%num_cells1 * sim%mesh_2d%num_cells2                   &
-            * sim%n_virtual_for_deposition ** 2 * sim%part_group%number_parts_vx * sim%part_group%number_parts_vy,  &
+       write(*,'(A,ES8.2,A)') 'lt_pic stats: ',                                     &
+            1 / deposit_time * sim%num_iterations * sim%virtual_particle_number,    &
             ' deposits/sec'
     end if
 

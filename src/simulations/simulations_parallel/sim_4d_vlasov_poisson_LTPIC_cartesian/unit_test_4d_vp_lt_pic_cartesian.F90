@@ -11,7 +11,6 @@ program unit_test_4d_vp_lt_pic_cartesian
   type(sll_simulation_4d_vp_lt_pic_cartesian) :: sim
   character(len=256)                          :: filename
   integer                                     :: rank, size
-  sll_int64            :: virtual_particle_number
   type(sll_time_mark)  ::  t1
   sll_real64           :: time
 
@@ -31,12 +30,8 @@ program unit_test_4d_vp_lt_pic_cartesian
          print*, (real(size,f64)/real(sim%mesh_2d%num_cells1 * sim%mesh_2d%num_cells2, f64)) &
               * sim%ions_number, 'transport markers (pushed particles) per cell'
 
-         virtual_particle_number = sim%n_virtual_for_deposition ** 2 * sim%mesh_2d%num_cells1 * sim%mesh_2d%num_cells2 &
-                        * sim%n_virtual_for_deposition ** 2 * sim%part_group%number_parts_vx * sim%part_group%number_parts_vy
-
          print*, (real(size,f64)/real(sim%mesh_2d%num_cells1 * sim%mesh_2d%num_cells2, f64)) &
-              * virtual_particle_number, 'virtual particles (deposited particles) per cell'
-
+              * sim%virtual_particle_number, 'virtual particles (deposited particles) per cell'
      else
          print*, (real(size,f64)/real(sim%mesh_2d%num_cells1 * sim%mesh_2d%num_cells2, f64)) &
               * sim%ions_number, 'particles per cell'
