@@ -55,12 +55,13 @@ module sll_simulation_4d_vp_lt_pic_cartesian_module
     sll_real64, dimension(:,:), pointer :: rho
     sll_int32 :: n_virtual_for_deposition
     type(poisson_2d_fft_solver), pointer :: poisson
+    sll_real64 :: total_density
+
     sll_real64, dimension(:,:), pointer :: E1, E2
     sll_int32 :: my_rank
     sll_int32 :: world_size
     sll_int32 :: n_threads
   contains
-    ! [[
     procedure, pass(sim) :: init_from_file => init_4d_lt_pic_cartesian
     procedure, pass(sim) :: run => run_4d_lt_pic_cartesian
   end type sll_simulation_4d_vp_lt_pic_cartesian
@@ -146,6 +147,8 @@ contains
     sim%thermal_speed_ions = THERM_SPEED
 !    sim%guard_size = GUARD_SIZE
 !    sim%array_size = PARTICLE_ARRAY_SIZE
+    sim%total_density = 1._f64 * (XMAX - XMIN) * (YMAX - YMIN)
+
     sim%dt = dt
     sim%num_iterations = number_iterations
 
@@ -293,7 +296,7 @@ contains
           ! [[file:~/mcp/selalib/src/pic_utilities/lt_pic_4d_utilities.F90::sll_lt_pic_4d_deposit_charge_on_2d_mesh]]
            call sll_lt_pic_4d_deposit_charge_on_2d_mesh( sim%part_group, &
                                                          sim%q_accumulator_ptr(1)%q, sim%n_virtual_for_deposition, &
-                                                         sim%use_exact_f0 )
+                                                         sim%use_exact_f0, sim%total_density )
        else
            !! -- PIC_VERSION
            !                   call sll_first_charge_accumulation_2d( sim%part_group, sim%q_accumulator_ptr)!(1)%q )
@@ -360,6 +363,7 @@ contains
     sll_real64, dimension(:), allocatable :: rho1d_receive
     sll_real64   :: t_init, t_fin, time
     sll_int32 :: save_nb
+    sll_int32 :: plot_e_period
     sll_int32 :: thread_id
     sll_int32 :: n_threads
     type(sll_charge_accumulator_2d),    pointer :: q_accum
@@ -382,6 +386,7 @@ contains
     n_threads = sim%n_threads
     thread_id = 0
     save_nb = sim%num_iterations/2
+    plot_e_period = sim%num_iterations/10
 
     SLL_ALLOCATE( rho1d_send(1:(ncx+1)*(ncy+1)),    ierr)
     SLL_ALLOCATE( rho1d_receive(1:(ncx+1)*(ncy+1)), ierr)
@@ -463,11 +468,24 @@ contains
 
     call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, -sim%rho )         !  I don't like this - sign...
 
+    if (sim%my_rank == 0) then
+    it = 0
+    print *, "writing Ex, Ey in gnuplot format for iteration # it = ", it
+    call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
+                        sim%mesh_2d%eta2_max, ncy+1,                        &
+                        sim%E1, 'Ex', it, ierr )
+
+    call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
+                        sim%mesh_2d%eta2_max, ncy+1,                        &
+                        sim%E2, 'Ey', it, ierr )
+
+    endif
+
 
     !! -- --  diagnostics: compute energy [begin]  -- --
 
-    call electric_energy( tot_ee, sim%E1, sim%E2, sim%mesh_2d%num_cells1, &
-         sim%mesh_2d%num_cells2, sim%mesh_2d%eta1_max, sim%mesh_2d%eta2_max )
+    call electric_energy( tot_ee, sim%E1, sim%E2, ncx, &
+         ncy, sim%mesh_2d%eta1_max, sim%mesh_2d%eta2_max )
     bors = 0.0_f64
     !$omp parallel
     !$omp do reduction(+:bors)
@@ -506,9 +524,8 @@ contains
     endif
 
     !! -- --  half v-push  [end]  -- --
-
-    une_cst = 16._f64*(sim%elec_params(2))**2 *(sim%elec_params(3))**2 &
-         * sll_pi/sim%elec_params(1) !pi/KX_LANDAU*(4._f64*ALPHA*er)**2
+    ! une_cst = (pi / KX_LANDAU) * (4._f64 * ALPHA * er)**2
+    une_cst = (sll_pi / sim%elec_params(1)) * (4._f64 * sim%elec_params(2) * sim%elec_params(3))**2
     omega_i = sim%elec_params(6)
     omega_r = sim%elec_params(5)
     psi = sim%elec_params(4)
@@ -542,8 +559,8 @@ contains
        !! -- --  diagnostics (computing energy) [begin]  -- --
 
        if (sim%my_rank == 0) then
-          exval_ee = une_cst * exp(2._f64*omega_i*real(it,f64)*sim%dt) * &
-             ( 0.5_f64 + 0.5_f64*cos(2._f64*(omega_r*real(it,f64)*sim%dt-psi)) )
+          exval_ee = une_cst * exp(2._f64 * omega_i * real(it,f64) * sim%dt)                          &
+                             * ( 0.5_f64 + 0.5_f64 * cos(2._f64 * (omega_r * real(it,f64) * sim%dt - psi)) )
           exval_ee = max(exval_ee, 1e-30_f64)    ! to avoid taking the log of 0
           call normL2_field_Ex ( val_lee, val_ee, ncx, ncy,                         &
                                  sim%E1,                                            &
@@ -656,7 +673,7 @@ contains
               call sll_set_time_mark(deposit_time_mark)
               call sll_lt_pic_4d_deposit_charge_on_2d_mesh( sim%part_group, &
                                                             sim%q_accumulator_ptr(1)%q, sim%n_virtual_for_deposition, &
-                                                            sim%use_exact_f0 )
+                                                            sim%use_exact_f0, sim%total_density )
               deposit_time=deposit_time+sll_time_elapsed_since(deposit_time_mark)
           else
               ! nothing to do, charge already deposited in the push loop
@@ -737,6 +754,21 @@ contains
 
        call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, -sim%rho )      !  I don't like this - sign...
 
+       !! -- --  diagnostics (plotting E ) [begin]  -- --
+
+        if (sim%my_rank == 0 .and. mod(it+1, plot_e_period)==0 ) then
+
+            print *, "writing Ex, Ey in gnuplot format for iteration # it = ", it+1, " / ", sim%num_iterations
+            call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
+                                sim%mesh_2d%eta2_max, ncy+1,                        &
+                                sim%E1, 'Ex', it+1, ierr )
+
+            call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
+                                sim%mesh_2d%eta2_max, ncy+1,                        &
+                                sim%E2, 'Ey', it+1, ierr )
+        endif
+
+       !! -- --  diagnostics (plotting E ) [end]  -- --
 
        !! -- --  diagnostics (computing energy) [begin]  -- --
 
@@ -758,8 +790,8 @@ contains
           enddo
           !$omp end do
           !$omp end parallel
-          call electric_energy( tot_ee, sim%E1, sim%E2, sim%mesh_2d%num_cells1, &
-               sim%mesh_2d%num_cells2, sim%mesh_2d%eta1_max, sim%mesh_2d%eta2_max )
+          call electric_energy( tot_ee, sim%E1, sim%E2, ncx, &
+               ncy, sim%mesh_2d%eta1_max, sim%mesh_2d%eta2_max )
           diag_TOTenergy(it) = some_val* 0.5_f64 *(sim%mesh_2d%eta1_max - sim%mesh_2d%eta1_min) * &
                (sim%mesh_2d%eta2_max - sim%mesh_2d%eta2_min)/( sim%world_size*sim%ions_number)  &
                + tot_ee * 0.5_f64
@@ -798,9 +830,10 @@ contains
     loop_time=sll_time_elapsed_since(loop_time_mark)
     write(*,'(A,ES8.2,A)') 'sim stats: ',1 / loop_time * sim%num_iterations * sim%ions_number,' pushes/sec '
     if(sim%use_lt_pic_scheme)then
-       write(*,'(A,ES8.2,A)') 'lt_pic stats: ',                                       &
-            1 / deposit_time * sim%num_iterations * sim%n_virtual_for_deposition ** 2 &
-            * sim%mesh_2d%num_cells1 * sim%mesh_2d%num_cells2,                        &
+       write(*,'(A,ES8.2,A)') 'lt_pic stats: ',                                                                     &
+            1 / deposit_time * sim%num_iterations                                                                   &
+            * sim%n_virtual_for_deposition ** 2 * sim%mesh_2d%num_cells1 * sim%mesh_2d%num_cells2                   &
+            * sim%n_virtual_for_deposition ** 2 * sim%part_group%number_parts_vx * sim%part_group%number_parts_vy,  &
             ' deposits/sec'
     end if
 
@@ -852,11 +885,12 @@ contains
     lee = 0._f64
     do j=1,ny
        do i=1,nx
-          lee = lee + e(i,j)**2!*e(i,j)
+          lee = lee + e(i,j)**2 !*e(i,j)
        enddo
     enddo
     lee = lee*dx*dy
     ee = lee
+    lee = max(lee, 1e-30_f64)    ! to avoid taking the log of 0
     lee = log(lee)*0.5_f64
   end subroutine normL2_field_Ex
   
