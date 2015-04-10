@@ -209,36 +209,46 @@ function value_at_index_analytic( field, i, j )
   value_at_index_analytic = field%func(eta1,eta2,field%params)
 end function value_at_index_analytic
 
-function first_deriv_eta1_value_at_pt_analytic( field, eta1, eta2)
+function first_deriv_eta1_value_at_pt_analytic( field, eta1, eta2 )
   class(sll_scalar_field_2d_analytic), intent(in) :: field
-  sll_real64, intent(in) :: eta1
-  sll_real64, intent(in) :: eta2
-  sll_real64             :: first_deriv_eta1_value_at_pt_analytic
-  
+  sll_real64                         , intent(in) :: eta1
+  sll_real64                         , intent(in) :: eta2
+  sll_real64 :: first_deriv_eta1_value_at_pt_analytic
+
+  character(len=128)          :: err_msg
+  character(len=*), parameter :: this_fun_name = &
+    'first_deriv_eta1_value_at_pt_analytic'
+
   if ( field%present_deriv_eta1_int ) then 
      first_deriv_eta1_value_at_pt_analytic = &
           field%first_deriv_eta1(eta1,eta2,field%params)
   else 
      first_deriv_eta1_value_at_pt_analytic = 0.0_f64
-     print*, field%name, 'first_deriv_eta1_value_at_pt_analytic()'
-     SLL_ERROR("first derivative in eta1 is not given in the initialization")
+     err_msg = "In field "// field%name // &
+               ": first derivative in eta1 is not given in the initialization."
+     SLL_ERROR( this_fun_name, err_msg )
   end if
 
 end function first_deriv_eta1_value_at_pt_analytic
 
-function first_deriv_eta2_value_at_pt_analytic( field, eta1, eta2)
+function first_deriv_eta2_value_at_pt_analytic( field, eta1, eta2 )
   class(sll_scalar_field_2d_analytic), intent(in) :: field
-  sll_real64, intent(in) :: eta1
-  sll_real64, intent(in) :: eta2
-  sll_real64            :: first_deriv_eta2_value_at_pt_analytic 
-    
+  sll_real64                         , intent(in) :: eta1
+  sll_real64                         , intent(in) :: eta2
+  sll_real64 :: first_deriv_eta2_value_at_pt_analytic 
+
+  character(len=128)          :: err_msg
+  character(len=*), parameter :: this_fun_name = &
+    'first_deriv_eta2_value_at_pt_analytic' 
+
   if ( field%present_deriv_eta2_int ) then 
      first_deriv_eta2_value_at_pt_analytic = &
           field%first_deriv_eta2(eta1,eta2,field%params)
   else 
      first_deriv_eta2_value_at_pt_analytic  = 0.0_f64
-     print*, field%name, 'first_deriv_eta2_value_at_pt_analytic()'
-     SLL_ERROR("first derivative in eta2 is not given in the initialization")
+     err_msg = "In field "// field%name // &
+               ": first derivative in eta2 is not given in the initialization."
+     SLL_ERROR( this_fun_name, err_msg )
   end if
     
 end function first_deriv_eta2_value_at_pt_analytic
