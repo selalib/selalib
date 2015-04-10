@@ -150,6 +150,10 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/random_deviate_generators/gaussian.F90
     ${SLL_DIR}/random_deviate_generators/hammersley.F90
     ${SLL_DIR}/random_deviate_generators/moment_matching.F90
+    ${SLL_DIR}/vector_space/sll_vector_space_base.F90
+    ${SLL_DIR}/vector_space/sll_vector_space_real_arrays.F90
+    ${SLL_DIR}/ode_integrators/sll_ode_integrator_base.F90
+    ${SLL_DIR}/ode_integrators/rk_explicit.F90
  )
 
 IF(Fortran_COMPILER MATCHES "IBM")
