@@ -331,6 +331,16 @@ contains
        if (sim%my_rank == 0) then
           call normL2_field(enst,ncx,ncy,sim%rho,sim%m2d%delta_eta1,sim%m2d%delta_eta2)
           diag_enstrophy(0) = enst
+!          open(50,file='rhoGC_1d7parts_INIT.dat')
+!          do i = 1, ncx+1
+!             do j = 1, ncy+1
+!                write(50,*)  sim%m2d%delta_eta1*real(ncx-1,f64), &
+!                                sim%m2d%delta_eta2*real(ncy-1,f64), &
+!                                sim%rho(i,j)! XMIN=0, YMIN=0 !!!
+!             enddo
+!             write(50,*)
+!          enddo
+!          close(50)
           it = 0
           call sll_gnuplot_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
                sim%m2d%eta2_max, ncy+1, &
@@ -495,7 +505,7 @@ contains
 
        if (mod(it+1, 200)==0 .and. sim%my_rank == 0) then
 !          tfin = sll_time_elapsed_since(tinit)
-!!$          write(it_name,'(i4.4)') it+1
+!!$          write(it_name,'(i5.5)') it+1
 !!$          nnnom = 'parts_at'//trim(adjustl(it_name))//'.dat'
 !!$          open(50,file=nnnom)
 !!$          do i = 1, sim%ions_number
@@ -503,9 +513,20 @@ contains
 !!$             write(50,*) x, y
 !!$          enddo
 !!$          close(50)
+!          filename = 'rhoGC_1d7parts_'//trim(adjustl(it_name))//'.dat'
+!          open(50,file=filename)
+!          do i = 1, ncx+1
+!             do j = 1, ncy+1
+!                write(50,*)  sim%m2d%delta_eta1*real(ncx-1,f64), &
+!                                sim%m2d%delta_eta2*real(ncy-1,f64), &
+!                                sim%rho(i,j)! XMIN=0, YMIN=0 !!!
+!             enddo
+!             write(50,*)
+!          enddo
+!          close(50)
           call sll_gnuplot_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
                sim%m2d%eta2_max, ncy+1, &
-               sim%rho, 'rhoGCrk2_it', it+1, ierr )
+               sim%rho, 'rhoGC_1d7p_it', it+1, ierr )
        endif
 
        if (sim%my_rank == 0) then
