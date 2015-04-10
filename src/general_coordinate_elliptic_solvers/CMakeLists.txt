@@ -1,10 +1,10 @@
 ADD_LIBRARY( sll_general_coordinate_elliptic_solvers STATIC
-             sll_general_coordinate_elliptic_solver.F90
              connectivity_qn.f90
              sll_knots.F90
              sll_lobatto_poisson.F90 
              map_function_module.F90
-             lobalap.F90)
+             lobalap.F90
+             sll_general_coordinate_elliptic_solver.F90 )
 
 TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers
                        sll_sparse_matrix 
@@ -21,8 +21,7 @@ TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers
                        sll_timer
                        sll_assert
                        sll_memory
-                       sll_working_precision
-                       deboor_splines)
+                       sll_working_precision)
 
 ADD_LIBRARY( finite_elements_solver STATIC connectivity_qn.f90
                                            finite_elements_solver.F90
@@ -44,6 +43,31 @@ TARGET_LINK_LIBRARIES( finite_elements_solver
                        sll_memory
                        sll_working_precision
                        deboor_splines)
+
+
+
+# ADD_LIBRARY( finite_elements_solver_hex STATIC connectivity_qn.f90
+#                                                finite_elements_solver_hex.F90
+#                                                sll_knots.F90)
+
+# TARGET_LINK_LIBRARIES( finite_elements_solver_hex
+#                        sll_sparse_matrix 
+#                        sll_fields
+#                        sll_interpolators
+#                        sll_coordinate_transformations
+#                        sll_hex_meshes
+#                        sll_boundary_condition_descriptors
+#                        sll_file_io
+#                        sll_integration
+#                        sll_constants
+#                        sll_utilities
+#                        sll_timer
+#                        sll_assert
+#                        sll_memory
+#                        sll_working_precision
+#                        deboor_splines)
+
+
 
 # Ctest
 IF(BUILD_TESTING)

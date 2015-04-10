@@ -7,6 +7,7 @@ SET(SLL_MACROS
     ${SLL_DIR}/working_precision/sll_working_precision.h
     ${SLL_DIR}/assert/sll_assert.h
     ${SLL_DIR}/constants/sll_constants.h
+    ${SLL_DIR}/errors/sll_errors.h
     ${SLL_DIR}/utilities/sll_utilities.h
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_solvers_macros.h
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_solvers.h
@@ -31,6 +32,7 @@ SET(SLL_MACROS
     ${SLL_DIR}/multigrid/mgd2_routines.h
     ${SLL_DIR}/remap/sll_remap.h
     ${SLL_DIR}/parallel_utilities/sll_parallel_utilities.h
+    ${SLL_DIR}/jorek/sll_jorek.h
 )
 
 FILE(COPY ${SLL_MACROS} DESTINATION ${CMAKE_BINARY_DIR}/include)
@@ -49,6 +51,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/advection/sll_advection_2d_tensor_product.F90
     ${SLL_DIR}/advection/sll_advection_2d_CSL.F90
     ${SLL_DIR}/advection/sll_advection_2d_base.F90
+    ${SLL_DIR}/advection/sll_advection_1d_ampere.F90
+    ${SLL_DIR}/advection/sll_advection_1d_spectral.F90
     ${SLL_DIR}/constants/sll_constants.F90
     ${SLL_DIR}/characteristics/sll_characteristics_1d_explicit_euler.F90
     ${SLL_DIR}/characteristics/sll_characteristics_1d_explicit_euler_conservative.F90
@@ -59,6 +63,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/characteristics/sll_characteristics_2d_explicit_euler.F90
     ${SLL_DIR}/characteristics/sll_characteristics_2d_explicit_euler_conservative.F90
     ${SLL_DIR}/characteristics/sll_characteristics_2d_base.F90
+    ${SLL_DIR}/errors/sll_errors.F90
     ${SLL_DIR}/utilities/sll_utilities.F90
     ${SLL_DIR}/utilities/sll_primitives.F90
     ${SLL_DIR}/utilities/tridiagonal.F90
@@ -72,6 +77,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/file_io/sll_ascii_io.F90
     ${SLL_DIR}/file_io/sll_xml_io.F90
     ${SLL_DIR}/file_io/sll_plotmtv.F90
+    ${SLL_DIR}/file_io/sll_tri_mesh_xmf.F90
     ${SLL_DIR}/visu_pic/sll_visu_pic.F90
     ${SLL_DIR}/timer/sll_timer.F90
     ${SLL_DIR}/fields/sll_scalar_field_1d_base.F90
@@ -88,7 +94,6 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/deboor_splines/banfac.f90
     ${SLL_DIR}/deboor_splines/banslv.f90
     ${SLL_DIR}/deboor_splines/knots.f90
-    #${SLL_DIR}/deboor_splines/splopt.f90
     ${SLL_DIR}/deboor_splines/sll_module_deboor_splines_1d.F90
     ${SLL_DIR}/deboor_splines/sll_module_deboor_splines_2d.F90
     ${SLL_DIR}/hermite_interpolation/sll_hermite_interpolation_2d.F90
@@ -119,25 +124,14 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/integration/gauss_lobatto.F90
     ${SLL_DIR}/simulations/simulations_sequential/sim_CG_polar/sll_polar_operators.F90
     ${SLL_DIR}/simulations/simulations_sequential/sim_CG_polar/sll_advection_polar.F90
-#    ${SLL_DIR}/sparse_matrix_manager/basic_cg.F90
-    ${SLL_DIR}/sparse_matrix_manager/gauss_seidel.F90
-    ${SLL_DIR}/sparse_matrix_manager/getdia.F90
-    ${SLL_DIR}/sparse_matrix_manager/getl.F90
-    ${SLL_DIR}/sparse_matrix_manager/getu.F90
-    ${SLL_DIR}/sparse_matrix_manager/lsol.F90
-    ${SLL_DIR}/sparse_matrix_manager/remove_zeros.F90
+    ${SLL_DIR}/sparse_matrix_manager/partition.F90
     ${SLL_DIR}/sparse_matrix_manager/sll_sparse_matrix_module.F90
-#    ${SLL_DIR}/sparse_matrix_manager/sll_sparse_matrix_module_basic.F90
-    ${SLL_DIR}/sparse_matrix_manager/spm_basic.F90
-    ${SLL_DIR}/sparse_matrix_manager/spm_def.F90
-#    ${SLL_DIR}/sparse_matrix_manager/spm_mkl.F90
-#    ${SLL_DIR}/sparse_matrix_manager/spm_murge.F90
-#    ${SLL_DIR}/sparse_matrix_manager/spm_template.F90
-    ${SLL_DIR}/sparse_matrix_manager/spm_tools.F90
     ${SLL_DIR}/time_solvers/sll_time_splitting_coeff.F90
     ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.F90
     ${SLL_DIR}/meshes/sll_meshes_base.F90
     ${SLL_DIR}/meshes/sll_cartesian_meshes.F90
+    ${SLL_DIR}/meshes/sll_triangular_meshes.F90
+    ${SLL_DIR}/meshes/sll_hex_meshes.F90
     ${SLL_DIR}/fields/scalar_field_initializer_base.F90
     ${SLL_DIR}/distribution_function/sll_scalar_field_2d_old.F90
     ${SLL_DIR}/coordinate_transformations/sll_common_coordinate_transformations.F90
@@ -153,7 +147,9 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/distribution_function/distribution_function_initializer_4d.F90
     ${SLL_DIR}/distribution_function/sll_fdistribu4d_DK.F90
     ${SLL_DIR}/reduction/sll_reduction.F90
-
+    ${SLL_DIR}/random_deviate_generators/gaussian.F90
+    ${SLL_DIR}/random_deviate_generators/hammersley.F90
+    ${SLL_DIR}/random_deviate_generators/moment_matching.F90
  )
 
 IF(Fortran_COMPILER MATCHES "IBM")
@@ -203,10 +199,6 @@ IF(SUITESPARSE_ENABLED)
         ${SLL_DIR}/sparse_matrix_manager/spm_umfpack.F90
 	${SLL_DIR}/sparse_matrix_manager/sll_sparse_matrix_umfpack_module.F90
   )
-ELSE()
-  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
-      ${SLL_DIR}/sparse_matrix_manager/basic_cg.F90)
-
 ENDIF(SUITESPARSE_ENABLED)
 
 IF(MPI_ENABLED)
