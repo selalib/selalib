@@ -82,6 +82,9 @@ type, public :: general_coordinate_elliptic_solver
   sll_real64, dimension(:,:,:), pointer :: v_splines2
   sll_real64, dimension(:,:,:), pointer :: d_splines1
   sll_real64, dimension(:,:,:), pointer :: d_splines2
+  sll_real64, dimension(:,:,:), pointer :: r_splines1
+  sll_real64, dimension(:,:,:), pointer :: r_splines2
+
   sll_real64, dimension(:,:,:,:), pointer :: val_jac
   sll_int32 , dimension(:)  , pointer :: tab_index_coeff1
   sll_int32 , dimension(:)  , pointer :: tab_index_coeff2
@@ -211,6 +214,7 @@ subroutine initialize_general_elliptic_solver( &
 
  sll_int32  :: i, j, ii, jj, ispl1, ispl2
  sll_real64 :: eta1, eta2, gspl1, gspl2
+ sll_int32  :: left_1, left_2
 
  
  bc_left_knots = bc_left
@@ -369,8 +373,8 @@ subroutine initialize_general_elliptic_solver( &
  es%intjac  = 0.0_f64
 
  call initialize_knots( &
-   spline_degree1,  &
-   num_cells1,      &
+   spline_degree1,      &
+   num_cells1,          &
    eta1_min,            &
    eta1_max,            &
    bc_left_knots,       &
@@ -378,8 +382,8 @@ subroutine initialize_general_elliptic_solver( &
    es%knots1 )
 
  call initialize_knots( &
-   spline_degree2,  &
-   num_cells2,      &
+   spline_degree2,      &
+   num_cells2,          &
    eta2_min,            &
    eta2_max,            &
    bc_bottom,           &
@@ -387,10 +391,10 @@ subroutine initialize_general_elliptic_solver( &
    es%knots2 )
 
  call initconnectivity(               &
-   num_cells1,                    &
-   num_cells2,                    &
-   spline_degree1,                &
-   spline_degree2,                &
+   num_cells1,                        &
+   num_cells2,                        &
+   spline_degree1,                    &
+   spline_degree2,                    &
    bc_left,                           &
    bc_right,                          &
    bc_bottom,                         &
@@ -402,7 +406,7 @@ subroutine initialize_general_elliptic_solver( &
  es%sll_csr_mat => new_csr_matrix(    &
    solution_size,                     &
    solution_size,                     &
-   num_cells1*num_cells2,     &
+   num_cells1*num_cells2,             &
    es%local_to_global_spline_indices, &
    es%total_num_splines_loc,          &
    es%local_to_global_spline_indices, &
@@ -421,7 +425,6 @@ subroutine initialize_general_elliptic_solver( &
        0.5*( eta1_min + ( i - (spline_degree1)/2 -1)*es%delta_eta1 + &
        eta1_min +  ( i -1 - (spline_degree1)/2 -1)*es%delta_eta1 )
    end do
-   
  end if
 
  es%knots2_rho(1:spline_degree2+1) = eta2_min
@@ -443,13 +446,17 @@ subroutine initialize_general_elliptic_solver( &
  ! derivatives in each gauss points
  SLL_ALLOCATE(es%v_splines1(spline_degree1+1,spline_degree1+2,num_cells1),ierr)
  SLL_ALLOCATE(es%d_splines1(spline_degree1+1,spline_degree1+2,num_cells1),ierr)
+ SLL_ALLOCATE(es%r_splines1(spline_degree1+1,spline_degree1+2,num_cells1),ierr)
  SLL_ALLOCATE(es%v_splines2(spline_degree2+1,spline_degree2+2,num_cells2),ierr)
  SLL_ALLOCATE(es%d_splines2(spline_degree2+1,spline_degree2+2,num_cells2),ierr)
+ SLL_ALLOCATE(es%r_splines2(spline_degree2+1,spline_degree2+2,num_cells2),ierr)
 
  es%v_splines1 = 0.0_f64
  es%v_splines1 = 0.0_f64
  es%d_splines2 = 0.0_f64
  es%d_splines2 = 0.0_f64
+ es%r_splines2 = 0.0_f64
+ es%r_splines2 = 0.0_f64
 
  SLL_ALLOCATE(es%val_jac(spline_degree1+2,spline_degree2+2,num_cells1,num_cells2),ierr)
  es%val_jac = 0.0_f64
@@ -467,17 +474,33 @@ allocate(work2(spline_degree2+1,spline_degree2+1))
 allocate(dbs1(spline_degree1+1,2))
 allocate(dbs2(spline_degree2+1,2))
 
-do j = 1, es%num_cells2
 do i = 1, es%num_cells1
-        
   eta1  = eta1_min + (i-1)*es%delta_eta1
+  do ii=1,num_pts_g1
+    xg  = eta1  + es%gauss_pts1(1,ii)
+    wxg = es%gauss_pts1(2,ii)
+    if(bc_left==SLL_PERIODIC .and. bc_right==SLL_PERIODIC) then 
+      gspl1 = es%gauss_pts1(1,ii)
+      ispl1 = spline_degree1+1
+    else 
+      gspl1 = xg
+      ispl1 = spline_degree1+i
+    end if
+    call bsplvd( es, es%knots1, spline_degree1+1, gspl1, ispl1, work1, dbs1, 2 )
+    es%v_splines1(:,ii,i) = dbs1(:,1)
+    es%d_splines1(:,ii,i) = dbs1(:,2)
+    call interv( es, es%knots1_rho, es%num_cells1+spline_degree1+2, xg, left_1, ierr )
+    call bsplvd( es, es%knots1_rho, spline_degree1+1, xg,left_1, work1, dbs1, 1 )
+    es%r_splines1(:,ii,i) = dbs1(:,1)
+  end do
+  es%tab_index_coeff1(i) = left_1
+end do
+
+do j = 1, es%num_cells2
   eta2  = eta2_min + (j-1)*es%delta_eta2
-    
   do jj=1,num_pts_g2
-  
     yg  = eta2+es%gauss_pts2(1,jj)
     wyg = es%gauss_pts2(2,jj)
-     
     if (bc_bottom==SLL_PERIODIC .and. bc_top==SLL_PERIODIC) then
       gspl2 = es%gauss_pts2(1,jj)
       ispl2 = spline_degree2+1
@@ -485,39 +508,16 @@ do i = 1, es%num_cells1
       gspl2 = yg
       ispl2 = spline_degree2+j
     end if
-     
     call bsplvd( es, es%knots2, spline_degree2+1, gspl2, ispl2, work2, dbs2, 2)
-
     es%v_splines2(:,jj,j) = dbs2(:,1)
     es%d_splines2(:,jj,j) = dbs2(:,2)
-  
-    do ii=1,num_pts_g1
-    
-      xg  = eta1  + es%gauss_pts1(1,ii)
-      wxg = es%gauss_pts1(2,ii)
-        
-      if(bc_left==SLL_PERIODIC .and. bc_right==SLL_PERIODIC) then 
-             
-        gspl1 = es%gauss_pts1(1,ii)
-        ispl1 = spline_degree1+1
-             
-      else 
-
-        gspl1 = xg
-        ispl1 = spline_degree1+i
-             
-      end if
-  
-      call bsplvd( es, es%knots1, spline_degree1+1, gspl1, ispl1, work1, dbs1, 2 )
-
-      es%v_splines1(:,ii,i) = dbs1(:,1)
-      es%d_splines1(:,ii,i) = dbs1(:,2)
-
-    end do
+    call interv( es, es%knots2_rho, es%num_cells2+spline_degree2+2, yg, left_2, ierr )
+    call bsplvd( es, es%knots2_rho, spline_degree2+1, yg, left_2, work2, dbs2, 1)
+    es%r_splines2(:,jj,j) = dbs2(:,1)
   end do
+  es%tab_index_coeff2(j) = left_2
+end do
 
-end do
-end do
 
 end subroutine initialize_general_elliptic_solver
   
@@ -742,8 +742,8 @@ sll_real64, dimension(es%spline_degree1+1,es%spline_degree1+1) :: work1
 sll_real64, dimension(es%spline_degree2+1,es%spline_degree2+1) :: work2
 sll_real64, dimension(es%spline_degree1+1,2) :: dbs1
 sll_real64, dimension(es%spline_degree2+1,2) :: dbs2
-sll_real64, dimension(es%spline_degree1+1,2) :: dbs1_rho
-sll_real64, dimension(es%spline_degree2+1,2) :: dbs2_rho
+sll_real64, dimension(es%spline_degree1+1,1) :: dbs1_rho
+sll_real64, dimension(es%spline_degree2+1,1) :: dbs2_rho
 sll_real64 :: val_c
 sll_real64 :: val_a11
 sll_real64 :: val_a12
@@ -837,66 +837,64 @@ do cell_i = 1, nc_1
   
     yg  = eta2+es%gauss_pts2(1,j)
     wyg = es%gauss_pts2(2,j)
+   !  
+   ! if (es%bc_bottom == SLL_PERIODIC .and. &
+   !     es%bc_top    == SLL_PERIODIC) then
+   !
+   !   gspl2 = es%gauss_pts2(1,j)
+   !   ispl2 = spl_deg_2 + 1
+   !     
+   ! else if (es%bc_bottom == SLL_DIRICHLET .and.&
+   !          es%bc_top    == SLL_DIRICHLET) then
+   !   gspl2 = yg
+   !   ispl2 = spl_deg_2 + cell_j
+   ! end if
      
-    if (es%bc_bottom == SLL_PERIODIC .and. &
-        es%bc_top    == SLL_PERIODIC) then
-   
-      gspl2 = es%gauss_pts2(1,j)
-      ispl2 = spl_deg_2 + 1
-        
-    else if (es%bc_bottom == SLL_DIRICHLET .and.&
-             es%bc_top    == SLL_DIRICHLET) then
-      gspl2 = yg
-      ispl2 = spl_deg_2 + cell_j
-    end if
-     
-    call bsplvd( es, es%knots2, spl_deg_2+1, gspl2, ispl2, work2, dbs2, 2)
-    call interv( es, es%knots2_rho, nc_2+spl_deg_2+2, yg, left_y, ierr )
-    call bsplvd( es, es%knots2_rho, spl_deg_2+1, yg, left_y, work2, dbs2_rho, 2)
+    !call bsplvd( es, es%knots2, spl_deg_2+1, gspl2, ispl2, work2, dbs2, 2)
+    !call interv( es, es%knots2_rho, nc_2+spl_deg_2+2, yg, left_y, ierr )
+    !call bsplvd( es, es%knots2_rho, spl_deg_2+1, yg, left_y, work2, dbs2_rho, 1)
     
-    ! we stock values of spline to construct the source term
-    es%v_splines2(:,j,cell_j) = dbs2(:,1)
-    if (j==1) es%tab_index_coeff2(cell_j) = left_y
+    !es%v_splines2(:,j,cell_j) = dbs2(:,1)
   
     do i=1,num_pts_g1
     
       xg  = eta1  + es%gauss_pts1(1,i)
       wxg = es%gauss_pts1(2,i)
+
         
-      if(es%bc_left_interp == SLL_PERIODIC .and. &
-         es%bc_right       == SLL_PERIODIC) then 
-             
-        gspl1 = es%gauss_pts1(1,i)
-        ispl1 = spl_deg_1+1
-             
-      else if (es%bc_left_interp  == SLL_DIRICHLET .and.&
-               es%bc_right        == SLL_DIRICHLET) then
-           
-        gspl1 = xg
-        ispl1 = spl_deg_1 + cell_i
-             
-      end if
+    !  if(es%bc_left_interp == SLL_PERIODIC .and. &
+    !     es%bc_right       == SLL_PERIODIC) then 
+    !         
+    !    gspl1 = es%gauss_pts1(1,i)
+    !    ispl1 = spl_deg_1+1
+    !         
+    !  else if (es%bc_left_interp  == SLL_DIRICHLET .and.&
+    !           es%bc_right        == SLL_DIRICHLET) then
+    !       
+    !    gspl1 = xg
+    !    ispl1 = spl_deg_1 + cell_i
+    !         
+    !  end if
   
-      call bsplvd( es, es%knots1, spl_deg_1+1, gspl1,ispl1, work1, dbs1, 2 )
-      call interv( es, es%knots1_rho, nc_1+spl_deg_1+2, xg, left_x, ierr )
-      call bsplvd( es, es%knots1_rho, spl_deg_1+1, xg,left_x, work1, dbs1_rho, 2 )
+      !call bsplvd( es, es%knots1, spl_deg_1+1, gspl1,ispl1, work1, dbs1, 2 )
+      !call interv( es, es%knots1_rho, nc_1+spl_deg_1+2, xg, left_x, ierr )
+      !call bsplvd( es, es%knots1_rho, spl_deg_1+1, xg,left_x, work1, dbs1_rho, 1 )
 
-      es%v_splines1(:,i,cell_i)       = dbs1(:,1)
-      if (i==1) es%tab_index_coeff1(cell_i) = left_x
+      !es%v_splines1(:,i,cell_i)       = dbs1(:,1)
 
-      val_c        = c_field%value_at_point(xg,yg)
-      val_a11      = a11_field_mat%value_at_point(xg,yg)
-      val_a12      = a12_field_mat%value_at_point(xg,yg)
-      val_a21      = a21_field_mat%value_at_point(xg,yg)
-      val_a22      = a22_field_mat%value_at_point(xg,yg)
+      val_c       = c_field%value_at_point(xg,yg)
+      val_a11     = a11_field_mat%value_at_point(xg,yg)
+      val_a12     = a12_field_mat%value_at_point(xg,yg)
+      val_a21     = a21_field_mat%value_at_point(xg,yg)
+      val_a22     = a22_field_mat%value_at_point(xg,yg)
 
-      val_b1       = b1_field_vect%value_at_point(xg,yg)
-      val_b1_der1  = b1_field_vect%first_deriv_eta1_value_at_point(xg,yg)
-      val_b1_der2  = b1_field_vect%first_deriv_eta2_value_at_point(xg,yg)
+      val_b1      = b1_field_vect%value_at_point(xg,yg)
+      val_b1_der1 = b1_field_vect%first_deriv_eta1_value_at_point(xg,yg)
+      val_b1_der2 = b1_field_vect%first_deriv_eta2_value_at_point(xg,yg)
 
-      val_b2       = b2_field_vect%value_at_point(xg,yg)
-      val_b2_der1  = b2_field_vect%first_deriv_eta1_value_at_point(xg,yg)
-      val_b2_der2  = b2_field_vect%first_deriv_eta2_value_at_point(xg,yg)
+      val_b2      = b2_field_vect%value_at_point(xg,yg)
+      val_b2_der1 = b2_field_vect%first_deriv_eta1_value_at_point(xg,yg)
+      val_b2_der2 = b2_field_vect%first_deriv_eta2_value_at_point(xg,yg)
  
       jac_mat = c_field%get_jacobian_matrix(xg,yg)
       val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)
@@ -940,46 +938,55 @@ do cell_i = 1, nc_1
               
         mm = jj*(spl_deg_1+1)+ii+1
               
-        mass(mm) = mass(mm)+val_jac*wxg*wyg*(dbs1(ii+1,1)*dbs2(jj+1,1))
+        mass(mm) = mass(mm)+val_jac*wxg*wyg* &
+          (es%v_splines1(ii+1,i,cell_i)*es%v_splines2(jj+1,j,cell_j))
 
-        stiff(mm) = stiff(mm)+val_jac*wxg*wyg*(dbs1(ii+1,2)*dbs2(jj+1,1)+&
-                                        dbs1(ii+1,1)*dbs2(jj+1,2))
+        stiff(mm) = stiff(mm)+val_jac*wxg*wyg* &
+          (es%d_splines1(ii+1,i,cell_i)*es%v_splines2(jj+1,j,cell_j)+&
+           es%v_splines1(ii+1,i,cell_i)*es%d_splines2(jj+1,j,cell_j))
              
         do kk = 0,spl_deg_1
         do ll = 0,spl_deg_2
                     
           nn =  ll*(spl_deg_1+1)+kk+1
          
-          source(icell,mm,nn) = source(icell,mm,nn) +     &
-            val_jac*wxg*wyg*dbs1_rho(ii+1,1)*dbs1(kk+1,1)*  &
-                            dbs2_rho(jj+1,1)*dbs2(ll+1,1)
+          source(icell,mm,nn) = source(icell,mm,nn) + val_jac*wxg*wyg * &
+            es%r_splines1(ii+1,i,cell_i)*es%v_splines1(kk+1,i,cell_i)*  &
+            es%r_splines2(jj+1,j,cell_j)*es%v_splines2(ll+1,j,cell_j)
                
-          M_c(mm,nn) = M_c(mm, nn) + &
-            val_c*val_jac*wxg*wyg*dbs1(ii+1,1)*dbs1(kk+1,1)*  &
-                                  dbs2(jj+1,1)*dbs2(ll+1,1)
+          M_c(mm,nn) = M_c(mm,nn) + val_c*val_jac*wxg*wyg*              &
+            es%v_splines1(ii+1,i,cell_i)*es%v_splines1(kk+1,i,cell_i) * &
+            es%v_splines2(jj+1,j,cell_j)*es%v_splines2(ll+1,j,cell_j)
                
-          K_11(mm,nn) = K_11(mm,nn) + B11*wxg*wyg/val_jac* &
-            dbs1(ii+1,2)*dbs1(kk+1,2) * dbs2(jj+1,1)*dbs2(ll+1,1)
+          K_11(mm,nn) = K_11(mm,nn) + B11*wxg*wyg/val_jac*              &
+            es%d_splines1(ii+1,i,cell_i)*es%d_splines1(kk+1,i,cell_i) * &
+            es%v_splines2(jj+1,j,cell_j)*es%v_splines2(ll+1,j,cell_j)
               
-          K_22(mm,nn) = K_22(mm,nn) + B22*wxg*wyg/val_jac*  &
-            dbs1(ii+1,1)*dbs1(kk+1,1) * dbs2(jj+1,2)*dbs2(ll+1,2)
+          K_22(mm,nn) = K_22(mm,nn) + B22*wxg*wyg/val_jac*              &
+            es%v_splines1(ii+1,i,cell_i)*es%v_splines1(kk+1,i,cell_i) * &
+            es%d_splines2(jj+1,j,cell_j)*es%d_splines2(ll+1,j,cell_j)
                
-          K_12(mm, nn) = K_12(mm,nn) + B12*wxg*wyg/val_jac*  &
-            dbs1(ii+1,2)*dbs1(kk+1,1) * dbs2(jj+1,1)*dbs2(ll+1,2)
+          K_12(mm,nn) = K_12(mm,nn) + B12*wxg*wyg/val_jac*              &
+            es%d_splines1(ii+1,i,cell_i)*es%v_splines1(kk+1,i,cell_i) * &
+            es%v_splines2(jj+1,j,cell_j)*es%d_splines2(ll+1,j,cell_j)
                
-          K_21(mm,nn) = K_21(mm, nn) + B21*wxg*wyg/val_jac*  &
-            dbs1(ii+1,1)*dbs1(kk+1,2) * dbs2(jj+1,2)*dbs2(ll+1,1)
+          K_21(mm,nn) = K_21(mm,nn) + B21*wxg*wyg/val_jac*              &
+            es%v_splines1(ii+1,i,cell_i)*es%d_splines1(kk+1,i,cell_i) * &
+            es%d_splines2(jj+1,j,cell_j)*es%v_splines2(ll+1,j,cell_j)
 
-          M_bv(mm,nn) = M_bv(mm,nn) + &
-            MC*wxg*wyg * dbs1(ii+1,1)*dbs1(kk+1,1) * dbs2(jj+1,1)*dbs2(ll+1,1)
+          M_bv(mm,nn) = M_bv(mm,nn) + MC*wxg*wyg *                      &
+            es%v_splines1(ii+1,i,cell_i)*es%v_splines1(kk+1,i,cell_i) * &
+            es%v_splines2(jj+1,j,cell_j)*es%v_splines2(ll+1,j,cell_j)
                
           ! A revoir 
-          S_b1(mm,nn) = S_b1(mm,nn) + C1*wxg*wyg *  &
-            dbs1(ii+1,1)*dbs1(kk+1,2) * dbs2(jj+1,1)*dbs2(ll+1,1)
+          S_b1(mm,nn) = S_b1(mm,nn) + C1*wxg*wyg *                      &
+            es%v_splines1(ii+1,i,cell_i)*es%d_splines1(kk+1,i,cell_i) * &
+            es%v_splines2(jj+1,j,cell_j)*es%v_splines2(ll+1,j,cell_j)
 
           ! A revoir 
-          S_b2(mm,nn) = S_b2(mm,nn) + C2*wxg*wyg *  &
-            dbs1(ii+1,1)*dbs1(kk+1,1) * dbs2(jj+1,1)*dbs2(ll+1,2)
+          S_b2(mm,nn) = S_b2(mm,nn) + C2*wxg*wyg *                      &
+            es%v_splines1(ii+1,i,cell_i)*es%v_splines1(kk+1,i,cell_i) * &
+            es%v_splines2(jj+1,j,cell_j)*es%d_splines2(ll+1,j,cell_j)
 
         end do
         end do
@@ -1797,7 +1804,7 @@ subroutine interv( es, xt, lxt, x, left, mflag )
     sll_int32  :: nderiv
     
     sll_real64 :: a(:,:)
-    sll_real64,dimension(k,nderiv), intent(out) :: dbiatx!(k,nderiv)
+    sll_real64,dimension(:,:), intent(out) :: dbiatx!(k,nderiv)
     sll_real64:: factor
     sll_real64:: fkp1mm
     sll_int32 :: i
