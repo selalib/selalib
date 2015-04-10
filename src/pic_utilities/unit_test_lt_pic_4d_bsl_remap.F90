@@ -283,7 +283,7 @@ program unit_test_lt_pic_bsl_remap
      call sll_lt_pic_4d_write_f_on_remap_grid( part_group )
   else if (remap_type == 'ltp_bsl') then
      ! remap with [[file:lt_pic_4d_utilities.F90::sll_lt_pic_4d_write_bsl_f_on_remap_grid]]
-     call sll_lt_pic_4d_write_f_on_remapping_grid( part_group, 2)
+     call sll_lt_pic_4d_write_f_on_remapping_grid( part_group, 2, 2, 2, 2)
   else
      print*, 'ERROR (code=765536864562b): option is ltp or ltp_bsl'
      stop
