@@ -1253,7 +1253,7 @@ subroutine build_local_matrices_rho( es, cell_i, cell_j)
   sll_real64 :: gpt2
   sll_real64 :: wgpt1
   sll_real64 :: wgpt2
-  sll_int32  :: index1
+  sll_int32  :: n
   sll_real64, dimension(es%spline_degree1+1,2) :: dbiatx1
   sll_real64, dimension(es%spline_degree2+1,2) :: dbiatx2
   sll_real64 :: val_f
@@ -1288,16 +1288,13 @@ subroutine build_local_matrices_rho( es, cell_i, cell_j)
      ! loop over the splines supported in the cell that are different than
      ! zero at the point (gpt1,gpt2) (there are spline_degree+1 splines in
      ! each direction.
-      do ii = 0,es%spline_degree1
-        do jj = 0,es%spline_degree2
-                
-          spline1 = es%v_splines1(1,ii+1,i,cell_i)
-          spline2 = es%v_splines2(1,jj+1,j,cell_j)
-               
-          index1  =  jj * ( es%spline_degree1 + 1 ) + ii + 1
-          es%M_rho_loc(index1)= es%M_rho_loc(index1) + &
-                    val_f*val_jac*wgpt1*wgpt2*spline1*spline2
-                
+      n = 0
+      do jj = 1,es%spline_degree2+1
+        spline2 = es%v_splines2(1,jj,j,cell_j)
+        do ii = 1,es%spline_degree1+1
+          spline1 = es%v_splines1(1,ii,i,cell_i)
+          n  =  n+1
+          es%M_rho_loc(n)= es%M_rho_loc(n) + val_f*val_jac*wgpt1*wgpt2*spline1*spline2
         end do
       end do
     end do
@@ -1324,6 +1321,7 @@ subroutine local_to_global_matrices_rho( es, cell_i, cell_j)
   bc_bottom = es%bc_bottom
   bc_top    = es%bc_top
   
+  b = 0
   do mm = 0,es%spline_degree2
     index3 = cell_j + mm
     !other option for above: index3 = mod(index3-1,es%total_num_splines2)+1
@@ -1345,7 +1343,7 @@ subroutine local_to_global_matrices_rho( es, cell_i, cell_j)
       end if
 
       x             =  index1 + (index3-1)*nbsp
-      b             =  mm * ( es%spline_degree1 + 1 ) + i + 1
+      b             =  b + 1
       es%rho_vec(x) =  es%rho_vec(x)  + es%M_rho_loc(b)
         
     end do
