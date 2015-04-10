@@ -1114,7 +1114,7 @@ subroutine solve_general_coordinates_elliptic_eq( es, rho, phi)
   sll_real64 :: int_rho,int_jac
   sll_int32 :: num_pts_g1, num_pts_g2, ig, jg
   sll_real64 :: wgpt1, wgpt2, gpt1, gpt2, eta1, eta2
-  sll_real64 :: val_jac
+  sll_real64 :: val_f, val_j
   class(sll_scalar_field_2d_base),pointer  :: base_field_pointer
   class(sll_interpolator_2d_base),pointer  :: base_interpolator_pointer
   sll_real64, dimension(:,:), pointer :: coeff_rho
@@ -1174,10 +1174,11 @@ subroutine solve_general_coordinates_elliptic_eq( es, rho, phi)
             do ig=1,num_pts_g1
               gpt1  = eta1  + es%gauss_pts1(1,ig)
               wgpt1 = es%gauss_pts1(2,ig)
-              es%rho_at_gauss(ig,jg,i,j)   = rho%value_at_point(gpt1,gpt2)
-              val_jac = es%val_jac(ig,jg,i,j)
-              int_rho = int_rho + rho%value_at_point(gpt1,gpt2)*wgpt2*wgpt1*val_jac 
-              int_jac = int_jac + wgpt2*wgpt1*val_jac
+              val_f = rho%value_at_point(gpt1,gpt2)
+              es%rho_at_gauss(ig,jg,i,j) = val_f
+              val_j = es%val_jac(ig,jg,i,j)*wgpt1*wgpt2
+              int_rho = int_rho + rho%value_at_point(gpt1,gpt2)**val_j
+              int_jac = int_jac + val_j
             end do
           end do
         end do
@@ -1206,10 +1207,11 @@ subroutine solve_general_coordinates_elliptic_eq( es, rho, phi)
           do ig=1,num_pts_g1
             gpt1  = eta1  + es%gauss_pts1(1,ig)
             wgpt1 = es%gauss_pts1(2,ig)
-            es%rho_at_gauss(ig,jg,i,j) = rho%value_at_point(gpt1,gpt2)
-            val_jac = es%val_jac(ig,jg,i,j)
-            int_rho = int_rho + rho%value_at_point(gpt1,gpt2)*wgpt2*wgpt1*val_jac 
-            int_jac = int_jac + wgpt2*wgpt1*val_jac
+            val_f = rho%value_at_point(gpt1,gpt2)
+            es%rho_at_gauss(ig,jg,i,j) =  val_f
+            val_j = es%val_jac(ig,jg,i,j) * wgpt1 * wgpt2
+            int_rho = int_rho + val_f*val_j 
+            int_jac = int_jac + val_j
           end do
         end do
       end do
@@ -1239,10 +1241,6 @@ subroutine build_local_matrices_rho( es, cell_i, cell_j)
   class(general_coordinate_elliptic_solver) :: es
   sll_int32, intent(in) :: cell_i
   sll_int32, intent(in) :: cell_j
-  sll_int32 :: bc_left    
-  sll_int32 :: bc_right
-  sll_int32 :: bc_bottom    
-  sll_int32 :: bc_top  
   sll_real64 :: eta1
   sll_real64 :: eta2
   sll_int32  :: num_pts_g1 
@@ -1254,19 +1252,10 @@ subroutine build_local_matrices_rho( es, cell_i, cell_j)
   sll_real64 :: wgpt1
   sll_real64 :: wgpt2
   sll_int32  :: n
-  sll_real64, dimension(es%spline_degree1+1,2) :: dbiatx1
-  sll_real64, dimension(es%spline_degree2+1,2) :: dbiatx2
   sll_real64 :: val_f
-  sll_real64 :: val_jac,spline1,spline2
+  sll_real64 :: val_j,spline1,spline2
     
   es%M_rho_loc(:)  = 0.0_f64
-  dbiatx1(:,:)  = 0.0_f64
-  dbiatx2(:,:)  = 0.0_f64
-  ! The supposition is that all fields use the same logical mesh
-  bc_left   = es%bc_left
-  bc_right  = es%bc_right
-  bc_bottom = es%bc_bottom
-  bc_top    = es%bc_top
 
   num_pts_g1 = size(es%gauss_pts1,2)
   num_pts_g2 = size(es%gauss_pts2,2)
@@ -1274,6 +1263,9 @@ subroutine build_local_matrices_rho( es, cell_i, cell_j)
   eta1  = es%eta1_min + (cell_i-1)*es%delta_eta1
   eta2  = es%eta2_min + (cell_j-1)*es%delta_eta2
     
+  !s_rho = 0.0_f64
+  !s_jac = 0.0_f64
+
   do j=1,num_pts_g2
     gpt2  = eta2 + es%gauss_pts2(1,j)
     wgpt2 = es%gauss_pts2(2,j)
@@ -1283,7 +1275,7 @@ subroutine build_local_matrices_rho( es, cell_i, cell_j)
       wgpt1 = es%gauss_pts1(2,i)
   
       val_f = es%rho_at_gauss(i,j,cell_i,cell_j)
-      val_jac = es%val_jac(i,j,cell_i,cell_j)
+      val_j = es%val_jac(i,j,cell_i,cell_j)*wgpt1*wgpt2
 
      ! loop over the splines supported in the cell that are different than
      ! zero at the point (gpt1,gpt2) (there are spline_degree+1 splines in
@@ -1294,9 +1286,13 @@ subroutine build_local_matrices_rho( es, cell_i, cell_j)
         do ii = 1,es%spline_degree1+1
           spline1 = es%v_splines1(1,ii,i,cell_i)
           n  =  n+1
-          es%M_rho_loc(n)= es%M_rho_loc(n) + val_f*val_jac*wgpt1*wgpt2*spline1*spline2
+          es%M_rho_loc(n)= es%M_rho_loc(n) + val_f*val_j*spline1*spline2
         end do
       end do
+
+      !s_rho = s_rho + val_f*wgpt2*wgpt1*val_jac 
+      !s_jac = s_jac + wgpt2*wgpt1*val_jac
+
     end do
   end do
     
@@ -1359,7 +1355,7 @@ subroutine solve_linear_system( es )
   class(general_coordinate_elliptic_solver) :: es
   !type(csr_matrix)  :: csr_masse
   integer :: elt, elt1
-  integer :: i,j
+  integer :: i,j,k
   character(len=*),parameter :: as_file  = 'rho'
   character(len=*),parameter :: as_file1 = 'phi'
   character(len=*),parameter :: as_file2 = 'mat'
@@ -1379,12 +1375,13 @@ subroutine solve_linear_system( es )
   if( bc_left  ==SLL_PERIODIC  .and. bc_right==SLL_PERIODIC .and. &
       bc_bottom==SLL_DIRICHLET .and. bc_top  ==SLL_DIRICHLET ) then
        
-    do i = 1, es%total_num_splines1
-      do j = 1, es%total_num_splines2
+    k = 0
+    do j = 1, es%total_num_splines2
+      do i = 1, es%total_num_splines1
              
-        elt  = i + es%total_num_splines1 * (  j - 1)
+        k = k+1
         elt1 = i + ( es%total_num_splines1 ) * j
-        es%tmp_rho_vec(elt) = es%rho_vec(elt1)
+        es%tmp_rho_vec(k) = es%rho_vec(elt1)
 
       end do
     end do
@@ -1392,12 +1389,13 @@ subroutine solve_linear_system( es )
   else if( bc_left  ==SLL_DIRICHLET .and. bc_right==SLL_DIRICHLET .and.&
            bc_bottom==SLL_DIRICHLET .and. bc_top  ==SLL_DIRICHLET) then 
        
-    do i = 1, es%total_num_splines1
-      do j = 1, es%total_num_splines2
+    k = 0
+    do j = 1, es%total_num_splines2
+      do i = 1, es%total_num_splines1
             
-        elt  = i + es%total_num_splines1 * (  j - 1)
+        k = k+1
         elt1 = i + 1 + ( es%total_num_splines1 + 2 ) * j 
-        es%tmp_rho_vec( elt ) = es%rho_vec( elt1 )
+        es%tmp_rho_vec(k) = es%rho_vec( elt1 )
 
       end do
     end do
@@ -1411,12 +1409,13 @@ subroutine solve_linear_system( es )
   else if(bc_left  ==SLL_DIRICHLET .and. bc_right==SLL_DIRICHLET .and.&
           bc_bottom==SLL_PERIODIC  .and. bc_top  ==SLL_PERIODIC ) then
      
-    do i = 1, es%total_num_splines1
+    k = 0
     do j = 1, es%total_num_splines2
+    do i = 1, es%total_num_splines1
 
+        k = k+1
         elt1 = i+1 + (es%total_num_splines1+2)*(j-1)
-        elt  = i + es%total_num_splines1*(j-1)
-        es%tmp_rho_vec(elt) = es%rho_vec(elt1)
+        es%tmp_rho_vec(k) = es%rho_vec(elt1)
 
     end do
     end do
