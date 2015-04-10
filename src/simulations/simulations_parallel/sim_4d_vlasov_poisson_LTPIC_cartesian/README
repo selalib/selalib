@@ -27,8 +27,9 @@
    file:../../../../usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/params_lt_pic_4d.nml
 
 ** Configuring
-   - extra packages: (binutils is for gprof)
-     [[elisp:(compile "sudo apt-get install -y sudo apt-get install libopenmpi-dev libfftw3-dev liblapack-dev libhdf5-mpi-dev binutils")]]
+   - extra packages: binutils is for gprof, linux-tools is for perf
+     [[elisp:(compile "sudo apt-get install -y sudo apt-get install libopenmpi-dev libfftw3-dev liblapack-dev
+     libhdf5-mpi-dev binutils linux-tools")]]
     
    - configuration options:
      some configuration options are required for [[file:../CMakeLists.txt]] to build parallel tests
