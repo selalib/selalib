@@ -2427,14 +2427,25 @@ end subroutine
 
 
   ! <<sll_lt_pic_4d_deposit_charge_on_2d_mesh>>
-  subroutine sll_lt_pic_4d_deposit_charge_on_2d_mesh( p_group, q_accumulator, n_virtual_for_deposition, use_exact_f0)
+  subroutine sll_lt_pic_4d_deposit_charge_on_2d_mesh( p_group, q_accumulator,       &
+                                                      n_virtual_for_deposition,     &
+                                                      use_exact_f0, given_total_density)
 
     type(sll_lt_pic_4d_group),pointer,intent(inout) :: p_group
     type(sll_charge_accumulator_2d), pointer, intent(inout) :: q_accumulator
     sll_int32, intent(in) :: n_virtual_for_deposition
     logical, intent(in) :: use_exact_f0
+    sll_real64, intent(in), optional :: given_total_density
 
-    call sll_lt_pic_4d_write_f_on_grid_or_deposit (p_group, q_accumulator, .true., n_virtual_for_deposition, use_exact_f0)
+    if( present(given_total_density) )then
+        call sll_lt_pic_4d_write_f_on_grid_or_deposit (p_group, q_accumulator, .true., &
+                                                       n_virtual_for_deposition, &
+                                                       use_exact_f0, given_total_density)
+    else
+        call sll_lt_pic_4d_write_f_on_grid_or_deposit (p_group, q_accumulator, .true., &
+                                                       n_virtual_for_deposition, &
+                                                       use_exact_f0)
+    end if
 
   end subroutine sll_lt_pic_4d_deposit_charge_on_2d_mesh
 
@@ -2483,11 +2494,16 @@ end subroutine
   !     -> in the "charge deposition" scenario, finer grids of virtual point particles will be (temporarily) created and
   !        deposited. This will slow down the code and is morally required if the density f(t_n) is not locally smooth
   !
+  !  - given_total_density is an optional argument that is given to make the deposition method conservative
+  !    (note: it may be used also in the 'write_f' scenario, but one has to define what conservative means in this case)
+  !
   !  Note: This routine is an evolution from sll_lt_pic_4d_write_bsl_f_on_remap_grid (which will be eventually discarded)
 
   ! todo: treat the non-peridodic case
 
-  subroutine sll_lt_pic_4d_write_f_on_grid_or_deposit (p_group, q_accumulator, scenario_is_deposition, n_virtual, use_exact_f0)
+  subroutine sll_lt_pic_4d_write_f_on_grid_or_deposit (p_group, q_accumulator,              &
+                                                       scenario_is_deposition, n_virtual,   &
+                                                       use_exact_f0, given_total_density)
 
     ! [[file:../pic_particle_types/lt_pic_4d_group.F90::sll_lt_pic_4d_group]] p_group contains both the existing
     ! particles and the virtual remapping grid
@@ -2496,7 +2512,13 @@ end subroutine
     logical, intent(in) :: scenario_is_deposition            ! if false, then scenario is remapping
     sll_int32, intent(in) :: n_virtual ! <<n_virtual>>      ! see comments above for the meaning
     logical, intent(in) :: use_exact_f0
+    sll_real64, intent(in), optional :: given_total_density
+
     type(charge_accumulator_cell_2d), pointer :: charge_accumulator_cell
+
+    sll_real64 :: deposited_density
+    sll_real64 :: charge_correction_factor
+
     ! cf [[file:~/mcp/maltpic/ltpic-bsl.tex::N*]]
 
     sll_int32 :: num_virtual_cells_x
@@ -2633,6 +2655,12 @@ end subroutine
     sll_real64 :: x_k,y_k,vx_k,vy_k
     sll_real64 :: x_k_t0,y_k_t0,vx_k_t0,vy_k_t0
 
+    sll_real64 :: x_to_xk, y_to_yk, vx_to_vxk, vy_to_vyk
+    sll_real64 :: d1_x, d1_y, d1_vx, d1_vy
+    sll_real64 :: d2_x, d2_y, d2_vx, d2_vy
+    sll_real64 :: d3_x, d3_y, d3_vx, d3_vy
+    sll_real64 :: d4_x, d4_y, d4_vx, d4_vy
+
     sll_real64 :: part_radius_x
     sll_real64 :: part_radius_y
     sll_real64 :: part_radius_vx
@@ -2685,6 +2713,21 @@ end subroutine
     sll_real64 :: one_over_thermal_velocity_squared
     sll_real64 :: alpha_landau
     sll_real64 :: k_landau
+
+    ! pw-affine approximations of exp and cos for fast (?) evaluations
+    sll_int32 :: i_table, ncells_table
+    sll_real64, dimension(:),allocatable :: cos_table, exp_table
+    sll_real64 :: s, s_aux
+    sll_real64 :: hs_cos_table, hs_exp_table
+    sll_real64 :: ds_cos_table, ds_exp_table, ds_table
+    sll_real64 :: smin_cos_table, smax_cos_table
+    sll_real64 :: smin_exp_table, smax_exp_table
+    sll_real64 :: si_cos, si_exp
+
+    sll_real64 :: cos_approx, exp_approx
+
+
+
 
     ! --- end of declarations
 
@@ -2750,6 +2793,10 @@ end subroutine
                                     virtual_grid_vy_min,  &
                                     virtual_grid_vy_max   &
                                    )
+
+        if( present(given_total_density) )then
+            deposited_density = 0
+        end if
 
     else
         g => p_group%remapping_grid
@@ -2912,6 +2959,36 @@ end subroutine
     ! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
     p_group%debug_bsl_remap = -100
 
+    if( use_exact_f0 )then
+
+        ! create two tables for fast evaluation of cosine and exponential
+        ! -- THIS IS USEFUL FOR THE LANDAU f0 AND MAYBE NOT FOR OTHER INITIAL DENSITIES --
+
+        ncells_table = 50000
+        SLL_ALLOCATE(cos_table(0:ncells_table),ierr)
+        SLL_ALLOCATE(exp_table(0:ncells_table),ierr)
+
+        !  cos table range is [0, 2 pi]
+        smin_cos_table = 0.
+        smax_cos_table = 2 * sll_pi
+        hs_cos_table = (smax_cos_table - smin_cos_table) / ncells_table
+
+        !  exp table range is [-100, 100]
+        smin_exp_table = -100.
+        smax_exp_table =  100.
+        hs_exp_table = (smax_exp_table - smin_exp_table) / ncells_table
+
+        si_cos = smin_cos_table
+        si_exp = smin_exp_table
+        do i_table = 0, ncells_table
+            cos_table(i_table) = cos(si_cos)
+            exp_table(i_table) = exp(si_exp)
+            si_cos = si_cos + hs_cos_table
+            si_exp = si_exp + hs_exp_table
+        end do
+
+    end if
+
     ! <<loop_on_virtual_cells>> [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:loop_over_all_cells]]
     ! Loop over all cells of indices i,j,l,m which contain at least one particle
 
@@ -2953,30 +3030,30 @@ end subroutine
 
                 k = closest_particle(i,j,l,m)
 
-#define UPDATE_CLOSEST_PARTICLE_ARRAYS_USING_NEIGHBOR_CELLS(di,dj,dl,dm)                     \
-    do ;\
-        k_neighbor = closest_particle(i+(di), j+(dj), l+(dl), m+(dm))           ;\
-                                                                                            ;\
-        if(k_neighbor /= 0) then;  do          ; \
-            particle => p_group%p_list(k_neighbor)                                  ;\
-            call cell_offset_to_global(particle%dx,particle%dy,particle%ic,p_group%mesh,x,y) ;\
-            vx = particle%vx                                                                    ;\
-            vy = particle%vy               ;\
-            x_aux = x - g%eta1_min               ;\
-            y_aux = y - g%eta2_min                           ;\
-            vx_aux = vx - g%eta3_min                           ;\
-            vy_aux = vy - g%eta4_min               ;\
-            call update_closest_particle_arrays(k_neighbor,                                       \
-                                                x_aux, y_aux, vx_aux, vy_aux,                     \
-                                                i, j, l, m,                                       \
-                                                h_virtual_cell_x, h_virtual_cell_y,               \
-                                                h_virtual_cell_vx, h_virtual_cell_vy,             \
-                                                closest_particle,                                 \
-                                                closest_particle_distance)                       ;\
-        exit ;\
-        end do ;\
-        end if ;\
-    exit ;\
+#define UPDATE_CLOSEST_PARTICLE_ARRAYS_USING_NEIGHBOR_CELLS(di,dj,dl,dm)                      \
+    do;                                                                                       \
+        k_neighbor = closest_particle(i+(di), j+(dj), l+(dl), m+(dm));                        \
+;                                                                                             \
+        if(k_neighbor /= 0) then;  do;                                                        \
+            particle => p_group%p_list(k_neighbor);                                           \
+            call cell_offset_to_global(particle%dx,particle%dy,particle%ic,p_group%mesh,x,y); \
+            vx = particle%vx;                                                                 \
+            vy = particle%vy;                                                                 \
+            x_aux = x - g%eta1_min;                                                           \
+            y_aux = y - g%eta2_min;                                                           \
+            vx_aux = vx - g%eta3_min;                                                         \
+            vy_aux = vy - g%eta4_min;                                                         \
+            call update_closest_particle_arrays(k_neighbor,                                   \
+                                                x_aux, y_aux, vx_aux, vy_aux,                 \
+                                                i, j, l, m,                                   \
+                                                h_virtual_cell_x, h_virtual_cell_y,           \
+                                                h_virtual_cell_vx, h_virtual_cell_vy,         \
+                                                closest_particle,                             \
+                                                closest_particle_distance);                   \
+        exit;                                                                                 \
+        end do;                                                                               \
+        end if;                                                                               \
+    exit;                                                                                     \
     end do
 
 
@@ -3016,12 +3093,8 @@ end subroutine
 
                 end if
 
-
-! A REMETTRE :
                 k = closest_particle(i,j,l,m)
                 SLL_ASSERT(k /= 0)
-
-!               if(k /= 0) then     ! A ENLEVER
 
                ! [[file:~/mcp/maltpic/ltpic-bsl.tex::hat-bz*]] Compute backward image of l-th virtual node by the
                ! k-th backward flow. MCP -> oui, avec la matrice de deformation calculée avec la fonction
@@ -3072,24 +3145,73 @@ end subroutine
                ! virtual particles in the cell to compute the value of f0 at that point (Following
                ! [[file:~/mcp/maltpic/ltpic-bsl.tex::BSL_remapping_algo]])
 
+
+               ! x, y, vx, vy = will be the location of the virtual particle at time n
+
+               i_x = (i-1)*n_virtual    ! this index is needed in the remapping scenario
+               x =  virtual_parts_x_min  + (i_x-1) * h_virtual_parts_x
+               x_to_xk = x - x_k
                do ivirt = 1,n_virtual
+                  i_x = i_x + 1
+                  x =       x       + h_virtual_parts_x
+                  x_to_xk = x_to_xk + h_virtual_parts_x
+
                   dx_in_virtual_cell = (ivirt-1)/n_virtual
+
+                  d1_x = d11 * x_to_xk
+                  d2_x = d21 * x_to_xk
+                  d3_x = d31 * x_to_xk
+                  d4_x = d41 * x_to_xk
+
+                  i_y = (j-1)*n_virtual     ! this index is needed in the remapping scenario
+                  y =  virtual_parts_y_min + (i_y-1)*h_virtual_parts_y
+                  y_to_yk = y - y_k
                   do jvirt = 1,n_virtual
+                     i_y = i_y + 1
+                     y =       y       + h_virtual_parts_y
+                     y_to_yk = y_to_yk + h_virtual_parts_y
+
                      dy_in_virtual_cell = (jvirt-1)/n_virtual
+
+                     d1_y = d12 * y_to_yk
+                     d2_y = d22 * y_to_yk
+                     d3_y = d32 * y_to_yk
+                     d4_y = d42 * y_to_yk
+
+                     i_vx = (l-1)*n_virtual     ! this index is needed in the remapping scenario
+                     vx = virtual_parts_vx_min + (i_vx-1)*h_virtual_parts_vx
+                     vx_to_vxk = vx - vx_k
                      do lvirt = 1,n_virtual
+                        i_vx = i_vx + 1
+                        vx =        vx        + h_virtual_parts_vx
+                        vx_to_vxk = vx_to_vxk + h_virtual_parts_vx
+
+                        d1_vx = d13 * vx_to_vxk
+                        d2_vx = d23 * vx_to_vxk
+                        d3_vx = d33 * vx_to_vxk
+                        d4_vx = d43 * vx_to_vxk
+
+
+                        i_vy = (m-1)*n_virtual      ! this index is needed in the remapping scenario
+                        vy = virtual_parts_vy_min + (i_vy-1)*h_virtual_parts_vy
+                        vy_to_vyk = vy - vy_k
                         do mvirt = 1,n_virtual
+                           i_vy = i_vy + 1
+                           vy =        vy        + h_virtual_parts_vy
+                           vy_to_vyk = vy_to_vyk + h_virtual_parts_vy
+
+                           d1_vy = d14 * vy_to_vyk
+                           d2_vy = d24 * vy_to_vyk
+                           d3_vy = d34 * vy_to_vyk
+                           d4_vy = d44 * vy_to_vyk
 
                            ! real index of the virtual particle in
                            ! [[file:../pic_particle_types/lt_pic_4d_group.F90::target_values]]
 
-                           i_x =  (i-1)*n_virtual + ivirt
-                           SLL_ASSERT(i_x>0)
-                           i_y =  (j-1)*n_virtual + jvirt
-                           SLL_ASSERT(i_y>0)
-                           i_vx = (l-1)*n_virtual + lvirt
-                           SLL_ASSERT(i_vx>0)
-                           i_vy = (m-1)*n_virtual + mvirt
-                           SLL_ASSERT(i_vy>0)
+!                           SLL_ASSERT( i_x == (i-1)*n_virtual + ivirt )
+!                           SLL_ASSERT( i_y == (j-1)*n_virtual + jvirt )
+!                           SLL_ASSERT( i_vx == (l-1)*n_virtual + lvirt )
+!                           SLL_ASSERT( i_vy == (m-1)*n_virtual + mvirt )
 
                            ! The index may go out of the domain for higher values of x,y,vx,vy in each dimension
                            ! (because the corners of the corresponding virtual cell do not correspond to existing
@@ -3101,13 +3223,6 @@ end subroutine
                                       .and. i_vx <=number_parts_vx              &
                                       .and. i_vy <= number_parts_vy) ) then
 
-                              ! Location of virtual particle (ivirt,jvirt,lvirt,mvirt) at time n
-
-                              x =  virtual_parts_x_min  + (i_x-1)*h_virtual_parts_x
-                              y =  virtual_parts_y_min  + (i_y-1)*h_virtual_parts_y
-                              vx = virtual_parts_vx_min + (i_vx-1)*h_virtual_parts_vx
-                              vy = virtual_parts_vy_min + (i_vy-1)*h_virtual_parts_vy
-
 !                                  x =  virtual_parts_x_min  + (i-1)*h_virtual_cell_x  + (ivirt-1)*h_virtual_parts_x
 !                                  y =  virtual_parts_y_min  + (j-1)*h_virtual_cell_y  + (jvirt-1)*h_virtual_parts_y
 !                                  vx = virtual_parts_vx_min + (l-1)*h_virtual_cell_vx + (lvirt-1)*h_virtual_parts_vx
@@ -3117,23 +3232,63 @@ end subroutine
                               ! position of particle k at time 0 (x_k_t0,y_k_t0,vx_k_t0,vy_k_t0) according to flow
                               ! deformation
 
-                              x_t0  = d11 * (x - x_k) + d12 * (y - y_k) + d13 * (vx - vx_k) + d14 * (vy - vy_k)
-                              y_t0  = d21 * (x - x_k) + d22 * (y - y_k) + d23 * (vx - vx_k) + d24 * (vy - vy_k)
-                              vx_t0 = d31 * (x - x_k) + d32 * (y - y_k) + d33 * (vx - vx_k) + d34 * (vy - vy_k)
-                              vy_t0 = d41 * (x - x_k) + d42 * (y - y_k) + d43 * (vx - vx_k) + d44 * (vy - vy_k)
+
+!                              x_t0  = d11 * (x - x_k) + d12 * (y - y_k) + d13 * (vx - vx_k) + d14 * (vy - vy_k)
+!                              y_t0  = d21 * (x - x_k) + d22 * (y - y_k) + d23 * (vx - vx_k) + d24 * (vy - vy_k)
+!                              vx_t0 = d31 * (x - x_k) + d32 * (y - y_k) + d33 * (vx - vx_k) + d34 * (vy - vy_k)
+!                              vy_t0 = d41 * (x - x_k) + d42 * (y - y_k) + d43 * (vx - vx_k) + d44 * (vy - vy_k)
+
 
                               if( use_exact_f0 )then
 
+                                ! here (x_t0, y_t0, vx_t0, vy_t0) is the (approx) position of the virtual particle at time t=0
+
+                                x_t0  = d1_x + d1_y + d1_vx + d1_vy + x_k_t0
+                                y_t0  = d2_x + d2_y + d2_vx + d2_vy + y_k_t0
+                                vx_t0 = d3_x + d3_y + d3_vx + d3_vy + vx_k_t0
+                                vy_t0 = d4_x + d4_y + d4_vx + d4_vy + vy_k_t0
+
                                 ! WARNING -- this is only valid for the landau damping case...
 
+                                ! -- fast (?) approximation of cos(x_t0)
+
+                                ! s = smin_table + hs_table * (i_table + ds_table) with integer i_table >= 0 and 0 <= ds_table <1
+                                s = modulo( k_landau * x_t0, 2*sll_pi)
+                                s_aux =  s / hs_cos_table       ! because xmin_cos_table = 0
+                                i_table = int(s_aux)
+                                SLL_ASSERT(i_table < ncells_table)
+                                ds_table = s_aux - i_table
+                                cos_approx = (1-ds_table) * cos_table(i_table) + ds_table * cos_table(i_table+1)
+
+                                ! -- fast (?) approximation of exp(vx_t0**2 + vy_t0**2)
+                                s = -0.5 * one_over_thermal_velocity_squared * (vx_t0**2 + vy_t0**2)
+                                s_aux = (s - smin_exp_table) / hs_exp_table
+                                i_table = int(s_aux)
+                                SLL_ASSERT(i_table < ncells_table)
+                                ds_table = s_aux - i_table
+                                exp_approx = (1-ds_table) * exp_table(i_table) + ds_table * exp_table(i_table+1)
+
                                 f_value_on_virtual_particle = one_over_two_pi                   &
-                                    * (1._f64 + alpha_landau * cos(k_landau * (x_k_t0 + x_t0))) &
+                                    * (1._f64 + alpha_landau * cos_approx)                      &
                                     * one_over_thermal_velocity_squared                         &
-                                    * exp(-0.5 * one_over_thermal_velocity_squared              &
-                                          * ((vx_k_t0 + vx_t0)**2 + (vy_k_t0 + vy_t0)**2)       &
-                                         )
+                                    * exp_approx
+
+                                !f_value_on_virtual_particle = one_over_two_pi                   &
+                                !    * (1._f64 + alpha_landau * cos(k_landau * (x_t0))) &
+                                !    * one_over_thermal_velocity_squared                         &
+                                !    * exp(-0.5 * one_over_thermal_velocity_squared              &
+                                !          * (vx_t0**2 + vy_t0**2)       &
+                                !         )
 
                               else
+
+                                  ! here (x_t0, y_t0, vx_t0, vy_t0) is the (approx) position of the virtual particle at time t=0,
+                                  ! RELATIVE to the k-th particle (marker) position at time t=0
+
+                                  x_t0  = d1_x + d1_y + d1_vx + d1_vy
+                                  y_t0  = d1_x + d1_y + d1_vx + d1_vy
+                                  vx_t0 = d1_x + d1_y + d1_vx + d1_vy
+                                  vy_t0 = d1_x + d1_y + d1_vx + d1_vy
 
                                   ! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
                                   if(.not. scenario_is_deposition)then
@@ -3340,6 +3495,11 @@ end subroutine
                                         charge_accumulator_cell%q_ne = charge_accumulator_cell%q_ne             &
                                                 + virtual_charge *  dx_in_virtual_cell *  dy_in_virtual_cell
 
+                                        if( present(given_total_density) )then
+                                            deposited_density = deposited_density + virtual_charge
+                                        end if
+
+
                                     else
 
                                         p_group%target_values(i_x,i_y,i_vx,i_vy) = f_value_on_virtual_particle
@@ -3358,6 +3518,40 @@ end subroutine
           end do
        end do
     end do
+    if( scenario_is_deposition .and. present(given_total_density) )then
+
+        if( deposited_density == 0 )then
+            print *, "WARNING (76576537475) -- total deposited charge is zero, which is strange..."
+            print *, "                      -- (no charge correction in this case) "
+
+        else
+            charge_correction_factor = given_total_density / deposited_density
+
+            do i = 1,num_virtual_cells_x
+               do j = 1,num_virtual_cells_y
+
+                  ! determining the index of the Poisson cell from i and j
+                  x_center_virtual_cell = virtual_grid_x_min + (i - 0.5) * h_virtual_cell_x
+                  y_center_virtual_cell = virtual_grid_y_min + (j - 0.5) * h_virtual_cell_y
+                  call global_to_cell_offset( x_center_virtual_cell, y_center_virtual_cell, &
+                                              p_group%mesh,   &
+                                              i_cell, &
+                                              tmp_dx, tmp_dy)
+
+                  ! simpler value below should work too
+                  SLL_ASSERT( i_cell == i + (j-1) * p_group%mesh%num_cells1 )
+
+                  charge_accumulator_cell => q_accumulator%q_acc(i_cell)
+
+                  charge_accumulator_cell%q_sw = charge_accumulator_cell%q_sw * charge_correction_factor
+                  charge_accumulator_cell%q_se = charge_accumulator_cell%q_se * charge_correction_factor
+                  charge_accumulator_cell%q_nw = charge_accumulator_cell%q_nw * charge_correction_factor
+                  charge_accumulator_cell%q_ne = charge_accumulator_cell%q_ne * charge_correction_factor
+               end do
+            end do
+        end if
+    end if
+
   end subroutine sll_lt_pic_4d_write_f_on_grid_or_deposit
 
 
