@@ -288,98 +288,98 @@ function new_csr_matrix_with_constraint(mat_a) result(mat)
 end function new_csr_matrix_with_constraint
 
 
-  subroutine sll_factorize_csr_matrix(mat)
-    type(sll_csr_matrix), intent(inout) :: mat
-    
-    print *,'#sll_factorize_csr_matrix does nothing here'
-    
-  end subroutine sll_factorize_csr_matrix
+subroutine sll_factorize_csr_matrix(mat)
+  type(sll_csr_matrix), intent(inout) :: mat
+  
+  print *,'#sll_factorize_csr_matrix does nothing here'
+  
+end subroutine sll_factorize_csr_matrix
 
+subroutine csr_add_one_constraint( ia_in,          &
+                                   ja_in,          &
+                                   a_in,           &
+                                   num_rows_in,    &
+                                   num_nz_in,      &
+                                   constraint_vec, &
+                                   ia_out,         &
+                                   ja_out,         &
+                                   a_out)
 
-  subroutine csr_add_one_constraint( &
-    ia_in, &
-    ja_in, &
-    a_in, &
-    num_rows_in, &
-    num_nz_in, &
-    constraint_vec, &
-    ia_out, &
-    ja_out, &
-    a_out)
-    integer, dimension(:), intent(in) :: ia_in  
-    integer, dimension(:), intent(in) :: ja_in  
-    real(8), dimension(:), intent(in) :: a_in
-    integer, intent(in) :: num_rows_in
-    integer, intent(in) :: num_nz_in
-    real(8), dimension(:), intent(in) :: constraint_vec
-    integer, dimension(:), intent(out) :: ia_out
-    integer, dimension(:), intent(out) :: ja_out
-    real(8), dimension(:), intent(out) :: a_out
-    integer :: num_rows_out
-    integer :: num_nz_out
-    integer :: i
-    integer :: s
-    integer :: k
-    
-    
-    num_rows_out = num_rows_in+1
-    num_nz_out = num_nz_in+2*num_rows_in
-    
-    if(size(ia_in)<num_rows_in+1) then
-      print *, '#problem of size of ia_in', size(ia_in),num_rows_in+1
-      stop
-    endif
-    if(size(ja_in)<num_nz_in) then
-      print *, '#problem of size of ja_in', size(ja_in),num_nz_in
-      stop
-    endif
-    if(size(a_in)<num_nz_in) then
-      print *, '#problem of size of a_in', size(a_in),num_nz_in
-      stop
-    endif
-    if(size(ia_out)<num_rows_out+1) then
-      print *, '#problem of size of ia_out', size(ia_out),num_rows_out+1
-      stop
-    endif
-    if(size(ja_out)<num_nz_out) then
-      print *, '#problem of size of ja_out', size(ja_out),num_nz_out
-      stop
-    endif
-    if(size(a_out)<num_nz_out) then
-      print *, '#problem of size of a_out', size(a_out),num_nz_out
-      stop
-    endif
-    if(ia_in(num_rows_in+1).ne.num_nz_in+1)then
-      print *,'#bad value of ia_in(num_rows_in+1)', ia_in(num_rows_in+1),num_nz_in+1
-      stop
-    endif
-    
-    s = 1
-    do i=1,num_rows_in
-      ia_out(i) = s
-      do k = ia_in(i), ia_in(i+1)-1
-        a_out(s) = a_in(k)
-        ja_out(s) = ja_in(k)
-        s = s+1
-      enddo
-      a_out(s) = constraint_vec(i)
-      ja_out(s) = num_rows_out
+  integer, dimension(:), intent(in)  :: ia_in  
+  integer, dimension(:), intent(in)  :: ja_in  
+  real(8), dimension(:), intent(in)  :: a_in
+  integer,               intent(in)  :: num_rows_in
+  integer,               intent(in)  :: num_nz_in
+  real(8), dimension(:), intent(in)  :: constraint_vec
+  integer, dimension(:), intent(out) :: ia_out
+  integer, dimension(:), intent(out) :: ja_out
+  real(8), dimension(:), intent(out) :: a_out
+
+  integer :: num_rows_out
+  integer :: num_nz_out
+  integer :: i
+  integer :: s
+  integer :: k
+  
+  
+  num_rows_out = num_rows_in+1
+  num_nz_out = num_nz_in+2*num_rows_in
+  
+  if(size(ia_in)<num_rows_in+1) then
+    print *, '#problem of size of ia_in', size(ia_in),num_rows_in+1
+    stop
+  endif
+  if(size(ja_in)<num_nz_in) then
+    print *, '#problem of size of ja_in', size(ja_in),num_nz_in
+    stop
+  endif
+  if(size(a_in)<num_nz_in) then
+    print *, '#problem of size of a_in', size(a_in),num_nz_in
+    stop
+  endif
+  if(size(ia_out)<num_rows_out+1) then
+    print *, '#problem of size of ia_out', size(ia_out),num_rows_out+1
+    stop
+  endif
+  if(size(ja_out)<num_nz_out) then
+    print *, '#problem of size of ja_out', size(ja_out),num_nz_out
+    stop
+  endif
+  if(size(a_out)<num_nz_out) then
+    print *, '#problem of size of a_out', size(a_out),num_nz_out
+    stop
+  endif
+  if(ia_in(num_rows_in+1).ne.num_nz_in+1)then
+    print *,'#bad value of ia_in(num_rows_in+1)', ia_in(num_rows_in+1),num_nz_in+1
+    stop
+  endif
+  
+  s = 1
+  do i=1,num_rows_in
+    ia_out(i) = s
+    do k = ia_in(i), ia_in(i+1)-1
+      a_out(s) = a_in(k)
+      ja_out(s) = ja_in(k)
       s = s+1
     enddo
-    ia_out(num_rows_in+1) = s
-    do i=1,num_rows_in
-      a_out(s) = constraint_vec(i)
-      ja_out(s) = i
-      s = s+1      
-    enddo
-    ia_out(num_rows_in+2) = s
-     
-    if(ia_out(num_rows_out+1).ne.num_nz_out+1)then
-      print *,'#bad value of ia_out(num_rows_out+1)',ia_out(num_rows_out+1),num_nz_out+1
-      stop
-    endif
-    
-  end subroutine csr_add_one_constraint
+    a_out(s) = constraint_vec(i)
+    ja_out(s) = num_rows_out
+    s = s+1
+  enddo
+  ia_out(num_rows_in+1) = s
+  do i=1,num_rows_in
+    a_out(s) = constraint_vec(i)
+    ja_out(s) = i
+    s = s+1      
+  enddo
+  ia_out(num_rows_in+2) = s
+   
+  if(ia_out(num_rows_out+1).ne.num_nz_out+1)then
+    print *,'#bad value of ia_out(num_rows_out+1)',ia_out(num_rows_out+1),num_nz_out+1
+    stop
+  endif
+  
+end subroutine csr_add_one_constraint
   
 subroutine sll_mult_csr_matrix_vector(mat, input, output)
     
@@ -396,27 +396,26 @@ subroutine sll_mult_csr_matrix_vector(mat, input, output)
     k_1 = mat%row_ptr(i)
     k_2 = mat%row_ptr(i+1)-1
 
-    output(i) = & 
-      dot_product(mat%val(k_1:k_2),input(mat%col_ind(k_1:k_2)))
+    output(i) = dot_product(mat%val(k_1:k_2),input(mat%col_ind(k_1:k_2)))
             
   end do
 
 end subroutine sll_mult_csr_matrix_vector
 
-subroutine sll_add_to_csr_matrix(mat, val, ai_A, ai_Aprime)
+subroutine sll_add_to_csr_matrix(mat, val, a, aprime)
 
   type(sll_csr_matrix), intent(inout) :: mat
-  sll_real64, intent(in) :: val
-  sll_int32, intent(in) :: ai_A
-  sll_int32, intent(in) :: ai_Aprime
+  sll_real64,           intent(in)    :: val
+  sll_int32,            intent(in)    :: a
+  sll_int32,            intent(in)    :: aprime
 
   sll_int32 :: j
   sll_int32 :: k
 
   ! THE CURRENT LINE IS self%row_ptr(ai_A)
-  do k = mat%row_ptr(ai_A), mat%row_ptr(ai_A+1) - 1
+  do k = mat%row_ptr(a), mat%row_ptr(a+1) - 1
     j = mat%col_ind(k)
-    if (j == ai_Aprime) then
+    if (j == aprime) then
       mat%val(k) = mat%val(k) + val
       exit
     end if
@@ -426,9 +425,9 @@ end subroutine sll_add_to_csr_matrix
   
 subroutine sll_solve_csr_matrix(mat, B, U)
 
-  type(sll_csr_matrix), intent(in) :: mat
-  sll_real64, dimension(:),intent(inout) :: B
-  sll_real64, dimension(:),intent(out) :: U
+  type(sll_csr_matrix),     intent(in)    :: mat
+  sll_real64, dimension(:), intent(inout) :: B
+  sll_real64, dimension(:), intent(out)   :: U
 
   sll_int32  :: maxIter
   sll_real64 :: eps
@@ -664,67 +663,69 @@ end subroutine csr_todense
 !> Test function to initialize a CSR matrix
 !> @details
 !> Fill a matrix in CSR format corresponding to a constant coefficient
-!> five-point stencil on a square grid
+!> five-point stencil on a square grid. This function comes from AGMG
+!> test program.
 subroutine uni2d(this,f)
-type(sll_csr_matrix) :: this
-sll_real64           :: f(:)
-sll_real64, pointer  :: a(:)
-sll_int32            :: m
-sll_int32, pointer   :: ia(:)
-sll_int32, pointer   :: ja(:)
-integer              :: k,l,i,j
 
-real (kind(0d0)), parameter :: zero=0.0d0,cx=-1.0d0,cy=-1.0d0, cd=4.0d0
-
-a  => this%val
-ia => this%row_ptr
-ja => this%col_ind
-
-m = this%num_rows
-
-k=0
-l=0
-ia(1)=1
-do i=1,m
-  do j=1,m
-    k=k+1
-    l=l+1
-    a(l)=cd
-    ja(l)=k
-    f(k)=zero
-    if(j < m) then
-       l=l+1
-       a(l)=cx
-       ja(l)=k+1
-      else
-       f(k)=f(k)-cx
-    end if
-    if(i < m) then
-       l=l+1
-       a(l)=cy
-       ja(l)=k+m
-      else
-       f(k)=f(k)-cy
-    end if
-    if(j > 1) then
-       l=l+1
-       a(l)=cx
-       ja(l)=k-1
-      else
-       f(k)=f(k)-cx
-    end if
-    if(i >  1) then
-       l=l+1
-       a(l)=cy
-       ja(l)=k-m
-      else
-       f(k)=f(k)-cy
-    end if
-    ia(k+1)=l+1
+  type(sll_csr_matrix) :: this
+  sll_real64           :: f(:)
+  sll_real64, pointer  :: a(:)
+  sll_int32            :: m
+  sll_int32, pointer   :: ia(:)
+  sll_int32, pointer   :: ja(:)
+  integer              :: k,l,i,j
+  
+  real (kind(0d0)), parameter :: zero=0.0d0,cx=-1.0d0,cy=-1.0d0, cd=4.0d0
+  
+  a  => this%val
+  ia => this%row_ptr
+  ja => this%col_ind
+  
+  m = this%num_rows
+  
+  k=0
+  l=0
+  ia(1)=1
+  do i=1,m
+    do j=1,m
+      k=k+1
+      l=l+1
+      a(l)=cd
+      ja(l)=k
+      f(k)=zero
+      if(j < m) then
+         l=l+1
+         a(l)=cx
+         ja(l)=k+1
+        else
+         f(k)=f(k)-cx
+      end if
+      if(i < m) then
+         l=l+1
+         a(l)=cy
+         ja(l)=k+m
+        else
+         f(k)=f(k)-cy
+      end if
+      if(j > 1) then
+         l=l+1
+         a(l)=cx
+         ja(l)=k-1
+        else
+         f(k)=f(k)-cx
+      end if
+      if(i >  1) then
+         l=l+1
+         a(l)=cy
+         ja(l)=k-m
+        else
+         f(k)=f(k)-cy
+      end if
+      ia(k+1)=l+1
+    end do
   end do
-end do
-
-this%num_nz = l
+  
+  this%num_nz = l
 
 return
 end subroutine uni2D

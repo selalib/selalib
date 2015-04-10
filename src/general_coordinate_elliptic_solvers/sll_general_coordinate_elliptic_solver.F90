@@ -84,9 +84,9 @@ type, public :: general_coordinate_elliptic_solver
   sll_real64, dimension(:,:,:,:), pointer :: val_jac
   sll_int32 , dimension(:)  , pointer :: tab_index_coeff1
   sll_int32 , dimension(:)  , pointer :: tab_index_coeff2
-  type(sll_csr_matrix), pointer       :: sll_csr_mat
-  type(sll_csr_matrix), pointer       :: sll_csr_mat_with_constraint
-  type(sll_csr_matrix), pointer       :: sll_csr_mat_source
+  type(sll_csr_matrix), pointer       :: csr_mat
+  type(sll_csr_matrix), pointer       :: csr_mat_with_constraint
+  type(sll_csr_matrix), pointer       :: csr_mat_source
   sll_real64, dimension(:), pointer   :: rho_vec
   sll_real64, dimension(:), pointer   :: phi_vec
   sll_real64, dimension(:), pointer   :: tmp_rho_vec
@@ -399,7 +399,7 @@ subroutine initialize_general_elliptic_solver( &
    es%global_spline_indices,          &
    es%local_to_global_spline_indices )
    
- es%sll_csr_mat => new_csr_matrix(    &
+ es%csr_mat => new_csr_matrix(    &
    solution_size,                     &
    solution_size,                     &
    num_cells1*num_cells2,             &
@@ -614,9 +614,9 @@ subroutine delete_elliptic( es )
   SLL_DEALLOCATE(es%local_to_global_spline_indices,ierr)
   SLL_DEALLOCATE(es%local_to_global_spline_indices_source,ierr)
   SLL_DEALLOCATE(es%local_to_global_spline_indices_source_bis,ierr)
-  call sll_delete(es%sll_csr_mat)
-  call sll_delete(es%sll_csr_mat_with_constraint)
-  call sll_delete(es%sll_csr_mat_source)
+  call sll_delete(es%csr_mat)
+  call sll_delete(es%csr_mat_with_constraint)
+  call sll_delete(es%csr_mat_source)
   SLL_DEALLOCATE(es%rho_vec,ierr)
   SLL_DEALLOCATE(es%phi_vec,ierr)
   SLL_DEALLOCATE(es%tmp_rho_vec,ierr)
@@ -997,7 +997,7 @@ do i = 1, nc_1
           es%local_to_global_spline_indices_source_bis(bprime,icell)= y
 
           if ( a>0 .and. aprime>0 ) then
-            call sll_add_to_csr_matrix(es%sll_csr_mat, elt_mat_global, a, aprime)   
+            call sll_add_to_csr_matrix(es%csr_mat, elt_mat_global, a, aprime)   
           end if
               
         end do
@@ -1011,26 +1011,26 @@ print *,'#begin of sll_factorize_csr_matrix'
 
 if (es%perper) then
 
- es%sll_csr_mat_with_constraint => new_csr_matrix_with_constraint(es%sll_csr_mat)  
+ es%csr_mat_with_constraint => new_csr_matrix_with_constraint(es%csr_mat)  
 
- call csr_add_one_constraint( es%sll_csr_mat%row_ptr,                 &  
-                              es%sll_csr_mat%col_ind,                 &
-                              es%sll_csr_mat%val,                     &
-                              es%sll_csr_mat%num_rows,                &
-                              es%sll_csr_mat%num_nz,                  &
+ call csr_add_one_constraint( es%csr_mat%row_ptr,                 &  
+                              es%csr_mat%col_ind,                 &
+                              es%csr_mat%val,                     &
+                              es%csr_mat%num_rows,                &
+                              es%csr_mat%num_nz,                  &
                               es%masse,                               &
-                              es%sll_csr_mat_with_constraint%row_ptr, &
-                              es%sll_csr_mat_with_constraint%col_ind, &
-                              es%sll_csr_mat_with_constraint%val)  
+                              es%csr_mat_with_constraint%row_ptr, &
+                              es%csr_mat_with_constraint%col_ind, &
+                              es%csr_mat_with_constraint%val)  
 
-  call sll_factorize_csr_matrix(es%sll_csr_mat_with_constraint)
+  call sll_factorize_csr_matrix(es%csr_mat_with_constraint)
 else   
-  call sll_factorize_csr_matrix(es%sll_csr_mat)
+  call sll_factorize_csr_matrix(es%csr_mat)
 end if 
 
 print *,'#end of sll_factorize_csr_matrix'
 
-es%sll_csr_mat_source => &
+es%csr_mat_source => &
   new_csr_matrix( size(es%masse,1),                             &
                   (nc_1+1)*(nc_2+1),                            &
                   nc_1*nc_2,                                    &
@@ -1062,7 +1062,7 @@ do i=1,es%num_cells1
       elt_mat_global = source(icell,bprime,b)
 
       if ( a > 0 .and. aprime > 0) then
-        call sll_add_to_csr_matrix(es%sll_csr_mat_source,elt_mat_global,a,aprime)
+        call sll_add_to_csr_matrix(es%csr_mat_source,elt_mat_global,a,aprime)
       end if
               
     end do
@@ -1156,7 +1156,7 @@ subroutine solve_general_coordinates_elliptic_eq( es, rho, phi)
         end do
       end do
 
-      call sll_mult_csr_matrix_vector(es%sll_csr_mat_source,es%rho_coeff_1d,es%rho_vec)
+      call sll_mult_csr_matrix_vector(es%csr_mat_source,es%rho_coeff_1d,es%rho_vec)
 
       if(es%perper) then
         es%rho_vec = es%rho_vec - sum(es%rho_vec)/es%intjac*es%masse
@@ -1441,12 +1441,12 @@ subroutine solve_linear_system( es )
   if(bc_left  ==SLL_PERIODIC .and. bc_right==SLL_PERIODIC .and.&
      bc_bottom==SLL_PERIODIC .and. bc_top  ==SLL_PERIODIC) then
 
-    call sll_solve_csr_matrix(es%sll_csr_mat_with_constraint, &
+    call sll_solve_csr_matrix(es%csr_mat_with_constraint, &
                               es%tmp_rho_vec, &
                               es%tmp_phi_vec)
 
   else
-    call sll_solve_csr_matrix(es%sll_csr_mat, &
+    call sll_solve_csr_matrix(es%csr_mat, &
                               es%tmp_rho_vec, &
                               es%tmp_phi_vec)
   endif
