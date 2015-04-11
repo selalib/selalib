@@ -22,6 +22,7 @@ module sll_module_arbitrary_degree_spline_interpolator_2d
 #include "sll_assert.h" 
 use sll_module_interpolators_2d_base
 use sll_utilities
+use sll_module_deboor_splines_2d
 
 implicit none
 private
