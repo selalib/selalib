@@ -1,0 +1,37 @@
+#!/usr/bin/perl
+#
+# filter for perf annotate output
+#
+# ======================================================================
+# Written by Antoine Le Hyaric
+# http://www.ljll.math.upmc.fr/lehyaric
+# ======================================================================
+# [[shell:header\alh 'perf_annotate']] [[file:~/alh/bin/headeralh]]
+# headeralh brief="filter for perf annotate output" default=0 perl start=10/04/2015 written
+
+use strict;
+use warnings;
+open PERF,"perf annotate -s __sll_lt_pic_4d_utilities_MOD_sll_lt_pic_4d_write_f_on_grid_or_deposit --stdio|" or die;
+my $total=0;
+my @biggest;
+foreach(<PERF>){
+
+  # remove lines of assembler that only account for 0%
+  next if /^\h+(0\.00)\h:\h+[0-9a-z]+:/;
+
+  # stats
+  if(/^\h+([0-9.]+)\h:/){push @biggest,$1;$total+=$1}
+
+  print $_;
+}
+
+@biggest=sort{$b<=>$a}@biggest;
+splice(@biggest,10,$#biggest-9);
+print "perf_annotate: biggest = ".join(", ",@biggest),"\n";
+print "perf_annotate: total = $total%\n";
+
+# Local Variables:
+# mode:cperl
+# ispell-local-dictionary:"british"
+# coding:utf-8
+# End:
