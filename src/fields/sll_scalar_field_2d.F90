@@ -188,11 +188,13 @@ contains
 ! **************************************************************************
 
 function value_at_pt_analytic( field, eta1, eta2 )
+
   class(sll_scalar_field_2d_analytic), intent(in) :: field
   sll_real64, intent(in) :: eta1
   sll_real64, intent(in) :: eta2
   sll_real64             ::  value_at_pt_analytic
   value_at_pt_analytic = field%func(eta1,eta2,field%params)
+
 end function value_at_pt_analytic
 
 function value_at_index_analytic( field, i, j )

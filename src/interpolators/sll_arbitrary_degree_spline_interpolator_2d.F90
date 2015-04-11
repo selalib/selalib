@@ -30,20 +30,22 @@ private
 ! in what follows, the direction '1' is in the contiguous memory direction.
 !> Arbitrary degree version of 2d irnterpolator
 type, extends(sll_interpolator_2d_base) :: sll_arbitrary_degree_spline_interpolator_2d           
-   sll_int32  :: num_pts1
-   sll_int32  :: num_pts2
-   sll_real64 :: eta1_min
-   sll_real64 :: eta1_max
-   sll_real64 :: eta2_min
-   sll_real64 :: eta2_max
-   sll_int32  :: bc_left
-   sll_int32  :: bc_right
-   sll_int32  :: bc_bottom
-   sll_int32  :: bc_top
-   sll_int32  :: spline_degree1
-   sll_int32  :: spline_degree2
+
+   sll_int32                         :: num_pts1
+   sll_int32                         :: num_pts2
+   sll_real64                        :: eta1_min
+   sll_real64                        :: eta1_max
+   sll_real64                        :: eta2_min
+   sll_real64                        :: eta2_max
+   sll_int32                         :: bc_left
+   sll_int32                         :: bc_right
+   sll_int32                         :: bc_bottom
+   sll_int32                         :: bc_top
+   sll_int32                         :: spline_degree1
+   sll_int32                         :: spline_degree2
    sll_real64, dimension(:), pointer :: knots1
    sll_real64, dimension(:), pointer :: knots2
+
    ! some knot-like arrays needed by the spli2d_per routine
    sll_real64, dimension(:), pointer :: t1
    sll_real64, dimension(:), pointer :: t2
@@ -3983,7 +3985,7 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
    
   
   function get_coefficients_ad2d(interpolator)
-    class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)    :: interpolator
+    class(sll_arbitrary_degree_spline_interpolator_2d), intent(in) :: interpolator
     sll_real64, dimension(:,:), pointer           :: get_coefficients_ad2d     
 
     get_coefficients_ad2d => interpolator%coeff_splines

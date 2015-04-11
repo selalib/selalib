@@ -340,6 +340,7 @@ subroutine initialize_general_elliptic_solver( &
  end if
 
  solution_size = es%total_num_splines1*es%total_num_splines2
+
  SLL_ALLOCATE(es%knots1(knots1_size),ierr)
  SLL_ALLOCATE(es%knots2(knots2_size),ierr)
  SLL_ALLOCATE(es%knots1_rho(num_cells1 + spline_degree1 + 2),ierr)
@@ -1423,13 +1424,12 @@ subroutine solve_linear_system( es )
   else if( (bc_left   == SLL_NEUMANN) .and. (bc_right == SLL_DIRICHLET) .and.&
            (bc_bottom == SLL_PERIODIC)  .and. (bc_top   == SLL_PERIODIC) ) then
      
-    do i = 1, es%total_num_splines1
-      do j = 1, es%total_num_splines2
-
+    k = 0
+    do j = 1, es%total_num_splines2
+      do i = 1, es%total_num_splines1
+        k = k+1
         elt1 = i + 1 + ( es%total_num_splines1 + 1 ) * (  j - 1)
-        elt  = i + es%total_num_splines1 * (  j - 1)
-        es%tmp_rho_vec( elt ) = es%rho_vec( elt1 )
-
+        es%tmp_rho_vec(k) = es%rho_vec( elt1 )
       end do
     end do
 
