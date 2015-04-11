@@ -315,162 +315,27 @@ case (0) ! 1. periodic-periodic
    
   SLL_ALLOCATE( interpolator%knots1(2*spline_degree1+2),ierr )
   SLL_ALLOCATE( interpolator%knots2(2*spline_degree2+2),ierr )
-  tmp1 = num_pts1+ 4*spline_degree1! *num_pts1 !+ 2*spline_degree1
-  tmp2 = num_pts2+ 4*spline_degree2!*num_pts2 !+ 2*spline_degree2
-  SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
 
 case (9) ! 2. dirichlet-left, dirichlet-right, periodic
 
   SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
   SLL_ALLOCATE( interpolator%knots2(2*spline_degree2+2),ierr )
-  tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
-  tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + 2*spline_degree2
-  SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
 
 case (576) ! 3. periodic, dirichlet-bottom, dirichlet-top
 
   SLL_ALLOCATE( interpolator%knots1(2*spline_degree1+2),ierr )
   SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-  tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + 2*spline_degree1
-  tmp2 = num_pts2+ 4*spline_degree2!*num_pts2 + spline_degree2 !- 1
-  SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
 
-case (585) ! 4. dirichlet in all sides
-
-  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-  tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
-  tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
-  SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
-
-case(650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet 
-
-  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-  tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
-  tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
-  SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
-
-case(657) !left: Dirichlet, right: Neumann, bottom: Neumann, Top: Dirichlet 
-
-  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-  tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
-  tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
-  SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
-
-case(780)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Dirichlet
-
-  SLL_CLEAR_ALLOCATE( interpolator%knots1(1:num_pts1+2*spline_degree1),ierr )
-  SLL_CLEAR_ALLOCATE( interpolator%knots2(1:num_pts2+2*spline_degree2),ierr )
-  tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
-  tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
-  SLL_CLEAR_ALLOCATE( interpolator%coeff_splines(1:tmp1,1:tmp2),ierr)
-
-case(801)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Dirichlet
-
-  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-
-  tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
-  tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
-  SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
-
-case(804)  !left: Hermite, right: Hermite, bottom: Hermite, Top: Dirichlet
-   
-  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-  
-  tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
-  tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
-  SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
-
-case(1098)  !left: Neumann, right: Dirichlet, bottom: Dirichlet, Top: Neumann
-   
-  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-
-  tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
-  tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
-  SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
-
-case(1105)  !left: Dirichlet, right: Neumann, bottom: Dirichlet, Top: Neumann
-   
-  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-
-  tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
-  tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
-  SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
-
-case(1170)  !left: Neumann, right: Neumann, bottom: Neuman, Top: Neumann
-   
-  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-
-  tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
-  tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
-  SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
-
-case(2124)  !left: Hermite, right: Dirichlet, bottom: Dirichlet, Top: Hermite
-
-  SLL_CLEAR_ALLOCATE( interpolator%knots1(1:num_pts1+2*spline_degree1),ierr )
-  SLL_CLEAR_ALLOCATE( interpolator%knots2(1:num_pts2+2*spline_degree2),ierr )
-
-  tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
-  tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
-  SLL_CLEAR_ALLOCATE( interpolator%coeff_splines(1:tmp1,1:tmp2),ierr)
-
-case(2145)  !left: Dirichlet, right: Hermite, bottom: Dirichlet, Top: Hermite  
-
-  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-
-  tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
-  tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
-  SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
-
-case(2148)  !left:Hermite , right: Hermite, bottom: Dirichlet, Top: Hermite  
-
-  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-
-  tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
-  tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
-  SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
-
-case(2316)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Hermite
-   
-  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-  
-  tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
-  tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
-  SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
-
-case(2338)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Hermite
-   
-  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-  
-  tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
-  tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
-  SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
-
-case(2340) ! Hermite in all sides
-
-  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-
-  tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
-  tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
-  SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
-   
 case default
 
-  print*,'initialize_ad2d_interpolator: BC combination not implemented.'
+  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
+  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
 
 end select
+
+tmp1 = num_pts1+ 4*spline_degree1
+tmp2 = num_pts2+ 4*spline_degree2
+SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
 
 ! knots and coeff splines allocations 
 interpolator%coeff_splines(:,:) = 0.0_f64
