@@ -34,6 +34,7 @@
     
 *** configuration options
 
+
      some configuration options are required for [[file:../CMakeLists.txt]] to build parallel tests
      OPENMP_ENABLED=OFF is forced to OFF until further speed tests
 
@@ -51,7 +52,6 @@
      remove file:~/selalib/build/CMakeCache.txt
 	
 ** Compiling
-
      [[elisp:(compile "cd ~/selalib/build && make -j $NCPU install")]]
 
 ** Running
