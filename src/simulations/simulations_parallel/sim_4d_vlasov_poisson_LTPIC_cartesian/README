@@ -27,11 +27,12 @@
    file:~/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/params_lt_pic_4d.nml
 
 ** Configuring
-   - extra packages: binutils is for gprof, linux-tools is for perf
-     [[elisp:(compile "sudo apt-get install -y sudo apt-get install libopenmpi-dev libfftw3-dev liblapack-dev
-     libhdf5-mpi-dev binutils linux-tools")]]
+*** extra packages
+
+   binutils is for gprof, linux-tools is for perf
+     [[elisp:(compile "sudo apt-get install -y libopenmpi-dev libfftw3-dev liblapack-dev libhdf5-mpi-dev binutils linux-tools")]]
     
-   - configuration options:
+*** configuration options
 
      some configuration options are required for [[file:../CMakeLists.txt]] to build parallel tests
      OPENMP_ENABLED=OFF is forced to OFF until further speed tests
@@ -102,15 +103,46 @@
      [[elisp:(compile "cd ~/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/run && gprof ../test_4d_vp_lt_pic_cartesian gmon.out > func_profile.txt")]]
      [[elisp:(compile "cd ~/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/run && gprof -l ../test_4d_vp_lt_pic_cartesian gmon.out > line_profile.txt")]]
 
-*** perf (from linux-tools) [[https://perf.wiki.kernel.org/index.php/Tutorial]]
+*** perf
 
-   - configure: [[elisp:(compile "cd ~/selalib/build && cmake -DCMAKE_BUILD_TYPE=Release -DHDF5_PARALLEL_ENABLED=ON -DCMAKE_VERBOSE_MAKEFILE=TRUE -DOPENMP_ENABLED=OFF -DCMAKE_Fortran_FLAGS='' ../src")]]
+    from the linux-tools package under Debian
 
-   - compile: [[elisp:(compile "cd ~/selalib/build && make -j $NCPU install")]]
+    more on perf profiling: [[https://perf.wiki.kernel.org/index.php/Tutorial]]
 
-   - run (stores data in binary form in file perf.data): [[elisp:(compile "cd ~/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/run && perf record ../test_4d_vp_lt_pic_cartesian ../params_lt_pic_4d.nml")]]
+**** configure
 
-   - synthetic report: perf stat -B -e cache-references,cache-misses,cycles,instructions,branches,faults,migrations ../test_4d_vp_lt_pic_cartesian ../params_lt_pic_4d.nml
+     -ggdb option is required to see source lines in the perf annotate output
+
+     [[elisp:(compile "cd ~/selalib/build && cmake -DCMAKE_BUILD_TYPE=Release -DHDF5_PARALLEL_ENABLED=ON -DCMAKE_VERBOSE_MAKEFILE=TRUE -DOPENMP_ENABLED=OFF -DCMAKE_Fortran_FLAGS='-ggdb' ../src")]]
+
+**** compile: [[elisp:(compile "cd ~/selalib/build && make -j $NCPU install")]]
+
+**** run (stores data in binary form in file perf.data):
+
+     - main run directory: file:~/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/
+
+     - the input data is in [[file:~/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/params_lt_pic_4d.nml][params_lt_pic_4d.nml]]
+
+     - plain run for timing reference (instrumented runs should be 5% slower than this)
+
+     [[elisp:(compile "cd ~/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/run && ../test_4d_vp_lt_pic_cartesian ../params_lt_pic_4d.nml")]]
+
+     - basic stats
+
+     [[elisp:(compile "cd ~/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/run && perf stat -d ../test_4d_vp_lt_pic_cartesian ../params_lt_pic_4d.nml")]]
+
+     - instrumented run (generates statistics in binary form in run/perf.data). Sampling value of 100000 chosen
+       according to [[http://sandsoftwaresound.net/perf/perf-tut-profile-hw-events/]]
+
+     [[elisp:(compile "cd ~/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/run && perf record -e
+     cpu-cycles -c 100000 ../test_4d_vp_lt_pic_cartesian ../params_lt_pic_4d.nml")]]
+
+     [[elisp:(compile "cd ~/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/run && perf record -e
+     stalled-cycles-frontend -c 100000 ../test_4d_vp_lt_pic_cartesian ../params_lt_pic_4d.nml")]]
+
+**** reporting
+
+     perf stat -B -e cache-references,cache-misses,cycles,instructions,branches,faults,migrations ../test_4d_vp_lt_pic_cartesian ../params_lt_pic_4d.nml
 
 ** Ctests
    [[elisp:(compile "cd ~/selalib/build && ctest -R 4d_vp_lt_pic_cartesian")]]
