@@ -521,12 +521,16 @@ end if
 end subroutine set_boundary_value2d
 
 
-!> @brief Initializing the coefficients of splines.
+! -------------------------------------------------------------
+!  subroutine initializing the coefficients of splines
+!  in the cas of linearization of them i.e. if we have 
+!  a table in 1d corresponding of coefficients 2d
+! 
+! -------------------------------------------------------------
+!> @brief initializing the coefficients of splines.
 !> @details  initializing the coefficients of splines
-!> in case of linearization of them i.e. if we have 
-!> a table in 1d corresponding of coefficients 2d.
-!> The interpretation and further filling of the spline coefficients array
-!> depends on the boundary conditions.
+!>  in the cas of linearization of them i.e. if we have 
+!>  a table in 1d corresponding of coefficients 2d
 !> 
 !> The parameters are
 !> @param interpolator the type sll_arbitrary_degree_spline_interpolator_2d
@@ -539,106 +543,128 @@ end subroutine set_boundary_value2d
 !> @param[in]  knots2  the knots in the direction eta2
 !> @param[in]  size_knots2 the size of knots in the direction eta2
 !> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_2d
+subroutine set_coefficients_ad2d( &
+ interpolator, &
+ coeffs_1d, &
+ coeffs_2d,&
+ coeff2d_size1,&
+ coeff2d_size2,&
+ knots1,&
+ size_knots1,&
+ knots2,&
+ size_knots2)
 
-subroutine set_coefficients_ad2d( interpolator,  &
-                                  coeffs_1d,     &
-                                  coeffs_2d,     &
-                                  coeff2d_size1, &
-                                  coeff2d_size2, &
-                                  knots1,        &
-                                  size_knots1,   &
-                                  knots2,        &
-                                  size_knots2)
+ class(sll_arbitrary_degree_spline_interpolator_2d), intent(inout)  :: interpolator
+ sll_real64, dimension(:)  , intent(in), optional :: coeffs_1d
+ sll_real64, dimension(:,:), intent(in), optional :: coeffs_2d
+ ! size coeffs 2D 
+ sll_int32, intent(in), optional :: coeff2d_size1
+ sll_int32, intent(in), optional :: coeff2d_size2
+ sll_real64, dimension(:), intent(in), optional   :: knots1
+ sll_real64, dimension(:), intent(in), optional   :: knots2
+ sll_int32, intent(in), optional :: size_knots1
+ sll_int32, intent(in), optional :: size_knots2
 
-class(sll_arbitrary_degree_spline_interpolator_2d), intent(inout)  :: interpolator
-
-sll_real64, dimension(:)  , intent(in), optional :: coeffs_1d
-sll_real64, dimension(:,:), intent(in), optional :: coeffs_2d
-sll_int32,                  intent(in), optional :: coeff2d_size1
-sll_int32,                  intent(in), optional :: coeff2d_size2
-sll_real64, dimension(:),   intent(in), optional :: knots1
-sll_int32,                  intent(in), optional :: size_knots1
-sll_real64, dimension(:),   intent(in), optional :: knots2
-sll_int32,                  intent(in), optional :: size_knots2
-
-sll_int32   :: sp_deg1
-sll_int32   :: sp_deg2
-sll_int32   :: num_cells1
-sll_int32   :: num_cells2
-sll_int32   :: i, j, k
-sll_real64  :: eta1_min, eta1_max
-sll_real64  :: eta2_min, eta2_max
-sll_real64  :: delta1
-sll_real64  :: delta2
-sll_int32   :: nb_spline_eta1
-sll_int32   :: nb_spline_eta2
-sll_real64  :: eta1
-sll_real64  :: eta2
-sll_int32   :: sz_derivative1,sz_derivative2
-
-sp_deg1    = interpolator%spline_degree1
-sp_deg2    = interpolator%spline_degree2
-num_cells1 = interpolator%num_pts1 - 1
-num_cells2 = interpolator%num_pts2 - 1
-eta1_min   = interpolator%eta1_min
-eta2_min   = interpolator%eta2_min
-eta1_max   = interpolator%eta1_max
-eta2_max   = interpolator%eta2_max
-delta1     = (eta1_max - eta1_min)/num_cells1
-delta2     = (eta2_max - eta2_min)/num_cells2
+ ! Local variables
+ sll_int32   :: sp_deg1
+ sll_int32   :: sp_deg2
+ sll_int32   :: num_cells1
+ sll_int32   :: num_cells2
+ sll_int32   :: i, j
+ sll_real64  :: eta1_min, eta1_max
+ sll_real64  :: eta2_min, eta2_max
+ sll_real64  :: delta1
+ sll_real64  :: delta2
+ sll_int32   :: nb_spline_eta1
+ sll_int32   :: nb_spline_eta2
+ sll_real64  :: eta1
+ sll_real64  :: eta2
+ sll_int32   :: sz_derivative1,sz_derivative2
 
  
-if (present(coeffs_1d) ) then 
+ sp_deg1    = interpolator%spline_degree1
+ sp_deg2    = interpolator%spline_degree2
+ num_cells1 = interpolator%num_pts1 - 1
+ num_cells2 = interpolator%num_pts2 - 1
+ eta1_min   = interpolator%eta1_min
+ eta2_min   = interpolator%eta2_min
+ eta1_max   = interpolator%eta1_max
+ eta2_max   = interpolator%eta2_max
+ delta1     = (eta1_max - eta1_min)/num_cells1
+ delta2     = (eta2_max - eta2_min)/num_cells2
 
-  select case (interpolator%bc_selector)
-  case(0) ! periodic-periodic
+ 
+ if (present(coeffs_1d) ) then 
+    ! The interpretation and further filling of the spline coefficients array
+    ! depends on the boundary conditions.
+    select case (interpolator%bc_selector)
+    case(0) ! periodic-periodic
+       
+       interpolator%size_coeffs1 =  num_cells1 + sp_deg1 + 1
+       interpolator%size_coeffs2 =  num_cells2 + sp_deg2 + 1 
+       interpolator%size_t1      =  2*sp_deg1 + num_cells1 +1 +1
+       interpolator%size_t2      =  2*sp_deg2 + num_cells2 +1 +1
+       
+       if ( size( coeffs_1d,1) .ne. num_cells1*num_cells2) then
+          print*, 'Problem in set_coefficients in arbitrary_degree_spline_2d'
+          print*, ' Problem with the size coeffs_1d must have the size equal to '
+          print*, ' num_cells1*num_cells2=', num_cells1*num_cells2
+          stop
+       end if
+       ! ------------------------------------------------------------
+       ! allocation and definition of knots
+       ! ------------------------------------------------------------
+       
+       do i = -sp_deg1, num_cells1 + sp_deg1 + 1
+          interpolator%t1( i + sp_deg1 + 1 ) = eta1_min + i*delta1
+       end do
+       
+       do i = -sp_deg2, num_cells2 + sp_deg2 + 1
+          interpolator%t2( i + sp_deg2 + 1 ) = eta2_min + i*delta2
+       end do
+       
+       ! ------------------------------------------------------------
+       
+       
+       ! ------------------------------------------------------------
+       !   reorganization of spline coefficients 1D in coefficients 2D 
+       ! ------------------------------------------------------------
+       
+       
+       do i = 1,num_cells1
+          do j = 1,num_cells2
+             interpolator%coeff_splines(i,j) = &
+                  coeffs_1d( i + num_cells1 *(j-1) )
+          end do
+       end do
+       
+       do j = 1, sp_deg2 + 1
+          do i = 1,num_cells1
+             
+             interpolator%coeff_splines(i ,num_cells2 + j ) = &
+                  coeffs_1d(i+num_cells1*(j-1))
+          end do
+       end do
+       do i = 1, sp_deg1 + 1
+          do j = 1,num_cells2
+             
+             interpolator%coeff_splines(num_cells1 + i ,j) = &
+                  coeffs_1d(i+num_cells1 *(j-1) )
+          end do
+       end do
+       do i= 1,sp_deg1 + 1
+          do j=1,sp_deg2 + 1
+             
+             interpolator%coeff_splines(num_cells1 +  i ,num_cells2 + j) = &
+                  interpolator%coeff_splines(i,j)
+          end do
+       end do
+
       
-     interpolator%size_coeffs1 =  num_cells1 + sp_deg1 + 1
-     interpolator%size_coeffs2 =  num_cells2 + sp_deg2 + 1 
-     interpolator%size_t1      =  2*sp_deg1 + num_cells1 +1 +1
-     interpolator%size_t2      =  2*sp_deg2 + num_cells2 +1 +1
-     
-     SLL_ASSERT(size(coeffs_1d,1) == num_cells1*num_cells2)
+    ! ------------------------------------------------------------
+    case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        
-     do i = -sp_deg1, num_cells1 + sp_deg1 + 1
-        interpolator%t1(i+sp_deg1+1) = eta1_min + i*delta1
-     end do
-     
-     do i = -sp_deg2, num_cells2 + sp_deg2 + 1
-        interpolator%t2(i+sp_deg2+1) = eta2_min + i*delta2
-     end do
        
-     k=0
-     do j = 1,num_cells2
-     do i = 1,num_cells1
-       k=k+1
-       interpolator%coeff_splines(i,j) = coeffs_1d(k)
-     end do
-     end do
-       
-     k=0
-     do j = 1,sp_deg2+1
-     do i = 1,num_cells1
-       k=k+1
-       interpolator%coeff_splines(i,num_cells2+j) = coeffs_1d(k)
-     end do
-     end do
-
-     k=0
-     do j = 1,num_cells2
-     do i = 1,sp_deg1+1
-       k=k+1
-       interpolator%coeff_splines(num_cells1+i,j) = coeffs_1d(k)
-     end do
-     end do
-
-     do j = 1,sp_deg2+1
-     do i = 1,sp_deg1+1
-       interpolator%coeff_splines(num_cells1+i,num_cells2+j) = interpolator%coeff_splines(i,j)
-     end do
-     end do
-
-  case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        
        interpolator%size_coeffs1 =  num_cells1 + sp_deg1
        interpolator%size_coeffs2 =  num_cells2 + sp_deg2 + 1
