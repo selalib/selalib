@@ -136,70 +136,71 @@ SLL_DEALLOCATE(interpolator%slope_max2,ierr)
 
 end subroutine delete_arbitrary_degree_2d_interpolator
 
-  !> @brief Initialization of a pointer interpolator arbitrary degree splines 2d.
-  !> @details To have the interpolator arbitrary degree splines 2d
-  !> 
-  !> The parameters are
-  !> @param[in] num_pts1 the number of points in the direction eta1
-  !> @param[in] num_pts2 the number of points in the direction eta2
-  !> @param[in] eta1_min the minimun in the direction eta1
-  !> @param[in] eta1_max the maximun in the direction eta1
-  !> @param[in] eta2_min the minimun in the direction eta2
-  !> @param[in] eta2_max the maximun in the direction eta2
-  !> @param[in] bc_min1  the boundary condition at left in the direction eta1
-  !> @param[in] bc_max1 the boundary condition at right in the direction eta2
-  !> @param[in] bc_min2 the boundary condition at left in the direction eta2
-  !> @param[in] bc_max2 the boundary condition at right in the direction eta2
-  !> @param[in] spline_degree1 the degree of B-spline in the direction eta1
-  !> @param[in] spline_degree2 the degre of B-spline in the direction eta2
-  !> @return the type sll_arbitrary_degree_spline_interpolator_2d
+!> @brief Initialization of a pointer interpolator arbitrary degree splines 2d.
+!> @details To have the interpolator arbitrary degree splines 2d
+!> 
+!> The parameters are
+!> @param[in] num_pts1 the number of points in the direction eta1
+!> @param[in] num_pts2 the number of points in the direction eta2
+!> @param[in] eta1_min the minimun in the direction eta1
+!> @param[in] eta1_max the maximun in the direction eta1
+!> @param[in] eta2_min the minimun in the direction eta2
+!> @param[in] eta2_max the maximun in the direction eta2
+!> @param[in] bc_min1  the boundary condition at left in the direction eta1
+!> @param[in] bc_max1 the boundary condition at right in the direction eta2
+!> @param[in] bc_min2 the boundary condition at left in the direction eta2
+!> @param[in] bc_max2 the boundary condition at right in the direction eta2
+!> @param[in] spline_degree1 the degree of B-spline in the direction eta1
+!> @param[in] spline_degree2 the degre of B-spline in the direction eta2
+!> @return the type sll_arbitrary_degree_spline_interpolator_2d
 
-  function new_arbitrary_degree_spline_interp2d( &
-    num_pts1, &
-    num_pts2, &
-    eta1_min, &
-    eta1_max, &
-    eta2_min, &
-    eta2_max, &
-    bc_min1, &
-    bc_max1, &
-    bc_min2, &
-    bc_max2, &
-    spline_degree1, &
-    spline_degree2) result( res )
+function new_arbitrary_degree_spline_interp2d( num_pts1,       &
+                                               num_pts2,       &
+                                               eta1_min,       &
+                                               eta1_max,       &
+                                               eta2_min,       &
+                                               eta2_max,       &
+                                               bc_min1,        &
+                                               bc_max1,        &
+                                               bc_min2,        &
+                                               bc_max2,        &
+                                               spline_degree1, &
+                                               spline_degree2) result( res )
 
-    type(sll_arbitrary_degree_spline_interpolator_2d), pointer :: res
-    sll_int32, intent(in) :: num_pts1
-    sll_int32, intent(in) :: num_pts2
-    sll_real64, intent(in) :: eta1_min
-    sll_real64, intent(in) :: eta1_max
-    sll_real64, intent(in) :: eta2_min
-    sll_real64, intent(in) :: eta2_max
-    sll_int32, intent(in) :: bc_min1
-    sll_int32, intent(in) :: bc_max1
-    sll_int32, intent(in) :: bc_min2
-    sll_int32, intent(in) :: bc_max2
-    sll_int32, intent(in) :: spline_degree1
-    sll_int32, intent(in) :: spline_degree2
-    sll_int32 :: ierr
-    
-    SLL_ALLOCATE(res,ierr)
+type(sll_arbitrary_degree_spline_interpolator_2d), pointer :: res
 
-    call initialize_ad2d_interpolator( &
-         res,&
-         num_pts1, &
-         num_pts2, &
-         eta1_min, &
-         eta1_max, &
-         eta2_min, &
-         eta2_max, &
-         bc_min1, &
-         bc_max1, &
-         bc_min2, &
-         bc_max2, &
-         spline_degree1, &
-         spline_degree2)
-  end function new_arbitrary_degree_spline_interp2d
+sll_int32,  intent(in) :: num_pts1
+sll_int32,  intent(in) :: num_pts2
+sll_real64, intent(in) :: eta1_min
+sll_real64, intent(in) :: eta1_max
+sll_real64, intent(in) :: eta2_min
+sll_real64, intent(in) :: eta2_max
+sll_int32,  intent(in) :: bc_min1
+sll_int32,  intent(in) :: bc_max1
+sll_int32,  intent(in) :: bc_min2
+sll_int32,  intent(in) :: bc_max2
+sll_int32,  intent(in) :: spline_degree1
+sll_int32,  intent(in) :: spline_degree2
+
+sll_int32 :: ierr
+
+SLL_ALLOCATE(res,ierr)
+
+call initialize_ad2d_interpolator( res,            &
+                                   num_pts1,       &
+                                   num_pts2,       &
+                                   eta1_min,       &
+                                   eta1_max,       &
+                                   eta2_min,       &
+                                   eta2_max,       &
+                                   bc_min1,        &
+                                   bc_max1,        &
+                                   bc_min2,        &
+                                   bc_max2,        &
+                                   spline_degree1, &
+                                   spline_degree2)
+
+end function new_arbitrary_degree_spline_interp2d
 
   ! -----------------------------------------------
   ! This subroutine allocate the type of interpolator
