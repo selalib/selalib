@@ -36,7 +36,7 @@ type, extends(sll_interpolator_2d_base) :: sll_arbitrary_degree_spline_interpola
   sll_real64                        :: eta1_max
   sll_real64                        :: eta2_min
   sll_real64                        :: eta2_max
-  sll_int32                         :: bc_left
+  sll_int32                         :: bc_min1
   sll_int32                         :: bc_right
   sll_int32                         :: bc_bottom
   sll_int32                         :: bc_top
@@ -150,7 +150,7 @@ end subroutine delete_arbitrary_degree_2d_interpolator
 !> @param[in] eta1_max the maximun in the direction eta1
 !> @param[in] eta2_min the minimun in the direction eta2
 !> @param[in] eta2_max the maximun in the direction eta2
-!> @param[in] bc_left  the boundary condition at left in the direction eta1
+!> @param[in] bc_min1  the boundary condition at left in the direction eta1
 !> @param[in] bc_right the boundary condition at right in the direction eta2
 !> @param[in] bc_bottom the boundary condition at left in the direction eta2
 !> @param[in] bc_top the boundary condition at right in the direction eta2
@@ -165,7 +165,7 @@ function new_arbitrary_degree_spline_interp2d( &
   eta1_max,                                    &
   eta2_min,                                    &
   eta2_max,                                    &
-  bc_left,                                     &
+  bc_min1,                                     &
   bc_right,                                    &
   bc_bottom,                                   &
   bc_top,                                      &
@@ -179,7 +179,7 @@ function new_arbitrary_degree_spline_interp2d( &
   sll_real64, intent(in) :: eta1_max
   sll_real64, intent(in) :: eta2_min
   sll_real64, intent(in) :: eta2_max
-  sll_int32, intent(in) :: bc_left
+  sll_int32, intent(in) :: bc_min1
   sll_int32, intent(in) :: bc_right
   sll_int32, intent(in) :: bc_bottom
   sll_int32, intent(in) :: bc_top
@@ -196,7 +196,7 @@ function new_arbitrary_degree_spline_interp2d( &
                                      eta1_max,       &
                                      eta2_min,       &
                                      eta2_max,       &
-                                     bc_left,        &
+                                     bc_min1,        &
                                      bc_right,       &
                                      bc_bottom,      &
                                      bc_top,         &
@@ -217,41 +217,40 @@ end function new_arbitrary_degree_spline_interp2d
 !> @param[in] eta1_max the maximun in the direction eta1
 !> @param[in] eta2_min the minimun in the direction eta2
 !> @param[in] eta2_max the maximun in the direction eta2
-!> @param[in] bc_left  the boundary condition at left in the direction eta1
+!> @param[in] bc_min1  the boundary condition at left in the direction eta1
 !> @param[in] bc_right the boundary condition at right in the direction eta2
 !> @param[in] bc_bottom the boundary condition at left in the direction eta2
 !> @param[in] bc_top the boundary condition at right in the direction eta2
 !> @param[in] spline_degree1 the degree of B-spline in the direction eta1
 !> @param[in] spline_degree2 the degre of B-spline in the direction eta2
 !> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_2d
-     subroutine initialize_ad2d_interpolator( &
-  interpolator, &
-  num_pts1, &
-  num_pts2, &
-  eta1_min, &
-  eta1_max, &
-  eta2_min, &
-  eta2_max, &
-  bc_left, &
-  bc_right, &
-  bc_bottom, &
-  bc_top, &
-  spline_degree1, &
-  spline_degree2)
+subroutine initialize_ad2d_interpolator( interpolator,   &
+                                         num_pts1,       &
+                                         num_pts2,       &
+                                         eta1_min,       &
+                                         eta1_max,       &
+                                         eta2_min,       &
+                                         eta2_max,       &
+                                         bc_min1,        &
+                                         bc_right,       &
+                                         bc_bottom,      &
+                                         bc_top,         &
+                                         spline_degree1, &
+                                         spline_degree2)
 
-  class(sll_arbitrary_degree_spline_interpolator_2d):: interpolator
-  sll_int32, intent(in) :: num_pts1
-  sll_int32, intent(in) :: num_pts2
-  sll_real64, intent(in) :: eta1_min
-  sll_real64, intent(in) :: eta1_max
-  sll_real64, intent(in) :: eta2_min
-  sll_real64, intent(in) :: eta2_max
-  sll_int32, intent(in) :: bc_left
-  sll_int32, intent(in) :: bc_right
-  sll_int32, intent(in) :: bc_bottom
-  sll_int32, intent(in) :: bc_top
-  sll_int32, intent(in) :: spline_degree1
-  sll_int32, intent(in) :: spline_degree2
+  class(sll_arbitrary_degree_spline_interpolator_2d) :: interpolator
+  sll_int32, intent(in)                              :: num_pts1
+  sll_int32, intent(in)                              :: num_pts2
+  sll_real64, intent(in)                             :: eta1_min
+  sll_real64, intent(in)                             :: eta1_max
+  sll_real64, intent(in)                             :: eta2_min
+  sll_real64, intent(in)                             :: eta2_max
+  sll_int32, intent(in)                              :: bc_min1
+  sll_int32, intent(in)                              :: bc_right
+  sll_int32, intent(in)                              :: bc_bottom
+  sll_int32, intent(in)                              :: bc_top
+  sll_int32, intent(in)                              :: spline_degree1
+  sll_int32, intent(in)                              :: spline_degree2
   sll_int32 :: ierr
   sll_int32 :: tmp1
   sll_int32 :: tmp2
@@ -259,8 +258,8 @@ end function new_arbitrary_degree_spline_interp2d
  
 
   ! do some argument checking...
-  if(((bc_left  == SLL_PERIODIC).and.(bc_right.ne. SLL_PERIODIC)).or.&
-     ((bc_right == SLL_PERIODIC).and.(bc_left .ne. SLL_PERIODIC)))then
+  if(((bc_min1  == SLL_PERIODIC).and.(bc_right.ne. SLL_PERIODIC)).or.&
+     ((bc_right == SLL_PERIODIC).and.(bc_min1 .ne. SLL_PERIODIC)))then
      print *, 'initialize_arbitrary_degree_2d_interpolator, ERROR: ', &
           'if one boundary condition is specified as periodic, then ', &
           'both must be. Error in first direction.'
@@ -275,15 +274,15 @@ end function new_arbitrary_degree_spline_interp2d
 
   bc_selector = 0
 
-  if( bc_left == SLL_DIRICHLET ) then
+  if( bc_min1 == SLL_DIRICHLET ) then
      bc_selector = bc_selector + 1
   end if
 
-  if( bc_left == SLL_NEUMANN ) then
+  if( bc_min1 == SLL_NEUMANN ) then
      bc_selector = bc_selector + 2
   end if
 
-  if( bc_left == SLL_HERMITE ) then
+  if( bc_min1 == SLL_HERMITE ) then
      bc_selector = bc_selector + 4
   end if
 
@@ -330,7 +329,7 @@ end function new_arbitrary_degree_spline_interp2d
   interpolator%eta1_max = eta1_max
   interpolator%eta2_min = eta2_min
   interpolator%eta2_max = eta2_max
-  interpolator%bc_left  = bc_left
+  interpolator%bc_min1  = bc_min1
   interpolator%bc_right = bc_right
   interpolator%bc_bottom= bc_bottom
   interpolator%bc_top   = bc_top
@@ -574,7 +573,7 @@ subroutine set_slope2d(&
   sll_int64 :: bc_selector
   sll_int32 :: num_pts1
   sll_int32 :: num_pts2
-  sll_int32 :: bc_left
+  sll_int32 :: bc_min1
   sll_int32 :: bc_right
   sll_int32 :: bc_bottom
   sll_int32 :: bc_top
@@ -582,7 +581,7 @@ subroutine set_slope2d(&
   num_pts1 = interpolator%num_pts1
   num_pts2 = interpolator%num_pts2
   bc_selector = interpolator%bc_selector
-  bc_left  = interpolator%bc_left 
+  bc_min1  = interpolator%bc_min1 
   bc_right = interpolator%bc_right 
   bc_bottom= interpolator%bc_bottom  
   bc_top   = interpolator%bc_top
@@ -621,7 +620,7 @@ subroutine set_slope2d(&
              interpolator%num_pts1, &
              interpolator%eta1_min, &
              interpolator%eta1_max, &
-             interpolator%bc_left, &
+             interpolator%bc_min1, &
              interpolator%bc_right, &
              interpolator%spline_degree1 )
         
@@ -663,7 +662,7 @@ subroutine set_slope2d(&
              interpolator%num_pts1, &
              interpolator%eta1_min, &
              interpolator%eta1_max, &
-             interpolator%bc_left, &
+             interpolator%bc_min1, &
              interpolator%bc_right, &
              interpolator%spline_degree1 )
         
@@ -699,7 +698,7 @@ subroutine set_slope2d(&
              interpolator%num_pts1, &
              interpolator%eta1_min, &
              interpolator%eta1_max, &
-             interpolator%bc_left, &
+             interpolator%bc_min1, &
              interpolator%bc_right, &
              interpolator%spline_degree1 )
         
@@ -728,7 +727,7 @@ subroutine set_slope2d(&
              interpolator%num_pts1, &
              interpolator%eta1_min, &
              interpolator%eta1_max, &
-             interpolator%bc_left, &
+             interpolator%bc_min1, &
              interpolator%bc_right, &
              interpolator%spline_degree1 )
         
@@ -765,7 +764,7 @@ subroutine set_slope2d(&
              interpolator%num_pts1, &
              interpolator%eta1_min, &
              interpolator%eta1_max, &
-             interpolator%bc_left, &
+             interpolator%bc_min1, &
              interpolator%bc_right, &
              interpolator%spline_degree1 )
         
@@ -794,7 +793,7 @@ subroutine set_slope2d(&
              interpolator%num_pts1, &
              interpolator%eta1_min, &
              interpolator%eta1_max, &
-             interpolator%bc_left, &
+             interpolator%bc_min1, &
              interpolator%bc_right, &
              interpolator%spline_degree1 )
         
@@ -832,7 +831,7 @@ subroutine set_slope2d(&
              interpolator%num_pts1, &
              interpolator%eta1_min, &
              interpolator%eta1_max, &
-             interpolator%bc_left, &
+             interpolator%bc_min1, &
              interpolator%bc_right, &
              interpolator%spline_degree1 )
         
@@ -861,7 +860,7 @@ subroutine set_slope2d(&
              interpolator%num_pts1, &
              interpolator%eta1_min, &
              interpolator%eta1_max, &
-             interpolator%bc_left, &
+             interpolator%bc_min1, &
              interpolator%bc_right, &
              interpolator%spline_degree1 )
         
@@ -901,7 +900,7 @@ subroutine set_slope2d(&
              interpolator%num_pts1, &
              interpolator%eta1_min, &
              interpolator%eta1_max, &
-             interpolator%bc_left, &
+             interpolator%bc_min1, &
              interpolator%bc_right, &
              interpolator%spline_degree1 )
         
@@ -930,7 +929,7 @@ subroutine set_slope2d(&
              interpolator%num_pts1, &
              interpolator%eta1_min, &
              interpolator%eta1_max, &
-             interpolator%bc_left, &
+             interpolator%bc_min1, &
              interpolator%bc_right, &
              interpolator%spline_degree1 )
         
@@ -967,7 +966,7 @@ subroutine set_slope2d(&
              interpolator%num_pts1, &
              interpolator%eta1_min, &
              interpolator%eta1_max, &
-             interpolator%bc_left, &
+             interpolator%bc_min1, &
              interpolator%bc_right, &
              interpolator%spline_degree1 )
         
@@ -1022,7 +1021,7 @@ subroutine set_slope2d(&
              interpolator%num_pts1, &
              interpolator%eta1_min, &
              interpolator%eta1_max, &
-             interpolator%bc_left, &
+             interpolator%bc_min1, &
              interpolator%bc_right, &
              interpolator%spline_degree1 )
         
@@ -1048,7 +1047,7 @@ subroutine set_slope2d(&
              interpolator%num_pts1, &
              interpolator%eta1_min, &
              interpolator%eta1_max, &
-             interpolator%bc_left, &
+             interpolator%bc_min1, &
              interpolator%bc_right, &
              interpolator%spline_degree1 )
         
@@ -1088,7 +1087,7 @@ subroutine set_slope2d(&
              interpolator%num_pts1, &
              interpolator%eta1_min, &
              interpolator%eta1_max, &
-             interpolator%bc_left, &
+             interpolator%bc_min1, &
              interpolator%bc_right, &
              interpolator%spline_degree1 )
         
@@ -1114,7 +1113,7 @@ subroutine set_slope2d(&
              interpolator%num_pts1, &
              interpolator%eta1_min, &
              interpolator%eta1_max, &
-             interpolator%bc_left, &
+             interpolator%bc_min1, &
              interpolator%bc_right, &
              interpolator%spline_degree1 )
         
@@ -1156,7 +1155,7 @@ subroutine set_slope2d(&
              interpolator%num_pts1, &
              interpolator%eta1_min, &
              interpolator%eta1_max, &
-             interpolator%bc_left, &
+             interpolator%bc_min1, &
              interpolator%bc_right, &
              interpolator%spline_degree1 )
         
@@ -1183,7 +1182,7 @@ subroutine set_slope2d(&
              interpolator%num_pts1, &
              interpolator%eta1_min, &
              interpolator%eta1_max, &
-             interpolator%bc_left, &
+             interpolator%bc_min1, &
              interpolator%bc_right, &
              interpolator%spline_degree1 )
         
@@ -1212,7 +1211,7 @@ subroutine set_slope2d(&
              interpolator%num_pts1, &
              interpolator%eta1_min, &
              interpolator%eta1_max, &
-             interpolator%bc_left, &
+             interpolator%bc_min1, &
              interpolator%bc_right, &
              interpolator%spline_degree1 )
         
@@ -1251,7 +1250,7 @@ subroutine set_slope2d(&
              interpolator%num_pts1, &
              interpolator%eta1_min, &
              interpolator%eta1_max, &
-             interpolator%bc_left, &
+             interpolator%bc_min1, &
              interpolator%bc_right, &
              interpolator%spline_degree1 )
         
@@ -1278,7 +1277,7 @@ subroutine set_slope2d(&
              interpolator%num_pts1, &
              interpolator%eta1_min, &
              interpolator%eta1_max, &
-             interpolator%bc_left, &
+             interpolator%bc_min1, &
              interpolator%bc_right, &
              interpolator%spline_degree1 )
         
@@ -1307,7 +1306,7 @@ subroutine set_slope2d(&
              interpolator%num_pts1, &
              interpolator%eta1_min, &
              interpolator%eta1_max, &
-             interpolator%bc_left, &
+             interpolator%bc_min1, &
              interpolator%bc_right, &
              interpolator%spline_degree1 )
         
@@ -1345,7 +1344,7 @@ subroutine set_slope2d(&
              interpolator%num_pts1, &
              interpolator%eta1_min, &
              interpolator%eta1_max, &
-             interpolator%bc_left, &
+             interpolator%bc_min1, &
              interpolator%bc_right, &
              interpolator%spline_degree1 )
         
@@ -1371,7 +1370,7 @@ subroutine set_slope2d(&
              interpolator%num_pts1, &
              interpolator%eta1_min, &
              interpolator%eta1_max, &
-             interpolator%bc_left, &
+             interpolator%bc_min1, &
              interpolator%bc_right, &
              interpolator%spline_degree1 )
         
@@ -1411,7 +1410,7 @@ subroutine set_slope2d(&
              interpolator%num_pts1, &
              interpolator%eta1_min, &
              interpolator%eta1_max, &
-             interpolator%bc_left, &
+             interpolator%bc_min1, &
              interpolator%bc_right, &
              interpolator%spline_degree1 )
         
@@ -1437,7 +1436,7 @@ subroutine set_slope2d(&
              interpolator%num_pts1, &
              interpolator%eta1_min, &
              interpolator%eta1_max, &
-             interpolator%bc_left, &
+             interpolator%bc_min1, &
              interpolator%bc_right, &
              interpolator%spline_degree1 )
         
@@ -1488,7 +1487,7 @@ subroutine set_boundary_value2d(&
   sll_int64 :: bc_selector
   sll_int32 :: num_pts1
   sll_int32 :: num_pts2
-  sll_int32 :: bc_left
+  sll_int32 :: bc_min1
   sll_int32 :: bc_right
   sll_int32 :: bc_bottom
   sll_int32 :: bc_top
@@ -1496,7 +1495,7 @@ subroutine set_boundary_value2d(&
   num_pts1 = interpolator%num_pts1
   num_pts2 = interpolator%num_pts2
   bc_selector = interpolator%bc_selector
-  bc_left  = interpolator%bc_left 
+  bc_min1  = interpolator%bc_min1 
   bc_right = interpolator%bc_right 
   bc_bottom= interpolator%bc_bottom  
   bc_top   = interpolator%bc_top
@@ -1572,7 +1571,7 @@ subroutine set_boundary_value2d(&
              interpolator%num_pts1, &
              interpolator%eta1_min, &
              interpolator%eta1_max, &
-             interpolator%bc_left, &
+             interpolator%bc_min1, &
              interpolator%bc_right, &
              interpolator%spline_degree1 )
         
@@ -1599,7 +1598,7 @@ subroutine set_boundary_value2d(&
              interpolator%num_pts1, &
              interpolator%eta1_min, &
              interpolator%eta1_max, &
-             interpolator%bc_left, &
+             interpolator%bc_min1, &
              interpolator%bc_right, &
              interpolator%spline_degree1 )
         
@@ -1692,7 +1691,7 @@ subroutine set_boundary_value2d(&
              interpolator%num_pts1, &
              interpolator%eta1_min, &
              interpolator%eta1_max, &
-             interpolator%bc_left, &
+             interpolator%bc_min1, &
              interpolator%bc_right, &
              interpolator%spline_degree1)
 
@@ -1724,7 +1723,7 @@ subroutine set_boundary_value2d(&
              interpolator%num_pts1, &
              interpolator%eta1_min, &
              interpolator%eta1_max, &
-             interpolator%bc_left, &
+             interpolator%bc_min1, &
              interpolator%bc_right, &
              interpolator%spline_degree1)
         
@@ -4604,237 +4603,6 @@ subroutine spli2d_custom ( &
 
  end subroutine spli2d_custom_derder
 
- subroutine spli2d_custom_der1 ( &
-   ai_nx,&
-   ai_nx_der,&
-   ai_kx,&
-   apr_taux,&
-   apr_taux_der,&
-   ai_ny,&
-   ai_ky,&
-   apr_tauy,&
-   apr_g,&
-   apr_g_der1,&
-   apr_Bcoef,&
-   apr_tx,&
-   apr_ty )
-   implicit none
-   ! INPUT
-   sll_int32  :: ai_nx, ai_kx, ai_ny, ai_ky
-   sll_int32  :: ai_nx_der
-   sll_real64, dimension(:),pointer :: apr_taux !!ai_nx
-   sll_real64, dimension(:),pointer :: apr_tauy !! ai_ny
-   sll_int32,  dimension(:),pointer :: apr_taux_der !!ai_nx_der
-   sll_real64, dimension(:,:),pointer :: apr_g    ! ai_nx,ai_ny
-   sll_real64, dimension(:,:),pointer :: apr_g_der1 ! ai_nx_der,ai_ny
-
-   ! OUTPUT
-   sll_real64, dimension(:,:),pointer::apr_Bcoef!ai_nx + ai_nx_der,ai_ny
-   sll_real64, dimension( : ),pointer:: apr_tx ! ai_nx + ai_kx + ai_nx_der
-   sll_real64, dimension( : ),pointer:: apr_ty ! ai_ny + ai_ky
-  ! LOCAL VARIABLES		
-  sll_real64, dimension ( ai_nx + ai_nx_der , ai_ny) :: lpr_work1
-  sll_real64, dimension ( ai_nx + ai_nx_der ) :: lpr_work2
-  sll_real64, dimension ( (ai_nx + ai_nx_der)* (ai_ny) ) :: lpr_work3
-  sll_real64, dimension ( (ai_nx+ai_nx_der) *( 2*ai_kx-1) ) :: lpr_work31
-  sll_real64, dimension (( 2*ai_ky-1) * (ai_ny) ) :: lpr_work32
-  sll_real64, dimension ( ai_ny) :: lpr_work4
-  sll_real64, dimension (1:ai_ny,1:ai_nx +ai_nx_der),target :: lpr_work5 !  ai_ny , ai_nx 
-  sll_real64, dimension (:,:),pointer :: lpr_work5_ptr
-  sll_int32  :: li_i, li_iflag
-  sll_int32 :: ierr
-  
-  
-  lpr_work1(:,:) = 0.0
-  lpr_work5(:,:) = 0.0
-  
-  ! *** set up knots
-  !     interpolate between knots
-  
-  apr_tx = 0.0_f64
-  apr_tx ( 1 : ai_kx ) = apr_taux ( 1 )
-  apr_tx ( ai_nx+ ai_nx_der + 1: ai_nx + ai_nx_der + ai_kx ) = apr_taux ( ai_nx )
-
-  
-  if (ai_nx + ai_nx_der + ai_kx == ai_nx + 2*(ai_kx-1)) then
-     apr_tx (ai_kx+1: ai_nx+ ai_nx_der) = apr_taux(2:ai_nx-1)
-     
-  else
-     print*, 'problem with construction of knots' 
-  end if
-  
-  apr_ty = 0.0_f64
-  
-  if ( mod(ai_ky,2) == 0 ) then
-     do li_i = ai_ky + 1, ai_ny
-        apr_ty ( li_i ) = apr_tauy ( li_i - ai_ky/2 ) 
-        
-     end do
-  else
-     
-     do li_i = ai_ky + 1, ai_ny
-        apr_ty ( li_i ) = &
-              0.5*( apr_tauy ( li_i - (ai_ky-1)/2 ) + &
-              apr_tauy ( li_i -1 - (ai_ky-1)/2 ) )
-        
-     end do
-     
-  end if
-  apr_ty ( 1 : ai_ky ) = apr_tauy ( 1 )
-  apr_ty ( ai_ny + 1 : ai_ny + ai_ky ) = apr_tauy ( ai_ny )
-  
-  lpr_work5_ptr => lpr_work5 
-  call spli2d_der ( &
-        apr_taux,&
-        apr_g,&
-        apr_taux_der,&
-        apr_g_der1,&
-        apr_tx, &
-        ai_nx,&
-        ai_nx_der,&
-        ai_kx, &
-        ai_ny, &
-        lpr_work2,&
-        lpr_work31,&
-        lpr_work5_ptr, &
-        li_iflag )
-  
-   apr_bcoef(:,:) =0.0_8
-   lpr_work4 = 0.0_8
-   lpr_work3 = 0.0_8
-   lpr_work32= 0.0_8
-   
-
-   call spli2d ( &
-        apr_tauy,&
-        lpr_work5_ptr,&
-        apr_ty,&
-        ai_ny, &
-        ai_ky, &
-        ai_nx+ai_nx_der, &
-        lpr_work4, &
-        lpr_work32,&
-        apr_bcoef, &
-        li_iflag )
-
- end subroutine spli2d_custom_der1
- 
-
- subroutine spli2d_custom_der2 ( &
-   ai_nx,&
-   ai_kx,&
-   ai_ny,&
-   ai_ny_der,&
-   ai_ky,&
-   apr_tauy,&
-   apr_tauy_der,&
-   apr_g,&
-   apr_g_der2,&
-   apr_Bcoef,&
-   apr_tx,&
-   apr_ty )
-   implicit none
-   ! INPUT
-   sll_int32  :: ai_nx, ai_kx, ai_ny, ai_ky
-   sll_int32  :: ai_ny_der
-   sll_real64, dimension(:),pointer :: apr_taux !!ai_nx
-   sll_real64, dimension(:),pointer :: apr_tauy !! ai_ny
-   sll_int32,  dimension(:),pointer :: apr_tauy_der !!ai_ny_der
-   sll_real64, dimension(:,:),pointer :: apr_g ! ai_nx,ai_ny
-   sll_real64, dimension(:,:),pointer :: apr_g_der2 !ai_ny_der,ai_nx
-   ! OUTPUT
-   sll_real64, dimension(:,:),pointer::apr_Bcoef!ai_nx ,ai_ny+ ai_ny_der 
-   sll_real64, dimension( : ),pointer:: apr_tx ! ai_nx + ai_kx 
-   sll_real64, dimension( : ),pointer:: apr_ty ! ai_ny + ai_ky + ai_ny_der
-   ! LOCAL VARIABLES		
-   sll_real64, dimension ( ai_nx , ai_ny + ai_ny_der) :: lpr_work1
-  sll_real64, dimension ( ai_nx ) :: lpr_work2
-  sll_real64, dimension ( (ai_nx )* (ai_ny+ai_ny_der) ) :: lpr_work3
-  sll_real64, dimension ( (ai_nx) *( 2*ai_kx-1) ) :: lpr_work31
-  sll_real64, dimension (( 2*ai_ky-1) * (ai_ny+ai_ny_der) ) :: lpr_work32
-  sll_real64, dimension ( ai_ny +ai_ny_der) :: lpr_work4
-  sll_real64, dimension (1:ai_ny,1:ai_nx),target :: lpr_work5 !  ai_ny , ai_nx 
-  sll_real64, dimension (:,:),pointer :: lpr_work5_ptr
-  sll_int32  :: li_i,li_iflag
-  sll_int32 :: ierr
-  
-  
-  lpr_work1(:,:) = 0.0
-  lpr_work5(:,:) = 0.0
-  
-  ! *** set up knots
-  !     interpolate between knots
-  
-  apr_tx ( 1 : ai_kx ) = apr_taux ( 1 )
-  apr_tx ( ai_nx + 1 : ai_nx + ai_kx ) = apr_taux ( ai_nx )
-  
-  if ( mod(ai_kx,2) == 0 ) then
-     do li_i = ai_kx + 1, ai_nx
-        apr_tx ( li_i ) = apr_taux ( li_i - ai_kx/2 ) 
-        
-     end do
-   else
-      
-      do li_i = ai_kx + 1, ai_nx
-         apr_tx ( li_i ) = &
-              0.5*( apr_taux ( li_i - (ai_kx-1)/2 ) + &
-              apr_taux ( li_i -1 - (ai_kx-1)/2 ) )
-         
-      end do
-   
-   end if
-
-  
-   !  *** construct b-coefficients of interpolant
-  !
-  apr_ty = 0.0_f64
-  apr_ty ( 1 : ai_ky ) = apr_tauy ( 1 )
-  apr_ty ( ai_ny+ ai_ny_der + 1: ai_ny + ai_ny_der + ai_ky ) = apr_tauy ( ai_ny )
-  
-  
-  if (ai_ny + ai_ny_der + ai_ky == ai_ny + 2*(ai_ky-1)) then
-     apr_ty (ai_ky+1: ai_ny+ ai_ny_der) = apr_tauy(2:ai_ny-1)
-     
-  else
-     print*, 'problem with construction of knots' 
-  end if
-  
-  lpr_work5_ptr = lpr_work5
-  call spli2d( &
-       apr_taux,&
-       apr_g,&
-       apr_tx, &
-       ai_nx,&
-       ai_kx, &
-       ai_ny, &
-       lpr_work2,&
-       lpr_work31,&
-       lpr_work5_ptr, &
-       li_iflag )
-  
-   apr_bcoef(:,:) =0.0_8
-   lpr_work4 = 0.0_8
-   lpr_work3 = 0.0_8
-   lpr_work32= 0.0_8
-   
-
-   call spli2d_der ( &
-        apr_tauy,&
-        lpr_work5_ptr,&
-        apr_tauy_der,&
-        apr_g_der2,&
-        apr_ty,&
-        ai_ny, &
-        ai_ny_der,&
-        ai_ky, &
-        ai_nx, &
-        lpr_work4, &
-        lpr_work32,&
-        apr_bcoef, &
-        li_iflag )
-
- end subroutine spli2d_custom_der2
-
  subroutine spli2d_perdir (&
       ar_L,&
       ai_nx,&
@@ -5908,444 +5676,6 @@ subroutine spli2d_der(&
     
   end function bvalue
   
-
-  function dvalue1d(ar_x,&
-       ai_nx,&
-       ai_kx,&
-       apr_Bcoef,&
-       apr_tx,&
-       deriv1) result(res)
-    implicit none
-    ! INPUT
-    sll_real64 :: ar_x
-    sll_real64 :: res
-    sll_int32  :: ai_nx, ai_kx
-    sll_int32  :: deriv1
-    sll_real64, dimension ( : ),pointer :: apr_tx ! ai_nx + ai_kx
-    sll_real64, dimension ( :),pointer :: apr_Bcoef ! ai_nx 			
-    
-    
-    
-    
-    res = bvalue(apr_tx,&
-         apr_Bcoef,&
-         ai_nx,&
-         ai_kx,&
-         ar_x,&
-         deriv1 )
-    
-  end function dvalue1d
-  
-
-  subroutine spli1d_dir ( &
-     ai_nx,&
-     ai_kx,&
-     apr_taux,&
-     apr_g,&
-     apr_Bcoef,&
-     apr_tx )
-    implicit none
-    ! INPUT
-    sll_int32  :: ai_nx, ai_kx
-    sll_real64, dimension ( ai_nx) :: apr_taux
-    sll_real64, dimension ( ai_nx) :: apr_g
-    ! OUTPUT
-    sll_real64, dimension ( ai_nx  ) :: apr_Bcoef
-    sll_real64, dimension ( ai_nx + ai_kx ) :: apr_tx
-    ! LOCAL VARIABLES		
-    sll_real64, dimension ( ai_nx ) :: lpr_work1
-    !sll_real64, dimension ( ai_nx         ) :: lpr_work2
-    sll_real64, dimension ( ai_nx *( 2*ai_kx-1) ) :: lpr_work31
-    !sll_real64, dimension ( (ai_nx-ai_kx)*(2*ai_kx+3)+5*ai_kx+3 ) :: scrtch
-    !sll_real64, dimension ( ai_nx + ai_kx ) :: t 
-    sll_int32  :: li_i, li_iflag
-    
-    lpr_work1(:) = 0.0
-    
-    ! *** set up knots
-  !     interpolate between knots
-    ! x
-    !  if (ai_kx <= 2) then 
-    apr_tx ( 1 : ai_kx ) = apr_taux ( 1 )
-    apr_tx ( ai_nx + 1 : ai_nx + ai_kx ) = apr_taux ( ai_nx )
-  
-    if ( mod(ai_kx,2) == 0 ) then
-       do li_i = ai_kx + 1, ai_nx
-          apr_tx ( li_i ) = apr_taux ( li_i - ai_kx/2 ) 
-          
-       end do
-    else
-       
-       do li_i = ai_kx + 1, ai_nx
-          apr_tx ( li_i ) = &
-               0.5*( apr_taux ( li_i - (ai_kx-1)/2 ) + &
-               apr_taux ( li_i -1 - (ai_kx-1)/2 ) )
-          
-       end do
-       
-    end if
-    
-    apr_Bcoef = 0.0_8
-    do li_i = 1, ai_nx
-       apr_Bcoef ( li_i ) = apr_g ( li_i )
-    end do
-    
-    !  *** construct b-coefficients of interpolant
-    !
-    call splint ( &
-         apr_taux,&
-         apr_g,&
-         apr_tx, &
-         ai_nx,&
-         ai_kx, &
-         lpr_work31,&
-         apr_Bcoef, &
-         li_iflag )
-  
-  end subroutine spli1d_dir
-
-
-  subroutine spli1d_per(&
-       ar_L,&
-       ai_nx,&
-       ai_kx,&
-       apr_taux,&
-       apr_g,&
-       apr_Bcoef,&
-       apr_tx)
-    ! CALLED WHEN WE WANT TO INTERPOL WITH A PERIODIC 
-    ! FIRST PARAM WITH A PERIOD = ar_L
-    implicit none
-    ! INPUT
-    sll_real64 :: ar_L 
-    sll_int32  :: ai_nx, ai_kx
-    sll_real64, dimension ( ai_nx) :: apr_taux
-    sll_real64, dimension ( ai_nx) :: apr_g
-    ! OUTPUT
-    sll_real64, dimension ( ai_nx ) :: apr_Bcoef
-    sll_real64, dimension ( ai_nx + ai_kx) :: apr_tx
-    ! LOCAL VARIABLES		
-    sll_real64, dimension ( ai_nx) :: lpr_taux
-    sll_real64, dimension ( ai_nx) :: lpr_g
-    sll_real64, dimension ( ai_nx *( 2*ai_kx-1) ) :: lpr_work
-    !sll_real64, dimension ( (ai_nx-ai_kx)*(2*ai_kx+3)+5*ai_kx+3 ) :: scrtch
-    sll_int32 :: iflag
-    sll_int32 :: li_i
-    if ( ar_L == 0.0_8 ) then
-       print*,'Error spli1d_per : called with a period = 0 '
-       stop
-    end if
-  
-    
-    lpr_taux ( 1 : ai_nx - 1 ) = apr_taux ( 1 : ai_nx - 1 )
-    lpr_taux ( ai_nx ) = apr_taux ( ai_nx ) !apr_taux ( 1 ) + ar_L
-    
-    lpr_g ( 1 : ai_nx - 1  ) = apr_g ( 1 : ai_nx - 1 )
-    lpr_g ( ai_nx) = apr_g ( ai_nx ) !apr_g ( 1 )		
-    
-    
-    apr_tx ( 1 : ai_kx ) = lpr_taux ( 1 )
-    apr_tx ( ai_nx + 1 : ai_nx + ai_kx ) = lpr_taux ( ai_nx )
-  
-    
-    if ( mod(ai_kx,2) == 0 ) then
-       do li_i = ai_kx + 1, ai_nx
-          apr_tx ( li_i ) = lpr_taux ( li_i - ai_kx/2 ) 
-          
-       end do
-    else
-       
-       do li_i = ai_kx + 1, ai_nx
-          apr_tx ( li_i ) = &
-               0.5*( lpr_taux ( li_i - (ai_kx-1)/2 ) + &
-               lpr_taux ( li_i -1 - (ai_kx-1)/2 ) )
-          
-       end do
-       
-    end if
-
-    
-    call splint ( &
-         lpr_taux,&
-         lpr_g,&
-         apr_tx,&
-         ai_nx, &
-         ai_kx, &
-         lpr_work,&
-         apr_Bcoef,&
-         iflag)
-    
-  end subroutine spli1d_per
-
-   subroutine spli1d_der(&
-       ai_nx,&
-       ai_nx_der,&
-       ai_kx,&
-       apr_taux,&
-       apr_g,&
-       apr_taux_der,&
-       apr_g_der,&
-       apr_Bcoef,&
-       apr_tx)
-    implicit none
-    ! INPUT
-    sll_int32  :: ai_nx, ai_kx,ai_nx_der
-    sll_real64, dimension ( ai_nx) :: apr_taux
-    sll_real64, dimension ( ai_nx) :: apr_g
-    sll_int32, dimension ( ai_nx_der) :: apr_taux_der
-    sll_real64, dimension ( ai_nx_der) :: apr_g_der
-    ! OUTPUT
-    sll_real64, dimension ( ai_nx + ai_nx_der) :: apr_Bcoef
-    sll_real64, dimension ( ai_nx + ai_nx_der + ai_kx) :: apr_tx
-    ! LOCAL VARIABLES		
-    sll_real64, dimension ( (ai_nx+ai_nx_der) *( 2*ai_kx-1) ) :: lpr_work
-    !sll_real64, dimension ( (ai_nx-ai_kx)*(2*ai_kx+3)+5*ai_kx+3 ) :: scrtch
-    sll_int32 :: iflag
-    
-    apr_tx = 0.0_f64
-    apr_tx ( 1 : ai_kx ) = apr_taux ( 1 )
-    apr_tx ( ai_nx+ ai_nx_der + 1: ai_nx + ai_nx_der + ai_kx ) = apr_taux ( ai_nx )
-  
-    
-    if (ai_nx + ai_nx_der + ai_kx == ai_nx + 2*(ai_kx-1)) then
-       apr_tx (ai_kx+1: ai_nx+ ai_nx_der) = apr_taux(2:ai_nx-1)
-       
-    else
-       print*, 'problem with construction of knots' 
-    end if
-
-
-    call splint_der ( &
-         apr_taux,&
-         apr_g,&
-         apr_taux_der,&
-         apr_g_der,&
-         apr_tx,&
-         ai_nx,ai_nx_der,ai_kx,&
-         lpr_work, apr_Bcoef, iflag )
-    
-    
-  end subroutine spli1d_der
-  
-  
-
-
-  subroutine splint ( tau, gtau, t, n, k, q, bcoef, iflag )
-    
-    !*************************************************************************
-    !
-    !! SPLINT produces the B-spline coefficients BCOEF of an 
-    ! interpolating spline.
-    !
-    !  Discussion:
-    !
-    !    The spline is of order K with knots T(1:N+K), and takes on the 
-    !    value GTAU(I) at TAU(I), for I = 1 to N.
-    !
-    !    The I-th equation of the linear system 
-    !
-    !      A * BCOEF = B 
-    !
-    !    for the B-spline coefficients of the interpolant enforces interpolation
-    !    at TAU(1:N).
-    !
-    !    Hence, B(I) = GTAU(I), for all I, and A is a band matrix with 2*K-1
-    !    bands, if it is invertible.
-    !
-    !    The matrix A is generated row by row and stored, diagonal by diagonal,
-    !    in the rows of the array Q, with the main diagonal going
-    !    into row K.  See comments in the program.
-    !
-    !    The banded system is then solved by a call to BANFAC, which 
-    !    constructs the triangular factorization for A and stores it again in
-    !    Q, followed by a call to BANSLV, which then obtains the solution
-    !    BCOEF by substitution.
-    !
-    !    BANFAC does no pivoting, since the total positivity of the matrix
-    !    A makes this unnecessary.
-    !
-    !    The linear system to be solved is (theoretically) invertible if
-    !    and only if
-    !      T(I) < TAU(I) < TAU(I+K), for all I.
-    !    Violation of this condition is certain to lead to IFLAG = 2.
-    !
-    !  Modified:
-    !
-    !    14 February 2007
-    !
-    !  Author:
-    !
-    !    Carl DeBoor
-    !
-    !  Reference:
-    !
-    !    Carl DeBoor,
-    !    A Practical Guide to Splines,
-    !    Springer, 2001,
-    !    ISBN: 0387953663,
-    !    LC: QA1.A647.v27.
-    !
-    !  Parameters:
-    !
-    ! Input, real ( kind = 8 ) TAU(N), the data point abscissas.The entries in
-    !    TAU should be strictly increasing.
-    !
-    !    Input, real ( kind = 8 ) GTAU(N), the data ordinates.
-    !
-    !    Input, real ( kind = 8 ) T(N+K), the knot sequence.
-    !
-    !    Input, integer ( kind = 4 ) N, the number of data points.
-    !
-    !    Input, integer ( kind = 4 ) K, the order of the spline.
-    !
-    !    Output, real ( kind = 8 ) Q((2*K-1)*N), the triangular factorization
-    !    of the coefficient matrix of the linear system for the B-coefficients 
-    !    of the spline interpolant.  The B-coefficients for the interpolant 
-    !    of an additional data set can be obtained without going through all 
-    !    the calculations in this routine, simply by loading HTAU into BCOEF 
-    !    and then executing the call:
-    !      call banslv ( q, 2*k-1, n, k-1, k-1, bcoef )
-    !
-    !    Output, real ( kind = 8 ) BCOEF(N), the B-spline coefficients of 
-    !    the interpolant.
-    !
-    !    Output, integer ( kind = 4 ) IFLAG, error flag.
-    !    1, = success.
-    !    2, = failure.
-    !
-    implicit none
-    
-    sll_int32 ::  n
-    
-    sll_real64,dimension(n):: bcoef ! (n)
-    sll_real64,dimension(n)::  gtau ! (n)
-    sll_int32 :: i
-    sll_int32 :: iflag
-    sll_int32 :: ilp1mx
-    sll_int32 :: j
-    sll_int32 :: jj
-    sll_int32 :: k
-    sll_int32 :: kpkm2
-    sll_int32 :: left
-    sll_real64, dimension((2*k-1)*n) :: q!((2*k-1)*n)
-    sll_real64,dimension(n+k) ::  t!(n+k)
-    sll_real64,dimension(n) ::  tau!!(n)
-    sll_real64:: taui
-  
-    kpkm2 = 2 * ( k - 1 )
-    left = k
-    q(1:(2*k-1)*n) = 0.0_f64
-    !
-    !  Loop over I to construct the N interpolation equations.
-    !
-    do i = 1, n
-       
-       taui = tau(i)
-       ilp1mx = min ( i + k, n + 1 )
-       !
-       !  Find LEFT in the closed interval (I,I+K-1) such that
-       !
-       !    T(LEFT) <= TAU(I) < T(LEFT+1)
-       !
-       !  The matrix is singular if this is not possible.
-       !
-       left = max ( left, i )
-       
-       if ( taui < t(left) ) then
-          iflag = 2
-          write ( *, '(a)' ) ' '
-          write ( *, '(a)' ) 'SPLINT - Fatal Error!'
-          write ( *, '(a)' ) '  The linear system is not invertible!'
-          return
-       end if
-   
-       do while ( t(left+1) <= taui )
-          
-          left = left + 1
-          
-          if ( left < ilp1mx ) then
-             cycle
-          end if
-          
-          left = left - 1
-          
-          if ( t(left+1) < taui ) then
-             iflag = 2
-             write ( *, '(a)' ) ' '
-             write ( *, '(a)' ) 'SPLINT - Fatal Error!'
-             write ( *, '(a)' ) '  The linear system is not invertible!'
-             return
-          end if
-          
-          exit
-          
-       end do
-       !
-       !  The I-th equation enforces interpolation at TAUI, hence for all J,
-       !
-       !    A(I,J) = B(J,K,T)(TAUI).
-       !
-       !Only the K entries with J = LEFT-K+1,...,LEFT actually might be nonzero.
-       !
-       !These K numbers are returned, in BCOEF 
-       ! (used for temporary storage here),
-       !  by the following.
-       !
-       call bsplvb ( t, k, 1, taui, left, bcoef )
-       !
-       !  We therefore want BCOEF(J) = B(LEFT-K+J)(TAUI) to go into
-       !  A(I,LEFT-K+J), that is, into Q(I-(LEFT+J)+2*K,(LEFT+J)-K) since
-       !  A(I+J,J) is to go into Q(I+K,J), for all I, J, if we consider Q
-       !  as a two-dimensional array, with  2*K-1 rows.  See comments in
-       !  BANFAC.
-       !
-       !  In the present program, we treat Q as an equivalent
-       !  one-dimensional array, because of fortran restrictions on
-       !  dimension statements.
-       !
-       !  We therefore want  BCOEF(J) to go into the entry of Q with index:
-       !
-       !    I -(LEFT+J)+2*K + ((LEFT+J)-K-1)*(2*K-1)
-       !   = I-LEFT+1+(LEFT -K)*(2*K-1) + (2*K-2)*J
-       !
-       jj = i - left + 1 + ( left - k ) * ( k + k - 1 )
-       
-       do j = 1, k
-          jj = jj + kpkm2
-          q(jj) = bcoef(j)
-       end do
-       
-    end do
-    !
-    !  Obtain factorization of A, stored again in Q.
-    !
-    call banfac ( q, k+k-1, n, k-1, k-1, iflag )
-    
-    if ( iflag == 2 ) then
-       write ( *, '(a)' ) ' '
-       write ( *, '(a)' ) 'SPLINT - Fatal Error!'
-       write ( *, '(a)' ) '  The linear system is not invertible!'
-       return
-    end if
-    !
-    !  Solve 
-    !
-    !    A * BCOEF = GTAU
-    !
-    !  by back substitution.
-    !
-    bcoef(1:n) = gtau(1:n)
-    
-    call banslv ( q, k+k-1, n, k-1, k-1, bcoef )
-    
-    return
-  end subroutine splint
-
-
-
-
-
-
 subroutine splint_der( tau,gtau,tau_der,gtau_der,t,n,m,k, q, bcoef_spline, iflag )
     
     !*************************************************************************
