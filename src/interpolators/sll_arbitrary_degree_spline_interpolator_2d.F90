@@ -405,16 +405,6 @@ sll_real64, dimension(:), optional :: value_max1
 sll_real64, dimension(:), optional :: value_min2
 sll_real64, dimension(:), optional :: value_max2
 
-class(sll_arbitrary_degree_spline_interpolator_1d), pointer :: interp1d_min1 => null()
-class(sll_arbitrary_degree_spline_interpolator_1d), pointer :: interp1d_max1 => null()
-class(sll_arbitrary_degree_spline_interpolator_1d), pointer :: interp1d_min2 => null()
-class(sll_arbitrary_degree_spline_interpolator_1d), pointer :: interp1d_max2 => null()
-
-sll_int32  :: sz_value_min1
-sll_int32  :: sz_value_max1
-sll_int32  :: sz_value_min2
-sll_int32  :: sz_value_max2
-sll_int64  :: bc_selector
 sll_int32  :: num_pts1
 sll_int32  :: num_pts2
 sll_int32  :: bc_min1
@@ -573,7 +563,8 @@ sll_int32   :: nb_spline_eta1
 sll_int32   :: nb_spline_eta2
 sll_real64  :: eta1
 sll_real64  :: eta2
-sll_int32   :: sz_derivative1,sz_derivative2
+sll_int32, parameter :: sz_derivative1=2
+sll_int32, parameter :: sz_derivative2=2
 
 sp_deg1    = interpolator%spline_degree1
 sp_deg2    = interpolator%spline_degree2
@@ -782,426 +773,284 @@ if (present(coeffs_1d)) then
     
   case(657) !left: Dirichlet, right: Neumann, bottom: Neumann, Top: Dirichlet 
 
-     interpolator%size_coeffs1=  num_cells1 + sp_deg1 +1
-     interpolator%size_coeffs2=  num_cells2 + sp_deg2 +1
-     interpolator%size_t1 = 2*sp_deg1 + num_cells1 + 1
-     interpolator%size_t2 = 2*sp_deg2 + num_cells2 + 1
-     nb_spline_eta1 = num_cells1 + sp_deg1 +1
-     nb_spline_eta2 = num_cells2 + sp_deg2 +1
-     
-     if(size(coeffs_1d,1).ne.(num_cells1 + sp_deg1+1)*(num_cells2+sp_deg2+1))then
-        print*, 'Problem in set_coefficients in arbitrary_degree_spline_2d'
-        print*, ' Problem with the size coeffs_1d must have the size equal to '
-        print*, ' (num_cells1 + sp_deg1 +1)*( num_cells2 + sp_deg2 +1)=',&
-             (num_cells1 + sp_deg1 +1)*( num_cells2 + sp_deg2+1)
-        stop
-     end if
-     ! ------------------------------------------------------------
-     ! allocation and definition of knots
-     ! ------------------------------------------------------------
-     do i = 1, sp_deg1 + 1
-        interpolator%t1(i) = eta1_min
-     enddo
-     eta1 = eta1_min
-     do i = sp_deg1 + 2, num_cells1 + 1 + sp_deg1
-        eta1 = eta1 + delta1
-        interpolator%t1(i) = eta1
-     enddo
-     do i = num_cells1 + sp_deg1 + 2, num_cells1 + 1 + 2*sp_deg1
-        interpolator%t1(i) = eta1
-     enddo
-     
-     do i = 1, sp_deg2 + 1
-        interpolator%t2(i) = eta2_min
-     enddo
-     eta2 = eta2_min
-     do i = sp_deg2 + 2, num_cells2 + 1 + sp_deg2
-        eta2 = eta2 + delta2
-        interpolator%t2(i) = eta2
-     enddo
-     do i = num_cells2 + sp_deg2 + 2, num_cells2 + 1 + 2*sp_deg2
-        interpolator%t2(i) = eta2
-     enddo
-     
-     ! ------------------------------------------------------------
-     ! reorganization of spline coefficients 1D in coefficients 2D 
-     ! ------------------------------------------------------------
-     ! achtung ! normaly interpolator%slope_min1(:) and interpolator%value_max1(:)
-     ! achtung ! normaly interpolator%value_min2(:) and interpolator%value_max2(:)
-
-     interpolator%coeff_splines(:,:) = 0.0_8
-     ! allocation coefficient spline
-     do i = 1,nb_spline_eta1
-        do j = 1,nb_spline_eta2
-           
-           interpolator%coeff_splines(i+1,j+1) = &
-                coeffs_1d( i + nb_spline_eta1 *(j-1))
-        end do
-     end do
-     ! ------------------------------------------------------------
+    interpolator%size_coeffs1 =  num_cells1 + sp_deg1 +1
+    interpolator%size_coeffs2 =  num_cells2 + sp_deg2 +1
+    interpolator%size_t1      = 2*sp_deg1 + num_cells1 + 1
+    interpolator%size_t2      = 2*sp_deg2 + num_cells2 + 1
+    nb_spline_eta1            = num_cells1 + sp_deg1 +1
+    nb_spline_eta2            = num_cells2 + sp_deg2 +1
+    
+    SLL_ASSERT(size(coeffs_1d,1)==(num_cells1+sp_deg1+1)*(num_cells2+sp_deg2+1))
+    do i = 1, sp_deg1 + 1
+      interpolator%t1(i) = eta1_min
+    enddo
+    eta1 = eta1_min
+    do i = sp_deg1 + 2, num_cells1 + 1 + sp_deg1
+      eta1 = eta1 + delta1
+      interpolator%t1(i) = eta1
+    enddo
+    do i = num_cells1 + sp_deg1 + 2, num_cells1 + 1 + 2*sp_deg1
+      interpolator%t1(i) = eta1
+    enddo
+    do i = 1, sp_deg2 + 1
+      interpolator%t2(i) = eta2_min
+    enddo
+    eta2 = eta2_min
+    do i = sp_deg2 + 2, num_cells2 + 1 + sp_deg2
+      eta2 = eta2 + delta2
+      interpolator%t2(i) = eta2
+    enddo
+    do i = num_cells2 + sp_deg2 + 2, num_cells2 + 1 + 2*sp_deg2
+      interpolator%t2(i) = eta2
+    enddo
+    interpolator%coeff_splines(:,:) = 0.0_8
+    do j = 1,nb_spline_eta2
+    do i = 1,nb_spline_eta1
+      interpolator%coeff_splines(i+1,j+1) = coeffs_1d(i+nb_spline_eta1*(j-1))
+    end do
+    end do
+    
   case(780)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Dirichlet
-     interpolator%size_coeffs1=  num_cells1 + sp_deg1 +1
-     interpolator%size_coeffs2=  num_cells2 + sp_deg2 +1
-     interpolator%size_t1 = 2*sp_deg1 + num_cells1 + 1
-     interpolator%size_t2 = 2*sp_deg2 + num_cells2 + 1
-     nb_spline_eta1 = num_cells1 + sp_deg1 +1
-     nb_spline_eta2 = num_cells2 + sp_deg2 +1
-     
-     if(size(coeffs_1d,1).ne.(num_cells1 + sp_deg1+1)*(num_cells2+sp_deg2+1))then
-        print*, 'Problem in set_coefficients in arbitrary_degree_spline_2d'
-        print*, ' Problem with the size coeffs_1d must have the size equal to '
-        print*, ' (num_cells1 + sp_deg1 +1)*( num_cells2 + sp_deg2 +1)=',&
-             (num_cells1 + sp_deg1 +1)*( num_cells2 + sp_deg2+1)
-        stop
-     end if
-     ! ------------------------------------------------------------
-     ! allocation and definition of knots
-     ! ------------------------------------------------------------
-     do i = 1, sp_deg1 + 1
-        interpolator%t1(i) = eta1_min
-     enddo
-     eta1 = eta1_min
-     do i = sp_deg1 + 2, num_cells1 + 1 + sp_deg1
-        eta1 = eta1 + delta1
-        interpolator%t1(i) = eta1
-     enddo
-     do i = num_cells1 + sp_deg1 + 2, num_cells1 + 1 + 2*sp_deg1
-        interpolator%t1(i) = eta1
-     enddo
-     
-     do i = 1, sp_deg2 + 1
-        interpolator%t2(i) = eta2_min
-     enddo
-     eta2 = eta2_min
-     do i = sp_deg2 + 2, num_cells2 + 1 + sp_deg2
-        eta2 = eta2 + delta2
-        interpolator%t2(i) = eta2
-     enddo
-     do i = num_cells2 + sp_deg2 + 2, num_cells2 + 1 + 2*sp_deg2
-        interpolator%t2(i) = eta2
-     enddo
-     
-     ! ------------------------------------------------------------
-     ! reorganization of spline coefficients 1D in coefficients 2D 
-     ! ------------------------------------------------------------
-     ! achtung ! normaly interpolator%slope_min1(:) and interpolator%value_max1(:)
-     ! achtung ! normaly interpolator%value_min2(:) and interpolator%value_max2(:)
 
-     interpolator%coeff_splines(:,:) = 0.0_8
-     ! allocation coefficient spline
-     do i = 1,nb_spline_eta1
-        do j = 1,nb_spline_eta2
-           
-           interpolator%coeff_splines(i+1,j+1) = &
-                coeffs_1d( i + nb_spline_eta1 *(j-1))
-        end do
-     end do
-     ! ------------------------------------------------------------
+    interpolator%size_coeffs1 = num_cells1 + sp_deg1 +1
+    interpolator%size_coeffs2 = num_cells2 + sp_deg2 +1
+    interpolator%size_t1      = 2*sp_deg1 + num_cells1 + 1
+    interpolator%size_t2      = 2*sp_deg2 + num_cells2 + 1
+    nb_spline_eta1            = num_cells1 + sp_deg1 +1
+    nb_spline_eta2            = num_cells2 + sp_deg2 +1
+    
+    SLL_ASSERT(size(coeffs_1d,1)==(num_cells1 + sp_deg1+1)*(num_cells2+sp_deg2+1))
+    do i = 1, sp_deg1 + 1
+      interpolator%t1(i) = eta1_min
+    enddo
+    eta1 = eta1_min
+    do i = sp_deg1 + 2, num_cells1 + 1 + sp_deg1
+      eta1 = eta1 + delta1
+      interpolator%t1(i) = eta1
+    enddo
+    do i = num_cells1 + sp_deg1 + 2, num_cells1 + 1 + 2*sp_deg1
+      interpolator%t1(i) = eta1
+    enddo
+    do i = 1, sp_deg2 + 1
+      interpolator%t2(i) = eta2_min
+    enddo
+    eta2 = eta2_min
+    do i = sp_deg2 + 2, num_cells2 + 1 + sp_deg2
+      eta2 = eta2 + delta2
+      interpolator%t2(i) = eta2
+    enddo
+    do i = num_cells2 + sp_deg2 + 2, num_cells2 + 1 + 2*sp_deg2
+      interpolator%t2(i) = eta2
+    enddo
+    interpolator%coeff_splines(:,:) = 0.0_8
+    do j = 1,nb_spline_eta2
+    do i = 1,nb_spline_eta1
+      interpolator%coeff_splines(i+1,j+1) = coeffs_1d(i+nb_spline_eta1*(j-1))
+    end do
+    end do
+    
   case(1098)  !left: Neumann, right: Dirichlet, bottom: Dirichlet, Top: Neumann
-     interpolator%size_coeffs1=  num_cells1 + sp_deg1 +1
-     interpolator%size_coeffs2=  num_cells2 + sp_deg2 +1
-     interpolator%size_t1 = 2*sp_deg1 + num_cells1 + 1
-     interpolator%size_t2 = 2*sp_deg2 + num_cells2 + 1
-     nb_spline_eta1 = num_cells1 + sp_deg1 +1
-     nb_spline_eta2 = num_cells2 + sp_deg2 +1
-     
-     if(size(coeffs_1d,1).ne.(num_cells1 + sp_deg1+1)*(num_cells2+sp_deg2+1))then
-        print*, 'Problem in set_coefficients in arbitrary_degree_spline_2d'
-        print*, ' Problem with the size coeffs_1d must have the size equal to '
-        print*, ' (num_cells1 + sp_deg1 +1)*( num_cells2 + sp_deg2 +1)=',&
-             (num_cells1 + sp_deg1 +1)*( num_cells2 + sp_deg2+1)
-        stop
-     end if
-     ! ------------------------------------------------------------
-     ! allocation and definition of knots
-     ! ------------------------------------------------------------
-     do i = 1, sp_deg1 + 1
-        interpolator%t1(i) = eta1_min
-     enddo
-     eta1 = eta1_min
-     do i = sp_deg1 + 2, num_cells1 + 1 + sp_deg1
-        eta1 = eta1 + delta1
-        interpolator%t1(i) = eta1
-     enddo
-     do i = num_cells1 + sp_deg1 + 2, num_cells1 + 1 + 2*sp_deg1
-        interpolator%t1(i) = eta1
-     enddo
-     
-     do i = 1, sp_deg2 + 1
-        interpolator%t2(i) = eta2_min
-     enddo
-     eta2 = eta2_min
-     do i = sp_deg2 + 2, num_cells2 + 1 + sp_deg2
-        eta2 = eta2 + delta2
-        interpolator%t2(i) = eta2
-     enddo
-     do i = num_cells2 + sp_deg2 + 2, num_cells2 + 1 + 2*sp_deg2
-        interpolator%t2(i) = eta2
-     enddo
-     
-     ! ------------------------------------------------------------
-     ! reorganization of spline coefficients 1D in coefficients 2D 
-     ! ------------------------------------------------------------
-     ! achtung ! normaly interpolator%slope_min1(:) and interpolator%value_max1(:)
-     ! achtung ! normaly interpolator%value_min2(:) and interpolator%value_max2(:)
 
-     interpolator%coeff_splines(:,:) = 0.0_8
-     ! allocation coefficient spline
-     do i = 1,nb_spline_eta1
-        do j = 1,nb_spline_eta2
-           
-           interpolator%coeff_splines(i+1,j+1) = &
-                coeffs_1d( i + nb_spline_eta1 *(j-1))
-        end do
-     end do
-     ! ------------------------------------------------------------
+    interpolator%size_coeffs1 = num_cells1 + sp_deg1+1
+    interpolator%size_coeffs2 = num_cells2 + sp_deg2+1
+    interpolator%size_t1      = 2*sp_deg1  + num_cells1+1
+    interpolator%size_t2      = 2*sp_deg2  + num_cells2+1
+    nb_spline_eta1            = num_cells1 + sp_deg1+1
+    nb_spline_eta2            = num_cells2 + sp_deg2+1
+    
+    SLL_ASSERT(size(coeffs_1d,1)==(num_cells1 + sp_deg1+1)*(num_cells2+sp_deg2+1))
+    do i = 1, sp_deg1 + 1
+      interpolator%t1(i) = eta1_min
+    enddo
+    eta1 = eta1_min
+    do i = sp_deg1 + 2, num_cells1 + 1 + sp_deg1
+      eta1 = eta1 + delta1
+      interpolator%t1(i) = eta1
+    enddo
+    do i = num_cells1 + sp_deg1 + 2, num_cells1 + 1 + 2*sp_deg1
+      interpolator%t1(i) = eta1
+    enddo
+    do i = 1, sp_deg2 + 1
+      interpolator%t2(i) = eta2_min
+    enddo
+    eta2 = eta2_min
+    do i = sp_deg2 + 2, num_cells2 + 1 + sp_deg2
+      eta2 = eta2 + delta2
+      interpolator%t2(i) = eta2
+    enddo
+    do i = num_cells2 + sp_deg2 + 2, num_cells2 + 1 + 2*sp_deg2
+      interpolator%t2(i) = eta2
+    enddo
+    interpolator%coeff_splines(:,:) = 0.0_8
+    do j = 1,nb_spline_eta2
+    do i = 1,nb_spline_eta1
+      interpolator%coeff_splines(i+1,j+1) = coeffs_1d(i+nb_spline_eta1*(j-1))
+    end do
+    end do
 
   case(2145)  !left: Dirichlet, right: Hermite, bottom: Dirichlet, Top: Hermite  
 
-     sz_derivative1 = 2
-     sz_derivative2 = 2
-     interpolator%size_coeffs1=  num_cells1 + sp_deg1 + 1
-     interpolator%size_coeffs2=  num_cells2 + sp_deg2 + 1
-     interpolator%size_t1 = 2*sp_deg1 + num_cells1 + 1
-     interpolator%size_t2 = 2*sp_deg2 + num_cells2 + 1
-     nb_spline_eta1 = num_cells1 + sp_deg1 + 1
-     nb_spline_eta2 = num_cells2 + sp_deg2 + 1
-     
-     if(size(coeffs_1d,1).ne.(num_cells1+sp_deg1+1)*(num_cells2+sp_deg2+1))then
-        print*, 'Problem in set_coefficients in arbitrary_degree_spline_2d'
-        print*, ' Problem with the size coeffs_1d must have the size equal to '
-        print*, ' (num_cells1 + sp_deg1 +1)*( num_cells2 + sp_deg2 +1)=',&
-             (num_cells1 + sp_deg1 +1)*( num_cells2 + sp_deg2 +1)
-        stop
-     end if
-     ! ------------------------------------------------------------
-     ! allocation and definition of knots
-     ! ------------------------------------------------------------
-     do i = 1, sp_deg1 + 1
-        interpolator%t1(i) = eta1_min
-     enddo
-     eta1 = eta1_min
-     do i = sp_deg1 + 2, num_cells1 + 1 + sp_deg1
-        eta1 = eta1 + delta1
-        interpolator%t1(i) = eta1
-     enddo
-     do i = num_cells1 + sp_deg1 + 2, num_cells1 + 1 + 2*sp_deg1
-        interpolator%t1(i) = eta1
-     enddo
-     
-     do i = 1, sp_deg2 + 1
-        interpolator%t2(i) = eta2_min
-     enddo
-     eta2 = eta2_min
-     do i = sp_deg2 + 2, num_cells2 + 1 + sp_deg2
-        eta2 = eta2 + delta2
-        interpolator%t2(i) = eta2
-     enddo
-     do i = num_cells2 + sp_deg2 + 2, num_cells2 + 1 + 2*sp_deg2
-        interpolator%t2(i) = eta2
-     enddo
-     
-     ! ------------------------------------------------------------
-     ! reorganization of spline coefficients 1D in coefficients 2D 
-     ! ------------------------------------------------------------
-     ! achtung ! normaly interpolator%slope_min1(:) and interpolator%value_max1(:)
-     ! achtung ! normaly interpolator%value_min2(:) and interpolator%value_max2(:)
+    interpolator%size_coeffs1 = num_cells1 + sp_deg1 + 1
+    interpolator%size_coeffs2 = num_cells2 + sp_deg2 + 1
+    interpolator%size_t1      = 2*sp_deg1 + num_cells1 + 1
+    interpolator%size_t2      = 2*sp_deg2 + num_cells2 + 1
+    nb_spline_eta1            = num_cells1 + sp_deg1 + 1
+    nb_spline_eta2            = num_cells2 + sp_deg2 + 1
+    
+    SLL_ASSERT(size(coeffs_1d,1)==(num_cells1+sp_deg1+1)*(num_cells2+sp_deg2+1))
 
-     interpolator%coeff_splines(:,:) = 0.0_8
-     ! allocation coefficient spline
-     do i = 1,nb_spline_eta1
-        do j = 1,nb_spline_eta2
-           
-           interpolator%coeff_splines(i+1,j+1) = &
-                coeffs_1d( i + nb_spline_eta1 *(j-1))
-        end do
-     end do
-     ! ------------------------------------------------------------
+    do i = 1, sp_deg1 + 1
+      interpolator%t1(i) = eta1_min
+    enddo
+    eta1 = eta1_min
+    do i = sp_deg1 + 2, num_cells1 + 1 + sp_deg1
+      eta1 = eta1 + delta1
+      interpolator%t1(i) = eta1
+    enddo
+    do i = num_cells1 + sp_deg1 + 2, num_cells1 + 1 + 2*sp_deg1
+      interpolator%t1(i) = eta1
+    enddo
+    do i = 1, sp_deg2 + 1
+      interpolator%t2(i) = eta2_min
+    enddo
+    eta2 = eta2_min
+    do i = sp_deg2 + 2, num_cells2 + 1 + sp_deg2
+      eta2 = eta2 + delta2
+      interpolator%t2(i) = eta2
+    enddo
+    do i = num_cells2 + sp_deg2 + 2, num_cells2 + 1 + 2*sp_deg2
+      interpolator%t2(i) = eta2
+    enddo
+    interpolator%coeff_splines(:,:) = 0.0_8
+    do j = 1,nb_spline_eta2
+    do i = 1,nb_spline_eta1
+      interpolator%coeff_splines(i+1,j+1) = coeffs_1d(i+nb_spline_eta1*(j-1))
+    end do
+    end do
      
  case(2124)  !left: Hermite, right: Dirichlet, bottom: Dirichlet, Top: Hermite
-     interpolator%size_coeffs1=  num_cells1 + sp_deg1 +1
-     interpolator%size_coeffs2=  num_cells2 + sp_deg2 +1
-     interpolator%size_t1 = 2*sp_deg1 + num_cells1 + 1
-     interpolator%size_t2 = 2*sp_deg2 + num_cells2 + 1
-     nb_spline_eta1 = num_cells1 + sp_deg1 +1
-     nb_spline_eta2 = num_cells2 + sp_deg2 +1
-     
-     if(size(coeffs_1d,1).ne.(num_cells1 + sp_deg1+1)*(num_cells2+sp_deg2+1))then
-        print*, 'Problem in set_coefficients in arbitrary_degree_spline_2d'
-        print*, ' Problem with the size coeffs_1d must have the size equal to '
-        print*, ' (num_cells1 + sp_deg1 +1)*( num_cells2 + sp_deg2 +1)=',&
-             (num_cells1 + sp_deg1 +1)*( num_cells2 + sp_deg2 +1)
-        stop
-     end if
-     ! ------------------------------------------------------------
-     ! allocation and definition of knots
-     ! ------------------------------------------------------------
-     do i = 1, sp_deg1 + 1
-        interpolator%t1(i) = eta1_min
-     enddo
-     eta1 = eta1_min
-     do i = sp_deg1 + 2, num_cells1 + 1 + sp_deg1
-        eta1 = eta1 + delta1
-        interpolator%t1(i) = eta1
-     enddo
-     do i = num_cells1 + sp_deg1 + 2, num_cells1 + 1 + 2*sp_deg1
-        interpolator%t1(i) = eta1
-     enddo
-     
-     do i = 1, sp_deg2 + 1
-        interpolator%t2(i) = eta2_min
-     enddo
-     eta2 = eta2_min
-     do i = sp_deg2 + 2, num_cells2 + 1 + sp_deg2
-        eta2 = eta2 + delta2
-        interpolator%t2(i) = eta2
-     enddo
-     do i = num_cells2 + sp_deg2 + 2, num_cells2 + 1 + 2*sp_deg2
-        interpolator%t2(i) = eta2
-     enddo
-     
-     ! ------------------------------------------------------------
-     ! reorganization of spline coefficients 1D in coefficients 2D 
-     ! ------------------------------------------------------------
-     ! achtung ! normaly interpolator%slope_min1(:) and interpolator%value_max1(:)
-     ! achtung ! normaly interpolator%value_min2(:) and interpolator%value_max2(:)
 
-     interpolator%coeff_splines(:,:) = 0.0_8
-     ! allocation coefficient spline
-     do i = 1,nb_spline_eta1
-        do j = 1,nb_spline_eta2
-           
-           interpolator%coeff_splines(i+1,j+1) = &
-                coeffs_1d( i + nb_spline_eta1 *(j-1))
-        end do
-     end do
-     ! ------------------------------------------------------------
+    interpolator%size_coeffs1 = num_cells1 + sp_deg1+1
+    interpolator%size_coeffs2 = num_cells2 + sp_deg2+1
+    interpolator%size_t1      = 2*sp_deg1  + num_cells1+1
+    interpolator%size_t2      = 2*sp_deg2  + num_cells2+1
+    nb_spline_eta1            = num_cells1 + sp_deg1+1
+    nb_spline_eta2            = num_cells2 + sp_deg2+1
+    
+    SLL_ASSERT(size(coeffs_1d,1)==(num_cells1+sp_deg1+1)*(num_cells2+sp_deg2+1))
+    do i = 1, sp_deg1 + 1
+      interpolator%t1(i) = eta1_min
+    enddo
+    eta1 = eta1_min
+    do i = sp_deg1 + 2, num_cells1 + 1 + sp_deg1
+      eta1 = eta1 + delta1
+      interpolator%t1(i) = eta1
+    enddo
+    do i = num_cells1 + sp_deg1 + 2, num_cells1 + 1 + 2*sp_deg1
+      interpolator%t1(i) = eta1
+    enddo
+    do i = 1, sp_deg2 + 1
+      interpolator%t2(i) = eta2_min
+    enddo
+    eta2 = eta2_min
+    do i = sp_deg2 + 2, num_cells2 + 1 + sp_deg2
+      eta2 = eta2 + delta2
+      interpolator%t2(i) = eta2
+    enddo
+    do i = num_cells2 + sp_deg2 + 2, num_cells2 + 1 + 2*sp_deg2
+      interpolator%t2(i) = eta2
+    enddo
+    interpolator%coeff_splines(:,:) = 0.0_8
+    do j = 1,nb_spline_eta2
+    do i = 1,nb_spline_eta1
+      interpolator%coeff_splines(i+1,j+1) = coeffs_1d(i+nb_spline_eta1 *(j-1))
+    end do
+    end do
   
   case(801)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Dirichlet
-     interpolator%size_coeffs1=  num_cells1 + sp_deg1+1
-     interpolator%size_coeffs2=  num_cells2 + sp_deg2+1
-     interpolator%size_t1 = 2*sp_deg1 + num_cells1 + 1
-     interpolator%size_t2 = 2*sp_deg2 + num_cells2 + 1
-     nb_spline_eta1 = num_cells1 + sp_deg1 +1
-     nb_spline_eta2 = num_cells2 + sp_deg2 +1
-     
-     if(size(coeffs_1d,1).ne.(num_cells1 + sp_deg1+1)*(num_cells2+sp_deg2+1))then
-        print*, 'Problem in set_coefficients in arbitrary_degree_spline_2d'
-        print*, ' Problem with the size coeffs_1d must have the size equal to '
-        print*, ' (num_cells1 + sp_deg1 +1)*( num_cells2 + sp_deg2 +1)=',&
-             (num_cells1 + sp_deg1 +1)*( num_cells2 + sp_deg2 +1)
-        stop
-     end if
-     ! ------------------------------------------------------------
-     ! allocation and definition of knots
-     ! ------------------------------------------------------------
-     do i = 1, sp_deg1 + 1
-        interpolator%t1(i) = eta1_min
-     enddo
-     eta1 = eta1_min
-     do i = sp_deg1 + 2, num_cells1 + 1 + sp_deg1
-        eta1 = eta1 + delta1
-        interpolator%t1(i) = eta1
-     enddo
-     do i = num_cells1 + sp_deg1 + 2, num_cells1 + 1 + 2*sp_deg1
-        interpolator%t1(i) = eta1
-     enddo
-     
-     do i = 1, sp_deg2 + 1
-        interpolator%t2(i) = eta2_min
-     enddo
-     eta2 = eta2_min
-     do i = sp_deg2 + 2, num_cells2 + 1 + sp_deg2
-        eta2 = eta2 + delta2
-        interpolator%t2(i) = eta2
-     enddo
-     do i = num_cells2 + sp_deg2 + 2, num_cells2 + 1 + 2*sp_deg2
-        interpolator%t2(i) = eta2
-     enddo
-     
-     ! ------------------------------------------------------------
-     ! reorganization of spline coefficients 1D in coefficients 2D 
-     ! ------------------------------------------------------------
-     ! achtung ! normaly interpolator%slope_min1(:) and interpolator%value_max1(:)
-     ! achtung ! normaly interpolator%value_min2(:) and interpolator%value_max2(:)
 
-     interpolator%coeff_splines(:,:) = 0.0_8
-     ! allocation coefficient spline
-     do i = 1,nb_spline_eta1
-        do j = 1,nb_spline_eta2
-           
-           interpolator%coeff_splines(i+1,j+1) = &
-                coeffs_1d( i + nb_spline_eta1 *(j-1))
-        end do
-     end do
-     ! ------------------------------------------------------------
-    case(2340) ! Hermite in al sides
+    interpolator%size_coeffs1 = num_cells1 + sp_deg1+1
+    interpolator%size_coeffs2 = num_cells2 + sp_deg2+1
+    interpolator%size_t1      = 2*sp_deg1 + num_cells1 + 1
+    interpolator%size_t2      = 2*sp_deg2 + num_cells2 + 1
+    nb_spline_eta1            = num_cells1 + sp_deg1 +1
+    nb_spline_eta2            = num_cells2 + sp_deg2 +1
+    
+    SLL_ASSERT(size(coeffs_1d,1).ne.(num_cells1+sp_deg1+1)*(num_cells2+sp_deg2+1))
+    do i = 1, sp_deg1 + 1
+      interpolator%t1(i) = eta1_min
+    enddo
+    eta1 = eta1_min
+    do i = sp_deg1 + 2, num_cells1 + 1 + sp_deg1
+      eta1 = eta1 + delta1
+      interpolator%t1(i) = eta1
+    enddo
+    do i = num_cells1 + sp_deg1 + 2, num_cells1 + 1 + 2*sp_deg1
+      interpolator%t1(i) = eta1
+    enddo
+    do i = 1, sp_deg2 + 1
+      interpolator%t2(i) = eta2_min
+    enddo
+    eta2 = eta2_min
+    do i = sp_deg2 + 2, num_cells2 + 1 + sp_deg2
+      eta2 = eta2 + delta2
+      interpolator%t2(i) = eta2
+    enddo
+    do i = num_cells2 + sp_deg2 + 2, num_cells2 + 1 + 2*sp_deg2
+      interpolator%t2(i) = eta2
+    enddo
+    interpolator%coeff_splines(:,:) = 0.0_8
+    do j = 1,nb_spline_eta2
+    do i = 1,nb_spline_eta1
+      interpolator%coeff_splines(i+1,j+1) = coeffs_1d(i+nb_spline_eta1*(j-1))
+    end do
+    end do
+    
+  case(2340) ! Hermite in al sides
        
-     interpolator%size_coeffs1=  num_cells1 + sp_deg1
-     interpolator%size_coeffs2=  num_cells2 + sp_deg2
-     interpolator%size_t1 = 2*sp_deg1 + num_cells1 + 1
-     interpolator%size_t2 = 2*sp_deg2 + num_cells2 + 1
-     nb_spline_eta1 = num_cells1 + sp_deg1
-     nb_spline_eta2 = num_cells2 + sp_deg2
-     
-     if(size(coeffs_1d,1).ne.(num_cells1 + sp_deg1)*(num_cells2+sp_deg2))then
-        print*, 'Problem in set_coefficients in arbitrary_degree_spline_2d'
-        print*, ' Problem with the size coeffs_1d must have the size equal to '
-        print*, ' (num_cells1 + sp_deg1)*( num_cells2 + sp_deg2)=',&
-             (num_cells1 + sp_deg1)*( num_cells2 + sp_deg2)
-
-        print*, 'but it is equal to =', size(coeffs_1d,1)
-        stop
-     end if
-     ! ------------------------------------------------------------
-     ! allocation and definition of knots
-     ! ------------------------------------------------------------
-     do i = 1, sp_deg1 + 1
-        interpolator%t1(i) = eta1_min
-     enddo
-     eta1 = eta1_min
-     do i = sp_deg1 + 2, num_cells1 + 1 + sp_deg1
-        eta1 = eta1 + delta1
-        interpolator%t1(i) = eta1
-     enddo
-     do i = num_cells1 + sp_deg1 + 2, num_cells1 + 1 + 2*sp_deg1
-        interpolator%t1(i) = eta1
-     enddo
-     
-     do i = 1, sp_deg2 + 1
-        interpolator%t2(i) = eta2_min
-     enddo
-     eta2 = eta2_min
-     do i = sp_deg2 + 2, num_cells2 + 1 + sp_deg2
-        eta2 = eta2 + delta2
-        interpolator%t2(i) = eta2
-     enddo
-     do i = num_cells2 + sp_deg2 + 2, num_cells2 + 1 + 2*sp_deg2
-        interpolator%t2(i) = eta2
-     enddo
-     
-     ! ------------------------------------------------------------
-     ! reorganization of spline coefficients 1D in coefficients 2D 
-     ! ------------------------------------------------------------
-     ! achtung ! normaly interpolator%slope_min1(:) and interpolator%value_max1(:)
-     ! achtung ! normaly interpolator%value_min2(:) and interpolator%value_max2(:)
-
-     interpolator%coeff_splines(:,:) = 0.0_8
-     ! allocation coefficient spline
-     do i = 1,nb_spline_eta1
-        do j = 1,nb_spline_eta2
-           
-           interpolator%coeff_splines(i,j) = &
-                coeffs_1d( i + nb_spline_eta1 *(j-1))
-        end do
-     end do
-     ! ------------------------------------------------------------
+    interpolator%size_coeffs1 = num_cells1 + sp_deg1
+    interpolator%size_coeffs2 = num_cells2 + sp_deg2
+    interpolator%size_t1      = 2*sp_deg1 + num_cells1 + 1
+    interpolator%size_t2      = 2*sp_deg2 + num_cells2 + 1
+    nb_spline_eta1            = num_cells1 + sp_deg1
+    nb_spline_eta2            = num_cells2 + sp_deg2
+    
+    SLL_ASSERT(size(coeffs_1d,1)==(num_cells1+sp_deg1)*(num_cells2+sp_deg2))
+    do i = 1, sp_deg1 + 1
+      interpolator%t1(i) = eta1_min
+    enddo
+    eta1 = eta1_min
+    do i = sp_deg1 + 2, num_cells1 + 1 + sp_deg1
+      eta1 = eta1 + delta1
+      interpolator%t1(i) = eta1
+    enddo
+    do i = num_cells1 + sp_deg1 + 2, num_cells1 + 1 + 2*sp_deg1
+      interpolator%t1(i) = eta1
+    enddo
+    do i = 1, sp_deg2 + 1
+       interpolator%t2(i) = eta2_min
+    enddo
+    eta2 = eta2_min
+    do i = sp_deg2 + 2, num_cells2 + 1 + sp_deg2
+      eta2 = eta2 + delta2
+      interpolator%t2(i) = eta2
+    enddo
+    do i = num_cells2 + sp_deg2 + 2, num_cells2 + 1 + 2*sp_deg2
+      interpolator%t2(i) = eta2
+    enddo
+    interpolator%coeff_splines(:,:) = 0.0_8
+    do j = 1,nb_spline_eta2
+    do i = 1,nb_spline_eta1
+      interpolator%coeff_splines(i,j) = coeffs_1d(i+nb_spline_eta1*(j-1))
+    end do
+    end do
    
   case default
-     print *, 'arbitrary_degree_spline_2d() error: set_spline_coefficients ',&
-          'not recognized.'
-     stop
+
+     stop 'arbitrary_degree_spline_2d set_spline_coefficients not recognized.'
+
   end select
+
 else if (present(coeffs_2d) ) then 
 
     if ( present(coeff2d_size1) .and. present(coeff2d_size2)) then
