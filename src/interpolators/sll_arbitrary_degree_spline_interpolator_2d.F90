@@ -1169,14 +1169,14 @@ sll_real64, dimension(:),   intent(in), optional :: eta2_coords
 sll_int32,                  intent(in), optional :: size_eta1_coords
 sll_int32,                  intent(in), optional :: size_eta2_coords
 
-sll_real64, dimension(:),   pointer :: point_location_eta1
-sll_real64, dimension(:),   pointer :: point_location_eta2
+sll_real64, dimension(:),   pointer :: taux
+sll_real64, dimension(:),   pointer :: tauy
 sll_real64, dimension(:,:), pointer :: data_array_tmp
 sll_real64, dimension(:,:), pointer :: data_array_deriv_eta1
 sll_real64, dimension(:,:), pointer :: data_array_deriv_eta2
 
-sll_int32, pointer :: point_location_eta1_deriv(:)
-sll_int32, pointer :: point_location_eta2_deriv(:)
+sll_int32, pointer :: taux_deriv(:)
+sll_int32, pointer :: tauy_deriv(:)
 
 sll_int32  :: sz_derivative_eta1,sz_derivative_eta2
 sll_real64 :: eta1_min, eta1_max, delta_eta1
@@ -1206,24 +1206,24 @@ if(present(eta1_coords)) then
   nx = size_eta1_coords
   ny = size_eta2_coords
   
-  SLL_ALLOCATE(point_location_eta1(1:nx),ierr)
-  SLL_ALLOCATE(point_location_eta2(1:ny),ierr)
-  point_location_eta1(1:nx) = eta1_coords(1:nx)
-  point_location_eta2(1:ny) = eta2_coords(1:ny)
+  SLL_ALLOCATE(taux(1:nx),ierr)
+  SLL_ALLOCATE(tauy(1:ny),ierr)
+  taux(1:nx) = eta1_coords(1:nx)
+  tauy(1:ny) = eta2_coords(1:ny)
 
 else ! size depends on BC combination, filled out at initialization.
 
   nx = interpolator%num_pts1
   ny = interpolator%num_pts2
 
-  SLL_ALLOCATE(point_location_eta1(1:nx),ierr)
-  SLL_ALLOCATE(point_location_eta2(1:ny),ierr)
+  SLL_ALLOCATE(taux(1:nx),ierr)
+  SLL_ALLOCATE(tauy(1:ny),ierr)
   
   do i = 1,nx
-     point_location_eta1(i) = interpolator%eta1_min + delta_eta1*(i-1)
+     taux(i) = interpolator%eta1_min + delta_eta1*(i-1)
   end do
   do i = 1,ny
-     point_location_eta2(i) = interpolator%eta2_min + delta_eta2*(i-1)
+     tauy(i) = interpolator%eta2_min + delta_eta2*(i-1)
   end do
   
 end if
@@ -1232,8 +1232,8 @@ SLL_ASSERT(nx .le. interpolator%num_pts1+8*interpolator%spline_degree1)
 SLL_ASSERT(ny .le. interpolator%num_pts2+8*interpolator%spline_degree1)
 SLL_ASSERT(size(data_array,1) .ge. nx)
 SLL_ASSERT(size(data_array,2) .ge. ny)
-SLL_ASSERT(size(point_location_eta1) .ge. nx)
-SLL_ASSERT(size(point_location_eta2) .ge. ny)
+SLL_ASSERT(size(taux) .ge. nx)
+SLL_ASSERT(size(tauy) .ge. ny)
 
 kx  = interpolator%spline_degree1 + 1
 ky  = interpolator%spline_degree2 + 1
@@ -1241,8 +1241,8 @@ period1 = interpolator%eta1_max - interpolator%eta1_min
 period2 = interpolator%eta2_max - interpolator%eta2_min
 
 ! compute the knots t1 and t2
-SLL_ALLOCATE(point_location_eta1_deriv(2),ierr)
-SLL_ALLOCATE(point_location_eta2_deriv(2),ierr)
+SLL_ALLOCATE(taux_deriv(2),ierr)
+SLL_ALLOCATE(tauy_deriv(2),ierr)
   
 select case (interpolator%bc_selector)
 
@@ -1256,11 +1256,11 @@ case (0) ! periodic-periodic
   call spli2d_perper( period1,                    &
                       nx,                        &
                       kx,                     &
-                      point_location_eta1,        &
+                      taux,        &
                       period2,                    &
                       ny,                        &
                       ky,                     &
-                      point_location_eta2,        &
+                      tauy,        &
                       data_array,                 &
                       interpolator%coeff_splines, &
                       interpolator%t1,            &
@@ -1275,8 +1275,8 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        
        SLL_ALLOCATE( data_array_tmp(1:nx,1:ny-1),ierr)
        data_array_tmp = data_array(1:nx,1:ny-1)
-       call spli2d_dirper( nx, kx, point_location_eta1,&!(1:nx), &
-            period2, ny, ky, point_location_eta2,&!(1:ny-1), & !+1
+       call spli2d_dirper( nx, kx, taux,&!(1:nx), &
+            period2, ny, ky, tauy,&!(1:ny-1), & !+1
             data_array_tmp, interpolator%coeff_splines,&!(1:nx,1:ny),&!+1
             interpolator%t1,&!(1:nx+kx), &
             interpolator%t2)!(1:ny+ky) ) !+1
@@ -1291,8 +1291,8 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        interpolator%size_t2 = ky + ny 
        SLL_ALLOCATE( data_array_tmp(1:nx-1,1:ny),ierr)
        data_array_tmp = data_array(1:nx-1,1:ny)
-       call spli2d_perdir( period1, nx, kx, point_location_eta1,&
-            ny, ky, point_location_eta2, &
+       call spli2d_perdir( period1, nx, kx, taux,&
+            ny, ky, tauy, &
             data_array_tmp, interpolator%coeff_splines,&
             interpolator%t1,&!(1:nx+kx), & ! + 1
             interpolator%t2)!)(1:ny+ky) )
@@ -1309,12 +1309,12 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        interpolator%size_t2 = ky + ny 
        
        !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  size(  taux ) x  size(  tauy )
        !  i.e  data_array must have the dimension nx x ny
        SLL_ALLOCATE( data_array_tmp(1:nx,1:ny),ierr)
        data_array_tmp = data_array(1:nx,1:ny)
-       call spli2d_custom( nx, kx, point_location_eta1, &
-            ny, ky, point_location_eta2, &
+       call spli2d_custom( nx, kx, taux, &
+            ny, ky, tauy, &
             data_array_tmp, interpolator%coeff_splines,&!(1:nx,1:ny),&
             interpolator%t1,&!(1:nx+kx), &
             interpolator%t2)!(1:ny+ky) )
@@ -1335,30 +1335,30 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        interpolator%size_t2 = ky + ny + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  size(  taux ) x  size(  tauy )
        !  i.e  data_array must have the dimension nx x ny
        SLL_ALLOCATE( data_array_tmp(1:nx,1:ny),ierr)
        SLL_CLEAR_ALLOCATE( data_array_deriv_eta1(1:2,1:ny),ierr)
        SLL_CLEAR_ALLOCATE( data_array_deriv_eta2(1:sz_derivative_eta2,1:nx+sz_derivative_eta1),ierr)
        data_array_tmp = data_array(1:nx,1:ny)
-       point_location_eta1_deriv(1) = 1
-       point_location_eta1_deriv(2) = nx
+       taux_deriv(1) = 1
+       taux_deriv(2) = nx
        data_array_deriv_eta1(1,1:ny)     = 0.0_f64
        data_array_deriv_eta1(2,1:ny)     = interpolator%slope_max1(1:ny)
-       point_location_eta2_deriv(1) = 1
-       point_location_eta2_deriv(2) = ny
+       tauy_deriv(1) = 1
+       tauy_deriv(2) = ny
        data_array_deriv_eta2(1,1:nx+sz_derivative_eta1)=0.0_f64
        data_array_deriv_eta2(2,1:nx+sz_derivative_eta1)=interpolator%slope_max2(1:nx+sz_derivative_eta1)
        call spli2d_custom_derder(&
             nx,&
             sz_derivative_eta1,&
             kx, &
-            point_location_eta1, &
-            point_location_eta1_deriv,&
+            taux, &
+            taux_deriv,&
             ny, &
             sz_derivative_eta2,&
-            ky, point_location_eta2, &
-            point_location_eta2_deriv,&
+            ky, tauy, &
+            tauy_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
@@ -1383,30 +1383,30 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        interpolator%size_t2 = ky + ny + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  size(  taux ) x  size(  tauy )
        !  i.e  data_array must have the dimension nx x ny
        SLL_ALLOCATE( data_array_tmp(1:nx,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:nx+sz_derivative_eta1),ierr)
        data_array_tmp = data_array(1:nx,1:ny)
-       point_location_eta1_deriv(1) = 1
-       point_location_eta1_deriv(2) = nx
+       taux_deriv(1) = 1
+       taux_deriv(2) = nx
        data_array_deriv_eta1(1,1:ny)     = interpolator%slope_min1(1:ny) 
        data_array_deriv_eta1(2,1:ny)     = 0.0_f64
-       point_location_eta2_deriv(1) = 1
-       point_location_eta2_deriv(2) = ny
+       tauy_deriv(1) = 1
+       tauy_deriv(2) = ny
        data_array_deriv_eta2(1,1:nx+sz_derivative_eta1)= 0.0_f64
        data_array_deriv_eta2(2,1:nx+sz_derivative_eta1)=interpolator%slope_max2(1:nx+sz_derivative_eta1)
        call spli2d_custom_derder(&
             nx,&
             sz_derivative_eta1,&
             kx, &
-            point_location_eta1, &
-            point_location_eta1_deriv,&
+            taux, &
+            taux_deriv,&
             ny, &
             sz_derivative_eta2,&
-            ky, point_location_eta2, &
-            point_location_eta2_deriv,&
+            ky, tauy, &
+            tauy_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
@@ -1433,18 +1433,18 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        interpolator%size_t2 = ky + ny + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  size(  taux ) x  size(  tauy )
        !  i.e  data_array must have the dimension nx x ny
        SLL_ALLOCATE(data_array_tmp(1:nx,1:ny),ierr)
        SLL_CLEAR_ALLOCATE(data_array_deriv_eta1(1:sz_derivative_eta1,1:ny),ierr)
        SLL_CLEAR_ALLOCATE(data_array_deriv_eta2(1:sz_derivative_eta2,1:nx+sz_derivative_eta1),ierr)
        data_array_tmp = data_array(1:nx,1:ny)
-       point_location_eta1_deriv(1) = 1
-       point_location_eta1_deriv(2) = nx
+       taux_deriv(1) = 1
+       taux_deriv(2) = nx
        data_array_deriv_eta1(1,1:ny) = interpolator%slope_min1(1:ny)
        data_array_deriv_eta1(2,1:ny) = interpolator%slope_max1(1:ny)
-       point_location_eta2_deriv(1) = 1
-       point_location_eta2_deriv(2) = ny
+       tauy_deriv(1) = 1
+       tauy_deriv(2) = ny
        data_array_deriv_eta2(1,1:nx+sz_derivative_eta1)= &
           interpolator%slope_min2(1:nx+sz_derivative_eta1)
        data_array_deriv_eta2(2,1:nx+sz_derivative_eta1)= &
@@ -1454,12 +1454,12 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             nx,&
             sz_derivative_eta1,&
             kx, &
-            point_location_eta1, &
-            point_location_eta1_deriv,&
+            taux, &
+            taux_deriv,&
             ny, &
             sz_derivative_eta2,&
-            ky, point_location_eta2, &
-            point_location_eta2_deriv,&
+            ky, tauy, &
+            tauy_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
@@ -1488,30 +1488,30 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        interpolator%size_t2 = ky + ny + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  size(  taux ) x  size(  tauy )
        !  i.e  data_array must have the dimension nx x ny
        SLL_ALLOCATE( data_array_tmp(1:nx,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:nx+sz_derivative_eta1),ierr)
        data_array_tmp = data_array(1:nx,1:ny)
-       point_location_eta1_deriv(1) = 1
-       point_location_eta1_deriv(2) = nx
+       taux_deriv(1) = 1
+       taux_deriv(2) = nx
        data_array_deriv_eta1(1,1:ny)     = interpolator%slope_min1(1:ny) 
        data_array_deriv_eta1(2,1:ny)     = interpolator%slope_max1(1:ny) 
-       point_location_eta2_deriv(1) = 1
-       point_location_eta2_deriv(2) = ny
+       tauy_deriv(1) = 1
+       tauy_deriv(2) = ny
        data_array_deriv_eta2(1,1:nx+sz_derivative_eta1)=interpolator%slope_min2(1:nx+sz_derivative_eta1)
        data_array_deriv_eta2(2,1:nx+sz_derivative_eta1)=interpolator%slope_max2(1:nx+sz_derivative_eta1)
        call spli2d_custom_derder(&
             nx,&
             sz_derivative_eta1,&
             kx, &
-            point_location_eta1, &
-            point_location_eta1_deriv,&
+            taux, &
+            taux_deriv,&
             ny, &
             sz_derivative_eta2,&
-            ky, point_location_eta2, &
-            point_location_eta2_deriv,&
+            ky, tauy, &
+            tauy_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
@@ -1536,30 +1536,30 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        interpolator%size_t2 = ky + ny + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  size(  taux ) x  size(  tauy )
        !  i.e  data_array must have the dimension nx x ny
        SLL_ALLOCATE( data_array_tmp(1:nx,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:nx+sz_derivative_eta1),ierr)
        data_array_tmp = data_array(1:nx,1:ny)
-       point_location_eta1_deriv(1) = 1
-       point_location_eta1_deriv(2) = nx
+       taux_deriv(1) = 1
+       taux_deriv(2) = nx
        data_array_deriv_eta1(1,1:ny)     = interpolator%slope_min1(1:ny) 
        data_array_deriv_eta1(2,1:ny)     = interpolator%slope_max1(1:ny) 
-       point_location_eta2_deriv(1) = 1
-       point_location_eta2_deriv(2) = ny
+       tauy_deriv(1) = 1
+       tauy_deriv(2) = ny
        data_array_deriv_eta2(1,1:nx+sz_derivative_eta1)=interpolator%slope_min2(1:nx+sz_derivative_eta1)
        data_array_deriv_eta2(2,1:nx+sz_derivative_eta1)=interpolator%slope_max2(1:nx+sz_derivative_eta1)
        call spli2d_custom_derder(&
             nx,&
             sz_derivative_eta1,&
             kx, &
-            point_location_eta1, &
-            point_location_eta1_deriv,&
+            taux, &
+            taux_deriv,&
             ny, &
             sz_derivative_eta2,&
-            ky, point_location_eta2, &
-            point_location_eta2_deriv,&
+            ky, tauy, &
+            tauy_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
@@ -1584,30 +1584,30 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        interpolator%size_t2 = ky + ny + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  size(  taux ) x  size(  tauy )
        !  i.e  data_array must have the dimension nx x ny
        SLL_ALLOCATE( data_array_tmp(1:nx,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:nx+sz_derivative_eta1),ierr)
        data_array_tmp = data_array(1:nx,1:ny)
-       point_location_eta1_deriv(1) = 1
-       point_location_eta1_deriv(2) = nx
+       taux_deriv(1) = 1
+       taux_deriv(2) = nx
        data_array_deriv_eta1(1,1:ny)     = 0.0_f64
        data_array_deriv_eta1(2,1:ny)     = interpolator%slope_max1(1:ny)
-       point_location_eta2_deriv(1) = 1
-       point_location_eta2_deriv(2) = ny
+       tauy_deriv(1) = 1
+       tauy_deriv(2) = ny
        data_array_deriv_eta2(1,1:nx+sz_derivative_eta1)=interpolator%slope_min2(1:nx+sz_derivative_eta1)
        data_array_deriv_eta2(2,1:nx+sz_derivative_eta1)= 0.0_f64
        call spli2d_custom_derder(&
             nx,&
             sz_derivative_eta1,&
             kx, &
-            point_location_eta1, &
-            point_location_eta1_deriv,&
+            taux, &
+            taux_deriv,&
             ny, &
             sz_derivative_eta2,&
-            ky, point_location_eta2, &
-            point_location_eta2_deriv,&
+            ky, tauy, &
+            tauy_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
@@ -1632,30 +1632,30 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        interpolator%size_t2 = ky + ny + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  size(  taux ) x  size(  tauy )
        !  i.e  data_array must have the dimension nx x ny
        SLL_ALLOCATE( data_array_tmp(1:nx,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(2,ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,nx+sz_derivative_eta1),ierr)
        data_array_tmp = data_array(1:nx,1:ny)
-       point_location_eta1_deriv(1) = 1
-       point_location_eta1_deriv(2) = nx
+       taux_deriv(1) = 1
+       taux_deriv(2) = nx
        data_array_deriv_eta1(1,1:ny)     = interpolator%slope_min1(1:ny)
        data_array_deriv_eta1(2,1:ny)     = 0.0_f64
-       point_location_eta2_deriv(1) = 1
-       point_location_eta2_deriv(2) = ny
+       tauy_deriv(1) = 1
+       tauy_deriv(2) = ny
        data_array_deriv_eta2(1,1:nx+sz_derivative_eta1)=interpolator%slope_min2(1:nx+sz_derivative_eta1)
        data_array_deriv_eta2(2,1:nx+sz_derivative_eta1)= 0.0_f64
        call spli2d_custom_derder(&
             nx,&
             sz_derivative_eta1,&
             kx, &
-            point_location_eta1, &
-            point_location_eta1_deriv,&
+            taux, &
+            taux_deriv,&
             ny, &
             sz_derivative_eta2,&
-            ky, point_location_eta2, &
-            point_location_eta2_deriv,&
+            ky, tauy, &
+            tauy_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
@@ -1681,30 +1681,30 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        interpolator%size_t2 = ky + ny + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  size(  taux ) x  size(  tauy )
        !  i.e  data_array must have the dimension nx x ny
        SLL_ALLOCATE( data_array_tmp(1:nx,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(2,ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,nx+sz_derivative_eta1),ierr)
        data_array_tmp = data_array(1:nx,1:ny)
-       point_location_eta1_deriv(1) = 1
-       point_location_eta1_deriv(2) = nx
+       taux_deriv(1) = 1
+       taux_deriv(2) = nx
        data_array_deriv_eta1(1,1:ny)     = 0.0_f64
        data_array_deriv_eta1(2,1:ny)     = 0.0_f64
-       point_location_eta2_deriv(1) = 1
-       point_location_eta2_deriv(2) = ny
+       tauy_deriv(1) = 1
+       tauy_deriv(2) = ny
        data_array_deriv_eta2(1,1:nx+sz_derivative_eta1)= 0.0_f64
        data_array_deriv_eta2(2,1:nx+sz_derivative_eta1)= 0.0_f64
        call spli2d_custom_derder(&
             nx,&
             sz_derivative_eta1,&
             kx, &
-            point_location_eta1, &
-            point_location_eta1_deriv,&
+            taux, &
+            taux_deriv,&
             ny, &
             sz_derivative_eta2,&
-            ky, point_location_eta2, &
-            point_location_eta2_deriv,&
+            ky, tauy, &
+            tauy_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
@@ -1728,30 +1728,30 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        interpolator%size_t2 = ky + ny + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  size(  taux ) x  size(  tauy )
        !  i.e  data_array must have the dimension nx x ny
        SLL_ALLOCATE( data_array_tmp(1:nx,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(2,ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,nx+sz_derivative_eta1),ierr)
        data_array_tmp = data_array(1:nx,1:ny)
-       point_location_eta1_deriv(1) = 1
-       point_location_eta1_deriv(2) = nx
+       taux_deriv(1) = 1
+       taux_deriv(2) = nx
        data_array_deriv_eta1(1,1:ny)     = interpolator%slope_min1(1:ny)
        data_array_deriv_eta1(2,1:ny)     = interpolator%slope_max1(1:ny)
-       point_location_eta2_deriv(1) = 1
-       point_location_eta2_deriv(2) = ny
+       tauy_deriv(1) = 1
+       tauy_deriv(2) = ny
        data_array_deriv_eta2(1,1:nx+sz_derivative_eta1)=interpolator%slope_min2(1:nx+sz_derivative_eta1)
        data_array_deriv_eta2(2,1:nx+sz_derivative_eta1)=interpolator%slope_max2(1:nx+sz_derivative_eta1)
        call spli2d_custom_derder(&
             nx,&
             sz_derivative_eta1,&
             kx, &
-            point_location_eta1, &
-            point_location_eta1_deriv,&
+            taux, &
+            taux_deriv,&
             ny, &
             sz_derivative_eta2,&
-            ky, point_location_eta2, &
-            point_location_eta2_deriv,&
+            ky, tauy, &
+            tauy_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
@@ -1776,30 +1776,30 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        interpolator%size_t2 = ky + ny + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  size(  taux ) x  size(  tauy )
        !  i.e  data_array must have the dimension nx x ny
        SLL_ALLOCATE( data_array_tmp(1:nx,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(2,ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,nx+sz_derivative_eta1),ierr)
        data_array_tmp = data_array(1:nx,1:ny)
-       point_location_eta1_deriv(1) = 1
-       point_location_eta1_deriv(2) = nx
+       taux_deriv(1) = 1
+       taux_deriv(2) = nx
        data_array_deriv_eta1(1,1:ny)     = interpolator%slope_min1(1:ny)
        data_array_deriv_eta1(2,1:ny)     = interpolator%slope_max1(1:ny)
-       point_location_eta2_deriv(1) = 1
-       point_location_eta2_deriv(2) = ny
+       tauy_deriv(1) = 1
+       tauy_deriv(2) = ny
        data_array_deriv_eta2(1,1:nx+sz_derivative_eta1)=interpolator%slope_min2(1:nx+sz_derivative_eta1)
        data_array_deriv_eta2(2,1:nx+sz_derivative_eta1)=interpolator%slope_max2(1:nx+sz_derivative_eta1)
        call spli2d_custom_derder(&
             nx,&
             sz_derivative_eta1,&
             kx, &
-            point_location_eta1, &
-            point_location_eta1_deriv,&
+            taux, &
+            taux_deriv,&
             ny, &
             sz_derivative_eta2,&
-            ky, point_location_eta2, &
-            point_location_eta2_deriv,&
+            ky, tauy, &
+            tauy_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
@@ -1826,30 +1826,30 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        interpolator%size_t2 = ky + ny + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  size(  taux ) x  size(  tauy )
        !  i.e  data_array must have the dimension nx x ny
        SLL_CLEAR_ALLOCATE( data_array_tmp(1:nx,1:ny),ierr)
        SLL_CLEAR_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:ny),ierr)
        SLL_CLEAR_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:nx+sz_derivative_eta1),ierr)
        data_array_tmp = data_array(1:nx,1:ny)
-       point_location_eta1_deriv(1) = 1
-       point_location_eta1_deriv(2) = nx
+       taux_deriv(1) = 1
+       taux_deriv(2) = nx
        data_array_deriv_eta1(1,1:ny)     = interpolator%slope_min1(1:ny)
        data_array_deriv_eta1(2,1:ny)     = interpolator%slope_max1(1:ny)
-       point_location_eta2_deriv(1) = 1
-       point_location_eta2_deriv(2) = ny
+       tauy_deriv(1) = 1
+       tauy_deriv(2) = ny
        data_array_deriv_eta2(1,1:nx+sz_derivative_eta1)=interpolator%slope_min2(1:nx+sz_derivative_eta1)
        data_array_deriv_eta2(2,1:nx+sz_derivative_eta1)=interpolator%slope_max2(1:nx+sz_derivative_eta1)
        call spli2d_custom_derder(&
             nx,&
             sz_derivative_eta1,&
             kx, &
-            point_location_eta1, &
-            point_location_eta1_deriv,&
+            taux, &
+            taux_deriv,&
             ny, &
             sz_derivative_eta2,&
-            ky, point_location_eta2, &
-            point_location_eta2_deriv,&
+            ky, tauy, &
+            tauy_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
@@ -1874,30 +1874,30 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        interpolator%size_t2 = ky + ny + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  size(  taux ) x  size(  tauy )
        !  i.e  data_array must have the dimension nx x ny
        SLL_ALLOCATE( data_array_tmp(1:nx,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:nx+sz_derivative_eta1),ierr)
        data_array_tmp = data_array(1:nx,1:ny)
-       point_location_eta1_deriv(1) = 1
-       point_location_eta1_deriv(2) = nx
+       taux_deriv(1) = 1
+       taux_deriv(2) = nx
        data_array_deriv_eta1(1,1:ny)     = interpolator%slope_min1(1:ny)
        data_array_deriv_eta1(2,1:ny)     = interpolator%slope_max1(1:ny)
-       point_location_eta2_deriv(1) = 1
-       point_location_eta2_deriv(2) = ny
+       tauy_deriv(1) = 1
+       tauy_deriv(2) = ny
        data_array_deriv_eta2(1,1:nx+sz_derivative_eta1)=interpolator%slope_min2(1:nx+sz_derivative_eta1)
        data_array_deriv_eta2(2,1:nx+sz_derivative_eta1)=interpolator%slope_max2(1:nx+sz_derivative_eta1)
        call spli2d_custom_derder(&
             nx,&
             sz_derivative_eta1,&
             kx, &
-            point_location_eta1, &
-            point_location_eta1_deriv,&
+            taux, &
+            taux_deriv,&
             ny, &
             sz_derivative_eta2,&
-            ky, point_location_eta2, &
-            point_location_eta2_deriv,&
+            ky, tauy, &
+            tauy_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
@@ -1922,30 +1922,30 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        interpolator%size_t2 = ky + ny + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  size(  taux ) x  size(  tauy )
        !  i.e  data_array must have the dimension nx x ny
        SLL_ALLOCATE( data_array_tmp(1:nx,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:nx+sz_derivative_eta1),ierr)
        data_array_tmp = data_array(1:nx,1:ny)
-       point_location_eta1_deriv(1) = 1
-       point_location_eta1_deriv(2) = nx
+       taux_deriv(1) = 1
+       taux_deriv(2) = nx
        data_array_deriv_eta1(1,1:ny)     = interpolator%slope_min1(1:ny)
        data_array_deriv_eta1(2,1:ny)     = interpolator%slope_max1(1:ny)
-       point_location_eta2_deriv(1) = 1
-       point_location_eta2_deriv(2) = ny
+       tauy_deriv(1) = 1
+       tauy_deriv(2) = ny
        data_array_deriv_eta2(1,1:nx+sz_derivative_eta1)=interpolator%slope_min2(1:nx+sz_derivative_eta1)
        data_array_deriv_eta2(2,1:nx+sz_derivative_eta1)=interpolator%slope_max2(1:nx+sz_derivative_eta1)
        call spli2d_custom_derder(&
             nx,&
             sz_derivative_eta1,&
             kx, &
-            point_location_eta1, &
-            point_location_eta1_deriv,&
+            taux, &
+            taux_deriv,&
             ny, &
             sz_derivative_eta2,&
-            ky, point_location_eta2, &
-            point_location_eta2_deriv,&
+            ky, tauy, &
+            tauy_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
@@ -1972,30 +1972,30 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        interpolator%size_t2 = ky + ny + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  size(  taux ) x  size(  tauy )
        !  i.e  data_array must have the dimension nx x ny
        SLL_ALLOCATE( data_array_tmp(1:nx,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:nx+sz_derivative_eta1),ierr)
        data_array_tmp = data_array(1:nx,1:ny)
-       point_location_eta1_deriv(1) = 1
-       point_location_eta1_deriv(2) = nx
+       taux_deriv(1) = 1
+       taux_deriv(2) = nx
        data_array_deriv_eta1(1,1:ny)     = interpolator%slope_min1(1:ny)
        data_array_deriv_eta1(2,1:ny)     = interpolator%slope_max1(1:ny)
-       point_location_eta2_deriv(1) = 1
-       point_location_eta2_deriv(2) = ny
+       tauy_deriv(1) = 1
+       tauy_deriv(2) = ny
        data_array_deriv_eta2(1,1:nx+sz_derivative_eta1)=interpolator%slope_min2(1:nx+sz_derivative_eta1)
        data_array_deriv_eta2(2,1:nx+sz_derivative_eta1)=interpolator%slope_max2(1:nx+sz_derivative_eta1)
        call spli2d_custom_derder(&
             nx,&
             sz_derivative_eta1,&
             kx, &
-            point_location_eta1, &
-            point_location_eta1_deriv,&
+            taux, &
+            taux_deriv,&
             ny, &
             sz_derivative_eta2,&
-            ky, point_location_eta2, &
-            point_location_eta2_deriv,&
+            ky, tauy, &
+            tauy_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
@@ -2014,8 +2014,8 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
     end select
     interpolator%coefficients_set = .true.
    
-    SLL_DEALLOCATE(point_location_eta2,ierr)
-    SLL_DEALLOCATE(point_location_eta1,ierr)
+    SLL_DEALLOCATE(taux,ierr)
+    SLL_DEALLOCATE(tauy,ierr)
 
   end subroutine !compute_interpolants_ad2d
 
