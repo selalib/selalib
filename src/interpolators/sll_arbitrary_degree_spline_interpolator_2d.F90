@@ -1228,54 +1228,49 @@ SLL_ALLOCATE(point_location_eta2_tmp(1:sz2-1),ierr)
 point_location_eta1_tmp = point_location_eta1(1:sz1-1)
 point_location_eta2_tmp = point_location_eta2(1:sz2-1)
 
-
-! the size of data_array  must be <= interpolator%num_pts1 + 4*interpolator%spline_degree1
-! because we have not need more !! 
-SLL_ASSERT(sz1 .le. interpolator%num_pts1 + 8*interpolator%spline_degree1)
-SLL_ASSERT(sz2 .le. interpolator%num_pts2 + 8*interpolator%spline_degree1)
+SLL_ASSERT(sz1 .le. interpolator%num_pts1+8*interpolator%spline_degree1)
+SLL_ASSERT(sz2 .le. interpolator%num_pts2+8*interpolator%spline_degree1)
 SLL_ASSERT(size(data_array,1) .ge. sz1)
 SLL_ASSERT(size(data_array,2) .ge. sz2)
-SLL_ASSERT(size(point_location_eta1)  .ge. sz1)
-SLL_ASSERT(size(point_location_eta2)  .ge. sz2)
+SLL_ASSERT(size(point_location_eta1) .ge. sz1)
+SLL_ASSERT(size(point_location_eta2) .ge. sz2)
 
 order1  = interpolator%spline_degree1 + 1
 order2  = interpolator%spline_degree2 + 1
 period1 = interpolator%eta1_max - interpolator%eta1_min
 period2 = interpolator%eta2_max - interpolator%eta2_min
 
-! we compute the coefficients spline associate to the values 
-! data_array and we compute also the knots t1 and t2 using to 
-! construct the spline to have a good interpolation
-
+! compute the knots t1 and t2
 SLL_ALLOCATE(point_location_eta1_deriv(2),ierr)
 SLL_ALLOCATE(point_location_eta2_deriv(2),ierr)
-
   
-    select case (interpolator%bc_selector)
-    case (0) ! periodic-periodic
-       interpolator%size_coeffs1 = sz1!+1
-       interpolator%size_coeffs2 = sz2!+1
-       interpolator%size_t1 = order1 + sz1 !+ 1
-       interpolator%size_t2 = order2 + sz2 !+ 1 
+select case (interpolator%bc_selector)
 
-       !  data_array must have the same dimension than 
-       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
-       !  i.e  data_array must have the dimension sz1 x sz2
-       SLL_ALLOCATE( data_array_tmp(1:sz1-1,1:sz2-1),ierr)
- 
-       data_array_tmp = data_array(1:sz1-1,1:sz2-1)
-       if ( .not. associated(point_location_eta1_tmp)) &
-          SLL_ALLOCATE(point_location_eta1_tmp(sz1-1),ierr)
-       if ( .not. associated(point_location_eta2_tmp)) &
-          SLL_ALLOCATE(point_location_eta2_tmp(sz2-1),ierr)
-       call spli2d_perper( &
-            period1, sz1, order1, point_location_eta1_tmp,&!(1:sz1-1), & !+1
-            period2, sz2, order2, point_location_eta2_tmp,&!(1:sz2-1), & !+1
-            data_array_tmp, interpolator%coeff_splines,&!(1:sz1,1:sz2),&
-            interpolator%t1,&!(1:order1 + sz1 ), &!+ 1), &
-            interpolator%t2)!(1:order2 + sz2 ))!+ 1) )
-       
-    case (9) ! 2. dirichlet-left, dirichlet-right, periodic
+case (0) ! periodic-periodic
+
+  interpolator%size_coeffs1 = sz1
+  interpolator%size_coeffs2 = sz2
+  interpolator%size_t1      = order1 + sz1
+  interpolator%size_t2      = order2 + sz2
+
+  SLL_ALLOCATE( data_array_tmp(1:sz1-1,1:sz2-1),ierr)
+  data_array_tmp = data_array(1:sz1-1,1:sz2-1)
+
+  call spli2d_perper( period1,                       &
+                      sz1,                           &
+                      order1,                        &
+                      point_location_eta1_tmp,       &
+                      period2,                       &
+                      sz2,                           &
+                      order2,                        &
+                      point_location_eta2_tmp,       &
+                      data_array_tmp,                &
+                      interpolator%coeff_splines,    &
+                      interpolator%t1,               &
+                      interpolator%t2)
+   
+case (9) ! 2. dirichlet-left, dirichlet-right, periodic
+
        interpolator%size_coeffs1 = sz1
        interpolator%size_coeffs2 = sz2!+1
        interpolator%size_t1 = order1 + sz1
@@ -3326,4 +3321,68 @@ SLL_ALLOCATE(point_location_eta2_deriv(2),ierr)
     
   end subroutine set_slope2d
   
+subroutine spli2d_perper( ar_Lx,     &
+                          ai_nx,     &
+                          ai_kx,     &
+                          apr_taux,  &
+                          ar_Ly,     &
+                          ai_ny,     &
+                          ai_ky,     &
+                          apr_tauy,  &
+                          apr_g,     &
+                          apr_Bcoef, &
+                          apr_tx,    &
+                          apr_ty )
+
+sll_real64                                  :: ar_Lx
+sll_real64                                  :: ar_Ly
+sll_int32                                   :: ai_nx
+sll_int32                                   :: ai_kx
+sll_int32                                   :: ai_ny
+sll_int32                                   :: ai_ky
+sll_real64, dimension(:),    pointer        :: apr_taux
+sll_real64, dimension(:),    pointer        :: apr_tauy
+sll_real64, dimension(:,:),  pointer        :: apr_g
+sll_real64, dimension( :,:), pointer        :: apr_Bcoef
+sll_real64, dimension(:),    pointer        :: apr_tx
+sll_real64, dimension( :),   pointer        :: apr_ty
+
+sll_real64, dimension(1:ai_nx),         target  :: lpr_taux 
+sll_real64, dimension(1:ai_ny),         target  :: lpr_tauy
+sll_real64, dimension(1:ai_nx,1:ai_ny), target  :: lpr_g 
+sll_real64, dimension (:),              pointer :: lpr_taux_ptr
+sll_real64, dimension (:),              pointer :: lpr_tauy_ptr
+sll_real64, dimension(:,:),             pointer :: lpr_g_ptr
+sll_int32 :: ierr
+
+SLL_ASSERT(ar_Lx /= 0.0_f64 )
+SLL_ASSERT(ar_Ly /= 0.0_f64 ) 
+
+lpr_taux(1:ai_nx-1) = apr_taux(1:ai_nx-1)
+lpr_taux(ai_nx)     = apr_taux(1)+ar_Lx
+lpr_tauy(1:ai_ny-1) = apr_tauy(1:ai_ny-1)
+lpr_tauy(ai_ny)     = apr_tauy(1)+ar_Ly
+
+lpr_g(1:ai_nx-1,1:ai_ny-1) = apr_g(1:ai_nx-1,1:ai_ny-1)
+lpr_g(ai_nx,1:ai_ny-1)     = apr_g(1,1:ai_ny-1 )
+lpr_g(1:ai_nx-1,ai_ny)     = apr_g(1:ai_nx-1,1)
+lpr_g(ai_nx,ai_ny)         = apr_g(1,1)
+
+lpr_taux_ptr => lpr_taux
+lpr_tauy_ptr => lpr_tauy
+lpr_g_ptr    => lpr_g
+
+call spli2d_custom ( ai_nx,        &
+                     ai_kx,        &
+                     lpr_taux_ptr, &
+                     ai_ny,        &
+                     ai_ky,        &
+                     lpr_tauy_ptr, &
+                     lpr_g_ptr,    &
+                     apr_Bcoef,    &
+                     apr_tx,       &
+                     apr_ty )
+
+end subroutine spli2d_perper
+
 end module sll_module_arbitrary_degree_spline_interpolator_2d
