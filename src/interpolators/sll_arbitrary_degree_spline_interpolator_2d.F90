@@ -1172,7 +1172,6 @@ sll_int32,                  intent(in), optional :: size_eta2_coords
 sll_real64, dimension(:),   pointer :: taux
 sll_real64, dimension(:),   pointer :: tauy
 sll_real64, dimension(:,:), pointer :: gtau
-sll_real64, dimension(:,:), pointer :: data_array_tmp
 sll_real64, dimension(:,:), pointer :: data_array_deriv_eta1
 sll_real64, dimension(:,:), pointer :: data_array_deriv_eta2
 
@@ -1272,65 +1271,74 @@ case (0) ! periodic-periodic
    
 case (9) ! 2. dirichlet-left, dirichlet-right, periodic
 
-       interpolator%size_coeffs1 = nx
-       interpolator%size_coeffs2 = ny!+1
-       interpolator%size_t1 = kx + nx
-       interpolator%size_t2 = ky + ny !+ 1
+  interpolator%size_coeffs1 = nx
+  interpolator%size_coeffs2 = ny
+  interpolator%size_t1      = kx+nx
+  interpolator%size_t2      = ky+ny
        
-       SLL_ALLOCATE( data_array_tmp(1:nx,1:ny-1),ierr)
-       data_array_tmp = data_array(1:nx,1:ny-1)
-       call spli2d_dirper( nx, kx, taux,&!(1:nx), &
-            period2, ny, ky, tauy,&!(1:ny-1), & !+1
-            data_array_tmp, interpolator%coeff_splines,&!(1:nx,1:ny),&!+1
-            interpolator%t1,&!(1:nx+kx), &
-            interpolator%t2)!(1:ny+ky) ) !+1
+  tauy(1:ny-1)      = tauy(1:ny-1)
+  tauy(ny)          = tauy(1)+period2
 
-       interpolator%coeff_splines(1,1:ny)   = data_array(1,1:ny)!interpolator%value_min1(1:ny)
-       interpolator%coeff_splines(nx,1:ny) = data_array(nx,1:ny)!interpolator%value_max1(1:ny)
+  SLL_ALLOCATE(gtau(1:nx,1:ny), ierr)
+
+  gtau(1:nx-1,1:ny) = data_array(1:nx-1,1:ny)
+  gtau(nx,1:ny)     = data_array(1,1:ny)
+
+  call spli2d_custom(nx, kx, taux, ny, ky, tauy, &
+                     gtau,                       &
+                     interpolator%coeff_splines, &
+                     interpolator%t1,            &
+                     interpolator%t2)
+
+  interpolator%coeff_splines(1,1:ny)  = data_array(1,1:ny)
+  interpolator%coeff_splines(nx,1:ny) = data_array(nx,1:ny)
   
-    case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
-       interpolator%size_coeffs1 = nx!+1
-       interpolator%size_coeffs2 = ny
-       interpolator%size_t1 = kx + nx !+ 1
-       interpolator%size_t2 = ky + ny 
-       SLL_ALLOCATE( data_array_tmp(1:nx-1,1:ny),ierr)
-       data_array_tmp = data_array(1:nx-1,1:ny)
-       call spli2d_perdir( period1, nx, kx, taux,&
-            ny, ky, tauy, &
-            data_array_tmp, interpolator%coeff_splines,&
-            interpolator%t1,&!(1:nx+kx), & ! + 1
-            interpolator%t2)!)(1:ny+ky) )
+case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
 
-       ! boundary condition non homogene
-       interpolator%coeff_splines(1:nx,1)   = data_array(1:nx,1)
-       interpolator%coeff_splines(1:nx,ny) = data_array(1:nx,ny)
+  interpolator%size_coeffs1 = nx!+1
+  interpolator%size_coeffs2 = ny
+  interpolator%size_t1 = kx + nx !+ 1
+  interpolator%size_t2 = ky + ny 
+
+  taux(1:nx-1) = taux(1:nx-1)
+  taux(nx)     = taux(1)+period1
+
+  SLL_ALLOCATE(gtau(1:nx,1:ny), ierr)
+
+  gtau(1:nx,1:ny-1) = data_array(1:nx,1:ny-1)
+  gtau(1:nx,ny)     = data_array(1:nx,1)
+
+  call spli2d_custom(nx, kx, taux, ny, ky, tauy, &
+                     gtau,                       &
+                     interpolator%coeff_splines, &
+                     interpolator%t1,            &
+                     interpolator%t2)
+
+  interpolator%coeff_splines(1:nx,1)   = data_array(1:nx,1)
+  interpolator%coeff_splines(1:nx,ny) = data_array(1:nx,ny)
        
-    case (585) ! 4. dirichlet in all sides
-       !print*, 'her'
-       interpolator%size_coeffs1 = nx
-       interpolator%size_coeffs2 = ny
-       interpolator%size_t1 = kx + nx 
-       interpolator%size_t2 = ky + ny 
-       
-       !  data_array must have the same dimension than 
-       !  size(  taux ) x  size(  tauy )
-       !  i.e  data_array must have the dimension nx x ny
-       SLL_ALLOCATE( data_array_tmp(1:nx,1:ny),ierr)
-       data_array_tmp = data_array(1:nx,1:ny)
-       call spli2d_custom( nx, kx, taux, &
-            ny, ky, tauy, &
-            data_array_tmp, interpolator%coeff_splines,&!(1:nx,1:ny),&
-            interpolator%t1,&!(1:nx+kx), &
-            interpolator%t2)!(1:ny+ky) )
+case (585) ! 4. dirichlet in all sides
 
-       ! boundary condition non homogene
-       interpolator%coeff_splines(1,1:ny)   = data_array(1,1:ny)
-       interpolator%coeff_splines(nx,1:ny) = data_array(nx,1:ny)
-       ! boundary condition non homogene
-       interpolator%coeff_splines(1:nx,1)   = data_array(1:nx,1)
-       interpolator%coeff_splines(1:nx,ny) = data_array(1:nx,ny)
+  interpolator%size_coeffs1 = nx
+  interpolator%size_coeffs2 = ny
+  interpolator%size_t1 = kx + nx 
+  interpolator%size_t2 = ky + ny 
+  
+  SLL_ALLOCATE(gtau(1:nx,1:ny),ierr)
+  gtau = data_array(1:nx,1:ny)
+  call spli2d_custom( nx, kx, taux, ny, ky, tauy, &
+                      gtau,                       &
+                      interpolator%coeff_splines, &
+                      interpolator%t1,            &
+                      interpolator%t2)
 
-    case (650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet
+  interpolator%coeff_splines(1,1:ny)  = data_array(1,1:ny)
+  interpolator%coeff_splines(nx,1:ny) = data_array(nx,1:ny)
+  interpolator%coeff_splines(1:nx,1)  = data_array(1:nx,1)
+  interpolator%coeff_splines(1:nx,ny) = data_array(1:nx,ny)
+
+case (650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet
+
        sz_derivative_eta1 = 2
        sz_derivative_eta2 = 2
        interpolator%size_coeffs1 = nx + sz_derivative_eta1
@@ -1341,10 +1349,10 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        !  data_array must have the same dimension than 
        !  size(  taux ) x  size(  tauy )
        !  i.e  data_array must have the dimension nx x ny
-       SLL_ALLOCATE( data_array_tmp(1:nx,1:ny),ierr)
+       SLL_ALLOCATE( gtau(1:nx,1:ny),ierr)
        SLL_CLEAR_ALLOCATE( data_array_deriv_eta1(1:2,1:ny),ierr)
        SLL_CLEAR_ALLOCATE( data_array_deriv_eta2(1:sz_derivative_eta2,1:nx+sz_derivative_eta1),ierr)
-       data_array_tmp = data_array(1:nx,1:ny)
+       gtau = data_array(1:nx,1:ny)
        taux_deriv(1) = 1
        taux_deriv(2) = nx
        data_array_deriv_eta1(1,1:ny)     = 0.0_f64
@@ -1363,7 +1371,7 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             sz_derivative_eta2,&
             ky, tauy, &
             tauy_deriv,&
-            data_array_tmp,&
+            gtau,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
             interpolator%coeff_splines,&!(1:nx,1:ny),&
@@ -1389,10 +1397,10 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        !  data_array must have the same dimension than 
        !  size(  taux ) x  size(  tauy )
        !  i.e  data_array must have the dimension nx x ny
-       SLL_ALLOCATE( data_array_tmp(1:nx,1:ny),ierr)
+       SLL_ALLOCATE( gtau(1:nx,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:nx+sz_derivative_eta1),ierr)
-       data_array_tmp = data_array(1:nx,1:ny)
+       gtau = data_array(1:nx,1:ny)
        taux_deriv(1) = 1
        taux_deriv(2) = nx
        data_array_deriv_eta1(1,1:ny)     = interpolator%slope_min1(1:ny) 
@@ -1411,7 +1419,7 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             sz_derivative_eta2,&
             ky, tauy, &
             tauy_deriv,&
-            data_array_tmp,&
+            gtau,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
             interpolator%coeff_splines,&!(1:nx,1:ny),&
@@ -1439,10 +1447,10 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        !  data_array must have the same dimension than 
        !  size(  taux ) x  size(  tauy )
        !  i.e  data_array must have the dimension nx x ny
-       SLL_ALLOCATE(data_array_tmp(1:nx,1:ny),ierr)
+       SLL_ALLOCATE(gtau(1:nx,1:ny),ierr)
        SLL_CLEAR_ALLOCATE(data_array_deriv_eta1(1:sz_derivative_eta1,1:ny),ierr)
        SLL_CLEAR_ALLOCATE(data_array_deriv_eta2(1:sz_derivative_eta2,1:nx+sz_derivative_eta1),ierr)
-       data_array_tmp = data_array(1:nx,1:ny)
+       gtau = data_array(1:nx,1:ny)
        taux_deriv(1) = 1
        taux_deriv(2) = nx
        data_array_deriv_eta1(1,1:ny) = interpolator%slope_min1(1:ny)
@@ -1464,7 +1472,7 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             sz_derivative_eta2,&
             ky, tauy, &
             tauy_deriv,&
-            data_array_tmp,&
+            gtau,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
             interpolator%coeff_splines,&!(1:nx,1:ny),&
@@ -1494,10 +1502,10 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        !  data_array must have the same dimension than 
        !  size(  taux ) x  size(  tauy )
        !  i.e  data_array must have the dimension nx x ny
-       SLL_ALLOCATE( data_array_tmp(1:nx,1:ny),ierr)
+       SLL_ALLOCATE( gtau(1:nx,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:nx+sz_derivative_eta1),ierr)
-       data_array_tmp = data_array(1:nx,1:ny)
+       gtau = data_array(1:nx,1:ny)
        taux_deriv(1) = 1
        taux_deriv(2) = nx
        data_array_deriv_eta1(1,1:ny)     = interpolator%slope_min1(1:ny) 
@@ -1516,7 +1524,7 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             sz_derivative_eta2,&
             ky, tauy, &
             tauy_deriv,&
-            data_array_tmp,&
+            gtau,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
             interpolator%coeff_splines,&!(1:nx,1:ny),&
@@ -1542,10 +1550,10 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        !  data_array must have the same dimension than 
        !  size(  taux ) x  size(  tauy )
        !  i.e  data_array must have the dimension nx x ny
-       SLL_ALLOCATE( data_array_tmp(1:nx,1:ny),ierr)
+       SLL_ALLOCATE( gtau(1:nx,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:nx+sz_derivative_eta1),ierr)
-       data_array_tmp = data_array(1:nx,1:ny)
+       gtau = data_array(1:nx,1:ny)
        taux_deriv(1) = 1
        taux_deriv(2) = nx
        data_array_deriv_eta1(1,1:ny)     = interpolator%slope_min1(1:ny) 
@@ -1564,7 +1572,7 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             sz_derivative_eta2,&
             ky, tauy, &
             tauy_deriv,&
-            data_array_tmp,&
+            gtau,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
             interpolator%coeff_splines,&!(1:nx,1:ny),&
@@ -1590,10 +1598,10 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        !  data_array must have the same dimension than 
        !  size(  taux ) x  size(  tauy )
        !  i.e  data_array must have the dimension nx x ny
-       SLL_ALLOCATE( data_array_tmp(1:nx,1:ny),ierr)
+       SLL_ALLOCATE( gtau(1:nx,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:nx+sz_derivative_eta1),ierr)
-       data_array_tmp = data_array(1:nx,1:ny)
+       gtau = data_array(1:nx,1:ny)
        taux_deriv(1) = 1
        taux_deriv(2) = nx
        data_array_deriv_eta1(1,1:ny)     = 0.0_f64
@@ -1612,7 +1620,7 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             sz_derivative_eta2,&
             ky, tauy, &
             tauy_deriv,&
-            data_array_tmp,&
+            gtau,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
             interpolator%coeff_splines,&!(1:nx,1:ny),&
@@ -1638,10 +1646,10 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        !  data_array must have the same dimension than 
        !  size(  taux ) x  size(  tauy )
        !  i.e  data_array must have the dimension nx x ny
-       SLL_ALLOCATE( data_array_tmp(1:nx,1:ny),ierr)
+       SLL_ALLOCATE( gtau(1:nx,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(2,ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,nx+sz_derivative_eta1),ierr)
-       data_array_tmp = data_array(1:nx,1:ny)
+       gtau = data_array(1:nx,1:ny)
        taux_deriv(1) = 1
        taux_deriv(2) = nx
        data_array_deriv_eta1(1,1:ny)     = interpolator%slope_min1(1:ny)
@@ -1660,7 +1668,7 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             sz_derivative_eta2,&
             ky, tauy, &
             tauy_deriv,&
-            data_array_tmp,&
+            gtau,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
             interpolator%coeff_splines,&!(1:nx,1:ny),&
@@ -1687,10 +1695,10 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        !  data_array must have the same dimension than 
        !  size(  taux ) x  size(  tauy )
        !  i.e  data_array must have the dimension nx x ny
-       SLL_ALLOCATE( data_array_tmp(1:nx,1:ny),ierr)
+       SLL_ALLOCATE( gtau(1:nx,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(2,ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,nx+sz_derivative_eta1),ierr)
-       data_array_tmp = data_array(1:nx,1:ny)
+       gtau = data_array(1:nx,1:ny)
        taux_deriv(1) = 1
        taux_deriv(2) = nx
        data_array_deriv_eta1(1,1:ny)     = 0.0_f64
@@ -1709,7 +1717,7 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             sz_derivative_eta2,&
             ky, tauy, &
             tauy_deriv,&
-            data_array_tmp,&
+            gtau,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
             interpolator%coeff_splines,&!(1:nx,1:ny),&
@@ -1734,10 +1742,10 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        !  data_array must have the same dimension than 
        !  size(  taux ) x  size(  tauy )
        !  i.e  data_array must have the dimension nx x ny
-       SLL_ALLOCATE( data_array_tmp(1:nx,1:ny),ierr)
+       SLL_ALLOCATE( gtau(1:nx,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(2,ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,nx+sz_derivative_eta1),ierr)
-       data_array_tmp = data_array(1:nx,1:ny)
+       gtau = data_array(1:nx,1:ny)
        taux_deriv(1) = 1
        taux_deriv(2) = nx
        data_array_deriv_eta1(1,1:ny)     = interpolator%slope_min1(1:ny)
@@ -1756,7 +1764,7 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             sz_derivative_eta2,&
             ky, tauy, &
             tauy_deriv,&
-            data_array_tmp,&
+            gtau,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
             interpolator%coeff_splines,&!(1:nx,1:ny),&
@@ -1782,10 +1790,10 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        !  data_array must have the same dimension than 
        !  size(  taux ) x  size(  tauy )
        !  i.e  data_array must have the dimension nx x ny
-       SLL_ALLOCATE( data_array_tmp(1:nx,1:ny),ierr)
+       SLL_ALLOCATE( gtau(1:nx,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(2,ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,nx+sz_derivative_eta1),ierr)
-       data_array_tmp = data_array(1:nx,1:ny)
+       gtau = data_array(1:nx,1:ny)
        taux_deriv(1) = 1
        taux_deriv(2) = nx
        data_array_deriv_eta1(1,1:ny)     = interpolator%slope_min1(1:ny)
@@ -1804,7 +1812,7 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             sz_derivative_eta2,&
             ky, tauy, &
             tauy_deriv,&
-            data_array_tmp,&
+            gtau,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
             interpolator%coeff_splines,&!(1:nx,1:ny),&
@@ -1832,10 +1840,10 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        !  data_array must have the same dimension than 
        !  size(  taux ) x  size(  tauy )
        !  i.e  data_array must have the dimension nx x ny
-       SLL_CLEAR_ALLOCATE( data_array_tmp(1:nx,1:ny),ierr)
+       SLL_CLEAR_ALLOCATE( gtau(1:nx,1:ny),ierr)
        SLL_CLEAR_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:ny),ierr)
        SLL_CLEAR_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:nx+sz_derivative_eta1),ierr)
-       data_array_tmp = data_array(1:nx,1:ny)
+       gtau = data_array(1:nx,1:ny)
        taux_deriv(1) = 1
        taux_deriv(2) = nx
        data_array_deriv_eta1(1,1:ny)     = interpolator%slope_min1(1:ny)
@@ -1854,7 +1862,7 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             sz_derivative_eta2,&
             ky, tauy, &
             tauy_deriv,&
-            data_array_tmp,&
+            gtau,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
             interpolator%coeff_splines,&!(1:nx,1:ny),&
@@ -1880,10 +1888,10 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        !  data_array must have the same dimension than 
        !  size(  taux ) x  size(  tauy )
        !  i.e  data_array must have the dimension nx x ny
-       SLL_ALLOCATE( data_array_tmp(1:nx,1:ny),ierr)
+       SLL_ALLOCATE( gtau(1:nx,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:nx+sz_derivative_eta1),ierr)
-       data_array_tmp = data_array(1:nx,1:ny)
+       gtau = data_array(1:nx,1:ny)
        taux_deriv(1) = 1
        taux_deriv(2) = nx
        data_array_deriv_eta1(1,1:ny)     = interpolator%slope_min1(1:ny)
@@ -1902,7 +1910,7 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             sz_derivative_eta2,&
             ky, tauy, &
             tauy_deriv,&
-            data_array_tmp,&
+            gtau,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
             interpolator%coeff_splines,&!(1:nx,1:ny),&
@@ -1928,10 +1936,10 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        !  data_array must have the same dimension than 
        !  size(  taux ) x  size(  tauy )
        !  i.e  data_array must have the dimension nx x ny
-       SLL_ALLOCATE( data_array_tmp(1:nx,1:ny),ierr)
+       SLL_ALLOCATE( gtau(1:nx,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:nx+sz_derivative_eta1),ierr)
-       data_array_tmp = data_array(1:nx,1:ny)
+       gtau = data_array(1:nx,1:ny)
        taux_deriv(1) = 1
        taux_deriv(2) = nx
        data_array_deriv_eta1(1,1:ny)     = interpolator%slope_min1(1:ny)
@@ -1950,7 +1958,7 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             sz_derivative_eta2,&
             ky, tauy, &
             tauy_deriv,&
-            data_array_tmp,&
+            gtau,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
             interpolator%coeff_splines,&!(1:nx,1:ny),&
@@ -1978,10 +1986,10 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        !  data_array must have the same dimension than 
        !  size(  taux ) x  size(  tauy )
        !  i.e  data_array must have the dimension nx x ny
-       SLL_ALLOCATE( data_array_tmp(1:nx,1:ny),ierr)
+       SLL_ALLOCATE( gtau(1:nx,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:ny),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:nx+sz_derivative_eta1),ierr)
-       data_array_tmp = data_array(1:nx,1:ny)
+       gtau = data_array(1:nx,1:ny)
        taux_deriv(1) = 1
        taux_deriv(2) = nx
        data_array_deriv_eta1(1,1:ny)     = interpolator%slope_min1(1:ny)
@@ -2000,7 +2008,7 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
             sz_derivative_eta2,&
             ky, tauy, &
             tauy_deriv,&
-            data_array_tmp,&
+            gtau,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
             interpolator%coeff_splines,&!(1:nx,1:ny),&
@@ -3589,130 +3597,5 @@ end do
 
 return
 end subroutine spli2d
-
-   subroutine spli2d_dirper (&
-        ai_nx,&
-        ai_kx,&
-        taux,&
-        ar_L, &
-        ai_ny,&
-        ai_ky, &
-        tauy,&
-        g,&
-        bcoef,&
-        tx,&
-        ty )
-     ! CALLED WHEN WE WANT TO INTERPOL WITH A PERIODIC second PARAM WITH A PERIOD = ar_L
-     implicit none
-     ! INPUT
-     sll_real64 :: ar_L
-     sll_int32  :: ai_nx, ai_kx, ai_ny, ai_ky
-     sll_real64, dimension ( :),pointer :: taux ! ai_nx
-     sll_real64, dimension (:) :: tauy !  ai_ny -1
-     sll_real64, dimension ( :,:) :: g ! ai_nx , ai_ny-1
-     ! OUTPUT
-     sll_real64, dimension (:,:),pointer :: bcoef !  ai_nx , ai_ny
-     sll_real64, dimension ( :),pointer :: tx ! ai_nx + ai_kx	
-     sll_real64, dimension (:),pointer :: ty ! ai_ny + ai_ky 
-     ! LOCAL VARIABLES
-     sll_real64, dimension (1:ai_ny),target :: lpr_tauy ! ai_ny	
-     sll_real64, dimension (1:ai_nx,1:ai_ny),target :: lpr_g  !  ai_nx ,ai_ny
-     sll_real64, dimension (:),pointer :: lpr_tauy_ptr ! ai_ny	
-     sll_real64, dimension (:,:),pointer :: lpr_g_ptr
-     sll_int32 :: ierr
-     
-     
-     if ( ar_L == 0.0_8 ) then
-        print*,'Error spli2d_per : called with a period = 0 '
-        stop
-     end if
-     
-     
-     lpr_tauy ( 1 : ai_ny - 1 ) = tauy ( 1 : ai_ny - 1 )
-     lpr_tauy ( ai_ny ) = tauy ( 1 ) + ar_L
-     
-     lpr_g ( 1 : ai_nx , 1 : ai_ny -1 ) = g ( 1 : ai_nx , 1 : ai_ny -1)
-     lpr_g (1: ai_nx , ai_ny ) = g ( 1 : ai_nx, 1 )
-     
-     lpr_tauy_ptr => lpr_tauy
-     lpr_g_ptr => lpr_g
-     call spli2d_custom (&
-          ai_nx,&
-          ai_kx,&
-          taux,&
-          ai_ny, &
-          ai_ky,&
-          lpr_tauy_ptr, &
-          lpr_g_ptr, &
-          bcoef,&
-          tx,&
-          ty )
-
-  
-   end subroutine spli2d_dirper
-   
-
-   subroutine spli2d_perdir (&
-        ar_L,&
-        ai_nx,&
-        ai_kx,&
-        taux,&
-        ai_ny,&
-        ai_ky,&
-        tauy,&
-        g,&
-        bcoef,&
-        tx,&
-        ty )
-     ! CALLED WHEN WE WANT TO INTERPOL WITH A PERIODIC FIRST PARAM WITH A PERIOD = ar_L
-     implicit none
-     ! INPUT
-     sll_real64 :: ar_L 
-     sll_int32  :: ai_nx, ai_kx, ai_ny, ai_ky
-     sll_real64, dimension ( :) :: taux ! ai_nx- 1
-     sll_real64, dimension ( :),pointer :: tauy ! ai_ny		
-     sll_real64, dimension ( :,:) :: g !ai_nx - 1, ai_ny
-     ! OUTPUT
-     sll_real64, dimension (:,:),pointer :: bcoef !  ai_nx , ai_ny	
-     sll_real64, dimension (:),pointer :: tx !  ai_nx + ai_kx
-     sll_real64, dimension (:),pointer :: ty ! ai_ny + ai_ky
-     ! LOCAL VARIABLES		
-     sll_real64, dimension (1:ai_nx),target :: lpr_taux !  ai_nx
-     sll_real64, dimension (:),pointer :: lpr_taux_ptr
-     sll_real64, dimension (1:ai_nx,1:ai_ny),target :: lpr_g !  ai_nx ,ai_ny
-     sll_real64, dimension (:,:),pointer :: lpr_g_ptr
-     sll_int32 :: ierr
-
-     if ( ar_L == 0.0_8 ) then
-        print*,'Error spli2d_per : called with a period = 0 '
-        stop
-     end if
-     
-    
-     lpr_taux ( 1 : ai_nx - 1 ) = taux ( 1 : ai_nx-1)
-     lpr_taux ( ai_nx ) = taux ( 1 ) + ar_L
-
-     lpr_g ( 1 : ai_nx - 1 , 1 : ai_ny ) = g ( 1 : ai_nx - 1 , 1 : ai_ny )
-     lpr_g ( ai_nx , 1 : ai_ny ) = g ( 1 , 1 : ai_ny )
-
-     lpr_taux_ptr => lpr_taux
-     lpr_g_ptr => lpr_g
-     
-     call spli2d_custom ( &
-          ai_nx, &
-          ai_kx, &
-          lpr_taux_ptr,&
-          ai_ny,&
-          ai_ky, &
-          tauy, &
-          lpr_g_ptr,&
-          bcoef,&
-          tx,&
-          ty )
-
-     
-   end subroutine spli2d_perdir
-   
-   
 
 end module sll_module_arbitrary_degree_spline_interpolator_2d
