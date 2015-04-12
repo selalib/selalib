@@ -652,8 +652,8 @@ if (present(coeffs_1d)) then
       interpolator%coeff_splines(i + 1 ,nb_spline_eta2 + j ) = coeffs_1d(i+nb_spline_eta1*(j-1))
     end do
     end do
-    interpolator%coeff_splines(1,:) = 0.0_8
-    interpolator%coeff_splines(nb_spline_eta1+2,:) = 0.0_8
+    interpolator%coeff_splines(1,:) = 0.0_f64
+    interpolator%coeff_splines(nb_spline_eta1+2,:) = 0.0_f64
     
   case(576)!3. periodic, dirichlet-bottom, dirichlet-top
      
@@ -690,8 +690,8 @@ if (present(coeffs_1d)) then
     end do
     end do
       
-    interpolator%coeff_splines(:,1) = 0.0_8
-    interpolator%coeff_splines(:,nb_spline_eta2+2) = 0.0_8
+    interpolator%coeff_splines(:,1) = 0.0_f64
+    interpolator%coeff_splines(:,nb_spline_eta2+2) = 0.0_f64
    
   case(585) ! 4. dirichlet in all sides
 
@@ -725,7 +725,7 @@ if (present(coeffs_1d)) then
     do i = num_cells2 + sp_deg2 + 2, num_cells2 + 1 + 2*sp_deg2
       interpolator%t2(i) = eta2
     enddo
-    interpolator%coeff_splines(:,:) = 0.0_8
+    interpolator%coeff_splines(:,:) = 0.0_f64
     do j = 1,nb_spline_eta2
     do i = 1,nb_spline_eta1
       interpolator%coeff_splines(i+1,j+1) = coeffs_1d(i+nb_spline_eta1*(j-1))
@@ -764,7 +764,7 @@ if (present(coeffs_1d)) then
     do i = num_cells2 + sp_deg2 + 2, num_cells2 + 1 + 2*sp_deg2
       interpolator%t2(i) = eta2
     enddo
-    interpolator%coeff_splines(:,:) = 0.0_8
+    interpolator%coeff_splines(:,:) = 0.0_f64
     do j = 1,nb_spline_eta2
     do i = 1,nb_spline_eta1
       interpolator%coeff_splines(i+1,j+1) = coeffs_1d(i+nb_spline_eta1*(j-1))
@@ -803,7 +803,7 @@ if (present(coeffs_1d)) then
     do i = num_cells2 + sp_deg2 + 2, num_cells2 + 1 + 2*sp_deg2
       interpolator%t2(i) = eta2
     enddo
-    interpolator%coeff_splines(:,:) = 0.0_8
+    interpolator%coeff_splines(:,:) = 0.0_f64
     do j = 1,nb_spline_eta2
     do i = 1,nb_spline_eta1
       interpolator%coeff_splines(i+1,j+1) = coeffs_1d(i+nb_spline_eta1*(j-1))
@@ -842,7 +842,7 @@ if (present(coeffs_1d)) then
     do i = num_cells2 + sp_deg2 + 2, num_cells2 + 1 + 2*sp_deg2
       interpolator%t2(i) = eta2
     enddo
-    interpolator%coeff_splines(:,:) = 0.0_8
+    interpolator%coeff_splines(:,:) = 0.0_f64
     do j = 1,nb_spline_eta2
     do i = 1,nb_spline_eta1
       interpolator%coeff_splines(i+1,j+1) = coeffs_1d(i+nb_spline_eta1*(j-1))
@@ -881,7 +881,7 @@ if (present(coeffs_1d)) then
     do i = num_cells2 + sp_deg2 + 2, num_cells2 + 1 + 2*sp_deg2
       interpolator%t2(i) = eta2
     enddo
-    interpolator%coeff_splines(:,:) = 0.0_8
+    interpolator%coeff_splines(:,:) = 0.0_f64
     do j = 1,nb_spline_eta2
     do i = 1,nb_spline_eta1
       interpolator%coeff_splines(i+1,j+1) = coeffs_1d(i+nb_spline_eta1*(j-1))
@@ -921,7 +921,7 @@ if (present(coeffs_1d)) then
     do i = num_cells2 + sp_deg2 + 2, num_cells2 + 1 + 2*sp_deg2
       interpolator%t2(i) = eta2
     enddo
-    interpolator%coeff_splines(:,:) = 0.0_8
+    interpolator%coeff_splines(:,:) = 0.0_f64
     do j = 1,nb_spline_eta2
     do i = 1,nb_spline_eta1
       interpolator%coeff_splines(i+1,j+1) = coeffs_1d(i+nb_spline_eta1*(j-1))
@@ -960,7 +960,7 @@ if (present(coeffs_1d)) then
     do i = num_cells2 + sp_deg2 + 2, num_cells2 + 1 + 2*sp_deg2
       interpolator%t2(i) = eta2
     enddo
-    interpolator%coeff_splines(:,:) = 0.0_8
+    interpolator%coeff_splines(:,:) = 0.0_f64
     do j = 1,nb_spline_eta2
     do i = 1,nb_spline_eta1
       interpolator%coeff_splines(i+1,j+1) = coeffs_1d(i+nb_spline_eta1 *(j-1))
@@ -999,7 +999,7 @@ if (present(coeffs_1d)) then
     do i = num_cells2 + sp_deg2 + 2, num_cells2 + 1 + 2*sp_deg2
       interpolator%t2(i) = eta2
     enddo
-    interpolator%coeff_splines(:,:) = 0.0_8
+    interpolator%coeff_splines(:,:) = 0.0_f64
     do j = 1,nb_spline_eta2
     do i = 1,nb_spline_eta1
       interpolator%coeff_splines(i+1,j+1) = coeffs_1d(i+nb_spline_eta1*(j-1))
@@ -1038,7 +1038,7 @@ if (present(coeffs_1d)) then
     do i = num_cells2 + sp_deg2 + 2, num_cells2 + 1 + 2*sp_deg2
       interpolator%t2(i) = eta2
     enddo
-    interpolator%coeff_splines(:,:) = 0.0_8
+    interpolator%coeff_splines(:,:) = 0.0_f64
     do j = 1,nb_spline_eta2
     do i = 1,nb_spline_eta1
       interpolator%coeff_splines(i,j) = coeffs_1d(i+nb_spline_eta1*(j-1))
@@ -1053,103 +1053,81 @@ if (present(coeffs_1d)) then
 
 else if (present(coeffs_2d) ) then 
 
-    if ( present(coeff2d_size1) .and. present(coeff2d_size2)) then
+  if ( present(coeff2d_size1) .and. present(coeff2d_size2)) then
 
-       interpolator%size_coeffs1 = coeff2d_size1
-       interpolator%size_coeffs2 = coeff2d_size2
-       interpolator%size_t1      = sp_deg1 + coeff2d_size1 +1 
-       interpolator%size_t2      = sp_deg2 + coeff2d_size2 +1
-       
-       if ( coeff2d_size1 > num_cells1 + 1 + 4*sp_deg1) then
-          print*, 'size1 of coeff2d is too big'
-          stop
-       end if
-       
-       if ( coeff2d_size2 > num_cells2 + 1 + 4*sp_deg2) then
-          print*, 'size2 of coeff2d is too big'
-          stop
-       end if
-       
-       interpolator%coeff_splines(1:coeff2d_size1,1:coeff2d_size2) = &
-            coeffs_2d(1:coeff2d_size1,1:coeff2d_size2)
-
-       
-       if ( present(knots1) .and. present(knots2) ) then 
-          
-          if ( ( size_knots1 .ne. (coeff2d_size1 + sp_deg1 + 1)  ) .OR.&
-               ( size_knots2 .ne. (coeff2d_size2 + sp_deg2 + 1)  ))  then
-             print*, 'Problem in set_coefficients in arbitrary_degree_spline_2d'
-             print*, 'problem with the size of knots'
-             print*, 'size(knots1) must be equal to',coeff2d_size1 + sp_deg1 + 1
-             print*, 'size(knots2) must be equal to',coeff2d_size2 + sp_deg2 + 1
-             stop
-          end if
-           
-          if ( size_knots1 > (num_cells1 + 1)*(sp_deg1+1)) then
-             print*, 'size1 of knots1 is too big'
-             stop
-          end if
-          
-          if ( size_knots2 >  (num_cells2 + 1)*(sp_deg2+1)) then
-             print*, 'size2 of knots2 is too big'
-             stop
-          end if
-          
-          
-          
-          interpolator%t1(1:interpolator%size_t1 ) = &
-               knots1(1:interpolator%size_t1 )
-          interpolator%t2(1:interpolator%size_t2 ) =&
-               knots2(1:interpolator%size_t2 )
-          
-       else if ( (.not. present(knots1)).and.(.not. present(knots2))) then
-          
-          
-          if ( interpolator%size_t1 > (num_cells1 + 1)*(sp_deg1+1)) then
-             print*, 'size1 of knots1 is too big'
-             stop
-          end if
-          
-          if ( interpolator%size_t2 >  (num_cells2 + 1)*(sp_deg2+1)) then
-             print*, 'size2 of knots2 is too big'
-             stop
-          end if
-
-          interpolator%t1 ( 1 : sp_deg1 + 1 )  = eta1_min
-          interpolator%t1 ( coeff2d_size1 + 2: coeff2d_size1 + 2 + sp_deg1) = eta1_max
-          
-          do i = 1, coeff2d_size1 -sp_deg1
-             interpolator%t1 ( i + sp_deg1 + 1 ) = eta1_min + &
-                  i * (eta1_max - eta1_min) / (coeff2d_size1-sp_deg1 + 1)   
-          end do
-          
-          interpolator%t2 ( 1 : sp_deg2 + 1 )  = eta2_min
-          interpolator%t2 ( coeff2d_size2 + 2: coeff2d_size2 + 2 + sp_deg2) = eta2_max
-          
-          do i = 1, coeff2d_size2 -sp_deg2
-             interpolator%t2 ( i + sp_deg2 + 1 ) = eta2_min + &
-                  i * (eta2_max - eta2_min) / (coeff2d_size2-sp_deg2 + 1)   
-          end do
-          
-       else 
-          print*, 'Problem in set_coefficients in arbitrary_degree_spline_2d'
-          print*, 'Knots1 or Knots2 is not present'
-          stop
-          
-       end if
-       
-    else 
-       print*, 'Problem in set_coefficients in arbitrary_degree_spline_2d'
-       print*, 'problem with the size of coeffs_2d'
-       print*, 'the number of coefficients must be specified'
-       stop
-       
+    interpolator%size_coeffs1 = coeff2d_size1
+    interpolator%size_coeffs2 = coeff2d_size2
+    interpolator%size_t1      = sp_deg1 + coeff2d_size1 +1 
+    interpolator%size_t2      = sp_deg2 + coeff2d_size2 +1
+    
+    if (coeff2d_size1 > num_cells1+1+4*sp_deg1) then
+       stop 'size1 of coeff2d is too big'
     end if
     
- else 
-    print*, 'Problem in set_coefficients: must be have coefficients'
-    stop
- end if
+    if (coeff2d_size2 > num_cells2+1+4*sp_deg2) then
+       stop 'size2 of coeff2d is too big'
+    end if
+    
+    interpolator%coeff_splines(1:coeff2d_size1,1:coeff2d_size2) = &
+         coeffs_2d(1:coeff2d_size1,1:coeff2d_size2)
+    
+    if (present(knots1).and.present(knots2)) then 
+       
+      SLL_ASSERT(size_knots1==(coeff2d_size1+sp_deg1+1)) 
+      SLL_ASSERT(size_knots2==(coeff2d_size2+sp_deg2+1))
+       
+      if ( size_knots1 > (num_cells1+1)*(sp_deg1+1)) then
+        stop 'size1 of knots1 is too big'
+      end if
+      if ( size_knots2 >  (num_cells2+1)*(sp_deg2+1)) then
+        stop 'size2 of knots2 is too big'
+      end if
+      
+      interpolator%t1(1:interpolator%size_t1) = knots1(1:interpolator%size_t1)
+      interpolator%t2(1:interpolator%size_t2) = knots2(1:interpolator%size_t2)
+      
+    else if ( (.not. present(knots1)).and.(.not. present(knots2))) then
+       
+      if ( interpolator%size_t1 > (num_cells1 + 1)*(sp_deg1+1)) then
+        stop 'size1 of knots1 is too big'
+      end if
+      
+      if ( interpolator%size_t2 >  (num_cells2 + 1)*(sp_deg2+1)) then
+         stop 'size2 of knots2 is too big'
+      end if
+
+      interpolator%t1(1:sp_deg1+1)  = eta1_min
+      interpolator%t1(coeff2d_size1+2:coeff2d_size1+2+sp_deg1) = eta1_max
+        
+      do i = 1, coeff2d_size1 -sp_deg1
+        interpolator%t1(i+sp_deg1+1) = eta1_min+i*(eta1_max-eta1_min)/(coeff2d_size1-sp_deg1+1)   
+      end do
+        
+      interpolator%t2(1:sp_deg2+1) = eta2_min
+      interpolator%t2(coeff2d_size2+2:coeff2d_size2+2+sp_deg2) = eta2_max
+        
+      do i = 1, coeff2d_size2 -sp_deg2
+        interpolator%t2(i+sp_deg2+1)=eta2_min+i*(eta2_max-eta2_min)/(coeff2d_size2-sp_deg2+1)   
+      end do
+
+    else 
+
+      print*, 'Problem in set_coefficients in arbitrary_degree_spline_2d'
+      stop 'Knots1 or Knots2 is not present'
+
+    end if
+
+  else 
+
+    print*, 'Problem in set_coefficients in arbitrary_degree_spline_2d'
+    print*, 'problem with the size of coeffs_2d'
+    stop 'the number of coefficients must be specified'
+
+  end if
+    
+else 
+  stop 'Problem in set_coefficients: must be have coefficients'
+end if
 
 interpolator%coefficients_set = .true.
  
