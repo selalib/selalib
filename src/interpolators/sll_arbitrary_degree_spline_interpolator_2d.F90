@@ -1171,6 +1171,7 @@ sll_int32,                  intent(in), optional :: size_eta2_coords
 
 sll_real64, dimension(:),   pointer :: taux
 sll_real64, dimension(:),   pointer :: tauy
+sll_real64, dimension(:,:), pointer :: gtau
 sll_real64, dimension(:,:), pointer :: data_array_tmp
 sll_real64, dimension(:,:), pointer :: data_array_deriv_eta1
 sll_real64, dimension(:,:), pointer :: data_array_deriv_eta2
@@ -1253,18 +1254,21 @@ case (0) ! periodic-periodic
   interpolator%size_t1      = kx + nx
   interpolator%size_t2      = ky + ny
 
-  call spli2d_perper( period1,                    &
-                      nx,                        &
-                      kx,                     &
-                      taux,        &
-                      period2,                    &
-                      ny,                        &
-                      ky,                     &
-                      tauy,        &
-                      data_array,                 &
-                      interpolator%coeff_splines, &
-                      interpolator%t1,            &
-                      interpolator%t2)
+  !Apply periodic boundary conditions
+  taux(nx) = taux(1)+period1
+  tauy(ny) = tauy(1)+period2
+
+  SLL_ALLOCATE(gtau(1:nx,1:ny), ierr)
+  gtau(1:nx-1,1:ny-1) = data_array(1:nx-1,1:ny-1)
+  gtau(nx,1:ny-1)     = data_array(1,1:ny-1 )
+  gtau(1:nx-1,ny)     = data_array(1:nx-1,1)
+  gtau(nx,ny)         = data_array(1,1)
+
+  call spli2d_custom(nx, kx, taux, ny, ky, tauy, &
+                     gtau,                       &
+                     interpolator%coeff_splines, &
+                     interpolator%t1,            &
+                     interpolator%t2)
    
 case (9) ! 2. dirichlet-left, dirichlet-right, periodic
 
@@ -3303,74 +3307,7 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
     
   end subroutine set_slope2d
   
-subroutine spli2d_perper( Lx,     &
-                          nx,     &
-                          kx,     &
-                          taux,  &
-                          Ly,     &
-                          ny,     &
-                          ky,     &
-                          tauy,  &
-                          g,     &
-                          Bcoef, &
-                          tx,    &
-                          ty )
-
-sll_real64,                          intent(in)  :: Lx
-sll_int32,                           intent(in)  :: nx
-sll_int32,                           intent(in)  :: kx
-sll_real64, dimension(:),   target               :: taux
-sll_real64,                          intent(in)  :: Ly
-sll_int32,                           intent(in)  :: ny
-sll_int32,                           intent(in)  :: ky
-sll_real64, dimension(:),   target               :: tauy
-sll_real64, dimension(:,:), target               :: g
-sll_real64, dimension(:,:), pointer, intent(out) :: Bcoef
-sll_real64, dimension(:),   pointer, intent(out) :: tx
-sll_real64, dimension( :),  pointer, intent(out) :: ty
-
-sll_real64, dimension (:),              pointer :: taux_ptr
-sll_real64, dimension (:),              pointer :: tauy_ptr
-sll_real64, dimension(:,:),             pointer :: g_ptr
-sll_int32 :: ierr
-
-SLL_ASSERT(Lx /= 0.0_f64 )
-SLL_ASSERT(Ly /= 0.0_f64 ) 
-
-!Apply periodic boundary conditions
-taux(nx)     = taux(1)+Lx
-tauy(ny)     = tauy(1)+Ly
-g(nx,1:ny-1) = g(1,1:ny-1 )
-g(1:nx-1,ny) = g(1:nx-1,1)
-g(nx,ny)     = g(1,1)
-
-taux_ptr => taux
-tauy_ptr => tauy
-g_ptr    => g
-
-call spli2d_custom( nx,       &
-                    kx,       &
-                    taux_ptr, &
-                    ny,       &
-                    ky,       &
-                    tauy_ptr, &
-                    g_ptr,    &
-                    Bcoef,    &
-                    tx,       &
-                    ty )
-
-end subroutine spli2d_perper
-
-subroutine spli2d_custom( nx,     &
-                          kx,     &
-                          taux,  &
-                          ny,     &
-                          ky,     &
-                          tauy,  &
-                          g,     &
-                          Bcoef, &
-                          tx,    &
-                          ty )
+subroutine spli2d_custom(nx, kx, taux, ny, ky, tauy, g, bcoef, tx, ty)
 
 sll_int32,                           intent(in)  :: nx
 sll_int32,                           intent(in)  :: kx
@@ -3380,33 +3317,27 @@ sll_real64, dimension(:),   pointer, intent(in)  :: taux
 sll_real64, dimension(:),   pointer, intent(in)  :: tauy
 sll_real64, dimension(:,:), pointer, intent(in)  :: g   
 
-sll_real64, dimension(:,:), pointer, intent(out) :: Bcoef
+sll_real64, dimension(:,:), pointer, intent(out) :: bcoef
 sll_real64, dimension(:),   pointer, intent(out) :: tx
 sll_real64, dimension(:),   pointer, intent(out) :: ty
 
-sll_real64, dimension(nx , ny )         :: lpr_work1
-sll_real64, dimension(nx         )         :: lpr_work2
-sll_real64, dimension(nx * ny )         :: lpr_work3
-sll_real64, dimension(nx *( 2*kx-1) )   :: lpr_work31
-sll_real64, dimension((2*ky-1) * ny )   :: lpr_work32
-sll_real64, dimension(ny         )         :: lpr_work4
-sll_real64, dimension(1:ny,1:nx),target :: lpr_work5
-sll_real64, dimension(:,:),pointer            :: lpr_work5_ptr
-sll_real64, dimension(1:ny),target         :: ty_bis
-sll_real64, dimension(:),pointer              :: ty_bis_ptr
+sll_real64, dimension(nx)                 :: work_x
+sll_real64, dimension(nx*(2*kx-1))        :: qx
+sll_real64, dimension((2*ky-1)*ny)        :: qy
+sll_real64, dimension(ny)                 :: work_y
+sll_real64, dimension(ny,nx),     target  :: bwork
+sll_real64, dimension(:,:),       pointer :: pwork
 
 sll_int32 :: i, j, flag
 sll_int32 :: ierr
-
-lpr_work1(:,:) = 0.0
 
 ! *** set up knots and interpolate between knots
 
 tx(1:kx)       = taux(1)
 tx(nx+1:nx+kx) = taux(nx)
-if ( mod(kx,2) == 0 ) then
+if (mod(kx,2) == 0) then
   do i = kx+1, nx
-    tx(i) = taux(i-kx/2 ) 
+    tx(i) = taux(i-kx/2) 
   end do
 else
   do i = kx+1, nx
@@ -3414,10 +3345,8 @@ else
   end do
 end if
 
-Bcoef(1:nx,1:ny) = g
-
 ty = 0.0_f64
-if ( mod(ky,2) == 0 ) then
+if (mod(ky,2) == 0) then
   do i = ky + 1, ny
     ty(i) = tauy(i-ky/2) 
   end do
@@ -3429,41 +3358,14 @@ end if
 
 ty(1:ky)       = tauy(1)
 ty(ny+1:ny+ky) = tauy(ny)
-ty_bis         = tauy(1:ny)
 
-lpr_work5_ptr => lpr_work5
+pwork => bwork
+bcoef(1:nx,1:ny) = g
 
-call spli2d ( taux,          &
-              Bcoef,         &
-              tx,            &
-              nx,         &
-              kx,         &
-              ny,         &
-              lpr_work2,     &
-              lpr_work31,    &
-              lpr_work5_ptr, &
-              flag)
-
-bcoef  = 0.0_f64
-lpr_work4  = 0.0_f64
-lpr_work3  = 0.0_f64
-lpr_work32 = 0.0_f64
-
-ty_bis_ptr => ty_bis
-
-call spli2d ( ty_bis_ptr,  &
-              lpr_work5_ptr,   &
-              ty,          &
-              ny,           &
-              ky,           &
-              nx,           &
-              lpr_work4,       &
-              lpr_work32,      &
-              bcoef,       &
-              flag )
+call spli2d( taux, bcoef, tx, nx, kx, ny, work_x, qx, pwork, flag)
+call spli2d( tauy, pwork, ty, ny, ky, nx, work_y, qy, bcoef, flag)
 
 end subroutine spli2d_custom
-
 
 !*****************************************************************************80
 !
@@ -3555,16 +3457,16 @@ end subroutine spli2d_custom
 !
 subroutine spli2d ( tau, gtau, t, n, k, m, work, q, bcoef, iflag )
     
-sll_real64, dimension(:),   pointer :: tau
-sll_real64, dimension(:,:), pointer :: gtau
-sll_real64, dimension(:),   pointer :: t
-sll_int32                           :: n
-sll_int32                           :: k
-sll_int32                           :: m
-sll_real64, dimension(n)            :: work
-sll_real64, dimension(:,:), pointer :: bcoef
-sll_real64, dimension((2*k-1)*n)    :: q
-sll_int32 :: iflag
+sll_real64, dimension(:),   pointer, intent(in)  :: tau
+sll_real64, dimension(:,:), pointer, intent(in)  :: gtau
+sll_real64, dimension(:),   pointer, intent(in)  :: t
+sll_int32                          , intent(in)  :: n
+sll_int32                          , intent(in)  :: k
+sll_int32                          , intent(in)  :: m
+sll_real64, dimension(n)                         :: work
+sll_real64, dimension((2*k-1)*n)                 :: q
+sll_real64, dimension(:,:), pointer, intent(out) :: bcoef
+sll_int32,                           intent(out) :: iflag
 
 sll_int32 :: i
 sll_int32 :: ilp1mx
@@ -3697,7 +3599,7 @@ end subroutine spli2d
         ai_ky, &
         tauy,&
         g,&
-        Bcoef,&
+        bcoef,&
         tx,&
         ty )
      ! CALLED WHEN WE WANT TO INTERPOL WITH A PERIODIC second PARAM WITH A PERIOD = ar_L
@@ -3709,7 +3611,7 @@ end subroutine spli2d
      sll_real64, dimension (:) :: tauy !  ai_ny -1
      sll_real64, dimension ( :,:) :: g ! ai_nx , ai_ny-1
      ! OUTPUT
-     sll_real64, dimension (:,:),pointer :: Bcoef !  ai_nx , ai_ny
+     sll_real64, dimension (:,:),pointer :: bcoef !  ai_nx , ai_ny
      sll_real64, dimension ( :),pointer :: tx ! ai_nx + ai_kx	
      sll_real64, dimension (:),pointer :: ty ! ai_ny + ai_ky 
      ! LOCAL VARIABLES
@@ -3742,7 +3644,7 @@ end subroutine spli2d
           ai_ky,&
           lpr_tauy_ptr, &
           lpr_g_ptr, &
-          Bcoef,&
+          bcoef,&
           tx,&
           ty )
 
@@ -3759,7 +3661,7 @@ end subroutine spli2d
         ai_ky,&
         tauy,&
         g,&
-        Bcoef,&
+        bcoef,&
         tx,&
         ty )
      ! CALLED WHEN WE WANT TO INTERPOL WITH A PERIODIC FIRST PARAM WITH A PERIOD = ar_L
@@ -3771,7 +3673,7 @@ end subroutine spli2d
      sll_real64, dimension ( :),pointer :: tauy ! ai_ny		
      sll_real64, dimension ( :,:) :: g !ai_nx - 1, ai_ny
      ! OUTPUT
-     sll_real64, dimension (:,:),pointer :: Bcoef !  ai_nx , ai_ny	
+     sll_real64, dimension (:,:),pointer :: bcoef !  ai_nx , ai_ny	
      sll_real64, dimension (:),pointer :: tx !  ai_nx + ai_kx
      sll_real64, dimension (:),pointer :: ty ! ai_ny + ai_ky
      ! LOCAL VARIABLES		
@@ -3804,7 +3706,7 @@ end subroutine spli2d
           ai_ky, &
           tauy, &
           lpr_g_ptr,&
-          Bcoef,&
+          bcoef,&
           tx,&
           ty )
 
