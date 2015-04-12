@@ -1185,8 +1185,8 @@ sll_int32  :: nx
 sll_int32  :: ny
 sll_real64 :: period1
 sll_real64 :: period2
-sll_int32  :: order1
-sll_int32  :: order2
+sll_int32  :: kx
+sll_int32  :: ky
 sll_int32  :: ierr
 sll_int32  :: i
 
@@ -1235,8 +1235,8 @@ SLL_ASSERT(size(data_array,2) .ge. ny)
 SLL_ASSERT(size(point_location_eta1) .ge. nx)
 SLL_ASSERT(size(point_location_eta2) .ge. ny)
 
-order1  = interpolator%spline_degree1 + 1
-order2  = interpolator%spline_degree2 + 1
+kx  = interpolator%spline_degree1 + 1
+ky  = interpolator%spline_degree2 + 1
 period1 = interpolator%eta1_max - interpolator%eta1_min
 period2 = interpolator%eta2_max - interpolator%eta2_min
 
@@ -1250,16 +1250,16 @@ case (0) ! periodic-periodic
 
   interpolator%size_coeffs1 = nx
   interpolator%size_coeffs2 = ny
-  interpolator%size_t1      = order1 + nx
-  interpolator%size_t2      = order2 + ny
+  interpolator%size_t1      = kx + nx
+  interpolator%size_t2      = ky + ny
 
   call spli2d_perper( period1,                    &
                       nx,                        &
-                      order1,                     &
+                      kx,                     &
                       point_location_eta1,        &
                       period2,                    &
                       ny,                        &
-                      order2,                     &
+                      ky,                     &
                       point_location_eta2,        &
                       data_array,                 &
                       interpolator%coeff_splines, &
@@ -1270,16 +1270,16 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
 
        interpolator%size_coeffs1 = nx
        interpolator%size_coeffs2 = ny!+1
-       interpolator%size_t1 = order1 + nx
-       interpolator%size_t2 = order2 + ny !+ 1
+       interpolator%size_t1 = kx + nx
+       interpolator%size_t2 = ky + ny !+ 1
        
        SLL_ALLOCATE( data_array_tmp(1:nx,1:ny-1),ierr)
        data_array_tmp = data_array(1:nx,1:ny-1)
-       call spli2d_dirper( nx, order1, point_location_eta1,&!(1:nx), &
-            period2, ny, order2, point_location_eta2,&!(1:ny-1), & !+1
+       call spli2d_dirper( nx, kx, point_location_eta1,&!(1:nx), &
+            period2, ny, ky, point_location_eta2,&!(1:ny-1), & !+1
             data_array_tmp, interpolator%coeff_splines,&!(1:nx,1:ny),&!+1
-            interpolator%t1,&!(1:nx+order1), &
-            interpolator%t2)!(1:ny+order2) ) !+1
+            interpolator%t1,&!(1:nx+kx), &
+            interpolator%t2)!(1:ny+ky) ) !+1
 
        interpolator%coeff_splines(1,1:ny)   = data_array(1,1:ny)!interpolator%value_min1(1:ny)
        interpolator%coeff_splines(nx,1:ny) = data_array(nx,1:ny)!interpolator%value_max1(1:ny)
@@ -1287,15 +1287,15 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
     case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
        interpolator%size_coeffs1 = nx!+1
        interpolator%size_coeffs2 = ny
-       interpolator%size_t1 = order1 + nx !+ 1
-       interpolator%size_t2 = order2 + ny 
+       interpolator%size_t1 = kx + nx !+ 1
+       interpolator%size_t2 = ky + ny 
        SLL_ALLOCATE( data_array_tmp(1:nx-1,1:ny),ierr)
        data_array_tmp = data_array(1:nx-1,1:ny)
-       call spli2d_perdir( period1, nx, order1, point_location_eta1,&
-            ny, order2, point_location_eta2, &
+       call spli2d_perdir( period1, nx, kx, point_location_eta1,&
+            ny, ky, point_location_eta2, &
             data_array_tmp, interpolator%coeff_splines,&
-            interpolator%t1,&!(1:nx+order1), & ! + 1
-            interpolator%t2)!)(1:ny+order2) )
+            interpolator%t1,&!(1:nx+kx), & ! + 1
+            interpolator%t2)!)(1:ny+ky) )
 
        ! boundary condition non homogene
        interpolator%coeff_splines(1:nx,1)   = data_array(1:nx,1)
@@ -1305,19 +1305,19 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        !print*, 'her'
        interpolator%size_coeffs1 = nx
        interpolator%size_coeffs2 = ny
-       interpolator%size_t1 = order1 + nx 
-       interpolator%size_t2 = order2 + ny 
+       interpolator%size_t1 = kx + nx 
+       interpolator%size_t2 = ky + ny 
        
        !  data_array must have the same dimension than 
        !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
        !  i.e  data_array must have the dimension nx x ny
        SLL_ALLOCATE( data_array_tmp(1:nx,1:ny),ierr)
        data_array_tmp = data_array(1:nx,1:ny)
-       call spli2d_custom( nx, order1, point_location_eta1, &
-            ny, order2, point_location_eta2, &
+       call spli2d_custom( nx, kx, point_location_eta1, &
+            ny, ky, point_location_eta2, &
             data_array_tmp, interpolator%coeff_splines,&!(1:nx,1:ny),&
-            interpolator%t1,&!(1:nx+order1), &
-            interpolator%t2)!(1:ny+order2) )
+            interpolator%t1,&!(1:nx+kx), &
+            interpolator%t2)!(1:ny+ky) )
 
        ! boundary condition non homogene
        interpolator%coeff_splines(1,1:ny)   = data_array(1,1:ny)
@@ -1331,8 +1331,8 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        sz_derivative_eta2 = 2
        interpolator%size_coeffs1 = nx + sz_derivative_eta1
        interpolator%size_coeffs2 = ny + sz_derivative_eta2
-       interpolator%size_t1 = order1 + nx + sz_derivative_eta1
-       interpolator%size_t2 = order2 + ny + sz_derivative_eta2
+       interpolator%size_t1 = kx + nx + sz_derivative_eta1
+       interpolator%size_t2 = ky + ny + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
        !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
@@ -1352,19 +1352,19 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        call spli2d_custom_derder(&
             nx,&
             sz_derivative_eta1,&
-            order1, &
+            kx, &
             point_location_eta1, &
             point_location_eta1_deriv,&
             ny, &
             sz_derivative_eta2,&
-            order2, point_location_eta2, &
+            ky, point_location_eta2, &
             point_location_eta2_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
             interpolator%coeff_splines,&!(1:nx,1:ny),&
-            interpolator%t1,&!(1:nx+order1), &
-            interpolator%t2)!(1:ny+order2) )
+            interpolator%t1,&!(1:nx+kx), &
+            interpolator%t2)!(1:ny+ky) )
 
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
@@ -1379,8 +1379,8 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        sz_derivative_eta2 = 2
        interpolator%size_coeffs1 = nx + sz_derivative_eta1
        interpolator%size_coeffs2 = ny + sz_derivative_eta2
-       interpolator%size_t1 = order1 + nx + sz_derivative_eta1
-       interpolator%size_t2 = order2 + ny + sz_derivative_eta2
+       interpolator%size_t1 = kx + nx + sz_derivative_eta1
+       interpolator%size_t2 = ky + ny + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
        !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
@@ -1400,19 +1400,19 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        call spli2d_custom_derder(&
             nx,&
             sz_derivative_eta1,&
-            order1, &
+            kx, &
             point_location_eta1, &
             point_location_eta1_deriv,&
             ny, &
             sz_derivative_eta2,&
-            order2, point_location_eta2, &
+            ky, point_location_eta2, &
             point_location_eta2_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
             interpolator%coeff_splines,&!(1:nx,1:ny),&
-            interpolator%t1,&!(1:nx+order1), &
-            interpolator%t2)!(1:ny+order2) )
+            interpolator%t1,&!(1:nx+kx), &
+            interpolator%t2)!(1:ny+ky) )
 
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
@@ -1429,8 +1429,8 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        sz_derivative_eta2 = 2
        interpolator%size_coeffs1 = nx + sz_derivative_eta1
        interpolator%size_coeffs2 = ny + sz_derivative_eta2
-       interpolator%size_t1 = order1 + nx + sz_derivative_eta1
-       interpolator%size_t2 = order2 + ny + sz_derivative_eta2
+       interpolator%size_t1 = kx + nx + sz_derivative_eta1
+       interpolator%size_t2 = ky + ny + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
        !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
@@ -1453,19 +1453,19 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        call spli2d_custom_derder(&
             nx,&
             sz_derivative_eta1,&
-            order1, &
+            kx, &
             point_location_eta1, &
             point_location_eta1_deriv,&
             ny, &
             sz_derivative_eta2,&
-            order2, point_location_eta2, &
+            ky, point_location_eta2, &
             point_location_eta2_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
             interpolator%coeff_splines,&!(1:nx,1:ny),&
-            interpolator%t1,&!(1:nx+order1), &
-            interpolator%t2)!(1:ny+order2) )
+            interpolator%t1,&!(1:nx+kx), &
+            interpolator%t2)!(1:ny+ky) )
 
 
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
@@ -1484,8 +1484,8 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        sz_derivative_eta2 = 2
        interpolator%size_coeffs1 = nx + sz_derivative_eta1
        interpolator%size_coeffs2 = ny + sz_derivative_eta2
-       interpolator%size_t1 = order1 + nx + sz_derivative_eta1
-       interpolator%size_t2 = order2 + ny + sz_derivative_eta2
+       interpolator%size_t1 = kx + nx + sz_derivative_eta1
+       interpolator%size_t2 = ky + ny + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
        !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
@@ -1505,19 +1505,19 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        call spli2d_custom_derder(&
             nx,&
             sz_derivative_eta1,&
-            order1, &
+            kx, &
             point_location_eta1, &
             point_location_eta1_deriv,&
             ny, &
             sz_derivative_eta2,&
-            order2, point_location_eta2, &
+            ky, point_location_eta2, &
             point_location_eta2_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
             interpolator%coeff_splines,&!(1:nx,1:ny),&
-            interpolator%t1,&!(1:nx+order1), &
-            interpolator%t2)!(1:ny+order2) )
+            interpolator%t1,&!(1:nx+kx), &
+            interpolator%t2)!(1:ny+ky) )
 
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
@@ -1532,8 +1532,8 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        sz_derivative_eta2 = 2
        interpolator%size_coeffs1 = nx + sz_derivative_eta1
        interpolator%size_coeffs2 = ny + sz_derivative_eta2
-       interpolator%size_t1 = order1 + nx + sz_derivative_eta1
-       interpolator%size_t2 = order2 + ny + sz_derivative_eta2
+       interpolator%size_t1 = kx + nx + sz_derivative_eta1
+       interpolator%size_t2 = ky + ny + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
        !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
@@ -1553,19 +1553,19 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        call spli2d_custom_derder(&
             nx,&
             sz_derivative_eta1,&
-            order1, &
+            kx, &
             point_location_eta1, &
             point_location_eta1_deriv,&
             ny, &
             sz_derivative_eta2,&
-            order2, point_location_eta2, &
+            ky, point_location_eta2, &
             point_location_eta2_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
             interpolator%coeff_splines,&!(1:nx,1:ny),&
-            interpolator%t1,&!(1:nx+order1), &
-            interpolator%t2)!(1:ny+order2) )
+            interpolator%t1,&!(1:nx+kx), &
+            interpolator%t2)!(1:ny+ky) )
 
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
@@ -1580,8 +1580,8 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        sz_derivative_eta2 = 2
        interpolator%size_coeffs1 = nx + sz_derivative_eta1
        interpolator%size_coeffs2 = ny + sz_derivative_eta2
-       interpolator%size_t1 = order1 + nx + sz_derivative_eta1
-       interpolator%size_t2 = order2 + ny + sz_derivative_eta2
+       interpolator%size_t1 = kx + nx + sz_derivative_eta1
+       interpolator%size_t2 = ky + ny + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
        !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
@@ -1601,19 +1601,19 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        call spli2d_custom_derder(&
             nx,&
             sz_derivative_eta1,&
-            order1, &
+            kx, &
             point_location_eta1, &
             point_location_eta1_deriv,&
             ny, &
             sz_derivative_eta2,&
-            order2, point_location_eta2, &
+            ky, point_location_eta2, &
             point_location_eta2_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
             interpolator%coeff_splines,&!(1:nx,1:ny),&
-            interpolator%t1,&!(1:nx+order1), &
-            interpolator%t2)!(1:ny+order2) )
+            interpolator%t1,&!(1:nx+kx), &
+            interpolator%t2)!(1:ny+ky) )
 
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
@@ -1628,8 +1628,8 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        sz_derivative_eta2 = 2
        interpolator%size_coeffs1 = nx + sz_derivative_eta1
        interpolator%size_coeffs2 = ny + sz_derivative_eta2
-       interpolator%size_t1 = order1 + nx + sz_derivative_eta1
-       interpolator%size_t2 = order2 + ny + sz_derivative_eta2
+       interpolator%size_t1 = kx + nx + sz_derivative_eta1
+       interpolator%size_t2 = ky + ny + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
        !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
@@ -1649,19 +1649,19 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        call spli2d_custom_derder(&
             nx,&
             sz_derivative_eta1,&
-            order1, &
+            kx, &
             point_location_eta1, &
             point_location_eta1_deriv,&
             ny, &
             sz_derivative_eta2,&
-            order2, point_location_eta2, &
+            ky, point_location_eta2, &
             point_location_eta2_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
             interpolator%coeff_splines,&!(1:nx,1:ny),&
-            interpolator%t1,&!(1:nx+order1), &
-            interpolator%t2)!(1:ny+order2) )
+            interpolator%t1,&!(1:nx+kx), &
+            interpolator%t2)!(1:ny+ky) )
 
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
@@ -1677,8 +1677,8 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        sz_derivative_eta2 = 2
        interpolator%size_coeffs1 = nx + sz_derivative_eta1
        interpolator%size_coeffs2 = ny + sz_derivative_eta2
-       interpolator%size_t1 = order1 + nx + sz_derivative_eta1
-       interpolator%size_t2 = order2 + ny + sz_derivative_eta2
+       interpolator%size_t1 = kx + nx + sz_derivative_eta1
+       interpolator%size_t2 = ky + ny + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
        !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
@@ -1698,19 +1698,19 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        call spli2d_custom_derder(&
             nx,&
             sz_derivative_eta1,&
-            order1, &
+            kx, &
             point_location_eta1, &
             point_location_eta1_deriv,&
             ny, &
             sz_derivative_eta2,&
-            order2, point_location_eta2, &
+            ky, point_location_eta2, &
             point_location_eta2_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
             interpolator%coeff_splines,&!(1:nx,1:ny),&
-            interpolator%t1,&!(1:nx+order1), &
-            interpolator%t2)!(1:ny+order2) )
+            interpolator%t1,&!(1:nx+kx), &
+            interpolator%t2)!(1:ny+ky) )
 
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
@@ -1724,8 +1724,8 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        sz_derivative_eta2 = 2
        interpolator%size_coeffs1 = nx + sz_derivative_eta1
        interpolator%size_coeffs2 = ny + sz_derivative_eta2
-       interpolator%size_t1 = order1 + nx + sz_derivative_eta1
-       interpolator%size_t2 = order2 + ny + sz_derivative_eta2
+       interpolator%size_t1 = kx + nx + sz_derivative_eta1
+       interpolator%size_t2 = ky + ny + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
        !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
@@ -1745,19 +1745,19 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        call spli2d_custom_derder(&
             nx,&
             sz_derivative_eta1,&
-            order1, &
+            kx, &
             point_location_eta1, &
             point_location_eta1_deriv,&
             ny, &
             sz_derivative_eta2,&
-            order2, point_location_eta2, &
+            ky, point_location_eta2, &
             point_location_eta2_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
             interpolator%coeff_splines,&!(1:nx,1:ny),&
-            interpolator%t1,&!(1:nx+order1), &
-            interpolator%t2)!(1:ny+order2) )
+            interpolator%t1,&!(1:nx+kx), &
+            interpolator%t2)!(1:ny+ky) )
 
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
@@ -1772,8 +1772,8 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        sz_derivative_eta2 = 2
        interpolator%size_coeffs1 = nx + sz_derivative_eta1
        interpolator%size_coeffs2 = ny + sz_derivative_eta2
-       interpolator%size_t1 = order1 + nx + sz_derivative_eta1
-       interpolator%size_t2 = order2 + ny + sz_derivative_eta2
+       interpolator%size_t1 = kx + nx + sz_derivative_eta1
+       interpolator%size_t2 = ky + ny + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
        !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
@@ -1793,19 +1793,19 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        call spli2d_custom_derder(&
             nx,&
             sz_derivative_eta1,&
-            order1, &
+            kx, &
             point_location_eta1, &
             point_location_eta1_deriv,&
             ny, &
             sz_derivative_eta2,&
-            order2, point_location_eta2, &
+            ky, point_location_eta2, &
             point_location_eta2_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
             interpolator%coeff_splines,&!(1:nx,1:ny),&
-            interpolator%t1,&!(1:nx+order1), &
-            interpolator%t2)!(1:ny+order2) )
+            interpolator%t1,&!(1:nx+kx), &
+            interpolator%t2)!(1:ny+ky) )
 
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
@@ -1822,8 +1822,8 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        sz_derivative_eta2 = 2
        interpolator%size_coeffs1 = nx + sz_derivative_eta1
        interpolator%size_coeffs2 = ny + sz_derivative_eta2
-       interpolator%size_t1 = order1 + nx + sz_derivative_eta1
-       interpolator%size_t2 = order2 + ny + sz_derivative_eta2
+       interpolator%size_t1 = kx + nx + sz_derivative_eta1
+       interpolator%size_t2 = ky + ny + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
        !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
@@ -1843,19 +1843,19 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        call spli2d_custom_derder(&
             nx,&
             sz_derivative_eta1,&
-            order1, &
+            kx, &
             point_location_eta1, &
             point_location_eta1_deriv,&
             ny, &
             sz_derivative_eta2,&
-            order2, point_location_eta2, &
+            ky, point_location_eta2, &
             point_location_eta2_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
             interpolator%coeff_splines,&!(1:nx,1:ny),&
-            interpolator%t1,&!(1:nx+order1), &
-            interpolator%t2)!(1:ny+order2) )
+            interpolator%t1,&!(1:nx+kx), &
+            interpolator%t2)!(1:ny+ky) )
 
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
@@ -1870,8 +1870,8 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        sz_derivative_eta2 = 2
        interpolator%size_coeffs1 = nx + sz_derivative_eta1
        interpolator%size_coeffs2 = ny + sz_derivative_eta2
-       interpolator%size_t1 = order1 + nx + sz_derivative_eta1
-       interpolator%size_t2 = order2 + ny + sz_derivative_eta2
+       interpolator%size_t1 = kx + nx + sz_derivative_eta1
+       interpolator%size_t2 = ky + ny + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
        !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
@@ -1891,19 +1891,19 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        call spli2d_custom_derder(&
             nx,&
             sz_derivative_eta1,&
-            order1, &
+            kx, &
             point_location_eta1, &
             point_location_eta1_deriv,&
             ny, &
             sz_derivative_eta2,&
-            order2, point_location_eta2, &
+            ky, point_location_eta2, &
             point_location_eta2_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
             interpolator%coeff_splines,&!(1:nx,1:ny),&
-            interpolator%t1,&!(1:nx+order1), &
-            interpolator%t2)!(1:ny+order2) )
+            interpolator%t1,&!(1:nx+kx), &
+            interpolator%t2)!(1:ny+ky) )
 
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
@@ -1918,8 +1918,8 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        sz_derivative_eta2 = 2
        interpolator%size_coeffs1 = nx + sz_derivative_eta1
        interpolator%size_coeffs2 = ny + sz_derivative_eta2
-       interpolator%size_t1 = order1 + nx + sz_derivative_eta1
-       interpolator%size_t2 = order2 + ny + sz_derivative_eta2
+       interpolator%size_t1 = kx + nx + sz_derivative_eta1
+       interpolator%size_t2 = ky + ny + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
        !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
@@ -1939,19 +1939,19 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        call spli2d_custom_derder(&
             nx,&
             sz_derivative_eta1,&
-            order1, &
+            kx, &
             point_location_eta1, &
             point_location_eta1_deriv,&
             ny, &
             sz_derivative_eta2,&
-            order2, point_location_eta2, &
+            ky, point_location_eta2, &
             point_location_eta2_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
             interpolator%coeff_splines,&!(1:nx,1:ny),&
-            interpolator%t1,&!(1:nx+order1), &
-            interpolator%t2)!(1:ny+order2) )
+            interpolator%t1,&!(1:nx+kx), &
+            interpolator%t2)!(1:ny+ky) )
 
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
@@ -1968,8 +1968,8 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        sz_derivative_eta2 = 2
        interpolator%size_coeffs1 = nx + sz_derivative_eta1
        interpolator%size_coeffs2 = ny + sz_derivative_eta2
-       interpolator%size_t1 = order1 + nx + sz_derivative_eta1
-       interpolator%size_t2 = order2 + ny + sz_derivative_eta2
+       interpolator%size_t1 = kx + nx + sz_derivative_eta1
+       interpolator%size_t2 = ky + ny + sz_derivative_eta2
        
        !  data_array must have the same dimension than 
        !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
@@ -1989,19 +1989,19 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        call spli2d_custom_derder(&
             nx,&
             sz_derivative_eta1,&
-            order1, &
+            kx, &
             point_location_eta1, &
             point_location_eta1_deriv,&
             ny, &
             sz_derivative_eta2,&
-            order2, point_location_eta2, &
+            ky, point_location_eta2, &
             point_location_eta2_deriv,&
             data_array_tmp,&
             data_array_deriv_eta1,&
             data_array_deriv_eta2,&
             interpolator%coeff_splines,&!(1:nx,1:ny),&
-            interpolator%t1,&!(1:nx+order1), &
-            interpolator%t2)!(1:ny+order2) )
+            interpolator%t1,&!(1:nx+kx), &
+            interpolator%t2)!(1:ny+ky) )
 
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
