@@ -1133,161 +1133,151 @@ interpolator%coefficients_set = .true.
  
 end subroutine !set_coefficients_ad2d
 
+!> @brief computing the coefficients spline with a given 
+!>  data_array 2D cooresponding at the values of a function 
+!> @details computing the coefficients spline with a given 
+!>  data_array 2D coorespondind at the values of a function 
+!>  on eta1_coords of size size_eta1_coords in the first direction and 
+!>  on eta2_coords of size size_eta2_coords in the second direction
+!>  if the eta1_coords and eta2_coords is not given 
+!>  we consider that the values of the function is on the points in the mesh_2d
+!> 
+!> The parameters are
+!> @param interpolator the type sll_arbitrary_degree_spline_interpolator_2d
+!> @param[in] data_array the 2d arrays corresponding at the values of a function
+!> @param[in] eta1_coords the 1d arrays corresponding at the points eta1 
+!> @param[in] size_eta1_coords the size of eta1_coords
+!> @param[in] eta2_coords the 1d arrays corresponding at the points eta2
+!> @param[in] size_eta2_coords the size of eta2_coords
+!> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_2d
 
- ! ----------------------------------------------------------------
- ! subroutine computing the coefficients spline with a given 
- !  data_array 2D coorespondind at the values of a function 
- !  on eta1_coords of size size_eta1_coords in the first direction and 
- !  on eta2_coords of size size_eta2_coords in the second direction
- !  if the eta1_coords and eta2_coords is not given 
- !  we consider that the values of the function is on the points in the mesh_2d
- !   ----------------------------------------------------------------
+subroutine compute_interpolants_ad2d( &
+  interpolator, &
+  data_array, &
+  eta1_coords, &
+  size_eta1_coords, &
+  eta2_coords, &
+  size_eta2_coords )
 
-  !> @brief computing the coefficients spline with a given 
-  !>  data_array 2D cooresponding at the values of a function 
-  !> @details computing the coefficients spline with a given 
-  !>  data_array 2D coorespondind at the values of a function 
-  !>  on eta1_coords of size size_eta1_coords in the first direction and 
-  !>  on eta2_coords of size size_eta2_coords in the second direction
-  !>  if the eta1_coords and eta2_coords is not given 
-  !>  we consider that the values of the function is on the points in the mesh_2d
-  !> 
-  !> The parameters are
-  !> @param interpolator the type sll_arbitrary_degree_spline_interpolator_2d
-  !> @param[in] data_array the 2d arrays corresponding at the values of a function
-  !> @param[in] eta1_coords the 1d arrays corresponding at the points eta1 
-  !> @param[in] size_eta1_coords the size of eta1_coords
-  !> @param[in] eta2_coords the 1d arrays corresponding at the points eta2
-  !> @param[in] size_eta2_coords the size of eta2_coords
-  !> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_2d
+class(sll_arbitrary_degree_spline_interpolator_2d), intent(inout)  :: interpolator
 
-  subroutine compute_interpolants_ad2d( &
-    interpolator, &
-    data_array, &
-    eta1_coords, &
-    size_eta1_coords, &
-    eta2_coords, &
-    size_eta2_coords )
+sll_real64, dimension(:,:), intent(in)         :: data_array
+sll_real64, dimension(:), intent(in),optional  :: eta1_coords
+sll_real64, dimension(:), intent(in),optional  :: eta2_coords
+sll_int32, intent(in),optional                 :: size_eta1_coords
+sll_int32, intent(in),optional                 :: size_eta2_coords
 
-    class(sll_arbitrary_degree_spline_interpolator_2d), intent(inout)  :: interpolator
+sll_real64, dimension(:),pointer               :: point_location_eta1
+sll_real64, dimension(:),pointer               :: point_location_eta2
+sll_real64, dimension(:),pointer               :: point_location_eta1_tmp
+sll_real64, dimension(:),pointer               :: point_location_eta2_tmp
+sll_real64, dimension(:,:),pointer             :: data_array_tmp
+sll_real64, dimension(:,:),pointer             :: data_array_deriv_eta1
+sll_real64, dimension(:,:),pointer             :: data_array_deriv_eta2
 
-    sll_real64, dimension(:,:), intent(in)         :: data_array
-    sll_real64, dimension(:), intent(in),optional  :: eta1_coords
-    sll_real64, dimension(:), intent(in),optional  :: eta2_coords
-    sll_int32, intent(in),optional                 :: size_eta1_coords
-    sll_int32, intent(in),optional                 :: size_eta2_coords
+sll_int32, pointer :: point_location_eta1_deriv(:)
+sll_int32, pointer :: point_location_eta2_deriv(:)
 
-    sll_real64, dimension(:),pointer               :: point_location_eta1
-    sll_real64, dimension(:),pointer               :: point_location_eta2
-    sll_real64, dimension(:),pointer               :: point_location_eta1_tmp
-    sll_real64, dimension(:),pointer               :: point_location_eta2_tmp
-    sll_real64, dimension(:,:),pointer             :: data_array_tmp
-    sll_real64, dimension(:,:),pointer             :: data_array_deriv_eta1
-    sll_real64, dimension(:,:),pointer             :: data_array_deriv_eta2
+sll_int32 :: sz_derivative_eta1,sz_derivative_eta2
+sll_real64 :: delta_eta1
+sll_real64 :: delta_eta2
+sll_int32  :: sz1
+sll_int32  :: sz2
+sll_real64 :: period1
+sll_real64 :: period2
+sll_int32  :: order1
+sll_int32  :: order2
+sll_int32  :: ierr
+sll_int32  :: i
+logical    :: user_coords
 
-    sll_int32, pointer :: point_location_eta1_deriv(:)
-    sll_int32, pointer :: point_location_eta2_deriv(:)
 
-    sll_int32 :: sz_derivative_eta1,sz_derivative_eta2
-    sll_real64 :: delta_eta1
-    sll_real64 :: delta_eta2
-    sll_int32  :: sz1
-    sll_int32  :: sz2
-    sll_real64 :: period1
-    sll_real64 :: period2
-    sll_int32  :: order1
-    sll_int32  :: order2
-    sll_int32  :: ierr
-    sll_int32  :: i
-    logical    :: user_coords
+!print*, data_array
+if(present(eta1_coords) .and. (.not. present(size_eta1_coords))) then
+   print *, 'compute_interpolants_ad2d(), ERROR: if eta1_coords is ', &
+        'passed, its size must be specified as well through ', &
+        'size_eta1_coords.'
+   stop
+end if
 
-    
-    !print*, data_array
-    if(present(eta1_coords) .and. (.not. present(size_eta1_coords))) then
-       print *, 'compute_interpolants_ad2d(), ERROR: if eta1_coords is ', &
-            'passed, its size must be specified as well through ', &
-            'size_eta1_coords.'
-       stop
-    end if
-    
-    if(present(eta2_coords) .and. (.not. present(size_eta2_coords))) then
-       print *, 'compute_interpolants_ad2d(), ERROR: if eta2_coords is ', &
-            'passed, its size must be specified as well through ', &
-            'size_eta2_coords.'
-       stop
-    end if
-    
-    if ( (present(eta1_coords) .and. (.not. present(eta2_coords))) .or.&
-       (present(eta2_coords) .and. (.not. present(eta1_coords))) ) then
-       print *, 'compute_interpolants_ad2d(), ERROR: if either, ', &
-            'eta1_coords or eta2_coords is specified, the other must be also.'
-       stop
-    end if
-    
-    if( present(eta1_coords) .and. present(eta2_coords) ) then
-       user_coords = .true.
-    else
-       user_coords = .false.
-    end if
-    
-    if (user_coords .eqv. .true.) then
-       sz1 = size_eta1_coords
-       sz2 = size_eta2_coords
-       
-       SLL_ALLOCATE(point_location_eta1(1:sz1),ierr)
-       SLL_ALLOCATE(point_location_eta2(1:sz2),ierr)
-       point_location_eta1(1:sz1) = eta1_coords(1:sz1)
-       point_location_eta2(1:sz2) = eta2_coords(1:sz2)
+if(present(eta2_coords) .and. (.not. present(size_eta2_coords))) then
+   print *, 'compute_interpolants_ad2d(), ERROR: if eta2_coords is ', &
+        'passed, its size must be specified as well through ', &
+        'size_eta2_coords.'
+   stop
+end if
 
-    else ! size depends on BC combination, filled out at initialization.
+if ( (present(eta1_coords) .and. (.not. present(eta2_coords))) .or.&
+   (present(eta2_coords) .and. (.not. present(eta1_coords))) ) then
+   print *, 'compute_interpolants_ad2d(), ERROR: if either, ', &
+        'eta1_coords or eta2_coords is specified, the other must be also.'
+   stop
+end if
 
-       sz1 = interpolator%num_pts1
-       sz2 = interpolator%num_pts2
+if( present(eta1_coords) .and. present(eta2_coords) ) then
+   user_coords = .true.
+else
+   user_coords = .false.
+end if
 
-       delta_eta1 = (interpolator%eta1_max - interpolator%eta1_min)&
-            /(interpolator%num_pts1 -1)
-       delta_eta2 = (interpolator%eta2_max - interpolator%eta2_min)&
-            /(interpolator%num_pts2 -1)
-       SLL_ALLOCATE(point_location_eta1(1:sz1),ierr)
-       SLL_ALLOCATE(point_location_eta2(1:sz2),ierr)
-      
-       do i = 1,sz1
-          point_location_eta1(i) = interpolator%eta1_min + delta_eta1*(i-1)
-       end do
-       do i = 1,sz2
-          point_location_eta2(i) = interpolator%eta2_min + delta_eta2*(i-1)
-       end do
+if (user_coords .eqv. .true.) then
+   sz1 = size_eta1_coords
+   sz2 = size_eta2_coords
+   
+   SLL_ALLOCATE(point_location_eta1(1:sz1),ierr)
+   SLL_ALLOCATE(point_location_eta2(1:sz2),ierr)
+   point_location_eta1(1:sz1) = eta1_coords(1:sz1)
+   point_location_eta2(1:sz2) = eta2_coords(1:sz2)
 
-      
-    end if
-    SLL_ALLOCATE(point_location_eta1_tmp(1:sz1-1),ierr)
-    SLL_ALLOCATE(point_location_eta2_tmp(1:sz2-1),ierr)
-    point_location_eta1_tmp = point_location_eta1(1:sz1-1)
-    point_location_eta2_tmp = point_location_eta2(1:sz2-1)
-    
-    
-    ! the size of data_array  must be <= interpolator%num_pts1 + 4*interpolator%spline_degree1
-    ! because we have not need more !! 
-    SLL_ASSERT(sz1 .le. interpolator%num_pts1 + 8*interpolator%spline_degree1)
-    SLL_ASSERT(sz2 .le. interpolator%num_pts2 + 8*interpolator%spline_degree1)
-    SLL_ASSERT(size(data_array,1) .ge. sz1)
-    SLL_ASSERT(size(data_array,2) .ge. sz2)
-    SLL_ASSERT(size(point_location_eta1)  .ge. sz1)
-    SLL_ASSERT(size(point_location_eta2)  .ge. sz2)
-    
-    order1  = interpolator%spline_degree1 + 1
-    order2  = interpolator%spline_degree2 + 1
-    period1 = interpolator%eta1_max - interpolator%eta1_min
-    period2 = interpolator%eta2_max - interpolator%eta2_min
-    
-    ! we compute the coefficients spline associate to the values 
-    ! data_array and we compute also the knots t1 and t2 using to 
-    ! construct the spline to have a good interpolation
-    
-    SLL_ALLOCATE(point_location_eta1_deriv(2),ierr)
-    SLL_ALLOCATE(point_location_eta2_deriv(2),ierr)
+else ! size depends on BC combination, filled out at initialization.
 
-    
+   sz1 = interpolator%num_pts1
+   sz2 = interpolator%num_pts2
+
+   delta_eta1 = (interpolator%eta1_max - interpolator%eta1_min)&
+        /(interpolator%num_pts1 -1)
+   delta_eta2 = (interpolator%eta2_max - interpolator%eta2_min)&
+        /(interpolator%num_pts2 -1)
+   SLL_ALLOCATE(point_location_eta1(1:sz1),ierr)
+   SLL_ALLOCATE(point_location_eta2(1:sz2),ierr)
+  
+   do i = 1,sz1
+      point_location_eta1(i) = interpolator%eta1_min + delta_eta1*(i-1)
+   end do
+   do i = 1,sz2
+      point_location_eta2(i) = interpolator%eta2_min + delta_eta2*(i-1)
+   end do
+
+  
+end if
+SLL_ALLOCATE(point_location_eta1_tmp(1:sz1-1),ierr)
+SLL_ALLOCATE(point_location_eta2_tmp(1:sz2-1),ierr)
+point_location_eta1_tmp = point_location_eta1(1:sz1-1)
+point_location_eta2_tmp = point_location_eta2(1:sz2-1)
+
+
+! the size of data_array  must be <= interpolator%num_pts1 + 4*interpolator%spline_degree1
+! because we have not need more !! 
+SLL_ASSERT(sz1 .le. interpolator%num_pts1 + 8*interpolator%spline_degree1)
+SLL_ASSERT(sz2 .le. interpolator%num_pts2 + 8*interpolator%spline_degree1)
+SLL_ASSERT(size(data_array,1) .ge. sz1)
+SLL_ASSERT(size(data_array,2) .ge. sz2)
+SLL_ASSERT(size(point_location_eta1)  .ge. sz1)
+SLL_ASSERT(size(point_location_eta2)  .ge. sz2)
+
+order1  = interpolator%spline_degree1 + 1
+order2  = interpolator%spline_degree2 + 1
+period1 = interpolator%eta1_max - interpolator%eta1_min
+period2 = interpolator%eta2_max - interpolator%eta2_min
+
+! we compute the coefficients spline associate to the values 
+! data_array and we compute also the knots t1 and t2 using to 
+! construct the spline to have a good interpolation
+
+SLL_ALLOCATE(point_location_eta1_deriv(2),ierr)
+SLL_ALLOCATE(point_location_eta2_deriv(2),ierr)
+
+  
     select case (interpolator%bc_selector)
     case (0) ! periodic-periodic
        interpolator%size_coeffs1 = sz1!+1
