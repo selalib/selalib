@@ -3361,38 +3361,38 @@ call spli2d_custom( nx,       &
 
 end subroutine spli2d_perper
 
-subroutine spli2d_custom( ai_nx,     &
-                          ai_kx,     &
+subroutine spli2d_custom( nx,     &
+                          kx,     &
                           taux,  &
-                          ai_ny,     &
-                          ai_ky,     &
+                          ny,     &
+                          ky,     &
                           tauy,  &
                           g,     &
                           Bcoef, &
                           tx,    &
                           ty )
 
-sll_int32                                     :: ai_nx
-sll_int32                                     :: ai_kx
-sll_int32                                     :: ai_ny
-sll_int32                                     :: ai_ky
-sll_real64, dimension(:),   pointer           :: taux
-sll_real64, dimension(:),   pointer           :: tauy
-sll_real64, dimension(:,:), pointer           :: g   
+sll_int32,                           intent(in)  :: nx
+sll_int32,                           intent(in)  :: kx
+sll_int32,                           intent(in)  :: ny
+sll_int32,                           intent(in)  :: ky
+sll_real64, dimension(:),   pointer, intent(in)  :: taux
+sll_real64, dimension(:),   pointer, intent(in)  :: tauy
+sll_real64, dimension(:,:), pointer, intent(in)  :: g   
 
-sll_real64, dimension(:,:), pointer           :: Bcoef
-sll_real64, dimension(:),   pointer           :: tx
-sll_real64, dimension(:),   pointer           :: ty
+sll_real64, dimension(:,:), pointer, intent(out) :: Bcoef
+sll_real64, dimension(:),   pointer, intent(out) :: tx
+sll_real64, dimension(:),   pointer, intent(out) :: ty
 
-sll_real64, dimension(ai_nx , ai_ny )         :: lpr_work1
-sll_real64, dimension(ai_nx         )         :: lpr_work2
-sll_real64, dimension(ai_nx * ai_ny )         :: lpr_work3
-sll_real64, dimension(ai_nx *( 2*ai_kx-1) )   :: lpr_work31
-sll_real64, dimension((2*ai_ky-1) * ai_ny )   :: lpr_work32
-sll_real64, dimension(ai_ny         )         :: lpr_work4
-sll_real64, dimension(1:ai_ny,1:ai_nx),target :: lpr_work5
+sll_real64, dimension(nx , ny )         :: lpr_work1
+sll_real64, dimension(nx         )         :: lpr_work2
+sll_real64, dimension(nx * ny )         :: lpr_work3
+sll_real64, dimension(nx *( 2*kx-1) )   :: lpr_work31
+sll_real64, dimension((2*ky-1) * ny )   :: lpr_work32
+sll_real64, dimension(ny         )         :: lpr_work4
+sll_real64, dimension(1:ny,1:nx),target :: lpr_work5
 sll_real64, dimension(:,:),pointer            :: lpr_work5_ptr
-sll_real64, dimension(1:ai_ny),target         :: ty_bis
+sll_real64, dimension(1:ny),target         :: ty_bis
 sll_real64, dimension(:),pointer              :: ty_bis_ptr
 
 sll_int32 :: i, j, flag
@@ -3402,48 +3402,43 @@ lpr_work1(:,:) = 0.0
 
 ! *** set up knots and interpolate between knots
 
-tx(1:ai_kx)             = taux(1)
-tx(ai_nx+1:ai_nx+ai_kx) = taux(ai_nx)
-
-if ( mod(ai_kx,2) == 0 ) then
-  do i = ai_kx+1, ai_nx
-    tx(i) = taux ( i - ai_kx/2 ) 
+tx(1:kx)       = taux(1)
+tx(nx+1:nx+kx) = taux(nx)
+if ( mod(kx,2) == 0 ) then
+  do i = kx+1, nx
+    tx(i) = taux(i-kx/2 ) 
   end do
 else
-  do i = ai_kx+1, ai_nx
-    tx(i) = 0.5*(taux(i-(ai_kx-1)/2)+taux(i-1-(ai_kx-1)/2))
+  do i = kx+1, nx
+    tx(i) = 0.5*(taux(i-(kx-1)/2)+taux(i-1-(kx-1)/2))
   end do
 end if
-Bcoef = 0.0_f64
-do i = 1, ai_nx
-   do j = 1, ai_ny
-      Bcoef ( i, j ) = g ( i, j )
-   end do
-end do
 
-!  *** construct b-coefficients of interpolant
+Bcoef(1:nx,1:ny) = g
+
 ty = 0.0_f64
-if ( mod(ai_ky,2) == 0 ) then
-  do i = ai_ky + 1, ai_ny
-    ty(i) = tauy(i-ai_ky/2) 
+if ( mod(ky,2) == 0 ) then
+  do i = ky + 1, ny
+    ty(i) = tauy(i-ky/2) 
   end do
 else
-  do i = ai_ky + 1, ai_ny
-    ty(i) = 0.5*(tauy(i-(ai_ky-1)/2)+tauy(i-1-(ai_ky-1)/2))
+  do i = ky + 1, ny
+    ty(i) = 0.5*(tauy(i-(ky-1)/2)+tauy(i-1-(ky-1)/2))
    end do
 end if
-ty(1:ai_ky) = tauy(1)
-ty(ai_ny+1:ai_ny+ai_ky) = tauy(ai_ny)
-ty_bis = tauy(1:ai_ny)
+
+ty(1:ky)       = tauy(1)
+ty(ny+1:ny+ky) = tauy(ny)
+ty_bis         = tauy(1:ny)
 
 lpr_work5_ptr => lpr_work5
 
 call spli2d ( taux,          &
               Bcoef,         &
               tx,            &
-              ai_nx,         &
-              ai_kx,         &
-              ai_ny,         &
+              nx,         &
+              kx,         &
+              ny,         &
               lpr_work2,     &
               lpr_work31,    &
               lpr_work5_ptr, &
@@ -3459,9 +3454,9 @@ ty_bis_ptr => ty_bis
 call spli2d ( ty_bis_ptr,  &
               lpr_work5_ptr,   &
               ty,          &
-              ai_ny,           &
-              ai_ky,           &
-              ai_nx,           &
+              ny,           &
+              ky,           &
+              nx,           &
               lpr_work4,       &
               lpr_work32,      &
               bcoef,       &
