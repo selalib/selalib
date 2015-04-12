@@ -22,7 +22,13 @@ module sll_module_arbitrary_degree_spline_interpolator_2d
 #include "sll_assert.h" 
 use sll_module_interpolators_2d_base
 use sll_utilities
-use sll_module_deboor_splines_2d
+use sll_module_deboor_splines_2d, only: spli2d_custom_derder, &
+                                        dvalue2d,             &
+                                        bvalue2d,             &
+                                        spli2d,               &
+                                        spli2d_dirper,        &
+                                        spli2d_perdir
+
 use sll_module_arbitrary_degree_spline_interpolator_1d
 implicit none
 private
@@ -574,8 +580,8 @@ eta1_min   = interpolator%eta1_min
 eta2_min   = interpolator%eta2_min
 eta1_max   = interpolator%eta1_max
 eta2_max   = interpolator%eta2_max
-delta1     = (eta1_max - eta1_min)/num_cells1
-delta2     = (eta2_max - eta2_min)/num_cells2
+delta1     = (eta1_max-eta1_min)/num_cells1
+delta2     = (eta2_max-eta2_min)/num_cells2
 
 
 if (present(coeffs_1d)) then 
@@ -1177,9 +1183,9 @@ sll_real64, dimension(:,:), pointer :: data_array_deriv_eta2
 sll_int32, pointer :: point_location_eta1_deriv(:)
 sll_int32, pointer :: point_location_eta2_deriv(:)
 
-sll_int32 :: sz_derivative_eta1,sz_derivative_eta2
-sll_real64 :: delta_eta1
-sll_real64 :: delta_eta2
+sll_int32  :: sz_derivative_eta1,sz_derivative_eta2
+sll_real64 :: eta1_min, eta1_max, delta_eta1
+sll_real64 :: eta2_min, eta2_max, delta_eta2
 sll_int32  :: sz1
 sll_int32  :: sz2
 sll_real64 :: period1
@@ -1189,7 +1195,15 @@ sll_int32  :: order2
 sll_int32  :: ierr
 sll_int32  :: i
 
+eta1_min   = interpolator%eta1_min
+eta2_min   = interpolator%eta2_min
+eta1_max   = interpolator%eta1_max
+eta2_max   = interpolator%eta2_max
+delta_eta1 = (eta1_max-eta1_min)/(interpolator%num_pts1-1)
+delta_eta2 = (eta2_max-eta2_min)/(interpolator%num_pts2-1)
+
 if(present(eta1_coords)) then 
+
   SLL_ASSERT(present(eta2_coords))
   SLL_ASSERT(present(size_eta2_coords))
   SLL_ASSERT(present(size_eta1_coords))
@@ -1207,10 +1221,6 @@ else ! size depends on BC combination, filled out at initialization.
   sz1 = interpolator%num_pts1
   sz2 = interpolator%num_pts2
 
-  delta_eta1 = (interpolator%eta1_max - interpolator%eta1_min)&
-       /(interpolator%num_pts1 -1)
-  delta_eta2 = (interpolator%eta2_max - interpolator%eta2_min)&
-       /(interpolator%num_pts2 -1)
   SLL_ALLOCATE(point_location_eta1(1:sz1),ierr)
   SLL_ALLOCATE(point_location_eta2(1:sz2),ierr)
   
@@ -3334,18 +3344,18 @@ subroutine spli2d_perper( ar_Lx,     &
                           apr_tx,    &
                           apr_ty )
 
-sll_real64                                  :: ar_Lx
-sll_real64                                  :: ar_Ly
-sll_int32                                   :: ai_nx
-sll_int32                                   :: ai_kx
-sll_int32                                   :: ai_ny
-sll_int32                                   :: ai_ky
-sll_real64, dimension(:),    pointer        :: apr_taux
-sll_real64, dimension(:),    pointer        :: apr_tauy
-sll_real64, dimension(:,:),  pointer        :: apr_g
-sll_real64, dimension( :,:), pointer        :: apr_Bcoef
-sll_real64, dimension(:),    pointer        :: apr_tx
-sll_real64, dimension( :),   pointer        :: apr_ty
+sll_real64                         , intent(in)  :: ar_Lx
+sll_int32                          , intent(in)  :: ai_nx
+sll_int32                          , intent(in)  :: ai_kx
+sll_real64, dimension(:),   pointer, intent(in)  :: apr_taux
+sll_real64                         , intent(in)  :: ar_Ly
+sll_int32                          , intent(in)  :: ai_ny
+sll_int32                          , intent(in)  :: ai_ky
+sll_real64, dimension(:),   pointer, intent(in)  :: apr_tauy
+sll_real64, dimension(:,:), pointer, intent(in)  :: apr_g
+sll_real64, dimension(:,:), pointer, intent(out) :: apr_Bcoef
+sll_real64, dimension(:),   pointer, intent(out) :: apr_tx
+sll_real64, dimension( :),  pointer, intent(out) :: apr_ty
 
 sll_real64, dimension(1:ai_nx),         target  :: lpr_taux 
 sll_real64, dimension(1:ai_ny),         target  :: lpr_tauy
@@ -3372,17 +3382,124 @@ lpr_taux_ptr => lpr_taux
 lpr_tauy_ptr => lpr_tauy
 lpr_g_ptr    => lpr_g
 
-call spli2d_custom ( ai_nx,        &
-                     ai_kx,        &
-                     lpr_taux_ptr, &
-                     ai_ny,        &
-                     ai_ky,        &
-                     lpr_tauy_ptr, &
-                     lpr_g_ptr,    &
-                     apr_Bcoef,    &
-                     apr_tx,       &
-                     apr_ty )
+call spli2d_custom( ai_nx,        &
+                    ai_kx,        &
+                    lpr_taux_ptr, &
+                    ai_ny,        &
+                    ai_ky,        &
+                    lpr_tauy_ptr, &
+                    lpr_g_ptr,    &
+                    apr_Bcoef,    &
+                    apr_tx,       &
+                    apr_ty )
 
 end subroutine spli2d_perper
+
+subroutine spli2d_custom( ai_nx,     &
+                          ai_kx,     &
+                          apr_taux,  &
+                          ai_ny,     &
+                          ai_ky,     &
+                          apr_tauy,  &
+                          apr_g,     &
+                          apr_Bcoef, &
+                          apr_tx,    &
+                          apr_ty )
+
+sll_int32                                        :: ai_nx
+sll_int32                                        :: ai_kx
+sll_int32                                        :: ai_ny
+sll_int32                                        :: ai_ky
+sll_real64, dimension(:),   pointer              :: apr_taux
+sll_real64, dimension(:),   pointer              :: apr_tauy
+sll_real64, dimension(:,:), pointer              :: apr_g   
+
+sll_real64, dimension(:,:), pointer              :: apr_Bcoef
+sll_real64, dimension(:),   pointer              :: apr_tx
+sll_real64, dimension(:),   pointer              :: apr_ty
+
+sll_real64, dimension(ai_nx , ai_ny )            :: lpr_work1
+sll_real64, dimension(ai_nx         )            :: lpr_work2
+sll_real64, dimension(ai_nx * ai_ny )            :: lpr_work3
+sll_real64, dimension(ai_nx *( 2*ai_kx-1) )      :: lpr_work31
+sll_real64, dimension((2*ai_ky-1) * ai_ny )      :: lpr_work32
+sll_real64, dimension(ai_ny         )            :: lpr_work4
+sll_real64, dimension(1:ai_ny,1:ai_nx),target    :: lpr_work5
+sll_real64, dimension(:,:),pointer               :: lpr_work5_ptr
+sll_real64, dimension(1:ai_ny),target            :: apr_ty_bis
+sll_real64, dimension(:),pointer                 :: apr_ty_bis_ptr
+
+sll_int32 :: li_i, li_j, li_iflag
+sll_int32 :: ierr
+
+lpr_work1(:,:) = 0.0
+! *** set up knots and interpolate between knots
+
+apr_tx(1:ai_kx)             = apr_taux(1)
+apr_tx(ai_nx+1:ai_nx+ai_kx) = apr_taux(ai_nx)
+
+if ( mod(ai_kx,2) == 0 ) then
+  do li_i = ai_kx+1, ai_nx
+    apr_tx(li_i) = apr_taux ( li_i - ai_kx/2 ) 
+  end do
+else
+  do li_i = ai_kx+1, ai_nx
+    apr_tx(li_i) = 0.5*(apr_taux(li_i-(ai_kx-1)/2)+apr_taux(li_i-1-(ai_kx-1)/2))
+  end do
+end if
+apr_Bcoef = 0.0_f64
+do li_i = 1, ai_nx
+   do li_j = 1, ai_ny
+      apr_Bcoef ( li_i, li_j ) = apr_g ( li_i, li_j )
+   end do
+end do
+
+!  *** construct b-coefficients of interpolant
+apr_ty = 0.0_f64
+if ( mod(ai_ky,2) == 0 ) then
+  do li_i = ai_ky + 1, ai_ny
+    apr_ty(li_i) = apr_tauy(li_i-ai_ky/2) 
+  end do
+else
+  do li_i = ai_ky + 1, ai_ny
+    apr_ty(li_i) = 0.5*(apr_tauy(li_i-(ai_ky-1)/2)+apr_tauy(li_i-1-(ai_ky-1)/2))
+   end do
+end if
+apr_ty(1:ai_ky) = apr_tauy(1)
+apr_ty(ai_ny+1:ai_ny+ai_ky) = apr_tauy(ai_ny)
+apr_ty_bis = apr_tauy(1:ai_ny)
+
+lpr_work5_ptr => lpr_work5
+
+call spli2d ( apr_taux,      &
+              apr_Bcoef,     &
+              apr_tx,        &
+              ai_nx,         &
+              ai_kx,         &
+              ai_ny,         &
+              lpr_work2,     &
+              lpr_work31,    &
+              lpr_work5_ptr, &
+              li_iflag)
+
+apr_bcoef(:,:) = 0.0_f64
+lpr_work4      = 0.0_f64
+lpr_work3      = 0.0_f64
+lpr_work32     = 0.0_f64
+
+apr_ty_bis_ptr => apr_ty_bis
+
+call spli2d ( apr_ty_bis_ptr,  &
+              lpr_work5_ptr,   &
+              apr_ty,          &
+              ai_ny,           &
+              ai_ky,           &
+              ai_nx,           &
+              lpr_work4,       &
+              lpr_work32,      &
+              apr_bcoef,       &
+              li_iflag )
+
+end subroutine spli2d_custom
 
 end module sll_module_arbitrary_degree_spline_interpolator_2d
