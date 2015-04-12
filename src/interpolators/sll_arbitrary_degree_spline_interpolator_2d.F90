@@ -3306,28 +3306,28 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
 subroutine spli2d_perper( ar_Lx,     &
                           ai_nx,     &
                           ai_kx,     &
-                          apr_taux,  &
+                          taux,  &
                           ar_Ly,     &
                           ai_ny,     &
                           ai_ky,     &
-                          apr_tauy,  &
-                          apr_g,     &
-                          apr_Bcoef, &
-                          apr_tx,    &
-                          apr_ty )
+                          tauy,  &
+                          g,     &
+                          Bcoef, &
+                          tx,    &
+                          ty )
 
 sll_real64,                          intent(in)  :: ar_Lx
 sll_int32,                           intent(in)  :: ai_nx
 sll_int32,                           intent(in)  :: ai_kx
-sll_real64, dimension(:),   target               :: apr_taux
+sll_real64, dimension(:),   target               :: taux
 sll_real64,                          intent(in)  :: ar_Ly
 sll_int32,                           intent(in)  :: ai_ny
 sll_int32,                           intent(in)  :: ai_ky
-sll_real64, dimension(:),   target               :: apr_tauy
-sll_real64, dimension(:,:), target               :: apr_g
-sll_real64, dimension(:,:), pointer, intent(out) :: apr_Bcoef
-sll_real64, dimension(:),   pointer, intent(out) :: apr_tx
-sll_real64, dimension( :),  pointer, intent(out) :: apr_ty
+sll_real64, dimension(:),   target               :: tauy
+sll_real64, dimension(:,:), target               :: g
+sll_real64, dimension(:,:), pointer, intent(out) :: Bcoef
+sll_real64, dimension(:),   pointer, intent(out) :: tx
+sll_real64, dimension( :),  pointer, intent(out) :: ty
 
 sll_real64, dimension (:),              pointer :: lpr_taux_ptr
 sll_real64, dimension (:),              pointer :: lpr_tauy_ptr
@@ -3338,15 +3338,15 @@ SLL_ASSERT(ar_Lx /= 0.0_f64 )
 SLL_ASSERT(ar_Ly /= 0.0_f64 ) 
 
 !Apply periodic boundary conditions
-apr_taux(ai_nx)        = apr_taux(1)+ar_Lx
-apr_tauy(ai_ny)        = apr_tauy(1)+ar_Ly
-apr_g(ai_nx,1:ai_ny-1) = apr_g(1,1:ai_ny-1 )
-apr_g(1:ai_nx-1,ai_ny) = apr_g(1:ai_nx-1,1)
-apr_g(ai_nx,ai_ny)     = apr_g(1,1)
+taux(ai_nx)        = taux(1)+ar_Lx
+tauy(ai_ny)        = tauy(1)+ar_Ly
+g(ai_nx,1:ai_ny-1) = g(1,1:ai_ny-1 )
+g(1:ai_nx-1,ai_ny) = g(1:ai_nx-1,1)
+g(ai_nx,ai_ny)     = g(1,1)
 
-lpr_taux_ptr => apr_taux
-lpr_tauy_ptr => apr_tauy
-lpr_g_ptr    => apr_g
+lpr_taux_ptr => taux
+lpr_tauy_ptr => tauy
+lpr_g_ptr    => g
 
 call spli2d_custom( ai_nx,        &
                     ai_kx,        &
@@ -3355,45 +3355,45 @@ call spli2d_custom( ai_nx,        &
                     ai_ky,        &
                     lpr_tauy_ptr, &
                     lpr_g_ptr,    &
-                    apr_Bcoef,    &
-                    apr_tx,       &
-                    apr_ty )
+                    Bcoef,    &
+                    tx,       &
+                    ty )
 
 end subroutine spli2d_perper
 
 subroutine spli2d_custom( ai_nx,     &
                           ai_kx,     &
-                          apr_taux,  &
+                          taux,  &
                           ai_ny,     &
                           ai_ky,     &
-                          apr_tauy,  &
-                          apr_g,     &
-                          apr_Bcoef, &
-                          apr_tx,    &
-                          apr_ty )
+                          tauy,  &
+                          g,     &
+                          Bcoef, &
+                          tx,    &
+                          ty )
 
-sll_int32                                        :: ai_nx
-sll_int32                                        :: ai_kx
-sll_int32                                        :: ai_ny
-sll_int32                                        :: ai_ky
-sll_real64, dimension(:),   pointer              :: apr_taux
-sll_real64, dimension(:),   pointer              :: apr_tauy
-sll_real64, dimension(:,:), pointer              :: apr_g   
+sll_int32                                     :: ai_nx
+sll_int32                                     :: ai_kx
+sll_int32                                     :: ai_ny
+sll_int32                                     :: ai_ky
+sll_real64, dimension(:),   pointer           :: taux
+sll_real64, dimension(:),   pointer           :: tauy
+sll_real64, dimension(:,:), pointer           :: g   
 
-sll_real64, dimension(:,:), pointer              :: apr_Bcoef
-sll_real64, dimension(:),   pointer              :: apr_tx
-sll_real64, dimension(:),   pointer              :: apr_ty
+sll_real64, dimension(:,:), pointer           :: Bcoef
+sll_real64, dimension(:),   pointer           :: tx
+sll_real64, dimension(:),   pointer           :: ty
 
-sll_real64, dimension(ai_nx , ai_ny )            :: lpr_work1
-sll_real64, dimension(ai_nx         )            :: lpr_work2
-sll_real64, dimension(ai_nx * ai_ny )            :: lpr_work3
-sll_real64, dimension(ai_nx *( 2*ai_kx-1) )      :: lpr_work31
-sll_real64, dimension((2*ai_ky-1) * ai_ny )      :: lpr_work32
-sll_real64, dimension(ai_ny         )            :: lpr_work4
-sll_real64, dimension(1:ai_ny,1:ai_nx),target    :: lpr_work5
-sll_real64, dimension(:,:),pointer               :: lpr_work5_ptr
-sll_real64, dimension(1:ai_ny),target            :: apr_ty_bis
-sll_real64, dimension(:),pointer                 :: apr_ty_bis_ptr
+sll_real64, dimension(ai_nx , ai_ny )         :: lpr_work1
+sll_real64, dimension(ai_nx         )         :: lpr_work2
+sll_real64, dimension(ai_nx * ai_ny )         :: lpr_work3
+sll_real64, dimension(ai_nx *( 2*ai_kx-1) )   :: lpr_work31
+sll_real64, dimension((2*ai_ky-1) * ai_ny )   :: lpr_work32
+sll_real64, dimension(ai_ny         )         :: lpr_work4
+sll_real64, dimension(1:ai_ny,1:ai_nx),target :: lpr_work5
+sll_real64, dimension(:,:),pointer            :: lpr_work5_ptr
+sll_real64, dimension(1:ai_ny),target         :: ty_bis
+sll_real64, dimension(:),pointer              :: ty_bis_ptr
 
 sll_int32 :: i, j, flag
 sll_int32 :: ierr
@@ -3402,45 +3402,45 @@ lpr_work1(:,:) = 0.0
 
 ! *** set up knots and interpolate between knots
 
-apr_tx(1:ai_kx)             = apr_taux(1)
-apr_tx(ai_nx+1:ai_nx+ai_kx) = apr_taux(ai_nx)
+tx(1:ai_kx)             = taux(1)
+tx(ai_nx+1:ai_nx+ai_kx) = taux(ai_nx)
 
 if ( mod(ai_kx,2) == 0 ) then
   do i = ai_kx+1, ai_nx
-    apr_tx(i) = apr_taux ( i - ai_kx/2 ) 
+    tx(i) = taux ( i - ai_kx/2 ) 
   end do
 else
   do i = ai_kx+1, ai_nx
-    apr_tx(i) = 0.5*(apr_taux(i-(ai_kx-1)/2)+apr_taux(i-1-(ai_kx-1)/2))
+    tx(i) = 0.5*(taux(i-(ai_kx-1)/2)+taux(i-1-(ai_kx-1)/2))
   end do
 end if
-apr_Bcoef = 0.0_f64
+Bcoef = 0.0_f64
 do i = 1, ai_nx
    do j = 1, ai_ny
-      apr_Bcoef ( i, j ) = apr_g ( i, j )
+      Bcoef ( i, j ) = g ( i, j )
    end do
 end do
 
 !  *** construct b-coefficients of interpolant
-apr_ty = 0.0_f64
+ty = 0.0_f64
 if ( mod(ai_ky,2) == 0 ) then
   do i = ai_ky + 1, ai_ny
-    apr_ty(i) = apr_tauy(i-ai_ky/2) 
+    ty(i) = tauy(i-ai_ky/2) 
   end do
 else
   do i = ai_ky + 1, ai_ny
-    apr_ty(i) = 0.5*(apr_tauy(i-(ai_ky-1)/2)+apr_tauy(i-1-(ai_ky-1)/2))
+    ty(i) = 0.5*(tauy(i-(ai_ky-1)/2)+tauy(i-1-(ai_ky-1)/2))
    end do
 end if
-apr_ty(1:ai_ky) = apr_tauy(1)
-apr_ty(ai_ny+1:ai_ny+ai_ky) = apr_tauy(ai_ny)
-apr_ty_bis = apr_tauy(1:ai_ny)
+ty(1:ai_ky) = tauy(1)
+ty(ai_ny+1:ai_ny+ai_ky) = tauy(ai_ny)
+ty_bis = tauy(1:ai_ny)
 
 lpr_work5_ptr => lpr_work5
 
-call spli2d ( apr_taux,      &
-              apr_Bcoef,     &
-              apr_tx,        &
+call spli2d ( taux,      &
+              Bcoef,     &
+              tx,        &
               ai_nx,         &
               ai_kx,         &
               ai_ny,         &
@@ -3449,22 +3449,22 @@ call spli2d ( apr_taux,      &
               lpr_work5_ptr, &
               flag)
 
-apr_bcoef  = 0.0_f64
+bcoef  = 0.0_f64
 lpr_work4  = 0.0_f64
 lpr_work3  = 0.0_f64
 lpr_work32 = 0.0_f64
 
-apr_ty_bis_ptr => apr_ty_bis
+ty_bis_ptr => ty_bis
 
-call spli2d ( apr_ty_bis_ptr,  &
+call spli2d ( ty_bis_ptr,  &
               lpr_work5_ptr,   &
-              apr_ty,          &
+              ty,          &
               ai_ny,           &
               ai_ky,           &
               ai_nx,           &
               lpr_work4,       &
               lpr_work32,      &
-              apr_bcoef,       &
+              bcoef,       &
               flag )
 
 end subroutine spli2d_custom
@@ -3696,27 +3696,27 @@ end subroutine spli2d
    subroutine spli2d_dirper (&
         ai_nx,&
         ai_kx,&
-        apr_taux,&
+        taux,&
         ar_L, &
         ai_ny,&
         ai_ky, &
-        apr_tauy,&
-        apr_g,&
-        apr_Bcoef,&
-        apr_tx,&
-        apr_ty )
+        tauy,&
+        g,&
+        Bcoef,&
+        tx,&
+        ty )
      ! CALLED WHEN WE WANT TO INTERPOL WITH A PERIODIC second PARAM WITH A PERIOD = ar_L
      implicit none
      ! INPUT
      sll_real64 :: ar_L
      sll_int32  :: ai_nx, ai_kx, ai_ny, ai_ky
-     sll_real64, dimension ( :),pointer :: apr_taux ! ai_nx
-     sll_real64, dimension (:) :: apr_tauy !  ai_ny -1
-     sll_real64, dimension ( :,:) :: apr_g ! ai_nx , ai_ny-1
+     sll_real64, dimension ( :),pointer :: taux ! ai_nx
+     sll_real64, dimension (:) :: tauy !  ai_ny -1
+     sll_real64, dimension ( :,:) :: g ! ai_nx , ai_ny-1
      ! OUTPUT
-     sll_real64, dimension (:,:),pointer :: apr_Bcoef !  ai_nx , ai_ny
-     sll_real64, dimension ( :),pointer :: apr_tx ! ai_nx + ai_kx	
-     sll_real64, dimension (:),pointer :: apr_ty ! ai_ny + ai_ky 
+     sll_real64, dimension (:,:),pointer :: Bcoef !  ai_nx , ai_ny
+     sll_real64, dimension ( :),pointer :: tx ! ai_nx + ai_kx	
+     sll_real64, dimension (:),pointer :: ty ! ai_ny + ai_ky 
      ! LOCAL VARIABLES
      sll_real64, dimension (1:ai_ny),target :: lpr_tauy ! ai_ny	
      sll_real64, dimension (1:ai_nx,1:ai_ny),target :: lpr_g  !  ai_nx ,ai_ny
@@ -3731,25 +3731,25 @@ end subroutine spli2d
      end if
      
      
-     lpr_tauy ( 1 : ai_ny - 1 ) = apr_tauy ( 1 : ai_ny - 1 )
-     lpr_tauy ( ai_ny ) = apr_tauy ( 1 ) + ar_L
+     lpr_tauy ( 1 : ai_ny - 1 ) = tauy ( 1 : ai_ny - 1 )
+     lpr_tauy ( ai_ny ) = tauy ( 1 ) + ar_L
      
-     lpr_g ( 1 : ai_nx , 1 : ai_ny -1 ) = apr_g ( 1 : ai_nx , 1 : ai_ny -1)
-     lpr_g (1: ai_nx , ai_ny ) = apr_g ( 1 : ai_nx, 1 )
+     lpr_g ( 1 : ai_nx , 1 : ai_ny -1 ) = g ( 1 : ai_nx , 1 : ai_ny -1)
+     lpr_g (1: ai_nx , ai_ny ) = g ( 1 : ai_nx, 1 )
      
      lpr_tauy_ptr => lpr_tauy
      lpr_g_ptr => lpr_g
      call spli2d_custom (&
           ai_nx,&
           ai_kx,&
-          apr_taux,&
+          taux,&
           ai_ny, &
           ai_ky,&
           lpr_tauy_ptr, &
           lpr_g_ptr, &
-          apr_Bcoef,&
-          apr_tx,&
-          apr_ty )
+          Bcoef,&
+          tx,&
+          ty )
 
   
    end subroutine spli2d_dirper
@@ -3759,26 +3759,26 @@ end subroutine spli2d
         ar_L,&
         ai_nx,&
         ai_kx,&
-        apr_taux,&
+        taux,&
         ai_ny,&
         ai_ky,&
-        apr_tauy,&
-        apr_g,&
-        apr_Bcoef,&
-        apr_tx,&
-        apr_ty )
+        tauy,&
+        g,&
+        Bcoef,&
+        tx,&
+        ty )
      ! CALLED WHEN WE WANT TO INTERPOL WITH A PERIODIC FIRST PARAM WITH A PERIOD = ar_L
      implicit none
      ! INPUT
      sll_real64 :: ar_L 
      sll_int32  :: ai_nx, ai_kx, ai_ny, ai_ky
-     sll_real64, dimension ( :) :: apr_taux ! ai_nx- 1
-     sll_real64, dimension ( :),pointer :: apr_tauy ! ai_ny		
-     sll_real64, dimension ( :,:) :: apr_g !ai_nx - 1, ai_ny
+     sll_real64, dimension ( :) :: taux ! ai_nx- 1
+     sll_real64, dimension ( :),pointer :: tauy ! ai_ny		
+     sll_real64, dimension ( :,:) :: g !ai_nx - 1, ai_ny
      ! OUTPUT
-     sll_real64, dimension (:,:),pointer :: apr_Bcoef !  ai_nx , ai_ny	
-     sll_real64, dimension (:),pointer :: apr_tx !  ai_nx + ai_kx
-     sll_real64, dimension (:),pointer :: apr_ty ! ai_ny + ai_ky
+     sll_real64, dimension (:,:),pointer :: Bcoef !  ai_nx , ai_ny	
+     sll_real64, dimension (:),pointer :: tx !  ai_nx + ai_kx
+     sll_real64, dimension (:),pointer :: ty ! ai_ny + ai_ky
      ! LOCAL VARIABLES		
      sll_real64, dimension (1:ai_nx),target :: lpr_taux !  ai_nx
      sll_real64, dimension (:),pointer :: lpr_taux_ptr
@@ -3792,11 +3792,11 @@ end subroutine spli2d
      end if
      
     
-     lpr_taux ( 1 : ai_nx - 1 ) = apr_taux ( 1 : ai_nx-1)
-     lpr_taux ( ai_nx ) = apr_taux ( 1 ) + ar_L
+     lpr_taux ( 1 : ai_nx - 1 ) = taux ( 1 : ai_nx-1)
+     lpr_taux ( ai_nx ) = taux ( 1 ) + ar_L
 
-     lpr_g ( 1 : ai_nx - 1 , 1 : ai_ny ) = apr_g ( 1 : ai_nx - 1 , 1 : ai_ny )
-     lpr_g ( ai_nx , 1 : ai_ny ) = apr_g ( 1 , 1 : ai_ny )
+     lpr_g ( 1 : ai_nx - 1 , 1 : ai_ny ) = g ( 1 : ai_nx - 1 , 1 : ai_ny )
+     lpr_g ( ai_nx , 1 : ai_ny ) = g ( 1 , 1 : ai_ny )
 
      lpr_taux_ptr => lpr_taux
      lpr_g_ptr => lpr_g
@@ -3807,11 +3807,11 @@ end subroutine spli2d
           lpr_taux_ptr,&
           ai_ny,&
           ai_ky, &
-          apr_tauy, &
+          tauy, &
           lpr_g_ptr,&
-          apr_Bcoef,&
-          apr_tx,&
-          apr_ty )
+          Bcoef,&
+          tx,&
+          ty )
 
      
    end subroutine spli2d_perdir
