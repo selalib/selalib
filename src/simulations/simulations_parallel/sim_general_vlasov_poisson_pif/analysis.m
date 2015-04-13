@@ -1,21 +1,47 @@
  %Octave/Matlab script to analyse results of PIF
  
+cd '/tmp/landau_prod'
 cd '/tmp/landau_sum'
+cd '~/DATA/Studium/Promotion/selalib_build/'
 clear all;
+prefix='piftest';
+prefix='landau_sum_B10'
+prefix='landau_B1'
+prefix='landau_B10'
+prefix='landau_B'
 
-DATA = csvread('pif_resultB1sum.csv',2);
-DATA = csvread('pif_result.csv',2);
-%DATA = csvread('pif_resultB0.csv',2);
+DATA = csvread([prefix,'_result.csv'],2);
+
+% dlmread([prefix,'_result.csv'],',');
+
+
 time=DATA(:,1);
 l2potential=DATA(:,6);
+energy_error=DATA(:,4);
+
+gamma=-0.4531; %B=1
+gamma = -0.3972; %B=10
 
 
-gamma=-0.4531;
-gamma=-0.4531;
-
+close all;
+figure;
 semilogy(time, l2potential); hold on;
-semilogy(time, l2potential(1)*exp(0.5*gamma.*time))
+semilogy(time, l2potential(1)*exp(gamma.*time))
 
+figure;
+semilogy(time, energy_error)
+
+rho=[];phi=[];
+for tstep=1:length(time)
+h5filename=sprintf('%s_data_%04d.h5',prefix,tstep);
+rho(:,tstep)=h5read(h5filename,'/rho');
+phi(:,tstep)=h5read(h5filename,'/phi');
+end
+
+semilogy(time,phi);hold on;
+
+size(time)
+size(MODES)
 % close all;
 % figure;
 
@@ -100,7 +126,8 @@ semilogy(time, l2potential(1)*exp(0.5*gamma.*time))
 % 
 % 0.02
 % 
-% 
-% Ef=
-% Ekin=
-% 
+
+digits(32)
+vpa(sym('1/(2-2^(1/3))'))
+vpa(sym('1-2/(2-2^(1/3))'))
+vpa(sym('(2^(1.0/3.0) +2^(-1/3)-1)/6'))
