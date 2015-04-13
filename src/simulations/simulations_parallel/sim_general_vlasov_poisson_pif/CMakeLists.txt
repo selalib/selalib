@@ -22,7 +22,8 @@ TARGET_LINK_LIBRARIES( ${EXECUTABLE}        sll_simulations_parallel
 					      sll_moment_matching
 					      sll_pic_utilities 
 					      sll_wedge_product_generaldim
-					      sll_descriptors)
+					      sll_descriptors
+					      sll_time_composition)
 
 INSTALL( TARGETS ${EXECUTABLE}                     DESTINATION ${INSTALL_DIR} )
 INSTALL( FILES  ${INPUT_FILES} README ${POST_PROC} DESTINATION ${INSTALL_DIR} )
