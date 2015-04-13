@@ -56,13 +56,15 @@ contains   ! *****************************************************************
     initializer )
 
     class(scalar_field_2d), intent(inout)               :: this
+    character(len=*), intent(in)                        :: field_name
     class(sll_coordinate_transformation_2d_base), pointer :: transf
+    sll_int32, intent(in)                               :: data_position
     class(sll_interpolator_1d_base), pointer            :: eta1_interpolator
     class(sll_interpolator_1d_base), pointer            :: eta2_interpolator
     class(scalar_field_2d_initializer_base), pointer, optional :: initializer
-    character(len=*), intent(in)                        :: field_name
-    sll_int32, intent(in)                               :: data_position
-    class(sll_cartesian_mesh_2d), pointer                  :: mesh
+    
+    class(sll_cartesian_mesh_2d), pointer :: mesh
+    character(len=*), parameter :: this_sub_name = 'initialize_scalar_field_2d'
 
     sll_int32  :: ierr
     sll_int32  :: num_cells1
@@ -73,7 +75,7 @@ contains   ! *****************************************************************
     sll_real64 :: eta1, eta2
     sll_real64 :: delta1, delta2
 
-    SLL_WARNING("the scalar_field_2d object is deprecated")
+    SLL_WARNING( this_sub_name, "The scalar_field_2d object is deprecated." )
 
     this%transf => transf
     this%transf%written = .false.

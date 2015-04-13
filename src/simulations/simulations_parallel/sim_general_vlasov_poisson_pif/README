@@ -1,0 +1,18 @@
+Directory structure
+===================
+   test_general_pif                         -- executable
+   params_quick_test.nml                    -- input file (general)
+   README                                   -- info (this file)
+   run/                                     -- output directory
+
+HOWTO
+=====
+0. Create output directory if missing, move into it
+     $ mkdir run
+     $ cd run
+
+1. Run parallel simulation within directory
+     $ mpirun -np 4 ../test_general_pif ../params_quick_test.nml
+
+!2. Run gnuplot scripts generated at runtime
+     $ gnuplot --persist pif_result.gnu

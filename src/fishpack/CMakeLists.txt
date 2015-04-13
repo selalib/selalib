@@ -14,7 +14,7 @@ ADD_library(fishpack STATIC blktri.f cblktri.f cmgnbn.f comf.f fftpack.f genbun.
 INSTALL(TARGETS fishpack ARCHIVE DESTINATION lib)
 
 # Tests
-IF(BUILD_TESTING)
+IF(BUILD_TESTING AND MPI_ENABLED)
 
 #  add_executable(tblktri tblktri.f)
 #  add_executable(tcblktri tcblktri.f)
@@ -56,4 +56,4 @@ IF(BUILD_TESTING)
 #  target_link_libraries(tsepeli fishpack)
 #  target_link_libraries(tsepx4  fishpack)
 
-ENDIF(BUILD_TESTING)
+ENDIF(BUILD_TESTING AND MPI_ENABLED)

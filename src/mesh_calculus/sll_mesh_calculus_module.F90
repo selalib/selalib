@@ -2,7 +2,10 @@ module sll_mesh_calculus_2d_module
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
+#include "sll_utilities.h"
+
   use sll_cartesian_meshes
+  use sll_triangular_meshes
   use sll_coordinate_transformation_2d_base_module
   use gauss_legendre_integration
   implicit none
@@ -636,4 +639,7 @@ contains
   end function normal_integral_eta2_minus
   
   
+
+
 end module sll_mesh_calculus_2d_module
+
