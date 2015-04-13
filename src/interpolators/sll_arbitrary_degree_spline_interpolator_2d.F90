@@ -3594,157 +3594,129 @@ return
 end subroutine spli2d
 
 
-subroutine spli2d_custom_derder ( ai_nx,        &
-                                  ai_nx_der,    &
-                                  ai_kx,        &
-                                  apr_taux,     &
-                                  apr_taux_der, &
-                                  ai_ny,        &
-                                  ai_ny_der,    &
-                                  ai_ky,        &
-                                  apr_tauy,     &
-                                  apr_tauy_der, &
-                                  apr_g,        &
-                                  apr_g_der1,   &
-                                  apr_g_der2,   &
-                                  apr_Bcoef,    &
-                                  apr_tx,       &
-                                  apr_ty )
-sll_int32  :: ai_nx, ai_kx, ai_ny, ai_ky
-sll_int32  :: ai_nx_der,ai_ny_der
-sll_real64, dimension(:),pointer :: apr_taux !!ai_nx
-sll_real64, dimension(:),pointer :: apr_tauy !! ai_ny
-sll_int32,  dimension(:),pointer :: apr_taux_der !!ai_nx_der
-sll_int32,  dimension(:),pointer :: apr_tauy_der !!ai_ny_der
-sll_real64, dimension(:,:),pointer :: apr_g    ! ai_nx,ai_ny
-sll_real64, dimension(:,:),pointer :: apr_g_der1 ! ai_nx_der,ai_ny
-sll_real64, dimension(:,:),pointer :: apr_g_der2 !ai_ny_der,ai_nx + ai_nx_der
-! OUTPUT
-sll_real64, dimension(:,:),pointer::apr_Bcoef!ai_nx + ai_nx_der,ai_ny+ ai_ny_der 
-sll_real64, dimension( : ),pointer:: apr_tx ! ai_nx + ai_kx + ai_nx_der
-sll_real64, dimension( : ),pointer:: apr_ty ! ai_ny + ai_ky + ai_ny_der
-! LOCAL VARIABLES		
-sll_real64, dimension ( ai_nx + ai_nx_der , ai_ny + ai_ny_der) :: lpr_work1
-sll_real64, dimension ( ai_nx + ai_nx_der ) :: lpr_work2
-sll_real64, dimension ( (ai_nx + ai_nx_der)* (ai_ny+ai_ny_der) ) :: lpr_work3
-sll_real64, dimension ( (ai_nx+ai_nx_der) *( 2*ai_kx-1) ) :: lpr_work31
-sll_real64, dimension (( 2*ai_ky-1) * (ai_ny+ai_ny_der) ) :: lpr_work32
-sll_real64, dimension ( ai_ny +ai_ny_der) :: lpr_work4
-sll_real64, dimension (1:ai_ny,1:ai_nx+ai_nx_der),target:: lpr_work5 !  ai_ny , ai_nx
-sll_real64, dimension (:,:),pointer :: lpr_work5_ptr 
-sll_int32  :: li_iflag
+subroutine spli2d_custom_derder ( nx,         &
+                                  mx,         &
+                                  kx,         &
+                                  taux,       &
+                                  taux_der,   &
+                                  ny,         &
+                                  my,         &
+                                  ky,         &
+                                  tauy,       &
+                                  tauy_der,   &
+                                  gtau,       &
+                                  gtau_der1,  &
+                                  gtau_der2,  &
+                                  bcoef,      &
+                                  tx,         &
+                                  ty          )
+
+sll_int32,                           intent(in) :: nx
+sll_int32,                           intent(in) :: kx
+sll_int32,                           intent(in) :: ny
+sll_int32,                           intent(in) :: ky
+sll_int32,                           intent(in) :: mx
+sll_int32,                           intent(in) :: my
+sll_real64, dimension(:),   pointer, intent(in) :: taux 
+sll_real64, dimension(:),   pointer, intent(in) :: tauy 
+sll_int32,  dimension(:),   pointer, intent(in) :: taux_der 
+sll_int32,  dimension(:),   pointer, intent(in) :: tauy_der
+sll_real64, dimension(:,:), pointer, intent(in) :: gtau    
+sll_real64, dimension(:,:), pointer, intent(in) :: gtau_der1 
+sll_real64, dimension(:,:), pointer, intent(in) :: gtau_der2
+
+sll_real64, dimension(:,:), pointer, intent(out) :: bcoef
+sll_real64, dimension( : ), pointer, intent(out) :: tx 
+sll_real64, dimension( : ), pointer, intent(out) :: ty 
+
+
+sll_real64, dimension(nx+mx)                :: work2
+sll_real64, dimension((nx+mx)*(ny+my))      :: work3
+sll_real64, dimension(nx*(2*kx-1))     :: qx
+sll_real64, dimension((nx+mx)*(2*kx-1))     :: work31
+sll_real64, dimension((2*ky-1)*(ny+my))     :: work32
+sll_real64, dimension(ny+my)                :: work4
+sll_real64, dimension(1:ny,1:nx+mx), target :: work5 
+sll_real64, dimension(:,:), pointer         :: work5_ptr 
+
 sll_int32  :: ierr
 
 
-lpr_work1(:,:) = 0.0
-lpr_work5(:,:) = 0.0
+work5(:,:) = 0.0
 
-! *** set up knots
-!     interpolate between knots
+tx(1:kx)             = taux(1)
+tx(nx+mx+1:nx+mx+kx) = taux(nx)
 
-apr_tx = 0.0_f64
-apr_tx ( 1 : ai_kx ) = apr_taux ( 1 )
-apr_tx ( ai_nx+ ai_nx_der + 1: ai_nx + ai_nx_der + ai_kx ) = apr_taux ( ai_nx )
-
-
-if (ai_nx + ai_nx_der + ai_kx == ai_nx + 2*(ai_kx-1)) then
-   apr_tx (ai_kx+1: ai_nx+ ai_nx_der) = apr_taux(2:ai_nx-1)
+if (nx+mx+kx == nx+2*(kx-1)) then
+   tx(kx+1:nx+mx) = taux(2:nx-1)
 else
-   print*, 'problem with construction of knots' 
+   stop 'problem with construction of knots' 
 end if
 
- !  *** construct b-coefficients of interpolant
-!
-apr_ty = 0.0_f64
-apr_ty ( 1 : ai_ky ) = apr_tauy ( 1 )
-apr_ty ( ai_ny+ ai_ny_der + 1: ai_ny + ai_ny_der + ai_ky ) = apr_tauy ( ai_ny )
+ty(1:ky)             = tauy(1)
+ty(ny+my+1:ny+my+ky) = tauy(ny)
 
-
-if (ai_ny + ai_ny_der + ai_ky == ai_ny + 2*(ai_ky-1)) then
-   apr_ty (ai_ky+1: ai_ny+ ai_ny_der) = apr_tauy(2:ai_ny-1)
+if (ny+my+ky == ny+2*(ky-1)) then
+   ty(ky+1:ny+my) = tauy(2:ny-1)
 else
-   print*, 'problem with construction of knots' 
+   stop 'problem with construction of knots' 
 end if
 
-lpr_work5_ptr => lpr_work5
-call spli2d_der ( apr_taux,      &
-                  apr_g,         &
-                  apr_taux_der,  &
-                  apr_g_der1,    &
-                  apr_tx,        &
-                  ai_nx,         &
-                  ai_nx_der,     &
-                  ai_kx,         &
-                  ai_ny,         &
-                  lpr_work2,     &
-                  lpr_work31,    &
-                  lpr_work5_ptr, &
-                  li_iflag )
+work5_ptr => work5
+!call spli2d_der ( taux,      &
+!                  gtau,      &
+!                  taux_der,  &
+!                  gtau_der1, &
+!                  tx,        &
+!                  nx,        &
+!                  mx,        &
+!                  kx,        &
+!                  ny,        &
+!                  work2,     &
+!                  work31,    &
+!                  work5_ptr, &
+!                  ierr )
 
- apr_bcoef(:,:) =0.0_8
- lpr_work4 = 0.0_8
- lpr_work3 = 0.0_8
- lpr_work32= 0.0_8
+do j = 1, ny
+   
+   call splint_der( taux,              &
+                    gtau(:,j),         &
+                    taux_der,          &
+                    gtau_der(:,j),     &
+                    tx,                &
+                    nx,                &
+                    mx,                &
+                    kx,                &
+                    qx,                &
+                    work5_result(:,j), &
+                    ierr )
+   
+   
+end do
+
+
+ bcoef(:,:) =0.0_8
+ work4 = 0.0_8
+ work3 = 0.0_8
+ work32= 0.0_8
  
-
- call spli2d_der ( apr_tauy,        &
-                   lpr_work5_ptr,   &
-                   apr_tauy_der,    &
-                   apr_g_der2,      &
-                   apr_ty,          &
-                   ai_ny,           &
-                   ai_ny_der,       &
-                   ai_ky,           &
-                   ai_nx+ai_nx_der, &
-                   lpr_work4,       &
-                   lpr_work32,      &
-                   apr_bcoef,       &
-                   li_iflag )
+ call spli2d_der ( tauy,        &
+                   work5_ptr,   &
+                   tauy_der,    &
+                   gtau_der2,   &
+                   ty,          &
+                   ny,          &
+                   my,          &
+                   ky,          &
+                   nx+mx,       &
+                   work4,       &
+                   work32,      &
+                   bcoef,       &
+                   ierr )
 
 end subroutine spli2d_custom_derder
 
 
-!  Parameters:
-!
-!    Input, real ( kind = 8 ) TAU(N), contains the data point abscissas.
-!    TAU must be strictly increasing
-!
-!    Input, real ( kind = 8 ) GTAU(N,M), contains the data point ordinates.
-
-!    Input, integer (kind= 8 )TAU_DER(Np), contains the data point abscissas.
-!    TAU must be strictly increasing
-!
-!    Input, real ( kind = 8 ) GTAU_DER(Np,M),contains the data point ordinates.
-!
-!    Input, real ( kind = 8 ) T(N+Np+K), the knot sequence.
-!
-!    Input, integer N, the number of data points and the
-!    dimension of the spline space SPLINE(K,T)
-!
-!    Input, integer K, the order of the spline.
-!
-!    Input, integer M, the number of data sets.
-!
-!    Work space, real ( kind = 8 ) WORK(N).
-!
-!    Output, real ( kind = 8 ) Q(2*K-1)*N, the triangular
-!    factorization of the coefficient matrix of the linear
-!    system for the B-spline coefficients of the spline interpolant.
-!    The B-spline coefficients for the interpolant of an additional
-!    data set ( TAU(I), HTAU(I) ), I=1,...,N  with the same data
-!    abscissae can be obtained without going through all the
-!    calculations in this routine, simply by loading HTAU into
-!    BCOEF and then using the statement
-!      CALL BANSLV ( Q, 2*K-1, N, K-1, K-1, BCOEF )
-!
-!    Output, real ( kind = 8 ) BCOEF(N), the B-spline coefficients of
-!    the interpolant.
-!
-!    Output, integer IFLAG, error indicator.
-!    1, no error.
-!    2, an error occurred, which may have been caused by
-!       singularity of the linear system.
-!
 subroutine spli2d_der( tau,       &
                        gtau,      &
                        tau_der,   &
@@ -3759,20 +3731,21 @@ subroutine spli2d_der( tau,       &
                        bcoef,     &
                        iflag )
     
-sll_int32 :: m
-sll_int32 :: n
-sll_int32 :: np
-sll_real64,dimension(:,:),pointer:: bcoef !(m,n+np)
-sll_real64,dimension(:,:),pointer:: gtau  !(n,m)
-sll_real64,dimension(:,:),pointer:: gtau_der!(np,n)
+sll_int32                          , intent(in)  :: m
+sll_int32                          , intent(in)  :: n
+sll_int32                          , intent(in)  :: np
+sll_real64, dimension(:,:), pointer, intent(in)  :: gtau  
+sll_real64, dimension(:,:), pointer, intent(in)  :: gtau_der
+sll_real64, dimension(:,:), pointer, intent(out) :: bcoef 
+
 sll_int32 :: iflag
 sll_int32 :: j
 sll_int32 :: k
-sll_real64,dimension((2*k-1)*n):: q!((2*k-1)*n)
-sll_real64,dimension(:),pointer:: t!(n+np+k)
-sll_real64,dimension(:),pointer:: tau!(n)
-sll_int32,dimension(:),pointer:: tau_der!np
-sll_real64,dimension(n):: work!(n)
+sll_real64,dimension((2*k-1)*n):: q
+sll_real64,dimension(:),pointer:: t
+sll_real64,dimension(:),pointer:: tau
+sll_int32,dimension(:),pointer:: tau_der
+sll_real64,dimension(n):: work
 sll_real64,dimension(np):: work_der
 sll_real64,dimension(n+np):: work_result
 
@@ -3781,7 +3754,7 @@ work_result = 0.0_f64
 
 do j = 1, m
    
-   work(1:n) = gtau(:,j)
+   work(1:n)      = gtau(:,j)
    work_der(1:np) = gtau_der(1:np,j)
 
    call splint_der( tau,         &
@@ -3995,9 +3968,7 @@ do i = 1, n-1
   bcoef_spline(i+ l-1) = gtau_der(l-1)
   end if
   
-
 end do
-
 
 taui = tau(n)
 call interv( t, n+m+k, taui, left, mflag )
