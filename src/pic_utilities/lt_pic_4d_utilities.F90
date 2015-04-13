@@ -2527,7 +2527,7 @@ subroutine get_initial_position_on_cartesian_grid_from_particle_index (k,       
     sll_int32, intent(out) :: j_y
     sll_int32, intent(out) :: j_vx
     sll_int32, intent(out) :: j_vy
-    sll_int64              :: k_aux
+    sll_int32              :: k_aux
 
     k_aux = k-1
     ! here, k_aux = (j_vy-1) + (j_vx-1) * n_parts_vy + (j_y-1) * n_parts_vy * n_parts_vx + (j_x-1) * n_parts_vy * n_parts_vx * n_parts_y
