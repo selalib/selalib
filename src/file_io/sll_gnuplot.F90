@@ -49,6 +49,7 @@ interface sll_gnuplot_2d
    module procedure sll_gnuplot_rect_2d
    module procedure sll_gnuplot_curv_2d
    module procedure sll_gnuplot_mesh_2d
+   module procedure write_unstructured_field
 end interface
 
 public sll_gnuplot_1d, sll_gnuplot_2d
@@ -379,6 +380,66 @@ subroutine sll_gnuplot_curv_2d( nx, ny, x, y, array, array_name, iplot, error)
 
 end subroutine sll_gnuplot_curv_2d
 
+
+!> Write a field on unstructures mesh of triangles
+!> @param[in] field_at_nodes field value on nodes
+!> @param[in] field_name     field name use as prefix for file name
+!> @param[in] coord          coordinates of nodes
+!> @param[in] nodes          mesh connections
+!> @param[in] plot_number    plot counter used for file name
+subroutine write_unstructured_field( field_at_node,  &
+                                     field_name,     &
+                                     coord,          &
+                                     nodes,          &
+                                     plot_number     )
+
+sll_real64, dimension(:)  , intent(in) :: field_at_node
+character(len=*),           intent(in) :: field_name
+sll_real64, dimension(:,:), intent(in) :: coord
+sll_int32 , dimension(:,:), intent(in) :: nodes
+sll_int32,                  intent(in) :: plot_number
+
+character(len=4)                       :: cplot
+sll_int32                              :: gnu_id
+sll_int32                              :: num_cells
+sll_int32                              :: ierr
+sll_int32                              :: i
+sll_real32                             :: xs1, xs2, xs3
+sll_real32                             :: ys1, ys2, ys3
+
+num_cells = size(nodes,2)
+SLL_ASSERT( size(nodes,1) == 3)
+call int2string(plot_number, cplot)
+
+write(*,"(/10x, 'Output file GNUplot ',a/)") field_name//'_'//cplot//'.dat'
+
+call sll_new_file_id(gnu_id, ierr)
+open(gnu_id, file = field_name//'.gnu', position="append")
+if (plot_number == 1) rewind(gnu_id)
+write(gnu_id,*)"set title 'Field "//field_name//"'"
+write(gnu_id,*)"splot '"//field_name//'_'//cplot//".dat' w l"
+close(gnu_id)
+
+open(gnu_id, file = field_name//'_'//cplot//'.dat')
+
+do i = 1, num_cells
+
+  xs1 = sngl(coord(1,nodes(1,i))); ys1 = sngl(coord(2,nodes(1,i)))
+  xs2 = sngl(coord(1,nodes(2,i))); ys2 = sngl(coord(2,nodes(2,i)))
+  xs3 = sngl(coord(1,nodes(3,i))); ys3 = sngl(coord(2,nodes(3,i)))
+
+  write(gnu_id,"(3e12.3)") xs1, ys1, field_at_node(nodes(1,i))
+  write(gnu_id,"(3e12.3)") xs2, ys2, field_at_node(nodes(2,i))
+  write(gnu_id,"(3e12.3)") xs3, ys3, field_at_node(nodes(3,i))
+  write(gnu_id,"(3e12.3)") xs1, ys1, field_at_node(nodes(1,i))
+  write(gnu_id,*)
+  write(gnu_id,*)
+
+end do
+
+close(gnu_id)
+
+end subroutine write_unstructured_field
 
 end module sll_gnuplot
 

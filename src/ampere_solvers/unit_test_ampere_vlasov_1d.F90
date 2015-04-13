@@ -156,6 +156,7 @@ delta_t = 0.1_f64
 SLL_ALLOCATE(nrj(n_step), error)
 print*, "set title'", delta_eta1, delta_eta2,"'"
 print*, 'set term x11'
+print*, 'set log y'
 
 call sll_create(ampere_vlasov,               &
                 eta1_min, eta1_max, nc_eta1, &

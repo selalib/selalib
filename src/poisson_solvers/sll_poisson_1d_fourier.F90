@@ -1,3 +1,6 @@
+!**************************************************************
+!  Author: Jakob Ameres, jakob.ameres@tum.de
+!**************************************************************
 
 !> Module to solve Poisson equation on one dimensional mesh using Finite Elements
 module sll_poisson_1d_fourier

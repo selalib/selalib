@@ -21,7 +21,7 @@ use sll_module_coordinate_transformations_2d
 use sll_common_coordinate_transformations
 use sll_dg_fields
 use sll_boundary_condition_descriptors
-use sll_maxwell_2d_diga_parallel
+use sll_module_maxwell_2d_diga
 
 implicit none
 private
@@ -29,11 +29,11 @@ private
 !>DG method in two dimensions with general coordinates
 type, public :: sll_maxwell_2d_diga_parallel
 
-   sll_transformation, pointer              :: tau  !< transformation
-   type(sll_cartesian_mesh_2d), pointer       :: mesh !< Logical mesh
+   sll_transformation, pointer              :: tau          !< transformation
+   type(sll_cartesian_mesh_2d), pointer     :: mesh         !< Logical mesh
    sll_int32                                :: polarization !< TE or TM
-   sll_int32                                :: degree !< degree of gauss integration
-   type(cell_type), dimension(:,:), pointer :: cell !< mesh cells
+   sll_int32                                :: degree       !< degree of gauss integration
+   type(cell_type), dimension(:,:), pointer :: cell         !< mesh cells
    sll_int32                                :: nc_eta1
    sll_int32                                :: nc_eta2
    sll_real64                               :: eta1_min
@@ -83,7 +83,7 @@ function new_maxwell_2d_diga_parallel(       &
                                bc_west,      &
                                flux_type) result(this)
 
-   type( maxwell_2d_diga ), pointer :: this !< solver data object
+   type( sll_maxwell_2d_diga ), pointer :: this !< solver data object
    sll_transformation, pointer      :: tau
    sll_int32                        :: polarization
    sll_int32                        :: degree
@@ -465,4 +465,4 @@ end subroutine solve_maxwell_2d_diga_parallel
 
 end module sll_module_maxwell_2d_diga_parallel
 
-#endif // DOXYGEN_SHOULD_SKIP_THIS
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

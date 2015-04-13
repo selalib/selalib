@@ -128,11 +128,12 @@ subroutine advect_1d( adv, a, dt, input, output )
   sll_real64, dimension(:), intent(in)  :: input
   sll_real64, dimension(:), intent(out) :: output      
 
-  sll_int32 :: num_cells
+  character(len=*), parameter :: this_sub_name = 'advect_1d'
+  sll_int32                   :: num_cells
 
   num_cells = adv%nc_eta1
   output(1:num_cells) = a(1:num_cells) * input(1:num_cells) * dt
-  SLL_ERROR(" ampere advect_1d not implemented ")
+  SLL_ERROR( this_sub_name, "ampere advect_1d not implemented." )
 
 end subroutine advect_1d
 
@@ -157,18 +158,15 @@ subroutine advect_1d_constant( adv, a, dt, input, output )
     
   nc_x = adv%nc_eta1
 
-  adv%rk = cmplx(0.0,0.0,kind=f64)
-
   adv%d_dx = input(1:nc_x)
   call fft_apply_plan(adv%fwx, adv%d_dx, adv%fk)
   do i = 2, nc_x/2+1
     adv%fk(i) = adv%fk(i)*cmplx(cos(adv%kx(i)*a*dt),-sin(adv%kx(i)*a*dt),kind=f64)
   end do
-  adv%rk = adv%rk + adv%fk
   call fft_apply_plan(adv%bwx, adv%fk, adv%d_dx)
 
   output(1:nc_x) = adv%d_dx / nc_x
-  output(nc_x+1) = adv%d_dx(1) / nc_x
+  output(nc_x+1) = output(1)
 
 end subroutine advect_1d_constant
 
