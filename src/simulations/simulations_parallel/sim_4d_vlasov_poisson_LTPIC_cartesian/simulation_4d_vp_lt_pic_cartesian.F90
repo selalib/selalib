@@ -212,10 +212,9 @@ contains
 
 
         print *, "WARNING 65373654 -- writing landau parameters in the particle group -- this is temporary..."
-
-        sim%part_group%thermal_speed = sim%thermal_speed_ions
-        sim%part_group%alpha_landau = ALPHA
-        sim%part_group%k_landau = KX_LANDAU
+        sim%part_group%thermal_speed = sim%thermal_speed_ions   !  temporary or not?
+        sim%part_group%alpha_landau = ALPHA    !  temporary or not?
+        sim%part_group%k_landau = KX_LANDAU    !  temporary or not?
 
         call sll_lt_pic_4d_init_landau (                &
             sim%thermal_speed_ions,                     &
@@ -425,9 +424,9 @@ contains
 
     sort_nb = 10
     particles => sim%part_group%p_list      ! previous name was 'p'
-    dt_q_over_m = dt * sim%part_group%qoverm
     !!!    p_guard => sim%part_group%p_guard
     dt = sim%dt
+    dt_q_over_m = dt * sim%part_group%qoverm
     xmin = sim%mesh_2d%eta1_min
     ymin = sim%mesh_2d%eta2_min
     rdx = 1._f64/sim%mesh_2d%delta_eta1
@@ -531,7 +530,7 @@ contains
       stop
 
     else
-       
+
        call reset_field_accumulator_to_zero( sim%E_accumulator )
        call sll_accumulate_field( sim%E1, sim%E2, sim%E_accumulator )
        !$omp parallel do PRIVATE (pp_vx, pp_vy, Ex, Ey, tmp5, tmp6)
@@ -543,10 +542,11 @@ contains
           particles(k)%vx = pp_vx - 0.5_f64 * dt_q_over_m * Ex
           particles(k)%vy = pp_vy - 0.5_f64 * dt_q_over_m * Ey
        enddo
-       !$omp end parallel do   
+       !$omp end parallel do
     endif
 
     !! -- --  half v-push  [end]  -- --
+
     ! une_cst = (pi / KX_LANDAU) * (4._f64 * ALPHA * er)**2
     une_cst = (sll_pi / sim%elec_params(1)) * (4._f64 * sim%elec_params(2) * sim%elec_params(3))**2
     omega_i = sim%elec_params(6)
