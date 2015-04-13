@@ -31,7 +31,7 @@ implicit none
 #define ETA2MAX           1.0_f64
 #define PRINT_COMPARISON  .false.
 
-type(sll_cartesian_mesh_2d), pointer                        :: mesh_2d
+type(sll_cartesian_mesh_2d), pointer                      :: mesh_2d
 class(sll_coordinate_transformation_2d_base), pointer     :: T
 type(general_coordinate_elliptic_solver)                  :: es
 type(sll_arbitrary_degree_spline_interpolator_2d), target :: interp_2d
@@ -45,7 +45,7 @@ class(sll_scalar_field_2d_base), pointer                  :: b1_field_vect
 class(sll_scalar_field_2d_base), pointer                  :: b2_field_vect
 class(sll_scalar_field_2d_base), pointer                  :: c_field
 class(sll_scalar_field_2d_base), pointer                  :: rho
-type(sll_scalar_field_2d_discrete), pointer           :: phi
+type(sll_scalar_field_2d_discrete), pointer               :: phi
 type(sll_time_mark)                                       :: t_reference
 
 sll_real64 :: ti(15), te(15)
@@ -185,43 +185,41 @@ do k = itest1, itest2
   print*, "-------------------------------------------------------------"
 
   T => new_coordinate_transformation_2d_analytic( &
-       "analytic", &
-       mesh_2d, &
-       identity_x1, &
-       identity_x2, &
-       identity_jac11, &
-       identity_jac12, &
-       identity_jac21, &
-       identity_jac22, &
+       "analytic",                                &
+       mesh_2d,                                   &
+       identity_x1,                               &
+       identity_x2,                               &
+       identity_jac11,                            &
+       identity_jac12,                            &
+       identity_jac21,                            &
+       identity_jac22,                            &
        (/ 0.0_f64 /) )
 
   call initialize_fields( SLL_PERIODIC, SLL_PERIODIC, SLL_PERIODIC, SLL_PERIODIC)
 
   rho => new_scalar_field_2d_analytic( &
-       source_term_perper, &
-       "rho"//ccase, &     
-       T, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC, &
+       source_term_perper,             &
+       "rho"//ccase,                   &     
+       T,                              &
+       SLL_PERIODIC,                   &
+       SLL_PERIODIC,                   &
+       SLL_PERIODIC,                   &
+       SLL_PERIODIC,                   &
        whatever  )
   
-  call solve_fields( SLL_PERIODIC, SLL_PERIODIC, &
-                     SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
+  call solve_fields( SLL_PERIODIC, SLL_PERIODIC, SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
 
   do j=1,npts2
   do i=1,npts1
-    node_val = calculated(i,j)
-    grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1(i),eta2(j))
-    grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1(i),eta2(j))
-    ref        = sol_exacte_perper(eta1(i),eta2(j))
-    grad1ref   = sol_exacte_perper_der1(eta1(i),eta2(j))
-    grad2ref   = sol_exacte_perper_der2(eta1(i),eta2(j))
+    node_val        = calculated(i,j)
+    grad1_node_val  = phi%first_deriv_eta1_value_at_point(eta1(i),eta2(j))
+    grad2_node_val  = phi%first_deriv_eta2_value_at_point(eta1(i),eta2(j))
+    ref             = sol_exacte_perper(eta1(i),eta2(j))
+    grad1ref        = sol_exacte_perper_der1(eta1(i),eta2(j))
+    grad2ref        = sol_exacte_perper_der2(eta1(i),eta2(j))
     reference( i,j) = ref
-    normL2(k)   = normL2(k) + (node_val-ref)**2*h1*h2
-    normH1(k)   = normH1(k) + &
-          ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2
+    normL2(k)       = normL2(k)+(node_val-ref)**2*h1*h2
+    normH1(k)       = normH1(k)+((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2
   end do
   end do
 
@@ -239,30 +237,29 @@ do k = itest1, itest2
   print*, "-------------------------------------------------------------"
   
   T => new_coordinate_transformation_2d_analytic( &
-       "analytic", &
-       mesh_2d, &
-       identity_x1, &
-       identity_x2, &
-       identity_jac11, &
-       identity_jac12, &
-       identity_jac21, &
-       identity_jac22, &
+       "analytic",                                &
+       mesh_2d,                                   &
+       identity_x1,                               &
+       identity_x2,                               &
+       identity_jac11,                            &
+       identity_jac12,                            &
+       identity_jac21,                            &
+       identity_jac22,                            &
        (/0.0_f64/) )
 
   call initialize_fields( SLL_PERIODIC, SLL_PERIODIC, SLL_DIRICHLET, SLL_DIRICHLET)
 
   rho => new_scalar_field_2d_analytic( &
-       source_term_perdir, &
-       "rho"//ccase, &     
-       T, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC, &
-       SLL_DIRICHLET, &
-       SLL_DIRICHLET, &
+       source_term_perdir,             &
+       "rho"//ccase,                   &     
+       T,                              &
+       SLL_PERIODIC,                   &
+       SLL_PERIODIC,                   &
+       SLL_DIRICHLET,                  &
+       SLL_DIRICHLET,                  &
        whatever )
 
-  call solve_fields( SLL_PERIODIC, SLL_PERIODIC, &
-                     SLL_DIRICHLET, SLL_DIRICHLET, ti(k), te(k))
+  call solve_fields( SLL_PERIODIC,  SLL_PERIODIC, SLL_DIRICHLET, SLL_DIRICHLET, ti(k), te(k))
   
   do j=1,npts2
   do i=1,npts1
@@ -273,9 +270,8 @@ do k = itest1, itest2
     grad1ref       = sol_exacte_perdir_der1(eta1(i),eta2(j))
     grad2ref       = sol_exacte_perdir_der2(eta1(i),eta2(j))
     reference(i,j) = ref
-    normL2(k)      = normL2(k) + (node_val-ref)**2*h1*h2
-    normH1(k)      = normH1(k) + &
-         ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2
+    normL2(k)      = normL2(k)+(node_val-ref)**2*h1*h2
+    normH1(k)      = normH1(k)+((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2
     if(PRINT_COMPARISON) call printout_comparison()
   end do
   end do
@@ -284,7 +280,6 @@ do k = itest1, itest2
   integral_exact_solution = sum(reference(1:NUM_CELLS1,1:NUM_CELLS2))*h1*h2
 
   call delete_things()
-  
   call check_error(k)
 
   case(3)
@@ -294,30 +289,29 @@ do k = itest1, itest2
   print*, "-------------------------------------------------------------"
   
   T => new_coordinate_transformation_2d_analytic( &
-       "analytic", &
-       mesh_2d, &
-       identity_x1, &
-       identity_x2, &
-       identity_jac11, &
-       identity_jac12, &
-       identity_jac21, &
-       identity_jac22, &
+       "analytic",                                &
+       mesh_2d,                                   &
+       identity_x1,                               &
+       identity_x2,                               &
+       identity_jac11,                            &
+       identity_jac12,                            &
+       identity_jac21,                            &
+       identity_jac22,                            &
        (/0.0_f64/) )
   
   call initialize_fields( SLL_DIRICHLET, SLL_DIRICHLET, SLL_DIRICHLET, SLL_DIRICHLET)
 
   rho => new_scalar_field_2d_analytic( &
-       source_term_perdir, &
-       "rho"//ccase, &     
-       T, &
-       SLL_DIRICHLET, &
-       SLL_DIRICHLET, &
-       SLL_DIRICHLET, &
-       SLL_DIRICHLET, &
+       source_term_perdir,             &
+       "rho"//ccase,                   &     
+       T,                              &
+       SLL_DIRICHLET,                  &
+       SLL_DIRICHLET,                  &
+       SLL_DIRICHLET,                  &
+       SLL_DIRICHLET,                  &
        whatever )
   
-  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
-                     SLL_DIRICHLET, SLL_DIRICHLET, ti(k), te(k))
+  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, SLL_DIRICHLET, SLL_DIRICHLET, ti(k), te(k))
 
   do j=1,npts2
   do i=1,npts1
@@ -328,9 +322,8 @@ do k = itest1, itest2
     grad1ref        = sol_exacte_perdir_der1(eta1(i),eta2(j))
     grad2ref        = sol_exacte_perdir_der2(eta1(i),eta2(j))
     reference(i,j)  = ref
-    normL2(k)  = normL2(k) + (node_val-ref)**2*h1*h2
-    normH1(k)  = normH1(k) + &
-      ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2
+    normL2(k)       = normL2(k) + (node_val-ref)**2*h1*h2
+    normH1(k)       = normH1(k) + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2
     if (PRINT_COMPARISON) call printout_comparison()
   end do
   end do
@@ -348,47 +341,46 @@ do k = itest1, itest2
   print*, "-------------------------------------------------------------"
   
   T => new_coordinate_transformation_2d_analytic( &
-       "analytic", &
-       mesh_2d, &
-       identity_x1, &
-       identity_x2, &
-       identity_jac11, &
-       identity_jac12, &
-       identity_jac21, &
-       identity_jac22, &
+       "analytic",                                &
+       mesh_2d,                                   &
+       identity_x1,                               &
+       identity_x2,                               &
+       identity_jac11,                            &
+       identity_jac12,                            &
+       identity_jac21,                            &
+       identity_jac22,                            &
        (/0.0_f64/) )
   
   call initialize_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
                           SLL_PERIODIC, SLL_PERIODIC)
   
   rho => new_scalar_field_2d_analytic( &
-       source_term_dirper, &
-       "rho"//ccase, &     
-       T, &
-       SLL_DIRICHLET, &
-       SLL_DIRICHLET, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC, &
+       source_term_dirper,             &
+       "rho"//ccase,                   &     
+       T,                              &
+       SLL_DIRICHLET,                  &
+       SLL_DIRICHLET,                  &
+       SLL_PERIODIC,                   &
+       SLL_PERIODIC,                   &
        whatever )
   
-  call solve_fields( SLL_DIRICHLET, &
-    SLL_DIRICHLET, SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
+  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
   
   do j=1,npts2
-     do i=1,npts1
-        node_val = calculated(i,j)
-        node_val        = phi%value_at_point(eta1(i),eta2(j))
-        grad1_node_val  = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
-        grad2_node_val  = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
-        ref             = sol_exacte_dirper(eta1(i),eta2(j))
-        grad1ref        = sol_exacte_dirper_der1(eta1(i),eta2(j))
-        grad2ref        = sol_exacte_dirper_der2(eta1(i),eta2(j))
-        reference(i,j)  = ref
-        normL2(k)       = normL2(k) + (node_val-ref)**2*h1*h2
-        normH1(k)       = normH1(k) + &
-        ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2
-        if(PRINT_COMPARISON) call printout_comparison()
-     end do
+  do i=1,npts1
+    node_val = calculated(i,j)
+    node_val        = phi%value_at_point(eta1(i),eta2(j))
+    grad1_node_val  = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
+    grad2_node_val  = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
+    ref             = sol_exacte_dirper(eta1(i),eta2(j))
+    grad1ref        = sol_exacte_dirper_der1(eta1(i),eta2(j))
+    grad2ref        = sol_exacte_dirper_der2(eta1(i),eta2(j))
+    reference(i,j)  = ref
+    normL2(k)       = normL2(k) + (node_val-ref)**2*h1*h2
+    normH1(k)       = normH1(k) + &
+    ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2
+    if(PRINT_COMPARISON) call printout_comparison()
+  end do
   end do
 
   integral_solution = sum(calculated(1:NUM_CELLS1,1:NUM_CELLS2))*h1*h2
@@ -405,54 +397,53 @@ do k = itest1, itest2
   print*, "-----------------------------------------------"
   
   T => new_coordinate_transformation_2d_analytic( &
-       "analytic", &
-       mesh_2d, &
-       sinprod_x1, &
-       sinprod_x2, &
-       sinprod_jac11, &
-       sinprod_jac12, &
-       sinprod_jac21, &
-       sinprod_jac22, &
+       "analytic",                                &
+       mesh_2d,                                   &
+       sinprod_x1,                                &
+       sinprod_x2,                                &
+       sinprod_jac11,                             &
+       sinprod_jac12,                             &
+       sinprod_jac21,                             &
+       sinprod_jac22,                             &
        (/ 0.1_f64, 0.1_f64, 1.0_f64, 1.0_f64/) )
   
   call initialize_fields( SLL_PERIODIC, SLL_PERIODIC, &
                           SLL_PERIODIC, SLL_PERIODIC)
 
   rho => new_scalar_field_2d_analytic( &
-       source_term_chgt_perper, &
-       "rho"//ccase, &     
-       T, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC, &
+       source_term_chgt_perper,        &
+       "rho"//ccase,                   &     
+       T,                              &
+       SLL_PERIODIC,                   &
+       SLL_PERIODIC,                   &
+       SLL_PERIODIC,                   &
+       SLL_PERIODIC,                   &
        whatever )
   
-  call solve_fields( SLL_PERIODIC, SLL_PERIODIC, &
-                     SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
+  call solve_fields( SLL_PERIODIC, SLL_PERIODIC, SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
   
   do j=1,npts2
-     do i=1,npts1
-        node_val = calculated(i,j)
-        grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
-        grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
-        ref        = sol_exacte_chgt_perper(eta1(i),eta2(j))
-        grad1ref   = sol_exacte_chgt_perper_der1(eta1(i),eta2(j))
-        grad2ref   = sol_exacte_chgt_perper_der2(eta1(i),eta2(j))
-        reference(i,j) = ref
-        val_jac = sinprod_jac11(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
-                  sinprod_jac22(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
-                  sinprod_jac12(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
-                  sinprod_jac21(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
-        if(PRINT_COMPARISON) call printout_comparison()
-        if ( i < NUM_CELLS1 .and. j < NUM_CELLS2) then
-           integral_solution = integral_solution + node_val*val_jac * h1*h2
-           integral_exact_solution = integral_exact_solution + ref*val_jac * h1*h2
-           normL2(k)    = normL2(k) + (node_val-ref)**2*h1*h2*val_jac
-           normH1(k)    = normH1(k) + &
-          ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
-        end if
-     end do
+  do i=1,npts1
+    node_val = calculated(i,j)
+    grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
+    grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
+    ref        = sol_exacte_chgt_perper(eta1(i),eta2(j))
+    grad1ref   = sol_exacte_chgt_perper_der1(eta1(i),eta2(j))
+    grad2ref   = sol_exacte_chgt_perper_der2(eta1(i),eta2(j))
+    reference(i,j) = ref
+    val_jac = sinprod_jac11(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+              sinprod_jac22(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
+              sinprod_jac12(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+              sinprod_jac21(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
+    if(PRINT_COMPARISON) call printout_comparison()
+    if ( i < NUM_CELLS1 .and. j < NUM_CELLS2) then
+       integral_solution = integral_solution + node_val*val_jac * h1*h2
+       integral_exact_solution = integral_exact_solution + ref*val_jac * h1*h2
+       normL2(k)    = normL2(k) + (node_val-ref)**2*h1*h2*val_jac
+       normH1(k)    = normH1(k) + &
+      ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
+    end if
+  end do
   end do
   
   integral_solution = sum(calculated(1:NUM_CELLS1,1:NUM_CELLS2))*h1*h2
@@ -469,57 +460,54 @@ do k = itest1, itest2
   print*, "-------------------------------------------------------------"
   
   T => new_coordinate_transformation_2d_analytic( &
-       "analytic", &
-       mesh_2d, &
-       sinprod_x1, &
-       sinprod_x2, &
-       sinprod_jac11, &
-       sinprod_jac12, &
-       sinprod_jac21, &
-       sinprod_jac22, &
+       "analytic",                                &
+       mesh_2d,                                   &
+       sinprod_x1,                                &
+       sinprod_x2,                                &
+       sinprod_jac11,                             &
+       sinprod_jac12,                             &
+       sinprod_jac21,                             &
+       sinprod_jac22,                             &
        (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
   
-  call initialize_fields( SLL_PERIODIC,  SLL_PERIODIC, &
-                          SLL_DIRICHLET, SLL_DIRICHLET)
+  call initialize_fields( SLL_PERIODIC,  SLL_PERIODIC, SLL_DIRICHLET, SLL_DIRICHLET)
   
   rho => new_scalar_field_2d_analytic( &
-       source_term_chgt_perdir, &
-       "rho"//ccase, &     
-       T, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC, &
-       SLL_DIRICHLET, &
-       SLL_DIRICHLET, &
+       source_term_chgt_perdir,        &
+       "rho"//ccase,                   &     
+       T,                              &
+       SLL_PERIODIC,                   &
+       SLL_PERIODIC,                   &
+       SLL_DIRICHLET,                  &
+       SLL_DIRICHLET,                  &
        whatever )
   
-  call solve_fields( SLL_PERIODIC, SLL_PERIODIC, &
-    SLL_DIRICHLET, SLL_DIRICHLET, ti(k), te(k))
+  call solve_fields( SLL_PERIODIC, SLL_PERIODIC, SLL_DIRICHLET, SLL_DIRICHLET, ti(k), te(k))
 
   do j=1,npts2
-     do i=1,npts1
-        
-        node_val = calculated(i,j)
-        grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
-        grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
-        ref        = sol_exacte_chgt_perdir(eta1(i),eta2(j))
-        grad1ref   = sol_exacte_chgt_perdir_der1(eta1(i),eta2(j))
-        grad2ref   = sol_exacte_chgt_perdir_der2(eta1(i),eta2(j))
-        reference(i,j) = ref
-        if(PRINT_COMPARISON) call printout_comparison()
-        
-        val_jac = sinprod_jac11(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
-                  sinprod_jac22(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
-                  sinprod_jac12(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
-                  sinprod_jac21(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
-        if ( i < NUM_CELLS1 .and. j < NUM_CELLS2 ) then
-           integral_solution = integral_solution + node_val*val_jac* h1*h2
-           integral_exact_solution = integral_exact_solution + ref*val_jac* h1*h2
-           normL2(k)    = normL2(k) + (node_val-ref)**2*h1*h2
-           normH1(k)    = normH1(k) + &
-          ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
-           
-        end if
-     end do
+  do i=1,npts1
+    node_val = calculated(i,j)
+    grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
+    grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
+    ref        = sol_exacte_chgt_perdir(eta1(i),eta2(j))
+    grad1ref   = sol_exacte_chgt_perdir_der1(eta1(i),eta2(j))
+    grad2ref   = sol_exacte_chgt_perdir_der2(eta1(i),eta2(j))
+    reference(i,j) = ref
+    if(PRINT_COMPARISON) call printout_comparison()
+    
+    val_jac = sinprod_jac11(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+              sinprod_jac22(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
+              sinprod_jac12(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+              sinprod_jac21(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
+    if ( i < NUM_CELLS1 .and. j < NUM_CELLS2 ) then
+       integral_solution = integral_solution + node_val*val_jac* h1*h2
+       integral_exact_solution = integral_exact_solution + ref*val_jac* h1*h2
+       normL2(k)    = normL2(k) + (node_val-ref)**2*h1*h2
+       normH1(k)    = normH1(k) + &
+      ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
+       
+    end if
+  end do
   end do
   
   call delete_things()
@@ -695,25 +683,26 @@ do k = itest1, itest2
      SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
   
   do j=1,npts2
-     do i=1,npts1
-        
-        node_val = calculated(i,j)
-        grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
-        grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
-        ref        = sol_exacte_perper(eta1(i),eta2(j))
-        grad1ref   = sol_exacte_perper_der1(eta1(i),eta2(j))
-        grad2ref   = sol_exacte_perper_der2(eta1(i),eta2(j))
-        reference(i,j) = ref
-        val_jac = 1.0
-        if(PRINT_COMPARISON) call printout_comparison()
-        if ( i < NUM_CELLS1 .and. j < NUM_CELLS2) then
-           integral_solution = integral_solution + node_val * h1*h2
-           integral_exact_solution = integral_exact_solution + ref * h1*h2
-           normL2(k)    = normL2(k) + (node_val-ref)**2*h1*h2*val_jac
-           normH1(k)    = normH1(k) + &
-          ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
-        end if
-     end do
+  do i=1,npts1
+     
+    node_val = calculated(i,j)
+    grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
+    grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
+    ref        = sol_exacte_perper(eta1(i),eta2(j))
+    grad1ref   = sol_exacte_perper_der1(eta1(i),eta2(j))
+    grad2ref   = sol_exacte_perper_der2(eta1(i),eta2(j))
+    reference(i,j) = ref
+    val_jac = 1.0
+    if(PRINT_COMPARISON) call printout_comparison()
+    if ( i < NUM_CELLS1 .and. j < NUM_CELLS2) then
+       integral_solution = integral_solution + node_val * h1*h2
+       integral_exact_solution = integral_exact_solution + ref * h1*h2
+       normL2(k)    = normL2(k) + (node_val-ref)**2*h1*h2*val_jac
+       normH1(k)    = normH1(k) + &
+      ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
+    end if
+
+  end do
   end do
 
   call delete_things()
@@ -728,73 +717,70 @@ do k = itest1, itest2
   print*, "------------------------------------------------"
   
   T => new_coordinate_transformation_2d_analytic( &
-       "analytic", &
-       mesh_2d, &
-       sinprod_x1, &
-       sinprod_x2, &
-       sinprod_jac11, &
-       sinprod_jac12, &
-       sinprod_jac21, &
-       sinprod_jac22, &
+       "analytic",                                &
+       mesh_2d,                                   &
+       sinprod_x1,                                &
+       sinprod_x2,                                &
+       sinprod_jac11,                             &
+       sinprod_jac12,                             &
+       sinprod_jac21,                             &
+       sinprod_jac22,                             &
        (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
   
   call initialize_fields( SLL_PERIODIC, SLL_PERIODIC, SLL_PERIODIC, SLL_PERIODIC)
   
   do j=1,npts2
-     do i=1,npts1
-        tab_rho(i,j)  = source_term_chgt_perper(eta1(i),eta2(j))
-     end do
+  do i=1,npts1
+    tab_rho(i,j) = source_term_chgt_perper(eta1(i),eta2(j))
+  end do
   end do
   
   rhs_interp => interp_2d_term_source
-  
   tab_rho(:,:) = tab_rho - sum(tab_rho)/(NUM_CELLS1*NUM_CELLS2)
 
   rho => new_scalar_field_2d_discrete( &
-       "rho"//ccase, &
-       rhs_interp, &
-       T, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC,&
-       SLL_PERIODIC,&
-       SLL_PERIODIC ,&
-       eta1,&
-       NUM_CELLS1,&
-       eta2,&
+       "rho"//ccase,                   &
+       rhs_interp,                     &
+       T,                              &
+       SLL_PERIODIC,                   &
+       SLL_PERIODIC,                   &
+       SLL_PERIODIC,                   &
+       SLL_PERIODIC ,                  &
+       eta1,                           &
+       NUM_CELLS1,                     &
+       eta2,                           &
        NUM_CELLS2)
 
   call rho%set_field_data(tab_rho)
   call rho%update_interpolation_coefficients()
   
-  
-  call solve_fields( SLL_PERIODIC, SLL_PERIODIC, &
-     SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
+  call solve_fields( SLL_PERIODIC, SLL_PERIODIC, SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
   
   do j=1,npts2
-     do i=1,npts1
-        
-        node_val = calculated(i,j)
-        grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
-        grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
-        ref        = sol_exacte_chgt_perper(eta1(i),eta2(j))
-        grad1ref   = sol_exacte_chgt_perper_der1(eta1(i),eta2(j))
-        grad2ref   = sol_exacte_chgt_perper_der2(eta1(i),eta2(j))
-        reference(i,j) = ref
-        if(PRINT_COMPARISON) call printout_comparison()
-        val_jac = sinprod_jac11(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
-                  sinprod_jac22(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
-                  sinprod_jac12(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
-                  sinprod_jac21(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
-        
-        if ( i < NUM_CELLS1 .and. j < NUM_CELLS2) then
-           integral_solution = integral_solution + node_val*val_jac * h1*h2
-           integral_exact_solution = integral_exact_solution + ref*val_jac * h1*h2
-           normL2(k)    = normL2(k) + (node_val-ref)**2*h1*h2*val_jac
-           normH1(k)    = normH1(k) + &
-          ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
-           
-        end if
-     end do
+  do i=1,npts1
+     
+    node_val = calculated(i,j)
+    grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
+    grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
+    ref        = sol_exacte_chgt_perper(eta1(i),eta2(j))
+    grad1ref   = sol_exacte_chgt_perper_der1(eta1(i),eta2(j))
+    grad2ref   = sol_exacte_chgt_perper_der2(eta1(i),eta2(j))
+    reference(i,j) = ref
+    if(PRINT_COMPARISON) call printout_comparison()
+    val_jac = sinprod_jac11(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+              sinprod_jac22(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
+              sinprod_jac12(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+              sinprod_jac21(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
+    
+    if ( i < NUM_CELLS1 .and. j < NUM_CELLS2) then
+       integral_solution = integral_solution + node_val*val_jac * h1*h2
+       integral_exact_solution = integral_exact_solution + ref*val_jac * h1*h2
+       normL2(k)    = normL2(k) + (node_val-ref)**2*h1*h2*val_jac
+       normH1(k)    = normH1(k) + &
+      ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
+    end if
+
+  end do
   end do
   
   call delete_things()
@@ -809,73 +795,70 @@ do k = itest1, itest2
   print*, "------------------------------------------------"
   
   T => new_coordinate_transformation_2d_analytic( &
-       "analytic", &
-       mesh_2d, &
-       sinprod_x1, &
-       sinprod_x2, &
-       sinprod_jac11, &
-       sinprod_jac12, &
-       sinprod_jac21, &
-       sinprod_jac22, &
+       "analytic",                                &
+       mesh_2d,                                   &
+       sinprod_x1,                                &
+       sinprod_x2,                                &
+       sinprod_jac11,                             &
+       sinprod_jac12,                             &
+       sinprod_jac21,                             &
+       sinprod_jac22,                             &
        (/0.1_f64, 0.1_f64, 1.0_f64, 1.0_f64/)) 
 
-  call initialize_fields( SLL_PERIODIC,  SLL_PERIODIC, &
-                          SLL_DIRICHLET, SLL_DIRICHLET)
+  call initialize_fields( SLL_PERIODIC,  SLL_PERIODIC, SLL_DIRICHLET, SLL_DIRICHLET)
 
   do j=1,npts2
-     do i=1,npts1
-        tab_rho(i,j) = source_term_chgt_perdir(eta1(i),eta2(j))
-     end do
+  do i=1,npts1
+    tab_rho(i,j) = source_term_chgt_perdir(eta1(i),eta2(j))
+  end do
   end do
 
   rhs_interp => interp_2d_term_source
 
   rho => new_scalar_field_2d_discrete( &
-       "rho"//ccase, &
-       rhs_interp, &
-       T, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC,&
-       SLL_DIRICHLET,&
-       SLL_DIRICHLET,&
-       eta1,&
-       NUM_CELLS1,&
-       eta2,&
+       "rho"//ccase,                   &
+       rhs_interp,                     &
+       T,                              &
+       SLL_PERIODIC,                   &
+       SLL_PERIODIC,                   &
+       SLL_DIRICHLET,                  &
+       SLL_DIRICHLET,                  &
+       eta1,                           &
+       NUM_CELLS1,                     &
+       eta2,                           &
        npts2)
 
   call rho%set_field_data(tab_rho)
   call rho%update_interpolation_coefficients()
-
   
-  call solve_fields( SLL_PERIODIC, SLL_PERIODIC, &
-     SLL_DIRICHLET, SLL_DIRICHLET, ti(k), te(k))
+  call solve_fields( SLL_PERIODIC, SLL_PERIODIC, SLL_DIRICHLET, SLL_DIRICHLET, ti(k), te(k))
   
   do j=1,npts2
-     do i=1,npts1
-        
-        node_val = calculated(i,j)
-        grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
-        grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
-        ref        = sol_exacte_chgt_perdir(eta1(i),eta2(j))
-        grad1ref   = sol_exacte_chgt_perdir_der1(eta1(i),eta2(j))
-        grad2ref   = sol_exacte_chgt_perdir_der2(eta1(i),eta2(j))
-        reference(i,j) = ref
-        if(PRINT_COMPARISON) call printout_comparison()
-        val_jac = sinprod_jac11(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
-                  sinprod_jac22(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
-                  sinprod_jac12(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
-                  sinprod_jac21(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
-        
-        if ( i < NUM_CELLS1 .and. j < NUM_CELLS2) then
-           integral_solution = integral_solution + node_val*val_jac * h1*h2
-           integral_exact_solution = integral_exact_solution + &
-                ref*val_jac * h1*h2
-           normL2(k)    = normL2(k) + (node_val-ref)**2*h1*h2*val_jac
-           normH1(k)   = normH1(k) + ((grad1_node_val-grad1ref)**2+&
-                (grad2_node_val-grad2ref)**2)*h1*h2*val_jac
-           
-        end if
-     end do
+  do i=1,npts1
+    
+    node_val = calculated(i,j)
+    grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
+    grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
+    ref        = sol_exacte_chgt_perdir(eta1(i),eta2(j))
+    grad1ref   = sol_exacte_chgt_perdir_der1(eta1(i),eta2(j))
+    grad2ref   = sol_exacte_chgt_perdir_der2(eta1(i),eta2(j))
+    reference(i,j) = ref
+    if(PRINT_COMPARISON) call printout_comparison()
+    val_jac = sinprod_jac11(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+              sinprod_jac22(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
+              sinprod_jac12(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+              sinprod_jac21(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
+    
+    if ( i < NUM_CELLS1 .and. j < NUM_CELLS2) then
+       integral_solution = integral_solution + node_val*val_jac * h1*h2
+       integral_exact_solution = integral_exact_solution + &
+            ref*val_jac * h1*h2
+       normL2(k)    = normL2(k) + (node_val-ref)**2*h1*h2*val_jac
+       normH1(k)   = normH1(k) + ((grad1_node_val-grad1ref)**2+&
+            (grad2_node_val-grad2ref)**2)*h1*h2*val_jac
+       
+    end if
+  end do
   end do
 
   call delete_things()
@@ -883,6 +866,7 @@ do k = itest1, itest2
   call check_error(k)
 
   case(12)
+
   print*, "------------------------------------------------"
   print*, " 12 test case with colella change of coordinates"
   print*, " dirichlet-dirichlet boundary conditions        "
@@ -890,72 +874,71 @@ do k = itest1, itest2
   print*, "------------------------------------------------"
   
    T => new_coordinate_transformation_2d_analytic( &
-       "analytic", &
-       mesh_2d, &
-       sinprod_x1, &
-       sinprod_x2, &
-       sinprod_jac11, &
-       sinprod_jac12, &
-       sinprod_jac21, &
-       sinprod_jac22, &
+       "analytic",                                 &
+       mesh_2d,                                    &
+       sinprod_x1,                                 &
+       sinprod_x2,                                 &
+       sinprod_jac11,                              &
+       sinprod_jac12,                              &
+       sinprod_jac21,                              &
+       sinprod_jac22,                              &
        (/0.1_f64, 0.1_f64, 1.0_f64, 1.0_f64/) )
 
-  call initialize_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
-                          SLL_DIRICHLET, SLL_DIRICHLET)
+  call initialize_fields( SLL_DIRICHLET, SLL_DIRICHLET, SLL_DIRICHLET, SLL_DIRICHLET)
 
   do j=1,npts2
-     do i=1,npts1
-        tab_rho(i,j)  = source_term_chgt_dirdir(eta1(i),eta2(j))
-     end do
+  do i=1,npts1
+    tab_rho(i,j)  = source_term_chgt_dirdir(eta1(i),eta2(j))
+  end do
   end do
 
   rhs_interp => interp_2d_term_source
 
   rho => new_scalar_field_2d_discrete( &
-       "rho"//ccase, &
-       rhs_interp, &
-       T, &
-       SLL_DIRICHLET, &
-       SLL_DIRICHLET,&
-       SLL_DIRICHLET,&
-       SLL_DIRICHLET,&
-       eta1,&
-       npts1,&
-       eta2,&
+       "rho"//ccase,                   &
+       rhs_interp,                     &
+       T,                              &
+       SLL_DIRICHLET,                  &
+       SLL_DIRICHLET,                  &
+       SLL_DIRICHLET,                  &
+       SLL_DIRICHLET,                  &
+       eta1,                           &
+       npts1,                          &
+       eta2,                           &
        npts2)
 
   call rho%set_field_data(tab_rho)
   call rho%update_interpolation_coefficients()
   
-  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
-    SLL_DIRICHLET, SLL_DIRICHLET, ti(k), te(k))
+  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, SLL_DIRICHLET, SLL_DIRICHLET, ti(k), te(k))
   
   do j=1,npts2
-     do i=1,npts1
+  do i=1,npts1
         
-        node_val = calculated(i,j)
-        grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
-        grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
-        ref        = sol_exacte_chgt_dirdir(eta1(i),eta2(j))
-        grad1ref   = sol_exacte_chgt_dirdir_der1(eta1(i),eta2(j))
-        grad2ref   = sol_exacte_chgt_dirdir_der2(eta1(i),eta2(j))
-        reference(i,j)  = ref
+    node_val = calculated(i,j)
+    grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
+    grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
+    ref        = sol_exacte_chgt_dirdir(eta1(i),eta2(j))
+    grad1ref   = sol_exacte_chgt_dirdir_der1(eta1(i),eta2(j))
+    grad2ref   = sol_exacte_chgt_dirdir_der2(eta1(i),eta2(j))
+    reference(i,j)  = ref
 
-        if(PRINT_COMPARISON) call printout_comparison()
-        val_jac = sinprod_jac11(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
-                  sinprod_jac22(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
-                  sinprod_jac12(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
-                  sinprod_jac21(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
-        
-        if ( i < NUM_CELLS1 .and. j < NUM_CELLS2) then
-           integral_solution = integral_solution + node_val*val_jac * h1*h2
-           integral_exact_solution = integral_exact_solution + &
-                ref*val_jac * h1*h2
-           normL2(k)    = normL2(k) + (node_val-ref)**2*h1*h2*val_jac
-           normH1(k)    = normH1(k) + ((grad1_node_val-grad1ref)**2+&
-                (grad2_node_val-grad2ref)**2)*h1*h2*val_jac
-        end if
-     end do
+    if(PRINT_COMPARISON) call printout_comparison()
+    val_jac = sinprod_jac11(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+              sinprod_jac22(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
+              sinprod_jac12(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+              sinprod_jac21(eta1(i),eta2(j),(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
+    
+    if ( i < NUM_CELLS1 .and. j < NUM_CELLS2) then
+       integral_solution = integral_solution + node_val*val_jac * h1*h2
+       integral_exact_solution = integral_exact_solution + &
+            ref*val_jac * h1*h2
+       normL2(k)    = normL2(k) + (node_val-ref)**2*h1*h2*val_jac
+       normH1(k)    = normH1(k) + ((grad1_node_val-grad1ref)**2+&
+            (grad2_node_val-grad2ref)**2)*h1*h2*val_jac
+    end if
+
+  end do
   end do
 
   call delete_things()
@@ -963,6 +946,7 @@ do k = itest1, itest2
   call check_error(k)
 
   case(13)
+
   print*, "------------------------------------------------"
   print*, " 13 test case with colella change of coordinates"
   print*, " dirichlet-periodic  boundary conditions        "
@@ -1007,35 +991,34 @@ do k = itest1, itest2
   call rho%set_field_data(tab_rho)
   call rho%update_interpolation_coefficients()
 
-  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
-     SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
+  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET,SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
    
   do j=1,npts2
-     do i=1,npts1
-        
-        node_val = calculated(i,j)
-        grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
-        grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
-        ref        = sol_exacte_chgt_dirper(eta1(i),eta2(j))
-        grad1ref   = sol_exacte_chgt_dirper_der1(eta1(i),eta2(j))
-        grad2ref   = sol_exacte_chgt_dirper_der2(eta1(i),eta2(j))
-        reference(i,j)  = ref
-        if (PRINT_COMPARISON) call printout_comparison()
-        val_jac = sinprod_jac11(eta1(i),eta2(j),(/.1_f64,.1_f64,1._f64,1._f64/))*&
-                  sinprod_jac22(eta1(i),eta2(j),(/.1_f64,.1_f64,1._f64,1._f64/))-&
-                  sinprod_jac12(eta1(i),eta2(j),(/.1_f64,.1_f64,1._f64,1._f64/))*&
-                  sinprod_jac21(eta1(i),eta2(j),(/.1_f64,.1_f64,1._f64,1._f64/))
-        
-        if ( i < NUM_CELLS1 .and. j < NUM_CELLS2) then
-           integral_solution = integral_solution + node_val*val_jac * h1*h2
-           integral_exact_solution = integral_exact_solution + &
-                ref*val_jac * h1*h2
-           normL2(k)    = normL2(k) + (node_val-ref)**2*h1*h2*val_jac
-           normH1(k)    = normH1(k) + ((grad1_node_val-grad1ref)**2+&
-                (grad2_node_val-grad2ref)**2)*h1*h2*val_jac
-           
-        end if
-     end do
+  do i=1,npts1
+     
+    node_val = calculated(i,j)
+    grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
+    grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
+    ref        = sol_exacte_chgt_dirper(eta1(i),eta2(j))
+    grad1ref   = sol_exacte_chgt_dirper_der1(eta1(i),eta2(j))
+    grad2ref   = sol_exacte_chgt_dirper_der2(eta1(i),eta2(j))
+    reference(i,j)  = ref
+    if (PRINT_COMPARISON) call printout_comparison()
+    val_jac = sinprod_jac11(eta1(i),eta2(j),(/.1_f64,.1_f64,1._f64,1._f64/))*&
+              sinprod_jac22(eta1(i),eta2(j),(/.1_f64,.1_f64,1._f64,1._f64/))-&
+              sinprod_jac12(eta1(i),eta2(j),(/.1_f64,.1_f64,1._f64,1._f64/))*&
+              sinprod_jac21(eta1(i),eta2(j),(/.1_f64,.1_f64,1._f64,1._f64/))
+    
+    if ( i < NUM_CELLS1 .and. j < NUM_CELLS2) then
+       integral_solution = integral_solution + node_val*val_jac * h1*h2
+       integral_exact_solution = integral_exact_solution + &
+            ref*val_jac * h1*h2
+       normL2(k)    = normL2(k) + (node_val-ref)**2*h1*h2*val_jac
+       normH1(k)    = normH1(k) + ((grad1_node_val-grad1ref)**2+&
+            (grad2_node_val-grad2ref)**2)*h1*h2*val_jac
+       
+    end if
+  end do
   end do
 
   call delete_things()
@@ -1063,55 +1046,53 @@ do k = itest1, itest2
                           SLL_PERIODIC,  SLL_PERIODIC)
 
   rho => new_scalar_field_2d_analytic( &
-       f_sin, &
-       "fsin", &
-       T, &
-       SLL_DIRICHLET,&
-       SLL_DIRICHLET,&
-       SLL_PERIODIC, &
-       SLL_PERIODIC,&
+       f_sin,                          &
+       "fsin",                         &
+       T,                              &
+       SLL_DIRICHLET,                  &
+       SLL_DIRICHLET,                  &
+       SLL_PERIODIC,                   &
+       SLL_PERIODIC,                   &
        whatever)
 
-
   do j = 1, npts2
-    do i = 1, npts1
-      values(i,j) = u_sin(eta1(i),eta2(j))
-    end do
+  do i = 1, npts1
+    values(i,j) = u_sin(eta1(i),eta2(j))
+  end do
   end do
 
   call phi%set_field_data(values)
   !call phi%write_to_file(0)
 
-  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
-     SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
+  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
    
   do j=1,npts2
-    do i=1,npts1
+  do i=1,npts1
         
-      node_val       = calculated(i,j)
-      grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
-      grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
-      ref            = u_sin(eta1(i),eta2(j))
-      grad1ref       = u_sin_der1(eta1(i),eta2(j))
-      grad2ref       = u_sin_der2(eta1(i),eta2(j))
-      reference(i,j) = ref
+    node_val       = calculated(i,j)
+    grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
+    grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
+    ref            = u_sin(eta1(i),eta2(j))
+    grad1ref       = u_sin_der1(eta1(i),eta2(j))
+    grad2ref       = u_sin_der2(eta1(i),eta2(j))
+    reference(i,j) = ref
 
-      if (PRINT_COMPARISON) call printout_comparison()
+    if (PRINT_COMPARISON) call printout_comparison()
 
-      val_jac = deriv_x1_polar_f_eta1(eta1(i),eta2(j),[1.0_f64,2.0_f64])*&
-                deriv_x2_polar_f_eta2(eta1(i),eta2(j),[1.0_f64,2.0_f64])-&
-                deriv_x1_polar_f_eta2(eta1(i),eta2(j),[1.0_f64,2.0_f64])*&
-                deriv_x2_polar_f_eta1(eta1(i),eta2(j),[1.0_f64,2.0_f64])
-        
-      if ( i < NUM_CELLS1 .and. j < NUM_CELLS2) then
-        integral_solution = integral_solution + node_val*val_jac * h1*h2
-        integral_exact_solution = integral_exact_solution + ref*val_jac * h1*h2
-        normL2(k)    = normL2(k) + (node_val-ref)**2*h1*h2*val_jac
-        normH1(k)    = normH1(k) + ((grad1_node_val-grad1ref)**2+&
-                                   (grad2_node_val-grad2ref)**2)*h1*h2*val_jac
-      end if
+    val_jac = deriv_x1_polar_f_eta1(eta1(i),eta2(j),[1.0_f64,2.0_f64])*&
+              deriv_x2_polar_f_eta2(eta1(i),eta2(j),[1.0_f64,2.0_f64])-&
+              deriv_x1_polar_f_eta2(eta1(i),eta2(j),[1.0_f64,2.0_f64])*&
+              deriv_x2_polar_f_eta1(eta1(i),eta2(j),[1.0_f64,2.0_f64])
+      
+    if ( i < NUM_CELLS1 .and. j < NUM_CELLS2) then
+      integral_solution = integral_solution + node_val*val_jac * h1*h2
+      integral_exact_solution = integral_exact_solution + ref*val_jac * h1*h2
+      normL2(k)    = normL2(k) + (node_val-ref)**2*h1*h2*val_jac
+      normH1(k)    = normH1(k) + ((grad1_node_val-grad1ref)**2+&
+                                 (grad2_node_val-grad2ref)**2)*h1*h2*val_jac
+    end if
 
-    end do
+  end do
   end do
 
   call delete_things()
@@ -1126,59 +1107,57 @@ do k = itest1, itest2
   print*, "--------------------------------------------------"
   
   T => new_coordinate_transformation_2d_analytic( &
-       "polar", &
-       mesh_2d, &
-       x1_polar_f, &
-       x2_polar_f, &
-       deriv_x1_polar_f_eta1, &
-       deriv_x1_polar_f_eta2, &
-       deriv_x2_polar_f_eta1, &
-       deriv_x2_polar_f_eta2, &
+       "polar",                                   &
+       mesh_2d,                                   &
+       x1_polar_f,                                &
+       x2_polar_f,                                &
+       deriv_x1_polar_f_eta1,                     &
+       deriv_x1_polar_f_eta2,                     &
+       deriv_x2_polar_f_eta1,                     &
+       deriv_x2_polar_f_eta2,                     &
        [1.0_f64,2.0_f64] )
   
-  call initialize_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
-                          SLL_PERIODIC,  SLL_PERIODIC)
+  call initialize_fields( SLL_DIRICHLET, SLL_DIRICHLET, SLL_PERIODIC,  SLL_PERIODIC)
 
   rho => new_scalar_field_2d_analytic( &
-       f_cos, &
-       "f_cos", &
-       T, &
-       SLL_DIRICHLET,&
-       SLL_DIRICHLET,&
-       SLL_PERIODIC, &
-       SLL_PERIODIC,&
+       f_cos,                          & 
+       "f_cos",                        &
+       T,                              &
+       SLL_DIRICHLET,                  &
+       SLL_DIRICHLET,                  &
+       SLL_PERIODIC,                   &
+       SLL_PERIODIC,                   &
        whatever)
 
-  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
-     SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
+  call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, SLL_PERIODIC, SLL_PERIODIC, ti(k), te(k))
    
   do j=1,npts2
-    do i=1,npts1
+  do i=1,npts1
         
-      node_val       = calculated(i,j)
-      grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
-      grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
-      ref            = u_cos(eta1(i),eta2(j))
-      grad1ref       = u_cos_der1(eta1(i),eta2(j))
-      grad2ref       = u_cos_der2(eta1(i),eta2(j))
-      reference(i,j) = ref
+    node_val       = calculated(i,j)
+    grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
+    grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
+    ref            = u_cos(eta1(i),eta2(j))
+    grad1ref       = u_cos_der1(eta1(i),eta2(j))
+    grad2ref       = u_cos_der2(eta1(i),eta2(j))
+    reference(i,j) = ref
 
-      if (PRINT_COMPARISON) call printout_comparison()
+    if (PRINT_COMPARISON) call printout_comparison()
 
-      val_jac = deriv_x1_polar_f_eta1(eta1(i),eta2(j),[1.0_f64,2.0_f64])*&
-                deriv_x2_polar_f_eta2(eta1(i),eta2(j),[1.0_f64,2.0_f64])-&
-                deriv_x1_polar_f_eta2(eta1(i),eta2(j),[1.0_f64,2.0_f64])*&
-                deriv_x2_polar_f_eta1(eta1(i),eta2(j),[1.0_f64,2.0_f64])
-        
-      if ( i < NUM_CELLS1 .and. j < NUM_CELLS2) then
-        integral_solution       = integral_solution + node_val*val_jac * h1*h2
-        integral_exact_solution = integral_exact_solution + ref*val_jac * h1*h2
-        normL2(k) = normL2(k) + (node_val-ref)**2*h1*h2*val_jac
-        normH1(k) = normH1(k) + ((grad1_node_val-grad1ref)**2+&
-                                 (grad2_node_val-grad2ref)**2)*h1*h2*val_jac
-      end if
+    val_jac = deriv_x1_polar_f_eta1(eta1(i),eta2(j),[1.0_f64,2.0_f64])*&
+              deriv_x2_polar_f_eta2(eta1(i),eta2(j),[1.0_f64,2.0_f64])-&
+              deriv_x1_polar_f_eta2(eta1(i),eta2(j),[1.0_f64,2.0_f64])*&
+              deriv_x2_polar_f_eta1(eta1(i),eta2(j),[1.0_f64,2.0_f64])
+      
+    if ( i < NUM_CELLS1 .and. j < NUM_CELLS2) then
+      integral_solution       = integral_solution + node_val*val_jac * h1*h2
+      integral_exact_solution = integral_exact_solution + ref*val_jac * h1*h2
+      normL2(k) = normL2(k) + (node_val-ref)**2*h1*h2*val_jac
+      normH1(k) = normH1(k) + ((grad1_node_val-grad1ref)**2+&
+                               (grad2_node_val-grad2ref)**2)*h1*h2*val_jac
+    end if
 
-    end do
+  end do
   end do
 
   call delete_things()
@@ -1186,6 +1165,7 @@ do k = itest1, itest2
   call check_error(k)
 
   end select
+
 end do
 
 
