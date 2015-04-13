@@ -1,5 +1,5 @@
 ADD_LIBRARY( sll_general_coordinate_elliptic_solvers STATIC
-             connectivity_qn.f90
+             connectivity_module.F90
              sll_knots.F90
              sll_lobatto_poisson.F90 
              map_function_module.F90
@@ -23,7 +23,7 @@ TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers
                        sll_memory
                        sll_working_precision)
 
-ADD_LIBRARY( finite_elements_solver STATIC connectivity_qn.f90
+ADD_LIBRARY( finite_elements_solver STATIC connectivity_module.F90
                                            finite_elements_solver.F90
                                            sll_knots.F90)
 
