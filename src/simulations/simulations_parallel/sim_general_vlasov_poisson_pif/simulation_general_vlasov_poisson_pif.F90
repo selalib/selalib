@@ -1,4 +1,4 @@
-!**************************************************************
+!*************************************************************
 !  Author: Jakob Ameres, jakob.ameres@tum.de
 !**************************************************************
 
@@ -23,6 +23,8 @@ use sll_wedge_product_generaldim
 use sll_descriptors
 use sll_visu_pic
 use sll_visu_pic_coll
+use sll_time_composition
+use sll_hdf5_io_serial
 
 implicit none
 
@@ -52,6 +54,7 @@ implicit none
  sll_int32, parameter :: PIF_INTEGRATOR_RK4S=4
  sll_int32, parameter :: PIF_INTEGRATOR_BORIS1=4
  
+ sll_int32, parameter :: PIF_NO_E_FIELD=0
  sll_int32, parameter :: PIF_POISSON=1
  sll_int32, parameter :: PIF_QUASINEUTRAL_RHO=2
  sll_int32, parameter :: PIF_QUASINEUTRAL_RHO_WO_ZONALFLOW=3
@@ -98,6 +101,8 @@ sll_int32 :: num_modes = 1
 sll_int32, dimension(2) :: plot2d_idx ! Contains 2 indicies of the dimensions to be plotted
 sll_int32, dimension(2) :: plot2d_bin ! Contains number of bins for each dimension
 sll_int32 :: num_visu_particles = 0
+character(len=64) :: prefix='pif'
+sll_int32 :: WRITE_PHI = 0
 
 !results
 sll_real64, dimension(:),allocatable :: kineticenergy,fieldenergy, energy,energy_error,&
@@ -114,6 +119,7 @@ sll_int32 :: coll_rank, coll_size
      
      procedure, pass(sim) :: init_particle => init_particle_generalvp_pif
      procedure, pass(sim) :: init_from_file => init_file_generalvp_pif
+     procedure, pass(sim) :: delete=>delete_generalvp_pif
      procedure, pass(sim) :: write_result=>write_result_generalvp_pif
      procedure, pass(sim) :: run=>run_generalvp_pif
      procedure, pass(sim) :: update_weight=>update_weight_generalvp_pif
@@ -151,6 +157,61 @@ end type
 !--------------------------------------------------------------
 
 contains
+
+!>Destructor, disallocates everything
+subroutine delete_generalvp_pif(sim)
+ class(sll_simulation_general_vlasov_poisson_pif), intent(inout) :: sim
+ sll_int32 :: ierr
+if (allocated(sim%particle)) then
+  SLL_DEALLOCATE_ARRAY(sim%particle,ierr)
+endif
+ 
+if (allocated(sim%weight_const)) then
+  SLL_DEALLOCATE_ARRAY(sim%weight_const,ierr)
+endif
+
+if (allocated(sim%prior_weight)) then
+  SLL_DEALLOCATE_ARRAY(sim%prior_weight,ierr)
+endif
+
+if (allocated(sim%rk_d)) then
+  SLL_DEALLOCATE_ARRAY(sim%rk_d,ierr)
+endif
+if (allocated(sim%rk_c)) then
+  SLL_DEALLOCATE_ARRAY(sim%rk_c,ierr)
+endif
+
+!type(pif_fieldsolver) :: SOLVER
+
+
+  SLL_DEALLOCATE_ARRAY(sim%maskx,ierr)
+  SLL_DEALLOCATE_ARRAY(sim%maskv,ierr)
+  SLL_DEALLOCATE_ARRAY(sim%maskxw,ierr)
+  SLL_DEALLOCATE_ARRAY(sim%maskxv,ierr)
+  
+  SLL_DEALLOCATE_ARRAY(sim%boxlen,ierr)
+  SLL_DEALLOCATE_ARRAY(sim%kmode,ierr)
+
+if (allocated(sim%B0)) then
+  SLL_DEALLOCATE_ARRAY(sim%B0,ierr)
+endif
+
+
+SLL_DEALLOCATE_ARRAY(sim%kineticenergy,ierr)
+SLL_DEALLOCATE_ARRAY(sim%fieldenergy,ierr)
+SLL_DEALLOCATE_ARRAY(sim%energy_error,ierr)
+SLL_DEALLOCATE_ARRAY(sim%energy,ierr)
+SLL_DEALLOCATE_ARRAY(sim%weight_sum,ierr)
+SLL_DEALLOCATE_ARRAY(sim%weight_var,ierr)
+SLL_DEALLOCATE_ARRAY(sim%moment_error,ierr)
+SLL_DEALLOCATE_ARRAY(sim%l2potential,ierr)
+SLL_DEALLOCATE_ARRAY(sim%moment,ierr)
+SLL_DEALLOCATE_ARRAY(sim%moment_var,ierr)
+
+SLL_DEALLOCATE_ARRAY(sim%rhs,ierr)
+SLL_DEALLOCATE_ARRAY(sim%solution,ierr)
+end subroutine
+
 
 !Gives back the v cross B
 function v_cross_B_generalvp_pif(sim, x,v, time) result(vxB)
@@ -246,7 +307,8 @@ function solve_field_sum_generalvp_pif(sim, rhs) result(solution)
  sll_comp64, dimension(size(rhs)) :: solution
  
  SELECT CASE (sim%FIELDSOLVER)
- 
+    CASE(PIF_NO_E_FIELD)
+     solution=0
     CASE(PIF_POISSON)
       solution=sim%SOLVER%solve_poisson(rhs)
     CASE(PIF_QUASINEUTRAL_RHO)
@@ -260,8 +322,11 @@ end function solve_field_sum_generalvp_pif
 
 subroutine run_generalvp_pif(sim)
   class(sll_simulation_general_vlasov_poisson_pif), intent(inout) :: sim
-  sll_int32 ::ierr , idx, tstep
+  sll_int32 ::ierr , idx, tstep, phi_file_id
+  character(len=4) :: timestr
+  integer(hid_t) :: hdata_id    !< HDF5 data file for each timestep
 
+  
 call sll_collective_barrier(sll_world_collective)
  !really global variables
  sim%coll_rank = sll_get_collective_rank( sll_world_collective )
@@ -337,18 +402,36 @@ call sll_collective_barrier(sll_world_collective)
 if (sim%coll_rank==0) print *, "# TIME        |IMPULSE ERR.(abs.) | ENERGY ERROR(rel.) | FIELDENERGY | MOMENTUM"
 
 
+!open file to write the Electric potential
+if (sim%WRITE_PHI==1 .and. sim%coll_rank==0 ) then 
+   call sll_new_file_id(phi_file_id, ierr)
+   open(phi_file_id, file = trim(sim%prefix)//'_phi_unitmodes.dat')
+     do idx=1,size(sim%SOLVER%allmodes,2)
+       write (phi_file_id,*) sim%SOLVER%allmodes(:,idx)
+     end do
+   close(phi_file_id)
+endif
+
+
+
+
+
 do tstep=1,sim%tsteps
  sim%tstep=tstep
   
   SELECT CASE (sim%dimx)
    CASE(3)
-!  call sim%symplectic_rungekutta()
+
+   if (allocated(sim%B0)) then
+   !  call sim%symplectic_rungekutta()
    !call sim%heun()
-    call sim%YSun_g2h()
+   call sim%YSun_g2h()
+   else
+   call sim%symplectic_rungekutta()
+   endif
    CASE DEFAULT
   call sim%symplectic_rungekutta()
   end SELECT
-  
         if (sim%coll_rank==0) write(*,'(A2, G10.4,  G20.8,  G20.8, G20.8, G20.8)') '#', sim%dt*(sim%tstep-1), &
                            abs(sim%moment(1,sim%tstep))/sim%npart, sim%energy_error(sim%tstep), &
                            sim%fieldenergy(sim%tstep), sqrt(sum(sim%moment(:,tstep)**2))
@@ -364,21 +447,36 @@ do tstep=1,sim%tsteps
   end do
   
   
+!   if (sim%WRITE_PHI==1 .and. sim%coll_rank==0 ) then 
+!     write (phi_file_id, *) abs(sim%solution)
+!   endif
+
+  if (sim%coll_rank==0) then
+   if (sim%WRITE_PHI==1) then
+   call int2string(sim%tstep, timestr)
+   call sll_hdf5_file_create(trim(sim%prefix)//'_data_'//timestr//'.h5',hdata_id,ierr)
+   call sll_hdf5_write_array(hdata_id,abs(sim%solution),"/phi",ierr)
+   call sll_hdf5_write_array(hdata_id,abs(sim%rhs),"/rho",ierr)
+   call sll_hdf5_file_close(hdata_id, ierr)
+   endif
+  endif
+  
   call sim%visu_phasespace()
 end do
+
 
 call sim%write_result()
 
 
+
+
 end subroutine run_generalvp_pif
-
-
 
 subroutine visu_phasespace(sim)
   class(sll_simulation_general_vlasov_poisson_pif), intent(in) :: sim 
   
   if  (all(sim%plot2d_idx/=0)) then
-    call distribution_xdmf_coll("pif_plot2d",  sim%particle(sim%plot2d_idx(1),:), sim%particle(sim%plot2d_idx(2),:), &
+    call distribution_xdmf_coll(trim(sim%prefix)//'_plot2d',  sim%particle(sim%plot2d_idx(1),:), sim%particle(sim%plot2d_idx(2),:), &
               sim%particle(sim%maskw,:)/sim%npart, &
               sim%visu_bound_low(sim%plot2d_idx(1)),sim%visu_bound_up(sim%plot2d_idx(1)), sim%plot2d_bin(1), &
               sim%visu_bound_low(sim%plot2d_idx(2)),sim%visu_bound_up(sim%plot2d_idx(2)), sim%plot2d_bin(2), sim%tstep,&
@@ -390,19 +488,19 @@ subroutine visu_phasespace(sim)
   if (sim%coll_rank==0 .and. sim%num_visu_particles/=0 ) then
   SELECT CASE(sim%dimx)
   CASE(1)
-  call plot_format_points3d("pif_xw", &
+  call plot_format_points3d(trim(sim%prefix)//'_xw', &
                sim%particle(sim%maskx(1),1:sim%num_visu_particles), &
                sim%particle(sim%maskx(2),1:sim%num_visu_particles), &
                sim%particle(sim%maskw,1:sim%num_visu_particles), &
                sim%tstep)
   CASE(2)
-  call plot_format_points3d("pif_xyw", &
+  call plot_format_points3d(trim(sim%prefix)//'pif_xyw', &
                sim%particle(sim%maskx(1),1:sim%num_visu_particles), &
                sim%particle(sim%maskx(2),1:sim%num_visu_particles), &
                sim%particle(sim%maskw,1:sim%num_visu_particles), &
                sim%tstep)
   CASE(3)
-  call plot_format_points3d("pif_xyzw", &
+  call plot_format_points3d(trim(sim%prefix)//'_xyzw', &
                sim%particle(sim%maskx(1),1:sim%num_visu_particles), &
                sim%particle(sim%maskx(2),1:sim%num_visu_particles), &
                sim%particle(sim%maskx(3),1:sim%num_visu_particles), &
@@ -472,8 +570,9 @@ end subroutine
  sll_int32 :: CONTROLVARIATE, RND_OFFSET
  
  sll_int32, dimension(2) :: PLOT2D_IDX=0, PLOT2D_BIN=50
- sll_int32 :: NUM_VISU_PARTICLES=0
+ sll_int32 :: NUM_VISU_PARTICLES=0 , WRITE_PHI=0
  character(len=32) :: TESTCASE
+ character(len=64) :: PREFIX
      
      sll_int32, parameter  :: input_file = 99
      sll_int32             :: IO_stat,ierr,idx
@@ -482,7 +581,7 @@ end subroutine
                           NUM_MODES, QoverM, EPSILON, CONTROLVARIATE, &
                           TIME_INTEGRATOR_ORDER,RND_OFFSET,K,L,B0,&
                           TESTCASE,&
-                          PLOT2D_IDX,PLOT2D_BIN, NUM_VISU_PARTICLES
+                          PLOT2D_IDX,PLOT2D_BIN, NUM_VISU_PARTICLES, PREFIX,WRITE_PHI
      
      open(unit = input_file, file=trim(filename),IOStat=IO_stat)
      if( IO_stat /= 0 ) then
@@ -522,6 +621,13 @@ end subroutine
          SLL_ALLOCATE(sim%B0(sim%dimx),ierr)
          sim%B0=B0(1:sim%dimx)
      endif
+
+     !Output
+     if (len(trim(PREFIX))/=0) then
+       sim%PREFIX=trim(PREFIX)
+     endif
+     
+     sim%WRITE_PHI=WRITE_PHI
      
      if (all(PLOT2D_IDX/=0)) then
          if (maxval(PLOT2D_IDX)>sim%dimx*2+1) then
@@ -695,21 +801,30 @@ end subroutine symplectic_rungekutta_generalvp_pif
 subroutine YSun_g2h_generalvp_pif(sim)
   class(sll_simulation_general_vlasov_poisson_pif), intent(inout) :: sim
   sll_real64, dimension(sim%dimx, sim%npart_loc) :: E,B
-  sll_int32 :: rkidx
+  sll_int32 :: stage
   sll_real64 :: t, h !time
-  sll_real64, parameter :: gamma1=1.0_f64/(2.0_f64-2.0_f64**(1.0_f64/3.0_f64))
-  sll_real64, parameter :: gamma0=1.0_f64-2.0_f64/(2.0_f64-2.0_f64**(1.0_f64/3.0_f64))
-  sll_real64, dimension(3) :: gamma
-     
-    gamma(1)=gamma1
-    gamma(2)=gamma0
-    gamma(3)=gamma1
+  type(comp_coeff_sym_sym)  :: compc
+  
+  SELECT CASE( sim%time_integrator_order  )
+    CASE(1)
+     call compc%init(1,1)
+    CASE(2:4)
+     call compc%init(2,3)
+    CASE(5:8)
+     call compc%init(6,9) !(6,7)
+    CASE(9:10)
+     call compc%init(8,17) !(8,15)
+    CASE(11:12)
+     call compc%init(10,35)
+   CASE DEFAULT
+    call compc%init(2,3)
+  END SELECT
          
   !Loop over all stages
     t=(sim%tstep-1)*sim%dt
-     do rkidx=1, size(gamma);
+     do stage=1, compc%stages;
      !Set control variate if used
-     call sim%update_weight()
+      call sim%update_weight()
      
      !Charge assignement, get right hand side
       sim%rhs=sim%SOLVER%get_rhs_particle(sim%particle(sim%maskxw,:))/sim%npart
@@ -717,27 +832,41 @@ subroutine YSun_g2h_generalvp_pif(sim)
      call sll_collective_globalsum(sll_world_collective, sim%rhs)
      sim%solution=sim%solve_field(sim%rhs)
     
-       if (rkidx==1) then
+       if (stage==1) then
          call sim%calculate_diagnostics()
        endif
 
-      h=gamma(rkidx)*sim%dt
+      h=compc%gamma(stage)*sim%dt
     
-       E= sim%E(sim%particle(sim%maskx,:),t) + &  ! Electric field external
+     E= sim%E(sim%particle(sim%maskx,:),t) + &  ! Electric field external
             (sim%SOLVER%eval_gradient(sim%particle(sim%maskx,:),sim%solution)) !Electric field selfconsistent
-!       E=0    
       B=sim%B(sim%particle(sim%maskx,:), t) !External magnetic field
       
-     sim%particle(sim%maskv,:)=exp_skew_product2( B, &
+     sim%particle(sim%maskv,:)=exp_skew_product2( normalize(B), &
                       sim%particle(sim%maskv,:) + h*sim%qm/2.0*E, h*(-sim%qm)*l2norm(B) ) + h*sim%qm/2.0*E    
     !x_{k+1}= x_k + dt*v_{k+1}
     sim%particle(sim%maskx,:)=sim%particle(sim%maskx,:) +  h*sim%particle(sim%maskv,:);
       
-          t=(sim%tstep-1)*sim%dt+sum(gamma(1:rkidx))*sim%dt;
+      t=(sim%tstep-1)*sim%dt+sum(compc%gamma(1:stage))*sim%dt;
      end do
      t=(sim%tstep)*sim%dt;
      
 end subroutine YSun_g2h_generalvp_pif
+
+
+function normalize( v ) result(vn)
+ sll_real64, dimension(:,:), intent(in) :: v
+ sll_real64, dimension(size(v,1),size(v,2)) :: vn
+ sll_real64, dimension(size(v,2)) :: normv
+ sll_int32 :: idx
+ normv=l2norm(v)
+ 
+ do idx=1,size(v,2)
+   if (normv(idx)/=0) then
+     vn(:,idx)=v(:,idx)/normv(idx)
+   endif
+ end do
+end function normalize
 
 
 subroutine heun_generalvp_pif(sim)
@@ -782,7 +911,7 @@ end subroutine heun_generalvp_pif
 subroutine rk4_generalvp_pif(sim)
     class(sll_simulation_general_vlasov_poisson_pif), intent(inout) :: sim
     sll_real64 :: t
-    sll_real64, dimension(sim%dimx,sim%npart_loc) :: k1_xx, k1_vx,k2_xx, &
+     sll_real64, dimension(sim%dimx,sim%npart_loc) :: k1_xx, k1_vx,k2_xx, &
                     k2_vx,k3_xx, k3_vx,E,k4_xx,k4_vx, xx_up,vx_up
     t=(sim%tstep-1)*sim%dt
 ! 
@@ -880,23 +1009,17 @@ end subroutine rk4_generalvp_pif
   sll_real64, dimension(:,:), intent(in) :: v, w
   sll_real64, dimension(3,size(v,2)) :: c
   sll_real64, dimension(:), intent(in) :: omega
+!    
+  c(1,:) = w(1,:) + w(1,:)*(v(2,:)**2 + v(3,:)**2)*(cos(omega) - 1) + v(2,:)*w(3,:)*sin(omega) - v(3,:)*w(2,:)*sin(omega) - v(1,:)*v(2,:)*w(2,:)*(cos(omega) - 1) - v(1,:)*v(3,:)*w(3,:)*(cos(omega) - 1) 
+  c(2,:) = w(2,:) + w(2,:)*(v(1,:)**2 + v(3,:)**2)*(cos(omega) - 1) - v(1,:)*w(3,:)*sin(omega) + v(3,:)*w(1,:)*sin(omega) - v(1,:)*v(2,:)*w(1,:)*(cos(omega) - 1) - v(2,:)*v(3,:)*w(3,:)*(cos(omega) - 1) 
+  c(3,:) = w(3,:) + w(3,:)*(v(1,:)**2 + v(2,:)**2)*(cos(omega) - 1) + v(1,:)*w(2,:)*sin(omega) - v(2,:)*w(1,:)*sin(omega) - v(1,:)*v(3,:)*w(1,:)*(cos(omega) - 1) - v(2,:)*v(3,:)*w(2,:)*(cos(omega) - 1)  
    
-   c(1,:) = w(1,:) + w(1,:)*(v(3,:)**2 + v(3,:)**2)*(cos(omega) - 1) + v(3,:)*w(3,:)*sin(omega) - v(3,:)*w(2,:)*sin(omega) - v(1,:)*v(3,:)*w(2,:)*(cos(omega) - 1) - v(1,:)*v(3,:)*w(3,:)*(cos(omega) - 1) 
-  c(2,:) = w(2,:) + w(2,:)*(v(1,:)**2 + v(3,:)**2)*(cos(omega) - 1) - v(1,:)*w(3,:)*sin(omega) + v(3,:)*w(1,:)*sin(omega) - v(1,:)*v(3,:)*w(1,:)*(cos(omega) - 1) - v(3,:)*v(3,:)*w(3,:)*(cos(omega) - 1) 
-  c(3,:) = w(3,:) + w(3,:)*(v(1,:)**2 + v(3,:)**2)*(cos(omega) - 1) + v(1,:)*w(2,:)*sin(omega) - v(3,:)*w(1,:)*sin(omega) - v(1,:)*v(3,:)*w(1,:)*(cos(omega) - 1) - v(3,:)*v(3,:)*w(2,:)*(cos(omega) - 1) 
-   
-   
-!   c(1,:) = w(1,:) + w(1,:)*(cos(omega) - 1) - w(2,:)*sin(omega) 
-!  c(2,:) = w(2,:) + w(2,:)*(cos(omega) - 1) + w(1,:)*sin(omega) 
-!  c(3,:) = w(3,:) 
-
   end function
 
 
   function exp_skew_product( v, w) result(c)
   sll_real64, dimension(:,:), intent(in) :: v, w
   sll_real64, dimension(3,size(v,2)) :: c
-  sll_comp64, dimension(size(v,2)) :: s
   sll_real64, dimension(size(v,2)) :: vv
   sll_comp64, dimension(size(v,2)) :: sqrtvv
   
@@ -904,7 +1027,6 @@ end subroutine rk4_generalvp_pif
   vv=-(v(1,:)**2+v(2,:)**2+v(3,:)**2)
   sqrtvv=sll_i1*sqrt(-vv)
   
-     
      c(1,:) = real((w(1,:)*exp(-sqrtvv)*(v(1,:)**2*exp(sqrtvv)*2.0D0+v(3,:)**2*exp(sqrtvv*2.0D0)+v(3,:)**2*exp(sqrtvv*2.0D0)+v(3,:)**2+v(3,:)**2)*&
      (-1.0D0/2.0D0))/vv+1.0D0/sqrtvv**(3.0D0)*w(2,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0D0)*&
      (v(3,:)**3*exp(sqrtvv)+v(1,:)**2*v(3,:)+v(3,:)**2*v(3,:)+v(3,:)**3+v(1,:)**2*v(3,:)*&
@@ -923,46 +1045,7 @@ end subroutine rk4_generalvp_pif
      vv-1.0D0/sqrtvv**(3.0D0)*w(2,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0D0)*(v(1,:)**3*exp(sqrtvv)+v(1,:)*v(3,:)**2+v(1,:)*v(3,:)**2+v(1,:)**3+v(1,:)&
      *v(3,:)**2*exp(sqrtvv)+v(1,:)*v(3,:)**2*exp(sqrtvv)+sqrtvv*v(3,:)*v(3,:)-sqrtvv*v(3,:)*v(3,:)*exp(sqrtvv))*(1.0D0/2.0D0)+&
      1.0D0/sqrtvv**(3.0D0)*w(1,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0D0)*(v(3,:)**3*exp(sqrtvv)+v(1,:)**2*v(3,:)+v(3,:)*v(3,:)**2+&
-     v(3,:)**3+v(1,:)**2*v(3,:)*exp(sqrtvv)+v(3,:)*v(3,:)**2*exp(sqrtvv)-sqrtvv*v(1,:)*v(3,:)+sqrtvv*v(1,:)*v(3,:)*exp(sqrtvv))*(1.0D0/2.0D0))
-  
-  
-!    c(1,:) = w(1,:)*5.403023058681397D-1-w(2,:)*8.414709848078966D-1
-!    c(2,:) = w(1,:)*8.414709848078965D-1+w(2,:)*5.403023058681398D-1
-!    c(3,:) = w(3,:)
-!     c=0
-!      s(:)=sll_i1*sqrt(v(1,:)**2+v(2,:)**2+v(3,:)**2)  
-!    c(1,:) =real( (w(1,:)*exp(-s)*(v(1,:)**2*exp(s)*2.0D0+v(2,:)**2*exp(s*2.0D0)+v(3,:)**2*exp(s*2.0D0)+v(2,:)**2+v(3,:)**2)*&
-!            (1.0D0/2.0D0))/(v(1,:)**2+v(2,:)**2+v(3,:)**2)+w(2,:)*exp(s)*(exp(s)-1.0D0)*1.0D0/ &
-!            sll_i1**3/sqrt(v(1,:)**2+v(2,:)**2+ v(3,:)**2)**(3.0D0)*(v(3,:)**3*exp(s)+v(1,:)**2*v(3,:)+v(2,:)**2*v(3,:)+v(3,:)**3+v(1,:)**2*v(3,:)*exp(s)+&
-!            v(2,:)**2*v(3,:)*exp(s)-s*v(1,:)*v(2,:)+s*v(1,:)*v(2,:)*exp(s))*(1.0D0/2.0D0)-(w(3,:)*exp(s)*(exp(s)-1.0D0)*(s*v(2,:)&
-!            -v(1,:)*v(3,:)+s*v(2,:)*exp(s)+v(1,:)*v(3,:)*exp(s))*(1.0D0/2.0D0))/(v(1,:)**2+v(2,:)**2+v(3,:)**2))
-
-!   c(2,:) =real( (w(2,:)*exp(-sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2))*(v(1,:)**2*exp(sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2)*2.0D0)+v(3,:)**2*exp(sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2)*2.0D0)+v(1,:)**2+v(3,:)**2+v(2,:)**2*exp(sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2))*2.0D0)*(1.0D0/2.0D0))&
-!   /(v(1,:)**2+v(2,:)**2+v(3,:)**2)+(w(3,:)*exp(-sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2))*&
-!   (exp(sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2))-1.0D0)*(v(1,:)*sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2)+v(2,:)*v(3,:)-v(2,:)*&
-!      v(3,:)*exp(sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2))+v(1,:)*exp(sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2))*&
-!      sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2))*(1.0D0/2.0D0))/(v(1,:)**2+v(2,:)**2+v(3,:)**2)-w(1,:)*&
-!      exp(-sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2))*(exp(sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2))-1.0D0)&
-!      *1.0D0/(-v(1,:)**2-v(2,:)**2-v(3,:)**2)**(3.0D0/2.0D0)*(v(1,:)**2*v(3,:)+v(2,:)**2*v(3,:)+v(3,:)**3&
-!      +v(3,:)**3*exp(sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2))+v(1,:)**2*v(3,:)*exp(sqrt(-v(1,:)**2-v(2,:)**2&
-!      -v(3,:)**2))+v(2,:)**2*v(3,:)*exp(sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2))+v(1,:)*v(2,:)*sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2)-&
-!      v(1,:)*v(2,:)*exp(sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2))*sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2))*(1.0D0/2.0D0))
-!           
-!  c(3,:) = real((w(3,:)*exp(-sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2))*(v(1,:)**2*exp(sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2)*2.0D0)+&
-!  v(2,:)**2*exp(sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2)*2.0D0)+v(1,:)**2+&
-!  v(2,:)**2+v(3,:)**2*exp(sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2))*2.0D0)*(1.0D0/2.0D0))&
-!  /(v(1,:)**2+v(2,:)**2+v(3,:)**2)-w(2,:)*exp(-sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2))*&
-!  (exp(sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2))-1.0D0)*1.0D0/(-v(1,:)**2-v(2,:)**2-v(3,:)**2)**(3.0D0/2.0D0)*(v(1,:)*v(2,:)**2+&
-!  v(1,:)*v(3,:)**2+v(1,:)**3+v(1,:)**3*exp(sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2))+&
-!  v(1,:)*v(2,:)**2*exp(sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2))+v(1,:)*v(3,:)**2*exp(sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2))+v(2,:)*v(3,:)*&
-!  sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2)-v(2,:)*v(3,:)*exp(sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2))*&
-!  sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2))*(1.0D0/2.0D0)+w(1,:)*exp(-sqrt(-v(1,:)**2-v(2,:)**2-&
-!  v(3,:)**2))*(exp(sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2))-1.0D0)*1.0D0/(-v(1,:)**2-v(2,:)**2-v(3,:)**2)**(3.0D0/2.0D0)*(v(1,:)**2*v(2,:)+v(2,:)*v(3,:)**2+v(2,:)**3+v(2,:)**3*exp(sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2))+v(1,:)**2*v(2,:)*exp(sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2))+v(2,:)*v(3,:)**2*exp(sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2))-v(1,:)*v(3,:)*sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2)+v(1,:)*v(3,:)*exp(sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2))*sqrt(-v(1,:)**2-v(2,:)**2-v(3,:)**2))*(1.0D0/2.0D0))
- 
-!  print *, sum(c(1,:))
- 
- 
- 
+     v(3,:)**3+v(1,:)**2*v(3,:)*exp(sqrtvv)+v(3,:)*v(3,:)**2*exp(sqrtvv)-sqrtvv*v(1,:)*v(3,:)+sqrtvv*v(1,:)*v(3,:)*exp(sqrtvv))*(1.0D0/2.0D0)) 
   end function
  
  
@@ -970,7 +1053,8 @@ subroutine set_symplectic_rungekutta_coeffs_generalvp_pif(sim,rk_order)
   class(sll_simulation_general_vlasov_poisson_pif), intent(inout) :: sim
 sll_int32, intent(in) :: rk_order
 sll_int32 :: ierr
-sll_real64,parameter :: rk4sx=((2**(1/3) +2**(-1/3)-1)/6)
+sll_real64,parameter :: rk4sx=0.17560359597982881702384390448573_f64 
+!((2**(1.0/3.0) +2**(-1/3)-1)/6)
 
 SLL_ALLOCATE(sim%rk_c(rk_order),ierr)
 SLL_ALLOCATE(sim%rk_d(rk_order),ierr)
@@ -989,6 +1073,7 @@ SELECT CASE (rk_order)
    CASE (4)
       sim%rk_d=(/ 2.0*rk4sx+1.0 , -4.0*rk4sx-1.0, 2.0*rk4sx+1.0, 0.0_f64/) 
       sim%rk_c=(/ rk4sx + 0.5 , -rk4sx, -rk4sx, rk4sx +0.5 /) 
+   CASE DEFAULT
 END SELECT
 
 if (sim%coll_rank==0) print *, "Symplectic Runge Kutta of order:", rk_order
@@ -1061,7 +1146,7 @@ end function control_variate_generalvp_pif
 
 subroutine write_result_generalvp_pif(sim)
   class(sll_simulation_general_vlasov_poisson_pif), intent(in) :: sim       
-        integer :: idx,file_id,file_id_err,ierr
+        integer :: idx,file_id,ierr
 
 
         if (sim%coll_rank==0) then
@@ -1070,7 +1155,7 @@ subroutine write_result_generalvp_pif(sim)
 
             !Write Data File
             !            open(file_id, file = plot_name//"_"//fin//'.dat' )
-             open(file_id, file = 'pif_result.csv')
+             open(file_id, file = trim(sim%prefix)//'_result.csv')
             !             open(file_id, file = './'//filename//'.csv')
 !             write (file_id, *)  "#Full 1d1v Electrostatic PIC"
 !             write (file_id,*)  "#Time steps:", timesteps
@@ -1088,7 +1173,7 @@ subroutine write_result_generalvp_pif(sim)
             enddo
             close(file_id)
         
-          open(file_id, file = 'pif_result.gnu')
+          open(file_id, file = trim(sim%prefix)//'_result.gnu')
        
           write(file_id,*) "set term x11 1"
           write(file_id,*) "set logscale y"
@@ -1150,6 +1235,9 @@ subroutine write_result_generalvp_pif(sim)
         
         endif
 end subroutine write_result_generalvp_pif
+
+
+
 
 
 
