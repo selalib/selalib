@@ -31,8 +31,8 @@ module sll_pic_simulation_4d_cartesian_module
      ! Physics/numerical parameters
      sll_real64 :: dt
      sll_int32  :: num_iterations
-     sll_real64 :: thermal_speed_ions
-     sll_int32  :: ions_number
+     sll_real64 :: thermal_speed_parts
+     sll_int32  :: parts_number
      sll_int32  :: guard_size
      sll_int32  :: array_size
      sll_real64, dimension(1:6) :: elec_params
@@ -110,8 +110,8 @@ contains
 
     XMAX = (2._f64*sll_pi/KX)
     sim%use_cubic_splines = UseCubicSplines
-    sim%thermal_speed_ions = THERM_SPEED
-    sim%ions_number = NUM_PARTICLES
+    sim%thermal_speed_parts = THERM_SPEED
+    sim%parts_number = NUM_PARTICLES
     sim%guard_size = GUARD_SIZE  
     sim%array_size = PARTICLE_ARRAY_SIZE
     sim%dt = dt
@@ -146,9 +146,9 @@ contains
     enddo
     
     pa_gr => sim%part_group
-    call sll_initial_particles_4d( sim%thermal_speed_ions, & 
+    call sll_initial_particles_4d( sim%thermal_speed_parts, & 
                                    ALPHA, KX, sim%m2d,     &
-                                   sim%ions_number,        &
+                                   sim%parts_number,        &
                                    pa_gr, &
                                    rand_seed, sim%my_rank, &
                                    sim%world_size ) 
@@ -156,7 +156,7 @@ contains
 
     !$omp parallel
     !$omp do
-    do j=1,sim%ions_number
+    do j=1,sim%parts_number
        sim%part_group%p_list(j) = pa_gr%p_list(j)
     enddo
     !$omp end do
@@ -318,14 +318,14 @@ contains
 !!$    bors = 0.0_f64
 !!$    !$omp parallel
 !!$    !$omp do reduction(+:bors)
-!!$    do i =1, sim%ions_number,2
+!!$    do i =1, sim%parts_number,2
 !!$       bors = bors + p(i)%vx**2 + p(i)%vy**2 &
 !!$            + p(i+1)%vx**2 + p(i+1)%vy**2
 !!$    enddo
 !!$    !$omp end do
 !!$    !$omp end parallel
 !!$    diag_TOTenergy(0) = bors * 0.5_f64*(sim%m2d%eta1_max - sim%m2d%eta1_min)  &
-!!$         * (sim%m2d%eta2_max - sim%m2d%eta2_min)/( sim%world_size*sim%ions_number)  &
+!!$         * (sim%m2d%eta2_max - sim%m2d%eta2_min)/( sim%world_size*sim%parts_number)  &
 !!$         + tot_ee * 0.5_f64! ATTENTION : resultats faux avec MPI 
     
     if (sim%use_cubic_splines) then 
@@ -333,7 +333,7 @@ contains
        call sll_accumulate_field_CS( sim%E1, sim%E2, sim%E_accumulator_CS )
        !$omp parallel do PRIVATE (pp_vx, pp_vy, Ex, Ey, ttmp)
        !$&omp FIRSTPRIVATE(dtqom)
-       do i = 1, sim%ions_number
+       do i = 1, sim%parts_number
           pp_vx = p(i)%vx
           pp_vy = p(i)%vy
           SLL_INTERPOLATE_FIELD_CS(Ex,Ey,accumE_CS,p(i),ttmp)
@@ -348,7 +348,7 @@ contains
        call sll_accumulate_field( sim%E1, sim%E2, sim%E_accumulator )
        !$omp parallel do PRIVATE (pp_vx, pp_vy, Ex, Ey, tmp5, tmp6)
        !$&omp FIRSTPRIVATE(dtqom)
-       do i = 1, sim%ions_number
+       do i = 1, sim%parts_number
           pp_vx = p(i)%vx
           pp_vy = p(i)%vy
           SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,p(i),tmp5,tmp6)
@@ -428,7 +428,7 @@ contains
           p_guard => sim%part_group%p_guard(thread_id+1)%g_list
           gi = 0
           !$omp do!!  reduction(+:some_val)
-          do i = 1, sim%ions_number,2
+          do i = 1, sim%parts_number,2
              SLL_INTERPOLATE_FIELD_CS(Ex,Ey,accumE_CS,p(i),ttmp)
              p(i)%vx = p(i)%vx + dtqom * Ex
              p(i)%vy = p(i)%vy + dtqom * Ey
@@ -476,7 +476,7 @@ contains
 !       diag_TOTenergy(mod(counter,save_nb)) = some_val
 
 !         ttime = omp_get_wtime()!! ttime = sll_time_elapsed_since(t3)
-!          diag_AccMem(it,:) = (/ (it+1)*dt, (32*sim%ions_number*2 + gi*2*8 + &
+!          diag_AccMem(it,:) = (/ (it+1)*dt, (32*sim%parts_number*2 + gi*2*8 + &
 !               2*128*ncx*ncy + 2*128*ncx*ncy)/ttime/1e9 /)! access to memory in GB/sec
 !!$            2*sizeof(sim%q_accumulator_CS%q_acc) + sizeof(sim%E_accumulator_CS%e_acc))
 
@@ -521,7 +521,7 @@ contains
           p_guard => sim%part_group%p_guard(thread_id+1)%g_list
           gi = 0
           !$omp do schedule(runtime)
-          do i = 1, sim%ions_number!!$,2
+          do i = 1, sim%parts_number!!$,2
              SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,p(i),tmp5,tmp6)
              p(i)%vx = p(i)%vx + dtqom * Ex
              p(i)%vy = p(i)%vy + dtqom * Ey
@@ -568,7 +568,7 @@ contains
 #ifdef _OPENMP
           ttime = omp_get_wtime()!! ttime = sll_time_elapsed_since(t3)
           diag_AccMem(it,:) = (/ (it+1)*dt, &
-               (real(32*sim%ions_number*2,f64)+real(gi*2*8,f64) + real(4*32*ncx*ncy,f64) ) &
+               (real(32*sim%parts_number*2,f64)+real(gi*2*8,f64) + real(4*32*ncx*ncy,f64) ) &
                /(ttime-t3)/1e9 /)! access to memory in GB/sec
 !          
 !            2*sizeof(sim%q_accumulator%q_acc) + sizeof(sim%E_accumulator%e_acc))
@@ -639,7 +639,7 @@ contains
 !!$          some_val = 0.0_f64
 !!$          !$omp parallel PRIVATE(Ex,Ey,Ex1,Ey1,tmp5,tmp6)
 !!$          !$omp do reduction(+:some_val)
-!!$          do i =1,sim%ions_number,2
+!!$          do i =1,sim%parts_number,2
 !!$             SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,p(i),tmp5,tmp6)
 !!$             SLL_INTERPOLATE_FIELD(Ex1,Ey1,accumE,p(i+1),tmp5,tmp6)
 !!$             some_val = some_val + (p(i)%vx + 0.5_f64 * dtqom * Ex)**2 &
@@ -652,7 +652,7 @@ contains
 !!$          call electric_energy( tot_ee, sim%E1, sim%E2, sim%m2d%num_cells1, &
 !!$               sim%m2d%num_cells2, sim%m2d%eta1_max, sim%m2d%eta2_max )
 !!$          diag_TOTenergy(it) = some_val* 0.5_f64 *(sim%m2d%eta1_max - sim%m2d%eta1_min) * &
-!!$               (sim%m2d%eta2_max - sim%m2d%eta2_min)/( sim%world_size*sim%ions_number)  &
+!!$               (sim%m2d%eta2_max - sim%m2d%eta2_min)/( sim%world_size*sim%parts_number)  &
 !!$               + tot_ee * 0.5_f64
        endif
 
@@ -663,7 +663,7 @@ contains
     if (sim%my_rank ==0) then 
        open(93,file='time_OptPush_omp.dat',position='append')
        write(93,*) '# Nb of threads   ||   time (sec)   ||   average pushes/sec'
-       write(93,*) n_threads, time-t2, int(sim%num_iterations,i64)*int(sim%ions_number,i64)/(time-t2)
+       write(93,*) n_threads, time-t2, int(sim%num_iterations,i64)*int(sim%parts_number,i64)/(time-t2)
        close(93)
     endif
 #endif
