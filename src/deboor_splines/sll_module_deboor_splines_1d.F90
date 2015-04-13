@@ -807,8 +807,7 @@ sll_int32  :: li_i, li_iflag
 
 lpr_work1(:) = 0.0
 
-! *** set up knots
-    interpolate between knots
+! *** set up knots interpolate between knots
 ! x
 !  if (ai_kx <= 2) then 
 apr_tx ( 1 : ai_kx ) = apr_taux ( 1 )
