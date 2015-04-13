@@ -34,7 +34,6 @@
     
 *** configuration options
 
-
      some configuration options are required for [[file:../CMakeLists.txt]] to build parallel tests
      OPENMP_ENABLED=OFF is forced to OFF until further speed tests
 
