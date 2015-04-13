@@ -3630,20 +3630,14 @@ sll_real64, dimension( : ), pointer, intent(out) :: tx
 sll_real64, dimension( : ), pointer, intent(out) :: ty 
 
 
-sll_real64, dimension(nx+mx)                :: work2
-sll_real64, dimension((nx+mx)*(ny+my))      :: work3
-sll_real64, dimension(nx*(2*kx-1))     :: qx
-sll_real64, dimension((nx+mx)*(2*kx-1))     :: work31
-sll_real64, dimension((2*ky-1)*(ny+my))     :: work32
-sll_real64, dimension(ny+my)                :: work4
-sll_real64, dimension(1:ny,1:nx+mx), target :: work5 
-sll_real64, dimension(:,:), pointer         :: work5_ptr 
+sll_real64, dimension(nx+mx)                :: wx
+sll_real64, dimension(ny+my)                :: wy
+sll_real64, dimension((nx+mx)*(2*kx-1))     :: qx
+sll_real64, dimension((ny+my)*(2*ky-1))     :: qy
+sll_real64, dimension(1:ny,1:nx+mx)         :: tmp 
 
-sll_int32 :: j
+sll_int32 :: i, j
 sll_int32 :: ierr
-
-
-work5(:,:) = 0.0
 
 tx(1:kx)             = taux(1)
 tx(nx+mx+1:nx+mx+kx) = taux(nx)
@@ -3663,117 +3657,45 @@ else
    stop 'problem with construction of knots' 
 end if
 
-work5_ptr => work5
-call spli2d_der ( taux,      &
-                  gtau,      &
-                  taux_der,  &
-                  gtau_der1, &
-                  tx,        &
-                  nx,        &
-                  mx,        &
-                  kx,        &
-                  ny,        &
-                  work2,     &
-                  work31,    &
-                  work5_ptr, &
-                  ierr )
-!do j = 1, ny
-!   
-!   call splint_der( taux,           &
-!                    gtau(:,j),      &
-!                    taux_der,       &
-!                    gtau_der1(:,j), &
-!                    tx,             &
-!                    nx,             &
-!                    mx,             &
-!                    kx,             &
-!                    qx,             &
-!                    work5_ptr(:,j), &
-!                    ierr )
-!   
-!   
-!end do
-
- bcoef(:,:) =0.0_8
- work4 = 0.0_8
- work3 = 0.0_8
- work32= 0.0_8
- 
- call spli2d_der ( tauy,        &
-                   work5_ptr,   &
-                   tauy_der,    &
-                   gtau_der2,   &
-                   ty,          &
-                   ny,          &
-                   my,          &
-                   ky,          &
-                   nx+mx,       &
-                   work4,       &
-                   work32,      &
-                   bcoef,       &
-                   ierr )
-
-end subroutine spli2d_custom_derder
-
-
-subroutine spli2d_der( tau,       &
-                       gtau,      &
-                       tau_der,   &
-                       gtau_der,  &
-                       t,         &
-                       n,         &
-                       np,        &
-                       k,         &
-                       m,         &
-                       work,      &
-                       q,         &
-                       bcoef,     &
-                       iflag )
-    
-sll_int32                          , intent(in)  :: m
-sll_int32                          , intent(in)  :: n
-sll_int32                          , intent(in)  :: np
-sll_real64, dimension(:,:), pointer, intent(in)  :: gtau  
-sll_real64, dimension(:,:), pointer, intent(in)  :: gtau_der
-sll_real64, dimension(:,:), pointer, intent(out) :: bcoef 
-
-sll_int32 :: iflag
-sll_int32 :: j
-sll_int32 :: k
-sll_real64,dimension((2*k-1)*n):: q
-sll_real64,dimension(:),pointer:: t
-sll_real64,dimension(:),pointer:: tau
-sll_int32,dimension(:),pointer:: tau_der
-sll_real64,dimension(n):: work
-sll_real64,dimension(np):: work_der
-sll_real64,dimension(n+np):: work_result
-
-
-work_result = 0.0_f64
-
-do j = 1, m
+do j = 1, ny
    
-   work(1:n)      = gtau(:,j)
-   work_der(1:np) = gtau_der(1:np,j)
+   call splint_der( taux,           &
+                    gtau(1:nx,j),   &
+                    taux_der,       &
+                    gtau_der1(:,j), &
+                    tx,             &
+                    nx,             &
+                    mx,             &
+                    kx,             &
+                    qx,             &
+                    wx,             &
+                    ierr )
 
-   call splint_der( tau,         &
-                    work,        &
-                    tau_der,     &
-                    work_der,    &
-                    t,           &
-                    n,           &
-                    np,          &
-                    k,           &
-                    q,           &
-                    work_result, &
-                    iflag )
+   tmp(j,1:nx+mx) = wx
+
+end do
+
+do i = 1, nx+mx
    
-   bcoef(j,1:n+np) = work_result(1:n+np)
-   
+    call splint_der( tauy,           &
+                     tmp(1:ny,i),    &
+                     tauy_der,       &
+                     gtau_der2(:,i), &
+                     ty,             &
+                     ny,             &
+                     my,             &
+                     ky,             &
+                     qy,             &
+                     wy,             &
+                     ierr )
+
+   bcoef(i,1:ny+my) = wy
+
 end do
 
 
-end subroutine spli2d_der
+end subroutine spli2d_custom_derder
+
 
 !*************************************************************************
 !
@@ -3860,23 +3782,27 @@ end subroutine spli2d_der
 !
 subroutine splint_der( tau,gtau,tau_der,gtau_der,t,n,m,k, q, bcoef_spline, iflag )
     
-sll_int32 ::  n
-sll_int32 ::  m
-sll_real64,dimension(n+m):: bcoef ! (n)
-sll_real64,dimension(n+m):: bcoef_spline 
-sll_real64,dimension(n)::  gtau ! (n)
-sll_real64,dimension(m)::  gtau_der ! (n)
+sll_int32                            , intent(in)  :: n
+sll_int32                            , intent(in)  :: m
+sll_int32                            , intent(in)  :: k
+sll_real64, dimension(n)             , intent(in)  :: tau
+sll_real64, dimension(n)             , intent(in)  :: gtau 
+sll_int32,  dimension(m)             , intent(in)  :: tau_der
+sll_real64, dimension(m)             , intent(in)  :: gtau_der
+sll_real64, dimension(n+k+m)         , intent(in)  :: t
+sll_real64, dimension((2*k-1)*(n+m)) , intent(out) :: q
+sll_real64, dimension(n+m)           , intent(out) :: bcoef_spline 
+sll_int32                            , intent(out) :: iflag
+
+
+
+sll_real64, dimension(n+m)           :: bcoef 
 sll_int32 :: i
-sll_int32 :: iflag,mflag
+sll_int32 :: mflag
 sll_int32 :: j,l
 sll_int32 :: jj
-sll_int32 :: k
 sll_int32 :: kpkm2
 sll_int32 :: left
-sll_real64, dimension((2*k-1)*(n+m)) :: q!((2*k-1)*n)
-sll_real64,dimension(n+k+m) ::  t!(n+k)
-sll_real64,dimension(n) ::  tau!!(n)
-sll_int32,dimension(m) ::  tau_der!!(n)
 sll_real64:: taui,taui_der
 sll_real64, dimension(k,k):: a
 sll_real64,dimension(k,2) :: bcoef_der
