@@ -32,8 +32,8 @@ module sll_pic_simulation_2d_cartesian_module
      ! Physics/numerical parameters
      sll_real64 :: dt
      sll_int32  :: num_iterations
-     sll_real64 :: thermal_speed_ions
-     sll_int32  :: ions_number
+     sll_real64 :: thermal_speed_parts
+     sll_int32  :: parts_number
      sll_int32  :: guard_size
      sll_int32  :: array_size
      type(sll_particle_group_2d),  pointer :: part_group
@@ -106,8 +106,8 @@ contains
     XMAX = 2._f64*sll_pi/KX
     YMAX = 2._f64*sll_pi
     sim%use_cubic_splines = UseCubicSplines
-    sim%thermal_speed_ions = THERM_SPEED
-    sim%ions_number = NUM_PARTICLES
+    sim%thermal_speed_parts = THERM_SPEED
+    sim%parts_number = NUM_PARTICLES
     sim%guard_size = GUARD_SIZE  
     sim%array_size = PARTICLE_ARRAY_SIZE
     sim%num_iterations = number_iterations
@@ -140,14 +140,14 @@ contains
 
     pa_gr => sim%part_group
     call sll_initial_particles_2d_KH( ALPHA, KX, sim%m2d,     &
-                                      sim%ions_number,        &
+                                      sim%parts_number,        &
                                       pa_gr, &
                                       rand_seed, sim%my_rank, &
                                       sim%world_size )
     SLL_DEALLOCATE_ARRAY( rand_seed, ierr )
     !$omp parallel
     !$omp do
-    do j=1,sim%ions_number
+    do j=1,sim%parts_number
        sim%part_group%p_list(j) = pa_gr%p_list(j)
     enddo
     !$omp end do
@@ -252,7 +252,7 @@ contains
        SLL_ALLOCATE( rho1d_send(1:(ncx+1)*(ncy+1)),    ierr)
        SLL_ALLOCATE( rho1d_receive(1:(ncx+1)*(ncy+1)), ierr)
     endif
-    SLL_ALLOCATE(ploc(1:sim%ions_number),ierr )
+    SLL_ALLOCATE(ploc(1:sim%parts_number),ierr )
     SLL_ALLOCATE(sim%rho(1:ncx+1,1:ncy+1),ierr)
     SLL_ALLOCATE( sim%E1(1:ncx+1,1:ncy+1), ierr )
     SLL_ALLOCATE( sim%E2(1:ncx+1,1:ncy+1), ierr )
@@ -331,6 +331,16 @@ contains
        if (sim%my_rank == 0) then
           call normL2_field(enst,ncx,ncy,sim%rho,sim%m2d%delta_eta1,sim%m2d%delta_eta2)
           diag_enstrophy(0) = enst
+!          open(50,file='rhoGC_1d7parts_INIT.dat')
+!          do i = 1, ncx+1
+!             do j = 1, ncy+1
+!                write(50,*)  sim%m2d%delta_eta1*real(ncx-1,f64), &
+!                                sim%m2d%delta_eta2*real(ncy-1,f64), &
+!                                sim%rho(i,j)! XMIN=0, YMIN=0 !!!
+!             enddo
+!             write(50,*)
+!          enddo
+!          close(50)
           it = 0
           call sll_gnuplot_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
                sim%m2d%eta2_max, ncy+1, &
@@ -371,7 +381,7 @@ contains
           call reset_charge_accumulator_to_zero_CS ( sim%q_accumulator_CS(thread_id+1)%q )
           q_accum_CS => sim%q_accumulator_CS(thread_id+1)%q
           !$omp do
-          do i = 1, sim%ions_number
+          do i = 1, sim%parts_number
              SLL_INTERPOLATE_FIELD_CS(Ex,Ey,accumE_CS,p(i),temp1)
              GET_PARTICLE_POSITION(p(i),sim%m2d,x,y)
              ploc(i) = p(i)
@@ -396,7 +406,7 @@ contains
           call reset_charge_accumulator_to_zero ( sim%q_accumulator(thread_id+1)%q )
           q_accum => sim%q_accumulator(thread_id+1)%q
           !$omp do
-          do i = 1, sim%ions_number
+          do i = 1, sim%parts_number
              SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,p(i),tmp3,tmp4)
              GET_PARTICLE_POSITION(p(i),sim%m2d,x,y)
              ploc(i) = p(i)
@@ -438,7 +448,7 @@ contains
           call reset_charge_accumulator_to_zero_CS ( sim%q_accumulator_CS(thread_id+1)%q )
           q_accum_CS => sim%q_accumulator_CS(thread_id+1)%q
           !$omp do
-          do i = 1, sim%ions_number
+          do i = 1, sim%parts_number
              SLL_INTERPOLATE_FIELD_CS(Ex,Ey,accumE_CS,p(i),temp1)
              GET_PARTICLE_POSITION(ploc(i),sim%m2d,x,y)
              x = modulo(x + dt*Ey, xmax - xmin)
@@ -462,7 +472,7 @@ contains
           call reset_charge_accumulator_to_zero ( sim%q_accumulator(thread_id+1)%q )
           q_accum => sim%q_accumulator(thread_id+1)%q
           !$omp do
-          do i = 1, sim%ions_number
+          do i = 1, sim%parts_number
              SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,p(i),tmp3,tmp4)
              GET_PARTICLE_POSITION(ploc(i),sim%m2d,x,y)
              x = modulo(x + dt*Ey, xmax - xmin)
@@ -495,17 +505,28 @@ contains
 
        if (mod(it+1, 200)==0 .and. sim%my_rank == 0) then
 !          tfin = sll_time_elapsed_since(tinit)
-!!$          write(it_name,'(i4.4)') it+1
+!!$          write(it_name,'(i5.5)') it+1
 !!$          nnnom = 'parts_at'//trim(adjustl(it_name))//'.dat'
 !!$          open(50,file=nnnom)
-!!$          do i = 1, sim%ions_number
+!!$          do i = 1, sim%parts_number
 !!$             GET_PARTICLE_POSITION( p(i),sim%m2d,x,y )
 !!$             write(50,*) x, y
 !!$          enddo
 !!$          close(50)
+!          filename = 'rhoGC_1d7parts_'//trim(adjustl(it_name))//'.dat'
+!          open(50,file=filename)
+!          do i = 1, ncx+1
+!             do j = 1, ncy+1
+!                write(50,*)  sim%m2d%delta_eta1*real(ncx-1,f64), &
+!                                sim%m2d%delta_eta2*real(ncy-1,f64), &
+!                                sim%rho(i,j)! XMIN=0, YMIN=0 !!!
+!             enddo
+!             write(50,*)
+!          enddo
+!          close(50)
           call sll_gnuplot_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
                sim%m2d%eta2_max, ncy+1, &
-               sim%rho, 'rhoGCrk2_it', it+1, ierr )
+               sim%rho, 'rhoGC_1d7p_it', it+1, ierr )
        endif
 
        if (sim%my_rank == 0) then
@@ -705,7 +726,7 @@ contains
           call reset_charge_accumulator_to_zero_CS ( sim%q_accumulator_CS(thread_id+1)%q )
           q_accum_CS => sim%q_accumulator_CS(thread_id+1)%q
           !$omp do
-          do i = 1, sim%ions_number
+          do i = 1, sim%parts_number
              SLL_INTERPOLATE_FIELD_CS(Ex,Ey,accumE_CS,p(i),temp1)
              GET_PARTICLE_POSITION(p(i),sim%m2d,x,y)
              x = modulo(x + dt*Ey, xmax - xmin)
@@ -729,7 +750,7 @@ contains
           call reset_charge_accumulator_to_zero ( sim%q_accumulator(thread_id+1)%q )
           q_accum => sim%q_accumulator(thread_id+1)%q
           !$omp do
-          do i = 1, sim%ions_number
+          do i = 1, sim%parts_number
              SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,p(i),tmp3,tmp4)
              GET_PARTICLE_POSITION(p(i),sim%m2d,x,y)
              x = modulo(x + dt*Ey, xmax - xmin)
@@ -766,7 +787,7 @@ contains
 !!$          print*, 'tfin at iter',it_name, 'is', tfin
 !!$          nnnom = 'parts_at'//trim(adjustl(it_name))//'.dat'
 !!$          open(50,file=nnnom)
-!!$          do i = 1, sim%ions_number
+!!$          do i = 1, sim%parts_number
 !!$             GET_PARTICLE_POSITION( p(i),sim%m2d,x,y )
 !!$             write(50,*) x, y
 !!$          enddo
