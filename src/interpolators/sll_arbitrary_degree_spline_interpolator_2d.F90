@@ -3639,7 +3639,8 @@ sll_real64, dimension(ny+my)                :: work4
 sll_real64, dimension(1:ny,1:nx+mx), target :: work5 
 sll_real64, dimension(:,:), pointer         :: work5_ptr 
 
-sll_int32  :: ierr
+sll_int32 :: j
+sll_int32 :: ierr
 
 
 work5(:,:) = 0.0
@@ -3663,37 +3664,35 @@ else
 end if
 
 work5_ptr => work5
-!call spli2d_der ( taux,      &
-!                  gtau,      &
-!                  taux_der,  &
-!                  gtau_der1, &
-!                  tx,        &
-!                  nx,        &
-!                  mx,        &
-!                  kx,        &
-!                  ny,        &
-!                  work2,     &
-!                  work31,    &
-!                  work5_ptr, &
-!                  ierr )
-
-do j = 1, ny
-   
-   call splint_der( taux,              &
-                    gtau(:,j),         &
-                    taux_der,          &
-                    gtau_der(:,j),     &
-                    tx,                &
-                    nx,                &
-                    mx,                &
-                    kx,                &
-                    qx,                &
-                    work5_result(:,j), &
-                    ierr )
-   
-   
-end do
-
+call spli2d_der ( taux,      &
+                  gtau,      &
+                  taux_der,  &
+                  gtau_der1, &
+                  tx,        &
+                  nx,        &
+                  mx,        &
+                  kx,        &
+                  ny,        &
+                  work2,     &
+                  work31,    &
+                  work5_ptr, &
+                  ierr )
+!do j = 1, ny
+!   
+!   call splint_der( taux,           &
+!                    gtau(:,j),      &
+!                    taux_der,       &
+!                    gtau_der1(:,j), &
+!                    tx,             &
+!                    nx,             &
+!                    mx,             &
+!                    kx,             &
+!                    qx,             &
+!                    work5_ptr(:,j), &
+!                    ierr )
+!   
+!   
+!end do
 
  bcoef(:,:) =0.0_8
  work4 = 0.0_8

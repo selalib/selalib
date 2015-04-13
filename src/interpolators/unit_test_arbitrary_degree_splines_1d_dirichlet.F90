@@ -64,8 +64,8 @@ print*,'--------------------------------------------'
 print*,' Norm H1 error ', sqrt(normH1), h**(SPL_DEG-2)
 print*,'--------------------------------------------'
 
-if(( sqrt(normL2) <= h**(SPL_DEG+1)) .AND. &
-   ( sqrt(normH1) <= h**(SPL_DEG-3))) then
+if(( sqrt(normL2) <= h**(SPL_DEG)) .AND. &
+   ( sqrt(normH1) <= h**(SPL_DEG-2))) then
   print *, 'PASSED'
 else
   print *, 'FAILED'
