@@ -3633,7 +3633,6 @@ sll_real64, dimension( : ), pointer, intent(out) :: ty
 sll_real64, dimension(nx+mx)                :: work2
 sll_real64, dimension((nx+mx)*(ny+my))      :: work3
 sll_real64, dimension(nx*(2*kx-1))     :: qx
-sll_real64, dimension(ny*(2*ky-1))     :: qy
 sll_real64, dimension((nx+mx)*(2*kx-1))     :: work31
 sll_real64, dimension((2*ky-1)*(ny+my))     :: work32
 sll_real64, dimension(ny+my)                :: work4
@@ -3642,10 +3641,6 @@ sll_real64, dimension(:,:), pointer         :: work5_ptr
 
 sll_int32 :: j
 sll_int32 :: ierr
-
-sll_real64 :: work(nx)
-sll_real64 :: work_der(mx)
-sll_real64 :: work_result(mx+nx)
 
 
 work5(:,:) = 0.0
@@ -3669,41 +3664,116 @@ else
 end if
 
 work5_ptr => work5
+call spli2d_der ( taux,      &
+                  gtau,      &
+                  taux_der,  &
+                  gtau_der1, &
+                  tx,        &
+                  nx,        &
+                  mx,        &
+                  kx,        &
+                  ny,        &
+                  work2,     &
+                  work31,    &
+                  work5_ptr, &
+                  ierr )
+!do j = 1, ny
+!   
+!   call splint_der( taux,           &
+!                    gtau(:,j),      &
+!                    taux_der,       &
+!                    gtau_der1(:,j), &
+!                    tx,             &
+!                    nx,             &
+!                    mx,             &
+!                    kx,             &
+!                    qx,             &
+!                    work5_ptr(:,j), &
+!                    ierr )
+!   
+!   
+!end do
 
-do j = 1, ny
-
-   call splint_der( taux,                 &
-                    gtau(1:nx,j),         &
-                    taux_der,             &
-                    gtau_der1(1:mx,j),    &
-                    tx,                   &
-                    nx,                   &
-                    mx,                   &
-                    kx,                   &
-                    qx,                   &
-                    work5_ptr(j,1:nx+mx), &
-                    ierr )
-  
-end do
-
-do j = 1, nx+mx
-
-   call splint_der( tauy,                 &
-                    work5_ptr(1:ny,j),    &
-                    tauy_der,             &
-                    gtau_der2(1:my,j),    &
-                    ty,                   &
-                    ny,                   &
-                    my,                   &
-                    kx,                   &
-                    qy,                   &
-                    bcoef(j,1:ny+my),     &
-                    ierr )
-  
-end do
+ bcoef(:,:) =0.0_8
+ work4 = 0.0_8
+ work3 = 0.0_8
+ work32= 0.0_8
+ 
+ call spli2d_der ( tauy,        &
+                   work5_ptr,   &
+                   tauy_der,    &
+                   gtau_der2,   &
+                   ty,          &
+                   ny,          &
+                   my,          &
+                   ky,          &
+                   nx+mx,       &
+                   work4,       &
+                   work32,      &
+                   bcoef,       &
+                   ierr )
 
 end subroutine spli2d_custom_derder
 
+
+subroutine spli2d_der( tau,       &
+                       gtau,      &
+                       tau_der,   &
+                       gtau_der,  &
+                       t,         &
+                       n,         &
+                       np,        &
+                       k,         &
+                       m,         &
+                       work,      &
+                       q,         &
+                       bcoef,     &
+                       iflag )
+    
+sll_int32                          , intent(in)  :: m
+sll_int32                          , intent(in)  :: n
+sll_int32                          , intent(in)  :: np
+sll_real64, dimension(:,:), pointer, intent(in)  :: gtau  
+sll_real64, dimension(:,:), pointer, intent(in)  :: gtau_der
+sll_real64, dimension(:,:), pointer, intent(out) :: bcoef 
+
+sll_int32 :: iflag
+sll_int32 :: j
+sll_int32 :: k
+sll_real64,dimension((2*k-1)*n):: q
+sll_real64,dimension(:),pointer:: t
+sll_real64,dimension(:),pointer:: tau
+sll_int32,dimension(:),pointer:: tau_der
+sll_real64,dimension(n):: work
+sll_real64,dimension(np):: work_der
+sll_real64,dimension(n+np):: work_result
+
+
+work_result = 0.0_f64
+
+do j = 1, m
+   
+   work(1:n)      = gtau(:,j)
+   work_der(1:np) = gtau_der(1:np,j)
+
+   call splint_der( tau,         &
+                    work,        &
+                    tau_der,     &
+                    work_der,    &
+                    t,           &
+                    n,           &
+                    np,          &
+                    k,           &
+                    q,           &
+                    work_result, &
+                    iflag )
+   
+   bcoef(j,1:n+np) = work_result(1:n+np)
+   
+end do
+
+
+end subroutine spli2d_der
 
 !*************************************************************************
 !
@@ -3788,36 +3858,33 @@ end subroutine spli2d_custom_derder
 !    1, = success.
 !    2, = failure.
 !
-subroutine splint_der( tau,gtau,tau_der,gtau_der,t,n,m,k,q,bcoef_spline,iflag)
+subroutine splint_der( tau,gtau,tau_der,gtau_der,t,n,m,k, q, bcoef_spline, iflag )
     
-sll_int32,                           intent(in)  :: n
-sll_int32,                           intent(in)  :: m
-sll_int32,                           intent(in)  :: k
-sll_real64, dimension(n),            intent(in)  :: tau
-sll_real64, dimension(n),            intent(in)  :: gtau
-sll_int32,  dimension(m),            intent(in)  :: tau_der
-sll_real64, dimension(m),            intent(in)  :: gtau_der
-sll_real64, dimension(n+k+m),        intent(in)  :: t
-sll_real64, dimension((2*k-1)*(n+m))             :: q
-sll_real64, dimension(n+m),          intent(out) :: bcoef_spline 
-sll_int32,                           intent(out) :: iflag
+sll_int32 ::  n
+sll_int32 ::  m
+sll_real64,dimension(n+m):: bcoef ! (n)
+sll_real64,dimension(n+m):: bcoef_spline 
+sll_real64,dimension(n)::  gtau ! (n)
+sll_real64,dimension(m)::  gtau_der ! (n)
+sll_int32 :: i
+sll_int32 :: iflag,mflag
+sll_int32 :: j,l
+sll_int32 :: jj
+sll_int32 :: k
+sll_int32 :: kpkm2
+sll_int32 :: left
+sll_real64, dimension((2*k-1)*(n+m)) :: q!((2*k-1)*n)
+sll_real64,dimension(n+k+m) ::  t!(n+k)
+sll_real64,dimension(n) ::  tau!!(n)
+sll_int32,dimension(m) ::  tau_der!!(n)
+sll_real64:: taui,taui_der
+sll_real64, dimension(k,k):: a
+sll_real64,dimension(k,2) :: bcoef_der
 
-sll_real64, dimension(n+m) :: bcoef 
-sll_real64, dimension(k,k) :: a
-sll_real64, dimension(k,2) :: bcoef_der
-
-sll_int32   :: i, j, l
-sll_int32   :: mflag
-sll_int32   :: jj
-sll_int32   :: kpkm2
-sll_int32   :: left
-sll_real64  :: taui
-sll_real64  :: taui_der
-
-kpkm2              = 2*(k-1)
-left               = k
+kpkm2 = 2 * ( k - 1 )
+left = k
 q(1:(2*k-1)*(n+m)) = 0.0_f64
-a(1:k,1:k)         = 0.0_f64
+a(1:k,1:k) = 0.0_f64
 bcoef_der(1:k,1:2) = 0.0_f64
 
 ! we must suppose that m is <= than n 
@@ -3833,6 +3900,7 @@ l = 1 ! index for the derivative
 do i = 1, n-1
    
   taui = tau(i)
+  
   !
   !  Find LEFT in the closed interval (I,I+K-1) such that
   !
@@ -3907,8 +3975,12 @@ call interv( t, n+m+k, taui, left, mflag )
 if ( tau_der(l)== n ) then   
 
   taui_der = taui
+  
   call bsplvd( t, k, taui_der, left, a, bcoef_der, 2)
+
+  
   jj = n - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
+
   do j = 1, k
      jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
      q(jj) = bcoef_der(j,2)
@@ -3926,6 +3998,7 @@ do j = 1, k
   q(jj) = bcoef(j)
 end do
 bcoef_spline(n+l-1) = gtau(n)
+
 !
 !  Obtain factorization of A, stored again in Q.
 !
@@ -3938,7 +4011,9 @@ if ( iflag == 2 ) then
    return
 end if
 !
-!  Solve  A * BCOEF = GTAU
+!  Solve 
+!
+!    A * BCOEF = GTAU
 !
 !  by back substitution.
 !
