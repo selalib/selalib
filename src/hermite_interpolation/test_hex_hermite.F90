@@ -13,7 +13,7 @@ program test_hex_hermite
   sll_real64, dimension(:,:), allocatable :: deriv
 
   sll_int32    :: num_cells, n_points, n_triangle, n_edge
-  sll_int32    :: i, k_min, n_min
+  sll_int32    :: i
   sll_int32    :: num_method = 10
   character(len = 5) ::name_test = "gauss"!"dioco"!"gauss"!
   sll_int32    :: nloops,ierr, EXTRA_TABLES = 1 ! put 1 for num_method = 15
@@ -70,7 +70,7 @@ program test_hex_hermite
   center_mesh_x2 = 0._f64
 
   radius = 8._f64
-  r_min  = 0._f64   ! beware there are some restrictions to respect 
+  !r_min  = 0._f64   ! beware there are some restrictions to respect 
 
 
   call print_method(num_method)
@@ -79,15 +79,15 @@ program test_hex_hermite
 
   write(33,*) 
 
-  do num_cells = 20,20,20 ! -> loop on the size of the mesh 
+  do num_cells = 20,120,20 ! -> loop on the size of the mesh 
   
      
      ! finding the hexagone corresponding to r_min
 
-     k_min = int(r_min/radius*real(num_cells)+1e-6)
-     if (k_min>0) then
-        n_min = 1+3*k_min*(k_min-1)
-     endif
+     !k_min = int(r_min/radius*real(num_cells)+1e-6)
+     !if (k_min>0) then
+     !   n_min = 1+3*k_min*(k_min-1)
+     !endif
 
      !*********************************************************
      !             allocation
@@ -259,8 +259,10 @@ program test_hex_hermite
         x2_char(:) = x2(:) - advec*dt
      else
         ! Circular advection
-        x1_char(:) = x1(:)*cos(2._f64*sll_pi*dt) - x2(:)*sin(2._f64*sll_pi*dt)
-        x2_char(:) = x1(:)*sin(2._f64*sll_pi*dt) + x2(:)*cos(2._f64*sll_pi*dt)
+        !x1_char(:) = x1(:)*cos(2._f64*sll_pi*dt) - x2(:)*sin(2._f64*sll_pi*dt)
+        !x2_char(:) = x1(:)*sin(2._f64*sll_pi*dt) + x2(:)*cos(2._f64*sll_pi*dt)
+        x1_char(:) = x1(:)*cos(dt) - x2(:)*sin(dt)
+        x2_char(:) = x1(:)*sin(dt) + x2(:)*cos(dt)
      end if
 
 
@@ -287,7 +289,7 @@ program test_hex_hermite
         ! with p the degree of the approximation
         !*********************************************************
 
-        call  der_finite_difference( f_tn, p, step, mesh, deriv, n_min, k_min )
+        call  der_finite_difference( f_tn, p, step, mesh, deriv)
 
         t = t + dt
         !*********************************************************
@@ -313,8 +315,12 @@ program test_hex_hermite
               x = mesh%center_cartesian_coord(1,i)
               y = mesh%center_cartesian_coord(2,i)
 
-              xx = x*cos(2._f64*sll_pi*dt) - y*sin(2._f64*sll_pi*dt);
-              yy = x*sin(2._f64*sll_pi*dt) + y*cos(2._f64*sll_pi*dt);
+
+              !xx = x*cos(2._f64*sll_pi*dt) - y*sin(2._f64*sll_pi*dt);
+              !yy = x*sin(2._f64*sll_pi*dt) + y*cos(2._f64*sll_pi*dt);
+
+              xx = x*cos(dt) - y*sin(dt);
+              yy = x*sin(dt) + y*cos(dt);
 
               !             INTERPOLATION
               inside = .true.
@@ -328,7 +334,7 @@ program test_hex_hermite
 
               if ( inside ) then
                  call hermite_interpolation(i, xx, yy, f_tn, center_values_tn,&
-                      edge_values_tn, center_values_tn1, mesh, deriv, aire, n_min, k_min,& 
+                      edge_values_tn, center_values_tn1, mesh, deriv, aire,& 
                  num_method)
               else 
                  center_values_tn1(i) = 0._f64 ! dirichlet boundary condition
@@ -338,8 +344,11 @@ program test_hex_hermite
                  xx = x - advec*dt*nloops
                  yy = y - advec*dt*nloops
               else                         ! Circular advection
-                 xx = x*cos(2._f64*sll_pi*t) - y*sin(2._f64*sll_pi*t);
-                 yy = x*sin(2._f64*sll_pi*t) + y*cos(2._f64*sll_pi*t);
+                 !xx = x*cos(2._f64*sll_pi*t) - y*sin(2._f64*sll_pi*t);
+                 !yy = x*sin(2._f64*sll_pi*t) + y*cos(2._f64*sll_pi*t);
+
+                 xx = x*cos(dt) - y*sin(dt);
+                 yy = x*sin(dt) + y*cos(dt);
               end if
 
 
@@ -405,7 +414,7 @@ program test_hex_hermite
 
               if ( inside ) then
                  call hermite_interpolation(i, xx, yy, f_tn, center_values_tn,&
-                      edge_values_tn, edge_values_tn1, mesh, deriv, aire, n_min, k_min,& 
+                      edge_values_tn, edge_values_tn1, mesh, deriv, aire,& 
                  num_method)
               else 
                  edge_values_tn1(i) = 0._f64 ! dirichlet boundary condition
@@ -458,9 +467,11 @@ program test_hex_hermite
            x = mesh%cartesian_coord(1,i)
            y = mesh%cartesian_coord(2,i)
 
-           xx = x*cos(2._f64*sll_pi*dt) - y*sin(2._f64*sll_pi*dt);
-           yy = x*sin(2._f64*sll_pi*dt) + y*cos(2._f64*sll_pi*dt);
+           !xx = x*cos(2._f64*sll_pi*dt) - y*sin(2._f64*sll_pi*dt);
+           !yy = x*sin(2._f64*sll_pi*dt) + y*cos(2._f64*sll_pi*dt);
 
+           xx = x*cos(dt) - y*sin(dt);
+           yy = x*sin(dt) + y*cos(dt);
            ! xx = x - 2._f64*sll_pi*dt*y
            ! yy = y + 2._f64*sll_pi*dt*x
 
@@ -476,8 +487,10 @@ program test_hex_hermite
            !- > for the leapfrog scheme to work, one needs to 
            ! make a interpolation on f(tn-dt) instead of f(tn)
 
+           !call compute_characteristic_euler_2d_hex( &
+           !     x,y,uxn,uyn,i,xx,yy,2._f64*sll_pi*dt )
            call compute_characteristic_euler_2d_hex( &
-                x,y,uxn,uyn,i,xx,yy,2._f64*sll_pi*dt )
+                x,y,uxn,uyn,i,xx,yy,dt )
 
         !*********************************************************
         !                INTERPOLATION
@@ -496,7 +509,7 @@ program test_hex_hermite
            if ( inside ) then
 
               call hermite_interpolation(i, xx, yy, f_tn, center_values_tn,&
-                   edge_values_tn, f_tn1, mesh, deriv, aire, n_min, k_min,& 
+                   edge_values_tn, f_tn1, mesh, deriv, aire,& 
                    num_method)
            else 
 
@@ -515,8 +528,10 @@ program test_hex_hermite
               x = mesh%cartesian_coord(1,i) - advec*dt*nloops
               y = mesh%cartesian_coord(2,i) - advec*dt*nloops
            else                         ! Circular advection
-              x = x1(i)*cos(2._f64*sll_pi*t) - x2(i)*sin(2._f64*sll_pi*t);
-              y = x1(i)*sin(2._f64*sll_pi*t) + x2(i)*cos(2._f64*sll_pi*t);
+              !x = x1(i)*cos(2._f64*sll_pi*t) - x2(i)*sin(2._f64*sll_pi*t);
+              !y = x1(i)*sin(2._f64*sll_pi*t) + x2(i)*cos(2._f64*sll_pi*t);
+              x = x1(i)*cos(t) - x2(i)*sin(t);
+              y = x1(i)*sin(t) + x2(i)*cos(t);
            end if
            
            

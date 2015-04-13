@@ -17,23 +17,14 @@ program test_hex_poisson
   sll_real64, dimension(:,:) ,allocatable :: matrix_poisson, l, u
   sll_int32                               :: num_cells, n_points, i, k1, k2 
   sll_int32                               :: ierr, l1,l2, index_tab, global
-  sll_int32                               :: n_min, k_min
-  sll_real64                              :: radius, r_min, r
   sll_real64                              :: x, y, erreur = 0._f64
   sll_real64                              :: erreur1, erreur2, erreur3
   sll_real64                              :: t_init,t_inter, t_end, residu
 
-  num_cells = 50
+  num_cells = 80
 
-  radius = 1._f64
-  r_min  = 0.1_f64
-  n_min = 0
+
   n_points  = 1 + 3 * num_cells * (num_cells + 1) 
-  
-  k_min = int(r_min/radius*real(num_cells)+1e-6)
-  if (k_min>0)  n_min = 1+3*k_min*(k_min-1)
-
-  print*, n_min, k_min
 
   SLL_ALLOCATE(second_term( n_points),ierr)      ! le b de Ax = b
   SLL_ALLOCATE(rho( n_points),ierr)              ! second terme de l'equation
@@ -55,14 +46,11 @@ program test_hex_poisson
 
   ! initialization
   mesh => new_hex_mesh_2d( num_cells, 0._f64, 0._f64) 
- 
-  open (unit = 11,file="hex_poisson.dat", action="write", status="replace")
-
+  
   do i=1, n_points  
 
      x = mesh%cartesian_coord(1,i)
      y = mesh%cartesian_coord(2,i)
-     r = sqrt( x**2 + y**2 )
 
      ! rho(i) = -(2._f64*(x**2+y**2)**2 + 6._f64*(1._f64-2._f64*x**2-2._f64*y**2))
 
@@ -71,29 +59,16 @@ program test_hex_poisson
      !   = (x**2-0.75_f64) * ( y**2 - (x/sqrt(3._f64)-1._f64)**2 )* &
      !     ( y**2 - (x/sqrt(3._f64)+1._f64)**2)
 
-     ! rho(i) = -(4._f64*(x**2+y**2)*36._f64**2-4._f64*36._f64)*exp( - (x**2 + y**2)*36._f64 )
-     ! sol(i) = +exp( - (x**2 + y**2)*36._f64 )
-
-     
-     if ( r >= 0.2_f64  .and. r <= 0.9_f64 ) then
-        sol(i) = exp( -200._f64*(r-0.6_f64)**2)
-     else
-        sol(i) = 0._f64
-     endif
-     if ( r >= 0.2_f64  .and. r <= 0.9_f64 ) then
-        rho(i) = -(16e4_f64*(r-0.6)**2 - 4e2_f64*( 1._f64 + (r-0.6_f64)/r ) )*exp( -200._f64*(r-0.6_f64)**2)
-     else
-        rho(i) = 0._f64
-     endif
+     rho(i) = -(4._f64*(x**2+y**2)*36._f64**2-4._f64*36._f64)*exp( - (x**2 + y**2)*36._f64 )
+     sol(i) = +exp( - (x**2 + y**2)*36._f64 )
 
   enddo
 
-
   ! here rho = - laplacian(sol) , sol ~ phi
 
-  call hex_matrix_poisson( matrix_poisson, mesh,n_min, k_min )
+  call hex_matrix_poisson( matrix_poisson, mesh,1 )
 
-  call hex_second_terme_poisson( second_term, mesh, rho,n_min, k_min )
+  call hex_second_terme_poisson( second_term, mesh, rho )
   
   !call searchband(matrix_poisson,n_points,l1,l2)
   l1 = 2*num_cells + 1
@@ -124,31 +99,24 @@ program test_hex_poisson
 
   ! Error between the computed value and the expected value 
   do i=1, n_points  
-     x = mesh%cartesian_coord(1,i)
-     y = mesh%cartesian_coord(2,i)
     erreur = erreur + abs( sol(i) - phi_end(i))**2
-     write(11,*) x,y,sol(i), phi_end(i), rho(i)
   enddo
-  close(11)
 
-  print*, "erreur", sqrt(erreur/real(num_cells,f64)**2),n_points
+  print*, "erreur", sqrt(erreur/real(num_cells,f64)**2)
 
 
   ! testing computing the field for the guiding center model in a hex. mesh
   ! here : uxn = -dy(phi)  and uyn = +dx(phi)
 
-  call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi_end,n_min,k_min)
+  call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi_end,1)
 
   erreur1 = 0._f64
   erreur2 = 0._f64
-  do i=2, n_points                  ! on a enlevé le centre pour éviter r = 0
+  do i=1, n_points  
      x = mesh%cartesian_coord(1,i)
      y = mesh%cartesian_coord(2,i)
-     r = sqrt(x**2+y**2) 
-     ! erreur1 = erreur1 + abs(-(2._f64*x*36._f64)*exp( - (x**2 + y**2)*36._f64 ) - uyn(i) )**2
-     ! erreur2 = erreur2 + abs(-(2._f64*y*36._f64)*exp( - (x**2 + y**2)*36._f64 ) + uxn(i) )**2
-     erreur1 = erreur1 + abs( -2._f64*2e2_f64*(r-0.6_f64)*x/r*exp( -200._f64*(r-0.6_f64)**2 ) - uyn(i) )**2
-     erreur2 = erreur2 + abs( -2._f64*2e2_f64*(r-0.6_f64)*y/r*exp( -200._f64*(r-0.6_f64)**2 ) + uxn(i) )**2
+     erreur1 = erreur1 + abs(-(2._f64*x*36._f64)*exp( - (x**2 + y**2)*36._f64 ) - uyn(i) )**2
+     erreur2 = erreur2 + abs(-(2._f64*y*36._f64)*exp( - (x**2 + y**2)*36._f64 ) + uxn(i) )**2
   enddo
   print*, "erreur sur dx(phi)", sqrt(erreur1/real(num_cells,f64)**2)
   print*, "erreur sur dy(phi)", sqrt(erreur2/real(num_cells,f64)**2)
@@ -161,27 +129,21 @@ program test_hex_poisson
   erreur1 = 0._f64
   erreur2 = 0._f64
   erreur3 = 0._f64
-  do i=2, n_points    ! on a enlevé le centre pour éviter r = 0
+  do i=1, n_points  
      x = mesh%cartesian_coord(1,i)
      y = mesh%cartesian_coord(2,i)
-     r = sqrt(x**2+y**2) 
-     ! erreur1 = erreur1 + abs(-(72._f64-(72._f64*x)**2)*&
-     !      exp( - (x**2 + y**2)*36._f64 ) - dxuyn(i) )**2 
-     ! erreur2 = erreur2 + abs(-(72._f64-(72._f64*y)**2)*&
-     !      exp( - (x**2 + y**2)*36._f64 ) + dyuxn(i) )**2
-     ! erreur3 = erreur3 + abs(+(2._f64*36._f64*2._f64*y*x*36._f64)*&
-     !      exp( - (x**2 + y**2)*36._f64 ) + dxuxn(i) )**2
-     erreur1 = erreur1 + abs( (16e4_f64*(r-0.6)**2*x**2/r**2 + 4e2_f64*( x**2/r**3*(r-0.6_f64) - &
-          (r-0.6_f64)/r - x**2/r**2 ) )*exp( -200._f64*(r-0.6_f64)**2) - dxuyn(i) )**2 
-     erreur2 = erreur2 + abs( (16e4_f64*(r-0.6)**2*y**2/r**2 + 4e2_f64*( y**2/r**3*(r-0.6_f64) - &
-          (r-0.6_f64)/r - y**2/r**2 ) )*exp( -200._f64*(r-0.6_f64)**2) + dyuxn(i) )**2
-     erreur3 = erreur3 + abs( (16e4_f64*(r-0.6)**2*x*y /r**2 + 4e2_f64*( x*y /r**3*(r-0.6_f64) - &
-            x*y/r**2 ) )*exp( -200._f64*(r-0.6_f64)**2) + dxuxn(i) )**2
+     erreur1 = erreur1 + abs(-(72._f64-(72._f64*x)**2)*&
+          exp( - (x**2 + y**2)*36._f64 ) - dxuyn(i) )**2 
+     erreur2 = erreur2 + abs(-(72._f64-(72._f64*y)**2)*&
+          exp( - (x**2 + y**2)*36._f64 ) + dyuxn(i) )**2
+     erreur3 = erreur3 + abs(+(2._f64*36._f64*2._f64*y*x*36._f64)*&
+          exp( - (x**2 + y**2)*36._f64 ) + dxuxn(i) )**2
   enddo
-
   print*, "erreur sur dxx(phi)", sqrt(erreur1/real(num_cells,f64)**2)
   print*, "erreur sur dyy(phi)", sqrt(erreur2/real(num_cells,f64)**2)
   print*, "erreur sur dxy(phi)", sqrt(erreur3/real(num_cells,f64)**2)
+
+
 
   ! open(unit = 11, file="matrix_hex_poisson.txt", action="write", status="replace")
 

@@ -63,7 +63,7 @@ inquire (file_id, opened=i_opened)
 if (i_opened) then
    write(file_id,"(a13,g15.3,a3)") "<Time Value='",time,"'/>"
 else
-   call errout(6, 'W', "sll_xdmf.F90", 65, "this xdmf is not opened" )
+   SLL_ERROR( "sll_xdmf_set_time", "This xdmf file is not not open." )
 end if
 
 end subroutine sll_xdmf_set_time

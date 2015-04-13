@@ -125,18 +125,19 @@ subroutine initialize( interpolator, &
                        bc_max)
 
   sll_interpolator,  intent(inout) :: interpolator
+  sll_int32,         intent(in   ) :: num_points
+  sll_real64,        intent(in   ) :: x_min
+  sll_real64,        intent(in   ) :: x_max
+  sll_int32,         intent(in   ) :: bc_min
+  sll_int32,         intent(in   ) :: bc_max
 
-  sll_int32,  intent(in)           :: num_points
-  sll_real64, intent(in)           :: x_min
-  sll_real64, intent(in)           :: x_max
-  sll_int32,  intent(in)           :: bc_min
-  sll_int32,  intent(in)           :: bc_max
+  character(len=*),  parameter     :: this_sub_name = 'initialize'
   sll_int32                        :: ierr
   sll_int32                        :: i
   sll_real64                       :: dx
 
   if (bc_min == SLL_PERIODIC .or. bc_max == SLL_PERIODIC) then
-    SLL_ERROR('These boundary conditions are not implemented')
+    SLL_ERROR( this_sub_name, 'These boundary conditions are not implemented' )
   end if
 
   interpolator%n      = num_points
@@ -302,15 +303,18 @@ subroutine interpolate_pointer_derivatives( interpolator,        &
                                             vals_to_interpolate, &
                                             output )
 
-  sll_interpolator,  intent(in)     :: interpolator
-  sll_int32,  intent(in)            :: num_pts
-  sll_real64, dimension(:), pointer :: vals_to_interpolate
-  sll_real64, dimension(:), pointer :: output
+  sll_interpolator,    intent(in) :: interpolator
+  sll_int32,           intent(in) :: num_pts
+  sll_real64, pointer             :: vals_to_interpolate(:)
+  sll_real64, pointer             :: output(:)
+
+  character(len=*), parameter :: this_sub_name = &
+                                 'interpolate_pointer_derivatives'
 
   print*, num_pts, interpolator%n
   print*, vals_to_interpolate
   output = 0.0_f64
-  SLL_ERROR('not implemented')
+  SLL_ERROR( this_sub_name, 'Not implemented.' )
 
 end subroutine interpolate_pointer_derivatives
 
@@ -337,15 +341,17 @@ end function interpolate_derivative_eta1
 function reconstruct_array(this, num_points, data) result(res)
 
   sll_interpolator, intent(in) :: this
-  sll_int32, intent(in)                :: num_points
-  sll_real64, dimension(:), intent(in) :: data
-  sll_real64, dimension(num_points)    :: res
+  sll_int32       , intent(in) :: num_points
+  sll_real64      , intent(in) :: data(:)
+  sll_real64                   :: res(num_points)
+
+  character(len=*), parameter  :: this_fun_name = 'reconstruct_array'
 
   print*, this%n, num_points
   print*, size(data)
   res(:) = 0.0_f64
 
-  SLL_WARNING('#warning reconstruct_array is dummy')
+  SLL_WARNING( this_fun_name, 'This function is dummy.' )
 
 end function reconstruct_array
 
@@ -441,46 +447,52 @@ end subroutine delete_1d
 
 subroutine set_coefficients( interpolator, coeffs )
 
-  sll_interpolator,  intent(inout) :: interpolator
-  sll_real64, dimension(:), intent(in), optional :: coeffs
+  sll_interpolator, intent(inout)           :: interpolator
+  sll_real64      , intent(in   ), optional :: coeffs(:)
+
+  character(len=*), parameter :: this_sub_name = 'set_coefficients'
 
   if (present(coeffs)) then
     print*, interpolator%n
   end if
 
-  SLL_ERROR('set_coefficients() not implemented yet.')
+  SLL_ERROR( this_sub_name, 'Not implemented yet.' )
 
 end subroutine set_coefficients
 
 !---------------------------------------------------------------------------
 
-function get_coefficients(interpolator)
+function get_coefficients( interpolator ) result( coeffs )
 
-  sll_interpolator,  intent(in)      :: interpolator
-  sll_real64, dimension(:), pointer  :: get_coefficients
+  sll_interpolator, intent(in) :: interpolator
+  sll_real64, pointer          :: coeffs(:)
 
-  get_coefficients = interpolator%x
-  SLL_ERROR('get_coefficients() not been implemented yet.')
+  character(len=*), parameter  :: this_fun_name = 'get_coefficients'
+
+  coeffs = interpolator%x
+  SLL_ERROR( this_fun_name, 'Not implemented yet.' )
 
 end function get_coefficients
 
 !---------------------------------------------------------------------------
 
-function interpolate_array_disp(this,        &
-                                num_points,  &
-                                data,        &
-                                alpha) result(f_interp)
+function interpolate_array_disp( this,        &
+                                 num_points,  &
+                                 data,        &
+                                 alpha ) result( f_interp )
 
   sll_interpolator, intent(in) :: this
-  sll_real64,       intent(in) :: alpha
-  sll_real64,       intent(in) :: data(:)
   sll_int32,        intent(in) :: num_points
+  sll_real64,       intent(in) :: data(:)
+  sll_real64,       intent(in) :: alpha
   sll_real64                   :: f_interp(num_points)
   
+  character(len=*), parameter  :: this_fun_name = 'interpolate_array_disp'
+
   print*, this%n
   print*, size(data), alpha, size(f_interp), num_points
   
-  SLL_ERROR('Not implemented')
+  SLL_ERROR( this_fun_name, 'Not implemented.' )
 
 end function
 
