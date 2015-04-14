@@ -97,15 +97,15 @@ contains
 
     sll_real64, intent(in)                                  :: thermal_speed, alpha, k_landau
     type(sll_lt_pic_4d_group), pointer, intent(inout)       :: p_group
-    sll_int64 :: j_x
-    sll_int64 :: j_y
-    sll_int64 :: j_vx
-    sll_int64 :: j_vy
-    sll_int64 :: number_particles
-    sll_int64 :: number_parts_x
-    sll_int64 :: number_parts_y
-    sll_int64 :: number_parts_vx
-    sll_int64 :: number_parts_vy
+    sll_int32 :: j_x
+    sll_int32 :: j_y
+    sll_int32 :: j_vx
+    sll_int32 :: j_vy
+    sll_int32 :: number_particles
+    sll_int32 :: number_parts_x
+    sll_int32 :: number_parts_y
+    sll_int32 :: number_parts_vx
+    sll_int32 :: number_parts_vy
     sll_real64 :: h_parts_x    
     sll_real64 :: h_parts_y    
     sll_real64 :: h_parts_vx   
@@ -206,15 +206,15 @@ contains
     sll_real64, intent(in)                                  :: r_x,r_y,r_vx,r_vy
     sll_real64, intent(in)                                  :: basis_height, hat_shift
     type(sll_lt_pic_4d_group), pointer, intent(inout)       :: p_group
-    sll_int64 :: j_x
-    sll_int64 :: j_y
-    sll_int64 :: j_vx
-    sll_int64 :: j_vy
-    sll_int64 :: number_particles
-    sll_int64 :: number_parts_x
-    sll_int64 :: number_parts_y
-    sll_int64 :: number_parts_vx
-    sll_int64 :: number_parts_vy
+    sll_int32 :: j_x
+    sll_int32 :: j_y
+    sll_int32 :: j_vx
+    sll_int32 :: j_vy
+    sll_int32 :: number_particles
+    sll_int32 :: number_parts_x
+    sll_int32 :: number_parts_y
+    sll_int32 :: number_parts_vx
+    sll_int32 :: number_parts_vy
     sll_real64 :: h_parts_x    
     sll_real64 :: h_parts_y    
     sll_real64 :: h_parts_vx   
@@ -290,25 +290,25 @@ contains
               p_group )
 
     type(sll_lt_pic_4d_group), pointer, intent(inout) :: p_group
-    sll_int64 :: k, k_ngb
-    sll_int64 :: k_temp_debug
-    sll_int64 :: j_x
-    sll_int64 :: j_y
-    sll_int64 :: j_vx
-    sll_int64 :: j_vy
-    sll_int64 :: j_aux_x
-    sll_int64 :: j_aux_y
-    sll_int64 :: j_aux_vx
-    sll_int64 :: j_aux_vy
-    sll_int64 :: l_x
-    sll_int64 :: l_y
-    sll_int64 :: l_vx
-    sll_int64 :: l_vy
+    sll_int32 :: k, k_ngb
+    sll_int32 :: k_temp_debug
+    sll_int32 :: j_x
+    sll_int32 :: j_y
+    sll_int32 :: j_vx
+    sll_int32 :: j_vy
+    sll_int32 :: j_aux_x
+    sll_int32 :: j_aux_y
+    sll_int32 :: j_aux_vx
+    sll_int32 :: j_aux_vy
+    sll_int32 :: l_x
+    sll_int32 :: l_y
+    sll_int32 :: l_vx
+    sll_int32 :: l_vy
     sll_int32 :: ierr
-    sll_int64 :: number_parts_x
-    sll_int64 :: number_parts_y
-    sll_int64 :: number_parts_vx
-    sll_int64 :: number_parts_vy
+    sll_int32 :: number_parts_x
+    sll_int32 :: number_parts_y
+    sll_int32 :: number_parts_vx
+    sll_int32 :: number_parts_vy
     sll_real64 :: h_parts_x    
     sll_real64 :: h_parts_y    
     sll_real64 :: h_parts_vx   
@@ -324,7 +324,7 @@ contains
     sll_real64 :: vy_j
     sll_real32 :: d_vol
     type(sll_cartesian_mesh_2d),      pointer  :: m2d
-    sll_int64,  dimension(:,:,:,:), pointer  :: particle_indices    !  why pointer ?
+    sll_int32,  dimension(:,:,:,:), pointer  :: particle_indices    !  why pointer ?
     
     number_parts_x  = p_group%number_parts_x
     number_parts_y  = p_group%number_parts_y
