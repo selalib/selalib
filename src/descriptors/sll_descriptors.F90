@@ -17,12 +17,11 @@ module sll_descriptors
     sll_int32                  :: id
     character(len=32), private :: pname
   contains
-    !procedure, pass(self)      :: id=>id_sll_vlasovpoisson_sim
     procedure, pass(self)      :: name=>name_sll_vlasovpoisson_sim
     procedure, pass(self)      :: parse=>parse_sll_vlasovpoisson_sim
   end type sll_vlasovpoisson_sim
 
-  type(sll_vlasovpoisson_sim), parameter :: SLL_LANDAU_DIAG = sll_vlasovpoisson_sim(1,'SLL_LANDAU_DIAG' )
+  type(sll_vlasovpoisson_sim), parameter :: SLL_LANDAU_DIAG = sll_vlasovpoisson_sim(1,"SLL_LANDAU_DIAG")
   type(sll_vlasovpoisson_sim), parameter :: SLL_LANDAU_SUM  = sll_vlasovpoisson_sim(2,'SLL_LANDAU_SUM' )
   type(sll_vlasovpoisson_sim), parameter :: SLL_LANDAU_PROD = sll_vlasovpoisson_sim(3,'SLL_LANDAU_PROD' )
   type(sll_vlasovpoisson_sim), parameter :: SLL_TWOSTREAM   = sll_vlasovpoisson_sim(4,'SLL_TWOSTREAM' )
