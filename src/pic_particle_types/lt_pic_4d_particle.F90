@@ -42,14 +42,14 @@ module sll_lt_pic_particle_module
      sll_real64 :: vy
      sll_real32 :: q
      ! <<neighbour_pointers>> particle indices of logical neighbors
-     sll_int64  :: ngb_xleft_index   ! 32 devrait suffire
-     sll_int64  :: ngb_xright_index
-     sll_int64  :: ngb_yleft_index
-     sll_int64  :: ngb_yright_index
-     sll_int64  :: ngb_vxleft_index
-     sll_int64  :: ngb_vxright_index
-     sll_int64  :: ngb_vyleft_index
-     sll_int64  :: ngb_vyright_index               
+     sll_int32  :: ngb_xleft_index   ! 32 devrait suffire
+     sll_int32  :: ngb_xright_index
+     sll_int32  :: ngb_yleft_index
+     sll_int32  :: ngb_yright_index
+     sll_int32  :: ngb_vxleft_index
+     sll_int32  :: ngb_vxright_index
+     sll_int32  :: ngb_vyleft_index
+     sll_int32  :: ngb_vyright_index
   end type sll_lt_pic_4d_particle
 
 

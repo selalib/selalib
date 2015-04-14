@@ -425,8 +425,10 @@ contains
     sort_nb = 10
     particles => sim%part_group%p_list      ! previous name was 'p'
     !!!    p_guard => sim%part_group%p_guard
+!    dt = sim%dt
     dt = sim%dt
     dt_q_over_m = dt * sim%part_group%qoverm
+    print*,  "dt_q_over_m = ", dt_q_over_m
     xmin = sim%mesh_2d%eta1_min
     ymin = sim%mesh_2d%eta2_min
     rdx = 1._f64/sim%mesh_2d%delta_eta1
@@ -689,6 +691,8 @@ contains
 
           !! -- --  deposit charge LTPIC [begin]  -- --
 
+            print *, "deposit charge begin"
+
           if( sim%use_lt_pic_scheme )then
               SLL_ASSERT(thread_id == 0)
              
@@ -705,6 +709,9 @@ contains
           else
               ! nothing to do, charge already deposited in the push loop
           end if
+
+            print *, "deposit charge end"
+
           !! -- --  deposit charge LTPIC [end]  -- --
 
           !! -- --  [PIC ONLY] process the reserved particles (in the guard list) [begin]  -- --
@@ -807,6 +814,10 @@ contains
                                    sim%n_virtual_vy_for_deposition,   &
                                    "f_slice", it)
 
+            print *, "done."
+
+        else
+            print *, "no f plot"
         end if
 
         if (sim%my_rank == 0 .and. mod(it+1, sim%plot_period)==0 ) then
@@ -819,11 +830,15 @@ contains
             call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
                                 sim%mesh_2d%eta2_max, ncy+1,                        &
                                 sim%E2, 'Ey', it+1, ierr )
+            print *, "done."
+
         endif
+
 
        !! -- --  diagnostics (plotting E ) [end]  -- --
 
        !! -- --  diagnostics (computing energy) [begin]  -- --
+        print *, "diag energy"
 
        if (sim%use_cubic_splines) then
          print*, "error (0976765) cubic splines not implemented yet"
@@ -852,6 +867,7 @@ contains
 
        !! -- --  diagnostics [end]  -- --
 
+    print *, "end one loop in time"
     enddo
 
     !  ----------------------------------------------------------------------------------------------------
