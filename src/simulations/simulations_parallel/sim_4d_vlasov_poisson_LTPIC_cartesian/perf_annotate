@@ -11,6 +11,8 @@
 
 use strict;
 use warnings;
+
+# [[man:perf-annotate]]
 open PERF,"perf annotate -s __sll_lt_pic_4d_utilities_MOD_sll_lt_pic_4d_write_f_on_grid_or_deposit --stdio|" or die;
 my $total=0;
 my @biggest;
