@@ -1,0 +1,22 @@
+&sim_params
+	NUM_PARTICLES       = 10000
+	DIMENSION           = 2
+	dt     =  0.2
+	NUM_TIMESTEPS   = 20
+	NUM_MODES       = 2
+	QoverM = -1.0
+	EPSILON  = 0.1
+	K = 0.5 0.5 
+	CONTROLVARIATE = 1
+	TIME_INTEGRATOR_ORDER = 2
+	RND_OFFSET = 10
+	TESTCASE = "SLL_LANDAU_SUM"
+	PLOT2D_IDX = 1 3 
+	PLOT2D_BIN = 20 20 
+	NUM_VISU_PARTICLES = 100
+	PREFIX = "piftest"
+	WRITE_PHI = 1
+	/    
+
+
+
