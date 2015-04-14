@@ -38,8 +38,8 @@ contains
     type(sll_lt_pic_4d_group), pointer      :: p_group
     type(sll_charge_accumulator_2d), pointer     :: q_accum
     type(sll_lt_pic_4d_particle), dimension(:), pointer :: p
-    sll_int64  :: i
-    sll_int64  :: number_particles
+    sll_int32  :: i
+    sll_int32  :: number_particles
     sll_real64 :: tmp1
     sll_real64 :: tmp2
 
@@ -105,7 +105,7 @@ contains
                         part_radius_vy          &
                         )                            
     
-        sll_int64, intent(in) :: k
+        sll_int32, intent(in) :: k
 !        sll_int32, intent(in) :: part_degree
         type(sll_cartesian_mesh_2d),               pointer,  intent(in) :: particles_m2d  ! Poisson mesh associated with the particles
         type(sll_lt_pic_4d_particle), dimension(:),  pointer,  intent(in) :: p_list
@@ -136,7 +136,7 @@ contains
         sll_real64, intent(out) :: part_radius_vx   ! radius of particle support, in vx dimension
         sll_real64, intent(out) :: part_radius_vy   ! radius of particle support, in vy dimension
     
-        sll_int64   :: k_ngb
+        sll_int32   :: k_ngb
         sll_real64  :: x_k_left,  x_k_right
         sll_real64  :: y_k_left,  y_k_right
         sll_real64  :: vx_k_left, vx_k_right
@@ -625,15 +625,15 @@ end subroutine get_ltp_deformation_matrix
 
     sll_int :: dim
     sll_real64 :: dim_t0
-    sll_int64 :: neighbour
+    sll_int32 :: neighbour
 
     ! [[file:~/mcp/selalib/src/pic_particle_types/lt_pic_4d_group.F90::sll_lt_pic_4d_group-p_list]]
     type(sll_lt_pic_4d_particle), dimension(:), pointer,intent(in) :: p_list
     
-    sll_int64 :: ngb_dim_right_index
-    sll_int64 :: ngb_dim_left_index
+    sll_int32 :: ngb_dim_right_index
+    sll_int32 :: ngb_dim_left_index
     sll_real64 :: h_parts_dim
-    sll_int64 :: kprime
+    sll_int32 :: kprime
     sll_int32 :: j,jumps
 
     ! <<up>> means that kprime needs to go up ie increase in coordinate
@@ -1331,11 +1331,11 @@ end subroutine get_ltp_deformation_matrix
     sll_int32 :: number_parts_y
     sll_int32 :: number_parts_vx
     sll_int32 :: number_parts_vy
-    sll_int64 :: i_x_min,  i_x_max,  i_x
-    sll_int64 :: i_y_min,  i_y_max,  i_y
-    sll_int64 :: i_vx_min, i_vx_max, i_vx
-    sll_int64 :: i_vy_min, i_vy_max, i_vy
-    sll_int64 :: k, k_ngb
+    sll_int32 :: i_x_min,  i_x_max,  i_x
+    sll_int32 :: i_y_min,  i_y_max,  i_y
+    sll_int32 :: i_vx_min, i_vx_max, i_vx
+    sll_int32 :: i_vy_min, i_vy_max, i_vy
+    sll_int32 :: k, k_ngb
     
     sll_real64 :: h_parts_x    
     sll_real64 :: h_parts_y    
@@ -1614,12 +1614,11 @@ end subroutine get_ltp_deformation_matrix
     sll_int32 :: mx, my
     sll_int32 :: m1, m2
         
-    sll_int64 :: num_points_1
-    sll_int64 :: num_points_2
-!    sll_int64 :: i_x, i_y, i_vx, i_vy
-    sll_int64 :: i1_min, i1_max, i1
-    sll_int64 :: i2_min, i2_max, i2
-    sll_int64 :: k, k_ngb
+    sll_int32 :: num_points_1
+    sll_int32 :: num_points_2
+    sll_int32 :: i1_min, i1_max, i1
+    sll_int32 :: i2_min, i2_max, i2
+    sll_int32 :: k, k_ngb
 
     sll_real64 :: h_parts_x    
     sll_real64 :: h_parts_y    
@@ -1699,7 +1698,7 @@ end subroutine get_ltp_deformation_matrix
     sll_int32 :: mx_max_sum
     sll_int32 :: my_min_sum
     sll_int32 :: my_max_sum
-    sll_int64 :: n_debug
+    sll_int32 :: n_debug
 
     sll_real64 :: time
     type(sll_time_mark)  :: t0
@@ -1724,8 +1723,8 @@ end subroutine get_ltp_deformation_matrix
     part_degree   = p_group%spline_degree
     ref_radius = 0.5*(part_degree+1)
     
-    num_points_1  = plot_m2d%num_cells1+1
-    num_points_2  = plot_m2d%num_cells2+1
+    num_points_1  = int(plot_m2d%num_cells1+1, i32)
+    num_points_2  = int(plot_m2d%num_cells2+1, i32)
 
     ! Poisson mesh associated to the particles
     particles_m2d => p_group%mesh
@@ -2006,16 +2005,16 @@ end subroutine get_ltp_deformation_matrix
             
                 i1_min  = max( 1, &
                                int(floor(   inv_h_plot_1  * ( x1_k + real( m1*mesh_period_1, f64)        &
-                                                                - plot_x1_min  - part_radius_1      ) ) ) + 2 )
+                                                                - plot_x1_min  - part_radius_1      ) ), i32 ) + 2 )
                 i1_max  = min( num_points_1, &
                                int(ceiling( inv_h_plot_1  * ( x1_k + real( m1*mesh_period_1, f64)        &
-                                                                - plot_x1_min  + part_radius_1      ) ), i64 ) )
+                                                                - plot_x1_min  + part_radius_1      ) ), i32 ) )
                 i2_min  = max( 1, &
                                int(floor(   inv_h_plot_2  * ( x2_k + real( m2*mesh_period_2, f64)        &
-                                                                - plot_x2_min  - part_radius_2      ) ) ) + 2 )
+                                                                - plot_x2_min  - part_radius_2      ) ), i32 ) + 2 )
                 i2_max  = min( num_points_2, &
                                int(ceiling( inv_h_plot_2  * ( x2_k + real( m2*mesh_period_2, f64)        &
-                                                                - plot_x2_min  + part_radius_2      ) ), i64 ) )
+                                                                - plot_x2_min  + part_radius_2      ) ), i32 ) )
 
                 ! loop over the grid points 
                 do i1 = i1_min, i1_max
@@ -2295,8 +2294,8 @@ subroutine plot_f_slice_x_vx(p_group,           &
   logical       :: scenario_is_deposition
   logical       :: use_remapping_grid
   logical       :: use_exact_f0
-  sll_real64, dimension(:,:),       pointer :: x_vx_grid
-  type(sll_cartesian_mesh_4d),      pointer :: grid_4d
+  sll_real64, dimension(:,:),       pointer :: x_vx_grid_values
+  type(sll_cartesian_mesh_4d),      pointer :: plotting_grid_4d
   type(sll_charge_accumulator_2d),  pointer :: dummy_q_accumulator
 
   nullify(dummy_q_accumulator)
@@ -2307,21 +2306,21 @@ subroutine plot_f_slice_x_vx(p_group,           &
   num_virtual_parts_vx = n_virtual_cells_vx * n_virtual_vx
   num_virtual_parts_vy = n_virtual_cells_vy * n_virtual_vy
 
-  SLL_ALLOCATE( x_vx_grid(num_virtual_parts_x,num_virtual_parts_vx),ierr)
+  SLL_ALLOCATE( x_vx_grid_values(num_virtual_parts_x,num_virtual_parts_vx),ierr)
 
-  grid_4d => new_cartesian_mesh_4d( num_virtual_parts_x,        &
-                                    num_virtual_parts_y,        &
-                                    num_virtual_parts_vx,       &
-                                    num_virtual_parts_vy,       &
-                                    plot_grid_x_min,   &
-                                    plot_grid_x_max,   &
-                                    plot_grid_y_min,   &
-                                    plot_grid_y_max,   &
-                                    plot_grid_vx_min,  &
-                                    plot_grid_vx_max,  &
-                                    plot_grid_vy_min,  &
-                                    plot_grid_vy_max   &
-                                   )
+  plotting_grid_4d => new_cartesian_mesh_4d( num_virtual_parts_x-1,     &
+                                             num_virtual_parts_y-1,     &
+                                             num_virtual_parts_vx-1,    &
+                                             num_virtual_parts_vy-1,    &
+                                             plot_grid_x_min,           &
+                                             plot_grid_x_max,           &
+                                             plot_grid_y_min,           &
+                                             plot_grid_y_max,           &
+                                             plot_grid_vx_min,          &
+                                             plot_grid_vx_max,          &
+                                             plot_grid_vy_min,          &
+                                             plot_grid_vy_max           &
+                                            )
 
   scenario_is_deposition = .false.
   use_remapping_grid = .false.
@@ -2330,8 +2329,8 @@ subroutine plot_f_slice_x_vx(p_group,           &
   call sll_lt_pic_4d_write_f_on_grid_or_deposit (p_group, dummy_q_accumulator,      &
                                                        scenario_is_deposition,      &
                                                        use_remapping_grid,          &
-                                                       grid_4d,                     &
-                                                       x_vx_grid,                   &
+                                                       plotting_grid_4d,            &
+                                                       x_vx_grid_values,            &
                                                        n_virtual_x,                 &
                                                        n_virtual_y,                 &
                                                        n_virtual_vx,                &
@@ -2340,7 +2339,7 @@ subroutine plot_f_slice_x_vx(p_group,           &
 
   call sll_gnuplot_2d(  plot_grid_x_min,  plot_grid_x_max,  num_virtual_parts_x,    &
                         plot_grid_vx_min, plot_grid_vx_max, num_virtual_parts_vx,   &
-                        x_vx_grid, array_name, iplot, ierr )
+                        x_vx_grid_values, array_name, iplot, ierr )
 
 end subroutine plot_f_slice_x_vx
 
@@ -2518,7 +2517,7 @@ subroutine get_initial_position_on_cartesian_grid_from_particle_index (k,       
                                                                        n_parts_x, n_parts_y, n_parts_vx, n_parts_vy,    &
                                                                        j_x, j_y, j_vx, j_vy                             &
                                                                        )
-    sll_int64, intent(in) :: k
+    sll_int32, intent(in) :: k
     sll_int32, intent(in) :: n_parts_x
     sll_int32, intent(in) :: n_parts_y
     sll_int32, intent(in) :: n_parts_vx
@@ -2527,7 +2526,7 @@ subroutine get_initial_position_on_cartesian_grid_from_particle_index (k,       
     sll_int32, intent(out) :: j_y
     sll_int32, intent(out) :: j_vx
     sll_int32, intent(out) :: j_vy
-    sll_int64              :: k_aux
+    sll_int32              :: k_aux
 
     k_aux = k-1
     ! here, k_aux = (j_vy-1) + (j_vx-1) * n_parts_vy + (j_y-1) * n_parts_vy * n_parts_vx + (j_x-1) * n_parts_vy * n_parts_vx * n_parts_y
@@ -2553,17 +2552,16 @@ subroutine get_particle_index_from_initial_position_on_cartesian_grid (j_x, j_y,
                                                                        n_parts_x, n_parts_y, n_parts_vx, n_parts_vy,    &
                                                                        k                                                &
                                                                        )
-    sll_int64, intent(in) :: j_x
-    sll_int64, intent(in) :: j_y
-    sll_int64, intent(in) :: j_vx
-    sll_int64, intent(in) :: j_vy
-    sll_int64, intent(in) :: n_parts_x
-    sll_int64, intent(in) :: n_parts_y
-    sll_int64, intent(in) :: n_parts_vx
-    sll_int64, intent(in) :: n_parts_vy
-    sll_int64, intent(out) :: k
+    sll_int32, intent(in) :: j_x
+    sll_int32, intent(in) :: j_y
+    sll_int32, intent(in) :: j_vx
+    sll_int32, intent(in) :: j_vy
+    sll_int32, intent(in) :: n_parts_x
+    sll_int32, intent(in) :: n_parts_y
+    sll_int32, intent(in) :: n_parts_vx
+    sll_int32, intent(in) :: n_parts_vy
+    sll_int32, intent(out) :: k
 
-!    k = 1+ (j_x-1) + (j_y-1) * n_parts_x + (j_vx-1) * n_parts_x * n_parts_y + (j_vy-1) * n_parts_x * n_parts_y * n_parts_vx
     k = 1+ (j_vy-1) + (j_vx-1) * n_parts_vy + (j_y-1) * n_parts_vy * n_parts_vx + (j_x-1) * n_parts_vy * n_parts_vx * n_parts_y
 
 end subroutine
@@ -2837,18 +2835,18 @@ end subroutine
     ! [[file:../pic_particle_types/lt_pic_4d_group.F90::sll_lt_pic_4d_group-remapping_grid]]. If [[n_virtual]] is
     ! greater than 1, the size of this array is smaller than the number of real remapping_grid cells.
 
-    sll_int64,dimension(:,:,:,:),allocatable :: closest_particle
+    sll_int32,dimension(:,:,:,:),allocatable :: closest_particle
     sll_real64,dimension(:,:,:,:),allocatable :: closest_particle_distance
 
     sll_int32 :: i ! x dimension
     sll_int32 :: j ! y dimension
-    sll_int64 :: k,kprime ! particle index
-    sll_int64 :: neighbour ! particle index for local use
+    sll_int32 :: k,kprime ! particle index
+    sll_int32 :: neighbour ! particle index for local use
     sll_int32 :: l ! vx dimension
     sll_int32 :: m ! vy dimension
 
-    sll_int64 :: k_neighbor
-    sll_int64 :: k_particle_closest_to_first_corner
+    sll_int32 :: k_neighbor
+    sll_int32 :: k_particle_closest_to_first_corner
 
     ! indices in a virtual cell (go from 1 to [[n_virtual]])
 
@@ -2932,14 +2930,9 @@ end subroutine
 
     ! value 1 or 2 points to each side of an hypercube in direction x,y,vx or vy
     sll_int :: side_x,side_y,side_vx,side_vy
-    sll_int64,dimension(2,2,2,2) :: hcube
+    sll_int32,dimension(2,2,2,2) :: hcube
 
     sll_int32 :: j_x,j_y,j_vx,j_vy
-
-!    sll_int64 :: number_parts_x
-!    sll_int64 :: number_parts_y
-!    sll_int64 :: number_parts_vx
-!    sll_int64 :: number_parts_vy
 
     sll_real64 :: one_over_two_pi
     sll_real64 :: one_over_thermal_velocity_squared
@@ -2948,7 +2941,7 @@ end subroutine
 
     ! pw-affine approximations of exp and cos for fast (?) evaluations
     sll_int32 :: i_table, ncells_table
-    sll_real32, dimension(:),allocatable :: cos_table, exp_table
+    sll_real64, dimension(:),allocatable :: cos_table, exp_table
     sll_real64 :: s, s_aux
     sll_real64 :: hs_cos_table, hs_exp_table
     sll_real64 :: ds_cos_table, ds_exp_table, ds_table
@@ -3521,6 +3514,7 @@ end subroutine
                                 s = modulo( k_landau * x_t0, 2*sll_pi)
                                 s_aux =  s / hs_cos_table       ! because xmin_cos_table = 0
                                 i_table = int(s_aux)
+                                SLL_ASSERT(i_table >= 0)
                                 SLL_ASSERT(i_table < ncells_table)
                                 ds_table = s_aux - i_table
                                 cos_approx = (1-ds_table) * cos_table(i_table) + ds_table * cos_table(i_table+1)
@@ -3529,10 +3523,12 @@ end subroutine
                                 s = -0.5 * one_over_thermal_velocity_squared * (vx_t0**2 + vy_t0**2)
                                 s_aux = (s - smin_exp_table) / hs_exp_table
                                 i_table = int(s_aux)
-                                SLL_ASSERT(i_table < ncells_table)
-                                ds_table = s_aux - i_table
-                                exp_approx = (1-ds_table) * exp_table(i_table) + ds_table * exp_table(i_table+1)
-
+                                if(i_table >= 0 .and. i_table < ncells_table)then
+                                    ds_table = s_aux - i_table
+                                    exp_approx = (1-ds_table) * exp_table(i_table) + ds_table * exp_table(i_table+1)
+                                else
+                                    exp_approx = 0
+                                end if
                                 f_value_on_virtual_particle = one_over_two_pi                   &
                                     * (1._f64 + alpha_landau * cos_approx)                      &
                                     * one_over_thermal_velocity_squared                         &
@@ -3829,12 +3825,12 @@ end subroutine
                                             closest_particle,               &
                                             closest_particle_distance)
 
-      sll_int64, intent(in) :: k_part
+      sll_int32, intent(in) :: k_part
       sll_int32, intent(in) :: i, j, l, m
       sll_real64, intent(in) :: x_aux, y_aux, vx_aux, vy_aux
       sll_real64, intent(in) :: h_virtual_cell_x, h_virtual_cell_y, h_virtual_cell_vx, h_virtual_cell_vy
 
-      sll_int64, dimension(:,:,:,:)  :: closest_particle
+      sll_int32, dimension(:,:,:,:)  :: closest_particle
       sll_real64, dimension(:,:,:,:) :: closest_particle_distance
 
       sll_real64 :: square_dist_to_cell_center

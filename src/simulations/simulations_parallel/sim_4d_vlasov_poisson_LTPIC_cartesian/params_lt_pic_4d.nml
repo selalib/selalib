@@ -4,7 +4,7 @@
         PARTICLE_ARRAY_SIZE = 510000
         THERM_SPEED         = 1.0
         dt     =  0.1
-        number_iterations   = 100
+        number_iterations   = 50
         plot_period         = 10
         QoverM = -1.0
         ALPHA  = 0.5
@@ -25,17 +25,17 @@
 /
 
 &lt_pic_params
-    NUM_PARTS_X         = 40
-    NUM_PARTS_Y         = 8
-    NUM_PARTS_VX        = 16
-    NUM_PARTS_VY        = 8
+    NUM_PARTS_X         = 160
+    NUM_PARTS_Y         = 20
+    NUM_PARTS_VX        = 40
+    NUM_PARTS_VY        = 40
     REMAP_GRID_VX_MIN   = -6.0
     REMAP_GRID_VX_MAX   = 6.0
     REMAP_GRID_VY_MIN   = -6.0
     REMAP_GRID_VY_MAX   = 6.0
-    NVirtual_X_ForDeposition = 8
+    NVirtual_X_ForDeposition = 1
     NVirtual_Y_ForDeposition = 1
-    NVirtual_VX_ForDeposition = 4
+    NVirtual_VX_ForDeposition = 1
     NVirtual_VY_ForDeposition = 1
     UseExactF0          = .true.
 /
