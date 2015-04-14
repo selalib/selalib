@@ -170,8 +170,11 @@ ADD_SUBDIRECTORY(maxwell_solvers)
 ADD_SUBDIRECTORY(ampere_solvers)
 ADD_SUBDIRECTORY(quasi_neutral_solvers)
 
-ADD_SUBDIRECTORY( vector_space )
-ADD_SUBDIRECTORY( ode_integrators )
+#Fortran version is checked in CMakeModules/FortranConfig.cmake
+IF(F2008)
+  ADD_SUBDIRECTORY( vector_space )
+  ADD_SUBDIRECTORY( ode_integrators )
+ENDIF(F2008)
 
 
 IF(MPI_ENABLED)
@@ -233,12 +236,28 @@ IF(BUILD_JOREK)
 
   SET(GIT_LOGIN $ENV{USER} CACHE STRING "INRIA GForge login")
   INCLUDE(ExternalProject)
-  EXTERNALPROJECT_ADD(
-    jorek
-    GIT_REPOSITORY git+ssh://${GIT_LOGIN}@scm.gforge.inria.fr/gitroot/jorek/jorek.git
-    GIT_TAG ${JOREK_GIT_BRANCH}
-    CMAKE_ARGS -DBUILD_TESTING=OFF -DJOREK_DEBUG_TRACE=OFF -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DJOREK_SAVE_MATRIX=OFF
-    INSTALL_COMMAND "")
+
+  SET(JOREK_GIT_REPOSITORY git+ssh://${GIT_LOGIN}@scm.gforge.inria.fr/gitroot/jorek/jorek.git)
+
+  IF(BUILD_PACKAGE)
+
+    EXTERNALPROJECT_ADD(
+      jorek
+      GIT_REPOSITORY git+ssh://${GIT_LOGIN}@scm.gforge.inria.fr/gitroot/jorek/jorek.git
+      GIT_TAG ${JOREK_GIT_BRANCH}
+      CMAKE_ARGS -DBUILD_TESTING=OFF -DJOREK_DEBUG_TRACE=OFF -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DJOREK_SAVE_MATRIX=OFF
+      )
+
+  ELSE()
+
+    EXTERNALPROJECT_ADD(
+      jorek
+      GIT_REPOSITORY git+ssh://${GIT_LOGIN}@scm.gforge.inria.fr/gitroot/jorek/jorek.git
+      GIT_TAG ${JOREK_GIT_BRANCH}
+      CMAKE_ARGS -DBUILD_TESTING=OFF -DJOREK_DEBUG_TRACE=OFF -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DJOREK_SAVE_MATRIX=OFF
+      INSTALL_COMMAND "")
+
+  ENDIF()
   
   FIND_PACKAGE(PETSc)
   ADD_SUBDIRECTORY(jorek)
