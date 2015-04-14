@@ -5,7 +5,12 @@ IF(NOT HDF5_FOUND AND HDF5_ENABLED)
    SET(HDF5_PATHS $ENV{HDF5_HOME}
                   ${HDF5_ROOT} 
                   $ENV{HDF5ROOT} 
+                  $ENV{HDF5_BASE}
                   $ENV{HDF5_ROOT_DIR}
+                  $ENV{HDF5_DIR}
+                  $ENV{SZIP_LIB}
+                  $ENV{SZIP_LIBDIR}
+                  $ENV{HDF5_BASE}
                   /usr 
                   /usr/include/hdf5/openmpi
                   /usr/include/openmpi-x86_64 
@@ -39,6 +44,7 @@ IF(NOT HDF5_FOUND AND HDF5_ENABLED)
    FIND_LIBRARY(ZLIB_LIBRARIES NAMES z sz
                 HINTS ${HDF5_PATHS} 
 	          PATH_SUFFIXES lib hdf5/lib
+                  ENV${SZIP_LIB}
 	          DOC "PATH TO zip library")
 
    SET(HDF5_LIBRARIES ${HDF5_FORTRAN_LIBRARY} ${HDF5_C_LIBRARY} ${ZLIB_LIBRARIES})

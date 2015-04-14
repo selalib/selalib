@@ -1238,6 +1238,7 @@ subroutine solve_general_coordinates_elliptic_eq( es, rho, phi)
 
 end subroutine solve_general_coordinates_elliptic_eq
   
+  class(general_coordinate_elliptic_solver) :: es  
 subroutine build_local_matrices_rho( es, cell_i, cell_j)
 
   class(general_coordinate_elliptic_solver) :: es
