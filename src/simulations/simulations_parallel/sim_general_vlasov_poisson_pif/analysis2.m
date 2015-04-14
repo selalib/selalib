@@ -1,17 +1,23 @@
  %Octave/Matlab script to analyse results of PIF
- 
-cd '/tmp/landau_prod'
-cd '/tmp/landau_sum'
+
 
 clear all;
 
-cd '~/DATA/Studium/Promotion/selalib_build/'
+cd '/tmp/landau_sumB'
+
 prefix='piftest';
 prefix='landau_B';
 
 prefix='landau_sum_B10'
 prefix='landau_B1'
 prefix='landau_B10'
+
+gamma=-0.4257; %B=0;
+prefix='landau_sumB-0.1.nml';gamma=-0.6665; %B=0.1
+prefix='landau_sumB-1.nml';gamma=-0.6740; %B=1
+prefix='landau_sumB-10.nml';gamma=-0.4277; %B=10
+prefix='landau_sumB-100.nml';gamma=-0.4257; %B=100
+
 
 DATA = csvread([prefix,'_result.csv'],2);
 
@@ -22,17 +28,8 @@ time=DATA(:,1);
 l2potential=DATA(:,6);
 energy_error=DATA(:,4);
 
-gamma=-0.4531; %B=1
-gamma = -0.3972; %B=10
 
 
-close all;
-figure;
-semilogy(time, l2potential); hold on;
-semilogy(time, l2potential(1)*exp(gamma.*time))
-
-figure;
-semilogy(time, energy_error)
 
 rho=[];phi=[];
 for tstep=1:length(time)
@@ -40,6 +37,17 @@ h5filename=sprintf('%s_data_%04d.h5',prefix,tstep);
 rho(:,tstep)=h5read(h5filename,'/rho');
 phi(:,tstep)=h5read(h5filename,'/phi');
 end
+
+close all;
+figure;
+semilogy(time, l2potential); hold on;
+semilogy(time, l2potential(1)*exp(gamma.*time))
+semilogy(time,phi(4,:));
+
+
+figure;
+semilogy(time, energy_error)
+
 
 
 for idx=1:size(phi,1)

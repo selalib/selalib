@@ -132,7 +132,7 @@ sll_int32 :: coll_rank, coll_size
      procedure, pass(sim) :: heun=>heun_generalvp_pif
      procedure, pass(sim) :: calculate_diagnostics=>calculate_diagnostics_generalvp_pif
      procedure, pass(sim) :: control_variate=>control_variate_generalvp_pif
-       procedure, pass(sim) :: vxB=>v_cross_B_generalvp_pif
+     procedure, pass(sim) :: vxB=>v_cross_B_generalvp_pif
      !Magnetic field, can be changed
      procedure, pass(sim) :: B=>Bstandard_generalvp_pif
      !>Unit vector of B

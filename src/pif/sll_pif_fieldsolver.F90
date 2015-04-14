@@ -262,8 +262,7 @@ function sll_pif_fieldsolver_solve_qn_rho_wo_zonalflow(this, rhs) result(solutio
  do idx=1,size(rhs)
  !intermit constant mode
   if (sum(abs(this%allmodes(:,idx)))/=0) then
-   solution(idx)=rhs(idx)/sum((this%allmodes(:,idx)*this%unitmode(:))**2)&
-                 *product(this%unitmode/sll_pi/2)
+   solution(idx)=rhs(idx)*product(this%unitmode/sll_pi/2)
   else
        solution(idx)=0
   endif
@@ -278,10 +277,11 @@ function sll_pif_fieldsolver_solve_qn_rho_wo_zonalflow(this, rhs) result(solutio
  end do
  
   do idx=1,this%problemsize()
-  if ( .not. this%allmodes(1,idx)==0) then
+  if (this%allmodes(1,idx)/=0) then
    solution(idx)=solution(idx)*2
   endif
  end do
+ 
 end function sll_pif_fieldsolver_solve_qn_rho_wo_zonalflow
 
 
@@ -322,7 +322,7 @@ function sll_pif_fieldsolver_solve_quasineutral(this, rhs) result(solution)
   endif
   
   !Remove constant mode, could also be a dimensional average
-  if (sum(abs(this%allmodes(:,idx)))==0) then
+  if (all(this%allmodes(:,idx)==0)) then
     solution(idx)=0
   endif
  end do
