@@ -75,6 +75,10 @@ type, extends(sll_interpolator_2d_base) :: &
   logical :: compute_value_max2 = .TRUE.
   logical :: compute_value_min2 = .TRUE.
 
+  sll_real64, dimension(:,:), pointer :: gtau
+  sll_real64, dimension(:,:), pointer :: gtau_der1
+  sll_real64, dimension(:,:), pointer :: gtau_der2
+
 contains
 
   procedure :: initialize                  => initialize_ad2d_interpolator
@@ -1171,9 +1175,6 @@ sll_int32,                  intent(in), optional :: size_eta2_coords
 
 sll_real64, dimension(:),   pointer :: taux
 sll_real64, dimension(:),   pointer :: tauy
-sll_real64, dimension(:,:), pointer :: gtau
-sll_real64, dimension(:,:), pointer :: gtau_der1
-sll_real64, dimension(:,:), pointer :: gtau_der2
 
 sll_int32, pointer :: taux_deriv(:)
 sll_int32, pointer :: tauy_deriv(:)
@@ -1257,14 +1258,14 @@ case (0) ! periodic-periodic
   taux(nx) = taux(1)+period1
   tauy(ny) = tauy(1)+period2
 
-  SLL_ALLOCATE(gtau(1:nx,1:ny), ierr)
-  gtau(1:nx-1,1:ny-1) = data_array(1:nx-1,1:ny-1)
-  gtau(nx,1:ny-1)     = data_array(1,1:ny-1 )
-  gtau(1:nx-1,ny)     = data_array(1:nx-1,1)
-  gtau(nx,ny)         = data_array(1,1)
+  SLL_ALLOCATE(interpolator%gtau(1:nx,1:ny), ierr)
+  interpolator%gtau(1:nx-1,1:ny-1) = data_array(1:nx-1,1:ny-1)
+  interpolator%gtau(nx,1:ny-1)     = data_array(1,1:ny-1 )
+  interpolator%gtau(1:nx-1,ny)     = data_array(1:nx-1,1)
+  interpolator%gtau(nx,ny)         = data_array(1,1)
 
   call spli2d_custom(nx, kx, taux, ny, ky, tauy, &
-                     gtau,                       &
+                     interpolator%gtau,                       &
                      interpolator%coeff_splines, &
                      interpolator%t1,            &
                      interpolator%t2)
@@ -1279,13 +1280,13 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
   tauy(1:ny-1)      = tauy(1:ny-1)
   tauy(ny)          = tauy(1)+period2
 
-  SLL_ALLOCATE(gtau(1:nx,1:ny), ierr)
+  SLL_ALLOCATE(interpolator%gtau(1:nx,1:ny), ierr)
 
-  gtau(1:nx-1,1:ny) = data_array(1:nx-1,1:ny)
-  gtau(nx,1:ny)     = data_array(1,1:ny)
+  interpolator%gtau(1:nx-1,1:ny) = data_array(1:nx-1,1:ny)
+  interpolator%gtau(nx,1:ny)     = data_array(1,1:ny)
 
   call spli2d_custom(nx, kx, taux, ny, ky, tauy, &
-                     gtau,                       &
+                     interpolator%gtau,                       &
                      interpolator%coeff_splines, &
                      interpolator%t1,            &
                      interpolator%t2)
@@ -1303,13 +1304,13 @@ case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
   taux(1:nx-1) = taux(1:nx-1)
   taux(nx)     = taux(1)+period1
 
-  SLL_ALLOCATE(gtau(1:nx,1:ny), ierr)
+  SLL_ALLOCATE(interpolator%gtau(1:nx,1:ny), ierr)
 
-  gtau(1:nx,1:ny-1) = data_array(1:nx,1:ny-1)
-  gtau(1:nx,ny)     = data_array(1:nx,1)
+  interpolator%gtau(1:nx,1:ny-1) = data_array(1:nx,1:ny-1)
+  interpolator%gtau(1:nx,ny)     = data_array(1:nx,1)
 
   call spli2d_custom(nx, kx, taux, ny, ky, tauy, &
-                     gtau,                       &
+                     interpolator%gtau,                       &
                      interpolator%coeff_splines, &
                      interpolator%t1,            &
                      interpolator%t2)
@@ -1324,10 +1325,10 @@ case (585) ! 4. dirichlet in all sides
   interpolator%size_t1 = kx + nx 
   interpolator%size_t2 = ky + ny 
   
-  SLL_ALLOCATE(gtau(1:nx,1:ny),ierr)
-  gtau = data_array(1:nx,1:ny)
+  SLL_ALLOCATE(interpolator%gtau(1:nx,1:ny),ierr)
+  interpolator%gtau = data_array(1:nx,1:ny)
   call spli2d_custom( nx, kx, taux, ny, ky, tauy, &
-                      gtau,                       &
+                      interpolator%gtau,                       &
                       interpolator%coeff_splines, &
                       interpolator%t1,            &
                       interpolator%t2)
@@ -1346,19 +1347,19 @@ case (650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet
   interpolator%size_t1 = kx + nx + mx
   interpolator%size_t2 = ky + ny + my
   
-  SLL_ALLOCATE(gtau(1:nx,1:ny),ierr)
-  SLL_CLEAR_ALLOCATE(gtau_der1(1:2,1:ny),ierr)
-  SLL_CLEAR_ALLOCATE(gtau_der2(1:my,1:nx+mx),ierr)
+  SLL_ALLOCATE(interpolator%gtau(1:nx,1:ny),ierr)
+  SLL_CLEAR_ALLOCATE(interpolator%gtau_der1(1:2,1:ny),ierr)
+  SLL_CLEAR_ALLOCATE(interpolator%gtau_der2(1:my,1:nx+mx),ierr)
 
-  gtau                 = data_array(1:nx,1:ny)
+  interpolator%gtau                 = data_array(1:nx,1:ny)
   taux_deriv(1)        = 1
   taux_deriv(2)        = nx
-  gtau_der1(1,1:ny)    = 0.0_f64
-  gtau_der1(2,1:ny)    = interpolator%slope_max1(1:ny)
+  interpolator%gtau_der1(1,1:ny)    = 0.0_f64
+  interpolator%gtau_der1(2,1:ny)    = interpolator%slope_max1(1:ny)
   tauy_deriv(1)        = 1
   tauy_deriv(2)        = ny
-  gtau_der2(1,1:nx+mx) = 0.0_f64
-  gtau_der2(2,1:nx+mx) = interpolator%slope_max2(1:nx+mx)
+  interpolator%gtau_der2(1,1:nx+mx) = 0.0_f64
+  interpolator%gtau_der2(2,1:nx+mx) = interpolator%slope_max2(1:nx+mx)
 
   call spli2d_custom_derder(nx,                         &
                             mx,                         &
@@ -1370,15 +1371,15 @@ case (650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet
                             ky,                         &
                             tauy,                       &
                             tauy_deriv,                 &
-                            gtau,                       &
-                            gtau_der1,                  &
-                            gtau_der2,                  &
+                            interpolator%gtau,                       &
+                            interpolator%gtau_der1,                  &
+                            interpolator%gtau_der2,                  &
                             interpolator%coeff_splines, &
                             interpolator%t1,            &
                             interpolator%t2)
 
-  SLL_DEALLOCATE( gtau_der1,ierr)
-  SLL_DEALLOCATE( gtau_der2,ierr)
+  SLL_DEALLOCATE( interpolator%gtau_der1,ierr)
+  SLL_DEALLOCATE( interpolator%gtau_der2,ierr)
 
 case(657) !left: Dirichlet, right: Neumann, bottom: Neumann, Top: Dirichlet 
 
@@ -1389,19 +1390,19 @@ case(657) !left: Dirichlet, right: Neumann, bottom: Neumann, Top: Dirichlet
   interpolator%size_t1 = kx + nx + mx
   interpolator%size_t2 = ky + ny + my
   
-  SLL_ALLOCATE( gtau(1:nx,1:ny),ierr)
-  SLL_ALLOCATE( gtau_der1(mx,1:ny),ierr)
-  SLL_ALLOCATE( gtau_der2(my,1:nx+mx),ierr)
+  SLL_ALLOCATE( interpolator%gtau(1:nx,1:ny),ierr)
+  SLL_ALLOCATE( interpolator%gtau_der1(mx,1:ny),ierr)
+  SLL_ALLOCATE( interpolator%gtau_der2(my,1:nx+mx),ierr)
 
-  gtau                 = data_array(1:nx,1:ny)
+  interpolator%gtau                 = data_array(1:nx,1:ny)
   taux_deriv(1)        = 1
   taux_deriv(2)        = nx
-  gtau_der1(1,1:ny)    = interpolator%slope_min1(1:ny) 
-  gtau_der1(2,1:ny)    = 0.0_f64
+  interpolator%gtau_der1(1,1:ny)    = interpolator%slope_min1(1:ny) 
+  interpolator%gtau_der1(2,1:ny)    = 0.0_f64
   tauy_deriv(1)        = 1
   tauy_deriv(2)        = ny
-  gtau_der2(1,1:nx+mx) = 0.0_f64
-  gtau_der2(2,1:nx+mx) = interpolator%slope_max2(1:nx+mx)
+  interpolator%gtau_der2(1,1:nx+mx) = 0.0_f64
+  interpolator%gtau_der2(2,1:nx+mx) = interpolator%slope_max2(1:nx+mx)
 
   call spli2d_custom_derder(nx,                         &
                             mx,                         &
@@ -1412,15 +1413,15 @@ case(657) !left: Dirichlet, right: Neumann, bottom: Neumann, Top: Dirichlet
                             my,                         &
                             ky, tauy,                   &
                             tauy_deriv,                 &
-                            gtau,                       &
-                            gtau_der1,                  &
-                            gtau_der2,                  &
+                            interpolator%gtau,                       &
+                            interpolator%gtau_der1,                  &
+                            interpolator%gtau_der2,                  &
                             interpolator%coeff_splines, &
                             interpolator%t1,            &
                             interpolator%t2)
 
-  SLL_DEALLOCATE( gtau_der1,ierr)
-  SLL_DEALLOCATE( gtau_der2,ierr)
+  SLL_DEALLOCATE( interpolator%gtau_der1,ierr)
+  SLL_DEALLOCATE( interpolator%gtau_der2,ierr)
 
 case(780)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Dirichlet
 
@@ -1431,19 +1432,19 @@ case(780)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Dirichlet
   interpolator%size_t1 = kx + nx + mx
   interpolator%size_t2 = ky + ny + my
   
-  SLL_ALLOCATE(gtau(1:nx,1:ny),ierr)
-  SLL_CLEAR_ALLOCATE(gtau_der1(1:mx,1:ny),ierr)
-  SLL_CLEAR_ALLOCATE(gtau_der2(1:my,1:nx+mx),ierr)
+  SLL_ALLOCATE(interpolator%gtau(1:nx,1:ny),ierr)
+  SLL_CLEAR_ALLOCATE(interpolator%gtau_der1(1:mx,1:ny),ierr)
+  SLL_CLEAR_ALLOCATE(interpolator%gtau_der2(1:my,1:nx+mx),ierr)
 
-  gtau                  = data_array(1:nx,1:ny)
+  interpolator%gtau                  = data_array(1:nx,1:ny)
   taux_deriv(1)         = 1
   taux_deriv(2)         = nx
-  gtau_der1(1,1:ny)     = interpolator%slope_min1(1:ny)
-  gtau_der1(2,1:ny)     = interpolator%slope_max1(1:ny)
+  interpolator%gtau_der1(1,1:ny)     = interpolator%slope_min1(1:ny)
+  interpolator%gtau_der1(2,1:ny)     = interpolator%slope_max1(1:ny)
   tauy_deriv(1)         = 1
   tauy_deriv(2)         = ny 
-  gtau_der2(1,1:nx+mx)  = interpolator%slope_min2(1:nx+mx)
-  gtau_der2(2,1:nx+mx)  = interpolator%slope_max2(1:nx+mx)
+  interpolator%gtau_der2(1,1:nx+mx)  = interpolator%slope_min2(1:nx+mx)
+  interpolator%gtau_der2(2,1:nx+mx)  = interpolator%slope_max2(1:nx+mx)
 
   call spli2d_custom_derder( nx,                          &
                              mx,                          &
@@ -1454,16 +1455,16 @@ case(780)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Dirichlet
                              my,                          & 
                              ky, tauy,                    &
                              tauy_deriv,                  &
-                             gtau,                        &
-                             gtau_der1,                   &
-                             gtau_der2,                   &
+                             interpolator%gtau,                        &
+                             interpolator%gtau_der1,                   &
+                             interpolator%gtau_der2,                   &
                              interpolator%coeff_splines,  &
                              interpolator%t1,             &
                              interpolator%t2)
 
 
-  SLL_DEALLOCATE( gtau_der1,ierr)
-  SLL_DEALLOCATE( gtau_der2,ierr)
+  SLL_DEALLOCATE( interpolator%gtau_der1,ierr)
+  SLL_DEALLOCATE( interpolator%gtau_der2,ierr)
 
 case(801)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Dirichlet
 
@@ -1475,19 +1476,19 @@ case(801)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Dirichlet
   interpolator%size_t1 = kx + nx + mx
   interpolator%size_t2 = ky + ny + my
   
-  SLL_ALLOCATE( gtau(1:nx,1:ny),ierr)
-  SLL_ALLOCATE( gtau_der1(mx,1:ny),ierr)
-  SLL_ALLOCATE( gtau_der2(my,1:nx+mx),ierr)
+  SLL_ALLOCATE( interpolator%gtau(1:nx,1:ny),ierr)
+  SLL_ALLOCATE( interpolator%gtau_der1(mx,1:ny),ierr)
+  SLL_ALLOCATE( interpolator%gtau_der2(my,1:nx+mx),ierr)
 
-  gtau                 = data_array(1:nx,1:ny)
-  taux_deriv(1)        = 1
-  taux_deriv(2)        = nx
-  gtau_der1(1,1:ny)    = interpolator%slope_min1(1:ny) 
-  gtau_der1(2,1:ny)    = interpolator%slope_max1(1:ny) 
-  tauy_deriv(1)        = 1
-  tauy_deriv(2)        = ny
-  gtau_der2(1,1:nx+mx) = interpolator%slope_min2(1:nx+mx)
-  gtau_der2(2,1:nx+mx) = interpolator%slope_max2(1:nx+mx)
+  interpolator%gtau                 = data_array(1:nx,1:ny)
+  taux_deriv(1)                     = 1
+  taux_deriv(2)                     = nx
+  interpolator%gtau_der1(1,1:ny)    = interpolator%slope_min1(1:ny) 
+  interpolator%gtau_der1(2,1:ny)    = interpolator%slope_max1(1:ny) 
+  tauy_deriv(1)                     = 1
+  tauy_deriv(2)                     = ny
+  interpolator%gtau_der2(1,1:nx+mx) = interpolator%slope_min2(1:nx+mx)
+  interpolator%gtau_der2(2,1:nx+mx) = interpolator%slope_max2(1:nx+mx)
 
   call spli2d_custom_derder( nx,                         &
                              mx,                         &
@@ -1498,15 +1499,15 @@ case(801)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Dirichlet
                              my,                         &
                              ky, tauy,                   &
                              tauy_deriv,                 &
-                             gtau,                       &
-                             gtau_der1,                  &
-                             gtau_der2,                  &
+                             interpolator%gtau,                       &
+                             interpolator%gtau_der1,                  &
+                             interpolator%gtau_der2,                  &
                              interpolator%coeff_splines, &
                              interpolator%t1,            &
                              interpolator%t2)
 
-  SLL_DEALLOCATE(gtau_der1,ierr)
-  SLL_DEALLOCATE(gtau_der2,ierr)
+  SLL_DEALLOCATE(interpolator%gtau_der1,ierr)
+  SLL_DEALLOCATE(interpolator%gtau_der2,ierr)
 
 case(804)  !left: Hermite, right: Hermite, bottom: Hermite, Top: Dirichlet
 
@@ -1517,19 +1518,19 @@ case(804)  !left: Hermite, right: Hermite, bottom: Hermite, Top: Dirichlet
   interpolator%size_t1 = kx + nx + mx
   interpolator%size_t2 = ky + ny + my
   
-  SLL_ALLOCATE(gtau(1:nx,1:ny),ierr)
-  SLL_ALLOCATE(gtau_der1(mx,1:ny),ierr)
-  SLL_ALLOCATE(gtau_der2(my,1:nx+mx),ierr)
+  SLL_ALLOCATE(interpolator%gtau(1:nx,1:ny),ierr)
+  SLL_ALLOCATE(interpolator%gtau_der1(mx,1:ny),ierr)
+  SLL_ALLOCATE(interpolator%gtau_der2(my,1:nx+mx),ierr)
 
-  gtau                 = data_array(1:nx,1:ny)
+  interpolator%gtau                 = data_array(1:nx,1:ny)
   taux_deriv(1)        = 1
   taux_deriv(2)        = nx
-  gtau_der1(1,1:ny)    = interpolator%slope_min1(1:ny) 
-  gtau_der1(2,1:ny)    = interpolator%slope_max1(1:ny) 
+  interpolator%gtau_der1(1,1:ny)    = interpolator%slope_min1(1:ny) 
+  interpolator%gtau_der1(2,1:ny)    = interpolator%slope_max1(1:ny) 
   tauy_deriv(1)        = 1
   tauy_deriv(2)        = ny
-  gtau_der2(1,1:nx+mx) = interpolator%slope_min2(1:nx+mx)
-  gtau_der2(2,1:nx+mx) = interpolator%slope_max2(1:nx+mx)
+  interpolator%gtau_der2(1,1:nx+mx) = interpolator%slope_min2(1:nx+mx)
+  interpolator%gtau_der2(2,1:nx+mx) = interpolator%slope_max2(1:nx+mx)
 
   call spli2d_custom_derder( nx,                          &
                              mx,                          &
@@ -1540,15 +1541,15 @@ case(804)  !left: Hermite, right: Hermite, bottom: Hermite, Top: Dirichlet
                              my,                          &
                              ky, tauy,                    &
                              tauy_deriv,                  &
-                             gtau,                        &
-                             gtau_der1,                   &
-                             gtau_der2,                   &
+                             interpolator%gtau,                        &
+                             interpolator%gtau_der1,                   &
+                             interpolator%gtau_der2,                   &
                              interpolator%coeff_splines,  &
                              interpolator%t1,             &
                              interpolator%t2)
 
-  SLL_DEALLOCATE( gtau_der1,ierr)
-  SLL_DEALLOCATE( gtau_der2,ierr)
+  SLL_DEALLOCATE( interpolator%gtau_der1,ierr)
+  SLL_DEALLOCATE( interpolator%gtau_der2,ierr)
 
 case(1098)  !left: Neumann, right: Dirichlet, bottom: Dirichlet, Top: Neumann
 
@@ -1562,19 +1563,19 @@ case(1098)  !left: Neumann, right: Dirichlet, bottom: Dirichlet, Top: Neumann
   !  data_array must have the same dimension than 
   !  size(  taux ) x  size(  tauy )
   !  i.e  data_array must have the dimension nx x ny
-  SLL_ALLOCATE(gtau(1:nx,1:ny),ierr)
-  SLL_ALLOCATE(gtau_der1(mx,1:ny),ierr)
-  SLL_ALLOCATE(gtau_der2(my,1:nx+mx),ierr)
+  SLL_ALLOCATE(interpolator%gtau(1:nx,1:ny),ierr)
+  SLL_ALLOCATE(interpolator%gtau_der1(mx,1:ny),ierr)
+  SLL_ALLOCATE(interpolator%gtau_der2(my,1:nx+mx),ierr)
 
-  gtau                 = data_array(1:nx,1:ny)
+  interpolator%gtau                 = data_array(1:nx,1:ny)
   taux_deriv(1)        = 1
   taux_deriv(2)        = nx
-  gtau_der1(1,1:ny)    = 0.0_f64
-  gtau_der1(2,1:ny)    = interpolator%slope_max1(1:ny)
+  interpolator%gtau_der1(1,1:ny)    = 0.0_f64
+  interpolator%gtau_der1(2,1:ny)    = interpolator%slope_max1(1:ny)
   tauy_deriv(1)        = 1
   tauy_deriv(2)        = ny
-  gtau_der2(1,1:nx+mx) = interpolator%slope_min2(1:nx+mx)
-  gtau_der2(2,1:nx+mx) = 0.0_f64
+  interpolator%gtau_der2(1,1:nx+mx) = interpolator%slope_min2(1:nx+mx)
+  interpolator%gtau_der2(2,1:nx+mx) = 0.0_f64
 
   call spli2d_custom_derder( nx,                         &
                              mx,                         &
@@ -1585,15 +1586,15 @@ case(1098)  !left: Neumann, right: Dirichlet, bottom: Dirichlet, Top: Neumann
                              my,                         &
                              ky, tauy,                   &
                              tauy_deriv,                 &
-                             gtau,                       &
-                             gtau_der1,                  &
-                             gtau_der2,                  &
+                             interpolator%gtau,                       &
+                             interpolator%gtau_der1,                  &
+                             interpolator%gtau_der2,                  &
                              interpolator%coeff_splines, &
                              interpolator%t1,            &
                              interpolator%t2)
 
-  SLL_DEALLOCATE( gtau_der1,ierr)
-  SLL_DEALLOCATE( gtau_der2,ierr)
+  SLL_DEALLOCATE( interpolator%gtau_der1,ierr)
+  SLL_DEALLOCATE( interpolator%gtau_der2,ierr)
 
 case(1105)  !left: Dirichlet, right: Neumann, bottom: Dirichlet, Top: Neumann
 
@@ -1604,19 +1605,19 @@ case(1105)  !left: Dirichlet, right: Neumann, bottom: Dirichlet, Top: Neumann
    interpolator%size_t1 = kx + nx + mx
    interpolator%size_t2 = ky + ny + my
    
-   SLL_ALLOCATE(gtau(1:nx,1:ny),ierr)
-   SLL_ALLOCATE(gtau_der1(2,ny),ierr)
-   SLL_ALLOCATE(gtau_der2(my,nx+mx),ierr)
+   SLL_ALLOCATE(interpolator%gtau(1:nx,1:ny),ierr)
+   SLL_ALLOCATE(interpolator%gtau_der1(2,ny),ierr)
+   SLL_ALLOCATE(interpolator%gtau_der2(my,nx+mx),ierr)
 
-   gtau                 = data_array(1:nx,1:ny)
+   interpolator%gtau                 = data_array(1:nx,1:ny)
    taux_deriv(1)        = 1
    taux_deriv(2)        = nx
-   gtau_der1(1,1:ny)    = interpolator%slope_min1(1:ny)
-   gtau_der1(2,1:ny)    = 0.0_f64
+   interpolator%gtau_der1(1,1:ny)    = interpolator%slope_min1(1:ny)
+   interpolator%gtau_der1(2,1:ny)    = 0.0_f64
    tauy_deriv(1)        = 1
    tauy_deriv(2)        = ny
-   gtau_der2(1,1:nx+mx) = interpolator%slope_min2(1:nx+mx)
-   gtau_der2(2,1:nx+mx) = 0.0_f64
+   interpolator%gtau_der2(1,1:nx+mx) = interpolator%slope_min2(1:nx+mx)
+   interpolator%gtau_der2(2,1:nx+mx) = 0.0_f64
 
    call spli2d_custom_derder( nx,                         &
                               mx,                         &
@@ -1627,339 +1628,328 @@ case(1105)  !left: Dirichlet, right: Neumann, bottom: Dirichlet, Top: Neumann
                               my,                         &
                               ky, tauy,                   &
                               tauy_deriv,                 &
-                              gtau,                       &
-                              gtau_der1,                  &
-                              gtau_der2,                  &
+                              interpolator%gtau,                       &
+                              interpolator%gtau_der1,                  &
+                              interpolator%gtau_der2,                  &
                               interpolator%coeff_splines, &
                               interpolator%t1,            &
                               interpolator%t2)
 
-   SLL_DEALLOCATE(gtau_der1,ierr)
-   SLL_DEALLOCATE(gtau_der2,ierr)
+   SLL_DEALLOCATE(interpolator%gtau_der1,ierr)
+   SLL_DEALLOCATE(interpolator%gtau_der2,ierr)
 
 case(1170)  !left: Neumann, right: Neumann, bottom: Neuman, Top: Neumann
 
-       mx = 2
-       my = 2
-       interpolator%size_coeffs1 = nx + mx
-       interpolator%size_coeffs2 = ny + my
-       interpolator%size_t1 = kx + nx + mx
-       interpolator%size_t2 = ky + ny + my
+  mx = 2
+  my = 2
+  interpolator%size_coeffs1 = nx + mx
+  interpolator%size_coeffs2 = ny + my
+  interpolator%size_t1 = kx + nx + mx
+  interpolator%size_t2 = ky + ny + my
+  
+  SLL_ALLOCATE(interpolator%gtau(1:nx,1:ny),ierr)
+  SLL_ALLOCATE(interpolator%gtau_der1(2,ny),ierr)
+  SLL_ALLOCATE(interpolator%gtau_der2(my,nx+mx),ierr)
+
+  interpolator%gtau                 = data_array(1:nx,1:ny)
+  taux_deriv(1)        = 1
+  taux_deriv(2)        = nx
+  interpolator%gtau_der1(1,1:ny)    = 0.0_f64
+  interpolator%gtau_der1(2,1:ny)    = 0.0_f64
+  tauy_deriv(1)        = 1
+  tauy_deriv(2)        = ny
+  interpolator%gtau_der2(1,1:nx+mx) = 0.0_f64
+  interpolator%gtau_der2(2,1:nx+mx) = 0.0_f64
+
+  call spli2d_custom_derder( nx,                         &
+                             mx,                         &
+                             kx,                         &
+                             taux,                       &
+                             taux_deriv,                 &
+                             ny,                         &
+                             my,                         &
+                             ky, tauy,                   &
+                             tauy_deriv,                 &
+                             interpolator%gtau,                       &
+                             interpolator%gtau_der1,                  &
+                             interpolator%gtau_der2,                  &
+                             interpolator%coeff_splines, &
+                             interpolator%t1,            &
+                             interpolator%t2)
+
+  SLL_DEALLOCATE( interpolator%gtau_der1,ierr)
+  SLL_DEALLOCATE( interpolator%gtau_der2,ierr)
+
+case(2338)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Hermite
+
+  mx = 2
+  my = 2
+  interpolator%size_coeffs1 = nx + mx
+  interpolator%size_coeffs2 = ny + my
+  interpolator%size_t1 = kx + nx + mx
+  interpolator%size_t2 = ky + ny + my
+  
+  SLL_ALLOCATE(interpolator%gtau(1:nx,1:ny),ierr)
+  SLL_ALLOCATE(interpolator%gtau_der1(2,ny),ierr)
+  SLL_ALLOCATE(interpolator%gtau_der2(my,nx+mx),ierr)
+
+  interpolator%gtau = data_array(1:nx,1:ny)
+  taux_deriv(1) = 1
+  taux_deriv(2) = nx
+  interpolator%gtau_der1(1,1:ny)     = interpolator%slope_min1(1:ny)
+  interpolator%gtau_der1(2,1:ny)     = interpolator%slope_max1(1:ny)
+  tauy_deriv(1) = 1
+  tauy_deriv(2) = ny
+  interpolator%gtau_der2(1,1:nx+mx)=interpolator%slope_min2(1:nx+mx)
+  interpolator%gtau_der2(2,1:nx+mx)=interpolator%slope_max2(1:nx+mx)
+
+  call spli2d_custom_derder( nx,                         &
+                             mx,                         &
+                             kx,                         &
+                             taux,                       &
+                             taux_deriv,                 &
+                             ny,                         &
+                             my,                         &
+                             ky, tauy,                   &
+                             tauy_deriv,                 &
+                             interpolator%gtau,                       &
+                             interpolator%gtau_der1,                  &
+                             interpolator%gtau_der2,                  &
+                             interpolator%coeff_splines, &
+                             interpolator%t1,            &
+                             interpolator%t2)
+
+  SLL_DEALLOCATE( interpolator%gtau_der1,ierr)
+  SLL_DEALLOCATE( interpolator%gtau_der2,ierr)
        
-       !  data_array must have the same dimension than 
-       !  size(  taux ) x  size(  tauy )
-       !  i.e  data_array must have the dimension nx x ny
-       SLL_ALLOCATE( gtau(1:nx,1:ny),ierr)
-       SLL_ALLOCATE( gtau_der1(2,ny),ierr)
-       SLL_ALLOCATE( gtau_der2(my,nx+mx),ierr)
-       gtau = data_array(1:nx,1:ny)
-       taux_deriv(1) = 1
-       taux_deriv(2) = nx
-       gtau_der1(1,1:ny)     = 0.0_f64
-       gtau_der1(2,1:ny)     = 0.0_f64
-       tauy_deriv(1) = 1
-       tauy_deriv(2) = ny
-       gtau_der2(1,1:nx+mx)= 0.0_f64
-       gtau_der2(2,1:nx+mx)= 0.0_f64
-       call spli2d_custom_derder(&
-            nx,&
-            mx,&
-            kx, &
-            taux, &
-            taux_deriv,&
-            ny, &
-            my,&
-            ky, tauy, &
-            tauy_deriv,&
-            gtau,&
-            gtau_der1,&
-            gtau_der2,&
-            interpolator%coeff_splines,&!(1:nx,1:ny),&
-            interpolator%t1,&!(1:nx+kx), &
-            interpolator%t2)!(1:ny+ky) )
+case(2145) !left: Dirichlet, right: Hermite, bottom: Dirichlet, Top: Hermite  
 
-       SLL_DEALLOCATE( gtau_der1,ierr)
-       SLL_DEALLOCATE( gtau_der2,ierr)
-    case(2338)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Hermite
-       mx = 2
-       my = 2
-       interpolator%size_coeffs1 = nx + mx
-       interpolator%size_coeffs2 = ny + my
-       interpolator%size_t1 = kx + nx + mx
-       interpolator%size_t2 = ky + ny + my
+  mx = 2
+  my = 2
+  interpolator%size_coeffs1 = nx + mx
+  interpolator%size_coeffs2 = ny + my
+  interpolator%size_t1 = kx + nx + mx
+  interpolator%size_t2 = ky + ny + my
+  
+  SLL_ALLOCATE( interpolator%gtau(1:nx,1:ny),ierr)
+  SLL_ALLOCATE( interpolator%gtau_der1(2,ny),ierr)
+  SLL_ALLOCATE( interpolator%gtau_der2(my,nx+mx),ierr)
+
+  interpolator%gtau                  = data_array(1:nx,1:ny)
+  taux_deriv(1)         = 1
+  taux_deriv(2)         = nx
+  interpolator%gtau_der1(1,1:ny)     = interpolator%slope_min1(1:ny)
+  interpolator%gtau_der1(2,1:ny)     = interpolator%slope_max1(1:ny)
+  tauy_deriv(1)         = 1
+  tauy_deriv(2)         = ny
+  interpolator%gtau_der2(1,1:nx+mx)  = interpolator%slope_min2(1:nx+mx)
+  interpolator%gtau_der2(2,1:nx+mx)  = interpolator%slope_max2(1:nx+mx)
+
+  call spli2d_custom_derder( nx,                          &
+                             mx,                          &
+                             kx,                          &
+                             taux,                        &
+                             taux_deriv,                  &
+                             ny,                          &
+                             my,                          &
+                             ky, tauy,                    &
+                             tauy_deriv,                  &
+                             interpolator%gtau,                        &
+                             interpolator%gtau_der1,                   &
+                             interpolator%gtau_der2,                   &
+                             interpolator%coeff_splines,  &
+                             interpolator%t1,             &
+                             interpolator%t2)
+
+  SLL_DEALLOCATE( interpolator%gtau_der1,ierr)
+  SLL_DEALLOCATE( interpolator%gtau_der2,ierr)
+
+case(2124)  !left: Hermite, right: Dirichlet, bottom: Dirichlet, Top: Hermite
+
+  mx = 2
+  my = 2
+  interpolator%size_coeffs1 = nx + mx
+  interpolator%size_coeffs2 = ny + my
+  interpolator%size_t1 = kx + nx + mx
+  interpolator%size_t2 = ky + ny + my
+  
+  SLL_CLEAR_ALLOCATE(interpolator%gtau(1:nx,1:ny),ierr)
+  SLL_CLEAR_ALLOCATE(interpolator%gtau_der1(mx,1:ny),ierr)
+  SLL_CLEAR_ALLOCATE(interpolator%gtau_der2(my,1:nx+mx),ierr)
+
+  interpolator%gtau                  = data_array(1:nx,1:ny)
+  taux_deriv(1)         = 1
+  taux_deriv(2)         = nx
+  interpolator%gtau_der1(1,1:ny)     = interpolator%slope_min1(1:ny)
+  interpolator%gtau_der1(2,1:ny)     = interpolator%slope_max1(1:ny)
+  tauy_deriv(1)         = 1
+  tauy_deriv(2)         = ny
+  interpolator%gtau_der2(1,1:nx+mx)  = interpolator%slope_min2(1:nx+mx)
+  interpolator%gtau_der2(2,1:nx+mx)  = interpolator%slope_max2(1:nx+mx)
+
+  call spli2d_custom_derder( nx,                         &
+                             mx,                         &
+                             kx,                         &
+                             taux,                       &
+                             taux_deriv,                 &
+                             ny,                         &
+                             my,                         &
+                             ky, tauy,                   &
+                             tauy_deriv,                 &
+                             interpolator%gtau,                       &
+                             interpolator%gtau_der1,                  &
+                             interpolator%gtau_der2,                  &
+                             interpolator%coeff_splines, &
+                             interpolator%t1,            &
+                             interpolator%t2)
+
+  SLL_DEALLOCATE( interpolator%gtau_der1,ierr)
+  SLL_DEALLOCATE( interpolator%gtau_der2,ierr)
+
+case(2148)  !left:Hermite , right: Hermite, bottom: Dirichlet, Top: Hermite
+
+  mx = 2
+  my = 2
+  interpolator%size_coeffs1 = nx + mx
+  interpolator%size_coeffs2 = ny + my
+  interpolator%size_t1 = kx + nx + mx
+  interpolator%size_t2 = ky + ny + my
+  
+  SLL_ALLOCATE(interpolator%gtau(1:nx,1:ny),ierr)
+  SLL_ALLOCATE(interpolator%gtau_der1(mx,1:ny),ierr)
+  SLL_ALLOCATE(interpolator%gtau_der2(my,1:nx+mx),ierr)
+
+  interpolator%gtau                  = data_array(1:nx,1:ny)
+  taux_deriv(1)         = 1
+  taux_deriv(2)         = nx
+  interpolator%gtau_der1(1,1:ny)     = interpolator%slope_min1(1:ny)
+  interpolator%gtau_der1(2,1:ny)     = interpolator%slope_max1(1:ny)
+  tauy_deriv(1)         = 1
+  tauy_deriv(2)         = ny
+  interpolator%gtau_der2(1,1:nx+mx)  = interpolator%slope_min2(1:nx+mx)
+  interpolator%gtau_der2(2,1:nx+mx)  = interpolator%slope_max2(1:nx+mx)
+
+  call spli2d_custom_derder( nx,                         &
+                             mx,                         &
+                             kx,                         &
+                             taux,                       &
+                             taux_deriv,                 &
+                             ny,                         &
+                             my,                         &
+                             ky, tauy,                   &
+                             tauy_deriv,                 &
+                             interpolator%gtau,                       &
+                             interpolator%gtau_der1,                  &
+                             interpolator%gtau_der2,                  &
+                             interpolator%coeff_splines, &
+                             interpolator%t1,            &
+                             interpolator%t2)
+
+  SLL_DEALLOCATE( interpolator%gtau_der1,ierr)
+  SLL_DEALLOCATE( interpolator%gtau_der2,ierr)
+
+case(2316)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Hermite
+
+  mx = 2
+  my = 2
+  interpolator%size_coeffs1 = nx + mx
+  interpolator%size_coeffs2 = ny + my
+  interpolator%size_t1 = kx + nx + mx
+  interpolator%size_t2 = ky + ny + my
+  
+  SLL_ALLOCATE(interpolator%gtau(1:nx,1:ny),ierr)
+  SLL_ALLOCATE(interpolator%gtau_der1(mx,1:ny),ierr)
+  SLL_ALLOCATE(interpolator%gtau_der2(my,1:nx+mx),ierr)
+
+  interpolator%gtau                  = data_array(1:nx,1:ny)
+  taux_deriv(1)         = 1
+  taux_deriv(2)         = nx
+  interpolator%gtau_der1(1,1:ny)     = interpolator%slope_min1(1:ny)
+  interpolator%gtau_der1(2,1:ny)     = interpolator%slope_max1(1:ny)
+  tauy_deriv(1)         = 1
+  tauy_deriv(2)         = ny
+  interpolator%gtau_der2(1,1:nx+mx)  = interpolator%slope_min2(1:nx+mx)
+  interpolator%gtau_der2(2,1:nx+mx)  = interpolator%slope_max2(1:nx+mx)
+
+  call spli2d_custom_derder( nx,                         &
+                             mx,                         &
+                             kx,                         &
+                             taux,                       &
+                             taux_deriv,                 &
+                             ny,                         &
+                             my,                         &
+                             ky, tauy,                   &
+                             tauy_deriv,                 &
+                             interpolator%gtau,                       &
+                             interpolator%gtau_der1,                  &
+                             interpolator%gtau_der2,                  &
+                             interpolator%coeff_splines, &
+                             interpolator%t1,            &
+                             interpolator%t2)
+
+  SLL_DEALLOCATE( interpolator%gtau_der1,ierr)
+  SLL_DEALLOCATE( interpolator%gtau_der2,ierr)
+
+case(2340) ! Hermite in al sides
        
-       !  data_array must have the same dimension than 
-       !  size(  taux ) x  size(  tauy )
-       !  i.e  data_array must have the dimension nx x ny
-       SLL_ALLOCATE( gtau(1:nx,1:ny),ierr)
-       SLL_ALLOCATE( gtau_der1(2,ny),ierr)
-       SLL_ALLOCATE( gtau_der2(my,nx+mx),ierr)
-       gtau = data_array(1:nx,1:ny)
-       taux_deriv(1) = 1
-       taux_deriv(2) = nx
-       gtau_der1(1,1:ny)     = interpolator%slope_min1(1:ny)
-       gtau_der1(2,1:ny)     = interpolator%slope_max1(1:ny)
-       tauy_deriv(1) = 1
-       tauy_deriv(2) = ny
-       gtau_der2(1,1:nx+mx)=interpolator%slope_min2(1:nx+mx)
-       gtau_der2(2,1:nx+mx)=interpolator%slope_max2(1:nx+mx)
-       call spli2d_custom_derder(&
-            nx,&
-            mx,&
-            kx, &
-            taux, &
-            taux_deriv,&
-            ny, &
-            my,&
-            ky, tauy, &
-            tauy_deriv,&
-            gtau,&
-            gtau_der1,&
-            gtau_der2,&
-            interpolator%coeff_splines,&!(1:nx,1:ny),&
-            interpolator%t1,&!(1:nx+kx), &
-            interpolator%t2)!(1:ny+ky) )
+  mx = 2
+  my = 2
+  interpolator%size_coeffs1 = nx + mx
+  interpolator%size_coeffs2 = ny + my
+  interpolator%size_t1 = kx + nx + mx
+  interpolator%size_t2 = ky + ny + my
+  
+  SLL_ALLOCATE(interpolator%gtau(1:nx,1:ny),ierr)
+  SLL_ALLOCATE(interpolator%gtau_der1(mx,1:ny),ierr)
+  SLL_ALLOCATE(interpolator%gtau_der2(my,1:nx+mx),ierr)
 
-       SLL_DEALLOCATE( gtau_der1,ierr)
-       SLL_DEALLOCATE( gtau_der2,ierr)
-       
-    case(2145) !left: Dirichlet, right: Hermite, bottom: Dirichlet, Top: Hermite  
-       mx = 2
-       my = 2
-       interpolator%size_coeffs1 = nx + mx
-       interpolator%size_coeffs2 = ny + my
-       interpolator%size_t1 = kx + nx + mx
-       interpolator%size_t2 = ky + ny + my
-       
-       !  data_array must have the same dimension than 
-       !  size(  taux ) x  size(  tauy )
-       !  i.e  data_array must have the dimension nx x ny
-       SLL_ALLOCATE( gtau(1:nx,1:ny),ierr)
-       SLL_ALLOCATE( gtau_der1(2,ny),ierr)
-       SLL_ALLOCATE( gtau_der2(my,nx+mx),ierr)
-       gtau = data_array(1:nx,1:ny)
-       taux_deriv(1) = 1
-       taux_deriv(2) = nx
-       gtau_der1(1,1:ny)     = interpolator%slope_min1(1:ny)
-       gtau_der1(2,1:ny)     = interpolator%slope_max1(1:ny)
-       tauy_deriv(1) = 1
-       tauy_deriv(2) = ny
-       gtau_der2(1,1:nx+mx)=interpolator%slope_min2(1:nx+mx)
-       gtau_der2(2,1:nx+mx)=interpolator%slope_max2(1:nx+mx)
-       call spli2d_custom_derder(&
-            nx,&
-            mx,&
-            kx, &
-            taux, &
-            taux_deriv,&
-            ny, &
-            my,&
-            ky, tauy, &
-            tauy_deriv,&
-            gtau,&
-            gtau_der1,&
-            gtau_der2,&
-            interpolator%coeff_splines,&!(1:nx,1:ny),&
-            interpolator%t1,&!(1:nx+kx), &
-            interpolator%t2)!(1:ny+ky) )
+  interpolator%gtau                  = data_array(1:nx,1:ny)
+  taux_deriv(1)         = 1
+  taux_deriv(2)         = nx
+  interpolator%gtau_der1(1,1:ny)     = interpolator%slope_min1(1:ny)
+  interpolator%gtau_der1(2,1:ny)     = interpolator%slope_max1(1:ny)
+  tauy_deriv(1)         = 1
+  tauy_deriv(2)         = ny
+  interpolator%gtau_der2(1,1:nx+mx)  = interpolator%slope_min2(1:nx+mx)
+  interpolator%gtau_der2(2,1:nx+mx)  = interpolator%slope_max2(1:nx+mx)
 
-       SLL_DEALLOCATE( gtau_der1,ierr)
-       SLL_DEALLOCATE( gtau_der2,ierr)
+  call spli2d_custom_derder( nx,                         &
+                             mx,                         &
+                             kx,                         &
+                             taux,                       &
+                             taux_deriv,                 &
+                             ny,                         &
+                             my,                         &
+                             ky, tauy,                   &
+                             tauy_deriv,                 &
+                             interpolator%gtau,                       &
+                             interpolator%gtau_der1,                  &
+                             interpolator%gtau_der2,                  &
+                             interpolator%coeff_splines, &
+                             interpolator%t1,            &
+                             interpolator%t2)
 
+  SLL_DEALLOCATE( interpolator%gtau_der1,ierr)
+  SLL_DEALLOCATE( interpolator%gtau_der2,ierr)
 
-    case(2124)  !left: Hermite, right: Dirichlet, bottom: Dirichlet, Top: Hermite
+end select
 
-       mx = 2
-       my = 2
-       interpolator%size_coeffs1 = nx + mx
-       interpolator%size_coeffs2 = ny + my
-       interpolator%size_t1 = kx + nx + mx
-       interpolator%size_t2 = ky + ny + my
-       
-       !  data_array must have the same dimension than 
-       !  size(  taux ) x  size(  tauy )
-       !  i.e  data_array must have the dimension nx x ny
-       SLL_CLEAR_ALLOCATE( gtau(1:nx,1:ny),ierr)
-       SLL_CLEAR_ALLOCATE( gtau_der1(mx,1:ny),ierr)
-       SLL_CLEAR_ALLOCATE( gtau_der2(my,1:nx+mx),ierr)
-       gtau = data_array(1:nx,1:ny)
-       taux_deriv(1) = 1
-       taux_deriv(2) = nx
-       gtau_der1(1,1:ny)     = interpolator%slope_min1(1:ny)
-       gtau_der1(2,1:ny)     = interpolator%slope_max1(1:ny)
-       tauy_deriv(1) = 1
-       tauy_deriv(2) = ny
-       gtau_der2(1,1:nx+mx)=interpolator%slope_min2(1:nx+mx)
-       gtau_der2(2,1:nx+mx)=interpolator%slope_max2(1:nx+mx)
-       call spli2d_custom_derder(&
-            nx,&
-            mx,&
-            kx, &
-            taux, &
-            taux_deriv,&
-            ny, &
-            my,&
-            ky, tauy, &
-            tauy_deriv,&
-            gtau,&
-            gtau_der1,&
-            gtau_der2,&
-            interpolator%coeff_splines,&!(1:nx,1:ny),&
-            interpolator%t1,&!(1:nx+kx), &
-            interpolator%t2)!(1:ny+ky) )
+interpolator%coefficients_set = .true.
 
-       SLL_DEALLOCATE( gtau_der1,ierr)
-       SLL_DEALLOCATE( gtau_der2,ierr)
+SLL_DEALLOCATE(taux,ierr)
+SLL_DEALLOCATE(tauy,ierr)
 
-    case(2148)  !left:Hermite , right: Hermite, bottom: Dirichlet, Top: Hermite
-       mx = 2
-       my = 2
-       interpolator%size_coeffs1 = nx + mx
-       interpolator%size_coeffs2 = ny + my
-       interpolator%size_t1 = kx + nx + mx
-       interpolator%size_t2 = ky + ny + my
-       
-       !  data_array must have the same dimension than 
-       !  size(  taux ) x  size(  tauy )
-       !  i.e  data_array must have the dimension nx x ny
-       SLL_ALLOCATE( gtau(1:nx,1:ny),ierr)
-       SLL_ALLOCATE( gtau_der1(mx,1:ny),ierr)
-       SLL_ALLOCATE( gtau_der2(my,1:nx+mx),ierr)
-       gtau = data_array(1:nx,1:ny)
-       taux_deriv(1) = 1
-       taux_deriv(2) = nx
-       gtau_der1(1,1:ny)     = interpolator%slope_min1(1:ny)
-       gtau_der1(2,1:ny)     = interpolator%slope_max1(1:ny)
-       tauy_deriv(1) = 1
-       tauy_deriv(2) = ny
-       gtau_der2(1,1:nx+mx)=interpolator%slope_min2(1:nx+mx)
-       gtau_der2(2,1:nx+mx)=interpolator%slope_max2(1:nx+mx)
-       call spli2d_custom_derder(&
-            nx,&
-            mx,&
-            kx, &
-            taux, &
-            taux_deriv,&
-            ny, &
-            my,&
-            ky, tauy, &
-            tauy_deriv,&
-            gtau,&
-            gtau_der1,&
-            gtau_der2,&
-            interpolator%coeff_splines,&!(1:nx,1:ny),&
-            interpolator%t1,&!(1:nx+kx), &
-            interpolator%t2)!(1:ny+ky) )
+end subroutine compute_interpolants_ad2d
 
-       SLL_DEALLOCATE( gtau_der1,ierr)
-       SLL_DEALLOCATE( gtau_der2,ierr)
+function coefficients_are_set_ad2d( interpolator ) result(res)
 
-    case(2316)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Hermite
-       mx = 2
-       my = 2
-       interpolator%size_coeffs1 = nx + mx
-       interpolator%size_coeffs2 = ny + my
-       interpolator%size_t1 = kx + nx + mx
-       interpolator%size_t2 = ky + ny + my
-       
-       !  data_array must have the same dimension than 
-       !  size(  taux ) x  size(  tauy )
-       !  i.e  data_array must have the dimension nx x ny
-       SLL_ALLOCATE( gtau(1:nx,1:ny),ierr)
-       SLL_ALLOCATE( gtau_der1(mx,1:ny),ierr)
-       SLL_ALLOCATE( gtau_der2(my,1:nx+mx),ierr)
-       gtau = data_array(1:nx,1:ny)
-       taux_deriv(1) = 1
-       taux_deriv(2) = nx
-       gtau_der1(1,1:ny)     = interpolator%slope_min1(1:ny)
-       gtau_der1(2,1:ny)     = interpolator%slope_max1(1:ny)
-       tauy_deriv(1) = 1
-       tauy_deriv(2) = ny
-       gtau_der2(1,1:nx+mx)=interpolator%slope_min2(1:nx+mx)
-       gtau_der2(2,1:nx+mx)=interpolator%slope_max2(1:nx+mx)
-       call spli2d_custom_derder(&
-            nx,&
-            mx,&
-            kx, &
-            taux, &
-            taux_deriv,&
-            ny, &
-            my,&
-            ky, tauy, &
-            tauy_deriv,&
-            gtau,&
-            gtau_der1,&
-            gtau_der2,&
-            interpolator%coeff_splines,&!(1:nx,1:ny),&
-            interpolator%t1,&!(1:nx+kx), &
-            interpolator%t2)!(1:ny+ky) )
+  class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)  :: interpolator
+  logical :: res
 
-       SLL_DEALLOCATE( gtau_der1,ierr)
-       SLL_DEALLOCATE( gtau_der2,ierr)
+  res = interpolator%coefficients_set
 
-    case(2340) ! Hermite in al sides
-       
+end function coefficients_are_set_ad2d
 
-       mx = 2
-       my = 2
-       interpolator%size_coeffs1 = nx + mx
-       interpolator%size_coeffs2 = ny + my
-       interpolator%size_t1 = kx + nx + mx
-       interpolator%size_t2 = ky + ny + my
-       
-       !  data_array must have the same dimension than 
-       !  size(  taux ) x  size(  tauy )
-       !  i.e  data_array must have the dimension nx x ny
-       SLL_ALLOCATE( gtau(1:nx,1:ny),ierr)
-       SLL_ALLOCATE( gtau_der1(mx,1:ny),ierr)
-       SLL_ALLOCATE( gtau_der2(my,1:nx+mx),ierr)
-       gtau = data_array(1:nx,1:ny)
-       taux_deriv(1) = 1
-       taux_deriv(2) = nx
-       gtau_der1(1,1:ny)     = interpolator%slope_min1(1:ny)
-       gtau_der1(2,1:ny)     = interpolator%slope_max1(1:ny)
-       tauy_deriv(1) = 1
-       tauy_deriv(2) = ny
-       gtau_der2(1,1:nx+mx)=interpolator%slope_min2(1:nx+mx)
-       gtau_der2(2,1:nx+mx)=interpolator%slope_max2(1:nx+mx)
-       call spli2d_custom_derder(&
-            nx,&
-            mx,&
-            kx, &
-            taux, &
-            taux_deriv,&
-            ny, &
-            my,&
-            ky, tauy, &
-            tauy_deriv,&
-            gtau,&
-            gtau_der1,&
-            gtau_der2,&
-            interpolator%coeff_splines,&!(1:nx,1:ny),&
-            interpolator%t1,&!(1:nx+kx), &
-            interpolator%t2)!(1:ny+ky) )
-
-       SLL_DEALLOCATE( gtau_der1,ierr)
-       SLL_DEALLOCATE( gtau_der2,ierr)
-
-    end select
-    interpolator%coefficients_set = .true.
-   
-    SLL_DEALLOCATE(taux,ierr)
-    SLL_DEALLOCATE(tauy,ierr)
-
-  end subroutine !compute_interpolants_ad2d
-
-  function coefficients_are_set_ad2d( interpolator ) result(res)
-    class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)  :: interpolator
-    logical :: res
-    res = interpolator%coefficients_set
-  end function coefficients_are_set_ad2d
-
-
-  !  ----------------------------------------------------------
-  !  Interpolation on the points eta1 and eta2 
-  !  ---------------------------------------------------------
   !> @brief Interpolation on the points eta1 and eta2 
   !> @details computing the values with the interpolator arbitrary degree splines 2d
   !>  on the points eta1 and eta2 of arbitrary degree splines 2d
