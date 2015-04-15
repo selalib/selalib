@@ -27,6 +27,15 @@ module sll_particle_method_descriptors
   !>use initial distribution f(t=0,x,v) as control variate
   sll_int32, parameter :: SLL_CONTROLVARIATE_INITIAL=4
 
+  character(len=*), parameter :: &
+	  sll_controlvariate_key(0:4) = &
+         (/"SLL_CONTROLVARIATE_NONE            ",&
+           "SLL_CONTROLVARIATE_STANDARD        ",&
+           "SLL_CONTROLVARIATE_MAXWELLIAN      ",&
+           "SLL_CONTROLVARIATE_MAXWELLIAN_LOCAL",&
+           "SLL_CONTROLVARIATE_INITIAL         "/)
+  
+  
   
   !-------------- RANDOM NUMBERS -----------------------------
   !> No Control Variate - also known as full-f
@@ -37,7 +46,21 @@ module sll_particle_method_descriptors
   sll_int32, parameter :: SLL_RANDOM_SOBOL_SCRAMBLED = 3
   
   sll_int32, parameter :: SLL_RANDOM_HAMMERSLEY = 4
-  
+ 
+ 
+  !---------------- MOMENT MATCHING ---------------------------
+  sll_int32, parameter :: SLL_MOMENT_MATCH_NONE = 0
+  !>Match initial moments
+  sll_int32, parameter :: SLL_MOMENT_MATCH_INITIAL = 1
+  !>match the moments of the sampling density
+  sll_int32, parameter :: SLL_MOMENT_MATCH_PRIOR = 2
+  !>match the moments of the sampling density, only velocity
+  sll_int32, parameter :: SLL_MOMENT_MATCH_PRIOR_V = 3
+  !>match the moments of the sampling density, only spatial
+  sll_int32, parameter :: SLL_MOMENT_MATCH_PRIOR_X = 4
+ 
+ 
+ 
   
   !------------- COLLISION OPERATORS -------------------------
   !> do not implement collisions
@@ -52,7 +75,13 @@ module sll_particle_method_descriptors
   !>use a landau operator for collisions
   sll_int32, parameter :: SLL_COLLISIONS_LANDAU = 3
   
-  
+  !>Key for collision operators
+   character(len=*), parameter :: &
+	  sll_collisions_key(0:3) = &
+         (/"SLL_COLLISIONS_NONE       ",&
+           "SLL_COLLISIONS_STANDARD   ",&
+           "SLL_COLLISIONS_KROOK      ",&
+           "SLL_COLLISIONS_LANDAU     " /) 
   
 end module sll_particle_method_descriptors
  
