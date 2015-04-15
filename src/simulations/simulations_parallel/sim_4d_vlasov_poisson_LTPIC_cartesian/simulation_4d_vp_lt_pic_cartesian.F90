@@ -401,7 +401,7 @@ contains
     ! ALH - Timing statistics
     sll_real64 :: deposit_time,loop_time,intermediate_deposit_time
     type(sll_time_mark) :: deposit_time_mark,loop_time_mark,intermediate_deposit_time_mark
-    sll_int32  :: speed_sample_period = 1 ! <<speed_sample_period>>
+    sll_int32  :: speed_sample_period = 10 ! <<speed_sample_period>>
     
     ! ------------------------------
 
