@@ -7,8 +7,8 @@ program unit_test
 
 implicit none
 
-#define NPTS1 64
-#define NPTS2 64 
+#define NPTS1 256
+#define NPTS2 256 
 #define SPL_DEG 3
 #define X1MIN (-2.0_f64*sll_pi)
 #define X1MAX (+2.0_f64*sll_pi)

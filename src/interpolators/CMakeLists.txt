@@ -42,7 +42,7 @@ IF(BUILD_TESTING)
   SET_TESTS_PROPERTIES( arbitrary_degree_spline_interpolator_1d 
                         PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 5 )
   SET_TESTS_PROPERTIES( arbitrary_degree_spline_interpolator_2d 
-                        PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 5 )
+                        PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 20 )
   SET_TESTS_PROPERTIES( periodic_interpolator_1d 
                         PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 5 )
   SET_TESTS_PROPERTIES( arbitrary_degree_splines_1d_periodic
