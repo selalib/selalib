@@ -398,9 +398,10 @@ contains
     sll_real64 :: omega_i, omega_r, psi
     sll_real64 :: bors
 
-    ! Timings and statistics
-    sll_real64 :: deposit_time,loop_time,iterations_time
-    type(sll_time_mark) :: deposit_time_mark,loop_time_mark,iterations_time_mark
+    ! ALH - Timing statistics
+    sll_real64 :: deposit_time,loop_time,intermediate_deposit_time
+    type(sll_time_mark) :: deposit_time_mark,loop_time_mark,intermediate_deposit_time_mark
+    sll_int32  :: speed_sample_period = 1 ! <<speed_sample_period>>
     
     ! ------------------------------
 
@@ -576,9 +577,7 @@ contains
 
     ! Time statistics
     call sll_set_time_mark(loop_time_mark)
-    call sll_set_time_mark(iterations_time_mark)
     deposit_time=0
-    iterations_time=0
     
     do it = 0, sim%num_iterations-1
 
@@ -699,6 +698,7 @@ contains
              
               ! [[file:~/mcp/selalib/src/pic_utilities/lt_pic_4d_utilities.F90::sll_lt_pic_4d_deposit_charge_on_2d_mesh]]
               call sll_set_time_mark(deposit_time_mark)
+              call sll_set_time_mark(intermediate_deposit_time_mark)
               call sll_lt_pic_4d_deposit_charge_on_2d_mesh( sim%part_group,                     &
                                                             sim%q_accumulator_ptr(1)%q,         &
                                                             sim%n_virtual_x_for_deposition,     &
@@ -707,6 +707,7 @@ contains
                                                             sim%n_virtual_vy_for_deposition,    &
                                                             sim%use_exact_f0, sim%total_density )
               deposit_time=deposit_time+sll_time_elapsed_since(deposit_time_mark)
+              intermediate_deposit_time=sll_time_elapsed_since(intermediate_deposit_time_mark)
           else
               ! nothing to do, charge already deposited in the push loop
           end if
@@ -816,13 +817,6 @@ contains
                                    "f_slice", it)
 
             print *, "done."
-
-
-            ! display intermediate times to determine how much the speed of the method varies with the age of the last remap
-
-            iterations_time=sll_time_elapsed_since(iterations_time_mark)
-            aaa
-            call sll_set_time_mark(iterations_time_mark)
         else
             print *, "no f plot"
         end if
@@ -842,6 +836,15 @@ contains
         endif
 
 
+
+        ! ALH - display intermediate times (cf [[speed_sample_period]]) to determine how much the speed of the method
+        ! varies with the age of the last remap
+
+        if (sim%my_rank == 0 .and. mod(it,speed_sample_period)==0 ) then
+           write(*,'(A,I5.1,A,ES8.2,A)') ' intermediate speed at iteration ',it,' : ', &
+                1/intermediate_deposit_time * sim%virtual_particle_number,' deposits/sec'
+        endif
+            
        !! -- --  diagnostics (plotting E ) [end]  -- --
 
        !! -- --  diagnostics (computing energy) [begin]  -- --
@@ -910,7 +913,7 @@ contains
        
        write(*,'(A,ES8.2,A,ES8.2,A)') 'LTPIC stats: ',                           &
             1 / loop_time * sim%num_iterations * sim%ions_number,                &
-            ' markers/sec',                                                      &
+            ' markers/sec ',                                                     &
             1 / deposit_time * sim%num_iterations * sim%virtual_particle_number, &
             ' deposits/sec'
     else
