@@ -34,23 +34,23 @@ implicit none
 
 contains
 
-  subroutine sll_first_lt_pic_charge_accumulation_4d( p_group, q_accum )
-    type(sll_lt_pic_4d_group), pointer      :: p_group
-    type(sll_charge_accumulator_2d), pointer     :: q_accum
-    type(sll_lt_pic_4d_particle), dimension(:), pointer :: p
-    sll_int32  :: i
-    sll_int32  :: number_particles
-    sll_real64 :: tmp1
-    sll_real64 :: tmp2
-
-    SLL_ASSERT( associated(p_group) .and. associated(q_accum))
-    number_particles =  p_group%number_particles
-    p             => p_group%p_list
-
-    do i=1,number_particles
-       SLL_ACCUMULATE_PARTICLE_CHARGE(q_accum,p(i),tmp1,tmp2)
-    end do
-  end subroutine sll_first_lt_pic_charge_accumulation_4d
+    !  subroutine sll_first_lt_pic_charge_accumulation_4d( p_group, q_accum )
+    !    type(sll_lt_pic_4d_group), pointer      :: p_group
+    !    type(sll_charge_accumulator_2d), pointer     :: q_accum
+    !    type(sll_lt_pic_4d_particle), dimension(:), pointer :: p
+    !    sll_int32  :: i
+    !    sll_int32  :: number_particles
+    !    sll_real64 :: tmp1
+    !    sll_real64 :: tmp2
+    !
+    !    SLL_ASSERT( associated(p_group) .and. associated(q_accum))
+    !    number_particles =  p_group%number_particles
+    !    p             => p_group%p_list
+    !
+    !    do i=1,number_particles
+    !       SLL_ACCUMULATE_PARTICLE_CHARGE(q_accum,p(i),tmp1,tmp2)
+    !    end do
+    !  end subroutine sll_first_lt_pic_charge_accumulation_4d
 
 
   ! <<get_ltp_deformation_matrix>>
@@ -82,6 +82,7 @@ contains
                         p_list,                 &
                         domain_is_x_periodic,   &
                         domain_is_y_periodic,   &
+                        track_markers_outside_domain, &
                         mesh_period_x,          &
                         mesh_period_y,          &
                         h_parts_x,              &    
@@ -112,6 +113,7 @@ contains
     
         LOGICAL, intent(in) :: domain_is_x_periodic
         LOGICAL, intent(in) :: domain_is_y_periodic    
+        LOGICAL, intent(in) :: track_markers_outside_domain
         sll_real64, intent(in)  :: mesh_period_x
         sll_real64, intent(in)  :: mesh_period_y
         
@@ -149,10 +151,11 @@ contains
         sll_real64  :: factor, det_J, inv_det_J
             
         
-        call cell_offset_to_global( p_list(k)%dx, &
-                                    p_list(k)%dy, &
-                                    p_list(k)%ic, &
-                                    particles_m2d, x_k, y_k )
+        call cell_offset_to_global_extended(p_list(k)%dx,   &
+                                            p_list(k)%dy,   &
+                                            p_list(k)%ic_x,   &
+                                            p_list(k)%ic_y,   &
+                                            particles_m2d, x_k, y_k )
         vx_k   = p_list(k)%vx
         vy_k   = p_list(k)%vy
 !        w_k    = p_list(k)%q           
@@ -171,16 +174,19 @@ contains
            vx_k_right  = vx_k
            vy_k_right  = vy_k
         else
-            call cell_offset_to_global( p_list(k_ngb)%dx, &
-                                    p_list(k_ngb)%dy, &
-                                    p_list(k_ngb)%ic, &
-                                    particles_m2d, x_k_right, y_k_right )
+            call cell_offset_to_global_extended(p_list(k_ngb)%dx,   &
+                                                p_list(k_ngb)%dy,   &
+                                                p_list(k_ngb)%ic_x,   &
+                                                p_list(k_ngb)%ic_y,   &
+                                                particles_m2d, x_k_right, y_k_right )
             vx_k_right = p_list(k_ngb)%vx
             vy_k_right = p_list(k_ngb)%vy        
-            if( domain_is_x_periodic .and. x_k_right < x_k - 0.5*mesh_period_x ) x_k_right = x_k_right + mesh_period_x
-            if( domain_is_x_periodic .and. x_k_right > x_k + 0.5*mesh_period_x ) x_k_right = x_k_right - mesh_period_x
-            if( domain_is_y_periodic .and. y_k_right < y_k - 0.5*mesh_period_y ) y_k_right = y_k_right + mesh_period_y
-            if( domain_is_y_periodic .and. y_k_right > y_k + 0.5*mesh_period_y ) y_k_right = y_k_right - mesh_period_y
+            if( .not. track_markers_outside_domain )then
+                if( domain_is_x_periodic .and. x_k_right < x_k - 0.5*mesh_period_x ) x_k_right = x_k_right + mesh_period_x
+                if( domain_is_x_periodic .and. x_k_right > x_k + 0.5*mesh_period_x ) x_k_right = x_k_right - mesh_period_x
+                if( domain_is_y_periodic .and. y_k_right < y_k - 0.5*mesh_period_y ) y_k_right = y_k_right + mesh_period_y
+                if( domain_is_y_periodic .and. y_k_right > y_k + 0.5*mesh_period_y ) y_k_right = y_k_right - mesh_period_y
+            end if
         end if
         
 
@@ -193,16 +199,19 @@ contains
            vx_k_left  = vx_k
            vy_k_left  = vy_k
         else
-            call cell_offset_to_global( p_list(k_ngb)%dx, &
-                                        p_list(k_ngb)%dy, &
-                                        p_list(k_ngb)%ic, &
-                                        particles_m2d, x_k_left, y_k_left )
+            call cell_offset_to_global_extended(p_list(k_ngb)%dx,   &
+                                                p_list(k_ngb)%dy,   &
+                                                p_list(k_ngb)%ic_x,   &
+                                                p_list(k_ngb)%ic_y,   &
+                                                particles_m2d, x_k_left, y_k_left )
             vx_k_left  = p_list(k_ngb)%vx
             vy_k_left  = p_list(k_ngb)%vy
-            if( domain_is_x_periodic .and. x_k_left < x_k - 0.5*mesh_period_x ) x_k_left = x_k_left + mesh_period_x
-            if( domain_is_x_periodic .and. x_k_left > x_k + 0.5*mesh_period_x ) x_k_left = x_k_left - mesh_period_x
-            if( domain_is_y_periodic .and. y_k_left < y_k - 0.5*mesh_period_y ) y_k_left = y_k_left + mesh_period_y
-            if( domain_is_y_periodic .and. y_k_left > y_k + 0.5*mesh_period_y ) y_k_left = y_k_left - mesh_period_y
+            if( .not. track_markers_outside_domain )then
+                if( domain_is_x_periodic .and. x_k_left < x_k - 0.5*mesh_period_x ) x_k_left = x_k_left + mesh_period_x
+                if( domain_is_x_periodic .and. x_k_left > x_k + 0.5*mesh_period_x ) x_k_left = x_k_left - mesh_period_x
+                if( domain_is_y_periodic .and. y_k_left < y_k - 0.5*mesh_period_y ) y_k_left = y_k_left + mesh_period_y
+                if( domain_is_y_periodic .and. y_k_left > y_k + 0.5*mesh_period_y ) y_k_left = y_k_left - mesh_period_y
+            end if
         end if
         
            j11 = factor * ( x_k_right  - x_k_left  )
@@ -222,16 +231,19 @@ contains
            vx_k_right  = vx_k
            vy_k_right  = vy_k
         else
-            call cell_offset_to_global(  p_list(k_ngb)%dx, &
-                                        p_list(k_ngb)%dy, &
-                                        p_list(k_ngb)%ic, &
-                                        particles_m2d, x_k_right, y_k_right )
+            call cell_offset_to_global_extended(p_list(k_ngb)%dx,   &
+                                                p_list(k_ngb)%dy,   &
+                                                p_list(k_ngb)%ic_x,   &
+                                                p_list(k_ngb)%ic_y,   &
+                                                particles_m2d, x_k_right, y_k_right )
             vx_k_right = p_list(k_ngb)%vx
             vy_k_right = p_list(k_ngb)%vy
-            if( domain_is_x_periodic .and. x_k_right < x_k - 0.5*mesh_period_x ) x_k_right = x_k_right + mesh_period_x
-            if( domain_is_x_periodic .and. x_k_right > x_k + 0.5*mesh_period_x ) x_k_right = x_k_right - mesh_period_x
-            if( domain_is_y_periodic .and. y_k_right < y_k - 0.5*mesh_period_y ) y_k_right = y_k_right + mesh_period_y
-            if( domain_is_y_periodic .and. y_k_right > y_k + 0.5*mesh_period_y ) y_k_right = y_k_right - mesh_period_y
+            if( .not. track_markers_outside_domain )then
+                if( domain_is_x_periodic .and. x_k_right < x_k - 0.5*mesh_period_x ) x_k_right = x_k_right + mesh_period_x
+                if( domain_is_x_periodic .and. x_k_right > x_k + 0.5*mesh_period_x ) x_k_right = x_k_right - mesh_period_x
+                if( domain_is_y_periodic .and. y_k_right < y_k - 0.5*mesh_period_y ) y_k_right = y_k_right + mesh_period_y
+                if( domain_is_y_periodic .and. y_k_right > y_k + 0.5*mesh_period_y ) y_k_right = y_k_right - mesh_period_y
+            end if
         end if
 
         k_ngb  = p_list(k)%ngb_yleft_index
@@ -243,16 +255,19 @@ contains
            vx_k_left  = vx_k
            vy_k_left  = vy_k
         else
-            call cell_offset_to_global( p_list(k_ngb)%dx, &
-                                        p_list(k_ngb)%dy, &
-                                        p_list(k_ngb)%ic, &
-                                        particles_m2d, x_k_left, y_k_left )
+            call cell_offset_to_global_extended(p_list(k_ngb)%dx,   &
+                                                p_list(k_ngb)%dy,   &
+                                                p_list(k_ngb)%ic_x,   &
+                                                p_list(k_ngb)%ic_y,   &
+                                                particles_m2d, x_k_left, y_k_left )
             vx_k_left  = p_list(k_ngb)%vx
             vy_k_left  = p_list(k_ngb)%vy
-            if( domain_is_x_periodic .and. x_k_left < x_k - 0.5*mesh_period_x ) x_k_left = x_k_left + mesh_period_x
-            if( domain_is_x_periodic .and. x_k_left > x_k + 0.5*mesh_period_x ) x_k_left = x_k_left - mesh_period_x
-            if( domain_is_y_periodic .and. y_k_left < y_k - 0.5*mesh_period_y ) y_k_left = y_k_left + mesh_period_y
-            if( domain_is_y_periodic .and. y_k_left > y_k + 0.5*mesh_period_y ) y_k_left = y_k_left - mesh_period_y
+            if( .not. track_markers_outside_domain )then
+                if( domain_is_x_periodic .and. x_k_left < x_k - 0.5*mesh_period_x ) x_k_left = x_k_left + mesh_period_x
+                if( domain_is_x_periodic .and. x_k_left > x_k + 0.5*mesh_period_x ) x_k_left = x_k_left - mesh_period_x
+                if( domain_is_y_periodic .and. y_k_left < y_k - 0.5*mesh_period_y ) y_k_left = y_k_left + mesh_period_y
+                if( domain_is_y_periodic .and. y_k_left > y_k + 0.5*mesh_period_y ) y_k_left = y_k_left - mesh_period_y
+            end if
         end if
         
            j12 = factor * ( x_k_right  - x_k_left  )
@@ -273,16 +288,19 @@ contains
            vx_k_right  = vx_k
            vy_k_right  = vy_k
         else
-           call cell_offset_to_global(  p_list(k_ngb)%dx, &
-                                        p_list(k_ngb)%dy, &
-                                        p_list(k_ngb)%ic, &
-                                        particles_m2d, x_k_right, y_k_right )
+            call cell_offset_to_global_extended(p_list(k_ngb)%dx,   &
+                                                p_list(k_ngb)%dy,   &
+                                                p_list(k_ngb)%ic_x,   &
+                                                p_list(k_ngb)%ic_y,   &
+                                                particles_m2d, x_k_right, y_k_right )
             vx_k_right = p_list(k_ngb)%vx
             vy_k_right = p_list(k_ngb)%vy
-            if( domain_is_x_periodic .and. x_k_right < x_k - 0.5*mesh_period_x ) x_k_right = x_k_right + mesh_period_x
-            if( domain_is_x_periodic .and. x_k_right > x_k + 0.5*mesh_period_x ) x_k_right = x_k_right - mesh_period_x
-            if( domain_is_y_periodic .and. y_k_right < y_k - 0.5*mesh_period_y ) y_k_right = y_k_right + mesh_period_y
-            if( domain_is_y_periodic .and. y_k_right > y_k + 0.5*mesh_period_y ) y_k_right = y_k_right - mesh_period_y
+            if( .not. track_markers_outside_domain )then
+                if( domain_is_x_periodic .and. x_k_right < x_k - 0.5*mesh_period_x ) x_k_right = x_k_right + mesh_period_x
+                if( domain_is_x_periodic .and. x_k_right > x_k + 0.5*mesh_period_x ) x_k_right = x_k_right - mesh_period_x
+                if( domain_is_y_periodic .and. y_k_right < y_k - 0.5*mesh_period_y ) y_k_right = y_k_right + mesh_period_y
+                if( domain_is_y_periodic .and. y_k_right > y_k + 0.5*mesh_period_y ) y_k_right = y_k_right - mesh_period_y
+            end if
         end if
 
         k_ngb  = p_list(k)%ngb_vxleft_index
@@ -294,16 +312,19 @@ contains
             vx_k_left  = vx_k
             vy_k_left  = vy_k
         else
-            call cell_offset_to_global( p_list(k_ngb)%dx, &
-                                        p_list(k_ngb)%dy, &
-                                        p_list(k_ngb)%ic, &
-                                        particles_m2d, x_k_left, y_k_left )
+            call cell_offset_to_global_extended(p_list(k_ngb)%dx,   &
+                                                p_list(k_ngb)%dy,   &
+                                                p_list(k_ngb)%ic_x,   &
+                                                p_list(k_ngb)%ic_y,   &
+                                                particles_m2d, x_k_left, y_k_left )
             vx_k_left  = p_list(k_ngb)%vx
             vy_k_left  = p_list(k_ngb)%vy
-            if( domain_is_x_periodic .and. x_k_left < x_k - 0.5*mesh_period_x ) x_k_left = x_k_left + mesh_period_x
-            if( domain_is_x_periodic .and. x_k_left > x_k + 0.5*mesh_period_x ) x_k_left = x_k_left - mesh_period_x
-            if( domain_is_y_periodic .and. y_k_left < y_k - 0.5*mesh_period_y ) y_k_left = y_k_left + mesh_period_y
-            if( domain_is_y_periodic .and. y_k_left > y_k + 0.5*mesh_period_y ) y_k_left = y_k_left - mesh_period_y
+            if( .not. track_markers_outside_domain )then
+                if( domain_is_x_periodic .and. x_k_left < x_k - 0.5*mesh_period_x ) x_k_left = x_k_left + mesh_period_x
+                if( domain_is_x_periodic .and. x_k_left > x_k + 0.5*mesh_period_x ) x_k_left = x_k_left - mesh_period_x
+                if( domain_is_y_periodic .and. y_k_left < y_k - 0.5*mesh_period_y ) y_k_left = y_k_left + mesh_period_y
+                if( domain_is_y_periodic .and. y_k_left > y_k + 0.5*mesh_period_y ) y_k_left = y_k_left - mesh_period_y
+            end if
         end if
         
            j13 = factor * ( x_k_right  - x_k_left  )
@@ -324,16 +345,19 @@ contains
            vx_k_right  = vx_k
            vy_k_right  = vy_k
         else
-           call cell_offset_to_global(  p_list(k_ngb)%dx, &
-                                        p_list(k_ngb)%dy, &
-                                        p_list(k_ngb)%ic, &
-                                        particles_m2d, x_k_right, y_k_right )
+            call cell_offset_to_global_extended(p_list(k_ngb)%dx,   &
+                                                p_list(k_ngb)%dy,   &
+                                                p_list(k_ngb)%ic_x,   &
+                                                p_list(k_ngb)%ic_y,   &
+                                                particles_m2d, x_k_right, y_k_right )
             vx_k_right = p_list(k_ngb)%vx
             vy_k_right = p_list(k_ngb)%vy
-            if( domain_is_x_periodic .and. x_k_right < x_k - 0.5*mesh_period_x ) x_k_right = x_k_right + mesh_period_x
-            if( domain_is_x_periodic .and. x_k_right > x_k + 0.5*mesh_period_x ) x_k_right = x_k_right - mesh_period_x
-            if( domain_is_y_periodic .and. y_k_right < y_k - 0.5*mesh_period_y ) y_k_right = y_k_right + mesh_period_y
-            if( domain_is_y_periodic .and. y_k_right > y_k + 0.5*mesh_period_y ) y_k_right = y_k_right - mesh_period_y
+            if( .not. track_markers_outside_domain )then
+                if( domain_is_x_periodic .and. x_k_right < x_k - 0.5*mesh_period_x ) x_k_right = x_k_right + mesh_period_x
+                if( domain_is_x_periodic .and. x_k_right > x_k + 0.5*mesh_period_x ) x_k_right = x_k_right - mesh_period_x
+                if( domain_is_y_periodic .and. y_k_right < y_k - 0.5*mesh_period_y ) y_k_right = y_k_right + mesh_period_y
+                if( domain_is_y_periodic .and. y_k_right > y_k + 0.5*mesh_period_y ) y_k_right = y_k_right - mesh_period_y
+            end if
         end if
 
         k_ngb  = p_list(k)%ngb_vyleft_index
@@ -345,16 +369,19 @@ contains
             vx_k_left  = vx_k
             vy_k_left  = vy_k
         else
-            call cell_offset_to_global( p_list(k_ngb)%dx, &
-                                        p_list(k_ngb)%dy, &
-                                        p_list(k_ngb)%ic, &
-                                        particles_m2d, x_k_left, y_k_left )
+            call cell_offset_to_global_extended(p_list(k_ngb)%dx,   &
+                                                p_list(k_ngb)%dy,   &
+                                                p_list(k_ngb)%ic_x,   &
+                                                p_list(k_ngb)%ic_y,   &
+                                                particles_m2d, x_k_left, y_k_left )
             vx_k_left  = p_list(k_ngb)%vx
             vy_k_left  = p_list(k_ngb)%vy
-            if( domain_is_x_periodic .and. x_k_left < x_k - 0.5*mesh_period_x ) x_k_left = x_k_left + mesh_period_x
-            if( domain_is_x_periodic .and. x_k_left > x_k + 0.5*mesh_period_x ) x_k_left = x_k_left - mesh_period_x
-            if( domain_is_y_periodic .and. y_k_left < y_k - 0.5*mesh_period_y ) y_k_left = y_k_left + mesh_period_y
-            if( domain_is_y_periodic .and. y_k_left > y_k + 0.5*mesh_period_y ) y_k_left = y_k_left - mesh_period_y
+            if( .not. track_markers_outside_domain )then
+                if( domain_is_x_periodic .and. x_k_left < x_k - 0.5*mesh_period_x ) x_k_left = x_k_left + mesh_period_x
+                if( domain_is_x_periodic .and. x_k_left > x_k + 0.5*mesh_period_x ) x_k_left = x_k_left - mesh_period_x
+                if( domain_is_y_periodic .and. y_k_left < y_k - 0.5*mesh_period_y ) y_k_left = y_k_left + mesh_period_y
+                if( domain_is_y_periodic .and. y_k_left > y_k + 0.5*mesh_period_y ) y_k_left = y_k_left - mesh_period_y
+            end if
         end if
         
            j14 = factor * ( x_k_right  - x_k_left  )
@@ -559,6 +586,50 @@ end subroutine get_ltp_deformation_matrix
     end if
   end function in_bounds_periodic
 
+
+  function in_bounds_periodic_x( x, mesh, x_periodic ) result(res)
+
+    use sll_cartesian_meshes
+
+    ! [[file:../working_precision/sll_working_precision.h]]
+    use sll_working_precision
+
+    logical :: res
+    sll_real64, intent(in) :: x
+    logical, intent(in) :: x_periodic
+    type(sll_cartesian_mesh_2d), pointer :: mesh
+    if( (x >= mesh%eta1_min)                                                                    &
+        .and.                                                                                   &
+        ((x < mesh%eta1_max .and. x_periodic) .or. (x <= mesh%eta1_max .and. .not. x_periodic)) &
+      ) then
+       res = .true.
+    else
+       res = .false.
+    end if
+  end function in_bounds_periodic_x
+
+
+  function in_bounds_periodic_y( y, mesh, y_periodic ) result(res)
+
+    use sll_cartesian_meshes
+
+    ! [[file:../working_precision/sll_working_precision.h]]
+    use sll_working_precision
+
+    logical :: res
+    sll_real64, intent(in) :: y
+    logical, intent(in) :: y_periodic
+    type(sll_cartesian_mesh_2d), pointer :: mesh
+    if( (y >= mesh%eta2_min)                                                                    &
+        .and.                                                                                   &
+        ((y < mesh%eta2_max .and. y_periodic) .or. (y <= mesh%eta2_max .and. .not. y_periodic)) &
+      ) then
+       res = .true.
+    else
+       res = .false.
+    end if
+  end function in_bounds_periodic_y
+
   ! <<apply_periodic_bc>> extracted from [[file:../simulation/simulation_4d_vp_lt_pic_cartesian.F90::subroutine
   ! apply_periodic_bc]]
 
@@ -605,7 +676,6 @@ end subroutine get_ltp_deformation_matrix
   subroutine apply_periodic_bc( mesh, x, y )
 
     use sll_cartesian_meshes
-
     ! [[file:../working_precision/sll_working_precision.h]]
     use sll_working_precision
 
@@ -616,6 +686,57 @@ end subroutine get_ltp_deformation_matrix
     x = mesh%eta1_min + modulo(x - mesh%eta1_min, mesh%eta1_max - mesh%eta1_min)
     y = mesh%eta2_min + modulo(y - mesh%eta2_min, mesh%eta2_max - mesh%eta2_min)
   end subroutine apply_periodic_bc
+
+
+  subroutine apply_periodic_bc_x( mesh, x)
+
+    use sll_cartesian_meshes
+    ! [[file:../working_precision/sll_working_precision.h]]
+    use sll_working_precision
+
+    type(sll_cartesian_mesh_2d), pointer :: mesh
+    sll_real64, intent(inout) :: x
+
+    x = mesh%eta1_min + modulo(x - mesh%eta1_min, mesh%eta1_max - mesh%eta1_min)
+  end subroutine apply_periodic_bc_x
+
+
+  subroutine apply_periodic_bc_y( mesh, y)
+
+    use sll_cartesian_meshes
+    ! [[file:../working_precision/sll_working_precision.h]]
+    use sll_working_precision
+
+    type(sll_cartesian_mesh_2d), pointer, intent(in) :: mesh
+    sll_real64, intent(inout) :: y
+
+    y = mesh%eta2_min + modulo(y - mesh%eta2_min, mesh%eta2_max - mesh%eta2_min)
+  end subroutine apply_periodic_bc_y
+
+
+  ! puts the point (x,y) back into the computational domain if periodic in x or y (or both)
+  ! otherwise, does nothing
+  subroutine periodic_correction(p_group, x, y)
+    type(sll_lt_pic_4d_group), pointer,  intent(in)    :: p_group
+    sll_real64, intent(inout) :: x
+    sll_real64, intent(inout) :: y
+    type(sll_cartesian_mesh_2d), pointer :: mesh
+
+    mesh => p_group%mesh
+
+    if( p_group%domain_is_x_periodic                        &
+        .and.                                               &
+        ( (x < mesh%eta1_min) .or. (x >= mesh%eta1_max) )   &
+      ) then
+          call apply_periodic_bc_x( mesh, x)
+    end if
+    if( p_group%domain_is_y_periodic                        &
+        .and.                                               &
+        ( (y < mesh%eta2_min) .or. (y >= mesh%eta2_max) )   &
+      ) then
+          call apply_periodic_bc_y( mesh, y)
+    end if
+  end subroutine periodic_correction
 
 
   ! <<onestep>> <<ALH>> utility function for finding the neighbours of a particle, used by [[ONESTEPMACRO]]. "dim"
@@ -1386,6 +1507,7 @@ end subroutine get_ltp_deformation_matrix
     
     LOGICAL :: domain_is_x_periodic
     LOGICAL :: domain_is_y_periodic    
+    LOGICAL :: track_markers_outside_domain
 
     ! Poisson mesh associated to the particles
     particles_m2d => p_group%mesh
@@ -1417,6 +1539,7 @@ end subroutine get_ltp_deformation_matrix
     parts_vx_min   = p_group%remapping_grid%eta3_min
     parts_vy_min   = p_group%remapping_grid%eta4_min
         
+    track_markers_outside_domain = p_group%track_markers_outside_domain
 
     ! <<sll_lt_pic_4d_write_f_on_remap_grid-periodicity>>
 
@@ -1460,6 +1583,7 @@ end subroutine get_ltp_deformation_matrix
                                     p,                      &
                                     domain_is_x_periodic,   &
                                     domain_is_y_periodic,   &
+                                    track_markers_outside_domain, &
                                     mesh_period_x,          &
                                     mesh_period_y,          &
                                     h_parts_x,              &     
@@ -1645,10 +1769,10 @@ end subroutine get_ltp_deformation_matrix
     sll_real64 :: inv_period_x
     sll_real64 :: inv_period_y
 
-    sll_real64 :: x_k_left,  x_k_right
-    sll_real64 :: y_k_left,  y_k_right
-    sll_real64 :: vx_k_left, vx_k_right
-    sll_real64 :: vy_k_left, vy_k_right
+!    sll_real64 :: x_k_left,  x_k_right
+!    sll_real64 :: y_k_left,  y_k_right
+!    sll_real64 :: vx_k_left, vx_k_right
+!    sll_real64 :: vy_k_left, vy_k_right
 
     sll_real64 :: mesh_period_1
     sll_real64 :: mesh_period_2
@@ -1689,6 +1813,7 @@ end subroutine get_ltp_deformation_matrix
         
     LOGICAL :: domain_is_x_periodic
     LOGICAL :: domain_is_y_periodic    
+    LOGICAL :: track_markers_outside_domain
 
     sll_real64 :: sum_part_radius_x
     sll_real64 :: sum_part_radius_y
@@ -1722,7 +1847,8 @@ end subroutine get_ltp_deformation_matrix
     p             => p_group%p_list
     part_degree   = p_group%spline_degree
     ref_radius = 0.5*(part_degree+1)
-    
+    track_markers_outside_domain = p_group%track_markers_outside_domain
+
     num_points_1  = int(plot_m2d%num_cells1+1, i32)
     num_points_2  = int(plot_m2d%num_cells2+1, i32)
 
@@ -1799,6 +1925,7 @@ end subroutine get_ltp_deformation_matrix
                                     p,                      &
                                     domain_is_x_periodic,   &
                                     domain_is_y_periodic,   &
+                                    track_markers_outside_domain,   &
                                     mesh_period_x,          &
                                     mesh_period_y,          &
                                     h_parts_x,              &     
@@ -2228,8 +2355,12 @@ end subroutine get_ltp_deformation_matrix
 
     do k = 1, p_group%number_particles
         particle => p_group%p_list(k)
-        call cell_offset_to_global( particle%dx, particle%dy, particle%ic, &
-                                      p_group%mesh, x_k, y_k )
+
+        call cell_offset_to_global_extended(particle%dx, particle%dy, particle%ic_x, particle%ic_y,   &
+                                            p_group%mesh, x_k, y_k )
+
+        call periodic_correction(p_group, x_k, y_k)
+
         write(file_id,*) x_k, "  ", y_k, "  ", particle%vx , "  ", particle%vy,  "  ", particle%q
 
     end do
@@ -2869,6 +3000,8 @@ end subroutine
 
     LOGICAL :: domain_is_x_periodic
     LOGICAL :: domain_is_y_periodic
+    LOGICAL :: track_markers_outside_domain
+
     sll_real64 :: mesh_period_x
     sll_real64 :: mesh_period_y
     sll_real64 :: inv_period_x
@@ -2944,7 +3077,7 @@ end subroutine
     sll_real64, dimension(:),allocatable :: cos_table, exp_table
     sll_real64 :: s, s_aux
     sll_real64 :: hs_cos_table, hs_exp_table
-    sll_real64 :: ds_cos_table, ds_exp_table, ds_table
+    sll_real64 :: ds_table
     sll_real64 :: smin_cos_table, smax_cos_table
     sll_real64 :: smin_exp_table, smax_exp_table
     sll_real64 :: si_cos, si_exp
@@ -3076,6 +3209,8 @@ end subroutine
 
     part_degree = p_group%spline_degree
 
+    track_markers_outside_domain = p_group%track_markers_outside_domain
+
     ! Preparatory work: find out the particle which is closest to each cell center by looping over all particles and
     ! noting which virtual cell contains it. The leftmost virtual cell in each dimension may not be complete.
 
@@ -3142,6 +3277,7 @@ end subroutine
     alpha_landau = p_group%alpha_landau
     k_landau = p_group%k_landau
 
+
     ! preparatory loop to fill the [[closest_particle]] array containing the particle closest to the center of each
     ! virtual cell
 
@@ -3154,7 +3290,8 @@ end subroutine
        ! find absolute (x,y,vx,vy) coordinates for this particle. Uses
        ! [[file:sll_representation_conversion.F90::cell_offset_to_global]]
 
-       call cell_offset_to_global(particle%dx,particle%dy,particle%ic,p_group%mesh,x,y)
+       call cell_offset_to_global_extended(particle%dx,particle%dy,particle%ic_x,particle%ic_y,p_group%mesh,x,y)
+       call periodic_correction(p_group, x,y)
        vx = particle%vx
        vy = particle%vy
 
@@ -3286,15 +3423,18 @@ end subroutine
 
                 k = closest_particle(i,j,l,m)
 
+        ! before, we used           call cell_offset_to_global(particle%dx,particle%dy,particle%ic,p_group%mesh,x,y) ;\
+
 #define UPDATE_CLOSEST_PARTICLE_ARRAYS_USING_NEIGHBOR_CELLS(di,dj,dl,dm)                     \
     do ;\
         k_neighbor = closest_particle(i+(di), j+(dj), l+(dl), m+(dm))           ;\
                                                                                             ;\
-        if(k_neighbor /= 0) then;  do          ; \
+        if(k_neighbor /= 0) then;  do          ;\
             particle => p_group%p_list(k_neighbor)                                  ;\
-            call cell_offset_to_global(particle%dx,particle%dy,particle%ic,p_group%mesh,x,y) ;\
+            call cell_offset_to_global_extended(particle%dx,particle%dy,particle%ic_x,particle%ic_y,p_group%mesh,x,y) ;\
+            call periodic_correction(p_group,x,y) ;\
             vx = particle%vx                                                                    ;\
-            vy = particle%vy               ;\
+            vy = particle%vy                        ;\
             x_aux = x - g%eta1_min               ;\
             y_aux = y - g%eta2_min                           ;\
             vx_aux = vx - g%eta3_min                           ;\
@@ -3360,6 +3500,7 @@ end subroutine
                     p_group%p_list,                            &
                     domain_is_x_periodic,                      &
                     domain_is_y_periodic,                      &
+                    track_markers_outside_domain,              &
                     mesh_period_x,                             &
                     mesh_period_y,                             &
                     h_parts_x,                                 &

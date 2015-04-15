@@ -422,12 +422,20 @@ contains
             p_group%p_list(k)%q = w_k
             particle_indices(j_x,j_y,j_vx,j_vy) = k
 
-            call global_to_cell_offset (  &
-                 x_j, y_j, &
-                 m2d, &
-                 p_group%p_list(k)%ic, &
-                 p_group%p_list(k)%dx, &
-                 p_group%p_list(k)%dy )
+            call global_to_cell_offset_extended(    &
+                    x_j, y_j, &
+                    m2d,      &
+                    p_group%p_list(k)%ic_x, &
+                    p_group%p_list(k)%ic_y, &
+                    p_group%p_list(k)%dx, &
+                    p_group%p_list(k)%dy )
+
+            !            call global_to_cell_offset (  &
+            !                 x_j, y_j, &
+            !                 m2d, &
+            !                 p_group%p_list(k)%ic, &
+            !                 p_group%p_list(k)%dx, &
+            !                 p_group%p_list(k)%dy )
             p_group%p_list(k)%vx = vx_j 
             p_group%p_list(k)%vy = vy_j
 
