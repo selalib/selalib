@@ -1019,7 +1019,7 @@ if (es%perper) then
                               es%csr_mat%val,                     &
                               es%csr_mat%num_rows,                &
                               es%csr_mat%num_nz,                  &
-                              es%masse,                               &
+                              es%masse,                           &
                               es%csr_mat_with_constraint%row_ptr, &
                               es%csr_mat_with_constraint%col_ind, &
                               es%csr_mat_with_constraint%val)  
@@ -1031,7 +1031,7 @@ end if
 
 print *,'#end of sll_factorize_csr_matrix'
 
-es%csr_mat_source => &
+es%csr_mat_source =>                                            &
   new_csr_matrix( size(es%masse,1),                             &
                   (nc_1+1)*(nc_2+1),                            &
                   nc_1*nc_2,                                    &
@@ -1088,6 +1088,7 @@ SLL_DEALLOCATE_ARRAY(stif,ierr)
 SLL_DEALLOCATE_ARRAY(mass,ierr) 
    
 end subroutine factorize_mat_es
+
 !> @brief Assemble the matrix for elliptic solver.
 !> @details To have the function phi such that 
 !>  \f[
