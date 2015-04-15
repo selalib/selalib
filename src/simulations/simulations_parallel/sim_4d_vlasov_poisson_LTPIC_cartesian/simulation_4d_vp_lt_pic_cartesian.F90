@@ -313,7 +313,7 @@ contains
 
           SLL_ASSERT(thread_id == 0)
 
-          ! [[file:~/mcp/selalib/src/pic_utilities/lt_pic_4d_utilities.F90::sll_lt_pic_4d_deposit_charge_on_2d_mesh]]
+          ! [[file:~/selalib/src/pic_utilities/lt_pic_4d_utilities.F90::sll_lt_pic_4d_deposit_charge_on_2d_mesh]]
            call sll_lt_pic_4d_deposit_charge_on_2d_mesh( sim%part_group,                    &
                                                          sim%q_accumulator_ptr(1)%q,        &
                                                          sim%n_virtual_x_for_deposition,    &
@@ -399,8 +399,8 @@ contains
     sll_real64 :: bors
 
     ! Timings and statistics
-    sll_real64 :: deposit_time,loop_time
-    type(sll_time_mark) :: deposit_time_mark,loop_time_mark
+    sll_real64 :: deposit_time,loop_time,iterations_time
+    type(sll_time_mark) :: deposit_time_mark,loop_time_mark,iterations_time_mark
     
     ! ------------------------------
 
@@ -502,7 +502,6 @@ contains
     call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
                         sim%mesh_2d%eta2_max, ncy+1,                        &
                         sim%E2, 'Ey', it, ierr )
-
     endif
 
 
@@ -577,7 +576,9 @@ contains
 
     ! Time statistics
     call sll_set_time_mark(loop_time_mark)
+    call sll_set_time_mark(iterations_time_mark)
     deposit_time=0
+    iterations_time=0
     
     do it = 0, sim%num_iterations-1
 
@@ -816,6 +817,12 @@ contains
 
             print *, "done."
 
+
+            ! display intermediate times to determine how much the speed of the method varies with the age of the last remap
+
+            iterations_time=sll_time_elapsed_since(iterations_time_mark)
+            aaa
+            call sll_set_time_mark(iterations_time_mark)
         else
             print *, "no f plot"
         end if
@@ -897,11 +904,17 @@ contains
     ! particles into account.
     
     loop_time=sll_time_elapsed_since(loop_time_mark)
-    write(*,'(A,ES8.2,A)') 'sim stats: ',1 / loop_time * sim%num_iterations * sim%ions_number,' pushes/sec '
     if(sim%use_lt_pic_scheme)then
-       write(*,'(A,ES8.2,A)') 'lt_pic stats: ',                                     &
-            1 / deposit_time * sim%num_iterations * sim%virtual_particle_number,    &
+
+       ! Different label for loop_time in PIC and LTPIC to make sure that the two definitions are not confused
+       
+       write(*,'(A,ES8.2,A,ES8.2,A)') 'LTPIC stats: ',                           &
+            1 / loop_time * sim%num_iterations * sim%ions_number,                &
+            ' markers/sec',                                                      &
+            1 / deposit_time * sim%num_iterations * sim%virtual_particle_number, &
             ' deposits/sec'
+    else
+       write(*,'(A,ES8.2,A)') 'PIC stats: ',1 / loop_time * sim%num_iterations * sim%ions_number,' pushes/sec '
     end if
 
     SLL_DEALLOCATE(sim%rho,   ierr)
