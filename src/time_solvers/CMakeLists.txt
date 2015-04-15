@@ -15,6 +15,10 @@ TARGET_LINK_LIBRARIES( sll_operator_splitting
 ADD_LIBRARY( sll_time_splitting STATIC
   sll_time_splitting_coeff.F90 )
 
+ADD_LIBRARY( sll_time_composition STATIC
+  sll_time_composition_coeff.F90 )
+  
+  
 # Tests
 IF(BUILD_TESTING)
 
