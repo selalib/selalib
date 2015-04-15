@@ -64,7 +64,7 @@
 
      [[elisp:(compile "cd ~/selalib/build && make -j $NCPU install && cd ~/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/run && ../test_4d_vp_lt_pic_cartesian ../params_lt_pic_4d.nml")]]
 
-** Debugging
+** <<Debugging>>
 
      [[elisp:(gdb "gdb -i=mi -cd=~/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/run --args $HOME/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/test_4d_vp_lt_pic_cartesian ../params_debug.nml")]]
 
@@ -89,43 +89,40 @@
      [[elisp:(compile "cd ~/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/run && gprof -l ../test_4d_vp_lt_pic_cartesian gmon.out > line_profile.txt")]]
 
 *** perf
-
     from the linux-tools package under Debian
-
     more on perf profiling: [[https://perf.wiki.kernel.org/index.php/Tutorial]]
 
 **** configure
-
      -ggdb option is required to see source lines in the perf annotate output
 
      [[elisp:(compile "cd ~/selalib/build && cmake -DCMAKE_BUILD_TYPE=Release -DHDF5_PARALLEL_ENABLED=ON -DCMAKE_VERBOSE_MAKEFILE=TRUE -DOPENMP_ENABLED=OFF -DCMAKE_Fortran_FLAGS='-ggdb' ../src")]]
 
-**** compile: [[elisp:(compile "cd ~/selalib/build && make -j $NCPU install")]]
+**** compile
+     [[elisp:(compile "cd ~/selalib/build && make -j $NCPU install")]]
 
 **** run (stores data in binary form in file perf.data):
 
-     - main run directory: file:~/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/
+     - main run directory: file:~/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/run/
 
-     - the input data comes from file:params_perf.nml
+     - the input data for profiling is in file:params_perf.nml
 
      - plain run for timing reference (instrumented runs should not be more than 5% slower than this)
-
-     [[elisp:(compile "cd ~/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/run && ../test_4d_vp_lt_pic_cartesian ../params_perf.nml")]]
+       [[elisp:(compile "cd ~/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/run && ../test_4d_vp_lt_pic_cartesian ../params_perf.nml | tee perf_ref_`date +%y%m%d%H%M`.txt")]]
 
      - basic stats ([[man:perf-stat]])
-
-     [[elisp:(compile "cd ~/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/run && perf stat -d --log-fd 1 ../test_4d_vp_lt_pic_cartesian ../params_perf.nml | tee perf_stat_`date +%y%m%d%H%M`.txt")]]
+       [[elisp:(compile "cd ~/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/run && perf stat -d --log-fd 1 ../test_4d_vp_lt_pic_cartesian ../params_perf.nml | tee perf_stat_`date +%y%m%d%H%M`.txt")]]
 
      - instrumented runs ([[man:perf-record]])
 
-       generates statistics in binary form in run/perf.data). Sampling value of 100000 chosen
-       according to [[http://sandsoftwaresound.net/perf/perf-tut-profile-hw-events/]]
+       Statistics are recorded in binary form in run/perf.data. The sampling value of 100000 chosen according to
+       [[http://sandsoftwaresound.net/perf/perf-tut-profile-hw-events/]]. "-o" is required to prevent perf from sending
+       binary data into the output pipe
 
-       "-o" is required to prevent perf from sending binary data into the output pipe
+       - cpu-cycles
+         [[elisp:(compile "STAMP=`date +%y%m%d%H%M` && cd ~/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/run && perf record -e cpu-cycles -c 100000 -o perf.data ../test_4d_vp_lt_pic_cartesian ../params_perf.nml | tee perf_cpu_$STAMP.txt && cp perf.data perf_cpu_$STAMP.data")]]
 
-       [[elisp:(compile "STAMP=`date +%y%m%d%H%M` && cd ~/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/run && perf record -e cpu-cycles -c 100000 -o perf.data ../test_4d_vp_lt_pic_cartesian ../params_perf.nml | tee perf_cpu_$STAMP.txt && cp perf.data perf_cpu_$STAMP.data")]]
-
-       [[elisp:(compile "STAMP=`date +%y%m%d%H%M` && cd ~/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/run && perf record -e stalled-cycles-frontend -c 100000 -o perf.data ../test_4d_vp_lt_pic_cartesian ../params_perf.nml | tee perf_stall_$STAMP.txt && cp perf.data perf_stall_$STAMP.data")]]
+       - stalled-cycles-frontend
+         [[elisp:(compile "STAMP=`date +%y%m%d%H%M` && cd ~/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/run && perf record -e stalled-cycles-frontend -c 100000 -o perf.data ../test_4d_vp_lt_pic_cartesian ../params_perf.nml | tee perf_stall_$STAMP.txt && cp perf.data perf_stall_$STAMP.data")]]
 
 **** reporting
 
