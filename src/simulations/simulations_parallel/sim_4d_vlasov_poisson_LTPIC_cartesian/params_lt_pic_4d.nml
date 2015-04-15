@@ -2,11 +2,11 @@
         NUM_PARTICLES       = 500000
         GUARD_SIZE          = 450000
         PARTICLE_ARRAY_SIZE = 510000
-        THERM_SPEED         = 1.0
+        THERM_SPEED         = 10000 ! 1.0
         dt     =  0.1
-        number_iterations   = 50
-        plot_period         = 10
-        QoverM = -1.0
+        number_iterations   = 100
+        plot_period         = 1
+        QoverM = 0  ! -1.0
         ALPHA  = 0.5
         UseCubicSplines = .false.
         UseLtPicScheme = .true.
@@ -25,18 +25,18 @@
 /
 
 &lt_pic_params
-    NUM_PARTS_X         = 160
-    NUM_PARTS_Y         = 20
-    NUM_PARTS_VX        = 40
-    NUM_PARTS_VY        = 40
+    NUM_PARTS_X         = 20 !160
+    NUM_PARTS_Y         = 4 !20
+    NUM_PARTS_VX        = 10 !40
+    NUM_PARTS_VY        = 10 ! 40
     REMAP_GRID_VX_MIN   = -6.0
     REMAP_GRID_VX_MAX   = 6.0
     REMAP_GRID_VY_MIN   = -6.0
     REMAP_GRID_VY_MAX   = 6.0
-    NVirtual_X_ForDeposition = 1
-    NVirtual_Y_ForDeposition = 1
-    NVirtual_VX_ForDeposition = 1
-    NVirtual_VY_ForDeposition = 1
+    NVirtual_X_ForDeposition = 2 !1
+    NVirtual_Y_ForDeposition = 2 !1
+    NVirtual_VX_ForDeposition = 2 !1
+    NVirtual_VY_ForDeposition = 2 !1
     UseExactF0          = .true.
 /
 

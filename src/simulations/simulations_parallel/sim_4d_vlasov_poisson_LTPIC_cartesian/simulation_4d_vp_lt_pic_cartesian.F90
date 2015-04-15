@@ -210,7 +210,6 @@ contains
             !            PARTICLE_ARRAY_SIZE,                      &       ! MCP: problems if this value too small ?
             !            GUARD_SIZE,                               &       ! MCP: problems if this value too small ?
 
-
         print *, "WARNING 65373654 -- writing landau parameters in the particle group -- this is temporary..."
         sim%part_group%thermal_speed = sim%thermal_speed_ions   !  temporary or not?
         sim%part_group%alpha_landau = ALPHA    !  temporary or not?
@@ -364,6 +363,7 @@ contains
     sll_real32 :: off_x, off_y,off_x1,off_y1
     sll_real64 :: xmin, ymin
     sll_real64 :: rdx, rdy
+    sll_int32  :: icell
     sll_int32  :: gi ! counter index for guard list
     sll_real64 :: Ex, Ey, Ex1, Ey1, Ex_CS, Ey_CS
     sll_real64 :: dt_q_over_m ! dt * qoverm
@@ -403,7 +403,6 @@ contains
     type(sll_time_mark) :: deposit_time_mark,loop_time_mark
     
     ! ------------------------------
-
     ncx = sim%mesh_2d%num_cells1
     ncy = sim%mesh_2d%num_cells2
     n_threads = sim%n_threads
@@ -540,7 +539,8 @@ contains
        do k = 1, sim%ions_number
           pp_vx = particles(k)%vx
           pp_vy = particles(k)%vy
-          SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,particles(k),tmp5,tmp6)
+          call get_poisson_cell_index(sim%mesh_2d, particles(k)%ic_x, particles(k)%ic_y, icell)
+          SLL_INTERPOLATE_FIELD_EXTENDED(Ex,Ey,accumE,particles(k),tmp5,tmp6,icell)
           particles(k)%vx = pp_vx - 0.5_f64 * dt_q_over_m * Ex
           particles(k)%vy = pp_vy - 0.5_f64 * dt_q_over_m * Ey
        enddo
@@ -642,7 +642,9 @@ contains
 
              !! -- --  v-push (v^{n-1/2} -> v^{n+1/2}  using  E^n)  [begin]  -- --
 
-             SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,particles(k),tmp5,tmp6)
+             call get_poisson_cell_index(sim%mesh_2d, particles(k)%ic_x, particles(k)%ic_y, icell)
+             SLL_INTERPOLATE_FIELD_EXTENDED(Ex,Ey,accumE,particles(k),tmp5,tmp6, icell)
+            ! SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,particles(k),tmp5,tmp6)
              particles(k)%vx = particles(k)%vx + dt_q_over_m * Ex
              particles(k)%vy = particles(k)%vy + dt_q_over_m * Ey
 
@@ -650,7 +652,7 @@ contains
 
              !! -- --  x-push (x^n -> x^{n+1} using v^{n+1/2})  [begin]  -- --
 
-             GET_PARTICLE_POSITION(particles(k),sim%mesh_2d,x,y)
+             GET_PARTICLE_POSITION_EXTENDED(particles(k),sim%mesh_2d,x,y)
              x = x + dt * particles(k)%vx
              y = y + dt * particles(k)%vy
 
@@ -664,18 +666,21 @@ contains
              !! -- --  LTPIC: put outside particles back in domain                              [begin]  -- --
              !! -- --  PIC: deposit charge (if particle is inside, otherwise reserve it)        [begin]  -- --
 
-             if (in_bounds_periodic( x, y, sim%mesh_2d,                         &
-                                     sim%part_group%domain_is_x_periodic,       &
-                                     sim%part_group%domain_is_y_periodic )) then ! finish push
-                SET_PARTICLE_POSITION(particles(k),xmin,ymin,ncx,x,y,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
+             if( sim%part_group%track_markers_outside_domain                            &
+                .or. ( in_bounds_periodic( x, y, sim%mesh_2d,                           &
+                                           sim%part_group%domain_is_x_periodic,         &
+                                           sim%part_group%domain_is_y_periodic )        &
+                ) ) then ! finish push
+                SET_PARTICLE_POSITION_EXTENDED(particles(k),xmin,ymin,ncx,x,y,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
                 if( .not. sim%use_lt_pic_scheme )then
-                    SLL_ACCUMULATE_PARTICLE_CHARGE(q_accum,particles(k),tmp5,tmp6)
+                    print*,  "WARNING: charge deposition discarded for pic case, please update"
+                    ! SLL_ACCUMULATE_PARTICLE_CHARGE(q_accum,particles(k),tmp5,tmp6)
                 end if
              else
                 ! particle outside domain
                 if( sim%use_lt_pic_scheme )then
                      call apply_periodic_bc( sim%mesh_2d, x, y)
-                     SET_PARTICLE_POSITION(particles(k),xmin,ymin,ncx,x,y,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
+                     SET_PARTICLE_POSITION_EXTENDED(particles(k),xmin,ymin,ncx,x,y,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
                 else
                   ! store reference for later processing
                   gi = gi + 1
@@ -733,12 +738,16 @@ contains
               p_guard => sim%part_group%p_guard(thread_id+1)%g_list
                 ! !  !          p => sim%part_group%p_list
               do k = 1, sim%part_group%num_postprocess_particles(thread_id+1)
-                 GET_PARTICLE_POSITION(p_guard(k)%p,sim%mesh_2d,x,y)
-                 x = x + dt * p_guard(k)%p%vx
-                 y = y + dt * p_guard(k)%p%vy
-                 call apply_periodic_bc( sim%mesh_2d, x, y)
-                 SET_PARTICLE_POSITION(p_guard(k)%p,xmin,ymin,ncx,x,y,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
-                 SLL_ACCUMULATE_PARTICLE_CHARGE(q_accum,p_guard(k)%p,tmp5,tmp6)
+
+                print*,  "WARNING (895848764): macros discarded for pic case, please update"
+
+                !                 GET_PARTICLE_POSITION(p_guard(k)%p,sim%mesh_2d,x,y)
+                !                 x = x + dt * p_guard(k)%p%vx
+                !                 y = y + dt * p_guard(k)%p%vy
+                !                 call apply_periodic_bc( sim%mesh_2d, x, y)
+                !
+                !                 SET_PARTICLE_POSITION(p_guard(k)%p,xmin,ymin,ncx,x,y,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
+                !                 SLL_ACCUMULATE_PARTICLE_CHARGE(q_accum,p_guard(k)%p,tmp5,tmp6)
               end do
               !$omp end parallel
               !       ! reset any counters
@@ -851,7 +860,9 @@ contains
           !$omp parallel PRIVATE(Ex,Ey,Ex1,Ey1,tmp5,tmp6)
           !$omp do reduction(+:some_val)
           do k = 1, sim%ions_number
-             SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,particles(k),tmp5,tmp6)
+             call get_poisson_cell_index(sim%mesh_2d, particles(k)%ic_x, particles(k)%ic_y, icell)
+             SLL_INTERPOLATE_FIELD_EXTENDED(Ex,Ey,accumE,particles(k),tmp5,tmp6, icell)
+             ! SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,particles(k),tmp5,tmp6)
              some_val = some_val &
                     + (particles(k)%vx + 0.5_f64 * dt_q_over_m * Ex)**2 &
                     + (particles(k)%vy + 0.5_f64 * dt_q_over_m * Ey)**2
