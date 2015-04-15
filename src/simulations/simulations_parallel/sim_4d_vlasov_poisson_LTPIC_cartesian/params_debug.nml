@@ -1,10 +1,10 @@
 ! 
-! Parameters for profiling
+! Parameters for debugging
 ! 
-! [[shell:header\alh 'params_perf.nml']] (cf [[file:~/alh/bin/headeralh]])
-! headeralh authors=- brief="Parameters for profiling" default=0 f90nml start=14/04/15
+! [[shell:header\alh 'params_debug.nml']] (cf [[file:~/alh/bin/headeralh]])
+! headeralh authors=- brief="Parameters for debugging" default=0 f90nml start=14/04/15
 
-! cf [[file:README::Profiling]]
+! cf [[file:README::Debugging]]
   
 &sim_params
         NUM_PARTICLES         = 500000
