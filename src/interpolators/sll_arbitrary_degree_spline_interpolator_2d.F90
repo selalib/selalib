@@ -1970,24 +1970,33 @@ sll_int32              :: ny
 sll_int32              :: kx
 sll_int32              :: ky
 
-sll_real64                          :: x
-sll_real64                          :: y
-sll_real64                          :: length1
-sll_real64                          :: length2
-sll_real64, dimension(:),   pointer :: tmp_tx
-sll_real64, dimension(:),   pointer :: tmp_ty
-sll_real64, dimension(:,:), pointer :: tmp_coeff
+sll_real64                        :: x
+sll_real64                        :: y
+sll_real64                        :: length1
+sll_real64                        :: length2
+sll_real64, dimension(:), pointer :: tmp_ty
+sll_real64, dimension(:), pointer :: tmp_tab
+sll_real64, dimension(:), pointer :: tmp_coef
+
+sll_int32 :: j
+sll_int32 :: lefty
+sll_int32 :: ierr
 
 nx = interpolator%size_coeffs1
 ny = interpolator%size_coeffs2
 kx = interpolator%spline_degree1+1
 ky = interpolator%spline_degree2+1
 
+SLL_ALLOCATE(tmp_coef(ky),ierr)
+SLL_ALLOCATE(tmp_tab(nx),ierr)
+SLL_ALLOCATE(tmp_ty(2*ky),ierr)
+
 length1 = interpolator%eta1_max-interpolator%eta1_min
 length2 = interpolator%eta1_max-interpolator%eta1_min
 
-x = eta1
-y = eta2
+x   = eta1
+y   = eta2
+val = 0.0_f64
 
 if (interpolator%bc_min1 == SLL_PERIODIC .and. eta1 < interpolator%eta1_min) then
   x = eta1 + length1 
@@ -2010,87 +2019,30 @@ SLL_ASSERT( x <= interpolator%eta1_max )
 SLL_ASSERT( y >= interpolator%eta2_min )
 SLL_ASSERT( y <= interpolator%eta2_max )
 
-tmp_tx    => interpolator%t1(1:interpolator%size_t1)
-tmp_ty    => interpolator%t2(1:interpolator%size_t2)
-tmp_coeff => interpolator%coeff_splines(1:size_coeffs1,1:size_coeffs2)
+call interv(interpolator%t2, ny+ky, y, lefty, ierr)
 
-!call bvalue2d( &
-!     x, &
-!     y, &
-!     size_coeffs1, &
-!     interpolator%spline_degree1+1, &
-!     size_coeffs2, &
-!     interpolator%spline_degree2+1, &
-!     tmp_coeff, &
-!     tmp_tx, &
-!     tmp_ty,&
-!     val)
-  subroutine bvalue2d(&
-       ar_x,&
-       ar_y,&
-       ai_nx,&
-       ai_kx,&
-       ai_ny,&
-       ai_ky,&
-       apr_Bcoef,&
-       apr_tx,&
-       apr_ty,&
-       val )
-    implicit none
-    ! INPUT
-    sll_real64,intent(in) :: ar_x, ar_y
-    sll_int32,intent(in)  :: ai_nx, ai_kx, ai_ny, ai_ky
-    sll_real64, dimension(:), pointer :: apr_tx !  ai_nx + ai_kx 
-    sll_real64, dimension(:), pointer :: apr_ty !  ai_ny + ai_ky	
-    sll_real64, dimension(:,:),pointer :: apr_Bcoef!( ai_nx,ai_ny)
-    !OUTPUT
-    sll_real64,intent(out) ::val
-    ! LOCAL VARIABLES
-    sll_int32  :: li_j, li_mflag, li_lefty
-    sll_real64, dimension(1:ai_ky),target :: lpr_coef ! ai_ky
-    sll_real64, dimension(:),pointer :: lpr_coef_ptr ! ai_ky
-    sll_real64, dimension(1:ai_nx),target :: tmp_tab
-    sll_real64, dimension(:),pointer :: tmp_tab_ptr
-    sll_real64, dimension(1:2*ai_ky),target :: tmp_ty
-    sll_real64, dimension(:),pointer :: tmp_ty_ptr
-    sll_int32 :: ierr
+if (ierr .ne. 0) return 
+
+do j = 1, ky
    
-
-    call interv ( apr_ty,ai_ny + ai_ky, ar_y, li_lefty, li_mflag )
-
-    if ( li_mflag .NE. 0 ) then
-       val = 0.0_8
-       return 
-    end if
-    
-    do li_j = 1, ai_ky
-       
-       
-       tmp_tab = apr_bcoef ( 1:ai_nx , li_lefty - ai_ky + li_j )
-       tmp_tab_ptr => tmp_tab
-       lpr_coef ( li_j ) = bvalue(&
-            apr_tx,&
-            tmp_tab_ptr,&
-            ai_nx,&
-            ai_kx,&
-            ar_x,&
-            0 )
-       
-       
-    end do
+   tmp_tab     = interpolator%coeff_splines(1:nx,lefty-ky+j)
+   tmp_coef(j) = bvalue(interpolator%t1, &
+                        tmp_tab,         &
+                        nx,              &
+                        kx,              &
+                        x,               &
+                        0 )
    
-    lpr_coef_ptr => lpr_coef
-    tmp_ty =  apr_ty ( li_lefty - ai_ky + 1 : li_lefty + ai_ky)
-    tmp_ty_ptr => tmp_ty
-    val = bvalue(&
-         tmp_ty_ptr,&
-         lpr_coef_ptr,&
-         ai_ky,&
-         ai_ky,&
-         ar_y,&
-         0 )
-    end subroutine bvalue2d
+end do
 
+tmp_ty = interpolator%t2(lefty-ky+1:lefty+ky)
+
+val = bvalue(tmp_ty,    &
+             tmp_coef,  &
+             ky,        &
+             ky,        &
+              y,        &
+              0)
 
 end function interpolate_value_ad2d
 
@@ -2646,7 +2598,6 @@ end function interpolate_value_ad2d
              print*, ' slope_min2 must have the size of numbers of pts in direction 1 '
              stop
           end if
-          
           interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
                interpolator%num_pts1, &
                interpolator%eta1_min, &
@@ -3936,7 +3887,7 @@ end subroutine splint_der
     sll_real64, dimension ( : ),pointer :: apr_tx ! ai_nx + ai_kx
     sll_real64, dimension ( : ),pointer :: apr_ty ! ai_ny + ai_ky
     sll_real64, dimension ( : , : ),pointer :: apr_Bcoef !(ai_nx,ai_ny)
-    ! LOCAL VARIABLES
+
     sll_int32  :: li_j, li_mflag, li_lefty
     sll_real64, dimension (1:ai_ky),target:: lpr_coef ! ai_ky
     sll_real64, dimension (:),pointer:: lpr_coef_ptr
@@ -3981,8 +3932,7 @@ end subroutine splint_der
 
 !*********************************************************************
 !
-!! BVALUE evaluates a derivative of a spline from
-! its B-spline representation.
+!! BVALUE evaluates a derivative of a spline from its B-spline representation.
 !
 !  Discussion:
 !
@@ -4056,15 +4006,15 @@ end subroutine splint_der
 !
 function bvalue( t, bcoef, n, k, x, jderiv ) result(res)
     
-sll_int32 :: k
-sll_int32 :: n
+sll_real64, dimension(:), pointer, intent(in) :: t
+sll_real64, dimension(:), pointer, intent(in) :: bcoef
+sll_int32,                         intent(in) :: n
+sll_int32,                         intent(in) :: k
+sll_real64                                    :: res
 
-sll_real64,dimension(:),pointer:: aj !(k)
-sll_real64,dimension(:),pointer:: bcoef!(n)
-sll_real64:: res
-!sll_real64:: tmp_value
-sll_real64,dimension(:),pointer:: dl!(k)
-sll_real64,dimension(:),pointer:: dr!(k)
+sll_real64, dimension(:), allocatable :: aj 
+sll_real64, dimension(:), allocatable :: dl
+sll_real64, dimension(:), allocatable :: dr
 sll_int32 :: i
 sll_int32 :: ilo
 sll_int32 :: j
@@ -4074,7 +4024,6 @@ sll_int32 :: jcmin
 sll_int32 :: jderiv
 sll_int32 :: jj
 sll_int32 :: mflag
-sll_real64,dimension(:),pointer:: t!(n+k)
 sll_real64:: x
 sll_int32 :: ierr
 
@@ -4088,12 +4037,7 @@ aj(:)=0.0_8
 dl(:)=0.0_8
 dr(:)=0.0_8
 
-if ( k <= jderiv ) then
-   SLL_DEALLOCATE(aj,ierr)
-   SLL_DEALLOCATE(dl,ierr)
-   SLL_DEALLOCATE(dr,ierr)
-   return
-end if
+if ( k <= jderiv ) return
 !
 !  Find I so that 1 <= I < N+K and T(I) < T(I+1) and T(I) <= X < T(I+1).
 !
@@ -4103,21 +4047,13 @@ end if
 !
 call interv ( t, n+k, x, i, mflag )
 
-if ( mflag /= 0 ) then
-   SLL_DEALLOCATE(aj,ierr)
-   SLL_DEALLOCATE(dl,ierr)
-   SLL_DEALLOCATE(dr,ierr)
-   return
-end if
+if ( mflag /= 0 ) return
 !
 !  If K = 1 (and JDERIV = 0), BVALUE = BCOEF(I).
 !
 if ( k <= 1 ) then
-   res = bcoef(i)
-   SLL_DEALLOCATE(aj,ierr)
-   SLL_DEALLOCATE(dl,ierr)
-   SLL_DEALLOCATE(dr,ierr)
-   return
+  res = bcoef(i)
+  return
 end if
 !
 !  Store the K B-spline coefficients relevant for the knot interval
@@ -4128,84 +4064,61 @@ end if
 !  Set any T's not obtainable equal to T(1) or to T(N+K) appropriately.
 !
 jcmin = 1
-
 if ( k <= i ) then
-   
-   do j = 1, k-1
-      dl(j) = x - t(i+1-j)
-   end do
-   
+  do j = 1, k-1
+    dl(j) = x - t(i+1-j)
+  end do
 else
-   
-   jcmin = 1 - ( i - k )
-   
-   do j = 1, i
-      dl(j) = x - t(i+1-j)
-   end do
-   
-   do j = i, k-1
-      aj(k-j) = 0.0_8
-      dl(j) = dl(i)
-   end do
-   
+  jcmin = 1 - ( i - k )
+  do j = 1, i
+    dl(j) = x - t(i+1-j)
+  end do
+  do j = i, k-1
+    aj(k-j) = 0.0_8
+    dl(j) = dl(i)
+  end do
 end if
-
 jcmax = k
-
 if ( n < i ) then
-   
-   jcmax = k + n - i
-   do j = 1, k + n - i
-      dr(j) = t(i+j) - x
-   end do
-   
-   do j = k+n-i, k-1
-      aj(j+1) = 0.0_8
-      dr(j) = dr(k+n-i)
-   end do
-   
+  jcmax = k + n - i
+  do j = 1, k + n - i
+    dr(j) = t(i+j) - x
+  end do
+  do j = k+n-i, k-1
+    aj(j+1) = 0.0_8
+    dr(j) = dr(k+n-i)
+  end do
 else
-   
-   do j = 1, k-1
-      dr(j) = t(i+j) - x
-   end do
-   
+  do j = 1, k-1
+    dr(j) = t(i+j) - x
+  end do
 end if
-
 do jc = jcmin, jcmax
-   aj(jc) = bcoef(i-k+jc)
+  aj(jc) = bcoef(i-k+jc)
 end do
 !
 !  Difference the coefficients JDERIV times.
 !
 do j = 1, jderiv
-   
-   ilo = k - j
-   do jj = 1, k - j
-      aj(jj) = ( ( aj(jj+1) - aj(jj) ) / ( dl(ilo) + dr(jj) ) ) &
-           * real ( k - j, kind = 8 )
-      ilo = ilo - 1
-   end do
-   
+  ilo = k - j
+  do jj = 1, k - j
+    aj(jj) = ((aj(jj+1)-aj(jj))/(dl(ilo)+dr(jj)))*real(k-j,kind=f64)
+    ilo = ilo - 1
+  end do
 end do
 !
 !  Compute value at X in (T(I),T(I+1)) of JDERIV-th derivative,
 !  given its relevant B-spline coefficients in AJ(1),...,AJ(K-JDERIV).
 !
 do j = jderiv+1, k-1
-   ilo = k-j
-   do jj = 1, k-j
-      aj(jj) = ( aj(jj+1) * dl(ilo) + aj(jj) * dr(jj) ) &
-           / ( dl(ilo) + dr(jj) )
-      ilo = ilo - 1
-   end do
+  ilo = k-j
+  do jj = 1, k-j
+    aj(jj) = (aj(jj+1)*dl(ilo)+aj(jj)*dr(jj))/(dl(ilo)+dr(jj))
+    ilo = ilo - 1
+  end do
 end do
 
 res = aj(1)
-
-SLL_DEALLOCATE(aj,ierr)
-SLL_DEALLOCATE(dl,ierr)
-SLL_DEALLOCATE(dr,ierr)
 
 end function bvalue
 
