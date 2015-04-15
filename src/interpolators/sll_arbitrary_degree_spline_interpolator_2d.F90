@@ -23,9 +23,8 @@ module sll_module_arbitrary_degree_spline_interpolator_2d
 use sll_module_interpolators_2d_base
 use sll_utilities
 use sll_module_deboor_splines_1d, only: bsplvb, bsplvd, interv
-use sll_module_deboor_splines_2d, only: dvalue2d, bvalue2d
-
 use sll_module_arbitrary_degree_spline_interpolator_1d
+
 implicit none
 private
 
@@ -1950,96 +1949,150 @@ function coefficients_are_set_ad2d( interpolator ) result(res)
 
 end function coefficients_are_set_ad2d
 
-  !> @brief Interpolation on the points eta1 and eta2 
-  !> @details computing the values with the interpolator arbitrary degree splines 2d
-  !>  on the points eta1 and eta2 of arbitrary degree splines 2d
-  !> 
-  !> The parameters are
-  !> @param interpolator the type sll_arbitrary_degree_spline_interpolator_2d
-  !> @param[in] eta1 the point inthe first direction
-  !> @param[in] eta2 the point inthe second direction 
-  !> @return val the values on the points eta1 and eta2 
-  function interpolate_value_ad2d( &
-    interpolator, &
-    eta1, &
-    eta2 ) result(val)
+!> @brief Interpolation on the points eta1 and eta2 
+!> @details computing the values with the interpolator arbitrary degree splines 2d
+!>  on the points eta1 and eta2 of arbitrary degree splines 2d
+!> 
+!> The parameters are
+!> @param interpolator the type sll_arbitrary_degree_spline_interpolator_2d
+!> @param[in] eta1 points in the first direction
+!> @param[in] eta2 points in the second direction 
+!> @return val the values on the points eta1 and eta2 
+function interpolate_value_ad2d( interpolator, eta1, eta2 ) result(val)
 
-    use sll_timer
-    class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)  :: interpolator
-    sll_real64, intent(in)         :: eta1
-    sll_real64, intent(in)         :: eta2
-    sll_real64                     :: val
-    sll_int32 :: size_coeffs1
-    sll_int32 :: size_coeffs2
-    sll_real64 :: res1,res2
-    sll_real64,dimension(:), pointer:: tmp_tx,tmp_ty
-    sll_real64,dimension(:,:), pointer:: tmp_coeff
+class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)  :: interpolator
 
-    size_coeffs1 = interpolator%size_coeffs1
-    size_coeffs2 = interpolator%size_coeffs2
+sll_real64, intent(in) :: eta1
+sll_real64, intent(in) :: eta2
+sll_real64             :: val
+sll_int32              :: nx
+sll_int32              :: ny
+sll_int32              :: kx
+sll_int32              :: ky
 
-    res1 = eta1
-    res2 = eta2
+sll_real64                          :: x
+sll_real64                          :: y
+sll_real64                          :: length1
+sll_real64                          :: length2
+sll_real64, dimension(:),   pointer :: tmp_tx
+sll_real64, dimension(:),   pointer :: tmp_ty
+sll_real64, dimension(:,:), pointer :: tmp_coeff
 
-    select case (interpolator%bc_selector)
-    case (0) ! periodic-periodic
+nx = interpolator%size_coeffs1
+ny = interpolator%size_coeffs2
+kx = interpolator%spline_degree1+1
+ky = interpolator%spline_degree2+1
 
-       if( res1 < interpolator%eta1_min ) then
-          res1 = res1 + (interpolator%eta1_max-interpolator%eta1_min)
-       else if( res1 >  interpolator%eta1_max ) then
-          res1 = res1 + (interpolator%eta2_min-interpolator%eta2_max)
-       end if
-       if( res2 < interpolator%eta2_min ) then
-          res2 = res2 + (interpolator%eta2_max-interpolator%eta2_min)
-       else if( res2 >  interpolator%eta2_max ) then
-          res2 = res2 + (interpolator%eta2_min-interpolator%eta2_max)
-       end if
+length1 = interpolator%eta1_max-interpolator%eta1_min
+length2 = interpolator%eta1_max-interpolator%eta1_min
 
-    case (9) ! 2. dirichlet-left, dirichlet-right, periodic
+x = eta1
+y = eta2
 
-       if( res2 < interpolator%eta2_min ) then
-          res2 = res2 + (interpolator%eta2_max-interpolator%eta2_min)
-       else if( res2 >  interpolator%eta2_max ) then
-          res2 = res2 + (interpolator%eta2_min-interpolator%eta2_max)
-       end if
+if (interpolator%bc_min1 == SLL_PERIODIC .and. eta1 < interpolator%eta1_min) then
+  x = eta1 + length1 
+end if
 
-       SLL_ASSERT( res1 >= interpolator%eta1_min )
-       SLL_ASSERT( res1 <= interpolator%eta1_max )
-  
-    case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
+if (interpolator%bc_max1 == SLL_PERIODIC .and. eta1 > interpolator%eta1_max) then
+  x = eta1 - length1
+end if
 
-       if( res1 < interpolator%eta1_min ) then
-          res1 = res1 + ( interpolator%eta1_max-interpolator%eta1_min)
-       else if( res1 >  interpolator%eta1_max ) then
-          res1 = res1 + (interpolator%eta2_min-interpolator%eta2_max)
-       end if
-       SLL_ASSERT( res2 >= interpolator%eta2_min )
-       SLL_ASSERT( res2 <= interpolator%eta2_max )
- 
-    end select
+if (interpolator%bc_min2 == SLL_PERIODIC .and. eta2 < interpolator%eta2_min) then
+  y = eta2 + length2
+end if
 
-    SLL_ASSERT( res1 >= interpolator%eta1_min )
-    SLL_ASSERT( res1 <= interpolator%eta1_max )
-    SLL_ASSERT( res2 >= interpolator%eta2_min )
-    SLL_ASSERT( res2 <= interpolator%eta2_max )
+if (interpolator%bc_min2 == SLL_PERIODIC .and. eta2 > interpolator%eta2_max) then
+  y = eta2 - length2
+end if
 
-    tmp_tx => interpolator%t1(1:interpolator%size_t1)
-    tmp_ty => interpolator%t2(1:interpolator%size_t2)
-    tmp_coeff =>interpolator%coeff_splines(1:size_coeffs1,1:size_coeffs2)
+SLL_ASSERT( x >= interpolator%eta1_min )
+SLL_ASSERT( x <= interpolator%eta1_max )
+SLL_ASSERT( y >= interpolator%eta2_min )
+SLL_ASSERT( y <= interpolator%eta2_max )
 
-    call bvalue2d( &
-         res1, &
-         res2, &
-         size_coeffs1, &
-         interpolator%spline_degree1+1, &
-         size_coeffs2, &
-         interpolator%spline_degree2+1, &
-         tmp_coeff, &
-         tmp_tx, &
-         tmp_ty,&
-         val)
+tmp_tx    => interpolator%t1(1:interpolator%size_t1)
+tmp_ty    => interpolator%t2(1:interpolator%size_t2)
+tmp_coeff => interpolator%coeff_splines(1:size_coeffs1,1:size_coeffs2)
 
-  end function interpolate_value_ad2d
+!call bvalue2d( &
+!     x, &
+!     y, &
+!     size_coeffs1, &
+!     interpolator%spline_degree1+1, &
+!     size_coeffs2, &
+!     interpolator%spline_degree2+1, &
+!     tmp_coeff, &
+!     tmp_tx, &
+!     tmp_ty,&
+!     val)
+  subroutine bvalue2d(&
+       ar_x,&
+       ar_y,&
+       ai_nx,&
+       ai_kx,&
+       ai_ny,&
+       ai_ky,&
+       apr_Bcoef,&
+       apr_tx,&
+       apr_ty,&
+       val )
+    implicit none
+    ! INPUT
+    sll_real64,intent(in) :: ar_x, ar_y
+    sll_int32,intent(in)  :: ai_nx, ai_kx, ai_ny, ai_ky
+    sll_real64, dimension(:), pointer :: apr_tx !  ai_nx + ai_kx 
+    sll_real64, dimension(:), pointer :: apr_ty !  ai_ny + ai_ky	
+    sll_real64, dimension(:,:),pointer :: apr_Bcoef!( ai_nx,ai_ny)
+    !OUTPUT
+    sll_real64,intent(out) ::val
+    ! LOCAL VARIABLES
+    sll_int32  :: li_j, li_mflag, li_lefty
+    sll_real64, dimension(1:ai_ky),target :: lpr_coef ! ai_ky
+    sll_real64, dimension(:),pointer :: lpr_coef_ptr ! ai_ky
+    sll_real64, dimension(1:ai_nx),target :: tmp_tab
+    sll_real64, dimension(:),pointer :: tmp_tab_ptr
+    sll_real64, dimension(1:2*ai_ky),target :: tmp_ty
+    sll_real64, dimension(:),pointer :: tmp_ty_ptr
+    sll_int32 :: ierr
+   
+
+    call interv ( apr_ty,ai_ny + ai_ky, ar_y, li_lefty, li_mflag )
+
+    if ( li_mflag .NE. 0 ) then
+       val = 0.0_8
+       return 
+    end if
+    
+    do li_j = 1, ai_ky
+       
+       
+       tmp_tab = apr_bcoef ( 1:ai_nx , li_lefty - ai_ky + li_j )
+       tmp_tab_ptr => tmp_tab
+       lpr_coef ( li_j ) = bvalue(&
+            apr_tx,&
+            tmp_tab_ptr,&
+            ai_nx,&
+            ai_kx,&
+            ar_x,&
+            0 )
+       
+       
+    end do
+   
+    lpr_coef_ptr => lpr_coef
+    tmp_ty =  apr_ty ( li_lefty - ai_ky + 1 : li_lefty + ai_ky)
+    tmp_ty_ptr => tmp_ty
+    val = bvalue(&
+         tmp_ty_ptr,&
+         lpr_coef_ptr,&
+         ai_ky,&
+         ai_ky,&
+         ar_y,&
+         0 )
+    end subroutine bvalue2d
+
+
+end function interpolate_value_ad2d
 
 
   !> @brief First derivative in eta1 interpolation on the points eta1 and eta2 
@@ -3860,5 +3913,301 @@ end if
 call banslv ( q, k+k-1, n+m, k-1, k-1, bcoef_spline )
 
 end subroutine splint_der
+
+
+  
+
+  function dvalue2d(&
+       ar_x,&
+       ar_y,&
+       ai_nx,&
+       ai_kx,&
+       ai_ny,&
+       ai_ky,&
+       apr_Bcoef,&
+       apr_tx,&
+       apr_ty,deriv1,deriv2 ) result(res)
+    implicit none
+    ! INPUT
+    sll_real64 :: ar_x, ar_y
+    sll_real64 :: res
+    sll_int32  :: ai_nx, ai_kx, ai_ny, ai_ky
+    sll_int32  :: deriv1,deriv2
+    sll_real64, dimension ( : ),pointer :: apr_tx ! ai_nx + ai_kx
+    sll_real64, dimension ( : ),pointer :: apr_ty ! ai_ny + ai_ky
+    sll_real64, dimension ( : , : ),pointer :: apr_Bcoef !(ai_nx,ai_ny)
+    ! LOCAL VARIABLES
+    sll_int32  :: li_j, li_mflag, li_lefty
+    sll_real64, dimension (1:ai_ky),target:: lpr_coef ! ai_ky
+    sll_real64, dimension (:),pointer:: lpr_coef_ptr
+    sll_real64, dimension (1:ai_nx),target :: tmp_coef
+    sll_real64,dimension(:),pointer::  tmp_coef_ptr
+    sll_real64, dimension (1:2*ai_ky),target :: tmp_ty
+    sll_real64, dimension (:),pointer :: tmp_ty_ptr
+    sll_int32:: ierr
+    
+    call interv ( apr_ty, ai_ny + ai_ky, ar_y, li_lefty, li_mflag )
+    
+    if ( li_mflag .NE. 0 ) then
+       res = 0.0_8
+       return 
+    end if
+    
+    do li_j = 1, ai_ky
+       
+       tmp_coef = apr_bcoef ( 1:ai_nx , li_lefty - ai_ky + li_j )
+       tmp_coef_ptr => tmp_coef
+       lpr_coef ( li_j ) = bvalue(&
+            apr_tx,&
+            tmp_coef_ptr,&
+            ai_nx,&
+            ai_kx,&
+            ar_x,&
+            deriv1 )
+       
+    end do
+    lpr_coef_ptr => lpr_coef
+    tmp_ty =  apr_ty ( li_lefty - ai_ky + 1 : li_lefty + ai_ky)
+    tmp_ty_ptr => tmp_ty
+    res = bvalue(&
+         tmp_ty_ptr,&
+         lpr_coef_ptr,&
+         ai_ky,&
+         ai_ky,&
+         ar_y,&
+         deriv2 )
+
+  end function dvalue2d
+
+!*********************************************************************
+!
+!! BVALUE evaluates a derivative of a spline from
+! its B-spline representation.
+!
+!  Discussion:
+!
+!    The spline is taken to be continuous from the right.
+!
+!    The nontrivial knot interval (T(I),T(I+1)) containing X is
+!    located with the aid of INTERV.  The K B-spline coefficients
+!    of F relevant for this interval are then obtained from BCOEF,
+!    or are taken to be zero if not explicitly available, and are
+!    then differenced JDERIV times to obtain the B-spline
+!    coefficients of (D**JDERIV)F relevant for that interval.
+!
+!    Precisely, with J = JDERIV, we have from X.(12) of the text that:
+!
+!      (D**J)F = sum ( BCOEF(.,J)*B(.,K-J,T) )
+!
+!    where
+!                      / BCOEF(.),                    if J == 0
+!                     /
+!       BCOEF(.,J) = / BCOEF(.,J-1) - BCOEF(.-1,J-1)
+!                   / -----------------------------,  if 0 < J
+!                  /    (T(.+K-J) - T(.))/(K-J)
+!
+!    Then, we use repeatedly the fact that
+!
+!      sum ( A(.) * B(.,M,T)(X) ) = sum ( A(.,X) * B(.,M-1,T)(X) )
+!
+!    with
+!                   (X - T(.))*A(.) + (T(.+M-1) - X)*A(.-1)
+!      A(.,X) =   ---------------------------------------
+!                   (X - T(.))      + (T(.+M-1) - X)
+!
+!    to write (D**J)F(X) eventually as a linear combination of
+!    B-splines of order 1, and the coefficient for B(I,1,T)(X)
+!    must then be the desired number (D**J)F(X).
+!    See Chapter X, (17)-(19) of text.
+!
+!  Modified:
+!
+!    14 February 2007
+!
+!  Author:
+!
+!    Carl DeBoor
+!
+!  Reference:
+!
+!    Carl DeBoor,
+!    A Practical Guide to Splines,
+!    Springer, 2001,
+!    ISBN: 0387953663.
+!
+!  Parameters:
+!
+!    Input, real ( kind = 8 ) T(N+K), the knot sequence.  T is assumed
+!    to be nondecreasing.
+!
+!    Input, real ( kind = 8 ) BCOEF(N), B-spline coefficient sequence.
+!
+!    Input, integer N, the length of BCOEF.
+!
+!    Input, integer K, the order of the spline.
+!
+!    Input, real ( kind = 8 ) X, the point at which to evaluate.
+!
+!    Input, integer JDERIV, the order of the derivative to
+!    be evaluated.  JDERIV is assumed to be zero or positive.
+!
+!    Output, real ( kind = 8 ) BVALUE, the value of the (JDERIV)-th
+!    derivative of the spline at X.
+!
+function bvalue( t, bcoef, n, k, x, jderiv ) result(res)
+    
+sll_int32 :: k
+sll_int32 :: n
+
+sll_real64,dimension(:),pointer:: aj !(k)
+sll_real64,dimension(:),pointer:: bcoef!(n)
+sll_real64:: res
+!sll_real64:: tmp_value
+sll_real64,dimension(:),pointer:: dl!(k)
+sll_real64,dimension(:),pointer:: dr!(k)
+sll_int32 :: i
+sll_int32 :: ilo
+sll_int32 :: j
+sll_int32 :: jc
+sll_int32 :: jcmax
+sll_int32 :: jcmin
+sll_int32 :: jderiv
+sll_int32 :: jj
+sll_int32 :: mflag
+sll_real64,dimension(:),pointer:: t!(n+k)
+sll_real64:: x
+sll_int32 :: ierr
+
+res = 0.0_8
+
+SLL_ALLOCATE(aj(k),ierr)
+SLL_ALLOCATE(dl(k),ierr)
+SLL_ALLOCATE(dr(k),ierr)
+
+aj(:)=0.0_8
+dl(:)=0.0_8
+dr(:)=0.0_8
+
+if ( k <= jderiv ) then
+   SLL_DEALLOCATE(aj,ierr)
+   SLL_DEALLOCATE(dl,ierr)
+   SLL_DEALLOCATE(dr,ierr)
+   return
+end if
+!
+!  Find I so that 1 <= I < N+K and T(I) < T(I+1) and T(I) <= X < T(I+1).
+!
+!  If no such I can be found, X lies outside the support of the
+!  spline F and  BVALUE = 0.  The asymmetry in this choice of I makes F
+!  right continuous.
+!
+call interv ( t, n+k, x, i, mflag )
+
+if ( mflag /= 0 ) then
+   SLL_DEALLOCATE(aj,ierr)
+   SLL_DEALLOCATE(dl,ierr)
+   SLL_DEALLOCATE(dr,ierr)
+   return
+end if
+!
+!  If K = 1 (and JDERIV = 0), BVALUE = BCOEF(I).
+!
+if ( k <= 1 ) then
+   res = bcoef(i)
+   SLL_DEALLOCATE(aj,ierr)
+   SLL_DEALLOCATE(dl,ierr)
+   SLL_DEALLOCATE(dr,ierr)
+   return
+end if
+!
+!  Store the K B-spline coefficients relevant for the knot interval
+!  ( T(I),T(I+1) ) in AJ(1),...,AJ(K) and compute DL(J) = X - T(I+1-J),
+!  DR(J) = T(I+J)-X, J=1,...,K-1.  Set any of the AJ not obtainable
+!  from input to zero.
+!
+!  Set any T's not obtainable equal to T(1) or to T(N+K) appropriately.
+!
+jcmin = 1
+
+if ( k <= i ) then
+   
+   do j = 1, k-1
+      dl(j) = x - t(i+1-j)
+   end do
+   
+else
+   
+   jcmin = 1 - ( i - k )
+   
+   do j = 1, i
+      dl(j) = x - t(i+1-j)
+   end do
+   
+   do j = i, k-1
+      aj(k-j) = 0.0_8
+      dl(j) = dl(i)
+   end do
+   
+end if
+
+jcmax = k
+
+if ( n < i ) then
+   
+   jcmax = k + n - i
+   do j = 1, k + n - i
+      dr(j) = t(i+j) - x
+   end do
+   
+   do j = k+n-i, k-1
+      aj(j+1) = 0.0_8
+      dr(j) = dr(k+n-i)
+   end do
+   
+else
+   
+   do j = 1, k-1
+      dr(j) = t(i+j) - x
+   end do
+   
+end if
+
+do jc = jcmin, jcmax
+   aj(jc) = bcoef(i-k+jc)
+end do
+!
+!  Difference the coefficients JDERIV times.
+!
+do j = 1, jderiv
+   
+   ilo = k - j
+   do jj = 1, k - j
+      aj(jj) = ( ( aj(jj+1) - aj(jj) ) / ( dl(ilo) + dr(jj) ) ) &
+           * real ( k - j, kind = 8 )
+      ilo = ilo - 1
+   end do
+   
+end do
+!
+!  Compute value at X in (T(I),T(I+1)) of JDERIV-th derivative,
+!  given its relevant B-spline coefficients in AJ(1),...,AJ(K-JDERIV).
+!
+do j = jderiv+1, k-1
+   ilo = k-j
+   do jj = 1, k-j
+      aj(jj) = ( aj(jj+1) * dl(ilo) + aj(jj) * dr(jj) ) &
+           / ( dl(ilo) + dr(jj) )
+      ilo = ilo - 1
+   end do
+end do
+
+res = aj(1)
+
+SLL_DEALLOCATE(aj,ierr)
+SLL_DEALLOCATE(dl,ierr)
+SLL_DEALLOCATE(dr,ierr)
+
+end function bvalue
+
   
 end module sll_module_arbitrary_degree_spline_interpolator_2d
