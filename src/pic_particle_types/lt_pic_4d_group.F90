@@ -44,7 +44,8 @@ module sll_lt_pic_4d_group_module
      sll_int32 :: guard_list_size
      sll_real64 :: qoverm 
      logical    :: domain_is_x_periodic
-     logical    :: domain_is_y_periodic     
+     logical    :: domain_is_y_periodic
+     logical    :: track_markers_outside_domain   !! default value is true
      type(sll_cartesian_mesh_2d), pointer                     :: mesh
 
      ! <<sll_lt_pic_4d_group-p_list>> uses [[file:lt_pic_4d_particle.F90::sll_lt_pic_4d_particle]]
@@ -154,6 +155,7 @@ contains
     res%qoverm           = qoverm
     res%domain_is_x_periodic = domain_is_x_periodic
     res%domain_is_y_periodic = domain_is_y_periodic
+    res%track_markers_outside_domain = .false.
     SLL_ALLOCATE( res%p_list(particle_array_size), ierr )
     SLL_ALLOCATE( res%p_guard(guard_list_size), ierr )
     SLL_ALLOCATE( res%target_values(number_parts_x, number_parts_y, number_parts_vx, number_parts_vy), ierr )
