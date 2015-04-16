@@ -33,6 +33,11 @@ implicit none
 
 private
 
+! @details
+! The indexing of the
+! splines in array global_sopline_indices depends on the boundary conditions.
+! local_spline_indices includes the changes resulting from the boundary conditions.
+! local_to_lobal_spline_indices(i,j) = global_spline_indices(local_spline_indices(i,j))
 type, public :: general_coordinate_elliptic_solver
 
   private
@@ -62,17 +67,8 @@ type, public :: general_coordinate_elliptic_solver
   sll_real64 :: epsi
   sll_real64 :: intjac
 
-  ! the following is otherwise known as "ID" in Aurore Back's original
-  ! nomenclature. The indexing of the
-  ! splines in this array depends on the boundary conditions.
   sll_int32, dimension(:), pointer, public :: global_spline_indices 
-  ! the following is otherwise known as "IEN"
   sll_int32, dimension(:,:), pointer :: local_spline_indices
-  ! the following is otherwise known as "LM". Same as global_spline_indices
-  ! but including the changes resulting from the boundary conditions.
-  ! This is:
-  ! local_to_lobal_spline_indices(i,j) = 
-  !   global_spline_indices(local_spline_indices(i,j))
   sll_int32, dimension(:,:), pointer :: local_to_global_spline_indices
   sll_int32, dimension(:,:), pointer :: local_to_global_spline_indices_source
   sll_int32, dimension(:,:), pointer :: local_to_global_spline_indices_source_bis
@@ -1355,12 +1351,11 @@ end subroutine local_to_global_matrices_rho
 subroutine solve_linear_system( es )
 
   class(general_coordinate_elliptic_solver) :: es
-  !type(csr_matrix)  :: csr_masse
-  integer :: elt, elt1
-  integer :: i,j,k
-  character(len=*),parameter :: as_file  = 'rho'
-  character(len=*),parameter :: as_file1 = 'phi'
-  character(len=*),parameter :: as_file2 = 'mat'
+  integer                                   :: elt
+  integer                                   :: i,j,k
+  character(len=*), parameter               :: as_file  = 'rho'
+  character(len=*), parameter               :: as_file1 = 'phi'
+  character(len=*), parameter               :: as_file2 = 'mat'
   sll_int32 :: bc_left
   sll_int32 :: bc_right
   sll_int32 :: bc_bottom
@@ -1380,11 +1375,9 @@ subroutine solve_linear_system( es )
     k = 0
     do j = 1, es%total_num_splines2
       do i = 1, es%total_num_splines1
-             
         k = k+1
-        elt1 = i + ( es%total_num_splines1 ) * j
-        es%tmp_rho_vec(k) = es%rho_vec(elt1)
-
+        elt = i+(es%total_num_splines1)*j
+        es%tmp_rho_vec(k) = es%rho_vec(elt)
       end do
     end do
        
@@ -1394,11 +1387,9 @@ subroutine solve_linear_system( es )
     k = 0
     do j = 1, es%total_num_splines2
       do i = 1, es%total_num_splines1
-            
         k = k+1
-        elt1 = i + 1 + ( es%total_num_splines1 + 2 ) * j 
-        es%tmp_rho_vec(k) = es%rho_vec( elt1 )
-
+        elt = i+1+(es%total_num_splines1+2)*j 
+        es%tmp_rho_vec(k) = es%rho_vec( elt )
       end do
     end do
        
@@ -1414,23 +1405,21 @@ subroutine solve_linear_system( es )
     k = 0
     do j = 1, es%total_num_splines2
     do i = 1, es%total_num_splines1
-
         k = k+1
-        elt1 = i+1 + (es%total_num_splines1+2)*(j-1)
-        es%tmp_rho_vec(k) = es%rho_vec(elt1)
-
+        elt = i+1+(es%total_num_splines1+2)*(j-1)
+        es%tmp_rho_vec(k) = es%rho_vec(elt)
     end do
     end do
 
-  else if( (bc_left   == SLL_NEUMANN) .and. (bc_right == SLL_DIRICHLET) .and.&
-           (bc_bottom == SLL_PERIODIC)  .and. (bc_top   == SLL_PERIODIC) ) then
+  else if( (bc_left   == SLL_NEUMANN)  .and. (bc_right == SLL_DIRICHLET) .and.&
+           (bc_bottom == SLL_PERIODIC) .and. (bc_top   == SLL_PERIODIC) ) then
      
     k = 0
     do j = 1, es%total_num_splines2
       do i = 1, es%total_num_splines1
         k = k+1
-        elt1 = i + 1 + ( es%total_num_splines1 + 1 ) * (  j - 1)
-        es%tmp_rho_vec(k) = es%rho_vec( elt1 )
+        elt = i+1+(es%total_num_splines1+1)*(j-1)
+        es%tmp_rho_vec(k) = es%rho_vec( elt )
       end do
     end do
 
@@ -1440,11 +1429,11 @@ subroutine solve_linear_system( es )
      bc_bottom==SLL_PERIODIC .and. bc_top  ==SLL_PERIODIC) then
 
     call sll_solve_csr_matrix(es%csr_mat_with_constraint, &
-                              es%tmp_rho_vec, &
+                              es%tmp_rho_vec,             &
                               es%tmp_phi_vec)
 
   else
-    call sll_solve_csr_matrix(es%csr_mat, &
+    call sll_solve_csr_matrix(es%csr_mat,     &
                               es%tmp_rho_vec, &
                               es%tmp_phi_vec)
   endif
@@ -1901,64 +1890,62 @@ end subroutine bsplvd
 !    (T(LEFT),T(LEFT+1)).
 !
 
- subroutine bsplvb ( es, t, jhigh, index, x, left, biatx )
+subroutine bsplvb ( es, t, jhigh, index, x, left, biatx )
 
-    type(general_coordinate_elliptic_solver) :: es
-    sll_int32, parameter :: jmax = 20
-    
-    sll_int32:: jhigh
-    
-    sll_real64,dimension(jhigh):: biatx !(jhigh)
-    sll_real64, save, dimension ( jmax ) :: deltal
-    sll_real64, save, dimension ( jmax ) :: deltar
-    sll_int32:: i
-    sll_int32:: index
-    sll_int32:: left
-    sll_real64:: saved
-    sll_real64,dimension(left+jhigh):: t!() left+jhigh
-    sll_real64:: term
-    sll_real64:: x
-    
-    if ( index == 1 ) then
-       es%jlo = 1
-       biatx(1) = 1.0_8
-       if ( jhigh <= es%jlo ) then
-          return
-       end if
-    end if
-    
-    if ( t(left+1) <= t(left) ) then
-       print*,'x=',x
-       write ( *, '(a)' ) ' '
-       write ( *, '(a)' ) 'BSPLVB - Fatal error!'
-       write ( *, '(a)' ) '  It is required that T(LEFT) < T(LEFT+1).'
-       write ( *, '(a,i8)' ) '  But LEFT = ', left
-       write ( *, '(a,g14.6)' ) '  T(LEFT) =   ', t(left)
-       write ( *, '(a,g14.6)' ) '  T(LEFT+1) = ', t(left+1)
-       stop
-    end if
-    
-    do
-       
-       deltar(es%jlo) = t(left+es%jlo) - x
-       deltal(es%jlo) = x - t(left+1-es%jlo)
-       
-       saved = 0.0_f64
-       do i = 1, es%jlo
-          term = biatx(i) / ( deltar(i) + deltal(es%jlo+1-i) )
-          biatx(i) = saved + deltar(i) * term
-          saved = deltal(es%jlo+1-i) * term
-       end do
-    
-       biatx(es%jlo+1) = saved
-       es%jlo = es%jlo + 1
-       
-       if ( jhigh <= es%jlo ) exit
-    
-    end do
-    
-  end subroutine bsplvb
+type(general_coordinate_elliptic_solver)       :: es
+sll_int32,                         intent(in)  :: left
+sll_int32,                         intent(in)  :: jhigh
+sll_real64, dimension(left+jhigh), intent(in)  :: t
+sll_int32,                         intent(in)  :: index
+sll_real64,                        intent(in)  :: x
+sll_real64, dimension(jhigh),      intent(out) :: biatx 
 
+sll_int32,  parameter             :: jmax = 20
+sll_real64, save, dimension(jmax) :: deltal
+sll_real64, save, dimension(jmax) :: deltar
+sll_int32                         :: i
+sll_real64                        :: saved
+sll_real64                        :: term
+
+if (index == 1) then
+  es%jlo = 1
+  biatx(1) = 1.0_8
+  if ( jhigh <= es%jlo ) then
+    return
+  end if
+end if
+
+if ( t(left+1) <= t(left) ) then
+  print*,'x=',x
+  write(*,'(a)')       ' '
+  write(*,'(a)')       'BSPLVB - Fatal error!'
+  write(*,'(a)')       '  It is required that T(LEFT) < T(LEFT+1).'
+  write(*,'(a,i8)')    '  But LEFT = ', left
+  write(*,'(a,g14.6)') '  T(LEFT) =   ', t(left)
+  write(*,'(a,g14.6)') '  T(LEFT+1) = ', t(left+1)
+  stop
+end if
+
+do
+   
+  deltar(es%jlo) = t(left+es%jlo) - x
+  deltal(es%jlo) = x - t(left+1-es%jlo)
+  
+  saved = 0.0_f64
+  do i = 1, es%jlo
+     term = biatx(i) / ( deltar(i) + deltal(es%jlo+1-i) )
+     biatx(i) = saved + deltar(i) * term
+     saved = deltal(es%jlo+1-i) * term
+  end do
+
+  biatx(es%jlo+1) = saved
+  es%jlo = es%jlo + 1
+  
+  if ( jhigh <= es%jlo ) exit
+
+end do
+   
+end subroutine bsplvb
 
 end module sll_general_coordinate_elliptic_solver_module
 
