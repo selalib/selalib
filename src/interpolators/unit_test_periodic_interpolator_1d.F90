@@ -98,4 +98,5 @@ end do
 
   end do
 
+print*, 'PASSED'
 end program periodic_interpolation
