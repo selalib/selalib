@@ -24,7 +24,7 @@ implicit none
 #define SPLINE_DEG1       3
 #define SPLINE_DEG2       3
 #define NUM_CELLS1        64
-#define NUM_CELLS2        128
+#define NUM_CELLS2        64
 #define ETA1MIN           0.0_f64
 #define ETA1MAX           1.0_f64
 #define ETA2MIN           0.0_f64
@@ -35,7 +35,7 @@ type(sll_cartesian_mesh_2d), pointer                      :: mesh_2d
 class(sll_coordinate_transformation_2d_base), pointer     :: T
 type(general_coordinate_elliptic_solver)                  :: es
 type(sll_arbitrary_degree_spline_interpolator_2d), target :: interp_2d
-type(sll_arbitrary_degree_spline_interpolator_2d), target :: interp_2d_term_source
+type(sll_arbitrary_degree_spline_interpolator_2d), target :: interp_2d_rhs
 class(sll_interpolator_2d_base), pointer                  :: rhs_interp
 class(sll_scalar_field_2d_base), pointer                  :: a11_field_mat
 class(sll_scalar_field_2d_base), pointer                  :: a12_field_mat
@@ -592,27 +592,27 @@ do k = itest1, itest2
   print*, "---------------------"
   
   T => new_coordinate_transformation_2d_analytic( &
-       "analytic", &
-       mesh_2d, &
-       sinprod_x1, &
-       sinprod_x2, &
-       sinprod_jac11, &
-       sinprod_jac12, &
-       sinprod_jac21, &
-       sinprod_jac22, &
+       "analytic",                                &
+       mesh_2d,                                   &
+       sinprod_x1,                                &
+       sinprod_x2,                                &
+       sinprod_jac11,                             &
+       sinprod_jac12,                             &
+       sinprod_jac21,                             &
+       sinprod_jac22,                             &
        (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
 
   call initialize_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
                           SLL_PERIODIC,  SLL_PERIODIC)
   
   rho => new_scalar_field_2d_analytic( &
-       source_term_chgt_dirper, &
-       "rho"//ccase, &     
-       T, &
-       SLL_DIRICHLET, &
-       SLL_DIRICHLET,&
-       SLL_PERIODIC,&
-       SLL_PERIODIC, &
+       source_term_chgt_dirper,        &
+       "rho"//ccase,                   &     
+       T,                              &
+       SLL_DIRICHLET,                  &
+       SLL_DIRICHLET,                  &
+       SLL_PERIODIC,                   &
+       SLL_PERIODIC,                   &
        whatever)
   
   call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
@@ -676,7 +676,7 @@ do k = itest1, itest2
   
   rho => new_scalar_field_2d_discrete( &
        "rho"//ccase,                   &
-       interp_2d_term_source,          &
+       interp_2d_rhs,                  &
        T,                              &
        SLL_PERIODIC,                   &
        SLL_PERIODIC,                   &
@@ -747,7 +747,7 @@ do k = itest1, itest2
   end do
   end do
   
-  rhs_interp => interp_2d_term_source
+  rhs_interp => interp_2d_rhs
   tab_rho(:,:) = tab_rho - sum(tab_rho)/(NUM_CELLS1*NUM_CELLS2)
 
   rho => new_scalar_field_2d_discrete( &
@@ -827,7 +827,7 @@ do k = itest1, itest2
   end do
   end do
 
-  rhs_interp => interp_2d_term_source
+  rhs_interp => interp_2d_rhs
 
   rho => new_scalar_field_2d_discrete( &
        "rho"//ccase,                   &
@@ -908,7 +908,7 @@ do k = itest1, itest2
   end do
   end do
 
-  rhs_interp => interp_2d_term_source
+  rhs_interp => interp_2d_rhs
 
   rho => new_scalar_field_2d_discrete( &
        "rho"//ccase,                   &
@@ -971,14 +971,14 @@ do k = itest1, itest2
   print*, "------------------------------------------------"
   
   T => new_coordinate_transformation_2d_analytic( &
-       "analytic", &
-       mesh_2d, &
-       sinprod_x1, &
-       sinprod_x2, &
-       sinprod_jac11, &
-       sinprod_jac12, &
-       sinprod_jac21, &
-       sinprod_jac22, &
+       "analytic",                                &
+       mesh_2d,                                   &
+       sinprod_x1,                                &
+       sinprod_x2,                                &
+       sinprod_jac11,                             &
+       sinprod_jac12,                             &
+       sinprod_jac21,                             &
+       sinprod_jac22,                             &
        (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
   
   call initialize_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
@@ -990,19 +990,19 @@ do k = itest1, itest2
      end do
   end do
   
-  rhs_interp => interp_2d_term_source
+  rhs_interp => interp_2d_rhs
 
   rho => new_scalar_field_2d_discrete( &
-       "rho"//ccase, &
-       rhs_interp, &
-       T, &
-       SLL_DIRICHLET,&
-       SLL_DIRICHLET,&
-       SLL_PERIODIC, &
-       SLL_PERIODIC,&
-       eta1,&
-       npts1,&
-       eta2,&
+       "rho"//ccase,                   &
+       rhs_interp,                     &
+       T,                              &
+       SLL_DIRICHLET,                  &
+       SLL_DIRICHLET,                  &
+       SLL_PERIODIC,                   &
+       SLL_PERIODIC,                   &
+       eta1,                           &
+       npts1,                          &
+       eta2,                           &
        NUM_CELLS2)
 
   call rho%set_field_data(tab_rho)
@@ -1227,8 +1227,6 @@ do k = itest1, itest2
   end do
   end do
 
-  call phi%set_field_data(values)
-  call phi%update_interpolation_coefficients()
 
   call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
                      SLL_DIRICHLET, SLL_DIRICHLET, ti(k), te(k))
@@ -1390,7 +1388,7 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
     SPLINE_DEG2 )
 
   call initialize_ad2d_interpolator(                 &
-    interp_2d_term_source,                           &
+    interp_2d_rhs,                                   &
     NUM_CELLS1+1,                                    &
     NUM_CELLS2+1,                                    &
     ETA1MIN,                                         &
@@ -1467,16 +1465,6 @@ call sll_create(       &
   ETA2MIN,             &
   ETA2MAX              )
  
-!call factorize_mat_es( &
-!  es,                  &
-!  a11_field_mat,       &
-!  a12_field_mat,       &
-!  a21_field_mat,       &
-!  a22_field_mat,       &
-!  b1_field_vect,       &
-!  b2_field_vect,       &
-!  c_field              )
-
 call factorize_mat_es( &
   es,                  &
   a11_field_mat,       &
@@ -1490,6 +1478,10 @@ call factorize_mat_es( &
 ti = sll_time_elapsed_since(t_reference)
 
 call sll_set_time_mark(t_reference)
+
+values = 0.0_f64
+call phi%set_field_data(values)
+call phi%update_interpolation_coefficients()
 
 call sll_solve( es, rho, phi)
 
