@@ -1,28 +1,7 @@
-!------------------------------------------------------------------------------
-! SELALIB
-!------------------------------------------------------------------------------
-!
-! MODULE: sll_scalar_field_2d
-!
-!> @author
-!> - Edwin
-!> - Pierre
-!> - Eric
-!> - Aurore
-!
-! DESCRIPTION: 
-!
+!> @ingroup fields
 !> @brief
-!> Implements the geometry and mesh descriptor types
+!> Implements the field descriptor types
 !>
-!>@details
-!>
-!> This module depends on:
-!>    - memory
-!>    - precision
-!>    - assert
-!>    - utilities
-!>    - constants
 module sll_module_scalar_field_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -38,7 +17,6 @@ use sll_gnuplot
 
 implicit none
 
-
 type, extends(sll_scalar_field_2d_base) :: sll_scalar_field_2d_analytic
   type(sll_cartesian_mesh_2d), pointer :: mesh
   procedure(two_var_parametrizable_function), pointer, nopass :: func
@@ -47,10 +25,10 @@ type, extends(sll_scalar_field_2d_base) :: sll_scalar_field_2d_analytic
   sll_real64, dimension(:), pointer        :: params
   character(len=64)                        :: name
   class(sll_coordinate_transformation_2d_base), pointer :: T
-  sll_int32 :: bc_left
-  sll_int32 :: bc_right
-  sll_int32 :: bc_bottom
-  sll_int32 :: bc_top
+  sll_int32 :: bc_min1
+  sll_int32 :: bc_max1
+  sll_int32 :: bc_min2
+  sll_int32 :: bc_max2
   ! allows to decide if the user put the derivative of the analiytic function: func
   logical :: present_deriv_eta1_int
   logical :: present_deriv_eta2_int
@@ -102,10 +80,10 @@ type, extends(sll_scalar_field_2d_base) :: sll_scalar_field_2d_discrete
   class(sll_interpolator_2d_base), pointer :: interp_2d
   sll_real64, dimension(:), pointer :: point1_1d
   sll_real64, dimension(:), pointer :: point2_1d
-  sll_int32 :: bc_left
-  sll_int32 :: bc_right
-  sll_int32 :: bc_bottom
-  sll_int32 :: bc_top
+  sll_int32 :: bc_min1
+  sll_int32 :: bc_max1
+  sll_int32 :: bc_min2
+  sll_int32 :: bc_max2
 
 contains
 
@@ -306,10 +284,10 @@ function new_scalar_field_2d_analytic( &
   func, &
   field_name, &
   transformation, &
-  bc_left, &
-  bc_right, &
-  bc_bottom, &
-  bc_top, &
+  bc_min1, &
+  bc_max1, &
+  bc_min2, &
+  bc_max2, &
   func_params,&
   first_deriv_eta1,&
   first_deriv_eta2) result(obj)
@@ -318,10 +296,10 @@ function new_scalar_field_2d_analytic( &
   procedure(two_var_parametrizable_function)      :: func
   character(len=*), intent(in)                    :: field_name
   class(sll_coordinate_transformation_2d_base), target :: transformation
-  sll_int32, intent(in) :: bc_left
-  sll_int32, intent(in) :: bc_right
-  sll_int32, intent(in) :: bc_bottom
-  sll_int32, intent(in) :: bc_top
+  sll_int32, intent(in) :: bc_min1
+  sll_int32, intent(in) :: bc_max1
+  sll_int32, intent(in) :: bc_min2
+  sll_int32, intent(in) :: bc_max2
   sll_real64, dimension(:), intent(in) :: func_params
   procedure(two_var_parametrizable_function), optional :: first_deriv_eta1
   procedure(two_var_parametrizable_function), optional :: first_deriv_eta2
@@ -333,10 +311,10 @@ function new_scalar_field_2d_analytic( &
     func,               &
     field_name,         &
     transformation,     &
-    bc_left,            &
-    bc_right,           &
-    bc_bottom,          &
-    bc_top,             &
+    bc_min1,            &
+    bc_max1,           &
+    bc_min2,          &
+    bc_max2,             &
     func_params,        &
     first_deriv_eta1,   &
     first_deriv_eta2)
@@ -372,10 +350,10 @@ subroutine initialize_scalar_field_2d_analytic( &
   func, &
   field_name, &
   transformation, &
-  bc_left, &
-  bc_right, &
-  bc_bottom, &
-  bc_top, &
+  bc_min1, &
+  bc_max1, &
+  bc_min2, &
+  bc_max2, &
   func_params, &
   first_deriv_eta1,&
   first_deriv_eta2)
@@ -384,10 +362,10 @@ subroutine initialize_scalar_field_2d_analytic( &
   procedure(two_var_parametrizable_function)           :: func
   character(len=*), intent(in)                         :: field_name
   class(sll_coordinate_transformation_2d_base), target :: transformation
-  sll_int32, intent(in) :: bc_left
-  sll_int32, intent(in) :: bc_right
-  sll_int32, intent(in) :: bc_bottom
-  sll_int32, intent(in) :: bc_top
+  sll_int32, intent(in) :: bc_min1
+  sll_int32, intent(in) :: bc_max1
+  sll_int32, intent(in) :: bc_min2
+  sll_int32, intent(in) :: bc_max2
   sll_real64, dimension(:), intent(in)  :: func_params
   procedure(two_var_parametrizable_function), optional :: first_deriv_eta1
   procedure(two_var_parametrizable_function), optional :: first_deriv_eta2
@@ -399,10 +377,10 @@ subroutine initialize_scalar_field_2d_analytic( &
   SLL_ALLOCATE(field%params(size(func_params)),ierr)
   field%params(:) = func_params
   field%name      = trim(field_name)
-  field%bc_left   = bc_left
-  field%bc_right  = bc_right
-  field%bc_bottom = bc_bottom
-  field%bc_top    = bc_top
+  field%bc_min1   = bc_min1
+  field%bc_max1  = bc_max1
+  field%bc_min2 = bc_min2
+  field%bc_max2    = bc_max2
     
   if (present(first_deriv_eta1)) then
      field%first_deriv_eta1 => first_deriv_eta1
@@ -512,10 +490,10 @@ function new_scalar_field_2d_discrete( &
   field_name, &
   interpolator_2d, &
   transformation, &
-  bc_left, &
-  bc_right, &
-  bc_bottom, &
-  bc_top,&
+  bc_min1, &
+  bc_max1, &
+  bc_min2, &
+  bc_max2,&
   point1_1d, &
   sz_point1,&
   point2_1d,&
@@ -528,10 +506,10 @@ function new_scalar_field_2d_discrete( &
   class(sll_cartesian_mesh_2d), pointer:: mesh
   !sll_int32 :: SPLINE_DEG1
   !sll_int32 :: SPLINE_DEG2
-  sll_int32, intent(in) :: bc_left
-  sll_int32, intent(in) :: bc_right
-  sll_int32, intent(in) :: bc_bottom
-  sll_int32, intent(in) :: bc_top
+  sll_int32, intent(in) :: bc_min1
+  sll_int32, intent(in) :: bc_max1
+  sll_int32, intent(in) :: bc_min2
+  sll_int32, intent(in) :: bc_max2
   sll_real64, dimension(:), optional :: point1_1d
   sll_real64, dimension(:), optional :: point2_1d
   sll_int32, optional :: sz_point1
@@ -548,10 +526,10 @@ function new_scalar_field_2d_discrete( &
        transformation, &
        mesh%num_cells1, &
        mesh%num_cells2, &
-       bc_left, &
-       bc_right, &
-       bc_bottom, &
-       bc_top,&
+       bc_min1, &
+       bc_max1, &
+       bc_min2, &
+       bc_max2,&
        point1_1d,&
        sz_point1,&
        point2_1d,&
@@ -565,10 +543,10 @@ subroutine initialize_scalar_field_2d_discrete( &
   transformation, &
   num_cells1, &
   num_cells2, &
-  bc_left, &
-  bc_right, &
-  bc_bottom, &
-  bc_top,&
+  bc_min1, &
+  bc_max1, &
+  bc_min2, &
+  bc_max2,&
   point1_1d,&
   sz_point1,&
   point2_1d,&
@@ -578,10 +556,10 @@ subroutine initialize_scalar_field_2d_discrete( &
   character(len=*), intent(in)                          :: field_name
   class(sll_interpolator_2d_base), target               :: interpolator_2d
   class(sll_coordinate_transformation_2d_base), target  :: transformation
-  sll_int32, intent(in) :: bc_left
-  sll_int32, intent(in) :: bc_right
-  sll_int32, intent(in) :: bc_bottom
-  sll_int32, intent(in) :: bc_top
+  sll_int32, intent(in) :: bc_min1
+  sll_int32, intent(in) :: bc_max1
+  sll_int32, intent(in) :: bc_min2
+  sll_int32, intent(in) :: bc_max2
   sll_real64, dimension(:), optional :: point1_1d
   sll_real64, dimension(:), optional :: point2_1d
   sll_int32, optional :: sz_point1
@@ -595,10 +573,10 @@ subroutine initialize_scalar_field_2d_discrete( &
   field%interp_2d => interpolator_2d
   !    field%mesh%written = .false.
   field%name      = trim(field_name)
-  field%bc_left   = bc_left
-  field%bc_right  = bc_right
-  field%bc_bottom = bc_bottom
-  field%bc_top    = bc_top
+  field%bc_min1   = bc_min1
+  field%bc_max1  = bc_max1
+  field%bc_min2 = bc_min2
+  field%bc_max2    = bc_max2
 
   ! Allocate internal array to store locally a copy of the data.
   SLL_ALLOCATE(field%values(num_cells1+1,num_cells2+1),ierr)
