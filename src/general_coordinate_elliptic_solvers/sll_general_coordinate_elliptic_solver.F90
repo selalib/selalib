@@ -51,19 +51,19 @@ type, public :: general_coordinate_elliptic_solver
   sll_int32 :: total_num_splines_loc
   sll_int32 :: total_num_splines1
   sll_int32 :: total_num_splines2
-  sll_real64, dimension(:), pointer :: knots1
-  sll_real64, dimension(:), pointer :: knots2
-  sll_real64, dimension(:), pointer :: knots1_rho
-  sll_real64, dimension(:), pointer :: knots2_rho
+  sll_real64, dimension(:),   pointer :: knots1
+  sll_real64, dimension(:),   pointer :: knots2
+  sll_real64, dimension(:),   pointer :: knots1_rho
+  sll_real64, dimension(:),   pointer :: knots2_rho
   sll_real64, dimension(:,:), pointer :: gauss_pts1
   sll_real64, dimension(:,:), pointer :: gauss_pts2
-  sll_int32 :: bc_left
-  sll_int32 :: bc_left_interp
-  sll_int32 :: bc_right
-  sll_int32 :: bc_bottom
-  sll_int32 :: bc_top
-  sll_int32 :: spline_degree1
-  sll_int32 :: spline_degree2
+  sll_int32  :: bc1_min
+  sll_int32  :: bc1_min_interp
+  sll_int32  :: bc1_max
+  sll_int32  :: bc2_min
+  sll_int32  :: bc2_max
+  sll_int32  :: spline_degree1
+  sll_int32  :: spline_degree2
   sll_real64 :: epsi
   sll_real64 :: intjac
 
@@ -143,10 +143,10 @@ contains
 !> @param[in]  num_cells2 the number of cells in the direction eta2
 !> @param[in]  quadrature_type1 the type of quadrature in the direction eta1
 !> @param[in]  quadrature_type2 the type of quadrature in the direction eta2
-!> @param[in]  bc_left the boundary condition at left in the direction eta1
-!> @param[in]  bc_right the boundary condition at right in the direction eta2
-!> @param[in]  bc_bottom the boundary condition at left in the direction eta2
-!> @param[in]  bc_top the boundary condition at right in the direction eta2
+!> @param[in]  bc1_min the boundary condition at left in the direction eta1
+!> @param[in]  bc1_max the boundary condition at right in the direction eta2
+!> @param[in]  bc2_min the boundary condition at left in the direction eta2
+!> @param[in]  bc2_max the boundary condition at right in the direction eta2
 !> @param[in]  eta1_min the minimun in the direction eta1
 !> @param[in]  eta1_max the maximun in the direction eta1
 !> @param[in]  eta2_min the minimun in the direction eta2
@@ -160,10 +160,10 @@ subroutine initialize_general_elliptic_solver( &
        num_cells2,                             &
        quadrature_type1,                       &
        quadrature_type2,                       &
-       bc_left,                                &
-       bc_right,                               &
-       bc_bottom,                              &
-       bc_top,                                 &
+       bc1_min,                                &
+       bc1_max,                                &
+       bc2_min,                                &
+       bc2_max,                                &
        eta1_min,                               &
        eta1_max,                               &
        eta2_min,                               &
@@ -175,10 +175,10 @@ sll_int32,  intent(in) :: spline_degree1
 sll_int32,  intent(in) :: spline_degree2
 sll_int32,  intent(in) :: num_cells1
 sll_int32,  intent(in) :: num_cells2
-sll_int32,  intent(in) :: bc_left
-sll_int32,  intent(in) :: bc_right
-sll_int32,  intent(in) :: bc_bottom
-sll_int32,  intent(in) :: bc_top
+sll_int32,  intent(in) :: bc1_min
+sll_int32,  intent(in) :: bc1_max
+sll_int32,  intent(in) :: bc2_min
+sll_int32,  intent(in) :: bc2_max
 sll_int32,  intent(in) :: quadrature_type1
 sll_int32,  intent(in) :: quadrature_type2
 sll_real64, intent(in) :: eta1_min
@@ -196,7 +196,7 @@ sll_int32 :: solution_size
 sll_int32 :: dim1, dim2
 sll_int32 :: num_pts_g1, num_pts_g2
 
-sll_int32 :: bc_left_knots
+sll_int32 :: bc1_min_knots
 
 sll_real64, allocatable :: work1(:,:)
 sll_real64, allocatable :: work2(:,:)
@@ -209,7 +209,7 @@ sll_real64 :: eta1, eta2, gspl1, gspl2
 sll_int32  :: left
 
 
-bc_left_knots = bc_left
+bc1_min_knots = bc1_min
   
 es%total_num_splines_loc = (spline_degree1+1)*(spline_degree2+1)
 ! The total number of splines in a single direction is given by
@@ -231,10 +231,10 @@ SLL_ALLOCATE(es%local_to_global_spline_indices_source_bis(1:dim1,1:dim2),ierr)
 ! This should be changed to verify that the passed BC's are part of the
 ! recognized list described in sll_boundary_condition_descriptors...
 
-es%bc_left        = bc_left
-es%bc_right       = bc_right
-es%bc_bottom      = bc_bottom
-es%bc_top         = bc_top
+es%bc1_min        = bc1_min
+es%bc1_max        = bc1_max
+es%bc2_min        = bc2_min
+es%bc2_max        = bc2_max
 es%spline_degree1 = spline_degree1
 es%spline_degree2 = spline_degree2
 es%num_cells1     = num_cells1
@@ -244,9 +244,9 @@ es%delta_eta2     = (eta2_max-eta2_min)/num_cells2
 es%eta1_min       = eta1_min
 es%eta2_min       = eta2_min
 
-es%bc_left_interp = bc_left
-if(bc_left==SLL_NEUMANN)then
-  es%bc_left_interp = SLL_DIRICHLET
+es%bc1_min_interp = bc1_min
+if(bc1_min==SLL_NEUMANN)then
+  es%bc1_min_interp = SLL_DIRICHLET
 endif
 
 !quadrature_type1_tmp = ES_GAUSS_LEGENDRE
@@ -282,8 +282,8 @@ es%gauss_pts2(2,:) = 0.5_f64*es%delta_eta2*es%gauss_pts2(2,:)
 
 es%perper  = .false. 
 
-if( (bc_left   == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
-    (bc_bottom == SLL_PERIODIC) .and. (bc_top   == SLL_PERIODIC) ) then
+if( bc1_min == SLL_PERIODIC .and. bc1_max == SLL_PERIODIC .and. &
+    bc2_min == SLL_PERIODIC .and. bc2_max == SLL_PERIODIC ) then
 
   es%total_num_splines1 = num_cells1 
   es%total_num_splines2 = num_cells2
@@ -293,8 +293,8 @@ if( (bc_left   == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
   vec_sz      = num_cells1*num_cells2
   es%perper   = .true. 
 
-else if( (bc_left   == SLL_PERIODIC)  .and. (bc_right == SLL_PERIODIC) .and.&
-         (bc_bottom == SLL_DIRICHLET) .and. (bc_top   == SLL_DIRICHLET) ) then
+else if( bc1_min == SLL_PERIODIC  .and. bc1_max == SLL_PERIODIC .and.&
+         bc2_min == SLL_DIRICHLET .and. bc2_max == SLL_DIRICHLET ) then
 
   es%total_num_splines1 = num_cells1 
   es%total_num_splines2 = num_cells2 + spline_degree2 - 2
@@ -302,10 +302,10 @@ else if( (bc_left   == SLL_PERIODIC)  .and. (bc_right == SLL_PERIODIC) .and.&
   knots1_size = 2*spline_degree1+2
   knots2_size = 2*spline_degree2+num_cells2+1
 
-  vec_sz      = num_cells1*(num_cells2+spline_degree2)
+  vec_sz = num_cells1*(num_cells2+spline_degree2)
 
-else if( (bc_left   == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
-         (bc_bottom == SLL_PERIODIC)  .and. (bc_top == SLL_PERIODIC) ) then
+else if( bc1_min == SLL_DIRICHLET .and. bc1_max == SLL_DIRICHLET .and.&
+         bc2_min == SLL_PERIODIC  .and. bc2_max == SLL_PERIODIC ) then
 
   es%total_num_splines1 = num_cells1 + spline_degree1 - 2
   es%total_num_splines2 = num_cells2 
@@ -313,18 +313,18 @@ else if( (bc_left   == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
   knots2_size = 2*spline_degree2+2
   vec_sz      = (num_cells1 + spline_degree1)*num_cells2
 
-else if( (bc_left   == SLL_NEUMANN) .and. (bc_right == SLL_DIRICHLET) .and.&
-         (bc_bottom == SLL_PERIODIC)  .and. (bc_top == SLL_PERIODIC) ) then
+else if( bc1_min == SLL_NEUMANN  .and. bc1_max == SLL_DIRICHLET .and.&
+         bc2_min == SLL_PERIODIC .and. bc2_max == SLL_PERIODIC ) then
 
   es%total_num_splines1 = num_cells1 + spline_degree1 - 1
   es%total_num_splines2 = num_cells2 
   knots1_size = 2*spline_degree1+num_cells1+1
   knots2_size = 2*spline_degree2+2
   vec_sz      = (num_cells1 + spline_degree1)*num_cells2
-  bc_left_knots = SLL_DIRICHLET
+  bc1_min_knots = SLL_DIRICHLET
 
-else if( (bc_left   == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
-         (bc_bottom == SLL_DIRICHLET) .and. (bc_top   == SLL_DIRICHLET) ) then
+else if( bc1_min == SLL_DIRICHLET .and. bc1_max == SLL_DIRICHLET .and.&
+         bc2_min == SLL_DIRICHLET .and. bc2_max == SLL_DIRICHLET ) then
 
   es%total_num_splines1 = num_cells1 + spline_degree1 - 2
   es%total_num_splines2 = num_cells2 + spline_degree2 - 2
@@ -365,58 +365,54 @@ es%masse   = 0.0_f64
 es%stiff   = 0.0_f64
 es%intjac  = 0.0_f64
 
-call initialize_knots( &
-  spline_degree1,      &
-  num_cells1,          &
-  eta1_min,            &
-  eta1_max,            &
-  bc_left_knots,       &
-  bc_right,            &
-  es%knots1 )
+call initialize_knots( spline_degree1,      &
+                       num_cells1,          &
+                       eta1_min,            &
+                       eta1_max,            &
+                       bc1_min_knots,       &
+                       bc1_max,             &
+                       es%knots1 )
 
-call initialize_knots( &
-  spline_degree2,      &
-  num_cells2,          &
-  eta2_min,            &
-  eta2_max,            &
-  bc_bottom,           &
-  bc_top,              &
-  es%knots2 )
+call initialize_knots( spline_degree2,      &
+                       num_cells2,          &
+                       eta2_min,            &
+                       eta2_max,            &
+                       bc2_min,             &
+                       bc2_max,             &
+                       es%knots2 )
 
-call initconnectivity(               &
-  num_cells1,                        &
-  num_cells2,                        &
-  spline_degree1,                    &
-  spline_degree2,                    &
-  bc_left,                           &
-  bc_right,                          &
-  bc_bottom,                         &
-  bc_top,                            &
-  es%local_spline_indices,           &
-  es%global_spline_indices,          &
-  es%local_to_global_spline_indices )
+call initconnectivity( num_cells1,                       &
+                       num_cells2,                       &
+                       spline_degree1,                   &
+                       spline_degree2,                   &
+                       bc1_min,                          &
+                       bc1_max,                          &
+                       bc2_min,                          &
+                       bc2_max,                          &
+                       es%local_spline_indices,          &
+                       es%global_spline_indices,         &
+                       es%local_to_global_spline_indices )
   
-es%csr_mat => new_csr_matrix(    &
-  solution_size,                     &
-  solution_size,                     &
-  num_cells1*num_cells2,             &
-  es%local_to_global_spline_indices, &
-  es%total_num_splines_loc,          &
-  es%local_to_global_spline_indices, &
-  es%total_num_splines_loc)
+es%csr_mat => new_csr_matrix( solution_size,                     &
+                              solution_size,                     &
+                              num_cells1*num_cells2,             &
+                              es%local_to_global_spline_indices, &
+                              es%total_num_splines_loc,          &
+                              es%local_to_global_spline_indices, &
+                              es%total_num_splines_loc)
 
 es%knots1_rho(1:spline_degree1+1) = eta1_min
 es%knots1_rho(num_cells1+2:num_cells1+1+spline_degree1+1) = eta1_max
  
 if ( mod(spline_degree1 +1,2) == 0 ) then
   do i = spline_degree1 +1 + 1, num_cells1 + 1
-    es%knots1_rho(i) = eta1_min + (i-(spline_degree1 +1)/2-1 )*es%delta_eta1 
+    es%knots1_rho(i) = eta1_min + (i-(spline_degree1+1)/2-1)*es%delta_eta1
   end do
 else
   do i = spline_degree1 +1 + 1, num_cells1 + 1
     es%knots1_rho ( i ) = &
-      0.5*( eta1_min + ( i - (spline_degree1)/2 -1)*es%delta_eta1 + &
-      eta1_min +  ( i -1 - (spline_degree1)/2 -1)*es%delta_eta1 )
+      0.5*( eta1_min + (i - (spline_degree1)/2-1)*es%delta_eta1 + &
+      eta1_min + (i-1 - (spline_degree1)/2 -1)*es%delta_eta1)
   end do
 end if
 
@@ -424,11 +420,11 @@ es%knots2_rho(1:spline_degree2+1) = eta2_min
 es%knots2_rho(num_cells2+2:num_cells2+1+spline_degree2+1)=eta2_max
     
 if (mod(spline_degree2+1,2) == 0 ) then
-  do i = spline_degree2 +1 + 1, num_cells2 + 1
+  do i = spline_degree2 +1 + 1, num_cells2+1
     es%knots2_rho(i) = eta2_min + (i-(spline_degree2+1)/2-1)*es%delta_eta2 
   end do
 else
-  do i = spline_degree2 +1 + 1, num_cells2 + 1
+  do i = spline_degree2+1+1, num_cells2+1
     es%knots2_rho ( i ) = &
       0.5*( eta2_min+(i  -(spline_degree2)/2-1)*es%delta_eta2 + &
             eta2_min+(i-1-(spline_degree2)/2-1)*es%delta_eta2 )
@@ -463,7 +459,7 @@ do i = 1, es%num_cells1
   eta1  = eta1_min + (i-1)*es%delta_eta1
   do ii=1,num_pts_g1
     xg  = eta1  + es%gauss_pts1(1,ii)
-    if(bc_left==SLL_PERIODIC .and. bc_right==SLL_PERIODIC) then 
+    if(bc1_min==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC) then 
       gspl1 = es%gauss_pts1(1,ii)
       ispl1 = spline_degree1+1
     else 
@@ -484,7 +480,7 @@ do j = 1, es%num_cells2
   eta2  = eta2_min + (j-1)*es%delta_eta2
   do jj=1,num_pts_g2
     yg  = eta2+es%gauss_pts2(1,jj)
-    if (bc_bottom==SLL_PERIODIC .and. bc_top==SLL_PERIODIC) then
+    if (bc2_min==SLL_PERIODIC .and. bc2_max==SLL_PERIODIC) then
       gspl2 = es%gauss_pts2(1,jj)
       ispl2 = spline_degree2+1
     else
@@ -521,10 +517,10 @@ end subroutine initialize_general_elliptic_solver
 !> @param[in] num_cells2 the number of cells in the direction eta2
 !> @param[in] quadrature_type1 the type of quadrature in the direction eta1
 !> @param[in] quadrature_type2 the type of quadrature in the direction eta2
-!> @param[in] bc_left the boundary condition at left in the direction eta1
-!> @param[in] bc_right the boundary condition at right in the direction eta2
-!> @param[in] bc_bottom the boundary condition at left in the direction eta2
-!> @param[in] bc_top the boundary condition at right in the direction eta2
+!> @param[in] bc1_min the boundary condition at left in the direction eta1
+!> @param[in] bc1_max the boundary condition at right in the direction eta2
+!> @param[in] bc2_min the boundary condition at left in the direction eta2
+!> @param[in] bc2_max the boundary condition at right in the direction eta2
 !> @param[in] eta1_min the minimun in the direction eta1
 !> @param[in] eta1_max the maximun in the direction eta1
 !> @param[in] eta2_min the minimun in the direction eta2
@@ -537,10 +533,10 @@ function new_general_elliptic_solver( spline_degree1,   &
                                       num_cells2,       &
                                       quadrature_type1, &
                                       quadrature_type2, &
-                                      bc_left,          &
-                                      bc_right,         &
-                                      bc_bottom,        &
-                                      bc_top,           &
+                                      bc1_min,          &
+                                      bc1_max,         &
+                                      bc2_min,        &
+                                      bc2_max,           &
                                       eta1_min,         &
                                       eta1_max,         &
                                       eta2_min,         &
@@ -552,10 +548,10 @@ sll_int32,  intent(in) :: spline_degree1
 sll_int32,  intent(in) :: spline_degree2
 sll_int32,  intent(in) :: num_cells1
 sll_int32,  intent(in) :: num_cells2
-sll_int32,  intent(in) :: bc_left
-sll_int32,  intent(in) :: bc_right
-sll_int32,  intent(in) :: bc_bottom
-sll_int32,  intent(in) :: bc_top
+sll_int32,  intent(in) :: bc1_min
+sll_int32,  intent(in) :: bc1_max
+sll_int32,  intent(in) :: bc2_min
+sll_int32,  intent(in) :: bc2_max
 sll_int32,  intent(in) :: quadrature_type1
 sll_int32,  intent(in) :: quadrature_type2
 sll_real64, intent(in) :: eta1_min
@@ -573,10 +569,10 @@ call sll_create( es,               &
                  num_cells2,       &
                  quadrature_type1, &
                  quadrature_type2, &
-                 bc_left,          &
-                 bc_right,         &
-                 bc_bottom,        &
-                 bc_top,           &
+                 bc1_min,          &
+                 bc1_max,         &
+                 bc2_min,        &
+                 bc2_max,           &
                  eta1_min,         &
                  eta1_max,         &
                  eta2_min,         &
@@ -693,10 +689,10 @@ sll_int32 :: ierr
 sll_int32 :: i
 sll_int32 :: j
 sll_int32 :: icell
-sll_int32 :: bc_left
-sll_int32 :: bc_right
-sll_int32 :: bc_bottom
-sll_int32 :: bc_top
+sll_int32 :: bc1_min
+sll_int32 :: bc1_max
+sll_int32 :: bc2_min
+sll_int32 :: bc2_max
 
 character(len=*),parameter :: as_file1='mat'
 
@@ -747,10 +743,10 @@ sll_int32  :: jdeg2,jdeg1
 sll_real64 :: vsp1, vsp2, vsp3, vsp4, dsp1, dsp2, dsp3, dsp4, rsp1, rsp2
 sll_real64 :: wxy
 
-bc_left    = es%bc_left
-bc_right   = es%bc_right
-bc_bottom  = es%bc_bottom
-bc_top     = es%bc_top
+bc1_min    = es%bc1_min
+bc1_max   = es%bc1_max
+bc2_min  = es%bc2_min
+bc2_max     = es%bc2_max
 delta1     = es%delta_eta1 
 delta2     = es%delta_eta2 
 eta1_min   = es%eta1_min  
@@ -764,8 +760,8 @@ nc_2       = es%num_cells2
 
 nspl = es%total_num_splines_loc
 
-if( bc_left   == SLL_PERIODIC .and. bc_right == SLL_PERIODIC .and. &
-    bc_bottom == SLL_PERIODIC .and. bc_top   == SLL_PERIODIC ) then
+if( bc1_min   == SLL_PERIODIC .and. bc1_max == SLL_PERIODIC .and. &
+    bc2_min == SLL_PERIODIC .and. bc2_max   == SLL_PERIODIC ) then
    es%perper = .true.
 else
    es%perper = .false.  
@@ -918,7 +914,7 @@ do i = 1, nc_1
 
     index3 = j + jj
     
-    if (bc_bottom==SLL_PERIODIC .and. bc_top==SLL_PERIODIC) then 
+    if (bc2_min==SLL_PERIODIC .and. bc2_max==SLL_PERIODIC) then 
       if ( index3 > es%total_num_splines2) then
         index3 = index3 - es%total_num_splines2
       end if
@@ -928,12 +924,12 @@ do i = 1, nc_1
         
       index1 = i + ii
 
-      if (bc_left==SLL_PERIODIC .and. bc_right==SLL_PERIODIC) then 
+      if (bc1_min==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC) then 
         if ( index1 > es%total_num_splines1) then
           index1 = index1 - es%total_num_splines1
         end if
         nbsp = es%total_num_splines1
-      else if (bc_left==SLL_DIRICHLET .and. bc_right==SLL_DIRICHLET) then
+      else if (bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET) then
         nbsp = nc_1 + spl_deg_1
       end if
 
@@ -955,7 +951,7 @@ do i = 1, nc_1
              
         index4 = j + ll
              
-        if ( (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC))then
+        if ( (bc2_min==SLL_PERIODIC).and.(bc2_max== SLL_PERIODIC))then
           if ( index4 > es%total_num_splines2) then
             index4 = index4 - es%total_num_splines2
           end if
@@ -965,7 +961,7 @@ do i = 1, nc_1
                 
           index2 = i + kk
 
-          if((bc_left==SLL_PERIODIC).and.(bc_right==SLL_PERIODIC))then
+          if((bc1_min==SLL_PERIODIC).and.(bc1_max==SLL_PERIODIC))then
 
             if ( index2 > es%total_num_splines1) then
               index2 = index2 - es%total_num_splines1
@@ -973,8 +969,8 @@ do i = 1, nc_1
 
             nbsp1 = es%total_num_splines1
                    
-          else if (bc_left ==SLL_DIRICHLET .and.&
-                   bc_right==SLL_DIRICHLET ) then
+          else if (bc1_min ==SLL_DIRICHLET .and.&
+                   bc1_max==SLL_DIRICHLET ) then
 
             nbsp1 = nc_1 + spl_deg_1
 
@@ -1300,22 +1296,22 @@ subroutine local_to_global_matrices_rho( es, cell_i, cell_j)
   sll_int32 :: cell_j
   sll_int32 :: i,mm, b, x!,y
   sll_int32 :: nbsp!,nbsp1
-  sll_int32 :: bc_left
-  sll_int32 :: bc_right
-  sll_int32 :: bc_bottom
-  sll_int32 :: bc_top
+  sll_int32 :: bc1_min
+  sll_int32 :: bc1_max
+  sll_int32 :: bc2_min
+  sll_int32 :: bc2_max
   sll_int32 :: index1,index3
    
-  bc_left   = es%bc_left_interp
-  bc_right  = es%bc_right
-  bc_bottom = es%bc_bottom
-  bc_top    = es%bc_top
+  bc1_min   = es%bc1_min_interp
+  bc1_max  = es%bc1_max
+  bc2_min = es%bc2_min
+  bc2_max    = es%bc2_max
   
   b = 0
   do mm = 0,es%spline_degree2
     index3 = cell_j + mm
     !other option for above: index3 = mod(index3-1,es%total_num_splines2)+1
-    if (bc_bottom==SLL_PERIODIC .and. bc_top==SLL_PERIODIC) then    
+    if (bc2_min==SLL_PERIODIC .and. bc2_max==SLL_PERIODIC) then    
        if ( index3 > es%total_num_splines2) then
           index3 = index3 - es%total_num_splines2
        end if
@@ -1323,12 +1319,12 @@ subroutine local_to_global_matrices_rho( es, cell_i, cell_j)
 
     do i = 0,es%spline_degree1
       index1 = cell_i + i
-      if (bc_left==SLL_PERIODIC .and. bc_right==SLL_PERIODIC) then 
+      if (bc1_min==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC) then 
         if ( index1 > es%total_num_splines1) then
           index1 = index1 - es%total_num_splines1
         end if
         nbsp = es%total_num_splines1
-      else if (bc_left==SLL_DIRICHLET .and. bc_right==SLL_DIRICHLET) then
+      else if (bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET) then
         nbsp = es%num_cells1 + es%spline_degree1
       end if
 
@@ -1352,21 +1348,21 @@ subroutine solve_linear_system( es )
   character(len=*), parameter               :: as_file  = 'rho'
   character(len=*), parameter               :: as_file1 = 'phi'
   character(len=*), parameter               :: as_file2 = 'mat'
-  sll_int32 :: bc_left
-  sll_int32 :: bc_right
-  sll_int32 :: bc_bottom
-  sll_int32 :: bc_top
+  sll_int32 :: bc1_min
+  sll_int32 :: bc1_max
+  sll_int32 :: bc2_min
+  sll_int32 :: bc2_max
 
-  bc_left   = es%bc_left
-  bc_right  = es%bc_right
-  bc_bottom = es%bc_bottom
-  bc_top    = es%bc_top
+  bc1_min   = es%bc1_min
+  bc1_max  = es%bc1_max
+  bc2_min = es%bc2_min
+  bc2_max    = es%bc2_max
    
   es%tmp_rho_vec(:) = 0.0_f64
   es%tmp_phi_vec(:) = 0.0_f64
     
-  if( bc_left  ==SLL_PERIODIC  .and. bc_right==SLL_PERIODIC .and. &
-      bc_bottom==SLL_DIRICHLET .and. bc_top  ==SLL_DIRICHLET ) then
+  if( bc1_min  ==SLL_PERIODIC  .and. bc1_max==SLL_PERIODIC .and. &
+      bc2_min==SLL_DIRICHLET .and. bc2_max  ==SLL_DIRICHLET ) then
        
     k = 0
     do j = 1, es%total_num_splines2
@@ -1377,8 +1373,8 @@ subroutine solve_linear_system( es )
       end do
     end do
        
-  else if( bc_left  ==SLL_DIRICHLET .and. bc_right==SLL_DIRICHLET .and.&
-           bc_bottom==SLL_DIRICHLET .and. bc_top  ==SLL_DIRICHLET) then 
+  else if( bc1_min  ==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET .and.&
+           bc2_min==SLL_DIRICHLET .and. bc2_max  ==SLL_DIRICHLET) then 
        
     k = 0
     do j = 1, es%total_num_splines2
@@ -1389,14 +1385,14 @@ subroutine solve_linear_system( es )
       end do
     end do
        
-  else if(bc_left  ==SLL_PERIODIC .and. bc_right==SLL_PERIODIC .and.&
-          bc_bottom==SLL_PERIODIC .and. bc_top  ==SLL_PERIODIC) then
+  else if(bc1_min  ==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC .and.&
+          bc2_min==SLL_PERIODIC .and. bc2_max  ==SLL_PERIODIC) then
        
     es%tmp_rho_vec(1:es%total_num_splines1*es%total_num_splines2)=&
       es%rho_vec(1:es%total_num_splines1*es%total_num_splines2) 
        
-  else if(bc_left  ==SLL_DIRICHLET .and. bc_right==SLL_DIRICHLET .and.&
-          bc_bottom==SLL_PERIODIC  .and. bc_top  ==SLL_PERIODIC ) then
+  else if(bc1_min  ==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET .and.&
+          bc2_min==SLL_PERIODIC  .and. bc2_max  ==SLL_PERIODIC ) then
      
     k = 0
     do j = 1, es%total_num_splines2
@@ -1407,8 +1403,8 @@ subroutine solve_linear_system( es )
     end do
     end do
 
-  else if( (bc_left   == SLL_NEUMANN)  .and. (bc_right == SLL_DIRICHLET) .and.&
-           (bc_bottom == SLL_PERIODIC) .and. (bc_top   == SLL_PERIODIC) ) then
+  else if( (bc1_min   == SLL_NEUMANN)  .and. (bc1_max == SLL_DIRICHLET) .and.&
+           (bc2_min == SLL_PERIODIC) .and. (bc2_max   == SLL_PERIODIC) ) then
      
     k = 0
     do j = 1, es%total_num_splines2
@@ -1421,8 +1417,8 @@ subroutine solve_linear_system( es )
 
   end if
 
-  if(bc_left  ==SLL_PERIODIC .and. bc_right==SLL_PERIODIC .and.&
-     bc_bottom==SLL_PERIODIC .and. bc_top  ==SLL_PERIODIC) then
+  if(bc1_min  ==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC .and.&
+     bc2_min==SLL_PERIODIC .and. bc2_max  ==SLL_PERIODIC) then
 
     call sll_solve_csr_matrix(es%csr_mat_with_constraint, &
                               es%tmp_rho_vec,             &
