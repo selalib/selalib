@@ -671,20 +671,25 @@ function get_cartesian_mesh_2d_discrete( field ) result(res)
 end function get_cartesian_mesh_2d_discrete
 
 function get_jacobian_matrix_discrete( field, eta1, eta2 ) result(res)
+
   class(sll_scalar_field_2d_discrete), intent(in) :: field
   sll_real64, intent(in) :: eta1
   sll_real64, intent(in) :: eta2
   sll_real64, dimension(2,2) :: res
+
   res(:,:) = field%T%jacobian_matrix(eta1,eta2)
+
 end function get_jacobian_matrix_discrete
 
 function value_at_pt_discrete( field, eta1, eta2 )
+
   class(sll_scalar_field_2d_discrete), intent(in) :: field
   sll_real64, intent(in) :: eta1
   sll_real64, intent(in) :: eta2
   sll_real64             :: value_at_pt_discrete
 
   value_at_pt_discrete = field%interp_2d%interpolate_value(eta1,eta2)
+
 end function value_at_pt_discrete
 
 function value_at_index_discrete( field, i, j )

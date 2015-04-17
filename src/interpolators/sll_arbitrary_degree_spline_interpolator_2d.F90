@@ -1969,11 +1969,9 @@ sll_int32 :: j
 sll_int32 :: lefty
 sll_int32 :: ierr
 
-sll_real64, dimension(:),   pointer :: tmp_t1
-sll_real64, dimension(:),   pointer :: tmp_t2
-sll_real64, dimension(:,:), pointer :: tmp_coeff
-sll_real64, allocatable :: t1(:)
-sll_real64, allocatable :: t2(:)
+sll_real64, dimension(:),   pointer :: t1
+sll_real64, dimension(:),   pointer :: t2
+sll_real64, dimension(:,:), pointer :: coeff
 
 nx = interpolator%size_coeffs1
 ny = interpolator%size_coeffs2
@@ -1991,41 +1989,27 @@ x   = eta1
 y   = eta2
 val = 0.0_f64
 
-if (interpolator%bc1_min == SLL_PERIODIC .and. eta1 < interpolator%eta1_min) then
-  x = eta1 + length1 
-end if
-if (interpolator%bc1_max == SLL_PERIODIC .and. eta1 > interpolator%eta1_max) then
-  x = eta1 - length1
-end if
-if (interpolator%bc2_min == SLL_PERIODIC .and. eta2 < interpolator%eta2_min) then
-  y = eta2 + length2
-end if
-if (interpolator%bc2_max == SLL_PERIODIC .and. eta2 > interpolator%eta2_max) then
-  y = eta2 - length2
-end if
+if (interpolator%bc1_min==SLL_PERIODIC .and. eta1<interpolator%eta1_min) x = eta1 + length1 
+if (interpolator%bc1_max==SLL_PERIODIC .and. eta1>interpolator%eta1_max) x = eta1 - length1
+if (interpolator%bc2_min==SLL_PERIODIC .and. eta2<interpolator%eta2_min) y = eta2 + length2
+if (interpolator%bc2_max==SLL_PERIODIC .and. eta2>interpolator%eta2_max) y = eta2 - length2
 
 SLL_ASSERT( x >= interpolator%eta1_min )
 SLL_ASSERT( x <= interpolator%eta1_max )
 SLL_ASSERT( y >= interpolator%eta2_min )
 SLL_ASSERT( y <= interpolator%eta2_max )
 
-tmp_t1    => interpolator%t1(1:interpolator%size_t1)
-tmp_t2    => interpolator%t2(1:interpolator%size_t2)
-tmp_coeff => interpolator%coeff_splines(1:nx,1:ny)
+t1    => interpolator%t1(1:interpolator%size_t1)
+t2    => interpolator%t2(1:interpolator%size_t2)
+coeff => interpolator%coeff_splines(1:nx,1:ny)
 
-allocate(t1(nx+kx))
-allocate(t2(ny+ky))
-
-t1 = interpolator%t1(1:nx+kx)
-t2 = interpolator%t2(1:ny+ky)
-
-call interv(interpolator%deboor(2), t2, ny+ky, y, lefty, ierr)
+call interv(interpolator%deboor(2), t2(1:ny+ky), ny+ky, y, lefty, ierr)
 
 if (ierr .ne. 0) return 
 
 do j = 1, ky
   tab     = interpolator%coeff_splines(1:nx,lefty-ky+j)
-  coef(j) = bvalue(interpolator%deboor(1), t1, tab, nx, kx, x, 0)
+  coef(j) = bvalue(interpolator%deboor(1), t1(1:nx+kx), tab, nx, kx, x, 0)
 end do
 
 ty = interpolator%t2(lefty-ky+1:lefty+ky)
@@ -2069,11 +2053,9 @@ sll_real64, dimension(:), pointer :: coef
 sll_real64, dimension(:), pointer :: tab
 sll_real64, dimension(:), pointer :: ty
 
-sll_real64, dimension(:),   pointer :: tmp_t1
-sll_real64, dimension(:),   pointer :: tmp_t2
-sll_real64, dimension(:,:), pointer :: tmp_coeff
-sll_real64, allocatable :: t1(:)
-sll_real64, allocatable :: t2(:)
+sll_real64, dimension(:),   pointer :: t1
+sll_real64, dimension(:),   pointer :: t2
+sll_real64, dimension(:,:), pointer :: coeff
 
 sll_int32 :: j
 sll_int32 :: lefty
@@ -2092,33 +2074,19 @@ ky = interpolator%spline_degree2+1
 x = eta1
 y = eta2
 
-if (interpolator%bc1_min == SLL_PERIODIC .and. eta1 < interpolator%eta1_min) then
-  x = eta1 + length1 
-end if
-if (interpolator%bc1_max == SLL_PERIODIC .and. eta1 > interpolator%eta1_max) then
-  x = eta1 - length1
-end if
-if (interpolator%bc2_min == SLL_PERIODIC .and. eta2 < interpolator%eta2_min) then
-  y = eta2 + length2
-end if
-if (interpolator%bc2_max == SLL_PERIODIC .and. eta2 > interpolator%eta2_max) then
-  y = eta2 - length2
-end if
+if (interpolator%bc1_min==SLL_PERIODIC .and. eta1<interpolator%eta1_min) x = eta1+length1 
+if (interpolator%bc1_max==SLL_PERIODIC .and. eta1>interpolator%eta1_max) x = eta1-length1
+if (interpolator%bc2_min==SLL_PERIODIC .and. eta2<interpolator%eta2_min) y = eta2+length2
+if (interpolator%bc2_max==SLL_PERIODIC .and. eta2>interpolator%eta2_max) y = eta2-length2
 
 SLL_ASSERT( x >= interpolator%eta1_min )
 SLL_ASSERT( x <= interpolator%eta1_max )
 SLL_ASSERT( y >= interpolator%eta2_min )
 SLL_ASSERT( y <= interpolator%eta2_max )
 
-tmp_t1 => interpolator%t1(1:interpolator%size_t1)
-tmp_t2 => interpolator%t2(1:interpolator%size_t2)
-tmp_coeff => interpolator%coeff_splines(1:nx,1:nx)
-
-allocate(t1(nx+kx))
-allocate(t2(ny+ky))
-
-t1 = interpolator%t1(1:nx+kx)
-t2 = interpolator%t2(1:ny+ky)
+t1 => interpolator%t1(1:interpolator%size_t1)
+t2 => interpolator%t2(1:interpolator%size_t2)
+coeff => interpolator%coeff_splines(1:nx,1:nx)
 
 call interv(interpolator%deboor(2),t2,ny+ky,y,lefty,ierr)
     
@@ -2176,11 +2144,9 @@ sll_int32, parameter  :: deriv2 = 1
 sll_int32 :: j
 sll_int32 :: lefty
 sll_int32 :: ierr = 0
-sll_real64, dimension(:),   pointer :: tmp_t1
-sll_real64, dimension(:),   pointer :: tmp_t2
-sll_real64, dimension(:,:), pointer :: tmp_coeff
-sll_real64, allocatable :: t1(:)
-sll_real64, allocatable :: t2(:)
+sll_real64, dimension(:),   pointer :: t1
+sll_real64, dimension(:),   pointer :: t2
+sll_real64, dimension(:,:), pointer :: coeff
 
 val = 0.0_f64 
 
@@ -2193,33 +2159,19 @@ length2 = interpolator%eta2_max-interpolator%eta2_min
 
 x = eta1
 y = eta2
-if (interpolator%bc1_min == SLL_PERIODIC .and. eta1 < interpolator%eta1_min) then
-  x = eta1 + length1 
-end if
-if (interpolator%bc1_max == SLL_PERIODIC .and. eta1 > interpolator%eta1_max) then
-  x = eta1 - length1
-end if
-if (interpolator%bc2_min == SLL_PERIODIC .and. eta2 < interpolator%eta2_min) then
-  y = eta2 + length2
-end if
-if (interpolator%bc2_max == SLL_PERIODIC .and. eta2 > interpolator%eta2_max) then
-  y = eta2 - length2
-end if
+if (interpolator%bc1_min==SLL_PERIODIC .and. eta1<interpolator%eta1_min) x = eta1+length1 
+if (interpolator%bc1_max==SLL_PERIODIC .and. eta1>interpolator%eta1_max) x = eta1-length1
+if (interpolator%bc2_min==SLL_PERIODIC .and. eta2<interpolator%eta2_min) y = eta2+length2
+if (interpolator%bc2_max==SLL_PERIODIC .and. eta2>interpolator%eta2_max) y = eta2-length2
 
 SLL_ASSERT( x >= interpolator%eta1_min )
 SLL_ASSERT( x <= interpolator%eta1_max )
 SLL_ASSERT( y >= interpolator%eta2_min )
 SLL_ASSERT( y <= interpolator%eta2_max )
 
-tmp_t1 => interpolator%t1(1:interpolator%size_t1)
-tmp_t2 => interpolator%t2(1:interpolator%size_t2)
-tmp_coeff => interpolator%coeff_splines(1:nx,1:ny)
-
-allocate(t1(nx+kx))
-allocate(t2(ny+ky))
-
-t1 = interpolator%t1(1:nx+kx)
-t2 = interpolator%t2(1:ny+ky)
+t1 => interpolator%t1(1:interpolator%size_t1)
+t2 => interpolator%t2(1:interpolator%size_t2)
+coeff => interpolator%coeff_splines(1:nx,1:ny)
 
 call interv(interpolator%deboor(2), t2(1:ny+ky), ny+ky, y, lefty, ierr )
     

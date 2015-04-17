@@ -742,6 +742,15 @@ sll_int32  :: ideg2,ideg1
 sll_int32  :: jdeg2,jdeg1
 sll_real64 :: vsp1, vsp2, vsp3, vsp4, dsp1, dsp2, dsp3, dsp4, rsp1, rsp2
 sll_real64 :: wxy
+sll_real64 :: dsp13 
+sll_real64 :: vsp13 
+sll_real64 :: dsp23 
+sll_real64 :: vsp23 
+sll_real64 :: dsp14 
+sll_real64 :: vsp14 
+sll_real64 :: dsp24 
+sll_real64 :: vsp24 
+sll_real64 :: wxy_by_val_jac 
 
 bc1_min    = es%bc1_min
 bc1_max   = es%bc1_max
@@ -828,6 +837,10 @@ do i = 1, nc_1
       val_jac = jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1)
 
       es%val_jac(ig,jg,i,j) = val_jac
+
+      wxy_by_val_jac = wxy/val_jac
+
+      val_c = val_c * val_jac * wxy
         
       es%intjac = es%intjac + wyg*wxg*val_jac
 
@@ -835,28 +848,41 @@ do i = 1, nc_1
       B11 = jac_mat(2,2)*jac_mat(2,2)*val_a11 - &
             jac_mat(2,2)*jac_mat(1,2)*(val_a12+val_a21) + &
             jac_mat(1,2)*jac_mat(1,2)*val_a22
+
+      B11 = B11*wxy_by_val_jac
           
       B21 = jac_mat(1,1)*jac_mat(2,2)*val_a12 - &
             jac_mat(1,1)*jac_mat(1,2)*val_a22 - &
             jac_mat(2,1)*jac_mat(2,2)*val_a11 + &
             jac_mat(1,2)*jac_mat(2,1)*val_a21
+
+      B21 = B21*wxy_by_val_jac
         
       B12 = jac_mat(1,1)*jac_mat(2,2)*val_a21 - &
             jac_mat(1,1)*jac_mat(1,2)*val_a22 - &
             jac_mat(2,1)*jac_mat(2,2)*val_a11 + &
             jac_mat(1,2)*jac_mat(2,1)*val_a12
 
+      B12 = B12*wxy_by_val_jac
+
       B22 = jac_mat(1,1)*jac_mat(1,1)*val_a22 - &
             jac_mat(1,1)*jac_mat(2,1)*(val_a21+val_a12) + &
             jac_mat(2,1)*jac_mat(2,1)*val_a11
           
+      B22 = B22*wxy_by_val_jac
+
       MC =  jac_mat(2,2)*val_b1_der1 &
           - jac_mat(2,1)*val_b1_der2 &
           - jac_mat(1,2)*val_b2_der1 &
           + jac_mat(1,1)*val_b2_der2
+
+      MC = MC*wxy
           
       C1 =  jac_mat(2,2)*val_b1-jac_mat(1,2)*val_b2 
       C2 =  jac_mat(1,1)*val_b2-jac_mat(2,1)*val_b1
+
+      C1 = C1*wxy
+      C2 = C2*wxy
          
       mm = 0
 
@@ -882,28 +908,38 @@ do i = 1, nc_1
 
             vsp4 = es%v_splines2(1,ll,jg,j)
             dsp4 = es%v_splines2(2,ll,jg,j)
+            dsp14 = dsp1*dsp4
+            vsp14 = vsp1*vsp4
+            dsp24 = dsp2*dsp4
+            vsp24 = vsp2*vsp4
 
             do kk = 1,spl_deg_1+1
                         
               vsp3 = es%v_splines1(1,kk,ig,i)
               dsp3 = es%v_splines1(2,kk,ig,i)
+              dsp13 = dsp1*dsp3
+              vsp13 = vsp1*vsp3
+              dsp23 = dsp2*dsp3
+              vsp23 = vsp2*vsp3
 
               nn = nn+1 
              
               source(icell,mm,nn) = source(icell,mm,nn) + val_jac*wxy * &
                 rsp1*vsp3*rsp2*vsp4
                    
-              M_c(mm,nn) =M_c(mm,nn)  + val_c*val_jac*wxy*vsp1*vsp3*vsp2*vsp4
-              K_11(mm,nn)=K_11(mm,nn) + B11*wxy/val_jac*dsp1*dsp3*vsp2*vsp4
-              K_22(mm,nn)=K_22(mm,nn) + B22*wxy/val_jac*vsp1*vsp3*dsp2*dsp4
-              K_12(mm,nn)=K_12(mm,nn) + B12*wxy/val_jac*dsp1*vsp3*vsp2*dsp4
-              K_21(mm,nn)=K_21(mm,nn) + B21*wxy/val_jac*vsp1*dsp3*dsp2*vsp4
-              M_bv(mm,nn)=M_bv(mm,nn) + MC*wxy*vsp1*vsp3*vsp2*vsp4
-              S_b1(mm,nn)=S_b1(mm,nn) + C1*wxy*vsp1*dsp3*vsp2*vsp4
-              S_b2(mm,nn)=S_b2(mm,nn) + C2*wxy*vsp1*vsp3*vsp2*dsp4
+              M_c(mm,nn) =M_c(mm,nn)  + val_c*vsp14*vsp23
+              K_11(mm,nn)=K_11(mm,nn) + B11*dsp13*vsp24
+              K_22(mm,nn)=K_22(mm,nn) + B22*vsp13*dsp24
+              K_12(mm,nn)=K_12(mm,nn) + B12*dsp14*vsp23
+              K_21(mm,nn)=K_21(mm,nn) + B21*vsp14*dsp23
+              M_bv(mm,nn)=M_bv(mm,nn) + MC*vsp13*vsp24
+              S_b1(mm,nn)=S_b1(mm,nn) + C1*vsp1*dsp3*vsp24
+              S_b2(mm,nn)=S_b2(mm,nn) + C2*vsp13*vsp2*dsp4
 
             end do
           end do
+
+       
         end do
       end do
     end do
