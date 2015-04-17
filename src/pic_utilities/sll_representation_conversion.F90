@@ -146,9 +146,9 @@ contains
     i_cell_y  = 1 + int(floor(temp))
     offset_y = real(temp - real(i_cell_y - 1,f64), f32)
     SLL_ASSERT(offset_x >= 0)
-    SLL_ASSERT(offset_x < 1 )
+    SLL_ASSERT(offset_x <= 1 )
     SLL_ASSERT(offset_y >= 0)
-    SLL_ASSERT(offset_y < 1 )
+    SLL_ASSERT(offset_y <= 1 )
 
     !! note: the (integer) index of the Poisson cell (within space computational domain) is then obtained with get_poisson_cell_index
 
