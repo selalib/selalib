@@ -1227,6 +1227,10 @@ do k = itest1, itest2
   end do
   end do
 
+!  call phi%interp_2d%set_values_at_boundary(values(1,:),     &
+!                                            values(npts1,:), &
+!                                            values(:,1),     &
+!                                            values(:,npts2))
 
   call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
                      SLL_DIRICHLET, SLL_DIRICHLET, ti(k), te(k))
