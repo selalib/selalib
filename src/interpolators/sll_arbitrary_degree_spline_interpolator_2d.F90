@@ -2035,7 +2035,7 @@ SLL_ASSERT( x <= interpolator%eta1_max )
 SLL_ASSERT( y >= interpolator%eta2_min )
 SLL_ASSERT( y <= interpolator%eta2_max )
 
-call interv(interpolator%deboor(2), interpolator%t2, ny+ky, y, lefty, ierr)
+call interv(interpolator%deboor(2), interpolator%t2(1:ny+ky), ny+ky, y, lefty, ierr)
 
 if (ierr .ne. 0) return 
 
@@ -2121,7 +2121,7 @@ SLL_ASSERT( y >= interpolator%eta2_min )
 SLL_ASSERT( y <= interpolator%eta2_max )
 
 
-call interv(interpolator%deboor(2),interpolator%t2,ny+ky,y,lefty,ierr)
+call interv(interpolator%deboor(2),interpolator%t2(1:ny+ky),ny+ky,y,lefty,ierr)
     
 if (ierr .ne. 0)  return 
 
@@ -2207,7 +2207,7 @@ SLL_ASSERT( x <= interpolator%eta1_max )
 SLL_ASSERT( y >= interpolator%eta2_min )
 SLL_ASSERT( y <= interpolator%eta2_max )
 
-call interv(interpolator%deboor(2), interpolator%t2, ny+ky, y, lefty, ierr )
+call interv(interpolator%deboor(2), interpolator%t2(1:ny+ky), ny+ky, y, lefty, ierr )
     
 if ( ierr .ne. 0 ) return
 
