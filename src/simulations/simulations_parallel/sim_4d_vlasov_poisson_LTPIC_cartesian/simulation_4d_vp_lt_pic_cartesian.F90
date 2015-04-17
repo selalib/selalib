@@ -36,6 +36,7 @@ module sll_simulation_4d_vp_lt_pic_cartesian_module
     sll_real64 :: dt
     sll_int32  :: num_iterations
     sll_int32  :: plot_period
+    sll_int32  :: remap_period
     sll_real64 :: thermal_speed_ions
     sll_int32  :: ions_number
     sll_int32  :: virtual_particle_number
@@ -51,7 +52,6 @@ module sll_simulation_4d_vp_lt_pic_cartesian_module
     type(electric_field_accumulator), pointer :: E_accumulator
     logical :: use_cubic_splines        ! disabled for now (will raise an error if true)
     logical :: use_lt_pic_scheme        ! if false then use pic scheme
-    logical :: use_exact_f0             ! if false, interpolate f0 from its values on the initial particle grid
     type(sll_charge_accumulator_2d_CS_ptr), dimension(:), pointer  :: q_accumulator_CS
     type(electric_field_accumulator_CS), pointer :: E_accumulator_CS
     sll_real64, dimension(:,:), pointer :: rho
@@ -87,7 +87,7 @@ contains
     sll_int32   :: ierr
     sll_int32   :: j
     sll_real64  :: dt
-    sll_int32   :: number_iterations, plot_period
+    sll_int32   :: number_iterations, plot_period, remap_period
     sll_int32   :: NUM_PARTICLES, GUARD_SIZE, PARTICLE_ARRAY_SIZE
     sll_real64  :: THERM_SPEED
     sll_real64  :: QoverM, ALPHA
@@ -115,7 +115,7 @@ contains
 
     namelist /sim_params/   NUM_PARTICLES, GUARD_SIZE, &
                             PARTICLE_ARRAY_SIZE, &
-                            THERM_SPEED, dt, number_iterations, plot_period, &
+                            THERM_SPEED, dt, number_iterations, plot_period, remap_period, &
                             QoverM, ALPHA, UseCubicSplines, UseLtPicScheme
     namelist /grid_dims/    NC_X, NC_Y, XMIN, KX_LANDAU, YMIN, YMAX, &
                             DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC
@@ -152,7 +152,6 @@ contains
     XMAX = (2._f64*sll_pi/KX_LANDAU)
     sim%use_cubic_splines = UseCubicSplines
     sim%use_lt_pic_scheme = UseLtPicScheme
-    sim%use_exact_f0      = UseExactF0
     sim%n_virtual_x_for_deposition = NVirtual_X_ForDeposition
     sim%n_virtual_y_for_deposition = NVirtual_Y_ForDeposition
     sim%n_virtual_vx_for_deposition = NVirtual_VX_ForDeposition
@@ -165,6 +164,7 @@ contains
     sim%dt = dt
     sim%num_iterations = number_iterations
     sim%plot_period = plot_period
+    sim%remap_period = remap_period
     sim%elec_params = (/KX_LANDAU, ALPHA, er, psi, omega_r, omega_i /)
     
     sim%mesh_2d =>  new_cartesian_mesh_2d( NC_X, NC_Y, &
@@ -209,6 +209,8 @@ contains
 
             !            PARTICLE_ARRAY_SIZE,                      &       ! MCP: problems if this value too small ?
             !            GUARD_SIZE,                               &       ! MCP: problems if this value too small ?
+
+        sim%part_group%use_exact_f0      = UseExactF0
 
         print *, "WARNING 65373654 -- writing landau parameters in the particle group -- this is temporary..."
         sim%part_group%thermal_speed = sim%thermal_speed_ions   !  temporary or not?
@@ -319,7 +321,7 @@ contains
                                                          sim%n_virtual_y_for_deposition,    &
                                                          sim%n_virtual_vx_for_deposition,   &
                                                          sim%n_virtual_vy_for_deposition,   &
-                                                         sim%use_exact_f0, sim%total_density )
+                                                         sim%total_density )
        else
            !! -- PIC_VERSION
            !                   call sll_first_charge_accumulation_2d( sim%part_group, sim%q_accumulator_ptr)!(1)%q )
@@ -407,7 +409,7 @@ contains
     ncy = sim%mesh_2d%num_cells2
     n_threads = sim%n_threads
     thread_id = 0
-    save_nb = sim%num_iterations/2
+    save_nb = sim%num_iterations/10
 
     SLL_ALLOCATE( rho1d_send(1:(ncx+1)*(ncy+1)),    ierr)
     SLL_ALLOCATE( rho1d_receive(1:(ncx+1)*(ncy+1)), ierr)
@@ -709,7 +711,7 @@ contains
                                                             sim%n_virtual_y_for_deposition,     &
                                                             sim%n_virtual_vx_for_deposition,    &
                                                             sim%n_virtual_vy_for_deposition,    &
-                                                            sim%use_exact_f0, sim%total_density )
+                                                            sim%total_density )
               deposit_time=deposit_time+sll_time_elapsed_since(deposit_time_mark)
           else
               ! nothing to do, charge already deposited in the push loop
@@ -823,10 +825,33 @@ contains
                                    sim%n_virtual_vy_for_deposition,   &
                                    "f_slice", it)
 
-            print *, "done."
+        end if
 
-        else
-            print *, "no f plot"
+        if (sim%my_rank == 0 .and. mod(it+1, sim%remap_period)==0 ) then
+
+            print *, "remapping f..."
+            call sll_lt_pic_4d_remap(sim%part_group)
+
+            print *, "writing (remapped) f slice in gnuplot format for iteration # it = ", it, " / ", sim%num_iterations
+
+            call plot_f_slice_x_vx(sim%part_group,           &
+                                   sim%part_group%remapping_grid%eta1_min,   &
+                                   sim%part_group%remapping_grid%eta1_max,   &
+                                   sim%part_group%remapping_grid%eta2_min,   &
+                                   sim%part_group%remapping_grid%eta2_max,   &
+                                   sim%part_group%remapping_grid%eta3_min,   &
+                                   sim%part_group%remapping_grid%eta3_max,   &
+                                   sim%part_group%remapping_grid%eta4_min,   &
+                                   sim%part_group%remapping_grid%eta4_max,   &
+                                   sim%part_group%remapping_grid%num_cells1, &
+                                   sim%part_group%remapping_grid%num_cells2, &
+                                   sim%part_group%remapping_grid%num_cells3, &
+                                   sim%part_group%remapping_grid%num_cells4, &
+                                   sim%n_virtual_x_for_deposition,    &
+                                   sim%n_virtual_y_for_deposition,    &
+                                   sim%n_virtual_vx_for_deposition,   &
+                                   sim%n_virtual_vy_for_deposition,   &
+                                   "f_slice_remapped", it)
         end if
 
         if (sim%my_rank == 0 .and. mod(it+1, sim%plot_period)==0 ) then
@@ -878,7 +903,7 @@ contains
 
        !! -- --  diagnostics [end]  -- --
 
-    print *, "end one loop in time"
+    print *, "end one loop in time, it = ", it
     enddo
 
     !  ----------------------------------------------------------------------------------------------------
