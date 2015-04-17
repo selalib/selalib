@@ -2085,6 +2085,10 @@ sll_real64, dimension(:), pointer :: coef
 sll_real64, dimension(:), pointer :: tab
 sll_real64, dimension(:), pointer :: ty
 
+sll_real64, dimension(:), pointer :: tmp_bcoef 
+sll_real64, dimension(:), pointer :: tmp_t1
+sll_real64, dimension(:), pointer :: tmp_t2
+
 sll_int32 :: j
 sll_int32 :: lefty
 sll_int32 :: ierr
@@ -2120,6 +2124,9 @@ SLL_ASSERT( x <= interpolator%eta1_max )
 SLL_ASSERT( y >= interpolator%eta2_min )
 SLL_ASSERT( y <= interpolator%eta2_max )
 
+tmp_t1 => interpolator%t1(1:interpolator%size_t1)
+tmp_t1 => interpolator%t2(1:interpolator%size_t2)
+tmp_coeff => interpolator%coeff_splines(1:size_coeffs1,1:size_coeffs2)
 
 call interv(interpolator%deboor(2),interpolator%t2(1:ny+ky),ny+ky,y,lefty,ierr)
     
@@ -2219,7 +2226,7 @@ SLL_ALLOCATE(ty(1:2*ky), ierr)
 do j = 1, ky
        
   tab = interpolator%coeff_splines(1:nx, lefty-ky+j)
-  coef(j) = bvalue(interpolator%deboor(1), interpolator%t1, tab, nx, kx, x, deriv1 )
+  coef(j) = bvalue(interpolator%deboor(1), t1, tab, nx, kx, x, deriv1 )
        
 end do
 
