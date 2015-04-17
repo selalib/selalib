@@ -44,8 +44,6 @@ type, extends(sll_interpolator_2d_base) :: &
   sll_int32                           :: bc_max2
   sll_int32                           :: spline_degree1
   sll_int32                           :: spline_degree2
-  sll_real64, dimension(:), pointer   :: knots1
-  sll_real64, dimension(:), pointer   :: knots2
   sll_real64, dimension(:), pointer   :: t1
   sll_real64, dimension(:), pointer   :: t2
   sll_int32                           :: size_t1
@@ -127,8 +125,6 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
 class(sll_arbitrary_degree_spline_interpolator_2d), intent(inout) :: interpolator
 sll_int32 :: ierr
 
-SLL_DEALLOCATE(interpolator%knots1,ierr)
-SLL_DEALLOCATE(interpolator%knots2,ierr)
 SLL_DEALLOCATE(interpolator%t1,ierr)
 SLL_DEALLOCATE(interpolator%t2,ierr)
 SLL_DEALLOCATE(interpolator%coeff_splines,ierr)
@@ -316,39 +312,11 @@ SLL_CLEAR_ALLOCATE(interpolator%slope_max1(1:num_pts2  ),ierr)
 SLL_CLEAR_ALLOCATE(interpolator%slope_min2(1:num_pts1+2),ierr)
 SLL_CLEAR_ALLOCATE(interpolator%slope_max2(1:num_pts1+2),ierr)
 
-! tmp1 and tmp2 is the maximun (not absolue) for the size of coefficients
-select case (bc_selector)
-case (0) ! 1. periodic-periodic
-   
-  SLL_ALLOCATE( interpolator%knots1(2*spline_degree1+2),ierr )
-  SLL_ALLOCATE( interpolator%knots2(2*spline_degree2+2),ierr )
-
-case (9) ! 2. dirichlet-left, dirichlet-right, periodic
-
-  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-  SLL_ALLOCATE( interpolator%knots2(2*spline_degree2+2),ierr )
-
-case (576) ! 3. periodic, dirichlet-bottom, dirichlet-top
-
-  SLL_ALLOCATE( interpolator%knots1(2*spline_degree1+2),ierr )
-  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-
-case default
-
-  SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-  SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-
-end select
-
 tmp1 = num_pts1+ 4*spline_degree1
 tmp2 = num_pts2+ 4*spline_degree2
 SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
 
-! knots and coeff splines allocations 
 interpolator%coeff_splines(:,:) = 0.0_f64
-! the minimun is to be of class C^0 everywhere on the knots
-! i.e. each knot have multiplicity (spline_degree1+1) 
-! so the maximun number of knots is num_pts1*(spline_degree1+1)
 SLL_CLEAR_ALLOCATE( interpolator%t1(1:num_pts1*(spline_degree1+1)),ierr)
 SLL_CLEAR_ALLOCATE( interpolator%t2(1:num_pts2*(spline_degree2+1)),ierr) 
 
@@ -2001,6 +1969,12 @@ sll_int32 :: j
 sll_int32 :: lefty
 sll_int32 :: ierr
 
+sll_real64, dimension(:),   pointer :: tmp_t1
+sll_real64, dimension(:),   pointer :: tmp_t2
+sll_real64, dimension(:,:), pointer :: tmp_coeff
+sll_real64, allocatable :: t1(:)
+sll_real64, allocatable :: t2(:)
+
 nx = interpolator%size_coeffs1
 ny = interpolator%size_coeffs2
 kx = interpolator%spline_degree1+1
@@ -2035,13 +2009,23 @@ SLL_ASSERT( x <= interpolator%eta1_max )
 SLL_ASSERT( y >= interpolator%eta2_min )
 SLL_ASSERT( y <= interpolator%eta2_max )
 
-call interv(interpolator%deboor(2), interpolator%t2(1:ny+ky), ny+ky, y, lefty, ierr)
+tmp_t1    => interpolator%t1(1:interpolator%size_t1)
+tmp_t2    => interpolator%t2(1:interpolator%size_t2)
+tmp_coeff => interpolator%coeff_splines(1:nx,1:ny)
+
+allocate(t1(nx+kx))
+allocate(t2(ny+ky))
+
+t1 = interpolator%t1(1:nx+kx)
+t2 = interpolator%t2(1:ny+ky)
+
+call interv(interpolator%deboor(2), t2, ny+ky, y, lefty, ierr)
 
 if (ierr .ne. 0) return 
 
 do j = 1, ky
   tab     = interpolator%coeff_splines(1:nx,lefty-ky+j)
-  coef(j) = bvalue(interpolator%deboor(1), interpolator%t1, tab, nx, kx, x, 0)
+  coef(j) = bvalue(interpolator%deboor(1), t1, tab, nx, kx, x, 0)
 end do
 
 ty = interpolator%t2(lefty-ky+1:lefty+ky)
@@ -2085,9 +2069,11 @@ sll_real64, dimension(:), pointer :: coef
 sll_real64, dimension(:), pointer :: tab
 sll_real64, dimension(:), pointer :: ty
 
-sll_real64, dimension(:), pointer :: tmp_bcoef 
-sll_real64, dimension(:), pointer :: tmp_t1
-sll_real64, dimension(:), pointer :: tmp_t2
+sll_real64, dimension(:),   pointer :: tmp_t1
+sll_real64, dimension(:),   pointer :: tmp_t2
+sll_real64, dimension(:,:), pointer :: tmp_coeff
+sll_real64, allocatable :: t1(:)
+sll_real64, allocatable :: t2(:)
 
 sll_int32 :: j
 sll_int32 :: lefty
@@ -2125,10 +2111,16 @@ SLL_ASSERT( y >= interpolator%eta2_min )
 SLL_ASSERT( y <= interpolator%eta2_max )
 
 tmp_t1 => interpolator%t1(1:interpolator%size_t1)
-tmp_t1 => interpolator%t2(1:interpolator%size_t2)
-tmp_coeff => interpolator%coeff_splines(1:size_coeffs1,1:size_coeffs2)
+tmp_t2 => interpolator%t2(1:interpolator%size_t2)
+tmp_coeff => interpolator%coeff_splines(1:nx,1:nx)
 
-call interv(interpolator%deboor(2),interpolator%t2(1:ny+ky),ny+ky,y,lefty,ierr)
+allocate(t1(nx+kx))
+allocate(t2(ny+ky))
+
+t1 = interpolator%t1(1:nx+kx)
+t2 = interpolator%t2(1:ny+ky)
+
+call interv(interpolator%deboor(2),t2,ny+ky,y,lefty,ierr)
     
 if (ierr .ne. 0)  return 
 
@@ -2139,11 +2131,11 @@ SLL_ALLOCATE(ty(1:2*ky), ierr)
 do j = 1, ky
        
   tab     = interpolator%coeff_splines(1:nx,lefty-ky+j)
-  coef(j) = bvalue(interpolator%deboor(1), interpolator%t1, tab, nx, kx, x, deriv1 )
+  coef(j) = bvalue(interpolator%deboor(1), t1, tab, nx, kx, x, deriv1 )
        
 end do
 
-ty = interpolator%t2(lefty-ky+1:lefty+ky)
+ty = t2(lefty-ky+1:lefty+ky)
 
 val = bvalue(interpolator%deboor(2), ty, coef, ky, ky, y, deriv2 )
 
@@ -2184,6 +2176,11 @@ sll_int32, parameter  :: deriv2 = 1
 sll_int32 :: j
 sll_int32 :: lefty
 sll_int32 :: ierr = 0
+sll_real64, dimension(:),   pointer :: tmp_t1
+sll_real64, dimension(:),   pointer :: tmp_t2
+sll_real64, dimension(:,:), pointer :: tmp_coeff
+sll_real64, allocatable :: t1(:)
+sll_real64, allocatable :: t2(:)
 
 val = 0.0_f64 
 
@@ -2214,11 +2211,20 @@ SLL_ASSERT( x <= interpolator%eta1_max )
 SLL_ASSERT( y >= interpolator%eta2_min )
 SLL_ASSERT( y <= interpolator%eta2_max )
 
-call interv(interpolator%deboor(2), interpolator%t2(1:ny+ky), ny+ky, y, lefty, ierr )
+tmp_t1 => interpolator%t1(1:interpolator%size_t1)
+tmp_t2 => interpolator%t2(1:interpolator%size_t2)
+tmp_coeff => interpolator%coeff_splines(1:nx,1:ny)
+
+allocate(t1(nx+kx))
+allocate(t2(ny+ky))
+
+t1 = interpolator%t1(1:nx+kx)
+t2 = interpolator%t2(1:ny+ky)
+
+call interv(interpolator%deboor(2), t2(1:ny+ky), ny+ky, y, lefty, ierr )
     
 if ( ierr .ne. 0 ) return
 
-SLL_ASSERT(lefty-ky>0)
 SLL_ALLOCATE(coef(1:ky), ierr) 
 SLL_ALLOCATE(tab(1:nx),  ierr)
 SLL_ALLOCATE(ty(1:2*ky), ierr)
@@ -2230,7 +2236,7 @@ do j = 1, ky
        
 end do
 
-ty =  interpolator%t2(lefty-ky+1:lefty+ky)
+ty =  t2(lefty-ky+1:lefty+ky)
 val = bvalue(interpolator%deboor(2), ty, coef, ky, ky, y, deriv2 )
 
 end function interpolate_derivative2_ad2d
