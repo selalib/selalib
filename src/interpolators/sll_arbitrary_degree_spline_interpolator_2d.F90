@@ -38,10 +38,10 @@ type, extends(sll_interpolator_2d_base) :: &
   sll_real64                          :: eta1_max
   sll_real64                          :: eta2_min
   sll_real64                          :: eta2_max
-  sll_int32                           :: bc_min1
-  sll_int32                           :: bc_max1
-  sll_int32                           :: bc_min2
-  sll_int32                           :: bc_max2
+  sll_int32                           :: bc1_min
+  sll_int32                           :: bc1_max
+  sll_int32                           :: bc2_min
+  sll_int32                           :: bc2_max
   sll_int32                           :: spline_degree1
   sll_int32                           :: spline_degree2
   sll_real64, dimension(:), pointer   :: t1
@@ -149,10 +149,10 @@ end subroutine delete_arbitrary_degree_2d_interpolator
 !> @param[in] eta1_max the maximun in the direction eta1
 !> @param[in] eta2_min the minimun in the direction eta2
 !> @param[in] eta2_max the maximun in the direction eta2
-!> @param[in] bc_min1  the boundary condition at left in the direction eta1
-!> @param[in] bc_max1 the boundary condition at right in the direction eta2
-!> @param[in] bc_min2 the boundary condition at left in the direction eta2
-!> @param[in] bc_max2 the boundary condition at right in the direction eta2
+!> @param[in] bc1_min  the boundary condition at left in the direction eta1
+!> @param[in] bc1_max  the boundary condition at right in the direction eta2
+!> @param[in] bc2_min  the boundary condition at left in the direction eta2
+!> @param[in] bc2_max  the boundary condition at right in the direction eta2
 !> @param[in] spline_degree1 the degree of B-spline in the direction eta1
 !> @param[in] spline_degree2 the degre of B-spline in the direction eta2
 !> @return the type sll_arbitrary_degree_spline_interpolator_2d
@@ -163,10 +163,10 @@ function new_arbitrary_degree_spline_interp2d( num_pts1,       &
                                                eta1_max,       &
                                                eta2_min,       &
                                                eta2_max,       &
-                                               bc_min1,        &
-                                               bc_max1,        &
-                                               bc_min2,        &
-                                               bc_max2,        &
+                                               bc1_min,        &
+                                               bc1_max,        &
+                                               bc2_min,        &
+                                               bc2_max,        &
                                                spline_degree1, &
                                                spline_degree2) result( res )
 
@@ -178,10 +178,10 @@ sll_real64, intent(in) :: eta1_min
 sll_real64, intent(in) :: eta1_max
 sll_real64, intent(in) :: eta2_min
 sll_real64, intent(in) :: eta2_max
-sll_int32,  intent(in) :: bc_min1
-sll_int32,  intent(in) :: bc_max1
-sll_int32,  intent(in) :: bc_min2
-sll_int32,  intent(in) :: bc_max2
+sll_int32,  intent(in) :: bc1_min
+sll_int32,  intent(in) :: bc1_max
+sll_int32,  intent(in) :: bc2_min
+sll_int32,  intent(in) :: bc2_max
 sll_int32,  intent(in) :: spline_degree1
 sll_int32,  intent(in) :: spline_degree2
 
@@ -196,10 +196,10 @@ call initialize_ad2d_interpolator( res,            &
                                    eta1_max,       &
                                    eta2_min,       &
                                    eta2_max,       &
-                                   bc_min1,        &
-                                   bc_max1,        &
-                                   bc_min2,        &
-                                   bc_max2,        &
+                                   bc1_min,        &
+                                   bc1_max,        &
+                                   bc2_min,        &
+                                   bc2_max,        &
                                    spline_degree1, &
                                    spline_degree2)
 
@@ -217,10 +217,10 @@ end function new_arbitrary_degree_spline_interp2d
 !> @param[in] eta1_max the maximun in the direction eta1
 !> @param[in] eta2_min the minimun in the direction eta2
 !> @param[in] eta2_max the maximun in the direction eta2
-!> @param[in] bc_min1  the boundary condition at left in the direction eta1
-!> @param[in] bc_max1 the boundary condition at right in the direction eta2
-!> @param[in] bc_min2 the boundary condition at left in the direction eta2
-!> @param[in] bc_max2 the boundary condition at right in the direction eta2
+!> @param[in] bc1_min  the boundary condition at left in the direction eta1
+!> @param[in] bc1_max the boundary condition at right in the direction eta2
+!> @param[in] bc2_min the boundary condition at left in the direction eta2
+!> @param[in] bc2_max the boundary condition at right in the direction eta2
 !> @param[in] spline_degree1 the degree of B-spline in the direction eta1
 !> @param[in] spline_degree2 the degre of B-spline in the direction eta2
 !> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_2d
@@ -231,10 +231,10 @@ subroutine initialize_ad2d_interpolator( interpolator,   &
                                          eta1_max,       &
                                          eta2_min,       &
                                          eta2_max,       &
-                                         bc_min1,        &
-                                         bc_max1,        &
-                                         bc_min2,        &
-                                         bc_max2,        &
+                                         bc1_min,        &
+                                         bc1_max,        &
+                                         bc2_min,        &
+                                         bc2_max,        &
                                          spline_degree1, &
                                          spline_degree2)
 
@@ -246,10 +246,10 @@ sll_real64, intent(in)  :: eta1_min
 sll_real64, intent(in)  :: eta1_max
 sll_real64, intent(in)  :: eta2_min
 sll_real64, intent(in)  :: eta2_max
-sll_int32,  intent(in)  :: bc_min1
-sll_int32,  intent(in)  :: bc_max1
-sll_int32,  intent(in)  :: bc_min2
-sll_int32,  intent(in)  :: bc_max2
+sll_int32,  intent(in)  :: bc1_min
+sll_int32,  intent(in)  :: bc1_max
+sll_int32,  intent(in)  :: bc2_min
+sll_int32,  intent(in)  :: bc2_max
 sll_int32,  intent(in)  :: spline_degree1
 sll_int32,  intent(in)  :: spline_degree2
 
@@ -260,15 +260,15 @@ sll_int64 :: bc_selector
 
 
 ! do some argument checking...
-if(((bc_min1  == SLL_PERIODIC).and.(bc_max1.ne. SLL_PERIODIC)).or.&
-   ((bc_max1 == SLL_PERIODIC).and.(bc_min1 .ne. SLL_PERIODIC)))then
+if(((bc1_min  == SLL_PERIODIC).and.(bc1_max.ne. SLL_PERIODIC)).or.&
+   ((bc1_max == SLL_PERIODIC).and.(bc1_min .ne. SLL_PERIODIC)))then
    print *, 'initialize_arbitrary_degree_2d_interpolator, ERROR: ', &
         'if one boundary condition is specified as periodic, then ', &
         'both must be. Error in first direction.'
 end if
 
-if(((bc_min2 == SLL_PERIODIC).and.(bc_max2.ne. SLL_PERIODIC)).or.&
-   ((bc_max2 == SLL_PERIODIC).and.(bc_min2 .ne. SLL_PERIODIC)))then
+if(((bc2_min == SLL_PERIODIC).and.(bc2_max.ne. SLL_PERIODIC)).or.&
+   ((bc2_max == SLL_PERIODIC).and.(bc2_min .ne. SLL_PERIODIC)))then
    print *, 'initialize_arbitrary_degree_2d_interpolator, ERROR: ', &
         'if one boundary condition is specified as periodic, then ', &
         'both must be. Error in second direction.'
@@ -276,18 +276,18 @@ end if
 
 bc_selector = 0
 
-if( bc_min1 == SLL_DIRICHLET ) bc_selector = bc_selector + 1
-if( bc_min1 == SLL_NEUMANN   ) bc_selector = bc_selector + 2
-if( bc_min1 == SLL_HERMITE   ) bc_selector = bc_selector + 4
-if( bc_max1 == SLL_DIRICHLET ) bc_selector = bc_selector + 8
-if( bc_max1 == SLL_NEUMANN   ) bc_selector = bc_selector + 16
-if( bc_max1 == SLL_HERMITE   ) bc_selector = bc_selector + 32
-if( bc_min2 == SLL_DIRICHLET ) bc_selector = bc_selector + 64
-if( bc_min2 == SLL_NEUMANN   ) bc_selector = bc_selector + 128
-if( bc_min2 == SLL_HERMITE   ) bc_selector = bc_selector + 256
-if( bc_max2 == SLL_DIRICHLET ) bc_selector = bc_selector + 512
-if( bc_max2 == SLL_NEUMANN   ) bc_selector = bc_selector + 1024
-if( bc_max2 == SLL_HERMITE   ) bc_selector = bc_selector + 2048
+if( bc1_min == SLL_DIRICHLET ) bc_selector = bc_selector + 1
+if( bc1_min == SLL_NEUMANN   ) bc_selector = bc_selector + 2
+if( bc1_min == SLL_HERMITE   ) bc_selector = bc_selector + 4
+if( bc1_max == SLL_DIRICHLET ) bc_selector = bc_selector + 8
+if( bc1_max == SLL_NEUMANN   ) bc_selector = bc_selector + 16
+if( bc1_max == SLL_HERMITE   ) bc_selector = bc_selector + 32
+if( bc2_min == SLL_DIRICHLET ) bc_selector = bc_selector + 64
+if( bc2_min == SLL_NEUMANN   ) bc_selector = bc_selector + 128
+if( bc2_min == SLL_HERMITE   ) bc_selector = bc_selector + 256
+if( bc2_max == SLL_DIRICHLET ) bc_selector = bc_selector + 512
+if( bc2_max == SLL_NEUMANN   ) bc_selector = bc_selector + 1024
+if( bc2_max == SLL_HERMITE   ) bc_selector = bc_selector + 2048
 
 interpolator%spline_degree1 = spline_degree1
 interpolator%spline_degree2 = spline_degree2
@@ -295,10 +295,10 @@ interpolator%eta1_min       = eta1_min
 interpolator%eta1_max       = eta1_max
 interpolator%eta2_min       = eta2_min
 interpolator%eta2_max       = eta2_max
-interpolator%bc_min1        = bc_min1
-interpolator%bc_max1        = bc_max1
-interpolator%bc_min2        = bc_min2
-interpolator%bc_max2        = bc_max2
+interpolator%bc1_min        = bc1_min
+interpolator%bc1_max        = bc1_max
+interpolator%bc2_min        = bc2_min
+interpolator%bc2_max        = bc2_max
 interpolator%bc_selector    = bc_selector
 interpolator%num_pts1       = num_pts1
 interpolator%num_pts2       = num_pts2
@@ -362,9 +362,9 @@ end subroutine set_coeff_splines_values_1d
 
 !> Initialization of the boundary for interpolator arbitrary degree splines 2d.
 !> The parameters are
-!> @param[in] value_min1 a 1d array contains values in the left in the direction 1  
-!> @param[in] value_max1 a 1d array contains values in the right in the direction 1 
-!> @param[in] value_min2 a 1d array contains values in the left in the direction 2 
+!> @param[in]  value_min1 a 1d array contains values in the left  in the direction 1  
+!> @param[in]  value_max1 a 1d array contains values in the right in the direction 1 
+!> @param[in]  value_min2 a 1d array contains values in the left  in the direction 2 
 !> @param[in]  value_max2 a 1d array contains values in the right in the direction 2
 !> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_2d
 subroutine set_boundary_value2d( interpolator, &
@@ -382,10 +382,10 @@ sll_real64, dimension(:), optional :: value_max2
 
 sll_int32  :: num_pts1
 sll_int32  :: num_pts2
-sll_int32  :: bc_min1
-sll_int32  :: bc_max1
-sll_int32  :: bc_min2
-sll_int32  :: bc_max2
+sll_int32  :: bc1_min
+sll_int32  :: bc1_max
+sll_int32  :: bc2_min
+sll_int32  :: bc2_max
 sll_int32  :: spline_degree1
 sll_int32  :: spline_degree2
 sll_real64 :: eta1_min
@@ -395,10 +395,10 @@ sll_real64 :: eta2_max
 
 num_pts1       = interpolator%num_pts1
 num_pts2       = interpolator%num_pts2
-bc_min1        = interpolator%bc_min1 
-bc_max1        = interpolator%bc_max1 
-bc_min2        = interpolator%bc_min2  
-bc_max2        = interpolator%bc_max2
+bc1_min        = interpolator%bc1_min 
+bc1_max        = interpolator%bc1_max 
+bc2_min        = interpolator%bc2_min  
+bc2_max        = interpolator%bc2_max
 spline_degree1 = interpolator%spline_degree1
 spline_degree2 = interpolator%spline_degree2
 eta1_min       = interpolator%eta1_min
@@ -406,7 +406,7 @@ eta1_max       = interpolator%eta1_max
 eta2_min       = interpolator%eta2_min
 eta2_max       = interpolator%eta2_max
 
-if (bc_min1==SLL_DIRICHLET) then 
+if (bc1_min==SLL_DIRICHLET) then 
 
   if (present(value_min1)) then 
   
@@ -414,8 +414,8 @@ if (bc_min1==SLL_DIRICHLET) then
          num_pts2,                                &
          eta2_min,                                &
          eta2_max,                                &
-         bc_min2,                                 &
-         bc_max2,                                 &
+         bc2_min,                                 &
+         bc2_max,                                 &
          spline_degree2 )
       
     interpolator%value_min1(1:num_pts2) = value_min1
@@ -426,15 +426,15 @@ if (bc_min1==SLL_DIRICHLET) then
 
 end if
   
-if (bc_max1==SLL_DIRICHLET) then 
+if (bc1_max==SLL_DIRICHLET) then 
 
   if (present(value_max1)) then 
     call set_coeff_splines_values_1d( value_max1, &
          num_pts2,                                &
          eta2_min,                                &
          eta2_max,                                &
-         bc_min2,                                 &
-         bc_max2,                                 &
+         bc2_min,                                 &
+         bc2_max,                                 &
          spline_degree2 )
       
     interpolator%value_max1(1:num_pts2) = value_max1
@@ -445,15 +445,15 @@ if (bc_max1==SLL_DIRICHLET) then
 
 end if
 
-if (bc_min2==SLL_DIRICHLET) then 
+if (bc2_min==SLL_DIRICHLET) then 
 
   if (present(value_min2)) then 
     call set_coeff_splines_values_1d( value_min2, &
                                       num_pts1,   &
                                       eta1_min,   &
                                       eta1_max,   &
-                                      bc_min1,    &
-                                      bc_max1,    &
+                                      bc1_min,    &
+                                      bc1_max,    &
                                       spline_degree1 )
       
     interpolator%value_min2(1:num_pts1) = value_min2
@@ -464,15 +464,15 @@ if (bc_min2==SLL_DIRICHLET) then
 
 end if
   
-if (bc_max2==SLL_DIRICHLET) then 
+if (bc2_max==SLL_DIRICHLET) then 
 
   if (present(value_max2)) then 
     call set_coeff_splines_values_1d( value_max2,    &
                                       num_pts1,      &
                                       eta1_min,      &
                                       eta1_max,      &
-                                      bc_min1,       &
-                                      bc_max1,       &
+                                      bc1_min,       &
+                                      bc1_max,       &
                                       spline_degree1 )
      
     interpolator%value_max2(1:num_pts1) = value_max2
@@ -867,8 +867,8 @@ if (present(coeffs_1d)) then
 
     interpolator%size_coeffs1 = num_cells1 + sp_deg1 + 1
     interpolator%size_coeffs2 = num_cells2 + sp_deg2 + 1
-    interpolator%size_t1      = 2*sp_deg1 + num_cells1 + 1
-    interpolator%size_t2      = 2*sp_deg2 + num_cells2 + 1
+    interpolator%size_t1      = 2*sp_deg1  + num_cells1 + 1
+    interpolator%size_t2      = 2*sp_deg2  + num_cells2 + 1
     nb_spline_eta1            = num_cells1 + sp_deg1 + 1
     nb_spline_eta2            = num_cells2 + sp_deg2 + 1
     
@@ -946,8 +946,8 @@ if (present(coeffs_1d)) then
 
     interpolator%size_coeffs1 = num_cells1 + sp_deg1+1
     interpolator%size_coeffs2 = num_cells2 + sp_deg2+1
-    interpolator%size_t1      = 2*sp_deg1 + num_cells1 + 1
-    interpolator%size_t2      = 2*sp_deg2 + num_cells2 + 1
+    interpolator%size_t1      = 2*sp_deg1  + num_cells1+1
+    interpolator%size_t2      = 2*sp_deg2  + num_cells2+1
     nb_spline_eta1            = num_cells1 + sp_deg1 +1
     nb_spline_eta2            = num_cells2 + sp_deg2 +1
     
@@ -985,8 +985,8 @@ if (present(coeffs_1d)) then
        
     interpolator%size_coeffs1 = num_cells1 + sp_deg1
     interpolator%size_coeffs2 = num_cells2 + sp_deg2
-    interpolator%size_t1      = 2*sp_deg1 + num_cells1 + 1
-    interpolator%size_t2      = 2*sp_deg2 + num_cells2 + 1
+    interpolator%size_t1      = 2*sp_deg1  + num_cells1+1
+    interpolator%size_t2      = 2*sp_deg2  + num_cells2+1
     nb_spline_eta1            = num_cells1 + sp_deg1
     nb_spline_eta2            = num_cells2 + sp_deg2
     
@@ -1991,16 +1991,16 @@ x   = eta1
 y   = eta2
 val = 0.0_f64
 
-if (interpolator%bc_min1 == SLL_PERIODIC .and. eta1 < interpolator%eta1_min) then
+if (interpolator%bc1_min == SLL_PERIODIC .and. eta1 < interpolator%eta1_min) then
   x = eta1 + length1 
 end if
-if (interpolator%bc_max1 == SLL_PERIODIC .and. eta1 > interpolator%eta1_max) then
+if (interpolator%bc1_max == SLL_PERIODIC .and. eta1 > interpolator%eta1_max) then
   x = eta1 - length1
 end if
-if (interpolator%bc_min2 == SLL_PERIODIC .and. eta2 < interpolator%eta2_min) then
+if (interpolator%bc2_min == SLL_PERIODIC .and. eta2 < interpolator%eta2_min) then
   y = eta2 + length2
 end if
-if (interpolator%bc_max2 == SLL_PERIODIC .and. eta2 > interpolator%eta2_max) then
+if (interpolator%bc2_max == SLL_PERIODIC .and. eta2 > interpolator%eta2_max) then
   y = eta2 - length2
 end if
 
@@ -2092,16 +2092,16 @@ ky = interpolator%spline_degree2+1
 x = eta1
 y = eta2
 
-if (interpolator%bc_min1 == SLL_PERIODIC .and. eta1 < interpolator%eta1_min) then
+if (interpolator%bc1_min == SLL_PERIODIC .and. eta1 < interpolator%eta1_min) then
   x = eta1 + length1 
 end if
-if (interpolator%bc_max1 == SLL_PERIODIC .and. eta1 > interpolator%eta1_max) then
+if (interpolator%bc1_max == SLL_PERIODIC .and. eta1 > interpolator%eta1_max) then
   x = eta1 - length1
 end if
-if (interpolator%bc_min2 == SLL_PERIODIC .and. eta2 < interpolator%eta2_min) then
+if (interpolator%bc2_min == SLL_PERIODIC .and. eta2 < interpolator%eta2_min) then
   y = eta2 + length2
 end if
-if (interpolator%bc_max2 == SLL_PERIODIC .and. eta2 > interpolator%eta2_max) then
+if (interpolator%bc2_max == SLL_PERIODIC .and. eta2 > interpolator%eta2_max) then
   y = eta2 - length2
 end if
 
@@ -2193,16 +2193,16 @@ length2 = interpolator%eta2_max-interpolator%eta2_min
 
 x = eta1
 y = eta2
-if (interpolator%bc_min1 == SLL_PERIODIC .and. eta1 < interpolator%eta1_min) then
+if (interpolator%bc1_min == SLL_PERIODIC .and. eta1 < interpolator%eta1_min) then
   x = eta1 + length1 
 end if
-if (interpolator%bc_max1 == SLL_PERIODIC .and. eta1 > interpolator%eta1_max) then
+if (interpolator%bc1_max == SLL_PERIODIC .and. eta1 > interpolator%eta1_max) then
   x = eta1 - length1
 end if
-if (interpolator%bc_min2 == SLL_PERIODIC .and. eta2 < interpolator%eta2_min) then
+if (interpolator%bc2_min == SLL_PERIODIC .and. eta2 < interpolator%eta2_min) then
   y = eta2 + length2
 end if
-if (interpolator%bc_max2 == SLL_PERIODIC .and. eta2 > interpolator%eta2_max) then
+if (interpolator%bc2_max == SLL_PERIODIC .and. eta2 > interpolator%eta2_max) then
   y = eta2 - length2
 end if
 
@@ -2242,982 +2242,978 @@ val = bvalue(interpolator%deboor(2), ty, coef, ky, ky, y, deriv2 )
 end function interpolate_derivative2_ad2d
 
   
-  function interpolate_array_ad2d( &
-  this, &
-  num_points1, &
-  num_points2, &
-  data_in, &
-  eta1, &
-  eta2 ) result(res)
-    
-    class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)  :: this
-    sll_real64,  dimension(:,:), intent(in)         :: eta1
-    sll_real64,  dimension(:,:), intent(in)         :: eta2
-    sll_real64, dimension(:,:), intent(in)         :: data_in
-    sll_int32, intent(in)         :: num_points1
-    sll_int32, intent(in)         :: num_points2
-
-    sll_real64, dimension(num_points1,num_points2) :: res
-    
-    print *, '#interpolate_array_ad2d: not implemented'
-    res = -1000000._f64
-    print *,this%num_pts1
-    print *,maxval(eta1)
-    print *,maxval(eta2)
-    print *,maxval(data_in)
-    print *,num_points1
-    print *,num_points2
-    stop
-  end function !interpolate_array_ad2d
+function interpolate_array_ad2d( this,            &
+                                 num_points1,     &
+                                 num_points2,     &
+                                 data_in,         &
+                                 eta1,            &
+                                 eta2 ) result(res)
   
-  function interpolate_2d_array_disp_ad2d( &
-       this,        &
-       num_points1, &
-       num_points2, &
-       data_in,     &
-       alpha1,      &
-       alpha2) result(res)
-      
-    class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)    :: this
-    sll_int32, intent(in)                          :: num_points1  
-    sll_int32, intent(in)                          :: num_points2 
-    sll_real64, dimension(:,:), intent(in)         :: data_in
-    sll_real64, dimension(:,:), intent(in)         :: alpha1
-    sll_real64, dimension(:,:), intent(in)         :: alpha2  
-    sll_real64, dimension(num_points1,num_points2) :: res
+class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)  :: this
+
+sll_real64, dimension(:,:), intent(in) :: eta1
+sll_real64, dimension(:,:), intent(in) :: eta2
+sll_real64, dimension(:,:), intent(in) :: data_in
+sll_int32,                  intent(in) :: num_points1
+sll_int32,                  intent(in) :: num_points2
+
+sll_real64, dimension(num_points1,num_points2) :: res
+
+print *, '#interpolate_array_ad2d: not implemented'
+res = -1000000._f64
+print *,this%num_pts1
+print *,maxval(eta1)
+print *,maxval(eta2)
+print *,maxval(data_in)
+print *,num_points1
+print *,num_points2
+stop
+end function !interpolate_array_ad2d
+  
+function interpolate_2d_array_disp_ad2d( this,        &
+                                         num_points1, &
+                                         num_points2, &
+                                         data_in,     &
+                                         alpha1,      &
+                                         alpha2) result(res)
     
+class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)    :: this
+
+sll_int32,                  intent(in)         :: num_points1  
+sll_int32,                  intent(in)         :: num_points2 
+sll_real64, dimension(:,:), intent(in)         :: data_in
+sll_real64, dimension(:,:), intent(in)         :: alpha1
+sll_real64, dimension(:,:), intent(in)         :: alpha2  
+sll_real64, dimension(num_points1,num_points2) :: res
+
+print *, '#interpolate_2d_array_disp_ad2d: not implemented.'
+!for preventing warning of unused objects
+print *,this%num_pts1
+print *,num_points1 
+print *,num_points2
+print *,maxval(data_in)
+print *,alpha1
+print *,alpha2     
+res = -1000000._f64
+stop
+  
+end function !interpolate_2d_array_disp_ad2d
     
-    
-    print *, '#interpolate_2d_array_disp_ad2d: not implemented.'
-    !for preventing warning of unused objects
-    print *,this%num_pts1
-    print *,num_points1 
-    print *,num_points2
-    print *,maxval(data_in)
-    print *,alpha1
-    print *,alpha2     
-    res = -1000000._f64
-    stop
-    
-  end function !interpolate_2d_array_disp_ad2d
-    
+function get_coefficients_ad2d(interpolator)
+class(sll_arbitrary_degree_spline_interpolator_2d), intent(in) :: interpolator
+sll_real64, dimension(:,:), pointer                            :: get_coefficients_ad2d     
+
+get_coefficients_ad2d => interpolator%coeff_splines
+
+end function get_coefficients_ad2d
+  
+!> Initialization of the boundary for interpolator arbitrary degree splines 2d.
+!> The parameters are
+!> @param[in] slope_min1 a 1d arrays contains values in the left in the direction eta1  
+!> @param[in] slope_max1 a 1d arrays contains values in the right in the direction eta1 
+!> @param[in] slope_min2 a 1d arrays contains values in the left in the direction eta2 
+!> @param[in] slope_max2 a 1d arrays contains values in the right in the direction eta2
+!> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_2d
+subroutine set_slope2d( interpolator, &
+                        slope_min1,   &
+                        slope_max1,   &
+                        slope_min2,   &
+                        slope_max2)
+
+class(sll_arbitrary_degree_spline_interpolator_2d)    :: interpolator
+sll_real64, dimension(:),optional :: slope_min1
+sll_real64, dimension(:),optional :: slope_max1
+sll_real64, dimension(:),optional :: slope_min2
+sll_real64, dimension(:),optional :: slope_max2
+class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp1d_min2=> null()
+class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp1d_max2 => null()
+sll_int32 :: sz_slope_min2,sz_slope_max2
+sll_int64 :: bc_selector
+sll_int32 :: num_pts1
+sll_int32 :: num_pts2
+sll_int32 :: bc1_min
+sll_int32 :: bc1_max
+sll_int32 :: bc2_min
+sll_int32 :: bc2_max
+
+num_pts1    = interpolator%num_pts1
+num_pts2    = interpolator%num_pts2
+bc_selector = interpolator%bc_selector
+bc1_min     = interpolator%bc1_min 
+bc1_max     = interpolator%bc1_max 
+bc2_min     = interpolator%bc2_min  
+bc2_max     = interpolator%bc2_max
+
+select case (bc_selector)
+case(0)
+case (9) ! dirichlet-left, dirichlet-right, periodic
+case (576) ! 3. periodic, dirichlet-bottom, dirichlet-top
+case (585) ! 4. dirichlet in all sides
+case (650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet
+
+  interpolator%slope_min1 = 0.0
+  interpolator%compute_slope_min1= .FALSE.
+  if ( present( slope_max1)) then 
+     interpolator%slope_max1 = slope_max1
+     interpolator%compute_slope_max1= .FALSE.
+  end if
+
+  interpolator%slope_min2 = 0.0_f64
+  interpolator%compute_slope_min2= .FALSE.
+  
+
+  if ( present( slope_max2)) then 
+     interpolator%compute_slope_max2= .FALSE.
+
+     
+     sz_slope_max2 = size(slope_max2)
+     if ( sz_slope_max2 .ne. interpolator%num_pts1 ) then 
+        print*, ' problem in the initialization of arb_deg_spline 2d'
+        print*, ' slope_max2 must have the size of numbers of pts in direction 1 '
+        stop
+     end if
+     
+     interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
+          interpolator%num_pts1, &
+          interpolator%eta1_min, &
+          interpolator%eta1_max, &
+          interpolator%bc1_min, &
+          interpolator%bc1_max, &
+          interpolator%spline_degree1 )
+     
+     call interp1d_max2%compute_interpolants(slope_max2(1:sz_slope_max2))
+     
+     interpolator%slope_max2(1:sz_slope_max2+2) = &
+          interp1d_max2%coeff_splines(1:sz_slope_max2+2)
+     call sll_delete(interp1d_max2)
+  else
+     print*, 'problem with slope top in case 780'
+  end if
+
+case(657) !left: Dirichlet, right: Neumann, bottom: Neumann, Top: Dirichlet 
+
+  if ( present( slope_min1)) then 
+     interpolator%slope_min1 = slope_min1
+     interpolator%compute_slope_min1= .FALSE.
+  end if
+  
+  
+  sz_slope_min2 = size(slope_min2)
+  interpolator%slope_max1 = 0.0_f64
+  interpolator%compute_slope_max1= .FALSE.
+  
+  interpolator%slope_min2(1:sz_slope_min2+2) = 0.0_f64
+  interpolator%compute_slope_min2 = .FALSE.
+
+  if ( present( slope_max2)) then 
+     interpolator%compute_slope_max2= .FALSE.
+
+
+     sz_slope_max2 = size(slope_max2)
+     if ( sz_slope_max2 .ne. interpolator%num_pts1 ) then 
+        print*, ' problem in the initialization of arb_deg_spline 2d'
+        print*, ' slope_max2 must have the size of numbers of pts in direction 1 '
+        stop
+     end if
+     
+     interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
+          interpolator%num_pts1, &
+          interpolator%eta1_min, &
+          interpolator%eta1_max, &
+          interpolator%bc1_min, &
+          interpolator%bc1_max, &
+          interpolator%spline_degree1 )
+     
+     call interp1d_max2%compute_interpolants(&
+          slope_max2(1:sz_slope_max2))
+     
+     interpolator%slope_max2(1:sz_slope_max2+2) = &
+          interp1d_max2%coeff_splines(1:sz_slope_max2+2)
+     call sll_delete(interp1d_max2)
+  else
+     print*, 'problem with slope top in case 780'
+  end if
+
+case(780)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Dirichlet
+
+  if ( present( slope_min1)) then 
+     interpolator%slope_min1 = slope_min1
+     interpolator%compute_slope_min1= .FALSE.
+  end if
+   if ( present( slope_max1)) then 
+     interpolator%slope_max1 = slope_max1
+     interpolator%compute_slope_max1= .FALSE.
+  end if
+  
+  if (present(slope_min2)) then 
+      sz_slope_min2 = size(slope_min2)
+     if ( sz_slope_min2 .ne. interpolator%num_pts1 ) then 
+        print*, ' problem in the initialization of arb_deg_spline 2d'
+        print*, ' slope_min2 must have the size of numbers of pts in direction 1 '
+        stop
+     end if
+     
+     interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
+          interpolator%num_pts1, &
+          interpolator%eta1_min, &
+          interpolator%eta1_max, &
+          interpolator%bc1_min, &
+          interpolator%bc1_max, &
+          interpolator%spline_degree1 )
+     
+     call interp1d_min2%compute_interpolants( &
+          slope_min2(1:sz_slope_min2))
+     
+     interpolator%slope_min2(1:sz_slope_min2+2) = &
+          interp1d_min2%coeff_splines(1:sz_slope_min2+2)
+     call sll_delete(interp1d_min2)
+     interpolator%compute_slope_min2 = .FALSE.
+  else
+     print*, 'problem with slope bottom in case 780'
+  end if
+  if ( present( slope_max2)) then 
+     interpolator%compute_slope_max2= .FALSE.
+
+
+     sz_slope_max2 = size(slope_max2)
+     if ( sz_slope_max2 .ne. interpolator%num_pts1 ) then 
+        print*, ' problem in the initialization of arb_deg_spline 2d'
+        print*, ' slope_max2 must have the size of numbers of pts in direction 1 '
+        stop
+     end if
+     
+     interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
+          interpolator%num_pts1, &
+          interpolator%eta1_min, &
+          interpolator%eta1_max, &
+          interpolator%bc1_min, &
+          interpolator%bc1_max, &
+          interpolator%spline_degree1 )
+     
+     call interp1d_max2%compute_interpolants(&
+          slope_max2(1:sz_slope_max2))
+     
+     interpolator%slope_max2(1:sz_slope_max2+2) = &
+          interp1d_max2%coeff_splines(1:sz_slope_max2+2)
+     call sll_delete(interp1d_max2)
+  else
+     print*, 'problem with slope top in case 780'
+  end if
+
+case(801)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Dirichlet
+    if ( present( slope_max1)) then 
+       interpolator%slope_max1 = slope_max1
+       interpolator%compute_slope_max1= .FALSE.
+   end if
+
+    if ( present( slope_min1)) then 
+      interpolator%slope_min1 = slope_min1
+      interpolator%compute_slope_min1= .FALSE.
+   end if
    
-  
-  function get_coefficients_ad2d(interpolator)
-    class(sll_arbitrary_degree_spline_interpolator_2d), intent(in) :: interpolator
-    sll_real64, dimension(:,:), pointer           :: get_coefficients_ad2d     
-
-    get_coefficients_ad2d => interpolator%coeff_splines
-  end function get_coefficients_ad2d
-  
-  !> Initialization of the boundary for interpolator arbitrary degree splines 2d.
-  !> The parameters are
-  !> @param[in] slope_min1 a 1d arrays contains values in the left in the direction eta1  
-  !> @param[in] slope_max1 a 1d arrays contains values in the right in the direction eta1 
-  !> @param[in] slope_min2 a 1d arrays contains values in the left in the direction eta2 
-  !> @param[in] slope_max2 a 1d arrays contains values in the right in the direction eta2
-  !> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_2d
-  subroutine set_slope2d(&
-       interpolator,&
-       slope_min1,&
-       slope_max1,&
-       slope_min2,&
-       slope_max2)
-
-    use sll_module_arbitrary_degree_spline_interpolator_1d
-    class(sll_arbitrary_degree_spline_interpolator_2d)    :: interpolator
-    sll_real64, dimension(:),optional :: slope_min1
-    sll_real64, dimension(:),optional :: slope_max1
-    sll_real64, dimension(:),optional :: slope_min2
-    sll_real64, dimension(:),optional :: slope_max2
-    class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp1d_min2=> null()
-    class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp1d_max2 => null()
-    sll_int32 :: sz_slope_min2,sz_slope_max2
-    sll_int64 :: bc_selector
-    sll_int32 :: num_pts1
-    sll_int32 :: num_pts2
-    sll_int32 :: bc_min1
-    sll_int32 :: bc_max1
-    sll_int32 :: bc_min2
-    sll_int32 :: bc_max2
-
-    num_pts1 = interpolator%num_pts1
-    num_pts2 = interpolator%num_pts2
-    bc_selector = interpolator%bc_selector
-    bc_min1  = interpolator%bc_min1 
-    bc_max1 = interpolator%bc_max1 
-    bc_min2= interpolator%bc_min2  
-    bc_max2   = interpolator%bc_max2
-
-    select case (bc_selector)
-    case(0)
-    case (9) ! dirichlet-left, dirichlet-right, periodic
-    case (576) ! 3. periodic, dirichlet-bottom, dirichlet-top
-    case (585) ! 4. dirichlet in all sides
-    case (650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet
-       !if ( present( slope_min1)) then 
-       interpolator%slope_min1 = 0.0
-       interpolator%compute_slope_min1= .FALSE.
-       !end if
-       if ( present( slope_max1)) then 
-          interpolator%slope_max1 = slope_max1
-          interpolator%compute_slope_max1= .FALSE.
-       end if
-
-       interpolator%slope_min2 = 0.0_f64
-       interpolator%compute_slope_min2= .FALSE.
-       
-
-       if ( present( slope_max2)) then 
-          interpolator%compute_slope_max2= .FALSE.
-
-          
-          sz_slope_max2 = size(slope_max2)
-          if ( sz_slope_max2 .ne. interpolator%num_pts1 ) then 
-             print*, ' problem in the initialization of arb_deg_spline 2d'
-             print*, ' slope_max2 must have the size of numbers of pts in direction 1 '
-             stop
-          end if
-          
-          interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
-               interpolator%num_pts1, &
-               interpolator%eta1_min, &
-               interpolator%eta1_max, &
-               interpolator%bc_min1, &
-               interpolator%bc_max1, &
-               interpolator%spline_degree1 )
-          
-          call interp1d_max2%compute_interpolants(&
-               slope_max2(1:sz_slope_max2))
-          
-          interpolator%slope_max2(1:sz_slope_max2+2) = &
-               interp1d_max2%coeff_splines(1:sz_slope_max2+2)
-          call sll_delete(interp1d_max2)
-       else
-          print*, 'problem with slope top in case 780'
-       end if
-    case(657) !left: Dirichlet, right: Neumann, bottom: Neumann, Top: Dirichlet 
-       if ( present( slope_min1)) then 
-          interpolator%slope_min1 = slope_min1
-          interpolator%compute_slope_min1= .FALSE.
-       end if
-       
-       
+   if (present(slope_min2)) then 
        sz_slope_min2 = size(slope_min2)
-       interpolator%slope_max1 = 0.0_f64
-       interpolator%compute_slope_max1= .FALSE.
-       
-       interpolator%slope_min2(1:sz_slope_min2+2) = 0.0_f64
-       interpolator%compute_slope_min2 = .FALSE.
-
-       if ( present( slope_max2)) then 
-          interpolator%compute_slope_max2= .FALSE.
-
-
-          sz_slope_max2 = size(slope_max2)
-          if ( sz_slope_max2 .ne. interpolator%num_pts1 ) then 
-             print*, ' problem in the initialization of arb_deg_spline 2d'
-             print*, ' slope_max2 must have the size of numbers of pts in direction 1 '
-             stop
-          end if
-          
-          interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
-               interpolator%num_pts1, &
-               interpolator%eta1_min, &
-               interpolator%eta1_max, &
-               interpolator%bc_min1, &
-               interpolator%bc_max1, &
-               interpolator%spline_degree1 )
-          
-          call interp1d_max2%compute_interpolants(&
-               slope_max2(1:sz_slope_max2))
-          
-          interpolator%slope_max2(1:sz_slope_max2+2) = &
-               interp1d_max2%coeff_splines(1:sz_slope_max2+2)
-          call sll_delete(interp1d_max2)
-       else
-          print*, 'problem with slope top in case 780'
-       end if
-
-    case(780)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Dirichlet
-       if ( present( slope_min1)) then 
-          interpolator%slope_min1 = slope_min1
-          interpolator%compute_slope_min1= .FALSE.
-       end if
-        if ( present( slope_max1)) then 
-          interpolator%slope_max1 = slope_max1
-          interpolator%compute_slope_max1= .FALSE.
-       end if
-       
-       if (present(slope_min2)) then 
-           sz_slope_min2 = size(slope_min2)
-          if ( sz_slope_min2 .ne. interpolator%num_pts1 ) then 
-             print*, ' problem in the initialization of arb_deg_spline 2d'
-             print*, ' slope_min2 must have the size of numbers of pts in direction 1 '
-             stop
-          end if
-          
-          interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
-               interpolator%num_pts1, &
-               interpolator%eta1_min, &
-               interpolator%eta1_max, &
-               interpolator%bc_min1, &
-               interpolator%bc_max1, &
-               interpolator%spline_degree1 )
-          
-          call interp1d_min2%compute_interpolants( &
-               slope_min2(1:sz_slope_min2))
-          
-          interpolator%slope_min2(1:sz_slope_min2+2) = &
-               interp1d_min2%coeff_splines(1:sz_slope_min2+2)
-          call sll_delete(interp1d_min2)
-          interpolator%compute_slope_min2 = .FALSE.
-       else
-          print*, 'problem with slope bottom in case 780'
-       end if
-       if ( present( slope_max2)) then 
-          interpolator%compute_slope_max2= .FALSE.
-
-
-          sz_slope_max2 = size(slope_max2)
-          if ( sz_slope_max2 .ne. interpolator%num_pts1 ) then 
-             print*, ' problem in the initialization of arb_deg_spline 2d'
-             print*, ' slope_max2 must have the size of numbers of pts in direction 1 '
-             stop
-          end if
-          
-          interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
-               interpolator%num_pts1, &
-               interpolator%eta1_min, &
-               interpolator%eta1_max, &
-               interpolator%bc_min1, &
-               interpolator%bc_max1, &
-               interpolator%spline_degree1 )
-          
-          call interp1d_max2%compute_interpolants(&
-               slope_max2(1:sz_slope_max2))
-          
-          interpolator%slope_max2(1:sz_slope_max2+2) = &
-               interp1d_max2%coeff_splines(1:sz_slope_max2+2)
-          call sll_delete(interp1d_max2)
-       else
-          print*, 'problem with slope top in case 780'
-       end if
-
-    case(801)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Dirichlet
-        if ( present( slope_max1)) then 
-           interpolator%slope_max1 = slope_max1
-           interpolator%compute_slope_max1= .FALSE.
-       end if
-
-        if ( present( slope_min1)) then 
-          interpolator%slope_min1 = slope_min1
-          interpolator%compute_slope_min1= .FALSE.
-       end if
-       
-       if (present(slope_min2)) then 
-           sz_slope_min2 = size(slope_min2)
-          if ( sz_slope_min2 .ne. interpolator%num_pts1 ) then 
-             print*, ' problem in the initialization of arb_deg_spline 2d'
-             print*, ' slope_min2 must have the size of numbers of pts in direction 1 '
-             stop
-          end if
-          
-          interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
-               interpolator%num_pts1, &
-               interpolator%eta1_min, &
-               interpolator%eta1_max, &
-               interpolator%bc_min1, &
-               interpolator%bc_max1, &
-               interpolator%spline_degree1 )
-          
-          call interp1d_min2%compute_interpolants( &
-               slope_min2(1:sz_slope_min2))
-          
-          interpolator%slope_min2(1:sz_slope_min2+2) = &
-               interp1d_min2%coeff_splines(1:sz_slope_min2+2)
-          call sll_delete(interp1d_min2)
-          interpolator%compute_slope_min2 = .FALSE.
-       else
-          print*, 'problem with slope bottom in case 801'
-       end if
-       if ( present( slope_max2)) then 
-          interpolator%compute_slope_max2= .FALSE.
-
-
-          sz_slope_max2 = size(slope_max2)
-          if ( sz_slope_max2 .ne. interpolator%num_pts1 ) then 
-             print*, ' problem in the initialization of arb_deg_spline 2d'
-             print*, ' slope_max2 must have the size of numbers of pts in direction 1 '
-             stop
-          end if
-          
-          interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
-               interpolator%num_pts1, &
-               interpolator%eta1_min, &
-               interpolator%eta1_max, &
-               interpolator%bc_min1, &
-               interpolator%bc_max1, &
-               interpolator%spline_degree1 )
-          
-          call interp1d_max2%compute_interpolants(&
-               slope_max2(1:sz_slope_max2))
-          
-          interpolator%slope_max2(1:sz_slope_max2+2) = &
-               interp1d_max2%coeff_splines(1:sz_slope_max2+2)
-          call sll_delete(interp1d_max2)
-       else
-          print*, 'problem with slope top in case 801'
-       end if
-
-    case(804)  !left: Hermite, right: Hermite, bottom: Hermite, Top: Dirichlet
-
-        if ( present( slope_max1)) then 
-           interpolator%slope_max1 = slope_max1
-           interpolator%compute_slope_max1= .FALSE.
-       end if
-
-        if ( present( slope_min1)) then 
-          interpolator%slope_min1 = slope_min1
-          interpolator%compute_slope_min1= .FALSE.
-       end if
-       
-       if (present(slope_min2)) then 
-           sz_slope_min2 = size(slope_min2)
-          if ( sz_slope_min2 .ne. interpolator%num_pts1 ) then 
-             print*, ' problem in the initialization of arb_deg_spline 2d'
-             print*, ' slope_min2 must have the size of numbers of pts in direction 1 '
-             stop
-          end if
-          interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
-               interpolator%num_pts1, &
-               interpolator%eta1_min, &
-               interpolator%eta1_max, &
-               interpolator%bc_min1, &
-               interpolator%bc_max1, &
-               interpolator%spline_degree1 )
-          
-          call interp1d_min2%compute_interpolants( &
-               slope_min2(1:sz_slope_min2))
-          
-          interpolator%slope_min2(1:sz_slope_min2+2) = &
-               interp1d_min2%coeff_splines(1:sz_slope_min2+2)
-          call sll_delete(interp1d_min2)
-          interpolator%compute_slope_min2 = .FALSE.
-       else
-          print*, 'problem with slope bottom in case 801'
-       end if
-       if ( present( slope_max2)) then 
-          interpolator%compute_slope_max2= .FALSE.
-
-
-          sz_slope_max2 = size(slope_max2)
-          if ( sz_slope_max2 .ne. interpolator%num_pts1 ) then 
-             print*, ' problem in the initialization of arb_deg_spline 2d'
-             print*, ' slope_max2 must have the size of numbers of pts in direction 1 '
-             stop
-          end if
-          
-          interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
-               interpolator%num_pts1, &
-               interpolator%eta1_min, &
-               interpolator%eta1_max, &
-               interpolator%bc_min1, &
-               interpolator%bc_max1, &
-               interpolator%spline_degree1 )
-          
-          call interp1d_max2%compute_interpolants(&
-               slope_max2(1:sz_slope_max2))
-          
-          interpolator%slope_max2(1:sz_slope_max2+2) = &
-               interp1d_max2%coeff_splines(1:sz_slope_max2+2)
-          call sll_delete(interp1d_max2)
-       else
-          print*, 'problem with slope top in case 801'
-       end if
-
-
-    case(1098)  !left: Neumann, right: Dirichlet, bottom: Dirichlet, Top: Neumann
-       interpolator%slope_min1 = 0.0_f64
-       interpolator%compute_slope_min1= .FALSE.
-    
-       if ( present( slope_max1)) then 
-          interpolator%slope_max1 = slope_max1
-          interpolator%compute_slope_max1= .FALSE.
-       end if
-       
-       sz_slope_max2= size(slope_max2)
-       interpolator%slope_max2(1:sz_slope_max2+2) = 0.0_f64
-       interpolator%compute_slope_max2 = .FALSE.
-
-       if (present(slope_min2)) then 
-           sz_slope_min2 = size(slope_min2)
-          if ( sz_slope_min2 .ne. interpolator%num_pts1 ) then 
-             print*, ' problem in the initialization of arb_deg_spline 2d'
-             print*, ' slope_min2 must have the size of numbers of pts in direction 1 '
-             stop
-          end if
-          
-          interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
-               interpolator%num_pts1, &
-               interpolator%eta1_min, &
-               interpolator%eta1_max, &
-               interpolator%bc_min1, &
-               interpolator%bc_max1, &
-               interpolator%spline_degree1 )
-          
-          call interp1d_min2%compute_interpolants( &
-               slope_min2(1:sz_slope_min2))
-          
-          interpolator%slope_min2(1:sz_slope_min2+2) = &
-               interp1d_min2%coeff_splines(1:sz_slope_min2+2)
-          call sll_delete(interp1d_min2)
-          interpolator%compute_slope_min2 = .FALSE.
-       else
-          print*, 'problem with slope bottom in case 2124'
-       end if
-       if ( present( slope_max2)) then 
-          interpolator%compute_slope_max2= .FALSE.
-
-
-          sz_slope_max2 = size(slope_max2)
-          if ( sz_slope_max2 .ne. interpolator%num_pts1 ) then 
-             print*, ' problem in the initialization of arb_deg_spline 2d'
-             print*, ' slope_max2 must have the size of numbers of pts in direction 1 '
-             stop
-          end if
-          
-          interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
-               interpolator%num_pts1, &
-               interpolator%eta1_min, &
-               interpolator%eta1_max, &
-               interpolator%bc_min1, &
-               interpolator%bc_max1, &
-               interpolator%spline_degree1 )
-          
-          call interp1d_max2%compute_interpolants(&
-               slope_max2(1:sz_slope_max2))
-          
-          interpolator%slope_max2(1:sz_slope_max2+2) = &
-               interp1d_max2%coeff_splines(1:sz_slope_max2+2)
-          call sll_delete(interp1d_max2)
-       else
-          print*, 'problem with slope top in case 2124'
-       end if
-    case(1105)  !left: Dirichlet, right: Neumann, bottom: Dirichlet, Top: Neumann
-       if ( present( slope_max1)) then 
-          interpolator%slope_max1 = slope_max1
-          interpolator%compute_slope_max1= .FALSE.
-       end if
-       interpolator%slope_min1 = 0.0_f64
-       interpolator%compute_slope_min1= .FALSE.
-       
-       sz_slope_max2 = size(slope_max2)
-       interpolator%compute_slope_max2= .FALSE.
-       interpolator%slope_max2(1:sz_slope_max2+2) = 0.0_f64
-
-       if (present(slope_min2)) then 
-           sz_slope_min2 = size(slope_min2)
-          if ( sz_slope_min2 .ne. interpolator%num_pts1 ) then 
-             print*, ' problem in the initialization of arb_deg_spline 2d'
-             print*, ' slope_min2 must have the size of numbers of pts in direction 1 '
-             stop
-          end if
-          
-          interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
-               interpolator%num_pts1, &
-               interpolator%eta1_min, &
-               interpolator%eta1_max, &
-               interpolator%bc_min1, &
-               interpolator%bc_max1, &
-               interpolator%spline_degree1 )
-          
-          call interp1d_min2%compute_interpolants( &
-               slope_min2(1:sz_slope_min2))
-          
-          interpolator%slope_min2(1:sz_slope_min2+2) = &
-               interp1d_min2%coeff_splines(1:sz_slope_min2+2)
-          call sll_delete(interp1d_min2)
-          interpolator%compute_slope_min2 = .FALSE.
-       else
-          print*, 'problem with slope bottom in case 2145'
-       end if
-    case(1170)  !left: Neumann, right: Neumann, bottom: Neuman, Top: Neumann
-       
-       interpolator%slope_max1 = 0.0_f64
-       interpolator%compute_slope_max1= .FALSE.
-       
-       interpolator%slope_min1 = 0.0_f64
-       interpolator%compute_slope_min1= .FALSE.
-       
-       sz_slope_max2 = size(slope_max2)
-       interpolator%compute_slope_max2= .FALSE.
-       interpolator%slope_max2(1:sz_slope_max2+2) = 0.0_f64
-          
-       sz_slope_min2 = size(slope_min2)
-       interpolator%slope_min2(1:sz_slope_min2+2) = 0.0_f64
-       interpolator%compute_slope_min2 = .FALSE.
-
-    case(2338)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Hermite
-       if ( present( slope_max1)) then 
-          interpolator%slope_max1 = slope_max1
-          interpolator%compute_slope_max1= .FALSE.
-       end if
-       if ( present( slope_min1)) then 
-          interpolator%slope_min1 = slope_min1
-          interpolator%compute_slope_min1= .FALSE.
-       end if
-       
-       if ( present( slope_max2)) then 
-          interpolator%compute_slope_max2= .FALSE.
-
-          
-          sz_slope_max2 = size(slope_max2)
-          if ( sz_slope_max2 .ne. interpolator%num_pts1 ) then 
-             print*, ' problem in the initialization of arb_deg_spline 2d'
-             print*, ' slope_max2 must have the size of numbers of pts in direction 1 '
-             stop
-          end if
-          
-          interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
-               interpolator%num_pts1, &
-               interpolator%eta1_min, &
-               interpolator%eta1_max, &
-               interpolator%bc_min1, &
-               interpolator%bc_max1, &
-               interpolator%spline_degree1 )
-          
-          call interp1d_max2%compute_interpolants(&
-               slope_max2(1:sz_slope_max2))
-          
-          interpolator%slope_max2(1:sz_slope_max2+2) = &
-               interp1d_max2%coeff_splines(1:sz_slope_max2+2)
-          call sll_delete(interp1d_max2)
-       else
-          print*, 'problem with slope top in case 2145'
-       end if
-
-       if (present(slope_min2)) then 
-           sz_slope_min2 = size(slope_min2)
-          if ( sz_slope_min2 .ne. interpolator%num_pts1 ) then 
-             print*, ' problem in the initialization of arb_deg_spline 2d'
-             print*, ' slope_min2 must have the size of numbers of pts in direction 1 '
-             stop
-          end if
-          
-          interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
-               interpolator%num_pts1, &
-               interpolator%eta1_min, &
-               interpolator%eta1_max, &
-               interpolator%bc_min1, &
-               interpolator%bc_max1, &
-               interpolator%spline_degree1 )
-          
-          call interp1d_min2%compute_interpolants( &
-               slope_min2(1:sz_slope_min2))
-          
-          interpolator%slope_min2(1:sz_slope_min2+2) = &
-               interp1d_min2%coeff_splines(1:sz_slope_min2+2)
-          call sll_delete(interp1d_min2)
-          interpolator%compute_slope_min2 = .FALSE.
-       else
-          print*, 'problem with slope bottom in case 2145'
-       end if
-
-    case(2145)  !left: Dirichlet, right: Hermite, bottom: Dirichlet, Top: Hermite
-       if ( present( slope_max1)) then 
-          interpolator%slope_max1 = slope_max1
-          interpolator%compute_slope_max1= .FALSE.
-       end if
-        if ( present( slope_min1)) then 
-          interpolator%slope_min1 = slope_min1
-          interpolator%compute_slope_min1= .FALSE.
-       end if
-       
-       if ( present( slope_max2)) then 
-          interpolator%compute_slope_max2= .FALSE.
-
-          
-          sz_slope_max2 = size(slope_max2)
-          if ( sz_slope_max2 .ne. interpolator%num_pts1 ) then 
-             print*, ' problem in the initialization of arb_deg_spline 2d'
-             print*, ' slope_max2 must have the size of numbers of pts in direction 1 '
-             stop
-          end if
-          
-          interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
-               interpolator%num_pts1, &
-               interpolator%eta1_min, &
-               interpolator%eta1_max, &
-               interpolator%bc_min1, &
-               interpolator%bc_max1, &
-               interpolator%spline_degree1 )
-          
-          call interp1d_max2%compute_interpolants(&
-               slope_max2(1:sz_slope_max2))
-          
-          interpolator%slope_max2(1:sz_slope_max2+2) = &
-               interp1d_max2%coeff_splines(1:sz_slope_max2+2)
-          call sll_delete(interp1d_max2)
-       else
-          print*, 'problem with slope top in case 2145'
-       end if
-
-       if (present(slope_min2)) then 
-           sz_slope_min2 = size(slope_min2)
-          if ( sz_slope_min2 .ne. interpolator%num_pts1 ) then 
-             print*, ' problem in the initialization of arb_deg_spline 2d'
-             print*, ' slope_min2 must have the size of numbers of pts in direction 1 '
-             stop
-          end if
-          
-          interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
-               interpolator%num_pts1, &
-               interpolator%eta1_min, &
-               interpolator%eta1_max, &
-               interpolator%bc_min1, &
-               interpolator%bc_max1, &
-               interpolator%spline_degree1 )
-          
-          call interp1d_min2%compute_interpolants( &
-               slope_min2(1:sz_slope_min2))
-          
-          interpolator%slope_min2(1:sz_slope_min2+2) = &
-               interp1d_min2%coeff_splines(1:sz_slope_min2+2)
-          call sll_delete(interp1d_min2)
-          interpolator%compute_slope_min2 = .FALSE.
-       else
-          print*, 'problem with slope bottom in case 2145'
-       end if
-
-       
-    case(2124)  !left: Hermite, right: Dirichlet, bottom: Dirichlet, Top: Hermite
-       
-       if ( present( slope_min1)) then 
-          interpolator%slope_min1 = slope_min1
-          interpolator%compute_slope_min1= .FALSE.
-       end if
-        if ( present( slope_max1)) then 
-          interpolator%slope_max1 = slope_max1
-          interpolator%compute_slope_max1= .FALSE.
-       end if
-       
-       if ( present( slope_max2)) then 
-          interpolator%compute_slope_max2= .FALSE.
-
-
-          sz_slope_max2 = size(slope_max2)
-          if ( sz_slope_max2 .ne. interpolator%num_pts1 ) then 
-             print*, ' problem in the initialization of arb_deg_spline 2d'
-             print*, ' slope_max2 must have the size of numbers of pts in direction 1 '
-             stop
-          end if
-          
-          interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
-               interpolator%num_pts1, &
-               interpolator%eta1_min, &
-               interpolator%eta1_max, &
-               interpolator%bc_min1, &
-               interpolator%bc_max1, &
-               interpolator%spline_degree1 )
-          
-          call interp1d_max2%compute_interpolants(&
-               slope_max2(1:sz_slope_max2))
-          
-          interpolator%slope_max2(1:sz_slope_max2+2) = &
-               interp1d_max2%coeff_splines(1:sz_slope_max2+2)
-
-          call sll_delete(interp1d_max2)
-       else
-          print*, 'problem with slope top in case 2124'
-       end if
-
-       if (present(slope_min2)) then 
-           sz_slope_min2 = size(slope_min2)
-          if ( sz_slope_min2 .ne. interpolator%num_pts1 ) then 
-             print*, ' problem in the initialization of arb_deg_spline 2d'
-             print*, ' slope_min2 must have the size of numbers of pts in direction 1 '
-             stop
-          end if
-          
-          interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
-               interpolator%num_pts1, &
-               interpolator%eta1_min, &
-               interpolator%eta1_max, &
-               interpolator%bc_min1, &
-               interpolator%bc_max1, &
-               interpolator%spline_degree1 )
-          
-          call interp1d_min2%compute_interpolants( &
-               slope_min2(1:sz_slope_min2))
-          
-          interpolator%slope_min2(1:sz_slope_min2+2) = &
-               interp1d_min2%coeff_splines(1:sz_slope_min2+2)
-          call sll_delete(interp1d_min2)
-          interpolator%compute_slope_min2 = .FALSE.
-       else
-          print*, 'problem with slope bottom in case 2124'
-       end if
-       if ( present( slope_max2)) then 
-          interpolator%compute_slope_max2= .FALSE.
-
-
-          sz_slope_max2 = size(slope_max2)
-          if ( sz_slope_max2 .ne. interpolator%num_pts1 ) then 
-             print*, ' problem in the initialization of arb_deg_spline 2d'
-             print*, ' slope_max2 must have the size of numbers of pts in direction 1 '
-             stop
-          end if
-          
-          interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
-               interpolator%num_pts1, &
-               interpolator%eta1_min, &
-               interpolator%eta1_max, &
-               interpolator%bc_min1, &
-               interpolator%bc_max1, &
-               interpolator%spline_degree1 )
-          
-          call interp1d_max2%compute_interpolants(&
-               slope_max2(1:sz_slope_max2))
-          
-          interpolator%slope_max2(1:sz_slope_max2+2) = &
-               interp1d_max2%coeff_splines(1:sz_slope_max2+2)
-          call sll_delete(interp1d_max2)
-       else
-          print*, 'problem with slope top in case 2124'
-       end if
+      if ( sz_slope_min2 .ne. interpolator%num_pts1 ) then 
+         print*, ' problem in the initialization of arb_deg_spline 2d'
+         print*, ' slope_min2 must have the size of numbers of pts in direction 1 '
+         stop
+      end if
       
-    case(2148)  !left:Hermite , right: Hermite, bottom: Dirichlet, Top: Hermite  
-       if ( present( slope_min1)) then 
-          interpolator%slope_min1 = slope_min1
-          interpolator%compute_slope_min1= .FALSE.
-       end if
-       if ( present( slope_max1)) then 
-          interpolator%slope_max1 = slope_max1
-          interpolator%compute_slope_max1= .FALSE.
-       end if
-       
-       if ( present( slope_max2)) then 
-          interpolator%compute_slope_max2= .FALSE.
+      interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
+           interpolator%num_pts1, &
+           interpolator%eta1_min, &
+           interpolator%eta1_max, &
+           interpolator%bc1_min, &
+           interpolator%bc1_max, &
+           interpolator%spline_degree1 )
+      
+      call interp1d_min2%compute_interpolants( &
+           slope_min2(1:sz_slope_min2))
+      
+      interpolator%slope_min2(1:sz_slope_min2+2) = &
+           interp1d_min2%coeff_splines(1:sz_slope_min2+2)
+      call sll_delete(interp1d_min2)
+      interpolator%compute_slope_min2 = .FALSE.
+   else
+      print*, 'problem with slope bottom in case 801'
+   end if
+   if ( present( slope_max2)) then 
+      interpolator%compute_slope_max2= .FALSE.
 
 
-          sz_slope_max2 = size(slope_max2)
-          if ( sz_slope_max2 .ne. interpolator%num_pts1 ) then 
-             print*, ' problem in the initialization of arb_deg_spline 2d'
-             print*, ' slope_max2 must have the size of numbers of pts in direction 1 '
-             stop
-          end if
-          
-          interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
-               interpolator%num_pts1, &
-               interpolator%eta1_min, &
-               interpolator%eta1_max, &
-               interpolator%bc_min1, &
-               interpolator%bc_max1, &
-               interpolator%spline_degree1 )
-          
-          call interp1d_max2%compute_interpolants(&
-               slope_max2(1:sz_slope_max2))
-          
-          interpolator%slope_max2(1:sz_slope_max2+2) = &
-               interp1d_max2%coeff_splines(1:sz_slope_max2+2)
+      sz_slope_max2 = size(slope_max2)
+      if ( sz_slope_max2 .ne. interpolator%num_pts1 ) then 
+         print*, ' problem in the initialization of arb_deg_spline 2d'
+         print*, ' slope_max2 must have the size of numbers of pts in direction 1 '
+         stop
+      end if
+      
+      interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
+           interpolator%num_pts1, &
+           interpolator%eta1_min, &
+           interpolator%eta1_max, &
+           interpolator%bc1_min, &
+           interpolator%bc1_max, &
+           interpolator%spline_degree1 )
+      
+      call interp1d_max2%compute_interpolants(&
+           slope_max2(1:sz_slope_max2))
+      
+      interpolator%slope_max2(1:sz_slope_max2+2) = &
+           interp1d_max2%coeff_splines(1:sz_slope_max2+2)
+      call sll_delete(interp1d_max2)
+   else
+      print*, 'problem with slope top in case 801'
+   end if
 
-          call sll_delete(interp1d_max2)
-       else
-          print*, 'problem with slope top in case 2124'
-       end if
+case(804)  !left: Hermite, right: Hermite, bottom: Hermite, Top: Dirichlet
 
-       if (present(slope_min2)) then 
-           sz_slope_min2 = size(slope_min2)
-          if ( sz_slope_min2 .ne. interpolator%num_pts1 ) then 
-             print*, ' problem in the initialization of arb_deg_spline 2d'
-             print*, ' slope_min2 must have the size of numbers of pts in direction 1 '
-             stop
-          end if
-          
-          interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
-               interpolator%num_pts1, &
-               interpolator%eta1_min, &
-               interpolator%eta1_max, &
-               interpolator%bc_min1, &
-               interpolator%bc_max1, &
-               interpolator%spline_degree1 )
-          
-          call interp1d_min2%compute_interpolants( &
-               slope_min2(1:sz_slope_min2))
-          
-          interpolator%slope_min2(1:sz_slope_min2+2) = &
-               interp1d_min2%coeff_splines(1:sz_slope_min2+2)
-          call sll_delete(interp1d_min2)
-          interpolator%compute_slope_min2 = .FALSE.
-       else
-          print*, 'problem with slope bottom in case 2124'
-       end if
-       if ( present( slope_max2)) then 
-          interpolator%compute_slope_max2= .FALSE.
+    if ( present( slope_max1)) then 
+       interpolator%slope_max1 = slope_max1
+       interpolator%compute_slope_max1= .FALSE.
+   end if
 
-
-          sz_slope_max2 = size(slope_max2)
-          if ( sz_slope_max2 .ne. interpolator%num_pts1 ) then 
-             print*, ' problem in the initialization of arb_deg_spline 2d'
-             print*, ' slope_max2 must have the size of numbers of pts in direction 1 '
-             stop
-          end if
-          
-          interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
-               interpolator%num_pts1, &
-               interpolator%eta1_min, &
-               interpolator%eta1_max, &
-               interpolator%bc_min1, &
-               interpolator%bc_max1, &
-               interpolator%spline_degree1 )
-          
-          call interp1d_max2%compute_interpolants(&
-               slope_max2(1:sz_slope_max2))
-          
-          interpolator%slope_max2(1:sz_slope_max2+2) = &
-               interp1d_max2%coeff_splines(1:sz_slope_max2+2)
-          call sll_delete(interp1d_max2)
-       else
-          print*, 'problem with slope top in case 2124'
-       end if
-    case(2316)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Hermite
-       if ( present( slope_max1)) then 
-          interpolator%slope_max1 = slope_max1
-          interpolator%compute_slope_max1= .FALSE.
-       end if
-       if ( present( slope_min1)) then 
-          interpolator%slope_min1 = slope_min1
-          interpolator%compute_slope_min1= .FALSE.
-       end if
-       
-       if ( present( slope_max2)) then 
-          interpolator%compute_slope_max2= .FALSE.
+    if ( present( slope_min1)) then 
+      interpolator%slope_min1 = slope_min1
+      interpolator%compute_slope_min1= .FALSE.
+   end if
+   
+   if (present(slope_min2)) then 
+       sz_slope_min2 = size(slope_min2)
+      if ( sz_slope_min2 .ne. interpolator%num_pts1 ) then 
+         print*, ' problem in the initialization of arb_deg_spline 2d'
+         print*, ' slope_min2 must have the size of numbers of pts in direction 1 '
+         stop
+      end if
+      interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
+           interpolator%num_pts1, &
+           interpolator%eta1_min, &
+           interpolator%eta1_max, &
+           interpolator%bc1_min, &
+           interpolator%bc1_max, &
+           interpolator%spline_degree1 )
+      
+      call interp1d_min2%compute_interpolants( &
+           slope_min2(1:sz_slope_min2))
+      
+      interpolator%slope_min2(1:sz_slope_min2+2) = &
+           interp1d_min2%coeff_splines(1:sz_slope_min2+2)
+      call sll_delete(interp1d_min2)
+      interpolator%compute_slope_min2 = .FALSE.
+   else
+      print*, 'problem with slope bottom in case 801'
+   end if
+   if ( present( slope_max2)) then 
+      interpolator%compute_slope_max2= .FALSE.
 
 
-          sz_slope_max2 = size(slope_max2)
-          if ( sz_slope_max2 .ne. interpolator%num_pts1 ) then 
-             print*, ' problem in the initialization of arb_deg_spline 2d'
-             print*, ' slope_max2 must have the size of numbers of pts in direction 1 '
-             stop
-          end if
-          
-          interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
-               interpolator%num_pts1, &
-               interpolator%eta1_min, &
-               interpolator%eta1_max, &
-               interpolator%bc_min1, &
-               interpolator%bc_max1, &
-               interpolator%spline_degree1 )
-          
-          call interp1d_max2%compute_interpolants(&
-               slope_max2(1:sz_slope_max2))
-          
-          interpolator%slope_max2(1:sz_slope_max2+2) = &
-               interp1d_max2%coeff_splines(1:sz_slope_max2+2)
-          call sll_delete(interp1d_max2)
-       else
-          print*, 'problem with slope top in case 2340'
-       end if
-       
-       if (present(slope_min2)) then 
-           sz_slope_min2 = size(slope_min2)
-          if ( sz_slope_min2 .ne. interpolator%num_pts1 ) then 
-             print*, ' problem in the initialization of arb_deg_spline 2d'
-             print*, ' slope_min2 must have the size of numbers of pts in direction 1 '
-             stop
-          end if
-          
-          interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
-               interpolator%num_pts1, &
-               interpolator%eta1_min, &
-               interpolator%eta1_max, &
-               interpolator%bc_min1, &
-               interpolator%bc_max1, &
-               interpolator%spline_degree1 )
-          
-          call interp1d_min2%compute_interpolants( &
-               slope_min2(1:sz_slope_min2))
-          
-          interpolator%slope_min2(1:sz_slope_min2+2) = &
-               interp1d_min2%coeff_splines(1:sz_slope_min2+2)
-          call sll_delete(interp1d_min2)
-          interpolator%compute_slope_min2 = .FALSE.
-       else
-          print*, 'problem with slope bottom in case 2340'
-       end if
-    case(2340) ! Hermite in al sides
-
-       if ( present( slope_max1)) then 
-          interpolator%slope_max1 = slope_max1
-          interpolator%compute_slope_max1= .FALSE.
-       end if
-        if ( present( slope_min1)) then 
-          interpolator%slope_min1 = slope_min1
-          interpolator%compute_slope_min1= .FALSE.
-       end if
-       
-       if ( present( slope_max2)) then 
-          interpolator%compute_slope_max2= .FALSE.
+      sz_slope_max2 = size(slope_max2)
+      if ( sz_slope_max2 .ne. interpolator%num_pts1 ) then 
+         print*, ' problem in the initialization of arb_deg_spline 2d'
+         print*, ' slope_max2 must have the size of numbers of pts in direction 1 '
+         stop
+      end if
+      
+      interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
+           interpolator%num_pts1, &
+           interpolator%eta1_min, &
+           interpolator%eta1_max, &
+           interpolator%bc1_min, &
+           interpolator%bc1_max, &
+           interpolator%spline_degree1 )
+      
+      call interp1d_max2%compute_interpolants(&
+           slope_max2(1:sz_slope_max2))
+      
+      interpolator%slope_max2(1:sz_slope_max2+2) = &
+           interp1d_max2%coeff_splines(1:sz_slope_max2+2)
+      call sll_delete(interp1d_max2)
+   else
+      print*, 'problem with slope top in case 801'
+   end if
 
 
-          sz_slope_max2 = size(slope_max2)
-          if ( sz_slope_max2 .ne. interpolator%num_pts1 ) then 
-             print*, ' problem in the initialization of arb_deg_spline 2d'
-             print*, ' slope_max2 must have the size of numbers of pts in direction 1 '
-             stop
-          end if
-          
-          interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
-               interpolator%num_pts1, &
-               interpolator%eta1_min, &
-               interpolator%eta1_max, &
-               interpolator%bc_min1, &
-               interpolator%bc_max1, &
-               interpolator%spline_degree1 )
-          
-          call interp1d_max2%compute_interpolants(&
-               slope_max2(1:sz_slope_max2))
-          
-          interpolator%slope_max2(1:sz_slope_max2+2) = &
-               interp1d_max2%coeff_splines(1:sz_slope_max2+2)
-          call sll_delete(interp1d_max2)
-       else
-          print*, 'problem with slope top in case 2340'
-       end if
-       
-       if (present(slope_min2)) then 
-           sz_slope_min2 = size(slope_min2)
-          if ( sz_slope_min2 .ne. interpolator%num_pts1 ) then 
-             print*, ' problem in the initialization of arb_deg_spline 2d'
-             print*, ' slope_min2 must have the size of numbers of pts in direction 1 '
-             stop
-          end if
-          
-          interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
-               interpolator%num_pts1, &
-               interpolator%eta1_min, &
-               interpolator%eta1_max, &
-               interpolator%bc_min1, &
-               interpolator%bc_max1, &
-               interpolator%spline_degree1 )
-          
-          call interp1d_min2%compute_interpolants( &
-               slope_min2(1:sz_slope_min2))
-          
-          interpolator%slope_min2(1:sz_slope_min2+2) = &
-               interp1d_min2%coeff_splines(1:sz_slope_min2+2)
-          call sll_delete(interp1d_min2)
-          interpolator%compute_slope_min2 = .FALSE.
-       else
-          print*, 'problem with slope bottom in case 2340'
-       end if
-       
-    case default
-       print*,'initialize_ad2d_interpolator: BC combination not implemented.'
-    end select
-    
-  end subroutine set_slope2d
+case(1098)  !left: Neumann, right: Dirichlet, bottom: Dirichlet, Top: Neumann
+   interpolator%slope_min1 = 0.0_f64
+   interpolator%compute_slope_min1= .FALSE.
+
+   if ( present( slope_max1)) then 
+      interpolator%slope_max1 = slope_max1
+      interpolator%compute_slope_max1= .FALSE.
+   end if
+   
+   sz_slope_max2= size(slope_max2)
+   interpolator%slope_max2(1:sz_slope_max2+2) = 0.0_f64
+   interpolator%compute_slope_max2 = .FALSE.
+
+   if (present(slope_min2)) then 
+       sz_slope_min2 = size(slope_min2)
+      if ( sz_slope_min2 .ne. interpolator%num_pts1 ) then 
+         print*, ' problem in the initialization of arb_deg_spline 2d'
+         print*, ' slope_min2 must have the size of numbers of pts in direction 1 '
+         stop
+      end if
+      
+      interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
+           interpolator%num_pts1, &
+           interpolator%eta1_min, &
+           interpolator%eta1_max, &
+           interpolator%bc1_min, &
+           interpolator%bc1_max, &
+           interpolator%spline_degree1 )
+      
+      call interp1d_min2%compute_interpolants( &
+           slope_min2(1:sz_slope_min2))
+      
+      interpolator%slope_min2(1:sz_slope_min2+2) = &
+           interp1d_min2%coeff_splines(1:sz_slope_min2+2)
+      call sll_delete(interp1d_min2)
+      interpolator%compute_slope_min2 = .FALSE.
+   else
+      print*, 'problem with slope bottom in case 2124'
+   end if
+   if ( present( slope_max2)) then 
+      interpolator%compute_slope_max2= .FALSE.
+
+
+      sz_slope_max2 = size(slope_max2)
+      if ( sz_slope_max2 .ne. interpolator%num_pts1 ) then 
+         print*, ' problem in the initialization of arb_deg_spline 2d'
+         print*, ' slope_max2 must have the size of numbers of pts in direction 1 '
+         stop
+      end if
+      
+      interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
+           interpolator%num_pts1, &
+           interpolator%eta1_min, &
+           interpolator%eta1_max, &
+           interpolator%bc1_min, &
+           interpolator%bc1_max, &
+           interpolator%spline_degree1 )
+      
+      call interp1d_max2%compute_interpolants(&
+           slope_max2(1:sz_slope_max2))
+      
+      interpolator%slope_max2(1:sz_slope_max2+2) = &
+           interp1d_max2%coeff_splines(1:sz_slope_max2+2)
+      call sll_delete(interp1d_max2)
+   else
+      print*, 'problem with slope top in case 2124'
+   end if
+case(1105)  !left: Dirichlet, right: Neumann, bottom: Dirichlet, Top: Neumann
+   if ( present( slope_max1)) then 
+      interpolator%slope_max1 = slope_max1
+      interpolator%compute_slope_max1= .FALSE.
+   end if
+   interpolator%slope_min1 = 0.0_f64
+   interpolator%compute_slope_min1= .FALSE.
+   
+   sz_slope_max2 = size(slope_max2)
+   interpolator%compute_slope_max2= .FALSE.
+   interpolator%slope_max2(1:sz_slope_max2+2) = 0.0_f64
+
+   if (present(slope_min2)) then 
+       sz_slope_min2 = size(slope_min2)
+      if ( sz_slope_min2 .ne. interpolator%num_pts1 ) then 
+         print*, ' problem in the initialization of arb_deg_spline 2d'
+         print*, ' slope_min2 must have the size of numbers of pts in direction 1 '
+         stop
+      end if
+      
+      interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
+           interpolator%num_pts1, &
+           interpolator%eta1_min, &
+           interpolator%eta1_max, &
+           interpolator%bc1_min, &
+           interpolator%bc1_max, &
+           interpolator%spline_degree1 )
+      
+      call interp1d_min2%compute_interpolants( &
+           slope_min2(1:sz_slope_min2))
+      
+      interpolator%slope_min2(1:sz_slope_min2+2) = &
+           interp1d_min2%coeff_splines(1:sz_slope_min2+2)
+      call sll_delete(interp1d_min2)
+      interpolator%compute_slope_min2 = .FALSE.
+   else
+      print*, 'problem with slope bottom in case 2145'
+   end if
+case(1170)  !left: Neumann, right: Neumann, bottom: Neuman, Top: Neumann
+   
+   interpolator%slope_max1 = 0.0_f64
+   interpolator%compute_slope_max1= .FALSE.
+   
+   interpolator%slope_min1 = 0.0_f64
+   interpolator%compute_slope_min1= .FALSE.
+   
+   sz_slope_max2 = size(slope_max2)
+   interpolator%compute_slope_max2= .FALSE.
+   interpolator%slope_max2(1:sz_slope_max2+2) = 0.0_f64
+      
+   sz_slope_min2 = size(slope_min2)
+   interpolator%slope_min2(1:sz_slope_min2+2) = 0.0_f64
+   interpolator%compute_slope_min2 = .FALSE.
+
+case(2338)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Hermite
+   if ( present( slope_max1)) then 
+      interpolator%slope_max1 = slope_max1
+      interpolator%compute_slope_max1= .FALSE.
+   end if
+   if ( present( slope_min1)) then 
+      interpolator%slope_min1 = slope_min1
+      interpolator%compute_slope_min1= .FALSE.
+   end if
+   
+   if ( present( slope_max2)) then 
+      interpolator%compute_slope_max2= .FALSE.
+
+      
+      sz_slope_max2 = size(slope_max2)
+      if ( sz_slope_max2 .ne. interpolator%num_pts1 ) then 
+         print*, ' problem in the initialization of arb_deg_spline 2d'
+         print*, ' slope_max2 must have the size of numbers of pts in direction 1 '
+         stop
+      end if
+      
+      interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
+           interpolator%num_pts1, &
+           interpolator%eta1_min, &
+           interpolator%eta1_max, &
+           interpolator%bc1_min, &
+           interpolator%bc1_max, &
+           interpolator%spline_degree1 )
+      
+      call interp1d_max2%compute_interpolants(&
+           slope_max2(1:sz_slope_max2))
+      
+      interpolator%slope_max2(1:sz_slope_max2+2) = &
+           interp1d_max2%coeff_splines(1:sz_slope_max2+2)
+      call sll_delete(interp1d_max2)
+   else
+      print*, 'problem with slope top in case 2145'
+   end if
+
+   if (present(slope_min2)) then 
+       sz_slope_min2 = size(slope_min2)
+      if ( sz_slope_min2 .ne. interpolator%num_pts1 ) then 
+         print*, ' problem in the initialization of arb_deg_spline 2d'
+         print*, ' slope_min2 must have the size of numbers of pts in direction 1 '
+         stop
+      end if
+      
+      interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
+           interpolator%num_pts1, &
+           interpolator%eta1_min, &
+           interpolator%eta1_max, &
+           interpolator%bc1_min, &
+           interpolator%bc1_max, &
+           interpolator%spline_degree1 )
+      
+      call interp1d_min2%compute_interpolants( &
+           slope_min2(1:sz_slope_min2))
+      
+      interpolator%slope_min2(1:sz_slope_min2+2) = &
+           interp1d_min2%coeff_splines(1:sz_slope_min2+2)
+      call sll_delete(interp1d_min2)
+      interpolator%compute_slope_min2 = .FALSE.
+   else
+      print*, 'problem with slope bottom in case 2145'
+   end if
+
+case(2145)  !left: Dirichlet, right: Hermite, bottom: Dirichlet, Top: Hermite
+   if ( present( slope_max1)) then 
+      interpolator%slope_max1 = slope_max1
+      interpolator%compute_slope_max1= .FALSE.
+   end if
+    if ( present( slope_min1)) then 
+      interpolator%slope_min1 = slope_min1
+      interpolator%compute_slope_min1= .FALSE.
+   end if
+   
+   if ( present( slope_max2)) then 
+      interpolator%compute_slope_max2= .FALSE.
+
+      
+      sz_slope_max2 = size(slope_max2)
+      if ( sz_slope_max2 .ne. interpolator%num_pts1 ) then 
+         print*, ' problem in the initialization of arb_deg_spline 2d'
+         print*, ' slope_max2 must have the size of numbers of pts in direction 1 '
+         stop
+      end if
+      
+      interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
+           interpolator%num_pts1, &
+           interpolator%eta1_min, &
+           interpolator%eta1_max, &
+           interpolator%bc1_min, &
+           interpolator%bc1_max, &
+           interpolator%spline_degree1 )
+      
+      call interp1d_max2%compute_interpolants(&
+           slope_max2(1:sz_slope_max2))
+      
+      interpolator%slope_max2(1:sz_slope_max2+2) = &
+           interp1d_max2%coeff_splines(1:sz_slope_max2+2)
+      call sll_delete(interp1d_max2)
+   else
+      print*, 'problem with slope top in case 2145'
+   end if
+
+   if (present(slope_min2)) then 
+       sz_slope_min2 = size(slope_min2)
+      if ( sz_slope_min2 .ne. interpolator%num_pts1 ) then 
+         print*, ' problem in the initialization of arb_deg_spline 2d'
+         print*, ' slope_min2 must have the size of numbers of pts in direction 1 '
+         stop
+      end if
+      
+      interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
+           interpolator%num_pts1, &
+           interpolator%eta1_min, &
+           interpolator%eta1_max, &
+           interpolator%bc1_min, &
+           interpolator%bc1_max, &
+           interpolator%spline_degree1 )
+      
+      call interp1d_min2%compute_interpolants( &
+           slope_min2(1:sz_slope_min2))
+      
+      interpolator%slope_min2(1:sz_slope_min2+2) = &
+           interp1d_min2%coeff_splines(1:sz_slope_min2+2)
+      call sll_delete(interp1d_min2)
+      interpolator%compute_slope_min2 = .FALSE.
+   else
+      print*, 'problem with slope bottom in case 2145'
+   end if
+
+   
+case(2124)  !left: Hermite, right: Dirichlet, bottom: Dirichlet, Top: Hermite
+   
+   if ( present( slope_min1)) then 
+      interpolator%slope_min1 = slope_min1
+      interpolator%compute_slope_min1= .FALSE.
+   end if
+    if ( present( slope_max1)) then 
+      interpolator%slope_max1 = slope_max1
+      interpolator%compute_slope_max1= .FALSE.
+   end if
+   
+   if ( present( slope_max2)) then 
+      interpolator%compute_slope_max2= .FALSE.
+
+
+      sz_slope_max2 = size(slope_max2)
+      if ( sz_slope_max2 .ne. interpolator%num_pts1 ) then 
+         print*, ' problem in the initialization of arb_deg_spline 2d'
+         print*, ' slope_max2 must have the size of numbers of pts in direction 1 '
+         stop
+      end if
+      
+      interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
+           interpolator%num_pts1, &
+           interpolator%eta1_min, &
+           interpolator%eta1_max, &
+           interpolator%bc1_min, &
+           interpolator%bc1_max, &
+           interpolator%spline_degree1 )
+      
+      call interp1d_max2%compute_interpolants(&
+           slope_max2(1:sz_slope_max2))
+      
+      interpolator%slope_max2(1:sz_slope_max2+2) = &
+           interp1d_max2%coeff_splines(1:sz_slope_max2+2)
+
+      call sll_delete(interp1d_max2)
+   else
+      print*, 'problem with slope top in case 2124'
+   end if
+
+   if (present(slope_min2)) then 
+       sz_slope_min2 = size(slope_min2)
+      if ( sz_slope_min2 .ne. interpolator%num_pts1 ) then 
+         print*, ' problem in the initialization of arb_deg_spline 2d'
+         print*, ' slope_min2 must have the size of numbers of pts in direction 1 '
+         stop
+      end if
+      
+      interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
+           interpolator%num_pts1, &
+           interpolator%eta1_min, &
+           interpolator%eta1_max, &
+           interpolator%bc1_min, &
+           interpolator%bc1_max, &
+           interpolator%spline_degree1 )
+      
+      call interp1d_min2%compute_interpolants( &
+           slope_min2(1:sz_slope_min2))
+      
+      interpolator%slope_min2(1:sz_slope_min2+2) = &
+           interp1d_min2%coeff_splines(1:sz_slope_min2+2)
+      call sll_delete(interp1d_min2)
+      interpolator%compute_slope_min2 = .FALSE.
+   else
+      print*, 'problem with slope bottom in case 2124'
+   end if
+   if ( present( slope_max2)) then 
+      interpolator%compute_slope_max2= .FALSE.
+
+
+      sz_slope_max2 = size(slope_max2)
+      if ( sz_slope_max2 .ne. interpolator%num_pts1 ) then 
+         print*, ' problem in the initialization of arb_deg_spline 2d'
+         print*, ' slope_max2 must have the size of numbers of pts in direction 1 '
+         stop
+      end if
+      
+      interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
+           interpolator%num_pts1, &
+           interpolator%eta1_min, &
+           interpolator%eta1_max, &
+           interpolator%bc1_min, &
+           interpolator%bc1_max, &
+           interpolator%spline_degree1 )
+      
+      call interp1d_max2%compute_interpolants(&
+           slope_max2(1:sz_slope_max2))
+      
+      interpolator%slope_max2(1:sz_slope_max2+2) = &
+           interp1d_max2%coeff_splines(1:sz_slope_max2+2)
+      call sll_delete(interp1d_max2)
+   else
+      print*, 'problem with slope top in case 2124'
+   end if
+  
+case(2148)  !left:Hermite , right: Hermite, bottom: Dirichlet, Top: Hermite  
+   if ( present( slope_min1)) then 
+      interpolator%slope_min1 = slope_min1
+      interpolator%compute_slope_min1= .FALSE.
+   end if
+   if ( present( slope_max1)) then 
+      interpolator%slope_max1 = slope_max1
+      interpolator%compute_slope_max1= .FALSE.
+   end if
+   
+   if ( present( slope_max2)) then 
+      interpolator%compute_slope_max2= .FALSE.
+
+
+      sz_slope_max2 = size(slope_max2)
+      if ( sz_slope_max2 .ne. interpolator%num_pts1 ) then 
+         print*, ' problem in the initialization of arb_deg_spline 2d'
+         print*, ' slope_max2 must have the size of numbers of pts in direction 1 '
+         stop
+      end if
+      
+      interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
+           interpolator%num_pts1, &
+           interpolator%eta1_min, &
+           interpolator%eta1_max, &
+           interpolator%bc1_min, &
+           interpolator%bc1_max, &
+           interpolator%spline_degree1 )
+      
+      call interp1d_max2%compute_interpolants(&
+           slope_max2(1:sz_slope_max2))
+      
+      interpolator%slope_max2(1:sz_slope_max2+2) = &
+           interp1d_max2%coeff_splines(1:sz_slope_max2+2)
+
+      call sll_delete(interp1d_max2)
+   else
+      print*, 'problem with slope top in case 2124'
+   end if
+
+   if (present(slope_min2)) then 
+       sz_slope_min2 = size(slope_min2)
+      if ( sz_slope_min2 .ne. interpolator%num_pts1 ) then 
+         print*, ' problem in the initialization of arb_deg_spline 2d'
+         print*, ' slope_min2 must have the size of numbers of pts in direction 1 '
+         stop
+      end if
+      
+      interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
+           interpolator%num_pts1, &
+           interpolator%eta1_min, &
+           interpolator%eta1_max, &
+           interpolator%bc1_min, &
+           interpolator%bc1_max, &
+           interpolator%spline_degree1 )
+      
+      call interp1d_min2%compute_interpolants( &
+           slope_min2(1:sz_slope_min2))
+      
+      interpolator%slope_min2(1:sz_slope_min2+2) = &
+           interp1d_min2%coeff_splines(1:sz_slope_min2+2)
+      call sll_delete(interp1d_min2)
+      interpolator%compute_slope_min2 = .FALSE.
+   else
+      print*, 'problem with slope bottom in case 2124'
+   end if
+   if ( present( slope_max2)) then 
+      interpolator%compute_slope_max2= .FALSE.
+
+
+      sz_slope_max2 = size(slope_max2)
+      if ( sz_slope_max2 .ne. interpolator%num_pts1 ) then 
+         print*, ' problem in the initialization of arb_deg_spline 2d'
+         print*, ' slope_max2 must have the size of numbers of pts in direction 1 '
+         stop
+      end if
+      
+      interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
+           interpolator%num_pts1, &
+           interpolator%eta1_min, &
+           interpolator%eta1_max, &
+           interpolator%bc1_min, &
+           interpolator%bc1_max, &
+           interpolator%spline_degree1 )
+      
+      call interp1d_max2%compute_interpolants(&
+           slope_max2(1:sz_slope_max2))
+      
+      interpolator%slope_max2(1:sz_slope_max2+2) = &
+           interp1d_max2%coeff_splines(1:sz_slope_max2+2)
+      call sll_delete(interp1d_max2)
+   else
+      print*, 'problem with slope top in case 2124'
+   end if
+case(2316)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Hermite
+   if ( present( slope_max1)) then 
+      interpolator%slope_max1 = slope_max1
+      interpolator%compute_slope_max1= .FALSE.
+   end if
+   if ( present( slope_min1)) then 
+      interpolator%slope_min1 = slope_min1
+      interpolator%compute_slope_min1= .FALSE.
+   end if
+   
+   if ( present( slope_max2)) then 
+      interpolator%compute_slope_max2= .FALSE.
+
+
+      sz_slope_max2 = size(slope_max2)
+      if ( sz_slope_max2 .ne. interpolator%num_pts1 ) then 
+         print*, ' problem in the initialization of arb_deg_spline 2d'
+         print*, ' slope_max2 must have the size of numbers of pts in direction 1 '
+         stop
+      end if
+      
+      interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
+           interpolator%num_pts1, &
+           interpolator%eta1_min, &
+           interpolator%eta1_max, &
+           interpolator%bc1_min, &
+           interpolator%bc1_max, &
+           interpolator%spline_degree1 )
+      
+      call interp1d_max2%compute_interpolants(&
+           slope_max2(1:sz_slope_max2))
+      
+      interpolator%slope_max2(1:sz_slope_max2+2) = &
+           interp1d_max2%coeff_splines(1:sz_slope_max2+2)
+      call sll_delete(interp1d_max2)
+   else
+      print*, 'problem with slope top in case 2340'
+   end if
+   
+   if (present(slope_min2)) then 
+       sz_slope_min2 = size(slope_min2)
+      if ( sz_slope_min2 .ne. interpolator%num_pts1 ) then 
+         print*, ' problem in the initialization of arb_deg_spline 2d'
+         print*, ' slope_min2 must have the size of numbers of pts in direction 1 '
+         stop
+      end if
+      
+      interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
+           interpolator%num_pts1, &
+           interpolator%eta1_min, &
+           interpolator%eta1_max, &
+           interpolator%bc1_min, &
+           interpolator%bc1_max, &
+           interpolator%spline_degree1 )
+      
+      call interp1d_min2%compute_interpolants( &
+           slope_min2(1:sz_slope_min2))
+      
+      interpolator%slope_min2(1:sz_slope_min2+2) = &
+           interp1d_min2%coeff_splines(1:sz_slope_min2+2)
+      call sll_delete(interp1d_min2)
+      interpolator%compute_slope_min2 = .FALSE.
+   else
+      print*, 'problem with slope bottom in case 2340'
+   end if
+case(2340) ! Hermite in al sides
+
+   if ( present( slope_max1)) then 
+      interpolator%slope_max1 = slope_max1
+      interpolator%compute_slope_max1= .FALSE.
+   end if
+    if ( present( slope_min1)) then 
+      interpolator%slope_min1 = slope_min1
+      interpolator%compute_slope_min1= .FALSE.
+   end if
+   
+   if ( present( slope_max2)) then 
+      interpolator%compute_slope_max2= .FALSE.
+
+
+      sz_slope_max2 = size(slope_max2)
+      if ( sz_slope_max2 .ne. interpolator%num_pts1 ) then 
+         print*, ' problem in the initialization of arb_deg_spline 2d'
+         print*, ' slope_max2 must have the size of numbers of pts in direction 1 '
+         stop
+      end if
+      
+      interp1d_max2 => new_arbitrary_degree_1d_interpolator(&
+           interpolator%num_pts1, &
+           interpolator%eta1_min, &
+           interpolator%eta1_max, &
+           interpolator%bc1_min, &
+           interpolator%bc1_max, &
+           interpolator%spline_degree1 )
+      
+      call interp1d_max2%compute_interpolants(&
+           slope_max2(1:sz_slope_max2))
+      
+      interpolator%slope_max2(1:sz_slope_max2+2) = &
+           interp1d_max2%coeff_splines(1:sz_slope_max2+2)
+      call sll_delete(interp1d_max2)
+   else
+      print*, 'problem with slope top in case 2340'
+   end if
+   
+   if (present(slope_min2)) then 
+       sz_slope_min2 = size(slope_min2)
+      if ( sz_slope_min2 .ne. interpolator%num_pts1 ) then 
+         print*, ' problem in the initialization of arb_deg_spline 2d'
+         print*, ' slope_min2 must have the size of numbers of pts in direction 1 '
+         stop
+      end if
+      
+      interp1d_min2 =>  new_arbitrary_degree_1d_interpolator(&
+           interpolator%num_pts1, &
+           interpolator%eta1_min, &
+           interpolator%eta1_max, &
+           interpolator%bc1_min, &
+           interpolator%bc1_max, &
+           interpolator%spline_degree1 )
+      
+      call interp1d_min2%compute_interpolants( &
+           slope_min2(1:sz_slope_min2))
+      
+      interpolator%slope_min2(1:sz_slope_min2+2) = &
+           interp1d_min2%coeff_splines(1:sz_slope_min2+2)
+      call sll_delete(interp1d_min2)
+      interpolator%compute_slope_min2 = .FALSE.
+   else
+      print*, 'problem with slope bottom in case 2340'
+   end if
+   
+case default
+   print*,'initialize_ad2d_interpolator: BC combination not implemented.'
+end select
+  
+end subroutine set_slope2d
   
 subroutine spli2d_custom(db, nx, kx, taux, ny, ky, tauy, g, bcoef, tx, ty)
 
