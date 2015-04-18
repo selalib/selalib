@@ -742,23 +742,15 @@ sll_int32  :: ideg2,ideg1
 sll_int32  :: jdeg2,jdeg1
 sll_real64 :: v1, v2, v3, v4, d1, d2, d3, d4, r1, r2
 sll_real64 :: wxy
-sll_real64 :: d13 
-sll_real64 :: v13 
-sll_real64 :: d23 
-sll_real64 :: v23 
-sll_real64 :: d14 
-sll_real64 :: v14 
-sll_real64 :: d24 
-sll_real64 :: v24 
 sll_real64 :: wxy_by_val_jac 
 sll_real64 :: wxy_val_jac 
-sll_real64 :: r1r2
-sll_real64 :: v3v4 
+sll_real64 :: r1r2, v1v2, d1v2, v1d2
+sll_real64 :: d3v4, v3v4 , v3d4
 
 bc1_min    = es%bc1_min
-bc1_max   = es%bc1_max
-bc2_min  = es%bc2_min
-bc2_max     = es%bc2_max
+bc1_max    = es%bc1_max
+bc2_min    = es%bc2_min
+bc2_max    = es%bc2_max
 delta1     = es%delta_eta1 
 delta2     = es%delta_eta2 
 eta1_min   = es%eta1_min  
@@ -906,42 +898,38 @@ do i = 1, nc_1
           r1 = es%v_splines1(3,ii,ig,i)
 
           r1r2 = r1*r2*wxy_val_jac
+          v1v2 = v1*v2
+          d1v2 = d1*v2
+          v1d2 = v1*d2
 
-          mass(mm) = mass(mm)+wxy_val_jac*v1*v2 
-          stif(mm) = stif(mm)+wxy_val_jac*(d1*v2+v1*d2)
+          mass(mm) = mass(mm)+v1v2*wxy_val_jac 
+          stif(mm) = stif(mm)+wxy_val_jac*(d1v2+v1*d2)
                
           nn = 0
           do ll = 1,spl_deg_2+1
 
             v4 = es%v_splines2(1,ll,jg,j)
             d4 = es%v_splines2(2,ll,jg,j)
-            d14 = d1*d4
-            v14 = v1*v4
-            d24 = d2*d4
-            v24 = v2*v4
 
             do kk = 1,spl_deg_1+1
                         
               v3 = es%v_splines1(1,kk,ig,i)
               d3 = es%v_splines1(2,kk,ig,i)
-              d13 = d1*d3
-              v13 = v1*v3
-              d23 = d2*d3
-              v23 = v2*v3
-              v3v4 = v4 * v3
-
+              v3v4 = v4*v3
+              d3v4 = d3*v4
+              v3d4 = v3*d4
               nn = nn+1 
              
-              source(mm,nn,icell) = source(mm,nn,icell) + r1r2*v3v4
+              source(nn,mm,icell) = source(nn,mm,icell) + r1r2*v3v4
                    
-              M_c(mm,nn) =M_c(mm,nn)  + val_c*v14*v23
-              K_11(mm,nn)=K_11(mm,nn) + B11*d13*v24
-              K_22(mm,nn)=K_22(mm,nn) + B22*v13*d24
-              K_12(mm,nn)=K_12(mm,nn) + B12*d14*v23
-              K_21(mm,nn)=K_21(mm,nn) + B21*v14*d23
-              M_bv(mm,nn)=M_bv(mm,nn) + MC*v13*v24
-              S_b1(mm,nn)=S_b1(mm,nn) + C1*v1*d3*v24
-              S_b2(mm,nn)=S_b2(mm,nn) + C2*v13*v2*d4
+              M_c (nn,mm)=M_c (nn,mm) + val_c* v1v2 * v3v4
+              K_11(nn,mm)=K_11(nn,mm) + B11  * d1v2 * d3v4
+              K_22(nn,mm)=K_22(nn,mm) + B22  * v1d2 * v3d4
+              K_12(nn,mm)=K_12(nn,mm) + B12  * d1v2 * v3d4
+              K_21(nn,mm)=K_21(nn,mm) + B21  * v1d2 * d3v4
+              M_bv(nn,mm)=M_bv(nn,mm) + MC   * v1v2 * v3v4
+              S_b1(nn,mm)=S_b1(nn,mm) + C1   * v1v2 * d3v4
+              S_b2(nn,mm)=S_b2(nn,mm) + C2   * v1v2 * v3d4
 
             end do
           end do
@@ -1023,14 +1011,14 @@ do i = 1, nc_1
           bprime = bprime+1 
           aprime = es%local_to_global_spline_indices(bprime,icell)
 
-          elt_mat_global = M_c(b,  bprime) - &
-                           K_11(b, bprime) - &
-                           K_12(b, bprime) - &
-                           K_21(b, bprime) - &
-                           K_22(b, bprime) - &
-                           M_bv(b, bprime) - &
-                           S_b1(b, bprime) - &
-                           S_b2(b, bprime)
+          elt_mat_global = M_c (bprime,b) - &
+                           K_11(bprime,b) - &
+                           K_12(bprime,b) - &
+                           K_21(bprime,b) - &
+                           K_22(bprime,b) - &
+                           M_bv(bprime,b) - &
+                           S_b1(bprime,b) - &
+                           S_b2(bprime,b)
 
           es%local_to_global_spline_indices_source_bis(bprime,icell)= y
 
@@ -1097,7 +1085,7 @@ do i=1,es%num_cells1
       bprime = bprime+1
       aprime = es%local_to_global_spline_indices_source(bprime,icell)
            
-      elt_mat_global = source(bprime,b,icell)
+      elt_mat_global = source(b,bprime,icell)
 
       if ( a > 0 .and. aprime > 0) then
         call sll_add_to_csr_matrix(es%csr_mat_source,elt_mat_global,a,aprime)
