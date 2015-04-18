@@ -751,6 +751,7 @@ sll_real64 :: vsp14
 sll_real64 :: dsp24 
 sll_real64 :: vsp24 
 sll_real64 :: wxy_by_val_jac 
+sll_real64 :: wxy_val_jac 
 
 bc1_min    = es%bc1_min
 bc1_max   = es%bc1_max
@@ -839,10 +840,11 @@ do i = 1, nc_1
       es%val_jac(ig,jg,i,j) = val_jac
 
       wxy_by_val_jac = wxy/val_jac
+      wxy_val_jac    = wxy*val_jac
 
-      val_c = val_c * val_jac * wxy
+      val_c = val_c * wxy_val_jac
         
-      es%intjac = es%intjac + wyg*wxg*val_jac
+      es%intjac = es%intjac + wxy_val_jac
 
       ! The B matrix is  by (J^(-1)) A^T (J^(-1))^T 
       B11 = jac_mat(2,2)*jac_mat(2,2)*val_a11 - &
@@ -900,8 +902,8 @@ do i = 1, nc_1
           dsp1 = es%v_splines1(2,ii,ig,i)
           rsp1 = es%v_splines1(3,ii,ig,i)
 
-          mass(mm) = mass(mm)+val_jac*wxg*wyg*vsp1*vsp2 
-          stif(mm) = stif(mm)+val_jac*wxg*wyg*(dsp1*vsp2+vsp1*dsp2)
+          mass(mm) = mass(mm)+wxy_val_jac*vsp1*vsp2 
+          stif(mm) = stif(mm)+wxy_val_jac*(dsp1*vsp2+vsp1*dsp2)
                
           nn = 0
           do ll = 1,spl_deg_2+1
@@ -924,7 +926,7 @@ do i = 1, nc_1
 
               nn = nn+1 
              
-              source(icell,mm,nn) = source(icell,mm,nn) + val_jac*wxy * &
+              source(icell,mm,nn) = source(icell,mm,nn) + wxy_val_jac * &
                 rsp1*vsp3*rsp2*vsp4
                    
               M_c(mm,nn) =M_c(mm,nn)  + val_c*vsp14*vsp23
@@ -1937,9 +1939,7 @@ sll_real64                        :: term
 if (index == 1) then
   es%jlo = 1
   biatx(1) = 1.0_8
-  if ( jhigh <= es%jlo ) then
-    return
-  end if
+  if ( jhigh <= es%jlo ) return
 end if
 
 if ( t(left+1) <= t(left) ) then
