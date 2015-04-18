@@ -9,6 +9,11 @@ ADD_LIBRARY(banded_linear_solver STATIC
   banfac.f90
   banslv.f90)
 
+ADD_LIBRARY(original_deboor_splines STATIC
+  interv.f
+  bsplvd.f
+  bsplvb.f)
+
 TARGET_LINK_LIBRARIES( deboor_splines banded_linear_solver sll_memory)
   
 ADD_EXECUTABLE(test_deboor unit_test.F90)
