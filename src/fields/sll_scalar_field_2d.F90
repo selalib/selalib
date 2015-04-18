@@ -151,7 +151,7 @@ function value_at_pt_analytic( field, eta1, eta2 )
   class(sll_scalar_field_2d_analytic), intent(in) :: field
   sll_real64, intent(in) :: eta1
   sll_real64, intent(in) :: eta2
-  sll_real64             ::  value_at_pt_analytic
+  sll_real64             :: value_at_pt_analytic
 
   value_at_pt_analytic = field%func(eta1,eta2,field%params)
 
@@ -406,29 +406,35 @@ end subroutine initialize_scalar_field_2d_analytic
 !!$  end subroutine compute_eta1_derivative_on_col
 
 function get_transformation_analytic( field ) result(res)
+
   class(sll_scalar_field_2d_analytic), intent(in) :: field
   class(sll_coordinate_transformation_2d_base), pointer :: res
   res => field%T
+
 end function get_transformation_analytic
 
 function get_cartesian_mesh_2d_analytic( field ) result(res)
+
   class(sll_scalar_field_2d_analytic), intent(in) :: field
   class(sll_cartesian_mesh_2d), pointer :: res
   res => field%T%get_cartesian_mesh()
+
 end function get_cartesian_mesh_2d_analytic
 
 function get_jacobian_matrix_analytic( field, eta1, eta2 ) result(res)
+
   class(sll_scalar_field_2d_analytic), intent(in) :: field
   sll_real64, intent(in) :: eta1
   sll_real64, intent(in) :: eta2
   sll_real64, dimension(2,2) :: res
   res = (field%T%jacobian_matrix(eta1,eta2))
+
 end function get_jacobian_matrix_analytic
 
 subroutine write_to_file_analytic_2d( field, tag )
 
   class(sll_scalar_field_2d_analytic), intent(in) :: field
-  sll_int32, intent(in)                               :: tag
+  sll_int32, intent(in)                           :: tag
   sll_int32 :: nptsx1
   sll_int32 :: nptsx2
   sll_real64, dimension(:,:), allocatable :: x1coords
@@ -583,8 +589,8 @@ end subroutine initialize_scalar_field_2d_discrete
 subroutine delete_field_2d_discrete( field )
   class(sll_scalar_field_2d_discrete), intent(inout) :: field
   sll_int32 :: ierr
-  if(field%owns_memory .eqv. .true.) then
-     if(associated(field%values))    SLL_DEALLOCATE(field%values,ierr)
+  if(field%owns_memory) then
+     if(associated(field%values)) SLL_DEALLOCATE(field%values,ierr)
   end if
   if(associated(field%T))         nullify(field%T)
   if(associated(field%interp_2d)) nullify(field%interp_2d)
@@ -741,6 +747,7 @@ function first_deriv_eta1_value_at_index_discrete( field, i, j )
   eta2 = lm%eta2_min + real(j-1,f64)*lm%delta_eta2
   first_deriv_eta1_value_at_index_discrete = &
         field%interp_2d%interpolate_derivative_eta1(eta1,eta2)
+
 end function first_deriv_eta1_value_at_index_discrete
 
 function first_deriv_eta2_value_at_index_discrete( field, i, j )
@@ -760,8 +767,9 @@ function first_deriv_eta2_value_at_index_discrete( field, i, j )
 end function first_deriv_eta2_value_at_index_discrete
 
 subroutine write_to_file_discrete_2d( field, tag )
+
   class(sll_scalar_field_2d_discrete), intent(in) :: field
-  sll_int32, intent(in)                               :: tag
+  sll_int32, intent(in)                           :: tag
   sll_int32 :: nptsx1
   sll_int32 :: nptsx2
   sll_real64, dimension(:,:), allocatable :: x1coords
@@ -814,6 +822,7 @@ subroutine write_to_file_discrete_2d( field, tag )
   SLL_DEALLOCATE_ARRAY(x1coords,ierr)
   SLL_DEALLOCATE_ARRAY(x2coords,ierr)
   SLL_DEALLOCATE_ARRAY(values,ierr)
+
 end subroutine write_to_file_discrete_2d
 
 end module sll_module_scalar_field_2d
