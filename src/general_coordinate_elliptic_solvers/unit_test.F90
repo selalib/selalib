@@ -1264,16 +1264,16 @@ do k = itest1, itest2
 
 end do
 
-call sll_ascii_file_create("solutions_gces.gnu",file_id,ierr)
-do k = itest1, itest2
-  write(*,"(a)") case_name(k)
-  print"('test',i2,' : ','norm L2=',g15.3,' norm H1=',g15.3,' times=',2g15.3)" &
-    ,k,normL2(k),normH1(k),ti(k),te(k)
-  call int2string(k, ccase)
-  write(file_id,"(a)") "set title '"//case_name(k)//"'"
-  write(file_id,"(a)") "load 'phi_"//ccase//".gnu'"
-  write(file_id,"(a)") " pause -1"
-end do
+!call sll_ascii_file_create("solutions_gces.gnu",file_id,ierr)
+!do k = itest1, itest2
+!  write(*,"(a)") case_name(k)
+!  print"('test',i2,' : ','norm L2=',g15.3,' norm H1=',g15.3,' times=',2g15.3)" &
+!    ,k,normL2(k),normH1(k),ti(k),te(k)
+!  call int2string(k, ccase)
+!  write(file_id,"(a)") "set title '"//case_name(k)//"'"
+!  write(file_id,"(a)") "load 'phi_"//ccase//".gnu'"
+!  write(file_id,"(a)") " pause -1"
+!end do
 
 print*, 'PASSED'
 
@@ -1489,7 +1489,7 @@ call phi%update_interpolation_coefficients()
 
 call sll_solve( es, rho, phi)
 
-call phi%write_to_file(0)
+!call phi%write_to_file(0)
 
 te = sll_time_elapsed_since(t_reference)
 
