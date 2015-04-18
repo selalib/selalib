@@ -1,6 +1,6 @@
 ADD_LIBRARY( sll_general_coordinate_elliptic_solvers STATIC
-             connectivity_module.F90
              sll_knots.F90
+             connectivity_module.F90
              sll_lobatto_poisson.F90 
              map_function_module.F90
              lobalap.F90
