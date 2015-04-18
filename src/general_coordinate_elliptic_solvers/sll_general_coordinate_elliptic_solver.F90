@@ -792,11 +792,11 @@ SLL_CLEAR_ALLOCATE(stif(1:nspl),ierr)
 
 
 !$OMP PARALLEL DEFAULT(NONE) &
-!$OMP SHARED(nc_1, nc_2, delta1, delta2, eta1_min, eta2_min, &
-!$OMP num_pts_g1, num_pts_g2, es, c_field, &
+!$OMP SHARED( es, c_field, &
 !$OMP a11_field_mat, a12_field_mat, a21_field_mat, a22_field_mat, &
-!$OMP b1_field_vect, b2_field_vect, spl_deg_1, spl_deg_2, &
-!$OMP bc1_min, bc1_max, bc2_min, bc2_max, source ) &
+!$OMP b1_field_vect, b2_field_vect, spl_deg_1, spl_deg_2, source ) &
+!$OMP FIRSTPRIVATE(nc_1, nc_2, delta1, delta2, eta1_min, eta2_min, &
+!$OMP bc1_min, bc1_max, bc2_min, bc2_max, num_pts_g1, num_pts_g2)  &
 !$OMP PRIVATE(nthreads, tid, &
 !$OMP i,j,eta1,eta2,mass,stif, &
 !$OMP yg,wyg,jg,ig,xg,wxg, &
