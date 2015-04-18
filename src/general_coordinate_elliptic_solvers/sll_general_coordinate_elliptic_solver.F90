@@ -1175,98 +1175,65 @@ end subroutine factorize_mat_es
   
 subroutine solve_general_coordinates_elliptic_eq( es, rho, phi)
 
-  class(general_coordinate_elliptic_solver) :: es
-  class(sll_scalar_field_2d_discrete), intent(inout)  :: phi
-  class(sll_scalar_field_2d_base), intent(in),target  :: rho
-  sll_int32 :: i
-  sll_int32 :: j
-  sll_int32 :: total_num_splines_loc
-  sll_real64 :: int_rho,int_jac
-  sll_int32 :: num_pts_g1, num_pts_g2, ig, jg
-  sll_real64 :: wgpt1, wgpt2, gpt1, gpt2, eta1, eta2
-  sll_real64 :: val_f, val_j
-  class(sll_scalar_field_2d_base),pointer  :: base_field_pointer
-  class(sll_interpolator_2d_base),pointer  :: base_interpolator_pointer
-  sll_real64, dimension(:,:), pointer :: coeff_rho
-    
-  total_num_splines_loc = es%total_num_splines_loc
-    
-  num_pts_g1 = size(es%gauss_pts1,2)
-  num_pts_g2 = size(es%gauss_pts2,2)
-  es%rho_at_gauss = 0.0_f64   
+class(general_coordinate_elliptic_solver) :: es
+class(sll_scalar_field_2d_discrete), intent(inout)  :: phi
+class(sll_scalar_field_2d_base), intent(in),target  :: rho
+sll_int32 :: i
+sll_int32 :: j
+sll_int32 :: total_num_splines_loc
+sll_real64 :: int_rho,int_jac
+sll_int32 :: num_pts_g1, num_pts_g2, ig, jg
+sll_real64 :: wgpt1, wgpt2, gpt1, gpt2, eta1, eta2
+sll_real64 :: val_f, val_j
+class(sll_scalar_field_2d_base),pointer  :: base_field_pointer
+class(sll_interpolator_2d_base),pointer  :: base_interpolator_pointer
+sll_real64, dimension(:,:), pointer :: coeff_rho
+  
+total_num_splines_loc = es%total_num_splines_loc
+  
+num_pts_g1 = size(es%gauss_pts1,2)
+num_pts_g2 = size(es%gauss_pts2,2)
+es%rho_at_gauss = 0.0_f64   
 
-  es%M_rho_loc    = 0.0_f64
-  es%rho_vec      = 0.0_f64
-  es%rho_coeff_1d = 0.0_f64
-   
-  !ES Compute rho at all Gauss points
-  int_rho = 0.0_f64
-  int_jac = 0.0_f64
-    
-  ! afin d'optimiser la construction de la matrice rho
-  ! on va proceder de la facon qui suit 
+es%M_rho_loc    = 0.0_f64
+es%rho_vec      = 0.0_f64
+es%rho_coeff_1d = 0.0_f64
+ 
+!ES Compute rho at all Gauss points
+int_rho = 0.0_f64
+int_jac = 0.0_f64
+  
+! afin d'optimiser la construction de la matrice rho
+! on va proceder de la facon qui suit 
 
-  base_field_pointer => rho
+base_field_pointer => rho
 
-  select type( type_field => base_field_pointer)
+select type( type_field => base_field_pointer)
 
-  class is (sll_scalar_field_2d_discrete)
+class is (sll_scalar_field_2d_discrete)
 
-    base_interpolator_pointer => type_field%interp_2d
+  base_interpolator_pointer => type_field%interp_2d
 
-    select type( type_interpolator => base_interpolator_pointer)
+  select type( type_interpolator => base_interpolator_pointer)
 
-    class is (sll_arbitrary_degree_spline_interpolator_2d)
+  class is (sll_arbitrary_degree_spline_interpolator_2d)
 
-      coeff_rho => type_interpolator%get_coefficients()
-                
-      do j=1,es%num_cells2+1
-        do i=1,es%num_cells1+1
-          es%rho_coeff_1d(i+(es%num_cells1+1)*(j-1)) = coeff_rho(i,j)
-        end do
+    coeff_rho => type_interpolator%get_coefficients()
+              
+    do j=1,es%num_cells2+1
+      do i=1,es%num_cells1+1
+        es%rho_coeff_1d(i+(es%num_cells1+1)*(j-1)) = coeff_rho(i,j)
       end do
+    end do
 
-      call sll_mult_csr_matrix_vector(es%csr_mat_source,es%rho_coeff_1d,es%rho_vec)
+    call sll_mult_csr_matrix_vector(es%csr_mat_source,es%rho_coeff_1d,es%rho_vec)
 
-      if(es%perper) then
-        es%rho_vec = es%rho_vec - sum(es%rho_vec)/es%intjac*es%masse
-      end if
+    if(es%perper) then
+      es%rho_vec = es%rho_vec - sum(es%rho_vec)/es%intjac*es%masse
+    end if
+      
+  class default
         
-    class default
-          
-      do j=1,es%num_cells2
-        eta2  = es%eta2_min + (j-1)*es%delta_eta2
-        do i=1,es%num_cells1
-          eta1  = es%eta1_min + (i-1)*es%delta_eta1
-          do jg=1,num_pts_g2
-            gpt2  = eta2  + es%gauss_pts2(1,jg)
-            wgpt2 = es%gauss_pts2(2,jg)
-            do ig=1,num_pts_g1
-              gpt1  = eta1  + es%gauss_pts1(1,ig)
-              wgpt1 = es%gauss_pts1(2,ig)
-              val_f = rho%value_at_point(gpt1,gpt2)
-              es%rho_at_gauss(ig,jg,i,j) = val_f
-              val_j = es%val_jac(ig,jg,i,j)*wgpt1*wgpt2
-              int_rho = int_rho + rho%value_at_point(gpt1,gpt2)**val_j
-              int_jac = int_jac + val_j
-            end do
-          end do
-        end do
-      end do
-
-      if (es%perper) es%rho_at_gauss = es%rho_at_gauss - int_rho/int_jac
-          
-      do j=1,es%num_cells2
-      do i=1,es%num_cells1
-        call build_local_matrices_rho(es, i, j)
-        call local_to_global_matrices_rho(es, i, j)
-      end do
-      end do
-
-    end select
-
-  class is (sll_scalar_field_2d_analytic)
-    
     do j=1,es%num_cells2
       eta2  = es%eta2_min + (j-1)*es%delta_eta2
       do i=1,es%num_cells1
@@ -1278,9 +1245,9 @@ subroutine solve_general_coordinates_elliptic_eq( es, rho, phi)
             gpt1  = eta1  + es%gauss_pts1(1,ig)
             wgpt1 = es%gauss_pts1(2,ig)
             val_f = rho%value_at_point(gpt1,gpt2)
-            es%rho_at_gauss(ig,jg,i,j) =  val_f
-            val_j = es%val_jac(ig,jg,i,j) * wgpt1 * wgpt2
-            int_rho = int_rho + val_f*val_j 
+            es%rho_at_gauss(ig,jg,i,j) = val_f
+            val_j = es%val_jac(ig,jg,i,j)*wgpt1*wgpt2
+            int_rho = int_rho + rho%value_at_point(gpt1,gpt2)**val_j
             int_jac = int_jac + val_j
           end do
         end do
@@ -1288,126 +1255,159 @@ subroutine solve_general_coordinates_elliptic_eq( es, rho, phi)
     end do
 
     if (es%perper) es%rho_at_gauss = es%rho_at_gauss - int_rho/int_jac
-          
+        
     do j=1,es%num_cells2
     do i=1,es%num_cells1
       call build_local_matrices_rho(es, i, j)
       call local_to_global_matrices_rho(es, i, j)
     end do
     end do
-       
+
   end select
 
-  call solve_linear_system(es)
+class is (sll_scalar_field_2d_analytic)
   
-  print *,'#solve_linear_system done'
-    
-  call phi%interp_2d%set_coefficients(es%phi_vec)
+  do j=1,es%num_cells2
+    eta2  = es%eta2_min + (j-1)*es%delta_eta2
+    do i=1,es%num_cells1
+      eta1  = es%eta1_min + (i-1)*es%delta_eta1
+      do jg=1,num_pts_g2
+        gpt2  = eta2  + es%gauss_pts2(1,jg)
+        wgpt2 = es%gauss_pts2(2,jg)
+        do ig=1,num_pts_g1
+          gpt1  = eta1  + es%gauss_pts1(1,ig)
+          wgpt1 = es%gauss_pts1(2,ig)
+          val_f = rho%value_at_point(gpt1,gpt2)
+          es%rho_at_gauss(ig,jg,i,j) =  val_f
+          val_j = es%val_jac(ig,jg,i,j) * wgpt1 * wgpt2
+          int_rho = int_rho + val_f*val_j 
+          int_jac = int_jac + val_j
+        end do
+      end do
+    end do
+  end do
+
+  if (es%perper) es%rho_at_gauss = es%rho_at_gauss - int_rho/int_jac
+        
+  do j=1,es%num_cells2
+  do i=1,es%num_cells1
+    call build_local_matrices_rho(es, i, j)
+    call local_to_global_matrices_rho(es, i, j)
+  end do
+  end do
+     
+end select
+
+call solve_linear_system(es)
+
+print *,'#solve_linear_system done'
+  
+call phi%interp_2d%set_coefficients(es%phi_vec)
 
 end subroutine solve_general_coordinates_elliptic_eq
   
 subroutine build_local_matrices_rho( es, cell_i, cell_j)
 
-  class(general_coordinate_elliptic_solver) :: es
-  sll_int32, intent(in) :: cell_i
-  sll_int32, intent(in) :: cell_j
-  sll_real64 :: eta1
-  sll_real64 :: eta2
-  sll_int32  :: num_pts_g1 
-  sll_int32  :: num_pts_g2
-  sll_int32  :: i,ii
-  sll_int32  :: j,jj
-  sll_real64 :: gpt1
-  sll_real64 :: gpt2
-  sll_real64 :: wgpt1
-  sll_real64 :: wgpt2
-  sll_int32  :: n
-  sll_real64 :: val_f
-  sll_real64 :: val_j,spline1,spline2
-    
-  es%M_rho_loc(:)  = 0.0_f64
-
-  num_pts_g1 = size(es%gauss_pts1,2)
-  num_pts_g2 = size(es%gauss_pts2,2)
-    
-  eta1  = es%eta1_min + (cell_i-1)*es%delta_eta1
-  eta2  = es%eta2_min + (cell_j-1)*es%delta_eta2
-    
-  do j=1,num_pts_g2
-    gpt2  = eta2 + es%gauss_pts2(1,j)
-    wgpt2 = es%gauss_pts2(2,j)
-
-    do i=1,num_pts_g1
-      gpt1  = eta1 + es%gauss_pts1(1,i)
-      wgpt1 = es%gauss_pts1(2,i)
+class(general_coordinate_elliptic_solver) :: es
+sll_int32, intent(in) :: cell_i
+sll_int32, intent(in) :: cell_j
+sll_real64 :: eta1
+sll_real64 :: eta2
+sll_int32  :: num_pts_g1 
+sll_int32  :: num_pts_g2
+sll_int32  :: i,ii
+sll_int32  :: j,jj
+sll_real64 :: gpt1
+sll_real64 :: gpt2
+sll_real64 :: wgpt1
+sll_real64 :: wgpt2
+sll_int32  :: n
+sll_real64 :: val_f
+sll_real64 :: val_j,spline1,spline2
   
-      val_f = es%rho_at_gauss(i,j,cell_i,cell_j)
-      val_j = es%val_jac(i,j,cell_i,cell_j)*wgpt1*wgpt2
+es%M_rho_loc(:)  = 0.0_f64
 
-     ! loop over the splines supported in the cell that are different than
-     ! zero at the point (gpt1,gpt2) (there are spline_degree+1 splines in
-     ! each direction.
-      n = 0
-      do jj = 1,es%spline_degree2+1
-        spline2 = es%v_splines2(1,jj,j,cell_j)
-        do ii = 1,es%spline_degree1+1
-          spline1 = es%v_splines1(1,ii,i,cell_i)
-          n  =  n+1
-          es%M_rho_loc(n)= es%M_rho_loc(n) + val_f*val_j*spline1*spline2
-        end do
+num_pts_g1 = size(es%gauss_pts1,2)
+num_pts_g2 = size(es%gauss_pts2,2)
+  
+eta1  = es%eta1_min + (cell_i-1)*es%delta_eta1
+eta2  = es%eta2_min + (cell_j-1)*es%delta_eta2
+  
+do j=1,num_pts_g2
+  gpt2  = eta2 + es%gauss_pts2(1,j)
+  wgpt2 = es%gauss_pts2(2,j)
+
+  do i=1,num_pts_g1
+    gpt1  = eta1 + es%gauss_pts1(1,i)
+    wgpt1 = es%gauss_pts1(2,i)
+
+    val_f = es%rho_at_gauss(i,j,cell_i,cell_j)
+    val_j = es%val_jac(i,j,cell_i,cell_j)*wgpt1*wgpt2
+
+   ! loop over the splines supported in the cell that are different than
+   ! zero at the point (gpt1,gpt2) (there are spline_degree+1 splines in
+   ! each direction.
+    n = 0
+    do jj = 1,es%spline_degree2+1
+      spline2 = es%v_splines2(1,jj,j,cell_j)
+      do ii = 1,es%spline_degree1+1
+        spline1 = es%v_splines1(1,ii,i,cell_i)
+        n  =  n+1
+        es%M_rho_loc(n)= es%M_rho_loc(n) + val_f*val_j*spline1*spline2
       end do
-
     end do
+
   end do
+end do
     
 end subroutine build_local_matrices_rho
   
 
 subroutine local_to_global_matrices_rho( es, cell_i, cell_j) 
 
-  class(general_coordinate_elliptic_solver)  :: es
-  sll_int32 :: cell_i
-  sll_int32 :: cell_j
-  sll_int32 :: i,mm, b, x!,y
-  sll_int32 :: nbsp!,nbsp1
-  sll_int32 :: bc1_min
-  sll_int32 :: bc1_max
-  sll_int32 :: bc2_min
-  sll_int32 :: bc2_max
-  sll_int32 :: index1,index3
-   
-  bc1_min   = es%bc1_min_interp
-  bc1_max  = es%bc1_max
-  bc2_min = es%bc2_min
-  bc2_max    = es%bc2_max
-  
-  b = 0
-  do mm = 0,es%spline_degree2
-    index3 = cell_j + mm
-    !other option for above: index3 = mod(index3-1,es%total_num_splines2)+1
-    if (bc2_min==SLL_PERIODIC .and. bc2_max==SLL_PERIODIC) then    
-       if ( index3 > es%total_num_splines2) then
-          index3 = index3 - es%total_num_splines2
-       end if
+class(general_coordinate_elliptic_solver)  :: es
+sll_int32 :: cell_i
+sll_int32 :: cell_j
+sll_int32 :: i,mm, b, x!,y
+sll_int32 :: nbsp!,nbsp1
+sll_int32 :: bc1_min
+sll_int32 :: bc1_max
+sll_int32 :: bc2_min
+sll_int32 :: bc2_max
+sll_int32 :: index1,index3
+ 
+bc1_min   = es%bc1_min_interp
+bc1_max  = es%bc1_max
+bc2_min = es%bc2_min
+bc2_max    = es%bc2_max
+
+b = 0
+do mm = 0,es%spline_degree2
+  index3 = cell_j + mm
+  !other option for above: index3 = mod(index3-1,es%total_num_splines2)+1
+  if (bc2_min==SLL_PERIODIC .and. bc2_max==SLL_PERIODIC) then    
+     if ( index3 > es%total_num_splines2) then
+        index3 = index3 - es%total_num_splines2
+     end if
+  end if
+
+  do i = 0,es%spline_degree1
+    index1 = cell_i + i
+    if (bc1_min==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC) then 
+      if ( index1 > es%total_num_splines1) then
+        index1 = index1 - es%total_num_splines1
+      end if
+      nbsp = es%total_num_splines1
+    else if (bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET) then
+      nbsp = es%num_cells1 + es%spline_degree1
     end if
 
-    do i = 0,es%spline_degree1
-      index1 = cell_i + i
-      if (bc1_min==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC) then 
-        if ( index1 > es%total_num_splines1) then
-          index1 = index1 - es%total_num_splines1
-        end if
-        nbsp = es%total_num_splines1
-      else if (bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET) then
-        nbsp = es%num_cells1 + es%spline_degree1
-      end if
-
-      x             =  index1 + (index3-1)*nbsp
-      b             =  b + 1
-      es%rho_vec(x) =  es%rho_vec(x)  + es%M_rho_loc(b)
-        
-    end do
+    x             =  index1 + (index3-1)*nbsp
+    b             =  b + 1
+    es%rho_vec(x) =  es%rho_vec(x)  + es%M_rho_loc(b)
+      
   end do
+end do
   
 end subroutine local_to_global_matrices_rho
   
@@ -1416,95 +1416,95 @@ end subroutine local_to_global_matrices_rho
 !> is given in terms of the spline coefficients that represent phi.
 subroutine solve_linear_system( es )
 
-  class(general_coordinate_elliptic_solver) :: es
-  integer                                   :: elt
-  integer                                   :: i,j,k
-  character(len=*), parameter               :: as_file  = 'rho'
-  character(len=*), parameter               :: as_file1 = 'phi'
-  character(len=*), parameter               :: as_file2 = 'mat'
-  sll_int32 :: bc1_min
-  sll_int32 :: bc1_max
-  sll_int32 :: bc2_min
-  sll_int32 :: bc2_max
+class(general_coordinate_elliptic_solver) :: es
+integer                                   :: elt
+integer                                   :: i,j,k
+character(len=*), parameter               :: as_file  = 'rho'
+character(len=*), parameter               :: as_file1 = 'phi'
+character(len=*), parameter               :: as_file2 = 'mat'
+sll_int32 :: bc1_min
+sll_int32 :: bc1_max
+sll_int32 :: bc2_min
+sll_int32 :: bc2_max
 
-  bc1_min   = es%bc1_min
-  bc1_max  = es%bc1_max
-  bc2_min = es%bc2_min
-  bc2_max    = es%bc2_max
-   
-  es%tmp_rho_vec(:) = 0.0_f64
-  es%tmp_phi_vec(:) = 0.0_f64
-    
-  if( bc1_min  ==SLL_PERIODIC  .and. bc1_max==SLL_PERIODIC .and. &
-      bc2_min==SLL_DIRICHLET .and. bc2_max  ==SLL_DIRICHLET ) then
-       
-    k = 0
-    do j = 1, es%total_num_splines2
-      do i = 1, es%total_num_splines1
-        k = k+1
-        elt = i+(es%total_num_splines1)*j
-        es%tmp_rho_vec(k) = es%rho_vec(elt)
-      end do
-    end do
-       
-  else if( bc1_min  ==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET .and.&
-           bc2_min==SLL_DIRICHLET .and. bc2_max  ==SLL_DIRICHLET) then 
-       
-    k = 0
-    do j = 1, es%total_num_splines2
-      do i = 1, es%total_num_splines1
-        k = k+1
-        elt = i+1+(es%total_num_splines1+2)*j 
-        es%tmp_rho_vec(k) = es%rho_vec( elt )
-      end do
-    end do
-       
-  else if(bc1_min  ==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC .and.&
-          bc2_min==SLL_PERIODIC .and. bc2_max  ==SLL_PERIODIC) then
-       
-    es%tmp_rho_vec(1:es%total_num_splines1*es%total_num_splines2)=&
-      es%rho_vec(1:es%total_num_splines1*es%total_num_splines2) 
-       
-  else if(bc1_min  ==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET .and.&
-          bc2_min==SLL_PERIODIC  .and. bc2_max  ==SLL_PERIODIC ) then
+bc1_min   = es%bc1_min
+bc1_max  = es%bc1_max
+bc2_min = es%bc2_min
+bc2_max    = es%bc2_max
+ 
+es%tmp_rho_vec(:) = 0.0_f64
+es%tmp_phi_vec(:) = 0.0_f64
+  
+if( bc1_min  ==SLL_PERIODIC  .and. bc1_max==SLL_PERIODIC .and. &
+    bc2_min==SLL_DIRICHLET .and. bc2_max  ==SLL_DIRICHLET ) then
      
-    k = 0
-    do j = 1, es%total_num_splines2
+  k = 0
+  do j = 1, es%total_num_splines2
     do i = 1, es%total_num_splines1
-        k = k+1
-        elt = i+1+(es%total_num_splines1+2)*(j-1)
-        es%tmp_rho_vec(k) = es%rho_vec(elt)
+      k = k+1
+      elt = i+(es%total_num_splines1)*j
+      es%tmp_rho_vec(k) = es%rho_vec(elt)
     end do
-    end do
-
-  else if( (bc1_min   == SLL_NEUMANN)  .and. (bc1_max == SLL_DIRICHLET) .and.&
-           (bc2_min == SLL_PERIODIC) .and. (bc2_max   == SLL_PERIODIC) ) then
+  end do
      
-    k = 0
-    do j = 1, es%total_num_splines2
-      do i = 1, es%total_num_splines1
-        k = k+1
-        elt = i+1+(es%total_num_splines1+1)*(j-1)
-        es%tmp_rho_vec(k) = es%rho_vec( elt )
-      end do
+else if( bc1_min  ==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET .and.&
+         bc2_min==SLL_DIRICHLET .and. bc2_max  ==SLL_DIRICHLET) then 
+     
+  k = 0
+  do j = 1, es%total_num_splines2
+    do i = 1, es%total_num_splines1
+      k = k+1
+      elt = i+1+(es%total_num_splines1+2)*j 
+      es%tmp_rho_vec(k) = es%rho_vec( elt )
     end do
+  end do
+     
+else if(bc1_min  ==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC .and.&
+        bc2_min==SLL_PERIODIC .and. bc2_max  ==SLL_PERIODIC) then
+     
+  es%tmp_rho_vec(1:es%total_num_splines1*es%total_num_splines2)=&
+    es%rho_vec(1:es%total_num_splines1*es%total_num_splines2) 
+     
+else if(bc1_min  ==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET .and.&
+        bc2_min==SLL_PERIODIC  .and. bc2_max  ==SLL_PERIODIC ) then
+   
+  k = 0
+  do j = 1, es%total_num_splines2
+  do i = 1, es%total_num_splines1
+      k = k+1
+      elt = i+1+(es%total_num_splines1+2)*(j-1)
+      es%tmp_rho_vec(k) = es%rho_vec(elt)
+  end do
+  end do
 
-  end if
+else if( (bc1_min   == SLL_NEUMANN)  .and. (bc1_max == SLL_DIRICHLET) .and.&
+         (bc2_min == SLL_PERIODIC) .and. (bc2_max   == SLL_PERIODIC) ) then
+   
+  k = 0
+  do j = 1, es%total_num_splines2
+    do i = 1, es%total_num_splines1
+      k = k+1
+      elt = i+1+(es%total_num_splines1+1)*(j-1)
+      es%tmp_rho_vec(k) = es%rho_vec( elt )
+    end do
+  end do
 
-  if(bc1_min  ==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC .and.&
-     bc2_min==SLL_PERIODIC .and. bc2_max  ==SLL_PERIODIC) then
+end if
 
-    call sll_solve_csr_matrix(es%csr_mat_with_constraint, &
-                              es%tmp_rho_vec,             &
-                              es%tmp_phi_vec)
+if(bc1_min  ==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC .and.&
+   bc2_min==SLL_PERIODIC .and. bc2_max  ==SLL_PERIODIC) then
 
-  else
-    call sll_solve_csr_matrix(es%csr_mat,     &
-                              es%tmp_rho_vec, &
-                              es%tmp_phi_vec)
-  endif
-  es%phi_vec(1:es%total_num_splines1*es%total_num_splines2)=&
-    es%tmp_phi_vec(1:es%total_num_splines1*es%total_num_splines2)
+  call sll_solve_csr_matrix(es%csr_mat_with_constraint, &
+                            es%tmp_rho_vec,             &
+                            es%tmp_phi_vec)
+
+else
+  call sll_solve_csr_matrix(es%csr_mat,     &
+                            es%tmp_rho_vec, &
+                            es%tmp_phi_vec)
+endif
+es%phi_vec(1:es%total_num_splines1*es%total_num_splines2)=&
+  es%tmp_phi_vec(1:es%total_num_splines1*es%total_num_splines2)
 
 end subroutine solve_linear_system
   
@@ -2012,81 +2012,3 @@ end subroutine bsplvb
 
 end module sll_general_coordinate_elliptic_solver_module
 
-
-!PN I removed this subroutine because it is not used...
-!PN 
-!!!> @brief Assemble the matrix for elliptic solver.
-!!!> @details To have the function phi such that 
-!!!> \f[
-!!!>  \nabla \cdot ( A \nabla \phi ) + B \nabla \phi + C \phi = \rho
-!!!> \f]
-!!!>  where A is a matrix of functions , B a vectorial function,
-!!!>  and  C and rho a scalar function.  
-!!!>  A, B, C, rho can be discret or analytic. 
-!!!>  phi is given with a B-spline interpolator  
-!!!> 
-!!!> The parameters are
-!!!> @param es the type general_coordinate_elliptic_solver
-!!!> @param[in] a11_field_mat the field corresponding to the matrix coefficient A(1,1)
-!!!> @param[in] a12_field_mat the field corresponding to the matrix coefficient A(1,2)
-!!!> @param[in] a21_field_mat the field corresponding to the matrix coefficient A(2,1)
-!!!> @param[in] a22_field_mat the field corresponding to the matrix coefficient A(2,2)
-!!!> @param[in] b1_field_vect the field corresponding to the vector coefficient B(1)
-!!!> @param[in] b2_field_vect the field corresponding to the vector coefficient B(2)
-!!!> @param[in] c_field the field corresponding to the coefficient B(1) of the scalar C
-!!!> @return the type general_coordinate_elliptic_solver contains the matrix 
-!!!> to solve the equation
-!!
-!!subroutine assemble_mat_es( es,            &
-!!                            a11_field_mat, &
-!!                            a12_field_mat, &
-!!                            a21_field_mat, &
-!!                            a22_field_mat, &
-!!                            b1_field_vect, &
-!!                            b2_field_vect, &
-!!                            c_field)
-!!
-!!  type(general_coordinate_elliptic_solver),intent(inout) :: es
-!!
-!!  class(sll_scalar_field_2d_base), pointer :: a11_field_mat
-!!  class(sll_scalar_field_2d_base), pointer :: a12_field_mat
-!!  class(sll_scalar_field_2d_base), pointer :: a21_field_mat
-!!  class(sll_scalar_field_2d_base), pointer :: a22_field_mat
-!!  class(sll_scalar_field_2d_base), pointer :: b1_field_vect
-!!  class(sll_scalar_field_2d_base), pointer :: b2_field_vect
-!!  class(sll_scalar_field_2d_base), pointer :: c_field
-!!  sll_int32 :: i
-!!  sll_int32 :: j
-!!  sll_int32 :: icell
-!!  sll_real64 :: eta1
-!!  sll_real64 :: eta2
-!!  sll_int32 :: num_pts_g1
-!!  sll_int32 :: num_pts_g2
-!!  sll_int32 :: ii
-!!  sll_int32 :: jj
-!!  sll_real64 :: gpt1
-!!  sll_real64 :: gpt2
-!!  sll_real64, dimension(2,2) :: jac_mat
-!!
-!!  num_pts_g1 = size(es%gauss_pts1,2)
-!!  num_pts_g2 = size(es%gauss_pts2,2)
-!!  
-!!  do j=1,es%num_cells2
-!!    do i=1,es%num_cells1          
-!!      icell = i+es%num_cells1*(j-1)
-!!      eta1  = es%eta1_min + real(i-1,f64)*es%delta_eta1
-!!      eta2  = es%eta2_min + real(j-1,f64)*es%delta_eta2
-!!
-!!      do jj=1,num_pts_g2
-!!        gpt2  = eta2  + 0.5_f64*es%delta_eta2 * ( es%gauss_pts2(1,jj) + 1.0_f64 )
-!!        do ii=1,num_pts_g1
-!!          jac_mat(:,:) = c_field%get_jacobian_matrix(gpt1,gpt2)
-!!        enddo
-!!      enddo  
-!!    enddo
-!!  enddo
-!!  
-!!  print *,'#not implemented for the moment'
-!!  
-!!end subroutine assemble_mat_es
- 
