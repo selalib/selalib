@@ -15,7 +15,8 @@ use sll_module_scalar_field_2d, only: sll_scalar_field_2d_analytic,  &
 use sll_module_interpolators_2d_base, only: sll_interpolator_2d_base
 use sll_module_arbitrary_degree_spline_interpolator_2d, only:        &
   sll_arbitrary_degree_spline_interpolator_2d
-use connectivity_module, only: initconnectivity
+use sll_module_arbitrary_degree_spline_interpolator_1d, only:        &
+  interv, deboor_type, bsplvd
 use sll_knots, only: initialize_knots
 use gauss_legendre_integration
 use gauss_lobatto_integration
@@ -28,6 +29,8 @@ use sll_sparse_matrix_module, only : sll_csr_matrix,                 &
                                      sll_mult_csr_matrix_vector,     &
                                      sll_solve_csr_matrix,           &
                                      sll_delete
+
+use connectivity_module, only: initconnectivity
 
 #ifdef _OPENMP
 use omp_lib
@@ -98,9 +101,7 @@ type, public :: general_coordinate_elliptic_solver
   sll_real64, dimension(:,:,:,:), pointer :: rho_at_gauss
   sll_real64, dimension(:), pointer   :: M_rho_loc
   logical                             :: perper
-  !save variables for deboor splines (bsplvd, bsplvb)
-  sll_int32                           :: ilo = 1
-  sll_int32                           :: jlo = 1
+  type(deboor_type)                   :: db
 end type general_coordinate_elliptic_solver
 
 !> For the integration mode.  
@@ -125,6 +126,9 @@ public sll_delete,                          &
        sll_solve,                           &
        new_general_elliptic_solver,         &
        factorize_mat_es
+
+sll_int32  :: jcell1, jcell2
+sll_int32  :: tid=0, nthreads=1
 
 contains 
 
@@ -471,11 +475,11 @@ do i = 1, es%num_cells1
       gspl1 = xg
       ispl1 = spline_degree1+i
     end if
-    call bsplvd( es, es%knots1, spline_degree1+1, gspl1, ispl1, work1, dbs1, 2 )
+    call bsplvd( es%db, es%knots1, spline_degree1+1, gspl1, ispl1, work1, dbs1, 2 )
     es%v_splines1(1,:,ii,i) = dbs1(:,1)
     es%v_splines1(2,:,ii,i) = dbs1(:,2)
-    call interv( es, es%knots1_rho, es%num_cells1+spline_degree1+2, xg, left, ierr )
-    call bsplvd( es, es%knots1_rho, spline_degree1+1, xg,left, work1, dbs1, 1 )
+    call interv( es%db, es%knots1_rho, es%num_cells1+spline_degree1+2, xg, left, ierr )
+    call bsplvd( es%db, es%knots1_rho, spline_degree1+1, xg,left, work1, dbs1, 1 )
     es%v_splines1(3,:,ii,i) = dbs1(:,1)
   end do
   es%tab_index_coeff1(i) = left
@@ -492,11 +496,11 @@ do j = 1, es%num_cells2
       gspl2 = yg
       ispl2 = spline_degree2+j
     end if
-    call bsplvd( es, es%knots2, spline_degree2+1, gspl2, ispl2, work2, dbs2, 2)
+    call bsplvd( es%db, es%knots2, spline_degree2+1, gspl2, ispl2, work2, dbs2, 2)
     es%v_splines2(1,:,jj,j) = dbs2(:,1)
     es%v_splines2(2,:,jj,j) = dbs2(:,2)
-    call interv( es, es%knots2_rho, es%num_cells2+spline_degree2+2, yg, left, ierr )
-    call bsplvd( es, es%knots2_rho, spline_degree2+1, yg, left, work2, dbs2, 1)
+    call interv( es%db, es%knots2_rho, es%num_cells2+spline_degree2+2, yg, left, ierr )
+    call bsplvd( es%db, es%knots2_rho, spline_degree2+1, yg, left, work2, dbs2, 1)
     es%v_splines2(3,:,jj,j) = dbs2(:,1)
   end do
   es%tab_index_coeff2(j) = left
@@ -539,9 +543,9 @@ function new_general_elliptic_solver( spline_degree1,   &
                                       quadrature_type1, &
                                       quadrature_type2, &
                                       bc1_min,          &
-                                      bc1_max,         &
-                                      bc2_min,        &
-                                      bc2_max,           &
+                                      bc1_max,          &
+                                      bc2_min,          &
+                                      bc2_max,          &
                                       eta1_min,         &
                                       eta1_max,         &
                                       eta2_min,         &
@@ -575,9 +579,9 @@ call sll_create( es,               &
                  quadrature_type1, &
                  quadrature_type2, &
                  bc1_min,          &
-                 bc1_max,         &
-                 bc2_min,        &
-                 bc2_max,           &
+                 bc1_max,          &
+                 bc2_min,          &
+                 bc2_max,          &
                  eta1_min,         &
                  eta1_max,         &
                  eta2_min,         &
@@ -751,8 +755,6 @@ sll_real64 :: wxy_by_val_jac
 sll_real64 :: wxy_val_jac 
 sll_real64 :: r1r2, v1v2, d1v2, v1d2
 sll_real64 :: d3v4, v3v4 , v3d4
-sll_int32  :: jcell1, jcell2
-sll_int32  :: tid, nthreads
 
 bc1_min    = es%bc1_min
 bc1_max    = es%bc1_max
@@ -976,8 +978,6 @@ do i = 1, nc_1
 
             end do
           end do
-
-       
         end do
       end do
     end do
@@ -1212,59 +1212,20 @@ select type( type_field => base_field_pointer)
 
 class is (sll_scalar_field_2d_discrete)
 
-  base_interpolator_pointer => type_field%interp_2d
-
-  select type( type_interpolator => base_interpolator_pointer)
-
-  class is (sll_arbitrary_degree_spline_interpolator_2d)
-
-    coeff_rho => type_interpolator%get_coefficients()
-              
-    do j=1,es%num_cells2+1
-      do i=1,es%num_cells1+1
-        es%rho_coeff_1d(i+(es%num_cells1+1)*(j-1)) = coeff_rho(i,j)
-      end do
+  coeff_rho => type_field%interp_2d%get_coefficients()
+            
+  do j=1,es%num_cells2+1
+    do i=1,es%num_cells1+1
+      es%rho_coeff_1d(i+(es%num_cells1+1)*(j-1)) = coeff_rho(i,j)
     end do
+  end do
 
-    call sll_mult_csr_matrix_vector(es%csr_mat_source,es%rho_coeff_1d,es%rho_vec)
+  call sll_mult_csr_matrix_vector(es%csr_mat_source,es%rho_coeff_1d,es%rho_vec)
 
-    if(es%perper) then
-      es%rho_vec = es%rho_vec - sum(es%rho_vec)/es%intjac*es%masse
-    end if
+  if(es%perper) then
+    es%rho_vec = es%rho_vec - sum(es%rho_vec)/es%intjac*es%masse
+  end if
       
-  class default
-        
-    do j=1,es%num_cells2
-      eta2  = es%eta2_min + (j-1)*es%delta_eta2
-      do i=1,es%num_cells1
-        eta1  = es%eta1_min + (i-1)*es%delta_eta1
-        do jg=1,num_pts_g2
-          gpt2  = eta2  + es%gauss_pts2(1,jg)
-          wgpt2 = es%gauss_pts2(2,jg)
-          do ig=1,num_pts_g1
-            gpt1  = eta1  + es%gauss_pts1(1,ig)
-            wgpt1 = es%gauss_pts1(2,ig)
-            val_f = rho%value_at_point(gpt1,gpt2)
-            es%rho_at_gauss(ig,jg,i,j) = val_f
-            val_j = es%val_jac(ig,jg,i,j)*wgpt1*wgpt2
-            int_rho = int_rho + rho%value_at_point(gpt1,gpt2)**val_j
-            int_jac = int_jac + val_j
-          end do
-        end do
-      end do
-    end do
-
-    if (es%perper) es%rho_at_gauss = es%rho_at_gauss - int_rho/int_jac
-        
-    do j=1,es%num_cells2
-    do i=1,es%num_cells1
-      call build_local_matrices_rho(es, i, j)
-      call local_to_global_matrices_rho(es, i, j)
-    end do
-    end do
-
-  end select
-
 class is (sll_scalar_field_2d_analytic)
   
   do j=1,es%num_cells2
@@ -1322,7 +1283,7 @@ sll_real64 :: gpt2
 sll_real64 :: wgpt1
 sll_real64 :: wgpt2
 sll_int32  :: n
-sll_real64 :: val_f
+sll_real64 :: val_f, valfj
 sll_real64 :: val_j,spline1,spline2
   
 es%M_rho_loc(:)  = 0.0_f64
@@ -1343,17 +1304,18 @@ do j=1,num_pts_g2
 
     val_f = es%rho_at_gauss(i,j,cell_i,cell_j)
     val_j = es%val_jac(i,j,cell_i,cell_j)*wgpt1*wgpt2
+    valfj = val_f*val_j
 
    ! loop over the splines supported in the cell that are different than
    ! zero at the point (gpt1,gpt2) (there are spline_degree+1 splines in
    ! each direction.
     n = 0
     do jj = 1,es%spline_degree2+1
-      spline2 = es%v_splines2(1,jj,j,cell_j)
+      spline2 = es%v_splines2(1,jj,j,cell_j)*valfj
       do ii = 1,es%spline_degree1+1
         spline1 = es%v_splines1(1,ii,i,cell_i)
         n  =  n+1
-        es%M_rho_loc(n)= es%M_rho_loc(n) + val_f*val_j*spline1*spline2
+        es%M_rho_loc(n)= es%M_rho_loc(n) + spline1*spline2
       end do
     end do
 
@@ -1368,18 +1330,18 @@ subroutine local_to_global_matrices_rho( es, cell_i, cell_j)
 class(general_coordinate_elliptic_solver)  :: es
 sll_int32 :: cell_i
 sll_int32 :: cell_j
-sll_int32 :: i,mm, b, x!,y
-sll_int32 :: nbsp!,nbsp1
+sll_int32 :: i,mm, b, x
+sll_int32 :: nbsp
 sll_int32 :: bc1_min
 sll_int32 :: bc1_max
 sll_int32 :: bc2_min
 sll_int32 :: bc2_max
 sll_int32 :: index1,index3
  
-bc1_min   = es%bc1_min_interp
-bc1_max  = es%bc1_max
+bc1_min = es%bc1_min_interp
+bc1_max = es%bc1_max
 bc2_min = es%bc2_min
-bc2_max    = es%bc2_max
+bc2_max = es%bc2_max
 
 b = 0
 do mm = 0,es%spline_degree2
@@ -1508,507 +1470,6 @@ es%phi_vec(1:es%total_num_splines1*es%total_num_splines2)=&
 
 end subroutine solve_linear_system
   
-
-!*************************************************************************
-!
-!! INTERV brackets a real value in an ascending vector of values.
-!
-!  Discussion:
-!
-!    The XT array is a set of increasing values.  The goal of the routine
-!    is to determine the largest index I so that XT(I) <= X.
-!
-!    The routine is designed to be efficient in the common situation
-!    that it is called repeatedly, with X taken from an increasing
-!    or decreasing sequence.
-!
-!    This will happen when a piecewise polynomial is to be graphed.
-!    The first guess for LEFT is therefore taken to be the value
-!    returned at the previous call and stored in the local variable ILO.
-!
-!    A first check ascertains that ILO < LXT.  This is necessary
-!    since the present call may have nothing to do with the previous
-!    call.  Then, if
-!
-!      XT(ILO) <= X < XT(ILO+1),
-!
-!    we set LEFT = ILO and are done after just three comparisons.
-!
-!    Otherwise, we repeatedly double the difference ISTEP = IHI - ILO
-!    while also moving ILO and IHI in the direction of X, until
-!
-!      XT(ILO) <= X < XT(IHI)
-!
-!    after which we use bisection to get, in addition, ILO + 1 = IHI.
-!    The value LEFT = ILO is then returned.
-!
-!  Modified:
-!
-!    14 February 2007
-!
-!  Author:
-!
-!    Carl DeBoor
-!
-!  Reference:
-!
-!    Carl DeBoor,
-!    A Practical Guide to Splines,
-!    Springer, 2001,
-!    ISBN: 0387953663.
-!
-!  Parameters:
-!
-!    Input, real ( kind = 8 ) XT(LXT), a nondecreasing sequence of values.
-!
-!    Input, integer LXT, the dimension of XT.
-!
-!    Input, real ( kind = 8 ) X, the point whose location with
-!    respect to the sequence XT is to be determined.
-!
-!    Output, integer LEFT, the index of the bracketing value:
-!      1     if             X  <  XT(1)
-!      I     if   XT(I)  <= X  < XT(I+1)
-!      LXT   if  XT(LXT) <= X
-!
-!    Output, integer MFLAG, indicates whether X lies within the
-!    range of the data.
-!    -1:            X  <  XT(1)
-!     0: XT(I)   <= X  < XT(I+1)
-!    +1: XT(LXT) <= X
-!
-
-subroutine interv( es, xt, lxt, x, left, mflag )
-    
-  type(general_coordinate_elliptic_solver) :: es
-
-  sll_int32, intent(in)    :: lxt
-  sll_int32, intent(out)   :: left
-  sll_int32, intent(out)   :: mflag
-  sll_int32                :: ihi
-  sll_int32                :: istep
-  sll_int32                :: middle
-  sll_real64, intent(in)   :: x
-  sll_real64, dimension(:) :: xt!(lxt)
-
-  ihi = es%ilo + 1
-  
-  if ( lxt <= ihi ) then
-     
-     if ( xt(lxt) <= x ) goto 110
-     
-     if ( lxt <= 1 ) then
-        mflag = -1
-        left = 1
-        return
-     end if
-     
-     es%ilo = lxt - 1
-     ihi = lxt
-     
-  end if
-  
-  if ( xt(ihi) <= x ) goto 20
-  
-  if ( xt(es%ilo) <= x ) then
-     mflag = 0
-     left = es%ilo
-     return
-  end if
-  !
-  !  Now X < XT(ILO).  Decrease ILO to capture X.
-  !
-  istep = 1
-    
-  10 continue
-    
-  ihi = es%ilo
-  es%ilo = ihi - istep
-  
-  if ( 1 < es%ilo ) then
-     if ( xt(es%ilo) <= x ) then
-        go to 50
-     end if
-     istep = istep * 2
-     go to 10
-  end if
-  
-  es%ilo = 1
-  
-  if ( x < xt(1) ) then
-     mflag = -1
-     left = 1
-     return
-  end if
-  
-  goto 50
-  !
-  !  Now XT(IHI) <= X.  Increase IHI to capture X.
-  !
-  20 continue
-    
-  istep = 1
-    
-  30 continue
-    
-  es%ilo = ihi
-  ihi = es%ilo + istep
-  
-  if ( ihi < lxt ) then
-     if ( x < xt(ihi) ) goto 50
-     istep = istep * 2
-     goto 30
-  end if
-  
-  if ( xt(lxt) <= x ) goto 110
-  !
-  !  Now XT(ILO) < = X < XT(IHI).  Narrow the interval.
-  !
-  ihi = lxt
-    
-  50 continue
-    
-  do
-     middle = ( es%ilo + ihi ) / 2
-     if ( middle == es%ilo ) then
-        mflag = 0
-        left = es%ilo
-        return
-     end if
-     !
-     !  It is assumed that MIDDLE = ILO in case IHI = ILO+1.
-     !
-     if ( xt(middle) <= x ) then
-        es%ilo = middle
-     else
-        ihi = middle
-     end if
-     
-  end do
-  !
-  !  Set output and return.
-  !
-  110 continue
-    
-  mflag = 1
-  if ( x == xt(lxt) ) mflag = 0
-  
-  do left = lxt, 1, -1
-     if ( xt(left) < xt(lxt) ) return
-  end do
-  
-  return
-
-end subroutine interv
-
-!*************************************************************************
-!
-!! BSPLVD calculates the nonvanishing B-splines and derivatives at X.
-!
-!  Discussion:
-!
-!    Values at X of all the relevant B-splines of order K:K+1-NDERIV
-!    are generated via BSPLVB and stored temporarily in DBIATX.
-!
-!    Then the B-spline coefficients of the required derivatives
-!    of the B-splines of interest are generated by differencing,
-!    each from the preceding one of lower order, and combined with
-!    the values of B-splines of corresponding order in DBIATX
-!    to produce the desired values.
-!
-!  Modified:
-!
-!    14 February 2007
-!
-!  Author:
-!
-!    Carl DeBoor
-!
-!  Reference:
-!
-!    Carl DeBoor,
-!    A Practical Guide to Splines,
-!    Springer, 2001,
-!    ISBN: 0387953663.
-!
-!  Parameters:
-!
-!    Input, real ( kind = 8 ) T(LEFT+K), the knot sequence.  It is assumed that
-!    T(LEFT) < T(LEFT+1).  Also, the output is correct only if
-!    T(LEFT) <= X <= T(LEFT+1).
-!
-!    Input, integer K, the order of the B-splines to be evaluated.
-!
-!    Input, real ( kind = 8 ) X, the point at which these values are sought.
-!
-!    Input, integer LEFT, indicates the left endpoint of the interval of
-!    interest.  The K B-splines whose support contains the interval
-!    ( T(LEFT), T(LEFT+1) ) are to be considered.
-!
-!    Workspace, real ( kind = 8 ) A(K,K).
-!
-!    Output, real ( kind = 8 ) DBIATX(K,NDERIV).  DBIATX(I,M) contains
-!    the value of the (M-1)st derivative of the (LEFT-K+I)-th B-spline
-!    of order K for knot sequence T, I=M,...,K, M=1,...,NDERIV.
-!
-!    Input, integer NDERIV, indicates that values of B-splines and their
-!    derivatives up to but not including the NDERIV-th are asked for.
-!
-
-subroutine bsplvd ( es, t, k, x, left, a, dbiatx, nderiv )
-
-  type(general_coordinate_elliptic_solver) :: es
-
-  sll_int32  :: k
-  sll_int32  :: left
-  sll_int32  :: nderiv
-  
-  sll_real64 :: a(:,:)
-  sll_real64,dimension(:,:), intent(out) :: dbiatx!(k,nderiv)
-  sll_real64:: factor
-  sll_real64:: fkp1mm
-  sll_int32 :: i
-  sll_int32 :: ideriv
-  sll_int32 :: il
-  sll_int32 :: j
-  sll_int32 :: jlow
-  sll_int32 :: jp1mid
-  sll_int32 :: ldummy
-  sll_int32 :: m
-  sll_int32 :: mhigh
-  sll_real64,dimension(left+k):: t 
-  sll_real64:: x
-  
-  
-  mhigh = max ( min ( nderiv, k ), 1 )
-  !
-  !  MHIGH is usually equal to NDERIV.
-  !
-  call bsplvb ( es, t, k+1-mhigh, 1, x, left, dbiatx )
-  
-  if ( mhigh == 1 ) then
-     return
-  end if
-  !
-  !  The first column of DBIATX always contains the B-spline values
-  !  for the current order.  These are stored in column K+1-current
-  !  order before BSPLVB is called to put values for the next
-  !  higher order on top of it.
-  !
-  ideriv = mhigh
-  do m = 2, mhigh
-     jp1mid = 1
-     do j = ideriv, k
-        dbiatx(j,ideriv) = dbiatx(jp1mid,1)
-        jp1mid = jp1mid + 1
-     end do
-     ideriv = ideriv - 1
-     call bsplvb ( es, t, k+1-ideriv, 2, x, left, dbiatx )
-  end do
-  !
-  !  At this point, B(LEFT-K+I, K+1-J)(X) is in DBIATX(I,J) for
-  !  I=J,...,K and J=1,...,MHIGH ('=' NDERIV).
-  !
-  !  In particular, the first column of DBIATX is already in final form.
-  !
-  !  To obtain corresponding derivatives of B-splines in subsequent columns,
-  !  generate their B-representation by differencing, then evaluate at X.
-  !
-  jlow = 1
-  do i = 1, k
-     a(jlow:k,i) = 0.0D+00
-     jlow = i
-     a(i,i) = 1.0D+00
-  end do
-  !
-  !  At this point, A(.,J) contains the B-coefficients for the J-th of the
-  !  K B-splines of interest here.
-  !
-  do m = 2, mhigh
-     
-     fkp1mm = real ( k + 1 - m, kind = 8 )
-     il = left
-     i = k
-     !
-     !  For J = 1,...,K, construct B-coefficients of (M-1)st derivative of
-     !  B-splines from those for preceding derivative by differencing
-     !  and store again in  A(.,J).  The fact that  A(I,J) = 0 for
-     !  I < J is used.
-     !
-     do ldummy = 1, k+1-m
-        
-        factor = fkp1mm / ( t(il+k+1-m) - t(il) )
-        !
-        !  The assumption that T(LEFT) < T(LEFT+1) makes denominator
-        !  in FACTOR nonzero.
-        !
-        a(i,1:i) = ( a(i,1:i) - a(i-1,1:i) ) * factor
-        
-        il = il - 1
-        i = i - 1
-     
-     end do
-     !
-     !  For I = 1,...,K, combine B-coefficients A(.,I) with B-spline values
-     !  stored in DBIATX(.,M) to get value of (M-1)st derivative of
-     !  I-th B-spline (of interest here) at X, and store in DBIATX(I,M).
-     !
-     !  Storage of this value over the value of a B-spline
-     !  of order M there is safe since the remaining B-spline derivatives
-     !  of the same order do not use this value due to the fact
-     !  that  A(J,I) = 0  for J < I.
-     !
-     do i = 1, k
-        jlow = max ( i, m )
-        dbiatx(i,m) = dot_product ( a(jlow:k,i), dbiatx(jlow:k,m) )
-     end do
-  
-  end do
-
-end subroutine bsplvd
-
-
-!***********************************************************************
-!
-!! BSPLVB evaluates B-splines at a point X with a given knot sequence.
-!
-!  Discusion:
-!
-!    BSPLVB evaluates all possibly nonzero B-splines at X of order
-!
-!      JOUT = MAX ( JHIGH, (J+1)*(INDEX-1) )
-!
-!    with knot sequence T.
-!
-!    The recurrence relation
-!
-!                     X - T(I)               T(I+J+1) - X
-!    B(I,J+1)(X) = ----------- * B(I,J)(X) + --------------- * B(I+1,J)(X)
-!                  T(I+J)-T(I)               T(I+J+1)-T(I+1)
-!
-!    is used to generate B(LEFT-J:LEFT,J+1)(X) from B(LEFT-J+1:LEFT,J)(X)
-!    storing the new values in BIATX over the old.
-!
-!    The facts that
-!
-!      B(I,1)(X) = 1  if  T(I) <= X < T(I+1)
-!
-!    and that
-!
-!      B(I,J)(X) = 0  unless  T(I) <= X < T(I+J)
-!
-!    are used.
-!
-!    The particular organization of the calculations follows
-!    algorithm 8 in chapter X of the text.
-!
-!  Modified:
-!
-!    14 February 2007
-!
-!  Author:
-!
-!    Carl DeBoor
-!
-!  Reference:
-!
-!    Carl DeBoor,
-!    A Practical Guide to Splines,
-!    Springer, 2001,
-!    ISBN: 0387953663.
-!
-!  Parameters:
-!
-!Input, real ( kind = 8 ) T(LEFT+JOUT), the knot sequence.  T is assumed to
-!    be nondecreasing, and also, T(LEFT) must be strictly less than
-!    T(LEFT+1).
-!
-!    Input, integer JHIGH, INDEX, determine the order
-!    JOUT = max ( JHIGH, (J+1)*(INDEX-1) )
-!    of the B-splines whose values at X are to be returned.
-!    INDEX is used to avoid recalculations when several
-!    columns of the triangular array of B-spline values are
-!    needed, for example, in BVALUE or in BSPLVD.
-!    If INDEX = 1, the calculation starts from scratch and the entire
-!    triangular array of B-spline values of orders
-!    1, 2, ...,JHIGH is generated order by order, that is,
-!    column by column.
-!    If INDEX = 2, only the B-spline values of order J+1, J+2, ..., JOUT
-!    are generated, the assumption being that BIATX, J,
-!    DELTAL, DELTAR are, on entry, as they were on exit
-!    at the previous call.  In particular, if JHIGH = 0,
-!    then JOUT = J+1, that is, just the next column of B-spline
-!    values is generated.
-!    Warning: the restriction  JOUT <= JMAX (= 20) is
-!    imposed arbitrarily by the dimension statement for DELTAL
-!    and DELTAR, but is nowhere checked for.
-!
-!    Input, real ( kind = 8 ) X, the point at which the B-splines
-!    are to be evaluated.
-!
-!    Input, integer LEFT, an integer chosen so that
-!    T(LEFT) <= X <= T(LEFT+1).
-!
-!    Output, real ( kind = 8 ) BIATX(JOUT), with BIATX(I) containing the
-!    value at X of the polynomial of order JOUT which agrees
-!    with the B-spline B(LEFT-JOUT+I,JOUT,T) on the interval
-!    (T(LEFT),T(LEFT+1)).
-!
-
-subroutine bsplvb ( es, t, jhigh, index, x, left, biatx )
-
-type(general_coordinate_elliptic_solver)       :: es
-sll_int32,                         intent(in)  :: left
-sll_int32,                         intent(in)  :: jhigh
-sll_real64, dimension(left+jhigh), intent(in)  :: t
-sll_int32,                         intent(in)  :: index
-sll_real64,                        intent(in)  :: x
-sll_real64, dimension(jhigh),      intent(out) :: biatx 
-
-sll_int32,  parameter             :: jmax = 20
-sll_real64, save, dimension(jmax) :: deltal
-sll_real64, save, dimension(jmax) :: deltar
-sll_int32                         :: i
-sll_real64                        :: saved
-sll_real64                        :: term
-
-if (index == 1) then
-  es%jlo = 1
-  biatx(1) = 1.0_8
-  if ( jhigh <= es%jlo ) return
-end if
-
-if ( t(left+1) <= t(left) ) then
-  print*,'x=',x
-  write(*,'(a)')       ' '
-  write(*,'(a)')       'BSPLVB - Fatal error!'
-  write(*,'(a)')       '  It is required that T(LEFT) < T(LEFT+1).'
-  write(*,'(a,i8)')    '  But LEFT = ', left
-  write(*,'(a,g14.6)') '  T(LEFT) =   ', t(left)
-  write(*,'(a,g14.6)') '  T(LEFT+1) = ', t(left+1)
-  stop
-end if
-
-do
-   
-  deltar(es%jlo) = t(left+es%jlo) - x
-  deltal(es%jlo) = x - t(left+1-es%jlo)
-  
-  saved = 0.0_f64
-  do i = 1, es%jlo
-     term = biatx(i) / ( deltar(i) + deltal(es%jlo+1-i) )
-     biatx(i) = saved + deltar(i) * term
-     saved = deltal(es%jlo+1-i) * term
-  end do
-
-  biatx(es%jlo+1) = saved
-  es%jlo = es%jlo + 1
-  
-  if ( jhigh <= es%jlo ) exit
-
-end do
-   
-end subroutine bsplvb
 
 end module sll_general_coordinate_elliptic_solver_module
 
