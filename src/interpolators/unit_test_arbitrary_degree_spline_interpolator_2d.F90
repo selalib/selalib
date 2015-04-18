@@ -247,37 +247,38 @@ print*, 'Average error (hermite-hermite-hermite-hermite)     = ',acc_der2(9)
 print*, '--------------------------------------------'
 print*, ' Error norm L2'
 print*, '--------------------------------------------'
-print*, 'Error norm L2 (periodic-periodic)                   = ',sqrt(normL2(1))
-print*, 'Error norm L2 (periodic-dirichlet)                  = ',sqrt(normL2(2))
-print*, 'Error norm L2 (dirichlet-periodic)                  = ',sqrt(normL2(3))
-print*, 'Error norm L2 (dirichlet-dirichlet)                 = ',sqrt(normL2(4))
-print*, 'Error norm L2 (hermite-dirichlet-dirichlet-hermite) = ',sqrt(normL2(5))
-print*, 'Error norm L2 (hermite-dirichlet-hermite-dirichlet) = ',sqrt(normL2(6))
-print*, 'Error norm L2 (dirichlet-hermite-hermite-dirichlet) = ',sqrt(normL2(7))
-print*, 'Error norm L2 (dirichlet-hermite-dirichlet-hermite) = ',sqrt(normL2(8))
-print*, 'Error norm L2 (hermite-hermite-hermite-hermite)     = ',sqrt(normL2(9))
+print*, 'Error norm L2 (periodic-periodic)                   = ',sqrt(normL2(1)),h1**(SPL_DEG)
+print*, 'Error norm L2 (periodic-dirichlet)                  = ',sqrt(normL2(2)),h1**(SPL_DEG)
+print*, 'Error norm L2 (dirichlet-periodic)                  = ',sqrt(normL2(3)),h1**(SPL_DEG)
+print*, 'Error norm L2 (dirichlet-dirichlet)                 = ',sqrt(normL2(4)),h1**(SPL_DEG)
+print*, 'Error norm L2 (hermite-dirichlet-dirichlet-hermite) = ',sqrt(normL2(5)),h1**(SPL_DEG)
+print*, 'Error norm L2 (hermite-dirichlet-hermite-dirichlet) = ',sqrt(normL2(6)),h1**(SPL_DEG)
+print*, 'Error norm L2 (dirichlet-hermite-hermite-dirichlet) = ',sqrt(normL2(7)),h1**(SPL_DEG)
+print*, 'Error norm L2 (dirichlet-hermite-dirichlet-hermite) = ',sqrt(normL2(8)),h1**(SPL_DEG)
+print*, 'Error norm L2 (hermite-hermite-hermite-hermite)     = ',sqrt(normL2(9)),h1**(SPL_DEG)
 print*, '--------------------------------------------'
 print*, ' Error norm H1'
 print*, '--------------------------------------------'
-print*, 'Error norm H1 (periodic-periodic)                   = ',sqrt(normH1(1))
-print*, 'Error norm H1 (periodic-dirichlet)                  = ',sqrt(normH1(2))
-print*, 'Error norm H1 (dirichlet-periodic)                  = ',sqrt(normH1(3))
-print*, 'Error norm H1 (dirichlet-dirichlet)                 = ',sqrt(normH1(4))
-print*, 'Error norm H1 (hermite-dirichlet-dirichlet-hermite) = ',sqrt(normH1(5))
-print*, 'Error norm H1 (hermite-dirichlet-hermite-dirichlet) = ',sqrt(normH1(6))
-print*, 'Error norm H1 (dirichlet-hermite-hermite-dirichlet) = ',sqrt(normH1(7))
-print*, 'Error norm H1 (dirichlet-hermite-dirichlet-hermite) = ',sqrt(normH1(8))
-print*, 'Error norm H1 (hermite-hermite-hermite-hermite)     = ',sqrt(normH1(9))
+print*, 'Error norm H1 (periodic-periodic)                   = ',sqrt(normH1(1)),h1**(SPL_DEG-3)
+print*, 'Error norm H1 (periodic-dirichlet)                  = ',sqrt(normH1(2)),h1**(SPL_DEG-3)
+print*, 'Error norm H1 (dirichlet-periodic)                  = ',sqrt(normH1(3)),h1**(SPL_DEG-3)
+print*, 'Error norm H1 (dirichlet-dirichlet)                 = ',sqrt(normH1(4)),h1**(SPL_DEG-3)
+print*, 'Error norm H1 (hermite-dirichlet-dirichlet-hermite) = ',sqrt(normH1(5)),h1**(SPL_DEG-3)
+print*, 'Error norm H1 (hermite-dirichlet-hermite-dirichlet) = ',sqrt(normH1(6)),h1**(SPL_DEG-3)
+print*, 'Error norm H1 (dirichlet-hermite-hermite-dirichlet) = ',sqrt(normH1(7)),h1**(SPL_DEG-3)
+print*, 'Error norm H1 (dirichlet-hermite-dirichlet-hermite) = ',sqrt(normH1(8)),h1**(SPL_DEG-3)
+print*, 'Error norm H1 (hermite-hermite-hermite-hermite)     = ',sqrt(normH1(9)),h1**(SPL_DEG-3)
 
-if (( sqrt(normL2(1)) <= h1**(SPL_DEG))   .AND. &
-    ( sqrt(normL2(2)) <= h1**(SPL_DEG))   .AND. &
-    ( sqrt(normL2(3)) <= h1**(SPL_DEG))   .AND. &
-    ( sqrt(normL2(4)) <= h1**(SPL_DEG))   .AND. &
-    ( sqrt(normL2(5)) <= h1**(SPL_DEG))   .AND. &
-    ( sqrt(normL2(6)) <= h1**(SPL_DEG))   .AND. &
-    ( sqrt(normL2(7)) <= h1**(SPL_DEG))   .AND. &
-    ( sqrt(normL2(8)) <= h1**(SPL_DEG))   .AND. &
-    ( sqrt(normL2(9)) <= h1**(SPL_DEG))   .AND. &
+
+if (( sqrt(normL2(1)) <= h1*h1*h1     )   .AND. &
+    ( sqrt(normL2(2)) <= h1*h1*h1     )   .AND. &
+    ( sqrt(normL2(3)) <= h1*h1*h1     )   .AND. &
+    ( sqrt(normL2(4)) <= h1*h1*h1     )   .AND. &
+    ( sqrt(normL2(5)) <= h1*h1*h1     )   .AND. &
+    ( sqrt(normL2(6)) <= h1*h1*h1     )   .AND. &
+    ( sqrt(normL2(7)) <= h1*h1*h1     )   .AND. &
+    ( sqrt(normL2(8)) <= h1*h1*h1     )   .AND. &
+    ( sqrt(normL2(9)) <= h1*h1*h1     )   .AND. &
     ( sqrt(normH1(1)) <= h1**(SPL_DEG-3)) .AND. &
     ( sqrt(normH1(2)) <= h1**(SPL_DEG-3)) .AND. &
     ( sqrt(normH1(3)) <= h1**(SPL_DEG-3)) .AND. &
