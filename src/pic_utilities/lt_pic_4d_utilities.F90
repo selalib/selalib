@@ -34,23 +34,23 @@ implicit none
 
 contains
 
-  subroutine sll_first_lt_pic_charge_accumulation_4d( p_group, q_accum )
-    type(sll_lt_pic_4d_group), pointer      :: p_group
-    type(sll_charge_accumulator_2d), pointer     :: q_accum
-    type(sll_lt_pic_4d_particle), dimension(:), pointer :: p
-    sll_int32  :: i
-    sll_int32  :: number_particles
-    sll_real64 :: tmp1
-    sll_real64 :: tmp2
-
-    SLL_ASSERT( associated(p_group) .and. associated(q_accum))
-    number_particles =  p_group%number_particles
-    p             => p_group%p_list
-
-    do i=1,number_particles
-       SLL_ACCUMULATE_PARTICLE_CHARGE(q_accum,p(i),tmp1,tmp2)
-    end do
-  end subroutine sll_first_lt_pic_charge_accumulation_4d
+    !  subroutine sll_first_lt_pic_charge_accumulation_4d( p_group, q_accum )
+    !    type(sll_lt_pic_4d_group), pointer      :: p_group
+    !    type(sll_charge_accumulator_2d), pointer     :: q_accum
+    !    type(sll_lt_pic_4d_particle), dimension(:), pointer :: p
+    !    sll_int32  :: i
+    !    sll_int32  :: number_particles
+    !    sll_real64 :: tmp1
+    !    sll_real64 :: tmp2
+    !
+    !    SLL_ASSERT( associated(p_group) .and. associated(q_accum))
+    !    number_particles =  p_group%number_particles
+    !    p             => p_group%p_list
+    !
+    !    do i=1,number_particles
+    !       SLL_ACCUMULATE_PARTICLE_CHARGE(q_accum,p(i),tmp1,tmp2)
+    !    end do
+    !  end subroutine sll_first_lt_pic_charge_accumulation_4d
 
 
   ! <<get_ltp_deformation_matrix>>
@@ -82,6 +82,7 @@ contains
                         p_list,                 &
                         domain_is_x_periodic,   &
                         domain_is_y_periodic,   &
+                        track_markers_outside_domain, &
                         mesh_period_x,          &
                         mesh_period_y,          &
                         h_parts_x,              &    
@@ -112,6 +113,7 @@ contains
     
         LOGICAL, intent(in) :: domain_is_x_periodic
         LOGICAL, intent(in) :: domain_is_y_periodic    
+        LOGICAL, intent(in) :: track_markers_outside_domain
         sll_real64, intent(in)  :: mesh_period_x
         sll_real64, intent(in)  :: mesh_period_y
         
@@ -149,10 +151,11 @@ contains
         sll_real64  :: factor, det_J, inv_det_J
             
         
-        call cell_offset_to_global( p_list(k)%dx, &
-                                    p_list(k)%dy, &
-                                    p_list(k)%ic, &
-                                    particles_m2d, x_k, y_k )
+        call cell_offset_to_global_extended(p_list(k)%dx,   &
+                                            p_list(k)%dy,   &
+                                            p_list(k)%ic_x,   &
+                                            p_list(k)%ic_y,   &
+                                            particles_m2d, x_k, y_k )
         vx_k   = p_list(k)%vx
         vy_k   = p_list(k)%vy
 !        w_k    = p_list(k)%q           
@@ -171,16 +174,19 @@ contains
            vx_k_right  = vx_k
            vy_k_right  = vy_k
         else
-            call cell_offset_to_global( p_list(k_ngb)%dx, &
-                                    p_list(k_ngb)%dy, &
-                                    p_list(k_ngb)%ic, &
-                                    particles_m2d, x_k_right, y_k_right )
+            call cell_offset_to_global_extended(p_list(k_ngb)%dx,   &
+                                                p_list(k_ngb)%dy,   &
+                                                p_list(k_ngb)%ic_x,   &
+                                                p_list(k_ngb)%ic_y,   &
+                                                particles_m2d, x_k_right, y_k_right )
             vx_k_right = p_list(k_ngb)%vx
             vy_k_right = p_list(k_ngb)%vy        
-            if( domain_is_x_periodic .and. x_k_right < x_k - 0.5*mesh_period_x ) x_k_right = x_k_right + mesh_period_x
-            if( domain_is_x_periodic .and. x_k_right > x_k + 0.5*mesh_period_x ) x_k_right = x_k_right - mesh_period_x
-            if( domain_is_y_periodic .and. y_k_right < y_k - 0.5*mesh_period_y ) y_k_right = y_k_right + mesh_period_y
-            if( domain_is_y_periodic .and. y_k_right > y_k + 0.5*mesh_period_y ) y_k_right = y_k_right - mesh_period_y
+            if( .not. track_markers_outside_domain )then
+                if( domain_is_x_periodic .and. x_k_right < x_k - 0.5*mesh_period_x ) x_k_right = x_k_right + mesh_period_x
+                if( domain_is_x_periodic .and. x_k_right > x_k + 0.5*mesh_period_x ) x_k_right = x_k_right - mesh_period_x
+                if( domain_is_y_periodic .and. y_k_right < y_k - 0.5*mesh_period_y ) y_k_right = y_k_right + mesh_period_y
+                if( domain_is_y_periodic .and. y_k_right > y_k + 0.5*mesh_period_y ) y_k_right = y_k_right - mesh_period_y
+            end if
         end if
         
 
@@ -193,16 +199,19 @@ contains
            vx_k_left  = vx_k
            vy_k_left  = vy_k
         else
-            call cell_offset_to_global( p_list(k_ngb)%dx, &
-                                        p_list(k_ngb)%dy, &
-                                        p_list(k_ngb)%ic, &
-                                        particles_m2d, x_k_left, y_k_left )
+            call cell_offset_to_global_extended(p_list(k_ngb)%dx,   &
+                                                p_list(k_ngb)%dy,   &
+                                                p_list(k_ngb)%ic_x,   &
+                                                p_list(k_ngb)%ic_y,   &
+                                                particles_m2d, x_k_left, y_k_left )
             vx_k_left  = p_list(k_ngb)%vx
             vy_k_left  = p_list(k_ngb)%vy
-            if( domain_is_x_periodic .and. x_k_left < x_k - 0.5*mesh_period_x ) x_k_left = x_k_left + mesh_period_x
-            if( domain_is_x_periodic .and. x_k_left > x_k + 0.5*mesh_period_x ) x_k_left = x_k_left - mesh_period_x
-            if( domain_is_y_periodic .and. y_k_left < y_k - 0.5*mesh_period_y ) y_k_left = y_k_left + mesh_period_y
-            if( domain_is_y_periodic .and. y_k_left > y_k + 0.5*mesh_period_y ) y_k_left = y_k_left - mesh_period_y
+            if( .not. track_markers_outside_domain )then
+                if( domain_is_x_periodic .and. x_k_left < x_k - 0.5*mesh_period_x ) x_k_left = x_k_left + mesh_period_x
+                if( domain_is_x_periodic .and. x_k_left > x_k + 0.5*mesh_period_x ) x_k_left = x_k_left - mesh_period_x
+                if( domain_is_y_periodic .and. y_k_left < y_k - 0.5*mesh_period_y ) y_k_left = y_k_left + mesh_period_y
+                if( domain_is_y_periodic .and. y_k_left > y_k + 0.5*mesh_period_y ) y_k_left = y_k_left - mesh_period_y
+            end if
         end if
         
            j11 = factor * ( x_k_right  - x_k_left  )
@@ -222,16 +231,19 @@ contains
            vx_k_right  = vx_k
            vy_k_right  = vy_k
         else
-            call cell_offset_to_global(  p_list(k_ngb)%dx, &
-                                        p_list(k_ngb)%dy, &
-                                        p_list(k_ngb)%ic, &
-                                        particles_m2d, x_k_right, y_k_right )
+            call cell_offset_to_global_extended(p_list(k_ngb)%dx,   &
+                                                p_list(k_ngb)%dy,   &
+                                                p_list(k_ngb)%ic_x,   &
+                                                p_list(k_ngb)%ic_y,   &
+                                                particles_m2d, x_k_right, y_k_right )
             vx_k_right = p_list(k_ngb)%vx
             vy_k_right = p_list(k_ngb)%vy
-            if( domain_is_x_periodic .and. x_k_right < x_k - 0.5*mesh_period_x ) x_k_right = x_k_right + mesh_period_x
-            if( domain_is_x_periodic .and. x_k_right > x_k + 0.5*mesh_period_x ) x_k_right = x_k_right - mesh_period_x
-            if( domain_is_y_periodic .and. y_k_right < y_k - 0.5*mesh_period_y ) y_k_right = y_k_right + mesh_period_y
-            if( domain_is_y_periodic .and. y_k_right > y_k + 0.5*mesh_period_y ) y_k_right = y_k_right - mesh_period_y
+            if( .not. track_markers_outside_domain )then
+                if( domain_is_x_periodic .and. x_k_right < x_k - 0.5*mesh_period_x ) x_k_right = x_k_right + mesh_period_x
+                if( domain_is_x_periodic .and. x_k_right > x_k + 0.5*mesh_period_x ) x_k_right = x_k_right - mesh_period_x
+                if( domain_is_y_periodic .and. y_k_right < y_k - 0.5*mesh_period_y ) y_k_right = y_k_right + mesh_period_y
+                if( domain_is_y_periodic .and. y_k_right > y_k + 0.5*mesh_period_y ) y_k_right = y_k_right - mesh_period_y
+            end if
         end if
 
         k_ngb  = p_list(k)%ngb_yleft_index
@@ -243,16 +255,19 @@ contains
            vx_k_left  = vx_k
            vy_k_left  = vy_k
         else
-            call cell_offset_to_global( p_list(k_ngb)%dx, &
-                                        p_list(k_ngb)%dy, &
-                                        p_list(k_ngb)%ic, &
-                                        particles_m2d, x_k_left, y_k_left )
+            call cell_offset_to_global_extended(p_list(k_ngb)%dx,   &
+                                                p_list(k_ngb)%dy,   &
+                                                p_list(k_ngb)%ic_x,   &
+                                                p_list(k_ngb)%ic_y,   &
+                                                particles_m2d, x_k_left, y_k_left )
             vx_k_left  = p_list(k_ngb)%vx
             vy_k_left  = p_list(k_ngb)%vy
-            if( domain_is_x_periodic .and. x_k_left < x_k - 0.5*mesh_period_x ) x_k_left = x_k_left + mesh_period_x
-            if( domain_is_x_periodic .and. x_k_left > x_k + 0.5*mesh_period_x ) x_k_left = x_k_left - mesh_period_x
-            if( domain_is_y_periodic .and. y_k_left < y_k - 0.5*mesh_period_y ) y_k_left = y_k_left + mesh_period_y
-            if( domain_is_y_periodic .and. y_k_left > y_k + 0.5*mesh_period_y ) y_k_left = y_k_left - mesh_period_y
+            if( .not. track_markers_outside_domain )then
+                if( domain_is_x_periodic .and. x_k_left < x_k - 0.5*mesh_period_x ) x_k_left = x_k_left + mesh_period_x
+                if( domain_is_x_periodic .and. x_k_left > x_k + 0.5*mesh_period_x ) x_k_left = x_k_left - mesh_period_x
+                if( domain_is_y_periodic .and. y_k_left < y_k - 0.5*mesh_period_y ) y_k_left = y_k_left + mesh_period_y
+                if( domain_is_y_periodic .and. y_k_left > y_k + 0.5*mesh_period_y ) y_k_left = y_k_left - mesh_period_y
+            end if
         end if
         
            j12 = factor * ( x_k_right  - x_k_left  )
@@ -273,16 +288,19 @@ contains
            vx_k_right  = vx_k
            vy_k_right  = vy_k
         else
-           call cell_offset_to_global(  p_list(k_ngb)%dx, &
-                                        p_list(k_ngb)%dy, &
-                                        p_list(k_ngb)%ic, &
-                                        particles_m2d, x_k_right, y_k_right )
+            call cell_offset_to_global_extended(p_list(k_ngb)%dx,   &
+                                                p_list(k_ngb)%dy,   &
+                                                p_list(k_ngb)%ic_x,   &
+                                                p_list(k_ngb)%ic_y,   &
+                                                particles_m2d, x_k_right, y_k_right )
             vx_k_right = p_list(k_ngb)%vx
             vy_k_right = p_list(k_ngb)%vy
-            if( domain_is_x_periodic .and. x_k_right < x_k - 0.5*mesh_period_x ) x_k_right = x_k_right + mesh_period_x
-            if( domain_is_x_periodic .and. x_k_right > x_k + 0.5*mesh_period_x ) x_k_right = x_k_right - mesh_period_x
-            if( domain_is_y_periodic .and. y_k_right < y_k - 0.5*mesh_period_y ) y_k_right = y_k_right + mesh_period_y
-            if( domain_is_y_periodic .and. y_k_right > y_k + 0.5*mesh_period_y ) y_k_right = y_k_right - mesh_period_y
+            if( .not. track_markers_outside_domain )then
+                if( domain_is_x_periodic .and. x_k_right < x_k - 0.5*mesh_period_x ) x_k_right = x_k_right + mesh_period_x
+                if( domain_is_x_periodic .and. x_k_right > x_k + 0.5*mesh_period_x ) x_k_right = x_k_right - mesh_period_x
+                if( domain_is_y_periodic .and. y_k_right < y_k - 0.5*mesh_period_y ) y_k_right = y_k_right + mesh_period_y
+                if( domain_is_y_periodic .and. y_k_right > y_k + 0.5*mesh_period_y ) y_k_right = y_k_right - mesh_period_y
+            end if
         end if
 
         k_ngb  = p_list(k)%ngb_vxleft_index
@@ -294,16 +312,19 @@ contains
             vx_k_left  = vx_k
             vy_k_left  = vy_k
         else
-            call cell_offset_to_global( p_list(k_ngb)%dx, &
-                                        p_list(k_ngb)%dy, &
-                                        p_list(k_ngb)%ic, &
-                                        particles_m2d, x_k_left, y_k_left )
+            call cell_offset_to_global_extended(p_list(k_ngb)%dx,   &
+                                                p_list(k_ngb)%dy,   &
+                                                p_list(k_ngb)%ic_x,   &
+                                                p_list(k_ngb)%ic_y,   &
+                                                particles_m2d, x_k_left, y_k_left )
             vx_k_left  = p_list(k_ngb)%vx
             vy_k_left  = p_list(k_ngb)%vy
-            if( domain_is_x_periodic .and. x_k_left < x_k - 0.5*mesh_period_x ) x_k_left = x_k_left + mesh_period_x
-            if( domain_is_x_periodic .and. x_k_left > x_k + 0.5*mesh_period_x ) x_k_left = x_k_left - mesh_period_x
-            if( domain_is_y_periodic .and. y_k_left < y_k - 0.5*mesh_period_y ) y_k_left = y_k_left + mesh_period_y
-            if( domain_is_y_periodic .and. y_k_left > y_k + 0.5*mesh_period_y ) y_k_left = y_k_left - mesh_period_y
+            if( .not. track_markers_outside_domain )then
+                if( domain_is_x_periodic .and. x_k_left < x_k - 0.5*mesh_period_x ) x_k_left = x_k_left + mesh_period_x
+                if( domain_is_x_periodic .and. x_k_left > x_k + 0.5*mesh_period_x ) x_k_left = x_k_left - mesh_period_x
+                if( domain_is_y_periodic .and. y_k_left < y_k - 0.5*mesh_period_y ) y_k_left = y_k_left + mesh_period_y
+                if( domain_is_y_periodic .and. y_k_left > y_k + 0.5*mesh_period_y ) y_k_left = y_k_left - mesh_period_y
+            end if
         end if
         
            j13 = factor * ( x_k_right  - x_k_left  )
@@ -324,16 +345,19 @@ contains
            vx_k_right  = vx_k
            vy_k_right  = vy_k
         else
-           call cell_offset_to_global(  p_list(k_ngb)%dx, &
-                                        p_list(k_ngb)%dy, &
-                                        p_list(k_ngb)%ic, &
-                                        particles_m2d, x_k_right, y_k_right )
+            call cell_offset_to_global_extended(p_list(k_ngb)%dx,   &
+                                                p_list(k_ngb)%dy,   &
+                                                p_list(k_ngb)%ic_x,   &
+                                                p_list(k_ngb)%ic_y,   &
+                                                particles_m2d, x_k_right, y_k_right )
             vx_k_right = p_list(k_ngb)%vx
             vy_k_right = p_list(k_ngb)%vy
-            if( domain_is_x_periodic .and. x_k_right < x_k - 0.5*mesh_period_x ) x_k_right = x_k_right + mesh_period_x
-            if( domain_is_x_periodic .and. x_k_right > x_k + 0.5*mesh_period_x ) x_k_right = x_k_right - mesh_period_x
-            if( domain_is_y_periodic .and. y_k_right < y_k - 0.5*mesh_period_y ) y_k_right = y_k_right + mesh_period_y
-            if( domain_is_y_periodic .and. y_k_right > y_k + 0.5*mesh_period_y ) y_k_right = y_k_right - mesh_period_y
+            if( .not. track_markers_outside_domain )then
+                if( domain_is_x_periodic .and. x_k_right < x_k - 0.5*mesh_period_x ) x_k_right = x_k_right + mesh_period_x
+                if( domain_is_x_periodic .and. x_k_right > x_k + 0.5*mesh_period_x ) x_k_right = x_k_right - mesh_period_x
+                if( domain_is_y_periodic .and. y_k_right < y_k - 0.5*mesh_period_y ) y_k_right = y_k_right + mesh_period_y
+                if( domain_is_y_periodic .and. y_k_right > y_k + 0.5*mesh_period_y ) y_k_right = y_k_right - mesh_period_y
+            end if
         end if
 
         k_ngb  = p_list(k)%ngb_vyleft_index
@@ -345,16 +369,19 @@ contains
             vx_k_left  = vx_k
             vy_k_left  = vy_k
         else
-            call cell_offset_to_global( p_list(k_ngb)%dx, &
-                                        p_list(k_ngb)%dy, &
-                                        p_list(k_ngb)%ic, &
-                                        particles_m2d, x_k_left, y_k_left )
+            call cell_offset_to_global_extended(p_list(k_ngb)%dx,   &
+                                                p_list(k_ngb)%dy,   &
+                                                p_list(k_ngb)%ic_x,   &
+                                                p_list(k_ngb)%ic_y,   &
+                                                particles_m2d, x_k_left, y_k_left )
             vx_k_left  = p_list(k_ngb)%vx
             vy_k_left  = p_list(k_ngb)%vy
-            if( domain_is_x_periodic .and. x_k_left < x_k - 0.5*mesh_period_x ) x_k_left = x_k_left + mesh_period_x
-            if( domain_is_x_periodic .and. x_k_left > x_k + 0.5*mesh_period_x ) x_k_left = x_k_left - mesh_period_x
-            if( domain_is_y_periodic .and. y_k_left < y_k - 0.5*mesh_period_y ) y_k_left = y_k_left + mesh_period_y
-            if( domain_is_y_periodic .and. y_k_left > y_k + 0.5*mesh_period_y ) y_k_left = y_k_left - mesh_period_y
+            if( .not. track_markers_outside_domain )then
+                if( domain_is_x_periodic .and. x_k_left < x_k - 0.5*mesh_period_x ) x_k_left = x_k_left + mesh_period_x
+                if( domain_is_x_periodic .and. x_k_left > x_k + 0.5*mesh_period_x ) x_k_left = x_k_left - mesh_period_x
+                if( domain_is_y_periodic .and. y_k_left < y_k - 0.5*mesh_period_y ) y_k_left = y_k_left + mesh_period_y
+                if( domain_is_y_periodic .and. y_k_left > y_k + 0.5*mesh_period_y ) y_k_left = y_k_left - mesh_period_y
+            end if
         end if
         
            j14 = factor * ( x_k_right  - x_k_left  )
@@ -559,6 +586,50 @@ end subroutine get_ltp_deformation_matrix
     end if
   end function in_bounds_periodic
 
+
+  function in_bounds_periodic_x( x, mesh, x_periodic ) result(res)
+
+    use sll_cartesian_meshes
+
+    ! [[file:../working_precision/sll_working_precision.h]]
+    use sll_working_precision
+
+    logical :: res
+    sll_real64, intent(in) :: x
+    logical, intent(in) :: x_periodic
+    type(sll_cartesian_mesh_2d), pointer :: mesh
+    if( (x >= mesh%eta1_min)                                                                    &
+        .and.                                                                                   &
+        ((x < mesh%eta1_max .and. x_periodic) .or. (x <= mesh%eta1_max .and. .not. x_periodic)) &
+      ) then
+       res = .true.
+    else
+       res = .false.
+    end if
+  end function in_bounds_periodic_x
+
+
+  function in_bounds_periodic_y( y, mesh, y_periodic ) result(res)
+
+    use sll_cartesian_meshes
+
+    ! [[file:../working_precision/sll_working_precision.h]]
+    use sll_working_precision
+
+    logical :: res
+    sll_real64, intent(in) :: y
+    logical, intent(in) :: y_periodic
+    type(sll_cartesian_mesh_2d), pointer :: mesh
+    if( (y >= mesh%eta2_min)                                                                    &
+        .and.                                                                                   &
+        ((y < mesh%eta2_max .and. y_periodic) .or. (y <= mesh%eta2_max .and. .not. y_periodic)) &
+      ) then
+       res = .true.
+    else
+       res = .false.
+    end if
+  end function in_bounds_periodic_y
+
   ! <<apply_periodic_bc>> extracted from [[file:../simulation/simulation_4d_vp_lt_pic_cartesian.F90::subroutine
   ! apply_periodic_bc]]
 
@@ -605,7 +676,6 @@ end subroutine get_ltp_deformation_matrix
   subroutine apply_periodic_bc( mesh, x, y )
 
     use sll_cartesian_meshes
-
     ! [[file:../working_precision/sll_working_precision.h]]
     use sll_working_precision
 
@@ -616,6 +686,57 @@ end subroutine get_ltp_deformation_matrix
     x = mesh%eta1_min + modulo(x - mesh%eta1_min, mesh%eta1_max - mesh%eta1_min)
     y = mesh%eta2_min + modulo(y - mesh%eta2_min, mesh%eta2_max - mesh%eta2_min)
   end subroutine apply_periodic_bc
+
+
+  subroutine apply_periodic_bc_x( mesh, x)
+
+    use sll_cartesian_meshes
+    ! [[file:../working_precision/sll_working_precision.h]]
+    use sll_working_precision
+
+    type(sll_cartesian_mesh_2d), pointer :: mesh
+    sll_real64, intent(inout) :: x
+
+    x = mesh%eta1_min + modulo(x - mesh%eta1_min, mesh%eta1_max - mesh%eta1_min)
+  end subroutine apply_periodic_bc_x
+
+
+  subroutine apply_periodic_bc_y( mesh, y)
+
+    use sll_cartesian_meshes
+    ! [[file:../working_precision/sll_working_precision.h]]
+    use sll_working_precision
+
+    type(sll_cartesian_mesh_2d), pointer, intent(in) :: mesh
+    sll_real64, intent(inout) :: y
+
+    y = mesh%eta2_min + modulo(y - mesh%eta2_min, mesh%eta2_max - mesh%eta2_min)
+  end subroutine apply_periodic_bc_y
+
+
+  ! puts the point (x,y) back into the computational domain if periodic in x or y (or both)
+  ! otherwise, does nothing
+  subroutine periodic_correction(p_group, x, y)
+    type(sll_lt_pic_4d_group), pointer,  intent(in)    :: p_group
+    sll_real64, intent(inout) :: x
+    sll_real64, intent(inout) :: y
+    type(sll_cartesian_mesh_2d), pointer :: mesh
+
+    mesh => p_group%mesh
+
+    if( p_group%domain_is_x_periodic                        &
+        .and.                                               &
+        ( (x < mesh%eta1_min) .or. (x >= mesh%eta1_max) )   &
+      ) then
+          call apply_periodic_bc_x( mesh, x)
+    end if
+    if( p_group%domain_is_y_periodic                        &
+        .and.                                               &
+        ( (y < mesh%eta2_min) .or. (y >= mesh%eta2_max) )   &
+      ) then
+          call apply_periodic_bc_y( mesh, y)
+    end if
+  end subroutine periodic_correction
 
 
   ! <<onestep>> <<ALH>> utility function for finding the neighbours of a particle, used by [[ONESTEPMACRO]]. "dim"
@@ -1386,6 +1507,7 @@ end subroutine get_ltp_deformation_matrix
     
     LOGICAL :: domain_is_x_periodic
     LOGICAL :: domain_is_y_periodic    
+    LOGICAL :: track_markers_outside_domain
 
     ! Poisson mesh associated to the particles
     particles_m2d => p_group%mesh
@@ -1417,6 +1539,7 @@ end subroutine get_ltp_deformation_matrix
     parts_vx_min   = p_group%remapping_grid%eta3_min
     parts_vy_min   = p_group%remapping_grid%eta4_min
         
+    track_markers_outside_domain = p_group%track_markers_outside_domain
 
     ! <<sll_lt_pic_4d_write_f_on_remap_grid-periodicity>>
 
@@ -1460,6 +1583,7 @@ end subroutine get_ltp_deformation_matrix
                                     p,                      &
                                     domain_is_x_periodic,   &
                                     domain_is_y_periodic,   &
+                                    track_markers_outside_domain, &
                                     mesh_period_x,          &
                                     mesh_period_y,          &
                                     h_parts_x,              &     
@@ -1645,10 +1769,10 @@ end subroutine get_ltp_deformation_matrix
     sll_real64 :: inv_period_x
     sll_real64 :: inv_period_y
 
-    sll_real64 :: x_k_left,  x_k_right
-    sll_real64 :: y_k_left,  y_k_right
-    sll_real64 :: vx_k_left, vx_k_right
-    sll_real64 :: vy_k_left, vy_k_right
+!    sll_real64 :: x_k_left,  x_k_right
+!    sll_real64 :: y_k_left,  y_k_right
+!    sll_real64 :: vx_k_left, vx_k_right
+!    sll_real64 :: vy_k_left, vy_k_right
 
     sll_real64 :: mesh_period_1
     sll_real64 :: mesh_period_2
@@ -1689,6 +1813,7 @@ end subroutine get_ltp_deformation_matrix
         
     LOGICAL :: domain_is_x_periodic
     LOGICAL :: domain_is_y_periodic    
+    LOGICAL :: track_markers_outside_domain
 
     sll_real64 :: sum_part_radius_x
     sll_real64 :: sum_part_radius_y
@@ -1722,7 +1847,8 @@ end subroutine get_ltp_deformation_matrix
     p             => p_group%p_list
     part_degree   = p_group%spline_degree
     ref_radius = 0.5*(part_degree+1)
-    
+    track_markers_outside_domain = p_group%track_markers_outside_domain
+
     num_points_1  = int(plot_m2d%num_cells1+1, i32)
     num_points_2  = int(plot_m2d%num_cells2+1, i32)
 
@@ -1799,6 +1925,7 @@ end subroutine get_ltp_deformation_matrix
                                     p,                      &
                                     domain_is_x_periodic,   &
                                     domain_is_y_periodic,   &
+                                    track_markers_outside_domain,   &
                                     mesh_period_x,          &
                                     mesh_period_y,          &
                                     h_parts_x,              &     
@@ -2228,8 +2355,12 @@ end subroutine get_ltp_deformation_matrix
 
     do k = 1, p_group%number_particles
         particle => p_group%p_list(k)
-        call cell_offset_to_global( particle%dx, particle%dy, particle%ic, &
-                                      p_group%mesh, x_k, y_k )
+
+        call cell_offset_to_global_extended(particle%dx, particle%dy, particle%ic_x, particle%ic_y,   &
+                                            p_group%mesh, x_k, y_k )
+
+        call periodic_correction(p_group, x_k, y_k)
+
         write(file_id,*) x_k, "  ", y_k, "  ", particle%vx , "  ", particle%vy,  "  ", particle%q
 
     end do
@@ -2293,7 +2424,6 @@ subroutine plot_f_slice_x_vx(p_group,           &
 
   logical       :: scenario_is_deposition
   logical       :: use_remapping_grid
-  logical       :: use_exact_f0
   sll_real64, dimension(:,:),       pointer :: x_vx_grid_values
   type(sll_cartesian_mesh_4d),      pointer :: plotting_grid_4d
   type(sll_charge_accumulator_2d),  pointer :: dummy_q_accumulator
@@ -2324,7 +2454,6 @@ subroutine plot_f_slice_x_vx(p_group,           &
 
   scenario_is_deposition = .false.
   use_remapping_grid = .false.
-  use_exact_f0 = .true.
 
   call sll_lt_pic_4d_write_f_on_grid_or_deposit (p_group, dummy_q_accumulator,      &
                                                        scenario_is_deposition,      &
@@ -2334,8 +2463,7 @@ subroutine plot_f_slice_x_vx(p_group,           &
                                                        n_virtual_x,                 &
                                                        n_virtual_y,                 &
                                                        n_virtual_vx,                &
-                                                       n_virtual_vy,                &
-                                                       use_exact_f0 )
+                                                       n_virtual_vy)
 
   call sll_gnuplot_2d(  plot_grid_x_min,  plot_grid_x_max,  num_virtual_parts_x,    &
                         plot_grid_vx_min, plot_grid_vx_max, num_virtual_parts_vx,   &
@@ -2562,7 +2690,16 @@ subroutine get_particle_index_from_initial_position_on_cartesian_grid (j_x, j_y,
     sll_int32, intent(in) :: n_parts_vy
     sll_int32, intent(out) :: k
 
-    k = 1+ (j_vy-1) + (j_vx-1) * n_parts_vy + (j_y-1) * n_parts_vy * n_parts_vx + (j_x-1) * n_parts_vy * n_parts_vx * n_parts_y
+    if(         j_x <= 0  .or. j_x > n_parts_x      &
+        .or.    j_y <= 0  .or. j_y > n_parts_y      &
+        .or.    j_vx <= 0 .or. j_vx > n_parts_vx    &
+        .or.    j_vy <= 0 .or. j_vy > n_parts_vy  )then
+        k = 0
+    else
+        k = 1+ (j_vy-1) + (j_vx-1) * n_parts_vy + (j_y-1) * n_parts_vy * n_parts_vx + (j_x-1) * n_parts_vy * n_parts_vx * n_parts_y
+    end if
+
+    SLL_ASSERT( k <= n_parts_x * n_parts_y * n_parts_vx * n_parts_vy )
 
 end subroutine
 
@@ -2573,7 +2710,7 @@ end subroutine
                                                       n_virtual_y_for_deposition,       &
                                                       n_virtual_vx_for_deposition,      &
                                                       n_virtual_vy_for_deposition,      &
-                                                      use_exact_f0, given_total_density)
+                                                      given_total_density)
 
     type(sll_lt_pic_4d_group),pointer,intent(inout) :: p_group
     type(sll_charge_accumulator_2d), pointer, intent(inout) :: q_accumulator
@@ -2585,7 +2722,6 @@ end subroutine
     sll_real64, dimension(:,:),     pointer :: dummy_array_2d
 
     sll_real64, intent(in), optional :: given_total_density
-    logical, intent(in) :: use_exact_f0
     logical       :: scenario_is_deposition
     logical       :: use_remapping_grid
 
@@ -2604,7 +2740,7 @@ end subroutine
                                                        n_virtual_y_for_deposition,      &
                                                        n_virtual_vx_for_deposition,     &
                                                        n_virtual_vy_for_deposition,     &
-                                                       use_exact_f0, given_total_density)
+                                                       given_total_density)
     else
         call sll_lt_pic_4d_write_f_on_grid_or_deposit (p_group, q_accumulator,          &
                                                        scenario_is_deposition,          &
@@ -2614,8 +2750,7 @@ end subroutine
                                                        n_virtual_x_for_deposition,      &
                                                        n_virtual_y_for_deposition,      &
                                                        n_virtual_vx_for_deposition,     &
-                                                       n_virtual_vy_for_deposition,     &
-                                                       use_exact_f0)
+                                                       n_virtual_vy_for_deposition)
     end if
 
   end subroutine sll_lt_pic_4d_deposit_charge_on_2d_mesh
@@ -2637,7 +2772,6 @@ end subroutine
     sll_real64, dimension(:,:),     pointer :: dummy_array_2d
     logical       :: scenario_is_deposition
     logical       :: use_remapping_grid
-    logical       :: use_exact_f0
 
     nullify(dummy_q_accumulator)
     nullify(dummy_grid_4d)
@@ -2645,7 +2779,6 @@ end subroutine
 
     scenario_is_deposition = .false.
     use_remapping_grid = .true.
-    use_exact_f0 = .false.
 
     call sll_lt_pic_4d_write_f_on_grid_or_deposit (p_group, dummy_q_accumulator,    &
                                                    scenario_is_deposition,          &
@@ -2655,8 +2788,7 @@ end subroutine
                                                    n_virtual_x_for_remapping,       &
                                                    n_virtual_y_for_remapping,       &
                                                    n_virtual_vx_for_remapping,      &
-                                                   n_virtual_vy_for_remapping,      &
-                                                   use_exact_f0)
+                                                   n_virtual_vy_for_remapping)
 
   end subroutine sll_lt_pic_4d_write_f_on_remapping_grid
 
@@ -2719,7 +2851,6 @@ end subroutine
                                                        n_virtual_y,                 &
                                                        n_virtual_vx,                &
                                                        n_virtual_vy,                &
-                                                       use_exact_f0,                &
                                                        given_total_density)
 
     ! [[file:../pic_particle_types/lt_pic_4d_group.F90::sll_lt_pic_4d_group]] p_group contains both the existing
@@ -2736,7 +2867,6 @@ end subroutine
     sll_int32, intent(in) :: n_virtual_vx
     sll_int32, intent(in) :: n_virtual_vy
 
-    logical, intent(in) :: use_exact_f0
     sll_real64, intent(in), optional :: given_total_density
 
     type(charge_accumulator_cell_2d), pointer :: charge_accumulator_cell
@@ -2869,6 +2999,10 @@ end subroutine
 
     LOGICAL :: domain_is_x_periodic
     LOGICAL :: domain_is_y_periodic
+    LOGICAL :: track_markers_outside_domain
+
+    LOGICAL :: find_k_prime_step_by_step
+
     sll_real64 :: mesh_period_x
     sll_real64 :: mesh_period_y
     sll_real64 :: inv_period_x
@@ -2886,6 +3020,12 @@ end subroutine
     sll_real64 :: x_k_t0,y_k_t0,vx_k_t0,vy_k_t0
 
     sll_real64 :: x_to_xk, y_to_yk, vx_to_vxk, vy_to_vyk
+
+    sll_real64 :: x_t0_to_xkprime_t0
+    sll_real64 :: y_t0_to_ykprime_t0
+    sll_real64 :: vx_t0_to_vxkprime_t0
+    sll_real64 :: vy_t0_to_vykprime_t0
+
     sll_real64 :: d1_x, d1_y, d1_vx, d1_vy
     sll_real64 :: d2_x, d2_y, d2_vx, d2_vy
     sll_real64 :: d3_x, d3_y, d3_vx, d3_vy
@@ -2908,6 +3048,11 @@ end subroutine
     ! coordinates of a virtual particle at time 0 relative to the coordinates of one real particle
 
     sll_real64 :: x_t0,y_t0,vx_t0,vy_t0
+
+    sll_real64 :: x_t0_to_xk_t0
+    sll_real64 :: y_t0_to_yk_t0
+    sll_real64 :: vx_t0_to_vxk_t0
+    sll_real64 :: vy_t0_to_vyk_t0
 
     sll_int32 :: part_degree
 
@@ -2944,7 +3089,7 @@ end subroutine
     sll_real64, dimension(:),allocatable :: cos_table, exp_table
     sll_real64 :: s, s_aux
     sll_real64 :: hs_cos_table, hs_exp_table
-    sll_real64 :: ds_cos_table, ds_exp_table, ds_table
+    sll_real64 :: ds_table
     sll_real64 :: smin_cos_table, smax_cos_table
     sll_real64 :: smin_exp_table, smax_exp_table
     sll_real64 :: si_cos, si_exp
@@ -3025,23 +3170,30 @@ end subroutine
 
         if( use_remapping_grid )then
 
-            ! todo: check that the definition of the virtual grid here is consistent with the "given_grid" case
-
             g => p_group%remapping_grid
-            ! we add one virtual cell at the end to avoid missing the last remapping node (will not be used if periodic)
-            ! question: should we modify the grid max values ? todo: check this
-            num_virtual_cells_x =  int(g%num_cells1/n_virtual_x)+1
-            num_virtual_cells_y =  int(g%num_cells2/n_virtual_y)+1
-            num_virtual_cells_vx = int(p_group%remapping_grid%num_cells3/n_virtual_vx)+1
-            num_virtual_cells_vy = int(p_group%remapping_grid%num_cells4/n_virtual_vy)+1
 
             number_virtual_particles_x = p_group%number_parts_x
             number_virtual_particles_y = p_group%number_parts_y
             number_virtual_particles_vx = p_group%number_parts_vx
             number_virtual_particles_vy = p_group%number_parts_vy
 
+            num_virtual_cells_x =  int(ceiling(number_virtual_particles_x * 1. / n_virtual_x) )
+            num_virtual_cells_y =  int(ceiling(number_virtual_particles_y * 1. / n_virtual_y) )
+            num_virtual_cells_vx = int(ceiling(number_virtual_particles_vx * 1. / n_virtual_vx))
+            num_virtual_cells_vy = int(ceiling(number_virtual_particles_vy * 1. / n_virtual_vy))
+
+
             ! initialize [[file:../pic_particle_types/lt_pic_4d_group.F90::target_values]]
             p_group%target_values(:,:,:,:) = 0
+
+            print *, "6453 before remap -> DEBUG: ", p_group%number_parts_x/2,    &
+                                           p_group%number_parts_y/2,    &
+                                           p_group%number_parts_vx/2,   &
+                                           p_group%number_parts_vy/2
+            print *, "6454 before remap -> DEBUG: ", p_group%target_values(p_group%number_parts_x/2,  p_group%number_parts_y/2, &
+                                                                 p_group%number_parts_vx/2, p_group%number_parts_vy/2)
+
+
 
         else
 
@@ -3063,6 +3215,10 @@ end subroutine
             num_virtual_cells_vx = number_virtual_particles_vx / n_virtual_vx
             num_virtual_cells_vy = number_virtual_particles_vy / n_virtual_vy
 
+            print *, "[7653534] write f on given grid: "
+            print *, " number_virtual_particles_x, n_virtual_x, num_virtual_cells_x", &
+                        number_virtual_particles_x, n_virtual_x, num_virtual_cells_x
+
             ! for now we assume that given_array_2d is in (x, vx) space
             SLL_ASSERT(size(given_array_2d,1) == number_virtual_particles_x)
             SLL_ASSERT(size(given_array_2d,2) == number_virtual_particles_vx)
@@ -3075,6 +3231,8 @@ end subroutine
     ! -- creating g the virtual grid [end] --
 
     part_degree = p_group%spline_degree
+
+    track_markers_outside_domain = p_group%track_markers_outside_domain
 
     ! Preparatory work: find out the particle which is closest to each cell center by looping over all particles and
     ! noting which virtual cell contains it. The leftmost virtual cell in each dimension may not be complete.
@@ -3142,6 +3300,7 @@ end subroutine
     alpha_landau = p_group%alpha_landau
     k_landau = p_group%k_landau
 
+
     ! preparatory loop to fill the [[closest_particle]] array containing the particle closest to the center of each
     ! virtual cell
 
@@ -3154,7 +3313,8 @@ end subroutine
        ! find absolute (x,y,vx,vy) coordinates for this particle. Uses
        ! [[file:sll_representation_conversion.F90::cell_offset_to_global]]
 
-       call cell_offset_to_global(particle%dx,particle%dy,particle%ic,p_group%mesh,x,y)
+       call cell_offset_to_global_extended(particle%dx,particle%dy,particle%ic_x,particle%ic_y,p_group%mesh,x,y)
+       call periodic_correction(p_group, x,y)
        vx = particle%vx
        vy = particle%vy
 
@@ -3223,7 +3383,7 @@ end subroutine
     ! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
     p_group%debug_bsl_remap = -100
 
-    if( use_exact_f0 )then
+    if( p_group%use_exact_f0 )then
 
         ! create two tables for fast evaluation of cosine and exponential
         ! -- THIS IS USEFUL FOR THE LANDAU f0 AND MAYBE NOT FOR OTHER INITIAL DENSITIES --
@@ -3286,30 +3446,33 @@ end subroutine
 
                 k = closest_particle(i,j,l,m)
 
-#define UPDATE_CLOSEST_PARTICLE_ARRAYS_USING_NEIGHBOR_CELLS(di,dj,dl,dm)                      \
-    do;                                                                                       \
-        k_neighbor = closest_particle(i+(di), j+(dj), l+(dl), m+(dm));                        \
-;                                                                                             \
-        if(k_neighbor /= 0) then;  do;                                                        \
-            particle => p_group%p_list(k_neighbor);                                           \
-            call cell_offset_to_global(particle%dx,particle%dy,particle%ic,p_group%mesh,x,y); \
-            vx = particle%vx;                                                                 \
-            vy = particle%vy;                                                                 \
-            x_aux = x - g%eta1_min;                                                           \
-            y_aux = y - g%eta2_min;                                                           \
-            vx_aux = vx - g%eta3_min;                                                         \
-            vy_aux = vy - g%eta4_min;                                                         \
-            call update_closest_particle_arrays(k_neighbor,                                   \
-                                                x_aux, y_aux, vx_aux, vy_aux,                 \
-                                                i, j, l, m,                                   \
-                                                h_virtual_cell_x, h_virtual_cell_y,           \
-                                                h_virtual_cell_vx, h_virtual_cell_vy,         \
-                                                closest_particle,                             \
-                                                closest_particle_distance);                   \
-        exit;                                                                                 \
-        end do;                                                                               \
-        end if;                                                                               \
-    exit;                                                                                     \
+        ! before, we used           call cell_offset_to_global(particle%dx,particle%dy,particle%ic,p_group%mesh,x,y) ;\
+
+#define UPDATE_CLOSEST_PARTICLE_ARRAYS_USING_NEIGHBOR_CELLS(di,dj,dl,dm)                                                \
+    do;                                                                                                                 \
+        k_neighbor = closest_particle(i+(di), j+(dj), l+(dl), m+(dm));                                                  \
+;                                                                                                                       \
+        if(k_neighbor /= 0) then;  do          ;                                                                        \
+            particle => p_group%p_list(k_neighbor);                                                                     \
+            call cell_offset_to_global_extended(particle%dx,particle%dy,particle%ic_x,particle%ic_y,p_group%mesh,x,y) ; \
+            call periodic_correction(p_group,x,y) ;                                                                     \
+            vx = particle%vx;                                                                                           \
+            vy = particle%vy;                                                                                           \
+            x_aux = x - g%eta1_min;                                                                                     \
+            y_aux = y - g%eta2_min;                                                                                     \
+            vx_aux = vx - g%eta3_min;                                                                                   \
+            vy_aux = vy - g%eta4_min;                                                                                   \
+            call update_closest_particle_arrays(k_neighbor,                                                             \
+                                                x_aux, y_aux, vx_aux, vy_aux,                                           \
+                                                i, j, l, m,                                                             \
+                                                h_virtual_cell_x, h_virtual_cell_y,                                     \
+                                                h_virtual_cell_vx, h_virtual_cell_vy,                                   \
+                                                closest_particle,                                                       \
+                                                closest_particle_distance);                                             \
+        exit;                                                                                                           \
+        end do;                                                                                                         \
+        end if;                                                                                                         \
+    exit;                                                                                                               \
     end do
 
 
@@ -3360,6 +3523,7 @@ end subroutine
                     p_group%p_list,                            &
                     domain_is_x_periodic,                      &
                     domain_is_y_periodic,                      &
+                    track_markers_outside_domain,              &
                     mesh_period_x,                             &
                     mesh_period_y,                             &
                     h_parts_x,                                 &
@@ -3416,8 +3580,19 @@ end subroutine
                x_to_xk = x - x_k
 
                do ivirt = 1, n_virtual_x
+
                   i_x = i_x + 1
                   SLL_ASSERT( i_x == (i-1)*n_virtual_x + ivirt )
+
+                  if( (.not. scenario_is_deposition) .and. use_remapping_grid) then
+                    if( (i > p_group%number_parts_x * 95/100) &
+                        .and. (j == p_group%number_parts_y /2) &
+                        .and. (l == p_group%number_parts_vx /2) &
+                        .and. (m == p_group%number_parts_vy /2) )then
+                        print *, "675465437545 -- i, ivirt, i_x = ", i, ivirt, i_x
+                    end if
+                  end if
+
                   x =       x       + h_virtual_parts_x
                   x_to_xk = x_to_xk + h_virtual_parts_x
 
@@ -3497,7 +3672,7 @@ end subroutine
 !                              vy_t0 = d41 * (x - x_k) + d42 * (y - y_k) + d43 * (vx - vx_k) + d44 * (vy - vy_k)
 
 
-                              if( use_exact_f0 )then
+                              if( p_group%use_exact_f0 )then
 
                                 ! here (x_t0, y_t0, vx_t0, vy_t0) is the (approx) position of the virtual particle at time t=0
 
@@ -3543,72 +3718,175 @@ end subroutine
 
                               else
 
-                                  ! here (x_t0, y_t0, vx_t0, vy_t0) is the (approx) position of the virtual particle at time t=0,
-                                  ! RELATIVE to the k-th particle (marker) position at time t=0
+                                  find_k_prime_step_by_step = .false.
 
-                                  x_t0  = d1_x + d1_y + d1_vx + d1_vy
-                                  y_t0  = d1_x + d1_y + d1_vx + d1_vy
-                                  vx_t0 = d1_x + d1_y + d1_vx + d1_vy
-                                  vy_t0 = d1_x + d1_y + d1_vx + d1_vy
+                                  if( find_k_prime_step_by_step )then
 
-                                  ! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
-                                  if(.not. scenario_is_deposition)then
-                                     p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,1) = x_k_t0 + x_t0
-                                     p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,1) = y_k_t0 + y_t0
-                                     p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,1) = vx_k_t0 + vx_t0
-                                     p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,1) = vy_k_t0 + vy_t0
-                                  endif
+                                      ! here (x_t0, y_t0, vx_t0, vy_t0) is the (approx) position of the virtual particle at time t=0,
+                                      ! RELATIVE to the k-th particle (marker) position at time t=0
 
-                                  ! Minimize the path to take along periodic boundaries
+                                      print *,"ERROR 876549 -- here x_t0 and the other variables should be recalled -- as RELATIVE"
+                                      stop
+                                      x_t0  = d1_x + d1_y + d1_vx + d1_vy
+                                      y_t0  = d1_x + d1_y + d1_vx + d1_vy
+                                      vx_t0 = d1_x + d1_y + d1_vx + d1_vy
+                                      vy_t0 = d1_x + d1_y + d1_vx + d1_vy
 
-                                  if(domain_is_x_periodic) then
-                                     if(x_t0 > mesh_period_x/2) then
-                                        x_t0 = x_t0 - mesh_period_x
-                                     else
-                                        if(x_t0 < -mesh_period_x/2) then
-                                           x_t0 = x_t0 + mesh_period_x
-                                        end if
-                                     end if
-                                  endif
+                                      ! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
+                                      if((.not. scenario_is_deposition) .and. use_remapping_grid)then
+                                         p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,1) = x_k_t0 + x_t0
+                                         p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,1) = y_k_t0 + y_t0
+                                         p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,1) = vx_k_t0 + vx_t0
+                                         p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,1) = vy_k_t0 + vy_t0
+                                      endif
 
-                                  if(domain_is_y_periodic) then
-                                     if(y_t0 > mesh_period_y/2) then
-                                        y_t0 = y_t0 - mesh_period_y
-                                     else
-                                        if(y_t0 < -mesh_period_y/2) then
-                                           y_t0 = y_t0 + mesh_period_y
-                                        end if
-                                     end if
-                                  endif
+                                      ! Minimize the path to take along periodic boundaries
 
-                                  ! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
-                                  if(.not. scenario_is_deposition)then
-                                     p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,2) = x_k_t0 + x_t0
-                                     p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,2) = y_k_t0 + y_t0
-                                     p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,2) = vx_k_t0 + vx_t0
-                                     p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,2) = vy_k_t0 + vy_t0
-                                  endif
+                                      if(domain_is_x_periodic) then
+                                         if(x_t0 > mesh_period_x/2) then
+                                            x_t0 = x_t0 - mesh_period_x
+                                         else
+                                            if(x_t0 < -mesh_period_x/2) then
+                                               x_t0 = x_t0 + mesh_period_x
+                                            end if
+                                         end if
+                                      endif
 
-                                  ! [[file:~/mcp/maltpic/ltpic-bsl.tex::neighbors-grid-0]] find the neighbours of the
-                                  ! virtual particle (ivirt,jvirt,lvirt,mvirt) at time 0 through the "logical
-                                  ! neighbours" pointers of particle k. To reduce the amount of code, start with finding
-                                  ! the closest neighbour which has lower coordinates in all directions. The particle
-                                  ! located at (x_t0,y_t0,vx_t0,vy_t0) (coordinates relative to particle k to start
-                                  ! with) gets progressively closer to kprime step by step (ie from neighbour to
-                                  ! neighbour).
+                                      if(domain_is_y_periodic) then
+                                         if(y_t0 > mesh_period_y/2) then
+                                            y_t0 = y_t0 - mesh_period_y
+                                         else
+                                            if(y_t0 < -mesh_period_y/2) then
+                                               y_t0 = y_t0 + mesh_period_y
+                                            end if
+                                         end if
+                                      endif
 
-                                  kprime = k
+                                      ! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
+                                      if((.not. scenario_is_deposition) .and. use_remapping_grid)then
+                                         p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,2) = x_k_t0 + x_t0
+                                         p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,2) = y_k_t0 + y_t0
+                                         p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,2) = vx_k_t0 + vx_t0
+                                         p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,2) = vy_k_t0 + vy_t0
+                                      endif
 
-                                  ! Calls [[onestep]]. "dim" can be x,y,vx,vy. cf
-                                  ! [[file:../pic_particle_types/lt_pic_4d_particle.F90::sll_lt_pic_4d_particle]] for
-                                  ! pointers to neighbours.
+                                      ! [[file:~/mcp/maltpic/ltpic-bsl.tex::neighbors-grid-0]] find the neighbours of the
+                                      ! virtual particle (ivirt,jvirt,lvirt,mvirt) at time 0 through the "logical
+                                      ! neighbours" pointers of particle k. To reduce the amount of code, start with finding
+                                      ! the closest neighbour which has lower coordinates in all directions. The particle
+                                      ! located at (x_t0,y_t0,vx_t0,vy_t0) (coordinates relative to particle k to start
+                                      ! with) gets progressively closer to kprime step by step (ie from neighbour to
+                                      ! neighbour).
+
+                                      kprime = k
+
+                                      ! Calls [[onestep]]. "dim" can be x,y,vx,vy. cf
+                                      ! [[file:../pic_particle_types/lt_pic_4d_particle.F90::sll_lt_pic_4d_particle]] for
+                                      ! pointers to neighbours.
 
 #define ONESTEPMACRO(dimpos,dimname) call onestep(dimpos,dimname/**/_t0,kprime,p_group%p_list,h_parts_/**/dimname)
 
-                                  ONESTEPMACRO(ALONG_X,x)
-                                  ONESTEPMACRO(ALONG_Y,y)
-                                  ONESTEPMACRO(ALONG_VX,vx)
-                                  ONESTEPMACRO(ALONG_VY,vy)
+                                      ONESTEPMACRO(ALONG_X,x)
+                                      ONESTEPMACRO(ALONG_Y,y)
+                                      ONESTEPMACRO(ALONG_VX,vx)
+                                      ONESTEPMACRO(ALONG_VY,vy)
+
+                                      if( (.not. scenario_is_deposition) .and. use_remapping_grid) then
+                                        if( (i > p_group%number_parts_x * 95/100) &
+                                            .and. (j == p_group%number_parts_y /2) &
+                                            .and. (l == p_group%number_parts_vx /2) &
+                                            .and. (m == p_group%number_parts_vy /2) )then
+                                            print *, "77654864 -- i, ivirt, i_x = ", i, ivirt, i_x
+
+                                            print *, "77654865 -- found step by step: kprime = ", kprime
+                                        end if
+                                      end if
+
+                                  else
+
+                                    ! find directly the index kprime of the lower left particle on the remapping grid
+                                    ! that contains z_t0, the position of the virtual particle at time = 0
+
+                                    ! here (x_t0, y_t0, vx_t0, vy_t0) is the (approx) position of the virtual particle at time t=0
+
+                                    x_t0_to_xk_t0   = d1_x + d1_y + d1_vx + d1_vy
+                                    y_t0_to_yk_t0   = d2_x + d2_y + d2_vx + d2_vy
+                                    vx_t0_to_vxk_t0 = d3_x + d3_y + d3_vx + d3_vy
+                                    vy_t0_to_vyk_t0 = d4_x + d4_y + d4_vx + d4_vy
+
+                                    x_t0 = x_t0_to_xk_t0 + x_k_t0
+                                    y_t0 = y_t0_to_yk_t0 + y_k_t0
+                                    vx_t0 = vx_t0_to_vxk_t0 + vx_k_t0
+                                    vy_t0 = vy_t0_to_vyk_t0 + vy_k_t0
+
+                                    call periodic_correction(p_group,x_t0,y_t0)
+
+                                    tmp = (x_t0 - parts_x_min) / h_parts_x
+                                    j_x  = 1 + int(floor(tmp))
+                                    x_t0_to_xkprime_t0 = x_t0 - (parts_x_min + (j_x-1)*h_parts_x)
+
+                                    tmp = (y_t0 - parts_y_min) / h_parts_y
+                                    j_y  = 1 + int(floor(tmp))
+                                    y_t0_to_ykprime_t0 = y_t0 - (parts_y_min + (j_y-1) * h_parts_y)
+
+                                    tmp = (vx_t0 - parts_vx_min) / h_parts_vx
+                                    j_vx  = 1 + int(floor(tmp))
+                                    vx_t0_to_vxkprime_t0 = vx_t0 - (parts_vx_min + (j_vx-1) * h_parts_vx)
+
+                                    tmp = (vy_t0 - parts_vy_min) / h_parts_vy
+                                    j_vy  = 1 + int(floor(tmp))
+                                    vy_t0_to_vykprime_t0 = vy_t0 - (parts_vy_min + (j_vy-1) * h_parts_vy)
+
+                                    call get_particle_index_from_initial_position_on_cartesian_grid (               &
+                                                            j_x, j_y, j_vx, j_vy,                                   &
+                                                            p_group%number_parts_x, p_group%number_parts_y,         &
+                                                            p_group%number_parts_vx, p_group%number_parts_vy,       &
+                                                            kprime )
+
+
+                                      if( (.not. scenario_is_deposition) .and. use_remapping_grid) then
+                                        if( (i > p_group%number_parts_x * 95/100) &
+                                            .and. (j == p_group%number_parts_y /2) &
+                                            .and. (l == p_group%number_parts_vx /2) &
+                                            .and. (m == p_group%number_parts_vy /2) )then
+                                            print *, "77654878 -- i, ivirt, i_x = ", i, ivirt, i_x
+
+                                            print *, "77654879 -- found directly: kprime = ", kprime
+
+                                            print *, "77654879 ---- "
+                                            tmp = parts_x_min + (j_x-1)* h_parts_x
+                                            print *, "10 ---- xmin_part_cell  = ", tmp
+                                            print *, "10 ---- x_t0            = ", x_t0
+                                            print *, "10 ---- xmax_part_cell  = ", tmp + h_parts_vx
+
+                                            tmp = parts_y_min + (j_y-1)* h_parts_y
+                                            print *, "11 ---- ymin_part_cell  = ", tmp
+                                            print *, "11 ---- y_t0            = ", y_t0
+                                            print *, "11 ---- ymax_part_cell  = ", tmp + h_parts_y
+
+                                            tmp = parts_vx_min + (j_vx-1)* h_parts_vx
+                                            print *, "12 ---- vxmin_part_cell  = ", tmp
+                                            print *, "12 ---- vx_t0            = ", vx_t0
+                                            print *, "12 ---- vxmax_part_cell  = ", tmp + h_parts_vx
+
+                                            tmp = parts_vy_min + (j_vy-1)* h_parts_vy
+                                            print *, "13 ---- vymin_part_cell  = ", tmp
+                                            print *, "13 ---- vy_t0            = ", vy_t0
+                                            print *, "13 ---- vymax_part_cell  = ", tmp + h_parts_vy
+
+                                        end if
+                                      end if
+
+
+
+                                    !    if( kprime <= 0 .or. kprime > p_group%number_particles )then
+                                    !    ! this means we are outside of the domain defined by the initial particle grid
+                                    !    kprime = 0
+                                    !    end if
+
+                                  end if
+
+                                  SLL_ASSERT(kprime >= 0)
 
                                   ! If we end up with kprime == 0, it means that we have not found a cell that contains
                                   ! the particle so we just set that (virtual) particle value to zero
@@ -3639,6 +3917,18 @@ end subroutine
                                           .and. hcube(1,1,2,1) /= kprime &
                                           .and. hcube(1,1,1,2) /= kprime) then
 
+
+                                          if( (.not. scenario_is_deposition) .and. use_remapping_grid) then
+                                            if( (i > p_group%number_parts_x * 85/100) &
+                                                .and. (j == p_group%number_parts_y /2) &
+                                                .and. (l == p_group%number_parts_vx /2) &
+                                                .and. (m == p_group%number_parts_vy /2) )then
+                                                print *, "77654889 -- i, ivirt, i_x = ", i, ivirt, i_x
+
+                                                print *, "77654890 -- hcube ok -- --  "
+                                            end if
+                                          end if
+
                                         ! remaining vertices of the hypercube. they should all exist now that the first
                                         ! 4 vertices are checked.
 
@@ -3665,21 +3955,21 @@ end subroutine
 
                                           ! MCP: [BEGIN-DEBUG] store the (computed) absolute initial position of the virtual particle
                                           ! [[get_initial_position_on_cartesian_grid_from_particle_index]]
-                                           call get_initial_position_on_cartesian_grid_from_particle_index(kprime, &
-                                                p_group%number_parts_x, p_group%number_parts_y,     &
-                                                p_group%number_parts_vx, p_group%number_parts_vy,   &
-                                                j_x,j_y,j_vx,j_vy)
-                                           x_kprime_t0 =  parts_x_min  + (j_x-1)  * h_parts_x
-                                           y_kprime_t0 =  parts_y_min  + (j_y-1)  * h_parts_y
-                                           vx_kprime_t0 = parts_vx_min + (j_vx-1) * h_parts_vx
-                                           vy_kprime_t0 = parts_vy_min + (j_vy-1) * h_parts_vy
-
-                                           if(.not. scenario_is_deposition)then
-                                              p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,3) = x_kprime_t0 + x_t0
-                                              p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,3) = y_kprime_t0 + y_t0
-                                              p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,3) = vx_kprime_t0 + vx_t0
-                                              p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,3) = vy_kprime_t0 + vy_t0
-                                           endif
+                                            !   call get_initial_position_on_cartesian_grid_from_particle_index(kprime, &
+                                            !        p_group%number_parts_x, p_group%number_parts_y,     &
+                                            !        p_group%number_parts_vx, p_group%number_parts_vy,   &
+                                            !        j_x,j_y,j_vx,j_vy)
+                                            !   x_kprime_t0 =  parts_x_min  + (j_x-1)  * h_parts_x
+                                            !   y_kprime_t0 =  parts_y_min  + (j_y-1)  * h_parts_y
+                                            !   vx_kprime_t0 = parts_vx_min + (j_vx-1) * h_parts_vx
+                                            !   vy_kprime_t0 = parts_vy_min + (j_vy-1) * h_parts_vy
+                                            !
+                                            !   if((.not. scenario_is_deposition) .and. use_remapping_grid)then
+                                            !      p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,3) = x_kprime_t0 + x_t0
+                                            !      p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,3) = y_kprime_t0 + y_t0
+                                            !      p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,3) = vx_kprime_t0 + vx_t0
+                                            !      p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,3) = vy_kprime_t0 + vy_t0
+                                            !   endif
 
                                           ! MCP [END-DEBUG]
 
@@ -3696,33 +3986,33 @@ end subroutine
 
                                         do side_x = 1,2
                                            if(side_x == 1)then
-                                              x_aux = x_t0
+                                              x_aux = x_t0_to_xkprime_t0
                                            else
-                                              x_aux = h_parts_x - x_t0
+                                              x_aux = h_parts_x - x_t0_to_xkprime_t0
                                            end if
                                            do side_y = 1,2
                                               if(side_y == 1)then
-                                                 y_aux = y_t0
+                                                 y_aux = y_t0_to_ykprime_t0
                                               else
-                                                 y_aux = h_parts_y - y_t0
+                                                 y_aux = h_parts_y - y_t0_to_ykprime_t0
                                               end if
                                               do side_vx = 1,2
                                                  if(side_vx == 1)then
-                                                    vx_aux = vx_t0
+                                                    vx_aux = vx_t0_to_vxkprime_t0
                                                  else
-                                                    vx_aux = h_parts_vx - vx_t0
+                                                    vx_aux = h_parts_vx - vx_t0_to_vxkprime_t0
                                                  end if
                                                  do side_vy = 1,2
                                                     if(side_vy == 1)then
-                                                       vy_aux = vy_t0
+                                                       vy_aux = vy_t0_to_vykprime_t0
                                                     else
-                                                       vy_aux = h_parts_vy - vy_t0
+                                                       vy_aux = h_parts_vy - vy_t0_to_vykprime_t0
                                                     end if
 
                                                     ! uses [[sll_pic_shape]]
                                                     f_value_on_virtual_particle =                                                  &
                                                         f_value_on_virtual_particle                                                &
-                                                          + p_group%p_list(hcube(side_x,side_y,side_vx,side_vy))%q                  &
+                                                          + p_group%p_list(hcube(side_x,side_y,side_vx,side_vy))%q                 &
                                                          * sll_pic_shape(part_degree,x_aux,y_aux,vx_aux,vy_aux,                    &
                                                                          inv_h_parts_x,inv_h_parts_y,inv_h_parts_vx,inv_h_parts_vy)
 
@@ -3730,6 +4020,21 @@ end subroutine
                                               end do
                                            end do
                                         end do
+
+                                          if( (.not. scenario_is_deposition) .and. use_remapping_grid) then
+                                            if( (i > p_group%number_parts_x * 95/100) &
+                                                .and. (j == p_group%number_parts_y /2) &
+                                                .and. (l == p_group%number_parts_vx /2) &
+                                                .and. (m == p_group%number_parts_vy /2) )then
+                                                print *, "6754654 -- i, ivirt, i_x = ", i, ivirt, i_x
+
+                                                print *, "6754654 -- f_value_on_virtual_particle = ", f_value_on_virtual_particle
+                                            end if
+                                          end if
+
+
+
+
                                      end if     ! test to see whether the hyper cube was inside initial particle grid
                                   end if     ! test on (k_prime \=0 )
                               end if    ! test on (use_exact_f0)
@@ -3784,6 +4089,30 @@ end subroutine
           end do
        end do
     end do
+
+    print *, "654 end remap -> DEBUG: ", p_group%number_parts_x,    &
+                                   p_group%number_parts_y/2,    &
+                                   p_group%number_parts_vx/2,   &
+                                   p_group%number_parts_vy/2
+
+    print *, "655 end remap  , p_group%number_parts_x = ", p_group%number_parts_x
+    print *, "655 end remap  , number_virtual_particles_x = ", number_virtual_particles_x
+
+    print *, "655 end remap -> DEBUG: p_group%target_values(p_group%number_parts_x - 2,  p_group%number_parts_y/2, "
+    print *,                                                "p_group%number_parts_vx/2, p_group%number_parts_vy/2) = "
+    print *, "               =  ", p_group%target_values(p_group%number_parts_x - 2,  p_group%number_parts_y/2, &
+                                                         p_group%number_parts_vx/2, p_group%number_parts_vy/2)
+
+    print *, "655 end remap -> DEBUG: p_group%target_values(p_group%number_parts_x - 1,  p_group%number_parts_y/2, "
+    print *,                                                "p_group%number_parts_vx/2, p_group%number_parts_vy/2) = "
+    print *, "               =  ", p_group%target_values(p_group%number_parts_x - 1,  p_group%number_parts_y/2, &
+                                                         p_group%number_parts_vx/2, p_group%number_parts_vy/2)
+
+    print *, "655 end remap -> DEBUG: p_group%target_values(p_group%number_parts_x,  p_group%number_parts_y/2, "
+    print *,                                                "p_group%number_parts_vx/2, p_group%number_parts_vy/2) = "
+    print *, "               =  ", p_group%target_values(p_group%number_parts_x,  p_group%number_parts_y/2, &
+                                                         p_group%number_parts_vx/2, p_group%number_parts_vy/2)
+
     if( scenario_is_deposition .and. present(given_total_density) )then
 
         if( deposited_density == 0 )then

@@ -251,7 +251,7 @@ program unit_test_lt_pic_bsl_remap
   do i = 1, part_group%number_particles
 
      particle => part_group%p_list(i)
-     call cell_offset_to_global(particle%dx,particle%dy,particle%ic,part_group%mesh,x,y)
+     call cell_offset_to_global_extended(particle%dx,particle%dy,particle%ic_x,particle%ic_y,part_group%mesh,x,y)
 
      ! Flow is cte + A*(x,y,vx,vy), where det A = 1, cf [[test_forward_push]]
 
@@ -262,16 +262,20 @@ program unit_test_lt_pic_bsl_remap
      particle%vy = new_vy
 
      ! [[in_bounds_periodic]] if a particle goes out of the domain
-     if(.not.in_bounds_periodic(x,y,part_group%mesh,DOMAIN_IS_X_PERIODIC,DOMAIN_IS_Y_PERIODIC)) then
-        ! [[apply_periodic_bc]] In the periodic case, no destruction of particles is needed, so this is
-        ! simple.
-        call apply_periodic_bc( part_group%mesh, x, y)
-        SLL_ASSERT(in_bounds_periodic(x,y,part_group%mesh,DOMAIN_IS_X_PERIODIC,DOMAIN_IS_Y_PERIODIC))
-     end if
+     !     if(.not.in_bounds_periodic(x,y,part_group%mesh,DOMAIN_IS_X_PERIODIC,DOMAIN_IS_Y_PERIODIC)) then
+     !        ! [[apply_periodic_bc]] In the periodic case, no destruction of particles is needed, so this is
+     !        ! simple.
+     !        call apply_periodic_bc( part_group%mesh, x, y)
+     !        SLL_ASSERT(in_bounds_periodic(x,y,part_group%mesh,DOMAIN_IS_X_PERIODIC,DOMAIN_IS_Y_PERIODIC))
+     !     end if
 
      ! [[file:sll_representation_conversion.F90::subroutine global_to_cell_offset]]
 
-     call global_to_cell_offset(x, y,part_group%mesh,particle%ic, particle%dx, particle%dy)
+
+     ! call global_to_cell_offset(x, y, part_group%mesh,particle%ic, particle%dx, particle%dy)
+     call global_to_cell_offset_extended( x, y, part_group%mesh, &
+                                          particle%ic_x, particle%ic_y, particle%dx, particle%dy)
+
   end do
 
   ! remap au choix
@@ -402,12 +406,18 @@ program unit_test_lt_pic_bsl_remap
   write(ncy_name,'(i3)') NC_Y
   open(83,file='vit_pos_'//trim(adjustl(ncx_name))//'x'//trim(adjustl(ncy_name))//'.dat')
   do j = 1, part_group%number_particles
-     call cell_offset_to_global ( part_group%p_list(j)%dx, &
-                                part_group%p_list(j)%dy, &
-                                part_group%p_list(j)%ic, &
-                                m2d, x, y )
+    ! call cell_offset_to_global ( part_group%p_list(j)%dx, &
+    !                            part_group%p_list(j)%dy, &
+    !                            part_group%p_list(j)%ic, &
+    !                            m2d, x, y )
+     call cell_offset_to_global_extended (  part_group%p_list(j)%dx, &
+                                            part_group%p_list(j)%dy, &
+                                            part_group%p_list(j)%ic_x, &
+                                            part_group%p_list(j)%ic_y, &
+                                            m2d, x, y )
+
      write(83,*) part_group%p_list(j)%vx, part_group%p_list(j)%vy, &
-     part_group%p_list(j)%ic, part_group%p_list(j)%dx, part_group%p_list(j)%dy, &
+     part_group%p_list(j)%ic_x, part_group%p_list(j)%ic_y, part_group%p_list(j)%dx, part_group%p_list(j)%dy, &
      x, y
   enddo
   close(83)
