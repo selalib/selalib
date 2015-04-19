@@ -73,17 +73,31 @@ contains
 
 
 
-  ! initialize the lt_particle group with the landau f0 distribution
-!  subroutine sll_remap_lt_particles_4d( &      ! old name
-  subroutine sll_lt_pic_4d_remap( &
-                  p_group )
+  subroutine sll_lt_pic_4d_remap( p_group )
 
     type(sll_lt_pic_4d_group), pointer, intent(inout) :: p_group
 
+    ! n_virtual arguments: here to define the virtual cells where the backward flow is linearized
+    sll_int32 :: n_virtual_x_for_remapping
+    sll_int32 :: n_virtual_y_for_remapping
+    sll_int32 :: n_virtual_vx_for_remapping
+    sll_int32 :: n_virtual_vy_for_remapping
+
     print*, "[sll_lt_pic_4d_remap]  calling sll_lt_pic_4d_write_f_on_remap_grid..."
-    call sll_lt_pic_4d_write_f_on_remap_grid( p_group )
-!    call plot_2d_slice_remapping_grid("part_values_on_rg.dat", p_group )
-!    print*, "[sll_lt_pic_4d_remap]  calling sll_lt_pic_4d_compute_new_particles..."
+
+    ! 1st try: take just 1...
+    n_virtual_x_for_remapping = 1
+    n_virtual_y_for_remapping = 1
+    n_virtual_vx_for_remapping = 1
+    n_virtual_vy_for_remapping = 1
+
+    call sll_lt_pic_4d_write_f_on_remapping_grid( p_group,                        &
+                                                  n_virtual_x_for_remapping,      &
+                                                  n_virtual_y_for_remapping,      &
+                                                  n_virtual_vx_for_remapping,     &
+                                                  n_virtual_vy_for_remapping)
+    !    call sll_lt_pic_4d_write_f_on_remap_grid( p_group )
+
     call sll_lt_pic_4d_compute_new_particles( p_group )
     
   end subroutine sll_lt_pic_4d_remap
@@ -349,6 +363,9 @@ contains
     SLL_ALLOCATE( particle_indices(number_parts_x, number_parts_y, number_parts_vx, number_parts_vy), ierr )
     particle_indices(:,:,:,:) = 0
 
+    print *, "8756548657 - DEBUG: ", number_parts_x/2, number_parts_y/2, number_parts_vx/2, number_parts_vy/2
+    print *, "8756548658 - DEBUG: ", p_group%target_values(number_parts_x/2, number_parts_y/2, number_parts_vx/2, number_parts_vy/2)
+
     ! compute the particle weights from the values of f0 on the (cartesian, phase-space) remapping grid
     k_temp_debug = 0
     x_j = parts_x_min
@@ -422,12 +439,20 @@ contains
             p_group%p_list(k)%q = w_k
             particle_indices(j_x,j_y,j_vx,j_vy) = k
 
-            call global_to_cell_offset (  &
-                 x_j, y_j, &
-                 m2d, &
-                 p_group%p_list(k)%ic, &
-                 p_group%p_list(k)%dx, &
-                 p_group%p_list(k)%dy )
+            call global_to_cell_offset_extended(    &
+                    x_j, y_j, &
+                    m2d,      &
+                    p_group%p_list(k)%ic_x, &
+                    p_group%p_list(k)%ic_y, &
+                    p_group%p_list(k)%dx, &
+                    p_group%p_list(k)%dy )
+
+            !            call global_to_cell_offset (  &
+            !                 x_j, y_j, &
+            !                 m2d, &
+            !                 p_group%p_list(k)%ic, &
+            !                 p_group%p_list(k)%dx, &
+            !                 p_group%p_list(k)%dy )
             p_group%p_list(k)%vx = vx_j 
             p_group%p_list(k)%vy = vy_j
 
