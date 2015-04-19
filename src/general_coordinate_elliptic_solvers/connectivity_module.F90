@@ -1,445 +1,410 @@
 module connectivity_module
+#include "sll_working_precision.h"
 
 implicit none
 
-integer, parameter :: CONNECT_PERIODIC  = 0
-integer, parameter :: CONNECT_DIRICHLET = 1
-integer, parameter :: CONNECT_NEUMANN   = 2
+sll_int32, parameter :: CONNECT_PERIODIC  = 0
+sll_int32, parameter :: CONNECT_DIRICHLET = 1
+sll_int32, parameter :: CONNECT_NEUMANN   = 2
 
 contains
 
-  !> PLEASE ADD DOCUMENTATION
-subroutine initconnectivity( &
-  num_cells1, &
-  num_cells2, &
-  spline_degree1, &
-  spline_degree2, &
-  bc_left, &
-  bc_right, &
-  bc_bottom, &
-  bc_top, &
-  local_spline_indices, &
-  global_spline_indices, &
-  local_to_global_spline_indices )
+subroutine initconnectivity( num_cells1,                    &
+                             num_cells2,                    &
+                             spline_degree1,                &
+                             spline_degree2,                &
+                             bc1_min,                       &
+                             bc1_max,                       &
+                             bc2_min,                       &
+                             bc2_max,                       &
+                             local_spline_indices,          &
+                             global_spline_indices,         &
+                             local_to_global_spline_indices )
   
-  integer :: num_cells1, num_cells2, spline_degree1, spline_degree2
-  integer :: bc_left, bc_right, bc_bottom, bc_top
-  integer :: nb_spl_x,nb_spl_y
-  integer, dimension(:,:) :: local_spline_indices
-  integer, dimension(:)   :: global_spline_indices
-  integer, dimension(:,:) :: local_to_global_spline_indices
+sll_int32, intent(in) :: num_cells1
+sll_int32, intent(in) :: num_cells2
+sll_int32, intent(in) :: spline_degree1
+sll_int32, intent(in) :: spline_degree2
+sll_int32, intent(in) :: bc1_min
+sll_int32, intent(in) :: bc1_max
+sll_int32, intent(in) :: bc2_min
+sll_int32, intent(in) :: bc2_max
 
- ! integer :: BC  ! 0 if periodic-Dirichlet and 1 if Dirichlet-Dirichlet 
-  integer :: li_i_, li_j_!,t1,t2
-  integer :: li_iloc, li_jloc, li_Bloc, li_B,maille    
+sll_int32, dimension(:,:), intent(out) :: local_spline_indices
+sll_int32, dimension(:)  , intent(out) :: global_spline_indices
+sll_int32, dimension(:,:), intent(out) :: local_to_global_spline_indices
+
+sll_int32 :: nb_spl_x
+sll_int32 :: nb_spl_y
+sll_int32 :: i, j
+sll_int32 :: ii, jj
+sll_int32 :: Bloc, B, maille    
   
-  !print*, 'local_spline_indices=', local_spline_indices(1,1)
-
-  ! loop over elements
-  do li_j_ = 1, num_cells2    
-     do li_i_=1, num_cells1  
-        maille = num_cells1*(li_j_-1) + li_i_
-        do li_jloc = 0 , spline_degree2
-           do li_iloc = 0, spline_degree1
-              li_B = (li_j_ -1)*(num_cells1+spline_degree1) + li_i_ + &
-                        li_jloc*(num_cells1+spline_degree1) + li_iloc 
-              li_Bloc = li_jloc * (spline_degree1 + 1) + li_iloc + 1
-              local_spline_indices(li_Bloc, maille) = li_B
-           end do
-        end do
-     end do
+do j = 1, num_cells2    
+  do i=1, num_cells1  
+    maille = num_cells1*(j-1) + i
+    do jj = 0 , spline_degree2
+      do ii = 0, spline_degree1
+        B = (j -1)*(num_cells1+spline_degree1) + i + &
+                  jj*(num_cells1+spline_degree1) + ii 
+        Bloc = jj * (spline_degree1 + 1) + ii + 1
+        local_spline_indices(Bloc, maille) = B
+      end do
+    end do
   end do
+end do
 
-  ! INITIALIIZING THE ID ARRAY
-  !select case ( ai_TYPE_PBC)
-
-  !case ( BC_XI_DIR_ETA_PER )
-  nb_spl_x= num_cells1 + spline_degree1
-  nb_spl_y= num_cells2 + spline_degree2 
+nb_spl_x= num_cells1 + spline_degree1
+nb_spl_y= num_cells2 + spline_degree2 
   
- if( (bc_left == CONNECT_PERIODIC) .and. (bc_right == CONNECT_PERIODIC).and.&
-     (bc_bottom == CONNECT_PERIODIC) .and. (bc_top == CONNECT_PERIODIC) ) then
-    call xi_PER_eta_PER_init( &
-         nb_spl_x,&
-         nb_spl_y,&
-         spline_degree1,&
-         spline_degree2,&
-         global_spline_indices)
+if( bc1_min == CONNECT_PERIODIC .and. bc1_max == CONNECT_PERIODIC .and.&
+    bc2_min == CONNECT_PERIODIC .and. bc2_max == CONNECT_PERIODIC ) then
+
+  call xi_PER_eta_PER_init( nb_spl_x,            &
+                            nb_spl_y,            &
+                            spline_degree1,      &
+                            spline_degree2,      &
+                            global_spline_indices)
       
-  else if ((bc_left==CONNECT_PERIODIC).and.(bc_right==CONNECT_PERIODIC).and. &
-           (bc_bottom==CONNECT_DIRICHLET).and.(bc_top==CONNECT_DIRICHLET))then
+else if (bc1_min == CONNECT_PERIODIC  .and. bc1_max == CONNECT_PERIODIC .and. &
+         bc2_min == CONNECT_DIRICHLET .and. bc2_max == CONNECT_DIRICHLET) then
      
-     call xi_PER_eta_DIR_init(&
-          nb_spl_x,&
-          nb_spl_y,&
-          spline_degree1,&
-          global_spline_indices)
+  call xi_PER_eta_DIR_init( nb_spl_x,            &
+                            nb_spl_y,            &
+                            spline_degree1,      &
+                            global_spline_indices)
 
-  else if((bc_left == CONNECT_DIRICHLET).and.(bc_right==CONNECT_DIRICHLET).and. &
-           (bc_bottom==CONNECT_PERIODIC).and.(bc_top==CONNECT_PERIODIC) )then
+else if(bc1_min == CONNECT_DIRICHLET .and. bc1_max == CONNECT_DIRICHLET .and. &
+        bc2_min == CONNECT_PERIODIC  .and. bc2_max == CONNECT_PERIODIC) then
 
-     call xi_DIR_eta_PER_init(&
-          nb_spl_x,&
-          nb_spl_y,&
-          spline_degree2,&
-          global_spline_indices)
+  call xi_DIR_eta_PER_init( nb_spl_x,            &
+                            nb_spl_y,            &
+                            spline_degree2,      &
+                            global_spline_indices)
 
-   elseif((bc_left == CONNECT_NEUMANN).and.(bc_right== CONNECT_DIRICHLET).and. &
-           (bc_bottom==CONNECT_PERIODIC).and.(bc_top==CONNECT_PERIODIC) )then
+elseif(bc1_min == CONNECT_NEUMANN  .and. bc1_max == CONNECT_DIRICHLET .and. &
+       bc2_min == CONNECT_PERIODIC .and. bc2_max == CONNECT_PERIODIC ) then
 
-     call xi_NEU_DIR_eta_PER_init(&
-          nb_spl_x,&
-          nb_spl_y,&
-          spline_degree2,&
-          global_spline_indices)       
+  call xi_NEU_DIR_eta_PER_init( nb_spl_x,            &
+                                nb_spl_y,            &
+                                spline_degree2,      &
+                                global_spline_indices)       
 
 
-  else if((bc_left == CONNECT_DIRICHLET).and.(bc_right==CONNECT_DIRICHLET).and. &
-          (bc_bottom==CONNECT_DIRICHLET).and.(bc_top==CONNECT_DIRICHLET))then
+else if(bc1_min == CONNECT_DIRICHLET .and. bc1_max==CONNECT_DIRICHLET .and. &
+        bc2_min == CONNECT_DIRICHLET .and. bc2_max==CONNECT_DIRICHLET) then
 
-     call xi_DIR_eta_DIR_init(nb_spl_x,nb_spl_y,global_spline_indices)
+  call xi_DIR_eta_DIR_init(nb_spl_x,nb_spl_y,global_spline_indices)
 
-     
-  end if
+end if
   
-  ! INITIALIIZING THE LOCATION MATRIX LM ARRAY
-  call initLM(&
-       num_cells1,&
-       num_cells2,&
-       spline_degree1,&
-       spline_degree2,&
-       local_spline_indices,&
-       global_spline_indices,&
-       local_to_global_spline_indices)
+call initLM( num_cells1,                   &
+             num_cells2,                   &
+             spline_degree1,               &
+             spline_degree2,               &
+             local_spline_indices,         &
+             global_spline_indices,        &
+             local_to_global_spline_indices)
 
 end subroutine initconnectivity
 
 
-subroutine initconnectivity_bis( &
-  num_cells1, &
-  num_cells2, &
-  spline_degree1, &
-  spline_degree2, &
-  local_spline_indices, &
-  global_spline_indices, &
-  local_to_global_spline_indices )
+subroutine xi_DIR_eta_PER_init( num_cells1,          &
+                                num_cells2,          &
+                                spline_degree2,      &
+                                global_spline_indices)
   
-  integer :: num_cells1, num_cells2, spline_degree1, spline_degree2
-  integer :: nb_spl_x,nb_spl_y
-  integer, dimension(:,:) :: local_spline_indices
-  integer, dimension(:)   :: global_spline_indices
-  integer, dimension(:,:) :: local_to_global_spline_indices
-  
- ! integer :: BC  ! 0 if periodic-Dirichlet and 1 if Dirichlet-Dirichlet 
-  integer :: li_i_, li_j_!,t1,t2
-  integer :: li_iloc, li_jloc, li_Bloc, li_B,maille    
-  
-  !print*, 'local_spline_indices=', local_spline_indices(1,1)
+sll_int32,               intent(in)  :: num_cells1
+sll_int32,               intent(in)  :: num_cells2
+sll_int32,               intent(in)  :: spline_degree2
+sll_int32, dimension(:), intent(out) :: global_spline_indices
 
-  ! loop over elements
- do li_j_ = 1, num_cells2    
-     do li_i_=1, num_cells1  
-        maille = num_cells1*(li_j_-1) + li_i_
-        do li_jloc = 0 , spline_degree2
-           do li_iloc = 0, spline_degree1
-              li_B = (li_j_ -1)*(num_cells1+spline_degree1) + li_i_ + &
-                        li_jloc*(num_cells1+spline_degree1) + li_iloc 
-              li_Bloc = li_jloc * (spline_degree1 + 1) + li_iloc + 1
-              local_spline_indices(li_Bloc, maille) = li_B
-           end do
-        end do
-     end do
-  end do
+sll_int32 :: d
+sll_int32 :: i
+sll_int32 :: j
+sll_int32 :: A
+sll_int32 :: L
 
- ! print*, local_spline_indices
-  ! INITIALIIZING THE ID ARRAY
-  !select case ( ai_TYPE_PBC)
+d = 0
 
-  !case ( BC_XI_DIR_ETA_PER )
-  nb_spl_x= num_cells1 + spline_degree1
-  nb_spl_y= num_cells2 + spline_degree2
-  
-  call xi_eta_init(&
-       nb_spl_x,&
-       nb_spl_y,&
-       global_spline_indices)
-  
-  ! INITIALIIZING THE LOCATION MATRIX LM ARRAY
-  call initLM(&
-       num_cells1,&
-       num_cells2,&
-       spline_degree1,&
-       spline_degree2,&
-       local_spline_indices,&
-       global_spline_indices,&
-       local_to_global_spline_indices)
+do j = 1, num_cells2
+do i = 1, num_cells1
 
-end subroutine initconnectivity_bis
+  A = i + num_cells1*(j-1)
+  if ((i == 1) .OR. (i == num_cells1)) then
+    global_spline_indices(A) = 0
+  else
+    if (j /= num_cells2) then
+      if (global_spline_indices(A) == 0) then
+        d = d + 1
+        global_spline_indices(A) = d
+      end if
+      if ( 1<=j .AND. j<=spline_degree2 ) then
+        L = (num_cells2 - spline_degree2) * num_cells1
+        global_spline_indices(A+L) = global_spline_indices(A)
+      end if
+    end if
+  end if
 
-subroutine xi_DIR_eta_PER_init( &
-     num_cells1,&
-     num_cells2,&
-     spline_degree2,&
-     global_spline_indices)
-  
-  integer :: li_d,num_cells1,num_cells2,spline_degree2
-  integer :: li_i, li_j, li_A
-  !integer :: li_dof,ai_sizePB
-  integer :: li_L
-  integer, dimension(:) :: global_spline_indices
-  
-  li_d = 0
-  
-  do li_j = 1, num_cells2
-     do li_i = 1, num_cells1
-        li_A = li_i + num_cells1*(li_j-1)
-        
-        if ((li_i == 1) .OR. (li_i == num_cells1)) then
-           global_spline_indices(li_A) = 0
-           
-        else
-           
-           if (li_j /= num_cells2) then
-              
-              if (global_spline_indices(li_A) == 0) then
-                 
-                 li_d = li_d + 1
-                 
-                 global_spline_indices(li_A) = li_d
-                 
-              end if
-              
-              if ( (1 <= li_j ) .AND. ( li_j <= spline_degree2 ) ) then
-                 
-                 li_L = (num_cells2 - spline_degree2) * num_cells1
-                 global_spline_indices(li_A + li_L) =&
-                      global_spline_indices(li_A)
-
-              end if
-           end if
-        end if
-     end do
-  end do
+end do
+end do
 
 end subroutine xi_DIR_eta_PER_init
 
-
-
-  subroutine xi_NEU_DIR_eta_PER_init( &
-     num_cells1,&
-     num_cells2,&
-     spline_degree2,&
-     global_spline_indices)
+subroutine xi_NEU_DIR_eta_PER_init( num_cells1,          &
+                                    num_cells2,          &
+                                    spline_degree2,      &
+                                    global_spline_indices)
   
-  integer :: li_d,num_cells1,num_cells2,spline_degree2
-  integer :: li_i, li_j, li_A
-  !integer :: li_dof,ai_sizePB
-  integer :: li_L
-  integer, dimension(:) :: global_spline_indices
-  
-  li_d = 0
-  
-  do li_j = 1, num_cells2
-     do li_i = 1, num_cells1
-        li_A = li_i + num_cells1*(li_j-1)
-        
-        if (li_i == num_cells1) then
-           global_spline_indices(li_A) = 0
-           
-        else
-           
-           if (li_j /= num_cells2) then
-              
-              if (global_spline_indices(li_A) == 0) then
-                 
-                 li_d = li_d + 1
-                 
-                 global_spline_indices(li_A) = li_d
-                 
-              end if
-              
-              if ( (1 <= li_j ) .AND. ( li_j <= spline_degree2 ) ) then
-                 
-                 li_L = (num_cells2 - spline_degree2) * num_cells1
-                 global_spline_indices(li_A + li_L) =&
-                      global_spline_indices(li_A)
+sll_int32              , intent(in)  :: num_cells1
+sll_int32              , intent(in)  :: num_cells2
+sll_int32              , intent(in)  :: spline_degree2
+sll_int32, dimension(:), intent(out) :: global_spline_indices
 
-              end if
-           end if
-        end if
-     end do
-  end do
+sll_int32 :: d
+sll_int32 :: i
+sll_int32 :: j
+sll_int32 :: A
+sll_int32 :: L
+
+d = 0
+do j = 1, num_cells2
+do i = 1, num_cells1
+  A = i + num_cells1*(j-1)
+  if (i == num_cells1) then
+    global_spline_indices(A) = 0
+  else
+    if (j /= num_cells2) then
+      if (global_spline_indices(A) == 0) then
+        d = d + 1
+        global_spline_indices(A) = d
+      end if
+      if ( (1 <= j ) .AND. ( j <= spline_degree2 ) ) then
+        L = (num_cells2 - spline_degree2) * num_cells1
+        global_spline_indices(A+L) = global_spline_indices(A)
+      end if
+    end if
+  end if
+end do
+end do
 
 end subroutine xi_NEU_DIR_eta_PER_init
 
-subroutine xi_PER_eta_DIR_init( &
-     num_cells1,&
-     num_cells2,&
-     spline_degree1,&
-     global_spline_indices)
+subroutine xi_PER_eta_DIR_init( num_cells1,          &
+                                num_cells2,          &
+                                spline_degree1,      &
+                                global_spline_indices)
   
-  integer :: li_d,num_cells1,num_cells2,spline_degree1
-  integer :: li_i, li_j, li_A
-  !integer :: li_dof,ai_sizePB
-  integer, dimension(:) :: global_spline_indices
+sll_int32,               intent(in)  :: num_cells1
+sll_int32,               intent(in)  :: num_cells2
+sll_int32,               intent(in)  :: spline_degree1
+sll_int32, dimension(:), intent(out) :: global_spline_indices
 
-  li_d = 0
-  do li_j = 1, num_cells2
-     do li_i = 1, num_cells1
-        li_A = li_i + num_cells1*(li_j-1)
+sll_int32 :: d
+sll_int32 :: i
+sll_int32 :: j
+sll_int32 :: A
 
-        if ((li_j == 1) .OR. (li_j == num_cells2)) then
+d = 0
+do j = 1, num_cells2
+do i = 1, num_cells1
+  A = i + num_cells1*(j-1)
+  if ((j == 1) .OR. (j == num_cells2)) then
+    global_spline_indices(A) = 0
+  else
+    if (i /= num_cells1) then
+      if (global_spline_indices(A) == 0) then
+        d = d + 1
+        global_spline_indices(A) = d
+      end if
+      if ( 1 <= i .AND. i <= spline_degree1 ) then
+        global_spline_indices(A+num_cells1-spline_degree1) = global_spline_indices(A)
+      end if
+    end if
+  end if
+end do
+end do
 
-           global_spline_indices(li_A) = 0
-           
-        else
-
-           if (li_i /= num_cells1) then
-
-              if (global_spline_indices(li_A) == 0) then
-
-                 li_d = li_d + 1
-                 
-                 global_spline_indices(li_A) = li_d
-
-              end if
-
-              if ( (1 <= li_i ) .AND. ( li_i <= spline_degree1 ) ) then
-
-                 global_spline_indices(li_A + num_cells1 - spline_degree1) = &
-                      global_spline_indices(li_A)
-
-              end if
-           end if
-        end if
-     end do
-  end do
 end subroutine xi_PER_eta_DIR_init
 
-subroutine xi_DIR_eta_DIR_init(&
-     num_cells1,&
-     num_cells2,&
-     global_spline_indices)
+subroutine xi_DIR_eta_DIR_init( num_cells1,          &
+                                num_cells2,          &
+                                global_spline_indices)
 
-  integer :: li_d,num_cells1,num_cells2
-  integer :: li_i, li_j, li_A
- ! integer :: li_dof!,ai_sizePB
-  integer, dimension(:) :: global_spline_indices
-  
-  li_d = 0
+sll_int32,               intent(in)  :: num_cells1
+sll_int32,               intent(in)  :: num_cells2
+sll_int32, dimension(:), intent(out) :: global_spline_indices
 
-  do li_j = 2, num_cells2-1
-      do li_i = 2, num_cells1-1
-          li_A = li_i + num_cells1*(li_j-1)
-          li_d = li_d + 1
-          global_spline_indices(li_A) = li_d
-      end do
-  end do
+sll_int32 :: d
+sll_int32 :: i
+sll_int32 :: j
+sll_int32 :: A
+
+d = 0
+do j = 2, num_cells2-1
+do i = 2, num_cells1-1
+  A = i + num_cells1*(j-1)
+  d = d + 1
+  global_spline_indices(A) = d
+end do
+end do
+
 end subroutine xi_DIR_eta_DIR_init
 
+subroutine xi_eta_init( num_cells1,          &
+                        num_cells2,          &
+                        global_spline_indices)
 
-subroutine xi_eta_init(&
-     num_cells1,&
-     num_cells2,&
-     global_spline_indices)
+sll_int32,               intent(in)  :: num_cells1
+sll_int32,               intent(in)  :: num_cells2
+sll_int32, dimension(:), intent(out) :: global_spline_indices
 
-  integer :: li_d,num_cells1,num_cells2
-  integer :: li_i, li_j, li_A
-  ! integer :: li_dof!,ai_sizePB
-  integer, dimension(:) :: global_spline_indices
-  
-  li_d = 0
-  
-  do li_j = 1, num_cells2
-     do li_i = 1, num_cells1
-        li_A = li_i + num_cells1*(li_j-1)
-        li_d = li_d + 1
-        global_spline_indices(li_A) = li_d
-     end do
-  end do
+sll_int32 :: d
+sll_int32 :: i
+sll_int32 :: j
+sll_int32 :: A
+
+
+d = 0
+do j = 1, num_cells2
+do i = 1, num_cells1
+  A = i + num_cells1*(j-1)
+  d = d + 1
+  global_spline_indices(A) = d
+end do
+end do
+
 end subroutine xi_eta_init
 
-subroutine xi_PER_eta_PER_init(&
-     num_cells1,&
-     num_cells2,&
-     spline_degree1,&
-     spline_degree2,&
-     global_spline_indices)
+subroutine xi_PER_eta_PER_init( num_cells1,          &
+                                num_cells2,          &
+                                spline_degree1,      &
+                                spline_degree2,      &
+                                global_spline_indices)
 
-  integer :: li_d,num_cells1,num_cells2,spline_degree1,spline_degree2
-  integer :: li_i, li_j, li_A, li_L
-  !integer :: li_dof!,ai_sizePB
-  integer, dimension(:) :: global_spline_indices
-  
-  li_d = 0
+sll_int32              , intent(in)  :: num_cells1
+sll_int32              , intent(in)  :: num_cells2
+sll_int32              , intent(in)  :: spline_degree1
+sll_int32              , intent(in)  :: spline_degree2
+sll_int32, dimension(:), intent(out) :: global_spline_indices
 
-  do li_j = 1, num_cells2
-     
-     do li_i = 1, num_cells1
-        
-        li_A = li_i + num_cells1*(li_j-1)
-        
-        !print*, li_A
-        
-        
-        if (li_i /= num_cells1 .and. li_j/= num_cells2 ) then
+sll_int32               :: d
+sll_int32               :: i
+sll_int32               :: j
+sll_int32               :: A
+sll_int32               :: L
 
-           if (global_spline_indices(li_A) == 0) then
-              
-              li_d = li_d + 1
-              
-              global_spline_indices(li_A) = li_d
-              
-           end if
+d = 0
+do j = 1, num_cells2
+do i = 1, num_cells1
 
-           if ( (1 <= li_i ) .AND. ( li_i <= spline_degree1 ) ) then
+  A = i + num_cells1*(j-1)
+  if (i /= num_cells1 .and. j/= num_cells2 ) then
+    if (global_spline_indices(A) == 0) then
+      d = d+1
+      global_spline_indices(A) = d
+    end if
+    if ( (1 <= i ) .AND. ( i <= spline_degree1 ) ) then
+      global_spline_indices(A+num_cells1-spline_degree1) = global_spline_indices(A)
+    end if
+    if ( (1 <= j ) .AND. ( j <= spline_degree2 ) ) then
+      L = (num_cells2 - spline_degree2) * num_cells1
+      global_spline_indices(A+L) = global_spline_indices(A)
+    end if
+  end if
 
-              global_spline_indices(li_A + num_cells1 - spline_degree1) = &
-                   global_spline_indices(li_A)
-           end if
+end do
+end do
 
-           if ( (1 <= li_j ) .AND. ( li_j <= spline_degree2 ) ) then
-
-              li_L = (num_cells2 - spline_degree2) * num_cells1
-              global_spline_indices(li_A  + li_L) = &
-                   global_spline_indices(li_A)
-              !print*, 'hey',li_A + li_L, li_L
-           end if
-        end if
-     end do
-  end do
-
-  global_spline_indices(num_cells2*num_cells1) = &
-       global_spline_indices(num_cells1*(num_cells2-1) + spline_degree2)
+global_spline_indices(num_cells2*num_cells1) = &
+     global_spline_indices(num_cells1*(num_cells2-1) + spline_degree2)
 
 end subroutine xi_PER_eta_PER_init
 
+subroutine initLM( num_cells1,                   &
+                   num_cells2,                   &
+                   spline_degree1,               &
+                   spline_degree2,               &
+                   local_spline_indices,         &
+                   global_spline_indices,        &
+                   local_to_global_spline_indices)
 
-subroutine initLM( &
-     num_cells1,&
-     num_cells2,&
-     spline_degree1,&
-     spline_degree2,&
-     local_spline_indices,&
-     global_spline_indices,&
-     local_to_global_spline_indices)
+sll_int32                , intent(in)  :: num_cells1
+sll_int32                , intent(in)  :: num_cells2
+sll_int32                , intent(in)  :: spline_degree1
+sll_int32                , intent(in)  :: spline_degree2
+sll_int32, dimension(:)  , intent(out) :: global_spline_indices
+sll_int32, dimension(:,:), intent(out) :: local_spline_indices
+sll_int32, dimension(:,:), intent(out) :: local_to_global_spline_indices
 
-  integer :: li_e, li_b,num_cells1,num_cells2,spline_degree1,spline_degree2
-  integer, dimension(:) :: global_spline_indices
-  integer, dimension(:,:) :: local_spline_indices
-  integer,dimension(:,:) :: local_to_global_spline_indices
-  
-  do li_e = 1, num_cells1*num_cells2
-     
-     do li_b = 1, (spline_degree1+1)*(spline_degree2+1)
-        
-        local_to_global_spline_indices(li_b, li_e) = &
-             global_spline_indices(local_spline_indices(li_b, li_e))
-     end do
+sll_int32                 :: e
+sll_int32                 :: b
+
+do e = 1, num_cells1*num_cells2
+  do b = 1, (spline_degree1+1)*(spline_degree2+1)
+    local_to_global_spline_indices(b,e) = global_spline_indices(local_spline_indices(b,e))
   end do
+end do
+
 end subroutine initLM
 
-
-
-    
 end module connectivity_module
+!subroutine initconnectivity_bis( num_cells1, &
+!                                 num_cells2, &
+!                                 spline_degree1, &
+!                                 spline_degree2, &
+!                                 local_spline_indices, &
+!                                 global_spline_indices, &
+!                                 local_to_global_spline_indices )
+!  
+!  sll_int32 :: num_cells1, num_cells2, spline_degree1, spline_degree2
+!  sll_int32 :: nb_spl_x,nb_spl_y
+!  sll_int32, dimension(:,:) :: local_spline_indices
+!  sll_int32, dimension(:)   :: global_spline_indices
+!  sll_int32, dimension(:,:) :: local_to_global_spline_indices
+!  
+! ! sll_int32 :: BC  ! 0 if periodic-Dirichlet and 1 if Dirichlet-Dirichlet 
+!  sll_int32 :: i, j!,t1,t2
+!  sll_int32 :: ii, jj, Bloc, B,maille    
+!  
+!  !print*, 'local_spline_indices=', local_spline_indices(1,1)
+!
+!  ! loop over elements
+! do j = 1, num_cells2    
+!     do i=1, num_cells1  
+!        maille = num_cells1*(j-1) + i
+!        do jj = 0 , spline_degree2
+!           do ii = 0, spline_degree1
+!              B = (j -1)*(num_cells1+spline_degree1) + i + &
+!                        jj*(num_cells1+spline_degree1) + ii 
+!              Bloc = jj * (spline_degree1 + 1) + ii + 1
+!              local_spline_indices(Bloc, maille) = B
+!           end do
+!        end do
+!     end do
+!  end do
+!
+! ! print*, local_spline_indices
+!  ! INITIALIIZING THE ID ARRAY
+!  !select case ( ai_TYPE_PBC)
+!
+!  !case ( BC_XI_DIR_ETA_PER )
+!  nb_spl_x= num_cells1 + spline_degree1
+!  nb_spl_y= num_cells2 + spline_degree2
+!  
+!  call xi_eta_init(&
+!       nb_spl_x,&
+!       nb_spl_y,&
+!       global_spline_indices)
+!  
+!  ! INITIALIIZING THE LOCATION MATRIX LM ARRAY
+!  call initLM(&
+!       num_cells1,&
+!       num_cells2,&
+!       spline_degree1,&
+!       spline_degree2,&
+!       local_spline_indices,&
+!       global_spline_indices,&
+!       local_to_global_spline_indices)
+!
+!end subroutine initconnectivity_bis
