@@ -241,12 +241,22 @@ program lt_pic_4d_init_tester
   write(ncy_name,'(i3)') NC_Y
   open(83,file='vit_pos_'//trim(adjustl(ncx_name))//'x'//trim(adjustl(ncy_name))//'.dat')
   do j = 1, part_group%number_particles
-     call cell_offset_to_global ( part_group%p_list(j)%dx, &
-                                part_group%p_list(j)%dy, &
-                                part_group%p_list(j)%ic, &
-                                m2d, x, y )
+
+     call cell_offset_to_global_extended( part_group%p_list(j)%dx, &
+                                         part_group%p_list(j)%dy, &
+                                         part_group%p_list(j)%ic_x, &
+                                         part_group%p_list(j)%ic_y, &
+                                         m2d, x, y )
+
+     ! call cell_offset_to_global ( part_group%p_list(j)%dx, &
+     !                            part_group%p_list(j)%dy, &
+     !                            part_group%p_list(j)%ic, &
+     !                            m2d, x, y )
+
+     ! note: here we may call periodic_correction(p_group,x,y)...
+
      write(83,*) part_group%p_list(j)%vx, part_group%p_list(j)%vy, &
-     part_group%p_list(j)%ic, part_group%p_list(j)%dx, part_group%p_list(j)%dy, &
+     part_group%p_list(j)%ic_x, part_group%p_list(j)%ic_y, part_group%p_list(j)%dx, part_group%p_list(j)%dy, &
      x, y
   enddo
   close(83)

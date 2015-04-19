@@ -35,7 +35,8 @@ module sll_lt_pic_particle_module
 
   type :: sll_lt_pic_4d_particle
 !  type :: sll_lt_particle_4d  ! old name
-     sll_int32  :: ic   ! cell index, linearly arranged
+     sll_int32  :: ic_x   ! cell index in the x dimension (can be outside physical domain)
+     sll_int32  :: ic_y   ! cell index in the x dimension (can be outside physical domain)
      sll_real32 :: dx
      sll_real32 :: dy
      sll_real64 :: vx
