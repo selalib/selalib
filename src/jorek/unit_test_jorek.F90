@@ -16,9 +16,6 @@ program test_jorek
 
   use sll_jorek
   type(sll_jorek_solver) :: jorek_solver
-  character(len=1024)    :: parameters
-  character(len=1024)    :: geometry
-  character(len=1024)    :: solver
 
           
   call sll_create(jorek_solver)

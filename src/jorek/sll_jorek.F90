@@ -75,22 +75,21 @@ END MODULE jorek_model
 
 module sll_jorek
 
-  ! ------------------------------ Modules used
-  USE TypeDef
-  USE FEBasis
-  USE tracelog_module
-  USE SPM_DEF
+  USE TYPEDEF
   USE JOREK_MODEL
-  USE JOREK_PARAM
-  USE JOREK_PARAM_DEF
-  USE COORDINATES_DEF
-  USE COORDINATES
-  USE FIELD_DEF
-  USE JOREK_GLOB_DEF
-  USE INDICES_DEF
-  USE MODEL_DEF
-  use fem_def
-  use fem
+  USE FIELD
+  !USE JOREK_GLOB_DEF
+  !USE FEBasis
+  !USE tracelog_module
+  !USE SPM_DEF
+  !USE JOREK_PARAM
+  !USE JOREK_PARAM_DEF
+  !USE COORDINATES_DEF
+  !USE COORDINATES
+  !USE FIELD_DEF
+  !USE INDICES_DEF
+  !use fem_def
+  !use fem
 
   ! ------------------------------ 
   IMPLICIT NONE
