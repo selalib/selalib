@@ -16,7 +16,7 @@ contains
     subroutine Mult_CSR_Matrix_Vector(self, apr_x, apr_y)
         implicit none
         type(csr_matrix) :: self
-        real(wp), dimension(:) :: apr_x, apr_y
+        real(8), dimension(:) :: apr_x, apr_y
         !local var
         integer :: li_i, li_k_1, li_k_2
 
@@ -34,7 +34,7 @@ contains
     subroutine add_to_csr_Matrix(self, ar_value, ai_A, ai_Aprime)
         implicit none
         type(csr_matrix) :: self
-        real(wp) :: ar_value
+        real(8) :: ar_value
         integer :: ai_A, ai_Aprime
         !local var
         integer :: li_result, li_j, li_k
@@ -65,7 +65,7 @@ contains
     subroutine add_to_csr_Matrix_condition(self, ar_value, ai_A, ai_Aprime, al_flag)
         implicit none
         type(csr_matrix) :: self
-        real(wp) :: ar_value
+        real(8) :: ar_value
         integer :: ai_A, ai_Aprime
         logical :: al_flag
         !local var
@@ -76,7 +76,7 @@ contains
         ! THE CURRENT LINE IS self%opi_ia(ai_A)
         do li_k = self % opi_ia(ai_A), self % opi_ia(ai_A + 1) - 1
             li_j = self % opi_ja(li_k)
-            if ((li_j == ai_Aprime) .AND. (al_flag) .AND. (self % opr_a(li_k) == 0.0_wp)) then
+            if ((li_j == ai_Aprime) .AND. (al_flag) .AND. (self % opr_a(li_k) == 0.0_8)) then
                 self % opr_a(li_k) = self % opr_a(li_k) + ar_value
                 exit
             end if
@@ -90,18 +90,18 @@ contains
     subroutine eigenval_for_circulant(ao_K, apr_eigenK)
         implicit none
         type(CSR_MATRIX), intent ( in) :: ao_K
-        real(wp), dimension(:), intent(inout) :: apr_eigenK
+        real(8), dimension(:), intent(inout) :: apr_eigenK
         ! LOCAL VARIABLES
-        real(wp), dimension ( ao_K % oi_nR) :: lpr_K
+        real(8), dimension ( ao_K % oi_nR) :: lpr_K
         integer :: li_i
         integer :: li_j
         integer :: li_k
         integer :: li_N
-        real(wp) :: lr_ck
+        real(8) :: lr_ck
 
 !        CALL printlog("eigenval_for_circulant : Start", ai_dtllevel = mi_dtllevel_base + 1)
 
-        lpr_K = 0.0_wp
+        lpr_K = 0.0_8
 
         li_i = 1
         do li_k = ao_K % opi_ia(li_i), ao_K % opi_ia(li_i + 1) - 1
@@ -116,11 +116,11 @@ contains
         ! compute the k^th eigenvalue of K
         !***********************************************************************************
         li_N = ao_K % oi_nR
-        apr_eigenK = 0.0_wp
+        apr_eigenK = 0.0_8
 
         do li_k = 1, li_N
 
-            lr_ck = 2.0_wp * pi * (li_k - 1) / li_N
+            lr_ck = 2.0_8 * pi * (li_k - 1) / li_N
 
             do li_j = 1, li_N
 
