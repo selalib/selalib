@@ -19,7 +19,7 @@ contains
     character(len=*), intent(in) :: as_file
     integer, optional :: ai_typeprint
     !local var
-    real(wp), dimension(:,:), pointer :: lpr_temp
+    real(8), dimension(:,:), pointer :: lpr_temp
     integer  :: li_err,li_flag
     integer  :: li_i,li_j,li_k
     integer  :: li_file=1
@@ -42,7 +42,7 @@ contains
     if (li_err.ne.0) li_flag=10
 
     !initialisation
-    lpr_temp(1:this%oi_nR,1:this%oi_nC) = 0.0_wp
+    lpr_temp(1:this%oi_nR,1:this%oi_nC) = 0.0_8
 
     do li_i =1,this%oi_nR
             do li_k = this%opi_ia(li_i),this%opi_ia(li_i+1)-1
@@ -81,7 +81,7 @@ contains
     subroutine profilMatrix(apr_A,ai_nR, ai_nC)
     implicit none
     integer  :: ai_nR, ai_nC
-    real(wp), dimension(ai_nR, ai_nC),intent(in)  :: apr_A
+    real(8), dimension(ai_nR, ai_nC),intent(in)  :: apr_A
     !local var
     integer  :: li_i, li_j
     character, dimension(ai_nR, ai_nC)  :: lpr_charA
