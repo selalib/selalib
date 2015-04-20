@@ -97,7 +97,6 @@ type, public :: general_coordinate_elliptic_solver
   sll_real64, dimension(:), pointer   :: masse
   sll_real64, dimension(:), pointer   :: stiff
   sll_real64, dimension(:),   pointer :: rho_coeff_1d
-  sll_real64, dimension(:), pointer   :: M_rho_loc
   logical                             :: perper
   type(deboor_type)                   :: db
 end type general_coordinate_elliptic_solver
@@ -125,8 +124,6 @@ public sll_delete,                          &
        new_general_elliptic_solver,         &
        factorize_mat_es
 
-sll_int32  :: jcell1, jcell2
-sll_int32  :: tid=0, nthreads=1
 
 contains 
 
@@ -451,7 +448,6 @@ SLL_ALLOCATE(es%tab_index_coeff2(num_cells2),ierr)
 num_pts_g1 = size(es%gauss_pts1,2)
 num_pts_g2 = size(es%gauss_pts2,2)
 SLL_ALLOCATE(es%rho_coeff_1d((num_cells1+1)*(num_cells2+1)),ierr)
-SLL_ALLOCATE(es%M_rho_loc(es%total_num_splines_loc),ierr)
 
 allocate(work1(spline_degree1+1,spline_degree1+1))
 allocate(work2(spline_degree2+1,spline_degree2+1))
@@ -747,6 +743,8 @@ sll_real64 :: wxy_by_val_jac
 sll_real64 :: wxy_val_jac 
 sll_real64 :: r1r2, v1v2, d1v2, v1d2
 sll_real64 :: d3v4, v3v4 , v3d4
+sll_int32  :: tid=0, nthreads=1
+sll_real64 :: intjac
 
 bc1_min    = es%bc1_min
 bc1_max    = es%bc1_max
@@ -772,7 +770,7 @@ else
    es%perper = .false.  
 end if   
 
-es%intjac = 0.0_f64
+intjac = 0.0_f64
 
 SLL_CLEAR_ALLOCATE(source(1:nspl,1:nspl,1:nc_1*nc_2),ierr)
 SLL_CLEAR_ALLOCATE(M_c(1:nspl,1:nspl),ierr)
@@ -789,7 +787,7 @@ SLL_CLEAR_ALLOCATE(stif(1:nspl),ierr)
 !$OMP PARALLEL DEFAULT(NONE) &
 !$OMP SHARED( es, c_field, &
 !$OMP a11_field_mat, a12_field_mat, a21_field_mat, a22_field_mat, &
-!$OMP b1_field_vect, b2_field_vect, spl_deg_1, spl_deg_2, source ) &
+!$OMP b1_field_vect, b2_field_vect, spl_deg_1, spl_deg_2, source, intjac ) &
 !$OMP FIRSTPRIVATE(nc_1, nc_2, delta1, delta2, eta1_min, eta2_min, &
 !$OMP bc1_min, bc1_max, bc2_min, bc2_max, num_pts_g1, num_pts_g2)  &
 !$OMP PRIVATE(nthreads, tid, &
@@ -802,7 +800,6 @@ SLL_CLEAR_ALLOCATE(stif(1:nspl),ierr)
 !$OMP jac_mat, val_jac, wxy_by_val_jac, wxy_val_jac, &
 !$OMP B11, B12, B21, B22, MC, C1, C2, &
 !$OMP v1, v2, v3, v4, r1, r2, d1, d2, d3, d4, &
-!$OMP jcell1, jcell2, &
 !$OMP v3v4, d3v4, v3d4, &
 !$OMP M_c,K_11,K_12,K_21,K_22,M_bv,S_b1,S_b2, &
 !$OMP index_coef2, index_coef1, &
@@ -810,21 +807,11 @@ SLL_CLEAR_ALLOCATE(stif(1:nspl),ierr)
 !$OMP a, b, x, y, aprime, bprime, nbsp, nbsp1, &
 !$OMP r1r2, v1v2, d1v2, v1d2, elt_mat_global )
 
-#ifdef _OPENMP
-tid = omp_get_thread_num()
-nthreads = omp_get_num_threads()
-if (tid == 0) then
-  print *, 'Number of threads = ', nthreads
-end if
-#else
-tid     = 0
-nthreads = 1
-#endif
-
-jcell1 = tid * nc_2 / nthreads + 1
-jcell2 = (tid+1) * nc_2 / nthreads
-
-do j = jcell1, jcell2
+!$ tid = omp_get_thread_num()
+!$ nthreads = omp_get_num_threads()
+!$ if (tid == 0) print *, 'Number of threads = ', nthreads
+!$OMP DO SCHEDULE(STATIC,nc_2/nthreads) REDUCTION(+:intjac)
+do j = 1, nc_2
 do i = 1, nc_1
         
   icell = i + (j-1) * nc_1
@@ -878,7 +865,7 @@ do i = 1, nc_1
 
       val_c = val_c * wxy_val_jac
         
-      es%intjac = es%intjac + wxy_val_jac
+      intjac = intjac + wxy_val_jac
 
       ! The B matrix is  by (J^(-1)) A^T (J^(-1))^T 
       B11 = jac_mat(2,2)*jac_mat(2,2)*val_a11 - &
@@ -1069,6 +1056,7 @@ end do
 
 !$OMP END PARALLEL
 
+es%intjac = intjac
 print *,'#begin of sll_factorize_csr_matrix'
 
 if (es%perper) then
@@ -1174,6 +1162,7 @@ class(sll_scalar_field_2d_base),           intent(in),target  :: rho
 
 class(sll_scalar_field_2d_base), pointer :: base_field_pointer
 sll_real64, dimension(:,:),      pointer :: coeff_rho
+sll_real64, dimension(:), allocatable :: m_rho_loc
 
 sll_int32  :: i
 sll_int32  :: j
@@ -1182,7 +1171,6 @@ sll_int32  :: x, n, b
 sll_int32  :: ii, jj, kk, ll, mm, nn
 sll_int32  :: bc1_min, bc1_max, bc2_min, bc2_max
 sll_int32  :: index1, index3, nbsp
-sll_int32  :: jcell1, jcell2, tid, nthreads
 
 sll_real64 :: wgpt1, wgpt2, gpt1, gpt2, eta1, eta2
 sll_real64 :: val_f, val_j, valfj
@@ -1190,11 +1178,17 @@ sll_real64 :: spline1, spline2
 
 sll_real64 :: int_rho
 sll_real64 :: int_jac
+sll_int32  :: tid      = 0
+sll_int32  :: nthreads = 1
+sll_int32  :: ierr
+sll_int32  :: nc_1, nc_2
   
 num_pts_g1 = size(es%gauss_pts1,2)
 num_pts_g2 = size(es%gauss_pts2,2)
 
-es%M_rho_loc    = 0.0_f64
+
+nc_1            = es%num_cells1
+nc_2            = es%num_cells2
 es%rho_vec      = 0.0_f64
 es%rho_coeff_1d = 0.0_f64
  
@@ -1202,10 +1196,6 @@ bc1_min = es%bc1_min_interp
 bc1_max = es%bc1_max
 bc2_min = es%bc2_min
 bc2_max = es%bc2_max
-
-  
-! afin d'optimiser la construction de la matrice rho
-! on va proceder de la facon qui suit 
 
 base_field_pointer => rho
 
@@ -1232,23 +1222,28 @@ class is (sll_scalar_field_2d_analytic)
   int_rho = 0.0_f64
   int_jac = 0.0_f64
 
-  tid     = 0
+  SLL_CLEAR_ALLOCATE(M_rho_loc(1:es%total_num_splines_loc),ierr)
 
-!!  !$OMP PARALLEL DEFAULT(NONE)  &
-!!  !$OMP FIRSTPRIVATE(bc1_min, bc1_max, bc2_min, bc2_max, &
-!!  !$OMP num_pts_g1, num_pts_g2) &
-!!  !$OMP PRIVATE(i,j,ii,jj,kk,ll,mm,nn,tid,nthreads,gpt1,gpt2, &
-!!  !$OMP wgpt1,wgpt2,val_f, val_j, valfj, spline1, spline2, &
-!!  !$OMP x, index1, index3, nbsp, b, n, jcell1, jcell2, &
-!!  !$OMP eta1, eta2, int_rho, int_jac) &
-!!  !$OMP SHARED(rho,es)
+!$OMP PARALLEL DEFAULT(NONE)  &
+!$OMP FIRSTPRIVATE(nc_1, nc_2, bc1_min, bc1_max, bc2_min, bc2_max, &
+!$OMP num_pts_g1, num_pts_g2) &
+!$OMP PRIVATE(i,j,ii,jj,kk,ll,mm,nn,tid,nthreads,gpt1,gpt2, &
+!$OMP wgpt1,wgpt2,val_f, val_j, valfj, spline1, spline2, &
+!$OMP x, index1, index3, nbsp, b, n, &
+!$OMP eta1, eta2, int_rho, int_jac, m_rho_loc) &
+!$OMP SHARED(rho,es)
 
+!$ tid = omp_get_thread_num()
+!$ nthreads = omp_get_num_threads()
+!$ if (tid == 0) then
+
+  print *, 'Number of threads = ', nthreads
   
-  do j = 1, es%num_cells2
-    eta2  = es%eta2_min + (j-1)*es%delta_eta2
-    do i=1,es%num_cells1
-      es%M_rho_loc(:)  = 0.0_f64
+  do j=1, nc_2
+    do i=1, nc_1
+      M_rho_loc = 0.0_f64
       eta1  = es%eta1_min + (i-1)*es%delta_eta1
+      eta2  = es%eta2_min + (j-1)*es%delta_eta2
       do jj=1,num_pts_g2
         gpt2  = eta2 + es%gauss_pts2(1,jj)
         wgpt2 = es%gauss_pts2(2,jj)
@@ -1268,7 +1263,7 @@ class is (sll_scalar_field_2d_analytic)
             do kk = 1,es%spline_degree1+1
               spline1 = es%v_splines1(1,kk,ii,i)
               n = n+1
-              es%M_rho_loc(n)= es%M_rho_loc(n) + spline1*spline2
+              M_rho_loc(n)= M_rho_loc(n) + spline1*spline2
             end do
           end do
 
@@ -1297,14 +1292,15 @@ class is (sll_scalar_field_2d_analytic)
       
           x             =  index1 + (index3-1)*nbsp
           b             =  b + 1
-          es%rho_vec(x) =  es%rho_vec(x)  + es%M_rho_loc(b)
+          es%rho_vec(x) =  es%rho_vec(x)  + M_rho_loc(b)
             
         end do
       end do
     end do
   end do
 
-!!  !$OMP END PARALLEL
+!$ end if
+!$OMP END PARALLEL
 
   if (es%perper) es%rho_vec = es%rho_vec - int_rho/int_jac
      
