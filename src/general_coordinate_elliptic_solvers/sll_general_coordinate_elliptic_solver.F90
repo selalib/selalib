@@ -1224,21 +1224,22 @@ class is (sll_scalar_field_2d_analytic)
 
   SLL_CLEAR_ALLOCATE(M_rho_loc(1:es%total_num_splines_loc),ierr)
 
-!$OMP PARALLEL DEFAULT(NONE)  &
-!$OMP FIRSTPRIVATE(nc_1, nc_2, bc1_min, bc1_max, bc2_min, bc2_max, &
-!$OMP num_pts_g1, num_pts_g2) &
-!$OMP PRIVATE(i,j,ii,jj,kk,ll,mm,nn,tid,nthreads,gpt1,gpt2, &
-!$OMP wgpt1,wgpt2,val_f, val_j, valfj, spline1, spline2, &
-!$OMP x, index1, index3, nbsp, b, n, &
-!$OMP eta1, eta2, int_rho, int_jac, m_rho_loc) &
-!$OMP SHARED(rho,es)
-
+!$OMP PARALLEL &
+!$OMP FIRSTPRIVATE(nc_1, nc_2, num_pts_g1, num_pts_g2, &
+!$OMP              bc1_min,bc1_max,bc2_min,bc2_max,    &
+!$OMP              tid, nthreads)                      &
+!$OMP PRIVATE(i,j,ii,jj,kk,ll,mm,nn,n,m_rho_loc,x,b,   &
+!$OMP         index1,index3,nbsp,eta1,eta2,gpt1,gpt2,  &
+!$OMP         wgpt1,wgpt2,spline1,spline2,val_f,val_j, &
+!$OMP         valfj)
 !$ tid = omp_get_thread_num()
 !$ nthreads = omp_get_num_threads()
-!$ if (tid == 0) then
 
+  !$OMP MASTER
   print *, 'Number of threads = ', nthreads
+  !$OMP END MASTER
   
+  !$OMP DO SCHEDULE(STATIC,nc_2/nthreads) REDUCTION(+:int_rho,int_jac)
   do j=1, nc_2
     do i=1, nc_1
       M_rho_loc = 0.0_f64
@@ -1257,20 +1258,17 @@ class is (sll_scalar_field_2d_analytic)
           int_rho = int_rho + valfj 
           int_jac = int_jac + val_j
       
-          n = 0
           do ll = 1,es%spline_degree2+1
             spline2 = es%v_splines2(1,ll,jj,j)*valfj
             do kk = 1,es%spline_degree1+1
               spline1 = es%v_splines1(1,kk,ii,i)
-              n = n+1
+              n = kk + (ll-1)*(es%spline_degree1+1)
               M_rho_loc(n)= M_rho_loc(n) + spline1*spline2
             end do
           end do
-
         end do
       end do
 
-      b = 0
       do mm = 0,es%spline_degree2
         index3 = j + mm
         if (bc2_min==SLL_PERIODIC .and. bc2_max==SLL_PERIODIC) then    
@@ -1291,7 +1289,7 @@ class is (sll_scalar_field_2d_analytic)
           end if
       
           x             =  index1 + (index3-1)*nbsp
-          b             =  b + 1
+          b             =  nn + 1 + mm * (es%spline_degree1+1)
           es%rho_vec(x) =  es%rho_vec(x)  + M_rho_loc(b)
             
         end do
@@ -1299,7 +1297,6 @@ class is (sll_scalar_field_2d_analytic)
     end do
   end do
 
-!$ end if
 !$OMP END PARALLEL
 
   if (es%perper) es%rho_vec = es%rho_vec - int_rho/int_jac
