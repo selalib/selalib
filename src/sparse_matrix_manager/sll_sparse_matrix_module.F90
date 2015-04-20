@@ -283,7 +283,7 @@ end subroutine initialize_csr_matrix_with_constraint
 function new_csr_matrix_with_constraint(mat_a) result(mat)
 
 type(sll_csr_matrix), pointer :: mat
-type(sll_csr_matrix) :: mat_a
+type(sll_csr_matrix)          :: mat_a
 
 sll_int32 :: ierr
 SLL_ALLOCATE(mat, ierr)
@@ -548,10 +548,10 @@ sll_real64 :: NormInfr
 sll_real64 :: ps
 sll_real64 :: beta
 sll_real64 :: alpha
-logical  :: ll_continue
 sll_int32  :: iter
 sll_int32  :: err
 sll_int32  :: flag
+logical    :: ll_continue
 
 maxIter = 100000
 eps = 1.d-13
