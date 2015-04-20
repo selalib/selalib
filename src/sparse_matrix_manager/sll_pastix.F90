@@ -10,15 +10,6 @@ use sll_collective
 implicit none
 private
 
-!> Matrix in CSC format
-type, public :: sll_csc_matrix
-    sll_int32           :: n             !< Matrix dimension
-    sll_int32           :: nnzeros       !< Number of non-zeros
-    sll_int32, pointer  :: colptr(:)     !< CSC format colum pointer
-    sll_int32, pointer  :: row(:)        !< CSC format row indices
-    sll_real64, pointer :: avals(:)      !< non zeros values
-end type sll_csc_matrix
-
 type, public :: pastix_solver
  pastix_data_ptr_t        :: pastix_data !< PaStiX structure (0 for first call)
  pastix_int_t             :: ncols       !< Number of columns in the matrix
@@ -38,7 +29,7 @@ end type pastix_solver
 
 interface initialize
    module procedure initialize_pastix
-   module procedure initialize_pastix_with_csc_matrix
+   !module procedure initialize_pastix_with_csc_matrix
 end interface initialize
 
 interface solve
@@ -58,50 +49,18 @@ public :: initialize, factorize, solve, delete
 
 contains
 
-subroutine initialize_csc_matrix(self, n, nnzeros, error)
+subroutine initialize_pastix(this,n,nnzeros,row_ptr,col_ind,val)
 
-   type(sll_csc_matrix)   :: self
-   sll_int32, intent(in)  :: n         !< Matrix dimension
-   sll_int32, intent(in)  :: nnzeros   !< Number of non-zeros
-   sll_int32, intent(out) :: error
-
-   self%n       = n
-   self%nnzeros = nnzeros
-   SLL_ALLOCATE(self%colptr(n+1), error)
-   SLL_ALLOCATE(self%row(nnzeros), error)
-   SLL_CLEAR_ALLOCATE(self%avals(1:nnzeros), error)
-
-end subroutine initialize_csc_matrix
-
-subroutine csc_todense( this, dense_matrix)
-
-   type(sll_csc_matrix)       :: this
-   sll_real64, dimension(:,:) :: dense_matrix
-   sll_int32                  :: i
-   sll_int32                  :: j
-   sll_int32                  :: k
-   sll_int32                  :: l
-
-   l = 0
-   do j = 1, this%n 
-      do k = this%colptr(j),this%colptr(j+1)-1 
-         l = l + 1
-         i = this%row(l)
-         dense_matrix(i,j) = this%avals(l)
-      end do
-   end do
-
-end subroutine csc_todense
-
-subroutine initialize_pastix(this,n,nnzeros)
-
-  type(pastix_solver)      :: this
-  sll_int32, intent(in)    :: n
-  pastix_int_t, intent(in) :: nnzeros
-  sll_int32                :: error
-  sll_int32                :: comm    
-  sll_int32                :: prank    
-  sll_int32                :: psize
+  type(pastix_solver)                :: this
+  sll_int32,    intent(in)           :: n
+  pastix_int_t, intent(in)           :: nnzeros
+  sll_int32,    intent(in), optional :: row_ptr(:)
+  sll_int32,    intent(in), optional :: col_ind(:)
+  sll_real64,   intent(in), optional :: val(:)
+  sll_int32                          :: error
+  sll_int32                          :: comm    
+  sll_int32                          :: prank    
+  sll_int32                          :: psize
 
   if( .not. associated(sll_world_collective)) then
      call sll_boot_collective()
@@ -117,13 +76,12 @@ subroutine initialize_pastix(this,n,nnzeros)
 
   ! Allocating
   SLL_ALLOCATE( this%colptr(1:n+1), error)
-  print*, associated(this%colptr)
-  SLL_ALLOCATE( this%row(1:nnzeros)   , error)
-  print*, associated(this%row)
-  SLL_ALLOCATE( this%avals(1:nnzeros) , error)
-  print*, associated(this%avals)
-  SLL_ALLOCATE( this%rhs(1:n)     , error)
-  print*, associated(this%rhs)
+  if (present(row_ptr)) this%colptr = row_ptr
+  SLL_ALLOCATE( this%row(1:nnzeros), error)
+  if (present(col_ind)) this%row    = col_ind
+  SLL_ALLOCATE( this%avals(1:nnzeros), error)
+  if (present(val)) this%avals  = val
+  SLL_ALLOCATE( this%rhs(1:n), error)
 
   ! First PaStiX call to initiate parameters
 
@@ -145,69 +103,15 @@ subroutine initialize_pastix(this,n,nnzeros)
   this%iparm(IPARM_THREAD_NBR) = this%nbthread  
   this%iparm(IPARM_VERBOSE)    = this%verbose
 
-  this%iparm(IPARM_SYM)           = API_SYM_NO !API_SYM_YES   ! API_SYM_NO
-  this%iparm(IPARM_FACTORIZATION) = API_FACT_LU !API_FACT_LDLT ! API_FACT_LU
+  this%iparm(IPARM_SYM)           = API_SYM_YES !API_SYM_NO
+  this%iparm(IPARM_FACTORIZATION) = API_FACT_LU !API_FACT_LDLT
 
   this%iparm(IPARM_MATRIX_VERIFICATION) = API_YES
   
+  !The matrix is in CSR format, we transpose to get CSC
   this%iparm(IPARM_TRANSPOSE_SOLVE) = API_YES
   
-  print *,'#initialize pastix is done'
-    
 end subroutine initialize_pastix
-
-subroutine initialize_pastix_with_csc_matrix(this, csc_matrix)
-
-  type(pastix_solver)   :: this
-  type(sll_csc_matrix)  :: csc_matrix
-  pastix_int_t          :: n
-  sll_int32             :: error
-  sll_int32             :: comm    
-  sll_int32             :: prank    
-  sll_int32             :: psize
-
-  n  = csc_matrix%n
-  prank = sll_get_collective_rank( sll_world_collective )
-  psize = sll_get_collective_size( sll_world_collective )
-  comm  = sll_world_collective%comm
-
-  ! Get options ftom command line
-  this%nbthread = 1
-  this%verbose  = API_VERBOSE_NO
-
-  
-  this%colptr => csc_matrix%colptr
-  this%row    => csc_matrix%row
-  this%avals  => csc_matrix%avals
-  SLL_ALLOCATE( this%rhs(1:n)     , error)
-
-  ! First PaStiX call to initiate parameters
-
-  this%pastix_data                   = 0
-  this%nrhs                          = 1
-  this%iparm(IPARM_MODIFY_PARAMETER) = API_NO
-  this%iparm(IPARM_START_TASK)       = API_TASK_INIT
-  this%iparm(IPARM_END_TASK)         = API_TASK_INIT
-
-  SLL_ALLOCATE(this%perm(n), error)
-  SLL_ALLOCATE(this%invp(n), error)
-
-  call pastix_fortran(this%pastix_data,comm,n,this%colptr,this%row, &
-                      this%avals,this%perm,this%invp,this%rhs,    &
-                      this%nrhs,this%iparm,this%dparm)
-
-  ! Customize some parameters
-
-  this%iparm(IPARM_THREAD_NBR) = this%nbthread  
-  this%iparm(IPARM_VERBOSE)    = this%verbose
-
-  this%iparm(IPARM_SYM)           = API_SYM_YES   ! API_SYM_NO
-  this%iparm(IPARM_FACTORIZATION) = API_FACT_LDLT ! API_FACT_LU
-
-  this%iparm(IPARM_MATRIX_VERIFICATION) = API_YES
-
-end subroutine initialize_pastix_with_csc_matrix
-
 
 subroutine factorize_pastix(this)
 

@@ -32,6 +32,7 @@ SET(SLL_MACROS
     ${SLL_DIR}/multigrid/mgd2_routines.h
     ${SLL_DIR}/remap/sll_remap.h
     ${SLL_DIR}/parallel_utilities/sll_parallel_utilities.h
+    ${SLL_DIR}/jorek/sll_jorek.h
 )
 
 FILE(COPY ${SLL_MACROS} DESTINATION ${CMAKE_BINARY_DIR}/include)
@@ -86,7 +87,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/fields/sll_scalar_field_2d.F90
     ${SLL_DIR}/general_coordinate_elliptic_solvers/sll_general_coordinate_elliptic_solver.F90
     ${SLL_DIR}/general_coordinate_elliptic_solvers/sll_knots.F90
-    ${SLL_DIR}/general_coordinate_elliptic_solvers/connectivity_qn.f90
+    ${SLL_DIR}/general_coordinate_elliptic_solvers/connectivity_module.F90
     ${SLL_DIR}/splines/sll_cubic_splines.F90
     ${SLL_DIR}/splines/sll_arbitrary_degree_splines.F90
     ${SLL_DIR}/splines/cubic_nonuniform_splines.F90
@@ -123,6 +124,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/integration/gauss_lobatto.F90
     ${SLL_DIR}/simulations/simulations_sequential/sim_CG_polar/sll_polar_operators.F90
     ${SLL_DIR}/simulations/simulations_sequential/sim_CG_polar/sll_advection_polar.F90
+    ${SLL_DIR}/sparse_matrix_manager/partition.F90
     ${SLL_DIR}/sparse_matrix_manager/sll_sparse_matrix_module.F90
     ${SLL_DIR}/time_solvers/sll_time_splitting_coeff.F90
     ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.F90
@@ -145,7 +147,13 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/distribution_function/distribution_function_initializer_4d.F90
     ${SLL_DIR}/distribution_function/sll_fdistribu4d_DK.F90
     ${SLL_DIR}/reduction/sll_reduction.F90
-
+    ${SLL_DIR}/random_deviate_generators/gaussian.F90
+    ${SLL_DIR}/random_deviate_generators/hammersley.F90
+    ${SLL_DIR}/random_deviate_generators/moment_matching.F90
+    ${SLL_DIR}/vector_space/sll_vector_space_base.F90
+    ${SLL_DIR}/vector_space/sll_vector_space_real_arrays.F90
+    ${SLL_DIR}/ode_integrators/sll_ode_integrator_base.F90
+    ${SLL_DIR}/ode_integrators/rk_explicit.F90
  )
 
 IF(Fortran_COMPILER MATCHES "IBM")
