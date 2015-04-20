@@ -21,9 +21,9 @@ program pic_2d_cartesian
   call sim%init_from_file(trim(filename))
 
 !!$   if (rank==0) then
-!!$      print*, size, 'mpi nodes X',sim%ions_number, 'particles', &
+!!$      print*, size, 'mpi nodes X',sim%parts_number, 'particles', &
 !!$           sim%m2d%num_cells1,'x',sim%m2d%num_cells2, 'cells' 
-!!$      print*, sim%ions_number/real(sim%m2d%num_cells1* &
+!!$      print*, sim%parts_number/real(sim%m2d%num_cells1* &
 !!$           sim%m2d%num_cells2,f64), 'particles per cell'
 !!$   endif
 
