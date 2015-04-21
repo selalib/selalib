@@ -1,698 +1,620 @@
-MODULE jorek_model
-  USE TypeDef
-  USE SPM_DEF
-  USE INDICES_DEF
-  USE JOREK_PARAM_DEF
-  USE MESH_DEF
-  USE BLACKBOX_DEF
-  USE GREENBOX_DEF
-  USE QUADRATURES_DEF 
-  USE LINEAR_SOLVER_DEF
-  USE BASIS_DEF
-  USE FEBasis
-  USE FEBasis2D_Bezier
-!  USE FEBasis2D_Splines
-!  USE FEBasis2D_BoxSplines
-  USE SPACE_DEF
-  USE FIELD_DEF
-  USE MATRIX_DEF
-  USE FEM_DEF
+module jorek_model
 
-  IMPLICIT NONE
+use typedef
+use spm_def
+use indices_def
+use jorek_param_def
+use mesh_def
+use blackbox_def
+use greenbox_def
+use quadratures_def 
+use linear_solver_def
+use basis_def
+use febasis
+use febasis2d_bezier
+use space_def
+use field_def
+use matrix_def
+use fem_def
 
-  ! ... quad mesh
-  TYPE(DEF_FEM_QUAD_2D)  , TARGET :: fem_model 
+!  use febasis2d_splines
+!  use febasis2d_boxsplines
 
-  TYPE(DEF_SPACE_QUAD_2D), TARGET :: space_trial
-  CLASS(DEF_SPACE_QUAD_2D), POINTER :: ptr_space_trial
+implicit none
 
-  TYPE(DEF_SPACE_QUAD_2D), TARGET :: space_test
-  CLASS(DEF_SPACE_QUAD_2D), POINTER :: ptr_space_test
-  ! ...
+! ... quad mesh
+type(def_fem_quad_2d),    target  :: fem_model 
+type(def_space_quad_2d),  target  :: space_trial
+class(def_space_quad_2d), pointer :: ptr_space_trial
+type(def_space_quad_2d),  target  :: space_test
+class(def_space_quad_2d), pointer :: ptr_space_test
+! ...
 
 !  ! ... triangle mesh
-!  TYPE(DEF_FEM_TRIANGLE_2D)  , TARGET :: fem_model 
+!  type(def_fem_triangle_2d)  , target :: fem_model 
 !
-!  TYPE(DEF_SPACE_TRIANGLE_2D), TARGET :: space_trial
-!  CLASS(DEF_SPACE_TRIANGLE_2D), POINTER :: ptr_space_trial
+!  type(def_space_triangle_2d), target :: space_trial
+!  class(def_space_triangle_2d), pointer :: ptr_space_trial
 !
-!  TYPE(DEF_SPACE_TRIANGLE_2D), TARGET :: space_test
-!  CLASS(DEF_SPACE_TRIANGLE_2D), POINTER :: ptr_space_test
+!  type(def_space_triangle_2d), target :: space_test
+!  class(def_space_triangle_2d), pointer :: ptr_space_test
 !  ! ...
 
-  TYPE(DEF_MESH_2D), TARGET       :: fem_mesh
+type(def_mesh_2d),     target  :: fem_mesh
+type(def_0_form_2d),   target  :: field_u
+class(def_field_2d),   pointer :: ptr_field
+type(def_matrix_2d) ,  target  :: matrix_stiffnes
+class(def_matrix_2d),  pointer :: ptr_system
 
-  TYPE(DEF_0_FORM_2D) , TARGET  :: field_U
-  CLASS(DEF_FIELD_2D), POINTER :: ptr_field
+type(def_linear_solver_2d) :: solver
+integer                    :: n_var_sys 
+integer                    :: n_var_unknown
 
-  TYPE(DEF_MATRIX_2D) , TARGET  :: matrix_Stiffnes
-  CLASS(DEF_MATRIX_2D), POINTER :: ptr_system
+real(kind=rk), dimension(:,:), pointer  :: diagnostics
+integer(kind=jorek_ints_kind)           :: nstep_max 
+integer, parameter, private             :: dtllevel_base=0
+integer, parameter                      :: nvar = 1
+integer, parameter                      :: matrix_a_id = 0
+integer                                 :: mode_m1
+integer                                 :: mode_n1
+real(kind=jorek_coef_kind)              :: a
+real(kind=jorek_coef_kind)              :: acenter
+real(kind=jorek_coef_kind)              :: r0
+real(kind=jorek_coef_kind)              :: z0
 
-  TYPE(DEF_LINEAR_SOLVER_2D)                 :: solver
-
-  INTEGER :: n_var_sys 
-  INTEGER :: n_var_unknown
-
-  REAL(KIND=RK), DIMENSION(:,:), POINTER  :: Diagnostics
-
-  INTEGER(KIND=JOREK_INTS_KIND) :: mi_nstep_max 
-  
-  INTEGER, PARAMETER, PRIVATE :: mi_dtllevel_base       = 0
-
-  INTEGER, PARAMETER	      :: mi_nvar	        = 1
-
-  INTEGER, PARAMETER          :: Matrix_A_ID              = 0
-
-  INTEGER :: mi_mode_m1
-  INTEGER :: mi_mode_n1
-
-  REAL(KIND=JOREK_COEF_KIND)  :: mr_a
-  REAL(KIND=JOREK_COEF_KIND)  :: mr_acenter
-  REAL(KIND=JOREK_COEF_KIND)  :: mr_R0
-  REAL(KIND=JOREK_COEF_KIND)  :: mr_Z0
-
-END MODULE jorek_model
+end module jorek_model
 
 module sll_jorek
 
-  USE TYPEDEF
-  USE JOREK_MODEL
-  USE FIELD
-  !USE JOREK_GLOB_DEF
-  !USE FEBasis
-  !USE tracelog_module
-  !USE SPM_DEF
-  !USE JOREK_PARAM
-  !USE JOREK_PARAM_DEF
-  !USE COORDINATES_DEF
-  !USE COORDINATES
-  !USE FIELD_DEF
-  !USE INDICES_DEF
-  !use fem_def
-  !use fem
+use typedef
+use jorek_model
+use field
+use mesh
+use spm
+use field
+use linear_solver
+use matrix
+use space
+use fem
 
-  ! ------------------------------ 
-  IMPLICIT NONE
+implicit none
 
-  type, public :: sll_jorek_solver
+type, public :: sll_jorek_solver
 
-  end type sll_jorek_solver
+end type sll_jorek_solver
 
-  interface sll_create
-  module procedure initialize_jorek
-  end interface sll_create
+interface sll_create
+module procedure initialize_jorek
+end interface sll_create
+interface sll_solve
+module procedure solve_jorek
+end interface sll_solve
 
 contains
 
-  subroutine initialize_jorek(jorek)
+subroutine initialize_jorek(jorek)
 
-  type(sll_jorek_solver) :: jorek
+type(sll_jorek_solver) :: jorek
 
-  ! ------------------------------ Local variables >> Integers
-  INTEGER          :: nb_args
-  INTEGER          :: is, ie, il, i1, i2, is1, is2
-  INTEGER          :: imesh=1, Nrefine
-  INTEGER          :: iv, iv_Pol, ipol, Ns_3D
-  INTEGER          :: ierr
-  INTEGER          :: TraceLogDetail 
-  INTEGER          :: TraceLogOutput
+integer          :: nb_args
+integer          :: ierr
+integer          :: tracelogdetail 
+integer          :: tracelogoutput
 
-  INTEGER, DIMENSION(:,:), POINTER     :: Nu
-  INTEGER, DIMENSION(:,:), ALLOCATABLE :: Ok
-  INTEGER(KIND=SPM_INTS_KIND) :: nRows !NUMBER OF ROWS
-  INTEGER(KIND=SPM_INTS_KIND) :: nCols !NUMBER OF COLUMNS
+character(len = 1024)         :: exec
+character(len = 1024)         :: rootname
+character(len = *), parameter :: mod_name = "main"
 
-  ! ------------------------------ Local variables >> Reals
+character(len=1024) :: filename_parameter
 
-  REAL(KIND=RK), DIMENSION(:,:), POINTER :: Coor  
+integer, parameter  :: n_dim = 2
+integer             :: err
+character(len=1024) :: dirname
+integer             :: myrank
+character(len=1024) :: argname
 
-  ! ------------------------------ Local variables >> Characters
-  CHARACTER(LEN = 1024)         :: exec
-  CHARACTER(LEN = 1024)         :: rootname
-  CHARACTER(LEN = *), PARAMETER :: mod_name = "Main"
 
-!  ! ------------------------------ Local variables >> Structures
-  LOGICAL :: ll_stdoutput
-  INTEGER :: li_assembly_proc
-  INTEGER :: li_toroidal_basis
-  character filename_parameter*1024
-  INTEGER :: li_n_Gauss_Rp, li_n_Gauss_Zp
-
-    INTEGER, PARAMETER          :: N_DIM = 2
-    INTEGER :: li_poloidal_basis
-    INTEGER :: li_err
-    CHARACTER(LEN = 1024)           :: dirname
-
-     REAL(KIND=RK)    :: T_fin, T_deb
-     CHARACTER(LEN = 1024)           :: filename
-     CHARACTER(LEN = 1024)           :: argname
-     INTEGER                     :: li_myRank
-     character(len=20) :: ls_stamp_default
-     character(len=20)   :: ls_msg
-     REAL(KIND=RK), DIMENSION(:), ALLOCATABLE  :: lpr_Y
-     REAL(KIND=RK), DIMENSION(1:1,1:2) :: lpr_x
-     REAL(KIND=RK), DIMENSION(1:1,1:2) :: lpr_v
-     INTEGER                     :: li_i   
-
-  argname = "--parameters"
-  CALL JOREK_GET_ARGUMENTS(argname, filename_parameter, ierr)
-
-!  CALL getarg( 1, filename_parameter )
-!  PRINT *, "XXXXXXXXXXXXXXXXXXXXXXXXXXXX ", filename_parameter
-
-  CALL INITIALIZE_JOREK_PARAMETERS(filename_parameter)
+argname = "--parameters"
+call jorek_get_arguments(argname, filename_parameter, ierr)
+myrank = 0
+#ifdef MPI_ENABLED
+call mpi_comm_rank ( mpi_comm_world, myrank, err)
+#endif
+if (myrank==0) print *, "Parameters text file ", trim(filename_parameter)
+call initialize_jorek_parameters(filename_parameter)
 
 #ifdef DEBUG_TRACE   
-  ! ... Only used in 3D case
-  CALL JOREK_Param_GETInt(INT_TRACE_DETAIL_ID,TraceLogDetail,ierr)
-  CALL JOREK_Param_GETInt(INT_TRACE_OUTPUT_ID,TraceLogOutput,ierr)
-  ll_stdoutput = (TraceLogOutput==1)
-  CALL opentracelog(al_stdoutput = ll_stdoutput, ai_dtllevel = TraceLogDetail)
+! ... only used in 3d case
+call jorek_param_getint(int_trace_detail_id,tracelogdetail,ierr)
+call jorek_param_getint(int_trace_output_id,tracelogoutput,ierr)
+ll_stdoutput = (tracelogoutput==1)
+call opentracelog(al_stdoutput = ll_stdoutput, ai_dtllevel = tracelogdetail)
 
-CALL printlog("=====================================================", ai_dtllevel = 0)
+call printlog("=========================================", ai_dtllevel = 0)
 #ifdef PETSC_ENABLED
-CALL printlog("== PETSC ENABLED                                   ==", ai_dtllevel = 0)
+call printlog("== petsc enabled                       ==", ai_dtllevel = 0)
 #else
-CALL printlog("== PETSC DISABLED                                  ==", ai_dtllevel = 0)
+call printlog("== petsc disabled                      ==", ai_dtllevel = 0)
 #endif
-
 #ifdef DEBUG_ELEMENT
-CALL printlog("== Jorek is working in Debug Element Assembly mode ==", ai_dtllevel = 0)
+call printlog("== debug element assembly mode         ==", ai_dtllevel = 0)
 #endif 
-CALL printlog("=====================================================", ai_dtllevel = 0)
+call printlog("=========================================", ai_dtllevel = 0)
 #endif
  
-  CALL getarg(0, exec)
-  rootname = "output"
+call getarg(0, exec)
+rootname = "output"
 
-  nb_args = iargc()
+nb_args = iargc()
 
-!  IF (nb_args > 1) THEN
-!          PRINT *, "ERROR: Jorek runs without argument. & 
-!                  &Input data must be provided in a text file.&
-!                  &Please take a look at Jorek Documentation."
-!     CALL delegate_stop()
-!  END IF
+print *, "runname : ", trim(exec)
 
-  PRINT *, "RunName : ", Trim(exec)
-  
-  ! ... Initialize SPM, MPI 
-  CALL SPM_INITIALIZE(ierr)
-  ! ...
+! ... initialize spm, mpi 
+call spm_initialize(ierr)
 
-  ! ... Define Model Parameters 
-  ! ..................................................
+! ... define model parameters 
+! ..................................................
 
-    current_model       = 1
+current_model       = 1
+n_var_unknown       = 1
+n_var_sys           = 1
+i_vp_rho            = 1
+nmatrices           = 1
+i_vu_rho            = 1 
 
-    n_var_unknown       = 1
-    n_var_sys           = 1
-    
-    i_Vp_Rho            = 1
+call jorek_param_getint(int_modes_m1_id, mode_m1, err)
+call jorek_param_getint(int_modes_n1_id, mode_n1, err)
 
-    nmatrices           = 1
-    i_Vu_Rho            = 1 
+call jorek_param_getreal(real_rgeo_id,r0,err)
+call jorek_param_getreal(real_zgeo_id,z0,err)
+call jorek_param_getreal(real_amin_id,a,err) 
+call jorek_param_getreal(real_acenter_id,acenter,err)
+call jorek_param_getint(int_nstep_max_id,nstep_max,err)
 
-    CALL JOREK_Param_GETInt(INT_MODES_M1_ID, mi_mode_m1, li_err)
-    CALL JOREK_Param_GETInt(INT_MODES_N1_ID, mi_mode_n1, li_err)
+! ...
+call space_create(space_trial, fem_mesh)
+ptr_space_trial => space_trial
+call space_create(space_test, fem_mesh)
+ptr_space_test => space_test
+! ...
 
-    CALL JOREK_Param_GETReal(REAL_RGEO_ID,mr_R0,li_err)
-    CALL JOREK_Param_GETReal(REAL_ZGEO_ID,mr_Z0,li_err)
-    CALL JOREK_Param_GETReal(REAL_AMIN_ID,mr_a,li_err) 
-    CALL JOREK_Param_GETReal(REAL_ACENTER_ID,mr_acenter,li_err)
-    CALL JOREK_Param_GETInt(INT_NSTEP_MAX_ID,mi_nstep_max,li_err)
+! ...
+argname = "--geometry"
+call jorek_get_arguments(argname, dirname, err)
+call create_mesh(fem_mesh, dirname)
+! ...
 
-    ! ...
-    CALL SPACE_CREATE(space_trial, fem_mesh)
-    ptr_space_trial => space_trial
-    CALL SPACE_CREATE(space_test, fem_mesh)
-    ptr_space_test => space_test
-    ! ...
+call model_create(fem_model,       &
+                  fem_mesh,        &
+                  ptr_space_trial, &
+                  ptr_space_test,  &
+                  n_var_unknown,   &
+                  n_var_sys)
 
-    ! ...
-    argname = "--geometry"
-    CALL JOREK_GET_ARGUMENTS(argname, dirname, li_err)
-    CALL CREATE_MESH(fem_mesh, dirname)
-    ! ...
+call field_create(field_u, fem_model%space_trial, field_name="density")
+ptr_field => field_u
+call model_append_field(fem_model, ptr_field)
 
-    CALL MODEL_CREATE(fem_model, fem_mesh, ptr_space_trial, ptr_space_test, n_var_unknown, n_var_sys)
+call matrix_create(matrix_stiffnes)
+ptr_system => matrix_stiffnes
 
-    CALL FIELD_CREATE(field_U, fem_model % space_trial, field_name="density")
-    ptr_field => field_U
-    CALL MODEL_APPEND_FIELD(fem_model, ptr_field)
+call matrix_append_unknown_field(ptr_system, ptr_field)
+call model_append_matrix(fem_model, ptr_system)
 
-    CALL MATRIX_CREATE(matrix_Stiffnes)
-    ptr_system => matrix_Stiffnes
+call model_initialize(fem_model)    
 
-    CALL MATRIX_APPEND_UNKNOWN_FIELD(ptr_system, ptr_field)
-    CALL MODEL_APPEND_MATRIX(fem_model, ptr_system)
-
-    CALL MODEL_INITIALIZE(fem_model)    
-
-  ! ..................................................
-  ! ...
-
-  ! -----------------------------------------------------------------
-  
-  ! output file
-  open(unit=li_file_stream_norm, file='output_Var_diag.dat', status='unknown')
-  open(unit=li_file_stream_visu, file='output_Var_visu.dat', status='unknown')
-
-  !RUN
-
-!     Find out the rank of the current proc
-     li_myRank = 0
-#ifdef MPI_ENABLED
-      CALL MPI_Comm_rank ( MPI_COMM_WORLD, li_myRank, li_err)
-#endif
-
-     ! ... define weak formulation 
-     ptr_system % ptr_matrix_contribution => Matrix_for_Vi_Vj
-     ptr_system % ptr_rhs_contribution    => RHS_for_Vi
-     ! ...
-
-     ! ... Loop over elements 
-     CALL CPU_TIME(T_deb)
-     CALL MODEL_ASSEMBLY(fem_model, ptr_system)
-     CALL CPU_TIME(T_fin)
-     ! ...
-
-!     print *, "RHS ", ptr_system % opr_global_rhs(1:6)
-
-     ! ... example of solver calls
-     argname = "--solver"
-     CALL JOREK_GET_ARGUMENTS(argname, filename, li_err)
-     CALL LINEAR_SOLVER_CREATE(solver, ptr_system, filename)
-     CALL LINEAR_SOLVER_SOLVE(solver, ptr_system % opr_global_rhs, ptr_system % opr_global_unknown) 
-     CALL LINEAR_SOLVER_FREE(solver)
-     ! ...
-
-     ! ... update related fields to the linear system
-     CALL UPDATE_FIELDS(fem_model, ptr_system)
-!     print *, ptr_field % opr_coeffs
-     ! ...
-
-     ! ... evaluate field
-     lpr_x = 1.0
-     lpr_v = 0.0
-     CALL FIELD_EVALUATE(field_U, 1, lpr_x, lpr_v)
-     print *, "field value at ", lpr_x, " is ", lpr_v
-     ! ...
-
-     CALL GET_NR_MATRIX(ptr_system, nRows)
-
-     write(ls_msg,*) li_myRank
-     ls_stamp_default = "-proc_" // TRIM ( ADJUSTL ( ls_msg ) )
-     ls_stamp_default = TRIM ( ADJUSTL ( ADJUSTR ( ls_stamp_default ) ) )
-
-     CALL getarg(0, filename)
-
-     ALLOCATE(lpr_Y(nRows))
-     lpr_Y=0.d0 
-     CALL SPM_MATMULT(Matrix_A_ID, ptr_system % opr_global_unknown, lpr_Y, li_err)
-
-     PRINT *, MAXVAL(lpr_Y-ptr_system % opr_global_rhs), MINVAL(lpr_Y-ptr_system % opr_global_rhs) 
-!     print *, "UNKNOWN ", ptr_system % opr_global_unknown
-
-     ! ... Evaluate unknowns on vertecies and compte model norms 
-     CALL MODEL_DIAGNOSTICS(fem_model, ANALYTICAL_MODEL, Assembly_Diagnostics, Plot_Diagnostics, ptr_system)
-
-      filename = TRIM(filename) 
-     CALL MODEL_SAVE(fem_model, ANALYTICAL_MODEL, filename, 0)
-
-     ! ...
-     OPEN(UNIT=12, FILE=TRIM ("RHS" // ADJUSTL ( ADJUSTR ( ls_stamp_default ) ) )  // ".txt"&
-             & , ACTION="write", STATUS="replace")
-     DO li_i=1,nRows
-        WRITE(12,*) ptr_system % opr_global_rhs(li_i) 
-     END DO
-     CLOSE(12)
-     OPEN(UNIT=13, FILE=TRIM ("UNKNOWN" // ADJUSTL ( ADJUSTR ( ls_stamp_default ) ) )  // ".txt"&
-             & , ACTION="write", STATUS="replace")
-     DO li_i=1,nRows
-        WRITE(13,*) ptr_system % opr_global_unknown(li_i) 
-     END DO
-     CLOSE(13)
-     OPEN(UNIT=14, FILE=TRIM ("VAR" // ADJUSTL ( ADJUSTR ( ls_stamp_default ) ) )  // ".txt"&
-             & , ACTION="write", STATUS="replace")
-     DO li_i=1, fem_model % ptr_mesh % oi_n_nodes
-        WRITE(14,*) fem_model % opr_global_var(:,li_i) 
-     END DO
-     CLOSE(14)
-     ! ...
-
-#ifdef DEBUG_TRACE
-    CALL concatmsg(" Min of VAR ", ai_dtllevel = 0)
-    CALL concatmsg(MINVAL(fem_model % opr_global_var(1,:)), ai_dtllevel = 0)
-    CALL concatmsg(" Max of VAR ", ai_dtllevel = 0)
-    CALL concatmsg(MAXVAL(fem_model % opr_global_var(1,:)), ai_dtllevel = 0)
-    CALL printmsg(ai_dtllevel = 0)
-#endif
-
-    
-
-  ! ..................................................
-  !END RUN
-  
-    CALL MODEL_FREE(fem_model)
-
-  close(li_file_stream_norm)
-  close(li_file_stream_visu)
-  
-  CALL SPM_CLEANALL(ierr)
-  CALL SPM_FINALIZE(ierr)
-
-#ifdef DEBUG_TRACE   
-  CALL closetracelog()
-#endif
+! output file
+open(unit=li_file_stream_norm, file='output_var_diag.dat', status='unknown')
+open(unit=li_file_stream_visu, file='output_var_visu.dat', status='unknown')
 
 end subroutine initialize_jorek
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+subroutine solve_jorek(jorek)
+
+type(sll_jorek_solver) :: jorek
+real(kind=rk), dimension(:), allocatable :: y
+real(kind=rk), dimension(1:1,1:2)        :: x
+real(kind=rk), dimension(1:1,1:2)        :: v
+integer                                  :: i   
+real(kind=rk)       :: t_fin, t_deb
+character(len=1024) :: argname
+integer             :: err
+integer(kind=spm_ints_kind)          :: nrows !number of rows
+character(len=20)   :: stamp_default
+character(len=20)   :: msg
+integer             :: myrank
+character(len=1024) :: filename
+integer             :: ierr
+
+! ... define weak formulation 
+ptr_system%ptr_matrix_contribution => matrix_for_vi_vj
+ptr_system%ptr_rhs_contribution    => rhs_for_vi
+! ...
+
+! ... loop over elements 
+call cpu_time(t_deb)
+call model_assembly(fem_model, ptr_system)
+call cpu_time(t_fin)
+! ...
+
+print *, "rhs ", ptr_system%opr_global_rhs(1:6)
+
+! ... example of solver calls
+argname = "--solver"
+call jorek_get_arguments(argname, filename, err)
+call linear_solver_create(solver, ptr_system, filename)
+call linear_solver_solve(solver,                     &
+                         ptr_system%opr_global_rhs,  &
+                         ptr_system%opr_global_unknown) 
+
+call linear_solver_free(solver)
+
+! ... update related fields to the linear system
+call update_fields(fem_model, ptr_system)
+
+! ... evaluate field
+x = 1.0
+v = 0.0
+call field_evaluate(field_u, 1, x, v)
+print *, "field value at ", x, " is ", v
+! ...
+
+call get_nr_matrix(ptr_system, nrows)
+
+write(msg,*) myrank
+stamp_default = "-proc_" // trim ( adjustl ( msg ) )
+stamp_default = trim ( adjustl ( adjustr ( stamp_default ) ) )
+
+call getarg(0, filename)
+
+allocate(y(nrows))
+y=0.d0 
+call spm_matmult(matrix_a_id, ptr_system%opr_global_unknown, y, err)
+
+print *, maxval(y-ptr_system%opr_global_rhs), &
+         minval(y-ptr_system%opr_global_rhs) 
+
+! ... evaluate unknowns on vertecies and compte model norms 
+call model_diagnostics(fem_model,             &
+                       analytical_model,      &
+                       assembly_diagnostics,  &
+                       plot_diagnostics,      &
+                       ptr_system)
+
+call model_save(fem_model, analytical_model, filename, 0)
+
+open(unit=12,file=trim("rhs"//adjustl(adjustr(stamp_default)))//".txt"&
+        & , action="write", status="replace")
+do i=1,nrows
+   write(12,*) ptr_system%opr_global_rhs(i) 
+end do
+close(12)
+open(unit=13,file=trim ("unknown"//adjustl(adjustr(stamp_default)))//".txt"&
+        & , action="write", status="replace")
+do i=1,nrows
+   write(13,*) ptr_system%opr_global_unknown(i) 
+end do
+close(13)
+open(unit=14, file=trim ("var"//adjustl(adjustr(stamp_default)))//".txt"&
+        & , action="write", status="replace")
+do i=1, fem_model%ptr_mesh%oi_n_nodes
+   write(14,*) fem_model%opr_global_var(:,i) 
+end do
+close(14)
+! ...
+
+#ifdef DEBUG_TRACE
+call concatmsg(" min of var ", ai_dtllevel = 0)
+call concatmsg(minval(fem_model%opr_global_var(1,:)), ai_dtllevel = 0)
+call concatmsg(" max of var ", ai_dtllevel = 0)
+call concatmsg(maxval(fem_model%opr_global_var(1,:)), ai_dtllevel = 0)
+call printmsg(ai_dtllevel = 0)
+#endif
+
+call model_free(fem_model)
+
+close(li_file_stream_norm)
+close(li_file_stream_visu)
+
+call spm_cleanall(ierr)
+call spm_finalize(ierr)
+
+#ifdef DEBUG_TRACE   
+call closetracelog()
+#endif
+
+end subroutine solve_jorek
 
 
+subroutine  rhs_for_vi(ptr_matrix, bbox2di, gbox2d)
+class(def_matrix_2d), pointer :: ptr_matrix
+type(def_blackbox_2d) :: bbox2di
+type(def_greenbox_2d)                :: gbox2d
+! local
+real(kind=rk) :: f_rhs
+real(kind=rk) :: contribution
+integer       :: ijg
+real(kind=rk) :: wvol
+real(kind=rk) :: vi_0
+real(kind=rk) :: vi_r
+real(kind=rk) :: vi_z
+real(kind=rk) :: vi_rr
+real(kind=rk) :: vi_rz
+real(kind=rk) :: vi_zz
+real(kind=rk), dimension(:), pointer :: rhs_contribution
+
+rhs_contribution => gbox2d%rhs_contribution
+
+ijg   = bbox2di%ijg
+wvol  = bbox2di%wvol(ijg)
+vi_0  = bbox2di%b_0(ijg)
+vi_r  = bbox2di%b_x1(ijg)
+vi_z  = bbox2di%b_x2(ijg)
+vi_rr = bbox2di%b_x1x1(ijg)
+vi_rz = bbox2di%b_x1x2(ijg)
+vi_zz = bbox2di%b_x2x2(ijg)
+
+! ... add l2 contribution
+f_rhs       = analytical_rhs(bbox2di)
+
+contribution                = vi_0 *wvol*f_rhs
+rhs_contribution(i_vu_rho)  =  contribution 
+! ...
+
+end subroutine rhs_for_vi
+! ............................................................... 
+
+! ............................................................... 
+subroutine matrix_for_vi_vj(ptr_matrix, bbox2di, bbox2dj, gbox2d)
+
+class(def_matrix_2d), pointer :: ptr_matrix
+type(def_blackbox_2d)         :: bbox2di
+type(def_blackbox_2d)         :: bbox2dj
+type(def_greenbox_2d)         :: gbox2d
+! local
+real(kind=rk) :: contribution
+integer       :: ijg
+real(kind=rk) :: wvol
+real(kind=rk) :: vi_0
+real(kind=rk) :: vi_r
+real(kind=rk) :: vi_z
+real(kind=rk) :: vi_rr
+real(kind=rk) :: vi_rz
+real(kind=rk) :: vi_zz
+real(kind=rk) :: vj_0
+real(kind=rk) :: vj_r
+real(kind=rk) :: vj_z
+real(kind=rk) :: vj_rr
+real(kind=rk) :: vj_rz
+real(kind=rk) :: vj_zz
+real(kind=rk), dimension(:,:), pointer :: matrix_contribution
+
+matrix_contribution => gbox2d%matrix_contribution
+
+ijg   = bbox2di%ijg
+wvol  = bbox2di%wvol(ijg)
+vi_0  = bbox2di%b_0(ijg)    ; vj_0  = bbox2dj%b_0(ijg)
+vi_r  = bbox2di%b_x1(ijg)   ; vj_r  = bbox2dj%b_x1(ijg)
+vi_z  = bbox2di%b_x2(ijg)   ; vj_z  = bbox2dj%b_x2(ijg)
+vi_rr = bbox2di%b_x1x1(ijg) ; vj_rr = bbox2dj%b_x1x1(ijg)
+vi_rz = bbox2di%b_x1x2(ijg) ; vj_rz = bbox2dj%b_x1x2(ijg)
+vi_zz = bbox2di%b_x2x2(ijg) ; vj_zz = bbox2dj%b_x2x2(ijg)
+
+! ... add stiffness contribution
+contribution = ( vi_r*vj_r + vi_z*vj_z ) * wvol
+
+matrix_contribution(i_vu_rho, i_vu_rho) =  contribution 
+! ...
+
+end subroutine matrix_for_vi_vj
+
+subroutine assembly_diagnostics(bbox2d, gbox2d,nstep)
+
+type(def_blackbox_2d) :: bbox2d
+type(def_greenbox_2d)                :: gbox2d
+integer       :: ijg
+integer       :: nstep
+real(kind=rk) :: wvol
+
+if(nstep .ge. 0) then
+
+  ijg   = bbox2d%ijg
+  wvol  = bbox2d%wvol(ijg)
+
+  fem_model%opr_diagnostics(1,nstep+1) = fem_model%opr_diagnostics(1,nstep+1) + &
+ 	  & gbox2d%varn_0(1, ijg) * &
+ 	  & wvol
+
+  fem_model%opr_diagnostics(2,nstep+1) = fem_model%opr_diagnostics(2,nstep+1) + &
+ 	  & gbox2d%varn_0(1, ijg) * &
+ 	  & gbox2d%varn_0(1, ijg) * &
+ 	  & wvol
+
+  fem_model%opr_diagnostics(3,nstep+1) = fem_model%opr_diagnostics(3,nstep+1) + &
+             & gbox2d%varn_x1(1, ijg) * &
+ 	  & gbox2d%varn_x1(1, ijg) * &
+ 	  & wvol  + &
+ 	  & gbox2d%varn_x2(1, ijg) * &
+ 	  & gbox2d%varn_x2(1, ijg) * &
+ 	  & wvol 
+
+  !... diff norms
+  fem_model%opr_diagnostics(4,nstep+1) = fem_model%opr_diagnostics(4,nstep+1) + &
+             & ( gbox2d%varn_0(1, ijg) - gbox2d%sol_analytical(ijg, 1, 1) ) * &
+ 	  & ( gbox2d%varn_0(1, ijg) - gbox2d%sol_analytical(ijg, 1, 1) ) * &
+ 	  & wvol 
+
+  fem_model%opr_diagnostics(5,nstep+1) = fem_model%opr_diagnostics(5,nstep+1) + &
+ 	  & ( gbox2d%varn_x1(1, ijg) - gbox2d%sol_analytical(ijg, 1, 2) ) * &
+ 	  & ( gbox2d%varn_x1(1, ijg) - gbox2d%sol_analytical(ijg, 1, 2) ) * &
+ 	  & wvol + &
+ 	  & ( gbox2d%varn_x2(1, ijg) - gbox2d%sol_analytical(ijg, 1, 3) ) * &
+ 	  & ( gbox2d%varn_x2(1, ijg) - gbox2d%sol_analytical(ijg, 1, 3) ) * &
+ 	  & wvol 
+
+end if
+
+end subroutine assembly_diagnostics
 
 
+subroutine plot_diagnostics(nstep)
+implicit none
+integer ::coordinates_poloidal,ierr,nstep
+real(kind=rk) :: dt, time
 
-    ! ............................................................... 
-    SUBROUTINE  RHS_for_Vi(ptr_matrix, ao_BBox2Di, ao_GBox2D)
-    IMPLICIT NONE
-       CLASS(DEF_MATRIX_2D), POINTER :: ptr_matrix
-       TYPE(DEF_BLACKBOX_2D) :: ao_BBox2Di
-       TYPE(DEF_GREENBOX_2D)                :: ao_GBox2D
-       ! LOCAL
-       REAL(KIND=RK) :: f_rhs
-       REAL(KIND=RK) :: contribution
-       INTEGER       :: ijg
-       REAL(KIND=RK) :: wVol
-       REAL(KIND=RK) :: Vi_0
-       REAL(KIND=RK) :: Vi_R
-       REAL(KIND=RK) :: Vi_Z
-       REAL(KIND=RK) :: Vi_RR
-       REAL(KIND=RK) :: Vi_RZ
-       REAL(KIND=RK) :: Vi_ZZ
-       REAL(KIND=RK), DIMENSION(:), POINTER :: Rhs_Contribution
+call jorek_param_getint(int_coordinates_poloidal_id,coordinates_poloidal,ierr)
+call jorek_param_getreal(real_dt_id,dt,ierr)
 
-       Rhs_Contribution => ao_GBox2D % Rhs_Contribution
+if(nstep .ge. 0) then
 
-       ijg   = ao_BBox2Di % ijg
-       wVol  = ao_BBox2Di % wVol(ijg)
-       Vi_0  = ao_BBox2Di % B_0(ijg)
-       Vi_R  = ao_BBox2Di % B_x1(ijg)
-       Vi_Z  = ao_BBox2Di % B_x2(ijg)
-       Vi_RR = ao_BBox2Di % B_x1x1(ijg)
-       Vi_RZ = ao_BBox2Di % B_x1x2(ijg)
-       Vi_ZZ = ao_BBox2Di % B_x2x2(ijg)
-  
-       ! ... ADD L2 contribution
-       f_rhs       = ANALYTICAL_RHS(ao_BBox2Di)
-
-       contribution                = Vi_0 *wVol*f_rhs
-       Rhs_Contribution(i_Vu_Rho)  =  contribution 
-       ! ...
-
-    END SUBROUTINE RHS_for_Vi
-    ! ............................................................... 
-  
-    ! ............................................................... 
-    SUBROUTINE Matrix_for_Vi_Vj(ptr_matrix, ao_BBox2Di, ao_BBox2Dj, ao_GBox2D)
-    IMPLICIT NONE
-       CLASS(DEF_MATRIX_2D), POINTER :: ptr_matrix
-       TYPE(DEF_BLACKBOX_2D) :: ao_BBox2Di
-       TYPE(DEF_BLACKBOX_2D) :: ao_BBox2Dj
-       TYPE(DEF_GREENBOX_2D)                :: ao_GBox2D
-       ! LOCAL
-       REAL(KIND=RK) :: contribution
-       INTEGER       :: ijg
-       REAL(KIND=RK) :: wVol
-       REAL(KIND=RK) :: Vi_0
-       REAL(KIND=RK) :: Vi_R
-       REAL(KIND=RK) :: Vi_Z
-       REAL(KIND=RK) :: Vi_RR
-       REAL(KIND=RK) :: Vi_RZ
-       REAL(KIND=RK) :: Vi_ZZ
-       REAL(KIND=RK) :: Vj_0
-       REAL(KIND=RK) :: Vj_R
-       REAL(KIND=RK) :: Vj_Z
-       REAL(KIND=RK) :: Vj_RR
-       REAL(KIND=RK) :: Vj_RZ
-       REAL(KIND=RK) :: Vj_ZZ
-       REAL(KIND=RK), DIMENSION(:,:), POINTER :: Matrix_Contribution
-
-       Matrix_Contribution => ao_GBox2D % Matrix_Contribution
-
-       ijg   = ao_BBox2Di % ijg
-       wVol  = ao_BBox2Di % wVol(ijg)
-       Vi_0  = ao_BBox2Di % B_0(ijg)    ; Vj_0  = ao_BBox2Dj % B_0(ijg)
-       Vi_R  = ao_BBox2Di % B_x1(ijg)   ; Vj_R  = ao_BBox2Dj % B_x1(ijg)
-       Vi_Z  = ao_BBox2Di % B_x2(ijg)   ; Vj_Z  = ao_BBox2Dj % B_x2(ijg)
-       Vi_RR = ao_BBox2Di % B_x1x1(ijg) ; Vj_RR = ao_BBox2Dj % B_x1x1(ijg)
-       Vi_RZ = ao_BBox2Di % B_x1x2(ijg) ; Vj_RZ = ao_BBox2Dj % B_x1x2(ijg)
-       Vi_ZZ = ao_BBox2Di % B_x2x2(ijg) ; Vj_ZZ = ao_BBox2Dj % B_x2x2(ijg)
-
-       ! ... ADD STIFFNESS CONTRIBUTION
-       contribution = ( Vi_R*Vj_R + Vi_Z*Vj_Z ) * wVol
-
-       Matrix_Contribution(i_Vu_Rho, i_Vu_Rho) =  contribution 
-       ! ...
-
-    END SUBROUTINE Matrix_for_Vi_Vj
-    ! ............................................................... 
-
-
- ! .........................................
-SUBROUTINE Assembly_Diagnostics(ao_BBox2D, ao_GBox2D,nstep)
-IMPLICIT NONE
-TYPE(DEF_BLACKBOX_2D) :: ao_BBox2D
-TYPE(DEF_GREENBOX_2D)                :: ao_GBox2D
-INTEGER :: mi_COORDINATES_POLOIDAL,ierr, ijg, kg  , nstep
-REAL(KIND=RK) ::wVol
-
-  IF(nstep .ge. 0) THEN
-
-       ijg   = ao_BBox2D % ijg
-       wVol  = ao_BBox2D % wVol(ijg)
+  fem_model%opr_diagnostics(2,nstep+1) = sqrt(fem_model%opr_diagnostics(2,nstep+1))
+  fem_model%opr_diagnostics(3,nstep+1) = sqrt(fem_model%opr_diagnostics(3,nstep+1))
  
-       fem_model % opr_diagnostics(1,nstep+1) = fem_model % opr_diagnostics(1,nstep+1) + &
-		  & ao_GBox2D%VarN_0(1, ijg) * &
-		  & wVol
-
-       fem_model % opr_diagnostics(2,nstep+1) = fem_model % opr_diagnostics(2,nstep+1) + &
-		  & ao_GBox2D%VarN_0(1, ijg) * &
-		  & ao_GBox2D%VarN_0(1, ijg) * &
-		  & wVol
-
-       fem_model % opr_diagnostics(3,nstep+1) = fem_model % opr_diagnostics(3,nstep+1) + &
-                  & ao_GBox2D%VarN_x1(1, ijg) * &
-		  & ao_GBox2D%VarN_x1(1, ijg) * &
-		  & wVol  + &
-		  & ao_GBox2D%VarN_x2(1, ijg) * &
-		  & ao_GBox2D%VarN_x2(1, ijg) * &
-		  & wVol 
-
-       !... Diff norms
-       fem_model % opr_diagnostics(4,nstep+1) = fem_model % opr_diagnostics(4,nstep+1) + &
-                  & ( ao_GBox2D%VarN_0(1, ijg) - ao_GBox2D%Sol_analytical(ijg, 1, 1) ) * &
-		  & ( ao_GBox2D%VarN_0(1, ijg) - ao_GBox2D%Sol_analytical(ijg, 1, 1) ) * &
-		  & wVol 
-
-       fem_model % opr_diagnostics(5,nstep+1) = fem_model % opr_diagnostics(5,nstep+1) + &
-		  & ( ao_GBox2D%VarN_x1(1, ijg) - ao_GBox2D%Sol_analytical(ijg, 1, 2) ) * &
-		  & ( ao_GBox2D%VarN_x1(1, ijg) - ao_GBox2D%Sol_analytical(ijg, 1, 2) ) * &
-		  & wVol + &
-		  & ( ao_GBox2D%VarN_x2(1, ijg) - ao_GBox2D%Sol_analytical(ijg, 1, 3) ) * &
-		  & ( ao_GBox2D%VarN_x2(1, ijg) - ao_GBox2D%Sol_analytical(ijg, 1, 3) ) * &
-		  & wVol 
-
-  END IF
+  fem_model%opr_diagnostics(4,nstep+1) = sqrt(fem_model%opr_diagnostics(4,nstep+1))
+  fem_model%opr_diagnostics(5,nstep+1) = sqrt(fem_model%opr_diagnostics(5,nstep+1))
   
-  RETURN 
-
-END SUBROUTINE Assembly_Diagnostics
-! .........................................
-
-SUBROUTINE Plot_Diagnostics(nstep)
-  IMPLICIT NONE
-  INTEGER ::mi_COORDINATES_POLOIDAL,ierr,nstep
-  REAL(KIND=RK) :: lr_dt, lr_time
+  print *, "======      masse ======"
+  print *,'masse :',fem_model%opr_diagnostics(1,nstep+1)
+  print *, "======      norms ======"
+  print *,'norm l2 :',fem_model%opr_diagnostics(2,nstep+1)
+  print *,'norm h1 :',fem_model%opr_diagnostics(3,nstep+1)
+  print *, "====== diff-norms ======"
+  print *,'error l2 :',fem_model%opr_diagnostics(4,nstep+1)/fem_model%opr_diagnostics(2,nstep+1)
+  print *,'error h1 :',fem_model%opr_diagnostics(5,nstep+1)/fem_model%opr_diagnostics(3,nstep+1)
+  print *, "========================"
   
-  CALL JOREK_Param_GETInt(INT_COORDINATES_POLOIDAL_ID,mi_COORDINATES_POLOIDAL,ierr)
-  CALL JOREK_Param_GETReal(REAL_DT_ID,lr_dt,ierr)
+  if(nstep .eq. 0) then
+     write(li_file_stream_norm,*) '# ,time, var_id, masse,  norm_l2, semi_norm_h1, diff_norm_l2, diff_semi_norm_h1'
+  end if
+  time=nstep*dt
+  write(li_file_stream_norm,*) time,                         &
+                          1,                                 &
+                       fem_model%opr_diagnostics(1,nstep+1), &
+                       fem_model%opr_diagnostics(2,nstep+1), &
+                       fem_model%opr_diagnostics(3,nstep+1), &
+                       fem_model%opr_diagnostics(4,nstep+1), &
+                       fem_model%opr_diagnostics(5,nstep+1)
 
-    IF(nstep .ge. 0) THEN
-  
-     fem_model % opr_diagnostics(2,nstep+1) = SQRT(fem_model % opr_diagnostics(2,nstep+1))
-     fem_model % opr_diagnostics(3,nstep+1) = SQRT(fem_model % opr_diagnostics(3,nstep+1))
+end if
 
-     fem_model % opr_diagnostics(4,nstep+1) = SQRT(fem_model % opr_diagnostics(4,nstep+1))
-     fem_model % opr_diagnostics(5,nstep+1) = SQRT(fem_model % opr_diagnostics(5,nstep+1))
-     
-     PRINT *, "======      Masse ======"
-     PRINT *,'Masse :',fem_model % opr_diagnostics(1,nstep+1)
-     PRINT *, "======      NORMS ======"
-     PRINT *,'Norm L2 :',fem_model % opr_diagnostics(2,nstep+1)
-     PRINT *,'Norm H1 :',fem_model % opr_diagnostics(3,nstep+1)
-     PRINT *, "====== DIFF-NORMS ======"
-     PRINT *,'Error L2 :',fem_model % opr_diagnostics(4,nstep+1)/fem_model % opr_diagnostics(2,nstep+1)
-     PRINT *,'Error H1 :',fem_model % opr_diagnostics(5,nstep+1)/fem_model % opr_diagnostics(3,nstep+1)
-     PRINT *, "========================"
-     
-   
-        IF(nstep .eq. 0) THEN
-           write(li_file_stream_norm,*) '# ,time, Var_id, masse,  norm_L2, semi_norm_H1, diff_norm_L2, diff_semi_norm_H1'
-        END IF
-        lr_time=nstep*lr_dt
-        write(li_file_stream_norm,*) lr_time, 1, fem_model % opr_diagnostics(1,nstep+1), fem_model % opr_diagnostics(2,nstep+1), &
-             fem_model % opr_diagnostics(3,nstep+1), fem_model % opr_diagnostics(4,nstep+1),fem_model % opr_diagnostics(5,nstep+1)
-     END IF
-
-  
-  RETURN 
-END SUBROUTINE Plot_Diagnostics
+return 
+end subroutine plot_diagnostics
 ! .........................................
 
 
-  !! Test case 1 :
-  !!             - mesh: square, collela or square-periodic
-  !!             - R0=Z0=1 (lenght square)
-  !!             - Cylindrical or Cartesian coordindate
-  !!             - Dirichet or periodic boundary condition
-  !!             - f(x,y)= 8pi**2 * SIN(2pi*R)*SIN(2pi*Z)
+!! test case 1 :
+!!             - mesh: square, collela or square-periodic
+!!             - r0=z0=1 (lenght square)
+!!             - cylindrical or cartesian coordindate
+!!             - dirichet or periodic boundary condition
+!!             - f(x,y)= 8pi**2 * sin(2pi*r)*sin(2pi*z)
 
-  !! Test case 2 : validate this case
+!! test case 2 : validate this case
 
-  !! Test case 3 : validate this case
-  
-  !! Test case 4 :
-  !!             - mesh: square-periodic
-  !!             - R0=Z0=1 (lenght square)
-  !!             - Cylindrical or Cartesian coordindate
-  !!             - Periodic boundary condition
-  !!             - f(x,y)= 8pi**2 * cos(2pi*R)*cos(2pi*Z)
+!! test case 3 : validate this case
 
-  
-  FUNCTION ANALYTICAL_RHS(ao_BBox2D)
-  IMPLICIT NONE
-     REAL(KIND=RK) :: ANALYTICAL_RHS 
-     TYPE(DEF_BLACKBOX_2D) :: ao_BBox2D
-     REAL(KIND=RK) :: lr_R, lr_Z
-     ! LOCAL
-     REAL(KIND=RK) :: lr_k1
-     REAL(KIND=RK) :: lr_k2
-     INTEGER       :: li_testcase
-     INTEGER       :: ierr
-     REAL(KIND=RK) :: lr_R0
-     REAL(KIND=RK) :: lr_a
-     REAL(KIND=RK) :: lr_acenter
-     INTEGER       :: ijg
+!! test case 4 :
+!!             - mesh: square-periodic
+!!             - r0=z0=1 (lenght square)
+!!             - cylindrical or cartesian coordindate
+!!             - periodic boundary condition
+!!             - f(x,y)= 8pi**2 * cos(2pi*r)*cos(2pi*z)
 
-     ijg = ao_BBox2D%ijg
 
-     lr_R   = ao_BBox2D%Xp_0(1,ijg)
-     lr_Z   = ao_BBox2D%Xp_0(2,ijg)
+function analytical_rhs(bbox2d)
 
-     lr_R0         = mr_R0 
-     lr_a          = mr_a
-     lr_acenter    = mr_acenter    
-    
-     lr_k1 = 2.0 * PI * FLOAT(mi_mode_m1)
-     lr_k2 = 2.0 * PI * FLOAT(mi_mode_n1)
-    
-     CALL JOREK_Param_GETInt(INT_TESTCASE_ID, li_testcase, ierr)
-     IF(li_testcase .eq. 1) THEN
-        ANALYTICAL_RHS = (lr_k1**2 + lr_k2**2) * SIN(lr_k1*lr_R)*SIN(lr_k2*lr_Z)
-     ENDIF    
-     IF(li_testcase .eq. 2) THEN
-        ANALYTICAL_RHS = 4.0 * ( lr_R**2 + lr_Z**2 ) * SIN ( 1.0 - lr_R**2 - lr_Z**2 ) &
-		& + 4.0 * COS ( 1.0 - lr_R**2 - lr_Z**2 ) 
-     ENDIF
-     IF(li_testcase .eq. 3) THEN
-        ANALYTICAL_RHS =8*lr_Z**2/lr_a**2 - 4 + 2*(2*lr_R - 2*lr_R0)**2/lr_a**2 &
-		&+ 4*(lr_Z**2 + (lr_R - lr_R0)**2)/lr_a**2 &
-		& + 4*(lr_Z**2 - lr_acenter**2 + (lr_R - lr_R0)**2)/lr_a**2 
-     ENDIF
+real(kind=rk)         :: analytical_rhs 
+type(def_blackbox_2d) :: bbox2d
+real(kind=rk)         :: r, z
 
-     ! periodic but not dirichet homogeneous
-      IF(li_testcase .eq. 4) THEN
-        ANALYTICAL_RHS = (lr_k1**2 + lr_k2**2) * cos(lr_k1*lr_R)*cos(lr_k2*lr_Z)
-     ENDIF 
-     
-     
-  
-  END FUNCTION ANALYTICAL_RHS
-  ! ..................................................
-  
-  ! ..................................................
-  SUBROUTINE ANALYTICAL_MODEL(apr_x, apr_v,apr_info,api_info,n_variable,n_dimension)
-  IMPLICIT NONE
-     INTEGER                            :: n_variable,n_dimension
-     REAL(KIND=8), DIMENSION(n_dimension), INTENT(IN)  :: apr_x
-     REAL(KIND=8), DIMENSION(N_variable, n_dimension+1), INTENT(OUT) :: apr_v
-     REAL(KIND=8), DIMENSION(10), INTENT(IN)  :: apr_info
-     INTEGER, DIMENSION(10), INTENT(IN) :: api_info
-     ! LOCAL
-     REAL(KIND=RK) :: lr_R
-     REAL(KIND=RK) :: lr_Z
-     REAL(KIND=RK) :: lr_k1
-     REAL(KIND=RK) :: lr_k2
-     INTEGER       :: li_testcase
-     INTEGER       :: ierr
-     REAL(KIND=RK) :: lr_R0
-     REAL(KIND=RK) :: lr_a
-     REAL(KIND=RK) :: lr_acenter
+real(kind=rk)         :: k1
+real(kind=rk)         :: k2
+integer               :: testcase
+integer               :: ierr
+real(kind=rk)         :: r0
+real(kind=rk)         :: a
+real(kind=rk)         :: acenter
+integer               :: ijg
 
-     lr_R0         = mr_R0 
-     lr_a          = mr_a
-     lr_acenter    = mr_acenter
+ijg = bbox2d%ijg
 
-     lr_R = apr_x(1)
-     lr_Z = apr_x(2)
+r   = bbox2d%xp_0(1,ijg)
+z   = bbox2d%xp_0(2,ijg)
 
-     lr_k1 = 2.0 * PI * FLOAT(mi_mode_m1)
-     lr_k2 = 2.0 * PI * FLOAT(mi_mode_n1)
+k1 = 2.0 * pi * float(mode_m1)
+k2 = 2.0 * pi * float(mode_n1)
 
-     CALL JOREK_Param_GETInt(INT_TESTCASE_ID, li_testcase, ierr)
-     IF(li_testcase .eq. 1) THEN
-        ! ... u
-        apr_v(1, 1) = SIN(lr_k1*lr_R)*SIN(lr_k2*lr_Z)
-        ! ... u_R
-        apr_v(1, 2) = lr_k1*COS(lr_k1*lr_R)*SIN(lr_k2*lr_Z)
-        ! ... u_Z
-        apr_v(1, 3) = lr_k2*SIN(lr_k1*lr_R)*COS(lr_k2*lr_Z)
-        ! ...
-     ENDIF    
-     IF(li_testcase .eq. 2) THEN
-        ! ... u
-        apr_v(1, 1) = SIN ( 1.0 - lr_R**2 - lr_Z**2 )
-        ! ... u_R
-        apr_v(1, 2) = - 2.0 * lr_R * COS ( 1.0 - lr_R**2 - lr_Z**2 )
-        ! ... u_Z
-        apr_v(1, 3) = - 2.0 * lr_Z * COS ( 1.0 - lr_R**2 - lr_Z**2 )
-        ! ...
-     ENDIF
-     IF(li_testcase .eq. 3) THEN
-        ! ... u
-        apr_v(1, 1) = (1 - (lr_Z**2 + (lr_R - lr_R0)**2)/lr_a**2)*(lr_Z**2 - lr_acenter**2 + (lr_R - lr_R0)**2)
-        ! ... u_R
-        apr_v(1, 2) = (1 - (lr_Z**2 + (lr_R - lr_R0)**2)/lr_a**2)*(2*lr_R - 2*lr_R0) &
-		& - (2*lr_R - 2*lr_R0)*(lr_Z**2 - lr_acenter**2 + (lr_R - lr_R0)**2)/lr_a**2
-        ! ... u_Z
-        apr_v(1, 3) = 2*lr_Z*(1 - (lr_Z**2 + (lr_R - lr_R0)**2)/lr_a**2) &
-		& - 2*lr_Z*(lr_Z**2 - lr_acenter**2 + (lr_R - lr_R0)**2)/lr_a**2
-        ! ...
-     ENDIF
+call jorek_param_getint(int_testcase_id, testcase, ierr)
+if(testcase .eq. 1) then
+   analytical_rhs = (k1**2 + k2**2) * sin(k1*r)*sin(k2*z)
+endif    
+if(testcase .eq. 2) then
+   analytical_rhs = 4.0 * ( r**2 + z**2 ) * sin(1.0-r**2-z**2) &
+ 	& + 4.0 * cos ( 1.0 - r**2 - z**2 ) 
+endif
+if(testcase .eq. 3) then
+   analytical_rhs =8*z**2/a**2 - 4 + 2*(2*r - 2*r0)**2/a**2 &
+ 	&+ 4*(z**2 + (r - r0)**2)/a**2 &
+ 	& + 4*(z**2 - acenter**2 + (r - r0)**2)/a**2 
+endif
 
-     ! periodic but not dirichet homogeneous
-     IF(li_testcase .eq. 4) THEN
-        ! ... u
-        apr_v(1, 1) = cos(lr_k1*lr_R)*cos(lr_k2*lr_Z)
-        ! ... u_R
-        apr_v(1, 2) = -lr_k1*sin(lr_k1*lr_R)*cos(lr_k2*lr_Z)
-        ! ... u_Z
-        apr_v(1, 3) = -lr_k2*cos(lr_k1*lr_R)*sin(lr_k2*lr_Z)
-        ! ...
-     ENDIF    
-     
+! periodic but not dirichet homogeneous
+ if(testcase .eq. 4) then
+   analytical_rhs = (k1**2 + k2**2) * cos(k1*r)*cos(k2*z)
+endif 
 
-  END SUBROUTINE ANALYTICAL_MODEL
-  ! ..................................................
+end function analytical_rhs
+
+subroutine analytical_model(x, v,info,api_info,n_variable,n_dimension)
+
+integer                                          :: n_dimension
+integer                                          :: n_variable
+real(kind=8), dimension(n_dimension), intent(in) :: x
+real(kind=8), dimension(n_variable, n_dimension+1), intent(out) :: v
+real(kind=8), dimension(10), intent(in)          :: info
+integer, dimension(10), intent(in)               :: api_info
+! local
+real(kind=rk) :: r
+real(kind=rk) :: z
+real(kind=rk) :: k1
+real(kind=rk) :: k2
+integer       :: testcase
+integer       :: ierr
+
+r = x(1)
+z = x(2)
+
+k1 = 2.0 * pi * float(mode_m1)
+k2 = 2.0 * pi * float(mode_n1)
+
+call jorek_param_getint(int_testcase_id, testcase, ierr)
+if(testcase .eq. 1) then
+  v(1,1) = sin(k1*r)*sin(k2*z)    ! ... u
+  v(1,2) = k1*cos(k1*r)*sin(k2*z) ! ... u_r
+  v(1,3) = k2*sin(k1*r)*cos(k2*z) ! ... u_z
+endif    
+if(testcase .eq. 2) then
+  v(1,1) = sin ( 1.0 - r**2 - z**2 ) ! ... u
+  v(1,2) = - 2.0 * r * cos ( 1.0 - r**2 - z**2) ! ... u_r
+  v(1,3) = - 2.0 * z * cos ( 1.0 - r**2 - z**2) ! ... u_z
+endif
+if(testcase .eq. 3) then
+  v(1,1) = (1-(z**2+(r-r0)**2)/a**2)*(z**2-acenter**2+(r-r0)**2) ! ... u
+  v(1,2) = (1-(z**2+(r-r0)**2)/a**2)*(2*r-2*r0) &                ! ... u_r
+     & - (2*r-2*r0)*(z**2-acenter**2+(r-r0)**2)/a**2
+  v(1,3) = 2*z*(1-(z**2+(r-r0)**2)/a**2) &
+     & - 2*z*(z**2 - acenter**2+(r-r0)**2)/a**2 ! ... u_z
+endif
+
+! periodic but not dirichet homogeneous
+if(testcase .eq. 4) then
+  v(1, 1) = cos(k1*r)*cos(k2*z)     ! ... u
+  v(1, 2) = -k1*sin(k1*r)*cos(k2*z) ! ... u_r
+  v(1, 3) = -k2*cos(k1*r)*sin(k2*z) ! ... u_z
+endif    
+
+end subroutine analytical_model
+
 end module sll_jorek

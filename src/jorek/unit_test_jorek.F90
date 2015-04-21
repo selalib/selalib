@@ -19,7 +19,7 @@ program test_jorek
 
           
   call sll_create(jorek_solver)
-  !call sll_solve(jorek_solver)
+  call sll_solve(jorek_solver)
   !call sll_delete(jorek_solver)
 
 end program test_jorek
