@@ -568,6 +568,68 @@ contains  ! ****************************************************************
   end function hex_interpolate_value
 
 
+  
+  !---------------------------------------------------------
+  !> @brief Computes indices of non null splines on a given cell
+  !> @details The function returns for a given cell and a certain degree
+  !> the indices of the splines of that degree that are different to 0
+  !> on that cell.
+  !> @param[IN] mesh hexagonal mesh, the domain
+  !> @param[IN] cell_index index of the cell where we wish to know the
+  !> indices of the non vanishing splines
+  !> @param[IN] deg integer of the degree of the splines
+  !> @param[OUT] index_nZ vector of size 3*deg*deg containing the global
+  !> indices of all non-zero splines
+  function non_zeros_splines(mesh, cell_index, deg) result(index_nZ)
+    type(sll_hex_mesh_2d), pointer, intent(in) :: mesh
+    sll_int32,  intent(in)  :: deg
+    sll_int32,  intent(in)  :: cell_index
+    sll_int32,  allocatable :: index_nZ(:)
+    sll_int32               :: ierr
+    sll_int32               :: nei_point
+    sll_int32               :: non_Zero
+    sll_int32               :: distance
+    sll_int32               :: edge1, edge2, edge3
+    sll_int32               :: first
+    sll_int32               :: last
+    sll_int32               :: i, j
+    sll_int32               :: last_point
+    sll_int32               :: current_nZ
+    
+    ! Number of non zero splines on a cell:
+    non_Zero = 3 * deg * deg
+    SLL_ALLOCATE(index_nZ(non_Zero), ierr)
+    index_nZ(1:non_Zero) = -1
+    
+    ! Getting the cell vertices which are the first indices of the non zero splines
+    call get_cell_vertices_index(mesh%center_cartesian_coord(1,cell_index), &
+         mesh%center_cartesian_coord(2,cell_index),&
+         mesh, &
+         edge1, edge2, edge3)
+    index_nZ(1) = edge1
+    index_nZ(2) = edge2
+    index_nZ(3) = edge3
+
+    current_nZ = 4
+    do distance = 1,deg-1
+       first = 1 + (distance-1)*(distance-1)*3
+       last = distance * distance * 3
+       do i=first,last
+          last_point = index_nZ(i)
+          if (last_point .eq. -1) then
+             print *, "ERROR in non_zero_splines: wrong index, i=", i
+          end if
+          do j=1,6
+             nei_point = local_to_global(mesh, last_point, j)
+             if ((nei_point.ne.-1).and.(.not.(ANY(index_nZ==nei_point)))) then
+                index_nZ(current_nZ) = nei_point
+                current_nZ = current_nZ + 1
+             end if
+          end do
+       end do
+    end do
+  end function non_zeros_splines
+
 
   !---------------------------------------------------------------------------
   !> @brief Computes x-derivative on (x,y)
@@ -791,28 +853,20 @@ contains  ! ****************************************************************
     sll_int32, intent(in)          :: deg
     sll_int32                      :: out_unit
     character(len=28), parameter   :: name = "boxsplines_connectivity.txt"
-    sll_int32,  dimension(:,:), allocatable :: LM
-    sll_real64, dimension(:,:), allocatable :: knots
-    sll_int32  :: num_fek
-    sll_int32  :: num_quad
+    sll_int32,         allocatable :: nZ_indices(:)
     sll_int32  :: num_ele
     sll_int32  :: non_zero
     sll_int32  :: ierr
-
-    num_quad = 2*mesh%num_edges + mesh%num_pts_tot + mesh%num_triangles
+    sll_int32  :: i
+    sll_int32  :: val
 
     ! Number of non Zero splines depends on the degree
-    non_zero = 0
-    if (deg .eq. 1) then
-       non_zero = 3
-       SLL_ALLOCATE(knots(3, num_quad), ierr)
-       SLL_ALLOCATE(LM(mesh%num_triangles, 10), ierr)
-       call initialize_knots_hexmesh(1, mesh, knots, LM)
-    end if
+    non_zero = 3*deg*deg
 
     ! We open file
     call sll_new_file_id(out_unit, ierr)
     open (unit=out_unit,file=name,action="write",status="replace")
+
     ! We write total number of cells
     write(out_unit, "(i6)") mesh%num_triangles
 
@@ -821,12 +875,13 @@ contains  ! ****************************************************************
        write(out_unit, "(i6)") num_ele
        ! We write number of non zero
        write(out_unit, "(i6)") non_zero
-
-       do num_fek = 1,10
-          write(out_unit, "(i6)", advance="no") LM(num_ele, num_fek)
+       ! We write the indices of the non zero splines
+       nZ_indices = non_zeros_splines(mesh, num_ele, deg)
+       do i=1,non_zero
+          val = nZ_indices(i)
+          write(out_unit, "(i6)", advance="no") val
           write(out_unit, "(a)", advance="no") ","
        end do
-
        write(out_unit,"(a)")""
     end do
 
