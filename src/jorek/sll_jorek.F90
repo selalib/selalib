@@ -10,8 +10,8 @@ use greenbox_def
 use quadratures_def 
 use linear_solver_def
 use basis_def
-use febasis
-use febasis2d_bezier
+!use febasis
+!use febasis2d_bezier
 use space_def
 use field_def
 use matrix_def
@@ -71,7 +71,6 @@ use jorek_model
 use field
 use mesh
 use spm
-use field
 use linear_solver
 use matrix
 use space
@@ -120,7 +119,7 @@ myrank = 0
 #ifdef MPI_ENABLED
 call mpi_comm_rank ( mpi_comm_world, myrank, err)
 #endif
-if (myrank==0) print *, "Parameters text file ", trim(filename_parameter)
+print *, "Parameters text file ", trim(filename_parameter)
 call initialize_jorek_parameters(filename_parameter)
 
 #ifdef DEBUG_TRACE   
@@ -224,7 +223,7 @@ integer             :: err
 integer(kind=spm_ints_kind)          :: nrows !number of rows
 character(len=20)   :: stamp_default
 character(len=20)   :: msg
-integer             :: myrank
+integer             :: myrank = 0
 character(len=1024) :: filename
 integer             :: ierr
 
