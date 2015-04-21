@@ -5,7 +5,6 @@ SET(CMAKE_Fortran_MODULE_DIRECTORY ${BINARY_DIR}/modules)
 INCLUDE_DIRECTORIES(${PETSC_INCLUDES})
 LINK_DIRECTORIES(${BINARY_DIR}/lib)
 
-MESSAGE(AUTHOR_WARNING "Since last changes in Jorek, sll_jorek interface is broken")
 SET(JOREK_MODEL   poisson_2d)
 
 ADD_EXECUTABLE(jorek_${JOREK_MODEL} sll_jorek.F90 
