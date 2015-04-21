@@ -303,6 +303,30 @@ do i=1, fem_model%ptr_mesh%oi_n_nodes
 end do
 close(14)
 ! ...
+!DO ipol = 1, Mesh2D%oi_n_nodes
+!       X2D = Mesh2D%TheNodes%Coor2D(1:N_DIM, i_D0 , ipol)
+!       isG = IsD(ipol)
+!       ri  = X2D(1)
+!       zi  = X2D(2)
+!       lpr_x (1) = ri ; lpr_x(2) = zi
+!       DO i_var = 1, ao_GBox2D % oi_n_var_unknown
+!          lpi_info(1)=label
+!          CALL func_analytical(lpr_x, lpr_v,lpr_info,lpi_info,ao_GBox2D % oi_N_var_unknown,N_dim)
+!          diff_variable(i_var) = Var(i_var, IsG) - lpr_v(i_var,1)
+!          variable(i_var)=Var(i_var, IsG)
+!       END DO   
+!       WRITE(fileID, *) ri, zi, variable(1:ao_GBox2D % oi_n_var_unknown), diff_variable(1:ao_GBox2D % oi_n_var_unknown) 
+!    END DO
+!  
+!       
+!       ! ... Connectivities
+!    DO ie_pol = 1, Mesh2D% oi_n_Elmts
+!       lp_elmt => Mesh2D% opo_elements (ie_pol)
+!       is_el(1:lp_elmt % oi_n_vtex) = lp_elmt % opi_vertices(1:lp_elmt % oi_n_vtex)    
+!       WRITE(fileID, *) is_el(1:lp_elmt % oi_n_vtex)
+!    END DO
+
+
 
 #ifdef DEBUG_TRACE
 call concatmsg(" min of var ", ai_dtllevel = 0)
