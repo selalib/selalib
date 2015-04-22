@@ -15,6 +15,10 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> @ingroup sparse_matrix_module
+!> @brief Sparse matrix linear solver utilities
+!> @details This part of selalib is derived from SPM library
+!> developed by Ahmed Ratnani (http://ratnani.org/spm_doc/html/)
 module sll_sparse_matrix_module
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -74,28 +78,28 @@ function new_csr_matrix( &
   num_local_dof_col)     &
   result(mat)
 
-  type(sll_csr_matrix), pointer :: mat
-  sll_int32, intent(in) :: num_rows
-  sll_int32, intent(in) :: num_cols
-  sll_int32, intent(in) :: num_elements
-  sll_int32, dimension(:,:), intent(in) :: local_to_global_row
-  sll_int32, dimension(:,:), intent(in) :: local_to_global_col
-  sll_int32, intent(in) :: num_local_dof_row
-  sll_int32, intent(in) :: num_local_dof_col
+type(sll_csr_matrix), pointer :: mat
+sll_int32, intent(in) :: num_rows
+sll_int32, intent(in) :: num_cols
+sll_int32, intent(in) :: num_elements
+sll_int32, dimension(:,:), intent(in) :: local_to_global_row
+sll_int32, dimension(:,:), intent(in) :: local_to_global_col
+sll_int32, intent(in) :: num_local_dof_row
+sll_int32, intent(in) :: num_local_dof_col
 
-  sll_int32 :: ierr
+sll_int32 :: ierr
 
-  SLL_ALLOCATE(mat, ierr)
+SLL_ALLOCATE(mat, ierr)
 
-  call initialize_csr_matrix( &
-    mat,                      &
-    num_rows,                 &
-    num_cols,                 &
-    num_elements,             &
-    local_to_global_row,      &
-    num_local_dof_row,        &
-    local_to_global_col,      &
-    num_local_dof_col)
+call initialize_csr_matrix( &
+  mat,                      &
+  num_rows,                 &
+  num_cols,                 &
+  num_elements,             &
+  local_to_global_row,      &
+  num_local_dof_row,        &
+  local_to_global_col,      &
+  num_local_dof_col)
     
 end function new_csr_matrix
 
@@ -121,178 +125,179 @@ subroutine initialize_csr_matrix( &
   local_to_global_col,            & 
   num_local_dof_col)
 
-  type(sll_csr_matrix),      intent(inout) :: mat
-  sll_int32,                 intent(in)    :: num_rows
-  sll_int32,                 intent(in)    :: num_cols
-  sll_int32,                 intent(in)    :: num_elements
-  sll_int32, dimension(:,:), intent(in)    :: local_to_global_row
-  sll_int32,                 intent(in)    :: num_local_dof_row
-  sll_int32, dimension(:,:), intent(in)    :: local_to_global_col
-  sll_int32,                 intent(in)    :: num_local_dof_col
+type(sll_csr_matrix),      intent(inout) :: mat
+sll_int32,                 intent(in)    :: num_rows
+sll_int32,                 intent(in)    :: num_cols
+sll_int32,                 intent(in)    :: num_elements
+sll_int32, dimension(:,:), intent(in)    :: local_to_global_row
+sll_int32,                 intent(in)    :: num_local_dof_row
+sll_int32, dimension(:,:), intent(in)    :: local_to_global_col
+sll_int32,                 intent(in)    :: num_local_dof_col
 
-  sll_int32                                :: num_nz
-  sll_int32                                :: ierr
-  sll_int32,  dimension(:,:), allocatable  :: lpi_columns
-  sll_int32,  dimension(:),   allocatable  :: lpi_occ
-  sll_int32                                :: COEF
-  sll_int32                                :: e
-  sll_int32                                :: b_1
-  sll_int32                                :: A_1
-  sll_int32                                :: b_2
-  sll_int32                                :: A_2
-  sll_int32                                :: i
-  sll_int32                                :: flag
-  sll_int32                                :: sz
-  sll_int32                                :: result
-  sll_int32                                :: lpi_size(2)
-  logical                                  :: ll_done
+sll_int32                                :: num_nz
+sll_int32                                :: ierr
+sll_int32,  dimension(:,:), allocatable  :: lpi_columns
+sll_int32,  dimension(:),   allocatable  :: lpi_occ
+sll_int32                                :: COEF
+sll_int32                                :: e
+sll_int32                                :: b_1
+sll_int32                                :: A_1
+sll_int32                                :: b_2
+sll_int32                                :: A_2
+sll_int32                                :: i
+sll_int32                                :: flag
+sll_int32                                :: sz
+sll_int32                                :: result
+sll_int32                                :: lpi_size(2)
+logical                                  :: ll_done
 
-  print *,'#initialize_csr_matrix'
-  COEF = 10
+print *,'#initialize_csr_matrix'
+COEF = 10
 
-  SLL_ALLOCATE(lpi_columns(num_rows, 0:COEF*num_local_dof_col),ierr)
-  SLL_ALLOCATE(lpi_occ(num_rows+1),ierr)
+SLL_ALLOCATE(lpi_columns(num_rows, 0:COEF*num_local_dof_col),ierr)
+SLL_ALLOCATE(lpi_occ(num_rows+1),ierr)
 
-  lpi_columns(:,:) = 0
-  lpi_occ(:) = 0
-  
-  ! WE FIRST COMPUTE, FOR EACH ROW, THE NUMBER OF COLUMNS THAT WILL BE USED
-  do e = 1, num_elements
+lpi_columns(:,:) = 0
+lpi_occ(:) = 0
 
-    do b_1 = 1, num_local_dof_row
+! WE FIRST COMPUTE, FOR EACH ROW, THE NUMBER OF COLUMNS THAT WILL BE USED
+do e = 1, num_elements
 
-      A_1 = local_to_global_row(b_1, e)
+  do b_1 = 1, num_local_dof_row
 
-      if (A_1 == 0) cycle
+    A_1 = local_to_global_row(b_1, e)
 
-      do b_2 = 1, num_local_dof_col
+    if (A_1 == 0) cycle
 
-        A_2 = local_to_global_col(b_2, e)
-        if (A_2 == 0) cycle
+    do b_2 = 1, num_local_dof_col
 
-        ll_done = .false.
-        ! WE CHECK IF IT IS THE FIRST OCCURANCE OF THE COUPLE (A_1, A_2)
-        do i = 1, lpi_columns(A_1, 0)
-          if (lpi_columns(A_1, i) /= A_2) cycle
-          ll_done = .true.
-          exit
-        end do
+      A_2 = local_to_global_col(b_2, e)
+      if (A_2 == 0) cycle
 
-        if (.not.ll_done) then
+      ll_done = .false.
+      ! WE CHECK IF IT IS THE FIRST OCCURANCE OF THE COUPLE (A_1, A_2)
+      do i = 1, lpi_columns(A_1, 0)
+        if (lpi_columns(A_1, i) /= A_2) cycle
+        ll_done = .true.
+        exit
+      end do
 
-          lpi_occ(A_1) = lpi_occ(A_1) + 1
+      if (.not.ll_done) then
 
-          ! A_1 IS THE ROW NUM, A_2 THE COLUMN NUM
-          ! INITIALIZATION OF THE SPARSE MATRIX
-          lpi_columns(A_1, 0) = lpi_columns(A_1, 0) + 1
-          lpi_columns(A_1, lpi_columns(A_1, 0)) = A_2
+        lpi_occ(A_1) = lpi_occ(A_1) + 1
 
-          ! resizing the array
-          lpi_size(1) = SIZE(lpi_columns, 1)
-          lpi_size(2) = SIZE(lpi_columns, 2)
-          if (lpi_size(2) < lpi_columns(A_1, 0)) then
-            ALLOCATE(lpi_columns(lpi_size(1), lpi_size(2)))
-            lpi_columns = lpi_columns
-            DEALLOCATE(lpi_columns)
-            ALLOCATE(lpi_columns(lpi_size(1), 2 * lpi_size(2)))
-            lpi_columns(1:lpi_size(1),1:lpi_size(2)) = &
-              lpi_columns(1:lpi_size(1), 1:lpi_size(2))
-            DEALLOCATE(lpi_columns)
-          end if
+        ! A_1 IS THE ROW NUM, A_2 THE COLUMN NUM
+        ! INITIALIZATION OF THE SPARSE MATRIX
+        lpi_columns(A_1, 0) = lpi_columns(A_1, 0) + 1
+        lpi_columns(A_1, lpi_columns(A_1, 0)) = A_2
 
+        ! resizing the array
+        lpi_size(1) = SIZE(lpi_columns, 1)
+        lpi_size(2) = SIZE(lpi_columns, 2)
+        if (lpi_size(2) < lpi_columns(A_1, 0)) then
+          ALLOCATE(lpi_columns(lpi_size(1), lpi_size(2)))
+          lpi_columns = lpi_columns
+          DEALLOCATE(lpi_columns)
+          ALLOCATE(lpi_columns(lpi_size(1), 2 * lpi_size(2)))
+          lpi_columns(1:lpi_size(1),1:lpi_size(2)) = &
+            lpi_columns(1:lpi_size(1), 1:lpi_size(2))
+          DEALLOCATE(lpi_columns)
         end if
 
-      end do
+      end if
 
     end do
 
   end do
 
-  ! COUNT NON ZERO ELEMENTS
-  num_nz = SUM(lpi_occ(1:num_rows))
+end do
 
-  mat%num_rows = num_rows
-  mat%num_cols = num_cols
-  mat%num_nz   = num_nz   
+! COUNT NON ZERO ELEMENTS
+num_nz = SUM(lpi_occ(1:num_rows))
 
-  print *,'#num_rows=',num_rows
-  print *,'#num_nz=',num_nz
+mat%num_rows = num_rows
+mat%num_cols = num_cols
+mat%num_nz   = num_nz   
 
-  SLL_ALLOCATE(mat%row_ptr(num_rows + 1),ierr)
-  SLL_ALLOCATE(mat%col_ind(num_nz),ierr)
-  SLL_ALLOCATE(mat%val(num_nz),ierr)
-  
-  mat%row_ptr(1) = 1
+print *,'#num_rows=',num_rows
+print *,'#num_nz=',num_nz
 
-  do i = 1, mat%num_rows
-    mat%row_ptr(i + 1) = mat%row_ptr(1) + SUM(lpi_occ(1: i))
-  end do
+SLL_ALLOCATE(mat%row_ptr(num_rows + 1),ierr)
+SLL_ALLOCATE(mat%col_ind(num_nz),ierr)
+SLL_ALLOCATE(mat%val(num_nz),ierr)
 
-  do e = 1, num_elements
+mat%row_ptr(1) = 1
 
-    do b_1 = 1, num_local_dof_row
+do i = 1, mat%num_rows
+  mat%row_ptr(i + 1) = mat%row_ptr(1) + SUM(lpi_occ(1: i))
+end do
 
-      A_1 = local_to_global_row(b_1, e)
+do e = 1, num_elements
 
-      if (A_1 == 0) cycle
-      if (lpi_columns(A_1, 0) == 0) cycle
+  do b_1 = 1, num_local_dof_row
 
-      sz = lpi_columns(A_1, 0)
+    A_1 = local_to_global_row(b_1, e)
 
-      call QsortC(lpi_columns(A_1, 1: sz))
+    if (A_1 == 0) cycle
+    if (lpi_columns(A_1, 0) == 0) cycle
 
-      do i = 1, sz
-         mat%col_ind(mat%row_ptr(A_1)+i-1) = lpi_columns(A_1,i)
-      end do
+    sz = lpi_columns(A_1, 0)
 
-      lpi_columns(A_1, 0) = 0
+    call QsortC(lpi_columns(A_1, 1: sz))
 
-      end do
+    do i = 1, sz
+       mat%col_ind(mat%row_ptr(A_1)+i-1) = lpi_columns(A_1,i)
+    end do
 
-   end do
+    lpi_columns(A_1, 0) = 0
 
-  mat%val(:) = 0.0_f64
-  SLL_DEALLOCATE_ARRAY(lpi_columns,ierr)
-  SLL_DEALLOCATE_ARRAY(lpi_occ,ierr)
+    end do
+
+ end do
+
+mat%val(:) = 0.0_f64
+SLL_DEALLOCATE_ARRAY(lpi_columns,ierr)
+SLL_DEALLOCATE_ARRAY(lpi_occ,ierr)
 
 end subroutine initialize_csr_matrix
 
 subroutine initialize_csr_matrix_with_constraint( mat, mat_a)
 
-  type(sll_csr_matrix), intent(inout) :: mat
-  type(sll_csr_matrix), intent(in) :: mat_a
-  sll_int32 :: ierr
+type(sll_csr_matrix), intent(inout) :: mat
+type(sll_csr_matrix), intent(in) :: mat_a
+sll_int32 :: ierr
 
-  mat%num_nz = mat_a%num_nz + 2*mat_a%num_rows       
-  print*,'num_nz mat, num_nz mat_tot', mat_a%num_nz,mat%num_nz 
-  mat%num_rows = mat_a%num_rows  +  1
-  print*,'num_rows mat, num_rows mat_tot',mat_a%num_rows , mat%num_rows
-  mat%num_cols = mat_a%num_cols  +  1
-  print*,'num_cols mat, num_cols mat_tot',mat_a%num_cols , mat%num_cols 
+mat%num_nz = mat_a%num_nz + 2*mat_a%num_rows       
+print*,'num_nz mat, num_nz mat_tot', mat_a%num_nz,mat%num_nz 
+mat%num_rows = mat_a%num_rows  +  1
+print*,'num_rows mat, num_rows mat_tot',mat_a%num_rows , mat%num_rows
+mat%num_cols = mat_a%num_cols  +  1
+print*,'num_cols mat, num_cols mat_tot',mat_a%num_cols , mat%num_cols 
 
-  SLL_ALLOCATE(mat%row_ptr(mat%num_rows+1),ierr)
-  SLL_ALLOCATE(mat%col_ind(mat%num_nz),ierr)
-  SLL_CLEAR_ALLOCATE(mat%val(1:mat%num_nz),ierr)
+SLL_ALLOCATE(mat%row_ptr(mat%num_rows+1),ierr)
+SLL_ALLOCATE(mat%col_ind(mat%num_nz),ierr)
+SLL_CLEAR_ALLOCATE(mat%val(1:mat%num_nz),ierr)
 
 end subroutine initialize_csr_matrix_with_constraint
 
 function new_csr_matrix_with_constraint(mat_a) result(mat)
 
-  type(sll_csr_matrix), pointer :: mat
-  type(sll_csr_matrix) :: mat_a
+type(sll_csr_matrix), pointer :: mat
+type(sll_csr_matrix)          :: mat_a
 
-  sll_int32 :: ierr
-  SLL_ALLOCATE(mat, ierr)
-  call initialize_csr_matrix_with_constraint( mat, mat_a)
+sll_int32 :: ierr
+SLL_ALLOCATE(mat, ierr)
+call initialize_csr_matrix_with_constraint( mat, mat_a)
 
 end function new_csr_matrix_with_constraint
 
 
 subroutine sll_factorize_csr_matrix(mat)
-  type(sll_csr_matrix), intent(inout) :: mat
-  
-  print *,'#sll_factorize_csr_matrix does nothing here'
-  
+
+type(sll_csr_matrix), intent(inout) :: mat
+
+print *,'#sll_factorize_csr_matrix does nothing here'
+
 end subroutine sll_factorize_csr_matrix
 
 subroutine csr_add_one_constraint( ia_in,          &
@@ -305,341 +310,339 @@ subroutine csr_add_one_constraint( ia_in,          &
                                    ja_out,         &
                                    a_out)
 
-  integer, dimension(:), intent(in)  :: ia_in  
-  integer, dimension(:), intent(in)  :: ja_in  
-  real(8), dimension(:), intent(in)  :: a_in
-  integer,               intent(in)  :: num_rows_in
-  integer,               intent(in)  :: num_nz_in
-  real(8), dimension(:), intent(in)  :: constraint_vec
-  integer, dimension(:), intent(out) :: ia_out
-  integer, dimension(:), intent(out) :: ja_out
-  real(8), dimension(:), intent(out) :: a_out
+integer, dimension(:), intent(in)  :: ia_in  
+integer, dimension(:), intent(in)  :: ja_in  
+real(8), dimension(:), intent(in)  :: a_in
+integer,               intent(in)  :: num_rows_in
+integer,               intent(in)  :: num_nz_in
+real(8), dimension(:), intent(in)  :: constraint_vec
+integer, dimension(:), intent(out) :: ia_out
+integer, dimension(:), intent(out) :: ja_out
+real(8), dimension(:), intent(out) :: a_out
 
-  integer :: num_rows_out
-  integer :: num_nz_out
-  integer :: i
-  integer :: s
-  integer :: k
-  
-  
-  num_rows_out = num_rows_in+1
-  num_nz_out = num_nz_in+2*num_rows_in
-  
-  if(size(ia_in)<num_rows_in+1) then
-    print *, '#problem of size of ia_in', size(ia_in),num_rows_in+1
-    stop
-  endif
-  if(size(ja_in)<num_nz_in) then
-    print *, '#problem of size of ja_in', size(ja_in),num_nz_in
-    stop
-  endif
-  if(size(a_in)<num_nz_in) then
-    print *, '#problem of size of a_in', size(a_in),num_nz_in
-    stop
-  endif
-  if(size(ia_out)<num_rows_out+1) then
-    print *, '#problem of size of ia_out', size(ia_out),num_rows_out+1
-    stop
-  endif
-  if(size(ja_out)<num_nz_out) then
-    print *, '#problem of size of ja_out', size(ja_out),num_nz_out
-    stop
-  endif
-  if(size(a_out)<num_nz_out) then
-    print *, '#problem of size of a_out', size(a_out),num_nz_out
-    stop
-  endif
-  if(ia_in(num_rows_in+1).ne.num_nz_in+1)then
-    print *,'#bad value of ia_in(num_rows_in+1)', ia_in(num_rows_in+1),num_nz_in+1
-    stop
-  endif
-  
-  s = 1
-  do i=1,num_rows_in
-    ia_out(i) = s
-    do k = ia_in(i), ia_in(i+1)-1
-      a_out(s) = a_in(k)
-      ja_out(s) = ja_in(k)
-      s = s+1
-    enddo
-    a_out(s) = constraint_vec(i)
-    ja_out(s) = num_rows_out
+integer :: num_rows_out
+integer :: num_nz_out
+integer :: i
+integer :: s
+integer :: k
+
+
+num_rows_out = num_rows_in+1
+num_nz_out = num_nz_in+2*num_rows_in
+
+if(size(ia_in)<num_rows_in+1) then
+  print *, '#problem of size of ia_in', size(ia_in),num_rows_in+1
+  stop
+endif
+if(size(ja_in)<num_nz_in) then
+  print *, '#problem of size of ja_in', size(ja_in),num_nz_in
+  stop
+endif
+if(size(a_in)<num_nz_in) then
+  print *, '#problem of size of a_in', size(a_in),num_nz_in
+  stop
+endif
+if(size(ia_out)<num_rows_out+1) then
+  print *, '#problem of size of ia_out', size(ia_out),num_rows_out+1
+  stop
+endif
+if(size(ja_out)<num_nz_out) then
+  print *, '#problem of size of ja_out', size(ja_out),num_nz_out
+  stop
+endif
+if(size(a_out)<num_nz_out) then
+  print *, '#problem of size of a_out', size(a_out),num_nz_out
+  stop
+endif
+if(ia_in(num_rows_in+1).ne.num_nz_in+1)then
+  print *,'#bad value of ia_in(num_rows_in+1)', ia_in(num_rows_in+1),num_nz_in+1
+  stop
+endif
+
+s = 1
+do i=1,num_rows_in
+  ia_out(i) = s
+  do k = ia_in(i), ia_in(i+1)-1
+    a_out(s) = a_in(k)
+    ja_out(s) = ja_in(k)
     s = s+1
   enddo
-  ia_out(num_rows_in+1) = s
-  do i=1,num_rows_in
-    a_out(s) = constraint_vec(i)
-    ja_out(s) = i
-    s = s+1      
-  enddo
-  ia_out(num_rows_in+2) = s
-   
-  if(ia_out(num_rows_out+1).ne.num_nz_out+1)then
-    print *,'#bad value of ia_out(num_rows_out+1)',ia_out(num_rows_out+1),num_nz_out+1
-    stop
-  endif
+  a_out(s) = constraint_vec(i)
+  ja_out(s) = num_rows_out
+  s = s+1
+enddo
+ia_out(num_rows_in+1) = s
+do i=1,num_rows_in
+  a_out(s) = constraint_vec(i)
+  ja_out(s) = i
+  s = s+1      
+enddo
+ia_out(num_rows_in+2) = s
+ 
+if(ia_out(num_rows_out+1).ne.num_nz_out+1)then
+  print *,'#bad value of ia_out(num_rows_out+1)',ia_out(num_rows_out+1),num_nz_out+1
+  stop
+endif
   
 end subroutine csr_add_one_constraint
   
 subroutine sll_mult_csr_matrix_vector(mat, input, output)
     
-  type(sll_csr_matrix),     intent(in)  :: mat
-  sll_real64, dimension(:), intent(in)  :: input
-  sll_real64, dimension(:), intent(out) :: output
+type(sll_csr_matrix),     intent(in)  :: mat
+sll_real64, dimension(:), intent(in)  :: input
+sll_real64, dimension(:), intent(out) :: output
 
-  sll_int32 :: i
-  sll_int32 :: k_1
-  sll_int32 :: k_2
+sll_int32 :: i
+sll_int32 :: k_1
+sll_int32 :: k_2
 
-  do i = 1, mat%num_rows
+do i = 1, mat%num_rows
 
-    k_1 = mat%row_ptr(i)
-    k_2 = mat%row_ptr(i+1)-1
+  k_1 = mat%row_ptr(i)
+  k_2 = mat%row_ptr(i+1)-1
 
-    output(i) = dot_product(mat%val(k_1:k_2),input(mat%col_ind(k_1:k_2)))
-            
-  end do
+  output(i) = dot_product(mat%val(k_1:k_2),input(mat%col_ind(k_1:k_2)))
+          
+end do
 
 end subroutine sll_mult_csr_matrix_vector
 
 subroutine sll_add_to_csr_matrix(mat, val, a, aprime)
 
-  type(sll_csr_matrix), intent(inout) :: mat
-  sll_real64,           intent(in)    :: val
-  sll_int32,            intent(in)    :: a
-  sll_int32,            intent(in)    :: aprime
+type(sll_csr_matrix), intent(inout) :: mat
+sll_real64,           intent(in)    :: val
+sll_int32,            intent(in)    :: a
+sll_int32,            intent(in)    :: aprime
 
-  sll_int32 :: j
-  sll_int32 :: k
+sll_int32 :: k
 
-  ! THE CURRENT LINE IS self%row_ptr(ai_A)
-  do k = mat%row_ptr(a), mat%row_ptr(a+1) - 1
-    j = mat%col_ind(k)
-    if (j == aprime) then
-      mat%val(k) = mat%val(k) + val
-      exit
-    end if
-  end do
+! THE CURRENT LINE IS self%row_ptr(ai_A)
+do k = mat%row_ptr(a), mat%row_ptr(a+1) - 1
+  if (mat%col_ind(k) == aprime) then
+    mat%val(k) = mat%val(k) + val
+    exit
+  end if
+end do
 
 end subroutine sll_add_to_csr_matrix
   
 subroutine sll_solve_csr_matrix(mat, B, U)
 
-  type(sll_csr_matrix),     intent(in)    :: mat
-  sll_real64, dimension(:), intent(inout) :: B
-  sll_real64, dimension(:), intent(out)   :: U
+type(sll_csr_matrix),     intent(in)    :: mat
+sll_real64, dimension(:), intent(inout) :: B
+sll_real64, dimension(:), intent(out)   :: U
 
-  sll_int32  :: maxIter
-  sll_real64 :: eps
+sll_int32  :: maxIter
+sll_real64 :: eps
 
-  sll_real64, dimension(:), allocatable :: Ad
-  sll_real64, dimension(:), allocatable :: d
+sll_real64, dimension(:), allocatable :: Ad
+sll_real64, dimension(:), allocatable :: d
 
-  logical    :: ll_continue
-  sll_real64 :: lr_Norm2r1
-  sll_real64 :: lr_Norm2r0
-  sll_real64 :: lr_NormInfb
-  sll_real64 :: lr_NormInfr
-  sll_real64 :: lr_ps
-  sll_real64 :: lr_beta
-  sll_real64 :: alpha
-  sll_int32  :: iter
-  sll_int32  :: err
-  sll_int32  :: flag
+logical    :: ll_continue
+sll_real64 :: Norm2r1
+sll_real64 :: Norm2r0
+sll_real64 :: NormInfb
+sll_real64 :: NormInfr
+sll_real64 :: ps
+sll_real64 :: beta
+sll_real64 :: alpha
+sll_int32  :: iter
+sll_int32  :: err
+sll_int32  :: flag
 
-  eps = 1.d-13
-  maxIter = 10000
+eps = 1.d-13
+maxIter = 10000
 
-  if ( mat%num_rows /= mat%num_cols ) then
-    PRINT*,'#ERROR Gradient_conj: The matrix must be square'
-    stop
-  end if
+if ( mat%num_rows /= mat%num_cols ) then
+  PRINT*,'#ERROR Gradient_conj: The matrix must be square'
+  stop
+end if
 
-  if ((dabs(maxval(B)) < eps) .AND. (dabs(minval(B)) < eps)) then
-    U = 0.0_8
-    return
-  end if
+if ((dabs(maxval(B)) < eps) .AND. (dabs(minval(B)) < eps)) then
+  U = 0.0_8
+  return
+end if
 
-  SLL_ALLOCATE(Ad(mat%num_rows),err)
-  SLL_ALLOCATE(d(mat%num_rows),err)
+SLL_ALLOCATE(Ad(mat%num_rows),err)
+SLL_ALLOCATE(d(mat%num_rows),err)
+
+U   = 0.0_8
+iter = 0
+
+NormInfb = maxval(abs(B))
+Norm2r0  = dot_product(B,B)
+
+d = B
+
+do iter = 1, maxiter
+  !--------------------------------------!
+  ! calcul du ak parametre optimal local !
+  !--------------------------------------!
+
+  call sll_mult_csr_matrix_vector( mat , d , Ad )
+
+  ps = dot_product( Ad , d )
+  alpha = Norm2r0 / ps
+          
+  !==================================================!
+  ! calcul de l'approximation Xk+1 et du residu Rk+1 !
+  !==================================================!
+  ! calcul des composantes residuelles
+  !-----------------------------------
+  B = B - alpha * Ad
+         
+  !----------------------------------------!
+  ! approximations ponctuelles au rang k+1 !
+  !----------------------------------------!
+  U = U + alpha * d
+          
+  !-------------------------------------------------------!
+  ! (a) extraction de la norme infinie du residu          !
+  !     pour le test d'arret                              !
+  ! (b) extraction de la norme euclidienne du residu rk+1 !
+  !-------------------------------------------------------!
+  NormInfr = maxval(dabs(B))
+  Norm2r1  = dot_product(B,B)
+
+  !==================================================!
+  ! calcul de la nouvelle direction de descente dk+1 !
+  !==================================================!
+  beta    = Norm2r1 / Norm2r0
+  Norm2r0 = Norm2r1
+  d      = B + beta * d
+         
+  !-------------------!
+  ! boucle suivante ? !
+  !-------------------!
+  if ( NormInfr / NormInfb < eps ) exit
+          
+end do
+
+if ( iter == maxIter ) then
+  print*,'Warning Gradient_conj : iter == maxIter'
+  print*,'Error after CG =',( NormInfr / NormInfb )
+end if
   
-  U   = 0.0_8
-  iter = 0
-
-  lr_NormInfb = maxval(abs(B))
-  lr_Norm2r0  = dot_product(B,B)
-
-  d = B
- 
-  do iter = 1, maxiter
-    !--------------------------------------!
-    ! calcul du ak parametre optimal local !
-    !--------------------------------------!
-
-    call sll_mult_csr_matrix_vector( mat , d , Ad )
-
-    lr_ps = dot_product( Ad , d )
-    alpha = lr_Norm2r0 / lr_ps
-            
-    !==================================================!
-    ! calcul de l'approximation Xk+1 et du residu Rk+1 !
-    !==================================================!
-    ! calcul des composantes residuelles
-    !-----------------------------------
-    B = B - alpha * Ad
-           
-    !----------------------------------------!
-    ! approximations ponctuelles au rang k+1 !
-    !----------------------------------------!
-    U = U + alpha * d
-            
-    !-------------------------------------------------------!
-    ! (a) extraction de la norme infinie du residu          !
-    !     pour le test d'arret                              !
-    ! (b) extraction de la norme euclidienne du residu rk+1 !
-    !-------------------------------------------------------!
-    lr_NormInfr = maxval(dabs(B))
-    lr_Norm2r1  = dot_product(B,B)
-
-    !==================================================!
-    ! calcul de la nouvelle direction de descente dk+1 !
-    !==================================================!
-    lr_beta    = lr_Norm2r1 / lr_Norm2r0
-    lr_Norm2r0 = lr_Norm2r1
-    d      = B + lr_beta * d
-           
-    !-------------------!
-    ! boucle suivante ? !
-    !-------------------!
-    if ( lr_NormInfr / lr_NormInfb < eps ) exit
-            
-  end do
-
-  if ( iter == maxIter ) then
-    print*,'Warning Gradient_conj : iter == maxIter'
-    print*,'Error after CG =',( lr_NormInfr / lr_NormInfb )
-  end if
-    
-  deallocate(Ad)
-  deallocate(d)
+deallocate(Ad)
+deallocate(d)
 
 end subroutine sll_solve_csr_matrix
 
-
-
 subroutine sll_solve_csr_matrix_perper ( this, B,U,Masse_tot )
-  type(sll_csr_matrix) :: this
-  sll_real64, dimension(:) :: U
-  sll_real64, dimension(:) :: B
-  sll_int32  :: maxIter
-  sll_real64 :: eps
 
-  sll_real64, dimension(:), pointer :: Ad
-  sll_real64, dimension(:), pointer :: r
-  sll_real64, dimension(:), pointer :: d
-  sll_real64, dimension(:), pointer :: Ux,one
-  sll_real64, dimension(:), pointer :: Masse_tot
-  sll_real64 :: lr_Norm2r1
-  sll_real64 :: lr_Norm2r0
-  sll_real64 :: lr_NormInfb
-  sll_real64 :: lr_NormInfr
-  sll_real64 :: lr_ps
-  sll_real64 :: lr_beta
-  sll_real64 :: alpha
-  logical  :: ll_continue
-  sll_int32  :: iter
-  sll_int32  :: err
-  sll_int32  :: flag
+type(sll_csr_matrix) :: this
+sll_real64, dimension(:) :: U
+sll_real64, dimension(:) :: B
+sll_int32  :: maxIter
+sll_real64 :: eps
 
-  maxIter = 100000
-  eps = 1.d-13
+sll_real64, dimension(:), pointer :: Ad
+sll_real64, dimension(:), pointer :: r
+sll_real64, dimension(:), pointer :: d
+sll_real64, dimension(:), pointer :: Ux,one
+sll_real64, dimension(:), pointer :: Masse_tot
+sll_real64 :: Norm2r1
+sll_real64 :: Norm2r0
+sll_real64 :: NormInfb
+sll_real64 :: NormInfr
+sll_real64 :: ps
+sll_real64 :: beta
+sll_real64 :: alpha
+sll_int32  :: iter
+sll_int32  :: err
+sll_int32  :: flag
+logical    :: ll_continue
 
-  if ( this%num_rows /= this%num_cols ) then
-    PRINT*,'ERROR Gradient_conj: The matrix must be square'
-    stop
-  end if
+maxIter = 100000
+eps = 1.d-13
 
-  if ((dabs(maxval(B)) < eps ) .AND. (dabs(MINVAL(B)) < eps )) then
-    U = 0.0_8
-    return
-  end if
+if ( this%num_rows /= this%num_cols ) then
+  PRINT*,'ERROR Gradient_conj: The matrix must be square'
+  stop
+end if
 
-  SLL_ALLOCATE(Ad(this%num_rows),err)
-  SLL_ALLOCATE(r(this%num_rows),err)
-  SLL_ALLOCATE(d(this%num_rows),err)
-  SLL_ALLOCATE(Ux(this%num_rows),err)
-  SLL_ALLOCATE(one(this%num_rows),err)
+if ((dabs(maxval(B)) < eps ) .AND. (dabs(MINVAL(B)) < eps )) then
+  U = 0.0_8
+  return
+end if
 
-  U(:)  = 0.0_8
-  one(:) = 1.
-  Ux(:) = U(:)
-  iter = 0
-  call sll_mult_csr_matrix_vector( this , Ux , Ad )
-  Ad = Ad - dot_product(Masse_tot, Ux)
-  r       = B - Ad
-  lr_Norm2r0  = DOT_PRODUCT( r , r )
-  lr_NormInfb = maxval( dabs( B ) )
+SLL_ALLOCATE(Ad(this%num_rows),err)
+SLL_ALLOCATE(r(this%num_rows),err)
+SLL_ALLOCATE(d(this%num_rows),err)
+SLL_ALLOCATE(Ux(this%num_rows),err)
+SLL_ALLOCATE(one(this%num_rows),err)
 
-  d = r
+U(:)  = 0.0_8
+one(:) = 1.
+Ux(:) = U(:)
+iter = 0
+call sll_mult_csr_matrix_vector( this , Ux , Ad )
+Ad = Ad - dot_product(Masse_tot, Ux)
+r       = B - Ad
+Norm2r0  = DOT_PRODUCT( r , r )
+NormInfb = maxval( dabs( B ) )
 
-  ll_continue=.true.
-  do while(ll_continue)
-    iter = iter + 1
-    !--------------------------------------!
-    ! calcul du ak parametre optimal local !
-    !--------------------------------------!
+d = r
 
-    call sll_mult_csr_matrix_vector( this , d , Ad )
+ll_continue=.true.
+do while(ll_continue)
+  iter = iter + 1
+  !--------------------------------------!
+  ! calcul du ak parametre optimal local !
+  !--------------------------------------!
+
+  call sll_mult_csr_matrix_vector( this , d , Ad )
+        
+  Ad = Ad - dot_product(Masse_tot, d)
+  ps = dot_product( Ad , d )
+  alpha = Norm2r0 / ps
+         
+  !==================================================!
+  ! calcul de l'approximation Xk+1 et du residu Rk+1 !
+  !==================================================!
+  ! calcul des composantes residuelles
+  !-----------------------------------
+  r = r - alpha * Ad
+         
+  !----------------------------------------!
+  ! approximations ponctuelles au rang k+1 !
+  !----------------------------------------!
+  Ux = Ux + alpha * d
+         
+  !-------------------------------------------------------!
+  ! (a) extraction de la norme infinie du residu          !
+  !     pour le test d'arret                              !
+  ! (b) extraction de la norme euclidienne du residu rk+1 !
+  !-------------------------------------------------------!
+  NormInfr = maxval(dabs( r ))
+  Norm2r1 = DOT_PRODUCT( r , r )
+         
+  !==================================================!
+  ! calcul de la nouvelle direction de descente dk+1 !
+  !==================================================!
+  beta = Norm2r1 / Norm2r0
+  Norm2r0 = Norm2r1
+  d = r + beta * d
+  !d(1) =  B(1)
+  !-------------------!
+  ! boucle suivante ? !
+  !-------------------!
+  ll_continue=((NormInfr/NormInfb) >= eps) .AND. (iter < maxIter)
           
-    Ad = Ad - dot_product(Masse_tot, d)
-    lr_ps = dot_product( Ad , d )
-    alpha = lr_Norm2r0 / lr_ps
-           
-    !==================================================!
-    ! calcul de l'approximation Xk+1 et du residu Rk+1 !
-    !==================================================!
-    ! calcul des composantes residuelles
-    !-----------------------------------
-    r = r - alpha * Ad
-           
-    !----------------------------------------!
-    ! approximations ponctuelles au rang k+1 !
-    !----------------------------------------!
-    Ux = Ux + alpha * d
-           
-    !-------------------------------------------------------!
-    ! (a) extraction de la norme infinie du residu          !
-    !     pour le test d'arret                              !
-    ! (b) extraction de la norme euclidienne du residu rk+1 !
-    !-------------------------------------------------------!
-    lr_NormInfr = maxval(dabs( r ))
-    lr_Norm2r1 = DOT_PRODUCT( r , r )
-           
-    !==================================================!
-    ! calcul de la nouvelle direction de descente dk+1 !
-    !==================================================!
-    lr_beta = lr_Norm2r1 / lr_Norm2r0
-    lr_Norm2r0 = lr_Norm2r1
-    d = r + lr_beta * d
-    !d(1) =  B(1)
-    !-------------------!
-    ! boucle suivante ? !
-    !-------------------!
-    ll_continue=((lr_NormInfr/lr_NormInfb) >= eps) .AND. (iter < maxIter)
-            
-  end do
-  U = Ux
-   
-  if ( iter == maxIter ) then
-    print*,'Warning Gradient_conj : iter == maxIter'
-    print*,'Error after CG =',( lr_NormInfr / lr_NormInfb )
-  end if
-    
-  deallocate(Ad)
-  deallocate(d)
-  deallocate(r)
-  deallocate(Ux)
-  deallocate(one)
+end do
+U = Ux
+ 
+if ( iter == maxIter ) then
+  print*,'Warning Gradient_conj : iter == maxIter'
+  print*,'Error after CG =',( NormInfr / NormInfb )
+end if
+  
+deallocate(Ad)
+deallocate(d)
+deallocate(r)
+deallocate(Ux)
+deallocate(one)
+
 end subroutine sll_solve_csr_matrix_perper
 
 subroutine csr_todense( this, dense_matrix)
@@ -667,65 +670,65 @@ end subroutine csr_todense
 !> test program.
 subroutine uni2d(this,f)
 
-  type(sll_csr_matrix) :: this
-  sll_real64           :: f(:)
-  sll_real64, pointer  :: a(:)
-  sll_int32            :: m
-  sll_int32, pointer   :: ia(:)
-  sll_int32, pointer   :: ja(:)
-  integer              :: k,l,i,j
-  
-  real (kind(0d0)), parameter :: zero=0.0d0,cx=-1.0d0,cy=-1.0d0, cd=4.0d0
-  
-  a  => this%val
-  ia => this%row_ptr
-  ja => this%col_ind
-  
-  m = this%num_rows
-  
-  k=0
-  l=0
-  ia(1)=1
-  do i=1,m
-    do j=1,m
-      k=k+1
-      l=l+1
-      a(l)=cd
-      ja(l)=k
-      f(k)=zero
-      if(j < m) then
-         l=l+1
-         a(l)=cx
-         ja(l)=k+1
-        else
-         f(k)=f(k)-cx
-      end if
-      if(i < m) then
-         l=l+1
-         a(l)=cy
-         ja(l)=k+m
-        else
-         f(k)=f(k)-cy
-      end if
-      if(j > 1) then
-         l=l+1
-         a(l)=cx
-         ja(l)=k-1
-        else
-         f(k)=f(k)-cx
-      end if
-      if(i >  1) then
-         l=l+1
-         a(l)=cy
-         ja(l)=k-m
-        else
-         f(k)=f(k)-cy
-      end if
-      ia(k+1)=l+1
-    end do
+type(sll_csr_matrix) :: this
+sll_real64           :: f(:)
+sll_real64, pointer  :: a(:)
+sll_int32            :: m
+sll_int32, pointer   :: ia(:)
+sll_int32, pointer   :: ja(:)
+integer              :: k,l,i,j
+
+real (kind(0d0)), parameter :: zero=0.0d0,cx=-1.0d0,cy=-1.0d0, cd=4.0d0
+
+a  => this%val
+ia => this%row_ptr
+ja => this%col_ind
+
+m = this%num_rows
+
+k=0
+l=0
+ia(1)=1
+do i=1,m
+  do j=1,m
+    k=k+1
+    l=l+1
+    a(l)=cd
+    ja(l)=k
+    f(k)=zero
+    if(j < m) then
+       l=l+1
+       a(l)=cx
+       ja(l)=k+1
+      else
+       f(k)=f(k)-cx
+    end if
+    if(i < m) then
+       l=l+1
+       a(l)=cy
+       ja(l)=k+m
+      else
+       f(k)=f(k)-cy
+    end if
+    if(j > 1) then
+       l=l+1
+       a(l)=cx
+       ja(l)=k-1
+      else
+       f(k)=f(k)-cx
+    end if
+    if(i >  1) then
+       l=l+1
+       a(l)=cy
+       ja(l)=k-m
+      else
+       f(k)=f(k)-cy
+    end if
+    ia(k+1)=l+1
   end do
-  
-  this%num_nz = l
+end do
+
+this%num_nz = l
 
 return
 end subroutine uni2D

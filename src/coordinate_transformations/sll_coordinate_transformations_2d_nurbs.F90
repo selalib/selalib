@@ -162,7 +162,7 @@ contains
     namelist /knots_2/   knots2
     namelist /control_points/ control_pts1, control_pts2
     namelist /pt_weights/  weights
-    namelist /logical_mesh_2d/ number_cells1,number_cells2
+    namelist /cartesian_mesh_2d/ number_cells1,number_cells2
     !character(len=80) :: line_buffer
 
     if(len(filename) >= 256) then
@@ -245,7 +245,7 @@ contains
     weights_2d = reshape(weights,(/num_pts1,num_pts2/))
 
     ! read the minimal mesh corresponding to the transformation
-    read( input_file_id, logical_mesh_2d )
+    read( input_file_id, cartesian_mesh_2d )
     ! close the file to begin the work 
     close( input_file_id )
 
