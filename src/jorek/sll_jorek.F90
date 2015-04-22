@@ -10,8 +10,6 @@ use greenbox_def
 use quadratures_def 
 use linear_solver_def
 use basis_def
-!use febasis
-!use febasis2d_bezier
 use space_def
 use field_def
 use matrix_def
@@ -68,10 +66,10 @@ module sll_jorek
 
 use typedef
 use jorek_model
+use linear_solver
 use field
 use mesh
-use spm
-use linear_solver
+use spm_def
 use matrix
 use space
 use fem
@@ -95,10 +93,10 @@ subroutine initialize_jorek(jorek)
 
 type(sll_jorek_solver) :: jorek
 
-integer          :: nb_args
-integer          :: ierr
-integer          :: tracelogdetail 
-integer          :: tracelogoutput
+integer                     :: nb_args
+integer(kind=spm_ints_kind) :: ierror
+integer                     :: tracelogdetail 
+integer                     :: tracelogoutput
 
 character(len = 1024)         :: exec
 character(len = 1024)         :: rootname
@@ -107,7 +105,7 @@ character(len = *), parameter :: mod_name = "main"
 character(len=1024) :: filename_parameter
 
 integer, parameter  :: n_dim = 2
-integer             :: err
+integer             :: ierr
 character(len=1024) :: dirname
 integer             :: myrank
 character(len=1024) :: argname
@@ -117,7 +115,7 @@ argname = "--parameters"
 call jorek_get_arguments(argname, filename_parameter, ierr)
 myrank = 0
 #ifdef MPI_ENABLED
-call mpi_comm_rank ( mpi_comm_world, myrank, err)
+call mpi_comm_rank ( mpi_comm_world, myrank, ierr)
 #endif
 print *, "Parameters text file ", trim(filename_parameter)
 call initialize_jorek_parameters(filename_parameter)
@@ -149,7 +147,7 @@ nb_args = iargc()
 print *, "runname : ", trim(exec)
 
 ! ... initialize spm, mpi 
-call spm_initialize(ierr)
+call spm_initialize(ierror)
 
 ! ... define model parameters 
 ! ..................................................
@@ -161,14 +159,14 @@ i_vp_rho            = 1
 nmatrices           = 1
 i_vu_rho            = 1 
 
-call jorek_param_getint(int_modes_m1_id, mode_m1, err)
-call jorek_param_getint(int_modes_n1_id, mode_n1, err)
+call jorek_param_getint(int_modes_m1_id, mode_m1, ierr)
+call jorek_param_getint(int_modes_n1_id, mode_n1, ierr)
 
-call jorek_param_getreal(real_rgeo_id,r0,err)
-call jorek_param_getreal(real_zgeo_id,z0,err)
-call jorek_param_getreal(real_amin_id,a,err) 
-call jorek_param_getreal(real_acenter_id,acenter,err)
-call jorek_param_getint(int_nstep_max_id,nstep_max,err)
+call jorek_param_getreal(real_rgeo_id,r0,ierr)
+call jorek_param_getreal(real_zgeo_id,z0,ierr)
+call jorek_param_getreal(real_amin_id,a,ierr) 
+call jorek_param_getreal(real_acenter_id,acenter,ierr)
+call jorek_param_getint(int_nstep_max_id,nstep_max,ierr)
 
 ! ...
 call space_create(space_trial, fem_mesh)
@@ -179,7 +177,7 @@ ptr_space_test => space_test
 
 ! ...
 argname = "--geometry"
-call jorek_get_arguments(argname, dirname, err)
+call jorek_get_arguments(argname, dirname, ierr)
 call create_mesh(fem_mesh, dirname)
 ! ...
 
@@ -303,6 +301,30 @@ do i=1, fem_model%ptr_mesh%oi_n_nodes
 end do
 close(14)
 ! ...
+!DO ipol = 1, Mesh2D%oi_n_nodes
+!       X2D = Mesh2D%TheNodes%Coor2D(1:N_DIM, i_D0 , ipol)
+!       isG = IsD(ipol)
+!       ri  = X2D(1)
+!       zi  = X2D(2)
+!       lpr_x (1) = ri ; lpr_x(2) = zi
+!       DO i_var = 1, ao_GBox2D % oi_n_var_unknown
+!          lpi_info(1)=label
+!          CALL func_analytical(lpr_x, lpr_v,lpr_info,lpi_info,ao_GBox2D % oi_N_var_unknown,N_dim)
+!          diff_variable(i_var) = Var(i_var, IsG) - lpr_v(i_var,1)
+!          variable(i_var)=Var(i_var, IsG)
+!       END DO   
+!       WRITE(fileID, *) ri, zi, variable(1:ao_GBox2D % oi_n_var_unknown), diff_variable(1:ao_GBox2D % oi_n_var_unknown) 
+!    END DO
+!  
+!       
+!       ! ... Connectivities
+!    DO ie_pol = 1, Mesh2D% oi_n_Elmts
+!       lp_elmt => Mesh2D% opo_elements (ie_pol)
+!       is_el(1:lp_elmt % oi_n_vtex) = lp_elmt % opi_vertices(1:lp_elmt % oi_n_vtex)    
+!       WRITE(fileID, *) is_el(1:lp_elmt % oi_n_vtex)
+!    END DO
+
+
 
 #ifdef DEBUG_TRACE
 call concatmsg(" min of var ", ai_dtllevel = 0)
