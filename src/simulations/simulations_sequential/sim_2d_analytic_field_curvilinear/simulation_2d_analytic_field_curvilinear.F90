@@ -1091,9 +1091,13 @@ contains
           f(i1,i2) =  sim%init_func(x1,x2,sim%params) 
           f_init(i1,i2)  =  sim%init_func(x1,x2,sim%params)
           phi(i1,i2) = sim%phi_func(x1,x2,sim%A_func_params)
+          phi(i1,i2)= sin(x1)*cos(x2) 
+          !-0.5_f64*(x1**2+x2**2) &
+          !  +sim%A_func_params(1)*x2-sim%A_func_params(2)*x1
           !warning specific change for colella mesh
-          !phi(i1,i2) = phi(i1,i2)-sim%A_func_params(1)*eta2+sim%A_func_params(2)*eta1
-          phi(i1,i2) = exp(1._f64/(cos(x1)-1.001_f64))*exp(1._f64/(cos(x2)-1.001_f64))-sim%A_func_params(1)*eta2+sim%A_func_params(2)*eta1
+          phi(i1,i2) = phi(i1,i2)-sim%A_func_params(1)*eta2+sim%A_func_params(2)*eta1
+          !phi(i1,i2) = exp(1._f64/(cos(x1)-1.001_f64))*exp(1._f64/(cos(x2)-1.001_f64)) &
+          !  -sim%A_func_params(1)*eta2+sim%A_func_params(2)*eta1
           jac_m  =  sim%transformation%jacobian_matrix(eta1,eta2)          
           call compute_curvilinear_field_2d( &
             sim%A1_func(x1,x2,sim%A_func_params), &
@@ -1209,7 +1213,10 @@ contains
 
 #ifndef NOHDF5
       if(modulo(step,sim%freq_diag)==0)then
-        call plot_f_curvilinear(iplot,div,sim%mesh_2d,sim%transformation)
+        if(iplot==0)then
+          call plot_divf_curvilinear(iplot,div,sim%mesh_2d,sim%transformation)
+        endif
+        call plot_f_curvilinear(iplot,f,sim%mesh_2d,sim%transformation)
         iplot = iplot+1  
       endif            
 #endif  
@@ -1315,6 +1322,79 @@ contains
 
 #endif
 
+#ifndef NOHDF5
+!*********************
+!*********************
+
+  subroutine plot_divf_curvilinear(iplot,f,mesh_2d,transf)
+    use sll_xdmf
+    use sll_hdf5_io_serial
+    sll_int32 :: file_id
+    sll_int32 :: error
+    sll_real64, dimension(:,:), allocatable :: x1
+    sll_real64, dimension(:,:), allocatable :: x2
+    sll_int32 :: i, j
+    sll_int32, intent(in) :: iplot
+    character(len=4)      :: cplot
+    sll_int32             :: nnodes_x1, nnodes_x2
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
+    class(sll_coordinate_transformation_2d_base), pointer :: transf
+    sll_real64, dimension(:,:), intent(in) :: f
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_real64 ::  eta1_min, eta2_min
+    sll_real64 ::  eta1_max, eta2_max  
+    sll_real64 :: deta1
+    sll_real64 :: deta2
+    
+    
+    nnodes_x1 = mesh_2d%num_cells1+1
+    nnodes_x2 = mesh_2d%num_cells2+1
+    eta1_min = mesh_2d%eta1_min
+    eta1_max = mesh_2d%eta1_max
+    eta2_min = mesh_2d%eta2_min
+    eta2_max = mesh_2d%eta2_max
+    deta1 = mesh_2d%delta_eta1
+    deta2 = mesh_2d%delta_eta2
+    
+    !print *,'#maxf=',iplot,maxval(f),minval(f)
+    
+
+    
+    if (iplot == 1) then
+
+      SLL_ALLOCATE(x1(nnodes_x1,nnodes_x2), error)
+      SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
+      do j = 1,nnodes_x2
+        do i = 1,nnodes_x1
+          eta1 = eta1_min+real(i-1,f32)*deta1
+          eta2 = eta2_min+real(j-1,f32)*deta2
+          x1(i,j) = transf%x1(eta1,eta2)
+          x2(i,j) = transf%x2(eta1,eta2)
+        end do
+      end do
+      call sll_hdf5_file_create("curvilinear_mesh-x1.h5",file_id,error)
+      call sll_hdf5_write_array(file_id,x1,"/x1",error)
+      call sll_hdf5_file_close(file_id, error)
+      call sll_hdf5_file_create("curvilinear_mesh-x2.h5",file_id,error)
+      call sll_hdf5_write_array(file_id,x2,"/x2",error)
+      call sll_hdf5_file_close(file_id, error)
+      deallocate(x1)
+      deallocate(x2)
+
+    end if
+
+    call int2string(iplot,cplot)
+    call sll_xdmf_open("divf"//cplot//".xmf","curvilinear_mesh", &
+      nnodes_x1,nnodes_x2,file_id,error)
+    call sll_xdmf_write_array("divf"//cplot,f,"values", &
+      error,file_id,"Node")
+    call sll_xdmf_close(file_id,error)
+  end subroutine plot_divf_curvilinear
+
+#endif
+
+
 
   subroutine compute_curvilinear_field_2d( &
     input1, &
@@ -1390,8 +1470,9 @@ contains
         A2(i1,i2) = phi(modulo(i1+1-1+Nc_eta1,Nc_eta1)+1,i2)-phi(modulo(i1-1-1+Nc_eta1,Nc_eta1)+1,i2)
         A2(i1,i2) = A2(i1,i2)/(2._f64*delta_eta1)
         A2(i1,i2) = -A2(i1,i2)/transformation%jacobian(eta1,eta2)
-        !A1(i1,i2)=interp2d%interpolate_derivative_eta2(eta1,eta2)/transformation%jacobian(eta1,eta2)
-        !A2(i1,i2)=-interp2d%interpolate_derivative_eta1(eta1,eta2)/transformation%jacobian(eta1,eta2)
+        
+        A1(i1,i2)=interp2d%interpolate_derivative_eta2(eta1,eta2)/transformation%jacobian(eta1,eta2)
+        A2(i1,i2)=-interp2d%interpolate_derivative_eta1(eta1,eta2)/transformation%jacobian(eta1,eta2)
       end do
     end do
    

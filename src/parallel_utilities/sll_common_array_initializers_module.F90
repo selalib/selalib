@@ -14,6 +14,7 @@ module sll_common_array_initializers_module
 contains
 
 
+!phi(i1,i2) =0.5_f64*(x1**2 + x2**2 - 0.1_f64*atan(x2/(x1+0.00001_f64))**2 )
 
   function sll_gaussian_initializer_2d( x_1, x_2, params ) 
     sll_real64 :: sll_gaussian_initializer_2d
