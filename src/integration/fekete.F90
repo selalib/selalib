@@ -387,15 +387,18 @@ contains
 
     call sll_new_file_id(out_unit, ierr)
     open (unit=out_unit,file=name,action="write",status="replace")
-    write(out_unit, "(i6)") rule
+    
 
     if (rule .eq. 1) then
        num_fek = 10
     else
        SLL_WARNING( "write_quadrature", "Required rule is not implemented." )
        num_fek = 0
+       STOP
     end if
 
+    write(out_unit, "(i6)") num_fek
+    
     do i=1,num_fek
        x = quad_pw(1,i)
        y = quad_pw(2,i)

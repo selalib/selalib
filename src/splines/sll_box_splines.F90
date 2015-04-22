@@ -619,7 +619,7 @@ contains  ! ****************************************************************
           if (last_point .eq. -1) then
              print *, "ERROR in non_zero_splines: wrong index, i=", i
           end if
-          do j=1,6
+          do j=2,7 ! this represents the direct neighbours for a point
              nei_point = local_to_global(mesh, last_point, j)
              if ((nei_point.ne.-1).and.(.not.(ANY(index_nZ==nei_point)))) then
                 index_nZ(current_nZ) = nei_point
@@ -754,8 +754,9 @@ contains  ! ****************************************************************
   !> fekete points.
   !> Output file : basis_values.txt
   !> @param[in] deg integer with degree of splines
-  subroutine write_basis_values(deg)
+  subroutine write_basis_values(deg, rule)
     sll_int32,  intent(in)      :: deg
+    sll_int32,  intent(in)      :: rule
     sll_real64, dimension(2, 3) :: ref_pts
     sll_real64, dimension(3,10) :: quad_pw
     sll_real64, allocatable     :: disp_vec(:,:) !> displacement vectors
@@ -796,21 +797,22 @@ contains  ! ****************************************************************
     ! see $SELALIB/src/integration/fekete.F90 for more info
     quad_pw = fekete_points_and_weights(ref_pts)
 
-    if (deg .eq. 1) then
-       nonZero = 3 !> Number of non null box splines on a cell
-       nderiv  = 1 !> Number of derivatives to be computed
+    nonZero = 3*deg*deg !> Number of non null box splines on a cell
+    nderiv  = 1 !> Number of derivatives to be computed
+    !> The displament vector correspond to the translation
+    !> done to obtain the other non null basis functions
+    SLL_ALLOCATE(disp_vec(2, nonZero), ierr)
+    disp_vec(:,1) = 0._f64
+    disp_vec(:,2) = ref_pts(:,1) - ref_pts(:,2)
+    disp_vec(:,3) = ref_pts(:,1) - ref_pts(:,3)
+    
+    if (rule .eq. 1) then
        num_fek = 10 !> Number of fekete points on a cell
-       !> The displament vector correspond to the translation
-       !> done to obtain the other non null basis functions
-       SLL_ALLOCATE(disp_vec(2, nonZero), ierr)
-       disp_vec(:,1) = 0._f64
-       disp_vec(:,2) = ref_pts(:,1) - ref_pts(:,2)
-       disp_vec(:,3) = ref_pts(:,1) - ref_pts(:,3)
     else
-       print *, "ERROR : not implemented yet"
-       nonZero = 0
-       nderiv  = 0
+       print *, ""
+       print *, "ERROR in write_basis_value() : rule not implemented yet"
        num_fek = 0
+       STOP
     end if
 
     open (unit=out_unit,file=name,action="write",status="replace")
