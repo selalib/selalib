@@ -16,6 +16,7 @@ implicit none
 
 integer :: i,j,n
 sll_int32 :: ierr
+sll_int32 :: degree
 
 sll_real64, dimension(10) :: x, w
 sll_real64, dimension(:,:), allocatable :: d
