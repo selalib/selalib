@@ -32,7 +32,6 @@ SET(SLL_MACROS
     ${SLL_DIR}/multigrid/mgd2_routines.h
     ${SLL_DIR}/remap/sll_remap.h
     ${SLL_DIR}/parallel_utilities/sll_parallel_utilities.h
-    ${SLL_DIR}/jorek/sll_jorek.h
 )
 
 FILE(COPY ${SLL_MACROS} DESTINATION ${CMAKE_BINARY_DIR}/include)
@@ -150,11 +149,15 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/random_deviate_generators/gaussian.F90
     ${SLL_DIR}/random_deviate_generators/hammersley.F90
     ${SLL_DIR}/random_deviate_generators/moment_matching.F90
+)
+
+IF(F2008)
+  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
     ${SLL_DIR}/vector_space/sll_vector_space_base.F90
     ${SLL_DIR}/vector_space/sll_vector_space_real_arrays.F90
     ${SLL_DIR}/ode_integrators/sll_ode_integrator_base.F90
-    ${SLL_DIR}/ode_integrators/rk_explicit.F90
- )
+    ${SLL_DIR}/ode_integrators/rk_explicit.F90)
+ENDIF(F2008)
 
 IF(Fortran_COMPILER MATCHES "IBM")
 ELSE()
