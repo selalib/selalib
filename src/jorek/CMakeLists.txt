@@ -18,8 +18,8 @@ SET(JOREK_LIBRARIES  assembly
                      boundary_conditions 
                      dispatching
                      coordinates 
-                     evaluator 
                      fem
+                     evaluator 
                      field
                      greenbox 
                      graph 
