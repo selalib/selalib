@@ -584,7 +584,9 @@ contains  ! ****************************************************************
     type(sll_hex_mesh_2d), pointer, intent(in) :: mesh
     sll_int32,  intent(in)  :: deg
     sll_int32,  intent(in)  :: cell_index
-    sll_int32,  allocatable :: index_nZ(:)
+    !PN do not work with ifort
+    !sll_int32, allocatable  :: index_nZ(:)
+    sll_int32               :: index_nZ(3*deg*deg)
     sll_int32               :: ierr
     sll_int32               :: nei_point
     sll_int32               :: non_Zero
@@ -598,7 +600,8 @@ contains  ! ****************************************************************
     
     ! Number of non zero splines on a cell:
     non_Zero = 3 * deg * deg
-    SLL_ALLOCATE(index_nZ(non_Zero), ierr)
+    !PN Do not work with ifort
+    !PN SLL_ALLOCATE(index_nZ(non_Zero), ierr)
     index_nZ(1:non_Zero) = -1
     
     ! Getting the cell vertices which are the first indices of the non zero splines
@@ -855,7 +858,7 @@ contains  ! ****************************************************************
     sll_int32, intent(in)          :: deg
     sll_int32                      :: out_unit
     character(len=28), parameter   :: name = "boxsplines_connectivity.txt"
-    sll_int32,         allocatable :: nZ_indices(:)
+    sll_int32                      :: nZ_indices(3*deg*deg)
     sll_int32  :: num_ele
     sll_int32  :: non_zero
     sll_int32  :: ierr
