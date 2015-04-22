@@ -86,7 +86,7 @@ contains
         , ao_con_C, ao_con_R    &
         , lpi_columns, lpi_occ)
 
-        self % opr_a(:) = 0.0_wp
+        self % opr_a(:) = 0.0_8
 
         deallocate(lpi_columns)
         deallocate(lpi_occ)
@@ -123,7 +123,7 @@ contains
         integer :: li_nen_C
         integer :: li_err
         integer :: li_flag
-        real(wp), dimension(:), pointer :: lpr_tmp
+        real(8), dimension(:), pointer :: lpr_tmp
 
         ! INITIALIZING ia
         self % opi_ia(1) = 1
@@ -211,7 +211,7 @@ contains
         integer :: li_result
         logical :: ll_done
         integer, dimension(2) :: lpi_size
-        !real(wp), dimension(:), pointer :: lpr_tmp
+        !real(8), dimension(:), pointer :: lpr_tmp
         integer, dimension(:,:), pointer :: lpi_columns
 
         DO li_id = 1, ai_npatch
