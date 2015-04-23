@@ -30,6 +30,8 @@ type, public :: sll_jorek_solver
   sll_real64, dimension(:),   pointer :: rho
   sll_real64, dimension(:),   pointer :: e_x
   sll_real64, dimension(:),   pointer :: e_y
+  logical                             :: created = .false.
+  logical                             :: deleted = .true.
 
 end type sll_jorek_solver
 
@@ -49,7 +51,12 @@ contains
 
 subroutine initialize_jorek(jorek)
 
-type(sll_jorek_solver) :: jorek
+type(sll_jorek_solver)     :: jorek
+type(def_element), pointer :: elmt => null()
+sll_int32                  :: iq
+sll_int32                  :: ierr
+
+call create_jorek_model()
 
 jorek%fem_model => fem_model
 jorek%n_nodes = fem_mesh%oi_n_nodes
@@ -68,7 +75,10 @@ do iq = 1, jorek%n_quads
   elmt => fem_mesh%opo_elements(iq)
   jorek%nodes(:,iq) = elmt%opi_vertices(1:elmt%oi_n_vtex)
 end do
-  
+
+jorek%created = .true.  
+jorek%deleted = .false.  
+
 end subroutine initialize_jorek
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -77,14 +87,19 @@ subroutine solve_jorek(jorek)
 
 type(sll_jorek_solver) :: jorek
 
-jorek%phi = fem_model%opr_global_var(one,is)
+call run_jorek_model()
+
+  jorek%phi = fem_model%opr_global_var(one,:)
 
 end subroutine solve_jorek
 
 subroutine delete_jorek(jorek)
 
 type(sll_jorek_solver) :: jorek
-sll_int32              :: ierr
+
+call delete_jorek_model()
+jorek%created = .false.  
+jorek%deleted = .true.  
 
 end subroutine delete_jorek
 
@@ -100,7 +115,7 @@ character(len=*), intent(in) :: label
 integer                      :: nbs
 integer                      :: nbq
 integer                      :: xmf
-integer                      :: i, j
+integer                      :: j
 sll_int32                    :: ierr
 
 call sll_new_file_id(xmf, ierr)
@@ -119,7 +134,7 @@ write(xmf,"(a,i6,a)") "<Topology Type='Quadrilateral' NumberOfElements='",nbq,"'
 write(xmf,"(a,i6,a)") "<DataItem Name='Connections' Format='XML' DataType='Int' Dimensions='", &
                       nbq, " 4'>" 
 do iq=1, nbq
-  write(xmf,"(4i6)") (jorek%nodes(j)-1,j=1,4)
+  write(xmf,"(4i6)") (jorek%nodes(j,iq)-1,j=1,4)
 end do
 write(xmf,"(a)") "</DataItem>"
 write(xmf,"(a)") "</Topology>"
@@ -145,12 +160,11 @@ close(xmf)
 
 end subroutine plot_field
 
-subroutine plot_jorek_field_2d_with_plotmtv(this, field_name)
+subroutine plot_jorek_field_2d_with_plotmtv(jorek, field_name)
 
 type(sll_jorek_solver) :: jorek
 character(len=*)       :: field_name
 sll_int32              :: file_id
-sll_int32              :: ni, nj, ino
 sll_real64             :: x1, y1
 sll_int32              :: is1, is2, is3, is4
 sll_int32              :: is, iq, nbs, nbq
@@ -184,8 +198,8 @@ end do
 
 write(file_id,*)
 do is = 1, nbs
-  x1 = jorek%coor2d(1,is)
-  y1 = jorek%coor2d(2,is)
+  x1 = jorek%coord(1,is)
+  y1 = jorek%coord(2,is)
   write(file_id,"(a)"   ,  advance="no")"@text x1="
   write(file_id,"(g15.3)", advance="no") x1
   write(file_id,"(a)"   ,  advance="no")" y1="
