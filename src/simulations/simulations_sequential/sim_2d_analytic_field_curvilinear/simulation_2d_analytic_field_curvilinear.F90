@@ -40,6 +40,8 @@ module sll_simulation_2d_analytic_field_curvilinear_module
 !  use sll_fft
 !  use sll_module_poisson_2d_periodic_solver
   use sll_parallel_array_initializer_module
+  use sll_hermite_interpolation_2d_module
+  use sll_module_hermite_interpolator_2d
   
   implicit none
   
@@ -49,6 +51,12 @@ module sll_simulation_2d_analytic_field_curvilinear_module
   sll_int32, parameter :: SLL_LEAP_FROG = 2 
   sll_int32, parameter :: SLL_COMPUTE_FIELD_FROM_PHI = 0 
   sll_int32, parameter :: SLL_COMPUTE_FIELD_FROM_ANALYTIC = 1 
+  sll_int32, parameter :: SLL_COMPUTE_FIELD_FROM_PHI_FD2 = 2 
+  sll_int32, parameter :: SLL_COMPUTE_FIELD_FROM_PHI_FD3 = 3 
+  sll_int32, parameter :: SLL_COMPUTE_FIELD_FROM_PHI_FD4 = 4 
+  sll_int32, parameter :: SLL_COMPUTE_FIELD_FROM_PHI_FD5 = 5 
+  sll_int32, parameter :: SLL_COMPUTE_FIELD_FROM_PHI_FD6 = 6 
+  sll_int32, parameter :: SLL_COMPUTE_FIELD_FROM_PHI_FD = 7 
 
   type, extends(sll_simulation_base_class) :: &
     sll_simulation_2d_analytic_field_curvilinear
@@ -102,7 +110,10 @@ module sll_simulation_2d_analytic_field_curvilinear_module
    sll_int32  :: bc_interp2d_eta1
    sll_int32  :: bc_interp2d_eta2   
    sll_int32  :: bc_charac2d_eta1
-   sll_int32  :: bc_charac2d_eta2 
+   sll_int32  :: bc_charac2d_eta2
+   
+   sll_int32 :: fd_degree1 
+   sll_int32 :: fd_degree2 
   contains
     procedure, pass(sim) :: run => run_af2d_curvilinear
     procedure, pass(sim) :: init_from_file => init_fake
@@ -223,6 +234,10 @@ contains
     sll_int32  :: Nc_eta2_bis
     sll_real64 :: A1 !parameter for translation
     sll_real64 :: A2 !parameter for translation
+    sll_int32 :: hermite_degree1
+    sll_int32 :: hermite_degree2
+    sll_int32 :: fd_degree1
+    sll_int32 :: fd_degree2
 
     !here we do all the initialization
     !in future, we will use namelist file
@@ -271,7 +286,11 @@ contains
       time_period, &
       A1, &
       A2, &
-      compute_field_case
+      compute_field_case, &
+      hermite_degree1, &
+      hermite_degree2, &
+      fd_degree1, &
+      fd_degree2
    
       
      namelist /boundaries/ &
@@ -334,6 +353,10 @@ contains
     A1 = 1._f64
     A2 = 1._f64
     compute_field_case = "SLL_COMPUTE_FIELD_FROM_ANALYTIC"
+    hermite_degree1 = 4
+    hermite_degree2 = 4
+    fd_degree1 = 4
+    fd_degree2 = 4
     
     !boundaries conditions
     sim%bc_eta1_left = SLL_PERIODIC
@@ -372,6 +395,9 @@ contains
     sim%num_iterations = number_iterations
     sim%freq_diag = freq_diag 
     sim%freq_diag_time = freq_diag_time
+   
+    sim%fd_degree1 = fd_degree1
+    sim%fd_degree2 = fd_degree2
    
     select case(bc_eta1_left)
       case ("SLL_PERIODIC")
@@ -627,6 +653,22 @@ contains
           eta2_max, &
           sim%bc_interp2d_eta1, &
           sim%bc_interp2d_eta2)
+      case ("SLL_HERMITE")
+        print*,"#f interpolation SLL_HERMITE"
+        f_interp2d => new_hermite_interpolator_2d( &
+          Nc_eta1+1, &
+          Nc_eta2+1, &
+          eta1_min, &
+          eta1_max, &
+          eta2_min, &
+          eta2_max, &
+          hermite_degree1, &          
+          hermite_degree2, &          
+          SLL_HERMITE_C0, &
+          SLL_HERMITE_C0, &
+          SLL_HERMITE_PERIODIC, &
+          SLL_HERMITE_PERIODIC)
+
       case default
         print *,'#bad f_interp2d_case',f_interp2d_case
         print *,'#not implemented'
@@ -997,6 +1039,24 @@ contains
       case ("SLL_COMPUTE_FIELD_FROM_PHI")
         print*,"#compute_field_case = SLL_COMPUTE_FIELD_FROM_PHI " 
         sim%compute_field_case = SLL_COMPUTE_FIELD_FROM_PHI
+      case ("SLL_COMPUTE_FIELD_FROM_PHI_FD2")
+        print*,"#compute_field_case = SLL_COMPUTE_FIELD_FROM_PHI_FD2" 
+        sim%compute_field_case = SLL_COMPUTE_FIELD_FROM_PHI_FD2
+      case ("SLL_COMPUTE_FIELD_FROM_PHI_FD3")
+        print*,"#compute_field_case = SLL_COMPUTE_FIELD_FROM_PHI_FD3" 
+        sim%compute_field_case = SLL_COMPUTE_FIELD_FROM_PHI_FD3
+      case ("SLL_COMPUTE_FIELD_FROM_PHI_FD4")
+        print*,"#compute_field_case = SLL_COMPUTE_FIELD_FROM_PHI_FD4" 
+        sim%compute_field_case = SLL_COMPUTE_FIELD_FROM_PHI_FD4
+      case ("SLL_COMPUTE_FIELD_FROM_PHI_FD5")
+        print*,"#compute_field_case = SLL_COMPUTE_FIELD_FROM_PHI_FD5" 
+        sim%compute_field_case = SLL_COMPUTE_FIELD_FROM_PHI_FD5
+      case ("SLL_COMPUTE_FIELD_FROM_PHI_FD6")
+        print*,"#compute_field_case = SLL_COMPUTE_FIELD_FROM_PHI_FD6" 
+        sim%compute_field_case = SLL_COMPUTE_FIELD_FROM_PHI_FD6
+      case ("SLL_COMPUTE_FIELD_FROM_PHI_FD")
+        print*,"#compute_field_case = SLL_COMPUTE_FIELD_FROM_PHI_FD" 
+        sim%compute_field_case = SLL_COMPUTE_FIELD_FROM_PHI_FD
       case default
         SLL_ERROR("initialize_analytic_field_2d_curvilinear","bad compute_field_case")
         stop
@@ -1078,58 +1138,121 @@ contains
     SLL_ALLOCATE(A1_init(Nc_eta1+1,Nc_eta2+1),ierr)
     SLL_ALLOCATE(A2_init(Nc_eta1+1,Nc_eta2+1),ierr)
     SLL_ALLOCATE(div(Nc_eta1+1,Nc_eta2+1),ierr)
+
+    do i2=1,Nc_eta2+1
+      eta2=eta2_min+real(i2-1,f64)*delta_eta2
+      do i1=1,Nc_eta1+1
+        eta1=eta1_min+real(i1-1,f64)*delta_eta1
+        x1 = sim%transformation%x1(eta1,eta2)
+        x2 = sim%transformation%x2(eta1,eta2)
+        f(i1,i2) =  sim%init_func(x1,x2,sim%params) 
+        f_init(i1,i2)  =  sim%init_func(x1,x2,sim%params)
+        phi(i1,i2) = sim%phi_func(x1,x2,sim%A_func_params)
+        !phi(i1,i2)= sin(x1)*cos(x2) 
+        !-0.5_f64*(x1**2+x2**2) &
+        !  +sim%A_func_params(1)*x2-sim%A_func_params(2)*x1
+        !warning specific change for colella mesh
+        !phi(i1,i2) = phi(i1,i2)-sim%A_func_params(1)*eta2+sim%A_func_params(2)*eta1
+      end do
+    end do
     
+    
+    select case (sim%compute_field_case)
+      case (SLL_COMPUTE_FIELD_FROM_ANALYTIC)
+        do i2=1,Nc_eta2+1
+          eta2=eta2_min+real(i2-1,f64)*delta_eta2
+          do i1=1,Nc_eta1+1
+            eta1=eta1_min+real(i1-1,f64)*delta_eta1
+            x1 = sim%transformation%x1(eta1,eta2)
+            x2 = sim%transformation%x2(eta1,eta2)
+            jac_m  =  sim%transformation%jacobian_matrix(eta1,eta2)          
+            call compute_curvilinear_field_2d( &
+              sim%A1_func(x1,x2,sim%A_func_params), &
+              sim%A2_func(x1,x2,sim%A_func_params), &
+              A1_init(i1,i2), &
+              A2_init(i1,i2), &
+              jac_m, &
+              sim%transformation%jacobian(eta1,eta2))
+              !A1_init(i1,i2) =  &
+              !  sim%A1_func(x1,x2,sim%A_func_params) !/sim%transformation%jacobian(eta1,eta2)
+              !A2_init(i1,i2) =  &
+              !  sim%A2_func(x1,x2,sim%A_func_params) !/sim%transformation%jacobian(eta1,eta2)
+          end do
+        end do
+        
+      case (SLL_COMPUTE_FIELD_FROM_PHI)
+        call compute_field_from_phi_2d_curvilinear( &
+          phi, &
+          sim%mesh_2d, &
+          sim%transformation, &
+          A1_init, &
+          A2_init, &
+          sim%phi_interp2d)
+      case (SLL_COMPUTE_FIELD_FROM_PHI_FD2)
+        call compute_field_from_phi_2d_fd2_curvilinear( &
+          phi, &
+          sim%mesh_2d, &
+          sim%transformation, &
+          A1_init, &
+          A2_init, &
+          sim%phi_interp2d)      
+      case (SLL_COMPUTE_FIELD_FROM_PHI_FD3)
+        call compute_field_from_phi_2d_fd3_curvilinear( &
+          phi, &
+          sim%mesh_2d, &
+          sim%transformation, &
+          A1_init, &
+          A2_init, &
+          sim%phi_interp2d)      
+      case (SLL_COMPUTE_FIELD_FROM_PHI_FD4)
+        call compute_field_from_phi_2d_fd4_curvilinear( &
+          phi, &
+          sim%mesh_2d, &
+          sim%transformation, &
+          A1_init, &
+          A2_init, &
+          sim%phi_interp2d)      
+      case (SLL_COMPUTE_FIELD_FROM_PHI_FD5)
+        call compute_field_from_phi_2d_fd5_curvilinear( &
+          phi, &
+          sim%mesh_2d, &
+          sim%transformation, &
+          A1_init, &
+          A2_init, &
+          sim%phi_interp2d)      
+      case (SLL_COMPUTE_FIELD_FROM_PHI_FD6)
+        call compute_field_from_phi_2d_fd6_curvilinear( &
+          phi, &
+          sim%mesh_2d, &
+          sim%transformation, &
+          A1_init, &
+          A2_init, &
+          sim%phi_interp2d)      
+      case (SLL_COMPUTE_FIELD_FROM_PHI_FD)
+        call compute_field_from_phi_2d_fd_curvilinear( &
+          phi, &
+          sim%mesh_2d, &
+          sim%transformation, &
+          A1_init, &
+          A2_init, &
+          sim%phi_interp2d, &
+          sim%fd_degree1, &
+          sim%fd_degree2)      
+      case default
+        SLL_ERROR("run_af2d_curvilinear","bad value of sim%compute_field_case")
+    end select    
+
+!      do i2=1,Nc_eta2+1
+!        eta2=eta2_min+real(i2-1,f64)*delta_eta2
+!        do i1=1,Nc_eta1+1
+!          eta1=eta1_min+real(i1-1,f64)*delta_eta1
+!          A1_init(i1,i2) =  A1_init(i1,i2)+sim%A_func_params(1)/sim%transformation%jacobian(eta1,eta2)
+!          A2_init(i1,i2) =  A2_init(i1,i2)+sim%A_func_params(2)/sim%transformation%jacobian(eta1,eta2)
+!        enddo
+!      enddo    
+
 
     
-    !initialisation of distribution function    
-     do i2=1,Nc_eta2+1
-        eta2=eta2_min+real(i2-1,f64)*delta_eta2
-        do i1=1,Nc_eta1+1
-          eta1=eta1_min+real(i1-1,f64)*delta_eta1
-          x1 = sim%transformation%x1(eta1,eta2)
-          x2 = sim%transformation%x2(eta1,eta2)
-          f(i1,i2) =  sim%init_func(x1,x2,sim%params) 
-          f_init(i1,i2)  =  sim%init_func(x1,x2,sim%params)
-          phi(i1,i2) = sim%phi_func(x1,x2,sim%A_func_params)
-          phi(i1,i2)= sin(x1)*cos(x2) 
-          !-0.5_f64*(x1**2+x2**2) &
-          !  +sim%A_func_params(1)*x2-sim%A_func_params(2)*x1
-          !warning specific change for colella mesh
-          phi(i1,i2) = phi(i1,i2)-sim%A_func_params(1)*eta2+sim%A_func_params(2)*eta1
-          !phi(i1,i2) = exp(1._f64/(cos(x1)-1.001_f64))*exp(1._f64/(cos(x2)-1.001_f64)) &
-          !  -sim%A_func_params(1)*eta2+sim%A_func_params(2)*eta1
-          jac_m  =  sim%transformation%jacobian_matrix(eta1,eta2)          
-          call compute_curvilinear_field_2d( &
-            sim%A1_func(x1,x2,sim%A_func_params), &
-            sim%A2_func(x1,x2,sim%A_func_params), &
-            A1_init(i1,i2), &
-            A2_init(i1,i2), &
-            jac_m, &
-            sim%transformation%jacobian(eta1,eta2))
-          !A1_init(i1,i2) =  &
-          !  sim%A1_func(x1,x2,sim%A_func_params) !/sim%transformation%jacobian(eta1,eta2)
-          !A2_init(i1,i2) =  &
-          !  sim%A2_func(x1,x2,sim%A_func_params) !/sim%transformation%jacobian(eta1,eta2)
-        end do
-     end do
-    
-    if(sim%compute_field_case==SLL_COMPUTE_FIELD_FROM_PHI) then   
-      call compute_field_from_phi_2d_curvilinear( &
-        phi, &
-        sim%mesh_2d, &
-        sim%transformation, &
-        A1_init, &
-        A2_init, &
-        sim%phi_interp2d)
-      do i2=1,Nc_eta2+1
-        eta2=eta2_min+real(i2-1,f64)*delta_eta2
-        do i1=1,Nc_eta1+1
-          eta1=eta1_min+real(i1-1,f64)*delta_eta1
-          A1_init(i1,i2) =  A1_init(i1,i2)+sim%A_func_params(1)/sim%transformation%jacobian(eta1,eta2)
-          A2_init(i1,i2) =  A2_init(i1,i2)+sim%A_func_params(2)/sim%transformation%jacobian(eta1,eta2)
-        enddo
-      enddo    
-    endif           
 
     call sll_ascii_file_create('thdiag.dat', thdiag_id, ierr)
     
@@ -1464,13 +1587,6 @@ contains
       eta2=eta2_min+real(i2-1,f64)*delta_eta2
       do i1=1,Nc_eta1+1
         eta1=eta1_min+real(i1-1,f64)*delta_eta1
-        A1(i1,i2) = phi(i1,modulo(i2+1-1+Nc_eta2,Nc_eta2)+1)-phi(i1,modulo(i2-1-1+Nc_eta2,Nc_eta2)+1)
-        A1(i1,i2) = A1(i1,i2)/(2._f64*delta_eta2)
-        A1(i1,i2) = A1(i1,i2)/transformation%jacobian(eta1,eta2)
-        A2(i1,i2) = phi(modulo(i1+1-1+Nc_eta1,Nc_eta1)+1,i2)-phi(modulo(i1-1-1+Nc_eta1,Nc_eta1)+1,i2)
-        A2(i1,i2) = A2(i1,i2)/(2._f64*delta_eta1)
-        A2(i1,i2) = -A2(i1,i2)/transformation%jacobian(eta1,eta2)
-        
         A1(i1,i2)=interp2d%interpolate_derivative_eta2(eta1,eta2)/transformation%jacobian(eta1,eta2)
         A2(i1,i2)=-interp2d%interpolate_derivative_eta1(eta1,eta2)/transformation%jacobian(eta1,eta2)
       end do
@@ -1478,6 +1594,348 @@ contains
    
     
   end subroutine compute_field_from_phi_2d_curvilinear
+
+
+  subroutine compute_field_from_phi_2d_fd2_curvilinear(phi,mesh_2d,transformation,A1,A2,interp2d)
+    sll_real64, dimension(:,:), intent(in) :: phi
+    sll_real64, dimension(:,:), intent(out) :: A1
+    sll_real64, dimension(:,:), intent(out) :: A2
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
+    class(sll_coordinate_transformation_2d_base), pointer :: transformation
+    class(sll_interpolator_2d_base), pointer   :: interp2d
+    sll_int32 :: Nc_eta1
+    sll_int32 :: Nc_eta2
+    sll_real64 :: eta1_min
+    sll_real64 :: eta2_min
+    sll_real64 :: delta_eta1
+    sll_real64 :: delta_eta2
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_int32 :: i1
+    sll_int32 :: i2
+    
+    Nc_eta1 = mesh_2d%num_cells1
+    Nc_eta2 = mesh_2d%num_cells2
+    eta1_min = mesh_2d%eta1_min
+    eta2_min = mesh_2d%eta2_min
+    delta_eta1 = mesh_2d%delta_eta1
+    delta_eta2 = mesh_2d%delta_eta2
+
+    call interp2d%compute_interpolants(phi)
+    A1 = 0._f64
+    A2 = 0._f64
+    do i2=1,Nc_eta2+1
+      eta2=eta2_min+real(i2-1,f64)*delta_eta2
+      do i1=1,Nc_eta1+1
+        eta1=eta1_min+real(i1-1,f64)*delta_eta1
+        A1(i1,i2) = phi(i1,modulo(i2+1-1+Nc_eta2,Nc_eta2)+1)-phi(i1,modulo(i2-1-1+Nc_eta2,Nc_eta2)+1)
+        A1(i1,i2) = A1(i1,i2)/(2._f64*delta_eta2)
+        A1(i1,i2) = A1(i1,i2)/transformation%jacobian(eta1,eta2)
+        A2(i1,i2) = phi(modulo(i1+1-1+Nc_eta1,Nc_eta1)+1,i2)-phi(modulo(i1-1-1+Nc_eta1,Nc_eta1)+1,i2)
+        A2(i1,i2) = A2(i1,i2)/(2._f64*delta_eta1)
+        A2(i1,i2) = -A2(i1,i2)/transformation%jacobian(eta1,eta2)
+        
+      end do
+    end do
+   
+    
+  end subroutine compute_field_from_phi_2d_fd2_curvilinear
+
+
+  subroutine compute_field_from_phi_2d_fd4_curvilinear(phi,mesh_2d,transformation,A1,A2,interp2d)
+    sll_real64, dimension(:,:), intent(in) :: phi
+    sll_real64, dimension(:,:), intent(out) :: A1
+    sll_real64, dimension(:,:), intent(out) :: A2
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
+    class(sll_coordinate_transformation_2d_base), pointer :: transformation
+    class(sll_interpolator_2d_base), pointer   :: interp2d
+    sll_int32 :: Nc_eta1
+    sll_int32 :: Nc_eta2
+    sll_real64 :: eta1_min
+    sll_real64 :: eta2_min
+    sll_real64 :: delta_eta1
+    sll_real64 :: delta_eta2
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_int32 :: i1
+    sll_int32 :: i2
+    
+    Nc_eta1 = mesh_2d%num_cells1
+    Nc_eta2 = mesh_2d%num_cells2
+    eta1_min = mesh_2d%eta1_min
+    eta2_min = mesh_2d%eta2_min
+    delta_eta1 = mesh_2d%delta_eta1
+    delta_eta2 = mesh_2d%delta_eta2
+
+    call interp2d%compute_interpolants(phi)
+    A1 = 0._f64
+    A2 = 0._f64
+    do i2=1,Nc_eta2+1
+      eta2=eta2_min+real(i2-1,f64)*delta_eta2
+      do i1=1,Nc_eta1+1
+        eta1=eta1_min+real(i1-1,f64)*delta_eta1
+        A1(i1,i2) = (2._f64/3._f64)*(phi(i1,modulo(i2+1-1+Nc_eta2,Nc_eta2)+1) &
+          -phi(i1,modulo(i2-1-1+Nc_eta2,Nc_eta2)+1))
+        A1(i1,i2) = A1(i1,i2)-(1._f64/12._f64)*(phi(i1,modulo(i2+2-1+Nc_eta2,Nc_eta2)+1) &
+          -phi(i1,modulo(i2-2-1+Nc_eta2,Nc_eta2)+1))
+        A1(i1,i2) = A1(i1,i2)/(delta_eta2)
+        A1(i1,i2) = A1(i1,i2)/transformation%jacobian(eta1,eta2)
+        A2(i1,i2) = (2._f64/3._f64)*(phi(modulo(i1+1-1+Nc_eta1,Nc_eta1)+1,i2) &
+          -phi(modulo(i1-1-1+Nc_eta1,Nc_eta1)+1,i2))
+        A2(i1,i2) = A2(i1,i2)-(1._f64/12._f64)*(phi(modulo(i1+2-1+Nc_eta1,Nc_eta1)+1,i2) &
+          -phi(modulo(i1-2-1+Nc_eta1,Nc_eta1)+1,i2))
+        A2(i1,i2) = A2(i1,i2)/(delta_eta1)
+        A2(i1,i2) = -A2(i1,i2)/transformation%jacobian(eta1,eta2)
+        
+      end do
+    end do
+   
+    
+  end subroutine compute_field_from_phi_2d_fd4_curvilinear
+
+  subroutine compute_field_from_phi_2d_fd6_curvilinear(phi,mesh_2d,transformation,A1,A2,interp2d)
+    sll_real64, dimension(:,:), intent(in) :: phi
+    sll_real64, dimension(:,:), intent(out) :: A1
+    sll_real64, dimension(:,:), intent(out) :: A2
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
+    class(sll_coordinate_transformation_2d_base), pointer :: transformation
+    class(sll_interpolator_2d_base), pointer   :: interp2d
+    sll_int32 :: Nc_eta1
+    sll_int32 :: Nc_eta2
+    sll_real64 :: eta1_min
+    sll_real64 :: eta2_min
+    sll_real64 :: delta_eta1
+    sll_real64 :: delta_eta2
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_int32 :: i1
+    sll_int32 :: i2
+    
+    Nc_eta1 = mesh_2d%num_cells1
+    Nc_eta2 = mesh_2d%num_cells2
+    eta1_min = mesh_2d%eta1_min
+    eta2_min = mesh_2d%eta2_min
+    delta_eta1 = mesh_2d%delta_eta1
+    delta_eta2 = mesh_2d%delta_eta2
+
+    call interp2d%compute_interpolants(phi)
+    A1 = 0._f64
+    A2 = 0._f64
+    do i2=1,Nc_eta2+1
+      eta2=eta2_min+real(i2-1,f64)*delta_eta2
+      do i1=1,Nc_eta1+1
+        eta1=eta1_min+real(i1-1,f64)*delta_eta1
+        A1(i1,i2) = (3._f64/4._f64)*(phi(i1,modulo(i2+1-1+Nc_eta2,Nc_eta2)+1) &
+          -phi(i1,modulo(i2-1-1+Nc_eta2,Nc_eta2)+1))
+        A1(i1,i2) = A1(i1,i2)-(3._f64/20._f64)*(phi(i1,modulo(i2+2-1+Nc_eta2,Nc_eta2)+1) &
+          -phi(i1,modulo(i2-2-1+Nc_eta2,Nc_eta2)+1))
+        A1(i1,i2) = A1(i1,i2)+(1._f64/60._f64)*(phi(i1,modulo(i2+3-1+Nc_eta2,Nc_eta2)+1) &
+          -phi(i1,modulo(i2-3-1+Nc_eta2,Nc_eta2)+1))
+        A1(i1,i2) = A1(i1,i2)/(delta_eta2)
+        A1(i1,i2) = A1(i1,i2)/transformation%jacobian(eta1,eta2)
+        A2(i1,i2) = (3._f64/4._f64)*(phi(modulo(i1+1-1+Nc_eta1,Nc_eta1)+1,i2) &
+          -phi(modulo(i1-1-1+Nc_eta1,Nc_eta1)+1,i2))
+        A2(i1,i2) = A2(i1,i2)-(3._f64/20._f64)*(phi(modulo(i1+2-1+Nc_eta1,Nc_eta1)+1,i2) &
+          -phi(modulo(i1-2-1+Nc_eta1,Nc_eta1)+1,i2))
+        A2(i1,i2) = A2(i1,i2)+(1._f64/60._f64)*(phi(modulo(i1+3-1+Nc_eta1,Nc_eta1)+1,i2) &
+          -phi(modulo(i1-3-1+Nc_eta1,Nc_eta1)+1,i2))
+        A2(i1,i2) = A2(i1,i2)/(delta_eta1)
+        A2(i1,i2) = -A2(i1,i2)/transformation%jacobian(eta1,eta2)
+        
+      end do
+    end do
+   
+    
+  end subroutine compute_field_from_phi_2d_fd6_curvilinear
+
+
+
+
+
+  subroutine compute_field_from_phi_2d_fd3_curvilinear(phi,mesh_2d,transformation,A1,A2,interp2d)
+    sll_real64, dimension(:,:), intent(in) :: phi
+    sll_real64, dimension(:,:), intent(out) :: A1
+    sll_real64, dimension(:,:), intent(out) :: A2
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
+    class(sll_coordinate_transformation_2d_base), pointer :: transformation
+    class(sll_interpolator_2d_base), pointer   :: interp2d
+    sll_int32 :: Nc_eta1
+    sll_int32 :: Nc_eta2
+    sll_real64 :: eta1_min
+    sll_real64 :: eta2_min
+    sll_real64 :: delta_eta1
+    sll_real64 :: delta_eta2
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_int32 :: i1
+    sll_int32 :: i2
+    
+    Nc_eta1 = mesh_2d%num_cells1
+    Nc_eta2 = mesh_2d%num_cells2
+    eta1_min = mesh_2d%eta1_min
+    eta2_min = mesh_2d%eta2_min
+    delta_eta1 = mesh_2d%delta_eta1
+    delta_eta2 = mesh_2d%delta_eta2
+
+    call interp2d%compute_interpolants(phi)
+    A1 = 0._f64
+    A2 = 0._f64
+    do i2=1,Nc_eta2+1
+      eta2=eta2_min+real(i2-1,f64)*delta_eta2
+      do i1=1,Nc_eta1+1
+        eta1=eta1_min+real(i1-1,f64)*delta_eta1
+        A1(i1,i2) = (-1._f64/3._f64)*phi(i1,modulo(i2-1-1+Nc_eta2,Nc_eta2)+1)
+        A1(i1,i2) = A1(i1,i2)+(-1._f64/2._f64)*phi(i1,modulo(i2+0-1+Nc_eta2,Nc_eta2)+1)
+        A1(i1,i2) = A1(i1,i2)+(1._f64)*phi(i1,modulo(i2+1-1+Nc_eta2,Nc_eta2)+1)
+        A1(i1,i2) = A1(i1,i2)+(-1._f64/6._f64)*phi(i1,modulo(i2+2-1+Nc_eta2,Nc_eta2)+1)
+        A1(i1,i2) = A1(i1,i2)/(delta_eta2)
+        A1(i1,i2) = A1(i1,i2)/transformation%jacobian(eta1,eta2)
+        A2(i1,i2) = (-1._f64/3._f64)*phi(modulo(i1-1-1+Nc_eta1,Nc_eta1)+1,i2)
+        A2(i1,i2) = A2(i1,i2)+(-1._f64/2._f64)*phi(modulo(i1+0-1+Nc_eta1,Nc_eta1)+1,i2)
+        A2(i1,i2) = A2(i1,i2)+(1._f64)*phi(modulo(i1+1-1+Nc_eta1,Nc_eta1)+1,i2)
+        A2(i1,i2) = A2(i1,i2)+(-1._f64/6._f64)*phi(modulo(i1+2-1+Nc_eta1,Nc_eta1)+1,i2)
+
+        A2(i1,i2) = A2(i1,i2)/(delta_eta1)
+        A2(i1,i2) = -A2(i1,i2)/transformation%jacobian(eta1,eta2)
+        
+      end do
+    end do
+   
+    
+  end subroutine compute_field_from_phi_2d_fd3_curvilinear
+
+
+subroutine compute_field_from_phi_2d_fd5_curvilinear(phi,mesh_2d,transformation,A1,A2,interp2d)
+    sll_real64, dimension(:,:), intent(in) :: phi
+    sll_real64, dimension(:,:), intent(out) :: A1
+    sll_real64, dimension(:,:), intent(out) :: A2
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
+    class(sll_coordinate_transformation_2d_base), pointer :: transformation
+    class(sll_interpolator_2d_base), pointer   :: interp2d
+    sll_int32 :: Nc_eta1
+    sll_int32 :: Nc_eta2
+    sll_real64 :: eta1_min
+    sll_real64 :: eta2_min
+    sll_real64 :: delta_eta1
+    sll_real64 :: delta_eta2
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_int32 :: i1
+    sll_int32 :: i2
+    
+    Nc_eta1 = mesh_2d%num_cells1
+    Nc_eta2 = mesh_2d%num_cells2
+    eta1_min = mesh_2d%eta1_min
+    eta2_min = mesh_2d%eta2_min
+    delta_eta1 = mesh_2d%delta_eta1
+    delta_eta2 = mesh_2d%delta_eta2
+
+    call interp2d%compute_interpolants(phi)
+    A1 = 0._f64
+    A2 = 0._f64
+    do i2=1,Nc_eta2+1
+      eta2=eta2_min+real(i2-1,f64)*delta_eta2
+      do i1=1,Nc_eta1+1
+        eta1=eta1_min+real(i1-1,f64)*delta_eta1
+        A1(i1,i2) = (1._f64/20._f64)*phi(i1,modulo(i2-2-1+Nc_eta2,Nc_eta2)+1)
+        A1(i1,i2) = A1(i1,i2)+(-1._f64/2._f64)*phi(i1,modulo(i2-1-1+Nc_eta2,Nc_eta2)+1)
+        A1(i1,i2) = A1(i1,i2)+(-1._f64/3._f64)*phi(i1,modulo(i2+0-1+Nc_eta2,Nc_eta2)+1)
+        A1(i1,i2) = A1(i1,i2)+(1._f64)*phi(i1,modulo(i2+1-1+Nc_eta2,Nc_eta2)+1)
+        A1(i1,i2) = A1(i1,i2)+(-1._f64/4._f64)*phi(i1,modulo(i2+2-1+Nc_eta2,Nc_eta2)+1)
+        A1(i1,i2) = A1(i1,i2)+(1._f64/30._f64)*phi(i1,modulo(i2+3-1+Nc_eta2,Nc_eta2)+1)
+        A1(i1,i2) = A1(i1,i2)/(delta_eta2)
+        A1(i1,i2) = A1(i1,i2)/transformation%jacobian(eta1,eta2)
+        A2(i1,i2) = (1._f64/20._f64)*phi(modulo(i1-2-1+Nc_eta1,Nc_eta1)+1,i2)
+        A2(i1,i2) = A2(i1,i2)+(-1._f64/2._f64)*phi(modulo(i1-1-1+Nc_eta1,Nc_eta1)+1,i2)
+        A2(i1,i2) = A2(i1,i2)+(-1._f64/3._f64)*phi(modulo(i1+0-1+Nc_eta1,Nc_eta1)+1,i2)
+        A2(i1,i2) = A2(i1,i2)+(1._f64)*phi(modulo(i1+1-1+Nc_eta1,Nc_eta1)+1,i2)
+        A2(i1,i2) = A2(i1,i2)+(-1._f64/4._f64)*phi(modulo(i1+2-1+Nc_eta1,Nc_eta1)+1,i2)
+        A2(i1,i2) = A2(i1,i2)+(1._f64/30._f64)*phi(modulo(i1+3-1+Nc_eta1,Nc_eta1)+1,i2)
+
+        A2(i1,i2) = A2(i1,i2)/(delta_eta1)
+        A2(i1,i2) = -A2(i1,i2)/transformation%jacobian(eta1,eta2)
+        
+      end do
+    end do
+   
+    
+  end subroutine compute_field_from_phi_2d_fd5_curvilinear
+
+subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A1,A2,interp2d,d1,d2)
+    sll_real64, dimension(:,:), intent(in) :: phi
+    sll_real64, dimension(:,:), intent(out) :: A1
+    sll_real64, dimension(:,:), intent(out) :: A2
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
+    class(sll_coordinate_transformation_2d_base), pointer :: transformation
+    class(sll_interpolator_2d_base), pointer   :: interp2d
+    sll_int32, intent(in) :: d1
+    sll_int32, intent(in) :: d2
+    sll_int32 :: Nc_eta1
+    sll_int32 :: Nc_eta2
+    sll_real64 :: eta1_min
+    sll_real64 :: eta2_min
+    sll_real64 :: delta_eta1
+    sll_real64 :: delta_eta2
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_int32 :: i1
+    sll_int32 :: i2
+    sll_real64, dimension(:), allocatable :: w1
+    sll_real64, dimension(:), allocatable :: w2
+    sll_int32 :: ierr
+    sll_int32 :: r1
+    sll_int32 :: s1
+    sll_int32 :: r2
+    sll_int32 :: s2
+    sll_int32 :: ii
+    
+    Nc_eta1 = mesh_2d%num_cells1
+    Nc_eta2 = mesh_2d%num_cells2
+    eta1_min = mesh_2d%eta1_min
+    eta2_min = mesh_2d%eta2_min
+    delta_eta1 = mesh_2d%delta_eta1
+    delta_eta2 = mesh_2d%delta_eta2
+    
+    r1 = -d1/2
+    r2 = -d2/2
+    s1 = (d1+1)/2
+    s2 = (d2+1)/2
+    SLL_ALLOCATE(w1(r1:s1),ierr)
+    SLL_ALLOCATE(w2(r2:s2),ierr)
+     
+    call compute_w_hermite(w1,r1,s1)
+    call compute_w_hermite(w2,r2,s2)
+
+    A1 = 0._f64
+    A2 = 0._f64
+    do i2=1,Nc_eta2+1
+      eta2=eta2_min+real(i2-1,f64)*delta_eta2
+      do i1=1,Nc_eta1+1
+        eta1=eta1_min+real(i1-1,f64)*delta_eta1
+        A1(i1,i2) = 0._f64
+        do ii=r1,s1
+          A1(i1,i2) = A1(i1,i2)+w1(ii)*phi(i1,modulo(i2+ii-1+Nc_eta2,Nc_eta2)+1)
+        enddo
+        A1(i1,i2) = A1(i1,i2)/(delta_eta2)
+        A1(i1,i2) = A1(i1,i2)/transformation%jacobian(eta1,eta2)
+        A2(i1,i2) = 0._f64
+        do ii=r2,s2
+          A2(i1,i2) = A2(i1,i2)+w2(ii)*phi(modulo(i1+ii-1+Nc_eta1,Nc_eta1)+1,i2)
+        enddo
+        A2(i1,i2) = A2(i1,i2)/(delta_eta1)
+        A2(i1,i2) = -A2(i1,i2)/transformation%jacobian(eta1,eta2)
+        
+      end do
+    end do
+   
+    
+  end subroutine compute_field_from_phi_2d_fd_curvilinear
+
+
+
+
+
+
 
 
   subroutine compute_divergence_2d_curvilinear(div,mesh_2d,transformation,A1,A2,interp2d)
