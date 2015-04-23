@@ -7,7 +7,7 @@ LINK_DIRECTORIES(${BINARY_DIR}/lib)
 
 SET(JOREK_MODEL   poisson_2d)
 
-ADD_LIBRARY(sll_jorek sll_jorek.F90)
+ADD_LIBRARY(sll_jorek jorek_interface.F90 sll_jorek.F90)
 ADD_DEPENDENCIES(sll_jorek jorek)
 
   
