@@ -21,32 +21,20 @@ use fem_def
 implicit none
 
 ! ... quad mesh
-type(def_fem_quad_2d),    target  :: fem_model 
-type(def_space_quad_2d),  target  :: space_trial
-class(def_space_quad_2d), pointer :: ptr_space_trial
-type(def_space_quad_2d),  target  :: space_test
-class(def_space_quad_2d), pointer :: ptr_space_test
-! ...
+type(def_fem_quad_2d),    target        :: fem_model 
+type(def_space_quad_2d),  target        :: space_trial
+class(def_space_quad_2d), pointer       :: ptr_space_trial
+type(def_space_quad_2d),  target        :: space_test
+class(def_space_quad_2d), pointer       :: ptr_space_test
+type(def_mesh_2d),        target        :: fem_mesh
+type(def_0_form_2d),      target        :: field_u
+class(def_field_2d),      pointer       :: ptr_field
+type(def_matrix_2d) ,     target        :: matrix_stiffnes
+class(def_matrix_2d),     pointer       :: ptr_system
 
-!  ! ... triangle mesh
-!  type(def_fem_triangle_2d)  , target :: fem_model 
-!
-!  type(def_space_triangle_2d), target :: space_trial
-!  class(def_space_triangle_2d), pointer :: ptr_space_trial
-!
-!  type(def_space_triangle_2d), target :: space_test
-!  class(def_space_triangle_2d), pointer :: ptr_space_test
-!  ! ...
-
-type(def_mesh_2d),     target  :: fem_mesh
-type(def_0_form_2d),   target  :: field_u
-class(def_field_2d),   pointer :: ptr_field
-type(def_matrix_2d) ,  target  :: matrix_stiffnes
-class(def_matrix_2d),  pointer :: ptr_system
-
-type(def_linear_solver_2d) :: solver
-integer                    :: n_var_sys 
-integer                    :: n_var_unknown
+type(def_linear_solver_2d)              :: solver
+integer                                 :: n_var_sys 
+integer                                 :: n_var_unknown
 
 real(kind=rk), dimension(:,:), pointer  :: diagnostics
 integer(kind=jorek_ints_kind)           :: nstep_max 
@@ -59,10 +47,16 @@ real(kind=jorek_coef_kind)              :: a
 real(kind=jorek_coef_kind)              :: acenter
 real(kind=jorek_coef_kind)              :: r0
 real(kind=jorek_coef_kind)              :: z0
+integer, parameter                      :: one=1
 
 end module jorek_model
 
 module sll_jorek
+
+#include "sll_working_precision.h"
+#include "sll_utilities.h"
+#include "sll_file_io.h"
+#include "sll_memory.h"
 
 use typedef
 use jorek_model
@@ -78,6 +72,15 @@ implicit none
 
 type, public :: sll_jorek_solver
 
+  sll_int32                           :: n_quads
+  sll_int32                           :: n_nodes
+  sll_real64, dimension(:,:), pointer :: coord
+  sll_int32,  dimension(:,:), pointer :: nodes
+  sll_real64, dimension(:),   pointer :: phi
+  sll_real64, dimension(:),   pointer :: rho
+  sll_real64, dimension(:),   pointer :: e_x
+  sll_real64, dimension(:),   pointer :: e_y
+
 end type sll_jorek_solver
 
 interface sll_create
@@ -86,8 +89,13 @@ end interface sll_create
 interface sll_solve
 module procedure solve_jorek
 end interface sll_solve
+interface sll_delete
+module procedure delete_jorek
+end interface sll_delete
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 subroutine initialize_jorek(jorek)
 
@@ -110,35 +118,14 @@ character(len=1024) :: dirname
 integer             :: myrank
 character(len=1024) :: argname
 
+sll_int32                  :: iq
+type(def_element), pointer :: elmt => null()
 
 argname = "--parameters"
 call jorek_get_arguments(argname, filename_parameter, ierr)
-myrank = 0
-#ifdef MPI_ENABLED
-call mpi_comm_rank ( mpi_comm_world, myrank, ierr)
-#endif
 print *, "Parameters text file ", trim(filename_parameter)
 call initialize_jorek_parameters(filename_parameter)
 
-#ifdef DEBUG_TRACE   
-! ... only used in 3d case
-call jorek_param_getint(int_trace_detail_id,tracelogdetail,ierr)
-call jorek_param_getint(int_trace_output_id,tracelogoutput,ierr)
-ll_stdoutput = (tracelogoutput==1)
-call opentracelog(al_stdoutput = ll_stdoutput, ai_dtllevel = tracelogdetail)
-
-call printlog("=========================================", ai_dtllevel = 0)
-#ifdef PETSC_ENABLED
-call printlog("== petsc enabled                       ==", ai_dtllevel = 0)
-#else
-call printlog("== petsc disabled                      ==", ai_dtllevel = 0)
-#endif
-#ifdef DEBUG_ELEMENT
-call printlog("== debug element assembly mode         ==", ai_dtllevel = 0)
-#endif 
-call printlog("=========================================", ai_dtllevel = 0)
-#endif
- 
 call getarg(0, exec)
 rootname = "output"
 
@@ -148,6 +135,10 @@ print *, "runname : ", trim(exec)
 
 ! ... initialize spm, mpi 
 call spm_initialize(ierror)
+myrank = 0
+#ifdef MPI_ENABLED
+call mpi_comm_rank ( mpi_comm_world, myrank, ierr)
+#endif
 
 ! ... define model parameters 
 ! ..................................................
@@ -168,18 +159,14 @@ call jorek_param_getreal(real_amin_id,a,ierr)
 call jorek_param_getreal(real_acenter_id,acenter,ierr)
 call jorek_param_getint(int_nstep_max_id,nstep_max,ierr)
 
-! ...
 call space_create(space_trial, fem_mesh)
 ptr_space_trial => space_trial
 call space_create(space_test, fem_mesh)
 ptr_space_test => space_test
-! ...
 
-! ...
 argname = "--geometry"
 call jorek_get_arguments(argname, dirname, ierr)
 call create_mesh(fem_mesh, dirname)
-! ...
 
 call model_create(fem_model,       &
                   fem_mesh,        &
@@ -203,6 +190,24 @@ call model_initialize(fem_model)
 ! output file
 open(unit=li_file_stream_norm, file='output_var_diag.dat', status='unknown')
 open(unit=li_file_stream_visu, file='output_var_visu.dat', status='unknown')
+
+jorek%n_nodes = fem_mesh%oi_n_nodes
+jorek%n_quads = fem_mesh%oi_n_elmts
+
+SLL_ALLOCATE(jorek%coord(2,jorek%n_nodes),ierr)
+SLL_ALLOCATE(jorek%nodes(4,jorek%n_quads),ierr)
+
+SLL_ALLOCATE(jorek%rho(jorek%n_nodes),ierr)
+SLL_ALLOCATE(jorek%phi(jorek%n_nodes),ierr)
+SLL_ALLOCATE(jorek%e_x(jorek%n_nodes),ierr)
+SLL_ALLOCATE(jorek%e_y(jorek%n_nodes),ierr)
+
+jorek%coord = fem_mesh%thenodes%coor2d(1:2, one, :)
+do iq = 1, jorek%n_quads
+  elmt => fem_mesh%opo_elements(iq)
+  jorek%nodes(:,iq) = elmt%opi_vertices(1:elmt%oi_n_vtex)
+end do
+  
 
 end subroutine initialize_jorek
 
@@ -261,10 +266,8 @@ print *, "field value at ", x, " is ", v
 call get_nr_matrix(ptr_system, nrows)
 
 write(msg,*) myrank
-stamp_default = "-proc_" // trim ( adjustl ( msg ) )
-stamp_default = trim ( adjustl ( adjustr ( stamp_default ) ) )
-
-call getarg(0, filename)
+stamp_default = "-proc_" // trim(adjustl(msg))
+stamp_default = trim(adjustl(adjustr(stamp_default)))
 
 allocate(y(nrows))
 y=0.d0 
@@ -280,7 +283,7 @@ call model_diagnostics(fem_model,             &
                        plot_diagnostics,      &
                        ptr_system)
 
-call model_save(fem_model, analytical_model, filename, 0)
+call model_save(fem_model, analytical_model, "jorek_plot", 0)
 
 open(unit=12,file=trim("rhs"//adjustl(adjustr(stamp_default)))//".txt"&
         & , action="write", status="replace")
@@ -300,59 +303,30 @@ do i=1, fem_model%ptr_mesh%oi_n_nodes
    write(14,*) fem_model%opr_global_var(:,i) 
 end do
 close(14)
-! ...
-!DO ipol = 1, Mesh2D%oi_n_nodes
-!       X2D = Mesh2D%TheNodes%Coor2D(1:N_DIM, i_D0 , ipol)
-!       isG = IsD(ipol)
-!       ri  = X2D(1)
-!       zi  = X2D(2)
-!       lpr_x (1) = ri ; lpr_x(2) = zi
-!       DO i_var = 1, ao_GBox2D % oi_n_var_unknown
-!          lpi_info(1)=label
-!          CALL func_analytical(lpr_x, lpr_v,lpr_info,lpi_info,ao_GBox2D % oi_N_var_unknown,N_dim)
-!          diff_variable(i_var) = Var(i_var, IsG) - lpr_v(i_var,1)
-!          variable(i_var)=Var(i_var, IsG)
-!       END DO   
-!       WRITE(fileID, *) ri, zi, variable(1:ao_GBox2D % oi_n_var_unknown), diff_variable(1:ao_GBox2D % oi_n_var_unknown) 
-!    END DO
-!  
-!       
-!       ! ... Connectivities
-!    DO ie_pol = 1, Mesh2D% oi_n_Elmts
-!       lp_elmt => Mesh2D% opo_elements (ie_pol)
-!       is_el(1:lp_elmt % oi_n_vtex) = lp_elmt % opi_vertices(1:lp_elmt % oi_n_vtex)    
-!       WRITE(fileID, *) is_el(1:lp_elmt % oi_n_vtex)
-!    END DO
-
-
-
-#ifdef DEBUG_TRACE
-call concatmsg(" min of var ", ai_dtllevel = 0)
-call concatmsg(minval(fem_model%opr_global_var(1,:)), ai_dtllevel = 0)
-call concatmsg(" max of var ", ai_dtllevel = 0)
-call concatmsg(maxval(fem_model%opr_global_var(1,:)), ai_dtllevel = 0)
-call printmsg(ai_dtllevel = 0)
-#endif
-
-call model_free(fem_model)
 
 close(li_file_stream_norm)
 close(li_file_stream_visu)
 
-call spm_cleanall(ierr)
-call spm_finalize(ierr)
-
-#ifdef DEBUG_TRACE   
-call closetracelog()
-#endif
 
 end subroutine solve_jorek
 
+subroutine delete_jorek(jorek)
 
-subroutine  rhs_for_vi(ptr_matrix, bbox2di, gbox2d)
+type(sll_jorek_solver) :: jorek
+sll_int32              :: ierr
+
+call model_free(fem_model)
+call spm_cleanall(ierr)
+call spm_finalize(ierr)
+
+end subroutine delete_jorek
+
+
+subroutine rhs_for_vi(ptr_matrix, bbox2di, gbox2d)
+
 class(def_matrix_2d), pointer :: ptr_matrix
-type(def_blackbox_2d) :: bbox2di
-type(def_greenbox_2d)                :: gbox2d
+type(def_blackbox_2d)         :: bbox2di
+type(def_greenbox_2d)         :: gbox2d
 ! local
 real(kind=rk) :: f_rhs
 real(kind=rk) :: contribution
@@ -434,10 +408,10 @@ end subroutine matrix_for_vi_vj
 subroutine assembly_diagnostics(bbox2d, gbox2d,nstep)
 
 type(def_blackbox_2d) :: bbox2d
-type(def_greenbox_2d)                :: gbox2d
-integer       :: ijg
-integer       :: nstep
-real(kind=rk) :: wvol
+type(def_greenbox_2d) :: gbox2d
+integer               :: ijg
+integer               :: nstep
+real(kind=rk)         :: wvol
 
 if(nstep .ge. 0) then
 
@@ -454,7 +428,7 @@ if(nstep .ge. 0) then
  	  & wvol
 
   fem_model%opr_diagnostics(3,nstep+1) = fem_model%opr_diagnostics(3,nstep+1) + &
-             & gbox2d%varn_x1(1, ijg) * &
+        & gbox2d%varn_x1(1, ijg) * &
  	  & gbox2d%varn_x1(1, ijg) * &
  	  & wvol  + &
  	  & gbox2d%varn_x2(1, ijg) * &
@@ -463,7 +437,7 @@ if(nstep .ge. 0) then
 
   !... diff norms
   fem_model%opr_diagnostics(4,nstep+1) = fem_model%opr_diagnostics(4,nstep+1) + &
-             & ( gbox2d%varn_0(1, ijg) - gbox2d%sol_analytical(ijg, 1, 1) ) * &
+        & ( gbox2d%varn_0(1, ijg) - gbox2d%sol_analytical(ijg, 1, 1) ) * &
  	  & ( gbox2d%varn_0(1, ijg) - gbox2d%sol_analytical(ijg, 1, 1) ) * &
  	  & wvol 
 
@@ -615,27 +589,150 @@ if(testcase .eq. 1) then
   v(1,1) = sin(k1*r)*sin(k2*z)    ! ... u
   v(1,2) = k1*cos(k1*r)*sin(k2*z) ! ... u_r
   v(1,3) = k2*sin(k1*r)*cos(k2*z) ! ... u_z
-endif    
-if(testcase .eq. 2) then
+else if(testcase .eq. 2) then
   v(1,1) = sin ( 1.0 - r**2 - z**2 ) ! ... u
   v(1,2) = - 2.0 * r * cos ( 1.0 - r**2 - z**2) ! ... u_r
   v(1,3) = - 2.0 * z * cos ( 1.0 - r**2 - z**2) ! ... u_z
-endif
-if(testcase .eq. 3) then
+else if(testcase .eq. 3) then
   v(1,1) = (1-(z**2+(r-r0)**2)/a**2)*(z**2-acenter**2+(r-r0)**2) ! ... u
   v(1,2) = (1-(z**2+(r-r0)**2)/a**2)*(2*r-2*r0) &                ! ... u_r
      & - (2*r-2*r0)*(z**2-acenter**2+(r-r0)**2)/a**2
   v(1,3) = 2*z*(1-(z**2+(r-r0)**2)/a**2) &
      & - 2*z*(z**2 - acenter**2+(r-r0)**2)/a**2 ! ... u_z
-endif
-
-! periodic but not dirichet homogeneous
-if(testcase .eq. 4) then
-  v(1, 1) = cos(k1*r)*cos(k2*z)     ! ... u
-  v(1, 2) = -k1*sin(k1*r)*cos(k2*z) ! ... u_r
-  v(1, 3) = -k2*cos(k1*r)*sin(k2*z) ! ... u_z
+else if(testcase .eq. 4) then ! periodic but not dirichet homogeneous
+  v(1,1) = cos(k1*r)*cos(k2*z)     ! ... u
+  v(1,2) = -k1*sin(k1*r)*cos(k2*z) ! ... u_r
+  v(1,3) = -k2*cos(k1*r)*sin(k2*z) ! ... u_z
 endif    
 
 end subroutine analytical_model
+
+subroutine plot_field(filename, label)
+
+sll_int32                    :: is
+sll_int32                    :: iq
+sll_int32, parameter         :: n_dim=2
+type(def_element), pointer   :: elmt => null()
+character(len=*), intent(in) :: filename
+character(len=*), intent(in) :: label
+integer                      :: nbs
+integer                      :: nbq
+integer                      :: xmf
+integer                      :: i, j
+sll_int32                    :: ierr
+
+call sll_new_file_id(xmf, ierr)
+
+nbs = fem_mesh%oi_n_nodes
+nbq = fem_mesh%oi_n_elmts
+
+print*, size(fem_model%opr_global_var(one,:))
+do is = 1, nbs
+  write(*,*) is, fem_mesh%thenodes%coor2d(1:n_dim, one, is), &
+             fem_model%opr_global_var(one,is)
+end do
+do iq = 1, nbq
+  elmt => fem_mesh%opo_elements(iq)
+  write(*,*) elmt%opi_vertices(1:elmt%oi_n_vtex)
+end do
+  
+open(xmf, file=filename//".xmf")
+
+write(xmf,"(a)") "<?xml version='1.0'?>"
+write(xmf,"(a)") "<!DOCTYPE Xdmf SYSTEM 'Xdmf.dtd' []> "
+write(xmf,"(a)") "<Xdmf Version='2.0'>"
+write(xmf,"(a)") "<Domain>"
+write(xmf,"(a)") "<Grid Name='Mesh' GridType='Uniform' >"
+write(xmf,"(a,i6,a)") "<Topology Type='Quadrilateral' NumberOfElements='",nbq,"'>"
+write(xmf,"(a,i6,a)") "<DataItem Name='Connections' Format='XML' DataType='Int' Dimensions='", &
+                      nbq, " 4'>" 
+do iq=1, nbq
+   write(xmf,"(4i6)") (fem_mesh%opo_elements(iq)%opi_vertices(j)-1,j=1,4)
+end do
+write(xmf,"(a)") "</DataItem>"
+write(xmf,"(a)") "</Topology>"
+write(xmf,"(a)") "<Geometry GeometryType='XY'>"
+write(xmf,"(a,i6,a)") "<DataItem Format='XML' Dimensions='", nbs, " 2'>"
+do is=1, nbs
+  write(xmf,"(2f12.6)") fem_mesh%thenodes%coor2d(1:n_dim, one, is)
+end do
+write(xmf,"(a)") "</DataItem>"
+write(xmf,"(a)") "</Geometry>"
+write(xmf,"(a)") "<Attribute Name='"//label//"' Center='Node'>"
+write(xmf,"(a,i6,a)") "<DataItem Format='XML' Datatype='Float' Dimensions='", nbs, "'>"
+do  is=1, nbs
+  write(xmf,"(f12.6)")fem_model%opr_global_var(one,is)
+end do
+write(xmf,"(a)") "</DataItem>"
+write(xmf,"(a)") "</Attribute>"
+write(xmf,"(a)") "</Grid>"
+write(xmf,"(a)") "</Domain>"
+write(xmf,"(a)") "</Xdmf>" 
+
+close(xmf)
+
+end subroutine plot_field
+
+subroutine plot_jorek_field_2d_with_plotmtv(this, field_name)
+
+type(sll_jorek_solver) :: this
+character(len=*)       :: field_name
+sll_int32              :: file_id
+sll_int32              :: ni, nj, ino
+sll_real64             :: x1, y1
+sll_int32              :: is1, is2, is3, is4
+type(def_element), pointer   :: elmt => null()
+sll_int32              :: is, iq, nbs, nbq
+sll_int32              :: error
+
+nbs = fem_mesh%oi_n_nodes
+nbq = fem_mesh%oi_n_elmts
+
+call sll_ascii_file_create(field_name//".mtv", file_id, error)
+
+write(file_id,*)"$DATA=CURVE3D"
+write(file_id,*)"%equalscale=T"
+write(file_id,*)"%contfill"
+write(file_id,*)"%toplabel='"//field_name//"'"
+
+do iq = 1, nbq
+
+  elmt => fem_mesh%opo_elements(iq)
+  is1 = elmt%opi_vertices(1)
+  is2 = elmt%opi_vertices(2)
+  is3 = elmt%opi_vertices(3)
+  is4 = elmt%opi_vertices(4)
+
+  write(file_id,*) sngl(fem_mesh%thenodes%coor2d(1:2,one,is1)), &
+                   sngl(fem_model%opr_global_var(one,is1))
+  write(file_id,*) sngl(fem_mesh%thenodes%coor2d(1:2,one,is2)), &
+                   sngl(fem_model%opr_global_var(one,is2))
+  write(file_id,*) sngl(fem_mesh%thenodes%coor2d(1:2,one,is3)), &
+                   sngl(fem_model%opr_global_var(one,is3))
+  write(file_id,*) sngl(fem_mesh%thenodes%coor2d(1:2,one,is4)), &
+                   sngl(fem_model%opr_global_var(one,is4))
+  write(file_id,*) sngl(fem_mesh%thenodes%coor2d(1:2,one,is1)), &
+                   sngl(fem_model%opr_global_var(one,is1))
+  write(file_id,*) 
+
+end do
+
+write(file_id,*)
+do is = 1, nbs
+  x1 = fem_mesh%thenodes%coor2d(1, one, is)
+  y1 = fem_mesh%thenodes%coor2d(2, one, is)
+  write(file_id,"(a)"   ,  advance="no")"@text x1="
+  write(file_id,"(g15.3)", advance="no") x1
+  write(file_id,"(a)"   ,  advance="no")" y1="
+  write(file_id,"(g15.3)", advance="no") y1
+  write(file_id,"(a)"   ,  advance="no")" z1=0. lc=5 ll='"
+  write(file_id,"(i4)"  ,  advance="no") is
+  write(file_id,"(a)")"'"
+end do
+
+write(file_id,*)"$end"
+close(file_id)
+   
+end subroutine plot_jorek_field_2d_with_plotmtv
 
 end module sll_jorek
