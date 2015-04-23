@@ -1,3 +1,7 @@
+!> @ingroup <DIRECTORY_NAME>
+!> @author <MODULE_AUTHOR_NAME_AND_AFFILIATION>
+!> @brief <BRIEF_DESCRIPTION>
+!> @details <DETAILED_DESCRIPTION>
 module sll_jorek
 
 #include "sll_working_precision.h"
@@ -38,9 +42,11 @@ end type sll_jorek_solver
 interface sll_create
 module procedure initialize_jorek
 end interface sll_create
+
 interface sll_solve
 module procedure solve_jorek
 end interface sll_solve
+
 interface sll_delete
 module procedure delete_jorek
 end interface sll_delete
@@ -49,6 +55,17 @@ end interface sll_delete
 contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+!---------------------------------------------------------------------------
+!> @brief Create your jorek model to solve Poisson in 2d
+!> @details 
+!> When you call the subroutine create_jorek_model, the program
+!> command line arguments you added.
+!> --solver solver.txt
+!> --parameters parameter.txt
+!> --geometry square_periodic/n16x16
+!> Different geometries are available in jorek-prefix/src/jorek/geometries 
+!> directory located in your cmake build directory.
+!> @param[OUT] jorek the solver derived that contains data useful for selalib
 subroutine initialize_jorek(jorek)
 
 type(sll_jorek_solver)     :: jorek
@@ -83,6 +100,11 @@ end subroutine initialize_jorek
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+!---------------------------------------------------------------------------
+!> @brief Run the created jorek model
+!> @details This subroutine run the jorek model and solve the Poisson
+!> equation in 2D
+!> @param[INOUT] jorek the jorek data type
 subroutine solve_jorek(jorek)
 
 type(sll_jorek_solver) :: jorek
@@ -93,6 +115,10 @@ call run_jorek_model()
 
 end subroutine solve_jorek
 
+!---------------------------------------------------------------------------
+!> @brief Delete the jorek object and the jorek model
+!> @details free the memory allocated by jorek.
+!> @param[INOUT>] jorek the jorek derived type linked to the jorek model.
 subroutine delete_jorek(jorek)
 
 type(sll_jorek_solver) :: jorek
@@ -104,6 +130,12 @@ jorek%deleted = .true.
 end subroutine delete_jorek
 
 
+!---------------------------------------------------------------------------
+!> @brief Write potential computed by Jorek in xdmf format file.
+!> @details This file is readable by VisIt (LLNL)
+!> @param[IN] jorek the solver object that conatins all data
+!> @param[IN] filename prefix of the xdmf file
+!> @param[IN] label field name (string)
 subroutine plot_field(jorek, filename, label)
 
 type(sll_jorek_solver)       :: jorek
@@ -160,6 +192,11 @@ close(xmf)
 
 end subroutine plot_field
 
+!---------------------------------------------------------------------------
+!> @brief Write a plotmtv file
+!> @details this file is readable plotmtv, it plots the mesh with nodes number
+!> @param[IN] jorek the solver object that conatins all data
+!> @param[IN] filename prefix of the mtv file
 subroutine plot_jorek_field_2d_with_plotmtv(jorek, field_name)
 
 type(sll_jorek_solver) :: jorek
