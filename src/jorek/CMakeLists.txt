@@ -40,6 +40,9 @@ SET(PROCS 4)
 SET(PARAMETERS parameter.txt)
 SET(GEOMETRY   ${SOURCE_DIR}/geometries/square_periodic/n16x16)
 SET(SOLVER     solver.txt)
+IF(NOT APPLE)
+  STRING(REGEX REPLACE "mpiexec" "mpirun" MPIEXEC ${MPIEXEC})
+ENDIF()
 ADD_TEST( NAME jorek
           COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS}
             ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/jorek_${JOREK_MODEL} 
