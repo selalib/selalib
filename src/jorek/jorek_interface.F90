@@ -78,7 +78,7 @@ implicit none
 contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine initialize_jorek_model()
+subroutine create_jorek_model()
 
 integer                     :: nb_args
 integer(kind=spm_ints_kind) :: ierror
@@ -97,7 +97,6 @@ character(len=1024) :: dirname
 integer             :: myrank
 character(len=1024) :: argname
 
-sll_int32                  :: iq
 type(def_element), pointer :: elmt => null()
 
 argname = "--parameters"
@@ -170,11 +169,11 @@ call model_initialize(fem_model)
 open(unit=li_file_stream_norm, file='output_var_diag.dat', status='unknown')
 open(unit=li_file_stream_visu, file='output_var_visu.dat', status='unknown')
 
-end subroutine initialize_jorek_model
+end subroutine create_jorek_model
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine solve_jorek_model()
+subroutine run_jorek_model()
 
 real(kind=rk), dimension(:), allocatable :: y
 real(kind=rk), dimension(1:1,1:2)        :: x
@@ -272,7 +271,7 @@ close(li_file_stream_norm)
 close(li_file_stream_visu)
 
 
-end subroutine solve_jorek_model
+end subroutine run_jorek_model
 
 subroutine delete_jorek_model()
 
@@ -282,7 +281,7 @@ call model_free(fem_model)
 call spm_cleanall(ierr)
 call spm_finalize(ierr)
 
-end subroutine delete_jorek
+end subroutine delete_jorek_model
 
 
 subroutine rhs_for_vi(ptr_matrix, bbox2di, gbox2d)
@@ -570,26 +569,24 @@ endif
 
 end subroutine analytical_model
 
-subroutine compute_electric_fields(jorek)
-type(sll_jorek_solver) :: jorek
-sll_int32              :: prank
-sll_int32              :: ierr
-
-call mpi_comm_rank(prank, ierr)
-
-subroutine compute_electric_fields(bbox2d, gbox2d)
-
-type(def_blackbox_2d) :: bbox2d
-type(def_greenbox_2d) :: gbox2d
-integer               :: ijg
-real(kind=rk)         :: wvol
-
-ijg   = bbox2d%ijg
-wvol  = bbox2d%wvol(ijg)
-
-jorek%e_x(1) = jorek%e_x(1) + gbox2d%varn_x1(1, ijg) * wvol
-jorek%e_y(1) = jorek%e_y(1) + gbox2d%varn_x2(1, ijg) * wvol
-
+!subroutine compute_electric_fields(bbox2d, gbox2d)
+!integer              :: prank
+!integer              :: ierr
+!
+!
+!
+!type(def_blackbox_2d) :: bbox2d
+!type(def_greenbox_2d) :: gbox2d
+!integer               :: ijg
+!real(kind=rk)         :: wvol
+!
+!call mpi_comm_rank(prank, ierr)
+!ijg   = bbox2d%ijg
+!wvol  = bbox2d%wvol(ijg)
+!
+!jorek%e_x(1) = jorek%e_x(1) + gbox2d%varn_x1(1, ijg) * wvol
+!jorek%e_y(1) = jorek%e_y(1) + gbox2d%varn_x2(1, ijg) * wvol
+!
 !call loop_on_elmts( ptr_matrix,                        &
 !             &      prank,                             &
 !             &      jorek%fem_model%ptr_mesh,          &
@@ -599,19 +596,19 @@ jorek%e_y(1) = jorek%e_y(1) + gbox2d%varn_x2(1, ijg) * wvol
 !             &      ptr_matrix%opr_global_unknown,     &
 !             &      jorek%fem_model%opr_global_var,    &
 !             &      ptr_matrix%opr_global_rhs)
-
-call evaluate_on_elmts(ptr_matrix,                      &
-&                      prank,                           &
-&                      fem_model%ptr_mesh,              &
-&                      fem_model%greenbox,              &
-&                      fem_model%space_trial%basis,     &
-&                      ptr_matrix%opr_global_unknown,   &
-&                      fem_model%opr_global_var,        &
-&                      func_analytical,                 &
-&                      Assembly_Diags,                  &
-&                      Plot_Diags,                      &
-&                      0                                )
-
-end subroutine compute_electric_fields
+!
+!call evaluate_on_elmts(ptr_matrix,                      &
+!&                      prank,                           &
+!&                      fem_model%ptr_mesh,              &
+!&                      fem_model%greenbox,              &
+!&                      fem_model%space_trial%basis,     &
+!&                      ptr_matrix%opr_global_unknown,   &
+!&                      fem_model%opr_global_var,        &
+!&                      func_analytical,                 &
+!&                      Assembly_Diags,                  &
+!&                      Plot_Diags,                      &
+!&                      0                                )
+!
+!end subroutine compute_electric_fields
 
 end module jorek_interface
