@@ -602,9 +602,6 @@ e_y = e_y + gbox2d%varn_x2(1, ijg) * wvol
 end subroutine assembly_electric_fields
 
 
-subroutine plot_diagnostics(nstep)
-
-
 function interpolate_rho_value(bbox_2d)
 sll_real64 :: a1, a2, a3, a4, xt, yt
 real(kind=rk)         :: interpolate_rho_value 
