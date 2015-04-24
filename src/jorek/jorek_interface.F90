@@ -566,7 +566,7 @@ type(def_greenbox_2d) :: gbox2d
 integer               :: ijg
 real(kind=rk)         :: wvol
 
-call mpi_comm_rank(prank, ierr)
+!call mpi_comm_rank(prank, ierr)
 ijg   = bbox2d%ijg
 wvol  = bbox2d%wvol(ijg)
 
@@ -602,35 +602,34 @@ e_y = e_y + gbox2d%varn_x2(1, ijg) * wvol
 end subroutine assembly_electric_fields
 
 
-function interpolate_rho_value(bbox_2d)
-sll_real64 :: a1, a2, a3, a4, xt, yt
-real(kind=rk)         :: interpolate_rho_value 
-type(def_blackbox_2d) :: bbox2d
-real(kind=rk)         :: x, y
-integer               :: ijg
-integer, parameter    :: one = 1
-
-ijg = bbox2d%ijg
-is1 = fem_mesh%opo_elements(ijg)%opi_vertices(1)
-is2 = fem_mesh%opo_elements(ijg)%opi_vertices(1)
-is3 = fem_mesh%opo_elements(ijg)%opi_vertices(1)
-is4 = fem_mesh%opo_elements(ijg)%opi_vertices(1)
-
-xs1 = fem_mesh%thenodes%coor2d(1, one, is1 )
-xs2 = fem_mesh%thenodes%coor2d(1, one, is2 )
-xs3 = fem_mesh%thenodes%coor2d(1, one, is3 )
-xs4 = fem_mesh%thenodes%coor2d(1, one, is4 )
-
-ys1 = fem_mesh%thenodes%coor2d(2, one, is1 )
-ys2 = fem_mesh%thenodes%coor2d(2, one, is2 )
-ys3 = fem_mesh%thenodes%coor2d(2, one, is3 )
-ys4 = fem_mesh%thenodes%coor2d(2, one, is4 )
-
-x   = bbox2d%xp_0(1,ijg)
-y   = bbox2d%xp_0(2,ijg)
-
-!call  the interpolator here
-
-end subroutine interpolate_rho_value
+!function interpolate_rho_value(bbox_2d)
+!real(kind=rk)         :: interpolate_rho_value 
+!type(def_blackbox_2d) :: bbox2d
+!real(kind=rk)         :: x, y
+!integer               :: ijg
+!integer, parameter    :: one = 1
+!
+!ijg = bbox2d%ijg
+!is1 = fem_mesh%opo_elements(ijg)%opi_vertices(1)
+!is2 = fem_mesh%opo_elements(ijg)%opi_vertices(1)
+!is3 = fem_mesh%opo_elements(ijg)%opi_vertices(1)
+!is4 = fem_mesh%opo_elements(ijg)%opi_vertices(1)
+!
+!xs1 = fem_mesh%thenodes%coor2d(1, one, is1 )
+!xs2 = fem_mesh%thenodes%coor2d(1, one, is2 )
+!xs3 = fem_mesh%thenodes%coor2d(1, one, is3 )
+!xs4 = fem_mesh%thenodes%coor2d(1, one, is4 )
+!
+!ys1 = fem_mesh%thenodes%coor2d(2, one, is1 )
+!ys2 = fem_mesh%thenodes%coor2d(2, one, is2 )
+!ys3 = fem_mesh%thenodes%coor2d(2, one, is3 )
+!ys4 = fem_mesh%thenodes%coor2d(2, one, is4 )
+!
+!x   = bbox2d%xp_0(1,ijg)
+!y   = bbox2d%xp_0(2,ijg)
+!
+!!call  the interpolator here
+!
+!end function interpolate_rho_value
 
 end module jorek_interface
