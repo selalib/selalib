@@ -63,6 +63,15 @@ use matrix
 use space
 use fem
 
+interface rhs_for_vi
+  subroutine user_rhs_for_vi(rho, ptr_matrix, bbox2di, gbox2d)
+    real(8), dimesnion(:)         :: jorek
+    class(def_matrix_2d), pointer :: ptr_matrix
+    type(def_blackbox_2d)         :: bbox2di
+    type(def_greenbox_2d)         :: gbox2d
+  end subroutine user_rhs_for_vi
+end interface
+
 implicit none
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -281,7 +290,7 @@ subroutine rhs_for_vi(ptr_matrix, bbox2di, gbox2d)
 class(def_matrix_2d), pointer :: ptr_matrix
 type(def_blackbox_2d)         :: bbox2di
 type(def_greenbox_2d)         :: gbox2d
-! local
+
 real(kind=rk) :: f_rhs
 real(kind=rk) :: contribution
 integer       :: ijg
