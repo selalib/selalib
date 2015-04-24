@@ -96,6 +96,10 @@ end do
 jorek%created = .true.  
 jorek%deleted = .false.  
 
+rho => jorek%rho
+e_x => jorek%e_x
+e_y => jorek%e_y
+
 end subroutine initialize_jorek
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -112,6 +116,7 @@ type(sll_jorek_solver) :: jorek
 call run_jorek_model()
 
   jorek%phi = fem_model%opr_global_var(one,:)
+
 
 end subroutine solve_jorek
 
