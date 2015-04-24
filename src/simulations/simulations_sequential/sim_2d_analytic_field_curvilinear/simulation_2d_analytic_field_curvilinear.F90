@@ -979,6 +979,19 @@ contains
         sim%A_time_func => sll_constant_time_initializer_1d 
         SLL_ALLOCATE(sim%A_time_func_params(1),ierr)
         sim%A_time_func_params(1) = 1._f64
+      case ("SLL_COSSIN_FLOW")
+        sim%phi_func => sll_cos_sin_initializer_2d
+        SLL_ALLOCATE(sim%A_func_params(2),ierr)
+        sim%A_func_params(1) = 0._f64
+        sim%A_func_params(2) = 0._f64
+        sim%A_time_func => sll_constant_time_initializer_1d 
+        SLL_ALLOCATE(sim%A_time_func_params(1),ierr)
+        sim%A_time_func_params(1) = 1._f64  
+        
+        sim%A1_func => sll_rotation_A1_initializer_2d 
+        sim%A2_func => sll_rotation_A2_initializer_2d 
+        sim%A1_exact_charac_func => sll_rotation_A1_exact_charac_2d 
+        sim%A2_exact_charac_func => sll_rotation_A2_exact_charac_2d 
       case default
         print *,'#bad advect_case',advection_field_case
         print *,'#not implemented'
@@ -1340,8 +1353,20 @@ contains
           call plot_divf_curvilinear(iplot,div,sim%mesh_2d,sim%transformation)
         endif
         call plot_f_curvilinear(iplot,f,sim%mesh_2d,sim%transformation)
-        iplot = iplot+1  
-      endif            
+        iplot = iplot+1          
+      endif    
+      
+      if(step==nb_step)then
+          do i2=1,Nc_eta2+1
+            eta2=eta2_min+real(i2-1,f64)*delta_eta2
+            do i1=1,Nc_eta1+1
+              eta1=eta1_min+real(i1-1,f64)*delta_eta1
+              x1 = sim%transformation%x1(eta1,eta2)
+              x2 = sim%transformation%x2(eta1,eta2)
+              write(12,*) x1,x2,f(i1,i2)
+            enddo
+          enddo    
+      endif        
 #endif  
 
 
