@@ -140,9 +140,7 @@ call create_mesh(fem_mesh, dirname)
 call model_create(fem_model,       &
                   fem_mesh,        &
                   ptr_space_trial, &
-                  ptr_space_test,  &
-                  n_var_unknown,   &
-                  n_var_sys)
+                  ptr_space_test)
 
 call field_create(field_u, fem_model%space_trial, field_name="density")
 ptr_field => field_u
@@ -166,7 +164,6 @@ end subroutine create_jorek_model
 
 subroutine run_jorek_model()
 
-real(kind=rk), dimension(:), allocatable :: y
 real(kind=rk), dimension(1:1,1:2)        :: x
 real(kind=rk), dimension(1:1,1:2)        :: v
 integer                                  :: i   
@@ -191,12 +188,8 @@ call model_assembly(fem_model, ptr_system)
 call cpu_time(t_fin)
 ! ...
 
-print *, "rhs ", ptr_system%opr_global_rhs(1:6)
-
 ! opr_global_var( & 
 print*, 'order =', fem_model%space_trial%basis%oi_n_order
-print*, 'order =', fem_model%oi_nvar_unknown
-
 ! ... example of solver calls
 argname = "--solver"
 call jorek_get_arguments(argname, filename, err)
@@ -222,13 +215,6 @@ call get_nr_matrix(ptr_system, nrows)
 write(msg,*) myrank
 stamp_default = "-proc_" // trim(adjustl(msg))
 stamp_default = trim(adjustl(adjustr(stamp_default)))
-
-allocate(y(nrows))
-y=0.d0 
-call spm_matmult(matrix_a_id, ptr_system%opr_global_unknown, y, err)
-
-print *, maxval(y-ptr_system%opr_global_rhs), &
-         minval(y-ptr_system%opr_global_rhs) 
 
 ! ... evaluate unknowns on vertecies and compte model norms 
 call model_diagnostics(fem_model,             &
@@ -293,7 +279,7 @@ real(kind=rk) :: vi_rz
 real(kind=rk) :: vi_zz
 real(kind=rk), dimension(:), pointer :: rhs_contribution
 
-rhs_contribution => gbox2d%rhs_contribution
+rhs_contribution => ptr_matrix%rhs_contribution
 
 ijg   = bbox2di%ijg
 wvol  = bbox2di%wvol(ijg)
@@ -339,7 +325,7 @@ real(kind=rk) :: vj_rz
 real(kind=rk) :: vj_zz
 real(kind=rk), dimension(:,:), pointer :: matrix_contribution
 
-matrix_contribution => gbox2d%matrix_contribution
+matrix_contribution => ptr_matrix%matrix_contribution
 
 ijg   = bbox2di%ijg
 wvol  = bbox2di%wvol(ijg)
