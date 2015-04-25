@@ -3,11 +3,6 @@ module sll_general_coordinate_elliptic_solver_multipatch_module
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-use sll_boundary_condition_descriptors
-use sll_module_scalar_field_2d_base
-use sll_module_scalar_field_2d
-use sll_module_arbitrary_degree_spline_interpolator_2d
-use connectivity_module
 use gauss_legendre_integration
 use gauss_lobatto_integration
 use sll_timer 
@@ -33,23 +28,24 @@ type :: general_coordinate_elliptic_solver_mp
    sll_real64, dimension(:,:),   pointer :: knots2_rho
    sll_real64, dimension(:,:,:), pointer :: gauss_pts1
    sll_real64, dimension(:,:,:), pointer :: gauss_pts2!
-   sll_int32,dimension(:),       pointer :: spline_degree1
-   sll_int32,dimension(:),       pointer :: spline_degree2
-   sll_int32                             :: solution_size_final,solution_size
-   sll_int32, dimension(:),      pointer :: num_elts_no_null_patchs
-   sll_int32, dimension(:,:,:),  pointer :: local_to_global_row, local_to_global_col
-   sll_int32, dimension(:,:,:),  pointer :: global_indices_row, global_indices_col
+   sll_int32,  dimension(:),     pointer :: spline_degree1
+   sll_int32,  dimension(:),     pointer :: spline_degree2
+   sll_int32                             :: solution_size
+   sll_int32                             :: solution_size_final
+   sll_int32,  dimension(:),     pointer :: num_elts_no_null_patchs
+   sll_int32,  dimension(:,:,:), pointer :: local_to_global_row, local_to_global_col
+   sll_int32,  dimension(:,:,:), pointer :: global_indices_row, global_indices_col
    sll_real64                            :: intjac
    sll_real64, dimension(:,:,:), pointer :: values_jacobian
    sll_int32 , dimension(:,:)  , pointer :: tab_index_coeff1
    sll_int32 , dimension(:,:)  , pointer :: tab_index_coeff2
-   type(sll_csr_matrix),         pointer :: sll_csr_mat
-   type(sll_csr_matrix),         pointer :: sll_csr_mat_source
    sll_real64, dimension(:),     pointer :: rho_vec
    sll_real64, dimension(:),     pointer :: phi_vec
+   sll_int32,  dimension(:,:,:), pointer :: local_to_global_spline_indices_source_col
+   sll_int32,  dimension(:,:,:), pointer :: local_to_global_spline_indices_source_row
 
-   sll_int32, dimension(:,:,:),  pointer :: local_to_global_spline_indices_source_col
-   sll_int32, dimension(:,:,:),  pointer :: local_to_global_spline_indices_source_row
+   type(sll_csr_matrix),         pointer :: sll_csr_mat
+   type(sll_csr_matrix),         pointer :: sll_csr_mat_source
 
 end type general_coordinate_elliptic_solver_mp
 
@@ -169,14 +165,14 @@ SLL_ALLOCATE(es_mp%phi_vec(es_mp%solution_size_final),ierr)
 knots1_size = size(es_mp%T%transfs(1)%T%knots1)
 knots2_size = size(es_mp%T%transfs(1)%T%knots2)
 if (es_mp%T%number_patches >1) then
-   do i = 2, es_mp%T%number_patches
-      if (knots1_size > size(es_mp%T%transfs(i-1)%T%knots1)) then
-         knots1_size = size(es_mp%T%transfs(i-1)%T%knots1)
-      end if
-      if (knots2_size > size(es_mp%T%transfs(i-1)%T%knots2)) then
-         knots2_size = size(es_mp%T%transfs(i-1)%T%knots2)
-      end if
-   end do
+  do i = 2, es_mp%T%number_patches
+    if (knots1_size > size(es_mp%T%transfs(i-1)%T%knots1)) then
+      knots1_size = size(es_mp%T%transfs(i-1)%T%knots1)
+    end if
+    if (knots2_size > size(es_mp%T%transfs(i-1)%T%knots2)) then
+      knots2_size = size(es_mp%T%transfs(i-1)%T%knots2)
+    end if
+  end do
 end if
 
 SLL_ALLOCATE(es_mp%knots1(num_patches,knots1_size),ierr1)
@@ -201,7 +197,6 @@ do i=1,num_patches
 end do
 
 max_num_elts_no_null_patchs = MAXVAL(es_mp%num_elts_no_null_patchs)
-
 max_total_num_splines_loc   = MAXVAL(es_mp%total_num_splines_loc)
 SLL_ALLOCATE(es_mp%local_to_global_row(num_patches,max_total_num_splines_loc,max_num_elts_no_null_patchs),ierr)
 SLL_ALLOCATE(es_mp%local_to_global_col(num_patches,max_total_num_splines_loc,max_num_elts_no_null_patchs),ierr)
@@ -269,8 +264,9 @@ function new_general_elliptic_solver_mp( quadrature_type1, &
                                          quadrature_type2, &
                                          T) result(es_mp)
   
-type(general_coordinate_elliptic_solver_mp), pointer :: es_mp
+type(general_coordinate_elliptic_solver_mp),       pointer :: es_mp
 type(sll_coordinate_transformation_multipatch_2d), pointer :: T
+
 sll_int32, intent(in) :: quadrature_type1
 sll_int32, intent(in) :: quadrature_type2
 sll_int32             :: ierr
@@ -295,14 +291,14 @@ type(general_coordinate_elliptic_solver_mp) :: es_mp
 sll_int32 :: ierr
 ! it is not good to check some cases and not others, fix...
 if(associated(es_mp%knots1)) then
-   SLL_DEALLOCATE(es_mp%knots1,ierr)
+  SLL_DEALLOCATE(es_mp%knots1,ierr)
 else
-   print *, 'delete es, WARNING: knots1 array was not allocated.'
+  print *, 'delete es, WARNING: knots1 array was not allocated.'
 end if
 if(associated(es_mp%knots2)) then
-   SLL_DEALLOCATE(es_mp%knots2,ierr)
+  SLL_DEALLOCATE(es_mp%knots2,ierr)
 else
-   print *, 'delete es general coords, WARNING: knots2 array was not allocated.'
+  print *, 'delete es general coords, WARNING: knots2 array was not allocated.'
 end if
 
 SLL_DEALLOCATE(es_mp%gauss_pts1,ierr)
@@ -375,66 +371,79 @@ sll_real64, dimension(:,:), allocatable :: S_b1_loc
 sll_real64, dimension(:,:), allocatable :: S_b2_loc 
 sll_real64, dimension(:,:,:,:), pointer :: Source_loc
 
-sll_int32 :: total_num_splines_loc
-sll_int32 :: ierr
-sll_int32 :: j,i
-sll_int32 :: cell_index
-sll_int32 :: patch
-  sll_real64 :: delta1
-  sll_real64 :: delta2
-  sll_real64 :: eta1_min
-  sll_real64 :: eta2_min
-  sll_real64 :: eta1
-  sll_real64 :: eta2
-  sll_real64 :: gpt1
-  sll_real64 :: gpt2
-  sll_real64 :: wgpt1
-  sll_real64 :: wgpt2
-  sll_real64 :: gtmp1
-  sll_real64 :: gtmp2
-  sll_int32 :: cell_i, cell_j
-  sll_int32  :: ii,iii
-  sll_int32  :: jj,jjj
-  sll_int32  :: local_spline_index1
-  sll_int32  :: local_spline_index2
-  sll_int32  :: index1
-  sll_int32  :: index2
+sll_int32  :: total_num_splines_loc
+sll_int32  :: ierr
+sll_int32  :: j,i
+sll_int32  :: cell_index
+sll_int32  :: patch
+sll_real64 :: delta1
+sll_real64 :: delta2
+sll_real64 :: eta1_min
+sll_real64 :: eta2_min
+sll_real64 :: eta1
+sll_real64 :: eta2
+sll_real64 :: gpt1
+sll_real64 :: gpt2
+sll_real64 :: wgpt1
+sll_real64 :: wgpt2
+sll_real64 :: gtmp1
+sll_real64 :: gtmp2
+sll_int32  :: cell_i, cell_j
+sll_int32  :: ii,iii
+sll_int32  :: jj,jjj
+sll_int32  :: local_spline_index1
+sll_int32  :: local_spline_index2
+sll_int32  :: index1
+sll_int32  :: index2
+sll_int32  :: index3
+sll_int32  :: index4
 
 type(sll_time_mark)                  :: t0 
 double precision                     :: time
 type(sll_cartesian_mesh_2d), pointer :: lm
 character(len=*),parameter           :: as_file1='mat'
-  sll_real64 :: val_jac
-  sll_real64 :: B11
-  sll_real64 :: B12
-  sll_real64 :: B21
-  sll_real64 :: B22
-  sll_real64 :: MC
-  sll_real64 :: C1
-  sll_real64 :: C2    
-  sll_int32 :: left_x,left_y
-  sll_int32 :: mflag_x, mflag_y
-  sll_int32 :: num_cells2,num_cells1
-  sll_real64 :: val_c
-  sll_real64 :: val_a11
-  sll_real64 :: val_a12
-  sll_real64 :: val_a21
-  sll_real64 :: val_a22
-  sll_real64 :: val_b1=0
-  sll_real64 :: val_b1_der1=0
-  sll_real64 :: val_b1_der2=0
-  sll_real64 :: val_b2=0
-  sll_real64 :: val_b2_der1=0
-  sll_real64 :: val_b2_der2=0
-  sll_real64, dimension(2,2) :: jac_mat
-  sll_real64, allocatable :: work1(:,:)
-  sll_real64, allocatable :: work2(:,:)
-  sll_real64, allocatable :: dbiatx1(:,:)
-  sll_real64, allocatable :: dbiatx2(:,:)
-  sll_int32  :: num_pts_g1 ! number of gauss points in first direction 
-  sll_int32  :: num_pts_g2 ! number of gauss points in second direction
-  sll_int32  :: tmp1
-  sll_int32  :: tmp2
+
+sll_real64 :: val_jac
+sll_real64 :: B11
+sll_real64 :: B12
+sll_real64 :: B21
+sll_real64 :: B22
+sll_real64 :: MC
+sll_real64 :: C1
+sll_real64 :: C2    
+sll_int32  :: left_x
+sll_int32  :: left_y
+sll_int32  :: mflag_x
+sll_int32  :: mflag_y
+sll_int32  :: num_cells1
+sll_int32  :: num_cells2
+sll_real64 :: val_c
+sll_real64 :: val_a11
+sll_real64 :: val_a12
+sll_real64 :: val_a21
+sll_real64 :: val_a22
+sll_real64 :: val_b1=0
+sll_real64 :: val_b1_der1=0
+sll_real64 :: val_b1_der2=0
+sll_real64 :: val_b2=0
+sll_real64 :: val_b2_der1=0
+sll_real64 :: val_b2_der2=0
+
+sll_real64, dimension(2,2) :: jac_mat
+sll_real64, allocatable    :: work1(:,:)
+sll_real64, allocatable    :: work2(:,:)
+sll_real64, allocatable    :: dbiatx1(:,:)
+sll_real64, allocatable    :: dbiatx2(:,:)
+
+sll_int32 :: num_pts_g1 
+sll_int32 :: num_pts_g2 
+sll_int32 :: tmp1
+sll_int32 :: tmp2
+sll_int32 :: mm, nn, b, bprime,x,y
+sll_int32 :: li_A, li_Aprime
+sll_int32 :: nbsp,nbsp1
+sll_int32 :: index_coef1,index_coef2,index
+sll_real64 :: elt_mat_global
 
 call sll_set_time_mark(t0)
 
@@ -650,21 +659,73 @@ do patch = 1,es_mp%T%number_patches
       end do
     end do
  
-    call local_to_global_matrices_mp( &
-             es_mp, &
-             cell_index, &
-             cell_i, &
-             cell_j, &
-             patch,&
-             M_c_loc, &
-             K_a11_loc, &
-             K_a12_loc, &
-             K_a21_loc, &
-             K_a22_loc,&
-             M_b_vect_loc, &
-             S_b1_loc, &
-             S_b2_loc)
-        
+do mm = 0,es_mp%spline_degree2(patch)
+   index3 = cell_j + mm
+   
+
+   
+   do i = 0,es_mp%spline_degree1(patch)
+      
+      index1 = cell_i + i
+
+         nbsp = num_cells1 + es_mp%spline_degree1(patch)
+
+      x          =  index1 + (index3-1)*nbsp
+      b          =  mm * ( es_mp%spline_degree1(patch) + 1 ) + i + 1
+      li_A       =  es_mp%local_to_global_row(patch,b, cell_index)
+     
+      
+      do nn = 0,es_mp%spline_degree2(patch)
+         
+         index4 = cell_j + nn
+         
+
+         
+         do j = 0,es_mp%spline_degree1(patch)
+            
+            index2 = cell_i + j
+
+               nbsp1 = num_cells1 + es_mp%spline_degree1(patch)
+
+            
+            y         = index2 + (index4-1)*nbsp1
+            bprime    =  nn * ( es_mp%spline_degree1(patch) + 1 ) + j + 1
+            li_Aprime = es_mp%local_to_global_col(patch,bprime,cell_index)
+            
+            elt_mat_global = &
+                 M_c_loc(b, bprime)     - &
+                 K_a11_loc(b, bprime)   - &
+                 K_a12_loc(b, bprime)   - &
+                 K_a21_loc(b, bprime)   - &
+                 K_a22_loc(b, bprime)   - &
+                 M_b_vect_loc(b,bprime) - &
+                 S_b1_loc( b, bprime)   - &
+                 S_b2_loc( b, bprime)
+            
+
+            
+            index_coef1 = es_mp%tab_index_coeff1(patch,cell_i)- es_mp%spline_degree1(patch) + i
+            index_coef2 = es_mp%tab_index_coeff2(patch,cell_j)- es_mp%spline_degree2(patch) + mm
+            index = index_coef1 + (index_coef2-1)*nbsp!(num_cells1+1)
+            es_mp%local_to_global_spline_indices_source_row(patch,b,cell_index)= index
+            es_mp%local_to_global_spline_indices_source_col(patch,bprime,cell_index)= y!index_phi
+              
+              if ( (li_A > 0) .and. (li_Aprime > 0) ) then
+                 
+                 call sll_add_to_csr_matrix( &
+                      es_mp%sll_csr_mat, &
+                      elt_mat_global, &
+                      li_A, &
+                      li_Aprime)
+              end if
+             
+              
+           end do
+           
+        end do
+     end do
+  end do
+  
   end do
   end do
   deallocate(work1)
@@ -715,10 +776,7 @@ end subroutine factorize_mat_es_mp
 !> @param[out] phi the field corresponding to the solution of the equation
 !> @return phi the field solution of the equation
 
-subroutine solve_general_coordinates_elliptic_eq_mp(&
-     es_mp,&
-     rho,&
-     phi)
+subroutine solve_general_coordinates_elliptic_eq_mp( es_mp, rho, phi)
 
 class(general_coordinate_elliptic_solver_mp) :: es_mp
 class(sll_scalar_field_multipatch_2d), intent(inout)  :: phi
@@ -752,32 +810,31 @@ base_field_pointer => rho
 select type( type_field => base_field_pointer)
 class is (sll_scalar_field_multipatch_2d)
    
-   ! put the spline coefficients in a 1d array
-   do patch = 1,es_mp%T%number_patches
-      coeff_rho => type_field%fields(patch)%f%interp_2d%get_coefficients()
-      lm => es_mp%T%get_cartesian_mesh(patch-1)
-    
-      sz_coef2 = type_field%interps(patch)%interp%size_coeffs2
-      sz_coef1 = type_field%interps(patch)%interp%size_coeffs1
+! put the spline coefficients in a 1d array
+do patch = 1,es_mp%T%number_patches
+   coeff_rho => type_field%fields(patch)%f%interp_2d%get_coefficients()
+   lm => es_mp%T%get_cartesian_mesh(patch-1)
+ 
+   sz_coef2 = type_field%interps(patch)%interp%size_coeffs2
+   sz_coef1 = type_field%interps(patch)%interp%size_coeffs1
 
-      do j=1,sz_coef2
-         do i=1,sz_coef1
-
-            num_coef = i + sz_coef1*(j-1)
-            i_spline_tot = num_coef + (patch- 1)*sz_coef2*sz_coef1
-            index = es_mp%T%get_spline_global_index(i_spline_tot)
-            if (index >0) then
-               k = k + 1
-               rho_coeff_1d(index) = coeff_rho(i,j)
-            end if
-         end do
+   do j=1,sz_coef2
+      do i=1,sz_coef1
+         num_coef = i + sz_coef1*(j-1)
+         i_spline_tot = num_coef + (patch- 1)*sz_coef2*sz_coef1
+         index = es_mp%T%get_spline_global_index(i_spline_tot)
+         if (index >0) then
+            k = k + 1
+            rho_coeff_1d(index) = coeff_rho(i,j)
+         end if
       end do
    end do
+end do
 
-   es_mp%rho_vec(1:es_mp%solution_size_final) = 0.0_f64
-   call sll_mult_csr_matrix_vector(&
-        es_mp%sll_csr_mat_source,&
-        rho_coeff_1d(1:es_mp%solution_size_final),es_mp%rho_vec(1:es_mp%solution_size_final))
+es_mp%rho_vec(1:es_mp%solution_size_final) = 0.0_f64
+call sll_mult_csr_matrix_vector(&
+     es_mp%sll_csr_mat_source,&
+     rho_coeff_1d(1:es_mp%solution_size_final),es_mp%rho_vec(1:es_mp%solution_size_final))
    
 end select
 
@@ -786,230 +843,56 @@ call solve_linear_system_mp(es_mp,es_mp%solution_size_final)
 
 do patch = 1,es_mp%T%number_patches
    
-   lm => es_mp%T%get_cartesian_mesh(patch-1)
-   sz_coef2 = phi%interps(patch)%interp%size_coeffs2
-   sz_coef1 = phi%interps(patch)%interp%size_coeffs1
-   SLL_ALLOCATE(tmp_phi_vec(sz_coef1*sz_coef2),ierr)
-   do j=1,sz_coef2
-      do i=1,sz_coef1
-         
-         num_coef = i + sz_coef1*(j-1)
-         i_spline_tot = num_coef + (patch- 1)*sz_coef2*sz_coef1
-         index = es_mp%T%get_spline_global_index(i_spline_tot)
+  lm => es_mp%T%get_cartesian_mesh(patch-1)
+  sz_coef2 = phi%interps(patch)%interp%size_coeffs2
+  sz_coef1 = phi%interps(patch)%interp%size_coeffs1
+  SLL_ALLOCATE(tmp_phi_vec(sz_coef1*sz_coef2),ierr)
+  do j=1,sz_coef2
+    do i=1,sz_coef1
+      
+      num_coef = i + sz_coef1*(j-1)
+      i_spline_tot = num_coef + (patch- 1)*sz_coef2*sz_coef1
+      index = es_mp%T%get_spline_global_index(i_spline_tot)
 
-         if ( index == 0) then 
-            tmp_phi_vec(num_coef) = 0
-         else 
-            tmp_phi_vec(num_coef) = es_mp%phi_vec(index)
-         end if
-         
-      end do
-   end do
-   call phi%fields(patch)%f%interp_2d%set_coefficients(tmp_phi_vec(1:sz_coef1*sz_coef2))
-   SLL_DEALLOCATE(tmp_phi_vec,ierr)
+      if ( index == 0) then 
+         tmp_phi_vec(num_coef) = 0
+      else 
+         tmp_phi_vec(num_coef) = es_mp%phi_vec(index)
+      end if
+      
+    end do
+  end do
+  call phi%fields(patch)%f%interp_2d%set_coefficients(tmp_phi_vec(1:sz_coef1*sz_coef2))
+  SLL_DEALLOCATE(tmp_phi_vec,ierr)
 end do
 
 SLL_DEALLOCATE_ARRAY(rho_coeff_1d,ierr)
 
 end subroutine solve_general_coordinates_elliptic_eq_mp
 
-! This is based on the assumption that all the input fields have the same
-! boundary conditions. TO DO: put all the boundary condition parameters in
-! a single module called 'boundary_condition_convention' or something, which
-! can be used library-wide, this way we could extract this information 
-! directly from the fields without any difficulties. 
-
-subroutine build_local_matrices_mp( &
-     es_mp, &
-     cell_index,&
-     cell_i, &
-     cell_j, &
-     patch,&
-     a11_field_mat, &
-     a12_field_mat, &
-     a21_field_mat, &
-     a22_field_mat, &
-     b1_field_vect, &
-     b2_field_vect, &
-     c_field, &
-     M_c_loc, &
-     K_a11_loc, &
-     K_a12_loc, &
-     K_a21_loc, &
-     K_a22_loc, &
-     M_b_vect_loc, &
-     S_b1_loc,  &
-     S_b2_loc,&
-     Source_loc)
-
-  
-  class(general_coordinate_elliptic_solver_mp) :: es_mp
-  type(sll_cartesian_mesh_2d), pointer           :: lm
-  sll_int32, intent(in) :: cell_i
-  sll_int32, intent(in) :: cell_j
-  sll_int32, intent(in) :: cell_index
-  sll_int32,intent(in) :: patch 
-  class(sll_scalar_field_multipatch_2d), pointer :: a11_field_mat
-  class(sll_scalar_field_multipatch_2d), pointer :: a12_field_mat
-  class(sll_scalar_field_multipatch_2d), pointer :: a21_field_mat
-  class(sll_scalar_field_multipatch_2d), pointer :: a22_field_mat
-  class(sll_scalar_field_multipatch_2d), pointer :: b1_field_vect
-  class(sll_scalar_field_multipatch_2d), pointer :: b2_field_vect
-  class(sll_scalar_field_multipatch_2d), pointer :: c_field
-  sll_real64, dimension(:,:,:,:), intent(inout) :: Source_loc
-  sll_real64, dimension(:,:), intent(out) :: M_c_loc
-  sll_real64, dimension(:,:), intent(out) :: K_a11_loc
-  sll_real64, dimension(:,:), intent(out) :: K_a12_loc
-  sll_real64, dimension(:,:), intent(out) :: K_a21_loc
-  sll_real64, dimension(:,:), intent(out) :: K_a22_loc
-  sll_real64, dimension(:,:), intent(out) :: M_b_vect_loc
-  sll_real64, dimension(:,:), intent(out) :: S_b1_loc
-  sll_real64, dimension(:,:), intent(out) :: S_b2_loc
-
-  
-end subroutine build_local_matrices_mp
-
-subroutine local_to_global_matrices_mp( es_mp,        &
-                                        cell_index,   &
-                                        cell_i,       &
-                                        cell_j,       &
-                                        patch,        &
-                                        M_c_loc,      &
-                                        K_a11_loc,    &
-                                        K_a12_loc,    &
-                                        K_a21_loc,    &
-                                        K_a22_loc,    &
-                                        M_b_vect_loc, &
-                                        S_b1_loc,     &
-                                        S_b2_loc)
-  
-class(general_coordinate_elliptic_solver_mp) :: es_mp
-type(sll_cartesian_mesh_2d), pointer         :: lm
-sll_int32                                    :: cell_index
-sll_int32                                    :: cell_i
-sll_int32                                    :: cell_j
-sll_real64, dimension(:,:), intent(in)       :: M_c_loc
-sll_real64, dimension(:,:), intent(in)       :: K_a11_loc
-sll_real64, dimension(:,:), intent(in)       :: K_a12_loc
-sll_real64, dimension(:,:), intent(in)       :: K_a21_loc
-sll_real64, dimension(:,:), intent(in)       :: K_a22_loc
-sll_real64, dimension(:,:), intent(in)       :: M_b_vect_loc
-sll_real64, dimension(:,:), intent(in)       :: S_b1_loc
-sll_real64, dimension(:,:), intent(in)       :: S_b2_loc
-
-
-sll_int32 :: index1, index2, index3, index4
-sll_int32 :: index_coef1,index_coef2,index
-!sll_int32 :: index_coef1_phi,index_coef2_phi,index_phi
-sll_int32 :: i,j,mm, nn, b, bprime,x,y
-sll_int32 :: li_A, li_Aprime
-sll_real64 :: elt_mat_global
-sll_int32 :: nbsp,nbsp1
-sll_int32 :: patch
-sll_int32 :: num_cells1,num_cells2
-
-lm => es_mp%T%get_cartesian_mesh(patch-1)
-num_cells1 = lm%num_cells1
-num_cells2 = lm%num_cells2
-
-
-do mm = 0,es_mp%spline_degree2(patch)
-   index3 = cell_j + mm
-   
-
-   
-   do i = 0,es_mp%spline_degree1(patch)
-      
-      index1 = cell_i + i
-
-         nbsp = num_cells1 + es_mp%spline_degree1(patch)
-
-      x          =  index1 + (index3-1)*nbsp
-      b          =  mm * ( es_mp%spline_degree1(patch) + 1 ) + i + 1
-      li_A       =  es_mp%local_to_global_row(patch,b, cell_index)
-      !li_AA= es_mp%local_to_global_spline_indices_test(b, cell_index)
-     
-      
-      do nn = 0,es_mp%spline_degree2(patch)
-         
-         index4 = cell_j + nn
-         
-
-         
-         do j = 0,es_mp%spline_degree1(patch)
-            
-            index2 = cell_i + j
-
-               nbsp1 = num_cells1 + es_mp%spline_degree1(patch)
-
-            
-            y         = index2 + (index4-1)*nbsp1
-            bprime    =  nn * ( es_mp%spline_degree1(patch) + 1 ) + j + 1
-            li_Aprime = es_mp%local_to_global_col(patch,bprime,cell_index)
-            !li_AAprime = es_mp%local_to_global_spline_indices_test(bprime,cell_index)
-            
-            elt_mat_global = &
-                 M_c_loc(b, bprime)     - &
-                 K_a11_loc(b, bprime)   - &
-                 K_a12_loc(b, bprime)   - &
-                 K_a21_loc(b, bprime)   - &
-                 K_a22_loc(b, bprime)   - &
-                 M_b_vect_loc(b,bprime) - &
-                 S_b1_loc( b, bprime)   - &
-                 S_b2_loc( b, bprime)
-            
-
-            
-            index_coef1 = es_mp%tab_index_coeff1(patch,cell_i)- es_mp%spline_degree1(patch) + i
-            index_coef2 = es_mp%tab_index_coeff2(patch,cell_j)- es_mp%spline_degree2(patch) + mm
-            index = index_coef1 + (index_coef2-1)*nbsp!(num_cells1+1)
-            es_mp%local_to_global_spline_indices_source_row(patch,b,cell_index)= index
-            es_mp%local_to_global_spline_indices_source_col(patch,bprime,cell_index)= y!index_phi
-              
-              if ( (li_A > 0) .and. (li_Aprime > 0) ) then
-                 
-                 call sll_add_to_csr_matrix( &
-                      es_mp%sll_csr_mat, &
-                      elt_mat_global, &
-                      li_A, &
-                      li_Aprime)
-              end if
-             
-              
-           end do
-           
-        end do
-     end do
-  end do
-  
-end subroutine local_to_global_matrices_mp
-
-
-
 subroutine solve_linear_system_mp( es_mp,k )
-  ! CSR_MAT*phi = rho_vec is the linear system to be solved. The solution
-  ! is given in terms of the spline coefficients that represent phi.
-  class(general_coordinate_elliptic_solver_mp) :: es_mp
-  !type(csr_matrix)  :: csr_masse
-  integer :: k
- 
-  call solve_gen_elliptic_eq_mp(es_mp,es_mp%rho_vec(1:k),es_mp%phi_vec(1:k))
+! CSR_MAT*phi = rho_vec is the linear system to be solved. The solution
+! is given in terms of the spline coefficients that represent phi.
+class(general_coordinate_elliptic_solver_mp) :: es_mp
+!type(csr_matrix)  :: csr_masse
+integer :: k
 
+call solve_gen_elliptic_eq_mp(es_mp,es_mp%rho_vec(1:k),es_mp%phi_vec(1:k))
 
 end subroutine solve_linear_system_mp
 
 subroutine solve_gen_elliptic_eq_mp(es_mp,apr_B,apr_U)
-  class(general_coordinate_elliptic_solver_mp) :: es_mp
-  sll_real64, dimension(:) :: apr_U
-  sll_real64, dimension(:) :: apr_B 
-  sll_int32  :: ai_maxIter
-  sll_real64 :: ar_eps
-  
-  ar_eps = 1.d-13
-  ai_maxIter = 100000
+class(general_coordinate_elliptic_solver_mp) :: es_mp
+sll_real64, dimension(:) :: apr_U
+sll_real64, dimension(:) :: apr_B 
+sll_int32  :: ai_maxIter
+sll_real64 :: ar_eps
 
-  call sll_solve_csr_matrix(es_mp%sll_csr_mat, apr_B, apr_U)
- 
+ar_eps = 1.d-13
+ai_maxIter = 100000
+
+call sll_solve_csr_matrix(es_mp%sll_csr_mat, apr_B, apr_U)
+
 end subroutine solve_gen_elliptic_eq_mp
   
 subroutine compute_Source_matrice_mp(es_mp,Source_loc)
@@ -1072,148 +955,141 @@ end do
 
 end subroutine compute_Source_matrice_mp
 
-subroutine initialize_knots(&
-     spline_degree,&
-     num_cells, &
-     eta_min, &
-     eta_max, &
-     bc_left, &
-     bc_right, &
-     knots)
+subroutine initialize_knots( spline_degree, &
+                             num_cells,     &
+                             eta_min,       &
+                             eta_max,       &
+                             bc_left,       &
+                             bc_right,      &
+                             knots)
   
-  integer, intent(in)   :: spline_degree 
-  integer, intent(in)   :: num_cells
-  real(8), intent(in)   :: eta_min
-  real(8), intent(in)   :: eta_max
-  integer, intent(in)   :: bc_left
-  integer, intent(in)   :: bc_right
-  real(8), dimension(:) :: knots
-  integer               :: i, k 
-  real(8)               :: eta
-  real(8)               :: delta
+integer, intent(in)   :: spline_degree 
+integer, intent(in)   :: num_cells
+real(8), intent(in)   :: eta_min
+real(8), intent(in)   :: eta_max
+integer, intent(in)   :: bc_left
+integer, intent(in)   :: bc_right
+real(8), dimension(:) :: knots
+integer               :: i, k 
+real(8)               :: eta
+real(8)               :: delta
 
-  ! This routine needs some error-checking...
-  delta = (eta_max - eta_min)/num_cells
+! This routine needs some error-checking...
+delta = (eta_max - eta_min)/num_cells
 
-  if ( (bc_left  == KNOTS_PERIODIC) .and. &
-       (bc_right == KNOTS_PERIODIC) ) then 
-     ! it is intentional that eta_min is not used, one intends to consider
-     ! only the [0,1] interval...
-     do k = -spline_degree, spline_degree+1
-        knots(k+spline_degree+1) = delta*k 
-     end do
-  else if ( (bc_left  == KNOTS_DIRICHLET) .and. &
-            (bc_right == KNOTS_DIRICHLET) ) then 
-     do i = 1, spline_degree + 1
-        knots(i) = eta_min
-     enddo
-     eta = eta_min
-     do i = spline_degree + 2, num_cells + 1 + spline_degree
-        eta = eta + delta
-        knots(i) = eta
-     enddo
-     do i = num_cells + spline_degree + 1, num_cells + 1 + 2*spline_degree
-        knots(i) = eta_max
-     enddo
-  end if
+if ( (bc_left  == KNOTS_PERIODIC) .and. &
+     (bc_right == KNOTS_PERIODIC) ) then 
+   ! it is intentional that eta_min is not used, one intends to consider
+   ! only the [0,1] interval...
+   do k = -spline_degree, spline_degree+1
+      knots(k+spline_degree+1) = delta*k 
+   end do
+else if ( (bc_left  == KNOTS_DIRICHLET) .and. &
+          (bc_right == KNOTS_DIRICHLET) ) then 
+   do i = 1, spline_degree + 1
+      knots(i) = eta_min
+   enddo
+   eta = eta_min
+   do i = spline_degree + 2, num_cells + 1 + spline_degree
+      eta = eta + delta
+      knots(i) = eta
+   enddo
+   do i = num_cells + spline_degree + 1, num_cells + 1 + 2*spline_degree
+      knots(i) = eta_max
+   enddo
+end if
 
 end subroutine initialize_knots
 
-subroutine initialize_knots_per(&
-     spline_degree,&
-     num_cells, &
-     eta_min, &
-     eta_max, &
-     knots)
+subroutine initialize_knots_per(spline_degree,&
+                                num_cells,    &
+                                eta_min,      &
+                                eta_max,      &
+                                knots)
 
-  integer, intent(in)   :: spline_degree 
-  integer, intent(in)   :: num_cells
-  real(8), intent(in)   :: eta_min
-  real(8), intent(in)   :: eta_max
-  real(8), dimension(:) :: knots
-  integer               :: i
-  real(8)               :: delta
+integer, intent(in)   :: spline_degree 
+integer, intent(in)   :: num_cells
+real(8), intent(in)   :: eta_min
+real(8), intent(in)   :: eta_max
+real(8), dimension(:) :: knots
+integer               :: i
+real(8)               :: delta
 
-  delta = (eta_max - eta_min)/num_cells
-  
-  do i = - spline_degree, num_cells + spline_degree
-     
-     knots( i+ spline_degree + 1 ) = eta_min + i* delta
-  end do
+delta = (eta_max - eta_min)/num_cells
+
+do i = - spline_degree, num_cells + spline_degree
+  knots( i+ spline_degree + 1 ) = eta_min + i* delta
+end do
 end subroutine initialize_knots_per
 
-subroutine initialize_knots_dir(&
-     spline_degree,&
-     num_cells, &
-     eta_min, &
-     eta_max, &
-     knots)
+subroutine initialize_knots_dir(spline_degree,&
+                                num_cells,    &
+                                eta_min,      & 
+                                eta_max,      &
+                                knots)
   
-  integer, intent(in)   :: spline_degree 
-  integer, intent(in)   :: num_cells
-  real(8), intent(in)   :: eta_min
-  real(8), intent(in)   :: eta_max
-  real(8), dimension(:) :: knots
-  integer               :: i
-  real(8)               :: delta
-  real(8)               :: eta
-  
-  delta = (eta_max - eta_min)/num_cells
-  
-  do i = 1, spline_degree + 1
-     knots(i) = eta_min
-  enddo
-  eta = eta_min
-  do i = spline_degree + 2, num_cells + 1 + spline_degree
-     eta = eta + delta
-     knots(i) = eta
-  enddo
-  do i = num_cells + spline_degree + 1, num_cells + 1 + 2*spline_degree
-     knots(i) = eta_max
-  enddo
+integer, intent(in)   :: spline_degree 
+integer, intent(in)   :: num_cells
+real(8), intent(in)   :: eta_min
+real(8), intent(in)   :: eta_max
+real(8), dimension(:) :: knots
+integer               :: i
+real(8)               :: delta
+real(8)               :: eta
+
+delta = (eta_max - eta_min)/num_cells
+do i = 1, spline_degree + 1
+  knots(i) = eta_min
+enddo
+eta = eta_min
+do i = spline_degree + 2, num_cells + 1 + spline_degree
+  eta = eta + delta
+  knots(i) = eta
+enddo
+do i = num_cells + spline_degree + 1, num_cells + 1 + 2*spline_degree
+  knots(i) = eta_max
+enddo
 end subroutine initialize_knots_dir
 
+subroutine initialize_knots_all(spline_degree,&
+                                num_cells,    &
+                                eta_min,      &
+                                eta_max,      &
+                                bc_left,      &
+                                bc_right,     &
+                                knots)
+  
+integer, intent(in)   :: spline_degree 
+integer, intent(in)   :: num_cells
+real(8), intent(in)   :: eta_min
+real(8), intent(in)   :: eta_max
+integer, intent(in)   :: bc_left
+integer, intent(in)   :: bc_right
+real(8), dimension(:) :: knots
+real(8)               :: delta
 
-subroutine initialize_knots_all(&
-     spline_degree,&
-     num_cells, &
-     eta_min, &
-     eta_max, &
-     bc_left, &
-     bc_right, &
-     knots)
+! This routine needs some error-checking...
+delta = (eta_max - eta_min)/num_cells
+
+if (bc_left  == KNOTS_PERIODIC .and. &
+    bc_right == KNOTS_PERIODIC ) then 
   
-  integer, intent(in)   :: spline_degree 
-  integer, intent(in)   :: num_cells
-  real(8), intent(in)   :: eta_min
-  real(8), intent(in)   :: eta_max
-  integer, intent(in)   :: bc_left
-  integer, intent(in)   :: bc_right
-  real(8), dimension(:) :: knots
-  real(8)               :: delta
-  
-  ! This routine needs some error-checking...
-  delta = (eta_max - eta_min)/num_cells
-  
-  if ( (bc_left  == KNOTS_PERIODIC) .and. &
-       (bc_right == KNOTS_PERIODIC) ) then 
-    
-     call initialize_knots_per(&
-          spline_degree,&
-          num_cells, &
-          eta_min, &
-          eta_max, &
-          knots)
-  else if ( (bc_left  == KNOTS_DIRICHLET) .and. &
-       (bc_right == KNOTS_DIRICHLET) ) then 
-     call initialize_knots_dir(&
-          spline_degree,&
-          num_cells, &
-          eta_min, &
-          eta_max, &
-          knots)
-     
-  end if
+  call initialize_knots_per(spline_degree,&
+                            num_cells,    &
+                            eta_min,      &
+                            eta_max,      &
+                            knots)
+
+else if (bc_left  == KNOTS_DIRICHLET .and. &
+         bc_right == KNOTS_DIRICHLET ) then 
+
+  call initialize_knots_dir(spline_degree,&
+                            num_cells,    &
+                            eta_min,      &
+                            eta_max,      &
+                            knots)
+   
+end if
   
 end subroutine initialize_knots_all
   

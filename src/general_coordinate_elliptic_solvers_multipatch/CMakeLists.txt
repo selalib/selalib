@@ -2,37 +2,16 @@ ADD_LIBRARY( sll_general_coordinate_elliptic_solvers_multipatch STATIC
   connectivity_qn.f90
   sll_general_coordinate_elliptic_solver_multipatch.F90
 )
-# profilmat.f90
-# GC.f90
-# sparse_matrix.F90
-# sparse_matrix_con.F90
-# sparse_matrix_operations.F90 
-# connectivity.F90
-# sparse_matrix_composed.F90
-# tracelog.F90
-# connectivities_def.F90
-# sparse_matrix_basic.F90
-# sparse_matrix_LM.F90  
-# quicksort.f90
-# sparse_matrix_def.F90
-# precision.f90
-# coocsr.f90 
-# linpack.f90)
 
 TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers_multipatch 
   sll_scalar_field_multipatch
   sll_coordinate_transformation_multipatch
   sll_sparse_matrix
-  sll_integration
-  original_deboor_splines)
-
-  #sll_general_coordinate_elliptic_solvers
-  #ll_sparse_matrix 
-  #sll_fields
-  #sll_integration)
+  sll_integration)
 
 IF(BUILD_TESTING AND MPI_ENABLED)
-  ADD_EXECUTABLE( test_general_coordinate_elliptic_solver_multipatch unit_test.F90)
+  ADD_EXECUTABLE( test_general_coordinate_elliptic_solver_multipatch 
+                  test_functions.F90 unit_test.F90)
   TARGET_LINK_LIBRARIES( test_general_coordinate_elliptic_solver_multipatch
     sll_general_coordinate_elliptic_solvers_multipatch)
 
