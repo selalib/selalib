@@ -380,11 +380,61 @@ sll_int32 :: ierr
 sll_int32 :: j,i
 sll_int32 :: cell_index
 sll_int32 :: patch
+  sll_real64 :: delta1
+  sll_real64 :: delta2
+  sll_real64 :: eta1_min
+  sll_real64 :: eta2_min
+  sll_real64 :: eta1
+  sll_real64 :: eta2
+  sll_real64 :: gpt1
+  sll_real64 :: gpt2
+  sll_real64 :: wgpt1
+  sll_real64 :: wgpt2
+  sll_real64 :: gtmp1
+  sll_real64 :: gtmp2
+  sll_int32 :: cell_i, cell_j
+  sll_int32  :: ii,iii
+  sll_int32  :: jj,jjj
+  sll_int32  :: local_spline_index1
+  sll_int32  :: local_spline_index2
+  sll_int32  :: index1
+  sll_int32  :: index2
 
 type(sll_time_mark)                  :: t0 
 double precision                     :: time
 type(sll_cartesian_mesh_2d), pointer :: lm
 character(len=*),parameter           :: as_file1='mat'
+  sll_real64 :: val_jac
+  sll_real64 :: B11
+  sll_real64 :: B12
+  sll_real64 :: B21
+  sll_real64 :: B22
+  sll_real64 :: MC
+  sll_real64 :: C1
+  sll_real64 :: C2    
+  sll_int32 :: left_x,left_y
+  sll_int32 :: mflag_x, mflag_y
+  sll_int32 :: num_cells2,num_cells1
+  sll_real64 :: val_c
+  sll_real64 :: val_a11
+  sll_real64 :: val_a12
+  sll_real64 :: val_a21
+  sll_real64 :: val_a22
+  sll_real64 :: val_b1=0
+  sll_real64 :: val_b1_der1=0
+  sll_real64 :: val_b1_der2=0
+  sll_real64 :: val_b2=0
+  sll_real64 :: val_b2_der1=0
+  sll_real64 :: val_b2_der2=0
+  sll_real64, dimension(2,2) :: jac_mat
+  sll_real64, allocatable :: work1(:,:)
+  sll_real64, allocatable :: work2(:,:)
+  sll_real64, allocatable :: dbiatx1(:,:)
+  sll_real64, allocatable :: dbiatx2(:,:)
+  sll_int32  :: num_pts_g1 ! number of gauss points in first direction 
+  sll_int32  :: num_pts_g2 ! number of gauss points in second direction
+  sll_int32  :: tmp1
+  sll_int32  :: tmp2
 
 call sll_set_time_mark(t0)
 
@@ -403,50 +453,208 @@ lm => es_mp%T%get_cartesian_mesh(0)
 SLL_ALLOCATE(Source_loc(es_mp%T%number_patches,lm%num_cells1*lm%num_cells2,total_num_splines_loc,total_num_splines_loc),ierr)
 Source_loc(:,:,:,:) = 0.0_f64
 
+
 do patch = 1,es_mp%T%number_patches
 
   lm => es_mp%T%get_cartesian_mesh(patch-1)
+
+  delta1    = lm%delta_eta1 !mesh2d%delta_eta1
+  delta2    = lm%delta_eta2 !! mesh2d%delta_eta2
+  eta1_min  = lm%eta1_min  
+  eta2_min  = lm%eta2_min
+  num_cells2= lm%num_cells2
+  num_cells1= lm%num_cells1
+  tmp1      = (es_mp%spline_degree1(patch) + 1)/2
+  tmp2      = (es_mp%spline_degree2(patch) + 1)/2
   
-  do j=1,lm%num_cells2
-  do i=1,lm%num_cells1
-        
-        M_c_loc   = 0.0_f64
-        K_a11_loc = 0.0_f64
-        K_a12_loc = 0.0_f64
-        K_a21_loc = 0.0_f64 
-        K_a22_loc = 0.0_f64
-        S_b1_loc  = 0.0_f64
-        S_b2_loc  = 0.0_f64
+  allocate(work1(es_mp%spline_degree1(patch)+1,es_mp%spline_degree1(patch)+1))
+  allocate(work2(es_mp%spline_degree2(patch)+1,es_mp%spline_degree2(patch)+1))
+  allocate(dbiatx1(es_mp%spline_degree1(patch)+1,2))
+  allocate(dbiatx2(es_mp%spline_degree2(patch)+1,2))
 
-        cell_index = i+lm%num_cells1*(j-1)
+  do cell_j=1,lm%num_cells2
+  do cell_i=1,lm%num_cells1
         
-        call build_local_matrices_mp( es_mp, &
-             cell_index,&
-             i, &
-             j, &
-             patch,&
-             a11_field_mat, &
-             a12_field_mat, &
-             a21_field_mat, &
-             a22_field_mat, &
-             b1_field_vect,&
-             b2_field_vect,&
-             c_field, &
-             M_c_loc, &
-             K_a11_loc, &
-             K_a12_loc, &
-             K_a21_loc, &
-             K_a22_loc, &
-             M_b_vect_loc, &
-             S_b1_loc,  &
-             S_b2_loc,&
-             Source_loc)
+    M_c_loc           = 0.0_f64
+    K_a11_loc         = 0.0_f64
+    K_a12_loc         = 0.0_f64
+    K_a21_loc         = 0.0_f64 
+    K_a22_loc         = 0.0_f64
+    S_b1_loc          = 0.0_f64
+    S_b2_loc          = 0.0_f64
+    M_b_vect_loc(:,:) = 0.0_f64
 
-        call local_to_global_matrices_mp( &
+    cell_index = cell_i+lm%num_cells1*(cell_j-1)
+        
+    num_pts_g1 = size(es_mp%gauss_pts1,3)
+    num_pts_g2 = size(es_mp%gauss_pts2,3)
+
+    eta1  = eta1_min + (cell_i-1)*delta1
+    eta2  = eta2_min + (cell_j-1)*delta2
+  
+    do j=1,num_pts_g2
+
+      gpt2  = eta2  + 0.5_f64*delta2 * ( es_mp%gauss_pts2(patch,1,j) + 1.0_f64 )
+      wgpt2 = 0.5_f64*delta2*es_mp%gauss_pts2(patch,2,j) !ATTENTION 0.5
+      gtmp2 = gpt2
+      local_spline_index2 = es_mp%spline_degree2(patch) + cell_j
+      call interv(es_mp%knots2(patch,:),size(es_mp%T%transfs(1)%T%knots2), gpt2, left_y, mflag_y )
+      if (mflag_y .eq. -1) stop "Problem : interv2 returned flag = -1"
+    
+      call bsplvd( es_mp%knots2(patch,:),        &
+                   es_mp%spline_degree2(patch)+1,&
+                   gtmp2,                        &
+                   left_y,                       &
+                   work2,                        &
+                   dbiatx2,                      &
+                   2)
+
+      es_mp%tab_index_coeff2(patch,cell_j + num_cells2*(j-1)) = left_y
+     
+      do i=1,num_pts_g1
+        gpt1  = eta1  + 0.5_f64*delta1 * ( es_mp%gauss_pts1(patch,1,i) + 1.0_f64 )
+        wgpt1 = 0.5_f64*delta1*es_mp%gauss_pts1(patch,2,i)
+        gtmp1   = gpt1
+        local_spline_index1 = es_mp%spline_degree1(patch) + cell_i
+        call interv(es_mp%knots1(patch,:),size(es_mp%T%transfs(1)%T%knots1),gpt1,left_x,mflag_x)
+
+        call bsplvd( es_mp%knots1(patch,:),        &
+                     es_mp%spline_degree1(patch)+1,&
+                     gtmp1,                        &
+                     left_x,                       &
+                     work1,                        &
+                     dbiatx1,                      &
+                     2 )
+
+        es_mp%tab_index_coeff1(patch,cell_i + num_cells1*(i-1)) = left_x
+
+        val_c       = c_field%fields(patch)%f%value_at_point(gpt1,gpt2)
+        val_a11     = a11_field_mat%fields(patch)%f%value_at_point(gpt1,gpt2)
+        val_a12     = a12_field_mat%fields(patch)%f%value_at_point(gpt1,gpt2)
+        val_a21     = a21_field_mat%fields(patch)%f%value_at_point(gpt1,gpt2)
+        val_a22     = a22_field_mat%fields(patch)%f%value_at_point(gpt1,gpt2)
+
+        val_b1      = b1_field_vect%fields(patch)%f%value_at_point(gpt1,gpt2)
+        val_b1_der1 = b1_field_vect%fields(patch)%f%first_deriv_eta1_value_at_point(gpt1,gpt2)
+        val_b1_der2 = b1_field_vect%fields(patch)%f%first_deriv_eta2_value_at_point(gpt1,gpt2)
+
+        val_b2      = b2_field_vect%fields(patch)%f%value_at_point(gpt1,gpt2)
+        val_b2_der1 = b2_field_vect%fields(patch)%f%first_deriv_eta1_value_at_point(gpt1,gpt2)
+        val_b2_der2 = b2_field_vect%fields(patch)%f%first_deriv_eta2_value_at_point(gpt1,gpt2)
+ 
+        jac_mat     = c_field%fields(patch)%f%get_jacobian_matrix(gpt1,gpt2)
+        val_jac     = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)
+
+        if (val_jac .eq. 0.) stop " ATTENTION : the value of the jacobian is zero !!"
+
+        es_mp%values_jacobian(patch,cell_i + num_cells1*(i-1),cell_j + num_cells2*(j-1)) = val_jac
+      
+        es_mp%intjac = es_mp%intjac + wgpt2*wgpt1*val_jac
+        ! The B matrix is  by (J^(-1)) A^T (J^(-1))^T 
+        B11 = jac_mat(2,2)*jac_mat(2,2)*val_a11 - &
+              jac_mat(2,2)*jac_mat(1,2)*(val_a12+val_a21) + &
+              jac_mat(1,2)*jac_mat(1,2)*val_a22
+
+        B21 = jac_mat(1,1)*jac_mat(2,2)*val_a12 - &
+              jac_mat(1,1)*jac_mat(1,2)*val_a22 - &
+              jac_mat(2,1)*jac_mat(2,2)*val_a11 + &
+              jac_mat(1,2)*jac_mat(2,1)*val_a21
+        
+        B12 = jac_mat(1,1)*jac_mat(2,2)*val_a21 - &
+              jac_mat(1,1)*jac_mat(1,2)*val_a22 - &
+              jac_mat(2,1)*jac_mat(2,2)*val_a11 + &
+              jac_mat(1,2)*jac_mat(2,1)*val_a12
+
+        B22 = jac_mat(1,1)*jac_mat(1,1)*val_a22 - &
+              jac_mat(1,1)*jac_mat(2,1)*(val_a21+val_a12) + &
+              jac_mat(2,1)*jac_mat(2,1)*val_a11
+        
+        MC =   jac_mat(2,2) * val_b1_der1 &
+             - jac_mat(2,1) * val_b1_der2 &
+             - jac_mat(1,2) * val_b2_der1 &
+             + jac_mat(1,1) * val_b2_der2
+        
+        C1 =   jac_mat(2,2) * val_b1 &
+             - jac_mat(1,2) * val_b2 
+        C2 =   jac_mat(1,1) * val_b2 &
+             - jac_mat(2,1) * val_b1
+       
+        do ii = 0,es_mp%spline_degree1(patch)
+        do jj = 0,es_mp%spline_degree2(patch)
+              
+          index1  =  jj * ( es_mp%spline_degree1(patch) + 1 ) + ii + 1
+          
+          do iii = 0,es_mp%spline_degree1(patch)
+          do jjj = 0,es_mp%spline_degree2(patch)
+             
+             index2 =  jjj*(es_mp%spline_degree1(patch) + 1) + iii + 1
+          
+             Source_loc(patch,cell_index,index1, index2) = &
+                  Source_loc(patch,cell_index,index1, index2) + &
+                  val_jac*wgpt1*wgpt2* &
+                  dbiatx1(ii+1,1)*dbiatx1(iii+1,1)*  &
+                  dbiatx2(jj+1,1)*dbiatx2(jjj+1,1)
+             
+             M_c_loc(index1, index2) = &
+                  M_c_loc(index1, index2) + &
+                  val_c*val_jac*wgpt1*wgpt2* &
+                  dbiatx1(ii+1,1)*dbiatx1(iii+1,1)*  &
+                  dbiatx2(jj+1,1)*dbiatx2(jjj+1,1)
+             
+             K_a11_loc(index1, index2) = &
+                  K_a11_loc(index1, index2) + &
+                  B11*wgpt1*wgpt2/val_jac* &
+                  dbiatx1(ii+1,2)*dbiatx1(iii+1,2)* &
+                  dbiatx2(jj+1,1)*dbiatx2(jjj+1,1)
+             
+             K_a22_loc(index1, index2) = &
+                  K_a22_loc(index1, index2) + &
+                  B22*wgpt1*wgpt2/val_jac*  &
+                  dbiatx1(ii+1,1)*dbiatx1(iii+1,1)*   &
+                  dbiatx2(jj+1,2)*dbiatx2(jjj+1,2)
+             
+             K_a12_loc(index1, index2) = &
+                  K_a12_loc(index1, index2) + &
+                  B12*wgpt1*wgpt2/val_jac*  &
+                  dbiatx1(ii+1,2)*dbiatx1(iii+1,1) *&
+                  dbiatx2(jj+1,1)*dbiatx2(jjj+1,2)
+             
+             K_a21_loc(index1, index2) = &
+                  K_a21_loc(index1, index2) +&
+                  B21*wgpt1*wgpt2/val_jac*  &
+                  dbiatx1(ii+1,1)*dbiatx1(iii+1,2)*   &
+                  dbiatx2(jj+1,2)*dbiatx2(jjj+1,1)
+
+
+             M_b_vect_loc(index1, index2) =      &
+                  M_b_vect_loc(index1, index2) + &
+                  MC*wgpt1*wgpt2 *  &
+                  dbiatx1(ii+1,1)*dbiatx1(iii+1,1)*   &
+                  dbiatx2(jj+1,1)*dbiatx2(jjj+1,1)
+             
+             S_b1_loc(index1, index2) =      &
+                  S_b1_loc(index1, index2) + &
+                  C1*wgpt1*wgpt2 *  &
+                  dbiatx1(ii+1,1)*dbiatx1(iii+1,2)*   &
+                  dbiatx2(jj+1,1)*dbiatx2(jjj+1,1)
+
+             S_b2_loc(index1, index2) = &
+                  S_b2_loc(index1, index2) + &
+                  C2*wgpt1*wgpt2 *  &
+                  dbiatx1(ii+1,1)*dbiatx1(iii+1,1)*   &
+                  dbiatx2(jj+1,1)*dbiatx2(jjj+1,2)
+          end do
+          end do
+        end do
+        end do
+      end do
+    end do
+ 
+    call local_to_global_matrices_mp( &
              es_mp, &
              cell_index, &
-             i, &
-             j, &
+             cell_i, &
+             cell_j, &
              patch,&
              M_c_loc, &
              K_a11_loc, &
@@ -459,6 +667,10 @@ do patch = 1,es_mp%T%number_patches
         
   end do
   end do
+  deallocate(work1)
+  deallocate(work2)
+  deallocate(dbiatx1)
+  deallocate(dbiatx2)
 
 end do
 
@@ -654,272 +866,7 @@ subroutine build_local_matrices_mp( &
   sll_real64, dimension(:,:), intent(out) :: S_b1_loc
   sll_real64, dimension(:,:), intent(out) :: S_b2_loc
 
-  sll_real64 :: delta1
-  sll_real64 :: delta2
-  sll_real64 :: eta1_min
-  sll_real64 :: eta2_min
-  sll_real64 :: eta1
-  sll_real64 :: eta2
-  sll_int32  :: tmp1
-  sll_int32  :: tmp2
-  sll_int32  :: num_pts_g1 ! number of gauss points in first direction 
-  sll_int32  :: num_pts_g2 ! number of gauss points in second direction
-  sll_int32  :: i,ii,iii
-  sll_int32  :: j,jj,jjj
-  sll_real64 :: gpt1
-  sll_real64 :: gpt2
-  sll_real64 :: wgpt1
-  sll_real64 :: wgpt2
-  sll_real64 :: gtmp1
-  sll_real64 :: gtmp2
-  sll_int32  :: local_spline_index1
-  sll_int32  :: local_spline_index2
-  sll_int32  :: index1
-  sll_int32  :: index2
-  sll_real64, dimension(es_mp%spline_degree1(patch)+1,es_mp%spline_degree1(patch)+1) :: work1
-  sll_real64, dimension(es_mp%spline_degree2(patch)+1,es_mp%spline_degree2(patch)+1) :: work2
-  sll_real64, dimension(es_mp%spline_degree1(patch)+1,2) :: dbiatx1
-  sll_real64, dimension(es_mp%spline_degree2(patch)+1,2) :: dbiatx2
-  sll_real64 :: val_c
-  sll_real64 :: val_a11
-  sll_real64 :: val_a12
-  sll_real64 :: val_a21
-  sll_real64 :: val_a22
-  sll_real64 :: val_b1=0
-  sll_real64 :: val_b1_der1=0
-  sll_real64 :: val_b1_der2=0
-  sll_real64 :: val_b2=0
-  sll_real64 :: val_b2_der1=0
-  sll_real64 :: val_b2_der2=0
-  sll_real64, dimension(2,2) :: jac_mat
-  sll_real64 :: val_jac
-  sll_real64 :: B11
-  sll_real64 :: B12
-  sll_real64 :: B21
-  sll_real64 :: B22
-  sll_real64 :: MC
-  sll_real64 :: C1
-  sll_real64 :: C2    
-  sll_int32 :: left_x,left_y
-  sll_int32 :: mflag_x, mflag_y
-  sll_int32 :: num_cells2,num_cells1
   
-  M_c_loc(:,:)      = 0.0_f64
-  K_a11_loc(:,:)    = 0.0_f64
-  K_a12_loc(:,:)    = 0.0_f64
-  K_a21_loc(:,:)    = 0.0_f64
-  K_a22_loc(:,:)    = 0.0_f64
-  M_b_vect_loc(:,:) = 0.0_f64
-  S_b1_loc(:,:)     = 0.0_f64
-  S_b2_loc(:,:)     = 0.0_f64
-  dbiatx1(:,:)      = 0.0_f64
-  dbiatx2(:,:)      = 0.0_f64
-  work1(:,:)        = 0.0_f64
-  work2(:,:)        = 0.0_f64
-  ! The supposition is that all fields use the same logical mesh
-  lm => es_mp%T%get_cartesian_mesh(patch-1)
-  delta1    = lm%delta_eta1 !mesh2d%delta_eta1
-  delta2    = lm%delta_eta2 !! mesh2d%delta_eta2
-  eta1_min  = lm%eta1_min  
-  eta2_min  = lm%eta2_min
-  num_cells2= lm%num_cells2
-  num_cells1= lm%num_cells1
-  tmp1      = (es_mp%spline_degree1(patch) + 1)/2
-  tmp2      = (es_mp%spline_degree2(patch) + 1)/2
-
-  num_pts_g1 = size(es_mp%gauss_pts1,3)
-  num_pts_g2 = size(es_mp%gauss_pts2,3)
-  
-
-  eta1  = eta1_min + (cell_i-1)*delta1
-  eta2  = eta2_min + (cell_j-1)*delta2
-  
-  do j=1,num_pts_g2
-     ! rescale Gauss points to be in interval [eta2 ,eta2 +delta_eta2]
-     ! the bottom edge of the cell.
-     gpt2  = eta2  + 0.5_f64*delta2 * ( es_mp%gauss_pts2(patch,1,j) + 1.0_f64 )
-     wgpt2 = 0.5_f64*delta2*es_mp%gauss_pts2(patch,2,j) !ATTENTION 0.5
-     
-     gtmp2 = gpt2
-     local_spline_index2 = es_mp%spline_degree2(patch) + cell_j
-
-     call interv(es_mp%knots2(patch,:),size(es_mp%T%transfs(1)%T%knots2), gpt2, left_y, mflag_y )
-
-     if (mflag_y .eq. -1) then
-        print *, "Problem : interv2 returned flag = -1"
-     end if
-    
-     call bsplvd( &
-          es_mp%knots2(patch,:), &
-          es_mp%spline_degree2(patch)+1,&
-          gtmp2,&
-          left_y,&
-          work2,&
-          dbiatx2,&
-          2)
-
-     ! we stocke the values of spline to construct the source term
-     es_mp%tab_index_coeff2(patch,cell_j + num_cells2*(j-1)) = left_y
-
-     
-     do i=1,num_pts_g1
-        ! rescale Gauss points to be in interval [eta1,eta1+delta1]
-        gpt1  = eta1  + 0.5_f64*delta1 * ( es_mp%gauss_pts1(patch,1,i) + 1.0_f64 )
-        wgpt1 = 0.5_f64*delta1*es_mp%gauss_pts1(patch,2,i)
-        
-           gtmp1   = gpt1
-           local_spline_index1 = es_mp%spline_degree1(patch) + cell_i
-           
-    
-        call interv ( es_mp%knots1(patch,:), size(es_mp%T%transfs(1)%T%knots1), gpt1,&
-             left_x, mflag_x )
-
-        call bsplvd(&
-             es_mp%knots1(patch,:),&
-             es_mp%spline_degree1(patch)+1,&
-             gtmp1,&
-             left_x,&
-             work1,&
-             dbiatx1,&
-             2 )
-
-        es_mp%tab_index_coeff1(patch,cell_i + num_cells1*(i-1)) = left_x
-
-        val_c        = c_field%fields(patch)%f%value_at_point(gpt1,gpt2)
-        val_a11      = a11_field_mat%fields(patch)%f%value_at_point(gpt1,gpt2)
-        val_a12      = a12_field_mat%fields(patch)%f%value_at_point(gpt1,gpt2)
-        val_a21      = a21_field_mat%fields(patch)%f%value_at_point(gpt1,gpt2)
-        val_a22      = a22_field_mat%fields(patch)%f%value_at_point(gpt1,gpt2)
-
-        val_b1       = b1_field_vect%fields(patch)%f%value_at_point(gpt1,gpt2)
-        val_b1_der1  = b1_field_vect%fields(patch)%f%first_deriv_eta1_value_at_point(gpt1,gpt2)
-        val_b1_der2  = b1_field_vect%fields(patch)%f%first_deriv_eta2_value_at_point(gpt1,gpt2)
-
-        val_b2       = b2_field_vect%fields(patch)%f%value_at_point(gpt1,gpt2)
-        val_b2_der1  = b2_field_vect%fields(patch)%f%first_deriv_eta1_value_at_point(gpt1,gpt2)
-        val_b2_der2  = b2_field_vect%fields(patch)%f%first_deriv_eta2_value_at_point(gpt1,gpt2)
- 
-        jac_mat(:,:) = c_field%fields(patch)%f%get_jacobian_matrix(gpt1,gpt2)
-        val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)
-
-        if (val_jac .eq. 0.) then
-           print *, " ATTENTION : the value of the jacobian is zero !!"
-        end if
-
-        es_mp%values_jacobian(patch,cell_i + num_cells1*(i-1),cell_j + num_cells2*(j-1)) = val_jac
-      
-        es_mp%intjac = es_mp%intjac + wgpt2*wgpt1*val_jac
-        ! The B matrix is  by (J^(-1)) A^T (J^(-1))^T 
-        B11 = jac_mat(2,2)*jac_mat(2,2)*val_a11 - &
-             jac_mat(2,2)*jac_mat(1,2)*(val_a12+val_a21) + &
-             jac_mat(1,2)*jac_mat(1,2)*val_a22
-        
-
-        B21 = jac_mat(1,1)*jac_mat(2,2)*val_a12 - &
-             jac_mat(1,1)*jac_mat(1,2)*val_a22 - &
-             jac_mat(2,1)*jac_mat(2,2)*val_a11 + &
-             jac_mat(1,2)*jac_mat(2,1)*val_a21
-        
-        
-        
-        B12 = jac_mat(1,1)*jac_mat(2,2)*val_a21 - &
-             jac_mat(1,1)*jac_mat(1,2)*val_a22 - &
-             jac_mat(2,1)*jac_mat(2,2)*val_a11 + &
-             jac_mat(1,2)*jac_mat(2,1)*val_a12
-
-        B22 = jac_mat(1,1)*jac_mat(1,1)*val_a22 - &
-             jac_mat(1,1)*jac_mat(2,1)*(val_a21+val_a12) + &
-             jac_mat(2,1)*jac_mat(2,1)*val_a11
-        
-        MC =   jac_mat(2,2) * val_b1_der1 &
-             - jac_mat(2,1) * val_b1_der2 &
-             - jac_mat(1,2) * val_b2_der1 &
-             + jac_mat(1,1) * val_b2_der2
-        
-
-        C1 =   jac_mat(2,2) * val_b1 &
-             - jac_mat(1,2) * val_b2 
-        C2 =   jac_mat(1,1) * val_b2 &
-             - jac_mat(2,1) * val_b1
-       
-        ! loop over the splines supported in the cell that are different than
-        ! zero at the point (gpt1,gpt2) (there are spline_degree+1 splines in
-        ! each direction.
-        do ii = 0,es_mp%spline_degree1(patch)
-           do jj = 0,es_mp%spline_degree2(patch)
-              
-              index1  =  jj * ( es_mp%spline_degree1(patch) + 1 ) + ii + 1
-              
-              
-              do iii = 0,es_mp%spline_degree1(patch)
-                 do jjj = 0,es_mp%spline_degree2(patch)
-                    
-                    index2 =  jjj*(es_mp%spline_degree1(patch) + 1) + iii + 1
-              
-                    Source_loc(patch,cell_index,index1, index2) = &
-                         Source_loc(patch,cell_index,index1, index2) + &
-                         val_jac*wgpt1*wgpt2* &
-                         dbiatx1(ii+1,1)*dbiatx1(iii+1,1)*  &
-                         dbiatx2(jj+1,1)*dbiatx2(jjj+1,1)
-                    
-                    M_c_loc(index1, index2) = &
-                         M_c_loc(index1, index2) + &
-                         val_c*val_jac*wgpt1*wgpt2* &
-                         dbiatx1(ii+1,1)*dbiatx1(iii+1,1)*  &
-                         dbiatx2(jj+1,1)*dbiatx2(jjj+1,1)
-                    
-                    K_a11_loc(index1, index2) = &
-                         K_a11_loc(index1, index2) + &
-                         B11*wgpt1*wgpt2/val_jac* &
-                         dbiatx1(ii+1,2)*dbiatx1(iii+1,2)* &
-                         dbiatx2(jj+1,1)*dbiatx2(jjj+1,1)
-                    
-                    K_a22_loc(index1, index2) = &
-                         K_a22_loc(index1, index2) + &
-                         B22*wgpt1*wgpt2/val_jac*  &
-                         dbiatx1(ii+1,1)*dbiatx1(iii+1,1)*   &
-                         dbiatx2(jj+1,2)*dbiatx2(jjj+1,2)
-                    
-                    K_a12_loc(index1, index2) = &
-                         K_a12_loc(index1, index2) + &
-                         B12*wgpt1*wgpt2/val_jac*  &
-                         dbiatx1(ii+1,2)*dbiatx1(iii+1,1) *&
-                         dbiatx2(jj+1,1)*dbiatx2(jjj+1,2)
-                    
-                    K_a21_loc(index1, index2) = &
-                         K_a21_loc(index1, index2) +&
-                         B21*wgpt1*wgpt2/val_jac*  &
-                         dbiatx1(ii+1,1)*dbiatx1(iii+1,2)*   &
-                         dbiatx2(jj+1,2)*dbiatx2(jjj+1,1)
-
-
-                    M_b_vect_loc(index1, index2) =      &
-                         M_b_vect_loc(index1, index2) + &
-                         MC*wgpt1*wgpt2 *  &
-                         dbiatx1(ii+1,1)*dbiatx1(iii+1,1)*   &
-                         dbiatx2(jj+1,1)*dbiatx2(jjj+1,1)
-                    
-                    
-                    ! A revoir 
-                    S_b1_loc(index1, index2) =      &
-                         S_b1_loc(index1, index2) + &
-                         C1*wgpt1*wgpt2 *  &
-                         dbiatx1(ii+1,1)*dbiatx1(iii+1,2)*   &
-                         dbiatx2(jj+1,1)*dbiatx2(jjj+1,1)
-
-                    ! A revoir 
-                    S_b2_loc(index1, index2) = &
-                         S_b2_loc(index1, index2) + &
-                         C2*wgpt1*wgpt2 *  &
-                         dbiatx1(ii+1,1)*dbiatx1(iii+1,1)*   &
-                         dbiatx2(jj+1,1)*dbiatx2(jjj+1,2)
-                 end do
-              end do
-           end do
-        end do
-     end do
-  end do
- 
 end subroutine build_local_matrices_mp
 
 subroutine local_to_global_matrices_mp( es_mp,        &
