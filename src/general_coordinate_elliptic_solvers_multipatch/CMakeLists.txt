@@ -26,7 +26,6 @@ TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers_multipatch
   sll_sparse_matrix 
   sll_integration)
 
-# Ctest
 IF(BUILD_TESTING AND MPI_ENABLED)
   ADD_EXECUTABLE( test_general_coordinate_elliptic_solver_multipatch unit_test.F90)
   TARGET_LINK_LIBRARIES( test_general_coordinate_elliptic_solver_multipatch
