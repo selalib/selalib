@@ -110,7 +110,7 @@ T => new_coordinate_transformation_2d_analytic( &
 call initialize_fields( SLL_DIRICHLET, SLL_DIRICHLET, SLL_DIRICHLET, SLL_DIRICHLET)
 
 rho => new_scalar_field_2d_analytic( &
-     func_zero,                      &
+     func_one,                       &
      "rho",                          &     
      T,                              &
      SLL_DIRICHLET,                  &
@@ -126,7 +126,8 @@ call phi%write_to_file(0)
 
 do j=1,npts2
 do i=1,npts1
-  node_val = calculated(i,j)
+  node_val        = phi%value_at_point(eta1(i),eta2(j))
+  calculated(i,j) = node_val
   grad1_node_val  = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
   grad2_node_val  = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
   ref             = 0.0_f64
@@ -362,11 +363,6 @@ call sll_solve( es, rho, phi)
 
 te = sll_time_elapsed_since(t_reference)
 
-do j=1,npts2
-  do i=1,npts1
-    calculated(i,j) = phi%value_at_point(eta1(i),eta2(j))
-  end do
-end do
 
 integral_solution       = 0.0_f64
 integral_exact_solution = 0.0_f64
@@ -394,7 +390,15 @@ real(8), intent(in) :: eta1
 real(8), intent(in) :: eta2
 real(8), dimension(:), intent(in) :: params
 real(8) :: res
-res = 1.0_f64
+
+if (eta1 == ETA1MIN) then
+  res = 1.0_f64
+else if (eta1 == ETA1MAX) then
+  res = 2.0_f64
+else
+  res = 3.0
+end if
+
 end function func_one
 
 function func_zero( eta1, eta2, params ) result(res)
