@@ -685,6 +685,7 @@ sll_real64, dimension(:,:,:), pointer     :: source
 sll_int32 :: ierr
 sll_int32 :: i
 sll_int32 :: j
+sll_int32 :: k
 sll_int32 :: icell
 sll_int32 :: bc1_min
 sll_int32 :: bc1_max
@@ -745,6 +746,9 @@ sll_real64 :: r1r2, v1v2, d1v2, v1d2
 sll_real64 :: d3v4, v3v4 , v3d4
 sll_int32  :: tid=0, nthreads=1
 sll_real64 :: intjac
+
+sll_real64, allocatable :: dense_matrix(:,:)
+character(len=8)        :: display_format
 
 bc1_min    = es%bc1_min
 bc1_max    = es%bc1_max
@@ -1056,6 +1060,20 @@ end do
 
 !$OMP END PARALLEL
 
+allocate(dense_matrix(es%csr_mat%num_rows,es%csr_mat%num_cols))
+
+do i =1, es%csr_mat%num_rows
+ do k = es%csr_mat%row_ptr(i), es%csr_mat%row_ptr(i+1)-1
+    j = es%csr_mat%col_ind(k)
+    dense_matrix(i,j) = es%csr_mat%val(k)
+ end do
+end do
+
+write(display_format,"('(',i2,'f7.3)')") es%csr_mat%num_cols
+do i = 1, es%csr_mat%num_rows
+  write(*,display_format) dense_matrix(i,:) 
+end do
+
 es%intjac = intjac
 print *,'#begin of sll_factorize_csr_matrix'
 
@@ -1074,8 +1092,11 @@ if (es%perper) then
                               es%csr_mat_with_constraint%val)  
 
   call sll_factorize_csr_matrix(es%csr_mat_with_constraint)
+
 else   
+
   call sll_factorize_csr_matrix(es%csr_mat)
+
 end if 
 
 print *,'#end of sll_factorize_csr_matrix'
@@ -1094,8 +1115,7 @@ do j=1,es%num_cells2
 do i=1,es%num_cells1
       
   icell = icell+1
-      
-  b = 0
+  b     = 0
   do ideg2 = 0,es%spline_degree2
   do ideg1 = 0,es%spline_degree1
             
@@ -1280,9 +1300,7 @@ class is (sll_scalar_field_2d_analytic)
         do nn = 0,es%spline_degree1
           index1 = i + nn
           if (bc1_min==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC) then 
-            if ( index1 > es%total_num_splines1) then
-              index1 = index1 - es%total_num_splines1
-            end if
+            if (index1 > es%total_num_splines1) index1=index1-es%total_num_splines1
             nbsp = es%total_num_splines1
           else if (bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET) then
             nbsp = es%num_cells1 + es%spline_degree1
@@ -1391,6 +1409,10 @@ else if( bc1_min==SLL_NEUMANN  .and. bc1_max==SLL_DIRICHLET .and.&
   end do
 
 end if
+
+print*, 'tmp_rho_vec', size(es%tmp_rho_vec)
+write(*,"(25i7)") (k, k = 1, size(es%tmp_rho_vec))
+write(*,"(25f7.3)") es%tmp_rho_vec
 
 if(bc1_min==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC .and.&
    bc2_min==SLL_PERIODIC .and. bc2_max==SLL_PERIODIC) then
