@@ -1,9 +1,7 @@
-
 module map_function_module
 #include "sll_coordinate_transformations.h"
 
-
-   class(sll_coordinate_transformation_2d_base),pointer :: tau
+class(sll_coordinate_transformation_2d_base),pointer :: tau
 
 contains
 

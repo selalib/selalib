@@ -1348,8 +1348,8 @@ if( bc1_min==SLL_PERIODIC  .and. bc1_max==SLL_PERIODIC .and. &
     end do
   end do
      
-else if( bc1_min  ==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET .and.&
-         bc2_min==SLL_DIRICHLET .and. bc2_max  ==SLL_DIRICHLET) then 
+else if( bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET .and.&
+         bc2_min==SLL_DIRICHLET .and. bc2_max==SLL_DIRICHLET) then 
      
   k = 0
   do j = 1, es%total_num_splines2
@@ -1378,8 +1378,8 @@ else if(bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET .and.&
   end do
   end do
 
-else if( bc1_min == SLL_NEUMANN  .and. bc1_max == SLL_DIRICHLET .and.&
-         bc2_min == SLL_PERIODIC .and. bc2_max == SLL_PERIODIC ) then
+else if( bc1_min==SLL_NEUMANN  .and. bc1_max==SLL_DIRICHLET .and.&
+         bc2_min==SLL_PERIODIC .and. bc2_max==SLL_PERIODIC ) then
    
   k = 0
   do j = 1, es%total_num_splines2
