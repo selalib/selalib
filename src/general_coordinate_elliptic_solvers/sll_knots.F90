@@ -125,8 +125,8 @@ subroutine initialize_knots_dir(spline_degree, &
                                 eta_max,       &
                                 knots)
   
-sll_int32, intent(in)    :: spline_degree 
-sll_int32, intent(in)    :: num_cells
+sll_int32,  intent(in)   :: spline_degree 
+sll_int32,  intent(in)   :: num_cells
 sll_real64, intent(in)   :: eta_min
 sll_real64, intent(in)   :: eta_max
 sll_real64, dimension(:) :: knots
