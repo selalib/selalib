@@ -748,7 +748,6 @@ sll_int32  :: tid=0, nthreads=1
 sll_real64 :: intjac
 
 sll_real64, allocatable :: dense_matrix(:,:)
-character(len=8)        :: display_format
 
 bc1_min    = es%bc1_min
 bc1_max    = es%bc1_max
@@ -1069,9 +1068,9 @@ do i =1, es%csr_mat%num_rows
  end do
 end do
 
-write(display_format,"('(',i2,'f7.3)')") es%csr_mat%num_cols
+write(*,"(3x,25i7)") (k, k = 1, size(es%tmp_rho_vec))
 do i = 1, es%csr_mat%num_rows
-  write(*,display_format) dense_matrix(i,:) 
+  write(*, "(i3,25f7.3)')") i, dense_matrix(i,:) 
 end do
 
 es%intjac = intjac
@@ -1426,6 +1425,8 @@ else
                             es%tmp_rho_vec, &
                             es%phi_vec)
 endif
+
+write(*,"(25f7.3)") es%phi_vec
 
 end subroutine solve_linear_system
   
