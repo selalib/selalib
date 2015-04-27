@@ -1350,20 +1350,21 @@ contains
 #ifndef NOHDF5
       if(modulo(step,sim%freq_diag)==0)then
         if(iplot==0)then
-          call plot_divf_curvilinear(iplot,div,sim%mesh_2d,sim%transformation)
+          call plot_visit_curvilinear(iplot,div,sim%mesh_2d,sim%transformation,"div")
         endif
-        call plot_f_curvilinear(iplot,f,sim%mesh_2d,sim%transformation)
+        call plot_visit_curvilinear(iplot,f,sim%mesh_2d,sim%transformation,"f")
         iplot = iplot+1          
       endif    
       
       if(step==nb_step)then
+          call plot_visit_curvilinear(iplot-1,abs(f_exact-f),sim%mesh_2d,sim%transformation,"Error")
           do i2=1,Nc_eta2+1
             eta2=eta2_min+real(i2-1,f64)*delta_eta2
             do i1=1,Nc_eta1+1
               eta1=eta1_min+real(i1-1,f64)*delta_eta1
               x1 = sim%transformation%x1(eta1,eta2)
               x2 = sim%transformation%x2(eta1,eta2)
-              write(12,*) x1,x2,f(i1,i2)
+              write(12,*) x1,x2,f(i1,i2) !,f_exact(i1,i2)
             enddo
           enddo    
       endif        
@@ -1474,7 +1475,7 @@ contains
 !*********************
 !*********************
 
-  subroutine plot_divf_curvilinear(iplot,f,mesh_2d,transf)
+  subroutine plot_visit_curvilinear(iplot,f,mesh_2d,transf,file_name)
     use sll_xdmf
     use sll_hdf5_io_serial
     sll_int32 :: file_id
@@ -1482,8 +1483,9 @@ contains
     sll_real64, dimension(:,:), allocatable :: x1
     sll_real64, dimension(:,:), allocatable :: x2
     sll_int32 :: i, j
-    sll_int32, intent(in) :: iplot
-    character(len=4)      :: cplot
+    sll_int32, intent(in)               :: iplot
+     character(len=*),  intent(in)      :: file_name
+    character(len=4)                    :: cplot
     sll_int32             :: nnodes_x1, nnodes_x2
     type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     class(sll_coordinate_transformation_2d_base), pointer :: transf
@@ -1533,12 +1535,12 @@ contains
     end if
 
     call int2string(iplot,cplot)
-    call sll_xdmf_open("divf"//cplot//".xmf","curvilinear_mesh", &
+    call sll_xdmf_open(file_name//cplot//".xmf","curvilinear_mesh", &
       nnodes_x1,nnodes_x2,file_id,error)
-    call sll_xdmf_write_array("divf"//cplot,f,"values", &
+    call sll_xdmf_write_array(file_name//cplot,f,"values", &
       error,file_id,"Node")
     call sll_xdmf_close(file_id,error)
-  end subroutine plot_divf_curvilinear
+  end subroutine plot_visit_curvilinear
 
 #endif
 
