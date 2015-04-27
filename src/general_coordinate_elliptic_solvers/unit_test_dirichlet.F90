@@ -23,19 +23,18 @@ implicit none
 
 #define SPLINE_DEG1       3
 #define SPLINE_DEG2       3
-#define NUM_CELLS1        4
-#define NUM_CELLS2        4
+#define NUM_CELLS1        5
+#define NUM_CELLS2        5
 #define ETA1MIN           0.0_f64
 #define ETA1MAX           1.0_f64
 #define ETA2MIN           0.0_f64
 #define ETA2MAX           1.0_f64
-#define PRINT_COMPARISON  .false.
 
 type(sll_cartesian_mesh_2d), pointer                      :: mesh_2d
 class(sll_coordinate_transformation_2d_base), pointer     :: T
 type(general_coordinate_elliptic_solver)                  :: es
-type(sll_arbitrary_degree_spline_interpolator_2d), target :: interp_2d
-type(sll_arbitrary_degree_spline_interpolator_2d), target :: interp_2d_rhs
+type(sll_arbitrary_degree_spline_interpolator_2d), target :: interp_phi
+type(sll_arbitrary_degree_spline_interpolator_2d), target :: interp_rho
 class(sll_scalar_field_2d_base), pointer                  :: a11_field_mat
 class(sll_scalar_field_2d_base), pointer                  :: a12_field_mat
 class(sll_scalar_field_2d_base), pointer                  :: a21_field_mat
@@ -57,6 +56,11 @@ sll_real64 :: normH1
 sll_real64, dimension(NUM_CELLS1+1,NUM_CELLS2+1) :: values
 sll_real64, dimension(NUM_CELLS1+1,NUM_CELLS2+1) :: calculated
 sll_real64, dimension(NUM_CELLS1+1,NUM_CELLS2+1) :: reference
+
+sll_real64, dimension(NUM_CELLS2+1) :: v1_min
+sll_real64, dimension(NUM_CELLS2+1) :: v1_max
+sll_real64, dimension(NUM_CELLS1+1) :: v2_min
+sll_real64, dimension(NUM_CELLS1+1) :: v2_max
 
 sll_int32  :: i, j
 sll_real64 :: h1,h2,node_val,ref
@@ -110,7 +114,7 @@ T => new_coordinate_transformation_2d_analytic( &
 call initialize_fields( SLL_DIRICHLET, SLL_DIRICHLET, SLL_DIRICHLET, SLL_DIRICHLET)
 
 rho => new_scalar_field_2d_analytic( &
-     func_one,                       &
+     zero,                           &
      "rho",                          &     
      T,                              &
      SLL_DIRICHLET,                  &
@@ -118,6 +122,22 @@ rho => new_scalar_field_2d_analytic( &
      SLL_DIRICHLET,                  &
      SLL_DIRICHLET,                  &
      [0.0_f64]                       )
+
+!Set boundary conditions
+do j = 1, npts2
+  v1_min(j) = eta1(    1)**2+eta2(j)**2
+  v1_max(j) = eta1(npts1)**2+eta2(j)**2
+end do
+do i = 1, npts1
+  v2_min(i) = eta1(i)**2+eta2(    1)**2
+  v2_max(i) = eta1(i)**2+eta2(npts2)**2
+end do
+
+
+values = 0.0_f64
+call phi%set_field_data(values)
+call set_boundary_value2d(interp_phi, v1_min, v1_max, v2_min, v2_max)
+call phi%update_interpolation_coefficients()
 
 call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, &
                    SLL_DIRICHLET, SLL_DIRICHLET, ti, te)
@@ -130,41 +150,36 @@ do i=1,npts1
   calculated(i,j) = node_val
   grad1_node_val  = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
   grad2_node_val  = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
-  ref             = 0.0_f64
-  grad1ref        = 0.0_f64
-  grad2ref        = 0.0_f64
+  ref             = eta1(i)**2 + eta2(j)**2
+  grad1ref        = 2*eta1(i)
+  grad2ref        = 2*eta2(j)
   reference(i,j)  = ref
   normL2          = normL2 + (node_val-ref)**2*h1*h2
   normH1          = normH1 + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2
-  if (PRINT_COMPARISON) call printout_comparison()
+  !call printout_comparison()
 end do
 end do
 
 integral_solution = sum(calculated(1:NUM_CELLS1,1:NUM_CELLS2))*h1*h2
 integral_exact_solution = sum(reference(1:NUM_CELLS1,1:NUM_CELLS2))*h1*h2
 
+do j=1,100
+do i=1,100
+  write(41,*) i, j, phi%value_at_point((i-1)*0.01_f64,(j-1)*0.01_f64) &
+                  , ((i-1)*0.01_f64)**2+((j-1)*0.01_f64)**2
+end do
+write(41,*) 
+end do
+
 call delete_things()
 call check_error()
 
 print*, 'PASSED'
 
-  
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine printout_comparison()
-
-print*,'(eta1,eta2) = ',eta1, eta2(j), 'calculated = ', node_val, &
-       'theoretical = ',ref, 'difference=', node_val-ref
-print*,'(eta1,eta2) = ',eta1, eta2(j), 'calculated = ', grad1_node_val, &
-       'theoretical = ',grad1ref, 'difference=',grad1ref-grad1_node_val
-print*,'(eta1,eta2) = ',eta1, eta2(j), 'calculated = ', grad2_node_val, &
-       'theoretical = ',grad2ref, 'difference=',grad2ref-grad2_node_val
-
-end subroutine printout_comparison
-
-! Each field object must be initialized using the same logical
 ! mesh and coordinate transformation.
 subroutine initialize_fields( bc1_min, bc1_max, bc2_min, bc2_max)
 
@@ -174,7 +189,7 @@ sll_int32, intent(in) :: bc1_max
 sll_int32, intent(in) :: bc2_max
 
 a11_field_mat => new_scalar_field_2d_analytic( &
-  func_one,                                    &
+  one,                                         &
   "a11",                                       &
   T,                                           &
   bc1_min,                                     &
@@ -184,7 +199,7 @@ a11_field_mat => new_scalar_field_2d_analytic( &
   [0.0_f64]  ) 
 
 a12_field_mat => new_scalar_field_2d_analytic( &
-  func_zero,                                   &
+  zero,                                        &
   "a12",                                       &
   T,                                           &
   bc1_min,                                     &
@@ -194,7 +209,7 @@ a12_field_mat => new_scalar_field_2d_analytic( &
   [0.0_f64] )
 
 a21_field_mat => new_scalar_field_2d_analytic( &
-  func_zero,                                   &
+  zero,                                        &
   "a21",                                       &
   T,                                           &
   bc1_min,                                     &
@@ -204,7 +219,7 @@ a21_field_mat => new_scalar_field_2d_analytic( &
   [0.0_f64] ) 
 
 a22_field_mat => new_scalar_field_2d_analytic( &
-  func_one,                                    &
+  one,                                         &
   "a22",                                       &
   T,                                           &
   bc1_min,                                     &
@@ -214,7 +229,7 @@ a22_field_mat => new_scalar_field_2d_analytic( &
   [0.0_f64])
 
 b1_field_vect => new_scalar_field_2d_analytic( &
-  func_zero,                                   &
+  zero,                                        &
   "b1",                                        &
   T,                                           &
   bc1_min,                                     &
@@ -222,11 +237,11 @@ b1_field_vect => new_scalar_field_2d_analytic( &
   bc2_min,                                     &
   bc2_max,                                     &
   [0.0_f64],                                   & 
-  first_deriv_eta1 = func_zero,                &
-  first_deriv_eta2 = func_zero) 
+  first_deriv_eta1 = zero,                     &
+  first_deriv_eta2 = zero) 
 
 b2_field_vect => new_scalar_field_2d_analytic( &
-  func_zero,                                   &
+  zero,                                        &
   "b2",                                        &
   T,                                           &
   bc1_min,                                     &
@@ -234,11 +249,11 @@ b2_field_vect => new_scalar_field_2d_analytic( &
   bc2_min,                                     &
   bc2_max,                                     &
   [0.0_f64],                                   &
-  first_deriv_eta1 = func_zero,                &
-  first_deriv_eta2 = func_zero)
+  first_deriv_eta1 = zero,                     &
+  first_deriv_eta2 = zero)
 
 c_field => new_scalar_field_2d_analytic(       &
-  func_zero,                                   &
+  zero,                                        &
   "c_field",                                   &
   T,                                           &
   bc1_min,                                     &
@@ -248,7 +263,7 @@ c_field => new_scalar_field_2d_analytic(       &
   [0.0_f64]  )
 
 call initialize_ad2d_interpolator(             &
-  interp_2d,                                   &
+  interp_phi,                                  &
   NUM_CELLS1+1,                                &
   NUM_CELLS2+1,                                &
   ETA1MIN,                                     &
@@ -263,7 +278,7 @@ call initialize_ad2d_interpolator(             &
   SPLINE_DEG2 )
 
 call initialize_ad2d_interpolator(             &
-  interp_2d_rhs,                               &
+  interp_rho,                                  &
   NUM_CELLS1+1,                                &
   NUM_CELLS2+1,                                &
   ETA1MIN,                                     &
@@ -279,7 +294,7 @@ call initialize_ad2d_interpolator(             &
 
 phi => new_scalar_field_2d_discrete(           &
   "phi",                                       &
-  interp_2d,                                   &
+  interp_phi,                                  &
   T,                                           &
   bc1_min,                                     &
   bc1_max,                                     &
@@ -354,15 +369,10 @@ ti = sll_time_elapsed_since(t_reference)
 
 call sll_set_time_mark(t_reference)
 
-values = 0.0_f64
-call phi%set_field_data(values)
-call phi%update_interpolation_coefficients()
 
 call sll_solve( es, rho, phi)
 
-
 te = sll_time_elapsed_since(t_reference)
-
 
 integral_solution       = 0.0_f64
 integral_exact_solution = 0.0_f64
@@ -373,40 +383,40 @@ subroutine check_error()
 
 print"('integral solution       =',g15.3)", integral_solution
 print"('integral exact solution =',g15.3)", integral_exact_solution
-acc = sum(abs(calculated-reference))/(npts1*npts2)
+print*, ' L2 norm :', sqrt(normL2), h1**(SPLINE_DEG1-1)
+print*, ' H1 norm :', sqrt(normH1), h1**(SPLINE_DEG1-2)
 if (sqrt(normL2) <= h1**(SPLINE_DEG1-1)  .and. &
     sqrt(normH1) <= h1**(SPLINE_DEG1-2)) then     
-   print"('error=',g15.3, 4x, 'OK' )", acc
+   acc = sum(abs(calculated-reference))/(npts1*npts2)
+   print"('L_oo =',g15.3, 4x, 'OK' )", acc
 else
-  print*, ' L2 norm :', sqrt(normL2), h1**(SPLINE_DEG1-1)
-  print*, ' H1 norm :', sqrt(normH1), h1**(SPLINE_DEG1-2)
   stop 'FAILED'
 end if
 
 end subroutine check_error
 
-function func_one( eta1, eta2, params ) result(res)
+function four( eta1, eta2, params ) result(res)
+real(8), intent(in) :: eta1
+real(8), intent(in) :: eta2
+real(8), dimension(:), intent(in) :: params
+real(8) :: res, pi
+res = 4.0_f64
+end function four
+
+function one( eta1, eta2, params ) result(res)
 real(8), intent(in) :: eta1
 real(8), intent(in) :: eta2
 real(8), dimension(:), intent(in) :: params
 real(8) :: res
+res = 1.0_f64
+end function one
 
-if (eta1 == ETA1MIN) then
-  res = 1.0_f64
-else if (eta1 == ETA1MAX) then
-  res = 2.0_f64
-else
-  res = 3.0
-end if
-
-end function func_one
-
-function func_zero( eta1, eta2, params ) result(res)
+function zero( eta1, eta2, params ) result(res)
 real(8), intent(in) :: eta1
 real(8), intent(in) :: eta2
 real(8), dimension(:), intent(in) :: params
 real(8) :: res
 res = 0.0_f64
-end function func_zero
+end function zero
 
 end program test_general_elliptic_solver
