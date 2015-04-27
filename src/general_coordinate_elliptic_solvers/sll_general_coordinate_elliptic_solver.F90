@@ -1392,6 +1392,38 @@ if(bc1_min==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC .and.&
 
 else
 
+  call set_coeff_splines_values_1d( v1_min,        &
+                                    num_pts2,      &
+                                    eta2_min,      &
+                                    eta2_max,      &
+                                    bc2_min,       &
+                                    bc2_max,       &
+                                    spline_degree2 )
+
+  call set_coeff_splines_values_1d( v1_max,        &
+                                    num_pts2,      &
+                                    eta2_min,      &
+                                    eta2_max,      &
+                                    bc2_min,       &
+                                    bc2_max,       &
+                                    spline_degree2 )
+
+  call set_coeff_splines_values_1d( v2_min,        &
+                                    num_pts1,      &
+                                    eta1_min,      &
+                                    eta1_max,      &
+                                    bc1_min,       &
+                                    bc1_max,       &
+                                    spline_degree1 )
+
+  call set_coeff_splines_values_1d( v2_max,        &
+                                    num_pts1,      &
+                                    eta1_min,      &
+                                    eta1_max,      &
+                                    bc1_min,       &
+                                    bc1_max,       &
+                                    spline_degree1 )
+
   if(bc1_min==SLL_DIRICHLET) then
     l = 0; i = 1
     do k = es%csr_mat%row_ptr(i),es%csr_mat%row_ptr(i+1)-1 

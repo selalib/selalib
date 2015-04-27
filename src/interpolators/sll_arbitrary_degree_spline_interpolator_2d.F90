@@ -113,6 +113,7 @@ public sll_delete
 public new_arbitrary_degree_spline_interp2d
 public set_slope2d
 public initialize_ad2d_interpolator
+public set_coeff_splines_values_1d
 
 contains
 
