@@ -553,7 +553,8 @@ delta1     = (eta1_max-eta1_min)/num_cells1
 delta2     = (eta2_max-eta2_min)/num_cells2
 
 
-if (present(coeffs_1d)) then 
+if (present(coeffs_1d)) then  !This case is used to set the solution from
+                              !the general coordinate elliptic solver
 
   select case (interpolator%bc_selector)
   case(0) ! periodic-periodic
@@ -677,7 +678,7 @@ if (present(coeffs_1d)) then
     nb_spline_eta1 = num_cells1 + sp_deg1 - 2
     nb_spline_eta2 = num_cells2 + sp_deg2 - 2
     
-    SLL_ASSERT(size(coeffs_1d,1)==(num_cells1 + sp_deg1-2)*(num_cells2+sp_deg2-2))
+    SLL_ASSERT(size(coeffs_1d,1)==(num_cells1+sp_deg1-2)*(num_cells2+sp_deg2-2))
     do i = 1, sp_deg1 + 1
       interpolator%t1(i) = eta1_min
     enddo
@@ -1106,7 +1107,7 @@ end if
 
 interpolator%coefficients_set = .true.
  
-end subroutine !set_coefficients_ad2d
+end subroutine set_coefficients_ad2d
 
 !> @brief computing the coefficients spline with a given 
 !>  data_array 2D cooresponding at the values of a function 
