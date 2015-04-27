@@ -486,11 +486,11 @@ do j = 1, es%num_cells2
       gspl2 = yg
       ispl2 = spline_degree2+j
     end if
-    call bsplvd( es%db, es%knots2, spline_degree2+1, gspl2, ispl2, work2, dbs2, 2)
+    call bsplvd(es%db,es%knots2,spline_degree2+1,gspl2,ispl2,work2,dbs2,2)
     es%v_splines2(1,:,jj,j) = dbs2(:,1)
     es%v_splines2(2,:,jj,j) = dbs2(:,2)
-    call interv( es%db, es%knots2_rho, es%num_cells2+spline_degree2+2, yg, left, ierr )
-    call bsplvd( es%db, es%knots2_rho, spline_degree2+1, yg, left, work2, dbs2, 1)
+    call interv(es%db,es%knots2_rho,es%num_cells2+spline_degree2+2,yg,left,ierr)
+    call bsplvd( es%db,es%knots2_rho,spline_degree2+1,yg,left,work2,dbs2,1)
     es%v_splines2(3,:,jj,j) = dbs2(:,1)
   end do
   es%tab_index_coeff2(j) = left
@@ -691,8 +691,6 @@ sll_int32 :: bc1_min
 sll_int32 :: bc1_max
 sll_int32 :: bc2_min
 sll_int32 :: bc2_max
-
-character(len=*),parameter :: as_file1='mat'
 
 sll_real64 :: delta1
 sll_real64 :: delta2
@@ -1059,6 +1057,7 @@ end do
 
 !$OMP END PARALLEL
 
+#ifdef DEBUG
 allocate(dense_matrix(es%csr_mat%num_rows,es%csr_mat%num_cols))
 
 do i =1, es%csr_mat%num_rows
@@ -1072,6 +1071,7 @@ write(*,"(3x,25i7)") (k, k = 1, size(es%tmp_rho_vec))
 do i = 1, es%csr_mat%num_rows
   write(*, "(i3,25f7.3)')") i, dense_matrix(i,:) 
 end do
+#endif /* DEBUG */
 
 es%intjac = intjac
 print *,'#begin of sll_factorize_csr_matrix'
@@ -1185,6 +1185,7 @@ sll_real64, dimension(:), allocatable :: m_rho_loc
 
 sll_int32  :: i
 sll_int32  :: j
+sll_int32  :: k
 sll_int32  :: num_pts_g1, num_pts_g2
 sll_int32  :: x, n, b
 sll_int32  :: ii, jj, kk, ll, mm, nn
@@ -1215,6 +1216,7 @@ bc1_min = es%bc1_min_interp
 bc1_max = es%bc1_max
 bc2_min = es%bc2_min
 bc2_max = es%bc2_max
+
 
 base_field_pointer => rho
 
@@ -1320,38 +1322,13 @@ class is (sll_scalar_field_2d_analytic)
      
 end select
 
-call solve_linear_system(es)
-
-print *,'#solve_linear_system done'
-  
-call phi%interp_2d%set_coefficients(es%phi_vec(1:es%total_num_splines1*es%total_num_splines2))
-
-end subroutine solve_general_coordinates_elliptic_eq
-  
-  
-!> @details
-!> CSR_MAT*phi = rho_vec is the linear system to be solved. The solution
-!> is given in terms of the spline coefficients that represent phi.
-subroutine solve_linear_system( es )
-
-class(general_coordinate_elliptic_solver) :: es
-integer                                   :: elt
-integer                                   :: i,j,k
-character(len=*), parameter               :: as_file  = 'rho'
-character(len=*), parameter               :: as_file1 = 'phi'
-character(len=*), parameter               :: as_file2 = 'mat'
-sll_int32 :: bc1_min
-sll_int32 :: bc1_max
-sll_int32 :: bc2_min
-sll_int32 :: bc2_max
-
 bc1_min = es%bc1_min
 bc1_max = es%bc1_max
 bc2_min = es%bc2_min
 bc2_max = es%bc2_max
  
-es%tmp_rho_vec(:) = 0.0_f64
-es%phi_vec(:) = 0.0_f64
+es%tmp_rho_vec(:) = 0.0_f64  !PN: Is it useful ?
+es%phi_vec(:)     = 0.0_f64  !PN: Is it useful ?
   
 if( bc1_min==SLL_PERIODIC  .and. bc1_max==SLL_PERIODIC .and. &
     bc2_min==SLL_DIRICHLET .and. bc2_max==SLL_DIRICHLET ) then
@@ -1360,8 +1337,7 @@ if( bc1_min==SLL_PERIODIC  .and. bc1_max==SLL_PERIODIC .and. &
   do j = 1, es%total_num_splines2
     do i = 1, es%total_num_splines1
       k = k+1
-      elt = i+(es%total_num_splines1)*j
-      es%tmp_rho_vec(k) = es%rho_vec(elt)
+      es%tmp_rho_vec(k) = es%rho_vec(i+(es%total_num_splines1)*j)
     end do
   end do
      
@@ -1372,8 +1348,7 @@ else if( bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET .and.&
   do j = 1, es%total_num_splines2
     do i = 1, es%total_num_splines1
       k = k+1
-      elt = i+1+(es%total_num_splines1+2)*j 
-      es%tmp_rho_vec(k) = es%rho_vec( elt )
+      es%tmp_rho_vec(k) = es%rho_vec(i+1+(es%total_num_splines1+2)*j)
     end do
   end do
      
@@ -1390,8 +1365,7 @@ else if(bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET .and.&
   do j = 1, es%total_num_splines2
   do i = 1, es%total_num_splines1
       k = k+1
-      elt = i+1+(es%total_num_splines1+2)*(j-1)
-      es%tmp_rho_vec(k) = es%rho_vec(elt)
+      es%tmp_rho_vec(k) = es%rho_vec(i+1+(es%total_num_splines1+2)*(j-1))
   end do
   end do
 
@@ -1402,8 +1376,7 @@ else if( bc1_min==SLL_NEUMANN  .and. bc1_max==SLL_DIRICHLET .and.&
   do j = 1, es%total_num_splines2
     do i = 1, es%total_num_splines1
       k = k+1
-      elt = i+1+(es%total_num_splines1+1)*(j-1)
-      es%tmp_rho_vec(k) = es%rho_vec( elt )
+      es%tmp_rho_vec(k) = es%rho_vec(i+1+(es%total_num_splines1+1)*(j-1))
     end do
   end do
 
@@ -1426,9 +1399,15 @@ else
                             es%phi_vec)
 endif
 
+#ifdef DEBUG
 write(*,"(25f7.3)") es%phi_vec
+#endif /* DEBUG */
 
-end subroutine solve_linear_system
+print *,'#solve_linear_system done'
+  
+call phi%interp_2d%set_coefficients(es%phi_vec(1:es%total_num_splines1*es%total_num_splines2))
+
+end subroutine solve_general_coordinates_elliptic_eq
   
 
 end module sll_general_coordinate_elliptic_solver_module
