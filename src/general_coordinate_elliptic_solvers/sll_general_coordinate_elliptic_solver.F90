@@ -984,7 +984,7 @@ do i = 1, nc_1
           index1 = index1 - es%total_num_splines1
         end if
         nbsp = es%total_num_splines1
-      else if (bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET) then
+      else !if (bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET) then
         nbsp = nc_1 + spl_deg_1
       end if
 
@@ -1023,7 +1023,7 @@ do i = 1, nc_1
 
             nbsp1 = es%total_num_splines1
                    
-          else if (bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET) then
+          else !if (bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET) then
 
             nbsp1 = nc_1 + spl_deg_1
 
@@ -1067,9 +1067,9 @@ do i =1, es%csr_mat%num_rows
  end do
 end do
 
-write(*,"(3x,25i7)") (k, k = 1, size(es%tmp_rho_vec))
+write(*,"(3x,36i7)") (k, k = 1, size(es%tmp_rho_vec))
 do i = 1, es%csr_mat%num_rows
-  write(*, "(i3,25f7.3)')") i, dense_matrix(i,:) 
+  write(*, "(i3,36f7.3)')") i, dense_matrix(i,:) 
 end do
 #endif /* DEBUG */
 
@@ -1186,6 +1186,7 @@ sll_real64, dimension(:), allocatable :: m_rho_loc
 sll_int32  :: i
 sll_int32  :: j
 sll_int32  :: k
+sll_int32  :: l
 sll_int32  :: num_pts_g1, num_pts_g2
 sll_int32  :: x, n, b
 sll_int32  :: ii, jj, kk, ll, mm, nn
@@ -1382,10 +1383,6 @@ else if( bc1_min==SLL_NEUMANN  .and. bc1_max==SLL_DIRICHLET .and.&
 
 end if
 
-print*, 'tmp_rho_vec', size(es%tmp_rho_vec)
-write(*,"(25i7)") (k, k = 1, size(es%tmp_rho_vec))
-write(*,"(25f7.3)") es%tmp_rho_vec
-
 if(bc1_min==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC .and.&
    bc2_min==SLL_PERIODIC .and. bc2_max==SLL_PERIODIC) then
 
@@ -1394,14 +1391,60 @@ if(bc1_min==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC .and.&
                             es%phi_vec)
 
 else
+
+  if(bc1_min==SLL_DIRICHLET) then
+    l = 0; i = 1
+    do k = es%csr_mat%row_ptr(i),es%csr_mat%row_ptr(i+1)-1 
+      l = l + 1; j = es%csr_mat%col_ind(l)
+      if (i==j) then
+        es%csr_mat%val(l) = es%csr_mat%val(l)*10e7
+        es%tmp_rho_vec(i) = 10e7
+        exit
+      end if
+    end do
+  end if
+  if(bc1_max==SLL_DIRICHLET) then
+    l = 0; i = es%num_cells1+1
+    do k = es%csr_mat%row_ptr(i),es%csr_mat%row_ptr(i+1)-1 
+      l = l + 1; j = es%csr_mat%col_ind(l)
+      if (i==j) then
+        es%csr_mat%val(l) = es%csr_mat%val(l)*10e7
+        es%tmp_rho_vec(i) = 10e7
+        exit
+      end if
+    end do
+  end if
+  if(bc2_min==SLL_DIRICHLET) then
+    l = 0
+    do i = 1, es%csr_mat%num_rows 
+      do k = es%csr_mat%row_ptr(i),es%csr_mat%row_ptr(i+1)-1 
+         l = l + 1; j = 1
+         if (i==j) then
+           es%csr_mat%val(l) = es%csr_mat%val(l)*10e7
+           es%tmp_rho_vec(i) = 10e7
+           exit
+         end if
+      end do
+    end do
+  end if
+  if(bc2_max==SLL_DIRICHLET) then
+    l = 0
+    do i = 1, es%csr_mat%num_rows 
+      do k = es%csr_mat%row_ptr(i),es%csr_mat%row_ptr(i+1)-1 
+        l = l + 1; j = es%num_cells2+1
+        if (i==j) then
+          es%csr_mat%val(l) = es%csr_mat%val(l)*10e7
+          es%tmp_rho_vec(i) = 10e7
+          exit
+        end if
+      end do
+    end do
+  end if
+
   call sll_solve_csr_matrix(es%csr_mat,     &
                             es%tmp_rho_vec, &
                             es%phi_vec)
 endif
-
-#ifdef DEBUG
-write(*,"(25f7.3)") es%phi_vec
-#endif /* DEBUG */
 
 print *,'#solve_linear_system done'
   
