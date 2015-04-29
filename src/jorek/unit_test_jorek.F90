@@ -20,8 +20,11 @@ program test_jorek
           
   call sll_create(jorek_solver)
   call sll_solve(jorek_solver)
-  !call sll_delete(jorek_solver)
+
+  call plot_field(jorek_solver, "jorek", "field")
+  call plot_jorek_field_2d_with_plotmtv(jorek_solver, "jorek")
+
+  call sll_delete(jorek_solver)
+
 
 end program test_jorek
-
-

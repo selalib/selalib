@@ -7,10 +7,9 @@ LINK_DIRECTORIES(${BINARY_DIR}/lib)
 
 SET(JOREK_MODEL   poisson_2d)
 
-ADD_EXECUTABLE(jorek_${JOREK_MODEL} sll_jorek.F90 
-                                    unit_test_jorek.F90)
-  
-ADD_DEPENDENCIES(jorek_${JOREK_MODEL} jorek)
+ADD_LIBRARY(sll_jorek jorek_interface.F90 sll_jorek.F90)
+ADD_DEPENDENCIES(sll_jorek jorek)
+
   
 SET(JOREK_LIBRARIES  assembly 
                      basis 
@@ -18,8 +17,8 @@ SET(JOREK_LIBRARIES  assembly
                      boundary_conditions 
                      dispatching
                      coordinates 
-                     evaluator 
                      fem
+                     evaluator 
                      field
                      greenbox 
                      graph 
@@ -34,12 +33,24 @@ SET(JOREK_LIBRARIES  assembly
                      space
                      spm)
   
-TARGET_LINK_LIBRARIES(jorek_${JOREK_MODEL} ${JOREK_LIBRARIES} ${PETSC_LIBRARIES})
+TARGET_LINK_LIBRARIES(sll_jorek ${JOREK_LIBRARIES} 
+                                sll_utilities
+                                sll_file_io
+                                ${PETSC_LIBRARIES})
+
+
+ADD_EXECUTABLE(jorek_${JOREK_MODEL} unit_test_jorek.F90)
+TARGET_LINK_LIBRARIES(jorek_${JOREK_MODEL} sll_jorek)
+ADD_EXECUTABLE(jorek_landau_2d landau_2d.F90)
+TARGET_LINK_LIBRARIES(jorek_landau_2d sll_interpolators sll_jorek)
   
 SET(PROCS 4)
 SET(PARAMETERS parameter.txt)
 SET(GEOMETRY   ${SOURCE_DIR}/geometries/square_periodic/n16x16)
 SET(SOLVER     solver.txt)
+IF(NOT APPLE)
+  STRING(REGEX REPLACE "mpiexec" "mpirun" MPIEXEC ${MPIEXEC})
+ENDIF()
 ADD_TEST( NAME jorek
           COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS}
             ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/jorek_${JOREK_MODEL} 
