@@ -298,7 +298,7 @@ def main ():
         writefile.write("/" + "\n\n")
         currently_reading = ""
         # add information relevant to the construction of the logical mesh.
-        writefile.write("&logical_mesh_2d\n")
+        writefile.write("&cartesian_mesh_2d\n")
         nc1 = len(cartesian_mesh_locations1) - 1
         print('for the logical mesh implicit in the given transformation:')
         print('number of cells in dimension 1: ', nc1)
