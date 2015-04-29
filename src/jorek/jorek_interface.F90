@@ -215,11 +215,11 @@ stamp_default = "-proc_" // trim(adjustl(msg))
 stamp_default = trim(adjustl(adjustr(stamp_default)))
 
 ! ... evaluate unknowns on vertecies and compte model norms 
+ptr_system%ptr_assembly_diagnostics => assembly_diagnostics
 call model_diagnostics(fem_model,             &
                        analytical_model,      &
-                       assembly_diagnostics,  &
                        plot_diagnostics,      &
-                       ptr_system)
+                       ptr_system, 0)
 
 call model_save(fem_model, analytical_model, "jorek_plot", 0)
 
@@ -342,13 +342,15 @@ matrix_contribution(i_vu_rho, i_vu_rho) =  contribution
 
 end subroutine matrix_for_vi_vj
 
-subroutine assembly_diagnostics(bbox2d, gbox2d,nstep)
+subroutine assembly_diagnostics(ptr_matrix, bbox2d, gbox2d,nstep)
 
-type(def_blackbox_2d) :: bbox2d
-type(def_greenbox_2d) :: gbox2d
-integer               :: ijg
-integer               :: nstep
-real(kind=rk)         :: wvol
+class(def_matrix_2d), pointer :: ptr_matrix
+type(def_blackbox_2d)         :: bbox2d
+type(def_greenbox_2d)         :: gbox2d
+
+integer                       :: ijg
+integer                       :: nstep
+real(kind=rk)                 :: wvol
 
 if(nstep .ge. 0) then
 
