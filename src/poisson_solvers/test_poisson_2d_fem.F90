@@ -23,8 +23,8 @@ sll_real64, dimension(:,:), pointer :: rho
 sll_real64, dimension(:,:), pointer :: phi
 sll_real64 :: errmax
 
-nc_x = 32
-nc_y = 32
+nc_x = 40
+nc_y = 40
 
 SLL_CLEAR_ALLOCATE(ex(1:nc_x+1,1:nc_y+1),error)  
 SLL_CLEAR_ALLOCATE(ey(1:nc_x+1,1:nc_y+1),error) 
@@ -34,10 +34,10 @@ SLL_CLEAR_ALLOCATE(phi(1:nc_x+1,1:nc_y+1),error)
 SLL_ALLOCATE(x(1:nc_x+1),error)  
 SLL_ALLOCATE(y(1:nc_y+1),error) 
 
-xmin = -5.0
-xmax =  5.0
-ymin = -5.0
-ymax =  5.0
+xmin = -1.0
+xmax =  1.0
+ymin = -1.0
+ymax =  1.0
 
 dx = (xmax-xmin) / nc_x
 dy = (ymax-ymin) / nc_y
@@ -91,7 +91,7 @@ type( sll_fem_poisson_2d_periodic ) :: poisson
 
 do j = 1, nc_y+1
    do i = 1, nc_x+1
-      rho(i,j) = 2_f64 * dpi**2 * sin(dpi*x(i))*sin(dpi*y(j))
+      rho(i,j) = 2_f64 * dpi**2 * cos(dpi*x(i))*cos(dpi*y(j))
    end do
 end do
 
@@ -99,11 +99,11 @@ call sll_create(poisson, x, y, nc_x+1, nc_y+1)
 call sll_solve(poisson, ex, ey, rho)
 
 errmax = 0.
-do j = 1, nc_y
-   do i = 1, nc_x
-      errmax = errmax+abs(rho(i,j)-sin(dpi*x(i))*sin(dpi*y(j)))
-      write(13,*) x(i), y(j), rho(i,j),sin(dpi*x(i))*sin(dpi*y(j))
-      write(14,*) x(i), y(j), rho(i,j)-sin(dpi*x(i))*sin(dpi*y(j))
+do j = 1, nc_y+1
+   do i = 1, nc_x+1
+      errmax = errmax+abs(rho(i,j)-cos(dpi*x(i))*cos(dpi*y(j)))
+      write(13,*) x(i), y(j), rho(i,j),cos(dpi*x(i))*cos(dpi*y(j))
+      write(14,*) x(i), y(j), rho(i,j)-cos(dpi*x(i))*cos(dpi*y(j))
    end do
    write(13,*) ; write(14,*) 
 end do
