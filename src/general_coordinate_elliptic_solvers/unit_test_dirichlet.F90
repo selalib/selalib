@@ -136,7 +136,7 @@ end do
 
 values = 0.0_f64
 call phi%set_field_data(values)
-call set_boundary_value2d(interp_phi, v1_min, v1_max, v2_min, v2_max)
+!call set_boundary_value2d(interp_phi, v1_min, v1_max, v2_min, v2_max)
 call phi%update_interpolation_coefficients()
 
 call solve_fields( SLL_DIRICHLET, SLL_DIRICHLET, &

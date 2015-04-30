@@ -68,6 +68,10 @@ sll_int32                   :: nx
 sll_int32                   :: ny
 sll_int32                   :: error
 
+sll_real64                  :: hx_by_hy
+sll_real64                  :: hy_by_hx
+sll_real64                  :: hx_hy
+
 this%nx = nn_x-1
 this%ny = nn_y-1
 
@@ -111,13 +115,16 @@ this%A = 0.d0
 !***  Interior mesh ***
 do i=2,nx-1
   do j=2,ny-1
+    hx_by_hy = this%hx(i) / this%hy(j)
+    hy_by_hx = this%hy(j) / this%hx(i)
+    hx_hy    = this%hy(j) * this%hx(i)
     do ii=1,4
       do jj=1,4
         this%A(som(nx,i,j,ii),som(nx,i,j,jj)) = this%A(som(nx,i,j,ii),som(nx,i,j,jj)) &
-                & + Axelem(ii,jj) * this%hy(j) / this%hx(i)   &
-                & + Ayelem(ii,jj) * this%hx(i) / this%hy(j)
+                & + Axelem(ii,jj) * hy_by_hx   &
+                & + Ayelem(ii,jj) * hx_by_hy
         this%M(som(nx,i,j,ii),som(nx,i,j,jj)) = this%M(som(nx,i,j,ii),som(nx,i,j,jj)) &
-                & + Melem(ii,jj)  * this%hx(i) * this%hy(j)
+                & + Melem(ii,jj)  * hx_hy
       end do
     end do
   end do
@@ -132,10 +139,10 @@ do i=2,nx-1
   do ii=3,4
     do jj=3,4
       this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
-              & + Axelem(ii,jj) * this%hy(j) / this%hx(i)   &
-              & + Ayelem(ii,jj) * this%hx(i) / this%hy(j)
+              & + Axelem(ii,jj) * hy_by_hx   &
+              & + Ayelem(ii,jj) * hx_by_hy
       this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
-              & + Melem(ii,jj)  * this%hx(i) * this%hy(j)
+              & + Melem(ii,jj)  * hx_hy
     end do
   end do
   j = ny
@@ -144,10 +151,10 @@ do i=2,nx-1
   do ii=1,2
     do jj=1,2
       this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
-              & + Axelem(ii,jj) * this%hy(j) / this%hx(i)   &
-              & + Ayelem(ii,jj) * this%hx(i) / this%hy(j)
+              & + Axelem(ii,jj) * hy_by_hx   &
+              & + Ayelem(ii,jj) * hx_by_hy
       this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
-              & + Melem(ii,jj)  * this%hx(i) * this%hy(j)
+              & + Melem(ii,jj)  * hx_hy
     end do
   end do
 end do
@@ -159,10 +166,10 @@ do j=2,ny-1
   do ii=2,3
     do jj=2,3
       this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
-              & + Axelem(ii,jj) * this%hy(j) / this%hx(i) &
-              & + Ayelem(ii,jj) * this%hx(i) / this%hy(j)
+              & + Axelem(ii,jj) * hy_by_hx &
+              & + Ayelem(ii,jj) * hx_by_hy
       this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
-              & + Melem(ii,jj)  * this%hx(i) * this%hy(j)
+              & + Melem(ii,jj)  * hx_hy
     end do
   end do
   i = nx
@@ -171,10 +178,10 @@ do j=2,ny-1
   do ii=1,4,3
     do jj=1,4,3
       this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
-              & + Axelem(ii,jj) * this%hy(j) / this%hx(i) &
-              & + Ayelem(ii,jj) * this%hx(i) / this%hy(j)
+              & + Axelem(ii,jj) * hy_by_hx &
+              & + Ayelem(ii,jj) * hx_by_hy
       this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
-              & + Melem(ii,jj)  * this%hx(i) * this%hy(j)
+              & + Melem(ii,jj)  * hx_hy
     end do
   end do
 end do
@@ -249,7 +256,7 @@ end function som
 
 !> Solve the poisson equation
 subroutine solve_poisson_2d_fem( this, ex, ey, rho )
-type( sll_fem_poisson_2d )        :: this !< Poisson solver object
+type( sll_fem_poisson_2d ) :: this !< Poisson solver object
 sll_real64, dimension(:,:) :: ex   !< x electric field
 sll_real64, dimension(:,:) :: ey   !< y electric field
 sll_real64, dimension(:,:) :: rho  !< charge density

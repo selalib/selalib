@@ -148,8 +148,8 @@ call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
 
 SLL_ALLOCATE(this%ipiv(nxy),error)
 
-this%A(1,:) = 0.
-this%A(1,1) = 1.
+!this%A(1,:) = 0.
+!this%A(1,1) = 1.
 call DGETRF(nxy,nxy,this%A,nxy,this%ipiv,error)
 
 end subroutine initialize_poisson_2d_periodic_fem
@@ -219,7 +219,7 @@ do i=1,this%nx
 end do
 
 b = matmul(this%M,b)
-b(1) = 1
+!b(1) = 1
 
 call DGETRS('N',nxy,1,this%A,nxy,this%ipiv,b,nxy,error)
 
