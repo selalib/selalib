@@ -75,6 +75,28 @@ contains
     endif
     
   end function sll_cos_bell_initializer_2d
+  
+  ! cossin flow
+  function sll_cos_sin_initializer_2d( x_1, x_2, params ) result(res)
+    sll_real64 :: res
+    sll_real64, intent(in) :: x_1
+    sll_real64, intent(in) :: x_2 
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: A1
+    sll_real64 :: A2
+
+    if( .not. present(params) ) then
+       print *, 'sll_cos_sin_initializer_2d, error: ', &
+         'the params array must be passed.', &
+         ' params(1) = A1', &
+         ' params(2) = A2'
+    end if
+    SLL_ASSERT(size(params)>=2)
+    A1 = params(1)
+    A2 = params(2)
+    res = (sin(x_1)-A1)*(cos(x_2)-A2)
+    
+  end function sll_cos_sin_initializer_2d
 
   function sll_cos_bell0_initializer_2d( x_1, x_2, params ) result(res)
     sll_real64 :: res
