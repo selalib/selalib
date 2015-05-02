@@ -1347,28 +1347,28 @@ contains
         sim%phi_interp2d)
 
 
-#ifndef NOHDF5
-      if(modulo(step,sim%freq_diag)==0)then
-        if(iplot==0)then
-          call plot_visit_curvilinear(iplot,div,sim%mesh_2d,sim%transformation,"div")
-        endif
-        call plot_visit_curvilinear(iplot,f,sim%mesh_2d,sim%transformation,"f")
-        iplot = iplot+1          
-      endif    
-      
-      if(step==nb_step)then
-          call plot_visit_curvilinear(iplot-1,abs(f_exact-f),sim%mesh_2d,sim%transformation,"Error")
-          do i2=1,Nc_eta2+1
-            eta2=eta2_min+real(i2-1,f64)*delta_eta2
-            do i1=1,Nc_eta1+1
-              eta1=eta1_min+real(i1-1,f64)*delta_eta1
-              x1 = sim%transformation%x1(eta1,eta2)
-              x2 = sim%transformation%x2(eta1,eta2)
-              write(12,*) x1,x2,f(i1,i2) !,f_exact(i1,i2)
-            enddo
-          enddo    
-      endif        
-#endif  
+!#ifndef NOHDF5
+!      if(modulo(step,sim%freq_diag)==0)then
+!        if(iplot==0)then
+!          call plot_visit_curvilinear(iplot,div,sim%mesh_2d,sim%transformation,"div")
+!        endif
+!        call plot_visit_curvilinear(iplot,f,sim%mesh_2d,sim%transformation,"f")
+!        iplot = iplot+1          
+!      endif    
+!      
+!      if(step==nb_step)then
+!          call plot_visit_curvilinear(iplot-1,abs(f_exact-f),sim%mesh_2d,sim%transformation,"Error")
+!          do i2=1,Nc_eta2+1
+!            eta2=eta2_min+real(i2-1,f64)*delta_eta2
+!            do i1=1,Nc_eta1+1
+!              eta1=eta1_min+real(i1-1,f64)*delta_eta1
+!              x1 = sim%transformation%x1(eta1,eta2)
+!              x2 = sim%transformation%x2(eta1,eta2)
+!              write(12,*) x1,x2,f(i1,i2) !,f_exact(i1,i2)
+!            enddo
+!          enddo    
+!      endif        
+!#endif  
 
 
       if(modulo(step,sim%freq_diag_time)==0)then
