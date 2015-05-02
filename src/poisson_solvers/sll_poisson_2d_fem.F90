@@ -218,8 +218,8 @@ this%M(isom(3),isom(3)) = this%M(isom(3),isom(3))               &
 i=nx; j=1 !SE
 isom(4) = som(nx,i-1,j+1,2)
 this%A(isom(4),isom(4)) = this%A(isom(4),isom(4))               &
-                        + Axelem(4,4) * this%hy(i) / this%hx(i) &
-                        + Ayelem(4,4) * this%hx(j) / this%hy(j)
+                        + Axelem(4,4) * this%hy(j) / this%hx(i) &
+                        + Ayelem(4,4) * this%hx(i) / this%hy(j)
 this%M(isom(4),isom(4)) = this%M(isom(4),isom(4))               &
                         + Melem(4,4) * this%hx(i) * this%hy(j)
 
