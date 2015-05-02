@@ -76,6 +76,47 @@ contains
     
   end function sll_cos_bell_initializer_2d
 
+  function sll_cos_bell0_initializer_2d( x_1, x_2, params ) result(res)
+    sll_real64 :: res
+    sll_real64, intent(in) :: x_1
+    sll_real64, intent(in) :: x_2 
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: xc_1
+    sll_real64 :: xc_2
+    sll_real64 :: cutx_value
+    sll_real64 :: cutf_value
+    sll_real64 :: r
+
+    if( .not. present(params) ) then
+       print *, 'sll_cos_bell_initializer_2d, error: ', &
+         'the params array must be passed.', &
+         ' params(1) = xc_1', &
+         ' params(2) = xc_2'
+    end if
+    SLL_ASSERT(size(params)>=2)
+    xc_1 = params(1)
+    xc_2 = params(2)
+    if(size(params)>=3)then
+      cutx_value = params(3)
+    else
+      cutx_value = 0.25_f64
+    endif
+    if(size(params)>=4)then
+      cutf_value = params(4)
+    else
+      cutf_value = 1._f64
+    endif
+    r = sqrt((x_1-xc_1)**2+(x_2-xc_2)**2)
+    
+    if(r<cutx_value*sll_pi)then
+      res = cutf_value
+    else
+      res = 0._f64
+    endif
+    
+  end function sll_cos_bell0_initializer_2d
+
+
   !rotation flow
   function sll_rotation_phi_initializer_2d( x_1, x_2, params ) result(res)
     sll_real64 :: res
