@@ -29,13 +29,13 @@ ENDIF()
 ADD_LIBRARY( sll_poisson_solvers STATIC ${POISSON_SRCS} )
 TARGET_LINK_LIBRARIES( sll_poisson_solvers
   sll_general_coordinate_elliptic_solvers 
+  sll_meshes
   sll_memory 
   sll_assert 
   mudpack
   fishpack
   dfftpack 
-  ${LAPACK_LIBRARIES}
-  sll_meshes)
+  ${LAPACK_LIBRARIES})
 
 ADD_LIBRARY( hex_poisson STATIC hex_poisson.F90 )
 TARGET_LINK_LIBRARIES( hex_poisson sll_hex_meshes )
@@ -81,7 +81,10 @@ IF(BUILD_TESTING AND MPI_ENABLED)
 
   ADD_EXECUTABLE( test_poisson_2d_fem sll_poisson_2d_fem.F90
     sll_poisson_2d_periodic_fem.F90 test_poisson_2d_fem.F90 )
-  TARGET_LINK_LIBRARIES( test_poisson_2d_fem sll_memory ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
+  TARGET_LINK_LIBRARIES( test_poisson_2d_fem sll_memory 
+                                             sll_utilities
+                                             ${LAPACK_LIBRARIES} 
+                                             ${BLAS_LIBRARIES})
 
   ADD_EXECUTABLE(test_fishpack test_fishpack.F90)
   TARGET_LINK_LIBRARIES( test_fishpack sll_poisson_solvers) 

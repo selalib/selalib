@@ -11,6 +11,7 @@ module sll_fem_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_constants.h"
+#include "sll_utilities.h"
 
 implicit none
 private
@@ -46,10 +47,8 @@ public :: sll_create, sll_solve
 contains
 
 !> Initialize Poisson solver object using finite elements method.
-!> Indices are shifted from [1:n+1] to [0:n] only inside this 
-!> subroutine
 subroutine initialize_poisson_2d_fem( this, x, y ,nn_x, nn_y)
-type( sll_fem_poisson_2d ) :: this         !< solver data structure
+type( sll_fem_poisson_2d )  :: this !< solver data structure
 sll_int32,  intent(in)      :: nn_x !< number of cells along x
 sll_int32,  intent(in)      :: nn_y !< number of cells along y
 sll_real64, dimension(nn_x) :: x    !< x nodes coordinates
@@ -64,6 +63,7 @@ sll_real64                  :: dum
 sll_int32, dimension(4)     :: isom
 sll_int32                   :: i
 sll_int32                   :: j
+sll_int32                   :: k
 sll_int32                   :: nx
 sll_int32                   :: ny
 sll_int32                   :: error
@@ -85,46 +85,58 @@ SLL_ALLOCATE(this%M((nx-1)*(ny-1),(nx-1)*(ny-1)), error)
 SLL_ALLOCATE(this%mat(nx+1,(nx-1)*(ny-1)), error)
 
 do i=1,nx
-   this%hx(i) = x(i+1)-x(i)
+  this%hx(i) = x(i+1)-x(i)
 end do
 
 do j=1,ny
-   this%hy(j) = y(j+1)-y(j)
+  this%hy(j) = y(j+1)-y(j)
 end do
 
 !** Construction des matrices elementaires
-dum = 1.d0/6.d0
-Axelem(1,1)= 2*dum; Axelem(1,2)=-2*dum; Axelem(1,3)= - dum; Axelem(1,4)=   dum ;
-Axelem(2,1)=-2*dum; Axelem(2,2)= 2*dum; Axelem(2,3)=   dum; Axelem(2,4)= - dum ;
-Axelem(3,1)= - dum; Axelem(3,2)=   dum; Axelem(3,3)= 2*dum; Axelem(3,4)=-2*dum ;
-Axelem(4,1)=   dum; Axelem(4,2)=-  dum; Axelem(4,3)=-2*dum; Axelem(4,4)= 2*dum ;
+Axelem(1,:) = [ 2.0_f64, -2.0_f64, -1.0_f64,  1.0_f64 ]
+Axelem(2,:) = [-2.0_f64,  2.0_f64,  1.0_f64, -1.0_f64 ]
+Axelem(3,:) = [-1.0_f64,  1.0_f64,  2.0_f64, -2.0_f64 ]
+Axelem(4,:) = [ 1.0_f64, -1.0_f64, -2.0_f64,  2.0_f64 ]
 
-Ayelem(1,1)= 2*dum; Ayelem(1,2)=   dum; Ayelem(1,3)= - dum; Ayelem(1,4)=-2*dum ;
-Ayelem(2,1)=   dum; Ayelem(2,2)= 2*dum; Ayelem(2,3)=-2*dum; Ayelem(2,4)= - dum ;
-Ayelem(3,1)= - dum; Ayelem(3,2)=-2*dum; Ayelem(3,3)= 2*dum; Ayelem(3,4)=   dum ;
-Ayelem(4,1)=-2*dum; Ayelem(4,2)= - dum; Ayelem(4,3)=   dum; Ayelem(4,4)= 2*dum ;
+call sll_display(Axelem, 'f7.3')
 
-dum = 1.d0/36.d0
-Melem(1,1)=4*dum; Melem(1,2)=2*dum; Melem(1,3)=  dum; Melem(1,4)=2*dum;
-Melem(2,1)=2*dum; Melem(2,2)=4*dum; Melem(2,3)=2*dum; Melem(2,4)=  dum;
-Melem(3,1)=  dum; Melem(3,2)=2*dum; Melem(3,3)=4*dum; Melem(3,4)=2*dum;
-Melem(4,1)=2*dum; Melem(4,2)=  dum; Melem(4,3)=2*dum; Melem(4,4)=4*dum;
+Axelem = Axelem/6.0_f64
 
-this%A = 0.d0
+Ayelem(1,:) = [ 2.0_f64,  1.0_f64, -1.0_f64, -2.0_f64 ]
+Ayelem(2,:) = [ 1.0_f64,  2.0_f64, -2.0_f64, -1.0_f64 ]
+Ayelem(3,:) = [-1.0_f64, -2.0_f64,  2.0_f64,  1.0_f64 ]
+Ayelem(4,:) = [-2.0_f64, -1.0_f64,  1.0_f64,  2.0_f64 ]
+
+call sll_display(Ayelem, 'f7.3')
+
+Ayelem = Ayelem/6.0_f64
+
+Melem(1,:) = [ 4.0_f64, 2.0_f64, 1.0_f64, 2.0_f64 ]
+Melem(2,:) = [ 2.0_f64, 4.0_f64, 2.0_f64, 1.0_f64 ]
+Melem(3,:) = [ 1.0_f64, 2.0_f64, 4.0_f64, 2.0_f64 ]
+Melem(4,:) = [ 2.0_f64, 1.0_f64, 2.0_f64, 4.0_f64 ]
+
+call sll_display(Melem, 'f7.3')
+
+Melem = Melem/36.0_f64
+
+this%A = 0.0_f64
+this%M = 0.0_f64
 
 !***  Interior mesh ***
 do i=2,nx-1
   do j=2,ny-1
-    hx_by_hy = this%hx(i) / this%hy(j)
-    hy_by_hx = this%hy(j) / this%hx(i)
-    hx_hy    = this%hy(j) * this%hx(i)
+    isom(1) = som(this%nx,i,j,1)
+    isom(2) = som(this%nx,i,j,2)
+    isom(3) = som(this%nx,i,j,3)
+    isom(4) = som(this%nx,i,j,4)
     do ii=1,4
       do jj=1,4
-        this%A(som(nx,i,j,ii),som(nx,i,j,jj)) = this%A(som(nx,i,j,ii),som(nx,i,j,jj)) &
-                & + Axelem(ii,jj) * hy_by_hx   &
-                & + Ayelem(ii,jj) * hx_by_hy
-        this%M(som(nx,i,j,ii),som(nx,i,j,jj)) = this%M(som(nx,i,j,ii),som(nx,i,j,jj)) &
-                & + Melem(ii,jj)  * hx_hy
+        this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj))                   &
+        & + Axelem(ii,jj) * this%hy(j) / this%hx(i) &
+        & + Ayelem(ii,jj) * this%hx(i) / this%hy(j)
+        this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
+        + Melem(ii,jj) * this%hy(j) * this%hx(i)
       end do
     end do
   end do
@@ -139,20 +151,22 @@ do i=2,nx-1
   do ii=3,4
     do jj=3,4
       this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
-              & + Axelem(ii,jj) * hy_by_hx   &
-              & + Ayelem(ii,jj) * hx_by_hy
+              & + Axelem(ii,jj) * this%hy(j) / this%hx(i)   &
+              & + Ayelem(ii,jj) * this%hx(i) / this%hy(j)
       this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
-              & + Melem(ii,jj)  * hx_hy
+              & + Melem(ii,jj)  * this%hy(j) * this%hx(i)
     end do
   end do
   j = ny
   isom(1)=som(nx,i,j-1,3)
   isom(2)=som(nx,i,j-1,4)
+  hx_by_hy = this%hx(i) / this%hy(j)
+  hy_by_hx = this%hy(j) / this%hx(i)
+  hx_hy    = this%hy(j) * this%hx(i)
   do ii=1,2
     do jj=1,2
       this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
-              & + Axelem(ii,jj) * hy_by_hx   &
-              & + Ayelem(ii,jj) * hx_by_hy
+              & + Axelem(ii,jj) * hy_by_hx + Ayelem(ii,jj) * hx_by_hy
       this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
               & + Melem(ii,jj)  * hx_hy
     end do
@@ -163,6 +177,9 @@ do j=2,ny-1
   i = 1
   isom(2)=som(nx,i+1,j,1)
   isom(3)=som(nx,i+1,j,4)
+  hx_by_hy = this%hx(i) / this%hy(j)
+  hy_by_hx = this%hy(j) / this%hx(i)
+  hx_hy    = this%hy(j) * this%hx(i)
   do ii=2,3
     do jj=2,3
       this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
@@ -175,6 +192,9 @@ do j=2,ny-1
   i = nx
   isom(1)=som(nx,i-1,j,2)
   isom(4)=som(nx,i-1,j,3)
+  hx_by_hy = this%hx(i) / this%hy(j)
+  hy_by_hx = this%hy(j) / this%hx(i)
+  hx_hy    = this%hy(j) * this%hx(i)
   do ii=1,4,3
     do jj=1,4,3
       this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
@@ -222,15 +242,15 @@ this%M(isom(2),isom(2)) =   this%M(isom(2),isom(2))             &
 this%mat = 0.d0
 this%mat(nx+1,1) = this%A(1,1)
 do j=2,(nx-1)*(ny-1)
-   this%mat(nx+1,j) = this%A(j,j)
-   this%mat(nx,j)   = this%A(j-1,j)
+  this%mat(nx+1,j) = this%A(j,j)
+  this%mat(nx  ,j) = this%A(j-1,j)
 end do
 this%mat(3,nx) = this%A(2,nx)
 this%mat(2,nx) = this%A(1,nx)
 do j=nx+1,(nx-1)*(ny-1)
-   this%mat(3,j) = this%A(j-nx+2,j)
-   this%mat(2,j) = this%A(j-nx+1,j)
-   this%mat(1,j) = this%A(j-nx,j)
+  this%mat(3,j) = this%A(j-nx+2,j)
+  this%mat(2,j) = this%A(j-nx+1,j)
+  this%mat(1,j) = this%A(j-nx,j)
 end do
 
 call dpbtrf('U',(nx-1)*(ny-1),nx,this%mat,nx+1,error)
@@ -240,17 +260,17 @@ end subroutine initialize_poisson_2d_fem
 !> Get the node index
 integer function som(nx, i, j, k)
 
-   integer :: i, j, k, nx
+integer :: i, j, k, nx
 
-   if (k == 1) then
-      som = i-1+(j-2)*(nx-1)
-   else if (k == 2) then
-      som = i-1+(j-2)*(nx-1)+1
-   else if (k == 3) then
-      som = i-1+(j-2)*(nx-1)+nx
-   else if (k == 4) then
-      som = i-1+(j-2)*(nx-1)+nx-1
-   end if 
+if (k == 1) then
+  som = i-1+(j-2)*(nx-1)
+else if (k == 2) then
+  som = i-1+(j-2)*(nx-1)+1
+else if (k == 3) then
+  som = i-1+(j-2)*(nx-1)+nx
+else if (k == 4) then
+  som = i-1+(j-2)*(nx-1)+nx-1
+end if 
 
 end function som
 
@@ -273,10 +293,10 @@ ny = this%ny
 !** Construction du second membre (rho a support compact)
 k = 0
 do i=2,nx
-   do j=2,ny
-      k = k+1
-      b(k) = rho(i,j)
-   end do
+  do j=2,ny
+    k = k+1
+    b(k) = rho(i,j)
+  end do
 end do
 
 b = matmul(this%M,b)
@@ -286,21 +306,21 @@ call dpbtrs('U',(nx-1)*(ny-1),nx,1,this%mat,nx+1,b,(nx-1)*(ny-1),error)
 rho = 0.0
 k = 0
 do i=2,nx
-   do j=2,ny
-      k = k+1
-      rho(i,j) = b(k) 
-   end do
+  do j=2,ny
+    k = k+1
+    rho(i,j) = b(k) 
+  end do
 end do
 
 do j=1,ny-1
 do i=1,nx-2
-   ex(i,j) = - (rho(i+1,j)-rho(i,j)) / this%hx(i)
+  ex(i,j) = - (rho(i+1,j)-rho(i,j)) / this%hx(i)
 end do
 end do
 
 do j=1,ny-2
 do i=1,nx-1
-   ey(i,j) = - (rho(i,j+1)-rho(i,j)) / this%hy(j)
+  ey(i,j) = - (rho(i,j+1)-rho(i,j)) / this%hy(j)
 end do
 end do
 
@@ -322,52 +342,51 @@ write(10,*)"%equalscale=T"
 write(10,*)"%toplabel='Elements number ' "
    
 do i=1,nx
-   do j=1,ny
-      write(10,*) x(i  ), y(j  ), 0.
-      write(10,*) x(i+1), y(j  ), 0.
-      write(10,*) x(i+1), y(j+1), 0.
-      write(10,*) x(i  ), y(j+1), 0.
-      write(10,*) x(i  ), y(j  ), 0.
-      write(10,*)
-   end do
+  do j=1,ny
+    write(10,*) x(i  ), y(j  ), 0.
+    write(10,*) x(i+1), y(j  ), 0.
+    write(10,*) x(i+1), y(j+1), 0.
+    write(10,*) x(i  ), y(j+1), 0.
+    write(10,*) x(i  ), y(j  ), 0.
+    write(10,*)
+  end do
 end do
 
 !Numeros des elements
 iel = 0
 do i=2,nx-1
-   do j=2,ny-1
-      iel = iel+1
-      x1 = 0.5*(x(i)+x(i+1))
-      y1 = 0.5*(y(j)+y(j+1))
-      write(10,"(a)"   ,  advance="no")"@text x1="
-      write(10,"(g15.3)", advance="no") x1
-      write(10,"(a)"   ,  advance="no")" y1="
-      write(10,"(g15.3)", advance="no") y1
-      write(10,"(a)"   ,  advance="no")" z1=0. lc=4 ll='"
-      write(10,"(i4)"  ,  advance="no") iel
-      write(10,"(a)")"'"
-   end do
+  do j=2,ny-1
+    iel = iel+1
+    x1 = 0.5*(x(i)+x(i+1))
+    y1 = 0.5*(y(j)+y(j+1))
+    write(10,"(a)"   ,  advance="no")"@text x1="
+    write(10,"(g15.3)", advance="no") x1
+    write(10,"(a)"   ,  advance="no")" y1="
+    write(10,"(g15.3)", advance="no") y1
+    write(10,"(a)"   ,  advance="no")" z1=0. lc=4 ll='"
+    write(10,"(i4)"  ,  advance="no") iel
+    write(10,"(a)")"'"
+  end do
 end do
 
 !Numeros des noeud
 do i=2,nx
-   do j=2,ny
-      isom = isom+1
-      write(10,"(a)"   ,  advance="no")"@text x1="
-      write(10,"(g15.3)", advance="no") x(i)
-      write(10,"(a)"   ,  advance="no")" y1="
-      write(10,"(g15.3)", advance="no") y(j)
-      write(10,"(a)"   ,  advance="no")" z1=0. lc=5 ll='"
-      write(10,"(i4)"  ,  advance="no") isom
-      write(10,"(a)")"'"
-   end do
+  do j=2,ny
+    isom = isom+1
+    write(10,"(a)"   ,  advance="no")"@text x1="
+    write(10,"(g15.3)", advance="no") x(i)
+    write(10,"(a)"   ,  advance="no")" y1="
+    write(10,"(g15.3)", advance="no") y(j)
+    write(10,"(a)"   ,  advance="no")" z1=0. lc=5 ll='"
+    write(10,"(i4)"  ,  advance="no") isom
+    write(10,"(a)")"'"
+  end do
 end do
    
 write(10,*)"$END"
 close(10)
 
 end subroutine write_mtv_file
-
 
 end module sll_fem_2d
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
