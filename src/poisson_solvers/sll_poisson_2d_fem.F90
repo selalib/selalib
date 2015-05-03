@@ -71,6 +71,8 @@ sll_int32                   :: error
 sll_real64                  :: hx_by_hy
 sll_real64                  :: hy_by_hx
 sll_real64                  :: hx_hy
+sll_int32                   :: kd
+sll_int32                   :: lda
 
 this%nx = nn_x-1
 this%ny = nn_y-1
@@ -82,7 +84,6 @@ SLL_ALLOCATE(this%hx(1:nx),error)
 SLL_ALLOCATE(this%hy(1:ny),error)
 SLL_ALLOCATE(this%A((nx-1)*(ny-1),(nx-1)*(ny-1)), error)
 SLL_ALLOCATE(this%M((nx-1)*(ny-1),(nx-1)*(ny-1)), error)
-SLL_ALLOCATE(this%mat(nx+1,(nx-1)*(ny-1)), error)
 
 do i=1,nx
   this%hx(i) = x(i+1)-x(i)
@@ -239,21 +240,20 @@ this%A(isom(2),isom(2)) = this%A(isom(2),isom(2))               &
 this%M(isom(2),isom(2)) =   this%M(isom(2),isom(2))             &
                         + Melem(2,2) * this%hx(i) * this%hy(j)
 
-this%mat = 0.d0
-this%mat(nx+1,1) = this%A(1,1)
-do j=2,(nx-1)*(ny-1)
-  this%mat(nx+1,j) = this%A(j,j)
-  this%mat(nx  ,j) = this%A(j-1,j)
-end do
-this%mat(3,nx) = this%A(2,nx)
-this%mat(2,nx) = this%A(1,nx)
-do j=nx+1,(nx-1)*(ny-1)
-  this%mat(3,j) = this%A(j-nx+2,j)
-  this%mat(2,j) = this%A(j-nx+1,j)
-  this%mat(1,j) = this%A(j-nx,j)
+SLL_ALLOCATE(this%mat(nx+1,(nx-1)*(ny-1)), error)
+this%mat = 0.0_f64
+kd = nx
+do k = 0, kd   ! Loop over diagonals
+  i = kd+1-k   ! Row number in this%mat
+  do j = (nx-1)*(ny-1)-k, max(1,j-kd+k),-1
+    this%mat(i,j+k) = this%A(j+k,j) 
+  end do
 end do
 
-call dpbtrf('U',(nx-1)*(ny-1),nx,this%mat,nx+1,error)
+!call sll_display(this%A, 'f7.3')
+!call sll_display(this%mat, 'f7.3')
+
+call dpbtrf('U',(nx-1)*(ny-1),kd,this%mat,nx+1,error)
 
 end subroutine initialize_poisson_2d_fem
 
