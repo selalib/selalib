@@ -23,8 +23,8 @@ sll_real64, dimension(:,:), pointer :: rho
 sll_real64, dimension(:,:), pointer :: phi
 sll_real64 :: errmax
 
-nc_x = 64
-nc_y = 64
+nc_x = 42
+nc_y = 42
 
 SLL_CLEAR_ALLOCATE(e_x(1:nc_x+1,1:nc_y+1),error)  
 SLL_CLEAR_ALLOCATE(e_y(1:nc_x+1,1:nc_y+1),error) 
