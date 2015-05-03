@@ -1538,6 +1538,16 @@ contains
       err = max(maxval(abs(f_exact-f)),err)
       print *,"#",step,maxval(abs(f_exact-f))
       
+      
+      call compute_divergence_2d_curvilinear( &
+        div, &
+        sim%mesh_2d, &
+        sim%transformation, &
+        A1, &
+        A2, &
+        sim%phi_interp2d)
+
+
       select case (sim%advection_form)
         case (SLL_ADVECTIVE)
           call compute_divergence_2d_curvilinear( &
@@ -1559,6 +1569,7 @@ contains
           print *,'#bad choice of advection_form:',sim%advection_form
           stop
         end select
+        
 #ifndef NOHDF5
       if(modulo(step,sim%freq_diag)==0)then
         if(iplot==0)then
@@ -1569,11 +1580,6 @@ contains
         iplot = iplot+1  
       endif            
 ! stuff of Adnane: commented for the moment to fix conflict
-!          call plot_visit_curvilinear(iplot,div,sim%mesh_2d,sim%transformation,"div")
-!        endif
-!        call plot_visit_curvilinear(iplot,f,sim%mesh_2d,sim%transformation,"f")
-!        iplot = iplot+1          
-!      endif    
 !      
 !      if(step==nb_step)then
 !          call plot_visit_curvilinear(iplot-1,abs(f_exact-f),sim%mesh_2d,sim%transformation,"Error")
@@ -1588,7 +1594,6 @@ contains
 !          enddo    
 !      endif        
 #endif  
-
 
       if(modulo(step,sim%freq_diag_time)==0)then
         call time_history_diagnostic_curvilinear( &
