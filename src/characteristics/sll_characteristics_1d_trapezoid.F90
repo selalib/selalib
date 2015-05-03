@@ -194,7 +194,6 @@ contains
     SLL_ASSERT(size(A)>=Npts)
     SLL_ASSERT(size(input)>=Npts)
     SLL_ASSERT(size(output)>=Npts)
-    
     call charac%A_interp%compute_interpolants( &
       A, &
       input, &
@@ -215,18 +214,18 @@ contains
             x2_i = x2  
           endif                      
           x2 = input(j)-0.5_f64*dt*(charac%A_interp%interpolate_value(x2_i)+A(j))
+          iter = iter+1
         end do
         if (iter==charac%maxiter .and. abs(x2_old-x2)>charac%tol) then
           print*,'#not enough iterations for compute_trapezoid_1d_charac',&
             iter,abs(x2_old-x2)
-          stop
+          !stop
         end if
         if((x2<=eta_min).or.(x2>=eta_max))then
           x2 =  charac%process_outside_point(x2,eta_min,eta_max)
         endif                      
         output(j) = x2  
     enddo
-      
   end subroutine compute_trapezoid_1d_charac
 
 
