@@ -20,7 +20,9 @@ program unit_test_gyroaverage_2d_polar_hermite
 #include "sll_memory.h"
 #include "sll_assert.h"
 use sll_module_gyroaverage_2d_polar_hermite_solver
-use sll_qn_2d_polar
+
+!use sll_qn_2d_polar
+
 implicit none
   
   class(sll_gyroaverage_2d_base), pointer :: gyroaverage 
