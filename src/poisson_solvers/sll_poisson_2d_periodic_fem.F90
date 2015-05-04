@@ -261,50 +261,50 @@ real(8)             :: y1
 integer :: i 
 integer :: j 
 
-open(10, file="mesh.mtv")
+open(10, file="mesh_periodic.mtv")
 write(10,*)"$DATA=CURVE3D"
 write(10,*)"%equalscale=T"
 write(10,*)"%toplabel='Elements number ' "
    
 do i=1,nx
-   do j=1,ny
-      write(10,*) x(i  ), y(j  ), 0.
-      write(10,*) x(i+1), y(j  ), 0.
-      write(10,*) x(i+1), y(j+1), 0.
-      write(10,*) x(i  ), y(j+1), 0.
-      write(10,*) x(i  ), y(j  ), 0.
-      write(10,*)
-   end do
+  do j=1,ny
+    write(10,*) x(i  ), y(j  ), 0.
+    write(10,*) x(i+1), y(j  ), 0.
+    write(10,*) x(i+1), y(j+1), 0.
+    write(10,*) x(i  ), y(j+1), 0.
+    write(10,*) x(i  ), y(j  ), 0.
+    write(10,*)
+  end do
 end do
 
 !Numeros des elements
 iel = 0
 do j=1,ny-1
-   do i=1,nx-1
-      iel = iel+1
-      x1 = 0.5*(x(i)+x(i+1))
-      y1 = 0.5*(y(j)+y(j+1))
-      write(10,"(a)"   ,  advance="no")"@text x1="
-      write(10,"(g15.3)", advance="no") x1
-      write(10,"(a)"   ,  advance="no")" y1="
-      write(10,"(g15.3)", advance="no") y1
-      write(10,"(a)"   ,  advance="no")" z1=0. lc=4 ll='"
-      write(10,"(i4)"  ,  advance="no") iel
-      write(10,"(a)")"'"
-   end do
+  do i=1,nx-1
+    iel = iel+1
+    x1 = 0.5*(x(i)+x(i+1))
+    y1 = 0.5*(y(j)+y(j+1))
+    write(10,"(a)"   ,  advance="no")"@text x1="
+    write(10,"(g15.3)", advance="no") x1
+    write(10,"(a)"   ,  advance="no")" y1="
+    write(10,"(g15.3)", advance="no") y1
+    write(10,"(a)"   ,  advance="no")" z1=0. lc=4 ll='"
+    write(10,"(i4)"  ,  advance="no") iel
+    write(10,"(a)")"'"
+  end do
 end do
 
 !Numeros des noeud
 do i=1,nx
-   do j=1,ny
-      write(10,"(a)"   ,  advance="no")"@text x1="
-      write(10,"(g15.3)", advance="no") x(i)
-      write(10,"(a)"   ,  advance="no")" y1="
-      write(10,"(g15.3)", advance="no") y(j)
-      write(10,"(a)"   ,  advance="no")" z1=0. lc=5 ll='"
-      write(10,"(i4)"  ,  advance="no") som(nx,i,j,1)
-      write(10,"(a)")"'"
-   end do
+  do j=1,ny
+    write(10,"(a)"   ,  advance="no")"@text x1="
+    write(10,"(g15.3)", advance="no") x(i)
+    write(10,"(a)"   ,  advance="no")" y1="
+    write(10,"(g15.3)", advance="no") y(j)
+    write(10,"(a)"   ,  advance="no")" z1=0. lc=5 ll='"
+    write(10,"(i4)"  ,  advance="no") som(nx,i,j,1)
+    write(10,"(a)")"'"
+  end do
 end do
    
 write(10,*)"$END"
