@@ -42,7 +42,6 @@ implicit none
   sll_int32 :: poisson_case
   sll_real64,dimension(:), pointer :: dlog_density
   sll_real64,dimension(:), pointer :: inv_Te
-  sll_real64,dimension(:), pointer :: mu
   
   
   contains
@@ -66,7 +65,6 @@ contains
     bc, &
     dlog_density, &
     inv_Te, &
-    mu, &
     poisson_case) &     
     result(poisson)
       
@@ -78,7 +76,6 @@ contains
     sll_int32, intent(in) :: bc(2)
     sll_real64, dimension(:), intent(in), optional :: dlog_density
     sll_real64, dimension(:), intent(in), optional :: inv_Te
-    sll_real64, dimension(:), intent(in), optional :: mu
     sll_int32, optional :: poisson_case
     sll_int32 :: ierr
       
@@ -92,7 +89,6 @@ contains
       bc, &
       dlog_density, &
       inv_Te, &
-      mu, &
       poisson_case)
     
   end function new_poisson_2d_polar_solver
@@ -107,7 +103,6 @@ contains
     bc, &
     dlog_density, &
     inv_Te, &
-    mu, &
     poisson_case)
     class(poisson_2d_polar_solver) :: poisson
     sll_real64, intent(in) :: eta1_min
@@ -117,7 +112,6 @@ contains
     sll_int32, intent(in) :: bc(2)
     sll_real64, dimension(:), intent(in), optional :: dlog_density
     sll_real64, dimension(:), intent(in), optional :: inv_Te
-    sll_real64, dimension(:), intent(in), optional :: mu
     sll_int32, intent(in), optional :: poisson_case
     sll_int32 :: ierr
     sll_real64 :: delta_eta
@@ -147,7 +141,6 @@ contains
      case (SLL_POISSON_DRIFT_KINETIC)    
         SLL_ALLOCATE(poisson%dlog_density(nc_eta1+1),ierr)
         SLL_ALLOCATE(poisson%inv_Te(nc_eta1+1),ierr)
-        SLL_ALLOCATE(poisson%mu(nc_eta1+1),ierr)
         if(.not.(present(dlog_density)))then
           print *,'#dlog_density should be present in initialize_poisson_2d_polar_solver'
           stop
@@ -167,27 +160,14 @@ contains
         endif
         poisson%dlog_density(1:nc_eta1+1)=dlog_density(1:nc_eta1+1)
         poisson%inv_Te(1:nc_eta1+1)=inv_Te(1:nc_eta1+1)
-        if(present(mu))then
-          poisson%mu(1:nc_eta1+1)=mu(1:nc_eta1+1)
-          poisson%poiss => new_plan_poisson_polar( &
-            delta_eta,& 
-            eta1_min, &
-            nc_eta1, &
-            nc_eta2, &
-            bc, &
-            poisson%dlog_density, &
-            poisson%inv_Te, &
-            poisson%mu)
-        else
-          poisson%poiss => new_plan_poisson_polar( &
-            delta_eta,& 
-            eta1_min, &
-            nc_eta1, &
-            nc_eta2, &
-            bc, &
-            poisson%dlog_density, &
-            poisson%inv_Te)
-         endif   
+        poisson%poiss => new_plan_poisson_polar( &
+          delta_eta,& 
+          eta1_min, &
+          nc_eta1, &
+          nc_eta2, &
+          bc, &
+          poisson%dlog_density, &
+          poisson%inv_Te)
       case default
         print *,'#bad value of poisson_case=', poisson%poisson_case
         print *,'#not implemented'
