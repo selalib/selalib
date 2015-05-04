@@ -21,12 +21,12 @@ program pic_4d_cartesian
   call get_command_argument(1, filename)
   call sim%init_from_file(trim(filename))
 
-  if (rank==0) then
-     print*, size, 'mpi nodes X', sim%ions_number, 'particles', &
-          sim%m2d%num_cells1, 'X',sim%m2d%num_cells2,'cells'
-     print*, (real(size,f64)/real(sim%m2d%num_cells1*sim%m2d%num_cells2,f64)) &
-          * sim%ions_number, 'particles per cell'
-  endif
+!!$  if (rank==0) then
+!!$     print*, size, 'mpi nodes X', sim%parts_number, 'particles', &
+!!$          sim%m2d%num_cells1, 'X',sim%m2d%num_cells2,'cells'
+!!$     print*, (real(size,f64)/real(sim%m2d%num_cells1*sim%m2d%num_cells2,f64)) &
+!!$          * sim%parts_number, 'particles per cell'
+!!$  endif
   
   call sim%run()
 

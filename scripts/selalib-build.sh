@@ -12,7 +12,7 @@ if [[ `hostname` == "irma-hpc" ]]; then
   source /opt/intel/impi/4.1.0.024/intel64/bin/mpivars.sh
   export FC=ifort
   export CC=icc
-  export CC=icpc
+  export CXX=icpc
   export I_MPI_F90=ifort
   export I_MPI_CC=icc
   export I_MPI_CXX=icpc
@@ -35,7 +35,7 @@ else
 fi
 
 echo "HOMEDIR:$HOMEDIR"
-echo "WORDIR:$WORKDIR"
+echo "WORKDIR:$WORKDIR"
 
 if [[ $(($(stat -f --format="%a*%S" $WORKDIR))) == 0 ]]; then
    cd /tmp
@@ -73,7 +73,6 @@ cd build; {
 ${CMAKE} \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DHDF5_PARALLEL_ENABLED=ON \
-        -DBUILD_PARALUTION=ON
 	${HOMEDIR}/selalib/src 
 make NightlyUpdate
 make NightlyConfigure

@@ -9,6 +9,7 @@
 	CONTROLVARIATE = 0
 	TIME_INTEGRATOR_ORDER = 3
 	RND_OFFSET = 10
+	K = 0.5
 /    
 
 &elec_params

@@ -243,7 +243,8 @@ module sll_collective
                       sll_collective_reduce_int, &
                       sll_collective_reduce_logical, &
                       sll_collective_reduce_comp64, &
-                      sll_collective_reduce_comp32
+                      sll_collective_reduce_comp32, &
+                      sll_collective_reduce_real64_2d
   end interface
 
   !> @brief Sends data from all to all processes.
@@ -1137,6 +1138,24 @@ contains !************************** Operations **************************
          'sll_collective_reduce_real64(): MPI_REDUCE()' )
   end subroutine sll_collective_reduce_real64
 
+  
+  
+  subroutine sll_collective_reduce_real64_2d( col, send_buf, size, op, root_rank, &
+       rec_buf )
+    type(sll_collective_t), pointer       :: col
+    sll_real64, dimension(:,:), intent(in)  :: send_buf
+    sll_int32, intent(in)                 :: size
+    sll_int32, intent(in)                 :: op
+    sll_int32, intent(in)                 :: root_rank
+    sll_real64, dimension(:,:), intent(out) :: rec_buf
+    sll_int32                             :: ierr
+
+    ! FIXME: ARG CHECKING!
+    call MPI_REDUCE( send_buf, rec_buf, size, MPI_DOUBLE_PRECISION, op, &
+         root_rank, col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_reduce_real64_2d(): MPI_REDUCE()' )
+  end subroutine sll_collective_reduce_real64_2d
 
   !> @brief Reduces complex values on all processes to a single value
   !> @param[in] col wrapper around the communicator
