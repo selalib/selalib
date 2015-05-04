@@ -123,10 +123,13 @@ program test_operator_splitting_adv_2d
     f, &
     num_cells_x1+1, &
     num_cells_x2+1, &
+    num_cells_x1+1, &
+    num_cells_x2+1, &
     A1, &
     A2, &
     adv_x1, &
     adv_x2, &
+    SLL_ADVECTIVE, &
     SLL_STRANG_TVT)
 
   ! do some steps of lie_splitting
