@@ -1,5 +1,5 @@
 #runs=( run8d2 run10d2 run11d2 run12d2 run13d2 run14d2 )
-#python $sll_py/map2dir.py "python $sll_py/multi_thdiag.py l1_diag $sll_py thdiag 0 99" ${runs[@]}
+#python $sll_py/map2dir.py "python $sll_py/multi_thdiag.py l1_diag $PWD thdiag 0 99" ${runs[@]}
 import os
 import sys
 import numpy as np
@@ -93,7 +93,7 @@ else:
   M = np.zeros((i_max-i_min+1,2))
   for i in range(i_min,i_max+1):
     f = array_list[i-i_min]
-    dt = f[1,0]-f[0,0]
+    dt = f[0,0]#f[1,0]-f[0,0]
     #print("dt=",dt)
     #print(len(time_grid_ref),len(f[:,1]),len(f[:,0]))
     #print(f[:,0])
