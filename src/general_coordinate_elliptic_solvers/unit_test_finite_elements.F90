@@ -258,7 +258,7 @@ program test_finite_elements_solver
 !   call sll_set_time_mark(t_reference)
 
 
-!   call initialize_finite_elements_solver( &
+!   call initialize( &
 !        es, &
 !        mesh_2d, &
 !        SPLINE_DEG1, &
@@ -528,7 +528,7 @@ program test_finite_elements_solver
   
   call sll_set_time_mark(t_reference)
 
-  call initialize_finite_elements_solver( &
+  call initialize( &
        es, &
        mesh_2d, &
        SPLINE_DEG1, &
@@ -788,7 +788,7 @@ program test_finite_elements_solver
   print *, 'initialized fields...'
   
   call sll_set_time_mark(t_reference)
-  call initialize_finite_elements_solver( &
+  call initialize( &
        es, &
        mesh_2d, &
        SPLINE_DEG2, &
@@ -1096,7 +1096,7 @@ program test_finite_elements_solver
   print *, 'initialized fields...'
   call sll_set_time_mark(t_reference)
   
-  call initialize_finite_elements_solver( &
+  call initialize( &
        es, &
        mesh_2d, &
        SPLINE_DEG1, &

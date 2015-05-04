@@ -18,10 +18,10 @@ use sll_box_splines
 implicit none
 
 type(sll_hex_mesh_2d),   pointer  :: mesh
-type(sll_box_spline_2d), pointer  :: spline
 sll_int32    :: ierr
-sll_int32    :: num_cells 
+sll_int32    :: num_cells
 sll_int32    :: deg
+sll_int32    :: rule
 sll_int32    :: i
 sll_real64   :: x1
 sll_real64   :: x2
@@ -68,7 +68,8 @@ SLL_DEALLOCATE_ARRAY(dyf, ierr)
 
 !Writing file for CAID:
 deg = 1
-call write_basis_values(deg)
+rule = 1
+call write_basis_values(deg, rule)
 print *, ""
 print *, "Done writing CAID file : basis_value.txt"
 end program box_spline_tester
