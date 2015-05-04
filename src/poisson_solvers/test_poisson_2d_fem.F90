@@ -8,13 +8,18 @@ use sll_fem_2d
 use sll_fem_2d_periodic
 implicit none
 
-sll_int32  :: i, j
-sll_real64 :: xmin, xmax
-sll_real64 :: ymin, ymax
-sll_real64 :: dx, dy
-sll_int32  :: nc_x, nc_y
-sll_int32  :: error
-sll_real64 :: dpi
+sll_int32                           :: i
+sll_int32                           :: j
+sll_real64                          :: xmin
+sll_real64                          :: xmax
+sll_real64                          :: ymin
+sll_real64                          :: ymax
+sll_real64                          :: dx
+sll_real64                          :: dy
+sll_int32                           :: nc_x
+sll_int32                           :: nc_y
+sll_int32                           :: error
+sll_real64                          :: dpi
 sll_real64, dimension(:),   pointer :: x
 sll_real64, dimension(:),   pointer :: y
 sll_real64, dimension(:,:), pointer :: e_x
@@ -23,8 +28,8 @@ sll_real64, dimension(:,:), pointer :: rho
 sll_real64, dimension(:,:), pointer :: phi
 sll_real64 :: errmax
 
-nc_x = 42
-nc_y = 42
+nc_x = 30
+nc_y = 30
 
 SLL_CLEAR_ALLOCATE(e_x(1:nc_x+1,1:nc_y+1),error)  
 SLL_CLEAR_ALLOCATE(e_y(1:nc_x+1,1:nc_y+1),error) 
