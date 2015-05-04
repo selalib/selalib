@@ -8,4 +8,4 @@ module load lapack
 export HDF5_ROOT=${HDF5_ROOT_DIR}
 export FFTW_ROOT=${FFTW_INC_DIR}/../
 module show openmpi/1.6.3_gnu47
-cmake -DHDF5_PARALLEL_ENABLED=ON SELALIB_DIRECTORY/prototype/src
+cmake -DHDF5_PARALLEL_ENABLED=ON SELALIB_DIRECTORY/src
