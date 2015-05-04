@@ -131,34 +131,53 @@ do i=1,nx
     isom(2) = som(this%nx,i,j,2)
     isom(3) = som(this%nx,i,j,3)
     isom(4) = som(this%nx,i,j,4)
+    print"(6i4)", i, j, isom
     do ii=1,4
       do jj=1,4
-        this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj))                   &
-        & + Axelem(ii,jj) * this%hy(j) / this%hx(i) &
+        this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
+        & + Axelem(ii,jj) * this%hy(j) / this%hx(i)           &
         & + Ayelem(ii,jj) * this%hx(i) / this%hy(j)
         this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
-        + Melem(ii,jj) * this%hy(j) * this%hx(i)
+        & + Melem(ii,jj) * this%hy(j) * this%hx(i)
       end do
     end do
   end do
 end do
 
 call write_mtv_file( x, y)
+!call sll_display(this%A, 'f5.2')
+
+!Force dirichlet boundary conditions
+do i = 1, nx
+  k = i
+  this%A(k,:) = 0.0; this%A(:,k) = 0.0; this%A(k,k) = 1.0
+  print*,'k=',k
+  k = (nx+1)*(ny+1)-i+1
+  this%A(k,:) = 0.0; this%A(:,k) = 0.0; this%A(k,k) = 1.0
+  print*,'k=',k
+end do
+do i = nx+1, nx*(ny+1), nx+1
+  k = i
+  this%A(k,:) = 0.0; this%A(:,k) = 0.0; this%A(k,k) = 1.0
+  print*,'k=',k
+  k = i+1
+  this%A(k,:) = 0.0; this%A(:,k) = 0.0; this%A(k,k) = 1.0
+  print*,'k=',k
+end do
+
+!call sll_display(this%A, 'f5.2')
 
 kd = nx+2
 SLL_ALLOCATE(this%mat(kd+1,(nx+1)*(ny+1)), error)
 this%mat = 0.0_f64
 do k = 0, kd   ! Loop over diagonals
   i = kd+1-k   ! Row number in this%mat
-  do j = (nx+1)*(ny+1)-k, max(1,j-kd+k),-1
+  do j = (nx+1)*(ny+1)-k, 1+k,-1
     this%mat(i,j+k) = this%A(j+k,j) 
   end do
 end do
 
-if (nx < 4 .and. ny < 4) then
-  call sll_display(this%A, 'f5.2')
-  call sll_display(this%mat, 'f5.2')
-end if
+!call sll_display(this%mat, 'f5.2')
 
 call dpbtrf('U',(nx+1)*(ny+1),kd,this%mat,kd+1,error)
 
@@ -199,11 +218,11 @@ ny = this%ny
 
 !** Construction du second membre (rho a support compact)
 k = 0
+do j=1,ny+1
 do i=1,nx+1
-  do j=1,ny+1
-    k = k+1
-    b(k) = rho(i,j)
-  end do
+  k = k+1
+  b(k) = rho(i,j)
+end do
 end do
 
 b = matmul(this%M,b)
@@ -212,11 +231,11 @@ call dpbtrs('U',(nx+1)*(ny+1),nx+2,1,this%mat,nx+3,b,(nx+1)*(ny+1),error)
 
 rho = 0.0
 k = 0
+do j=1,ny+1
 do i=1,nx+1
-  do j=1,ny+1
-    k = k+1
-    rho(i,j) = b(k) 
-  end do
+  k = k+1
+  rho(i,j) = b(k) 
+end do
 end do
 
 do j=1,ny+1
@@ -245,6 +264,8 @@ nx = size(x)-1
 ny = size(y)-1
 open(10, file="mesh.mtv")
 write(10,*)"$DATA=CURVE3D"
+write(10,*)"%xmin=", 1.1*minval(x), " xmax = ", 1.1*maxval(x)
+write(10,*)"%ymin=", 1.1*minval(y), " ymax = ", 1.1*maxval(y)
 write(10,*)"%equalscale=T"
 write(10,*)"%toplabel='Elements number ' "
    
@@ -278,8 +299,8 @@ end do
 
 !Numeros des noeud
 isom = 0
-do i=1,nx+1
-  do j=1,ny+1
+do j=1,ny+1
+  do i=1,nx+1
     isom = isom+1
     write(10,"(a)"   ,  advance="no")"@text x1="
     write(10,"(g15.3)", advance="no") x(i)
