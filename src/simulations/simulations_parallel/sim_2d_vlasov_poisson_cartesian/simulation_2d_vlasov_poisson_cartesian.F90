@@ -689,6 +689,8 @@ contains
         sim%split => new_time_splitting_coeff(SLL_TRIPLE_JUMP_VTV)
       case ("SLL_ORDER6_VTV") 
         sim%split => new_time_splitting_coeff(SLL_ORDER6_VTV)
+      case ("SLL_ORDER6_TVT") 
+        sim%split => new_time_splitting_coeff(SLL_ORDER6_TVT)
       case ("SLL_ORDER6VP_TVT") 
         sim%split => new_time_splitting_coeff(SLL_ORDER6VP_TVT,dt=dt)
       case ("SLL_ORDER6VP_VTV") 
