@@ -48,8 +48,6 @@ module sll_simulation_2d_analytic_field_curvilinear_module
   
   implicit none
   
-  sll_int32, parameter :: SLL_ADVECTIVE    = 0
-  sll_int32, parameter :: SLL_CONSERVATIVE = 1
   
   sll_int32, parameter :: SLL_EULER = 0 
   sll_int32, parameter :: SLL_PREDICTOR_CORRECTOR = 1 
@@ -74,6 +72,9 @@ module sll_simulation_2d_analytic_field_curvilinear_module
    sll_real64, dimension(:), pointer :: eta2_array
    sll_int32 :: num_dof1  
    sll_int32 :: num_dof2
+   sll_real64, dimension(:), pointer :: integration_weight1
+   sll_real64, dimension(:), pointer :: integration_weight2
+   
      
    !transformation 
     class(sll_coordinate_transformation_2d_base), pointer :: transformation
@@ -474,6 +475,7 @@ contains
         print *,'#in initialize_analytic_field_2d_curvilinear'
         stop
     end select
+    
       
    
     select case(bc_eta1_left)
@@ -683,6 +685,14 @@ contains
         print *,'#in initialize_analytic_field_2d_curvilinear'
         stop
     end select  
+
+
+    SLL_ALLOCATE(sim%integration_weight1(sim%num_dof1),ierr)
+    SLL_ALLOCATE(sim%integration_weight2(sim%num_dof2),ierr)
+    
+    call compute_integration_weight(sim%eta1_array,sim%integration_weight1)
+    call compute_integration_weight(sim%eta2_array,sim%integration_weight2)
+
      
 !    select case(advect1d_x1_case)
 !      case ("SLL_BSL")
@@ -1260,8 +1270,8 @@ contains
     sll_real64,dimension(:,:),  pointer :: A1_init !advection fields
     sll_real64,dimension(:,:),  pointer :: A2_init
     sll_real64,dimension(:,:),  pointer :: div
-    sll_real64, dimension(:), allocatable :: node_positions1
-    sll_real64, dimension(:), allocatable :: node_positions2
+    sll_real64, dimension(:), allocatable :: dof_positions1
+    sll_real64, dimension(:), allocatable :: dof_positions2
     sll_int32  :: ierr
     sll_int32  :: nb_step
     sll_int32  :: step
@@ -1300,18 +1310,18 @@ contains
     SLL_ALLOCATE(A1_init(Nc_eta1+1,Nc_eta2+1),ierr)
     SLL_ALLOCATE(A2_init(Nc_eta1+1,Nc_eta2+1),ierr)
     SLL_ALLOCATE(div(Nc_eta1+1,Nc_eta2+1),ierr)
-    SLL_ALLOCATE(node_positions1(num_dof1),ierr)
-    SLL_ALLOCATE(node_positions2(num_dof2),ierr)
+    SLL_ALLOCATE(dof_positions1(num_dof1),ierr)
+    SLL_ALLOCATE(dof_positions2(num_dof2),ierr)
 
-    call compute_node_positions(sim%eta1_array,node_positions1)
-    call compute_node_positions(sim%eta2_array,node_positions2)
+    call compute_dof_positions(sim%eta1_array,dof_positions1)
+    call compute_dof_positions(sim%eta2_array,dof_positions2)
 
 
 
     do i2=1,num_dof2
-      eta2=node_positions2(i2)
+      eta2=dof_positions2(i2)
       do i1=1,num_dof1
-        eta1=node_positions1(i1)
+        eta1=dof_positions1(i1)
         x1 = sim%transformation%x1(eta1,eta2)
         x2 = sim%transformation%x2(eta1,eta2)
         f(i1,i2) =  sim%init_func(x1,x2,sim%params) 
@@ -1340,9 +1350,9 @@ contains
     select case (sim%compute_field_case)
       case (SLL_COMPUTE_FIELD_FROM_ANALYTIC)
         do i2=1,Nc_eta2+1
-          eta2=eta2_min+real(i2-1,f64)*delta_eta2
+          eta2=sim%eta2_array(i2)
           do i1=1,Nc_eta1+1
-            eta1=eta1_min+real(i1-1,f64)*delta_eta1
+            eta1=sim%eta1_array(i1)
             x1 = sim%transformation%x1(eta1,eta2)
             x2 = sim%transformation%x2(eta1,eta2)
             jac_m  =  sim%transformation%jacobian_matrix(eta1,eta2)          
@@ -1368,46 +1378,6 @@ contains
           A1_init, &
           A2_init, &
           sim%phi_interp2d)
-      case (SLL_COMPUTE_FIELD_FROM_PHI_FD2)
-        call compute_field_from_phi_2d_fd2_curvilinear( &
-          phi, &
-          sim%mesh_2d, &
-          sim%transformation, &
-          A1_init, &
-          A2_init, &
-          sim%phi_interp2d)      
-      case (SLL_COMPUTE_FIELD_FROM_PHI_FD3)
-        call compute_field_from_phi_2d_fd3_curvilinear( &
-          phi, &
-          sim%mesh_2d, &
-          sim%transformation, &
-          A1_init, &
-          A2_init, &
-          sim%phi_interp2d)      
-      case (SLL_COMPUTE_FIELD_FROM_PHI_FD4)
-        call compute_field_from_phi_2d_fd4_curvilinear( &
-          phi, &
-          sim%mesh_2d, &
-          sim%transformation, &
-          A1_init, &
-          A2_init, &
-          sim%phi_interp2d)      
-      case (SLL_COMPUTE_FIELD_FROM_PHI_FD5)
-        call compute_field_from_phi_2d_fd5_curvilinear( &
-          phi, &
-          sim%mesh_2d, &
-          sim%transformation, &
-          A1_init, &
-          A2_init, &
-          sim%phi_interp2d)      
-      case (SLL_COMPUTE_FIELD_FROM_PHI_FD6)
-        call compute_field_from_phi_2d_fd6_curvilinear( &
-          phi, &
-          sim%mesh_2d, &
-          sim%transformation, &
-          A1_init, &
-          A2_init, &
-          sim%phi_interp2d)      
       case (SLL_COMPUTE_FIELD_FROM_PHI_FD)
         call compute_field_from_phi_2d_fd_curvilinear( &
           phi, &
@@ -1422,25 +1392,19 @@ contains
         SLL_ERROR("run_af2d_curvilinear","bad value of sim%compute_field_case")
     end select    
 
-!      do i2=1,Nc_eta2+1
-!        eta2=eta2_min+real(i2-1,f64)*delta_eta2
-!        do i1=1,Nc_eta1+1
-!          eta1=eta1_min+real(i1-1,f64)*delta_eta1
-!          A1_init(i1,i2) =  A1_init(i1,i2)+sim%A_func_params(1)/sim%transformation%jacobian(eta1,eta2)
-!          A2_init(i1,i2) =  A2_init(i1,i2)+sim%A_func_params(2)/sim%transformation%jacobian(eta1,eta2)
-!        enddo
-!      enddo    
-
 
     if(sim%time_loop_case==SLL_SPLITTING)then
       sim%split => new_advection_2d( &
         f, &
         Nc_eta1+1, &
         Nc_eta2+1, &
+        num_dof1, &
+        num_dof2, &
         A1_init, &
         A2_init, &
         sim%advect1_1d, &
         sim%advect2_1d, &
+        sim%advection_form, &
         SLL_STRANG_TVT)      
     endif
 
@@ -1511,10 +1475,10 @@ contains
       endif
 
       
-      do i2=1,Nc_eta2+1
-        eta2=eta2_min+real(i2-1,f64)*delta_eta2
-        do i1=1,Nc_eta1+1
-          eta1=eta1_min+real(i1-1,f64)*delta_eta1
+      do i2=1,num_dof2
+        eta2=dof_positions2(i2)
+        do i1=1,num_dof1
+          eta1=dof_positions1(i1)
           x1 = sim%transformation%x1(eta1,eta2)
           x2 = sim%transformation%x2(eta1,eta2)
           feet1 = sim%A1_exact_charac_func( &
@@ -1573,10 +1537,34 @@ contains
 #ifndef NOHDF5
       if(modulo(step,sim%freq_diag)==0)then
         if(iplot==0)then
-          call plot_f_curvilinear("divf",iplot,div,sim%mesh_2d,sim%transformation)
+          call plot_f_curvilinear( &
+            "divf", &
+            iplot, &
+            div, &
+            dof_positions1, &
+            dof_positions2, &
+            num_dof1, &
+            num_dof2, &
+            sim%transformation)
         endif
-        call plot_f_curvilinear("f",iplot,f,sim%mesh_2d,sim%transformation)
-        call plot_f_curvilinear("errf",iplot,f-f_exact,sim%mesh_2d,sim%transformation)
+        call plot_f_curvilinear( &
+          "f", &
+          iplot, &
+          f, &
+          dof_positions1, &
+          dof_positions2, &
+          num_dof1, &
+          num_dof2, &
+          sim%transformation)
+        call plot_f_curvilinear( &
+          "errf", &
+          iplot, &
+          f-f_exact, &
+          dof_positions1, &
+          dof_positions2, &
+          num_dof1, &
+          num_dof2, &
+          sim%transformation)
         iplot = iplot+1  
       endif            
 ! stuff of Adnane: commented for the moment to fix conflict
@@ -1596,17 +1584,32 @@ contains
 #endif  
 
       if(modulo(step,sim%freq_diag_time)==0)then
-        call time_history_diagnostic_curvilinear( &
+        call time_history_diagnostic_curvilinear2( &
           thdiag_id , &    
           step, &
           dt, &
           sim%mesh_2d, &
           sim%transformation, &
           f, &
-          phi, &
-          A1, &
-          A2, &
+          dof_positions1, &
+          dof_positions2, &
+          num_dof1, &
+          num_dof2, &
+          sim%integration_weight1, &
+          sim%integration_weight2, &    
           f_exact)
+
+!        call time_history_diagnostic_curvilinear( &
+!          thdiag_id , &    
+!          step, &
+!          dt, &
+!          sim%mesh_2d, &
+!          sim%transformation, &
+!          f, &
+!          phi, &
+!          A1, &
+!          A2, &
+!          f_exact)
       endif            
       
       
@@ -1620,7 +1623,7 @@ contains
   end subroutine run_af2d_curvilinear
   
 
-  subroutine compute_node_positions(input, output)
+  subroutine compute_dof_positions(input, output)
     sll_real64, dimension(:), intent(in) :: input
     sll_real64, dimension(:), intent(out) :: output
     sll_int32 :: Npts
@@ -1642,7 +1645,38 @@ contains
       enddo
     endif
   
-  end subroutine compute_node_positions
+  end subroutine compute_dof_positions
+
+
+  subroutine compute_integration_weight(input,output)
+    sll_real64, dimension(:), intent(in) :: input
+    sll_real64, dimension(:), intent(out) :: output
+    sll_int32 :: Npts
+    sll_int32 :: num_dof
+    sll_int32 :: i
+    
+    Npts = size(input)
+    num_dof = size(output)
+        
+    if(num_dof==Npts)then
+    !trapezoidal rule
+      output(1)=0.5_f64*(input(2)-input(1))
+      do i=2,Npts-1
+        output(i) = 0.5_f64*(input(i+1)-input(i-1))
+      enddo  
+      output(Npts) = &
+          0.5_f64*(input(Npts)-input(Npts-1))
+    else
+      if(num_dof/=Npts-1)then
+        SLL_ERROR('compute_integration_weight','#bad value for Npts')
+      endif
+      !conservative rule
+      do i=1,num_dof
+        output(i) = input(i+1)-input(i)
+      enddo
+    endif  
+  end subroutine compute_integration_weight
+
   
 
 #ifndef NOHDF5
@@ -1652,21 +1686,33 @@ contains
   !---------------------------------------------------
   ! Save the mesh structure
   !---------------------------------------------------
-  subroutine plot_f_curvilinear(filename,iplot,f,mesh_2d,transf)
+  subroutine plot_f_curvilinear( &
+    filename, &
+    iplot, &
+    f, &
+    node_positions1, &
+    node_positions2, &
+    n1, &
+    n2, &
+    transf)
     use sll_xdmf
     use sll_hdf5_io_serial
     character(len=*), intent(in) :: filename  !< file name
+    sll_int32, intent(in) :: iplot
+    sll_real64, dimension(:,:), intent(in) :: f
+    sll_real64, dimension(:), intent(in) :: node_positions1
+    sll_real64, dimension(:), intent(in) :: node_positions2
+    sll_int32, intent(in) :: n1
+    sll_int32, intent(in) :: n2
+    class(sll_coordinate_transformation_2d_base), pointer :: transf    
     sll_int32 :: file_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1
     sll_real64, dimension(:,:), allocatable :: x2
     sll_int32 :: i, j
-    sll_int32, intent(in) :: iplot
     character(len=4)      :: cplot
     sll_int32             :: nnodes_x1, nnodes_x2
-    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
-    class(sll_coordinate_transformation_2d_base), pointer :: transf
-    sll_real64, dimension(:,:), intent(in) :: f
+    !type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     sll_real64 :: eta1
     sll_real64 :: eta2
     sll_real64 ::  eta1_min, eta2_min
@@ -1675,14 +1721,6 @@ contains
     sll_real64 :: deta2
     
     
-    nnodes_x1 = mesh_2d%num_cells1+1
-    nnodes_x2 = mesh_2d%num_cells2+1
-    eta1_min = mesh_2d%eta1_min
-    eta1_max = mesh_2d%eta1_max
-    eta2_min = mesh_2d%eta2_min
-    eta2_max = mesh_2d%eta2_max
-    deta1 = mesh_2d%delta_eta1
-    deta2 = mesh_2d%delta_eta2
     
     !print *,'#maxf=',iplot,maxval(f),minval(f)
     
@@ -1690,12 +1728,12 @@ contains
     
     if (iplot == 1) then
 
-      SLL_ALLOCATE(x1(nnodes_x1,nnodes_x2), error)
-      SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
-      do j = 1,nnodes_x2
-        do i = 1,nnodes_x1
-          eta1 = eta1_min+real(i-1,f32)*deta1
-          eta2 = eta2_min+real(j-1,f32)*deta2
+      SLL_ALLOCATE(x1(n1,n2), error)
+      SLL_ALLOCATE(x2(n1,n2), error)
+      do j = 1,n2
+        do i = 1,n1
+          eta1 = node_positions1(i) 
+          eta2 = node_positions2(j)
           x1(i,j) = transf%x1(eta1,eta2)
           x2(i,j) = transf%x2(eta1,eta2)
         end do
@@ -1712,10 +1750,20 @@ contains
     end if
 
     call int2string(iplot,cplot)
-    call sll_xdmf_open(trim(filename)//cplot//".xmf","curvilinear_mesh", &
-      nnodes_x1,nnodes_x2,file_id,error)
-    call sll_xdmf_write_array(trim(filename)//cplot,f,"values", &
-      error,file_id,"Node")
+    call sll_xdmf_open( &
+      trim(filename)//cplot//".xmf", &
+      "curvilinear_mesh", &
+      n1, &
+      n2, &
+      file_id, &
+      error)
+    call sll_xdmf_write_array( &
+      trim(filename)//cplot, &
+      f, &
+      "values", &
+      error, &
+      file_id, &
+      "Node")
     call sll_xdmf_close(file_id,error)
   end subroutine plot_f_curvilinear
 
@@ -2425,6 +2473,215 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
    
     
   end subroutine compute_divergence_2d_conservative_curvilinear
+
+
+
+  subroutine time_history_diagnostic_curvilinear2( &
+    file_id, &    
+    step, &
+    dt, &
+    mesh_2d, &
+    transformation,&
+    f, &
+    dof_positions1, &
+    dof_positions2, &
+    num_dof1, &
+    num_dof2, &
+    integration_weight1, &
+    integration_weight2, &    
+    !phi, &
+    !A1, &
+    !A2, &
+    f_exact)
+    sll_int32, intent(in) :: file_id
+    sll_int32, intent(in) :: step
+    sll_real64, intent(in) :: dt
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
+    class(sll_coordinate_transformation_2d_base), pointer :: transformation
+    sll_real64, dimension(:,:), intent(in) :: f
+    sll_real64, dimension(:), intent(in) :: dof_positions1
+    sll_real64, dimension(:), intent(in) :: dof_positions2
+    sll_real64, dimension(:), intent(in) :: integration_weight1
+    sll_real64, dimension(:), intent(in) :: integration_weight2
+    sll_int32, intent(in) :: num_dof1
+    sll_int32, intent(in) :: num_dof2
+    !sll_real64, dimension(:,:), intent(in) :: phi
+    !sll_real64, dimension(:,:), intent(in) :: A1
+    !sll_real64, dimension(:,:), intent(in) :: A2 
+    sll_real64, dimension(:,:), intent(in) :: f_exact
+    sll_real64 :: mass
+    sll_real64 :: linf
+    sll_real64 :: l1
+    sll_real64 :: l2
+    sll_real64 :: e
+    
+    sll_real64, dimension(:), allocatable :: mass_array
+    sll_real64, dimension(:), allocatable  :: l1_array
+    sll_real64, dimension(:), allocatable  :: l2_array
+    !sll_real64, dimension(:), allocatable  :: e_array
+    
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_real64, dimension(:),allocatable :: data
+    !sll_real64, dimension(1:2,1:2) :: jac_m
+    sll_int32 :: i1
+    sll_int32 :: i2
+!    sll_int32 :: Nc_eta1
+!    sll_int32 :: Nc_eta2
+!    sll_real64 :: eta1_min
+!    sll_real64 :: eta1_max
+!    sll_real64 :: eta2_min
+!    sll_real64 :: eta2_max
+!    sll_real64 :: delta_eta1
+!    sll_real64 :: delta_eta2
+!    sll_real64 :: dphi_eta1
+!    sll_real64 :: dphi_eta2
+    sll_int32 :: ierr
+    sll_real64 :: err_linf 
+    sll_real64 :: err_l1 
+    sll_real64 :: err_l2 
+
+    
+!    Nc_eta1 = mesh_2d%num_cells1
+!    Nc_eta2 = mesh_2d%num_cells2
+    
+    
+!    eta1_min = mesh_2d%eta1_min
+!    eta1_max = mesh_2d%eta1_max
+!    eta2_min = mesh_2d%eta2_min
+!    eta2_max = mesh_2d%eta2_max
+!    delta_eta1 = mesh_2d%delta_eta1
+!    delta_eta2 = mesh_2d%delta_eta2
+
+
+!    SLL_ALLOCATE(data(Nc_eta1+1),ierr)
+!    SLL_ALLOCATE(mass_array(Nc_eta2+1),ierr)
+!    SLL_ALLOCATE(l1_array(Nc_eta2+1),ierr)
+!    SLL_ALLOCATE(l2_array(Nc_eta2+1),ierr)
+!    SLL_ALLOCATE(e_array(Nc_eta2+1),ierr)
+
+
+    SLL_ALLOCATE(data(num_dof2),ierr)
+    SLL_ALLOCATE(mass_array(num_dof2),ierr)
+    SLL_ALLOCATE(l1_array(num_dof2),ierr)
+    SLL_ALLOCATE(l2_array(num_dof2),ierr)
+    linf  = 0.0_f64
+    !l1    = 0.0_f64
+    !l2    = 0.0_f64
+    !mass  = 0.0_f64
+     !e     = 0.0_f64
+    
+    do i2 = 1, num_dof2
+      eta2 = dof_positions2(i2) 
+      do i1=1, num_dof1
+        eta1 = dof_positions1(i1)
+        data(i1) = f(i1,i2)*abs(transformation%jacobian(eta1,eta2))
+      enddo
+      mass_array(i2) = sum(data(1:num_dof1)*integration_weight1(1:num_dof1))
+      !compute_integral_trapezoid_1d(data, Nc_eta1+1, delta_eta1)
+
+      do i1=1,num_dof1
+        eta1 = dof_positions1(i1)
+        data(i1) = abs(f(i1,i2))*abs(transformation%jacobian(eta1,eta2))
+      enddo
+      l1_array(i2) = sum(data(1:num_dof1)*integration_weight1(1:num_dof1))
+      !compute_integral_trapezoid_1d(data, Nc_eta1+1, delta_eta1)
+
+      do i1=1,num_dof1
+        eta1 = dof_positions1(i1)
+        data(i1) = (f(i1,i2))**2 *abs(transformation%jacobian(eta1,eta2))
+      enddo
+      l2_array(i2) = sum(data(1:num_dof1)*integration_weight1(1:num_dof1))
+      !compute_integral_trapezoid_1d(data, Nc_eta1+1, delta_eta1)
+
+
+      do i1=1,num_dof1
+       linf = max(linf,abs(f(i1,i2)))
+      enddo
+         
+    enddo     
+
+!    do i2 = 1,Nc_eta2+1
+!      do i1 = 1,Nc_eta1+1
+!        eta1 = eta1_min + (i1-1)* delta_eta1
+!        jac_m  =  transformation%jacobian_matrix(eta1,eta2)
+!        dphi_eta1 = -A2(i1,i2)* transformation%jacobian(eta1,eta2)
+!        dphi_eta2 = A1(i1,i2)* transformation%jacobian(eta1,eta2)
+!        data(i1) = (( jac_m(2,2)*dphi_eta1 - jac_m(2,1)*dphi_eta2 )**2 + &
+!        ( -jac_m(1,2)*dphi_eta1 + jac_m(1,1)*dphi_eta2 )**2) &
+!        /abs(transformation%jacobian(eta1,eta2)) 
+!      enddo
+!      e_array(i2) = compute_integral_trapezoid_1d(data, Nc_eta1+1, delta_eta1)
+!    enddo
+!    e = compute_integral_trapezoid_1d(e_array, Nc_eta2+1, delta_eta2)
+
+    mass = sum(mass_array(1:num_dof2)*integration_weight2(1:num_dof2))
+    l1 = sum(l1_array(1:num_dof2)*integration_weight2(1:num_dof2))
+    l2 = sum(l2_array(1:num_dof2)*integration_weight2(1:num_dof2))
+    !compute_integral_trapezoid_1d(mass_array, Nc_eta2+1, delta_eta2)
+    !l1 = compute_integral_trapezoid_1d(l1_array, Nc_eta2+1, delta_eta2)
+    !l2 = compute_integral_trapezoid_1d(l2_array, Nc_eta2+1, delta_eta2)
+    l2 = sqrt(l2)
+
+
+    !mass = mass*delta_eta2
+    !l1 = l1*delta_eta2
+    !l2 = sqrt(l2*delta_eta2)
+    !e  = e*delta_eta2
+    
+    
+    !now, compute errors
+
+
+    err_linf  = 0.0_f64
+    
+    do i2 = 1, num_dof2
+      eta2 = dof_positions2(i2) 
+
+      do i1=1,num_dof1
+        eta1 = dof_positions1(i1) 
+        data(i1) = abs(f(i1,i2)-f_exact(i1,i2))*abs(transformation%jacobian(eta1,eta2))
+      enddo
+      l1_array(i2) = sum(data(1:num_dof1)*integration_weight1(1:num_dof1))
+      !compute_integral_trapezoid_1d(data, Nc_eta1+1, delta_eta1)
+
+      do i1=1,num_dof1
+        eta1 = dof_positions1(i1)
+        data(i1) = (f(i1,i2)-f_exact(i1,i2))**2 *abs(transformation%jacobian(eta1,eta2))
+      enddo
+      l2_array(i2) = sum(data(1:num_dof1)*integration_weight1(1:num_dof1))
+      !compute_integral_trapezoid_1d(data, Nc_eta1+1, delta_eta1)
+
+
+      do i1=1,num_dof1
+       err_linf = max(err_linf,abs(f(i1,i2)-f_exact(i1,i2)))
+      enddo
+         
+    enddo     
+
+    err_l1 = sum(l1_array(1:num_dof2)*integration_weight2(1:num_dof2))
+    !compute_integral_trapezoid_1d(l1_array, Nc_eta2+1, delta_eta2)
+    err_l2 = sum(l2_array(1:num_dof2)*integration_weight2(1:num_dof2))
+    !compute_integral_trapezoid_1d(l2_array, Nc_eta2+1, delta_eta2)
+    err_l2 = sqrt(err_l2)
+    
+    write(file_id,*) &
+      dt*real(step,f64), &
+      linf, &
+      l1, &
+      l2, &
+      mass, &
+      0._f64, &
+      0._f64, &
+!      e, &
+!      maxval(abs(phi(1:Nc_eta1+1,1:Nc_eta2+1))), &
+      err_linf, &
+      err_l1, &
+      err_l2
+      
+   
+    
+  end subroutine time_history_diagnostic_curvilinear2
 
 
 
