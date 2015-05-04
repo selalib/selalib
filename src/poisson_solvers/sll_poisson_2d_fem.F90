@@ -82,8 +82,8 @@ ny = this%ny
 
 SLL_ALLOCATE(this%hx(1:nx),error)
 SLL_ALLOCATE(this%hy(1:ny),error)
-SLL_ALLOCATE(this%A((nx-1)*(ny-1),(nx-1)*(ny-1)), error)
-SLL_ALLOCATE(this%M((nx-1)*(ny-1),(nx-1)*(ny-1)), error)
+SLL_ALLOCATE(this%A((nx+1)*(ny+1),(nx+1)*(ny+1)), error)
+SLL_ALLOCATE(this%M((nx+1)*(ny+1),(nx+1)*(ny+1)), error)
 
 do i=1,nx
   this%hx(i) = x(i+1)-x(i)
@@ -125,8 +125,8 @@ this%A = 0.0_f64
 this%M = 0.0_f64
 
 !***  Interior mesh ***
-do i=2,nx-1
-  do j=2,ny-1
+do i=1,nx
+  do j=1,ny
     isom(1) = som(this%nx,i,j,1)
     isom(2) = som(this%nx,i,j,2)
     isom(3) = som(this%nx,i,j,3)
@@ -145,115 +145,22 @@ end do
 
 call write_mtv_file( x, y)
 
-do i=2,nx-1
-  j = 1
-  isom(3)=som(nx,i,j+1,1)
-  isom(4)=som(nx,i,j+1,2)
-  do ii=3,4
-    do jj=3,4
-      this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
-              & + Axelem(ii,jj) * this%hy(j) / this%hx(i)   &
-              & + Ayelem(ii,jj) * this%hx(i) / this%hy(j)
-      this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
-              & + Melem(ii,jj)  * this%hy(j) * this%hx(i)
-    end do
-  end do
-  j = ny
-  isom(1)=som(nx,i,j-1,3)
-  isom(2)=som(nx,i,j-1,4)
-  hx_by_hy = this%hx(i) / this%hy(j)
-  hy_by_hx = this%hy(j) / this%hx(i)
-  hx_hy    = this%hy(j) * this%hx(i)
-  do ii=1,2
-    do jj=1,2
-      this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
-              & + Axelem(ii,jj) * hy_by_hx + Ayelem(ii,jj) * hx_by_hy
-      this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
-              & + Melem(ii,jj)  * hx_hy
-    end do
-  end do
-end do
-
-do j=2,ny-1
-  i = 1
-  isom(2)=som(nx,i+1,j,1)
-  isom(3)=som(nx,i+1,j,4)
-  hx_by_hy = this%hx(i) / this%hy(j)
-  hy_by_hx = this%hy(j) / this%hx(i)
-  hx_hy    = this%hy(j) * this%hx(i)
-  do ii=2,3
-    do jj=2,3
-      this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
-              & + Axelem(ii,jj) * hy_by_hx &
-              & + Ayelem(ii,jj) * hx_by_hy
-      this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
-              & + Melem(ii,jj)  * hx_hy
-    end do
-  end do
-  i = nx
-  isom(1)=som(nx,i-1,j,2)
-  isom(4)=som(nx,i-1,j,3)
-  hx_by_hy = this%hx(i) / this%hy(j)
-  hy_by_hx = this%hy(j) / this%hx(i)
-  hx_hy    = this%hy(j) * this%hx(i)
-  do ii=1,4,3
-    do jj=1,4,3
-      this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
-              & + Axelem(ii,jj) * hy_by_hx &
-              & + Ayelem(ii,jj) * hx_by_hy
-      this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
-              & + Melem(ii,jj)  * hx_hy
-    end do
-  end do
-end do
-
-!Corners
-i=1; j=1  !SW
-isom(3) = som(nx,i+1,j+1,1)
-this%A(isom(3),isom(3)) = this%A(i,j)                           &
-                        + Axelem(3,3) * this%hy(j) / this%hx(i) &
-                        + Ayelem(3,3) * this%hx(i) / this%hy(j)
-this%M(isom(3),isom(3)) = this%M(isom(3),isom(3))               &
-                        + Melem(3,3) * this%hx(i) * this%hy(j)
-
-i=nx; j=1 !SE
-isom(4) = som(nx,i-1,j+1,2)
-this%A(isom(4),isom(4)) = this%A(isom(4),isom(4))               &
-                        + Axelem(4,4) * this%hy(j) / this%hx(i) &
-                        + Ayelem(4,4) * this%hx(i) / this%hy(j)
-this%M(isom(4),isom(4)) = this%M(isom(4),isom(4))               &
-                        + Melem(4,4) * this%hx(i) * this%hy(j)
-
-i=nx; j=ny !NE
-isom(1) = som(nx,i-1,j-1,3)
-this%A(isom(1),isom(1)) = this%A(isom(1),isom(1))               &
-                        + Axelem(1,1) * this%hy(j) / this%hx(i) &
-                        + Ayelem(1,1) * this%hx(i) / this%hy(j)
-this%M(isom(1),isom(1)) =   this%M(isom(1),isom(1))             &
-                        + Melem(1,1) * this%hx(i) * this%hy(j)
-
-i=1; j=ny !NW
-isom(2) = som(nx,i+1,j-1,4) 
-this%A(isom(2),isom(2)) = this%A(isom(2),isom(2))               &
-                        + Axelem(2,2) * this%hy(j) / this%hx(i) &
-                        + Ayelem(2,2) * this%hx(i) / this%hy(j)
-this%M(isom(2),isom(2)) =   this%M(isom(2),isom(2))             &
-                        + Melem(2,2) * this%hx(i) * this%hy(j)
-
-SLL_ALLOCATE(this%mat(nx+1,(nx-1)*(ny-1)), error)
+kd = nx+2
+SLL_ALLOCATE(this%mat(kd+1,(nx+1)*(ny+1)), error)
 this%mat = 0.0_f64
-kd = nx
 do k = 0, kd   ! Loop over diagonals
   i = kd+1-k   ! Row number in this%mat
-  do j = (nx-1)*(ny-1)-k, max(1,j-kd+k),-1
+  do j = (nx+1)*(ny+1)-k, max(1,j-kd+k),-1
     this%mat(i,j+k) = this%A(j+k,j) 
   end do
 end do
 
-!call sll_display(this%A, 'f7.3')
-!call sll_display(this%mat, 'f7.3')
+if (nx < 4 .and. ny < 4) then
+  call sll_display(this%A, 'f5.2')
+  call sll_display(this%mat, 'f5.2')
+end if
 
-call dpbtrf('U',(nx-1)*(ny-1),kd,this%mat,nx+1,error)
+call dpbtrf('U',(nx+1)*(ny+1),kd,this%mat,kd+1,error)
 
 end subroutine initialize_poisson_2d_fem
 
@@ -263,13 +170,13 @@ integer function som(nx, i, j, k)
 integer :: i, j, k, nx
 
 if (k == 1) then
-  som = i-1+(j-2)*(nx-1)
+  som = i+(j-1)*(nx+1) 
 else if (k == 2) then
-  som = i-1+(j-2)*(nx-1)+1
+  som = i+(j-1)*(nx+1)+1
 else if (k == 3) then
-  som = i-1+(j-2)*(nx-1)+nx
+  som = i+(j-1)*(nx+1)+nx+2
 else if (k == 4) then
-  som = i-1+(j-2)*(nx-1)+nx-1
+  som = i+(j-1)*(nx+1)+nx+1
 end if 
 
 end function som
@@ -280,7 +187,7 @@ type( sll_fem_poisson_2d ) :: this !< Poisson solver object
 sll_real64, dimension(:,:) :: ex   !< x electric field
 sll_real64, dimension(:,:) :: ey   !< y electric field
 sll_real64, dimension(:,:) :: rho  !< charge density
-sll_real64, dimension((this%nx-1)*(this%ny-1)) :: b
+sll_real64, dimension((this%nx+1)*(this%ny+1)) :: b
 
 sll_int32 :: nx
 sll_int32 :: ny
@@ -292,8 +199,8 @@ ny = this%ny
 
 !** Construction du second membre (rho a support compact)
 k = 0
-do i=2,nx
-  do j=2,ny
+do i=1,nx+1
+  do j=1,ny+1
     k = k+1
     b(k) = rho(i,j)
   end do
@@ -301,25 +208,25 @@ end do
 
 b = matmul(this%M,b)
 
-call dpbtrs('U',(nx-1)*(ny-1),nx,1,this%mat,nx+1,b,(nx-1)*(ny-1),error) 
+call dpbtrs('U',(nx+1)*(ny+1),nx+2,1,this%mat,nx+3,b,(nx+1)*(ny+1),error) 
 
 rho = 0.0
 k = 0
-do i=2,nx
-  do j=2,ny
+do i=1,nx+1
+  do j=1,ny+1
     k = k+1
     rho(i,j) = b(k) 
   end do
 end do
 
-do j=1,ny-1
-do i=1,nx-2
+do j=1,ny+1
+do i=1,nx
   ex(i,j) = - (rho(i+1,j)-rho(i,j)) / this%hx(i)
 end do
 end do
 
-do j=1,ny-2
-do i=1,nx-1
+do j=1,ny
+do i=1,nx+1
   ey(i,j) = - (rho(i,j+1)-rho(i,j)) / this%hy(j)
 end do
 end do
@@ -354,8 +261,8 @@ end do
 
 !Numeros des elements
 iel = 0
-do i=2,nx-1
-  do j=2,ny-1
+do i=1,nx
+  do j=1,ny
     iel = iel+1
     x1 = 0.5*(x(i)+x(i+1))
     y1 = 0.5*(y(j)+y(j+1))
@@ -370,8 +277,9 @@ do i=2,nx-1
 end do
 
 !Numeros des noeud
-do i=2,nx
-  do j=2,ny
+isom = 0
+do i=1,nx+1
+  do j=1,ny+1
     isom = isom+1
     write(10,"(a)"   ,  advance="no")"@text x1="
     write(10,"(g15.3)", advance="no") x(i)
