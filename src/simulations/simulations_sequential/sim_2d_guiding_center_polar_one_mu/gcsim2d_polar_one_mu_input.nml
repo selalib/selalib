@@ -1,0 +1,57 @@
+!ctest --verbose -R sim2d_gc_polar
+!./bin/test_2d_gc_polar_one_mu ../selalib/prototype/src/simulation/gcsim2d_polar_one_mu_input
+!gnuplot -persist ../selalib/prototype/src/simulation/gcsim2d_polar.gnu
+
+
+&geometry
+  mesh_case="SLL_POLAR_MESH"
+  num_cells_x1 = 128
+  r_min = 1.
+  r_max = 10.
+  num_cells_x2 = 128
+/
+
+&initial_function
+  initial_function_case="SLL_DIOCOTRON"
+  r_minus = 4.
+  r_plus = 5.
+  kmode_x2 = 3.
+  eps = 1.e-6
+/
+
+&time_iterations
+  dt = 0.05
+  number_iterations  = 2000
+  freq_diag = 80
+  freq_diag_time = 1
+  !time_loop_case = "SLL_EULER"
+  time_loop_case = "SLL_PREDICTOR_CORRECTOR" 
+/
+
+&advector
+  advect2d_case = "SLL_BSL"    
+  f_interp2d_case = "SLL_CUBIC_SPLINES"
+  phi_interp2d_case = "SLL_CUBIC_SPLINES"
+  !charac2d_case = "SLL_EULER"
+  charac2d_case = "SLL_VERLET"
+  A_interp_case = "SLL_CUBIC_SPLINES"
+/
+    
+&poisson
+  poisson_case = "SLL_PHI_FROM_RHO"
+  poisson_solver = "SLL_POLAR_FFT"  
+  !poisson_solver = "SLL_ELLIPTIC_FINITE_ELEMENT_SOLVER" !use with "SLL_PHI_FROM_RHO"
+  !poisson_solver = "SLL_MUDPACK_CURVILINEAR"   !use with "SLL_PHI_FROM_RHO"    
+  spline_degree_eta1 = 3
+  spline_degree_eta2 = 3    
+/
+
+&gyroaverage
+  !gyroaverage_case = "HERMITE_C1_PRECOMPUTE"
+  !gyroaverage_case = "SPLINES"
+  gyroaverage_case = "PADE"
+  mu = 1.0e-0
+  gyroaverage_N_points = 1024
+  gyroaverage_interp_degree_x1 = 3
+  gyroaverage_interp_degree_x2 = 3   
+/
