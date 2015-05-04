@@ -72,7 +72,7 @@ C) Configuring (Makefile Generator)
         EXTRA_ARGS=$@
         
         cmake \
-          -D CMAKE_BUILD_TYPE:STRING=DEBUG \
+          -D CMAKE_BUILD_TYPE:STRING=Debug \
           $EXTRA_ARGS \
           ${SLL_HOME}
 
@@ -81,8 +81,8 @@ C) Configuring (Makefile Generator)
         ./do-configure [OTHER OPTIONS] -D<PACKAGE>_ENABLED=ON
 
       where <PACKAGE> FFTW, etc. and SLL_HOME is set to the
-      selalib prototype source base directory (or your can just give it explicitly).
-      (ex: selalib/prototype/src)
+      selalib source base directory (or your can just give it explicitly).
+      (ex: selalib/src)
 
   b) [Recommended] Create a CMake file fragment and point to it.
 
@@ -97,7 +97,7 @@ C) Configuring (Makefile Generator)
        
     where MyConfigureOptions.cmake might look like:
 
-      SET(CMAKE_BUILD_TYPE DEBUG CACHE STRING "" FORCE)
+      SET(CMAKE_BUILD_TYPE Debug CACHE STRING "" FORCE)
       SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "" FORCE)
       SET(MPI_Fortran_COMPILER "mpiifort" CACHE BOOL "" FORCE) #Hydra build
       ...
@@ -133,7 +133,7 @@ C) Configuring (Makefile Generator)
       $ ./do-configure \
          -D HDF5_ENABLED:BOOL=ON \
          -D HDF5_PARALLEL_ENABLED:BOOL=ON \
-         -D MPI_MODULE_ENABLED:BOOL=ON \
+         -D MPI_ENABLED:BOOL=ON \
          -D BUILD_TESTS:BOOL=ON
   
   b) Configuring SeLaLib to test all effects of changing a given package(s):
@@ -152,13 +152,13 @@ C) Configuring (Makefile Generator)
   
     To build a debug version, pass into 'cmake':
   
-      -D CMAKE_BUILD_TYPE:STRING=DEBUG
+      -D CMAKE_BUILD_TYPE:STRING=Debug
   
     This will result in default debug flags getting passed to the compiler.
   
     To build a release (optimized) version, pass into 'cmake':
   
-      -D CMAKE_BUILD_TYPE:STRING=RELEASE
+      -D CMAKE_BUILD_TYPE:STRING=Release
   
     This will result in optimized flags getting passed to the compiler.
   
@@ -184,7 +184,7 @@ C) Configuring (Makefile Generator)
 
       CMAKE_Fortran_FLAGS   CMAKE_Fortran_FLAGS_<CMAKE_BUILD_TYPE>
 
-    where <CMAKE_BUILD_TYPE> = DEBUG or RELEASE.  THEREFORE: The options in 
+    where <CMAKE_BUILD_TYPE> = Debug or Release.  THEREFORE: The options in 
     CMAKE_Fortran_FLAGS_<CMAKE_BUILD_TYPE> come after and override those in 
     CMAKE_Fortran_FLAGS!.
 
@@ -202,8 +202,8 @@ C) Configuring (Makefile Generator)
     defines (e.g. -DSOMETHING) for example.
 
     WARNING: Any options that you set through the cache varible
-    CMAKE_Fortran_FLAGS_<CMAKE_BUILD_TYPE> (where <CMAKE_BUILD_TYPE> = DEBUG or
-    RELEASE) will get overridden in the SeLaLib CMake system for GNU
+    CMAKE_Fortran_FLAGS_<CMAKE_BUILD_TYPE> (where <CMAKE_BUILD_TYPE> = Debug or
+    Release) will get overridden in the SeLaLib CMake system for GNU
     compilers in development mode so don't try to manually set
     CMAKE_Fortran_FLAGS_<CMAKE_BUILD_TYPE>!
   
@@ -216,7 +216,7 @@ C) Configuring (Makefile Generator)
 
   MPI is enabled by default, do disable the support you must minimally:
 
-    -D MPI_MODULE_ENABLED:BOOL=OFF
+    -D MPI_ENABLED:BOOL=OFF
 
   a) Configuring build using MPI compiler wrappers:
 
@@ -435,7 +435,7 @@ F) Installing
 
     $ ./do-configure \
       -D CMAKE_INSTALL_PREFIX:PATH=$HOME/local \
-      -D SLL_BUILD_PACKAGE:BOOL=ON
+      -D BUILD_PACKAGE:BOOL=ON
 
   NOTE: The script 'do-configure' is just a simple shell script that calls
   CMake as shown above.
