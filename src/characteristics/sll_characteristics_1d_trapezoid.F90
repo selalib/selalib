@@ -36,6 +36,7 @@ implicit none
     class(sll_interpolator_1d_base), pointer               :: A_interp
     sll_int32 :: maxiter
     sll_real64 :: tol
+    logical :: feet_inside
      
   contains
     procedure, pass(charac) :: initialize => &
@@ -53,7 +54,8 @@ contains
       eta_max, &
       process_outside_point, &
       maxiter, &
-      tol) &
+      tol, &
+      feet_inside) &
       result(charac)
       
     type(trapezoid_1d_charac_computer),pointer :: charac
@@ -66,6 +68,7 @@ contains
     class(sll_interpolator_1d_base), target :: A_interp
     sll_int32, intent(in), optional :: maxiter
     sll_real64, intent(in), optional :: tol
+    logical, intent(in), optional :: feet_inside
     sll_int32 :: ierr
       
     SLL_ALLOCATE(charac,ierr)
@@ -78,7 +81,8 @@ contains
       eta_max, &
       process_outside_point, &
       maxiter, &
-      tol)
+      tol, &
+      feet_inside)
 
     
   end function new_trapezoid_1d_charac
@@ -91,7 +95,8 @@ contains
       eta_max, &
       process_outside_point, &
       maxiter, &
-      tol)
+      tol, &
+      feet_inside)
       
     class(trapezoid_1d_charac_computer) :: charac
     sll_int32, intent(in) :: Npts
@@ -103,6 +108,7 @@ contains
     class(sll_interpolator_1d_base), target :: A_interp
     sll_int32, intent(in), optional :: maxiter
     sll_real64, intent(in), optional :: tol
+    logical, intent(in), optional :: feet_inside
 
 
     charac%Npts = Npts
@@ -161,7 +167,12 @@ contains
     else
       charac%tol = 1.e-12_f64  
     endif
-
+    
+    if(present(feet_inside))then
+      charac%feet_inside = feet_inside
+    else
+      charac%feet_inside = .true.
+    endif
     
     
   end subroutine initialize_trapezoid_1d_charac
@@ -221,7 +232,7 @@ contains
             iter,abs(x2_old-x2)
           !stop
         end if
-        if((x2<=eta_min).or.(x2>=eta_max))then
+        if(((x2<=eta_min).or.(x2>=eta_max)).and.(charac%feet_inside))then
           x2 =  charac%process_outside_point(x2,eta_min,eta_max)
         endif                      
         output(j) = x2  
