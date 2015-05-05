@@ -30,7 +30,8 @@ private
     sll_real64                              :: eta_max  
     procedure(signature_process_outside_point_1d), pointer, nopass    :: &
       process_outside_point
-     
+    logical :: feet_inside
+ 
   contains
     procedure, pass(charac) :: initialize => &
       initialize_explicit_euler_1d_charac
@@ -47,7 +48,8 @@ contains
       bc_type, &
       eta_min, &
       eta_max, &
-      process_outside_point) &
+      process_outside_point, &
+      feet_inside) &
       result(charac)
       
     type(explicit_euler_1d_charac_computer),pointer :: charac
@@ -57,6 +59,7 @@ contains
     sll_real64, intent(in), optional  :: eta_max
     procedure(signature_process_outside_point_1d), optional    :: &
       process_outside_point
+    logical, optional :: feet_inside 
     sll_int32 :: ierr
       
     SLL_ALLOCATE(charac,ierr)
@@ -66,7 +69,8 @@ contains
       bc_type, &
       eta_min, &
       eta_max, &
-      process_outside_point)
+      process_outside_point, &
+      feet_inside)
 
     
   end function new_explicit_euler_1d_charac
@@ -78,7 +82,8 @@ contains
       bc_type, &
       eta_min, &
       eta_max, &
-      process_outside_point)
+      process_outside_point, &
+      feet_inside)
       
     class(explicit_euler_1d_charac_computer) :: charac
     sll_int32, intent(in) :: Npts
@@ -87,7 +92,7 @@ contains
     sll_real64, intent(in), optional  :: eta_max
     procedure(signature_process_outside_point_1d), optional    :: &
       process_outside_point
-
+    logical, optional :: feet_inside
 
     charac%Npts = Npts
     
@@ -133,7 +138,11 @@ contains
       stop
     endif
     
-
+    if(present(feet_inside))then
+      charac%feet_inside = feet_inside
+    else
+      charac%feet_inside = .true.  
+    endif
 
     
     
@@ -166,7 +175,7 @@ contains
     
     do i=1,Npts
       output(i) = input(i)-dt*A(i)
-      if((output(i)<=eta_min).or.(output(i)>=eta_max))then
+      if(((output(i)<=eta_min).or.(output(i)>=eta_max)).and.(charac%feet_inside))then
         output(i)=charac%process_outside_point(output(i),eta_min,eta_max)
       endif  
     enddo
