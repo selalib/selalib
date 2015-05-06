@@ -115,15 +115,15 @@ end function new_csr_matrix
 !> @param[in] local_to_global_col : local_to_global_col(\ell,i) gives the global 
 !> column index of the matrix, for the element i and local degree of freedom \ell
 !> @param[in] num_local_dof_col : number of local degrees of freedom for the columns
-subroutine initialize_csr_matrix( &
-  mat,                            &
-  num_rows,                       &
-  num_cols,                       &
-  num_elements,                   &
-  local_to_global_row,            &
-  num_local_dof_row,              &
-  local_to_global_col,            & 
-  num_local_dof_col)
+
+subroutine initialize_csr_matrix( mat,                            &
+                                  num_rows,                       &
+                                  num_cols,                       &
+                                  num_elements,                   &
+                                  local_to_global_row,            &
+                                  num_local_dof_row,              &
+                                  local_to_global_col,            & 
+                                  num_local_dof_col)
 
 type(sll_csr_matrix),      intent(inout) :: mat
 sll_int32,                 intent(in)    :: num_rows
@@ -136,7 +136,7 @@ sll_int32,                 intent(in)    :: num_local_dof_col
 
 sll_int32                                :: num_nz
 sll_int32                                :: ierr
-sll_int32,  dimension(:,:), allocatable  :: lpi_columns
+sll_int32,  dimension(:,:), allocatable  :: lpi_col
 sll_int32,  dimension(:),   allocatable  :: lpi_occ
 sll_int32                                :: COEF
 sll_int32                                :: e
@@ -154,10 +154,10 @@ logical                                  :: ll_done
 print *,'#initialize_csr_matrix'
 COEF = 6
 
-SLL_ALLOCATE(lpi_columns(num_rows, 0:COEF*num_local_dof_col),ierr)
+SLL_ALLOCATE(lpi_col(num_rows, 0:COEF*num_local_dof_col),ierr)
 SLL_ALLOCATE(lpi_occ(num_rows+1),ierr)
 
-lpi_columns(:,:) = 0
+lpi_col(:,:) = 0
 lpi_occ(:) = 0
 
 ! WE FIRST COMPUTE, FOR EACH ROW, THE NUMBER OF COLUMNS THAT WILL BE USED
@@ -176,8 +176,8 @@ do e = 1, num_elements
 
       ll_done = .false.
       ! WE CHECK IF IT IS THE FIRST OCCURANCE OF THE COUPLE (A_1, A_2)
-      do i = 1, lpi_columns(A_1, 0)
-        if (lpi_columns(A_1, i) /= A_2) cycle
+      do i = 1, lpi_col(A_1, 0)
+        if (lpi_col(A_1, i) /= A_2) cycle
         ll_done = .true.
         exit
       end do
@@ -188,21 +188,21 @@ do e = 1, num_elements
 
         ! A_1 IS THE ROW NUM, A_2 THE COLUMN NUM
         ! INITIALIZATION OF THE SPARSE MATRIX
-        lpi_columns(A_1, 0) = lpi_columns(A_1, 0) + 1
-        lpi_columns(A_1, lpi_columns(A_1, 0)) = A_2
+        lpi_col(A_1, 0) = lpi_col(A_1, 0) + 1
+        lpi_col(A_1, lpi_col(A_1, 0)) = A_2
 
-        ! resizing the array
-        lpi_size(1) = SIZE(lpi_columns, 1)
-        lpi_size(2) = SIZE(lpi_columns, 2)
-        if (lpi_size(2) < lpi_columns(A_1, 0)) then
-          ALLOCATE(lpi_columns(lpi_size(1), lpi_size(2)))
-          lpi_columns = lpi_columns
-          DEALLOCATE(lpi_columns)
-          ALLOCATE(lpi_columns(lpi_size(1), 2 * lpi_size(2)))
-          lpi_columns(1:lpi_size(1),1:lpi_size(2)) = &
-            lpi_columns(1:lpi_size(1), 1:lpi_size(2))
-          DEALLOCATE(lpi_columns)
-        end if
+       !! resizing the array
+       !lpi_size(1) = SIZE(lpi_col, 1)
+       !lpi_size(2) = SIZE(lpi_col, 2)
+       !if (lpi_size(2) < lpi_col(A_1, 0)) then
+       !  ALLOCATE(lpi_col(lpi_size(1), lpi_size(2)))
+       !  lpi_col = lpi_col
+       !  DEALLOCATE(lpi_col)
+       !  ALLOCATE(lpi_col(lpi_size(1), 2 * lpi_size(2)))
+       !  lpi_col(1:lpi_size(1),1:lpi_size(2)) = &
+       !    lpi_col(1:lpi_size(1), 1:lpi_size(2))
+       !  DEALLOCATE(lpi_col)
+       !end if
 
       end if
 
@@ -239,24 +239,24 @@ do e = 1, num_elements
     A_1 = local_to_global_row(b_1, e)
 
     if (A_1 == 0) cycle
-    if (lpi_columns(A_1, 0) == 0) cycle
+    if (lpi_col(A_1, 0) == 0) cycle
 
-    sz = lpi_columns(A_1, 0)
+    sz = lpi_col(A_1, 0)
 
-    call QsortC(lpi_columns(A_1, 1: sz))
+    call QsortC(lpi_col(A_1, 1: sz))
 
     do i = 1, sz
-       mat%col_ind(mat%row_ptr(A_1)+i-1) = lpi_columns(A_1,i)
+       mat%col_ind(mat%row_ptr(A_1)+i-1) = lpi_col(A_1,i)
     end do
 
-    lpi_columns(A_1, 0) = 0
+    lpi_col(A_1, 0) = 0
 
     end do
 
  end do
 
 mat%val(:) = 0.0_f64
-SLL_DEALLOCATE_ARRAY(lpi_columns,ierr)
+SLL_DEALLOCATE_ARRAY(lpi_col,ierr)
 SLL_DEALLOCATE_ARRAY(lpi_occ,ierr)
 
 end subroutine initialize_csr_matrix
