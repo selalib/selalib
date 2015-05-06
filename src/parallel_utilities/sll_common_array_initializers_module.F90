@@ -139,6 +139,21 @@ contains
   end function sll_cos_bell0_initializer_2d
 
 
+  function sll_one_initializer_2d( x_1, x_2, params ) result(res)
+    sll_real64 :: res
+    sll_real64, intent(in) :: x_1
+    sll_real64, intent(in) :: x_2 
+    sll_real64, dimension(:), intent(in), optional :: params
+
+    if(size(params)>=1)then
+      res = params(1)
+    else
+      res = 0._f64
+    endif
+    
+  end function sll_one_initializer_2d
+
+
   !rotation flow
   function sll_rotation_phi_initializer_2d( x_1, x_2, params ) result(res)
     sll_real64 :: res
