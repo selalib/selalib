@@ -10,6 +10,7 @@ TARGET_LINK_LIBRARIES( sll_simulations_sequential
                        sll_poisson_solvers
                        sll_reduction
                        sll_common_array_initializers
+                       sll_gyroaverage
                      )
 
 SET( INSTALL_DIR "${INSTALL_DIR}/simulations_sequential" )
