@@ -86,7 +86,7 @@ contains  ! ****************************************************************
   subroutine compute_box_spline_2d( data, deg, spline )
     sll_real64, dimension(:), intent(in), target :: data
     sll_int32, intent(in)                        :: deg
-    type(sll_box_spline_2d), pointer, intent(in)     :: spline
+    type(sll_box_spline_2d), pointer, intent(in) :: spline
     sll_int32  :: bc
     sll_int32  :: bc_selector
 
@@ -393,6 +393,24 @@ contains  ! ****************************************************************
     end if
 
   end function chi_gen_val
+
+
+  function compute_box_spline(spline, x1, x2, degree) result(val)
+    type(sll_box_spline_2d), pointer    :: spline
+    sll_real64, intent(in) :: x1
+    sll_real64, intent(in) :: x2
+    sll_int32,  intent(in) :: deg
+    sll_real64 :: val
+    sll_real64 :: x1_basis
+    sll_real64 :: x2_basis
+
+    x1_basis = change_basis_x1(spline, x1, x2)
+    x2_basis = change_basis_x2(spline, x1, x2)
+
+    val = chi_gen_val(x1_basis, x2_basis, degree)
+
+  end function compute_box_spline
+
 
 
   !---------------------------------------------------------------------------
