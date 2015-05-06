@@ -32,6 +32,8 @@ type, public :: sll_fem_poisson_2d
    sll_int32                           :: ny  !< cells number along y minus 1
    sll_int32                           :: nd
    sll_int32,  dimension(:)  , pointer :: id
+   sll_real64, dimension(:)  , pointer :: xd
+   sll_real64, dimension(:)  , pointer :: yd
 end type sll_fem_poisson_2d
 
 !> Initialize the solver
@@ -77,6 +79,7 @@ sll_real64                  :: hx_hy
 sll_int32                   :: kd
 sll_int32                   :: lda
 sll_int32                   :: nd
+sll_int32                   :: n
 
 this%nx = nn_x-1
 this%ny = nn_y-1
@@ -175,32 +178,52 @@ do i = nx+1, nx*(ny+1), nx+1
   nd = nd+1
   this%id(nd) = k
 end do
-print*, 'nd=', this%nd
-print*, 'id=', this%id
 
-!call sll_display(this%A, 'f5.2')
+call sll_display(this%id, 'i5')
+
+if (nx<5) call sll_display(this%A, 'f5.2')
 
 do i = 1, this%nd
   k = this%id(i)
   this%A(k,k) = 1e20
 end do
 
-!call sll_display(this%A, 'f5.2')
+if (nx < 5) call sll_display(this%A, 'f5.2')
 
 kd = nx+2
 SLL_ALLOCATE(this%mat(kd+1,(nx+1)*(ny+1)), error)
 this%mat = 0.0_f64
-do k = 0, kd   ! Loop over diagonals
-  i = kd+1-k   ! Row number in this%mat
-  do j = (nx+1)*(ny+1)-k, 1+k,-1
-    this%mat(i,j+k) = this%A(j+k,j) 
+!do k = 0, kd   ! Loop over diagonals
+!  i = kd+1-k   ! Row number in this%mat
+!  do j = (nx+1)*(ny+1)-k, 1+k,-1
+!    this%mat(i,j+k) = this%A(j+k,j) 
+!  end do
+!end do
+n = (nx+1)*(ny+1)
+do i = 1, n
+  do j=i,min(n,i+kd)
+   this%mat(kd+1+i-j,j) = this%a(i,j)
   end do
 end do
 
-!call sll_display(this%mat, 'f5.2')
+if (nx < 5) call sll_display(this%mat, 'f5.2')
 
 call dpbtrf('U',(nx+1)*(ny+1),kd,this%mat,kd+1,error)
+print*, 'info=', error
 
+allocate(this%xd((nx+1)*(ny+1)))
+allocate(this%yd((nx+1)*(ny+1)))
+
+k = 0
+do j = 1, ny+1
+do i = 1, nx+1
+  k = k+1
+  this%xd(k) = x(i)
+  this%yd(k) = y(j)
+end do
+end do
+
+ 
 end subroutine initialize_poisson_2d_fem
 
 !> Get the node index
@@ -249,8 +272,10 @@ b = matmul(this%M,b)
 
 do i = 1, this%nd
   k = this%id(i)
-  b(k) = 1.0e20
+  b(k) = 1.0e20 * (this%xd(k)*this%xd(k)+this%yd(k)*this%yd(k))
 end do
+
+if (nx < 5) call sll_display(b, 'f5.2')
 
 call dpbtrs('U',(nx+1)*(ny+1),nx+2,1,this%mat,nx+3,b,(nx+1)*(ny+1),error) 
 

@@ -58,12 +58,12 @@ enddo
 dpi = 2*sll_pi
 do j = 1, nc_y+1
   do i = 1, nc_x+1
-   phi(i,j) = x(i)
-   rho(i,j) = fbc(x(i),y(j))
+   phi(i,j) = x(i)*x(i) + y(j)*y(j)
+   rho(i,j) = phi(i,j)
   end do
 end do
 
-rho = 0.0_f64
+rho(2:nc_x,2:nc_y) = -4.0_f64
 
 call test_compact()
 
