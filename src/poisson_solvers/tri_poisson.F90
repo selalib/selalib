@@ -487,12 +487,15 @@ end subroutine initialize_poisson_solver
 ! mors2  - tableau des numeros des termes des matrices "morse"         
 subroutine morse(npoel1, npoel2, ntri, nbt, nbs, mors1, mors2)
 
-sll_int32, intent(in) :: nbs, nbt
-sll_int32, dimension(:), intent(in) :: npoel1
-sll_int32, dimension(:), intent(in) :: npoel2
-sll_int32, dimension(3,nbt), intent(in) :: ntri
-sll_int32, dimension(:),   intent(out):: mors1, mors2
-sll_int32, dimension(20)  :: ilign
+sll_int32,                   intent(in)  :: nbt
+sll_int32,                   intent(in)  :: nbs
+sll_int32, dimension(:),     intent(in)  :: npoel1
+sll_int32, dimension(:),     intent(in)  :: npoel2
+sll_int32, dimension(3,nbt), intent(in)  :: ntri
+sll_int32, dimension(:),     intent(out) :: mors1
+sll_int32, dimension(:),     intent(out) :: mors2
+sll_int32, dimension(20)                 :: ilign
+
 sll_int32 :: l, itest1, itest2, js1, js2, is1, is2, is3, numel
 sll_int32 :: iel, nlign, nel, is, im, k
 
