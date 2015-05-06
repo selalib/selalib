@@ -15,7 +15,8 @@ module sll_simulation_2d_guiding_center_polar_one_mu_module
 #include "sll_field_2d.h"
 #include "sll_utilities.h"
 #include "sll_poisson_solvers.h"
-  use sll_logical_meshes  
+  !use sll_logical_meshes 
+  use sll_cartesian_meshes  
   use sll_module_advection_1d_periodic
   use sll_module_advection_2d_BSL
   use sll_module_characteristics_2d_explicit_euler
@@ -24,21 +25,25 @@ module sll_simulation_2d_guiding_center_polar_one_mu_module
   use sll_fft
   use sll_reduction_module
   use sll_simulation_base
-  use sll_cubic_spline_interpolator_2d
-  use sll_cubic_spline_interpolator_1d
+  !use sll_cubic_spline_interpolator_2d
+  !use sll_cubic_spline_interpolator_1d
+  use sll_module_cubic_spline_interpolator_1d
+  use sll_module_cubic_spline_interpolator_2d
   use sll_coordinate_transformation_2d_base_module
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
-  use sll_module_poisson_2d_polar_solver
+  !use sll_module_poisson_2d_polar_solver
+  use sll_module_poisson_2d_polar
   use sll_module_poisson_2d_elliptic_solver
   use sll_module_scalar_field_2d_base
-  use sll_module_scalar_field_2d_alternative
+  !use sll_module_scalar_field_2d_alternative
+  use sll_parallel_array_initializer_module
   use sll_module_gyroaverage_2d_polar_hermite_solver
   use sll_module_gyroaverage_2d_polar_splines_solver
   use sll_module_gyroaverage_2d_polar_pade_solver
 #ifdef MUDPACK
-  use sll_module_poisson_2d_mudpack_solver
+  use sll_module_poisson_2d_mudpack
   use sll_module_poisson_2d_mudpack_curvilinear_solver_old
 #endif
 
@@ -61,7 +66,7 @@ module sll_simulation_2d_guiding_center_polar_one_mu_module
 
 
    !geometry
-   type(sll_logical_mesh_2d), pointer :: mesh_2d
+   type(sll_cartesian_mesh_2d), pointer :: mesh_2d
 
 
    !initial function
@@ -100,15 +105,15 @@ module sll_simulation_2d_guiding_center_polar_one_mu_module
   end type sll_simulation_2d_guiding_center_polar_one_mu
 
 
-  abstract interface
-    function sll_scalar_initializer_2d( x1, x2, params )
-      use sll_working_precision
-      sll_real64                                     :: sll_scalar_initializer_2d
-      sll_real64, intent(in)                         :: x1
-      sll_real64, intent(in)                         :: x2
-      sll_real64, dimension(:), intent(in), optional :: params
-    end function sll_scalar_initializer_2d
-  end interface
+!  abstract interface
+!    function sll_scalar_initializer_2d( x1, x2, params )
+!      use sll_working_precision
+!      sll_real64                                     :: sll_scalar_initializer_2d
+!      sll_real64, intent(in)                         :: x1
+!      sll_real64, intent(in)                         :: x2
+!      sll_real64, dimension(:), intent(in), optional :: params
+!    end function sll_scalar_initializer_2d
+!  end interface
 
 
 
@@ -347,7 +352,7 @@ contains
     sim%freq_diag = freq_diag
     sim%freq_diag_time = freq_diag_time
 
-    sim%mesh_2d => new_logical_mesh_2d( &
+    sim%mesh_2d => new_cartesian_mesh_2d( &
       Nc_x1, &
       Nc_x2, &
       eta1_min = x1_min, &
@@ -359,7 +364,7 @@ contains
       
     select case (f_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
-        f_interp2d => new_cubic_spline_2d_interpolator( &
+        f_interp2d => new_cubic_spline_interpolator_2d( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
@@ -380,7 +385,7 @@ contains
 
     select case (A_interp_case)
       case ("SLL_CUBIC_SPLINES")
-        A1_interp2d => new_cubic_spline_2d_interpolator( &
+        A1_interp2d => new_cubic_spline_interpolator_2d( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
@@ -389,7 +394,7 @@ contains
           x2_max, &
           SLL_HERMITE, &
           SLL_PERIODIC)
-        A2_interp2d => new_cubic_spline_2d_interpolator( &
+        A2_interp2d => new_cubic_spline_interpolator_2d( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
@@ -398,12 +403,12 @@ contains
           x2_max, &
           SLL_HERMITE, &
           SLL_PERIODIC)  
-        A1_interp1d_x1 => new_cubic_spline_1d_interpolator( &
+        A1_interp1d_x1 => new_cubic_spline_interpolator_1d( &
           Nc_x1+1, &
           x1_min, &
           x1_max, &
           SLL_HERMITE)
-        A2_interp1d_x1 => new_cubic_spline_1d_interpolator( &
+        A2_interp1d_x1 => new_cubic_spline_interpolator_1d( &
           Nc_x1+1, &
           x1_min, &
           x1_max, &
@@ -417,7 +422,7 @@ contains
 
     select case (phi_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
-        phi_interp2d => new_cubic_spline_2d_interpolator( &
+        phi_interp2d => new_cubic_spline_interpolator_2d( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
@@ -532,7 +537,7 @@ contains
 
     select case(poisson_solver)    
       case ("SLL_POLAR_FFT")     
-        sim%poisson =>new_poisson_2d_polar_solver( &
+        sim%poisson =>new_poisson_2d_polar( &
           x1_min, &
           x1_max, &
           Nc_x1, &
@@ -840,7 +845,7 @@ contains
       end do
     end do
 
-	Jf=f
+    Jf=f
 
     call sim%gyroaverage%compute_gyroaverage( &
         sqrt(2*sim%mu), &
@@ -868,7 +873,7 @@ contains
     do step=1,nb_step+1
       f_old = f
       
-	  Jf_old=f_old
+    Jf_old=f_old
 
       call sim%gyroaverage%compute_gyroaverage( &
         sqrt(2*sim%mu), &
@@ -939,7 +944,7 @@ contains
     sll_real64, dimension(:,:), intent(in) :: phi
     sll_real64, dimension(:,:), intent(out) :: A1
     sll_real64, dimension(:,:), intent(out) :: A2
-    type(sll_logical_mesh_2d), pointer :: mesh_2d
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     class(sll_interpolator_2d_base), pointer   :: interp2d
     sll_int32 :: Nc_x1
     sll_int32 :: Nc_x2
@@ -986,7 +991,7 @@ contains
     sll_int32, intent(in) :: file_id
     sll_int32, intent(in) :: step
     sll_real64, intent(in) :: dt
-    type(sll_logical_mesh_2d), pointer :: mesh_2d
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     sll_real64, dimension(:,:), intent(in) :: f
     sll_real64, dimension(:,:), intent(in) :: phi
     sll_real64, dimension(:,:), intent(in) :: A1
@@ -1108,7 +1113,7 @@ contains
   !---------------------------------------------------
   subroutine plot_f_polar(iplot,f,mesh_2d)
     use sll_xdmf
-    use sll_hdf5_io
+    use sll_hdf5_io_serial
     sll_int32 :: file_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1
@@ -1117,7 +1122,7 @@ contains
     sll_int32, intent(in) :: iplot
     character(len=4)      :: cplot
     sll_int32             :: nnodes_x1, nnodes_x2
-    type(sll_logical_mesh_2d), pointer :: mesh_2d
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
     sll_real64, dimension(:,:), intent(in) :: f
     sll_real64 :: r
     sll_real64 :: theta
