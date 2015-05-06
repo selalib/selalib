@@ -1146,8 +1146,8 @@ sll_int32,                  intent(in), optional :: size_eta2_coords
 sll_real64, dimension(:),   pointer :: taux
 sll_real64, dimension(:),   pointer :: tauy
 
-sll_int32, pointer :: taux_deriv(:)
-sll_int32, pointer :: tauy_deriv(:)
+sll_int32 :: taux_deriv(2)
+sll_int32 :: tauy_deriv(2)
 
 sll_int32  :: mx,my
 sll_real64 :: eta1_min, eta1_max, delta_eta1
@@ -1211,9 +1211,6 @@ ky  = interpolator%spline_degree2 + 1
 period1 = interpolator%eta1_max - interpolator%eta1_min
 period2 = interpolator%eta2_max - interpolator%eta2_min
 
-! compute the knots t1 and t2
-SLL_ALLOCATE(taux_deriv(2),ierr)
-SLL_ALLOCATE(tauy_deriv(2),ierr)
   
 select case (interpolator%bc_selector)
 
@@ -1982,7 +1979,7 @@ ky = interpolator%spline_degree2+1
 
 SLL_ALLOCATE(coef(ky),ierr)
 SLL_ALLOCATE(tab(nx),ierr)
-SLL_ALLOCATE(ty(2*ky),ierr)
+!SLL_ALLOCATE(ty(2*ky),ierr)
 
 length1 = interpolator%eta1_max-interpolator%eta1_min
 length2 = interpolator%eta2_max-interpolator%eta2_min
@@ -2014,9 +2011,12 @@ do j = 1, ky
   coef(j) = bvalue(interpolator%deboor(1), t1(1:nx+kx), tab, nx, kx, x, 0)
 end do
 
-ty = interpolator%t2(lefty-ky+1:lefty+ky)
+ty => interpolator%t2(lefty-ky+1:lefty+ky)
 
 val = bvalue(interpolator%deboor(2), ty, coef, ky, ky, y, 0)
+
+deallocate(tab)
+deallocate(coef)
 
 end function interpolate_value_ad2d
 
@@ -2109,6 +2109,10 @@ ty = t2(lefty-ky+1:lefty+ky)
 
 val = bvalue(interpolator%deboor(2), ty, coef, ky, ky, y, deriv2 )
 
+deallocate(ty)
+deallocate(tab)
+deallocate(coef)
+
 end function interpolate_derivative1_ad2d
      
 !> @brief First derivative in eta2 Interpolation on the points eta1 and eta2 
@@ -2192,6 +2196,10 @@ end do
 
 ty =  t2(lefty-ky+1:lefty+ky)
 val = bvalue(interpolator%deboor(2), ty, coef, ky, ky, y, deriv2 )
+
+deallocate(ty)
+deallocate(tab)
+deallocate(coef)
 
 end function interpolate_derivative2_ad2d
 
@@ -3176,8 +3184,8 @@ sll_int32,                           intent(in)  :: nx
 sll_int32,                           intent(in)  :: kx
 sll_int32,                           intent(in)  :: ny
 sll_int32,                           intent(in)  :: ky
-sll_real64, dimension(:),   pointer, intent(in)  :: taux
-sll_real64, dimension(:),   pointer, intent(in)  :: tauy
+sll_real64, dimension(:),            intent(in)  :: taux
+sll_real64, dimension(:),            intent(in)  :: tauy
 sll_real64, dimension(:,:), pointer, intent(in)  :: g   
 
 sll_real64, dimension(:,:), pointer, intent(out) :: bcoef
@@ -3321,7 +3329,7 @@ end subroutine spli2d_custom
 subroutine spli2d ( db, tau, gtau, t, n, k, m, work, q, bcoef, iflag )
     
 type(deboor_type)                                :: db
-sll_real64, dimension(:),   pointer, intent(in)  :: tau
+sll_real64, dimension(:),            intent(in)  :: tau
 sll_real64, dimension(:,:), pointer, intent(in)  :: gtau
 sll_real64, dimension(:),   pointer, intent(in)  :: t
 sll_int32                          , intent(in)  :: n
@@ -3482,8 +3490,8 @@ sll_int32,                           intent(in) :: mx
 sll_int32,                           intent(in) :: my
 sll_real64, dimension(:),   pointer, intent(in) :: taux 
 sll_real64, dimension(:),   pointer, intent(in) :: tauy 
-sll_int32,  dimension(:),   pointer, intent(in) :: taux_der 
-sll_int32,  dimension(:),   pointer, intent(in) :: tauy_der
+sll_int32,  dimension(:),            intent(in) :: taux_der 
+sll_int32,  dimension(:),            intent(in) :: tauy_der
 sll_real64, dimension(:,:), pointer, intent(in) :: gtau    
 sll_real64, dimension(:,:), pointer, intent(in) :: gtau_der1 
 sll_real64, dimension(:,:), pointer, intent(in) :: gtau_der2
