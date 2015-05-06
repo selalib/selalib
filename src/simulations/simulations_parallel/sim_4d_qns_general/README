@@ -19,3 +19,11 @@ HOWTO
 2. Run gnuplot scripts generated at runtime
      $ gnuplot --persist rho_split.gnu
 
+
+
+- Pierre Navaro (April 16th 2015)
+The original author Aurore Back told be it is deprecated
+It will be reviewed soon to be usable with Jorek
+The test is temporary disabled
+
+
