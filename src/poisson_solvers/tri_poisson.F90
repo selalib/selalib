@@ -830,13 +830,8 @@ end do
 
 do is=1,this%ndiric
    nref=this%mesh%refs(this%ifron(is))
-   sdmb(this%ifron(is))=this%potfr(nref)
+   sdmb(this%ifron(is))=this%potfr(nref)*grandx
 end do
-
-do is=1,this%ndiric
-   sdmb(this%ifron(is))=sdmb(this%ifron(is))*grandx
-end do
-
 
 call desrem(this%iprof, this%grgr,sdmb,this%mesh%num_nodes,phi)
 

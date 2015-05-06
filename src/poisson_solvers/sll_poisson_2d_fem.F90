@@ -30,6 +30,8 @@ type, public :: sll_fem_poisson_2d
    sll_real64, dimension(:)  , pointer :: hy  !< step size y
    sll_int32                           :: nx  !< cells number along x minus 1
    sll_int32                           :: ny  !< cells number along y minus 1
+   sll_int32                           :: nd
+   sll_int32,  dimension(:)  , pointer :: id
 end type sll_fem_poisson_2d
 
 !> Initialize the solver
@@ -74,6 +76,7 @@ sll_real64                  :: hy_by_hx
 sll_real64                  :: hx_hy
 sll_int32                   :: kd
 sll_int32                   :: lda
+sll_int32                   :: nd
 
 this%nx = nn_x-1
 this%ny = nn_y-1
@@ -152,39 +155,35 @@ end do
 call write_mtv_file( x, y)
 !call sll_display(this%A, 'f5.2')
 
-!Force dirichlet boundary conditions
+!Set nodes dirichlet boundary conditions
+this%nd = 2*(nx+ny)
+allocate(this%id(this%nd))
+nd = 0
 do i = 1, nx
   k = i
-  this%A(k,k) = 1.0e20*this%A(k,k)
+  nd = nd+1
+  this%id(nd) = k
   k = (nx+1)*(ny+1)-i+1
-  this%A(k,k) = 1.0e20*this%A(k,k)
+  nd = nd+1
+  this%id(nd) = k
 end do
 do i = nx+1, nx*(ny+1), nx+1
   k = i
-  this%A(k,k) = 1.0e20*this%A(k,k)
+  nd = nd+1
+  this%id(nd) = k
   k = i+1
-  this%A(k,k) = 1.0e20*this%A(k,k)
+  nd = nd+1
+  this%id(nd) = k
 end do
+print*, 'nd=', this%nd
+print*, 'id=', this%id
 
 !call sll_display(this%A, 'f5.2')
 
-kd = nx+2
-!do i = 1, nx
-!  k = i
-!  this%A(k,:) = 0.0; this%A(:,k) = 0.0; this%A(k,k) = 1.0
-!  print*,'k=',k
-!  k = (nx+1)*(ny+1)-i+1
-!  this%A(k,:) = 0.0; this%A(:,k) = 0.0; this%A(k,k) = 1.0
-!  print*,'k=',k
-!end do
-!do i = nx+1, nx*(ny+1), nx+1
-!  k = i
-!  this%A(k,:) = 0.0; this%A(:,k) = 0.0; this%A(k,k) = 1.0
-!  print*,'k=',k
-!  k = i+1
-!  this%A(k,:) = 0.0; this%A(:,k) = 0.0; this%A(k,k) = 1.0
-!  print*,'k=',k
-!end do
+do i = 1, this%nd
+  k = this%id(i)
+  this%A(k,k) = 1e20
+end do
 
 !call sll_display(this%A, 'f5.2')
 
@@ -237,7 +236,7 @@ sll_int32 :: error
 nx = this%nx
 ny = this%ny
 
-!** Construction du second membre (rho a support compact)
+!** Construction du second membre 
 k = 0
 do j=1,ny+1
 do i=1,nx+1
@@ -247,20 +246,11 @@ end do
 end do
 
 b = matmul(this%M,b)
-!Force dirichlet boundary conditions
-do i = 1, nx
-  k = i
-  b(k) = 1.0e20*b(k)
-  k = (nx+1)*(ny+1)-i+1
-  b(k) = 1.0e20*b(k)
-end do
-do i = nx+1, nx*(ny+1), nx+1
-  k = i
-  b(k) = 1.0e20*b(k)
-  k = i+1
-  b(k) = 1.0e20*b(k)
-end do
 
+do i = 1, this%nd
+  k = this%id(i)
+  b(k) = 1.0e20
+end do
 
 call dpbtrs('U',(nx+1)*(ny+1),nx+2,1,this%mat,nx+3,b,(nx+1)*(ny+1),error) 
 
@@ -351,6 +341,7 @@ write(10,*)"$END"
 close(10)
 
 end subroutine write_mtv_file
+
 
 end module sll_fem_2d
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

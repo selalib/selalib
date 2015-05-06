@@ -1423,55 +1423,55 @@ else
 !                                    bc1_min,       &
 !                                    bc1_max,       &
 !                                    spline_degree1 )
-
-  if(bc1_min==SLL_DIRICHLET) then
-    l = 0; i = 1
-    do k = es%csr_mat%row_ptr(i),es%csr_mat%row_ptr(i+1)-1 
-      l = l + 1; j = es%csr_mat%col_ind(l)
-      if (i==j) then
-        es%csr_mat%val(l) = es%csr_mat%val(l)*10e7
-        es%tmp_rho_vec(i) = 10e7
-        exit
-      end if
-    end do
-  end if
-  if(bc1_max==SLL_DIRICHLET) then
-    l = 0; i = es%num_cells1+1
-    do k = es%csr_mat%row_ptr(i),es%csr_mat%row_ptr(i+1)-1 
-      l = l + 1; j = es%csr_mat%col_ind(l)
-      if (i==j) then
-        es%csr_mat%val(l) = es%csr_mat%val(l)*10e7
-        es%tmp_rho_vec(i) = 10e7
-        exit
-      end if
-    end do
-  end if
-  if(bc2_min==SLL_DIRICHLET) then
-    l = 0
-    do i = 1, es%csr_mat%num_rows 
-      do k = es%csr_mat%row_ptr(i),es%csr_mat%row_ptr(i+1)-1 
-         l = l + 1; j = 1
-         if (i==j) then
-           es%csr_mat%val(l) = es%csr_mat%val(l)*10e7
-           es%tmp_rho_vec(i) = 10e7
-           exit
-         end if
-      end do
-    end do
-  end if
-  if(bc2_max==SLL_DIRICHLET) then
-    l = 0
-    do i = 1, es%csr_mat%num_rows 
-      do k = es%csr_mat%row_ptr(i),es%csr_mat%row_ptr(i+1)-1 
-        l = l + 1; j = es%num_cells2+1
-        if (i==j) then
-          es%csr_mat%val(l) = es%csr_mat%val(l)*10e7
-          es%tmp_rho_vec(i) = 10e7
-          exit
-        end if
-      end do
-    end do
-  end if
+!
+!  if(bc1_min==SLL_DIRICHLET) then
+!    l = 0; i = 1
+!    do k = es%csr_mat%row_ptr(i),es%csr_mat%row_ptr(i+1)-1 
+!      l = l + 1; j = es%csr_mat%col_ind(l)
+!      if (i==j) then
+!        es%csr_mat%val(l) = es%csr_mat%val(l)*10e7
+!        es%tmp_rho_vec(i) = 10e7
+!        exit
+!      end if
+!    end do
+!  end if
+!  if(bc1_max==SLL_DIRICHLET) then
+!    l = 0; i = es%num_cells1+1
+!    do k = es%csr_mat%row_ptr(i),es%csr_mat%row_ptr(i+1)-1 
+!      l = l + 1; j = es%csr_mat%col_ind(l)
+!      if (i==j) then
+!        es%csr_mat%val(l) = es%csr_mat%val(l)*10e7
+!        es%tmp_rho_vec(i) = 10e7
+!        exit
+!      end if
+!    end do
+!  end if
+!  if(bc2_min==SLL_DIRICHLET) then
+!    l = 0
+!    do i = 1, es%csr_mat%num_rows 
+!      do k = es%csr_mat%row_ptr(i),es%csr_mat%row_ptr(i+1)-1 
+!         l = l + 1; j = 1
+!         if (i==j) then
+!           es%csr_mat%val(l) = es%csr_mat%val(l)*10e7
+!           es%tmp_rho_vec(i) = 10e7
+!           exit
+!         end if
+!      end do
+!    end do
+!  end if
+!  if(bc2_max==SLL_DIRICHLET) then
+!    l = 0
+!    do i = 1, es%csr_mat%num_rows 
+!      do k = es%csr_mat%row_ptr(i),es%csr_mat%row_ptr(i+1)-1 
+!        l = l + 1; j = es%num_cells2+1
+!        if (i==j) then
+!          es%csr_mat%val(l) = es%csr_mat%val(l)*10e7
+!          es%tmp_rho_vec(i) = 10e7
+!          exit
+!        end if
+!      end do
+!    end do
+!  end if
 
   call sll_solve_csr_matrix(es%csr_mat,     &
                             es%tmp_rho_vec, &
