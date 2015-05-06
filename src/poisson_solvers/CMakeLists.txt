@@ -47,7 +47,9 @@ ADD_LIBRARY ( pivotbande STATIC ../utilities/pivotbande.F90)
 TARGET_LINK_LIBRARIES( pivotbande )
 
 # Tests
-IF(BUILD_TESTING AND MPI_ENABLED)
+IF(BUILD_TESTING)
+
+  IF(MPI_ENABLED)
 
   ADD_EXECUTABLE( test_poisson_2d_dirichlet_cartesian 
     test_poisson_2d_dirichlet_cartesian.F90 )
@@ -79,18 +81,8 @@ IF(BUILD_TESTING AND MPI_ENABLED)
     sll_poisson_3d_periodic_seq.F90 )
   TARGET_LINK_LIBRARIES( test_poisson_3d_periodic_seq sll_poisson_solvers sll_fft )
 
-  ADD_EXECUTABLE( test_poisson_2d_fem sll_poisson_2d_fem.F90
-    sll_poisson_2d_periodic_fem.F90 test_poisson_2d_fem.F90 )
-  TARGET_LINK_LIBRARIES( test_poisson_2d_fem sll_memory 
-                                             sll_utilities
-                                             ${LAPACK_LIBRARIES} 
-                                             ${BLAS_LIBRARIES})
 
-  ADD_EXECUTABLE(test_fishpack test_fishpack.F90)
-  TARGET_LINK_LIBRARIES( test_fishpack sll_poisson_solvers) 
 
-  ADD_EXECUTABLE( test_hex_poisson ../utilities/pivotbande.F90 test_hex_poisson.F90 )
-  TARGET_LINK_LIBRARIES( test_hex_poisson hex_poisson sll_constants )
 
   ADD_EXECUTABLE( test_tri_poisson test_tri_poisson.F90 )
   TARGET_LINK_LIBRARIES( test_tri_poisson tri_poisson sll_mesh_calculus sll_file_io )
@@ -120,4 +112,19 @@ IF(BUILD_TESTING AND MPI_ENABLED)
     SET_TESTS_PROPERTIES( poisson_per_cart_par_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
   ENDIF()
 
-ENDIF(BUILD_TESTING AND MPI_ENABLED)
+  ENDIF(MPI_ENABLED)
+
+  ADD_EXECUTABLE(test_fishpack test_fishpack.F90)
+  TARGET_LINK_LIBRARIES( test_fishpack sll_poisson_solvers) 
+  
+  ADD_EXECUTABLE( test_poisson_2d_fem sll_poisson_2d_fem.F90
+    sll_poisson_2d_periodic_fem.F90 test_poisson_2d_fem.F90 )
+  TARGET_LINK_LIBRARIES( test_poisson_2d_fem sll_memory 
+                                           sll_utilities
+                                           ${LAPACK_LIBRARIES} 
+                                           ${BLAS_LIBRARIES})
+
+  ADD_EXECUTABLE( test_hex_poisson ../utilities/pivotbande.F90 test_hex_poisson.F90 )
+  TARGET_LINK_LIBRARIES( test_hex_poisson hex_poisson sll_constants )
+
+ENDIF(BUILD_TESTING)
