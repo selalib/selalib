@@ -778,9 +778,9 @@ contains
     j22 = jacobian_matrix(2,2)
     jac   = j11*j22 - j12*j21   
     if(jac == 0.0_f64) then
-       ! print *, 'ERROR: inverse_jacobian_matrix_2d_nurbs(): 0-valued ', &
-       !      'jacobian found. NaNs expected. Values of eta1 and eta2 = ', &
-       !      eta1, eta2, 'Jacobian matrix: ', jacobian_matrix(:,:)
+       print *, 'Warning: inverse_jacobian_matrix_2d_nurbs(): 0-valued ', &
+            'jacobian found. NaNs expected. Values of eta1 and eta2 = ', &
+            eta1, eta2, 'Jacobian matrix: ', jacobian_matrix(:,:)
        jac = sll_epsilon_0
     end if
     r_jac = 1.0_f64/jac   
