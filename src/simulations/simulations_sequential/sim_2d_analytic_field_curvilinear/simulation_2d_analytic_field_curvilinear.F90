@@ -43,6 +43,8 @@ module sll_simulation_2d_analytic_field_curvilinear_module
   use sll_parallel_array_initializer_module
   use sll_hermite_interpolation_2d_module
   use sll_module_hermite_interpolator_2d
+  use sll_hermite_interpolation_1d_module
+  use sll_module_hermite_interpolator_1d
   use sll_operator_splitting
   use sll_split_advection_2d
   
@@ -365,7 +367,7 @@ contains
     initial_function_case="SLL_KHP1"
     kmode_eta1 = 0.5_f64
     kmode_eta2 = 1._f64
-    eps = 0.015_f64
+    eps = 1._f64 !0.015_f64
     cutx_value = 0.25_f64
     cutf_value = 1._f64
     
@@ -841,14 +843,14 @@ contains
 
     select case (f_interp1d_x1_case)
       case ("SLL_CUBIC_SPLINES")
-        f_interp1d_x1 => new_cubic_spline_interpolator_1d( &
-          Nc_eta1+1, &
-          eta1_min, &
-          eta1_max, &
-          !Nc_eta1_bis+1, &
-          !eta1_min_bis, &
-          !eta1_max_bis, &
-          sim%bc_interp2d_eta1)
+!        f_interp1d_x1 => new_cubic_spline_interpolator_1d( &
+!          Nc_eta1+1, &
+!          eta1_min, &
+!          eta1_max, &
+!          !Nc_eta1_bis+1, &
+!          !eta1_min_bis, &
+!          !eta1_max_bis, &
+!          sim%bc_interp2d_eta1)
         sim%interp1 => new_cubic_spline_interpolator_1d( &
           Nc_eta1+1, &
           eta1_min, &
@@ -857,6 +859,15 @@ contains
           !eta1_min_bis, &
           !eta1_max_bis, &
           sim%bc_interp2d_eta1)
+      case ("SLL_HERMITE")
+        sim%interp1 => new_hermite_interpolator_1d( &
+          Nc_eta1+1, &
+          eta1_min, &
+          eta1_max, &
+          hermite_degree1, &          
+          SLL_HERMITE_1d_C0, &
+          sim%bc_interp2d_eta1) 
+    
       case default
         print *,'#bad f_interp1d_x1_case',f_interp1d_x1_case
         print *,'#not implemented'
@@ -867,14 +878,14 @@ contains
 
     select case (f_interp1d_x2_case)
       case ("SLL_CUBIC_SPLINES")
-        f_interp1d_x2 => new_cubic_spline_interpolator_1d( &
-          Nc_eta2+1, &
-          eta2_min, &
-          eta2_max, &
-          !Nc_eta2_bis+1, &
-          !eta2_min_bis, &
-          !eta2_max_bis, &
-          sim%bc_interp2d_eta2)
+!        f_interp1d_x2 => new_cubic_spline_interpolator_1d( &
+!          Nc_eta2+1, &
+!          eta2_min, &
+!          eta2_max, &
+!          !Nc_eta2_bis+1, &
+!          !eta2_min_bis, &
+!          !eta2_max_bis, &
+!          sim%bc_interp2d_eta2)
         sim%interp2 => new_cubic_spline_interpolator_1d( &
           Nc_eta2+1, &
           eta2_min, &
@@ -883,6 +894,14 @@ contains
           !eta2_min_bis, &
           !eta2_max_bis, &
           sim%bc_interp2d_eta2)
+      case ("SLL_HERMITE")
+        sim%interp2 => new_hermite_interpolator_1d( &
+          Nc_eta2+1, &
+          eta2_min, &
+          eta2_max, &
+          hermite_degree2, &          
+          SLL_HERMITE_1d_C0, &
+          sim%bc_interp2d_eta2) 
       case default
         print *,'#bad f_interp1d_x2_case',f_interp1d_x2_case
         print *,'#not implemented'
@@ -906,7 +925,7 @@ contains
         sim%charac1 => &
           new_trapezoid_1d_charac(&
           !Nc_eta1_bis+1, &
-          Nc_eta1_bis+1, &
+          Nc_eta1+1, &
           A1_interp1d_x1, &
           bc_type= sim%bc_charac2d_eta1, &
           !eta_min=eta1_min_bis, &
@@ -1198,6 +1217,11 @@ contains
         sim%params(2) = xc_2  
         sim%params(3) = cutx_value  
         sim%params(4) = cutf_value  
+      case ("SLL_ONE")
+        print*,"#f0 = SLL__ONE " 
+        sim%init_func => sll_one_initializer_2d
+        SLL_ALLOCATE(sim%params(1),ierr)
+        sim%params(1) = eps
       case default
         print *,'#bad initial_function_case',initial_function_case
         print *,'#not implemented'
@@ -1377,8 +1401,6 @@ contains
         phi(i1,i2) = sim%phi_func(x1,x2,sim%A_func_params)
       end do
     end do
-
-    
     
     select case (sim%compute_field_case)
       case (SLL_COMPUTE_FIELD_FROM_ANALYTIC)
@@ -1432,7 +1454,8 @@ contains
         sim%process_outside_point2_func, &
         sim%mesh_2d, &
         sim%advection_form, &
-        SLL_STRANG_TVT) 
+        SLL_STRANG_TVT, &
+        transformation=sim%transformation) 
 
 !      sim%split => new_advection_2d( &
 !        f, &
@@ -1496,7 +1519,10 @@ contains
           call sim%advect_2d%advect_2d(A1, A2, sim%dt, f_old, f)
         case (SLL_SPLITTING)
           f = f_old
+          !print *,'f_old=',minval(f),maxval(f)
            call do_split_steps(sim%split, dt, 1)
+          !print *,'f=',minval(f),maxval(f)
+          !stop
         case default  
           print *,'#bad time_loop_case',sim%time_loop_case
           print *,'#not implemented'
@@ -1568,13 +1594,13 @@ contains
             A2, &
             sim%phi_interp2d)
         case (SLL_CONSERVATIVE)
-          call compute_divergence_2d_conservative_curvilinear( &
-            div, &
-            sim%mesh_2d, &
-            sim%transformation, &
-            A1, &
-            A2, &
-            sim%phi_interp2d)
+!          call compute_divergence_2d_conservative_curvilinear( &
+!            div, &
+!            sim%mesh_2d, &
+!            sim%transformation, &
+!            A1, &
+!            A2, &
+!            sim%phi_interp2d)
         case default
           print *,'#bad choice of advection_form:',sim%advection_form
           stop
