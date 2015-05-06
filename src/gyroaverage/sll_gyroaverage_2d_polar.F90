@@ -2140,7 +2140,7 @@ end subroutine solve_tridiag
          x(i) = (d(i) - f(i)*x(i+2) - c(i)*x(i+1))/b(i)
       end do
       return
-      end
+      end subroutine penta
 
 
 
