@@ -30,7 +30,7 @@ sll_real64   :: x2
 sll_real64, dimension(:), allocatable :: f
 sll_real64, dimension(:), allocatable :: dxf
 sll_real64, dimension(:), allocatable :: dyf
-
+sll_real64, dimension(:), allocatable :: splines_on_support
 
 
 ! Mesh initialization
@@ -76,4 +76,17 @@ rule = 1
 call write_basis_values(deg, rule)
 print *, ""
 print *, "Done writing CAID file : basis_value.txt"
+
+
+! Computing non null splines on one cell:
+SLL_ALLOCATE(splines_on_support(deg*deg*3),ierr)
+splines_on_support = non_zeros_splines(mesh, 2, deg)
+
+print *, "Non null splines of degree 1 at cell#2 (expected 1,2,3) =", &
+     splines_on_support(1), &
+     splines_on_support(2), &
+     splines_on_support(3)
+
+SLL_DEALLOCATE_ARRAY(splines_on_support, ierr)
+
 end program box_spline_tester
