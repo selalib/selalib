@@ -18,6 +18,8 @@ use sll_box_splines
 implicit none
 
 type(sll_hex_mesh_2d),   pointer  :: mesh
+type(sll_box_spline_2d), pointer  :: spline
+
 sll_int32    :: ierr
 sll_int32    :: num_cells
 sll_int32    :: deg

@@ -83,7 +83,7 @@ contains  ! ****************************************************************
   !> @param[in] data vector containing the data to be fit
   !> @param[in] deg integer representing the box spline degree
   !> @param[in] spline box spline type element, containting the mesh, bc, ...
-  subroutine compute_box_spline_2d( data, deg, spline )
+  subroutine compute_coeff_box_spline_2d( data, deg, spline )
     sll_real64, dimension(:), intent(in), target :: data
     sll_int32, intent(in)                        :: deg
     type(sll_box_spline_2d), pointer, intent(in) :: spline
@@ -93,7 +93,7 @@ contains  ! ****************************************************************
 
     if( .not. associated(spline) ) then
        ! FIXME: THROW ERROR
-       print *, 'ERROR: compute_box_spline_2d(): ', &
+       print *, 'ERROR: compute_coeff_box_spline_2d(): ', &
             'uninitialized spline object passed as argument. '
        print *, "Exiting..."
        STOP
@@ -122,19 +122,19 @@ contains  ! ****************************************************************
     select case (bc_selector)
        case ( 1 )
           ! boundary condition type is dirichlet
-          call compute_box_spline_2d_diri( data, deg, spline )
+          call compute_coeff_box_spline_2d_diri( data, deg, spline )
        case ( 2 )
           ! boundary condition type is periodic
-          call compute_box_spline_2d_prdc( data, deg, spline )
+          call compute_coeff_box_spline_2d_prdc( data, deg, spline )
        case ( 4 )
           ! boundary condition type is neumann
-          call compute_box_spline_2d_neum( data, deg, spline )
+          call compute_coeff_box_spline_2d_neum( data, deg, spline )
        case default
-          print *, 'ERROR: compute_box_spline_2d(): ', &
+          print *, 'ERROR: compute_coeff_box_spline_2d(): ', &
             'did not recognize given boundary condition combination.'
        STOP
     end select
-  end subroutine compute_box_spline_2d
+  end subroutine compute_coeff_box_spline_2d
 
 
   !---------------------------------------------------------------------------
@@ -144,7 +144,7 @@ contains  ! ****************************************************************
   !> @param[in] data vector containing the data to be fit
   !> @param[in] deg integer representing the box spline degree
   !> @param[in] spline box spline type element, containting the mesh, bc, ...
-  subroutine compute_box_spline_2d_diri( data, deg, spline )
+  subroutine compute_coeff_box_spline_2d_diri( data, deg, spline )
     sll_real64, dimension(:), intent(in), target  :: data  ! data to be fit
     type(sll_box_spline_2d), pointer              :: spline
     sll_int32, intent(in)                         :: deg
@@ -176,7 +176,8 @@ contains  ! ****************************************************************
              filter = pre_filter_int(spline%mesh, k, deg)
           else
              filter = 0._f64
-             print *, "Error in compute_box_spline_2d_diri: Filter not yet defined"
+             print *, "Error in compute_coeff_box_spline_2d_diri():"
+             print *, "       Filter not yet defined"
              STOP
           end if
           nei = spline%mesh%local_hex_to_global(k1_ref, k2_ref, k)
@@ -190,7 +191,7 @@ contains  ! ****************************************************************
        end do
     end do
 
-  end subroutine compute_box_spline_2d_diri
+  end subroutine compute_coeff_box_spline_2d_diri
 
 
   !---------------------------------------------------------------------------
@@ -200,7 +201,7 @@ contains  ! ****************************************************************
   !> @param[in] data vector containing the data to be fit
   !> @param[in] deg integer representing the box spline degree
   !> @param[in] spline box spline type element, containting the mesh, bc, ...
-  subroutine compute_box_spline_2d_prdc( data, deg, spline )
+  subroutine compute_coeff_box_spline_2d_prdc( data, deg, spline )
     sll_real64, dimension(:), intent(in), target :: data  ! data to be fit
     type(sll_box_spline_2d), pointer             :: spline
     sll_int32, intent(in)                        :: deg
@@ -214,7 +215,7 @@ contains  ! ****************************************************************
        spline%coeffs(i) = real(0,f64)*data(i)
     end do
 
-  end subroutine compute_box_spline_2d_prdc
+  end subroutine compute_coeff_box_spline_2d_prdc
 
   !---------------------------------------------------------------------------
   !> @brief Computes box splines coefficients with neumann BC.
@@ -223,7 +224,7 @@ contains  ! ****************************************************************
   !> @param[in] data vector containing the data to be fit
   !> @param[in] deg integer representing the box spline degree
   !> @param[in] spline box spline type element, containting the mesh, bc, ...
-  subroutine compute_box_spline_2d_neum( data, deg, spline )
+  subroutine compute_coeff_box_spline_2d_neum( data, deg, spline )
     sll_real64, dimension(:), intent(in), target :: data  ! data to be fit
     sll_int32, intent(in)                        :: deg
     type(sll_box_spline_2d), pointer             :: spline
@@ -237,7 +238,7 @@ contains  ! ****************************************************************
        spline%coeffs(i) = real(0,f64)*data(i)
     end do
 
-  end subroutine compute_box_spline_2d_neum
+  end subroutine compute_coeff_box_spline_2d_neum
 
   !---------------------------------------------------------------------------
   !> @brief Computes the binomial coefficient (n, k)
@@ -395,7 +396,7 @@ contains  ! ****************************************************************
   end function chi_gen_val
 
 
-  function compute_box_spline(spline, x1, x2, degree) result(val)
+  function compute_box_spline(spline, x1, x2, deg) result(val)
     type(sll_box_spline_2d), pointer    :: spline
     sll_real64, intent(in) :: x1
     sll_real64, intent(in) :: x2
@@ -407,7 +408,7 @@ contains  ! ****************************************************************
     x1_basis = change_basis_x1(spline, x1, x2)
     x2_basis = change_basis_x2(spline, x1, x2)
 
-    val = chi_gen_val(x1_basis, x2_basis, degree)
+    val = chi_gen_val(x1_basis, x2_basis, deg)
 
   end function compute_box_spline
 
