@@ -23,12 +23,14 @@ SET( ADVECTION_SRC_FILES
        sll_advection_2d_CSL.F90
        sll_advection_2d_base.F90
        sll_advection_1d_spectral.F90
-       sll_advection_1d_ampere.F90)
+       sll_advection_1d_ampere.F90
+       sll_advection_2d_tri_mesh.F90)
 
 ADD_LIBRARY( sll_advection STATIC ${ADVECTION_SRC_FILES})
 
 TARGET_LINK_LIBRARIES( sll_advection
                        sll_meshes
+                       sll_tri_meshes
                        sll_characteristics
                        sll_interpolators
                        sll_periodic_interpolation
@@ -122,6 +124,11 @@ IF(BUILD_TESTING)
   TARGET_LINK_LIBRARIES(
     test_advection_2d_CSL
     sll_advection)
+
+  ADD_EXECUTABLE(test_advection_2d_tri_mesh unit_test_advection_2d_tri_mesh.F90)
+
+  TARGET_LINK_LIBRARIES(test_advection_2d_tri_mesh sll_advection sll_mesh_calculus)
+
 
   IF(MPI_ENABLED)
 
