@@ -1364,7 +1364,7 @@ contains
           boundary = 1
        end if
        !... we write the coordinates
-       write (out_unit, "((i6),(a,1x),(g13.3),(a,1x),(g13.3))") boundary, &
+       write (out_unit, "((i6),(a,1x),(g25.17),(a,1x),(g25.17))") boundary, &
             ",", &
             mesh%global_to_x1(i), &
             ",", &
@@ -1394,7 +1394,7 @@ contains
        !... we write the spline degree
        write(out_unit, "((i6),(a,1x),(i6))") spline_deg, ",", spline_deg
        !... we write the scale of the element
-       write(out_unit, "((f10.5),(a,1x))",advance='no') scale, ","
+       write(out_unit, "((f22.17),(a,1x))",advance='no') scale, ","
        !... we write its neighbours
        call get_neighbours(mesh, i, nei1, nei2, nei3)
        write(out_unit, "(3((i6),(a,1x)))",advance='no') nei1, ",", nei2, ",", nei3, ","
@@ -1413,7 +1413,7 @@ contains
        a22 = y_ver3 - y_ver1
        b1  = x_ver1
        b2  = y_ver1
-       write(out_unit, "(5((f10.5), (a,1x)), (f10.5))") a11, ",", a12, ",", a21, ",", a22, ",", b1, ",", b2
+       write(out_unit, "(5((f22.17), (a,1x)), (f22.17))") a11, ",", a12, ",", a21, ",", a22, ",", b1, ",", b2
     end do
     print *, ""
     close(out_unit)
