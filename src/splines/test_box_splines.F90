@@ -159,9 +159,9 @@ do num_cells = cells_min, cells_max, cells_stp
    ! Just for test purpose of test only : computing splines
    if (WRITE_SPLINES.eq.1) then
       do i=1, mesh%num_pts_tot
-         chi1(i) = compute_box_spline(x1_basis, x2_basis, 1)
-         chi2(i) = compute_box_spline(x1_basis, x2_basis, 2)
-         chi3(i) = compute_box_spline(x1_basis, x2_basis, 3)
+         chi1(i) = compute_box_spline(spline, x1_basis, x2_basis, 1)
+         chi2(i) = compute_box_spline(spline, x1_basis, x2_basis, 2)
+         chi3(i) = compute_box_spline(spline, x1_basis, x2_basis, 3)
       end do
    end if
 
@@ -177,7 +177,7 @@ do num_cells = cells_min, cells_max, cells_stp
 
       nloops = nloops + 1
 
-      call compute_box_spline_2d( f_tn, deg, spline )
+      call compute_coeff_box_spline_2d( f_tn, deg, spline )
       t      = t + dt
 
       do i=1, mesh%num_pts_tot
