@@ -27,7 +27,12 @@ implicit none
 
   type,extends(sll_gyroaverage_2d_base) :: gyroaverage_2d_polar_pade_solver     
   
-    type(sll_plan_gyroaverage_polar), pointer        :: gyro
+    type(sll_plan_gyroaverage_polar), pointer                   :: gyro
+     sll_int32 :: pade_case
+	! pade_case
+	! (/0,2/)
+	! (/0,4/)
+    ! (/2,4/)
 
     contains
       procedure, pass(gyroaverage) :: initialize => &
@@ -41,13 +46,15 @@ contains
   function new_gyroaverage_2d_polar_pade_solver( &
     eta_min, &
     eta_max, &
-    Nc) &     
+    Nc, &
+    pade_case) &     
     result(gyroaverage)
       
     type(gyroaverage_2d_polar_pade_solver),pointer :: gyroaverage
     sll_real64, intent(in) :: eta_min(2)
     sll_real64, intent(in) :: eta_max(2)
     sll_int32, intent(in)  :: Nc(2)
+    sll_int32, optional    :: pade_case(2)
     sll_int32 :: ierr
       
     SLL_ALLOCATE(gyroaverage,ierr)
@@ -55,7 +62,8 @@ contains
       gyroaverage, &
       eta_min, &
       eta_max, &
-      Nc)
+      Nc, &
+      pade_case)
     
   end function new_gyroaverage_2d_polar_pade_solver
   
@@ -64,16 +72,34 @@ contains
     gyroaverage, &
     eta_min, &
     eta_max, &
-    Nc)
+    Nc, &
+    pade_case)
     class(gyroaverage_2d_polar_pade_solver) :: gyroaverage
     sll_real64, intent(in) :: eta_min(2)
     sll_real64, intent(in) :: eta_max(2)
     sll_int32, intent(in)  :: Nc(2)
+    sll_int32, optional    :: pade_case(2)
     
-    gyroaverage%gyro => new_plan_gyroaverage_polar_pade( &
-    eta_min, &
-    eta_max, &
-    Nc) 
+    if(.not.(present(pade_case)))then
+      gyroaverage%pade_case = 0
+    elseif ((pade_case(1)==0).and.(pade_case(2)==2)) then
+      gyroaverage%pade_case = 1  
+    elseif ((pade_case(1)==0).and.(pade_case(2)==4)) then
+      gyroaverage%pade_case = 2  
+    elseif ((pade_case(1)==2).and.(pade_case(2)==4)) then
+      gyroaverage%pade_case = 3  
+    else
+      print *,'#bad value of pade_case=', gyroaverage%pade_case
+      print *,'#not implemented'
+      print *,'#in initialize_gyroaverage_2d_polar_pade_solver'
+      stop  
+    endif   
+
+        gyroaverage%gyro => new_plan_gyroaverage_polar_pade( &
+        eta_min, &
+        eta_max, &
+        Nc) 
+      
            
   end subroutine initialize_gyroaverage_2d_polar_pade_solver
   
@@ -83,7 +109,22 @@ contains
     sll_real64, intent(in) :: larmor_rad
     sll_real64,dimension(:,:),intent(inout) :: f
 
-    call compute_gyroaverage_pade_polar(gyroaverage%gyro,f,larmor_rad)
+
+    select case(gyroaverage%pade_case)
+      case (0)
+        call compute_gyroaverage_pade_polar(gyroaverage%gyro,f,larmor_rad)
+      case (1)
+        call compute_gyroaverage_pade_high_order_polar(gyroaverage%gyro,f,larmor_rad,(/0,2/))
+      case (2)
+        call compute_gyroaverage_pade_high_order_polar(gyroaverage%gyro,f,larmor_rad,(/0,4/))
+      case (3)
+        call compute_gyroaverage_pade_high_order_polar(gyroaverage%gyro,f,larmor_rad,(/2,4/))
+      case default
+        print *,'#bad value of pade_case=', gyroaverage%pade_case
+        print *,'#not implemented'
+        print *,'compute_gyroaverage_2d_polar_pade'
+        stop
+     end select
     
   end subroutine compute_gyroaverage_2d_polar_pade
   
