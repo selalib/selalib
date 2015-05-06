@@ -59,11 +59,11 @@ dpi = 2*sll_pi
 do j = 1, nc_y+1
   do i = 1, nc_x+1
    phi(i,j) = x(i)
-   rho(i,j) = 1.0_f64
+   rho(i,j) = fbc(x(i),y(j))
   end do
 end do
 
-rho(2:nc_x,2:nc_y) = 0.0_f64
+rho = 0.0_f64
 
 call test_compact()
 
@@ -116,5 +116,13 @@ close(13)
 print*, 'periodic, error = ', errmax / (nc_x*nc_y)
 
 end subroutine test_periodic
+
+function fbc( x, y)
+sll_real64 :: fbc
+sll_real64 :: x, y
+
+fbc = x*x + y*y
+
+end function fbc
 
 end program test_poisson_2d_fem
