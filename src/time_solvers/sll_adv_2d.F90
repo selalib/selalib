@@ -9,6 +9,7 @@ module sll_split_advection_2d
   use sll_module_interpolators_1d_base
   use sll_operator_splitting
   use sll_cartesian_meshes  
+  use sll_coordinate_transformation_2d_base_module
 
   implicit none
 
@@ -51,6 +52,8 @@ module sll_split_advection_2d
      !> advection coefficient in second direction
      sll_real64, dimension(:,:), pointer  :: a2
 
+     class(sll_coordinate_transformation_2d_base), pointer :: transformation !< coordinate transformation
+
      !> temporary array
      sll_real64, dimension(:), pointer :: input1
      sll_real64, dimension(:), pointer :: output1
@@ -85,7 +88,8 @@ contains
       split_step, &
       nb_split_step, &
       split_begin_T, &
-      dt) &
+      dt, &
+      transformation) &
       result(this)  
     class(split_advection_2d), pointer :: this  !< object to be initialised
     sll_real64, dimension(:,:), pointer, intent(in) :: f   !< initial value of function
@@ -104,6 +108,7 @@ contains
     sll_int32, intent(in), optional :: nb_split_step !< number of split steps
     logical, intent(in), optional :: split_begin_T   !< begin with operator T if .true.
     sll_real64, intent(in), optional :: dt  !< time step   
+    class(sll_coordinate_transformation_2d_base), pointer, optional :: transformation !< coordinate transformation
     ! local variable
     sll_int32 :: ierr
 
@@ -125,7 +130,8 @@ contains
       split_step, &
       nb_split_step, &
       split_begin_T, &
-      dt )
+      dt, &
+      transformation)
 
   end function
 
@@ -147,7 +153,8 @@ contains
       split_step, &
       nb_split_step, &
       split_begin_T, &
-      dt )
+      dt, &
+      transformation)
     class(split_advection_2d), intent(inout)   :: this !< object 
     sll_real64, dimension(:,:), pointer, intent(in) :: f   !< initial value of function
     sll_real64, dimension(:,:), pointer, intent(in) :: a1   !< advection coefficient in first direction
@@ -165,6 +172,7 @@ contains
     sll_int32, intent(in), optional :: nb_split_step !< number of split steps
     logical, intent(in), optional :: split_begin_T   !< begin with operator T if .true.
     sll_real64, intent(in), optional :: dt  !< time step
+    class(sll_coordinate_transformation_2d_base), pointer, optional :: transformation !< coordinate transformation
     sll_int32 :: ierr
     sll_int32 :: n1
     sll_int32 :: n2
@@ -187,6 +195,10 @@ contains
     this%mesh_2d => mesh_2d
     
     this%advection_form = advection_form
+    
+    if(present(transformation))then
+      this%transformation => transformation
+    endif
     
     n1 = mesh_2d%num_cells1+1
     n2 = mesh_2d%num_cells2+1
@@ -282,6 +294,12 @@ contains
         
     do j=1,num_dof2
       this%input1(1:num_dof1) = this%f(1:num_dof1,j)
+
+      !print *,'this%input1(1:num_dof1)=', &
+      !  minval(this%input1(1:num_dof1)), &
+      !  maxval(this%input1(1:num_dof1))
+
+
       if(this%advection_form==SLL_CONSERVATIVE)then      
         call function_to_primitive_adv( &
           this%input1, &
@@ -323,7 +341,21 @@ contains
 
       this%f(1:num_dof1,j) = this%output1(1:num_dof1)
       
+      !print *,'this%output1(1:num_dof1)=', &
+      !  minval(this%output1(1:num_dof1)), &
+      !  maxval(this%output1(1:num_dof1))
       
+      print *,'#mean_adv1=',mean
+      
+!      if(this%advection_form==SLL_CONSERVATIVE)then      
+!        call function_to_primitive_adv( &
+!          this%output1, &
+!          this%origin1, &
+!          num_dof1, &
+!          mean)      
+!      endif
+!      
+!      print *,'#mean_adv1b=',mean
         
     enddo
 
@@ -331,7 +363,7 @@ contains
   end subroutine
 
 
-  !> @brief Advection operator in first direction
+  !> @brief Advection operator in second direction
   subroutine adv2(this, dt)
     class(split_advection_2d), intent(inout) :: this !< object 
     sll_real64, intent(in) :: dt   !< time step
@@ -396,6 +428,7 @@ contains
 
       this%f(i,1:num_dof2) = this%output2(1:num_dof2)
       
+      print *,'#mean_adv2=',mean
       
         
     enddo
@@ -453,6 +486,9 @@ contains
     sll_real64,intent(in)::M
     sll_int32::i
     sll_real64::tmp!,tmp2
+    
+    
+    
     
     tmp=f(1)
     do i=1,N-1

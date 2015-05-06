@@ -1,5 +1,5 @@
 ADD_LIBRARY ( sll_hermite_interpolation STATIC
-  sll_hermite_interpolation_2d.F90 )
+  sll_hermite_interpolation_1d.F90 sll_hermite_interpolation_2d.F90 )
 TARGET_LINK_LIBRARIES( sll_hermite_interpolation
   sll_utilities sll_boundary_condition_descriptors )
 
