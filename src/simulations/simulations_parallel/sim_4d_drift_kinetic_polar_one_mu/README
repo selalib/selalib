@@ -13,7 +13,8 @@ HOWTO
      $ cd run
 
 1. Run parallel simulation within directory
-     $ mpirun -np 4 ../test_4d_dk_polar_one_mu ../dksim4d_polar_one_mu.nml
+     $ mpirun -np 4 ../bin/test_4d_dk_polar_one_mu ../simulations/simulations_parallel/sim_4d_drift_kinetic_polar_one_mu/dksim4d_polar_one_mu.nml
+
 
 2. Run included gnuplot script
      $ gnuplot --persist ../dksim4d_polar_one_mu.gnu
