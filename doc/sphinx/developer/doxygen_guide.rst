@@ -41,3 +41,5 @@ To check the results, open::
 
  selalib/doc/build/html/doxygen/html/namespaces.html 
 
+Laura Mendoza from IPP Garching wrote the script (https://github.com/lasofivec/python-scripts/blob/master/make_sll_doxygen_doc.py) 
+to comment the fortran modules, function and subroutines of a file. Basically it will write the comment lines that you can find above. It doesn't write the documentation for you (of course) but it could save some time!

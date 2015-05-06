@@ -146,9 +146,9 @@ contains
     mat%num_cols = num_cols
     mat%num_nz = num_nz
 
-    SLL_ALLOCATE(mat%opi_ia(num_rows + 1),ierr)
-    SLL_ALLOCATE(mat%opi_ja(num_nz),ierr)
-    SLL_ALLOCATE(mat%opr_a(num_nz),ierr)
+    SLL_ALLOCATE(mat%row_ptr(num_rows + 1),ierr)
+    SLL_ALLOCATE(mat%col_ind(num_nz),ierr)
+    SLL_ALLOCATE(mat%val(num_nz),ierr)
     
     print *,'#num_rows=',num_rows
     print *,'#num_nz=',num_nz
@@ -166,7 +166,7 @@ contains
       lpi_columns, &
       lpi_occ)
     
-    mat%opr_a(:) = 0.0_f64
+    mat%val(:) = 0.0_f64
     SLL_DEALLOCATE_ARRAY(lpi_columns,ierr)
     SLL_DEALLOCATE_ARRAY(lpi_occ,ierr)
 
@@ -330,11 +330,11 @@ contains
     sll_int32, dimension(:), pointer :: lpr_tmp
     
     ! INITIALIZING ia
-    self % opi_ia(1) = 1
+    self % row_ptr(1) = 1
     
     do li_i = 1, self%num_rows !self % oi_nR
        
-       self % opi_ia(li_i + 1) = self % opi_ia(1) + SUM(api_occ(1: li_i))
+       self % row_ptr(li_i + 1) = self % row_ptr(1) + SUM(api_occ(1: li_i))
        
     end do
     
@@ -371,7 +371,7 @@ contains
              
              do li_i = 1, li_size
                 
-                self % opi_ja(self % opi_ia(li_A_C) + li_i - 1) = lpr_tmp(li_i)
+                self % col_ind(self % row_ptr(li_A_C) + li_i - 1) = lpr_tmp(li_i)
                 
              end do
              

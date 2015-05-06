@@ -18,10 +18,10 @@ use sll_box_splines
 implicit none
 
 type(sll_hex_mesh_2d),   pointer  :: mesh
-type(sll_box_spline_2d), pointer  :: spline
 sll_int32    :: ierr
 sll_int32    :: num_cells
 sll_int32    :: deg
+sll_int32    :: rule
 sll_int32    :: i
 sll_real64   :: x1
 sll_real64   :: x2
@@ -32,8 +32,8 @@ sll_real64, dimension(:), allocatable :: dyf
 
 
 ! Mesh initialization
-num_cells = 100
-mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, radius = 8._f64)
+num_cells = 50
+mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, radius = 2._f64)
 call sll_display(mesh)
 
 spline => new_box_spline_2d(mesh, SLL_DIRICHLET)
@@ -52,8 +52,8 @@ do i=1, mesh%num_pts_tot
    ! Computing boxsplines of degree 2:
    f(i) = compute_box_spline(spline, x1, x2, 2)
    ! And derivatives :
-   dxf(i) = boxspline_x1_derivative(x1, x2, 2)
-   dyf(i) = boxspline_x2_derivative(x1, x2, 2)
+   dxf(i) = boxspline_val_der(x1, x2, 1, 1, 0)!boxspline_x1_derivative(x1, x2, 1)
+   dyf(i) = boxspline_val_der(x1, x2, 1, 0, 1)!boxspline_x2_derivative(x1, x2, 1)
 
 end do
 
@@ -70,7 +70,8 @@ SLL_DEALLOCATE_ARRAY(dyf, ierr)
 
 !Writing file for CAID:
 deg = 1
-call write_basis_values(deg)
+rule = 1
+call write_basis_values(deg, rule)
 print *, ""
 print *, "Done writing CAID file : basis_value.txt"
 end program box_spline_tester

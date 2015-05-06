@@ -59,42 +59,57 @@ contains
 
     num_tests = 10
     criterion = 1.0e-15
-    degree    = 3
     min_val   = 0.0
     num_pts   = 10
     step      = 1.0
+
+    call random_number(rnd)
+    print *, "rnd", rnd
+    call random_number(rnd)
+    print *, "rnd", rnd
+    call random_number(rnd)
+    print *, "rnd", rnd
+    degree    = int(10*rnd)
+    print *, " ------------- Degree = ", degree, " -----------------"
+
+    
     SLL_ALLOCATE(knots(num_pts),ierr)
     SLL_ALLOCATE(answer1(degree+1),ierr)
     SLL_ALLOCATE(answer2(degree+1),ierr)
     SLL_ALLOCATE(answer3(2,degree+1),ierr)
 
-    ! fill knots array. Try first a uniform set of knots to compare with the
-    ! uniform spline functions.
+    ! --------- 1D CUBIC SPLINE INITIALIZATION ON NON UNIFORM MESH ----
+    ! Creating non uniform mesh....
     knots(1) = min_val
     do i=2,num_pts
        call random_number(rnd)
        knots(i) = knots(i-1) + rnd !step
     end do
-    print *, ' '
-    print *, 'knots array = ', knots(:)
-    print *, ' '
-    ! fill spline object
+    ! ..... non uniform mesh done
+    ! creating non uniform 1d cubic spline 
     spline => new_arbitrary_degree_spline_1d( &
          degree, &
          knots, &
          num_pts, &
          PERIODIC_ARBITRARY_DEG_SPLINE )
+    ! --------- INITIALIZATION DONE ------------
 
+    ! To compensate random factor, we do the test more than once:
     do j=1,num_tests
+       ! We compute a point randomly on the mesh:
        call random_number(rnd)
        x = min_val + rnd*(knots(num_pts)-min_val)
+       ! We find its cell:
        cell = find_index( x, knots, num_pts )
+       ! initialization accumulator:
        acc = 0.0_f64
        
-       ! test spline values
+       ! computing all non zero splines at point x:
        answer1(:) = b_splines_at_x(spline, cell, x)
+       ! testing partition of unity property:
        acc = abs(1.0_f64 - sum(answer1(1:degree+1)))
        passed_test = passed_test .and. (acc < criterion)
+       ! corresponding prints:
        if( passed_test .eqv. .false. ) then
           print *, 'nonuniform splines test failure, spline values case:'
           print *, 'cell = ', cell, 'x = ', x
@@ -102,11 +117,16 @@ contains
           print *, 'accumulator = ', acc
           print*, 'Exiting...'
           stop
+       else
+          print *, "test =", j, "sum of non null splines at x (expected 1) =", &
+               sum(answer1(1:degree+1)), "... PASSED"
        end if
        
        ! test spline derivatives
        acc = 0.0_f64
+       ! computing derivatives of all non zero splines:
        answer1(:) = b_spline_derivatives_at_x(spline, cell, x)
+       ! test of sum all derivatives (should be 0):
        acc = abs(sum(answer1(1:degree+1)))
        passed_test = passed_test .and. (acc < criterion)
        if( passed_test .eqv. .false. ) then
