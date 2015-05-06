@@ -4,7 +4,7 @@ ADD_LIBRARY( sll_splines STATIC
   sll_arbitrary_degree_splines.F90
   cubic_nonuniform_splines.F90 )
 TARGET_LINK_LIBRARIES( sll_splines
-  sll_utilities 
+  sll_utilities
   sll_boundary_condition_descriptors
   ${LAPACK_LIBRARIES} )
 
@@ -37,9 +37,6 @@ IF(BUILD_TESTING)
 
   ADD_EXECUTABLE( test_arbitrary_degree_splines unit_test_arbitrary_degree.F90 )
   TARGET_LINK_LIBRARIES( test_arbitrary_degree_splines sll_splines )
-
-  ADD_EXECUTABLE( test_box_splines test_box_splines.F90 )
-  TARGET_LINK_LIBRARIES( test_box_splines sll_box_splines )
 
   ADD_EXECUTABLE( test_box_splines_derivatives test_box_splines_derivatives.F90 )
   TARGET_LINK_LIBRARIES( test_box_splines_derivatives sll_box_splines )
