@@ -255,7 +255,7 @@ program sim2d_gc_hex_hermite
         !                     interpolation
         !*********************************************************
 
-        call compute_box_spline_2d( rho_tn, spline_degree, spline )
+        call compute_coeff_box_spline_2d( rho_tn, spline_degree, spline )
 
         do i=1, n_points
 
