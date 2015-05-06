@@ -102,6 +102,7 @@ implicit none
   print *, 'Average error in nodes, x1 transformation = ', acc/(NPTS1*NPTS2)
   print *, 'Average error, x1 deriv eta1 = ', acc1/(NPTS1*NPTS2)
   print *, 'Average error, x1 deriv eta2 = ', acc2/(NPTS1*NPTS2)
+  print *, 'PASSED'
 
   call test_interpolator_2d()
 

@@ -16,14 +16,15 @@ program test_jorek
 
   use sll_jorek
   type(sll_jorek_solver) :: jorek_solver
-  character(len=1024)    :: parameters
-  character(len=1024)    :: geometry
 
           
   call sll_create(jorek_solver)
   call sll_solve(jorek_solver)
+
+  call plot_field(jorek_solver, "jorek", "field")
+  call plot_jorek_field_2d_with_plotmtv(jorek_solver, "jorek")
+
   call sll_delete(jorek_solver)
 
+
 end program test_jorek
-
-
