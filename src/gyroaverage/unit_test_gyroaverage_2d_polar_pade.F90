@@ -47,10 +47,17 @@ implicit none
   larmor_rad = 0.01_f64
 
 
+!  gyroaverage => new_gyroaverage_2d_polar_pade_solver( &
+!    eta_min, &
+!    eta_max, &
+!    Nc)
+  
   gyroaverage => new_gyroaverage_2d_polar_pade_solver( &
     eta_min, &
     eta_max, &
-    Nc)
+    Nc, &
+    (/2,4/))  
+  
   
   call gyroaverage%compute_gyroaverage( larmor_rad, f)
 
