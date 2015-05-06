@@ -58,7 +58,8 @@ sll_int32                   :: jj
 
 sll_real64, dimension(4,4)  :: Axelem
 sll_real64, dimension(4,4)  :: Ayelem
-sll_real64, dimension(4,4)  :: Melem
+sll_real64, dimension(4,4)  :: Mmelem
+sll_real64, dimension(2,2)  :: Mfelem
 sll_real64                  :: dum
 sll_int32, dimension(4)     :: isom
 sll_int32                   :: i
@@ -112,14 +113,19 @@ call sll_display(Ayelem, 'f7.3')
 
 Ayelem = Ayelem/6.0_f64
 
-Melem(1,:) = [ 4.0_f64, 2.0_f64, 1.0_f64, 2.0_f64 ]
-Melem(2,:) = [ 2.0_f64, 4.0_f64, 2.0_f64, 1.0_f64 ]
-Melem(3,:) = [ 1.0_f64, 2.0_f64, 4.0_f64, 2.0_f64 ]
-Melem(4,:) = [ 2.0_f64, 1.0_f64, 2.0_f64, 4.0_f64 ]
+Mmelem(1,:) = [ 4.0_f64, 2.0_f64, 1.0_f64, 2.0_f64 ]
+Mmelem(2,:) = [ 2.0_f64, 4.0_f64, 2.0_f64, 1.0_f64 ]
+Mmelem(3,:) = [ 1.0_f64, 2.0_f64, 4.0_f64, 2.0_f64 ]
+Mmelem(4,:) = [ 2.0_f64, 1.0_f64, 2.0_f64, 4.0_f64 ]
 
-call sll_display(Melem, 'f7.3')
+call sll_display(Mmelem, 'f7.3')
 
-Melem = Melem/36.0_f64
+Mmelem = Mmelem/36.0_f64
+
+Mfelem(1,:) = [ 2.0_f64, 1.0_f64]
+Mfelem(2,:) = [ 1.0_f64, 2.0_f64]
+
+Mfelem = Mfelem / 6.0_f64
 
 this%A = 0.0_f64
 this%M = 0.0_f64
@@ -131,14 +137,13 @@ do i=1,nx
     isom(2) = som(this%nx,i,j,2)
     isom(3) = som(this%nx,i,j,3)
     isom(4) = som(this%nx,i,j,4)
-    print"(6i4)", i, j, isom
     do ii=1,4
       do jj=1,4
         this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
         & + Axelem(ii,jj) * this%hy(j) / this%hx(i)           &
         & + Ayelem(ii,jj) * this%hx(i) / this%hy(j)
         this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
-        & + Melem(ii,jj) * this%hy(j) * this%hx(i)
+        & + Mmelem(ii,jj) * this%hy(j) * this%hx(i)
       end do
     end do
   end do
@@ -150,20 +155,36 @@ call write_mtv_file( x, y)
 !Force dirichlet boundary conditions
 do i = 1, nx
   k = i
-  this%A(k,:) = 0.0; this%A(:,k) = 0.0; this%A(k,k) = 1.0
-  print*,'k=',k
+  this%A(k,k) = 1.0e20*this%A(k,k)
   k = (nx+1)*(ny+1)-i+1
-  this%A(k,:) = 0.0; this%A(:,k) = 0.0; this%A(k,k) = 1.0
-  print*,'k=',k
+  this%A(k,k) = 1.0e20*this%A(k,k)
 end do
 do i = nx+1, nx*(ny+1), nx+1
   k = i
-  this%A(k,:) = 0.0; this%A(:,k) = 0.0; this%A(k,k) = 1.0
-  print*,'k=',k
+  this%A(k,k) = 1.0e20*this%A(k,k)
   k = i+1
-  this%A(k,:) = 0.0; this%A(:,k) = 0.0; this%A(k,k) = 1.0
-  print*,'k=',k
+  this%A(k,k) = 1.0e20*this%A(k,k)
 end do
+
+!call sll_display(this%A, 'f5.2')
+
+kd = nx+2
+!do i = 1, nx
+!  k = i
+!  this%A(k,:) = 0.0; this%A(:,k) = 0.0; this%A(k,k) = 1.0
+!  print*,'k=',k
+!  k = (nx+1)*(ny+1)-i+1
+!  this%A(k,:) = 0.0; this%A(:,k) = 0.0; this%A(k,k) = 1.0
+!  print*,'k=',k
+!end do
+!do i = nx+1, nx*(ny+1), nx+1
+!  k = i
+!  this%A(k,:) = 0.0; this%A(:,k) = 0.0; this%A(k,k) = 1.0
+!  print*,'k=',k
+!  k = i+1
+!  this%A(k,:) = 0.0; this%A(:,k) = 0.0; this%A(k,k) = 1.0
+!  print*,'k=',k
+!end do
 
 !call sll_display(this%A, 'f5.2')
 
@@ -226,6 +247,20 @@ end do
 end do
 
 b = matmul(this%M,b)
+!Force dirichlet boundary conditions
+do i = 1, nx
+  k = i
+  b(k) = 1.0e20*b(k)
+  k = (nx+1)*(ny+1)-i+1
+  b(k) = 1.0e20*b(k)
+end do
+do i = nx+1, nx*(ny+1), nx+1
+  k = i
+  b(k) = 1.0e20*b(k)
+  k = i+1
+  b(k) = 1.0e20*b(k)
+end do
+
 
 call dpbtrs('U',(nx+1)*(ny+1),nx+2,1,this%mat,nx+3,b,(nx+1)*(ny+1),error) 
 

@@ -1057,21 +1057,21 @@ end do
 
 !$OMP END PARALLEL
 
-#ifdef DEBUG
-allocate(dense_matrix(es%csr_mat%num_rows,es%csr_mat%num_cols))
-
-do i =1, es%csr_mat%num_rows
- do k = es%csr_mat%row_ptr(i), es%csr_mat%row_ptr(i+1)-1
-    j = es%csr_mat%col_ind(k)
-    dense_matrix(i,j) = es%csr_mat%val(k)
- end do
-end do
-
-write(*,"(3x,36i7)") (k, k = 1, size(es%tmp_rho_vec))
-do i = 1, es%csr_mat%num_rows
-  write(*, "(i3,36f7.3)')") i, dense_matrix(i,:) 
-end do
-#endif /* DEBUG */
+!#ifdef DEBUG
+!allocate(dense_matrix(es%csr_mat%num_rows,es%csr_mat%num_cols))
+!
+!do i =1, es%csr_mat%num_rows
+! do k = es%csr_mat%row_ptr(i), es%csr_mat%row_ptr(i+1)-1
+!    j = es%csr_mat%col_ind(k)
+!    dense_matrix(i,j) = es%csr_mat%val(k)
+! end do
+!end do
+!
+!write(*,"(3x,36i7)") (k, k = 1, size(es%tmp_rho_vec))
+!do i = 1, es%csr_mat%num_rows
+!  write(*, "(i3,36f7.3)')") i, dense_matrix(i,:) 
+!end do
+!#endif /* DEBUG */
 
 es%intjac = intjac
 print *,'#begin of sll_factorize_csr_matrix'
