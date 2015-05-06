@@ -1979,7 +1979,7 @@ ky = interpolator%spline_degree2+1
 
 SLL_ALLOCATE(coef(ky),ierr)
 SLL_ALLOCATE(tab(nx),ierr)
-!SLL_ALLOCATE(ty(2*ky),ierr)
+SLL_ALLOCATE(ty(2*ky),ierr)
 
 length1 = interpolator%eta1_max-interpolator%eta1_min
 length2 = interpolator%eta2_max-interpolator%eta2_min
@@ -2011,12 +2011,13 @@ do j = 1, ky
   coef(j) = bvalue(interpolator%deboor(1), t1(1:nx+kx), tab, nx, kx, x, 0)
 end do
 
-ty => interpolator%t2(lefty-ky+1:lefty+ky)
+ty = interpolator%t2(lefty-ky+1:lefty+ky)
 
 val = bvalue(interpolator%deboor(2), ty, coef, ky, ky, y, 0)
 
 deallocate(tab)
 deallocate(coef)
+deallocate(ty)
 
 end function interpolate_value_ad2d
 

@@ -152,7 +152,7 @@ sll_int32                                :: lpi_size(2)
 logical                                  :: ll_done
 
 print *,'#initialize_csr_matrix'
-COEF = 10
+COEF = 6
 
 SLL_ALLOCATE(lpi_columns(num_rows, 0:COEF*num_local_dof_col),ierr)
 SLL_ALLOCATE(lpi_occ(num_rows+1),ierr)
