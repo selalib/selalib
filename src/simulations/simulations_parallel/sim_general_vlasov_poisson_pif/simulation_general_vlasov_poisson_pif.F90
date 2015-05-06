@@ -92,7 +92,7 @@ sll_int32 :: time_integrator_order
 sll_int32 :: collisions=SLL_COLLISIONS_NONE
 sll_int32 :: controlvariate=SLL_CONTROLVARIATE_NONE      !SLL_CONTROLVARIATE_MAXWELLIAN
 sll_int32 :: momentmatch=SLL_MOMENT_MATCH_NONE
-sll_int32 :: FIELDSOLVER=PIF_QUASINEUTRAL_RHO_WO_ZONALFLOW
+sll_int32 :: FIELDSOLVER=PIF_QUASINEUTRAL_RHO_WO_ZONALFLOW !PIF_POISSON
 type(sll_vlasovpoisson_sim) :: testcase=SLL_LANDAU_SUM
 sll_int32 :: RND_OFFSET   = 10    !Default sobol offset, skip zeros
 sll_int32 :: num_modes = 1
@@ -109,6 +109,7 @@ sll_real64, dimension(:),allocatable :: kineticenergy,fieldenergy, energy,energy
                weight_sum,weight_var,moment_error, l2potential
 sll_real64, dimension(:,:),allocatable ::moment,moment_var
 sll_comp64, dimension(:), allocatable :: rhs, solution
+sll_real64 :: ExB=0
 !--------------
 
 !------MPI---------
@@ -554,8 +555,11 @@ end subroutine
 
 subroutine load_landau_diag_generalvp_pif(sim)
   class(sll_simulation_general_vlasov_poisson_pif), intent(inout) :: sim
-!     sim%particle(sim%maskw,:)=(1+sim%eps*product(cos(0.5*sim%particle(sim%maskx,:))))
-!     sim%particle(sim%maskw,:)=sim%particle(sim%maskw,:)/sim%prior_weight  
+  sll_int32 :: idx
+  do idx=1, sim%npart_loc
+    sim%particle(sim%maskw,idx)=1+sim%eps*cos(sum(sim%kmode(:)*sim%particle(sim%maskx,idx),1))  
+  end do
+  sim%particle(sim%maskw,:)=sim%particle(sim%maskw,:)/sim%prior_weight 
 end subroutine
 
 
@@ -841,6 +845,8 @@ subroutine YSun_g2h_generalvp_pif(sim)
      E= sim%E(sim%particle(sim%maskx,:),t) + &  ! Electric field external
             (sim%SOLVER%eval_gradient(sim%particle(sim%maskx,:),sim%solution)) !Electric field selfconsistent
       B=sim%B(sim%particle(sim%maskx,:), t) !External magnetic field
+      
+     sim%ExB=0 
       
      sim%particle(sim%maskv,:)=exp_skew_product2( normalize(B), &
                       sim%particle(sim%maskv,:) + h*sim%qm/2.0*E, h*(-sim%qm)*l2norm(B) ) + h*sim%qm/2.0*E    
