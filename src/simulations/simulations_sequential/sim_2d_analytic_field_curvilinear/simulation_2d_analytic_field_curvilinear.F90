@@ -1359,7 +1359,8 @@ contains
     SLL_ALLOCATE(f_old(num_dof1,num_dof2),ierr)
     SLL_ALLOCATE(f_init(num_dof1,num_dof2),ierr)
     SLL_ALLOCATE(f_exact(num_dof1,num_dof2),ierr)
-    SLL_ALLOCATE(phi(Nc_eta1+1,Nc_eta2+1),ierr)
+    !SLL_ALLOCATE(phi(num_dof1,num_dof2),ierr)
+    SLL_ALLOCATE(phi(Nc_eta1+1,Nc_eta1+1),ierr)
     !SLL_ALLOCATE(A1(Nc_eta1+1,Nc_eta2+1),ierr)
     !SLL_ALLOCATE(A2(Nc_eta1+1,Nc_eta2+1),ierr)
     !SLL_ALLOCATE(A1_init(Nc_eta1+1,Nc_eta2+1),ierr)
@@ -1371,7 +1372,7 @@ contains
     SLL_ALLOCATE(A2_init(num_dof1,Nc_eta2+1),ierr)
 
 
-    SLL_ALLOCATE(div(Nc_eta1+1,Nc_eta2+1),ierr)
+    SLL_ALLOCATE(div(num_dof1,num_dof2),ierr)
     SLL_ALLOCATE(dof_positions1(num_dof1),ierr)
     SLL_ALLOCATE(dof_positions2(num_dof2),ierr)
 
@@ -1397,6 +1398,10 @@ contains
       end do
     end do
 
+!    do i2=1,num_dof2
+!      eta2=dof_positions2(i2)
+!      do i1=1,num_dof1
+!        eta1=dof_positions1(i1)
     do i2=1,Nc_eta2+1
       eta2=sim%eta2_array(i2)
       do i1=1,Nc_eta1+1
@@ -1433,15 +1438,33 @@ contains
           A2_init, &
           sim%phi_interp2d)
       case (SLL_COMPUTE_FIELD_FROM_PHI_FD)
-        call compute_field_from_phi_2d_fd_curvilinear( &
-          phi, &
-          sim%mesh_2d, &
-          sim%transformation, &
-          A1_init, &
-          A2_init, &
-          sim%phi_interp2d, &
-          sim%fd_degree1, &
-          sim%fd_degree2)      
+        select case (sim%advection_form)
+          case (SLL_ADVECTIVE)
+            call compute_field_from_phi_2d_fd_curvilinear( &
+              phi, &
+              sim%mesh_2d, &
+              sim%transformation, &
+              A1_init, &
+              A2_init, &
+              sim%phi_interp2d, &
+              sim%fd_degree1, &
+              sim%fd_degree2)      
+          case (SLL_CONSERVATIVE)
+            call compute_field_from_phi_2d_fd_conservative_curvilinear2( &
+              phi, &
+              sim%mesh_2d, &
+              sim%transformation, &
+              A1_init, &
+              A2_init, &
+              sim%phi_interp2d, &
+              sim%fd_degree1, &
+              sim%fd_degree2)                
+        case default
+          print *,'#bad choice of advection_form:',sim%advection_form
+          stop
+        end select
+
+        
       case default
         SLL_ERROR("run_af2d_curvilinear","bad value of sim%compute_field_case")
     end select    
@@ -1462,6 +1485,9 @@ contains
         SLL_STRANG_TVT, &
         transformation=sim%transformation, &
         csl_2012=sim%csl_2012) 
+
+      A1 = A1_init
+      A2 = A2_init 
 
 !      sim%split => new_advection_2d( &
 !        f, &
@@ -1580,14 +1606,7 @@ contains
       err = max(maxval(abs(f_exact-f)),err)
       print *,"#",step,maxval(abs(f_exact-f))
       
-      
-!      call compute_divergence_2d_curvilinear( &
-!        div, &
-!        sim%mesh_2d, &
-!        sim%transformation, &
-!        A1, &
-!        A2, &
-!        sim%phi_interp2d)
+     
 
 
       select case (sim%advection_form)
@@ -1600,13 +1619,13 @@ contains
             A2, &
             sim%phi_interp2d)
         case (SLL_CONSERVATIVE)
-!          call compute_divergence_2d_conservative_curvilinear( &
-!            div, &
-!            sim%mesh_2d, &
-!            sim%transformation, &
-!            A1, &
-!            A2, &
-!            sim%phi_interp2d)
+          call compute_divergence_2d_conservative_curvilinear( &
+            div, &
+            sim%mesh_2d, &
+            sim%transformation, &
+            A1, &
+            A2, &
+            sim%phi_interp2d)
         case default
           print *,'#bad choice of advection_form:',sim%advection_form
           stop
@@ -2445,6 +2464,202 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
 
 
 
+subroutine compute_field_from_phi_2d_fd_conservative_curvilinear(phi,mesh_2d,transformation,A1,A2,interp2d,d1,d2)
+    sll_real64, dimension(:,:), intent(in) :: phi
+    sll_real64, dimension(:,:), intent(out) :: A1
+    sll_real64, dimension(:,:), intent(out) :: A2
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
+    class(sll_coordinate_transformation_2d_base), pointer :: transformation
+    class(sll_interpolator_2d_base), pointer   :: interp2d
+    sll_int32, intent(in) :: d1
+    sll_int32, intent(in) :: d2
+    sll_int32 :: Nc_eta1
+    sll_int32 :: Nc_eta2
+    sll_real64 :: eta1_min
+    sll_real64 :: eta2_min
+    sll_real64 :: delta_eta1
+    sll_real64 :: delta_eta2
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_int32 :: i1
+    sll_int32 :: i2
+    sll_real64, dimension(:), allocatable :: tmp1
+    sll_real64, dimension(:), allocatable :: tmp2
+    sll_real64, dimension(:), allocatable :: jac1
+    sll_real64, dimension(:), allocatable :: jac2
+    sll_real64, dimension(:,:), allocatable :: dphi
+    sll_int32 :: ierr
+    
+    Nc_eta1 = mesh_2d%num_cells1
+    Nc_eta2 = mesh_2d%num_cells2
+    eta1_min = mesh_2d%eta1_min
+    eta2_min = mesh_2d%eta2_min
+    delta_eta1 = mesh_2d%delta_eta1
+    delta_eta2 = mesh_2d%delta_eta2
+    
+    SLL_ALLOCATE(tmp1(Nc_eta1+1),ierr)
+    SLL_ALLOCATE(tmp2(Nc_eta2+1),ierr)
+    SLL_ALLOCATE(jac1(Nc_eta1),ierr)
+    SLL_ALLOCATE(jac2(Nc_eta2),ierr)
+    SLL_ALLOCATE(dphi(Nc_eta1+1,Nc_eta2+1),ierr)
+    
+    do i2=1,Nc_eta2
+      call compute_deriv_csl_periodic( &
+        phi(1:Nc_eta1,i2), &
+        Nc_eta1, &
+        tmp1(1:Nc_eta1+1), &
+        d1)
+      dphi(1:Nc_eta1+1,i2) = tmp1(1:Nc_eta1+1)   
+    enddo
+
+    do i1=1,Nc_eta1+1
+      call compute_deriv_csl_periodic( &
+        dphi(i1,1:Nc_eta2), &
+        Nc_eta2, &
+        tmp2(1:Nc_eta2+1), &
+        d2)
+      dphi(i1,1:Nc_eta2+1) = tmp2(1:Nc_eta2+1)   
+    enddo
+
+    do i2=1,Nc_eta2
+      eta2=eta2_min+(real(i2-1,f64)+0.5_f64)*delta_eta2
+      do i1=1,Nc_eta1
+        eta1=eta1_min+(real(i1-1,f64)+0.5_f64)*delta_eta1
+        jac1(i1) = transformation%jacobian(eta1,eta2)
+      enddo
+      call compute_deriv_csl_periodic( &
+        jac1(1:Nc_eta1), &
+        Nc_eta1, &
+        tmp1(1:Nc_eta1+1), &
+        d1)
+      do i1=1,Nc_eta1+1
+        A1(i1,i2) = (dphi(i1,i2+1)-dphi(i1,i2))/delta_eta2
+        !A1(i1,i2) = A1(i1,i2)/tmp1(i1)
+        eta1=eta1_min+(real(i1-1,f64))*delta_eta1
+        eta2=eta2_min+(real(i2-1,f64)+0.5_f64)*delta_eta2
+        A1(i1,i2) = A1(i1,i2)/transformation%jacobian(eta1,eta2)
+      enddo
+    enddo
+
+
+    do i1=1,Nc_eta1
+      eta1=eta1_min+(real(i1-1,f64)+0.5_f64)*delta_eta1
+      do i2=1,Nc_eta2
+        eta2=eta2_min+(real(i2-1,f64)+0.5_f64)*delta_eta2
+        jac2(i2) = transformation%jacobian(eta1,eta2)
+      enddo
+      call compute_deriv_csl_periodic( &
+        jac2(1:Nc_eta2), &
+        Nc_eta2, &
+        tmp2(1:Nc_eta2+1), &
+        d2)
+      do i2=1,Nc_eta2+1
+        A2(i1,i2) = (dphi(i1+1,i2)-dphi(i1,i2))/delta_eta1
+        !A2(i1,i2) = -A2(i1,i2)/tmp2(i2)
+        eta1=eta1_min+(real(i1-1,f64)+0.5_f64)*delta_eta1
+        eta2=eta2_min+(real(i2-1,f64))*delta_eta2
+        A2(i1,i2) = -A2(i1,i2)/transformation%jacobian(eta1,eta2)
+      enddo
+    enddo
+    
+    
+    !print *,'#dphi',maxval(dphi),minval(dphi)
+    !print *,'#A1',maxval(A1),minval(A1)
+    !print *,'#A2',maxval(A2),minval(A2)
+    !stop   
+  end subroutine compute_field_from_phi_2d_fd_conservative_curvilinear
+
+subroutine compute_field_from_phi_2d_fd_conservative_curvilinear2(phi,mesh_2d,transformation,A1,A2,interp2d,d1,d2)
+    sll_real64, dimension(:,:), intent(in) :: phi
+    sll_real64, dimension(:,:), intent(out) :: A1
+    sll_real64, dimension(:,:), intent(out) :: A2
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
+    class(sll_coordinate_transformation_2d_base), pointer :: transformation
+    class(sll_interpolator_2d_base), pointer   :: interp2d
+    sll_int32, intent(in) :: d1
+    sll_int32, intent(in) :: d2
+    sll_int32 :: Nc_eta1
+    sll_int32 :: Nc_eta2
+    sll_real64 :: eta1_min
+    sll_real64 :: eta2_min
+    sll_real64 :: delta_eta1
+    sll_real64 :: delta_eta2
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_int32 :: i1
+    sll_int32 :: i2
+    sll_real64, dimension(:), allocatable :: tmp1
+    sll_real64, dimension(:), allocatable :: tmp2
+    sll_real64, dimension(:), allocatable :: jac1
+    sll_real64, dimension(:), allocatable :: jac2
+    sll_real64, dimension(:,:), allocatable :: dphi
+    sll_int32 :: ierr
+    
+    Nc_eta1 = mesh_2d%num_cells1
+    Nc_eta2 = mesh_2d%num_cells2
+    eta1_min = mesh_2d%eta1_min
+    eta2_min = mesh_2d%eta2_min
+    delta_eta1 = mesh_2d%delta_eta1
+    delta_eta2 = mesh_2d%delta_eta2
+    
+    SLL_ALLOCATE(tmp1(Nc_eta1+1),ierr)
+    SLL_ALLOCATE(tmp2(Nc_eta2+1),ierr)
+    SLL_ALLOCATE(jac1(Nc_eta1),ierr)
+    SLL_ALLOCATE(jac2(Nc_eta2),ierr)
+    !SLL_ALLOCATE(dphi(Nc_eta1+1,Nc_eta2+1),ierr)
+    
+
+    do i2=1,Nc_eta2
+      eta2=eta2_min+(real(i2-1,f64)+0.5_f64)*delta_eta2
+      do i1=1,Nc_eta1
+        eta1=eta1_min+(real(i1-1,f64)+0.5_f64)*delta_eta1
+        jac1(i1) = transformation%jacobian(eta1,eta2)
+      enddo
+      call compute_deriv_csl_periodic( &
+        jac1(1:Nc_eta1), &
+        Nc_eta1, &
+        tmp1(1:Nc_eta1+1), &
+        d1)
+      do i1=1,Nc_eta1+1
+        A1(i1,i2) = (phi(i1,i2+1)-phi(i1,i2))/delta_eta2
+        A1(i1,i2) = A1(i1,i2)/tmp1(i1)
+        eta1=eta1_min+(real(i1-1,f64))*delta_eta1
+        eta2=eta2_min+(real(i2-1,f64)+0.5_f64)*delta_eta2
+        !A1(i1,i2) = A1(i1,i2)/transformation%jacobian(eta1,eta2)
+      enddo
+    enddo
+
+
+    do i1=1,Nc_eta1
+      eta1=eta1_min+(real(i1-1,f64)+0.5_f64)*delta_eta1
+      do i2=1,Nc_eta2
+        eta2=eta2_min+(real(i2-1,f64)+0.5_f64)*delta_eta2
+        jac2(i2) = transformation%jacobian(eta1,eta2)
+      enddo
+      call compute_deriv_csl_periodic( &
+        jac2(1:Nc_eta2), &
+        Nc_eta2, &
+        tmp2(1:Nc_eta2+1), &
+        d2)
+      do i2=1,Nc_eta2+1
+        A2(i1,i2) = (phi(i1+1,i2)-phi(i1,i2))/delta_eta1
+        A2(i1,i2) = -A2(i1,i2)/tmp2(i2)
+        eta1=eta1_min+(real(i1-1,f64)+0.5_f64)*delta_eta1
+        eta2=eta2_min+(real(i2-1,f64))*delta_eta2
+        !A2(i1,i2) = -A2(i1,i2)/transformation%jacobian(eta1,eta2)
+      enddo
+    enddo
+    
+    
+    !print *,'#dphi',maxval(dphi),minval(dphi)
+    !print *,'#A1',maxval(A1),minval(A1)
+    !print *,'#A2',maxval(A2),minval(A2)
+    !stop   
+  end subroutine compute_field_from_phi_2d_fd_conservative_curvilinear2
+
+
+
+
 
 
   subroutine advective_to_conservative_2d_curvilinear( &
@@ -2616,36 +2831,34 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
     
     SLL_ALLOCATE(tmp(Nc_eta1+1,Nc_eta2+1),ierr)
 
-    do i2=1,Nc_eta2+1
-      eta2=eta2_min+real(i2-1,f64)*delta_eta2
+    do i2=1,Nc_eta2
+      eta2=eta2_min+(real(i2-1,f64)+0.5_f64)*delta_eta2
       do i1=1,Nc_eta1+1
         eta1=eta1_min+real(i1-1,f64)*delta_eta1
         tmp(i1,i2)=A1(i1,i2)*transformation%jacobian(eta1,eta2)
       end do
     end do
-    do i1=1,Nc_eta1+1
-      do i2=1,Nc_eta2+1
-        ip = modulo(i1+1+Nc_eta1-1,Nc_eta1)+1
-        im = modulo(i1-1+Nc_eta1-1,Nc_eta1)+1
-        div(i1,i2) = 0.5_f64*(tmp(ip,i2)+tmp(i1,i2))-0.5_f64*(tmp(i1,i2)+tmp(im,i2))
+    do i1=1,Nc_eta1
+      do i2=1,Nc_eta2
+        div(i1,i2) = tmp(i1+1,i2)-tmp(i1,i2)
         div(i1,i2) = div(i1,i2)/delta_eta1
       enddo
     enddo     
 
     do i2=1,Nc_eta2+1
       eta2=eta2_min+real(i2-1,f64)*delta_eta2
-      do i1=1,Nc_eta1+1
-        eta1=eta1_min+real(i1-1,f64)*delta_eta1
+      do i1=1,Nc_eta1
+        eta1=eta1_min+(real(i1-1,f64)+0.5_f64)*delta_eta1
         tmp(i1,i2)=A2(i1,i2)*transformation%jacobian(eta1,eta2)
       end do
     end do
 
 
-    do i1=1,Nc_eta1+1
-      do i2=1,Nc_eta2+1
+    do i1=1,Nc_eta1
+      do i2=1,Nc_eta2
         ip = modulo(i2+1+Nc_eta2-1,Nc_eta2)+1
         im = modulo(i2-1+Nc_eta2-1,Nc_eta2)+1
-        tmp2 = 0.5_f64*(tmp(i1,ip)+tmp(i1,i2))-0.5_f64*(tmp(i1,i2)+tmp(i1,im))
+        tmp2 = tmp(i1,i2+1)-tmp(i1,i2)
         tmp2 = tmp2/delta_eta2
         div(i1,i2) = div(i1,i2)+tmp2
       enddo
@@ -3091,6 +3304,216 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
       SLL_ASSERT((eta_out>=eta_min).and.(eta_out<=eta_max))      
       
   end function process_outside_point_set_to_limit1
+
+  subroutine compute_deriv_csl_periodic(input,num_cell,output,p)
+    sll_real64, dimension(:), intent(in) :: input
+    sll_int32, intent(in) :: num_cell
+    sll_real64, dimension(:), intent(out) :: output
+    sll_int32, intent(in) :: p
+    sll_int32 :: r
+    sll_int32 :: s
+    sll_int32 :: ierr
+    sll_real64, dimension(:), allocatable :: ww
+    sll_int32 :: i
+    sll_int32 :: ii
+    sll_int32 :: ind
+    sll_real64 :: tmp
+    sll_real64, dimension(:,:), allocatable :: buf
+
+    r=-p/2
+    s=(p+1)/2
+
+
+    SLL_ALLOCATE(ww(r:s-1),ierr)
+    !SLL_ALLOCATE(buf(2,num_cell),ierr)
+    
+    call compute_ww_test(ww,r,s)
+    
+    !print *,'ww=',ww
+    !print *,'r,s=',r,s
+    
+    !stop
+    
+    do i=1,num_cell
+      tmp = 0._f64
+      do ii=r,s-1
+        ind = modulo(i+ii-1,num_cell)+1
+        tmp=tmp+ww(r+s-1-ii)*input(ind)
+      enddo
+      output(i) = tmp
+      !buf(1,i) = tmp
+      !do ii=r,s-1
+      !  ind = modulo(i+ii-1,num_cell)+1
+      !  tmp=tmp+ww(ii)*input(ind)
+      !enddo
+      !buf(2,i) = tmp      
+    enddo
+    output(num_cell+1) = output(1)
+    !output(1) = 0.5_f64*(buf(1,1)+buf(2,num_cell))
+    !output(num_cell+1) = output(1)
+    !do i=2,num_cell
+    !  output(i) = 0.5_f64*(buf(2,i-1)+buf(1,i))
+    !enddo
+    
+  end subroutine compute_deriv_csl_periodic
+!        tmp=0._f64
+!        do ii=r,s-1
+!          i3=i+ii-1;if(i3<=0)i3=0;if(i3>=N0)i3=N0          
+!          tmp=tmp+ww(r+s-1-ii)*f(i3,j)
+!        enddo
+!        aretesvg(i,j)=tmp
+!        tmp=0._f64
+!        do ii=r,s-1
+!          i3=i+ii;if(i3<=0)i3=0;if(i3>=N0)i3=N0          
+!          tmp=tmp+ww(ii)*f(i3,j)
+!        enddo
+!        aretesvd(i,j)=tmp
+
+
+
+  subroutine compute_ww_test(ww,r,s)
+    sll_real64, dimension(r:s-1), intent(out) :: ww
+    sll_int32, intent(in) :: r
+    sll_int32, intent(in) :: s
+    sll_real64, dimension(:), allocatable :: w
+    sll_real64 :: tmp
+    sll_int32 :: i
+    sll_int32 :: j
+    sll_int32 :: ii
+    sll_int32 :: ierr
+
+    SLL_ALLOCATE(w(r:s),ierr)
+
+     !maple code for generation of w
+    !for k from r to -1 do
+    !  C[k]:=product((k-j),j=r..k-1)*product((k-j),j=k+1..s):
+    !  C[k]:=1/C[k]*product((-j),j=r..k-1)*product((-j),j=k+1..-1)*product((-j),j=1..s):
+    !od:
+    !for k from 1 to s do
+    !  C[k]:=product((k-j),j=r..k-1)*product((k-j),j=k+1..s):
+    !  C[k]:=1/C[k]*product((-j),j=r..-1)*product((-j),j=1..k-1)*product((-j),j=k+1..s):
+    !od:
+    !C[0]:=-add(C[k],k=r..-1)-add(C[k],k=1..s):
+    
+    do i=r,-1
+      tmp=1._f64
+      do j=r,i-1
+        tmp=tmp*real(i-j,f64)
+      enddo
+      do j=i+1,s
+        tmp=tmp*real(i-j,f64)
+      enddo
+      tmp=1._f64/tmp
+      do j=r,i-1
+        tmp=tmp*real(-j,f64)
+      enddo
+      do j=i+1,-1
+        tmp=tmp*real(-j,f64)
+      enddo
+      do j=1,s
+        tmp=tmp*real(-j,f64)
+      enddo
+      w(i)=tmp      
+     enddo
+
+!    do i=r,-1
+!      tmp=1._f64
+!      !do j=r,i-1
+!      !  tmp=tmp*real(i-j,f64)
+!      !enddo
+!      !do j=i+1,s
+!      !  tmp=tmp*real(i-j,f64)
+!      !enddo
+!      !tmp=1._f64/tmp
+!      do j=r,i-1 !-j/(i-j)=j/(j-i)=1/(1-i/j)
+!        tmp=tmp*(1._f64-real(i,f64)/real(j,f64))
+!      enddo
+!      do j=i+1,-1
+!        tmp=tmp*(1._f64-real(i,f64)/real(j,f64))
+!      enddo
+!      do j=1,s
+!        tmp=tmp*(1._f64-real(i,f64)/real(j,f64))
+!      enddo
+!      tmp=tmp*real(i,f64)
+!      w(i)=1._f64/tmp      
+!    enddo
+
+
+    do i=1,s
+      tmp=1._f64
+      do j=r,i-1
+        tmp=tmp*real(i-j,f64)
+      enddo
+      do j=i+1,s
+        tmp=tmp*real(i-j,f64)
+      enddo
+      tmp=1._f64/tmp
+      do j=r,-1
+        tmp=tmp*real(-j,f64)
+      enddo
+      do j=1,i-1
+        tmp=tmp*real(-j,f64)
+      enddo
+      do j=i+1,s
+        tmp=tmp*real(-j,f64)
+      enddo
+      w(i)=tmp      
+    enddo
+
+    tmp=0._f64
+    do i=r,-1
+      tmp=tmp+w(i)
+    enddo
+    do i=1,s
+      tmp=tmp+w(i)
+    enddo
+    w(0)=-tmp
+    
+    
+    
+    !print *,'w',w
+    !do ii=r,s
+    !  print *,ii,w(r+s-ii)
+    !enddo
+    
+    !compute now ww
+    !maple code
+    !#for conservative formulation
+    !tmp:=0:
+    !for k from r to -1 do
+    !tmp:=tmp+C[k]:
+    !CC[k]:=-tmp:
+    !od:
+    !tmp:=0:
+    !for k from s to 1 by -1 do
+    !  tmp:=tmp+C[k]:
+    !  CC[k-1]:=tmp:
+    !od:
+    !seq(CC[k],k=r..s-1);
+    !evalf(%);
+
+    tmp=0._f64
+    do i=r,-1
+      tmp=tmp+w(i)
+      ww(i)=-tmp
+    enddo
+    tmp=0._f64
+    do i=s,1,-1
+      tmp=tmp+w(i)
+      ww(i-1)=tmp
+    enddo
+
+    !print *,'ww',ww(r:s-1)
+    !do ii=r,s-1
+    !  print *,ii,ww(r+s-1-ii)
+    !enddo
+    !stop
+
+    SLL_DEALLOCATE_ARRAY(w,ierr)
+    
+  end subroutine compute_ww_test
+
+
 
   subroutine delete_analytic_field_2d_curvilinear( sim )
 
