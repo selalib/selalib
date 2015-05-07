@@ -33,6 +33,8 @@ module sll_simulation_2d_guiding_center_curvilinear_module
  
   use sll_module_cubic_spline_interpolator_1d
   use sll_module_cubic_spline_interpolator_2d
+  use sll_hermite_interpolation_2d_module
+  use sll_module_hermite_interpolator_2d
 !  use sll_coordinate_transformation_2d_base_module
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
@@ -48,6 +50,10 @@ module sll_simulation_2d_guiding_center_curvilinear_module
      only: new_poisson_2d_elliptic_solver, &
            es_gauss_legendre
   implicit none
+
+  sll_int32, parameter :: SLL_COMPUTE_FIELD_FROM_PHI = 0 
+  sll_int32, parameter :: SLL_COMPUTE_FIELD_FROM_PHI_FD = 1 
+
   
   sll_int32, parameter :: SLL_EULER = 0 
   sll_int32, parameter :: SLL_PREDICTOR_CORRECTOR = 1 
@@ -115,6 +121,9 @@ module sll_simulation_2d_guiding_center_curvilinear_module
 
    !time_loop
    sll_int32 :: time_loop_case
+   sll_int32 :: compute_field_case
+   sll_int32 :: fd_degree1
+   sll_int32 :: fd_degree2
    ! quadrature 
    sll_int32  :: quadrature_type1
    sll_int32  :: quadrature_type2
@@ -200,6 +209,11 @@ contains
     character(len=256) :: f_interp1d_x1_case
     character(len=256) :: f_interp1d_x2_case
     character(len=256) :: advection_form
+    character(len=256) ::  compute_field_case
+    sll_int32 :: hermite_degree1
+    sll_int32 :: hermite_degree2
+    sll_int32 :: fd_degree1
+    sll_int32 :: fd_degree2
     
     !poisson
     character(len=256) :: poisson_solver
@@ -292,7 +306,12 @@ contains
       charac1d_x2_case, &
       advect1d_x1_case, &   
       advect1d_x2_case, &
-      advection_form  
+      advection_form, &
+      hermite_degree1, &
+      hermite_degree2, &
+      fd_degree1, &
+      fd_degree2, &
+      compute_field_case  
 
     namelist /poisson/ &
       poisson_solver, &
@@ -350,6 +369,11 @@ contains
     !charac2d_case = "SLL_EULER"
     charac2d_case = "SLL_VERLET"
     A_interp_case = "SLL_CUBIC_SPLINES"
+    compute_field_case = "SLL_COMPUTE_FIELD_FROM_PHI"
+    hermite_degree1 = 4
+    hermite_degree2 = 4
+    fd_degree1 = 4
+    fd_degree2 = 4
     
     advection_form = "SLL_ADVECTIVE"
     advect1d_x1_case = "SLL_BSL"
@@ -425,6 +449,10 @@ contains
     sim%spline_degree_eta2 = spline_degree_eta2
     sim%quadrature_type1 = ES_GAUSS_LEGENDRE
     sim%quadrature_type2 = ES_GAUSS_LEGENDRE
+
+    sim%fd_degree1 = fd_degree1
+    sim%fd_degree2 = fd_degree2
+
       
     SLL_ALLOCATE(sim%b11(Nc_eta1+1,Nc_eta2+1),ierr)
     SLL_ALLOCATE(sim%b12(Nc_eta1+1,Nc_eta2+1),ierr)
@@ -433,6 +461,22 @@ contains
     SLL_ALLOCATE(sim%b1(Nc_eta1+1,Nc_eta2+1),ierr)
     SLL_ALLOCATE(sim%b2(Nc_eta1+1,Nc_eta2+1),ierr)
     SLL_ALLOCATE(sim%c(Nc_eta1+1,Nc_eta2+1),ierr)
+
+
+
+    select case(compute_field_case)
+      case ("SLL_COMPUTE_FIELD_FROM_PHI")
+        print*,"#compute_field_case = SLL_COMPUTE_FIELD_FROM_PHI " 
+        sim%compute_field_case = SLL_COMPUTE_FIELD_FROM_PHI
+      case ("SLL_COMPUTE_FIELD_FROM_PHI_FD")
+        print*,"#compute_field_case = SLL_COMPUTE_FIELD_FROM_PHI_FD" 
+        sim%compute_field_case = SLL_COMPUTE_FIELD_FROM_PHI_FD
+      case default
+        SLL_ERROR("initialize_analytic_field_2d_curvilinear","bad compute_field_case")
+        stop
+    end select
+
+
     
     select case(bc_eta1_left)
       case ("SLL_PERIODIC")
@@ -763,6 +807,21 @@ contains
           eta2_max, &
           sim%bc_interp2d_eta1, &
           sim%bc_interp2d_eta2)
+      case ("SLL_HERMITE")
+        print*,"#f interpolation SLL_HERMITE"
+        sim%f_interp2d => new_hermite_interpolator_2d( &
+          Nc_eta1+1, &
+          Nc_eta2+1, &
+          eta1_min, &
+          eta1_max, &
+          eta2_min, &
+          eta2_max, &
+          hermite_degree1, &          
+          hermite_degree2, &          
+          SLL_HERMITE_C0, &
+          SLL_HERMITE_C0, &
+          SLL_HERMITE_PERIODIC, &
+          SLL_HERMITE_PERIODIC)
       case default
         print *,'#bad f_interp2d_case',f_interp2d_case
         print *,'#not implemented'
@@ -1209,6 +1268,18 @@ contains
         stop
     end select
 
+    select case(compute_field_case)
+      case ("SLL_COMPUTE_FIELD_FROM_PHI")
+        print*,"#compute_field_case = SLL_COMPUTE_FIELD_FROM_PHI " 
+        sim%compute_field_case = SLL_COMPUTE_FIELD_FROM_PHI
+      case ("SLL_COMPUTE_FIELD_FROM_PHI_FD")
+        print*,"#compute_field_case = SLL_COMPUTE_FIELD_FROM_PHI_FD" 
+        sim%compute_field_case = SLL_COMPUTE_FIELD_FROM_PHI_FD
+      case default
+        SLL_ERROR("initialize_guiding_center_2d_curvilinear","bad compute_field_case")
+        stop
+    end select
+
    
   end subroutine initialize_guiding_center_2d_curvilinear
   
@@ -1306,7 +1377,39 @@ contains
 
     !solve poisson
     call sim%poisson%compute_phi_from_rho(phi, f)
-    call compute_field_from_phi_2d_curvilinear(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)  
+
+    select case (sim%compute_field_case)
+      case (SLL_COMPUTE_FIELD_FROM_PHI)
+        call compute_field_from_phi_2d_curvilinear( &
+          phi, &
+          sim%mesh_2d, &
+          sim%transformation, &
+          A1, &
+          A2, &
+          sim%phi_interp2d)
+      case (SLL_COMPUTE_FIELD_FROM_PHI_FD)
+            call compute_field_from_phi_2d_fd_curvilinear( &
+              phi, &
+              sim%mesh_2d, &
+              sim%transformation, &
+              A1, &
+              A2, &
+              sim%phi_interp2d, &
+              sim%fd_degree1, &
+              sim%fd_degree2)      
+ 
+        
+      case default
+        SLL_ERROR("run_af2d_curvilinear","bad value of sim%compute_field_case")
+    end select    
+
+
+
+
+
+
+
+    !call compute_field_from_phi_2d_curvilinear(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)  
 !    do i2=1,Nc_eta2+1
 !        eta2=eta2_min+real(i2-1,f64)*delta_eta2
 !        do i1=1,Nc_eta1+1
@@ -1331,7 +1434,38 @@ contains
       f_old = f
       
       call sim%poisson%compute_phi_from_rho(phi, f_old) 
-      call compute_field_from_phi_2d_curvilinear(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)      
+
+    select case (sim%compute_field_case)
+      case (SLL_COMPUTE_FIELD_FROM_PHI)
+        call compute_field_from_phi_2d_curvilinear( &
+          phi, &
+          sim%mesh_2d, &
+          sim%transformation, &
+          A1, &
+          A2, &
+          sim%phi_interp2d)
+      case (SLL_COMPUTE_FIELD_FROM_PHI_FD)
+            call compute_field_from_phi_2d_fd_curvilinear( &
+              phi, &
+              sim%mesh_2d, &
+              sim%transformation, &
+              A1, &
+              A2, &
+              sim%phi_interp2d, &
+              sim%fd_degree1, &
+              sim%fd_degree2)      
+ 
+        
+      case default
+        SLL_ERROR("run_af2d_curvilinear","bad value of sim%compute_field_case")
+    end select    
+
+
+      !call compute_field_from_phi_2d_curvilinear(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)      
+      
+      
+      
+      
       if(modulo(step-1,sim%freq_diag_time)==0)then
         call time_history_diagnostic_collela( &
           thdiag_id , &    
@@ -1386,7 +1520,40 @@ contains
               print *,'#bad advection_form',sim%advection_form
           end select    
           call sim%poisson%compute_phi_from_rho(phi, f)
-          call compute_field_from_phi_2d_curvilinear(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)      
+
+
+    select case (sim%compute_field_case)
+      case (SLL_COMPUTE_FIELD_FROM_PHI)
+        call compute_field_from_phi_2d_curvilinear( &
+          phi, &
+          sim%mesh_2d, &
+          sim%transformation, &
+          A1, &
+          A2, &
+          sim%phi_interp2d)
+      case (SLL_COMPUTE_FIELD_FROM_PHI_FD)
+            call compute_field_from_phi_2d_fd_curvilinear( &
+              phi, &
+              sim%mesh_2d, &
+              sim%transformation, &
+              A1, &
+              A2, &
+              sim%phi_interp2d, &
+              sim%fd_degree1, &
+              sim%fd_degree2)      
+ 
+        
+      case default
+        SLL_ERROR("run_af2d_curvilinear","bad value of sim%compute_field_case")
+    end select    
+
+
+          
+          !call compute_field_from_phi_2d_curvilinear(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)      
+          
+          
+          
+          
           select case (sim%advection_form)
             case(SLL_CONSERVATIVE)
               call compute_f_to_f_conserv(f_old,f_conserv,sim%transformation,sim%mesh_2d)
@@ -1454,6 +1621,79 @@ contains
    
     
   end subroutine compute_field_from_phi_2d_curvilinear
+
+
+
+subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A1,A2,interp2d,d1,d2)
+    sll_real64, dimension(:,:), intent(in) :: phi
+    sll_real64, dimension(:,:), intent(out) :: A1
+    sll_real64, dimension(:,:), intent(out) :: A2
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
+    class(sll_coordinate_transformation_2d_base), pointer :: transformation
+    class(sll_interpolator_2d_base), pointer   :: interp2d
+    sll_int32, intent(in) :: d1
+    sll_int32, intent(in) :: d2
+    sll_int32 :: Nc_eta1
+    sll_int32 :: Nc_eta2
+    sll_real64 :: eta1_min
+    sll_real64 :: eta2_min
+    sll_real64 :: delta_eta1
+    sll_real64 :: delta_eta2
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_int32 :: i1
+    sll_int32 :: i2
+    sll_real64, dimension(:), allocatable :: w1
+    sll_real64, dimension(:), allocatable :: w2
+    sll_int32 :: ierr
+    sll_int32 :: r1
+    sll_int32 :: s1
+    sll_int32 :: r2
+    sll_int32 :: s2
+    sll_int32 :: ii
+    
+    Nc_eta1 = mesh_2d%num_cells1
+    Nc_eta2 = mesh_2d%num_cells2
+    eta1_min = mesh_2d%eta1_min
+    eta2_min = mesh_2d%eta2_min
+    delta_eta1 = mesh_2d%delta_eta1
+    delta_eta2 = mesh_2d%delta_eta2
+    
+    r1 = -d1/2
+    r2 = -d2/2
+    s1 = (d1+1)/2
+    s2 = (d2+1)/2
+    SLL_ALLOCATE(w1(r1:s1),ierr)
+    SLL_ALLOCATE(w2(r2:s2),ierr)
+     
+    call compute_w_hermite(w1,r1,s1)
+    call compute_w_hermite(w2,r2,s2)
+
+    A1 = 0._f64
+    A2 = 0._f64
+    do i2=1,Nc_eta2+1
+      eta2=eta2_min+real(i2-1,f64)*delta_eta2
+      do i1=1,Nc_eta1+1
+        eta1=eta1_min+real(i1-1,f64)*delta_eta1
+        A1(i1,i2) = 0._f64
+        do ii=r1,s1
+          A1(i1,i2) = A1(i1,i2)+w1(ii)*phi(i1,modulo(i2+ii-1+Nc_eta2,Nc_eta2)+1)
+        enddo
+        A1(i1,i2) = A1(i1,i2)/(delta_eta2)
+        A1(i1,i2) = A1(i1,i2)/transformation%jacobian(eta1,eta2)
+        A2(i1,i2) = 0._f64
+        do ii=r2,s2
+          A2(i1,i2) = A2(i1,i2)+w2(ii)*phi(modulo(i1+ii-1+Nc_eta1,Nc_eta1)+1,i2)
+        enddo
+        A2(i1,i2) = A2(i1,i2)/(delta_eta1)
+        A2(i1,i2) = -A2(i1,i2)/transformation%jacobian(eta1,eta2)
+        
+      end do
+    end do
+   
+    
+  end subroutine compute_field_from_phi_2d_fd_curvilinear
+
 
 
   subroutine compute_f_to_f_conserv(f,f_conserv,transformation,mesh_2d)
