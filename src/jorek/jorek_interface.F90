@@ -137,7 +137,7 @@ ptr_space_test => space_test
 
 argname = "--geometry"
 call jorek_get_arguments(argname, dirname, ierr)
-call create_mesh(fem_mesh, dirname)
+call create_mesh(fem_mesh, dirname=dirname)
 
 call model_create(fem_model,       &
                   fem_mesh,        &
