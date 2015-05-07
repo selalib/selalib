@@ -10,6 +10,8 @@ module sll_split_advection_2d
   use sll_operator_splitting
   use sll_cartesian_meshes  
   use sll_coordinate_transformation_2d_base_module
+  use cubic_non_uniform_splines
+  use ode_solvers
 
   implicit none
 
@@ -53,18 +55,37 @@ module sll_split_advection_2d
      sll_real64, dimension(:,:), pointer  :: a2
 
      class(sll_coordinate_transformation_2d_base), pointer :: transformation !< coordinate transformation
+     type (cubic_nonunif_spline_1D), pointer :: spl_eta1
+     type (cubic_nonunif_spline_1D), pointer :: spl_eta2
 
+     
+      
      !> temporary array
      sll_real64, dimension(:), pointer :: input1
      sll_real64, dimension(:), pointer :: output1
      sll_real64, dimension(:), pointer :: origin1
+     sll_real64, dimension(:), pointer :: origin_middle1
      sll_real64, dimension(:), pointer :: feet1
+     sll_real64, dimension(:), pointer :: feet_middle1
      sll_real64, dimension(:), pointer :: feet_inside1
      sll_real64, dimension(:), pointer :: input2
      sll_real64, dimension(:), pointer :: output2
      sll_real64, dimension(:), pointer :: origin2
+     sll_real64, dimension(:), pointer :: origin_middle2
      sll_real64, dimension(:), pointer :: feet2
+     sll_real64, dimension(:), pointer :: feet_middle2
      sll_real64, dimension(:), pointer :: feet_inside2
+
+     logical :: csl_2012
+
+     sll_real64, dimension(:), pointer :: primitive1
+     sll_real64, dimension(:), pointer :: primitive2
+     sll_real64, dimension(:), pointer :: xi1
+     sll_real64, dimension(:), pointer :: xi2
+     sll_real64, dimension(:), pointer :: A1jac
+     sll_real64, dimension(:), pointer :: A2jac
+     
+     
    contains
      procedure, pass(this) :: operatorT => adv1  !< advection in first direction
      procedure, pass(this) :: operatorV => adv2  !< advection in second direction
@@ -89,7 +110,8 @@ contains
       nb_split_step, &
       split_begin_T, &
       dt, &
-      transformation) &
+      transformation, &
+      csl_2012) &
       result(this)  
     class(split_advection_2d), pointer :: this  !< object to be initialised
     sll_real64, dimension(:,:), pointer, intent(in) :: f   !< initial value of function
@@ -109,6 +131,7 @@ contains
     logical, intent(in), optional :: split_begin_T   !< begin with operator T if .true.
     sll_real64, intent(in), optional :: dt  !< time step   
     class(sll_coordinate_transformation_2d_base), pointer, optional :: transformation !< coordinate transformation
+    logical, intent(in), optional :: csl_2012
     ! local variable
     sll_int32 :: ierr
 
@@ -131,7 +154,8 @@ contains
       nb_split_step, &
       split_begin_T, &
       dt, &
-      transformation)
+      transformation, &
+      csl_2012)
 
   end function
 
@@ -154,7 +178,8 @@ contains
       nb_split_step, &
       split_begin_T, &
       dt, &
-      transformation)
+      transformation, &
+      csl_2012)
     class(split_advection_2d), intent(inout)   :: this !< object 
     sll_real64, dimension(:,:), pointer, intent(in) :: f   !< initial value of function
     sll_real64, dimension(:,:), pointer, intent(in) :: a1   !< advection coefficient in first direction
@@ -173,6 +198,7 @@ contains
     logical, intent(in), optional :: split_begin_T   !< begin with operator T if .true.
     sll_real64, intent(in), optional :: dt  !< time step
     class(sll_coordinate_transformation_2d_base), pointer, optional :: transformation !< coordinate transformation
+    logical, intent(in), optional :: csl_2012
     sll_int32 :: ierr
     sll_int32 :: n1
     sll_int32 :: n2
@@ -198,6 +224,11 @@ contains
     
     if(present(transformation))then
       this%transformation => transformation
+    endif
+    if(present(csl_2012))then
+      this%csl_2012 = csl_2012
+    else
+      this%csl_2012 = .false.  
     endif
     
     n1 = mesh_2d%num_cells1+1
@@ -241,14 +272,27 @@ contains
     SLL_ALLOCATE(this%input1(n1),ierr)
     SLL_ALLOCATE(this%output1(n1),ierr)
     SLL_ALLOCATE(this%origin1(n1),ierr)
+    SLL_ALLOCATE(this%origin_middle1(n1-1),ierr)
+    SLL_ALLOCATE(this%feet_middle1(n1-1),ierr)
     SLL_ALLOCATE(this%feet1(n1),ierr)
     SLL_ALLOCATE(this%feet_inside1(n1),ierr)
 
     SLL_ALLOCATE(this%input2(n2),ierr)
     SLL_ALLOCATE(this%output2(n2),ierr)
     SLL_ALLOCATE(this%origin2(n2),ierr)
+    SLL_ALLOCATE(this%origin_middle2(n2-1),ierr)
+    SLL_ALLOCATE(this%feet_middle2(n2-1),ierr)
     SLL_ALLOCATE(this%feet2(n2),ierr)
     SLL_ALLOCATE(this%feet_inside2(n2),ierr)
+
+    SLL_ALLOCATE(this%primitive1(n1),ierr)
+    SLL_ALLOCATE(this%primitive2(n2),ierr)
+    SLL_ALLOCATE(this%xi1(n1),ierr)
+    SLL_ALLOCATE(this%xi2(n2),ierr)
+    SLL_ALLOCATE(this%A1jac(n1),ierr)
+    SLL_ALLOCATE(this%A2jac(n2),ierr)
+
+
     
     do i=1,n1
       this%origin1(i) = real(i-1,f64)/real(n1-1,f64)
@@ -260,6 +304,18 @@ contains
       this%origin2(i) = &
         eta2_min+this%origin2(i)*(eta2_max-eta2_min)
     enddo
+
+    do i=1,n1-1
+      this%origin_middle1(i) = 0.5_f64*(this%origin1(i)+this%origin1(i+1))
+    enddo
+    do i=1,n2-1
+      this%origin_middle2(i) = 0.5_f64*(this%origin2(i)+this%origin2(i+1))
+    enddo
+
+    this%spl_eta1 => new_cubic_nonunif_spline_1D( &
+      n1-1, &
+      SLL_PERIODIC)
+    this%spl_eta2 => new_cubic_nonunif_spline_1D( n2-1, SLL_PERIODIC)
     
 
     call initialize_operator_splitting( &
@@ -285,19 +341,175 @@ contains
     sll_real64 :: eta1_min
     sll_real64 :: eta1_max
     sll_real64 :: mean
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_real64 :: xi_max
+    sll_real64 :: delta_eta1
+    sll_real64 :: lperiod
+    sll_real64 :: xi_new
+    sll_real64 :: mean_init
+    
     n1 = this%mesh_2d%num_cells1+1
     n2 = this%mesh_2d%num_cells2+1
     num_dof1 =this%num_dof1
     num_dof2 =this%num_dof2
     eta1_min = this%mesh_2d%eta1_min
     eta1_max = this%mesh_2d%eta1_max
+    delta_eta1 = (eta1_max-eta1_min)/real(n1-1,f64)
+    if(this%csl_2012)then
+      do j=1,num_dof2
+
+
+        eta2 = 0.5_f64*(this%origin2(j)+this%origin2(j+1))
+        do i=1,n1
+          eta1 = this%origin1(i)
+          this%A1jac(i) = &
+            this%A1(i,j)*this%transformation%jacobian(eta1,eta2)
+        enddo
+
+!        do i=1,n1-1
+!          eta1 = 0.5_f64*(this%origin1(i)+this%origin1(i+1))
+!          this%A1jac(i) = &
+!            this%A1(i,j)*this%transformation%jacobian(eta1,eta2)
+!          print *,'A1=', this%A1jac(i)
+!        enddo
+!stop
+
+!!        do i=1,n1
+!          print*,i,this%A1(i,j)
+!        enddo
+!        stop
+!        print *,'#this%f',minval(this%f(1:num_dof1,j)),maxval(this%f(1:num_dof1,j))
+!
+        this%input1(1:num_dof1) = this%f(1:num_dof1,j)
+        eta2 = 0.5_f64*(this%origin2(j)+this%origin2(j+1))
+!        do i=1,num_dof1
+!          eta1 = 0.5_f64*(this%origin1(i)+this%origin1(i+1))
+!          this%input1(i) = &
+!            this%input1(i)/this%transformation%jacobian(eta1,eta2)
+!        enddo
+!        
+        print *,'#input1=',minval(this%input1(1:num_dof1)),maxval(this%input1(1:num_dof1))
+
+        
+        this%primitive1(1) = 0._f64
+        do i=2,num_dof1+1
+          this%primitive1(i) = this%primitive1(i-1) &
+            +delta_eta1*this%input1(i-1)
+        enddo
+
+!        do i=1,n1
+!          print *,this%primitive1(i)
+!        enddo
+ 
+ 
+ 
+        
+        this%xi1(1) = 0._f64
+        do i=2,num_dof1+1
+          eta1 = 0.5_f64*(this%origin1(i)+this%origin1(i-1))
+          this%xi1(i) = this%xi1(i-1) &
+            +delta_eta1*this%transformation%jacobian(eta1,eta2)
+        enddo
+        !jacobian(i1) = df_jac_at_i( i1-1, i2 )
+
+        mean = this%primitive1(n1)/this%xi1(n1)
+        print *,'#mean init'
+        !modify primitive so that it becomes periodic
+        do i = 2,num_dof1+1
+          this%primitive1(i) = this%primitive1(i)-mean*this%xi1(i)
+        end do
+        xi_max = this%xi1(n1)
+
+!        print *,'#this%primitive1=',minval(this%primitive1(1:n1)),maxval(this%primitive1(1:n1))
+!        do i=1,n1
+!          print *,this%primitive1(i)
+!        enddo
+!        stop
+        call implicit_ode_nonuniform( &
+          2, &
+          dt, &
+          this%xi1, &
+          num_dof1, &
+          PERIODIC_ODE, &
+          this%feet_inside1, &
+          this%A1jac(1:n1),&
+          this%A1jac)
+        
+        do i=1,n1
+          this%feet1(i) = this%xi1(i)-this%A1jac(i)*dt
+        enddo  
+           
+        call compute_spline_nonunif( &
+          this%primitive1, &
+          this%spl_eta1, &
+          this%xi1)
+        ! interpolate primitive at origin of characteritics
+        call interpolate_array_value_nonunif( &
+          this%feet_inside1, &
+          this%primitive1, &
+          n1, &
+          this%spl_eta1)
+        ! come back to real primitive by adding average
+        if (this%feet1(1) > 0.5_f64*(xi_max)) then
+          lperiod = -1.0_f64
+        else
+          lperiod = 0.0_f64
+        end if
+        !print *,'lperiod=',lperiod
+        xi_new = this%feet1(1) +  lperiod*xi_max
+        this%primitive1(1) = this%primitive1(1) + mean*xi_new
+        !if ((xi_new > xi_max) .or. (xi_new <xi(1))) then
+        !   print*, 1, xi_new, xi_out(1), primitive(1)
+        !end if
+        do i = 2,n1
+          ! We need here to find the points where it has been modified by periodicity
+          if (this%feet1(i) < this%feet1(i-1)) then
+             lperiod = lperiod+1.0_f64
+          end if
+          !print *,'lperiod=',i,lperiod
+          xi_new = this%feet1(i)+lperiod*xi_max
+          this%primitive1(i) = this%primitive1(i)+mean*xi_new
+          !if (i>98) then
+          !   print*, 'iii', i, xi_new, xi_out(i),xi_max, primitive(i), primitive(i-1)
+          !endif
+        end do
+        
+        do i=1,num_dof1
+          eta1 = 0.5_f64*(this%origin1(i)+this%origin1(i+1))
+          !print *,this%feet1(i+1)-this%feet1(i), &
+          !  this%xi1(i+1)-this%xi1(i), &
+          !  this%primitive1(i+1)-this%primitive1(i), &
+          !  this%transformation%jacobian(eta1,eta2)*delta_eta1
+        enddo
+        
+        do i = 1,num_dof1 
+          this%f(i,j) = (this%primitive1(i+1)-this%primitive1(i))/delta_eta1
+          eta1 = 0.5_f64*(this%origin1(i)+this%origin1(i+1))
+          !print *,i,this%f(i,j)/this%transformation%jacobian(eta1,eta2)
+          !call sll_set_df_val( dist_func_2D, i1, i2, val )
+          !if (val/df_jac_at_i(i1,i2)>1.) then
+          !   print*, 'val', i1,i2, val, primitive1(i1) , primitive1(i1+1), df_jac_at_i(i1,i2), delta_eta1
+          !end if
+       end do
+
+       !
+!     print *,'#output1=',minval(this%f(1:num_dof1,j)),maxval(this%f(1:num_dof1,j))
+!       print *,'#mean=',mean
+!       !print *,'#this%f',minval(this%f(1:num_dof1,j)),maxval(this%f(1:num_dof1,j))
+!       !stop
+
+        
+      enddo
+    else
+    
         
     do j=1,num_dof2
       this%input1(1:num_dof1) = this%f(1:num_dof1,j)
 
-      !print *,'this%input1(1:num_dof1)=', &
-      !  minval(this%input1(1:num_dof1)), &
-      !  maxval(this%input1(1:num_dof1))
+!      print *,'this%input1(1:num_dof1)=', &
+!        minval(this%input1(1:num_dof1)), &
+!        maxval(this%input1(1:num_dof1))
 
 
       if(this%advection_form==SLL_CONSERVATIVE)then      
@@ -305,17 +517,57 @@ contains
           this%input1, &
           this%origin1, &
           num_dof1, &
-          mean)      
+          mean)
+!        this%input1(1:num_dof1) = this%f(1:num_dof1,j)  
+!        eta2 = 0.5_f64*(this%origin2(j)+this%origin2(j+1))
+!        do i=1,num_dof1
+!          eta1 = 0.5_f64*(this%origin1(i)+this%origin1(i+1))
+!          this%input1(i) = &
+!            this%input1(i)/this%transformation%jacobian(eta1,eta2)-mean
+!          this%input1(i) = &
+!            this%input1(i)*this%transformation%jacobian(eta1,eta2)
+!        enddo        
+!        mean_init = mean
+!        call function_to_primitive_adv( &
+!          this%input1, &
+!          this%origin1, &
+!          num_dof1, &
+!          mean)
+!        !print *,'new mean=',mean
+!        !stop  
       endif
-      
       
 
       !advection
-      call this%charac1%compute_characteristics( &
-        this%A1(1:n1,j), &
-        dt, &
-        this%origin1(1:n1), &
-        this%feet1(1:n1))
+!      if(this%advection_form==SLL_CONSERVATIVE)then      
+!        do i=1,num_dof1
+!          this%A1jac(i) = 0.5_f64*(this%A1(i,j)+this%A1(i+1,j))
+!        enddo
+!        call this%charac1%compute_characteristics( &
+!          this%A1jac(1:num_dof1), &
+!          dt, &
+!          this%origin_middle1(1:num_dof1), &
+!          this%feet_middle1(1:num_dof1))
+!      
+!        this%feet1(1) = 0.5_f64*(this%feet_middle1(1)+this%feet_middle1(n1-1)) &
+!         -0.5_f64*(this%origin1(n1)-this%origin1(1))
+!        
+!        do i=2,n1-1
+!          this%feet1(i) = 0.5_f64*(this%feet_middle1(i)+this%feet_middle1(i-1))
+!        enddo
+!        
+!        this%feet1(n1) = this%feet1(1) &
+!         +(this%origin1(n1)-this%origin1(1))
+!        
+!      else
+        call this%charac1%compute_characteristics( &
+          this%A1(1:n1,j), &
+          dt, &
+          this%origin1(1:n1), &
+          this%feet1(1:n1))
+!      endif
+      
+        
       do i=1,n1
         this%feet_inside1(i) = this%process_outside_point1( &
           this%feet1(i), &
@@ -336,16 +588,25 @@ contains
           this%origin1(1:n1), &
           this%feet1(1:n1), &
           num_dof1, &
-          mean)      
+          mean)
+!        eta2 = 0.5_f64*(this%origin2(j)+this%origin2(j+1))
+!        do i=1,num_dof1
+!          eta1 = 0.5_f64*(this%origin1(i)+this%origin1(i+1))
+!          this%output1(i) = &
+!            this%output1(i)/this%transformation%jacobian(eta1,eta2)+mean_init
+!          this%output1(i) = &
+!            this%output1(i)*this%transformation%jacobian(eta1,eta2)
+!        enddo        
+                
       endif
 
       this%f(1:num_dof1,j) = this%output1(1:num_dof1)
       
-      !print *,'this%output1(1:num_dof1)=', &
-      !  minval(this%output1(1:num_dof1)), &
-      !  maxval(this%output1(1:num_dof1))
-      
-      print *,'#mean_adv1=',mean
+!      print *,'this%output1(1:num_dof1)=', &
+!        minval(this%output1(1:num_dof1)), &
+!        maxval(this%output1(1:num_dof1))
+!      
+!      print *,'#mean_adv1=',mean
       
 !      if(this%advection_form==SLL_CONSERVATIVE)then      
 !        call function_to_primitive_adv( &
@@ -358,7 +619,7 @@ contains
 !      print *,'#mean_adv1b=',mean
         
     enddo
-
+    endif
 
   end subroutine
 
@@ -377,6 +638,9 @@ contains
     sll_real64 :: eta2_min
     sll_real64 :: eta2_max
     sll_real64 :: mean
+    sll_real64 :: mean_init
+    sll_real64 :: eta1
+    sll_real64 :: eta2
 
     n1 = this%mesh_2d%num_cells1+1
     n2 = this%mesh_2d%num_cells2+1
@@ -384,26 +648,69 @@ contains
     num_dof2 =this%num_dof2
     eta2_min = this%mesh_2d%eta2_min
     eta2_max = this%mesh_2d%eta2_max
-        
+    
+    !return     
     do i=1,num_dof1
       this%input2(1:num_dof2) = this%f(i,1:num_dof2)
-      
+      !print *,'#input2=',minval(this%input2(1:num_dof2)),maxval(this%input2(1:num_dof2))
+     
       if(this%advection_form==SLL_CONSERVATIVE)then      
         call function_to_primitive_adv( &
           this%input2, &
           this%origin2, &
           num_dof2, &
           mean)      
+
+!        this%input2(1:num_dof1) = this%f(i,1:num_dof2)  
+!        eta1 = 0.5_f64*(this%origin1(i)+this%origin1(i+1))
+!        do j=1,num_dof2
+!          eta2 = 0.5_f64*(this%origin2(j)+this%origin2(j+1))
+!          this%input2(j) = &
+!            this%input2(j)/this%transformation%jacobian(eta1,eta2)-mean
+!          this%input2(j) = &
+!            this%input2(j)*this%transformation%jacobian(eta1,eta2)
+!        enddo        
+!        mean_init = mean
+!       call function_to_primitive_adv( &
+!          this%input2, &
+!          this%origin2, &
+!          num_dof2, &
+!          mean)      
+
+
       endif
       
       
 
       !advection
-      call this%charac1%compute_characteristics( &
+!      if(this%advection_form==SLL_CONSERVATIVE)then      
+!        do j=1,num_dof2
+!          this%A2jac(j) = 0.5_f64*(this%A2(i,j)+this%A2(i,j+1))
+!        enddo
+!        call this%charac2%compute_characteristics( &
+!          this%A2jac(1:num_dof2), &
+!          dt, &
+!          this%origin_middle2(1:num_dof2), &
+!          this%feet_middle2(1:num_dof2))
+!      
+!        this%feet2(1) = 0.5_f64*(this%feet_middle2(1)+this%feet_middle2(n2-1)) &
+!         -0.5_f64*(this%origin2(n2)-this%origin2(1))
+!        
+!        do j=2,n2-1
+!          this%feet2(j) = 0.5_f64*(this%feet_middle2(j)+this%feet_middle2(j-1))
+!        enddo
+!        
+!        this%feet2(n2) = this%feet2(1) &
+!         +(this%origin2(n2)-this%origin2(1))
+!        
+!      else
+        call this%charac2%compute_characteristics( &
         this%A2(i,1:n2), &
         dt, &
         this%origin2(1:n2), &
         this%feet2(1:n2))
+!      endif
+      !print *,'err=',maxval(this%origin2-this%feet2)
       
       do j=1,n2
         this%feet_inside2(j) = this%process_outside_point2( &
@@ -424,12 +731,23 @@ contains
           this%feet2(1:n2), &
           num_dof2, &
           mean)      
+!        eta1 = 0.5_f64*(this%origin1(i)+this%origin1(i+1))
+!        do j=1,num_dof2
+!          eta2 = 0.5_f64*(this%origin2(j)+this%origin2(j+1))
+!          this%output2(j) = &
+!            this%output2(j)/this%transformation%jacobian(eta1,eta2)+mean_init
+!          this%output2(j) = &
+!            this%output2(j)*this%transformation%jacobian(eta1,eta2)
+!        enddo        
+
+
       endif
 
       this%f(i,1:num_dof2) = this%output2(1:num_dof2)
-      
-      print *,'#mean_adv2=',mean
-      
+!      print *,'#output2=',minval(this%output2(1:num_dof2)),maxval(this%output2(1:num_dof2))
+!      
+!      print *,'#mean_adv2=',mean
+!      stop
         
     enddo
   end subroutine
