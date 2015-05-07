@@ -677,6 +677,22 @@ contains
           eta_max_gyro, &
           Nc_gyro)
           
+       case ("PADE04")       
+
+        sim%gyroaverage => new_gyroaverage_2d_polar_pade_solver( &
+          eta_min_gyro, &
+          eta_max_gyro, &
+          Nc_gyro, &
+          (/0,4/))   
+          
+       case ("PADE24")       
+
+        sim%gyroaverage => new_gyroaverage_2d_polar_pade_solver( &
+          eta_min_gyro, &
+          eta_max_gyro, &
+          Nc_gyro, &
+          (/2,4/))   
+          
       case default
         print *,'#bad gyroaverage_case',gyroaverage_case
         print *,'#not implemented'
