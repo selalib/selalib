@@ -46,12 +46,9 @@ end interface sll_delete
 contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-
 subroutine delete_csr_matrix(csr_mat)
-  type(sll_csr_matrix),pointer :: csr_mat
-
-  nullify(csr_mat)
-    
+type(sll_csr_matrix),pointer :: csr_mat
+nullify(csr_mat)
 end subroutine delete_csr_matrix
 
 !> @brief allocates the memory space for a new CSR matrix,
@@ -139,11 +136,11 @@ sll_int32                                :: ierr
 sll_int32,  dimension(:,:), allocatable  :: lpi_col
 sll_int32,  dimension(:),   allocatable  :: lpi_occ
 sll_int32                                :: COEF
-sll_int32                                :: e
-sll_int32                                :: b_1
-sll_int32                                :: A_1
-sll_int32                                :: b_2
-sll_int32                                :: A_2
+sll_int32                                :: elt
+sll_int32                                :: ii
+sll_int32                                :: jj
+sll_int32                                :: row
+sll_int32                                :: col
 sll_int32                                :: i
 sll_int32                                :: flag
 sll_int32                                :: sz
@@ -160,53 +157,43 @@ SLL_ALLOCATE(lpi_occ(num_rows+1),ierr)
 lpi_col(:,:) = 0
 lpi_occ(:) = 0
 
-! WE FIRST COMPUTE, FOR EACH ROW, THE NUMBER OF COLUMNS THAT WILL BE USED
-do e = 1, num_elements
+do elt = 1, num_elements  !Loop over cells
 
-  do b_1 = 1, num_local_dof_row
+  do ii = 1, num_local_dof_row
 
-    A_1 = local_to_global_row(b_1, e)
+    row = local_to_global_row(ii, elt) !Row number in matrix
 
-    if (A_1 == 0) cycle
+    if (row /= 0) then
 
-    do b_2 = 1, num_local_dof_col
+      do jj = 1, num_local_dof_col
 
-      A_2 = local_to_global_col(b_2, e)
-      if (A_2 == 0) cycle
+        col = local_to_global_col(jj, elt) !Column number in matrix
 
-      ll_done = .false.
-      ! WE CHECK IF IT IS THE FIRST OCCURANCE OF THE COUPLE (A_1, A_2)
-      do i = 1, lpi_col(A_1, 0)
-        if (lpi_col(A_1, i) /= A_2) cycle
-        ll_done = .true.
-        exit
+        if (col /= 0) then
+
+          ll_done = .false.
+
+          ! WE CHECK IF IT IS THE FIRST OCCURANCE OF THE COUPLE (row, col)
+          do i = 1, lpi_col(row, 0)
+            if (lpi_col(row, i) == col) then
+              ll_done = .true.
+              exit
+            end if
+          end do
+
+          if (.not.ll_done) then
+
+            lpi_occ(row)                  = lpi_occ(row) + 1
+            lpi_col(row, 0)               = lpi_col(row, 0) + 1
+            lpi_col(row, lpi_col(row, 0)) = col
+
+          end if
+
+        end if
+
       end do
 
-      if (.not.ll_done) then
-
-        lpi_occ(A_1) = lpi_occ(A_1) + 1
-
-        ! A_1 IS THE ROW NUM, A_2 THE COLUMN NUM
-        ! INITIALIZATION OF THE SPARSE MATRIX
-        lpi_col(A_1, 0) = lpi_col(A_1, 0) + 1
-        lpi_col(A_1, lpi_col(A_1, 0)) = A_2
-
-       !! resizing the array
-       !lpi_size(1) = SIZE(lpi_col, 1)
-       !lpi_size(2) = SIZE(lpi_col, 2)
-       !if (lpi_size(2) < lpi_col(A_1, 0)) then
-       !  ALLOCATE(lpi_col(lpi_size(1), lpi_size(2)))
-       !  lpi_col = lpi_col
-       !  DEALLOCATE(lpi_col)
-       !  ALLOCATE(lpi_col(lpi_size(1), 2 * lpi_size(2)))
-       !  lpi_col(1:lpi_size(1),1:lpi_size(2)) = &
-       !    lpi_col(1:lpi_size(1), 1:lpi_size(2))
-       !  DEALLOCATE(lpi_col)
-       !end if
-
-      end if
-
-    end do
+    end if
 
   end do
 
@@ -229,31 +216,29 @@ SLL_ALLOCATE(mat%val(num_nz),ierr)
 mat%row_ptr(1) = 1
 
 do i = 1, mat%num_rows
-  mat%row_ptr(i + 1) = mat%row_ptr(1) + SUM(lpi_occ(1: i))
+  mat%row_ptr(i + 1) = mat%row_ptr(1) + sum(lpi_occ(1: i))
 end do
 
-do e = 1, num_elements
+do elt = 1, num_elements
 
-  do b_1 = 1, num_local_dof_row
+  do ii = 1, num_local_dof_row
 
-    A_1 = local_to_global_row(b_1, e)
+    row = local_to_global_row(ii, elt)
 
-    if (A_1 == 0) cycle
-    if (lpi_col(A_1, 0) == 0) cycle
+    if (row /= 0) then
+      if (lpi_col(row,0) /= 0) then
+        sz = lpi_col(row, 0)
+        call QsortC(lpi_col(row,1:sz))
+        do i = 1, sz
+          mat%col_ind(mat%row_ptr(row)+i-1) = lpi_col(row,i)
+        end do
+        lpi_col(row, 0) = 0
+      end if
+    end if
 
-    sz = lpi_col(A_1, 0)
+  end do
 
-    call QsortC(lpi_col(A_1, 1: sz))
-
-    do i = 1, sz
-       mat%col_ind(mat%row_ptr(A_1)+i-1) = lpi_col(A_1,i)
-    end do
-
-    lpi_col(A_1, 0) = 0
-
-    end do
-
- end do
+end do
 
 mat%val(:) = 0.0_f64
 SLL_DEALLOCATE_ARRAY(lpi_col,ierr)
