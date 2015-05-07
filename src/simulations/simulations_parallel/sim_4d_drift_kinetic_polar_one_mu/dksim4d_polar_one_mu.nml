@@ -66,6 +66,8 @@
   gyroaverage_case = "HERMITE_C1_PRECOMPUTE"
   !gyroaverage_case = "SPLINES"
   !gyroaverage_case = "PADE"
+  !gyroaverage_case = "PADE04"
+  !gyroaverage_case = "PADE24"
   mu = 2.2e-0
   gyroaverage_N_points = 1024
   gyroaverage_interp_degree_x1 = 3
