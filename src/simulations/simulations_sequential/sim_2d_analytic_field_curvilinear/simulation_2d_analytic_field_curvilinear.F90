@@ -109,7 +109,7 @@ module sll_simulation_2d_analytic_field_curvilinear_module
    procedure(sll_scalar_initializer_1d), nopass, pointer :: A_time_func
    sll_real64, dimension(:), pointer :: A_time_func_params
    class(split_advection_2d), pointer :: split
-   
+   logical :: csl_2012
    
    !interpolator for derivatives
    class(sll_interpolator_2d_base), pointer   :: phi_interp2d
@@ -276,6 +276,7 @@ contains
     sll_int32 :: fd_degree2
     character(len=256)      :: str_num_run
     character(len=256)      :: filename_loc
+    logical :: csl_2012
 
 
     !here we do all the initialization
@@ -334,7 +335,8 @@ contains
       hermite_degree1, &
       hermite_degree2, &
       fd_degree1, &
-      fd_degree2
+      fd_degree2, &
+      csl_2012
    
       
      namelist /boundaries/ &
@@ -404,6 +406,7 @@ contains
     hermite_degree2 = 4
     fd_degree1 = 4
     fd_degree2 = 4
+    csl_2012 = .false.
     
     !boundaries conditions
     sim%bc_eta1_left = SLL_PERIODIC
@@ -467,6 +470,8 @@ contains
    
     sim%fd_degree1 = fd_degree1
     sim%fd_degree2 = fd_degree2
+    
+    sim%csl_2012 = csl_2012
    
     select case(advection_form)
       case ("SLL_ADVECTIVE")
@@ -1455,7 +1460,8 @@ contains
         sim%mesh_2d, &
         sim%advection_form, &
         SLL_STRANG_TVT, &
-        transformation=sim%transformation) 
+        transformation=sim%transformation, &
+        csl_2012=sim%csl_2012) 
 
 !      sim%split => new_advection_2d( &
 !        f, &
