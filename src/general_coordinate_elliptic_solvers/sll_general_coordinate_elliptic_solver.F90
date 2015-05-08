@@ -30,8 +30,6 @@ use sll_sparse_matrix_module, only : sll_csr_matrix,                 &
                                      sll_solve_csr_matrix,           &
                                      sll_delete
 
-use connectivity_module, only: initconnectivity
-
 #ifdef _OPENMP
 use omp_lib
 #endif
@@ -41,11 +39,13 @@ implicit none
 private
 
 
-! @details
-! The indexing of the
-! splines in array global_sopline_indices depends on the boundary conditions.
-! local_spline_indices includes the changes resulting from the boundary conditions.
-! local_to_lobal_spline_indices(i,j) = global_spline_indices(local_spline_indices(i,j))
+!> @brief
+!> General coordinate elliptic solver derived type
+!> @details
+!> The indexing of the
+!> splines in array global_indices depends on the boundary conditions.
+!> local_indices includes the changes resulting from the boundary conditions.
+!> local_to_lobal_indices(i,j) = global_indices(local_indices(i,j))
 type, public :: general_coordinate_elliptic_solver
 
   private
@@ -75,11 +75,11 @@ type, public :: general_coordinate_elliptic_solver
   sll_real64 :: epsi
   sll_real64 :: intjac
 
-  sll_int32, dimension(:), pointer, public :: global_spline_indices 
-  sll_int32, dimension(:,:), pointer :: local_spline_indices
-  sll_int32, dimension(:,:), pointer :: local_to_global_spline_indices
-  sll_int32, dimension(:,:), pointer :: local_to_global_spline_indices_source
-  sll_int32, dimension(:,:), pointer :: local_to_global_spline_indices_source_bis
+  sll_int32, dimension(:), pointer, public :: global_indices 
+  sll_int32, dimension(:,:), pointer :: local_indices
+  sll_int32, dimension(:,:), pointer :: local_to_global_indices
+  sll_int32, dimension(:,:), pointer :: local_to_global_indices_source
+  sll_int32, dimension(:,:), pointer :: local_to_global_indices_source_bis
 
   !!! contains the values of all splines in all gauss points
   sll_real64, dimension(:,:,:,:), pointer :: v_splines1
@@ -123,7 +123,6 @@ public sll_delete,                          &
        sll_solve,                           &
        new_general_elliptic_solver,         &
        factorize_mat_es
-
 
 contains 
 
@@ -220,17 +219,17 @@ es%total_num_splines_loc = (spline_degree1+1)*(spline_degree2+1)
 ! num_cells + spline_degree
 num_splines1 = num_cells1 + spline_degree1
 num_splines2 = num_cells2 + spline_degree2
-SLL_ALLOCATE(es%global_spline_indices(num_splines1*num_splines2),ierr)
-es%global_spline_indices(:) = 0
+SLL_ALLOCATE(es%global_indices(num_splines1*num_splines2),ierr)
+es%global_indices(:) = 0
   
 dim1 = (spline_degree1+1)*(spline_degree2+1)
 dim2 = (num_cells1*num_cells2)
-SLL_ALLOCATE(es%local_spline_indices(1:dim1,1:dim2),ierr)
-es%local_spline_indices = 0
-SLL_ALLOCATE(es%local_to_global_spline_indices(1:dim1,1:dim2),ierr)
-es%local_to_global_spline_indices = 0
-SLL_ALLOCATE(es%local_to_global_spline_indices_source(1:dim1,1:dim2),ierr)
-SLL_ALLOCATE(es%local_to_global_spline_indices_source_bis(1:dim1,1:dim2),ierr)
+SLL_ALLOCATE(es%local_indices(1:dim1,1:dim2),ierr)
+es%local_indices = 0
+SLL_ALLOCATE(es%local_to_global_indices(1:dim1,1:dim2),ierr)
+es%local_to_global_indices = 0
+SLL_ALLOCATE(es%local_to_global_indices_source(1:dim1,1:dim2),ierr)
+SLL_ALLOCATE(es%local_to_global_indices_source_bis(1:dim1,1:dim2),ierr)
 
 ! This should be changed to verify that the passed BC's are part of the
 ! recognized list described in sll_boundary_condition_descriptors...
@@ -253,10 +252,7 @@ if(bc1_min==SLL_NEUMANN)then
   es%bc1_min_interp = SLL_DIRICHLET
 endif
 
-!quadrature_type1_tmp = ES_GAUSS_LEGENDRE
-!quadrature_type2_tmp = ES_GAUSS_LEGENDRE
 ! Allocate and fill the gauss points/weights information.
-! First direction
 select case(quadrature_type1)
 case (ES_GAUSS_LEGENDRE)
   SLL_ALLOCATE(es%gauss_pts1(2,spline_degree1+2),ierr)
@@ -275,10 +271,12 @@ case (ES_GAUSS_LEGENDRE)
 case (ES_GAUSS_LOBATTO)
   SLL_ALLOCATE(es%gauss_pts2(2,spline_degree2+2),ierr)
   es%gauss_pts2(:,:) = gauss_lobatto_points_and_weights(spline_degree2+2)
-case DEFAULT
+case default
   SLL_ERROR('initialize_general_elliptic_solver','unknown type of gauss points in the direction 2')
 end select
 
+!PN : Gauss points positions and weights are computed in [-1:1] interval
+!PN : We need to rescale them.
 es%gauss_pts1(1,:) = 0.5_f64*es%delta_eta1*(es%gauss_pts1(1,:)+1.0_f64)
 es%gauss_pts1(2,:) = 0.5_f64*es%delta_eta1*es%gauss_pts1(2,:)
 es%gauss_pts2(1,:) = 0.5_f64*es%delta_eta2*(es%gauss_pts2(1,:)+1.0_f64)
@@ -348,10 +346,9 @@ SLL_ALLOCATE(es%rho_vec(vec_sz),ierr)
 SLL_ALLOCATE(es%masse(vec_sz),ierr)
 SLL_ALLOCATE(es%stiff(vec_sz),ierr)
 
-! -------------------------------------------
-! We must add plus 1 for the dimension of the solution 
-! in the case periodic periodic to include the periodicity in the last point.  
-!  -----------------------------------------
+!AB : We must add plus 1 for the dimension of the 
+!AB : solution in the case periodic periodic to 
+!AB : include the periodicity in the last point.  
 
 solution_size = es%total_num_splines1*es%total_num_splines2
 
@@ -367,40 +364,40 @@ es%masse   = 0.0_f64
 es%stiff   = 0.0_f64
 
 call initialize_knots( spline_degree1,      &
-                       num_cells1,          &
-                       eta1_min,            &
-                       eta1_max,            &
-                       bc1_min_knots,       &
-                       bc1_max,             &
-                       es%knots1 )
+&                      num_cells1,          &
+&                      eta1_min,            &
+&                      eta1_max,            &
+&                      bc1_min_knots,       &
+&                      bc1_max,             &
+&                      es%knots1 )
 
 call initialize_knots( spline_degree2,      &
-                       num_cells2,          &
-                       eta2_min,            &
-                       eta2_max,            &
-                       bc2_min,             &
-                       bc2_max,             &
-                       es%knots2 )
+&                      num_cells2,          &
+&                      eta2_min,            &
+&                      eta2_max,            &
+&                      bc2_min,             &
+&                      bc2_max,             &
+&                      es%knots2 )
 
-call initconnectivity( num_cells1,                       &
-                       num_cells2,                       &
-                       spline_degree1,                   &
-                       spline_degree2,                   &
-                       bc1_min,                          &
-                       bc1_max,                          &
-                       bc2_min,                          &
-                       bc2_max,                          &
-                       es%local_spline_indices,          &
-                       es%global_spline_indices,         &
-                       es%local_to_global_spline_indices )
+call initconnectivity( num_cells1,                &
+&                      num_cells2,                &
+&                      spline_degree1,            &
+&                      spline_degree2,            &
+&                      bc1_min,                   &
+&                      bc1_max,                   &
+&                      bc2_min,                   &
+&                      bc2_max,                   &
+&                      es%local_indices,          &
+&                      es%global_indices,         &
+&                      es%local_to_global_indices )
   
-es%csr_mat => new_csr_matrix( solution_size,                     &
-                              solution_size,                     &
-                              num_cells1*num_cells2,             &
-                              es%local_to_global_spline_indices, &
-                              es%total_num_splines_loc,          &
-                              es%local_to_global_spline_indices, &
-                              es%total_num_splines_loc)
+es%csr_mat => new_csr_matrix( solution_size,              &
+&                             solution_size,              &
+&                             num_cells1*num_cells2,      &
+&                             es%local_to_global_indices, &
+&                             es%total_num_splines_loc,   &
+&                             es%local_to_global_indices, &
+&                             es%total_num_splines_loc)
 
 es%knots1_rho(1:spline_degree1+1) = eta1_min
 es%knots1_rho(num_cells1+2:num_cells1+1+spline_degree1+1) = eta1_max
@@ -432,7 +429,8 @@ else
   end do
 end if
 
-! allocation of the table containning all values of splines and its
+! allocation of the table containning 
+! all values of splines and its
 ! derivatives in each gauss points
 SLL_ALLOCATE(es%v_splines1(3,spline_degree1+1,spline_degree1+2,num_cells1),ierr)
 SLL_ALLOCATE(es%v_splines2(3,spline_degree2+1,spline_degree2+2,num_cells2),ierr)
@@ -546,12 +544,12 @@ sll_int32,  intent(in) :: spline_degree1
 sll_int32,  intent(in) :: spline_degree2
 sll_int32,  intent(in) :: num_cells1
 sll_int32,  intent(in) :: num_cells2
+sll_int32,  intent(in) :: quadrature_type1
+sll_int32,  intent(in) :: quadrature_type2
 sll_int32,  intent(in) :: bc1_min
 sll_int32,  intent(in) :: bc1_max
 sll_int32,  intent(in) :: bc2_min
 sll_int32,  intent(in) :: bc2_max
-sll_int32,  intent(in) :: quadrature_type1
-sll_int32,  intent(in) :: quadrature_type2
 sll_real64, intent(in) :: eta1_min
 sll_real64, intent(in) :: eta1_max
 sll_real64, intent(in) :: eta2_min
@@ -560,6 +558,7 @@ sll_real64, intent(in) :: eta2_max
 sll_int32 :: ierr
 
 SLL_ALLOCATE(es,ierr)
+
 call sll_create( es,               &
                  spline_degree1,   &
                  spline_degree2,   &
@@ -602,11 +601,11 @@ else
 end if
 SLL_DEALLOCATE(es%gauss_pts1,ierr)
 SLL_DEALLOCATE(es%gauss_pts2,ierr)
-SLL_DEALLOCATE(es%global_spline_indices,ierr)
-SLL_DEALLOCATE(es%local_spline_indices,ierr)
-SLL_DEALLOCATE(es%local_to_global_spline_indices,ierr)
-SLL_DEALLOCATE(es%local_to_global_spline_indices_source,ierr)
-SLL_DEALLOCATE(es%local_to_global_spline_indices_source_bis,ierr)
+SLL_DEALLOCATE(es%global_indices,ierr)
+SLL_DEALLOCATE(es%local_indices,ierr)
+SLL_DEALLOCATE(es%local_to_global_indices,ierr)
+SLL_DEALLOCATE(es%local_to_global_indices_source,ierr)
+SLL_DEALLOCATE(es%local_to_global_indices_source_bis,ierr)
 call sll_delete(es%csr_mat)
 call sll_delete(es%csr_mat_with_constraint)
 call sll_delete(es%csr_mat_source)
@@ -991,7 +990,7 @@ do i = 1, nc_1
 
       x = index1 + (index3-1)*nbsp
       b = b+1
-      a = es%local_to_global_spline_indices(b, icell)
+      a = es%local_to_global_indices(b, icell)
          
       es%masse(x) = es%masse(x) + mass(b)
       es%stiff(x) = es%stiff(x) + stif(b)
@@ -999,7 +998,7 @@ do i = 1, nc_1
       index_coef1 = es%tab_index_coeff1(i) - spl_deg_1 + ii
       index_coef2 = es%tab_index_coeff2(j) - spl_deg_2 + jj
 
-      es%local_to_global_spline_indices_source(b,icell)= &
+      es%local_to_global_indices_source(b,icell)= &
               index_coef1 + (index_coef2-1)*(nc_1+1)
 
       bprime = 0
@@ -1032,7 +1031,7 @@ do i = 1, nc_1
                 
           y      = index2 + (index4-1)*nbsp1
           bprime = bprime+1 
-          aprime = es%local_to_global_spline_indices(bprime,icell)
+          aprime = es%local_to_global_indices(bprime,icell)
 
           elt_mat_global = M_c (bprime,b) - &
                            K_11(bprime,b) - &
@@ -1043,7 +1042,7 @@ do i = 1, nc_1
                            S_b1(bprime,b) - &
                            S_b2(bprime,b)
 
-          es%local_to_global_spline_indices_source_bis(bprime,icell)= y
+          es%local_to_global_indices_source_bis(bprime,icell)= y
 
           if ( a>0 .and. aprime>0 ) then
             call sll_add_to_csr_matrix(es%csr_mat, elt_mat_global, a, aprime)   
@@ -1105,9 +1104,9 @@ es%csr_mat_source =>                                            &
   new_csr_matrix( size(es%masse,1),                             &
                   (nc_1+1)*(nc_2+1),                            &
                   nc_1*nc_2,                                    &
-                  es%local_to_global_spline_indices_source_bis, &
+                  es%local_to_global_indices_source_bis, &
                   nspl,                                         &
-                  es%local_to_global_spline_indices_source,     &
+                  es%local_to_global_indices_source,     &
                   nspl )
 
 icell = 0
@@ -1120,14 +1119,14 @@ do i=1,es%num_cells1
   do ideg1 = 0,es%spline_degree1
             
     b = b+1
-    a = es%local_to_global_spline_indices_source_bis(b, icell)
+    a = es%local_to_global_indices_source_bis(b, icell)
         
     bprime = 0
     do jdeg2 = 0,es%spline_degree2
     do jdeg1 = 0,es%spline_degree1
               
       bprime = bprime+1
-      aprime = es%local_to_global_spline_indices_source(bprime,icell)
+      aprime = es%local_to_global_indices_source(bprime,icell)
            
       elt_mat_global = source(b,bprime,icell)
 
@@ -1485,6 +1484,189 @@ call phi%interp_2d%set_coefficients(es%phi_vec(1:es%total_num_splines1*es%total_
 
 end subroutine solve_general_coordinates_elliptic_eq
   
+!PN In this subroutine we compute the matrix row corresponding to the degree of
+!PN freedom in the mesh
+
+subroutine initconnectivity( num_cells1,             &
+                             num_cells2,             &
+                             spline_degree1,         &
+                             spline_degree2,         &
+                             bc1_min,                &
+                             bc1_max,                &
+                             bc2_min,                &
+                             bc2_max,                &
+                             local_indices,          &
+                             global_indices,         &
+                             local_to_global_indices )
+  
+sll_int32, intent(in) :: num_cells1
+sll_int32, intent(in) :: num_cells2
+sll_int32, intent(in) :: spline_degree1
+sll_int32, intent(in) :: spline_degree2
+sll_int32, intent(in) :: bc1_min
+sll_int32, intent(in) :: bc1_max
+sll_int32, intent(in) :: bc2_min
+sll_int32, intent(in) :: bc2_max
+
+sll_int32, dimension(:,:), intent(out) :: local_indices
+sll_int32, dimension(:)  , intent(out) :: global_indices
+sll_int32, dimension(:,:), intent(out) :: local_to_global_indices
+
+sll_int32 :: nb_spl_x
+sll_int32 :: nb_spl_y
+sll_int32 :: ii, jj
+sll_int32 :: bloc
+sll_int32 :: cell
+sll_int32 :: e
+sll_int32 :: b
+sll_int32 :: d
+sll_int32 :: i
+sll_int32 :: j
+sll_int32 :: a
+sll_int32 :: l
+  
+do j=1, num_cells2    
+  do i=1, num_cells1  
+    cell = (j-1)*num_cells1 + i
+    do jj = 0 , spline_degree2
+      do ii = 0, spline_degree1
+
+        bloc = jj * (spline_degree1 + 1) + ii + 1
+
+        b = cell + (j-1)*spline_degree1 + jj*(num_cells1+spline_degree1) + ii 
+
+        local_indices(bloc, cell) = b
+
+      end do
+    end do
+  end do
+end do
+
+nb_spl_x= num_cells1 + spline_degree1
+nb_spl_y= num_cells2 + spline_degree2 
+  
+if( bc1_min == SLL_PERIODIC .and. bc1_max == SLL_PERIODIC .and.&
+    bc2_min == SLL_PERIODIC .and. bc2_max == SLL_PERIODIC ) then
+
+  d = 0
+  do j = 1, nb_spl_y
+    do i = 1, nb_spl_x
+    
+      a = i + nb_spl_x*(j-1)
+      if (i /= nb_spl_x .and. j/= nb_spl_y) then
+        if (global_indices(a) == 0) then
+          d = d+1
+          global_indices(a) = d
+        end if
+        if ( 1 <= i .and. i <= spline_degree1) then
+          global_indices(a+nb_spl_x-spline_degree1) = global_indices(a)
+        end if
+        if ( 1 <= j .and. j <= spline_degree2) then
+          l = (nb_spl_y - spline_degree2) * nb_spl_x
+          global_indices(a+l) = global_indices(a)
+        end if
+      end if
+    
+    end do
+  end do
+  
+  global_indices(nb_spl_y*nb_spl_x) = global_indices(nb_spl_x*(nb_spl_y-1) + spline_degree2)
+      
+else if (bc1_min == SLL_PERIODIC  .and. bc1_max == SLL_PERIODIC .and. &
+         bc2_min == SLL_DIRICHLET .and. bc2_max == SLL_DIRICHLET) then
+     
+  d = 0
+  do j = 1, nb_spl_y
+    do i = 1, nb_spl_x
+      a = i + nb_spl_x*(j-1)
+      if ( j == 1 .OR. j == nb_spl_y) then
+        global_indices(a) = 0
+      else
+        if (i /= nb_spl_x) then
+          if (global_indices(a) == 0) then
+            d = d + 1
+            global_indices(a) = d
+          end if
+          if ( 1 <= i .and. i <= spline_degree1 ) then
+            global_indices(a+nb_spl_x-spline_degree1) = global_indices(a)
+          end if
+        end if
+      end if
+    end do
+  end do
+
+else if(bc1_min == SLL_DIRICHLET .and. bc1_max == SLL_DIRICHLET .and. &
+        bc2_min == SLL_PERIODIC  .and. bc2_max == SLL_PERIODIC) then
+
+  d = 0
+  do j = 1, nb_spl_y
+    do i = 1, nb_spl_x
+      a = i + nb_spl_x*(j-1)
+      if (i == 1 .OR. i == nb_spl_x) then
+        global_indices(a) = 0
+      else
+        if (j /= nb_spl_y) then
+          if (global_indices(a) == 0) then
+            d = d + 1
+            global_indices(a) = d
+          end if
+          if ( 1<=j .and. j<=spline_degree2 ) then
+            l = (nb_spl_y - spline_degree2) * nb_spl_x
+            global_indices(a+l) = global_indices(a)
+          end if
+        end if
+      end if
+    end do
+  end do
+
+elseif(bc1_min == SLL_NEUMANN  .and. bc1_max == SLL_DIRICHLET .and. &
+       bc2_min == SLL_PERIODIC .and. bc2_max == SLL_PERIODIC ) then
+
+  d = 0
+  do j = 1, nb_spl_y
+    do i = 1, nb_spl_x
+      a = i + nb_spl_x*(j-1)
+      if (i == nb_spl_x) then
+        global_indices(a) = 0
+      else
+        if (j /= nb_spl_y) then
+          if (global_indices(a) == 0) then
+            d = d + 1
+            global_indices(a) = d
+          end if
+          if ( 1 <= j .and. j <= spline_degree2 ) then
+            l = (nb_spl_y - spline_degree2) * nb_spl_x
+            global_indices(a+l) = global_indices(a)
+          end if
+        end if
+      end if
+    end do
+  end do
+
+else if(bc1_min == SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET .and. &
+        bc2_min == SLL_DIRICHLET .and. bc2_max==SLL_DIRICHLET) then
+
+  !PN : Since points on boundary are not computed, 
+  !PN : i guess Dirichlet is homogeneous only
+  !PN : Some values of global_indices are not set  
+  d = 0
+  do j = 2, nb_spl_y-1
+    do i = 2, nb_spl_x-1
+      a = i + nb_spl_x*(j-1)
+      d = d + 1
+      global_indices(a) = d
+    end do
+  end do
+
+end if
+  
+do e = 1, num_cells1*num_cells2
+  do b = 1, (spline_degree1+1)*(spline_degree2+1)
+    local_to_global_indices(b,e) = global_indices(local_indices(b,e))
+  end do
+end do
+
+end subroutine initconnectivity
+
 
 end module sll_general_coordinate_elliptic_solver_module
-
