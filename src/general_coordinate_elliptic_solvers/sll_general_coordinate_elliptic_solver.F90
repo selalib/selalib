@@ -17,7 +17,6 @@ use sll_module_arbitrary_degree_spline_interpolator_2d, only:        &
   sll_arbitrary_degree_spline_interpolator_2d
 use sll_module_arbitrary_degree_spline_interpolator_1d, only:        &
   interv, deboor_type, bsplvd
-use sll_knots, only: initialize_knots
 use gauss_legendre_integration
 use gauss_lobatto_integration
 use sll_sparse_matrix_module, only : sll_csr_matrix,                 &
@@ -66,7 +65,6 @@ type, public :: general_coordinate_elliptic_solver
   sll_real64, dimension(:,:), pointer :: gauss_pts1
   sll_real64, dimension(:,:), pointer :: gauss_pts2
   sll_int32  :: bc1_min
-  sll_int32  :: bc1_min_interp
   sll_int32  :: bc1_max
   sll_int32  :: bc2_min
   sll_int32  :: bc2_max
@@ -75,7 +73,8 @@ type, public :: general_coordinate_elliptic_solver
   sll_real64 :: epsi
   sll_real64 :: intjac
 
-  sll_int32, dimension(:), pointer, public :: global_indices 
+  sll_int32, dimension(:),   pointer, public :: global_indices 
+
   sll_int32, dimension(:,:), pointer :: local_indices
   sll_int32, dimension(:,:), pointer :: local_to_global_indices
   sll_int32, dimension(:,:), pointer :: local_to_global_indices_source
@@ -86,19 +85,20 @@ type, public :: general_coordinate_elliptic_solver
   sll_real64, dimension(:,:,:,:), pointer :: v_splines2
 
   sll_real64, dimension(:,:,:,:), pointer :: val_jac
-  sll_int32 , dimension(:)  , pointer :: tab_index_coeff1
-  sll_int32 , dimension(:)  , pointer :: tab_index_coeff2
-  type(sll_csr_matrix), pointer       :: csr_mat
-  type(sll_csr_matrix), pointer       :: csr_mat_with_constraint
-  type(sll_csr_matrix), pointer       :: csr_mat_source
-  sll_real64, dimension(:), pointer   :: rho_vec
-  sll_real64, dimension(:), pointer   :: tmp_rho_vec
-  sll_real64, dimension(:), pointer   :: phi_vec
-  sll_real64, dimension(:), pointer   :: masse
-  sll_real64, dimension(:), pointer   :: stiff
-  sll_real64, dimension(:),   pointer :: rho_coeff_1d
-  logical                             :: perper
-  type(deboor_type)                   :: db
+  sll_int32 , dimension(:),       pointer :: tab_index_coeff1
+  sll_int32 , dimension(:),       pointer :: tab_index_coeff2
+  type(sll_csr_matrix),           pointer :: csr_mat
+  type(sll_csr_matrix),           pointer :: csr_mat_with_constraint
+  type(sll_csr_matrix),           pointer :: csr_mat_source
+  sll_real64, dimension(:),       pointer :: rho_vec
+  sll_real64, dimension(:),       pointer :: tmp_rho_vec
+  sll_real64, dimension(:),       pointer :: phi_vec
+  sll_real64, dimension(:),       pointer :: masse
+  sll_real64, dimension(:),       pointer :: stiff
+  sll_real64, dimension(:),       pointer :: rho_coeff_1d
+  logical                                 :: perper
+  type(deboor_type)                       :: db
+
 end type general_coordinate_elliptic_solver
 
 !> For the integration mode.  
@@ -199,8 +199,6 @@ sll_int32 :: solution_size
 sll_int32 :: dim1, dim2
 sll_int32 :: num_pts_g1, num_pts_g2
 
-sll_int32 :: bc1_min_knots
-
 sll_real64, allocatable :: work1(:,:)
 sll_real64, allocatable :: work2(:,:)
 sll_real64, allocatable :: dbs1(:,:)
@@ -211,25 +209,31 @@ sll_int32  :: i, j, ii, jj, ispl1, ispl2
 sll_real64 :: eta1, eta2, gspl1, gspl2
 sll_int32  :: left
 
-
-bc1_min_knots = bc1_min
-  
 es%total_num_splines_loc = (spline_degree1+1)*(spline_degree2+1)
 ! The total number of splines in a single direction is given by
 ! num_cells + spline_degree
 num_splines1 = num_cells1 + spline_degree1
 num_splines2 = num_cells2 + spline_degree2
 SLL_ALLOCATE(es%global_indices(num_splines1*num_splines2),ierr)
-es%global_indices(:) = 0
   
 dim1 = (spline_degree1+1)*(spline_degree2+1)
 dim2 = (num_cells1*num_cells2)
 SLL_ALLOCATE(es%local_indices(1:dim1,1:dim2),ierr)
-es%local_indices = 0
 SLL_ALLOCATE(es%local_to_global_indices(1:dim1,1:dim2),ierr)
-es%local_to_global_indices = 0
 SLL_ALLOCATE(es%local_to_global_indices_source(1:dim1,1:dim2),ierr)
 SLL_ALLOCATE(es%local_to_global_indices_source_bis(1:dim1,1:dim2),ierr)
+
+call initconnectivity( num_cells1,                &
+&                      num_cells2,                &
+&                      spline_degree1,            &
+&                      spline_degree2,            &
+&                      bc1_min,                   &
+&                      bc1_max,                   &
+&                      bc2_min,                   &
+&                      bc2_max,                   &
+&                      es%local_indices,          &
+&                      es%global_indices,         &
+&                      es%local_to_global_indices )
 
 ! This should be changed to verify that the passed BC's are part of the
 ! recognized list described in sll_boundary_condition_descriptors...
@@ -246,11 +250,6 @@ es%delta_eta1     = (eta1_max-eta1_min)/num_cells1
 es%delta_eta2     = (eta2_max-eta2_min)/num_cells2
 es%eta1_min       = eta1_min
 es%eta2_min       = eta2_min
-
-es%bc1_min_interp = bc1_min
-if(bc1_min==SLL_NEUMANN)then
-  es%bc1_min_interp = SLL_DIRICHLET
-endif
 
 ! Allocate and fill the gauss points/weights information.
 select case(quadrature_type1)
@@ -315,16 +314,6 @@ else if( bc1_min == SLL_DIRICHLET .and. bc1_max == SLL_DIRICHLET .and.&
   knots2_size = 2*spline_degree2+2
   vec_sz      = (num_cells1 + spline_degree1)*num_cells2
 
-else if( bc1_min == SLL_NEUMANN  .and. bc1_max == SLL_DIRICHLET .and.&
-         bc2_min == SLL_PERIODIC .and. bc2_max == SLL_PERIODIC ) then
-
-  es%total_num_splines1 = num_cells1 + spline_degree1 - 1
-  es%total_num_splines2 = num_cells2 
-  knots1_size = 2*spline_degree1+num_cells1+1
-  knots2_size = 2*spline_degree2+2
-  vec_sz      = (num_cells1 + spline_degree1)*num_cells2
-  bc1_min_knots = SLL_DIRICHLET
-
 else if( bc1_min == SLL_DIRICHLET .and. bc1_max == SLL_DIRICHLET .and.&
          bc2_min == SLL_DIRICHLET .and. bc2_max == SLL_DIRICHLET ) then
 
@@ -363,33 +352,22 @@ es%rho_vec = 0.0_f64
 es%masse   = 0.0_f64
 es%stiff   = 0.0_f64
 
-call initialize_knots( spline_degree1,      &
-&                      num_cells1,          &
-&                      eta1_min,            &
-&                      eta1_max,            &
-&                      bc1_min_knots,       &
-&                      bc1_max,             &
+call initialize_knots( spline_degree1, &
+&                      num_cells1,     &
+&                      eta1_min,       &
+&                      eta1_max,       &
+&                      bc1_min,        &
+&                      bc1_max,        &
 &                      es%knots1 )
 
-call initialize_knots( spline_degree2,      &
-&                      num_cells2,          &
-&                      eta2_min,            &
-&                      eta2_max,            &
-&                      bc2_min,             &
-&                      bc2_max,             &
+call initialize_knots( spline_degree2, &
+&                      num_cells2,     &
+&                      eta2_min,       &
+&                      eta2_max,       &
+&                      bc2_min,        &
+&                      bc2_max,        &
 &                      es%knots2 )
 
-call initconnectivity( num_cells1,                &
-&                      num_cells2,                &
-&                      spline_degree1,            &
-&                      spline_degree2,            &
-&                      bc1_min,                   &
-&                      bc1_max,                   &
-&                      bc2_min,                   &
-&                      bc2_max,                   &
-&                      es%local_indices,          &
-&                      es%global_indices,         &
-&                      es%local_to_global_indices )
   
 es%csr_mat => new_csr_matrix( solution_size,              &
 &                             solution_size,              &
@@ -408,7 +386,7 @@ if ( mod(spline_degree1 +1,2) == 0 ) then
   end do
 else
   do i = spline_degree1 +1 + 1, num_cells1 + 1
-    es%knots1_rho ( i ) = &
+    es%knots1_rho(i) = &
       0.5*( eta1_min + (i - (spline_degree1)/2-1)*es%delta_eta1 + &
       eta1_min + (i-1 - (spline_degree1)/2 -1)*es%delta_eta1)
   end do
@@ -423,7 +401,7 @@ if (mod(spline_degree2+1,2) == 0 ) then
   end do
 else
   do i = spline_degree2+1+1, num_cells2+1
-    es%knots2_rho ( i ) = &
+    es%knots2_rho(i) = &
       0.5*( eta2_min+(i  -(spline_degree2)/2-1)*es%delta_eta2 + &
             eta2_min+(i-1-(spline_degree2)/2-1)*es%delta_eta2 )
   end do
@@ -463,11 +441,11 @@ do i = 1, es%num_cells1
       gspl1 = xg
       ispl1 = spline_degree1+i
     end if
-    call bsplvd( es%db, es%knots1, spline_degree1+1, gspl1, ispl1, work1, dbs1, 2 )
+    call bsplvd(es%db,es%knots1,spline_degree1+1,gspl1,ispl1,work1,dbs1,2)
     es%v_splines1(1,:,ii,i) = dbs1(:,1)
     es%v_splines1(2,:,ii,i) = dbs1(:,2)
-    call interv( es%db, es%knots1_rho, es%num_cells1+spline_degree1+2, xg, left, ierr )
-    call bsplvd( es%db, es%knots1_rho, spline_degree1+1, xg,left, work1, dbs1, 1 )
+    call interv(es%db,es%knots1_rho,es%num_cells1+spline_degree1+2,xg,left,ierr)
+    call bsplvd(es%db,es%knots1_rho,spline_degree1+1,xg,left,work1,dbs1,1)
     es%v_splines1(3,:,ii,i) = dbs1(:,1)
   end do
   es%tab_index_coeff1(i) = left
@@ -488,11 +466,16 @@ do j = 1, es%num_cells2
     es%v_splines2(1,:,jj,j) = dbs2(:,1)
     es%v_splines2(2,:,jj,j) = dbs2(:,2)
     call interv(es%db,es%knots2_rho,es%num_cells2+spline_degree2+2,yg,left,ierr)
-    call bsplvd( es%db,es%knots2_rho,spline_degree2+1,yg,left,work2,dbs2,1)
+    call bsplvd(es%db,es%knots2_rho,spline_degree2+1,yg,left,work2,dbs2,1)
     es%v_splines2(3,:,jj,j) = dbs2(:,1)
   end do
   es%tab_index_coeff2(j) = left
 end do
+
+deallocate(work1)
+deallocate(work2)
+deallocate(dbs1)
+deallocate(dbs2)
 
 end subroutine initialize_general_elliptic_solver
   
@@ -560,20 +543,20 @@ sll_int32 :: ierr
 SLL_ALLOCATE(es,ierr)
 
 call sll_create( es,               &
-                 spline_degree1,   &
-                 spline_degree2,   &
-                 num_cells1,       &
-                 num_cells2,       &
-                 quadrature_type1, &
-                 quadrature_type2, &
-                 bc1_min,          &
-                 bc1_max,          &
-                 bc2_min,          &
-                 bc2_max,          &
-                 eta1_min,         &
-                 eta1_max,         &
-                 eta2_min,         &
-                 eta2_max )
+&                spline_degree1,   &
+&                spline_degree2,   &
+&                num_cells1,       &
+&                num_cells2,       &
+&                quadrature_type1, &
+&                quadrature_type2, &
+&                bc1_min,          &
+&                bc1_max,          &
+&                bc2_min,          &
+&                bc2_max,          &
+&                eta1_min,         &
+&                eta1_max,         &
+&                eta2_min,         &
+&                eta2_max )
    
 end function new_general_elliptic_solver
 
@@ -684,7 +667,6 @@ sll_real64, dimension(:,:,:), pointer     :: source
 sll_int32 :: ierr
 sll_int32 :: i
 sll_int32 :: j
-sll_int32 :: k
 sll_int32 :: icell
 sll_int32 :: bc1_min
 sll_int32 :: bc1_max
@@ -868,7 +850,7 @@ do i = 1, nc_1
         
       intjac = intjac + wxy_val_jac
 
-      ! The B matrix is  by (J^(-1)) A^T (J^(-1))^T 
+      ! The B matrix is  by (J^(-1)) A^t (J^(-1))^t 
       B11 = jac_mat(2,2)*jac_mat(2,2)*val_a11 - &
             jac_mat(2,2)*jac_mat(1,2)*(val_a12+val_a21) + &
             jac_mat(1,2)*jac_mat(1,2)*val_a22
@@ -1015,7 +997,7 @@ do i = 1, nc_1
                 
           index2 = i + kk
 
-          if((bc1_min==SLL_PERIODIC).and.(bc1_max==SLL_PERIODIC))then
+          if(bc1_min==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC)then
 
             if ( index2 > es%total_num_splines1) then
               index2 = index2 - es%total_num_splines1
@@ -1213,7 +1195,7 @@ nc_2            = es%num_cells2
 es%rho_vec      = 0.0_f64
 es%rho_coeff_1d = 0.0_f64
  
-bc1_min = es%bc1_min_interp
+bc1_min = es%bc1_min
 bc1_max = es%bc1_max
 bc2_min = es%bc2_min
 bc2_max = es%bc2_max
@@ -1246,17 +1228,16 @@ class is (sll_scalar_field_2d_analytic)
 
   SLL_CLEAR_ALLOCATE(M_rho_loc(1:es%total_num_splines_loc),ierr)
 
-!$OMP PARALLEL &
-!$OMP FIRSTPRIVATE(nc_1, nc_2, num_pts_g1, num_pts_g2, &
-!$OMP              bc1_min,bc1_max,bc2_min,bc2_max,    &
-!$OMP              tid, nthreads)                      &
-!$OMP PRIVATE(i,j,ii,jj,kk,ll,mm,nn,n,m_rho_loc,x,b,   &
-!$OMP         index1,index3,nbsp,eta1,eta2,gpt1,gpt2,  &
-!$OMP         wgpt1,wgpt2,spline1,spline2,val_f,val_j, &
-!$OMP         valfj)
-!$ tid = omp_get_thread_num()
-!$ nthreads = omp_get_num_threads()
-
+  !$OMP PARALLEL &
+  !$OMP FIRSTPRIVATE(nc_1, nc_2, num_pts_g1, num_pts_g2, &
+  !$OMP              bc1_min,bc1_max,bc2_min,bc2_max,    &
+  !$OMP              tid, nthreads)                      &
+  !$OMP PRIVATE(i,j,ii,jj,kk,ll,mm,nn,n,m_rho_loc,x,b,   &
+  !$OMP         index1,index3,nbsp,eta1,eta2,gpt1,gpt2,  &
+  !$OMP         wgpt1,wgpt2,spline1,spline2,val_f,val_j, &
+  !$OMP         valfj)
+  !$ tid = omp_get_thread_num()
+  !$ nthreads = omp_get_num_threads()
   !$OMP MASTER
   !$ print *, 'Number of threads = ', nthreads
   !$OMP END MASTER
@@ -1317,7 +1298,7 @@ class is (sll_scalar_field_2d_analytic)
     end do
   end do
 
-!$OMP END PARALLEL
+  !$OMP END PARALLEL
 
   if (es%perper) es%rho_vec = es%rho_vec - int_rho/int_jac
      
@@ -1368,17 +1349,6 @@ else if(bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET .and.&
       k = k+1
       es%tmp_rho_vec(k) = es%rho_vec(i+1+(es%total_num_splines1+2)*(j-1))
   end do
-  end do
-
-else if( bc1_min==SLL_NEUMANN  .and. bc1_max==SLL_DIRICHLET .and.&
-         bc2_min==SLL_PERIODIC .and. bc2_max==SLL_PERIODIC ) then
-   
-  k = 0
-  do j = 1, es%total_num_splines2
-    do i = 1, es%total_num_splines1
-      k = k+1
-      es%tmp_rho_vec(k) = es%rho_vec(i+1+(es%total_num_splines1+1)*(j-1))
-    end do
   end do
 
 end if
@@ -1486,6 +1456,8 @@ end subroutine solve_general_coordinates_elliptic_eq
   
 !PN In this subroutine we compute the matrix row corresponding to the degree of
 !PN freedom in the mesh
+!PN local_indices and global_indices should be allocated and initializad
+!PN in this subroutine
 
 subroutine initconnectivity( num_cells1,             &
                              num_cells2,             &
@@ -1524,6 +1496,10 @@ sll_int32 :: i
 sll_int32 :: j
 sll_int32 :: a
 sll_int32 :: l
+
+global_indices          = 0
+local_indices           = 0
+local_to_global_indices = 0
   
 do j=1, num_cells2    
   do i=1, num_cells1  
@@ -1619,30 +1595,6 @@ else if(bc1_min == SLL_DIRICHLET .and. bc1_max == SLL_DIRICHLET .and. &
     end do
   end do
 
-elseif(bc1_min == SLL_NEUMANN  .and. bc1_max == SLL_DIRICHLET .and. &
-       bc2_min == SLL_PERIODIC .and. bc2_max == SLL_PERIODIC ) then
-
-  d = 0
-  do j = 1, nb_spl_y
-    do i = 1, nb_spl_x
-      a = i + nb_spl_x*(j-1)
-      if (i == nb_spl_x) then
-        global_indices(a) = 0
-      else
-        if (j /= nb_spl_y) then
-          if (global_indices(a) == 0) then
-            d = d + 1
-            global_indices(a) = d
-          end if
-          if ( 1 <= j .and. j <= spline_degree2 ) then
-            l = (nb_spl_y - spline_degree2) * nb_spl_x
-            global_indices(a+l) = global_indices(a)
-          end if
-        end if
-      end if
-    end do
-  end do
-
 else if(bc1_min == SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET .and. &
         bc2_min == SLL_DIRICHLET .and. bc2_max==SLL_DIRICHLET) then
 
@@ -1668,5 +1620,53 @@ end do
 
 end subroutine initconnectivity
 
+!> @brief
+!> Assembling knots array
+!> @details
+!> it is intentional that eta_min is not used, one intends to consider
+!> only the [0,1] interval...
+subroutine initialize_knots( spline_degree, &
+&                            num_cells,     &
+&                            eta_min,       & 
+&                            eta_max,       &
+&                            bc_left,       &
+&                            bc_right,      &
+&                            knots)
+    
+sll_int32,  intent(in)  :: spline_degree 
+sll_int32,  intent(in)  :: num_cells
+sll_real64, intent(in)  :: eta_min
+sll_real64, intent(in)  :: eta_max
+sll_int32,  intent(in)  :: bc_left
+sll_int32,  intent(in)  :: bc_right
+sll_real64, intent(out) :: knots(:)
+sll_int32               :: i
+sll_real64              :: eta
+sll_real64              :: delta
+
+delta = (eta_max - eta_min)/num_cells
+
+if ( bc_left  == SLL_PERIODIC .and. bc_right == SLL_PERIODIC ) then 
+
+  do i = -spline_degree, spline_degree+1
+    knots(i+spline_degree+1) = delta*i 
+  end do
+
+else if ( bc_left  == SLL_DIRICHLET .and. bc_right == SLL_DIRICHLET ) then 
+
+  do i = 1, spline_degree + 1
+    knots(i) = eta_min
+  enddo
+  eta = eta_min
+  do i = spline_degree+2, num_cells+1+spline_degree
+    eta = eta + delta
+    knots(i) = eta
+  enddo
+  do i = num_cells+spline_degree+1, num_cells+1+2*spline_degree
+    knots(i) = eta_max
+  enddo
+end if
+
+end subroutine initialize_knots
 
 end module sll_general_coordinate_elliptic_solver_module
