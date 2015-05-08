@@ -37,7 +37,6 @@ implicit none
 
 private
 
-
 !> @brief
 !> General coordinate elliptic solver derived type
 !> @details
@@ -569,19 +568,8 @@ subroutine delete_elliptic( es )
 type(general_coordinate_elliptic_solver) :: es
 sll_int32 :: ierr
 
-! it is not good to check some cases and not others, fix...
-
-if(associated(es%knots1)) then
-  SLL_DEALLOCATE(es%knots1,ierr)
-else
-  print *, 'delete es, WARNING: knots1 array was not allocated.'
-end if
-if(associated(es%knots2)) then
-  SLL_DEALLOCATE(es%knots2,ierr)
-else
-  print *, 'delete es general coords, ', &
-           'WARNING: knots2 array was not allocated.'
-end if
+SLL_DEALLOCATE(es%knots1,ierr)
+SLL_DEALLOCATE(es%knots2,ierr)
 SLL_DEALLOCATE(es%gauss_pts1,ierr)
 SLL_DEALLOCATE(es%gauss_pts2,ierr)
 SLL_DEALLOCATE(es%global_indices,ierr)
@@ -679,8 +667,8 @@ sll_real64 :: eta1_min
 sll_real64 :: eta2_min
 sll_real64 :: eta1
 sll_real64 :: eta2
-sll_int32  :: num_pts_g1 ! number of gauss points in first direction 
-sll_int32  :: num_pts_g2 ! number of gauss points in second direction
+sll_int32  :: num_pts_g1
+sll_int32  :: num_pts_g2
 sll_int32  :: ii,kk,mm
 sll_int32  :: jj,ll,nn
 sll_int32  :: ig, jg
@@ -727,7 +715,8 @@ sll_real64 :: intjac
 
 !sll_real64, allocatable :: dense_matrix(:,:)
 
-!$ sll_int32  :: tid=0, nthreads=1
+!$ sll_int32 :: tid=0
+!$ sll_int32 :: nthreads=1
 
 bc1_min    = es%bc1_min
 bc1_max    = es%bc1_max
@@ -884,8 +873,8 @@ do i = 1, nc_1
 
       MC = MC*wxy
           
-      C1 =  jac_mat(2,2)*val_b1-jac_mat(1,2)*val_b2 
-      C2 =  jac_mat(1,1)*val_b2-jac_mat(2,1)*val_b1
+      C1 = jac_mat(2,2)*val_b1-jac_mat(1,2)*val_b2 
+      C2 = jac_mat(1,1)*val_b2-jac_mat(2,1)*val_b1
 
       C1 = C1*wxy
       C2 = C2*wxy
@@ -1150,15 +1139,15 @@ end subroutine factorize_mat_es
 !>  phi is given with a B-spline interpolator  
 !> 
 !> The parameters are
-!> @param es the type general_coordinate_elliptic_solver
-!> @param[in] rho \f$ \rho \f$ the field corresponding to the source term   
+!> @param[in]  es  the type general_coordinate_elliptic_solver
+!> @param[in]  rho \f$ \rho \f$ the field corresponding to the source term   
 !> @param[out] phi \f$ \phi \f$ the field corresponding to the solution of the equation
-!> @return phi the field solution of the equation
+!> @return     phi the field solution of the equation
   
 subroutine solve_general_coordinates_elliptic_eq( es, rho, phi)
 
-class(general_coordinate_elliptic_solver), intent(inout) :: es
-class(sll_scalar_field_2d_discrete),       intent(inout)  :: phi
+class(general_coordinate_elliptic_solver), intent(inout)      :: es
+class(sll_scalar_field_2d_discrete),       intent(inout)      :: phi
 class(sll_scalar_field_2d_base),           intent(in),target  :: rho
 
 class(sll_scalar_field_2d_base), pointer :: base_field_pointer
@@ -1168,7 +1157,8 @@ sll_real64, dimension(:), allocatable :: m_rho_loc
 sll_int32  :: i
 sll_int32  :: j
 sll_int32  :: k
-sll_int32  :: num_pts_g1, num_pts_g2
+sll_int32  :: num_pts_g1
+sll_int32  :: num_pts_g2
 sll_int32  :: x, n, b
 sll_int32  :: ii, jj, kk, ll, mm, nn
 sll_int32  :: bc1_min, bc1_max, bc2_min, bc2_max
@@ -1275,15 +1265,17 @@ class is (sll_scalar_field_2d_analytic)
       do mm = 0,es%spline_degree2
         index3 = j + mm
         if (bc2_min==SLL_PERIODIC .and. bc2_max==SLL_PERIODIC) then    
-           if ( index3 > es%total_num_splines2) then
-              index3 = index3 - es%total_num_splines2
-           end if
+          if ( index3 > es%total_num_splines2) then
+            index3 = index3 - es%total_num_splines2
+          end if
         end if
       
         do nn = 0,es%spline_degree1
           index1 = i + nn
           if (bc1_min==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC) then 
-            if (index1 > es%total_num_splines1) index1=index1-es%total_num_splines1
+            if (index1 > es%total_num_splines1) then
+              index1=index1-es%total_num_splines1
+            end if
             nbsp = es%total_num_splines1
           else if (bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET) then
             nbsp = es%num_cells1 + es%spline_degree1
@@ -1345,10 +1337,10 @@ else if(bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET .and.&
    
   k = 0
   do j = 1, es%total_num_splines2
-  do i = 1, es%total_num_splines1
+    do i = 1, es%total_num_splines1
       k = k+1
       es%tmp_rho_vec(k) = es%rho_vec(i+1+(es%total_num_splines1+2)*(j-1))
-  end do
+    end do
   end do
 
 end if
@@ -1460,16 +1452,16 @@ end subroutine solve_general_coordinates_elliptic_eq
 !PN in this subroutine
 
 subroutine initconnectivity( num_cells1,             &
-                             num_cells2,             &
-                             spline_degree1,         &
-                             spline_degree2,         &
-                             bc1_min,                &
-                             bc1_max,                &
-                             bc2_min,                &
-                             bc2_max,                &
-                             local_indices,          &
-                             global_indices,         &
-                             local_to_global_indices )
+&                            num_cells2,             &
+&                            spline_degree1,         &
+&                            spline_degree2,         &
+&                            bc1_min,                &
+&                            bc1_max,                &
+&                            bc2_min,                &
+&                            bc2_max,                &
+&                            local_indices,          &
+&                            global_indices,         &
+&                            local_to_global_indices )
   
 sll_int32, intent(in) :: num_cells1
 sll_int32, intent(in) :: num_cells2
@@ -1518,8 +1510,8 @@ do j=1, num_cells2
   end do
 end do
 
-nb_spl_x= num_cells1 + spline_degree1
-nb_spl_y= num_cells2 + spline_degree2 
+nb_spl_x = num_cells1 + spline_degree1
+nb_spl_y = num_cells2 + spline_degree2 
   
 if( bc1_min == SLL_PERIODIC .and. bc1_max == SLL_PERIODIC .and.&
     bc2_min == SLL_PERIODIC .and. bc2_max == SLL_PERIODIC ) then
@@ -1623,7 +1615,7 @@ end subroutine initconnectivity
 !> @brief
 !> Assembling knots array
 !> @details
-!> it is intentional that eta_min is not used, one intends to consider
+!> it is intentional that eta_min not used, one intends to consider
 !> only the [0,1] interval...
 subroutine initialize_knots( spline_degree, &
 &                            num_cells,     &
@@ -1646,13 +1638,13 @@ sll_real64              :: delta
 
 delta = (eta_max - eta_min)/num_cells
 
-if ( bc_left  == SLL_PERIODIC .and. bc_right == SLL_PERIODIC ) then 
+if (bc_left==SLL_PERIODIC .and. bc_right==SLL_PERIODIC) then 
 
   do i = -spline_degree, spline_degree+1
     knots(i+spline_degree+1) = delta*i 
   end do
 
-else if ( bc_left  == SLL_DIRICHLET .and. bc_right == SLL_DIRICHLET ) then 
+else if (bc_left==SLL_DIRICHLET .and. bc_right==SLL_DIRICHLET) then 
 
   do i = 1, spline_degree + 1
     knots(i) = eta_min
@@ -1665,6 +1657,7 @@ else if ( bc_left  == SLL_DIRICHLET .and. bc_right == SLL_DIRICHLET ) then
   do i = num_cells+spline_degree+1, num_cells+1+2*spline_degree
     knots(i) = eta_max
   enddo
+
 end if
 
 end subroutine initialize_knots
