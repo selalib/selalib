@@ -742,10 +742,11 @@ sll_real64 :: wxy_by_val_jac
 sll_real64 :: wxy_val_jac 
 sll_real64 :: r1r2, v1v2, d1v2, v1d2
 sll_real64 :: d3v4, v3v4 , v3d4
-sll_int32  :: tid=0, nthreads=1
 sll_real64 :: intjac
 
-sll_real64, allocatable :: dense_matrix(:,:)
+!sll_real64, allocatable :: dense_matrix(:,:)
+
+!$ sll_int32  :: tid=0, nthreads=1
 
 bc1_min    = es%bc1_min
 bc1_max    = es%bc1_max
@@ -1186,7 +1187,6 @@ sll_real64, dimension(:), allocatable :: m_rho_loc
 sll_int32  :: i
 sll_int32  :: j
 sll_int32  :: k
-sll_int32  :: l
 sll_int32  :: num_pts_g1, num_pts_g2
 sll_int32  :: x, n, b
 sll_int32  :: ii, jj, kk, ll, mm, nn
@@ -1199,10 +1199,11 @@ sll_real64 :: spline1, spline2
 
 sll_real64 :: int_rho
 sll_real64 :: int_jac
-sll_int32  :: tid      = 0
-sll_int32  :: nthreads = 1
 sll_int32  :: ierr
 sll_int32  :: nc_1, nc_2
+
+!$ sll_int32  :: tid = 0
+!$ sll_int32  :: nthreads = 1
   
 num_pts_g1 = size(es%gauss_pts1,2)
 num_pts_g2 = size(es%gauss_pts2,2)
@@ -1258,7 +1259,7 @@ class is (sll_scalar_field_2d_analytic)
 !$ nthreads = omp_get_num_threads()
 
   !$OMP MASTER
-  print *, 'Number of threads = ', nthreads
+  !$ print *, 'Number of threads = ', nthreads
   !$OMP END MASTER
   
   !$OMP DO SCHEDULE(STATIC,nc_2/nthreads) REDUCTION(+:int_rho,int_jac)
