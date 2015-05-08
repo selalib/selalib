@@ -1,3 +1,31 @@
+!> This module is an implementation of a general elliptic solver using 
+!> Finite Element Methods with B-Splines used as the basis shape functions.
+!>
+!> Just a reminder about bsplines
+!>
+!>  \f$ m+1 \f$ knots \f$ t_i \f$  in \f$ [0,1] \f$ with
+!> \f[ 0 \le t_0 \le t_1 \le \ldots \le t_m \le 1 \f]
+!> the n degree spline curve is
+!> \f[
+!> \mathbf{S}(t) = \sum_{i = 0}^{m-n-1} b_{i,n} (t) . \mathbf{P}_{i} \,,\, t \in [0, 1],
+!> \f]
+!> 
+!> où les \f$ P_i \f$ is a polynomial function \f$ (m-n) \f$ points.
+!> 
+!> \f$ m-n \f$ B-splines n degree functions are defined recursively :
+!> 
+!> \f[
+!> b_{j, 0}(t) := \left\{
+!> \begin{array}{ll}
+!> \mathrm{if} \quad t_j \leqslant t < t_{j+1} & 1 \\\
+!> \mathrm{else} \quad  & 0
+!> \end{array} \right.
+!> \f]
+!>
+!> \f[
+!> b_{j,n}(t) := \frac{t-t_j}{t_{j+n}-t_j} b_{j,n-1}(t)+\frac{t_{j+n+1}-t}{t_{j+n+1}-t_{j+1}}b_{j+1,n-1}(t).
+!> \f]
+!>
 !> @ingroup general_coordinate_elliptic_solvers
 !> @brief Elliptic solver on 2d curvilinear mesh
 !> @details This solver works with analytical 
