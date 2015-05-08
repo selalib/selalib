@@ -113,6 +113,7 @@ public sll_delete
 public new_arbitrary_degree_spline_interp2d
 public set_slope2d
 public initialize_ad2d_interpolator
+public set_coeff_splines_values_1d
 
 contains
 
@@ -553,7 +554,8 @@ delta1     = (eta1_max-eta1_min)/num_cells1
 delta2     = (eta2_max-eta2_min)/num_cells2
 
 
-if (present(coeffs_1d)) then 
+if (present(coeffs_1d)) then  !This case is used to set the solution from
+                              !the general coordinate elliptic solver
 
   select case (interpolator%bc_selector)
   case(0) ! periodic-periodic
@@ -677,7 +679,7 @@ if (present(coeffs_1d)) then
     nb_spline_eta1 = num_cells1 + sp_deg1 - 2
     nb_spline_eta2 = num_cells2 + sp_deg2 - 2
     
-    SLL_ASSERT(size(coeffs_1d,1)==(num_cells1 + sp_deg1-2)*(num_cells2+sp_deg2-2))
+    SLL_ASSERT(size(coeffs_1d,1)==(num_cells1+sp_deg1-2)*(num_cells2+sp_deg2-2))
     do i = 1, sp_deg1 + 1
       interpolator%t1(i) = eta1_min
     enddo
@@ -1106,7 +1108,7 @@ end if
 
 interpolator%coefficients_set = .true.
  
-end subroutine !set_coefficients_ad2d
+end subroutine set_coefficients_ad2d
 
 !> @brief computing the coefficients spline with a given 
 !>  data_array 2D cooresponding at the values of a function 
@@ -1144,8 +1146,8 @@ sll_int32,                  intent(in), optional :: size_eta2_coords
 sll_real64, dimension(:),   pointer :: taux
 sll_real64, dimension(:),   pointer :: tauy
 
-sll_int32, pointer :: taux_deriv(:)
-sll_int32, pointer :: tauy_deriv(:)
+sll_int32 :: taux_deriv(2)
+sll_int32 :: tauy_deriv(2)
 
 sll_int32  :: mx,my
 sll_real64 :: eta1_min, eta1_max, delta_eta1
@@ -1209,9 +1211,6 @@ ky  = interpolator%spline_degree2 + 1
 period1 = interpolator%eta1_max - interpolator%eta1_min
 period2 = interpolator%eta2_max - interpolator%eta2_min
 
-! compute the knots t1 and t2
-SLL_ALLOCATE(taux_deriv(2),ierr)
-SLL_ALLOCATE(tauy_deriv(2),ierr)
   
 select case (interpolator%bc_selector)
 
@@ -2016,6 +2015,10 @@ ty = interpolator%t2(lefty-ky+1:lefty+ky)
 
 val = bvalue(interpolator%deboor(2), ty, coef, ky, ky, y, 0)
 
+deallocate(tab)
+deallocate(coef)
+deallocate(ty)
+
 end function interpolate_value_ad2d
 
 
@@ -2107,6 +2110,10 @@ ty = t2(lefty-ky+1:lefty+ky)
 
 val = bvalue(interpolator%deboor(2), ty, coef, ky, ky, y, deriv2 )
 
+deallocate(ty)
+deallocate(tab)
+deallocate(coef)
+
 end function interpolate_derivative1_ad2d
      
 !> @brief First derivative in eta2 Interpolation on the points eta1 and eta2 
@@ -2190,6 +2197,10 @@ end do
 
 ty =  t2(lefty-ky+1:lefty+ky)
 val = bvalue(interpolator%deboor(2), ty, coef, ky, ky, y, deriv2 )
+
+deallocate(ty)
+deallocate(tab)
+deallocate(coef)
 
 end function interpolate_derivative2_ad2d
 
@@ -3174,8 +3185,8 @@ sll_int32,                           intent(in)  :: nx
 sll_int32,                           intent(in)  :: kx
 sll_int32,                           intent(in)  :: ny
 sll_int32,                           intent(in)  :: ky
-sll_real64, dimension(:),   pointer, intent(in)  :: taux
-sll_real64, dimension(:),   pointer, intent(in)  :: tauy
+sll_real64, dimension(:),            intent(in)  :: taux
+sll_real64, dimension(:),            intent(in)  :: tauy
 sll_real64, dimension(:,:), pointer, intent(in)  :: g   
 
 sll_real64, dimension(:,:), pointer, intent(out) :: bcoef
@@ -3319,7 +3330,7 @@ end subroutine spli2d_custom
 subroutine spli2d ( db, tau, gtau, t, n, k, m, work, q, bcoef, iflag )
     
 type(deboor_type)                                :: db
-sll_real64, dimension(:),   pointer, intent(in)  :: tau
+sll_real64, dimension(:),            intent(in)  :: tau
 sll_real64, dimension(:,:), pointer, intent(in)  :: gtau
 sll_real64, dimension(:),   pointer, intent(in)  :: t
 sll_int32                          , intent(in)  :: n
@@ -3480,8 +3491,8 @@ sll_int32,                           intent(in) :: mx
 sll_int32,                           intent(in) :: my
 sll_real64, dimension(:),   pointer, intent(in) :: taux 
 sll_real64, dimension(:),   pointer, intent(in) :: tauy 
-sll_int32,  dimension(:),   pointer, intent(in) :: taux_der 
-sll_int32,  dimension(:),   pointer, intent(in) :: tauy_der
+sll_int32,  dimension(:),            intent(in) :: taux_der 
+sll_int32,  dimension(:),            intent(in) :: tauy_der
 sll_real64, dimension(:,:), pointer, intent(in) :: gtau    
 sll_real64, dimension(:,:), pointer, intent(in) :: gtau_der1 
 sll_real64, dimension(:,:), pointer, intent(in) :: gtau_der2

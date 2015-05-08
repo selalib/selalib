@@ -486,11 +486,11 @@ do j = 1, es%num_cells2
       gspl2 = yg
       ispl2 = spline_degree2+j
     end if
-    call bsplvd( es%db, es%knots2, spline_degree2+1, gspl2, ispl2, work2, dbs2, 2)
+    call bsplvd(es%db,es%knots2,spline_degree2+1,gspl2,ispl2,work2,dbs2,2)
     es%v_splines2(1,:,jj,j) = dbs2(:,1)
     es%v_splines2(2,:,jj,j) = dbs2(:,2)
-    call interv( es%db, es%knots2_rho, es%num_cells2+spline_degree2+2, yg, left, ierr )
-    call bsplvd( es%db, es%knots2_rho, spline_degree2+1, yg, left, work2, dbs2, 1)
+    call interv(es%db,es%knots2_rho,es%num_cells2+spline_degree2+2,yg,left,ierr)
+    call bsplvd( es%db,es%knots2_rho,spline_degree2+1,yg,left,work2,dbs2,1)
     es%v_splines2(3,:,jj,j) = dbs2(:,1)
   end do
   es%tab_index_coeff2(j) = left
@@ -685,13 +685,12 @@ sll_real64, dimension(:,:,:), pointer     :: source
 sll_int32 :: ierr
 sll_int32 :: i
 sll_int32 :: j
+sll_int32 :: k
 sll_int32 :: icell
 sll_int32 :: bc1_min
 sll_int32 :: bc1_max
 sll_int32 :: bc2_min
 sll_int32 :: bc2_max
-
-character(len=*),parameter :: as_file1='mat'
 
 sll_real64 :: delta1
 sll_real64 :: delta2
@@ -743,8 +742,11 @@ sll_real64 :: wxy_by_val_jac
 sll_real64 :: wxy_val_jac 
 sll_real64 :: r1r2, v1v2, d1v2, v1d2
 sll_real64 :: d3v4, v3v4 , v3d4
-sll_int32  :: tid=0, nthreads=1
 sll_real64 :: intjac
+
+!sll_real64, allocatable :: dense_matrix(:,:)
+
+!$ sll_int32  :: tid=0, nthreads=1
 
 bc1_min    = es%bc1_min
 bc1_max    = es%bc1_max
@@ -983,7 +985,7 @@ do i = 1, nc_1
           index1 = index1 - es%total_num_splines1
         end if
         nbsp = es%total_num_splines1
-      else if (bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET) then
+      else !if (bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET) then
         nbsp = nc_1 + spl_deg_1
       end if
 
@@ -1022,7 +1024,7 @@ do i = 1, nc_1
 
             nbsp1 = es%total_num_splines1
                    
-          else if (bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET) then
+          else !if (bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET) then
 
             nbsp1 = nc_1 + spl_deg_1
 
@@ -1056,6 +1058,22 @@ end do
 
 !$OMP END PARALLEL
 
+!#ifdef DEBUG
+!allocate(dense_matrix(es%csr_mat%num_rows,es%csr_mat%num_cols))
+!
+!do i =1, es%csr_mat%num_rows
+! do k = es%csr_mat%row_ptr(i), es%csr_mat%row_ptr(i+1)-1
+!    j = es%csr_mat%col_ind(k)
+!    dense_matrix(i,j) = es%csr_mat%val(k)
+! end do
+!end do
+!
+!write(*,"(3x,36i7)") (k, k = 1, size(es%tmp_rho_vec))
+!do i = 1, es%csr_mat%num_rows
+!  write(*, "(i3,36f7.3)')") i, dense_matrix(i,:) 
+!end do
+!#endif /* DEBUG */
+
 es%intjac = intjac
 print *,'#begin of sll_factorize_csr_matrix'
 
@@ -1074,8 +1092,11 @@ if (es%perper) then
                               es%csr_mat_with_constraint%val)  
 
   call sll_factorize_csr_matrix(es%csr_mat_with_constraint)
+
 else   
+
   call sll_factorize_csr_matrix(es%csr_mat)
+
 end if 
 
 print *,'#end of sll_factorize_csr_matrix'
@@ -1094,8 +1115,7 @@ do j=1,es%num_cells2
 do i=1,es%num_cells1
       
   icell = icell+1
-      
-  b = 0
+  b     = 0
   do ideg2 = 0,es%spline_degree2
   do ideg1 = 0,es%spline_degree1
             
@@ -1166,6 +1186,7 @@ sll_real64, dimension(:), allocatable :: m_rho_loc
 
 sll_int32  :: i
 sll_int32  :: j
+sll_int32  :: k
 sll_int32  :: num_pts_g1, num_pts_g2
 sll_int32  :: x, n, b
 sll_int32  :: ii, jj, kk, ll, mm, nn
@@ -1178,10 +1199,11 @@ sll_real64 :: spline1, spline2
 
 sll_real64 :: int_rho
 sll_real64 :: int_jac
-sll_int32  :: tid      = 0
-sll_int32  :: nthreads = 1
 sll_int32  :: ierr
 sll_int32  :: nc_1, nc_2
+
+!$ sll_int32  :: tid = 0
+!$ sll_int32  :: nthreads = 1
   
 num_pts_g1 = size(es%gauss_pts1,2)
 num_pts_g2 = size(es%gauss_pts2,2)
@@ -1196,6 +1218,7 @@ bc1_min = es%bc1_min_interp
 bc1_max = es%bc1_max
 bc2_min = es%bc2_min
 bc2_max = es%bc2_max
+
 
 base_field_pointer => rho
 
@@ -1236,7 +1259,7 @@ class is (sll_scalar_field_2d_analytic)
 !$ nthreads = omp_get_num_threads()
 
   !$OMP MASTER
-  print *, 'Number of threads = ', nthreads
+  !$ print *, 'Number of threads = ', nthreads
   !$OMP END MASTER
   
   !$OMP DO SCHEDULE(STATIC,nc_2/nthreads) REDUCTION(+:int_rho,int_jac)
@@ -1280,9 +1303,7 @@ class is (sll_scalar_field_2d_analytic)
         do nn = 0,es%spline_degree1
           index1 = i + nn
           if (bc1_min==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC) then 
-            if ( index1 > es%total_num_splines1) then
-              index1 = index1 - es%total_num_splines1
-            end if
+            if (index1 > es%total_num_splines1) index1=index1-es%total_num_splines1
             nbsp = es%total_num_splines1
           else if (bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET) then
             nbsp = es%num_cells1 + es%spline_degree1
@@ -1303,38 +1324,13 @@ class is (sll_scalar_field_2d_analytic)
      
 end select
 
-call solve_linear_system(es)
-
-print *,'#solve_linear_system done'
-  
-call phi%interp_2d%set_coefficients(es%phi_vec(1:es%total_num_splines1*es%total_num_splines2))
-
-end subroutine solve_general_coordinates_elliptic_eq
-  
-  
-!> @details
-!> CSR_MAT*phi = rho_vec is the linear system to be solved. The solution
-!> is given in terms of the spline coefficients that represent phi.
-subroutine solve_linear_system( es )
-
-class(general_coordinate_elliptic_solver) :: es
-integer                                   :: elt
-integer                                   :: i,j,k
-character(len=*), parameter               :: as_file  = 'rho'
-character(len=*), parameter               :: as_file1 = 'phi'
-character(len=*), parameter               :: as_file2 = 'mat'
-sll_int32 :: bc1_min
-sll_int32 :: bc1_max
-sll_int32 :: bc2_min
-sll_int32 :: bc2_max
-
 bc1_min = es%bc1_min
 bc1_max = es%bc1_max
 bc2_min = es%bc2_min
 bc2_max = es%bc2_max
  
-es%tmp_rho_vec(:) = 0.0_f64
-es%phi_vec(:) = 0.0_f64
+es%tmp_rho_vec(:) = 0.0_f64  !PN: Is it useful ?
+es%phi_vec(:)     = 0.0_f64  !PN: Is it useful ?
   
 if( bc1_min==SLL_PERIODIC  .and. bc1_max==SLL_PERIODIC .and. &
     bc2_min==SLL_DIRICHLET .and. bc2_max==SLL_DIRICHLET ) then
@@ -1343,20 +1339,18 @@ if( bc1_min==SLL_PERIODIC  .and. bc1_max==SLL_PERIODIC .and. &
   do j = 1, es%total_num_splines2
     do i = 1, es%total_num_splines1
       k = k+1
-      elt = i+(es%total_num_splines1)*j
-      es%tmp_rho_vec(k) = es%rho_vec(elt)
+      es%tmp_rho_vec(k) = es%rho_vec(i+(es%total_num_splines1)*j)
     end do
   end do
      
-else if( bc1_min  ==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET .and.&
-         bc2_min==SLL_DIRICHLET .and. bc2_max  ==SLL_DIRICHLET) then 
+else if( bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET .and.&
+         bc2_min==SLL_DIRICHLET .and. bc2_max==SLL_DIRICHLET) then 
      
   k = 0
   do j = 1, es%total_num_splines2
     do i = 1, es%total_num_splines1
       k = k+1
-      elt = i+1+(es%total_num_splines1+2)*j 
-      es%tmp_rho_vec(k) = es%rho_vec( elt )
+      es%tmp_rho_vec(k) = es%rho_vec(i+1+(es%total_num_splines1+2)*j)
     end do
   end do
      
@@ -1373,20 +1367,18 @@ else if(bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET .and.&
   do j = 1, es%total_num_splines2
   do i = 1, es%total_num_splines1
       k = k+1
-      elt = i+1+(es%total_num_splines1+2)*(j-1)
-      es%tmp_rho_vec(k) = es%rho_vec(elt)
+      es%tmp_rho_vec(k) = es%rho_vec(i+1+(es%total_num_splines1+2)*(j-1))
   end do
   end do
 
-else if( bc1_min == SLL_NEUMANN  .and. bc1_max == SLL_DIRICHLET .and.&
-         bc2_min == SLL_PERIODIC .and. bc2_max == SLL_PERIODIC ) then
+else if( bc1_min==SLL_NEUMANN  .and. bc1_max==SLL_DIRICHLET .and.&
+         bc2_min==SLL_PERIODIC .and. bc2_max==SLL_PERIODIC ) then
    
   k = 0
   do j = 1, es%total_num_splines2
     do i = 1, es%total_num_splines1
       k = k+1
-      elt = i+1+(es%total_num_splines1+1)*(j-1)
-      es%tmp_rho_vec(k) = es%rho_vec( elt )
+      es%tmp_rho_vec(k) = es%rho_vec(i+1+(es%total_num_splines1+1)*(j-1))
     end do
   end do
 
@@ -1400,12 +1392,98 @@ if(bc1_min==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC .and.&
                             es%phi_vec)
 
 else
+
+!  call set_coeff_splines_values_1d( v1_min,        &
+!                                    num_pts2,      &
+!                                    eta2_min,      &
+!                                    eta2_max,      &
+!                                    bc2_min,       &
+!                                    bc2_max,       &
+!                                    spline_degree2 )
+!
+!  call set_coeff_splines_values_1d( v1_max,        &
+!                                    num_pts2,      &
+!                                    eta2_min,      &
+!                                    eta2_max,      &
+!                                    bc2_min,       &
+!                                    bc2_max,       &
+!                                    spline_degree2 )
+!
+!  call set_coeff_splines_values_1d( v2_min,        &
+!                                    num_pts1,      &
+!                                    eta1_min,      &
+!                                    eta1_max,      &
+!                                    bc1_min,       &
+!                                    bc1_max,       &
+!                                    spline_degree1 )
+!
+!  call set_coeff_splines_values_1d( v2_max,        &
+!                                    num_pts1,      &
+!                                    eta1_min,      &
+!                                    eta1_max,      &
+!                                    bc1_min,       &
+!                                    bc1_max,       &
+!                                    spline_degree1 )
+!
+!  if(bc1_min==SLL_DIRICHLET) then
+!    l = 0; i = 1
+!    do k = es%csr_mat%row_ptr(i),es%csr_mat%row_ptr(i+1)-1 
+!      l = l + 1; j = es%csr_mat%col_ind(l)
+!      if (i==j) then
+!        es%csr_mat%val(l) = es%csr_mat%val(l)*10e7
+!        es%tmp_rho_vec(i) = 10e7
+!        exit
+!      end if
+!    end do
+!  end if
+!  if(bc1_max==SLL_DIRICHLET) then
+!    l = 0; i = es%num_cells1+1
+!    do k = es%csr_mat%row_ptr(i),es%csr_mat%row_ptr(i+1)-1 
+!      l = l + 1; j = es%csr_mat%col_ind(l)
+!      if (i==j) then
+!        es%csr_mat%val(l) = es%csr_mat%val(l)*10e7
+!        es%tmp_rho_vec(i) = 10e7
+!        exit
+!      end if
+!    end do
+!  end if
+!  if(bc2_min==SLL_DIRICHLET) then
+!    l = 0
+!    do i = 1, es%csr_mat%num_rows 
+!      do k = es%csr_mat%row_ptr(i),es%csr_mat%row_ptr(i+1)-1 
+!         l = l + 1; j = 1
+!         if (i==j) then
+!           es%csr_mat%val(l) = es%csr_mat%val(l)*10e7
+!           es%tmp_rho_vec(i) = 10e7
+!           exit
+!         end if
+!      end do
+!    end do
+!  end if
+!  if(bc2_max==SLL_DIRICHLET) then
+!    l = 0
+!    do i = 1, es%csr_mat%num_rows 
+!      do k = es%csr_mat%row_ptr(i),es%csr_mat%row_ptr(i+1)-1 
+!        l = l + 1; j = es%num_cells2+1
+!        if (i==j) then
+!          es%csr_mat%val(l) = es%csr_mat%val(l)*10e7
+!          es%tmp_rho_vec(i) = 10e7
+!          exit
+!        end if
+!      end do
+!    end do
+!  end if
+
   call sll_solve_csr_matrix(es%csr_mat,     &
                             es%tmp_rho_vec, &
                             es%phi_vec)
 endif
 
-end subroutine solve_linear_system
+print *,'#solve_linear_system done'
+  
+call phi%interp_2d%set_coefficients(es%phi_vec(1:es%total_num_splines1*es%total_num_splines2))
+
+end subroutine solve_general_coordinates_elliptic_eq
   
 
 end module sll_general_coordinate_elliptic_solver_module
