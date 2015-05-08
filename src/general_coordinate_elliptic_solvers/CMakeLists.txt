@@ -1,6 +1,5 @@
 ADD_LIBRARY( sll_general_coordinate_elliptic_solvers STATIC
              sll_knots.F90
-             connectivity_module.F90
              sll_lobatto_poisson.F90 
              map_function_module.F90
              lobalap.F90
@@ -46,46 +45,3 @@ IF(BUILD_TESTING)
   TARGET_LINK_LIBRARIES( test_gces_dirichlet sll_general_coordinate_elliptic_solvers )
 
 ENDIF(BUILD_TESTING)
-
-#ADD_LIBRARY( finite_elements_solver STATIC connectivity_module.F90
-#                                           finite_elements_solver.F90
-#                                           sll_knots.F90)
-#
-#TARGET_LINK_LIBRARIES( finite_elements_solver
-#                       sll_sparse_matrix 
-#                       sll_fields
-#                       sll_interpolators
-#                       sll_coordinate_transformations
-#                       sll_meshes
-#                       sll_boundary_condition_descriptors
-#                       sll_file_io
-#                       sll_integration
-#                       sll_constants
-#                       sll_utilities
-#                       sll_timer
-#                       sll_assert
-#                       sll_memory
-#                       sll_working_precision
-#                       deboor_splines)
-#  ADD_EXECUTABLE( test_finite_elements_solver unit_test_finite_elements.F90 )
-#  TARGET_LINK_LIBRARIES( test_finite_elements_solver finite_elements_solver )
-# ADD_LIBRARY( finite_elements_solver_hex STATIC connectivity_module.f90
-#                                                finite_elements_solver_hex.F90
-#                                                sll_knots.F90)
-#
-# TARGET_LINK_LIBRARIES( finite_elements_solver_hex
-#                        sll_sparse_matrix 
-#                        sll_fields
-#                        sll_interpolators
-#                        sll_coordinate_transformations
-#                        sll_hex_meshes
-#                        sll_boundary_condition_descriptors
-#                        sll_file_io
-#                        sll_integration
-#                        sll_constants
-#                        sll_utilities
-#                        sll_timer
-#                        sll_assert
-#                        sll_memory
-#                        sll_working_precision
-#                        deboor_splines)

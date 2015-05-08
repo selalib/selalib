@@ -23,8 +23,8 @@ implicit none
 
 #define SPLINE_DEG1       3
 #define SPLINE_DEG2       3
-#define NUM_CELLS1        64
-#define NUM_CELLS2        64
+#define NUM_CELLS1        32
+#define NUM_CELLS2        32
 #define ETA1MIN           0.0_f64
 #define ETA1MAX           1.0_f64
 #define ETA2MIN           0.0_f64
