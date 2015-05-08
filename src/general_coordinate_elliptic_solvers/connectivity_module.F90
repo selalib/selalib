@@ -45,7 +45,7 @@ do j = 1, num_cells2
     maille = num_cells1*(j-1) + i
     do jj = 0 , spline_degree2
       do ii = 0, spline_degree1
-        B = (j -1)*(num_cells1+spline_degree1) + i + &
+        B = (j-1)*(num_cells1+spline_degree1) + i + &
                   jj*(num_cells1+spline_degree1) + ii 
         Bloc = jj * (spline_degree1 + 1) + ii + 1
         local_spline_indices(Bloc, maille) = B
@@ -349,6 +349,7 @@ end do
 end subroutine initLM
 
 end module connectivity_module
+
 !subroutine initconnectivity_bis( num_cells1, &
 !                                 num_cells2, &
 !                                 spline_degree1, &
