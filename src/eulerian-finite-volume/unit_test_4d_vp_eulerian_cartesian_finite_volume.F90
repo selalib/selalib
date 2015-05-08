@@ -5,7 +5,7 @@
 
 program vp_cartesian_4d
 #include "sll_working_precision.h"
-  use sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
+  use sll_simulation_4d_vp_eulerian_cart_finite_volume_module
   use sll_collective
   use sll_constants
   use sll_cartesian_meshes
@@ -15,7 +15,7 @@ program vp_cartesian_4d
   use sll_timer
   implicit none
 
-  type(sll_simulation_4d_vp_eulerian_cartesian_finite_volume)      :: simulation
+  type(sll_simulation_4d_vp_eulerian_cart_finite_volume)      :: simulation
   type(sll_cartesian_mesh_2d), pointer      :: mx,mv
   type(sll_time_mark)  :: t0 
   class(sll_coordinate_transformation_2d_base),pointer      :: tx,tv

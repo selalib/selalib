@@ -1,4 +1,4 @@
-module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
+module sll_simulation_4d_vp_eulerian_cart_finite_volume_module
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -18,7 +18,7 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
   implicit none
 
   type, extends(sll_simulation_base_class) :: &
-       sll_simulation_4d_vp_eulerian_cartesian_finite_volume
+       sll_simulation_4d_vp_eulerian_cart_finite_volume
   ! Parallel environment parameters
   sll_int32  :: buf_size
   sll_int32  :: world_size
@@ -115,7 +115,7 @@ contains
   procedure, pass(sim) :: run => run_vp_cart
   procedure, pass(sim) :: init_from_file => init_vp_cart
 
-end type sll_simulation_4d_vp_eulerian_cartesian_finite_volume
+end type sll_simulation_4d_vp_eulerian_cart_finite_volume
 
 interface sll_delete
   module procedure delete_vp_cart
@@ -125,7 +125,7 @@ contains
 
 subroutine init_vp_cart( sim, filename )
  intrinsic :: trim
- class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim
+ class(sll_simulation_4d_vp_eulerian_cart_finite_volume), intent(inout) :: sim
  character(len=*), intent(in)                                :: filename
  sll_int32             :: IO_stat
  sll_real64            :: dt
@@ -169,7 +169,7 @@ subroutine initialize_vp4d( &
     params, &
     tmax )
 
- type(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout)     :: sim
+ type(sll_simulation_4d_vp_eulerian_cart_finite_volume), intent(inout)     :: sim
  type(sll_cartesian_mesh_2d), pointer                    :: mesh2dx,mesh2dv
  class(sll_coordinate_transformation_2d_base),pointer          :: tx,tv
  procedure(sll_scalar_initializer_4d)                  :: init_func
@@ -201,7 +201,7 @@ end subroutine initialize_vp4d
 ! This just happened since the guts of the unit test were transplanted here
 ! directly, but this should be cleaned up.
 subroutine run_vp_cart(sim)
- class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim
+ class(sll_simulation_4d_vp_eulerian_cart_finite_volume), intent(inout) :: sim
  sll_int32  :: file_id_4
  sll_int32  :: loc_sz_v1
  sll_int32  :: loc_sz_v2
@@ -1491,7 +1491,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
 
   subroutine velocity_mesh_connectivity(sim)
 
-    class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume) :: sim
+    class(sll_simulation_4d_vp_eulerian_cart_finite_volume) :: sim
     sll_int32 :: ierr
     sll_int32 :: i,j,k,ii,jj,ib,iel,iglob
     sll_int32 :: ic,jc,iploc,jploc,ino
@@ -1980,7 +1980,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
   end subroutine velocity_mesh_connectivity
 
   subroutine delete_vp_cart( sim )
-    class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume) :: sim
+    class(sll_simulation_4d_vp_eulerian_cart_finite_volume) :: sim
     sll_int32 :: ierr
     SLL_DEALLOCATE( sim%fn_v1v2, ierr )
     SLL_DEALLOCATE( sim%fn_star_v1v2, ierr )
@@ -2391,7 +2391,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
 
   subroutine sourcenum(sim,Ex,Ey,w,source)
 
-    class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim   
+    class(sll_simulation_4d_vp_eulerian_cart_finite_volume), intent(inout) :: sim   
     sll_real64,dimension(sim%np_v1*sim%np_v2),intent(in) :: w
     !sll_real64,intent(in)  :: Ex,Ey
     sll_real64  :: Ex,Ey
@@ -2502,7 +2502,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
 
   subroutine fluxnum(sim,wL,wR,vn,flux)
 
-    class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim   
+    class(sll_simulation_4d_vp_eulerian_cart_finite_volume), intent(inout) :: sim   
 
     sll_real64,dimension(2),intent(in) :: vn
     sll_real64,dimension(sim%np_v1*sim%np_v2),intent(in) :: wL,wR
@@ -2534,7 +2534,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
 
   ! time derivative of f
   subroutine dtf(sim)
-    class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim 
+    class(sll_simulation_4d_vp_eulerian_cart_finite_volume), intent(inout) :: sim 
     sll_int32 :: i,j,k,beg
     sll_int32 :: count1,count2,count3,count4
     sll_int32  :: loc_sz_v1
@@ -3014,7 +3014,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
   end subroutine dtf
 
   subroutine euler(sim)
-    class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim
+    class(sll_simulation_4d_vp_eulerian_cart_finite_volume), intent(inout) :: sim
     sll_int32  :: loc_sz_x2,loc_sz_x1
     call compute_local_sizes( sim%phi_seq_x1_layout, loc_sz_x1, loc_sz_x2)
     ! mpi communications
@@ -3049,7 +3049,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
   end subroutine euler
 
   subroutine RK2(sim)
-    class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim
+    class(sll_simulation_4d_vp_eulerian_cart_finite_volume), intent(inout) :: sim
     call dtf(sim)
     sim%fnp1_v1v2 = sim%fn_v1v2
     sim%fn_v1v2 = sim%fn_v1v2 &
@@ -3060,7 +3060,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
   end subroutine RK2
 
   subroutine RK4(sim)
-    class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim
+    class(sll_simulation_4d_vp_eulerian_cart_finite_volume), intent(inout) :: sim
     call dtf(sim)
     sim%fn_star_v1v2 = sim%fn_v1v2
     sim%fn_v1v2 = sim%fn_star_v1v2 &
@@ -3083,7 +3083,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
   end subroutine RK4
 
 !!$subroutine mpi_comm(sim)
-!!$ class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim   
+!!$ class(sll_simulation_4d_vp_eulerian_cart_finite_volume), intent(inout) :: sim   
 !!$ sll_int32 :: ierr
 !!$ sll_int32  :: loc_sz_v1
 !!$ sll_int32  :: loc_sz_v2
@@ -3141,7 +3141,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
   subroutine normL2(sim,w1,w2,res)
     !for instance, but after i want to code this sub with any dimension of vector
     !n in fact here i compute the norm L2 with the center points
-    class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim 
+    class(sll_simulation_4d_vp_eulerian_cart_finite_volume), intent(inout) :: sim 
     sll_real64,dimension(sim%nc_x1,sim%np_v1), intent(in) :: w1,w2
     sll_real64, intent(out) :: res
     sll_int32 :: i,j
@@ -3163,7 +3163,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
 
   subroutine fn_L2_norm(sim,norml2_glob)
 
-    class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(in) :: sim
+    class(sll_simulation_4d_vp_eulerian_cart_finite_volume), intent(in) :: sim
 
     sll_real64,dimension(:,:),allocatable :: lag,dlag
     sll_real64,dimension(:),allocatable :: gauss,weight
@@ -3243,7 +3243,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
 !!$  !calcul the first moment 
 !!$  subroutine first_moment(sim,moment)
 !!$
-!!$    class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(in) :: sim
+!!$    class(sll_simulation_4d_vp_eulerian_cart_finite_volume), intent(in) :: sim
 !!$
 !!$    sll_real64,dimension(:,:),allocatable :: lag,dlag
 !!$    sll_real64,dimension(:),allocatable :: gauss,weight
@@ -3321,7 +3321,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
   !compute with the formula of Eric Sonnendrucker
   subroutine solexact(sim,t,E2norm_ex)
 
-  class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(in) :: sim
+  class(sll_simulation_4d_vp_eulerian_cart_finite_volume), intent(in) :: sim
 sll_int32 :: i,nx,ierr
 sll_real64,intent(in) ::t
 sll_real64, intent(out) :: E2norm_ex
@@ -3373,7 +3373,7 @@ end do
   end subroutine solexact
 
  subroutine poisson_dirichlet(sim)
-   class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim
+   class(sll_simulation_4d_vp_eulerian_cart_finite_volume), intent(inout) :: sim
    sll_int32 :: nn,n,nsky,ch
    sll_int32 :: ii,jj,i,j,p,ier,ierr,k,l
    sll_int32,dimension(:),pointer  :: prof,indi,indj,kld
@@ -3499,4 +3499,4 @@ end do
   end subroutine poisson_dirichlet
 
 
-end module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
+end module sll_simulation_4d_vp_eulerian_cart_finite_volume_module
