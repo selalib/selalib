@@ -11,7 +11,8 @@ ADD_LIBRARY(sll_jorek jorek_interface.F90 sll_jorek.F90)
 ADD_DEPENDENCIES(sll_jorek jorek)
 
   
-SET(JOREK_LIBRARIES  assembly 
+SET(JOREK_LIBRARIES  aggregate_field
+                     assembly 
                      basis 
                      blackbox 
                      boundary_conditions 
