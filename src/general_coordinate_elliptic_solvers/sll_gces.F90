@@ -49,8 +49,6 @@ use gauss_legendre_integration
 use gauss_lobatto_integration
 use sll_sparse_matrix_module, only : sll_csr_matrix,                 &
                                      new_csr_matrix,                 &
-                                     new_csr_matrix_with_constraint, &
-                                     csr_add_one_constraint,         &
                                      sll_factorize_csr_matrix,       &
                                      sll_add_to_csr_matrix,          &
                                      sll_mult_csr_matrix_vector,     &
@@ -119,7 +117,6 @@ type, public :: sll_gces
   sll_real64, dimension(:),       pointer :: masse
   sll_real64, dimension(:),       pointer :: stiff
   sll_real64, dimension(:),       pointer :: rho_coeff_1d
-  logical                                 :: perper
   type(deboor_type)                       :: db
 
 end type sll_gces
@@ -219,6 +216,7 @@ sll_int32  :: i, j, ii, jj, ispl1, ispl2
 sll_real64 :: eta1, eta2, gspl1, gspl2
 sll_int32  :: left, left_rho
 sll_int32  :: cell
+sll_int32  :: a, b, c, d
 
 es%total_num_splines_loc = (spline_degree1+1)*(spline_degree2+1)
 ! The total number of splines in a single direction is given by
@@ -234,16 +232,38 @@ SLL_ALLOCATE(es%local_to_global_indices(1:dim1,1:dim2),ierr)
 SLL_ALLOCATE(es%local_to_global_indices_source(1:dim1,1:dim2),ierr)
 SLL_ALLOCATE(es%local_to_global_indices_source_bis(1:dim1,1:dim2),ierr)
 
-call initconnectivity( num_cells1,                &
-&                      num_cells2,                &
-&                      spline_degree1,            &
-&                      spline_degree2,            &
-&                      es%local_indices,          &
-&                      es%global_indices,         &
-&                      es%local_to_global_indices )
+es%global_indices          = 0
+es%local_indices           = 0
+es%local_to_global_indices = 0
+  
+c = 0
+do j = 1, num_cells2    
+do i = 1, num_cells1  
+  c = c+1
+  b = 0
+  do jj = 0, spline_degree2
+  do ii = 0, spline_degree1
+    b    =  b+1
+    es%local_indices(b, c) = c + (j-1)*spline_degree1 + jj*(num_cells1+spline_degree1) + ii 
+  end do
+  end do
+end do
+end do
 
-! This should be changed to verify that the passed BC's are part of the
-! recognized list described in sll_boundary_condition_descriptors...
+d = 0
+do j = 2, num_cells2+spline_degree2-1
+  do i = 2, num_cells1+spline_degree1-1
+    a = i + (num_cells1+spline_degree1)*(j-1)
+    d = d + 1
+    es%global_indices(a) = d
+  end do
+end do
+
+do c = 1, num_cells1*num_cells2
+  do b = 1, (spline_degree1+1)*(spline_degree2+1)
+    es%local_to_global_indices(b,c) = es%global_indices(es%local_indices(b,c))
+  end do
+end do
 
 es%spline_degree1 = spline_degree1
 es%spline_degree2 = spline_degree2
@@ -288,8 +308,7 @@ es%total_num_splines1 = num_cells1 + spline_degree1 - 2
 es%total_num_splines2 = num_cells2 + spline_degree2 - 2
 knots1_size = 2*spline_degree1 + num_cells1+1
 knots2_size = 2*spline_degree2 + num_cells2+1
-vec_sz      = (num_cells1 + spline_degree1)*&
-              (num_cells2 + spline_degree2)
+vec_sz      = (num_cells1+spline_degree1)*(num_cells2+spline_degree2)
 
 
 SLL_ALLOCATE(es%knots1(knots1_size),ierr)
@@ -312,18 +331,25 @@ es%rho_vec = 0.0_f64
 es%masse   = 0.0_f64
 es%stiff   = 0.0_f64
 
-call initialize_knots( spline_degree1, &
-&                      num_cells1,     &
-&                      eta1_min,       &
-&                      eta1_max,       &
-&                      es%knots1 )
+do i = 1, spline_degree1 + 1
+  es%knots1(i) = eta1_min
+enddo
+do i = spline_degree1+2, num_cells1+1+spline_degree1
+  es%knots1(i) = es%knots1(i-1) + es%delta_eta1
+enddo
+do i = num_cells1+spline_degree1+1, num_cells1+1+2*spline_degree1
+  es%knots1(i) = eta1_max
+enddo
 
-call initialize_knots( spline_degree2, &
-&                      num_cells2,     &
-&                      eta2_min,       &
-&                      eta2_max,       &
-&                      es%knots2 )
-
+do j = 1, spline_degree2 + 1
+  es%knots2(j) = eta2_min
+enddo
+do j = spline_degree2+2, num_cells2+1+spline_degree2
+  es%knots2(j) = es%knots2(j-1) + es%delta_eta2
+enddo
+do j = num_cells2+spline_degree2+1, num_cells2+1+2*spline_degree2
+  es%knots2(j) = eta2_max
+enddo
   
 es%csr_mat => new_csr_matrix( solution_size,              &
 &                             solution_size,              &
@@ -342,9 +368,8 @@ if ( mod(spline_degree1 +1,2) == 0 ) then
   end do
 else
   do i = spline_degree1 +1 + 1, num_cells1 + 1
-    es%knots1_rho(i) = &
-      0.5*( eta1_min + (i - (spline_degree1)/2-1)*es%delta_eta1 + &
-      eta1_min + (i-1 - (spline_degree1)/2 -1)*es%delta_eta1)
+    es%knots1_rho(i) = 0.5*(eta1_min+(i  -(spline_degree1)/2-1)*es%delta_eta1 + &
+                            eta1_min+(i-1-(spline_degree1)/2-1)*es%delta_eta1)
   end do
 end if
 
@@ -357,9 +382,8 @@ if (mod(spline_degree2+1,2) == 0 ) then
   end do
 else
   do i = spline_degree2+1+1, num_cells2+1
-    es%knots2_rho(i) = &
-      0.5*( eta2_min+(i  -(spline_degree2)/2-1)*es%delta_eta2 + &
-            eta2_min+(i-1-(spline_degree2)/2-1)*es%delta_eta2 )
+    es%knots2_rho(i) = 0.5*(eta2_min+(i  -(spline_degree2)/2-1)*es%delta_eta2 + &
+                            eta2_min+(i-1-(spline_degree2)/2-1)*es%delta_eta2 )
   end do
 end if
 
@@ -1189,10 +1213,6 @@ class is (sll_scalar_field_2d_discrete)
 
   call sll_mult_csr_matrix_vector(es%csr_mat_source,es%rho_coeff_1d,es%rho_vec)
 
-  if(es%perper) then
-    es%rho_vec = es%rho_vec - sum(es%rho_vec)/es%intjac*es%masse
-  end if
-      
 class is (sll_scalar_field_2d_analytic)
   
   int_rho = 0.0_f64
@@ -1260,8 +1280,6 @@ class is (sll_scalar_field_2d_analytic)
 
   !$OMP END PARALLEL
 
-  if (es%perper) es%rho_vec = es%rho_vec - int_rho/int_jac
-     
 end select
 
 es%tmp_rho_vec(:) = 0.0_f64  !PN: Is it useful ?
@@ -1275,128 +1293,11 @@ do j = 1, es%total_num_splines2
   end do
 end do
      
-call sll_solve_csr_matrix(es%csr_mat,     &
-                          es%tmp_rho_vec, &
-                          es%phi_vec)
+call sll_solve_csr_matrix(es%csr_mat, es%tmp_rho_vec, es%phi_vec)
   
 call phi%interp_2d%set_coefficients(es%phi_vec(1:es%total_num_splines1*es%total_num_splines2))
 
 end subroutine solve_gces
   
-!PN In this subroutine we compute the matrix row corresponding to the degree of
-!PN freedom in the mesh
-!PN local_indices and global_indices should be allocated and initializad
-!PN in this subroutine
-
-subroutine initconnectivity( num_cells1,             &
-&                            num_cells2,             &
-&                            spline_degree1,         &
-&                            spline_degree2,         &
-&                            local_indices,          &
-&                            global_indices,         &
-&                            local_to_global_indices )
-  
-sll_int32, intent(in) :: num_cells1
-sll_int32, intent(in) :: num_cells2
-sll_int32, intent(in) :: spline_degree1
-sll_int32, intent(in) :: spline_degree2
-
-sll_int32, dimension(:,:), intent(out) :: local_indices
-sll_int32, dimension(:)  , intent(out) :: global_indices
-sll_int32, dimension(:,:), intent(out) :: local_to_global_indices
-
-sll_int32 :: nb_spl_x
-sll_int32 :: nb_spl_y
-sll_int32 :: ii, jj
-sll_int32 :: bloc
-sll_int32 :: cell
-sll_int32 :: e
-sll_int32 :: b
-sll_int32 :: d
-sll_int32 :: i
-sll_int32 :: j
-sll_int32 :: a
-sll_int32 :: l
-
-global_indices          = 0
-local_indices           = 0
-local_to_global_indices = 0
-  
-do j = 1, num_cells2    
-  do i = 1, num_cells1  
-    cell = (j-1)*num_cells1 + i
-    do jj = 0 , spline_degree2
-      do ii = 0, spline_degree1
-
-        bloc = jj * (spline_degree1 + 1) + ii + 1
-
-        b = cell + (j-1)*spline_degree1 + jj*(num_cells1+spline_degree1) + ii 
-
-        local_indices(bloc, cell) = b
-
-      end do
-    end do
-  end do
-end do
-
-
-nb_spl_x = num_cells1 + spline_degree1
-nb_spl_y = num_cells2 + spline_degree2 
-  
-!PN : Since points on boundary are not computed, 
-!PN : i guess Dirichlet is homogeneous only
-!PN : Some values of global_indices are not set  
-d = 0
-do j = 2, nb_spl_y-1
-  do i = 2, nb_spl_x-1
-    a = i + nb_spl_x*(j-1)
-    d = d + 1
-    global_indices(a) = d
-  end do
-end do
-
-do e = 1, num_cells1*num_cells2
-  do b = 1, (spline_degree1+1)*(spline_degree2+1)
-    local_to_global_indices(b,e) = global_indices(local_indices(b,e))
-  end do
-end do
-
-end subroutine initconnectivity
-
-!> @brief
-!> Assembling knots array
-!> @details
-!> it is intentional that eta_min not used, one intends to consider
-!> only the [0,1] interval...
-subroutine initialize_knots( spline_degree, &
-&                            num_cells,     &
-&                            eta_min,       & 
-&                            eta_max,       &
-&                            knots)
-    
-sll_int32,  intent(in)  :: spline_degree 
-sll_int32,  intent(in)  :: num_cells
-sll_real64, intent(in)  :: eta_min
-sll_real64, intent(in)  :: eta_max
-sll_real64, intent(out) :: knots(:)
-sll_int32               :: i
-sll_real64              :: eta
-sll_real64              :: delta
-
-delta = (eta_max - eta_min)/num_cells
-
-do i = 1, spline_degree + 1
-  knots(i) = eta_min
-enddo
-eta = eta_min
-do i = spline_degree+2, num_cells+1+spline_degree
-  eta = eta + delta
-  knots(i) = eta
-enddo
-do i = num_cells+spline_degree+1, num_cells+1+2*spline_degree
-  knots(i) = eta_max
-enddo
-
-end subroutine initialize_knots
 
 end module sll_module_gces
