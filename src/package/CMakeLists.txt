@@ -85,8 +85,6 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/fields/sll_scalar_field_2d_base.F90
     ${SLL_DIR}/fields/sll_scalar_field_2d.F90
     ${SLL_DIR}/general_coordinate_elliptic_solvers/sll_general_coordinate_elliptic_solver.F90
-    ${SLL_DIR}/general_coordinate_elliptic_solvers/sll_knots.F90
-    ${SLL_DIR}/general_coordinate_elliptic_solvers/connectivity_module.F90
     ${SLL_DIR}/splines/sll_cubic_splines.F90
     ${SLL_DIR}/splines/sll_arbitrary_degree_splines.F90
     ${SLL_DIR}/splines/cubic_nonuniform_splines.F90
