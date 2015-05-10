@@ -94,9 +94,6 @@ type, public :: sll_gces
   sll_real64 :: epsi
   sll_real64 :: intjac
 
-  sll_int32, dimension(:),   pointer, public :: global_indices 
-
-  sll_int32, dimension(:,:), pointer :: local_indices
   sll_int32, dimension(:,:), pointer :: local_to_global_indices
   sll_int32, dimension(:,:), pointer :: local_to_global_indices_source
   sll_int32, dimension(:,:), pointer :: local_to_global_indices_source_bis
@@ -108,9 +105,6 @@ type, public :: sll_gces
   sll_real64, dimension(:,:,:,:), pointer :: val_jac
   sll_int32 , dimension(:),       pointer :: tab_index_coeff1
   sll_int32 , dimension(:),       pointer :: tab_index_coeff2
-  type(sll_csr_matrix),           pointer :: csr_mat
-  type(sll_csr_matrix),           pointer :: csr_mat_with_constraint
-  type(sll_csr_matrix),           pointer :: csr_mat_source
   sll_real64, dimension(:),       pointer :: rho_vec
   sll_real64, dimension(:),       pointer :: tmp_rho_vec
   sll_real64, dimension(:),       pointer :: phi_vec
@@ -118,6 +112,10 @@ type, public :: sll_gces
   sll_real64, dimension(:),       pointer :: stiff
   sll_real64, dimension(:),       pointer :: rho_coeff_1d
   type(deboor_type)                       :: db
+
+  type(sll_csr_matrix),           pointer :: csr_mat
+  type(sll_csr_matrix),           pointer :: csr_mat_with_constraint
+  type(sll_csr_matrix),           pointer :: csr_mat_source
 
 end type sll_gces
 
@@ -217,23 +215,25 @@ sll_real64 :: eta1, eta2, gspl1, gspl2
 sll_int32  :: left, left_rho
 sll_int32  :: cell
 sll_int32  :: a, b, c, d
+sll_int32, dimension(:),   pointer :: global_indices 
+sll_int32, dimension(:,:), pointer :: local_indices
 
 es%total_num_splines_loc = (spline_degree1+1)*(spline_degree2+1)
 ! The total number of splines in a single direction is given by
 ! num_cells + spline_degree
 num_splines1 = num_cells1 + spline_degree1
 num_splines2 = num_cells2 + spline_degree2
-SLL_ALLOCATE(es%global_indices(num_splines1*num_splines2),ierr)
   
 dim1 = (spline_degree1+1)*(spline_degree2+1)
 dim2 = (num_cells1*num_cells2)
-SLL_ALLOCATE(es%local_indices(1:dim1,1:dim2),ierr)
 SLL_ALLOCATE(es%local_to_global_indices(1:dim1,1:dim2),ierr)
 SLL_ALLOCATE(es%local_to_global_indices_source(1:dim1,1:dim2),ierr)
 SLL_ALLOCATE(es%local_to_global_indices_source_bis(1:dim1,1:dim2),ierr)
 
-es%global_indices          = 0
-es%local_indices           = 0
+SLL_ALLOCATE(global_indices(num_splines1*num_splines2),ierr)
+SLL_ALLOCATE(local_indices(1:dim1,1:dim2),ierr)
+global_indices             = 0
+local_indices              = 0
 es%local_to_global_indices = 0
   
 c = 0
@@ -244,7 +244,7 @@ do i = 1, num_cells1
   do jj = 0, spline_degree2
   do ii = 0, spline_degree1
     b    =  b+1
-    es%local_indices(b, c) = c + (j-1)*spline_degree1 + jj*(num_cells1+spline_degree1) + ii 
+    local_indices(b, c) = c + (j-1)*spline_degree1 + jj*(num_cells1+spline_degree1) + ii 
   end do
   end do
 end do
@@ -255,18 +255,18 @@ do j = 2, num_cells2+spline_degree2-1
   do i = 2, num_cells1+spline_degree1-1
     a = i + (num_cells1+spline_degree1)*(j-1)
     d = d + 1
-    es%global_indices(a) = d
+    global_indices(a) = d
   end do
 end do
 
 do c = 1, num_cells1*num_cells2
   do b = 1, (spline_degree1+1)*(spline_degree2+1)
-    es%local_to_global_indices(b,c) = es%global_indices(es%local_indices(b,c))
+    es%local_to_global_indices(b,c) = global_indices(local_indices(b,c))
   end do
 end do
 
-SLL_DEALLOCATE(es%global_indices,ierr)
-SLL_DEALLOCATE(es%local_indices,ierr)
+SLL_DEALLOCATE(global_indices,ierr)
+SLL_DEALLOCATE(local_indices,ierr)
 
 es%spline_degree1 = spline_degree1
 es%spline_degree2 = spline_degree2
@@ -566,7 +566,7 @@ do i=1,NUM_CELLS2
     write(10,"(a)"   ,  advance="no")" y1="
     write(10,"(g15.3)", advance="no") eta2_min+(j-1)*es%delta_eta2
     write(10,"(a)"   ,  advance="no")" z1=0. lc=5 ll='"
-    write(10,"(i4)"  ,  advance="no") es%local_to_global_indices(i,j)
+    write(10,"(i4)"  ,  advance="no") es%local_to_global_indices(1,cell)
     write(10,"(a)")"'"
   end do
 end do
@@ -1206,6 +1206,7 @@ class is (sll_scalar_field_2d_discrete)
 
   coeff_rho => type_field%interp_2d%get_coefficients()
             
+  !Loop over point mesh
   do j=1,es%num_cells2+1
     do i=1,es%num_cells1+1
       es%rho_coeff_1d(i+(es%num_cells1+1)*(j-1)) = coeff_rho(i,j)
