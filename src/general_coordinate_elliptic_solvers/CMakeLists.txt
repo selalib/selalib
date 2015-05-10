@@ -2,6 +2,7 @@ ADD_LIBRARY( sll_general_coordinate_elliptic_solvers STATIC
              sll_lobatto_poisson.F90 
              map_function_module.F90
              lobalap.F90
+             sll_gces.F90
              sll_general_coordinate_elliptic_solver.F90 )
 
 TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers
