@@ -100,9 +100,6 @@ type, public :: general_coordinate_elliptic_solver
   sll_real64 :: epsi
   sll_real64 :: intjac
 
-  sll_int32, dimension(:),   pointer, public :: global_indices 
-
-  sll_int32, dimension(:,:), pointer :: local_indices
   sll_int32, dimension(:,:), pointer :: local_to_global_indices
   sll_int32, dimension(:,:), pointer :: local_to_global_indices_source
   sll_int32, dimension(:,:), pointer :: local_to_global_indices_source_bis
@@ -236,20 +233,23 @@ sll_int32  :: i, j, ii, jj, ispl1, ispl2
 sll_real64 :: eta1, eta2, gspl1, gspl2
 sll_int32  :: left
 
+sll_int32, dimension(:),   pointer :: global_indices 
+sll_int32, dimension(:,:), pointer :: local_indices
+
 es%total_num_splines_loc = (spline_degree1+1)*(spline_degree2+1)
 ! The total number of splines in a single direction is given by
 ! num_cells + spline_degree
 num_splines1 = num_cells1 + spline_degree1
 num_splines2 = num_cells2 + spline_degree2
-SLL_ALLOCATE(es%global_indices(num_splines1*num_splines2),ierr)
   
 dim1 = (spline_degree1+1)*(spline_degree2+1)
 dim2 = (num_cells1*num_cells2)
-SLL_ALLOCATE(es%local_indices(1:dim1,1:dim2),ierr)
 SLL_ALLOCATE(es%local_to_global_indices(1:dim1,1:dim2),ierr)
 SLL_ALLOCATE(es%local_to_global_indices_source(1:dim1,1:dim2),ierr)
 SLL_ALLOCATE(es%local_to_global_indices_source_bis(1:dim1,1:dim2),ierr)
 
+SLL_ALLOCATE(local_indices(1:dim1,1:dim2),ierr)
+SLL_ALLOCATE(global_indices(num_splines1*num_splines2),ierr)
 call initconnectivity( num_cells1,                &
 &                      num_cells2,                &
 &                      spline_degree1,            &
@@ -258,9 +258,12 @@ call initconnectivity( num_cells1,                &
 &                      bc1_max,                   &
 &                      bc2_min,                   &
 &                      bc2_max,                   &
-&                      es%local_indices,          &
-&                      es%global_indices,         &
+&                      local_indices,             &
+&                      global_indices,            &
 &                      es%local_to_global_indices )
+
+deallocate(local_indices)
+deallocate(global_indices)
 
 ! This should be changed to verify that the passed BC's are part of the
 ! recognized list described in sll_boundary_condition_descriptors...
@@ -600,8 +603,6 @@ SLL_DEALLOCATE(es%knots1,ierr)
 SLL_DEALLOCATE(es%knots2,ierr)
 SLL_DEALLOCATE(es%gauss_pts1,ierr)
 SLL_DEALLOCATE(es%gauss_pts2,ierr)
-SLL_DEALLOCATE(es%global_indices,ierr)
-SLL_DEALLOCATE(es%local_indices,ierr)
 SLL_DEALLOCATE(es%local_to_global_indices,ierr)
 SLL_DEALLOCATE(es%local_to_global_indices_source,ierr)
 SLL_DEALLOCATE(es%local_to_global_indices_source_bis,ierr)

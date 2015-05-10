@@ -293,10 +293,10 @@ integral_exact_solution = sum(reference)*h1*h2
 
 do j=-50,50
 do i=-50,50
-  write(41,*) i, j, phi%first_deriv_eta1_value_at_point((i-1)*0.01_f64,(j-1)*0.01_f64) &
-                  , 2*sll_pi*cos(2*sll_pi*(i-1)*0.01_f64)*sin(2*sll_pi*(j-1)*0.01_f64)
-  write(42,*) i, j, phi%value_at_point((i-1)*0.01_f64,(j-1)*0.01_f64) &
-                  , sin(2*sll_pi*(i-1)*0.01_f64)*sin(2*sll_pi*(j-1)*0.01_f64)
+  write(41,*) i, j, phi%first_deriv_eta1_value_at_point(i*0.01_f64,j*0.01_f64) &
+                  , 2*sll_pi*cos(2*sll_pi*i*0.01_f64)*sin(2*sll_pi*j*0.01_f64)
+  write(42,*) i, j, phi%value_at_point(i*0.01_f64,j*0.01_f64) &
+                  , sin(2*sll_pi*i*0.01_f64)*sin(2*sll_pi*j*0.01_f64)
 end do
 write(41,*) 
 write(42,*) 

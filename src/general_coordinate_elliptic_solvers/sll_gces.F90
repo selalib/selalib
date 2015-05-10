@@ -265,6 +265,9 @@ do c = 1, num_cells1*num_cells2
   end do
 end do
 
+SLL_DEALLOCATE(es%global_indices,ierr)
+SLL_DEALLOCATE(es%local_indices,ierr)
+
 es%spline_degree1 = spline_degree1
 es%spline_degree2 = spline_degree2
 es%num_cells1     = num_cells1
@@ -563,7 +566,7 @@ do i=1,NUM_CELLS2
     write(10,"(a)"   ,  advance="no")" y1="
     write(10,"(g15.3)", advance="no") eta2_min+(j-1)*es%delta_eta2
     write(10,"(a)"   ,  advance="no")" z1=0. lc=5 ll='"
-    write(10,"(i4)"  ,  advance="no") es%local_indices(1,cell)
+    write(10,"(i4)"  ,  advance="no") es%local_to_global_indices(i,j)
     write(10,"(a)")"'"
   end do
 end do
@@ -651,8 +654,6 @@ SLL_DEALLOCATE(es%knots1,ierr)
 SLL_DEALLOCATE(es%knots2,ierr)
 SLL_DEALLOCATE(es%gauss_pts1,ierr)
 SLL_DEALLOCATE(es%gauss_pts2,ierr)
-SLL_DEALLOCATE(es%global_indices,ierr)
-SLL_DEALLOCATE(es%local_indices,ierr)
 SLL_DEALLOCATE(es%local_to_global_indices,ierr)
 SLL_DEALLOCATE(es%local_to_global_indices_source,ierr)
 SLL_DEALLOCATE(es%local_to_global_indices_source_bis,ierr)
