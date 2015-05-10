@@ -35,6 +35,9 @@ module sll_simulation_2d_guiding_center_curvilinear_module
   use sll_module_cubic_spline_interpolator_2d
   use sll_hermite_interpolation_2d_module
   use sll_module_hermite_interpolator_2d
+  use sll_hermite_interpolation_1d_module
+  use sll_module_hermite_interpolator_1d
+
 !  use sll_coordinate_transformation_2d_base_module
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
@@ -118,6 +121,7 @@ module sll_simulation_2d_guiding_center_curvilinear_module
    sll_int32  :: num_iterations
    sll_int32  :: freq_diag
    sll_int32  :: freq_diag_time
+   character(len=256)      :: thdiag_filename
 
    !time_loop
    sll_int32 :: time_loop_case
@@ -148,22 +152,31 @@ module sll_simulation_2d_guiding_center_curvilinear_module
 
 contains
 
-  function new_guiding_center_2d_curvilinear(filename) result(sim)
+  function new_guiding_center_2d_curvilinear( &
+    filename, &
+    num_run &
+    ) result(sim)
     type(sll_simulation_2d_guiding_center_curvilinear), pointer :: sim 
     character(len=*), intent(in), optional :: filename   
+    sll_int32, intent(in), optional :: num_run   
     sll_int32 :: ierr
+
     
     SLL_ALLOCATE(sim,ierr)
     
-    call initialize_guiding_center_2d_curvilinear(sim,filename)
+    call initialize_guiding_center_2d_curvilinear(sim,filename,num_run)
     
   
   
   end function new_guiding_center_2d_curvilinear
   
-  subroutine initialize_guiding_center_2d_curvilinear(sim,filename)
+  subroutine initialize_guiding_center_2d_curvilinear( &
+    sim, &
+    filename, &
+    num_run)
     class(sll_simulation_2d_guiding_center_curvilinear), intent(inout) :: sim
     character(len=*), intent(in), optional :: filename
+    sll_int32, intent(in), optional :: num_run
     sll_int32             :: IO_stat
     sll_int32, parameter  :: input_file = 99
         
@@ -220,6 +233,8 @@ contains
     sll_int32 :: mudpack_method    
     sll_int32 :: spline_degree_eta1
     sll_int32 :: spline_degree_eta2
+    character(len=256) ::  es_control_case
+    sll_int32 ::  es_control
     
     !boundaries conditions
     !character(len=256) :: boundaries_conditions
@@ -262,6 +277,10 @@ contains
     sll_int32  :: Nc_eta1_bis
     sll_int32  :: Nc_eta2_bis
 
+    character(len=256)      :: str_num_run
+    character(len=256)      :: filename_loc
+
+
     !here we do all the initialization
     !in future, we will use namelist file
     
@@ -302,6 +321,8 @@ contains
       phi_interp2d_case, &
       charac2d_case, &
       A_interp_case, &
+      f_interp1d_x1_case, &
+      f_interp1d_x2_case, &
       charac1d_x1_case, &
       charac1d_x2_case, &
       advect1d_x1_case, &   
@@ -317,7 +338,8 @@ contains
       poisson_solver, &
       mudpack_method, &    
       spline_degree_eta1, &
-      spline_degree_eta2    
+      spline_degree_eta2, &
+      es_control_case    
       
      namelist /boundaries/ &
       bc_interp2d_eta1, &
@@ -328,6 +350,10 @@ contains
       bc_eta1_right, &
       bc_eta2_left,  &
       bc_eta2_right   
+
+
+
+
     
         !! set default parameters
     
@@ -388,9 +414,10 @@ contains
     !poisson 
     !poisson_solver = "SLL_ELLIPTIC_FINITE_ELEMENT_SOLVER" !use with "SLL_PHI_FROM_RHO"
     poisson_solver = "SLL_MUDPACK_CURVILINEAR"   !use with "SLL_PHI_FROM_RHO"    
+    es_control_case = "SLL_SOLVE_ELLIPTIC_SOLVER" 
     !mudpack_method = SLL_NON_SEPARABLE_WITH_CROSS_TERMS  
 #ifdef MUDPACK
-
+    print *,'#MUDPACK IS ON'
     mudpack_method = SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS  
 #else
     mudpack_method = 0
@@ -408,15 +435,33 @@ contains
     sim%bc_charac2d_eta1 = SLL_PERIODIC
     sim%bc_charac2d_eta2 = SLL_PERIODIC  
 
+    if(present(num_run))then
+      !call int2string(num_run, str_num_run)
+      write(str_num_run, *) num_run
+      str_num_run = adjustl(str_num_run) 
+      sim%thdiag_filename = "thdiag_"//trim(str_num_run)//".dat"
+    else      
+      sim%thdiag_filename = "thdiag.dat"
+    endif
+
+
+
     if(present(filename))then
-      open(unit = input_file, file=trim(filename)//'.nml',IOStat=IO_stat)
+      filename_loc = filename
+      filename_loc = adjustl(filename_loc)
+      if(present(num_run)) then
+        filename_loc = trim(filename)//"_"//trim(str_num_run)
+        !filename_loc = adjustl(filename_loc)
+        !print *,'filename_loc=',filename_loc
+      endif
+      open(unit = input_file, file=trim(filename_loc)//'.nml',IOStat=IO_stat)
         if( IO_stat /= 0 ) then
           print *, '#initialize_guiding_center_2d_curvilinear() failed to open file ', &
           trim(filename)//'.nml'
           STOP
         end if
       print *,'#initialization with filename:'
-      print *,'#',trim(filename)//'.nml'
+      print *,'#',trim(filename_loc)//'.nml'
       read(input_file, geometry) 
       read(input_file, initial_function)
       read(input_file, time_iterations)
@@ -909,6 +954,14 @@ contains
           eta1_min_bis, &
           eta1_max_bis, &
           sim%bc_interp2d_eta1)
+      case ("SLL_HERMITE")
+        sim%f_interp1d_x1 => new_hermite_interpolator_1d( &
+          Nc_eta1_bis+1, &
+          eta1_min_bis, &
+          eta1_max_bis, &
+          hermite_degree1, &          
+          SLL_HERMITE_1d_C0, &
+          sim%bc_interp2d_eta1) 
       case default
         print *,'#bad f_interp1d_x1_case',f_interp1d_x1_case
         print *,'#not implemented'
@@ -924,6 +977,14 @@ contains
           eta2_min_bis, &
           eta2_max_bis, &
           sim%bc_interp2d_eta2)
+      case ("SLL_HERMITE")
+        sim%f_interp1d_x2 => new_hermite_interpolator_1d( &
+          Nc_eta2_bis+1, &
+          eta2_min_bis, &
+          eta2_max_bis, &
+          hermite_degree1, &          
+          SLL_HERMITE_1d_C0, &
+          sim%bc_interp2d_eta2) 
       case default
         print *,'#bad f_interp1d_x2_case',f_interp1d_x2_case
         print *,'#not implemented'
@@ -1423,7 +1484,8 @@ contains
     print *,maxval(A2)
 
     thdiagp_id=thdiag_id+1
-    call sll_ascii_file_create('thdiag.dat', thdiag_id, ierr)
+    call sll_ascii_file_create(sim%thdiag_filename, thdiag_id, ierr)
+    !call sll_ascii_file_create('thdiag.dat', thdiag_id, ierr)
     call sll_ascii_file_create('thdiagp.dat', thdiagp_id, ierr)
     iplot = 0
 
@@ -2418,4 +2480,15 @@ subroutine sll_DSG( eta1_min,eta1_max, eta2_min,eta2_max,n_eta1,n_eta2, f )
      enddo
     enddo 
   end subroutine sll_DSG 
+
+  subroutine delete_guiding_center_2d_curvilinear( sim )
+
+    class(sll_simulation_2d_guiding_center_curvilinear) :: sim
+    sll_int32 :: ierr
+    
+            
+  end subroutine delete_guiding_center_2d_curvilinear
+
+
+
 end module sll_simulation_2d_guiding_center_curvilinear_module

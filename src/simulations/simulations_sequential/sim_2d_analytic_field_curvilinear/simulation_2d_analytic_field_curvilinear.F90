@@ -444,7 +444,7 @@ contains
       open(unit = input_file, file=trim(filename_loc)//'.nml',IOStat=IO_stat)
         if( IO_stat /= 0 ) then
           print *, '#in initialize_analytic_field_2d_curvilinear() failed to open file ', &
-          trim(filename)//'.nml'
+          trim(filename_loc)//'.nml'
           STOP
         end if
       print *,'#initialization with filename:'
