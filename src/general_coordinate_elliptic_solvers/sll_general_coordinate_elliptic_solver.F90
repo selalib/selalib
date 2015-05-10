@@ -1100,12 +1100,12 @@ end if
 
 print *,'#end of sll_factorize_csr_matrix'
 
-es%csr_mat_source =>                                            &
-  new_csr_matrix( size(es%masse,1),                             &
-                  (nc_1+1)*(nc_2+1),                            &
-                  nc_1*nc_2,                                    &
+es%csr_mat_source =>                                     &
+  new_csr_matrix( size(es%masse,1),                      &
+                  (nc_1+1)*(nc_2+1),                     &
+                  nc_1*nc_2,                             &
                   es%local_to_global_indices_source_bis, &
-                  nspl,                                         &
+                  nspl,                                  &
                   es%local_to_global_indices_source,     &
                   nspl )
 
