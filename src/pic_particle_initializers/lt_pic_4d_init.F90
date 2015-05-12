@@ -83,8 +83,6 @@ contains
     sll_int32 :: n_virtual_vx_for_remapping
     sll_int32 :: n_virtual_vy_for_remapping
 
-    print*, "[sll_lt_pic_4d_remap]  calling sll_lt_pic_4d_write_f_on_remap_grid..."
-
     ! 1st try: take just 1...
     n_virtual_x_for_remapping = 1
     n_virtual_y_for_remapping = 1
@@ -362,9 +360,6 @@ contains
     
     SLL_ALLOCATE( particle_indices(number_parts_x, number_parts_y, number_parts_vx, number_parts_vy), ierr )
     particle_indices(:,:,:,:) = 0
-
-    print *, "8756548657 - DEBUG: ", number_parts_x/2, number_parts_y/2, number_parts_vx/2, number_parts_vy/2
-    print *, "8756548658 - DEBUG: ", p_group%target_values(number_parts_x/2, number_parts_y/2, number_parts_vx/2, number_parts_vy/2)
 
     ! compute the particle weights from the values of f0 on the (cartesian, phase-space) remapping grid
     k_temp_debug = 0
