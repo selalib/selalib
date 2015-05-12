@@ -583,6 +583,7 @@ contains
     
     do it = 0, sim%num_iterations-1
 
+       print *, "BEGIN one loop in time, it = ", it
        !! -- --  diagnostics (computing energy) [begin]  -- --
 
        if (sim%my_rank == 0) then
@@ -913,7 +914,7 @@ contains
 
        !! -- --  diagnostics [end]  -- --
 
-    print *, "end one loop in time, it = ", it
+    print *, "end one loop in time"
     enddo
 
     !  ----------------------------------------------------------------------------------------------------
