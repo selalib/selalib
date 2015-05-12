@@ -100,8 +100,8 @@ type, public :: sll_gces
   sll_real64, dimension(:,:,:,:), pointer :: v_splines2
 
   sll_real64, dimension(:,:,:,:), pointer :: val_jac
-  sll_int32 , dimension(:),       pointer :: tab_i1
-  sll_int32 , dimension(:),       pointer :: tab_i2
+  sll_int32 , dimension(:),       pointer :: left1
+  sll_int32 , dimension(:),       pointer :: left2
   sll_real64, dimension(:),       pointer :: rho_vec
   sll_real64, dimension(:),       pointer :: tmp_rho_vec
   sll_real64, dimension(:),       pointer :: phi_vec
@@ -226,7 +226,6 @@ global_indices             = 0
 local_indices              = 0
 es%local_to_global_indices = 0
 
-  
 c = 0
 do j = 1, n2    
 do i = 1, n1  
@@ -256,7 +255,6 @@ do c = 1, n1*n2
     es%local_to_global_indices(b,c) = global_indices(local_indices(b,c))
   end do
 end do
-
 
 es%k1         = k1
 es%k2         = k2
@@ -387,8 +385,8 @@ SLL_ALLOCATE(es%v_splines2(3,k2+1,k2+2,n2),ierr)
 es%v_splines1 = 0.0_f64
 es%v_splines2 = 0.0_f64
 
-SLL_ALLOCATE(es%tab_i1(n1),ierr)
-SLL_ALLOCATE(es%tab_i2(n2),ierr)
+SLL_ALLOCATE(es%left1(n1),ierr)
+SLL_ALLOCATE(es%left2(n2),ierr)
 
 g1 = size(es%gauss1,2)
 g2 = size(es%gauss2,2)
@@ -488,7 +486,7 @@ do i = 1, n1
     call bsplvd(es%db,es%t1_rho,k1+1,x1,left_rho,work1,dbs1,1)
     es%v_splines1(3,:,ii,i) = dbs1(:,1)
   end do
-  es%tab_i1(i) = left_rho
+  es%left1(i) = left_rho
 end do
 
 do j = 1, n2
@@ -504,7 +502,7 @@ do j = 1, n2
     call bsplvd(es%db,es%t2_rho,k2+1,x2,left_rho,work2,dbs2,1)
     es%v_splines2(3,:,jj,j) = dbs2(:,1)
   end do
-  es%tab_i2(j) = left_rho
+  es%left2(j) = left_rho
 end do
 
 deallocate(work1)
@@ -662,8 +660,8 @@ SLL_DEALLOCATE(es%t1_rho,ierr)
 SLL_DEALLOCATE(es%t2_rho,ierr)
 SLL_DEALLOCATE(es%v_splines1,ierr)
 SLL_DEALLOCATE(es%v_splines2,ierr)
-SLL_DEALLOCATE(es%tab_i1,ierr)
-SLL_DEALLOCATE(es%tab_i2,ierr)
+SLL_DEALLOCATE(es%left1,ierr)
+SLL_DEALLOCATE(es%left2,ierr)
 
 call sll_delete(es%csr_mat)
 call sll_delete(es%csr_mat_with_constraint)
@@ -766,8 +764,8 @@ sll_real64 :: C1
 sll_real64 :: C2    
 sll_int32  :: i3, i4
 sll_int32  :: i1,i2
+sll_int32  :: col, row
 sll_int32  :: b, bprime,x,y
-sll_int32  :: a, aprime
 sll_real64 :: elt_mat_global
 sll_int32  :: k1, k2, n1, n2
 sll_int32  :: ideg2,ideg1
@@ -785,18 +783,18 @@ sll_real64 :: intjac
 !$ sll_int32 :: tid=0
 !$ sll_int32 :: nthreads=1
 
-delta1     = es%delta_eta1 
-delta2     = es%delta_eta2 
-eta1_min   = es%eta1_min  
-eta2_min   = es%eta2_min  
-g1 = size(es%gauss1,2)
-g2 = size(es%gauss2,2)
-k1         = es%k1
-k2         = es%k2
-n1         = es%n1
-n2         = es%n2
+delta1   = es%delta_eta1 
+delta2   = es%delta_eta2 
+eta1_min = es%eta1_min  
+eta2_min = es%eta2_min  
+g1       = size(es%gauss1,2)
+g2       = size(es%gauss2,2)
+k1       = es%k1
+k2       = es%k2
+n1       = es%n1
+n2       = es%n2
 
-intjac = 0.0_f64
+intjac   = 0.0_f64
 
 SLL_CLEAR_ALLOCATE(source(1:(k1+1)*(k2+1),1:(k1+1)*(k2+1),1:n1*n2),ierr)
 SLL_CLEAR_ALLOCATE(M_c(1:(k1+1)*(k2+1),1:(k1+1)*(k2+1)),ierr)
@@ -815,7 +813,7 @@ SLL_CLEAR_ALLOCATE(stif(1:(k1+1)*(k2+1)),ierr)
 !$OMP a11_field_mat, a12_field_mat, a21_field_mat, a22_field_mat, &
 !$OMP b1_field_vect, b2_field_vect, k1, k2, source, intjac )      &
 !$OMP FIRSTPRIVATE(n1, n2, delta1, delta2, eta1_min, eta2_min,    &
-!$OMP g1, g2)                                     &
+!$OMP g1, g2)                                                     &
 !$OMP PRIVATE(nthreads, tid,                                      &
 !$OMP i,j,eta1,eta2,mass,stif,                                    &
 !$OMP x2,w2,jg,ig,x1,w1,                                          &
@@ -829,7 +827,7 @@ SLL_CLEAR_ALLOCATE(stif(1:(k1+1)*(k2+1)),ierr)
 !$OMP v3v4, d3v4, v3d4,                                           &
 !$OMP M_c,K_11,K_12,K_21,K_22,M_bv,S_b1,S_b2,                     &
 !$OMP i2, i1, i3, i4,                                             &
-!$OMP a, b, x, y, aprime, bprime,                                 &
+!$OMP b, x, y, col, row, bprime,                                  &
 !$OMP r1r2, v1v2, d1v2, v1d2, elt_mat_global )
 
 !$ tid = omp_get_thread_num()
@@ -856,12 +854,12 @@ do i = 1, n1
 
   do jg=1,g2
   
-    x2  = eta2+es%gauss2(1,jg)
+    x2 = eta2+es%gauss2(1,jg)
     w2 = es%gauss2(2,jg)
   
     do ig=1,g1
     
-      x1  = eta1+es%gauss1(1,ig)
+      x1 = eta1+es%gauss1(1,ig)
       w1 = es%gauss1(2,ig)
 
       w1w2 = w1*w2
@@ -961,12 +959,12 @@ do i = 1, n1
 
             do kk = 1,k1+1
                         
-              v3 = es%v_splines1(1,kk,ig,i)
-              d3 = es%v_splines1(2,kk,ig,i)
+              v3   = es%v_splines1(1,kk,ig,i)
+              d3   = es%v_splines1(2,kk,ig,i)
               v3v4 = v4*v3
               d3v4 = d3*v4
               v3d4 = v3*d4
-              nn = nn+1
+              nn   = nn+1
              
               source(nn,mm,icell) = source(nn,mm,icell) + r1r2*v3v4
                    
@@ -986,22 +984,18 @@ do i = 1, n1
     end do
   end do
 
-  b = 0
   do jj = 0, k2
+    do ii = 0, k1
 
-    i3 = j + jj
-    
-    do ii = 0,k1
-        
-      x = i + ii + (i3-1)*(n1+k1)
-      b = b+1
-      a = es%local_to_global_indices(b, icell)
+      x   = i+ii+((j+jj)-1)*(n1+k1)
+      b   = ii+1+jj*(k1+1)
+      row = es%local_to_global_indices(b, icell)
          
       es%masse(x) = es%masse(x) + mass(b)
       es%stiff(x) = es%stiff(x) + stif(b)
 
-      i1 = es%tab_i1(i) - k1 + ii
-      i2 = es%tab_i2(j) - k2 + jj
+      i1 = es%left1(i) - k1 + ii
+      i2 = es%left2(j) - k2 + jj
 
       es%local_to_global_indices_source(b,icell)= i1 + (i2-1)*(n1+1)
 
@@ -1011,7 +1005,7 @@ do i = 1, n1
         do kk = 0,k1
           y      = i + kk+ (i4-1)*(n1+k1)
           bprime = bprime+1 
-          aprime = es%local_to_global_indices(bprime,icell)
+          col    = es%local_to_global_indices(bprime,icell)
 
           elt_mat_global = M_c (bprime,b) - &
                            K_11(bprime,b) - &
@@ -1024,8 +1018,8 @@ do i = 1, n1
 
           es%local_to_global_indices_source_bis(bprime,icell)= y
 
-          if ( a>0 .and. aprime>0 ) then
-            call sll_add_to_csr_matrix(es%csr_mat, elt_mat_global, a, aprime)   
+          if ( row>0 .and. col>0 ) then
+            call sll_add_to_csr_matrix(es%csr_mat, elt_mat_global, row, col)   
           end if
               
         end do
@@ -1060,12 +1054,12 @@ call sll_factorize_csr_matrix(es%csr_mat)
 
 print *,'#end of sll_factorize_csr_matrix'
 
-es%csr_mat_source =>                                            &
-  new_csr_matrix( size(es%masse,1),                             &
-                  (n1+1)*(n2+1),                            &
-                  n1*n2,                                    &
+es%csr_mat_source =>                                     &
+  new_csr_matrix( size(es%masse,1),                      &
+                  (n1+1)*(n2+1),                         &
+                  n1*n2,                                 &
                   es%local_to_global_indices_source_bis, &
-                  (k1+1)*(k2+1),                                         &
+                  (k1+1)*(k2+1),                         &
                   es%local_to_global_indices_source,     &
                   (k1+1)*(k2+1) )
 
@@ -1079,19 +1073,19 @@ do i=1,n1
   do ideg1 = 0,k1
             
     b = b+1
-    a = es%local_to_global_indices_source_bis(b, icell)
+    row = es%local_to_global_indices_source_bis(b, icell)
         
     bprime = 0
     do jdeg2 = 0,k2
     do jdeg1 = 0,k1
               
       bprime = bprime+1
-      aprime = es%local_to_global_indices_source(bprime,icell)
+      col = es%local_to_global_indices_source(bprime,icell)
            
       elt_mat_global = source(b,bprime,icell)
 
-      if ( a > 0 .and. aprime > 0) then
-        call sll_add_to_csr_matrix(es%csr_mat_source,elt_mat_global,a,aprime)
+      if ( row > 0 .and. col > 0) then
+        call sll_add_to_csr_matrix(es%csr_mat_source,elt_mat_global,row,col)
       end if
               
     end do
