@@ -20,10 +20,16 @@ interface sll_create
   module procedure initialize_poisson_solver_from_file
 end interface sll_create
 
+interface sll_delete
+  module procedure delete_tri_poisson
+end interface sll_delete
+
+public :: new_triangular_poisson_2d
 public :: sll_create
 public :: sll_compute_phi_from_rho
 public :: sll_compute_e_from_rho
 public :: sll_compute_e_from_phi 
+public :: sll_delete 
 
 !    Caracteristiques du maillage triangulaire:         
 !
@@ -114,20 +120,39 @@ type, public :: sll_triangular_poisson_2d
 
 end type sll_triangular_poisson_2d
 
-#ifdef DEBUG
-logical :: ldebug = .true.
-#else
-logical :: ldebug = .false.
-#endif /* DEBUG */
-
 contains
 
+function new_triangular_poisson_2d(mesh, ntypfr, potfr) result (solver)
+
+type(sll_triangular_poisson_2d), pointer          :: solver
+type(sll_triangular_mesh_2d),  intent(in), target :: mesh
+sll_int32,  dimension(:),      intent(in)         :: ntypfr 
+sll_real64, dimension(:),      intent(in)         :: potfr 
+
+sll_int32 :: ierr
+
+SLL_ALLOCATE(solver,ierr)
+call initialize_poisson_solver(solver, mesh, ntypfr, potfr)
+
+end function new_triangular_poisson_2d
+
+!> Delete the solver derived type
+subroutine delete_tri_poisson( this )
+type(sll_triangular_poisson_2d), pointer :: this
+
+#ifdef DEBUG
+print*, 'delete poisson solver'
+#endif
+nullify(this)
+
+end subroutine delete_tri_poisson
+
 !> Compute electric field from charge density
-!> @param[in] this solver derived type
-!> @param[in] rho charge density array on nodes
-!> @param[out] phi electric potential on nodes
-!> @param[out] ex electric field x component on nodes
-!> @param[out] ey electric field y component on nodes
+!> @param[in]  this solver derived type
+!> @param[in]  rho  charge density array on nodes
+!> @param[out] phi  electric potential on nodes
+!> @param[out] ex   electric field x component on nodes
+!> @param[out] ey   electric field y component on nodes
 subroutine sll_compute_e_from_rho( this, rho, phi, ex, ey)
 type(sll_triangular_poisson_2d) :: this
 sll_real64, intent(in)          :: rho(:)
@@ -301,7 +326,7 @@ character(len=*), parameter :: this_sub_name = 'read_data_solver'
 character(len=128)          :: err_msg
 
 sll_int32 :: nref, nn, ndir
-sll_int32 :: i, j
+sll_int32 :: i
 sll_int32 :: ierr
 
 if ( mesh%analyzed) then
@@ -329,13 +354,13 @@ allocate(this%mors2(12*mesh%num_nodes)); this%mors2 = 0
  
 ! Calcul de mors1,mors2.
 
-call morse(mesh%npoel1,    &
-           mesh%npoel2,    &
-           mesh%nodes,     &
-           mesh%num_cells, &
-           mesh%num_nodes, &
-           this%mors1,     &
-           this%mors2      )
+call morse(mesh%npoel1,        &
+           mesh%npoel2,        &
+           mesh%nodes,         &
+           mesh%num_triangles, &
+           mesh%num_nodes,     &
+           this%mors1,         &
+           this%mors2          )
  
 ! Ajustement de la taille de mors2.
 ! pas sur que ca fonctionne a tous les coups
@@ -462,13 +487,20 @@ end subroutine initialize_poisson_solver
 ! mors2  - tableau des numeros des termes des matrices "morse"         
 subroutine morse(npoel1, npoel2, ntri, nbt, nbs, mors1, mors2)
 
-sll_int32, intent(in) :: nbs, nbt
-sll_int32, dimension(:), intent(in) :: npoel1, npoel2
-sll_int32, dimension(3,nbt), intent(in) :: ntri
-sll_int32, dimension(:),   intent(out):: mors1, mors2
-sll_int32, dimension(20)  :: ilign
+sll_int32,                   intent(in)  :: nbt
+sll_int32,                   intent(in)  :: nbs
+sll_int32, dimension(:),     intent(in)  :: npoel1
+sll_int32, dimension(:),     intent(in)  :: npoel2
+sll_int32, dimension(3,nbt), intent(in)  :: ntri
+sll_int32, dimension(:),     intent(out) :: mors1
+sll_int32, dimension(:),     intent(out) :: mors2
+sll_int32, dimension(20)                 :: ilign
+
 sll_int32 :: l, itest1, itest2, js1, js2, is1, is2, is3, numel
-sll_int32 :: iel, nlign, nel, is, im = 0, k = 0
+sll_int32 :: iel, nlign, nel, is, im, k
+
+im = 0
+k  = 0
 
 mors1(1)=0
  
@@ -597,12 +629,12 @@ type(sll_triangular_poisson_2d),  intent(inout) :: this
 sll_real64 :: amloc(3),aggloc(9),grxloc(9),gryloc(9)
 sll_real64 :: dntx1, dntx2, dntx3, dnty1, dnty2, dnty3 
 sll_real64 :: x1t, x2t, x3t, y1t, y2t, y3t, coef
-sll_int32 :: is1t, is2t, is3t, iel, nis
-sll_int32 :: is, il, j
+sll_int32 :: is1t, is2t, is3t, iel
+sll_int32 :: is, j
  
 !Boucle sur les elements.
 
-do iel=1,this%mesh%num_cells
+do iel=1,this%mesh%num_triangles
 
   !Calcul des coefficients dependant de la geometrie du triangle.
 
@@ -798,13 +830,8 @@ end do
 
 do is=1,this%ndiric
    nref=this%mesh%refs(this%ifron(is))
-   sdmb(this%ifron(is))=this%potfr(nref)
+   sdmb(this%ifron(is))=this%potfr(nref)*grandx
 end do
-
-do is=1,this%ndiric
-   sdmb(this%ifron(is))=sdmb(this%ifron(is))*grandx
-end do
-
 
 call desrem(this%iprof, this%grgr,sdmb,this%mesh%num_nodes,phi)
 
@@ -859,7 +886,7 @@ type(sll_triangular_poisson_2d)   :: this
 sll_real64 :: ex(:), ey(:)
 sll_real64 :: pscal, xnor
 sll_int32 :: is1, is2, ict
-sll_int32 :: i, ierr
+sll_int32 :: i
       
 !!$ ======================================================================
 !!$ ... On force E.tau = 0 sur toutes les frontieres Dirichlet 
@@ -1040,19 +1067,19 @@ end do
 end subroutine profil
 
 !Function: asbld
-!     Assembler une matrice elementaire    
-!     dans une matrice globale dans          
-!     le cas ou elle est diagonale            
+!  Assembler une matrice elementaire    
+!  dans une matrice globale dans          
+!  le cas ou elle est diagonale            
 !                                                                 
 !Parametres d'entree: 
 !                                 
-!          aele         -    Matrice elementaire diagonale           
-!                           (3 termes pour un element triangulaire)
-!          i1,i2,i3     -    numeros des sommets de l'element      
+!  aele         -    Matrice elementaire diagonale           
+!                    (3 termes pour un element triangulaire)
+!  i1,i2,i3     -    numeros des sommets de l'element      
 !                                                                 
 !Parametre resultat:                                     
 !                                                              
-!          xmass    -   matrice globale diagonalisee          
+!  xmass    -   matrice globale diagonalisee          
 !
 !Auteur:
 !      J. Segre - Version 1.0  Juillet 1989

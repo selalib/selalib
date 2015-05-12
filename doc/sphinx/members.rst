@@ -28,7 +28,7 @@ Post-Docs
 Ph.D. students
 --------------
 * Thi Trang Nhung PHAM (IRMA Strasbourg)
-* Laura MENDOZA (IPP Garching)
+* `Laura MENDOZA (IPP Garching) <http://www2.ipp.mpg.de/~mela/>`_
 * Charles PROUVEUR (ICJ Lyon)
 * Christophe STEINER (IRMA Strasbourg)
 
