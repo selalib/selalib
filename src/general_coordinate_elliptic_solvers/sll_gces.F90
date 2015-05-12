@@ -84,8 +84,8 @@ type, public :: sll_gces
   sll_real64, dimension(:),   pointer :: t2
   sll_real64, dimension(:),   pointer :: t1_rho
   sll_real64, dimension(:),   pointer :: t2_rho
-  sll_real64, dimension(:,:), pointer :: gauss_pts1
-  sll_real64, dimension(:,:), pointer :: gauss_pts2
+  sll_real64, dimension(:,:), pointer :: gauss1
+  sll_real64, dimension(:,:), pointer :: gauss2
   sll_int32  :: k1
   sll_int32  :: k2
   sll_real64 :: epsi
@@ -100,8 +100,8 @@ type, public :: sll_gces
   sll_real64, dimension(:,:,:,:), pointer :: v_splines2
 
   sll_real64, dimension(:,:,:,:), pointer :: val_jac
-  sll_int32 , dimension(:),       pointer :: tab_index_coeff1
-  sll_int32 , dimension(:),       pointer :: tab_index_coeff2
+  sll_int32 , dimension(:),       pointer :: tab_i1
+  sll_int32 , dimension(:),       pointer :: tab_i2
   sll_real64, dimension(:),       pointer :: rho_vec
   sll_real64, dimension(:),       pointer :: tmp_rho_vec
   sll_real64, dimension(:),       pointer :: phi_vec
@@ -116,9 +116,7 @@ type, public :: sll_gces
 
 end type sll_gces
 
-!> For the integration mode.  
 sll_int32, parameter, public :: ES_GAUSS_LEGENDRE = 0
-!> For the integration mode.  
 sll_int32, parameter, public :: ES_GAUSS_LOBATTO = 1
   
 interface sll_delete
@@ -167,10 +165,10 @@ contains
 !> @param[in]  eta2_max the maximun in the direction eta2
 !> @param[out] the type general_coordinate_elliptic_solver
 subroutine initialize_gces( es,                  &
-                            k1,      &
-                            k2,      &
-                            n1,          &
-                            n2,          &
+                            k1,                  &
+                            k2,                  &
+                            num_cells1,          &
+                            num_cells2,          &
                             quadrature_type1,    &
                             quadrature_type2,    &
                             eta1_min,            &
@@ -182,8 +180,8 @@ type(sll_gces), intent(out) :: es
 
 sll_int32,  intent(in)  :: k1
 sll_int32,  intent(in)  :: k2
-sll_int32,  intent(in)  :: n1
-sll_int32,  intent(in)  :: n2
+sll_int32,  intent(in)  :: num_cells1
+sll_int32,  intent(in)  :: num_cells2
 sll_int32,  intent(in)  :: quadrature_type1
 sll_int32,  intent(in)  :: quadrature_type2
 sll_real64, intent(in)  :: eta1_min
@@ -196,7 +194,10 @@ sll_int32 :: t2_size
 sll_int32 :: vec_sz ! for rho_vec and phi_vec allocations
 sll_int32 :: ierr
 sll_int32 :: solution_size
-sll_int32 :: num_pts_g1, num_pts_g2
+sll_int32 :: g1
+sll_int32 :: g2
+sll_int32 :: n1
+sll_int32 :: n2
 
 sll_real64, allocatable :: work1(:,:)
 sll_real64, allocatable :: work2(:,:)
@@ -212,6 +213,9 @@ sll_int32  :: a, b, c, d
 sll_int32, dimension(:),   pointer :: global_indices 
 sll_int32, dimension(:,:), pointer :: local_indices
 
+n1 = num_cells1
+n2 = num_cells2
+
 SLL_ALLOCATE(es%local_to_global_indices(1:(k1+1)*(k2+1),1:(n1*n2)),ierr)
 SLL_ALLOCATE(es%local_to_global_indices_source(1:(k1+1)*(k2+1),1:(n1*n2)),ierr)
 SLL_ALLOCATE(es%local_to_global_indices_source_bis(1:(k1+1)*(k2+1),1:(n1*n2)),ierr)
@@ -221,6 +225,7 @@ SLL_ALLOCATE(local_indices(1:(k1+1)*(k2+1),1:(n1*n2)),ierr)
 global_indices             = 0
 local_indices              = 0
 es%local_to_global_indices = 0
+
   
 c = 0
 do j = 1, n2    
@@ -265,36 +270,36 @@ es%eta2_min   = eta2_min
 ! Allocate and fill the gauss points/weights information.
 select case(quadrature_type1)
 case (ES_GAUSS_LEGENDRE)
-  SLL_ALLOCATE(es%gauss_pts1(2,k1+2),ierr)
-  es%gauss_pts1 = gauss_legendre_points_and_weights(k1+2)
+  SLL_ALLOCATE(es%gauss1(2,k1+2),ierr)
+  es%gauss1 = gauss_legendre_points_and_weights(k1+2)
 case (ES_GAUSS_LOBATTO)
-  SLL_ALLOCATE(es%gauss_pts1(2,k1+2),ierr)
-  es%gauss_pts1 = gauss_lobatto_points_and_weights(k1+2)
+  SLL_ALLOCATE(es%gauss1(2,k1+2),ierr)
+  es%gauss1 = gauss_lobatto_points_and_weights(k1+2)
 case default
   SLL_ERROR('initialize_general_elliptic_solver','unknown type of gauss points in the direction 1')
 end select
    
 select case(quadrature_type2)
 case (ES_GAUSS_LEGENDRE)
-  SLL_ALLOCATE(es%gauss_pts2(2,k2+2),ierr)
-  es%gauss_pts2(:,:) = gauss_legendre_points_and_weights(k2+2)
+  SLL_ALLOCATE(es%gauss2(2,k2+2),ierr)
+  es%gauss2(:,:) = gauss_legendre_points_and_weights(k2+2)
 case (ES_GAUSS_LOBATTO)
-  SLL_ALLOCATE(es%gauss_pts2(2,k2+2),ierr)
-  es%gauss_pts2(:,:) = gauss_lobatto_points_and_weights(k2+2)
+  SLL_ALLOCATE(es%gauss2(2,k2+2),ierr)
+  es%gauss2(:,:) = gauss_lobatto_points_and_weights(k2+2)
 case default
   SLL_ERROR('initialize_general_elliptic_solver','unknown type of gauss points in the direction 2')
 end select
 
 !PN : Gauss points positions and weights are computed in [-1:1] interval
 !PN : We need to rescale them.
-es%gauss_pts1(1,:) = 0.5_f64*es%delta_eta1*(es%gauss_pts1(1,:)+1.0_f64)
-es%gauss_pts1(2,:) = 0.5_f64*es%delta_eta1*es%gauss_pts1(2,:)
-es%gauss_pts2(1,:) = 0.5_f64*es%delta_eta2*(es%gauss_pts2(1,:)+1.0_f64)
-es%gauss_pts2(2,:) = 0.5_f64*es%delta_eta2*es%gauss_pts2(2,:)
+es%gauss1(1,:) = 0.5_f64*es%delta_eta1*(es%gauss1(1,:)+1.0_f64)
+es%gauss1(2,:) = 0.5_f64*es%delta_eta1*(es%gauss1(2,:))
+es%gauss2(1,:) = 0.5_f64*es%delta_eta2*(es%gauss2(1,:)+1.0_f64)
+es%gauss2(2,:) = 0.5_f64*es%delta_eta2*(es%gauss2(2,:))
 
 t1_size = 2*k1 + n1+1
 t2_size = 2*k2 + n2+1
-vec_sz      = (n1+k1)*(n2+k2)
+vec_sz  = (n1+k1)*(n2+k2)
 
 
 SLL_ALLOCATE(es%t1(t1_size),ierr)
@@ -382,11 +387,11 @@ SLL_ALLOCATE(es%v_splines2(3,k2+1,k2+2,n2),ierr)
 es%v_splines1 = 0.0_f64
 es%v_splines2 = 0.0_f64
 
-SLL_ALLOCATE(es%tab_index_coeff1(n1),ierr)
-SLL_ALLOCATE(es%tab_index_coeff2(n2),ierr)
+SLL_ALLOCATE(es%tab_i1(n1),ierr)
+SLL_ALLOCATE(es%tab_i2(n2),ierr)
 
-num_pts_g1 = size(es%gauss_pts1,2)
-num_pts_g2 = size(es%gauss_pts2,2)
+g1 = size(es%gauss1,2)
+g2 = size(es%gauss2,2)
 SLL_ALLOCATE(es%rho_coeff_1d((n1+1)*(n2+1)),ierr)
 
 allocate(work1(k1+1,k1+1))
@@ -472,8 +477,8 @@ allocate(dbs2(k2+1,2))
 
 do i = 1, n1
   eta1  = eta1_min + (i-1)*es%delta_eta1
-  do ii=1,num_pts_g1
-    x1    = eta1  + es%gauss_pts1(1,ii)
+  do ii=1,g1
+    x1    = eta1  + es%gauss1(1,ii)
     gspl1 = x1
     ispl1 = k1+i
     call bsplvd(es%db,es%t1,k1+1,gspl1,ispl1,work1,dbs1,2)
@@ -483,13 +488,13 @@ do i = 1, n1
     call bsplvd(es%db,es%t1_rho,k1+1,x1,left_rho,work1,dbs1,1)
     es%v_splines1(3,:,ii,i) = dbs1(:,1)
   end do
-  es%tab_index_coeff1(i) = left_rho
+  es%tab_i1(i) = left_rho
 end do
 
 do j = 1, n2
   eta2  = eta2_min + (j-1)*es%delta_eta2
-  do jj=1,num_pts_g2
-    x2  = eta2+es%gauss_pts2(1,jj)
+  do jj=1,g2
+    x2  = eta2+es%gauss2(1,jj)
     gspl2 = x2
     ispl2 = k2+j
     call bsplvd(es%db,es%t2,k2+1,gspl2,ispl2,work2,dbs2,2)
@@ -499,7 +504,7 @@ do j = 1, n2
     call bsplvd(es%db,es%t2_rho,k2+1,x2,left_rho,work2,dbs2,1)
     es%v_splines2(3,:,jj,j) = dbs2(:,1)
   end do
-  es%tab_index_coeff2(j) = left_rho
+  es%tab_i2(j) = left_rho
 end do
 
 deallocate(work1)
@@ -643,8 +648,8 @@ sll_int32 :: ierr
 
 SLL_DEALLOCATE(es%t1,ierr)
 SLL_DEALLOCATE(es%t2,ierr)
-SLL_DEALLOCATE(es%gauss_pts1,ierr)
-SLL_DEALLOCATE(es%gauss_pts2,ierr)
+SLL_DEALLOCATE(es%gauss1,ierr)
+SLL_DEALLOCATE(es%gauss2,ierr)
 SLL_DEALLOCATE(es%local_to_global_indices,ierr)
 SLL_DEALLOCATE(es%local_to_global_indices_source,ierr)
 SLL_DEALLOCATE(es%local_to_global_indices_source_bis,ierr)
@@ -657,8 +662,8 @@ SLL_DEALLOCATE(es%t1_rho,ierr)
 SLL_DEALLOCATE(es%t2_rho,ierr)
 SLL_DEALLOCATE(es%v_splines1,ierr)
 SLL_DEALLOCATE(es%v_splines2,ierr)
-SLL_DEALLOCATE(es%tab_index_coeff1,ierr)
-SLL_DEALLOCATE(es%tab_index_coeff2,ierr)
+SLL_DEALLOCATE(es%tab_i1,ierr)
+SLL_DEALLOCATE(es%tab_i2,ierr)
 
 call sll_delete(es%csr_mat)
 call sll_delete(es%csr_mat_with_constraint)
@@ -720,7 +725,7 @@ sll_real64, dimension(:,:),   allocatable :: S_b1
 sll_real64, dimension(:,:),   allocatable :: S_b2  
 sll_real64, dimension(:),     allocatable :: mass
 sll_real64, dimension(:),     allocatable :: stif
-sll_real64, dimension(:,:,:), pointer     :: source
+sll_real64, dimension(:,:,:), allocatable :: source
 
 sll_int32  :: ierr
 sll_int32  :: i
@@ -732,15 +737,13 @@ sll_real64 :: eta1_min
 sll_real64 :: eta2_min
 sll_real64 :: eta1
 sll_real64 :: eta2
-sll_int32  :: num_pts_g1
-sll_int32  :: num_pts_g2
+sll_int32  :: g1
+sll_int32  :: g2
 sll_int32  :: ii,kk,mm
 sll_int32  :: jj,ll,nn
 sll_int32  :: ig, jg
 sll_real64 :: x1, w1
 sll_real64 :: x2, w2
-sll_int32  :: index1
-sll_int32  :: index2
 sll_real64 :: val_c
 sll_real64 :: val_a11
 sll_real64 :: val_a12
@@ -761,8 +764,8 @@ sll_real64 :: B22
 sll_real64 :: MC
 sll_real64 :: C1
 sll_real64 :: C2    
-sll_int32  :: index3, index4
-sll_int32  :: index_coef1,index_coef2
+sll_int32  :: i3, i4
+sll_int32  :: i1,i2
 sll_int32  :: b, bprime,x,y
 sll_int32  :: a, aprime
 sll_real64 :: elt_mat_global
@@ -786,8 +789,8 @@ delta1     = es%delta_eta1
 delta2     = es%delta_eta2 
 eta1_min   = es%eta1_min  
 eta2_min   = es%eta2_min  
-num_pts_g1 = size(es%gauss_pts1,2)
-num_pts_g2 = size(es%gauss_pts2,2)
+g1 = size(es%gauss1,2)
+g2 = size(es%gauss2,2)
 k1         = es%k1
 k2         = es%k2
 n1         = es%n1
@@ -807,27 +810,26 @@ SLL_CLEAR_ALLOCATE(M_bv(1:(k1+1)*(k2+1),1:(k1+1)*(k2+1)),ierr)
 SLL_CLEAR_ALLOCATE(mass(1:(k1+1)*(k2+1)),ierr)
 SLL_CLEAR_ALLOCATE(stif(1:(k1+1)*(k2+1)),ierr)
 
-!$OMP PARALLEL DEFAULT(NONE) &
-!$OMP SHARED( es, c_field, &
+!$OMP PARALLEL DEFAULT(NONE)                                      &
+!$OMP SHARED( es, c_field,                                        &
 !$OMP a11_field_mat, a12_field_mat, a21_field_mat, a22_field_mat, &
-!$OMP b1_field_vect, b2_field_vect, k1, k2, source, intjac ) &
-!$OMP FIRSTPRIVATE(n1, n2, delta1, delta2, eta1_min, eta2_min, &
-!$OMP num_pts_g1, num_pts_g2)  &
-!$OMP PRIVATE(nthreads, tid, &
-!$OMP i,j,eta1,eta2,mass,stif, &
-!$OMP x2,w2,jg,ig,x1,w1, &
-!$OMP w1w2,val_c,val_a11,val_a12,val_a21,val_a22, &
-!$OMP val_b1, val_b1_der1, val_b1_der2, &
-!$OMP val_b2, val_b2_der1, val_b2_der2, &
-!$OMP icell, ii, jj, kk, ll, mm, nn,   &
-!$OMP jac_mat, val_jac, w1w2_by_val_jac, w1w2_val_jac, &
-!$OMP B11, B12, B21, B22, MC, C1, C2, &
-!$OMP v1, v2, v3, v4, r1, r2, d1, d2, d3, d4, &
-!$OMP v3v4, d3v4, v3d4, &
-!$OMP M_c,K_11,K_12,K_21,K_22,M_bv,S_b1,S_b2, &
-!$OMP index_coef2, index_coef1, &
-!$OMP index1, index2, index3, index4, &
-!$OMP a, b, x, y, aprime, bprime,  &
+!$OMP b1_field_vect, b2_field_vect, k1, k2, source, intjac )      &
+!$OMP FIRSTPRIVATE(n1, n2, delta1, delta2, eta1_min, eta2_min,    &
+!$OMP g1, g2)                                     &
+!$OMP PRIVATE(nthreads, tid,                                      &
+!$OMP i,j,eta1,eta2,mass,stif,                                    &
+!$OMP x2,w2,jg,ig,x1,w1,                                          &
+!$OMP w1w2,val_c,val_a11,val_a12,val_a21,val_a22,                 &
+!$OMP val_b1, val_b1_der1, val_b1_der2,                           &
+!$OMP val_b2, val_b2_der1, val_b2_der2,                           &
+!$OMP icell, ii, jj, kk, ll, mm, nn,                              &
+!$OMP jac_mat, val_jac, w1w2_by_val_jac, w1w2_val_jac,            &
+!$OMP B11, B12, B21, B22, MC, C1, C2,                             &
+!$OMP v1, v2, v3, v4, r1, r2, d1, d2, d3, d4,                     &
+!$OMP v3v4, d3v4, v3d4,                                           &
+!$OMP M_c,K_11,K_12,K_21,K_22,M_bv,S_b1,S_b2,                     &
+!$OMP i2, i1, i3, i4,                                             &
+!$OMP a, b, x, y, aprime, bprime,                                 &
 !$OMP r1r2, v1v2, d1v2, v1d2, elt_mat_global )
 
 !$ tid = omp_get_thread_num()
@@ -852,15 +854,15 @@ do i = 1, n1
   S_b1  = 0.0_f64
   S_b2  = 0.0_f64
 
-  do jg=1,num_pts_g2
+  do jg=1,g2
   
-    x2  = eta2+es%gauss_pts2(1,jg)
-    w2 = es%gauss_pts2(2,jg)
+    x2  = eta2+es%gauss2(1,jg)
+    w2 = es%gauss2(2,jg)
   
-    do ig=1,num_pts_g1
+    do ig=1,g1
     
-      x1  = eta1+es%gauss_pts1(1,ig)
-      w1 = es%gauss_pts1(2,ig)
+      x1  = eta1+es%gauss1(1,ig)
+      w1 = es%gauss1(2,ig)
 
       w1w2 = w1*w2
 
@@ -987,35 +989,27 @@ do i = 1, n1
   b = 0
   do jj = 0, k2
 
-    index3 = j + jj
+    i3 = j + jj
     
     do ii = 0,k1
         
-      index1 = i + ii
-
-      x = index1 + (index3-1)*(n1+k1)
+      x = i + ii + (i3-1)*(n1+k1)
       b = b+1
       a = es%local_to_global_indices(b, icell)
          
       es%masse(x) = es%masse(x) + mass(b)
       es%stiff(x) = es%stiff(x) + stif(b)
 
-      index_coef1 = es%tab_index_coeff1(i) - k1 + ii
-      index_coef2 = es%tab_index_coeff2(j) - k2 + jj
+      i1 = es%tab_i1(i) - k1 + ii
+      i2 = es%tab_i2(j) - k2 + jj
 
-      es%local_to_global_indices_source(b,icell)= &
-              index_coef1 + (index_coef2-1)*(n1+1)
+      es%local_to_global_indices_source(b,icell)= i1 + (i2-1)*(n1+1)
 
       bprime = 0
       do ll = 0,k2
-             
-        index4 = j + ll
-             
+        i4 = j + ll
         do kk = 0,k1
-                
-          index2 = i + kk
-
-          y      = index2 + (index4-1)*(n1+k1)
+          y      = i + kk+ (i4-1)*(n1+k1)
           bprime = bprime+1 
           aprime = es%local_to_global_indices(bprime,icell)
 
@@ -1152,11 +1146,11 @@ sll_real64, dimension(:), allocatable    :: m_rho_loc
 sll_int32  :: i
 sll_int32  :: j
 sll_int32  :: k
-sll_int32  :: num_pts_g1
-sll_int32  :: num_pts_g2
+sll_int32  :: g1
+sll_int32  :: g2
 sll_int32  :: x, n, b
 sll_int32  :: ii, jj, kk, ll, mm, nn
-sll_int32  :: index1, index3
+sll_int32  :: i3
 
 sll_real64 :: w1, w2, x1, x2, eta1, eta2
 sll_real64 :: val_f, val_j, valfj, jac_mat(2,2)
@@ -1170,8 +1164,8 @@ sll_int32  :: k1, k2, n1, n2
 !$ sll_int32  :: tid = 0
 !$ sll_int32  :: nthreads = 1
   
-num_pts_g1 = size(es%gauss_pts1,2)
-num_pts_g2 = size(es%gauss_pts2,2)
+g1 = size(es%gauss1,2)
+g2 = size(es%gauss2,2)
 
 
 k1              = es%k1
@@ -1206,10 +1200,10 @@ class is (sll_scalar_field_2d_analytic)
   SLL_CLEAR_ALLOCATE(M_rho_loc(1:(k1+1)*(k2+1)),ierr)
 
   !$OMP PARALLEL &
-  !$OMP FIRSTPRIVATE(n1, n2, num_pts_g1, num_pts_g2, &
+  !$OMP FIRSTPRIVATE(n1, n2, g1, g2, &
   !$OMP              tid, nthreads)                      &
   !$OMP PRIVATE(i,j,ii,jj,kk,ll,mm,nn,n,m_rho_loc,x,b,   &
-  !$OMP         index1,index3,eta1,eta2,x1,x2,  &
+  !$OMP         i3,eta1,eta2,x1,x2,  &
   !$OMP         w1,w2,spline1,spline2,val_f,val_j, &
   !$OMP         valfj, jac_mat)
   !$ tid = omp_get_thread_num()
@@ -1224,12 +1218,12 @@ class is (sll_scalar_field_2d_analytic)
       M_rho_loc = 0.0_f64
       eta1  = es%eta1_min + (i-1)*es%delta_eta1
       eta2  = es%eta2_min + (j-1)*es%delta_eta2
-      do jj=1,num_pts_g2
-        x2  = eta2 + es%gauss_pts2(1,jj)
-        w2 = es%gauss_pts2(2,jj)
-        do ii=1,num_pts_g1
-          x1      = eta1 + es%gauss_pts1(1,ii)
-          w1      = es%gauss_pts1(2,ii)
+      do jj=1,g2
+        x2  = eta2 + es%gauss2(1,jj)
+        w2 = es%gauss2(2,jj)
+        do ii=1,g1
+          x1      = eta1 + es%gauss1(1,ii)
+          w1      = es%gauss1(2,ii)
       
           val_f   = rho%value_at_point(x1,x2)
           jac_mat = rho%get_jacobian_matrix(x1,x2)
@@ -1251,10 +1245,9 @@ class is (sll_scalar_field_2d_analytic)
       end do
 
       do mm = 0,k2
-        index3 = j + mm
+        i3 = j + mm
         do nn = 0,k1
-          index1 = i + nn
-          x             =  index1 + (index3-1)*(n1+k1)
+          x             =  i + nn + (i3-1)*(n1+k1)
           b             =  nn + 1 + mm * (k1+1)
           es%rho_vec(x) =  es%rho_vec(x)  + M_rho_loc(b)
             
