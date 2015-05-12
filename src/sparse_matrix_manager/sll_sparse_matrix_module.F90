@@ -392,18 +392,17 @@ end do
 
 end subroutine sll_mult_csr_matrix_vector
 
-subroutine sll_add_to_csr_matrix(mat, val, a, aprime)
+subroutine sll_add_to_csr_matrix(mat, val, row, col)
 
 type(sll_csr_matrix), intent(inout) :: mat
 sll_real64,           intent(in)    :: val
-sll_int32,            intent(in)    :: a
-sll_int32,            intent(in)    :: aprime
+sll_int32,            intent(in)    :: row
+sll_int32,            intent(in)    :: col
 
 sll_int32 :: k
 
-! THE CURRENT LINE IS self%row_ptr(ai_A)
-do k = mat%row_ptr(a), mat%row_ptr(a+1) - 1
-  if (mat%col_ind(k) == aprime) then
+do k = mat%row_ptr(row), mat%row_ptr(row+1) - 1
+  if (mat%col_ind(k) == col) then
     mat%val(k) = mat%val(k) + val
     exit
   end if
