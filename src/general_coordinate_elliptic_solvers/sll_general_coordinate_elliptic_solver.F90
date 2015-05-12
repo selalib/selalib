@@ -108,7 +108,6 @@ type, public :: general_coordinate_elliptic_solver
   sll_real64, dimension(:,:,:,:), pointer :: v_splines1
   sll_real64, dimension(:,:,:,:), pointer :: v_splines2
 
-  sll_real64, dimension(:,:,:,:), pointer :: val_jac
   sll_int32 , dimension(:),       pointer :: tab_index_coeff1
   sll_int32 , dimension(:),       pointer :: tab_index_coeff2
   type(sll_csr_matrix),           pointer :: csr_mat
@@ -446,8 +445,6 @@ SLL_ALLOCATE(es%v_splines2(3,spline_degree2+1,spline_degree2+2,num_cells2),ierr)
 es%v_splines1 = 0.0_f64
 es%v_splines2 = 0.0_f64
 
-SLL_ALLOCATE(es%val_jac(spline_degree1+2,spline_degree2+2,num_cells1,num_cells2),ierr)
-es%val_jac = 0.0_f64
 SLL_ALLOCATE(es%tab_index_coeff1(num_cells1),ierr)
 SLL_ALLOCATE(es%tab_index_coeff2(num_cells2),ierr)
 
@@ -618,7 +615,6 @@ SLL_DEALLOCATE(es%knots1_rho,ierr)
 SLL_DEALLOCATE(es%knots2_rho,ierr)
 SLL_DEALLOCATE(es%v_splines1,ierr)
 SLL_DEALLOCATE(es%v_splines2,ierr)
-SLL_DEALLOCATE(es%val_jac,ierr)
 SLL_DEALLOCATE(es%tab_index_coeff1,ierr)
 SLL_DEALLOCATE(es%tab_index_coeff2,ierr)
 
@@ -858,8 +854,6 @@ do i = 1, nc_1
  
       jac_mat = c_field%get_jacobian_matrix(xg,yg)
       val_jac = jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1)
-
-      es%val_jac(ig,jg,i,j) = val_jac
 
       wxy_by_val_jac = wxy/val_jac
       wxy_val_jac    = wxy*val_jac
@@ -1194,7 +1188,7 @@ sll_int32  :: bc1_min, bc1_max, bc2_min, bc2_max
 sll_int32  :: index1, index3, nbsp
 
 sll_real64 :: wgpt1, wgpt2, gpt1, gpt2, eta1, eta2
-sll_real64 :: val_f, val_j, valfj
+sll_real64 :: val_f, val_j, valfj, jac_mat(2,2)
 sll_real64 :: spline1, spline2
 
 sll_real64 :: int_rho
@@ -1275,7 +1269,9 @@ class is (sll_scalar_field_2d_analytic)
           wgpt1 = es%gauss_pts1(2,ii)
       
           val_f = rho%value_at_point(gpt1,gpt2)
-          val_j = es%val_jac(ii,jj,i,j)*wgpt1*wgpt2
+          jac_mat = rho%get_jacobian_matrix(gpt1,gpt2)
+          val_j   = jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1)
+          val_j = val_j*wgpt1*wgpt2
           valfj = val_f*val_j
           int_rho = int_rho + valfj 
           int_jac = int_jac + val_j
