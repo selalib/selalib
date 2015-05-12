@@ -26,13 +26,15 @@ subroutine choles(mudl,ae,as)
 
 !**********************************************************************
 
-sll_int32, dimension(:), intent(in) :: mudl
-sll_real64, dimension(:), intent(in)  :: ae
+sll_int32,  dimension(:), intent(in)    :: mudl
+sll_real64, dimension(:), intent(in)    :: ae
 sll_real64, dimension(:), intent(inout) :: as
-sll_int32 :: kj, jid, jmi, ij, jj, id, imi, ii, ntest
-sll_real64    :: s, xii
+
+sll_int32  :: kj, jid, jmi, ij, jj, id, imi, ii, ntest
+sll_int32  :: i, j
+sll_real64 :: s, xii
+
 sll_real64, parameter  :: eps = 1.0d-10
-sll_int32 :: i, j
 
 ntest = 0
 as(1) = sqrt(ae(1))
@@ -42,41 +44,41 @@ ii    = mudl(1)
 
 do  i=2,size(mudl)
 
-   xii = 0
-   imi = ii+1
-   ii  = mudl(i)
-   id  = i - ii
-   jj  = mudl(imi+id-1)
+  xii = 0
+  imi = ii+1
+  ii  = mudl(i)
+  id  = i - ii
+  jj  = mudl(imi+id-1)
 
-   do  ij =imi,ii-1
-      j   = ij+id
-      jmi = jj+1
-      jj  = mudl(j)
-      jid = j - jj -id
-      s = 0
+  do ij = imi,ii-1
+    j   = ij+id
+    jmi = jj+1
+    jj  = mudl(j)
+    jid = j - jj -id
+    s   = 0
 
-      do  kj = max( jmi , imi-jid )  ,  jj-1
-         s = s + as( kj ) * as( kj + jid )
-      end do
+    do  kj = max( jmi , imi-jid )  ,  jj-1
+      s = s + as( kj ) * as( kj + jid )
+    end do
 
-      as(ij) = ( ae(ij) - s ) / as(jj)
-      xii   = xii + as(ij)*as(ij)
-   end do 
+    as(ij) = ( ae(ij) - s ) / as(jj)
+    xii    = xii + as(ij)*as(ij)
+  end do 
 
-   xii = ae(ii)  - xii
-   if ( xii  <  eps*abs(ae(ii))) then
-      write(6,900) i,eps
-      write(6,901)xii,eps,ae(ii)
-      ntest = 1
-   end if
+  xii = ae(ii)  - xii
+  if ( xii  <  eps*abs(ae(ii))) then
+    write(6,900) i,eps
+    write(6,901)xii,eps,ae(ii)
+    ntest = 1
+  end if
 
-   as(ii) = sqrt ( xii )
+  as(ii) = sqrt ( xii )
 
 end do
 
 if(ntest==1) then 
-   write(6,902) 
-   stop "choleski"
+  write(6,902) 
+  stop "choleski"
 end if
 
 !--- 9.0 --- Formats ---------------------------------------------------
@@ -103,12 +105,13 @@ end subroutine choles
 !f hecht  - juin 84 inria , f. hermeline aout 89 cel/v
 subroutine desrem(mudl,a,be,ntdl,bs)
 
-sll_int32   :: ntdl
-sll_int32   :: mudl(0:*)
-sll_int32   :: ii, ij, kj, il
-sll_int32   :: i
-sll_int32   :: j
-sll_real64  :: a(*),be(*),bs(*)
+sll_int32,  intent(in)    :: mudl(0:*)
+sll_real64, intent(in)    :: a(*)
+sll_real64, intent(in)    :: be(*)
+sll_int32,  intent(in)    :: ntdl
+sll_real64, intent(inout) :: bs(*)
+
+sll_int32   :: ii, ij, kj, il, i, j
 sll_real64  :: y
 
 ii = mudl(1)

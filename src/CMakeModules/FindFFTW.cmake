@@ -11,6 +11,7 @@ ENDIF()
 SET(TRIAL_PATHS $ENV{FFTW_HOME}
                 ${FFTW_ROOT}
                 $ENV{FFTW_DIR}
+                $ENV{FFTW_BASE}
                 /usr
                 /usr/local
                 /usr/lib64/mpich2

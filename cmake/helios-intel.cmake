@@ -1,6 +1,5 @@
 #once compiling in helios, use then
-#cmake ../selalib/src -DOPTIONS_FILE=/csc/home2/mehren/selalib_mac/selalib/cmake/helios-intel-new.cmake 
-#(change with your home directory)
+#cmake ../selalib/src -DOPTIONS_FILE=../cmake/helios-intel.cmake 
 
 #bashrc should be similar to that
 ## .bashrc
@@ -19,25 +18,41 @@
 #export CXX=icpc
 #export ARCH=helios
 
-SET(CMAKE_BUILD_TYPE "Release")
-SET(CMAKE_Fortran_COMPILER "/opt/intel/composer_xe_2013_sp1.4.211/bin/intel64/ifort")
 
-SET(FFTW_ENABLED ON CACHE BOOL "" FORCE)
-SET(FFTW_INCLUDE_DIRS "/csc/softs/fftw/fftw-3.3.4/intel-14.0.2.144/intelmpi-4.1.3.049/default/include")
-SET(FFTW_LIBRARY "/csc/softs/fftw/fftw-3.3.4/intel-14.0.2.144/intelmpi-4.1.3.049/default/lib/libfftw3.a")
-
+#Configuration that should be (is) independent of the module versions
+SET(CMAKE_BUILD_TYPE "Release" CACHE STRING "We chose Release" FORCE)
+SET(CMAKE_Fortran_COMPILER "ifort")
 
 SET(HDF5_ENABLED ON CACHE BOOL "" FORCE)
 SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "" FORCE)
-SET(HDF5_ROOT "/csc/softs/hdf/hdf5-1.8.13_parallel/intel-14.0.2.144/intelmpi-4.1.3.049/default")
-SET(HDF5_C_LIBRARY "/csc/softs/hdf/hdf5-1.8.13_parallel/intel-14.0.2.144/intelmpi-4.1.3.049/default/lib/libhdf5.a")
-SET(HDF5_FORTRAN_LIBRARY "/csc/softs/hdf/hdf5-1.8.13_parallel/intel-14.0.2.144/intelmpi-4.1.3.049/default/lib/libhdf5_fortran.a")
-SET(HDF5_INCLUDE_DIR "/csc/softs/hdf/hdf5-1.8.13_parallel/intel-14.0.2.144/intelmpi-4.1.3.049/default/include")
-SET(HDF5_INCLUDE_DIR_FORTRAN "/csc/softs/hdf/hdf5-1.8.13_parallel/intel-14.0.2.144/intelmpi-4.1.3.049/default/include")
+SET(HDF5_ROOT $ENV{HDF5_DIR})
 
-SET(MPI_Fortran_COMPILER "/opt/intel/impi/4.1.3.049/intel64/bin/mpiifort")
-SET(MPI_C_COMPILER "/opt/intel/impi/4.1.3.049/intel64/bin/mpicc")
-SET(MPI_CXX_COMPILER "/opt/intel/impi/4.1.3.049/intel64/bin/mpiicpc")
+SET(MPI_Fortran_COMPILER "mpiifort")
+SET(MPI_C_COMPILER "mpicc")
+SET(MPI_CXX_COMPILER "mpiicpc")
+
+SET(USE_MKL ON CACHE BOOL "" FORCE)
+SET(CMAKE_Fortran_FLAGS_RELEASE "-nowarn -O3 -xHost -ip -fpic -g" CACHE STRING "Enable -g to analyse with vtune " FORCE)
+
+# SET(CMAKE_BUILD_TYPE "Release" CACHE STRING "We chose Release" FORCE)
+# SET(CMAKE_Fortran_COMPILER "/opt/intel/composer_xe_2013_sp1.4.211/bin/intel64/ifort")
+# 
+# SET(FFTW_ENABLED ON CACHE BOOL "" FORCE)
+# SET(FFTW_INCLUDE_DIRS "/csc/softs/fftw/fftw-3.3.4/intel-14.0.2.144/intelmpi-4.1.3.049/default/include")
+# SET(FFTW_LIBRARY "/csc/softs/fftw/fftw-3.3.4/intel-14.0.2.144/intelmpi-4.1.3.049/default/lib/libfftw3.a")
+# 
+# 
+# SET(HDF5_ENABLED ON CACHE BOOL "" FORCE)
+# SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "" FORCE)
+# SET(HDF5_ROOT "/csc/softs/hdf/hdf5-1.8.13_parallel/intel-14.0.2.144/intelmpi-4.1.3.049/default")
+# SET(HDF5_C_LIBRARY "/csc/softs/hdf/hdf5-1.8.13_parallel/intel-14.0.2.144/intelmpi-4.1.3.049/default/lib/libhdf5.a")
+# SET(HDF5_FORTRAN_LIBRARY "/csc/softs/hdf/hdf5-1.8.13_parallel/intel-14.0.2.144/intelmpi-4.1.3.049/default/lib/libhdf5_fortran.a")
+# SET(HDF5_INCLUDE_DIR "/csc/softs/hdf/hdf5-1.8.13_parallel/intel-14.0.2.144/intelmpi-4.1.3.049/default/include")
+# SET(HDF5_INCLUDE_DIR_FORTRAN "/csc/softs/hdf/hdf5-1.8.13_parallel/intel-14.0.2.144/intelmpi-4.1.3.049/default/include")
+# 
+# SET(MPI_Fortran_COMPILER "/opt/intel/impi/4.1.3.049/intel64/bin/mpiifort")
+# SET(MPI_C_COMPILER "/opt/intel/impi/4.1.3.049/intel64/bin/mpicc")
+# SET(MPI_CXX_COMPILER "/opt/intel/impi/4.1.3.049/intel64/bin/mpiicpc")
 
 #intel/14.0.3.174          intel/15.0.0.090
 #intel/14.0.4.211(default) intel/15.0.1.133

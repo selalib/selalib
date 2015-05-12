@@ -174,7 +174,7 @@ print*, 'e'
 end subroutine particles_center_gnuplot_inline
 
 !> point3D format http://www.visitusers.org/index.php?title=Reading_point_data
-!> This format is designed to plot x,y,z particles with one weight (only four
+!> This format is designed to plot x,y,z particles with one weight (only for
 !> characteristics)
 !> This format is readable by VisIt
 subroutine pq_plot_format_points3d( plot_name, x, v, iplot)
@@ -200,8 +200,7 @@ close(file_id)
 end subroutine pq_plot_format_points3d
 
 !> point3D format http://www.visitusers.org/index.php?title=Reading_point_data
-!> This format is designed to plot x,y,z particles with one weight (only four
-!> characteristics)
+!> This format is designed to plot x,y,z particles
 !> This format is readable by VisIt
 subroutine pqr_plot_format_points3d( plot_name, x, y, z, iplot)
 character(len=*), intent(in) :: plot_name

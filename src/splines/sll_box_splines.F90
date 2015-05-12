@@ -83,17 +83,17 @@ contains  ! ****************************************************************
   !> @param[in] data vector containing the data to be fit
   !> @param[in] deg integer representing the box spline degree
   !> @param[in] spline box spline type element, containting the mesh, bc, ...
-  subroutine compute_box_spline_2d( data, deg, spline )
+  subroutine compute_coeff_box_spline_2d( data, deg, spline )
     sll_real64, dimension(:), intent(in), target :: data
     sll_int32, intent(in)                        :: deg
-    type(sll_box_spline_2d), pointer, intent(in)     :: spline
+    type(sll_box_spline_2d), pointer, intent(in) :: spline
     sll_int32  :: bc
     sll_int32  :: bc_selector
 
 
     if( .not. associated(spline) ) then
        ! FIXME: THROW ERROR
-       print *, 'ERROR: compute_box_spline_2d(): ', &
+       print *, 'ERROR: compute_coeff_box_spline_2d(): ', &
             'uninitialized spline object passed as argument. '
        print *, "Exiting..."
        STOP
@@ -122,19 +122,19 @@ contains  ! ****************************************************************
     select case (bc_selector)
        case ( 1 )
           ! boundary condition type is dirichlet
-          call compute_box_spline_2d_diri( data, deg, spline )
+          call compute_coeff_box_spline_2d_diri( data, deg, spline )
        case ( 2 )
           ! boundary condition type is periodic
-          call compute_box_spline_2d_prdc( data, deg, spline )
+          call compute_coeff_box_spline_2d_prdc( data, deg, spline )
        case ( 4 )
           ! boundary condition type is neumann
-          call compute_box_spline_2d_neum( data, deg, spline )
+          call compute_coeff_box_spline_2d_neum( data, deg, spline )
        case default
-          print *, 'ERROR: compute_box_spline_2d(): ', &
+          print *, 'ERROR: compute_coeff_box_spline_2d(): ', &
             'did not recognize given boundary condition combination.'
        STOP
     end select
-  end subroutine compute_box_spline_2d
+  end subroutine compute_coeff_box_spline_2d
 
 
   !---------------------------------------------------------------------------
@@ -144,7 +144,7 @@ contains  ! ****************************************************************
   !> @param[in] data vector containing the data to be fit
   !> @param[in] deg integer representing the box spline degree
   !> @param[in] spline box spline type element, containting the mesh, bc, ...
-  subroutine compute_box_spline_2d_diri( data, deg, spline )
+  subroutine compute_coeff_box_spline_2d_diri( data, deg, spline )
     sll_real64, dimension(:), intent(in), target  :: data  ! data to be fit
     type(sll_box_spline_2d), pointer              :: spline
     sll_int32, intent(in)                         :: deg
@@ -176,7 +176,8 @@ contains  ! ****************************************************************
              filter = pre_filter_int(spline%mesh, k, deg)
           else
              filter = 0._f64
-             print *, "Error in compute_box_spline_2d_diri: Filter not yet defined"
+             print *, "Error in compute_coeff_box_spline_2d_diri():"
+             print *, "       Filter not yet defined"
              STOP
           end if
           nei = spline%mesh%local_hex_to_global(k1_ref, k2_ref, k)
@@ -190,7 +191,7 @@ contains  ! ****************************************************************
        end do
     end do
 
-  end subroutine compute_box_spline_2d_diri
+  end subroutine compute_coeff_box_spline_2d_diri
 
 
   !---------------------------------------------------------------------------
@@ -200,7 +201,7 @@ contains  ! ****************************************************************
   !> @param[in] data vector containing the data to be fit
   !> @param[in] deg integer representing the box spline degree
   !> @param[in] spline box spline type element, containting the mesh, bc, ...
-  subroutine compute_box_spline_2d_prdc( data, deg, spline )
+  subroutine compute_coeff_box_spline_2d_prdc( data, deg, spline )
     sll_real64, dimension(:), intent(in), target :: data  ! data to be fit
     type(sll_box_spline_2d), pointer             :: spline
     sll_int32, intent(in)                        :: deg
@@ -214,7 +215,7 @@ contains  ! ****************************************************************
        spline%coeffs(i) = real(0,f64)*data(i)
     end do
 
-  end subroutine compute_box_spline_2d_prdc
+  end subroutine compute_coeff_box_spline_2d_prdc
 
   !---------------------------------------------------------------------------
   !> @brief Computes box splines coefficients with neumann BC.
@@ -223,7 +224,7 @@ contains  ! ****************************************************************
   !> @param[in] data vector containing the data to be fit
   !> @param[in] deg integer representing the box spline degree
   !> @param[in] spline box spline type element, containting the mesh, bc, ...
-  subroutine compute_box_spline_2d_neum( data, deg, spline )
+  subroutine compute_coeff_box_spline_2d_neum( data, deg, spline )
     sll_real64, dimension(:), intent(in), target :: data  ! data to be fit
     sll_int32, intent(in)                        :: deg
     type(sll_box_spline_2d), pointer             :: spline
@@ -237,7 +238,7 @@ contains  ! ****************************************************************
        spline%coeffs(i) = real(0,f64)*data(i)
     end do
 
-  end subroutine compute_box_spline_2d_neum
+  end subroutine compute_coeff_box_spline_2d_neum
 
   !---------------------------------------------------------------------------
   !> @brief Computes the binomial coefficient (n, k)
@@ -393,6 +394,33 @@ contains  ! ****************************************************************
     end if
 
   end function chi_gen_val
+
+
+  !---------------------------------------------------------------------------
+  !> @brief Computes the value of a box spline
+  !> @details This function computes the value of a box spline of degree
+  !> deg at the point (x1,x2)
+  !> @param[in] spline box spline which contains the reference hexagonal mesh
+  !> @param[in] x1 real containing first coordinate of point
+  !> @param[in] x2 real containing second coordinate of point
+  !> @param[in] deg real containing the degree of the spline to be computed
+  !> @return the value of the box spline at (x1,x2)
+  function compute_box_spline(spline, x1, x2, deg) result(val)
+    type(sll_box_spline_2d), pointer    :: spline
+    sll_real64, intent(in) :: x1
+    sll_real64, intent(in) :: x2
+    sll_int32,  intent(in) :: deg
+    sll_real64 :: val
+    sll_real64 :: x1_basis
+    sll_real64 :: x2_basis
+
+    x1_basis = change_basis_x1(spline, x1, x2)
+    x2_basis = change_basis_x2(spline, x1, x2)
+
+    val = chi_gen_val(x1_basis, x2_basis, deg)
+
+  end function compute_box_spline
+
 
 
   !---------------------------------------------------------------------------
@@ -568,6 +596,70 @@ contains  ! ****************************************************************
   end function hex_interpolate_value
 
 
+  !---------------------------------------------------------
+  !> @brief Computes indices of non null splines on a given cell
+  !> @details The function returns for a given cell and a certain degree
+  !> the indices of the splines of that degree that are different to 0
+  !> on that cell.
+  !> @param[IN] mesh hexagonal mesh, the domain
+  !> @param[IN] cell_index index of the cell where we wish to know the
+  !> indices of the non vanishing splines
+  !> @param[IN] deg integer of the degree of the splines
+  !> @param[OUT] index_nZ vector of size 3*deg*deg containing the global
+  !> indices of all non-zero splines
+  function non_zeros_splines(mesh, cell_index, deg) result(index_nZ)
+    type(sll_hex_mesh_2d), pointer, intent(in) :: mesh
+    sll_int32,  intent(in)  :: deg
+    sll_int32,  intent(in)  :: cell_index
+    !PN do not work with ifort
+    !sll_int32, allocatable  :: index_nZ(:)
+    sll_int32               :: index_nZ(3*deg*deg)
+    sll_int32               :: ierr
+    sll_int32               :: nei_point
+    sll_int32               :: non_Zero
+    sll_int32               :: distance
+    sll_int32               :: edge1, edge2, edge3
+    sll_int32               :: first
+    sll_int32               :: last
+    sll_int32               :: i, j
+    sll_int32               :: last_point
+    sll_int32               :: current_nZ
+    
+    ! Number of non zero splines on a cell:
+    non_Zero = 3 * deg * deg
+    !PN Do not work with ifort
+    !PN SLL_ALLOCATE(index_nZ(non_Zero), ierr)
+    index_nZ(1:non_Zero) = -1
+    
+    ! Getting the cell vertices which are the first indices of the non zero splines
+    call get_cell_vertices_index(mesh%center_cartesian_coord(1,cell_index), &
+         mesh%center_cartesian_coord(2,cell_index),&
+         mesh, &
+         edge1, edge2, edge3)
+    index_nZ(1) = edge1
+    index_nZ(2) = edge2
+    index_nZ(3) = edge3
+
+    current_nZ = 4
+    do distance = 1,deg-1
+       first = 1 + (distance-1)*(distance-1)*3
+       last = distance * distance * 3
+       do i=first,last
+          last_point = index_nZ(i)
+          if (last_point .eq. -1) then
+             print *, "ERROR in non_zero_splines: wrong index, i=", i
+          end if
+          do j=2,7 ! this represents the direct neighbours for a point
+             nei_point = local_to_global(mesh, last_point, j)
+             if ((nei_point.ne.-1).and.(.not.(ANY(index_nZ==nei_point)))) then
+                index_nZ(current_nZ) = nei_point
+                current_nZ = current_nZ + 1
+             end if
+          end do
+       end do
+    end do
+  end function non_zeros_splines
+
 
   !---------------------------------------------------------------------------
   !> @brief Computes x-derivative on (x,y)
@@ -591,12 +683,12 @@ contains  ! ****************************************************************
     h = max(10.*sll_epsilon_0*abs(x1), sll_epsilon_0)
 
     ! Finite difference method of order 5
-    fm2h = chi_gen_val(x1-2.0*h, x2, deg)
-    fm1h = chi_gen_val(x1 - h,   x2, deg)
-    fp2h = chi_gen_val(x1+2.0*h, x2, deg)
-    fp1h = chi_gen_val(x1 + h,   x2, deg)
+    fm2h = chi_gen_val(x1-2.0_f64*h, x2, deg)
+    fm1h = chi_gen_val(x1 - h,       x2, deg)
+    fp2h = chi_gen_val(x1+2.0_f64*h, x2, deg)
+    fp1h = chi_gen_val(x1 + h,       x2, deg)
 
-    val = 0.25/3._f64/h * ( - fp2h + 8._f64 * fp1h - 8._f64 * fm1h + fm2h)
+    val = 0.25_f64/3._f64/h * ( - fp2h + 8._f64 * fp1h - 8._f64 * fm1h + fm2h)
 
   end function boxspline_x1_derivative
 
@@ -665,13 +757,16 @@ contains  ! ****************************************************************
     
     if (nderiv1.eq.0) then
        if (nderiv2.eq.0) then
+          !> no derivative to compute
           val = chi_gen_val(x1_basis, x2_basis, deg)
        else if (nderiv2.eq.1) then
+          !> derivative with respect to the second coo
           val = boxspline_x2_derivative(x1_basis, x2_basis, deg)
        else
           print *, "Error in boxspline_val_der : cannot compute this derivative"
        end if
     else if (nderiv1.eq.1) then
+       ! derivative with respecto to the first coo
        if (nderiv2.eq.0) then
           val = boxspline_x1_derivative(x1_basis, x2_basis, deg)
        else
@@ -692,8 +787,9 @@ contains  ! ****************************************************************
   !> fekete points.
   !> Output file : basis_values.txt
   !> @param[in] deg integer with degree of splines
-  subroutine write_basis_values(deg)
+  subroutine write_basis_values(deg, rule)
     sll_int32,  intent(in)      :: deg
+    sll_int32,  intent(in)      :: rule
     sll_real64, dimension(2, 3) :: ref_pts
     sll_real64, dimension(3,10) :: quad_pw
     sll_real64, allocatable     :: disp_vec(:,:) !> displacement vectors
@@ -726,29 +822,30 @@ contains  ! ****************************************************************
     !    |
     !    +--0-----1-->
     ref_pts(:,1) = (/ 0._f64,               0.0_f64 /)
-    ref_pts(:,2) = (/ sqrt(3._f64)*0.5_f64, 0.5_f64 /)
-    ref_pts(:,3) = (/ 0._f64,               1.0_f64 /)
+    ref_pts(:,2) = (/ 0._f64,               1.0_f64 /)
+    ref_pts(:,3) = (/ sqrt(3._f64)*0.5_f64, 0.5_f64 /)
     
     ! Computing fekete points on equilateral reference triangle
     ! ie. triangle of vertices : (0,0) (0,1) and (1,0)
     ! see $SELALIB/src/integration/fekete.F90 for more info
     quad_pw = fekete_points_and_weights(ref_pts)
 
-    if (deg .eq. 1) then
-       nonZero = 3 !> Number of non null box splines on a cell
-       nderiv  = 1 !> Number of derivatives to be computed
+    nonZero = 3*deg*deg !> Number of non null box splines on a cell
+    nderiv  = 1 !> Number of derivatives to be computed
+    !> The displament vector correspond to the translation
+    !> done to obtain the other non null basis functions
+    SLL_ALLOCATE(disp_vec(2, nonZero), ierr)
+    disp_vec(:,1) = 0._f64
+    disp_vec(:,2) = ref_pts(:,1) - ref_pts(:,2)
+    disp_vec(:,3) = ref_pts(:,1) - ref_pts(:,3)
+    
+    if (rule .eq. 1) then
        num_fek = 10 !> Number of fekete points on a cell
-       !> The displament vector correspond to the translation
-       !> done to obtain the other non null basis functions
-       SLL_ALLOCATE(disp_vec(2, nonZero), ierr)
-       disp_vec(:,1) = 0._f64
-       disp_vec(:,2) = ref_pts(:,1) - ref_pts(:,2)
-       disp_vec(:,3) = ref_pts(:,1) - ref_pts(:,3)
     else
-       print *, "ERROR : not implemented yet"
-       nonZero = 0
-       nderiv  = 0
+       print *, ""
+       print *, "ERROR in write_basis_value() : rule not implemented yet"
        num_fek = 0
+       STOP
     end if
 
     open (unit=out_unit,file=name,action="write",status="replace")
@@ -763,9 +860,9 @@ contains  ! ****************************************************************
           do idx = 0, nderiv
              do idy = 0, nderiv-idx
                 val = boxspline_val_der(x, y, deg, idx, idy)
-                write(out_unit, "(1(g13.3))", advance='no') val
+                write(out_unit, "(1(g20.10))", advance='no') val
                 write(out_unit, "(1(a,1x))", advance='no') ","
-                write(*, "(1(g13.3,1x))", advance='no') val
+                write(*, "(1(g20.10,1x))", advance='no') val
              end do
           end do
           write(out_unit, *) ""
@@ -791,28 +888,20 @@ contains  ! ****************************************************************
     sll_int32, intent(in)          :: deg
     sll_int32                      :: out_unit
     character(len=28), parameter   :: name = "boxsplines_connectivity.txt"
-    sll_int32,  dimension(:,:), allocatable :: LM
-    sll_real64, dimension(:,:), allocatable :: knots
-    sll_int32  :: num_fek
-    sll_int32  :: num_quad
+    sll_int32                      :: nZ_indices(3*deg*deg)
     sll_int32  :: num_ele
     sll_int32  :: non_zero
     sll_int32  :: ierr
-
-    num_quad = 2*mesh%num_edges + mesh%num_pts_tot + mesh%num_triangles
+    sll_int32  :: i
+    sll_int32  :: val
 
     ! Number of non Zero splines depends on the degree
-    non_zero = 0
-    if (deg .eq. 1) then
-       non_zero = 3
-       SLL_ALLOCATE(knots(3, num_quad), ierr)
-       SLL_ALLOCATE(LM(mesh%num_triangles, 10), ierr)
-       call initialize_knots_hexmesh(1, mesh, knots, LM)
-    end if
+    non_zero = 3*deg*deg
 
     ! We open file
     call sll_new_file_id(out_unit, ierr)
     open (unit=out_unit,file=name,action="write",status="replace")
+
     ! We write total number of cells
     write(out_unit, "(i6)") mesh%num_triangles
 
@@ -821,12 +910,13 @@ contains  ! ****************************************************************
        write(out_unit, "(i6)") num_ele
        ! We write number of non zero
        write(out_unit, "(i6)") non_zero
-
-       do num_fek = 1,10
-          write(out_unit, "(i6)", advance="no") LM(num_ele, num_fek)
+       ! We write the indices of the non zero splines
+       nZ_indices = non_zeros_splines(mesh, num_ele, deg)
+       do i=1,non_zero
+          val = nZ_indices(i)
+          write(out_unit, "(i6)", advance="no") val
           write(out_unit, "(a)", advance="no") ","
        end do
-
        write(out_unit,"(a)")""
     end do
 
