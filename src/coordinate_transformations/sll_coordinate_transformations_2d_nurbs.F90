@@ -16,6 +16,7 @@ module sll_module_coordinate_transformations_2d_nurbs
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_file_io.h"
+#include "sll_constants.h"
   use sll_xdmf
   use sll_meshes_base
   use sll_cartesian_meshes
@@ -161,7 +162,7 @@ contains
     namelist /knots_2/   knots2
     namelist /control_points/ control_pts1, control_pts2
     namelist /pt_weights/  weights
-    namelist /logical_mesh_2d/ number_cells1,number_cells2
+    namelist /cartesian_mesh_2d/ number_cells1,number_cells2
     !character(len=80) :: line_buffer
 
     if(len(filename) >= 256) then
@@ -244,7 +245,7 @@ contains
     weights_2d = reshape(weights,(/num_pts1,num_pts2/))
 
     ! read the minimal mesh corresponding to the transformation
-    read( input_file_id, logical_mesh_2d )
+    read( input_file_id, cartesian_mesh_2d )
     ! close the file to begin the work 
     close( input_file_id )
 
@@ -777,9 +778,10 @@ contains
     j22 = jacobian_matrix(2,2)
     jac   = j11*j22 - j12*j21   
     if(jac == 0.0_f64) then
-       print *, 'ERROR: inverse_jacobian_matrix_2d_nurbs(): 0-valued ', &
+       print *, 'Warning: inverse_jacobian_matrix_2d_nurbs(): 0-valued ', &
             'jacobian found. NaNs expected. Values of eta1 and eta2 = ', &
             eta1, eta2, 'Jacobian matrix: ', jacobian_matrix(:,:)
+       jac = sll_epsilon_0
     end if
     r_jac = 1.0_f64/jac   
     inverse_jacobian_matrix_2d_nurbs(1,1) =  j22*r_jac

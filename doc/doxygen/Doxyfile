@@ -796,6 +796,7 @@ RECURSIVE              = YES
 # run.
 
 EXCLUDE = \
+@CMAKE_CURRENT_SOURCE_DIR@/AGMG \
 @CMAKE_CURRENT_SOURCE_DIR@/BSL \
 @CMAKE_CURRENT_SOURCE_DIR@/CSL \
 @CMAKE_CURRENT_SOURCE_DIR@/advection \
@@ -804,12 +805,14 @@ EXCLUDE = \
 @CMAKE_CURRENT_SOURCE_DIR@/collective \
 @CMAKE_CURRENT_SOURCE_DIR@/coordinate_transformation_multipatch \
 @CMAKE_CURRENT_SOURCE_DIR@/deboor_splines \
+@CMAKE_CURRENT_SOURCE_DIR@/descriptors \
 @CMAKE_CURRENT_SOURCE_DIR@/distribution_function \
 @CMAKE_CURRENT_SOURCE_DIR@/electric_field_accumulators \
 @CMAKE_CURRENT_SOURCE_DIR@/fft/fftpack \
 @CMAKE_CURRENT_SOURCE_DIR@/fft/fftw3 \
 @CMAKE_CURRENT_SOURCE_DIR@/fftpack \
 @CMAKE_CURRENT_SOURCE_DIR@/fishpack \
+@CMAKE_CURRENT_SOURCE_DIR@/jorek \
 @CMAKE_CURRENT_SOURCE_DIR@/lagrange_interpolation \
 @CMAKE_CURRENT_SOURCE_DIR@/linear_solvers \
 @CMAKE_CURRENT_SOURCE_DIR@/linearly_transformed_pic \
@@ -820,10 +823,12 @@ EXCLUDE = \
 @CMAKE_CURRENT_SOURCE_DIR@/multigrid \
 @CMAKE_CURRENT_SOURCE_DIR@/non_linear_solvers \
 @CMAKE_CURRENT_SOURCE_DIR@/ode_solvers \
+@CMAKE_CURRENT_SOURCE_DIR@/ode_integrators \
 @CMAKE_CURRENT_SOURCE_DIR@/package \
 @CMAKE_CURRENT_SOURCE_DIR@/parallel_array_initializers \
 @CMAKE_CURRENT_SOURCE_DIR@/parallel_utilities \
 @CMAKE_CURRENT_SOURCE_DIR@/periodic_interpolation \
+@CMAKE_CURRENT_SOURCE_DIR@/pif \
 @CMAKE_CURRENT_SOURCE_DIR@/point_to_point_communications \
 @CMAKE_CURRENT_SOURCE_DIR@/python_scripts \
 @CMAKE_CURRENT_SOURCE_DIR@/quasi_neutral_solvers \
@@ -854,7 +859,6 @@ EXCLUDE = \
 @CMAKE_CURRENT_SOURCE_DIR@/sparse_matrix_manager \
 @CMAKE_CURRENT_SOURCE_DIR@/maxwell_solvers \
 @CMAKE_CURRENT_SOURCE_DIR@/coordinate_transformations \
-@CMAKE_CURRENT_SOURCE_DIR@/general_coordinate_elliptic_solvers \
 @CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/bsl_examples \
 @CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_2d_guiding_center_PIC_cartesian \
 @CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_2d_guiding_center_curvilinear \
@@ -875,6 +879,7 @@ EXCLUDE = \
 @CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_4d_vlasov_poisson_general \
 @CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_4d_vlasov_poisson_polar \
 @CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_6d \
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_general_vlasov_poisson_pif \
 @CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/bsl_examples \
 @CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/csl_examples \
 @CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_2d_analytic_field_cartesian \
@@ -892,7 +897,9 @@ EXCLUDE = \
 @CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_guiding_center_2D_generalized_coords \
 @CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_guiding_center_2D_generalized_coords_mudpack \
 @CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_poisson_polar_test \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_polar_SL
+@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_polar_SL \
+@CMAKE_CURRENT_SOURCE_DIR@/time_solvers \
+@CMAKE_CURRENT_SOURCE_DIR@/vector_space
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
@@ -2041,7 +2048,7 @@ SEARCH_INCLUDES        = YES
 # preprocessor.
 # This tag requires that the tag SEARCH_INCLUDES is set to YES.
 
-INCLUDE_PATH           =
+INCLUDE_PATH           = @CMAKE_BINARY_DIR@/include
 
 # You can use the INCLUDE_FILE_PATTERNS tag to specify one or more wildcard
 # patterns (like *.h and *.hpp) to filter out the header-files in the

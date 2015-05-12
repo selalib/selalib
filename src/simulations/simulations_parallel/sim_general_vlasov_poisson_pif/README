@@ -12,7 +12,7 @@ HOWTO
      $ cd run
 
 1. Run parallel simulation within directory
-     $ mpirun -np 4 ../test_general_pif ../params_quick_test.nml
+     $ mpirun -np 4 ../test_general_pif ../quick_test.nml
 
 !2. Run gnuplot scripts generated at runtime
      $ gnuplot --persist pif_result.gnu

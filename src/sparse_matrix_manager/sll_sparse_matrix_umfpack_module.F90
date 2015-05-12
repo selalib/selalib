@@ -21,6 +21,7 @@ module sll_sparse_matrix_module
 #include "sll_memory.h"
 #include "sll_assert.h"
 use mod_umfpack
+use qsort_partition
 
 
   !> @brief type for CSR format
@@ -28,9 +29,9 @@ use mod_umfpack
     sll_int32 :: num_rows !< number of rows
     sll_int32 :: num_cols !< number of columns
     sll_int32 :: num_nz !< number of non zero elements
-    sll_int32, dimension(:), pointer :: opi_ia
-    sll_int32, dimension(:), pointer :: opi_ja
-    sll_real64, dimension(:), pointer :: opr_a
+    sll_int32, dimension(:), pointer :: row_ptr
+    sll_int32, dimension(:), pointer :: col_ind
+    sll_real64, dimension(:), pointer :: val
         !................
     !logical :: ol_use_mm_format
     sll_int32, dimension(:), pointer :: opi_i
@@ -53,9 +54,9 @@ contains
     sll_int32 :: ierr
 
     nullify(csr_mat)
-   ! SLL_DEALLOCATE_ARRAY(csr_mat%opi_ia,ierr)
-   ! SLL_DEALLOCATE_ARRAY(csr_mat%opi_ja,ierr)
-   ! SLL_DEALLOCATE_ARRAY(csr_mat%opr_a,ierr)
+   ! SLL_DEALLOCATE_ARRAY(csr_mat%row_ptr,ierr)
+   ! SLL_DEALLOCATE_ARRAY(csr_mat%col_ind,ierr)
+   ! SLL_DEALLOCATE_ARRAY(csr_mat%val,ierr)
    ! SLL_DEALLOCATE_ARRAY(csr_mat%opi_i,ierr)
     
     
@@ -173,9 +174,9 @@ contains
     mat%num_rows = num_rows
     mat%num_cols = num_cols
     mat%num_nz = num_nz
-    SLL_ALLOCATE(mat%opi_ia(num_rows + 1),ierr)
-    SLL_ALLOCATE(mat%opi_ja(num_nz),ierr)
-    SLL_ALLOCATE(mat%opr_a(num_nz),ierr)
+    SLL_ALLOCATE(mat%row_ptr(num_rows + 1),ierr)
+    SLL_ALLOCATE(mat%col_ind(num_nz),ierr)
+    SLL_ALLOCATE(mat%val(num_nz),ierr)
     
     call sll_init_SparseMatrix( &
       mat, &
@@ -187,7 +188,7 @@ contains
       lpi_columns, &
       lpi_occ)
     
-    mat%opr_a(:) = 0.0_f64
+    mat%val(:) = 0.0_f64
     
 !    print *,mat%num_nz
 !    !print *,umfpack_control
@@ -230,10 +231,10 @@ contains
     print*,'num_cols mat, num_cols mat_tot',mat_a%num_cols , mat%num_cols 
 
     
-    SLL_ALLOCATE(mat%opi_ia(mat%num_rows + 1),ierr)
-    SLL_ALLOCATE(mat%opi_ja(mat%num_nz),ierr)
-    SLL_ALLOCATE(mat%opr_a(mat%num_nz),ierr)
-    mat%opr_a(:) = 0.0_f64
+    SLL_ALLOCATE(mat%row_ptr(mat%num_rows + 1),ierr)
+    SLL_ALLOCATE(mat%col_ind(mat%num_nz),ierr)
+    SLL_ALLOCATE(mat%val(mat%num_nz),ierr)
+    mat%val(:) = 0.0_f64
     
     
     SLL_ALLOCATE(mat%umf_control(umfpack_control),ierr)
@@ -345,8 +346,8 @@ contains
     sll_int32 :: ierr
     
     
-    mat%Ap = mat%opi_ia(:) - 1
-    mat%Ai = mat%opi_ja(:) - 1
+    mat%Ap = mat%row_ptr(:) - 1
+    mat%Ai = mat%col_ind(:) - 1
 
     ! pre-order and symbolic analysis
     call umf4sym( &
@@ -354,7 +355,7 @@ contains
       mat%num_cols, &
       mat%Ap, &
       mat%Ai, &
-      mat%opr_a, &
+      mat%val, &
       mat%umf_symbolic, &
       mat%umf_control, &
       info)
@@ -364,7 +365,7 @@ contains
     call umf4num( &
       mat%Ap, &
       mat%Ai, &
-      mat%opr_a, &
+      mat%val, &
       mat%umf_symbolic, &
       mat%umf_numeric, &
       mat%umf_control, &
@@ -386,10 +387,10 @@ contains
 
     do li_i = 1, mat % num_rows
 
-      li_k_1 = mat % opi_ia(li_i)
-      li_k_2 = mat % opi_ia(li_i + 1) - 1
+      li_k_1 = mat % row_ptr(li_i)
+      li_k_2 = mat % row_ptr(li_i + 1) - 1
       output(li_i) = &
-        DOT_PRODUCT(mat % opr_a(li_k_1: li_k_2), input(mat % opi_ja(li_k_1: li_k_2)))
+        DOT_PRODUCT(mat % val(li_k_1: li_k_2), input(mat % col_ind(li_k_1: li_k_2)))
             
     end do
 
@@ -408,11 +409,11 @@ contains
     sll_int32 :: li_k
 
 
-    ! THE CURRENT LINE IS self%opi_ia(ai_A)
-    do li_k = mat % opi_ia(ai_A), mat % opi_ia(ai_A + 1) - 1
-      li_j = mat % opi_ja(li_k)
+    ! THE CURRENT LINE IS self%row_ptr(ai_A)
+    do li_k = mat % row_ptr(ai_A), mat % row_ptr(ai_A + 1) - 1
+      li_j = mat % col_ind(li_k)
       if (li_j == ai_Aprime) then
-        mat % opr_a(li_k) = mat % opr_a(li_k) + val 
+        mat % val(li_k) = mat % val(li_k) + val 
         exit
       end if
     end do
@@ -554,11 +555,11 @@ contains
         sll_int32, dimension(:), pointer :: lpr_tmp
 
         ! INITIALIZING ia
-        self % opi_ia(1) = 1
+        self % row_ptr(1) = 1
 
         do li_i = 1, self % num_rows
 
-            self % opi_ia(li_i + 1) = self % opi_ia(1) + SUM(api_occ(1: li_i))
+            self % row_ptr(li_i + 1) = self % row_ptr(1) + SUM(api_occ(1: li_i))
 
         end do
 
@@ -588,7 +589,7 @@ contains
 
                 do li_i = 1, li_size
 
-                    self % opi_ja(self % opi_ia(li_A_1) + li_i - 1) =  ( lpr_tmp(li_i))
+                    self % col_ind(self % row_ptr(li_A_1) + li_i - 1) =  ( lpr_tmp(li_i))
 
                 end do
 
@@ -600,59 +601,6 @@ contains
         end do
 
     end subroutine sll_init_SparseMatrix
-
-
-recursive subroutine QsortC(A)
-  sll_int32, intent(in out), dimension(:) :: A
-  integer :: iq
-
-  if(size(A) > 1) then
-     call Partition(A, iq)
-     call QsortC(A(:iq-1))
-     call QsortC(A(iq:))
-  endif
-end subroutine QsortC
-
-subroutine Partition(A, marker)
-  sll_int32, intent(in out), dimension(:) :: A
-  integer, intent(out) :: marker
-  integer :: i, j
-  real(f64) :: temp
-  real(f64) :: x      ! pivot point
-  x = A(1)
-  i= 0
-  j= size(A) + 1
-
-  do
-     j = j-1
-     do
-        if (A(j) <= x) exit
-        j = j-1
-     end do
-     i = i+1
-     do
-        if (A(i) >= x) exit
-        i = i+1
-     end do
-     if (i < j) then
-        ! exchange A(i) and A(j)
-        temp = A(i)
-        A(i) = A(j)
-        A(j) = temp
-     elseif (i == j) then
-        marker = i+1
-        return
-     else
-        marker = i
-        return
-     endif
-  end do
-
-end subroutine Partition
-
-
-
-
 
 
   subroutine sll_solve_csr_matrix_perper(mat, apr_B, apr_U,Masse_tot)
@@ -680,5 +628,72 @@ end subroutine Partition
 
 
 
+!> @brief
+!> Test function to initialize a CSR matrix
+!> @details
+!> Fill a matrix in CSR format corresponding to a constant coefficient
+!> five-point stencil on a square grid
+subroutine uni2d(this,f)
+type(sll_csr_matrix) :: this
+sll_real64           :: f(:)
+sll_real64, pointer  :: a(:)
+sll_int32            :: m
+sll_int32, pointer   :: ia(:),ja(:)
+integer              :: k,l,i,j
+
+real (kind(0d0)), parameter :: zero=0.0d0,cx=-1.0d0,cy=-1.0d0, cd=4.0d0
+
+a  => this%val
+ia => this%row_ptr
+ja => this%col_ind
+
+m = this%num_rows
+
+k=0
+l=0
+ia(1)=1
+do i=1,m
+  do j=1,m
+    k=k+1
+    l=l+1
+    a(l)=cd
+    ja(l)=k
+    f(k)=zero
+    if(j < m) then
+       l=l+1
+       a(l)=cx
+       ja(l)=k+1
+      else
+       f(k)=f(k)-cx
+    end if
+    if(i < m) then
+       l=l+1
+       a(l)=cy
+       ja(l)=k+m
+      else
+       f(k)=f(k)-cy
+    end if
+    if(j > 1) then
+       l=l+1
+       a(l)=cx
+       ja(l)=k-1
+      else
+       f(k)=f(k)-cx
+    end if
+    if(i >  1) then
+       l=l+1
+       a(l)=cy
+       ja(l)=k-m
+      else
+       f(k)=f(k)-cy
+    end if
+    ia(k+1)=l+1
+  end do
+end do
+
+this%num_nz = l
+
+return
+end subroutine uni2D
 
 end module sll_sparse_matrix_module
