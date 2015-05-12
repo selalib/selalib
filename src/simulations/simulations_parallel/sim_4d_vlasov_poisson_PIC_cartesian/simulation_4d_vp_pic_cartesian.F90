@@ -32,8 +32,8 @@ module sll_pic_simulation_4d_cartesian_module
      ! Physics/numerical parameters
      sll_real64 :: dt
      sll_int32  :: num_iterations
-     sll_real64 :: thermal_speed_ions
-     sll_int32  :: ions_number
+     sll_real64 :: thermal_speed_parts
+     sll_int32  :: parts_number
      sll_int32  :: guard_size
      sll_int32  :: array_size
      sll_real64, dimension(1:6) :: elec_params
@@ -111,8 +111,8 @@ contains
 
     XMAX = (2._f64*sll_pi/KX)
     sim%use_cubic_splines = UseCubicSplines
-    sim%thermal_speed_ions = THERM_SPEED
-    sim%ions_number = NUM_PARTICLES
+    sim%thermal_speed_parts = THERM_SPEED
+    sim%parts_number = NUM_PARTICLES
     sim%guard_size = GUARD_SIZE  
     sim%array_size = PARTICLE_ARRAY_SIZE
     sim%dt = dt
@@ -147,16 +147,17 @@ contains
     enddo
 
     pa_gr => sim%part_group
-    call sll_initial_particles_4d( sim%thermal_speed_ions, & 
+    call sll_initial_particles_4d( sim%thermal_speed_parts, & 
                                    ALPHA, KX, sim%m2d,     &
-                                   sim%ions_number,        &
+                                   sim%parts_number,        &
                                    pa_gr, &
                                    rand_seed, sim%my_rank, &
                                    sim%world_size  )
     SLL_DEALLOCATE_ARRAY( rand_seed, ierr )
+
     !$omp parallel
     !$omp do
-    do j=1,sim%ions_number
+    do j=1,sim%parts_number
        sim%part_group%p_list(j) = pa_gr%p_list(j)
     enddo
     !$omp end do
@@ -255,23 +256,24 @@ contains
     n_threads = sim%n_threads
     thread_id = 0
     save_nb = sim%num_iterations/2
-
-    SLL_ALLOCATE( rho1d_send(1:(ncx+1)*(ncy+1)),    ierr)
-    SLL_ALLOCATE( rho1d_receive(1:(ncx+1)*(ncy+1)), ierr)
-
-    SLL_ALLOCATE(sim%rho(ncx+1,ncy+1),ierr)
+    if (sim%world_size > 1 ) then
+       SLL_ALLOCATE( rho1d_send(1:(ncx+1)*(ncy+1)),    ierr)
+       SLL_ALLOCATE( rho1d_receive(1:(ncx+1)*(ncy+1)), ierr)
+    endif
+    SLL_ALLOCATE(sim%rho(1:ncx+1,1:ncy+1),ierr)
     SLL_ALLOCATE( sim%E1(1:ncx+1,1:ncy+1), ierr )
     SLL_ALLOCATE( sim%E2(1:ncx+1,1:ncy+1), ierr )
     SLL_ALLOCATE(phi(1:ncx+1, 1:ncy+1), ierr)
     SLL_ALLOCATE(diag_energy(1:save_nb, 1:5), ierr)
-    SLL_ALLOCATE(diag_TOTmoment(1:save_nb), ierr)
-    SLL_ALLOCATE(diag_TOTenergy(0:sim%num_iterations-1), ierr)
+!!$    SLL_ALLOCATE(diag_TOTmoment(1:save_nb), ierr)
+!!$    SLL_ALLOCATE(diag_TOTenergy(0:sim%num_iterations-1), ierr)
     SLL_ALLOCATE(diag_AccMem(0:sim%num_iterations-1, 1:2), ierr)
 
     sort_nb = 10
     p => sim%part_group%p_list
     dt = sim%dt
     dtqom = dt * sim%part_group%qoverm
+!!!    p_guard => sim%part_group%p_guard
     xmin = sim%m2d%eta1_min
     ymin = sim%m2d%eta2_min
     rdx = 1._f64/sim%m2d%delta_eta1
@@ -287,52 +289,54 @@ contains
        call sll_convert_charge_to_rho_2d_per_per( sim%q_accumulator(1)%q, sim%rho ) 
     endif
 
-    do j = 1, ncy+1
-       do i = 1, ncx+1
-          rho1d_send(i+(j-1)*(ncx+1)) = sim%rho(i, j)
-          rho1d_receive(i+(j-1)*(ncx+1)) = 0._f64
+    if (sim%world_size > 1 ) then
+       do j = 1, ncy+1
+          do i = 1, ncx+1
+             rho1d_send(i+(j-1)*(ncx+1)) = sim%rho(i, j)
+             rho1d_receive(i+(j-1)*(ncx+1)) = 0._f64
+          enddo
        enddo
-    enddo
     
-    call sll_collective_allreduce( sll_world_collective, rho1d_send, (ncx+1)*(ncy+1), &
-         MPI_SUM, rho1d_receive   )
+       call sll_collective_allreduce( sll_world_collective, rho1d_send, &
+            (ncx+1)*(ncy+1), MPI_SUM, rho1d_receive   )
     
-    do j = 1, ncy+1
-       do i = 1, ncx+1
-          sim%rho(i, j) = rho1d_receive(i+(j-1)*(ncx+1))
+       do j = 1, ncy+1
+          do i = 1, ncx+1
+             sim%rho(i, j) = rho1d_receive(i+(j-1)*(ncx+1))
+          enddo
        enddo
-    enddo
-
-    if (sim%my_rank == 0) then
-    it = 0
-    call sll_gnuplot_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
-            sim%m2d%eta2_max, ncy+1, &
-            sim%rho, 'rho_init_standPUSH', it, ierr )
     endif
+
+!!$    if (sim%my_rank == 0) then
+!!$    it = 0
+!!$    call sll_gnuplot_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
+!!$            sim%m2d%eta2_max, ncy+1, &
+!!$            sim%rho, 'rho_init_standPUSH', it, ierr )
+!!$    endif
 
     call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, -sim%rho )
 
-    call electric_energy( tot_ee, sim%E1, sim%E2, sim%m2d%num_cells1, &
-         sim%m2d%num_cells2, sim%m2d%eta1_max, sim%m2d%eta2_max )
-    bors = 0.0_f64
-    !$omp parallel
-    !$omp do reduction(+:bors)
-    do i =1, sim%ions_number,2
-       bors = bors + p(i)%vx**2 + p(i)%vy**2 &
-            + p(i+1)%vx**2 + p(i+1)%vy**2
-    enddo
-    !$omp end do
-    !$omp end parallel
-    diag_TOTenergy(0) = bors * 0.5_f64*(sim%m2d%eta1_max - sim%m2d%eta1_min)  &
-         * (sim%m2d%eta2_max - sim%m2d%eta2_min)/( sim%world_size*sim%ions_number)  &
-         + tot_ee * 0.5_f64
+!!$    call electric_energy( tot_ee, sim%E1, sim%E2, sim%m2d%num_cells1, &
+!!$         sim%m2d%num_cells2, sim%m2d%eta1_max, sim%m2d%eta2_max )
+!!$    bors = 0.0_f64
+!!$    !$omp parallel
+!!$    !$omp do reduction(+:bors)
+!!$    do i =1, sim%parts_number,2
+!!$       bors = bors + p(i)%vx**2 + p(i)%vy**2 &
+!!$            + p(i+1)%vx**2 + p(i+1)%vy**2
+!!$    enddo
+!!$    !$omp end do
+!!$    !$omp end parallel
+!!$    diag_TOTenergy(0) = bors * 0.5_f64*(sim%m2d%eta1_max - sim%m2d%eta1_min)  &
+!!$         * (sim%m2d%eta2_max - sim%m2d%eta2_min)/( sim%world_size*sim%parts_number)  &
+!!$         + tot_ee * 0.5_f64
     
     if (sim%use_cubic_splines) then 
        call reset_field_accumulator_CS_to_zero( sim%E_accumulator_CS )
        call sll_accumulate_field_CS( sim%E1, sim%E2, sim%E_accumulator_CS )
        !$omp parallel do default(SHARED) PRIVATE (pp_vx, pp_vy, Ex, Ey, ttmp)
        !$&omp FIRSTPRIVATE(dtqom)
-       do i = 1, sim%ions_number
+       do i = 1, sim%parts_number
           pp_vx = p(i)%vx
           pp_vy = p(i)%vy
           SLL_INTERPOLATE_FIELD_CS(Ex,Ey,accumE_CS,p(i),ttmp)
@@ -347,7 +351,7 @@ contains
        call sll_accumulate_field( sim%E1, sim%E2, sim%E_accumulator )
        !$omp parallel do PRIVATE (pp_vx, pp_vy, Ex, Ey, tmp5, tmp6)
        !$&omp FIRSTPRIVATE(dtqom)
-       do i = 1, sim%ions_number
+       do i = 1, sim%parts_number
           pp_vx = p(i)%vx
           pp_vy = p(i)%vy
           SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,p(i),tmp5,tmp6)
@@ -357,7 +361,7 @@ contains
        !$omp end parallel do   
     endif
 !    diag_TOTenergy(0) = 0.0_f64
-!    do i =1, sim%ions_number
+!    do i =1, sim%parts_number
 !       diag_TOTenergy(0) = diag_TOTenergy(0) + &
 !            p(i)%vx*p(i)%vx + p(i)%vy*p(i)%vy           
 !    enddo
@@ -399,13 +403,13 @@ contains
 !!$          enddo
 !!$          diag_TOTmoment(counter) = valeur
 !       diag_TOTenergy(counter) = 0.5_f64 *(sim%m2d%eta1_max - sim%m2d%eta1_min) * &
-!            (sim%m2d%eta2_max - sim%m2d%eta2_min)/sim%ions_number * &
+!            (sim%m2d%eta2_max - sim%m2d%eta2_min)/sim%parts_number * &
 !            diag_TOTenergy(mod(counter-1,save_nb)) + &
 !            0.5_f64 * val2 *sim%m2d%delta_eta1*sim%m2d%delta_eta2
                     
           if ( mod(it+1,save_nb)==0 ) then
              do jj=1,save_nb
-                write(65,*) diag_energy(jj,:)!, diag_TOTmoment(jj)!, diag_TOTenergy(jj)
+                write(65,*) diag_energy(jj,1),diag_energy(jj,2),diag_energy(jj,3),diag_energy(jj,4),diag_energy(jj,5)
              enddo
           endif
        endif
@@ -435,7 +439,7 @@ contains
           p_guard => sim%part_group%p_guard(thread_id+1)%g_list
           gi = 0
           !$omp do!!  reduction(+:some_val)
-          do i = 1, sim%ions_number,2
+          do i = 1, sim%parts_number,2
              SLL_INTERPOLATE_FIELD_CS(Ex,Ey,accumE_CS,p(i),ttmp1)
              SLL_INTERPOLATE_FIELD_CS(Ex1,Ey1,accumE_CS,p(i+1),ttmp2)
              p(i)%vx = p(i)%vx + dtqom * Ex
@@ -473,7 +477,7 @@ contains
 #ifdef _OPENMP
           ttime = omp_get_wtime()
 #endif
-          diag_AccMem(it,:) = (/ (it+1)*dt, (32*sim%ions_number*2 + gi*2*8 + &
+          diag_AccMem(it,:) = (/ (it+1)*dt, (32*sim%parts_number*2 + gi*2*8 + &
                2*128*ncx*ncy + 2*128*ncx*ncy)/(ttime-t3)/1e9 /)! access to memory in GB/sec
 !!$            2*sizeof(sim%q_accumulator_CS%q_acc) + sizeof(sim%E_accumulator_CS%e_acc))
 
@@ -513,7 +517,7 @@ contains
           p_guard => sim%part_group%p_guard(thread_id+1)%g_list
           gi = 0
           !$omp do!! reduction(+:some_val)
-          do i = 1, sim%ions_number,2 
+          do i = 1, sim%parts_number,2 
              SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,p(i),tmp5,tmp6)
              p(i)%vx = p(i)%vx + dtqom * Ex
              p(i)%vy = p(i)%vy + dtqom * Ey
@@ -550,7 +554,7 @@ contains
 !#ifdef _OPENMP
 !          ttime = omp_get_wtime()!! ttime = sll_time_elapsed_since(t3)
 !#endif
- !         diag_AccMem(it,:) = (/ (it+1)*dt, (32*sim%ions_number*2 + gi*2*8 + &
+ !         diag_AccMem(it,:) = (/ (it+1)*dt, (32*sim%parts_number*2 + gi*2*8 + &
  !              2*32*ncx*ncy + 2*32*ncx*ncy)/(ttime-t3)/1e9 /)! access to memory in GB/sec
 !!$            2*sizeof(sim%q_accumulator%q_acc) + sizeof(sim%E_accumulator%e_acc))
           
@@ -588,22 +592,24 @@ contains
           call sum_accumulators( sim%q_accumulator, n_threads, ncx*ncy )
           call sll_convert_charge_to_rho_2d_per_per( sim%q_accumulator(1)%q, sim%rho )
        endif
-       do j = 1, ncy+1
-          do i = 1, ncx+1
-             rho1d_send(i+(j-1)*(ncx+1)) = sim%rho(i, j)
-             rho1d_receive(i+(j-1)*(ncx+1)) = 0._f64
+       if (sim%world_size > 1 ) then
+          do j = 1, ncy+1
+             do i = 1, ncx+1
+                rho1d_send(i+(j-1)*(ncx+1)) = sim%rho(i, j)
+                rho1d_receive(i+(j-1)*(ncx+1)) = 0._f64
+             enddo
           enddo
-       enddo
 
-       call sll_collective_allreduce( sll_world_collective, rho1d_send, (ncx+1)*(ncy+1), &
-            MPI_SUM, rho1d_receive   )
+          call sll_collective_allreduce( sll_world_collective, rho1d_send, &
+               (ncx+1)*(ncy+1), MPI_SUM, rho1d_receive   )
 
-       do j = 1, ncy+1
-          do i = 1, ncx+1
-             sim%rho(i, j) = rho1d_receive(i+(j-1)*(ncx+1))
+          do j = 1, ncy+1
+             do i = 1, ncx+1
+                sim%rho(i, j) = rho1d_receive(i+(j-1)*(ncx+1))
+             enddo
           enddo
-       enddo
-     
+       endif
+
 !       if ( (sim%my_rank == 0).and.mod(it,3)==0) &
 !            call sll_gnuplot_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, sim%m2d%eta2_max, ncy+1, &
 !            sim%rho, 'rhototal', it, ierr )
@@ -616,24 +622,24 @@ contains
        else
           call reset_field_accumulator_to_zero( sim%E_accumulator )
           call sll_accumulate_field( sim%E1, sim%E2, sim%E_accumulator )
-          some_val = 0.0_f64
-          !$omp parallel PRIVATE(Ex,Ey,Ex1,Ey1,tmp5,tmp6)
-          !$omp do reduction(+:some_val)
-          do i =1,sim%ions_number,2
-             SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,p(i),tmp5,tmp6)
-             SLL_INTERPOLATE_FIELD(Ex1,Ey1,accumE,p(i+1),tmp5,tmp6)
-             some_val = some_val + (p(i)%vx + 0.5_f64 * dtqom * Ex)**2 &
-                  + (p(i)%vy + 0.5_f64 * dtqom * Ey)**2 &
-                  + (p(i+1)%vx + 0.5_f64 * dtqom * Ex1)**2  &
-                  + (p(i+1)%vy + 0.5_f64 * dtqom * Ey1)**2
-          enddo
-          !$omp end do
-          !$omp end parallel
-          call electric_energy( tot_ee, sim%E1, sim%E2, sim%m2d%num_cells1, &
-               sim%m2d%num_cells2, sim%m2d%eta1_max, sim%m2d%eta2_max )
-          diag_TOTenergy(it) = some_val* 0.5_f64 *(sim%m2d%eta1_max - sim%m2d%eta1_min) * &
-               (sim%m2d%eta2_max - sim%m2d%eta2_min)/( sim%world_size*sim%ions_number)  &
-               + tot_ee * 0.5_f64
+!!$          some_val = 0.0_f64
+!!$          !$omp parallel PRIVATE(Ex,Ey,Ex1,Ey1,tmp5,tmp6)
+!!$          !$omp do reduction(+:some_val)
+!!$          do i =1,sim%parts_number,2
+!!$             SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,p(i),tmp5,tmp6)
+!!$             SLL_INTERPOLATE_FIELD(Ex1,Ey1,accumE,p(i+1),tmp5,tmp6)
+!!$             some_val = some_val + (p(i)%vx + 0.5_f64 * dtqom * Ex)**2 &
+!!$                  + (p(i)%vy + 0.5_f64 * dtqom * Ey)**2 &
+!!$                  + (p(i+1)%vx + 0.5_f64 * dtqom * Ex1)**2  &
+!!$                  + (p(i+1)%vy + 0.5_f64 * dtqom * Ey1)**2
+!!$          enddo
+!!$          !$omp end do
+!!$          !$omp end parallel
+!!$          call electric_energy( tot_ee, sim%E1, sim%E2, sim%m2d%num_cells1, &
+!!$               sim%m2d%num_cells2, sim%m2d%eta1_max, sim%m2d%eta2_max )
+!!$          diag_TOTenergy(it) = some_val* 0.5_f64 *(sim%m2d%eta1_max - sim%m2d%eta1_min) * &
+!!$               (sim%m2d%eta2_max - sim%m2d%eta2_min)/( sim%world_size*sim%parts_number)  &
+!!$               + tot_ee * 0.5_f64
        endif
 
        print *, "END one loop in time"
@@ -645,19 +651,22 @@ contains
 #ifdef _OPENMP
     time = omp_get_wtime()!! time = sll_time_elapsed_since(t2)
 
-    if (sim%my_rank ==0) then 
-       close(65)
+    if (sim%my_rank ==0) then
        open(93,file='time_parts_sec_omp.dat',position='append')
        write(93,*) '# Nb of threads  ||  time (sec)  ||  average pushes/sec'
-       write(93,*) sim%n_threads, time-t2, int(sim%num_iterations,i64)*int(sim%ions_number,i64)/(time-t2)
+       write(93,*) sim%n_threads, time-t2, int(sim%num_iterations,i64)*int(sim%parts_number,i64)/(time-t2)
        close(93)
-       open(65,file='Energie_totale_standPush.dat')
-       do it=0,sim%num_iterations-1
-          write(65,*) it*dt,  diag_TOTenergy(it), (diag_TOTenergy(it)-diag_TOTenergy(0))/diag_TOTenergy(0)
-       enddo
-       close(65)
     endif
 #endif
+    
+    if (sim%my_rank ==0) then 
+       close(65)
+!!$       open(65,file='Energie_totale_standPush.dat')
+!!$       do it=0,sim%num_iterations-1
+!!$          write(65,*) it*dt,  diag_TOTenergy(it), (diag_TOTenergy(it)-diag_TOTenergy(0))/diag_TOTenergy(0)
+!!$       enddo
+!!$       close(65)
+    endif
     
 !      if (sim%my_rank==0 .and. thread_id==0) then
 !         open(65,file='AccesstoMemory_rk0.dat')! URGENT d'utiliser the rank_name !
@@ -675,15 +684,17 @@ contains
 !    !!$       close(66)
 !      endif
 
+    if (sim%world_size > 1 ) then
+       SLL_DEALLOCATE_ARRAY(rho1d_send, ierr)
+       SLL_DEALLOCATE_ARRAY(rho1d_receive, ierr)       
+    endif
     SLL_DEALLOCATE(sim%rho,   ierr)
     SLL_DEALLOCATE(sim%E1,    ierr)
     SLL_DEALLOCATE(sim%E2,    ierr)
     SLL_DEALLOCATE(phi, ierr)
-    SLL_DEALLOCATE_ARRAY(rho1d_send, ierr)
-    SLL_DEALLOCATE_ARRAY(rho1d_receive, ierr)
     SLL_DEALLOCATE_ARRAY(diag_energy, ierr)
-    SLL_DEALLOCATE_ARRAY(diag_TOTenergy, ierr)
-    SLL_DEALLOCATE_ARRAY(diag_TOTmoment, ierr)
+!!$    SLL_DEALLOCATE_ARRAY(diag_TOTenergy, ierr)
+!!$    SLL_DEALLOCATE_ARRAY(diag_TOTmoment, ierr)
     SLL_DEALLOCATE_ARRAY(diag_AccMem, ierr)
   end subroutine run_4d_pic_cartesian
 

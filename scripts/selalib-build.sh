@@ -12,8 +12,10 @@ if [[ `hostname` == "irma-hpc" ]]; then
   source /opt/intel/impi/4.1.0.024/intel64/bin/mpivars.sh
   export FC=ifort
   export CC=icc
+  export CXX=icpc
   export I_MPI_F90=ifort
   export I_MPI_CC=icc
+  export I_MPI_CXX=icpc
   export HDF5_ROOT=/opt/local
   export FFTW_ROOT=/opt/local
 fi
@@ -33,7 +35,7 @@ else
 fi
 
 echo "HOMEDIR:$HOMEDIR"
-echo "WORDIR:$WORKDIR"
+echo "WORKDIR:$WORKDIR"
 
 if [[ $(($(stat -f --format="%a*%S" $WORKDIR))) == 0 ]]; then
    cd /tmp
@@ -54,9 +56,12 @@ if [[ `hostname -s` == "irma-4600" ]]; then
   source /opt/intel/composerxe/bin/compilervars.sh intel64
   source /opt/intel/mkl/bin/mklvars.sh intel64
   source /opt/intel/impi/4.1.1.036/bin64/mpivars.sh 
+  export FC=ifort
   export CC=icc
+  export CXX=icpc
   export I_MPI_F90=ifort
   export I_MPI_CC=icc
+  export I_MPI_CXX=icpc
   export HDF5_ROOT=/opt/local
   export FFTW_ROOT=/opt/local
   export MKLROOT=/opt/intel/composer_xe_2013.4.183/mkl
