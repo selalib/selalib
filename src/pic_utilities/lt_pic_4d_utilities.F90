@@ -3186,12 +3186,12 @@ end subroutine
             ! initialize [[file:../pic_particle_types/lt_pic_4d_group.F90::target_values]]
             p_group%target_values(:,:,:,:) = 0
 
-            print *, "6453 before remap -> DEBUG: ", p_group%number_parts_x/2,    &
-                                           p_group%number_parts_y/2,    &
-                                           p_group%number_parts_vx/2,   &
-                                           p_group%number_parts_vy/2
-            print *, "6454 before remap -> DEBUG: ", p_group%target_values(p_group%number_parts_x/2,  p_group%number_parts_y/2, &
-                                                                 p_group%number_parts_vx/2, p_group%number_parts_vy/2)
+            !print *, "6453 before remap -> DEBUG: ", p_group%number_parts_x/2,    &
+            !                               p_group%number_parts_y/2,    &
+            !                               p_group%number_parts_vx/2,   &
+            !                               p_group%number_parts_vy/2
+            !print *, "6454 before remap -> DEBUG: ", p_group%target_values(p_group%number_parts_x/2,  p_group%number_parts_y/2, &
+            !                                                     p_group%number_parts_vx/2, p_group%number_parts_vy/2)
 
 
 
@@ -3214,10 +3214,6 @@ end subroutine
             num_virtual_cells_y = number_virtual_particles_y / n_virtual_y
             num_virtual_cells_vx = number_virtual_particles_vx / n_virtual_vx
             num_virtual_cells_vy = number_virtual_particles_vy / n_virtual_vy
-
-            print *, "[7653534] write f on given grid: "
-            print *, " number_virtual_particles_x, n_virtual_x, num_virtual_cells_x", &
-                        number_virtual_particles_x, n_virtual_x, num_virtual_cells_x
 
             ! for now we assume that given_array_2d is in (x, vx) space
             SLL_ASSERT(size(given_array_2d,1) == number_virtual_particles_x)
@@ -3381,7 +3377,7 @@ end subroutine
     end if
 
     ! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
-    p_group%debug_bsl_remap = -100
+    !p_group%debug_bsl_remap = -100
 
     if( p_group%use_exact_f0 )then
 
@@ -3584,14 +3580,14 @@ end subroutine
                   i_x = i_x + 1
                   SLL_ASSERT( i_x == (i-1)*n_virtual_x + ivirt )
 
-                  if( (.not. scenario_is_deposition) .and. use_remapping_grid) then
-                    if( (i > p_group%number_parts_x * 95/100) &
-                        .and. (j == p_group%number_parts_y /2) &
-                        .and. (l == p_group%number_parts_vx /2) &
-                        .and. (m == p_group%number_parts_vy /2) )then
-                        print *, "675465437545 -- i, ivirt, i_x = ", i, ivirt, i_x
-                    end if
-                  end if
+                  !if( (.not. scenario_is_deposition) .and. use_remapping_grid) then
+                  !  if( (i > p_group%number_parts_x * 95/100) &
+                  !      .and. (j == p_group%number_parts_y /2) &
+                  !      .and. (l == p_group%number_parts_vx /2) &
+                  !      .and. (m == p_group%number_parts_vy /2) )then
+                  !      print *, "675465437545 -- i, ivirt, i_x = ", i, ivirt, i_x
+                  !  end if
+                  !end if
 
                   x =       x       + h_virtual_parts_x
                   x_to_xk = x_to_xk + h_virtual_parts_x
@@ -3732,13 +3728,13 @@ end subroutine
                                       vx_t0 = d1_x + d1_y + d1_vx + d1_vy
                                       vy_t0 = d1_x + d1_y + d1_vx + d1_vy
 
-                                      ! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
-                                      if((.not. scenario_is_deposition) .and. use_remapping_grid)then
-                                         p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,1) = x_k_t0 + x_t0
-                                         p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,1) = y_k_t0 + y_t0
-                                         p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,1) = vx_k_t0 + vx_t0
-                                         p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,1) = vy_k_t0 + vy_t0
-                                      endif
+                                        !! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
+                                        !if((.not. scenario_is_deposition) .and. use_remapping_grid)then
+                                        ! p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,1) = x_k_t0 + x_t0
+                                        ! p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,1) = y_k_t0 + y_t0
+                                        ! p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,1) = vx_k_t0 + vx_t0
+                                        ! p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,1) = vy_k_t0 + vy_t0
+                                        !endif
 
                                       ! Minimize the path to take along periodic boundaries
 
@@ -3762,13 +3758,13 @@ end subroutine
                                          end if
                                       endif
 
-                                      ! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
-                                      if((.not. scenario_is_deposition) .and. use_remapping_grid)then
-                                         p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,2) = x_k_t0 + x_t0
-                                         p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,2) = y_k_t0 + y_t0
-                                         p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,2) = vx_k_t0 + vx_t0
-                                         p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,2) = vy_k_t0 + vy_t0
-                                      endif
+                                        !! MCP: [DEBUG] store the (computed) absolute initial position of the virtual particle
+                                        !if((.not. scenario_is_deposition) .and. use_remapping_grid)then
+                                        !p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,1,2) = x_k_t0 + x_t0
+                                        !p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,2,2) = y_k_t0 + y_t0
+                                        !p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,3,2) = vx_k_t0 + vx_t0
+                                        !p_group%debug_bsl_remap(i_x,i_y,i_vx,i_vy,4,2) = vy_k_t0 + vy_t0
+                                        !endif
 
                                       ! [[file:~/mcp/maltpic/ltpic-bsl.tex::neighbors-grid-0]] find the neighbours of the
                                       ! virtual particle (ivirt,jvirt,lvirt,mvirt) at time 0 through the "logical
@@ -3791,16 +3787,15 @@ end subroutine
                                       ONESTEPMACRO(ALONG_VX,vx)
                                       ONESTEPMACRO(ALONG_VY,vy)
 
-                                      if( (.not. scenario_is_deposition) .and. use_remapping_grid) then
-                                        if( (i > p_group%number_parts_x * 95/100) &
-                                            .and. (j == p_group%number_parts_y /2) &
-                                            .and. (l == p_group%number_parts_vx /2) &
-                                            .and. (m == p_group%number_parts_vy /2) )then
-                                            print *, "77654864 -- i, ivirt, i_x = ", i, ivirt, i_x
-
-                                            print *, "77654865 -- found step by step: kprime = ", kprime
-                                        end if
-                                      end if
+                                      !if( (.not. scenario_is_deposition) .and. use_remapping_grid) then
+                                      !  if( (i > p_group%number_parts_x * 95/100) &
+                                      !      .and. (j == p_group%number_parts_y /2) &
+                                      !      .and. (l == p_group%number_parts_vx /2) &
+                                      !      .and. (m == p_group%number_parts_vy /2) )then
+                                      !      print *, "77654864 -- i, ivirt, i_x = ", i, ivirt, i_x
+                                      !      print *, "77654865 -- found step by step: kprime = ", kprime
+                                      !  end if
+                                      !end if
 
                                   else
 
@@ -3844,38 +3839,32 @@ end subroutine
                                                             kprime )
 
 
-                                      if( (.not. scenario_is_deposition) .and. use_remapping_grid) then
-                                        if( (i > p_group%number_parts_x * 95/100) &
-                                            .and. (j == p_group%number_parts_y /2) &
-                                            .and. (l == p_group%number_parts_vx /2) &
-                                            .and. (m == p_group%number_parts_vy /2) )then
-                                            print *, "77654878 -- i, ivirt, i_x = ", i, ivirt, i_x
-
-                                            print *, "77654879 -- found directly: kprime = ", kprime
-
-                                            print *, "77654879 ---- "
-                                            tmp = parts_x_min + (j_x-1)* h_parts_x
-                                            print *, "10 ---- xmin_part_cell  = ", tmp
-                                            print *, "10 ---- x_t0            = ", x_t0
-                                            print *, "10 ---- xmax_part_cell  = ", tmp + h_parts_vx
-
-                                            tmp = parts_y_min + (j_y-1)* h_parts_y
-                                            print *, "11 ---- ymin_part_cell  = ", tmp
-                                            print *, "11 ---- y_t0            = ", y_t0
-                                            print *, "11 ---- ymax_part_cell  = ", tmp + h_parts_y
-
-                                            tmp = parts_vx_min + (j_vx-1)* h_parts_vx
-                                            print *, "12 ---- vxmin_part_cell  = ", tmp
-                                            print *, "12 ---- vx_t0            = ", vx_t0
-                                            print *, "12 ---- vxmax_part_cell  = ", tmp + h_parts_vx
-
-                                            tmp = parts_vy_min + (j_vy-1)* h_parts_vy
-                                            print *, "13 ---- vymin_part_cell  = ", tmp
-                                            print *, "13 ---- vy_t0            = ", vy_t0
-                                            print *, "13 ---- vymax_part_cell  = ", tmp + h_parts_vy
-
-                                        end if
-                                      end if
+                                      !if( (.not. scenario_is_deposition) .and. use_remapping_grid) then
+                                      !  if( (i > p_group%number_parts_x * 95/100) &
+                                      !      .and. (j == p_group%number_parts_y /2) &
+                                      !      .and. (l == p_group%number_parts_vx /2) &
+                                      !      .and. (m == p_group%number_parts_vy /2) )then
+                                      !      print *, "77654878 -- i, ivirt, i_x = ", i, ivirt, i_x
+                                      !      print *, "77654879 -- found directly: kprime = ", kprime
+                                      !      print *, "77654879 ---- "
+                                      !      tmp = parts_x_min + (j_x-1)* h_parts_x
+                                      !      print *, "10 ---- xmin_part_cell  = ", tmp
+                                      !      print *, "10 ---- x_t0            = ", x_t0
+                                      !      print *, "10 ---- xmax_part_cell  = ", tmp + h_parts_vx
+                                      !      tmp = parts_y_min + (j_y-1)* h_parts_y
+                                      !      print *, "11 ---- ymin_part_cell  = ", tmp
+                                      !      print *, "11 ---- y_t0            = ", y_t0
+                                      !      print *, "11 ---- ymax_part_cell  = ", tmp + h_parts_y
+                                      !      tmp = parts_vx_min + (j_vx-1)* h_parts_vx
+                                      !      print *, "12 ---- vxmin_part_cell  = ", tmp
+                                      !      print *, "12 ---- vx_t0            = ", vx_t0
+                                      !      print *, "12 ---- vxmax_part_cell  = ", tmp + h_parts_vx
+                                      !      tmp = parts_vy_min + (j_vy-1)* h_parts_vy
+                                      !      print *, "13 ---- vymin_part_cell  = ", tmp
+                                      !      print *, "13 ---- vy_t0            = ", vy_t0
+                                      !      print *, "13 ---- vymax_part_cell  = ", tmp + h_parts_vy
+                                      !  end if
+                                      !end if
 
 
 
@@ -3918,16 +3907,15 @@ end subroutine
                                           .and. hcube(1,1,1,2) /= kprime) then
 
 
-                                          if( (.not. scenario_is_deposition) .and. use_remapping_grid) then
-                                            if( (i > p_group%number_parts_x * 85/100) &
-                                                .and. (j == p_group%number_parts_y /2) &
-                                                .and. (l == p_group%number_parts_vx /2) &
-                                                .and. (m == p_group%number_parts_vy /2) )then
-                                                print *, "77654889 -- i, ivirt, i_x = ", i, ivirt, i_x
-
-                                                print *, "77654890 -- hcube ok -- --  "
-                                            end if
-                                          end if
+                                          !if( (.not. scenario_is_deposition) .and. use_remapping_grid) then
+                                          !  if( (i > p_group%number_parts_x * 85/100) &
+                                          !      .and. (j == p_group%number_parts_y /2) &
+                                          !      .and. (l == p_group%number_parts_vx /2) &
+                                          !      .and. (m == p_group%number_parts_vy /2) )then
+                                          !      print *, "77654889 -- i, ivirt, i_x = ", i, ivirt, i_x
+                                          !      print *, "77654890 -- hcube ok -- --  "
+                                          !  end if
+                                          !end if
 
                                         ! remaining vertices of the hypercube. they should all exist now that the first
                                         ! 4 vertices are checked.
@@ -4021,16 +4009,15 @@ end subroutine
                                            end do
                                         end do
 
-                                          if( (.not. scenario_is_deposition) .and. use_remapping_grid) then
-                                            if( (i > p_group%number_parts_x * 95/100) &
-                                                .and. (j == p_group%number_parts_y /2) &
-                                                .and. (l == p_group%number_parts_vx /2) &
-                                                .and. (m == p_group%number_parts_vy /2) )then
-                                                print *, "6754654 -- i, ivirt, i_x = ", i, ivirt, i_x
-
-                                                print *, "6754654 -- f_value_on_virtual_particle = ", f_value_on_virtual_particle
-                                            end if
-                                          end if
+                                          !if( (.not. scenario_is_deposition) .and. use_remapping_grid) then
+                                          !  if( (i > p_group%number_parts_x * 95/100) &
+                                          !      .and. (j == p_group%number_parts_y /2) &
+                                          !      .and. (l == p_group%number_parts_vx /2) &
+                                          !      .and. (m == p_group%number_parts_vy /2) )then
+                                          !      print *, "6754654 -- i, ivirt, i_x = ", i, ivirt, i_x
+                                          !     print *, "6754654 -- f_value_on_virtual_particle = ", f_value_on_virtual_particle
+                                          ! end if
+                                          !end if
 
 
 
@@ -4090,28 +4077,28 @@ end subroutine
        end do
     end do
 
-    print *, "654 end remap -> DEBUG: ", p_group%number_parts_x,    &
-                                   p_group%number_parts_y/2,    &
-                                   p_group%number_parts_vx/2,   &
-                                   p_group%number_parts_vy/2
-
-    print *, "655 end remap  , p_group%number_parts_x = ", p_group%number_parts_x
-    print *, "655 end remap  , number_virtual_particles_x = ", number_virtual_particles_x
-
-    print *, "655 end remap -> DEBUG: p_group%target_values(p_group%number_parts_x - 2,  p_group%number_parts_y/2, "
-    print *,                                                "p_group%number_parts_vx/2, p_group%number_parts_vy/2) = "
-    print *, "               =  ", p_group%target_values(p_group%number_parts_x - 2,  p_group%number_parts_y/2, &
-                                                         p_group%number_parts_vx/2, p_group%number_parts_vy/2)
-
-    print *, "655 end remap -> DEBUG: p_group%target_values(p_group%number_parts_x - 1,  p_group%number_parts_y/2, "
-    print *,                                                "p_group%number_parts_vx/2, p_group%number_parts_vy/2) = "
-    print *, "               =  ", p_group%target_values(p_group%number_parts_x - 1,  p_group%number_parts_y/2, &
-                                                         p_group%number_parts_vx/2, p_group%number_parts_vy/2)
-
-    print *, "655 end remap -> DEBUG: p_group%target_values(p_group%number_parts_x,  p_group%number_parts_y/2, "
-    print *,                                                "p_group%number_parts_vx/2, p_group%number_parts_vy/2) = "
-    print *, "               =  ", p_group%target_values(p_group%number_parts_x,  p_group%number_parts_y/2, &
-                                                         p_group%number_parts_vx/2, p_group%number_parts_vy/2)
+    !print *, "654 end remap -> DEBUG: ", p_group%number_parts_x,    &
+    !                               p_group%number_parts_y/2,    &
+    !                               p_group%number_parts_vx/2,   &
+    !                               p_group%number_parts_vy/2
+    !
+    !print *, "655 end remap  , p_group%number_parts_x = ", p_group%number_parts_x
+    !print *, "655 end remap  , number_virtual_particles_x = ", number_virtual_particles_x
+    !
+    !print *, "655 end remap -> DEBUG: p_group%target_values(p_group%number_parts_x - 2,  p_group%number_parts_y/2, "
+    !print *,                                                "p_group%number_parts_vx/2, p_group%number_parts_vy/2) = "
+    !print *, "               =  ", p_group%target_values(p_group%number_parts_x - 2,  p_group%number_parts_y/2, &
+    !                                                     p_group%number_parts_vx/2, p_group%number_parts_vy/2)
+    !
+    !print *, "655 end remap -> DEBUG: p_group%target_values(p_group%number_parts_x - 1,  p_group%number_parts_y/2, "
+    !print *,                                                "p_group%number_parts_vx/2, p_group%number_parts_vy/2) = "
+    !print *, "               =  ", p_group%target_values(p_group%number_parts_x - 1,  p_group%number_parts_y/2, &
+    !                                                     p_group%number_parts_vx/2, p_group%number_parts_vy/2)
+    !
+    !print *, "655 end remap -> DEBUG: p_group%target_values(p_group%number_parts_x,  p_group%number_parts_y/2, "
+    !print *,                                                "p_group%number_parts_vx/2, p_group%number_parts_vy/2) = "
+    !print *, "               =  ", p_group%target_values(p_group%number_parts_x,  p_group%number_parts_y/2, &
+    !                                                     p_group%number_parts_vx/2, p_group%number_parts_vy/2)
 
     if( scenario_is_deposition .and. present(given_total_density) )then
 

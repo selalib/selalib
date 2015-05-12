@@ -381,6 +381,9 @@ contains
 !  ------  TIME LOOP  ------
 !  -------------------------
     do it = 0, sim%num_iterations-1
+
+       print *, "BEGIN one loop in time, it = ", it
+
        if (sim%my_rank == 0) then
           exval_ee = une_cst * exp(2._f64*omega_i*real(it,f64)*sim%dt) * &
              ( 0.5_f64 + 0.5_f64*cos(2._f64*(omega_r*real(it,f64)*sim%dt-psi)) )
@@ -638,6 +641,9 @@ contains
 !!$               (sim%m2d%eta2_max - sim%m2d%eta2_min)/( sim%world_size*sim%parts_number)  &
 !!$               + tot_ee * 0.5_f64
        endif
+
+       print *, "END one loop in time"
+       print *, " "
 
     enddo
 !  ---  ---  - - -   END TIME LOOP  - - -  --- -----
