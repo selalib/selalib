@@ -16,17 +16,19 @@ PROJECT(SeLaLib)
 ENABLE_LANGUAGE(Fortran)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
-SET(OPENMP_ENABLED        OFF CACHE BOOL "Enable use of OpenMP library")
-SET(MPI_ENABLED           ON  CACHE BOOL "Enable use of MPI library")
-SET(HDF5_ENABLED          ON  CACHE BOOL "Use HDF5 library for data output")
-SET(HDF5_PARALLEL_ENABLED OFF CACHE BOOL "Use Parallel HDF5")
-SET(FFTW_ENABLED          ON  CACHE BOOL "Enable use of FFTW library")
-SET(PASTIX_ENABLED        OFF CACHE BOOL "Build PasTiX solvers ")
-SET(SUITESPARSE_ENABLED   OFF CACHE BOOL "Enable UMFpack solvers")
-SET(BUILD_SIMULATIONS     ON  CACHE BOOL "Build selalib simulations")
-SET(BUILD_PACKAGE         OFF CACHE BOOL "Build selalib package")
-SET(PROCS                 4   CACHE STRING
-    "Number of MPI processes used in parallel tests")
+SET(OPENMP_ENABLED        OFF CACHE BOOL   "Enable use of OpenMP library")
+SET(MPI_ENABLED           ON  CACHE BOOL   "Enable use of MPI library")
+SET(HDF5_ENABLED          ON  CACHE BOOL   "Use HDF5 library for data output")
+SET(HDF5_PARALLEL_ENABLED OFF CACHE BOOL   "Use Parallel HDF5")
+SET(FFTW_ENABLED          ON  CACHE BOOL   "Enable use of FFTW library")
+SET(PASTIX_ENABLED        OFF CACHE BOOL   "Build PasTiX solvers ")
+SET(SUITESPARSE_ENABLED   OFF CACHE BOOL   "Enable UMFpack solvers")
+SET(BUILD_SIMULATIONS     ON  CACHE BOOL   "Build selalib simulations")
+SET(BUILD_PACKAGE         OFF CACHE BOOL   "Build selalib package")
+SET(BUILD_PARALUTION      OFF CACHE BOOL   "Build paralution library")
+SET(BUILD_JOREK           OFF CACHE BOOL   "Build jorek django solver")
+SET(PROCS                 4   CACHE STRING "Number of MPI processes for tests")
+SET(JOREK_GIT_BRANCH      selalib-branch CACHE STRING "Jorek branch to clone")
 
 IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   GET_FILENAME_COMPONENT(INSTALL_DIR "${CMAKE_SOURCE_DIR}/../usr" ABSOLUTE)
@@ -167,6 +169,13 @@ ADD_SUBDIRECTORY(gyroaverage)
 ADD_SUBDIRECTORY(maxwell_solvers)
 ADD_SUBDIRECTORY(ampere_solvers)
 ADD_SUBDIRECTORY(quasi_neutral_solvers)
+ADD_SUBDIRECTORY(descriptors)
+
+#Fortran version is checked in CMakeModules/FortranConfig.cmake
+IF(F2008)
+  ADD_SUBDIRECTORY( vector_space )
+  ADD_SUBDIRECTORY( ode_integrators )
+ENDIF(F2008)
 
 
 IF(MPI_ENABLED)
@@ -189,6 +198,7 @@ ADD_SUBDIRECTORY(fields)
 ADD_SUBDIRECTORY(meshes_multipatch)
 ADD_SUBDIRECTORY(coordinate_transformations_multipatch)
 ADD_SUBDIRECTORY(fields_multipatch)
+ADD_SUBDIRECTORY(AGMG)
 ADD_SUBDIRECTORY(sparse_matrix_manager)
 ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers)
 ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers_multipatch)
@@ -211,13 +221,68 @@ IF(BUILD_SIMULATIONS)
     "simulations install dir")
   ADD_SUBDIRECTORY(simulations)
   ADD_SUBDIRECTORY(eulerian-finite-volume)
-#YG   IF(NOT BUILD_PACKAGE AND BUILD_TESTING)
-#YG      INCLUDE(SequentialTests)
-#YG      IF(MPI_ENABLED)
-#YG         INCLUDE(ParallelTests)
-#YG      ENDIF()
-#YG   ENDIF()
 ENDIF(BUILD_SIMULATIONS)
+
+IF(BUILD_PARALUTION)
+  INCLUDE(ExternalProject)
+  SET(PARALUTION_VERSION 1.0.0 CACHE STRING "Paralution version number")
+  EXTERNALPROJECT_ADD( paralution
+     URL  http://www.paralution.com/downloads/paralution-${PARALUTION_VERSION}.tar.gz
+     CMAKE_ARGS -DSUPPORT_CUDA=OFF -DBUILD_EXAMPLES=OFF
+     INSTALL_COMMAND ""
+  )
+ENDIF()
+
+
+IF(BUILD_JOREK)
+
+  SET(GIT_LOGIN $ENV{USER} CACHE STRING "INRIA GForge login")
+  INCLUDE(ExternalProject)
+
+  SET(JOREK_GIT_REPOSITORY git+ssh://${GIT_LOGIN}@scm.gforge.inria.fr/gitroot/jorek/jorek.git)
+
+  IF(APPLE)
+    SET(JOREK_CMAKE_ARGS -DBUILD_TESTING=OFF -DJOREK_DEBUG_TRACE=OFF -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DJOREK_SAVE_MATRIX=OFF)
+  ELSE(APPLE)
+    SET(JOREK_CMAKE_ARGS -DBUILD_TESTING=OFF -DJOREK_DEBUG_TRACE=OFF -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DJOREK_SAVE_MATRIX=OFF -DPETSC_DIR=${PETSC_DIR} -DPETSC_ARCH=${PETSC_ARCH})
+  ENDIF(APPLE)
+
+  IF(BUILD_PACKAGE)
+
+    EXTERNALPROJECT_ADD(
+      jorek
+      GIT_REPOSITORY ${JOREK_GIT_REPOSITORY}
+      GIT_TAG ${JOREK_GIT_BRANCH}
+      CMAKE_ARGS ${JOREK_CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+      )
+
+  ELSE()
+
+    EXTERNALPROJECT_ADD(
+      jorek
+      GIT_REPOSITORY ${JOREK_GIT_REPOSITORY}
+      GIT_TAG ${JOREK_GIT_BRANCH}
+      CMAKE_ARGS ${JOREK_CMAKE_ARGS}
+      INSTALL_COMMAND "")
+
+  ENDIF()
+  
+  FIND_PACKAGE(PETSc)
+  ADD_SUBDIRECTORY(jorek)
+
+ENDIF()
+
+IF($ENV{PFUNIT})
+
+  INCLUDE(ExternalProject)
+
+  EXTERNALPROJECT_ADD(
+    pFUnit
+    PREFIX pFunit
+    GIT_REPOSITORY git://git.code.sf.net/p/pfunit/code
+    CMAKE_ARGS -DINSTALL_PATH=${CMAKE_BINARY_DIR})
+
+ENDIF()
 
 MESSAGE(STATUS "############################################################")
 MESSAGE(STATUS "####")

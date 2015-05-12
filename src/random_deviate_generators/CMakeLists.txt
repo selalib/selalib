@@ -8,6 +8,7 @@ ADD_SUBDIRECTORY(prob) #Probability density functions
 add_library( sll_moment_matching STATIC moment_matching.F90)
 target_link_libraries(sll_moment_matching sll_assert
 					    sll_memory
+					    sll_constants
 					sll_working_precision)	
 # Test
 IF(BUILD_TESTING)

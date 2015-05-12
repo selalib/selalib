@@ -32,7 +32,7 @@ private
 !Some deboor functions are clone copied because we don't want to have
 !side effects with general coordinates elliptic solver that uses
 !module deboor splines
-type deboor_type
+type, public :: deboor_type
    sll_int32 :: ilo = 1
    sll_int32 :: j   = 1
    sll_real64, dimension(20) :: deltal
@@ -108,6 +108,7 @@ public sll_delete
 public new_arbitrary_degree_1d_interpolator
 public set_values_at_boundary1d
 public initialize_ad1d_interpolator
+public bsplvd, bsplvb, interv, bvalue
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
@@ -124,6 +125,8 @@ subroutine delete_arbitrary_degree_1d_interpolator( interpolator )
   sll_int32 :: ierr
   SLL_DEALLOCATE(interpolator%t,ierr)
   SLL_DEALLOCATE(interpolator%coeff_splines,ierr)
+  deallocate(interpolator%eta)
+  deallocate(interpolator%work)
 end subroutine delete_arbitrary_degree_1d_interpolator
 
 

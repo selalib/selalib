@@ -14,6 +14,19 @@ TARGET_LINK_LIBRARIES( sll_visu_pic
   sll_assert
   sll_working_precision )
 
+  
+IF (MPI_ENABLED)  
+
+ADD_LIBRARY( sll_visu_pic_coll STATIC sll_visu_pic_coll.F90 )
+TARGET_LINK_LIBRARIES( sll_visu_pic_coll
+  sll_utilities
+  sll_file_io
+  sll_assert
+  sll_working_precision
+  sll_visu_pic
+  sll_collective)
+ENDIF (MPI_ENABLED) 
+  
 # Ctest
 IF(BUILD_TESTING AND MPI_ENABLED)
   ADD_EXECUTABLE( test_visu_pic unit_test.F90 biot_savart.F90 )

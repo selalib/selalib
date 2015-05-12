@@ -18,6 +18,8 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+#define sll_transformation class(sll_coordinate_transformation_2d_base)
+
 use sll_common_coordinate_transformations
 use sll_coordinate_transformation_2d_base_module
 use sll_module_coordinate_transformations_2d
