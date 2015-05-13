@@ -119,7 +119,7 @@ contains
         sll_int32, intent(in) :: timesteps_user
         sll_real64 , intent(in):: timestepwidth_user
         sll_int32, intent(in):: particle_pusher_user , psolver_user
-        SLL_ASSERT( is_power_of_two( int( mesh_cells,i64)))
+        SLL_ASSERT( is_power_of_two( int( mesh_cells_user,i64)))
         mesh_cells=mesh_cells_user
         spline_degree=spline_degree_user
         nparticles=numberofparticles_user

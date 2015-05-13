@@ -18,7 +18,8 @@ program unit_test
 
     CHARACTER(LEN=255) :: string  ! stores command line argument
     CHARACTER(LEN=255) :: message           ! use for I/O error messages
-    integer :: ios
+    integer :: ios, IO_stat
+
     !---------------------------------------------------------------------------
     !------------------DEFAULT VALUES-------------------------------------------------------
     sll_int32 :: tsteps = 100     !Number of timesteps
@@ -36,27 +37,52 @@ program unit_test
     !
     sll_real64 :: boxlenpi=4.0_f64
 
+    CHARACTER(LEN=255) :: ppusher!='lfrog'  !Particle pusher  euler
+    CHARACTER(LEN=255) :: psolver='fem'
+    CHARACTER(LEN=255) :: scenario='landau'
 
     !Streams
     sll_int32 :: nstreams=1
     logical  :: gnuplot_inline_output_user=.FALSE.
 
+    namelist /paramss/ tsteps, tstepw, nmark, femp, sdeg, ppusher, scenario, psolver, lalpha, gnuplot_inline_output_user
 
-    CHARACTER(LEN=255) :: ppusher='euler'  !Particle pusher
-    CHARACTER(LEN=255) :: psolver='fem'  !Poisson solver
-    CHARACTER(LEN=255) :: scenario='landau'  !Which testcase to use
+  !------------------ END DEFAULT VALUES --------------------------------------------------
+
+    !    LOGICAL :: gnuplot_inline_output=.TRUE. !write gnuplot output during the simulation
+
+    !Landau damping
+   
+
+
+      !Particle pusher  euler 
+     !Poisson solver
+      !Which testcase to use
 
     !Choices are rk4, euler, verlet, lfrog, v_lfrog
     sll_int32 :: ppusher_int=0, psolver_int=0
 
     CHARACTER(LEN=255) :: path="./"
-
+    character(len=256) :: filename
     integer :: gpinline=0,deltaf=0
+    sll_int32, parameter  :: input_file =99
+NAMELIST /cmd/ tsteps, tstepw , nmark, scenario, nstreams, femp, sdeg, lalpha, lmode,&
+        ppusher,gpinline,path,boxlenpi,deltaf, psolver
 
+!**************************************************************
+    ! Read input data from file
+    call getarg(1,filename)
+    open(unit=input_file, file=trim(filename), IOStat=IO_stat)
+    if( IO_stat /= 0 ) then
+        print *, 'init_file() failed to open file ', filename
+        STOP
+    end if
+    read(input_file,paramss)
+    close(input_file)
+!**************************************************************
 
     !Add input variables to namelist
-    NAMELIST /cmd/ tsteps, tstepw , nmark, scenario, nstreams, femp, sdeg, lalpha, lmode,&
-        ppusher,gpinline,path,boxlenpi,deltaf, psolver
+    
 
     call sll_boot_collective()
 
