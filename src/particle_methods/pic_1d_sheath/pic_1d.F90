@@ -1,24 +1,15 @@
-module sll_pic_1d_Class
+module sll_pic_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_utilities.h"
 
     use sll_constants
-    !use sll_logical_meshes
-    !use sll_poisson_1d_periodic
-    !use sll_poisson_solvers
     use sll_collective !Parallel operations
 
-    !  use hdf5, only: HID_T,HSIZE_T,HSSIZE_T
-    !  ! #ifdef HDF5_PARALLEL
-    !          use sll_hdf5_io_parallel
-    !        use sll_xdmf_parallel
-    ! #endif
-
+    
     use sll_arbitrary_degree_splines
     use gauss_legendre_integration
-    !use sll_bspline_fem_solver_1d
     use sll_pic_1d_field_solver
     use sll_visu_pic !Visualization with gnuplot
     use pic_1d_particle_loading !should be integrated here
@@ -31,78 +22,62 @@ module sll_pic_1d_Class
     integer, private :: i, j
 
 
-    !    type particle
-    !        sll_real64, DIMENSION(:), allocatable:: particleposition
-    !        sll_real64, DIMENSION(:), allocatable :: particlespeed
-    !        sll_real64, DIMENSION(:), allocatable :: particleweight          ! cf. y_k in delta f and c_k in full f pic
-    !
-    !    endtype
-
-
+    !Allocate space for species
     type(sll_particle_1d_group),dimension(10) :: species
+    
     !1d1v data for electrostatic PIC
     sll_real64, DIMENSION(:), allocatable:: particleposition
     sll_real64, DIMENSION(:), allocatable :: particlespeed
-    !sll_real64, DIMENSION(:), allocatable :: particleweight          ! cf. y_k in delta f and c_k in full f pic
-    !sll_real64, DIMENSION(:), allocatable :: particleweight_constant !cf. c_k
     sll_real64 ::  particle_qm !<mass to electron mass ratio, with the sign of the charge
     sll_real64, DIMENSION(:), allocatable:: steadyparticleposition !Steady non-moving objects aka Ions
-
-    sll_int32 :: particle_pusher, poisson_solver
-
-    integer, private :: timestep
-
+    !Initial offsets
+    sll_real64 :: kineticenergy_offset, impulse_offset
+    sll_real64 :: initial_fem_inhom , fem_inhom
+    sll_int64    ::  fastest_particle_idx
+    sll_real64 , DIMENSION(:), allocatable:: eval_solution
     !Data to be collected throughout a run
     sll_real64, dimension(:), allocatable :: fieldenergy, kineticenergy, impulse, &
         thermal_velocity_estimate, particleweight_mean ,particleweight_var, inhom_var ,&
         push_error_mean, push_error_var
+    integer, private :: timestep !Global counter for the time step loop
+    
+    
+    !-----------------Parameters--------------------------------------
+    sll_int32 :: particle_pusher, poisson_solver
 
-    !Initial offets
-    sll_real64 :: kineticenergy_offset, impulse_offset
-
-    !sll_real64 :: initial_fieldenergy , initial_kineticenergy , initial_total_energy
-    sll_real64 :: initial_fem_inhom , fem_inhom
-    sll_int64    ::  fastest_particle_idx
-    sll_real64 , DIMENSION(:), allocatable:: eval_solution
-
-
-    sll_int32 :: timesteps = 100
-    sll_real64 :: timestepwidth=0.1_f64
-    sll_int32 :: nparticles = 1000  !GLOBAL, marker particles
-    sll_int32 :: particles_system= 1 !Number of the particles in the system
-    LOGICAL :: gnuplot_inline_output=.FALSE. !write gnuplot output during the simulation
-    !sll_real64,parameter :: plasma_frequency = 1.0_f64 != sqrt( sll_e_charge**2/sll_e_mass/sll_epsilon_0)
-    !sll_real64 ,parameter:: thermal_velocity = 1.0_f64
-
-    !Mesh parameters
-    sll_int32 :: mesh_cells = 2**8
-    sll_int32                   :: spline_degree=3
-
-    sll_real :: interval_a=0, interval_b=4.0_f64*sll_pi
-    sll_real64 :: mesh_delta_t
-    sll_real64, dimension(:), allocatable, private   :: knots
-    sll_int32                  :: num_pts
-
-    sll_int32 :: pushed_species
-
-    class(pic_1d_field_solver), pointer :: fsolver  !<Quasi neutral solver
-
-    integer, private ::  phasespace_file_id=-1
 
     CHARACTER(LEN=255) :: root_path
+    
+    sll_int32 :: timesteps 
+    sll_real64 :: timestepwidth
+    sll_int32 :: nparticles  !GLOBAL, marker particles
+    LOGICAL :: gnuplot_inline_output !write gnuplot output during the simulation
+    
+    !Mesh parameters
+    sll_int32 :: mesh_cells
+    sll_int32 :: spline_degree
+    sll_real :: interval_a=0, interval_b=4.0_f64*sll_pi  !Interval length [a,b], should be a parameter and changed from outside
+    sll_real64 :: mesh_dx  
+    !-----------------Parameters--------------------------------------
+ 
+    
+    !Bspline knots
+    sll_real64, dimension(:), allocatable, private   :: knots 
+    sll_int32 :: pushed_species
 
-    !type(sll_logical_mesh_1d), pointer :: mesh1d
-    !    type(poisson_1d_periodic), pointer :: poisson1dsolver
+    class(pic_1d_field_solver), pointer :: fsolver  !<Field solver
 
+    integer, private ::  phasespace_file_id=-1   
+    
 
-    sll_real64, dimension(:), allocatable ::electricpotential_interp
-    !For parallelization
+    !Interpolation points for electric potential, for visualization
+    sll_real64, dimension(:), allocatable ::electricpotential_interp 
+    !For parallelization MPI Rank and collective size
     sll_int32, private :: coll_rank, coll_size
 
-    ! mesh1d=> new_logical_mesh_1d(mesh_cells, interval_a,interval_b)
-    !call sll_display(mesh1d)
 
     !Definitions for different particle pushers, enumerator
+    !Descriptors that should be done using the descriptor module
     sll_int32, parameter :: SLL_PIC1D_PPUSHER_NONE       = 0
     sll_int32, parameter :: SLL_PIC1D_PPUSHER_EULER   = 1    !Explicit EULER
     sll_int32, parameter :: SLL_PIC1D_PPUSHER_VERLET   = 2
@@ -133,7 +108,8 @@ module sll_pic_1d_Class
 
 contains
 
-    !<
+    !<Creates a new instance if pic_1d and sets all the parameters given as input
+    !parameters given by user are marked with _user
     subroutine new_sll_pic_1d(mesh_cells_user, spline_degree_user, numberofparticles_user,&
             timesteps_user, timestepwidth_user,particle_pusher_user, psolver_user )
         implicit none
@@ -142,8 +118,6 @@ contains
         sll_int32 , intent(in):: numberofparticles_user
         sll_int32, intent(in) :: timesteps_user
         sll_real64 , intent(in):: timestepwidth_user
-        sll_int32 :: idx
-        !character(len=255), intent(in):: particle_pusher_user
         sll_int32, intent(in):: particle_pusher_user , psolver_user
         SLL_ASSERT( is_power_of_two( int( mesh_cells,i64)))
         mesh_cells=mesh_cells_user
@@ -164,7 +138,7 @@ contains
 
 
         !The Mesh is needed on every Node, it is global
-        mesh_delta_t = (interval_b - interval_a)/mesh_cells
+        mesh_dx = (interval_b - interval_a)/mesh_cells
         SLL_CLEAR_ALLOCATE(knots(1:mesh_cells+1),ierr)
         SLL_CLEAR_ALLOCATE(electricpotential_interp(1:mesh_cells),ierr)
 
@@ -172,7 +146,7 @@ contains
 
         knots(1)=interval_a
         do i=2,size(knots)
-            knots(i)=  knots(1) + (i-1)*mesh_delta_t*1.0_f64
+            knots(i)=  knots(1) + (i-1)*mesh_dx*1.0_f64
         enddo
         knots(size(knots))=interval_b
         SLL_ASSERT(knots(size(knots))==interval_b)
@@ -196,7 +170,7 @@ contains
                     mesh_cells, poisson_solver, sll_world_collective,SLL_PERIODIC)
         endselect
 
-        !electric_field_external=>sll_pic_1d_electric_field
+        !Set pointer to external electric field
         Eex=>pic_1d_electric_field_external
 
 
@@ -249,7 +223,6 @@ contains
     subroutine sll_pic_1d_initial_error_estimates()
         sll_real64 :: num_err_mean, num_err_noise_max, num_err_noise_l2, num_err_seminorm
         sll_real64, dimension(size(knots)-1) :: analytical_solution
-        sll_real64 :: flag=1.0_f64
         selectcase(pic1d_testcase)
             case(SLL_PIC1D_TESTCASE_LANDAU)
                 !The first field solve is a Monte Carlo estimator
@@ -283,9 +256,11 @@ contains
 
     endsubroutine
 
+    
+    
+    !Main loop, runs the particle method,
     subroutine sll_pic_1d_run(gnuplot_inline_output_user)
-        logical, intent(in), optional ::gnuplot_inline_output_user
-        sll_real64, dimension(size(knots)-1) :: analytical_solution
+        logical, intent(in), optional ::gnuplot_inline_output_user !Should live gnuplot readable output be generated
         sll_int32 :: idx,jdx,kdx
         sll_real64 :: time
         !Timers
@@ -329,15 +304,9 @@ contains
 
         call fsolver%set_num_sample(nparticles*coll_size)
 
+        
         call load_particle_species (nparticles, interval_a, interval_b, species)
 
-        !        call load_particles (nparticles, interval_a, interval_b,&
-            !            steadyparticleposition, particleposition, &
-            !            particlespeed, particleweight, particleweight_constant, particle_qm)
-        !        particleposition=species(1)%particle%dx
-        !        particlespeed=species(1)%particle%vx
-        !        particleweight=species(1)%particle%weight
-        !        particleweight_constant =species(1)%particle%weight_const
         particle_qm=species(1)%qm
 
         call sll_collective_barrier(sll_world_collective)
@@ -669,31 +638,7 @@ contains
 
     endsubroutine
 
-    !subroutine sll_pic1d_collision_step()
-    !      !  sll_real64, dimension(size(particleweight)) :: collision_weights
-    !        sll_real64 :: ueq, Teq
-    !        !       sll_real64:: feq,v
-    !        sll_int32 :: idx
-    !        !feq(v)=1.0_f64/sqrt(sll_kx)*exp(-0.5_f64*(v-ueq)**2/Teq)
-    !        ueq=dot_product(particlespeed, particleweight)
-    !        Teq=dot_product(particlespeed**2, particleweight)-ueq**2
-    !
-    !        !                collision_weights=particleweight&
-        !            !                         /sqrt(sll_kx)*exp(-0.5_f64*(particlespeed-ueq)**2/Teq)/(interval_length)
-    !        !                         initial_dist_xv(particleposition, particlespeed)
-    !        !
-    !
-    !
-    !        !        do idx=1,size(particleweight)
-    !        !                collision_weights(idx)=particleweight(idx)*&
-        !            !                         feq(particlespeed(idx))/&
-        !            !                         initial_dist_xv((/particleposition(idx)/), (/particlespeed(idx)/))
-    !        !        enddo
-    !
-    !
-    !
-    !
-    !    endsubroutine
+
     subroutine sll_pic1d_collision_step_species( spec, timestepwidth )
         type( sll_particle_1d_group), intent(inout) :: spec
        sll_real64 :: temp
@@ -743,19 +688,6 @@ contains
 
     endsubroutine
 
-!    subroutine sll_pic1d_collision_step_1d( v, weight, weight_const  )
-!       sll_real64, dimension(:), intent(inout):: v !particle velocity 1D
-!       sll_real64, dimension(:), intent(in) :: weight, weight_const
-!       sll_real64, dimension(size(weight)) :: w_kern
-!
-!
-!       SLL_ASSERT(size(weight)==size(v))
-!
-!
-!
-!    endsubroutine
-
-
 
     subroutine sll_pic1d_injection_removing()
         sll_real64 :: weight
@@ -782,26 +714,10 @@ contains
 
     endsubroutine
 
-    !    !<Wrapper for the field solver, here particle destruction and injection can be made
-    !    !<during the push
-    !    subroutine sll_pic_1d_solve_field(p_species)
-    !        type( sll_particle_1d_group), dimension(:), intent(in) :: p_species
-    !
-    !
-    !
-    !
-    !
-    !    endsubroutine
-
-
 
     !<Only relevant for solving the QN in the pusher
     subroutine sll_pic_1d_solve_qn(particleposition_selected)
         sll_real64, dimension(:),intent(in) :: particleposition_selected
-        !sll_real64, dimension(nparticles) :: allparticleposition
-        sll_real64, dimension(nparticles) :: allparticleposition
-        !allparticleposition=particleposition
-        !allparticleposition( particle_mask)=particleposition_selected
         sll_int32 ::jdx
         !Add all the other species as constant
         call fsolver%reset_particles()
@@ -1866,6 +1782,6 @@ contains
         enddo
     endfunction
 
-endmodule  sll_pic_1d_Class
+endmodule  sll_pic_1d
 
 
