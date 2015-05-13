@@ -5,7 +5,7 @@ program unit_test
 #include "sll_utilities.h"
 
     use sll_collective
-    use sll_pic_1d_Class
+    use sll_pic_1d
     implicit none
 
 

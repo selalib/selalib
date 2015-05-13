@@ -1,7 +1,8 @@
 ADD_LIBRARY( sll_pic_1d_sheath_field_solver STATIC pic_1d_field_solver.F90
   particle_description.F90 )
 
-TARGET_LINK_LIBRARIES( sll_pic_1d_sheath_field_solver sll_constants
+TARGET_LINK_LIBRARIES( sll_pic_1d_sheath_field_solver
+  sll_constants
   sll_working_precision
   sll_memory
   sll_meshes
@@ -20,7 +21,8 @@ ADD_LIBRARY( sll_pic_1d_sheath STATIC particle_loading.F90
   pic_postprocessing.F90
   particle_description.F90 )
 
-TARGET_LINK_LIBRARIES( sll_pic_1d_sheath sll_pic_1d_sheath_field_solver
+TARGET_LINK_LIBRARIES( sll_pic_1d_sheath
+  sll_pic_1d_sheath_field_solver
   sll_constants
   sll_working_precision
   sll_memory
