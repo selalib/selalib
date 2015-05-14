@@ -253,10 +253,6 @@ call initconnectivity( num_cells1,                &
 &                      num_cells2,                &
 &                      spline_degree1,            &
 &                      spline_degree2,            &
-&                      bc1_min,                   &
-&                      bc1_max,                   &
-&                      bc2_min,                   &
-&                      bc2_max,                   &
 &                      local_indices,             &
 &                      global_indices,            &
 &                      es%local_to_global_indices )
@@ -310,51 +306,13 @@ es%gauss_pts1(2,:) = 0.5_f64*es%delta_eta1*es%gauss_pts1(2,:)
 es%gauss_pts2(1,:) = 0.5_f64*es%delta_eta2*(es%gauss_pts2(1,:)+1.0_f64)
 es%gauss_pts2(2,:) = 0.5_f64*es%delta_eta2*es%gauss_pts2(2,:)
 
-es%perper  = .false. 
+es%total_num_splines1 = num_cells1 
+es%total_num_splines2 = num_cells2
 
-if( bc1_min == SLL_PERIODIC .and. bc1_max == SLL_PERIODIC .and. &
-    bc2_min == SLL_PERIODIC .and. bc2_max == SLL_PERIODIC ) then
-
-  es%total_num_splines1 = num_cells1 
-  es%total_num_splines2 = num_cells2
-
-  knots1_size = 2*spline_degree1+2
-  knots2_size = 2*spline_degree2+2
-  vec_sz      = num_cells1*num_cells2
-  es%perper   = .true. 
-
-else if( bc1_min == SLL_PERIODIC  .and. bc1_max == SLL_PERIODIC .and.&
-         bc2_min == SLL_DIRICHLET .and. bc2_max == SLL_DIRICHLET ) then
-
-  es%total_num_splines1 = num_cells1 
-  es%total_num_splines2 = num_cells2 + spline_degree2 - 2
-
-  knots1_size = 2*spline_degree1+2
-  knots2_size = 2*spline_degree2+num_cells2+1
-
-  vec_sz = num_cells1*(num_cells2+spline_degree2)
-
-else if( bc1_min == SLL_DIRICHLET .and. bc1_max == SLL_DIRICHLET .and.&
-         bc2_min == SLL_PERIODIC  .and. bc2_max == SLL_PERIODIC ) then
-
-  es%total_num_splines1 = num_cells1 + spline_degree1 - 2
-  es%total_num_splines2 = num_cells2 
-  knots1_size = 2*spline_degree1+num_cells1+1
-  knots2_size = 2*spline_degree2+2
-  vec_sz      = (num_cells1 + spline_degree1)*num_cells2
-
-else if( bc1_min == SLL_DIRICHLET .and. bc1_max == SLL_DIRICHLET .and.&
-         bc2_min == SLL_DIRICHLET .and. bc2_max == SLL_DIRICHLET ) then
-
-  es%total_num_splines1 = num_cells1 + spline_degree1 - 2
-  es%total_num_splines2 = num_cells2 + spline_degree2 - 2
-  knots1_size = 2*spline_degree1 + num_cells1+1
-  knots2_size = 2*spline_degree2 + num_cells2+1
-  vec_sz      = (num_cells1 + spline_degree1)*&
-                (num_cells2 + spline_degree2)
-
-end if
-
+knots1_size = 2*spline_degree1+2
+knots2_size = 2*spline_degree2+2
+vec_sz      = num_cells1*num_cells2
+es%perper   = .true. 
 
 SLL_ALLOCATE(es%knots1(knots1_size),ierr)
 SLL_ALLOCATE(es%knots2(knots2_size),ierr)
@@ -370,13 +328,8 @@ SLL_ALLOCATE(es%stiff(vec_sz),ierr)
 
 solution_size = es%total_num_splines1*es%total_num_splines2
 
-if(es%perper) then
-  SLL_ALLOCATE(es%tmp_rho_vec(solution_size+1),ierr)
-  SLL_ALLOCATE(es%phi_vec(solution_size+1),ierr)
-else
-  SLL_ALLOCATE(es%tmp_rho_vec(solution_size),ierr)
-  SLL_ALLOCATE(es%phi_vec(solution_size),ierr) 
-endif
+SLL_ALLOCATE(es%tmp_rho_vec(solution_size+1),ierr)
+SLL_ALLOCATE(es%phi_vec(solution_size+1),ierr)
 es%rho_vec = 0.0_f64
 es%masse   = 0.0_f64
 es%stiff   = 0.0_f64
@@ -385,16 +338,12 @@ call initialize_knots( spline_degree1, &
 &                      num_cells1,     &
 &                      eta1_min,       &
 &                      eta1_max,       &
-&                      bc1_min,        &
-&                      bc1_max,        &
 &                      es%knots1 )
 
 call initialize_knots( spline_degree2, &
 &                      num_cells2,     &
 &                      eta2_min,       &
 &                      eta2_max,       &
-&                      bc2_min,        &
-&                      bc2_max,        &
 &                      es%knots2 )
 
   
@@ -461,13 +410,8 @@ do i = 1, es%num_cells1
   eta1  = eta1_min + (i-1)*es%delta_eta1
   do ii=1,num_pts_g1
     xg  = eta1  + es%gauss_pts1(1,ii)
-    if(bc1_min==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC) then 
-      gspl1 = es%gauss_pts1(1,ii)
-      ispl1 = spline_degree1+1
-    else 
-      gspl1 = xg
-      ispl1 = spline_degree1+i
-    end if
+    gspl1 = es%gauss_pts1(1,ii)
+    ispl1 = spline_degree1+1
     call bsplvd(es%db,es%knots1,spline_degree1+1,gspl1,ispl1,work1,dbs1,2)
     es%v_splines1(1,:,ii,i) = dbs1(:,1)
     es%v_splines1(2,:,ii,i) = dbs1(:,2)
@@ -482,13 +426,8 @@ do j = 1, es%num_cells2
   eta2  = eta2_min + (j-1)*es%delta_eta2
   do jj=1,num_pts_g2
     yg  = eta2+es%gauss_pts2(1,jj)
-    if (bc2_min==SLL_PERIODIC .and. bc2_max==SLL_PERIODIC) then
-      gspl2 = es%gauss_pts2(1,jj)
-      ispl2 = spline_degree2+1
-    else
-      gspl2 = yg
-      ispl2 = spline_degree2+j
-    end if
+    gspl2 = es%gauss_pts2(1,jj)
+    ispl2 = spline_degree2+1
     call bsplvd(es%db,es%knots2,spline_degree2+1,gspl2,ispl2,work2,dbs2,2)
     es%v_splines2(1,:,jj,j) = dbs2(:,1)
     es%v_splines2(2,:,jj,j) = dbs2(:,2)
@@ -510,21 +449,15 @@ do i = 1, es%num_cells1
   b = 0
   do jj = 0, es%spline_degree2
     index3 = j + jj
-    if (bc2_min==SLL_PERIODIC .and. bc2_max==SLL_PERIODIC) then 
-      if ( index3 > es%total_num_splines2) then
-        index3 = index3 - es%total_num_splines2
-      end if
+    if ( index3 > es%total_num_splines2) then
+      index3 = index3 - es%total_num_splines2
     end if
     do ii = 0,es%spline_degree1
       index1 = i + ii
-      if (bc1_min==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC) then 
-        if ( index1 > es%total_num_splines1) then
-          index1 = index1 - es%total_num_splines1
-        end if
-        nbsp = es%total_num_splines1
-      else !if (bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET) then
-        nbsp = es%num_cells1 + es%spline_degree1
+      if ( index1 > es%total_num_splines1) then
+        index1 = index1 - es%total_num_splines1
       end if
+      nbsp = es%total_num_splines1
       x = index1 + (index3-1)*nbsp
       b = b+1
       index_coef1 = tab_index_coeff1(i) - es%spline_degree1 + ii
@@ -533,21 +466,15 @@ do i = 1, es%num_cells1
       bprime = 0
       do ll = 0,es%spline_degree2
         index4 = j + ll
-        if ( (bc2_min==SLL_PERIODIC).and.(bc2_max== SLL_PERIODIC))then
-          if ( index4 > es%total_num_splines2) then
-            index4 = index4 - es%total_num_splines2
-          end if
+        if ( index4 > es%total_num_splines2) then
+          index4 = index4 - es%total_num_splines2
         end if
         do kk = 0,es%spline_degree1
           index2 = i + kk
-          if(bc1_min==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC)then
-            if ( index2 > es%total_num_splines1) then
-              index2 = index2 - es%total_num_splines1
-            end if
-            nbsp1 = es%total_num_splines1
-          else !if (bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET) then
-            nbsp1 = es%num_cells1 + es%spline_degree1
+          if ( index2 > es%total_num_splines1) then
+            index2 = index2 - es%total_num_splines1
           end if
+          nbsp1 = es%total_num_splines1
           y      = index2 + (index4-1)*nbsp1
           bprime = bprime+1 
           es%local_to_global_indices_source_bis(bprime,icell)= y
@@ -802,12 +729,7 @@ nc_2       = es%num_cells2
 
 nspl = es%total_num_splines_loc
 
-if( bc1_min == SLL_PERIODIC .and. bc1_max == SLL_PERIODIC .and. &
-    bc2_min == SLL_PERIODIC .and. bc2_max == SLL_PERIODIC ) then
-   es%perper = .true.
-else
-   es%perper = .false.  
-end if   
+es%perper = .true.
 
 intjac = 0.0_f64
 
@@ -1003,24 +925,17 @@ do i = 1, nc_1
   do jj = 0, spl_deg_2
 
     index3 = j + jj
-    if (bc2_min==SLL_PERIODIC .and. bc2_max==SLL_PERIODIC) then 
-      if ( index3 > es%total_num_splines2) then
-        index3 = index3 - es%total_num_splines2
-      end if
+    if ( index3 > es%total_num_splines2) then
+      index3 = index3 - es%total_num_splines2
     end if
      
     do ii = 0,spl_deg_1
         
       index1 = i + ii
-      if (bc1_min==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC) then 
-        if ( index1 > es%total_num_splines1) then
-          index1 = index1 - es%total_num_splines1
-        end if
-        nbsp = es%total_num_splines1
-      else !if (bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET) then
-        nbsp = nc_1 + spl_deg_1
+      if ( index1 > es%total_num_splines1) then
+        index1 = index1 - es%total_num_splines1
       end if
-
+      nbsp = es%total_num_splines1
       x = index1 + (index3-1)*nbsp
       b = ii+1+jj*(spl_deg_1+1)
       a = es%local_to_global_indices(b, icell)
@@ -1030,22 +945,15 @@ do i = 1, nc_1
 
       do ll = 0,spl_deg_2
         index4 = j + ll
-        if ( (bc2_min==SLL_PERIODIC).and.(bc2_max== SLL_PERIODIC))then
-          if ( index4 > es%total_num_splines2) then
-            index4 = index4 - es%total_num_splines2
-          end if
+        if ( index4 > es%total_num_splines2) then
+          index4 = index4 - es%total_num_splines2
         end if
         do kk = 0,spl_deg_1
           index2 = i + kk
-          if(bc1_min==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC)then
-            if ( index2 > es%total_num_splines1) then
-              index2 = index2 - es%total_num_splines1
-            end if
-            nbsp1 = es%total_num_splines1
-          else !if (bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET) then
-            nbsp1 = nc_1 + spl_deg_1
+          if ( index2 > es%total_num_splines1) then
+            index2 = index2 - es%total_num_splines1
           end if
-                
+          nbsp1 = es%total_num_splines1
           y      = index2 + (index4-1)*nbsp1
           bprime = kk+1+ll*(spl_deg_1+1)
           aprime = es%local_to_global_indices(bprime,icell)
@@ -1073,46 +981,22 @@ end do
 
 !$OMP END PARALLEL
 
-!#ifdef DEBUG
-!allocate(dense_matrix(es%csr_mat%num_rows,es%csr_mat%num_cols))
-!
-!do i =1, es%csr_mat%num_rows
-! do k = es%csr_mat%row_ptr(i), es%csr_mat%row_ptr(i+1)-1
-!    j = es%csr_mat%col_ind(k)
-!    dense_matrix(i,j) = es%csr_mat%val(k)
-! end do
-!end do
-!
-!write(*,"(3x,36i7)") (k, k = 1, size(es%tmp_rho_vec))
-!do i = 1, es%csr_mat%num_rows
-!  write(*, "(i3,36f7.3)')") i, dense_matrix(i,:) 
-!end do
-!#endif /* DEBUG */
-
 es%intjac = intjac
 print *,'#begin of sll_factorize_csr_matrix'
 
-if (es%perper) then
+es%csr_mat_with_constraint => new_csr_matrix_with_constraint(es%csr_mat)  
 
- es%csr_mat_with_constraint => new_csr_matrix_with_constraint(es%csr_mat)  
+call csr_add_one_constraint( es%csr_mat%row_ptr,                 &  
+                             es%csr_mat%col_ind,                 &
+                             es%csr_mat%val,                     &
+                             es%csr_mat%num_rows,                &
+                             es%csr_mat%num_nz,                  &
+                             es%masse,                           &
+                             es%csr_mat_with_constraint%row_ptr, &
+                             es%csr_mat_with_constraint%col_ind, &
+                             es%csr_mat_with_constraint%val)  
 
- call csr_add_one_constraint( es%csr_mat%row_ptr,                 &  
-                              es%csr_mat%col_ind,                 &
-                              es%csr_mat%val,                     &
-                              es%csr_mat%num_rows,                &
-                              es%csr_mat%num_nz,                  &
-                              es%masse,                           &
-                              es%csr_mat_with_constraint%row_ptr, &
-                              es%csr_mat_with_constraint%col_ind, &
-                              es%csr_mat_with_constraint%val)  
-
-  call sll_factorize_csr_matrix(es%csr_mat_with_constraint)
-
-else   
-
-  call sll_factorize_csr_matrix(es%csr_mat)
-
-end if 
+call sll_factorize_csr_matrix(es%csr_mat_with_constraint)
 
 print *,'#end of sll_factorize_csr_matrix'
 
@@ -1252,9 +1136,7 @@ class is (sll_scalar_field_2d_discrete)
 
   call sll_mult_csr_matrix_vector(es%csr_mat_source,es%rho_coeff_1d,es%rho_vec)
 
-  if(es%perper) then
-    es%rho_vec = es%rho_vec - sum(es%rho_vec)/es%intjac*es%masse
-  end if
+  es%rho_vec = es%rho_vec - sum(es%rho_vec)/es%intjac*es%masse
       
 class is (sll_scalar_field_2d_analytic)
   
@@ -1311,22 +1193,15 @@ class is (sll_scalar_field_2d_analytic)
 
       do mm = 0,es%spline_degree2
         index3 = j + mm
-        if (bc2_min==SLL_PERIODIC .and. bc2_max==SLL_PERIODIC) then    
-          if ( index3 > es%total_num_splines2) then
-            index3 = index3 - es%total_num_splines2
-          end if
+        if ( index3 > es%total_num_splines2) then
+          index3 = index3 - es%total_num_splines2
         end if
-      
         do nn = 0,es%spline_degree1
           index1 = i + nn
-          if (bc1_min==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC) then 
-            if (index1 > es%total_num_splines1) then
-              index1=index1-es%total_num_splines1
-            end if
-            nbsp = es%total_num_splines1
-          else if (bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET) then
-            nbsp = es%num_cells1 + es%spline_degree1
+          if (index1 > es%total_num_splines1) then
+            index1=index1-es%total_num_splines1
           end if
+          nbsp = es%total_num_splines1
       
           x             =  index1 + (index3-1)*nbsp
           b             =  nn + 1 + mm * (es%spline_degree1+1)
@@ -1339,7 +1214,7 @@ class is (sll_scalar_field_2d_analytic)
 
   !$OMP END PARALLEL
 
-  if (es%perper) es%rho_vec = es%rho_vec - int_rho/int_jac
+  es%rho_vec = es%rho_vec - int_rho/int_jac
      
 end select
 
@@ -1351,141 +1226,12 @@ bc2_max = es%bc2_max
 es%tmp_rho_vec(:) = 0.0_f64  !PN: Is it useful ?
 es%phi_vec(:)     = 0.0_f64  !PN: Is it useful ?
   
-if( bc1_min==SLL_PERIODIC  .and. bc1_max==SLL_PERIODIC .and. &
-    bc2_min==SLL_DIRICHLET .and. bc2_max==SLL_DIRICHLET ) then
+es%tmp_rho_vec(1:es%total_num_splines1*es%total_num_splines2)=&
+  es%rho_vec(1:es%total_num_splines1*es%total_num_splines2) 
      
-  k = 0
-  do j = 1, es%total_num_splines2
-    do i = 1, es%total_num_splines1
-      k = k+1
-      es%tmp_rho_vec(k) = es%rho_vec(i+(es%total_num_splines1)*j)
-    end do
-  end do
-     
-else if( bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET .and.&
-         bc2_min==SLL_DIRICHLET .and. bc2_max==SLL_DIRICHLET) then 
-     
-  k = 0
-  do j = 1, es%total_num_splines2
-    do i = 1, es%total_num_splines1
-      k = k+1
-      es%tmp_rho_vec(k) = es%rho_vec(i+1+(es%total_num_splines1+2)*j)
-    end do
-  end do
-     
-else if(bc1_min==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC .and.&
-        bc2_min==SLL_PERIODIC .and. bc2_max==SLL_PERIODIC) then
-     
-  es%tmp_rho_vec(1:es%total_num_splines1*es%total_num_splines2)=&
-    es%rho_vec(1:es%total_num_splines1*es%total_num_splines2) 
-     
-else if(bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET .and.&
-        bc2_min==SLL_PERIODIC  .and. bc2_max==SLL_PERIODIC ) then
-   
-  k = 0
-  do j = 1, es%total_num_splines2
-    do i = 1, es%total_num_splines1
-      k = k+1
-      es%tmp_rho_vec(k) = es%rho_vec(i+1+(es%total_num_splines1+2)*(j-1))
-    end do
-  end do
-
-end if
-
-if(bc1_min==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC .and.&
-   bc2_min==SLL_PERIODIC .and. bc2_max==SLL_PERIODIC) then
-
-  call sll_solve_csr_matrix(es%csr_mat_with_constraint, &
-                            es%tmp_rho_vec,             &
-                            es%phi_vec)
-
-else
-
-!  call set_coeff_splines_values_1d( v1_min,        &
-!                                    num_pts2,      &
-!                                    eta2_min,      &
-!                                    eta2_max,      &
-!                                    bc2_min,       &
-!                                    bc2_max,       &
-!                                    spline_degree2 )
-!
-!  call set_coeff_splines_values_1d( v1_max,        &
-!                                    num_pts2,      &
-!                                    eta2_min,      &
-!                                    eta2_max,      &
-!                                    bc2_min,       &
-!                                    bc2_max,       &
-!                                    spline_degree2 )
-!
-!  call set_coeff_splines_values_1d( v2_min,        &
-!                                    num_pts1,      &
-!                                    eta1_min,      &
-!                                    eta1_max,      &
-!                                    bc1_min,       &
-!                                    bc1_max,       &
-!                                    spline_degree1 )
-!
-!  call set_coeff_splines_values_1d( v2_max,        &
-!                                    num_pts1,      &
-!                                    eta1_min,      &
-!                                    eta1_max,      &
-!                                    bc1_min,       &
-!                                    bc1_max,       &
-!                                    spline_degree1 )
-!
-!  if(bc1_min==SLL_DIRICHLET) then
-!    l = 0; i = 1
-!    do k = es%csr_mat%row_ptr(i),es%csr_mat%row_ptr(i+1)-1 
-!      l = l + 1; j = es%csr_mat%col_ind(l)
-!      if (i==j) then
-!        es%csr_mat%val(l) = es%csr_mat%val(l)*10e7
-!        es%tmp_rho_vec(i) = 10e7
-!        exit
-!      end if
-!    end do
-!  end if
-!  if(bc1_max==SLL_DIRICHLET) then
-!    l = 0; i = es%num_cells1+1
-!    do k = es%csr_mat%row_ptr(i),es%csr_mat%row_ptr(i+1)-1 
-!      l = l + 1; j = es%csr_mat%col_ind(l)
-!      if (i==j) then
-!        es%csr_mat%val(l) = es%csr_mat%val(l)*10e7
-!        es%tmp_rho_vec(i) = 10e7
-!        exit
-!      end if
-!    end do
-!  end if
-!  if(bc2_min==SLL_DIRICHLET) then
-!    l = 0
-!    do i = 1, es%csr_mat%num_rows 
-!      do k = es%csr_mat%row_ptr(i),es%csr_mat%row_ptr(i+1)-1 
-!         l = l + 1; j = 1
-!         if (i==j) then
-!           es%csr_mat%val(l) = es%csr_mat%val(l)*10e7
-!           es%tmp_rho_vec(i) = 10e7
-!           exit
-!         end if
-!      end do
-!    end do
-!  end if
-!  if(bc2_max==SLL_DIRICHLET) then
-!    l = 0
-!    do i = 1, es%csr_mat%num_rows 
-!      do k = es%csr_mat%row_ptr(i),es%csr_mat%row_ptr(i+1)-1 
-!        l = l + 1; j = es%num_cells2+1
-!        if (i==j) then
-!          es%csr_mat%val(l) = es%csr_mat%val(l)*10e7
-!          es%tmp_rho_vec(i) = 10e7
-!          exit
-!        end if
-!      end do
-!    end do
-!  end if
-
-  call sll_solve_csr_matrix(es%csr_mat,     &
-                            es%tmp_rho_vec, &
-                            es%phi_vec)
-endif
+call sll_solve_csr_matrix(es%csr_mat_with_constraint, &
+                          es%tmp_rho_vec,             &
+                          es%phi_vec)
 
 print *,'#solve_linear_system done'
   
@@ -1502,10 +1248,6 @@ subroutine initconnectivity( num_cells1,             &
 &                            num_cells2,             &
 &                            spline_degree1,         &
 &                            spline_degree2,         &
-&                            bc1_min,                &
-&                            bc1_max,                &
-&                            bc2_min,                &
-&                            bc2_max,                &
 &                            local_indices,          &
 &                            global_indices,         &
 &                            local_to_global_indices )
@@ -1514,11 +1256,6 @@ sll_int32, intent(in) :: num_cells1
 sll_int32, intent(in) :: num_cells2
 sll_int32, intent(in) :: spline_degree1
 sll_int32, intent(in) :: spline_degree2
-sll_int32, intent(in) :: bc1_min
-sll_int32, intent(in) :: bc1_max
-sll_int32, intent(in) :: bc2_min
-sll_int32, intent(in) :: bc2_max
-
 sll_int32, dimension(:,:), intent(out) :: local_indices
 sll_int32, dimension(:)  , intent(out) :: global_indices
 sll_int32, dimension(:,:), intent(out) :: local_to_global_indices
@@ -1545,13 +1282,9 @@ do j=1, num_cells2
     cell = (j-1)*num_cells1 + i
     do jj = 0 , spline_degree2
       do ii = 0, spline_degree1
-
         bloc = jj * (spline_degree1 + 1) + ii + 1
-
         b = cell + (j-1)*spline_degree1 + jj*(num_cells1+spline_degree1) + ii 
-
         local_indices(bloc, cell) = b
-
       end do
     end do
   end do
@@ -1560,97 +1293,30 @@ end do
 nb_spl_x = num_cells1 + spline_degree1
 nb_spl_y = num_cells2 + spline_degree2 
   
-if( bc1_min == SLL_PERIODIC .and. bc1_max == SLL_PERIODIC .and.&
-    bc2_min == SLL_PERIODIC .and. bc2_max == SLL_PERIODIC ) then
-
-  d = 0
-  do j = 1, nb_spl_y
-    do i = 1, nb_spl_x
-    
-      a = i + nb_spl_x*(j-1)
-      if (i /= nb_spl_x .and. j/= nb_spl_y) then
-        if (global_indices(a) == 0) then
-          d = d+1
-          global_indices(a) = d
-        end if
-        if ( 1 <= i .and. i <= spline_degree1) then
-          global_indices(a+nb_spl_x-spline_degree1) = global_indices(a)
-        end if
-        if ( 1 <= j .and. j <= spline_degree2) then
-          l = (nb_spl_y - spline_degree2) * nb_spl_x
-          global_indices(a+l) = global_indices(a)
-        end if
-      end if
-    
-    end do
-  end do
+d = 0
+do j = 1, nb_spl_y
+  do i = 1, nb_spl_x
   
-  global_indices(nb_spl_y*nb_spl_x) = global_indices(nb_spl_x*(nb_spl_y-1) + spline_degree2)
+    a = i + nb_spl_x*(j-1)
+    if (i /= nb_spl_x .and. j/= nb_spl_y) then
+      if (global_indices(a) == 0) then
+        d = d+1
+        global_indices(a) = d
+      end if
+      if ( 1 <= i .and. i <= spline_degree1) then
+        global_indices(a+nb_spl_x-spline_degree1) = global_indices(a)
+      end if
+      if ( 1 <= j .and. j <= spline_degree2) then
+        l = (nb_spl_y - spline_degree2) * nb_spl_x
+        global_indices(a+l) = global_indices(a)
+      end if
+    end if
+  
+  end do
+end do
+
+global_indices(nb_spl_y*nb_spl_x) = global_indices(nb_spl_x*(nb_spl_y-1) + spline_degree2)
       
-else if (bc1_min == SLL_PERIODIC  .and. bc1_max == SLL_PERIODIC .and. &
-         bc2_min == SLL_DIRICHLET .and. bc2_max == SLL_DIRICHLET) then
-     
-  d = 0
-  do j = 1, nb_spl_y
-    do i = 1, nb_spl_x
-      a = i + nb_spl_x*(j-1)
-      if ( j == 1 .OR. j == nb_spl_y) then
-        global_indices(a) = 0
-      else
-        if (i /= nb_spl_x) then
-          if (global_indices(a) == 0) then
-            d = d + 1
-            global_indices(a) = d
-          end if
-          if ( 1 <= i .and. i <= spline_degree1 ) then
-            global_indices(a+nb_spl_x-spline_degree1) = global_indices(a)
-          end if
-        end if
-      end if
-    end do
-  end do
-
-else if(bc1_min == SLL_DIRICHLET .and. bc1_max == SLL_DIRICHLET .and. &
-        bc2_min == SLL_PERIODIC  .and. bc2_max == SLL_PERIODIC) then
-
-  d = 0
-  do j = 1, nb_spl_y
-    do i = 1, nb_spl_x
-      a = i + nb_spl_x*(j-1)
-      if (i == 1 .OR. i == nb_spl_x) then
-        global_indices(a) = 0
-      else
-        if (j /= nb_spl_y) then
-          if (global_indices(a) == 0) then
-            d = d + 1
-            global_indices(a) = d
-          end if
-          if ( 1<=j .and. j<=spline_degree2 ) then
-            l = (nb_spl_y - spline_degree2) * nb_spl_x
-            global_indices(a+l) = global_indices(a)
-          end if
-        end if
-      end if
-    end do
-  end do
-
-else if(bc1_min == SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET .and. &
-        bc2_min == SLL_DIRICHLET .and. bc2_max==SLL_DIRICHLET) then
-
-  !PN : Since points on boundary are not computed, 
-  !PN : i guess Dirichlet is homogeneous only
-  !PN : Some values of global_indices are not set  
-  d = 0
-  do j = 2, nb_spl_y-1
-    do i = 2, nb_spl_x-1
-      a = i + nb_spl_x*(j-1)
-      d = d + 1
-      global_indices(a) = d
-    end do
-  end do
-
-end if
-  
 do e = 1, num_cells1*num_cells2
   do b = 1, (spline_degree1+1)*(spline_degree2+1)
     local_to_global_indices(b,e) = global_indices(local_indices(b,e))
@@ -1668,16 +1334,12 @@ subroutine initialize_knots( spline_degree, &
 &                            num_cells,     &
 &                            eta_min,       & 
 &                            eta_max,       &
-&                            bc_left,       &
-&                            bc_right,      &
 &                            knots)
     
 sll_int32,  intent(in)  :: spline_degree 
 sll_int32,  intent(in)  :: num_cells
 sll_real64, intent(in)  :: eta_min
 sll_real64, intent(in)  :: eta_max
-sll_int32,  intent(in)  :: bc_left
-sll_int32,  intent(in)  :: bc_right
 sll_real64, intent(out) :: knots(:)
 sll_int32               :: i
 sll_real64              :: eta
@@ -1685,27 +1347,9 @@ sll_real64              :: delta
 
 delta = (eta_max - eta_min)/num_cells
 
-if (bc_left==SLL_PERIODIC .and. bc_right==SLL_PERIODIC) then 
-
-  do i = -spline_degree, spline_degree+1
-    knots(i+spline_degree+1) = delta*i 
-  end do
-
-else if (bc_left==SLL_DIRICHLET .and. bc_right==SLL_DIRICHLET) then 
-
-  do i = 1, spline_degree + 1
-    knots(i) = eta_min
-  enddo
-  eta = eta_min
-  do i = spline_degree+2, num_cells+1+spline_degree
-    eta = eta + delta
-    knots(i) = eta
-  enddo
-  do i = num_cells+spline_degree+1, num_cells+1+2*spline_degree
-    knots(i) = eta_max
-  enddo
-
-end if
+do i = -spline_degree, spline_degree+1
+  knots(i+spline_degree+1) = delta*i 
+end do
 
 end subroutine initialize_knots
 
