@@ -100,8 +100,6 @@ type, public :: sll_gces
   sll_real64, dimension(:,:,:,:), pointer :: v_splines2
 
   sll_real64, dimension(:,:,:,:), pointer :: val_jac
-  sll_int32 , dimension(:),       pointer :: left1
-  sll_int32 , dimension(:),       pointer :: left2
   sll_real64, dimension(:),       pointer :: rho_vec
   sll_real64, dimension(:),       pointer :: tmp_rho_vec
   sll_real64, dimension(:),       pointer :: phi_vec
@@ -207,11 +205,14 @@ sll_real64 :: x1, x2
 
 sll_int32  :: i, j, ii, jj, ispl1, ispl2
 sll_real64 :: eta1, eta2, gspl1, gspl2
+sll_int32 , dimension(:),  allocatable :: left1
+sll_int32 , dimension(:),  allocatable :: left2
 sll_int32  :: left_rho
 sll_int32  :: cell
 sll_int32  :: a, b, c, d
 sll_int32, dimension(:),   pointer :: global_indices 
 sll_int32, dimension(:,:), pointer :: local_indices
+sll_int32  :: i1, i2, i4, kk, ll, icell, b1, b2
 
 n1 = num_cells1
 n2 = num_cells2
@@ -255,6 +256,7 @@ do c = 1, n1*n2
     es%local_to_global_indices(b,c) = global_indices(local_indices(b,c))
   end do
 end do
+
 
 es%k1         = k1
 es%k2         = k2
@@ -358,7 +360,7 @@ if ( mod(k1+1,2) == 0 ) then
 else
   do i = k1+1+1, n1+1
     es%t1_rho(i) = 0.5*(eta1_min+(i  -(k1)/2-1)*es%delta_eta1 + &
-                            eta1_min+(i-1-(k1)/2-1)*es%delta_eta1)
+                        eta1_min+(i-1-(k1)/2-1)*es%delta_eta1)
   end do
 end if
 
@@ -372,7 +374,7 @@ if (mod(k2+1,2) == 0 ) then
 else
   do i = k2+1+1, n2+1
     es%t2_rho(i) = 0.5*(eta2_min+(i  -(k2)/2-1)*es%delta_eta2 + &
-                            eta2_min+(i-1-(k2)/2-1)*es%delta_eta2 )
+                        eta2_min+(i-1-(k2)/2-1)*es%delta_eta2 )
   end do
 end if
 
@@ -385,8 +387,8 @@ SLL_ALLOCATE(es%v_splines2(3,k2+1,k2+2,n2),ierr)
 es%v_splines1 = 0.0_f64
 es%v_splines2 = 0.0_f64
 
-SLL_ALLOCATE(es%left1(n1),ierr)
-SLL_ALLOCATE(es%left2(n2),ierr)
+SLL_ALLOCATE(left1(n1),ierr)
+SLL_ALLOCATE(left2(n2),ierr)
 
 g1 = size(es%gauss1,2)
 g2 = size(es%gauss2,2)
@@ -486,7 +488,7 @@ do i = 1, n1
     call bsplvd(es%db,es%t1_rho,k1+1,x1,left_rho,work1,dbs1,1)
     es%v_splines1(3,:,ii,i) = dbs1(:,1)
   end do
-  es%left1(i) = left_rho
+  left1(i) = left_rho
 end do
 
 do j = 1, n2
@@ -502,13 +504,39 @@ do j = 1, n2
     call bsplvd(es%db,es%t2_rho,k2+1,x2,left_rho,work2,dbs2,1)
     es%v_splines2(3,:,jj,j) = dbs2(:,1)
   end do
-  es%left2(j) = left_rho
+  left2(j) = left_rho
 end do
 
 deallocate(work1)
 deallocate(work2)
 deallocate(dbs1)
 deallocate(dbs2)
+
+icell = 0
+do j = 1, n2    
+do i = 1, n1  
+  icell = icell+1
+  b1 = 0
+  do jj = 0, k2
+  do ii = 0, k1
+    i1 = left1(i) - k1 + ii
+    i2 = left2(j) - k2 + jj
+    b1 = b1+1
+    es%local_to_global_indices_source(b1,icell)= i1 + (i2-1)*(n1+1)
+    b2 = 0
+    do ll = 0,k2
+      i4 = j + ll
+      do kk = 0,k1
+        b2 = b2+1
+        es%local_to_global_indices_source_bis(b2,icell)= i+kk+(i4-1)*(n1+k1)
+      end do
+    end do
+  end do
+  end do
+end do
+end do
+SLL_DEALLOCATE(left1,ierr)
+SLL_DEALLOCATE(left2,ierr)
 
 open(10, file="gces.mtv")
 write(10,*)"$DATA=CURVE3D"
@@ -660,8 +688,6 @@ SLL_DEALLOCATE(es%t1_rho,ierr)
 SLL_DEALLOCATE(es%t2_rho,ierr)
 SLL_DEALLOCATE(es%v_splines1,ierr)
 SLL_DEALLOCATE(es%v_splines2,ierr)
-SLL_DEALLOCATE(es%left1,ierr)
-SLL_DEALLOCATE(es%left2,ierr)
 
 call sll_delete(es%csr_mat)
 call sll_delete(es%csr_mat_with_constraint)
@@ -994,11 +1020,6 @@ do i = 1, n1
       es%masse(x) = es%masse(x) + mass(b)
       es%stiff(x) = es%stiff(x) + stif(b)
 
-      i1 = es%left1(i) - k1 + ii
-      i2 = es%left2(j) - k2 + jj
-
-      es%local_to_global_indices_source(b,icell)= i1 + (i2-1)*(n1+1)
-
       bprime = 0
       do ll = 0,k2
         i4 = j + ll
@@ -1015,8 +1036,6 @@ do i = 1, n1
                            M_bv(bprime,b) - &
                            S_b1(bprime,b) - &
                            S_b2(bprime,b)
-
-          es%local_to_global_indices_source_bis(bprime,icell)= y
 
           if ( row>0 .and. col>0 ) then
             call sll_add_to_csr_matrix(es%csr_mat, elt_mat_global, row, col)   
