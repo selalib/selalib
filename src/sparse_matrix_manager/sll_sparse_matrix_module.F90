@@ -255,7 +255,6 @@ call initialize_csr_matrix_with_constraint( mat, mat_a)
 
 end function new_csr_matrix_with_constraint
 
-
 subroutine sll_factorize_csr_matrix(mat)
 
 type(sll_csr_matrix), intent(inout) :: mat
@@ -289,7 +288,6 @@ integer :: num_nz_out
 integer :: i
 integer :: s
 integer :: k
-
 
 num_rows_out = num_rows_in+1
 num_nz_out   = num_nz_in+2*num_rows_in

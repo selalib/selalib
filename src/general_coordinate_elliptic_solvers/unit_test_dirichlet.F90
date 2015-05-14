@@ -1,4 +1,4 @@
-program test_gces
+program test_gces_dirichlet
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
@@ -11,14 +11,14 @@ use sll_module_scalar_field_2d
 use sll_constants
 use sll_module_arbitrary_degree_spline_interpolator_2d
 use sll_module_deboor_splines_2d
-use sll_module_gces
+use sll_module_gces_dirichlet
 
 implicit none
 
 #define SPLINE_DEG1       3
 #define SPLINE_DEG2       3
-#define NUM_CELLS1        10
-#define NUM_CELLS2        10
+#define NUM_CELLS1        100
+#define NUM_CELLS2        100
 #define ETA1MIN          (-1.0_f64)
 #define ETA1MAX          (+1.0_f64)
 #define ETA2MIN          (-1.0_f64)
@@ -26,7 +26,7 @@ implicit none
 
 type(sll_cartesian_mesh_2d), pointer                      :: mesh_2d
 class(sll_coordinate_transformation_2d_base), pointer     :: tau
-type(sll_gces)                                            :: es
+type(sll_gces_dirichlet)                                  :: es
 type(sll_arbitrary_degree_spline_interpolator_2d), target :: interp_phi
 type(sll_arbitrary_degree_spline_interpolator_2d), target :: interp_rho
 class(sll_scalar_field_2d_base), pointer                  :: a11_field_mat
@@ -52,7 +52,7 @@ sll_real64, dimension(NUM_CELLS2+1) :: v1_max
 sll_real64, dimension(NUM_CELLS1+1) :: v2_min
 sll_real64, dimension(NUM_CELLS1+1) :: v2_max
 
-sll_int32  :: i, j
+sll_int32  :: i, j, k
 sll_real64 :: h1,h2,node_val,ref
 sll_real64 :: eta1(NUM_CELLS1+1)
 sll_real64 :: eta2(NUM_CELLS2+1)
@@ -264,7 +264,9 @@ call factorize_mat_es( es,            &
 &                      b2_field_vect, &
 &                      c_field        )
 
-call sll_solve( es, rho, phi)
+do k = 1, 10
+  call sll_solve( es, rho, phi)
+end do
 
 integral_solution       = 0.0_f64
 integral_exact_solution = 0.0_f64
@@ -377,4 +379,4 @@ res = sin(2*pi*eta1)*sin(2*pi*eta2)
 
 end function sol
 
-end program test_gces
+end program test_gces_dirichlet
