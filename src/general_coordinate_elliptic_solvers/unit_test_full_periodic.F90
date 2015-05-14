@@ -1,4 +1,4 @@
-program test_gces_periodic
+program test_gces_full_periodic
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
@@ -11,14 +11,14 @@ use sll_module_scalar_field_2d
 use sll_constants
 use sll_module_arbitrary_degree_spline_interpolator_2d
 use sll_module_deboor_splines_2d
-use sll_module_gces_periodic
+use sll_module_gces_full_periodic
 
 implicit none
 
 #define SPLINE_DEG1       3
 #define SPLINE_DEG2       3
-#define NUM_CELLS1        10
-#define NUM_CELLS2        10
+#define NUM_CELLS1        128
+#define NUM_CELLS2        128
 #define ETA1MIN          (-1.0_f64)
 #define ETA1MAX          (+1.0_f64)
 #define ETA2MIN          (-1.0_f64)
@@ -26,7 +26,7 @@ implicit none
 
 type(sll_cartesian_mesh_2d), pointer                      :: mesh_2d
 class(sll_coordinate_transformation_2d_base), pointer     :: tau
-type(sll_gces_periodic)                                   :: es
+type(sll_gces_full_periodic)                              :: es
 type(sll_arbitrary_degree_spline_interpolator_2d), target :: interp_phi
 type(sll_arbitrary_degree_spline_interpolator_2d), target :: interp_rho
 class(sll_scalar_field_2d_base), pointer                  :: a11_field_mat
@@ -52,7 +52,7 @@ sll_real64, dimension(NUM_CELLS2+1) :: v1_max
 sll_real64, dimension(NUM_CELLS1+1) :: v2_min
 sll_real64, dimension(NUM_CELLS1+1) :: v2_max
 
-sll_int32  :: i, j
+sll_int32  :: i, j, k
 sll_real64 :: h1,h2,node_val,ref
 sll_real64 :: eta1(NUM_CELLS1+1)
 sll_real64 :: eta2(NUM_CELLS2+1)
@@ -249,7 +249,9 @@ call factorize_mat_es( es,            &
 &                      b2_field_vect, &
 &                      c_field        )
 
-call sll_solve( es, rho, phi)
+do k = 1, 10
+  call sll_solve( es, rho, phi)
+end do
 
 integral_solution       = 0.0_f64
 integral_exact_solution = 0.0_f64
@@ -264,9 +266,9 @@ do i=1,npts1
   calculated(i,j) = node_val
   grad1_node_val  = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
   grad2_node_val  = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
-  ref             = sin(2*sll_pi*eta1(i)) * sin(2*sll_pi*eta2(j))
-  grad1ref        = 2*sll_pi*cos(2*sll_pi*eta1(i))*sin(2*sll_pi*eta2(j))
-  grad2ref        = 2*sll_pi*cos(2*sll_pi*eta2(j))*sin(2*sll_pi*eta1(i))
+  ref             = cos(2*sll_pi*eta1(i)) * cos(2*sll_pi*eta2(j))
+  grad1ref        =-2*sll_pi*sin(2*sll_pi*eta1(i))*cos(2*sll_pi*eta2(j))
+  grad2ref        =-2*sll_pi*sin(2*sll_pi*eta2(j))*cos(2*sll_pi*eta1(i))
   reference(i,j)  = ref
   normL2          = normL2 + (node_val-ref)**2*h1*h2
   normH1          = normH1 + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2
@@ -279,9 +281,9 @@ integral_exact_solution = sum(reference)*h1*h2
 do j=-50,50
 do i=-50,50
   write(41,*) i, j, phi%first_deriv_eta1_value_at_point(i*0.01_f64,j*0.01_f64) &
-                  , 2*sll_pi*cos(2*sll_pi*i*0.01_f64)*sin(2*sll_pi*j*0.01_f64)
+                  ,-2*sll_pi*sin(2*sll_pi*i*0.01_f64)*cos(2*sll_pi*j*0.01_f64)
   write(42,*) i, j, phi%value_at_point(i*0.01_f64,j*0.01_f64) &
-                  , sin(2*sll_pi*i*0.01_f64)*sin(2*sll_pi*j*0.01_f64)
+                  , cos(2*sll_pi*i*0.01_f64)*cos(2*sll_pi*j*0.01_f64)
 end do
 write(41,*) 
 write(42,*) 
@@ -338,7 +340,7 @@ real(8) :: res
 real(8) :: pi
 
 pi = 4d0*atan(1d0)
-res = -8*pi*pi*sin(2*pi*eta1)*sin(2*pi*eta2)
+res = -8*pi*pi*cos(2*pi*eta1)*cos(2*pi*eta2)
 
 end function rhs
 
@@ -350,8 +352,8 @@ real(8) :: res
 real(8) :: pi
 
 pi = 4d0*atan(1d0)
-res = sin(2*pi*eta1)*sin(2*pi*eta2)
+res = cos(2*pi*eta1)*cos(2*pi*eta2)
 
 end function sol
 
-end program test_gces_periodic
+end program test_gces_full_periodic
