@@ -3,6 +3,7 @@ ADD_LIBRARY( sll_general_coordinate_elliptic_solvers STATIC
              map_function_module.F90
              lobalap.F90
              sll_gces.F90
+             sll_gces_periodic.F90
              sll_general_coordinate_elliptic_solver.F90 )
 
 TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers
@@ -43,5 +44,8 @@ IF(BUILD_TESTING)
 
   ADD_EXECUTABLE( test_gces_dirichlet unit_test_dirichlet.F90 )
   TARGET_LINK_LIBRARIES( test_gces_dirichlet sll_general_coordinate_elliptic_solvers )
+
+  ADD_EXECUTABLE( test_gces_periodic unit_test_periodic.F90 )
+  TARGET_LINK_LIBRARIES( test_gces_periodic sll_general_coordinate_elliptic_solvers )
 
 ENDIF(BUILD_TESTING)
