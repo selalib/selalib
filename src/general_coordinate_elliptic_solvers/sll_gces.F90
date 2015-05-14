@@ -535,8 +535,8 @@ do i = 1, n1
   end do
 end do
 end do
-SLL_DEALLOCATE(left1,ierr)
-SLL_DEALLOCATE(left2,ierr)
+DEALLOCATE(left1)
+DEALLOCATE(left2)
 
 open(10, file="gces.mtv")
 write(10,*)"$DATA=CURVE3D"
