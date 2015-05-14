@@ -30,7 +30,7 @@
 !> @brief Elliptic solver on 2d curvilinear mesh
 !> @details This solver works with analytical 
 !> and discrete coordinate transformations.
-module sll_module_gces
+module sll_module_gces_dirichlet
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -70,7 +70,7 @@ private
 !> splines in array global_indices depends on the boundary conditions.
 !> local_indices includes the changes resulting from the boundary conditions.
 !> local_to_lobal_indices(i,j) = global_indices(local_indices(i,j))
-type, public :: sll_gces
+type, public :: sll_gces_dirichlet
 
   private
   sll_int32,  public :: n1
@@ -109,30 +109,29 @@ type, public :: sll_gces
   type(deboor_type)                       :: db
 
   type(sll_csr_matrix),           pointer :: csr_mat
-  type(sll_csr_matrix),           pointer :: csr_mat_with_constraint
   type(sll_csr_matrix),           pointer :: csr_mat_source
 
-end type sll_gces
+end type sll_gces_dirichlet
 
 sll_int32, parameter, public :: ES_GAUSS_LEGENDRE = 0
 sll_int32, parameter, public :: ES_GAUSS_LOBATTO = 1
   
 interface sll_delete
-  module procedure delete_gces
+  module procedure delete_gces_dirichlet
 end interface sll_delete
 
 interface sll_create
-  module procedure initialize_gces
+  module procedure initialize_gces_dirichlet
 end interface sll_create
 
 interface sll_solve
-  module procedure solve_gces
+  module procedure solve_gces_dirichlet
 end interface sll_solve
 
 public sll_delete,       &
        sll_create,       &
        sll_solve,        &
-       new_gces,         &
+       new_gces_dirichlet,         &
        factorize_mat_es
 
 contains 
@@ -162,7 +161,7 @@ contains
 !> @param[in]  eta2_min the minimun in the direction eta2
 !> @param[in]  eta2_max the maximun in the direction eta2
 !> @param[out] the type general_coordinate_elliptic_solver
-subroutine initialize_gces( es,                  &
+subroutine initialize_gces_dirichlet( es,                  &
                             k1,                  &
                             k2,                  &
                             num_cells1,          &
@@ -174,7 +173,7 @@ subroutine initialize_gces( es,                  &
                             eta2_min,            &
                             eta2_max)
     
-type(sll_gces), intent(out) :: es
+type(sll_gces_dirichlet), intent(out) :: es
 
 sll_int32,  intent(in)  :: k1
 sll_int32,  intent(in)  :: k2
@@ -189,7 +188,6 @@ sll_real64, intent(in)  :: eta2_max
 
 sll_int32 :: t1_size
 sll_int32 :: t2_size
-sll_int32 :: vec_sz ! for rho_vec and phi_vec allocations
 sll_int32 :: ierr
 sll_int32 :: solution_size
 sll_int32 :: g1
@@ -236,7 +234,7 @@ do i = 1, n1
   do ii = 0, k1
     b    =  b+1
     local_indices(b, c) = c + (j-1)*k1 + jj*(n1+k1) + ii 
-     print"(5i4)", i, j, c, b, local_indices(b, c)
+     !print"(5i4)", i, j, c, b, local_indices(b, c)
   end do
   end do
 end do
@@ -299,16 +297,14 @@ es%gauss2(2,:) = 0.5_f64*es%delta_eta2*(es%gauss2(2,:))
 
 t1_size = 2*k1 + n1+1
 t2_size = 2*k2 + n2+1
-vec_sz  = (n1+k1)*(n2+k2)
-
 
 SLL_ALLOCATE(es%t1(t1_size),ierr)
 SLL_ALLOCATE(es%t2(t2_size),ierr)
 SLL_ALLOCATE(es%t1_rho(n1+k1+2),ierr)
 SLL_ALLOCATE(es%t2_rho(n2+k2+2),ierr)
-SLL_ALLOCATE(es%rho_vec(vec_sz),ierr)
-SLL_ALLOCATE(es%masse(vec_sz),ierr)
-SLL_ALLOCATE(es%stiff(vec_sz),ierr)
+SLL_ALLOCATE(es%rho_vec((n1+k1)*(n2+k2)),ierr)
+SLL_ALLOCATE(es%masse((n1+k1)*(n2+k2)),ierr)
+SLL_ALLOCATE(es%stiff((n1+k1)*(n2+k2)),ierr)
 
 !AB : We must add plus 1 for the dimension of the 
 !AB : solution in the case periodic periodic to 
@@ -538,7 +534,7 @@ end do
 DEALLOCATE(left1)
 DEALLOCATE(left2)
 
-open(10, file="gces.mtv")
+open(10, file="gces_dirichlet.mtv")
 write(10,*)"$DATA=CURVE3D"
 write(10,*)"%xmin=", -1.1, " xmax = ", 1.1
 write(10,*)"%ymin=", -1.1, " ymax = ", 1.1
@@ -596,7 +592,7 @@ end do
 SLL_DEALLOCATE(global_indices,ierr)
 SLL_DEALLOCATE(local_indices,ierr)
 
-end subroutine initialize_gces
+end subroutine initialize_gces_dirichlet
   
 !> @brief Initialization for elliptic solver.
 !> @details To have the function phi such that 
@@ -621,7 +617,7 @@ end subroutine initialize_gces
 !> @param[in] eta2_max the maximun in the direction eta2
 !> @return    the type general_coordinate_elliptic_solver such that a pointer
 
-function new_gces( k1,               &
+function new_gces_dirichlet( k1,               &
                    k2,               &
                    n1,               &
                    n2,               &
@@ -632,7 +628,7 @@ function new_gces( k1,               &
                    eta2_min,         &
                    eta2_max ) result(es)
 
-type(sll_gces), pointer :: es
+type(sll_gces_dirichlet), pointer :: es
 
 sll_int32,  intent(in) :: k1
 sll_int32,  intent(in) :: k2
@@ -661,15 +657,15 @@ call sll_create( es,               &
 &                eta2_min,         &
 &                eta2_max )
    
-end function new_gces
+end function new_gces_dirichlet
 
 !> @brief Deallocate the type general_coordinate_elliptic_solver
 !> @details
 !> The parameters are
 !> @param[in] es the type general_coordinate_elliptic_solver
   
-subroutine delete_gces( es )
-type(sll_gces) :: es
+subroutine delete_gces_dirichlet( es )
+type(sll_gces_dirichlet) :: es
 sll_int32 :: ierr
 
 SLL_DEALLOCATE(es%t1,ierr)
@@ -690,10 +686,9 @@ SLL_DEALLOCATE(es%v_splines1,ierr)
 SLL_DEALLOCATE(es%v_splines2,ierr)
 
 call sll_delete(es%csr_mat)
-call sll_delete(es%csr_mat_with_constraint)
 call sll_delete(es%csr_mat_source)
 
-end subroutine delete_gces
+end subroutine delete_gces_dirichlet
 
 !> @brief Assemble the matrix for elliptic solver.
 !> @details To have the function phi such that 
@@ -729,7 +724,7 @@ subroutine factorize_mat_es( es,            &
 &                            b2_field_vect, &
 &                            c_field)
 
-type(sll_gces),intent(inout) :: es
+type(sll_gces_dirichlet),intent(inout) :: es
 
 class(sll_scalar_field_2d_base), pointer :: a11_field_mat
 class(sll_scalar_field_2d_base), pointer :: a12_field_mat
@@ -1146,9 +1141,9 @@ end subroutine factorize_mat_es
 !> @param[out] phi \f$ \phi \f$ the field corresponding to the solution of the equation
 !> @return     phi the field solution of the equation
   
-subroutine solve_gces( es, rho, phi)
+subroutine solve_gces_dirichlet( es, rho, phi)
 
-class(sll_gces), intent(inout)                         :: es
+class(sll_gces_dirichlet),           intent(inout)     :: es
 class(sll_scalar_field_2d_discrete), intent(inout)     :: phi
 class(sll_scalar_field_2d_base),     intent(in),target :: rho
 
@@ -1177,16 +1172,11 @@ sll_int32  :: k1, k2, n1, n2
 !$ sll_int32  :: tid = 0
 !$ sll_int32  :: nthreads = 1
   
-g1 = size(es%gauss1,2)
-g2 = size(es%gauss2,2)
-
-
-k1              = es%k1
-k2              = es%k2
-n1              = es%n1
-n2              = es%n2
-es%rho_vec      = 0.0_f64
-es%rho_coeff_1d = 0.0_f64
+k1          = es%k1
+k2          = es%k2
+n1          = es%n1
+n2          = es%n2
+es%rho_vec  = 0.0_f64
  
 base_field_pointer => rho
 
@@ -1196,6 +1186,7 @@ class is (sll_scalar_field_2d_discrete)
 
   coeff_rho => type_field%interp_2d%get_coefficients()
             
+  es%rho_coeff_1d = 0.0_f64
   !Loop over point mesh
   do j=1,n2+1
     do i=1,n1+1
@@ -1209,6 +1200,9 @@ class is (sll_scalar_field_2d_analytic)
   
   int_rho = 0.0_f64
   int_jac = 0.0_f64
+
+  g1 = size(es%gauss1,2)
+  g2 = size(es%gauss2,2)
 
   SLL_CLEAR_ALLOCATE(M_rho_loc(1:(k1+1)*(k2+1)),ierr)
 
@@ -1263,7 +1257,6 @@ class is (sll_scalar_field_2d_analytic)
           x             =  i + nn + (i3-1)*(n1+k1)
           b             =  nn + 1 + mm * (k1+1)
           es%rho_vec(x) =  es%rho_vec(x)  + M_rho_loc(b)
-            
         end do
       end do
     end do
@@ -1288,7 +1281,7 @@ call sll_solve_csr_matrix(es%csr_mat, es%tmp_rho_vec, es%phi_vec)
   
 call phi%interp_2d%set_coefficients(es%phi_vec(1:(n1+k1-2)*(n2+k2-2)))
 
-end subroutine solve_gces
+end subroutine solve_gces_dirichlet
   
 
-end module sll_module_gces
+end module sll_module_gces_dirichlet
