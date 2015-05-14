@@ -54,7 +54,6 @@ use sll_sparse_matrix_module, only : sll_csr_matrix,                 &
                                      sll_mult_csr_matrix_vector,     &
                                      sll_solve_csr_matrix,           &
                                      sll_delete
-
 #ifdef _OPENMP
 use omp_lib
 #endif
@@ -99,7 +98,6 @@ type, public :: sll_gces_full_periodic
   sll_real64, dimension(:,:,:,:), pointer :: v_splines1
   sll_real64, dimension(:,:,:,:), pointer :: v_splines2
 
-  type(sll_csr_matrix),           pointer :: csr_mat
   type(sll_csr_matrix),           pointer :: csr_mat_with_constraint
   type(sll_csr_matrix),           pointer :: csr_mat_source
   sll_real64, dimension(:),       pointer :: rho_vec
@@ -113,27 +111,25 @@ type, public :: sll_gces_full_periodic
 
 end type sll_gces_full_periodic
 
-!> For the integration mode.  
 sll_int32, parameter, public :: ES_GAUSS_LEGENDRE = 0
-!> For the integration mode.  
 sll_int32, parameter, public :: ES_GAUSS_LOBATTO = 1
   
 interface sll_delete
-  module procedure delete_elliptic
+  module procedure delete_gces_full_periodic
 end interface sll_delete
 
 interface sll_create
-  module procedure initialize_general_elliptic_solver
+  module procedure initialize_gces_full_periodic
 end interface sll_create
 
 interface sll_solve
-  module procedure solve_general_coordinates_elliptic_eq
+  module procedure solve_gces_full_periodic
 end interface sll_solve
 
-public sll_delete,                          &
-       sll_create,                          &
-       sll_solve,                           &
-       new_general_elliptic_solver,         &
+public sll_delete,                     &
+       sll_create,                     &
+       sll_solve,                      &
+       new_general_elliptic_solver,    &
        factorize_mat_es
 
 contains 
@@ -163,17 +159,17 @@ contains
 !> @param[in]  eta2_min the minimun in the direction eta2
 !> @param[in]  eta2_max the maximun in the direction eta2
 !> @param[out] the type general_coordinate_elliptic_solver
-subroutine initialize_general_elliptic_solver( &
-       es,                                     &
-       spline_degree1,                         &
-       spline_degree2,                         &
-       num_cells1,                             &
-       num_cells2,                             &
-       quadrature_type1,                       &
-       quadrature_type2,                       &
-       eta1_min,                               &
-       eta1_max,                               &
-       eta2_min,                               &
+subroutine initialize_gces_full_periodic( &
+       es,                                &
+       spline_degree1,                    &
+       spline_degree2,                    &
+       num_cells1,                        &
+       num_cells2,                        &
+       quadrature_type1,                  &
+       quadrature_type2,                  &
+       eta1_min,                          &
+       eta1_max,                          &
+       eta2_min,                          &
        eta2_max)
     
 type(sll_gces_full_periodic), intent(out) :: es
@@ -208,9 +204,9 @@ sll_int32  :: i, j, ii, jj, ispl1, ispl2
 sll_real64 :: eta1, eta2, gspl1, gspl2
 sll_int32  :: left
 sll_int32  :: kk, ll, index_coef1, index_coef2
-sll_int32  :: x, y, nbsp, nbsp1
+sll_int32  :: x, y
 sll_int32  :: index1, index2, index3, index4
-sll_int32  :: icell, aprime, bprime
+sll_int32  :: icell, bprime
 
 sll_int32, dimension(:),   allocatable :: global_indices 
 sll_int32, dimension(:,:), allocatable :: local_indices
@@ -227,7 +223,6 @@ sll_int32 :: d
 sll_int32 :: a
 sll_int32 :: l
 
-  
 dim1 = (spline_degree1+1)*(spline_degree2+1)
 dim2 = (num_cells1*num_cells2)
 SLL_ALLOCATE(es%local_to_global_indices(1:dim1,1:dim2),ierr)
@@ -364,7 +359,6 @@ do i = -spline_degree2, spline_degree2+1
   es%knots2(i+spline_degree2+1) = es%delta_eta2*i 
 end do
   
-
 es%knots1_rho(1:spline_degree1+1) = eta1_min
 es%knots1_rho(num_cells1+2:num_cells1+1+spline_degree1+1) = eta1_max
  
@@ -463,12 +457,11 @@ do i = 1, es%num_cells1
     do ii = 0,es%spline_degree1
       index1 = i + ii
       if ( index1 > es%num_cells1) index1 = index1 - es%num_cells1
-      nbsp = es%num_cells1
-      x = index1 + (index3-1)*nbsp
+      x = index1+(index3-1)*es%num_cells1
       b = b+1
       index_coef1 = tab_index_coeff1(i) - es%spline_degree1 + ii
       index_coef2 = tab_index_coeff2(j) - es%spline_degree2 + jj
-      es%local_to_global_indices_source(b,icell)= index_coef1 + (index_coef2-1)*(es%num_cells1+1)
+      es%local_to_global_indices_source(b,icell)= index_coef1+(index_coef2-1)*(es%num_cells1+1)
       bprime = 0
       do ll = 0,es%spline_degree2
         index4 = j + ll
@@ -476,10 +469,8 @@ do i = 1, es%num_cells1
         do kk = 0,es%spline_degree1
           index2 = i + kk
           if ( index2 > es%num_cells1) index2 = index2 - es%num_cells1
-          nbsp1 = es%num_cells1
-          y      = index2 + (index4-1)*nbsp1
           bprime = bprime+1 
-          es%local_to_global_indices_source_bis(bprime,icell)= y
+          es%local_to_global_indices_source_bis(bprime,icell)=index2+(index4-1)*es%num_cells1
         end do
       end do
     end do
@@ -489,7 +480,7 @@ end do
 DEALLOCATE(tab_index_coeff1)
 DEALLOCATE(tab_index_coeff2)
 
-end subroutine initialize_general_elliptic_solver
+end subroutine initialize_gces_full_periodic
   
 !> @brief Initialization for elliptic solver.
 !> @details To have the function phi such that 
@@ -561,7 +552,7 @@ end function new_general_elliptic_solver
 !> The parameters are
 !> @param[in] es the type general_coordinate_elliptic_solver
   
-subroutine delete_elliptic( es )
+subroutine delete_gces_full_periodic( es )
 type(sll_gces_full_periodic) :: es
 sll_int32 :: ierr
 
@@ -584,7 +575,7 @@ SLL_DEALLOCATE(es%knots2_rho,ierr)
 SLL_DEALLOCATE(es%v_splines1,ierr)
 SLL_DEALLOCATE(es%v_splines2,ierr)
 
-end subroutine delete_elliptic
+end subroutine delete_gces_full_periodic
 
 
 !> @brief Assemble the matrix for elliptic solver.
@@ -622,6 +613,8 @@ subroutine factorize_mat_es( es,            &
                              c_field)
 
 type(sll_gces_full_periodic),intent(inout) :: es
+
+type(sll_csr_matrix),            pointer :: csr_mat
 
 class(sll_scalar_field_2d_base), pointer :: a11_field_mat
 class(sll_scalar_field_2d_base), pointer :: a12_field_mat
@@ -690,7 +683,7 @@ sll_int32  :: index_coef1,index_coef2
 sll_int32  :: b, bprime,x,y
 sll_int32  :: a, aprime
 sll_real64 :: elt_mat_global
-sll_int32  :: nspl, nbsp,nbsp1
+sll_int32  :: nspl
 sll_int32  :: spl_deg_1, spl_deg_2, nc_1, nc_2
 sll_int32  :: ideg2,ideg1
 sll_int32  :: jdeg2,jdeg1
@@ -736,16 +729,16 @@ SLL_CLEAR_ALLOCATE(M_bv(1:nspl,1:nspl),ierr)
 SLL_CLEAR_ALLOCATE(mass(1:nspl),ierr)
 SLL_CLEAR_ALLOCATE(stif(1:nspl),ierr)
 
-es%csr_mat => new_csr_matrix( es%num_cells1*es%num_cells2,  &
-&                             es%num_cells1*es%num_cells2,  &
-&                             es%num_cells1*es%num_cells2,  &
-&                             es%local_to_global_indices,   &
-&                             nspl,                         &
-&                             es%local_to_global_indices,   &
-&                             (es%spline_degree1+1)*(es%spline_degree2+1))
+csr_mat => new_csr_matrix( es%num_cells1*es%num_cells2,               &
+&                          es%num_cells1*es%num_cells2,               &
+&                          es%num_cells1*es%num_cells2,               &
+&                          es%local_to_global_indices,                &
+&                          nspl,                                      &
+&                          es%local_to_global_indices,                &
+&                          (es%spline_degree1+1)*(es%spline_degree2+1))
 
 !$OMP PARALLEL DEFAULT(NONE) &
-!$OMP SHARED( es, c_field, &
+!$OMP SHARED( es, c_field, csr_mat, &
 !$OMP a11_field_mat, a12_field_mat, a21_field_mat, a22_field_mat, &
 !$OMP b1_field_vect, b2_field_vect, spl_deg_1, spl_deg_2, source, intjac ) &
 !$OMP FIRSTPRIVATE(nc_1, nc_2, delta1, delta2, eta1_min, eta2_min, &
@@ -764,7 +757,7 @@ es%csr_mat => new_csr_matrix( es%num_cells1*es%num_cells2,  &
 !$OMP M_c,K_11,K_12,K_21,K_22,M_bv,S_b1,S_b2, &
 !$OMP index_coef2, index_coef1, &
 !$OMP index1, index2, index3, index4, &
-!$OMP a, b, x, y, aprime, bprime, nbsp, nbsp1, &
+!$OMP a, b, x, y, aprime, bprime, &
 !$OMP r1r2, v1v2, d1v2, v1d2, elt_mat_global )
 
 !$ tid = omp_get_thread_num()
@@ -924,18 +917,13 @@ do i = 1, nc_1
   do jj = 0, spl_deg_2
 
     index3 = j + jj
-    if ( index3 > es%num_cells2) then
-      index3 = index3 - es%num_cells2
-    end if
+    if ( index3 > es%num_cells2) index3 = index3 - es%num_cells2
      
     do ii = 0,spl_deg_1
         
       index1 = i + ii
-      if ( index1 > es%num_cells1) then
-        index1 = index1 - es%num_cells1
-      end if
-      nbsp = es%num_cells1
-      x = index1 + (index3-1)*nbsp
+      if ( index1 > es%num_cells1) index1 = index1 - es%num_cells1
+      x = index1 + (index3-1)*es%num_cells1
       b = ii+1+jj*(spl_deg_1+1)
       a = es%local_to_global_indices(b, icell)
          
@@ -944,16 +932,10 @@ do i = 1, nc_1
 
       do ll = 0,spl_deg_2
         index4 = j + ll
-        if ( index4 > es%num_cells2) then
-          index4 = index4 - es%num_cells2
-        end if
+        if ( index4 > es%num_cells2) index4 = index4 - es%num_cells2
         do kk = 0,spl_deg_1
           index2 = i + kk
-          if ( index2 > es%num_cells1) then
-            index2 = index2 - es%num_cells1
-          end if
-          nbsp1 = es%num_cells1
-          y      = index2 + (index4-1)*nbsp1
+          if ( index2 > es%num_cells1) index2 = index2 - es%num_cells1
           bprime = kk+1+ll*(spl_deg_1+1)
           aprime = es%local_to_global_indices(bprime,icell)
 
@@ -966,10 +948,8 @@ do i = 1, nc_1
                            S_b1(bprime,b) - &
                            S_b2(bprime,b)
 
-          es%local_to_global_indices_source_bis(bprime,icell)= y
-
           if ( a>0 .and. aprime>0 ) then
-            call sll_add_to_csr_matrix(es%csr_mat, elt_mat_global, a, aprime)   
+            call sll_add_to_csr_matrix(csr_mat, elt_mat_global, a, aprime)   
           end if
         end do
       end do
@@ -984,38 +964,38 @@ es%intjac = intjac
 print *,'#begin of sll_factorize_csr_matrix'
 
 SLL_ALLOCATE(es%csr_mat_with_constraint,ierr)  
-es%csr_mat_with_constraint%num_nz   = es%csr_mat%num_nz + 2*es%csr_mat%num_rows       
-es%csr_mat_with_constraint%num_rows = es%csr_mat%num_rows  +  1
-es%csr_mat_with_constraint%num_cols = es%csr_mat%num_cols  +  1
+es%csr_mat_with_constraint%num_nz   = csr_mat%num_nz + 2*csr_mat%num_rows       
+es%csr_mat_with_constraint%num_rows = csr_mat%num_rows  +  1
+es%csr_mat_with_constraint%num_cols = csr_mat%num_cols  +  1
 
 SLL_ALLOCATE(es%csr_mat_with_constraint%row_ptr(es%csr_mat_with_constraint%num_rows+1),ierr)
 SLL_ALLOCATE(es%csr_mat_with_constraint%col_ind(es%csr_mat_with_constraint%num_nz),ierr)
 SLL_CLEAR_ALLOCATE(es%csr_mat_with_constraint%val(1:es%csr_mat_with_constraint%num_nz),ierr)
 
-es%csr_mat_with_constraint%num_rows = es%csr_mat%num_rows+1
-es%csr_mat_with_constraint%num_nz   = es%csr_mat%num_nz+2*es%csr_mat%num_rows
+es%csr_mat_with_constraint%num_rows = csr_mat%num_rows+1
+es%csr_mat_with_constraint%num_nz   = csr_mat%num_nz+2*csr_mat%num_rows
 
 s = 1
-do i=1, es%csr_mat%num_rows
+do i=1, csr_mat%num_rows
   es%csr_mat_with_constraint%row_ptr(i) = s
-  do k =  es%csr_mat%row_ptr(i),  es%csr_mat%row_ptr(i+1)-1
-    es%csr_mat_with_constraint%val(s) =  es%csr_mat%val(k)
-    es%csr_mat_with_constraint%col_ind(s) =  es%csr_mat%col_ind(k)
+  do k =  csr_mat%row_ptr(i),  csr_mat%row_ptr(i+1)-1
+    es%csr_mat_with_constraint%val(s) =  csr_mat%val(k)
+    es%csr_mat_with_constraint%col_ind(s) =  csr_mat%col_ind(k)
     s = s+1
   enddo
   es%csr_mat_with_constraint%val(s) = es%masse(i)
   es%csr_mat_with_constraint%col_ind(s) = es%csr_mat_with_constraint%num_rows
   s = s+1
 enddo
-es%csr_mat_with_constraint%row_ptr(es%csr_mat%num_rows+1) = s
-do i=1, es%csr_mat%num_rows
+es%csr_mat_with_constraint%row_ptr(csr_mat%num_rows+1) = s
+do i=1, csr_mat%num_rows
   es%csr_mat_with_constraint%val(s) = es%masse(i)
   es%csr_mat_with_constraint%col_ind(s) = i
   s = s+1      
 enddo
-es%csr_mat_with_constraint%row_ptr(es%csr_mat%num_rows+2) = s
+es%csr_mat_with_constraint%row_ptr(csr_mat%num_rows+2) = s
 
-call sll_delete(es%csr_mat)
+call sll_delete(csr_mat)
  
 call sll_factorize_csr_matrix(es%csr_mat_with_constraint)
 
@@ -1094,24 +1074,23 @@ end subroutine factorize_mat_es
 !> @param[out] phi \f$ \phi \f$ the field corresponding to the solution of the equation
 !> @return     phi the field solution of the equation
   
-subroutine solve_general_coordinates_elliptic_eq( es, rho, phi)
+subroutine solve_gces_full_periodic( es, rho, phi)
 
-class(sll_gces_full_periodic), intent(inout)      :: es
-class(sll_scalar_field_2d_discrete),       intent(inout)      :: phi
-class(sll_scalar_field_2d_base),           intent(in),target  :: rho
+class(sll_gces_full_periodic),       intent(inout)     :: es
+class(sll_scalar_field_2d_discrete), intent(inout)     :: phi
+class(sll_scalar_field_2d_base),     intent(in),target :: rho
 
 class(sll_scalar_field_2d_base), pointer :: base_field_pointer
 sll_real64, dimension(:,:),      pointer :: coeff_rho
-sll_real64, dimension(:), allocatable :: m_rho_loc
+sll_real64, dimension(:),    allocatable :: m_rho_loc
 
 sll_int32  :: i
 sll_int32  :: j
-sll_int32  :: k
 sll_int32  :: num_pts_g1
 sll_int32  :: num_pts_g2
 sll_int32  :: x, n, b
 sll_int32  :: ii, jj, kk, ll, mm, nn
-sll_int32  :: index1, index3, nbsp
+sll_int32  :: index1, index3
 
 sll_real64 :: wgpt1, wgpt2, gpt1, gpt2, eta1, eta2
 sll_real64 :: val_f, val_j, valfj, jac_mat(2,2)
@@ -1163,7 +1142,7 @@ class is (sll_scalar_field_2d_analytic)
   !$OMP FIRSTPRIVATE(nc_1, nc_2, num_pts_g1, num_pts_g2, &
   !$OMP              tid, nthreads)                      &
   !$OMP PRIVATE(i,j,ii,jj,kk,ll,mm,nn,n,m_rho_loc,x,b,   &
-  !$OMP         index1,index3,nbsp,eta1,eta2,gpt1,gpt2,  &
+  !$OMP         index1,index3,eta1,eta2,gpt1,gpt2,  &
   !$OMP         wgpt1,wgpt2,spline1,spline2,val_f,val_j, &
   !$OMP         valfj,jac_mat)
   !$ tid = omp_get_thread_num()
@@ -1240,6 +1219,6 @@ print *,'#solve_linear_system done'
   
 call phi%interp_2d%set_coefficients(es%phi_vec(1:es%num_cells1*es%num_cells2))
 
-end subroutine solve_general_coordinates_elliptic_eq
+end subroutine solve_gces_full_periodic
   
 end module sll_module_gces_full_periodic

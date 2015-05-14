@@ -821,6 +821,7 @@ nspl = es%total_num_splines_loc
 if( bc1_min == SLL_PERIODIC .and. bc1_max == SLL_PERIODIC .and. &
     bc2_min == SLL_PERIODIC .and. bc2_max == SLL_PERIODIC ) then
    es%perper = .true.
+   SLL_WARNING("sll_general_coordinate_elliptic_solver","The full periodic version is deprecated")
 else
    es%perper = .false.  
 end if   
@@ -1062,7 +1063,6 @@ do i = 1, nc_1
             nbsp1 = nc_1 + spl_deg_1
           end if
                 
-          y      = index2 + (index4-1)*nbsp1
           bprime = kk+1+ll*(spl_deg_1+1)
           aprime = es%local_to_global_indices(bprime,icell)
 
@@ -1074,8 +1074,6 @@ do i = 1, nc_1
                            M_bv(bprime,b) - &
                            S_b1(bprime,b) - &
                            S_b2(bprime,b)
-
-          es%local_to_global_indices_source_bis(bprime,icell)= y
 
           if ( a>0 .and. aprime>0 ) then
             call sll_add_to_csr_matrix(es%csr_mat, elt_mat_global, a, aprime)   
@@ -1123,6 +1121,8 @@ if (es%perper) then
                               es%csr_mat_with_constraint%val)  
 
   call sll_factorize_csr_matrix(es%csr_mat_with_constraint)
+
+  SLL_WARNING("sll_general_coordinate_elliptic_solver","The full periodic version is deprecated")
 
 else   
 
@@ -1306,11 +1306,11 @@ class is (sll_scalar_field_2d_analytic)
           gpt1  = eta1 + es%gauss_pts1(1,ii)
           wgpt1 = es%gauss_pts1(2,ii)
       
-          val_f = rho%value_at_point(gpt1,gpt2)
+          val_f   = rho%value_at_point(gpt1,gpt2)
           jac_mat = rho%get_jacobian_matrix(gpt1,gpt2)
           val_j   = jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1)
-          val_j = val_j*wgpt1*wgpt2
-          valfj = val_f*val_j
+          val_j   = val_j*wgpt1*wgpt2
+          valfj   = val_f*val_j
           int_rho = int_rho + valfj 
           int_jac = int_jac + val_j
       
@@ -1415,92 +1415,11 @@ if(bc1_min==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC .and.&
                             es%tmp_rho_vec,             &
                             es%phi_vec)
 
+  SLL_WARNING("sll_general_coordinate_elliptic_solver","Use sll_gces_full_periodic")
 else
 
-!  call set_coeff_splines_values_1d( v1_min,        &
-!                                    num_pts2,      &
-!                                    eta2_min,      &
-!                                    eta2_max,      &
-!                                    bc2_min,       &
-!                                    bc2_max,       &
-!                                    spline_degree2 )
-!
-!  call set_coeff_splines_values_1d( v1_max,        &
-!                                    num_pts2,      &
-!                                    eta2_min,      &
-!                                    eta2_max,      &
-!                                    bc2_min,       &
-!                                    bc2_max,       &
-!                                    spline_degree2 )
-!
-!  call set_coeff_splines_values_1d( v2_min,        &
-!                                    num_pts1,      &
-!                                    eta1_min,      &
-!                                    eta1_max,      &
-!                                    bc1_min,       &
-!                                    bc1_max,       &
-!                                    spline_degree1 )
-!
-!  call set_coeff_splines_values_1d( v2_max,        &
-!                                    num_pts1,      &
-!                                    eta1_min,      &
-!                                    eta1_max,      &
-!                                    bc1_min,       &
-!                                    bc1_max,       &
-!                                    spline_degree1 )
-!
-!  if(bc1_min==SLL_DIRICHLET) then
-!    l = 0; i = 1
-!    do k = es%csr_mat%row_ptr(i),es%csr_mat%row_ptr(i+1)-1 
-!      l = l + 1; j = es%csr_mat%col_ind(l)
-!      if (i==j) then
-!        es%csr_mat%val(l) = es%csr_mat%val(l)*10e7
-!        es%tmp_rho_vec(i) = 10e7
-!        exit
-!      end if
-!    end do
-!  end if
-!  if(bc1_max==SLL_DIRICHLET) then
-!    l = 0; i = es%num_cells1+1
-!    do k = es%csr_mat%row_ptr(i),es%csr_mat%row_ptr(i+1)-1 
-!      l = l + 1; j = es%csr_mat%col_ind(l)
-!      if (i==j) then
-!        es%csr_mat%val(l) = es%csr_mat%val(l)*10e7
-!        es%tmp_rho_vec(i) = 10e7
-!        exit
-!      end if
-!    end do
-!  end if
-!  if(bc2_min==SLL_DIRICHLET) then
-!    l = 0
-!    do i = 1, es%csr_mat%num_rows 
-!      do k = es%csr_mat%row_ptr(i),es%csr_mat%row_ptr(i+1)-1 
-!         l = l + 1; j = 1
-!         if (i==j) then
-!           es%csr_mat%val(l) = es%csr_mat%val(l)*10e7
-!           es%tmp_rho_vec(i) = 10e7
-!           exit
-!         end if
-!      end do
-!    end do
-!  end if
-!  if(bc2_max==SLL_DIRICHLET) then
-!    l = 0
-!    do i = 1, es%csr_mat%num_rows 
-!      do k = es%csr_mat%row_ptr(i),es%csr_mat%row_ptr(i+1)-1 
-!        l = l + 1; j = es%num_cells2+1
-!        if (i==j) then
-!          es%csr_mat%val(l) = es%csr_mat%val(l)*10e7
-!          es%tmp_rho_vec(i) = 10e7
-!          exit
-!        end if
-!      end do
-!    end do
-!  end if
+  call sll_solve_csr_matrix(es%csr_mat, es%tmp_rho_vec, es%phi_vec)
 
-  call sll_solve_csr_matrix(es%csr_mat,     &
-                            es%tmp_rho_vec, &
-                            es%phi_vec)
 endif
 
 print *,'#solve_linear_system done'
