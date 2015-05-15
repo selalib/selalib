@@ -253,6 +253,7 @@ SLL_ALLOCATE(es%local_to_global_indices_source_bis(1:dim1,1:dim2),ierr)
 
 SLL_ALLOCATE(local_indices(1:dim1,1:dim2),ierr)
 SLL_ALLOCATE(global_indices(num_splines1*num_splines2),ierr)
+
 call initconnectivity( num_cells1,                &
 &                      num_cells2,                &
 &                      spline_degree1,            &
@@ -1066,16 +1067,16 @@ do i = 1, nc_1
           bprime = kk+1+ll*(spl_deg_1+1)
           aprime = es%local_to_global_indices(bprime,icell)
 
-          elt_mat_global = M_c (bprime,b) - &
-                           K_11(bprime,b) - &
-                           K_12(bprime,b) - &
-                           K_21(bprime,b) - &
-                           K_22(bprime,b) - &
-                           M_bv(bprime,b) - &
-                           S_b1(bprime,b) - &
-                           S_b2(bprime,b)
-
           if ( a>0 .and. aprime>0 ) then
+            elt_mat_global = M_c (bprime,b) - &
+                             K_11(bprime,b) - &
+                             K_12(bprime,b) - &
+                             K_21(bprime,b) - &
+                             K_22(bprime,b) - &
+                             M_bv(bprime,b) - &
+                             S_b1(bprime,b) - &
+                             S_b2(bprime,b)
+
             call sll_add_to_csr_matrix(es%csr_mat, elt_mat_global, a, aprime)   
           end if
         end do
@@ -1160,9 +1161,8 @@ do i=1,es%num_cells1
       bprime = bprime+1
       aprime = es%local_to_global_indices_source(bprime,icell)
            
-      elt_mat_global = source(b,bprime,icell)
-
       if ( a > 0 .and. aprime > 0) then
+        elt_mat_global = source(b,bprime,icell)
         call sll_add_to_csr_matrix(es%csr_mat_source,elt_mat_global,a,aprime)
       end if
               

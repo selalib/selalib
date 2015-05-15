@@ -268,7 +268,7 @@ if( bc1_min == SLL_PERIODIC .and. bc1_max .ne. SLL_PERIODIC .or.&
         'both must be. Error in first direction.'
 end if
 
-if(((bc2_min == SLL_PERIODIC).and.(bc2_max.ne. SLL_PERIODIC)).or.&
+if(((bc2_min == SLL_PERIODIC).and.(bc2_max .ne. SLL_PERIODIC)).or.&
    ((bc2_max == SLL_PERIODIC).and.(bc2_min .ne. SLL_PERIODIC)))then
    print *, 'initialize_arbitrary_degree_2d_interpolator, ERROR: ', &
         'if one boundary condition is specified as periodic, then ', &
@@ -358,7 +358,7 @@ values = interp1d%coeff_splines(1:num_pts)
 
 call sll_delete(interp1d)
 deallocate(interp1d)
-interp1d => null()
+nullify(interp1d)
 
 end subroutine set_coeff_splines_values_1d
 
