@@ -1725,4 +1725,63 @@ end if
 
 end subroutine initialize_knots
 
+
+
+!next routine is for doing the general elliptic solver
+!without scalar fields
+!the aim is to work only with arrays
+! commented for the moment
+!subroutine solve_general_coordinates_elliptic_eq_discrete_vec( es, rho, phi)
+!
+!  class(general_coordinate_elliptic_solver), intent(inout) :: es
+!  sll_real64, dimension(:,:), intent(in) :: rho
+!  sll_int32  :: i
+!  sll_int32  :: j
+!  sll_real64, dimension(:,:), pointer :: coeff_rho
+!
+!  call interp_2d%compute_interpolants(rho)  
+!  coeff_rho => phi%interp_2d%get_coefficients()
+!
+!  do j=1,es%num_cells2+1
+!    do i=1,es%num_cells1+1
+!      es%rho_coeff_1d(i+(es%num_cells1+1)*(j-1)) = rho(i,j)
+!    end do
+!  end do
+!
+!  call sll_mult_csr_matrix_vector(es%csr_mat_source,es%rho_coeff_1d,es%rho_vec)
+!
+!  if(es%perper) then
+!    es%rho_vec = es%rho_vec - sum(es%rho_vec)/es%intjac*es%masse
+!  end if
+!
+!  call solve_linear_system(es)
+!
+!  call phi%interp_2d%set_coefficients(es%phi_vec(1:es%total_num_splines1*es%total_num_splines2))
+!  
+!
+!end subroutine solve_general_coordinates_elliptic_eq_discrete_vec
+!
+
+  
+  
+!> @details
+!> CSR_MAT*phi = rho_vec is the linear system to be solved. The solution
+!> is given in terms of the spline coefficients that represent phi.
+subroutine solve_linear_system( es )
+
+class(general_coordinate_elliptic_solver) :: es
+integer                                   :: elt
+integer                                   :: i,j,k
+character(len=*), parameter               :: as_file  = 'rho'
+character(len=*), parameter               :: as_file1 = 'phi'
+character(len=*), parameter               :: as_file2 = 'mat'
+sll_int32 :: bc1_min
+sll_int32 :: bc1_max
+sll_int32 :: bc2_min
+sll_int32 :: bc2_max
+
+=======
+>>>>>>> origin/prototype-devel
+
+
 end module sll_general_coordinate_elliptic_solver_module
