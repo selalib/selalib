@@ -12,7 +12,8 @@ TARGET_LINK_LIBRARIES( sll_operator_splitting
   sll_utilities	
   sll_file_io
   sll_advection
-  sll_poisson_solvers )
+  sll_poisson_solvers
+  ode_solvers )
 
 ADD_LIBRARY( sll_time_splitting STATIC
   sll_time_splitting_coeff.F90 )

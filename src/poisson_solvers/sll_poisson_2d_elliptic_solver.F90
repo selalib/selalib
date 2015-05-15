@@ -34,6 +34,10 @@ module sll_module_poisson_2d_elliptic_solver
   use sll_module_scalar_field_2d
 implicit none
 
+  sll_int32, parameter :: SLL_NO_SOLVE_ELLIPTIC_SOLVER = 0 
+  sll_int32, parameter :: SLL_SOLVE_ELLIPTIC_SOLVER = 1 
+  sll_int32, parameter :: SLL_DO_NOTHING_ELLIPTIC_SOLVER = 2 
+
   type,extends(sll_poisson_2d_base) :: poisson_2d_elliptic_solver      
     type(general_coordinate_elliptic_solver), pointer      :: elliptic_solver
     class(sll_scalar_field_2d_discrete), pointer        :: phi_field
@@ -54,6 +58,7 @@ implicit none
     type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_b1
     type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_b2
     type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_c
+    sll_int32 :: control
   contains
     procedure, pass(poisson) :: initialize => &
       initialize_poisson_2d_elliptic_solver
@@ -89,7 +94,8 @@ contains
    a22_values, & 
    b1_values,&
    b2_values,&
-   c_values ) 
+   c_values, &
+   control) 
    
    class(poisson_2d_elliptic_solver),        target  :: poisson
    class(sll_coordinate_transformation_2d_base), pointer :: transf
@@ -116,12 +122,22 @@ contains
    sll_real64, dimension(:,:)          :: b1_values
    sll_real64, dimension(:,:)          :: b2_values
    sll_real64, dimension(:,:)          :: c_values
+   sll_int32, intent(in), optional :: control
    sll_int32 :: np_eta1
    sll_int32 :: np_eta2
    sll_int32 :: ierr
    
    sll_int32 :: bc_eta1_left_interp
    
+   if(present(control))then
+     poisson%control = control
+   else
+     poisson%control =  SLL_SOLVE_ELLIPTIC_SOLVER 
+   endif
+   
+   if(poisson%control==SLL_DO_NOTHING_ELLIPTIC_SOLVER)then
+     return
+   endif
    bc_eta1_left_interp = bc_eta1_left
    
    if(bc_eta1_left==SLL_NEUMANN)then
@@ -440,7 +456,8 @@ contains
    a22_values, & 
    b1_values,&
    b2_values,&
-   c_values ) &
+   c_values, &
+   control ) &
    result(poisson)
    
    class(poisson_2d_elliptic_solver),        pointer  :: poisson
@@ -468,6 +485,7 @@ contains
    sll_real64, dimension(:,:)          :: b1_values
    sll_real64, dimension(:,:)          :: b2_values
    sll_real64, dimension(:,:)          :: c_values
+   sll_int32, intent(in), optional     :: control
    !sll_int32 :: np_eta1
    !sll_int32 :: np_eta2
    sll_int32 :: ierr
@@ -493,9 +511,10 @@ contains
    a12_values, & 
    a21_values, & 
    a22_values, & 
-   b1_values,&
-   b2_values,&
-   c_values )  
+   b1_values, &
+   b2_values, &
+   c_values, &
+   control)  
    
   end function new_poisson_2d_elliptic_solver
   
@@ -520,6 +539,15 @@ contains
      
     ! The supposition is that all fields use the same logical mesh
     !elliptic_solver => poisson%elliptic_solver
+
+   if(poisson%control==SLL_DO_NOTHING_ELLIPTIC_SOLVER)then
+     do j=1,nc_eta2+1
+       do i=1,nc_eta1+1
+         phi(i,j) = 0._f64
+       end do
+     end do
+     return
+   endif
    
     delta1    = poisson%elliptic_solver%delta_eta1
     delta2    = poisson%elliptic_solver%delta_eta2
@@ -530,6 +558,15 @@ contains
     
     call poisson%rho_field%set_field_data(-rho)
     call poisson%rho_field%update_interpolation_coefficients( )
+
+    if(poisson%control==SLL_NO_SOLVE_ELLIPTIC_SOLVER)then
+      do j=1,nc_eta2+1
+        do i=1,nc_eta1+1
+           phi(i,j) = 0._f64
+        end do
+       end do
+     return
+    endif
             
     call sll_solve(&
        poisson%elliptic_solver,&

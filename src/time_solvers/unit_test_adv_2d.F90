@@ -6,20 +6,18 @@ program test_operator_splitting_adv_2d
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_field_2d.h"
-  use sll_advection_2d
+  use sll_split_advection_2d
   use sll_module_advection_1d_BSL
   use sll_module_characteristics_1d_explicit_euler
   use sll_module_cubic_spline_interpolator_1d
   use sll_operator_splitting
   use sll_hdf5_io_serial
   implicit none
-  class(advection_2d), pointer :: split
-  class(sll_advection_1d_base), pointer :: adv_x1
-  class(sll_advection_1d_base), pointer :: adv_x2
-  class(sll_interpolator_1d_base), pointer :: interp_x1
-  class(sll_interpolator_1d_base), pointer :: interp_x2
-  class(sll_characteristics_1d_base), pointer :: charac_x1
-  class(sll_characteristics_1d_base), pointer :: charac_x2
+  class(split_advection_2d), pointer :: split
+  class(sll_interpolator_1d_base), pointer :: interp1
+  class(sll_interpolator_1d_base), pointer :: interp2
+  class(sll_characteristics_1d_base), pointer :: charac1
+  class(sll_characteristics_1d_base), pointer :: charac2
   sll_real64, dimension(:,:), pointer :: f
   sll_real64,dimension(:,:), pointer :: A1
   sll_real64,dimension(:,:), pointer :: A2
@@ -38,10 +36,13 @@ program test_operator_splitting_adv_2d
   sll_int32 :: num_cells_x2
   sll_real64, dimension(:), pointer :: x1_mesh
   sll_real64, dimension(:), pointer :: x2_mesh
+  type(sll_cartesian_mesh_2d), pointer :: mesh_2d
   sll_real64 :: err
   sll_int32 :: ierr
   sll_real64 :: delta_x1
   sll_real64 :: delta_x2
+  procedure(signature_process_outside_point_1d), pointer :: process_outside_point1
+  procedure(signature_process_outside_point_1d), pointer :: process_outside_point2
   
   x1_min = 0._f64
   x1_max = 1._f64
@@ -67,6 +68,18 @@ program test_operator_splitting_adv_2d
     x2_mesh(i) = x2_min+real(i-1,f64)*delta_x2
   enddo
 
+  mesh_2d => new_cartesian_mesh_2d( &
+    num_cells_x1, &
+    num_cells_x2, &
+    x1_min, &
+    x1_max, &
+    x2_min, &
+    x2_max)
+  
+  process_outside_point1 =>  process_outside_point_periodic
+  process_outside_point2 =>  process_outside_point_periodic
+
+
   do j=1,num_cells_x2+1
     x_2 = x2_mesh(j)
     do i=1,num_cells_x1+1
@@ -83,51 +96,61 @@ program test_operator_splitting_adv_2d
 
 
 
-  interp_x1 => new_cubic_spline_interpolator_1d( &
+  interp1 => new_cubic_spline_interpolator_1d( &
     num_cells_x1+1, &
     x1_min, &
     x1_max, &
     SLL_PERIODIC)
 
 
-  charac_x1 => new_explicit_euler_1d_charac(&
+  charac1 => new_explicit_euler_1d_charac(&
     num_cells_x1+1, &
     SLL_PERIODIC)
   
-  adv_x1 => new_BSL_1d_advector(&
-    interp_x1, &
-    charac_x1, &
-    num_cells_x1+1, &
-    eta_coords = x1_mesh)
 
-  interp_x2 => new_cubic_spline_interpolator_1d( &
+  interp2 => new_cubic_spline_interpolator_1d( &
     num_cells_x2+1, &
     x2_min, &
     x2_max, &
     SLL_PERIODIC)
 
 
-  charac_x2 => new_explicit_euler_1d_charac(&
+  charac2 => new_explicit_euler_1d_charac(&
     num_cells_x2+1, &
     SLL_PERIODIC)
   
-  adv_x2 => new_BSL_1d_advector(&
-    interp_x2, &
-    charac_x2, &
-    num_cells_x2+1, &
-    eta_coords = x2_mesh)
 
 
   ! initialize time splitting method
-  split => new_advection_2d( &
-    f, &
-    num_cells_x1+1, &
-    num_cells_x2+1, &
-    A1, &
-    A2, &
-    adv_x1, &
-    adv_x2, &
-    SLL_STRANG_TVT)
+  split => new_split_advection_2d( &
+      f, &
+      A1, &
+      A2, &
+      interp1, &
+      charac1, &
+      process_outside_point1, &
+      interp2, &
+      charac2, &
+      process_outside_point2, &
+      mesh_2d, &
+      SLL_ADVECTIVE, &
+      SLL_STRANG_TVT) 
+  
+  
+  
+  
+!  split => new_split_advection_2d( &
+!    f, &
+!    num_cells_x1+1, &
+!    num_cells_x2+1, &
+!    num_cells_x1+1, &
+!    num_cells_x2+1, &
+!    A1, &
+!    A2, &
+!    adv_x1, &
+!    adv_x2, &
+!    SLL_ADVECTIVE, &
+!    SLL_STRANG_TVT)
 
   ! do some steps of lie_splitting
   dt = 0.5_f64
