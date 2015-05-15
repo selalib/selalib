@@ -17,8 +17,8 @@ implicit none
 
 #define SPLINE_DEG1       3
 #define SPLINE_DEG2       3
-#define NUM_CELLS1        100
-#define NUM_CELLS2        100
+#define NUM_CELLS1        10
+#define NUM_CELLS2        10
 #define ETA1MIN          (-1.0_f64)
 #define ETA1MAX          (+1.0_f64)
 #define ETA2MIN          (-1.0_f64)
@@ -184,10 +184,10 @@ call initialize_ad2d_interpolator(             &
   ETA1MAX,                                     &
   ETA2MIN,                                     &
   ETA2MAX,                                     &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
+  SLL_HERMITE,                                 &
+  SLL_HERMITE,                                 &
+  SLL_HERMITE,                                 &
+  SLL_HERMITE,                                 &
   SPLINE_DEG1,                                 &
   SPLINE_DEG2 )
 
@@ -210,10 +210,10 @@ phi => new_scalar_field_2d_discrete(           &
   "phi",                                       &
   interp_phi,                                  &
   tau,                                         &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET )
+  SLL_HERMITE,                                 &
+  SLL_HERMITE,                                 &
+  SLL_HERMITE,                                 &
+  SLL_HERMITE )
 
 rho => new_scalar_field_2d_analytic( &
 &    rhs,                            &

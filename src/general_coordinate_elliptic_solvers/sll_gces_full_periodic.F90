@@ -200,7 +200,6 @@ sll_int32  :: i, j, ii, jj, ispl1, ispl2
 sll_real64 :: eta1, eta2, gspl1, gspl2
 sll_int32  :: left
 sll_int32  :: kk, ll, index_coef1, index_coef2
-sll_int32  :: x, y
 sll_int32  :: index1, index2, index3, index4
 sll_int32  :: icell, bprime
 
@@ -450,7 +449,6 @@ do i = 1, es%num_cells1
     do ii = 0,es%spline_degree1
       index1 = i + ii
       if ( index1 > es%num_cells1) index1 = index1 - es%num_cells1
-      x = index1+(index3-1)*es%num_cells1
       b = b+1
       index_coef1 = tab_index_coeff1(i) - es%spline_degree1 + ii
       index_coef2 = tab_index_coeff2(j) - es%spline_degree2 + jj

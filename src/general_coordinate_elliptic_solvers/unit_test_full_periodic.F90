@@ -338,10 +338,8 @@ real(8), intent(in) :: eta2
 real(8), dimension(:), intent(in) :: params
 real(8) :: res
 real(8) :: pi
-
 pi = 4d0*atan(1d0)
 res = -8*pi*pi*cos(2*pi*eta1)*cos(2*pi*eta2)
-
 end function rhs
 
 function sol( eta1, eta2, params ) result(res)
@@ -350,10 +348,8 @@ real(8), intent(in) :: eta2
 real(8), dimension(:), intent(in) :: params
 real(8) :: res
 real(8) :: pi
-
 pi = 4d0*atan(1d0)
 res = cos(2*pi*eta1)*cos(2*pi*eta2)
-
 end function sol
 
 end program test_gces_full_periodic
