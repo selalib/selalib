@@ -87,7 +87,6 @@ type, public :: sll_gces_full_periodic
   sll_real64, dimension(:,:), pointer :: gauss_pts2
   sll_int32  :: spline_degree1
   sll_int32  :: spline_degree2
-  sll_real64 :: epsi
   sll_real64 :: intjac
 
   sll_int32, dimension(:,:), pointer :: local_to_global_indices
@@ -101,12 +100,10 @@ type, public :: sll_gces_full_periodic
   type(sll_csr_matrix),           pointer :: csr_mat_with_constraint
   type(sll_csr_matrix),           pointer :: csr_mat_source
   sll_real64, dimension(:),       pointer :: rho_vec
-  sll_real64, dimension(:),       pointer :: tmp_rho_vec
   sll_real64, dimension(:),       pointer :: phi_vec
   sll_real64, dimension(:),       pointer :: masse
   sll_real64, dimension(:),       pointer :: stiff
   sll_real64, dimension(:),       pointer :: rho_coeff_1d
-  logical                                 :: perper
   type(deboor_type)                       :: db
 
 end type sll_gces_full_periodic
@@ -189,7 +186,6 @@ sll_int32 :: knots1_size
 sll_int32 :: knots2_size
 sll_int32 :: num_splines1
 sll_int32 :: num_splines2
-sll_int32 :: vec_sz ! for rho_vec and phi_vec allocations
 sll_int32 :: ierr
 sll_int32 :: dim1, dim2
 sll_int32 :: num_pts_g1, num_pts_g2
@@ -331,22 +327,19 @@ es%gauss_pts2(2,:) = 0.5_f64*es%delta_eta2*es%gauss_pts2(2,:)
 
 knots1_size = 2*spline_degree1+2
 knots2_size = 2*spline_degree2+2
-vec_sz      = num_cells1*num_cells2
-es%perper   = .true. 
 
 SLL_ALLOCATE(es%knots1(knots1_size),ierr)
 SLL_ALLOCATE(es%knots2(knots2_size),ierr)
 SLL_ALLOCATE(es%knots1_rho(num_cells1 + spline_degree1 + 2),ierr)
 SLL_ALLOCATE(es%knots2_rho(num_cells2 + spline_degree2 + 2),ierr)
-SLL_ALLOCATE(es%rho_vec(vec_sz),ierr)
-SLL_ALLOCATE(es%masse(vec_sz),ierr)
-SLL_ALLOCATE(es%stiff(vec_sz),ierr)
+SLL_ALLOCATE(es%masse(num_cells1*num_cells2),ierr)
+SLL_ALLOCATE(es%stiff(num_cells1*num_cells2),ierr)
 
 !AB : We must add plus 1 for the dimension of the 
 !AB : solution in the case periodic periodic to 
 !AB : include the periodicity in the last point.  
 
-SLL_ALLOCATE(es%tmp_rho_vec(num_cells1*num_cells2+1),ierr)
+SLL_ALLOCATE(es%rho_vec(num_cells1*num_cells2+1),ierr)
 SLL_ALLOCATE(es%phi_vec(num_cells1*num_cells2+1),ierr)
 es%rho_vec = 0.0_f64
 es%masse   = 0.0_f64
@@ -362,15 +355,15 @@ end do
 es%knots1_rho(1:spline_degree1+1) = eta1_min
 es%knots1_rho(num_cells1+2:num_cells1+1+spline_degree1+1) = eta1_max
  
-if ( mod(spline_degree1 +1,2) == 0 ) then
-  do i = spline_degree1 +1 + 1, num_cells1 + 1
+if ( mod(spline_degree1+1,2) == 0 ) then
+  do i = spline_degree1+1+1, num_cells1+1
     es%knots1_rho(i) = eta1_min + (i-(spline_degree1+1)/2-1)*es%delta_eta1
   end do
 else
   do i = spline_degree1 +1 + 1, num_cells1 + 1
     es%knots1_rho(i) = &
-      0.5*( eta1_min + (i - (spline_degree1)/2-1)*es%delta_eta1 + &
-      eta1_min + (i-1 - (spline_degree1)/2 -1)*es%delta_eta1)
+      0.5*(eta1_min+(i-(spline_degree1)/2-1)*es%delta_eta1 + &
+      eta1_min+(i-1-(spline_degree1)/2 -1)*es%delta_eta1)
   end do
 end if
 
@@ -378,8 +371,8 @@ es%knots2_rho(1:spline_degree2+1) = eta2_min
 es%knots2_rho(num_cells2+2:num_cells2+1+spline_degree2+1)=eta2_max
     
 if (mod(spline_degree2+1,2) == 0 ) then
-  do i = spline_degree2 +1 + 1, num_cells2+1
-    es%knots2_rho(i) = eta2_min + (i-(spline_degree2+1)/2-1)*es%delta_eta2 
+  do i = spline_degree2+1+1,num_cells2+1
+    es%knots2_rho(i) = eta2_min+(i-(spline_degree2+1)/2-1)*es%delta_eta2 
   end do
 else
   do i = spline_degree2+1+1, num_cells2+1
@@ -566,7 +559,6 @@ SLL_DEALLOCATE(es%local_to_global_indices_source_bis,ierr)
 call sll_delete(es%csr_mat_with_constraint)
 call sll_delete(es%csr_mat_source)
 SLL_DEALLOCATE(es%rho_vec,ierr)
-SLL_DEALLOCATE(es%tmp_rho_vec,ierr)
 SLL_DEALLOCATE(es%phi_vec,ierr)
 SLL_DEALLOCATE(es%masse,ierr)
 SLL_DEALLOCATE(es%stiff,ierr)
@@ -712,8 +704,6 @@ nc_1       = es%num_cells1
 nc_2       = es%num_cells2
 
 nspl = (es%spline_degree1+1)*(es%spline_degree2+1)
-
-es%perper = .true.
 
 intjac = 0.0_f64
 
@@ -1127,9 +1117,13 @@ class is (sll_scalar_field_2d_discrete)
     end do
   end do
 
-  call sll_mult_csr_matrix_vector(es%csr_mat_source,es%rho_coeff_1d,es%rho_vec)
+  call sll_mult_csr_matrix_vector(es%csr_mat_source,  &
+                                  es%rho_coeff_1d,    &
+                                  es%rho_vec(1:es%num_cells1*es%num_cells2))
 
-  es%rho_vec = es%rho_vec - sum(es%rho_vec)/es%intjac*es%masse
+  es%rho_vec(1:es%num_cells1*es%num_cells2) =     &
+     es%rho_vec(1:es%num_cells1*es%num_cells2)    &
+     - sum(es%rho_vec(1:es%num_cells1*es%num_cells2))/es%intjac*es%masse
       
 class is (sll_scalar_field_2d_analytic)
   
@@ -1201,18 +1195,15 @@ class is (sll_scalar_field_2d_analytic)
 
   !$OMP END PARALLEL
 
-  es%rho_vec = es%rho_vec - int_rho/int_jac
+  es%rho_vec(1:es%num_cells1*es%num_cells2) =  &
+    es%rho_vec(1:es%num_cells1*es%num_cells2) - int_rho/int_jac
      
 end select
 
-es%tmp_rho_vec(:) = 0.0_f64  !PN: Is it useful ?
 es%phi_vec(:)     = 0.0_f64  !PN: Is it useful ?
   
-es%tmp_rho_vec(1:es%num_cells1*es%num_cells2)=&
-  es%rho_vec(1:es%num_cells1*es%num_cells2) 
-     
 call sll_solve_csr_matrix(es%csr_mat_with_constraint, &
-                          es%tmp_rho_vec,             &
+                          es%rho_vec,                 &
                           es%phi_vec)
 
 print *,'#solve_linear_system done'
