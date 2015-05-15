@@ -281,7 +281,7 @@ do i=1,npts1
   calculated(i,j) = node_val
   grad1_node_val  = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
   grad2_node_val  = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
-  ref             = sin(2*sll_pi*eta1(i)) * sin(2*sll_pi*eta2(j))
+  ref             = sol(eta1(i),eta2(j), [0.0d0])
   grad1ref        = 2*sll_pi*cos(2*sll_pi*eta1(i))*sin(2*sll_pi*eta2(j))
   grad2ref        = 2*sll_pi*cos(2*sll_pi*eta2(j))*sin(2*sll_pi*eta1(i))
   reference(i,j)  = ref
@@ -298,7 +298,7 @@ do i=-50,50
   write(41,*) i, j, phi%first_deriv_eta1_value_at_point(i*0.01_f64,j*0.01_f64) &
                   , 2*sll_pi*cos(2*sll_pi*i*0.01_f64)*sin(2*sll_pi*j*0.01_f64)
   write(42,*) i, j, phi%value_at_point(i*0.01_f64,j*0.01_f64) &
-                  , sin(2*sll_pi*i*0.01_f64)*sin(2*sll_pi*j*0.01_f64)
+                  , sol(i*0.01_f64,j*0.01_f64, [0.0d0])
 end do
 write(41,*) 
 write(42,*) 
