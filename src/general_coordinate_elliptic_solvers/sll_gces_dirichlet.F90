@@ -41,6 +41,9 @@ use sll_module_scalar_field_2d_base, only: sll_scalar_field_2d_base
 use sll_module_scalar_field_2d, only: sll_scalar_field_2d_analytic,  &
                                       sll_scalar_field_2d_discrete
 use sll_module_interpolators_2d_base, only: sll_interpolator_2d_base
+use sll_module_arbitrary_degree_spline_interpolator_1d, only:        &
+  sll_arbitrary_degree_spline_interpolator_1d,                       &
+  new_arbitrary_degree_1d_interpolator
 use sll_module_arbitrary_degree_spline_interpolator_2d, only:        &
   sll_arbitrary_degree_spline_interpolator_2d
 use sll_module_arbitrary_degree_spline_interpolator_1d, only:        &
@@ -77,8 +80,8 @@ type, public :: sll_gces_dirichlet
   sll_int32,  public :: n2
   sll_real64, public :: delta_eta1
   sll_real64, public :: delta_eta2
-  sll_real64, public :: eta1_min
-  sll_real64, public :: eta2_min   
+  sll_real64, public :: eta1_min, eta1_max
+  sll_real64, public :: eta2_min, eta2_max
 
   sll_real64, dimension(:),   pointer :: t1
   sll_real64, dimension(:),   pointer :: t2
@@ -88,10 +91,8 @@ type, public :: sll_gces_dirichlet
   sll_real64, dimension(:,:), pointer :: gauss2
   sll_int32  :: k1
   sll_int32  :: k2
-  sll_real64 :: epsi
-  sll_real64 :: intjac
 
-  sll_int32, dimension(:,:), pointer :: local_to_global_indices
+  sll_int32, dimension(:,:), pointer :: local_to_global_indices_mat
   sll_int32, dimension(:,:), pointer :: local_to_global_indices_col
   sll_int32, dimension(:,:), pointer :: local_to_global_indices_row
 
@@ -211,15 +212,15 @@ sll_int32  :: i1, i2, i4, kk, ll, icell, b1, b2
 n1 = num_cells1
 n2 = num_cells2
 
-SLL_ALLOCATE(es%local_to_global_indices(1:(k1+1)*(k2+1),1:(n1*n2)),ierr)
+SLL_ALLOCATE(es%local_to_global_indices_mat(1:(k1+1)*(k2+1),1:(n1*n2)),ierr)
 SLL_ALLOCATE(es%local_to_global_indices_col(1:(k1+1)*(k2+1),1:(n1*n2)),ierr)
 SLL_ALLOCATE(es%local_to_global_indices_row(1:(k1+1)*(k2+1),1:(n1*n2)),ierr)
 
 SLL_ALLOCATE(global_indices((n1+k1)*(n2+k2)),ierr)
 SLL_ALLOCATE(local_indices(1:(k1+1)*(k2+1),1:(n1*n2)),ierr)
-global_indices             = 0
-local_indices              = 0
-es%local_to_global_indices = 0
+global_indices                 = 0
+local_indices                  = 0
+es%local_to_global_indices_mat = 0
 
 c = 0
 do j = 1, n2    
@@ -245,7 +246,7 @@ end do
 
 do c = 1, n1*n2
   do b = 1, (k1+1)*(k2+1)
-    es%local_to_global_indices(b,c) = global_indices(local_indices(b,c))
+    es%local_to_global_indices_mat(b,c) = global_indices(local_indices(b,c))
   end do
 end do
 
@@ -258,6 +259,8 @@ es%delta_eta1 = (eta1_max-eta1_min)/n1
 es%delta_eta2 = (eta2_max-eta2_min)/n2
 es%eta1_min   = eta1_min
 es%eta2_min   = eta2_min
+es%eta1_max   = eta1_max
+es%eta2_max   = eta2_max
 
 ! Allocate and fill the gauss points/weights information.
 select case(quadrature_type1)
@@ -325,12 +328,12 @@ do j = n2+k2+1, n2+1+2*k2
   es%t2(j) = eta2_max
 enddo
   
-es%csr_mat => new_csr_matrix( (n1+k1)*(n2+k2),            &
-&                             (n1+k1)*(n2+k2),            &
-&                             (n1+k1)*(n2+k2),            &
-&                             es%local_to_global_indices, &
-&                             (k1+1)*(k2+1),              &
-&                             es%local_to_global_indices, &
+es%csr_mat => new_csr_matrix( (n1+k1)*(n2+k2),                &
+&                             (n1+k1)*(n2+k2),                &
+&                             (n1*n2),                        &
+&                             es%local_to_global_indices_mat, &
+&                             (k1+1)*(k2+1),                  &
+&                             es%local_to_global_indices_mat, &
 &                             (k1+1)*(k2+1))
 
 es%t1_rho(1:k1+1)         = eta1_min
@@ -624,6 +627,7 @@ sll_real64, dimension(:,:,:), allocatable :: src
 sll_int32  :: ierr
 sll_int32  :: i
 sll_int32  :: j
+sll_int32  :: k
 sll_int32  :: icell
 sll_int32  :: g1
 sll_int32  :: g2
@@ -633,15 +637,15 @@ sll_int32  :: ig, jg
 sll_int32  :: i3, i4
 sll_int32  :: i1,i2
 sll_int32  :: col, row
-sll_int32  :: b, bprime,x,y
+sll_int32  :: b1, b2, x, y
 sll_int32  :: k1, k2, n1, n2
 sll_int32  :: ideg2,ideg1
 sll_int32  :: jdeg2,jdeg1
 
 sll_real64 :: delta1
 sll_real64 :: delta2
-sll_real64 :: eta1_min
-sll_real64 :: eta2_min
+sll_real64 :: eta1_min, eta1_max
+sll_real64 :: eta2_min, eta2_max
 sll_real64 :: eta1
 sll_real64 :: eta2
 sll_real64 :: x1, w1
@@ -673,9 +677,9 @@ sll_real64 :: w1w2_by_val_jac
 sll_real64 :: w1w2_val_jac 
 sll_real64 :: r1r2, v1v2, d1v2, v1d2
 sll_real64 :: d3v4, v3v4 , v3d4
-sll_real64 :: intjac
 
-!sll_real64, allocatable :: dense_matrix(:,:)
+class(sll_arbitrary_degree_spline_interpolator_1d), pointer :: interp1d => null()
+sll_real64, dimension(:), allocatable                       :: values
 
 !$ sll_int32 :: tid=0
 !$ sll_int32 :: nthreads=1
@@ -684,6 +688,8 @@ delta1   = es%delta_eta1
 delta2   = es%delta_eta2 
 eta1_min = es%eta1_min  
 eta2_min = es%eta2_min  
+eta1_max = es%eta1_max  
+eta2_max = es%eta2_max  
 g1       = size(es%gauss1,2)
 g2       = size(es%gauss2,2)
 k1       = es%k1
@@ -691,7 +697,6 @@ k2       = es%k2
 n1       = es%n1
 n2       = es%n2
 
-intjac   = 0.0_f64
 
 SLL_CLEAR_ALLOCATE(src(1:(k1+1)*(k2+1),1:(k1+1)*(k2+1),1:n1*n2),ierr)
 SLL_CLEAR_ALLOCATE(M_cc(1:(k1+1)*(k2+1),1:(k1+1)*(k2+1)),ierr)
@@ -708,7 +713,7 @@ SLL_CLEAR_ALLOCATE(stif(1:(k1+1)*(k2+1)),ierr)
 !$OMP PARALLEL DEFAULT(NONE)                                      &
 !$OMP SHARED( es, c_field,                                        &
 !$OMP a11_field_mat, a12_field_mat, a21_field_mat, a22_field_mat, &
-!$OMP b1_field_vect, b2_field_vect, k1, k2, src, intjac )      &
+!$OMP b1_field_vect, b2_field_vect, k1, k2, src )                 &
 !$OMP FIRSTPRIVATE(n1, n2, delta1, delta2, eta1_min, eta2_min,    &
 !$OMP g1, g2)                                                     &
 !$OMP PRIVATE(nthreads, tid,                                      &
@@ -722,15 +727,15 @@ SLL_CLEAR_ALLOCATE(stif(1:(k1+1)*(k2+1)),ierr)
 !$OMP B11, B12, B21, B22, MC, C1, C2,                             &
 !$OMP v1, v2, v3, v4, r1, r2, d1, d2, d3, d4,                     &
 !$OMP v3v4, d3v4, v3d4,                                           &
-!$OMP M_cc,K_11,K_12,K_21,K_22,M_bv,S_b1,S_b2,                     &
+!$OMP M_cc,K_11,K_12,K_21,K_22,M_bv,S_b1,S_b2,                    &
 !$OMP i2, i1, i3, i4,                                             &
-!$OMP b, x, y, col, row, bprime,                                  &
+!$OMP b1, x, y, col, row, b2,                                     &
 !$OMP r1r2, v1v2, d1v2, v1d2, elt_mat_global )
 
 !$ tid = omp_get_thread_num()
 !$ nthreads = omp_get_num_threads()
 !$ if (tid == 0) print *, 'Number of threads = ', nthreads
-!$OMP DO SCHEDULE(STATIC,n2/nthreads) REDUCTION(+:intjac)
+!$OMP DO SCHEDULE(STATIC,n2/nthreads) 
 do j = 1, n2
 do i = 1, n1
         
@@ -783,8 +788,6 @@ do i = 1, n1
 
       val_c = val_c * w1w2_val_jac
         
-      intjac = intjac + w1w2_val_jac
-
       ! The B matrix is  by (J^(-1)) A^t (J^(-1))^t 
       B11 = jac_mat(2,2)*jac_mat(2,2)*val_a11 - &
             jac_mat(2,2)*jac_mat(1,2)*(val_a12+val_a21) + &
@@ -885,30 +888,29 @@ do i = 1, n1
     do ii = 0, k1
 
       x   = i+ii+((j+jj)-1)*(n1+k1)
-      b   = ii+1+jj*(k1+1)
-      row = es%local_to_global_indices(b, icell)
+      b1  = ii+1+jj*(k1+1)
+      row = es%local_to_global_indices_mat(b1, icell)
          
-      es%masse(x) = es%masse(x) + mass(b)
-      es%stiff(x) = es%stiff(x) + stif(b)
+      es%masse(x) = es%masse(x) + mass(b1)
+      es%stiff(x) = es%stiff(x) + stif(b1)
 
-      bprime = 0
+      b2 = 0
       do ll = 0,k2
         i4 = j + ll
         do kk = 0,k1
-          y      = i + kk+ (i4-1)*(n1+k1)
-          bprime = bprime+1 
-          col    = es%local_to_global_indices(bprime,icell)
-
-          elt_mat_global = M_cc(bprime,b) - &
-                           K_11(bprime,b) - &
-                           K_12(bprime,b) - &
-                           K_21(bprime,b) - &
-                           K_22(bprime,b) - &
-                           M_bv(bprime,b) - &
-                           S_b1(bprime,b) - &
-                           S_b2(bprime,b)
+          b2  = b2+1 
+          col = es%local_to_global_indices_mat(b2, icell)
 
           if ( row>0 .and. col>0 ) then
+            elt_mat_global = M_cc(b2,b1) - &
+                             K_11(b2,b1) - &
+                             K_12(b2,b1) - &
+                             K_21(b2,b1) - &
+                             K_22(b2,b1) - &
+                             M_bv(b2,b1) - &
+                             S_b1(b2,b1) - &
+                             S_b2(b2,b1)
+
             call sll_add_to_csr_matrix(es%csr_mat, elt_mat_global, row, col)   
           end if
               
@@ -916,72 +918,65 @@ do i = 1, n1
       end do
     end do
   end do
+
 end do
 end do
 
 !$OMP END PARALLEL
 
-!#ifdef DEBUG
-!allocate(dense_matrix(es%csr_mat%num_rows,es%csr_mat%num_cols))
-!
+
+interp1d => new_arbitrary_degree_1d_interpolator(n1+1,eta1_min,eta1_max,SLL_HERMITE,SLL_HERMITE,k1)
+allocate(values(n1+1))
+call interp1d%compute_interpolants(values)
+values = interp1d%coeff_splines(1:n1+1)
+deallocate(values)
+deallocate(interp1d)
+nullify(interp1d)
+
+!Penalization on boundary value
 !do i =1, es%csr_mat%num_rows
 ! do k = es%csr_mat%row_ptr(i), es%csr_mat%row_ptr(i+1)-1
 !    j = es%csr_mat%col_ind(k)
-!    dense_matrix(i,j) = es%csr_mat%val(k)
+!    if (i==j) es%csr_mat%val(k) = es%csr_mat%val(k) * 1e20
 ! end do
 !end do
-!
-!do i = 1, es%csr_mat%num_rows
-!  write(*, "(i3,36f7.3)')") i, dense_matrix(i,:) 
-!end do
-!#endif /* DEBUG */
 
-es%intjac = intjac
 print *,'#begin of sll_factorize_csr_matrix'
 
 call sll_factorize_csr_matrix(es%csr_mat)
 
 print *,'#end of sll_factorize_csr_matrix'
 
-es%csr_mat_src => new_csr_matrix( size(es%masse,1),                 &
-&                                 (n1+1)*(n2+1),                    &
-&                                 n1*n2,                            &
+es%csr_mat_src => new_csr_matrix( (n1+k1)*(n2+k2),                &
+&                                 (n1+1)*(n2+1),                  &
+&                                 n1*n2,                          &
 &                                 es%local_to_global_indices_row, &
-&                                 (k1+1)*(k2+1),                    &
+&                                 (k1+1)*(k2+1),                  &
 &                                 es%local_to_global_indices_col, &
 &                                 (k1+1)*(k2+1) )
 
 icell = 0
 do j=1,n2
 do i=1,n1
-      
   icell = icell+1
-  b     = 0
+  b1    = 0
   do ideg2 = 0,k2
   do ideg1 = 0,k1
-            
-    b = b+1
-    row = es%local_to_global_indices_row(b, icell)
-        
-    bprime = 0
+    b1 = b1+1
+    row = es%local_to_global_indices_row(b1, icell)
+    b2 = 0
     do jdeg2 = 0,k2
     do jdeg1 = 0,k1
-              
-      bprime = bprime+1
-      col = es%local_to_global_indices_col(bprime,icell)
-           
-      elt_mat_global = src(b,bprime,icell)
-
+      b2 = b2+1
+      col = es%local_to_global_indices_col(b2,icell)
       if ( row > 0 .and. col > 0) then
+        elt_mat_global = src(b1,b2,icell)
         call sll_add_to_csr_matrix(es%csr_mat_src,elt_mat_global,row,col)
       end if
-              
     end do
     end do
-
   end do
   end do
-
 end do
 end do
 
@@ -1038,8 +1033,6 @@ sll_real64 :: w1, w2, x1, x2, eta1, eta2
 sll_real64 :: val_f, val_j, valfj, jac_mat(2,2)
 sll_real64 :: spline1, spline2
 
-sll_real64 :: int_rho
-sll_real64 :: int_jac
 sll_int32  :: ierr
 sll_int32  :: k1, k2, n1, n2
 
@@ -1072,17 +1065,13 @@ class is (sll_scalar_field_2d_discrete)
 
 class is (sll_scalar_field_2d_analytic)
   
-  int_rho = 0.0_f64
-  int_jac = 0.0_f64
-
   g1 = size(es%gauss1,2)
   g2 = size(es%gauss2,2)
 
   SLL_CLEAR_ALLOCATE(M_rho_loc(1:(k1+1)*(k2+1)),ierr)
 
   !$OMP PARALLEL &
-  !$OMP FIRSTPRIVATE(n1, n2, g1, g2, &
-  !$OMP              tid, nthreads)                      &
+  !$OMP FIRSTPRIVATE(n1, n2, g1, g2, tid, nthreads)      &
   !$OMP PRIVATE(i,j,ii,jj,kk,ll,mm,nn,n,m_rho_loc,x,b,   &
   !$OMP         i3,eta1,eta2,x1,x2,  &
   !$OMP         w1,w2,spline1,spline2,val_f,val_j, &
@@ -1093,7 +1082,7 @@ class is (sll_scalar_field_2d_analytic)
   !$ print *, 'Number of threads = ', nthreads
   !$OMP END MASTER
   
-  !$OMP DO SCHEDULE(STATIC,n2/nthreads) REDUCTION(+:int_rho,int_jac)
+  !$OMP DO SCHEDULE(STATIC,n2/nthreads) 
   do j=1, n2
     do i=1, n1
       M_rho_loc = 0.0_f64
@@ -1111,8 +1100,6 @@ class is (sll_scalar_field_2d_analytic)
           val_j   = jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1)
           val_j   = val_j*w1*w2
           valfj   = val_f*val_j
-          int_rho = int_rho + valfj 
-          int_jac = int_jac + val_j
       
           do ll = 1,k2+1
             spline2 = es%v_splines2(1,ll,jj,j)*valfj
@@ -1142,7 +1129,7 @@ end select
 
 es%phi_vec = 0.0_f64  !PN: Is it useful ?
   
-call sll_solve_csr_matrix(es%csr_mat, es%tmp_rho_vec, es%phi_vec)
+call sll_solve_csr_matrix(es%csr_mat, es%rho_vec, es%phi_vec)
   
 call phi%interp_2d%set_coefficients(es%phi_vec)
 
@@ -1160,7 +1147,7 @@ SLL_DEALLOCATE(es%t1,ierr)
 SLL_DEALLOCATE(es%t2,ierr)
 SLL_DEALLOCATE(es%gauss1,ierr)
 SLL_DEALLOCATE(es%gauss2,ierr)
-SLL_DEALLOCATE(es%local_to_global_indices,ierr)
+SLL_DEALLOCATE(es%local_to_global_indices_mat,ierr)
 SLL_DEALLOCATE(es%local_to_global_indices_col,ierr)
 SLL_DEALLOCATE(es%local_to_global_indices_row,ierr)
 SLL_DEALLOCATE(es%rho_vec,ierr)
