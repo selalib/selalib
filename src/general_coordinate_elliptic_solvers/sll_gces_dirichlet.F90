@@ -48,8 +48,6 @@ use sll_module_arbitrary_degree_spline_interpolator_2d, only:        &
   sll_arbitrary_degree_spline_interpolator_2d
 use sll_module_arbitrary_degree_spline_interpolator_1d, only:        &
   interv, deboor_type, bsplvd
-use gauss_legendre_integration
-use gauss_lobatto_integration
 use sll_sparse_matrix_module, only : sll_csr_matrix,                 &
                                      new_csr_matrix,                 &
                                      sll_factorize_csr_matrix,       &
@@ -57,6 +55,8 @@ use sll_sparse_matrix_module, only : sll_csr_matrix,                 &
                                      sll_mult_csr_matrix_vector,     &
                                      sll_solve_csr_matrix,           &
                                      sll_delete
+use gauss_legendre_integration
+use gauss_lobatto_integration
 
 #ifdef _OPENMP
 use omp_lib
@@ -152,8 +152,8 @@ contains
 !> @param[in]  k2 the degre of B-spline in the direction eta2
 !> @param[in]  n1 the number of cells in the direction eta1
 !> @param[in]  n2 the number of cells in the direction eta2
-!> @param[in]  quadrature_type1 the type of quadrature in the direction eta1
-!> @param[in]  quadrature_type2 the type of quadrature in the direction eta2
+!> @param[in]  quadrature_type1 integration quadrature in the direction eta1
+!> @param[in]  quadrature_type2 integration quadrature in the direction eta2
 !> @param[in]  eta1_min the minimun in the direction eta1
 !> @param[in]  eta1_max the maximun in the direction eta1
 !> @param[in]  eta2_min the minimun in the direction eta2
@@ -173,16 +173,16 @@ subroutine initialize_gces_dirichlet( es,                  &
     
 type(sll_gces_dirichlet), intent(out) :: es
 
-sll_int32,  intent(in)  :: k1
-sll_int32,  intent(in)  :: k2
-sll_int32,  intent(in)  :: num_cells1
-sll_int32,  intent(in)  :: num_cells2
-sll_int32,  intent(in)  :: quadrature_type1
-sll_int32,  intent(in)  :: quadrature_type2
-sll_real64, intent(in)  :: eta1_min
-sll_real64, intent(in)  :: eta1_max
-sll_real64, intent(in)  :: eta2_min
-sll_real64, intent(in)  :: eta2_max
+sll_int32,  intent(in) :: k1
+sll_int32,  intent(in) :: k2
+sll_int32,  intent(in) :: num_cells1
+sll_int32,  intent(in) :: num_cells2
+sll_int32,  intent(in) :: quadrature_type1
+sll_int32,  intent(in) :: quadrature_type2
+sll_real64, intent(in) :: eta1_min
+sll_real64, intent(in) :: eta1_max
+sll_real64, intent(in) :: eta2_min
+sll_real64, intent(in) :: eta2_max
 
 sll_int32 :: t1_size
 sll_int32 :: t2_size
@@ -196,18 +196,19 @@ sll_real64, allocatable :: work1(:,:)
 sll_real64, allocatable :: work2(:,:)
 sll_real64, allocatable :: dbs1(:,:)
 sll_real64, allocatable :: dbs2(:,:)
-sll_real64 :: x1, x2
+sll_int32,  allocatable :: left1(:)
+sll_int32,  allocatable :: left2(:)
+sll_int32,  allocatable :: global_indices(:)
+sll_int32,  allocatable :: local_indices(:,:)
 
 sll_int32  :: i, j, ii, jj, ispl1, ispl2
-sll_real64 :: eta1, eta2, gspl1, gspl2
-sll_int32 , dimension(:),  allocatable :: left1
-sll_int32 , dimension(:),  allocatable :: left2
 sll_int32  :: left_rho
 sll_int32  :: cell
 sll_int32  :: a, b, c, d
-sll_int32, dimension(:),   pointer :: global_indices 
-sll_int32, dimension(:,:), pointer :: local_indices
 sll_int32  :: i1, i2, i4, kk, ll, icell, b1, b2
+
+sll_real64 :: x1, x2
+sll_real64 :: eta1, eta2, gspl1, gspl2
 
 n1 = num_cells1
 n2 = num_cells2
@@ -250,7 +251,6 @@ do c = 1, n1*n2
   end do
 end do
 
-
 es%k1         = k1
 es%k2         = k2
 es%n1         = n1
@@ -271,7 +271,7 @@ case (ES_GAUSS_LOBATTO)
   SLL_ALLOCATE(es%gauss1(2,k1+2),ierr)
   es%gauss1 = gauss_lobatto_points_and_weights(k1+2)
 case default
-  SLL_ERROR('initialize_general_elliptic_solver','unknown type of gauss points in the direction 1')
+  SLL_ERROR('initialize_general_elliptic_solver','unknown type of gauss points')
 end select
    
 select case(quadrature_type2)
@@ -282,11 +282,11 @@ case (ES_GAUSS_LOBATTO)
   SLL_ALLOCATE(es%gauss2(2,k2+2),ierr)
   es%gauss2(:,:) = gauss_lobatto_points_and_weights(k2+2)
 case default
-  SLL_ERROR('initialize_general_elliptic_solver','unknown type of gauss points in the direction 2')
+  SLL_ERROR('initialize_general_elliptic_solver','unknown type of gauss points')
 end select
 
 !PN : Gauss points positions and weights are computed in [-1:1] interval
-!PN : We need to rescale them.
+!PN : We need to rescale them to [0:1].
 es%gauss1(1,:) = 0.5_f64*es%delta_eta1*(es%gauss1(1,:)+1.0_f64)
 es%gauss1(2,:) = 0.5_f64*es%delta_eta1*(es%gauss1(2,:))
 es%gauss2(1,:) = 0.5_f64*es%delta_eta2*(es%gauss2(1,:)+1.0_f64)
@@ -497,8 +497,8 @@ end do
 write(10,*)"$END"
 close(10)
 
-SLL_DEALLOCATE(global_indices,ierr)
-SLL_DEALLOCATE(local_indices,ierr)
+DEALLOCATE(global_indices)
+DEALLOCATE(local_indices)
 
 end subroutine initialize_gces_dirichlet
   
