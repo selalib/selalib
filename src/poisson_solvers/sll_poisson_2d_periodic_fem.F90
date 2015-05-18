@@ -104,37 +104,38 @@ Melem(4,:) = (/ 2, 1, 2, 4/)
 Melem = 1.d0/36.d0 * Melem
 
 this%A = 0.d0
+this%M = 0.d0
 
 !***  Interior mesh ***
 do j=1,this%ny-1
-   do i=1,this%nx-1
-      isom(1) =  som(this%nx,i,j,1)
-      isom(2) =  som(this%nx,i,j,2)
-      isom(3) =  som(this%nx,i,j,3)
-      isom(4) =  som(this%nx,i,j,4)
-      call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
-   end do
+  do i=1,this%nx-1
+    isom(1) =  som(this%nx,i,j,1)
+    isom(2) =  som(this%nx,i,j,2)
+    isom(3) =  som(this%nx,i,j,3)
+    isom(4) =  som(this%nx,i,j,4)
+    call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
+  end do
 end do
 
 do i=2,this%nx-1
 
-   j = 1
-   isom(1)=som(this%nx,i,this%ny,1)
-   isom(2)=som(this%nx,i,this%ny,2)
-   isom(3)=som(this%nx,i,j,2)
-   isom(4)=som(this%nx,i,j,1)
-   call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
+  j = 1
+  isom(1)=som(this%nx,i,this%ny,1)
+  isom(2)=som(this%nx,i,this%ny,2)
+  isom(3)=som(this%nx,i,j,2)
+  isom(4)=som(this%nx,i,j,1)
+  call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
 
 end do
 
 do j=2,this%ny-1
 
-   i = 1
-   isom(1)=som(this%nx,this%nx,j,1)
-   isom(2)=som(this%nx,i,j,1)
-   isom(3)=som(this%nx,i,j,4)
-   isom(4)=som(this%nx,this%nx,j,4)
-   call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
+  i = 1
+  isom(1)=som(this%nx,this%nx,j,1)
+  isom(2)=som(this%nx,i,j,1)
+  isom(3)=som(this%nx,i,j,4)
+  isom(4)=som(this%nx,this%nx,j,4)
+  call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
 
 end do
    
@@ -148,24 +149,24 @@ call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
 
 SLL_ALLOCATE(this%ipiv(nxy),error)
 
-this%A(1,:) = 0.
-this%A(1,1) = 1.
+this%A(1,1) = 1.0e7
 call DGETRF(nxy,nxy,this%A,nxy,this%ipiv,error)
 
 end subroutine initialize_poisson_2d_periodic_fem
 
 !> Get the node number
 integer function som(nx, i, j, k)
-integer :: nx, i, j, k
+integer :: nx, i, j, k, l
 
+l = i+(j-1)*nx
 if (k == 1) then
-   som = i+(j-1)*nx
+  som = l
 else if (k == 2) then
-   som = i+(j-1)*nx+1
+  som = l+1
 else if (k == 3) then
-   som = i+j*nx+1
+  som = l+nx+1
 else if (k == 4) then
-   som = i+j*nx
+  som = l+nx
 end if 
 
 end function som
@@ -183,15 +184,15 @@ sll_int32, intent(in)           :: j        !< int(y) position on mesh
 sll_int32 :: ii
 sll_int32 :: jj
 
-   do ii=1,4
-      do jj=1,4
-         this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
-                 & + Axelem(ii,jj) * this%hy(j) / this%hx(i) &
-                 & + Ayelem(ii,jj) * this%hx(i) / this%hy(j)
-         this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
-                 & + Melem(ii,jj)  * this%hx(i) * this%hy(j)
-      end do
-   end do
+do ii=1,4
+  do jj=1,4
+    this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
+            & + Axelem(ii,jj) * this%hy(j) / this%hx(i)   &
+            & + Ayelem(ii,jj) * this%hx(i) / this%hy(j)
+    this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
+            & + Melem(ii,jj)  * this%hx(i) * this%hy(j)
+  end do
+end do
 
 end subroutine build_matrices
 
@@ -260,50 +261,50 @@ real(8)             :: y1
 integer :: i 
 integer :: j 
 
-open(10, file="mesh.mtv")
+open(10, file="mesh_periodic.mtv")
 write(10,*)"$DATA=CURVE3D"
 write(10,*)"%equalscale=T"
 write(10,*)"%toplabel='Elements number ' "
    
 do i=1,nx
-   do j=1,ny
-      write(10,*) x(i  ), y(j  ), 0.
-      write(10,*) x(i+1), y(j  ), 0.
-      write(10,*) x(i+1), y(j+1), 0.
-      write(10,*) x(i  ), y(j+1), 0.
-      write(10,*) x(i  ), y(j  ), 0.
-      write(10,*)
-   end do
+  do j=1,ny
+    write(10,*) x(i  ), y(j  ), 0.
+    write(10,*) x(i+1), y(j  ), 0.
+    write(10,*) x(i+1), y(j+1), 0.
+    write(10,*) x(i  ), y(j+1), 0.
+    write(10,*) x(i  ), y(j  ), 0.
+    write(10,*)
+  end do
 end do
 
 !Numeros des elements
 iel = 0
 do j=1,ny-1
-   do i=1,nx-1
-      iel = iel+1
-      x1 = 0.5*(x(i)+x(i+1))
-      y1 = 0.5*(y(j)+y(j+1))
-      write(10,"(a)"   ,  advance="no")"@text x1="
-      write(10,"(g15.3)", advance="no") x1
-      write(10,"(a)"   ,  advance="no")" y1="
-      write(10,"(g15.3)", advance="no") y1
-      write(10,"(a)"   ,  advance="no")" z1=0. lc=4 ll='"
-      write(10,"(i4)"  ,  advance="no") iel
-      write(10,"(a)")"'"
-   end do
+  do i=1,nx-1
+    iel = iel+1
+    x1 = 0.5*(x(i)+x(i+1))
+    y1 = 0.5*(y(j)+y(j+1))
+    write(10,"(a)"   ,  advance="no")"@text x1="
+    write(10,"(g15.3)", advance="no") x1
+    write(10,"(a)"   ,  advance="no")" y1="
+    write(10,"(g15.3)", advance="no") y1
+    write(10,"(a)"   ,  advance="no")" z1=0. lc=4 ll='"
+    write(10,"(i4)"  ,  advance="no") iel
+    write(10,"(a)")"'"
+  end do
 end do
 
 !Numeros des noeud
 do i=1,nx
-   do j=1,ny
-      write(10,"(a)"   ,  advance="no")"@text x1="
-      write(10,"(g15.3)", advance="no") x(i)
-      write(10,"(a)"   ,  advance="no")" y1="
-      write(10,"(g15.3)", advance="no") y(j)
-      write(10,"(a)"   ,  advance="no")" z1=0. lc=5 ll='"
-      write(10,"(i4)"  ,  advance="no") som(nx,i,j,1)
-      write(10,"(a)")"'"
-   end do
+  do j=1,ny
+    write(10,"(a)"   ,  advance="no")"@text x1="
+    write(10,"(g15.3)", advance="no") x(i)
+    write(10,"(a)"   ,  advance="no")" y1="
+    write(10,"(g15.3)", advance="no") y(j)
+    write(10,"(a)"   ,  advance="no")" z1=0. lc=5 ll='"
+    write(10,"(i4)"  ,  advance="no") som(nx,i,j,1)
+    write(10,"(a)")"'"
+  end do
 end do
    
 write(10,*)"$END"
