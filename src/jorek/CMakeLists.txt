@@ -11,7 +11,8 @@ ADD_LIBRARY(sll_jorek jorek_interface.F90 sll_jorek.F90)
 ADD_DEPENDENCIES(sll_jorek jorek)
 
   
-SET(JOREK_LIBRARIES  assembly 
+SET(JOREK_LIBRARIES  aggregate_field
+                     assembly 
                      basis 
                      blackbox 
                      boundary_conditions 
@@ -46,7 +47,7 @@ TARGET_LINK_LIBRARIES(jorek_landau_2d sll_interpolators sll_jorek)
   
 SET(PROCS 4)
 SET(PARAMETERS parameter.txt)
-SET(GEOMETRY   ${SOURCE_DIR}/geometries/square_periodic/n16x16)
+SET(GEOMETRY   ${SOURCE_DIR}/geometries/square/hbezier/n16x16)
 SET(SOLVER     solver.txt)
 IF(NOT APPLE)
   STRING(REGEX REPLACE "mpiexec" "mpirun" MPIEXEC ${MPIEXEC})
