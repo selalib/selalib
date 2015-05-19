@@ -191,7 +191,7 @@ contains
         split%split_step(5) = split%split_step(3)
         split%split_step(6) = split%split_step(2)
         split%split_step(7) = split%split_step(1)
-      case (SLL_ORDER6_VTV) ! Order 6 VTV
+      case (SLL_ORDER6_VTV) ! Order 6 VTV (O6-11 of Blanes)
         split%nb_split_step = 23
         SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
         split%split_begin_T = .false.
@@ -218,7 +218,7 @@ contains
         split%split_step(21) = split%split_step(3)
         split%split_step(22) = split%split_step(2)
         split%split_step(23) = split%split_step(1)          
-      case (SLL_ORDER6_TVT) ! Order 6 VTV
+      case (SLL_ORDER6_TVT) ! Order 6 TVT (O6-14 of Blanes)
         split%nb_split_step = 29
         SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
         split%split_begin_T = .true.
