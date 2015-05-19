@@ -100,9 +100,6 @@ type, public :: general_coordinate_elliptic_solver
   sll_real64 :: epsi
   sll_real64 :: intjac
 
-  sll_int32, dimension(:),   pointer, public :: global_indices 
-
-  sll_int32, dimension(:,:), pointer :: local_indices
   sll_int32, dimension(:,:), pointer :: local_to_global_indices
   sll_int32, dimension(:,:), pointer :: local_to_global_indices_source
   sll_int32, dimension(:,:), pointer :: local_to_global_indices_source_bis
@@ -111,9 +108,6 @@ type, public :: general_coordinate_elliptic_solver
   sll_real64, dimension(:,:,:,:), pointer :: v_splines1
   sll_real64, dimension(:,:,:,:), pointer :: v_splines2
 
-  sll_real64, dimension(:,:,:,:), pointer :: val_jac
-  sll_int32 , dimension(:),       pointer :: tab_index_coeff1
-  sll_int32 , dimension(:),       pointer :: tab_index_coeff2
   type(sll_csr_matrix),           pointer :: csr_mat
   type(sll_csr_matrix),           pointer :: csr_mat_with_constraint
   type(sll_csr_matrix),           pointer :: csr_mat_source
@@ -235,21 +229,30 @@ sll_real64 :: xg, yg
 sll_int32  :: i, j, ii, jj, ispl1, ispl2
 sll_real64 :: eta1, eta2, gspl1, gspl2
 sll_int32  :: left
+sll_int32  :: kk, ll, index_coef1, index_coef2
+sll_int32  :: x, y, nbsp, nbsp1
+sll_int32  :: index1, index2, index3, index4
+sll_int32  :: icell, a, aprime, b, bprime
+
+sll_int32, dimension(:),   allocatable :: global_indices 
+sll_int32, dimension(:,:), allocatable :: local_indices
+sll_int32, dimension(:),   allocatable :: tab_index_coeff1
+sll_int32, dimension(:),   allocatable :: tab_index_coeff2
 
 es%total_num_splines_loc = (spline_degree1+1)*(spline_degree2+1)
 ! The total number of splines in a single direction is given by
 ! num_cells + spline_degree
 num_splines1 = num_cells1 + spline_degree1
 num_splines2 = num_cells2 + spline_degree2
-SLL_ALLOCATE(es%global_indices(num_splines1*num_splines2),ierr)
   
 dim1 = (spline_degree1+1)*(spline_degree2+1)
 dim2 = (num_cells1*num_cells2)
-SLL_ALLOCATE(es%local_indices(1:dim1,1:dim2),ierr)
 SLL_ALLOCATE(es%local_to_global_indices(1:dim1,1:dim2),ierr)
 SLL_ALLOCATE(es%local_to_global_indices_source(1:dim1,1:dim2),ierr)
 SLL_ALLOCATE(es%local_to_global_indices_source_bis(1:dim1,1:dim2),ierr)
 
+SLL_ALLOCATE(local_indices(1:dim1,1:dim2),ierr)
+SLL_ALLOCATE(global_indices(num_splines1*num_splines2),ierr)
 call initconnectivity( num_cells1,                &
 &                      num_cells2,                &
 &                      spline_degree1,            &
@@ -258,9 +261,12 @@ call initconnectivity( num_cells1,                &
 &                      bc1_max,                   &
 &                      bc2_min,                   &
 &                      bc2_max,                   &
-&                      es%local_indices,          &
-&                      es%global_indices,         &
+&                      local_indices,             &
+&                      global_indices,            &
 &                      es%local_to_global_indices )
+
+deallocate(local_indices)
+deallocate(global_indices)
 
 ! This should be changed to verify that the passed BC's are part of the
 ! recognized list described in sll_boundary_condition_descriptors...
@@ -443,10 +449,8 @@ SLL_ALLOCATE(es%v_splines2(3,spline_degree2+1,spline_degree2+2,num_cells2),ierr)
 es%v_splines1 = 0.0_f64
 es%v_splines2 = 0.0_f64
 
-SLL_ALLOCATE(es%val_jac(spline_degree1+2,spline_degree2+2,num_cells1,num_cells2),ierr)
-es%val_jac = 0.0_f64
-SLL_ALLOCATE(es%tab_index_coeff1(num_cells1),ierr)
-SLL_ALLOCATE(es%tab_index_coeff2(num_cells2),ierr)
+SLL_ALLOCATE(tab_index_coeff1(num_cells1),ierr)
+SLL_ALLOCATE(tab_index_coeff2(num_cells2),ierr)
 
 num_pts_g1 = size(es%gauss_pts1,2)
 num_pts_g2 = size(es%gauss_pts2,2)
@@ -475,7 +479,7 @@ do i = 1, es%num_cells1
     call bsplvd(es%db,es%knots1_rho,spline_degree1+1,xg,left,work1,dbs1,1)
     es%v_splines1(3,:,ii,i) = dbs1(:,1)
   end do
-  es%tab_index_coeff1(i) = left
+  tab_index_coeff1(i) = left
 end do
 
 do j = 1, es%num_cells2
@@ -496,13 +500,69 @@ do j = 1, es%num_cells2
     call bsplvd(es%db,es%knots2_rho,spline_degree2+1,yg,left,work2,dbs2,1)
     es%v_splines2(3,:,jj,j) = dbs2(:,1)
   end do
-  es%tab_index_coeff2(j) = left
+  tab_index_coeff2(j) = left
 end do
 
 deallocate(work1)
 deallocate(work2)
 deallocate(dbs1)
 deallocate(dbs2)
+
+do j = 1, es%num_cells2
+do i = 1, es%num_cells1
+  icell = i + (j-1)*es%num_cells1
+  b = 0
+  do jj = 0, es%spline_degree2
+    index3 = j + jj
+    if (bc2_min==SLL_PERIODIC .and. bc2_max==SLL_PERIODIC) then 
+      if ( index3 > es%total_num_splines2) then
+        index3 = index3 - es%total_num_splines2
+      end if
+    end if
+    do ii = 0,es%spline_degree1
+      index1 = i + ii
+      if (bc1_min==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC) then 
+        if ( index1 > es%total_num_splines1) then
+          index1 = index1 - es%total_num_splines1
+        end if
+        nbsp = es%total_num_splines1
+      else !if (bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET) then
+        nbsp = es%num_cells1 + es%spline_degree1
+      end if
+      x = index1 + (index3-1)*nbsp
+      b = b+1
+      index_coef1 = tab_index_coeff1(i) - es%spline_degree1 + ii
+      index_coef2 = tab_index_coeff2(j) - es%spline_degree2 + jj
+      es%local_to_global_indices_source(b,icell)= index_coef1 + (index_coef2-1)*(es%num_cells1+1)
+      bprime = 0
+      do ll = 0,es%spline_degree2
+        index4 = j + ll
+        if ( (bc2_min==SLL_PERIODIC).and.(bc2_max== SLL_PERIODIC))then
+          if ( index4 > es%total_num_splines2) then
+            index4 = index4 - es%total_num_splines2
+          end if
+        end if
+        do kk = 0,es%spline_degree1
+          index2 = i + kk
+          if(bc1_min==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC)then
+            if ( index2 > es%total_num_splines1) then
+              index2 = index2 - es%total_num_splines1
+            end if
+            nbsp1 = es%total_num_splines1
+          else !if (bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET) then
+            nbsp1 = es%num_cells1 + es%spline_degree1
+          end if
+          y      = index2 + (index4-1)*nbsp1
+          bprime = bprime+1 
+          es%local_to_global_indices_source_bis(bprime,icell)= y
+        end do
+      end do
+    end do
+  end do
+end do
+end do
+DEALLOCATE(tab_index_coeff1)
+DEALLOCATE(tab_index_coeff2)
 
 end subroutine initialize_general_elliptic_solver
   
@@ -600,8 +660,6 @@ SLL_DEALLOCATE(es%knots1,ierr)
 SLL_DEALLOCATE(es%knots2,ierr)
 SLL_DEALLOCATE(es%gauss_pts1,ierr)
 SLL_DEALLOCATE(es%gauss_pts2,ierr)
-SLL_DEALLOCATE(es%global_indices,ierr)
-SLL_DEALLOCATE(es%local_indices,ierr)
 SLL_DEALLOCATE(es%local_to_global_indices,ierr)
 SLL_DEALLOCATE(es%local_to_global_indices_source,ierr)
 SLL_DEALLOCATE(es%local_to_global_indices_source_bis,ierr)
@@ -617,9 +675,6 @@ SLL_DEALLOCATE(es%knots1_rho,ierr)
 SLL_DEALLOCATE(es%knots2_rho,ierr)
 SLL_DEALLOCATE(es%v_splines1,ierr)
 SLL_DEALLOCATE(es%v_splines2,ierr)
-SLL_DEALLOCATE(es%val_jac,ierr)
-SLL_DEALLOCATE(es%tab_index_coeff1,ierr)
-SLL_DEALLOCATE(es%tab_index_coeff2,ierr)
 
 end subroutine delete_elliptic
 
@@ -858,8 +913,6 @@ do i = 1, nc_1
       jac_mat = c_field%get_jacobian_matrix(xg,yg)
       val_jac = jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1)
 
-      es%val_jac(ig,jg,i,j) = val_jac
-
       wxy_by_val_jac = wxy/val_jac
       wxy_val_jac    = wxy*val_jac
 
@@ -963,11 +1016,9 @@ do i = 1, nc_1
     end do
   end do
 
-  b = 0
   do jj = 0, spl_deg_2
 
     index3 = j + jj
-    
     if (bc2_min==SLL_PERIODIC .and. bc2_max==SLL_PERIODIC) then 
       if ( index3 > es%total_num_splines2) then
         index3 = index3 - es%total_num_splines2
@@ -977,7 +1028,6 @@ do i = 1, nc_1
     do ii = 0,spl_deg_1
         
       index1 = i + ii
-
       if (bc1_min==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC) then 
         if ( index1 > es%total_num_splines1) then
           index1 = index1 - es%total_num_splines1
@@ -988,48 +1038,32 @@ do i = 1, nc_1
       end if
 
       x = index1 + (index3-1)*nbsp
-      b = b+1
+      b = ii+1+jj*(spl_deg_1+1)
       a = es%local_to_global_indices(b, icell)
          
       es%masse(x) = es%masse(x) + mass(b)
       es%stiff(x) = es%stiff(x) + stif(b)
 
-      index_coef1 = es%tab_index_coeff1(i) - spl_deg_1 + ii
-      index_coef2 = es%tab_index_coeff2(j) - spl_deg_2 + jj
-
-      es%local_to_global_indices_source(b,icell)= &
-              index_coef1 + (index_coef2-1)*(nc_1+1)
-
-      bprime = 0
       do ll = 0,spl_deg_2
-             
         index4 = j + ll
         if ( (bc2_min==SLL_PERIODIC).and.(bc2_max== SLL_PERIODIC))then
           if ( index4 > es%total_num_splines2) then
             index4 = index4 - es%total_num_splines2
           end if
         end if
-             
         do kk = 0,spl_deg_1
-                
           index2 = i + kk
-
           if(bc1_min==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC)then
-
             if ( index2 > es%total_num_splines1) then
               index2 = index2 - es%total_num_splines1
             end if
-
             nbsp1 = es%total_num_splines1
-                   
           else !if (bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET) then
-
             nbsp1 = nc_1 + spl_deg_1
-
           end if
                 
           y      = index2 + (index4-1)*nbsp1
-          bprime = bprime+1 
+          bprime = kk+1+ll*(spl_deg_1+1)
           aprime = es%local_to_global_indices(bprime,icell)
 
           elt_mat_global = M_c (bprime,b) - &
@@ -1046,7 +1080,6 @@ do i = 1, nc_1
           if ( a>0 .and. aprime>0 ) then
             call sll_add_to_csr_matrix(es%csr_mat, elt_mat_global, a, aprime)   
           end if
-              
         end do
       end do
     end do
@@ -1099,12 +1132,12 @@ end if
 
 print *,'#end of sll_factorize_csr_matrix'
 
-es%csr_mat_source =>                                            &
-  new_csr_matrix( size(es%masse,1),                             &
-                  (nc_1+1)*(nc_2+1),                            &
-                  nc_1*nc_2,                                    &
+es%csr_mat_source =>                                     &
+  new_csr_matrix( size(es%masse,1),                      &
+                  (nc_1+1)*(nc_2+1),                     &
+                  nc_1*nc_2,                             &
                   es%local_to_global_indices_source_bis, &
-                  nspl,                                         &
+                  nspl,                                  &
                   es%local_to_global_indices_source,     &
                   nspl )
 
@@ -1193,7 +1226,7 @@ sll_int32  :: bc1_min, bc1_max, bc2_min, bc2_max
 sll_int32  :: index1, index3, nbsp
 
 sll_real64 :: wgpt1, wgpt2, gpt1, gpt2, eta1, eta2
-sll_real64 :: val_f, val_j, valfj
+sll_real64 :: val_f, val_j, valfj, jac_mat(2,2)
 sll_real64 :: spline1, spline2
 
 sll_real64 :: int_rho
@@ -1253,7 +1286,7 @@ class is (sll_scalar_field_2d_analytic)
   !$OMP PRIVATE(i,j,ii,jj,kk,ll,mm,nn,n,m_rho_loc,x,b,   &
   !$OMP         index1,index3,nbsp,eta1,eta2,gpt1,gpt2,  &
   !$OMP         wgpt1,wgpt2,spline1,spline2,val_f,val_j, &
-  !$OMP         valfj)
+  !$OMP         valfj,jac_mat)
   !$ tid = omp_get_thread_num()
   !$ nthreads = omp_get_num_threads()
   !$OMP MASTER
@@ -1274,7 +1307,9 @@ class is (sll_scalar_field_2d_analytic)
           wgpt1 = es%gauss_pts1(2,ii)
       
           val_f = rho%value_at_point(gpt1,gpt2)
-          val_j = es%val_jac(ii,jj,i,j)*wgpt1*wgpt2
+          jac_mat = rho%get_jacobian_matrix(gpt1,gpt2)
+          val_j   = jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1)
+          val_j = val_j*wgpt1*wgpt2
           valfj = val_f*val_j
           int_rho = int_rho + valfj 
           int_jac = int_jac + val_j

@@ -47,7 +47,7 @@ TARGET_LINK_LIBRARIES(jorek_landau_2d sll_interpolators sll_jorek)
   
 SET(PROCS 4)
 SET(PARAMETERS parameter.txt)
-SET(GEOMETRY   ${SOURCE_DIR}/geometries/square_periodic/n16x16)
+SET(GEOMETRY   ${SOURCE_DIR}/geometries/square/hbezier/n16x16)
 SET(SOLVER     solver.txt)
 IF(NOT APPLE)
   STRING(REGEX REPLACE "mpiexec" "mpirun" MPIEXEC ${MPIEXEC})
