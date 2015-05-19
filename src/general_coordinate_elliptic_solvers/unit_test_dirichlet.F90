@@ -25,7 +25,7 @@ implicit none
 #define ETA2MAX          (+1.0_f64)
 
 type(sll_cartesian_mesh_2d), pointer                      :: mesh_2d
-class(sll_coordinate_transformation_2d_base), pointer     :: T
+class(sll_coordinate_transformation_2d_base), pointer     :: tau
 type(sll_gces)                                            :: es
 type(sll_arbitrary_degree_spline_interpolator_2d), target :: interp_phi
 type(sll_arbitrary_degree_spline_interpolator_2d), target :: interp_rho
@@ -91,21 +91,21 @@ print*, " test case witout change of coordinates"
 print*, " dirichlet-dirichlet boundary conditions"
 print*, "-------------------------------------------------------------"
 
-T => new_coordinate_transformation_2d_analytic( &
-&    "analytic",                                &
-&    mesh_2d,                                   &
-&    identity_x1,                               &
-&    identity_x2,                               &
-&    identity_jac11,                            &
-&    identity_jac12,                            &
-&    identity_jac21,                            &
-&    identity_jac22,                            &
-&    [0.0_f64]                                  )
+tau => new_coordinate_transformation_2d_analytic( &
+&      "analytic",                                &
+&      mesh_2d,                                   &
+&      identity_x1,                               &
+&      identity_x2,                               &
+&      identity_jac11,                            &
+&      identity_jac12,                            &
+&      identity_jac21,                            &
+&      identity_jac22,                            &
+&      [0.0_f64]                                  )
 
 a11_field_mat => new_scalar_field_2d_analytic( &
   one,                                         &
   "a11",                                       &
-  T,                                           &
+  tau,                                         &
   SLL_DIRICHLET,                               &
   SLL_DIRICHLET,                               &
   SLL_DIRICHLET,                               &
@@ -115,7 +115,7 @@ a11_field_mat => new_scalar_field_2d_analytic( &
 a12_field_mat => new_scalar_field_2d_analytic( &
   zero,                                        &
   "a12",                                       &
-  T,                                           &
+  tau,                                         &
   SLL_DIRICHLET,                               &
   SLL_DIRICHLET,                               &
   SLL_DIRICHLET,                               &
@@ -125,7 +125,7 @@ a12_field_mat => new_scalar_field_2d_analytic( &
 a21_field_mat => new_scalar_field_2d_analytic( &
   zero,                                        &
   "a21",                                       &
-  T,                                           &
+  tau,                                         &
   SLL_DIRICHLET,                               &
   SLL_DIRICHLET,                               &
   SLL_DIRICHLET,                               &
@@ -135,7 +135,7 @@ a21_field_mat => new_scalar_field_2d_analytic( &
 a22_field_mat => new_scalar_field_2d_analytic( &
   one,                                         &
   "a22",                                       &
-  T,                                           &
+  tau,                                         &
   SLL_DIRICHLET,                               &
   SLL_DIRICHLET,                               &
   SLL_DIRICHLET,                               &
@@ -145,7 +145,7 @@ a22_field_mat => new_scalar_field_2d_analytic( &
 b1_field_vect => new_scalar_field_2d_analytic( &
   zero,                                        &
   "b1",                                        &
-  T,                                           &
+  tau,                                         &
   SLL_DIRICHLET,                               &
   SLL_DIRICHLET,                               &
   SLL_DIRICHLET,                               &
@@ -157,7 +157,7 @@ b1_field_vect => new_scalar_field_2d_analytic( &
 b2_field_vect => new_scalar_field_2d_analytic( &
   zero,                                        &
   "b2",                                        &
-  T,                                           &
+  tau,                                         &
   SLL_DIRICHLET,                               &
   SLL_DIRICHLET,                               &
   SLL_DIRICHLET,                               &
@@ -169,7 +169,7 @@ b2_field_vect => new_scalar_field_2d_analytic( &
 c_field => new_scalar_field_2d_analytic(       &
   zero,                                        &
   "c_field",                                   &
-  T,                                           &
+  tau,                                         &
   SLL_DIRICHLET,                               &
   SLL_DIRICHLET,                               &
   SLL_DIRICHLET,                               &
@@ -209,7 +209,7 @@ call initialize_ad2d_interpolator(             &
 phi => new_scalar_field_2d_discrete(           &
   "phi",                                       &
   interp_phi,                                  &
-  T,                                           &
+  tau,                                         &
   SLL_DIRICHLET,                               &
   SLL_DIRICHLET,                               &
   SLL_DIRICHLET,                               &
@@ -218,7 +218,7 @@ phi => new_scalar_field_2d_discrete(           &
 rho => new_scalar_field_2d_analytic( &
 &    rhs,                            &
 &    "rho",                          &     
-&    T,                              &
+&    tau,                            &
 &    SLL_DIRICHLET,                  &
 &    SLL_DIRICHLET,                  &
 &    SLL_DIRICHLET,                  &
@@ -293,10 +293,10 @@ integral_exact_solution = sum(reference)*h1*h2
 
 do j=-50,50
 do i=-50,50
-  write(41,*) i, j, phi%first_deriv_eta1_value_at_point((i-1)*0.01_f64,(j-1)*0.01_f64) &
-                  , 2*sll_pi*cos(2*sll_pi*(i-1)*0.01_f64)*sin(2*sll_pi*(j-1)*0.01_f64)
-  write(42,*) i, j, phi%value_at_point((i-1)*0.01_f64,(j-1)*0.01_f64) &
-                  , sin(2*sll_pi*(i-1)*0.01_f64)*sin(2*sll_pi*(j-1)*0.01_f64)
+  write(41,*) i, j, phi%first_deriv_eta1_value_at_point(i*0.01_f64,j*0.01_f64) &
+                  , 2*sll_pi*cos(2*sll_pi*i*0.01_f64)*sin(2*sll_pi*j*0.01_f64)
+  write(42,*) i, j, phi%value_at_point(i*0.01_f64,j*0.01_f64) &
+                  , sin(2*sll_pi*i*0.01_f64)*sin(2*sll_pi*j*0.01_f64)
 end do
 write(41,*) 
 write(42,*) 
@@ -312,7 +312,7 @@ call a21_field_mat%delete()
 call b1_field_vect%delete()
 call b2_field_vect%delete()
 call a22_field_mat%delete()
-call T%delete()
+call tau%delete()
 
 print"('integral solution       =',g15.3)", integral_solution
 print"('integral exact solution =',g15.3)", integral_exact_solution
