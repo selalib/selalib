@@ -93,7 +93,7 @@ else:
   M = np.zeros((i_max-i_min+1,2))
   for i in range(i_min,i_max+1):
     f = array_list[i-i_min]
-    dt = f[0,0]#f[1,0]-f[0,0]
+    dt = f[1,0]-f[0,0]
     #print("dt=",dt)
     #print(len(time_grid_ref),len(f[:,1]),len(f[:,0]))
     #print(f[:,0])
