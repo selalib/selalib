@@ -21,7 +21,7 @@ $latest=~/perf_(.*)\.data$/ or die;
 my $tag=$1;
 
 # create report with same tag
-open REPORT,"> annotate_$tag.txt" or die;
+open REPORT,"> annotate_${tag}_$object.txt" or die;
 
 foreach my $object(@ARGV){
 

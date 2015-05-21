@@ -154,7 +154,7 @@ contains
 
   end subroutine global_to_cell_offset_extended
 
-  !> performs the inverse transformation of global_to_cell_offset_extended above
+  !> <<cell_offset_to_global_extended>> performs the inverse transformation of global_to_cell_offset_extended above
   !!
   subroutine cell_offset_to_global_extended ( offset_x, offset_y, &
                                    i_cell_x, i_cell_y, m2d, &
