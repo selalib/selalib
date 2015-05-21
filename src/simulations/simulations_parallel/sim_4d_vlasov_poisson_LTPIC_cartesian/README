@@ -155,15 +155,18 @@
         [[elisp:(compile "STAMP=`date +%y%m%d%H%M` && cd ~/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/run && perf record -e stalled-cycles-frontend -c 100000 -o perf.data ../test_4d_vp_lt_pic_cartesian ../params_perf.nml | tee perf_stall_$STAMP.txt && cp perf.data perf_stall_$STAMP.data")]]
 
 **** report
-
-     file:perf_report
+***** whole code with file:perf_report
 
      [[elisp:(compile "cd ~/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/run && ~/selalib/src/simulations/simulations_parallel/sim_4d_vlasov_poisson_LTPIC_cartesian/perf_report")]]
 
+***** annotating source code with file:perf_annotate
+****** [[file:~/selalib/src/pic_utilities/lt_pic_4d_utilities.F90::sll_lt_pic_4d_write_f_on_grid_or_deposit][sll_lt_pic_4d_write_f_on_grid_or_deposit]]
 
-     file:perf_annotate
+       [[elisp:(compile "cd ~/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/run && ~/selalib/src/simulations/simulations_parallel/sim_4d_vlasov_poisson_LTPIC_cartesian/perf_annotate __sll_lt_pic_4d_utilities_MOD_sll_lt_pic_4d_write_f_on_grid_or_deposit")]]
 
-     [[elisp:(compile "cd ~/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/run && ~/selalib/src/simulations/simulations_parallel/sim_4d_vlasov_poisson_LTPIC_cartesian/perf_annotate __sll_lt_pic_4d_utilities_MOD_sll_lt_pic_4d_write_f_on_grid_or_deposit")]]
+****** [[file:~/selalib/src/pic_utilities/sll_representation_conversion.F90::cell_offset_to_global_extended][cell_offset_to_global_extended]]
+
+       [[elisp:(compile "cd ~/selalib/usr/simulations/simulations_parallel/4d_vp_lt_pic_cartesian/run && ~/selalib/src/simulations/simulations_parallel/sim_4d_vlasov_poisson_LTPIC_cartesian/perf_annotate __sll_representation_conversion_module_MOD_cell_offset_to_global_extended")]]
 
 ** Selalib Ctests check
 
@@ -172,7 +175,6 @@
 ** clean
 
    [[elisp:(compile "cd ~/selalib/build && make clean")]]
-
 
 * <<File_info>>
 # Local Variables:
