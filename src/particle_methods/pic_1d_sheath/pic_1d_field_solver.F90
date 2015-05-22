@@ -14,10 +14,12 @@ module sll_pic_1d_field_solver
     use sll_arbitrary_degree_splines
     !!use gauss_lobatto_integration
     use sll_fft
-    use sll_constants
+!    use sll_constants
     use sll_collective
-    use sll_module_poisson_1d_periodic_solver
-    use sll_poisson_1d_fem !Finite Element Bspline
+!    use sll_module_poisson_1d_periodic_solver
+
+   use sll_poisson_1d_fem , only :   poisson_1d_fem, poisson_1d_fem_rhs_function ,&
+ new_poisson_1d_fem         !Finite Element Bspline
     use sll_cartesian_meshes
     use sll_poisson_1d_fd !Finite difference solver
     use sll_poisson_1d_periodic
