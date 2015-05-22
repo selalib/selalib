@@ -8,13 +8,13 @@ module sll_pic_1d
     use sll_collective !Parallel operations
 
     
-    use sll_arbitrary_degree_splines
-    use gauss_legendre_integration
+   use sll_arbitrary_degree_splines
+   use gauss_legendre_integration          !      perhaps useless
     use sll_pic_1d_field_solver
-    use sll_visu_pic !Visualization with gnuplot
-    use pic_1d_particle_loading !should be integrated here
-    use sll_timer
-    use pic_postprocessing
+    use sll_visu_pic   !Visualization with gnuplot
+    use pic_1d_particle_loading     !should be integrated here
+    use sll_timer  
+    use pic_postprocessing  
 
     implicit none
 
