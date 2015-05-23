@@ -1780,8 +1780,6 @@ sll_int32 :: bc1_max
 sll_int32 :: bc2_min
 sll_int32 :: bc2_max
 
-=======
->>>>>>> origin/prototype-devel
-
+end subroutine
 
 end module sll_general_coordinate_elliptic_solver_module
