@@ -2,7 +2,7 @@
 #ifndef FEM_MASS_MATRIX_TOL
 #define  FEM_MASS_MATRIX_TOL 0.0000000001_f64
 #endif
-
+  
 
 
 module sll_pic_1d_field_solver
@@ -20,8 +20,9 @@ module sll_pic_1d_field_solver
 
    use sll_poisson_1d_fem , only :   poisson_1d_fem, poisson_1d_fem_rhs_function ,&
  new_poisson_1d_fem         !Finite Element Bspline
-    use sll_cartesian_meshes
-    use sll_poisson_1d_fd !Finite difference solver
+    use sll_cartesian_meshes, only : sll_cartesian_mesh_1d , new_cartesian_mesh_1d 
+!we work in 1d so all 2d - 3d 4d modules are not used here
+    use sll_poisson_1d_fd!Finite difference solver
     use sll_poisson_1d_periodic
     use sll_particle_1d_description
     use sll_poisson_1d_fourier

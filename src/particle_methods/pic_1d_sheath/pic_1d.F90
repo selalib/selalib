@@ -11,8 +11,30 @@ module sll_pic_1d
     use sll_arbitrary_degree_splines 
 !    use gauss_legendre_integration          !      perhaps useless
     use sll_pic_1d_field_solver
-    use sll_visu_pic   !Visualization with gnuplot
-    use pic_1d_particle_loading     !should be integrated here
+!     use sll_visu_pic 
+   use sll_visu_pic  , only :  distribution_xdmf, energies_electrostatic_gnuplot_inline , particles_center_gnuplot_inline, electricpotential_gnuplot_inline !Visualization with gnuplot
+   
+
+    use pic_1d_particle_loading, only : sll_normal_rnd ,& 
+         sll_initialize_intrinsic_mpi_random ,&   
+         load_particle_species ,&
+         sll_pic1d_ensure_boundary_conditions_species  ,&
+         sll_pic1d_ensure_boundary_conditions ,&
+         sll_pic1d_ensure_periodicity  ,& 
+         sll_pic_1d_landaudamp_PDFxv ,&
+         sll_local_maxwellian ,&
+         control_variate_xv ,& 
+         SLL_PIC1D_TESTCASE_IONBEAM, SLL_PIC1D_TESTCASE_LANDAU, pic1d_testcase  ,&
+         num_species, landau_mode ,landau_alpha, enable_deltaf, enable_deltaf ,&
+         SLL_PIC1D_TESTCASE_IONBEAM_ELECTRONS ,SLL_PIC1D_TESTCASE_QUIET ,&
+         control_variate_v ,SLL_PIC1D_TESTCASE_BUMPONTAIL, set_loading_parameters
+         
+         
+         
+         
+               !should be integrated here
+    
+    
     use sll_timer  
     use pic_postprocessing  
 
