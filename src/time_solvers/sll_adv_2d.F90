@@ -357,150 +357,176 @@ contains
     eta1_max = this%mesh_2d%eta1_max
     delta_eta1 = (eta1_max-eta1_min)/real(n1-1,f64)
     if(this%csl_2012)then
-      do j=1,num_dof2
+      
+      !Let Fn(eta) = \int_0^{eta} (Jf)(tn,s)ds
+      ! such that Fn'(eta_j) = Jf(tn,eta_j)
+      !Let F_h(eta) = Fn(H(tn;eta,t_{n+1}))
+      !we know F_h(eta_k)=Fn(eta_k^*)
+      !we reconstruct F_h
+      !Jf(t_{n+1},eta_j) = F_h'(eta_j)
+      !we suppose here periodic boundary conditions
+      
+      ! on [0,1] mesh
+      ! eta_k = (k-1/2)/num_dof, k=1,num_dof
+      !we have to know
+      !  eta_k^*,k=1,num_dof
+      !at first order eta_k^*=eta_k-a(eta_k)dt
+      !input: a_k, k=1,num_dof
+      !      Jf(tn,eta_k), k=1,num_dof
+      !      dt
+      !      interp1d => new_cubic_spline_interpolator_1d( &
+      !        num_dof+1, &
+      !        eta_1, &
+      !        eta_1+eta_max-eta_min, &
+      !        SLL_PERIODIC)
 
-
-        eta2 = 0.5_f64*(this%origin2(j)+this%origin2(j+1))
-        do i=1,n1
-          eta1 = this%origin1(i)
-          this%A1jac(i) = &
-            this%A1(i,j)*this%transformation%jacobian(eta1,eta2)
-        enddo
-
-!        do i=1,n1-1
-!          eta1 = 0.5_f64*(this%origin1(i)+this%origin1(i+1))
+!      do j=1,num_dof2
+!
+!
+!        eta2 = 0.5_f64*(this%origin2(j)+this%origin2(j+1))
+!        do i=1,n1
+!          eta1 = this%origin1(i)
 !          this%A1jac(i) = &
 !            this%A1(i,j)*this%transformation%jacobian(eta1,eta2)
-!          print *,'A1=', this%A1jac(i)
 !        enddo
-!stop
-
-!!        do i=1,n1
-!          print*,i,this%A1(i,j)
-!        enddo
-!        stop
-!        print *,'#this%f',minval(this%f(1:num_dof1,j)),maxval(this%f(1:num_dof1,j))
 !
-        this%input1(1:num_dof1) = this%f(1:num_dof1,j)
-        eta2 = 0.5_f64*(this%origin2(j)+this%origin2(j+1))
+!!        do i=1,n1-1
+!!          eta1 = 0.5_f64*(this%origin1(i)+this%origin1(i+1))
+!!          this%A1jac(i) = &
+!!            this%A1(i,j)*this%transformation%jacobian(eta1,eta2)
+!!          print *,'A1=', this%A1jac(i)
+!!        enddo
+!!stop
+!
+!!!        do i=1,n1
+!!          print*,i,this%A1(i,j)
+!!        enddo
+!!        stop
+!!        print *,'#this%f',minval(this%f(1:num_dof1,j)),maxval(this%f(1:num_dof1,j))
+!!
+!        this%input1(1:num_dof1) = this%f(1:num_dof1,j)
+!        eta2 = 0.5_f64*(this%origin2(j)+this%origin2(j+1))
+!!        do i=1,num_dof1
+!!          eta1 = 0.5_f64*(this%origin1(i)+this%origin1(i+1))
+!!          this%input1(i) = &
+!!            this%input1(i)/this%transformation%jacobian(eta1,eta2)
+!!        enddo
+!!        
+!        print *,'#input1=',minval(this%input1(1:num_dof1)),maxval(this%input1(1:num_dof1))
+!
+!        
+!        this%primitive1(1) = 0._f64
+!        do i=2,num_dof1+1
+!          this%primitive1(i) = this%primitive1(i-1) &
+!            +delta_eta1*this%input1(i-1)
+!        enddo
+!
+!!        do i=1,n1
+!!          print *,this%primitive1(i)
+!!        enddo
+! 
+! 
+! 
+!        
+!        this%xi1(1) = 0._f64
+!        do i=2,num_dof1+1
+!          eta1 = 0.5_f64*(this%origin1(i)+this%origin1(i-1))
+!          this%xi1(i) = this%xi1(i-1) &
+!            +delta_eta1*this%transformation%jacobian(eta1,eta2)
+!        enddo
+!        !jacobian(i1) = df_jac_at_i( i1-1, i2 )
+!
+!        mean = this%primitive1(n1)/this%xi1(n1)
+!        print *,'#mean init'
+!        !modify primitive so that it becomes periodic
+!        do i = 2,num_dof1+1
+!          this%primitive1(i) = this%primitive1(i)-mean*this%xi1(i)
+!        end do
+!        xi_max = this%xi1(n1)
+!
+!!        print *,'#this%primitive1=',minval(this%primitive1(1:n1)),maxval(this%primitive1(1:n1))
+!!        do i=1,n1
+!!          print *,this%primitive1(i)
+!!        enddo
+!!        stop
+!        call implicit_ode_nonuniform( &
+!          2, &
+!          dt, &
+!          this%xi1, &
+!          num_dof1, &
+!          PERIODIC_ODE, &
+!          this%feet_inside1, &
+!          this%A1jac(1:n1),&
+!          this%A1jac)
+!        
+!        do i=1,n1
+!          this%feet1(i) = this%xi1(i)-this%A1jac(i)*dt
+!        enddo  
+!           
+!        call compute_spline_nonunif( &
+!          this%primitive1, &
+!          this%spl_eta1, &
+!          this%xi1)
+!        ! interpolate primitive at origin of characteritics
+!        call interpolate_array_value_nonunif( &
+!          this%feet_inside1, &
+!          this%primitive1, &
+!          n1, &
+!          this%spl_eta1)
+!        ! come back to real primitive by adding average
+!        if (this%feet1(1) > 0.5_f64*(xi_max)) then
+!          lperiod = -1.0_f64
+!        else
+!          lperiod = 0.0_f64
+!        end if
+!        !print *,'lperiod=',lperiod
+!        xi_new = this%feet1(1) +  lperiod*xi_max
+!        this%primitive1(1) = this%primitive1(1) + mean*xi_new
+!        !if ((xi_new > xi_max) .or. (xi_new <xi(1))) then
+!        !   print*, 1, xi_new, xi_out(1), primitive(1)
+!        !end if
+!        do i = 2,n1
+!          ! We need here to find the points where it has been modified by periodicity
+!          if (this%feet1(i) < this%feet1(i-1)) then
+!             lperiod = lperiod+1.0_f64
+!          end if
+!          !print *,'lperiod=',i,lperiod
+!          xi_new = this%feet1(i)+lperiod*xi_max
+!          this%primitive1(i) = this%primitive1(i)+mean*xi_new
+!          !if (i>98) then
+!          !   print*, 'iii', i, xi_new, xi_out(i),xi_max, primitive(i), primitive(i-1)
+!          !endif
+!        end do
+!        
 !        do i=1,num_dof1
 !          eta1 = 0.5_f64*(this%origin1(i)+this%origin1(i+1))
-!          this%input1(i) = &
-!            this%input1(i)/this%transformation%jacobian(eta1,eta2)
+!          !print *,this%feet1(i+1)-this%feet1(i), &
+!          !  this%xi1(i+1)-this%xi1(i), &
+!          !  this%primitive1(i+1)-this%primitive1(i), &
+!          !  this%transformation%jacobian(eta1,eta2)*delta_eta1
 !        enddo
 !        
-        print *,'#input1=',minval(this%input1(1:num_dof1)),maxval(this%input1(1:num_dof1))
+!        do i = 1,num_dof1 
+!          this%f(i,j) = (this%primitive1(i+1)-this%primitive1(i))/delta_eta1
+!          eta1 = 0.5_f64*(this%origin1(i)+this%origin1(i+1))
+!          !print *,i,this%f(i,j)/this%transformation%jacobian(eta1,eta2)
+!          !call sll_set_df_val( dist_func_2D, i1, i2, val )
+!          !if (val/df_jac_at_i(i1,i2)>1.) then
+!          !   print*, 'val', i1,i2, val, primitive1(i1) , primitive1(i1+1), df_jac_at_i(i1,i2), delta_eta1
+!          !end if
+!       end do
+!
+!       !
+!!     print *,'#output1=',minval(this%f(1:num_dof1,j)),maxval(this%f(1:num_dof1,j))
+!!       print *,'#mean=',mean
+!!       !print *,'#this%f',minval(this%f(1:num_dof1,j)),maxval(this%f(1:num_dof1,j))
+!!       !stop
+!
+!        
+!      enddo
 
-        
-        this%primitive1(1) = 0._f64
-        do i=2,num_dof1+1
-          this%primitive1(i) = this%primitive1(i-1) &
-            +delta_eta1*this%input1(i-1)
-        enddo
 
-!        do i=1,n1
-!          print *,this%primitive1(i)
-!        enddo
- 
- 
- 
-        
-        this%xi1(1) = 0._f64
-        do i=2,num_dof1+1
-          eta1 = 0.5_f64*(this%origin1(i)+this%origin1(i-1))
-          this%xi1(i) = this%xi1(i-1) &
-            +delta_eta1*this%transformation%jacobian(eta1,eta2)
-        enddo
-        !jacobian(i1) = df_jac_at_i( i1-1, i2 )
 
-        mean = this%primitive1(n1)/this%xi1(n1)
-        print *,'#mean init'
-        !modify primitive so that it becomes periodic
-        do i = 2,num_dof1+1
-          this%primitive1(i) = this%primitive1(i)-mean*this%xi1(i)
-        end do
-        xi_max = this%xi1(n1)
-
-!        print *,'#this%primitive1=',minval(this%primitive1(1:n1)),maxval(this%primitive1(1:n1))
-!        do i=1,n1
-!          print *,this%primitive1(i)
-!        enddo
-!        stop
-        call implicit_ode_nonuniform( &
-          2, &
-          dt, &
-          this%xi1, &
-          num_dof1, &
-          PERIODIC_ODE, &
-          this%feet_inside1, &
-          this%A1jac(1:n1),&
-          this%A1jac)
-        
-        do i=1,n1
-          this%feet1(i) = this%xi1(i)-this%A1jac(i)*dt
-        enddo  
-           
-        call compute_spline_nonunif( &
-          this%primitive1, &
-          this%spl_eta1, &
-          this%xi1)
-        ! interpolate primitive at origin of characteritics
-        call interpolate_array_value_nonunif( &
-          this%feet_inside1, &
-          this%primitive1, &
-          n1, &
-          this%spl_eta1)
-        ! come back to real primitive by adding average
-        if (this%feet1(1) > 0.5_f64*(xi_max)) then
-          lperiod = -1.0_f64
-        else
-          lperiod = 0.0_f64
-        end if
-        !print *,'lperiod=',lperiod
-        xi_new = this%feet1(1) +  lperiod*xi_max
-        this%primitive1(1) = this%primitive1(1) + mean*xi_new
-        !if ((xi_new > xi_max) .or. (xi_new <xi(1))) then
-        !   print*, 1, xi_new, xi_out(1), primitive(1)
-        !end if
-        do i = 2,n1
-          ! We need here to find the points where it has been modified by periodicity
-          if (this%feet1(i) < this%feet1(i-1)) then
-             lperiod = lperiod+1.0_f64
-          end if
-          !print *,'lperiod=',i,lperiod
-          xi_new = this%feet1(i)+lperiod*xi_max
-          this%primitive1(i) = this%primitive1(i)+mean*xi_new
-          !if (i>98) then
-          !   print*, 'iii', i, xi_new, xi_out(i),xi_max, primitive(i), primitive(i-1)
-          !endif
-        end do
-        
-        do i=1,num_dof1
-          eta1 = 0.5_f64*(this%origin1(i)+this%origin1(i+1))
-          !print *,this%feet1(i+1)-this%feet1(i), &
-          !  this%xi1(i+1)-this%xi1(i), &
-          !  this%primitive1(i+1)-this%primitive1(i), &
-          !  this%transformation%jacobian(eta1,eta2)*delta_eta1
-        enddo
-        
-        do i = 1,num_dof1 
-          this%f(i,j) = (this%primitive1(i+1)-this%primitive1(i))/delta_eta1
-          eta1 = 0.5_f64*(this%origin1(i)+this%origin1(i+1))
-          !print *,i,this%f(i,j)/this%transformation%jacobian(eta1,eta2)
-          !call sll_set_df_val( dist_func_2D, i1, i2, val )
-          !if (val/df_jac_at_i(i1,i2)>1.) then
-          !   print*, 'val', i1,i2, val, primitive1(i1) , primitive1(i1+1), df_jac_at_i(i1,i2), delta_eta1
-          !end if
-       end do
-
-       !
-!     print *,'#output1=',minval(this%f(1:num_dof1,j)),maxval(this%f(1:num_dof1,j))
-!       print *,'#mean=',mean
-!       !print *,'#this%f',minval(this%f(1:num_dof1,j)),maxval(this%f(1:num_dof1,j))
-!       !stop
-
-        
-      enddo
     else
     
         
