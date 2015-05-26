@@ -226,6 +226,9 @@ contains
           endif                      
           x2 = input(j)-0.5_f64*dt*(charac%A_interp%interpolate_value(x2_i)+A(j))
           iter = iter+1
+          !if(j==1)then
+          !  print *,'#x2=',x2
+          !endif
         end do
         if (iter==charac%maxiter .and. abs(x2_old-x2)>charac%tol) then
           print*,'#not enough iterations for compute_trapezoid_1d_charac',&
@@ -237,6 +240,8 @@ contains
         endif                      
         output(j) = x2  
     enddo
+    !print *,'input=',input(1),input(Npts)
+    !print *,'output=',output(1),output(Npts)
   end subroutine compute_trapezoid_1d_charac
 
 
