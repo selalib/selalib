@@ -147,6 +147,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/random_deviate_generators/gaussian.F90
     ${SLL_DIR}/random_deviate_generators/hammersley.F90
     ${SLL_DIR}/random_deviate_generators/moment_matching.F90
+    ${SLL_DIR}/random_deviate_generators/sobol/sll_sobol.F90
+    ${SLL_DIR}/random_deviate_generators/prob/sll_prob.F90
 )
 
 IF(F2008)
