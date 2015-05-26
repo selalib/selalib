@@ -14,6 +14,7 @@ SET( ADVECTION_SRC_FILES
        sll_advection_1d_non_uniform_cubic_splines.F90
        sll_advection_1d_BSL.F90
        sll_advection_1d_CSL.F90
+       sll_advection_1d_CSL_periodic.F90
        sll_advection_1d_PSM.F90
        sll_advection_1d_base.F90
        sll_advection_2d_BSL.F90
@@ -65,6 +66,15 @@ IF(BUILD_TESTING)
   TARGET_LINK_LIBRARIES(
     test_advection_1d_BSL
     sll_advection)
+
+  ADD_EXECUTABLE(
+    test_advection_1d_CSL_periodic
+    unit_test_advection_1d_CSL_periodic.F90)
+
+  TARGET_LINK_LIBRARIES(
+    test_advection_1d_CSL_periodic
+    sll_advection)
+
 
   ADD_EXECUTABLE(
     test_advection_1d_CSL

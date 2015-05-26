@@ -22,12 +22,13 @@ module sll_simulation_2d_guiding_center_curvilinear_module
   use sll_module_characteristics_2d_explicit_euler
   use sll_module_characteristics_2d_verlet
   use sll_module_advection_1d_BSL
-  use sll_module_advection_1d_CSL
-  use sll_module_advection_1d_PSM
+  use sll_module_advection_1d_CSL_periodic
+  !use sll_module_advection_1d_CSL
+  !use sll_module_advection_1d_PSM
 !  use sll_module_characteristics_1d_explicit_euler
   use sll_module_characteristics_1d_trapezoid
-  use sll_module_characteristics_1d_explicit_euler_conservative
-  use sll_module_characteristics_1d_trapezoid_conservative
+  !use sll_module_characteristics_1d_explicit_euler_conservative
+  !use sll_module_characteristics_1d_trapezoid_conservative
   use sll_reduction_module
   use sll_simulation_base
  
@@ -279,7 +280,8 @@ contains
 
     character(len=256)      :: str_num_run
     character(len=256)      :: filename_loc
-
+    logical :: feet_inside1 
+    logical :: feet_inside2
 
     !here we do all the initialization
     !in future, we will use namelist file
@@ -804,19 +806,11 @@ contains
         stop
     end select
      
-     select case(advect1d_x1_case)
+    select case(advect1d_x1_case)
       case ("SLL_BSL")
-        eta1_min_bis = eta1_min
-        eta1_max_bis = eta1_max
-        Nc_eta1_bis = Nc_eta1
-      case ("SLL_PSM")
-        eta1_min_bis = eta1_min
-        eta1_max_bis = eta1_max
-        Nc_eta1_bis = Nc_eta1
-      case ("SLL_CSL")
-        eta1_min_bis = eta1_min-0.5_f64*sim%mesh_2d%delta_eta1
-        eta1_max_bis = eta1_max-0.5_f64*sim%mesh_2d%delta_eta1
-        Nc_eta1_bis = Nc_eta1
+        feet_inside1 = .true.
+      case ("SLL_CSL_PERIODIC")
+        feet_inside1 = .false.
       case default
         print *,'#bad value of advect1d_x1_case'
         stop  
@@ -824,21 +818,15 @@ contains
 
     select case(advect1d_x2_case)
       case ("SLL_BSL")
-        eta2_min_bis = eta2_min
-        eta2_max_bis = eta2_max
-        Nc_eta2_bis = Nc_eta2
-      case ("SLL_PSM")
-        eta2_min_bis = eta2_min
-        eta2_max_bis = eta2_max
-        Nc_eta2_bis = Nc_eta2
-      case ("SLL_CSL")
-        eta2_min_bis = eta2_min-0.5_f64*sim%mesh_2d%delta_eta2
-        eta2_max_bis = eta2_max-0.5_f64*sim%mesh_2d%delta_eta2        
-        Nc_eta2_bis = Nc_eta2
+        feet_inside2 = .true.
+      case ("SLL_CSL_PERIODIC")
+        feet_inside2 = .false.
       case default
         print *,'#bad value of advect1d_x2_case'
         stop  
     end select
+
+
       
     select case (f_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
@@ -950,15 +938,15 @@ contains
     select case (f_interp1d_x1_case)
       case ("SLL_CUBIC_SPLINES")
         sim%f_interp1d_x1 => new_cubic_spline_interpolator_1d( &
-          Nc_eta1_bis+1, &
-          eta1_min_bis, &
-          eta1_max_bis, &
+          Nc_eta1+1, &
+          eta1_min, &
+          eta1_max, &
           sim%bc_interp2d_eta1)
       case ("SLL_HERMITE")
         sim%f_interp1d_x1 => new_hermite_interpolator_1d( &
-          Nc_eta1_bis+1, &
-          eta1_min_bis, &
-          eta1_max_bis, &
+          Nc_eta1+1, &
+          eta1_min, &
+          eta1_max, &
           hermite_degree1, &          
           SLL_HERMITE_1d_C0, &
           sim%bc_interp2d_eta1) 
@@ -973,15 +961,15 @@ contains
     select case (f_interp1d_x2_case)
       case ("SLL_CUBIC_SPLINES")
         sim%f_interp1d_x2 => new_cubic_spline_interpolator_1d( &
-          Nc_eta2_bis+1, &
-          eta2_min_bis, &
-          eta2_max_bis, &
+          Nc_eta2+1, &
+          eta2_min, &
+          eta2_max, &
           sim%bc_interp2d_eta2)
       case ("SLL_HERMITE")
         sim%f_interp1d_x2 => new_hermite_interpolator_1d( &
-          Nc_eta2_bis+1, &
-          eta2_min_bis, &
-          eta2_max_bis, &
+          Nc_eta2+1, &
+          eta2_min, &
+          eta2_max, &
           hermite_degree1, &          
           SLL_HERMITE_1d_C0, &
           sim%bc_interp2d_eta2) 
@@ -996,32 +984,20 @@ contains
     select case(charac1d_x1_case)
       case ("SLL_EULER")
         sim%charac1d_x1 => new_explicit_euler_1d_charac(&
-          Nc_eta1_bis+1, &
-          eta_min=eta1_min_bis, &
-          eta_max=eta1_max_bis, &
-          bc_type= sim%bc_charac2d_eta1)    
+          Nc_eta1+1, &
+          eta_min=eta1_min, &
+          eta_max=eta1_max, &
+          bc_type= sim%bc_charac2d_eta1, &
+          feet_inside = feet_inside1)    
       case ("SLL_TRAPEZOID")
         sim%charac1d_x1 => &
           new_trapezoid_1d_charac(&
-          Nc_eta1_bis+1, &
+          Nc_eta1+1, &
           sim%A1_interp1d_x1, &
           bc_type= sim%bc_charac2d_eta1, &
-          eta_min=eta1_min_bis, &
-          eta_max=eta1_max_bis)
-      case ("SLL_TRAPEZOID_CONSERVATIVE")
-        sim%charac1d_x1 => &
-          new_trapezoid_conservative_1d_charac(&
-          Nc_eta1_bis+1, &
-          sim%A1_interp1d_x1, &
-          bc_type=SLL_PERIODIC, &
-          eta_min=eta1_min_bis, &
-          eta_max=eta1_max_bis)
-      case ("SLL_EULER_CONSERVATIVE")
-        sim%charac1d_x1 => new_explicit_euler_conservative_1d_charac(&
-          Nc_eta1_bis+1, &
-          eta_min=eta1_min_bis, &
-          eta_max=eta1_max_bis, &
-          bc_type=sim%bc_charac2d_eta1)    
+          eta_min=eta1_min, &
+          eta_max=eta1_max, &
+          feet_inside = feet_inside1)
       case default
         print *,'#bad charac1d_x1_case',charac1d_x1_case
         print *,'#not implemented'
@@ -1032,32 +1008,20 @@ contains
     select case(charac1d_x2_case)
       case ("SLL_EULER")
         sim%charac1d_x2 => new_explicit_euler_1d_charac(&
-          Nc_eta2_bis+1, &
-          eta_min=eta2_min_bis, &
-          eta_max=eta2_max_bis, &
-          bc_type= sim%bc_charac2d_eta2)    
+          Nc_eta2+1, &
+          eta_min=eta2_min, &
+          eta_max=eta2_max, &
+          bc_type= sim%bc_charac2d_eta2, &
+          feet_inside = feet_inside2)    
       case ("SLL_TRAPEZOID")
         sim%charac1d_x2 => &
           new_trapezoid_1d_charac(&
-          Nc_eta2_bis+1, &
+          Nc_eta2+1, &
           sim%A2_interp1d_x2, &
           bc_type= sim%bc_charac2d_eta2, &
-          eta_min=eta2_min_bis, &
-          eta_max=eta2_max_bis)
-      case ("SLL_EULER_CONSERVATIVE")
-        sim%charac1d_x2 => new_explicit_euler_conservative_1d_charac(&
-          Nc_eta2_bis+1, &
-          eta_min=eta2_min_bis, &
-          eta_max=eta2_max_bis, &
-          bc_type= sim%bc_charac2d_eta2)    
-      case ("SLL_TRAPEZOID_CONSERVATIVE")
-        sim%charac1d_x2 => &
-          new_trapezoid_conservative_1d_charac(&
-          Nc_eta2_bis+1, &
-          sim%A2_interp1d_x2, &
-          bc_type=SLL_PERIODIC, &
-          eta_min=eta2_min_bis, &
-          eta_max=eta2_max_bis)
+          eta_min=eta2_min, &
+          eta_max=eta2_max, &
+          feet_inside = feet_inside2)
       case default
         print *,'#bad charac1d_x2_case',charac1d_x2_case
         print *,'#not implemented'
@@ -1070,19 +1034,13 @@ contains
         sim%advect_1d_x1 => new_BSL_1d_advector(&
           sim%f_interp1d_x1, &
           sim%charac1d_x1, &
-          Nc_eta1_bis+1, &
-          eta_min = eta1_min_bis, &
-          eta_max = eta1_max_bis)
-      case ("SLL_CSL")
-        sim%advect_1d_x1 => new_CSL_1d_advector(&
+          Nc_eta1+1, &
+          eta_min = eta1_min, &
+          eta_max = eta1_max)
+      case ("SLL_CSL_PERIODIC")
+        sim%advect_1d_x1 => new_CSL_periodic_1d_advector(&
           sim%f_interp1d_x1, &
           sim%charac1d_x1, &
-          Nc_eta1_bis+1, &
-          eta_min = eta1_min_bis, &
-          eta_max = eta1_max_bis, &
-          bc_type = sim%bc_charac2d_eta1)
-      case ("SLL_PSM")
-        sim%advect_1d_x1 => new_PSM_1d_advector(&
           Nc_eta1+1, &
           eta_min = eta1_min, &
           eta_max = eta1_max)
@@ -1098,19 +1056,13 @@ contains
         sim%advect_1d_x2 => new_BSL_1d_advector(&
           sim%f_interp1d_x2, &
           sim%charac1d_x2, &
-          Nc_eta2_bis+1, &
-          eta_min = eta2_min_bis, &
-          eta_max = eta2_max_bis)
-      case ("SLL_CSL")
-        sim%advect_1d_x2 => new_CSL_1d_advector(&
+          Nc_eta2+1, &
+          eta_min = eta2_min, &
+          eta_max = eta2_max)
+      case ("SLL_CSL_PERIODIC")
+        sim%advect_1d_x2 => new_CSL_periodic_1d_advector(&
           sim%f_interp1d_x2, &
           sim%charac1d_x2, &
-          Nc_eta2_bis+1, &
-          eta_min = eta2_min_bis, &
-          eta_max = eta2_max_bis, &
-          bc_type = sim%bc_charac2d_eta2)
-      case ("SLL_PSM")
-        sim%advect_1d_x2 => new_PSM_1d_advector(&
           Nc_eta2+1, &
           eta_min = eta2_min, &
           eta_max = eta2_max)
