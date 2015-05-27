@@ -177,9 +177,10 @@ contains
         adv%csl_mat_init(i) = adv%csl_mat(i)
       enddo
       
-      
-      
+      !inverse csl_mat
+      call csl_reverse(adv%csl_mat,Npts-1)
       call dfftf(Npts-1,adv%csl_mat,adv%fft_buf)
+      
       hermite_inversibility = abs(adv%csl_mat(1))
       !print *,0,adv%csl_mat(1)
       do i=1,(Npts-1)/2
@@ -711,8 +712,7 @@ contains
     
     output(1:N) = 0._f64
     output(1) = 0.5_f64
-    output(N) = 0.5_f64 !because we have to take a_{-i}
-    !instead of a_i, if we want to perform further fft of a
+    output(2) = 0.5_f64
 
     f = 0._f64
     call interp%compute_interpolants(f)    
@@ -796,14 +796,14 @@ contains
         g, &
         N)
       err = max(err,maxval(abs(h-g)))
-      print *,'#i='
-      do j=1,N
-        print *,j,f(j),g(j),h(j)
-      enddo    
+      !print *,'#i='
+      !do j=1,N
+      !  print *,j,f(j),g(j),h(j)
+      !enddo    
     enddo
     
     print *,'#err=',err
-    stop
+    !stop
   
   end subroutine check_solve_csl_mat  
   
@@ -816,17 +816,44 @@ contains
     sll_int32 :: j
     sll_int32 :: j2
     sll_int32 :: ind
-    
+    !a1 a2 a3 ... aN
+    !aN a1 a2 ... a{N-1}
+    !output(1) = sum(a(j)*input(j),j=1..N)
+    !output(2) = sum(a(j-1)*input(j),j=1..N)
     do i=1,N
       output(i) = 0._f64
       do j=1,N
-        ind = j!1+modulo(i+j-2,N)
-        j2 = 1+modulo(N-i+1,N) !1+modulo(N-j,N)
-        output(i) = output(i)+a(j2)*input(ind)
+        ind = 1+modulo(j-i+N,N)
+        !j2 = 1+modulo(N-ind,N)
+        output(i) = output(i)+a(ind)*input(j)
       enddo
     enddo
     
   end subroutine circ_mat_mul_direct
-  
+
+  subroutine csl_reverse(a,N)
+    sll_real64, dimension(:), intent(inout) :: a
+    sll_int32, intent(in) :: N
+    sll_real64, dimension(:), allocatable :: a_copy
+    sll_int32 :: ierr
+    sll_int32 :: ind
+    sll_int32 :: i
+    
+    if(size(a)<N)then
+      print *,'#size(a),N=',size(a),N
+      SLL_ERROR("csl_reverse",'bad size of a')
+    endif
+    
+    SLL_ALLOCATE(a_copy(N),ierr)
+    
+    a_copy(1:N) = a(1:N)
+    
+    do i=1,N
+      ind = 1+modulo(N-i+1,N)
+      a(i) = a_copy(ind)
+    enddo
+    
+    
+  end subroutine csl_reverse   
 
 end module sll_module_advection_1d_CSL_periodic
