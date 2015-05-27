@@ -2,7 +2,8 @@ ADD_LIBRARY( sll_general_coordinate_elliptic_solvers STATIC
              sll_lobatto_poisson.F90 
              map_function_module.F90
              lobalap.F90
-             sll_gces.F90
+             sll_gces_dirichlet.F90
+             sll_gces_full_periodic.F90
              sll_general_coordinate_elliptic_solver.F90 )
 
 TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers
@@ -34,7 +35,6 @@ IF(BUILD_TESTING)
   SET_TESTS_PROPERTIES( general_coordinate_elliptic_solver 
                         PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 2000 )
 
-
   ADD_EXECUTABLE( test_lobalap_analytic unit_test_lobalap_analytic.F90 )
   TARGET_LINK_LIBRARIES( test_lobalap_analytic sll_general_coordinate_elliptic_solvers )
 
@@ -43,5 +43,12 @@ IF(BUILD_TESTING)
 
   ADD_EXECUTABLE( test_gces_dirichlet unit_test_dirichlet.F90 )
   TARGET_LINK_LIBRARIES( test_gces_dirichlet sll_general_coordinate_elliptic_solvers )
+  ADD_TEST( NAME gces_dirichlet COMMAND test_gces_dirichlet )
+  SET_TESTS_PROPERTIES( gces_dirichlet PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100 )
+
+  ADD_EXECUTABLE( test_gces_full_periodic unit_test_full_periodic.F90 )
+  TARGET_LINK_LIBRARIES( test_gces_full_periodic sll_general_coordinate_elliptic_solvers )
+  ADD_TEST( NAME gces_full_periodic COMMAND test_gces_full_periodic )
+  SET_TESTS_PROPERTIES( gces_full_periodic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100 )
 
 ENDIF(BUILD_TESTING)
