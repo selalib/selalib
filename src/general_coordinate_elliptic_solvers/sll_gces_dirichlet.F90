@@ -30,7 +30,7 @@
 !> @brief Elliptic solver on 2d curvilinear mesh
 !> @details This solver works with analytical 
 !> and discrete coordinate transformations.
-module sll_module_gces
+module sll_module_gces_dirichlet
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -41,12 +41,13 @@ use sll_module_scalar_field_2d_base, only: sll_scalar_field_2d_base
 use sll_module_scalar_field_2d, only: sll_scalar_field_2d_analytic,  &
                                       sll_scalar_field_2d_discrete
 use sll_module_interpolators_2d_base, only: sll_interpolator_2d_base
+use sll_module_arbitrary_degree_spline_interpolator_1d, only:        &
+  sll_arbitrary_degree_spline_interpolator_1d,                       &
+  new_arbitrary_degree_1d_interpolator
 use sll_module_arbitrary_degree_spline_interpolator_2d, only:        &
   sll_arbitrary_degree_spline_interpolator_2d
 use sll_module_arbitrary_degree_spline_interpolator_1d, only:        &
   interv, deboor_type, bsplvd
-use gauss_legendre_integration
-use gauss_lobatto_integration
 use sll_sparse_matrix_module, only : sll_csr_matrix,                 &
                                      new_csr_matrix,                 &
                                      sll_factorize_csr_matrix,       &
@@ -54,6 +55,8 @@ use sll_sparse_matrix_module, only : sll_csr_matrix,                 &
                                      sll_mult_csr_matrix_vector,     &
                                      sll_solve_csr_matrix,           &
                                      sll_delete
+use gauss_legendre_integration
+use gauss_lobatto_integration
 
 #ifdef _OPENMP
 use omp_lib
@@ -70,15 +73,15 @@ private
 !> splines in array global_indices depends on the boundary conditions.
 !> local_indices includes the changes resulting from the boundary conditions.
 !> local_to_lobal_indices(i,j) = global_indices(local_indices(i,j))
-type, public :: sll_gces
+type, public :: sll_gces_dirichlet
 
   private
   sll_int32,  public :: n1
   sll_int32,  public :: n2
   sll_real64, public :: delta_eta1
   sll_real64, public :: delta_eta2
-  sll_real64, public :: eta1_min
-  sll_real64, public :: eta2_min   
+  sll_real64, public :: eta1_min, eta1_max
+  sll_real64, public :: eta2_min, eta2_max
 
   sll_real64, dimension(:),   pointer :: t1
   sll_real64, dimension(:),   pointer :: t2
@@ -88,22 +91,17 @@ type, public :: sll_gces
   sll_real64, dimension(:,:), pointer :: gauss2
   sll_int32  :: k1
   sll_int32  :: k2
-  sll_real64 :: epsi
-  sll_real64 :: intjac
 
-  sll_int32, dimension(:,:), pointer :: local_to_global_indices
-  sll_int32, dimension(:,:), pointer :: local_to_global_indices_source
-  sll_int32, dimension(:,:), pointer :: local_to_global_indices_source_bis
+  sll_int32, dimension(:,:), pointer :: local_to_global_indices_mat
+  sll_int32, dimension(:,:), pointer :: local_to_global_indices_col
+  sll_int32, dimension(:,:), pointer :: local_to_global_indices_row
 
   !!! contains the values of all splines in all gauss points
   sll_real64, dimension(:,:,:,:), pointer :: v_splines1
   sll_real64, dimension(:,:,:,:), pointer :: v_splines2
 
   sll_real64, dimension(:,:,:,:), pointer :: val_jac
-  sll_int32 , dimension(:),       pointer :: left1
-  sll_int32 , dimension(:),       pointer :: left2
   sll_real64, dimension(:),       pointer :: rho_vec
-  sll_real64, dimension(:),       pointer :: tmp_rho_vec
   sll_real64, dimension(:),       pointer :: phi_vec
   sll_real64, dimension(:),       pointer :: masse
   sll_real64, dimension(:),       pointer :: stiff
@@ -111,35 +109,32 @@ type, public :: sll_gces
   type(deboor_type)                       :: db
 
   type(sll_csr_matrix),           pointer :: csr_mat
-  type(sll_csr_matrix),           pointer :: csr_mat_with_constraint
-  type(sll_csr_matrix),           pointer :: csr_mat_source
+  type(sll_csr_matrix),           pointer :: csr_mat_src
 
-end type sll_gces
+end type sll_gces_dirichlet
 
 sll_int32, parameter, public :: ES_GAUSS_LEGENDRE = 0
 sll_int32, parameter, public :: ES_GAUSS_LOBATTO = 1
   
 interface sll_delete
-  module procedure delete_gces
+  module procedure delete_gces_dirichlet
 end interface sll_delete
 
 interface sll_create
-  module procedure initialize_gces
+  module procedure initialize_gces_dirichlet
 end interface sll_create
 
 interface sll_solve
-  module procedure solve_gces
+  module procedure solve_gces_dirichlet
 end interface sll_solve
 
-public sll_delete,       &
-       sll_create,       &
-       sll_solve,        &
-       new_gces,         &
+public sll_delete,         &
+       sll_create,         &
+       sll_solve,          &
+       new_gces_dirichlet, &
        factorize_mat_es
 
 contains 
-
-! *******************************************************************
 
 !> @brief Initialization for elliptic solver.
 !> @details To have the function phi such that 
@@ -157,43 +152,41 @@ contains
 !> @param[in]  k2 the degre of B-spline in the direction eta2
 !> @param[in]  n1 the number of cells in the direction eta1
 !> @param[in]  n2 the number of cells in the direction eta2
-!> @param[in]  quadrature_type1 the type of quadrature in the direction eta1
-!> @param[in]  quadrature_type2 the type of quadrature in the direction eta2
+!> @param[in]  quadrature_type1 integration quadrature in the direction eta1
+!> @param[in]  quadrature_type2 integration quadrature in the direction eta2
 !> @param[in]  eta1_min the minimun in the direction eta1
 !> @param[in]  eta1_max the maximun in the direction eta1
 !> @param[in]  eta2_min the minimun in the direction eta2
 !> @param[in]  eta2_max the maximun in the direction eta2
 !> @param[out] the type general_coordinate_elliptic_solver
-subroutine initialize_gces( es,                  &
-                            k1,                  &
-                            k2,                  &
-                            num_cells1,          &
-                            num_cells2,          &
-                            quadrature_type1,    &
-                            quadrature_type2,    &
-                            eta1_min,            &
-                            eta1_max,            &
-                            eta2_min,            &
-                            eta2_max)
+subroutine initialize_gces_dirichlet( es,                  &
+&                                     k1,                  &
+&                                     k2,                  &
+&                                     num_cells1,          &
+&                                     num_cells2,          &
+&                                     quadrature_type1,    &
+&                                     quadrature_type2,    &
+&                                     eta1_min,            &
+&                                     eta1_max,            &
+&                                     eta2_min,            &
+&                                     eta2_max)
     
-type(sll_gces), intent(out) :: es
+type(sll_gces_dirichlet), intent(out) :: es
 
-sll_int32,  intent(in)  :: k1
-sll_int32,  intent(in)  :: k2
-sll_int32,  intent(in)  :: num_cells1
-sll_int32,  intent(in)  :: num_cells2
-sll_int32,  intent(in)  :: quadrature_type1
-sll_int32,  intent(in)  :: quadrature_type2
-sll_real64, intent(in)  :: eta1_min
-sll_real64, intent(in)  :: eta1_max
-sll_real64, intent(in)  :: eta2_min
-sll_real64, intent(in)  :: eta2_max
+sll_int32,  intent(in) :: k1
+sll_int32,  intent(in) :: k2
+sll_int32,  intent(in) :: num_cells1
+sll_int32,  intent(in) :: num_cells2
+sll_int32,  intent(in) :: quadrature_type1
+sll_int32,  intent(in) :: quadrature_type2
+sll_real64, intent(in) :: eta1_min
+sll_real64, intent(in) :: eta1_max
+sll_real64, intent(in) :: eta2_min
+sll_real64, intent(in) :: eta2_max
 
 sll_int32 :: t1_size
 sll_int32 :: t2_size
-sll_int32 :: vec_sz ! for rho_vec and phi_vec allocations
 sll_int32 :: ierr
-sll_int32 :: solution_size
 sll_int32 :: g1
 sll_int32 :: g2
 sll_int32 :: n1
@@ -203,28 +196,32 @@ sll_real64, allocatable :: work1(:,:)
 sll_real64, allocatable :: work2(:,:)
 sll_real64, allocatable :: dbs1(:,:)
 sll_real64, allocatable :: dbs2(:,:)
-sll_real64 :: x1, x2
+sll_int32,  allocatable :: left1(:)
+sll_int32,  allocatable :: left2(:)
+sll_int32,  allocatable :: global_indices(:)
+sll_int32,  allocatable :: local_indices(:,:)
 
 sll_int32  :: i, j, ii, jj, ispl1, ispl2
-sll_real64 :: eta1, eta2, gspl1, gspl2
 sll_int32  :: left_rho
 sll_int32  :: cell
 sll_int32  :: a, b, c, d
-sll_int32, dimension(:),   pointer :: global_indices 
-sll_int32, dimension(:,:), pointer :: local_indices
+sll_int32  :: i1, i2, i4, kk, ll, icell, b1, b2
+
+sll_real64 :: x1, x2
+sll_real64 :: eta1, eta2, gspl1, gspl2
 
 n1 = num_cells1
 n2 = num_cells2
 
-SLL_ALLOCATE(es%local_to_global_indices(1:(k1+1)*(k2+1),1:(n1*n2)),ierr)
-SLL_ALLOCATE(es%local_to_global_indices_source(1:(k1+1)*(k2+1),1:(n1*n2)),ierr)
-SLL_ALLOCATE(es%local_to_global_indices_source_bis(1:(k1+1)*(k2+1),1:(n1*n2)),ierr)
+SLL_ALLOCATE(es%local_to_global_indices_mat(1:(k1+1)*(k2+1),1:(n1*n2)),ierr)
+SLL_ALLOCATE(es%local_to_global_indices_col(1:(k1+1)*(k2+1),1:(n1*n2)),ierr)
+SLL_ALLOCATE(es%local_to_global_indices_row(1:(k1+1)*(k2+1),1:(n1*n2)),ierr)
 
 SLL_ALLOCATE(global_indices((n1+k1)*(n2+k2)),ierr)
 SLL_ALLOCATE(local_indices(1:(k1+1)*(k2+1),1:(n1*n2)),ierr)
-global_indices             = 0
-local_indices              = 0
-es%local_to_global_indices = 0
+global_indices                 = 0
+local_indices                  = 0
+es%local_to_global_indices_mat = 0
 
 c = 0
 do j = 1, n2    
@@ -235,24 +232,22 @@ do i = 1, n1
   do ii = 0, k1
     b    =  b+1
     local_indices(b, c) = c + (j-1)*k1 + jj*(n1+k1) + ii 
-     print"(5i4)", i, j, c, b, local_indices(b, c)
   end do
   end do
 end do
 end do
 
 d = 0
-do j = 2, n2+k2-1
-  do i = 2, n1+k1-1
-    a = i + (n1+k1)*(j-1)
+do j = 1, n2+k2
+  do i = 1, n1+k1
     d = d + 1
-    global_indices(a) = d
+    global_indices(d) = d
   end do
 end do
 
 do c = 1, n1*n2
   do b = 1, (k1+1)*(k2+1)
-    es%local_to_global_indices(b,c) = global_indices(local_indices(b,c))
+    es%local_to_global_indices_mat(b,c) = global_indices(local_indices(b,c))
   end do
 end do
 
@@ -264,6 +259,8 @@ es%delta_eta1 = (eta1_max-eta1_min)/n1
 es%delta_eta2 = (eta2_max-eta2_min)/n2
 es%eta1_min   = eta1_min
 es%eta2_min   = eta2_min
+es%eta1_max   = eta1_max
+es%eta2_max   = eta2_max
 
 ! Allocate and fill the gauss points/weights information.
 select case(quadrature_type1)
@@ -274,7 +271,7 @@ case (ES_GAUSS_LOBATTO)
   SLL_ALLOCATE(es%gauss1(2,k1+2),ierr)
   es%gauss1 = gauss_lobatto_points_and_weights(k1+2)
 case default
-  SLL_ERROR('initialize_general_elliptic_solver','unknown type of gauss points in the direction 1')
+  SLL_ERROR('initialize_general_elliptic_solver','unknown type of gauss points')
 end select
    
 select case(quadrature_type2)
@@ -285,42 +282,33 @@ case (ES_GAUSS_LOBATTO)
   SLL_ALLOCATE(es%gauss2(2,k2+2),ierr)
   es%gauss2(:,:) = gauss_lobatto_points_and_weights(k2+2)
 case default
-  SLL_ERROR('initialize_general_elliptic_solver','unknown type of gauss points in the direction 2')
+  SLL_ERROR('initialize_general_elliptic_solver','unknown type of gauss points')
 end select
 
 !PN : Gauss points positions and weights are computed in [-1:1] interval
-!PN : We need to rescale them.
+!PN : We need to rescale them to [0:1].
 es%gauss1(1,:) = 0.5_f64*es%delta_eta1*(es%gauss1(1,:)+1.0_f64)
 es%gauss1(2,:) = 0.5_f64*es%delta_eta1*(es%gauss1(2,:))
 es%gauss2(1,:) = 0.5_f64*es%delta_eta2*(es%gauss2(1,:)+1.0_f64)
 es%gauss2(2,:) = 0.5_f64*es%delta_eta2*(es%gauss2(2,:))
 
-t1_size = 2*k1 + n1+1
-t2_size = 2*k2 + n2+1
-vec_sz  = (n1+k1)*(n2+k2)
-
+t1_size = 2*k1+n1+1
+t2_size = 2*k2+n2+1
 
 SLL_ALLOCATE(es%t1(t1_size),ierr)
 SLL_ALLOCATE(es%t2(t2_size),ierr)
 SLL_ALLOCATE(es%t1_rho(n1+k1+2),ierr)
 SLL_ALLOCATE(es%t2_rho(n2+k2+2),ierr)
-SLL_ALLOCATE(es%rho_vec(vec_sz),ierr)
-SLL_ALLOCATE(es%masse(vec_sz),ierr)
-SLL_ALLOCATE(es%stiff(vec_sz),ierr)
+SLL_ALLOCATE(es%rho_vec((n1+k1)*(n2+k2)),ierr)
+SLL_ALLOCATE(es%masse((n1+k1)*(n2+k2)),ierr)
+SLL_ALLOCATE(es%stiff((n1+k1)*(n2+k2)),ierr)
+SLL_ALLOCATE(es%phi_vec((n1+k1)*(n2+k2)),ierr) 
 
-!AB : We must add plus 1 for the dimension of the 
-!AB : solution in the case periodic periodic to 
-!AB : include the periodicity in the last point.  
-
-solution_size = (n1+k1-2)*(n2+k2-2)
-
-SLL_ALLOCATE(es%tmp_rho_vec(solution_size),ierr)
-SLL_ALLOCATE(es%phi_vec(solution_size),ierr) 
 es%rho_vec = 0.0_f64
 es%masse   = 0.0_f64
 es%stiff   = 0.0_f64
 
-do i = 1, k1 + 1
+do i = 1, k1+1
   es%t1(i) = eta1_min
 enddo
 do i = k1+2, n1+1+k1
@@ -330,7 +318,7 @@ do i = n1+k1+1, n1+1+2*k1
   es%t1(i) = eta1_max
 enddo
 
-do j = 1, k2 + 1
+do j = 1, k2+1
   es%t2(j) = eta2_min
 enddo
 do j = k2+2, n2+1+k2
@@ -340,15 +328,15 @@ do j = n2+k2+1, n2+1+2*k2
   es%t2(j) = eta2_max
 enddo
   
-es%csr_mat => new_csr_matrix( solution_size,              &
-&                             solution_size,              &
-&                             n1*n2,                      &
-&                             es%local_to_global_indices, &
-&                             (k1+1)*(k2+1),              &
-&                             es%local_to_global_indices, &
+es%csr_mat => new_csr_matrix( (n1+k1)*(n2+k2),                &
+&                             (n1+k1)*(n2+k2),                &
+&                             (n1*n2),                        &
+&                             es%local_to_global_indices_mat, &
+&                             (k1+1)*(k2+1),                  &
+&                             es%local_to_global_indices_mat, &
 &                             (k1+1)*(k2+1))
 
-es%t1_rho(1:k1+1) = eta1_min
+es%t1_rho(1:k1+1)         = eta1_min
 es%t1_rho(n1+2:n1+1+k1+1) = eta1_max
  
 if ( mod(k1+1,2) == 0 ) then
@@ -357,8 +345,8 @@ if ( mod(k1+1,2) == 0 ) then
   end do
 else
   do i = k1+1+1, n1+1
-    es%t1_rho(i) = 0.5*(eta1_min+(i  -(k1)/2-1)*es%delta_eta1 + &
-                            eta1_min+(i-1-(k1)/2-1)*es%delta_eta1)
+    es%t1_rho(i) = 0.5*(eta1_min+(i  -k1/2-1)*es%delta_eta1 + &
+                        eta1_min+(i-1-k1/2-1)*es%delta_eta1)
   end do
 end if
 
@@ -371,8 +359,8 @@ if (mod(k2+1,2) == 0 ) then
   end do
 else
   do i = k2+1+1, n2+1
-    es%t2_rho(i) = 0.5*(eta2_min+(i  -(k2)/2-1)*es%delta_eta2 + &
-                            eta2_min+(i-1-(k2)/2-1)*es%delta_eta2 )
+    es%t2_rho(i) = 0.5*(eta2_min+(i  -k2/2-1)*es%delta_eta2 + &
+                        eta2_min+(i-1-k2/2-1)*es%delta_eta2 )
   end do
 end if
 
@@ -385,8 +373,8 @@ SLL_ALLOCATE(es%v_splines2(3,k2+1,k2+2,n2),ierr)
 es%v_splines1 = 0.0_f64
 es%v_splines2 = 0.0_f64
 
-SLL_ALLOCATE(es%left1(n1),ierr)
-SLL_ALLOCATE(es%left2(n2),ierr)
+SLL_ALLOCATE(left1(n1),ierr)
+SLL_ALLOCATE(left2(n2),ierr)
 
 g1 = size(es%gauss1,2)
 g2 = size(es%gauss2,2)
@@ -396,82 +384,6 @@ allocate(work1(k1+1,k1+1))
 allocate(work2(k2+1,k2+1))
 allocate(dbs1(k1+1,2))
 allocate(dbs2(k2+1,2))
-
-!PN: Compute values of basis functions on the mesh
-!PN: We use two functions from Carl DeBoor
-!PN:
-!PN: interv computes  left = max(i: xt(i) <= x < xt(lxt)).
-!PN: 
-!PN:   xt  assumed to be nondecreasing
-!PN:   x   the point whose location with respect to the 
-!PN        sequence xt is to be determined.
-!PN: 
-!PN: output
-!PN:
-!PN:  left, mflag.....both integers, whose value is
-!PN: 
-!PN:  1     -1      if             x <  xt(1)
-!PN:  i      0      if   xt(i)  <= x < xt(i+1)
-!PN:  i      0      if   xt(i)  <  x .eq. xt(i+1) .eq. xt(lxt)
-!PN:  i      1      if   xt(i)  <         xt(i+1) .eq. xt(lxt) .lt. x
-!PN: 
-!PN:  In particular,  mflag = 0  is the 'usual' case.  mflag .ne. 0
-!PN:  indicates that  x  lies outside the CLOSED interval
-!PN:  xt(1) .le. y .le. xt(lxt) . The asymmetric treatment of the
-!PN:  intervals is due to the decision to make all pp functions cont-
-!PN:  inuous from the right, but, by returning  mflag = 0  even if
-!PN:  x = xt(lxt), there is the option of having the computed pp function
-!PN:  continuous from the left at  xt(lxt) .
-!PN: 
-!PN:  The program is designed to be efficient in the common situation that
-!PN:  it is called repeatedly, with  x  taken from an increasing or decrea-
-!PN:  sing sequence. The first guess for left is therefore taken to be the val-
-!PN:  ue returned at the previous call and stored in the local variable  ilo . 
-!PN   A first check ascertains that  ilo .lt. lxt (this is nec-
-!PN:  essary since the present call may have nothing to do with the previ-
-!PN:  ous call). Then, if  xt(ilo) .le. x .lt. xt(ilo+1), we set  left =
-!PN:  ilo  and are done after just three comparisons.
-!PN:     Otherwise, we repeatedly double the difference  istep = ihi - ilo
-!PN:  while also moving  ilo  and  ihi  in the direction of  x , until
-!PN:                      xt(ilo) .le. x .lt. xt(ihi) ,
-!PN:  after which we use bisection to get, in addition, ilo+1 = ihi .
-!PN:  left = ilo  is then returned.
-!PN: 
-!PN:  splvb calculates value and deriv.s of all b-splines which do not vanish at x
-!PN: 
-!PN:  nput
-!PN:  t     the knot array, of length left+k (at least)
-!PN:  k     the order of the b-splines to be evaluated
-!PN:  x     the point at which these values are sought
-!PN:  left  an integer indicating the left endpoint of the interval of
-!PN:        interest. the  k  b-splines whose support contains the interval
-!PN:               (t(left), t(left+1))
-!PN:        are to be considered.
-!PN:  assumption  ---  it is assumed that
-!PN:               t(left) .lt. t(left+1)
-!PN:        division by zero will result otherwise (in  bsplvb ).
-!PN:        also, the output is as advertised only if
-!PN:               t(left) .le. x .le. t(left+1) .
-!PN:  nderiv   an integer indicating that values of b-splines and their
-!PN:        derivatives up to but not including the  nderiv-th  are asked
-!PN:        for. ( nderiv  is replaced internally by the integer  mhigh
-!PN:        in  (1,k)  closest to it.)
-!PN: 
-!PN:  work area 
-!PN:       an array of order (k,k), to contain b-coeff.s of the derivat-
-!PN:       ives of a certain order of the  k  b-splines of interest.
-!PN: 
-!PN:  output
-!PN:  dbiatx an array of order (k,nderiv). its entry  (i,m)  contains
-!PN:        value of  (m-1)st  derivative of  (left-k+i)-th  b-spline of
-!PN:        order  k  for knot sequence  t , i=1,...,k, m=1,...,nderiv.
-!PN: 
-!PN:  values at  x  of all the relevant b-splines of order k,k-1,...,
-!PN:  k+1-nderiv  are generated via  bsplvb  and stored temporarily in
-!PN:  dbiatx .  then, the b-coeffs of the required derivatives of the b-
-!PN:  splines of interest are generated by differencing, each from the pre-
-!PN:  ceding one of lower order, and combined with the values of b-splines
-!PN:  of corresponding order in  dbiatx  to produce the desired values .
 
 do i = 1, n1
   eta1  = eta1_min + (i-1)*es%delta_eta1
@@ -486,7 +398,7 @@ do i = 1, n1
     call bsplvd(es%db,es%t1_rho,k1+1,x1,left_rho,work1,dbs1,1)
     es%v_splines1(3,:,ii,i) = dbs1(:,1)
   end do
-  es%left1(i) = left_rho
+  left1(i) = left_rho
 end do
 
 do j = 1, n2
@@ -502,7 +414,7 @@ do j = 1, n2
     call bsplvd(es%db,es%t2_rho,k2+1,x2,left_rho,work2,dbs2,1)
     es%v_splines2(3,:,jj,j) = dbs2(:,1)
   end do
-  es%left2(j) = left_rho
+  left2(j) = left_rho
 end do
 
 deallocate(work1)
@@ -510,7 +422,33 @@ deallocate(work2)
 deallocate(dbs1)
 deallocate(dbs2)
 
-open(10, file="gces.mtv")
+icell = 0
+do j = 1, n2    
+do i = 1, n1  
+  icell = icell+1
+  b1 = 0
+  do jj = 0, k2
+  do ii = 0, k1
+    i1 = left1(i) - k1 + ii
+    i2 = left2(j) - k2 + jj
+    b1 = b1+1
+    es%local_to_global_indices_col(b1,icell)= i1 + (i2-1)*(n1+1)
+    b2 = 0
+    do ll = 0,k2
+      i4 = j + ll
+      do kk = 0,k1
+        b2 = b2+1
+        es%local_to_global_indices_row(b2,icell)= i+kk+(i4-1)*(n1+k1)
+      end do
+    end do
+  end do
+  end do
+end do
+end do
+DEALLOCATE(left1)
+DEALLOCATE(left2)
+
+open(10, file="gces_dirichlet.mtv")
 write(10,*)"$DATA=CURVE3D"
 write(10,*)"%xmin=", -1.1, " xmax = ", 1.1
 write(10,*)"%ymin=", -1.1, " ymax = ", 1.1
@@ -559,16 +497,10 @@ end do
 write(10,*)"$END"
 close(10)
 
-c = 0
-do j=1,n2
-  do i=1,n1
-  end do
-end do
+DEALLOCATE(global_indices)
+DEALLOCATE(local_indices)
 
-SLL_DEALLOCATE(global_indices,ierr)
-SLL_DEALLOCATE(local_indices,ierr)
-
-end subroutine initialize_gces
+end subroutine initialize_gces_dirichlet
   
 !> @brief Initialization for elliptic solver.
 !> @details To have the function phi such that 
@@ -593,18 +525,18 @@ end subroutine initialize_gces
 !> @param[in] eta2_max the maximun in the direction eta2
 !> @return    the type general_coordinate_elliptic_solver such that a pointer
 
-function new_gces( k1,               &
-                   k2,               &
-                   n1,               &
-                   n2,               &
-                   quadrature_type1, &
-                   quadrature_type2, &
-                   eta1_min,         &
-                   eta1_max,         &
-                   eta2_min,         &
-                   eta2_max ) result(es)
+function new_gces_dirichlet( k1,                  &
+&                            k2,                  &
+&                            n1,                  &
+&                            n2,                  &
+&                            quadrature_type1,    &
+&                            quadrature_type2,    &
+&                            eta1_min,            &
+&                            eta1_max,            &
+&                            eta2_min,            &
+&                            eta2_max ) result(es)
 
-type(sll_gces), pointer :: es
+type(sll_gces_dirichlet), pointer :: es
 
 sll_int32,  intent(in) :: k1
 sll_int32,  intent(in) :: k2
@@ -633,41 +565,8 @@ call sll_create( es,               &
 &                eta2_min,         &
 &                eta2_max )
    
-end function new_gces
+end function new_gces_dirichlet
 
-!> @brief Deallocate the type general_coordinate_elliptic_solver
-!> @details
-!> The parameters are
-!> @param[in] es the type general_coordinate_elliptic_solver
-  
-subroutine delete_gces( es )
-type(sll_gces) :: es
-sll_int32 :: ierr
-
-SLL_DEALLOCATE(es%t1,ierr)
-SLL_DEALLOCATE(es%t2,ierr)
-SLL_DEALLOCATE(es%gauss1,ierr)
-SLL_DEALLOCATE(es%gauss2,ierr)
-SLL_DEALLOCATE(es%local_to_global_indices,ierr)
-SLL_DEALLOCATE(es%local_to_global_indices_source,ierr)
-SLL_DEALLOCATE(es%local_to_global_indices_source_bis,ierr)
-SLL_DEALLOCATE(es%rho_vec,ierr)
-SLL_DEALLOCATE(es%tmp_rho_vec,ierr)
-SLL_DEALLOCATE(es%phi_vec,ierr)
-SLL_DEALLOCATE(es%masse,ierr)
-SLL_DEALLOCATE(es%stiff,ierr)
-SLL_DEALLOCATE(es%t1_rho,ierr)
-SLL_DEALLOCATE(es%t2_rho,ierr)
-SLL_DEALLOCATE(es%v_splines1,ierr)
-SLL_DEALLOCATE(es%v_splines2,ierr)
-SLL_DEALLOCATE(es%left1,ierr)
-SLL_DEALLOCATE(es%left2,ierr)
-
-call sll_delete(es%csr_mat)
-call sll_delete(es%csr_mat_with_constraint)
-call sll_delete(es%csr_mat_source)
-
-end subroutine delete_gces
 
 !> @brief Assemble the matrix for elliptic solver.
 !> @details To have the function phi such that 
@@ -703,17 +602,17 @@ subroutine factorize_mat_es( es,            &
 &                            b2_field_vect, &
 &                            c_field)
 
-type(sll_gces),intent(inout) :: es
+type(sll_gces_dirichlet),intent(inout)    :: es
 
-class(sll_scalar_field_2d_base), pointer :: a11_field_mat
-class(sll_scalar_field_2d_base), pointer :: a12_field_mat
-class(sll_scalar_field_2d_base), pointer :: a21_field_mat
-class(sll_scalar_field_2d_base), pointer :: a22_field_mat
-class(sll_scalar_field_2d_base), pointer :: b1_field_vect
-class(sll_scalar_field_2d_base), pointer :: b2_field_vect
-class(sll_scalar_field_2d_base), pointer :: c_field
+class(sll_scalar_field_2d_base), pointer  :: a11_field_mat
+class(sll_scalar_field_2d_base), pointer  :: a12_field_mat
+class(sll_scalar_field_2d_base), pointer  :: a21_field_mat
+class(sll_scalar_field_2d_base), pointer  :: a22_field_mat
+class(sll_scalar_field_2d_base), pointer  :: b1_field_vect
+class(sll_scalar_field_2d_base), pointer  :: b2_field_vect
+class(sll_scalar_field_2d_base), pointer  :: c_field
 
-sll_real64, dimension(:,:),   allocatable :: M_c
+sll_real64, dimension(:,:),   allocatable :: M_cc
 sll_real64, dimension(:,:),   allocatable :: K_11
 sll_real64, dimension(:,:),   allocatable :: K_12
 sll_real64, dimension(:,:),   allocatable :: K_21
@@ -723,23 +622,32 @@ sll_real64, dimension(:,:),   allocatable :: S_b1
 sll_real64, dimension(:,:),   allocatable :: S_b2  
 sll_real64, dimension(:),     allocatable :: mass
 sll_real64, dimension(:),     allocatable :: stif
-sll_real64, dimension(:,:,:), allocatable :: source
+sll_real64, dimension(:,:,:), allocatable :: src
 
 sll_int32  :: ierr
 sll_int32  :: i
 sll_int32  :: j
+sll_int32  :: k
 sll_int32  :: icell
-sll_real64 :: delta1
-sll_real64 :: delta2
-sll_real64 :: eta1_min
-sll_real64 :: eta2_min
-sll_real64 :: eta1
-sll_real64 :: eta2
 sll_int32  :: g1
 sll_int32  :: g2
 sll_int32  :: ii,kk,mm
 sll_int32  :: jj,ll,nn
 sll_int32  :: ig, jg
+sll_int32  :: i3, i4
+sll_int32  :: i1,i2
+sll_int32  :: col, row
+sll_int32  :: b1, b2, x, y
+sll_int32  :: k1, k2, n1, n2
+sll_int32  :: ideg2,ideg1
+sll_int32  :: jdeg2,jdeg1
+
+sll_real64 :: delta1
+sll_real64 :: delta2
+sll_real64 :: eta1_min, eta1_max
+sll_real64 :: eta2_min, eta2_max
+sll_real64 :: eta1
+sll_real64 :: eta2
 sll_real64 :: x1, w1
 sll_real64 :: x2, w2
 sll_real64 :: val_c
@@ -762,23 +670,16 @@ sll_real64 :: B22
 sll_real64 :: MC
 sll_real64 :: C1
 sll_real64 :: C2    
-sll_int32  :: i3, i4
-sll_int32  :: i1,i2
-sll_int32  :: col, row
-sll_int32  :: b, bprime,x,y
 sll_real64 :: elt_mat_global
-sll_int32  :: k1, k2, n1, n2
-sll_int32  :: ideg2,ideg1
-sll_int32  :: jdeg2,jdeg1
 sll_real64 :: v1, v2, v3, v4, d1, d2, d3, d4, r1, r2
 sll_real64 :: w1w2
 sll_real64 :: w1w2_by_val_jac 
 sll_real64 :: w1w2_val_jac 
 sll_real64 :: r1r2, v1v2, d1v2, v1d2
 sll_real64 :: d3v4, v3v4 , v3d4
-sll_real64 :: intjac
 
-!sll_real64, allocatable :: dense_matrix(:,:)
+class(sll_arbitrary_degree_spline_interpolator_1d), pointer :: interp1d => null()
+sll_real64, dimension(:), allocatable                       :: values
 
 !$ sll_int32 :: tid=0
 !$ sll_int32 :: nthreads=1
@@ -787,6 +688,8 @@ delta1   = es%delta_eta1
 delta2   = es%delta_eta2 
 eta1_min = es%eta1_min  
 eta2_min = es%eta2_min  
+eta1_max = es%eta1_max  
+eta2_max = es%eta2_max  
 g1       = size(es%gauss1,2)
 g2       = size(es%gauss2,2)
 k1       = es%k1
@@ -794,10 +697,9 @@ k2       = es%k2
 n1       = es%n1
 n2       = es%n2
 
-intjac   = 0.0_f64
 
-SLL_CLEAR_ALLOCATE(source(1:(k1+1)*(k2+1),1:(k1+1)*(k2+1),1:n1*n2),ierr)
-SLL_CLEAR_ALLOCATE(M_c(1:(k1+1)*(k2+1),1:(k1+1)*(k2+1)),ierr)
+SLL_CLEAR_ALLOCATE(src(1:(k1+1)*(k2+1),1:(k1+1)*(k2+1),1:n1*n2),ierr)
+SLL_CLEAR_ALLOCATE(M_cc(1:(k1+1)*(k2+1),1:(k1+1)*(k2+1)),ierr)
 SLL_CLEAR_ALLOCATE(K_11(1:(k1+1)*(k2+1),1:(k1+1)*(k2+1)),ierr)
 SLL_CLEAR_ALLOCATE(K_12(1:(k1+1)*(k2+1),1:(k1+1)*(k2+1)),ierr)
 SLL_CLEAR_ALLOCATE(K_21(1:(k1+1)*(k2+1),1:(k1+1)*(k2+1)),ierr)
@@ -811,7 +713,7 @@ SLL_CLEAR_ALLOCATE(stif(1:(k1+1)*(k2+1)),ierr)
 !$OMP PARALLEL DEFAULT(NONE)                                      &
 !$OMP SHARED( es, c_field,                                        &
 !$OMP a11_field_mat, a12_field_mat, a21_field_mat, a22_field_mat, &
-!$OMP b1_field_vect, b2_field_vect, k1, k2, source, intjac )      &
+!$OMP b1_field_vect, b2_field_vect, k1, k2, src )                 &
 !$OMP FIRSTPRIVATE(n1, n2, delta1, delta2, eta1_min, eta2_min,    &
 !$OMP g1, g2)                                                     &
 !$OMP PRIVATE(nthreads, tid,                                      &
@@ -825,15 +727,15 @@ SLL_CLEAR_ALLOCATE(stif(1:(k1+1)*(k2+1)),ierr)
 !$OMP B11, B12, B21, B22, MC, C1, C2,                             &
 !$OMP v1, v2, v3, v4, r1, r2, d1, d2, d3, d4,                     &
 !$OMP v3v4, d3v4, v3d4,                                           &
-!$OMP M_c,K_11,K_12,K_21,K_22,M_bv,S_b1,S_b2,                     &
+!$OMP M_cc,K_11,K_12,K_21,K_22,M_bv,S_b1,S_b2,                    &
 !$OMP i2, i1, i3, i4,                                             &
-!$OMP b, x, y, col, row, bprime,                                  &
+!$OMP b1, x, y, col, row, b2,                                     &
 !$OMP r1r2, v1v2, d1v2, v1d2, elt_mat_global )
 
 !$ tid = omp_get_thread_num()
 !$ nthreads = omp_get_num_threads()
 !$ if (tid == 0) print *, 'Number of threads = ', nthreads
-!$OMP DO SCHEDULE(STATIC,n2/nthreads) REDUCTION(+:intjac)
+!$OMP DO SCHEDULE(STATIC,n2/nthreads) 
 do j = 1, n2
 do i = 1, n1
         
@@ -843,7 +745,7 @@ do i = 1, n1
     
   mass  = 0.0_f64
   stif  = 0.0_f64
-  M_c   = 0.0_f64
+  M_cc  = 0.0_f64
   K_11  = 0.0_f64
   K_12  = 0.0_f64
   K_21  = 0.0_f64
@@ -886,8 +788,6 @@ do i = 1, n1
 
       val_c = val_c * w1w2_val_jac
         
-      intjac = intjac + w1w2_val_jac
-
       ! The B matrix is  by (J^(-1)) A^t (J^(-1))^t 
       B11 = jac_mat(2,2)*jac_mat(2,2)*val_a11 - &
             jac_mat(2,2)*jac_mat(1,2)*(val_a12+val_a21) + &
@@ -966,9 +866,9 @@ do i = 1, n1
               v3d4 = v3*d4
               nn   = nn+1
              
-              source(nn,mm,icell) = source(nn,mm,icell) + r1r2*v3v4
+              src(nn,mm,icell) = src(nn,mm,icell) + r1r2*v3v4
                    
-              M_c (nn,mm) = M_c (nn,mm) + val_c * v1v2 * v3v4
+              M_cc(nn,mm) = M_cc(nn,mm) + val_c * v1v2 * v3v4
               K_11(nn,mm) = K_11(nn,mm) + B11   * d1v2 * d3v4
               K_22(nn,mm) = K_22(nn,mm) + B22   * v1d2 * v3d4
               K_12(nn,mm) = K_12(nn,mm) + B12   * d1v2 * v3d4
@@ -988,37 +888,29 @@ do i = 1, n1
     do ii = 0, k1
 
       x   = i+ii+((j+jj)-1)*(n1+k1)
-      b   = ii+1+jj*(k1+1)
-      row = es%local_to_global_indices(b, icell)
+      b1  = ii+1+jj*(k1+1)
+      row = es%local_to_global_indices_mat(b1, icell)
          
-      es%masse(x) = es%masse(x) + mass(b)
-      es%stiff(x) = es%stiff(x) + stif(b)
+      es%masse(x) = es%masse(x) + mass(b1)
+      es%stiff(x) = es%stiff(x) + stif(b1)
 
-      i1 = es%left1(i) - k1 + ii
-      i2 = es%left2(j) - k2 + jj
-
-      es%local_to_global_indices_source(b,icell)= i1 + (i2-1)*(n1+1)
-
-      bprime = 0
+      b2 = 0
       do ll = 0,k2
         i4 = j + ll
         do kk = 0,k1
-          y      = i + kk+ (i4-1)*(n1+k1)
-          bprime = bprime+1 
-          col    = es%local_to_global_indices(bprime,icell)
-
-          elt_mat_global = M_c (bprime,b) - &
-                           K_11(bprime,b) - &
-                           K_12(bprime,b) - &
-                           K_21(bprime,b) - &
-                           K_22(bprime,b) - &
-                           M_bv(bprime,b) - &
-                           S_b1(bprime,b) - &
-                           S_b2(bprime,b)
-
-          es%local_to_global_indices_source_bis(bprime,icell)= y
+          b2  = b2+1 
+          col = es%local_to_global_indices_mat(b2, icell)
 
           if ( row>0 .and. col>0 ) then
+            elt_mat_global = M_cc(b2,b1) - &
+                             K_11(b2,b1) - &
+                             K_12(b2,b1) - &
+                             K_21(b2,b1) - &
+                             K_22(b2,b1) - &
+                             M_bv(b2,b1) - &
+                             S_b1(b2,b1) - &
+                             S_b2(b2,b1)
+
             call sll_add_to_csr_matrix(es%csr_mat, elt_mat_global, row, col)   
           end if
               
@@ -1026,79 +918,70 @@ do i = 1, n1
       end do
     end do
   end do
+
 end do
 end do
 
 !$OMP END PARALLEL
 
-!#ifdef DEBUG
-!allocate(dense_matrix(es%csr_mat%num_rows,es%csr_mat%num_cols))
-!
+
+interp1d => new_arbitrary_degree_1d_interpolator(n1+1,eta1_min,eta1_max,SLL_HERMITE,SLL_HERMITE,k1)
+allocate(values(n1+1))
+call interp1d%compute_interpolants(values)
+values = interp1d%coeff_splines(1:n1+1)
+deallocate(values)
+deallocate(interp1d)
+nullify(interp1d)
+
+!Penalization on boundary value
 !do i =1, es%csr_mat%num_rows
 ! do k = es%csr_mat%row_ptr(i), es%csr_mat%row_ptr(i+1)-1
 !    j = es%csr_mat%col_ind(k)
-!    dense_matrix(i,j) = es%csr_mat%val(k)
+!    if (i==j) es%csr_mat%val(k) = es%csr_mat%val(k) * 1e20
 ! end do
 !end do
-!
-!write(*,"(3x,36i7)") (k, k = 1, size(es%tmp_rho_vec))
-!do i = 1, es%csr_mat%num_rows
-!  write(*, "(i3,36f7.3)')") i, dense_matrix(i,:) 
-!end do
-!#endif /* DEBUG */
 
-es%intjac = intjac
 print *,'#begin of sll_factorize_csr_matrix'
 
 call sll_factorize_csr_matrix(es%csr_mat)
 
 print *,'#end of sll_factorize_csr_matrix'
 
-es%csr_mat_source =>                                     &
-  new_csr_matrix( size(es%masse,1),                      &
-                  (n1+1)*(n2+1),                         &
-                  n1*n2,                                 &
-                  es%local_to_global_indices_source_bis, &
-                  (k1+1)*(k2+1),                         &
-                  es%local_to_global_indices_source,     &
-                  (k1+1)*(k2+1) )
+es%csr_mat_src => new_csr_matrix( (n1+k1)*(n2+k2),                &
+&                                 (n1+1)*(n2+1),                  &
+&                                 n1*n2,                          &
+&                                 es%local_to_global_indices_row, &
+&                                 (k1+1)*(k2+1),                  &
+&                                 es%local_to_global_indices_col, &
+&                                 (k1+1)*(k2+1) )
 
 icell = 0
 do j=1,n2
 do i=1,n1
-      
   icell = icell+1
-  b     = 0
+  b1    = 0
   do ideg2 = 0,k2
   do ideg1 = 0,k1
-            
-    b = b+1
-    row = es%local_to_global_indices_source_bis(b, icell)
-        
-    bprime = 0
+    b1 = b1+1
+    row = es%local_to_global_indices_row(b1, icell)
+    b2 = 0
     do jdeg2 = 0,k2
     do jdeg1 = 0,k1
-              
-      bprime = bprime+1
-      col = es%local_to_global_indices_source(bprime,icell)
-           
-      elt_mat_global = source(b,bprime,icell)
-
+      b2 = b2+1
+      col = es%local_to_global_indices_col(b2,icell)
       if ( row > 0 .and. col > 0) then
-        call sll_add_to_csr_matrix(es%csr_mat_source,elt_mat_global,row,col)
+        elt_mat_global = src(b1,b2,icell)
+        call sll_add_to_csr_matrix(es%csr_mat_src,elt_mat_global,row,col)
       end if
-              
     end do
     end do
-
   end do
   end do
-
 end do
 end do
 
-SLL_DEALLOCATE_ARRAY(source,ierr)
-SLL_DEALLOCATE_ARRAY(M_c,ierr)
+SLL_DEALLOCATE_ARRAY(src,ierr)
+SLL_DEALLOCATE_ARRAY(M_cc,ierr)
 SLL_DEALLOCATE_ARRAY(K_11,ierr)
 SLL_DEALLOCATE_ARRAY(K_12,ierr)
 SLL_DEALLOCATE_ARRAY(K_21,ierr)
@@ -1127,9 +1010,9 @@ end subroutine factorize_mat_es
 !> @param[out] phi \f$ \phi \f$ the field corresponding to the solution of the equation
 !> @return     phi the field solution of the equation
   
-subroutine solve_gces( es, rho, phi)
+subroutine solve_gces_dirichlet( es, rho, phi)
 
-class(sll_gces), intent(inout)                         :: es
+class(sll_gces_dirichlet),           intent(inout)     :: es
 class(sll_scalar_field_2d_discrete), intent(inout)     :: phi
 class(sll_scalar_field_2d_base),     intent(in),target :: rho
 
@@ -1150,24 +1033,17 @@ sll_real64 :: w1, w2, x1, x2, eta1, eta2
 sll_real64 :: val_f, val_j, valfj, jac_mat(2,2)
 sll_real64 :: spline1, spline2
 
-sll_real64 :: int_rho
-sll_real64 :: int_jac
 sll_int32  :: ierr
 sll_int32  :: k1, k2, n1, n2
 
 !$ sll_int32  :: tid = 0
 !$ sll_int32  :: nthreads = 1
   
-g1 = size(es%gauss1,2)
-g2 = size(es%gauss2,2)
-
-
-k1              = es%k1
-k2              = es%k2
-n1              = es%n1
-n2              = es%n2
-es%rho_vec      = 0.0_f64
-es%rho_coeff_1d = 0.0_f64
+k1          = es%k1
+k2          = es%k2
+n1          = es%n1
+n2          = es%n2
+es%rho_vec  = 0.0_f64
  
 base_field_pointer => rho
 
@@ -1177,6 +1053,7 @@ class is (sll_scalar_field_2d_discrete)
 
   coeff_rho => type_field%interp_2d%get_coefficients()
             
+  es%rho_coeff_1d = 0.0_f64
   !Loop over point mesh
   do j=1,n2+1
     do i=1,n1+1
@@ -1184,18 +1061,17 @@ class is (sll_scalar_field_2d_discrete)
     end do
   end do
 
-  call sll_mult_csr_matrix_vector(es%csr_mat_source,es%rho_coeff_1d,es%rho_vec)
+  call sll_mult_csr_matrix_vector(es%csr_mat_src,es%rho_coeff_1d,es%rho_vec)
 
 class is (sll_scalar_field_2d_analytic)
   
-  int_rho = 0.0_f64
-  int_jac = 0.0_f64
+  g1 = size(es%gauss1,2)
+  g2 = size(es%gauss2,2)
 
   SLL_CLEAR_ALLOCATE(M_rho_loc(1:(k1+1)*(k2+1)),ierr)
 
   !$OMP PARALLEL &
-  !$OMP FIRSTPRIVATE(n1, n2, g1, g2, &
-  !$OMP              tid, nthreads)                      &
+  !$OMP FIRSTPRIVATE(n1, n2, g1, g2, tid, nthreads)      &
   !$OMP PRIVATE(i,j,ii,jj,kk,ll,mm,nn,n,m_rho_loc,x,b,   &
   !$OMP         i3,eta1,eta2,x1,x2,  &
   !$OMP         w1,w2,spline1,spline2,val_f,val_j, &
@@ -1206,7 +1082,7 @@ class is (sll_scalar_field_2d_analytic)
   !$ print *, 'Number of threads = ', nthreads
   !$OMP END MASTER
   
-  !$OMP DO SCHEDULE(STATIC,n2/nthreads) REDUCTION(+:int_rho,int_jac)
+  !$OMP DO SCHEDULE(STATIC,n2/nthreads) 
   do j=1, n2
     do i=1, n1
       M_rho_loc = 0.0_f64
@@ -1224,8 +1100,6 @@ class is (sll_scalar_field_2d_analytic)
           val_j   = jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1)
           val_j   = val_j*w1*w2
           valfj   = val_f*val_j
-          int_rho = int_rho + valfj 
-          int_jac = int_jac + val_j
       
           do ll = 1,k2+1
             spline2 = es%v_splines2(1,ll,jj,j)*valfj
@@ -1244,7 +1118,6 @@ class is (sll_scalar_field_2d_analytic)
           x             =  i + nn + (i3-1)*(n1+k1)
           b             =  nn + 1 + mm * (k1+1)
           es%rho_vec(x) =  es%rho_vec(x)  + M_rho_loc(b)
-            
         end do
       end do
     end do
@@ -1254,22 +1127,117 @@ class is (sll_scalar_field_2d_analytic)
 
 end select
 
-es%tmp_rho_vec(:) = 0.0_f64  !PN: Is it useful ?
-es%phi_vec(:)     = 0.0_f64  !PN: Is it useful ?
+es%phi_vec = 0.0_f64  !PN: Is it useful ?
   
-k = 0
-do j = 1, n1+k1-2
-  do i = 1, n2+k2-2
-    k = k+1
-    es%tmp_rho_vec(k) = es%rho_vec(i+1+(n1+k1)*j)
-  end do
-end do
-     
-call sll_solve_csr_matrix(es%csr_mat, es%tmp_rho_vec, es%phi_vec)
+call sll_solve_csr_matrix(es%csr_mat, es%rho_vec, es%phi_vec)
   
-call phi%interp_2d%set_coefficients(es%phi_vec(1:(n1+k1-2)*(n2+k2-2)))
+call phi%interp_2d%set_coefficients(es%phi_vec)
 
-end subroutine solve_gces
+end subroutine solve_gces_dirichlet
   
+!> @brief Deallocate the type general_coordinate_elliptic_solver
+!> @details
+!> The parameters are
+!> @param[in] es the type general_coordinate_elliptic_solver
+subroutine delete_gces_dirichlet( es )
+type(sll_gces_dirichlet) :: es
+sll_int32 :: ierr
 
-end module sll_module_gces
+SLL_DEALLOCATE(es%t1,ierr)
+SLL_DEALLOCATE(es%t2,ierr)
+SLL_DEALLOCATE(es%gauss1,ierr)
+SLL_DEALLOCATE(es%gauss2,ierr)
+SLL_DEALLOCATE(es%local_to_global_indices_mat,ierr)
+SLL_DEALLOCATE(es%local_to_global_indices_col,ierr)
+SLL_DEALLOCATE(es%local_to_global_indices_row,ierr)
+SLL_DEALLOCATE(es%rho_vec,ierr)
+SLL_DEALLOCATE(es%phi_vec,ierr)
+SLL_DEALLOCATE(es%masse,ierr)
+SLL_DEALLOCATE(es%stiff,ierr)
+SLL_DEALLOCATE(es%t1_rho,ierr)
+SLL_DEALLOCATE(es%t2_rho,ierr)
+SLL_DEALLOCATE(es%v_splines1,ierr)
+SLL_DEALLOCATE(es%v_splines2,ierr)
+
+call sll_delete(es%csr_mat)
+call sll_delete(es%csr_mat_src)
+
+end subroutine delete_gces_dirichlet
+
+end module sll_module_gces_dirichlet
+
+!PN: Compute values of basis functions on the mesh
+!PN: We use two functions from Carl DeBoor
+!PN:
+!PN: interv computes  left = max(i: xt(i) <= x < xt(lxt)).
+!PN: 
+!PN:   xt  assumed to be nondecreasing
+!PN:   x   the point whose location with respect to the 
+!PN        sequence xt is to be determined.
+!PN: 
+!PN: output
+!PN:
+!PN:  left, mflag.....both integers, whose value is
+!PN: 
+!PN:  1     -1      if             x <  xt(1)
+!PN:  i      0      if   xt(i)  <= x < xt(i+1)
+!PN:  i      0      if   xt(i)  <  x .eq. xt(i+1) .eq. xt(lxt)
+!PN:  i      1      if   xt(i)  <         xt(i+1) .eq. xt(lxt) .lt. x
+!PN: 
+!PN:  In particular,  mflag = 0  is the 'usual' case.  mflag .ne. 0
+!PN:  indicates that  x  lies outside the CLOSED interval
+!PN:  xt(1) .le. y .le. xt(lxt) . The asymmetric treatment of the
+!PN:  intervals is due to the decision to make all pp functions cont-
+!PN:  inuous from the right, but, by returning  mflag = 0  even if
+!PN:  x = xt(lxt), there is the option of having the computed pp function
+!PN:  continuous from the left at  xt(lxt) .
+!PN: 
+!PN:  The program is designed to be efficient in the common situation that
+!PN:  it is called repeatedly, with  x  taken from an increasing or decrea-
+!PN:  sing sequence. The first guess for left is therefore taken to be the val-
+!PN:  ue returned at the previous call and stored in the local variable  ilo . 
+!PN   A first check ascertains that  ilo .lt. lxt (this is nec-
+!PN:  essary since the present call may have nothing to do with the previ-
+!PN:  ous call). Then, if  xt(ilo) .le. x .lt. xt(ilo+1), we set  left =
+!PN:  ilo  and are done after just three comparisons.
+!PN:     Otherwise, we repeatedly double the difference  istep = ihi - ilo
+!PN:  while also moving  ilo  and  ihi  in the direction of  x , until
+!PN:                      xt(ilo) .le. x .lt. xt(ihi) ,
+!PN:  after which we use bisection to get, in addition, ilo+1 = ihi .
+!PN:  left = ilo  is then returned.
+!PN: 
+!PN:  splvb calculates value and deriv.s of all b-splines which do not vanish at x
+!PN: 
+!PN:  nput
+!PN:  t     the knot array, of length left+k (at least)
+!PN:  k     the order of the b-splines to be evaluated
+!PN:  x     the point at which these values are sought
+!PN:  left  an integer indicating the left endpoint of the interval of
+!PN:        interest. the  k  b-splines whose support contains the interval
+!PN:               (t(left), t(left+1))
+!PN:        are to be considered.
+!PN:  assumption  ---  it is assumed that
+!PN:               t(left) .lt. t(left+1)
+!PN:        division by zero will result otherwise (in  bsplvb ).
+!PN:        also, the output is as advertised only if
+!PN:               t(left) .le. x .le. t(left+1) .
+!PN:  nderiv   an integer indicating that values of b-splines and their
+!PN:        derivatives up to but not including the  nderiv-th  are asked
+!PN:        for. ( nderiv  is replaced internally by the integer  mhigh
+!PN:        in  (1,k)  closest to it.)
+!PN: 
+!PN:  work area 
+!PN:       an array of order (k,k), to contain b-coeff.s of the derivat-
+!PN:       ives of a certain order of the  k  b-splines of interest.
+!PN: 
+!PN:  output
+!PN:  dbiatx an array of order (k,nderiv). its entry  (i,m)  contains
+!PN:        value of  (m-1)st  derivative of  (left-k+i)-th  b-spline of
+!PN:        order  k  for knot sequence  t , i=1,...,k, m=1,...,nderiv.
+!PN: 
+!PN:  values at  x  of all the relevant b-splines of order k,k-1,...,
+!PN:  k+1-nderiv  are generated via  bsplvb  and stored temporarily in
+!PN:  dbiatx .  then, the b-coeffs of the required derivatives of the b-
+!PN:  splines of interest are generated by differencing, each from the pre-
+!PN:  ceding one of lower order, and combined with the values of b-splines
+!PN:  of corresponding order in  dbiatx  to produce the desired values .
