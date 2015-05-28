@@ -8,9 +8,9 @@ module sll_pic_1d
     use sll_collective !Parallel operations
 
     
-    use sll_arbitrary_degree_splines 
-!    use gauss_legendre_integration          !      perhaps useless
-    use sll_pic_1d_field_solver
+!    use sll_arbitrary_degree_splines 
+!  use gauss_legendre_integration          !      perhaps useless
+   use sll_pic_1d_field_solver
 !     use sll_visu_pic 
    use sll_visu_pic  , only :  distribution_xdmf, energies_electrostatic_gnuplot_inline , particles_center_gnuplot_inline, electricpotential_gnuplot_inline !Visualization with gnuplot
    
@@ -35,8 +35,8 @@ module sll_pic_1d
                !should be integrated here
     
     
-    use sll_timer  
-    use pic_postprocessing  
+    use sll_timer , only :   sll_set_time_mark, sll_time_mark,  sll_time_elapsed_between
+    use pic_postprocessing , only : det_landau_damping 
 
     implicit none
 
