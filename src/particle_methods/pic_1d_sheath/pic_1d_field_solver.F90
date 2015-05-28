@@ -11,8 +11,8 @@ module sll_pic_1d_field_solver
 #include "sll_assert.h"
 #include "sll_utilities.h"
     !  use sll_arbitrary_degree_spline_interpolator_1d_module
-    use sll_arbitrary_degree_splines
-    !!use gauss_lobatto_integration
+!    use sll_arbitrary_degree_splines
+    !use gauss_lobatto_integration
     use sll_fft
 !    use sll_constants
     use sll_collective
@@ -23,9 +23,9 @@ module sll_pic_1d_field_solver
     use sll_cartesian_meshes, only : sll_cartesian_mesh_1d , new_cartesian_mesh_1d 
 !we work in 1d so all 2d - 3d 4d modules are not used here
     use sll_poisson_1d_fd!Finite difference solver
-    use sll_poisson_1d_periodic
+    use sll_poisson_1d_periodic , only : poisson_1d_periodic , new , solve
     use sll_particle_1d_description
-    use sll_poisson_1d_fourier
+    use sll_poisson_1d_fourier , only :  poisson_1d_fourier, new_poisson_1d_fourier
     implicit none
     !initialize
     !solve
