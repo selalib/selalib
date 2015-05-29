@@ -422,7 +422,11 @@ subroutine hermite_coef_nat_1d(f,buf2d,N,d)
     g(2)=f(1,i)          !fx(0)
     g(3)=f(2,i)          !fx(1)
 
-
+    !print *,'#in hermite:'
+    !print *,'i=',i
+    !print *,'x=',x
+    !print *,'w=',w
+    !print *,'g=',g
 
 
     fval=w(0)*g(0)+w(1)*g(1)+w(2)*g(2)+w(3)*g(3)
