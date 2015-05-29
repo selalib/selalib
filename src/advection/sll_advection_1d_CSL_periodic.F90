@@ -39,9 +39,10 @@ implicit none
     sll_real64, dimension(:), pointer :: eta_coords
     sll_real64, dimension(:), pointer :: charac_feet
     sll_real64, dimension(:), pointer :: charac_feet_inside
-    sll_real64, dimension(:), pointer :: csl_mat_init
-    sll_real64, dimension(:), pointer :: csl_mat
-    sll_real64, dimension(:), pointer :: fft_buf
+    !sll_real64, dimension(:), pointer :: csl_mat_init
+    !sll_real64, dimension(:), pointer :: csl_mat
+    !sll_real64, dimension(:), pointer :: fft_buf
+    sll_real64, dimension(:,:), pointer :: deriv
     sll_int32 :: Npts
   contains
     procedure, pass(adv) :: initialize => &
@@ -112,9 +113,9 @@ contains
     sll_int32 :: ierr
     sll_int32 :: i
     sll_real64 :: delta_eta
-    sll_real64 :: hermite_inversibility     
+    !sll_real64 :: hermite_inversibility     
     
-    hermite_inversibility = 1._f64
+    !hermite_inversibility = 1._f64
     
     adv%Npts = Npts
     adv%interp => interp
@@ -123,11 +124,12 @@ contains
 
     SLL_ALLOCATE(adv%charac_feet(Npts),ierr)
     SLL_ALLOCATE(adv%charac_feet_inside(Npts),ierr)
-    SLL_ALLOCATE(adv%csl_mat(Npts-1),ierr)
-    SLL_ALLOCATE(adv%csl_mat_init(Npts-1),ierr)
-    SLL_ALLOCATE(adv%fft_buf(2*(Npts-1)+15),ierr)
+    !SLL_ALLOCATE(adv%csl_mat(Npts-1),ierr)
+    !SLL_ALLOCATE(adv%csl_mat_init(Npts-1),ierr)
+    !SLL_ALLOCATE(adv%fft_buf(2*(Npts-1)+15),ierr)
+    SLL_ALLOCATE(adv%deriv(2,Npts-1),ierr)
     
-    call dffti(Npts-1,adv%fft_buf)
+    !call dffti(Npts-1,adv%fft_buf)
     
     if(present(eta_min).and.present(eta_max))then
       if(present(eta_coords))then
@@ -155,12 +157,12 @@ contains
       enddo                      
     endif
     
-    call compute_csl_mat( &
-      interp, &
-      adv%eta_coords(1), &
-      adv%eta_coords(Npts), &
-      Npts, &
-      adv%csl_mat)
+!    call compute_csl_mat( &
+!      interp, &
+!      adv%eta_coords(1), &
+!      adv%eta_coords(Npts), &
+!      Npts, &
+!      adv%csl_mat)
     
     
     !if(present(hermite_degree))then
@@ -173,39 +175,38 @@ contains
       !  print *,i,adv%csl_mat(i)
       !enddo
       !stop
-      do i=1,Npts-1
-        adv%csl_mat_init(i) = adv%csl_mat(i)
-      enddo
+      !do i=1,Npts-1
+      !  adv%csl_mat_init(i) = adv%csl_mat(i)
+      !enddo
       
-      !inverse csl_mat
-      call csl_reverse(adv%csl_mat,Npts-1)
-      call dfftf(Npts-1,adv%csl_mat,adv%fft_buf)
       
-      hermite_inversibility = abs(adv%csl_mat(1))
+      
+      !call dfftf(Npts-1,adv%csl_mat,adv%fft_buf)
+      !hermite_inversibility = abs(adv%csl_mat(1))
       !print *,0,adv%csl_mat(1)
-      do i=1,(Npts-1)/2
+      !do i=1,(Npts-1)/2
         !print *,i-1,adv%csl_mat(2*(i-1)),adv%csl_mat(2*(i-1)+1), &
-        hermite_inversibility = min(hermite_inversibility, &
-          sqrt(adv%csl_mat(2*i)**2+adv%csl_mat(2*i+1)**2))
-      enddo
+        !hermite_inversibility = min(hermite_inversibility, &
+        !  sqrt(adv%csl_mat(2*i)**2+adv%csl_mat(2*i+1)**2))
+      !enddo
       !if(mod(Npts-1,2)==0)then
       !  print *,(Npts-1)/2,adv%csl_mat(Npts-1)
       !endif
       
-      print *,'#hermite_inversibility=',hermite_inversibility
-      if(hermite_inversibility<1.-12)then
-        print *,'#csl_mat not invertible',hermite_inversibility
-        stop
-      endif
-      call compute_inverse_csl_hermite_mat(Npts-1,adv%csl_mat)
+      !print *,'#hermite_inversibility=',hermite_inversibility
+      !if(hermite_inversibility<1.-12)then
+      !  print *,'#csl_mat not invertible',hermite_inversibility
+      !  stop
+      !endif
+      !call compute_inverse_csl_hermite_mat(Npts-1,adv%csl_mat)
 
 
 
-      call check_solve_csl_mat( &
-        adv%csl_mat, &
-        adv%csl_mat_init, &
-        Npts-1, &
-        adv%fft_buf)
+      !call check_solve_csl_mat( &
+      !  adv%csl_mat, &
+      !  adv%csl_mat_init, &
+      !  Npts-1, &
+      !  adv%fft_buf)
       
       
       
@@ -250,12 +251,31 @@ contains
     enddo
     call adv%interp%compute_interpolants(input)
 
-    call compute_csl_integral( &
-      adv%Npts, &
+    !compute the derivatives at time tn
+    !for future use in Hermite form
+    call compute_node_derivative_order3( &
       adv%interp, &
-      adv%eta_coords, &
+      adv%deriv, &
+      adv%Npts-1, &
+      adv%eta_coords(1), &
+      adv%eta_coords(adv%Npts))
+    
+    call update_solution_csl_periodic( &
+      adv%interp, &
+      input, &
+      adv%deriv, &
       adv%charac_feet, &
-      output(1:adv%Npts-1))
+      adv%Npts, &
+      adv%eta_coords(1), &
+      adv%eta_coords(adv%Npts), &
+      output)
+
+!    call compute_csl_integral( &
+!      adv%Npts, &
+!      adv%interp, &
+!      adv%eta_coords, &
+!      adv%charac_feet, &
+!      output(1:adv%Npts-1))
 !    if(maxval(input)>1.e-1)then
 !      print *,'before'
 !      do i=1,adv%Npts-1
@@ -264,13 +284,13 @@ contains
 !!      stop
 !    endif             
     
-    call mult_circulant_mat( &
-      adv%Npts-1, &
-      adv%csl_mat, &
-      output(1:adv%Npts-1), &
-      adv%fft_buf)
-    
-    output(adv%Npts) = output(1)
+!    call mult_circulant_mat( &
+!      adv%Npts-1, &
+!      adv%csl_mat, &
+!      output(1:adv%Npts-1), &
+!      adv%fft_buf)
+!    
+!    output(adv%Npts) = output(1)
 !    if(maxval(input)>1.e-1)then
 !      print *,'after'
 !      do i=1,adv%Npts-1
@@ -712,7 +732,8 @@ contains
     
     output(1:N) = 0._f64
     output(1) = 0.5_f64
-    output(2) = 0.5_f64
+    output(N) = 0.5_f64 !because we have to take a_{-i}
+    !instead of a_i, if we want to perform further fft of a
 
     f = 0._f64
     call interp%compute_interpolants(f)    
@@ -796,14 +817,14 @@ contains
         g, &
         N)
       err = max(err,maxval(abs(h-g)))
-      !print *,'#i='
-      !do j=1,N
-      !  print *,j,f(j),g(j),h(j)
-      !enddo    
+      print *,'#i='
+      do j=1,N
+        print *,j,f(j),g(j),h(j)
+      enddo    
     enddo
     
     print *,'#err=',err
-    !stop
+    stop
   
   end subroutine check_solve_csl_mat  
   
@@ -816,44 +837,578 @@ contains
     sll_int32 :: j
     sll_int32 :: j2
     sll_int32 :: ind
-    !a1 a2 a3 ... aN
-    !aN a1 a2 ... a{N-1}
-    !output(1) = sum(a(j)*input(j),j=1..N)
-    !output(2) = sum(a(j-1)*input(j),j=1..N)
+    
     do i=1,N
       output(i) = 0._f64
       do j=1,N
-        ind = 1+modulo(j-i+N,N)
-        !j2 = 1+modulo(N-ind,N)
-        output(i) = output(i)+a(ind)*input(j)
+        ind = j!1+modulo(i+j-2,N)
+        j2 = 1+modulo(N-i+1,N) !1+modulo(N-j,N)
+        output(i) = output(i)+a(j2)*input(ind)
       enddo
     enddo
     
   end subroutine circ_mat_mul_direct
 
-  subroutine csl_reverse(a,N)
-    sll_real64, dimension(:), intent(inout) :: a
+  !we suppose that compute_interpolant is already done
+  subroutine compute_node_derivative_order3( &
+    interp, &
+    deriv, &
+    N, &
+    eta_min, &
+    eta_max)
+    class(sll_interpolator_1d_base), pointer :: interp
+    sll_real64, dimension(:,:), intent(out) :: deriv
     sll_int32, intent(in) :: N
-    sll_real64, dimension(:), allocatable :: a_copy
-    sll_int32 :: ierr
-    sll_int32 :: ind
+    sll_real64, intent(in) :: eta_min    
+    sll_real64, intent(in) :: eta_max
     sll_int32 :: i
+    sll_real64 :: w_deriv_left(4)    
+    sll_real64 :: w_deriv_right(4)
+    sll_real64 :: a    
+    sll_real64 :: b
+    sll_real64 :: delta    
     
-    if(size(a)<N)then
-      print *,'#size(a),N=',size(a),N
-      SLL_ERROR("csl_reverse",'bad size of a')
+    w_deriv_left = (/-5.5_f64,9._f64,-4.5_f64,1._f64 /)
+    w_deriv_right = (/-1._f64,4.5_f64,-9._f64,5.5_f64 /)
+
+    
+    if(N<1)then
+      print *,'N=',N
+      SLL_ERROR('compute_node_derivative','bad size of N')
     endif
     
-    SLL_ALLOCATE(a_copy(N),ierr)
+    if((size(deriv,1)<2).or.(size(deriv,2)<N))then
+      print *,'#size=',size(deriv)
+      print *,'#expected size=',2,N
+      SLL_ERROR('compute_node_derivative','bad size of deriv')
+    endif
     
-    a_copy(1:N) = a(1:N)
-    
+    delta= (eta_max-eta_min)/real(N,f64)
+        
     do i=1,N
-      ind = 1+modulo(N-i+1,N)
-      a(i) = a_copy(ind)
+      a = eta_min+real(i-1,f64)*delta 
+      b = eta_min+real(i,f64)*delta 
+      deriv(1,i) = compute_quadrature(interp,a,b,w_deriv_left)
+      deriv(2,i) = compute_quadrature(interp,a,b,w_deriv_right)      
+    enddo
+      
+  end subroutine compute_node_derivative_order3
+
+  subroutine update_solution_csl_periodic( &
+    interp, &
+    input, &
+    deriv, &
+    charac, &
+    Npts, &
+    eta_min, &
+    eta_max, &
+    output)
+    class(sll_interpolator_1d_base), pointer :: interp
+    sll_real64, dimension(:), intent(in) :: input
+    sll_real64, dimension(:,:), intent(inout) :: deriv
+    sll_real64, dimension(:), intent(in) :: charac
+    sll_int32, intent(in) :: Npts
+    sll_real64, intent(in) :: eta_min
+    sll_real64, intent(in) :: eta_max
+    sll_real64, dimension(:), intent(out) :: output
+    sll_real64, dimension(:), allocatable :: output_bsl
+    sll_real64, dimension(:), allocatable :: flux
+    sll_int32, dimension(:), allocatable :: jstar
+    sll_real64, dimension(:), allocatable :: alpha
+    sll_int32 :: ierr
+    sll_real64 :: eta
+    sll_int32 :: i
+    sll_int32 :: ind
+    sll_int32 :: N
+    sll_real64 :: dof(4)
+    sll_real64 :: res
+    sll_real64 :: delta
+    sll_real64 :: err
+    sll_real64 :: xi(-2:2)
+    sll_real64 :: fxi(-2:2)
+    sll_int32 :: ii
+    sll_real64 :: a
+    sll_real64 :: b
+    sll_real64 :: xstarj
+    sll_real64 :: xj
+    sll_real64 :: xstarj1
+    sll_int32 :: i1
+    sll_int32 :: ind1
+    
+    
+    
+    !here is the main work for CSL
+    !(Jf)(tn+dt,xj) = Jf(tn,xj)+G'(xj)
+    !with G(x) = F1(tn,H(tn;x,tn+dt))-F1(tn,x)
+    !we have
+    !G(xj) = F1(tn,xstarj)-F1(tn,xj)= int(Jf(tn,x),x=xj..xstarj)
+    !we write G(x) = int(G1(s),s=x-dx/2..x+dx/2)/dx
+    !so, we get
+    !G'(xj) = (G1(xj+dx/2)-G1(xj-dx/2))/dx
+    !and thus the scheme is automatically conservative
+    !we thus have to compute G1(xj+dx/2)
+    !we know that 
+    !int(G1(s),s=xk-dx/2..xk+dx/2)/dx = int(Jf(tn,x),x=xk..xstark)
+    !we first consider the case where the displacement
+    !is less than a cell
+    !that is xj <= xstarj < xj+dx
+    !or xj-dx <=xstarj < xj
+    !if xj <= xstarj < xj+dx
+    ! val(ell) = int(G1(s),s=x(j+ell)-dx/2..x(j+ell)+dx/2)/dx = 
+    !  = int(Jf(tn,x),x=x(j+ell)..xstar(j+ell)), ell=-1,0,1,2
+    !  = (1/6)*(xstar(j+ell)-x(j+ell))
+    !  *(Jf(tn,x(j+ell))
+    !    +4Jf(tn,(x(j+ell)+xstar(j+ell))/2)
+    !     +Jf(tn,xstar(j+ell)))
+    ! to compute the integral, we use polynomial of degree <= 3
+    ! on [xjstar, xjstar+dx]
+    !where xjstar<=xstarj<xjstar+dx
+    ! we then have G1(xj+dx/2) 
+    !  = (7/12)*(val(0)+val(1))-(1/12)*(val(-1)+val(2))
+    !
+    ! -1 val(-1) 0 val(0) 1 val(1) 2 val(2) 3
+    !  |_________|________|________|_________|
+    ! -3/2      -1/2     1/2      3/2       5/2 
+    !further step is to generalize for
+    ! a displacement bigger than one cell
+    !G(xj) = int(Jf(tn,x),x=xj..xjstar)+int(Jf(tn,x),x=xjstar..xstarj)
+    !G1(xj+dx/2) = A+G2(x0+dx/2)
+    !for G2 everything is shifted to xjstar instead of xj
+    !and A = sum(Jf(tn,xk),k=j+1..jstar), if jstar>j
+    !and A = -sum(Jf(tn,xk),k=jstar..j-1), if jstar<j
+    ! so we know
+    ! int(Jf(tn,x),x=xstarj..xjstar)
+    ! val(ell) = int(G2(s),s=xell-dx/2..xell+dx/2)/dx = 
+    !  = int(Jf(tn,x),x=x(jstar+ell)..xstar(j+ell)), ell=-1,0,1,2
+    ! to compute the integral, we use polynomial of degree <= 3
+    ! on [xjstar, xjstar+dx]
+    ! we then have G2(x0+dx/2) 
+    !  = (7/12)*(val(0)+val(1))-(1/12)*(val(-1)+val(2))
+    !
+    ! -1 val(-1) 0 val(0) 1 val(1) 2 val(2) 3
+    !  |_________|________|________|_________|
+    ! -3/2      -1/2     1/2      3/2       5/2 
+    !
+    !we compute the flux at 1/2 (we take x0=0,dx=1)
+    !to begin we do a first version that just reproduces BSL
+    SLL_ALLOCATE(output_bsl(Npts),ierr)
+    SLL_ALLOCATE(flux(0:Npts),ierr)
+    SLL_ALLOCATE(jstar(-1:Npts+2),ierr)
+    SLL_ALLOCATE(alpha(-1:Npts+2),ierr)
+    
+    N = Npts-1
+    
+    delta = (eta_max-eta_min)/real(N,f64)
+    
+    
+    output_bsl = input
+    
+    !added; otherwise small diff with bsl
+    output_bsl(Npts) = output_bsl(1)
+              
+    call interp%compute_interpolants(output_bsl)
+    call compute_node_derivative_order3( &
+      interp, &
+      deriv, &
+      Npts-1, &
+      eta_min, &
+      eta_max)
+    
+    err = 0._f64
+    
+    do i=1,Npts
+      eta = charac(i)
+      eta = process_outside_point_periodic(eta,eta_min,eta_max)
+      eta = real(N,f64)*(eta-eta_min)/(eta_max-eta_min)
+      ind = floor(eta)
+      eta = eta-ind
+      if((eta<0).or.(eta>=1))then
+        print *,'eta=',eta
+        SLL_ERROR('update_solution_csl_periodic','bad value of eta')
+      endif            
+      if((ind<0).or.(ind>=N))then
+        print *,'ind=',eta
+        SLL_ERROR('update_solution_csl_periodic','bad value of ind')
+      endif
+      ind = ind+1            
+      dof(1) = output_bsl(ind)
+      dof(2) = output_bsl(ind+1)
+      dof(3) = deriv(1,ind)
+      dof(4) = deriv(2,ind)
+      output(i) = evaluate_hermite_1d(eta,dof)
+      eta = charac(i)
+      eta = process_outside_point_periodic(eta,eta_min,eta_max)
+      res = output(i)-interp%interpolate_value(eta)
+      if(abs(res)>1.e-10)then
+        print *,'#problem detected'
+        print *,'#dof=',dof
+        print *,'ind=',ind
+        eta = charac(i)
+        eta = process_outside_point_periodic(eta,eta_min,eta_max)
+        eta = real(N,f64)*(eta-eta_min)/(eta_max-eta_min)
+        ind = floor(eta)
+        eta = eta-ind
+        print *,'#eta=',eta
+        stop
+      endif
+      err = max(err,abs(res))
     enddo
     
+    !check that the hermite  version of bsl
+    !leads to the same result 
+    if(err>1.e-14)then
+      print *,'#err bsl=',err
+    endif
+    output_bsl = output
+    output = output_bsl
+    output_bsl = input
+    !now we construct the new scheme
     
-  end subroutine csl_reverse   
+    !do i=1,Npts
+    !  output_bsl(i) = 1._f64
+    !enddo
+
+    call interp%compute_interpolants(output_bsl)
+    call compute_node_derivative_order3( &
+      interp, &
+      deriv, &
+      Npts-1, &
+      eta_min, &
+      eta_max)
+
+
+    
+    !we compute jstar
+    do i=1,Npts
+      eta = charac(i)
+      eta = real(N,f64)*(eta-eta_min)/(eta_max-eta_min)
+      jstar(i) = floor(eta)
+      alpha(i) = eta-jstar(i)
+      jstar(i) = jstar(i)+1
+      if((alpha(i)<0._f64).or.(alpha(i)>=1.))then
+        print *,'alpha(i)=',i,alpha(i)
+        SLL_ERROR('update_solution_csl_periodic','bad value of alpha(i)')
+      endif
+      !print *,i,jstar(i)-i,jstar(i)
+    enddo
+    !stop
+    err = abs(real(jstar(Npts)-jstar(1)-N,f64))
+    err = max(err,abs(alpha(N+1)-alpha(1)))
+    if(err>1.e-14)then
+      print *,'#err periodicity=',err
+    endif
+    
+    !enforce periodicity
+    jstar(N+1) = jstar(1)+N
+    alpha(N+1) = alpha(1)
+    
+    !boundary conditions
+    jstar(0) = jstar(N)-N
+    jstar(-1) = jstar(N-1)-N
+    jstar(N+2) = jstar(2)+N
+    jstar(N+3) = jstar(3)+N
+    alpha(0) = alpha(N)
+    alpha(-1) = alpha(N-1)
+    alpha(N+2) = alpha(2)
+    alpha(N+3) = alpha(3)
+    
+    !we then check that the jstar and alpha 
+    !are well computed
+    
+    err = 0._f64
+    do i=1,Npts
+      eta = real(jstar(i)-1,f64)+alpha(i)
+      eta = eta_min + eta*delta
+      err = max(err,abs(eta-charac(i)))
+    enddo    
+    
+    if(err>1.e-14)then
+      print *,'#err charac=',err
+    endif
+    
+    !we do a first version that is subject to CFL condition
+    ! this is the simplest scheme that should always work
+    
+    do i=1,Npts
+      xj = eta_min+real(i-1,f64)*delta
+      xstarj = charac(i)      
+      if(xstarj.ge.xj)then
+        if(xstarj.ge.(xj+delta))then
+          print *,'xstarj>=xj+delta'
+          print *,'xstarj=',xstarj
+          print *,'xj+delta=',xj+delta
+          print *,'i=',i
+          SLL_ERROR('update_solution_csl_periodic','dt may be too big')
+        endif
+        flux(i) = output_bsl(1+modulo(i,N))*(xstarj-xj)/delta !to begin low order approx
+      else
+        if(xstarj.le.(xj-delta))then
+          print *,'xstarj<=xj-delta'
+          print *,'xstarj=',xstarj
+          print *,'xj-delta=',xj-delta
+          print *,'i=',i
+          SLL_ERROR('update_solution_csl_periodic','dt may be too big')
+        endif
+        flux(i) = output_bsl(i)*(xstarj-xj)/delta        
+      endif  
+    enddo
+    
+    do i=1,N
+      output(i) = output_bsl(i)+(flux(i)-flux(1+modulo(i-1+N-1,N)))
+    enddo
+    output(N+1)=output(1)
+    
+    
+    
+    !now we try something of order 1 for the function
+    !previous version was order 0 for function
+
+
+    do i=1,N
+      xj = eta_min+real(i-1,f64)*delta
+      xstarj = charac(i)      
+      if(xstarj.ge.xj)then
+        if(xstarj.ge.(xj+delta))then
+          print *,'xstarj>=xj+delta'
+          print *,'xstarj=',xstarj
+          print *,'xj+delta=',xj+delta
+          print *,'i=',i
+          SLL_ERROR('update_solution_csl_periodic','dt may be too big')
+        endif
+        i1 = 1+modulo(i,N)
+        a = 0.5_f64*(xj+xstarj)
+        fxi(0) =  output_bsl(i)*(xj+delta-a)/delta
+        fxi(0) = fxi(0)+output_bsl(i1)*(1._f64-(xj+delta-a)/delta)
+        fxi(0) = fxi(0)*(xstarj-xj)/delta        
+        xstarj1 = real(jstar(i+1)-1,f64)+alpha(i+1)
+        xstarj1 = eta_min + xstarj1*delta
+        !do not use charac(i1) because charac is not periodic
+        a = 0.5_f64*(xj+delta+xstarj1)
+        fxi(1) =  output_bsl(i)*(xj+delta-a)/delta
+        fxi(1) = fxi(1)+output_bsl(i1)*(1._f64-(xj+delta-a)/delta)
+        fxi(1) = fxi(1)*(xstarj1-xj-delta)/delta
+        flux(i) =  0.5_f64*(fxi(0)+fxi(1))
+      else
+        !SLL_ERROR('update_solution_csl_periodic','temporary we do not want this case') 
+        if(xstarj.le.(xj-delta))then
+          print *,'xstarj<=xj-delta'
+          print *,'xstarj=',xstarj
+          print *,'xj-delta=',xj-delta
+          print *,'i=',i
+          SLL_ERROR('update_solution_csl_periodic','dt may be too big')
+        endif
+        flux(i) = output_bsl(i)*(xstarj-xj)/delta        
+      endif  
+    enddo
+    
+    flux(N+1) = flux(1)
+    
+    
+    do i=1,N
+      output(i) = output_bsl(i)+(flux(i)-flux(1+modulo(i-1+N-1,N)))
+    enddo
+    output(N+1)=output(1)
+
+    
+    !now we try order 3 (?)
+
+    do i=1,N
+      xj = eta_min+real(i-1,f64)*delta
+      xstarj = charac(i)      
+
+
+      if(xstarj.ge.xj)then
+        if(xstarj.ge.(xj+delta))then
+          print *,'xstarj>=xj+delta'
+          print *,'xstarj=',xstarj
+          print *,'xj+delta=',xj+delta
+          print *,'i=',i
+          SLL_ERROR('update_solution_csl_periodic','dt may be too big')
+        endif
+        ind = 1+modulo(N+jstar(i)-1,N)
+        dof(1) = output_bsl(ind)
+        dof(2) = output_bsl(ind+1)
+        dof(3) = deriv(1,ind)
+        dof(4) = deriv(2,ind)
+
+        do ii=-1,2
+          xi(ii) = jstar(i+ii)+alpha(i+ii)-i
+        enddo
+
+        do ii=-1,2
+          a = real(ii,f64)
+          b = xi(ii)
+          fxi(ii) = contribution_simpson_hermite(a,b,dof)
+        enddo    
+        flux(i) = (7._f64/12._f64)*(fxi(0)+fxi(1))
+        flux(i) = flux(i)-(1._f64/12._f64)*(fxi(-1)+fxi(2))
+
+      else
+        !SLL_ERROR('update_solution_csl_periodic','temporary we do not want this case') 
+        if(xstarj.le.(xj-delta))then
+          print *,'xstarj<=xj-delta'
+          print *,'xstarj=',xstarj
+          print *,'xj-delta=',xj-delta
+          print *,'i=',i
+          SLL_ERROR('update_solution_csl_periodic','dt may be too big')
+        endif
+
+        ind = 1+modulo(N+jstar(i)-1,N)
+        ind1 = 1+modulo(N+jstar(i),N)
+        if(ind1.ne.i)then
+          print *,'#ind1 should be equal to i'
+          print *,'#ind1=',ind1
+          print *,'#i=',i
+          SLL_ERROR('update_solution_csl_periodic',"bad value of ind")
+        endif
+        
+        dof(1) = output_bsl(ind1)
+        dof(2) = output_bsl(ind)
+        dof(3) = deriv(2,ind)
+        dof(4) = deriv(1,ind)
+        
+        
+        
+        do ii=-1,2
+          xi(ii) = i-jstar(i-ii)-alpha(i-ii)
+        enddo
+
+        do ii=-1,2
+          a = real(ii,f64)
+          b = xi(ii)
+          fxi(ii) = contribution_simpson_hermite(a,b,dof)
+        enddo    
+        flux(i) = (7._f64/12._f64)*(fxi(0)+fxi(1))
+        flux(i) = flux(i)-(1._f64/12._f64)*(fxi(-1)+fxi(2))
+
+        
+        
+                
+                
+      endif  
+    enddo
+    
+    flux(N+1) = flux(1)
+    
+    
+    do i=1,N
+      output(i) = output_bsl(i)+(flux(i)-flux(1+modulo(i-1+N-1,N)))
+    enddo
+    output(N+1)=output(1)
+
+
+
+    
+    
+
+    
+    
+    
+    
+    return
+
+
+
+
+    
+    do i=1,Npts
+
+      ind = 1+modulo(N+jstar(i)-1,N)
+      dof(1) = output_bsl(ind)
+      dof(2) = output_bsl(ind+1)
+      dof(3) = deriv(1,ind)
+      dof(4) = deriv(2,ind)
+
+      do ii=-1,2
+        xi(ii) = jstar(i+ii)+alpha(i+ii)-jstar(i)
+      enddo
+      do ii=-1,2
+        a = real(ii,f64)
+        b = xi(ii)
+        fxi(ii) = contribution_simpson_hermite(a,b,dof)
+      enddo    
+      flux(i) = (7._f64/12._f64)*(fxi(0)+fxi(1))
+      flux(i) = flux(i)-(1._f64/12._f64)*(fxi(-1)+fxi(2))
+
+    !and A = sum(Jf(tn,xk),k=j+1..jstar), if jstar>j
+    !and A = -sum(Jf(tn,xk),k=jstar..j-1), if jstar<j
+      do ii=i+1,jstar(i)
+        ind = 1+modulo(N+jstar(ii)-1,N)
+        flux(i) = flux(i)+output_bsl(ind)
+      enddo
+      do ii=jstar(i),i-1
+        ind = 1+modulo(N+jstar(ii)-1,N)
+        flux(i) = flux(i)-output_bsl(ind)
+      enddo
+      
+      !print *,i,fxi
+    enddo
+    
+    flux(0) = flux(N)
+    do i=1,N
+      output(i) = input(i)+(flux(i)-flux(i-1)) !/delta
+    enddo
+    
+    output(N+1) = output(1)
+    
+    err = maxval(abs(output-output_bsl)) 
+    
+    if(err>1.e-14)then
+      print *,'#diff with bsl=',err
+      
+      do i=1,Npts
+        print *,i,output(i)
+      enddo
+      stop
+    endif
+    
+    
+        
+    !output = output_bsl
+    
+    !stop
+    
+  end subroutine update_solution_csl_periodic
+  
+
+ function evaluate_hermite_1d(x,dof) result(res)
+    sll_real64, intent(in)::x
+    sll_real64, dimension(:), intent(in) :: dof
+    sll_real64 :: res
+    sll_real64 :: w(4)
+
+    w(1)=(2._f64*x+1)*(1._f64-x)*(1._f64-x)
+    w(2)=x*x*(3._f64-2._f64*x)
+    w(3)=x*(1._f64-x)*(1._f64-x)
+    w(4)=x*x*(x-1._f64)
+    res=dof(1)*w(1)+dof(2)*w(2)+dof(3)*w(3)+dof(4)*w(4)
+
+  end function evaluate_hermite_1d
+
+  function contribution_simpson_hermite( &
+    a, &
+    b, &
+    dof) &
+    result(res)
+    sll_real64, intent(in) :: a
+    sll_real64, intent(in) :: b
+    sll_real64, dimension(:), intent(in) :: dof
+    sll_real64 :: eta
+    sll_real64 :: res
+    sll_real64 :: nodes(3,2)
+    sll_int32 :: j
+    
+    nodes(1,1) = a
+    nodes(3,1) = b
+    nodes(2,1) = 0.5_f64*(a+b)
+    do j=1,3
+      nodes(j,2) = evaluate_hermite_1d(nodes(j,1),dof)
+    enddo
+    res = nodes(1,2)+4._f64*nodes(2,2)+nodes(3,2) 
+    res = res*(b-a)/6._f64
+    
+  end function contribution_simpson_hermite
+  
+  
 
 end module sll_module_advection_1d_CSL_periodic
