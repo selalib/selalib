@@ -372,7 +372,7 @@ contains
     Npts, &
     epsilon)
     sll_real64, dimension(:), intent(in) :: origin
-    sll_real64, dimension(:), intent(in) :: feet
+    sll_real64, dimension(:), intent(inout) :: feet
     sll_int32, intent(in) :: Npts
     sll_real64, intent(in), optional :: epsilon
     sll_real64 :: length
@@ -388,6 +388,7 @@ contains
       SLL_ERROR("check_charac_feet","bad size for feet")
     endif
     length = origin(Npts)-origin(1)
+    feet(Npts) = feet(1) +length !added because errors
     if(abs(length-(feet(Npts)-feet(1)))>1.e-12_f64)then
       print *,'origin',origin
       print *,'feet',feet
@@ -924,8 +925,8 @@ contains
     sll_real64 :: res
     sll_real64 :: delta
     sll_real64 :: err
-    sll_real64 :: xi(-2:2)
-    sll_real64 :: fxi(-2:2)
+    sll_real64 :: xi(-10:10)
+    sll_real64 :: fxi(-10:10)
     sll_int32 :: ii
     sll_real64 :: a
     sll_real64 :: b
@@ -993,8 +994,8 @@ contains
     !to begin we do a first version that just reproduces BSL
     SLL_ALLOCATE(output_bsl(Npts),ierr)
     SLL_ALLOCATE(flux(0:Npts),ierr)
-    SLL_ALLOCATE(jstar(-1:Npts+2),ierr)
-    SLL_ALLOCATE(alpha(-1:Npts+2),ierr)
+    SLL_ALLOCATE(jstar(-10:Npts+10),ierr)
+    SLL_ALLOCATE(alpha(-10:Npts+10),ierr)
     
     N = Npts-1
     
@@ -1094,7 +1095,7 @@ contains
     !stop
     err = abs(real(jstar(Npts)-jstar(1)-N,f64))
     err = max(err,abs(alpha(N+1)-alpha(1)))
-    if(err>1.e-14)then
+    if(err>1.e-13)then
       print *,'#err periodicity=',err
     endif
     
@@ -1103,14 +1104,25 @@ contains
     alpha(N+1) = alpha(1)
     
     !boundary conditions
-    jstar(0) = jstar(N)-N
-    jstar(-1) = jstar(N-1)-N
-    jstar(N+2) = jstar(2)+N
-    jstar(N+3) = jstar(3)+N
-    alpha(0) = alpha(N)
-    alpha(-1) = alpha(N-1)
-    alpha(N+2) = alpha(2)
-    alpha(N+3) = alpha(3)
+    do ii=0,10
+      jstar(-ii) = jstar(N-ii)-N
+      alpha(-ii) = alpha(N-ii)
+    enddo
+    do ii=1,10
+      jstar(N+ii) = jstar(ii)+N
+      alpha(N+ii) = alpha(ii)
+    enddo
+!    jstar(0) = jstar(N)-N
+!    jstar(-1) = jstar(N-1)-N
+!    jstar(-2) = jstar(N-2)-N
+!    jstar(-3) = jstar(N-3)-N
+!    jstar(N+2) = jstar(2)+N
+!    jstar(N+3) = jstar(3)+N
+!    jstar(N+4) = jstar(4)+N
+!    alpha(0) = alpha(N)
+!    alpha(-1) = alpha(N-1)
+!    alpha(N+2) = alpha(2)
+!    alpha(N+3) = alpha(3)
     
     !we then check that the jstar and alpha 
     !are well computed
@@ -1126,6 +1138,69 @@ contains
       print *,'#err charac=',err
     endif
     
+
+    
+    !now we try order 3 (?)
+
+    do i=1,N
+      !xj = eta_min+real(i-1,f64)*delta
+      !xstarj = charac(i)      
+      !xstarj = eta_min+(jstar(i)+alpha(i)-1)*delta
+
+      ind = 1+modulo(N+jstar(i)-1,N)
+      ind1 = 1+modulo(N+jstar(i),N)
+      dof(1) = output_bsl(ind)
+      dof(2) = output_bsl(ind1)
+      dof(3) = deriv(1,ind)
+      dof(4) = deriv(2,ind)
+
+      do ii=-2,3
+        xi(ii) = jstar(i+ii)+alpha(i+ii)-jstar(i)
+      enddo
+
+      do ii=-2,3
+        a = real(ii,f64)
+        b = xi(ii)
+        fxi(ii) = contribution_simpson_hermite(a,b,dof)
+      enddo    
+      flux(i) = (7._f64/12._f64)*(fxi(0)+fxi(1))
+      flux(i) = flux(i)-(1._f64/12._f64)*(fxi(-1)+fxi(2))
+      
+      !flux(i) = fxi(0)
+
+      !flux(i) = (37._f64/60._f64)*(fxi(0)+fxi(1))
+      !flux(i) = flux(i)-(8._f64/60._f64)*(fxi(-1)+fxi(2))
+      !flux(i) = flux(i)+(1._f64/60._f64)*(fxi(-2)+fxi(3))
+      
+      
+      
+      !flux(i) = (6._f64/12._f64)*(fxi(0)+fxi(1))
+      !flux(i) = flux(i)-(1._f64/12._f64)*(fxi(-1)+fxi(2))
+
+      do ii=i+1,jstar(i)
+        ind1 = 1+modulo(ii+N-1,N)
+        flux(i) = flux(i)+output_bsl(ind1)
+      enddo  
+      do ii=jstar(i)+1,i
+        ind1 = 1+modulo(ii+N-1,N)
+        flux(i) = flux(i)-output_bsl(ind1)
+      enddo
+        
+    enddo
+
+    flux(N+1) = flux(1)
+    
+    
+    do i=1,N
+      ind1 = 1+modulo(i-1+N-1,N)
+      output(i) = output_bsl(i)+(flux(i)-flux(ind1))
+    enddo
+    output(N+1)=output(1)
+
+    return
+
+
+
     !we do a first version that is subject to CFL condition
     ! this is the simplest scheme that should always work
     
@@ -1209,92 +1284,111 @@ contains
     enddo
     output(N+1)=output(1)
 
+
+
+!
+!
+!    
+!      !if(xstarj.ge.xj)then
+!      if(jstar(i).ge.i)then
+!        if(jstar(i)>i)then
+!        !if(xstarj.ge.(xj+delta))then
+!          print *,'xstarj>=xj+delta'
+!          print *,'xstarj=',xstarj
+!          print *,'xj+delta=',xj+delta
+!          print *,'i=',i
+!          SLL_ERROR('update_solution_csl_periodic','dt may be too big')
+!        endif
+!        ind = 1+modulo(N+jstar(i)-1,N)
+!        ind1 = 1+modulo(N+jstar(i),N)
+!        dof(1) = output_bsl(ind)
+!        dof(2) = output_bsl(ind1)
+!        dof(3) = deriv(1,ind)
+!        dof(4) = deriv(2,ind)
+!
+!        !we have jstar(i) = i
+!        do ii=-1,2
+!          !xi(ii) = jstar(i+ii)+alpha(i+ii)-i
+!          xi(ii) = jstar(i+ii)+alpha(i+ii)-jstar(i)
+!          !print *,'xi(ii)=',ii,xi(ii)
+!        enddo
+!        !stop
+!        
+!        do ii=-1,2
+!          a = real(ii,f64)
+!          b = xi(ii)
+!          fxi(ii) = contribution_simpson_hermite(a,b,dof)
+!        enddo    
+!        flux(i) = (7._f64/12._f64)*(fxi(0)+fxi(1))
+!        flux(i) = flux(i)-(1._f64/12._f64)*(fxi(-1)+fxi(2))
+!        !if jstar(i)>i ->+sum(j=i+1..jstar(i))
+!        do ii=i+1,jstar(i)
+!          ind1 = 1+modulo(ii+N-1,N)
+!          flux(i) = flux(i)+output_bsl(ind1)
+!        enddo  
+!
+!      else
+!        !SLL_ERROR('update_solution_csl_periodic','temporary we do not want this case') 
+!        if(jstar(i)<i-1)then
+!        !if(xstarj.le.(xj-delta))then
+!          print *,'xstarj<=xj-delta'
+!          print *,'xstarj=',xstarj
+!          print *,'xj-delta=',xj-delta
+!          print *,'i=',i
+!          SLL_ERROR('update_solution_csl_periodic','dt may be too big')
+!        endif
+!
+!        ind = 1+modulo(N+jstar(i)-1,N)
+!        ind1 = 1+modulo(N+jstar(i),N)
+!        if(ind1.ne.i)then
+!          print *,'#ind1 should be equal to i'
+!          print *,'#ind1=',ind1
+!          print *,'#i=',i
+!          print *,'#xstarj=',xstarj          
+!          print *,'#jstar(i)=',jstar(i)
+!          print *,'#alpha(i)=',alpha(i)
+!          print *,'#xstarj2=',eta_min+(jstar(i)+alpha(i)-1)*delta
+!          SLL_ERROR('update_solution_csl_periodic',"bad value of ind")
+!        endif
+!        
+!        dof(1) = output_bsl(ind)
+!        dof(2) = output_bsl(ind1)
+!        dof(3) = deriv(1,ind)
+!        dof(4) = deriv(2,ind)
+!        
+!        
+!        !we have jstar(i) = i-1
+!        do ii=-1,2
+!          !xi(ii) = jstar(i+ii)+alpha(i+ii)-i+1
+!          xi(ii) = jstar(i+ii)+alpha(i+ii)-jstar(i)
+!          !i-jstar(i-ii)-alpha(i-ii)
+!          !print *,'xi(ii)=',ii,xi(ii)
+!        enddo
+!        !stop
+!        do ii=-1,2
+!          a = real(ii,f64)
+!          b = xi(ii)
+!          fxi(ii) = contribution_simpson_hermite(a,b,dof)
+!        enddo    
+!        flux(i) = (7._f64/12._f64)*(fxi(0)+fxi(1))
+!        flux(i) = flux(i)-(1._f64/12._f64)*(fxi(-1)+fxi(2))
+!        !flux(i) = flux(i)-output_bsl(ind1)
+!        do ii=jstar(i)+1,i
+!          ind1 = 1+modulo(ii+N-1,N)
+!          flux(i) = flux(i)-output_bsl(ind1)
+!        enddo  
+!        !ind1 = 1+modulo(N+jstar(i),N)
+!        !if jstar(i)=i-2 -> -output_bsl(i)-output_bsl(i-1)
+!        !if jstar(i)=i-1 -> -output_bsl(i)
+!        !if jstar(i)<i ->-sum(j=jstar(i)+1..i)
+!        !if jstar(i)=i -> 0
+!        !if jstar(i)>i ->+sum(j=i+1..jstar(i))
+!        !if jstar(i)=i+1 ->+output_bsl(i+1)
+!        !if jstar(i)=i+2 ->+output_bsl(i+1)+output_bsl(i+2)        
+!                
+!      endif  
+!    enddo
     
-    !now we try order 3 (?)
-
-    do i=1,N
-      xj = eta_min+real(i-1,f64)*delta
-      xstarj = charac(i)      
-
-
-      if(xstarj.ge.xj)then
-        if(xstarj.ge.(xj+delta))then
-          print *,'xstarj>=xj+delta'
-          print *,'xstarj=',xstarj
-          print *,'xj+delta=',xj+delta
-          print *,'i=',i
-          SLL_ERROR('update_solution_csl_periodic','dt may be too big')
-        endif
-        ind = 1+modulo(N+jstar(i)-1,N)
-        dof(1) = output_bsl(ind)
-        dof(2) = output_bsl(ind+1)
-        dof(3) = deriv(1,ind)
-        dof(4) = deriv(2,ind)
-
-        do ii=-1,2
-          xi(ii) = jstar(i+ii)+alpha(i+ii)-i
-        enddo
-
-        do ii=-1,2
-          a = real(ii,f64)
-          b = xi(ii)
-          fxi(ii) = contribution_simpson_hermite(a,b,dof)
-        enddo    
-        flux(i) = (7._f64/12._f64)*(fxi(0)+fxi(1))
-        flux(i) = flux(i)-(1._f64/12._f64)*(fxi(-1)+fxi(2))
-
-      else
-        !SLL_ERROR('update_solution_csl_periodic','temporary we do not want this case') 
-        if(xstarj.le.(xj-delta))then
-          print *,'xstarj<=xj-delta'
-          print *,'xstarj=',xstarj
-          print *,'xj-delta=',xj-delta
-          print *,'i=',i
-          SLL_ERROR('update_solution_csl_periodic','dt may be too big')
-        endif
-
-        ind = 1+modulo(N+jstar(i)-1,N)
-        ind1 = 1+modulo(N+jstar(i),N)
-        if(ind1.ne.i)then
-          print *,'#ind1 should be equal to i'
-          print *,'#ind1=',ind1
-          print *,'#i=',i
-          SLL_ERROR('update_solution_csl_periodic',"bad value of ind")
-        endif
-        
-        dof(1) = output_bsl(ind1)
-        dof(2) = output_bsl(ind)
-        dof(3) = deriv(2,ind)
-        dof(4) = deriv(1,ind)
-        
-        
-        
-        do ii=-1,2
-          xi(ii) = i-jstar(i-ii)-alpha(i-ii)
-        enddo
-
-        do ii=-1,2
-          a = real(ii,f64)
-          b = xi(ii)
-          fxi(ii) = contribution_simpson_hermite(a,b,dof)
-        enddo    
-        flux(i) = (7._f64/12._f64)*(fxi(0)+fxi(1))
-        flux(i) = flux(i)-(1._f64/12._f64)*(fxi(-1)+fxi(2))
-
-        
-        
-                
-                
-      endif  
-    enddo
-    
-    flux(N+1) = flux(1)
-    
-    
-    do i=1,N
-      output(i) = output_bsl(i)+(flux(i)-flux(1+modulo(i-1+N-1,N)))
-    enddo
-    output(N+1)=output(1)
 
 
 
@@ -1305,7 +1399,6 @@ contains
     
     
     
-    return
 
 
 
