@@ -10,17 +10,27 @@ module sll_pic_1d_field_solver
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_utilities.h"
-    !  use sll_arbitrary_degree_spline_interpolator_1d_module
+!    use sll_arbitrary_degree_spline_interpolator_1d_module
 !    use sll_arbitrary_degree_splines
-    !use gauss_lobatto_integration
-    use sll_fft
+!    use gauss_lobatto_integration
+!    use sll_fft
 !    use sll_constants
-    use sll_collective
-!    use sll_module_poisson_1d_periodic_solver
 
-   use sll_poisson_1d_fem , only :   poisson_1d_fem, poisson_1d_fem_rhs_function ,&
+
+
+
+
+     use sll_collective , only :  sll_collective_t, sll_get_collective_size ,sll_get_collective_rank , sll_collective_globalsum, sll_collective_bcast_real64, sll_collective_globalsum_array_comp64 ,&
+     sll_collective_globalsum_array_real64
+
+
+
+!    use sll_module_poisson_1d_periodic_solver
+     use sll_poisson_1d_fem , only :   poisson_1d_fem, poisson_1d_fem_rhs_function ,&
  new_poisson_1d_fem         !Finite Element Bspline
-    use sll_cartesian_meshes, only : sll_cartesian_mesh_1d , new_cartesian_mesh_1d 
+  
+  
+     use sll_cartesian_meshes, only : sll_cartesian_mesh_1d , new_cartesian_mesh_1d 
 !we work in 1d so all 2d - 3d 4d modules are not used here
     use sll_poisson_1d_fd!Finite difference solver
     use sll_poisson_1d_periodic , only : poisson_1d_periodic , new , solve
@@ -82,12 +92,12 @@ module sll_pic_1d_field_solver
         procedure, pass(this), public ::  BC=>pic_1d_field_solver_boundary_conditions
 
         !Setting up solve
-        procedure, pass(this), public ::  set_ions_constant=>pic_1d_field_solver_set_ions_constant
-        procedure, pass(this), public :: set_ions_constant_particles=>pic_1d_field_solver_set_ions_constant_particles
-        procedure, pass(this), public :: set_ions_constant_function=>pic_1d_field_solver_set_ions_constant_function
-        procedure, pass(this), public :: calc_variance_rhs=>pic_1d_field_solver_calc_variance_rhs
+        procedure, pass(this), public :: set_ions_constant           => pic_1d_field_solver_set_ions_constant
+        procedure, pass(this), public :: set_ions_constant_particles => pic_1d_field_solver_set_ions_constant_particles
+        procedure, pass(this), public :: set_ions_constant_function  => pic_1d_field_solver_set_ions_constant_function
+        procedure, pass(this), public :: calc_variance_rhs           => pic_1d_field_solver_calc_variance_rhs
 
-        procedure,  pass(this) :: solve =>pic_1d_field_solver_solve
+        procedure, pass(this)         :: solve                       => pic_1d_field_solver_solve
 
         procedure, pass(this), public :: reset_particles=>pic_1d_field_solver_reset_particles
         procedure, pass(this), public :: add_species=>pic_1d_field_solver_add_species

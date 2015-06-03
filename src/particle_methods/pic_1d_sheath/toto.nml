@@ -1,0 +1,16 @@
+&paramss
+      tsteps  = 50
+      tstepw =1
+      nmark=40000
+      femp =7
+      sdeg=2
+      ppusher="euler"
+      scenario="landau"
+      psolver="fd"
+      lalpha=5
+      gnuplot_inline_output_user=.FALSE.
+      gpinline=0
+      boxlenpi=4.0_f64
+      deltaf=0
+      nstreams=1
+      /

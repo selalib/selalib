@@ -4,8 +4,18 @@ program unit_test
 #include "sll_assert.h"
 #include "sll_utilities.h"
 
-    use sll_collective
-    use sll_pic_1d
+     use sll_collective , only :       sll_world_collective , sll_collective_barrier ,&
+     sll_boot_collective
+    
+    
+    use sll_pic_1d  , only : new_sll_pic_1d, sll_solver_fourier, sll_solver_fd, sll_solver_fem, sll_pic1d_testcase_quiet ,&
+    sll_pic1d_testcase_landau, sll_pic1d_testcase_ionbeam, sll_pic1d_testcase_bumpontail, sll_pic1d_ppusher_verlet ,&     
+    enable_deltaf, interval_a, interval_b, landau_alpha, landau_mode, pic1d_testcase, root_path, sll_pi ,&
+    sll_pic1d_ppusher_euler, sll_pic1d_ppusher_shift, sll_pic1d_ppusher_rk2, sll_pic1d_ppusher_rk4, sll_pic1d_ppusher_none ,&
+    sll_pic1d_ppusher_merson, sll_pic1d_ppusher_leapfrog_v, set_loading_parameters ,&
+    sll_pic1d_ppusher_leapfrog, sll_pic1d_ppusher_heun, sll_solver_spectral, sll_pic_1d_run, destroy_sll_pic_1d
+  
+    
     implicit none
 
 
@@ -45,7 +55,6 @@ program unit_test
     sll_int32 :: nstreams=1
     logical  :: gnuplot_inline_output_user=.FALSE.
 
-    namelist /paramss/ tsteps, tstepw, nmark, femp, sdeg, ppusher, scenario, psolver, lalpha, gnuplot_inline_output_user
 
   !------------------ END DEFAULT VALUES --------------------------------------------------
 
@@ -66,6 +75,9 @@ program unit_test
     character(len=256) :: filename
     integer :: gpinline=0,deltaf=0
     sll_int32, parameter  :: input_file =99
+    !input
+    namelist /paramss/ tsteps, tstepw, nmark, femp, sdeg, ppusher, scenario, psolver, lalpha, gnuplot_inline_output_user,gpinline,boxlenpi,deltaf,nstreams
+    
 NAMELIST /cmd/ tsteps, tstepw , nmark, scenario, nstreams, femp, sdeg, lalpha, lmode,&
         ppusher,gpinline,path,boxlenpi,deltaf, psolver
 
