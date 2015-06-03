@@ -1043,7 +1043,8 @@ contains
           sim%charac1d_x1, &
           Nc_eta1+1, &
           eta_min = eta1_min, &
-          eta_max = eta1_max)
+          eta_max = eta1_max, &
+          csl_degree = hermite_degree1+1)
       case default
         print *,'#bad advect_case',advect1d_x1_case
         print *,'#not implemented'
@@ -1065,7 +1066,8 @@ contains
           sim%charac1d_x2, &
           Nc_eta2+1, &
           eta_min = eta2_min, &
-          eta_max = eta2_max)
+          eta_max = eta2_max, &
+          csl_degree = hermite_degree2+1)
       case default
         print *,'#bad advect_case',advect1d_x2_case
         print *,'#not implemented'
@@ -1325,6 +1327,10 @@ contains
     sll_real64,dimension(:,:), pointer :: f
     sll_real64,dimension(:,:), pointer :: f_conserv
     sll_real64,dimension(:,:), pointer :: f_old
+    sll_real64,dimension(:,:), pointer :: fone_conserv
+    sll_real64,dimension(:,:), pointer :: fone_old
+    sll_real64,dimension(:,:), pointer :: fone
+    
     sll_real64,dimension(:,:), pointer :: rho
     sll_real64,dimension(:,:), pointer :: phi
     sll_real64,dimension(:,:), pointer :: A1 !advection fields
@@ -1357,6 +1363,10 @@ contains
     SLL_ALLOCATE(A1(Nc_eta1+1,Nc_eta2+1),ierr)
     SLL_ALLOCATE(A2(Nc_eta1+1,Nc_eta2+1),ierr)
     SLL_ALLOCATE(f_conserv(Nc_eta1+1,Nc_eta2+1),ierr)
+
+    SLL_ALLOCATE(fone_conserv(Nc_eta1+1,Nc_eta2+1),ierr)
+    SLL_ALLOCATE(fone_old(Nc_eta1+1,Nc_eta2+1),ierr)
+    SLL_ALLOCATE(fone(Nc_eta1+1,Nc_eta2+1),ierr)
   
 
     
@@ -1387,6 +1397,9 @@ contains
         print *,'#in  run_gc2d_curvilinear'
         stop
     end select    
+
+    fone = 1._f64    
+
 
     !solve poisson
     call sim%poisson%compute_phi_from_rho(phi, f)
@@ -1446,6 +1459,7 @@ contains
          print*,"step= ", step
       endif   
       f_old = f
+      fone_old = fone
       
       call sim%poisson%compute_phi_from_rho(phi, f_old) 
 
@@ -1490,7 +1504,8 @@ contains
           f, &
           phi, &
           A1, &
-          A2)
+          A2, &
+          fone)
         call time_history_diagnostic_polar( &
           thdiagp_id, &    
           step-1, &
@@ -1516,6 +1531,14 @@ contains
               call sim%advect_2d%advect_2d(A1, A2, dt, f_conserv, f)
               f_conserv =f
               call compute_f_conserv_to_f(f_conserv,f,sim%transformation,sim%mesh_2d)
+
+
+              call compute_f_to_f_conserv(fone_old,fone_conserv,sim%transformation,sim%mesh_2d)
+              call sim%advect_2d%advect_2d(A1, A2, dt, fone_conserv, f)
+              fone_conserv =fone
+              call compute_f_conserv_to_f(fone_conserv,fone,sim%transformation,sim%mesh_2d)
+            
+            
             case(SLL_ADVECTIVE)  
               call sim%advect_2d%advect_2d(A1, A2, dt, f_old, f)
            case default 
@@ -1570,10 +1593,18 @@ contains
           
           select case (sim%advection_form)
             case(SLL_CONSERVATIVE)
+              
               call compute_f_to_f_conserv(f_old,f_conserv,sim%transformation,sim%mesh_2d)
               call sim%advect_2d%advect_2d(A1, A2, dt, f_conserv, f)
               f_conserv =f
               call compute_f_conserv_to_f(f_conserv,f,sim%transformation,sim%mesh_2d)
+
+              call compute_f_to_f_conserv(fone_old,fone_conserv,sim%transformation,sim%mesh_2d)
+              call sim%advect_2d%advect_2d(A1, A2, dt, fone_conserv, fone)
+              fone_conserv =fone
+              call compute_f_conserv_to_f(fone_conserv,fone,sim%transformation,sim%mesh_2d)
+
+            
             case(SLL_ADVECTIVE)  
               call sim%advect_2d%advect_2d(A1, A2, dt, f_old, f)
            case default 
@@ -1789,7 +1820,8 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
     f, &
     phi, &
     A1, &
-    A2)
+    A2, &
+    fone)
     sll_int32, intent(in) :: file_id
     sll_int32, intent(in) :: step
     sll_real64, intent(in) :: dt
@@ -1799,6 +1831,7 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
     sll_real64, dimension(:,:), intent(in) :: phi
     sll_real64, dimension(:,:), intent(in) :: A1
     sll_real64, dimension(:,:), intent(in) :: A2 
+    sll_real64, dimension(:,:), intent(in) :: fone 
     sll_real64 :: mass
     sll_real64 :: linf
     sll_real64 :: l1
@@ -1906,8 +1939,9 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
       l1, &
       l2, &
       mass, &
-      e, &
-      maxval(abs(phi(1:Nc_eta1+1,1:Nc_eta2+1)))
+      e, &      
+      maxval(abs(phi(1:Nc_eta1+1,1:Nc_eta2+1))), &
+      maxval(abs(fone(1:Nc_eta1+1,1:Nc_eta2+1)-1._f64))
    
     
   end subroutine time_history_diagnostic_collela

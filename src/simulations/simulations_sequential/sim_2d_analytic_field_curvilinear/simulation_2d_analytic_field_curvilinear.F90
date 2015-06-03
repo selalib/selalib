@@ -1052,7 +1052,7 @@ contains
               Nc_eta1+1, &
               eta_min = eta1_min, &
               eta_max = eta1_max, &
-              hermite_degree = hermite_degree1)
+              csl_degree = hermite_degree1+1)
           case default
             print *,'#bad f_interp1d_x1_case',f_interp1d_x1_case
         end select       
@@ -1087,7 +1087,7 @@ contains
               Nc_eta2+1, &
               eta_min = eta2_min, &
               eta_max = eta2_max, &
-              hermite_degree = hermite_degree2)
+              csl_degree = hermite_degree2+1)
           case default
             print *,'#bad f_interp1d_x2_case',f_interp1d_x2_case
         end select       
