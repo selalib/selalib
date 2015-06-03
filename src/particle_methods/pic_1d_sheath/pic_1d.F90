@@ -11,11 +11,18 @@ module sll_pic_1d
      sll_halt_collective
 
     
-!    use sll_arbitrary_degree_splines 
-!  use gauss_legendre_integration          !      perhaps useless
+!  use sll_arbitrary_degree_splines 
+!  use gauss_legendre_integration 
+
+         
    use sll_pic_1d_field_solver
+   
+   
 !     use sll_visu_pic 
-   use sll_visu_pic  , only :  distribution_xdmf, energies_electrostatic_gnuplot_inline , particles_center_gnuplot_inline, electricpotential_gnuplot_inline !Visualization with gnuplot
+
+
+   use sll_visu_pic  , only :  distribution_xdmf, energies_electrostatic_gnuplot_inline , particles_center_gnuplot_inline, electricpotential_gnuplot_inline 
+   !Visualization with gnuplot
    
 
     use pic_1d_particle_loading, only : sll_normal_rnd ,& 
@@ -66,7 +73,7 @@ sll_real64, dimension(:), allocatable :: fieldenergy, kineticenergy, impulse, &
         push_error_mean, push_error_var
     integer, private :: timestep !Global counter for the time step loop
     
-    
+!-------------------------------------------INPUT---------------------------------------!
     !-----------------Parameters--------------------------------------
     sll_int32 :: particle_pusher, poisson_solver
 
@@ -77,15 +84,16 @@ sll_real64, dimension(:), allocatable :: fieldenergy, kineticenergy, impulse, &
     sll_real64 :: timestepwidth
     sll_int32 :: nparticles  !GLOBAL, marker particles
     LOGICAL :: gnuplot_inline_output !input     write gnuplot output during the simulation
-    !-------------------------------------------INPUT---------------------------------------!
+
+     !-----------------Parameters--------------------------------------
     !Mesh parameters
     sll_int32 :: mesh_cells
     sll_int32 :: spline_degree
     sll_real :: interval_a=0, interval_b=4.0_f64*sll_pi  !Interval length [a,b], should be a parameter and changed from outside
     sll_real64 :: mesh_dx  
-    !-----------------Parameters--------------------------------------
+  
  
-    
+!-----------------------------------------END_INPUT-------------------------------------!   
     !Bspline knots
     sll_real64,  allocatable, private   :: knots(:) 
     sll_int32 :: pushed_species
@@ -103,6 +111,11 @@ sll_real64, dimension(:), allocatable :: fieldenergy, kineticenergy, impulse, &
 
     !Definitions for different particle pushers, enumerator
     !Descriptors that should be done using the descriptor module
+    
+    
+    
+!-------------------------------------------LOCAL_VARIABLES--------------------------------
+
     sll_int32, parameter :: SLL_PIC1D_PPUSHER_NONE       = 0
     sll_int32, parameter :: SLL_PIC1D_PPUSHER_EULER   = 1    !Explicit EULER
     sll_int32, parameter :: SLL_PIC1D_PPUSHER_VERLET   = 2
@@ -114,9 +127,15 @@ sll_real64, dimension(:), allocatable :: fieldenergy, kineticenergy, impulse, &
     sll_int32, parameter :: SLL_PIC1D_PPUSHER_LEAPFROG_V       = 8 !Variational Leapfrog
     sll_int32, parameter :: SLL_PIC1D_PPUSHER_RK3        =9     ! Runge Kutta 3
     sll_int32, parameter ::  SLL_PIC1D_PPUSHER_MERSON =10 !Merson 3-5 with integrated Err estimate
-    sll_int32, parameter :: SLL_PIC1D_FULLF       = 1
-    sll_int32, parameter :: SLL_PIC1D_DELTAF       = 2
+       
+    
+!    sll_int32, parameter :: SLL_PIC1D_FULLF       = 1
+!    sll_int32, parameter :: SLL_PIC1D_DELTAF       = 2
+    
 
+
+    
+!-------------------------------END_LOCAL_VARIABLES-----------------------------------
 
     !Interface for one dimensional function for right hand side
     abstract interface
