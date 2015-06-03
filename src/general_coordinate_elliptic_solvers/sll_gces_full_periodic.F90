@@ -49,6 +49,7 @@ use gauss_legendre_integration
 use gauss_lobatto_integration
 use sll_sparse_matrix_module, only : sll_csr_matrix,                 &
                                      new_csr_matrix,                 &
+                                     new_csr_matrix_with_constraint, &
                                      sll_factorize_csr_matrix,       &
                                      sll_add_to_csr_matrix,          &
                                      sll_mult_csr_matrix_vector,     &
@@ -951,14 +952,7 @@ end do
 es%intjac = intjac
 print *,'#begin of sll_factorize_csr_matrix'
 
-SLL_ALLOCATE(es%csr_mat_with_constraint,ierr)  
-es%csr_mat_with_constraint%num_nz   = csr_mat%num_nz + 2*csr_mat%num_rows       
-es%csr_mat_with_constraint%num_rows = csr_mat%num_rows  +  1
-es%csr_mat_with_constraint%num_cols = csr_mat%num_cols  +  1
-
-SLL_ALLOCATE(es%csr_mat_with_constraint%row_ptr(es%csr_mat_with_constraint%num_rows+1),ierr)
-SLL_ALLOCATE(es%csr_mat_with_constraint%col_ind(es%csr_mat_with_constraint%num_nz),ierr)
-SLL_CLEAR_ALLOCATE(es%csr_mat_with_constraint%val(1:es%csr_mat_with_constraint%num_nz),ierr)
+es%csr_mat_with_constraint => new_csr_matrix_with_constraint(csr_mat)
 
 es%csr_mat_with_constraint%num_rows = csr_mat%num_rows+1
 es%csr_mat_with_constraint%num_nz   = csr_mat%num_nz+2*csr_mat%num_rows
