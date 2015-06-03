@@ -4,8 +4,11 @@ module sll_pic_1d
 #include "sll_assert.h"
 #include "sll_utilities.h"
 
-    use sll_constants
-    use sll_collective !Parallel operations
+  use sll_constants , only : sll_pi
+!   use sll_collective !Parallel operations
+   use sll_collective , only :  sll_collective_globalsum ,&
+     sll_world_collective, sll_collective_barrier ,&
+     sll_halt_collective
 
     
 !    use sll_arbitrary_degree_splines 
@@ -48,17 +51,17 @@ module sll_pic_1d
     type(sll_particle_1d_group),dimension(10) :: species
     
     !1d1v data for electrostatic PIC
-    sll_real64, DIMENSION(:), allocatable:: particleposition
-    sll_real64, DIMENSION(:), allocatable :: particlespeed
+    sll_real64,  allocatable:: particleposition(:)
+    sll_real64,  allocatable :: particlespeed(:)
     sll_real64 ::  particle_qm !<mass to electron mass ratio, with the sign of the charge
-    sll_real64, DIMENSION(:), allocatable:: steadyparticleposition !Steady non-moving objects aka Ions
+    sll_real64,  allocatable:: steadyparticleposition(:) !Steady non-moving objects aka Ions
     !Initial offsets
     sll_real64 :: kineticenergy_offset, impulse_offset
     sll_real64 :: initial_fem_inhom , fem_inhom
     sll_int64    ::  fastest_particle_idx
-    sll_real64 , DIMENSION(:), allocatable:: eval_solution
+    sll_real64, allocatable:: eval_solution(:)
     !Data to be collected throughout a run
-    sll_real64, dimension(:), allocatable :: fieldenergy, kineticenergy, impulse, &
+sll_real64, dimension(:), allocatable :: fieldenergy, kineticenergy, impulse, &
         thermal_velocity_estimate, particleweight_mean ,particleweight_var, inhom_var ,&
         push_error_mean, push_error_var
     integer, private :: timestep !Global counter for the time step loop
@@ -73,8 +76,8 @@ module sll_pic_1d
     sll_int32 :: timesteps 
     sll_real64 :: timestepwidth
     sll_int32 :: nparticles  !GLOBAL, marker particles
-    LOGICAL :: gnuplot_inline_output !write gnuplot output during the simulation
-    
+    LOGICAL :: gnuplot_inline_output !input     write gnuplot output during the simulation
+    !-------------------------------------------INPUT---------------------------------------!
     !Mesh parameters
     sll_int32 :: mesh_cells
     sll_int32 :: spline_degree
@@ -84,7 +87,7 @@ module sll_pic_1d
  
     
     !Bspline knots
-    sll_real64, dimension(:), allocatable, private   :: knots 
+    sll_real64,  allocatable, private   :: knots(:) 
     sll_int32 :: pushed_species
 
     class(pic_1d_field_solver), pointer :: fsolver  !<Field solver
@@ -93,7 +96,7 @@ module sll_pic_1d
     
 
     !Interpolation points for electric potential, for visualization
-    sll_real64, dimension(:), allocatable ::electricpotential_interp 
+    sll_real64,  allocatable ::electricpotential_interp(:) 
     !For parallelization MPI Rank and collective size
     sll_int32, private :: coll_rank, coll_size
 
@@ -119,7 +122,7 @@ module sll_pic_1d
     abstract interface
         function sll_pic_1d_electric_field_external(x,t) result(E)
             use sll_working_precision
-            sll_real64, dimension(:),intent(in) :: x !<Position
+            sll_real64, intent(in) :: x(:) !<Position
             sll_real64, intent(in)  :: t  !<Time
             sll_real64, dimension(size(x)) :: E
         endfunction
@@ -299,7 +302,8 @@ contains
         if (coll_rank==0) print*, "#Total Number of particles: ", nparticles*coll_size
 
 
-        !Scalar values to be recorded
+        !Scalar values to be recorded  
+        !outputs : fieldenery kineticenergy  
         SLL_CLEAR_ALLOCATE(fieldenergy(1:timesteps+1), ierr)
         SLL_CLEAR_ALLOCATE(kineticenergy(1:timesteps+1), ierr)
         SLL_CLEAR_ALLOCATE(impulse(1:timesteps+1), ierr)
@@ -1805,5 +1809,6 @@ contains
     endfunction
 
 endmodule  sll_pic_1d
+
 
 
