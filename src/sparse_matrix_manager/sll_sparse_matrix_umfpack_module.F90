@@ -24,28 +24,28 @@ use mod_umfpack
 use qsort_partition
 
 
-  !> @brief type for CSR format
-  type sll_csr_matrix
-    sll_int32 :: num_rows !< number of rows
-    sll_int32 :: num_cols !< number of columns
-    sll_int32 :: num_nz !< number of non zero elements
-    sll_int32, dimension(:), pointer :: row_ptr
-    sll_int32, dimension(:), pointer :: col_ind
-    sll_real64, dimension(:), pointer :: val
-        !................
-    !logical :: ol_use_mm_format
-    sll_int32, dimension(:), pointer :: opi_i
-        !................
-    ! work arrays for Umfpack
-    sll_int32, dimension(:), pointer :: Ai, Ap
-    integer(umf_void) :: umf_symbolic
-    integer(umf_void) :: umf_numeric
-    sll_real64, dimension(:), pointer :: umf_control
-  end type sll_csr_matrix
+!> @brief type for CSR format
+type sll_csr_matrix
 
-  interface sll_delete
-     module procedure delete_csr_matrix
-  end interface sll_delete
+  sll_int32                         :: num_rows !< number of rows
+  sll_int32                         :: num_cols !< number of columns
+  sll_int32                         :: num_nz   !< number of non zero elements
+  sll_int32,  dimension(:), pointer :: row_ptr
+  sll_int32,  dimension(:), pointer :: col_ind
+  sll_real64, dimension(:), pointer :: val
+  sll_int32,  dimension(:), pointer :: opi_i
+  sll_int32,  dimension(:), pointer :: Ai
+  sll_int32,  dimension(:), pointer :: Ap
+
+  integer(umf_void)                 :: umf_symbolic
+  integer(umf_void)                 :: umf_numeric
+  sll_real64, dimension(:), pointer :: umf_control
+
+end type sll_csr_matrix
+
+interface sll_delete
+  module procedure delete_csr_matrix
+end interface sll_delete
 
 contains
 
@@ -231,7 +231,7 @@ contains
     print*,'num_cols mat, num_cols mat_tot',mat_a%num_cols , mat%num_cols 
 
     
-    SLL_ALLOCATE(mat%row_ptr(mat%num_rows + 1),ierr)
+    SLL_ALLOCATE(mat%row_ptr(mat%num_rows+1),ierr)
     SLL_ALLOCATE(mat%col_ind(mat%num_nz),ierr)
     SLL_ALLOCATE(mat%val(mat%num_nz),ierr)
     mat%val(:) = 0.0_f64
