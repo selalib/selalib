@@ -29,7 +29,8 @@ use sll_module_advection_1d_base
 use sll_module_characteristics_1d_base
 use sll_module_interpolators_1d_base
 use sll_hermite_interpolation_1d_module
-
+use gauss_legendre_integration
+use lagrange_interpolation
 implicit none
 
   type,extends(sll_advection_1d_base) :: CSL_periodic_1d_advector
@@ -44,6 +45,7 @@ implicit none
     !sll_real64, dimension(:), pointer :: fft_buf
     sll_real64, dimension(:,:), pointer :: deriv
     sll_int32 :: Npts
+    sll_int32 :: csl_degree
   contains
     procedure, pass(adv) :: initialize => &
        initialize_CSL_periodic_1d_advector
@@ -66,7 +68,7 @@ contains
     eta_min, &
     eta_max, &
     eta_coords, &
-    hermite_degree) &  
+    csl_degree) &  
     result(adv)      
     type(CSL_periodic_1d_advector), pointer :: adv
     class(sll_interpolator_1d_base), pointer :: interp
@@ -75,7 +77,7 @@ contains
     sll_real64, intent(in), optional :: eta_min
     sll_real64, intent(in), optional :: eta_max
     sll_real64, dimension(:), pointer, optional :: eta_coords
-    sll_int32, intent(in), optional :: hermite_degree
+    sll_int32, intent(in), optional :: csl_degree
     sll_int32 :: ierr
     
     SLL_ALLOCATE(adv,ierr)
@@ -88,7 +90,7 @@ contains
       eta_min, &
       eta_max, &
       eta_coords, &
-      hermite_degree)    
+      csl_degree)    
     
   end function  new_CSL_periodic_1d_advector
 
@@ -101,7 +103,7 @@ contains
     eta_min, &
     eta_max, &
     eta_coords, &
-    hermite_degree)    
+    csl_degree)    
     class(CSL_periodic_1d_advector), intent(inout) :: adv
     class(sll_interpolator_1d_base), pointer :: interp
     class(sll_characteristics_1d_base), pointer  :: charac
@@ -109,13 +111,19 @@ contains
     sll_real64, intent(in), optional :: eta_min
     sll_real64, intent(in), optional :: eta_max
     sll_real64, dimension(:), pointer, optional :: eta_coords
-    sll_int32, optional :: hermite_degree
+    sll_int32, optional :: csl_degree
     sll_int32 :: ierr
     sll_int32 :: i
     sll_real64 :: delta_eta
     !sll_real64 :: hermite_inversibility     
     
     !hermite_inversibility = 1._f64
+    
+    if(present(csl_degree))then
+      adv%csl_degree = csl_degree
+    else
+      adv%csl_degree = 3  
+    endif
     
     adv%Npts = Npts
     adv%interp => interp
@@ -268,7 +276,8 @@ contains
       adv%Npts, &
       adv%eta_coords(1), &
       adv%eta_coords(adv%Npts), &
-      output)
+      output, &
+      adv%csl_degree)
 
 !    call compute_csl_integral( &
 !      adv%Npts, &
@@ -903,7 +912,8 @@ contains
     Npts, &
     eta_min, &
     eta_max, &
-    output)
+    output, &
+    csl_degree)
     class(sll_interpolator_1d_base), pointer :: interp
     sll_real64, dimension(:), intent(in) :: input
     sll_real64, dimension(:,:), intent(inout) :: deriv
@@ -912,6 +922,7 @@ contains
     sll_real64, intent(in) :: eta_min
     sll_real64, intent(in) :: eta_max
     sll_real64, dimension(:), intent(out) :: output
+    sll_int32, intent(in), optional :: csl_degree
     sll_real64, dimension(:), allocatable :: output_bsl
     sll_real64, dimension(:), allocatable :: flux
     sll_int32, dimension(:), allocatable :: jstar
@@ -925,8 +936,10 @@ contains
     sll_real64 :: res
     sll_real64 :: delta
     sll_real64 :: err
-    sll_real64 :: xi(-10:10)
-    sll_real64 :: fxi(-10:10)
+    sll_real64, dimension(:), allocatable :: xi
+    sll_real64, dimension(:), allocatable  :: fxi
+    sll_real64, dimension(:), allocatable :: xval
+    sll_real64, dimension(:), allocatable :: fval
     sll_int32 :: ii
     sll_real64 :: a
     sll_real64 :: b
@@ -935,8 +948,64 @@ contains
     sll_real64 :: xstarj1
     sll_int32 :: i1
     sll_int32 :: ind1
+    sll_real64, dimension(:), allocatable :: ww_tmp
+    sll_real64, dimension(:), allocatable :: ww
+    sll_int32 :: r
+    sll_int32 :: s
+    sll_int32 :: d
+    sll_int32 :: r1
+    sll_int32 :: s1
+    sll_int32 :: num_gauss_points
+    sll_real64, dimension(:,:), allocatable :: xw
+    sll_real64 :: val
     
     
+    
+    if(present(csl_degree))then
+      d = csl_degree
+    else
+      d = 3  
+    endif
+    
+    r = -d/2
+    s = (d+1)/2
+    
+    
+    SLL_ALLOCATE(ww_tmp(r:s-1),ierr)
+    
+    call compute_csl_ww(ww_tmp,r,s)
+    
+    !print *,'d=',d
+    !print *,'r=,s=',r,s
+    !print *,ww_tmp(r:s-1)
+
+    r1 = -d/2+1
+    s1 = (d+1)/2
+    SLL_ALLOCATE(ww(r1:s1),ierr)
+    
+    ww(r1:s1) = ww_tmp(r:s-1)
+    
+    num_gauss_points = (d+1)/2
+    SLL_ALLOCATE(xw(2,num_gauss_points),ierr)
+    xw = gauss_legendre_points_and_weights( &
+      num_gauss_points, &
+      0._f64, &
+      1._f64 )
+    !print *,'points=',xw(1,:)
+    !print *,'weights=',xw(2,:)
+    
+    !stop
+    !print *,'r1,s1=',r1,s1
+    !print *,ww(r1:s1)
+    
+    !stop
+    SLL_ALLOCATE(xi(r1:s1),ierr)
+    SLL_ALLOCATE(fxi(r1:s1),ierr)
+    SLL_ALLOCATE(xval(r1:s1),ierr)
+    SLL_ALLOCATE(fval(r1:s1),ierr)
+    do ii=r1,s1
+      xval(ii) = real(ii,f64)
+    enddo
     
     !here is the main work for CSL
     !(Jf)(tn+dt,xj) = Jf(tn,xj)+G'(xj)
@@ -994,8 +1063,8 @@ contains
     !to begin we do a first version that just reproduces BSL
     SLL_ALLOCATE(output_bsl(Npts),ierr)
     SLL_ALLOCATE(flux(0:Npts),ierr)
-    SLL_ALLOCATE(jstar(-10:Npts+10),ierr)
-    SLL_ALLOCATE(alpha(-10:Npts+10),ierr)
+    SLL_ALLOCATE(jstar(1+r1-10:Npts+s1+10),ierr)
+    SLL_ALLOCATE(alpha(1+r1-10:Npts+s1+10),ierr)
     
     N = Npts-1
     
@@ -1016,6 +1085,10 @@ contains
       eta_max)
     
     err = 0._f64
+    
+    
+    !print *,'r1=',r1,s1
+    !stop
     
     do i=1,Npts
       eta = charac(i)
@@ -1104,11 +1177,11 @@ contains
     alpha(N+1) = alpha(1)
     
     !boundary conditions
-    do ii=0,10
-      jstar(-ii) = jstar(N-ii)-N
-      alpha(-ii) = alpha(N-ii)
+    do ii=r1,0
+      jstar(ii) = jstar(N+ii)-N
+      alpha(ii) = alpha(N+ii)
     enddo
-    do ii=1,10
+    do ii=1,1+s1
       jstar(N+ii) = jstar(ii)+N
       alpha(N+ii) = alpha(ii)
     enddo
@@ -1147,24 +1220,59 @@ contains
       !xstarj = charac(i)      
       !xstarj = eta_min+(jstar(i)+alpha(i)-1)*delta
 
+      !we now use lagrange interpolation of degree d-1
+      !for d=4
+      !-1,0,1,2
+      !for d=3
+      !0,1,2
+      !->r1,s1
+      !for the moment we use Hermite
+
       ind = 1+modulo(N+jstar(i)-1,N)
       ind1 = 1+modulo(N+jstar(i),N)
       dof(1) = output_bsl(ind)
       dof(2) = output_bsl(ind1)
       dof(3) = deriv(1,ind)
       dof(4) = deriv(2,ind)
+      
+      do ii=r1,s1
+        fval(ii) = output_bsl(1+modulo(N+jstar(i)+ii-1,N))
+      enddo
+       
 
-      do ii=-2,3
+      do ii=r1,s1
         xi(ii) = jstar(i+ii)+alpha(i+ii)-jstar(i)
       enddo
 
-      do ii=-2,3
+      do ii=r1,s1
         a = real(ii,f64)
         b = xi(ii)
-        fxi(ii) = contribution_simpson_hermite(a,b,dof)
+        fxi(ii) = contribution_gauss_lagrange( &
+          a, &
+          b, &
+          xval, &
+          fval, &
+          r1, &
+          s1, &
+          xw, &
+          num_gauss_points)
+!        val = contribution_simpson_hermite(a,b,dof)
+!        if(abs(val-fxi(ii))>1.e-12)then
+!          print *,fxi(ii),val
+!          print *,'a,b=',a,b
+!          print *,'dof=',dof
+!          print *,'xval=',xval
+!          print *,'fval=',fval
+!          stop
+!        endif
+      enddo
+      
+      flux(i) = 0._f64
+      do ii=r1,s1
+        flux(i) = flux(i)+ww(ii)*fxi(ii)
       enddo    
-      flux(i) = (7._f64/12._f64)*(fxi(0)+fxi(1))
-      flux(i) = flux(i)-(1._f64/12._f64)*(fxi(-1)+fxi(2))
+      !flux(i) = (7._f64/12._f64)*(fxi(0)+fxi(1))
+      !flux(i) = flux(i)-(1._f64/12._f64)*(fxi(-1)+fxi(2))
       
       !flux(i) = fxi(0)
 
@@ -1501,7 +1609,143 @@ contains
     res = res*(b-a)/6._f64
     
   end function contribution_simpson_hermite
-  
+
+
+  subroutine compute_csl_ww(ww,r,s)
+    sll_real64, dimension(r:s-1), intent(out) :: ww
+    sll_int32, intent(in) :: r
+    sll_int32, intent(in) :: s
+    sll_real64, dimension(:), allocatable :: w
+    sll_real64 :: tmp
+    sll_int32 :: i
+    sll_int32 :: j
+    sll_int32 :: ierr
+
+    SLL_ALLOCATE(w(r:s),ierr)
+
+    ww = 0._f64
+    do i=r,-1
+      tmp=1._f64
+      do j=r,i-1
+        tmp=tmp*real(i-j,f64)
+      enddo
+      do j=i+1,s
+        tmp=tmp*real(i-j,f64)
+      enddo
+      tmp=1._f64/tmp
+      do j=r,i-1
+        tmp=tmp*real(-j,f64)
+      enddo
+      do j=i+1,-1
+        tmp=tmp*real(-j,f64)
+      enddo
+      do j=1,s
+        tmp=tmp*real(-j,f64)
+      enddo
+      w(i)=tmp      
+    enddo
+
+    do i=1,s
+      tmp=1._f64
+      do j=r,i-1
+        tmp=tmp*real(i-j,f64)
+      enddo
+      do j=i+1,s
+        tmp=tmp*real(i-j,f64)
+      enddo
+      tmp=1._f64/tmp
+      do j=r,-1
+        tmp=tmp*real(-j,f64)
+      enddo
+      do j=1,i-1
+        tmp=tmp*real(-j,f64)
+      enddo
+      do j=i+1,s
+        tmp=tmp*real(-j,f64)
+      enddo
+      w(i)=tmp      
+    enddo
+
+    tmp=0._f64
+    do i=r,-1
+      tmp=tmp+w(i)
+    enddo
+    do i=1,s
+      tmp=tmp+w(i)
+    enddo
+    w(0)=-tmp
+
+    tmp=0._f64
+    do i=r,-1
+      tmp=tmp+w(i)
+      ww(i)=-tmp
+    enddo
+    tmp=0._f64
+    do i=s,1,-1
+      tmp=tmp+w(i)
+      ww(i-1)=tmp
+    enddo
+    
+    !print *,'r,s=',r,s
+    !print *,'w=',w
+
+    !print *,'ww=',ww
+    !SLL_DEALLOCATE_ARRAY(w,ierr)
+    
+  end subroutine compute_csl_ww
+
+
+  function contribution_gauss_lagrange(a,b,xval,fval,r,s,xw,ng) result(res)
+    sll_real64, intent(in) :: a
+    sll_real64, intent(in) :: b
+    sll_real64, dimension(r:s), intent(in) :: xval
+    sll_real64, dimension(r:s), intent(in) :: fval
+    sll_int32, intent(in) :: r
+    sll_int32, intent(in) :: s
+    sll_real64, dimension(:,:), intent(in) ::xw
+    sll_int32, intent(in) :: ng
+    sll_real64 :: res
+    sll_int32 :: i
+    sll_int32 :: d
+    sll_real64 :: x
+    sll_real64 :: nodes(3)
+    
+    !print *,'a=',a,b
+    !print *,'xval=',xval(r:s)
+    !print *,'r=',r,s
+    d = s-r
+    res = 0._f64
+    !do i=r,s
+    !  print *,lagrange_interpolate(xval(i),d,xval(r:s),fval(r:s))
+    !enddo
+		!stop
+	!x = a	
+	!nodes(1) = lagrange_interpolate(x,d,xval(r:s),fval(r:s))	
+	!x = 0.5_f64*(a+b)	
+	!nodes(2) = lagrange_interpolate(x,d,xval(r:s),fval(r:s))	
+	!x = b	
+	!nodes(3) = lagrange_interpolate(x,d,xval(r:s),fval(r:s))	
+
+    !res = nodes(1)+4._f64*nodes(2)+nodes(3) 
+    !res = res*(b-a)/6._f64
+		
+	!print *,'res simpson=',res	
+
+    res = 0._f64
+    do i=1,ng
+      x = a+xw(1,i)*(b-a)
+      !print *,'x=',i,x
+      res = res+(b-a)*xw(2,i)*lagrange_interpolate(x,d,xval(r:s),fval(r:s))
+    enddo
+
+	!print *,'res gauss=',res	
+
+
+    
+    
+    
+    
+  end function contribution_gauss_lagrange  
   
 
 end module sll_module_advection_1d_CSL_periodic
