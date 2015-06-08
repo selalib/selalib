@@ -57,20 +57,32 @@ module sll_pic_1d
     !Allocate space for species
     type(sll_particle_1d_group),dimension(10) :: species
     
-    !1d1v data for electrostatic PIC
-    sll_real64,  allocatable:: particleposition(:)
-    sll_real64,  allocatable :: particlespeed(:)
-    sll_real64 ::  particle_qm !<mass to electron mass ratio, with the sign of the charge
-    sll_real64,  allocatable:: steadyparticleposition(:) !Steady non-moving objects aka Ions
+    
     !Initial offsets
     sll_real64 :: kineticenergy_offset, impulse_offset
     sll_real64 :: initial_fem_inhom , fem_inhom
     sll_int64    ::  fastest_particle_idx
     sll_real64, allocatable:: eval_solution(:)
-    !Data to be collected throughout a run
-sll_real64, dimension(:), allocatable :: fieldenergy, kineticenergy, impulse, &
+  
+  
+  
+ !-------------------------------------------outPUT---------------------------------------!
+ 
+  !1d1v data for electrostatic PIC
+    sll_real64,  allocatable:: particleposition(:)
+    sll_real64,  allocatable :: particlespeed(:)
+  
+    sll_real64,  allocatable:: steadyparticleposition(:) !Steady non-moving objects aka Ions
+  
+  
+  !Data to be collected throughout a run
+     
+    sll_real64, dimension(:), allocatable :: fieldenergy, kineticenergy, impulse, &
         thermal_velocity_estimate, particleweight_mean ,particleweight_var, inhom_var ,&
         push_error_mean, push_error_var
+        
+        
+        
     integer, private :: timestep !Global counter for the time step loop
     
 !-------------------------------------------INPUT---------------------------------------!
@@ -94,19 +106,12 @@ sll_real64, dimension(:), allocatable :: fieldenergy, kineticenergy, impulse, &
   
  
 !-----------------------------------------END_INPUT-------------------------------------!   
-    !Bspline knots
-    sll_real64,  allocatable, private   :: knots(:) 
-    sll_int32 :: pushed_species
 
-    class(pic_1d_field_solver), pointer :: fsolver  !<Field solver
 
     integer, private ::  phasespace_file_id=-1   
     
 
-    !Interpolation points for electric potential, for visualization
-    sll_real64,  allocatable ::electricpotential_interp(:) 
-    !For parallelization MPI Rank and collective size
-    sll_int32, private :: coll_rank, coll_size
+   
 
 
     !Definitions for different particle pushers, enumerator
@@ -127,13 +132,29 @@ sll_real64, dimension(:), allocatable :: fieldenergy, kineticenergy, impulse, &
     sll_int32, parameter :: SLL_PIC1D_PPUSHER_LEAPFROG_V       = 8 !Variational Leapfrog
     sll_int32, parameter :: SLL_PIC1D_PPUSHER_RK3        =9     ! Runge Kutta 3
     sll_int32, parameter ::  SLL_PIC1D_PPUSHER_MERSON =10 !Merson 3-5 with integrated Err estimate
-       
+    sll_real64 ::  particle_qm !<mass to electron mass ratio, with the sign of the charge
     
 !    sll_int32, parameter :: SLL_PIC1D_FULLF       = 1            useless variables
 !    sll_int32, parameter :: SLL_PIC1D_DELTAF       = 2           useless variables
     
 
-
+    !Bspline knots
+    sll_real64,  allocatable, private   :: knots(:) 
+    sll_int32 :: pushed_species
+    class(pic_1d_field_solver), pointer :: fsolver  !<Field solver
+    
+    
+    
+    
+     !Interpolation points for electric potential, for visualization
+    sll_real64,  allocatable ::electricpotential_interp(:) 
+    !For parallelization MPI Rank and collective size
+    sll_int32, private :: coll_rank, coll_size
+    
+    
+    
+    
+    
     
 !-------------------------------END_LOCAL_VARIABLES-----------------------------------
 
@@ -265,7 +286,8 @@ contains
     !<Calculates Error estimates for different Testcases using preknown analytical
     !<solutions. Call after the first field solve.
     subroutine sll_pic_1d_initial_error_estimates()
-        sll_real64 :: num_err_mean, num_err_noise_max, num_err_noise_l2, num_err_seminorm
+        sll_real64 ::  num_err_noise_max, num_err_noise_l2, num_err_seminorm
+!        sll_real64 :: num_err_mean
         sll_real64, dimension(size(knots)-1) :: analytical_solution
         selectcase(pic1d_testcase)
             case(SLL_PIC1D_TESTCASE_LANDAU)
@@ -1272,7 +1294,7 @@ contains
         sll_real64, dimension(:) ,intent(inout) :: x_0
         sll_real64, dimension(:) ,intent(inout) :: v_0
         sll_real64, dimension(size(x_0)) ::  DPhidx_0, DPhidx_1, x_1, v_1
-
+!       sll_real64, dimension(size(x_0)) ::  DPhidx_1
 
         call fsolver%evalE(x_0, DPhidx_0)
         x_1=x_0+ h*v_0 - ((h**2)/2.0_f64) *DPhidx_0*(-particle_qm)
