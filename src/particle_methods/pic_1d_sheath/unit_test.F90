@@ -35,13 +35,13 @@ program unit_test
     sll_int32 :: tsteps = 100     !Number of timesteps
     sll_real64 :: tstepw=0.1_f64   !stepwidth
     sll_int32 :: nmark=40000        !Number of marker particles
-    sll_int32 :: femp=7            !exponent for number of mesh cells
+
     sll_int32 :: sdeg=3            !spline degree
 
     !    LOGICAL :: gnuplot_inline_output=.TRUE. !write gnuplot output during the simulation
 
     !Landau damping
-    sll_real64 :: lalpha=0.1_f64
+    sll_real64 :: lalpha!=0.1_f64
     sll_real64 :: lmode=0.5_f64
 
     !
@@ -54,7 +54,7 @@ program unit_test
     !Streams
     sll_int32 :: nstreams=1
     logical  :: gnuplot_inline_output_user=.FALSE.
-
+    LOGICAL :: deltaf=.TRUE.
 
   !------------------ END DEFAULT VALUES --------------------------------------------------
 
@@ -73,12 +73,22 @@ program unit_test
 
     CHARACTER(LEN=255) :: path="./"
     character(len=256) :: filename
-    integer :: gpinline=0,deltaf=0
+    integer :: gpinline=0
+    logical :: pi_unit
     sll_int32, parameter  :: input_file =99
-    !input
-    namelist /paramss/ tsteps, tstepw, nmark, femp, sdeg, ppusher, scenario, psolver, lalpha, gnuplot_inline_output_user,gpinline,boxlenpi,deltaf,nstreams
+    !input   
+     sll_int32 :: femp=7            !exponent for number of mesh cells
+     
+     
+    namelist /landau_params/ lalpha,lmode,pi_unit,interval_a,interval_b
     
-NAMELIST /cmd/ tsteps, tstepw , nmark, scenario, nstreams, femp, sdeg, lalpha, lmode,&
+    
+    
+    namelist /params/ tsteps,nmark, ppusher, scenario, psolver,gnuplot_inline_output_user,deltaf,nstreams
+    
+    namelist /numerical_params/nmark,sdeg,tstepw,femp
+    
+NAMELIST /cmd/ tsteps, tstepw ,  scenario, nstreams, femp, sdeg, lalpha, lmode,&
         ppusher,gpinline,path,boxlenpi,deltaf, psolver
 
 !**************************************************************
@@ -89,7 +99,9 @@ NAMELIST /cmd/ tsteps, tstepw , nmark, scenario, nstreams, femp, sdeg, lalpha, l
         print *, 'init_file() failed to open file ', filename
         STOP
     end if
-    read(input_file,paramss)
+    read(input_file,landau_params)
+    read(input_file,numerical_params)
+    read(input_file,params)
     close(input_file)
 !**************************************************************
 
@@ -115,21 +127,14 @@ NAMELIST /cmd/ tsteps, tstepw , nmark, scenario, nstreams, femp, sdeg, lalpha, l
         write(*,*)message
 
     endif
-    if (deltaf/=0) then
-        enable_deltaf=.TRUE.
-    else
-        enable_deltaf=.FALSE.
 
+        enable_deltaf=deltaf
+ 
+
+    if(pi_unit)then
+    interval_a=interval_a*sll_pi
+    interval_b=interval_b*sll_pi
     endif
-
-    if (gpinline/=0) then
-        gnuplot_inline_output_user=.TRUE.
-
-    endif
-
-    interval_a=0
-    interval_b=boxlenpi*sll_pi
-
     selectcase (scenario)
         case("landau")
             pic1d_testcase = SLL_PIC1D_TESTCASE_LANDAU
@@ -205,7 +210,8 @@ NAMELIST /cmd/ tsteps, tstepw , nmark, scenario, nstreams, femp, sdeg, lalpha, l
 
 
     call destroy_sll_pic_1d
-
+  !  write(*,*) 'the length of the box =',interval_b-interval_a  
+    
 end program unit_test
 
 
