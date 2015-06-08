@@ -115,7 +115,7 @@ sll_real64, dimension(:), allocatable :: fieldenergy, kineticenergy, impulse, &
     
     
 !-------------------------------------------LOCAL_VARIABLES--------------------------------
-
+! These variables are usefull to select the appropriate particle pusher 
     sll_int32, parameter :: SLL_PIC1D_PPUSHER_NONE       = 0
     sll_int32, parameter :: SLL_PIC1D_PPUSHER_EULER   = 1    !Explicit EULER
     sll_int32, parameter :: SLL_PIC1D_PPUSHER_VERLET   = 2
@@ -129,8 +129,8 @@ sll_real64, dimension(:), allocatable :: fieldenergy, kineticenergy, impulse, &
     sll_int32, parameter ::  SLL_PIC1D_PPUSHER_MERSON =10 !Merson 3-5 with integrated Err estimate
        
     
-!    sll_int32, parameter :: SLL_PIC1D_FULLF       = 1
-!    sll_int32, parameter :: SLL_PIC1D_DELTAF       = 2
+!    sll_int32, parameter :: SLL_PIC1D_FULLF       = 1            useless variables
+!    sll_int32, parameter :: SLL_PIC1D_DELTAF       = 2           useless variables
     
 
 
@@ -224,7 +224,7 @@ contains
             print *, "Choose appropriate number of markers!"
             stop
         endif
-      
+   
     endsubroutine new_sll_pic_1d
 
     !<Destructor
