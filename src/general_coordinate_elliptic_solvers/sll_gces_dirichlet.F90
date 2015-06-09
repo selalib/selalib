@@ -204,7 +204,7 @@ sll_int32,  allocatable :: local_indices(:,:)
 sll_int32  :: i, j, ii, jj, ispl1, ispl2
 sll_int32  :: left_rho
 sll_int32  :: cell
-sll_int32  :: a, b, c, d
+sll_int32  :: a, b, e, d
 sll_int32  :: i1, i2, i4, kk, ll, icell, b1, b2
 
 sll_real64 :: x1, x2
@@ -223,20 +223,13 @@ global_indices                 = 0
 local_indices                  = 0
 es%local_to_global_indices_mat = 0
 
-c = 0
-do j = 1, n2    
-do i = 1, n1  
-  c = c+1
-  b = 0
-  do jj = 0, k2
-  do ii = 0, k1
-    b    =  b+1
-    local_indices(b, c) = c + (j-1)*k1 + jj*(n1+k1) + ii 
-  end do
-  end do
-end do
-end do
-
+! Compute the NURBS coordinates indices array such that given a global basis
+! function number and a parametric direction, it returns the index of the one-
+! dimensional basis function in the specified direction that was used to build
+! the global function. We can also interpret this array as relating the global
+! basis function number and the specified parametric direction with index of the
+! knot in the appropriate knot vector at which the support of the function
+! begins
 d = 0
 do j = 1, n2+k2
   do i = 1, n1+k1
@@ -245,9 +238,27 @@ do j = 1, n2+k2
   end do
 end do
 
-do c = 1, n1*n2
+! e is the element number
+! Compute the element nodes array that connects the global fucntion numbers to 
+! their local ordering on the
+! element
+e = 0
+do j = 1, n2    
+  do i = 1, n1  
+    e = e+1
+    b = 0
+    do jj = 0, k2
+      do ii = 0, k1
+        b    =  b+1
+        local_indices(b, e) = e + (j-1)*k1 + jj*(n1+k1) + ii 
+      end do
+    end do
+  end do
+end do
+
+do e = 1, n1*n2
   do b = 1, (k1+1)*(k2+1)
-    es%local_to_global_indices_mat(b,c) = global_indices(local_indices(b,c))
+    es%local_to_global_indices_mat(b,e) = global_indices(local_indices(b,e))
   end do
 end do
 
