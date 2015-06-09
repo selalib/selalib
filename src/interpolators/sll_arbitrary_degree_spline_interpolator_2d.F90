@@ -96,7 +96,7 @@ contains
 end type sll_arbitrary_degree_spline_interpolator_2d
 
 
-!> Pointer to arbitrary degree version of 1d interpolator
+!> Pointer to arbitrary degree version of 2d interpolator
 type sll_arbitrary_degree_spline_interpolator_2d_ptr
    type(sll_arbitrary_degree_spline_interpolator_2d), pointer :: interp
 end type sll_arbitrary_degree_spline_interpolator_2d_ptr
@@ -261,14 +261,14 @@ sll_int64 :: bc_selector
 
 
 ! do some argument checking...
-if(((bc1_min  == SLL_PERIODIC).and.(bc1_max.ne. SLL_PERIODIC)).or.&
-   ((bc1_max == SLL_PERIODIC).and.(bc1_min .ne. SLL_PERIODIC)))then
+if( bc1_min == SLL_PERIODIC .and. bc1_max .ne. SLL_PERIODIC .or.&
+    bc1_max == SLL_PERIODIC .and. bc1_min .ne. SLL_PERIODIC )then
    print *, 'initialize_arbitrary_degree_2d_interpolator, ERROR: ', &
         'if one boundary condition is specified as periodic, then ', &
         'both must be. Error in first direction.'
 end if
 
-if(((bc2_min == SLL_PERIODIC).and.(bc2_max.ne. SLL_PERIODIC)).or.&
+if(((bc2_min == SLL_PERIODIC).and.(bc2_max .ne. SLL_PERIODIC)).or.&
    ((bc2_max == SLL_PERIODIC).and.(bc2_min .ne. SLL_PERIODIC)))then
    print *, 'initialize_arbitrary_degree_2d_interpolator, ERROR: ', &
         'if one boundary condition is specified as periodic, then ', &
@@ -358,7 +358,7 @@ values = interp1d%coeff_splines(1:num_pts)
 
 call sll_delete(interp1d)
 deallocate(interp1d)
-interp1d => null()
+nullify(interp1d)
 
 end subroutine set_coeff_splines_values_1d
 
@@ -985,7 +985,7 @@ if (present(coeffs_1d)) then  !This case is used to set the solution from
     end do
     end do
     
-  case(2340) ! Hermite in al sides
+  case(2340) ! Hermite in all sides
        
     interpolator%size_coeffs1 = num_cells1 + sp_deg1
     interpolator%size_coeffs2 = num_cells2 + sp_deg2
