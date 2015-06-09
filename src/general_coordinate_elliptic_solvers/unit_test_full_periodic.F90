@@ -1,4 +1,4 @@
-program test_gces_dirichlet
+program test_gces_full_periodic
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
@@ -11,14 +11,14 @@ use sll_module_scalar_field_2d
 use sll_constants
 use sll_module_arbitrary_degree_spline_interpolator_2d
 use sll_module_deboor_splines_2d
-use sll_module_gces_dirichlet
+use sll_module_gces_full_periodic
 
 implicit none
 
 #define SPLINE_DEG1       3
 #define SPLINE_DEG2       3
-#define NUM_CELLS1        10
-#define NUM_CELLS2        10
+#define NUM_CELLS1        128
+#define NUM_CELLS2        128
 #define ETA1MIN          (-1.0_f64)
 #define ETA1MAX          (+1.0_f64)
 #define ETA2MIN          (-1.0_f64)
@@ -26,7 +26,7 @@ implicit none
 
 type(sll_cartesian_mesh_2d), pointer                      :: mesh_2d
 class(sll_coordinate_transformation_2d_base), pointer     :: tau
-type(sll_gces_dirichlet)                                  :: es
+type(sll_gces_full_periodic)                              :: es
 type(sll_arbitrary_degree_spline_interpolator_2d), target :: interp_phi
 type(sll_arbitrary_degree_spline_interpolator_2d), target :: interp_rho
 class(sll_scalar_field_2d_base), pointer                  :: a11_field_mat
@@ -106,50 +106,50 @@ a11_field_mat => new_scalar_field_2d_analytic( &
   one,                                         &
   "a11",                                       &
   tau,                                         &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
+  SLL_PERIODIC,                                &
+  SLL_PERIODIC,                                &
+  SLL_PERIODIC,                                &
+  SLL_PERIODIC,                                &
   [0.0_f64]  ) 
 
 a12_field_mat => new_scalar_field_2d_analytic( &
   zero,                                        &
   "a12",                                       &
   tau,                                         &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
+  SLL_PERIODIC,                                &
+  SLL_PERIODIC,                                &
+  SLL_PERIODIC,                                &
+  SLL_PERIODIC,                                &
   [0.0_f64] )
 
 a21_field_mat => new_scalar_field_2d_analytic( &
   zero,                                        &
   "a21",                                       &
   tau,                                         &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
+  SLL_PERIODIC,                                &
+  SLL_PERIODIC,                                &
+  SLL_PERIODIC,                                &
+  SLL_PERIODIC,                                &
   [0.0_f64] ) 
 
 a22_field_mat => new_scalar_field_2d_analytic( &
   one,                                         &
   "a22",                                       &
   tau,                                         &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
+  SLL_PERIODIC,                                &
+  SLL_PERIODIC,                                &
+  SLL_PERIODIC,                                &
+  SLL_PERIODIC,                                &
   [0.0_f64])
 
 b1_field_vect => new_scalar_field_2d_analytic( &
   zero,                                        &
   "b1",                                        &
   tau,                                         &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
+  SLL_PERIODIC,                                &
+  SLL_PERIODIC,                                &
+  SLL_PERIODIC,                                &
+  SLL_PERIODIC,                                &
   [0.0_f64],                                   & 
   first_deriv_eta1 = zero,                     &
   first_deriv_eta2 = zero) 
@@ -158,10 +158,10 @@ b2_field_vect => new_scalar_field_2d_analytic( &
   zero,                                        &
   "b2",                                        &
   tau,                                         &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
+  SLL_PERIODIC,                                &
+  SLL_PERIODIC,                                &
+  SLL_PERIODIC,                                &
+  SLL_PERIODIC,                                &
   [0.0_f64],                                   &
   first_deriv_eta1 = zero,                     &
   first_deriv_eta2 = zero)
@@ -170,10 +170,10 @@ c_field => new_scalar_field_2d_analytic(       &
   zero,                                        &
   "c_field",                                   &
   tau,                                         &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
+  SLL_PERIODIC,                                &
+  SLL_PERIODIC,                                &
+  SLL_PERIODIC,                                &
+  SLL_PERIODIC,                                &
   [0.0_f64]  )
 
 call initialize_ad2d_interpolator(             &
@@ -184,10 +184,10 @@ call initialize_ad2d_interpolator(             &
   ETA1MAX,                                     &
   ETA2MIN,                                     &
   ETA2MAX,                                     &
-  SLL_HERMITE,                                 &
-  SLL_HERMITE,                                 &
-  SLL_HERMITE,                                 &
-  SLL_HERMITE,                                 &
+  SLL_PERIODIC,                                &
+  SLL_PERIODIC,                                &
+  SLL_PERIODIC,                                &
+  SLL_PERIODIC,                                &
   SPLINE_DEG1,                                 &
   SPLINE_DEG2 )
 
@@ -199,10 +199,10 @@ call initialize_ad2d_interpolator(             &
   ETA1MAX,                                     &
   ETA2MIN,                                     &
   ETA2MAX,                                     &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
+  SLL_PERIODIC,                                &
+  SLL_PERIODIC,                                &
+  SLL_PERIODIC,                                &
+  SLL_PERIODIC,                                &
   SPLINE_DEG1,                                 &
   SPLINE_DEG2 )
 
@@ -210,35 +210,20 @@ phi => new_scalar_field_2d_discrete(           &
   "phi",                                       &
   interp_phi,                                  &
   tau,                                         &
-  SLL_HERMITE,                                 &
-  SLL_HERMITE,                                 &
-  SLL_HERMITE,                                 &
-  SLL_HERMITE )
+  SLL_PERIODIC,                                &
+  SLL_PERIODIC,                                &
+  SLL_PERIODIC,                                &
+  SLL_PERIODIC )
 
 rho => new_scalar_field_2d_analytic( &
 &    rhs,                            &
 &    "rho",                          &     
 &    tau,                            &
-&    SLL_DIRICHLET,                  &
-&    SLL_DIRICHLET,                  &
-&    SLL_DIRICHLET,                  &
-&    SLL_DIRICHLET,                  &
+&    SLL_PERIODIC,                   &
+&    SLL_PERIODIC,                   &
+&    SLL_PERIODIC,                   &
+&    SLL_PERIODIC,                   &
 &    [0.0_f64]                       )
-
-!Set boundary conditions
-do j = 1, npts2
-  v1_min(j) = eta1(    1)**2+eta2(j)**2
-  v1_max(j) = eta1(npts1)**2+eta2(j)**2
-end do
-do i = 1, npts1
-  v2_min(i) = eta1(i)**2+eta2(    1)**2
-  v2_max(i) = eta1(i)**2+eta2(npts2)**2
-end do
-
-values = 0.0_f64
-call phi%set_field_data(values)
-!call set_boundary_value2d(interp_phi, v1_min, v1_max, v2_min, v2_max)
-call phi%update_interpolation_coefficients()
 
 integral_solution = 0.0_f64
 integral_exact_solution = 0.0_f64
@@ -281,9 +266,9 @@ do i=1,npts1
   calculated(i,j) = node_val
   grad1_node_val  = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
   grad2_node_val  = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
-  ref             = sol(eta1(i),eta2(j), [0.0d0])
-  grad1ref        = 2*sll_pi*cos(2*sll_pi*eta1(i))*sin(2*sll_pi*eta2(j))
-  grad2ref        = 2*sll_pi*cos(2*sll_pi*eta2(j))*sin(2*sll_pi*eta1(i))
+  ref             = cos(2*sll_pi*eta1(i)) * cos(2*sll_pi*eta2(j))
+  grad1ref        =-2*sll_pi*sin(2*sll_pi*eta1(i))*cos(2*sll_pi*eta2(j))
+  grad2ref        =-2*sll_pi*sin(2*sll_pi*eta2(j))*cos(2*sll_pi*eta1(i))
   reference(i,j)  = ref
   normL2          = normL2 + (node_val-ref)**2*h1*h2
   normH1          = normH1 + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2
@@ -296,9 +281,9 @@ integral_exact_solution = sum(reference)*h1*h2
 do j=-50,50
 do i=-50,50
   write(41,*) i, j, phi%first_deriv_eta1_value_at_point(i*0.01_f64,j*0.01_f64) &
-                  , 2*sll_pi*cos(2*sll_pi*i*0.01_f64)*sin(2*sll_pi*j*0.01_f64)
+                  ,-2*sll_pi*sin(2*sll_pi*i*0.01_f64)*cos(2*sll_pi*j*0.01_f64)
   write(42,*) i, j, phi%value_at_point(i*0.01_f64,j*0.01_f64) &
-                  , sol(i*0.01_f64,j*0.01_f64, [0.0d0])
+                  , cos(2*sll_pi*i*0.01_f64)*cos(2*sll_pi*j*0.01_f64)
 end do
 write(41,*) 
 write(42,*) 
@@ -331,14 +316,6 @@ print*, 'PASSED'
 
 contains
 
-function four( eta1, eta2, params ) result(res)
-real(8), intent(in) :: eta1
-real(8), intent(in) :: eta2
-real(8), dimension(:), intent(in) :: params
-real(8) :: res, pi
-res = 4.0_f64
-end function four
-
 function one( eta1, eta2, params ) result(res)
 real(8), intent(in) :: eta1
 real(8), intent(in) :: eta2
@@ -361,10 +338,8 @@ real(8), intent(in) :: eta2
 real(8), dimension(:), intent(in) :: params
 real(8) :: res
 real(8) :: pi
-
 pi = 4d0*atan(1d0)
-res = -8*pi*pi*sin(2*pi*eta1)*sin(2*pi*eta2)
-
+res = -8*pi*pi*cos(2*pi*eta1)*cos(2*pi*eta2)
 end function rhs
 
 function sol( eta1, eta2, params ) result(res)
@@ -373,10 +348,8 @@ real(8), intent(in) :: eta2
 real(8), dimension(:), intent(in) :: params
 real(8) :: res
 real(8) :: pi
-
 pi = 4d0*atan(1d0)
-res = sin(2*pi*eta1)*sin(2*pi*eta2)
-
+res = cos(2*pi*eta1)*cos(2*pi*eta2)
 end function sol
 
-end program test_gces_dirichlet
+end program test_gces_full_periodic
