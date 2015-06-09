@@ -177,6 +177,8 @@ contains
     !parameters given by user are marked with _user
     subroutine new_sll_pic_1d(mesh_cells_user, spline_degree_user, numberofparticles_user,&
             timesteps_user, timestepwidth_user,particle_pusher_user, psolver_user )
+            
+            !creates the knots
         implicit none
         sll_int32, intent(in) :: mesh_cells_user
         sll_int32 , intent(in):: spline_degree_user
@@ -203,12 +205,13 @@ contains
 
 
         !The Mesh is needed on every Node, it is global
+        !space set and initiation of the knots and electrocpotential
         mesh_dx = (interval_b - interval_a)/mesh_cells
         SLL_CLEAR_ALLOCATE(knots(1:mesh_cells+1),ierr)
         SLL_CLEAR_ALLOCATE(electricpotential_interp(1:mesh_cells),ierr)
 
 
-
+        !Knots coordinates
         knots(1)=interval_a
         do i=2,size(knots)
             knots(i)=  knots(1) + (i-1)*mesh_dx*1.0_f64
@@ -218,15 +221,17 @@ contains
 
 
         if (coll_rank==0) then
-            print *, "Size of MPI-Collective: ", coll_size
+            print *, "Size of MPI-Collective: ", coll_size   !number of cores involved in calculus (mpirun argument)
         endif
-
+!parallel configuration
         call sll_collective_barrier(sll_world_collective)
         call sll_initialize_intrinsic_mpi_random(sll_world_collective)
         call sll_collective_barrier(sll_world_collective)
 
         !Set up Quasineutral solver
-        selectcase(pic1d_testcase)
+        
+        !fsolver is of class pic_1d_field_solver 
+               selectcase(pic1d_testcase)
             case(SLL_PIC1D_TESTCASE_IONBEAM)
                 fsolver=>new_pic_1d_field_solver(interval_a, interval_b, spline_degree, &
                     mesh_cells, poisson_solver, sll_world_collective, SLL_DIRICHLET)
@@ -345,6 +350,9 @@ contains
 
         !Scalar values to be recorded  
         !outputs : fieldenery kineticenergy  
+        
+        ! allocating output pointers 
+        !global outputs
         SLL_CLEAR_ALLOCATE(fieldenergy(1:timesteps+1), ierr)
         SLL_CLEAR_ALLOCATE(kineticenergy(1:timesteps+1), ierr)
         SLL_CLEAR_ALLOCATE(impulse(1:timesteps+1), ierr)
@@ -354,16 +362,16 @@ contains
         SLL_CLEAR_ALLOCATE(push_error_mean(1:timesteps+1), ierr)
         SLL_CLEAR_ALLOCATE(push_error_var(1:timesteps+1), ierr)
         SLL_CLEAR_ALLOCATE(inhom_var(1:timesteps+1), ierr)
-
-
+        
+        !particle caracterized  outputs
         SLL_CLEAR_ALLOCATE( steadyparticleposition(1:nparticles),ierr)
         SLL_CLEAR_ALLOCATE(particleposition(1:nparticles),ierr)
         SLL_CLEAR_ALLOCATE(particlespeed(1:nparticles),ierr)
-
+         SLL_CLEAR_ALLOCATE(eval_solution(1:size(knots)),ierr)   
         !SLL_CLEAR_ALLOCATE(particleweight(1:nparticles),ierr)
         !SLL_CLEAR_ALLOCATE(particleweight_constant(1:nparticles),ierr)
 
-        SLL_CLEAR_ALLOCATE(eval_solution(1:size(knots)),ierr)
+       
 
 
         if (coll_rank==0) write(*,*) "#PIC1D: Loading particles..."
