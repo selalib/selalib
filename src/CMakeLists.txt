@@ -235,6 +235,7 @@ IF(BUILD_PARALUTION)
   )
 ENDIF()
 
+
 IF(BUILD_JOREK)
 
   SET(GIT_LOGIN $ENV{USER} CACHE STRING "INRIA GForge login")
@@ -270,6 +271,18 @@ IF(BUILD_JOREK)
   
   FIND_PACKAGE(PETSc)
   ADD_SUBDIRECTORY(jorek)
+
+ENDIF()
+
+IF($ENV{PFUNIT})
+
+  INCLUDE(ExternalProject)
+
+  EXTERNALPROJECT_ADD(
+    pFUnit
+    PREFIX pFunit
+    GIT_REPOSITORY git://git.code.sf.net/p/pfunit/code
+    CMAKE_ARGS -DINSTALL_PATH=${CMAKE_BINARY_DIR})
 
 ENDIF()
 

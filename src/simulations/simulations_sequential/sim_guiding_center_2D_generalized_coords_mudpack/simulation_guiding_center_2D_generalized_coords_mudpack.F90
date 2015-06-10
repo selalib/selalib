@@ -1,4 +1,4 @@
-module sll_simulation_2d_guiding_center_curvilinear_mudpack_module
+module sll_simulation_2d_gc_curvilinear_mudpack_module
 
 !the aim is to create guiding center cartesian in simulation class
 !related to
@@ -37,7 +37,7 @@ module sll_simulation_2d_guiding_center_curvilinear_mudpack_module
 
 
   type, extends(sll_simulation_base_class) :: &
-    sll_simulation_2d_guiding_center_curvilinear_mudpack
+    sll_simulation_2d_gc_curvilinear_mudpack
 
    !geometry
    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
@@ -79,12 +79,12 @@ module sll_simulation_2d_guiding_center_curvilinear_mudpack_module
     procedure, pass(sim) :: run => run_gc2d_curvilinear_mudpack
     procedure, pass(sim) :: init_from_file => init_fake
      
-  end type sll_simulation_2d_guiding_center_curvilinear_mudpack
+  end type sll_simulation_2d_gc_curvilinear_mudpack
 
 contains
 
   function new_guiding_center_2d_curvilinear_mudpack() result(sim)
-    type(sll_simulation_2d_guiding_center_curvilinear_mudpack), pointer :: sim    
+    type(sll_simulation_2d_gc_curvilinear_mudpack), pointer :: sim    
     sll_int32 :: ierr
     
     SLL_ALLOCATE(sim,ierr)
@@ -96,7 +96,7 @@ contains
   end function new_guiding_center_2d_curvilinear_mudpack
   
   subroutine initialize_guiding_center_2d_curvilinear_mudpack(sim)
-    class(sll_simulation_2d_guiding_center_curvilinear_mudpack), intent(inout) :: sim
+    class(sll_simulation_2d_gc_curvilinear_mudpack), intent(inout) :: sim
     sll_int32 :: Nc_eta1
     sll_int32 :: Nc_eta2
     sll_real64 :: eta1_min
@@ -435,7 +435,7 @@ contains
 
 
   subroutine init_fake(sim, filename)
-    class(sll_simulation_2d_guiding_center_curvilinear_mudpack), intent(inout) :: sim
+    class(sll_simulation_2d_gc_curvilinear_mudpack), intent(inout) :: sim
     character(len=*), intent(in)                                :: filename
   
     print *,'# Do not use the routine init_vp4d_fake'
@@ -445,7 +445,7 @@ contains
   end subroutine init_fake
   
   subroutine run_gc2d_curvilinear_mudpack(sim)
-    class(sll_simulation_2d_guiding_center_curvilinear_mudpack), intent(inout) :: sim
+    class(sll_simulation_2d_gc_curvilinear_mudpack), intent(inout) :: sim
     sll_int32 :: Nc_eta1
     sll_int32 :: Nc_eta2
     sll_real64 :: delta_eta1
@@ -952,4 +952,4 @@ contains
 #endif
 
 
-end module sll_simulation_2d_guiding_center_curvilinear_mudpack_module
+end module sll_simulation_2d_gc_curvilinear_mudpack_module

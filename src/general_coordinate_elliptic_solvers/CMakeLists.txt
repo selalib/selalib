@@ -1,9 +1,9 @@
 ADD_LIBRARY( sll_general_coordinate_elliptic_solvers STATIC
-             sll_knots.F90
-             connectivity_module.F90
              sll_lobatto_poisson.F90 
              map_function_module.F90
              lobalap.F90
+             sll_gces_dirichlet.F90
+             sll_gces_full_periodic.F90
              sll_general_coordinate_elliptic_solver.F90 )
 
 TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers
@@ -23,53 +23,7 @@ TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers
                        sll_memory
                        sll_working_precision)
 
-ADD_LIBRARY( finite_elements_solver STATIC connectivity_module.F90
-                                           finite_elements_solver.F90
-                                           sll_knots.F90)
 
-TARGET_LINK_LIBRARIES( finite_elements_solver
-                       sll_sparse_matrix 
-                       sll_fields
-                       sll_interpolators
-                       sll_coordinate_transformations
-                       sll_meshes
-                       sll_boundary_condition_descriptors
-                       sll_file_io
-                       sll_integration
-                       sll_constants
-                       sll_utilities
-                       sll_timer
-                       sll_assert
-                       sll_memory
-                       sll_working_precision
-                       deboor_splines)
-
-
-
-# ADD_LIBRARY( finite_elements_solver_hex STATIC connectivity_qn.f90
-#                                                finite_elements_solver_hex.F90
-#                                                sll_knots.F90)
-
-# TARGET_LINK_LIBRARIES( finite_elements_solver_hex
-#                        sll_sparse_matrix 
-#                        sll_fields
-#                        sll_interpolators
-#                        sll_coordinate_transformations
-#                        sll_hex_meshes
-#                        sll_boundary_condition_descriptors
-#                        sll_file_io
-#                        sll_integration
-#                        sll_constants
-#                        sll_utilities
-#                        sll_timer
-#                        sll_assert
-#                        sll_memory
-#                        sll_working_precision
-#                        deboor_splines)
-
-
-
-# Ctest
 IF(BUILD_TESTING)
 
   ADD_EXECUTABLE( test_general_coordinates_elliptic_solver 
@@ -81,13 +35,20 @@ IF(BUILD_TESTING)
   SET_TESTS_PROPERTIES( general_coordinate_elliptic_solver 
                         PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 2000 )
 
-  ADD_EXECUTABLE( test_finite_elements_solver unit_test_finite_elements.F90 )
-  TARGET_LINK_LIBRARIES( test_finite_elements_solver finite_elements_solver )
-
   ADD_EXECUTABLE( test_lobalap_analytic unit_test_lobalap_analytic.F90 )
   TARGET_LINK_LIBRARIES( test_lobalap_analytic sll_general_coordinate_elliptic_solvers )
 
   ADD_EXECUTABLE( test_lobalap_discrete unit_test_lobalap_discrete.F90 )
   TARGET_LINK_LIBRARIES( test_lobalap_discrete sll_general_coordinate_elliptic_solvers )
+
+  ADD_EXECUTABLE( test_gces_dirichlet unit_test_dirichlet.F90 )
+  TARGET_LINK_LIBRARIES( test_gces_dirichlet sll_general_coordinate_elliptic_solvers )
+  #ADD_TEST( NAME gces_dirichlet COMMAND test_gces_dirichlet )
+  #SET_TESTS_PROPERTIES( gces_dirichlet PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100 )
+
+  ADD_EXECUTABLE( test_gces_full_periodic unit_test_full_periodic.F90 )
+  TARGET_LINK_LIBRARIES( test_gces_full_periodic sll_general_coordinate_elliptic_solvers )
+  ADD_TEST( NAME gces_full_periodic COMMAND test_gces_full_periodic )
+  SET_TESTS_PROPERTIES( gces_full_periodic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100 )
 
 ENDIF(BUILD_TESTING)
