@@ -41,6 +41,8 @@ integer(kind=jorek_ints_kind)           :: nstep_max
 integer, parameter, private             :: dtllevel_base=0
 integer, parameter                      :: nvar = 1
 integer, parameter                      :: matrix_a_id = 0
+integer                                 :: testcase
+integer                                 :: mesh_type
 integer                                 :: mode_m1
 integer                                 :: mode_n1
 real(kind=jorek_coef_kind)              :: a
@@ -48,6 +50,9 @@ real(kind=jorek_coef_kind)              :: acenter
 real(kind=jorek_coef_kind)              :: r0
 real(kind=jorek_coef_kind)              :: z0
 integer, parameter                      :: one=1
+real(8), dimension(:), pointer          :: rho
+real(8), dimension(:), pointer          :: e_x
+real(8), dimension(:), pointer          :: e_y
 
 end module jorek_model
 
@@ -76,9 +81,8 @@ integer(kind=spm_ints_kind) :: ierror
 integer                     :: tracelogdetail 
 integer                     :: tracelogoutput
 
-character(len = 1024)         :: exec
-character(len = 1024)         :: rootname
-character(len = *), parameter :: mod_name = "main"
+character(len=1024) :: progname
+character(len=1024) :: rootname
 
 character(len=1024) :: filename_parameter
 
@@ -95,12 +99,11 @@ call jorek_get_arguments(argname, filename_parameter, ierr)
 print *, "Parameters text file ", trim(filename_parameter)
 call initialize_jorek_parameters(filename_parameter)
 
-call getarg(0, exec)
+call getarg(0, progname)
 rootname = "output"
 
 nb_args = iargc()
 
-print *, "runname : ", trim(exec)
 
 ! ... initialize spm, mpi 
 call spm_initialize(ierror)
@@ -108,6 +111,7 @@ myrank = 0
 #ifdef MPI_ENABLED
 call mpi_comm_rank ( mpi_comm_world, myrank, ierr)
 #endif
+if (myrank == 0) print *, "runname : ", trim(progname)
 
 ! ... define model parameters 
 ! ..................................................
@@ -119,8 +123,10 @@ i_vp_rho            = 1
 nmatrices           = 1
 i_vu_rho            = 1 
 
-call jorek_param_getint(int_modes_m1_id, mode_m1, ierr)
-call jorek_param_getint(int_modes_n1_id, mode_n1, ierr)
+call jorek_param_getint(int_modes_m1_id, mode_m1,   ierr)
+call jorek_param_getint(int_modes_n1_id, mode_n1,   ierr)
+CALL JOREK_Param_GETInt(int_testcase_id, Testcase,  ierr)
+CALL JOREK_Param_GETInt(int_typemesh_id, mesh_type, ierr)
 
 call jorek_param_getreal(real_rgeo_id,r0,ierr)
 call jorek_param_getreal(real_zgeo_id,z0,ierr)
@@ -128,21 +134,32 @@ call jorek_param_getreal(real_amin_id,a,ierr)
 call jorek_param_getreal(real_acenter_id,acenter,ierr)
 call jorek_param_getint(int_nstep_max_id,nstep_max,ierr)
 
-call space_create(space_trial, fem_mesh)
-ptr_space_trial => space_trial
-call space_create(space_test, fem_mesh)
-ptr_space_test => space_test
+!if the basis is given in a direcroty dirname given by the argument argname
+IF (mesh_type == INT_MESH_BEZIER_DESCRIPTION) THEN
+   argname = "--basis"
+   CALL JOREK_GET_ARGUMENTS(argname, dirname, ierr)
+   CALL SPACE_CREATE(space_trial, fem_mesh, dirname=dirname)
+   ptr_space_trial => space_trial
+   CALL SPACE_CREATE(space_test, fem_mesh, dirname=dirname)
+   ptr_space_test => space_test
+ELSE
+   !    if the basis is defined internally (hermite-bezier for example)
+   CALL SPACE_CREATE(space_trial, fem_mesh)
+   ptr_space_trial => space_trial
+   CALL SPACE_CREATE(space_test, fem_mesh)
+   ptr_space_test => space_test
+   ! ...
+END IF
+
 
 argname = "--geometry"
 call jorek_get_arguments(argname, dirname, ierr)
-call create_mesh(fem_mesh, dirname)
+call create_mesh(fem_mesh, dirname=dirname)
 
 call model_create(fem_model,       &
                   fem_mesh,        &
                   ptr_space_trial, &
-                  ptr_space_test,  &
-                  n_var_unknown,   &
-                  n_var_sys)
+                  ptr_space_test)
 
 call field_create(field_u, fem_model%space_trial, field_name="density")
 ptr_field => field_u
@@ -166,11 +183,9 @@ end subroutine create_jorek_model
 
 subroutine run_jorek_model()
 
-real(kind=rk), dimension(:), allocatable :: y
 real(kind=rk), dimension(1:1,1:2)        :: x
-real(kind=rk), dimension(1:1,1:2)        :: v
+real(kind=rk), dimension(1:3,1:2)        :: v
 integer                                  :: i   
-real(kind=rk)       :: t_fin, t_deb
 character(len=1024) :: argname
 integer             :: err
 integer(kind=spm_ints_kind)          :: nrows !number of rows
@@ -183,20 +198,13 @@ integer             :: ierr
 ! ... define weak formulation 
 ptr_system%ptr_matrix_contribution => matrix_for_vi_vj
 ptr_system%ptr_rhs_contribution    => rhs_for_vi
-! ...
 
 ! ... loop over elements 
-call cpu_time(t_deb)
 call model_assembly(fem_model, ptr_system)
-call cpu_time(t_fin)
 ! ...
-
-print *, "rhs ", ptr_system%opr_global_rhs(1:6)
 
 ! opr_global_var( & 
 print*, 'order =', fem_model%space_trial%basis%oi_n_order
-print*, 'order =', fem_model%oi_nvar_unknown
-
 ! ... example of solver calls
 argname = "--solver"
 call jorek_get_arguments(argname, filename, err)
@@ -223,19 +231,12 @@ write(msg,*) myrank
 stamp_default = "-proc_" // trim(adjustl(msg))
 stamp_default = trim(adjustl(adjustr(stamp_default)))
 
-allocate(y(nrows))
-y=0.d0 
-call spm_matmult(matrix_a_id, ptr_system%opr_global_unknown, y, err)
-
-print *, maxval(y-ptr_system%opr_global_rhs), &
-         minval(y-ptr_system%opr_global_rhs) 
-
 ! ... evaluate unknowns on vertecies and compte model norms 
+ptr_system%ptr_assembly_diagnostics => assembly_diagnostics
 call model_diagnostics(fem_model,             &
                        analytical_model,      &
-                       assembly_diagnostics,  &
                        plot_diagnostics,      &
-                       ptr_system)
+                       ptr_system, 0)
 
 call model_save(fem_model, analytical_model, "jorek_plot", 0)
 
@@ -280,7 +281,7 @@ subroutine rhs_for_vi(ptr_matrix, bbox2di, gbox2d)
 class(def_matrix_2d), pointer :: ptr_matrix
 type(def_blackbox_2d)         :: bbox2di
 type(def_greenbox_2d)         :: gbox2d
-! local
+
 real(kind=rk) :: f_rhs
 real(kind=rk) :: contribution
 integer       :: ijg
@@ -293,7 +294,7 @@ real(kind=rk) :: vi_rz
 real(kind=rk) :: vi_zz
 real(kind=rk), dimension(:), pointer :: rhs_contribution
 
-rhs_contribution => gbox2d%rhs_contribution
+rhs_contribution => ptr_matrix%rhs_contribution
 
 ijg   = bbox2di%ijg
 wvol  = bbox2di%wvol(ijg)
@@ -339,7 +340,7 @@ real(kind=rk) :: vj_rz
 real(kind=rk) :: vj_zz
 real(kind=rk), dimension(:,:), pointer :: matrix_contribution
 
-matrix_contribution => gbox2d%matrix_contribution
+matrix_contribution => ptr_matrix%matrix_contribution
 
 ijg   = bbox2di%ijg
 wvol  = bbox2di%wvol(ijg)
@@ -358,13 +359,15 @@ matrix_contribution(i_vu_rho, i_vu_rho) =  contribution
 
 end subroutine matrix_for_vi_vj
 
-subroutine assembly_diagnostics(bbox2d, gbox2d,nstep)
+subroutine assembly_diagnostics(ptr_matrix, bbox2d, gbox2d,nstep)
 
-type(def_blackbox_2d) :: bbox2d
-type(def_greenbox_2d) :: gbox2d
-integer               :: ijg
-integer               :: nstep
-real(kind=rk)         :: wvol
+class(def_matrix_2d), pointer :: ptr_matrix
+type(def_blackbox_2d)         :: bbox2d
+type(def_greenbox_2d)         :: gbox2d
+
+integer                       :: ijg
+integer                       :: nstep
+real(kind=rk)                 :: wvol
 
 if(nstep .ge. 0) then
 
@@ -543,9 +546,9 @@ if(testcase .eq. 1) then
   v(1,2) = k1*cos(k1*r)*sin(k2*z) ! ... u_r
   v(1,3) = k2*sin(k1*r)*cos(k2*z) ! ... u_z
 else if(testcase .eq. 2) then
-  v(1,1) = sin ( 1.0 - r**2 - z**2 ) ! ... u
-  v(1,2) = - 2.0 * r * cos ( 1.0 - r**2 - z**2) ! ... u_r
-  v(1,3) = - 2.0 * z * cos ( 1.0 - r**2 - z**2) ! ... u_z
+  v(1,1) = sin(1.0-r**2-z**2 ) ! ... u
+  v(1,2) = -2.0*r*cos(1.0-r**2-z**2) ! ... u_r
+  v(1,3) = -2.0*z*cos(1.0-r**2-z**2) ! ... u_z
 else if(testcase .eq. 3) then
   v(1,1) = (1-(z**2+(r-r0)**2)/a**2)*(z**2-acenter**2+(r-r0)**2) ! ... u
   v(1,2) = (1-(z**2+(r-r0)**2)/a**2)*(2*r-2*r0) &                ! ... u_r
@@ -560,34 +563,19 @@ endif
 
 end subroutine analytical_model
 
-!subroutine compute_electric_fields(bbox2d, gbox2d)
-!integer              :: prank
-!integer              :: ierr
-!
-!
-!
-!type(def_blackbox_2d) :: bbox2d
-!type(def_greenbox_2d) :: gbox2d
-!integer               :: ijg
-!real(kind=rk)         :: wvol
-!
+subroutine compute_electric_fields(bbox2d, gbox2d)
+integer              :: prank
+integer              :: ierr
+type(def_blackbox_2d) :: bbox2d
+type(def_greenbox_2d) :: gbox2d
+integer               :: ijg
+real(kind=rk)         :: wvol
+
 !call mpi_comm_rank(prank, ierr)
-!ijg   = bbox2d%ijg
-!wvol  = bbox2d%wvol(ijg)
-!
-!jorek%e_x(1) = jorek%e_x(1) + gbox2d%varn_x1(1, ijg) * wvol
-!jorek%e_y(1) = jorek%e_y(1) + gbox2d%varn_x2(1, ijg) * wvol
-!
-!call loop_on_elmts( ptr_matrix,                        &
-!             &      prank,                             &
-!             &      jorek%fem_model%ptr_mesh,          &
-!             &      jorek%fem_model%greenbox,          &
-!             &      jorek%fem_model%space_trial%basis, &
-!             &      jorek%fem_model%space_test%basis,  &
-!             &      ptr_matrix%opr_global_unknown,     &
-!             &      jorek%fem_model%opr_global_var,    &
-!             &      ptr_matrix%opr_global_rhs)
-!
+ijg   = bbox2d%ijg
+wvol  = bbox2d%wvol(ijg)
+
+
 !call evaluate_on_elmts(ptr_matrix,                      &
 !&                      prank,                           &
 !&                      fem_model%ptr_mesh,              &
@@ -599,7 +587,54 @@ end subroutine analytical_model
 !&                      Assembly_Diags,                  &
 !&                      Plot_Diags,                      &
 !&                      0                                )
+
+end subroutine compute_electric_fields
+
+subroutine assembly_electric_fields(bbox2d, gbox2d)
+
+type(def_blackbox_2d) :: bbox2d
+type(def_greenbox_2d) :: gbox2d
+integer               :: ijg
+integer               :: nstep
+real(kind=rk)         :: wvol
+
+ijg   = bbox2d%ijg
+wvol  = bbox2d%wvol(ijg)
+
+e_x = e_x + gbox2d%varn_x1(1, ijg) * wvol
+e_y = e_y + gbox2d%varn_x2(1, ijg) * wvol
+
+end subroutine assembly_electric_fields
+
+
+!function interpolate_rho_value(bbox_2d)
+!real(kind=rk)         :: interpolate_rho_value 
+!type(def_blackbox_2d) :: bbox2d
+!real(kind=rk)         :: x, y
+!integer               :: ijg
+!integer, parameter    :: one = 1
 !
-!end subroutine compute_electric_fields
+!ijg = bbox2d%ijg
+!is1 = fem_mesh%opo_elements(ijg)%opi_vertices(1)
+!is2 = fem_mesh%opo_elements(ijg)%opi_vertices(1)
+!is3 = fem_mesh%opo_elements(ijg)%opi_vertices(1)
+!is4 = fem_mesh%opo_elements(ijg)%opi_vertices(1)
+!
+!xs1 = fem_mesh%thenodes%coor2d(1, one, is1 )
+!xs2 = fem_mesh%thenodes%coor2d(1, one, is2 )
+!xs3 = fem_mesh%thenodes%coor2d(1, one, is3 )
+!xs4 = fem_mesh%thenodes%coor2d(1, one, is4 )
+!
+!ys1 = fem_mesh%thenodes%coor2d(2, one, is1 )
+!ys2 = fem_mesh%thenodes%coor2d(2, one, is2 )
+!ys3 = fem_mesh%thenodes%coor2d(2, one, is3 )
+!ys4 = fem_mesh%thenodes%coor2d(2, one, is4 )
+!
+!x   = bbox2d%xp_0(1,ijg)
+!y   = bbox2d%xp_0(2,ijg)
+!
+!!call  the interpolator here
+!
+!end function interpolate_rho_value
 
 end module jorek_interface
