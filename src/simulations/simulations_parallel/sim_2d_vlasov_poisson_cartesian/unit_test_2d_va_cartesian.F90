@@ -20,6 +20,8 @@ use sll_fft
 use sll_timer
 use sll_module_advection_1d_ampere
 
+!$ use omp_lib
+
 implicit none
 
 character(len=*), parameter :: this_prog_name = 'vlasov_ampere_2d'
