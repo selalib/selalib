@@ -8,7 +8,7 @@ dnl Comment for the Generated file
 !> of the names used to describe different properties which are applicabale
 !> in a global sense
 !> <b> How to use-it </b>
-
+!> m4 descriptors.m4 > sll_descriptors.F90
 
 define(`foreach', `pushdef(`$1')_foreach($@)popdef(`$1')')
 define(`_arg1', `$1')
@@ -23,7 +23,7 @@ dnl
 dnl####### Type definition ###########
 define(TYPE_DEF, `type sll_$1 
     sll_int32                  :: id
-    character(len=32) private :: pname
+    character(len=32), private :: pname
   contains
     procedure,  pass(self)      :: name=>name_$1 
     procedure,  pass(self)      :: parse=>parse_$1
@@ -105,13 +105,15 @@ dnl
 dnl
 dnl
 DESCRIPTOR_HEADER(vlasovpoisson_sim,(SLL_LANDAU_DIAG,SLL_LANDAU_SUM,SLL_LANDAU_PROD,SLL_TWOSTREAM,SLL_BUMPONTAIL))
+DESCRIPTOR_HEADER(sll_field_eqn,(POISSON,AMPERE,MAXWELL,ADIABATIC_WO_ZONAL,ADIABATIC,QN_ADIABATIC))
+
 DESCRIPTOR_HEADER(boundary,(OPEN,CLOSED))
 
 contains
 
 DESCRIPTOR_BODY(vlasovpoisson_sim,(SLL_LANDAU_DIAG,SLL_LANDAU_SUM,SLL_LANDAU_PROD,SLL_TWOSTREAM,SLL_BUMPONTAIL))
 DESCRIPTOR_BODY(boundary,(OPEN,CLOSED))
-
+DESCRIPTOR_BODY(sll_field_eqn,(POISSON,AMPERE,MAXWELL,ADIABATIC_WO_ZONAL,ADIABATIC,QN_ADIABATIC))
 dnl
 end module sll_descriptors
 dnl

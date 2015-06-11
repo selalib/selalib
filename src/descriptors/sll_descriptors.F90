@@ -19,7 +19,7 @@ module sll_descriptors
 #include "sll_working_precision.h"
 type sll_vlasovpoisson_sim 
     sll_int32                  :: id
-    character(len=32) private :: pname
+    character(len=32), private :: pname
   contains
     procedure,  pass(self)      :: name=>name_vlasovpoisson_sim 
     procedure,  pass(self)      :: parse=>parse_vlasovpoisson_sim
@@ -37,7 +37,7 @@ type(sll_vlasovpoisson_sim), parameter :: SLL_BUMPONTAIL = sll_vlasovpoisson_sim
 
 type sll_boundary 
     sll_int32                  :: id
-    character(len=32) private :: pname
+    character(len=32), private :: pname
   contains
     procedure,  pass(self)      :: name=>name_boundary 
     procedure,  pass(self)      :: parse=>parse_boundary
