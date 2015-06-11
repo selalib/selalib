@@ -12,7 +12,11 @@ program vlasov_ampere_2d
 
 use sll_simulation_2d_vlasov_ampere_cartesian
 use sll_common_array_initializers_module
+use sll_parallel_array_initializer_module
 use sll_collective
+use sll_buffer_loader_utilities_module
+use sll_remapper
+use sll_fft
 use sll_timer
 use sll_module_advection_1d_ampere
 
