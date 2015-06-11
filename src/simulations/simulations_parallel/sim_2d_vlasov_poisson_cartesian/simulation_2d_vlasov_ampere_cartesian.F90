@@ -1151,8 +1151,7 @@ contains
     call int2string(iproc, cproc)
     call int2string(iplot, cplot)    
     
-!PN    call check_restart()
-    time_init = sim%time_init
+    call check_restart(sim, f_x1)
     
     !ES initialise f_x1_equil that is used to define deltaf: 
     !ES deltaf =  f_x1 - f_x1_equil
@@ -1195,7 +1194,7 @@ contains
     istep = 0
     
     if (sim%driven) then
-!PN      call set_e_app(time_init)
+!PN      call set_e_app(sim%time_init)
     else
       e_app = 0._f64
     end if
@@ -1216,7 +1215,7 @@ contains
     
     if (MPI_MASTER) then
       call sll_binary_write_array_2d(deltaf_id,f_visu(1:np_x1-1,1:np_x2-1),ierr)
-      print *,'#step=',0,time_init,'iplot=',iplot
+      print *,'#step=',0,sim%time_init,'iplot=',iplot
     endif
     
     iplot = iplot+1  
@@ -1246,7 +1245,7 @@ contains
     
          else
     
-!PN           if (sim%driven) call set_e_app(time_init+(istep-1)*sim%dt)
+!PN           if (sim%driven) call set_e_app(sim%time_init+(istep-1)*sim%dt)
 !PN           call transpose_xv()
 !PN           call advection_v(sim%split%split_step(split_istep)*sim%dt)
 !PN           call transpose_vx()
@@ -1266,7 +1265,7 @@ contains
         if (mod(istep,sim%freq_diag)==0) then          
     
           if (MPI_MASTER) then        
-            print *,'#step=',istep,time_init+real(istep,f64)*sim%dt,'iplot=',iplot
+            print *,'#step=',istep,sim%time_init+real(istep,f64)*sim%dt,'iplot=',iplot
           endif
     
 !PN          call gnuplot_write(f_x1-f_x1_equil, 'deltaf', 'intdeltafdx')
@@ -1619,7 +1618,7 @@ contains
 !    call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
 !    global_indices = local_to_global( layout_x1, (/1, 1/) )
 !    
-!    time             = time_init+real(istep,f64)*sim%dt
+!    time             = sim%time_init+real(istep,f64)*sim%dt
 !    mass             = 0._f64
 !    momentum         = 0._f64
 !    l1norm           = 0._f64
@@ -1733,7 +1732,7 @@ contains
 !                               sim%node_positions_x2, &
 !                               sim%num_dof_x2,    &
 !                               'f',               &
-!                               time_init )        
+!                               sim%time_init )        
 !    
 !    print *,'#maxf',maxval(f_visu), minval(f_visu) 
 !    
@@ -1798,44 +1797,56 @@ contains
 !    
 !  end subroutine save_for_restart
 !    
-!  subroutine check_restart(sim)
-!      class(sll_simulation_2d_vlasov_ampere_cart), intent(inout) :: sim
-!      character(len=*), parameter :: this_sub_name = 'check_restart'
-!    
-!    if (trim(sim%restart_file) /= "no_restart_file" ) then
-!    
-!    
-!      INQUIRE(FILE=trim(sim%restart_file)//'_proc_'//cproc//'.rst', EXIST=file_exists)
-!    
-!      if (.not. file_exists) then
-!        err_msg = '#file '//trim(sim%restart_file)//'_proc_'//cproc//'.rst &
-!                  & does not exist'
-!        SLL_ERROR( this_sub_name, err_msg )
-!      endif
-!    
-!      open(unit=restart_id, &
-!           file=trim(sim%restart_file)//'_proc_'//cproc//'.rst', ACCESS="STREAM", &
-!           form='unformatted', IOStat=ierr)      
-!    
-!      if ( ierr .ne. 0 ) then
-!        err_msg = 'ERROR while opening file &
-!                   &'//trim(sim%restart_file)//'_proc_'//cproc//'.rst &
-!                   & Called from run_va2d_cartesian().'
-!        SLL_ERROR( this_sub_name, err_msg )
-!      end if
-!    
-!      print *,'#read restart file '//trim(sim%restart_file)//'_proc_'//cproc//'.rst'      
-!      call sll_binary_read_array_0d(restart_id,time_init,ierr)
-!      call sll_binary_read_array_2d(restart_id,f_x1,ierr)
-!      call sll_binary_file_close(restart_id,ierr)
-!    
-!    endif      
-!    
-!    if (sim%time_init_from_restart_file .eqv. .true.) then
-!      sim%time_init = time_init  
-!    endif
-!    
-!  end subroutine check_restart
+  subroutine check_restart(sim, f_x1)
+
+    class(sll_simulation_2d_vlasov_ampere_cart), intent(inout) :: sim
+    sll_real64                  :: f_x1(:,:)
+    character(len=*), parameter :: this_sub_name = 'check_restart'
+    character(len=288)          :: err_msg
+    sll_int32                   :: iproc
+    character(len=4)            :: cproc
+    logical                     :: file_exists
+    sll_int32                   :: ierr
+    sll_real64                  :: time_init
+    sll_int32                   :: restart_id
+    
+    iproc = sll_get_collective_rank(sll_world_collective)
+    call int2string(iproc, cproc)
+
+    if (trim(sim%restart_file) /= "no_restart_file" ) then
+    
+    
+      INQUIRE(FILE=trim(sim%restart_file)//'_proc_'//cproc//'.rst', EXIST=file_exists)
+    
+      if (.not. file_exists) then
+        err_msg = '#file '//trim(sim%restart_file)//'_proc_'//cproc//'.rst &
+                  & does not exist'
+        SLL_ERROR( this_sub_name, err_msg )
+      endif
+    
+      open(unit=restart_id, &
+           file=trim(sim%restart_file)//'_proc_'//cproc//'.rst', ACCESS="STREAM", &
+           form='unformatted', IOStat=ierr)      
+    
+      if ( ierr .ne. 0 ) then
+        err_msg = 'ERROR while opening file &
+                   &'//trim(sim%restart_file)//'_proc_'//cproc//'.rst &
+                   & Called from run_va2d_cartesian().'
+        SLL_ERROR( this_sub_name, err_msg )
+      end if
+    
+      print *,'#read restart file '//trim(sim%restart_file)//'_proc_'//cproc//'.rst'      
+      call sll_binary_read_array_0d(restart_id,time_init,ierr)
+      call sll_binary_read_array_2d(restart_id,f_x1,ierr)
+      call sll_binary_file_close(restart_id,ierr)
+    
+    endif      
+    
+    if (sim%time_init_from_restart_file .eqv. .true.) then
+      sim%time_init = time_init  
+    endif
+    
+  end subroutine check_restart
 
 
   subroutine delete_va2d_par_cart( sim )
