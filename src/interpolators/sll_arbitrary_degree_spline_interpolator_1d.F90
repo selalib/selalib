@@ -125,6 +125,8 @@ subroutine delete_arbitrary_degree_1d_interpolator( interpolator )
   sll_int32 :: ierr
   SLL_DEALLOCATE(interpolator%t,ierr)
   SLL_DEALLOCATE(interpolator%coeff_splines,ierr)
+  deallocate(interpolator%eta)
+  deallocate(interpolator%work)
 end subroutine delete_arbitrary_degree_1d_interpolator
 
 
