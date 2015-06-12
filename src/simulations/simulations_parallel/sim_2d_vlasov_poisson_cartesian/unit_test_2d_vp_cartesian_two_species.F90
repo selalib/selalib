@@ -71,6 +71,9 @@ endif
           sim,                                      &
           init_func,                                &
           params,                                   &
+          num_params,                               &
+          init_func,                                &
+          params,                                   &
           num_params)
         
       endif
