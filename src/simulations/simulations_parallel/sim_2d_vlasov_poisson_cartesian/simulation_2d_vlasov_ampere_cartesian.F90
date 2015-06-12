@@ -1300,10 +1300,10 @@ contains
      delta_t)
 
     class(sll_simulation_2d_vlasov_ampere_cart), intent(inout) :: sim
-    type(layout_2D), pointer   :: layout_x1
-    sll_real64, dimension(:,:) :: f_x1
-    sll_real64, dimension(:)   :: efield
-    sll_real64, dimension(:)   :: rho
+    type(layout_2D), intent(in),    pointer        :: layout_x1
+    sll_real64,      intent(inout), dimension(:,:) :: f_x1
+    sll_real64,      intent(out),   dimension(:)   :: efield
+    sll_real64,      intent(out),   dimension(:)   :: rho
     sll_real64 :: delta_t
     sll_int32  :: ig_omp
     sll_int32  :: i_omp
@@ -1352,8 +1352,9 @@ contains
     type(layout_2d) , pointer :: layout_x1
     sll_real64 :: efield(:)
     sll_real64 :: f_x1(:,:)
-    sll_int32 :: local_size_x1, local_size_x2
-    sll_int32 :: global_indices(2)
+    sll_int32  :: local_size_x1
+    sll_int32  :: local_size_x2
+    sll_int32  :: global_indices(2)
     
     sll_real64 :: delta_t
     sll_int32  :: nc_x1
