@@ -159,7 +159,7 @@ use omp_lib
   sll_int32                          :: deltaf_id
   sll_int32                          :: rhotot_id
   sll_int32                          :: efield_id
-  sll_int32                          :: th_diag_id
+  sll_int32                          :: thdiag_id
   sll_real64                         :: adr
   sll_real64                         :: time
 
@@ -424,6 +424,12 @@ contains
 
     num_threads = 1
 
+    if (sll_get_collective_rank(sll_world_collective)==0) then
+      MPI_MASTER = .true.
+    else
+      MPI_MASTER = .false.
+    end if
+    
 #ifdef _OPENMP
     !$OMP PARALLEL SHARED(num_threads)
     if (omp_get_thread_num()==0) then
@@ -512,7 +518,6 @@ contains
     !keen_Edrmax         = 0.2
     !keen_omegadr        = 0.37	
 
-
     if(present(num_run))then
       !call int2string(num_run, str_num_run)
       write(str_num_run, *) num_run
@@ -521,8 +526,6 @@ contains
     else      
       sim%thdiag_filename = "thdiag.dat"
     endif
-
-
 
     if (present(filename)) then
 
@@ -535,7 +538,6 @@ contains
         !print *,'filename_loc=',filename_loc
       endif
 
-
       call sll_new_file_id(input_file, ierr)
 
       open(unit = input_file, file=trim(filename_loc)//'.nml',IOStat=IO_stat)
@@ -544,7 +546,7 @@ contains
         SLL_ERROR( this_sub_name, err_msg )
       end if
 
-      if (sll_get_collective_rank(sll_world_collective)==0) then
+      if (MPI_MASTER) then
         print *,'#initialization with filename:'
         print *,'#',trim(filename_loc)//'.nml'
       endif
@@ -1019,13 +1021,6 @@ contains
     sll_real64, dimension(:),   pointer :: e_app
     sll_real64, dimension(:),   pointer :: current
     
-    sll_int32 :: rhotot_id
-    sll_int32 :: efield_id     
-    sll_int32 :: adr_id
-    sll_int32 :: Edr_id
-    sll_int32 :: deltaf_id
-    sll_int32 :: t_id
-    sll_int32 :: th_diag_id
     
     type(layout_2D),            pointer :: layout_x1
     type(layout_2D),            pointer :: layout_x2
@@ -1058,12 +1053,6 @@ contains
     sll_int32                              :: iproc
     
     
-    if (sll_get_collective_rank(sll_world_collective)==0) then
-      MPI_MASTER = .true.
-    else
-      MPI_MASTER = .false.
-    end if
-    
     iplot = 1
     
     nb_mode          = sim%nb_mode
@@ -1071,9 +1060,12 @@ contains
     np_x1            = sim%mesh2d%num_cells1+1
     np_x2            = sim%mesh2d%num_cells2+1
     num_dof_x2       = sim%num_dof_x2
+
+    collective_size = sll_get_collective_size(sll_world_collective)
+
     if (MPI_MASTER) then
     
-      print *,'#collective_size=',sll_get_collective_size(sll_world_collective)
+      print *,'#collective_size=', collective_size
       SLL_ALLOCATE(f_visu(np_x1,num_dof_x2),ierr)
       SLL_ALLOCATE(f_visu_buf1d(np_x1*num_dof_x2),ierr)
     
@@ -1084,7 +1076,6 @@ contains
     
     endif
     
-    collective_size = sll_get_collective_size(sll_world_collective)
     SLL_ALLOCATE(collective_displs(collective_size),ierr)
     SLL_ALLOCATE(collective_recvcnts(collective_size),ierr)
     
@@ -1267,7 +1258,7 @@ contains
         call diagnostics(sim, layout_x1, f_x1, rho, efield, e_app)
         
         if (mod(istep,sim%freq_diag_restart)==0) then          
-          call save_for_restart(sim, layout_x1, f_x1)
+          call save_for_restart(layout_x1, f_x1)
         endif 
     
         if (mod(istep,sim%freq_diag)==0) then          
@@ -1288,7 +1279,7 @@ contains
     enddo
     
     if (MPI_MASTER) then
-      call sll_ascii_file_close(th_diag_id,ierr) 
+      call sll_ascii_file_close(thdiag_id,ierr) 
       call sll_binary_file_close(deltaf_id,ierr) 
       call sll_binary_file_close(efield_id,ierr)
       call sll_binary_file_close(rhotot_id,ierr)
@@ -1659,12 +1650,14 @@ contains
     
   subroutine diagnostics(sim, layout_x1, f_x1, rho, efield, e_app)
     
-    class(sll_simulation_2d_vlasov_ampere_cart), intent(inout) :: sim
+    class(sll_simulation_2d_vlasov_ampere_cart), intent(in) :: sim
+
     type(layout_2d), pointer :: layout_x1
-    sll_real64 :: f_x1(:,:)
-    sll_real64 :: rho(:)
-    sll_real64 :: efield(:)
-    sll_real64 :: e_app(:)
+    sll_real64, intent(in)   :: f_x1(:,:)
+    sll_real64, intent(in)   :: rho(:)
+    sll_real64, intent(in)   :: efield(:)
+    sll_real64, intent(in)   :: e_app(:)
+
     sll_int32  :: local_size_x1, local_size_x2
     sll_int32  :: global_indices(2)
     sll_real64 :: tmp_loc(5), tmp(5)
@@ -1676,9 +1669,9 @@ contains
     sll_real64, dimension(:), allocatable :: f_hat_x2
     sll_comp64, dimension(:), allocatable :: rho_mode
 
-    SLL_ALLOCATE(rho_mode(0:sim%nb_mode),ierr)      
-    SLL_ALLOCATE(f_hat_x2(sim%nb_mode+1),ierr)
-    SLL_ALLOCATE(f_hat_x2_loc(sim%nb_mode+1),ierr)
+    SLL_CLEAR_ALLOCATE(rho_mode(0:sim%nb_mode),ierr) 
+    SLL_CLEAR_ALLOCATE(f_hat_x2(1:sim%nb_mode+1),ierr)
+    SLL_CLEAR_ALLOCATE(f_hat_x2_loc(1:sim%nb_mode+1),ierr)
 
     np_x1            = sim%mesh2d%num_cells1+1
     call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
@@ -1744,7 +1737,7 @@ contains
                                    MPI_SUM,              &
                                    f_hat_x2 )
     
-    if (sll_get_collective_rank(sll_world_collective)==0) then                  
+    if (MPI_MASTER) then                  
     
       buf_fft = rho(1:np_x1-1)
       call fft_apply_plan(pfwd,buf_fft,buf_fft)
@@ -1753,25 +1746,25 @@ contains
         rho_mode(k)=fft_get_mode(pfwd,buf_fft,k)
       enddo  
     
-      write(th_diag_id,'(f12.5,7g20.12)',advance='no') &
-        time,                                          &
-        mass,                                          &
-        l1norm,                                        &
-        momentum,                                      &
-        l2norm,                                        &
-        kinetic_energy,                                &
-        potential_energy,                              &
-        kinetic_energy + potential_energy
+      write(thdiag_id,'(f12.5,7g20.12)',advance='no') &
+        time,                                         &
+        mass,                                         &
+        l1norm,                                       &
+        momentum,                                     &
+        l2norm,                                       &
+        kinetic_energy,                               &
+        potential_energy,                             &
+        kinetic_energy+potential_energy
     
       do k=0,sim%nb_mode
-        write(th_diag_id,'(g20.12)',advance='no') abs(rho_mode(k))
+        write(thdiag_id,'(g20.12)',advance='no') abs(rho_mode(k))
       enddo
     
       do k=0,sim%nb_mode-1
-        write(th_diag_id,'(g20.12)',advance='no') f_hat_x2(k+1)
+        write(thdiag_id,'(g20.12)',advance='no') f_hat_x2(k+1)
       enddo
     
-      write(th_diag_id,'(g20.12)') f_hat_x2(sim%nb_mode+1)
+      write(thdiag_id,'(g20.12)') f_hat_x2(sim%nb_mode+1)
     
       call sll_binary_write_array_1d(efield_id,efield(1:np_x1-1),ierr)
       call sll_binary_write_array_1d(rhotot_id,rho(1:np_x1-1),ierr)
@@ -1780,6 +1773,7 @@ contains
         call sll_binary_write_array_1d(Edr_id,e_app(1:np_x1-1),ierr)
         call sll_binary_write_array_0d(adr_id,adr,ierr)
       endif   
+
     endif
     
   end subroutine diagnostics
@@ -1815,9 +1809,9 @@ contains
     call sll_binary_file_close(file_id,ierr)                    
     call sll_binary_file_create("v.bdat", file_id, ierr)
     call sll_binary_write_array_1d(file_id,sim%node_positions_x2(1:np_x2-1),ierr)
-    call sll_binary_file_close(file_id,ierr)                                             
+    call sll_binary_file_close(file_id,ierr)
     
-    call sll_ascii_file_create(sim%thdiag_filename, th_diag_id, ierr)
+    call sll_ascii_file_create(sim%thdiag_filename, thdiag_id, ierr)
     
     call sll_binary_file_create('deltaf.bdat', deltaf_id, ierr)
     call sll_binary_file_create('rhotot.bdat', rhotot_id, ierr)
@@ -1862,8 +1856,7 @@ contains
     
   end subroutine set_e_app
     
-  subroutine save_for_restart(sim, layout_x1, f_x1)
-    class(sll_simulation_2d_vlasov_ampere_cart), intent(inout) :: sim
+  subroutine save_for_restart(layout_x1, f_x1)
     type(layout_2d), pointer :: layout_x1
     sll_real64               :: f_x1(:,:)
     character(len=4) :: cplot
@@ -1877,14 +1870,14 @@ contains
 
     iproc = sll_get_collective_rank(sll_world_collective)
     call int2string(iproc, cproc)
-    
-      call int2string(iplot,cplot) 
-      call sll_binary_file_create('f_plot_'//cplot//'_proc_'//cproc//'.rst', &
-                                  restart_id, ierr )
-      call sll_binary_write_array_0d(restart_id,time,ierr)
-      call sll_binary_write_array_2d(restart_id, &
-                                     f_x1(1:local_size_x1,1:local_size_x2),ierr)
-      call sll_binary_file_close(restart_id,ierr)    
+    call int2string(iplot, cplot) 
+
+    call sll_binary_file_create('f_plot_'//cplot//'_proc_'//cproc//'.rst', &
+                                restart_id, ierr )
+    call sll_binary_write_array_0d(restart_id,time,ierr)
+    call sll_binary_write_array_2d(restart_id, &
+                                   f_x1(1:local_size_x1,1:local_size_x2),ierr)
+    call sll_binary_file_close(restart_id,ierr)    
     
   end subroutine save_for_restart
     
