@@ -991,7 +991,6 @@ contains
     sll_real64, dimension(:),   pointer :: rho
     sll_real64, dimension(:),   pointer :: efield
     sll_real64, dimension(:),   pointer :: e_app
-    sll_real64, dimension(:),   pointer :: rho_loc
     sll_real64, dimension(:),   pointer :: current
     
     sll_int32 :: rhotot_id
@@ -1108,7 +1107,6 @@ contains
     remap_plan_x2_x1 => NEW_REMAP_PLAN(layout_x2, layout_x1, f_x2)
     
     SLL_ALLOCATE(rho(np_x1),ierr)
-    SLL_ALLOCATE(rho_loc(np_x1),ierr)
     SLL_ALLOCATE(current(np_x1),ierr)
     SLL_ALLOCATE(efield(np_x1),ierr)
     SLL_ALLOCATE(e_app(np_x1),ierr)
@@ -1185,7 +1183,7 @@ contains
         
     f_visu = reshape(f_visu_buf1d, shape(f_visu))
     
-!PN    call compute_rho()
+    call compute_rho(sim, layout_x1, f_x1, rho)
     
     call sim%poisson%compute_E_from_rho( efield, rho )
         
@@ -1194,7 +1192,7 @@ contains
     istep = 0
     
     if (sim%driven) then
-!PN      call set_e_app(sim%time_init)
+      call set_e_app(sim, sim%time_init, e_app)
     else
       e_app = 0._f64
     end if
@@ -1245,7 +1243,7 @@ contains
     
          else
     
-!PN           if (sim%driven) call set_e_app(sim%time_init+(istep-1)*sim%dt)
+           if (sim%driven) call set_e_app(sim, sim%time_init+(istep-1)*sim%dt, e_app)
 !PN           call transpose_xv()
 !PN           call advection_v(sim%split%split_step(split_istep)*sim%dt)
 !PN           call transpose_vx()
@@ -1347,7 +1345,7 @@ contains
     !$OMP END DO          
     !$OMP END PARALLEL
     
-!PN    call compute_rho()
+    call compute_rho(sim, layout_x1, f_x1, rho)
     call sim%poisson%compute_E_from_rho( efield, rho )
     
   end subroutine advection_poisson_x
@@ -1442,59 +1440,84 @@ contains
 !    
 !  end subroutine advection_ampere_x
 !    
-!  subroutine compute_rho(sim)
-!    class(sll_simulation_2d_vlasov_ampere_cart), intent(inout) :: sim
-!    
-!    call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
-!    global_indices = local_to_global( layout_x1, (/1, 1/) )
-!    !computation of electric field
-!    rho_loc = 0._f64
-!    ig = global_indices(2)-1
-!    do i=1,np_x1
-!      rho_loc(i)=rho_loc(i)                              &
-!        +sum(f_x1(i,1:local_size_x2)                     &
-!        *sim%integration_weight(1+ig:local_size_x2+ig))
-!    end do
-!        
-!    call sll_collective_allreduce( sll_world_collective, &
-!                                   rho_loc,              &
-!                                   np_x1,                &
-!                                   MPI_SUM,              &
-!                                   rho )
-!    
-!    rho = sim%factor_x2_1*1._f64-sim%factor_x2_rho*rho
-!    
-!  end subroutine compute_rho
-!    
-!  subroutine compute_current()
-!    
-!    sll_int32  :: global_indices(2)
-!    sll_int32  :: local_size_x1
-!    sll_int32  :: local_size_x2
-!    sll_real64 :: v
-!    sll_int32  :: j
-!    sll_int32  :: gj
-!    
-!    call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
-!    global_indices = local_to_global( layout_x1, (/1, 1/) )
-!    
-!    do i = 1,local_size_x1
-!      rho_loc(i) = 0._f64
-!      do j = 1,local_size_x2
-!        global_indices = local_to_global( layout_x1, (/i, j/) )
-!        gj = global_indices(2)
-!        v  = sim%node_positions_x2(gj)
-!        rho_loc(i) = rho_loc(i)+f_x1(i,j)*sim%integration_weight(gj)*v
-!      end do
-!    end do
-!    
-!    call sll_collective_allreduce( sll_world_collective, &
-!                                   rho_loc,              &
-!                                   np_x1,                &
-!                                   MPI_SUM,              &
-!                                   current )
-!    
-!  end subroutine compute_current
+  subroutine compute_rho(sim, layout_x1, f_x1, rho)
+    class(sll_simulation_2d_vlasov_ampere_cart), intent(inout) :: sim
+    type(layout_2d), pointer :: layout_x1
+    sll_real64      :: rho(:)
+    sll_real64      :: f_x1(:,:)
+    sll_int32       :: local_size_x1, local_size_x2
+    sll_int32       :: global_indices(2)
+    sll_int32       :: np_x1
+    sll_int32       :: i
+    sll_int32       :: ig
+    sll_int32       :: ierr
+
+    sll_real64, dimension(:), allocatable :: rho_loc
+
+    np_x1 = sim%mesh2d%num_cells1+1
+    SLL_ALLOCATE(rho_loc(np_x1),ierr)
+    
+    call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
+    global_indices = local_to_global( layout_x1, (/1, 1/) )
+    !computation of electric field
+    rho_loc = 0._f64
+    ig = global_indices(2)-1
+    do i=1,np_x1
+      rho_loc(i)=rho_loc(i)                              &
+        +sum(f_x1(i,1:local_size_x2)                     &
+        *sim%integration_weight(1+ig:local_size_x2+ig))
+    end do
+        
+    call sll_collective_allreduce( sll_world_collective, &
+                                   rho_loc,              &
+                                   np_x1,                &
+                                   MPI_SUM,              &
+                                   rho )
+    
+    rho = sim%factor_x2_1*1._f64-sim%factor_x2_rho*rho
+    
+  end subroutine compute_rho
+    
+! subroutine compute_current(sim, layout_x1, f_x1, current)
+!   
+!   class(sll_simulation_2d_vlasov_ampere_cart), intent(inout) :: sim
+!   type(layout_2d), pointer :: layout_x1
+!   sll_real64      :: current(:)
+!   sll_real64      :: f_x1(:,:)
+!   sll_int32       :: np_x1
+!   sll_int32       :: i
+!   sll_int32       :: ig
+!   sll_int32       :: ierr
+!   sll_int32  :: global_indices(2)
+!   sll_int32  :: local_size_x1
+!   sll_int32  :: local_size_x2
+!   sll_real64 :: v
+!   sll_int32  :: j
+!   sll_int32  :: gj
+!   sll_real64, dimension(:), allocatable :: rho_loc
+!   
+!   np_x1 = sim%mesh2d%num_cells1+1
+!   SLL_ALLOCATE(rho_loc(np_x1),ierr)
+!   call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
+!   global_indices = local_to_global( layout_x1, (/1, 1/) )
+!   
+!   do i = 1,local_size_x1
+!     rho_loc(i) = 0._f64
+!     do j = 1,local_size_x2
+!       global_indices = local_to_global( layout_x1, (/i, j/) )
+!       gj = global_indices(2)
+!       v  = sim%node_positions_x2(gj)
+!       rho_loc(i) = rho_loc(i)+f_x1(i,j)*sim%integration_weight(gj)*v
+!     end do
+!   end do
+!   
+!   call sll_collective_allreduce( sll_world_collective, &
+!                                  rho_loc,              &
+!                                  np_x1,                &
+!                                  MPI_SUM,              &
+!                                  current )
+!   
+! end subroutine compute_current
 !    
 !  subroutine advection_v(sim, delta_t)
 !
@@ -1762,28 +1785,33 @@ contains
 !    
 !  end subroutine write_init_files
 !    
-!  subroutine set_e_app(sim,t)
-!    class(sll_simulation_2d_vlasov_ampere_cart), intent(inout) :: sim
-!    sll_real64 :: t
-!    
-!      call PFenvelope(adr,                    &
-!                      t,                      &
-!                      sim%tflat,              &
-!                      sim%tL,                 &
-!                      sim%tR,                 &
-!                      sim%twL,                &
-!                      sim%twR,                &
-!                      sim%t0,                 &
-!                      sim%turn_drive_off)
-!    
-!      do i = 1, np_x1
-!        e_app(i) = sim%Edrmax*adr*sim%kx                          &
-!                 * sin(sim%kx*real(i-1,f64)*sim%mesh2d%delta_eta1 &
-!                 - sim%omegadr*t)
-!      enddo
-!    
-!  end subroutine set_e_app
-!    
+  subroutine set_e_app(sim,t,e_app)
+    class(sll_simulation_2d_vlasov_ampere_cart), intent(in) :: sim
+    sll_real64 :: t
+    sll_int32  :: i
+    sll_int32  :: np_x1
+    sll_real64 :: adr
+    sll_real64, dimension(:) :: e_app
+    
+    np_x1 = sim%mesh2d%num_cells1+1
+    call PFenvelope(adr,                    &
+                    t,                      &
+                    sim%tflat,              &
+                    sim%tL,                 &
+                    sim%tR,                 &
+                    sim%twL,                &
+                    sim%twR,                &
+                    sim%t0,                 &
+                    sim%turn_drive_off)
+    
+    do i = 1, np_x1
+      e_app(i) = sim%Edrmax*adr*sim%kx                          &
+               * sin(sim%kx*real(i-1,f64)*sim%mesh2d%delta_eta1 &
+               - sim%omegadr*t)
+    enddo
+    
+  end subroutine set_e_app
+    
 !  subroutine save_for_restart(sim)
 !    class(sll_simulation_2d_vlasov_ampere_cart), intent(inout) :: sim
 !    
