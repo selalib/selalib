@@ -161,14 +161,21 @@ use omp_lib
   sll_int32                          :: efield_id
   sll_int32                          :: th_diag_id
   sll_real64                         :: adr
+  sll_real64                         :: time
+
+  sll_int32, dimension(:),    allocatable :: collective_displs
+  sll_int32, dimension(:),    allocatable :: collective_recvcnts
 
   sll_real64, dimension(:),   allocatable :: buf_fft
   sll_real64, dimension(:),   allocatable :: x2_array_unit
+  sll_real64, dimension(:),   allocatable :: f_x1_buf1d
+  sll_real64, dimension(:),   allocatable :: f_visu_buf1d
   sll_real64, dimension(:,:), allocatable :: f_visu 
   sll_real64, dimension(:,:), allocatable :: f1d_omp_in
   sll_real64, dimension(:,:), allocatable :: f1d_omp_out
 
   type(sll_fft_plan), pointer :: pfwd
+  logical                     :: MPI_MASTER
 
 contains
 
@@ -1046,15 +1053,10 @@ contains
     
     ! for parallelization (output of distribution function in one single file)
     sll_int32                              :: collective_size
-    sll_int32, dimension(:),   allocatable :: collective_displs
-    sll_int32, dimension(:),   allocatable :: collective_recvcnts
-    sll_real64,dimension(:),   pointer     :: f_visu_buf1d
-    sll_real64,dimension(:),   pointer     :: f_x1_buf1d
     character(len=4)                       :: cproc
     character(len=4)                       :: cplot
     sll_int32                              :: iproc
     
-    logical                                :: MPI_MASTER
     
     if (sll_get_collective_rank(sll_world_collective)==0) then
       MPI_MASTER = .true.
@@ -1265,7 +1267,7 @@ contains
         call diagnostics(sim, layout_x1, f_x1, rho, efield, e_app)
         
         if (mod(istep,sim%freq_diag_restart)==0) then          
-!PN          call save_for_restart()
+          call save_for_restart(sim, layout_x1, f_x1)
         endif 
     
         if (mod(istep,sim%freq_diag)==0) then          
@@ -1274,8 +1276,8 @@ contains
             print *,'#step=',istep,sim%time_init+real(istep,f64)*sim%dt,'iplot=',iplot
           endif
     
-!PN          call gnuplot_write(f_x1-f_x1_equil, 'deltaf', 'intdeltafdx')
-!PN          call gnuplot_write(f_x1,                 'f',      'intfdx')
+          call gnuplot_write(sim, layout_x1, f_x1-f_x1_equil, 'deltaf', 'intdeltafdx')
+          call gnuplot_write(sim, layout_x1, f_x1,                 'f',      'intfdx')
     
           iplot = iplot+1  
                     
@@ -1592,64 +1594,67 @@ contains
   end subroutine advection_v
     
     
-  subroutine gnuplot_write( sim, f, fname, intfname)
+  subroutine gnuplot_write( sim, layout_x1, f, fname, intfname)
     
     class(sll_simulation_2d_vlasov_ampere_cart), intent(inout) :: sim
+    type(layout_2d), pointer   :: layout_x1
     sll_real64, dimension(:,:) :: f
     character(len=*)           :: fname
     character(len=*)           :: intfname
     
     sll_int32 :: np_x1, np_x2
-    sll_int32 :: ierr
+    sll_int32 :: local_size_x1, local_size_x2
+    sll_int32 :: i, ierr
     
     np_x1 = sim%mesh2d%num_cells1+1
     np_x2 = sim%mesh2d%num_cells2+1
-!    call load_buffer_2d( layout_x1, f, f_x1_buf1d )
-!    
-!    call sll_collective_gatherv_real64( &
-!      sll_world_collective,             &
-!      f_x1_buf1d,                       &
-!      local_size_x1*local_size_x2,      &
-!      collective_recvcnts,              &
-!      collective_displs,                &
-!      0,                                &
-!      f_visu_buf1d )
-!    
-!    f_visu = reshape(f_visu_buf1d, shape(f_visu))
-!    
-!    if (MPI_MASTER) then
-!    
-!      do i=1,sim%num_dof_x2
-!        f_visu_buf1d(i) = sum(f_visu(1:np_x1-1,i))*sim%mesh2d%delta_eta1
-!      enddo
-!    
-!      call sll_gnuplot_1d(         &
-!        f_visu_buf1d(1:sim%num_dof_x2),      &
-!        sim%node_positions_x2(1:sim%num_dof_x2), &
-!        intfname,                        &
-!        iplot )
-!    
-!      call sll_gnuplot_1d(         &
-!        f_visu_buf1d(1:sim%num_dof_x2),      &
-!        sim%node_positions_x2(1:sim%num_dof_x2), &
-!        intfname )                        
-!    
-!      call sll_binary_write_array_2d(deltaf_id,                      &
-!                                     f_visu(1:np_x1-1,1:np_x2-1),    &
-!                                     ierr)  
-!    
-!      call sll_plot_f_cartesian( &
-!            iplot,               &
-!            f_visu,              &
-!            sim%x1_array,        &
-!            np_x1,               &
-!            sim%node_positions_x2,   &
-!            sim%num_dof_x2,      &
-!            fname,time)                    
-!    
-!    
-!    endif
-!    
+    call load_buffer_2d( layout_x1, f, f_x1_buf1d )
+    call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
+    
+    call sll_collective_gatherv_real64( &
+      sll_world_collective,             &
+      f_x1_buf1d,                       &
+      local_size_x1*local_size_x2,      &
+      collective_recvcnts,              &
+      collective_displs,                &
+      0,                                &
+      f_visu_buf1d )
+    
+    f_visu = reshape(f_visu_buf1d, shape(f_visu))
+    
+    if (MPI_MASTER) then
+    
+      do i=1,sim%num_dof_x2
+        f_visu_buf1d(i) = sum(f_visu(1:np_x1-1,i))*sim%mesh2d%delta_eta1
+      enddo
+    
+      call sll_gnuplot_1d(                       &
+        f_visu_buf1d(1:sim%num_dof_x2),          &
+        sim%node_positions_x2(1:sim%num_dof_x2), &
+        intfname,                                &
+        iplot )
+    
+      call sll_gnuplot_1d(                       &
+        f_visu_buf1d(1:sim%num_dof_x2),          &
+        sim%node_positions_x2(1:sim%num_dof_x2), &
+        intfname )                        
+    
+      call sll_binary_write_array_2d(deltaf_id,                      &
+                                     f_visu(1:np_x1-1,1:np_x2-1),    &
+                                     ierr)  
+    
+      call sll_plot_f_cartesian(     &
+            iplot,                   &
+            f_visu,                  &
+            sim%x1_array,            &
+            np_x1,                   &
+            sim%node_positions_x2,   &
+            sim%num_dof_x2,          &
+            fname,time)                    
+    
+    
+    endif
+    
   end subroutine gnuplot_write
     
   subroutine diagnostics(sim, layout_x1, f_x1, rho, efield, e_app)
@@ -1666,7 +1671,6 @@ contains
     sll_real64 :: mass, l1norm, l2norm, momentum
     sll_real64 :: potential_energy, kinetic_energy
     sll_int32  :: i, ig, k, np_x1, ierr
-    sll_real64 :: time
 
     sll_real64, dimension(:), allocatable :: f_hat_x2_loc
     sll_real64, dimension(:), allocatable :: f_hat_x2
@@ -1858,19 +1862,32 @@ contains
     
   end subroutine set_e_app
     
-!  subroutine save_for_restart(sim)
-!    class(sll_simulation_2d_vlasov_ampere_cart), intent(inout) :: sim
-!    
-!      call int2string(iplot,cplot) 
-!      call sll_binary_file_create('f_plot_'//cplot//'_proc_'//cproc//'.rst', &
-!                                  restart_id, ierr )
-!      call sll_binary_write_array_0d(restart_id,time,ierr)
-!      call sll_binary_write_array_2d(restart_id, &
-!                                     f_x1(1:local_size_x1,1:local_size_x2),ierr)
-!      call sll_binary_file_close(restart_id,ierr)    
-!    
-!  end subroutine save_for_restart
-!    
+  subroutine save_for_restart(sim, layout_x1, f_x1)
+    class(sll_simulation_2d_vlasov_ampere_cart), intent(inout) :: sim
+    type(layout_2d), pointer :: layout_x1
+    sll_real64               :: f_x1(:,:)
+    character(len=4) :: cplot
+    sll_int32        :: iproc
+    character(len=4) :: cproc
+    sll_int32        :: restart_id
+    sll_int32        :: ierr
+    sll_int32        :: local_size_x1, local_size_x2
+
+    call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
+
+    iproc = sll_get_collective_rank(sll_world_collective)
+    call int2string(iproc, cproc)
+    
+      call int2string(iplot,cplot) 
+      call sll_binary_file_create('f_plot_'//cplot//'_proc_'//cproc//'.rst', &
+                                  restart_id, ierr )
+      call sll_binary_write_array_0d(restart_id,time,ierr)
+      call sll_binary_write_array_2d(restart_id, &
+                                     f_x1(1:local_size_x1,1:local_size_x2),ierr)
+      call sll_binary_file_close(restart_id,ierr)    
+    
+  end subroutine save_for_restart
+    
   subroutine check_restart(sim, f_x1)
 
     class(sll_simulation_2d_vlasov_ampere_cart), intent(inout) :: sim
