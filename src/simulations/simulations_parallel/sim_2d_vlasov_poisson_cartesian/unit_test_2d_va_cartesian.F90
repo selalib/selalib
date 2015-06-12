@@ -153,17 +153,14 @@ time_init        = sim%time_init
 np_x1            = sim%mesh2d%num_cells1+1
 np_x2            = sim%mesh2d%num_cells2+1
 num_dof_x2       = sim%num_dof_x2
-if (MPI_MASTER) then
 
+if (MPI_MASTER) then
   print *,'#collective_size=',sll_get_collective_size(sll_world_collective)
   SLL_ALLOCATE(f_visu(np_x1,num_dof_x2),ierr)
   SLL_ALLOCATE(f_visu_buf1d(np_x1*num_dof_x2),ierr)
-
 else
-
   SLL_ALLOCATE(f_visu(1:1,1:1),ierr)          
   SLL_ALLOCATE(f_visu_buf1d(1:1),ierr)
-
 endif
 
 collective_size = sll_get_collective_size(sll_world_collective)
