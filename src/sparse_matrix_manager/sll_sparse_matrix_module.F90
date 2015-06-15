@@ -75,14 +75,14 @@ function new_csr_matrix( &
   num_local_dof_col)     &
   result(mat)
 
-type(sll_csr_matrix), pointer :: mat
-sll_int32, intent(in) :: num_rows
-sll_int32, intent(in) :: num_cols
-sll_int32, intent(in) :: num_elements
-sll_int32, dimension(:,:), intent(in) :: local_to_global_row
-sll_int32, dimension(:,:), intent(in) :: local_to_global_col
-sll_int32, intent(in) :: num_local_dof_row
-sll_int32, intent(in) :: num_local_dof_col
+type(sll_csr_matrix), pointer            :: mat
+sll_int32,                    intent(in) :: num_rows
+sll_int32,                    intent(in) :: num_cols
+sll_int32,                    intent(in) :: num_elements
+sll_int32, dimension(:,:),    intent(in) :: local_to_global_row
+sll_int32, dimension(:,:),    intent(in) :: local_to_global_col
+sll_int32,                    intent(in) :: num_local_dof_row
+sll_int32,                    intent(in) :: num_local_dof_col
 
 sll_int32 :: ierr
 
@@ -158,21 +158,13 @@ lpi_col(:,:) = 0
 lpi_occ(:) = 0
 
 do elt = 1, num_elements  !Loop over cells
-
   do ii = 1, num_local_dof_row
-
     row = local_to_global_row(ii, elt) !Row number in matrix
-
     if (row /= 0) then
-
       do jj = 1, num_local_dof_col
-
         col = local_to_global_col(jj, elt) !Column number in matrix
-
         if (col /= 0) then
-
           ll_done = .false.
-
           ! WE CHECK IF IT IS THE FIRST OCCURANCE OF THE COUPLE (row, col)
           do i = 1, lpi_col(row, 0)
             if (lpi_col(row, i) == col) then
@@ -180,23 +172,15 @@ do elt = 1, num_elements  !Loop over cells
               exit
             end if
           end do
-
           if (.not.ll_done) then
-
             lpi_occ(row)                  = lpi_occ(row) + 1
             lpi_col(row, 0)               = lpi_col(row, 0) + 1
             lpi_col(row, lpi_col(row, 0)) = col
-
           end if
-
         end if
-
       end do
-
     end if
-
   end do
-
 end do
 
 ! COUNT NON ZERO ELEMENTS
@@ -216,15 +200,12 @@ SLL_ALLOCATE(mat%val(num_nz),ierr)
 mat%row_ptr(1) = 1
 
 do i = 1, mat%num_rows
-  mat%row_ptr(i + 1) = mat%row_ptr(1) + sum(lpi_occ(1: i))
+  mat%row_ptr(i+1) = mat%row_ptr(1) + sum(lpi_occ(1:i))
 end do
 
 do elt = 1, num_elements
-
   do ii = 1, num_local_dof_row
-
     row = local_to_global_row(ii, elt)
-
     if (row /= 0) then
       if (lpi_col(row,0) /= 0) then
         sz = lpi_col(row, 0)
@@ -235,9 +216,7 @@ do elt = 1, num_elements
         lpi_col(row, 0) = 0
       end if
     end if
-
   end do
-
 end do
 
 mat%val(:) = 0.0_f64
@@ -276,7 +255,6 @@ call initialize_csr_matrix_with_constraint( mat, mat_a)
 
 end function new_csr_matrix_with_constraint
 
-
 subroutine sll_factorize_csr_matrix(mat)
 
 type(sll_csr_matrix), intent(inout) :: mat
@@ -311,38 +289,16 @@ integer :: i
 integer :: s
 integer :: k
 
-
 num_rows_out = num_rows_in+1
-num_nz_out = num_nz_in+2*num_rows_in
+num_nz_out   = num_nz_in+2*num_rows_in
 
-if(size(ia_in)<num_rows_in+1) then
-  print *, '#problem of size of ia_in', size(ia_in),num_rows_in+1
-  stop
-endif
-if(size(ja_in)<num_nz_in) then
-  print *, '#problem of size of ja_in', size(ja_in),num_nz_in
-  stop
-endif
-if(size(a_in)<num_nz_in) then
-  print *, '#problem of size of a_in', size(a_in),num_nz_in
-  stop
-endif
-if(size(ia_out)<num_rows_out+1) then
-  print *, '#problem of size of ia_out', size(ia_out),num_rows_out+1
-  stop
-endif
-if(size(ja_out)<num_nz_out) then
-  print *, '#problem of size of ja_out', size(ja_out),num_nz_out
-  stop
-endif
-if(size(a_out)<num_nz_out) then
-  print *, '#problem of size of a_out', size(a_out),num_nz_out
-  stop
-endif
-if(ia_in(num_rows_in+1).ne.num_nz_in+1)then
-  print *,'#bad value of ia_in(num_rows_in+1)', ia_in(num_rows_in+1),num_nz_in+1
-  stop
-endif
+SLL_ASSERT(size(ia_in)          >= num_rows_in+1)
+SLL_ASSERT(size(ja_in)          >= num_nz_in)
+SLL_ASSERT(size(a_in)           >= num_nz_in)
+SLL_ASSERT(size(ia_out)         >= num_rows_out+1)
+SLL_ASSERT(size(ja_out)         >= num_nz_out)
+SLL_ASSERT(size(a_out)          >= num_nz_out)
+SLL_ASSERT(ia_in(num_rows_in+1) == num_nz_in+1)
 
 s = 1
 do i=1,num_rows_in
@@ -364,10 +320,7 @@ do i=1,num_rows_in
 enddo
 ia_out(num_rows_in+2) = s
  
-if(ia_out(num_rows_out+1).ne.num_nz_out+1)then
-  print *,'#bad value of ia_out(num_rows_out+1)',ia_out(num_rows_out+1),num_nz_out+1
-  stop
-endif
+SLL_ASSERT(ia_out(num_rows_out+1) == num_nz_out+1)
   
 end subroutine csr_add_one_constraint
   
@@ -392,18 +345,17 @@ end do
 
 end subroutine sll_mult_csr_matrix_vector
 
-subroutine sll_add_to_csr_matrix(mat, val, a, aprime)
+subroutine sll_add_to_csr_matrix(mat, val, row, col)
 
 type(sll_csr_matrix), intent(inout) :: mat
 sll_real64,           intent(in)    :: val
-sll_int32,            intent(in)    :: a
-sll_int32,            intent(in)    :: aprime
+sll_int32,            intent(in)    :: row
+sll_int32,            intent(in)    :: col
 
 sll_int32 :: k
 
-! THE CURRENT LINE IS self%row_ptr(ai_A)
-do k = mat%row_ptr(a), mat%row_ptr(a+1) - 1
-  if (mat%col_ind(k) == aprime) then
+do k = mat%row_ptr(row), mat%row_ptr(row+1) - 1
+  if (mat%col_ind(k) == col) then
     mat%val(k) = mat%val(k) + val
     exit
   end if

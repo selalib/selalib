@@ -17,7 +17,12 @@ ADD_LIBRARY( sll_time_splitting STATIC
 
 ADD_LIBRARY( sll_time_composition STATIC
   sll_time_composition_coeff.F90 )
+
   
+TARGET_LINK_LIBRARIES( sll_time_composition 
+                       sll_working_precision
+                       sll_memory)
+
   
 # Tests
 IF(BUILD_TESTING)
