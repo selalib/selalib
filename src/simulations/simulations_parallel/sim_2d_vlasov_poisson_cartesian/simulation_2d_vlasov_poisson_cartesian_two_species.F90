@@ -144,7 +144,7 @@ use omp_lib
    !poisson solver
    class(sll_poisson_1d_base), pointer   :: poisson
    sll_real64 :: mass_ratio
-   sll_real64, dimension(:), pointer :: mixt_bc
+   !sll_real64, dimension(:), pointer :: mixt_bc
    
    contains
      procedure, pass(sim) :: run => run_vp2d_cartesian_two_species
@@ -264,13 +264,13 @@ contains
     character(len=256) :: initial_function_case_sp1
     sll_real64 :: kmode_sp1
     sll_real64 :: eps_sp1
-    sll_real64 :: theta_sp1
+    sll_real64 :: sigma_sp1
     sll_real64 :: v0_sp1
     sll_real64 :: alpha_gaussian_sp1
     character(len=256) :: initial_function_case_sp2
     sll_real64 :: kmode_sp2
     sll_real64 :: eps_sp2
-    sll_real64 :: theta_sp2
+    sll_real64 :: sigma_sp2
     sll_real64 :: v0_sp2
     sll_real64 :: alpha_gaussian_sp2
     character(len=256) :: restart_file
@@ -359,13 +359,13 @@ contains
       initial_function_case_sp1, &
       kmode_sp1, &
       eps_sp1, &
-      theta_sp1, &
+      sigma_sp1, &
       v0_sp1, &
       alpha_gaussian_sp1, &
       initial_function_case_sp2, &
       kmode_sp2, &
       eps_sp2, &
-      theta_sp2, &
+      sigma_sp2, &
       v0_sp2, &
       alpha_gaussian_sp2, &
       restart_file, &
@@ -449,20 +449,24 @@ contains
     initial_function_case_sp1 = "SLL_LANDAU"
     kmode_sp1 = 0.5_f64
     eps_sp1 = 0.001_f64
+    sigma_sp1 = 1._f64
+    v0_sp1 = 0._f64
     !initial_function_case = "SLL_BEAM"
     alpha_gaussian_sp1 = 0.2_f64
     !initial_function_case = "SLL_PLASMA_SHEATH"
-    theta_sp1 = 5.52d-4
-    v0_sp1 = 0._f64
+    !sigma_sp1 = 5.52d-4
+    !v0_sp1 = 0._f64
     
     initial_function_case_sp2 = "SLL_LANDAU"
     kmode_sp2 = 0.5_f64
     eps_sp2 = 0.001_f64
+    sigma_sp2 = 1._f64
+    v0_sp2 = 0._f64
     !initial_function_case = "SLL_BEAM"
     alpha_gaussian_sp2 = 0.2_f64
     !initial_function_case = "SLL_PLASMA_SHEATH"
-    theta_sp2 = 5.52d-4
-    v0_sp2 = 0._f64
+    !sigma_sp2 = 5.52d-4
+    !v0_sp2 = 0._f64
     
     restart_file = "no_restart_file"
     time_init_from_restart_file = .false.
@@ -622,9 +626,11 @@ contains
     select case (initial_function_case_sp1)
     case ("SLL_LANDAU")
        sim%init_func_sp1 => sll_landau_initializer_2d
-       SLL_ALLOCATE(sim%params_sp1(2),ierr)
+       SLL_ALLOCATE(sim%params_sp1(4),ierr)
        sim%params_sp1(1) = kmode_sp1
        sim%params_sp1(2) = eps_sp1
+       sim%params_sp1(3) = v0_sp1
+       sim%params_sp1(4) = sigma_sp1
        sim%nrj0_sp1 = 0._f64  !compute the right value
        !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
        !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
@@ -675,9 +681,11 @@ contains
     select case (initial_function_case_sp2)
     case ("SLL_LANDAU")
        sim%init_func_sp2 => sll_landau_initializer_2d
-       SLL_ALLOCATE(sim%params_sp2(2),ierr)
+       SLL_ALLOCATE(sim%params_sp2(4),ierr)
        sim%params_sp2(1) = kmode_sp2
        sim%params_sp2(2) = eps_sp2
+       sim%params_sp2(3) = v0_sp2
+       sim%params_sp2(4) = sigma_sp2
        sim%nrj0_sp2 = 0._f64  !compute the right value
        !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
        !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
@@ -1009,7 +1017,7 @@ contains
     sim%mass_ratio = mass_ratio
     
     !poisson
-    SLL_ALLOCATE(sim%mixt_bc(2),ierr)
+    !SLL_ALLOCATE(sim%mixt_bc(2),ierr)
     select case (poisson_solver)
     case ("SLL_FFT")
        sim%poisson => new_poisson_1d_periodic_solver( &
@@ -1146,7 +1154,7 @@ contains
     sll_real64,dimension(:,:),pointer :: f_x1_sp1,f_x2_sp1,f_x1_init_sp1
     sll_real64,dimension(:,:),pointer :: f_x1_sp2,f_x2_sp2,f_x1_init_sp2
     sll_real64,dimension(:),pointer :: rho_sp1,rho_sp2,efield,e_app,rho_loc_sp1,rho_loc_sp2
-    sll_real64 :: qel(1),qel_loc(1)
+    !sll_real64 :: qel(1),qel_loc(1)
     !sll_real64, dimension(:), allocatable :: rho_split
     !sll_real64, dimension(:), allocatable :: rho_full
     
@@ -1257,7 +1265,7 @@ contains
     np_x2_sp2 = sim%mesh2d_sp2%num_cells2+1
     num_dof_x2_sp2 = sim%num_dof_x2_sp2
 
-    qel(1) = 0._f64
+    !qel(1) = 0._f64
     
     if(sll_get_collective_rank(sll_world_collective)==0)then
        print *,'#collective_size=',sll_get_collective_size(sll_world_collective)
@@ -1617,9 +1625,14 @@ contains
       rho_sp2 )
 
 
-    sim%mixt_bc = (/ 0._f64, 0._f64 /)
+    !sim%mixt_bc = (/ 0._f64, 0._f64 /)
     
     call sim%poisson%compute_E_from_rho( efield, rho_sp2-rho_sp1 )
+    
+    istep = 0
+    if(sim%driven)then
+      call compute_e_app(sim,e_app,time_init+real(istep,f64)*sim%dt)
+    endif
     
     ! write initial fields
     if(sll_get_collective_rank(sll_world_collective)==0)then
@@ -1721,14 +1734,14 @@ contains
           !computation of electric field
           rho_loc_sp1 = 0._f64
           rho_loc_sp2 = 0._f64
-          qel_loc(1) = 0._f64
+          !qel_loc(1) = 0._f64
           ig = global_indices_sp1(2)-1
           do i=1,np_x1
              rho_loc_sp1(i)=rho_loc_sp1(i)&
                   +sum(f_x1_sp1(i,1:local_size_x2_sp1)*sim%integration_weight_sp1(1+ig:local_size_x2_sp1+ig))
           end do
 
-          qel_loc(1) = qel_loc(1) + sum(f_x1_sp1(1,1:local_size_x2_sp1)*(-abs(node_positions_x2_sp1(ig+1:ig+local_size_x2_sp1))+node_positions_x2_sp1(ig+1:ig+local_size_x2_sp1))*0.5_f64*sim%integration_weight_sp1(1+ig:local_size_x2_sp1+ig))
+          !qel_loc(1) = qel_loc(1) + sum(f_x1_sp1(1,1:local_size_x2_sp1)*(-abs(node_positions_x2_sp1(ig+1:ig+local_size_x2_sp1))+node_positions_x2_sp1(ig+1:ig+local_size_x2_sp1))*0.5_f64*sim%integration_weight_sp1(1+ig:local_size_x2_sp1+ig))
 
           ig = global_indices_sp2(2)-1
           do i = 1,np_x1
@@ -1736,7 +1749,7 @@ contains
                   +sum(f_x1_sp2(i,1:local_size_x2_sp2)*sim%integration_weight_sp2(1+ig:local_size_x2_sp2+ig))
           end do
 
-          qel_loc(1) = qel_loc(1) - sum(f_x1_sp2(1,1:local_size_x2_sp2)*(-abs(node_positions_x2_sp2(ig+1:ig+local_size_x2_sp2))+node_positions_x2_sp2(ig+1:ig+local_size_x2_sp2))*0.5_f64*sim%integration_weight_sp2(1+ig:local_size_x2_sp2+ig))
+          !qel_loc(1) = qel_loc(1) - sum(f_x1_sp2(1,1:local_size_x2_sp2)*(-abs(node_positions_x2_sp2(ig+1:ig+local_size_x2_sp2))+node_positions_x2_sp2(ig+1:ig+local_size_x2_sp2))*0.5_f64*sim%integration_weight_sp2(1+ig:local_size_x2_sp2+ig))
           
           call sll_collective_allreduce( &
             sll_world_collective, &
@@ -1752,17 +1765,25 @@ contains
             MPI_SUM, &
             rho_sp2 )
 
-          call sll_collective_allreduce( &
-               sll_world_collective, &
-               qel_loc, &
-               1, &
-               MPI_SUM, &
-               qel )
+!          call sll_collective_allreduce( &
+!               sll_world_collective, &
+!               qel_loc, &
+!               1, &
+!               MPI_SUM, &
+!               qel )
 
-          sim%mixt_bc(1) = sim%mixt_bc(1) - 0.5_f64*qel(1)*sim%dt
+          !sim%mixt_bc(1) = sim%mixt_bc(1) - 0.5_f64*qel(1)*sim%dt
 
           call sim%poisson%compute_E_from_rho( efield, rho_sp2-rho_sp1 )
+          
+          t_step = t_step+sim%split%split_step(split_istep)
+          
+          if(sim%driven)then
+            call compute_e_app(sim,e_app,time_init+t_step*sim%dt)
+          endif
 
+          
+          
        else
 
           !! V ADVECTION 
@@ -1803,7 +1824,7 @@ contains
 
           do i_omp = 1,local_size_x1_sp2
              ig_omp=i_omp+global_indices_sp2(1)-1
-             alpha_omp = sim%mass_ratio*(efield(ig_omp)+e_app(ig_omp)) * sim%split%split_step(split_istep)
+             alpha_omp = sim%mass_ratio*(efield(ig_omp)-e_app(ig_omp)) * sim%split%split_step(split_istep)
              f1d_omp_in_sp2(1:num_dof_x2_sp2,tid) = f_x2_sp2(i_omp,1:num_dof_x2_sp2)
              if(sim%advection_form_x2_sp2==SLL_CONSERVATIVE)then
                 call function_to_primitive(f1d_omp_in_sp2(:,tid),x2_array_unit_sp2,np_x2_sp2-1,mean_omp)
@@ -1872,18 +1893,19 @@ contains
                 *sim%x2_array_sp1(global_indices_sp1(2)-1+1:global_indices_sp1(2)-1+local_size_x2_sp1)**2 &
                 *sim%integration_weight_sp1(1+ig:local_size_x2_sp1+ig) )          
         end do
-
+        
+        ig = global_indices_sp2(2)-1
         do i = 1, np_x1-1        
-           tmp_loc(6)= tmp_loc(1)+sum(f_x1_sp2(i,1:local_size_x2_sp2) &
+           tmp_loc(6)= tmp_loc(6)+sum(f_x1_sp2(i,1:local_size_x2_sp2) &
                 *sim%integration_weight_sp2(1+ig:local_size_x2_sp2+ig))
-           tmp_loc(7)= tmp_loc(2)+sum(abs(f_x1_sp2(i,1:local_size_x2_sp2)) &
+           tmp_loc(7)= tmp_loc(7)+sum(abs(f_x1_sp2(i,1:local_size_x2_sp2)) &
                 *sim%integration_weight_sp2(1+ig:local_size_x2_sp2+ig))
-           tmp_loc(8)= tmp_loc(3)+sum((f_x1_sp2(i,1:local_size_x2_sp2))**2 &
+           tmp_loc(8)= tmp_loc(8)+sum((f_x1_sp2(i,1:local_size_x2_sp2))**2 &
                 *sim%integration_weight_sp2(1+ig:local_size_x2_sp2+ig))
-           tmp_loc(9)= tmp_loc(4) +sum(f_x1_sp2(i,1:local_size_x2_sp2) &
+           tmp_loc(9)= tmp_loc(9) +sum(f_x1_sp2(i,1:local_size_x2_sp2) &
                 *sim%x2_array_sp2(global_indices_sp2(2)-1+1:global_indices_sp2(2)-1+local_size_x2_sp2) &
                 *sim%integration_weight_sp2(1+ig:local_size_x2_sp2+ig))          
-           tmp_loc(10)= tmp_loc(5)+sum(f_x1_sp2(i,1:local_size_x2_sp2) &
+           tmp_loc(10)= tmp_loc(10)+sum(f_x1_sp2(i,1:local_size_x2_sp2) &
                 *sim%x2_array_sp2(global_indices_sp2(2)-1+1:global_indices_sp2(2)-1+local_size_x2_sp2)**2 &
                 *sim%integration_weight_sp2(1+ig:local_size_x2_sp2+ig) )          
         end do
@@ -1960,7 +1982,7 @@ contains
         endif 
 
         if(sll_get_collective_rank(sll_world_collective)==0)then                  
-          buf_fft = rho_sp1(1:np_x1-1)
+          buf_fft = rho_sp1(1:np_x1-1)-rho_sp2(1:np_x1-1)
           call fft_apply_plan(pfwd,buf_fft,buf_fft)
           do k=0,nb_mode
             rho_mode(k)=fft_get_mode(pfwd,buf_fft,k)
@@ -2241,7 +2263,33 @@ contains
     call sll_xdmf_close(file_id,error)
   end subroutine plot_f_cartesian
 
+  subroutine compute_e_app(sim,e_app,t)
+    class(sll_simulation_2d_vlasov_poisson_cart_two_species) :: sim
+    sll_real64, dimension(:), intent(inout) :: e_app
+    sll_real64, intent(in) :: t
+    sll_real64 :: adr
+    sll_int32 :: i
+    sll_int32 :: np_x1
+    !t = time_init+istep*sim%dt
+    e_app = 0._f64
+    np_x1 = sim%mesh2d_sp1%num_cells1+1      
+    call PFenvelope(adr, &
+      t, &
+      sim%tflat, &
+      sim%tL, &
+      sim%tR, &
+      sim%twL, &
+      sim%twR, &
+      sim%t0, &
+      sim%turn_drive_off)
 
+    do i = 1, np_x1
+     e_app(i) = sim%Edrmax*adr*sim%kx_sp1 &
+       * sin(sim%kx_sp1*real(i-1,f64)*sim%mesh2d_sp1%delta_eta1 &
+       - sim%omegadr*t)
+    enddo
+
+  end subroutine compute_e_app
 
 
 end module sll_simulation_2d_vlasov_poisson_cartesian_two_species
