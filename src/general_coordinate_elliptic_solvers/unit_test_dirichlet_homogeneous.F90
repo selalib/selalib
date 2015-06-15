@@ -1,4 +1,4 @@
-program test_gces_dirichlet
+program test_gces_dirichlet_homogeneous
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
@@ -11,7 +11,7 @@ use sll_module_scalar_field_2d
 use sll_constants
 use sll_module_arbitrary_degree_spline_interpolator_2d
 use sll_module_deboor_splines_2d
-use sll_module_gces_dirichlet
+use sll_module_gces_dirichlet_homogeneous
 
 implicit none
 
@@ -26,7 +26,7 @@ implicit none
 
 type(sll_cartesian_mesh_2d),                       pointer :: mesh_2d
 class(sll_coordinate_transformation_2d_base),      pointer :: tau
-type(sll_gces_dirichlet)                                   :: es
+type(sll_gces_dirichlet_homogeneous)                       :: es
 type(sll_arbitrary_degree_spline_interpolator_2d), target  :: interp_phi
 type(sll_arbitrary_degree_spline_interpolator_2d), target  :: interp_rho
 class(sll_scalar_field_2d_base),                   pointer :: a11_field_mat
@@ -359,4 +359,4 @@ res = sin(2*pi*eta1)*sin(2*pi*eta2)
 
 end function sol
 
-end program test_gces_dirichlet
+end program test_gces_dirichlet_homogeneous
