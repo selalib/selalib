@@ -6,98 +6,81 @@ use sll_module_deboor_splines_1d
 
 implicit none
 
-
-
 sll_real64, dimension(:), pointer :: knots
-sll_real64, dimension(:), pointer :: value_func
-sll_real64, dimension(:), pointer :: value_der
-sll_real64, dimension(:), pointer :: points,points_test
-sll_int32, dimension(:), pointer :: points_der
-sll_int32  :: dim_point, dim_point_der
-sll_int32  :: deg_spline,ordre
-sll_real64, dimension(:), pointer :: matrices
+sll_real64, dimension(:), allocatable :: value_func
+sll_real64, dimension(:), allocatable :: value_der
+sll_real64, dimension(:), allocatable :: x,points_test
+sll_int32,  dimension(:), allocatable :: points_der
+sll_int32                         :: n
+sll_int32                         :: m
+sll_int32                         :: k
+sll_real64, dimension(:), allocatable :: matrices
 sll_real64, dimension(:), pointer :: bcoef
-sll_int32 :: iflag,ierr
-sll_real64 :: d,res
-sll_int32 :: i
+sll_int32                         :: iflag
+sll_int32                         :: ierr
+sll_real64                        :: d
+sll_real64                        :: res
+sll_int32                         :: i
 
+k = 3
+n = 10
+m = 2
 
+SLL_ALLOCATE(knots(n+(k+1)+m),ierr)
+SLL_ALLOCATE(value_func(n),ierr)
+SLL_ALLOCATE(value_der(m),ierr)
+SLL_ALLOCATE(x(n),ierr)
+SLL_ALLOCATE(points_test(n),ierr)
+SLL_ALLOCATE(points_der(m),ierr)
+SLL_ALLOCATE(matrices((2*(k+1)-1)*(n+m)),ierr)
+SLL_ALLOCATE(bcoef(n+m),ierr)
 
-deg_spline    = 3
-dim_point     = 10
-dim_point_der = 2
-ordre         = deg_spline +1
-
-SLL_ALLOCATE(knots(dim_point + ordre + dim_point_der),ierr)
-SLL_ALLOCATE(value_func(dim_point),ierr)
-SLL_ALLOCATE(value_der(dim_point_der),ierr)
-SLL_ALLOCATE(points(dim_point),ierr)
-SLL_ALLOCATE(points_test(dim_point),ierr)
-SLL_ALLOCATE(points_der(dim_point_der),ierr)
-SLL_ALLOCATE(matrices((2*ordre-1)*(dim_point+dim_point_der)),ierr)
-SLL_ALLOCATE(bcoef(dim_point+ dim_point_der),ierr)
-
-
-
-do i = 1 , dim_point
-   points(i) = 0.0_f64 + (i-1)*1./(dim_point-1)
-   value_func(i) = cos(2*sll_pi*points(i))
+!PN : Set point values and abscissae
+do i = 1 , n
+ x(i) = 0.0_f64 + (i-1)*1./(n-1)
+ value_func(i) = cos(2*sll_pi*x(i))
 end do
 
+d = sum( abs( value_func(2:n)-value_func(1:n-1)))
+points_test(1) =  x(1)
+points_test(n) =  x(n)
 
-
-d = sum( abs( value_func(2:dim_point)-value_func(1:dim_point-1)))
-points_test(1) =  points(1)
-points_test(dim_point) =  points(dim_point)
-
-do i = 2,dim_point
-   points_test(i) = points_test(i-1) +  abs( value_func(i)-value_func(i-1))/d
+do i = 2,n
+  points_test(i) = points_test(i-1) +  abs( value_func(i)-value_func(i-1))/d
 end do
 
-
-
-knots(1:ordre) = points(1)
-
-do i = ordre+1, dim_point + deg_spline-1
-      knots(i) = points(i-deg_spline)
+!PN : Initialize knots
+knots(1:(k+1)) = x(1)
+do i = (k+1)+1, n + k-1
+  knots(i) = x(i-k)
 end do
-
-do i = dim_point +deg_spline,dim_point + ordre + dim_point_der
-   knots(i) = points(dim_point)
+do i = n +k,n + (k+1) + m
+  knots(i) = x(n)
 end do
-
-
 
 points_der(1) = 1
-value_der(1)  = -sin(2*sll_pi*points(1))*2*sll_pi
-points_der(2) = dim_point
-value_der(2)  = -sin(2*sll_pi*points(dim_point))*2*sll_pi
+value_der(1)  = -sin(2*sll_pi*x(1))*2*sll_pi
+points_der(2) = n
+value_der(2)  = -sin(2*sll_pi*x(n))*2*sll_pi
 
 call splint_der(&
-     points,value_func,&
+     x,value_func,&
      points_der,value_der,&
-     knots,dim_point,dim_point_der,ordre,&
+     knots,n,m,(k+1),&
      matrices, bcoef, iflag )
 
-
-
-do i = 1 , dim_point
-   res=bvalue( knots, bcoef, dim_point+dim_point_der, ordre, points(i), 0)
-   !print*, 'approx',res,'exact', value_func(i)
+!PN : interpolate values
+print*, " Values "
+do i = 1 , n
+  res=bvalue( knots, bcoef, n+m, (k+1), x(i), 0)
+  print"(3(a8,f17.12))", 'approx',res,'exact', value_func(i), 'error', res-value_func(i)
 end do
-do i = 1,dim_point
-   res=bvalue( knots, bcoef, dim_point+dim_point_der, ordre, points(i), 1)
-   !print*, 'approx',res,'exact', value_der(i)
-end do
+!PN : interpolate values of first derivative
+!print*, " Values of first derivative "
+!do i = 1,n
+!  res=bvalue( knots, bcoef, n+m, (k+1), x(i), 1)
+!  print"(a8,f17.12,a8,f17.12)", 'approx',res,'exact', value_der(i)
+!end do
    
-
-SLL_DEALLOCATE(knots,ierr)
-SLL_DEALLOCATE(value_func,ierr)
-SLL_DEALLOCATE(value_der,ierr)
-SLL_DEALLOCATE(points,ierr)
-SLL_DEALLOCATE(points_der,ierr)
-SLL_DEALLOCATE(matrices,ierr)
-SLL_DEALLOCATE(bcoef,ierr)
-
 print*, 'PASSED'
 end program unit_test
