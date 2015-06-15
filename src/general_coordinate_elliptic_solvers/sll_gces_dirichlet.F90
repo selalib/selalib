@@ -96,7 +96,6 @@ type, public :: sll_gces_dirichlet
   sll_int32, dimension(:,:), pointer :: local_to_global_indices_col
   sll_int32, dimension(:,:), pointer :: local_to_global_indices_row
 
-  !!! contains the values of all splines in all gauss points
   sll_real64, dimension(:,:,:,:), pointer :: v_splines1
   sll_real64, dimension(:,:,:,:), pointer :: v_splines2
 
@@ -231,8 +230,8 @@ es%local_to_global_indices_mat = 0
 ! knot in the appropriate knot vector at which the support of the function
 ! begins
 d = 0
-do j = 2, n2+k2-1
-  do i = 2, n1+k1-1
+do j = 1, n2+k2
+  do i = 1, n1+k1
     a = i + (n1+k1)*(j-1)
     d = d + 1
     global_indices(a) = d
@@ -311,7 +310,7 @@ SLL_ALLOCATE(es%t2_rho(n2+k2+2),ierr)
 SLL_ALLOCATE(es%rho_vec((n1+k1)*(n2+k2)),ierr)
 SLL_ALLOCATE(es%masse((n1+k1)*(n2+k2)),ierr)
 SLL_ALLOCATE(es%stiff((n1+k1)*(n2+k2)),ierr)
-SLL_ALLOCATE(es%phi_vec((n1+k1-2)*(n2+k2-2)),ierr) 
+SLL_ALLOCATE(es%phi_vec((n1+k1)*(n2+k2)),ierr) 
 
 es%rho_vec = 0.0_f64
 es%masse   = 0.0_f64
@@ -338,8 +337,8 @@ do j = n2+k2+1, n2+1+2*k2
   es%t2(j) = eta2_max
 enddo
   
-es%csr_mat => new_csr_matrix( (n1+k1-2)*(n2+k2-2),            &
-&                             (n1+k1-2)*(n2+k2-2),            &
+es%csr_mat => new_csr_matrix( (n1+k1)*(n2+k2),                &
+&                             (n1+k1)*(n2+k2),                &
 &                             (n1*n2),                        &
 &                             es%local_to_global_indices_mat, &
 &                             (k1+1)*(k2+1),                  &
@@ -1028,7 +1027,6 @@ class(sll_scalar_field_2d_base),     intent(in),target :: rho
 class(sll_scalar_field_2d_base), pointer :: base_field_pointer
 sll_real64, dimension(:,:),      pointer :: coeff_rho
 sll_real64, dimension(:), allocatable    :: m_rho_loc
-sll_real64, dimension(:), allocatable    :: tmp_rho_vec
 
 sll_int32  :: i
 sll_int32  :: j
@@ -1139,20 +1137,8 @@ end select
 
 es%phi_vec = 0.0_f64  !PN: Is it useful ?
 
-SLL_ALLOCATE(tmp_rho_vec((n1+k1-2)*(n2+k2-2)),ierr)
-k = 0
-do j = 1, n2+k2-2
-  do i = 1, n1+k1-2
-    k = k+1
-    tmp_rho_vec(k) = es%rho_vec(i+1+(n1+k1)*j)
-  end do
-end do
+call sll_solve_csr_matrix(es%csr_mat, es%rho_vec, es%phi_vec)
 
-  
-call sll_solve_csr_matrix(es%csr_mat, tmp_rho_vec, es%phi_vec)
-
-DEALLOCATE(tmp_rho_vec)
-  
 call phi%interp_2d%set_coefficients(es%phi_vec)
 
 end subroutine solve_gces_dirichlet

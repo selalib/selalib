@@ -28,7 +28,6 @@ type(sll_cartesian_mesh_2d),                       pointer :: mesh_2d
 class(sll_coordinate_transformation_2d_base),      pointer :: tau
 type(sll_gces_dirichlet)                                   :: es
 type(sll_arbitrary_degree_spline_interpolator_2d), target  :: interp_phi
-type(sll_arbitrary_degree_spline_interpolator_2d), target  :: interp_rho
 class(sll_scalar_field_2d_base),                   pointer :: a11_field_mat
 class(sll_scalar_field_2d_base),                   pointer :: a12_field_mat
 class(sll_scalar_field_2d_base),                   pointer :: a21_field_mat
@@ -179,25 +178,10 @@ call initialize_ad2d_interpolator(             &
   ETA1MAX,                                     &
   ETA2MIN,                                     &
   ETA2MAX,                                     &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SPLINE_DEG1,                                 &
-  SPLINE_DEG2 )
-
-call initialize_ad2d_interpolator(             &
-  interp_rho,                                  &
-  NUM_CELLS1+1,                                &
-  NUM_CELLS2+1,                                &
-  ETA1MIN,                                     &
-  ETA1MAX,                                     &
-  ETA2MIN,                                     &
-  ETA2MAX,                                     &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
+  SLL_HERMITE,                               &
+  SLL_HERMITE,                               &
+  SLL_HERMITE,                               &
+  SLL_HERMITE,                               &
   SPLINE_DEG1,                                 &
   SPLINE_DEG2 )
 
@@ -205,10 +189,10 @@ phi => new_scalar_field_2d_discrete(           &
   "phi",                                       &
   interp_phi,                                  &
   tau,                                         &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET )
+  SLL_HERMITE,                               &
+  SLL_HERMITE,                               &
+  SLL_HERMITE,                               &
+  SLL_HERMITE )
 
 rho => new_scalar_field_2d_analytic( &
 &    rhs,                            &
