@@ -53,15 +53,12 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
 
     # Simulations as new subdirectories
     ADD_SUBDIRECTORY( sim_2d_guiding_center_curvilinear        )
-    ADD_SUBDIRECTORY( sim_2d_guiding_center_PIC_cartesian      )
     ADD_SUBDIRECTORY( sim_2d_vlasov_poisson_cartesian          )
     ADD_SUBDIRECTORY( sim_2d_vlasov_poisson_no_splitting       )
     ADD_SUBDIRECTORY( sim_4d                                   )
     ADD_SUBDIRECTORY( sim_4d_vlasov_poisson_cartesian          )
     ADD_SUBDIRECTORY( sim_4d_vlasov_poisson_polar              )
     ADD_SUBDIRECTORY( sim_4d_vlasov_poisson_general            )
-    ADD_SUBDIRECTORY( sim_4d_vlasov_poisson_PIC_cartesian      )
-    ADD_SUBDIRECTORY( sim_4d_vlasov_poisson_LTPIC_cartesian    )
     ADD_SUBDIRECTORY( sim_4d_drift_kinetic_cartesian           )
     ADD_SUBDIRECTORY( sim_4d_drift_kinetic_polar               )
     ADD_SUBDIRECTORY( sim_4d_drift_kinetic_polar_one_mu        )
@@ -72,7 +69,12 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
     ADD_SUBDIRECTORY( sim_4d_qns_general                       )
     ADD_SUBDIRECTORY( sim_4d_qns_general_multipatch            )
     ADD_SUBDIRECTORY( sim_6d                                   )
+
+    # Particle simulations (mostly PIC)
+    ADD_SUBDIRECTORY( sim_2d_guiding_center_PIC_cartesian      )
+    ADD_SUBDIRECTORY( sim_4d_vlasov_poisson_PIC_cartesian      )
     ADD_SUBDIRECTORY( sim_general_vlasov_poisson_pif           )
+    ADD_SUBDIRECTORY( sim_pic1d1v_vlasov-poisson_periodic      )
 
 ENDIF()
 

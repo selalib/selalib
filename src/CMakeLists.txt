@@ -177,6 +177,8 @@ IF(F2008)
   ADD_SUBDIRECTORY( ode_integrators )
 ENDIF(F2008)
 
+# Container for all particle methods (mostly PIC)
+ADD_SUBDIRECTORY( particle_methods )
 
 IF(MPI_ENABLED)
    
