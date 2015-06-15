@@ -24,13 +24,13 @@ TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers
                        sll_memory
                        sll_working_precision)
 
-
 IF(BUILD_TESTING)
 
   ADD_EXECUTABLE( test_general_coordinates_elliptic_solver 
                   init_functions.F90 unit_test.F90 )
   TARGET_LINK_LIBRARIES( test_general_coordinates_elliptic_solver
                          sll_general_coordinate_elliptic_solvers )
+
   ADD_TEST( NAME general_coordinate_elliptic_solver 
             COMMAND test_general_coordinates_elliptic_solver )
   SET_TESTS_PROPERTIES( general_coordinate_elliptic_solver 
@@ -44,6 +44,7 @@ IF(BUILD_TESTING)
 
   ADD_EXECUTABLE( test_gces_dirichlet_homogeneous unit_test_dirichlet_homogeneous.F90 )
   TARGET_LINK_LIBRARIES( test_gces_dirichlet_homogeneous sll_general_coordinate_elliptic_solvers )
+
   ADD_TEST( NAME gces_dirichlet_homogeneous COMMAND test_gces_dirichlet_homogeneous )
   SET_TESTS_PROPERTIES( gces_dirichlet_homogeneous PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100 )
 
