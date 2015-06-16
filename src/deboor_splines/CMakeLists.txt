@@ -14,7 +14,7 @@ ADD_LIBRARY(original_deboor_splines STATIC
   bsplvd.f
   bsplvb.f)
 
-TARGET_LINK_LIBRARIES( deboor_splines banded_linear_solver sll_memory)
+TARGET_LINK_LIBRARIES( deboor_splines banded_linear_solver sll_memory sll_working_precision)
   
 ADD_EXECUTABLE(test_deboor unit_test.F90)
 TARGET_LINK_LIBRARIES( test_deboor deboor_splines sll_utilities sll_file_io)
