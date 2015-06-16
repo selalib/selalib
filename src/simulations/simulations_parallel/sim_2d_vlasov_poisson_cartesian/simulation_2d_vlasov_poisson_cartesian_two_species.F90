@@ -1486,7 +1486,8 @@ contains
        node_positions_x2_sp1, &
        f_x1_init_sp1, &
        sll_landau_initializer_2d, &
-       (/ sim%kx_sp1,0._f64 /))
+       (/ sim%params_sp1(1),0._f64,sim%params_sp1(3),sim%params_sp1(4) /))
+       !(/ sim%kx_sp1,0._f64 /))
 
     call sll_2d_parallel_array_initializer_cartesian( &
        layout_x1_sp2, &
@@ -1494,7 +1495,8 @@ contains
        node_positions_x2_sp2, &
        f_x1_init_sp2, &
        sll_landau_initializer_2d, &
-       (/ sim%kx_sp2,0._f64 /))
+       (/ sim%params_sp2(1),0._f64,sim%params_sp2(3),sim%params_sp2(4) /))
+       !(/ sim%kx_sp2,0._f64 /))
     
     
     call compute_displacements_array_2d( &
