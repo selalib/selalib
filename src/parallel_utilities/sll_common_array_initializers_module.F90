@@ -480,7 +480,7 @@ contains
     eta2_min = params(3)
     eta2_max = params(4)
     eps      = params(5)
-    kx  =  2. * sll_pi / (eta1_max - eta1_min)
+    kx       =  2. * sll_pi / (eta1_max - eta1_min)
 
     !Normalization
     !sagemath command
@@ -493,7 +493,7 @@ contains
 !!$                - (eta1_min - eta1_max)* &
 !!$               sin(2*sll_pi*eta1_max/(eta1_min - eta1_max)))*eps  &
 !!$               + 2*sll_pi*eta1_min - 2*sll_pi*eta1_max))
-    factor1 = 1.0_f64/(2.0*sll_pi)
+    factor1 = 1.0_f64/(2.0_f64*sll_pi)
 !!$    sll_landau_initializer_4d = factor1 * &
 !!$         (1.0_f64/((eta2_max-eta2_min)*(eta1_max-eta1_min))+eps*cos(kx*x))*exp(-0.5_f64*(vx**2+vy**2))
     sll_landau_initializer_4d = factor1 * &
@@ -571,9 +571,9 @@ contains
 
     SLL_ASSERT( size(params) >= 3 )
 
-    kx = params(1)
-    ky = params(2)
-    eps      = params(3)
+    kx   = params(1)
+    ky   = params(2)
+    eps  = params(3)
     
     factor1 = eps*cos(kx*x)*cos(ky*y)
     !factor1 = eps*cos(kx*x+ky*y)
@@ -584,8 +584,8 @@ contains
       factor1 = factor1+eps_ell*cos(ellx*x)*cos(elly*y)            
       !factor1 = factor1+eps_ell*cos(ellx*x+elly*y)            
     endif
-    factor1 = 1._f64+factor1
-    res = (1.0_f64/(2.0*sll_pi))*factor1*exp(-0.5_f64*(vx**2+vy**2))
+    factor1 = 1.0_f64+factor1
+    res = (1.0_f64/(2.0_f64*sll_pi))*factor1*exp(-0.5_f64*(vx**2+vy**2))
     
     !print *,'k=',kx,ky,eps
     !print *,'ell=',ellx,elly,eps_ell
@@ -866,8 +866,8 @@ function sll_test_yvy_transport_initializer_v1v2x1x2( vx, vy, x, y, params )
 
     eps = params(5)
     !kx  =  2. * sll_pi / (eta1_max - eta1_min)
-    kx=0.2_f64
-    factor1 = 1.0_f64/sqrt((2.0*sll_pi))
+    kx      = 0.2_f64
+    factor1 = 1.0_f64/sqrt((2.0_f64*sll_pi))
 
     sll_landau_1d_xvx_initializer_v1v2x1x2 = factor1 * &
          (1.0_f64+eps*cos(kx*x))*exp(-0.5_f64*(vx**2))
