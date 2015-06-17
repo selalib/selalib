@@ -33,31 +33,47 @@ module sll_simple_pic_4d_group_module
 
   type, extends(sll_particle_group_base) :: sll_simple_pic_4d_group
 
-    ! the group
-    class( sll_species ), pointer   :: species
-    sll_int32                       :: id
+    !    ! the group
+    !    class( sll_species ), pointer   :: species
+        !    sll_int32                       :: id
 
     ! the particles
     sll_int32                                                   :: number_particles
     type(sll_simple_pic_4d_particle),   dimension(:), pointer   :: particle_list
+    sll_real64                                                  :: common_weight
 
     ! the physical mesh used eg in the Poisson solver
-    type(sll_cartesian_mesh_2d), pointer    :: physical_mesh_2d
+    type(sll_cartesian_mesh_2d), pointer    :: space_mesh_2d
     logical                                 :: domain_is_x_periodic
     logical                                 :: domain_is_y_periodic
 
+    ! the initial density (put this in a separate object ?)
+    sll_real64      :: thermal_speed
+    sll_real64      :: alpha
+    sll_real64      :: k_landau
 
   contains
 
     ! Getters
-    procedure :: get_x      => get_x_simple_pic_4d
-    procedure :: get_v      => get_v_simple_pic_4d
-    procedure :: get_charge => get_charge_simple_pic_4d
-    procedure :: get_mass   => get_mass_simple_pic_4d
+    procedure :: get_x          => simple_pic_4d_get_x
+    procedure :: get_v          => simple_pic_4d_get_v
+    procedure :: get_charge     => simple_pic_4d_get_charge
+    procedure :: get_mass       => simple_pic_4d_get_mass
+    procedure :: get_cell_index => simple_pic_4d_get_cell_index
 
     ! Setters
-    procedure :: set_x      => set_x_simple_pic_4d
-    procedure :: set_v      => set_v_simple_pic_4d
+    procedure :: set_x                  => simple_pic_4d_set_x
+    procedure :: set_v                  => simple_pic_4d_set_v
+    procedure :: set_common_weight      => simple_pic_4d_set_common_weight
+    procedure :: set_particle_weight    => simple_pic_4d_set_particle_weight
+
+    ! Initializers
+    procedure :: set_initial_density_landau => simple_pic_4d_set_initial_density_landau
+    procedure :: random_initializer         => simple_pic_4d_random_initializer
+    procedure :: cartesian_initializer      => simple_pic_4d_cartesian_initializer
+
+
+    procedure :: deposit_charge_2d          => simple_pic_4d_deposit_charge_2d
 
   end type sll_simple_pic_4d_group
 
@@ -69,49 +85,49 @@ contains
 
 
   !----------------------------------------------------------------------------
-  pure function get_charge_simple_pic_4d( self, i ) result( r )
+  pure function simple_pic_4d_get_charge( self, i ) result( r )
     class( sll_simple_pic_4d_group ), intent( in ) :: self
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r
 
-    r = self%species%q
+    r = self%species%q * self%common_weight
 
-  end function get_charge_simple_pic_4d
+  end function simple_pic_4d_get_charge
 
 
   !----------------------------------------------------------------------------
-  pure function get_mass_simple_pic_4d( self, i ) result( r )
+  pure function simple_pic_4d_get_mass( self, i ) result( r )
     class( sll_simple_pic_4d_group ), intent( in ) :: self
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r
 
-    r = self%species%m
+    r = self%species%m * self%common_weight
 
-  end function get_mass_simple_pic_4d
+  end function simple_pic_4d_get_mass
 
 
   !----------------------------------------------------------------------------
-  pure function get_x_simple_pic_4d( self, i ) result( r )
+  pure function simple_pic_4d_get_x( self, i ) result( r )
     class( sll_simple_pic_4d_group ), intent( in ) :: self
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r(3)
 
-    type(sll_cartesian_mesh_2d),      pointer :: physical_mesh_2d
+    type(sll_cartesian_mesh_2d),      pointer :: space_mesh_2d
     type(sll_simple_pic_4d_particle), pointer :: particle
 
-    physical_mesh_2d => self%physical_mesh_2d
+    space_mesh_2d => self%space_mesh_2d
     particle => self%particle_list(i)
 
     ! get x
-    r(1) = physical_mesh_2d%eta1_min + physical_mesh_2d%delta_eta1*( particle%offset_x + real(particle%i_cell_x - 1, f64) )
+    r(1) = space_mesh_2d%eta1_min + space_mesh_2d%delta_eta1*( particle%offset_x + real(particle%i_cell_x - 1, f64) )
     ! get y
-    r(2) = physical_mesh_2d%eta2_min + physical_mesh_2d%delta_eta2*( particle%offset_y + real(particle%i_cell_y - 1, f64) )
+    r(2) = space_mesh_2d%eta2_min + space_mesh_2d%delta_eta2*( particle%offset_y + real(particle%i_cell_y - 1, f64) )
 
-  end function get_x_simple_pic_4d
+  end function simple_pic_4d_get_x
 
 
   !----------------------------------------------------------------------------
-  pure function get_v_simple_pic_4d( self, i ) result( r )
+  pure function simple_pic_4d_get_v( self, i ) result( r )
     class( sll_simple_pic_4d_group ), intent( in ) :: self
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r(3)
@@ -125,7 +141,29 @@ contains
     ! get vy
     r(2) = particle%v_y
 
-  end function get_v_simple_pic_4d
+  end function simple_pic_4d_get_v
+
+
+  !----------------------------------------------------------------------------
+  pure function ::  simple_pic_4d_get_cell_index(particle_group, i_part) res(i_cell)
+    type(sll_simple_pic_4d_group),  intent( in )    ::  particle_group
+    sll_int32,                      intent( in )    ::  i_part
+    sll_int32,                      intent( out )   ::  i_cell
+    sll_int32 ::  i_cell_x, i_cell_y
+    sll_int32 ::  num_cells_x, num_cells_y
+
+    i_cell_x = particle_group%particle_list(i_part)%i_cell_x
+    i_cell_y = particle_group%particle_list(i_part)%i_cell_y
+    num_cells_x = particle_group%space_mesh_2d%num_cells1
+    num_cells_y = particle_group%space_mesh_2d%num_cells2
+
+    i_cell = 1 + modulo(i_cell_x - 1,  num_cells_x) + modulo(i_cell_y - 1,  num_cells_y) * num_cells_x
+
+    SLL_ASSERT( i_cell >= 1)
+    SLL_ASSERT( i_cell <= num_cells_x * num_cells_y )
+
+  end function simple_pic_4d_get_cell_index
+
 
 
   !----------------------------------------------------------------------------
@@ -136,25 +174,25 @@ contains
   !             - in non-periodic domains we can track outside particles (markers)
   !
   ! note: the integer index of the physical cell (used eg for the Poisson solver) is then obtained with get_poisson_cell_index
-  subroutine set_x_simple_pic_4d( self, i, x )
+  subroutine simple_pic_4d_set_x( self, i, x )
     class( sll_simple_pic_4d_group ), intent( inout ) :: self
     sll_int32                       , intent( in    ) :: i
     sll_real64                      , intent( in    ) :: x(3)
 
-    type(sll_cartesian_mesh_2d),      pointer :: physical_mesh_2d
+    type(sll_cartesian_mesh_2d),      pointer :: space_mesh_2d
     type(sll_simple_pic_4d_particle), pointer :: particle
     sll_int32               :: i_cell_x, i_cell_y
     sll_real32              :: offset_x, offset_y
     sll_real64              :: temp
 
-    physical_mesh_2d => self%physical_mesh_2d
+    space_mesh_2d => self%space_mesh_2d
     particle => self%particle_list(i)
 
-    temp = (x(1) - physical_mesh_2d%eta1_min) / physical_mesh_2d%delta_eta1
+    temp = (x(1) - space_mesh_2d%eta1_min) / space_mesh_2d%delta_eta1
     i_cell_x  = 1 + int(floor(temp))
     offset_x = real(temp - real(i_cell_x - 1,f64), f32)
 
-    temp = (x(2) - physical_mesh_2d%eta2_min) / physical_mesh_2d%delta_eta2
+    temp = (x(2) - space_mesh_2d%eta2_min) / space_mesh_2d%delta_eta2
     i_cell_y  = 1 + int(floor(temp))
     offset_y = real(temp - real(i_cell_y - 1,f64), f32)
 
@@ -168,11 +206,11 @@ contains
     particle%offset_x = offset_x
     particle%offset_y = offset_y
 
-  end subroutine set_x_simple_pic_4d
+  end subroutine simple_pic_4d_set_x
 
 
   !----------------------------------------------------------------------------
-  subroutine set_v_simple_pic_4d( self, i, v )
+  subroutine simple_pic_4d_set_v( self, i, v )
     class( sll_simple_pic_4d_group ), intent( inout ) :: self
     sll_int32                       , intent( in    ) :: i
     sll_real64                      , intent( in    ) :: v(3)
@@ -183,38 +221,169 @@ contains
     particle%v_x = v(1)
     particle%v_y = v(2)
 
-  end subroutine set_v_simple_pic_4d
+  end subroutine simple_pic_4d_set_v
 
 
+  !----------------------------------------------------------------------------
+  subroutine simple_pic_4d_set_common_weight( self, w )
+    class( sll_simple_pic_4d_group ), intent( inout ) :: self
+    sll_real64                      , intent( in    ) :: w
+
+    self%common_weight = w
+
+  end subroutine simple_pic_4d_set_common_weight
+
+
+  !----------------------------------------------------------------------------
+  subroutine simple_pic_4d_set_particle_weight( self, i, w )
+    class( sll_simple_pic_4d_group ), intent( inout ) :: self
+    sll_int32                       , intent( in    ) :: i
+    sll_real64                      , intent( in    ) :: w
+
+    print*, "Error (8654354237645) -- this subroutine is not implemented for simple_pic_4d_group objects"
+    stop
+
+  end subroutine simple_pic_4d_set_particle_weight
+
+
+  !----------------------------------------------------------------------------
+  subroutine simple_pic_4d_set_initial_density_landau( self, thermal_speed, alpha, k_landau )
+    class( sll_simple_pic_4d_group ), intent( inout ) :: self
+    sll_real64                      , intent( in    ) :: thermal_speed
+    sll_real64                      , intent( in    ) :: alpha
+    sll_real64                      , intent( in    ) :: k_landau
+
+    self%thermal_speed = thermal_speed
+    self%alpha = alpha
+    self%k_landau = k_landau
+
+  end subroutine simple_pic_4d_set_initial_density_landau
+
+
+  !----------------------------------------------------------------------------
+   subroutine simple_pic_4d_random_initializer( self, initial_density_identifier )
+    class( sll_simple_pic_4d_group ), intent( inout ) :: self
+    sll_int32                       , intent( in    ) :: initial_density_identifier
+
+    ! for the moment we only use the landau damping initial density
+    ! so we don't use the initial_density_identifier, but eventually it should say which initial density is used
+
+    call sll_pic_4d_random_unweighted_initializer_landau_f0 (   &
+      self%thermal_speed, self%alpha, self%k_landau,            & ! -> these parameters should be members of the initializer object
+      self,                                                     &
+      self%space_mesh_2d,                                       &
+      self%number_particles                                     &
+    )
+
+   end subroutine simple_pic_4d_random_initializer
+
+
+
+  !----------------------------------------------------------------------------
+   subroutine simple_pic_4d_cartesian_initializer( self, nb_cells_x, nb_cells_v, x_min, x_max, v_min, v_max )
+    class( sll_simple_pic_4d_group ), intent( inout ) :: self
+    sll_int32                       , intent( in    ) :: nb_cells_x(3)
+    sll_int32                       , intent( in    ) :: nb_cells_v(3)
+    sll_real64                      , intent( in    ) :: x_min(3)
+    sll_real64                      , intent( in    ) :: x_max(3)
+    sll_real64                      , intent( in    ) :: v_min(3)
+    sll_real64                      , intent( in    ) :: v_max(3)
+
+    print*, "Error (987856) -- this subroutine is not implemented for simple_pic_4d_group objects"
+    stop
+
+   end subroutine simple_pic_4d_cartesian_initializer
+
+
+  subroutine simple_pic_4d_deposit_charge_2d( self, charge_accumulator )
+    class( sll_simple_pic_4d_group ),           intent( inout ) :: self
+    type( sll_charge_accumulator_2d ), pointer, intent( inout ) :: charge_accumulator
+
+    sll_int32,      :: i_part
+    sll_int32,      :: thread_id
+    sll_real64,     :: x_part(3)
+    sll_real64,     :: particle_charge
+    sll_real64,     :: tmp1, tmp2
+
+
+
+    call reset_charge_accumulator_to_zero ( charge_accumulator )
+
+    particle_charge = particle_group%get_species_charge
+    do i_part = 1, self%number_particles
+
+      particle => self%particle_list( i_part )
+      dx = particle%offset_x
+      dy = particle%offset_y
+      i_cell = get_cell_index(particle_group, i_part)
+      charge_accumulator_cell => charge_accumulator%q_acc(i_cell)
+
+      xy_part = self%get_x( i_part )  ! x and y
+      if( x_is_in_domain_2d( x_part, self%space_mesh_2d, self%domain_is_x_periodic, self%domain_is_y_periodic ) )then
+
+        tmp1 = (1.0_f64 - dx)
+        tmp2 = (1.0_f64 - dy)
+        charge_accumulator_cell%q_sw = charge_accumulator_cell%q_sw + q*tmp1*tmp2
+        charge_accumulator_cell%q_se = charge_accumulator_cell%q_se + q*  dx*tmp2
+        charge_accumulator_cell%q_nw = charge_accumulator_cell%q_nw + q*tmp1*  dy
+        charge_accumulator_cell%q_ne = charge_accumulator_cell%q_ne + q*  dx*  dy
+
+
+
+        SLL_ACCUMULATE_PARTICLE_CHARGE(q_accum, p(i), tmp1, tmp2)
+      else ! store reference for later processing
+        print*, "Error (097647687): for the moment every particle should be in the (periodic) 2d domain..."
+        stop
+      end if
+    end do
+
+  end subroutine simple_pic_4d_deposit_charge_2d
+
+  !----------------------------------------------------------------------------
+  ! Constructor
   function sll_simple_pic_4d_group_new( &
-        number_particles,   &
-        species_charge,     &
-        species_mass,       &
-        domain_is_x_periodic,&
-        domain_is_y_periodic,&
-        physical_mesh_2d ) result(res)
+        number_particles,       &
+        species_charge,         &
+        species_mass,           &
+        particle_group_id,      &
+        domain_is_x_periodic,   &
+        domain_is_y_periodic,   &
+        space_mesh_2d ) result(res)
 
     type(sll_lt_pic_4d_group), pointer :: res
 
     sll_real64, intent(in)  :: species_charge
     sll_real64, intent(in)  :: species_mass
-    type(sll_cartesian_mesh_2d), pointer :: physical_mesh_2d
+    type(sll_cartesian_mesh_2d), pointer :: space_mesh_2d
 
     logical, intent(in)      :: domain_is_x_periodic
     logical, intent(in)      :: domain_is_y_periodic
 
-    ! physical 2d mesh, used eg in the Poisson solver
-    if (.not.associated(physical_mesh_2d) ) then
-       print*, 'ERROR (876876456), given physical_mesh_2d is not associated'
-    endif
-    res%physical_mesh_2d => physical_mesh_2d
+    SLL_ALLOCATE( res, ierr )
 
-    ! todo: finish
+    ! the group
+    res%species => species_new( species_charge, species_mass )
+    res%id = particle_group_id
+    res%dimension_x = 2
+    res%dimension_v = 2
+
+    ! the particles
+    res%number_particles = number_particles
+    SLL_ALLOCATE( res%particle_list(number_particles), ierr )
+
+    ! physical 2d mesh, used eg in the Poisson solver
+    if (.not.associated(space_mesh_2d) ) then
+       print*, 'ERROR (876876456), given space_mesh_2d is not associated'
+    end if
+    res%space_mesh_2d => space_mesh_2d
+    res%domain_is_x_periodic = domain_is_x_periodic
+    res%domain_is_y_periodic = domain_is_y_periodic
 
     end function sll_simple_pic_4d_group_new
 
 
   !----------------------------------------------------------------------------
+  ! Destructor
   subroutine sll_simple_pic_4d_group_delete(particle_group)
     type(sll_simple_pic_4d_group), pointer :: particle_group
     sll_int32 :: ierr
@@ -230,15 +399,58 @@ contains
 
 
 
+  ! tells whether the given point is in the given domain, with boolean arguments for the domain periodicity
+  ! (taken from previous function in_bounds_periodic)
+  function x_is_in_domain_2d( x, mesh, x_periodic, y_periodic ) result(res)
 
+    sll_real64,                     intent( in )    :: x(3)             ! dimension 3 to fit the general interface
+    logical,                        intent( in )    :: x_periodic
+    logical,                        intent( in )    :: y_periodic
+    type(sll_cartesian_mesh_2d),    intent( in ), pointer :: mesh
+    logical     :: res
 
+    res = ( x(1) >= mesh%eta1_min )                                                                               &
+          .and.                                                                                                   &
+          ( ( x(1) < mesh%eta1_max .and. x_periodic ) .or. ( x(1) <= mesh%eta1_max .and. .not. x_periodic ) )     &
+          .and.                                                                                                   &
+          ( x(2) >= mesh%eta2_min )                                                                               &
+          .and.                                                                                                   &
+          ( ( x(2) < mesh%eta2_max .and. y_periodic ) .or. ( x(2) <= mesh%eta2_max .and. .not. y_periodic) )
 
-
-
-
+  end function x_is_in_domain_2d
 
 
 end module sll_simple_pic_4d_group_module
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
