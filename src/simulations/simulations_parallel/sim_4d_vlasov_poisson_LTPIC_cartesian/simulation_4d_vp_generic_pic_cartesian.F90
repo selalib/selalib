@@ -659,28 +659,32 @@ contains
              coords(1) = pp_vx + dt_q_over_m * Ex
              coords(2) = pp_vy + dt_q_over_m * Ey
              coords(3) = 0
-             aaa
+             sim%particle_group%set_v(coords)
+
+             !> remember new speed for x-push
+             pp_vx=coords(1)
+             pp_vy=coords(2)
              
              !! -- --  v-push [end]  -- --
 
              !! -- --  x-push (x^n -> x^{n+1} using v^{n+1/2})  [begin]  -- --
 
-             !> ========= AAA ==========
-             GET_PARTICLE_POSITION_EXTENDED(particles(k),sim%mesh_2d,x,y)
-             
-             x = x + dt * particles(k)%vx
-             y = y + dt * particles(k)%vy
+             coords(1) = pp_x + dt * pp_vx
+             coords(2) = pp_y + dt * pp_vy
+             coords(3) = 0
+             sim%particle_group%set_x(coords)
 
              !! -- --  x-push [end]  -- --
 
-
-             !! note: with the ltp_bsl charge deposition we will not be able to deposit the charge of the "just-pushed" particles
-             !!       since we need to first compute the weights of the virtual particles (with the remapping algorithm)
+             !! note: with the ltp_bsl charge deposition we will not be able to deposit the charge of the "just-pushed"
+             !!       particles since we need to first compute the weights of the virtual particles (with the remapping
+             !!       algorithm)
 
 
              !! -- --  LTPIC: put outside particles back in domain                              [begin]  -- --
              !! -- --  PIC: deposit charge (if particle is inside, otherwise reserve it)        [begin]  -- --
 
+             !> ========= AAA ==========
              if( sim%part_group%track_markers_outside_domain                            &
                 .or. ( in_bounds_periodic( x, y, sim%mesh_2d,                           &
                                            sim%part_group%domain_is_x_periodic,         &
