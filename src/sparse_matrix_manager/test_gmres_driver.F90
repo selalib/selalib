@@ -3,7 +3,7 @@
 !*************************************************************************
 program validation
 
-integer, parameter :: lda = 1000, ldstrt = 60
+integer, parameter :: lda = 500, ldstrt = 40
 integer, parameter :: lwork = ldstrt**2 + ldstrt*(lda+5) + 5*lda + 1
 integer, parameter :: matvec=1, precondLeft=2, precondRight=3, dotProd=4
 real(8), parameter :: ZERO = 0.0d0, ONE = 1.0d0
