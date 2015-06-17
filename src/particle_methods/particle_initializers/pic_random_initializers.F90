@@ -33,8 +33,6 @@ module sll_pic_random_initializers
   
 
 contains
-
-  
    
   ! initialize a simple_pic group with the landau f0 distribution
   !
@@ -42,102 +40,87 @@ contains
   ! and it creates the particle list inside this group
   subroutine sll_pic_4d_random_unweighted_initializer_landau_f0 (   &
       thermal_speed, alpha, k_landau,                               &
-      particle_group                                                &
-  )
+      particle_group,                                               &
+      space_mesh_2d,                                             &
+      number_particles,                                             &
+      rand_seed, rank, worldsize                                    &
+    )
 
-    sll_real64, intent(in)                                  :: thermal_speed, alpha, k_landau
-    type(sll_pic_base_class), pointer, intent(inout)   :: particle_group
+    sll_real64,                         intent(in)              :: thermal_speed, alpha, k_landau
+    type(sll_pic_base_class), pointer,  intent(inout)           :: particle_group
+    type(sll_cartesian_mesh_2d),        intent(in)              :: space_mesh_2d
+    sll_int32,                          intent(in)              :: number_particles
 
+    sll_int32, dimension(:),            intent(in), optional    :: rand_seed
+    sll_int32,                          intent(in), optional    :: rank, worldsize
 
-
-    ! todo: finish rewriting this old function by Sever and Edwin
-
-    sll_real64, intent(in) :: thermal_speed, alpha, k
-    type(sll_cartesian_mesh_2d), intent(in) :: m2d
-    sll_int32, intent(in)  :: num_particles
-    type(sll_particle_group_4d), pointer, intent(inout) :: p_group
-
-
-
-    sll_int32  :: j, ii
-    sll_int32  :: ncx, ic_x,ic_y
-    sll_real64 :: x, y, vx, vy, nu
-    sll_real64 :: xmin, ymin, rdx, rdy
-    sll_real32 :: weight!  sll_real64 :: weight!
-    sll_real32 :: off_x,off_y!  sll_real64 :: off_x,off_y
-    sll_real64 :: tmp1, tmp2
-    sll_int32, dimension(:), intent(in), optional  :: rand_seed
-    sll_int32, optional  :: rank, worldsize
-    character(len=8)  :: rank_name
-    character(len=40) :: nomfile
-    sll_real64 :: yo, val(1:2)
-
+    sll_int32  :: i_part, ii
+    sll_int32  :: ncx, ic_x, ic_y
+    sll_int32  :: effective_worldsize
+    sll_real64 :: x_min, y_min, x_max, y_max, rdx, rdy
+    sll_real32 :: weight
+    sll_real64 :: aux_random
+    sll_real64 :: x(3)
+    sll_real64 :: v(3)
+    sll_real64 :: val(1:2)
 
     SLL_ASSERT( particle_group%dimension_x == 2 )
     SLL_ASSERT( particle_group%dimension_v == 2 )
 
+    rdx = 1._f64/space_mesh_2d%delta_eta1
+    rdy = 1._f64/space_mesh_2d%delta_eta2
+    x_min = space_mesh_2d%eta1_min
+    x_max = space_mesh_2d%eta1_max
+    y_min = space_mesh_2d%eta2_min
+    y_max = space_mesh_2d%eta2_max
 
-
+    ncx  = space_mesh_2d%num_cells1
 
     if ( present(rand_seed) ) then
        call random_seed (put=rand_seed)
-    endif
+    end if
 
     if( present(worldsize) ) then
-       weight = (m2d%eta1_max - m2d%eta1_min) * &
-            (m2d%eta2_max - m2d%eta2_min)/real(worldsize*num_particles,f64)
+      effective_worldsize = worldsize
     else
-       weight = (m2d%eta1_max - m2d%eta1_min) * &
-            (m2d%eta2_max - m2d%eta2_min)/real(num_particles,f64)
-    endif
+      effective_worldsize = 1
+    end if
+    weight = (x_max - x_min) * (y_max - y_min) / real(effective_worldsize * num_particles,f64)
+    particle_group%set_common_weight( weight )
 
-    rdx = 1._f64/m2d%delta_eta1
-    rdy = 1._f64/m2d%delta_eta2
-    xmin = m2d%eta1_min
-    ymin = m2d%eta2_min
-    ncx  = m2d%num_cells1
+    x = 0
+    v = 0
 
-!!$    if(present(rank)) then
-!!$       write(rank_name,'(i8)') rank
-!!$    else
-!!$       rank_name = '00000000'
-!!$    end if
-!!$    nomfile='initialparts_'//trim(adjustl(rank_name))//'.dat'
-!!$    open(90, file=nomfile)
-!!$
-!!$    write(90,*) '#  POSITIONS in 2d    |||    VELOCITIES in 2d'
+    i_part = 1
+    ii = 1
+    ! Rejection sampling for the function x --> 1 + alpha * cos(k * x)
+    ! Each MPI node initializes 'num_particles' particles in phys space and velocity
+    do while ( i_part <= num_particles )
+      call random_number(aux_random)
+      x(1) = (x_max - x_min) * aux_random + x_min
+      call random_number(aux_random)
+      x(2) = (1._f64 + alpha) * aux_random
+      if ( eval_landau(alpha, k, x(1)) >= x(2) ) then
+        call random_number(aux_random)
+        x(2) = (y_max - y_min) * aux_random + y_min
+        call gaussian_deviate_2D(val)
+        v(1) = val(1) * thermal_speed
+        v(2) = val(2) * thermal_speed
 
-    j=1
-    ii=1
-    !Rejection sampling for the function x --> 1+alpha*cos(k*x)
-!Each MPI node initialize 'num_particles' particles in phys space and velocity
-    do while ( j <= num_particles )
-       call random_number(x)
-!!$       x = vandercorput(ii,3,2)! suite_hamm(ii,3)!
-!!$       ii = ii+1
-       x = (m2d%eta1_max - xmin)*x + xmin
-       call random_number(y)
-       y = (1._f64+alpha)*y! 2._f64 * y
-       if (eval_landau(alpha, k, x) >= y ) then
-          call random_number(y)
-          y = (m2d%eta2_max - ymin)*y + ymin
-!!$          y = (m2d%eta2_max - ymin)*vandercorput(j,5,3) + ymin! suite_hamm(j,2)
-          !
-!-!          nu = thermal_speed*sqrt( -2.0_f64*log(1.0_f64 - &
-!-!               (real(j,f64)-0.5_f64)/real(num_particles,f64)) )
-!-!          call random_number(yo)
-!-!          vx = nu * cos(yo*2.0_f64*sll_pi)! cos(vandercorput(j,5,2)*2.0_f64*sll_pi)!! yo=suite_hamm(j,5)
-!-!          vy = nu * sin(yo*2.0_f64*sll_pi)! sin(vandercorput(j,5,2)*2.0_f64*sll_pi)!
-          call gaussian_deviate_2D(val)
-          vx = val(1)*thermal_speed
-          vy = val(2)*thermal_speed
-          !if (j<=50000) write(90,*) x, y, vx, vy
-          SET_PARTICLE_VALUES(p_group%p_list(j),x,y,vx,vy,weight,xmin,ymin,ncx,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
-          j = j + 1
-       endif
+        particle_group%set_x( i_part, x )
+        particle_group%set_v( i_part, v )
+
+        !        SET_PARTICLE_VALUES(p_group%p_list(j),x,y,vx,vy,weight,xmin,ymin,ncx,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
+        i_part = i_part + 1
+       end if
     end do
-    !close(90)
   end subroutine sll_pic_4d_random_unweighted_initializer_landau_f0
 
+
+  function eval_landau(alpha, kx, x)
+    sll_real64 :: alpha, kx, x
+    sll_real64 :: eval_landau
+    eval_landau = 1._f64 + alpha * cos(kx * x)
+  end function eval_landau
 
 end module sll_pic_random_initializers
