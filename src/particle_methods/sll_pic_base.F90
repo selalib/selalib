@@ -27,6 +27,9 @@ module sll_module_pic_base
 
     class( sll_species ), pointer :: species
     sll_int32                     :: id
+
+    sll_int32                     :: dimension_x
+    sll_int32                     :: dimension_v
     
   contains
     ! Getters
