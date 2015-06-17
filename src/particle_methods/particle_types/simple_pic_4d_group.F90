@@ -68,9 +68,9 @@ module sll_simple_pic_4d_group_module
     procedure :: set_particle_weight    => simple_pic_4d_set_particle_weight
 
     ! Initializers
-    procedure :: set_initial_density_landau => simple_pic_4d_set_initial_density_landau
-    procedure :: random_initializer         => simple_pic_4d_random_initializer
-    procedure :: cartesian_initializer      => simple_pic_4d_cartesian_initializer
+    procedure :: set_landau_params      => simple_pic_4d_set_landau_params
+    procedure :: random_initializer     => simple_pic_4d_random_initializer
+    procedure :: cartesian_initializer  => simple_pic_4d_cartesian_initializer
 
 
     procedure :: deposit_charge_2d          => simple_pic_4d_deposit_charge_2d
@@ -247,7 +247,7 @@ contains
 
 
   !----------------------------------------------------------------------------
-  subroutine simple_pic_4d_set_initial_density_landau( self, thermal_speed, alpha, k_landau )
+  subroutine simple_pic_4d_set_landau_params( self, thermal_speed, alpha, k_landau )
     class( sll_simple_pic_4d_group ), intent( inout ) :: self
     sll_real64                      , intent( in    ) :: thermal_speed
     sll_real64                      , intent( in    ) :: alpha
@@ -257,13 +257,15 @@ contains
     self%alpha = alpha
     self%k_landau = k_landau
 
-  end subroutine simple_pic_4d_set_initial_density_landau
+  end subroutine simple_pic_4d_set_landau_params
 
 
   !----------------------------------------------------------------------------
-   subroutine simple_pic_4d_random_initializer( self, initial_density_identifier )
+   subroutine simple_pic_4d_random_initializer( self, initial_density_identifier, rand_seed, rank, world_size )
     class( sll_simple_pic_4d_group ), intent( inout ) :: self
     sll_int32                       , intent( in    ) :: initial_density_identifier
+    sll_int32, dimension(:)         , intent( in ), optional :: rand_seed
+    sll_int32                       , intent( in ), optional :: rank, world_size
 
     ! for the moment we only use the landau damping initial density
     ! so we don't use the initial_density_identifier, but eventually it should say which initial density is used
@@ -273,6 +275,7 @@ contains
       self,                                                     &
       self%space_mesh_2d,                                       &
       self%number_particles                                     &
+      rand_seed, rank, world_size                               &
     )
 
    end subroutine simple_pic_4d_random_initializer
@@ -300,12 +303,9 @@ contains
     type( sll_charge_accumulator_2d ), pointer, intent( inout ) :: charge_accumulator
 
     sll_int32,      :: i_part
-    sll_int32,      :: thread_id
     sll_real64,     :: x_part(3)
     sll_real64,     :: particle_charge
     sll_real64,     :: tmp1, tmp2
-
-
 
     call reset_charge_accumulator_to_zero ( charge_accumulator )
 
@@ -328,13 +328,11 @@ contains
         charge_accumulator_cell%q_nw = charge_accumulator_cell%q_nw + q*tmp1*  dy
         charge_accumulator_cell%q_ne = charge_accumulator_cell%q_ne + q*  dx*  dy
 
-
-
-        SLL_ACCUMULATE_PARTICLE_CHARGE(q_accum, p(i), tmp1, tmp2)
-      else ! store reference for later processing
+      else ! particle not in domain (should store the reference for later processing)
         print*, "Error (097647687): for the moment every particle should be in the (periodic) 2d domain..."
         stop
       end if
+
     end do
 
   end subroutine simple_pic_4d_deposit_charge_2d

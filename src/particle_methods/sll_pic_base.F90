@@ -49,9 +49,8 @@ module sll_module_pic_base
     ! Charge deposition
     procedure( dep_charge_2d), deferred :: deposit_charge_2d
 
-
     ! Initializers
-    procedure( set_init_dens_landau ),  deferred :: set_initial_density_landau
+    procedure( set_landau_params    ), deferred :: set_landau_parameters
     procedure( rand_init            ),  deferred :: random_initializer
     procedure( cart_init            ),  deferred :: cartesian_initializer
 
@@ -115,12 +114,14 @@ module sll_module_pic_base
 
   !----------------------------------------------------------------------------
   abstract interface
-   subroutine rand_init( self, nb_particles, initial_density_identifier )
+   subroutine rand_init( self, nb_particles, initial_density_identifier, rand_seed, rank, world_size)
     use sll_working_precision
     import sll_particle_group_base
     class( sll_particle_group_base ), intent( inout ) :: self
     sll_int32                       , intent( in    ) :: nb_particles
     sll_int32                       , intent( in    ) :: initial_density_identifier
+    sll_int32, dimension(:)         , intent( in ), optional :: rand_seed
+    sll_int32                       , intent( in ), optional :: rank, world_size
    end subroutine rand_init
   end interface
 
@@ -141,7 +142,7 @@ module sll_module_pic_base
 
   !----------------------------------------------------------------------------
   abstract interface
-   subroutine set_init_dens_landau( self, thermal_speed, alpha, k_landau )
+   subroutine set_landau_params( self, thermal_speed, alpha, k_landau )
     use sll_working_precision
     import sll_particle_group_base
     class( sll_particle_group_base ), intent( inout ) :: self
@@ -149,7 +150,7 @@ module sll_module_pic_base
     sll_real64                      , intent( in    ) :: alpha
     sll_real64                      , intent( in    ) :: k_landau
 
-   end subroutine set_init_dens_landau
+   end subroutine set_landau_params
   end interface
 
 

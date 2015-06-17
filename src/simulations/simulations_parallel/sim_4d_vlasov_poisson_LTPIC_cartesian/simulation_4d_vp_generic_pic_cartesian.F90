@@ -62,8 +62,9 @@ module sll_simulation_4d_vp_generic_pic_cartesian_module
      !    sll_int32  :: array_size
      sll_real64, dimension(1:6) :: elec_params
      type(sll_cartesian_mesh_2d),    pointer :: mesh_2d ! [[file:~/selalib/src/meshes/sll_cartesian_meshes.F90::sll_cartesian_mesh_2d]]
-     type(sll_charge_accumulator_2d_ptr), dimension(:), pointer  :: q_accumulator_ptr      ! called q_accumulator in Sever simulation
-     type(electric_field_accumulator), pointer :: E_accumulator
+     type(sll_charge_accumulator_2d_ptr), dimension(:), pointer     :: q_accumulator_ptr  ! called q_accumulator in Sever simulation
+     type(sll_charge_accumulator_2d),     dimension(:), pointer     :: charge_accumulator
+     type(electric_field_accumulator),                  pointer     :: E_accumulator
      logical :: use_cubic_splines        ! disabled for now (will raise an error if true)
      logical :: use_lt_pic_scheme        ! if false then use pic scheme
      type(sll_charge_accumulator_2d_CS_ptr), dimension(:), pointer  :: q_accumulator_CS
@@ -113,6 +114,7 @@ contains
     sll_int32   :: NVirtual_Y_ForDeposition
     sll_int32   :: NVirtual_VX_ForDeposition
     sll_int32   :: NVirtual_VY_ForDeposition
+    sll_int32   :: landau_initial_density_identifier
 
     logical     :: UseExactF0
     sll_real64  :: er, psi, omega_i, omega_r
@@ -246,36 +248,32 @@ contains
     else
        ! initialize [[simple_pic_particle_group]]
 
-       sim%simple_pic_particle_group => new_particle_4d_group( &
-            NUM_PARTICLES,                                 &
-            PARTICLE_ARRAY_SIZE,                           &
-            GUARD_SIZE,                                    &
-            QoverM,                                        &
+      ! todo: read SPECIES_CHARGE and SPECIES_MASS in the parameter file above, and discard QoverM
+      sim%simple_pic_particle_group => sll_simple_pic_4d_group_new(     &
+            NUMBER_PARTICLES,                                           &
+            SPECIES_CHARGE,                                             &
+            SPECIES_MASS,                                               &
+            particle_group_id,                                          &
+            DOMAIN_IS_X_PERIODIC,                                       &
+            DOMAIN_IS_Y_PERIODIC,                                       &
             sim%mesh_2d )
 
-        call random_seed (SIZE=rand_seed_size)
+      call random_seed (SIZE=rand_seed_size)
+      SLL_ALLOCATE( rand_seed(1:rand_seed_size), ierr )
+      do j=1, rand_seed_size
+        rand_seed(j) = (-1)**j*(100 + 15*j)*(2*sim%my_rank + 1)
+      end do
 
-        SLL_ALLOCATE( rand_seed(1:rand_seed_size), ierr )
-        do j=1, rand_seed_size
-           rand_seed(j) = (-1)**j*(100 + 15*j)*(2*sim%my_rank + 1)
-        enddo
+      call sim%simple_pic_4d_group%set_landau_params( sim%thermal_speed_ions, ALPHA, KX_LANDAU )
 
-        !> \todo ALH rewrite
-        !> [[file:~/selalib/src/pic_particle_initializers/sll_particle_init4D.F90::sll_initial_particles_4d]] in the
-        !> [[file:~/selalib/src/particle_methods/sll_pic_base.F90::sll_module_pic_base]] framework
-        
-        call sll_initial_particles_4d( sim%thermal_speed_ions,        &
-                                       ALPHA, KX_LANDAU, sim%mesh_2d, &
-                                       sim%ions_number,               &
-                                       sim%simple_pic_particle_group,     &
-                                       rand_seed, sim%my_rank,        &
-                                       sim%world_size  )
-        SLL_DEALLOCATE_ARRAY(rand_seed,ierr)
+      initial_density_identifier = 0     ! for the moment we only use one density (landau)
+      call sim%simple_pic_4d_group%random_initializer( initial_density_identifier, rand_seed, sim%my_rank, sim%world_size )
 
-        ! [[particle_group]] will contain either a reference to a simple group or to an ltpic group as defined in
-        ! [[particle_types]]
-    
-        sim%particle_group => sim%simple_pic_particle_group
+      SLL_DEALLOCATE_ARRAY(rand_seed, ierr)
+
+      ! [[particle_group]] will contain either a reference to a simple group or to an ltpic group as defined in
+      ! [[particle_types]]
+      sim%particle_group => sim%simple_pic_particle_group
         
     end if
 
@@ -309,33 +307,17 @@ contains
 
        !! -- --  First charge deposition [begin]  -- --
 
-       if( sim%use_lt_pic_scheme )then
-
-          SLL_ASSERT(thread_id == 0)
-
-          ! [[file:~/selalib/src/pic_utilities/lt_pic_4d_utilities.F90::sll_lt_pic_4d_deposit_charge_on_2d_mesh]]
-          call sll_lt_pic_4d_deposit_charge_on_2d_mesh( sim%particle_group, &
-               sim%q_accumulator_ptr(1)%q,                                  &
-               sim%n_virtual_x_for_deposition,                              &
-               sim%n_virtual_y_for_deposition,                              &
-               sim%n_virtual_vx_for_deposition,                             &
-               sim%n_virtual_vy_for_deposition,                             &
-               sim%total_density )
-          
-       else
-
-          !> \todo ALH reimplement
-          ! [[file:~/selalib/src/pic_utilities/sll_pic_utilities.F90::sll_first_charge_accumulation_2d]] in the
-          ! [[file:~/selalib/src/particle_methods/sll_pic_base.F90::sll_module_pic_base]] framework
-          
-          call sll_first_charge_accumulation_2d(sim%particle_group,sim%q_accumulator_ptr)
-       end if
+       charge_accumulator => sim%q_accumulator_ptr(thread_id+1)%q
+       call sim%particle_group%deposit_charge_2d( charge_accumulator )
 
        !! -- --  First charge deposition [end]  -- --
 
-    endif
+    end if
+
   end subroutine init_4d_generic_pic_cartesian
-  
+
+
+
   !> run_4d_lt_pic_cartesian: run the Vlasov-Poisson simulation
   !!
   !! note 1: this is a skeleton-in-progress: some routines are not implemented, some variables are not needed
@@ -383,7 +365,7 @@ contains
     sll_int32 :: save_nb
     sll_int32 :: thread_id
     sll_int32 :: n_threads
-    type(sll_charge_accumulator_2d),    pointer :: q_accum
+    type(sll_charge_accumulator_2d),    pointer :: q_accum     !! better call it charge_accumulator, as in the init routine above...
     sll_int32 :: sort_nb
     sll_real64 :: some_val, une_cst
     sll_real64 :: val_lee, exval_ee

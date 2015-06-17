@@ -33,7 +33,7 @@ module sll_pic_random_initializers
   
 
 contains
-   
+
   ! initialize a simple_pic group with the landau f0 distribution
   !
   ! this routine takes as arguments a newly created particle group of simple_pic type
@@ -41,9 +41,9 @@ contains
   subroutine sll_pic_4d_random_unweighted_initializer_landau_f0 (   &
       thermal_speed, alpha, k_landau,                               &
       particle_group,                                               &
-      space_mesh_2d,                                             &
+      space_mesh_2d,                                                &
       number_particles,                                             &
-      rand_seed, rank, worldsize                                    &
+      rand_seed, rank, world_size                                   &
     )
 
     sll_real64,                         intent(in)              :: thermal_speed, alpha, k_landau
@@ -52,11 +52,11 @@ contains
     sll_int32,                          intent(in)              :: number_particles
 
     sll_int32, dimension(:),            intent(in), optional    :: rand_seed
-    sll_int32,                          intent(in), optional    :: rank, worldsize
+    sll_int32,                          intent(in), optional    :: rank, world_size
 
     sll_int32  :: i_part, ii
     sll_int32  :: ncx, ic_x, ic_y
-    sll_int32  :: effective_worldsize
+    sll_int32  :: effective_world_size
     sll_real64 :: x_min, y_min, x_max, y_max, rdx, rdy
     sll_real32 :: weight
     sll_real64 :: aux_random
@@ -80,12 +80,12 @@ contains
        call random_seed (put=rand_seed)
     end if
 
-    if( present(worldsize) ) then
-      effective_worldsize = worldsize
+    if( present(world_size) ) then
+      effective_world_size = world_size
     else
-      effective_worldsize = 1
+      effective_world_size = 1
     end if
-    weight = (x_max - x_min) * (y_max - y_min) / real(effective_worldsize * num_particles,f64)
+    weight = (x_max - x_min) * (y_max - y_min) / real(effective_world_size * num_particles,f64)
     particle_group%set_common_weight( weight )
 
     x = 0
