@@ -664,26 +664,29 @@ subroutine compute_w_hermite_aligned( &
   sll_real64 :: eta1_loc
   sll_real64 :: w_basis(4)
   sll_int32 :: ii
+  character(len=*), parameter :: fun = "compute_w_hermite_aligned" 
+  
+  
   
   if(r>0 .or. s<0) then
     print *,'#r,s=',r,s
     print *,'#not treated'
-    SLL_ERROR('#bad value of r and s')
+    SLL_ERROR(fun,'#bad value of r and s')
   endif
   if(size(w,1)<4)then
-    SLL_ERROR('#bad size1 for w')
+    SLL_ERROR(fun,'#bad size1 for w')
   endif
   if(size(w,2)<s-r)then
-    SLL_ERROR('#bad size2 for w')
+    SLL_ERROR(fun,'#bad size2 for w')
   endif
   if(size(w,3)<num_points1)then
-    SLL_ERROR('#bad size3 for w')
+    SLL_ERROR(fun,'#bad size3 for w')
   endif
   if(size(eta1_pos,1)<s-r)then
-    SLL_ERROR('#bad size1 for eta1_pos')
+    SLL_ERROR(fun,'#bad size1 for eta1_pos')
   endif
   if(size(eta1_pos,2)<num_points1)then
-    SLL_ERROR('#bad size2 for eta1_pos')
+    SLL_ERROR(fun,'#bad size2 for eta1_pos')
   endif
   
   call compute_w_hermite(w_loc_tmp,r,s)
