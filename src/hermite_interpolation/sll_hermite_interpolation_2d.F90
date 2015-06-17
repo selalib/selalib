@@ -348,31 +348,31 @@ end subroutine compute_hermite_derivatives_periodic1
 
 
 
-function compute_hermite_r_left(p) result(res)
-  sll_int32, intent(in) :: p
-  sll_int32 :: res
-  res = -p/2  
-end function compute_hermite_r_left
-
-
-function compute_hermite_s_left(p) result(res)
-  sll_int32, intent(in) :: p
-  sll_int32 :: res
-  res = (p+1)/2  
-end function compute_hermite_s_left
-
-
-function compute_hermite_r_right(p) result(res)
-  sll_int32, intent(in) :: p
-  sll_int32 :: res
-  res = (-p+1)/2  
-end function compute_hermite_r_right
-
-function compute_hermite_s_right(p) result(res)
-  sll_int32, intent(in) :: p
-  sll_int32 :: res
-  res = p/2/+1  
-end function compute_hermite_s_right
+!function compute_hermite_r_left(p) result(res)
+!  sll_int32, intent(in) :: p
+!  sll_int32 :: res
+!  res = -p/2  
+!end function compute_hermite_r_left
+!
+!
+!function compute_hermite_s_left(p) result(res)
+!  sll_int32, intent(in) :: p
+!  sll_int32 :: res
+!  res = (p+1)/2  
+!end function compute_hermite_s_left
+!
+!
+!function compute_hermite_r_right(p) result(res)
+!  sll_int32, intent(in) :: p
+!  sll_int32 :: res
+!  res = (-p+1)/2  
+!end function compute_hermite_r_right
+!
+!function compute_hermite_s_right(p) result(res)
+!  sll_int32, intent(in) :: p
+!  sll_int32 :: res
+!  res = p/2/+1  
+!end function compute_hermite_s_right
 
 
 subroutine hermite_coef_nat_per(f,buf3d,N,d)

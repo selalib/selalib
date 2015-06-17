@@ -382,38 +382,38 @@ print*,"iota=",iota
   print *,'#err for aligned method=',err
 
   
-  hermite_r_left = compute_hermite_r_left(hermite_p)
-  hermite_s_left = compute_hermite_s_left(hermite_p)
-  hermite_r_right = compute_hermite_r_right(hermite_p)
-  hermite_s_right = compute_hermite_s_right(hermite_p)
-  
-  SLL_ALLOCATE(hermite_w_aligned(4,hermite_s_left-hermite_r_left,Npts_theta),ierr)  
-  SLL_ALLOCATE(hermite_w_cell_aligned(hermite_s_left-hermite_r_left,Npts_theta),ierr)  
-  SLL_ALLOCATE(theta_pos_left(hermite_s_left-hermite_r_left,Npts_theta),ierr)  
-
-  call compute_w_hermite_aligned( &
-    hermite_w_aligned, &
-    hermite_w_cell_aligned, &
-    Npts_theta, &
-    hermite_r_left, &
-    hermite_s_left, &
-    theta_pos_left, &
-    0._f64, &
-    2._f64*sll_pi )
-
-
-  SLL_ALLOCATE(buf(9,Npts_theta,Npts_phi),ierr)  
-
-  call compute_hermite_derivatives_aligned( &
-    f, &
-    Npts_theta, &
-    Npts_phi, &
-    hermite_p, &
-    hermite_w_aligned, &
-    hermite_w_cell_aligned, &
-    hermite_w_aligned, &
-    hermite_w_cell_aligned, &
-    buf)
+!  hermite_r_left = compute_hermite_r_left(hermite_p)
+!  hermite_s_left = compute_hermite_s_left(hermite_p)
+!  hermite_r_right = compute_hermite_r_right(hermite_p)
+!  hermite_s_right = compute_hermite_s_right(hermite_p)
+!  
+!  SLL_ALLOCATE(hermite_w_aligned(4,hermite_s_left-hermite_r_left,Npts_theta),ierr)  
+!  SLL_ALLOCATE(hermite_w_cell_aligned(hermite_s_left-hermite_r_left,Npts_theta),ierr)  
+!  SLL_ALLOCATE(theta_pos_left(hermite_s_left-hermite_r_left,Npts_theta),ierr)  
+!
+!  call compute_w_hermite_aligned( &
+!    hermite_w_aligned, &
+!    hermite_w_cell_aligned, &
+!    Npts_theta, &
+!    hermite_r_left, &
+!    hermite_s_left, &
+!    theta_pos_left, &
+!    0._f64, &
+!    2._f64*sll_pi )
+!
+!
+!  SLL_ALLOCATE(buf(9,Npts_theta,Npts_phi),ierr)  
+!
+!  call compute_hermite_derivatives_aligned( &
+!    f, &
+!    Npts_theta, &
+!    Npts_phi, &
+!    hermite_p, &
+!    hermite_w_aligned, &
+!    hermite_w_cell_aligned, &
+!    hermite_w_aligned, &
+!    hermite_w_cell_aligned, &
+!    buf)
   
   print*,'#PASSED'
 
