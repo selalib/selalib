@@ -546,30 +546,27 @@ contains
           coords=sim%particle_group%get_v(k) ! [[file:~/selalib/src/particle_methods/sll_pic_base.F90::get_v]]
           pp_vx = coords(1)
           pp_vy = coords(2)
-          !> ========= AAA ==========
-
-          ! The function [[file:~/selalib/src/pic_utilities/sll_representation_conversion.F90::get_poisson_cell_index]]
-          ! is replaced by [[file:~/selalib/src/particle_methods/sll_pic_base.F90::get_cell_index]] in the PIC base
-          ! class.
-          call get_cell_index(sim%mesh_2d, particles(k)%ic_x, particles(k)%ic_y, icell)
 
           !> compute cell dx and dy again locally (although we could extract this info for some types of particles)
           !> because the base PIC class does not give access to this type of info (because some particles may not have
           !> it). \todo we may want to optimize this out for speed
-          
-          ! [[file:~/selalib/src/pic_accumulators/sll_accumulators.h::SLL_INTERPOLATE_FIELD_EXTENDED]]
-          SLL_INTERPOLATE_FIELD_EXTENDED(Ex,Ey,accumE,particles(k),tmp5,tmp6,icell)
 
-          !> \todo ALH particles should not be accessed directly from this simulation
-          particles(k)%vx = pp_vx - 0.5_f64 * dt_q_over_m * Ex
-          particles(k)%vy = pp_vy - 0.5_f64 * dt_q_over_m * Ey
+          call global_to_cell_offset(pp_x,pp_y,sim%mesh_2d,pp_c,pp_dx,pp_dy)
+          
+          ! [[file:~/selalib/src/pic_accumulators/sll_accumulators.h::SLL_INTERPOLATE_FIELD_IN_CELL]]
+          SLL_INTERPOLATE_FIELD_IN_CELL(Ex,Ey,accumE,pp_c,pp_dx,pp_dy,tmp5,tmp6,icell)
+
+          !> Set particle speed
+          coords(1) = pp_vx - 0.5_f64 * dt_q_over_m * Ex
+          coords(2) = pp_vy - 0.5_f64 * dt_q_over_m * Ey
+          coords(3) = 0
+          sim%particle_group%set_v(coords)
        enddo
        !$omp end parallel do
     endif
 
     !! -- --  half v-push  [end]  -- --
 
-    ! une_cst = (pi / KX_LANDAU) * (4._f64 * ALPHA * er)**2
     une_cst = (sll_pi / sim%elec_params(1)) * (4._f64 * sim%elec_params(2) * sim%elec_params(3))**2
     omega_i = sim%elec_params(6)
     omega_r = sim%elec_params(5)
@@ -586,12 +583,12 @@ contains
     !  ------
     !  ------  - begins with:
     !  ------      * E^n stored in sim%E1, sim%E2
-    !  ------      * (x,y)^n_k, (vx, vy)^{n-1/2}_k  stored in particles => sim%part_group%p_list
+    !  ------      * (x,y)^n_k, (vx, vy)^{n-1/2}_k  stored in particles
     !  ------    (where n = it)
     !  ------
     !  ------  - ends with:
     !  ------      * E^{n+1} stored in sim%E1, sim%E2
-    !  ------      * (x,y)^{n+1}_k, (vx, vy)^{n+1/2}_k  stored in particles => sim%part_group%p_list
+    !  ------      * (x,y)^{n+1}_k, (vx, vy)^{n+1/2}_k  stored in particles
     !  ------
     !  ----------------------------------------------------------------------------------------------------
 
@@ -623,13 +620,6 @@ contains
        endif
 
        !! -- --  diagnostics [end]  -- --
-
-       !! -- --  sort particles  -- --
-       if( .not. sim%use_lt_pic_scheme )then
-           if (mod(it+1,sort_nb)==0) then
-            !  PIC_VERSION            call sll_sort_particles_2d( sim%sorter, sim%part_group )
-           endif
-       end if
 
        !  ------------------------------------------------------------------
        !  ------
@@ -663,17 +653,39 @@ contains
 
              !! -- --  v-push (v^{n-1/2} -> v^{n+1/2}  using  E^n)  [begin]  -- --
 
-             call get_poisson_cell_index(sim%mesh_2d, particles(k)%ic_x, particles(k)%ic_y, icell)
-             SLL_INTERPOLATE_FIELD_EXTENDED(Ex,Ey,accumE,particles(k),tmp5,tmp6, icell)
-            ! SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,particles(k),tmp5,tmp6)
-             particles(k)%vx = particles(k)%vx + dt_q_over_m * Ex
-             particles(k)%vy = particles(k)%vy + dt_q_over_m * Ey
 
+             ! particle position
+             coords=sim%particle_group%get_x(k) ! [[file:~/selalib/src/particle_methods/sll_pic_base.F90::get_v]]
+             pp_x = coords(1)
+             pp_y = coords(2)
+
+             ! particle speed
+             coords=sim%particle_group%get_v(k) ! [[file:~/selalib/src/particle_methods/sll_pic_base.F90::get_v]]
+             pp_vx = coords(1)
+             pp_vy = coords(2)
+
+             !> compute cell dx and dy again locally (although we could extract this info for some types of particles)
+             !> because the base PIC class does not give access to this type of info (because some particles may not
+             !> have it). \todo we may want to optimize this out for speed
+
+             call global_to_cell_offset(pp_x,pp_y,sim%mesh_2d,pp_c,pp_dx,pp_dy)
+          
+             ! [[file:~/selalib/src/pic_accumulators/sll_accumulators.h::SLL_INTERPOLATE_FIELD_IN_CELL]]
+             SLL_INTERPOLATE_FIELD_IN_CELL(Ex,Ey,accumE,pp_c,pp_dx,pp_dy,tmp5,tmp6,icell)
+
+             !> Set particle speed
+             coords(1) = pp_vx + dt_q_over_m * Ex
+             coords(2) = pp_vy + dt_q_over_m * Ey
+             coords(3) = 0
+             aaa
+             
              !! -- --  v-push [end]  -- --
 
              !! -- --  x-push (x^n -> x^{n+1} using v^{n+1/2})  [begin]  -- --
 
+             !> ========= AAA ==========
              GET_PARTICLE_POSITION_EXTENDED(particles(k),sim%mesh_2d,x,y)
+             
              x = x + dt * particles(k)%vx
              y = y + dt * particles(k)%vy
 

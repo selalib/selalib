@@ -81,6 +81,18 @@
     exit; \
  end do
 
+  !> same as [[SLL_INTERPOLATE_FIELD_EXTENDED]] where the reference to a
+  !> specific particle has been replaced only by the data that we need
+  !> to extract from it, ie dx and dy
+#define SLL_INTERPOLATE_FIELD_IN_CELL(part_Ex, part_Ey, cell_E, dx, dy, tmp3, tmp4, icell)	\
+  do; \
+    tmp3 = (1.0_f64 - dx); \
+    tmp4 = (1.0_f64 - dy); \
+    part_Ex = dx*dy*cell_E(icell)%Ex_ne + tmp3*dy*cell_E(icell)%Ex_nw + dx*tmp4*cell_E(icell)%Ex_se + tmp3*tmp4*cell_E(icell)%Ex_sw; \
+    part_Ey = dx*dy*cell_E(icell)%Ey_ne + tmp3*dy*cell_E(icell)%Ey_nw + dx*tmp4*cell_E(icell)%Ey_se + tmp3*tmp4*cell_E(icell)%Ey_sw; \
+    exit; \
+ end do
+
 #define SLL_INTERPOLATE_FIELD(part_Ex, part_Ey, cell_E, p, tmp3, tmp4) \
   do; \
     tmp3 = (1.0_f64 - p%dx); \
