@@ -33,6 +33,7 @@ module sll_simple_pic_4d_particle_module
      sll_real64 :: v_x
      sll_real64 :: v_y
      sll_real32 :: weight
+
   end type sll_simple_pic_4d_particle
 
 end module sll_simple_pic_4d_particle_module
