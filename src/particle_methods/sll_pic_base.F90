@@ -9,13 +9,13 @@ module sll_module_pic_base
   ! Particle species
   !============================================================================
   type, public :: sll_species
-
-    character(len=64) :: name !< species name
-    sll_real64        :: q    !< charge of a single particle 
-    sll_real64        :: m    !< mass   of a single particle
+      character(len=64) :: name !< species name
+      sll_real64        :: q    !< charge of a single particle
+      sll_real64        :: m    !< mass   of a single particle
 
   contains
-    procedure         :: q_over_m  !< charge over mass ratio
+    procedure           :: q_over_m  !< charge over mass ratio
+    procedure           :: species_new
 
   end type sll_species
 
@@ -38,9 +38,22 @@ module sll_module_pic_base
     procedure( i_get_scalar ), deferred :: get_charge
     procedure( i_get_scalar ), deferred :: get_mass
 
+    procedure( i_get_integer), deferred :: get_cell_index
+
     ! Setters
     procedure( i_set_coords ), deferred :: set_x
     procedure( i_set_coords ), deferred :: set_v
+    procedure( i_set_scalar ), deferred :: set_particle_weight
+    procedure( set_scalar   ), deferred :: set_common_weight
+
+    ! Charge deposition
+    procedure( dep_charge_2d), deferred :: deposit_charge_2d
+
+
+    ! Initializers
+    procedure( set_init_dens_landau ),  deferred :: set_initial_density_landau
+    procedure( rand_init            ),  deferred :: random_initializer
+    procedure( cart_init            ),  deferred :: cartesian_initializer
 
   end type sll_particle_group_base
 
@@ -68,6 +81,29 @@ module sll_module_pic_base
 
   !----------------------------------------------------------------------------
   abstract interface
+   pure function :: i_get_integer(self, i ) result( i_out )
+    use sll_working_precision
+    import sll_particle_group_base
+    class( sll_particle_group_base ),   intent( in )    ::  self
+    sll_int32,                          intent( in )    ::  i
+    sll_int32  ::  i_out
+
+   end function i_get_integer
+  end interface
+
+  !----------------------------------------------------------------------------
+  abstract interface
+   subroutine i_set_scalar( self, i, s )
+    use sll_working_precision
+    import sll_particle_group_base
+    class( sll_particle_group_base ), intent( inout ) :: self
+    sll_int32                       , intent( in    ) :: i
+    sll_real64                      , intent( in    ) :: s
+   end subroutine i_set_scalar
+  end interface
+
+  !----------------------------------------------------------------------------
+  abstract interface
    subroutine i_set_coords( self, i, x )
     use sll_working_precision
     import sll_particle_group_base
@@ -77,9 +113,72 @@ module sll_module_pic_base
    end subroutine i_set_coords
   end interface
 
+  !----------------------------------------------------------------------------
+  abstract interface
+   subroutine rand_init( self, nb_particles, initial_density_identifier )
+    use sll_working_precision
+    import sll_particle_group_base
+    class( sll_particle_group_base ), intent( inout ) :: self
+    sll_int32                       , intent( in    ) :: nb_particles
+    sll_int32                       , intent( in    ) :: initial_density_identifier
+   end subroutine rand_init
+  end interface
+
+  !----------------------------------------------------------------------------
+  abstract interface
+   subroutine cart_init( self, nb_cells_x, nb_cells_v, x_min, x_max, v_min, v_max )
+    use sll_working_precision
+    import sll_particle_group_base
+    class( sll_particle_group_base ), intent( inout ) :: self
+    sll_int32                       , intent( in    ) :: nb_cells_x(3)
+    sll_int32                       , intent( in    ) :: nb_cells_v(3)
+    sll_real64                      , intent( in    ) :: x_min(3)
+    sll_real64                      , intent( in    ) :: x_max(3)
+    sll_real64                      , intent( in    ) :: v_min(3)
+    sll_real64                      , intent( in    ) :: v_max(3)
+   end subroutine cart_init
+  end interface
+
+  !----------------------------------------------------------------------------
+  abstract interface
+   subroutine set_init_dens_landau( self, thermal_speed, alpha, k_landau )
+    use sll_working_precision
+    import sll_particle_group_base
+    class( sll_particle_group_base ), intent( inout ) :: self
+    sll_real64                      , intent( in    ) :: thermal_speed
+    sll_real64                      , intent( in    ) :: alpha
+    sll_real64                      , intent( in    ) :: k_landau
+
+   end subroutine set_init_dens_landau
+  end interface
+
+
+  !----------------------------------------------------------------------------
+  abstract interface
+   subroutine dep_charge_2d( self, charge_accumulator )
+    use sll_working_precision
+    import sll_particle_group_base
+    class( sll_particle_group_base ),           intent( inout ) :: self
+    type( sll_charge_accumulator_2d ), pointer, intent( inout ) :: charge_accumulator
+   end subroutine dep_charge_2d
+  end interface
+
+
 !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 contains
 !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+  pure function species_new( &
+      species_charge,     &
+      species_mass,       &
+  ) result(res)
+
+    type(sll_species), pointer :: res
+    res%q = species_charge
+    res%m = species_mass
+
+  end function species_new
+
 
   !----------------------------------------------------------------------------
   pure function q_over_m( self ) result( r )
