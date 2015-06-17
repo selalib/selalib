@@ -147,6 +147,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/random_deviate_generators/gaussian.F90
     ${SLL_DIR}/random_deviate_generators/hammersley.F90
     ${SLL_DIR}/random_deviate_generators/moment_matching.F90
+    ${SLL_DIR}/random_deviate_generators/sobol/sll_sobol.F90
+    ${SLL_DIR}/random_deviate_generators/prob/sll_prob.F90
 )
 
 IF(F2008)
@@ -225,9 +227,10 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
   ${SLL_DIR}/file_io_parallel/sll_hdf5_io_parallel.F90
   ${SLL_DIR}/file_io_parallel/sll_xdmf_parallel.F90
+  ${SLL_DIR}/distribution_function_multipatch/sll_distribution_function_4d_multipatch.F90
   ${SLL_DIR}/simulations/simulations_parallel/sim_4d_qns_general/simulation_4d_qns_general.F90
   ${SLL_DIR}/simulations/simulations_parallel/sim_2d_vlasov_poisson_cartesian/simulation_2d_vlasov_poisson_cartesian.F90
-  ${SLL_DIR}/distribution_function_multipatch/sll_distribution_function_4d_multipatch.F90
+  ${SLL_DIR}/simulations/simulations_parallel/sim_2d_vlasov_poisson_cartesian/simulation_2d_vlasov_ampere_cartesian.F90
   ${SLL_DIR}/simulations/simulations_parallel/sim_4d_qns_general_multipatch/simulation_4d_qns_general_multipatch.F90
   ${SLL_DIR}/simulations/simulations_parallel/sim_4d_drift_kinetic_hybrid/simulation_4d_DK_hybrid.F90
   ${SLL_DIR}/simulations/simulations_parallel/sim_4d_drift_kinetic_polar/simulation_4d_drift_kinetic_polar.F90)
