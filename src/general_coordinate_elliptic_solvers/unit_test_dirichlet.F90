@@ -1,4 +1,4 @@
-program test_gces
+program test_gces_dirichlet
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
@@ -11,7 +11,7 @@ use sll_module_scalar_field_2d
 use sll_constants
 use sll_module_arbitrary_degree_spline_interpolator_2d
 use sll_module_deboor_splines_2d
-use sll_module_gces
+use sll_module_gces_dirichlet
 
 implicit none
 
@@ -25,8 +25,8 @@ implicit none
 #define ETA2MAX          (+1.0_f64)
 
 type(sll_cartesian_mesh_2d), pointer                      :: mesh_2d
-class(sll_coordinate_transformation_2d_base), pointer     :: T
-type(sll_gces)                                            :: es
+class(sll_coordinate_transformation_2d_base), pointer     :: tau
+type(sll_gces_dirichlet)                                  :: es
 type(sll_arbitrary_degree_spline_interpolator_2d), target :: interp_phi
 type(sll_arbitrary_degree_spline_interpolator_2d), target :: interp_rho
 class(sll_scalar_field_2d_base), pointer                  :: a11_field_mat
@@ -52,7 +52,7 @@ sll_real64, dimension(NUM_CELLS2+1) :: v1_max
 sll_real64, dimension(NUM_CELLS1+1) :: v2_min
 sll_real64, dimension(NUM_CELLS1+1) :: v2_max
 
-sll_int32  :: i, j
+sll_int32  :: i, j, k
 sll_real64 :: h1,h2,node_val,ref
 sll_real64 :: eta1(NUM_CELLS1+1)
 sll_real64 :: eta2(NUM_CELLS2+1)
@@ -91,21 +91,21 @@ print*, " test case witout change of coordinates"
 print*, " dirichlet-dirichlet boundary conditions"
 print*, "-------------------------------------------------------------"
 
-T => new_coordinate_transformation_2d_analytic( &
-&    "analytic",                                &
-&    mesh_2d,                                   &
-&    identity_x1,                               &
-&    identity_x2,                               &
-&    identity_jac11,                            &
-&    identity_jac12,                            &
-&    identity_jac21,                            &
-&    identity_jac22,                            &
-&    [0.0_f64]                                  )
+tau => new_coordinate_transformation_2d_analytic( &
+&      "analytic",                                &
+&      mesh_2d,                                   &
+&      identity_x1,                               &
+&      identity_x2,                               &
+&      identity_jac11,                            &
+&      identity_jac12,                            &
+&      identity_jac21,                            &
+&      identity_jac22,                            &
+&      [0.0_f64]                                  )
 
 a11_field_mat => new_scalar_field_2d_analytic( &
   one,                                         &
   "a11",                                       &
-  T,                                           &
+  tau,                                         &
   SLL_DIRICHLET,                               &
   SLL_DIRICHLET,                               &
   SLL_DIRICHLET,                               &
@@ -115,7 +115,7 @@ a11_field_mat => new_scalar_field_2d_analytic( &
 a12_field_mat => new_scalar_field_2d_analytic( &
   zero,                                        &
   "a12",                                       &
-  T,                                           &
+  tau,                                         &
   SLL_DIRICHLET,                               &
   SLL_DIRICHLET,                               &
   SLL_DIRICHLET,                               &
@@ -125,7 +125,7 @@ a12_field_mat => new_scalar_field_2d_analytic( &
 a21_field_mat => new_scalar_field_2d_analytic( &
   zero,                                        &
   "a21",                                       &
-  T,                                           &
+  tau,                                         &
   SLL_DIRICHLET,                               &
   SLL_DIRICHLET,                               &
   SLL_DIRICHLET,                               &
@@ -135,7 +135,7 @@ a21_field_mat => new_scalar_field_2d_analytic( &
 a22_field_mat => new_scalar_field_2d_analytic( &
   one,                                         &
   "a22",                                       &
-  T,                                           &
+  tau,                                         &
   SLL_DIRICHLET,                               &
   SLL_DIRICHLET,                               &
   SLL_DIRICHLET,                               &
@@ -145,7 +145,7 @@ a22_field_mat => new_scalar_field_2d_analytic( &
 b1_field_vect => new_scalar_field_2d_analytic( &
   zero,                                        &
   "b1",                                        &
-  T,                                           &
+  tau,                                         &
   SLL_DIRICHLET,                               &
   SLL_DIRICHLET,                               &
   SLL_DIRICHLET,                               &
@@ -157,7 +157,7 @@ b1_field_vect => new_scalar_field_2d_analytic( &
 b2_field_vect => new_scalar_field_2d_analytic( &
   zero,                                        &
   "b2",                                        &
-  T,                                           &
+  tau,                                         &
   SLL_DIRICHLET,                               &
   SLL_DIRICHLET,                               &
   SLL_DIRICHLET,                               &
@@ -169,7 +169,7 @@ b2_field_vect => new_scalar_field_2d_analytic( &
 c_field => new_scalar_field_2d_analytic(       &
   zero,                                        &
   "c_field",                                   &
-  T,                                           &
+  tau,                                         &
   SLL_DIRICHLET,                               &
   SLL_DIRICHLET,                               &
   SLL_DIRICHLET,                               &
@@ -184,10 +184,10 @@ call initialize_ad2d_interpolator(             &
   ETA1MAX,                                     &
   ETA2MIN,                                     &
   ETA2MAX,                                     &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
+  SLL_HERMITE,                                 &
+  SLL_HERMITE,                                 &
+  SLL_HERMITE,                                 &
+  SLL_HERMITE,                                 &
   SPLINE_DEG1,                                 &
   SPLINE_DEG2 )
 
@@ -209,16 +209,16 @@ call initialize_ad2d_interpolator(             &
 phi => new_scalar_field_2d_discrete(           &
   "phi",                                       &
   interp_phi,                                  &
-  T,                                           &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET )
+  tau,                                         &
+  SLL_HERMITE,                                 &
+  SLL_HERMITE,                                 &
+  SLL_HERMITE,                                 &
+  SLL_HERMITE )
 
 rho => new_scalar_field_2d_analytic( &
 &    rhs,                            &
 &    "rho",                          &     
-&    T,                              &
+&    tau,                            &
 &    SLL_DIRICHLET,                  &
 &    SLL_DIRICHLET,                  &
 &    SLL_DIRICHLET,                  &
@@ -264,7 +264,9 @@ call factorize_mat_es( es,            &
 &                      b2_field_vect, &
 &                      c_field        )
 
-call sll_solve( es, rho, phi)
+do k = 1, 10
+  call sll_solve( es, rho, phi)
+end do
 
 integral_solution       = 0.0_f64
 integral_exact_solution = 0.0_f64
@@ -279,7 +281,7 @@ do i=1,npts1
   calculated(i,j) = node_val
   grad1_node_val  = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
   grad2_node_val  = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
-  ref             = sin(2*sll_pi*eta1(i)) * sin(2*sll_pi*eta2(j))
+  ref             = sol(eta1(i),eta2(j), [0.0d0])
   grad1ref        = 2*sll_pi*cos(2*sll_pi*eta1(i))*sin(2*sll_pi*eta2(j))
   grad2ref        = 2*sll_pi*cos(2*sll_pi*eta2(j))*sin(2*sll_pi*eta1(i))
   reference(i,j)  = ref
@@ -293,10 +295,10 @@ integral_exact_solution = sum(reference)*h1*h2
 
 do j=-50,50
 do i=-50,50
-  write(41,*) i, j, phi%first_deriv_eta1_value_at_point((i-1)*0.01_f64,(j-1)*0.01_f64) &
-                  , 2*sll_pi*cos(2*sll_pi*(i-1)*0.01_f64)*sin(2*sll_pi*(j-1)*0.01_f64)
-  write(42,*) i, j, phi%value_at_point((i-1)*0.01_f64,(j-1)*0.01_f64) &
-                  , sin(2*sll_pi*(i-1)*0.01_f64)*sin(2*sll_pi*(j-1)*0.01_f64)
+  write(41,*) i, j, phi%first_deriv_eta1_value_at_point(i*0.01_f64,j*0.01_f64) &
+                  , 2*sll_pi*cos(2*sll_pi*i*0.01_f64)*sin(2*sll_pi*j*0.01_f64)
+  write(42,*) i, j, phi%value_at_point(i*0.01_f64,j*0.01_f64) &
+                  , sol(i*0.01_f64,j*0.01_f64, [0.0d0])
 end do
 write(41,*) 
 write(42,*) 
@@ -312,7 +314,7 @@ call a21_field_mat%delete()
 call b1_field_vect%delete()
 call b2_field_vect%delete()
 call a22_field_mat%delete()
-call T%delete()
+call tau%delete()
 
 print"('integral solution       =',g15.3)", integral_solution
 print"('integral exact solution =',g15.3)", integral_exact_solution
@@ -377,4 +379,4 @@ res = sin(2*pi*eta1)*sin(2*pi*eta2)
 
 end function sol
 
-end program test_gces
+end program test_gces_dirichlet

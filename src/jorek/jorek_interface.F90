@@ -41,6 +41,8 @@ integer(kind=jorek_ints_kind)           :: nstep_max
 integer, parameter, private             :: dtllevel_base=0
 integer, parameter                      :: nvar = 1
 integer, parameter                      :: matrix_a_id = 0
+integer                                 :: testcase
+integer                                 :: mesh_type
 integer                                 :: mode_m1
 integer                                 :: mode_n1
 real(kind=jorek_coef_kind)              :: a
@@ -121,8 +123,10 @@ i_vp_rho            = 1
 nmatrices           = 1
 i_vu_rho            = 1 
 
-call jorek_param_getint(int_modes_m1_id, mode_m1, ierr)
-call jorek_param_getint(int_modes_n1_id, mode_n1, ierr)
+call jorek_param_getint(int_modes_m1_id, mode_m1,   ierr)
+call jorek_param_getint(int_modes_n1_id, mode_n1,   ierr)
+CALL JOREK_Param_GETInt(int_testcase_id, Testcase,  ierr)
+CALL JOREK_Param_GETInt(int_typemesh_id, mesh_type, ierr)
 
 call jorek_param_getreal(real_rgeo_id,r0,ierr)
 call jorek_param_getreal(real_zgeo_id,z0,ierr)
@@ -130,10 +134,23 @@ call jorek_param_getreal(real_amin_id,a,ierr)
 call jorek_param_getreal(real_acenter_id,acenter,ierr)
 call jorek_param_getint(int_nstep_max_id,nstep_max,ierr)
 
-call space_create(space_trial, fem_mesh)
-ptr_space_trial => space_trial
-call space_create(space_test, fem_mesh)
-ptr_space_test => space_test
+!if the basis is given in a direcroty dirname given by the argument argname
+IF (mesh_type == INT_MESH_BEZIER_DESCRIPTION) THEN
+   argname = "--basis"
+   CALL JOREK_GET_ARGUMENTS(argname, dirname, ierr)
+   CALL SPACE_CREATE(space_trial, fem_mesh, dirname=dirname)
+   ptr_space_trial => space_trial
+   CALL SPACE_CREATE(space_test, fem_mesh, dirname=dirname)
+   ptr_space_test => space_test
+ELSE
+   !    if the basis is defined internally (hermite-bezier for example)
+   CALL SPACE_CREATE(space_trial, fem_mesh)
+   ptr_space_trial => space_trial
+   CALL SPACE_CREATE(space_test, fem_mesh)
+   ptr_space_test => space_test
+   ! ...
+END IF
+
 
 argname = "--geometry"
 call jorek_get_arguments(argname, dirname, ierr)
@@ -167,7 +184,7 @@ end subroutine create_jorek_model
 subroutine run_jorek_model()
 
 real(kind=rk), dimension(1:1,1:2)        :: x
-real(kind=rk), dimension(1:1,1:2)        :: v
+real(kind=rk), dimension(1:3,1:2)        :: v
 integer                                  :: i   
 character(len=1024) :: argname
 integer             :: err
