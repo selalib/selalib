@@ -397,26 +397,6 @@ contains
 
 
 
-  ! tells whether the given point is in the given domain, with boolean arguments for the domain periodicity
-  ! (taken from previous function in_bounds_periodic)
-  function x_is_in_domain_2d( x, mesh, x_periodic, y_periodic ) result(res)
-
-    sll_real64,                     intent( in )    :: x(3)             ! dimension 3 to fit the general interface
-    logical,                        intent( in )    :: x_periodic
-    logical,                        intent( in )    :: y_periodic
-    type(sll_cartesian_mesh_2d),    intent( in ), pointer :: mesh
-    logical     :: res
-
-    res = ( x(1) >= mesh%eta1_min )                                                                               &
-          .and.                                                                                                   &
-          ( ( x(1) < mesh%eta1_max .and. x_periodic ) .or. ( x(1) <= mesh%eta1_max .and. .not. x_periodic ) )     &
-          .and.                                                                                                   &
-          ( x(2) >= mesh%eta2_min )                                                                               &
-          .and.                                                                                                   &
-          ( ( x(2) < mesh%eta2_max .and. y_periodic ) .or. ( x(2) <= mesh%eta2_max .and. .not. y_periodic) )
-
-  end function x_is_in_domain_2d
-
 
 end module sll_simple_pic_4d_group_module
 
