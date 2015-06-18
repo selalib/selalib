@@ -14,8 +14,8 @@ module sll_module_pic_base
       sll_real64        :: m    !< mass   of a single particle
 
   contains
-    procedure           :: q_over_m  !< charge over mass ratio
-    procedure           :: species_new
+    procedure, pass(species_charge, species_mass)   :: q_over_m  !< charge over mass ratio
+    procedure                                       :: species_new
 
   end type sll_species
 
@@ -80,7 +80,7 @@ module sll_module_pic_base
 
   !----------------------------------------------------------------------------
   abstract interface
-   pure function :: i_get_integer(self, i ) result( i_out )
+   pure function i_get_integer(self, i ) result( i_out )
     use sll_working_precision
     import sll_particle_group_base
     class( sll_particle_group_base ),   intent( in )    ::  self
@@ -88,6 +88,17 @@ module sll_module_pic_base
     sll_int32  ::  i_out
 
    end function i_get_integer
+  end interface
+
+  !----------------------------------------------------------------------------
+  abstract interface
+   subroutine i_set_coords( self, i, x )
+    use sll_working_precision
+    import sll_particle_group_base
+    class( sll_particle_group_base ), intent( inout ) :: self
+    sll_int32                       , intent( in    ) :: i
+    sll_real64                      , intent( in    ) :: x(3)
+   end subroutine i_set_coords
   end interface
 
   !----------------------------------------------------------------------------
@@ -103,13 +114,12 @@ module sll_module_pic_base
 
   !----------------------------------------------------------------------------
   abstract interface
-   subroutine i_set_coords( self, i, x )
+   subroutine set_scalar( self, s )
     use sll_working_precision
     import sll_particle_group_base
     class( sll_particle_group_base ), intent( inout ) :: self
-    sll_int32                       , intent( in    ) :: i
-    sll_real64                      , intent( in    ) :: x(3)
-   end subroutine i_set_coords
+    sll_real64                      , intent( in    ) :: s
+   end subroutine set_scalar
   end interface
 
   !----------------------------------------------------------------------------
@@ -158,6 +168,7 @@ module sll_module_pic_base
   abstract interface
    subroutine dep_charge_2d( self, charge_accumulator )
     use sll_working_precision
+#include "sll_accumulators.h"
     import sll_particle_group_base
     class( sll_particle_group_base ),           intent( inout ) :: self
     type( sll_charge_accumulator_2d ), pointer, intent( inout ) :: charge_accumulator
@@ -169,12 +180,14 @@ module sll_module_pic_base
 contains
 !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-  pure function species_new( &
+  function species_new( &
       species_charge,     &
-      species_mass,       &
+      species_mass        &
   ) result(res)
+    sll_real64, intent ( in )   :: species_charge
+    sll_real64, intent ( in )   :: species_mass
+    type(sll_species), pointer  :: res
 
-    type(sll_species), pointer :: res
     res%q = species_charge
     res%m = species_mass
 
@@ -182,11 +195,55 @@ contains
 
 
   !----------------------------------------------------------------------------
-  pure function q_over_m( self ) result( r )
+  function q_over_m( self ) result( r )
     class( sll_species ), intent( in ) :: self
     sll_real64 :: r
 
     r = self%q / self%m
+
   end function q_over_m
+
+
+
+  ! todo: put this in the right module (with the meshes...)
+
+  ! tells whether the given point is in the given domain, with boolean arguments for the domain periodicity
+  ! (taken from previous function in_bounds_periodic)
+  function x_is_in_domain_2d( x, y, mesh, x_periodic, y_periodic ) result(res)
+
+    use sll_cartesian_meshes
+    sll_real64,                     intent( in )    :: x, y
+    logical,                        intent( in )    :: x_periodic
+    logical,                        intent( in )    :: y_periodic
+    type(sll_cartesian_mesh_2d),    intent( in ), pointer :: mesh
+    logical     :: res
+
+    res = ( x >= mesh%eta1_min )                                                                               &
+          .and.                                                                                                   &
+          ( ( x < mesh%eta1_max .and. x_periodic ) .or. ( x <= mesh%eta1_max .and. .not. x_periodic ) )     &
+          .and.                                                                                                   &
+          ( y >= mesh%eta2_min )                                                                               &
+          .and.                                                                                                   &
+          ( ( y < mesh%eta2_max .and. y_periodic ) .or. ( y <= mesh%eta2_max .and. .not. y_periodic) )
+
+  end function x_is_in_domain_2d
+
+  ! todo: put this in the right module (with the meshes...)
+
+  subroutine apply_periodic_bc_on_cartesian_mesh_2d( mesh, x, y )
+
+    use sll_cartesian_meshes
+    ! [[file:../working_precision/sll_working_precision.h]]
+    use sll_working_precision
+
+    type(sll_cartesian_mesh_2d), pointer :: mesh
+    sll_real64, intent(inout) :: x
+    sll_real64, intent(inout) :: y
+
+    x = mesh%eta1_min + modulo(x - mesh%eta1_min, mesh%eta1_max - mesh%eta1_min)
+    y = mesh%eta2_min + modulo(y - mesh%eta2_min, mesh%eta2_max - mesh%eta2_min)
+  end subroutine apply_periodic_bc_on_cartesian_mesh_2d
+
+
 
 end module sll_module_pic_base
