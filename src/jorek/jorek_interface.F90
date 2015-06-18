@@ -184,7 +184,7 @@ end subroutine create_jorek_model
 subroutine run_jorek_model()
 
 real(kind=rk), dimension(1:1,1:2)        :: x
-real(kind=rk), dimension(1:1,1:2)        :: v
+real(kind=rk), dimension(1:3,1:2)        :: v
 integer                                  :: i   
 character(len=1024) :: argname
 integer             :: err
