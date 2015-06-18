@@ -86,15 +86,6 @@
     exit; \
  end do
 
-    !> same as [[GET_PARTICLE_POSITION_EXTENDED]] without any reference to the particle index
-    
-#define GET_PARTICLE_POSITION_EXTENDED_AAA(p,m2d,x,y) \
-  do; \
-     x = m2d%eta1_min + m2d%delta_eta1*(real(p%dx,f64) + real( modulo(p%ic_x-1,m2d%num_cells1), f64) ); \
-     y = m2d%eta2_min + m2d%delta_eta2*(real(p%dy,f64) + real( modulo(p%ic_y-1,m2d%num_cells2), f64) ); \
-    exit; \
- end do
-
 #define SET_2DPARTICLE_VALUES(p,x,y,qq,xmin,ymin,ncx,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2) \
  do; \
     SET_PARTICLE_POSITION(p,xmin,ymin,ncx,x,y,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2); \

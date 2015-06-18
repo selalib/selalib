@@ -549,6 +549,7 @@ contains
 
     !! -- --  half v-push  [end]  -- --
 
+    ! this means (pi / KX_LANDAU) * (4._f64 * ALPHA * er)**2
     une_cst = (sll_pi / sim%elec_params(1)) * (4._f64 * sim%elec_params(2) * sim%elec_params(3))**2
     omega_i = sim%elec_params(6)
     omega_r = sim%elec_params(5)
