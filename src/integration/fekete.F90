@@ -366,6 +366,7 @@ contains
     sll_real64 :: x
     sll_real64 :: y
     sll_real64 :: w
+    sll_real64 :: volume
     sll_int32  :: ierr
     ! Definition of reference triangle, such that:
     !    |
@@ -381,7 +382,8 @@ contains
     ref_pts(:,1) = (/ 0._f64,          0.0_f64 /)
     ref_pts(:,2) = (/ 1./sqrt(3._f64), 0.5_f64 /)
     ref_pts(:,3) = (/ 0._f64,          1.0_f64 /)
-
+    volume = 1._f64 / sll_sqrt3 ! volume of the reference triangle
+    
     ! Computing fekete points on that triangle
     quad_pw = fekete_points_and_weights(ref_pts)
 
@@ -402,8 +404,8 @@ contains
     do i=1,num_fek
        x = quad_pw(1,i)
        y = quad_pw(2,i)
-       w = quad_pw(3,i)
-       write(out_unit, "(2(g13.3,a,1x),(g13.3))") x, ",", y, ",", w
+       w = quad_pw(3,i) * volume
+       write(out_unit, "(2(g25.17,a,1x),(g25.17))") x, ",", y, ",", w
     end do
     close(out_unit)
 
