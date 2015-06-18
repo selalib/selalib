@@ -612,267 +612,178 @@ contains
 
        some_val = 0.0_f64
 
-      if (sim%use_cubic_splines) then
-
-        print*, "error (0976765) cubic splines not implemented yet"
-        stop
-
-      else
-       
-          !$omp parallel PRIVATE(x,y,x1,y1,Ex,Ey,gi,tmp1,tmp2,tmp5,tmp6,off_x,off_y,ic_x,ic_y,thread_id,p_guard,q_accum)
-          !$&omp FIRSTPRIVATE(dt,dt_q_over_m,ncx,xmin,ymin,rdx,rdy)
+       !$omp parallel PRIVATE(x,y,x1,y1,Ex,Ey,gi,tmp1,tmp2,tmp5,tmp6,off_x,off_y,ic_x,ic_y,thread_id,p_guard,q_accum)
+       !$&omp FIRSTPRIVATE(dt,dt_q_over_m,ncx,xmin,ymin,rdx,rdy)
 #ifdef _OPENMP
-          thread_id = OMP_GET_THREAD_NUM()
+       thread_id = OMP_GET_THREAD_NUM()
 #endif
-          call reset_charge_accumulator_to_zero ( sim%q_accumulator_ptr(thread_id+1)%q )
-          q_accum => sim%q_accumulator_ptr(thread_id+1)%q
-          p_guard => sim%part_group%p_guard(thread_id+1)%g_list
-          gi = 0
-          !$omp do!! reduction(+:some_val)
+      call reset_charge_accumulator_to_zero ( sim%q_accumulator_ptr(thread_id+1)%q )
+      q_accum => sim%q_accumulator_ptr(thread_id+1)%q
+      p_guard => sim%part_group%p_guard(thread_id+1)%g_list
+      gi = 0
+      !$omp do!! reduction(+:some_val)
 
-          !! -- --  particle loop: treat the particles by pair for faster treatment ?  -- --
+      !! -- --  particle loop: treat the particles by pair for faster treatment ?  -- --
 
-          do k = 1, sim%ions_number
+      do k = 1, sim%ions_number
 
-             !! -- --  v-push (v^{n-1/2} -> v^{n+1/2}  using  E^n)  [begin]  -- --
-
-
-             ! particle position
-             coords=sim%particle_group%get_x(k) ! [[file:~/selalib/src/particle_methods/sll_pic_base.F90::get_v]]
-             pp_x = coords(1)
-             pp_y = coords(2)
-
-             ! particle speed
-             coords=sim%particle_group%get_v(k) ! [[file:~/selalib/src/particle_methods/sll_pic_base.F90::get_v]]
-             pp_vx = coords(1)
-             pp_vy = coords(2)
-
-             !> compute cell dx and dy again locally (although we could extract this info for some types of particles)
-             !> because the base PIC class does not give access to this type of info (because some particles may not
-             !> have it). \todo we may want to optimize this out for speed
-
-             call global_to_cell_offset(pp_x,pp_y,sim%mesh_2d,pp_c,pp_dx,pp_dy)
-          
-             ! [[file:~/selalib/src/pic_accumulators/sll_accumulators.h::SLL_INTERPOLATE_FIELD_IN_CELL]]
-             SLL_INTERPOLATE_FIELD_IN_CELL(Ex,Ey,accumE,pp_c,pp_dx,pp_dy,tmp5,tmp6,icell)
-
-             !> Set particle speed
-             coords(1) = pp_vx + dt_q_over_m * Ex
-             coords(2) = pp_vy + dt_q_over_m * Ey
-             coords(3) = 0
-             sim%particle_group%set_v(coords)
-
-             !> remember new speed for x-push
-             pp_vx=coords(1)
-             pp_vy=coords(2)
-             
-             !! -- --  v-push [end]  -- --
-
-             !! -- --  x-push (x^n -> x^{n+1} using v^{n+1/2})  [begin]  -- --
-
-             coords(1) = pp_x + dt * pp_vx
-             coords(2) = pp_y + dt * pp_vy
-             coords(3) = 0
-             sim%particle_group%set_x(coords)
-
-             !! -- --  x-push [end]  -- --
-
-             !! note: with the ltp_bsl charge deposition we will not be able to deposit the charge of the "just-pushed"
-             !!       particles since we need to first compute the weights of the virtual particles (with the remapping
-             !!       algorithm)
+         !! -- --  v-push (v^{n-1/2} -> v^{n+1/2}  using  E^n)  [begin]  -- --
 
 
-             !! -- --  LTPIC: put outside particles back in domain                              [begin]  -- --
-             !! -- --  PIC: deposit charge (if particle is inside, otherwise reserve it)        [begin]  -- --
+         ! particle position
+         coords=sim%particle_group%get_x(k) ! [[file:~/selalib/src/particle_methods/sll_pic_base.F90::get_v]]
+         pp_x = coords(1)
+         pp_y = coords(2)
 
-             !> ========= AAA ==========
-             if( sim%part_group%track_markers_outside_domain                            &
-                .or. ( in_bounds_periodic( x, y, sim%mesh_2d,                           &
-                                           sim%part_group%domain_is_x_periodic,         &
-                                           sim%part_group%domain_is_y_periodic )        &
-                ) ) then ! finish push
-                SET_PARTICLE_POSITION_EXTENDED(particles(k),xmin,ymin,ncx,x,y,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
-                if( .not. sim%use_lt_pic_scheme )then
-                    print*,  "WARNING: charge deposition discarded for pic case, please update"
-                    ! SLL_ACCUMULATE_PARTICLE_CHARGE(q_accum,particles(k),tmp5,tmp6)
-                end if
-             else
-                ! particle outside domain
-                if( sim%use_lt_pic_scheme )then
-                     call apply_periodic_bc( sim%mesh_2d, x, y)
-                     SET_PARTICLE_POSITION_EXTENDED(particles(k),xmin,ymin,ncx,x,y,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
-                else
-                  ! store reference for later processing
-                  gi = gi + 1
-                  p_guard(gi)%p => particles(k)
-                end if
-             end if
+         ! particle speed
+         coords=sim%particle_group%get_v(k) ! [[file:~/selalib/src/particle_methods/sll_pic_base.F90::get_v]]
+         pp_vx = coords(1)
+         pp_vy = coords(2)
 
-             !! -- --  LTPIC: put outside particles back in domain                              [end]  -- --
-             !! -- --  PIC: deposit charge (if particle is inside, otherwise reserve it)        [end]  -- --
+         !> compute cell dx and dy again locally (although we could extract this info for some types of particles)
+         !> because the base PIC class does not give access to this type of info (because some particles may not
+         !> have it). \todo we may want to optimize this out for speed
 
-          enddo
+         call global_to_cell_offset(pp_x,pp_y,sim%mesh_2d,pp_c,pp_dx,pp_dy)
+
+         ! [[file:~/selalib/src/pic_accumulators/sll_accumulators.h::SLL_INTERPOLATE_FIELD_IN_CELL]]
+         SLL_INTERPOLATE_FIELD_IN_CELL(Ex,Ey,accumE,pp_c,pp_dx,pp_dy,tmp5,tmp6,icell)
+
+         !> Set particle speed
+         coords(1) = pp_vx + dt_q_over_m * Ex
+         coords(2) = pp_vy + dt_q_over_m * Ey
+         coords(3) = 0
+         sim%particle_group%set_v(coords)
+
+         !> remember new speed for x-push
+         pp_vx=coords(1)
+         pp_vy=coords(2)
+
+         !! -- --  v-push [end]  -- --
+
+         !! -- --  x-push (x^n -> x^{n+1} using v^{n+1/2})  [begin]  -- --
+
+         coords(1) = pp_x + dt * pp_vx
+         coords(2) = pp_y + dt * pp_vy
+         coords(3) = 0
+
+         !! -- --  x-push [end]  -- --
+
+         if( .not. x_is_in_domain_2d( coords(1), coords(2), sim%mesh_2d,                    &
+                                       sim%part_group%domain_is_x_periodic,                 &
+                                       sim%part_group%domain_is_y_periodic )                &
+               ) then
+           !! -- -- put outside particles back in domain
+           call apply_periodic_bc_on_cartesian_mesh_2d( sim%mesh_2d, coords(1), coords(2))
+         end if
+
+         sim%particle_group%set_x(coords)
+
+      end do
 
 
-          !! -- --  deposit charge LTPIC [begin]  -- --
+      print *, "deposit charge begin"
 
-            print *, "deposit charge begin"
+      call sll_set_time_mark(deposit_time_mark)
 
-          if( sim%use_lt_pic_scheme )then
-              SLL_ASSERT(thread_id == 0)
-             
-              ! [[file:~/selalib/src/pic_utilities/lt_pic_4d_utilities.F90::sll_lt_pic_4d_deposit_charge_on_2d_mesh]]
-              call sll_set_time_mark(deposit_time_mark)
-              aaa
-              call sll_lt_pic_4d_deposit_charge_on_2d_mesh( sim%part_group,                     &
-                                                            sim%q_accumulator_ptr(1)%q,         &
-                                                            sim%n_virtual_x_for_deposition,     &
-                                                            sim%n_virtual_y_for_deposition,     &
-                                                            sim%n_virtual_vx_for_deposition,    &
-                                                            sim%n_virtual_vy_for_deposition,    &
-                                                            sim%total_density )
-              deposit_time=deposit_time+sll_time_elapsed_since(deposit_time_mark)
-          else
-              ! nothing to do, charge already deposited in the push loop
-          end if
+      charge_accumulator => sim%q_accumulator_ptr(thread_id+1)%q
+      call sim%particle_group%deposit_charge_2d( charge_accumulator )
 
-            print *, "deposit charge end"
+      deposit_time=deposit_time+sll_time_elapsed_since(deposit_time_mark)
 
-          !! -- --  deposit charge LTPIC [end]  -- --
+      print *, "deposit charge end"
 
-          !! -- --  [PIC ONLY] process the reserved particles (in the guard list) [begin]  -- --
+      !  ------------------------------------------------------------------
+      !  ------
+      !  ------  PUSH PARTICLES [end]
+      !  ------
+      !  ------------------------------------------------------------------
 
-          if( .not. sim%use_lt_pic_scheme )then
-              !$omp end do
-              sim%part_group%num_postprocess_particles(thread_id+1) = gi
-              !$omp end parallel
+      !! -- --  parallel communications for rho ?? [begin]  -- --
 
-              ! Process the particles in the guard list. In the periodic case, no
-              ! destruction of particles is needed, so this is simple.
+      call sum_accumulators( sim%q_accumulator_ptr, n_threads, ncx*ncy )
+      call sll_convert_charge_to_rho_2d_per_per( sim%q_accumulator_ptr(1)%q, sim%rho )     ! this name not clear enough
+      do j = 1, ncy+1
+         do i = 1, ncx+1
+            rho1d_send(i+(j-1)*(ncx+1)) = sim%rho(i, j)
+            rho1d_receive(i+(j-1)*(ncx+1)) = 0._f64
+         end do
+      end do
 
-              !$omp parallel PRIVATE(x,y,ic_x,ic_y,off_x,off_y,tmp1,tmp2,tmp5,tmp6,p_guard,q_accum,p,thread_id)
-              !$&omp FIRSTPRIVATE(dt,ncx,xmin,ymin,rdx,rdy)
-#ifdef _OPENMP
-              thread_id = OMP_GET_THREAD_NUM()
-#endif
-              q_accum => sim%q_accumulator_ptr(thread_id+1)%q
-              p_guard => sim%part_group%p_guard(thread_id+1)%g_list
-                ! !  !          p => sim%part_group%p_list
-              do k = 1, sim%part_group%num_postprocess_particles(thread_id+1)
-
-                print*,  "WARNING (895848764): macros discarded for pic case, please update"
-
-                !                 GET_PARTICLE_POSITION(p_guard(k)%p,sim%mesh_2d,x,y)
-                !                 x = x + dt * p_guard(k)%p%vx
-                !                 y = y + dt * p_guard(k)%p%vy
-                !                 call apply_periodic_bc( sim%mesh_2d, x, y)
-                !
-                !                 SET_PARTICLE_POSITION(p_guard(k)%p,xmin,ymin,ncx,x,y,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
-                !                 SLL_ACCUMULATE_PARTICLE_CHARGE(q_accum,p_guard(k)%p,tmp5,tmp6)
-              end do
-              !$omp end parallel
-              !       ! reset any counters
-              gi = 0
-          else
-              ! nothing to do, particles have been put back in the periodic domain already
-          end if
-          !! -- --  [PIC ONLY] process the reserved particles [end]  -- --
-
-       endif
-
-       !  ------------------------------------------------------------------
-       !  ------
-       !  ------  PUSH PARTICLES [end]
-       !  ------
-       !  ------------------------------------------------------------------
-
-       !! -- --  parallel communications for rho ?? [begin]  -- --
-
-       if (sim%use_cubic_splines) then
-         print*, "error (0976765) cubic splines not implemented yet"
-         stop
-
-       else
-          call sum_accumulators( sim%q_accumulator_ptr, n_threads, ncx*ncy )
-          call sll_convert_charge_to_rho_2d_per_per( sim%q_accumulator_ptr(1)%q, sim%rho )     ! this name not clear enough
-       endif
-       do j = 1, ncy+1
-          do i = 1, ncx+1
-             rho1d_send(i+(j-1)*(ncx+1)) = sim%rho(i, j)
-             rho1d_receive(i+(j-1)*(ncx+1)) = 0._f64
-          enddo
-       enddo
-
-       call sll_collective_allreduce( sll_world_collective, rho1d_send, (ncx+1)*(ncy+1), &
+      call sll_collective_allreduce( sll_world_collective, rho1d_send, (ncx+1)*(ncy+1), &
             MPI_SUM, rho1d_receive   )
 
-       do j = 1, ncy+1
-          do i = 1, ncx+1
-             sim%rho(i, j) = rho1d_receive(i+(j-1)*(ncx+1))
-          enddo
-       enddo
+      do j = 1, ncy+1
+         do i = 1, ncx+1
+            sim%rho(i, j) = rho1d_receive(i+(j-1)*(ncx+1))
+         end do
+      end do
 
-       !! -- --  parallel communications for rho ?? [end]  -- --
+      !! -- --  parallel communications for rho ?? [end]  -- --
 
-       !! -- --  Poisson solver (computing E^{n+1}) -- --
+      !! -- --  Poisson solver (computing E^{n+1}) -- --
 
-       call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, -sim%rho )      !  I don't like this - sign...
+      call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, -sim%rho )      !  todo: replace - sign by Species charge...
 
-       !! -- --  diagnostics (plotting) [begin]  -- --
+      !! -- --  diagnostics (plotting) [begin]  -- --
 
-        if (sim%my_rank == 0 .and. mod(it, sim%plot_period)==0 ) then
+      if (sim%my_rank == 0 .and. mod(it, sim%plot_period)==0 ) then
 
-            print *, "writing f slice in gnuplot format for iteration # it = ", it, " / ", sim%num_iterations
-!            call plot_f_slice(sim%part_group, "f_slice", it)
+        print *, "writing f slice in gnuplot format for iteration # it = ", it, " / ", sim%num_iterations
 
-            call plot_f_slice_x_vx(sim%part_group,           &
-                                   sim%part_group%remapping_grid%eta1_min,   &
-                                   sim%part_group%remapping_grid%eta1_max,   &
-                                   sim%part_group%remapping_grid%eta2_min,   &
-                                   sim%part_group%remapping_grid%eta2_max,   &
-                                   sim%part_group%remapping_grid%eta3_min,   &
-                                   sim%part_group%remapping_grid%eta3_max,   &
-                                   sim%part_group%remapping_grid%eta4_min,   &
-                                   sim%part_group%remapping_grid%eta4_max,   &
-                                   sim%part_group%remapping_grid%num_cells1, &
-                                   sim%part_group%remapping_grid%num_cells2, &
-                                   sim%part_group%remapping_grid%num_cells3, &
-                                   sim%part_group%remapping_grid%num_cells4, &
-                                   sim%n_virtual_x_for_deposition,    &
-                                   sim%n_virtual_y_for_deposition,    &
-                                   sim%n_virtual_vx_for_deposition,   &
-                                   sim%n_virtual_vy_for_deposition,   &
-                                   "f_slice", it)
+        ! todo: use a slice plotting routine here
 
-        end if
+            ! this one works for lt_pic:
+!            call plot_f_slice_x_vx(sim%part_group,           &
+!                                   sim%part_group%remapping_grid%eta1_min,   &
+!                                   sim%part_group%remapping_grid%eta1_max,   &
+!                                   sim%part_group%remapping_grid%eta2_min,   &
+!                                   sim%part_group%remapping_grid%eta2_max,   &
+!                                   sim%part_group%remapping_grid%eta3_min,   &
+!                                   sim%part_group%remapping_grid%eta3_max,   &
+!                                   sim%part_group%remapping_grid%eta4_min,   &
+!                                   sim%part_group%remapping_grid%eta4_max,   &
+!                                   sim%part_group%remapping_grid%num_cells1, &
+!                                   sim%part_group%remapping_grid%num_cells2, &
+!                                   sim%part_group%remapping_grid%num_cells3, &
+!                                   sim%part_group%remapping_grid%num_cells4, &
+!                                   sim%n_virtual_x_for_deposition,    &
+!                                   sim%n_virtual_y_for_deposition,    &
+!                                   sim%n_virtual_vx_for_deposition,   &
+!                                   sim%n_virtual_vy_for_deposition,   &
+!                                   "f_slice", it)
 
-        if (sim%my_rank == 0 .and. mod(it+1, sim%remap_period)==0 ) then
+       end if
 
-           aaa
-            print *, "remapping f..."
-            call sll_lt_pic_4d_remap(sim%part_group)
+        ! todo: remap and plot here
 
-            print *, "writing (remapped) f slice in gnuplot format for iteration # it = ", it, " / ", sim%num_iterations
-
-            call plot_f_slice_x_vx(sim%part_group,           &
-                                   sim%part_group%remapping_grid%eta1_min,   &
-                                   sim%part_group%remapping_grid%eta1_max,   &
-                                   sim%part_group%remapping_grid%eta2_min,   &
-                                   sim%part_group%remapping_grid%eta2_max,   &
-                                   sim%part_group%remapping_grid%eta3_min,   &
-                                   sim%part_group%remapping_grid%eta3_max,   &
-                                   sim%part_group%remapping_grid%eta4_min,   &
-                                   sim%part_group%remapping_grid%eta4_max,   &
-                                   sim%part_group%remapping_grid%num_cells1, &
-                                   sim%part_group%remapping_grid%num_cells2, &
-                                   sim%part_group%remapping_grid%num_cells3, &
-                                   sim%part_group%remapping_grid%num_cells4, &
-                                   sim%n_virtual_x_for_deposition,    &
-                                   sim%n_virtual_y_for_deposition,    &
-                                   sim%n_virtual_vx_for_deposition,   &
-                                   sim%n_virtual_vy_for_deposition,   &
-                                   "f_slice_remapped", it)
-        end if
+!        if (sim%my_rank == 0 .and. mod(it+1, sim%remap_period)==0 ) then
+!
+!
+!            print *, "remapping f..."
+!            call sll_lt_pic_4d_remap(sim%part_group)
+!
+!            print *, "writing (remapped) f slice in gnuplot format for iteration # it = ", it, " / ", sim%num_iterations
+!
+!            call plot_f_slice_x_vx(sim%part_group,           &
+!                                   sim%part_group%remapping_grid%eta1_min,   &
+!                                   sim%part_group%remapping_grid%eta1_max,   &
+!                                   sim%part_group%remapping_grid%eta2_min,   &
+!                                   sim%part_group%remapping_grid%eta2_max,   &
+!                                   sim%part_group%remapping_grid%eta3_min,   &
+!                                   sim%part_group%remapping_grid%eta3_max,   &
+!                                   sim%part_group%remapping_grid%eta4_min,   &
+!                                   sim%part_group%remapping_grid%eta4_max,   &
+!                                   sim%part_group%remapping_grid%num_cells1, &
+!                                   sim%part_group%remapping_grid%num_cells2, &
+!                                   sim%part_group%remapping_grid%num_cells3, &
+!                                   sim%part_group%remapping_grid%num_cells4, &
+!                                   sim%n_virtual_x_for_deposition,    &
+!                                   sim%n_virtual_y_for_deposition,    &
+!                                   sim%n_virtual_vx_for_deposition,   &
+!                                   sim%n_virtual_vy_for_deposition,   &
+!                                   "f_slice_remapped", it)
+!        end if
 
         if (sim%my_rank == 0 .and. mod(it+1, sim%plot_period)==0 ) then
 
@@ -886,10 +797,10 @@ contains
                                 sim%E2, 'Ey', it+1, ierr )
             print *, "done."
 
-        endif
-
+        end if
 
        !! -- --  diagnostics (plotting E ) [end]  -- --
+
 
        !! -- --  diagnostics (computing energy) [begin]  -- --
         print *, "diag energy"
@@ -979,15 +890,15 @@ contains
   end subroutine delete_4d_generic_pic_cartesian
 
 
-  function in_bounds( x, y, mesh ) result(res)
-    logical :: res
-    sll_real64, intent(in) :: x
-    sll_real64, intent(in) :: y
-    type(sll_cartesian_mesh_2d), pointer :: mesh
-
-    res = (x >= mesh%eta1_min) .and. (x <= mesh%eta1_max) .and. &
-          (y >= mesh%eta2_min) .and. (y <= mesh%eta2_max)
-  end function in_bounds
+!  function in_bounds( x, y, mesh ) result(res)
+!    logical :: res
+!    sll_real64, intent(in) :: x
+!    sll_real64, intent(in) :: y
+!    type(sll_cartesian_mesh_2d), pointer :: mesh
+!
+!    res = (x >= mesh%eta1_min) .and. (x <= mesh%eta1_max) .and. &
+!          (y >= mesh%eta2_min) .and. (y <= mesh%eta2_max)
+!  end function in_bounds
 
 !  subroutine apply_periodic_bc( mesh, x, y )
 !    type(sll_cartesian_mesh_2d), pointer :: mesh
