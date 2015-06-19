@@ -26,6 +26,7 @@ SET(SUITESPARSE_ENABLED   OFF CACHE BOOL   "Enable UMFpack solvers")
 SET(BUILD_SIMULATIONS     ON  CACHE BOOL   "Build selalib simulations")
 SET(BUILD_PACKAGE         OFF CACHE BOOL   "Build selalib package")
 SET(BUILD_PARALUTION      OFF CACHE BOOL   "Build paralution library")
+SET(BUILD_SPRNG           OFF CACHE BOOL   "Build SPRNG libraries")
 SET(BUILD_JOREK           OFF CACHE BOOL   "Build jorek django solver")
 SET(PROCS                 4   CACHE STRING "Number of MPI processes for tests")
 SET(JOREK_GIT_BRANCH      selalib-branch CACHE STRING "Jorek branch to clone")
@@ -283,6 +284,31 @@ IF($ENV{PFUNIT})
     PREFIX pFunit
     GIT_REPOSITORY git://git.code.sf.net/p/pfunit/code
     CMAKE_ARGS -DINSTALL_PATH=${CMAKE_BINARY_DIR})
+
+ENDIF()
+
+IF(BUILD_SPRNG AND MPI_ENABLED)
+
+  IF(CMAKE_CXX_COMPILER_ID MATCHES Clang)
+
+    MESSAGE(STATUS "SPRNG: Your CXX compiler is Clang, change it to g++")
+
+  ELSE()
+    
+  INCLUDE(ExternalProject)
+
+  SET(SPRNG_VERSION 5 CACHE STRING "SPRNG version number")
+  
+
+  EXTERNALPROJECT_ADD( sprng
+     URL  http://www.sprng.org/Version5.0/sprng${SPRNG_VERSION}.tar.bz2
+     SOURCE_DIR ${CMAKE_BINARY_DIR}/sprng
+     BINARY_DIR ${CMAKE_BINARY_DIR}/sprng
+     UPDATE_COMMAND autoreconf -if
+     CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/sprng/configure --prefix=${CMAKE_BINARY_DIR}/sprng --with-mpi=yes LIBS=-lmpi_cxx CXX=${CMAKE_CXX_COMPILER} OMPI_CXX=${CMAKE_CXX_COMPILER}
+     BUILD_COMMAND ${MAKE}
+  )
+  ENDIF()
 
 ENDIF()
 
