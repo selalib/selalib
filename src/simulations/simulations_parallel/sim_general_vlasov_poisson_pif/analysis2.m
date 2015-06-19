@@ -35,7 +35,7 @@ time=DATA(:,1);
 l2potential=DATA(:,6);
 energy_error=DATA(:,4);
 
-modeidx=13;
+%modeidx=13;
 
 
 
@@ -51,11 +51,20 @@ close all;
 figure;
 semilogy(time, l2potential); hold on;
 semilogy(time, l2potential(1)*exp(gamma.*time))
+
+
 semilogy(time,phi(15,:));
 
-% 
-% phim=phi(15,:);
-%  phim=[fliplr(phim),phim];
+
+%------------- Fourier transform in time
+ 
+size(phi)
+
+phim=[fliplr(phi), phi   ];
+phim=abs(fft(phim,[],2));
+
+semilogy(phim.')
+
 % 
 % fphim=fft(log(phim));
 % fphim(40:end)=0;
@@ -71,7 +80,7 @@ semilogy(time,phi(15,:));
 % 
 % fphim=abs(fft((fun(time))));
 % semilogy(fphim(2:40));hold on;
-
+%---------------------------------------
 
 semilogy(time,fun(time));
 
