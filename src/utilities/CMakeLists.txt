@@ -5,6 +5,7 @@ SET( SRC_UTILITIES
   sll_primitives.F90
   choleski.F90
   fornberg.F90
+  kiss.F90
   sol.f
   muls.f )
 
