@@ -3,18 +3,18 @@ program test_deboor_dirichlet
 #include "sll_working_precision.h"
 #include "sll_constants.h"
 #include "sll_assert.h"
+#include "sll_deboor_splines.h"
 
 implicit none
 
 type :: sll_bsplines
 
-  sll_int32               :: n
-  sll_int32               :: k
-  sll_real64, allocatable :: tau(:)
-  sll_real64, allocatable :: t(:)
-  sll_real64, allocatable :: q(:)
-  sll_real64, allocatable :: bcoef(:)
-  sll_real64, allocatable :: scrtch(:)
+  sll_int32           :: n
+  sll_int32           :: k
+  sll_real64, pointer :: tau(:)
+  sll_real64, pointer :: t(:)
+  sll_real64, pointer :: q(:)
+  sll_real64, pointer :: bcoef(:)
 
 end type sll_bsplines
 
@@ -22,10 +22,6 @@ type(sll_bsplines) :: bsplines
 
 sll_real64, dimension(:), allocatable :: x
 sll_real64, dimension(:), allocatable :: y
-sll_int32                             :: n
-sll_int32                             :: m
-sll_int32                             :: k
-sll_int32                             :: mflag
 sll_int32                             :: ierr
 sll_real64, dimension(:), allocatable :: gtau
 sll_real64, dimension(:), allocatable :: htau
@@ -33,8 +29,10 @@ sll_real64, dimension(:), allocatable :: htau
 sll_int32                             :: i
 sll_int32                             :: nx
 
-sll_real64 :: tau_min = 0.0_f64
-sll_real64 :: tau_max = 1.0_f64
+sll_int32 , parameter :: n = 10
+sll_int32 , parameter :: k = 3
+sll_real64, parameter :: tau_min = 0.0_f64
+sll_real64, parameter :: tau_max = 1.0_f64
 
 ! TAU(N),      the data point abscissas. TAU should be strictly increasing.
 ! TAU_der(M),  the node index to evaluate the derivative.
@@ -63,27 +61,33 @@ do i = 1, nx
   x(i) = (i-1)*1.0_f64/(nx-1)
 end do
 
-k = 4
-n = 10
-m = 2
-
 call initialize_bsplines(bsplines, n, k, tau_min, tau_max)
 
-call compute_interpolants(bsplines)
+call build_system(bsplines)
 
 SLL_ALLOCATE(gtau(n),ierr)
 gtau = cos(2*sll_pi*bsplines%tau)
-call interpolate_array_values( bsplines, gtau, nx, x, y)
+call compute_coefficients( bsplines, gtau)
+call interpolate_array_values( bsplines, nx, x, y)
+do i = 1, n
+  write(11,*) bsplines%tau(i), gtau(i)
+end do
 do i = 1, nx
   write(12,*) x(i), y(i), cos(2*sll_pi*x(i))
 end do
+print*, "error = ", maxval(abs(y-cos(2*sll_pi*x)))
 
 SLL_ALLOCATE(htau(n),ierr)
 htau = sin(2*sll_pi*bsplines%tau)
-call interpolate_array_values( bsplines, htau, nx, x, y)
-do i = 1, nx
-  write(13,*) x(i), y(i), sin(2*sll_pi*x(i))
+call compute_coefficients( bsplines, htau)
+call interpolate_array_values( bsplines, nx, x, y)
+do i = 1, n
+  write(21,*) bsplines%tau(i),htau(i)
 end do
+do i = 1, nx
+  write(22,*) x(i), y(i), sin(2*sll_pi*x(i))
+end do
+print*, "error = ", maxval(abs(y-sin(2*sll_pi*x)))
 
 print*, 'PASSED'
 
@@ -110,15 +114,26 @@ subroutine initialize_bsplines(this, n, k, tau_min, tau_max)
 
   SLL_ALLOCATE(this%t(n+k), iflag)
 
-  SLL_ALLOCATE(this%scrtch((n-k)*(2*k+3)+5*k+3), iflag)
-  call splopt ( this%tau, n, k, this%scrtch, this%t, iflag )
+  this%t(1:k) = this%tau(1)
+  if ( mod(k,2) == 0 ) then
+    do i = k+1,n
+      this%t(i) = this%tau(i-k/2)
+    end do
+  else
+    do i = k+1, n
+      this%t(i) = 0.5*(this%tau(i-(k-1)/2)+this%tau(i-1-(k-1)/2))
+    end do
+  end if
+  do i = n+1,n+k
+    this%t(i) = this%tau(n)
+  end do
 
   SLL_ALLOCATE(this%q(1:(2*k-1)*n), iflag)
   SLL_ALLOCATE(this%bcoef(n), iflag)
 
 end subroutine initialize_bsplines
 
-subroutine compute_interpolants(this)
+subroutine build_system(this)
   
   type(sll_bsplines)     :: this 
 
@@ -129,6 +144,7 @@ subroutine compute_interpolants(this)
   sll_int32              :: kpkm2
   sll_int32              :: left
   sll_int32              :: iflag
+  sll_int32              :: mflag
   sll_real64             :: taui
 
   n = this%n
@@ -162,19 +178,12 @@ subroutine compute_interpolants(this)
     stop
   end if
 
-end subroutine compute_interpolants
+end subroutine build_system
 
-
-subroutine interpolate_array_values( this, gtau, nx, x, y)
+subroutine compute_coefficients( this, gtau)
 
   type(sll_bsplines)      :: this 
   sll_real64, intent(in)  :: gtau(:)
-  sll_int32,  intent(in)  :: nx
-  sll_real64, intent(in)  :: x(nx)
-  sll_real64, intent(out) :: y(nx)
-  sll_real64              :: bvalue
-
-  sll_int32              :: i
   
   SLL_ASSERT(size(gtau) == this%n)
 
@@ -183,6 +192,17 @@ subroutine interpolate_array_values( this, gtau, nx, x, y)
   
   call banslv( this%q, this%k+this%k-1, n, this%k-1, this%k-1, this%bcoef )
 
+end subroutine compute_coefficients
+
+subroutine interpolate_array_values( this, nx, x, y)
+
+  type(sll_bsplines)      :: this 
+  sll_int32,  intent(in)  :: nx
+  sll_real64, intent(in)  :: x(nx)
+  sll_real64, intent(out) :: y(nx)
+
+  sll_int32              :: i
+  
   do i = 1, nx
     y(i) = bvalue( this%t, this%bcoef, this%n, this%k, x(i), 0)
   end do
