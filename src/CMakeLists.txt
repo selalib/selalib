@@ -292,22 +292,26 @@ IF(BUILD_SPRNG AND MPI_ENABLED)
   IF(CMAKE_CXX_COMPILER_ID MATCHES Clang)
 
     MESSAGE(STATUS "SPRNG: Your CXX compiler is Clang, change it to g++")
+    SET(SPRNG_ENABLED OFF)
 
   ELSE()
     
-  INCLUDE(ExternalProject)
-
-  SET(SPRNG_VERSION 5 CACHE STRING "SPRNG version number")
+    INCLUDE(ExternalProject)
   
+    SET(SPRNG_VERSION 5 CACHE STRING "SPRNG version number")
 
-  EXTERNALPROJECT_ADD( sprng
-     URL  http://www.sprng.org/Version5.0/sprng${SPRNG_VERSION}.tar.bz2
-     SOURCE_DIR ${CMAKE_BINARY_DIR}/sprng
-     BINARY_DIR ${CMAKE_BINARY_DIR}/sprng
-     UPDATE_COMMAND autoreconf -if
-     CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/sprng/configure --prefix=${CMAKE_BINARY_DIR}/sprng --with-mpi=yes LIBS=-lmpi_cxx CXX=${CMAKE_CXX_COMPILER} OMPI_CXX=${CMAKE_CXX_COMPILER}
-     BUILD_COMMAND ${MAKE}
-  )
+    EXTERNALPROJECT_ADD( sprng
+       URL  http://www.sprng.org/Version5.0/sprng${SPRNG_VERSION}.tar.bz2
+       SOURCE_DIR ${CMAKE_BINARY_DIR}/sprng
+       BINARY_DIR ${CMAKE_BINARY_DIR}/sprng
+       UPDATE_COMMAND autoreconf -if
+       CONFIGURE_COMMAND ""
+       BUILD_COMMAND ${MAKE}
+       INSTALL_COMMAND ""
+    )
+  
+       #CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/sprng/configure --prefix=${CMAKE_BINARY_DIR}/sprng --with-mpi=yes CXX=${MPI_CXX_COMPILER} OMPI_CXX=${CMAKE_CXX_COMPILER}
+
   ENDIF()
 
 ENDIF()
