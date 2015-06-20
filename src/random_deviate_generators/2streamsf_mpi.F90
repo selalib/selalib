@@ -10,7 +10,7 @@ program twostreamsf_mpi
 use mpi
 implicit none
 
-!#include "sprng_f.h"
+#include "sprng_f.h"
 
 integer       :: streamnum,commNum, nstreams, seed
 integer       :: stream, commonStream
@@ -30,18 +30,20 @@ nstreams = nprocs +1 !extra stream is common to all processes
 seed = 985456376
 
 !--- node 0 is reading in a generator type
-if (myid .eq. 0) then	
-  print *, 'Available generators; use corresponding numeral:'
-  print *, '   lfg     --- 0 '
-  print *, '   lcg     --- 1 '
-  print *, '   lcg64     --- 2 '
-  print *, '   cmrg     --- 3 '
-  print *, '   mlfg     --- 4 '
-  print *, '   pmlcg     --- 5 '
-  print *,'Type in a generator type (integers: 0,1,2,3,4,5):  '
-  read *, gtype
-endif
-call MPI_BCAST(gtype,1, MPI_INTEGER,0,MPI_COMM_WORLD,ierror)
+!if (myid .eq. 0) then
+!  print *, 'Available generators; use corresponding numeral:'
+!  print *, '   lfg     --- 0 '
+!  print *, '   lcg     --- 1 '
+!  print *, '   lcg64   --- 2 '
+!  print *, '   cmrg    --- 3 '
+!  print *, '   mlfg    --- 4 '
+!  print *, '   pmlcg   --- 5 '
+!  print *,'Type in a generator type (integers: 0,1,2,3,4,5):  '
+!  read *, gtype
+!endif
+!call MPI_BCAST(gtype,1, MPI_INTEGER,0,MPI_COMM_WORLD,ierror)
+
+gtype = 0
 
 !  This stream is different on each process
 stream = init_sprng(gtype,streamnum,nstreams,seed,SPRNG_DEFAULT)
