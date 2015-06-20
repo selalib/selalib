@@ -289,13 +289,6 @@ ENDIF()
 
 IF(BUILD_SPRNG AND MPI_ENABLED)
 
-  IF(CMAKE_CXX_COMPILER_ID MATCHES Clang)
-
-    MESSAGE(STATUS "SPRNG: Your CXX compiler is Clang, change it to g++")
-    SET(SPRNG_ENABLED OFF)
-
-  ELSE()
-    
     INCLUDE(ExternalProject)
   
     SET(SPRNG_VERSION 5 CACHE STRING "SPRNG version number")
@@ -311,8 +304,6 @@ IF(BUILD_SPRNG AND MPI_ENABLED)
     )
   
        #CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/sprng/configure --prefix=${CMAKE_BINARY_DIR}/sprng --with-mpi=yes CXX=${MPI_CXX_COMPILER} OMPI_CXX=${CMAKE_CXX_COMPILER}
-
-  ENDIF()
 
 ENDIF()
 
