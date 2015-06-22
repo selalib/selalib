@@ -282,6 +282,7 @@ contains
     character(len=256)      :: filename_loc
     logical :: feet_inside1 
     logical :: feet_inside2
+    logical :: precompute_rhs
 
     !here we do all the initialization
     !in future, we will use namelist file
@@ -341,7 +342,8 @@ contains
       mudpack_method, &    
       spline_degree_eta1, &
       spline_degree_eta2, &
-      es_control_case    
+      es_control_case, &
+      precompute_rhs    
       
      namelist /boundaries/ &
       bc_interp2d_eta1, &
@@ -416,7 +418,9 @@ contains
     !poisson 
     !poisson_solver = "SLL_ELLIPTIC_FINITE_ELEMENT_SOLVER" !use with "SLL_PHI_FROM_RHO"
     poisson_solver = "SLL_MUDPACK_CURVILINEAR"   !use with "SLL_PHI_FROM_RHO"    
-    es_control_case = "SLL_SOLVE_ELLIPTIC_SOLVER" 
+    es_control_case = "SLL_SOLVE_ELLIPTIC_SOLVER"
+    precompute_rhs = .false.
+     
     !mudpack_method = SLL_NON_SEPARABLE_WITH_CROSS_TERMS  
 #ifdef MUDPACK
     print *,'#MUDPACK IS ON'
@@ -532,9 +536,9 @@ contains
       case ("SLL_DIRICHLET")
         print*,"#bc_eta1_left = SLL_DIRICHLET"  
         sim%bc_eta1_left = SLL_DIRICHLET
-      case ("SLL_NEUMANN")
-        print*,"#bc_eta1_left = SLL_NEUMANN"  
-        sim%bc_eta1_left = SLL_NEUMANN
+!      case ("SLL_NEUMANN")
+!        print*,"#bc_eta1_left = SLL_NEUMANN"  
+!        sim%bc_eta1_left = SLL_NEUMANN
       case default
         print *,'#bad bc_eta1_left',bc_eta1_left
         print *,'#not implemented'
@@ -588,9 +592,9 @@ contains
       case ("SLL_PERIODIC")
         print*,"#bc_interp2d_eta1= SLL_PERIODIC" 
         sim%bc_interp2d_eta1 = SLL_PERIODIC
-      case ("SLL_DIRICHLET")
-        print*,"#bc_interp2d_eta1 = SLL_DIRICHLET"  
-        sim%bc_interp2d_eta1= SLL_DIRICHLET
+!      case ("SLL_DIRICHLET")
+!        print*,"#bc_interp2d_eta1 = SLL_DIRICHLET"  
+!        sim%bc_interp2d_eta1= SLL_DIRICHLET
       case ("SLL_HERMITE")
         print*,"#bc_interp2d_eta1 = SLL_HERMITE"  
         sim%bc_interp2d_eta1= SLL_HERMITE 
@@ -605,9 +609,9 @@ contains
       case ("SLL_PERIODIC")
         print*,"#bc_interp2d_eta2= SLL_PERIODIC" 
         sim%bc_interp2d_eta2 = SLL_PERIODIC
-      case ("SLL_DIRICHLET")
-        print*,"#bc_interp2d_eta2 = SLL_DIRICHLET"  
-        sim%bc_interp2d_eta2= SLL_DIRICHLET
+!      case ("SLL_DIRICHLET")
+!        print*,"#bc_interp2d_eta2 = SLL_DIRICHLET"  
+!        sim%bc_interp2d_eta2= SLL_DIRICHLET
       case ("SLL_HERMITE")
         print*,"#bc_interp2d_eta2 = SLL_HERMITE"  
         sim%bc_interp2d_eta2= SLL_HERMITE 
@@ -1265,6 +1269,8 @@ contains
          sim%bc_eta1_right, &
          sim%bc_eta2_left, &
          sim%bc_eta2_right, &
+         sim%bc_interp2d_eta1, &
+         sim%bc_interp2d_eta2, &
          eta1_min, &
          eta1_max, &
          eta2_min, &
@@ -1275,7 +1281,8 @@ contains
          sim%b22, & 
          sim%b1, & 
          sim%b2, & 
-         sim%c ) 
+         sim%c, &
+         precompute_rhs=precompute_rhs ) 
       case default
         print *,'#bad poisson_case',poisson_solver
         print *,'#not implemented'

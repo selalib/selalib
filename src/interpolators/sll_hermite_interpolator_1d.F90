@@ -221,7 +221,8 @@ end function
 
 subroutine delete_hi1d (obj)
   class(sll_hermite_interpolator_1d) :: obj
-  call delete(obj%hermite)
+  !should be fixed; for the moment just commented
+  !call delete(obj%hermite)
 end subroutine delete_hi1d
 
 

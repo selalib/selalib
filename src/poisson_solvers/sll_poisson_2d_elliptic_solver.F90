@@ -32,6 +32,7 @@ module sll_module_poisson_2d_elliptic_solver
   use sll_general_coordinate_elliptic_solver_module
   use sll_module_scalar_field_2d_base
   use sll_module_scalar_field_2d
+  use sll_module_cubic_spline_interpolator_2d
 implicit none
 
   sll_int32, parameter :: SLL_NO_SOLVE_ELLIPTIC_SOLVER = 0 
@@ -49,7 +50,8 @@ implicit none
     class(sll_scalar_field_2d_base), pointer                :: b1_field
     class(sll_scalar_field_2d_base), pointer                :: b2_field
     class(sll_scalar_field_2d_base), pointer                :: c_field
-    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_rho
+    class(sll_interpolator_2d_base), pointer                           :: interp_rho
+    !type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_rho
     type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_phi
     type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_a11
     type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_a12
@@ -84,6 +86,8 @@ contains
    bc_eta1_right, &
    bc_eta2_left, &
    bc_eta2_right, &
+   bc_interp2d_eta1, &
+   bc_interp2d_eta2, &
    eta1_min, &
    eta1_max, &
    eta2_min, &
@@ -95,7 +99,8 @@ contains
    b1_values,&
    b2_values,&
    c_values, &
-   control) 
+   control, &
+   precompute_rhs) 
    
    class(poisson_2d_elliptic_solver),        target  :: poisson
    class(sll_coordinate_transformation_2d_base), pointer :: transf
@@ -107,6 +112,8 @@ contains
    sll_int32, intent(in)  :: bc_eta1_right
    sll_int32, intent(in)  :: bc_eta2_left
    sll_int32, intent(in)  :: bc_eta2_right
+   sll_int32, intent(in)  :: bc_interp2d_eta1
+   sll_int32, intent(in)  :: bc_interp2d_eta2
    sll_int32, intent(in)  :: quadrature_type1
    sll_int32, intent(in)  :: quadrature_type2
    sll_real64, intent(in) :: eta1_min
@@ -123,6 +130,8 @@ contains
    sll_real64, dimension(:,:)          :: b2_values
    sll_real64, dimension(:,:)          :: c_values
    sll_int32, intent(in), optional :: control
+   logical, intent(in), optional :: precompute_rhs
+   logical :: local_precompute_rhs
    sll_int32 :: np_eta1
    sll_int32 :: np_eta2
    sll_int32 :: ierr
@@ -133,6 +142,12 @@ contains
      poisson%control = control
    else
      poisson%control =  SLL_SOLVE_ELLIPTIC_SOLVER 
+   endif
+   
+   if(present(precompute_rhs))then
+     local_precompute_rhs = precompute_rhs
+   else
+     local_precompute_rhs =  .false. 
    endif
    
    if(poisson%control==SLL_DO_NOTHING_ELLIPTIC_SOLVER)then
@@ -160,8 +175,11 @@ contains
          bc_eta2_right,&
          spline_degree_eta1, &
          spline_degree_eta2)
-   
-   call poisson%interp_rho%initialize( &
+
+
+
+   if(local_precompute_rhs)then
+     poisson%interp_rho => new_arbitrary_degree_spline_interp2d( &
          np_eta1, &
          np_eta2, &
          eta1_min, &
@@ -174,6 +192,18 @@ contains
          bc_eta2_right,&
          spline_degree_eta1, &
          spline_degree_eta2)
+   else
+     poisson%interp_rho => new_cubic_spline_interpolator_2d( &
+          np_eta1, &
+          np_eta2, &
+          eta1_min, &
+          eta1_max, &
+          eta2_min, &
+          eta2_max, &
+          bc_interp2d_eta1, &
+          bc_interp2d_eta2)                
+   endif
+   
        
     call poisson%interp_a11%initialize( &
          np_eta1, &
@@ -415,7 +445,8 @@ contains
         eta1_min, &
         eta1_max, &
         eta2_min, &
-        eta2_max )
+        eta2_max, &
+        local_precompute_rhs )
         
     ! compute matrix the field
     print *,'#begin factorize_mat_es'
@@ -446,6 +477,8 @@ contains
    bc_eta1_right, &
    bc_eta2_left, &
    bc_eta2_right, &
+   bc_interp2d_eta1, &
+   bc_interp2d_eta2, &
    eta1_min, &
    eta1_max, &
    eta2_min, &
@@ -457,7 +490,8 @@ contains
    b1_values,&
    b2_values,&
    c_values, &
-   control ) &
+   control, & 
+   precompute_rhs ) &
    result(poisson)
    
    class(poisson_2d_elliptic_solver),        pointer  :: poisson
@@ -470,6 +504,8 @@ contains
    sll_int32, intent(in)  :: bc_eta1_right
    sll_int32, intent(in)  :: bc_eta2_left
    sll_int32, intent(in)  :: bc_eta2_right
+   sll_int32, intent(in)  :: bc_interp2d_eta1
+   sll_int32, intent(in)  :: bc_interp2d_eta2
    sll_int32, intent(in)  :: quadrature_type1
    sll_int32, intent(in)  :: quadrature_type2
    sll_real64, intent(in) :: eta1_min
@@ -486,6 +522,7 @@ contains
    sll_real64, dimension(:,:)          :: b2_values
    sll_real64, dimension(:,:)          :: c_values
    sll_int32, intent(in), optional     :: control
+   logical, intent(in), optional     :: precompute_rhs
    !sll_int32 :: np_eta1
    !sll_int32 :: np_eta2
    sll_int32 :: ierr
@@ -503,6 +540,8 @@ contains
    bc_eta1_right, &
    bc_eta2_left, &
    bc_eta2_right, &
+   bc_interp2d_eta1, &
+   bc_interp2d_eta2, &
    eta1_min, &
    eta1_max, &
    eta2_min, &
@@ -514,7 +553,8 @@ contains
    b1_values, &
    b2_values, &
    c_values, &
-   control)  
+   control, &
+   precompute_rhs)  
    
   end function new_poisson_2d_elliptic_solver
   
