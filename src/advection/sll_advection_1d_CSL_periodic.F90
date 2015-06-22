@@ -727,7 +727,7 @@ contains
     sll_real64 :: df1
     sll_real64 :: w_deriv_left(4)    
     sll_real64 :: w_deriv_right(4)    
-    sll_real64 :: N
+    sll_int32 :: N
     sll_int32 :: ind
     
     w_deriv_left = (/-5.5_f64,9._f64,-4.5_f64,1._f64 /)
@@ -1612,9 +1612,9 @@ contains
 
 
   subroutine compute_csl_ww(ww,r,s)
-    sll_real64, dimension(r:s-1), intent(out) :: ww
     sll_int32, intent(in) :: r
     sll_int32, intent(in) :: s
+    sll_real64, dimension(r:s-1), intent(out) :: ww
     sll_real64, dimension(:), allocatable :: w
     sll_real64 :: tmp
     sll_int32 :: i
@@ -1698,10 +1698,10 @@ contains
   function contribution_gauss_lagrange(a,b,xval,fval,r,s,xw,ng) result(res)
     sll_real64, intent(in) :: a
     sll_real64, intent(in) :: b
-    sll_real64, dimension(r:s), intent(in) :: xval
-    sll_real64, dimension(r:s), intent(in) :: fval
     sll_int32, intent(in) :: r
     sll_int32, intent(in) :: s
+    sll_real64, dimension(r:s), intent(in) :: xval
+    sll_real64, dimension(r:s), intent(in) :: fval
     sll_real64, dimension(:,:), intent(in) ::xw
     sll_int32, intent(in) :: ng
     sll_real64 :: res
