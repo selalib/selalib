@@ -2,11 +2,12 @@ module sll_module_deboor_splines_1d
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
+#include "sll_assert.h"
+
 implicit none 
   
 contains
   
-    
 !*************************************************************************
 !
 !! INTERV brackets a real value in an ascending vector of values.
@@ -77,146 +78,114 @@ contains
 !
 subroutine interv( xt, lxt, x, left, mflag )
  
- sll_int32,intent(in):: lxt
- sll_int32,intent(out):: left
- sll_int32,intent(out):: mflag
- sll_int32:: ihi
- sll_int32, save :: ilo = 1
- sll_int32:: istep
- sll_int32:: middle
- sll_real64,intent(in) ::x
- sll_real64,dimension(:):: xt!(lxt)
+sll_real64, intent(in)  :: xt(:)
+sll_int32,  intent(in)  :: lxt
+sll_real64, intent(in)  :: x
+sll_int32,  intent(out) :: left
+sll_int32,  intent(out) :: mflag
 
- 
- ihi = ilo + 1
- 
- if ( lxt <= ihi ) then
-    
-    if ( xt(lxt) <= x ) then
-       go to 110
-    end if
-    
-    if ( lxt <= 1 ) then
-       mflag = -1
-       left = 1
-       return
-    end if
-    
-    ilo = lxt - 1
-    ihi = lxt
-    
- end if
- 
- if ( xt(ihi) <= x ) then
-    go to 20
- end if
- 
- if ( xt(ilo) <= x ) then
-    mflag = 0
-    left = ilo
-    return
- end if
- !
- !  Now X < XT(ILO).  Decrease ILO to capture X.
- !
- istep = 1
-    
+sll_int32               :: ihi
+sll_int32, save         :: ilo = 1
+sll_int32               :: istep
+sll_int32               :: middle
+
+ihi = ilo + 1
+if ( lxt <= ihi ) then
+   if ( xt(lxt) <= x ) then
+      go to 110
+   end if
+   if ( lxt <= 1 ) then
+      mflag = -1
+      left = 1
+      return
+   end if
+   ilo = lxt - 1
+   ihi = lxt
+end if
+if ( xt(ihi) <= x ) then
+   go to 20
+end if
+if ( xt(ilo) <= x ) then
+   mflag = 0
+   left = ilo
+   return
+end if
+!
+!  Now X < XT(ILO).  Decrease ILO to capture X.
+!
+istep = 1
 10  continue
-    
-    ihi = ilo
-    ilo = ihi - istep
-    
-    if ( 1 < ilo ) then
-       if ( xt(ilo) <= x ) then
-          go to 50
-       end if
-       istep = istep * 2
-       go to 10
-    end if
-    
-    ilo = 1
-    
-    if ( x < xt(1) ) then
-       mflag = -1
-       left = 1
-       return
-    end if
-    
-    go to 50
-    !
-    !  Now XT(IHI) <= X.  Increase IHI to capture X.
-    !
+ihi = ilo
+ilo = ihi - istep
+if ( 1 < ilo ) then
+   if ( xt(ilo) <= x ) then
+      go to 50
+   end if
+   istep = istep * 2
+   go to 10
+end if
+ilo = 1
+if ( x < xt(1) ) then
+   mflag = -1
+   left = 1
+   return
+end if
+go to 50
+!
+!  Now XT(IHI) <= X.  Increase IHI to capture X.
+!
 20  continue
-    
-    istep = 1
-    
+istep = 1
 30  continue
-    
-    ilo = ihi
-    ihi = ilo + istep
-    
-    if ( ihi < lxt ) then
-       
-       if ( x < xt(ihi) ) then
-          go to 50
-       end if
-       
-       istep = istep * 2
-       go to 30
-       
-    end if
-    
-    if ( xt(lxt) <= x ) then
-       go to 110
-    end if
-    !
-    !  Now XT(ILO) < = X < XT(IHI).  Narrow the interval.
-    !
-    ihi = lxt
-    
+ilo = ihi
+ihi = ilo + istep
+if ( ihi < lxt ) then
+   if ( x < xt(ihi) ) then
+      go to 50
+   end if
+   istep = istep * 2
+   go to 30
+end if
+if ( xt(lxt) <= x ) then
+   go to 110
+end if
+!
+!  Now XT(ILO) < = X < XT(IHI).  Narrow the interval.
+!
+ihi = lxt
 50  continue
-    
-    do
-       
-       middle = ( ilo + ihi ) / 2
-       
-       if ( middle == ilo ) then
-          mflag = 0
-          left = ilo
-          return
-       end if
-       !
-       !  It is assumed that MIDDLE = ILO in case IHI = ILO+1.
-       !
-       if ( xt(middle) <= x ) then
-          ilo = middle
-       else
-          ihi = middle
-       end if
-       
-    end do
-    !
-    !  Set output and return.
-    !
-    
-    
+do
+  middle = ( ilo + ihi ) / 2
+  if ( middle == ilo ) then
+     mflag = 0
+     left = ilo
+     return
+  end if
+  !
+  !  It is assumed that MIDDLE = ILO in case IHI = ILO+1.
+  !
+  if ( xt(middle) <= x ) then
+     ilo = middle
+  else
+     ihi = middle
+  end if
+   
+end do
+!
+!  Set output and return.
+!
 110 continue
-    
-    mflag = 1
-    
-    if ( x == xt(lxt) ) then
-       mflag = 0
-    end if
-    
-    do left = lxt, 1, -1
-       if ( xt(left) < xt(lxt) ) then
-          return
-       end if
-    end do
-    
-    return
+mflag = 1
+if ( x == xt(lxt) ) then
+   mflag = 0
+end if
+do left = lxt, 1, -1
+   if ( xt(left) < xt(lxt) ) then
+      return
+   end if
+end do
 
-  end subroutine interv
+end subroutine interv
 
 !***********************************************************************
 !
@@ -255,7 +224,7 @@ subroutine interv( xt, lxt, x, left, mflag )
 !  Modified:
 !
 !    14 February 2007
-!
+!interpolate_values_cs1d
 !  Author:
 !
 !    Carl DeBoor
@@ -304,71 +273,64 @@ subroutine interv( xt, lxt, x, left, mflag )
 !    with the B-spline B(LEFT-JOUT+I,JOUT,T) on the interval
 !    (T(LEFT),T(LEFT+1)).
 !
-  subroutine bsplvb ( t, jhigh, index, x, left, biatx )
-    
-    sll_int32, parameter :: jmax = 20
-    
-    sll_int32:: jhigh
-    
-    sll_real64,dimension(jhigh):: biatx !(jhigh)
-    sll_real64, save, dimension ( jmax ) :: deltal
-    sll_real64, save, dimension ( jmax ) :: deltar
-    sll_int32:: i
-    sll_int32:: index
-    sll_int32, save :: j = 1
-    sll_int32:: left
-    sll_real64:: saved
-    sll_real64,dimension(left+jhigh):: t!() left+jhigh
-    sll_real64:: term
-    sll_real64:: x
-    
-    if ( index == 1 ) then
-       j = 1
-       biatx(1) = 1.0_8
-       if ( jhigh <= j ) then
-          return
-       end if
-    end if
-    
-    if ( t(left+1) <= t(left) ) then
-       print*,'x=',x
-       write ( *, '(a)' ) ' '
-       write ( *, '(a)' ) 'BSPLVB - Fatal error!'
-       write ( *, '(a)' ) '  It is required that T(LEFT) < T(LEFT+1).'
-       write ( *, '(a,i8)' ) '  But LEFT = ', left
-       write ( *, '(a,g14.6)' ) '  T(LEFT) =   ', t(left)
-       write ( *, '(a,g14.6)' ) '  T(LEFT+1) = ', t(left+1)
-       stop
-    end if
-    
-    do
-       
-       deltar(j) = t(left+j) - x
-       deltal(j) = x - t(left+1-j)
-       
-       saved = 0.0_f64
-       do i = 1, j
-          term = biatx(i) / ( deltar(i) + deltal(j+1-i) )
-          biatx(i) = saved + deltar(i) * term
-          saved = deltal(j+1-i) * term
-       end do
-    
-       biatx(j+1) = saved
-       j = j + 1
-       
-       if ( jhigh <= j ) then
-          
-          exit
-       end if
-    
-    end do
-    
-    return
-  end subroutine bsplvb
+subroutine bsplvb ( t, jhigh, index, x, left, biatx )
   
+sll_int32,  intent(in)  :: jhigh
+sll_int32,  intent(in)  :: index
+sll_real64, intent(in)  :: x
+sll_int32,  intent(in)  :: left
+sll_real64, intent(in)  :: t(left+jhigh)
+sll_real64, intent(out) :: biatx (jhigh)
+
+sll_int32,  parameter             :: jmax = 20
+sll_real64, save, dimension(jmax) :: deltal
+sll_real64, save, dimension(jmax) :: deltar
+sll_int32                         :: i
+sll_int32, save                   :: j = 1
+sll_real64                        :: saved
+sll_real64                        :: term
 
 
+if ( index == 1 ) then
+  j = 1
+  biatx(1) = 1.0_8
+  if ( jhigh <= j ) then
+     return
+  end if
+end if
 
+if ( t(left+1) <= t(left) ) then
+  print*,'x=',x
+  write ( *, '(a)' ) ' '
+  write ( *, '(a)' ) 'BSPLVB - Fatal error!'
+  write ( *, '(a)' ) '  It is required that T(LEFT) < T(LEFT+1).'
+  write ( *, '(a,i8)' ) '  But LEFT = ', left
+  write ( *, '(a,g14.6)' ) '  T(LEFT) =   ', t(left)
+  write ( *, '(a,g14.6)' ) '  T(LEFT+1) = ', t(left+1)
+  stop
+end if
+
+do
+   
+  deltar(j) = t(left+j) - x
+  deltal(j) = x - t(left+1-j)
+  
+  saved = 0.0_f64
+  do i = 1, j
+     term = biatx(i) / ( deltar(i) + deltal(j+1-i) )
+     biatx(i) = saved + deltar(i) * term
+     saved = deltal(j+1-i) * term
+  end do
+
+  biatx(j+1) = saved
+  j = j + 1
+  
+  if ( jhigh <= j ) exit
+
+end do
+
+end subroutine bsplvb
+  
 !*************************************************************************
 !
 !! BSPLVD calculates the nonvanishing B-splines and derivatives at X.
@@ -424,26 +386,25 @@ subroutine interv( xt, lxt, x, left, mflag )
 !
 subroutine bsplvd ( t, k, x, left, a, dbiatx, nderiv )
     
-sll_int32 :: k
-sll_int32 :: left
-sll_int32 :: nderiv
+sll_int32,  intent(in)    :: k
+sll_real64, intent(in)    :: x
+sll_int32,  intent(in)    :: left
+sll_real64, intent(in)    :: t(left+k)
+sll_real64, intent(inout) :: a(k,k)
+sll_int32,  intent(in)    :: nderiv
+sll_real64, intent(out)   :: dbiatx(k,nderiv)
 
-sll_real64, dimension(k,k):: a!(k,k)
-sll_real64,dimension(k,nderiv), intent(out) :: dbiatx!(k,nderiv)
-sll_real64:: factor
-sll_real64:: fkp1mm
-sll_int32 :: i
-sll_int32 :: ideriv
-sll_int32 :: il
-sll_int32 :: j
-sll_int32 :: jlow
-sll_int32 :: jp1mid
-sll_int32 :: ldummy
-sll_int32 :: m
-sll_int32 :: mhigh
-!  sll_real64 sum1  ! this one is not used...
-sll_real64,dimension(left+k):: t ! (left+k)
-sll_real64:: x
+sll_real64 :: factor
+sll_real64 :: fkp1mm
+sll_int32  :: i
+sll_int32  :: ideriv
+sll_int32  :: il
+sll_int32  :: j
+sll_int32  :: jlow
+sll_int32  :: jp1mid
+sll_int32  :: ldummy
+sll_int32  :: m
+sll_int32  :: mhigh
 
 
 mhigh = max ( min ( nderiv, k ), 1 )
@@ -452,9 +413,7 @@ mhigh = max ( min ( nderiv, k ), 1 )
 !
 call bsplvb ( t, k+1-mhigh, 1, x, left, dbiatx )
 
-if ( mhigh == 1 ) then
-   return
-end if
+if ( mhigh == 1 ) return
 !
 !  The first column of DBIATX always contains the B-spline values
 !  for the current order.  These are stored in column K+1-current
@@ -494,47 +453,35 @@ end do
 !  K B-splines of interest here.
 !
 do m = 2, mhigh
-   
-   fkp1mm = real ( k + 1 - m, kind = 8 )
-   il = left
-   i = k
-   !
-   !  For J = 1,...,K, construct B-coefficients of (M-1)st derivative of
-   !  B-splines from those for preceding derivative by differencing
-   !  and store again in  A(.,J).  The fact that  A(I,J) = 0 for
-   !  I < J is used.
-   !
-   do ldummy = 1, k+1-m
-      
-      factor = fkp1mm / ( t(il+k+1-m) - t(il) )
-      !
-      !  The assumption that T(LEFT) < T(LEFT+1) makes denominator
-      !  in FACTOR nonzero.
-      !
-      a(i,1:i) = ( a(i,1:i) - a(i-1,1:i) ) * factor
-      
-      il = il - 1
-      i = i - 1
-   
-   end do
-   !
-   !  For I = 1,...,K, combine B-coefficients A(.,I) with B-spline values
-   !  stored in DBIATX(.,M) to get value of (M-1)st derivative of
-   !  I-th B-spline (of interest here) at X, and store in DBIATX(I,M).
-   !
-   !  Storage of this value over the value of a B-spline
-   !  of order M there is safe since the remaining B-spline derivatives
-   !  of the same order do not use this value due to the fact
-   !  that  A(J,I) = 0  for J < I.
-   !
-   do i = 1, k
-      
-      jlow = max ( i, m )
-      
-      dbiatx(i,m) = dot_product ( a(jlow:k,i), dbiatx(jlow:k,m) )
-      
-   end do
-
+  fkp1mm = real ( k + 1 - m, kind = 8 )
+  il = left
+  i = k
+  !
+  !  For J = 1,...,K, construct B-coefficients of (M-1)st derivative of
+  !  B-splines from those for preceding derivative by differencing
+  !  and store again in  A(.,J).  The fact that  A(I,J) = 0 for
+  !  I < J is used.
+  !
+  do ldummy = 1, k+1-m
+     factor = fkp1mm / ( t(il+k+1-m) - t(il) )
+     !  The assumption that T(LEFT) < T(LEFT+1) makes denominator
+     !  in FACTOR nonzero.
+     a(i,1:i) = ( a(i,1:i) - a(i-1,1:i) ) * factor
+     il = il - 1
+     i = i - 1
+  end do
+  !  For I = 1,...,K, combine B-coefficients A(.,I) with B-spline values
+  !  stored in DBIATX(.,M) to get value of (M-1)st derivative of
+  !  I-th B-spline (of interest here) at X, and store in DBIATX(I,M).
+  !
+  !  Storage of this value over the value of a B-spline
+  !  of order M there is safe since the remaining B-spline derivatives
+  !  of the same order do not use this value due to the fact
+  !  that  A(J,I) = 0  for J < I.
+  do i = 1, k
+     jlow = max ( i, m )
+     dbiatx(i,m) = dot_product ( a(jlow:k,i), dbiatx(jlow:k,m) )
+  end do
 end do
 end subroutine bsplvd
   
