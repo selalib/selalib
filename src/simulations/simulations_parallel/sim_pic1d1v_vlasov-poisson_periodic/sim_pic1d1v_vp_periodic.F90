@@ -369,7 +369,7 @@ contains
         sim%nmark=nmark/coll_size
         print*, "#Core ", coll_rank, " handles particles", coll_rank*nparticles +1, "-", (coll_rank+1)*nparticles
         call sll_collective_barrier(sll_world_collective)
-        if (coll_rank==0) 
+        if (coll_rank==0) then
             print*, "#Total Number of particles: ", sim%nmark*coll_size
             !Scalar values to be recorded  
             !outputs : fieldenery kineticenergy  
@@ -392,60 +392,61 @@ contains
             SLL_CLEAR_ALLOCATE(sim%particlespeed(1:sim%nmark),ierr)
             SLL_CLEAR_ALLOCATE(sim%eval_solution(1:size(sim%knots)),ierr)   
     
-            if (coll_rank==0) 
+            if (coll_rank==0) then
                 write(*,*) "#PIC1D: Loading particles..."
                 call sim%fsolver%set_num_sample(nparticles*coll_size)
                 call load_particle_species (sim%nmark, sim%interval_a, sim%interval_b ,&
                  sim%species)
                 sim%particle_qm=sim%species(1)%qm
                 call sll_collective_barrier(sll_world_collective)
-                if (coll_rank==0) write(*,*) "#PIC1D: Particles loaded..."
-
-        !Determine index of fastest particle
-        fastest_particle_idx=MAXLOC(particlespeed, dim=1)
-
-
-        !Do precalculations, especially for the FEM solver
-        !call sll_bspline_fem_solver_1d_initialize(knots, spline_degree, steadyparticleposition, -(sll_e_charge/sll_epsilon_0) )
-        if (coll_rank==0)
-           print *, "#Number of FEM-Cells ",sim%mesh_cells
+                if (coll_rank==0) then 
+                   write(*,*) "#PIC1D: Particles loaded..."
+               
+                  !Determine index of fastest particle
+                   fastest_particle_idx=MAXLOC(particlespeed, dim=1)   
 
 
-
-           select case(sim%scenario_int)
-                case(SLL_PIC1D_TESTCASE_QUIET)
-                  call sim%fsolver%set_ions_constant(0.0_f64)
-                  sim%particle_qm=-1.0_f64
-                case(SLL_PIC1D_TESTCASE_LANDAU)
-                  call sim%fsolver%set_ions_constant(0.0_f64)
-                case(SLL_PIC1D_TESTCASE_IONBEAM)
-                  call sim%fsolver%set_ions_constant(0.0_f64)
-                case(SLL_PIC1D_TESTCASE_IONBEAM_ELECTRONS)
-                  call sim%fsolver%set_ions_constant_particles(steadyparticleposition)
-                case default
-                  sim%particle_qm=-1.0_f64 !By default we simulate Electrons
-                  call sim%fsolver%set_ions_constant(0.0_f64)
-           end select
+               !Do precalculations, especially for the FEM solver  
+               !call sll_bspline_fem_solver_1d_initialize(knots, spline_degree, steadyparticleposition, -(sll_e_charge/sll_epsilon_0) )
+                     if (coll_rank==0) then
+                            print *, "#Number of FEM-Cells ",sim%mesh_cells
 
 
 
-           if (sim%deltaf .eqv. .TRUE.) then
-            !The Control Variate, as it is constant over time gos into the constant inhomogenity
-            !In the constant electron case this should be normalized to zero
-            !But since the fem solver ignores the constant ion background anyway
-            !this is going to be ok.
-            !Also this should be done analytically and not like that as an Monte Carlo estimate
-            !Here suppose the control variate is the initial state by default
-              call  sim%fsolver%set_bg_particles(sim%species(1)%particle%dx, &
-              sign(1.0_f64, sim%species(1)%qm)*sim%species(1)%particle%weight_const)
+                            select case(sim%scenario_int)
+                              case(SLL_PIC1D_TESTCASE_QUIET)
+                                call sim%fsolver%set_ions_constant(0.0_f64)
+                                sim%particle_qm=-1.0_f64
+                              case(SLL_PIC1D_TESTCASE_LANDAU)
+                                call sim%fsolver%set_ions_constant(0.0_f64)
+                              case(SLL_PIC1D_TESTCASE_IONBEAM)
+                                call sim%fsolver%set_ions_constant(0.0_f64)
+                              case(SLL_PIC1D_TESTCASE_IONBEAM_ELECTRONS)
+                                call sim%fsolver%set_ions_constant_particles(steadyparticleposition)
+                              case default
+                                sim%particle_qm=-1.0_f64 !By default we simulate Electrons
+                                call sim%fsolver%set_ions_constant(0.0_f64)
+                            end select
 
-              sim%kineticenergy_offset=sll_pic1d_calc_kineticenergy_offset(sim%species(1:num_species))
-              sim%impulse_offset=sll_pic1d_calc_impulse_offset(sim%species(1:num_species))
-           else
-              !Here should be a quick deactivate since every code is primarily deltaf
-              sim%kineticenergy_offset=0.0_f64
-              sim%impulse_offset=0.0_f64
-           endif
+
+
+                           if (sim%deltaf .eqv. .TRUE.) then
+                                  !The Control Variate, as it is constant over time gos into the constant inhomogenity
+                                  !In the constant electron case this should be normalized to zero
+                                  !But since the fem solver ignores the constant ion background anyway
+                                  !this is going to be ok.
+                                  !Also this should be done analytically and not like that as an Monte Carlo estimate
+                                  !Here suppose the control variate is the initial state by default
+                                  call  sim%fsolver%set_bg_particles(sim%species(1)%particle%dx, &
+                                  sign(1.0_f64, sim%species(1)%qm)*sim%species(1)%particle%weight_const)
+
+                                sim%kineticenergy_offset=sll_pic1d_calc_kineticenergy_offset(sim%species(1:num_species))
+                                sim%impulse_offset=sll_pic1d_calc_impulse_offset(sim%species(1:num_species))
+                          else
+                                !Here should be a quick deactivate since every code is primarily deltaf
+                                sim%kineticenergy_offset=0.0_f64
+                                sim%impulse_offset=0.0_f64
+                         endif
 
 
 !Start with PIC Method
@@ -454,29 +455,30 @@ contains
         !call sll_pic1d_ensure_boundary_conditions(species(1)%particle%dx, species(1)%particle%vx)
 
 
-           call sll_pic1d_ensure_boundary_conditions_species(species(1:num_species)  )
+           call sll_pic1d_ensure_boundary_conditions_species(sim%species(1:num_species)  )
 
 
         !Initial Solve
            call sim%fsolver%reset_particles()
-           call sim%fsolver%set_species(species(1:num_species))
+           call sim%fsolver%set_species(sim%species(1:num_species))
            call sim%fsolver%solve()
            print *, "#Initial field solve"
            print *, "#Test initial field, and loading condition for landau damping"
-           call fsolver%evalE(knots(1:mesh_cells)+ (sll_pi/6)*(knots(2)-knots(1)), eval_solution(1:mesh_cells))
+           call sim%fsolver%evalE(sim%knots(1:sim%mesh_cells)+ (sll_pi/6)*(sim%knots(2)-sim%knots(1)), sim%eval_solution(1:sim%mesh_cells))
+           
            call  sll_pic_1d_initial_error_estimates()
   !Information on initial field
 
-          print *, "#Initial Field average: " , sum( fsolver%getPotential())
-          print *, "#Initial Field variance: " , sum((sum(  fsolver%getPotential())/mesh_cells &
-            -  fsolver%getPotential())**2)/mesh_cells
+          print *, "#Initial Field average: " , sum( sim%fsolver%getPotential())
+          print *, "#Initial Field variance: " , sum((sum(  sim%fsolver%getPotential())/sim%mesh_cells &
+            -  sim%fsolver%getPotential())**2)/sim%mesh_cells
 
 
         !---------------------------Initial Plots------------------------------------------------------------
 
 
           open(unit=20, file=trim(root_path)//"initial_field.txt")
-          write (20,*) eval_solution(1:mesh_cells)
+          write (20,*) sim%eval_solution(1:sim%mesh_cells)
           close(20)
           print *, "#Field Energy                  " , &
                 "Kinetic Energy                  ", "Inhom. Variance       "
@@ -492,7 +494,7 @@ contains
                 endif
                 do kdx=1, num_species
                     do idx=1, size(sim%species(kdx)%particle)
-                        write (20,*) sim%species(kdx)%particle(idx)%dx, species(kdx)%particle(idx)%vx, species(kdx)%particle(idx)%weight
+                        write (20,*) sim%species(kdx)%particle(idx)%dx, sim%species(kdx)%particle(idx)%vx, sim%species(kdx)%particle(idx)%weight
                     enddo
                 enddo
                 close(20)
@@ -514,8 +516,9 @@ contains
 
             end if
         
-            sim%particleweight_mean(sim%timestep)=sum(sim%species(1)%particle%weight)/size(sim%species(1)%particle%weight)
-            particleweight_var(timestep)=sum(sim%species(1)%particle%weight**2)/size(sim%species(1)%particle)-sim%particleweight_mean(timestep)**2
+            sim%particleweight_mean(timestep)=sum(sim%species(1)%particle%weight)/size(sim%species(1)%particle%weight)
+            
+            sim%particleweight_var(timestep)=sum(sim%species(1)%particle%weight**2)/size(sim%species(1)%particle)-sim%particleweight_mean(timestep)**2
 
 
              sim%kineticenergy(timestep)=sll_pic1d_calc_kineticenergy( sim%species(1:num_species) )
@@ -523,10 +526,10 @@ contains
 !            fieldenergy(1)=landau_alpha**2/(2*landau_mode**2)/2.0_f64
 !            kineticenergy(1)=0.5_f64
 
-             sim%impulse(timestep)=sll_pic1d_calc_impulse(species(1:num_species))
+             sim%impulse(timestep)=sll_pic1d_calc_impulse(sim%species(1:num_species))
 
-             sim%thermal_velocity_estimate(timestep)=sll_pic1d_calc_thermal_velocity(species(1)%particle%vx,species(1)%particle%weight)
-             sim%inhom_var(timestep)=fsolver%calc_variance_rhs()
+             sim%thermal_velocity_estimate(timestep)=sll_pic1d_calc_thermal_velocity(sim%species(1)%particle%vx,sim%species(1)%particle%weight)
+             sim%inhom_var(timestep)=sim%fsolver%calc_variance_rhs()
                
         
             if ( (sim%gnuplot_inline_output.eqv. .true.) .AND. coll_rank==0 .AND. mod(timestep-1,tsteps/100)==0  ) then
@@ -536,13 +539,13 @@ contains
             endif
             if ( (sim%gnuplot_inline_output.eqv. .true.) .AND. coll_rank==0 .AND. mod(timestep-1,tsteps/100)==0 ) then
                 !call sll_bspline_fem_solver_1d_eval_solution(knots(1:mesh_cells), electricpotential_interp)
-                call fsolver%evalPhi(knots(1:mesh_cells), sim%electricpotential_interp)
+                call sim%fsolver%evalPhi(sim%knots(1:sim%mesh_cells), sim%electricpotential_interp)
                 !Scale potential to acutal values
                 !                    electricpotential_interp=electricpotential_interp*&
                     !                    (sll_mass_e/sll_e_charge)*vthermal_e**2
                 call electricpotential_gnuplot_inline( sim%electricpotential_interp  &
                     !+0.5_f64*knots(1:mesh_cells)&
-                    ,sim%knots(1:mesh_cells) )
+                    ,sim%knots(1:sim%mesh_cells) )
 
             endif
             if ( coll_rank==0) then
@@ -563,7 +566,7 @@ contains
             selectcase (ppusher_int)
                 case(SLL_PIC1D_PPUSHER_RK4)
                     call  sll_pic_1d_rungekutta4_step_array( sim%species(1)%particle%dx, &
-                        species(1)%particle%vx ,sim%tstepw, time)
+                        sim%species(1)%particle%vx ,sim%tstepw, time)
                 case(SLL_PIC1D_PPUSHER_VERLET)
                     call sll_pic_1d_Verlet_scheme(  sim%species(1:num_species) ,sim%tstepw, time)
                 case(SLL_PIC1D_PPUSHER_EULER)
@@ -582,7 +585,7 @@ contains
                         sim%species(sim%pushed_species)%particle%vx ,sim%tstepw, time)
                 case(SLL_PIC1D_PPUSHER_HEUN)
                     call sll_pic_1d_heun( sim%species(sim%pushed_species)%particle%dx, &
-                        species(sim%pushed_species)%particle%vx ,sim%tstepw, time)
+                        sim%species(sim%pushed_species)%particle%vx ,sim%tstepw, time)
                 case(SLL_PIC1D_PPUSHER_MERSON)
                     call sll_pic_1d_merson4( sim%species(sim%pushed_species)%particle%dx, &
                         sim%species(sim%pushed_species)%particle%vx ,sim%tstepw, time, &
@@ -616,8 +619,8 @@ contains
 
 sim%kineticenergy(timestep)=sll_pic1d_calc_kineticenergy( sim%species(1:num_species) )
         sim%fieldenergy(timestep)=sll_pic1d_calc_fieldenergy(sim%species(1:num_species))
-        sim%impulse(timestep)=sll_pic1d_calc_impulse(species(1:num_species))
-        sim%thermal_velocity_estimate(timestep)=sll_pic1d_calc_thermal_velocity(sim%species(1)%particle%vx,species(1)%particle%weight)
+        sim%impulse(timestep)=sll_pic1d_calc_impulse(sim%species(1:num_species))
+        sim%thermal_velocity_estimate(timestep)=sll_pic1d_calc_thermal_velocity(sim%species(1)%particle%vx,sim%species(1)%particle%weight)
         sim%particleweight_mean(timestep)=sum(sim%species(1)%particle%weight)/size(sim%species(1)%particle)
         sim%particleweight_var(timestep)=sum(sim%species(1)%particle%weight**2)/size(sim%species(1)%particle)-sim%particleweight_mean(timestep)**2
 
@@ -634,7 +637,8 @@ sim%kineticenergy(timestep)=sll_pic1d_calc_kineticenergy( sim%species(1:num_spec
             print *, "Overall Time: " , sll_time_elapsed_between(tstart,tstop)
             print *, "Particles Pushed/s: " , (sim%nmark*coll_size*sim%tsteps)/sll_time_elapsed_between(tstart,tstop)
         endif
-        if (coll_rank==0) call det_landau_damping((/ ( timestep*timestepwidth, timestep = 0, sim%tsteps) /),sim%fieldenergy)
+        if (coll_rank==0)then
+         call det_landau_damping((/ ( timestep*timestepwidth, timestep = 0, sim%tsteps) /),sim%fieldenergy)
 
         !call sll_bspline_fem_solver_1d_destroy
         call sim%fsolver%delete()
