@@ -3,6 +3,7 @@ ADD_LIBRARY( sll_general_coordinate_elliptic_solvers STATIC
              map_function_module.F90
              lobalap.F90
              sll_gces_dirichlet.F90
+             sll_gces_dirichlet_homogeneous.F90
              sll_gces_full_periodic.F90
              sll_general_coordinate_elliptic_solver.F90 )
 
@@ -23,13 +24,13 @@ TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers
                        sll_memory
                        sll_working_precision)
 
-
 IF(BUILD_TESTING)
 
   ADD_EXECUTABLE( test_general_coordinates_elliptic_solver 
                   init_functions.F90 unit_test.F90 )
   TARGET_LINK_LIBRARIES( test_general_coordinates_elliptic_solver
                          sll_general_coordinate_elliptic_solvers )
+
   ADD_TEST( NAME general_coordinate_elliptic_solver 
             COMMAND test_general_coordinates_elliptic_solver )
   SET_TESTS_PROPERTIES( general_coordinate_elliptic_solver 
@@ -41,14 +42,18 @@ IF(BUILD_TESTING)
   ADD_EXECUTABLE( test_lobalap_discrete unit_test_lobalap_discrete.F90 )
   TARGET_LINK_LIBRARIES( test_lobalap_discrete sll_general_coordinate_elliptic_solvers )
 
-  ADD_EXECUTABLE( test_gces_dirichlet unit_test_dirichlet.F90 )
-  TARGET_LINK_LIBRARIES( test_gces_dirichlet sll_general_coordinate_elliptic_solvers )
-  #ADD_TEST( NAME gces_dirichlet COMMAND test_gces_dirichlet )
-  #SET_TESTS_PROPERTIES( gces_dirichlet PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100 )
+  ADD_EXECUTABLE( test_gces_dirichlet_homogeneous unit_test_dirichlet_homogeneous.F90 )
+  TARGET_LINK_LIBRARIES( test_gces_dirichlet_homogeneous sll_general_coordinate_elliptic_solvers )
+
+  ADD_TEST( NAME gces_dirichlet_homogeneous COMMAND test_gces_dirichlet_homogeneous )
+  SET_TESTS_PROPERTIES( gces_dirichlet_homogeneous PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100 )
 
   ADD_EXECUTABLE( test_gces_full_periodic unit_test_full_periodic.F90 )
   TARGET_LINK_LIBRARIES( test_gces_full_periodic sll_general_coordinate_elliptic_solvers )
   ADD_TEST( NAME gces_full_periodic COMMAND test_gces_full_periodic )
   SET_TESTS_PROPERTIES( gces_full_periodic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100 )
+
+  ADD_EXECUTABLE( test_gces_dirichlet unit_test_dirichlet.F90 )
+  TARGET_LINK_LIBRARIES( test_gces_dirichlet sll_general_coordinate_elliptic_solvers )
 
 ENDIF(BUILD_TESTING)
