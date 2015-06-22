@@ -67,10 +67,6 @@ slope_max = -sin(2*sll_pi*tau_max)*2*sll_pi
 call compute_coefficients(bsplines, gtau, slope_min, slope_max)
 call interpolate_array_values( bsplines, nx, x, y)
 
-do i = 1, nx
-  write(13,*) x(i), y(i), cos(2*sll_pi*x(i))
-end do
-
 print*, "error = ", maxval(abs(y-cos(2*sll_pi*x)))
 
 SLL_ALLOCATE(htau(n),ierr)
@@ -79,9 +75,6 @@ slope_min = cos(2*sll_pi*tau_min)*2*sll_pi
 slope_max = cos(2*sll_pi*tau_max)*2*sll_pi
 call compute_coefficients(bsplines, htau, slope_min, slope_max)
 call interpolate_array_values( bsplines, nx, x, y)
-do i = 1, nx
-  write(23,*) x(i), y(i), sin(2*sll_pi*x(i))
-end do
 
 print*, "error = ", maxval(abs(y-sin(2*sll_pi*x)))
 
@@ -129,7 +122,6 @@ subroutine build_system(this)
   sll_int32               :: kpkm2
   sll_int32               :: left
   sll_int32               :: n
-  sll_int32, parameter    :: m = 2
   sll_int32               :: k
   sll_int32               :: iflag
   sll_int32               :: j
@@ -147,48 +139,52 @@ subroutine build_system(this)
   
   SLL_ASSERT(m < n) 
 
-  l = 1 ! index for the derivative
+  l = 0 ! index for the derivative
 
-  do i = 1, n-1
+  do i = 1, n
       
     taui = this%tau(i)
     call interv( this%t, n+m+k, taui, left, mflag )
-    call bsplvb ( this%t, k, 1, taui, left, this%bcoef )
-    jj = i - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
-    
-    do j = 1, k
-      jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
-      this%q(jj) = this%bcoef(j)
-    end do
-   
-    if ( i == 1 ) then   
-      call bsplvd( this%t, k, taui, left, a, dbiatx, 2)
-      l = l + 1
-      jj = i - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
+
+
+    if (i < n) then
+
+      call bsplvb ( this%t, k, 1, taui, left, this%bcoef )
+      jj = i-left+1+(left-k)*(k+k-1)+l
       do j = 1, k
-        jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
+        jj = jj + kpkm2
+        this%q(jj) = this%bcoef(j)
+      end do
+   
+      if ( i == 1 ) then   
+        call bsplvd( this%t, k, taui, left, a, dbiatx, 2)
+        l = l + 1
+        jj = i-left+1+(left-k)*(k+k-1)+l
+        do j = 1, k
+          jj = jj + kpkm2
+          this%q(jj) = dbiatx(j,2)
+        end do
+      end if
+
+    else
+
+      call bsplvd( this%t, k, taui, left, a, dbiatx, 2)
+      jj = i-left+1+(left-k)*(k+k-1)+l
+      do j = 1, k
+        jj = jj + kpkm2
         this%q(jj) = dbiatx(j,2)
       end do
+      l = l + 1
+      
+      call bsplvb ( this%t, k, 1, taui, left, this%bcoef )
+      jj = i-left+1+(left-k)*(k+k-1)+l
+      do j = 1, k
+        jj = jj + kpkm2 
+        this%q(jj) = this%bcoef(j)
+      end do
+
     end if
-   
-  end do
-  
-  taui = this%tau(n)
-  call interv( this%t, n+m+k, taui, left, mflag )
-  call bsplvd( this%t, k, taui, left, a, dbiatx, 2)
-  jj = n - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
-  do j = 1, k
-     jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
-     this%q(jj) = dbiatx(j,2)
-  end do
-  l = l + 1
-  
-  call bsplvb ( this%t, k, 1, taui, left, this%bcoef )
-  jj = n - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
-     
-  do j = 1, k
-    jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
-    this%q(jj) = this%bcoef(j)
+ 
   end do
   
   !Obtain factorization of A, stored again in Q.
