@@ -242,8 +242,6 @@ sll_int32  :: icell, a, aprime, b, bprime
 sll_int32, dimension(:),   allocatable :: tab_index_coeff1
 sll_int32, dimension(:),   allocatable :: tab_index_coeff2
 
-sll_int32, dimension(:),   allocatable :: global_indices_check
-sll_int32, dimension(:,:), allocatable :: local_indices_check
 sll_int32, dimension(:,:), allocatable :: local_to_global_indices_check
 sll_real64, dimension(:,:,:,:), allocatable :: v_splines1_check
 sll_real64, dimension(:,:,:,:), allocatable :: v_splines2_check
@@ -269,10 +267,6 @@ SLL_ALLOCATE(es%local_to_global_indices(1:dim1,1:dim2),ierr)
 SLL_ALLOCATE(es%local_to_global_indices_source(1:dim1,1:dim2),ierr)
 SLL_ALLOCATE(es%local_to_global_indices_source_bis(1:dim1,1:dim2),ierr)
 
-SLL_ALLOCATE(local_indices(1:dim1,1:dim2),ierr)
-SLL_ALLOCATE(global_indices(num_splines1*num_splines2),ierr)
-SLL_ALLOCATE(local_indices_check(1:dim1,1:dim2),ierr)
-SLL_ALLOCATE(global_indices_check(num_splines1*num_splines2),ierr)
 SLL_ALLOCATE(local_to_global_indices_check(1:dim1,1:dim2),ierr)
 
 SLL_ALLOCATE(knots1(num_cells1 + 2*spline_degree1+1),ierr)
@@ -287,8 +281,6 @@ call initconnectivity_new(   &
   bc1_max,                   &
   bc2_min,                   &
   bc2_max,                   &
-  local_indices,             &
-  global_indices,            &
   es%local_to_global_indices )
 
 
@@ -305,24 +297,8 @@ call initconnectivity( &
   bc1_max, &
   bc2_min, &
   bc2_max, &
-  local_indices_check, &
-  global_indices_check, &
   local_to_global_indices_check )
 
-ierr = maxval(abs(local_indices_check-local_indices))
-if(ierr/=0)then
-  print *,'local_indices=',local_indices
-  print *,'local_indices_check=',local_indices_check
-  SLL_ERROR('initialize_general_elliptic_solver&
-  &','problem with local_indices')
-endif
-
-ierr = maxval(abs(global_indices_check-global_indices))
-if(ierr/=0)then
-  print *,'global_indices=',global_indices
-  print *,'global_indices_check=',global_indices_check
-  SLL_ERROR('initialize_general_elliptic_solver','problem with global_indices')
-endif
 ierr = maxval(abs(local_to_global_indices_check-es%local_to_global_indices))
 if(ierr/=0)then
   print *,'es%local_to_global_indices=',es%local_to_global_indices
@@ -1783,8 +1759,6 @@ end subroutine initconnectivity
     bc1_max, &
     bc2_min, &
     bc2_max, &
-    local_indices, &
-    global_indices, &
     local_to_global_indices )
 
     sll_int32, intent(in) :: num_cells1
@@ -1795,9 +1769,9 @@ end subroutine initconnectivity
     sll_int32, intent(in) :: bc1_max
     sll_int32, intent(in) :: bc2_min
     sll_int32, intent(in) :: bc2_max
-    sll_int32, dimension(:,:), intent(out) :: local_indices
-    sll_int32, dimension(:)  , intent(out) :: global_indices
     sll_int32, dimension(:,:), intent(out) :: local_to_global_indices
+    sll_int32, dimension(:,:), allocatable :: local_indices
+    sll_int32, dimension(:)  , allocatable :: global_indices
     
     sll_int32, dimension(:), allocatable :: bc_indices1
     sll_int32, dimension(:), allocatable :: bc_indices2
@@ -1805,6 +1779,8 @@ end subroutine initconnectivity
     
     SLL_ALLOCATE(bc_indices1(num_cells1+spline_degree1),ierr)
     SLL_ALLOCATE(bc_indices2(num_cells2+spline_degree2),ierr)
+    SLL_ALLOCATE(local_indices( 1:(spline_degree1+1)*(spline_degree2+1),1:(num_cells1*num_cells2)),ierr)
+    SLL_ALLOCATE(global_indices((num_cells1+spline_degree1)*(num_cells2+spline_degree2)),ierr)
     
     
     call compute_local_splines_indices( &
