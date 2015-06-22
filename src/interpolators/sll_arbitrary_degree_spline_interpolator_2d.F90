@@ -96,7 +96,7 @@ contains
 end type sll_arbitrary_degree_spline_interpolator_2d
 
 
-!> Pointer to arbitrary degree version of 1d interpolator
+!> Pointer to arbitrary degree version of 2d interpolator
 type sll_arbitrary_degree_spline_interpolator_2d_ptr
    type(sll_arbitrary_degree_spline_interpolator_2d), pointer :: interp
 end type sll_arbitrary_degree_spline_interpolator_2d_ptr
@@ -261,14 +261,14 @@ sll_int64 :: bc_selector
 
 
 ! do some argument checking...
-if(((bc1_min  == SLL_PERIODIC).and.(bc1_max.ne. SLL_PERIODIC)).or.&
-   ((bc1_max == SLL_PERIODIC).and.(bc1_min .ne. SLL_PERIODIC)))then
+if( bc1_min == SLL_PERIODIC .and. bc1_max .ne. SLL_PERIODIC .or.&
+    bc1_max == SLL_PERIODIC .and. bc1_min .ne. SLL_PERIODIC )then
    print *, 'initialize_arbitrary_degree_2d_interpolator, ERROR: ', &
         'if one boundary condition is specified as periodic, then ', &
         'both must be. Error in first direction.'
 end if
 
-if(((bc2_min == SLL_PERIODIC).and.(bc2_max.ne. SLL_PERIODIC)).or.&
+if(((bc2_min == SLL_PERIODIC).and.(bc2_max .ne. SLL_PERIODIC)).or.&
    ((bc2_max == SLL_PERIODIC).and.(bc2_min .ne. SLL_PERIODIC)))then
    print *, 'initialize_arbitrary_degree_2d_interpolator, ERROR: ', &
         'if one boundary condition is specified as periodic, then ', &
@@ -357,6 +357,8 @@ call interp1d%compute_interpolants(values)
 values = interp1d%coeff_splines(1:num_pts)
 
 call sll_delete(interp1d)
+deallocate(interp1d)
+nullify(interp1d)
 
 end subroutine set_coeff_splines_values_1d
 
@@ -983,7 +985,7 @@ if (present(coeffs_1d)) then  !This case is used to set the solution from
     end do
     end do
     
-  case(2340) ! Hermite in al sides
+  case(2340) ! Hermite in all sides
        
     interpolator%size_coeffs1 = num_cells1 + sp_deg1
     interpolator%size_coeffs2 = num_cells2 + sp_deg2
@@ -1237,6 +1239,7 @@ case (0) ! periodic-periodic
                      interpolator%coeff_splines, &
                      interpolator%t1,            &
                      interpolator%t2)
+  deallocate(interpolator%gtau)
    
 case (9) ! 2. dirichlet-left, dirichlet-right, periodic
 
@@ -1262,6 +1265,7 @@ case (9) ! 2. dirichlet-left, dirichlet-right, periodic
 
   interpolator%coeff_splines(1,1:ny)  = data_array(1,1:ny)
   interpolator%coeff_splines(nx,1:ny) = data_array(nx,1:ny)
+  deallocate(interpolator%gtau)
   
 case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
 
@@ -1287,6 +1291,7 @@ case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
 
   interpolator%coeff_splines(1:nx,1)   = data_array(1:nx,1)
   interpolator%coeff_splines(1:nx,ny) = data_array(1:nx,ny)
+  deallocate(interpolator%gtau)
        
 case (585) ! 4. dirichlet in all sides
 
@@ -1308,6 +1313,7 @@ case (585) ! 4. dirichlet in all sides
   interpolator%coeff_splines(nx,1:ny) = data_array(nx,1:ny)
   interpolator%coeff_splines(1:nx,1)  = data_array(1:nx,1)
   interpolator%coeff_splines(1:nx,ny) = data_array(1:nx,ny)
+  deallocate(interpolator%gtau)
 
 case (650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet
 
@@ -1352,6 +1358,7 @@ case (650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet
 
   SLL_DEALLOCATE( interpolator%gtau_der1,ierr)
   SLL_DEALLOCATE( interpolator%gtau_der2,ierr)
+  deallocate(interpolator%gtau)
 
 case(657) !left: Dirichlet, right: Neumann, bottom: Neumann, Top: Dirichlet 
 
@@ -1395,6 +1402,7 @@ case(657) !left: Dirichlet, right: Neumann, bottom: Neumann, Top: Dirichlet
 
   SLL_DEALLOCATE( interpolator%gtau_der1,ierr)
   SLL_DEALLOCATE( interpolator%gtau_der2,ierr)
+  deallocate(interpolator%gtau)
 
 case(780)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Dirichlet
 
@@ -1439,6 +1447,7 @@ case(780)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Dirichlet
 
   SLL_DEALLOCATE( interpolator%gtau_der1,ierr)
   SLL_DEALLOCATE( interpolator%gtau_der2,ierr)
+  deallocate(interpolator%gtau)
 
 case(801)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Dirichlet
 
@@ -1483,6 +1492,7 @@ case(801)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Dirichlet
 
   SLL_DEALLOCATE(interpolator%gtau_der1,ierr)
   SLL_DEALLOCATE(interpolator%gtau_der2,ierr)
+  deallocate(interpolator%gtau)
 
 case(804)  !left: Hermite, right: Hermite, bottom: Hermite, Top: Dirichlet
 
@@ -1526,6 +1536,7 @@ case(804)  !left: Hermite, right: Hermite, bottom: Hermite, Top: Dirichlet
 
   SLL_DEALLOCATE( interpolator%gtau_der1,ierr)
   SLL_DEALLOCATE( interpolator%gtau_der2,ierr)
+  deallocate(interpolator%gtau)
 
 case(1098)  !left: Neumann, right: Dirichlet, bottom: Dirichlet, Top: Neumann
 
@@ -1572,6 +1583,7 @@ case(1098)  !left: Neumann, right: Dirichlet, bottom: Dirichlet, Top: Neumann
 
   SLL_DEALLOCATE( interpolator%gtau_der1,ierr)
   SLL_DEALLOCATE( interpolator%gtau_der2,ierr)
+  deallocate(interpolator%gtau)
 
 case(1105)  !left: Dirichlet, right: Neumann, bottom: Dirichlet, Top: Neumann
 
@@ -1615,6 +1627,7 @@ case(1105)  !left: Dirichlet, right: Neumann, bottom: Dirichlet, Top: Neumann
 
    SLL_DEALLOCATE(interpolator%gtau_der1,ierr)
    SLL_DEALLOCATE(interpolator%gtau_der2,ierr)
+  deallocate(interpolator%gtau)
 
 case(1170)  !left: Neumann, right: Neumann, bottom: Neuman, Top: Neumann
 
@@ -1658,6 +1671,7 @@ case(1170)  !left: Neumann, right: Neumann, bottom: Neuman, Top: Neumann
 
   SLL_DEALLOCATE( interpolator%gtau_der1,ierr)
   SLL_DEALLOCATE( interpolator%gtau_der2,ierr)
+  deallocate(interpolator%gtau)
 
 case(2338)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Hermite
 
@@ -1701,6 +1715,7 @@ case(2338)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Hermite
 
   SLL_DEALLOCATE( interpolator%gtau_der1,ierr)
   SLL_DEALLOCATE( interpolator%gtau_der2,ierr)
+  deallocate(interpolator%gtau)
        
 case(2145) !left: Dirichlet, right: Hermite, bottom: Dirichlet, Top: Hermite  
 
@@ -1744,6 +1759,7 @@ case(2145) !left: Dirichlet, right: Hermite, bottom: Dirichlet, Top: Hermite
 
   SLL_DEALLOCATE( interpolator%gtau_der1,ierr)
   SLL_DEALLOCATE( interpolator%gtau_der2,ierr)
+  deallocate(interpolator%gtau)
 
 case(2124)  !left: Hermite, right: Dirichlet, bottom: Dirichlet, Top: Hermite
 
@@ -1787,6 +1803,7 @@ case(2124)  !left: Hermite, right: Dirichlet, bottom: Dirichlet, Top: Hermite
 
   SLL_DEALLOCATE( interpolator%gtau_der1,ierr)
   SLL_DEALLOCATE( interpolator%gtau_der2,ierr)
+  deallocate(interpolator%gtau)
 
 case(2148)  !left:Hermite , right: Hermite, bottom: Dirichlet, Top: Hermite
 
@@ -1830,6 +1847,7 @@ case(2148)  !left:Hermite , right: Hermite, bottom: Dirichlet, Top: Hermite
 
   SLL_DEALLOCATE( interpolator%gtau_der1,ierr)
   SLL_DEALLOCATE( interpolator%gtau_der2,ierr)
+  deallocate(interpolator%gtau)
 
 case(2316)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Hermite
 
@@ -1873,6 +1891,7 @@ case(2316)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Hermite
 
   SLL_DEALLOCATE( interpolator%gtau_der1,ierr)
   SLL_DEALLOCATE( interpolator%gtau_der2,ierr)
+  deallocate(interpolator%gtau)
 
 case(2340) ! Hermite in al sides
        
@@ -1916,6 +1935,7 @@ case(2340) ! Hermite in al sides
 
   SLL_DEALLOCATE( interpolator%gtau_der1,ierr)
   SLL_DEALLOCATE( interpolator%gtau_der2,ierr)
+  deallocate(interpolator%gtau)
 
 end select
 
@@ -2289,7 +2309,7 @@ sll_real64, dimension(:),optional :: slope_max1
 sll_real64, dimension(:),optional :: slope_min2
 sll_real64, dimension(:),optional :: slope_max2
 class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp1d_min2=> null()
-class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp1d_max2 => null()
+class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp1d_max2=> null()
 sll_int32 :: sz_slope_min2,sz_slope_max2
 sll_int64 :: bc_selector
 sll_int32 :: num_pts1
@@ -2349,6 +2369,7 @@ case (650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet
      interpolator%slope_max2(1:sz_slope_max2+2) = &
           interp1d_max2%coeff_splines(1:sz_slope_max2+2)
      call sll_delete(interp1d_max2)
+     deallocate(interp1d_max2)
   else
      print*, 'problem with slope top in case 780'
   end if
@@ -2393,6 +2414,7 @@ case(657) !left: Dirichlet, right: Neumann, bottom: Neumann, Top: Dirichlet
      interpolator%slope_max2(1:sz_slope_max2+2) = &
           interp1d_max2%coeff_splines(1:sz_slope_max2+2)
      call sll_delete(interp1d_max2)
+     deallocate(interp1d_max2)
   else
      print*, 'problem with slope top in case 780'
   end if
@@ -2430,6 +2452,7 @@ case(780)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Dirichlet
      interpolator%slope_min2(1:sz_slope_min2+2) = &
           interp1d_min2%coeff_splines(1:sz_slope_min2+2)
      call sll_delete(interp1d_min2)
+     deallocate(interp1d_min2)
      interpolator%compute_slope_min2 = .FALSE.
   else
      print*, 'problem with slope bottom in case 780'
@@ -2459,6 +2482,7 @@ case(780)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Dirichlet
      interpolator%slope_max2(1:sz_slope_max2+2) = &
           interp1d_max2%coeff_splines(1:sz_slope_max2+2)
      call sll_delete(interp1d_max2)
+     deallocate(interp1d_max2)
   else
      print*, 'problem with slope top in case 780'
   end if
@@ -2525,6 +2549,7 @@ case(801)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Dirichlet
       interpolator%slope_max2(1:sz_slope_max2+2) = &
            interp1d_max2%coeff_splines(1:sz_slope_max2+2)
       call sll_delete(interp1d_max2)
+      deallocate(interp1d_max2)
    else
       print*, 'problem with slope top in case 801'
    end if
@@ -2562,6 +2587,7 @@ case(804)  !left: Hermite, right: Hermite, bottom: Hermite, Top: Dirichlet
       interpolator%slope_min2(1:sz_slope_min2+2) = &
            interp1d_min2%coeff_splines(1:sz_slope_min2+2)
       call sll_delete(interp1d_min2)
+      deallocate(interp1d_min2)
       interpolator%compute_slope_min2 = .FALSE.
    else
       print*, 'problem with slope bottom in case 801'
@@ -2591,6 +2617,7 @@ case(804)  !left: Hermite, right: Hermite, bottom: Hermite, Top: Dirichlet
       interpolator%slope_max2(1:sz_slope_max2+2) = &
            interp1d_max2%coeff_splines(1:sz_slope_max2+2)
       call sll_delete(interp1d_max2)
+      deallocate(interp1d_max2)
    else
       print*, 'problem with slope top in case 801'
    end if
@@ -2631,6 +2658,7 @@ case(1098)  !left: Neumann, right: Dirichlet, bottom: Dirichlet, Top: Neumann
       interpolator%slope_min2(1:sz_slope_min2+2) = &
            interp1d_min2%coeff_splines(1:sz_slope_min2+2)
       call sll_delete(interp1d_min2)
+      deallocate(interp1d_min2)
       interpolator%compute_slope_min2 = .FALSE.
    else
       print*, 'problem with slope bottom in case 2124'
@@ -2660,6 +2688,7 @@ case(1098)  !left: Neumann, right: Dirichlet, bottom: Dirichlet, Top: Neumann
       interpolator%slope_max2(1:sz_slope_max2+2) = &
            interp1d_max2%coeff_splines(1:sz_slope_max2+2)
       call sll_delete(interp1d_max2)
+      deallocate(interp1d_max2)
    else
       print*, 'problem with slope top in case 2124'
    end if
@@ -2697,6 +2726,7 @@ case(1105)  !left: Dirichlet, right: Neumann, bottom: Dirichlet, Top: Neumann
       interpolator%slope_min2(1:sz_slope_min2+2) = &
            interp1d_min2%coeff_splines(1:sz_slope_min2+2)
       call sll_delete(interp1d_min2)
+      deallocate(interp1d_min2)
       interpolator%compute_slope_min2 = .FALSE.
    else
       print*, 'problem with slope bottom in case 2145'
@@ -2752,6 +2782,7 @@ case(2338)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Hermite
       interpolator%slope_max2(1:sz_slope_max2+2) = &
            interp1d_max2%coeff_splines(1:sz_slope_max2+2)
       call sll_delete(interp1d_max2)
+      deallocate(interp1d_max2)
    else
       print*, 'problem with slope top in case 2145'
    end if
@@ -2778,6 +2809,7 @@ case(2338)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Hermite
       interpolator%slope_min2(1:sz_slope_min2+2) = &
            interp1d_min2%coeff_splines(1:sz_slope_min2+2)
       call sll_delete(interp1d_min2)
+      deallocate(interp1d_min2)
       interpolator%compute_slope_min2 = .FALSE.
    else
       print*, 'problem with slope bottom in case 2145'
@@ -2818,6 +2850,7 @@ case(2145)  !left: Dirichlet, right: Hermite, bottom: Dirichlet, Top: Hermite
       interpolator%slope_max2(1:sz_slope_max2+2) = &
            interp1d_max2%coeff_splines(1:sz_slope_max2+2)
       call sll_delete(interp1d_max2)
+      deallocate(interp1d_max2)
    else
       print*, 'problem with slope top in case 2145'
    end if
@@ -2844,6 +2877,7 @@ case(2145)  !left: Dirichlet, right: Hermite, bottom: Dirichlet, Top: Hermite
       interpolator%slope_min2(1:sz_slope_min2+2) = &
            interp1d_min2%coeff_splines(1:sz_slope_min2+2)
       call sll_delete(interp1d_min2)
+      deallocate(interp1d_min2)
       interpolator%compute_slope_min2 = .FALSE.
    else
       print*, 'problem with slope bottom in case 2145'
@@ -2887,6 +2921,7 @@ case(2124)  !left: Hermite, right: Dirichlet, bottom: Dirichlet, Top: Hermite
            interp1d_max2%coeff_splines(1:sz_slope_max2+2)
 
       call sll_delete(interp1d_max2)
+      deallocate(interp1d_max2)
    else
       print*, 'problem with slope top in case 2124'
    end if
@@ -2913,6 +2948,7 @@ case(2124)  !left: Hermite, right: Dirichlet, bottom: Dirichlet, Top: Hermite
       interpolator%slope_min2(1:sz_slope_min2+2) = &
            interp1d_min2%coeff_splines(1:sz_slope_min2+2)
       call sll_delete(interp1d_min2)
+      deallocate(interp1d_min2)
       interpolator%compute_slope_min2 = .FALSE.
    else
       print*, 'problem with slope bottom in case 2124'
@@ -2942,6 +2978,7 @@ case(2124)  !left: Hermite, right: Dirichlet, bottom: Dirichlet, Top: Hermite
       interpolator%slope_max2(1:sz_slope_max2+2) = &
            interp1d_max2%coeff_splines(1:sz_slope_max2+2)
       call sll_delete(interp1d_max2)
+      deallocate(interp1d_max2)
    else
       print*, 'problem with slope top in case 2124'
    end if
@@ -2982,6 +3019,7 @@ case(2148)  !left:Hermite , right: Hermite, bottom: Dirichlet, Top: Hermite
            interp1d_max2%coeff_splines(1:sz_slope_max2+2)
 
       call sll_delete(interp1d_max2)
+      deallocate(interp1d_max2)
    else
       print*, 'problem with slope top in case 2124'
    end if
@@ -3008,6 +3046,7 @@ case(2148)  !left:Hermite , right: Hermite, bottom: Dirichlet, Top: Hermite
       interpolator%slope_min2(1:sz_slope_min2+2) = &
            interp1d_min2%coeff_splines(1:sz_slope_min2+2)
       call sll_delete(interp1d_min2)
+      deallocate(interp1d_min2)
       interpolator%compute_slope_min2 = .FALSE.
    else
       print*, 'problem with slope bottom in case 2124'
@@ -3037,6 +3076,7 @@ case(2148)  !left:Hermite , right: Hermite, bottom: Dirichlet, Top: Hermite
       interpolator%slope_max2(1:sz_slope_max2+2) = &
            interp1d_max2%coeff_splines(1:sz_slope_max2+2)
       call sll_delete(interp1d_max2)
+      deallocate(interp1d_max2)
    else
       print*, 'problem with slope top in case 2124'
    end if
@@ -3075,6 +3115,7 @@ case(2316)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Hermite
       interpolator%slope_max2(1:sz_slope_max2+2) = &
            interp1d_max2%coeff_splines(1:sz_slope_max2+2)
       call sll_delete(interp1d_max2)
+      deallocate(interp1d_max2)
    else
       print*, 'problem with slope top in case 2340'
    end if
@@ -3101,6 +3142,7 @@ case(2316)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Hermite
       interpolator%slope_min2(1:sz_slope_min2+2) = &
            interp1d_min2%coeff_splines(1:sz_slope_min2+2)
       call sll_delete(interp1d_min2)
+      deallocate(interp1d_min2)
       interpolator%compute_slope_min2 = .FALSE.
    else
       print*, 'problem with slope bottom in case 2340'
@@ -3141,6 +3183,7 @@ case(2340) ! Hermite in al sides
       interpolator%slope_max2(1:sz_slope_max2+2) = &
            interp1d_max2%coeff_splines(1:sz_slope_max2+2)
       call sll_delete(interp1d_max2)
+      deallocate(interp1d_max2)
    else
       print*, 'problem with slope top in case 2340'
    end if
@@ -3167,6 +3210,7 @@ case(2340) ! Hermite in al sides
       interpolator%slope_min2(1:sz_slope_min2+2) = &
            interp1d_min2%coeff_splines(1:sz_slope_min2+2)
       call sll_delete(interp1d_min2)
+      deallocate(interp1d_min2)
       interpolator%compute_slope_min2 = .FALSE.
    else
       print*, 'problem with slope bottom in case 2340'
