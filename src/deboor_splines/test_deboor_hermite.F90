@@ -17,19 +17,8 @@ program test_deboor_hermite
 
 implicit none
 
-type :: sll_bsplines
 
-  sll_int32           :: n
-  sll_int32           :: k
-  sll_real64, pointer :: tau(:)
-  sll_real64, pointer :: t(:)
-  sll_real64, pointer :: q(:)
-  sll_real64, pointer :: bcoef(:)
-  sll_real64, pointer :: bcoef_spline(:)
-
-end type sll_bsplines
-
-type(sll_bsplines) :: bsplines
+type(sll_bspline_1d) :: bsplines
 
 sll_real64, dimension(:), allocatable :: x
 sll_real64, dimension(:), allocatable :: y
@@ -41,7 +30,8 @@ sll_real64, dimension(:), allocatable :: gtau
 sll_real64, dimension(:), allocatable :: htau
 
 sll_int32                             :: i
-sll_int32, parameter                  :: nx = 100
+sll_int32                             :: j
+sll_int32, parameter                  :: nx = 1000
 
 sll_int32, parameter :: m = 2
 sll_real64 :: tau_min = 0.0_f64
@@ -56,7 +46,7 @@ do i = 1, nx
   x(i) = (i-1)*1.0_f64/(nx-1)
 end do
 
-call initialize_bsplines(bsplines, n, k, tau_min, tau_max)
+call initialize_bspline_1d(bsplines, n, k, tau_min, tau_max)
 
 call build_system(bsplines)
 
@@ -65,7 +55,9 @@ gtau = cos(2*sll_pi*bsplines%tau)
 slope_min = -sin(2*sll_pi*tau_min)*2*sll_pi
 slope_max = -sin(2*sll_pi*tau_max)*2*sll_pi
 call compute_coefficients(bsplines, gtau, slope_min, slope_max)
-call interpolate_array_values( bsplines, nx, x, y)
+do j = 1, 10000
+  call interpolate_array_values( bsplines, nx, x, y)
+end do
 
 print*, "error = ", maxval(abs(y-cos(2*sll_pi*x)))
 
@@ -74,7 +66,9 @@ htau = sin(2*sll_pi*bsplines%tau)
 slope_min = cos(2*sll_pi*tau_min)*2*sll_pi
 slope_max = cos(2*sll_pi*tau_max)*2*sll_pi
 call compute_coefficients(bsplines, htau, slope_min, slope_max)
-call interpolate_array_values( bsplines, nx, x, y)
+do j = 1, 10000
+  call interpolate_array_values( bsplines, nx, x, y)
+end do
 
 print*, "error = ", maxval(abs(y-sin(2*sll_pi*x)))
 
@@ -83,39 +77,10 @@ print*, 'PASSED'
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
 
-subroutine initialize_bsplines(this, n, k, tau_min, tau_max)
-
-  type(sll_bsplines), intent(out) :: this
-  sll_int32         , intent(in)  :: n
-  sll_int32         , intent(in)  :: k
-  sll_real64        , intent(in)  :: tau_min
-  sll_real64        , intent(in)  :: tau_max
-
-  sll_int32                       :: ierr
-
-  this%n = n
-  this%k = k
-
-  SLL_ALLOCATE(this%tau(n), ierr)
-  do i = 1, n
-    this%tau(i) = tau_min + (i-1) * (tau_max-tau_min) / (n-1)
-  end do
-
-  SLL_ALLOCATE(this%t(n+k+m), ierr)
-
-  this%t(1:k)         = tau_min
-  this%t(k+1:n+m)     = this%tau(2:n-1)
-  this%t(n+m+1:n+m+k) = tau_max
-
-  SLL_ALLOCATE(this%q(1:(2*k-1)*(n+m)),    ierr)
-  SLL_ALLOCATE(this%bcoef(n),          ierr)
-  SLL_ALLOCATE(this%bcoef_spline(n+m), ierr)
-
-end subroutine initialize_bsplines
 
 subroutine build_system(this)
 
-  type(sll_bsplines)      :: this 
+  type(sll_bspline_1d)    :: this 
   sll_real64              :: dbiatx(k,2)
   sll_real64              :: a(k,k)
   sll_real64              :: taui
@@ -195,7 +160,7 @@ end subroutine build_system
 
 subroutine compute_coefficients( this, gtau, slope_min, slope_max)
 
-  type(sll_bsplines)      :: this 
+  type(sll_bspline_1d)    :: this 
   sll_real64, intent(in)  :: gtau(:)
   sll_real64, intent(in)  :: slope_min
   sll_real64, intent(in)  :: slope_max
@@ -223,7 +188,7 @@ subroutine interpolate_array_values( this,      &
                                      nx,        &
                                      x,         &
                                      y)
-  type(sll_bsplines)      :: this 
+  type(sll_bspline_1d)    :: this 
   sll_int32,  intent(in)  :: nx
   sll_real64, intent(in)  :: x(nx)
   sll_real64, intent(out) :: y(nx)

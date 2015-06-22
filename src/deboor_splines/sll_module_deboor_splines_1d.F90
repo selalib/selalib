@@ -6,76 +6,117 @@ module sll_module_deboor_splines_1d
 
 implicit none 
   
+
+!> @brief 
+!> basic type for one-dimensional B-spline data. 
+!> @details This should be
+!> treated as an opaque type. No access to its internals is directly allowed.
+type :: sll_bspline_1d
+
+  sll_int32           :: n
+  sll_int32           :: k
+  sll_real64, pointer :: tau(:)
+  sll_real64, pointer :: t(:)
+  sll_real64, pointer :: q(:)
+  sll_real64, pointer :: bcoef(:)
+  sll_real64, pointer :: bcoef_spline(:)
+
+end type sll_bspline_1d
+
+sll_real64, allocatable :: aj(:)
+sll_real64, allocatable :: dl(:)
+sll_real64, allocatable :: dr(:)
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
+
+subroutine initialize_bspline_1d(this, n, k, tau_min, tau_max)
+
+  type(sll_bspline_1d), intent(out) :: this
+  sll_int32         , intent(in)    :: n
+  sll_int32         , intent(in)    :: k
+  sll_real64        , intent(in)    :: tau_min
+  sll_real64        , intent(in)    :: tau_max
+
+  sll_int32                         :: i
+  sll_int32                         :: ierr
+  sll_int32, parameter              :: m=2
+
+  this%n = n
+  this%k = k
+
+  SLL_ALLOCATE(this%tau(n), ierr)
+  do i = 1, n
+    this%tau(i) = tau_min + (i-1) * (tau_max-tau_min) / (n-1)
+  end do
+
+  SLL_ALLOCATE(this%t(n+k+m), ierr)
+
+  this%t(1:k)         = tau_min
+  this%t(k+1:n+m)     = this%tau(2:n-1)
+  this%t(n+m+1:n+m+k) = tau_max
+
+  SLL_ALLOCATE(this%q(1:(2*k-1)*(n+m)),    ierr)
+  SLL_ALLOCATE(this%bcoef(n),          ierr)
+  SLL_ALLOCATE(this%bcoef_spline(n+m), ierr)
+
+  if(.not. allocated(aj)) allocate(aj(k))
+  if(.not. allocated(dl)) allocate(dl(k))
+  if(.not. allocated(dr)) allocate(dr(k))
+
+end subroutine initialize_bspline_1d
   
-!*************************************************************************
-!
-!! INTERV brackets a real value in an ascending vector of values.
-!
-!  Discussion:
-!
-!    The XT array is a set of increasing values.  The goal of the routine
-!    is to determine the largest index I so that XT(I) <= X.
-!
-!    The routine is designed to be efficient in the common situation
-!    that it is called repeatedly, with X taken from an increasing
-!    or decreasing sequence.
-!
-!    This will happen when a piecewise polynomial is to be graphed.
-!    The first guess for LEFT is therefore taken to be the value
-!    returned at the previous call and stored in the local variable ILO.
-!
-!    A first check ascertains that ILO < LXT.  This is necessary
-!    since the present call may have nothing to do with the previous
-!    call.  Then, if
-!
-!      XT(ILO) <= X < XT(ILO+1),
-!
-!    we set LEFT = ILO and are done after just three comparisons.
-!
-!    Otherwise, we repeatedly double the difference ISTEP = IHI - ILO
-!    while also moving ILO and IHI in the direction of X, until
-!
-!      XT(ILO) <= X < XT(IHI)
-!
-!    after which we use bisection to get, in addition, ILO + 1 = IHI.
-!    The value LEFT = ILO is then returned.
-!
-!  Modified:
-!
-!    14 February 2007
-!
-!  Author:
-!
-!    Carl DeBoor
-!
-!  Reference:
-!
-!    Carl DeBoor,
-!    A Practical Guide to Splines,
-!    Springer, 2001,
-!    ISBN: 0387953663.
-!
-!  Parameters:
-!
-!    Input, real ( kind = 8 ) XT(LXT), a nondecreasing sequence of values.
-!
-!    Input, integer LXT, the dimension of XT.
-!
-!    Input, real ( kind = 8 ) X, the point whose location with
-!    respect to the sequence XT is to be determined.
-!
-!    Output, integer LEFT, the index of the bracketing value:
-!      1     if             X  <  XT(1)
-!      I     if   XT(I)  <= X  < XT(I+1)
-!      LXT   if  XT(LXT) <= X
-!
-!    Output, integer MFLAG, indicates whether X lies within the
-!    range of the data.
-!    -1:            X  <  XT(1)
-!     0: XT(I)   <= X  < XT(I+1)
-!    +1: XT(LXT) <= X
-!
+!> Brackets a real value in an ascending vector of values.
+!> @details
+!!
+!!   The XT array is a set of increasing values.  The goal of the routine
+!!   is to determine the largest index I so that XT(I) <= X.
+!!
+!!   The routine is designed to be efficient in the common situation
+!!   that it is called repeatedly, with X taken from an increasing
+!!   or decreasing sequence.
+!!
+!!   This will happen when a piecewise polynomial is to be graphed.
+!!   The first guess for LEFT is therefore taken to be the value
+!!   returned at the previous call and stored in the local variable ILO.
+!!
+!!   A first check ascertains that ILO < LXT.  This is necessary
+!!   since the present call may have nothing to do with the previous
+!!   call.  Then, if
+!!
+!!     XT(ILO) <= X < XT(ILO+1),
+!!
+!!   we set LEFT = ILO and are done after just three comparisons.
+!!
+!!   Otherwise, we repeatedly double the difference ISTEP = IHI - ILO
+!!   while also moving ILO and IHI in the direction of X, until
+!!
+!!     XT(ILO) <= X < XT(IHI)
+!!
+!!   after which we use bisection to get, in addition, ILO + 1 = IHI.
+!!   The value LEFT = ILO is then returned.
+!!
+!!  Reference:
+!!
+!!    Carl DeBoor,
+!!    A Practical Guide to Splines,
+!!    Springer, 2001,
+!!    ISBN: 0387953663.
+!!
+!! @param[in] xt(lxt), a nondecreasing sequence of values.
+!! @param[in] lxt, the dimension of xt.
+!! @param[in] x, the point whose location with
+!!    respect to the sequence XT is to be determined.
+!! @param[out] left, the index of the bracketing value:
+!!      1     if             X  <  XT(1)
+!!      I     if   XT(I)  <= X  < XT(I+1)
+!!      LXT   if  XT(LXT) <= X
+!! @param[out] mflag, indicates whether X lies within the
+!!    range of the data.
+!!    -1:            X  <  XT(1)
+!!     0: XT(I)   <= X  < XT(I+1)
+!!    +1: XT(LXT) <= X
+!<
 subroutine interv( xt, lxt, x, left, mflag )
  
 sll_real64, intent(in)  :: xt(:)
@@ -189,7 +230,6 @@ end subroutine interv
 
 !***********************************************************************
 !
-!! BSPLVB evaluates B-splines at a point X with a given knot sequence.
 !
 !  Discusion:
 !
@@ -273,6 +313,7 @@ end subroutine interv
 !    with the B-spline B(LEFT-JOUT+I,JOUT,T) on the interval
 !    (T(LEFT),T(LEFT+1)).
 !
+!> Evaluates B-splines at a point X with a given knot sequence.
 subroutine bsplvb ( t, jhigh, index, x, left, biatx )
   
 sll_int32,  intent(in)  :: jhigh
@@ -333,7 +374,6 @@ end subroutine bsplvb
   
 !*************************************************************************
 !
-!! BSPLVD calculates the nonvanishing B-splines and derivatives at X.
 !
 !  Discussion:
 !
@@ -384,6 +424,7 @@ end subroutine bsplvb
 !    Input, integer NDERIV, indicates that values of B-splines and their
 !    derivatives up to but not including the NDERIV-th are asked for.
 !
+!> Calculates the nonvanishing B-splines and derivatives at X.
 subroutine bsplvd ( t, k, x, left, a, dbiatx, nderiv )
     
 sll_int32,  intent(in)    :: k
@@ -406,7 +447,6 @@ sll_int32  :: ldummy
 sll_int32  :: m
 sll_int32  :: mhigh
 
-
 mhigh = max ( min ( nderiv, k ), 1 )
 !
 !  MHIGH is usually equal to NDERIV.
@@ -422,15 +462,15 @@ if ( mhigh == 1 ) return
 !
 ideriv = mhigh
 do m = 2, mhigh
-   jp1mid = 1
-   do j = ideriv, k
-      dbiatx(j,ideriv) = dbiatx(jp1mid,1)
-      jp1mid = jp1mid + 1
-      
-   end do
-   ideriv = ideriv - 1
-   
-   call bsplvb ( t, k+1-ideriv, 2, x, left, dbiatx )
+  jp1mid = 1
+  do j = ideriv, k
+     dbiatx(j,ideriv) = dbiatx(jp1mid,1)
+     jp1mid = jp1mid + 1
+     
+  end do
+  ideriv = ideriv - 1
+  
+  call bsplvb ( t, k+1-ideriv, 2, x, left, dbiatx )
    
 end do
 !
@@ -487,8 +527,6 @@ end subroutine bsplvd
   
 !*********************************************************************
 !
-!! BVALUE evaluates a derivative of a spline from
-! its B-spline representation.
 !
 !  Discussion:
 !
@@ -560,46 +598,35 @@ end subroutine bsplvd
 !    Output, real ( kind = 8 ) BVALUE, the value of the (JDERIV)-th
 !    derivative of the spline at X.
 !
+!> Evaluates a derivative of a spline from its B-spline representation.
 function bvalue( t, bcoef, n, k, x, jderiv ) result(res)
     
-sll_int32 :: k
-sll_int32 :: n
+sll_real64, intent(in)  :: t(:)
+sll_real64, intent(in)  :: bcoef(:)
+sll_int32,  intent(in)  :: n
+sll_int32,  intent(in)  :: k
+sll_real64, intent(in)  :: x
+sll_int32,  intent(in)  :: jderiv
 
-sll_real64,dimension(:),pointer:: aj !(k)
-sll_real64,dimension(:),pointer:: bcoef!(n)
-sll_real64:: res
-!sll_real64:: tmp_value
-sll_real64,dimension(:),pointer:: dl!(k)
-sll_real64,dimension(:),pointer:: dr!(k)
+sll_real64              :: res
+
 sll_int32 :: i
 sll_int32 :: ilo
 sll_int32 :: j
 sll_int32 :: jc
 sll_int32 :: jcmax
 sll_int32 :: jcmin
-sll_int32 :: jderiv
 sll_int32 :: jj
 sll_int32 :: mflag
-sll_real64,dimension(:),pointer:: t!(n+k)
-sll_real64:: x
 sll_int32 :: ierr
 
 res = 0.0_8
 
-SLL_ALLOCATE(aj(k),ierr)
-SLL_ALLOCATE(dl(k),ierr)
-SLL_ALLOCATE(dr(k),ierr)
+aj = 0.0_f64
+dl = 0.0_f64
+dr = 0.0_f64
 
-aj(:)=0.0_8
-dl(:)=0.0_8
-dr(:)=0.0_8
-
-if ( k <= jderiv ) then
-   SLL_DEALLOCATE(aj,ierr)
-   SLL_DEALLOCATE(dl,ierr)
-   SLL_DEALLOCATE(dr,ierr)
-   return
-end if
+if ( k <= jderiv ) return
 !
 !  Find I so that 1 <= I < N+K and T(I) < T(I+1) and T(I) <= X < T(I+1).
 !
@@ -609,21 +636,13 @@ end if
 !
 call interv ( t, n+k, x, i, mflag )
 
-if ( mflag /= 0 ) then
-   SLL_DEALLOCATE(aj,ierr)
-   SLL_DEALLOCATE(dl,ierr)
-   SLL_DEALLOCATE(dr,ierr)
-   return
-end if
+if ( mflag /= 0 ) return
 !
 !  If K = 1 (and JDERIV = 0), BVALUE = BCOEF(I).
 !
 if ( k <= 1 ) then
-   res = bcoef(i)
-   SLL_DEALLOCATE(aj,ierr)
-   SLL_DEALLOCATE(dl,ierr)
-   SLL_DEALLOCATE(dr,ierr)
-   return
+  res = bcoef(i)
+  return
 end if
 !
 !  Store the K B-spline coefficients relevant for the knot interval
@@ -636,251 +655,64 @@ end if
 jcmin = 1
 
 if ( k <= i ) then
-   
-   do j = 1, k-1
-      dl(j) = x - t(i+1-j)
-   end do
-   
+  do j = 1, k-1
+    dl(j) = x - t(i+1-j)
+  end do
 else
-   
-   jcmin = 1 - ( i - k )
-   
-   do j = 1, i
-      dl(j) = x - t(i+1-j)
-   end do
-   
-   do j = i, k-1
-      aj(k-j) = 0.0_8
-      dl(j) = dl(i)
-   end do
-   
+  jcmin = 1 - ( i - k )
+  do j = 1, i
+    dl(j) = x - t(i+1-j)
+  end do
+  do j = i, k-1
+    aj(k-j) = 0.0_8
+    dl(j) = dl(i)
+  end do
 end if
 
 jcmax = k
-
 if ( n < i ) then
-   
-   jcmax = k + n - i
-   do j = 1, k + n - i
-      dr(j) = t(i+j) - x
-   end do
-   
-   do j = k+n-i, k-1
-      aj(j+1) = 0.0_8
-      dr(j) = dr(k+n-i)
-   end do
-   
+  jcmax = k + n - i
+  do j = 1, k + n - i
+    dr(j) = t(i+j) - x
+  end do
+  do j = k+n-i, k-1
+    aj(j+1) = 0.0_8
+    dr(j) = dr(k+n-i)
+  end do
 else
-   
-   do j = 1, k-1
-      dr(j) = t(i+j) - x
-   end do
-   
+  do j = 1, k-1
+    dr(j) = t(i+j) - x
+  end do
 end if
 
 do jc = jcmin, jcmax
-   aj(jc) = bcoef(i-k+jc)
+  aj(jc) = bcoef(i-k+jc)
 end do
-!
 !  Difference the coefficients JDERIV times.
-!
 do j = 1, jderiv
-   
-   ilo = k - j
-   do jj = 1, k - j
-      aj(jj) = ( ( aj(jj+1) - aj(jj) ) / ( dl(ilo) + dr(jj) ) ) &
-           * real ( k - j, kind = 8 )
-      ilo = ilo - 1
-   end do
-   
+  ilo = k - j
+  do jj = 1, k - j
+    aj(jj) = ( ( aj(jj+1) - aj(jj) ) / ( dl(ilo) + dr(jj) ) ) &
+          * real ( k - j, kind = 8 )
+    ilo = ilo - 1
+  end do
 end do
 !
 !  Compute value at X in (T(I),T(I+1)) of JDERIV-th derivative,
 !  given its relevant B-spline coefficients in AJ(1),...,AJ(K-JDERIV).
 !
 do j = jderiv+1, k-1
-   ilo = k-j
-   do jj = 1, k-j
-      aj(jj) = ( aj(jj+1) * dl(ilo) + aj(jj) * dr(jj) ) &
-           / ( dl(ilo) + dr(jj) )
-      ilo = ilo - 1
-   end do
+  ilo = k-j
+  do jj = 1, k-j
+    aj(jj) = ( aj(jj+1) * dl(ilo) + aj(jj) * dr(jj) ) &
+          / ( dl(ilo) + dr(jj) )
+    ilo = ilo - 1
+  end do
 end do
 
 res = aj(1)
 
-SLL_DEALLOCATE(aj,ierr)
-SLL_DEALLOCATE(dl,ierr)
-SLL_DEALLOCATE(dr,ierr)
-
 end function bvalue
-  
-subroutine spli1d_dir (ai_nx, ai_kx, apr_taux, apr_g, apr_Bcoef, apr_tx )
-
-! INPUT
-sll_int32  :: ai_nx, ai_kx
-sll_real64, dimension ( ai_nx) :: apr_taux
-sll_real64, dimension ( ai_nx) :: apr_g
-! OUTPUT
-sll_real64, dimension ( ai_nx  ) :: apr_Bcoef
-sll_real64, dimension ( ai_nx + ai_kx ) :: apr_tx
-! LOCAL VARIABLES		
-sll_real64, dimension ( ai_nx ) :: lpr_work1
-!sll_real64, dimension ( ai_nx         ) :: lpr_work2
-sll_real64, dimension ( ai_nx *( 2*ai_kx-1) ) :: lpr_work31
-!sll_real64, dimension ( (ai_nx-ai_kx)*(2*ai_kx+3)+5*ai_kx+3 ) :: scrtch
-!sll_real64, dimension ( ai_nx + ai_kx ) :: t 
-sll_int32  :: li_i, li_iflag
-
-lpr_work1(:) = 0.0
-
-! *** set up knots interpolate between knots
-! x
-!  if (ai_kx <= 2) then 
-apr_tx ( 1 : ai_kx ) = apr_taux ( 1 )
-apr_tx ( ai_nx + 1 : ai_nx + ai_kx ) = apr_taux ( ai_nx )
-
-if ( mod(ai_kx,2) == 0 ) then
-   do li_i = ai_kx + 1, ai_nx
-      apr_tx ( li_i ) = apr_taux ( li_i - ai_kx/2 ) 
-      
-   end do
-else
-   
-   do li_i = ai_kx + 1, ai_nx
-      apr_tx ( li_i ) = &
-           0.5*( apr_taux ( li_i - (ai_kx-1)/2 ) + &
-           apr_taux ( li_i -1 - (ai_kx-1)/2 ) )
-      
-   end do
-   
-end if
-
-apr_Bcoef = 0.0_8
-do li_i = 1, ai_nx
-   apr_Bcoef ( li_i ) = apr_g ( li_i )
-end do
-
-!  *** construct b-coefficients of interpolant
-!
-call splint ( &
-     apr_taux,&
-     apr_g,&
-     apr_tx, &
-     ai_nx,&
-     ai_kx, &
-     lpr_work31,&
-     apr_Bcoef, &
-     li_iflag )
-  
-end subroutine spli1d_dir
-
-
-subroutine spli1d_per( ar_L, ai_nx, ai_kx, apr_taux, apr_g, apr_Bcoef, apr_tx)
-
-! CALLED WHEN WE WANT TO INTERPOL WITH A PERIODIC 
-! FIRST PARAM WITH A PERIOD = ar_L
-! INPUT
-sll_real64 :: ar_L 
-sll_int32  :: ai_nx, ai_kx
-sll_real64, dimension ( ai_nx) :: apr_taux
-sll_real64, dimension ( ai_nx) :: apr_g
-! OUTPUT
-sll_real64, dimension ( ai_nx ) :: apr_Bcoef
-sll_real64, dimension ( ai_nx + ai_kx) :: apr_tx
-! LOCAL VARIABLES		
-sll_real64, dimension ( ai_nx) :: lpr_taux
-sll_real64, dimension ( ai_nx) :: lpr_g
-sll_real64, dimension ( ai_nx *( 2*ai_kx-1) ) :: lpr_work
-!sll_real64, dimension ( (ai_nx-ai_kx)*(2*ai_kx+3)+5*ai_kx+3 ) :: scrtch
-sll_int32 :: iflag
-sll_int32 :: li_i
-if ( ar_L == 0.0_8 ) then
-   print*,'Error spli1d_per : called with a period = 0 '
-   stop
-end if
-
-
-lpr_taux ( 1 : ai_nx - 1 ) = apr_taux ( 1 : ai_nx - 1 )
-lpr_taux ( ai_nx ) = apr_taux ( ai_nx ) !apr_taux ( 1 ) + ar_L
-
-lpr_g ( 1 : ai_nx - 1  ) = apr_g ( 1 : ai_nx - 1 )
-lpr_g ( ai_nx) = apr_g ( ai_nx ) !apr_g ( 1 )		
-
-
-apr_tx ( 1 : ai_kx ) = lpr_taux ( 1 )
-apr_tx ( ai_nx + 1 : ai_nx + ai_kx ) = lpr_taux ( ai_nx )
-
-
-if ( mod(ai_kx,2) == 0 ) then
-   do li_i = ai_kx + 1, ai_nx
-      apr_tx ( li_i ) = lpr_taux ( li_i - ai_kx/2 ) 
-      
-   end do
-else
-   
-   do li_i = ai_kx + 1, ai_nx
-      apr_tx ( li_i ) = &
-           0.5*( lpr_taux ( li_i - (ai_kx-1)/2 ) + &
-           lpr_taux ( li_i -1 - (ai_kx-1)/2 ) )
-      
-   end do
-   
-end if
-
-call splint(lpr_taux,lpr_g,apr_tx,ai_nx,ai_kx,lpr_work,apr_Bcoef,iflag)
-
-end subroutine spli1d_per
-
-subroutine spli1d_der(&
-    ai_nx,&
-    ai_nx_der,&
-    ai_kx,&
-    apr_taux,&
-    apr_g,&
-    apr_taux_der,&
-    apr_g_der,&
-    apr_Bcoef,&
-    apr_tx)
- implicit none
- ! INPUT
- sll_int32  :: ai_nx, ai_kx,ai_nx_der
- sll_real64, dimension ( ai_nx) :: apr_taux
- sll_real64, dimension ( ai_nx) :: apr_g
- sll_int32, dimension ( ai_nx_der) :: apr_taux_der
- sll_real64, dimension ( ai_nx_der) :: apr_g_der
- ! OUTPUT
- sll_real64, dimension ( ai_nx + ai_nx_der) :: apr_Bcoef
- sll_real64, dimension ( ai_nx + ai_nx_der + ai_kx) :: apr_tx
- ! LOCAL VARIABLES		
- sll_real64, dimension ( (ai_nx+ai_nx_der) *( 2*ai_kx-1) ) :: lpr_work
- !sll_real64, dimension ( (ai_nx-ai_kx)*(2*ai_kx+3)+5*ai_kx+3 ) :: scrtch
- sll_int32 :: iflag
- 
- apr_tx = 0.0_f64
- apr_tx ( 1 : ai_kx ) = apr_taux ( 1 )
- apr_tx ( ai_nx+ ai_nx_der + 1: ai_nx + ai_nx_der + ai_kx ) = apr_taux ( ai_nx )
-
- 
- if (ai_nx + ai_nx_der + ai_kx == ai_nx + 2*(ai_kx-1)) then
-    apr_tx (ai_kx+1: ai_nx+ ai_nx_der) = apr_taux(2:ai_nx-1)
-    
- else
-    print*, 'problem with construction of knots' 
- end if
-
-
- call splint_der ( &
-      apr_taux,&
-      apr_g,&
-      apr_taux_der,&
-      apr_g_der,&
-      apr_tx,&
-      ai_nx,ai_nx_der,ai_kx,&
-      lpr_work, apr_Bcoef, iflag )
- 
- 
-end subroutine spli1d_der
   
 !*************************************************************************
 !
