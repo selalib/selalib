@@ -69,24 +69,12 @@ SLL_ALLOCATE(gtau(n),ierr)
 gtau = cos(2*sll_pi*bsplines%tau)
 call compute_coefficients( bsplines, gtau)
 call interpolate_array_values( bsplines, nx, x, y)
-do i = 1, n
-  write(11,*) bsplines%tau(i), gtau(i)
-end do
-do i = 1, nx
-  write(12,*) x(i), y(i), cos(2*sll_pi*x(i))
-end do
 print*, "error = ", maxval(abs(y-cos(2*sll_pi*x)))
 
 SLL_ALLOCATE(htau(n),ierr)
 htau = sin(2*sll_pi*bsplines%tau)
 call compute_coefficients( bsplines, htau)
 call interpolate_array_values( bsplines, nx, x, y)
-do i = 1, n
-  write(21,*) bsplines%tau(i),htau(i)
-end do
-do i = 1, nx
-  write(22,*) x(i), y(i), sin(2*sll_pi*x(i))
-end do
 print*, "error = ", maxval(abs(y-sin(2*sll_pi*x)))
 
 print*, 'PASSED'
@@ -158,7 +146,7 @@ subroutine build_system(this)
     
     taui = this%tau(i)
     call interv( this%t, n+k, taui, left, mflag )
-    call bsplvb ( this%t, k, 1, taui, left, this%bcoef )
+    call bsplvb( this%t, k, 1, taui, left, this%bcoef )
     jj = i - left + 1 + ( left - k ) * ( k + k - 1 )
     do j = 1, k
       jj = jj + kpkm2
@@ -172,8 +160,6 @@ subroutine build_system(this)
   call banfac ( this%q, k+k-1, n, k-1, k-1, iflag )
     
   if ( iflag == 2 ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'SPLINT - Fatal Error!'
     write ( *, '(a)' ) '  The linear system is not invertible!'
     stop
   end if
@@ -187,7 +173,6 @@ subroutine compute_coefficients( this, gtau)
   
   SLL_ASSERT(size(gtau) == this%n)
 
-  !  Solve A * BCOEF = GTAU by back substitution.
   this%bcoef(1:n) = gtau(1:n)
   
   call banslv( this%q, this%k+this%k-1, n, this%k-1, this%k-1, this%bcoef )
@@ -201,7 +186,7 @@ subroutine interpolate_array_values( this, nx, x, y)
   sll_real64, intent(in)  :: x(nx)
   sll_real64, intent(out) :: y(nx)
 
-  sll_int32              :: i
+  sll_int32               :: i
   
   do i = 1, nx
     y(i) = bvalue( this%t, this%bcoef, this%n, this%k, x(i), 0)
