@@ -3475,9 +3475,9 @@ subroutine compute_field_from_phi_2d_fd_conservative_curvilinear2(phi,mesh_2d,tr
 
 
   subroutine compute_ww_test(ww,r,s)
-    sll_real64, dimension(r:s-1), intent(out) :: ww
     sll_int32, intent(in) :: r
     sll_int32, intent(in) :: s
+    sll_real64, dimension(r:s-1), intent(out) :: ww
     sll_real64, dimension(:), allocatable :: w
     sll_real64 :: tmp
     sll_int32 :: i
