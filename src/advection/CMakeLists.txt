@@ -38,7 +38,8 @@ TARGET_LINK_LIBRARIES( sll_advection
                        sll_splines
                        sll_fft
                        sll_boundary_condition_descriptors
-                       sll_utilities)
+                       sll_utilities
+                       sll_integration)
 
 IF(BUILD_TESTING)
 
