@@ -220,12 +220,15 @@ sll_int32               :: mflag
 sll_int32               :: ierr
 sll_int32               :: k
 sll_int32               :: l
+sll_int32               :: nmk
 sll_int32,  parameter   :: m = 2
 sll_real64, allocatable :: aj(:)
 sll_real64, allocatable :: dl(:)
 sll_real64, allocatable :: dr(:)
+sll_real64              :: xi
 
 k = this%k
+nmk = n+m+k
 
 SLL_ALLOCATE(aj(k), ierr)
 SLL_ALLOCATE(dl(k), ierr)
@@ -233,28 +236,29 @@ SLL_ALLOCATE(dr(k), ierr)
 
 do l = 1, n
 
+  xi = x(l)
   aj = 0.0_f64
   dl = 0.0_f64
   dr = 0.0_f64
 
-  call interv ( this%t, n+m+k, x(l), i, mflag )
+  call interv ( this%t, nmk, xi, i, mflag )
   
   if ( mflag /= 0 ) return
+
   if ( k <= 1 ) then
     y(l) = this%bcoef_spline(i)
     cycle
   end if
   
-  jcmin = 1
-  
   if ( k <= i ) then
     do j = 1, k-1
-      dl(j) = x(l) - this%t(i+1-j)
+      dl(j) = xi - this%t(i+1-j)
     end do
+    jcmin = 1
   else
     jcmin = 1-(i-k)
     do j = 1, i
-      dl(j) = x(l) - this%t(i+1-j)
+      dl(j) = xi - this%t(i+1-j)
     end do
     do j = i, k-1
       aj(k-j) = 0.0_f64
@@ -262,19 +266,19 @@ do l = 1, n
     end do
   end if
   
-  jcmax = k
   if ( n+m < i ) then
-    jcmax = k+n+m-i
+    jcmax = nmk-i
     do j = 1, jcmax
-      dr(j) = this%t(i+j) - x(l)
+      dr(j) = this%t(i+j) - xi
     end do
     do j = jcmax, k-1
       aj(j+1) = 0.0_8
       dr(j) = dr(jcmax)
     end do
   else
+    jcmax = k
     do j = 1, k-1
-      dr(j) = this%t(i+j) - x(l)
+      dr(j) = this%t(i+j) - xi
     end do
   end if
   
@@ -293,11 +297,11 @@ do l = 1, n
   y(l) = aj(1)
 
 end do
+
 DEALLOCATE(aj,dl,dr)
 
 end subroutine interpolate_array_values
 
-  
 !> Brackets a real value in an ascending vector of values.
 !> @details
 !!
