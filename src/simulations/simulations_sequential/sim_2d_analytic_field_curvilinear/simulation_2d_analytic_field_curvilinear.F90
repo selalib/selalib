@@ -475,15 +475,15 @@ contains
     
     sim%csl_2012 = csl_2012
    
+        sim%num_dof1 =  num_cells_eta1+1
+        sim%num_dof2 =  num_cells_eta2+1
     select case(advection_form)
       case ("SLL_ADVECTIVE")
         sim%advection_form = SLL_ADVECTIVE
-        sim%num_dof1 =  num_cells_eta1+1
-        sim%num_dof2 =  num_cells_eta2+1
       case ("SLL_CONSERVATIVE")
         sim%advection_form = SLL_CONSERVATIVE
-        sim%num_dof1 =  num_cells_eta1
-        sim%num_dof2 =  num_cells_eta2
+        !sim%num_dof1 =  num_cells_eta1
+        !sim%num_dof2 =  num_cells_eta2
       case default
         print *,'#bad advection_form',advection_form
         print *,'#not implemented'
@@ -1052,7 +1052,7 @@ contains
               Nc_eta1+1, &
               eta_min = eta1_min, &
               eta_max = eta1_max, &
-              hermite_degree = hermite_degree1)
+              csl_degree = hermite_degree1+1)
           case default
             print *,'#bad f_interp1d_x1_case',f_interp1d_x1_case
         end select       
@@ -1087,7 +1087,7 @@ contains
               Nc_eta2+1, &
               eta_min = eta2_min, &
               eta_max = eta2_max, &
-              hermite_degree = hermite_degree2)
+              csl_degree = hermite_degree2+1)
           case default
             print *,'#bad f_interp1d_x2_case',f_interp1d_x2_case
         end select       
@@ -1467,8 +1467,6 @@ contains
           A2_init, &
           sim%phi_interp2d)
       case (SLL_COMPUTE_FIELD_FROM_PHI_FD)
-        select case (sim%advection_form)
-          case (SLL_ADVECTIVE)
             call compute_field_from_phi_2d_fd_curvilinear( &
               phi, &
               sim%mesh_2d, &
@@ -1478,20 +1476,22 @@ contains
               sim%phi_interp2d, &
               sim%fd_degree1, &
               sim%fd_degree2)      
-          case (SLL_CONSERVATIVE)
-            call compute_field_from_phi_2d_fd_conservative_curvilinear2( &
-              phi, &
-              sim%mesh_2d, &
-              sim%transformation, &
-              A1_init, &
-              A2_init, &
-              sim%phi_interp2d, &
-              sim%fd_degree1, &
-              sim%fd_degree2)                
-        case default
-          print *,'#bad choice of advection_form:',sim%advection_form
-          stop
-        end select
+!        select case (sim%advection_form)
+!          case (SLL_ADVECTIVE)
+!          case (SLL_CONSERVATIVE)
+!            call compute_field_from_phi_2d_fd_conservative_curvilinear2( &
+!              phi, &
+!              sim%mesh_2d, &
+!              sim%transformation, &
+!              A1_init, &
+!              A2_init, &
+!              sim%phi_interp2d, &
+!              sim%fd_degree1, &
+!              sim%fd_degree2)                
+!        case default
+!          print *,'#bad choice of advection_form:',sim%advection_form
+!          stop
+!        end select
 
         
       case default
@@ -1636,10 +1636,6 @@ contains
       print *,"#",step,maxval(abs(f_exact-f))
       
      
-
-
-      select case (sim%advection_form)
-        case (SLL_ADVECTIVE)
           call compute_divergence_2d_curvilinear( &
             div, &
             sim%mesh_2d, &
@@ -1647,18 +1643,29 @@ contains
             A1, &
             A2, &
             sim%phi_interp2d)
-        case (SLL_CONSERVATIVE)
-          call compute_divergence_2d_conservative_curvilinear( &
-            div, &
-            sim%mesh_2d, &
-            sim%transformation, &
-            A1, &
-            A2, &
-            sim%phi_interp2d)
-        case default
-          print *,'#bad choice of advection_form:',sim%advection_form
-          stop
-        end select
+
+
+!      select case (sim%advection_form)
+!        case (SLL_ADVECTIVE)
+!          call compute_divergence_2d_curvilinear( &
+!            div, &
+!            sim%mesh_2d, &
+!            sim%transformation, &
+!            A1, &
+!            A2, &
+!            sim%phi_interp2d)
+!        case (SLL_CONSERVATIVE)
+!          call compute_divergence_2d_conservative_curvilinear( &
+!            div, &
+!            sim%mesh_2d, &
+!            sim%transformation, &
+!            A1, &
+!            A2, &
+!            sim%phi_interp2d)
+!        case default
+!          print *,'#bad choice of advection_form:',sim%advection_form
+!          stop
+!        end select
         
 #ifndef NOHDF5
       if(modulo(step,sim%freq_diag)==0)then
@@ -3468,9 +3475,9 @@ subroutine compute_field_from_phi_2d_fd_conservative_curvilinear2(phi,mesh_2d,tr
 
 
   subroutine compute_ww_test(ww,r,s)
-    sll_real64, dimension(r:s-1), intent(out) :: ww
     sll_int32, intent(in) :: r
     sll_int32, intent(in) :: s
+    sll_real64, dimension(r:s-1), intent(out) :: ww
     sll_real64, dimension(:), allocatable :: w
     sll_real64 :: tmp
     sll_int32 :: i
