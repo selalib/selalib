@@ -64,7 +64,6 @@ contains
   !!                (and i_cell_y goes from 0 to m2d%num_cells2 - 1)
   !! BUT:
   !!                i_cell goes from 1 to m2d%num_cells1 * m2d%num_cells2  !!
-  !! (beurk)
 
   subroutine global_to_cell_offset( x, y, &
                       m2d,   &

@@ -11,7 +11,9 @@ ADD_EXECUTABLE( ${EXECUTABLE} simulation_${SIM_NAME}.F90
                               unit_test_${TEST_NAME}.F90 )
 TARGET_LINK_LIBRARIES( ${EXECUTABLE}
   sll_simulations_parallel
-  sll_working_precision)
+  sll_working_precision
+  sll_pic_interface
+  sll_simple_pic_particles )
 
 INSTALL( TARGETS ${EXECUTABLE}                     DESTINATION ${INSTALL_DIR} )
 INSTALL( FILES  ${INPUT_FILES} README ${POST_PROC} DESTINATION ${INSTALL_DIR} )
