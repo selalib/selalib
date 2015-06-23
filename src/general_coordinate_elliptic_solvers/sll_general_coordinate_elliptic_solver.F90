@@ -619,11 +619,32 @@ call compute_non_zero_splines_and_deriv_at_cell_points( &
 err = maxval(abs(v_splines1_check(1:2,:,:,:)-es%v_splines1(1:2,:,:,:)))  
 err = max(err,maxval(abs(v_splines2_check(1:2,:,:,:)-es%v_splines2(1:2,:,:,:))))  
 
-if(err>1.e-13)then
+if(err>1.e-8)then
   !print *,'#v_splines1_check=',v_splines1_check
   !print *,'#es%v_splines1=',es%v_splines1
-  do i=1,spline_degree1+1
-    print *,v_splines1_check(1,i,1,1),es%v_splines1(1,i,1,1)
+  do i=1,num_cells1
+  do j=1,num_pts_g1
+  do ii=1,spline_degree1+1    
+    print *,1,i,j,ii,es%v_splines1(1,ii,j,i), &
+      v_splines1_check(1,ii,j,i),&
+      v_splines1_check(1,ii,j,i)-es%v_splines1(1,ii,j,i)
+    print *,2,i,j,ii,es%v_splines1(2,ii,j,i), &
+      v_splines1_check(2,ii,j,i),&
+      v_splines1_check(2,ii,j,i)-es%v_splines1(2,ii,j,i)
+  enddo
+  enddo
+  enddo
+  do i=1,num_cells2
+  do j=1,num_pts_g2
+  do ii=1,spline_degree2+1
+    print *,1,i,j,ii,es%v_splines2(1,ii,j,i), &
+    v_splines2_check(1,ii,j,i), &
+    v_splines2_check(1,ii,j,i)-es%v_splines2(1,ii,j,i)
+    print *,2,i,j,ii,es%v_splines2(1,ii,j,i), &
+    v_splines2_check(2,ii,j,i), &
+    v_splines2_check(2,ii,j,i)-es%v_splines2(2,ii,j,i)
+  enddo
+  enddo
   enddo
   call flush()
   gspl1 = es%gauss_pts1(1,1)
@@ -2104,6 +2125,7 @@ subroutine compute_non_zero_splines_and_deriv_at_cell_points( &
   sll_real64 :: eta_max_loc
   sll_real64 :: delta_eta_loc
   sll_real64 :: eta
+  sll_real64, dimension(:,:), allocatable :: dbiatx
   if(num_cells<1)then
     print *,'#num_cells=',num_cells
     call flush()
@@ -2166,6 +2188,8 @@ subroutine compute_non_zero_splines_and_deriv_at_cell_points( &
     &','Problem with size of v_splines')
   endif
   
+  SLL_ALLOCATE(dbiatx(degree+1,2),ierr)
+  
   do i=1,num_cells
     eta_min_loc = knots(i+degree)
     eta_max_loc = knots(i+1+degree)
@@ -2179,7 +2203,9 @@ subroutine compute_non_zero_splines_and_deriv_at_cell_points( &
         i+degree, &
         eta, &
         degree, &
-        v_splines(1:2,1:degree+1,j,i), .true.)
+        dbiatx)
+      v_splines(1,1:degree+1,j,i) = dbiatx(:,1)
+      v_splines(2,1:degree+1,j,i) = dbiatx(:,2)
       !print *,  v_splines(1,1:degree+1,j,i)
       !call flush()
       !stop
@@ -2240,14 +2266,12 @@ subroutine compute_b_spline_at_x( &
   cell, &
   x, &
   degree, &
-  out, &
-  check)
+  out)
   sll_real64, dimension(:), intent(in) :: knots
   sll_int32, intent(in) :: cell
   sll_real64, intent(in) :: x
   sll_int32, intent(in) :: degree
   sll_real64, dimension(:), intent(out) :: out
-  logical, intent(in), optional :: check
   
   sll_real64 :: tmp1
   sll_real64 :: tmp2
@@ -2266,18 +2290,7 @@ subroutine compute_b_spline_at_x( &
     enddo
     out(ell+1) = tmp1
   enddo
-  
-  if(present(check))then
-    res = check_compute_b_spline_at_x( &
-      knots, &
-      cell, &
-      x, &
-      degree )
-    if(res>1.e-13)then
-      SLL_ERROR('compute_b_spline_at_x','bad computation')
-    endif  
-  endif
-  
+    
   
 end subroutine compute_b_spline_at_x
 
@@ -2357,69 +2370,41 @@ subroutine compute_b_spline_and_deriv_at_x( &
   cell, &
   x, &
   degree, &
-  out, &
-  check)
+  out)
   sll_real64, dimension(:), intent(in) :: knots
   sll_int32, intent(in) :: cell
   sll_real64, intent(in) :: x
   sll_int32, intent(in) :: degree
   sll_real64, dimension(:,:), intent(out) :: out
-  logical, intent(in), optional :: check
-  sll_real64, dimension(:,:), allocatable :: work
-  sll_real64, dimension(:,:), allocatable :: dbs1
-  type(deboor_type)                       :: db
   
   sll_real64 :: tmp1
   sll_real64 :: tmp2
   sll_int32 :: ell
   sll_int32 :: k
-  sll_real64 :: res
-  sll_int32 :: ierr
   
   out(1,1) = 1._f64
   do ell=1,degree
     tmp1 = (x-knots(cell+1-ell))/(knots(cell+1)-knots(cell+1-ell))*out(1,1)
     out(1,1) = out(1,1) -tmp1
     do k=2,ell
-      tmp2 = (x-knots(cell+k-ell))/(knots(cell+k)-knots(cell+k-ell))*out(1,k)
-      out(1,k) = out(1,k)+tmp1-tmp2
+      tmp2 = (x-knots(cell+k-ell))/(knots(cell+k)-knots(cell+k-ell))*out(k,1)
+      out(k,1) = out(k,1)+tmp1-tmp2
       tmp1 = tmp2
     enddo
-    out(1,ell+1) = tmp1
+    out(ell+1,1) = tmp1
+    if(ell==degree-1)then
+      !compute the derivatives
+      tmp1 = real(degree,f64)/(knots(cell+1)-knots(cell+1-degree))*out(1,1)
+      out(1,2) = -tmp1
+      do k=2,degree
+        out(k,2) = tmp1
+        tmp1 = real(degree,f64)/(knots(cell+k)-knots(cell+k-degree))*out(k,1)
+        out(k,2) = out(k,2)-tmp1
+      enddo
+      out(degree+1,2) = tmp1
+    endif
   enddo
-  
-  if(present(check))then
-    res = check_compute_b_spline_at_x( &
-      knots, &
-      cell, &
-      x, &
-      degree )
-    if(res>1.e-13)then
-      SLL_ERROR('compute_b_spline_at_x','bad computation')
-    endif  
-  endif
-  
-  !for the derivatives, we use for the moment
-  !the deboor routine
-
-  SLL_ALLOCATE(work(degree+1,degree+1),ierr)
-  SLL_ALLOCATE(dbs1(degree+1,2),ierr)
-
-
-  call bsplvd( &
-    db, &
-    knots(1:cell+degree+1), &
-    degree+1, &
-    x, &
-    cell, &
-    work, &
-    dbs1, &
-    2)
-  
-  out(2,:) = dbs1(:,2)
-  
-  
-  
+   
   
 end subroutine compute_b_spline_and_deriv_at_x
 
