@@ -8,7 +8,9 @@ TARGET_LINK_LIBRARIES( sll_simple_pic_particles
   sll_working_precision
   sll_assert
   sll_meshes
-  sll_pic_interface )
+  sll_pic_interface
+  sll_pic_accumulators
+  sll_pic_random_initializers )
 
 # Ctest
 IF(BUILD_TESTING)

@@ -21,21 +21,19 @@ module sll_simple_pic_4d_group_module
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
+#include "sll_accumulators.h"
+
 ! #include "particle_representation.h"   NEEDED?
 
   use sll_working_precision
   use sll_simple_pic_4d_particle_module
   use sll_cartesian_meshes
   use sll_module_pic_base
+  use sll_pic_random_initializers
 
   implicit none
 
-
   type, extends(sll_particle_group_base) :: sll_simple_pic_4d_group
-
-    !    ! the group
-    !    class( sll_species ), pointer   :: species
-        !    sll_int32                       :: id
 
     ! the particles
     sll_int32                                                   :: number_particles
@@ -68,10 +66,9 @@ module sll_simple_pic_4d_group_module
     procedure :: set_particle_weight    => simple_pic_4d_set_particle_weight
 
     ! Initializers
-    procedure :: set_landau_params      => simple_pic_4d_set_landau_params
+    procedure, pass(self) :: set_landau_parameters  => simple_pic_4d_set_landau_parameters
     procedure :: random_initializer     => simple_pic_4d_random_initializer
     procedure :: cartesian_initializer  => simple_pic_4d_cartesian_initializer
-
 
     procedure :: deposit_charge_2d          => simple_pic_4d_deposit_charge_2d
 
@@ -90,6 +87,7 @@ contains
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r
 
+    ! same charge for all particles
     r = self%species%q * self%common_weight
 
   end function simple_pic_4d_get_charge
@@ -101,6 +99,7 @@ contains
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r
 
+    ! same mass for all particles
     r = self%species%m * self%common_weight
 
   end function simple_pic_4d_get_mass
@@ -112,16 +111,14 @@ contains
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r(3)
 
-    type(sll_cartesian_mesh_2d),      pointer :: space_mesh_2d
-    type(sll_simple_pic_4d_particle), pointer :: particle
-
-    space_mesh_2d => self%space_mesh_2d
-    particle => self%particle_list(i)
-
     ! get x
-    r(1) = space_mesh_2d%eta1_min + space_mesh_2d%delta_eta1*( particle%offset_x + real(particle%i_cell_x - 1, f64) )
+    r(1) = self%space_mesh_2d%eta1_min + self%space_mesh_2d%delta_eta1*(                            &
+                self%particle_list(i)%offset_x + real(self%particle_list(i)%i_cell_x - 1, f64)      &
+            )
     ! get y
-    r(2) = space_mesh_2d%eta2_min + space_mesh_2d%delta_eta2*( particle%offset_y + real(particle%i_cell_y - 1, f64) )
+    r(2) = self%space_mesh_2d%eta2_min + self%space_mesh_2d%delta_eta2*(                            &
+                self%particle_list(i)%offset_y + real(self%particle_list(i)%i_cell_y - 1, f64)      &
+            )
 
   end function simple_pic_4d_get_x
 
@@ -132,35 +129,29 @@ contains
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r(3)
 
-    type(sll_simple_pic_4d_particle), pointer :: particle
-
-    particle => self%particle_list(i)
-
     ! get vx
-    r(1) = particle%v_x
+    r(1) = self%particle_list(i)%v_x
     ! get vy
-    r(2) = particle%v_y
+    r(2) = self%particle_list(i)%v_y
 
   end function simple_pic_4d_get_v
 
 
   !----------------------------------------------------------------------------
-  pure function ::  simple_pic_4d_get_cell_index(particle_group, i_part) res(i_cell)
-    type(sll_simple_pic_4d_group),  intent( in )    ::  particle_group
-    sll_int32,                      intent( in )    ::  i_part
-    sll_int32,                      intent( out )   ::  i_cell
+  ! get the cartesian cell index (here i_out to match the abstract interface), 1 <= i_out <= num_cells_x * num_cells_y
+  pure function simple_pic_4d_get_cell_index(self, i) result(i_out)
+    class(sll_simple_pic_4d_group),  intent( in )   ::  self
+    sll_int32,                      intent( in )    ::  i       !> particle index
+    sll_int32                                       ::  i_out   !> cell index
     sll_int32 ::  i_cell_x, i_cell_y
     sll_int32 ::  num_cells_x, num_cells_y
 
-    i_cell_x = particle_group%particle_list(i_part)%i_cell_x
-    i_cell_y = particle_group%particle_list(i_part)%i_cell_y
-    num_cells_x = particle_group%space_mesh_2d%num_cells1
-    num_cells_y = particle_group%space_mesh_2d%num_cells2
+    i_cell_x    = self%particle_list(i)%i_cell_x
+    i_cell_y    = self%particle_list(i)%i_cell_y
+    num_cells_x = self%space_mesh_2d%num_cells1
+    num_cells_y = self%space_mesh_2d%num_cells2
 
-    i_cell = 1 + modulo(i_cell_x - 1,  num_cells_x) + modulo(i_cell_y - 1,  num_cells_y) * num_cells_x
-
-    SLL_ASSERT( i_cell >= 1)
-    SLL_ASSERT( i_cell <= num_cells_x * num_cells_y )
+    i_out = 1 + modulo(i_cell_x - 1,  num_cells_x) + modulo(i_cell_y - 1,  num_cells_y) * num_cells_x
 
   end function simple_pic_4d_get_cell_index
 
@@ -210,35 +201,35 @@ contains
 
 
   !----------------------------------------------------------------------------
-  subroutine simple_pic_4d_set_v( self, i, v )
+  subroutine simple_pic_4d_set_v( self, i, x )
     class( sll_simple_pic_4d_group ), intent( inout ) :: self
     sll_int32                       , intent( in    ) :: i
-    sll_real64                      , intent( in    ) :: v(3)
+    sll_real64                      , intent( in    ) :: x(3)  !> this is the velocity, but argument name in abstract interface is x
 
     type(sll_simple_pic_4d_particle), pointer :: particle
 
     particle => self%particle_list(i)
-    particle%v_x = v(1)
-    particle%v_y = v(2)
+    particle%v_x = x(1)
+    particle%v_y = x(2)
 
   end subroutine simple_pic_4d_set_v
 
 
   !----------------------------------------------------------------------------
-  subroutine simple_pic_4d_set_common_weight( self, w )
+  subroutine simple_pic_4d_set_common_weight( self, s )
     class( sll_simple_pic_4d_group ), intent( inout ) :: self
-    sll_real64                      , intent( in    ) :: w
+    sll_real64                      , intent( in    ) :: s
 
-    self%common_weight = w
+    self%common_weight = s
 
   end subroutine simple_pic_4d_set_common_weight
 
 
   !----------------------------------------------------------------------------
-  subroutine simple_pic_4d_set_particle_weight( self, i, w )
+  subroutine simple_pic_4d_set_particle_weight( self, i, s )
     class( sll_simple_pic_4d_group ), intent( inout ) :: self
     sll_int32                       , intent( in    ) :: i
-    sll_real64                      , intent( in    ) :: w
+    sll_real64                      , intent( in    ) :: s
 
     print*, "Error (8654354237645) -- this subroutine is not implemented for simple_pic_4d_group objects"
     stop
@@ -247,7 +238,7 @@ contains
 
 
   !----------------------------------------------------------------------------
-  subroutine simple_pic_4d_set_landau_params( self, thermal_speed, alpha, k_landau )
+  subroutine simple_pic_4d_set_landau_parameters( self, thermal_speed, alpha, k_landau )
     class( sll_simple_pic_4d_group ), intent( inout ) :: self
     sll_real64                      , intent( in    ) :: thermal_speed
     sll_real64                      , intent( in    ) :: alpha
@@ -257,24 +248,29 @@ contains
     self%alpha = alpha
     self%k_landau = k_landau
 
-  end subroutine simple_pic_4d_set_landau_params
+  end subroutine simple_pic_4d_set_landau_parameters
 
 
   !----------------------------------------------------------------------------
-   subroutine simple_pic_4d_random_initializer( self, initial_density_identifier, rand_seed, rank, world_size )
+   subroutine simple_pic_4d_random_initializer( self, number_particles, initial_density_identifier, rand_seed, rank, world_size )
     class( sll_simple_pic_4d_group ), intent( inout ) :: self
+    sll_int32                       , intent( in )    :: number_particles
     sll_int32                       , intent( in    ) :: initial_density_identifier
     sll_int32, dimension(:)         , intent( in ), optional :: rand_seed
     sll_int32                       , intent( in ), optional :: rank, world_size
+    sll_int32                       :: ierr
 
     ! for the moment we only use the landau damping initial density
     ! so we don't use the initial_density_identifier, but eventually it should say which initial density is used
+
+    self%number_particles = number_particles
+    SLL_ALLOCATE( self%particle_list(number_particles), ierr )
 
     call sll_pic_4d_random_unweighted_initializer_landau_f0 (   &
       self%thermal_speed, self%alpha, self%k_landau,            & ! -> these parameters should be members of the initializer object
       self,                                                     &
       self%space_mesh_2d,                                       &
-      self%number_particles                                     &
+      self%number_particles,                                    &
       rand_seed, rank, world_size                               &
     )
 
@@ -299,34 +295,34 @@ contains
 
 
   subroutine simple_pic_4d_deposit_charge_2d( self, charge_accumulator )
-    class( sll_simple_pic_4d_group ),           intent( inout ) :: self
+    class( sll_simple_pic_4d_group ),           intent( inout )  :: self
     type( sll_charge_accumulator_2d ), pointer, intent( inout ) :: charge_accumulator
 
-    sll_int32,      :: i_part
-    sll_real64,     :: x_part(3)
-    sll_real64,     :: particle_charge
-    sll_real64,     :: tmp1, tmp2
+    type( charge_accumulator_cell_2d ), pointer             :: charge_accumulator_cell
+    type(sll_simple_pic_4d_particle), pointer :: particle
+    sll_int32       :: i_part, i_cell
+    sll_real64      :: xy_part(3)
+    sll_real64      :: particle_charge
+    sll_real64      :: dx, dy
 
     call reset_charge_accumulator_to_zero ( charge_accumulator )
 
-    particle_charge = particle_group%get_species_charge
+    particle_charge = self%species%q
     do i_part = 1, self%number_particles
 
       particle => self%particle_list( i_part )
       dx = particle%offset_x
       dy = particle%offset_y
-      i_cell = get_cell_index(particle_group, i_part)
+      i_cell = self%get_cell_index(i_part)
       charge_accumulator_cell => charge_accumulator%q_acc(i_cell)
 
       xy_part = self%get_x( i_part )  ! x and y
-      if( x_is_in_domain_2d( x_part, self%space_mesh_2d, self%domain_is_x_periodic, self%domain_is_y_periodic ) )then
+      if(x_is_in_domain_2d( xy_part(1), xy_part(2), self%space_mesh_2d, self%domain_is_x_periodic, self%domain_is_y_periodic ))then
 
-        tmp1 = (1.0_f64 - dx)
-        tmp2 = (1.0_f64 - dy)
-        charge_accumulator_cell%q_sw = charge_accumulator_cell%q_sw + q*tmp1*tmp2
-        charge_accumulator_cell%q_se = charge_accumulator_cell%q_se + q*  dx*tmp2
-        charge_accumulator_cell%q_nw = charge_accumulator_cell%q_nw + q*tmp1*  dy
-        charge_accumulator_cell%q_ne = charge_accumulator_cell%q_ne + q*  dx*  dy
+        charge_accumulator_cell%q_sw = charge_accumulator_cell%q_sw + particle_charge * (1.0_f64 - dx) * (1.0_f64 - dy)
+        charge_accumulator_cell%q_se = charge_accumulator_cell%q_se + particle_charge *            dx  * (1.0_f64 - dy)
+        charge_accumulator_cell%q_nw = charge_accumulator_cell%q_nw + particle_charge * (1.0_f64 - dx) *            dy
+        charge_accumulator_cell%q_ne = charge_accumulator_cell%q_ne + particle_charge *            dx  *            dy
 
       else ! particle not in domain (should store the reference for later processing)
         print*, "Error (097647687): for the moment every particle should be in the (periodic) 2d domain..."
@@ -340,7 +336,6 @@ contains
   !----------------------------------------------------------------------------
   ! Constructor
   function sll_simple_pic_4d_group_new( &
-        number_particles,       &
         species_charge,         &
         species_mass,           &
         particle_group_id,      &
@@ -348,26 +343,23 @@ contains
         domain_is_y_periodic,   &
         space_mesh_2d ) result(res)
 
-    type(sll_lt_pic_4d_group), pointer :: res
+    type( sll_simple_pic_4d_group ), pointer :: res
 
+    sll_int32, intent(in)   :: particle_group_id
     sll_real64, intent(in)  :: species_charge
     sll_real64, intent(in)  :: species_mass
-    type(sll_cartesian_mesh_2d), pointer :: space_mesh_2d
-
     logical, intent(in)      :: domain_is_x_periodic
     logical, intent(in)      :: domain_is_y_periodic
+    type(sll_cartesian_mesh_2d), pointer :: space_mesh_2d
+    sll_int32               :: ierr
 
     SLL_ALLOCATE( res, ierr )
 
     ! the group
-    res%species => species_new( species_charge, species_mass )
+    !    res%species => species_new( species_charge, species_mass )  ! todo: put this back in
     res%id = particle_group_id
     res%dimension_x = 2
     res%dimension_v = 2
-
-    ! the particles
-    res%number_particles = number_particles
-    SLL_ALLOCATE( res%particle_list(number_particles), ierr )
 
     ! physical 2d mesh, used eg in the Poisson solver
     if (.not.associated(space_mesh_2d) ) then
@@ -383,15 +375,15 @@ contains
   !----------------------------------------------------------------------------
   ! Destructor
   subroutine sll_simple_pic_4d_group_delete(particle_group)
-    type(sll_simple_pic_4d_group), pointer :: particle_group
+    class(sll_simple_pic_4d_group), pointer :: particle_group
     sll_int32 :: ierr
 
     if(.not. associated(particle_group) ) then
        print *, 'sll_simple_pic_4d_group_delete(): ERROR (986876), passed group was not associated.'
     end if
     SLL_DEALLOCATE(particle_group%particle_list, ierr)
-    SLL_DEALLOCATE(particle_group%mesh, ierr)
-    SLL_DEALLOCATE(p_group, ierr)
+    SLL_DEALLOCATE(particle_group%space_mesh_2d, ierr)
+    SLL_DEALLOCATE(particle_group, ierr)
 
   end subroutine sll_simple_pic_4d_group_delete
 
@@ -421,222 +413,222 @@ end module sll_simple_pic_4d_group_module
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-! --------------   ancien module ----------------
-
-
-     sll_int32 :: spline_degree
-     sll_int32 :: number_parts_x
-     sll_int32 :: number_parts_y
-     sll_int32 :: number_parts_vx
-     sll_int32 :: number_parts_vy
-     sll_int32 :: number_particles
-     sll_int32 :: active_particles
-     sll_int32 :: guard_list_size
-     sll_real64 :: qoverm 
-     logical    :: domain_is_x_periodic
-     logical    :: domain_is_y_periodic
-     logical    :: track_markers_outside_domain   !! default value is true
-     logical    :: use_exact_f0                   ! if false, interpolate f0 from its values on the initial/remapped particle grid
-     type(sll_cartesian_mesh_2d), pointer                     :: mesh
-
-     ! <<sll_lt_pic_4d_group-p_list>> uses [[file:lt_pic_4d_particle.F90::sll_lt_pic_4d_particle]]
-     type(sll_lt_pic_4d_particle), dimension(:), pointer        :: p_list
-     type(sll_lt_pic_4d_particle_guard_ptr), dimension(:), pointer :: p_guard
-
-     ! num_postprocess_particles: an array indexed by the thread number (if any),
-     ! of the number of particles to post-process after the main loop
-     sll_int32, dimension(:), pointer :: num_postprocess_particles
-
-     ! <<sll_lt_pic_4d_group-remapping_grid>> uses [[file:../meshes/sll_cartesian_meshes.F90::sll_cartesian_mesh_4d]]
-     type(sll_cartesian_mesh_4d),               pointer       :: remapping_grid
-!     sll_real64, dimension(:,:,:,:),          pointer       :: remapped_values     ! old name
-     sll_real64, dimension(:,:,:,:),          pointer       :: target_values
-
-     ! MCP [DEBUG]
-     sll_real64, dimension(:,:,:,:,:,:),          pointer       :: debug_bsl_remap
-
-     sll_real64, dimension(:),                pointer       :: ltpic_interpolation_coefs
-
-    ! temp fields (landau damping)
-    sll_real64 :: thermal_speed
-    sll_real64 :: alpha_landau
-    sll_real64 :: k_landau
-
-
-  end type sll_lt_pic_4d_group
-
-
-  interface sll_delete
-     module procedure sll_lt_pic_4d_group_delete
-!     module procedure delete_lt_particle_4d_group  ! old name
-  end interface sll_delete
-
-contains
-
-
-  function sll_lt_pic_4d_group_new( &
-!  function new_lt_particle_4d_group( &   ! old name
-        spline_degree,     &
-        number_parts_x,    &
-        number_parts_y,    &
-        number_parts_vx,   &
-        number_parts_vy,   &
-        remap_grid_vx_min, &
-        remap_grid_vx_max, &
-        remap_grid_vy_min, &
-        remap_grid_vy_max, &       
-        !        particle_array_size, &
-        !        guard_list_size,     &
-        qoverm,              &
-        domain_is_x_periodic,&
-        domain_is_y_periodic,&
-        mesh ) result(res)
-
-    type(sll_lt_pic_4d_group), pointer :: res
-
-    sll_int32, intent(in)   :: spline_degree
-    sll_int32, intent(in)   :: number_parts_x
-    sll_int32, intent(in)   :: number_parts_y
-    sll_int32, intent(in)   :: number_parts_vx
-    sll_int32, intent(in)   :: number_parts_vy
-    sll_real64, intent(in)  :: remap_grid_vx_min   
-    sll_real64, intent(in)  :: remap_grid_vx_max   
-    sll_real64, intent(in)  :: remap_grid_vy_min   
-    sll_real64, intent(in)  :: remap_grid_vy_max   
-    sll_real64, intent(in)  :: qoverm
-    logical, intent(in)      :: domain_is_x_periodic
-    logical, intent(in)      :: domain_is_y_periodic
-    
-    !        sll_int32, intent(in)   :: particle_array_size
-    !        sll_int32, intent(in)   :: guard_list_size
-    sll_int32   :: particle_array_size
-    sll_int32   :: guard_list_size
-
-    type(sll_cartesian_mesh_2d), pointer :: mesh
-    sll_int32   :: ierr
-    sll_int32   :: number_particles
-    sll_int32   :: remap_grid_number_cells_x
-    sll_int32   :: remap_grid_number_cells_y
-    sll_int32   :: remap_grid_number_cells_vx
-    sll_int32   :: remap_grid_number_cells_vy
-    sll_real64  :: remap_grid_x_min   
-    sll_real64  :: remap_grid_x_max   
-    sll_real64  :: remap_grid_y_min   
-    sll_real64  :: remap_grid_y_max   
-        
-    number_particles = number_parts_x * number_parts_y * number_parts_vx * number_parts_vy
-    particle_array_size = number_particles
-    guard_list_size = number_particles
-    !    if( number_particles > particle_array_size ) then
-    !       print *, 'sll_lt_pic_4d_group_new(): ERROR (code=6454357),  number_particles should not ', &
-    !            'be greater than the requested memory size, particle_array_size.'
-    !       print *, 'note: number_particles, particle_array_size = ', number_particles, particle_array_size
-    !       STOP
-    !    end if
-
-    SLL_ALLOCATE( res, ierr )
-    res%spline_degree = spline_degree
-    res%number_parts_x   = number_parts_x
-    res%number_parts_y   = number_parts_y
-    res%number_parts_vx  = number_parts_vx
-    res%number_parts_vy  = number_parts_vy
-    res%number_particles = number_particles
-    res%active_particles = number_particles
-    res%guard_list_size  = guard_list_size
-    res%qoverm           = qoverm
-    res%domain_is_x_periodic = domain_is_x_periodic
-    res%domain_is_y_periodic = domain_is_y_periodic
-    res%track_markers_outside_domain = .false.
-    res%use_exact_f0 = .false.
-    SLL_ALLOCATE( res%p_list(particle_array_size), ierr )
-    SLL_ALLOCATE( res%p_guard(guard_list_size), ierr )
-    SLL_ALLOCATE( res%target_values(number_parts_x, number_parts_y, number_parts_vx, number_parts_vy), ierr )
-
-    ! MCP [DEBUG]
-    SLL_ALLOCATE( res%debug_bsl_remap(number_parts_x, number_parts_y, number_parts_vx, number_parts_vy,4,3), ierr )
-
-    ! physical mesh, used for Poisson solver
-    if (.not.associated(mesh) ) then
-       print*, 'sll_lt_pic_4d_group_new(): ERROR, passed mesh not associated'
-    endif
-    res%mesh => mesh
-
-    ! phase space grid to initialize and remap the particles    
-    remap_grid_x_min = mesh%eta1_min
-    remap_grid_x_max = mesh%eta1_max
-    remap_grid_y_min = mesh%eta2_min
-    remap_grid_y_max = mesh%eta2_max
-    
-    if( domain_is_x_periodic )then
-        remap_grid_number_cells_x = number_parts_x
-    else
-        remap_grid_number_cells_x = number_parts_x - 1
-    end if
-    if( domain_is_y_periodic )then
-        remap_grid_number_cells_y = number_parts_y
-    else
-        remap_grid_number_cells_y = number_parts_y - 1
-    end if
-    remap_grid_number_cells_vx = number_parts_vx - 1
-    remap_grid_number_cells_vy = number_parts_vy - 1
-    res%remapping_grid => new_cartesian_mesh_4d(  remap_grid_number_cells_x,        &
-                                                remap_grid_number_cells_y,        & 
-                                                remap_grid_number_cells_vx,       &
-                                                remap_grid_number_cells_vy,       &
-                                                remap_grid_x_min,   &
-                                                remap_grid_x_max,   &
-                                                remap_grid_y_min,   &
-                                                remap_grid_y_max,   &
-                                                remap_grid_vx_min,  &
-                                                remap_grid_vx_max,  &
-                                                remap_grid_vy_min,  &
-                                                remap_grid_vy_max   & 
-                                              )
-  
- 
-
-    if( spline_degree == 3) then  ! ( otherwise, no need... )   
-        SLL_ALLOCATE( res%ltpic_interpolation_coefs(-1:1), ierr )
-           res%ltpic_interpolation_coefs(-1) = -1./6.
-           res%ltpic_interpolation_coefs(0)  =  8./6.
-           res%ltpic_interpolation_coefs(1)  =  -1./6.
-    end if
-
-  
-  
-  end function sll_lt_pic_4d_group_new
-
-
-  subroutine sll_lt_pic_4d_group_delete(p_group)
-    type(sll_lt_pic_4d_group), pointer :: p_group
-    sll_int32 :: ierr
-
-    if(.not. associated(p_group) ) then
-       print *, 'delete_lt_particle_group_4d(): ERROR, passed group was not ', &
-            'associated.'
-    end if
-    SLL_DEALLOCATE(p_group%p_list, ierr)
-    SLL_DEALLOCATE(p_group%p_guard, ierr)
-    SLL_DEALLOCATE(p_group%target_values, ierr)
-
-    ! MCP [DEBUG]
-    SLL_DEALLOCATE( p_group%debug_bsl_remap, ierr )
-
-    SLL_DEALLOCATE(p_group, ierr)
-    
-  end subroutine sll_lt_pic_4d_group_delete
-
-
-end module sll_lt_pic_4d_grou_modulee
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!! --------------   ancien module ----------------
+!
+!
+!     sll_int32 :: spline_degree
+!     sll_int32 :: number_parts_x
+!     sll_int32 :: number_parts_y
+!     sll_int32 :: number_parts_vx
+!     sll_int32 :: number_parts_vy
+!     sll_int32 :: number_particles
+!     sll_int32 :: active_particles
+!     sll_int32 :: guard_list_size
+!     sll_real64 :: qoverm
+!     logical    :: domain_is_x_periodic
+!     logical    :: domain_is_y_periodic
+!     logical    :: track_markers_outside_domain   !! default value is true
+!     logical    :: use_exact_f0                   ! if false, interpolate f0 from its values on the initial/remapped particle grid
+!     type(sll_cartesian_mesh_2d), pointer                     :: mesh
+!
+!     ! <<sll_lt_pic_4d_group-p_list>> uses [[file:lt_pic_4d_particle.F90::sll_lt_pic_4d_particle]]
+!     type(sll_lt_pic_4d_particle), dimension(:), pointer        :: p_list
+!     type(sll_lt_pic_4d_particle_guard_ptr), dimension(:), pointer :: p_guard
+!
+!     ! num_postprocess_particles: an array indexed by the thread number (if any),
+!     ! of the number of particles to post-process after the main loop
+!     sll_int32, dimension(:), pointer :: num_postprocess_particles
+!
+!     ! <<sll_lt_pic_4d_group-remapping_grid>> uses [[file:../meshes/sll_cartesian_meshes.F90::sll_cartesian_mesh_4d]]
+!     type(sll_cartesian_mesh_4d),               pointer       :: remapping_grid
+!!     sll_real64, dimension(:,:,:,:),          pointer       :: remapped_values     ! old name
+!     sll_real64, dimension(:,:,:,:),          pointer       :: target_values
+!
+!     ! MCP [DEBUG]
+!     sll_real64, dimension(:,:,:,:,:,:),          pointer       :: debug_bsl_remap
+!
+!     sll_real64, dimension(:),                pointer       :: ltpic_interpolation_coefs
+!
+!    ! temp fields (landau damping)
+!    sll_real64 :: thermal_speed
+!    sll_real64 :: alpha_landau
+!    sll_real64 :: k_landau
+!
+!
+!  end type sll_lt_pic_4d_group
+!
+!
+!  interface sll_delete
+!     module procedure sll_lt_pic_4d_group_delete
+!!     module procedure delete_lt_particle_4d_group  ! old name
+!  end interface sll_delete
+!
+!contains
+!
+!
+!  function sll_lt_pic_4d_group_new( &
+!!  function new_lt_particle_4d_group( &   ! old name
+!        spline_degree,     &
+!        number_parts_x,    &
+!        number_parts_y,    &
+!        number_parts_vx,   &
+!        number_parts_vy,   &
+!        remap_grid_vx_min, &
+!        remap_grid_vx_max, &
+!        remap_grid_vy_min, &
+!        remap_grid_vy_max, &
+!        !        particle_array_size, &
+!        !        guard_list_size,     &
+!        qoverm,              &
+!        domain_is_x_periodic,&
+!        domain_is_y_periodic,&
+!        mesh ) result(res)
+!
+!    type(sll_lt_pic_4d_group), pointer :: res
+!
+!    sll_int32, intent(in)   :: spline_degree
+!    sll_int32, intent(in)   :: number_parts_x
+!    sll_int32, intent(in)   :: number_parts_y
+!    sll_int32, intent(in)   :: number_parts_vx
+!    sll_int32, intent(in)   :: number_parts_vy
+!    sll_real64, intent(in)  :: remap_grid_vx_min
+!    sll_real64, intent(in)  :: remap_grid_vx_max
+!    sll_real64, intent(in)  :: remap_grid_vy_min
+!    sll_real64, intent(in)  :: remap_grid_vy_max
+!    sll_real64, intent(in)  :: qoverm
+!    logical, intent(in)      :: domain_is_x_periodic
+!    logical, intent(in)      :: domain_is_y_periodic
+!
+!    !        sll_int32, intent(in)   :: particle_array_size
+!    !        sll_int32, intent(in)   :: guard_list_size
+!    sll_int32   :: particle_array_size
+!    sll_int32   :: guard_list_size
+!
+!    type(sll_cartesian_mesh_2d), pointer :: mesh
+!    sll_int32   :: ierr
+!    sll_int32   :: number_particles
+!    sll_int32   :: remap_grid_number_cells_x
+!    sll_int32   :: remap_grid_number_cells_y
+!    sll_int32   :: remap_grid_number_cells_vx
+!    sll_int32   :: remap_grid_number_cells_vy
+!    sll_real64  :: remap_grid_x_min
+!    sll_real64  :: remap_grid_x_max
+!    sll_real64  :: remap_grid_y_min
+!    sll_real64  :: remap_grid_y_max
+!
+!    number_particles = number_parts_x * number_parts_y * number_parts_vx * number_parts_vy
+!    particle_array_size = number_particles
+!    guard_list_size = number_particles
+!    !    if( number_particles > particle_array_size ) then
+!    !       print *, 'sll_lt_pic_4d_group_new(): ERROR (code=6454357),  number_particles should not ', &
+!    !            'be greater than the requested memory size, particle_array_size.'
+!    !       print *, 'note: number_particles, particle_array_size = ', number_particles, particle_array_size
+!    !       STOP
+!    !    end if
+!
+!    SLL_ALLOCATE( res, ierr )
+!    res%spline_degree = spline_degree
+!    res%number_parts_x   = number_parts_x
+!    res%number_parts_y   = number_parts_y
+!    res%number_parts_vx  = number_parts_vx
+!    res%number_parts_vy  = number_parts_vy
+!    res%number_particles = number_particles
+!    res%active_particles = number_particles
+!    res%guard_list_size  = guard_list_size
+!    res%qoverm           = qoverm
+!    res%domain_is_x_periodic = domain_is_x_periodic
+!    res%domain_is_y_periodic = domain_is_y_periodic
+!    res%track_markers_outside_domain = .false.
+!    res%use_exact_f0 = .false.
+!    SLL_ALLOCATE( res%p_list(particle_array_size), ierr )
+!    SLL_ALLOCATE( res%p_guard(guard_list_size), ierr )
+!    SLL_ALLOCATE( res%target_values(number_parts_x, number_parts_y, number_parts_vx, number_parts_vy), ierr )
+!
+!    ! MCP [DEBUG]
+!    SLL_ALLOCATE( res%debug_bsl_remap(number_parts_x, number_parts_y, number_parts_vx, number_parts_vy,4,3), ierr )
+!
+!    ! physical mesh, used for Poisson solver
+!    if (.not.associated(mesh) ) then
+!       print*, 'sll_lt_pic_4d_group_new(): ERROR, passed mesh not associated'
+!    endif
+!    res%mesh => mesh
+!
+!    ! phase space grid to initialize and remap the particles
+!    remap_grid_x_min = mesh%eta1_min
+!    remap_grid_x_max = mesh%eta1_max
+!    remap_grid_y_min = mesh%eta2_min
+!    remap_grid_y_max = mesh%eta2_max
+!
+!    if( domain_is_x_periodic )then
+!        remap_grid_number_cells_x = number_parts_x
+!    else
+!        remap_grid_number_cells_x = number_parts_x - 1
+!    end if
+!    if( domain_is_y_periodic )then
+!        remap_grid_number_cells_y = number_parts_y
+!    else
+!        remap_grid_number_cells_y = number_parts_y - 1
+!    end if
+!    remap_grid_number_cells_vx = number_parts_vx - 1
+!    remap_grid_number_cells_vy = number_parts_vy - 1
+!    res%remapping_grid => new_cartesian_mesh_4d(  remap_grid_number_cells_x,        &
+!                                                remap_grid_number_cells_y,        &
+!                                                remap_grid_number_cells_vx,       &
+!                                                remap_grid_number_cells_vy,       &
+!                                                remap_grid_x_min,   &
+!                                                remap_grid_x_max,   &
+!                                                remap_grid_y_min,   &
+!                                                remap_grid_y_max,   &
+!                                                remap_grid_vx_min,  &
+!                                                remap_grid_vx_max,  &
+!                                                remap_grid_vy_min,  &
+!                                                remap_grid_vy_max   &
+!                                              )
+!
+!
+!
+!    if( spline_degree == 3) then  ! ( otherwise, no need... )
+!        SLL_ALLOCATE( res%ltpic_interpolation_coefs(-1:1), ierr )
+!           res%ltpic_interpolation_coefs(-1) = -1./6.
+!           res%ltpic_interpolation_coefs(0)  =  8./6.
+!           res%ltpic_interpolation_coefs(1)  =  -1./6.
+!    end if
+!
+!
+!
+!  end function sll_lt_pic_4d_group_new
+!
+!
+!  subroutine sll_lt_pic_4d_group_delete(p_group)
+!    type(sll_lt_pic_4d_group), pointer :: p_group
+!    sll_int32 :: ierr
+!
+!    if(.not. associated(p_group) ) then
+!       print *, 'delete_lt_particle_group_4d(): ERROR, passed group was not ', &
+!            'associated.'
+!    end if
+!    SLL_DEALLOCATE(p_group%p_list, ierr)
+!    SLL_DEALLOCATE(p_group%p_guard, ierr)
+!    SLL_DEALLOCATE(p_group%target_values, ierr)
+!
+!    ! MCP [DEBUG]
+!    SLL_DEALLOCATE( p_group%debug_bsl_remap, ierr )
+!
+!    SLL_DEALLOCATE(p_group, ierr)
+!
+!  end subroutine sll_lt_pic_4d_group_delete
+!
+!
+!end module sll_lt_pic_4d_grou_modulee
