@@ -308,6 +308,87 @@ subroutine compute_w_hermite(w,r,s)
   end subroutine compute_w_hermite
 
 
+
+subroutine compute_hermite_derivatives_periodic1(f,num_points1,num_points2,p,buf)
+  sll_real64, dimension(:,:), intent(in) :: f !> input 2d function
+  sll_int32, intent(in) :: num_points1 !> 
+  sll_int32, intent(in) :: num_points2 !> 
+  sll_int32, intent(in) :: p !> order of finite difference
+  sll_real64, dimension(:,:,:), intent(out) :: buf 
+  
+  sll_real64 :: w_left(-p/2:(p+1)/2)
+  sll_real64 :: w_right((-p+1)/2:p/2+1)
+  sll_int32 :: r_left
+  sll_int32 :: s_left
+  sll_int32 :: r_right
+  sll_int32 :: s_right
+  sll_int32 :: i
+  sll_int32 :: j
+  sll_real64 :: tmp
+  sll_int32 :: ii
+  sll_int32 :: ind
+      
+  r_left=-p/2
+  s_left=(p+1)/2
+  r_right=(-p+1)/2
+  s_right=p/2+1   
+  call compute_w_hermite(w_left,r_left,s_left)
+  if(((2*p/2)-p)==0)then
+    w_right(r_right:s_right) = w_left(r_left:s_left)
+  else
+    w_right(r_right:s_right) = -w_left(s_left:r_left:-1)
+  endif    
+  
+  do j=1,num_points2
+    do i=1,num_points1
+      buf(1,i,j) = f(i,j)  !f(0)
+      tmp=0._f64
+      do ii=r_left,s_left
+        ind=modulo(i+ii-2+num_points1,num_points1-1)+1
+        tmp=tmp+w_left(ii)*f(ind,j)
+      enddo
+      buf(2,i,j)=tmp !df(0)
+      tmp=0._f64
+      do ii=r_right,s_right
+        ind=modulo(i+ii-2+num_points1,num_points1-1)+1
+        tmp=tmp+w_right(ii)*f(ind,j)
+      enddo
+      buf(3,i,j)=tmp !df(1)      
+    enddo
+  enddo
+  
+end subroutine compute_hermite_derivatives_periodic1
+
+
+
+
+!function compute_hermite_r_left(p) result(res)
+!  sll_int32, intent(in) :: p
+!  sll_int32 :: res
+!  res = -p/2  
+!end function compute_hermite_r_left
+!
+!
+!function compute_hermite_s_left(p) result(res)
+!  sll_int32, intent(in) :: p
+!  sll_int32 :: res
+!  res = (p+1)/2  
+!end function compute_hermite_s_left
+!
+!
+!function compute_hermite_r_right(p) result(res)
+!  sll_int32, intent(in) :: p
+!  sll_int32 :: res
+!  res = (-p+1)/2  
+!end function compute_hermite_r_right
+!
+!function compute_hermite_s_right(p) result(res)
+!  sll_int32, intent(in) :: p
+!  sll_int32 :: res
+!  res = p/2/+1  
+!end function compute_hermite_s_right
+
+
 subroutine hermite_coef_nat_per(f,buf3d,N,d)
     sll_int32,intent(in)::N(2),d(2)
     sll_real64,dimension(N(1)+1,N(2)),intent(in)::f

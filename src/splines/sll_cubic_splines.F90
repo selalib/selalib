@@ -97,10 +97,10 @@ module sll_cubic_splines
      sll_int32 SLL_PRIV   :: x1_bc_type  !< PLEASE ADD DOCUMENTATION
      sll_int32 SLL_PRIV   :: x2_bc_type  !< PLEASE ADD DOCUMENTATION
      ! if data is not used, it should be deleted make a decision...
-     sll_real64, pointer SLL_PRIV :: data(:,:) => null()    !< data for the spline fit
-     sll_real64, pointer SLL_PRIV :: d1(:) => null()        !< scratch space D (L*D = F), refer to algorithm below. Size depends on BCs.
-     sll_real64, pointer SLL_PRIV :: d2(:) => null()        !< Second scratch space: 
-     sll_real64, pointer SLL_PRIV :: coeffs(:,:) => null()  !< the spline coefficients:
+     sll_real64, pointer SLL_PRIV :: data(:,:) => null()  !< data for the spline fit
+     sll_real64, pointer SLL_PRIV :: d1(:) => null()      !< scratch space D (L*D = F), refer to algorithm below. Size depends on BCs.
+     sll_real64, pointer SLL_PRIV :: d2(:) => null()      !< Second scratch space: 
+     sll_real64, pointer SLL_PRIV :: coeffs(:,:) => null()!< the spline coefficients:
      !> PLEASE ADD DOCUMENTATION
      sll_real64, pointer SLL_PRIV :: x1_min_slopes(:) => null() 
      !> PLEASE ADD DOCUMENTATION
@@ -936,7 +936,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     sll_int32, intent(in)                   :: n
     sll_real64, dimension(1:n), intent(in)  :: a_in
     sll_real64, dimension(1:n), intent(out) :: a_out
-    type(sll_cubic_spline_1D), pointer            :: spline
+    type(sll_cubic_spline_1D), pointer      :: spline
     sll_real64, dimension(:), pointer       :: coeffs
     sll_real64                              :: rh   ! reciprocal of cell spacing
     sll_int32                               :: cell
