@@ -3,6 +3,7 @@ module sll_module_deboor_splines_1d
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_assert.h"
+#include "sll_boundary_condition_descriptors.h"
 
 implicit none 
   
@@ -20,23 +21,28 @@ type :: sll_bspline_1d
   sll_real64, pointer :: q(:)
   sll_real64, pointer :: bcoef(:)
   sll_real64, pointer :: bcoef_spline(:)
+  sll_int32           :: bc_type
+  sll_real64, pointer :: dbiatx(:,:)
+  sll_real64, pointer :: a(:,:)
+  sll_real64, pointer :: aj(:)
+  sll_real64, pointer :: dl(:)
+  sll_real64, pointer :: dr(:)
 
 end type sll_bspline_1d
 
-sll_real64, allocatable :: aj(:)
-sll_real64, allocatable :: dl(:)
-sll_real64, allocatable :: dr(:)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine initialize_bspline_1d(this, n, k, tau_min, tau_max)
+subroutine initialize_bspline_1d(this, n, k, tau_min, tau_max, bc_type)
 
   type(sll_bspline_1d), intent(out) :: this
   sll_int32         , intent(in)    :: n
   sll_int32         , intent(in)    :: k
   sll_real64        , intent(in)    :: tau_min
   sll_real64        , intent(in)    :: tau_max
+  sll_int32         , intent(in)    :: bc_type
 
   sll_int32                         :: i
   sll_int32                         :: ierr
@@ -56,15 +62,241 @@ subroutine initialize_bspline_1d(this, n, k, tau_min, tau_max)
   this%t(k+1:n+m)     = this%tau(2:n-1)
   this%t(n+m+1:n+m+k) = tau_max
 
-  SLL_ALLOCATE(this%q(1:(2*k-1)*(n+m)),    ierr)
-  SLL_ALLOCATE(this%bcoef(n),          ierr)
-  SLL_ALLOCATE(this%bcoef_spline(n+m), ierr)
+  SLL_ALLOCATE(this%q(1:(2*k-1)*(n+m)), ierr)
+  SLL_ALLOCATE(this%bcoef(n),           ierr)
+  SLL_ALLOCATE(this%bcoef_spline(n+m),  ierr)
 
-  if(.not. allocated(aj)) allocate(aj(k))
-  if(.not. allocated(dl)) allocate(dl(k))
-  if(.not. allocated(dr)) allocate(dr(k))
+  allocate(this%a(k,k))
+  allocate(this%dbiatx(k,m))
+  allocate(this%aj(k))
+  allocate(this%aj(k))
+  allocate(this%dl(k))
+  allocate(this%dr(k))
 
 end subroutine initialize_bspline_1d
+
+subroutine build_system(this)
+
+  type(sll_bspline_1d)    :: this 
+
+  sll_real64              :: taui
+  sll_int32               :: kpkm2
+  sll_int32               :: left
+  sll_int32               :: n
+  sll_int32               :: k
+  sll_int32               :: iflag
+  sll_int32               :: mflag
+  sll_int32               :: i
+  sll_int32               :: j
+  sll_int32               :: jj
+  sll_int32               :: l
+  sll_int32, parameter    :: m=2
+  
+  n = this%n
+  k = this%k
+  this%a = 0.0_f64
+
+  kpkm2       = 2*(k-1)
+  left        = k
+  this%q      = 0.0_f64
+  this%dbiatx = 0.0_f64
+  
+  SLL_ASSERT(m < n) 
+
+  l = 0 ! index for the derivative
+
+  do i = 1, n
+      
+    taui = this%tau(i)
+    call interv( this%t, n+m+k, taui, left, mflag )
+
+    if (i < n) then
+
+      call bsplvb ( this%t, k, 1, taui, left, this%bcoef )
+      jj = i-left+1+(left-k)*(k+k-1)+l
+      do j = 1, k
+        jj = jj + kpkm2
+        this%q(jj) = this%bcoef(j)
+      end do
+   
+      if ( i == 1 ) then   
+        call bsplvd( this%t, k, taui, left, this%a, this%dbiatx, 2)
+        l = l + 1
+        jj = i-left+1+(left-k)*(k+k-1)+l
+        do j = 1, k
+          jj = jj + kpkm2
+          this%q(jj) = this%dbiatx(j,2)
+        end do
+      end if
+
+    else
+
+      call bsplvd( this%t, k, taui, left, this%a, this%dbiatx, 2)
+      jj = i-left+1+(left-k)*(k+k-1)+l
+      do j = 1, k
+        jj = jj + kpkm2
+        this%q(jj) = this%dbiatx(j,2)
+      end do
+      l = l + 1
+      
+      call bsplvb ( this%t, k, 1, taui, left, this%bcoef )
+      jj = i-left+1+(left-k)*(k+k-1)+l
+      do j = 1, k
+        jj = jj + kpkm2 
+        this%q(jj) = this%bcoef(j)
+      end do
+
+    end if
+ 
+  end do
+  
+  !Obtain factorization of A, stored again in Q.
+
+  call banfac ( this%q, k+k-1, n+m, k-1, k-1, iflag )
+
+end subroutine build_system
+
+subroutine compute_bspline_1d( this, gtau, slope_min, slope_max)
+
+  type(sll_bspline_1d)    :: this 
+  sll_real64, intent(in)  :: gtau(:)
+  sll_real64, optional    :: slope_min
+  sll_real64, optional    :: slope_max
+
+  sll_int32               :: n
+  sll_int32               :: k
+  sll_int32, parameter    :: m = 2
+
+  n = this%n
+  k = this%k
+
+  SLL_ASSERT(size(gtau) == this%n)
+
+  this%bcoef_spline(1)   = gtau(1)
+  if (present(slope_min)) then
+    this%bcoef_spline(2) = slope_min
+  else
+    this%bcoef_spline(2) = 0.0_f64
+  end if
+  this%bcoef_spline(3:n) = gtau(2:n-1)
+  if (present(slope_max)) then
+    this%bcoef_spline(n+1) = slope_max
+  else
+    this%bcoef_spline(n+1) = 0.0_f64
+  end if
+  this%bcoef_spline(n+2) = gtau(n)
+
+  call banslv ( this%q, k+k-1, n+m, k-1, k-1, this%bcoef_spline )
+  
+end subroutine compute_bspline_1d
+
+!> @brief returns the values of the images of a collection of abscissae,
+!> represented by a 1D array in another output array. The spline coefficients
+!> used are stored in the spline object pointer.
+!> @param[in] x input double-precison element array containing the 
+!> abscissae to be interpolated.
+!> @param[out] y output double-precision element array containing the 
+!> results of the interpolation.
+!> @param[in] n the number of elements of the input array which are to be
+!> interpolated.
+!> @param[inout] spline the spline object pointer, duly initialized and 
+!> already operated on by the compute_bspline_1d() subroutine.
+subroutine interpolate_array_values( this, n, x, y)
+
+type(sll_bspline_1d)    :: this 
+sll_int32,  intent(in)  :: n
+sll_real64, intent(in)  :: x(n)
+sll_real64, intent(out) :: y(n)
+
+sll_int32               :: i
+sll_int32               :: j
+sll_int32               :: ilo
+sll_int32               :: left
+sll_int32               :: jc
+sll_int32               :: jcmax
+sll_int32               :: jcmin
+sll_int32               :: jj
+sll_int32               :: mflag
+sll_int32               :: ierr
+sll_int32               :: k
+sll_int32               :: l
+sll_int32,  parameter   :: m = 2
+sll_real64, allocatable :: aj(:)
+sll_real64, allocatable :: dl(:)
+sll_real64, allocatable :: dr(:)
+
+k = this%k
+
+SLL_ALLOCATE(aj(k), ierr)
+SLL_ALLOCATE(dl(k), ierr)
+SLL_ALLOCATE(dr(k), ierr)
+
+do l = 1, n
+
+  aj = 0.0_f64
+  dl = 0.0_f64
+  dr = 0.0_f64
+
+  call interv ( this%t, n+m+k, x(l), i, mflag )
+  
+  if ( mflag /= 0 ) return
+  if ( k <= 1 ) then
+    y(l) = this%bcoef_spline(i)
+    cycle
+  end if
+  
+  jcmin = 1
+  
+  if ( k <= i ) then
+    do j = 1, k-1
+      dl(j) = x(l) - this%t(i+1-j)
+    end do
+  else
+    jcmin = 1-(i-k)
+    do j = 1, i
+      dl(j) = x(l) - this%t(i+1-j)
+    end do
+    do j = i, k-1
+      aj(k-j) = 0.0_f64
+      dl(j) = dl(i)
+    end do
+  end if
+  
+  jcmax = k
+  if ( n+m < i ) then
+    jcmax = k+n+m-i
+    do j = 1, jcmax
+      dr(j) = this%t(i+j) - x(l)
+    end do
+    do j = jcmax, k-1
+      aj(j+1) = 0.0_8
+      dr(j) = dr(jcmax)
+    end do
+  else
+    do j = 1, k-1
+      dr(j) = this%t(i+j) - x(l)
+    end do
+  end if
+  
+  do jc = jcmin, jcmax
+    aj(jc) = this%bcoef_spline(i-k+jc)
+  end do
+  
+  do j = 1, k-1
+    ilo = k-j
+    do jj = 1, k-j
+      aj(jj) = (aj(jj+1)*dl(ilo)+aj(jj)*dr(jj))/(dl(ilo)+dr(jj))
+      ilo = ilo - 1
+    end do
+  end do
+  
+  y(l) = aj(1)
+
+end do
+DEALLOCATE(aj,dl,dr)
+
+end subroutine interpolate_array_values
+
   
 !> Brackets a real value in an ascending vector of values.
 !> @details
@@ -466,12 +698,9 @@ do m = 2, mhigh
   do j = ideriv, k
      dbiatx(j,ideriv) = dbiatx(jp1mid,1)
      jp1mid = jp1mid + 1
-     
   end do
   ideriv = ideriv - 1
-  
   call bsplvb ( t, k+1-ideriv, 2, x, left, dbiatx )
-   
 end do
 !
 !  At this point, B(LEFT-K+I, K+1-J)(X) is in DBIATX(I,J) for
@@ -610,6 +839,10 @@ sll_int32,  intent(in)  :: jderiv
 
 sll_real64              :: res
 
+sll_real64, allocatable :: aj(:)
+sll_real64, allocatable :: dl(:)
+sll_real64, allocatable :: dr(:)
+
 sll_int32 :: i
 sll_int32 :: ilo
 sll_int32 :: j
@@ -622,9 +855,9 @@ sll_int32 :: ierr
 
 res = 0.0_8
 
-aj = 0.0_f64
-dl = 0.0_f64
-dr = 0.0_f64
+SLL_CLEAR_ALLOCATE(aj(1:k), ierr)
+SLL_CLEAR_ALLOCATE(dl(1:k), ierr)
+SLL_CLEAR_ALLOCATE(dr(1:k), ierr)
 
 if ( k <= jderiv ) return
 !
@@ -664,7 +897,7 @@ else
     dl(j) = x - t(i+1-j)
   end do
   do j = i, k-1
-    aj(k-j) = 0.0_8
+    aj(k-j) = 0.0_f64
     dl(j) = dl(i)
   end do
 end if
@@ -692,8 +925,7 @@ end do
 do j = 1, jderiv
   ilo = k - j
   do jj = 1, k - j
-    aj(jj) = ( ( aj(jj+1) - aj(jj) ) / ( dl(ilo) + dr(jj) ) ) &
-          * real ( k - j, kind = 8 )
+    aj(jj) = ((aj(jj+1)-aj(jj))/(dl(ilo)+dr(jj)))*(k-j)
     ilo = ilo - 1
   end do
 end do
@@ -704,8 +936,7 @@ end do
 do j = jderiv+1, k-1
   ilo = k-j
   do jj = 1, k-j
-    aj(jj) = ( aj(jj+1) * dl(ilo) + aj(jj) * dr(jj) ) &
-          / ( dl(ilo) + dr(jj) )
+    aj(jj) = (aj(jj+1)*dl(ilo)+aj(jj)*dr(jj))/(dl(ilo)+dr(jj))
     ilo = ilo - 1
   end do
 end do
