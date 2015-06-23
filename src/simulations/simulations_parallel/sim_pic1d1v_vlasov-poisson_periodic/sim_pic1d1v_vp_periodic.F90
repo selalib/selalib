@@ -5,13 +5,19 @@ module sll_module_simulation_pic1d1v_vp_periodic
 #include "sll_memory.h"
 #include "sll_assert.h"
 
+  use sll_boundary_condition_descriptors
+
   use sll_simulation_base, only: sll_simulation_base_class
-  
+    
+  use sll_constants , only : sll_pi
+    
   use sll_collective , only :       sll_world_collective , sll_collective_barrier ,&
-     sll_boot_collective
+     sll_boot_collective, sll_collective_t, sll_get_collective_size ,sll_get_collective_rank , sll_collective_globalsum, sll_collective_bcast_real64, sll_collective_globalsum_array_comp64 ,&
+     sll_collective_globalsum_array_real64
   use sll_timer , only :   sll_set_time_mark, sll_time_mark,  sll_time_elapsed_between
   
-  use sll_pic_1d_field_solver
+  use sll_particle_1d_description, only: sll_particle_1d_group
+  use sll_pic_1d_field_solver    , only: pic_1d_field_solver, new_pic_1d_field_solver
   
   
       use pic_1d_particle_loading, only : sll_normal_rnd ,& 
@@ -44,7 +50,10 @@ module sll_module_simulation_pic1d1v_vp_periodic
   sll_int32, parameter :: SLL_PIC1D_PPUSHER_LEAPFROG_V = 8 !Variational Leapfrog
   sll_int32, parameter :: SLL_PIC1D_PPUSHER_RK3        = 9     ! Runge Kutta 3
   sll_int32, parameter :: SLL_PIC1D_PPUSHER_MERSON     = 10 !Merson 3-5 with integrated Err estimate
-
+    sll_int32, parameter :: SLL_SOLVER_FEM = 1
+    sll_int32, parameter :: SLL_SOLVER_FD = 2
+    sll_int32, parameter :: SLL_SOLVER_SPECTRAL = 3
+    sll_int32, parameter :: SLL_SOLVER_FOURIER = 4
   !For parallelization MPI Rank and collective size
   sll_int32 :: coll_rank,coll_size
   sll_int32 :: ierr,i,j
@@ -52,7 +61,7 @@ module sll_module_simulation_pic1d1v_vp_periodic
   type, extends( sll_simulation_base_class ) :: &
       sll_simulation_pic1d1v_vp_periodic
 
-    CHARACTER(LEN=256) :: path
+    CHARACTER(LEN=256) :: root_path
 
     ! TODO: use new enumerations
     character(len=32) ::  ppusher    , psolver    , scenario
@@ -81,7 +90,7 @@ module sll_module_simulation_pic1d1v_vp_periodic
     sll_real64, allocatable               :: electricpotential_interp(:) 
     sll_int32                             :: pushed_species
     sll_real64, allocatable               :: particle(:,:)
-    type(sll_particle_1d_group),dimension(10) :: species
+    type(sll_particle_1d_group)           :: species(10)
     sll_real64 :: kineticenergy_offset, impulse_offset
     sll_real64 :: initial_fem_inhom , fem_inhom
     sll_int64    ::  fastest_particle_idx
@@ -322,9 +331,9 @@ contains
       sim%tstepw=tstepw
       sim%femp=femp
   
-      sim%ppusher_int= match_enumeration("ppusher",sim%ppusher) 
-      sim%psolver_int= match_enumeration("psolver",sim%psolver)
-      sim%scenario_int= match_enumeration("scenario",sim%scenario)
+      sim%ppusher_int= match_enumeration('ppusher' ,sim%ppusher) 
+      sim%psolver_int= match_enumeration('psolver' ,sim%psolver)
+      sim%scenario_int= match_enumeration('scenario' ,sim%scenario)
       
   end subroutine init_from_file
 
@@ -359,15 +368,17 @@ contains
 
 
 
-  subroutine run_pic_1d(sim)
+  subroutine run_pic_1d( sim )
      class( sll_simulation_pic1d1v_vp_periodic ), intent( inout ) :: sim
-     sll_int32 :: idx,jdx,kdx
-     sll_real64 :: time,timestep
+     integer              :: timestep
+     sll_int32            :: idx,jdx,kdx
+     sll_real64           :: time
      type(sll_time_mark)  :: tstart, tstop
+     logical              :: gnuplot_now
 
 
-        sim%nmark=nmark/coll_size
-        print*, "#Core ", coll_rank, " handles particles", coll_rank*nparticles +1, "-", (coll_rank+1)*nparticles
+        sim%nmark=sim%nmark/coll_size
+        print*, "#Core ", coll_rank, " handles particles", coll_rank*sim%nmark +1, "-", (coll_rank+1)*sim%nmark
         call sll_collective_barrier(sll_world_collective)
         if (coll_rank==0) then
             print*, "#Total Number of particles: ", sim%nmark*coll_size
@@ -390,75 +401,71 @@ contains
             SLL_CLEAR_ALLOCATE( sim%steadyparticleposition(1:sim%nmark),ierr)
             SLL_CLEAR_ALLOCATE(sim%particleposition(1:sim%nmark),ierr)
             SLL_CLEAR_ALLOCATE(sim%particlespeed(1:sim%nmark),ierr)
-            SLL_CLEAR_ALLOCATE(sim%eval_solution(1:size(sim%knots)),ierr)   
-    
-            if (coll_rank==0) then
-                write(*,*) "#PIC1D: Loading particles..."
-                call sim%fsolver%set_num_sample(nparticles*coll_size)
-                call load_particle_species (sim%nmark, sim%interval_a, sim%interval_b ,&
-                 sim%species)
-                sim%particle_qm=sim%species(1)%qm
-                call sll_collective_barrier(sll_world_collective)
-                if (coll_rank==0) then 
-                   write(*,*) "#PIC1D: Particles loaded..."
+            SLL_CLEAR_ALLOCATE(sim%eval_solution(1:size(sim%knots)),ierr)
+            
+            if (coll_rank==0) write(*,*) "#PIC1D: Loading particles..."
+            
+            call sim%fsolver%set_num_sample(sim%nmark*coll_size)
+            call load_particle_species (sim%nmark, sim%interval_a, sim%interval_b ,&
+                                        sim%species)
+            sim%particle_qm = sim%species(1)%qm
+            
+            ! Wait here for all processors to be done with the instructions above
+            call sll_collective_barrier( sll_world_collective )
+            
+            if (coll_rank==0) write(*,*) "#PIC1D: Particles loaded..."
                
-                  !Determine index of fastest particle
-                   fastest_particle_idx=MAXLOC(particlespeed, dim=1)   
+            !Determine index of fastest particle
+            sim%fastest_particle_idx = maxloc( sim%particlespeed, dim=1 )   
+
+            !Do precalculations, especially for the FEM solver  
+            !call sll_bspline_fem_solver_1d_initialize(knots, spline_degree, steadyparticleposition, -(sll_e_charge/sll_epsilon_0) )
+           
+            if (coll_rank==0) print *, "#Number of FEM-Cells ", sim%mesh_cells
+            
+            ! Add ion background density to Poisson solver, if needed
+            ! TODO: ask Jakob about exact behavior here...
+            select case( sim%scenario_int )
+              case( SLL_PIC1D_TESTCASE_QUIET )
+                call sim%fsolver%set_ions_constant(0.0_f64)
+                sim%particle_qm = -1.0_f64
+              case( SLL_PIC1D_TESTCASE_LANDAU )
+                call sim%fsolver%set_ions_constant(0.0_f64)
+              case( SLL_PIC1D_TESTCASE_IONBEAM )
+                call sim%fsolver%set_ions_constant(0.0_f64)
+              case( SLL_PIC1D_TESTCASE_IONBEAM_ELECTRONS )
+                call sim%fsolver%set_ions_constant_particles(sim%steadyparticleposition)
+              case default
+                sim%particle_qm = -1.0_f64 !By default we simulate Electrons
+                call sim%fsolver%set_ions_constant(0.0_f64)
+            end select
+
+            ! Control variate method
+            if (sim%deltaf .eqv. .TRUE.) then
+                  !The Control Variate, as it is constant over time gos into the constant inhomogenity
+                  !In the constant electron case this should be normalized to zero
+                  !But since the fem solver ignores the constant ion background anyway
+                  !this is going to be ok.
+                  !Also this should be done analytically and not like that as an Monte Carlo estimate
+                  !Here suppose the control variate is the initial state by default
+                  call  sim%fsolver%set_bg_particles(sim%species(1)%particle%dx, &
+                        sign(1.0_f64, sim%species(1)%qm)*sim%species(1)%particle%weight_const)
+
+                sim%kineticenergy_offset=sll_pic1d_calc_kineticenergy_offset(sim%species(1:num_species))
+                sim%impulse_offset=sll_pic1d_calc_impulse_offset(sim%species(1:num_species))
+            else
+                !Here should be a quick deactivate since every code is primarily deltaf
+                sim%kineticenergy_offset=0.0_f64
+                sim%impulse_offset=0.0_f64
+            endif
 
 
-               !Do precalculations, especially for the FEM solver  
-               !call sll_bspline_fem_solver_1d_initialize(knots, spline_degree, steadyparticleposition, -(sll_e_charge/sll_epsilon_0) )
-                     if (coll_rank==0) then
-                            print *, "#Number of FEM-Cells ",sim%mesh_cells
-
-
-
-                            select case(sim%scenario_int)
-                              case(SLL_PIC1D_TESTCASE_QUIET)
-                                call sim%fsolver%set_ions_constant(0.0_f64)
-                                sim%particle_qm=-1.0_f64
-                              case(SLL_PIC1D_TESTCASE_LANDAU)
-                                call sim%fsolver%set_ions_constant(0.0_f64)
-                              case(SLL_PIC1D_TESTCASE_IONBEAM)
-                                call sim%fsolver%set_ions_constant(0.0_f64)
-                              case(SLL_PIC1D_TESTCASE_IONBEAM_ELECTRONS)
-                                call sim%fsolver%set_ions_constant_particles(steadyparticleposition)
-                              case default
-                                sim%particle_qm=-1.0_f64 !By default we simulate Electrons
-                                call sim%fsolver%set_ions_constant(0.0_f64)
-                            end select
-
-
-
-                           if (sim%deltaf .eqv. .TRUE.) then
-                                  !The Control Variate, as it is constant over time gos into the constant inhomogenity
-                                  !In the constant electron case this should be normalized to zero
-                                  !But since the fem solver ignores the constant ion background anyway
-                                  !this is going to be ok.
-                                  !Also this should be done analytically and not like that as an Monte Carlo estimate
-                                  !Here suppose the control variate is the initial state by default
-                                  call  sim%fsolver%set_bg_particles(sim%species(1)%particle%dx, &
-                                  sign(1.0_f64, sim%species(1)%qm)*sim%species(1)%particle%weight_const)
-
-                                sim%kineticenergy_offset=sll_pic1d_calc_kineticenergy_offset(sim%species(1:num_species))
-                                sim%impulse_offset=sll_pic1d_calc_impulse_offset(sim%species(1:num_species))
-                          else
-                                !Here should be a quick deactivate since every code is primarily deltaf
-                                sim%kineticenergy_offset=0.0_f64
-                                sim%impulse_offset=0.0_f64
-                         endif
-
-
-!Start with PIC Method
-        !Do the initial solve of the field
-        !particleposition=sll_pic1d_ensure_periodicity(particleposition,  interval_a, interval_b)
-        !call sll_pic1d_ensure_boundary_conditions(species(1)%particle%dx, species(1)%particle%vx)
-
-
+           !Start with PIC Method
+           !Do the initial solve of the field
            call sll_pic1d_ensure_boundary_conditions_species(sim%species(1:num_species)  )
 
 
-        !Initial Solve
+           !Initial Solve
            call sim%fsolver%reset_particles()
            call sim%fsolver%set_species(sim%species(1:num_species))
            call sim%fsolver%solve()
@@ -474,23 +481,24 @@ contains
             -  sim%fsolver%getPotential())**2)/sim%mesh_cells
 
 
-        !---------------------------Initial Plots------------------------------------------------------------
-
-
-          open(unit=20, file=trim(root_path)//"initial_field.txt")
+        !---------------------------Initial Plots----------------------------------------
+        if (coll_rank==0) then
+           !  open(unit=20, file="initial_field.txt")
+        open(unit=20, file=trim(ADJUSTL(sim%root_path))//"initial_field.txt")
           write (20,*) sim%eval_solution(1:sim%mesh_cells)
           close(20)
           print *, "#Field Energy                  " , &
-                "Kinetic Energy                  ", "Inhom. Variance       "
+                  "Kinetic Energy                  ", "Inhom. Variance       "
         endif
-!Write initial phasespace
+        
+        !Write initial phasespace
         do jdx=0, coll_size
             call sll_collective_barrier(sll_world_collective)
             if( coll_rank==jdx) then
                 if (jdx==0) then
-                    open(unit=20, file=trim(root_path)//"initial_phasespace.dat")
+                    open(unit=20, file=trim(ADJUSTL(sim%root_path))//"initial_phasespace.dat")
                 else
-                    open(unit=20, file=trim(root_path)//"initial_phasespace.dat",position="append")
+                    open(unit=20, file=trim(sim%root_path)//"initial_phasespace.dat",position="append")
                 endif
                 do kdx=1, num_species
                     do idx=1, size(sim%species(kdx)%particle)
@@ -500,54 +508,58 @@ contains
                 close(20)
             endif
         enddo
-        call sll_set_time_mark(tstart)
+        
+        ! TODO: find out meaning of this
+        call sll_set_time_mark( tstart )
+        
 !---------------------------### Main Loop
-        time=0.0_f64
-        do timestep=1, tsteps
-            time=tstepw*tstepw*(timestep-1)    
-            call sll_pic1d_write_phasespace(timestep,sim%species(1:num_species))
-            if (sim%nmark*coll_size<=10000 .AND. (sim%gnuplot_inline_output .eqv. .true.) .AND. (coll_rank==0) .AND. mod(timestep-1,sim%tsteps/100)==0) then
-                call particles_center_gnuplot_inline(pic_1d_allparticlepos(sim%species(1:num_species)), &
-                    pic_1d_allparticlev(sim%species(1:num_species)), &
-                    sim%interval_a, sim%interval_b,&
-                    -1.1_f64*maxval(pic_1d_allparticlev(sim%species(1:num_species))),&
-                    1.1_f64*maxval( pic_1d_allparticlev(sim%species(1:num_species))),&
-                    time)
-
-            end if
-        
-            sim%particleweight_mean(timestep)=sum(sim%species(1)%particle%weight)/size(sim%species(1)%particle%weight)
+        time = 0.0_f64
+        do timestep=1, sim%tsteps
+            ! Compute time instant
+            time = sim%tstepw*(timestep-1) ! WARNING: bug was here
             
-            sim%particleweight_var(timestep)=sum(sim%species(1)%particle%weight**2)/size(sim%species(1)%particle)-sim%particleweight_mean(timestep)**2
+            ! Determine if gnuplot should create plots
+            gnuplot_now = (sim%nmark*coll_size<=10000 .AND. (sim%gnuplot_inline_output .eqv. .true.) .AND. (coll_rank==0) .AND. mod(timestep-1,sim%tsteps/100)==0)
+            
+            ! Write currrent phase-space to file
+            call sll_pic1d_write_phasespace( timestep, sim%species(1:num_species) )
+            
+            ! Gnuplot real-time plots
+            ! TODO: carefully check function and options
+            if (gnuplot_now) then
+                call particles_center_gnuplot_inline(pic_1d_allparticlepos(sim%species(1:num_species),sim%nmark), &
+                    pic_1d_allparticlev(sim%species(1:num_species),sim%nmark), &
+                    sim%interval_a, sim%interval_b,&
+                    -1.1_f64*maxval(pic_1d_allparticlev(sim%species(1:num_species),sim%nmark)),&
+                    1.1_f64*maxval( pic_1d_allparticlev(sim%species(1:num_species),sim%nmark)),&
+                    time)
+            end if
+            
+            ! Compute mean value and variance 
+            sim%particleweight_mean(timestep) = sum(sim%species(1)%particle%weight) &
+                                              / size(sim%species(1)%particle) ! WARNING: bug here
+            
+            sim%particleweight_var(timestep) = sum(sim%species(1)%particle%weight**2) &
+                                             / size(sim%species(1)%particle)          &
+                                             - sim%particleweight_mean(timestep)**2
 
+            ! Other diagnostic quantities: kin. energy, el. energy, momentum, etc..
+            sim%kineticenergy(timestep) = sll_pic1d_calc_kineticenergy( sim%species(1:num_species),sim%deltaf )
+            sim%fieldenergy(timestep) = sll_pic1d_calc_fieldenergy(sim%species(1:num_species),sim)
+            sim%impulse(timestep) = sll_pic1d_calc_impulse(sim%species(1:num_species),sim%deltaf)
 
-             sim%kineticenergy(timestep)=sll_pic1d_calc_kineticenergy( sim%species(1:num_species) )
-             sim%fieldenergy(timestep)=sll_pic1d_calc_fieldenergy(sim%species(1:num_species))
-!            fieldenergy(1)=landau_alpha**2/(2*landau_mode**2)/2.0_f64
-!            kineticenergy(1)=0.5_f64
-
-             sim%impulse(timestep)=sll_pic1d_calc_impulse(sim%species(1:num_species))
-
-             sim%thermal_velocity_estimate(timestep)=sll_pic1d_calc_thermal_velocity(sim%species(1)%particle%vx,sim%species(1)%particle%weight)
-             sim%inhom_var(timestep)=sim%fsolver%calc_variance_rhs()
-               
-        
-            if ( (sim%gnuplot_inline_output.eqv. .true.) .AND. coll_rank==0 .AND. mod(timestep-1,tsteps/100)==0  ) then
+            sim%thermal_velocity_estimate(timestep) = sll_pic1d_calc_thermal_velocity(sim%species(1)%particle%vx,sim%species(1)%particle%weight)
+            sim%inhom_var(timestep) = sim%fsolver%calc_variance_rhs()
+            
+            ! Gnuplot real-time plots
+            if ( gnuplot_now ) then
                 call energies_electrostatic_gnuplot_inline(sim%kineticenergy(1:timestep), sim%fieldenergy(1:timestep), sim%impulse(1:timestep),sim%tstepw)
-            else
-
-            endif
-            if ( (sim%gnuplot_inline_output.eqv. .true.) .AND. coll_rank==0 .AND. mod(timestep-1,tsteps/100)==0 ) then
-                !call sll_bspline_fem_solver_1d_eval_solution(knots(1:mesh_cells), electricpotential_interp)
                 call sim%fsolver%evalPhi(sim%knots(1:sim%mesh_cells), sim%electricpotential_interp)
-                !Scale potential to acutal values
-                !                    electricpotential_interp=electricpotential_interp*&
-                    !                    (sll_mass_e/sll_e_charge)*vthermal_e**2
                 call electricpotential_gnuplot_inline( sim%electricpotential_interp  &
                     !+0.5_f64*knots(1:mesh_cells)&
                     ,sim%knots(1:sim%mesh_cells) )
-
             endif
+            
             if ( coll_rank==0) then
                 !Stop if Error ist catastrophal
                 if ( (sim%kineticenergy(timestep)+sim%fieldenergy(timestep) -(sim%kineticenergy(1)+sim%fieldenergy(1)))&
@@ -563,7 +575,7 @@ contains
 
             endif
             sim%pushed_species=1
-            selectcase (ppusher_int)
+            selectcase (sim%ppusher_int)
                 case(SLL_PIC1D_PPUSHER_RK4)
                     call  sll_pic_1d_rungekutta4_step_array( sim%species(1)%particle%dx, &
                         sim%species(1)%particle%vx ,sim%tstepw, time)
@@ -617,9 +629,9 @@ contains
 
 
 
-sim%kineticenergy(timestep)=sll_pic1d_calc_kineticenergy( sim%species(1:num_species) )
-        sim%fieldenergy(timestep)=sll_pic1d_calc_fieldenergy(sim%species(1:num_species))
-        sim%impulse(timestep)=sll_pic1d_calc_impulse(sim%species(1:num_species))
+sim%kineticenergy(timestep)=sll_pic1d_calc_kineticenergy( sim%species(1:num_species),sim%deltaf )
+        sim%fieldenergy(timestep)=sll_pic1d_calc_fieldenergy(sim%species(1:num_species),sim)
+        sim%impulse(timestep)=sll_pic1d_calc_impulse(sim%species(1:num_species),sim%deltaf)
         sim%thermal_velocity_estimate(timestep)=sll_pic1d_calc_thermal_velocity(sim%species(1)%particle%vx,sim%species(1)%particle%weight)
         sim%particleweight_mean(timestep)=sum(sim%species(1)%particle%weight)/size(sim%species(1)%particle)
         sim%particleweight_var(timestep)=sum(sim%species(1)%particle%weight**2)/size(sim%species(1)%particle)-sim%particleweight_mean(timestep)**2
@@ -638,23 +650,15 @@ sim%kineticenergy(timestep)=sll_pic1d_calc_kineticenergy( sim%species(1:num_spec
             print *, "Particles Pushed/s: " , (sim%nmark*coll_size*sim%tsteps)/sll_time_elapsed_between(tstart,tstop)
         endif
         if (coll_rank==0)then
-         call det_landau_damping((/ ( timestep*timestepwidth, timestep = 0, sim%tsteps) /),sim%fieldenergy)
-
+         call det_landau_damping((/ ( timestep*sim%tstepw, timestep = 0, sim%tsteps) /),sim%fieldenergy)
+        endif
         !call sll_bspline_fem_solver_1d_destroy
         call sim%fsolver%delete()
 
-
-
-
-
-
-
-
-
-
-
-
+        endif
+  
   end subroutine run_pic_1d
+
   
   !===========================================================================
   ! Matching enumerations (clumsy!).  TODO: use new enumeration classes
@@ -704,6 +708,231 @@ sim%kineticenergy(timestep)=sll_pic1d_calc_kineticenergy( sim%species(1:num_spec
 
     
   end function match_enumeration
+
+
+
+
+
+
+
+function sll_pic1d_calc_kineticenergy_offset(p_species ) &
+            result(energy)
+        type( sll_particle_1d_group), dimension(:), intent(in) :: p_species
+        sll_int32 :: idx
+        sll_int32 :: num_sp
+        sll_real64 :: energy
+        num_sp=size(p_species)
+        energy=0
+        do idx=1,num_sp
+            energy=energy + &
+            sll_pic1d_calc_kineticenergy_weighted(p_species(idx)%particle%vx, &
+                            p_species(idx)%particle%weight_const,1.0_f64/abs(p_species(idx)%qm))
+        enddo
+
+        call sll_collective_globalsum(sll_world_collective, energy, 0)
+    endfunction
+
+
+
+    function sll_pic1d_calc_impulse(p_species,bool) &
+            result(impulse)
+        type( sll_particle_1d_group), dimension(:), intent(in) :: p_species
+        LOGICAL, intent(in) :: bool
+        sll_real64:: impulse
+        sll_int32 :: idx, num_sp
+        num_sp=size(p_species)
+
+        impulse=0
+        do idx=1,num_sp
+            impulse=impulse + sll_pic1d_calc_impulse_weighted&
+               (p_species(idx)%particle%weight, p_species(idx)%particle%vx, &
+                            1.0_f64/abs(p_species(idx)%qm))
+        enddo
+        call sll_collective_globalsum(sll_world_collective, impulse, 0)
+        if(bool .eqv. .TRUE.) then
+        impulse=impulse+sll_pic1d_calc_impulse_offset(p_species) !Warning: bug here...
+        endif
+          
+    endfunction
+
+ function sll_pic1d_calc_impulse_weighted(particle_v, particle_weight, particlemass) &
+            result(impulse)
+                sll_real64, dimension(:),intent(in) :: particle_v,particle_weight
+        sll_real64, intent(in) ::particlemass
+        sll_real64 :: impulse
+        SLL_ASSERT(size(particle_v)==size(particle_weight))
+
+        impulse= 0.5_f64*particlemass*&
+                dot_product(particle_weight, particle_v)
+    endfunction
+
+
+  function sll_pic1d_calc_impulse_offset(p_species) &
+            result(impulse)
+        type( sll_particle_1d_group), dimension(:), intent(in) :: p_species
+        sll_real64:: impulse
+        sll_int32 :: idx, num_sp
+        num_sp=size(p_species)
+
+        impulse=0
+        do idx=1,num_sp
+            impulse=impulse + sll_pic1d_calc_impulse_weighted&
+               (p_species(idx)%particle%weight_const, p_species(idx)%particle%vx, &
+                            1.0_f64/abs(p_species(idx)%qm))
+        enddo
+
+        call sll_collective_globalsum(sll_world_collective, impulse, 0)
+    endfunction
+
+
+
+    function pic_1d_allparticlepos(p_species,npartic) result( ppos)
+        type( sll_particle_1d_group), dimension(:), intent(in) :: p_species
+        sll_int32, intent(inout) :: npartic
+        sll_int32 :: idx, num, npart
+        sll_int32 :: off
+        sll_real64, dimension(npartic) :: ppos
+        num=size(p_species)
+
+        off=0
+
+        do idx=1,num
+            npart=size(p_species(idx)%particle)
+            ppos(1+off:npart+off)=p_species(idx)%particle%dx
+            off=npart
+        enddo
+    endfunction
+
+
+    function sll_pic1d_calc_kineticenergy_weighted( particle_v, particle_weight, particlemass ) &
+            result(energy)
+        sll_real64, dimension(:),intent(in) :: particle_v,particle_weight
+        sll_real64, intent(in) ::particlemass
+        sll_real64 :: energy
+        SLL_ASSERT(size(particle_v)==size(particle_weight))
+
+        energy= 0.5_f64*particlemass*&
+                dot_product(particle_weight, particle_v**2)
+    endfunction
+
+
+    function pic_1d_allparticlev(p_species,npartic) result( pv)
+        type( sll_particle_1d_group), dimension(:), intent(in) :: p_species
+        sll_int32, intent(inout) :: npartic
+        sll_int32 :: idx, num, npart
+        sll_int32 :: off
+        sll_real64, dimension(npartic) :: pv
+        num=size(p_species)
+
+        off=0
+
+        do idx=1,num
+            npart=size(p_species(idx)%particle)
+            pv(1+off:npart+off)=p_species(idx)%particle%vx
+            off=npart
+        enddo
+    endfunction
+    
+    
+    
+    
+        function sll_pic1d_calc_kineticenergy(p_species, bool) &
+            result(energy)
+        type( sll_particle_1d_group), dimension(:), intent(in) :: p_species
+        LOGICAL, intent(in) :: bool
+        sll_int32 :: idx
+        sll_int32 :: num_sp
+        sll_real64 :: energy
+        num_sp=size(p_species)
+        energy=0
+       do idx=1,num_sp
+            energy=energy + &
+            sll_pic1d_calc_kineticenergy_weighted(p_species(idx)%particle%vx, &
+                            p_species(idx)%particle%weight,1.0_f64/abs(p_species(idx)%qm))
+        enddo
+
+        call sll_collective_globalsum(sll_world_collective, energy, 0)
+        !energy=energy+kineticenergy_offset
+        if(bool .eqv. .TRUE.) then 
+        energy=energy+sll_pic1d_calc_kineticenergy_offset(p_species)
+        endif
+    endfunction
+
+
+
+
+!warning : can this a method in the class ??
+
+  function sll_pic1d_calc_fieldenergy(p_species,sim) &
+            result(energy)
+        type( sll_particle_1d_group), dimension(:), intent(in) :: p_species
+        type(sll_simulation_pic1d1v_vp_periodic), intent(inout) :: sim
+        sll_real64 :: energy
+        !Only for constant case
+        sll_int32 :: idx
+        sll_int32 :: num_sp
+        num_sp=size(p_species)
+
+        energy=0
+        do idx=1,num_sp
+            energy=energy+ &
+                dot_product(sim%Eex( p_species(idx)%particle%dx, 0.0_f64), &
+                p_species(idx)%particle%dx)*(-1.0_f64)*p_species(idx)%qm/abs(p_species(idx)%qm)
+        enddo
+
+        call sll_collective_globalsum(sll_world_collective, energy, 0)
+
+        !if (coll_rank==0)  energy=energy+0.5_f64*bspline_fem_solver_1d_H1seminorm_solution()/(interval_b-interval_a)
+        if (coll_rank==0)  energy=energy+sim%fsolver%fieldenergy()
+
+
+    endfunction
+
+
+
+
+  function sll_pic1d_calc_thermal_velocity(particlespeed, particleweight) &
+            result(vth)
+        sll_real64, DIMENSION(:), intent(in) :: particlespeed
+        sll_real64, DIMENSION(:), intent(in):: particleweight
+        sll_real64 :: vth
+        sll_real64 :: mean
+        mean=dot_product(particlespeed,particleweight)
+        call sll_collective_globalsum(sll_world_collective, mean, 0)
+
+
+        vth=dot_product((particlespeed-mean)**2,particleweight)
+        call sll_collective_globalsum(sll_world_collective, vth, 0)
+    endfunction
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 end module sll_module_simulation_pic1d1v_vp_periodic
 
