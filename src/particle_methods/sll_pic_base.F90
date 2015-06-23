@@ -1,24 +1,30 @@
 module sll_module_pic_base
 
 #include "sll_working_precision.h"
+#include "sll_memory.h"
 
   implicit none
   private
+
+  public :: species_new, apply_periodic_bc_on_cartesian_mesh_2d, x_is_in_domain_2d
 
   !============================================================================
   ! Particle species
   !============================================================================
   type, public :: sll_species
-      character(len=64) :: name !< species name
+    !      character(len=64) :: name !< species name
       sll_real64        :: q    !< charge of a single particle
       sll_real64        :: m    !< mass   of a single particle
 
   contains
-    procedure, pass(species_charge, species_mass)   :: q_over_m  !< charge over mass ratio
-    procedure                                       :: species_new
+    procedure, pass(self) :: q_over_m => get_q_over_m
+!    procedure  :: species_new ! => create_species_new      !! is that a good syntax for the constructor interface?
 
   end type sll_species
 
+!  interface sll_species
+!    procedure, public species_new
+!  end interface
 
   !============================================================================
   ! Particle group
@@ -50,7 +56,7 @@ module sll_module_pic_base
     procedure( dep_charge_2d), deferred :: deposit_charge_2d
 
     ! Initializers
-    procedure( set_landau_params    ), deferred :: set_landau_parameters
+    procedure( set_landau_params    ), pass(self), deferred :: set_landau_parameters
     procedure( rand_init            ),  deferred :: random_initializer
     procedure( cart_init            ),  deferred :: cartesian_initializer
 
@@ -124,11 +130,11 @@ module sll_module_pic_base
 
   !----------------------------------------------------------------------------
   abstract interface
-   subroutine rand_init( self, nb_particles, initial_density_identifier, rand_seed, rank, world_size)
+   subroutine rand_init( self, number_particles, initial_density_identifier, rand_seed, rank, world_size)
     use sll_working_precision
     import sll_particle_group_base
     class( sll_particle_group_base ), intent( inout ) :: self
-    sll_int32                       , intent( in    ) :: nb_particles
+    sll_int32                       , intent( in    ) :: number_particles
     sll_int32                       , intent( in    ) :: initial_density_identifier
     sll_int32, dimension(:)         , intent( in ), optional :: rand_seed
     sll_int32                       , intent( in ), optional :: rank, world_size
@@ -187,7 +193,10 @@ contains
     sll_real64, intent ( in )   :: species_charge
     sll_real64, intent ( in )   :: species_mass
     type(sll_species), pointer  :: res
+    sll_int32  :: ierr
 
+    SLL_ALLOCATE( res, ierr )
+    !    res%name =
     res%q = species_charge
     res%m = species_mass
 
@@ -195,13 +204,13 @@ contains
 
 
   !----------------------------------------------------------------------------
-  function q_over_m( self ) result( r )
+  function get_q_over_m( self ) result( r )
     class( sll_species ), intent( in ) :: self
     sll_real64 :: r
 
     r = self%q / self%m
 
-  end function q_over_m
+  end function get_q_over_m
 
 
 
@@ -212,18 +221,18 @@ contains
   function x_is_in_domain_2d( x, y, mesh, x_periodic, y_periodic ) result(res)
 
     use sll_cartesian_meshes
-    sll_real64,                     intent( in )    :: x, y
-    logical,                        intent( in )    :: x_periodic
-    logical,                        intent( in )    :: y_periodic
-    type(sll_cartesian_mesh_2d),    intent( in ), pointer :: mesh
+    sll_real64,                     intent( in )            :: x, y
+    type(sll_cartesian_mesh_2d),    intent( in ), pointer   :: mesh
+    logical,                        intent( in )            :: x_periodic
+    logical,                        intent( in )            :: y_periodic
     logical     :: res
 
-    res = ( x >= mesh%eta1_min )                                                                               &
-          .and.                                                                                                   &
-          ( ( x < mesh%eta1_max .and. x_periodic ) .or. ( x <= mesh%eta1_max .and. .not. x_periodic ) )     &
-          .and.                                                                                                   &
-          ( y >= mesh%eta2_min )                                                                               &
-          .and.                                                                                                   &
+    res = ( x >= mesh%eta1_min )                                                                                    &
+          .and.                                                                                                     &
+          ( ( x < mesh%eta1_max .and. x_periodic ) .or. ( x <= mesh%eta1_max .and. .not. x_periodic ) )             &
+          .and.                                                                                                     &
+          ( y >= mesh%eta2_min )                                                                                    &
+          .and.                                                                                                     &
           ( ( y < mesh%eta2_max .and. y_periodic ) .or. ( y <= mesh%eta2_max .and. .not. y_periodic) )
 
   end function x_is_in_domain_2d

@@ -26,6 +26,8 @@ module sll_simulation_4d_vp_generic_pic_cartesian_module
   use sll_gnuplot
   use sll_collective
 
+  use sll_module_pic_base
+  use sll_simple_pic_4d_group_module
   use sll_particle_initializers_4d
   use sll_particle_sort_module
   use sll_charge_to_density_module
@@ -40,15 +42,8 @@ module sll_simulation_4d_vp_generic_pic_cartesian_module
 
   type, extends(sll_simulation_base_class) :: sll_simulation_4d_vp_generic_pic_cartesian
 
-     ! <<particle_types>> <<lt_pic_particle_group>> this simulation can deal with simple or ltpic particle types
-     type(sll_lt_pic_4d_group),      pointer     :: lt_pic_particle_group
-
-     ! <<simple_pic_particle_group>>
-     ! [[file:~/selalib/src/particle_methods/particle_types/simple_pic_4d_group.F90::sll_simple_pic_4d_group]]
-     type(sll_simple_pic_4d_group),  pointer     :: simple_pic_particle_group
-
      ! <<particle_group>> the abstract particle group
-     type(sll_particle_group_base),  pointer     :: particle_group
+     class(sll_particle_group_base),  pointer     :: particle_group
 
      ! Physics/numerical parameters
      sll_real64 :: dt
@@ -58,6 +53,9 @@ module sll_simulation_4d_vp_generic_pic_cartesian_module
      sll_real64 :: thermal_speed_ions
      sll_int32  :: ions_number
      sll_int32  :: virtual_particle_number
+     logical :: domain_is_x_periodic
+     logical :: domain_is_y_periodic
+
      !    sll_int32  :: guard_size
      !    sll_int32  :: array_size
      sll_real64, dimension(1:6) :: elec_params
@@ -100,7 +98,7 @@ contains
     sll_int32   :: number_iterations, plot_period, remap_period
     sll_int32   :: NUM_PARTICLES, GUARD_SIZE, PARTICLE_ARRAY_SIZE
     sll_real64  :: THERM_SPEED
-    sll_real64  :: QoverM, ALPHA
+    sll_real64  :: SPECIES_CHARGE, SPECIES_MASS, ALPHA
     logical     :: UseCubicSplines
     logical     :: UseLtPicScheme
     logical     :: DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC
@@ -110,11 +108,23 @@ contains
     sll_real64  :: REMAP_GRID_VX_MIN, REMAP_GRID_VX_MAX
     sll_real64  :: REMAP_GRID_VY_MIN, REMAP_GRID_VY_MAX
     sll_int32   :: SPLINE_DEGREE
+    sll_int32   :: particle_group_id
     sll_int32   :: NVirtual_X_ForDeposition
     sll_int32   :: NVirtual_Y_ForDeposition
     sll_int32   :: NVirtual_VX_ForDeposition
     sll_int32   :: NVirtual_VY_ForDeposition
-    sll_int32   :: landau_initial_density_identifier
+    sll_int32   :: initial_density_identifier
+
+    ! <<simple_pic_particle_group>>
+    ! [[file:~/selalib/src/particle_methods/particle_types/simple_pic_4d_group.F90::sll_simple_pic_4d_group]]
+    type(sll_simple_pic_4d_group),  pointer     :: simple_pic_particle_group
+
+    ! <<particle_types>> <<lt_pic_particle_group>> this simulation can deal with simple or ltpic particle types
+    ! todo: activate
+    !     type(sll_lt_pic_4d_group),      pointer     :: lt_pic_particle_group
+
+
+    type(sll_charge_accumulator_2d),    pointer :: charge_accumulator
 
     logical     :: UseExactF0
     sll_real64  :: er, psi, omega_i, omega_r
@@ -128,7 +138,7 @@ contains
     namelist /sim_params/   NUM_PARTICLES, GUARD_SIZE, &
                             PARTICLE_ARRAY_SIZE, &
                             THERM_SPEED, dt, number_iterations, plot_period, remap_period, &
-                            QoverM, ALPHA, UseCubicSplines, UseLtPicScheme
+                            SPECIES_CHARGE, SPECIES_MASS, ALPHA, UseCubicSplines, UseLtPicScheme
     namelist /grid_dims/    NC_X, NC_Y, XMIN, KX_LANDAU, YMIN, YMAX, &
                             DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC
     namelist /lt_pic_params/NUM_PARTS_X,            &
@@ -165,11 +175,7 @@ contains
     sim%use_cubic_splines = UseCubicSplines
     sim%use_lt_pic_scheme = UseLtPicScheme
 
-    sim%n_virtual_x_for_deposition = NVirtual_X_ForDeposition
-    sim%n_virtual_y_for_deposition = NVirtual_Y_ForDeposition
-    sim%n_virtual_vx_for_deposition = NVirtual_VX_ForDeposition
-    sim%n_virtual_vy_for_deposition = NVirtual_VY_ForDeposition
-    
+
     sim%thermal_speed_ions = THERM_SPEED
     sim%total_density = 1._f64 * (XMAX - XMIN) * (YMAX - YMIN)
 
@@ -192,65 +198,72 @@ contains
     ! initialize [[particle_group]]
     if( sim%use_lt_pic_scheme )then
 
-       ! initialize [[lt_pic_particle_group]]
-       if( sim%use_cubic_splines )then
-          SPLINE_DEGREE = 3
-          print *, "Error (7634876568576) -- cubic spline particles not implemented yet"
-       else
-          SPLINE_DEGREE = 1
-       end if
 
-       sim%lt_pic_particle_group => sll_lt_pic_4d_group_new(    &
-            SPLINE_DEGREE,                            &
-            NUM_PARTS_X,                              &
-            NUM_PARTS_Y,                              &
-            NUM_PARTS_VX,                             &
-            NUM_PARTS_VY,                             &
-            REMAP_GRID_VX_MIN,                        &
-            REMAP_GRID_VX_MAX,                        &
-            REMAP_GRID_VY_MIN,                        &
-            REMAP_GRID_VY_MAX,                        &
-            QoverM,                                   &
-            DOMAIN_IS_X_PERIODIC,                     &
-            DOMAIN_IS_Y_PERIODIC,                     &
-            sim%mesh_2d )
+        !       ! initialize [[lt_pic_particle_group]]
+        !       if( sim%use_cubic_splines )then
+        !          SPLINE_DEGREE = 3
+        !          print *, "Error (7634876568576) -- cubic spline particles not implemented yet"
+        !       else
+        !          SPLINE_DEGREE = 1
+        !       end if
+        !
+        !       sim%lt_pic_particle_group => sll_lt_pic_4d_group_new(    &
+        !            SPLINE_DEGREE,                                      &
+        !            NUM_PARTS_X,                                        &
+        !            NUM_PARTS_Y,                                        &
+        !            NUM_PARTS_VX,                                       &
+        !            NUM_PARTS_VY,                                       &
+        !            REMAP_GRID_VX_MIN,                                  &
+        !            REMAP_GRID_VX_MAX,                                  &
+        !            REMAP_GRID_VY_MIN,                                  &
+        !            REMAP_GRID_VY_MAX,                                  &
+        !            QoverM,                                             &
+        !            DOMAIN_IS_X_PERIODIC,                               &
+        !            DOMAIN_IS_Y_PERIODIC,                               &
+        !            sim%mesh_2d                                         &
+        !       )
 
-       sim%lt_pic_particle_group%use_exact_f0      = UseExactF0
+        !todo: put this in the right place
+        !       sim%lt_pic_particle_group%set_parameters(                        &
+        !            n_virtual_x_for_deposition = NVirtual_X_ForDeposition,      &
+        !            n_virtual_y_for_deposition = NVirtual_Y_ForDeposition,      &
+        !            n_virtual_vx_for_deposition = NVirtual_VX_ForDeposition,    &
+        !            n_virtual_vy_for_deposition = NVirtual_VY_ForDeposition     &
+        !       )
 
-       print *, "WARNING 65373654 -- writing landau parameters in the particle group -- this is temporary..."
-       sim%lt_pic_particle_group%thermal_speed = sim%thermal_speed_ions   !  temporary or not?
-       sim%lt_pic_particle_group%alpha_landau = ALPHA    !  temporary or not?
-       sim%lt_pic_particle_group%k_landau = KX_LANDAU    !  temporary or not?
+        !       print *, "WARNING 65373654 -- writing landau parameters in the particle group -- this is temporary..."
+        !       sim%lt_pic_particle_group%thermal_speed = sim%thermal_speed_ions   !  temporary or not?
+        !       sim%lt_pic_particle_group%alpha_landau = ALPHA    !  temporary or not?
+        !       sim%lt_pic_particle_group%k_landau = KX_LANDAU    !  temporary or not?
 
-       call sll_generic_pic_4d_init_landau (                &
-            sim%thermal_speed_ions,                     &
-            ALPHA, KX_LANDAU,                           &
-            sim%lt_pic_particle_group )
-
-       sim%ions_number = sim%lt_pic_particle_group%number_particles
-       SLL_ASSERT( sim%ions_number == NUM_PARTS_X * NUM_PARTS_Y * NUM_PARTS_VX * NUM_PARTS_VY)
-
-       print *, "sim%ions_number (pushed markers) = ", sim%ions_number
-
-       sim%virtual_particle_number =                                               &
-            sim%n_virtual_x_for_deposition * sim%mesh_2d%num_cells1               &
-            * sim%n_virtual_y_for_deposition * sim%mesh_2d%num_cells2               &
-            * sim%n_virtual_vx_for_deposition * sim%lt_pic_particle_group%number_parts_vx      &
-            * sim%n_virtual_vy_for_deposition * sim%lt_pic_particle_group%number_parts_vy
-       
-       print *, "sim%virtual_particle_number (deposited particles) = ", sim%virtual_particle_number
-
-       ! [[particle_group]] will contain either a reference to a simple group or to an ltpic group as defined in
-       ! [[particle_types]]
-
-       sim%particle_group => sim%lt_pic_particle_group
+        !       call sll_generic_pic_4d_init_landau (                &
+        !            sim%thermal_speed_ions,                     &
+        !            ALPHA, KX_LANDAU,                           &
+        !            sim%lt_pic_particle_group )
+        !
+        !       sim%ions_number = sim%lt_pic_particle_group%number_particles
+        !       SLL_ASSERT( sim%ions_number == NUM_PARTS_X * NUM_PARTS_Y * NUM_PARTS_VX * NUM_PARTS_VY)
+        !
+        !       print *, "sim%ions_number (pushed markers) = ", sim%ions_number
+        !
+        !       sim%virtual_particle_number =                                               &
+        !            sim%n_virtual_x_for_deposition * sim%mesh_2d%num_cells1               &
+        !            * sim%n_virtual_y_for_deposition * sim%mesh_2d%num_cells2               &
+        !            * sim%n_virtual_vx_for_deposition * sim%lt_pic_particle_group%number_parts_vx      &
+        !            * sim%n_virtual_vy_for_deposition * sim%lt_pic_particle_group%number_parts_vy
+        !
+        !       print *, "sim%virtual_particle_number (deposited particles) = ", sim%virtual_particle_number
+        !
+        !       ! [[particle_group]] will contain either a reference to a simple group or to an ltpic group as defined in
+        !       ! [[particle_types]]
+        !
+        !       sim%particle_group => sim%lt_pic_particle_group
 
     else
        ! initialize [[simple_pic_particle_group]]
 
-      ! todo: read SPECIES_CHARGE and SPECIES_MASS in the parameter file above, and discard QoverM
-      sim%simple_pic_particle_group => sll_simple_pic_4d_group_new(     &
-            NUMBER_PARTICLES,                                           &
+      particle_group_id = 0
+      simple_pic_particle_group => sll_simple_pic_4d_group_new(     &
             SPECIES_CHARGE,                                             &
             SPECIES_MASS,                                               &
             particle_group_id,                                          &
@@ -258,23 +271,59 @@ contains
             DOMAIN_IS_Y_PERIODIC,                                       &
             sim%mesh_2d )
 
+
+        !! this gives a compilation error but I don't understand why.
+        !  Therefore I call the initialization for the base class pointer below...
+        !
+        !      call random_seed (SIZE=rand_seed_size)
+        !      SLL_ALLOCATE( rand_seed(1:rand_seed_size), ierr )
+        !      do j=1, rand_seed_size
+        !        rand_seed(j) = (-1)**j*(100 + 15*j)*(2*sim%my_rank + 1)
+        !      end do
+        !
+        !      call simple_pic_particle_group%simple_pic_4d_set_landau_parameters( sim%thermal_speed_ions, ALPHA, KX_LANDAU )
+        !
+        !      initial_density_identifier = 0     ! for the moment we only use one density (landau)
+        !      call simple_pic_particle_group%random_initializer( initial_density_identifier, rand_seed, sim%my_rank, sim%world_size )
+        !
+        !      SLL_DEALLOCATE_ARRAY(rand_seed, ierr)
+
+
+
+
+      ! [[particle_group]] will contain either a reference to a simple group or to an ltpic group as defined in
+      ! [[particle_types]]
+      sim%particle_group => simple_pic_particle_group
+        
+    end if
+
+    ! temporary (todo: put this with the mesh?)
+    sim%domain_is_x_periodic = DOMAIN_IS_X_PERIODIC
+    sim%domain_is_y_periodic = DOMAIN_IS_Y_PERIODIC
+
+
+    if( sim%use_lt_pic_scheme )then
+
+        ! write initialization here ?
+
+    else
+
+
       call random_seed (SIZE=rand_seed_size)
       SLL_ALLOCATE( rand_seed(1:rand_seed_size), ierr )
       do j=1, rand_seed_size
         rand_seed(j) = (-1)**j*(100 + 15*j)*(2*sim%my_rank + 1)
       end do
 
-      call sim%simple_pic_4d_group%set_landau_params( sim%thermal_speed_ions, ALPHA, KX_LANDAU )
+      ! todo: clean up the initialization (write a structure for it, and improve how it is called)
+      call sim%particle_group%set_landau_parameters( sim%thermal_speed_ions, ALPHA, KX_LANDAU )
 
       initial_density_identifier = 0     ! for the moment we only use one density (landau)
-      call sim%simple_pic_4d_group%random_initializer( initial_density_identifier, rand_seed, sim%my_rank, sim%world_size )
+      call sim%particle_group%random_initializer( NUM_PARTICLES, initial_density_identifier, &
+                                                  rand_seed, sim%my_rank, sim%world_size )
 
       SLL_DEALLOCATE_ARRAY(rand_seed, ierr)
 
-      ! [[particle_group]] will contain either a reference to a simple group or to an ltpic group as defined in
-      ! [[particle_types]]
-      sim%particle_group => sim%simple_pic_particle_group
-        
     end if
 
     !$omp parallel
@@ -345,15 +394,17 @@ contains
     sll_real64 :: xmin, ymin
     sll_real64 :: rdx, rdy
     sll_int32  :: icell
-    sll_int32  :: gi ! counter index for guard list
+    ! sll_int32  :: gi ! counter index for guard list
     sll_real64 :: Ex, Ey, Ex1, Ey1, Ex_CS, Ey_CS
     sll_real64 :: dt_q_over_m ! dt * qoverm
     sll_real64 :: x, x1  ! for global position
     sll_real64 :: y, y1  ! for global position
     sll_real64 :: dt
     sll_real64 :: pp_x,pp_y,pp_vx, pp_vy
+    sll_real32 :: pp_dx, pp_dy
+    sll_int32  :: pp_icell
     type(field_accumulator_cell), dimension(:), pointer :: accumE
-    type(sll_generic_pic_4d_particle_guard), dimension(:), pointer :: p_guard
+    ! type(sll_generic_pic_4d_particle_guard), dimension(:), pointer :: p_guard
     sll_real64, dimension(:,:), allocatable  ::  diag_energy
     sll_real64, dimension(:),   allocatable  ::  diag_TOTmoment
     sll_real64, dimension(:),   allocatable  ::  diag_TOTenergy
@@ -365,7 +416,7 @@ contains
     sll_int32 :: save_nb
     sll_int32 :: thread_id
     sll_int32 :: n_threads
-    type(sll_charge_accumulator_2d),    pointer :: q_accum     !! better call it charge_accumulator, as in the init routine above...
+    type(sll_charge_accumulator_2d),    pointer :: charge_accumulator
     sll_int32 :: sort_nb
     sll_real64 :: some_val, une_cst
     sll_real64 :: val_lee, exval_ee
@@ -399,7 +450,7 @@ contains
 
     sort_nb = 10
     dt = sim%dt
-    dt_q_over_m = dt * sim%part_group%qoverm
+    dt_q_over_m = dt * sim%particle_group%species%q_over_m()
     print*,  "dt_q_over_m = ", dt_q_over_m
     xmin = sim%mesh_2d%eta1_min
     ymin = sim%mesh_2d%eta2_min
@@ -533,16 +584,16 @@ contains
           !> because the base PIC class does not give access to this type of info (because some particles may not have
           !> it). \todo we may want to optimize this out for speed
 
-          call global_to_cell_offset(pp_x,pp_y,sim%mesh_2d,pp_c,pp_dx,pp_dy)
+          call global_to_cell_offset(pp_x,pp_y,sim%mesh_2d,pp_icell,pp_dx,pp_dy)
           
           ! [[file:~/selalib/src/pic_accumulators/sll_accumulators.h::SLL_INTERPOLATE_FIELD_IN_CELL]]
-          SLL_INTERPOLATE_FIELD_IN_CELL(Ex,Ey,accumE,pp_c,pp_dx,pp_dy,tmp5,tmp6,icell)
+          SLL_INTERPOLATE_FIELD_IN_CELL(Ex,Ey,accumE,pp_dx,pp_dy,tmp5,tmp6,pp_icell)
 
           !> Set particle speed
           coords(1) = pp_vx - 0.5_f64 * dt_q_over_m * Ex
           coords(2) = pp_vy - 0.5_f64 * dt_q_over_m * Ey
           coords(3) = 0
-          sim%particle_group%set_v(coords)
+          call sim%particle_group%set_v(k, coords)
        enddo
        !$omp end parallel do
     endif
@@ -618,9 +669,9 @@ contains
        thread_id = OMP_GET_THREAD_NUM()
 #endif
       call reset_charge_accumulator_to_zero ( sim%q_accumulator_ptr(thread_id+1)%q )
-      q_accum => sim%q_accumulator_ptr(thread_id+1)%q
-      p_guard => sim%part_group%p_guard(thread_id+1)%g_list
-      gi = 0
+      charge_accumulator => sim%q_accumulator_ptr(thread_id+1)%q
+      ! p_guard => sim%part_group%p_guard(thread_id+1)%g_list
+      !gi = 0
       !$omp do!! reduction(+:some_val)
 
       !! -- --  particle loop: treat the particles by pair for faster treatment ?  -- --
@@ -644,16 +695,16 @@ contains
          !> because the base PIC class does not give access to this type of info (because some particles may not
          !> have it). \todo we may want to optimize this out for speed
 
-         call global_to_cell_offset(pp_x,pp_y,sim%mesh_2d,pp_c,pp_dx,pp_dy)
+         call global_to_cell_offset(pp_x,pp_y,sim%mesh_2d,pp_icell,pp_dx,pp_dy)
 
          ! [[file:~/selalib/src/pic_accumulators/sll_accumulators.h::SLL_INTERPOLATE_FIELD_IN_CELL]]
-         SLL_INTERPOLATE_FIELD_IN_CELL(Ex,Ey,accumE,pp_c,pp_dx,pp_dy,tmp5,tmp6,icell)
+         SLL_INTERPOLATE_FIELD_IN_CELL(Ex,Ey,accumE,pp_dx,pp_dy,tmp5,tmp6,pp_icell)
 
          !> Set particle speed
          coords(1) = pp_vx + dt_q_over_m * Ex
          coords(2) = pp_vy + dt_q_over_m * Ey
          coords(3) = 0
-         sim%particle_group%set_v(coords)
+         call sim%particle_group%set_v(k, coords)
 
          !> remember new speed for x-push
          pp_vx=coords(1)
@@ -669,15 +720,15 @@ contains
 
          !! -- --  x-push [end]  -- --
 
-         if( .not. x_is_in_domain_2d( coords(1), coords(2), sim%mesh_2d,                    &
-                                       sim%part_group%domain_is_x_periodic,                 &
-                                       sim%part_group%domain_is_y_periodic )                &
+         if( .not. x_is_in_domain_2d( coords(1), coords(2), sim%mesh_2d,            &
+                                       sim%domain_is_x_periodic,                    &
+                                       sim%domain_is_y_periodic )                   &
                ) then
            !! -- -- put outside particles back in domain
            call apply_periodic_bc_on_cartesian_mesh_2d( sim%mesh_2d, coords(1), coords(2))
          end if
 
-         sim%particle_group%set_x(coords)
+         call sim%particle_group%set_x(k, coords)
 
       end do
 
@@ -805,32 +856,44 @@ contains
        !! -- --  diagnostics (computing energy) [begin]  -- --
         print *, "diag energy"
 
-       if (sim%use_cubic_splines) then
-         print*, "error (0976765) cubic splines not implemented yet"
-         stop
+        call reset_field_accumulator_to_zero( sim%E_accumulator )
+        call sll_accumulate_field( sim%E1, sim%E2, sim%E_accumulator )
+        some_val = 0.0_f64
+        !$omp parallel PRIVATE(Ex,Ey,Ex1,Ey1,tmp5,tmp6)
+        !$omp do reduction(+:some_val)
+        do k = 1, sim%ions_number
 
-       else
-          call reset_field_accumulator_to_zero( sim%E_accumulator )
-          call sll_accumulate_field( sim%E1, sim%E2, sim%E_accumulator )
-          some_val = 0.0_f64
-          !$omp parallel PRIVATE(Ex,Ey,Ex1,Ey1,tmp5,tmp6)
-          !$omp do reduction(+:some_val)
-          do k = 1, sim%ions_number
-             call get_poisson_cell_index(sim%mesh_2d, particles(k)%ic_x, particles(k)%ic_y, icell)
-             SLL_INTERPOLATE_FIELD_EXTENDED(Ex,Ey,accumE,particles(k),tmp5,tmp6, icell)
-             ! SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,particles(k),tmp5,tmp6)
+             ! particle position
+             coords=sim%particle_group%get_x(k) ! [[file:~/selalib/src/particle_methods/sll_pic_base.F90::get_x]]
+             pp_x = coords(1)
+             pp_y = coords(2)
+
+             !> compute cell dx and dy again locally (although we could extract this info for some types of particles)
+             !> because the base PIC class does not give access to this type of info (because some particles may not
+             !> have it). \todo we may want to optimize this out for speed
+
+             call global_to_cell_offset(pp_x,pp_y,sim%mesh_2d,pp_icell,pp_dx,pp_dy)
+
+             ! [[file:~/selalib/src/pic_accumulators/sll_accumulators.h::SLL_INTERPOLATE_FIELD_IN_CELL]]
+             SLL_INTERPOLATE_FIELD_IN_CELL(Ex,Ey,accumE,pp_dx,pp_dy,tmp5,tmp6,pp_icell)
+
+             ! particle position
+             coords=sim%particle_group%get_v(k) ! [[file:~/selalib/src/particle_methods/sll_pic_base.F90::get_v]]
+             pp_vx = coords(1)
+             pp_vy = coords(2)
+
+            ! todo: check the energy diagnostics (dt_q_over_m??)
              some_val = some_val &
-                    + (particles(k)%vx + 0.5_f64 * dt_q_over_m * Ex)**2 &
-                    + (particles(k)%vy + 0.5_f64 * dt_q_over_m * Ey)**2
-          enddo
-          !$omp end do
-          !$omp end parallel
-          call electric_energy( tot_ee, sim%E1, sim%E2, ncx, &
-               ncy, sim%mesh_2d%eta1_max, sim%mesh_2d%eta2_max )
-          diag_TOTenergy(it) = some_val* 0.5_f64 *(sim%mesh_2d%eta1_max - sim%mesh_2d%eta1_min) * &
-               (sim%mesh_2d%eta2_max - sim%mesh_2d%eta2_min)/( sim%world_size*sim%ions_number)  &
-               + tot_ee * 0.5_f64
-       endif
+                    + (pp_vx + 0.5_f64 * dt_q_over_m * Ex)**2 &
+                    + (pp_vy + 0.5_f64 * dt_q_over_m * Ey)**2
+        enddo
+        !$omp end do
+        !$omp end parallel
+        call electric_energy( tot_ee, sim%E1, sim%E2, ncx, &
+           ncy, sim%mesh_2d%eta1_max, sim%mesh_2d%eta2_max )
+        diag_TOTenergy(it) = some_val* 0.5_f64 *(sim%mesh_2d%eta1_max - sim%mesh_2d%eta1_min) * &
+           (sim%mesh_2d%eta2_max - sim%mesh_2d%eta2_min)/( sim%world_size*sim%ions_number)  &
+           + tot_ee * 0.5_f64
 
        !! -- --  diagnostics [end]  -- --
 

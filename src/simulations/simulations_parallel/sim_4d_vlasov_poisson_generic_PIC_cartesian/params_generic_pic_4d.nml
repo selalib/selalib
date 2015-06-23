@@ -1,10 +1,11 @@
 &sim_params
         THERM_SPEED         = 1.0
-        dt     =  0.1
+        dt                  =  0.1
         number_iterations   = 60
         plot_period         = 20
         remap_period        = 10         !  voir l'influence
-        QoverM = -1.0
+        SPECIES_CHARGE      = -1.0
+        SPECIES_MASS        = 1.0
         ALPHA  = 0.01
         UseCubicSplines = .false.
         UseLtPicScheme = .true.         ! <-- garder pour la classe abstraite

@@ -20,24 +20,25 @@ module sll_pic_random_initializers
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "particle_representation.h"
+!#include "particle_representation.h"
 
   use sll_constants, only: sll_pi
-  use sll_simple_pic_4d_group_module
-!  use sll_pic_utilities
-!  use sll_lt_pic_4d_utilities
   use sll_cartesian_meshes
-!  use sll_representation_conversion_module
+  use sll_module_pic_base
+  use gaussian
 
   implicit none
   
 
 contains
 
-  ! initialize a simple_pic group with the landau f0 distribution
+  ! initialize an abstract particle group with the landau f0 distribution
   !
-  ! this routine takes as arguments a newly created particle group of simple_pic type
-  ! and it creates the particle list inside this group
+  ! this routine takes as arguments a newly created particle group of type sll_particle_group_base
+  ! and it creates the particle list inside this group, using the public interface
+  !
+  ! note: here we assume that the abstract particles are in dimension 2Dx2V,
+  ! that they are allocated (with given number) and that they have a common weight
   subroutine sll_pic_4d_random_unweighted_initializer_landau_f0 (   &
       thermal_speed, alpha, k_landau,                               &
       particle_group,                                               &
@@ -46,10 +47,10 @@ contains
       rand_seed, rank, world_size                                   &
     )
 
-    sll_real64,                         intent(in)              :: thermal_speed, alpha, k_landau
-    type(sll_pic_base_class), pointer,  intent(inout)           :: particle_group
-    type(sll_cartesian_mesh_2d),        intent(in)              :: space_mesh_2d
     sll_int32,                          intent(in)              :: number_particles
+    sll_real64,                         intent(in)              :: thermal_speed, alpha, k_landau
+    class(sll_particle_group_base),  intent(inout)              :: particle_group
+    type(sll_cartesian_mesh_2d),        intent(in)              :: space_mesh_2d
 
     sll_int32, dimension(:),            intent(in), optional    :: rand_seed
     sll_int32,                          intent(in), optional    :: rank, world_size
@@ -58,7 +59,7 @@ contains
     sll_int32  :: ncx, ic_x, ic_y
     sll_int32  :: effective_world_size
     sll_real64 :: x_min, y_min, x_max, y_max, rdx, rdy
-    sll_real32 :: weight
+    sll_real64 :: weight
     sll_real64 :: aux_random
     sll_real64 :: x(3)
     sll_real64 :: v(3)
@@ -85,8 +86,8 @@ contains
     else
       effective_world_size = 1
     end if
-    weight = (x_max - x_min) * (y_max - y_min) / real(effective_world_size * num_particles,f64)
-    particle_group%set_common_weight( weight )
+    weight = (x_max - x_min) * (y_max - y_min) / real(effective_world_size * number_particles,f64)
+    call particle_group%set_common_weight( weight )     ! if the particle group has no common weight, this will raise an error
 
     x = 0
     v = 0
@@ -94,21 +95,21 @@ contains
     i_part = 1
     ii = 1
     ! Rejection sampling for the function x --> 1 + alpha * cos(k * x)
-    ! Each MPI node initializes 'num_particles' particles in phys space and velocity
-    do while ( i_part <= num_particles )
+    ! Each MPI node initializes 'number_particles' particles in phys space and velocity
+    do while ( i_part <= number_particles )
       call random_number(aux_random)
       x(1) = (x_max - x_min) * aux_random + x_min
       call random_number(aux_random)
       x(2) = (1._f64 + alpha) * aux_random
-      if ( eval_landau(alpha, k, x(1)) >= x(2) ) then
+      if ( eval_landau(alpha, k_landau, x(1)) >= x(2) ) then
         call random_number(aux_random)
         x(2) = (y_max - y_min) * aux_random + y_min
         call gaussian_deviate_2D(val)
         v(1) = val(1) * thermal_speed
         v(2) = val(2) * thermal_speed
 
-        particle_group%set_x( i_part, x )
-        particle_group%set_v( i_part, v )
+        call particle_group%set_x( i_part, x )
+        call particle_group%set_v( i_part, v )
 
         !        SET_PARTICLE_VALUES(p_group%p_list(j),x,y,vx,vy,weight,xmin,ymin,ncx,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
         i_part = i_part + 1

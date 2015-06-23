@@ -13,7 +13,8 @@ type(sll_cartesian_mesh_2d),    pointer     :: mesh_2d ! [[file:~/selalib/src/me
 type(sll_simple_pic_4d_group),  pointer     :: simple_pic_particle_group
 
 sll_int32 :: particle_group_id
-sll_int32 :: NUMBER_PARTICLES
+sll_int32 :: NC_X
+sll_int32 :: NC_Y
 sll_real64 :: SPECIES_CHARGE
 sll_real64 :: SPECIES_MASS
 sll_real64 :: XMIN, XMAX
@@ -23,7 +24,6 @@ logical :: DOMAIN_IS_X_PERIODIC
 logical :: DOMAIN_IS_Y_PERIODIC
 
 particle_group_id = 0
-NUMBER_PARTICLES = 10000
 SPECIES_CHARGE = 1.
 SPECIES_MASS = 1.
 DOMAIN_IS_X_PERIODIC = .true.
@@ -41,7 +41,6 @@ YMAX = 1.
 mesh_2d =>  new_cartesian_mesh_2d( NC_X, NC_Y, XMIN, XMAX, YMIN, YMAX )
 
 simple_pic_particle_group => sll_simple_pic_4d_group_new(       &
-    NUMBER_PARTICLES,                                           &
     SPECIES_CHARGE,                                             &
     SPECIES_MASS,                                               &
     particle_group_id,                                          &
