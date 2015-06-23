@@ -7,7 +7,8 @@ TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers_multipatch
   sll_scalar_field_multipatch
   sll_coordinate_transformation_multipatch
   sll_sparse_matrix
-  sll_integration)
+  sll_integration
+  sll_general_coordinate_elliptic_solvers )
 
 IF(BUILD_TESTING AND MPI_ENABLED)
   ADD_EXECUTABLE( test_general_coordinate_elliptic_solver_multipatch 
