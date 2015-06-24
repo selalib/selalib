@@ -289,6 +289,104 @@ subroutine update_bspline_1d(this, htau, slope_min, slope_max)
 
 end subroutine update_bspline_1d
 
+!> @brief returns the value of the image of an abscissae,
+!> The spline coefficients
+!> used are stored in the spline object pointer.
+!> @param[in] x input double-precison element containing the 
+!> abscissae to be interpolated.
+!> @param[out] y output double-precision element containing the 
+!> results of the interpolation.
+!> @param[inout] spline the spline object pointer, duly initialized and 
+!> already operated on by the compute_bspline_1d() subroutine.
+function interpolate_value( this, x) result(y)
+
+type(sll_bspline_1d)    :: this 
+sll_real64, intent(in)  :: x
+sll_real64              :: y
+
+sll_int32               :: i
+sll_int32               :: j
+sll_int32               :: ilo
+sll_int32               :: jc
+sll_int32               :: jcmax
+sll_int32               :: jcmin
+sll_int32               :: jj
+sll_int32               :: mflag
+sll_int32               :: ierr
+sll_int32               :: k
+sll_int32               :: l
+sll_int32               :: nmk
+sll_int32,  parameter   :: m = 2
+sll_real64, allocatable :: aj(:)
+sll_real64, allocatable :: dl(:)
+sll_real64, allocatable :: dr(:)
+
+k = this%k
+nmk = this%n+m+k
+
+SLL_CLEAR_ALLOCATE(aj(1:k), ierr)
+SLL_CLEAR_ALLOCATE(dl(1:k), ierr)
+SLL_CLEAR_ALLOCATE(dr(1:k), ierr)
+
+y = this%bcoef(i)
+
+call interv( this%t, nmk, x, i, mflag )
+
+if ( mflag /= 0 ) return
+if ( k <= 1 ) return
+
+if ( k <= i ) then
+  do j = 1, k-1
+    dl(j) = x - this%t(i+1-j)
+  end do
+  jcmin = 1
+else
+  jcmin = 1-(i-k)
+  do j = 1, i
+    dl(j) = x - this%t(i+1-j)
+  end do
+  do j = i, k-1
+    aj(k-j) = 0.0_f64
+    dl(j) = dl(i)
+  end do
+end if
+
+if ( this%n+m < i ) then
+  jcmax = nmk-i
+  do j = 1, jcmax
+    dr(j) = this%t(i+j) - x
+  end do
+  do j = jcmax, k-1
+    aj(j+1) = 0.0_f64
+    dr(j) = dr(jcmax)
+  end do
+else
+  jcmax = k
+  do j = 1, k-1
+    dr(j) = this%t(i+j) - x
+  end do
+end if
+
+do jc = jcmin, jcmax
+  aj(jc) = this%bcoef(i-k+jc)
+end do
+
+do j = 1, k-1
+  ilo = k-j
+  do jj = 1, k-j
+    aj(jj) = (aj(jj+1)*dl(ilo)+aj(jj)*dr(jj))/(dl(ilo)+dr(jj))
+    ilo = ilo - 1
+  end do
+end do
+
+y = aj(1)
+
+DEALLOCATE(aj,dl,dr)
+
+end function interpolate_value
+
+!> @brief returns the values of the derivatives evaluated at a collection of 
+!> abscissae stored by a 1D array in another output array. The spline coefficients
 !> @brief returns the values of the images of a collection of abscissae,
 !> represented by a 1D array in another output array. The spline coefficients
 !> used are stored in the spline object pointer.
@@ -310,7 +408,6 @@ sll_real64, intent(out) :: y(n)
 sll_int32               :: i
 sll_int32               :: j
 sll_int32               :: ilo
-sll_int32               :: left
 sll_int32               :: jc
 sll_int32               :: jcmax
 sll_int32               :: jcmin
