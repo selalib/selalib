@@ -80,6 +80,18 @@ module sll_simple_pic_4d_group_module
 
 contains
 
+  !----------------------------------------------------------------------------
+  pure function simple_pic_4d_get_common_charge( self ) result( r )
+    class( sll_simple_pic_4d_group ), intent( in ) :: self
+    sll_int32  :: dummy_i
+    sll_real64 :: r
+
+    dummy_i = 0
+
+    ! same charge for all particles
+    r = simple_pic_4d_get_charge(self, dummy_i)
+
+  end function simple_pic_4d_get_common_charge
 
   !----------------------------------------------------------------------------
   pure function simple_pic_4d_get_charge( self, i ) result( r )
@@ -263,8 +275,11 @@ contains
     ! for the moment we only use the landau damping initial density
     ! so we don't use the initial_density_identifier, but eventually it should say which initial density is used
 
+     print *, "in SP 0 -- ", number_particles, self%number_particles
     self%number_particles = number_particles
+     print *, "in SP 1 -- ", number_particles, self%number_particles
     SLL_ALLOCATE( self%particle_list(number_particles), ierr )
+     print *, "in SP 2 -- ", number_particles, self%number_particles
 
     call sll_pic_4d_random_unweighted_initializer_landau_f0 (   &
       self%thermal_speed, self%alpha, self%k_landau,            & ! -> these parameters should be members of the initializer object
@@ -274,8 +289,8 @@ contains
       rand_seed, rank, world_size                               &
     )
 
+     print *, "in SP 10 -- ", number_particles, self%number_particles
    end subroutine simple_pic_4d_random_initializer
-
 
 
   !----------------------------------------------------------------------------
@@ -305,20 +320,34 @@ contains
     sll_real64      :: particle_charge
     sll_real64      :: dx, dy
 
+    print*, "DC 0"
     call reset_charge_accumulator_to_zero ( charge_accumulator )
 
-    particle_charge = self%species%q
+    print*, "DC 1"
+
+!    print*, "DC 2 -- ", self%species
+
+    print*, "DC 3 -- ", self%species%q
+
+    particle_charge = simple_pic_4d_get_common_charge(self)
+!    particle_charge = self%get_common_charge()
+!    particle_charge = self%species%q
     do i_part = 1, self%number_particles
 
+      print*, "DC 10 -- i_part = ", i_part
       particle => self%particle_list( i_part )
       dx = particle%offset_x
       dy = particle%offset_y
+      print*, "DC 11"
       i_cell = self%get_cell_index(i_part)
+      print*, "DC 12"
       charge_accumulator_cell => charge_accumulator%q_acc(i_cell)
 
+      print*, "DC 13"
       xy_part = self%get_x( i_part )  ! x and y
       if(x_is_in_domain_2d( xy_part(1), xy_part(2), self%space_mesh_2d, self%domain_is_x_periodic, self%domain_is_y_periodic ))then
 
+        print*, "DC 20 -- "
         charge_accumulator_cell%q_sw = charge_accumulator_cell%q_sw + particle_charge * (1.0_f64 - dx) * (1.0_f64 - dy)
         charge_accumulator_cell%q_se = charge_accumulator_cell%q_se + particle_charge *            dx  * (1.0_f64 - dy)
         charge_accumulator_cell%q_nw = charge_accumulator_cell%q_nw + particle_charge * (1.0_f64 - dx) *            dy
@@ -353,10 +382,15 @@ contains
     type(sll_cartesian_mesh_2d), pointer :: space_mesh_2d
     sll_int32               :: ierr
 
+    print*, "CONSTR 0 -- "
+
     SLL_ALLOCATE( res, ierr )
 
+    print*, "CONSTR 1 -- "
     ! the group
-    !    res%species => species_new( species_charge, species_mass )  ! todo: put this back in
+    res%species => species_new( species_charge, species_mass )
+
+    print*, "CONSTR 3 -- ", res%species%q
     res%id = particle_group_id
     res%dimension_x = 2
     res%dimension_v = 2
