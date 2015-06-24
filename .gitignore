@@ -64,3 +64,5 @@ ChangeLog
 build*
 
 jorek/
+
+src/simulations/simulations_parallel/sim_pic1d1v_vlasov-poisson_periodic/README
