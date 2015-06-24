@@ -82,7 +82,6 @@ IF(BUILD_TESTING)
 
     INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/paralution-prefix/src/paralution/src/)
     LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/paralution-prefix/src/paralution-build/lib/)
-    ADD_DEFINITIONS(-lstdc++)
     ADD_LIBRARY(sll_paralution paralution_fortran.cpp sll_paralution.F90)
     ADD_EXECUTABLE(paralution_solver unit_test_paralution.F90) 
     TARGET_LINK_LIBRARIES(paralution_solver sll_sparse_matrix sll_paralution paralution)
