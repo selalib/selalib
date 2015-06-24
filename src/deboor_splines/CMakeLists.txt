@@ -12,11 +12,8 @@ IF(BUILD_TESTING)
 
   ADD_EXECUTABLE(test_deboor_splines_1d unit_test.F90)
   TARGET_LINK_LIBRARIES( test_deboor_splines_1d deboor_splines )
-  
-  ADD_EXECUTABLE(test_deboor_hermite test_deboor_hermite.F90)
-  TARGET_LINK_LIBRARIES( test_deboor_hermite deboor_splines sll_memory sll_assert)
 
-  ADD_TEST( NAME deboor_hermite COMMAND test_deboor_hermite   )
-  SET_TESTS_PROPERTIES( deboor_hermite PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+  ADD_TEST( NAME deboor_splines COMMAND test_deboor_splines_1d   )
+  SET_TESTS_PROPERTIES( deboor_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 ENDIF (BUILD_TESTING)
