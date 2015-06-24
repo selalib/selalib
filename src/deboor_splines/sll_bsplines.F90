@@ -32,6 +32,7 @@ type, public :: sll_bspline_1d
   sll_real64, pointer       :: dr(:)
   sll_real64, dimension(20) :: deltal
   sll_real64, dimension(20) :: deltar
+  sll_int32                 :: j = 1
 
 end type sll_bspline_1d
 
@@ -66,14 +67,38 @@ subroutine initialize_bspline_1d(this, n, k, tau_min, tau_max, bc_type)
     this%tau(i) = tau_min + (i-1) * (tau_max-tau_min) / (n-1)
   end do
 
-  SLL_ALLOCATE(this%t(n+k+m), ierr)
+  if ( bc_type == SLL_PERIODIC) then
 
-  this%t(1:k)         = tau_min
-  this%t(k+1:n+m)     = this%tau(2:n-1)
-  this%t(n+m+1:n+m+k) = tau_max
+    SLL_ALLOCATE(this%bcoef(n),ierr)
+    SLL_ALLOCATE(this%t(n+k),ierr)
+    this%t(1:k)     = tau_min
+    this%t(n+1:n+k) = tau_max
+  
+    if ( mod(k,2) == 0 ) then
+      do i = k+1,n
+        this%t(i) = this%tau(i-k/2) 
+      end do
+    else
+      do i = k+1, n
+        this%t(i) = 0.5*(this%tau(i-(k-1)/2)+this%tau(i-1-(k-1)/2))
+      end do
+    end if
 
-  SLL_ALLOCATE(this%q(1:(2*k-1)*(n+m)), ierr)
-  SLL_ALLOCATE(this%bcoef(n+m),  ierr)
+    SLL_ALLOCATE(this%q(n*(2*k-1)),ierr)
+
+  else
+
+
+    SLL_ALLOCATE(this%t(n+k+m), ierr)
+
+    this%t(1:k)         = tau_min
+    this%t(k+1:n+m)     = this%tau(2:n-1)
+    this%t(n+m+1:n+m+k) = tau_max
+
+    SLL_ALLOCATE(this%q(1:(2*k-1)*(n+m)), ierr)
+    SLL_ALLOCATE(this%bcoef(n+m),  ierr)
+
+  end if
 
   allocate(this%a(k,k))
   allocate(this%dbiatx(k,m))
@@ -598,9 +623,9 @@ end do
 !
 jlow = 1
 do i = 1, k
-   this%a(jlow:k,i) = 0.0D+00
-   jlow = i
-   this%a(i,i) = 1.0D+00
+  this%a(jlow:k,i) = 0.0D+00
+  jlow = i
+  this%a(i,i) = 1.0D+00
 end do
 !
 !  At this point, A(.,J) contains the B-coefficients for the J-th of the
@@ -617,12 +642,12 @@ do m = 2, mhigh
   !  I < J is used.
   !
   do ldummy = 1, k+1-m
-     factor = fkp1mm / ( this%t(il+k+1-m) - this%t(il) )
-     !  The assumption that T(LEFT) < T(LEFT+1) makes denominator
-     !  in FACTOR nonzero.
-     this%a(i,1:i) = ( this%a(i,1:i) - this%a(i-1,1:i) ) * factor
-     il = il - 1
-     i = i - 1
+    factor = fkp1mm / ( this%t(il+k+1-m) - this%t(il) )
+    !  The assumption that T(LEFT) < T(LEFT+1) makes denominator
+    !  in FACTOR nonzero.
+    this%a(i,1:i) = ( this%a(i,1:i) - this%a(i-1,1:i) ) * factor
+    il = il - 1
+    i = i - 1
   end do
   !  For I = 1,...,K, combine B-coefficients A(.,I) with B-spline values
   !  stored in DBIATX(.,M) to get value of (M-1)st derivative of
@@ -633,13 +658,13 @@ do m = 2, mhigh
   !  of the same order do not use this value due to the fact
   !  that  A(J,I) = 0  for J < I.
   do i = 1, k
-     jlow = max ( i, m )
-     this%dbiatx(i,m) = dot_product ( this%a(jlow:k,i), this%dbiatx(jlow:k,m) )
+    jlow = max ( i, m )
+    this%dbiatx(i,m) = dot_product ( this%a(jlow:k,i), this%dbiatx(jlow:k,m) )
   end do
 end do
+
 end subroutine bsplvd
   
-
 !***********************************************************************
 !> @brief
 !> Evaluates B-splines at a point X with a given knot sequence.
@@ -705,20 +730,17 @@ sll_int32,  intent(in)  :: jhigh
 sll_int32,  intent(in)  :: index
 sll_real64, intent(in)  :: x
 sll_int32,  intent(in)  :: left
-sll_real64, intent(out) :: biatx (jhigh)
+sll_real64, intent(out) :: biatx(:) ! (jhigh)
 
-sll_int32                         :: i
-sll_int32, save                   :: j = 1
-sll_real64                        :: saved
-sll_real64                        :: term
+sll_int32               :: i
+sll_real64              :: saved
+sll_real64              :: term
 
 
 if ( index == 1 ) then
-  j = 1
-  biatx(1) = 1.0_8
-  if ( jhigh <= j ) then
-     return
-  end if
+  this%j = 1
+  biatx(1) = 1.0_f64
+  if ( jhigh <= this%j ) return
 end if
 
 SLL_ASSERT ( this%t(left+1) > this%t(left) )
@@ -736,20 +758,20 @@ SLL_ASSERT ( this%t(left+1) > this%t(left) )
 
 do
    
-  this%deltar(j) = this%t(left+j) - x
-  this%deltal(j) = x - this%t(left+1-j)
+  this%deltar(this%j) = this%t(left+this%j) - x
+  this%deltal(this%j) = x - this%t(left+1-this%j)
   
   saved = 0.0_f64
-  do i = 1, j
-     term = biatx(i) / ( this%deltar(i) + this%deltal(j+1-i) )
+  do i = 1, this%j
+     term = biatx(i) / ( this%deltar(i) + this%deltal(this%j+1-i) )
      biatx(i) = saved + this%deltar(i) * term
-     saved = this%deltal(j+1-i) * term
+     saved = this%deltal(this%j+1-i) * term
   end do
 
-  biatx(j+1) = saved
-  j = j + 1
+  biatx(this%j+1) = saved
+  this%j = this%j + 1
   
-  if ( jhigh <= j ) exit
+  if ( jhigh <= this%j ) exit
 
 end do
 
