@@ -1,5 +1,6 @@
 
 ADD_LIBRARY( deboor_splines STATIC
+             sll_bsplines.F90
              sll_module_deboor_splines_2d.F90
              sll_module_deboor_splines_1d.F90 )
 
