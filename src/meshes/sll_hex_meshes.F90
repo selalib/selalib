@@ -1453,6 +1453,9 @@ contains
     do i=1, num_ele
        !... we write its global number
        write (out_unit, "(i6)") i
+       !... we write its type (1 or 2)
+       type = cell_type(mesh, i)
+       write (out_unit, "(i6)") type
        !... we write the spline degree
        write(out_unit, "((i6),(a,1x),(i6))") spline_deg, ",", spline_deg
        !... we write the scale of the element
@@ -1466,7 +1469,6 @@ contains
        call get_cell_vertices_index(x1, y1, mesh, e1, e2, e3)
        write(out_unit, "((i6),(a,1x),(i6),(a,1x),(i6))") e1, ",",e2,",", e3
        !... we write the coordinate transformation (*)
-       type = cell_type(mesh, i)
        if (type == 1) then
           a11 = 0.5_f64 / mesh%num_cells
           a12 = -sll_sqrt3/2._f64 / mesh%num_cells
