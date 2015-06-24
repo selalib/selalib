@@ -22,6 +22,10 @@
    [[file:simulation_4d_vp_generic_pic_cartesian.F90]]
    file:unit_test_4d_vp_generic_pic_cartesian.F90
 	
+** Doxygen
+  building: [[elisp:(compile "cd ~/selalib/build && make doc")]]
+  HTML index: file:~/selalib/doc/build/html/doxygen/html/index.html
+
 ** Configuring
 *** extra packages
 
