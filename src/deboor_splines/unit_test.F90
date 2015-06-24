@@ -47,7 +47,6 @@ end do
 
 call initialize_bspline_1d(bsplines, n, k, tau_min, tau_max, SLL_HERMITE)
 
-call build_system(bsplines)
 
 SLL_ALLOCATE(gtau(n),ierr)
 gtau = cos(2*sll_pi*bsplines%tau)
@@ -66,7 +65,7 @@ SLL_ALLOCATE(htau(n),ierr)
 htau = sin(2*sll_pi*bsplines%tau)
 slope_min = cos(2*sll_pi*tau_min)*2*sll_pi
 slope_max = cos(2*sll_pi*tau_max)*2*sll_pi
-call compute_bspline_1d(bsplines, htau, slope_min, slope_max)
+call update_bspline_1d(bsplines, htau, slope_min, slope_max)
 do j = 1, 10000
   call interpolate_array_values( bsplines, n, x, y)
 end do
