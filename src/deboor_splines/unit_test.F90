@@ -37,6 +37,7 @@ sll_real64 :: tau_min = 0.0_f64
 sll_real64 :: tau_max = 1.0_f64
 sll_real64 :: slope_min
 sll_real64 :: slope_max
+sll_real64 :: t0, t1, t2
 
 SLL_ALLOCATE(x(n),ierr)
 SLL_ALLOCATE(y(n),ierr)
@@ -52,10 +53,17 @@ SLL_ALLOCATE(gtau(n),ierr)
 gtau = cos(2*sll_pi*bsplines%tau)
 slope_min = -sin(2*sll_pi*tau_min)*2*sll_pi
 slope_max = -sin(2*sll_pi*tau_max)*2*sll_pi
-call compute_bspline_1d(bsplines, gtau, slope_min, slope_max)
-do j = 1, 10000
+call cpu_time(t0)
+do j = 1, 8400
+  call compute_bspline_1d(bsplines, gtau, slope_min, slope_max)
+end do
+call cpu_time(t1)
+do j = 1, 18000
   call interpolate_array_values( bsplines, n, x, y)
 end do
+call cpu_time(t2)
+print*, ' time spent to compute interpolants : ', t1-t0
+print*, ' time spent to interpolate values : ', t2-t1
 
 print*, "values error = ", maxval(abs(y-cos(2*sll_pi*x)))
 call interpolate_array_derivatives( bsplines, n, x, y)
