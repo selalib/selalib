@@ -414,12 +414,13 @@ end if
 order  = interpolator%spline_degree + 1
 period = interpolator%eta_max - interpolator%eta_min
 
+interpolator%deboor%ilo = 1
+interpolator%size_coeffs = sz 
+interpolator%size_t = order + sz 
 
 select case (interpolator%bc_selector)
 case (0) ! periodic
 
-  interpolator%size_coeffs = sz 
-  interpolator%size_t = order + sz 
 
   call splint ( interpolator%deboor,        &
                 interpolator%eta,           &
@@ -433,10 +434,7 @@ case (0) ! periodic
     
 case (9) ! 2. dirichlet-left, dirichlet-right
 
-  interpolator%size_coeffs = sz
-  interpolator%size_t = order + sz
   interpolator%coeff_splines  = data_array
-  interpolator%deboor%ilo = 1
 
   call splint ( interpolator%deboor,        &
                 interpolator%eta,           &
