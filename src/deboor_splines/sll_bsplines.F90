@@ -24,7 +24,6 @@ type, public :: sll_bspline_1d
   sll_real64, pointer       :: t(:)
   sll_real64, pointer       :: q(:)
   sll_real64, pointer       :: bcoef(:)
-  sll_real64, pointer       :: bcoef_spline(:)
   sll_int32                 :: bc_type
   sll_real64, pointer       :: dbiatx(:,:)
   sll_real64, pointer       :: a(:,:)
@@ -74,8 +73,7 @@ subroutine initialize_bspline_1d(this, n, k, tau_min, tau_max, bc_type)
   this%t(n+m+1:n+m+k) = tau_max
 
   SLL_ALLOCATE(this%q(1:(2*k-1)*(n+m)), ierr)
-  SLL_ALLOCATE(this%bcoef(n),           ierr)
-  SLL_ALLOCATE(this%bcoef_spline(n+m),  ierr)
+  SLL_ALLOCATE(this%bcoef(n+m),  ierr)
 
   allocate(this%a(k,k))
   allocate(this%dbiatx(k,m))
@@ -123,7 +121,7 @@ subroutine build_system(this)
 
     if (i < n) then
 
-      call bsplvb ( this, this%t, k, 1, taui, left, this%bcoef )
+      call bsplvb ( this, k, 1, taui, left, this%bcoef )
       jj = i-left+1+(left-k)*(k+k-1)+l
       do j = 1, k
         jj = jj + kpkm2
@@ -131,7 +129,7 @@ subroutine build_system(this)
       end do
    
       if ( i == 1 ) then   
-        call bsplvd( this, this%t, k, taui, left, this%a, this%dbiatx, 2)
+        call bsplvd( this, k, taui, left, 2)
         l = l + 1
         jj = i-left+1+(left-k)*(k+k-1)+l
         do j = 1, k
@@ -142,7 +140,7 @@ subroutine build_system(this)
 
     else
 
-      call bsplvd( this, this%t, k, taui, left, this%a, this%dbiatx, 2)
+      call bsplvd( this, k, taui, left, 2)
       jj = i-left+1+(left-k)*(k+k-1)+l
       do j = 1, k
         jj = jj + kpkm2
@@ -150,7 +148,7 @@ subroutine build_system(this)
       end do
       l = l + 1
       
-      call bsplvb ( this, this%t, k, 1, taui, left, this%bcoef )
+      call bsplvb ( this, k, 1, taui, left, this%bcoef )
       jj = i-left+1+(left-k)*(k+k-1)+l
       do j = 1, k
         jj = jj + kpkm2 
@@ -183,21 +181,21 @@ subroutine compute_bspline_1d_aux( this, gtau, slope_min, slope_max)
 
   SLL_ASSERT(size(gtau) == this%n)
 
-  this%bcoef_spline(1)   = gtau(1)
+  this%bcoef(1)   = gtau(1)
   if (present(slope_min)) then
-    this%bcoef_spline(2) = slope_min
+    this%bcoef(2) = slope_min
   else
-    this%bcoef_spline(2) = 0.0_f64
+    this%bcoef(2) = 0.0_f64
   end if
-  this%bcoef_spline(3:n) = gtau(2:n-1)
+  this%bcoef(3:n) = gtau(2:n-1)
   if (present(slope_max)) then
-    this%bcoef_spline(n+1) = slope_max
+    this%bcoef(n+1) = slope_max
   else
-    this%bcoef_spline(n+1) = 0.0_f64
+    this%bcoef(n+1) = 0.0_f64
   end if
-  this%bcoef_spline(n+2) = gtau(n)
+  this%bcoef(n+2) = gtau(n)
 
-  call banslv ( this%q, k+k-1, n+m, k-1, k-1, this%bcoef_spline )
+  call banslv ( this%q, k+k-1, n+m, k-1, k-1, this%bcoef )
   
 end subroutine compute_bspline_1d_aux
 
@@ -319,7 +317,7 @@ do l = 1, n
   if ( mflag /= 0 ) return
 
   if ( k <= 1 ) then
-    y(l) = this%bcoef_spline(i)
+    y(l) = this%bcoef(i)
     cycle
   end if
   
@@ -356,7 +354,7 @@ do l = 1, n
   end if
   
   do jc = jcmin, jcmax
-    aj(jc) = this%bcoef_spline(i-k+jc)
+    aj(jc) = this%bcoef(i-k+jc)
   end do
   
   do j = 1, k-1
@@ -438,7 +436,7 @@ do l = 1, n
   !  If K = 1 (and JDERIV = 0), BVALUE = BCOEF(I).
   !
   if ( k <= 1 ) then
-    y(l) = this%bcoef_spline(i)
+    y(l) = this%bcoef(i)
     cycle
   end if
   !
@@ -483,7 +481,7 @@ do l = 1, n
   end if
   
   do jc = jcmin, jcmax
-    aj(jc) = this%bcoef_spline(i-k+jc)
+    aj(jc) = this%bcoef(i-k+jc)
   end do
   !  Difference the coefficients JDERIV times.
   do j = 1, jderiv
@@ -546,16 +544,13 @@ end subroutine interpolate_array_derivatives
 !   A Practical Guide to Splines,
 !   Springer, 2001,
 !   ISBN: 0387953663.
-subroutine bsplvd ( this, t, k, x, left, a, dbiatx, nderiv )
+subroutine bsplvd ( this, k, x, left, nderiv )
     
 type(sll_bspline_1d)      :: this
 sll_int32,  intent(in)    :: k
 sll_real64, intent(in)    :: x
 sll_int32,  intent(in)    :: left
-sll_real64, intent(in)    :: t(left+k)
-sll_real64, intent(inout) :: a(k,k)
 sll_int32,  intent(in)    :: nderiv
-sll_real64, intent(out)   :: dbiatx(k,nderiv)
 
 sll_real64 :: factor
 sll_real64 :: fkp1mm
@@ -573,7 +568,7 @@ mhigh = max ( min ( nderiv, k ), 1 )
 !
 !  MHIGH is usually equal to NDERIV.
 !
-call bsplvb ( this, t, k+1-mhigh, 1, x, left, dbiatx )
+call bsplvb ( this, k+1-mhigh, 1, x, left, this%dbiatx(:,1) )
 
 if ( mhigh == 1 ) return
 !
@@ -586,11 +581,11 @@ ideriv = mhigh
 do m = 2, mhigh
   jp1mid = 1
   do j = ideriv, k
-     dbiatx(j,ideriv) = dbiatx(jp1mid,1)
+     this%dbiatx(j,ideriv) = this%dbiatx(jp1mid,1)
      jp1mid = jp1mid + 1
   end do
   ideriv = ideriv - 1
-  call bsplvb ( this, t, k+1-ideriv, 2, x, left, dbiatx )
+  call bsplvb ( this, k+1-ideriv, 2, x, left, this%dbiatx(:,1) )
 end do
 !
 !  At this point, B(LEFT-K+I, K+1-J)(X) is in DBIATX(I,J) for
@@ -603,16 +598,16 @@ end do
 !
 jlow = 1
 do i = 1, k
-   a(jlow:k,i) = 0.0D+00
+   this%a(jlow:k,i) = 0.0D+00
    jlow = i
-   a(i,i) = 1.0D+00
+   this%a(i,i) = 1.0D+00
 end do
 !
 !  At this point, A(.,J) contains the B-coefficients for the J-th of the
 !  K B-splines of interest here.
 !
 do m = 2, mhigh
-  fkp1mm = real ( k + 1 - m, kind = 8 )
+  fkp1mm = real(k+1-m, kind = f64 )
   il = left
   i = k
   !
@@ -622,10 +617,10 @@ do m = 2, mhigh
   !  I < J is used.
   !
   do ldummy = 1, k+1-m
-     factor = fkp1mm / ( t(il+k+1-m) - t(il) )
+     factor = fkp1mm / ( this%t(il+k+1-m) - this%t(il) )
      !  The assumption that T(LEFT) < T(LEFT+1) makes denominator
      !  in FACTOR nonzero.
-     a(i,1:i) = ( a(i,1:i) - a(i-1,1:i) ) * factor
+     this%a(i,1:i) = ( this%a(i,1:i) - this%a(i-1,1:i) ) * factor
      il = il - 1
      i = i - 1
   end do
@@ -639,7 +634,7 @@ do m = 2, mhigh
   !  that  A(J,I) = 0  for J < I.
   do i = 1, k
      jlow = max ( i, m )
-     dbiatx(i,m) = dot_product ( a(jlow:k,i), dbiatx(jlow:k,m) )
+     this%dbiatx(i,m) = dot_product ( this%a(jlow:k,i), this%dbiatx(jlow:k,m) )
   end do
 end do
 end subroutine bsplvd
@@ -703,14 +698,13 @@ end subroutine bsplvd
 !    Springer, 2001,
 !    ISBN: 0387953663.
 !
-subroutine bsplvb ( this, t, jhigh, index, x, left, biatx )
+subroutine bsplvb ( this, jhigh, index, x, left, biatx )
   
 type(sll_bspline_1d)    :: this
 sll_int32,  intent(in)  :: jhigh
 sll_int32,  intent(in)  :: index
 sll_real64, intent(in)  :: x
 sll_int32,  intent(in)  :: left
-sll_real64, intent(in)  :: t(:)
 sll_real64, intent(out) :: biatx (jhigh)
 
 sll_int32                         :: i
@@ -727,21 +721,23 @@ if ( index == 1 ) then
   end if
 end if
 
-if ( t(left+1) <= t(left) ) then
-  print*,'x=',x
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'BSPLVB - Fatal error!'
-  write ( *, '(a)' ) '  It is required that T(LEFT) < T(LEFT+1).'
-  write ( *, '(a,i8)' ) '  But LEFT = ', left
-  write ( *, '(a,g14.6)' ) '  T(LEFT) =   ', t(left)
-  write ( *, '(a,g14.6)' ) '  T(LEFT+1) = ', t(left+1)
-  stop
-end if
+SLL_ASSERT ( this%t(left+1) > this%t(left) )
+
+!if ( this%t(left+1) <= this%t(left) ) then
+!  print*,'x=',x
+!  write ( *, '(a)' ) ' '
+!  write ( *, '(a)' ) 'BSPLVB - Fatal error!'
+!  write ( *, '(a)' ) '  It is required that T(LEFT) < T(LEFT+1).'
+!  write ( *, '(a,i8)' ) '  But LEFT = ', left
+!  write ( *, '(a,g14.6)' ) '  T(LEFT) =   ', this%t(left)
+!  write ( *, '(a,g14.6)' ) '  T(LEFT+1) = ', this%t(left+1)
+!  stop
+!end if
 
 do
    
-  this%deltar(j) = t(left+j) - x
-  this%deltal(j) = x - t(left+1-j)
+  this%deltar(j) = this%t(left+j) - x
+  this%deltal(j) = x - this%t(left+1-j)
   
   saved = 0.0_f64
   do i = 1, j
