@@ -431,7 +431,7 @@ contains
     
     ! initialize of general_elliptic_solver
     print *,'new_general_elliptic_solver'   
-    poisson%elliptic_solver => new_general_elliptic_solver( &
+    poisson%elliptic_solver => new_general_elliptic_solver_prototype( &
         spline_degree_eta1, &
         spline_degree_eta2, &
         num_cells_eta1, &
@@ -450,7 +450,7 @@ contains
         
     ! compute matrix the field
     print *,'#begin factorize_mat_es'
-    call factorize_mat_es(&
+    call factorize_mat_es_prototype(&
 !    call assemble_mat_es(&
         poisson%elliptic_solver, &
         poisson%a11_field, &
@@ -608,16 +608,17 @@ contains
      return
     endif
             
-    call sll_solve(&
+    call solve_general_coordinates_elliptic_eq_prototype(&
        poisson%elliptic_solver,&
        poisson%rho_field,&
-       poisson%phi_field)
+       phi)
+       !poisson%phi_field)
    
-   do j=1,nc_eta2+1
-        do i=1,nc_eta1+1
-           phi(i,j) = poisson%phi_field%value_at_indices(i,j)
-        end do
-     end do
+!   do j=1,nc_eta2+1
+!        do i=1,nc_eta1+1
+!           phi(i,j) = poisson%phi_field%value_at_indices(i,j)
+!        end do
+!     end do
      
   end subroutine compute_phi_from_rho_2d_elliptic_solver
 
