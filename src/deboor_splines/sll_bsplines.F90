@@ -18,19 +18,21 @@ private
 !> treated as an opaque type. No access to its internals is directly allowed.
 type, public :: sll_bspline_1d
 
-  sll_int32           :: n
-  sll_int32           :: k
-  sll_real64, pointer :: tau(:)
-  sll_real64, pointer :: t(:)
-  sll_real64, pointer :: q(:)
-  sll_real64, pointer :: bcoef(:)
-  sll_real64, pointer :: bcoef_spline(:)
-  sll_int32           :: bc_type
-  sll_real64, pointer :: dbiatx(:,:)
-  sll_real64, pointer :: a(:,:)
-  sll_real64, pointer :: aj(:)
-  sll_real64, pointer :: dl(:)
-  sll_real64, pointer :: dr(:)
+  sll_int32                 :: n
+  sll_int32                 :: k
+  sll_real64, pointer       :: tau(:)
+  sll_real64, pointer       :: t(:)
+  sll_real64, pointer       :: q(:)
+  sll_real64, pointer       :: bcoef(:)
+  sll_real64, pointer       :: bcoef_spline(:)
+  sll_int32                 :: bc_type
+  sll_real64, pointer       :: dbiatx(:,:)
+  sll_real64, pointer       :: a(:,:)
+  sll_real64, pointer       :: aj(:)
+  sll_real64, pointer       :: dl(:)
+  sll_real64, pointer       :: dr(:)
+  sll_real64, dimension(20) :: deltal
+  sll_real64, dimension(20) :: deltar
 
 end type sll_bspline_1d
 
@@ -121,7 +123,7 @@ subroutine build_system(this)
 
     if (i < n) then
 
-      call bsplvb ( this%t, k, 1, taui, left, this%bcoef )
+      call bsplvb ( this, this%t, k, 1, taui, left, this%bcoef )
       jj = i-left+1+(left-k)*(k+k-1)+l
       do j = 1, k
         jj = jj + kpkm2
@@ -129,7 +131,7 @@ subroutine build_system(this)
       end do
    
       if ( i == 1 ) then   
-        call bsplvd( this%t, k, taui, left, this%a, this%dbiatx, 2)
+        call bsplvd( this, this%t, k, taui, left, this%a, this%dbiatx, 2)
         l = l + 1
         jj = i-left+1+(left-k)*(k+k-1)+l
         do j = 1, k
@@ -140,7 +142,7 @@ subroutine build_system(this)
 
     else
 
-      call bsplvd( this%t, k, taui, left, this%a, this%dbiatx, 2)
+      call bsplvd( this, this%t, k, taui, left, this%a, this%dbiatx, 2)
       jj = i-left+1+(left-k)*(k+k-1)+l
       do j = 1, k
         jj = jj + kpkm2
@@ -148,7 +150,7 @@ subroutine build_system(this)
       end do
       l = l + 1
       
-      call bsplvb ( this%t, k, 1, taui, left, this%bcoef )
+      call bsplvb ( this, this%t, k, 1, taui, left, this%bcoef )
       jj = i-left+1+(left-k)*(k+k-1)+l
       do j = 1, k
         jj = jj + kpkm2 
@@ -544,8 +546,9 @@ end subroutine interpolate_array_derivatives
 !   A Practical Guide to Splines,
 !   Springer, 2001,
 !   ISBN: 0387953663.
-subroutine bsplvd ( t, k, x, left, a, dbiatx, nderiv )
+subroutine bsplvd ( this, t, k, x, left, a, dbiatx, nderiv )
     
+type(sll_bspline_1d)      :: this
 sll_int32,  intent(in)    :: k
 sll_real64, intent(in)    :: x
 sll_int32,  intent(in)    :: left
@@ -570,7 +573,7 @@ mhigh = max ( min ( nderiv, k ), 1 )
 !
 !  MHIGH is usually equal to NDERIV.
 !
-call bsplvb ( t, k+1-mhigh, 1, x, left, dbiatx )
+call bsplvb ( this, t, k+1-mhigh, 1, x, left, dbiatx )
 
 if ( mhigh == 1 ) return
 !
@@ -587,7 +590,7 @@ do m = 2, mhigh
      jp1mid = jp1mid + 1
   end do
   ideriv = ideriv - 1
-  call bsplvb ( t, k+1-ideriv, 2, x, left, dbiatx )
+  call bsplvb ( this, t, k+1-ideriv, 2, x, left, dbiatx )
 end do
 !
 !  At this point, B(LEFT-K+I, K+1-J)(X) is in DBIATX(I,J) for
@@ -700,18 +703,16 @@ end subroutine bsplvd
 !    Springer, 2001,
 !    ISBN: 0387953663.
 !
-subroutine bsplvb ( t, jhigh, index, x, left, biatx )
+subroutine bsplvb ( this, t, jhigh, index, x, left, biatx )
   
+type(sll_bspline_1d)    :: this
 sll_int32,  intent(in)  :: jhigh
 sll_int32,  intent(in)  :: index
 sll_real64, intent(in)  :: x
 sll_int32,  intent(in)  :: left
-sll_real64, intent(in)  :: t(left+jhigh)
+sll_real64, intent(in)  :: t(:)
 sll_real64, intent(out) :: biatx (jhigh)
 
-sll_int32,  parameter             :: jmax = 20
-sll_real64, save, dimension(jmax) :: deltal
-sll_real64, save, dimension(jmax) :: deltar
 sll_int32                         :: i
 sll_int32, save                   :: j = 1
 sll_real64                        :: saved
@@ -739,14 +740,14 @@ end if
 
 do
    
-  deltar(j) = t(left+j) - x
-  deltal(j) = x - t(left+1-j)
+  this%deltar(j) = t(left+j) - x
+  this%deltal(j) = x - t(left+1-j)
   
   saved = 0.0_f64
   do i = 1, j
-     term = biatx(i) / ( deltar(i) + deltal(j+1-i) )
-     biatx(i) = saved + deltar(i) * term
-     saved = deltal(j+1-i) * term
+     term = biatx(i) / ( this%deltar(i) + this%deltal(j+1-i) )
+     biatx(i) = saved + this%deltar(i) * term
+     saved = this%deltal(j+1-i) * term
   end do
 
   biatx(j+1) = saved
