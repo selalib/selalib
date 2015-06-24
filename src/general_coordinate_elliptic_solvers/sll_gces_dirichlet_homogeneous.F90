@@ -30,7 +30,7 @@
 !> @brief Elliptic solver on 2d curvilinear mesh
 !> @details This solver works with analytical 
 !> and discrete coordinate transformations.
-module sll_module_gces_dirichlet
+module sll_module_gces_dirichlet_homogeneous
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -73,7 +73,7 @@ private
 !> splines in array global_indices depends on the boundary conditions.
 !> local_indices includes the changes resulting from the boundary conditions.
 !> local_to_lobal_indices(i,j) = global_indices(local_indices(i,j))
-type, public :: sll_gces_dirichlet
+type, public :: sll_gces_dirichlet_homogeneous
 
   private
   sll_int32,  public :: n1
@@ -96,6 +96,7 @@ type, public :: sll_gces_dirichlet
   sll_int32, dimension(:,:), pointer :: local_to_global_indices_col
   sll_int32, dimension(:,:), pointer :: local_to_global_indices_row
 
+  !!! contains the values of all splines in all gauss points
   sll_real64, dimension(:,:,:,:), pointer :: v_splines1
   sll_real64, dimension(:,:,:,:), pointer :: v_splines2
 
@@ -110,27 +111,27 @@ type, public :: sll_gces_dirichlet
   type(sll_csr_matrix),           pointer :: csr_mat
   type(sll_csr_matrix),           pointer :: csr_mat_src
 
-end type sll_gces_dirichlet
+end type sll_gces_dirichlet_homogeneous
 
 sll_int32, parameter, public :: ES_GAUSS_LEGENDRE = 0
 sll_int32, parameter, public :: ES_GAUSS_LOBATTO = 1
   
 interface sll_delete
-  module procedure delete_gces_dirichlet
+  module procedure delete_gces_dirichlet_homogeneous
 end interface sll_delete
 
 interface sll_create
-  module procedure initialize_gces_dirichlet
+  module procedure initialize_gces_dirichlet_homogeneous
 end interface sll_create
 
 interface sll_solve
-  module procedure solve_gces_dirichlet
+  module procedure solve_gces_dirichlet_homogeneous
 end interface sll_solve
 
 public sll_delete,         &
        sll_create,         &
        sll_solve,          &
-       new_gces_dirichlet, &
+       new_gces_dirichlet_homogeneous, &
        factorize_mat_es
 
 contains 
@@ -158,7 +159,7 @@ contains
 !> @param[in]  eta2_min the minimun in the direction eta2
 !> @param[in]  eta2_max the maximun in the direction eta2
 !> @param[out] the type general_coordinate_elliptic_solver
-subroutine initialize_gces_dirichlet( es,                  &
+subroutine initialize_gces_dirichlet_homogeneous( es,                  &
 &                                     k1,                  &
 &                                     k2,                  &
 &                                     num_cells1,          &
@@ -170,7 +171,7 @@ subroutine initialize_gces_dirichlet( es,                  &
 &                                     eta2_min,            &
 &                                     eta2_max)
     
-type(sll_gces_dirichlet), intent(out) :: es
+type(sll_gces_dirichlet_homogeneous), intent(out) :: es
 
 sll_int32,  intent(in) :: k1
 sll_int32,  intent(in) :: k2
@@ -230,8 +231,8 @@ es%local_to_global_indices_mat = 0
 ! knot in the appropriate knot vector at which the support of the function
 ! begins
 d = 0
-do j = 1, n2+k2
-  do i = 1, n1+k1
+do j = 2, n2+k2-1
+  do i = 2, n1+k1-1
     a = i + (n1+k1)*(j-1)
     d = d + 1
     global_indices(a) = d
@@ -310,7 +311,7 @@ SLL_ALLOCATE(es%t2_rho(n2+k2+2),ierr)
 SLL_ALLOCATE(es%rho_vec((n1+k1)*(n2+k2)),ierr)
 SLL_ALLOCATE(es%masse((n1+k1)*(n2+k2)),ierr)
 SLL_ALLOCATE(es%stiff((n1+k1)*(n2+k2)),ierr)
-SLL_ALLOCATE(es%phi_vec((n1+k1)*(n2+k2)),ierr) 
+SLL_ALLOCATE(es%phi_vec((n1+k1-2)*(n2+k2-2)),ierr) 
 
 es%rho_vec = 0.0_f64
 es%masse   = 0.0_f64
@@ -337,8 +338,8 @@ do j = n2+k2+1, n2+1+2*k2
   es%t2(j) = eta2_max
 enddo
   
-es%csr_mat => new_csr_matrix( (n1+k1)*(n2+k2),                &
-&                             (n1+k1)*(n2+k2),                &
+es%csr_mat => new_csr_matrix( (n1+k1-2)*(n2+k2-2),            &
+&                             (n1+k1-2)*(n2+k2-2),            &
 &                             (n1*n2),                        &
 &                             es%local_to_global_indices_mat, &
 &                             (k1+1)*(k2+1),                  &
@@ -457,7 +458,7 @@ end do
 DEALLOCATE(left1)
 DEALLOCATE(left2)
 
-open(10, file="gces_dirichlet.mtv")
+open(10, file="gces_dirichlet_homogeneous.mtv")
 write(10,*)"$DATA=CURVE3D"
 write(10,*)"%xmin=", -1.1, " xmax = ", 1.1
 write(10,*)"%ymin=", -1.1, " ymax = ", 1.1
@@ -509,7 +510,7 @@ close(10)
 DEALLOCATE(global_indices)
 DEALLOCATE(local_indices)
 
-end subroutine initialize_gces_dirichlet
+end subroutine initialize_gces_dirichlet_homogeneous
   
 !> @brief Initialization for elliptic solver.
 !> @details To have the function phi such that 
@@ -534,7 +535,7 @@ end subroutine initialize_gces_dirichlet
 !> @param[in] eta2_max the maximun in the direction eta2
 !> @return    the type general_coordinate_elliptic_solver such that a pointer
 
-function new_gces_dirichlet( k1,                  &
+function new_gces_dirichlet_homogeneous( k1,                  &
 &                            k2,                  &
 &                            n1,                  &
 &                            n2,                  &
@@ -545,7 +546,7 @@ function new_gces_dirichlet( k1,                  &
 &                            eta2_min,            &
 &                            eta2_max ) result(es)
 
-type(sll_gces_dirichlet), pointer :: es
+type(sll_gces_dirichlet_homogeneous), pointer :: es
 
 sll_int32,  intent(in) :: k1
 sll_int32,  intent(in) :: k2
@@ -574,7 +575,7 @@ call sll_create( es,               &
 &                eta2_min,         &
 &                eta2_max )
    
-end function new_gces_dirichlet
+end function new_gces_dirichlet_homogeneous
 
 
 !> @brief Assemble the matrix for elliptic solver.
@@ -611,7 +612,7 @@ subroutine factorize_mat_es( es,            &
 &                            b2_field_vect, &
 &                            c_field)
 
-type(sll_gces_dirichlet),intent(inout)    :: es
+type(sll_gces_dirichlet_homogeneous),intent(inout)    :: es
 
 class(sll_scalar_field_2d_base), pointer  :: a11_field_mat
 class(sll_scalar_field_2d_base), pointer  :: a12_field_mat
@@ -1018,15 +1019,16 @@ end subroutine factorize_mat_es
 !> @param[out] phi \f$ \phi \f$ the field corresponding to the solution of the equation
 !> @return     phi the field solution of the equation
   
-subroutine solve_gces_dirichlet( es, rho, phi)
+subroutine solve_gces_dirichlet_homogeneous( es, rho, phi)
 
-class(sll_gces_dirichlet),           intent(inout)     :: es
+class(sll_gces_dirichlet_homogeneous),           intent(inout)     :: es
 class(sll_scalar_field_2d_discrete), intent(inout)     :: phi
 class(sll_scalar_field_2d_base),     intent(in),target :: rho
 
 class(sll_scalar_field_2d_base), pointer :: base_field_pointer
 sll_real64, dimension(:,:),      pointer :: coeff_rho
 sll_real64, dimension(:), allocatable    :: m_rho_loc
+sll_real64, dimension(:), allocatable    :: tmp_rho_vec
 
 sll_int32  :: i
 sll_int32  :: j
@@ -1137,18 +1139,30 @@ end select
 
 es%phi_vec = 0.0_f64  !PN: Is it useful ?
 
-call sll_solve_csr_matrix(es%csr_mat, es%rho_vec, es%phi_vec)
+SLL_ALLOCATE(tmp_rho_vec((n1+k1-2)*(n2+k2-2)),ierr)
+k = 0
+do j = 1, n2+k2-2
+  do i = 1, n1+k1-2
+    k = k+1
+    tmp_rho_vec(k) = es%rho_vec(i+1+(n1+k1)*j)
+  end do
+end do
 
+  
+call sll_solve_csr_matrix(es%csr_mat, tmp_rho_vec, es%phi_vec)
+
+DEALLOCATE(tmp_rho_vec)
+  
 call phi%interp_2d%set_coefficients(es%phi_vec)
 
-end subroutine solve_gces_dirichlet
+end subroutine solve_gces_dirichlet_homogeneous
   
 !> @brief Deallocate the type general_coordinate_elliptic_solver
 !> @details
 !> The parameters are
 !> @param[in] es the type general_coordinate_elliptic_solver
-subroutine delete_gces_dirichlet( es )
-type(sll_gces_dirichlet) :: es
+subroutine delete_gces_dirichlet_homogeneous( es )
+type(sll_gces_dirichlet_homogeneous) :: es
 sll_int32 :: ierr
 
 SLL_DEALLOCATE(es%t1,ierr)
@@ -1170,7 +1184,7 @@ SLL_DEALLOCATE(es%v_splines2,ierr)
 call sll_delete(es%csr_mat)
 call sll_delete(es%csr_mat_src)
 
-end subroutine delete_gces_dirichlet
+end subroutine delete_gces_dirichlet_homogeneous
 
-end module sll_module_gces_dirichlet
+end module sll_module_gces_dirichlet_homogeneous
 
