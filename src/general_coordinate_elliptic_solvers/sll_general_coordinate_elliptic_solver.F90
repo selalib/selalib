@@ -1261,7 +1261,7 @@ class is (sll_scalar_field_2d_discrete)
   call sll_mult_csr_matrix_vector(es%csr_mat_source,es%rho_coeff_1d,es%rho_vec)
 
   if(es%perper) then
-    es%rho_vec = es%rho_vec - sum(es%rho_vec)/es%intjac*es%masse
+    es%rho_vec = es%rho_vec - sum(es%rho_vec)/es%intjac!*es%masse
   end if
       
 class is (sll_scalar_field_2d_analytic)
