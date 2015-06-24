@@ -1,103 +1,80 @@
-program unit_test
+! N,           the number of data points for the interpolation.
+! K,           the order of the spline.
+! TAU(N),      the data point abscissas. TAU should be strictly increasing.
+! GTAU(N),     the data ordinates.
+! T(N+K+2),    the knot sequence.
+!
+! Q((2*K-1)*(N+2)) is the triangular factorization
+! of the coefficient matrix of the linear system for the B-coefficients 
+! BCOEF(N+M), the B-spline coefficients of the interpolant.
+
+program test_deboor_hermite
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_constants.h"
-use sll_module_deboor_splines_1d
+#include "sll_assert.h"
+#include "sll_deboor_splines.h"
+#include "sll_boundary_condition_descriptors.h"
 
 implicit none
 
 
+type(sll_bspline_1d) :: bsplines
 
-sll_real64, dimension(:), pointer :: knots
-sll_real64, dimension(:), pointer :: value_func
-sll_real64, dimension(:), pointer :: value_der
-sll_real64, dimension(:), pointer :: points,points_test
-sll_int32, dimension(:), pointer :: points_der
-sll_int32  :: dim_point, dim_point_der
-sll_int32  :: deg_spline,ordre
-sll_real64, dimension(:), pointer :: matrices
-sll_real64, dimension(:), pointer :: bcoef
-sll_int32 :: iflag,ierr
-sll_real64 :: d,res
-sll_int32 :: i
+sll_real64, dimension(:), allocatable :: x
+sll_real64, dimension(:), allocatable :: y
+sll_int32,  parameter                 :: n = 1024
+sll_int32,  parameter                 :: k = 4
+sll_int32                             :: ierr
+sll_real64, dimension(:), allocatable :: gtau
+sll_real64, dimension(:), allocatable :: htau
 
+sll_int32                             :: i
+sll_int32                             :: j
 
+sll_int32, parameter :: m = 2
+sll_real64 :: tau_min = 0.0_f64
+sll_real64 :: tau_max = 1.0_f64
+sll_real64 :: slope_min
+sll_real64 :: slope_max
 
-deg_spline    = 3
-dim_point     = 10
-dim_point_der = 2
-ordre         = deg_spline +1
+SLL_ALLOCATE(x(n),ierr)
+SLL_ALLOCATE(y(n),ierr)
 
-SLL_ALLOCATE(knots(dim_point + ordre + dim_point_der),ierr)
-SLL_ALLOCATE(value_func(dim_point),ierr)
-SLL_ALLOCATE(value_der(dim_point_der),ierr)
-SLL_ALLOCATE(points(dim_point),ierr)
-SLL_ALLOCATE(points_test(dim_point),ierr)
-SLL_ALLOCATE(points_der(dim_point_der),ierr)
-SLL_ALLOCATE(matrices((2*ordre-1)*(dim_point+dim_point_der)),ierr)
-SLL_ALLOCATE(bcoef(dim_point+ dim_point_der),ierr)
-
-
-
-do i = 1 , dim_point
-   points(i) = 0.0_f64 + (i-1)*1./(dim_point-1)
-   value_func(i) = cos(2*sll_pi*points(i))
+do i = 1, n
+  x(i) = (i-1)*1.0_f64/(n-1)
 end do
 
+call initialize_bspline_1d(bsplines, n, k, tau_min, tau_max, SLL_HERMITE)
 
+call build_system(bsplines)
 
-d = sum( abs( value_func(2:dim_point)-value_func(1:dim_point-1)))
-points_test(1) =  points(1)
-points_test(dim_point) =  points(dim_point)
-
-do i = 2,dim_point
-   points_test(i) = points_test(i-1) +  abs( value_func(i)-value_func(i-1))/d
+SLL_ALLOCATE(gtau(n),ierr)
+gtau = cos(2*sll_pi*bsplines%tau)
+slope_min = -sin(2*sll_pi*tau_min)*2*sll_pi
+slope_max = -sin(2*sll_pi*tau_max)*2*sll_pi
+call compute_bspline_1d(bsplines, gtau, slope_min, slope_max)
+do j = 1, 10000
+  call interpolate_array_values( bsplines, n, x, y)
 end do
 
+print*, "values error = ", maxval(abs(y-cos(2*sll_pi*x)))
+call interpolate_array_derivatives( bsplines, n, x, y)
+print*, "derivatives error = ", maxval(abs(y+2*sll_pi*sin(2*sll_pi*x)))
 
-
-knots(1:ordre) = points(1)
-
-do i = ordre+1, dim_point + deg_spline-1
-      knots(i) = points(i-deg_spline)
+SLL_ALLOCATE(htau(n),ierr)
+htau = sin(2*sll_pi*bsplines%tau)
+slope_min = cos(2*sll_pi*tau_min)*2*sll_pi
+slope_max = cos(2*sll_pi*tau_max)*2*sll_pi
+call compute_bspline_1d(bsplines, htau, slope_min, slope_max)
+do j = 1, 10000
+  call interpolate_array_values( bsplines, n, x, y)
 end do
 
-do i = dim_point +deg_spline,dim_point + ordre + dim_point_der
-   knots(i) = points(dim_point)
-end do
-
-
-
-points_der(1) = 1
-value_der(1)  = -sin(2*sll_pi*points(1))*2*sll_pi
-points_der(2) = dim_point
-value_der(2)  = -sin(2*sll_pi*points(dim_point))*2*sll_pi
-
-call splint_der(&
-     points,value_func,&
-     points_der,value_der,&
-     knots,dim_point,dim_point_der,ordre,&
-     matrices, bcoef, iflag )
-
-
-
-do i = 1 , dim_point
-   res=bvalue( knots, bcoef, dim_point+dim_point_der, ordre, points(i), 0)
-   !print*, 'approx',res,'exact', value_func(i)
-end do
-do i = 1,dim_point
-   res=bvalue( knots, bcoef, dim_point+dim_point_der, ordre, points(i), 1)
-   !print*, 'approx',res,'exact', value_der(i)
-end do
-   
-
-SLL_DEALLOCATE(knots,ierr)
-SLL_DEALLOCATE(value_func,ierr)
-SLL_DEALLOCATE(value_der,ierr)
-SLL_DEALLOCATE(points,ierr)
-SLL_DEALLOCATE(points_der,ierr)
-SLL_DEALLOCATE(matrices,ierr)
-SLL_DEALLOCATE(bcoef,ierr)
+print*, "values error = ", maxval(abs(y-sin(2*sll_pi*x)))
+call interpolate_array_derivatives( bsplines, n, x, y)
+print*, "derivatives error = ", maxval(abs(y-2*sll_pi*cos(2*sll_pi*x)))
 
 print*, 'PASSED'
-end program unit_test
+
+end program test_deboor_hermite

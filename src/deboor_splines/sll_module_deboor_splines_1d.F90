@@ -302,6 +302,145 @@ DEALLOCATE(aj,dl,dr)
 
 end subroutine interpolate_array_values
 
+!> @brief returns the values of the derivatives evaluated at a collection of 
+!> abscissae stored by a 1D array in another output array. The spline coefficients
+!> used are stored in the spline object pointer.
+!> @param[in] x input double-precison element array containing the 
+!> abscissae to be interpolated.
+!> @param[out] y output double-precision element array containing the 
+!> results of the interpolation.
+!> @param[in] n the number of elements of the input array which are to be
+!> interpolated.
+!> @param[inout] spline the spline object pointer, duly initialized and 
+!> already operated on by the compute_bspline_1d() subroutine.
+subroutine interpolate_array_derivatives( this, n, x, y)
+
+type(sll_bspline_1d)    :: this 
+sll_int32,  intent(in)  :: n
+sll_real64, intent(in)  :: x(n)
+sll_real64, intent(out) :: y(n)
+
+sll_int32               :: i
+sll_int32               :: j
+sll_int32               :: ilo
+sll_int32               :: left
+sll_int32               :: jc
+sll_int32               :: jcmax
+sll_int32               :: jcmin
+sll_int32               :: jj
+sll_int32               :: mflag
+sll_int32               :: ierr
+sll_int32               :: k
+sll_int32               :: l
+sll_int32               :: nmk
+sll_int32,  parameter   :: m = 2
+sll_real64, allocatable :: aj(:)
+sll_real64, allocatable :: dl(:)
+sll_real64, allocatable :: dr(:)
+sll_real64              :: xi
+sll_int32               :: jderiv = 1
+
+k = this%k
+nmk = n+m+k
+
+SLL_ALLOCATE(aj(k), ierr)
+SLL_ALLOCATE(dl(k), ierr)
+SLL_ALLOCATE(dr(k), ierr)
+
+do l = 1, n
+
+  xi = x(l)
+  if ( k <= jderiv ) cycle
+  !
+  !  Find I so that 1 <= I < N+K and T(I) < T(I+1) and T(I) <= X < T(I+1).
+  !
+  !  If no such I can be found, X lies outside the support of the
+  !  spline F and  BVALUE = 0.  The asymmetry in this choice of I makes F
+  !  right continuous.
+  !
+  call interv ( this%t, n+m+k, xi, i, mflag )
+  
+  if ( mflag /= 0 ) return
+  !
+  !  If K = 1 (and JDERIV = 0), BVALUE = BCOEF(I).
+  !
+  if ( k <= 1 ) then
+    y(l) = this%bcoef_spline(i)
+    cycle
+  end if
+  !
+  !  Store the K B-spline coefficients relevant for the knot interval
+  !  ( T(I),T(I+1) ) in AJ(1),...,AJ(K) and compute DL(J) = X - T(I+1-J),
+  !  DR(J) = T(I+J)-X, J=1,...,K-1.  Set any of the AJ not obtainable
+  !  from input to zero.
+  !
+  !  Set any T's not obtainable equal to T(1) or to T(N+K) appropriately.
+  !
+  jcmin = 1
+  
+  if ( k <= i ) then
+    do j = 1, k-1
+      dl(j) = x(l) - this%t(i+1-j)
+    end do
+  else
+    jcmin = 1 - ( i - k )
+    do j = 1, i
+      dl(j) = xi - this%t(i+1-j)
+    end do
+    do j = i, k-1
+      aj(k-j) = 0.0_f64
+      dl(j) = dl(i)
+    end do
+  end if
+  
+  jcmax = k
+  if ( n + m < i ) then
+    jcmax = k + n + m - i
+    do j = 1, jcmax
+      dr(j) = this%t(i+j) - xi
+    end do
+    do j = jcmax, k-1
+      aj(j+1) = 0.0_8
+      dr(j) = dr(jcmax)
+    end do
+  else
+    do j = 1, k-1
+      dr(j) = this%t(i+j) - xi
+    end do
+  end if
+  
+  do jc = jcmin, jcmax
+    aj(jc) = this%bcoef_spline(i-k+jc)
+  end do
+  !  Difference the coefficients JDERIV times.
+  do j = 1, jderiv
+    ilo = k - j
+    do jj = 1, k - j
+      aj(jj) = ((aj(jj+1)-aj(jj))/(dl(ilo)+dr(jj)))*(k-j)
+      ilo = ilo - 1
+    end do
+  end do
+  !
+  !  Compute value at X in (T(I),T(I+1)) of JDERIV-th derivative,
+  !  given its relevant B-spline coefficients in AJ(1),...,AJ(K-JDERIV).
+  !
+  do j = jderiv+1, k-1
+    ilo = k-j
+    do jj = 1, k-j
+      aj(jj) = (aj(jj+1)*dl(ilo)+aj(jj)*dr(jj))/(dl(ilo)+dr(jj))
+      ilo = ilo - 1
+    end do
+  end do
+  
+  y(l) = aj(1)
+
+end do
+
+DEALLOCATE(aj,dl,dr)
+
+end subroutine interpolate_array_derivatives
+
+
 !> Brackets a real value in an ascending vector of values.
 !> @details
 !!
