@@ -56,7 +56,7 @@ module sll_module_pic_base
     procedure( dep_charge_2d), deferred :: deposit_charge_2d
 
     ! Initializers
-    procedure( set_landau_params    ), pass(self), deferred :: set_landau_parameters
+    procedure( set_landau_params    ),  deferred :: set_landau_parameters
     procedure( rand_init            ),  deferred :: random_initializer
     procedure( cart_init            ),  deferred :: cartesian_initializer
 
