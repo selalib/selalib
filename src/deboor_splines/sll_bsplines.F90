@@ -324,9 +324,9 @@ SLL_CLEAR_ALLOCATE(aj(1:k), ierr)
 SLL_CLEAR_ALLOCATE(dl(1:k), ierr)
 SLL_CLEAR_ALLOCATE(dr(1:k), ierr)
 
-y = this%bcoef(i)
-
 call interv( this%t, nmk, x, i, ilo, mflag )
+
+y = this%bcoef(i)
 
 if ( mflag /= 0 ) return
 if ( k <= 1 ) return
