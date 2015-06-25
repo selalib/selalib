@@ -196,39 +196,6 @@ subroutine build_system(this)
 
 end subroutine build_system
 
-subroutine compute_bspline_1d_aux( this, gtau, slope_min, slope_max)
-
-  type(sll_bspline_1d)    :: this 
-  sll_real64, intent(in)  :: gtau(:)
-  sll_real64, optional    :: slope_min
-  sll_real64, optional    :: slope_max
-
-  sll_int32               :: n
-  sll_int32               :: k
-  sll_int32, parameter    :: m = 2
-
-  n = this%n
-  k = this%k
-
-  SLL_ASSERT(size(gtau) == this%n)
-
-  this%bcoef(1)   = gtau(1)
-  if (present(slope_min)) then
-    this%bcoef(2) = slope_min
-  else
-    this%bcoef(2) = 0.0_f64
-  end if
-  this%bcoef(3:n) = gtau(2:n-1)
-  if (present(slope_max)) then
-    this%bcoef(n+1) = slope_max
-  else
-    this%bcoef(n+1) = 0.0_f64
-  end if
-  this%bcoef(n+2) = gtau(n)
-
-  call banslv ( this%q, k+k-1, n+m, k-1, k-1, this%bcoef )
-  
-end subroutine compute_bspline_1d_aux
 
 
 !> @brief
@@ -274,7 +241,7 @@ subroutine compute_bspline_1d(this, gtau, slope_min, slope_max)
 
   call build_system(this)
 
-  call compute_bspline_1d_aux( this, gtau, slope_min, slope_max)
+  call update_bspline_1d( this, gtau, slope_min, slope_max)
 
 end subroutine compute_bspline_1d
 
@@ -284,15 +251,38 @@ end subroutine compute_bspline_1d
 !> If interpolants are already computed and if you change only 
 !> the data set and knots and points positions did not change
 !> use this routine.
-subroutine update_bspline_1d(this, htau, slope_min, slope_max)
+subroutine update_bspline_1d(this, gtau, slope_min, slope_max)
 
   type(sll_bspline_1d)    :: this 
-  sll_real64, intent(in)  :: htau(:)
+  sll_real64, intent(in)  :: gtau(:)
   sll_real64, optional    :: slope_min
   sll_real64, optional    :: slope_max
 
-  call compute_bspline_1d_aux( this, htau, slope_min, slope_max)
+  sll_int32               :: n
+  sll_int32               :: k
+  sll_int32, parameter    :: m = 2
 
+  n = this%n
+  k = this%k
+
+  SLL_ASSERT(size(gtau) == this%n)
+
+  this%bcoef(1)   = gtau(1)
+  if (present(slope_min)) then
+    this%bcoef(2) = slope_min
+  else
+    this%bcoef(2) = 0.0_f64
+  end if
+  this%bcoef(3:n) = gtau(2:n-1)
+  if (present(slope_max)) then
+    this%bcoef(n+1) = slope_max
+  else
+    this%bcoef(n+1) = 0.0_f64
+  end if
+  this%bcoef(n+2) = gtau(n)
+
+  call banslv ( this%q, k+k-1, n+m, k-1, k-1, this%bcoef )
+  
 end subroutine update_bspline_1d
 
 !> @brief returns the value of the image of an abscissae,
