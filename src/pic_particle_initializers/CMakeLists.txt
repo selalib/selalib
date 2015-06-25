@@ -17,7 +17,7 @@ if(MLT_PIC)
 
   # ALH - <<test_mlt_pic_2d_init>>
   #
-  # compile: [[elisp:(compile "cd ../../../build && make test_mlt_pic_2d_init && ctest -R mlt_pic_2d_init")]] aaa
+  # compile: [[elisp:(compile "cd ../../../build && make test_mlt_pic_2d_init && ctest -R mlt_pic_2d_init")]]
 
   ADD_EXECUTABLE(test_mlt_pic_2d_init unit_test_mlt_pic_2d_init.F90) # [[file:unit_test_mlt_pic_2d_init.F90]]
   TARGET_LINK_LIBRARIES(test_mlt_pic_2d_init
