@@ -16,6 +16,9 @@
 !**************************************************************
 
 
+!> @ingroup particle_methods
+!> @brief
+!> Module for groups of particles of type \ref sll_simple_pic_4d_particle
 module sll_simple_pic_4d_group_module
 
 #include "sll_working_precision.h"
