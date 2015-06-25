@@ -40,8 +40,9 @@ module sll_module_scalar_field_2d_multipatch
   use sll_gnuplot
   implicit none
 
+  private
 
-  type ::  sll_scalar_field_multipatch_2d
+  type, public ::  sll_scalar_field_multipatch_2d
      sll_int32 :: num_patches
      character(len=128) :: field_name
      type(sll_coordinate_transformation_multipatch_2d), pointer    :: transf
@@ -101,6 +102,10 @@ module sll_module_scalar_field_2d_multipatch
   interface sll_delete
      module procedure delete_field_sfmp2d_ptr
   end interface sll_delete
+
+  public :: new_scalar_field_multipatch_2d
+  public :: sll_delete
+  public :: set_slope_mp
 
 
 contains   ! *****************************************************************

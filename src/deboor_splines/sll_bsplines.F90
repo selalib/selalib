@@ -5,8 +5,6 @@ module sll_bsplines
 #include "sll_assert.h"
 #include "sll_boundary_condition_descriptors.h"
 
-use sll_module_deboor_splines_1d, only: interv
-
 implicit none 
 
 private
@@ -33,12 +31,16 @@ type, public :: sll_bspline_1d
   sll_real64, dimension(20) :: deltal
   sll_real64, dimension(20) :: deltar
   sll_int32                 :: j = 1
+  sll_real64                :: length
+  sll_int32                 :: ilo
 
 end type sll_bspline_1d
 
 public :: initialize_bspline_1d
 public :: compute_bspline_1d
 public :: update_bspline_1d
+public :: interpolate_value
+public :: interpolate_derivative
 public :: interpolate_array_values
 public :: interpolate_array_derivatives
 
@@ -61,6 +63,7 @@ subroutine initialize_bspline_1d(this, n, k, tau_min, tau_max, bc_type)
 
   this%n = n
   this%k = k
+  this%length = tau_max - tau_min
 
   SLL_ALLOCATE(this%tau(n), ierr)
   do i = 1, n
@@ -125,6 +128,7 @@ subroutine build_system(this)
   sll_int32               :: jj
   sll_int32               :: l
   sll_int32, parameter    :: m=2
+  sll_int32               :: ilo
   
   n = this%n
   k = this%k
@@ -139,10 +143,12 @@ subroutine build_system(this)
 
   l = 0 ! index for the derivative
 
+  ilo = 1
+
   do i = 1, n
       
     taui = this%tau(i)
-    call interv( this%t, n+m+k, taui, left, mflag )
+    call interv( this%t, n+m+k, taui, left, ilo, mflag )
 
     if (i < n) then
 
@@ -307,6 +313,7 @@ sll_real64              :: y
 sll_int32               :: i
 sll_int32               :: j
 sll_int32               :: ilo
+sll_int32               :: jlo
 sll_int32               :: jc
 sll_int32               :: jcmax
 sll_int32               :: jcmin
@@ -314,7 +321,6 @@ sll_int32               :: jj
 sll_int32               :: mflag
 sll_int32               :: ierr
 sll_int32               :: k
-sll_int32               :: l
 sll_int32               :: nmk
 sll_int32,  parameter   :: m = 2
 sll_real64, allocatable :: aj(:)
@@ -330,7 +336,7 @@ SLL_CLEAR_ALLOCATE(dr(1:k), ierr)
 
 y = this%bcoef(i)
 
-call interv( this%t, nmk, x, i, mflag )
+call interv( this%t, nmk, x, i, ilo, mflag )
 
 if ( mflag /= 0 ) return
 if ( k <= 1 ) return
@@ -372,10 +378,10 @@ do jc = jcmin, jcmax
 end do
 
 do j = 1, k-1
-  ilo = k-j
+  jlo = k-j
   do jj = 1, k-j
-    aj(jj) = (aj(jj+1)*dl(ilo)+aj(jj)*dr(jj))/(dl(ilo)+dr(jj))
-    ilo = ilo - 1
+    aj(jj) = (aj(jj+1)*dl(jlo)+aj(jj)*dr(jj))/(dl(jlo)+dr(jj))
+    jlo = jlo - 1
   end do
 end do
 
@@ -408,6 +414,7 @@ sll_real64, intent(out) :: y(n)
 sll_int32               :: i
 sll_int32               :: j
 sll_int32               :: ilo
+sll_int32               :: jlo
 sll_int32               :: jc
 sll_int32               :: jcmax
 sll_int32               :: jcmin
@@ -434,7 +441,7 @@ do l = 1, n
 
   xi = x(l)
 
-  call interv ( this%t, nmk, xi, i, mflag )
+  call interv ( this%t, nmk, xi, i, ilo, mflag )
   
   if ( mflag /= 0 ) return
 
@@ -480,10 +487,10 @@ do l = 1, n
   end do
   
   do j = 1, k-1
-    ilo = k-j
+    jlo = k-j
     do jj = 1, k-j
-      aj(jj) = (aj(jj+1)*dl(ilo)+aj(jj)*dr(jj))/(dl(ilo)+dr(jj))
-      ilo = ilo - 1
+      aj(jj) = (aj(jj+1)*dl(jlo)+aj(jj)*dr(jj))/(dl(jlo)+dr(jj))
+      jlo = jlo - 1
     end do
   end do
   
@@ -516,7 +523,7 @@ sll_real64, intent(out) :: y(n)
 sll_int32               :: i
 sll_int32               :: j
 sll_int32               :: ilo
-sll_int32               :: left
+sll_int32               :: jlo
 sll_int32               :: jc
 sll_int32               :: jcmax
 sll_int32               :: jcmin
@@ -540,6 +547,8 @@ SLL_ALLOCATE(aj(k), ierr)
 SLL_ALLOCATE(dl(k), ierr)
 SLL_ALLOCATE(dr(k), ierr)
 
+ilo = 1
+
 do l = 1, n
 
   xi = x(l)
@@ -551,7 +560,7 @@ do l = 1, n
   !  spline F and  BVALUE = 0.  The asymmetry in this choice of I makes F
   !  right continuous.
   !
-  call interv ( this%t, n+m+k, xi, i, mflag )
+  call interv ( this%t, n+m+k, xi, i, ilo, mflag )
   
   if ( mflag /= 0 ) return
   !
@@ -607,10 +616,10 @@ do l = 1, n
   end do
   !  Difference the coefficients JDERIV times.
   do j = 1, jderiv
-    ilo = k - j
+    jlo = k - j
     do jj = 1, k - j
-      aj(jj) = ((aj(jj+1)-aj(jj))/(dl(ilo)+dr(jj)))*(k-j)
-      ilo = ilo - 1
+      aj(jj) = ((aj(jj+1)-aj(jj))/(dl(jlo)+dr(jj)))*(k-j)
+      jlo = jlo - 1
     end do
   end do
   !
@@ -618,10 +627,10 @@ do l = 1, n
   !  given its relevant B-spline coefficients in AJ(1),...,AJ(K-JDERIV).
   !
   do j = jderiv+1, k-1
-    ilo = k-j
+    jlo = k-j
     do jj = 1, k-j
-      aj(jj) = (aj(jj+1)*dl(ilo)+aj(jj)*dr(jj))/(dl(ilo)+dr(jj))
-      ilo = ilo - 1
+      aj(jj) = (aj(jj+1)*dl(jlo)+aj(jj)*dr(jj))/(dl(jlo)+dr(jj))
+      jlo = jlo - 1
     end do
   end do
   
@@ -632,6 +641,123 @@ end do
 DEALLOCATE(aj,dl,dr)
 
 end subroutine interpolate_array_derivatives
+
+function interpolate_derivative( this, x) result(y)
+
+type(sll_bspline_1d)    :: this 
+sll_real64, intent(in)  :: x
+sll_real64              :: y
+
+sll_int32               :: i
+sll_int32               :: j
+sll_int32               :: ilo
+sll_int32               :: jc
+sll_int32               :: jcmax
+sll_int32               :: jcmin
+sll_int32               :: jj
+sll_int32               :: mflag
+sll_int32               :: ierr
+sll_int32               :: k
+sll_int32               :: nmk
+sll_int32,  parameter   :: m = 2
+sll_real64, allocatable :: aj(:)
+sll_real64, allocatable :: dl(:)
+sll_real64, allocatable :: dr(:)
+sll_int32,  parameter   :: jderiv = 1
+
+k = this%k
+nmk = this%n+m+k
+
+SLL_ALLOCATE(aj(k), ierr)
+SLL_ALLOCATE(dl(k), ierr)
+SLL_ALLOCATE(dr(k), ierr)
+
+!  Find I so that 1 <= I < N+K and T(I) < T(I+1) and T(I) <= X < T(I+1).
+!
+!  If no such I can be found, X lies outside the support of the
+!  spline F and  BVALUE = 0.  The asymmetry in this choice of I makes F
+!  right continuous.
+!
+call interv ( this%t, nmk, x, i, this%ilo, mflag )
+
+y = this%bcoef(i)
+
+if ( k <= jderiv ) return
+
+if ( mflag /= 0 ) return
+!
+!  If K = 1 (and JDERIV = 0), BVALUE = BCOEF(I).
+!
+if ( k <= 1 ) return
+!
+!  Store the K B-spline coefficients relevant for the knot interval
+!  ( T(I),T(I+1) ) in AJ(1),...,AJ(K) and compute DL(J) = X - T(I+1-J),
+!  DR(J) = T(I+J)-X, J=1,...,K-1.  Set any of the AJ not obtainable
+!  from input to zero.
+!
+!  Set any T's not obtainable equal to T(1) or to T(N+K) appropriately.
+!
+jcmin = 1
+
+if ( k <= i ) then
+  do j = 1, k-1
+    dl(j) = x - this%t(i+1-j)
+  end do
+else
+  jcmin = 1-(i-k)
+  do j = 1, i
+    dl(j) = x - this%t(i+1-j)
+  end do
+  do j = i, k-1
+    aj(k-j) = 0.0_f64
+    dl(j) = dl(i)
+  end do
+end if
+
+jcmax = k
+if ( this%n + m < i ) then
+  jcmax = nmk-i
+  do j = 1, jcmax
+    dr(j) = this%t(i+j) - x
+  end do
+  do j = jcmax, k-1
+    aj(j+1) = 0.0_8
+    dr(j) = dr(jcmax)
+  end do
+else
+  do j = 1, k-1
+    dr(j) = this%t(i+j) - x
+  end do
+end if
+
+do jc = jcmin, jcmax
+  aj(jc) = this%bcoef(i-k+jc)
+end do
+!  Difference the coefficients JDERIV times.
+do j = 1, jderiv
+  ilo = k - j
+  do jj = 1, k - j
+    aj(jj) = ((aj(jj+1)-aj(jj))/(dl(ilo)+dr(jj)))*(k-j)
+    ilo = ilo-1
+  end do
+end do
+!
+!  Compute value at X in (T(I),T(I+1)) of JDERIV-th derivative,
+!  given its relevant B-spline coefficients in AJ(1),...,AJ(K-JDERIV).
+!
+do j = jderiv+1, k-1
+  ilo = k-j
+  do jj = 1, k-j
+    aj(jj) = (aj(jj+1)*dl(ilo)+aj(jj)*dr(jj))/(dl(ilo)+dr(jj))
+    ilo = ilo-1
+  end do
+end do
+
+y = aj(1)
+
+DEALLOCATE(aj,dl,dr)
+
+end function interpolate_derivative
 
 !>@brief
 !> Calculates the nonvanishing B-splines and derivatives at X.
@@ -874,5 +1000,166 @@ end do
 
 end subroutine bsplvb
   
+!> Brackets a real value in an ascending vector of values.
+!> @details
+!!
+!!   The XT array is a set of increasing values.  The goal of the routine
+!!   is to determine the largest index I so that XT(I) <= X.
+!!
+!!   The routine is designed to be efficient in the common situation
+!!   that it is called repeatedly, with X taken from an increasing
+!!   or decreasing sequence.
+!!
+!!   This will happen when a piecewise polynomial is to be graphed.
+!!   The first guess for LEFT is therefore taken to be the value
+!!   returned at the previous call and stored in the local variable ILO.
+!!
+!!   A first check ascertains that ILO < LXT.  This is necessary
+!!   since the present call may have nothing to do with the previous
+!!   call.  Then, if
+!!
+!!     XT(ILO) <= X < XT(ILO+1),
+!!
+!!   we set LEFT = ILO and are done after just three comparisons.
+!!
+!!   Otherwise, we repeatedly double the difference ISTEP = IHI - ILO
+!!   while also moving ILO and IHI in the direction of X, until
+!!
+!!     XT(ILO) <= X < XT(IHI)
+!!
+!!   after which we use bisection to get, in addition, ILO + 1 = IHI.
+!!   The value LEFT = ILO is then returned.
+!!
+!!  Reference:
+!!
+!!    Carl DeBoor,
+!!    A Practical Guide to Splines,
+!!    Springer, 2001,
+!!    ISBN: 0387953663.
+!!
+!! @param[in] xt(lxt), a nondecreasing sequence of values.
+!! @param[in] lxt, the dimension of xt.
+!! @param[in] x, the point whose location with
+!!    respect to the sequence XT is to be determined.
+!! @param[out] left, the index of the bracketing value:
+!!      1     if             X  <  XT(1)
+!!      I     if   XT(I)  <= X  < XT(I+1)
+!!      LXT   if  XT(LXT) <= X
+!! @param[out] mflag, indicates whether X lies within the
+!!    range of the data.
+!!    -1:            X  <  XT(1)
+!!     0: XT(I)   <= X  < XT(I+1)
+!!    +1: XT(LXT) <= X
+!<
+subroutine interv( xt, lxt, x, left, ilo, mflag )
+ 
+sll_real64, intent(in)    :: xt(:)
+sll_int32,  intent(in)    :: lxt
+sll_real64, intent(in)    :: x
+sll_int32,  intent(out)   :: left
+sll_int32,  intent(inout) :: ilo
+sll_int32,  intent(out)   :: mflag
+
+sll_int32                 :: ihi
+sll_int32                 :: istep
+sll_int32                 :: middle
+
+ihi = ilo + 1
+if ( lxt <= ihi ) then
+   if ( xt(lxt) <= x ) then
+      go to 110
+   end if
+   if ( lxt <= 1 ) then
+      mflag = -1
+      left = 1
+      return
+   end if
+   ilo = lxt - 1
+   ihi = lxt
+end if
+if ( xt(ihi) <= x ) then
+   go to 20
+end if
+if ( xt(ilo) <= x ) then
+   mflag = 0
+   left = ilo
+   return
+end if
+!
+!  Now X < XT(ILO).  Decrease ILO to capture X.
+!
+istep = 1
+10  continue
+ihi = ilo
+ilo = ihi - istep
+if ( 1 < ilo ) then
+   if ( xt(ilo) <= x ) then
+      go to 50
+   end if
+   istep = istep * 2
+   go to 10
+end if
+ilo = 1
+if ( x < xt(1) ) then
+   mflag = -1
+   left = 1
+   return
+end if
+go to 50
+!
+!  Now XT(IHI) <= X.  Increase IHI to capture X.
+!
+20  continue
+istep = 1
+30  continue
+ilo = ihi
+ihi = ilo + istep
+if ( ihi < lxt ) then
+   if ( x < xt(ihi) ) then
+      go to 50
+   end if
+   istep = istep * 2
+   go to 30
+end if
+if ( xt(lxt) <= x ) then
+   go to 110
+end if
+!
+!  Now XT(ILO) < = X < XT(IHI).  Narrow the interval.
+!
+ihi = lxt
+50  continue
+do
+  middle = ( ilo + ihi ) / 2
+  if ( middle == ilo ) then
+     mflag = 0
+     left = ilo
+     return
+  end if
+  !
+  !  It is assumed that MIDDLE = ILO in case IHI = ILO+1.
+  !
+  if ( xt(middle) <= x ) then
+     ilo = middle
+  else
+     ihi = middle
+  end if
+   
+end do
+!
+!  Set output and return.
+!
+110 continue
+mflag = 1
+if ( x == xt(lxt) ) then
+   mflag = 0
+end if
+do left = lxt, 1, -1
+   if ( xt(left) < xt(lxt) ) then
+      return
+   end if
+end do
+
+end subroutine interv
 !*************************************************************************
 end module sll_bsplines

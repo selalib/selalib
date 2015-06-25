@@ -8,6 +8,7 @@ use gauss_lobatto_integration
 use sll_timer 
 use sll_sparse_matrix_module
 use sll_sparse_matrix_mp_module
+use sll_coordinate_transformation_multipatch_module
 use sll_module_scalar_field_2d_multipatch
 use sll_general_coordinate_elliptic_solver_module
 use sll_module_deboor_splines_1d
