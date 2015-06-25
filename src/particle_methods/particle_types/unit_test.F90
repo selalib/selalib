@@ -9,7 +9,7 @@ program simple_pic_4d_group_tester
 
   implicit none
 
-type(sll_cartesian_mesh_2d),    pointer     :: mesh_2d ! [[file:~/selalib/src/meshes/sll_cartesian_meshes.F90::sll_cartesian_mesh_2d]]
+type(sll_cartesian_mesh_2d),    pointer     :: mesh_2d ! [[selalib:src/meshes/sll_cartesian_meshes.F90::sll_cartesian_mesh_2d]]
 type(sll_simple_pic_4d_group),  pointer     :: simple_pic_particle_group
 
 sll_int32 :: particle_group_id

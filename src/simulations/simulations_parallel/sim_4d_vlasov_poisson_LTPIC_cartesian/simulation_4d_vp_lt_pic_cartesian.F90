@@ -1,5 +1,5 @@
 !> the base for this development was
-!> [[file:~/selalib/src/simulations/simulations_parallel/sim_4d_vlasov_poisson_PIC_cartesian/simulation_4d_vp_pic_cartesian.F90::sll_pic_simulation_4d_cartesian_module]]
+!> [[selalib:src/simulations/simulations_parallel/sim_4d_vlasov_poisson_PIC_cartesian/simulation_4d_vp_pic_cartesian.F90::sll_pic_simulation_4d_cartesian_module]]
 
 module sll_simulation_4d_vp_lt_pic_cartesian_module
 
@@ -317,7 +317,7 @@ contains
 
           SLL_ASSERT(thread_id == 0)
 
-          ! [[file:~/selalib/src/pic_utilities/lt_pic_4d_utilities.F90::sll_lt_pic_4d_deposit_charge_on_2d_mesh]]
+          ! [[selalib:src/pic_utilities/lt_pic_4d_utilities.F90::sll_lt_pic_4d_deposit_charge_on_2d_mesh]]
            call sll_lt_pic_4d_deposit_charge_on_2d_mesh( sim%part_group,                    &
                                                          sim%q_accumulator_ptr(1)%q,        &
                                                          sim%n_virtual_x_for_deposition,    &
