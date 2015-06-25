@@ -15,6 +15,11 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> @ingroup particle_methods
+!> @author
+!> MCP ALH
+!> @brief
+!> Simplest particle model
 module sll_simple_pic_4d_particle_module
 
 #include "sll_working_precision.h"

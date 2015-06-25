@@ -1,22 +1,22 @@
-! This file is read by doxygen software
-! Change it to match with your library
-! [[http://www.stack.nl/~dimitri/doxygen/manual/docblocks.html#fortranblocks]]
-! To see the documentation, remove the line containing your directory 
-! in [[file:~/selalib/doc/doxygen/Doxyfile::EXCLUDE tag]] if it is excluded. 
-! Type 'make doc' in build directory.
-! To check the results, open : 
-! selalib/doc/build/html/doxygen/html/defgroup___.html 
-! The following lines will be read by doxygen to generate documentation:
+  ! [[shell:header\alh 'particle_methods_doc.F90']] (cf [[file:~/alh/bin/headeralh]])
+  ! headeralh authors=- default=0 f90 start=25/06/15
 
-!> @defgroup particle_methods sll_particle_methods 
-!! @brief
-!! Classes for particle methods.
-!! @details
-!! PLEASE ADD DOCUMENTATION 
-!!
-!! Methods:
-!!
-!> Classes available are:
-!>
-!> <b> How to use it </b>
-!>
+  ! this documentation creates the file [[file:~/selalib/doc/build/html/doxygen/html/group__particle__methods.html]] and
+  ! is linked from the list of "Libraries" at [[file:~/selalib/doc/build/html/doxygen/html/modules.html]].
+  !
+  ! to rebuild the documentation: [[elisp:(compile "cd ~/selalib/build && make doc")]]
+
+  !> @defgroup particle_methods sll_particle_methods 
+  !! @brief
+  !! Centralized location for all particle methods, in directory src/particle_methods
+  !! @details
+  !! 
+  
+  ! Local Variables:
+  ! mode:F90
+  ! ispell-local-dictionary:"british"
+  ! coding:utf-8
+  ! eval:(flyspell-prog-mode)
+  ! eval:(outline-minor-mode)
+  ! End:
+  ! LocalWords: headeralh
