@@ -5,7 +5,7 @@
         plot_period         = 20
         SPECIES_CHARGE      = -1.0
         SPECIES_MASS        = 1.0
-        ALPHA  = 0.01
+        ALPHA  = 0.5
         UseLtPicScheme = .false.         ! <-- garder pour la classe abstraite
 /
 
@@ -38,7 +38,7 @@
 /
 
 &simple_pic_params
-    NUM_PARTICLES       = 10    ! <-- garder pour la classe abstraite
+    NUM_PARTICLES       = 100000    ! <-- garder pour la classe abstraite
 /
 
 ! parametres physiques pour la solution exacte du modele lineaire
