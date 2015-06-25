@@ -1,3 +1,6 @@
+!> @ingroup particle_methods
+!> @brief
+!> Common interface for all groups of particles
 module sll_module_pic_base
 
 #include "sll_working_precision.h"

@@ -15,6 +15,9 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> @ingroup particle_methods
+!> @brief
+!> Random particle initializers
 module sll_pic_random_initializers
 
 #include "sll_working_precision.h"
