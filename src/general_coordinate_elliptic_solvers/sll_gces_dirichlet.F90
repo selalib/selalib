@@ -45,8 +45,7 @@ use sll_module_arbitrary_degree_spline_interpolator_1d, only:        &
   sll_arbitrary_degree_spline_interpolator_1d,                       &
   new_arbitrary_degree_1d_interpolator
 use sll_module_arbitrary_degree_spline_interpolator_2d, only:        &
-  sll_arbitrary_degree_spline_interpolator_2d
-use sll_module_arbitrary_degree_spline_interpolator_1d, only:        &
+  sll_arbitrary_degree_spline_interpolator_2d,                       &
   interv, deboor_type, bsplvd
 use sll_sparse_matrix_module, only : sll_csr_matrix,                 &
                                      new_csr_matrix,                 &

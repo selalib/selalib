@@ -27,6 +27,18 @@ use sll_module_arbitrary_degree_spline_interpolator_1d
 implicit none
 private
 
+!this derived type is created to avoid the save attribute you found
+!in module deboor splines 1d
+!Some deboor functions are clone copied because we don't want to have
+!side effects with general coordinates elliptic solver that uses
+!module deboor splines
+type, public :: deboor_type
+   sll_int32 :: ilo = 1
+   sll_int32 :: j   = 1
+   sll_real64, dimension(20) :: deltal
+   sll_real64, dimension(20) :: deltar
+end type deboor_type
+
 ! in what follows, the direction '1' is in the contiguous memory direction.
 !> Arbitrary degree version of 2d irnterpolator
 type, extends(sll_interpolator_2d_base) :: &
@@ -114,6 +126,7 @@ public new_arbitrary_degree_spline_interp2d
 public set_slope2d
 public initialize_ad2d_interpolator
 public set_coeff_splines_values_1d
+public interv, bsplvd
 
 contains
 
@@ -3244,8 +3257,7 @@ sll_real64, dimension(ny)                 :: work_y
 sll_real64, dimension(ny,nx),     target  :: bwork
 sll_real64, dimension(:,:),       pointer :: pwork
 
-sll_int32 :: i, j, flag
-sll_int32 :: ierr
+sll_int32 :: i, flag
 
 ! *** set up knots and interpolate between knots
 
@@ -3876,6 +3888,431 @@ end if
 call banslv ( q, k+k-1, n+m, k-1, k-1, bcoef_spline )
 
 end subroutine splint_der
+
+function bvalue( deboor, t, coeff_splines, n, k, x, jderiv )
+    
+implicit none
+
+type(deboor_type)        :: deboor
+sll_real64               :: bvalue
+
+sll_real64, dimension(:) :: t     
+sll_real64, dimension(:) :: coeff_splines 
+sll_int32                :: n
+sll_int32                :: k
+sll_real64               :: x
+sll_int32                :: jderiv
+
+sll_real64, dimension(k) :: aj
+sll_real64, dimension(k) :: dl
+sll_real64, dimension(k) :: dr
+
+sll_int32 :: i
+sll_int32 :: ilo
+sll_int32 :: j
+sll_int32 :: jc
+sll_int32 :: jcmax
+sll_int32 :: jcmin
+sll_int32 :: jj
+sll_int32 :: mflag
+
+bvalue = 0.0_8
+
+aj(:)=0.0_8
+dl(:)=0.0_8
+dr(:)=0.0_8
+
+if ( k <= jderiv ) return
+
+!  Find I so that 1 <= I < N+K and T(I) < T(I+1) and T(I) <= X < T(I+1).
+!
+!  If no such I can be found, X lies outside the support of the
+!  spline F and  BVALUE = 0.  The asymmetry in this choice of I makes F
+!  right continuous.
+
+call interv ( deboor, t, n+k, x, i, mflag )
+
+if ( mflag /= 0 ) return
+!
+!  If K = 1 (and JDERIV = 0), BVALUE = BCOEF(I).
+!
+if ( k <= 1 ) then
+  bvalue = coeff_splines(i)
+  return
+end if
+!
+!  Store the K B-spline coefficients relevant for the knot interval
+!  ( T(I),T(I+1) ) in AJ(1),...,AJ(K) and compute DL(J) = X - T(I+1-J),
+!  DR(J) = T(I+J)-X, J=1,...,K-1.  Set any of the AJ not obtainable
+!  from input to zero.
+!
+!  Set any T's not obtainable equal to T(1) or to T(N+K) appropriately.
+!
+jcmin = 1
+
+if ( k <= i ) then
+  
+  do j = 1, k-1
+    dl(j) = x - t(i+1-j)
+  end do
+   
+else
+   
+  jcmin = 1 - ( i - k )
+  do j = 1, i
+    dl(j) = x - t(i+1-j)
+  end do
+  do j = i, k-1
+    aj(k-j) = 0.0_8
+    dl(j) = dl(i)
+  end do
+   
+end if
+
+jcmax = k
+
+if ( n < i ) then
+   
+  jcmax = k + n - i
+  do j = 1, k + n - i
+    dr(j) = t(i+j) - x
+  end do
+   
+  do j = k+n-i, k-1
+    aj(j+1) = 0.0_8
+    dr(j) = dr(k+n-i)
+  end do
+   
+else
+   
+  do j = 1, k-1
+    dr(j) = t(i+j) - x
+  end do
+   
+end if
+
+do jc = jcmin, jcmax
+  aj(jc) = coeff_splines(i-k+jc)
+end do
+!
+!  Difference the coefficients JDERIV times.
+!
+do j = 1, jderiv
+   
+  ilo = k - j
+  do jj = 1, k - j
+    aj(jj) = ((aj(jj+1)-aj(jj))/(dl(ilo)+dr(jj)))*(k-j)
+    ilo = ilo - 1
+  end do
+   
+end do
+!
+!  Compute value at X in (T(I),T(I+1)) of JDERIV-th derivative,
+!  given its relevant B-spline coefficients in AJ(1),...,AJ(K-JDERIV).
+!
+do j = jderiv+1, k-1
+  ilo = k-j
+  do jj = 1, k-j
+    aj(jj) = (aj(jj+1)*dl(ilo)+aj(jj)*dr(jj))/(dl(ilo)+dr(jj))
+    ilo = ilo - 1
+  end do
+end do
+
+bvalue = aj(1)
+
+return
+
+end function bvalue
+
+subroutine bsplvb ( deboor, t, jhigh, index, x, left, biatx )
+
+type(deboor_type) :: deboor
+sll_int32:: jhigh
+
+sll_real64,dimension(jhigh):: biatx !(jhigh)
+sll_int32:: i
+sll_int32:: index
+sll_int32:: left
+sll_real64:: saved
+sll_real64,dimension(left+jhigh), intent(in) :: t!() left+jhigh
+sll_real64:: term
+sll_real64:: x
+
+if ( index == 1 ) then
+   deboor%j = 1
+   biatx(1) = 1.0_8
+   if ( jhigh <= deboor%j ) then
+      return
+   end if
+end if
+
+if ( t(left+1) <= t(left) ) then
+   print*,'x=',x
+   write ( *, '(a)' ) ' '
+   write ( *, '(a)' ) 'BSPLVB - Fatal error!'
+   write ( *, '(a)' ) '  It is required that T(LEFT) < T(LEFT+1).'
+   write ( *, '(a,i8)' ) '  But LEFT = ', left
+   write ( *, '(a,g14.6)' ) '  T(LEFT) =   ', t(left)
+   write ( *, '(a,g14.6)' ) '  T(LEFT+1) = ', t(left+1)
+   stop
+end if
+
+do
+   
+  deboor%deltar(deboor%j) = t(left+deboor%j) - x
+  deboor%deltal(deboor%j) = x - t(left+1-deboor%j)
+   
+  saved = 0.0_f64
+  do i = 1, deboor%j
+     term = biatx(i) / ( deboor%deltar(i) + deboor%deltal(deboor%j+1-i) )
+     biatx(i) = saved + deboor%deltar(i) * term
+     saved = deboor%deltal(deboor%j+1-i) * term
+  end do
+
+  biatx(deboor%j+1) = saved
+  deboor%j = deboor%j + 1
+  
+  if ( jhigh <= deboor%j ) exit
+
+end do
+
+return
+end subroutine bsplvb
+
+subroutine bsplvd ( deboor, t, k, x, left, a, dbiatx, nderiv )
+
+    type(deboor_type) :: deboor
+    sll_int32 :: k
+    sll_int32 :: left
+    sll_int32 :: nderiv
+    
+    sll_real64, dimension(k,k):: a!(k,k)
+    sll_real64,dimension(k,nderiv), intent(out) :: dbiatx!(k,nderiv)
+    sll_real64:: factor
+    sll_real64:: fkp1mm
+    sll_int32 :: i
+    sll_int32 :: ideriv
+    sll_int32 :: il
+    sll_int32 :: j
+    sll_int32 :: jlow
+    sll_int32 :: jp1mid
+    sll_int32 :: ldummy
+    sll_int32 :: m
+    sll_int32 :: mhigh
+    !  sll_real64 sum1  ! this one is not used...
+    sll_real64,dimension(left+k):: t ! (left+k)
+    sll_real64:: x
+    
+    
+    mhigh = max ( min ( nderiv, k ), 1 )
+    !
+    !  MHIGH is usually equal to NDERIV.
+    !
+    call bsplvb ( deboor, t, k+1-mhigh, 1, x, left, dbiatx )
+    
+    if ( mhigh == 1 ) then
+       return
+    end if
+    !
+    !  The first column of DBIATX always contains the B-spline values
+    !  for the current order.  These are stored in column K+1-current
+    !  order before BSPLVB is called to put values for the next
+    !  higher order on top of it.
+    !
+    ideriv = mhigh
+    do m = 2, mhigh
+       jp1mid = 1
+       do j = ideriv, k
+          dbiatx(j,ideriv) = dbiatx(jp1mid,1)
+          jp1mid = jp1mid + 1
+          
+       end do
+       ideriv = ideriv - 1
+       
+       call bsplvb ( deboor, t, k+1-ideriv, 2, x, left, dbiatx )
+       
+    end do
+    !
+    !  At this point, B(LEFT-K+I, K+1-J)(X) is in DBIATX(I,J) for
+    !  I=J,...,K and J=1,...,MHIGH ('=' NDERIV).
+    !
+    !  In particular, the first column of DBIATX is already in final form.
+    !
+    !  To obtain corresponding derivatives of B-splines in subsequent columns,
+    !  generate their B-representation by differencing, then evaluate at X.
+    !
+    jlow = 1
+    do i = 1, k
+       a(jlow:k,i) = 0.0D+00
+       jlow = i
+       a(i,i) = 1.0D+00
+    end do
+    !
+    !  At this point, A(.,J) contains the B-coefficients for the J-th of the
+    !  K B-splines of interest here.
+    !
+    do m = 2, mhigh
+       
+       fkp1mm = real ( k + 1 - m, kind = 8 )
+       il = left
+       i = k
+       !
+       !  For J = 1,...,K, construct B-coefficients of (M-1)st derivative of
+       !  B-splines from those for preceding derivative by differencing
+       !  and store again in  A(.,J).  The fact that  A(I,J) = 0 for
+       !  I < J is used.
+       !
+       do ldummy = 1, k+1-m
+          
+          factor = fkp1mm / ( t(il+k+1-m) - t(il) )
+          !
+          !  The assumption that T(LEFT) < T(LEFT+1) makes denominator
+          !  in FACTOR nonzero.
+          !
+          a(i,1:i) = ( a(i,1:i) - a(i-1,1:i) ) * factor
+          
+          il = il - 1
+          i = i - 1
+       
+       end do
+       !
+       !  For I = 1,...,K, combine B-coefficients A(.,I) with B-spline values
+       !  stored in DBIATX(.,M) to get value of (M-1)st derivative of
+       !  I-th B-spline (of interest here) at X, and store in DBIATX(I,M).
+       !
+       !  Storage of this value over the value of a B-spline
+       !  of order M there is safe since the remaining B-spline derivatives
+       !  of the same order do not use this value due to the fact
+       !  that  A(J,I) = 0  for J < I.
+       !
+       do i = 1, k
+          
+          jlow = max ( i, m )
+          
+          dbiatx(i,m) = dot_product ( a(jlow:k,i), dbiatx(jlow:k,m) )
+          
+       end do
+    
+    end do
+    return
+  end subroutine bsplvd
+
+subroutine interv( deboor, xt, lxt, x, left, mflag )
+    
+type(deboor_type)                     :: deboor
+sll_real64, dimension(:), intent(in)  :: xt
+sll_int32,                intent(in)  :: lxt
+sll_real64,               intent(in)  :: x
+sll_int32,                intent(out) :: left
+sll_int32,                intent(out) :: mflag
+sll_int32                             :: ihi
+
+sll_int32 :: istep
+sll_int32 :: middle
+
+SLL_ASSERT(size(xt) == lxt)
+
+ihi = deboor%ilo + 1
+if ( lxt <= ihi ) then
+   if ( xt(lxt) <= x ) go to 110
+   if ( lxt <= 1 ) then
+      mflag = -1
+      left = 1
+      return
+   end if
+   deboor%ilo = lxt - 1
+   ihi = lxt
+end if
+if ( xt(ihi) <= x ) go to 20
+if ( xt(deboor%ilo) <= x ) then
+   mflag = 0
+   left = deboor%ilo
+   return
+end if
+!
+!  Now X < XT(ILO).  Decrease ILO to capture X.
+!
+istep = 1
+    
+10  continue
+    
+ihi = deboor%ilo
+deboor%ilo = ihi - istep
+
+if ( 1 < deboor%ilo ) then
+   if ( xt(deboor%ilo) <= x ) go to 50
+   istep = istep * 2
+   go to 10
+end if
+
+deboor%ilo = 1
+
+if ( x < xt(1) ) then
+   mflag = -1
+   left = 1
+   return
+end if
+
+go to 50
+!
+!  Now XT(IHI) <= X.  Increase IHI to capture X.
+!
+20  continue
+    
+istep = 1
+    
+30  continue
+    
+deboor%ilo = ihi
+ihi = deboor%ilo + istep
+
+if ( ihi < lxt ) then
+   if ( x < xt(ihi) ) go to 50
+   istep = istep * 2
+   go to 30
+end if
+
+if ( xt(lxt) <= x ) go to 110
+!
+!  Now XT(ILO) < = X < XT(IHI).  Narrow the interval.
+!
+ihi = lxt
+
+50 continue
+    
+do
+   
+  middle = ( deboor%ilo + ihi ) / 2
+  if ( middle == deboor%ilo ) then
+    mflag = 0
+    left = deboor%ilo
+    return
+  end if
+  !
+  !  It is assumed that MIDDLE = ILO in case IHI = ILO+1.
+  !
+  if ( xt(middle) <= x ) then
+    deboor%ilo = middle
+  else
+    ihi = middle
+  end if
+   
+end do
+!
+!  Set output and return.
+!
+
+110 continue
+    
+mflag = 1
+
+if ( x == xt(lxt) ) mflag = 0
+
+do left = lxt, 1, -1
+  if ( xt(left) < xt(lxt) ) return
+end do
+
+end subroutine interv
 
   
 end module sll_module_arbitrary_degree_spline_interpolator_2d
