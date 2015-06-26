@@ -114,27 +114,7 @@ subroutine initialize_bspline_1d(this, n, k, tau_min, tau_max, bc_type)
 
     SLL_ALLOCATE(this%q(n*(2*k-1)),ierr)
 
-  else if ( bc_type == SLL_DIRICHLET) then
-
-    SLL_ALLOCATE(this%bcoef(n),ierr)
-    SLL_ALLOCATE(this%t(n+k),ierr)
-    this%t(1:k)     = tau_min
-    this%t(n+1:n+k) = tau_max
-  
-    if ( mod(k,2) == 0 ) then
-      do i = k+1,n
-        this%t(i) = this%tau(i-k/2) 
-      end do
-    else
-      do i = k+1, n
-        this%t(i) = 0.5*(this%tau(i-(k-1)/2)+this%tau(i-1-(k-1)/2))
-      end do
-    end if
-
-    SLL_ALLOCATE(this%q(n*(2*k-1)),ierr)
-
   else
-
 
     SLL_ALLOCATE(this%t(n+k+m), ierr)
 
@@ -156,7 +136,60 @@ subroutine initialize_bspline_1d(this, n, k, tau_min, tau_max, bc_type)
 
 end subroutine initialize_bspline_1d
 
-subroutine build_system(this)
+subroutine build_system_periodic(this)
+
+  type(sll_bspline_1d)    :: this 
+
+  sll_real64              :: taui
+  sll_int32               :: kpkm2
+  sll_int32               :: left
+  sll_int32               :: n
+  sll_int32               :: k
+  sll_int32               :: iflag
+  sll_int32               :: mflag
+  sll_int32               :: i
+  sll_int32               :: j
+  sll_int32               :: jj
+  sll_int32               :: l
+  sll_int32               :: ilo
+  
+  !PN Warning:
+  !PN The system built for periodic boundary conditions is wrong
+  !PN This needs improvements, it simplifies the splines
+  !PN computed in deboor_splines directory.
+
+  n = this%n
+  k = this%k
+  this%a = 0.0_f64
+
+  kpkm2       = 2*(k-1)
+  left        = k
+  this%q      = 0.0_f64
+  this%dbiatx = 0.0_f64
+  
+  ilo = 1
+
+  do i = 1, n
+      
+    taui = this%tau(i)
+    call interv( this%t, n+k, taui, left, ilo, mflag )
+
+    call bsplvb ( this, k, 1, taui, left, this%bcoef )
+    jj = i-left+1+(left-k)*(k+k-1)
+    do j = 1, k
+        jj = jj + kpkm2
+        this%q(jj) = this%bcoef(j)
+    end do
+   
+  end do
+  
+  !Obtain factorization of A, stored again in Q.
+
+  call banfac ( this%q, k+k-1, n, k-1, k-1, iflag )
+
+end subroutine build_system_periodic
+
+subroutine build_system_hermite(this)
 
   type(sll_bspline_1d)    :: this 
 
@@ -238,7 +271,7 @@ subroutine build_system(this)
 
   call banfac ( this%q, k+k-1, n+m, k-1, k-1, iflag )
 
-end subroutine build_system
+end subroutine build_system_hermite
 
 !> @brief
 !>  produces the B-spline coefficients of an interpolating spline.
@@ -281,7 +314,11 @@ subroutine compute_bspline_1d(this, gtau, slope_min, slope_max)
   sll_real64, optional    :: slope_min
   sll_real64, optional    :: slope_max
 
-  call build_system(this)
+  if (this%bc_type == SLL_PERIODIC) then
+    call build_system_periodic(this)
+  else
+    call build_system_hermite(this)
+  end if
 
   if (present(slope_min) .and. present(slope_max)) then
     call update_bspline_1d( this, gtau, slope_min, slope_max)
@@ -312,22 +349,23 @@ subroutine update_bspline_1d(this, gtau, slope_min, slope_max)
 
   n = this%n
   k = this%k
-
-  if (.not. present(slope_min)) then
-    call apply_fd(k+1, 1, this%tau(1:k+1), gtau(1:k+1), this%tau(1), slope)
-    slope_min = slope(1)
-  end if
-  if (.not. present(slope_min)) then
-    call apply_fd(k+1, 1, this%tau(n-k-1:n), gtau(n-k-1:n), this%tau(n), slope)
-    slope_max = slope(1)
-  end if
-
-  SLL_ASSERT(size(gtau) == this%n)
+  SLL_ASSERT(size(gtau) == n)
 
   this%bcoef(1)   = gtau(1)
-  this%bcoef(2)   = slope_min
+
+  if (present(slope_min)) then
+    this%bcoef(2)   = slope_min
+  else
+    call apply_fd(k+1, 1, this%tau(1:k+1), gtau(1:k+1), this%tau(1), slope(0:1))
+    this%bcoef(2) = slope(1)
+  end if
   this%bcoef(3:n) = gtau(2:n-1)
-  this%bcoef(n+1) = slope_max
+  if (present(slope_max)) then
+    this%bcoef(n+1) = slope_max
+  else
+    call apply_fd(k+1, 1, this%tau(n-k-1:n), gtau(n-k-1:n), this%tau(n), slope(0:1))
+    this%bcoef(n+1) = slope(1)
+  end if
   this%bcoef(n+2) = gtau(n)
 
   call banslv ( this%q, k+k-1, n+m, k-1, k-1, this%bcoef )

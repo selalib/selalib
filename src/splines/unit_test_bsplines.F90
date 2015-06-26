@@ -42,6 +42,8 @@ sll_real64 :: t0, t1, t2
 
 SLL_ALLOCATE(x(n),ierr)
 SLL_ALLOCATE(y(n),ierr)
+SLL_ALLOCATE(gtau(n),ierr)
+SLL_ALLOCATE(htau(n),ierr)
 
 do i = 1, n
   x(i) = (i-1)*1.0_f64/(n-1)
@@ -49,8 +51,6 @@ end do
 
 call initialize_bspline_1d(spline, n, k, tau_min, tau_max, SLL_HERMITE)
 
-
-SLL_ALLOCATE(gtau(n),ierr)
 gtau = cos(2*sll_pi*spline%tau)
 slope_min = -sin(2*sll_pi*tau_min)*2*sll_pi
 slope_max = -sin(2*sll_pi*tau_max)*2*sll_pi
@@ -63,18 +63,15 @@ do j = 1, 1000
   call interpolate_array_values( spline, n, x, y)
 end do
 call cpu_time(t2)
-print*, ' time spent to compute interpolants : ', t1-t0
-print*, ' time spent to interpolate values : ', t2-t1
+print*, ' time spent to compute interpolants     : ', t1-t0
+print*, ' time spent to interpolate array values : ', t2-t1
 
 print*, "values error = ", maxval(abs(y-cos(2*sll_pi*x)))
 call interpolate_array_derivatives( spline, n, x, y)
 print*, "derivatives error = ", maxval(abs(y+2*sll_pi*sin(2*sll_pi*x)))
 
-SLL_ALLOCATE(htau(n),ierr)
 htau = sin(2*sll_pi*spline%tau)
-slope_min = cos(2*sll_pi*tau_min)*2*sll_pi
-slope_max = cos(2*sll_pi*tau_max)*2*sll_pi
-call update_bspline_1d(spline, htau, slope_min, slope_max)
+call update_bspline_1d(spline, htau)
 call interpolate_array_values( spline, n, x, y)
 print*, "values error = ", maxval(abs(y-sin(2*sll_pi*x)))
 call interpolate_array_derivatives( spline, n, x, y)
@@ -98,8 +95,6 @@ print*, " derivatives error = ", err2 / n
 print*, ' time spent to interpolate_value      : ', t1-t0
 print*, ' time spent to interpolate_derivative : ', t2-t1
 print*, "-------------------------------------------------"
-
-
 
 print*, 'PASSED'
 
