@@ -1,7 +1,9 @@
-program arbitrary_degree_splines_1d_dirichlet
+program bspline_1d_dirichlet
 #include "sll_working_precision.h"
 #include "sll_constants.h"
-#include "sll_interpolators.h"
+
+use sll_module_bspline_interpolator_1d
+use sll_boundary_condition_descriptors
 implicit none
 
 #define NPTS 65
@@ -9,7 +11,7 @@ implicit none
 #define XMIN 0.0_f64
 #define XMAX 1.0_f64
 
-type(sll_arbitrary_degree_spline_interpolator_1d) :: interpolator
+type(sll_bspline_interpolator_1d) :: interpolator
 
 sll_real64, dimension(NPTS) :: x
 sll_real64, dimension(NPTS) :: y
@@ -33,24 +35,24 @@ end do
 call random_number(x)
 x = x * (XMAX-XMIN)
   
-call interpolator%initialize(NPTS,XMIN,XMAX,SLL_DIRICHLET,SLL_DIRICHLET,SPL_DEG)
-call set_values_at_boundary1d(interpolator,value_left=1.0_f64,value_right=1.0_f64)
-
-call interpolator%compute_interpolants(y)
-  
-normL2 = 0.0_f64
-normH1 = 0.0_f64
-do i=1,NPTS
-  y_int(i)  = interpolator%interpolate_value(x(i))
-  y_ref(i)  = f(x(i))
-  dy_int(i) = interpolator%interpolate_derivative_eta1(x(i))
-  dy_ref(i) = df(x(i))
-  write(10,*) x(i), y_int(i), y_ref(i)
-  write(11,*) x(i), dy_int(i), dy_ref(i)
-end do
-
-normL2 = sum((y_int-y_ref)**2*h)
-normH1 = sum((dy_int-dy_ref)**2*h)
+!call interpolator%initialize(NPTS,XMIN,XMAX,SLL_DIRICHLET,SLL_DIRICHLET,SPL_DEG)
+!call set_values_at_boundary1d(interpolator,value_left=1.0_f64,value_right=1.0_f64)
+!
+!call interpolator%compute_interpolants(y)
+!  
+!normL2 = 0.0_f64
+!normH1 = 0.0_f64
+!do i=1,NPTS
+!  y_int(i)  = interpolator%interpolate_value(x(i))
+!  y_ref(i)  = f(x(i))
+!  dy_int(i) = interpolator%interpolate_derivative_eta1(x(i))
+!  dy_ref(i) = df(x(i))
+!  write(10,*) x(i), y_int(i), y_ref(i)
+!  write(11,*) x(i), dy_int(i), dy_ref(i)
+!end do
+!
+!normL2 = sum((y_int-y_ref)**2*h)
+!normH1 = sum((dy_int-dy_ref)**2*h)
   
 print*,'--------------------------------------------'
 print*,' Average error in nodes', sum(abs(y_int-y_ref))/NPTS
@@ -94,4 +96,4 @@ function df(x)
 end function df
 
 
-end program arbitrary_degree_splines_1d_dirichlet
+end program bspline_1d_dirichlet
