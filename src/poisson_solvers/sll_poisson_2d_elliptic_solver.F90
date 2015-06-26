@@ -27,6 +27,7 @@ module sll_module_poisson_2d_elliptic_solver
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
+#include "sll_errors.h"
 !use sll_boundary_condition_descriptors
   use sll_module_poisson_2d_base
   use sll_general_coordinate_elliptic_solver_module
@@ -41,7 +42,7 @@ implicit none
 
   type,extends(sll_poisson_2d_base) :: poisson_2d_elliptic_solver      
     type(general_coordinate_elliptic_solver), pointer      :: elliptic_solver
-    class(sll_scalar_field_2d_discrete), pointer        :: phi_field
+    !class(sll_scalar_field_2d_discrete), pointer        :: phi_field
     class(sll_scalar_field_2d_base), pointer                :: rho_field
     class(sll_scalar_field_2d_base), pointer                :: a11_field
     class(sll_scalar_field_2d_base), pointer                :: a12_field
@@ -50,17 +51,25 @@ implicit none
     class(sll_scalar_field_2d_base), pointer                :: b1_field
     class(sll_scalar_field_2d_base), pointer                :: b2_field
     class(sll_scalar_field_2d_base), pointer                :: c_field
-    class(sll_interpolator_2d_base), pointer                           :: interp_rho
+    class(sll_interpolator_2d_base), pointer                :: interp_rho
+    class(sll_interpolator_2d_base), pointer                :: interp_a11
+    class(sll_interpolator_2d_base), pointer                :: interp_a12
+    class(sll_interpolator_2d_base), pointer                :: interp_a21
+    class(sll_interpolator_2d_base), pointer                :: interp_a22
+    class(sll_interpolator_2d_base), pointer                :: interp_b1
+    class(sll_interpolator_2d_base), pointer                :: interp_b2
+    class(sll_interpolator_2d_base), pointer                :: interp_c
     !type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_rho
-    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_phi
-    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_a11
-    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_a12
-    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_a21
-    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_a22
-    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_b1
-    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_b2
-    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_c
+    !type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_phi
+!    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_a11
+!    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_a12
+!    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_a21
+!    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_a22
+!    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_b1
+!    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_b2
+!    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_c
     sll_int32 :: control
+    logical :: precompute_rhs
   contains
     procedure, pass(poisson) :: initialize => &
       initialize_poisson_2d_elliptic_solver
@@ -99,6 +108,8 @@ contains
    b1_values,&
    b2_values,&
    c_values, &
+   interp_rho, &
+   interp_rho_case, &
    control, &
    precompute_rhs) 
    
@@ -129,12 +140,14 @@ contains
    sll_real64, dimension(:,:)          :: b1_values
    sll_real64, dimension(:,:)          :: b2_values
    sll_real64, dimension(:,:)          :: c_values
+   class(sll_interpolator_2d_base), pointer, optional :: interp_rho
+   character(len=256), optional  :: interp_rho_case
    sll_int32, intent(in), optional :: control
    logical, intent(in), optional :: precompute_rhs
-   logical :: local_precompute_rhs
    sll_int32 :: np_eta1
    sll_int32 :: np_eta2
    sll_int32 :: ierr
+   logical :: use_cubic_splines
    
    sll_int32 :: bc_eta1_left_interp
    
@@ -145,9 +158,15 @@ contains
    endif
    
    if(present(precompute_rhs))then
-     local_precompute_rhs = precompute_rhs
+     poisson%precompute_rhs = precompute_rhs
    else
-     local_precompute_rhs =  .false. 
+     poisson%precompute_rhs =  .false. 
+   endif
+   
+   if(poisson%precompute_rhs)then
+     use_cubic_splines = .true.
+   else
+     use_cubic_splines = .false.    
    endif
    
    if(poisson%control==SLL_DO_NOTHING_ELLIPTIC_SOLVER)then
@@ -162,160 +181,286 @@ contains
     np_eta1 = num_cells_eta1 + 1
     np_eta2 = num_cells_eta2 + 1
     
-    call poisson%interp_phi%initialize( &
-         np_eta1, &
-         np_eta2, &
-         eta1_min, &
-         eta1_max, &
-         eta2_min, &
-         eta2_max, &
-         bc_eta1_left_interp, &
-         bc_eta1_right, &
-         bc_eta2_left, &
-         bc_eta2_right,&
-         spline_degree_eta1, &
-         spline_degree_eta2)
+!    call poisson%interp_phi%initialize( &
+!         np_eta1, &
+!         np_eta2, &
+!         eta1_min, &
+!         eta1_max, &
+!         eta2_min, &
+!         eta2_max, &
+!         bc_eta1_left_interp, &
+!         bc_eta1_right, &
+!         bc_eta2_left, &
+!         bc_eta2_right,&
+!         spline_degree_eta1, &
+!         spline_degree_eta2)
 
-
-
-   if(local_precompute_rhs)then
-     poisson%interp_rho => new_arbitrary_degree_spline_interp2d( &
-         np_eta1, &
-         np_eta2, &
-         eta1_min, &
-         eta1_max, &
-         eta2_min, &
-         eta2_max, &
-         bc_eta1_left_interp, &
-         bc_eta1_right, &
-         bc_eta2_left, &
-         bc_eta2_right,&
-         spline_degree_eta1, &
-         spline_degree_eta2)
+   if(present(interp_rho))then
+     poisson%interp_rho => interp_rho
    else
-     poisson%interp_rho => new_cubic_spline_interpolator_2d( &
-          np_eta1, &
-          np_eta2, &
-          eta1_min, &
-          eta1_max, &
-          eta2_min, &
-          eta2_max, &
-          bc_interp2d_eta1, &
-          bc_interp2d_eta2)                
+     if(present(interp_rho_case))then
+       select case(interp_rho_case)
+         case ("SLL_CUBIC_SPLINES")
+           poisson%interp_rho => new_cubic_spline_interpolator_2d( &
+             np_eta1, &
+             np_eta2, &
+             eta1_min, &
+             eta1_max, &
+             eta2_min, &
+             eta2_max, &
+             bc_interp2d_eta1, &
+             bc_interp2d_eta2)
+         case ("SLL_ARBITRARY_DEGREE_SPLINES")
+           poisson%interp_rho => new_arbitrary_degree_spline_interp2d( &
+             np_eta1, &
+             np_eta2, &
+             eta1_min, &
+             eta1_max, &
+             eta2_min, &
+             eta2_max, &
+             bc_eta1_left_interp, &
+             bc_eta1_right, &
+             bc_eta2_left, &
+             bc_eta2_right,&
+             spline_degree_eta1, &
+             spline_degree_eta2)
+         case default
+           print *,'interp_rho_case=',interp_rho_case
+           call flush()
+           SLL_ERROR('initialize_poisson_2d_elliptic_solver&
+           &','bad interp_rho_case')    
+       end select
+     else
+       poisson%interp_rho => new_cubic_spline_interpolator_2d( &
+         np_eta1, &
+         np_eta2, &
+         eta1_min, &
+         eta1_max, &
+         eta2_min, &
+         eta2_max, &
+         bc_interp2d_eta1, &
+         bc_interp2d_eta2)
+     endif                         
    endif
+
+!   if(local_precompute_rhs)then
+!     poisson%interp_rho => new_arbitrary_degree_spline_interp2d( &
+!         np_eta1, &
+!         np_eta2, &
+!         eta1_min, &
+!         eta1_max, &
+!         eta2_min, &
+!         eta2_max, &
+!         bc_eta1_left_interp, &
+!         bc_eta1_right, &
+!         bc_eta2_left, &
+!         bc_eta2_right,&
+!         spline_degree_eta1, &
+!         spline_degree_eta2)
+!   else
+!     poisson%interp_rho => new_cubic_spline_interpolator_2d( &
+!          np_eta1, &
+!          np_eta2, &
+!          eta1_min, &
+!          eta1_max, &
+!          eta2_min, &
+!          eta2_max, &
+!          bc_interp2d_eta1, &
+!          bc_interp2d_eta2)                
+!   endif
+
+
+
+    
+  poisson%interp_a11 => new_cubic_spline_interpolator_2d( &
+    np_eta1, &
+    np_eta2, &
+    eta1_min, &
+    eta1_max, &
+    eta2_min, &
+    eta2_max, &
+    bc_interp2d_eta1, &
+    bc_interp2d_eta2)                
+
+
+  poisson%interp_a12 => new_cubic_spline_interpolator_2d( &
+    np_eta1, &
+    np_eta2, &
+    eta1_min, &
+    eta1_max, &
+    eta2_min, &
+    eta2_max, &
+    bc_interp2d_eta1, &
+    bc_interp2d_eta2)                
+
+  poisson%interp_a21 => new_cubic_spline_interpolator_2d( &
+    np_eta1, &
+    np_eta2, &
+    eta1_min, &
+    eta1_max, &
+    eta2_min, &
+    eta2_max, &
+    bc_interp2d_eta1, &
+    bc_interp2d_eta2)                
+
+  poisson%interp_a22 => new_cubic_spline_interpolator_2d( &
+    np_eta1, &
+    np_eta2, &
+    eta1_min, &
+    eta1_max, &
+    eta2_min, &
+    eta2_max, &
+    bc_interp2d_eta1, &
+    bc_interp2d_eta2)                
+
+
+  poisson%interp_b1 => new_cubic_spline_interpolator_2d( &
+    np_eta1, &
+    np_eta2, &
+    eta1_min, &
+    eta1_max, &
+    eta2_min, &
+    eta2_max, &
+    bc_interp2d_eta1, &
+    bc_interp2d_eta2)                
+
+  poisson%interp_b2 => new_cubic_spline_interpolator_2d( &
+    np_eta1, &
+    np_eta2, &
+    eta1_min, &
+    eta1_max, &
+    eta2_min, &
+    eta2_max, &
+    bc_interp2d_eta1, &
+    bc_interp2d_eta2)                
+
+  poisson%interp_c => new_cubic_spline_interpolator_2d( &
+    np_eta1, &
+    np_eta2, &
+    eta1_min, &
+    eta1_max, &
+    eta2_min, &
+    eta2_max, &
+    bc_interp2d_eta1, &
+    bc_interp2d_eta2)                
+
+
+
+
+
    
        
-    call poisson%interp_a11%initialize( &
-         np_eta1, &
-         np_eta2, &
-         eta1_min, &
-         eta1_max, &
-         eta2_min, &
-         eta2_max, &
-         bc_eta1_left_interp, &
-         bc_eta1_right, &
-         bc_eta2_left, &
-         bc_eta2_right,&
-         spline_degree_eta1, &
-         spline_degree_eta2)     
-          
-     call poisson%interp_a12%initialize( &
-         np_eta1, &
-         np_eta2, &
-         eta1_min, &
-         eta1_max, &
-         eta2_min, &
-         eta2_max, &
-         bc_eta1_left_interp, &
-         bc_eta1_right, &
-         bc_eta2_left, &
-         bc_eta2_right,&
-         spline_degree_eta1, &
-         spline_degree_eta2)    
-           
-    call poisson%interp_a21%initialize( &
-         np_eta1, &
-         np_eta2, &
-         eta1_min, &
-         eta1_max, &
-         eta2_min, &
-         eta2_max, &
-         bc_eta1_left_interp, &
-         bc_eta1_right, &
-         bc_eta2_left, &
-         bc_eta2_right,&
-         spline_degree_eta1, &
-         spline_degree_eta2) 
-          
-    call poisson%interp_a22%initialize( &
-         np_eta1, &
-         np_eta2, &
-         eta1_min, &
-         eta1_max, &
-         eta2_min, &
-         eta2_max, &
-         bc_eta1_left_interp, &
-         bc_eta1_right, &
-         bc_eta2_left, &
-         bc_eta2_right,&
-         spline_degree_eta1, &
-         spline_degree_eta2)   
-
-    call poisson%interp_a21%initialize( &
-         np_eta1, &
-         np_eta2, &
-         eta1_min, &
-         eta1_max, &
-         eta2_min, &
-         eta2_max, &
-         bc_eta1_left_interp, &
-         bc_eta1_right, &
-         bc_eta2_left, &
-         bc_eta2_right,&
-         spline_degree_eta1, &
-         spline_degree_eta2) 
-     
-    call poisson%interp_c%initialize( &
-         np_eta1, &
-         np_eta2, &
-         eta1_min, &
-         eta1_max, &
-         eta2_min, &
-         eta2_max, &
-         bc_eta1_left_interp, &
-         bc_eta1_right, &
-         bc_eta2_left, &
-         bc_eta2_right,&
-         spline_degree_eta1, &
-         spline_degree_eta2)     
-          
-    call poisson%interp_b1%initialize( &
-         np_eta1, &
-         np_eta2, &
-         eta1_min, &
-         eta1_max, &
-         eta2_min, &
-         eta2_max, &
-         bc_eta1_left_interp, &
-         bc_eta1_right, &
-         bc_eta2_left, &
-         bc_eta2_right,&
-         spline_degree_eta1, &
-         spline_degree_eta2)
-      
-    call poisson%interp_b2%initialize( &
-         np_eta1, &
-         np_eta2, &
-         eta1_min, &
-         eta1_max, &
-         eta2_min, &
-         eta2_max, &
-         bc_eta1_left_interp, &
-         bc_eta1_right, &
-         bc_eta2_left, &
-         bc_eta2_right,&
-         spline_degree_eta1, &
-         spline_degree_eta2)   
+!    call poisson%interp_a11%initialize( &
+!         np_eta1, &
+!         np_eta2, &
+!         eta1_min, &
+!         eta1_max, &
+!         eta2_min, &
+!         eta2_max, &
+!         bc_eta1_left_interp, &
+!         bc_eta1_right, &
+!         bc_eta2_left, &
+!         bc_eta2_right,&
+!         spline_degree_eta1, &
+!         spline_degree_eta2)     
+!          
+!     call poisson%interp_a12%initialize( &
+!         np_eta1, &
+!         np_eta2, &
+!         eta1_min, &
+!         eta1_max, &
+!         eta2_min, &
+!         eta2_max, &
+!         bc_eta1_left_interp, &
+!         bc_eta1_right, &
+!         bc_eta2_left, &
+!         bc_eta2_right,&
+!         spline_degree_eta1, &
+!         spline_degree_eta2)    
+!           
+!    call poisson%interp_a21%initialize( &
+!         np_eta1, &
+!         np_eta2, &
+!         eta1_min, &
+!         eta1_max, &
+!         eta2_min, &
+!         eta2_max, &
+!         bc_eta1_left_interp, &
+!         bc_eta1_right, &
+!         bc_eta2_left, &
+!         bc_eta2_right,&
+!         spline_degree_eta1, &
+!         spline_degree_eta2) 
+!          
+!    call poisson%interp_a22%initialize( &
+!         np_eta1, &
+!         np_eta2, &
+!         eta1_min, &
+!         eta1_max, &
+!         eta2_min, &
+!         eta2_max, &
+!         bc_eta1_left_interp, &
+!         bc_eta1_right, &
+!         bc_eta2_left, &
+!         bc_eta2_right,&
+!         spline_degree_eta1, &
+!         spline_degree_eta2)   
+!
+!    call poisson%interp_a21%initialize( &
+!         np_eta1, &
+!         np_eta2, &
+!         eta1_min, &
+!         eta1_max, &
+!         eta2_min, &
+!         eta2_max, &
+!         bc_eta1_left_interp, &
+!         bc_eta1_right, &
+!         bc_eta2_left, &
+!         bc_eta2_right,&
+!         spline_degree_eta1, &
+!         spline_degree_eta2) 
+!     
+!    call poisson%interp_c%initialize( &
+!         np_eta1, &
+!         np_eta2, &
+!         eta1_min, &
+!         eta1_max, &
+!         eta2_min, &
+!         eta2_max, &
+!         bc_eta1_left_interp, &
+!         bc_eta1_right, &
+!         bc_eta2_left, &
+!         bc_eta2_right,&
+!         spline_degree_eta1, &
+!         spline_degree_eta2)     
+!          
+!    call poisson%interp_b1%initialize( &
+!         np_eta1, &
+!         np_eta2, &
+!         eta1_min, &
+!         eta1_max, &
+!         eta2_min, &
+!         eta2_max, &
+!         bc_eta1_left_interp, &
+!         bc_eta1_right, &
+!         bc_eta2_left, &
+!         bc_eta2_right,&
+!         spline_degree_eta1, &
+!         spline_degree_eta2)
+!      
+!    call poisson%interp_b2%initialize( &
+!         np_eta1, &
+!         np_eta2, &
+!         eta1_min, &
+!         eta1_max, &
+!         eta2_min, &
+!         eta2_max, &
+!         bc_eta1_left_interp, &
+!         bc_eta1_right, &
+!         bc_eta2_left, &
+!         bc_eta2_right,&
+!         spline_degree_eta1, &
+!         spline_degree_eta2)   
                                    
     poisson%a11_field => new_scalar_field_2d_discrete( &
          "a11_check", &
@@ -406,16 +551,6 @@ contains
     phi_values(:,:) = 0.0_f64
     rho_values(:,:) = 0.0_f64
     
-    poisson%phi_field => new_scalar_field_2d_discrete( &
-         "phi_check", &
-         poisson%interp_phi, &
-         transf, &
-         bc_eta1_left_interp, &
-         bc_eta1_right, &
-         bc_eta2_left, &
-         bc_eta2_right)
-    call poisson%phi_field%set_field_data( phi_values )
-    call poisson%phi_field%update_interpolation_coefficients( )  
     
      poisson%rho_field => new_scalar_field_2d_discrete( &
          "rho_check", &
@@ -446,7 +581,11 @@ contains
         eta1_max, &
         eta2_min, &
         eta2_max, &
-        local_precompute_rhs )
+        precompute_rhs=poisson%precompute_rhs, &
+        rhs_bc1 = bc_interp2d_eta1, &
+        rhs_bc2 = bc_interp2d_eta2, &
+        use_cubic_splines = use_cubic_splines)                
+ 
         
     ! compute matrix the field
     print *,'#begin factorize_mat_es'
@@ -490,7 +629,9 @@ contains
    b1_values,&
    b2_values,&
    c_values, &
-   control, & 
+   interp_rho, &
+   interp_rho_case, &
+   control, &
    precompute_rhs ) &
    result(poisson)
    
@@ -522,6 +663,8 @@ contains
    sll_real64, dimension(:,:)          :: b2_values
    sll_real64, dimension(:,:)          :: c_values
    sll_int32, intent(in), optional     :: control
+   class(sll_interpolator_2d_base), pointer, optional :: interp_rho
+   character(len=256), optional  :: interp_rho_case
    logical, intent(in), optional     :: precompute_rhs
    !sll_int32 :: np_eta1
    !sll_int32 :: np_eta2
@@ -553,6 +696,8 @@ contains
    b1_values, &
    b2_values, &
    c_values, &
+   interp_rho, &
+   interp_rho_case, &
    control, &
    precompute_rhs)  
    
@@ -596,9 +741,8 @@ contains
     nc_eta1   = poisson%elliptic_solver%num_cells1 !+ 1    
     nc_eta2   = poisson%elliptic_solver%num_cells2 !+ 1
     
-    call poisson%rho_field%set_field_data(-rho)
-    call poisson%rho_field%update_interpolation_coefficients( )
-
+    
+    
     if(poisson%control==SLL_NO_SOLVE_ELLIPTIC_SOLVER)then
       do j=1,nc_eta2+1
         do i=1,nc_eta1+1
@@ -607,11 +751,22 @@ contains
        end do
      return
     endif
+    if(poisson%precompute_rhs)then
+      call set_rho_coefficients_coordinates_elliptic_eq_prototype( &
+        poisson%elliptic_solver, &
+        rho_values=-rho)
+      call solve_general_coordinates_elliptic_eq_prototype(&
+        poisson%elliptic_solver,&
+        phi)      
+    else
+      call poisson%rho_field%set_field_data(-rho)
+      call poisson%rho_field%update_interpolation_coefficients( )
+      call solve_general_coordinates_elliptic_eq_prototype(&
+        poisson%elliptic_solver,&
+        phi, &
+        rho_field=poisson%rho_field)
+    endif
             
-    call solve_general_coordinates_elliptic_eq_prototype(&
-       poisson%elliptic_solver,&
-       poisson%rho_field,&
-       phi)
        !poisson%phi_field)
    
 !   do j=1,nc_eta2+1
