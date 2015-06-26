@@ -370,7 +370,6 @@ contains
       mat%umf_numeric, &
       mat%umf_control, &
       info)
-
     
   end subroutine sll_factorize_csr_matrix
   
