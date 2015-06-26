@@ -7,7 +7,7 @@ ADD_LIBRARY( deboor_splines STATIC
 ADD_LIBRARY(banded_linear_solver STATIC banfac.f90 banslv.f90)
 
 TARGET_LINK_LIBRARIES( deboor_splines banded_linear_solver 
-                       sll_memory sll_working_precision sll_assert)
+                       sll_utilities sll_memory sll_working_precision sll_assert)
   
 IF(BUILD_TESTING)
 
