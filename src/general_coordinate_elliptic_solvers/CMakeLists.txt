@@ -56,4 +56,9 @@ IF(BUILD_TESTING)
   ADD_EXECUTABLE( test_gces_dirichlet unit_test_dirichlet.F90 )
   TARGET_LINK_LIBRARIES( test_gces_dirichlet sll_general_coordinate_elliptic_solvers )
 
+
+  ADD_EXECUTABLE( test_gces_full_periodic_prototype unit_test_full_periodic_prototype.F90 )
+  TARGET_LINK_LIBRARIES( test_gces_full_periodic_prototype sll_general_coordinate_elliptic_solvers )
+
+
 ENDIF(BUILD_TESTING)
