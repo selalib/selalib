@@ -42,7 +42,8 @@ use sll_module_scalar_field_2d, only: sll_scalar_field_2d_analytic,  &
                                       sll_scalar_field_2d_discrete
 use sll_module_interpolators_2d_base, only: sll_interpolator_2d_base
 use sll_module_arbitrary_degree_spline_interpolator_2d, only:        &
-  sll_arbitrary_degree_spline_interpolator_2d,                       &
+  sll_arbitrary_degree_spline_interpolator_2d
+use sll_module_arbitrary_degree_spline_interpolator_1d, only:        &
   interv, deboor_type, bsplvd
 use gauss_legendre_integration
 use gauss_lobatto_integration
@@ -1187,7 +1188,7 @@ class is (sll_scalar_field_2d_analytic)
   !$OMP END PARALLEL
 
   es%rho_vec(1:es%num_cells1*es%num_cells2) =  &
-    es%rho_vec(1:es%num_cells1*es%num_cells2) - int_rho/int_jac
+    es%rho_vec(1:es%num_cells1*es%num_cells2) - sum(es%rho_vec)/int_jac*es%masse
      
 end select
 

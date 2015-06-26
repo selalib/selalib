@@ -42,7 +42,8 @@ use sll_module_scalar_field_2d, only: sll_scalar_field_2d_analytic,  &
                                       sll_scalar_field_2d_discrete
 use sll_module_interpolators_2d_base, only: sll_interpolator_2d_base
 use sll_module_arbitrary_degree_spline_interpolator_2d, only:        &
-  sll_arbitrary_degree_spline_interpolator_2d,                       &
+  sll_arbitrary_degree_spline_interpolator_2d
+use sll_module_arbitrary_degree_spline_interpolator_1d, only:        &
   interv, deboor_type, bsplvd
 use gauss_legendre_integration
 use gauss_lobatto_integration
@@ -231,7 +232,7 @@ sll_int32  :: left
 sll_int32  :: kk, ll, index_coef1, index_coef2
 sll_int32  :: x, y, nbsp, nbsp1
 sll_int32  :: index1, index2, index3, index4
-sll_int32  :: icell, b, bprime
+sll_int32  :: icell, a, aprime, b, bprime
 
 sll_int32, dimension(:),   allocatable :: tab_index_coeff1
 sll_int32, dimension(:),   allocatable :: tab_index_coeff2
@@ -772,6 +773,7 @@ sll_real64 :: MC
 sll_real64 :: C1
 sll_real64 :: C2    
 sll_int32  :: index3, index4
+sll_int32  :: index_coef1,index_coef2
 sll_int32  :: b, bprime,x,y
 sll_int32  :: a, aprime
 sll_real64 :: elt_mat_global
@@ -849,6 +851,7 @@ SLL_CLEAR_ALLOCATE(stif(1:nspl),ierr)
 !$OMP v1, v2, v3, v4, r1, r2, d1, d2, d3, d4, &
 !$OMP v3v4, d3v4, v3d4, &
 !$OMP M_c,K_11,K_12,K_21,K_22,M_bv,S_b1,S_b2, &
+!$OMP index_coef2, index_coef1, &
 !$OMP index1, index2, index3, index4, &
 !$OMP a, b, x, y, aprime, bprime, nbsp, nbsp1, &
 !$OMP r1r2, v1v2, d1v2, v1d2, elt_mat_global )
@@ -1258,7 +1261,7 @@ class is (sll_scalar_field_2d_discrete)
   call sll_mult_csr_matrix_vector(es%csr_mat_source,es%rho_coeff_1d,es%rho_vec)
 
   if(es%perper) then
-    es%rho_vec = es%rho_vec - sum(es%rho_vec)/es%intjac!*es%masse
+    es%rho_vec = es%rho_vec - sum(es%rho_vec)/es%intjac*es%masse
   end if
       
 class is (sll_scalar_field_2d_analytic)

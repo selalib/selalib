@@ -4,6 +4,7 @@ module sll_bsplines
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_boundary_condition_descriptors.h"
+#include "sll_utilities.h"
 
 implicit none 
 
@@ -60,17 +61,38 @@ subroutine initialize_bspline_1d(this, n, k, tau_min, tau_max, bc_type)
   sll_int32                         :: i
   sll_int32                         :: ierr
   sll_int32, parameter              :: m=2
+  sll_real64                        :: delta_tau
 
   this%n = n
   this%k = k
   this%length = tau_max - tau_min
+  delta_tau   = this%length / (n-1)
 
   SLL_ALLOCATE(this%tau(n), ierr)
   do i = 1, n
-    this%tau(i) = tau_min + (i-1) * (tau_max-tau_min) / (n-1)
+    this%tau(i) = tau_min + (i-1) * delta_tau
   end do
 
   if ( bc_type == SLL_PERIODIC) then
+
+    SLL_ALLOCATE(this%bcoef(n),ierr)
+    SLL_ALLOCATE(this%t(n+k),ierr)
+    this%t(1:k)     = tau_min
+    this%t(n+1:n+k) = tau_max
+
+    if ( mod(k,2) == 0 ) then
+      do i = k+1,n
+        this%t(i) = this%tau(i-k/2) 
+      end do
+    else
+      do i = k+1, n
+        this%t(i) = 0.5*(this%tau(i-(k-1)/2)+this%tau(i-1-(k-1)/2))
+      end do
+    end if
+
+    SLL_ALLOCATE(this%q(n*(2*k-1)),ierr)
+
+  else if ( bc_type == SLL_DIRICHLET) then
 
     SLL_ALLOCATE(this%bcoef(n),ierr)
     SLL_ALLOCATE(this%t(n+k),ierr)
@@ -258,21 +280,28 @@ subroutine update_bspline_1d(this, gtau, slope_min, slope_max)
   sll_real64, optional    :: slope_min
   sll_real64, optional    :: slope_max
 
+
   sll_int32               :: n
   sll_int32               :: k
   sll_int32, parameter    :: m = 2
+  sll_real64              :: slope(0:1)
 
   n = this%n
   k = this%k
 
+  if (.not. present(slope_min)) then
+    call apply_fd(k+1, 1, this%tau(1:k+1), gtau(1:k+1), this%tau(1), slope)
+    slope_min = slope(1)
+  end if
+  if (.not. present(slope_min)) then
+    call apply_fd(k+1, 1, this%tau(n-k-1:n), gtau(n-k-1:n), this%tau(n), slope)
+    slope_max = slope(1)
+  end if
+
   SLL_ASSERT(size(gtau) == this%n)
 
   this%bcoef(1)   = gtau(1)
-  if (present(slope_min)) then
-    this%bcoef(2) = slope_min
-  else
-    this%bcoef(2) = 0.0_f64
-  end if
+  this%bcoef(2)   = slope_min
   this%bcoef(3:n) = gtau(2:n-1)
   if (present(slope_max)) then
     this%bcoef(n+1) = slope_max
@@ -1151,5 +1180,6 @@ do left = lxt, 1, -1
 end do
 
 end subroutine interv
-!*************************************************************************
+
+
 end module sll_bsplines
