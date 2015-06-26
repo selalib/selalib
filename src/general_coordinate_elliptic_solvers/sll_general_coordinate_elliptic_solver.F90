@@ -1504,7 +1504,11 @@ if(es%precompute_rhs .eqv. .false.)then
 
   !$OMP END PARALLEL
 
-  if (es%perper) es%rho_vec = es%rho_vec - int_rho/int_jac
+  !PN fix bug found by Michel
+  !if (es%perper) es%rho_vec = es%rho_vec - int_rho/int_jac
+  if (es%perper)  then
+    es%rho_vec = es%rho_vec - sum(es%rho_vec)/es%intjac*es%masse
+  end if
      
 end if
 
