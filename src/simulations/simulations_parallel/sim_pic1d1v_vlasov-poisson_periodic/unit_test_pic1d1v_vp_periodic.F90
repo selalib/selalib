@@ -36,8 +36,12 @@ program pic1d1v_vp_periodic
   filename_local = trim(filename)
 
   call simulation%init_from_file( filename_local )
+  print *, 'simulation initialized from file'
+
   call simulation%run( )
-  call sll_delete( simulation )
+  print *, 'run completed'
+
+!  call sll_delete( simulation )
 
   print *, 'reached end of pic1d1v_vp_periodic test'
   print *, 'PASSED'
