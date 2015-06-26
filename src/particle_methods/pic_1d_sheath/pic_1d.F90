@@ -832,7 +832,7 @@ contains
                 !                call fsolver%solve()
         endselect
 
-    endsubroutine
+    end subroutine
 
     !Dummy function for solving the potential Phi
     !Input x \in [a, b] is the position in the electric field
@@ -1786,7 +1786,7 @@ contains
             !particleweight = particleweight_constant - (particleweight_constant)
         endif
 
-    endsubroutine
+    end subroutine
 
 
     !    !<Dummy function for Electric field

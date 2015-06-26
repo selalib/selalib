@@ -316,7 +316,7 @@ contains
     ! General parameters
    
    
-    namelist /params/ nmark, tstepw, ppusher, scenario, psolver,gnuplot_inline_output_user,deltaf,nstreams
+    namelist /params/ nmark, tsteps, ppusher, scenario, psolver,gnuplot_inline_output_user,deltaf,nstreams
     
     ! Numerical parameters
 
@@ -357,7 +357,7 @@ contains
       sim%nstreams=nstreams
     
       sim%sdeg=sdeg
-      sim%tstepw=tstepw
+      sim%tsteps=tsteps
       sim%femp=femp
   
       sim%ppusher_int= match_enumeration('ppusher' ,sim%ppusher) 
@@ -405,7 +405,7 @@ contains
      type(sll_time_mark)  :: tstart, tstop
      logical              :: gnuplot_now
 
-
+        sim%root_path=""
         sim%nmark=sim%nmark/coll_size
         print*, "#Core ", coll_rank, " handles particles", coll_rank*sim%nmark +1, "-", (coll_rank+1)*sim%nmark
         call sll_collective_barrier(sll_world_collective)
@@ -686,7 +686,7 @@ sim%kineticenergy(timestep)=sll_pic1d_calc_kineticenergy( sim%species(1:num_spec
   ! Matching enumerations (clumsy!).  TODO: use new enumeration classes
   
   function match_enumeration( enum_name, enum_string ) result( enum_int )
-    character( len=32 ), intent( in ) :: enum_name
+    character( len=32  ), intent( in ) :: enum_name
     character( len=32 ), intent( in ) :: enum_string
     sll_int32                         :: enum_int
     
