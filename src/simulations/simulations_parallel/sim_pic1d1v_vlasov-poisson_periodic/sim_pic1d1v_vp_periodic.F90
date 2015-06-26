@@ -682,8 +682,8 @@ sim%kineticenergy(timestep)=sll_pic1d_calc_kineticenergy( sim%species(1:num_spec
   ! Matching enumerations (clumsy!).  TODO: use new enumeration classes
   
   function match_enumeration( enum_name, enum_string ) result( enum_int )
-    character( len=32  ), intent( in ) :: enum_name
-    character( len=32 ), intent( in ) :: enum_string
+    character( len=* ), intent( in ) :: enum_name
+    character( len=* ), intent( in ) :: enum_string
     sll_int32                         :: enum_int
     
     select case( enum_name )
