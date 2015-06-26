@@ -222,34 +222,34 @@ select case (bc_selector)
 
 case (0) ! 1. periodic
 
-  call initialize_bspline_1d(interpolator%bspline, &
-                             num_pts,              &
-                             k,                    &
-                             eta_min,              &
-                             eta_max,              &
-                             SLL_PERIODIC          )
-
+!PN  call initialize_bspline_1d(interpolator%bspline, &
+!PN                             num_pts,              &
+!PN                             k,                    &
+!PN                             eta_min,              &
+!PN                             eta_max,              &
+!PN                             SLL_PERIODIC          )
+!PN
 case (9) ! 2. dirichlet-left, dirichlet-right
 
   interpolator%value_left  = 0.0_f64
   interpolator%value_right = 0.0_f64
 
-  call initialize_bspline_1d(interpolator%bspline, &
-                             num_pts,              &
-                             k,                    &
-                             eta_min,              &
-                             eta_max,              &
-                             SLL_DIRICHLET         )
-
+!PN  call initialize_bspline_1d(interpolator%bspline, &
+!PN                             num_pts,              &
+!PN                             k,                    &
+!PN                             eta_min,              &
+!PN                             eta_max,              &
+!PN                             SLL_DIRICHLET         )
+!PN
 case default
 
-  call initialize_bspline_1d(interpolator%bspline, &
-                             num_pts,              &
-                             k,                    &
-                             eta_min,              &
-                             eta_max,              &
-                             SLL_HERMITE           )
-
+!PN  call initialize_bspline_1d(interpolator%bspline, &
+!PN                             num_pts,              &
+!PN                             k,                    &
+!PN                             eta_min,              &
+!PN                             eta_max,              &
+!PN                             SLL_HERMITE           )
+!PN
   interpolator%slope_right = 0.0_f64
   interpolator%slope_left = 0.0_f64
     
@@ -477,7 +477,7 @@ sll_real64, dimension(num_points)    :: res
 sll_int32                            :: i
 
 call compute_bspline_1d( this%bspline, data)
-call interpolate_array_values( this%bspline, num_points, coordinates, res)
+!PN call interpolate_array_values( this%bspline, num_points, coordinates, res)
 
 end function interpolate_array_bs1d
 
@@ -517,10 +517,10 @@ sll_int32,  intent(in)                 :: num_pts
 sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
 sll_real64, dimension(:), intent(out)  :: output_array
 
-call interpolate_array_values(interpolator%bspline, &
-                              num_pts,              &
-                              vals_to_interpolate,  &
-                              output_array)
+!PN call interpolate_array_values(interpolator%bspline, &
+!PN                              num_pts,              &
+!PN                              vals_to_interpolate,  &
+!PN                              output_array)
 
 end subroutine interpolate_values_bs1d
 
