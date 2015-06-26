@@ -11,18 +11,23 @@ module sll_module_simulation_pic1d1v_vp_periodic
     
   use sll_constants , only : sll_pi
   
+  use sll_utilities , only : sll_new_file_id
+  
   use sll_visu_pic  , only :  distribution_xdmf   , energies_electrostatic_gnuplot_inline , particles_center_gnuplot_inline, electricpotential_gnuplot_inline 
     
   use sll_collective , only :       sll_world_collective , sll_collective_barrier ,&
      sll_boot_collective, sll_collective_t, sll_get_collective_size ,sll_get_collective_rank , sll_collective_globalsum, sll_collective_bcast_real64, sll_collective_globalsum_array_comp64 ,&
      sll_collective_globalsum_array_real64
+     
   use sll_timer , only :   sll_set_time_mark, sll_time_mark,  sll_time_elapsed_between
   
   use sll_particle_1d_description, only: sll_particle_1d_group
+  
   use sll_pic_1d_field_solver    , only: pic_1d_field_solver, new_pic_1d_field_solver
   
+  use pic_postprocessing , only : det_landau_damping 
   
-      use pic_1d_particle_loading, only : sll_normal_rnd ,& 
+  use pic_1d_particle_loading, only : sll_normal_rnd ,& 
          sll_initialize_intrinsic_mpi_random ,&   
          load_particle_species ,&
          sll_pic1d_ensure_boundary_conditions_species  ,&
@@ -112,12 +117,27 @@ module sll_module_simulation_pic1d1v_vp_periodic
     procedure( sll_pic_1d_electric_field_external ), pointer :: Eex   
   contains
   
-    procedure :: run            => run_pic_1d
-    procedure :: init_from_file => init_from_file
-    procedure :: new_pic        => new_sll_pic_1d
-    procedure :: error_estimation => sll_pic_1d_initial_error_estimates  
-    procedure :: pic1d_write_phasespace => sll_pic1d_write_phasespace
-    procedure :: pic_1d_Verlet_scheme   => sll_pic_1d_Verlet_scheme
+    procedure :: run                           => run_pic_1d
+    procedure :: init_from_file                => init_from_file
+    procedure :: new_pic                       => new_sll_pic_1d
+    procedure :: error_estimation              => sll_pic_1d_initial_error_estimates  
+    procedure :: pic1d_write_phasespace        => sll_pic1d_write_phasespace
+    !ode integrators
+    
+    procedure :: pic_1d_rungekutta4_step_array => sll_pic_1d_rungekutta4_step_array
+    procedure :: pic_1d_Verlet_scheme          => sll_pic_1d_Verlet_scheme 
+    procedure :: pic_1d_leap_frog              => sll_pic_1d_leap_frog
+    procedure :: pic_1d_explicit_euler         => sll_pic_1d_explicit_euler
+    procedure :: pic_1d_variational_leap_frog  => sll_pic_1d_variational_leap_frog
+    procedure :: pic_1d_rungekutta2            => sll_pic_1d_rungekutta2
+    procedure :: pic_1d_rungekutta3            => sll_pic_1d_rungekutta3
+    procedure :: pic_1d_heun                   => sll_pic_1d_heun                     
+    procedure :: pic_1d_merson4                => sll_pic_1d_merson4 
+    procedure :: pic_1d_solve_qn               => sll_pic_1d_solve_qn
+    procedure :: pic1d_adjustweights           => sll_pic1d_adjustweights
+    procedure :: pic1d_write_result            => sll_pic1d_write_result
+    procedure :: pic_1d_calc_push_error        => sll_pic_1d_calc_push_error
+    
   end type sll_simulation_pic1d1v_vp_periodic
 
   abstract interface
@@ -585,33 +605,26 @@ contains
 
             endif
             sim%pushed_species=1
-            selectcase (sim%ppusher_int)
-                case(SLL_PIC1D_PPUSHER_RK4)
-                    call  sll_pic_1d_rungekutta4_step_array( sim,sim%species(1)%particle%dx, &
-                        sim%species(1)%particle%vx , time)
-                case(SLL_PIC1D_PPUSHER_VERLET)
-                    call sim%pic_1d_Verlet_scheme(time)
-                case(SLL_PIC1D_PPUSHER_EULER)
-                    call sll_pic_1d_explicit_euler(sim, sim%species(1:num_species), time)
-                case(SLL_PIC1D_PPUSHER_LEAPFROG_V)
-                    call  sll_pic_1d_variational_leap_frog( sim,sim%species(sim%pushed_species)%particle%dx, &
-                        sim%species(sim%pushed_species)%particle%vx )
-                case(SLL_PIC1D_PPUSHER_LEAPFROG)
-                    call  sll_pic_1d_leap_frog(sim, sim%species(sim%pushed_species)%particle%dx, &
-                        sim%species(sim%pushed_species)%particle%vx )
-                case(SLL_PIC1D_PPUSHER_RK2)
-                    call sll_pic_1d_rungekutta2( sim,sim%species(sim%pushed_species)%particle%dx, &
-                        sim%species(sim%pushed_species)%particle%vx , time)
-                case(SLL_PIC1D_PPUSHER_RK3)
-                    call sll_pic_1d_rungekutta3( sim,sim%species(sim%pushed_species)%particle%dx, &
-                        sim%species(sim%pushed_species)%particle%vx , time)
-                case(SLL_PIC1D_PPUSHER_HEUN)
-                    call sll_pic_1d_heun( sim,sim%species(sim%pushed_species)%particle%dx, &
-                        sim%species(sim%pushed_species)%particle%vx , time)
-                case(SLL_PIC1D_PPUSHER_MERSON)
-                    call sll_pic_1d_merson4( sim,sim%species(sim%pushed_species)%particle%dx, &
-                        sim%species(sim%pushed_species)%particle%vx , time, &
-                        sim%species(sim%pushed_species)%particle%weight      )
+            select case (sim%ppusher_int)
+            
+            
+                case(SLL_PIC1D_PPUSHER_RK4)         ;call sim%pic_1d_rungekutta4_step_array(time)
+                        
+                case(SLL_PIC1D_PPUSHER_VERLET)      ;call sim%pic_1d_Verlet_scheme(time)
+                    
+                case(SLL_PIC1D_PPUSHER_EULER)       ;call sim%pic_1d_explicit_euler(time)
+                    
+                case(SLL_PIC1D_PPUSHER_LEAPFROG_V)  ;call sim%pic_1d_variational_leap_frog()
+                    
+                case(SLL_PIC1D_PPUSHER_LEAPFROG)    ;call sim%pic_1d_leap_frog()
+                
+                case(SLL_PIC1D_PPUSHER_RK2)         ;call sim%pic_1d_rungekutta2(time)
+                
+                case(SLL_PIC1D_PPUSHER_RK3)         ;call sim%pic_1d_rungekutta3(time)
+                
+                case(SLL_PIC1D_PPUSHER_HEUN)        ;call sim%pic_1d_heun(time)
+                
+                case(SLL_PIC1D_PPUSHER_MERSON)      ;call sim%pic_1d_merson4(time)
 
 
                 case(SLL_PIC1D_PPUSHER_NONE)
@@ -649,8 +662,7 @@ sim%kineticenergy(timestep)=sll_pic1d_calc_kineticenergy( sim%species(1:num_spec
         close(25)
 
         !Save Results to file
-        call sll_pic1d_write_result("pic1dresult", sim%kineticenergy, sim%fieldenergy, sim%impulse, &
-            sim%particleweight_mean, sim%particleweight_var, sim%push_error_mean, sim%push_error_var )
+        call sim%pic1d_write_result("pic1dresult")
 
 
         if (coll_rank==0) then
@@ -1135,20 +1147,22 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
     
     
     
-     subroutine sll_pic_1d_rungekutta4_step_array(sim,x_0, v_0,  t)
+     subroutine sll_pic_1d_rungekutta4_step_array(sim, t)
        
         sll_real64 :: h 
         sll_real64, intent(in):: t
-        
-        sll_real64, dimension(:) ,intent(inout) :: x_0
-        sll_real64, dimension(:) ,intent(inout) :: v_0
+        class( sll_simulation_pic1d1v_vp_periodic ), intent( inout ) :: sim
+        sll_real64, dimension(size(sim%species(1)%particle%dx)) :: x_0
+        sll_real64, dimension(size(sim%species(1)%particle%vx)) :: v_0
         sll_real64, dimension(size(x_0)) :: k_x1, k_x2,&
             k_x3, k_x4, k_v1, &
             k_v2, k_v3, k_v4, stage_DPhidx,x_1,v_1
 
         !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
-        class( sll_simulation_pic1d1v_vp_periodic ), intent( inout ) :: sim
+        
         h=sim%tstepw 
+        x_0=sim%species(1)%particle%dx
+        v_0=sim%species(1)%particle%vx
         call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
       
         
@@ -1160,8 +1174,8 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
         x_1=x_0 + 0.5_f64*k_x1
         v_1=v_0 + 0.5_f64*k_v1
         call sll_pic1d_ensure_boundary_conditions(x_1, v_1)
-        call sll_pic1d_adjustweights(x_0,x_1,v_0,v_1)
-        call sll_pic_1d_solve_qn(x_1)
+        call sim%pic1d_adjustweights(x_0,x_1,v_0,v_1)
+        call sim%pic_1d_solve_qn(x_1)
         call sim%fsolver%evalE( x_1, stage_DPhidx)
         k_x2= h*(v_1)
         k_v2= h*( stage_DPhidx + sim%Eex(x_1, t+0.5_f64*h))*(-sim%particle_qm)
@@ -1170,8 +1184,8 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
         x_1=x_0 + 0.5_f64*k_x2
         v_1=v_0 + 0.5_f64*k_v2
         call sll_pic1d_ensure_boundary_conditions(x_1, v_1)
-        call sll_pic1d_adjustweights(x_0 + 0.5_f64*k_x1,x_1,v_0 + 0.5_f64*k_v1,v_1)
-        call sll_pic_1d_solve_qn(x_1)
+        call sim%pic1d_adjustweights(x_0 + 0.5_f64*k_x1,x_1,v_0 + 0.5_f64*k_v1,v_1)
+        call sim%pic_1d_solve_qn(x_1)
         call sim%fsolver%evalE(x_1, stage_DPhidx)
         k_x3= h*(v_1)
         k_v3= h*(stage_DPhidx+ sim%Eex(x_1, t+0.5_f64*h)) *(-sim%particle_qm)
@@ -1179,8 +1193,8 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
         x_1=x_0 + k_x3
         v_1=v_0 + k_v3
         call sll_pic1d_ensure_boundary_conditions(x_1, v_1)
-        call sll_pic1d_adjustweights(x_0 + 0.5_f64*k_x2,x_1,v_0 + 0.5_f64*k_v2,v_1)
-        call sll_pic_1d_solve_qn(x_0 +  k_x3)
+        call sim%pic1d_adjustweights(x_0 + 0.5_f64*k_x2,x_1,v_0 + 0.5_f64*k_v2,v_1)
+        call sim%pic_1d_solve_qn(x_0 +  k_x3)
         call sim%fsolver%evalE(x_1, stage_DPhidx)
         k_x4= h*(v_1)
         k_v4= h*(stage_DPhidx+ sim%Eex(x_1, t+h)) *(-sim%particle_qm)
@@ -1189,32 +1203,36 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
         v_1= v_0 + (  k_v1 +  2.0_f64 *k_v2 +  2.0_f64*k_v3 + k_v4)/6.0_f64
         call sll_pic1d_ensure_boundary_conditions(x_1, v_1)
 
-        call sll_pic1d_adjustweights(x_0 + 0.5_f64*k_x3,x_1,v_0 + 0.5_f64*k_v3,v_1)
+        call sim%pic1d_adjustweights(x_0 + 0.5_f64*k_x3,x_1,v_0 + 0.5_f64*k_v3,v_1)
 
         !call sll_pic1d_adjustweights(x_0,x_1,v_0,v_1)
-        x_0=x_1
-        v_0=v_1
+        sim%species(1)%particle%dx=x_1
+        sim%species(1)%particle%vx=v_1
 
-        call sll_pic_1d_solve_qn(x_0)
+        call sim%pic_1d_solve_qn(sim%species(1)%particle%dx)
 
     end subroutine
 
 
 
     !<Merson scheme with built in error estimate for each particle
-    subroutine sll_pic_1d_merson4(sim,x_0, v_0, t, weight)
+    subroutine sll_pic_1d_merson4(sim, t)
         sll_real64  :: h
         sll_real64, intent(in):: t
-        
-        sll_real64, dimension(:) ,intent(inout) :: x_0
-        sll_real64, dimension(:) ,intent(inout) :: v_0
-        sll_real64, dimension(:) ,intent(in) :: weight
         class( sll_simulation_pic1d1v_vp_periodic ), intent( inout ) :: sim
+        sll_real64, dimension(size(sim%species(sim%pushed_species)%particle%dx))                :: x_0
+        sll_real64, dimension(size(sim%species(sim%pushed_species)%particle%vx))                :: v_0
+        sll_real64, dimension(size(sim%species(sim%pushed_species)%particle%weight))                :: weight
+        
         sll_real64, dimension(size(x_0)) :: k_x1, k_x2,&
             k_x3, k_x4, k_v1, &
             k_v2, k_v3, k_v4, k_v5, k_x5, stage_DPhidx,x_1,v_1, err_x, err_v
            
         h=sim%tstepw
+        x_0=sim%species(sim%pushed_species)%particle%dx
+        v_0=sim%species(sim%pushed_species)%particle%vx
+        weight=sim%species(sim%pushed_species)%particle%weight
+        
         !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
         call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
 
@@ -1223,26 +1241,26 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
         k_x1= h*v_0
         k_v1= h*(stage_DPhidx+sim%Eex(x_0,t))*(-sim%particle_qm)
         !--------------------Stage 2-------------------------------------------------
-        call sll_pic_1d_solve_qn(x_0 + (1.0_f64/3.0_f64)*k_x1)
+        call sim%pic_1d_solve_qn(x_0 + (1.0_f64/3.0_f64)*k_x1)
         call sim%fsolver%evalE(x_0 + (1.0_f64/3.0_f64) *k_x1, stage_DPhidx)
 
         k_x2= h*(v_0  + (1.0_f64/3.0_f64)*k_v1)
         k_v2= h*( stage_DPhidx + sim%Eex(x_0 + (1.0_f64/3.0_f64)*k_x1, t+(1.0_f64/3.0_f64)*h))*(-sim%particle_qm)
         !--------------------Stage 3-------------------------------------------------
         k_x3= h*(v_0+ (1.0_f64/3.0_f64) * k_v2)
-        call sll_pic_1d_solve_qn(x_0 +  (1.0_f64/6.0_f64)*(k_x1 + k_x2 ))
+        call sim%pic_1d_solve_qn(x_0 +  (1.0_f64/6.0_f64)*(k_x1 + k_x2 ))
 
         call sim%fsolver%evalE(x_0 + (1.0_f64/6.0_f64)*(k_x1 + k_x2 ), stage_DPhidx)
         k_v3= h*(stage_DPhidx+ sim%Eex(x_0 + (1.0_f64/6.0_f64)*(k_x1 + k_x2 ), &
             t+(1.0_f64/3.0_f64)*h)) *(-sim%particle_qm)
         !--------------------Stage 4-------------------------------------------------
         k_x4= h*(v_0+ 0.5_f64*k_v3)
-        call sll_pic_1d_solve_qn(x_0 +  (k_x1 + 3*k_x3)/8.0_f64  )
+        call sim%pic_1d_solve_qn(x_0 +  (k_x1 + 3*k_x3)/8.0_f64  )
         call sim%fsolver%evalE(x_0 +  (k_x1 + 3*k_x3)/8.0_f64  , stage_DPhidx)
         k_v4= h*(stage_DPhidx+ sim%Eex(x_0 +  (k_x1 + 3*k_x3)/8.0_f64  , t+0.5_f64*h)) *(-sim%particle_qm)
         !--------------------Stage 5-------------------------------------------------
         k_x5= h*(v_0+ k_v4)
-        call sll_pic_1d_solve_qn(x_0 +  0.5_f64*k_x1  -1.5_f64*k_x3 + 2.0_f64*k_x1)
+        call sim%pic_1d_solve_qn(x_0 +  0.5_f64*k_x1  -1.5_f64*k_x3 + 2.0_f64*k_x1)
         call sim%fsolver%evalE(x_0 +  0.5_f64*k_x1  -1.5_f64*k_x3 + 2.0_f64*k_x1, stage_DPhidx)
         k_v4= h*(stage_DPhidx+ sim%Eex(x_0 +  0.5_f64*k_x1  -1.5_f64*k_x3 + 2.0_f64*k_x1, t+h)) *(-sim%particle_qm)
 
@@ -1256,28 +1274,33 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
         err_x=x_1 - err_x
         err_v=v_1 - err_v
 
-        call sll_pic_1d_calc_push_error(err_x,weight)
+        call sim%pic_1d_calc_push_error(err_x,weight,t)
 
         call sll_pic1d_ensure_boundary_conditions(x_1, v_1)
 
-        call sll_pic1d_adjustweights(x_0,x_1,v_0,v_1)
+        call sim%pic1d_adjustweights(x_0,x_1,v_0,v_1)
         x_0=x_1
         v_0=v_1
 
-        call sll_pic_1d_solve_qn(x_0)
+        call sim%pic_1d_solve_qn(x_0)
+        sim%species(sim%pushed_species)%particle%dx=x_0
+        sim%species(sim%pushed_species)%particle%vx=v_0
 
     end subroutine
 
-    subroutine sll_pic_1d_rungekutta2(sim,x_0, v_0,  t)
+    subroutine sll_pic_1d_rungekutta2(sim,  t)
+        class( sll_simulation_pic1d1v_vp_periodic ), intent( inout ) :: sim
         sll_real64   :: h
         sll_real64, intent(in):: t
         
-        sll_real64, dimension(:) ,intent(inout) :: x_0
-        sll_real64, dimension(:) ,intent(inout) :: v_0
+        sll_real64, dimension(size(sim%species(sim%pushed_species)%particle%dx))                :: x_0
+        sll_real64, dimension(size(sim%species(sim%pushed_species)%particle%vx))                :: v_0
         sll_real64, dimension(size(x_0)) :: k_x1, k_x2,&
             k_v1, k_v2, stage_DPhidx,x_1,v_1
-         class( sll_simulation_pic1d1v_vp_periodic ), intent( inout ) :: sim
+        
          h=sim%tstepw
+         x_0=sim%species(sim%pushed_species)%particle%dx
+         v_0=sim%species(sim%pushed_species)%particle%vx
         !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
         call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
 
@@ -1287,7 +1310,7 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
         k_x1= h*v_0
         k_v1= h*(stage_DPhidx+sim%Eex(x_0,t)) *(-sim%particle_qm)
         !--------------------Stage 2-------------------------------------------------
-        call sll_pic_1d_solve_qn(x_0 + 0.5_f64 *k_x1)
+        call sim%pic_1d_solve_qn(x_0 + 0.5_f64 *k_x1)
         call sim%fsolver%evalE(x_0 + 0.5_f64 *k_x1, stage_DPhidx)
         k_x2= h*(v_0  + 0.5_f64  *k_v1)
         k_v2= h*( stage_DPhidx + sim%Eex(x_0 + 0.5_f64 *k_x1,t + 0.5_f64*h))&
@@ -1299,27 +1322,30 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
         !        x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
         call sll_pic1d_ensure_boundary_conditions(x_1, v_1)
 
-        call sll_pic1d_adjustweights(x_0,x_1,v_0,v_1)
+        call sim%pic1d_adjustweights(x_0,x_1,v_0,v_1)
         x_0=x_1
         v_0=v_1
 
-        call sll_pic_1d_solve_qn(x_0)
-    endsubroutine
+        call sim%pic_1d_solve_qn(x_0)
+        sim%species(sim%pushed_species)%particle%dx=x_0
+        sim%species(sim%pushed_species)%particle%vx=v_0
+    end subroutine
 
 
-    subroutine sll_pic_1d_rungekutta3(sim,x_0, v_0, t)
-        
+    subroutine sll_pic_1d_rungekutta3(sim, t)
+        class( sll_simulation_pic1d1v_vp_periodic ), intent( inout ) :: sim
         sll_real64            :: h
         sll_real64, intent(in):: t
-        sll_real64, dimension(:) ,intent(inout) :: x_0
-        sll_real64, dimension(:) ,intent(inout) :: v_0
+        sll_real64, dimension(size(sim%species(sim%pushed_species)%particle%dx))                :: x_0
+        sll_real64, dimension(size(sim%species(sim%pushed_species)%particle%vx))                :: v_0
         sll_real64, dimension(size(x_0)) :: k_x1, k_x2,&
             k_x3, k_v3, k_v1,k_v2, stage_DPhidx
 
         
-        class( sll_simulation_pic1d1v_vp_periodic ), intent( inout ) :: sim
-        h=sim%tstepw
         
+        h=sim%tstepw
+        x_0=sim%species(sim%pushed_species)%particle%dx
+        v_0=sim%species(sim%pushed_species)%particle%vx
         call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
 
         !--------------------Stage 1-------------------------------------------------
@@ -1328,13 +1354,13 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
         k_v1= h*(stage_DPhidx+sim%Eex(x_0,t)) *(-sim%particle_qm)
         !--------------------Stage 2-------------------------------------------------
         k_x2= h*(v_0  + 0.5_f64  *k_v1)
-        call sll_pic_1d_solve_qn(x_0 + 0.5_f64 *k_x1)
+        call sim%pic_1d_solve_qn(x_0 + 0.5_f64 *k_x1)
         call sim%fsolver%evalE(x_0 + 0.5_f64 *k_x1, stage_DPhidx)
         k_v2= h*( stage_DPhidx + sim%Eex(x_0 + 0.5_f64 *k_x1,t + 0.5_f64*h))&
             *(-sim%particle_qm)
         !--------------------Stage 3-------------------------------------------------
         k_x3= h*(v_0  - k_v1 + 2.0_f64*k_v2)
-        call sll_pic_1d_solve_qn(x_0 - k_x1 + 2.0_f64*k_x2)
+        call sim%pic_1d_solve_qn(x_0 - k_x1 + 2.0_f64*k_x2)
         call sim%fsolver%evalE(x_0 - k_x1 + 2.0_f64*k_x2, stage_DPhidx)
         k_v3= h*( stage_DPhidx + sim%Eex(x_0 - k_x1 + 2.0_f64*k_x2,t + h))&
             *(-sim%particle_qm)
@@ -1345,22 +1371,27 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
 
         call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
 
-        call sll_pic_1d_solve_qn(x_0)
+        call sim%pic_1d_solve_qn(x_0)
+        sim%species(sim%pushed_species)%particle%vx=v_0
+        sim%species(sim%pushed_species)%particle%dx=x_0
     end subroutine
 
 
-    subroutine sll_pic_1d_heun(sim,x_0, v_0, t)
-       
+    subroutine sll_pic_1d_heun(sim, t)
+        class( sll_simulation_pic1d1v_vp_periodic ), intent( inout ) :: sim
         sll_real64            :: h
         sll_real64, intent(in):: t
-        sll_real64, dimension(:) ,intent(inout) :: x_0
-        sll_real64, dimension(:) ,intent(inout) :: v_0
+        sll_real64, dimension(size(sim%species(sim%pushed_species)%particle%dx))                :: x_0
+        sll_real64, dimension(size(sim%species(sim%pushed_species)%particle%vx))                :: v_0
         sll_real64, dimension(size(x_0)) :: k_x1, k_x2 , &
             k_v1 , k_v2 ,stage_DPhidx,x_1,v_1
 
         !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
-         class( sll_simulation_pic1d1v_vp_periodic ), intent( inout ) :: sim
+        
          h=sim%tstepw
+         x_0=sim%species(sim%pushed_species)%particle%dx
+         v_0=sim%species(sim%pushed_species)%particle%vx
+         
         call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
         !--------------------Stage 1-------------------------------------------------
         !call sll_bspline_fem_solver_1d_solve(x_0)
@@ -1369,7 +1400,7 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
         k_v1= h*(stage_DPhidx+sim%Eex(x_0,t))*(-sim%particle_qm)
         !call sll_pic1d_adjustweights(x_0,x_0+ k_x1,v_0,v_0 + k_v1)
         !--------------------Stage 2-------------------------------------------------
-        call sll_pic_1d_solve_qn(x_0 + k_x1)
+        call sim%pic_1d_solve_qn(x_0 + k_x1)
         call sim%fsolver%evalE(x_0 + k_x1, stage_DPhidx)
         k_x2= h*(v_0  + k_v1)
         k_v2= h*( stage_DPhidx+sim%Eex(x_0 +k_x1,t+h))*(-sim%particle_qm)
@@ -1381,23 +1412,25 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
         call sll_pic1d_ensure_boundary_conditions(x_1, v_1)
 
         !call sll_pic1d_adjustweights(x_0+ k_x1,x_1,v_0 + k_v1,v_1)
-        call sll_pic1d_adjustweights(x_0,x_1,v_0,v_1)
+        call sim%pic1d_adjustweights(x_0,x_1,v_0,v_1)
         x_0=x_1
-        v_0=v_1
+        x_0=v_1
 
-        call sll_pic_1d_solve_qn(x_0)
-    endsubroutine
+        call sim%pic_1d_solve_qn(x_0)
+        sim%species(sim%pushed_species)%particle%dx=x_0
+        sim%species(sim%pushed_species)%particle%vx=v_0
+    end subroutine
 
-    subroutine sll_pic_1d_explicit_euler(sim,species_0,  t)
+    subroutine sll_pic_1d_explicit_euler(sim,  t)
     
  
-        type(sll_particle_1d_group), dimension(:), intent(inout) :: species_0
+        !type(sll_particle_1d_group), dimension(:), intent(inout) :: species_0
         sll_int32 :: jdx, num_part
         sll_real64            :: h
         sll_real64, intent(in):: t
         class( sll_simulation_pic1d1v_vp_periodic ), intent( inout ) :: sim
         
-        type(sll_particle_1d_group), dimension(size(species_0)) :: species_1
+        type(sll_particle_1d_group), dimension(num_species) :: species_1
 
         sll_real64 , dimension(:),allocatable :: stage_DPhidx
         
@@ -1405,18 +1438,18 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
          h=sim%tstepw
 
         !----ALLOCATE STAGES-----------------------------------------------
-        call sll_pic_1d_copy_species(species_0, species_1)
+        call sll_pic_1d_copy_species(sim%species(1:num_species), species_1)
 
         !--------------------Stage 1-------------------------------------------------
-        do jdx=1,size(species_0)
-            num_part=size(species_0(jdx)%particle)
+        do jdx=1,num_species
+            num_part=size(sim%species(jdx)%particle)
             SLL_ALLOCATE(stage_DPhidx(num_part),ierr)
 
-            call sim%fsolver%evalE(species_0(jdx)%particle%dx, stage_DPhidx)
+            call sim%fsolver%evalE(sim%species(jdx)%particle%dx, stage_DPhidx)
 
-            species_1(jdx)%particle%dx=species_0(jdx)%particle%dx + h*species_0(jdx)%particle%vx
-            species_1(jdx)%particle%vx=species_0(jdx)%particle%vx + h*(stage_DPhidx + &
-                sim%Eex( species_0(jdx)%particle%dx,t) )*(-species_0(jdx)%qm)
+            species_1(jdx)%particle%dx=sim%species(jdx)%particle%dx + h*sim%species(jdx)%particle%vx
+            species_1(jdx)%particle%vx=sim%species(jdx)%particle%vx + h*(stage_DPhidx + &
+                sim%Eex( sim%species(jdx)%particle%dx,t) )*(-sim%species(jdx)%qm)
 
             SLL_DEALLOCATE_ARRAY(stage_DPhidx,ierr)
 
@@ -1424,50 +1457,54 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
 
         call sll_pic1d_ensure_boundary_conditions_species(species_1)
 
-        call sll_pic1d_adjustweights_advection_species(sim%fsolver,species_0, species_1)
+        call sll_pic1d_adjustweights_advection_species(sim%fsolver,sim%species(1:num_species), species_1)
 
-        call sll_pic_1d_copy_species(species_1, species_0)
+        call sll_pic_1d_copy_species(species_1, sim%species(1:num_species))
 
-        call sim%fsolver%set_species(species_0)
+        call sim%fsolver%set_species(sim%species(1:num_species))
         call sim%fsolver%solve()
 
     end subroutine
     
     
-        subroutine sll_pic_1d_variational_leap_frog(sim,x_0, v_0)
+        subroutine sll_pic_1d_variational_leap_frog(sim)
         
-      
+        class( sll_simulation_pic1d1v_vp_periodic ), intent( inout ) :: sim
         sll_real64                              :: h
-        sll_real64, dimension(:) ,intent(inout) :: x_0
-        sll_real64, dimension(:) ,intent(inout) :: v_0
+        sll_real64, dimension(size(sim%species(sim%pushed_species)%particle%dx))  :: x_0
+        sll_real64, dimension(size(sim%species(sim%pushed_species)%particle%dx))  :: v_0
         sll_real64, dimension(size(x_0)) ::  DPhidx_0, DPhidx_1, x_1, v_1
 !       sll_real64, dimension(size(x_0)) ::  DPhidx_1
-        class( sll_simulation_pic1d1v_vp_periodic ), intent( inout ) :: sim
+       
         h=sim%tstepw
+        x_0=sim%species(sim%pushed_species)%particle%dx
+        v_0=sim%species(sim%pushed_species)%particle%vx
         call sim%fsolver%evalE(x_0, DPhidx_0)
         x_1=x_0+ h*v_0 - ((h**2)/2.0_f64) *DPhidx_0*(-sim%particle_qm)
         x_1=sll_pic1d_ensure_periodicity(x_1,  sim%interval_a, sim%interval_b)
         call sll_pic1d_ensure_boundary_conditions(x_1, v_0)
 
-        call sll_pic_1d_solve_qn(x_1)
+        call sim%pic_1d_solve_qn(x_1)
         call sim%fsolver%evalE(x_1, DPhidx_1)
 
         v_1=v_0 + 0.5_f64*h* (DPhidx_0 + DPhidx_1)*(-sim%particle_qm)
 
         !Push
-        x_0=x_1
-        v_0=v_1
-    endsubroutine
+        sim%species(sim%pushed_species)%particle%dx=x_1
+        sim%species(sim%pushed_species)%particle%vx=v_1
+    end subroutine
 
-    subroutine sll_pic_1d_leap_frog(sim,x_0, v_0)
+    subroutine sll_pic_1d_leap_frog(sim)
     
-        
+         class( sll_simulation_pic1d1v_vp_periodic ), intent( inout ) :: sim
         sll_real64                              :: h
-        sll_real64, dimension(:) ,intent(inout) :: x_0
-        sll_real64, dimension(:) ,intent(inout) :: v_0
+        sll_real64, dimension(size(sim%species(sim%pushed_species)%particle%dx))                :: x_0
+        sll_real64, dimension(size(sim%species(sim%pushed_species)%particle%vx))                :: v_0
         sll_real64, dimension(size(x_0)) ::  DPhidx_0, DPhidx_1, x_1, v_1
-        class( sll_simulation_pic1d1v_vp_periodic ), intent( inout ) :: sim
+       
         h=sim%tstepw
+        x_0 =sim%species(sim%pushed_species)%particle%dx
+        v_0 =sim%species(sim%pushed_species)%particle%vx
         x_0=sll_pic1d_ensure_periodicity(x_0,  sim%interval_a, sim%interval_b)
         call sim%fsolver%evalE(x_0, DPhidx_0)
         !DPhidx_0=0
@@ -1489,8 +1526,57 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
         !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
         call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
 
-        call sll_pic_1d_solve_qn(x_0)
-    endsubroutine
+        call sim%pic_1d_solve_qn(x_0)
+        sim%species(sim%pushed_species)%particle%dx=x_0
+        sim%species(sim%pushed_species)%particle%vx=v_0
+    end subroutine
+    
+    
+    
+    
+    subroutine sll_pic_1d_solve_qn(sim, particleposition_selected)
+        
+        class( sll_simulation_pic1d1v_vp_periodic ), intent( inout ) :: sim
+        sll_real64, dimension(:),intent(in) :: particleposition_selected
+        sll_int32 ::jdx
+        !Add all the other species as constant
+        call sim%fsolver%reset_particles()
+
+        do jdx=1,num_species
+            if (jdx/=sim%pushed_species) then
+                call sim%fsolver%add_species(sim%species(jdx))
+            endif
+        enddo
+
+        selectcase(sim%scenario_int)
+            !            case(SLL_PIC1D_TESTCASE_QUIET)
+            case(SLL_PIC1D_TESTCASE_LANDAU)
+                !All particles, are only electrons
+                !load constant ion background
+                SLL_ASSERT(size(particleposition_selected)==size(sim%species(sim%pushed_species)%particle))
+
+                call sim%fsolver%set_electrons_only_weighted(particleposition_selected, sim%species(sim%pushed_species)%particle%weight)
+                call sim%fsolver%solve()
+            case(SLL_PIC1D_TESTCASE_IONBEAM)
+                SLL_ASSERT(size(particleposition_selected)==size(sim%species(sim%pushed_species)%particle))
+
+                call sim%fsolver%add_particles_weighted(particleposition_selected, &
+                    sign(sim%species(sim%pushed_species)%particle%weight,sim%species(sim%pushed_species)%qm) )
+                call sim%fsolver%solve()
+            case default
+                SLL_ASSERT(num_species==1)
+                !All particles, are only electrons
+                SLL_ASSERT(size(particleposition_selected)==size(sim%species(sim%pushed_species)%particle))
+                call sim%fsolver%set_electrons_only_weighted(particleposition_selected, sim%species(sim%pushed_species)%particle%weight)
+                call sim%fsolver%solve()
+
+                !load constant ion background
+                !                SLL_ASSERT(size(allparticleposition)==size(particleweight))
+                !                call fsolver%set_electrons_only_weighted(allparticleposition, particleweight)
+                !                call fsolver%solve()
+        endselect
+
+    end subroutine    
     
     
     
@@ -1499,6 +1585,31 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
     
     
     
+    subroutine sll_pic1d_adjustweights(sim,xold, xnew, vold, vnew)
+        class( sll_simulation_pic1d1v_vp_periodic ), intent( inout ) :: sim
+        sll_real64, dimension(:),intent(in) ::vold, xold
+        sll_real64, dimension(:),intent(in) ::vnew, xnew
+        sll_real64, dimension(size(sim%species(sim%pushed_species)%particle)):: ratio
+        sll_int32 :: N
+
+        N=size(xold)
+        SLL_ASSERT(N==size(xnew))
+        SLL_ASSERT(N==size(vold))
+        SLL_ASSERT(N==size(vnew))
+
+        SLL_ASSERT(N==size( sim%species(sim%pushed_species)%particle))
+        !Adjust weights
+        if (enable_deltaf .eqv. .TRUE.) then
+            ratio=control_variate_xv(sim%fsolver%BC(xnew), vnew )/&
+                                control_variate_xv(sim%fsolver%BC(xold), vold )
+            !ratio=ratio/(N*coll_size)
+            !ratio=ratio
+            sim%species(sim%pushed_species)%particle%weight=sim%species(sim%pushed_species)%particle%weight_const &
+                -(sim%species(sim%pushed_species)%particle%weight_const-sim%species(sim%pushed_species)%particle%weight)*ratio
+            
+        endif
+
+    end subroutine
     
     
     
@@ -1506,11 +1617,184 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
     
     
     
+    ! write result in file subroutine
     
     
+        subroutine sll_pic1d_write_result(sim,filename)
+        
+        class( sll_simulation_pic1d1v_vp_periodic ), intent( inout ) :: sim
+        character(len=*), intent(in) :: filename
+!        sll_real64, dimension(:), intent(in) :: kinetic_energy, electrostatic_energy, impulse,&
+!            particleweight_mean,particleweight_var, perror_mean  , perror_var
+        integer :: k,file_id,file_id_err
+        sll_real64,  dimension(size(sim%kineticenergy)) :: total_energy
+
+
+        if (coll_rank==0) then
+
+            SLL_ASSERT(size(sim%kineticenergy)==sim%tsteps+1)
+            SLL_ASSERT(size(sim%fieldenergy)==sim%tsteps+1)
+            SLL_ASSERT(size(sim%impulse)==sim%tsteps+1)
+
+            total_energy=sim%kineticenergy +sim%fieldenergy
+
+            
+
+            call sll_new_file_id(file_id, ierr)
+
+            !Write Data File
+            !            open(file_id, file = plot_name//"_"//fin//'.dat' )
+            open(file_id, file = trim(sim%root_path)//filename//'.dat')
+
+            write (file_id, *)  "#Full 1d1v Electrostatic PIC"
+            write (file_id,*)  "#Time steps:", sim%tsteps
+            write (file_id,*)  "#Time stepwidth:", sim%tstepw
+            write (file_id,*)  "#Marko particles:", coll_size*sim%nmark
+            write (file_id,*)  "#Particle Pusher:", sim%ppusher
+            write (file_id,*)  "#Finite Elements: 2^(", log(real(sim%mesh_cells,i64))/log(2.0_f64),")"
+            write (file_id,*)  "#Size of MPI Collective: ", coll_size
+
+            write (file_id,*)  "time  ", "kineticenergy  ", "electrostaticenergy  ", "impulse  ", &
+                "vthermal  ", "weightmean   ", "weightvar  ", "perrormean  ", "perrorvar   "
+            do k=1,sim%tsteps+1
+                write (file_id,*)  sim%tstepw*(k-1), sim%kineticenergy(k), sim%fieldenergy(k), sim%impulse(k), &
+                    sim%thermal_velocity_estimate(k), sim%particleweight_mean(k),sim%particleweight_var(k),&
+                    sim%push_error_mean(k), sim%push_error_var(k)
+            enddo
+            close(file_id)
+
+            call sll_new_file_id(file_id_err, ierr)
+
+            open(file_id_err, file = trim(sim%root_path)//filename//'-errors.dat')
+
+            if (sim%impulse(1)/=0 .AND. total_energy(1)/=0) then
+                !Write the relative errors
+                do k=1,sim%tsteps+1
+                    write (file_id_err,*)  sim%tstepw*(k-1),&
+                        abs((total_energy(k)-total_energy(1))/total_energy(1)), &
+                        abs((  sim%impulse(k)-sim%impulse(1)))
+                enddo
+            endif
+            close(file_id_err)
+
+
+            !Write Gnuplot file
+            open(file_id, file = trim(sim%root_path)//filename//'.gnu')
+
+            !First Plot
+            write (file_id, *) "set term x11 1"
+
+            write(file_id,"(A17,G10.3,A4,G10.3,A1)")"set title 'alpha=",sim%lalpha,", k=",sim%lmode,"'"
+            write(file_id, "(A14,G10.5,A1)") "set xrange [0:",sim%tstepw*sim%tsteps,"]"
+            write (file_id,*)  "set logscale y"
+            write (file_id,*)  "unset logscale x"
+            write (file_id,*)  "l_alpha=",sim%lalpha
+            write (file_id,"(A21,G4.3,A18,G10.3,A1)")  "set xlabel 'Time t in", sim%tsteps, &
+                " steps, stepwidth=", sim%tstepw, "'"
+            write (file_id,*)  "set ylabel 'Energy'"
+
+
+            !Plot expected damping curve if known
+            if (sim%lalpha==0.001_f64 .AND. sim%lmode==0.4_f64) then
+
+                write (file_id,*) "E(x)=abs(0.002*0.424666*exp(-0.0661*x)*cos(1.2850*x-0.3357725))**2"
+                write (file_id,*)  "plot '"//filename//".dat' using 1:3 with lines,\"
+                write (file_id,*) "E(x) with lines linestyle 2;"
+            elseif (sim%lalpha/=0) then
+                write (file_id,*) "E(x)=0.1*exp(-0.1533*2*x)"
+                write (file_id,*)  "plot '"//filename//".dat' using 1:3 with lines,\"
+                write (file_id,*) "E(x) with lines linestyle 2;"
+
+            else
+
+                write (file_id,*)  "plot '"//filename//".dat' using 1:3 with lines"
+
+
+            endif
+            write (file_id,*) "set autoscale x; unset logscale;unset xlabel;unset ylabel;unset xrange;unset yrange;"
+
+
+            !Plot Kernel density estimates for initial distribution
+            !!!Enter v_thermal and two stream here
+            write (file_id, *) "set term x11 2"
+            write (file_id, *)  "set multiplot layout 2,1 rowsfirst title 'Distribution Kernel Density Estimates'"
+            write (file_id, *) "set autoscale x; set autoscale y"
+            write (file_id,*)  "vel_pdf(x)=1/sqrt(2*pi)*exp(-0.5*(x**2))"
+            write (file_id,*)  "set title 'Velocity Distribution'"
+            write (file_id,*)  "plot '"//trim(sim%root_path)//"initial_phasespace.dat' using 2:3 smooth kdensity, vel_pdf(x)"
+            write (file_id,*)  "set title 'Spacial Distribution'"
+            write (file_id,*)  "plot '"//trim(sim%root_path)//"initial_phasespace.dat' using 1:3 smooth kdensity"
+            write (file_id,*) "unset multiplot"
+
+
+            write (file_id, *) "set term x11 3"
+            write (file_id, *) "set autoscale x; set autoscale y"
+            write (file_id,*)  "set title 'Thermal velocity estimate'"
+            write (file_id,*)  "set xlabel 'time'"
+            write (file_id,*)  "set ylabel 'v_th'"
+            write (file_id,*)  "plot '"//filename//".dat' using 1:5 with lines"
+
+            write (file_id, *) "set term x11 4"
+            write (file_id, *) "set autoscale x; set autoscale y; unset logscale y"
+            write (file_id,*)  "set title 'Absolute Energies'"
+            write (file_id,*)  "set xlabel 'time'"
+            write (file_id,*)  "set ylabel 'energy'"
+            write (file_id,*)  "plot '"//filename//".dat' using 1:($2+$3) with lines\"
+            write (file_id,*)  "title 'total (kinetic+electrostatic)',\"
+            write (file_id,*)  "'"//filename//".dat' using 1:2 with lines \"
+            write (file_id,*)  "title 'kinetic'"
+
+            write (file_id, *) "set term x11 5"
+            write (file_id, *) "set autoscale x; set logscale y"
+            write (file_id,*)  "set title 'Relative Energy Error'"
+            write (file_id,*)  "set xlabel 'time'"
+            write (file_id,*)  "set ylabel 'rel. error'"
+            write (file_id,*)  "plot '"//filename//"-errors.dat' using 1:2 with lines"
+
+            write (file_id, *) "set term x11 6"
+            write (file_id, *) "set autoscale x; set logscale y"
+            write (file_id,*)  "set title 'Total Impulse Error'"
+            write (file_id,*)  "set xlabel 'time'"
+            write (file_id,*)  "set ylabel 'total. error'"
+            write (file_id,*)  "plot '"//filename//"-errors.dat' using 1:3 with lines"
+
+        if (enable_deltaf .eqv. .TRUE.) then
+            write (file_id, *) "set term x11 7"
+            write (file_id, *)  "set multiplot layout 2,1 rowsfirst title 'Time Development of Particle Weights'"
+            write (file_id, *) "set autoscale x; set autoscale y"
+            write (file_id,*)  "set title 'Mean'"
+            write (file_id,*)  "plot '"//filename//".dat' using 1:6 with lines"
+            write (file_id,*)  "set title 'Variance'"
+            write (file_id,*)  "plot '"//filename//".dat' using 1:7 with lines"
+            write (file_id,*) "unset multiplot"
+        endif
+
+            write (file_id, *) "set term x11 8"
+            write (file_id, *)  "set multiplot layout 2,1 rowsfirst title 'Time Development of local Pusher Error in x'"
+            write (file_id, *) "set autoscale x; set autoscale y"
+            write (file_id,*)  "set title 'Mean'"
+            write (file_id,*)  "plot '"//filename//".dat' using 1:8 with lines"
+            write (file_id,*)  "set title 'Variance'"
+            write (file_id,*)  "plot '"//filename//".dat' using 1:9 with lines"
+            write (file_id,*) "unset multiplot"
+        endif
+        
+    end subroutine
+
     
-    
-    
+    subroutine sll_pic_1d_calc_push_error(sim,perror, pweight,t)
+        class( sll_simulation_pic1d1v_vp_periodic ), intent( inout ) :: sim
+        sll_real64, dimension(:), intent(in) :: perror
+        sll_real64, dimension(:), intent(in) :: pweight
+        sll_real64, intent(in)              :: t
+        integer                              :: timestep
+        timestep=1+NINT(t/sim%tstepw)
+        sim%push_error_mean(timestep)=dot_product(perror, pweight)
+        sim%push_error_var(timestep)=dot_product(perror**2, pweight)&
+            - sim%push_error_mean(timestep)
+
+        sim%push_error_mean=maxval(perror)
+    end subroutine
     
     
     
