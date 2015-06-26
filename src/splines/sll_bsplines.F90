@@ -1,3 +1,5 @@
+!> @ingroup splines
+!> Contains bsplines documentation
 module sll_bsplines
 
 #include "sll_memory.h"
@@ -64,6 +66,7 @@ type, public :: sll_bspline_2d
 end type sll_bspline_2d
 
 public :: new_bspline_1d
+public :: delete_bspline_1d
 public :: compute_bspline_1d
 public :: update_bspline_1d
 public :: interpolate_value
@@ -1397,6 +1400,9 @@ end subroutine interv
   end function interpolate_x2_derivative_2D
 
 
+  subroutine delete_bspline_1d( spline )
+    type(sll_bspline_1d), pointer :: spline
+  end subroutine delete_bspline_1d 
   subroutine delete_bspline_2D( spline )
     type(sll_bspline_2D), pointer :: spline
   end subroutine delete_bspline_2D 
