@@ -8,7 +8,7 @@
 ! of the coefficient matrix of the linear system for the B-coefficients 
 ! BCOEF(N+M), the B-spline coefficients of the interpolant.
 
-program test_deboor_hermite
+program test_bsplines
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_constants.h"
@@ -128,4 +128,4 @@ subroutine test_process(bc_type)
 end subroutine test_process
 
 
-end program test_deboor_hermite
+end program test_bsplines
