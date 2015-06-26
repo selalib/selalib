@@ -314,18 +314,14 @@ contains
     
     
     ! General parameters
-   
-   
-    namelist /params/ nmark, tsteps, ppusher, scenario, psolver,gnuplot_inline_output_user,deltaf,nstreams
+    namelist /params/ scenario, gnuplot_inline_output_user, deltaf, nstreams
     
     ! Numerical parameters
-
-    namelist /numerical_params/sdeg,tstepw,femp
+    namelist /numerical_params/ nmark, ppusher, psolver, tstepw, tsteps, sdeg,&
+      femp
     
     ! Landau parameters
-   
-
-    namelist /landau_params/ lalpha,lmode,pi_unit,interval_a,interval_b
+    namelist /landau_params/ lalpha, lmode, pi_unit, interval_a, interval_b
  
     
    call getarg(1,filename)
