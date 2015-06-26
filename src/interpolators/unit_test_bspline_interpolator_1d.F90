@@ -35,24 +35,24 @@ end do
 call random_number(x)
 x = x * (XMAX-XMIN)
   
-!call interpolator%initialize(NPTS,XMIN,XMAX,SLL_DIRICHLET,SLL_DIRICHLET,SPL_DEG)
+call interpolator%initialize(NPTS,XMIN,XMAX,SPL_DEG,SLL_DIRICHLET)
 !call set_values_at_boundary1d(interpolator,value_left=1.0_f64,value_right=1.0_f64)
-!
-!call interpolator%compute_interpolants(y)
-!  
-!normL2 = 0.0_f64
-!normH1 = 0.0_f64
-!do i=1,NPTS
-!  y_int(i)  = interpolator%interpolate_value(x(i))
-!  y_ref(i)  = f(x(i))
-!  dy_int(i) = interpolator%interpolate_derivative_eta1(x(i))
-!  dy_ref(i) = df(x(i))
-!  write(10,*) x(i), y_int(i), y_ref(i)
-!  write(11,*) x(i), dy_int(i), dy_ref(i)
-!end do
-!
-!normL2 = sum((y_int-y_ref)**2*h)
-!normH1 = sum((dy_int-dy_ref)**2*h)
+
+call interpolator%compute_interpolants(y)
+  
+normL2 = 0.0_f64
+normH1 = 0.0_f64
+do i=1,NPTS
+  y_int(i)  = interpolator%interpolate_value(x(i))
+  y_ref(i)  = f(x(i))
+  dy_int(i) = interpolator%interpolate_derivative_eta1(x(i))
+  dy_ref(i) = df(x(i))
+  write(10,*) x(i), y_int(i), y_ref(i)
+  write(11,*) x(i), dy_int(i), dy_ref(i)
+end do
+
+normL2 = sum((y_int-y_ref)**2*h)
+normH1 = sum((dy_int-dy_ref)**2*h)
   
 print*,'--------------------------------------------'
 print*,' Average error in nodes', sum(abs(y_int-y_ref))/NPTS
