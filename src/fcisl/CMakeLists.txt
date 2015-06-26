@@ -18,6 +18,14 @@ IF(HDF5_ENABLED)
     sll_fcisl
     sll_utilities )
 
+  ADD_LIBRARY( sll_fcisl_toroidal STATIC fcisl_toroidal.F90 )
+  TARGET_LINK_LIBRARIES( sll_fcisl_toroidal
+    sll_interpolators
+    sll_utilities
+    sll_file_io
+    sll_parallel_array_utilities )
+
+
   # Tests
   IF(BUILD_TESTING)
   
@@ -43,6 +51,14 @@ IF(HDF5_ENABLED)
       sll_meshes 
       sll_advection
       sll_constants )
+
+    ADD_EXECUTABLE( test_fcisl_toroidal test_fcisl_toroidal.F90 )
+    TARGET_LINK_LIBRARIES( test_fcisl_toroidal 
+      sll_fcisl_toroidal
+      sll_meshes 
+      sll_advection
+      sll_constants )
+
 
   ENDIF(BUILD_TESTING)
 
