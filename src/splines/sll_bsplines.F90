@@ -93,11 +93,11 @@ contains
 !> @param[in] sr OPTIONAL: The value of the slope at xmin, for use in the case
 !> of hermite boundary conditions.
 !> @return a pointer to a heap-allocated cubic spline object.
-function new_bspline_1d( num_points, spline_degree, xmin, xmax, bc_type, sl, sr )
+function new_bspline_1d( num_points, degree, xmin, xmax, bc_type, sl, sr )
 
   type(sll_bspline_1D), pointer    :: new_bspline_1d
   sll_int32,  intent(in)           :: num_points
-  sll_int32,  intent(in)           :: spline_degree
+  sll_int32,  intent(in)           :: degree
   sll_real64, intent(in)           :: xmin
   sll_real64, intent(in)           :: xmax
   sll_int32,  intent(in)           :: bc_type
@@ -123,7 +123,7 @@ function new_bspline_1d( num_points, spline_degree, xmin, xmax, bc_type, sl, sr 
 
   call initialize_bspline_1d( new_bspline_1d,  &
                               num_points,      &
-                              spline_degree+1, &
+                              degree+1,        &
                               xmin,            &
                               xmax,            &
                               bc_type          ) 
