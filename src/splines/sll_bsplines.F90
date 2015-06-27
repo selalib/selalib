@@ -104,7 +104,6 @@ function new_bspline_1d( num_points, degree, xmin, xmax, bc_type, sl, sr )
   sll_real64, intent(in), optional :: sl
   sll_real64, intent(in), optional :: sr
   sll_int32                        :: ierr
-  sll_int32                        :: i
 
   SLL_ALLOCATE( new_bspline_1d, ierr )
 
@@ -285,11 +284,9 @@ subroutine build_system_periodic(this)
   sll_int32               :: n
   sll_int32               :: k
   sll_int32               :: iflag
-  sll_int32               :: mflag
   sll_int32               :: i
   sll_int32               :: j
   sll_int32               :: jj
-  sll_int32               :: l
   sll_int32               :: ilp1mx
   
   !PN Warning:
@@ -482,7 +479,6 @@ function interpolate_value( this, x) result(y)
   sll_int32               :: jcmin
   sll_int32               :: jj
   sll_int32               :: mflag
-  sll_int32               :: ierr
   sll_int32               :: k
   sll_int32               :: n
   sll_int32               :: nmk
@@ -502,7 +498,6 @@ function interpolate_value( this, x) result(y)
   y = this%bcoef(i)
   
   if ( mflag /= 0 ) return
-  if ( k <= 1 ) return
   
   if ( k <= i ) then
     do j = 1, k-1
@@ -831,7 +826,6 @@ function interpolate_derivative( this, x) result(y)
   sll_int32               :: jcmin
   sll_int32               :: jj
   sll_int32               :: mflag
-  sll_int32               :: ierr
   sll_int32               :: k
   sll_int32               :: n
   sll_int32               :: nmk
@@ -1240,23 +1234,17 @@ subroutine interv( xt, lxt, x, left, ilo, mflag )
   sll_int32                 :: ihi
   sll_int32                 :: istep
   sll_int32                 :: middle
+  sll_real64                :: xtmax
+
+  xtmax = xt(lxt)
   
   ihi = ilo + 1
-  if ( lxt <= ihi ) then
-    if ( xt(lxt) <= x ) then
-      go to 110
-    end if
-    if ( lxt <= 1 ) then
-      mflag = -1
-      left = 1
-      return
-    end if
+  if ( ihi >= lxt ) then
+    if ( x >= xtmax ) goto 110
     ilo = lxt - 1
     ihi = lxt
   end if
-  if ( xt(ihi) <= x ) then
-    go to 20
-  end if
+  if ( xt(ihi) <= x ) goto 20
   if ( xt(ilo) <= x ) then
     mflag = 0
     left = ilo
@@ -1270,11 +1258,9 @@ subroutine interv( xt, lxt, x, left, ilo, mflag )
   ihi = ilo
   ilo = ihi - istep
   if ( 1 < ilo ) then
-    if ( xt(ilo) <= x ) then
-      go to 50
-    end if
+    if ( xt(ilo) <= x ) goto 50
     istep = istep * 2
-    go to 10
+    goto 10
   end if
   ilo = 1
   if ( x < xt(1) ) then
@@ -1282,7 +1268,7 @@ subroutine interv( xt, lxt, x, left, ilo, mflag )
     left = 1
     return
   end if
-  go to 50
+  goto 50
   !
   !  Now XT(IHI) <= X.  Increase IHI to capture X.
   !
@@ -1292,20 +1278,18 @@ subroutine interv( xt, lxt, x, left, ilo, mflag )
   ilo = ihi
   ihi = ilo + istep
   if ( ihi < lxt ) then
-    if ( x < xt(ihi) ) then
-      go to 50
-    end if
+    if ( x < xt(ihi) ) goto 50
     istep = istep * 2
-    go to 30
+    goto 30
   end if
-  if ( xt(lxt) <= x ) goto 110
+  if ( xtmax <= x ) goto 110
   !
   !  Now XT(ILO) < = X < XT(IHI).  Narrow the interval.
   !
   ihi = lxt
   50  continue
   do
-    middle = ( ilo + ihi ) / 2
+    middle = (ilo+ihi)/2
     if ( middle == ilo ) then
       mflag = 0
       left = ilo
@@ -1326,32 +1310,28 @@ subroutine interv( xt, lxt, x, left, ilo, mflag )
   !
   110 continue
   mflag = 1
-  if ( x == xt(lxt) ) then
-    mflag = 0
-  end if
+  if ( x == xtmax ) mflag = 0
+
   do left = lxt, 1, -1
-    if ( xt(left) < xt(lxt) ) then
-      return
-    end if
+    if ( xt(left) < xtmax ) return
   end do
 
 end subroutine interv
 
-  !> @brief Returns the interpolated value of the derivative in the x1 
-  !> direction at the point
-  !> (x1,x2) using the spline decomposition stored in the spline object.
-  !> @param[in] x1 first coordinate.
-  !> @param[in] x2 second coordinate.
-  !> @param[in] spline pointer to spline object.
-  !> @returns the interpolated value of the derivative in the x1 
-  function interpolate_x1_derivative_2D( x1, x2, spline )
-    sll_real64                          :: interpolate_x1_derivative_2D
-    intrinsic                           :: associated, int, real
-    sll_real64, intent(in)              :: x1
-    sll_real64, intent(in)              :: x2
-    type(sll_bspline_2D), pointer        :: spline
+!> @brief Returns the interpolated value of the derivative in the x1 
+!> direction at the point
+!> (x1,x2) using the spline decomposition stored in the spline object.
+!> @param[in] x1 first coordinate.
+!> @param[in] x2 second coordinate.
+!> @param[in] spline pointer to spline object.
+!> @returns the interpolated value of the derivative in the x1 
+function interpolate_x1_derivative_2D( x1, x2, spline )
+  sll_real64                          :: interpolate_x1_derivative_2D
+  sll_real64, intent(in)              :: x1
+  sll_real64, intent(in)              :: x2
+  type(sll_bspline_2D), pointer       :: spline
 
-  end function interpolate_x1_derivative_2D
+end function interpolate_x1_derivative_2D
 
   ! interpolate_x2_derivative_2D(): given discrete data f(i,j) that are
   ! described by a 2-dimensional bspline fit s(x1,x2), where the
