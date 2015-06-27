@@ -28,9 +28,6 @@ type, public :: sll_bspline_1d
   sll_int32                 :: bc_type
   sll_real64, pointer       :: dbiatx(:,:)
   sll_real64, pointer       :: a(:,:)
-  sll_real64, pointer       :: aj(:)
-  sll_real64, pointer       :: dl(:)
-  sll_real64, pointer       :: dr(:)
   sll_real64, dimension(20) :: deltal
   sll_real64, dimension(20) :: deltar
   sll_int32                 :: j = 1
@@ -54,9 +51,6 @@ type, public :: sll_bspline_2d
   sll_int32                 :: bc_type
   sll_real64, pointer       :: dbiatx(:,:)
   sll_real64, pointer       :: a(:,:)
-  sll_real64, pointer       :: aj(:)
-  sll_real64, pointer       :: dl(:)
-  sll_real64, pointer       :: dr(:)
   sll_real64, dimension(20) :: deltal
   sll_real64, dimension(20) :: deltar
   sll_int32                 :: j = 1
@@ -187,10 +181,6 @@ subroutine initialize_bspline_1d(this, n, k, tau_min, tau_max, bc_type)
 
   allocate(this%a(k,k))
   allocate(this%dbiatx(k,m))
-  allocate(this%aj(k))
-  allocate(this%aj(k))
-  allocate(this%dl(k))
-  allocate(this%dr(k))
 
 end subroutine initialize_bspline_1d
 
