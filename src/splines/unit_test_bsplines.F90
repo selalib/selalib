@@ -23,7 +23,7 @@ type(sll_bspline_1d),      pointer :: bspline
 
 sll_real64, dimension(:), allocatable :: x
 sll_real64, dimension(:), allocatable :: y
-sll_int32,  parameter                 :: n = 256
+sll_int32,  parameter                 :: n = 512
 sll_int32                             :: ierr
 sll_real64, dimension(:), allocatable :: gtau
 sll_real64, dimension(:), allocatable :: htau
