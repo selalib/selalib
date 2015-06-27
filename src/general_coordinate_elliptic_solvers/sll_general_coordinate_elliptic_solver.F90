@@ -295,6 +295,8 @@ call initconnectivity_new(   &
   es%local_to_global_indices )
 
 
+
+
 !old way to compute initconnectivity
 !just for check for the moment
 !when everything is checked
@@ -1925,13 +1927,13 @@ end subroutine initconnectivity
       global_indices)
     
     call compute_local_to_global_splines_indices( &
-      num_cells1,&
-      num_cells2,&
+      num_cells1, &
+      num_cells2, &
       spline_degree1,&
       spline_degree2,&
-      local_indices,&
-      global_indices,&
-      local_to_global_indices)  
+      local_to_global_indices, &
+      local_spline_indices = local_indices, &
+      global_spline_indices = global_indices)  
     
   end subroutine initconnectivity_new
 
@@ -2058,32 +2060,109 @@ subroutine compute_local_to_global_splines_indices( &
   num_cells2,&
   spline_degree1,&
   spline_degree2,&
+  local_to_global_spline_indices, &
   local_spline_indices,&
-  global_spline_indices,&
+  global_spline_indices, &
+  bc_indices1, &
+  bc_indices2)
+  
+  sll_int32, intent(in) :: num_cells1
+  sll_int32, intent(in) :: num_cells2
+  sll_int32, intent(in) :: spline_degree1
+  sll_int32, intent(in) :: spline_degree2
+  sll_int32, dimension(:,:), intent(out) :: local_to_global_spline_indices
+  sll_int32, dimension(:,:), intent(in), optional :: local_spline_indices
+  sll_int32, dimension(:), intent(in), optional :: global_spline_indices
+  sll_int32, dimension(:), intent(in), optional :: bc_indices1
+  sll_int32, dimension(:), intent(in), optional :: bc_indices2
+  
+  sll_int32 :: i
+  sll_int32 :: iloc
+  
+  if(present(local_spline_indices) &
+    .and.present(global_spline_indices) )then
+  
+    do i= 1, num_cells1*num_cells2
+      do iloc = 1, (spline_degree1+1)*(spline_degree2+1)
+        local_to_global_spline_indices(iloc, i) = &
+          global_spline_indices(local_spline_indices(iloc, i))
+      enddo
+    enddo
+  else
+    if(.not.(present(bc_indices1) &
+      .and.present(bc_indices2)) )then
+      
+      SLL_ERROR('compute_local_to_global_splines_indices&
+      &', 'bc_indices1 and bc_indices2 should be present&
+      & as it is not the case for local/global_spline_indices')
+      
+    else  
+      call compute_local_to_global_splines_indices_from_bc_indices( &
+        num_cells1,&
+        num_cells2,&
+        spline_degree1,&
+        spline_degree2,&
+        bc_indices1, &
+        bc_indices2, &
+        local_to_global_spline_indices)
+    endif  
+  endif  
+end subroutine compute_local_to_global_splines_indices
+
+
+subroutine compute_local_to_global_splines_indices_from_bc_indices( &
+  num_cells1,&
+  num_cells2,&
+  spline_degree1,&
+  spline_degree2,&
+  bc_indices1, &
+  bc_indices2, &
   local_to_global_spline_indices)
   
   sll_int32, intent(in) :: num_cells1
   sll_int32, intent(in) :: num_cells2
   sll_int32, intent(in) :: spline_degree1
   sll_int32, intent(in) :: spline_degree2
-  sll_int32, dimension(:,:), intent(in) :: local_spline_indices
-  sll_int32, dimension(:), intent(in) :: global_spline_indices
+  sll_int32, dimension(:), intent(in) :: bc_indices1
+  sll_int32, dimension(:), intent(in) :: bc_indices2
   sll_int32, dimension(:,:), intent(out) :: local_to_global_spline_indices
-  
-  sll_int32 :: i
-  sll_int32 :: iloc
-  
-  do i= 1, num_cells1*num_cells2
-    do iloc = 1, (spline_degree1+1)*(spline_degree2+1)
-      local_to_global_spline_indices(iloc, i) = &
-        global_spline_indices(local_spline_indices(iloc, i))
-    enddo
-  enddo
-end subroutine compute_local_to_global_splines_indices
 
 
+    sll_int32, dimension(:,:), allocatable :: local_indices
+    sll_int32, dimension(:)  , allocatable :: global_indices
+    
+    sll_int32 :: ierr
+    
+    SLL_ALLOCATE(local_indices( 1:(spline_degree1+1)*(spline_degree2+1),1:(num_cells1*num_cells2)),ierr)
+    SLL_ALLOCATE(global_indices((num_cells1+spline_degree1)*(num_cells2+spline_degree2)),ierr)
+    
+    
+    call compute_local_splines_indices( &
+      num_cells1, &
+      num_cells2, &
+      spline_degree1, &
+      spline_degree2, &
+      local_indices)
+   
+
+    call compute_global_splines_indices( &
+      num_cells1+spline_degree1, &
+      num_cells2+spline_degree2, &
+      bc_indices1, &
+      bc_indices2, &
+      global_indices)
+    
+    call compute_local_to_global_splines_indices( &
+      num_cells1, &
+      num_cells2, &
+      spline_degree1,&
+      spline_degree2,&
+      local_to_global_spline_indices, &
+      local_spline_indices = local_indices, &
+      global_spline_indices = global_indices)  
 
 
+end subroutine compute_local_to_global_splines_indices_from_bc_indices
 
 
 
@@ -2666,8 +2745,14 @@ sll_int32 :: num_pts_g1, num_pts_g2
 
 
 
-sll_real64 :: vec_sz1
-sll_real64 :: vec_sz2
+sll_int32 :: vec_sz1
+sll_int32 :: vec_sz2
+sll_int32, dimension(:), allocatable :: bc_indices1
+sll_int32, dimension(:), allocatable :: bc_indices2
+sll_int32, dimension(:), allocatable :: bc_rho_indices1
+sll_int32, dimension(:), allocatable :: bc_rho_indices2
+sll_int32 :: i
+
 
 if(present(precompute_rhs))then
   es%precompute_rhs = precompute_rhs
@@ -2727,33 +2812,98 @@ SLL_ALLOCATE(es%local_to_global_indices(1:dim1,1:dim2),ierr)
 dim1 = (spline_degree1+1)*(spline_degree2+1)
 dim2 = (num_cells1*num_cells2)
 SLL_ALLOCATE(es%local_to_global_indices(1:dim1,1:dim2),ierr)
-dim1 = (spline_degree1+1)*(spline_degree2+1)
-SLL_ALLOCATE(es%local_to_global_indices_source(1:dim1,1:dim2),ierr)
-dim1 = (es%rho_degree1+1)*(es%rho_degree2+1)
-SLL_ALLOCATE(es%local_to_global_indices_source_bis(1:dim1,1:dim2),ierr)
-
-
 
 if(es%precompute_rhs)then
+  dim1 = (spline_degree1+1)*(spline_degree2+1)
+  !source_bis is for rows
+  SLL_ALLOCATE(es%local_to_global_indices_source_bis(1:dim1,1:dim2),ierr)
+  !source is for columns
+  dim1 = (es%rho_degree1+1)*(es%rho_degree2+1)
+  SLL_ALLOCATE(es%local_to_global_indices_source(1:dim1,1:dim2),ierr)
   dim1 = num_cells1 + es%rho_degree1
   dim2 = num_cells2 + es%rho_degree2
   SLL_ALLOCATE(es%rho_coeff_1d(dim1*dim2),ierr)
+  SLL_ALLOCATE(bc_rho_indices1(num_cells1+es%rho_degree1),ierr)
+  SLL_ALLOCATE(bc_rho_indices2(num_cells2+es%rho_degree2),ierr)
 endif
 
 
 SLL_ALLOCATE(es%knots1(num_cells1 + 2*spline_degree1+1),ierr)
 SLL_ALLOCATE(es%knots2(num_cells2 + 2*spline_degree2+1),ierr)
+SLL_ALLOCATE(es%knots1_rho(num_cells1 + 2*es%rho_degree1+1),ierr)
+SLL_ALLOCATE(es%knots2_rho(num_cells2 + 2*es%rho_degree2+1),ierr)
+SLL_ALLOCATE(bc_indices1(num_cells1+spline_degree1),ierr)
+SLL_ALLOCATE(bc_indices2(num_cells2+spline_degree2),ierr)
 
-call initconnectivity_new(   &
-  num_cells1,                &
-  num_cells2,                &
-  spline_degree1,            &
-  spline_degree2,            &
-  bc1_min,                   &
-  bc1_max,                   &
-  bc2_min,                   &
-  bc2_max,                   &
-  es%local_to_global_indices )
+
+call compute_bc_indices( &
+  num_cells1, &
+  spline_degree1, &
+  bc1_min, &
+  bc1_max, &
+  bc_indices1 )
+call compute_bc_indices( &
+  num_cells2, &
+  spline_degree2, &
+  bc2_min, &
+  bc2_max, &
+  bc_indices2 )
+
+
+call compute_local_to_global_splines_indices( &
+  num_cells1, &
+  num_cells2, &
+  spline_degree1, &
+  spline_degree2, &
+  es%local_to_global_indices, &
+  bc_indices1 = bc_indices1, &
+  bc_indices2 = bc_indices2 )
+
+if(es%precompute_rhs)then
+print *,'#begin connectivity rho'
+call flush()
+
+call compute_index( &
+  num_cells1, &
+  spline_degree1, &
+  bc1_min, &
+  bc1_max, &
+  bc_indices1 )
+call compute_index( &
+  num_cells2, &
+  spline_degree2, &
+  bc2_min, &
+  bc2_max, &
+  bc_indices2 )
+call compute_local_to_global_splines_indices( &
+  num_cells1, &
+  num_cells2, &
+  spline_degree1, &
+  spline_degree2, &
+  es%local_to_global_indices_source_bis, &
+  bc_indices1 = bc_indices1, &
+  bc_indices2 = bc_indices2 )
+
+do i=1, num_cells1+es%rho_degree1
+  bc_rho_indices1(i) = i  
+enddo  
+do i=1, num_cells2+es%rho_degree2
+  bc_rho_indices2(i) = i  
+enddo  
+  
+call compute_local_to_global_splines_indices( &
+  num_cells1, &
+  num_cells2, &
+  es%rho_degree1, &
+  es%rho_degree2, &
+  es%local_to_global_indices_source, &
+  bc_indices1 = bc_rho_indices1, &
+  bc_indices2 = bc_rho_indices2 )
+print *,'#end connectivity rho'
+call flush()
+endif
+
+
 
 print *,'#initconnectivity_new done'
 call flush()
@@ -2872,6 +3022,16 @@ es%csr_mat => new_csr_matrix( solution_size,              &
 &                             es%local_to_global_indices, &
 &                             es%total_num_splines_loc)
 
+if(es%precompute_rhs)then
+es%csr_mat_source => new_csr_matrix( &
+  vec_sz, &
+  (num_cells1+es%rho_degree1)*(num_cells2+es%rho_degree2), &
+  num_cells1*num_cells2, &
+  es%local_to_global_indices_source_bis, &
+  (es%spline_degree1+1)*(es%spline_degree2+1), &
+  es%local_to_global_indices_source, &
+  (es%rho_degree1+1)*(es%rho_degree2+1))
+endif
  
 print *,'#new_csr_matrix done'
 call flush()
@@ -2915,6 +3075,27 @@ call compute_global_knots( &
   eta2_max, &
   spline_degree2, &
   es%knots2)
+
+call compute_global_knots( &
+  bc1_min, &
+  bc1_max, &
+  num_cells1, &
+  eta1_min, &
+  eta1_max, &
+  es%rho_degree1, &
+  es%knots1_rho)
+
+call compute_global_knots( &
+  bc2_min, &
+  bc2_max, &
+  num_cells2, &
+  eta2_min, &
+  eta2_max, &
+  es%rho_degree2, &
+  es%knots2_rho)
+
+
+
 print *,'#compute_global_knots done'
 call flush()
 
@@ -2939,7 +3120,7 @@ print *,'#compute_non_zero_splines_and_deriv_at_cell_points done'
 call compute_non_zero_splines_at_cell_points( &
   num_cells1, &
   es%rho_degree1, &
-  es%knots1, &
+  es%knots1_rho, &
   es%gauss_pts1(1,:)/es%delta_eta1, & 
   num_pts_g1, &
   es%v_rho_splines1 )
@@ -2948,7 +3129,7 @@ call compute_non_zero_splines_at_cell_points( &
 call compute_non_zero_splines_at_cell_points( &
   num_cells2, &
   es%rho_degree2, &
-  es%knots2, &
+  es%knots2_rho, &
   es%gauss_pts2(1,:)/es%delta_eta2, & 
   num_pts_g2, &
   es%v_rho_splines2 )
@@ -2982,16 +3163,11 @@ class(sll_scalar_field_2d_base), pointer :: b1_field_vect
 class(sll_scalar_field_2d_base), pointer :: b2_field_vect
 class(sll_scalar_field_2d_base), pointer :: c_field
 
-sll_real64, dimension(:,:),   allocatable :: M_c
-sll_real64, dimension(:,:),   allocatable :: K_11
-sll_real64, dimension(:,:),   allocatable :: K_12
-sll_real64, dimension(:,:),   allocatable :: K_21
-sll_real64, dimension(:,:),   allocatable :: K_22
-sll_real64, dimension(:,:),   allocatable :: M_bv
-sll_real64, dimension(:,:),   allocatable :: S_b1
-sll_real64, dimension(:,:),   allocatable :: S_b2  
+
+sll_real64, dimension(:,:),   allocatable :: elt_mat_loc
 sll_real64, dimension(:),     allocatable :: mass
 sll_real64, dimension(:),     allocatable :: stif
+sll_real64, dimension(:,:), allocatable     :: source
 
 sll_int32 :: ierr
 sll_int32 :: i
@@ -3056,6 +3232,7 @@ sll_real64 :: d3v4, v3v4 , v3d4
 sll_int32, dimension(:), allocatable :: index_eta1
 sll_int32, dimension(:), allocatable :: index_eta2
 sll_int32 :: vec_sz1
+sll_real64 :: val
 
 !sll_real64, allocatable :: dense_matrix(:,:)
 
@@ -3106,16 +3283,11 @@ vec_sz1 = compute_vec_size( &
 
 print *,'begin factorize_mat_es_prototype'
 call flush()
-SLL_CLEAR_ALLOCATE(M_c(1:nspl,1:nspl),ierr)
-SLL_CLEAR_ALLOCATE(K_11(1:nspl,1:nspl),ierr)
-SLL_CLEAR_ALLOCATE(K_12(1:nspl,1:nspl),ierr)
-SLL_CLEAR_ALLOCATE(K_21(1:nspl,1:nspl),ierr)
-SLL_CLEAR_ALLOCATE(K_22(1:nspl,1:nspl),ierr)
-SLL_CLEAR_ALLOCATE(S_b1(1:nspl,1:nspl),ierr)
-SLL_CLEAR_ALLOCATE(S_b2(1:nspl,1:nspl),ierr)
-SLL_CLEAR_ALLOCATE(M_bv(1:nspl,1:nspl),ierr)
+SLL_CLEAR_ALLOCATE(elt_mat_loc(1:nspl,1:nspl),ierr)
 SLL_CLEAR_ALLOCATE(mass(1:nspl),ierr)
 SLL_CLEAR_ALLOCATE(stif(1:nspl),ierr)
+SLL_CLEAR_ALLOCATE(source(1:nspl,(es%rho_degree1+1)*(es%rho_degree2+1)),ierr)
+
 do j = 1, nc_2
 do i = 1, nc_1
         
@@ -3125,14 +3297,9 @@ do i = 1, nc_1
     
   mass  = 0.0_f64
   stif  = 0.0_f64
-  M_c   = 0.0_f64
-  K_11  = 0.0_f64
-  K_12  = 0.0_f64
-  K_21  = 0.0_f64
-  K_22  = 0.0_f64
-  M_bv  = 0.0_f64
-  S_b1  = 0.0_f64
-  S_b2  = 0.0_f64
+  elt_mat_loc = 0._f64
+  source = 0._f64
+
 
   do jg=1,num_pts_g2
   
@@ -3209,98 +3376,130 @@ do i = 1, nc_1
 
       C1 = C1*wxy
       C2 = C2*wxy
-         
+      
+      
+      !fill local matrix contribution 
+      !for the gauss point ig,jg   
       mm = 0
       do jj = 1,spl_deg_2+1
-
         v2 = es%v_splines2(1,jj,jg,j)
         d2 = es%v_splines2(2,jj,jg,j)
-
         do ii = 1,spl_deg_1+1
-              
           mm = mm+1
-                
           v1 = es%v_splines1(1,ii,ig,i)
           d1 = es%v_splines1(2,ii,ig,i)
-
           v1v2 = v1*v2
           d1v2 = d1*v2
           v1d2 = v1*d2
-
           mass(mm) = mass(mm)+v1v2*wxy_val_jac 
           stif(mm) = stif(mm)+wxy_val_jac*(d1v2+v1d2)
-               
           nn = 0
           do ll = 1,spl_deg_2+1
-
             v4 = es%v_splines2(1,ll,jg,j)
             d4 = es%v_splines2(2,ll,jg,j)
-
             do kk = 1,spl_deg_1+1
-                        
               v3 = es%v_splines1(1,kk,ig,i)
               d3 = es%v_splines1(2,kk,ig,i)
               v3v4 = v4*v3
               d3v4 = d3*v4
               v3d4 = v3*d4
               nn = nn+1
-             
-                   
-              M_c (nn,mm)=M_c (nn,mm) + val_c* v1v2 * v3v4
-              K_11(nn,mm)=K_11(nn,mm) + B11  * d1v2 * d3v4
-              K_22(nn,mm)=K_22(nn,mm) + B22  * v1d2 * v3d4
-              K_12(nn,mm)=K_12(nn,mm) + B12  * d1v2 * v3d4
-              K_21(nn,mm)=K_21(nn,mm) + B21  * v1d2 * d3v4
-              M_bv(nn,mm)=M_bv(nn,mm) + MC   * v1v2 * v3v4
-              S_b1(nn,mm)=S_b1(nn,mm) + C1   * v1v2 * d3v4
-              S_b2(nn,mm)=S_b2(nn,mm) + C2   * v1v2 * v3d4
-
+              val = val_c*v1v2*v3v4                  
+              val = val-B11*d1v2*d3v4                 
+              val = val-B22*v1d2*v3d4                 
+              val = val-B12*d1v2*v3d4
+              val = val-B21*v1d2*d3v4                 
+              val = val-MC*v1v2*v3v4                 
+              val = val-C1*v1v2*d3v4                 
+              val = val-C2*v1v2*v3d4
+              elt_mat_loc(nn,mm) = elt_mat_loc(nn,mm)+val                   
             end do
           end do
         end do
       end do
+
+      !fill source local matrix contribution 
+      !for the gauss point ig,jg   
+      if(es%precompute_rhs)then
+      mm = 0
+      do jj = 1,es%rho_degree2+1
+        r2 = es%v_rho_splines2(jj,jg,j)
+        do ii = 1,es%rho_degree1+1
+          mm = mm+1
+          r1 = es%v_rho_splines1(ii,ig,i)
+          r1r2 = r1*r2*wxy_val_jac
+          nn = 0
+          do ll = 1,spl_deg_2+1
+            v4 = es%v_splines2(1,ll,jg,j)
+            do kk = 1,spl_deg_1+1
+              v3 = es%v_splines1(1,kk,ig,i)
+              v3v4 = v4*v3
+              nn = nn+1
+              source(nn,mm) = source(nn,mm) + r1r2*v3v4
+            end do
+          end do
+        end do
+      end do
+      endif
+
     end do
   end do
+  !local matrix and source matrix are computed
+  !now, add contribution to csr matrix
 
   do jj = 0, spl_deg_2
-
     index3 = index_eta2(j + jj)
-     
     do ii = 0,spl_deg_1
-        
       index1 = index_eta1(i + ii)
 
       x = index1 + (index3-1)*vec_sz1
       b = ii+1+jj*(spl_deg_1+1)
-      a = es%local_to_global_indices(b, icell)
-         
       es%masse(x) = es%masse(x) + mass(b)
       es%stiff(x) = es%stiff(x) + stif(b)
 
+      a = es%local_to_global_indices(b, icell)
       do ll = 0,spl_deg_2
-        index4 = index_eta2(j + ll)
         do kk = 0,spl_deg_1
-          index2 = index_eta1(i + kk)
-                
           bprime = kk+1+ll*(spl_deg_1+1)
           aprime = es%local_to_global_indices(bprime,icell)
-
           if ( a>0 .and. aprime>0 ) then
-            elt_mat_global = M_c (bprime,b) - &
-                             K_11(bprime,b) - &
-                             K_12(bprime,b) - &
-                             K_21(bprime,b) - &
-                             K_22(bprime,b) - &
-                             M_bv(bprime,b) - &
-                             S_b1(bprime,b) - &
-                             S_b2(bprime,b)
-
-            call sll_add_to_csr_matrix(es%csr_mat, elt_mat_global, a, aprime)   
+            call sll_add_to_csr_matrix( &
+              es%csr_mat, &
+              elt_mat_loc(bprime,b), &
+              a, &
+              aprime)   
           end if
         end do
       end do
     end do
   end do
+  
+  !add contribution to csr source matrix
+  if(es%precompute_rhs)then
+  do jj = 0, spl_deg_2
+    do ii = 0,spl_deg_1
+      b = ii+1+jj*(spl_deg_1+1)
+      a = es%local_to_global_indices_source_bis(b, icell)
+      do ll = 0,es%rho_degree2
+        do kk = 0,es%rho_degree1
+          bprime = kk+1+ll*(es%rho_degree1+1)
+          aprime = es%local_to_global_indices_source(bprime,icell)
+          if ( a>0 .and. aprime>0 ) then
+            call sll_add_to_csr_matrix( &
+              es%csr_mat_source, &
+              source(b,bprime), &
+              a, &
+              aprime)              
+            !print *,'val=',a,aprime,source(b,bprime)     
+          end if
+        end do
+      end do
+    end do
+  end do
+  endif
+  
+  
+  
 end do
 end do
 
@@ -3339,14 +3538,14 @@ print *,'#end of sll_factorize_csr_matrix'
 call flush()
 
 
-SLL_DEALLOCATE_ARRAY(M_c,ierr)
-SLL_DEALLOCATE_ARRAY(K_11,ierr)
-SLL_DEALLOCATE_ARRAY(K_12,ierr)
-SLL_DEALLOCATE_ARRAY(K_21,ierr)
-SLL_DEALLOCATE_ARRAY(K_22,ierr)
-SLL_DEALLOCATE_ARRAY(M_bv,ierr)
-SLL_DEALLOCATE_ARRAY(S_b1,ierr)
-SLL_DEALLOCATE_ARRAY(S_b2,ierr)
+!SLL_DEALLOCATE_ARRAY(M_c,ierr)
+!SLL_DEALLOCATE_ARRAY(K_11,ierr)
+!SLL_DEALLOCATE_ARRAY(K_12,ierr)
+!SLL_DEALLOCATE_ARRAY(K_21,ierr)
+!SLL_DEALLOCATE_ARRAY(K_22,ierr)
+!SLL_DEALLOCATE_ARRAY(M_bv,ierr)
+!SLL_DEALLOCATE_ARRAY(S_b1,ierr)
+!SLL_DEALLOCATE_ARRAY(S_b2,ierr)
 SLL_DEALLOCATE_ARRAY(stif,ierr) 
 SLL_DEALLOCATE_ARRAY(mass,ierr) 
 
@@ -3384,6 +3583,7 @@ num_spl2 = es%num_cells2+es%spline_degree2
     
   if(present(rho_values))then
     if(es%use_cubic_splines)then
+      call compute_cubic_spline_2D( rho_values, es%cubic_spline )
       call get_coeff_cubic_spline_2d(es%cubic_spline,es%rho_coeff_1d)
     else
     SLL_ERROR('set_rho_coefficients_coordinates_elliptic_eq_prototype&
@@ -3546,9 +3746,10 @@ call compute_index_coeff( &
   SLL_CLEAR_ALLOCATE(M_rho_loc(1:es%total_num_splines_loc),ierr)
   
   if(es%precompute_rhs)then
-    es%rho_vec = 0._f64
-    
-    
+    call sll_mult_csr_matrix_vector( &
+      es%csr_mat_source,&
+      es%rho_coeff_1d, &
+      es%rho_vec)    
   else
     if(present(rho_field))then
   do j=1, nc_2
