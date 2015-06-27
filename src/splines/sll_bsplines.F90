@@ -27,16 +27,22 @@ type, public :: sll_bspline_1d
   sll_real64, pointer       :: bcoef(:)
   sll_int32                 :: bc_type
   sll_real64, pointer       :: dbiatx(:,:)
-  sll_real64, pointer       :: a(:,:)
   sll_real64, dimension(20) :: deltal
   sll_real64, dimension(20) :: deltar
   sll_int32                 :: j = 1
   sll_real64                :: length
   sll_int32                 :: ilo
+  sll_real64                :: vl
+  sll_real64                :: vr
   sll_real64                :: sl
   sll_real64                :: sr
+  logical                   :: compute_vl
+  logical                   :: compute_vr
   logical                   :: compute_sl
   logical                   :: compute_sr
+  sll_real64, allocatable   :: aj(:)
+  sll_real64, allocatable   :: dl(:)
+  sll_real64, allocatable   :: dr(:)
 
 end type sll_bspline_1d
 
@@ -179,8 +185,10 @@ subroutine initialize_bspline_1d(this, n, k, tau_min, tau_max, bc_type)
 
   end if
 
-  allocate(this%a(k,k))
   allocate(this%dbiatx(k,m))
+  allocate(this%aj(k))
+  allocate(this%dl(k))
+  allocate(this%dr(k))
 
 end subroutine initialize_bspline_1d
 
@@ -204,7 +212,6 @@ subroutine build_system(this)
   
   n = this%n
   k = this%k
-  this%a = 0.0_f64
 
   kpkm2       = 2*(k-1)
   left        = k
@@ -292,7 +299,6 @@ subroutine build_system_periodic(this)
 
   n = this%n
   k = this%k
-  this%a = 0.0_f64
 
   kpkm2       = 2*(k-1)
   left        = k
@@ -481,9 +487,6 @@ function interpolate_value( this, x) result(y)
   sll_int32               :: n
   sll_int32               :: nmk
   sll_int32,  parameter   :: m = 2
-  sll_real64, allocatable :: aj(:)
-  sll_real64, allocatable :: dl(:)
-  sll_real64, allocatable :: dr(:)
   
   k = this%k
   n = this%n  
@@ -494,10 +497,6 @@ function interpolate_value( this, x) result(y)
     nmk = n+m+k
   end if
   
-  SLL_CLEAR_ALLOCATE(aj(1:k), ierr)
-  SLL_CLEAR_ALLOCATE(dl(1:k), ierr)
-  SLL_CLEAR_ALLOCATE(dr(1:k), ierr)
-  
   call interv( this%t, nmk, x, i, this%ilo, mflag )
   
   y = this%bcoef(i)
@@ -507,52 +506,50 @@ function interpolate_value( this, x) result(y)
   
   if ( k <= i ) then
     do j = 1, k-1
-      dl(j) = x - this%t(i+1-j)
+      this%dl(j) = x - this%t(i+1-j)
     end do
     jcmin = 1
   else
     jcmin = 1-(i-k)
     do j = 1, i
-      dl(j) = x - this%t(i+1-j)
+      this%dl(j) = x - this%t(i+1-j)
     end do
     do j = i, k-1
-      aj(k-j) = 0.0_f64
-      dl(j) = dl(i)
+      this%aj(k-j) = 0.0_f64
+      this%dl(j) = this%dl(i)
     end do
   end if
   
   if ( nmk-k < i ) then
     jcmax = nmk-i
     do j = 1, jcmax
-      dr(j) = this%t(i+j) - x
+      this%dr(j) = this%t(i+j) - x
     end do
     do j = jcmax, k-1
-      aj(j+1) = 0.0_f64
-      dr(j) = dr(jcmax)
+      this%aj(j+1) = 0.0_f64
+      this%dr(j) = this%dr(jcmax)
     end do
   else
     jcmax = k
     do j = 1, k-1
-      dr(j) = this%t(i+j) - x
+      this%dr(j) = this%t(i+j) - x
     end do
   end if
   
   do jc = jcmin, jcmax
-    aj(jc) = this%bcoef(i-k+jc)
+    this%aj(jc) = this%bcoef(i-k+jc)
   end do
   
   do j = 1, k-1
     ilo = k-j
     do jj = 1, k-j
-      aj(jj) = (aj(jj+1)*dl(ilo)+aj(jj)*dr(jj))/(dl(ilo)+dr(jj))
+      this%aj(jj) = (this%aj(jj+1)*this%dl(ilo)+this%aj(jj)*this%dr(jj))/(this%dl(ilo)+this%dr(jj))
       ilo = ilo - 1
     end do
   end do
   
-  y = aj(1)
+  y = this%aj(1)
   
-  deallocate(aj,dl,dr)
-
 end function interpolate_value
 
 !> @brief returns the values of the derivatives evaluated at a 
@@ -839,9 +836,6 @@ function interpolate_derivative( this, x) result(y)
   sll_int32               :: n
   sll_int32               :: nmk
   sll_int32,  parameter   :: m = 2
-  sll_real64, allocatable :: aj(:)
-  sll_real64, allocatable :: dl(:)
-  sll_real64, allocatable :: dr(:)
   sll_int32,  parameter   :: jderiv = 1
   
   k = this%k
@@ -852,10 +846,6 @@ function interpolate_derivative( this, x) result(y)
   else
     nmk = n+m+k
   end if
-  
-  SLL_ALLOCATE(aj(k), ierr)
-  SLL_ALLOCATE(dl(k), ierr)
-  SLL_ALLOCATE(dr(k), ierr)
   
   !  Find I so that 1 <= I < N+K and T(I) < T(I+1) and T(I) <= X < T(I+1).
   !
@@ -886,16 +876,16 @@ function interpolate_derivative( this, x) result(y)
   
   if ( k <= i ) then
     do j = 1, k-1
-      dl(j) = x - this%t(i+1-j)
+      this%dl(j) = x - this%t(i+1-j)
     end do
   else
     jcmin = 1-(i-k)
     do j = 1, i
-      dl(j) = x - this%t(i+1-j)
+      this%dl(j) = x - this%t(i+1-j)
     end do
     do j = i, k-1
-      aj(k-j) = 0.0_f64
-      dl(j) = dl(i)
+      this%aj(k-j) = 0.0_f64
+      this%dl(j) = this%dl(i)
     end do
   end if
   
@@ -903,26 +893,26 @@ function interpolate_derivative( this, x) result(y)
   if ( nmk-k < i ) then
     jcmax = nmk-i
     do j = 1, jcmax
-      dr(j) = this%t(i+j) - x
+      this%dr(j) = this%t(i+j) - x
     end do
     do j = jcmax, k-1
-      aj(j+1) = 0.0_8
-      dr(j) = dr(jcmax)
+      this%aj(j+1) = 0.0_8
+      this%dr(j) = this%dr(jcmax)
     end do
   else
     do j = 1, k-1
-      dr(j) = this%t(i+j) - x
+      this%dr(j) = this%t(i+j) - x
     end do
   end if
   
   do jc = jcmin, jcmax
-    aj(jc) = this%bcoef(i-k+jc)
+    this%aj(jc) = this%bcoef(i-k+jc)
   end do
   !  Difference the coefficients JDERIV times.
   do j = 1, jderiv
     ilo = k - j
     do jj = 1, k - j
-      aj(jj) = ((aj(jj+1)-aj(jj))/(dl(ilo)+dr(jj)))*(k-j)
+      this%aj(jj) = ((this%aj(jj+1)-this%aj(jj))/(this%dl(ilo)+this%dr(jj)))*(k-j)
       ilo = ilo-1
     end do
   end do
@@ -933,15 +923,13 @@ function interpolate_derivative( this, x) result(y)
   do j = jderiv+1, k-1
     ilo = k-j
     do jj = 1, k-j
-      aj(jj) = (aj(jj+1)*dl(ilo)+aj(jj)*dr(jj))/(dl(ilo)+dr(jj))
+      this%aj(jj) = (this%aj(jj+1)*this%dl(ilo)+this%aj(jj)*this%dr(jj))/(this%dl(ilo)+this%dr(jj))
       ilo = ilo-1
     end do
   end do
   
-  y = aj(1)
+  y = this%aj(1)
   
-  deallocate(aj,dl,dr)
-
 end function interpolate_derivative
 
 !>@brief
@@ -984,7 +972,8 @@ subroutine bsplvd ( this, k, x, left, nderiv )
   sll_real64, intent(in)    :: x
   sll_int32,  intent(in)    :: left
   sll_int32,  intent(in)    :: nderiv
-  
+
+  sll_real64, allocatable   :: a(:,:)
   sll_real64 :: factor
   sll_real64 :: fkp1mm
   sll_int32  :: i
@@ -997,6 +986,8 @@ subroutine bsplvd ( this, k, x, left, nderiv )
   sll_int32  :: m
   sll_int32  :: mhigh
   
+  allocate(a(k,k))
+
   mhigh = max ( min ( nderiv, k ), 1 )
   !
   !  MHIGH is usually equal to NDERIV.
@@ -1031,9 +1022,9 @@ subroutine bsplvd ( this, k, x, left, nderiv )
   !
   jlow = 1
   do i = 1, k
-    this%a(jlow:k,i) = 0.0D+00
+    a(jlow:k,i) = 0.0D+00
     jlow = i
-    this%a(i,i) = 1.0D+00
+    a(i,i) = 1.0D+00
   end do
   !
   !  At this point, A(.,J) contains the B-coefficients for the J-th of the
@@ -1053,7 +1044,7 @@ subroutine bsplvd ( this, k, x, left, nderiv )
       factor = fkp1mm / ( this%t(il+k+1-m) - this%t(il) )
       !  The assumption that T(LEFT) < T(LEFT+1) makes denominator
       !  in FACTOR nonzero.
-      this%a(i,1:i) = ( this%a(i,1:i) - this%a(i-1,1:i) ) * factor
+      a(i,1:i) = ( a(i,1:i) - a(i-1,1:i) ) * factor
       il = il - 1
       i = i - 1
     end do
@@ -1067,9 +1058,11 @@ subroutine bsplvd ( this, k, x, left, nderiv )
     !  that  A(J,I) = 0  for J < I.
     do i = 1, k
       jlow = max ( i, m )
-      this%dbiatx(i,m) = dot_product ( this%a(jlow:k,i), this%dbiatx(jlow:k,m) )
+      this%dbiatx(i,m) = dot_product ( a(jlow:k,i), this%dbiatx(jlow:k,m) )
     end do
   end do
+
+  deallocate(a)
 
 end subroutine bsplvd
   
@@ -1143,7 +1136,6 @@ subroutine bsplvb ( this, jhigh, index, x, left, biatx )
   sll_int32               :: i
   sll_real64              :: saved
   sll_real64              :: term
-  
   
   if ( index == 1 ) then
     this%j = 1
