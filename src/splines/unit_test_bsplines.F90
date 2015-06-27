@@ -23,7 +23,7 @@ type(sll_bspline_1d),      pointer :: bspline
 
 sll_real64, dimension(:), allocatable :: x
 sll_real64, dimension(:), allocatable :: y
-sll_int32,  parameter                 :: n = 65
+sll_int32,  parameter                 :: n = 256
 sll_int32                             :: ierr
 sll_real64, dimension(:), allocatable :: gtau
 sll_real64, dimension(:), allocatable :: htau
@@ -34,7 +34,7 @@ sll_int32                             :: i
 sll_int32                             :: j
 sll_int32,  parameter                 :: d = 3
 sll_real64                            :: h
-sll_int32,  parameter                 :: nstep = 1
+sll_int32,  parameter                 :: nstep = 10000
 
 sll_int32,  parameter :: m = 2
 sll_real64 :: tau_min = 0.0_f64
@@ -77,13 +77,13 @@ subroutine test_process(bc_type)
   call compute_bspline_1d(bspline, gtau, slope_min, slope_max)
   call cpu_time(t1)
   do j = 1,nstep
-  call interpolate_array_values( bspline, n, x, y)
+    call interpolate_array_values( bspline, n, x, y)
   end do
   print*, "average values error      = ", sum(abs(y-cos(2*sll_pi*x)))/n
   print*, "maximum values error      = ", maxval(abs(y-cos(2*sll_pi*x)))
   call cpu_time(t2)
   do j = 1,nstep
-  call interpolate_array_derivatives( bspline, n, x, y)
+    call interpolate_array_derivatives( bspline, n, x, y)
   end do
   print*, "average derivatives error = ", sum(abs(y+2*sll_pi*sin(2*sll_pi*x)))/n
   print*, "maximum derivatives error = ", maxval(abs(y+2*sll_pi*sin(2*sll_pi*x)))
@@ -104,17 +104,17 @@ subroutine test_process(bc_type)
   
   call cpu_time(t0)
   do j = 1,nstep
-  err1 = 0.0_f64
-  do i = 1, n
-    err1 = err1 + abs(interpolate_value(bspline,x(i))-sin(2*sll_pi*x(i))) 
-  end do
+    err1 = 0.0_f64
+    do i = 1, n
+      err1 = err1 + abs(interpolate_value(bspline,x(i))-sin(2*sll_pi*x(i))) 
+    end do
   end do
   call cpu_time(t1)
   do j = 1,nstep
-  err2 = 0.0_f64
-  do i = 1, n
-    err2 = err2 + abs(interpolate_derivative(bspline,x(i))-2*sll_pi*cos(2*sll_pi*x(i))) 
-  end do
+    err2 = 0.0_f64
+    do i = 1, n
+      err2 = err2 + abs(interpolate_derivative(bspline,x(i))-2*sll_pi*cos(2*sll_pi*x(i))) 
+    end do
   end do
   call cpu_time(t2)
   
