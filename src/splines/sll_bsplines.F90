@@ -398,6 +398,8 @@ subroutine compute_bspline_1d(this, gtau, slope_min, slope_max)
     call update_bspline_1d( this, gtau)
   end if
 
+  this%ilo = this%k
+
 end subroutine compute_bspline_1d
 
 !>@brief
@@ -426,7 +428,6 @@ subroutine update_bspline_1d(this, gtau, slope_min, slope_max)
   if (this%bc_type == SLL_PERIODIC) then
 
     this%bcoef = gtau
-
     call banslv ( this%q, k+k-1, n, k-1, k-1, this%bcoef )
 
   else
@@ -480,7 +481,6 @@ function interpolate_value( this, x) result(y)
   sll_int32               :: i
   sll_int32               :: j
   sll_int32               :: ilo
-  sll_int32               :: jlo
   sll_int32               :: jc
   sll_int32               :: jcmax
   sll_int32               :: jcmin
@@ -508,7 +508,7 @@ function interpolate_value( this, x) result(y)
   SLL_CLEAR_ALLOCATE(dl(1:k), ierr)
   SLL_CLEAR_ALLOCATE(dr(1:k), ierr)
   
-  call interv( this%t, nmk, x, i, ilo, mflag )
+  call interv( this%t, nmk, x, i, this%ilo, mflag )
   
   y = this%bcoef(i)
   
@@ -552,10 +552,10 @@ function interpolate_value( this, x) result(y)
   end do
   
   do j = 1, k-1
-    jlo = k-j
+    ilo = k-j
     do jj = 1, k-j
-      aj(jj) = (aj(jj+1)*dl(jlo)+aj(jj)*dr(jj))/(dl(jlo)+dr(jj))
-      jlo = jlo - 1
+      aj(jj) = (aj(jj+1)*dl(ilo)+aj(jj)*dr(jj))/(dl(ilo)+dr(jj))
+      ilo = ilo - 1
     end do
   end do
   
@@ -735,7 +735,7 @@ subroutine interpolate_array_derivatives( this, n, x, y)
   SLL_ALLOCATE(dl(k), ierr)
   SLL_ALLOCATE(dr(k), ierr)
   
-  ilo = 1
+  ilo = k
   
   do l = 1, n
   
