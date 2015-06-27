@@ -207,7 +207,8 @@ module sll_cubic_splines
            get_x1_delta,                      &
            get_x2_max,                        &
            get_x2_delta,                      &
-           deposit_value_2d
+           deposit_value_2d,                  &
+           get_coeff_cubic_spline_2d
 
 contains  ! ****************************************************************
 
@@ -2606,7 +2607,26 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     interpolate_x2_derivative_2D = 0.5_f64*rh2*(dx*(t1 + dx*t2) + t3)
   end function interpolate_x2_derivative_2D
 
+  subroutine get_coeff_cubic_spline_2d(spline, coeff)
+    type(sll_cubic_spline_2D), pointer :: spline
+    sll_real64, dimension(:), intent(out) :: coeff
+    sll_int32 :: i
+    sll_int32 :: j
+    sll_int32 :: num_pts_x1
+    sll_int32 :: num_pts_x2
 
+    num_pts_x1 = spline%num_pts_x1
+    num_pts_x2 = spline%num_pts_x2
+    
+    SLL_ASSERT(size(coeff)>=(num_pts_x1+2)*(num_pts_x2+2))
+    
+    do j=1,num_pts_x2+2
+      do i=1,num_pts_x1+2
+        coeff(i+(num_pts_x1+2)*(j-1)) = spline%coeffs(i-1,j-1)
+      enddo    
+    enddo
+  end subroutine get_coeff_cubic_spline_2d  
+    
   subroutine delete_cubic_spline_2D( spline )
     type(sll_cubic_spline_2D), pointer :: spline
     sll_int32                    :: ierr

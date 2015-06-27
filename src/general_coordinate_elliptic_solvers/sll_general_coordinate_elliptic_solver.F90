@@ -45,6 +45,7 @@ use sll_module_arbitrary_degree_spline_interpolator_2d, only:        &
   sll_arbitrary_degree_spline_interpolator_2d
 use sll_module_arbitrary_degree_spline_interpolator_1d, only:        &
   interv, deboor_type, bsplvd
+use sll_cubic_splines  
 use gauss_legendre_integration
 use gauss_lobatto_integration
 use sll_sparse_matrix_module, only : sll_csr_matrix,                 &
@@ -107,6 +108,8 @@ type, public :: general_coordinate_elliptic_solver
   !!! contains the values of all splines in all gauss points
   sll_real64, dimension(:,:,:,:), pointer :: v_splines1
   sll_real64, dimension(:,:,:,:), pointer :: v_splines2
+  sll_real64, dimension(:,:,:), pointer :: v_rho_splines1
+  sll_real64, dimension(:,:,:), pointer :: v_rho_splines2
   !sll_real64, dimension(:,:,:,:), pointer :: v_splines1_check
   !sll_real64, dimension(:,:,:,:), pointer :: v_splines2_check
 
@@ -122,6 +125,10 @@ type, public :: general_coordinate_elliptic_solver
   logical                                 :: perper
   type(deboor_type)                       :: db
   logical                                 :: precompute_rhs
+  type(sll_cubic_spline_2D),      pointer :: cubic_spline 
+  logical                                 :: use_cubic_splines
+  sll_int32                               :: rho_degree1
+  sll_int32                               :: rho_degree2
 
 end type general_coordinate_elliptic_solver
 
@@ -150,8 +157,8 @@ public sll_delete,                          &
        solve_general_coordinates_elliptic_eq_prototype, &
        initialize_general_elliptic_solver_prototype, &
        new_general_elliptic_solver_prototype,         &
-       factorize_mat_es_prototype
-       
+       factorize_mat_es_prototype, &
+       set_rho_coefficients_coordinates_elliptic_eq_prototype
 contains 
 
 ! *******************************************************************
@@ -829,7 +836,12 @@ function new_general_elliptic_solver_prototype( spline_degree1,   &
                                       eta1_max,         &
                                       eta2_min,         &
                                       eta2_max,         &
-                                      precompute_rhs ) result(es)
+                                      precompute_rhs,   &
+                                      rhs_bc1,          &
+                                      rhs_bc2,          &
+                                      use_cubic_splines, &
+                                      rho_degree1, &
+                                      rho_degree2 ) result(es)
 
 type(general_coordinate_elliptic_solver), pointer :: es
 
@@ -848,6 +860,11 @@ sll_real64, intent(in) :: eta1_max
 sll_real64, intent(in) :: eta2_min
 sll_real64, intent(in) :: eta2_max
 logical,    intent(in), optional :: precompute_rhs
+sll_int32,  intent(in), optional :: rhs_bc1
+sll_int32,  intent(in), optional :: rhs_bc2
+logical, intent(in), optional :: use_cubic_splines
+sll_int32, intent(in), optional :: rho_degree1
+sll_int32, intent(in), optional :: rho_degree2
 
 sll_int32 :: ierr
 
@@ -868,7 +885,12 @@ call initialize_general_elliptic_solver_prototype( es,               &
 &                eta1_max,         &
 &                eta2_min,         &
 &                eta2_max,         &
-&                precompute_rhs )
+&                precompute_rhs,   &
+&                rhs_bc1,          &
+&                rhs_bc2,          &
+&                use_cubic_splines,&
+&                rho_degree1,      &
+&                rho_degree2 )
    
 end function new_general_elliptic_solver_prototype
 
@@ -2285,6 +2307,115 @@ subroutine compute_non_zero_splines_and_deriv_at_cell_points( &
 end subroutine compute_non_zero_splines_and_deriv_at_cell_points
 
 
+
+
+
+subroutine compute_non_zero_splines_at_cell_points( &
+  num_cells, &
+  degree, &
+  knots, &
+  cell_points, & 
+  num_cell_points, &
+  v_splines )
+  sll_int32, intent(in) :: num_cells
+  sll_int32, intent(in) :: degree
+  sll_real64, dimension(:), intent(in) :: knots
+  sll_real64, dimension(:), intent(in) :: cell_points
+  sll_int32, intent(in) :: num_cell_points
+  sll_real64, dimension(:,:,:), intent(out) :: v_splines
+  
+  sll_int32 :: ierr
+  sll_int32 :: i
+  sll_int32 :: j
+  sll_real64 :: eta_min_loc
+  sll_real64 :: eta_max_loc
+  sll_real64 :: delta_eta_loc
+  sll_real64 :: eta
+  sll_real64, dimension(:), allocatable :: dbiatx
+  if(num_cells<1)then
+    print *,'#num_cells=',num_cells
+    call flush()
+    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
+    &','Problem with num_cells')
+  endif
+  if(degree<0)then
+    print *,'#degree=',degree
+    call flush()
+    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
+    &','Problem with degree')
+  endif
+  if(num_cell_points<1)then
+    print *,'#num_cell_points=',num_cell_points
+    call flush()
+    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
+    &','Problem with num_cell_points')
+  endif
+  if(minval(cell_points)<0.)then
+    print *,'#minval(cell_points)=',minval(cell_points)
+    call flush()
+    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
+    &','Problem with minval(cell_points)')
+  endif
+  if(maxval(cell_points)>=1.)then
+    print *,'#maxval(cell_points)=',maxval(cell_points)
+    call flush()
+    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
+    &','Problem with maxval(cell_points)')
+  endif
+  
+  if(size(knots)<num_cells+2*degree+1)then
+    print *,'#size(knots)=',size(knots)
+    call flush()
+    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
+    &','Problem with knots')
+  endif
+  if(size(v_splines,1)<degree+1)then
+    print *,'#size(v_splines,1)=',size(v_splines,1),degree+1
+    call flush()
+    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
+    &','Problem with size of v_splines')
+  endif
+  if(size(v_splines,2)<num_cell_points)then
+    print *,'#size(v_splines,2)=',size(v_splines,2),num_cell_points
+    call flush()
+    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
+    &','Problem with size of v_splines')
+  endif
+  if(size(v_splines,3)<num_cells)then
+    print *,'#size(v_splines,3)=',size(v_splines,3),num_cells
+    call flush()
+    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
+    &','Problem with size of v_splines')
+  endif
+  
+  SLL_ALLOCATE(dbiatx(degree+1),ierr)
+  
+  do i=1,num_cells
+    eta_min_loc = knots(i+degree)
+    eta_max_loc = knots(i+1+degree)
+    delta_eta_loc = eta_max_loc-eta_min_loc
+    do j=1,num_cell_points
+      eta = eta_min_loc+cell_points(j)*delta_eta_loc
+      !print *,'#eta=',eta_min_loc,cell_points(j),delta_eta_loc
+      !call flush()
+      call compute_b_spline_at_x( &
+        knots, &
+        i+degree, &
+        eta, &
+        degree, &
+        dbiatx)
+      v_splines(1:degree+1,j,i) = dbiatx
+      !print *,  v_splines(1,1:degree+1,j,i)
+      !call flush()
+      !stop
+    enddo  
+  enddo
+  
+  
+end subroutine compute_non_zero_splines_at_cell_points
+
+
+
 subroutine compute_global_knots( &
   bc_min, &
   bc_max, &
@@ -2493,8 +2624,13 @@ subroutine initialize_general_elliptic_solver_prototype( &
        eta1_min,                               &
        eta1_max,                               &
        eta2_min,                               &
-       eta2_max,                                &
-       precompute_rhs)
+       eta2_max,                               &
+       precompute_rhs,                         &
+       rhs_bc1,                                &
+       rhs_bc2,                                &
+       use_cubic_splines,                      &
+       rho_degree1,                            &
+       rho_degree2)
     
 type(general_coordinate_elliptic_solver), intent(out) :: es
 
@@ -2513,6 +2649,11 @@ sll_real64, intent(in) :: eta1_max
 sll_real64, intent(in) :: eta2_min
 sll_real64, intent(in) :: eta2_max
 logical,    intent(in), optional :: precompute_rhs
+sll_int32,  intent(in), optional :: rhs_bc1
+sll_int32,  intent(in), optional :: rhs_bc2
+logical, intent(in), optional :: use_cubic_splines
+sll_int32, intent(in), optional :: rho_degree1
+sll_int32, intent(in), optional :: rho_degree2
 
 sll_int32 :: num_splines1
 sll_int32 :: num_splines2
@@ -2531,7 +2672,47 @@ sll_real64 :: vec_sz2
 if(present(precompute_rhs))then
   es%precompute_rhs = precompute_rhs
 else
-  es%precompute_rhs = .true.
+  es%precompute_rhs = .false.
+endif
+
+if(present(use_cubic_splines))then
+  es%use_cubic_splines = use_cubic_splines
+else
+  es%use_cubic_splines = .false.
+endif
+
+if(es%use_cubic_splines)then
+  if(present(rhs_bc1) .and. present(rhs_bc2))then
+  es%cubic_spline => new_cubic_spline_2D( &
+    num_cells1+1, &
+    num_cells2+1, &
+    eta1_min, &
+    eta1_max, &
+    eta2_min, &
+    eta2_max, &
+    rhs_bc1, &
+    rhs_bc2)
+  else
+    SLL_ERROR('initialize_general_elliptic_solver_prototype&
+    &','provide rhs_bc1 and rhs_bc2')
+  endif  
+endif
+
+if(present(rho_degree1))then
+  es%rho_degree1 = rho_degree1
+else
+  es%rho_degree1 = 3   
+endif
+
+if(present(rho_degree2))then
+  es%rho_degree2 = rho_degree2
+else
+  es%rho_degree2 = 3   
+endif
+
+if(es%use_cubic_splines)then
+  es%rho_degree1 = 3
+  es%rho_degree2 = 3
 endif
 
 es%total_num_splines_loc = (spline_degree1+1)*(spline_degree2+1)
@@ -2543,6 +2724,22 @@ num_splines2 = num_cells2 + spline_degree2
 dim1 = (spline_degree1+1)*(spline_degree2+1)
 dim2 = (num_cells1*num_cells2)
 SLL_ALLOCATE(es%local_to_global_indices(1:dim1,1:dim2),ierr)
+dim1 = (spline_degree1+1)*(spline_degree2+1)
+dim2 = (num_cells1*num_cells2)
+SLL_ALLOCATE(es%local_to_global_indices(1:dim1,1:dim2),ierr)
+dim1 = (spline_degree1+1)*(spline_degree2+1)
+SLL_ALLOCATE(es%local_to_global_indices_source(1:dim1,1:dim2),ierr)
+dim1 = (es%rho_degree1+1)*(es%rho_degree2+1)
+SLL_ALLOCATE(es%local_to_global_indices_source_bis(1:dim1,1:dim2),ierr)
+
+
+
+if(es%precompute_rhs)then
+  dim1 = num_cells1 + es%rho_degree1
+  dim2 = num_cells2 + es%rho_degree2
+  SLL_ALLOCATE(es%rho_coeff_1d(dim1*dim2),ierr)
+endif
+
 
 SLL_ALLOCATE(es%knots1(num_cells1 + 2*spline_degree1+1),ierr)
 SLL_ALLOCATE(es%knots2(num_cells2 + 2*spline_degree2+1),ierr)
@@ -2686,6 +2883,8 @@ call flush()
 ! derivatives in each gauss points
 SLL_ALLOCATE(es%v_splines1(2,spline_degree1+1,spline_degree1+2,num_cells1),ierr)
 SLL_ALLOCATE(es%v_splines2(2,spline_degree2+1,spline_degree2+2,num_cells2),ierr)
+SLL_ALLOCATE(es%v_rho_splines1(es%rho_degree1+1,spline_degree1+2,num_cells1),ierr)
+SLL_ALLOCATE(es%v_rho_splines2(es%rho_degree2+1,spline_degree2+2,num_cells2),ierr)
 
 
 
@@ -2736,6 +2935,28 @@ call compute_non_zero_splines_and_deriv_at_cell_points( &
   num_pts_g2, &
   es%v_splines2 )
 print *,'#compute_non_zero_splines_and_deriv_at_cell_points done'
+
+call compute_non_zero_splines_at_cell_points( &
+  num_cells1, &
+  es%rho_degree1, &
+  es%knots1, &
+  es%gauss_pts1(1,:)/es%delta_eta1, & 
+  num_pts_g1, &
+  es%v_rho_splines1 )
+
+
+call compute_non_zero_splines_at_cell_points( &
+  num_cells2, &
+  es%rho_degree2, &
+  es%knots2, &
+  es%gauss_pts2(1,:)/es%delta_eta2, & 
+  num_pts_g2, &
+  es%v_rho_splines2 )
+
+
+
+
+
 call flush()
 
 end subroutine initialize_general_elliptic_solver_prototype
@@ -3134,11 +3355,76 @@ call flush()
    
 end subroutine factorize_mat_es_prototype
 
-subroutine solve_general_coordinates_elliptic_eq_prototype( es, rho, phi)
+subroutine set_rho_coefficients_coordinates_elliptic_eq_prototype( &
+  es, &
+  rho_values, &
+  rho_coeff)
+class(general_coordinate_elliptic_solver), intent(inout) :: es
+sll_real64, dimension(:,:), intent(in), optional :: rho_values
+sll_real64, dimension(:,:), intent(in), optional :: rho_coeff
+
+sll_int32 :: num_spl1
+sll_int32 :: num_spl2
+sll_int32 :: i
+sll_int32 :: j
+
+num_spl1 = es%num_cells1+es%spline_degree1
+num_spl2 = es%num_cells2+es%spline_degree2
+
+  
+  if(es%precompute_rhs .eqv. .false.)then
+    SLL_ERROR('set_rho_coefficients_coordinates_elliptic_eq_prototype&
+    &','should not be used as es%precompute_rhs is set to false')             
+  endif
+   
+  if(present(rho_values).and.present(rho_coeff))then
+    SLL_ERROR('set_rho_coefficients_coordinates_elliptic_eq_prototype&
+    &','provide either rho_values or rho_coeff, not both')         
+  endif
+    
+  if(present(rho_values))then
+    if(es%use_cubic_splines)then
+      call get_coeff_cubic_spline_2d(es%cubic_spline,es%rho_coeff_1d)
+    else
+    SLL_ERROR('set_rho_coefficients_coordinates_elliptic_eq_prototype&
+    &','spline coeff computed only with cubic splines for the moment&
+    & if precompute_rhs is true')                 
+    endif
+  else
+    if(present(rho_coeff))then
+      if(size(rho_coeff,1)<num_spl1)then
+        print *,'#size(rho_coeff,1)=',size(rho_coeff,1)
+        call flush()
+        SLL_ERROR('set_rho_coefficients_coordinates_elliptic_eq_prototype&
+        &','bad size(rho_coeff,1)')
+      endif
+      if(size(rho_coeff,2)<num_spl2)then
+        print *,'#size(rho_coeff,2)=',size(rho_coeff,2)
+        call flush()
+        SLL_ERROR('set_rho_coefficients_coordinates_elliptic_eq_prototype&
+        &','bad size(rho_coeff,2)')
+      endif
+      do j = 1,num_spl2
+        do i = 1,num_spl1
+          es%rho_coeff_1d(i+num_spl1*(j-1)) = rho_coeff(i,j)
+        enddo
+      enddo
+    else
+      SLL_ERROR('set_rho_coefficients_coordinates_elliptic_eq_prototype&
+        &','provide rho_values or rho_coeff')     
+    endif
+  endif
+
+end subroutine set_rho_coefficients_coordinates_elliptic_eq_prototype
+
+subroutine solve_general_coordinates_elliptic_eq_prototype( &
+  es, &
+  phi, &
+  rho_field)
 
 class(general_coordinate_elliptic_solver), intent(inout)      :: es
-class(sll_scalar_field_2d_base),           intent(in),target  :: rho
 sll_real64, dimension(:,:), intent(out) :: phi
+class(sll_scalar_field_2d_base),           intent(in),target, optional  :: rho_field
 !class(sll_scalar_field_2d_discrete),       intent(inout)      :: phi
 !
 sll_real64, dimension(:,:),      pointer :: coeff_rho
@@ -3258,7 +3544,13 @@ call compute_index_coeff( &
   int_jac = 0.0_f64
 
   SLL_CLEAR_ALLOCATE(M_rho_loc(1:es%total_num_splines_loc),ierr)
-
+  
+  if(es%precompute_rhs)then
+    es%rho_vec = 0._f64
+    
+    
+  else
+    if(present(rho_field))then
   do j=1, nc_2
     do i=1, nc_1
       M_rho_loc = 0.0_f64
@@ -3271,9 +3563,9 @@ call compute_index_coeff( &
           gpt1  = eta1 + es%gauss_pts1(1,ii)
           wgpt1 = es%gauss_pts1(2,ii)
       
-          val_f   = rho%value_at_point(gpt1,gpt2)
+          val_f   = rho_field%value_at_point(gpt1,gpt2)
           
-          jac_mat = rho%get_jacobian_matrix(gpt1,gpt2)
+          jac_mat = rho_field%get_jacobian_matrix(gpt1,gpt2)
           val_j   = jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1)
           val_j   = val_j*wgpt1*wgpt2
           valfj   = val_f*val_j
@@ -3304,11 +3596,16 @@ call compute_index_coeff( &
       end do
     end do
   end do
-
+    else
+      SLL_ERROR('solve_general_coordinates_elliptic_eq_prototype&
+      &','rho_field should be given')
+    endif  
+  endif
 
   !if (es%perper) es%rho_vec = es%rho_vec - int_rho/int_jac
-  !print *,'sum(es%rho_vec)=',int_rho,sum(es%rho_vec)
+  print *,'sum(es%rho_vec)=',int_rho,sum(es%rho_vec)
   if (es%perper) es%rho_vec = es%rho_vec - sum(es%rho_vec)/es%intjac*es%masse
+  print *,'after sum(es%rho_vec)=',sum(es%rho_vec)
 
 bc1_min = es%bc1_min
 bc1_max = es%bc1_max
@@ -3542,6 +3839,8 @@ subroutine compute_values_at_knots( &
   sll_int32 :: ierr
   sll_int32 :: i
   sll_int32 :: j
+  sll_real64 :: err
+  
   
   if(num_cells1<1)then
     print *,'#num_cells1=',num_cells1
@@ -3644,11 +3943,91 @@ subroutine compute_values_at_knots( &
       biat2(1:degree2+1),&
       tmp(i,num_cells2:num_cells2+degree2))  
   enddo
-
-
-
+  
+!  err = 0._f64
+!  !check periodicity
+!  do i=1,num_cells1+1
+!    err = max(err,abs(output(i,1)-output(i,num_cells2+1)))
+!  enddo
+!  do i=1,num_cells2+1
+!    err = max(err,abs(output(1,i)-output(num_cells1+1,i)))
+!  enddo
+  
+  !print *,'#err periodicity=',errg
   
 end subroutine compute_values_at_knots
+
+
+
+!subroutine compute_local_to_global_indices_source( &
+!  num_cells1, &
+!  num_cells2, &
+!  degree1, &
+!  degree2, &
+!  degree1_bis, &
+!  degree2_bis, &
+!  local_to_global_indices_source, &
+!  local_to_global_indices_source_bis, &
+!  bc_index1, & !index1
+!  bc_index2, & !index1_bis 
+!  bc_index3, & !index2
+!  bc_index4, & !index2_bis
+!  
+!
+!
+!do j = 1, es%num_cells2
+!do i = 1, es%num_cells1
+!  icell = i + (j-1)*es%num_cells1
+!  b = 0
+!  do jj = 0, es%spline_degree2
+!    index3 = j + jj
+!    if (bc2_min==SLL_PERIODIC .and. bc2_max==SLL_PERIODIC) then 
+!      if ( index3 > es%total_num_splines2) then
+!        index3 = index3 - es%total_num_splines2
+!      end if
+!    end if
+!    do ii = 0,es%spline_degree1
+!      index1 = i + ii
+!      if (bc1_min==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC) then 
+!        if ( index1 > es%total_num_splines1) then
+!          index1 = index1 - es%total_num_splines1
+!        end if
+!        nbsp = es%total_num_splines1
+!      else !if (bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET) then
+!        nbsp = es%num_cells1 + es%spline_degree1
+!      end if
+!      x = index1 + (index3-1)*nbsp
+!      b = b+1
+!      index_coef1 = tab_index_coeff1(i) - es%spline_degree1 + ii
+!      index_coef2 = tab_index_coeff2(j) - es%spline_degree2 + jj
+!      es%local_to_global_indices_source(b,icell)= index_coef1 + (index_coef2-1)*(es%num_cells1+1)
+!      bprime = 0
+!      do ll = 0,es%spline_degree2
+!        index4 = j + ll
+!        if ( (bc2_min==SLL_PERIODIC).and.(bc2_max== SLL_PERIODIC))then
+!          if ( index4 > es%total_num_splines2) then
+!            index4 = index4 - es%total_num_splines2
+!          end if
+!        end if
+!        do kk = 0,es%spline_degree1
+!          index2 = i + kk
+!          if(bc1_min==SLL_PERIODIC .and. bc1_max==SLL_PERIODIC)then
+!            if ( index2 > es%total_num_splines1) then
+!              index2 = index2 - es%total_num_splines1
+!            end if
+!            nbsp1 = es%total_num_splines1
+!          else !if (bc1_min==SLL_DIRICHLET .and. bc1_max==SLL_DIRICHLET) then
+!            nbsp1 = es%num_cells1 + es%spline_degree1
+!          end if
+!          y      = index2 + (index4-1)*nbsp1
+!          bprime = bprime+1 
+!          es%local_to_global_indices_source_bis(bprime,icell)= y
+!        end do
+!      end do
+!    end do
+!  end do
+!end do
+!end do
 
 
 
