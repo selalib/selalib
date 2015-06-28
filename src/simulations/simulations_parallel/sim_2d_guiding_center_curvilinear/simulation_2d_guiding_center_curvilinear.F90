@@ -547,9 +547,9 @@ contains
       case ("SLL_DIRICHLET")
         print*,"#bc_eta1_left = SLL_DIRICHLET"  
         sim%bc_eta1_left = SLL_DIRICHLET
-!      case ("SLL_NEUMANN")
-!        print*,"#bc_eta1_left = SLL_NEUMANN"  
-!        sim%bc_eta1_left = SLL_NEUMANN
+      case ("SLL_NEUMANN")
+        print*,"#bc_eta1_left = SLL_NEUMANN"  
+        sim%bc_eta1_left = SLL_NEUMANN
       case default
         print *,'#bad bc_eta1_left',bc_eta1_left
         print *,'#not implemented'
@@ -564,6 +564,9 @@ contains
       case ("SLL_DIRICHLET")
         print*,"#bc_eta1_right = SLL_DIRICHLET"  
         sim%bc_eta1_right = SLL_DIRICHLET
+      case ("SLL_NEUMANN")
+        print*,"#bc_eta1_right = SLL_NEUMANN"  
+        sim%bc_eta1_right = SLL_NEUMANN
       case default
         print *,'#bad bc_eta1_right',bc_eta1_right
         print *,'#not implemented'
@@ -578,6 +581,9 @@ contains
       case ("SLL_DIRICHLET")
         print*,"#bc_eta2_left = SLL_DIRICHLET"  
         sim%bc_eta2_left = SLL_DIRICHLET
+      case ("SLL_NEUMANN")
+        print*,"#bc_eta2_left = SLL_NEUMANN"  
+        sim%bc_eta2_left = SLL_NEUMANN
       case default
         print *,'#bad bc_eta2_left',bc_eta2_left
         print *,'#not implemented'
@@ -592,6 +598,9 @@ contains
       case ("SLL_DIRICHLET")
         print*,"#bc_eta2_right = SLL_DIRICHLET"  
         sim%bc_eta2_right = SLL_DIRICHLET
+      case ("SLL_NEUMANN")
+        print*,"#bc_eta2_right = SLL_NEUMANN"  
+        sim%bc_eta2_right = SLL_NEUMANN
       case default
         print *,'#bad bc_eta2_right',bc_eta2_right
         print *,'#not implemented'
