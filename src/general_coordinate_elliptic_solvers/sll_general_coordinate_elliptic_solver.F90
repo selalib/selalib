@@ -2736,7 +2736,7 @@ sll_int32, intent(in), optional :: rho_degree2
 
 sll_int32 :: num_splines1
 sll_int32 :: num_splines2
-sll_int32 :: vec_sz ! for rho_vec and phi_vec allocations
+sll_int32 :: vec_sz ! for rho_vec allocation
 sll_int32 :: ierr
 sll_int32 :: solution_size
 sll_int32 :: dim1, dim2
@@ -2806,9 +2806,6 @@ es%total_num_splines_loc = (spline_degree1+1)*(spline_degree2+1)
 num_splines1 = num_cells1 + spline_degree1
 num_splines2 = num_cells2 + spline_degree2
   
-dim1 = (spline_degree1+1)*(spline_degree2+1)
-dim2 = (num_cells1*num_cells2)
-SLL_ALLOCATE(es%local_to_global_indices(1:dim1,1:dim2),ierr)
 dim1 = (spline_degree1+1)*(spline_degree2+1)
 dim2 = (num_cells1*num_cells2)
 SLL_ALLOCATE(es%local_to_global_indices(1:dim1,1:dim2),ierr)
@@ -2988,7 +2985,7 @@ vec_sz2 = compute_vec_size( &
   bc2_min, &
   bc2_max)
 vec_sz = vec_sz1*vec_sz2  
-es%perper = .true. 
+!es%perper = .true. 
 
 SLL_ALLOCATE(es%rho_vec(vec_sz),ierr)
 SLL_ALLOCATE(es%masse(vec_sz),ierr)
@@ -3840,7 +3837,8 @@ else
 endif
 
 
-SLL_ALLOCATE(coeff_phi(nc_1+es%total_num_splines1,nc_2+es%total_num_splines2),ierr)
+!SLL_ALLOCATE(coeff_phi(nc_1+es%total_num_splines1,nc_2+es%total_num_splines2),ierr)
+SLL_ALLOCATE(coeff_phi(nc_1+es%spline_degree1,nc_2+es%spline_degree2),ierr)
 coeff_phi(:,:) = 0._f64
 
   k = 0
@@ -3850,8 +3848,10 @@ coeff_phi(:,:) = 0._f64
       do i = 1, nc_1+es%spline_degree1
         k = k+1
         ii = index_coeff1(i)
-        if(ii/=0)then
-          coeff_phi(i,j) = es%phi_vec(ii+vec_sz1*(jj-1))
+        if(ii/=0)then          
+          coeff_phi(i,j) = &
+            es%phi_vec(ii+es%total_num_splines1*(jj-1))
+          !coeff_phi(i,j) = es%phi_vec(ii+vec_sz1*(jj-1))
         endif  
       end do
     endif  
@@ -4002,6 +4002,9 @@ subroutine compute_index_coeff( &
   
   if(bc_min==SLL_DIRICHLET)then
     index(1) = 0
+    do i=2,num_cells+degree
+      index(i) = i-1
+    enddo
   endif
   if(bc_max==SLL_DIRICHLET)then
     index(num_cells+degree) = 0
