@@ -54,10 +54,14 @@ type, public :: sll_bspline_2d
 
 end type sll_bspline_2d
 
-public :: new_bspline_1d,     new_bspline_2d
-public :: delete_bspline_1d,  delete_bspline_2d
-public :: compute_bspline_1d, compute_bspline_2d
-public :: update_bspline_1d,  update_bspline_2d
+public :: new_bspline_1d
+public :: new_bspline_2d
+public :: delete_bspline_1d
+public :: delete_bspline_2d
+public :: compute_bspline_1d
+public :: compute_bspline_2d
+public :: update_bspline_1d
+public :: update_bspline_2d
 public :: interpolate_value
 public :: interpolate_derivative
 public :: interpolate_array_values
@@ -216,25 +220,27 @@ function new_bspline_2d( nx1, degree1, x1_min, x1_max, bc1, &
   sll_real64, intent(in), optional :: sr2
 
 
+  sll_int32                        :: n1
+  sll_int32                        :: n2
   sll_int32                        :: ierr
 
   SLL_ALLOCATE( new_bspline_2d, ierr )
 
   if (present(sl1) .and. present(sr1)) then
-    new_bspline_2d%bs1 => new_bspline_1d( nx1, degree1, x1_min, x1_max, bc1, &
-                                          sl1, sr1)
+    new_bspline_2d%bs1 => new_bspline_1d(nx1,degree1,x1_min,x1_max,bc1,sl1,sr1)
   else
-    new_bspline_2d%bs1 => new_bspline_1d( nx1, degree1, x1_min, x1_max, bc1)
+    new_bspline_2d%bs1 => new_bspline_1d(nx1,degree1,x1_min,x1_max,bc1)
   end if
 
   if (present(sl1) .and. present(sr1)) then
-    new_bspline_2d%bs2 => new_bspline_1d( nx2, degree2, x2_min, x2_max, bc2, &
-                                          sl2, sr2)
+    new_bspline_2d%bs2 => new_bspline_1d(nx2,degree2,x2_min,x2_max,bc2,sl2,sr2)
   else
-    new_bspline_2d%bs2 => new_bspline_1d( nx2, degree2, x2_min, x2_max, bc2)
+    new_bspline_2d%bs2 => new_bspline_1d(nx2,degree2,x2_min,x2_max,bc2)
   end if
 
-  SLL_CLEAR_ALLOCATE(new_bspline_2d%bcoef(1:nx1,1:nx2), ierr)
+  n1 = size(new_bspline_2d%bs1%bcoef)
+  n2 = size(new_bspline_2d%bs2%bcoef)
+  SLL_CLEAR_ALLOCATE(new_bspline_2d%bcoef(1:n1,1:n2), ierr)
 
 end function new_bspline_2d
 
@@ -351,37 +357,25 @@ subroutine build_system_periodic(this)
   this%dbiatx = 0.0_f64
   
   do i = 1, n
-      
     taui = this%tau(i)
     ilp1mx = min ( i + k, n + 1 )
     left = max ( left, i )
     if ( taui < this%t(left) ) stop '  The linear system is not invertible!'
-
     do while ( this%t(left+1) <= taui )
-      
       left = left + 1
-      
       if ( left < ilp1mx ) cycle
-      
       left = left - 1
-      
       if ( this%t(left+1) < taui ) stop '  The linear system is not invertible!'
-      
       exit
-      
     end do
-
     call bsplvb ( this, k, 1, taui, left, this%bcoef )
     jj = i-left+1+(left-k)*(k+k-1)
     do j = 1, k
         jj = jj + kpkm2
         this%q(jj) = this%bcoef(j)
     end do
-   
   end do
   
-  !Obtain factorization of A, stored again in Q.
-
   call banfac ( this%q, k+k-1, n, k-1, k-1, iflag )
 
 end subroutine build_system_periodic
@@ -491,25 +485,27 @@ subroutine update_bspline_2d(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
   if (present(sl1_l) .and. present(sl1_r)) then
     do j = 1, n2
       call update_bspline_1d( this%bs1, gtau(:,j), sl1_l, sl1_r)
+      bwork(j,:) = this%bs1%bcoef
     end do
   else
     do j = 1, n2
       call update_bspline_1d( this%bs1, gtau(:,j))
+      bwork(j,:) = this%bs1%bcoef
     end do
   end if
 
-  bwork(j,:) = this%bs1%bcoef
 
   if (present(sl2_l) .and. present(sl2_r)) then
     do i = 1, n1
       call update_bspline_1d( this%bs2, bwork(:,i), sl2_l, sl2_r)
+      this%bcoef(i,:) = this%bs2%bcoef(:)
     end do
   else
     do i = 1, n1
       call update_bspline_1d( this%bs2, bwork(:,i))
+      this%bcoef(i,:) = this%bs2%bcoef(:)
     end do
   end if
-      this%bcoef(i,:) = this%bs2%bcoef
 
   deallocate(bwork)
 
@@ -536,10 +532,10 @@ subroutine update_bspline_1d(this, gtau, slope_min, slope_max)
 
   n = this%n
   k = this%k
-  SLL_ASSERT(size(gtau) == n)
 
   if (this%bc_type == SLL_PERIODIC) then
 
+    SLL_ASSERT(size(gtau) == n)
     this%bcoef = gtau
     call banslv ( this%q, k+k-1, n, k-1, k-1, this%bcoef )
 
