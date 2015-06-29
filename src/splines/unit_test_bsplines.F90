@@ -18,49 +18,20 @@ use sll_bsplines
 
 implicit none
 
-type(sll_bspline_1d), pointer         :: bspline_1d
+type(sll_bspline_1d), pointer :: bspline_1d
+type(sll_bspline_2d), pointer :: bspline_2d
 
-
-sll_real64, dimension(:), allocatable :: x
-sll_real64, dimension(:), allocatable :: y
-sll_int32,  parameter                 :: n = 512
-sll_int32                             :: ierr
-sll_real64, dimension(:), allocatable :: gtau
-sll_real64, dimension(:), allocatable :: htau
-
-type(sll_bspline_2d), pointer           :: bspline_2d
-sll_real64, parameter                   :: x1_min = 0.0_f64
-sll_real64, parameter                   :: x1_max = 1.0_f64
-sll_real64, parameter                   :: x2_min = 0.0_f64
-sll_real64, parameter                   :: x2_max = 1.0_f64
-sll_int32,  parameter                   :: n1 = 512
-sll_int32,  parameter                   :: n2 = 512
-sll_real64, dimension(:,:), allocatable :: f
-sll_real64, dimension(:,:), allocatable :: g
-
-sll_real64                            :: err1
-sll_real64                            :: err2
-sll_int32                             :: i
-sll_int32                             :: j
-sll_int32,  parameter                 :: d = 3
-sll_real64                            :: h
-sll_int32,  parameter                 :: nstep = 1
+sll_real64                    :: err1
+sll_real64                    :: err2
+sll_int32                     :: i
+sll_int32                     :: j
+sll_int32,  parameter         :: d = 3
+sll_int32,  parameter         :: nstep = 1
 
 sll_int32,  parameter :: m = 2
-sll_real64 :: tau_min = 0.0_f64
-sll_real64 :: tau_max = 1.0_f64
-sll_real64 :: slope_min
-sll_real64 :: slope_max
-sll_real64 :: t0, t1, t2, t3
+sll_real64            :: t0, t1, t2, t3, t4
+sll_int32             :: ierr
 
-SLL_ALLOCATE(x(n),ierr)
-SLL_ALLOCATE(y(n),ierr)
-SLL_ALLOCATE(htau(n),ierr)
-
-h = 1.0_f64/(n-1)
-do i = 1, n
-  x(i) = (i-1)*h
-end do
 
 print*,'*** 1D PERIODIC ***'
 call test_process_1d(SLL_PERIODIC)
@@ -78,16 +49,39 @@ contains
 subroutine test_process_1d(bc_type)
 
   sll_int32, intent(in) :: bc_type
+
+  sll_real64 :: tau_min   = 0.0_f64
+  sll_real64 :: tau_max   = 1.0_f64
+  sll_real64 :: slope_min = 0.0_f64
+  sll_real64 :: slope_max = 0.0_f64
+
+  sll_real64, dimension(:), allocatable :: x
+  sll_real64, dimension(:), allocatable :: y
+  sll_real64, dimension(:), allocatable :: gtau
+  sll_real64, dimension(:), allocatable :: htau
+
+  sll_int32,  parameter                 :: n = 512
+  sll_real64                            :: h
   
+  SLL_ALLOCATE(x(n),ierr)
+  SLL_ALLOCATE(y(n),ierr)
+  SLL_ALLOCATE(gtau(n),ierr)
+  SLL_ALLOCATE(htau(n),ierr)
+  
+  h = 1.0_f64/(n-1)
+  do i = 1, n
+    x(i) = (i-1)*h
+  end do
+
   if (bc_type == SLL_PERIODIC) print*, "Periodic Bspline"
   bspline_1d => new_bspline_1d( n, d, tau_min, tau_max, bc_type)
   print*, 'bspline_1d allocated'
   
-  htau = cos(2*sll_pi*bspline_1d%tau)
+  gtau = cos(2*sll_pi*bspline_1d%tau)
   slope_min = -sin(2*sll_pi*tau_min)*2*sll_pi
   slope_max = -sin(2*sll_pi*tau_max)*2*sll_pi
   call cpu_time(t0)
-  call compute_bspline_1d(bspline_1d, htau, slope_min, slope_max)
+  call compute_bspline_1d(bspline_1d, gtau, slope_min, slope_max)
   call cpu_time(t1)
   do j = 1,nstep
     call interpolate_array_values( bspline_1d, n, x, y)
@@ -119,14 +113,16 @@ subroutine test_process_1d(bc_type)
   do j = 1,nstep
     err1 = 0.0_f64
     do i = 1, n
-      err1 = err1 + abs(interpolate_value(bspline_1d,x(i))-sin(2*sll_pi*x(i))) 
+      err1 = err1 + &
+        abs(interpolate_value(bspline_1d,x(i))-sin(2*sll_pi*x(i))) 
     end do
   end do
   call cpu_time(t1)
   do j = 1,nstep
     err2 = 0.0_f64
     do i = 1, n
-      err2 = err2 + abs(interpolate_derivative(bspline_1d,x(i))-2*sll_pi*cos(2*sll_pi*x(i))) 
+      err2 = err2 + &
+        abs(interpolate_derivative(bspline_1d,x(i))-2*sll_pi*cos(2*sll_pi*x(i))) 
     end do
   end do
   call cpu_time(t2)
@@ -143,20 +139,33 @@ end subroutine test_process_1d
 
 subroutine test_process_2d(bc1_type, bc2_type)
 
-  sll_int32, intent(in) :: bc1_type
-  sll_int32, intent(in) :: bc2_type
+  sll_int32, intent(in)   :: bc1_type
+  sll_int32, intent(in)   :: bc2_type
 
   sll_real64, allocatable :: ftau(:,:)
+  sll_real64, allocatable :: gtau(:,:)
   sll_real64, allocatable :: tau1(:,:)
   sll_real64, allocatable :: tau2(:,:)
 
-  sll_real64 :: sl1, sr1, sl2, sr2 ! slopes at boundaries
+  sll_int32,  parameter   :: n1 = 512
+  sll_int32,  parameter   :: n2 = 512
+  sll_real64              :: sl1      ! slopes at boundaries
+  sll_real64              :: sr1      ! slopes at boundaries
+  sll_real64              :: sl2      ! slopes at boundaries
+  sll_real64              :: sr2      ! slopes at boundaries
+  sll_real64, parameter   :: dpi = 2*sll_pi
+
+  sll_real64, parameter   :: x1_min = 0.0_f64
+  sll_real64, parameter   :: x1_max = 1.0_f64
+  sll_real64, parameter   :: x2_min = 0.0_f64
+  sll_real64, parameter   :: x2_max = 1.0_f64
   
   bspline_2d => new_bspline_2d( n1, d, x1_min, x1_max, bc1_type, &
                                 n2, d, x2_min, x2_max, bc2_type  )
   print*, 'bspline_2d allocated'
 
-  allocate(tau1(n1,n2), tau2(n1,n2), ftau(n1,n2))
+  allocate(ftau(n1,n2), gtau(n1,n2))
+  allocate(tau1(n1,n2), tau2(n1,n2))
   
   do j = 1, n2
     do i = i, n1
@@ -176,44 +185,56 @@ subroutine test_process_2d(bc1_type, bc2_type)
   call compute_bspline_2d(bspline_2d, ftau, sl1, sr1, sl2, sr2)
   call cpu_time(t1)
   do j = 1,nstep
-    call interpolate_array_values( bspline_2d, n, x, y)
+    call interpolate_array_values_2d( bspline_2d, n1, n2, ftau, gtau)
   end do
-  print*, "average values error      = ", sum(abs(y-cos(2*sll_pi*x)))/n
-  print*, "maximum values error      = ", maxval(abs(y-cos(2*sll_pi*x)))
-!  call cpu_time(t2)
-!  do j = 1,nstep
-!    call interpolate_array_derivatives( bspline_1d, n, x, y)
-!  end do
-  print*, "average derivatives error = ", sum(abs(y+2*sll_pi*sin(2*sll_pi*x)))/n
-  print*, "maximum derivatives error = ", maxval(abs(y+2*sll_pi*sin(2*sll_pi*x)))
-  call cpu_time(t3)
-
-  print*, ' time spent to compute interpolants          : ', t1-t0
-  print*, ' time spent to interpolate array values      : ', t2-t1
-  print*, ' time spent to interpolate array derivatives : ', t3-t2
-  
-  call cpu_time(t0)
-  do j = 1,nstep
-    err1 = 0.0_f64
-!    do i = 1, n
-!      err1 = err1 + abs(interpolate_value(bspline_1d,x(i))-sin(2*sll_pi*x(i))) 
-!    end do
-  end do
-  call cpu_time(t1)
-  do j = 1,nstep
-    err2 = 0.0_f64
-    do i = 1, n
-!      err2 = err2 + abs(interpolate_derivative(bspline_1d,x(i))-2*sll_pi*cos(2*sll_pi*x(i))) 
-    end do
-  end do
+  print*, "average error = ", sum(abs(gtau-cos(dpi*tau1)*cos(dpi*tau2)))/(n1*n2)
+  print*, "maximum error = ", maxval(abs(gtau-cos(dpi*tau1)*cos(dpi*tau2)))
   call cpu_time(t2)
+  do j = 1,nstep
+    call interpolate_array_x1_derivatives_2d( bspline_2d, n1, n2, ftau, gtau)
+  end do
+  print*, "average x1 derivatives error = ", &
+    sum(abs(gtau+dpi*sin(dpi*tau1)*cos(dpi*tau2)))/(n1*n2)
+  print*, "maximum x1 derivatives error = ", &
+    maxval(abs(gtau+dpi*cos(dpi*tau1)*sin(dpi*tau2)))
+  call cpu_time(t3)
+  do j = 1,nstep
+    call interpolate_array_x2_derivatives_2d( bspline_2d, n1, n2, ftau, gtau)
+  end do
+  print*, "average x2 derivatives error = ", sum(abs(gtau+dpi*sin(dpi*tau1)))/(n1*n2)
+  print*, "maximum x2 derivatives error = ", maxval(abs(gtau+dpi*sin(dpi*tau1)))
+  call cpu_time(t4)
+
+  print*, ' time spent to compute interpolants             : ', t1-t0
+  print*, ' time spent to interpolate array values         : ', t2-t1
+  print*, ' time spent to interpolate array x1 derivatives : ', t3-t2
+  print*, ' time spent to interpolate array x2 derivatives : ', t4-t3
   
-  print*, "-------------------------------------------------"
-  print*, " values error = ", err1 / n
-  print*, " derivatives error = ", err2 / n
-  print*, ' time spent in interpolate_value      : ', t1-t0
-  print*, ' time spent in interpolate_derivative : ', t2-t1
-  print*, "-------------------------------------------------"
+  !call cpu_time(t0)
+  !do j = 1,nstep
+  !  err1 = 0.0_f64
+  !  do i = 1, n
+  !    err1 = err1 + abs(interpolate_value(bspline_1d,x(i))-sin(dpi*x(i))) 
+  !  end do
+  !end do
+  !call cpu_time(t1)
+  !do j = 1,nstep
+  !  err2 = 0.0_f64
+  !  do i = 1, n
+  !    err2 = err2 + abs(interpolate_derivative(bspline_1d,x(i))-dpi*cos(dpi*x(i))) 
+  !  end do
+  !end do
+  !call cpu_time(t2)
+  !
+  !print*, "-------------------------------------------------"
+  !print*, " values error = ", err1 / n
+  !print*, " derivatives error = ", err2 / n
+  !print*, ' time spent in interpolate_value      : ', t1-t0
+  !print*, ' time spent in interpolate_derivative : ', t2-t1
+  !print*, "-------------------------------------------------"
+
+  deallocate(tau1, tau2)
+  deallocate(ftau, gtau)
 
 end subroutine test_process_2d
 
