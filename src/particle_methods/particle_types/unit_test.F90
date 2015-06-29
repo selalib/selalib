@@ -1,3 +1,5 @@
+!> @ingroup particle_methods
+!> @brief Unit test for particles of type \ref sll_simple_pic_4d_particle
 program simple_pic_4d_group_tester
 
 #include "sll_working_precision.h"
