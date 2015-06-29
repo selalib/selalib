@@ -38,6 +38,8 @@ program pic1d1v_vp_periodic
   call simulation%init_from_file( filename_local )
   print *, 'simulation initialized from file'
 
+  call simulation%new_pic()
+  write(*,*) "figuring out the place of the bug"
   call simulation%run( )
   print *, 'run completed'
 
