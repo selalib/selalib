@@ -27,7 +27,9 @@
   deltarTe = 0.1        !1.45
   !QN_case  = "SLL_NO_QUASI_NEUTRAL"
   !QN_case  = "SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW"
-  QN_case  = "SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW"
+  !QN_case  = "SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW"
+  QN_case  = "SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW_PADE_EPSILON"
+  pade_epsilon = 1.0e-3
   poisson2d_BC_rmin = "SLL_NEUMANN_MODE_0"
   poisson2d_BC_rmax = "SLL_DIRICHLET"
 /
