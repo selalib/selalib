@@ -162,10 +162,10 @@ contains
 
 
 
-  subroutine new_sll_pic_1d( sim, mesh_dx )
+  subroutine new_sll_pic_1d( sim )
             
     class( sll_simulation_pic1d1v_vp_periodic ), intent(inout) :: sim
-    sll_real64                                 , intent(inout) :: mesh_dx
+    sll_real64   :: mesh_dx
    
       !  SLL_ASSERT( is_power_of_two( int( sim%mesh_cells,i64)))
 
@@ -177,16 +177,18 @@ contains
         !really global variables
         coll_rank = sll_get_collective_rank( sll_world_collective )
         coll_size = sll_get_collective_size( sll_world_collective )
-        call sll_collective_barrier(sll_world_collective)
 
+        call sll_collective_barrier(sll_world_collective)
+  
+print *, "*********************searching for bug********************************"
 
         !The Mesh is needed on every Node, it is global
         !space set and initiation of the knots and electrocpotential
-        
+        sim%mesh_cells=2**sim%femp
         mesh_dx = (sim%interval_b - sim%interval_a)/sim%mesh_cells
         SLL_CLEAR_ALLOCATE(sim%knots(1:sim%mesh_cells+1),ierr)
         SLL_CLEAR_ALLOCATE(sim%electricpotential_interp(1:sim%mesh_cells),ierr)
-
+      
 
         !Knots coordinates
         sim%knots(1)=sim%interval_a
@@ -400,11 +402,12 @@ contains
      sll_real64           :: time
      type(sll_time_mark)  :: tstart, tstop
      logical              :: gnuplot_now
-
+                  
         sim%root_path=""
         sim%nmark=sim%nmark/coll_size
         print*, "#Core ", coll_rank, " handles particles", coll_rank*sim%nmark +1, "-", (coll_rank+1)*sim%nmark
         call sll_collective_barrier(sll_world_collective)
+         
         if (coll_rank==0) then
             print*, "#Total Number of particles: ", sim%nmark*coll_size
             !Scalar values to be recorded  
