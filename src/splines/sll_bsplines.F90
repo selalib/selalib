@@ -66,6 +66,9 @@ public :: interpolate_value
 public :: interpolate_derivative
 public :: interpolate_array_values
 public :: interpolate_array_derivatives
+public :: interpolate_array_values_2d
+public :: interpolate_array_x1_derivatives_2d
+public :: interpolate_array_x2_derivatives_2d
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
@@ -655,7 +658,8 @@ function interpolate_value( this, x) result(y)
   do j = 1, k-1
     ilo = k-j
     do jj = 1, k-j
-      this%aj(jj) = (this%aj(jj+1)*this%dl(ilo)+this%aj(jj)*this%dr(jj))/(this%dl(ilo)+this%dr(jj))
+      this%aj(jj) = (this%aj(jj+1)*this%dl(ilo)+this%aj(jj)*this%dr(jj)) &
+                    /(this%dl(ilo)+this%dr(jj))
       ilo = ilo - 1
     end do
   end do
@@ -1488,5 +1492,150 @@ end function interpolate_x1_derivative_2D
   subroutine delete_bspline_2D( spline )
     type(sll_bspline_2D), pointer :: spline
   end subroutine delete_bspline_2D 
+
+subroutine interpolate_array_values_2d(this, n1, n2, x, y)
+
+type(sll_bspline_2d)    :: this
+sll_int32               :: n1
+sll_int32               :: n2
+sll_real64, intent(in)  :: x(:,:)
+sll_real64, intent(out) :: y(:,:)
+
+sll_int32               :: i
+sll_int32               :: j, jj
+sll_int32               :: i1, i2
+sll_int32               :: k1, k2
+sll_int32               :: jc, jcmin, jcmax
+
+sll_real64, allocatable :: aj(:)
+sll_real64, allocatable :: dl(:)
+sll_real64, allocatable :: dr(:)
+
+sll_int32               :: left
+sll_int32               :: ilo
+sll_int32               :: ilo1
+sll_int32               :: ilo2
+sll_int32               :: m, mflag
+
+m = merge(0, 2, this%bs1%bc_type == SLL_PERIODIC)
+
+k1 = this%bs1%k
+k2 = this%bs2%k
+
+allocate(aj(1:max(k1,k2)),dl(1:max(k1,k2)),dr(1:max(k1,k2)))
+
+do i2 = 1, n2
+  
+  call interv( this%bs2%t, n2+k2, x(i1,i2), left, ilo2, mflag )
+
+  ilo1 = k1
+  do i1 = 1, n1
+
+      call interv( this%bs1%t, n1+k1, x(i1,i2), i, ilo1, mflag )
+  
+      y(i1,i2) = this%bs1%bcoef(i)
+  
+      if ( mflag /= 0 ) return
+  
+      if ( k1 <= i ) then
+        do j = 1, k1-1
+          dl(j) = x(i1,i2) - this%bs1%t(i+1-j)
+        end do
+        jcmin = 1
+      else
+        jcmin = 1-(i-k1)
+        do j = 1, i
+          dl(j) = x(i1,i2) - this%bs1%t(i+1-j)
+        end do
+        do j = i, k1-1
+          aj(k1-j) = 0.0_f64
+          dl(j) = dl(i)
+        end do
+      end if
+      
+      if ( n1+m < i ) then
+        jcmax = n1+k1+m-i
+        do j = 1, jcmax
+          dr(j) = this%bs1%t(i+j) - x(i1,i2)
+        end do
+        do j = jcmax, k1-1
+          aj(j+1) = 0.0_f64
+          dr(j) = dr(jcmax)
+        end do
+      else
+        jcmax = k1
+        do j = 1, k1-1
+          dr(j) = this%bs1%t(i+j) - x(i1,i2)
+        end do
+      end if
+      
+      do jc = jcmin, jcmax
+        aj(jc) = this%bcoef(i-k1+jc,j)
+      end do
+      
+      do j = 1, k1-1
+        ilo = k1-j
+        do jj = 1, k1-j
+          aj(jj) = (aj(jj+1)*dl(ilo)+aj(jj)*dr(jj)) &
+                        /(dl(ilo)+dr(jj))
+          ilo = ilo - 1
+        end do
+      end do
+      
+      y(i1,i2) = aj(1)
+    
+  end do
+end do
+
+end subroutine interpolate_array_values_2d
+
+subroutine interpolate_array_x1_derivatives_2d(this, n1, n2, x, y)
+
+type(sll_bspline_2d)    :: this
+sll_int32               :: n1
+sll_int32               :: n2
+sll_real64, intent(in)  :: x(:,:)
+sll_real64, intent(out) :: y(:,:)
+
+sll_int32               :: i1, i2
+sll_int32               :: k1, k2
+
+
+
+k1 = this%bs1%k
+k2 = this%bs2%k
+
+!allocate(work(k2),tab1(n1),tab2(2*k2))
+
+do i2 = 1, n2
+do i1 = 1, n1
+end do
+end do
+
+
+    
+end subroutine interpolate_array_x1_derivatives_2d
+
+subroutine interpolate_array_x2_derivatives_2d(this, n1, n2, a_in, a_out)
+
+type(sll_bspline_2d)   :: this
+sll_int32              :: n1
+sll_int32              :: n2
+sll_real64, intent(in) :: a_in(:,:)
+sll_real64, intent(in) :: a_out(:,:)
+
+sll_int32              :: i1, i2
+sll_int32              :: k1, k2
+
+k1 = this%bs1%k
+k2 = this%bs2%k
+
+do i2 = 1, n2
+do i1 = 1, n1
+
+end do
+end do
+
+end subroutine interpolate_array_x2_derivatives_2d
 
 end module sll_bsplines
