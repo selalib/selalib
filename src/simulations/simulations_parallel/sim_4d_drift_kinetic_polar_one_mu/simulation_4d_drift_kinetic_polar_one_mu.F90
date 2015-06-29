@@ -74,6 +74,7 @@ module sll_simulation_4d_drift_kinetic_polar_one_mu_module
   sll_int32, parameter :: SLL_NO_QUASI_NEUTRAL = 0 
   sll_int32, parameter :: SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW = 1 
   sll_int32, parameter :: SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW = 2 
+  sll_int32, parameter :: SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW_PADE_EPSILON = 3 
 
 !! choice of time scheme solver
 !! should be else where
@@ -125,7 +126,8 @@ module sll_simulation_4d_drift_kinetic_polar_one_mu_module
      sll_real64 :: deltarTi 
      sll_real64 :: kappaTe  
      sll_real64 :: deltarTe
-     sll_int32  :: QN_case     
+     sll_int32  :: QN_case  
+     sll_real64 :: pade_epsilon   
      sll_real64 :: n0_at_rpeak     
      !--> Pertubation
      sll_int32  :: perturb_choice
@@ -273,6 +275,7 @@ contains
     sll_real64 :: kappaTe  
     sll_real64 :: deltarTe
     !sll_int32  :: QN_case
+    sll_real64 :: pade_epsilon
     !--> Pertubation
     sll_int32  :: perturb_choice
     sll_int32  :: mmode
@@ -348,6 +351,7 @@ contains
       kappaTe, &
       deltarTe, &
       QN_case, &
+      pade_epsilon, &
       poisson2d_BC_rmin, &
       poisson2d_BC_rmax
     namelist /perturbation/ &
@@ -402,6 +406,7 @@ contains
     sim%m_x3 => new_cartesian_mesh_1d(num_cells_x3,eta_min=z_min,eta_max=z_max)
     sim%m_x4 => new_cartesian_mesh_1d(num_cells_x4,eta_min=v_min,eta_max=v_max)
     
+    
     !--> Equilibrium
     sim%tau0     = tau0
     sim%rho_peak = rho_peak 
@@ -451,6 +456,9 @@ contains
         sim%QN_case = SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW 
       case ("SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW")
         sim%QN_case = SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW 
+      case ("SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW_PADE_EPSILON")
+        sim%QN_case = SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW_PADE_EPSILON 
+        sim%pade_epsilon = pade_epsilon
       case default
         print *,'#bad choice for QN_case', QN_case
         print *,'#in init_dk4d_polar'
@@ -563,7 +571,6 @@ contains
           dlog_density=sim%dlog_density_r, &
           inv_Te=tmp_r(1:num_cells_x1+1,1), &
           poisson_case=SLL_POISSON_DRIFT_KINETIC)
-
           
       case default
         print *,'#bad poisson2d_case',poisson2d_case
@@ -2134,14 +2141,14 @@ subroutine gyroaverage_phi_dk( sim )
           sim%remap_plan_seqx3_to_seqx1x2, &
           sim%phi3d_seqx3, &
           sim%phi3d_seqx1x2 )  
+          
+          
       case (SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW)
         call compute_local_sizes( &
           sim%layout3d_seqx1x2, &
           loc3d_sz_x1, &
           loc3d_sz_x2, &
-          loc3d_sz_x3 )
-          
-          
+          loc3d_sz_x3 )          
           
       select case (sim%delta_f_method)     
       case (0)
@@ -2195,7 +2202,107 @@ subroutine gyroaverage_phi_dk( sim )
     call apply_remap_3D( &
           sim%remap_plan_seqx1x2_to_seqx3, &
           sim%phi3d_seqx1x2, &
-          sim%phi3d_seqx3 )            
+          sim%phi3d_seqx3 )
+          
+          
+          
+          
+
+ case (SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW_PADE_EPSILON)
+ 
+ 
+        call compute_local_sizes( &
+          sim%layout3d_seqx1x2, &
+          loc3d_sz_x1, &
+          loc3d_sz_x2, &
+          loc3d_sz_x3 )         
+          
+      select case (sim%delta_f_method)     
+      case (0)
+      
+      print *,'#bad value for sim%delta_n_method, not implemented yet' 
+       stop  
+         
+!         do iloc3 = 1,loc3d_sz_x3    
+!            call sim%gyroaverage%compute_gyroaverage( &
+!                 sqrt(2*sim%mu), &
+!                 sim%rho3d_seqx1x2(1:nc_x1+1,1:nc_x2+1,iloc3))   
+!         enddo
+!         
+!         do iloc2=1, loc3d_sz_x2
+!            do iloc1=1, loc3d_sz_x1
+!               sim%phi3d_seqx1x2(iloc1,iloc2,:) = &
+!                 (1._f64/(sim%mu*exp(sim%mu)))*(sim%rho3d_seqx1x2(iloc1,iloc2,:)/sim%n0_r(iloc1)-1._f64)
+!            enddo
+!         enddo
+         
+      case (1)
+         
+        do iloc1 = 1,loc3d_sz_x1  
+           sim%rho3d_seqx1x2(iloc1,:,:)=sim%rho3d_seqx1x2(iloc1,:,:)-sim%n0_r(iloc1)
+        enddo
+        
+        do iloc3 = 1,loc3d_sz_x3    
+           call sim%gyroaverage%compute_gyroaverage( &
+                sqrt(2*sim%mu), &
+                sim%rho3d_seqx1x2(1:nc_x1+1,1:nc_x2+1,iloc3))   
+        enddo
+        
+        do iloc2=1, loc3d_sz_x2
+          do iloc1=1, loc3d_sz_x1
+             sim%rho3d_seqx1x2(iloc1,iloc2,:) = &
+               sim%rho3d_seqx1x2(iloc1,iloc2,:)/sim%n0_r(iloc1)
+          enddo
+       enddo
+       
+        do iloc2=1, loc3d_sz_x2
+          do iloc1=1, loc3d_sz_x1
+             sim%phi3d_seqx1x2(iloc1,iloc2,:) = &
+               sim%Ti_r(iloc1)*sim%rho3d_seqx1x2(iloc1,iloc2,:)
+          enddo
+       enddo
+       
+       do iloc3 = 1,loc3d_sz_x3 
+         call compute_laplacian_polar(&
+                 sim,&
+                 sim%phi3d_seqx1x2(1:nc_x1+1,1:nc_x2+1,iloc3))
+       enddo
+       
+       do iloc2=1, loc3d_sz_x2
+          do iloc1=1, loc3d_sz_x1
+             sim%phi3d_seqx1x2(iloc1,iloc2,:) = &
+               -((3._f64/4._f64)+sim%pade_epsilon)*sim%Te_r(iloc1)*sim%phi3d_seqx1x2(iloc1,iloc2,:)+sim%Te_r(iloc1)*sim%rho3d_seqx1x2(iloc1,iloc2,:)
+          enddo
+       enddo
+       
+       
+       do iloc3 = 1,loc3d_sz_x3 
+         call solve_bilaplacian_polar(&
+                 sim,&
+                 sim%phi3d_seqx1x2(1:nc_x1+1,1:nc_x2+1,iloc3))
+       enddo
+       
+       
+    case default
+       print *,'#bad value for sim%delta_n_method'
+       stop  
+    end select
+       
+!    do iloc3=1, loc3d_sz_x3
+!       call sim%poisson2d%compute_phi_from_rho( &
+!            sim%phi3d_seqx1x2(:,:,iloc3), &
+!            sim%phi3d_seqx1x2(:,:,iloc3) )
+!    enddo
+
+    call apply_remap_3D( &
+          sim%remap_plan_seqx1x2_to_seqx3, &
+          sim%phi3d_seqx1x2, &
+          sim%phi3d_seqx3 )  
+
+
+    
+    
+                            
  case (SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW)
     print *,'#SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW'
     print *,'#not implemented yet '
@@ -2241,6 +2348,204 @@ subroutine gyroaverage_field_dk(sim)
 
 
   end subroutine gyroaverage_field_dk
+
+
+
+  subroutine compute_laplacian_polar(sim,f)
+    class(sll_simulation_4d_drift_kinetic_polar_one_mu), intent(inout) :: sim
+    sll_real64,dimension(:,:),intent(inout) :: f ! (Nr+1)*(Ntheta+1)
+    sll_real64,dimension(:,:),allocatable :: lap_f
+    sll_real64,dimension(:),allocatable :: buf
+    sll_real64 :: dr,diagm1,diag,diagp1
+    sll_int32 :: error
+    sll_int32 :: i,k
+  
+    dr=sim%m_x1%delta_eta
+    SLL_ALLOCATE(buf(1:2*sim%m_x2%num_cells+15),error)
+    SLL_ALLOCATE(lap_f(1:sim%m_x1%num_cells+1,1:sim%m_x2%num_cells+1),error) 
+  
+    !*** Perform FFT 1D in theta direction of ***
+    !***   the system solution                ***
+    call dffti(sim%m_x2%num_cells,buf)
+    do i=1,sim%m_x1%num_cells+1
+      call dfftf(sim%m_x2%num_cells,f(i,1:sim%m_x2%num_cells),buf)
+    enddo
+  f=f/real(sim%m_x2%num_cells,f64)
+  
+! ***POISSON
+
+  do k=1,sim%m_x2%num_cells
+  
+  ! i=1
+  
+    diag = (-(2/dr**2)-((floor(k/2._f64)*1._f64)/ &
+         (sim%m_x1%eta_min+(sim%m_x1%eta_max-sim%m_x1%eta_min)*&
+         real(1-1,f64)/real(sim%m_x1%num_cells,f64)))**2)
+    diagp1 = (1/dr**2+1/(2*dr*(sim%m_x1%eta_min+ &
+         (sim%m_x1%eta_max-sim%m_x1%eta_min)*real(i-1,f64)&
+         /real(sim%m_x1%num_cells,f64))))     
+    
+    lap_f(1,k) = diag*f(1,k)+diagp1*f(2,k)
+  
+     do i=2,sim%m_x1%num_cells
+        diagm1 = (1/dr**2-1/(2*dr*(sim%m_x1%eta_min+ &
+             (sim%m_x1%eta_max-sim%m_x1%eta_min)*real(i-1,f64)&
+             /real(sim%m_x1%num_cells,f64))))
+        diag = (-(2/dr**2)-((floor(k/2._f64)*1._f64)/ &
+             (sim%m_x1%eta_min+(sim%m_x1%eta_max-sim%m_x1%eta_min)*&
+             real(i-1,f64)/real(sim%m_x1%num_cells,f64)))**2)
+        diagp1 = (1/dr**2+1/(2*dr*(sim%m_x1%eta_min+ &
+             (sim%m_x1%eta_max-sim%m_x1%eta_min)*real(i-1,f64)&
+             /real(sim%m_x1%num_cells,f64))))
+             
+     lap_f(i,k) = diagm1*f(i-1,k) + diag*f(i,k) + diagp1*f(i+1,k)     
+             
+     enddo
+
+  ! i=sim%m_x1%num_cells+1
+
+        diagm1 = (1/dr**2-1/(2*dr*(sim%m_x1%eta_min+ &
+             (sim%m_x1%eta_max-sim%m_x1%eta_min)*real((sim%m_x1%num_cells+1)-1,f64)&
+             /real(sim%m_x1%num_cells,f64))))
+        diag = (-(2/dr**2)-((floor(k/2._f64)*1._f64)/ &
+             (sim%m_x1%eta_min+(sim%m_x1%eta_max-sim%m_x1%eta_min)*&
+             real((sim%m_x1%num_cells+1)-1,f64)/real(sim%m_x1%num_cells,f64)))**2)
+
+      lap_f(sim%m_x1%num_cells+1,k) = diagm1*f(sim%m_x1%num_cells,k) + diag*f(sim%m_x1%num_cells+1,k) 
+
+  enddo
+
+
+  !*** Perform FFT 1D inverse ***
+  do i=1,sim%m_x1%num_cells+1
+     call dfftb(sim%m_x2%num_cells,lap_f(i,1:sim%m_x2%num_cells),buf)
+  enddo
+  
+  !*** duplicate periodic value ***
+  lap_f(1:sim%m_x1%num_cells+1,sim%m_x2%num_cells+1)=lap_f(1:sim%m_x1%num_cells+1,1)
+  
+  f = lap_f
+  
+end subroutine compute_laplacian_polar
+
+
+
+
+
+
+subroutine solve_bilaplacian_polar(sim,f)
+  class(sll_simulation_4d_drift_kinetic_polar_one_mu), intent(inout) :: sim
+  sll_real64,dimension(:,:),intent(inout) :: f
+  sll_real64,dimension(:,:),allocatable :: fsol
+  sll_real64,dimension(:),allocatable :: buf
+  sll_real64,dimension(:),allocatable :: diagm1_left,diag_left,diagp1_left,diagm2_left,diagp2_left
+  sll_real64,dimension(:),allocatable :: a,b
+  sll_int32 ::i,k
+  sll_real64::dr,ri,rip1,rip2,nfloat
+  sll_int32 ::error
+  
+  dr=sim%m_x1%delta_eta
+  
+  SLL_ALLOCATE(buf(1:2*sim%m_x2%num_cells+15),error)
+  SLL_ALLOCATE(fsol(1:sim%m_x1%num_cells+1,1:sim%m_x2%num_cells),error)
+  SLL_ALLOCATE(diagm2_left(1:sim%m_x1%num_cells+1),error)
+  SLL_ALLOCATE(diagm1_left(1:sim%m_x1%num_cells+1),error)
+  SLL_ALLOCATE(diag_left(1:sim%m_x1%num_cells+1),error)
+  SLL_ALLOCATE(diagp1_left(1:sim%m_x1%num_cells+1),error)
+  SLL_ALLOCATE(diagp2_left(1:sim%m_x1%num_cells+1),error)
+  SLL_ALLOCATE(a(1:sim%m_x1%num_cells+1),error)
+  SLL_ALLOCATE(b(1:sim%m_x1%num_cells+1),error)
+  
+  fsol(1:sim%m_x1%num_cells+1,1:sim%m_x2%num_cells)=f(1:sim%m_x1%num_cells+1,1:sim%m_x2%num_cells)
+  
+  
+  !*** Perform FFT 1D in theta direction of ***
+  !***   the system solution                ***
+  call dffti(sim%m_x2%num_cells,buf)
+  do i=1,sim%m_x1%num_cells+1
+     call dfftf(sim%m_x2%num_cells,fsol(i,:),buf)
+  enddo
+  fsol=fsol/real(sim%m_x2%num_cells,f64)
+  
+  
+  do i=1,sim%m_x1%num_cells+1
+    a(i)=-sim%Te_r(i)-sim%Ti_r(i)*((3._f64/4._f64)+sim%pade_epsilon)
+    b(i)=sim%pade_epsilon*sim%Te_r(i)*sim%Ti_r(i)
+  enddo
+   
+  !***POISSON
+  do k=1,sim%m_x2%num_cells
+     nfloat=floor(k/2._f64)*1._f64
+     do i=1,sim%m_x1%num_cells-1
+     
+        ri=sim%m_x1%eta_min+(sim%m_x1%eta_max-sim%m_x1%eta_min)*real(i-1,f64)/real(sim%m_x1%num_cells,f64)
+        rip1=sim%m_x1%eta_min+(sim%m_x1%eta_max-sim%m_x1%eta_min)*real(i,f64)/real(sim%m_x1%num_cells,f64)
+        rip2=sim%m_x1%eta_min+(sim%m_x1%eta_max-sim%m_x1%eta_min)*real(i+1,f64)/real(sim%m_x1%num_cells,f64)
+      
+
+      ! gauche
+        
+        diagm2_left(i+2)=b(i+2)/dr**4 + &
+           (2._f64*b(i+2)/rip2)*(-1._f64/(2._f64*dr**3))
+           
+        diagm1_left(i+1)=-4._f64*b(i+1)/dr**4 + &
+           (2._f64*b(i+1)/rip1)*(2._f64/(2._f64*dr**3)) + &
+           (a(i+1)-(b(i+1)*(2._f64*(nfloat**2)+1._f64)/rip1**2)) * (1._f64/dr**2) + &
+           (a(i+1)/rip1+b(i+1)*(2._f64*(nfloat**2)+1._f64)/(rip1**3)) * (-1._f64/(2._f64*dr)) 
+     		
+        diag_left(i)=6._f64*b(i)/dr**4 + &
+           (a(i)-(b(i)*(2._f64*(nfloat**2)+1._f64)/ri**2)) * (-2._f64/dr**2) + &
+           (1._f64-a(i)*(nfloat**2)/(rip1**2)+b(i)*(nfloat**2)*(nfloat**2-4._f64)/(ri**4))
+        	
+        diagp1_left(i)=-4._f64*b(i)/dr**4 + &
+           (2._f64*b(i)/ri)*(-2._f64/(2._f64*dr**3)) + &
+           (a(i)-(b(i)*(2._f64*(nfloat**2)+1._f64)/ri**2)) * (1._f64/dr**2) + &
+           (a(i)/ri+b(i)*(2._f64*(nfloat**2)+1._f64)/(ri**3)) * (1._f64/(2._f64*dr))        
+        		
+        diagp2_left(i)=b(i)/dr**4 + &
+           (2._f64*b(i)/ri)*(1._f64/(2._f64*dr**3))
+
+
+
+     enddo
+     diagm1_left(1)=0._f64
+     diagm2_left(1)=0._f64
+     diagm2_left(2)=0._f64
+     diagp1_left(sim%m_x1%num_cells+1)=0._f64
+     diagp2_left(sim%m_x1%num_cells+1)=0._f64
+     diagp2_left(sim%m_x1%num_cells)=0._f64
+     !***  Dirichlet boundary conditions ***	
+     diag_left(1)=1._f64  
+     diagp1_left(1)=0._f64
+     diagp2_left(1)=0._f64
+     diagm1_left(2)=0._f64
+     diag_left(2)=1._f64
+     diagp1_left(2)=0._f64
+     diagp2_left(2)=0._f64
+     diagm1_left(sim%m_x1%num_cells)=0._f64
+     diagm2_left(sim%m_x1%num_cells)=0._f64
+     diag_left(sim%m_x1%num_cells)=1._f64
+     diagp1_left(sim%m_x1%num_cells)=0._f64
+     diagm1_left(sim%m_x1%num_cells+1)=0._f64
+     diagm2_left(sim%m_x1%num_cells+1)=0._f64
+     diag_left(sim%m_x1%num_cells+1)=1._f64
+
+     
+     !*** Solve penta ***
+     call penta(sim%m_x1%num_cells+1,diagm2_left,diagm1_left,diag_left,diagp1_left,diagp2_left,fsol(1:sim%m_x1%num_cells+1,k),f(1:sim%m_x1%num_cells+1,k))
+  enddo
+  
+  !*** Perform FFT 1D inverse ***
+  do i=1,sim%m_x1%num_cells+1
+     call dfftb(sim%m_x2%num_cells,f(i,1:sim%m_x2%num_cells),buf)
+  enddo
+  
+  !*** duplicate periodic value ***
+  f(1:sim%m_x1%num_cells+1,sim%m_x2%num_cells+1)=f(1:sim%m_x1%num_cells+1,1)
+  
+end subroutine solve_bilaplacian_polar
+
+
 
 
 #ifndef NOHDF5
