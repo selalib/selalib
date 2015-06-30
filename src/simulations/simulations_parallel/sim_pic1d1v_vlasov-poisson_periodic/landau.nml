@@ -1,18 +1,18 @@
 &landau_params
-      lalpha=5
+      lalpha=0.05
       lmode=0.5  
       pi_unit=.true.
       interval_a=0
       interval_b=4
      / 
 &numerical_params
-      nmark  = 40000
-      psolver= "fd"
-      ppusher= "euler"
-      tstepw = 10
-      tsteps = 50
-      sdeg   = 4  
-      femp   = 5
+      nmark  = 100000
+      psolver= "fem"
+      ppusher= "verlet"
+      tstepw = 0.05
+      tsteps = 200
+      sdeg   = 4
+      femp   = 6
       /
 &params
       scenario = "landau"
