@@ -151,19 +151,27 @@ function new_bspline_1d( num_points, degree, xmin, xmax, bc_type, sl, sr )
       end do
     else
       do i = k+1, n
-        new_bspline_1d%t(i) = 0.5*(new_bspline_1d%tau(i-degree/2)+new_bspline_1d%tau(i-1-degree/2))
+        new_bspline_1d%t(i) = 0.5*(new_bspline_1d%tau(i  -(k-1)/2) &
+                                  +new_bspline_1d%tau(i-1-(k-1)/2))
       end do
     end if
     new_bspline_1d%t(n+1:n+k) = xmax
-
+       
   else
 
-    SLL_ALLOCATE(new_bspline_1d%t(n+k+m), ierr)
-    SLL_ALLOCATE(new_bspline_1d%bcoef(n+m),  ierr)
+    SLL_ALLOCATE(new_bspline_1d%t(n+k+m),           ierr)
+    SLL_ALLOCATE(new_bspline_1d%bcoef(n+m),         ierr)
     SLL_ALLOCATE(new_bspline_1d%q(1:(2*k-1)*(n+m)), ierr)
 
-    new_bspline_1d%t(1:k)         = xmin
-    new_bspline_1d%t(k+1:n+m)     = new_bspline_1d%tau(2:n-1)
+    new_bspline_1d%t(1:k)   = xmin
+    if ( mod(k,2) == 0) then
+      new_bspline_1d%t(k+1:n+m) = new_bspline_1d%tau(2:n-1)
+    else
+      do i = k+1, n+m
+        new_bspline_1d%t(i) = 0.5*(new_bspline_1d%tau(i-k)+ &
+                                   new_bspline_1d%tau(i-k+1))
+      end do
+    end if
     new_bspline_1d%t(n+m+1:n+m+k) = xmax
 
   end if

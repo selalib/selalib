@@ -4,6 +4,7 @@ program test_bsplines_2d
 #include "sll_memory.h"
 #include "sll_utilities.h"
 use sll_bsplines
+use sll_boundary_condition_descriptors
 
   sll_int32, parameter :: nx=7
   sll_int32, parameter :: kx=3
@@ -18,47 +19,32 @@ use sll_bsplines
   sll_int32            :: mflag
   sll_int32            :: ilo
 
-  sll_real64            :: gtau(nx,ny)
-  sll_real64            :: bcoef(nx,ny)
-  sll_real64            :: taux(nx)
-  sll_real64            :: tauy(ny)
-  sll_real64            :: tx(nx+kx)
-  sll_real64            :: ty(ny+ky)
-  sll_real64            :: work1(ny,nx)
-  sll_real64            :: work2(nx)
-  sll_real64            :: work3(nx*ny)
+  sll_real64           :: gtau(nx,ny)
+  sll_real64           :: bcoef(nx,ny)
+  sll_real64           :: taux(nx)
+  sll_real64           :: tauy(ny)
+  sll_real64           :: tx(nx+kx)
+  sll_real64           :: ty(ny+ky)
+  sll_real64           :: work1(ny,nx)
+  sll_real64           :: work2(nx)
+  sll_real64           :: work3(nx*ny)
+  sll_real64           :: workx(nx)
+  sll_real64           :: worky(nx)
+
+  type(sll_bspline_2d), pointer :: bspline_2d
   
   
+  bspline_2d => new_bspline_2d( nx, kx-1, 1.0_f64, nx*1.0_f64, SLL_PERIODIC, &
+                                ny, ky-1, 1.0_f64, ny*1.0_f64, SLL_PERIODIC  )
+
   ! set up data points and knots
   ! in x, interpolate between knots by parabolic splines, using
   ! not-a-knot end condition
+  taux = bspline_2d%bs1%tau
+  tx   = bspline_2d%bs1%t
+  tauy = bspline_2d%bs2%tau
+  ty   = bspline_2d%bs2%t
   
-  do i=1,nx
-    taux(i) = float(i)
-  end do
-  do i=1,kx
-    tx(i)    = taux(1)
-    tx(nx+i) = taux(nx)
-  end do
-  kp1 = kx+1  
-  do i=kp1,nx
-    tx(i) = (taux(i-kx+1) + taux(i-kx+2))/2.
-  end do
-  
-  ! in y, interpolate at knots by cubic splines, using not-a-knot
-  ! end condition
-  
-  do i=1,ny
-    tauy(i) = float(i)
-  end do
-  do i=1,ky
-    ty(i) = tauy(1)
-    ty(ny+i) = tauy(ny)
-  end do
-  kp1 = ky+1  
-  do i=kp1,ny
-    ty(i) = tauy(i-ky+2)
-  end do
   
   ! generate and print out function values
   print 620,(tauy(i),i=1,ny)
@@ -69,6 +55,9 @@ use sll_bsplines
     print 632,taux(i),(bcoef(i,j),j=1,ny)
   end do
   
+  !call compute_spline_1d( bspline_2d%bs1, 
+  !call compute_spline_1d( bspline_2d%bs2,
+
   ! construct b-coefficients of interpolant
   call spli2d(taux,bcoef,tx,nx,kx,ny,work2,work3,work1,iflag)
   call spli2d(tauy,work1,ty,ny,ky,nx,work2,work3,bcoef,iflag)
@@ -173,36 +162,19 @@ q     = 0.0_f64  ! zero out all entries of q
 ! loop over i to construct the  n  interpolation equations 
 do i=1,n 
 
-  taui = tau(i)  
-  ilp1mx = min0(i+k,np1)     
-  ! find  left  in the closed interval (i,i+k-1) such that     
-  ! t(left) .le. tau(i) .lt. t(left+1)   
-  ! matrix is singular if this is not possible   
-  left = max0(left,i)  
-  if (taui .lt. t(left))      stop ' linear system not invertible '
-  15 if (taui .lt. t(left+1)) go to 16
-  left = left + 1   
-  if (left .lt. ilp1mx)       go to 15
-  left = left - 1
-  if (taui .gt. t(left+1))    stop ' linear system not invertible '
+  taui   = tau(i)  
+  ilp1mx = min(i+k,np1)     
+  left   = max(left,i)  
+  if (taui < t(left)) stop ' linear system not invertible '
 
-  ! *** the i-th equation enforces interpolation at taui, hence    
-  ! a(i,j) = b(j,k,t)(taui), all j. only the  k  entries with  j = 
-  ! left-k+1,...,left actually might be nonzero. these  k  numbers 
-  ! are returned, in  work  (used for temp.storage here), by the   
-  ! following
-  16 call bsplvb ( t, k, 1, taui, left, work )                     
-  ! we therefore want  work(j) = b(left -k+j)(taui) to go into     
-  ! a(i,left-k+j), i.e., into  q(i-(left+j)+2*k,(left+j)-k) since  
-  ! a(i+j,j)  is to go into  q(i+k,j), all i,j,  if we consider  q 
-  ! as a two-dim. array , with  2*k-1  rows (see comments in 
-  ! banfac). in the present program, we treat  q  as an equivalent 
-  ! one-dimensional array (because of fortran restrictions on
-  ! dimension statements) . we therefore want  work(j) to go into  
-  ! entry    
-  !     i -(left+j) + 2*k + ((left+j) - k-1)*(2*k-1)   
-  !            =  i-left+1 + (left -k)*(2*k-1) + (2*k-2)*j   
-  ! of  q .  
+  do while (taui >= t(left+1))
+    left = left + 1   
+    if (left < ilp1mx) cycle
+    left = left - 1
+    if (taui > t(left+1)) stop ' linear system not invertible '
+    exit
+  end do
+  call bsplvb ( t, k, 1, taui, left, work )                     
   jj = i-left+1 + (left-k)*(k+km1) 
   do j=1,k    
     jj = jj+kpkm2     
