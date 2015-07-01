@@ -48,7 +48,7 @@ contains
   !> @param[out] out(0:n) values of n th derivatives at xtgt
   subroutine apply_fd(nin, maxorder, xdata, ydata, xtgt, out)
     sll_int32,  intent(in)  :: nin, maxorder
-    sll_real64, intent(in)  :: xdata(0:nin-1), ydata(0:), xtgt
+    sll_real64, intent(in)  :: xdata(0:nin-1), ydata(0:nin-1), xtgt
     sll_real64, intent(out) :: out(0:maxorder)
 
     sll_int32 :: j
