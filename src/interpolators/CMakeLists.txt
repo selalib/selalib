@@ -9,7 +9,9 @@ SET( INTERPOLATORS_SRC_FILES
   sll_cubic_spline_interpolator_2d.F90
   sll_hermite_interpolator_2d.F90
   sll_arbitrary_degree_spline_interpolator_1d.F90
-  sll_arbitrary_degree_spline_interpolator_2d.F90 ) 
+  sll_arbitrary_degree_spline_interpolator_2d.F90
+  sll_bspline_interpolator_1d.F90
+  sll_bspline_interpolator_2d.F90)
 
 ADD_LIBRARY( sll_interpolators STATIC ${INTERPOLATORS_SRC_FILES} )
 
@@ -30,10 +32,11 @@ IF(BUILD_TESTING)
   SLL_TEST( arbitrary_degree_spline_interpolator_1d sll_interpolators sll_file_io )
   SLL_TEST( arbitrary_degree_spline_interpolator_2d sll_interpolators sll_file_io )
   SLL_TEST( periodic_interpolator_1d sll_interpolators )
-  SLL_TEST( arbitrary_degree_splines_1d_periodic  sll_interpolators )
-  SLL_TEST( arbitrary_degree_splines_1d_dirichlet sll_interpolators )
-  SLL_TEST( arbitrary_degree_splines_1d_neumann sll_interpolators )
+  SLL_TEST( arbitrary_degree_spline_1d_periodic  sll_interpolators )
+  SLL_TEST( arbitrary_degree_spline_1d_dirichlet sll_interpolators )
+  SLL_TEST( arbitrary_degree_spline_1d_neumann sll_interpolators )
   SLL_TEST( quintic_spline_interpolator_1d sll_interpolators )
+  SLL_TEST( bspline_interpolator_1d sll_interpolators )
 
   SET_TESTS_PROPERTIES( cubic_spline_interpolator_1d 
                         PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 5 )
@@ -45,11 +48,11 @@ IF(BUILD_TESTING)
                         PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 20 )
   SET_TESTS_PROPERTIES( periodic_interpolator_1d 
                         PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 5 )
-  SET_TESTS_PROPERTIES( arbitrary_degree_splines_1d_periodic
+  SET_TESTS_PROPERTIES( arbitrary_degree_spline_1d_periodic
                         PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 5 )
-  SET_TESTS_PROPERTIES( arbitrary_degree_splines_1d_dirichlet
+  SET_TESTS_PROPERTIES( arbitrary_degree_spline_1d_dirichlet
                         PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 5 )
-  SET_TESTS_PROPERTIES( arbitrary_degree_splines_1d_neumann 
+  SET_TESTS_PROPERTIES( arbitrary_degree_spline_1d_neumann 
                         PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 5 )
   SET_TESTS_PROPERTIES( quintic_spline_interpolator_1d 
                         PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 5 )

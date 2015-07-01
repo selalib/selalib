@@ -6,8 +6,10 @@ SET( SRC_UTILITIES
   choleski.F90
   fornberg.F90
   kiss.F90
-  sol.f
-  muls.f )
+  sol.f muls.f 
+  banfac.f90 
+  banslv.f90  
+)
 
 IF(Fortran_COMPILER MATCHES IBM)
    SET_SOURCE_FILES_PROPERTIES( sol.f muls.f 
