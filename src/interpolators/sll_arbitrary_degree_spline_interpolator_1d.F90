@@ -322,7 +322,7 @@ subroutine set_values_at_boundary1d( interpolator, &
                                      slope_left,   &
                                      slope_right)
 
-class(sll_arbitrary_degree_spline_interpolator_1d), intent(inout) :: interpolator
+type(sll_arbitrary_degree_spline_interpolator_1d), intent(inout) :: interpolator
 
 sll_real64, intent(in), optional :: value_left
 sll_real64, intent(in), optional :: value_right
