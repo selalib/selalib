@@ -69,6 +69,7 @@ public :: interpolate_array_derivatives
 public :: interpolate_array_values_2d
 public :: interpolate_array_x1_derivatives_2d
 public :: interpolate_array_x2_derivatives_2d
+public :: build_system
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
@@ -256,7 +257,7 @@ function new_bspline_2d( nx1, degree1, x1_min, x1_max, bc1, &
 end function new_bspline_2d
 
 
-subroutine build_system(this)
+subroutine build_system_with_derivative(this)
 
   type(sll_bspline_1d)    :: this 
 
@@ -337,9 +338,9 @@ subroutine build_system(this)
 
   call banfac ( this%q, k+k-1, n+m, k-1, k-1, iflag )
 
-end subroutine build_system
+end subroutine build_system_with_derivative
 
-subroutine build_system_periodic(this)
+subroutine build_system(this)
 
   type(sll_bspline_1d)    :: this 
 
@@ -389,7 +390,7 @@ subroutine build_system_periodic(this)
   
   call banfac ( this%q, k+k-1, n, k-1, k-1, iflag )
 
-end subroutine build_system_periodic
+end subroutine build_system
 
 !> @brief
 !>  produces the B-spline coefficients of an interpolating spline.
@@ -433,9 +434,9 @@ subroutine compute_bspline_1d(this, gtau, slope_min, slope_max)
   sll_real64, optional   :: slope_max
 
   if ( this%bc_type == SLL_PERIODIC) then
-    call build_system_periodic(this)
-  else
     call build_system(this)
+  else
+    call build_system_with_derivative(this)
   end if
 
   if (present(slope_min) .and. present(slope_max)) then
@@ -458,14 +459,14 @@ subroutine compute_bspline_2d(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
   sll_real64, optional    :: sl2_r
 
   if ( this%bs1%bc_type == SLL_PERIODIC) then
-    call build_system_periodic(this%bs1)
-  else
     call build_system(this%bs1)
+  else
+    call build_system_with_derivative(this%bs1)
   end if
   if ( this%bs2%bc_type == SLL_PERIODIC) then
-    call build_system_periodic(this%bs2)
-  else
     call build_system(this%bs2)
+  else
+    call build_system_with_derivative(this%bs2)
   end if
 
   call update_bspline_2d(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)

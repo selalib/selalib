@@ -6,6 +6,8 @@ program test_bsplines_2d
 use sll_bsplines
 use sll_boundary_condition_descriptors
 
+  implicit none
+
   sll_int32, parameter :: nx=7
   sll_int32, parameter :: kx=3
   sll_int32, parameter :: ny=6
@@ -29,7 +31,7 @@ use sll_boundary_condition_descriptors
   sll_real64           :: work2(nx)
   sll_real64           :: work3(nx*ny)
   sll_real64           :: workx(nx)
-  sll_real64           :: worky(nx)
+  sll_real64           :: worky(ny)
 
   type(sll_bspline_2d), pointer :: bspline_2d
   
@@ -55,13 +57,11 @@ use sll_boundary_condition_descriptors
     print 632,taux(i),(bcoef(i,j),j=1,ny)
   end do
   
-  !call compute_spline_1d( bspline_2d%bs1, 
-  !call compute_spline_1d( bspline_2d%bs2,
-
-  ! construct b-coefficients of interpolant
-  call spli2d(taux,bcoef,tx,nx,kx,ny,work2,work3,work1,iflag)
-  call spli2d(tauy,work1,ty,ny,ky,nx,work2,work3,bcoef,iflag)
-  
+  call build_system( bspline_2d%bs1 )  
+  call build_system( bspline_2d%bs2 )
+  call update_bspline_2d( bspline_2d, bcoef) 
+  bcoef = bspline_2d%bcoef
+ 
   ! evaluate interpolation error at mesh points and print out
   print 640,(tauy(j),j=1,ny)
   ilo = ky
@@ -86,119 +86,6 @@ use sll_boundary_condition_descriptors
   640 format(//' interpolation error'//6f13.1)
 
 contains
-
-!     
-!> @param[in]  tau array of length  n , containing data point abscissae.  
-!>   (strictly  increasing)
-!> @param[in]  gtau array of length  n , containing data point ordinates, j=1,...,m
-!> @param[in]  t knot sequence, of length  n+k
-!> @param[in]  n number of data points and dimension of spline space s(k,t)
-!> @param[in]  k order of spline
-!> @param[in]  m number of data sets
-!> @param[in]  work a vector of length n
-!> @param[out] q array of size  (2*k-1)*n , containing the triangular factoriz- 
-!>               ation of the coefficient matrix of the linear system for the b-
-!>               coefficients of the spline interpolant.
-!>               the b-coeffs for the interpolant of an additional data set  
-!>               (tau(i),htau(i)), i=1,...,n  with the same data abscissae can  
-!>               be obtained without going through all the calculations in this 
-!>               routine, simply by loading  htau  into  bcoef  and then execut-
-!>       ing the    call banslv ( q, 2*k-1, n, k-1, k-1, bcoef )  
-!> @param[out] bcoef the b-coefficients of the interpolant, of length  n  
-!> @param[out] iflag an sll_int32 indicating success (= 1)  or failure (= 2)
-!>       the linear system to be solved is (theoretically) invertible if
-!>       and only if    
-!>             t(i) .lt. tau(i) .lt. tau(i+k),    all i.    
-!>       violation of this condition is certain to lead to  iflag = 2 . 
-!>    
-!>@brief Produces the b-spline coeff.s  bcoef(j,.)  of the spline of
-!>  order  k  with knots  t (i), i=1,..., n + k , which takes on the
-!>  value  gtau (i,j)  at  tau (i), i=1,..., n , j=1,..., m .
-!> @details
-!>    the i-th equation of the linear system  a*bcoef = b  for the b-co-
-!> effs of the interpolant enforces interpolation at  tau(i), i=1,...,n.
-!> hence,  b(i) = gtau(i), all i, and  a  is a band matrix with  2k-1   
-!>  bands (if it is invertible).    
-!>    the matrix  a  is generated row by row and stored, diagonal by di-
-!> agonal, in the  rows  of the array  q , with the main diagonal go-
-!> ing into row  k .  see comments in the program below.    
-!>    the banded system is then solved by a call to  banfac (which con- 
-!> structs the triangular factorization for  a  and stores it again in  
-!>  q ), followed by a call to  banslv (which then obtains the solution 
-!>  bcoef  by substitution).  
-!>    banfac  does no pivoting, since the total positivity of the matrix
-!> a  makes this unnecessary. 
-!>    
-subroutine spli2d ( tau, gtau, t, n, k, m, work, q, bcoef, iflag )
-
-sll_real64, intent(in)  :: tau(n)
-sll_real64, intent(in)  :: gtau(n,m)
-sll_real64, intent(in)  :: t(n+k)
-sll_int32,  intent(in)  :: n
-sll_int32,  intent(in)  :: k 
-sll_int32,  intent(in)  :: m
-sll_real64, intent(out) :: work(n)
-sll_real64, intent(out) :: q((2*k-1)*n)
-sll_real64, intent(out) :: bcoef(m,n)
-
-sll_int32 :: km1
-sll_int32 :: kpkm2
-sll_int32 :: left
-sll_int32 :: np1 
-sll_int32 :: jj
-sll_int32 :: j
-sll_int32 :: i
-sll_int32 :: ilp1mx
-sll_int32 :: iflag
-
-sll_real64 :: taui 
-
-np1   = n + 1 
-km1   = k - 1 
-kpkm2 = 2*km1     
-left  = k    
-q     = 0.0_f64  ! zero out all entries of q
-     
-! loop over i to construct the  n  interpolation equations 
-do i=1,n 
-
-  taui   = tau(i)  
-  ilp1mx = min(i+k,np1)     
-  left   = max(left,i)  
-  if (taui < t(left)) stop ' linear system not invertible '
-
-  do while (taui >= t(left+1))
-    left = left + 1   
-    if (left < ilp1mx) cycle
-    left = left - 1
-    if (taui > t(left+1)) stop ' linear system not invertible '
-    exit
-  end do
-  call bsplvb ( t, k, 1, taui, left, work )                     
-  jj = i-left+1 + (left-k)*(k+km1) 
-  do j=1,k    
-    jj = jj+kpkm2     
-    q(jj) = work(j)
-  end do
-end do
-     
-! ***obtain factorization of  a  , stored again in  q.  
-
-call banfac ( q, k+km1, n, km1, km1, iflag )    
-
-if (iflag == 1) then  ! solve  a*bcoef = gtau  by backsubstitution  
-  do j=1,m
-    do i=1,n
-      work(i) = gtau(i,j)
-    end do
-    call banslv ( q, k+km1, n, km1, km1, work ) 
-    do i=1,n                                   
-      bcoef(j,i) = work(i)
-    end do
-  end do
-end if   
-
-end subroutine spli2d 
 
 function g (x , y)
 
@@ -321,65 +208,6 @@ end do
 
 end subroutine interv
 
-!> Evaluates B-splines at a point X with a given knot sequence.
-subroutine bsplvb ( t, jhigh, index, x, left, biatx )
-  
-sll_int32,  intent(in)  :: jhigh
-sll_int32,  intent(in)  :: index
-sll_real64, intent(in)  :: x
-sll_int32,  intent(in)  :: left
-sll_real64, intent(in)  :: t(left+jhigh)
-sll_real64, intent(out) :: biatx (jhigh)
-
-sll_int32,  parameter             :: jmax = 20
-sll_real64, save, dimension(jmax) :: deltal
-sll_real64, save, dimension(jmax) :: deltar
-sll_int32                         :: i
-sll_int32, save                   :: j = 1
-sll_real64                        :: saved
-sll_real64                        :: term
-
-
-if ( index == 1 ) then
-  j = 1
-  biatx(1) = 1.0_f64
-  if ( jhigh <= j ) then
-     return
-  end if
-end if
-
-if ( t(left+1) <= t(left) ) then
-  print*,'x=',x
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'BSPLVB - Fatal error!'
-  write ( *, '(a)' ) '  It is required that T(LEFT) < T(LEFT+1).'
-  write ( *, '(a,i8)' ) '  But LEFT = ', left
-  write ( *, '(a,g14.6)' ) '  T(LEFT) =   ', t(left)
-  write ( *, '(a,g14.6)' ) '  T(LEFT+1) = ', t(left+1)
-  stop
-end if
-
-do
-   
-  deltar(j) = t(left+j) - x
-  deltal(j) = x - t(left+1-j)
-  
-  saved = 0.0_f64
-  do i = 1, j
-     term = biatx(i) / ( deltar(i) + deltal(j+1-i) )
-     biatx(i) = saved + deltar(i) * term
-     saved = deltal(j+1-i) * term
-  end do
-
-  biatx(j+1) = saved
-  j = j + 1
-  
-  if ( jhigh <= j ) exit
-
-end do
-
-end subroutine bsplvb
-  
 !> Evaluates a derivative of a spline from its B-spline representation.
 function bvalue( t, bcoef, n, k, x, jderiv ) result(res)
     
