@@ -57,26 +57,24 @@ use sll_boundary_condition_descriptors
     print 632,taux(i),(bcoef(i,j),j=1,ny)
   end do
   
-  call build_system( bspline_2d%bs1 )  
-  call build_system( bspline_2d%bs2 )
-  call update_bspline_2d( bspline_2d, bcoef) 
+  call compute_bspline_2d( bspline_2d, bcoef) 
   bcoef = bspline_2d%bcoef
  
   ! evaluate interpolation error at mesh points and print out
   print 640,(tauy(j),j=1,ny)
   ilo = ky
   do j=1,ny
-    call interv(ty,ny+1,tauy(j),lefty,mflag)
+    call interv(ty,ny+1,tauy(j),lefty,ilo,mflag)
     do i=1,nx
       do jj=1,ky
         work2(jj)=bvalue(tx,bcoef(:,lefty-ky+jj),nx,kx,taux(i),0)
       end do
-      gtau(i,j) = g(taux(i),tauy(j)) - &
-                   bvalue(ty(lefty-ky+1:),work2,ky,ky,tauy(j),0)
+      gtau(i,j) = bvalue(ty(lefty-ky+1:),work2,ky,ky,tauy(j),0)
     end do
   end do
+
   do i=1,nx
-    print 632,taux(i),(gtau(i,j),j=1,ny)
+    print 632,taux(i),(gtau(i,j)-g(taux(i),tauy(j)),j=1,ny)
   end do
 
   print*, 'PASSED'
@@ -97,117 +95,6 @@ function g (x , y)
 
 end function g
 
-subroutine interv( xt, lxt, x, left, mflag )
- 
-sll_real64, intent(in)  :: xt(:)
-sll_int32,  intent(in)  :: lxt
-sll_real64, intent(in)  :: x
-sll_int32,  intent(out) :: left
-sll_int32,  intent(out) :: mflag
-
-sll_int32               :: ihi
-sll_int32, save         :: ilo = 1
-sll_int32               :: istep
-sll_int32               :: middle
-
-ihi = ilo + 1
-if ( lxt <= ihi ) then
-   if ( xt(lxt) <= x ) then
-      go to 110
-   end if
-   if ( lxt <= 1 ) then
-      mflag = -1
-      left = 1
-      return
-   end if
-   ilo = lxt - 1
-   ihi = lxt
-end if
-if ( xt(ihi) <= x ) then
-   go to 20
-end if
-if ( xt(ilo) <= x ) then
-   mflag = 0
-   left = ilo
-   return
-end if
-!
-!  Now X < XT(ILO).  Decrease ILO to capture X.
-!
-istep = 1
-10  continue
-ihi = ilo
-ilo = ihi - istep
-if ( 1 < ilo ) then
-   if ( xt(ilo) <= x ) then
-      go to 50
-   end if
-   istep = istep * 2
-   go to 10
-end if
-ilo = 1
-if ( x < xt(1) ) then
-   mflag = -1
-   left = 1
-   return
-end if
-go to 50
-!
-!  Now XT(IHI) <= X.  Increase IHI to capture X.
-!
-20  continue
-istep = 1
-30  continue
-ilo = ihi
-ihi = ilo + istep
-if ( ihi < lxt ) then
-   if ( x < xt(ihi) ) then
-      go to 50
-   end if
-   istep = istep * 2
-   go to 30
-end if
-if ( xt(lxt) <= x ) then
-   go to 110
-end if
-!
-!  Now XT(ILO) < = X < XT(IHI).  Narrow the interval.
-!
-ihi = lxt
-50  continue
-do
-  middle = ( ilo + ihi ) / 2
-  if ( middle == ilo ) then
-     mflag = 0
-     left = ilo
-     return
-  end if
-  !
-  !  It is assumed that MIDDLE = ILO in case IHI = ILO+1.
-  !
-  if ( xt(middle) <= x ) then
-     ilo = middle
-  else
-     ihi = middle
-  end if
-   
-end do
-!
-!  Set output and return.
-!
-110 continue
-mflag = 1
-if ( x == xt(lxt) ) then
-   mflag = 0
-end if
-do left = lxt, 1, -1
-   if ( xt(left) < xt(lxt) ) then
-      return
-   end if
-end do
-
-end subroutine interv
-
 !> Evaluates a derivative of a spline from its B-spline representation.
 function bvalue( t, bcoef, n, k, x, jderiv ) result(res)
     
@@ -226,6 +113,7 @@ sll_real64, allocatable :: dr(:)
 
 sll_int32 :: i
 sll_int32 :: ilo
+sll_int32 :: jlo
 sll_int32 :: j
 sll_int32 :: jc
 sll_int32 :: jcmax
@@ -248,7 +136,7 @@ if ( k <= jderiv ) return
 !  spline F and  BVALUE = 0.  The asymmetry in this choice of I makes F
 !  right continuous.
 !
-call interv ( t, n+k, x, i, mflag )
+call interv ( t, n+k, x, i, jlo, mflag )
 
 if ( mflag /= 0 ) return
 !
