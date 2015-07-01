@@ -1,7 +1,9 @@
-program arbitrary_degree_splines_1d_neumann
+program bspline_1d_dirichlet
 #include "sll_working_precision.h"
 #include "sll_constants.h"
-#include "sll_interpolators.h"
+
+use sll_module_bspline_interpolator_1d
+use sll_boundary_condition_descriptors
 implicit none
 
 #define NPTS 65
@@ -9,7 +11,7 @@ implicit none
 #define XMIN 0.0_f64
 #define XMAX 1.0_f64
 
-type(sll_arbitrary_degree_spline_interpolator_1d) :: interpolator
+type(sll_bspline_interpolator_1d) :: interpolator
 
 sll_real64, dimension(NPTS) :: x
 sll_real64, dimension(NPTS) :: y
@@ -24,7 +26,7 @@ sll_real64 :: normH1
 h = (XMAX-XMIN)/real(NPTS-1,f64)
   
 print *, '***********************************************************'
-print *, '              Neumann case'
+print *, '              Dirichlet'
 print *, '***********************************************************'
   
 do i=1,NPTS
@@ -33,13 +35,8 @@ end do
 call random_number(x)
 x = x * (XMAX-XMIN)
   
-call interpolator%initialize(NPTS,XMIN,XMAX,SLL_NEUMANN,SLL_NEUMANN,SPL_DEG)
-
-call set_values_at_boundary1d(interpolator,         &
-                              value_left =1.0_f64,  &
-                              value_right=1.0_f64,  &
-                              slope_left =0.0_f64,  &
-                              slope_right=0.0_f64)
+call interpolator%initialize(NPTS,XMIN,XMAX,SPL_DEG,SLL_DIRICHLET)
+!call set_values_at_boundary1d(interpolator,value_left=1.0_f64,value_right=1.0_f64)
 
 call interpolator%compute_interpolants(y)
   
@@ -69,8 +66,8 @@ print*,'--------------------------------------------'
 print*,' Norm H1 error ', sqrt(normH1), h**(SPL_DEG-2)
 print*,'--------------------------------------------'
 
-if(( sqrt(normL2) <= 1e-6) .AND. &
-   ( sqrt(normH1) <= 1e-4)) then
+if(( sqrt(normL2) <= h**(SPL_DEG)) .AND. &
+   ( sqrt(normH1) <= h**(SPL_DEG-2))) then
   print *, 'PASSED'
 else
   print *, 'FAILED'
@@ -78,16 +75,14 @@ end if
 
 call sll_delete(interpolator)
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 function f(x)
 
   sll_real64 :: x
   sll_real64 :: f
 
-  f = cos(2.0_f64*sll_pi*x)
+  f = sin(2.0_f64*sll_pi*x)+1
 
 end function f
 
@@ -96,9 +91,9 @@ function df(x)
   sll_real64 :: x
   sll_real64 :: df
 
-  df = -2.0_f64*sll_pi*sin(2.0_f64*sll_pi*x)
+  df = 2.0_f64*sll_pi*cos(2.0_f64*sll_pi*x)
 
 end function df
 
 
-end program arbitrary_degree_splines_1d_neumann
+end program bspline_1d_dirichlet
