@@ -548,7 +548,7 @@ contains
         !---------------------------### Main Loop ###----------------------------------------------------
         time=0.0_f64
         do timestep=1, timesteps
-            time=timestepwidth*timestepwidth*(timestep-1)
+            time=timestepwidth*(timestep-1)
 
             call sll_pic1d_write_phasespace(timestep,species(1:num_species))
 
