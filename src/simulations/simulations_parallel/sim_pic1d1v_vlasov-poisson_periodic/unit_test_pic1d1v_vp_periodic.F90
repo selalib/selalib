@@ -26,9 +26,7 @@ program pic1d1v_vp_periodic
 
   call sll_boot_collective()
   coll_rank = sll_get_collective_rank( sll_world_collective )
-  if( coll_rank == 0 ) then
-    print *, '#Booting parallel environment...'
-  endif
+  if( coll_rank == 0 ) print *, '#Booting parallel environment...'
 
   ! In this test, the name of the file to open is provided as a command line
   ! argument.
@@ -36,17 +34,18 @@ program pic1d1v_vp_periodic
   filename_local = trim(filename)
 
   call simulation%init_from_file( filename_local )
-  print *, 'simulation initialized from file'
+  if( coll_rank == 0 ) print *, 'simulation initialized from file'
 
   call simulation%new_pic()
-  write(*,*) "figuring out the place of the bug"
+  if( coll_rank == 0 ) print *, 'parallel PIC ready to run'
+
   call simulation%run( )
-  print *, 'run completed'
+  if( coll_rank == 0 ) print *, 'run completed'
 
 !  call sll_delete( simulation )
 
-  print *, 'reached end of pic1d1v_vp_periodic test'
-  print *, 'PASSED'
+  if( coll_rank == 0 ) print *, 'reached end of pic1d1v_vp_periodic test'
+  if( coll_rank == 0 ) print *, 'PASSED'
 
   call sll_halt_collective()
 
