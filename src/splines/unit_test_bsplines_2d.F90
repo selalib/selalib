@@ -8,18 +8,22 @@ use sll_boundary_condition_descriptors
 
   implicit none
 
-  sll_int32, parameter :: nx=7
+  sll_int32, parameter :: nx=17
   sll_int32, parameter :: kx=3
-  sll_int32, parameter :: ny=6
+  sll_int32, parameter :: ny=11
   sll_int32, parameter :: ky=4
 
   sll_int32            :: i
   sll_int32            :: j
-  sll_int32            :: iflag
   sll_int32            :: jj
+  sll_int32            :: left
+  sll_int32            :: leftx
   sll_int32            :: lefty
   sll_int32            :: mflag
   sll_int32            :: ilo
+  sll_int32            :: jlo
+  sll_int32            :: klo
+  sll_int32            :: ierr
 
   sll_real64           :: gtau(nx,ny)
   sll_real64           :: bcoef(nx,ny)
@@ -27,13 +31,15 @@ use sll_boundary_condition_descriptors
   sll_real64           :: tauy(ny)
   sll_real64           :: tx(nx+kx)
   sll_real64           :: ty(ny+ky)
-  sll_real64           :: work1(ny,nx)
-  sll_real64           :: work2(nx)
-  sll_real64           :: work3(nx*ny)
-  sll_real64           :: workx(nx)
-  sll_real64           :: worky(ny)
+  sll_real64           :: work(nx)
+
+  sll_real64, allocatable :: aj(:)
+  sll_real64, allocatable :: dl(:)
+  sll_real64, allocatable :: dr(:)
 
   type(sll_bspline_2d), pointer :: bspline_2d
+
+  sll_real64 :: t0, t1, t2
   
   
   bspline_2d => new_bspline_2d( nx, kx-1, 1.0_f64, nx*1.0_f64, SLL_PERIODIC, &
@@ -57,31 +63,52 @@ use sll_boundary_condition_descriptors
     print 632,taux(i),(bcoef(i,j),j=1,ny)
   end do
   
+  call cpu_time(t0)
   call compute_bspline_2d( bspline_2d, bcoef) 
   bcoef = bspline_2d%bcoef
+  call cpu_time(t1)
  
   ! evaluate interpolation error at mesh points and print out
   print 640,(tauy(j),j=1,ny)
-  ilo = ky
+
+  SLL_CLEAR_ALLOCATE(aj(1:max(kx,ky)), ierr)
+  SLL_CLEAR_ALLOCATE(dl(1:max(kx,ky)), ierr)
+  SLL_CLEAR_ALLOCATE(dr(1:max(kx,ky)), ierr)
+
+  jlo = ky
   do j=1,ny
-    call interv(ty,ny+1,tauy(j),lefty,ilo,mflag)
+    call interv(ty,ny+1,tauy(j),lefty,jlo,mflag)
+    ilo = kx
     do i=1,nx
+      call interv (tx,nx+kx,taux(i),leftx, ilo, mflag )
       do jj=1,ky
-        work2(jj)=bvalue(tx,bcoef(:,lefty-ky+jj),nx,kx,taux(i),0)
+        work(jj)=bvalue(tx,bcoef(:,lefty-ky+jj),nx,kx,taux(i),leftx)
       end do
-      gtau(i,j) = bvalue(ty(lefty-ky+1:),work2,ky,ky,tauy(j),0)
+      call interv(ty(lefty-ky+1:),ky+ky,tauy(j),left,klo,mflag)
+      gtau(i,j) = bvalue(ty(lefty-ky+1:),work,ky,ky,tauy(j),left)
     end do
   end do
+  call cpu_time(t2)
 
   do i=1,nx
     print 632,taux(i),(gtau(i,j)-g(taux(i),tauy(j)),j=1,ny)
   end do
 
+  do j=1,ny
+  do i=1,nx
+    gtau(i,j)=gtau(i,j)-g(taux(i),tauy(j))
+  end do
+  end do
+
+  print*, 'Max error                    ', maxval(abs(gtau))
+  print*, 'Average error                ', sum(abs(gtau))/(nx*ny)
+  print*, 'Time to compute interpolants ', t1-t0
+  print*, 'Time to interpolate values   ', t2-t1
   print*, 'PASSED'
 
-  620 format(' given data'//6f13.1)
-  632 format(f5.1,6e13.5)
-  640 format(//' interpolation error'//6f13.1)
+  620 format(' given data'//11f8.1)
+  632 format(f5.1,11f8.4)
+  640 format(//' interpolation error'//11f8.1)
 
 contains
 
@@ -91,77 +118,38 @@ function g (x , y)
   sll_real64 :: y
   sll_real64 :: g
   
-  g = max(x-3.5_f64,0.0_f64)**2 + max(y-3.0_f64,0.0_f64)**3
+  g = max(x-0.5_f64*nx,0.0_f64)**2 + max(y-0.5_f64*ny,0.0_f64)**3
 
 end function g
 
 !> Evaluates a derivative of a spline from its B-spline representation.
-function bvalue( t, bcoef, n, k, x, jderiv ) result(res)
+function bvalue( t, bcoef, n, k, x, i ) result(res)
     
 sll_real64, intent(in)  :: t(:)
 sll_real64, intent(in)  :: bcoef(:)
 sll_int32,  intent(in)  :: n
 sll_int32,  intent(in)  :: k
 sll_real64, intent(in)  :: x
-sll_int32,  intent(in)  :: jderiv
+sll_int32,  intent(in)  :: i
 
 sll_real64              :: res
 
-sll_real64, allocatable :: aj(:)
-sll_real64, allocatable :: dl(:)
-sll_real64, allocatable :: dr(:)
 
-sll_int32 :: i
 sll_int32 :: ilo
-sll_int32 :: jlo
 sll_int32 :: j
 sll_int32 :: jc
 sll_int32 :: jcmax
 sll_int32 :: jcmin
 sll_int32 :: jj
-sll_int32 :: mflag
-sll_int32 :: ierr
 
-res = 0.0_f64
-
-SLL_CLEAR_ALLOCATE(aj(1:k), ierr)
-SLL_CLEAR_ALLOCATE(dl(1:k), ierr)
-SLL_CLEAR_ALLOCATE(dr(1:k), ierr)
-
-if ( k <= jderiv ) return
-!
-!  Find I so that 1 <= I < N+K and T(I) < T(I+1) and T(I) <= X < T(I+1).
-!
-!  If no such I can be found, X lies outside the support of the
-!  spline F and  BVALUE = 0.  The asymmetry in this choice of I makes F
-!  right continuous.
-!
-call interv ( t, n+k, x, i, jlo, mflag )
-
-if ( mflag /= 0 ) return
-!
-!  If K = 1 (and JDERIV = 0), BVALUE = BCOEF(I).
-!
-if ( k <= 1 ) then
-  res = bcoef(i)
-  return
-end if
-!
-!  Store the K B-spline coefficients relevant for the knot interval
-!  ( T(I),T(I+1) ) in AJ(1),...,AJ(K) and compute DL(J) = X - T(I+1-J),
-!  DR(J) = T(I+J)-X, J=1,...,K-1.  Set any of the AJ not obtainable
-!  from input to zero.
-!
-!  Set any T's not obtainable equal to T(1) or to T(N+K) appropriately.
-!
+res = bcoef(i)
 jcmin = 1
-
 if ( k <= i ) then
   do j = 1, k-1
     dl(j) = x - t(i+1-j)
   end do
 else
-  jcmin = 1 - ( i - k )
+  jcmin = 1-(i-k)
   do j = 1, i
     dl(j) = x - t(i+1-j)
   end do
@@ -173,8 +161,8 @@ end if
 
 jcmax = k
 if ( n < i ) then
-  jcmax = k + n - i
-  do j = 1, k + n - i
+  jcmax = k+n-i
+  do j = 1, k+n-i
     dr(j) = t(i+j) - x
   end do
   do j = k+n-i, k-1
@@ -190,19 +178,7 @@ end if
 do jc = jcmin, jcmax
   aj(jc) = bcoef(i-k+jc)
 end do
-!  Difference the coefficients JDERIV times.
-do j = 1, jderiv
-  ilo = k - j
-  do jj = 1, k - j
-    aj(jj) = ((aj(jj+1)-aj(jj))/(dl(ilo)+dr(jj)))*(k-j)
-    ilo = ilo - 1
-  end do
-end do
-!
-!  Compute value at X in (T(I),T(I+1)) of JDERIV-th derivative,
-!  given its relevant B-spline coefficients in AJ(1),...,AJ(K-JDERIV).
-!
-do j = jderiv+1, k-1
+do j = 1, k-1
   ilo = k-j
   do jj = 1, k-j
     aj(jj) = (aj(jj+1)*dl(ilo)+aj(jj)*dr(jj))/(dl(ilo)+dr(jj))
