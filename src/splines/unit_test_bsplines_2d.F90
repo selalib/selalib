@@ -8,9 +8,9 @@ use sll_boundary_condition_descriptors
 
   implicit none
 
-  sll_int32, parameter    :: nx=2800
+  sll_int32, parameter    :: nx=14
   sll_int32, parameter    :: kx=3
-  sll_int32, parameter    :: ny=2400
+  sll_int32, parameter    :: ny=11
   sll_int32, parameter    :: ky=4
 
   sll_int32               :: i
@@ -31,6 +31,7 @@ use sll_boundary_condition_descriptors
 
   sll_real64              :: xi, xj
   sll_real64              :: gtau(nx,ny)
+  sll_real64              :: htau(nx,ny)
   sll_real64, pointer     :: bcoef(:,:)
   sll_real64, pointer     :: taux(:)
   sll_real64, pointer     :: tauy(:)
@@ -53,17 +54,17 @@ use sll_boundary_condition_descriptors
   ! in x, interpolate between knots by parabolic splines, using
   ! not-a-knot end condition
   taux => bspline_2d%bs1%tau
-  tx   => bspline_2d%bs1%t
   tauy => bspline_2d%bs2%tau
+  tx   => bspline_2d%bs1%t
   ty   => bspline_2d%bs2%t
   
   ! generate and print out function values
-  !print 620,(tauy(i),i=1,ny)
+  print 620,(tauy(i),i=1,ny)
   do i=1,nx
     do j=1,ny
       gtau(i,j) = g(taux(i),tauy(j))
     end do
-    !print 632,taux(i),(bcoef(i,j),j=1,ny)
+    print 632,taux(i),(gtau(i,j),j=1,ny)
   end do
   
   call cpu_time(t0)
@@ -72,119 +73,19 @@ use sll_boundary_condition_descriptors
   call cpu_time(t1)
  
   ! evaluate interpolation error at mesh points and print out
-  !print 640,(tauy(j),j=1,ny)
+  call interpolate_array_values_2d(bspline_2d, nx, ny, gtau, htau)
 
-  SLL_CLEAR_ALLOCATE(aj(1:max(kx,ky)), ierr)
-  SLL_CLEAR_ALLOCATE(dl(1:max(kx,ky)), ierr)
-  SLL_CLEAR_ALLOCATE(dr(1:max(kx,ky)), ierr)
-
-  jlo = ky
-  do j=1,ny
-    xj = tauy(j)
-    call interv(ty,ny+ky,xj,lefty,jlo,mflag)
-    ilo = kx
-    klo = jlo
-    do i=1,nx
-      xi = taux(i)
-      call interv (tx,nx+kx,xi,leftx, ilo, mflag )
-      do jj=1,ky
-        jcmin = 1
-        if ( kx <= leftx ) then
-          do jjj = 1, kx-1
-            dl(jjj) = xi - tx(leftx+1-jjj)
-          end do
-        else
-          jcmin = 1-(leftx-kx)
-          do jjj = 1, leftx
-            dl(jjj) = xi - tx(leftx+1-jjj)
-          end do
-          do jjj = leftx, kx-1
-            aj(kx-jjj) = 0.0_f64
-            dl(jjj) = dl(leftx)
-          end do
-        end if
-        jcmax = kx
-        if ( nx < leftx ) then
-          jcmax = kx+nx-leftx
-          do jjj = 1, kx+nx-leftx
-            dr(jjj) = tx(leftx+jjj) - xi
-          end do
-          do jjj = kx+nx-leftx, kx-1
-            aj(jjj+1) = 0.0_f64
-            dr(jjj) = dr(kx+nx-leftx)
-          end do
-        else
-          do jjj = 1, kx-1
-            dr(jjj) = tx(leftx+jjj) - xi
-          end do
-        end if
-        do jc = jcmin, jcmax
-          aj(jc) = bcoef(leftx-kx+jc,lefty-ky+jj)
-        end do
-        do jjj = 1, kx-1
-          llo = kx-jjj
-          do kkk = 1, kx-jjj
-            aj(kkk) = (aj(kkk+1)*dl(llo)+aj(kkk)*dr(kkk))/(dl(llo)+dr(kkk))
-            llo = llo - 1
-          end do
-        end do
-        work(jj) = aj(1)
-      end do
-
-      call interv(ty(lefty-ky+1:),ky+ky,xj,left,klo,mflag)
-      jcmin = 1
-      if ( ky <= left ) then
-        do jjj = 1, ky-1
-          dl(jjj) = xj - ty(lefty-ky+left+1-jjj)
-        end do
-      else
-        jcmin = 1-(left-ky)
-        do jjj = 1, left
-          dl(jjj) = xj - ty(lefty-ky+left+1-jjj)
-        end do
-        do jjj = left, ky-1
-          aj(ky-jjj) = 0.0_f64
-          dl(jjj) = dl(left)
-        end do
-      end if
-      jcmax = ky
-      if ( ky < left ) then
-        jcmax = ky+ky-left
-        do jjj = 1, ky+ky-left
-          dr(jjj) = ty(lefty-ky+left+jjj) - xj
-        end do
-        do jjj = ky+ky-left, ky-1
-          aj(jjj+1) = 0.0_f64
-          dr(jjj) = dr(ky+ky-left)
-        end do
-      else
-        do jjj = 1, ky-1
-          dr(jjj) = ty(lefty-ky+left+jjj) - xj
-        end do
-      end if
-      do jc = jcmin, jcmax
-        aj(jc) = work(left-ky+jc)
-      end do
-      do jjj = 1, ky-1
-        llo = ky-jjj
-        do kkk = 1, ky-jjj
-          aj(kkk) = (aj(kkk+1)*dl(llo)+aj(kkk)*dr(kkk))/(dl(llo)+dr(kkk))
-          llo = llo - 1
-        end do
-      end do
-      gtau(i,j) = aj(1)
-    end do
-  end do
   call cpu_time(t2)
 
-  !do i=1,nx
-  !  print 632,taux(i),(gtau(i,j)-g(taux(i),xj),j=1,ny)
-  !end do
+  print 640,(tauy(j),j=1,ny)
+  do i=1,nx
+    print 632,taux(i),(htau(i,j)-g(taux(i),tauy(j)),j=1,ny)
+  end do
 
   do j=1,ny
-  do i=1,nx
-    gtau(i,j)=gtau(i,j)-g(taux(i),tauy(j))
-  end do
+    do i=1,nx
+      gtau(i,j)=htau(i,j)-g(taux(i),tauy(j))
+    end do
   end do
 
   print*, 'Max error                    ', maxval(abs(gtau))
