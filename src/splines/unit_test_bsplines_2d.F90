@@ -8,9 +8,9 @@ use sll_boundary_condition_descriptors
 
   implicit none
 
-  sll_int32, parameter    :: nx=17
+  sll_int32, parameter    :: nx=2800
   sll_int32, parameter    :: kx=3
-  sll_int32, parameter    :: ny=11
+  sll_int32, parameter    :: ny=2400
   sll_int32, parameter    :: ky=4
 
   sll_int32               :: i
@@ -29,12 +29,13 @@ use sll_boundary_condition_descriptors
   sll_int32               :: kkk
   sll_int32               :: jc, jcmin, jcmax
 
+  sll_real64              :: xi, xj
   sll_real64              :: gtau(nx,ny)
-  sll_real64              :: bcoef(nx,ny)
-  sll_real64              :: taux(nx)
-  sll_real64              :: tauy(ny)
-  sll_real64              :: tx(nx+kx)
-  sll_real64              :: ty(ny+ky)
+  sll_real64, pointer     :: bcoef(:,:)
+  sll_real64, pointer     :: taux(:)
+  sll_real64, pointer     :: tauy(:)
+  sll_real64, pointer     :: tx(:)
+  sll_real64, pointer     :: ty(:)
   sll_real64              :: work(nx)
 
   sll_real64, allocatable :: aj(:)
@@ -51,23 +52,23 @@ use sll_boundary_condition_descriptors
   ! set up data points and knots
   ! in x, interpolate between knots by parabolic splines, using
   ! not-a-knot end condition
-  taux = bspline_2d%bs1%tau
-  tx   = bspline_2d%bs1%t
-  tauy = bspline_2d%bs2%tau
-  ty   = bspline_2d%bs2%t
+  taux => bspline_2d%bs1%tau
+  tx   => bspline_2d%bs1%t
+  tauy => bspline_2d%bs2%tau
+  ty   => bspline_2d%bs2%t
   
   ! generate and print out function values
   !print 620,(tauy(i),i=1,ny)
   do i=1,nx
     do j=1,ny
-      bcoef(i,j) = g(taux(i),tauy(j))
+      gtau(i,j) = g(taux(i),tauy(j))
     end do
     !print 632,taux(i),(bcoef(i,j),j=1,ny)
   end do
   
   call cpu_time(t0)
-  call compute_bspline_2d( bspline_2d, bcoef) 
-  bcoef = bspline_2d%bcoef
+  call compute_bspline_2d( bspline_2d, gtau) 
+  bcoef => bspline_2d%bcoef
   call cpu_time(t1)
  
   ! evaluate interpolation error at mesh points and print out
@@ -79,20 +80,23 @@ use sll_boundary_condition_descriptors
 
   jlo = ky
   do j=1,ny
-    call interv(ty,ny+ky,tauy(j),lefty,jlo,mflag)
+    xj = tauy(j)
+    call interv(ty,ny+ky,xj,lefty,jlo,mflag)
     ilo = kx
+    klo = jlo
     do i=1,nx
-      call interv (tx,nx+kx,taux(i),leftx, ilo, mflag )
+      xi = taux(i)
+      call interv (tx,nx+kx,xi,leftx, ilo, mflag )
       do jj=1,ky
         jcmin = 1
         if ( kx <= leftx ) then
           do jjj = 1, kx-1
-            dl(jjj) = taux(i) - tx(leftx+1-jjj)
+            dl(jjj) = xi - tx(leftx+1-jjj)
           end do
         else
           jcmin = 1-(leftx-kx)
           do jjj = 1, leftx
-            dl(jjj) = taux(i) - tx(leftx+1-jjj)
+            dl(jjj) = xi - tx(leftx+1-jjj)
           end do
           do jjj = leftx, kx-1
             aj(kx-jjj) = 0.0_f64
@@ -103,7 +107,7 @@ use sll_boundary_condition_descriptors
         if ( nx < leftx ) then
           jcmax = kx+nx-leftx
           do jjj = 1, kx+nx-leftx
-            dr(jjj) = tx(leftx+jjj) - taux(i)
+            dr(jjj) = tx(leftx+jjj) - xi
           end do
           do jjj = kx+nx-leftx, kx-1
             aj(jjj+1) = 0.0_f64
@@ -111,33 +115,32 @@ use sll_boundary_condition_descriptors
           end do
         else
           do jjj = 1, kx-1
-            dr(jjj) = tx(leftx+jjj) - taux(i)
+            dr(jjj) = tx(leftx+jjj) - xi
           end do
         end if
         do jc = jcmin, jcmax
           aj(jc) = bcoef(leftx-kx+jc,lefty-ky+jj)
         end do
         do jjj = 1, kx-1
-          klo = kx-jjj
+          llo = kx-jjj
           do kkk = 1, kx-jjj
-            aj(kkk) = (aj(kkk+1)*dl(klo)+aj(kkk)*dr(kkk))/(dl(klo)+dr(kkk))
-            klo = klo - 1
+            aj(kkk) = (aj(kkk+1)*dl(llo)+aj(kkk)*dr(kkk))/(dl(llo)+dr(kkk))
+            llo = llo - 1
           end do
         end do
         work(jj) = aj(1)
       end do
 
-      call interv(ty(lefty-ky+1:),ky+ky,tauy(j),left,klo,mflag)
-      !bvalue(ty(lefty-ky+1:),work,ky,ky,tauy(j),left)
+      call interv(ty(lefty-ky+1:),ky+ky,xj,left,klo,mflag)
       jcmin = 1
       if ( ky <= left ) then
         do jjj = 1, ky-1
-          dl(jjj) = tauy(j) - ty(lefty-ky+left+1-jjj)
+          dl(jjj) = xj - ty(lefty-ky+left+1-jjj)
         end do
       else
         jcmin = 1-(left-ky)
         do jjj = 1, left
-          dl(jjj) = tauy(j) - ty(lefty-ky+left+1-jjj)
+          dl(jjj) = xj - ty(lefty-ky+left+1-jjj)
         end do
         do jjj = left, ky-1
           aj(ky-jjj) = 0.0_f64
@@ -148,7 +151,7 @@ use sll_boundary_condition_descriptors
       if ( ky < left ) then
         jcmax = ky+ky-left
         do jjj = 1, ky+ky-left
-          dr(jjj) = ty(lefty-ky+left+jjj) - tauy(j)
+          dr(jjj) = ty(lefty-ky+left+jjj) - xj
         end do
         do jjj = ky+ky-left, ky-1
           aj(jjj+1) = 0.0_f64
@@ -156,7 +159,7 @@ use sll_boundary_condition_descriptors
         end do
       else
         do jjj = 1, ky-1
-          dr(jjj) = ty(lefty-ky+left+jjj) - tauy(j)
+          dr(jjj) = ty(lefty-ky+left+jjj) - xj
         end do
       end if
       do jc = jcmin, jcmax
@@ -175,7 +178,7 @@ use sll_boundary_condition_descriptors
   call cpu_time(t2)
 
   !do i=1,nx
-  !  print 632,taux(i),(gtau(i,j)-g(taux(i),tauy(j)),j=1,ny)
+  !  print 632,taux(i),(gtau(i,j)-g(taux(i),xj),j=1,ny)
   !end do
 
   do j=1,ny
