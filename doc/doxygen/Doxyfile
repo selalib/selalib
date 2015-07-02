@@ -858,7 +858,6 @@ EXCLUDE                = @CMAKE_CURRENT_SOURCE_DIR@/sparse_matrix_manager \
                          @CMAKE_CURRENT_SOURCE_DIR@/quasi_neutral_solvers \
                          @CMAKE_CURRENT_SOURCE_DIR@/random_deviate_generators \
                          @CMAKE_CURRENT_SOURCE_DIR@/reduction \
-                         @CMAKE_CURRENT_SOURCE_DIR@/simulations \
                          @CMAKE_CURRENT_SOURCE_DIR@/sparse_matrix_manager \
                          @CMAKE_CURRENT_SOURCE_DIR@/time_solvers \
                          @CMAKE_CURRENT_SOURCE_DIR@/timer \
