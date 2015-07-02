@@ -1521,79 +1521,131 @@ sll_real64, allocatable :: aj(:)
 sll_real64, allocatable :: dl(:)
 sll_real64, allocatable :: dr(:)
 
-sll_int32               :: left
+sll_int32               :: nx, kx, ny, ky
+sll_int32               :: left, leftx, lefty
 sll_int32               :: ilo
-sll_int32               :: ilo1
-sll_int32               :: ilo2
-sll_int32               :: m, mflag
+sll_int32               :: jlo
+sll_int32               :: klo
+sll_int32               :: llo
+sll_int32               :: mflag
+sll_int32               :: ierr
+sll_int32               :: jjj
+sll_int32               :: kkk
 
-m = merge(0, 2, this%bs1%bc_type == SLL_PERIODIC)
+sll_real64              :: xi
+sll_real64              :: xj
+sll_real64, pointer     :: tx(:)
+sll_real64, pointer     :: ty(:)
+sll_real64, pointer     :: work(:)
 
-k1 = this%bs1%k
-k2 = this%bs2%k
+nx   = n1
+ny   = n2
+kx   = this%bs1%k
+ky   = this%bs2%k
+tx   => this%bs1%t
+ty   => this%bs2%t
+work => this%bs1%bcoef
 
-allocate(aj(1:max(k1,k2)),dl(1:max(k1,k2)),dr(1:max(k1,k2)))
+SLL_CLEAR_ALLOCATE(aj(1:max(kx,ky)),ierr)
+SLL_CLEAR_ALLOCATE(dl(1:max(kx,ky)),ierr)
+SLL_CLEAR_ALLOCATE(dr(1:max(kx,ky)),ierr)
 
-do i2 = 1, n2
-  
-  call interv( this%bs2%t, n2+k2, x(i1,i2), left, ilo2, mflag )
-
-  ilo1 = k1
-  do i1 = 1, n1
-
-      call interv( this%bs1%t, n1+k1, x(i1,i2), i, ilo1, mflag )
-  
-      y(i1,i2) = this%bs1%bcoef(i)
-  
-      if ( mflag /= 0 ) return
-  
-      if ( k1 <= i ) then
-        do j = 1, k1-1
-          dl(j) = x(i1,i2) - this%bs1%t(i+1-j)
-        end do
-        jcmin = 1
-      else
-        jcmin = 1-(i-k1)
-        do j = 1, i
-          dl(j) = x(i1,i2) - this%bs1%t(i+1-j)
-        end do
-        do j = i, k1-1
-          aj(k1-j) = 0.0_f64
-          dl(j) = dl(i)
-        end do
-      end if
-      
-      if ( n1+m < i ) then
-        jcmax = n1+k1+m-i
-        do j = 1, jcmax
-          dr(j) = this%bs1%t(i+j) - x(i1,i2)
-        end do
-        do j = jcmax, k1-1
-          aj(j+1) = 0.0_f64
-          dr(j) = dr(jcmax)
+jlo = ky
+do j=1,ny
+  ilo = kx
+  klo = jlo
+  xj  = this%bs2%tau(j)
+  call interv(ty,ny+ky,xj,lefty,jlo,mflag)
+  do i=1,nx
+    xi = this%bs1%tau(i)
+    call interv(tx,nx+kx,xi,leftx,ilo,mflag)
+    do jj=1,ky
+      jcmin = 1
+      if ( kx <= leftx ) then
+        do jjj = 1, kx-1
+          dl(jjj) = xi - tx(leftx+1-jjj)
         end do
       else
-        jcmax = k1
-        do j = 1, k1-1
-          dr(j) = this%bs1%t(i+j) - x(i1,i2)
+        jcmin = 1-(leftx-kx)
+        do jjj = 1, leftx
+          dl(jjj) = xi - tx(leftx+1-jjj)
+        end do
+        do jjj = leftx, kx-1
+          aj(kx-jjj) = 0.0_f64
+          dl(jjj) = dl(leftx)
         end do
       end if
-      
+      jcmax = kx
+      if ( nx < leftx ) then
+        jcmax = kx+nx-leftx
+        do jjj = 1, kx+nx-leftx
+          dr(jjj) = tx(leftx+jjj) - xi
+        end do
+        do jjj = kx+nx-leftx, kx-1
+          aj(jjj+1) = 0.0_f64
+          dr(jjj) = dr(kx+nx-leftx)
+        end do
+      else
+        do jjj = 1, kx-1
+          dr(jjj) = tx(leftx+jjj) - xi
+        end do
+      end if
       do jc = jcmin, jcmax
-        aj(jc) = this%bcoef(i-k1+jc,j)
+        aj(jc) = this%bcoef(leftx-kx+jc,lefty-ky+jj)
       end do
-      
-      do j = 1, k1-1
-        ilo = k1-j
-        do jj = 1, k1-j
-          aj(jj) = (aj(jj+1)*dl(ilo)+aj(jj)*dr(jj)) &
-                        /(dl(ilo)+dr(jj))
-          ilo = ilo - 1
+      do jjj = 1, kx-1
+        llo = kx-jjj
+        do kkk = 1, kx-jjj
+          aj(kkk) = (aj(kkk+1)*dl(llo)+aj(kkk)*dr(kkk))/(dl(llo)+dr(kkk))
+          llo = llo - 1
         end do
       end do
-      
-      y(i1,i2) = aj(1)
-    
+      work(jj) = aj(1)
+    end do
+
+    call interv(ty(lefty-ky+1:ny+ky),ky+ky,xj,left,klo,mflag)
+
+    jcmin = 1
+    if ( ky <= left ) then
+      do jjj = 1, ky-1
+        dl(jjj) = xj - ty(lefty-ky+left+1-jjj)
+      end do
+    else
+      jcmin = 1-(left-ky)
+      do jjj = 1, left
+        dl(jjj) = xj - ty(lefty-ky+left+1-jjj)
+      end do
+      do jjj = left, ky-1
+        aj(ky-jjj) = 0.0_f64
+        dl(jjj) = dl(left)
+      end do
+    end if
+    jcmax = ky
+    if ( ky < left ) then
+      jcmax = ky+ky-left
+      do jjj = 1, ky+ky-left
+        dr(jjj) = ty(lefty-ky+left+jjj) - xj
+      end do
+      do jjj = ky+ky-left, ky-1
+        aj(jjj+1) = 0.0_f64
+        dr(jjj) = dr(ky+ky-left)
+      end do
+    else
+      do jjj = 1, ky-1
+        dr(jjj) = ty(lefty-ky+left+jjj) - xj
+      end do
+    end if
+    do jc = jcmin, jcmax
+      aj(jc) = work(left-ky+jc)
+    end do
+    do jjj = 1, ky-1
+      llo = ky-jjj
+      do kkk = 1, ky-jjj
+        aj(kkk) = (aj(kkk+1)*dl(llo)+aj(kkk)*dr(kkk))/(dl(llo)+dr(kkk))
+        llo = llo - 1
+      end do
+    end do
+    y(i,j) = aj(1)
   end do
 end do
 
