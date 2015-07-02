@@ -27,19 +27,18 @@ module sll_module_simulation_pic1d1v_vp_periodic
   
   use pic_postprocessing , only : det_landau_damping 
   
-  use pic_1d_particle_loading, only : sll_normal_rnd ,& 
+  use pic_1d_particle_loading, only : & 
          sll_initialize_intrinsic_mpi_random ,&   
          load_particle_species ,&
+         set_loading_parameters, &
          sll_pic1d_ensure_boundary_conditions_species  ,&
          sll_pic1d_ensure_boundary_conditions ,&
          sll_pic1d_ensure_periodicity  ,& 
-         sll_pic_1d_landaudamp_PDFxv ,&
-         sll_local_maxwellian ,&
          control_variate_xv ,& 
-         SLL_PIC1D_TESTCASE_IONBEAM, SLL_PIC1D_TESTCASE_LANDAU, pic1d_testcase  ,&
-         num_species, landau_mode ,landau_alpha, enable_deltaf, enable_deltaf ,&
+         num_species, enable_deltaf, &  ! TODO these should be read from sim
+         SLL_PIC1D_TESTCASE_IONBEAM, SLL_PIC1D_TESTCASE_LANDAU, &
          SLL_PIC1D_TESTCASE_IONBEAM_ELECTRONS ,SLL_PIC1D_TESTCASE_QUIET ,&
-         control_variate_v ,SLL_PIC1D_TESTCASE_BUMPONTAIL, set_loading_parameters
+         SLL_PIC1D_TESTCASE_BUMPONTAIL
   
   implicit none
    
@@ -88,7 +87,6 @@ module sll_module_simulation_pic1d1v_vp_periodic
     sll_real64 :: interval_a
     sll_real64 :: interval_b
 
-    logical :: pi_unit
     logical :: deltaf
     logical :: gnuplot_inline_output
     sll_real64 ::  particle_qm !<mass to electron mass ratio, with the sign of the charge
@@ -178,10 +176,11 @@ contains
         coll_rank = sll_get_collective_rank( sll_world_collective )
         coll_size = sll_get_collective_size( sll_world_collective )
 
+        !number of cores involved in calculus (mpirun argument)
+        if (coll_rank==0) print *, "Size of MPI-Collective: ", coll_size
+
         call sll_collective_barrier(sll_world_collective)
   
-print *, "*********************searching for bug********************************"
-
         !The Mesh is needed on every Node, it is global
         !space set and initiation of the knots and electrocpotential
         sim%mesh_cells=2**sim%femp
@@ -189,7 +188,6 @@ print *, "*********************searching for bug********************************
         SLL_CLEAR_ALLOCATE(sim%knots(1:sim%mesh_cells+1),ierr)
         SLL_CLEAR_ALLOCATE(sim%electricpotential_interp(1:sim%mesh_cells),ierr)
       
-
         !Knots coordinates
         sim%knots(1)=sim%interval_a
         do i=2,size(sim%knots)
@@ -198,21 +196,13 @@ print *, "*********************searching for bug********************************
         sim%knots(size(sim%knots))=sim%interval_b
         SLL_ASSERT(sim%knots(size(sim%knots))==sim%interval_b)
 
-
-        if (coll_rank==0) then
-            print *, "Size of MPI-Collective: ", coll_size               !number of cores involved in calculus (mpirun argument)
-        endif
-!parallel configuration
+        !parallel configuration
         call sll_collective_barrier(sll_world_collective)
         call sll_initialize_intrinsic_mpi_random(sll_world_collective)
         call sll_collective_barrier(sll_world_collective)
 
         !Set up Quasineutral solver
-        
         !fsolver is of class pic_1d_field_solver
-        
-
-         
         select case(sim%scenario_int)
             case(SLL_PIC1D_TESTCASE_IONBEAM)
                 sim%fsolver => new_pic_1d_field_solver( sim%interval_a, sim%interval_b,& 
@@ -325,8 +315,8 @@ print *, "*********************searching for bug********************************
     ! Landau parameters
     namelist /landau_params/ lalpha, lmode, pi_unit, interval_a, interval_b
  
-    
-   call getarg(1,filename)
+    ! Read namelists from input file
+    call getarg(1,filename)
     open(unit=input_file, file=trim(filename), IOStat=IO_stat)
     if( IO_stat /= 0 ) then
         print *, 'init_file() failed to open file ', filename
@@ -337,35 +327,39 @@ print *, "*********************searching for bug********************************
     read(input_file,params)
     close(input_file) 
   
-  
-      sim%lalpha=lalpha
-      sim%lmode=lmode
-      sim%pi_unit=pi_unit
-      sim%interval_a=interval_a
-      sim%interval_b=interval_b
-            
-      sim%nmark=nmark
-      sim%tstepw  =tstepw
-      sim%ppusher=ppusher
-      sim%scenario=scenario
-      sim%psolver=psolver
-      sim%gnuplot_inline_output=gnuplot_inline_output_user
-      
-      sim%deltaf=deltaf
-      sim%nstreams=nstreams
+    ! Define global variables in "pic_1d_particle_loading" module
+    ! (needed for loading initial distribution function)
+    call set_loading_parameters( lalpha, lmode, nstreams )
+
+    ! Store various parameters in PIC simulation object
+    sim%lalpha = lalpha
+    sim%lmode  = lmode
+    if ( pi_unit ) then
+      sim%interval_a = interval_a*sll_pi
+      sim%interval_b = interval_b*sll_pi
+    else
+      sim%interval_a = interval_a
+      sim%interval_b = interval_b
+    endif
+    sim%nmark    = nmark
+    sim%tstepw   = tstepw
+    sim%ppusher  = ppusher
+    sim%scenario = scenario
+    sim%psolver  = psolver
+    sim%gnuplot_inline_output=gnuplot_inline_output_user
     
-      sim%sdeg=sdeg
-      sim%tsteps=tsteps
-      sim%femp=femp
-  
-      sim%ppusher_int= match_enumeration('ppusher' ,sim%ppusher) 
-      sim%psolver_int= match_enumeration('psolver' ,sim%psolver)
-      sim%scenario_int= match_enumeration('scenario' ,sim%scenario)
-      
+    sim%deltaf=deltaf
+    sim%nstreams=nstreams
+    
+    sim%sdeg=sdeg
+    sim%tsteps=tsteps
+    sim%femp=femp
+
+    sim%ppusher_int= match_enumeration('ppusher' ,sim%ppusher) 
+    sim%psolver_int= match_enumeration('psolver' ,sim%psolver)
+    sim%scenario_int= match_enumeration('scenario' ,sim%scenario)
+    
   end subroutine init_from_file
-
-
-
 
 !  interface initialize
 !     module procedure initialize_pid1d_vlasov_poisson_periodic
@@ -377,6 +371,7 @@ print *, "*********************searching for bug********************************
 
 !end subroutine initialize_pid1d_vlasov_poisson_periodic
 
+  !============================================================================
 
   subroutine delete_pid1d_vp_periodic( sim )
     class( sll_simulation_pic1d1v_vp_periodic ), intent( inout ) :: sim
@@ -386,14 +381,6 @@ print *, "*********************searching for bug********************************
   end subroutine delete_pid1d_vp_periodic
 
   !============================================================================
-
-
-
-
-
-
-
-
 
   subroutine run_pic_1d( sim )
      class( sll_simulation_pic1d1v_vp_periodic ), intent( inout ) :: sim
@@ -408,8 +395,8 @@ print *, "*********************searching for bug********************************
         print*, "#Core ", coll_rank, " handles particles", coll_rank*sim%nmark +1, "-", (coll_rank+1)*sim%nmark
         call sll_collective_barrier(sll_world_collective)
          
-        if (coll_rank==0) then
-            print*, "#Total Number of particles: ", sim%nmark*coll_size
+        if (coll_rank==0) print*, "#Total Number of particles: ", sim%nmark*coll_size
+            
             !Scalar values to be recorded  
             !outputs : fieldenery kineticenergy  
             
@@ -450,6 +437,7 @@ print *, "*********************searching for bug********************************
             !call sll_bspline_fem_solver_1d_initialize(knots, spline_degree, steadyparticleposition, -(sll_e_charge/sll_epsilon_0) )
            
             if (coll_rank==0) print *, "#Number of FEM-Cells ", sim%mesh_cells
+
             
             ! Add ion background density to Poisson solver, if needed
             ! TODO: ask Jakob about exact behavior here...
@@ -486,7 +474,6 @@ print *, "*********************searching for bug********************************
                 sim%kineticenergy_offset=0.0_f64
                 sim%impulse_offset=0.0_f64
             endif
-
 
            !Start with PIC Method
            !Do the initial solve of the field
@@ -676,8 +663,6 @@ sim%kineticenergy(timestep)=sll_pic1d_calc_kineticenergy( sim%species(1:num_spec
         !call sll_bspline_fem_solver_1d_destroy
         call sim%fsolver%delete()
 
-        endif
-  
   end subroutine run_pic_1d
 
   
