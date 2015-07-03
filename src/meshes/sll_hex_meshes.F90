@@ -1391,6 +1391,7 @@ contains
     character(len=20),   parameter :: name_nodes = "boxsplines_nodes.txt"
     character(len=23),   parameter :: name_elemt = "boxsplines_elements.txt"
     character(len=24),   parameter :: name_diri  = "boxsplines_dirichlet.txt"
+    character(len=32),   parameter :: name_ele_i = "boxsplines_elements_internal.txt"
     sll_real64 :: x1, y1
     sll_real64 :: x_ver1, y_ver1
     sll_real64 :: a11, a12, a21, a22
@@ -1403,11 +1404,13 @@ contains
     sll_int32  :: nen
     sll_int32  :: num_pts_tot
     sll_int32  :: num_ele
+    sll_int32  :: ele_int
     sll_int32  :: nei1, nei2, nei3
     sll_int32  :: num_cells_to_origin
     sll_int32  :: boundary
     sll_int32  :: dirichlet
     sll_int32  :: type
+    sll_int32  :: dist
     sll_int32,  parameter :: out_unit=20
 
     ! Writing the nodes file....................
@@ -1443,7 +1446,7 @@ contains
     num_ele = mesh%num_triangles
     write(out_unit, "(i6)") num_ele
 
-    ! The (maximum) spline degree and scale are fix here
+    ! The scale is fix here
     scale = 1._f64
     !... we write its global number
     write (out_unit, "(i6)") spline_deg
@@ -1487,6 +1490,80 @@ contains
     print *, ""
     close(out_unit)
 
+    ! Writing the INTERNAL elements file....................
+    ! File containing general information about the INTERNAL* cells and
+    ! the transformation.
+    ! (*) By Internal we mean all cells which splines basis are contained
+    ! within the domain
+    open (unit=out_unit,file=name_ele_i,action="write",status="replace")
+
+    ! We first write the total number of cells/elements:
+    num_ele = mesh%num_triangles
+    ! We compute the number of elements that are fully contained:
+    ele_int = 6 * (mesh%num_cells - spline_deg + 1) * (mesh%num_cells - spline_deg + 1)
+ 
+    write(out_unit, "(i6)") ele_int
+
+    ! The scale is fixed here
+    scale = 1._f64
+    !... we write its global number
+    write (out_unit, "(i6)") spline_deg
+
+    ! For every element...
+    do i=1, num_ele
+       ! before writing the information we want to test if the elements is
+       ! not in the boundary.
+       ! For this first we get the vertices of the cell:
+       x1 = mesh%center_cartesian_coord(1, i)
+       y1 = mesh%center_cartesian_coord(2, i)
+       call get_cell_vertices_index(x1, y1, mesh, e1, e2, e3)
+
+       ! and we get the distance to the origin:
+       dist = 0
+       dist = dist + cells_to_origin(mesh%hex_coord(1, e1), mesh%hex_coord(2, e1))
+       dist = dist + cells_to_origin(mesh%hex_coord(1, e2), mesh%hex_coord(2, e2))
+       dist = dist + cells_to_origin(mesh%hex_coord(1, e3), mesh%hex_coord(2, e3))
+
+       if (dist .lt. (mesh%num_cells - spline_deg + 1)*3 ) then
+ 
+          !... we write its global number
+          write (out_unit, "(i6)") i
+          !... we write its type (1 or 2)
+          type = cell_type(mesh, i)
+          write (out_unit, "(i6)") type
+          !... we write the spline degree
+          write(out_unit, "(i6)") spline_deg
+          !... we write the scale of the element
+          write(out_unit, "((f22.17),(a,1x))",advance='no') scale, ","
+          !... we write its neighbours
+          call get_neighbours(mesh, i, nei1, nei2, nei3)
+          write(out_unit, "(3((i6),(a,1x)))",advance='no') nei1, ",", nei2, ",", nei3, ","
+          !... we write the indices of the edges
+          write(out_unit, "((i6),(a,1x),(i6),(a,1x),(i6))") e1, ",",e2,",", e3
+          !... we write the coordinate transformation (*)
+          if (type == 1) then
+             a11 = 0.5_f64 / mesh%num_cells
+             a12 = -sll_sqrt3/2._f64 / mesh%num_cells
+             a21 =  sll_sqrt3/2._f64 / mesh%num_cells
+             a22 = 0.5_f64 / mesh%num_cells
+          else
+             a11 = 1._f64 / mesh%num_cells
+             a12 = 0._f64 / mesh%num_cells
+             a21 = 0._f64 / mesh%num_cells
+             a22 = 1._f64 / mesh%num_cells
+          end if
+          x_ver1 = mesh%cartesian_coord(1, e1)
+          y_ver1 = mesh%cartesian_coord(2, e1)
+          b1  = x_ver1
+          b2  = y_ver1
+          write(out_unit, "(5((f22.17), (a,1x)), (f22.17))") &
+               a11, ",", a12, ",", a21, ",", a22, ",", b1, ",", b2
+       end if
+    end do
+    print *, ""
+    close(out_unit)
+
+    
     ! (*) The coordinate transformation : Is the transformation from the reference
     ! element to the current cell. As the reference element is the first cell of an
     ! hexagonal mesh of radius 1, the transformation is only a rotation followed by
