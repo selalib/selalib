@@ -13,7 +13,7 @@ IF (Fortran_COMPILER_NAME MATCHES ifort)
   STRING(REGEX MATCH "1[0-9]\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
 ELSE()
   EXEC_PROGRAM(${CMAKE_Fortran_COMPILER} ARGS "--version" OUTPUT_VARIABLE source_path)
-  STRING(REGEX MATCH "4\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
+  STRING(REGEX MATCH "[4-5]\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
 ENDIF()
 MESSAGE(STATUS "Fortran ${Fortran_COMPILER_NAME}-${Fortran_COMPILER_VERSION}")
 

@@ -286,6 +286,27 @@ IF($ENV{PFUNIT})
 
 ENDIF()
 
+#SET(BUILD_SPRNG           OFF CACHE BOOL   "Build SPRNG libraries")
+#IF(BUILD_SPRNG)
+#
+#    INCLUDE(ExternalProject)
+#  
+#    SET(SPRNG_VERSION 5 CACHE STRING "SPRNG version number")
+#
+#    EXTERNALPROJECT_ADD( sprng
+#       URL  http://www.sprng.org/Version5.0/sprng${SPRNG_VERSION}.tar.bz2
+#       SOURCE_DIR ${CMAKE_BINARY_DIR}/sprng
+#       BINARY_DIR ${CMAKE_BINARY_DIR}/sprng
+#       UPDATE_COMMAND autoreconf -if
+#       CONFIGURE_COMMAND ""
+#       BUILD_COMMAND ${MAKE}
+#       INSTALL_COMMAND ""
+#    )
+#  
+#       #CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/sprng/configure --prefix=${CMAKE_BINARY_DIR}/sprng --with-mpi=yes CXX=${MPI_CXX_COMPILER} OMPI_CXX=${CMAKE_CXX_COMPILER}
+#
+#ENDIF()
+
 MESSAGE(STATUS "############################################################")
 MESSAGE(STATUS "####")
 MESSAGE(STATUS "#### CMAKE_BUILD_TYPE:${CMAKE_BUILD_TYPE}")
