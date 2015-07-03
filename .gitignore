@@ -6,6 +6,7 @@
 *.orig
 *.swp
 *~
+*.kate-swp
 
 # Local port index file for MacPorts
 Portindex*
