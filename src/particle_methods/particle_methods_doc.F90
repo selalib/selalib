@@ -18,4 +18,4 @@
   ! eval:(flyspell-prog-mode)
   ! eval:(outline-minor-mode)
   ! End:
-  ! LocalWords: headeralh Doxygen selalib html Centralized src doxygen
+  ! LocalWords: headeralh Doxygen selalib html Centralized src doxygen Doxyfile
