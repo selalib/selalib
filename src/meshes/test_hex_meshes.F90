@@ -20,8 +20,8 @@ sll_int32                   :: nei3
 sll_int32                   :: type
 sll_int32                   :: spline_degree
 
-num_cells = 2
-spline_degree = 1
+num_cells = 20
+spline_degree = 2
 
 print *, ""
 print *, "Creating a mesh with", num_cells, "cells, mesh coordinates written in ./hex_mesh_coo.txt"
