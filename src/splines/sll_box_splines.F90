@@ -891,6 +891,8 @@ contains  ! ****************************************************************
     sll_int32  :: non_zero
     sll_int32  :: ierr
     sll_int32  :: i
+    sll_int32  :: s1, s2, s3
+    sll_int32  :: dist
     sll_int32  :: val
 
     ! Number of non Zero splines depends on the degree
@@ -940,23 +942,38 @@ contains  ! ****************************************************************
     ! We write total number of cells
     write(out_unit, "(i6)") ele_contained
 
-    do num_ele = 1,ele_contained
-       ! We write cell ID number
-       write(out_unit, "(i6)") num_ele
-       ! We write number of non zero
-       write(out_unit, "(i6)") non_zero
-       ! We write the indices of the non zero splines
-       nZ_indices = non_zeros_splines(mesh, num_ele, deg)
-       do i=1,non_zero
-          val = nZ_indices(i)
-          if (val == -1) then
-             print *, "Error in write_connectivity: -1 found"
-             STOP
-          end if
-          write(out_unit, "(i6)", advance="no") val
-          write(out_unit, "(a)", advance="no") ","
-       end do
-       write(out_unit,"(a)")""
+    do num_ele = 1,mesh%num_triangles
+       ! before writing the information we want to test if the elements is
+       ! not in the boundary.
+       ! For this first we get the vertices of the cell:
+       call get_cell_vertices_index(mesh%center_cartesian_coord(1,num_ele), &
+            mesh%center_cartesian_coord(2,num_ele), &
+            mesh, &
+            s1, s2, s3)
+       ! and we get the distance to the origin:
+       dist = 0
+       dist = dist + cells_to_origin(mesh%hex_coord(1, s1), mesh%hex_coord(2, s1))
+       dist = dist + cells_to_origin(mesh%hex_coord(1, s2), mesh%hex_coord(2, s2))
+       dist = dist + cells_to_origin(mesh%hex_coord(1, s3), mesh%hex_coord(2, s3))
+
+       if (dist .lt. (mesh%num_cells - deg + 1)*3 ) then
+          ! We write cell ID number
+          write(out_unit, "(i6)") num_ele
+          ! We write number of non zero
+          write(out_unit, "(i6)") non_zero
+          ! We write the indices of the non zero splines
+          nZ_indices = non_zeros_splines(mesh, num_ele, deg)
+          do i=1,non_zero
+             val = nZ_indices(i)
+             if (val == -1) then
+                print *, "Error in write_connectivity: -1 found"
+                STOP
+             end if
+             write(out_unit, "(i6)", advance="no") val
+             write(out_unit, "(a)", advance="no") ","
+          end do
+          write(out_unit,"(a)")""
+       end if
     end do
     
     close(out_unit)
