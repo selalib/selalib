@@ -1467,41 +1467,30 @@ function interpolate_x1_derivative_2D( x1, x2, spline )
 
 end function interpolate_x1_derivative_2D
 
-  ! interpolate_x2_derivative_2D(): given discrete data f(i,j) that are
-  ! described by a 2-dimensional bspline fit s(x1,x2), where the
-  ! continuous variables x1 and x2 are within the original limits of i and j
-  ! respectively, interpolate_x1_derivative() returns the value of
-  !
-  !         partial s
-  !       -------------
-  !         partial x2
-  !
-  ! evaluated at the point (x1,x2). (Sorry for the ambiguous use of x1)
-
-  !> @brief 
-  !> Returns the interpolated value of the derivative 
-  !> @details
-  !> in the x2 direction at the point(x1,x2) using the spline 
-  !> decomposition stored in the spline object.
-  !> @param[in] x1 first coordinate.
-  !> @param[in] x2 second coordinate.
-  !> @param[in] spline pointer to spline object.
-  !> @return interpolate_x2_derivative_2D  interpolated value of the derivative 
-  function interpolate_x2_derivative_2D( x1, x2, spline )
-    sll_real64                          :: interpolate_x2_derivative_2D
-    intrinsic                           :: associated, int, real
-    sll_real64, intent(in)              :: x1
-    sll_real64, intent(in)              :: x2
-    type(sll_bspline_2D), pointer  :: spline
-  end function interpolate_x2_derivative_2D
+!> @brief 
+!> Returns the interpolated value of the derivative 
+!> @details
+!> in the x2 direction at the point(x1,x2) using the spline 
+!> decomposition stored in the spline object.
+!> @param[in] x1 first coordinate.
+!> @param[in] x2 second coordinate.
+!> @param[in] spline pointer to spline object.
+!> @return interpolate_x2_derivative_2D  interpolated value of the derivative 
+function interpolate_x2_derivative_2D( x1, x2, spline )
+  sll_real64                          :: interpolate_x2_derivative_2D
+  intrinsic                           :: associated, int, real
+  sll_real64, intent(in)              :: x1
+  sll_real64, intent(in)              :: x2
+  type(sll_bspline_2D), pointer  :: spline
+end function interpolate_x2_derivative_2D
 
 
-  subroutine delete_bspline_1d( spline )
-    type(sll_bspline_1d), pointer :: spline
-  end subroutine delete_bspline_1d 
-  subroutine delete_bspline_2D( spline )
-    type(sll_bspline_2D), pointer :: spline
-  end subroutine delete_bspline_2D 
+subroutine delete_bspline_1d( spline )
+  type(sll_bspline_1d), pointer :: spline
+end subroutine delete_bspline_1d 
+subroutine delete_bspline_2D( spline )
+  type(sll_bspline_2D), pointer :: spline
+end subroutine delete_bspline_2D 
 
 subroutine interpolate_array_values_2d(this, n1, n2, x, y)
 
@@ -1650,6 +1639,133 @@ do j=1,ny
 end do
 
 end subroutine interpolate_array_values_2d
+
+function interpolate_value_2d(this, xi, xj) result (y)
+
+type(sll_bspline_2d)    :: this
+sll_real64, intent(in)  :: xi
+sll_real64, intent(in)  :: xj
+sll_real64              :: y
+
+sll_int32               :: jj
+sll_int32               :: jc, jcmin, jcmax
+sll_int32               :: nx, kx, ny, ky
+sll_int32               :: left, leftx, lefty
+sll_int32               :: klo
+sll_int32               :: llo
+sll_int32               :: mflag
+sll_int32               :: jjj
+sll_int32               :: kkk
+
+sll_real64, pointer     :: tx(:)
+sll_real64, pointer     :: ty(:)
+sll_real64, pointer     :: work(:)
+
+nx   =  this%bs1%n
+ny   =  this%bs2%n
+kx   =  this%bs1%k
+ky   =  this%bs2%k
+tx   => this%bs1%t
+ty   => this%bs2%t
+work => this%bs1%bcoef
+
+call interv(tx,nx+kx,xi,leftx,this%bs1%ilo,mflag)
+call interv(ty,ny+ky,xj,lefty,this%bs2%ilo,mflag)
+
+klo = this%bs2%ilo
+do jj=1,ky
+  jcmin = 1
+  if ( kx <= leftx ) then
+    do jjj = 1, kx-1
+      this%bs1%dl(jjj) = xi - tx(leftx+1-jjj)
+    end do
+  else
+    jcmin = 1-(leftx-kx)
+    do jjj = 1, leftx
+      this%bs1%dl(jjj) = xi - tx(leftx+1-jjj)
+    end do
+    do jjj = leftx, kx-1
+      this%bs1%aj(kx-jjj) = 0.0_f64
+      this%bs1%dl(jjj) = this%bs1%dl(leftx)
+    end do
+  end if
+  jcmax = kx
+  if ( nx < leftx ) then
+    jcmax = kx+nx-leftx
+    do jjj = 1, kx+nx-leftx
+      this%bs1%dr(jjj) = tx(leftx+jjj) - xi
+    end do
+    do jjj = kx+nx-leftx, kx-1
+      this%bs1%aj(jjj+1) = 0.0_f64
+      this%bs1%dr(jjj) = this%bs1%dr(kx+nx-leftx)
+    end do
+  else
+    do jjj = 1, kx-1
+      this%bs1%dr(jjj) = tx(leftx+jjj) - xi
+    end do
+  end if
+  do jc = jcmin, jcmax
+    this%bs1%aj(jc) = this%bcoef(leftx-kx+jc,lefty-ky+jj)
+  end do
+  do jjj = 1, kx-1
+    llo = kx-jjj
+    do kkk = 1, kx-jjj
+      this%bs1%aj(kkk) = (this%bs1%aj(kkk+1)*this%bs1%dl(llo)+ &
+                          this%bs1%aj(kkk)*this%bs1%dr(kkk))/  &
+                         (this%bs1%dl(llo)+this%bs1%dr(kkk))
+      llo = llo - 1
+    end do
+  end do
+  work(jj) = this%bs1%aj(1)
+end do
+
+call interv(ty(lefty-ky+1:ny+ky),ky+ky,xj,left,klo,mflag)
+
+jcmin = 1
+if ( ky <= left ) then
+  do jjj = 1, ky-1
+    this%bs2%dl(jjj) = xj - ty(lefty-ky+left+1-jjj)
+  end do
+else
+  jcmin = 1-(left-ky)
+  do jjj = 1, left
+    this%bs2%dl(jjj) = xj - ty(lefty-ky+left+1-jjj)
+  end do
+  do jjj = left, ky-1
+    this%bs2%aj(ky-jjj) = 0.0_f64
+    this%bs2%dl(jjj) = this%bs2%dl(left)
+  end do
+end if
+jcmax = ky
+if ( ky < left ) then
+  jcmax = ky+ky-left
+  do jjj = 1, ky+ky-left
+    this%bs2%dr(jjj) = ty(lefty-ky+left+jjj) - xj
+  end do
+  do jjj = ky+ky-left, ky-1
+    this%bs2%aj(jjj+1) = 0.0_f64
+    this%bs2%dr(jjj) = this%bs2%dr(ky+ky-left)
+  end do
+else
+  do jjj = 1, ky-1
+    this%bs2%dr(jjj) = ty(lefty-ky+left+jjj) - xj
+  end do
+end if
+do jc = jcmin, jcmax
+  this%bs2%aj(jc) = work(left-ky+jc)
+end do
+do jjj = 1, ky-1
+  llo = ky-jjj
+  do kkk = 1, ky-jjj
+    this%bs2%aj(kkk) = (this%bs2%aj(kkk+1)*this%bs2%dl(llo)+ &
+                        this%bs2%aj(kkk)*this%bs2%dr(kkk))/  &
+                       (this%bs2%dl(llo)+this%bs2%dr(kkk))
+    llo = llo - 1
+  end do
+end do
+y = this%bs2%aj(1)
+
+end function interpolate_value_2d
 
 subroutine interpolate_array_x1_derivatives_2d(this, n1, n2, x, y)
 
