@@ -151,7 +151,8 @@ IF(BUILD_TESTING)
        test_aligned_translation_2d
        sll_file_io
        sll_advection
-       sll_utilities)
+       sll_utilities
+       sll_fcisl_toroidal)
 
   ENDIF(MPI_ENABLED)
 

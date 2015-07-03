@@ -234,8 +234,6 @@ sll_int32  :: x, y, nbsp, nbsp1
 sll_int32  :: index1, index2, index3, index4
 sll_int32  :: icell, a, aprime, b, bprime
 
-sll_int32, dimension(:),   allocatable :: global_indices 
-sll_int32, dimension(:,:), allocatable :: local_indices
 sll_int32, dimension(:),   allocatable :: tab_index_coeff1
 sll_int32, dimension(:),   allocatable :: tab_index_coeff2
 
@@ -251,8 +249,6 @@ SLL_ALLOCATE(es%local_to_global_indices(1:dim1,1:dim2),ierr)
 SLL_ALLOCATE(es%local_to_global_indices_source(1:dim1,1:dim2),ierr)
 SLL_ALLOCATE(es%local_to_global_indices_source_bis(1:dim1,1:dim2),ierr)
 
-SLL_ALLOCATE(local_indices(1:dim1,1:dim2),ierr)
-SLL_ALLOCATE(global_indices(num_splines1*num_splines2),ierr)
 
 call initconnectivity( num_cells1,                &
 &                      num_cells2,                &
@@ -262,12 +258,8 @@ call initconnectivity( num_cells1,                &
 &                      bc1_max,                   &
 &                      bc2_min,                   &
 &                      bc2_max,                   &
-&                      local_indices,             &
-&                      global_indices,            &
 &                      es%local_to_global_indices )
 
-deallocate(local_indices)
-deallocate(global_indices)
 
 ! This should be changed to verify that the passed BC's are part of the
 ! recognized list described in sll_boundary_condition_descriptors...
@@ -1355,7 +1347,11 @@ class is (sll_scalar_field_2d_analytic)
 
   !$OMP END PARALLEL
 
-  if (es%perper) es%rho_vec = es%rho_vec - int_rho/int_jac
+  !PN fix bug found by Michel
+  !if (es%perper) es%rho_vec = es%rho_vec - int_rho/int_jac
+  if (es%perper)  then
+    es%rho_vec = es%rho_vec - sum(es%rho_vec)/es%intjac*es%masse
+  end if
      
 end select
 
@@ -1441,8 +1437,6 @@ subroutine initconnectivity( num_cells1,             &
 &                            bc1_max,                &
 &                            bc2_min,                &
 &                            bc2_max,                &
-&                            local_indices,          &
-&                            global_indices,         &
 &                            local_to_global_indices )
   
 sll_int32, intent(in) :: num_cells1
@@ -1454,8 +1448,8 @@ sll_int32, intent(in) :: bc1_max
 sll_int32, intent(in) :: bc2_min
 sll_int32, intent(in) :: bc2_max
 
-sll_int32, dimension(:,:), intent(out) :: local_indices
-sll_int32, dimension(:)  , intent(out) :: global_indices
+sll_int32, dimension(:,:), allocatable :: local_indices
+sll_int32, dimension(:)  , allocatable :: global_indices
 sll_int32, dimension(:,:), intent(out) :: local_to_global_indices
 
 sll_int32 :: nb_spl_x
@@ -1470,6 +1464,10 @@ sll_int32 :: i
 sll_int32 :: j
 sll_int32 :: a
 sll_int32 :: l
+sll_int32 :: ierr
+
+SLL_ALLOCATE(local_indices( 1:(spline_degree1+1)*(spline_degree2+1),1:(num_cells1*num_cells2)),ierr)
+SLL_ALLOCATE(global_indices((num_cells1+spline_degree1)*(num_cells2+spline_degree2)),ierr)
 
 global_indices          = 0
 local_indices           = 0
@@ -1591,6 +1589,9 @@ do e = 1, num_cells1*num_cells2
     local_to_global_indices(b,e) = global_indices(local_indices(b,e))
   end do
 end do
+
+deallocate(local_indices)
+deallocate(global_indices)
 
 end subroutine initconnectivity
 

@@ -32,6 +32,7 @@ SET(SLL_MACROS
     ${SLL_DIR}/multigrid/mgd2_routines.h
     ${SLL_DIR}/remap/sll_remap.h
     ${SLL_DIR}/parallel_utilities/sll_parallel_utilities.h
+    ${SLL_DIR}/deboor_splines/sll_deboor_splines.h
 )
 
 FILE(COPY ${SLL_MACROS} DESTINATION ${CMAKE_BINARY_DIR}/include)
@@ -68,6 +69,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/utilities/tridiagonal.F90
     ${SLL_DIR}/utilities/fornberg.F90
     ${SLL_DIR}/utilities/sll_toeplitz_penta_diagonal.F90
+    ${SLL_DIR}/utilities/banfac.f90
+    ${SLL_DIR}/utilities/banslv.f90
     ${SLL_DIR}/lagrange_interpolation/sll_lagrange_interpolation.F90
     ${SLL_DIR}/file_io/sll_binary_io.F90
     ${SLL_DIR}/file_io/sll_gnuplot.F90
@@ -85,12 +88,10 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/fields/sll_scalar_field_2d_base.F90
     ${SLL_DIR}/fields/sll_scalar_field_2d.F90
     ${SLL_DIR}/general_coordinate_elliptic_solvers/sll_general_coordinate_elliptic_solver.F90
+    ${SLL_DIR}/splines/sll_bsplines.F90
     ${SLL_DIR}/splines/sll_cubic_splines.F90
     ${SLL_DIR}/splines/sll_arbitrary_degree_splines.F90
     ${SLL_DIR}/splines/cubic_nonuniform_splines.F90
-    ${SLL_DIR}/deboor_splines/banfac.f90
-    ${SLL_DIR}/deboor_splines/banslv.f90
-    ${SLL_DIR}/deboor_splines/knots.f90
     ${SLL_DIR}/deboor_splines/sll_module_deboor_splines_1d.F90
     ${SLL_DIR}/deboor_splines/sll_module_deboor_splines_2d.F90
     ${SLL_DIR}/hermite_interpolation/sll_hermite_interpolation_2d.F90
@@ -132,7 +133,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/fields/scalar_field_initializer_base.F90
     ${SLL_DIR}/distribution_function/sll_scalar_field_2d_old.F90
     ${SLL_DIR}/coordinate_transformations/sll_common_coordinate_transformations.F90
-    ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d_nurbs.F90	
+    ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d_nurbs.F90
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformation_2d_base.F90	
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d.F90
     ${SLL_DIR}/meshes_multipatch/sll_meshes_multipatch.F90
