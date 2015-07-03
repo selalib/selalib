@@ -253,23 +253,12 @@ contains
 !            spline_degree, num_cells, poisson_solver_type, collective,boundary_type  )
 !    endfunction
     
-    
-    
-    
-    
-    
-    
-
-
 
   subroutine run_fake( sim )
     class( sll_simulation_pic1d1v_vp_periodic ), intent( inout ) :: sim
     character( len=64 ), parameter :: this_sub_name = "run_fake"
     SLL_WARNING( this_sub_name, "'run' method not implemented" )   
   end subroutine run_fake
-
-
-
 
 
   subroutine init_from_file( sim, filename )
@@ -531,6 +520,7 @@ contains
 !---------------------------### Main Loop
         time = 0.0_f64
         do timestep=1, sim%tsteps
+        
             ! Compute time instant
             time = sim%tstepw*(timestep-1) ! WARNING: bug was here
             
@@ -541,7 +531,6 @@ contains
             call sim%pic1d_write_phasespace( timestep )
             
             ! Gnuplot real-time plots
-            ! TODO: carefully check function and options
             if (gnuplot_now) then
                 call particles_center_gnuplot_inline(pic_1d_allparticlepos(sim%species(1:num_species),sim%nmark), &
                     pic_1d_allparticlev(sim%species(1:num_species),sim%nmark), &
@@ -576,8 +565,8 @@ contains
                     ,sim%knots(1:sim%mesh_cells) )
             endif
             
+            ! Stop if Error is catastrophic
             if ( coll_rank==0) then
-                !Stop if Error ist catastrophal
                 if ( (sim%kineticenergy(timestep)+sim%fieldenergy(timestep) -(sim%kineticenergy(1)+sim%fieldenergy(1)))&
                         /(sim%kineticenergy(1)+sim%fieldenergy(1)) > 10000.0_f64) then
                     !                    print *, "Its Over, Giving Up!"
@@ -585,34 +574,26 @@ contains
                 endif
             endif
 
-
+            ! Print electrostatic and kinetic energy to terminal
             if ((sim%gnuplot_inline_output .eqv. .FALSE.) .AND. coll_rank==0) then
                 print *, timestep, sim%fieldenergy(timestep),sim%kineticenergy(timestep),sim%inhom_var(timestep)
-
             endif
+            
+            ! TODO: discover meaning of this line!
             sim%pushed_species=1
+            
+            ! Evolve solution from t to t+dt (i.e. push particles)
             select case (sim%ppusher_int)
             
-            
-                case(SLL_PIC1D_PPUSHER_RK4)         ;call sim%pic_1d_rungekutta4_step_array(time)
-                        
+                case(SLL_PIC1D_PPUSHER_RK4)         ;call sim%pic_1d_rungekutta4_step_array(time)                  
                 case(SLL_PIC1D_PPUSHER_VERLET)      ;call sim%pic_1d_Verlet_scheme(time)
-                    
                 case(SLL_PIC1D_PPUSHER_EULER)       ;call sim%pic_1d_explicit_euler(time)
-                    
-                case(SLL_PIC1D_PPUSHER_LEAPFROG_V)  ;call sim%pic_1d_variational_leap_frog()
-                    
+                case(SLL_PIC1D_PPUSHER_LEAPFROG_V)  ;call sim%pic_1d_variational_leap_frog()    
                 case(SLL_PIC1D_PPUSHER_LEAPFROG)    ;call sim%pic_1d_leap_frog()
-                
                 case(SLL_PIC1D_PPUSHER_RK2)         ;call sim%pic_1d_rungekutta2(time)
-                
                 case(SLL_PIC1D_PPUSHER_RK3)         ;call sim%pic_1d_rungekutta3(time)
-                
                 case(SLL_PIC1D_PPUSHER_HEUN)        ;call sim%pic_1d_heun(time)
-                
                 case(SLL_PIC1D_PPUSHER_MERSON)      ;call sim%pic_1d_merson4(time)
-
-
                 case(SLL_PIC1D_PPUSHER_NONE)
                     print *, "No Particle pusher choosen"
                     !                case(SLL_PIC1D_PPUSHER_SHIFT)
@@ -623,43 +604,42 @@ contains
                     !
                     !                    !call sll_bspline_fem_solver_1d_solve(particleposition)
                     !                    call sll_pic_1d_solve_qn(particleposition)
-
             end select
      
+            ! Estimate total simulation runtime
             if (coll_rank==0 .AND. timestep==1) then
                 call sll_set_time_mark(tstop)
-                !Calculate remaining Time
                 print *, "Remaining Time: " , (sll_time_elapsed_between(tstart,tstop)/timestep)*real(sim%tsteps-timestep,i64)
             endif
 
         enddo
-        
 
-
-
-
-sim%kineticenergy(timestep)=sll_pic1d_calc_kineticenergy( sim%species(1:num_species),sim%deltaf )
-        sim%fieldenergy(timestep)=sll_pic1d_calc_fieldenergy(sim%species(1:num_species),sim)
-        sim%impulse(timestep)=sll_pic1d_calc_impulse(sim%species(1:num_species),sim%deltaf)
-        sim%thermal_velocity_estimate(timestep)=sll_pic1d_calc_thermal_velocity(sim%species(1)%particle%vx,sim%species(1)%particle%weight)
-        sim%particleweight_mean(timestep)=sum(sim%species(1)%particle%weight)/size(sim%species(1)%particle)
-        sim%particleweight_var(timestep)=sum(sim%species(1)%particle%weight**2)/size(sim%species(1)%particle)-sim%particleweight_mean(timestep)**2
+        ! Print final value of various diagnostic quantities (in dedicated arrays)
+        sim%kineticenergy(timestep)   = sll_pic1d_calc_kineticenergy( sim%species(1:num_species),sim%deltaf )
+        sim%fieldenergy(timestep)     = sll_pic1d_calc_fieldenergy(sim%species(1:num_species),sim)
+        sim%impulse(timestep)         = sll_pic1d_calc_impulse(sim%species(1:num_species),sim%deltaf)
+        sim%thermal_velocity_estimate(timestep) = sll_pic1d_calc_thermal_velocity(sim%species(1)%particle%vx,sim%species(1)%particle%weight)
+        sim%particleweight_mean(timestep)       = sum(sim%species(1)%particle%weight)/size(sim%species(1)%particle)
+        sim%particleweight_var(timestep)        = sum(sim%species(1)%particle%weight**2)/size(sim%species(1)%particle)-sim%particleweight_mean(timestep)**2
 
         close(25)
 
-        !Save Results to file
+        ! Save Results to file
         call sim%pic1d_write_result("pic1dresult")
 
-
+        ! Print total simulation time
         if (coll_rank==0) then
             call sll_set_time_mark(tstop)
-            !Calculate remaining Time
             print *, "Overall Time: " , sll_time_elapsed_between(tstart,tstop)
             print *, "Particles Pushed/s: " , (sim%nmark*coll_size*sim%tsteps)/sll_time_elapsed_between(tstart,tstop)
         endif
-        if (coll_rank==0)then
-         call det_landau_damping((/ ( timestep*sim%tstepw, timestep = 0, sim%tsteps) /),sim%fieldenergy)
+        
+        ! Compute damping (exponential factor) of electrostatic energy (this makes sense only for Landau damping)
+        if (coll_rank==0) then
+         call det_landau_damping( (/ ( timestep*sim%tstepw, timestep = 0, sim%tsteps) /), sim%fieldenergy )
         endif
+        
+        ! Deallocate field solver
         !call sll_bspline_fem_solver_1d_destroy
         call sim%fsolver%delete()
 
