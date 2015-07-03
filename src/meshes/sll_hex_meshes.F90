@@ -1386,7 +1386,7 @@ contains
   !> resp. the mesh's cells, edges and BC in the format of CAID and pigasus.
   !> This is was written in order to have a Poisson solver for the hex-mesh
   !> @param mesh hex-mesh that will be described
-  subroutine write_caid_files(mesh)
+  subroutine write_caid_files(mesh, spline_deg)
     type(sll_hex_mesh_2d), pointer :: mesh
     character(len=20),   parameter :: name_nodes = "boxsplines_nodes.txt"
     character(len=23),   parameter :: name_elemt = "boxsplines_elements.txt"
@@ -1444,7 +1444,6 @@ contains
     write(out_unit, "(i6)") num_ele
 
     ! The (maximum) spline degree and scale are fix here
-    spline_deg = 1
     scale = 1._f64
     !... we write its global number
     write (out_unit, "(i6)") spline_deg
@@ -1457,7 +1456,7 @@ contains
        type = cell_type(mesh, i)
        write (out_unit, "(i6)") type
        !... we write the spline degree
-       write(out_unit, "((i6),(a,1x),(i6))") spline_deg, ",", spline_deg
+       write(out_unit, "(i6)") spline_deg
        !... we write the scale of the element
        write(out_unit, "((f22.17),(a,1x))",advance='no') scale, ","
        !... we write its neighbours
@@ -1504,7 +1503,7 @@ contains
     write(out_unit, "(i6)") num_ele
 
     !The number of elements non-null is fixed here, this should be changed (TODO)
-    nen = 3
+    nen = 3*spline_deg*spline_deg
     dirichlet = 1
 
     ! For every element...
