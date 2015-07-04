@@ -287,6 +287,7 @@ IF($ENV{PFUNIT})
 ENDIF()
 
 SET(BUILD_SPRNG OFF CACHE BOOL   "Build SPRNG libraries")
+SET(SPRNG_CONFIG_ARGS "" CACHE STRING  "configure options for SPRNG")
 IF(BUILD_SPRNG)
     IF(APPLE)
     MESSAGE(STATUS "Warning: Build SPRNG library on mac is very tricky")
@@ -298,7 +299,7 @@ IF(BUILD_SPRNG)
        SOURCE_DIR ${CMAKE_BINARY_DIR}/sprng
        BINARY_DIR ${CMAKE_BINARY_DIR}/sprng
        UPDATE_COMMAND autoreconf -if
-       CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/sprng/configure --prefix=${CMAKE_BINARY_DIR}/sprng --with-mpi=yes CXX=${MPI_CXX_COMPILER} MPI_CXX=${MPI_CXX_COMPILER} LIBS=-lmpi_cxx
+       CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/sprng/configure --prefix=${CMAKE_BINARY_DIR}/sprng --with-mpi=yes ${SPRNG_CONFIG_ARGS}
        BUILD_COMMAND ${MAKE}
        INSTALL_COMMAND ""
     )
