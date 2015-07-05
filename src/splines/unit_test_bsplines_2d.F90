@@ -76,7 +76,7 @@ use sll_boundary_condition_descriptors
   !call interpolate_array_values_2d(bspline_2d, nx, ny, gtau, htau)
   do j=1,ny
     do i=1,nx
-      htau(i,j) = interpolate_value_2d(bspline_2d, taux(i), tauy(j))
+      htau(i,j) = interpolate_value_2d(bspline_2d, taux(i), tauy(j), 0, 0)
     end do
   end do
 
