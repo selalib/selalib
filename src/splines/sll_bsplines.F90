@@ -12,7 +12,6 @@ implicit none
 
 private
   
-
 !> @brief 
 !> basic type for one-dimensional B-spline data. 
 !> @details This should be
@@ -70,8 +69,6 @@ public :: interpolate_array_values_2d
 public :: interpolate_value_2d
 public :: interpolate_array_x1_derivatives_2d
 public :: interpolate_array_x2_derivatives_2d
-public :: build_system  !PN temporary, please remove
-public :: interv        !PN temporary, please remove
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
@@ -1493,13 +1490,15 @@ subroutine delete_bspline_2D( spline )
   type(sll_bspline_2D), pointer :: spline
 end subroutine delete_bspline_2D 
 
-subroutine interpolate_array_values_2d(this, n1, n2, x, y)
+subroutine interpolate_array_values_2d(this, n1, n2, x, y, ideriv, jderiv)
 
 type(sll_bspline_2d)    :: this
 sll_int32               :: n1
 sll_int32               :: n2
 sll_real64, intent(in)  :: x(:,:)
 sll_real64, intent(out) :: y(:,:)
+sll_int32               :: ideriv
+sll_int32               :: jderiv
 
 sll_int32               :: i
 sll_int32               :: j, jj
@@ -1583,7 +1582,14 @@ do j=1,ny
       do jc = jcmin, jcmax
         aj(jc) = this%bcoef(leftx-kx+jc,lefty-ky+jj)
       end do
-      do jjj = 1, kx-1
+      do jjj = 1, ideriv
+        llo = kx-jjj
+        do kkk = 1, kx - jjj
+          aj(kkk) = ((aj(kkk+1)-aj(kkk))/(dl(llo)+dr(kkk)))*(kx-jjj)
+          llo = llo - 1
+        end do
+      end do
+      do jjj = ideriv+1, kx-1
         llo = kx-jjj
         do kkk = 1, kx-jjj
           aj(kkk) = (aj(kkk+1)*dl(llo)+aj(kkk)*dr(kkk))/(dl(llo)+dr(kkk))
@@ -1628,7 +1634,16 @@ do j=1,ny
     do jc = jcmin, jcmax
       aj(jc) = work(left-ky+jc)
     end do
-    do jjj = 1, ky-1
+
+    do jjj = 1, jderiv
+      llo = ky - jjj
+      do kkk = 1, ky - jjj
+        aj(kkk) = ((aj(kkk+1)-aj(kkk))/(dl(llo)+dr(kkk)))*(ky-jjj)
+        llo = llo - 1
+      end do
+    end do
+
+    do jjj = jderiv+1, ky-1
       llo = ky-jjj
       do kkk = 1, ky-jjj
         aj(kkk) = (aj(kkk+1)*dl(llo)+aj(kkk)*dr(kkk))/(dl(llo)+dr(kkk))
@@ -1641,12 +1656,14 @@ end do
 
 end subroutine interpolate_array_values_2d
 
-function interpolate_value_2d(this, xi, xj) result (y)
+function interpolate_value_2d(this, xi, xj, ideriv, jderiv) result (y)
 
 type(sll_bspline_2d)    :: this
 sll_real64, intent(in)  :: xi
 sll_real64, intent(in)  :: xj
 sll_real64              :: y
+sll_int32, intent(in)   :: ideriv
+sll_int32, intent(in)   :: jderiv
 
 sll_int32               :: jj
 sll_int32               :: jc, jcmin, jcmax
@@ -1708,7 +1725,15 @@ do jj=1,ky
   do jc = jcmin, jcmax
     this%bs1%aj(jc) = this%bcoef(leftx-kx+jc,lefty-ky+jj)
   end do
-  do jjj = 1, kx-1
+  do jjj = 1, ideriv
+    llo = kx-jjj
+    do kkk = 1, kx - jjj
+      this%bs1%aj(kkk) = ((this%bs1%aj(kkk+1)-this%bs1%aj(kkk)) &
+                         /(this%bs1%dl(llo)+this%bs1%dr(kkk)))*(kx-jjj)
+      llo = llo - 1
+    end do
+  end do
+  do jjj = ideriv+1, kx-1
     llo = kx-jjj
     do kkk = 1, kx-jjj
       this%bs1%aj(kkk) = (this%bs1%aj(kkk+1)*this%bs1%dl(llo)+ &
@@ -1755,7 +1780,15 @@ end if
 do jc = jcmin, jcmax
   this%bs2%aj(jc) = work(left-ky+jc)
 end do
-do jjj = 1, ky-1
+do jjj = 1, jderiv
+  llo = ky - jjj
+  do kkk = 1, ky - jjj
+    this%bs2%aj(kkk) = ((this%bs2%aj(kkk+1)-this%bs2%aj(kkk)) &
+                       /(this%bs2%dl(llo)+this%bs2%dr(kkk)))*(ky-jjj)
+    llo = llo - 1
+  end do
+end do
+do jjj = jderiv+1, ky-1
   llo = ky-jjj
   do kkk = 1, ky-jjj
     this%bs2%aj(kkk) = (this%bs2%aj(kkk+1)*this%bs2%dl(llo)+ &
