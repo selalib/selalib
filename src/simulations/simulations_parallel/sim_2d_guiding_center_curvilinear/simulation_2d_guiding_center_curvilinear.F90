@@ -38,6 +38,7 @@ module sll_simulation_2d_guiding_center_curvilinear_module
   use sll_module_hermite_interpolator_2d
   use sll_hermite_interpolation_1d_module
   use sll_module_hermite_interpolator_1d
+  use sll_module_arbitrary_degree_spline_interpolator_2d
 
 !  use sll_coordinate_transformation_2d_base_module
   use sll_module_coordinate_transformations_2d
@@ -236,7 +237,11 @@ contains
     sll_int32 :: spline_degree_eta2
     character(len=256) ::  es_control_case
     sll_int32 ::  es_control
-    
+    character(len=256) ::  interp_rho_case
+    sll_int32 :: rho_degree1
+    sll_int32 :: rho_degree2
+    class(sll_interpolator_2d_base), pointer   :: interp_rho
+
     !boundaries conditions
     !character(len=256) :: boundaries_conditions
     character(len=256) :: bc_interp2d_eta1
@@ -343,7 +348,10 @@ contains
       spline_degree_eta1, &
       spline_degree_eta2, &
       es_control_case, &
-      precompute_rhs    
+      precompute_rhs, &
+      interp_rho_case, &
+      rho_degree1, &
+      rho_degree2    
       
      namelist /boundaries/ &
       bc_interp2d_eta1, &
@@ -419,6 +427,9 @@ contains
     !poisson_solver = "SLL_ELLIPTIC_FINITE_ELEMENT_SOLVER" !use with "SLL_PHI_FROM_RHO"
     poisson_solver = "SLL_MUDPACK_CURVILINEAR"   !use with "SLL_PHI_FROM_RHO"    
     es_control_case = "SLL_SOLVE_ELLIPTIC_SOLVER"
+    interp_rho_case = "SLL_CUBIC_SPLINES"
+    rho_degree1 = 3
+    rho_degree2 = 3
     precompute_rhs = .false.
      
     !mudpack_method = SLL_NON_SEPARABLE_WITH_CROSS_TERMS  
@@ -536,9 +547,9 @@ contains
       case ("SLL_DIRICHLET")
         print*,"#bc_eta1_left = SLL_DIRICHLET"  
         sim%bc_eta1_left = SLL_DIRICHLET
-!      case ("SLL_NEUMANN")
-!        print*,"#bc_eta1_left = SLL_NEUMANN"  
-!        sim%bc_eta1_left = SLL_NEUMANN
+      case ("SLL_NEUMANN")
+        print*,"#bc_eta1_left = SLL_NEUMANN"  
+        sim%bc_eta1_left = SLL_NEUMANN
       case default
         print *,'#bad bc_eta1_left',bc_eta1_left
         print *,'#not implemented'
@@ -553,6 +564,9 @@ contains
       case ("SLL_DIRICHLET")
         print*,"#bc_eta1_right = SLL_DIRICHLET"  
         sim%bc_eta1_right = SLL_DIRICHLET
+      case ("SLL_NEUMANN")
+        print*,"#bc_eta1_right = SLL_NEUMANN"  
+        sim%bc_eta1_right = SLL_NEUMANN
       case default
         print *,'#bad bc_eta1_right',bc_eta1_right
         print *,'#not implemented'
@@ -567,6 +581,9 @@ contains
       case ("SLL_DIRICHLET")
         print*,"#bc_eta2_left = SLL_DIRICHLET"  
         sim%bc_eta2_left = SLL_DIRICHLET
+      case ("SLL_NEUMANN")
+        print*,"#bc_eta2_left = SLL_NEUMANN"  
+        sim%bc_eta2_left = SLL_NEUMANN
       case default
         print *,'#bad bc_eta2_left',bc_eta2_left
         print *,'#not implemented'
@@ -581,6 +598,9 @@ contains
       case ("SLL_DIRICHLET")
         print*,"#bc_eta2_right = SLL_DIRICHLET"  
         sim%bc_eta2_right = SLL_DIRICHLET
+      case ("SLL_NEUMANN")
+        print*,"#bc_eta2_right = SLL_NEUMANN"  
+        sim%bc_eta2_right = SLL_NEUMANN
       case default
         print *,'#bad bc_eta2_right',bc_eta2_right
         print *,'#not implemented'
@@ -865,6 +885,57 @@ contains
         print *,'#in initialize_guiding_center_2d_curvilinear'
         stop
     end select
+
+
+    select case (interp_rho_case)
+      case ("SLL_CUBIC_SPLINES")
+        print*,"#rhs interpolation SLL_CUBIC_SPLINES"
+        interp_rho => new_cubic_spline_interpolator_2d( &
+          Nc_eta1+1, &
+          Nc_eta2+1, &
+          eta1_min, &
+          eta1_max, &
+          eta2_min, &
+          eta2_max, &
+          sim%bc_interp2d_eta1, &
+          sim%bc_interp2d_eta2)
+      case ("SLL_HERMITE")
+        print*,"#rho interpolation SLL_HERMITE"
+        interp_rho => new_hermite_interpolator_2d( &
+          Nc_eta1+1, &
+          Nc_eta2+1, &
+          eta1_min, &
+          eta1_max, &
+          eta2_min, &
+          eta2_max, &
+          rho_degree1, &          
+          rho_degree2, &          
+          SLL_HERMITE_C0, &
+          SLL_HERMITE_C0, &
+          SLL_HERMITE_PERIODIC, &
+          SLL_HERMITE_PERIODIC)
+      case ("SLL_ARBITRARY_DEGREE_SPLINES")
+        print*,"#rho interpolation SLL_ARBITRARY_DEGREE_SPLINES"
+        interp_rho => new_arbitrary_degree_spline_interp2d( &
+          Nc_eta1+1, &
+          Nc_eta2+1, &
+          eta1_min, &
+          eta1_max, &
+          eta2_min, &
+          eta2_max, &
+          sim%bc_eta1_left, &
+          sim%bc_eta1_right, &
+          sim%bc_eta2_left, &
+          sim%bc_eta2_right, &
+          rho_degree1, &
+          rho_degree2)          
+      case default
+        print *,'#bad interp_rho_case',interp_rho_case
+        print *,'#not implemented'
+        print *,'#in initialize_guiding_center_2d_curvilinear'
+        stop
+    end select
+
 
 
 
@@ -1282,6 +1353,7 @@ contains
          sim%b1, & 
          sim%b2, & 
          sim%c, &
+         interp_rho=interp_rho, &
          precompute_rhs=precompute_rhs ) 
       case default
         print *,'#bad poisson_case',poisson_solver

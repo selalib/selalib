@@ -287,22 +287,22 @@ IF($ENV{PFUNIT})
 ENDIF()
 
 SET(BUILD_SPRNG OFF CACHE BOOL   "Build SPRNG libraries")
-SET(SPRNG_CONFIG_ARGS "" CACHE STRING  "configure options for SPRNG")
+SET(SPRNG_CXX_COMPILER ${CMAKE_CXX_COMPILER} CACHE FILEPATH  "CXX compiler for SPRNG")
 IF(BUILD_SPRNG)
-    IF(APPLE)
-    MESSAGE(STATUS "Warning: Build SPRNG library on mac is very tricky")
-    ENDIF(APPLE)
-    INCLUDE(ExternalProject)
-    SET(SPRNG_VERSION 5 CACHE STRING "SPRNG version number")
-    EXTERNALPROJECT_ADD( sprng
-       URL  http://www.sprng.org/Version5.0/sprng${SPRNG_VERSION}.tar.bz2
-       SOURCE_DIR ${CMAKE_BINARY_DIR}/sprng
-       BINARY_DIR ${CMAKE_BINARY_DIR}/sprng
-       UPDATE_COMMAND autoreconf -if
-       CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/sprng/configure --prefix=${CMAKE_BINARY_DIR}/sprng --with-mpi=yes ${SPRNG_CONFIG_ARGS}
-       BUILD_COMMAND ${MAKE}
-       INSTALL_COMMAND ""
-    )
+  IF(APPLE)
+    MESSAGE(STATUS "Warning: Build SPRNG library on mac is tricky")
+  ENDIF(APPLE)
+  INCLUDE(ExternalProject)
+  SET(SPRNG_VERSION 5 CACHE STRING "SPRNG version number")
+  EXTERNALPROJECT_ADD( sprng
+     URL  http://www.sprng.org/Version5.0/sprng${SPRNG_VERSION}.tar.bz2
+     SOURCE_DIR ${CMAKE_BINARY_DIR}/sprng
+     BINARY_DIR ${CMAKE_BINARY_DIR}/sprng
+     UPDATE_COMMAND autoreconf -if
+     CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/sprng/configure --prefix=${CMAKE_BINARY_DIR}/sprng --with-mpi=yes CXX=${SPRNG_CXX_COMPILER} OMPI_CXX=${SPRNG_CXX_COMPILER} LIBS=-lmpi_cxx
+     BUILD_COMMAND ${MAKE} 
+     INSTALL_COMMAND ""
+  )
 ENDIF()
 
 MESSAGE(STATUS "############################################################")
