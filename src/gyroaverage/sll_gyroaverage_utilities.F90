@@ -45,9 +45,9 @@ contains
       do i=1,N(1)+1
         eta(1)=eta_min(1)+real(i-1,f64)*delta_eta(1)
         eta(1)=val*eta(1)/eta_max(1)
-        f(i,j)= 0._f64 !temporary, because DBESJ not recognized on helios
+        !f(i,j)= 0._f64 !temporary, because DBESJ not recognized on helios
         !f(i,j)=cos(kmode*eta(2))
-        !f(i,j) = (DBESJN(mode(2),val)*DBESYN(mode(2),eta(1))-DBESYN(mode(2),val)*DBESJN(mode(2),eta(1)))*cos(kmode*eta(2))
+        f(i,j) = (DBESJN(mode(2),val)*DBESYN(mode(2),eta(1))-DBESYN(mode(2),val)*DBESJN(mode(2),eta(1)))*cos(kmode*eta(2))
       enddo
     enddo   
     
