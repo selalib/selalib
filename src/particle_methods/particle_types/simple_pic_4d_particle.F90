@@ -16,10 +16,16 @@
 !**************************************************************
 
 !> @ingroup particle_methods
-!> @author
-!> MCP ALH
-!> @brief
-!> Simplest particle model
+
+!> @author MCP ALH
+
+!> @brief Most simple particle model
+
+!> @details Mainly useful to compare against more advanced models. Defined in
+!> [[selalib:src/particle_methods/particle_types/simple_pic_4d_particle.F90]]. A group of sll_simple_pic_4d_particle is
+!> a sll_simple_pic_4d_group
+!> [[selalib:src/particle_methods/particle_types/simple_pic_4d_group.F90::sll_simple_pic_4d_group]]
+
 module sll_simple_pic_4d_particle_module
 
 #include "sll_working_precision.h"
@@ -31,12 +37,24 @@ module sll_simple_pic_4d_particle_module
   implicit none
 
   type :: sll_simple_pic_4d_particle
-     sll_int32  :: i_cell_x     ! cell index in the x dimension (can be outside physical domain)
-     sll_int32  :: i_cell_y     ! cell index in the y dimension (can be outside physical domain)
-     sll_real32 :: offset_x     ! relative position in cell (in [0,1])
-     sll_real32 :: offset_y     ! relative position in cell (in [0,1])
+     !> cell index in the x dimension (can be outside physical domain)
+     sll_int32  :: i_cell_x
+
+     !> cell index in the y dimension (can be outside physical domain)
+     sll_int32  :: i_cell_y
+
+     !> relative position in cell (in [0,1])
+     sll_real32 :: offset_x
+
+     !> relative position in cell (in [0,1])
+     sll_real32 :: offset_y
+
+     !> speed along X axis
      sll_real64 :: v_x
+
+     !> speed along Y axis
      sll_real64 :: v_y
+
      sll_real32 :: weight
 
   end type sll_simple_pic_4d_particle

@@ -982,7 +982,6 @@ end subroutine get_ltp_deformation_matrix
 !
 !    sll_real64 :: length
 !
-!    !aaa
 !    sll_real64 :: x_kprime_t0
 !    sll_real64 :: y_kprime_t0
 !    sll_real64 :: vx_kprime_t0
@@ -3066,12 +3065,6 @@ end subroutine
     sll_real64 :: vy_aux
 
     sll_real64 :: length
-
-    !aaa
-    sll_real64 :: x_kprime_t0
-    sll_real64 :: y_kprime_t0
-    sll_real64 :: vx_kprime_t0
-    sll_real64 :: vy_kprime_t0
 
     ! value 1 or 2 points to each side of an hypercube in direction x,y,vx or vy
     sll_int :: side_x,side_y,side_vx,side_vy
