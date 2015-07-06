@@ -318,7 +318,7 @@ contains
 
 
   
-   subroutine precompute_double_gyroaverage_matrix_polar_splines(quasineutral,rho,N_rho)
+   subroutine precompute_gyroaverage_index(quasineutral,rho,N_rho)
     type(sll_plan_qn_polar)  :: quasineutral
     sll_int32 :: N_rho
     sll_real64,dimension(1:N_rho),intent(in) :: rho
@@ -418,503 +418,7 @@ contains
   
     SLL_DEALLOCATE_ARRAY(buf,error)
   
-  end subroutine precompute_double_gyroaverage_matrix_polar_splines  
-  
-  
-  
-  subroutine compute_double_gyroaverage_matrix_polar_splines(quasineutral,N_rad)
-    type(sll_plan_qn_polar)  :: quasineutral
-    sll_int32,intent(in)::N_rad
-    sll_real64,dimension(:),allocatable,target::dnat,lnat,dper,lper,mper
-    sll_real64,dimension(:),pointer::pointer_dnat,pointer_lnat
-    sll_real64,dimension(:),pointer::pointer_dper,pointer_lper,pointer_mper
-    sll_real64,dimension(:,:),allocatable,target::mat_nat,mat_per
-    sll_real64,dimension(:,:),pointer::pointer_mat_nat,pointer_mat_per
-    sll_real64,dimension(:,:,:),allocatable,target::mat_spl2D_circ,mat_contribution_circ,mat_gyro_circ
-    sll_real64,dimension(:,:,:),pointer::pointer_mat_spl2D_circ,pointer_mat_contribution_circ,pointer_mat_gyro_circ
-    sll_int32 ::Nr,Ntheta,i,j,k,ell,ii(2),s,error,p
-    type(sll_time_mark)  :: t0
-    sll_real64 :: time1,time2,time3,time4,time5
-        
-        print *, '#Start time mark t0'
-        call sll_set_time_mark(t0)    
-        
-    Nr = quasineutral%Nc(1)
-    Ntheta = quasineutral%Nc(2)
-    
-    SLL_ALLOCATE(dnat(0:Nr+2),error)
-    SLL_ALLOCATE(lnat(0:Nr+2),error)
-    SLL_ALLOCATE(dper(0:Ntheta-1),error)
-    SLL_ALLOCATE(lper(0:Ntheta-1),error)
-    SLL_ALLOCATE(mper(0:Ntheta-1),error)
-    
-    SLL_ALLOCATE(mat_nat(0:Nr+2,0:Nr),error)
-    SLL_ALLOCATE(mat_per(0:Ntheta-1,0:Ntheta-1),error)
-    SLL_ALLOCATE(mat_gyro_circ(0:Ntheta-1,0:Nr,0:Nr),error)
-    SLL_ALLOCATE(mat_spl2D_circ(0:Ntheta-1,0:Nr+2,0:Nr),error)
-    SLL_ALLOCATE(mat_contribution_circ(0:Ntheta-1,0:Nr,0:Nr+2),error)
-         
-    SLL_ALLOCATE(quasineutral%mat_double_gyro_circ(1:N_rad,0:Ntheta-1,0:Nr,0:Nr),error)
-    SLL_ALLOCATE(quasineutral%mat_gyro_circ(1:N_rad,0:Ntheta-1,0:Nr,0:Nr),error)
-  
-    call splcoefnat1d0old(dnat,lnat,Nr)
-    call splcoefper1d0old(dper,lper,mper,Ntheta)
-    
-    mat_contribution_circ = 0._f64
-   
-	pointer_dnat => dnat
-	pointer_lnat => lnat
-	pointer_dper => dper
-	pointer_lper => lper
-	pointer_mper => mper
-	
-	pointer_mat_nat => mat_nat
-    pointer_mat_per => mat_per
-    pointer_mat_gyro_circ => mat_gyro_circ 
-    pointer_mat_spl2D_circ => mat_spl2D_circ
-    pointer_mat_contribution_circ => mat_contribution_circ
-
-
-    call compute_splines_coefs_matrix_nat_1D(pointer_mat_nat,pointer_dnat,pointer_lnat,Nr)    
-    call compute_splines_coefs_matrix_per_1D(pointer_mat_per,pointer_dper,pointer_lper,pointer_mper,Ntheta) 
-
-        time1 = sll_time_elapsed_since(t0)
-        print *, '#time elapsed for CALCUL COEF SPLINES : ',time1
-
-    
-  do j=0,Ntheta-1  
-    pointer_mat_spl2D_circ(j,:,:)=pointer_mat_per(0,j)*pointer_mat_nat
-  enddo
-
-
-   do p=1,N_rad
-   pointer_mat_contribution_circ = 0._f64
-   
-      s=0
-      do i=1,Nr+1
-        do k=1,quasineutral%pre_compute_N(p,i)
-          s=s+1
-          ii(1)=quasineutral%pre_compute_index(p,1,s)
-          ii(2)=modulo(quasineutral%pre_compute_index(p,2,s),Ntheta)
-          pointer_mat_contribution_circ(ii(2),i-1,ii(1))=pointer_mat_contribution_circ(ii(2),i-1,ii(1))+quasineutral%pre_compute_coeff_spl(p,s) 
-        enddo
-      enddo
-      
-        time2 = sll_time_elapsed_since(t0)
-        print *, '#time elapsed for MAT CONTRIBUTION : ',time2-time1
-      
-      
-  
-    call matrix_product_circ(pointer_mat_contribution_circ,Nr+1,Nr+3,pointer_mat_spl2D_circ,Nr+3,Nr+1,pointer_mat_gyro_circ,Ntheta)
-   
-        time3 = sll_time_elapsed_since(t0)
-        print *, '#time elapsed for MATRIX PRODUCT 1 : ',time3-time2
-   
-    quasineutral%mat_gyro_circ(p,:,:,:) = mat_gyro_circ
-    
-  ! call matrix_transpose
-   
-    call matrix_product_circ(pointer_mat_gyro_circ,Nr+1,Nr+1,pointer_mat_gyro_circ,Nr+1,Nr+1,quasineutral%mat_double_gyro_circ(p,:,:,:),Ntheta)
-        
-        time4 = sll_time_elapsed_since(t0)
-        print *, '#time elapsed for MATRIX PRODUCT 2 : ',time4-time3     
-   enddo ! p =1 , N_rad  
-       
-    SLL_DEALLOCATE_ARRAY(dnat,error)
-    SLL_DEALLOCATE_ARRAY(lnat,error)
-    SLL_DEALLOCATE_ARRAY(dper,error)
-    SLL_DEALLOCATE_ARRAY(lper,error)
-    SLL_DEALLOCATE_ARRAY(mper,error)
-    
-    SLL_DEALLOCATE_ARRAY(mat_nat,error)
-    SLL_DEALLOCATE_ARRAY(mat_per,error)
-    SLL_DEALLOCATE_ARRAY(mat_spl2D_circ,error)
-    SLL_DEALLOCATE_ARRAY(mat_contribution_circ,error)
-    SLL_DEALLOCATE_ARRAY(mat_gyro_circ,error)
-    
-        time5 = sll_time_elapsed_since(t0)
-        print *, '#time elapsed for DEALLOCATE : ',time5-time4
-
-  end subroutine compute_double_gyroaverage_matrix_polar_splines
-  
-    
-  
- subroutine test_double_gyroaverage(quasineutral,rho,N_rho)
-  type(sll_plan_qn_polar)  :: quasineutral
-  sll_real64,dimension(:),intent(in)::rho
-  sll_int32,intent(in)::N_rho
-  sll_real64,dimension(:,:),allocatable :: f_init,f_init_restr,f_gyro,f_gyro_restr,f_double_gyro,f_double_gyro_restr
-  sll_int32  :: mode(2),Nc(2),N_min(2),N_max(2),N_min_double(2),N_max_double(2)
-  sll_real64  :: eta_min(2),eta_max(2),result,tmp_gyro,tmp_double_gyro,tmp1
-  sll_real64 :: eps,bounds(2,2),maxi,mini,rho2d(2),rho2dmax(2),error(3)
-  sll_int32 :: i,j,m,ell,ierr,p
-
-  Nc(1) = quasineutral%Nc(1)
-  Nc(2) = quasineutral%Nc(2)
-  
-  eta_min = quasineutral%eta_min
-  eta_max = quasineutral%eta_max
-  
-  mode(1) = 1
-  mode(2) = 1
-
-  SLL_ALLOCATE(f_init(1:Nc(1)+1,1:Nc(2)+1),ierr)
-  SLL_ALLOCATE(f_init_restr(1:Nc(1)+1,1:Nc(2)),ierr)
-  SLL_ALLOCATE(f_gyro(1:Nc(1)+1,1:Nc(2)+1),ierr)
-  SLL_ALLOCATE(f_gyro_restr(1:Nc(1)+1,1:Nc(2)),ierr)
-  SLL_ALLOCATE(f_double_gyro(1:Nc(1)+1,1:Nc(2)+1),ierr)
-  SLL_ALLOCATE(f_double_gyro_restr(1:Nc(1)+1,1:Nc(2)),ierr)
-  
-  N_min=1
-  N_max=Nc
-  N_min_double=1
-  N_max_double=Nc
-  
-  call compute_init_f_polar(f_init,mode,Nc,eta_min,eta_max)
-  
-  eps=1.e-10
-  tmp_gyro=0._f64
-  tmp_double_gyro=0._f64
-  tmp1=0._f64
-  
-  rho2dmax(1) = maxval(rho)
-  rho2dmax(2) = maxval(rho)
-  
-  call compute_N_bounds_polar_circle(N_min(1),N_max(1),Nc(1),rho2dmax,eta_min(1),eta_max(1))
-  call compute_N_bounds_polar_circle(N_min_double(1),N_max_double(1),Nc(1),2*rho2dmax,eta_min(1),eta_max(1))
-  
-  f_gyro = f_init
-  f_double_gyro = f_init
-
-  f_init_restr(1:Nc(1)+1,1:Nc(2)) = f_init(1:Nc(1)+1,1:Nc(2))
-  
-  f_gyro_restr = 0._f64
-  f_double_gyro_restr = 0._f64
-  
-  do p=1,N_rho 
-  
-  rho2d(1) = rho(p)
-  rho2d(2) = rho(p)  
-    
-    do i=0,Nc(1)
-      do j=0,Nc(2)-1
-        result = 0._f64
-        do m=0,Nc(1)
-          do ell=0,Nc(2)-1
-            result = result + quasineutral%mat_gyro_circ(p,modulo(ell-j,Nc(2)),i,m)*f_init_restr(m+1,ell+1)
-          enddo  
-        enddo
-        f_gyro_restr(i+1,j+1) = f_gyro_restr(i+1,j+1) + result
-      enddo
-    enddo
-    
-    do i=0,Nc(1)
-      do j=0,Nc(2)-1
-        result = 0._f64
-        do m=0,Nc(1)
-          do ell=0,Nc(2)-1
-            result = result + quasineutral%mat_double_gyro_circ(p,modulo(ell-j,Nc(2)),i,m)*f_init_restr(m+1,ell+1)
-          enddo  
-        enddo
-        f_double_gyro_restr(i+1,j+1) = f_double_gyro_restr(i+1,j+1) + result
-      enddo
-    enddo
-    
-    call solution_polar_circle(rho2d,mode,eta_min,eta_max,tmp1)
-    tmp_gyro = tmp_gyro + tmp1
-    tmp_double_gyro = tmp_double_gyro + tmp1**2
-    
-    enddo ! p=1,N_rho 
-
-    f_gyro(1:Nc(1)+1,1:Nc(2)) = f_gyro_restr(1:Nc(1)+1,1:Nc(2))
-    f_gyro(:,Nc(2)+1) = f_gyro_restr(:,1)
-    f_double_gyro(1:Nc(1)+1,1:Nc(2)) = f_double_gyro_restr(1:Nc(1)+1,1:Nc(2))
-    f_double_gyro(:,Nc(2)+1) = f_double_gyro_restr(:,1)
-    
-    print *,'#factors are',tmp_gyro,tmp_double_gyro
-    print *,'#max f_init',maxval(f_init)
-    print *,'#max f_gyro',maxval(f_gyro),maxval(f_double_gyro)
-
-    print *,'#test gyroaverage'
-    call compute_error(f_gyro,f_init,tmp_gyro,error,N_min,N_max)
-    print *,'#error subdomain=',error
-    call compute_error(f_gyro,f_init,tmp_gyro,error,(/1,1/),Nc)
-    print *,'#error whole domain=',error
-    print *,'#test double gyroaverage'
-    call compute_error(f_double_gyro,f_init,tmp_double_gyro,error,N_min_double,N_max_double)
-    print *,'#error subdomain=',error
-    call compute_error(f_double_gyro,f_init,tmp_double_gyro,error,(/1,1/),Nc)
-    print *,'#error whole domain=',error
-
-! *** old version before prototype/src move
-!  call sll_gnuplot_corect_2d( &
-!    eta_min(1), &
-!    eta_max(1), &
-!    Nc(1)+1, &
-!    0._f64, &
-!    2._f64*sll_pi, &
-!    Nc(2)+1, &
-!    f_init, &
-!    "f_init", &
-!    1, &
-!    ierr)
-!
-!
-!  call sll_gnuplot_corect_2d( &
-!    eta_min(1), &
-!    eta_max(1), &
-!    Nc(1)+1, &
-!    0._f64, &
-!    2._f64*sll_pi, &
-!    Nc(2)+1, &
-!    f_double_gyro, &
-!    "f_double_gyro", &
-!    1, &
-!    ierr)
-
-  
-  end subroutine test_double_gyroaverage
-  
-  
-  
-  
-  
- ! subroutine print_profiles(quasineutral,rho,N_rho)
-!  type(sll_plan_qn_polar)  :: quasineutral
-!  sll_real64,dimension(:),intent(in)::rho
-!  sll_int32,intent(in)::N_rho
-!  sll_real64,dimension(:,:),allocatable :: f_init,f_init_restr,f_gyro,f_gyro_restr
-!  sll_real64,dimension(:,:),allocatable :: f_double_gyro,f_double_gyro_stock,f_double_gyro_restr
-!  sll_int32  :: mode(2),Nc(2),N_min(2),N_max(2),N_min_double(2),N_max_double(2)
-!  sll_real64  :: eta_min(2),eta_max(2),result,tmp_gyro,tmp_double_gyro,tmp1
-!  sll_real64 :: eps,bounds(2,2),maxi,mini,rho2d(2),rho2dmax(2),error(3)
-!  sll_int32 :: i,j,m,ell,ierr,p
-!  character(20) :: filename
-!
-!  Nc(1) = quasineutral%Nc(1)
-!  Nc(2) = quasineutral%Nc(2)
-!  
-!  eta_min = quasineutral%eta_min
-!  eta_max = quasineutral%eta_max
-!  
-!  mode(1) = 1
-!  mode(2) = 1
-!
-!  SLL_ALLOCATE(f_init(1:Nc(1)+1,1:Nc(2)+1),ierr)
-!  SLL_ALLOCATE(f_init_restr(1:Nc(1)+1,1:Nc(2)),ierr)
-!  SLL_ALLOCATE(f_gyro(1:Nc(1)+1,1:Nc(2)+1),ierr)
-!  SLL_ALLOCATE(f_gyro_restr(1:Nc(1)+1,1:Nc(2)),ierr)
-!  SLL_ALLOCATE(f_double_gyro(1:Nc(1)+1,1:Nc(2)+1),ierr)
-!  SLL_ALLOCATE(f_double_gyro_stock(1:Nc(1)+1,1:Nc(2)+1),ierr)
-!  SLL_ALLOCATE(f_double_gyro_restr(1:Nc(1)+1,1:Nc(2)),ierr)
-!  
-!  N_min=1
-!  N_max=Nc
-!  N_min_double=1
-!  N_max_double=Nc
-!  
-!  call compute_init_f_polar(f_init,mode,Nc,eta_min,eta_max)
-!  
-!  write (filename, "('phi')")
-!  call sll_gnuplot_write(f_init(:,1),filename,ierr)
-!
-!  f_double_gyro_stock = 0._f64
-!
-!  f_init_restr(1:Nc(1)+1,1:Nc(2)) = f_init(1:Nc(1)+1,1:Nc(2))
-!   
-!  do p=1,N_rho 
-!  
-!  rho2d(1) = rho(p)
-!  rho2d(2) = rho(p)  
-!  
-!    f_gyro_restr = 0._f64
-!    
-!    do i=0,Nc(1)
-!      do j=0,Nc(2)-1
-!        result = 0._f64
-!        do m=0,Nc(1)
-!          do ell=0,Nc(2)-1
-!            result = result + quasineutral%mat_gyro_circ(p,modulo(ell-j,Nc(2)),i,m)*f_init_restr(m+1,ell+1)
-!          enddo  
-!        enddo
-!        f_gyro_restr(i+1,j+1) = f_gyro_restr(i+1,j+1) + result
-!      enddo
-!    enddo
-!
-!    f_gyro(1:Nc(1)+1,1:Nc(2)) = f_gyro_restr(1:Nc(1)+1,1:Nc(2))
-!    f_gyro(:,Nc(2)+1) = f_gyro_restr(:,1)
-!    
-!  write (filename, "('gyro_',i1)") p
-!  call sll_gnuplot_write(f_gyro(:,1),filename,ierr)
-!  
-!   enddo ! p=1,N_rho 
-!    
-!    
-!  do p=1,N_rho 
-!  
-!  rho2d(1) = rho(p)
-!  rho2d(2) = rho(p)     
-!    
-!    f_double_gyro_restr = 0._f64 
-!    
-!    do i=0,Nc(1)
-!      do j=0,Nc(2)-1
-!        result = 0._f64
-!        do m=0,Nc(1)
-!          do ell=0,Nc(2)-1
-!            result = result + quasineutral%mat_double_gyro_circ(p,modulo(ell-j,Nc(2)),i,m)*f_init_restr(m+1,ell+1)
-!          enddo  
-!        enddo
-!        f_double_gyro_restr(i+1,j+1) = f_double_gyro_restr(i+1,j+1) + result
-!      enddo
-!    enddo
-!
-!    f_double_gyro(1:Nc(1)+1,1:Nc(2)) = f_double_gyro_restr(1:Nc(1)+1,1:Nc(2))
-!    f_double_gyro(:,Nc(2)+1) = f_double_gyro_restr(:,1)  
-!    
-!    f_double_gyro_stock(:,:)=f_double_gyro_stock(:,:)+f_double_gyro(:,:)
-!    
-!    write (filename, "('double_gyro_',i1)") p
-!    call sll_gnuplot_write(f_double_gyro(:,1),filename,ierr)  
-!    
-!    enddo ! p=1,N_rho 
-!
-!
-!  write (filename, "('sum_double_gyro')")
-!  call sll_gnuplot_write(f_double_gyro_stock(:,1),filename,ierr)
-!    
-!  
-!  end subroutine print_profiles
-!  
-  
-  
-  
-  
-  subroutine solve_qn_polar(quasineutral,phi,mu_points,mu_weights,N_mu)
-    type(sll_plan_qn_polar) :: quasineutral
-    sll_int32,intent(in) :: N_mu
-    sll_real64,dimension(1:N_mu),intent(in) :: mu_points
-    sll_real64,dimension(1:N_mu),intent(in) :: mu_weights
-    sll_real64,dimension(:,:,:),allocatable :: mat
-    sll_real64,dimension(1:quasineutral%Nc(1)+1,1:quasineutral%Nc(2)),intent(inout) :: phi
-    sll_int32 :: Nr,Ntheta,i,error,p
-  
-    Nr = quasineutral%Nc(1)
-    Ntheta = quasineutral%Nc(2)
-    
-    SLL_ALLOCATE(mat(0:Ntheta-1,0:Nr,0:Nr),error)
-    
-    ! Id-\sum_j c_j J_{\mu_j}^2*exp(-\mu_j)
-    mat = 0._f64
-    do p=1,N_mu
-      mat = mat - mu_weights(p)*quasineutral%mat_double_gyro_circ(p,:,:,:)*dexp(-mu_points(p))
-    enddo
-    do i=0,Nr
-      mat(0,i,i) = mat(0,i,i) + 1._f64
-    enddo
-    
-    print *,mat(3,5,7)
-
-    ! call test_solve_circulant_system(mat,Nr,Ntheta)
-
-    call solve_circulant_system(Ntheta,Nr,mat,phi)
-    
-    print *,"phi_min : ",minval(phi)
-    print *,"phi_max : ",maxval(phi)
-    
-  end subroutine solve_qn_polar
-
-  
-  
-  
- !!!!!! TEST BEGIN --------------------------------------
-
-
-
-  subroutine precompute_qn_polar_splines(quasineutral,mu_points,mu_weights,N_mu)
-    type(sll_plan_qn_polar) :: quasineutral
-    sll_int32,intent(in) :: N_mu
-    sll_real64,dimension(1:N_mu),intent(in) :: mu_points
-    sll_real64,dimension(1:N_mu),intent(in) :: mu_weights
-    sll_int32 :: Nr
-    sll_int32 :: Ntheta
-    sll_int32 :: ierr
-    sll_int32 :: m
-    sll_int32 :: j
-    sll_int32 :: p
-    sll_comp64,dimension(:,:),allocatable :: mat_stock1
-    sll_comp64,dimension(:,:),allocatable :: mat_stock2
-    sll_comp64,dimension(:,:,:),allocatable :: D_contrib
-    sll_real64,dimension(:),allocatable :: rho_points
-    sll_int32 :: i
-    
-    SLL_ALLOCATE(rho_points(N_mu),ierr)
-    
-    do i=1,N_mu
-      rho_points(i)=sqrt(2._f64*mu_points(i))
-    enddo
-    
-    call precompute_double_gyroaverage_matrix_polar_splines(quasineutral,rho_points,N_mu)
-    
-    !following arrays are computed
-    !sll_int32 :: max_nb = quasineutral%size_pre_compute
-    !sll_int32 :: pre_compute_N(1:N_rho,quasineutral%Nc(1)+1)
-    !sll_int32 :: pre_compute_index(1:N_rho,1:2,1:max_nb)
-    !sll_real64 :: pre_compute_coeff_spl(1:N_rho,1:max_nb)
-
-    print *,'#size_pre_compute=',quasineutral%size_pre_compute
-    
-    
-    
-    
-!    
-!    Nr = quasineutral%Nc(1)
-!    Ntheta = quasineutral%Nc(2)
-!    
-!    SLL_ALLOCATE(quasineutral%mat_qn_inverse(0:Ntheta-1,0:Nr,0:Nr),ierr)
-!    SLL_ALLOCATE(mat_stock1(0:Nr,0:Nr),ierr)
-!    SLL_ALLOCATE(mat_stock2(0:Nr,0:Nr),ierr)
-!    SLL_ALLOCATE(D_contrib(0:Ntheta-1,0:Nr,0:Nr+2),ierr)
-!
-!    D_contrib = (0._f64,0._f64)
-!    do j=0,Ntheta-1
-!      do p=1,N_mu
-!          D_contrib(j,:,:) = D_contrib(j,:,:) &
-!            + pointer_mat_contribution_circ(j,:,:)
-!      enddo
-!    enddo
-!
-!
-!
-!    
-!
-! ! Construction de la matrice à inverser
-!    quasineutral%mat_qn_inverse = (0._f64,0._f64)
-!    do m=0,Ntheta-1
-!      do p=1,N_mu
-!        mat_stock1 = (0._f64,0._f64)
-!        mat_stock2 = (0._f64,0._f64)
-!        call matrix_product_comp(D_contr(p,m,:,:),Nr+1,Nr+3,D_spl2D(m,:,:),Nr+3,Nr+1,mat_stock1)
-!        call matrix_product_comp(mat_stock1(:,:),Nr+1,Nr+1,mat_stock1(:,:),Nr+1,Nr+1,mat_stock2)
-!        quasineutral%mat_qn_inverse(m,:,:)=quasineutral%mat_qn_inverse(m,:,:) - mu_weights(p)*mat_stock2(:,:)*dexp(-mu_points(p))
-!      enddo
-!      do i=0,Nr
-!        !mat(m,i,i) = (1._f64,0._f64) + mat(m,i,i)
-!        quasineutral%mat_qn_inverse(m,i,i) = quasineutral%lambda(i+1)*(1._f64,0._f64) + quasineutral%mat_qn_inverse(m,i,i)
-!      enddo   
-!    enddo     
-!
-! ! Inversion des blocs
-!    do m=0,Ntheta-1
-!      call ZGETRF(Nr+1,Nr+1,quasineutral%mat_qn_inverse(m,:,:),Nr+1,IPIV,INFO)
-!      call ZGETRI(Nr+1,quasineutral%mat_qn_inverse(m,:,:),Nr+1,IPIV,WORK,(Nr+1)**2,INFO)
-!    enddo
-!
-!
-
-
-
-  end subroutine precompute_qn_polar_splines
+  end subroutine precompute_gyroaverage_index  
 
 
 
@@ -966,6 +470,9 @@ contains
     SLL_ALLOCATE(D_contr(0:N_mu,0:Ntheta-1,0:Nr,0:Nr+2),error)
     SLL_ALLOCATE(IPIV(Nr+1),error)
     SLL_ALLOCATE(WORK((Nr+1)**2),error) 
+    
+    SLL_ALLOCATE(quasineutral%mat_double_gyro_circ(1:N_mu,0:Ntheta-1,0:Nr,0:Nr),error)
+    SLL_ALLOCATE(quasineutral%mat_gyro_circ(1:N_mu,0:Ntheta-1,0:Nr,0:Nr),error)
 
  
  ! Initialise les coefficients de splines  
@@ -1025,35 +532,21 @@ contains
         mat_stock1 = (0._f64,0._f64)
         mat_stock2 = (0._f64,0._f64)
         call matrix_product_comp(D_contr(p,m,:,:),Nr+1,Nr+3,D_spl2D(m,:,:),Nr+3,Nr+1,mat_stock1)
-        !call matrix_product_comp(mat_stock1(:,:),Nr+1,Nr+1,mat_stock1(:,:),Nr+1,Nr+1,mat_stock2)
+        call matrix_product_comp(mat_stock1(:,:),Nr+1,Nr+1,mat_stock1(:,:),Nr+1,Nr+1,mat_stock2)
 
-        call matrix_product_comp(transpose(mat_stock1(:,:)),Nr+1,Nr+1,mat_stock1(:,:),Nr+1,Nr+1,mat_stock2)
-        !print *,p,abs(mat_stock2(1,1)),abs(mat_stock2(1,2)),abs(mat_stock2(1,3)), &
-        !  abs(mat_stock2(16,16)),abs(mat_stock2(16,15)),abs(mat_stock2(16,17))
+        !call matrix_product_comp(transpose(mat_stock1(:,:)),Nr+1,Nr+1,mat_stock1(:,:),Nr+1,Nr+1,mat_stock2)
+
         do i=0,Nr
-          !mat_stock2(i,i) =  mat_stock2(i,i) - quasineutral%lambda(i+1)*(1._f64,0._f64)
-          mat_stock2(i,i) =  quasineutral%lambda(i+1)*(mat_stock2(i,i) - (1._f64,0._f64))
+          mat_stock2(i,i) =   mat_stock2(i,i) - quasineutral%lambda(i+1)*(1._f64,0._f64)
         enddo
-        quasineutral%mat_qn_inverse(m,:,:)=quasineutral%mat_qn_inverse(m,:,:) - mu_weights(p)*mat_stock2(:,:)*dexp(-mu_points(p))
-      enddo
-      do i=0,Nr
-        !mat(m,i,i) = (1._f64,0._f64) + mat(m,i,i)
-        !quasineutral%mat_qn_inverse(m,i,i) = quasineutral%lambda(i+1)*(1._f64,0._f64) + quasineutral%mat_qn_inverse(m,i,i)
-      enddo   
+        quasineutral%mat_qn_inverse(m,:,:) = quasineutral%mat_qn_inverse(m,:,:) - mu_weights(p)*mat_stock2(:,:)*dexp(-mu_points(p))
+      enddo 
     enddo     
-   do m = 0,Ntheta-1
-     do i= 0,Nr
-       do j= 0,Nr
-         print *, quasineutral%mat_qn_inverse(m,i,j)
-       enddo
-     enddo
-   enddo
  ! Inversion des blocs
     do m=0,Ntheta-1
       call ZGETRF(Nr+1,Nr+1,quasineutral%mat_qn_inverse(m,:,:),Nr+1,IPIV,INFO)
       call ZGETRI(Nr+1,quasineutral%mat_qn_inverse(m,:,:),Nr+1,IPIV,WORK,(Nr+1)**2,INFO)
     enddo
-    
     
  ! Deallocate    
     SLL_DEALLOCATE_ARRAY(mat_stock1,error)
@@ -1081,7 +574,7 @@ contains
 
  
  
-   subroutine solve_qn_polar_new(quasineutral,phi)
+   subroutine solve_qn_polar_splines(quasineutral,phi)
     type(sll_plan_qn_polar) :: quasineutral
     sll_real64,dimension(1:quasineutral%Nc(1)+1,1:quasineutral%Nc(2)),intent(inout) :: phi
     sll_comp64,dimension(:,:),allocatable :: phi_comp,phi_old
@@ -1122,7 +615,8 @@ contains
         enddo
         phi_comp(i,m) = result
       enddo 
-    enddo
+    enddo  
+
     
  ! FFT^-1
     do i=1,Nr+1
@@ -1139,7 +633,71 @@ contains
     SLL_DEALLOCATE_ARRAY(phi_old,error)
     SLL_DEALLOCATE_ARRAY(buf_fft,error)
     
-  end subroutine solve_qn_polar_new
+  end subroutine solve_qn_polar_splines
+
+
+
+ subroutine test_solve_qn_polar_splines(Nc,eta_min,eta_max,mu_points,mu_weights,N_mu,mode,lambda,phi_init,phi_qn)
+  sll_int32,intent(in)  :: Nc(2)
+  sll_real64,intent(in) :: eta_min(2)
+  sll_real64,intent(in) :: eta_max(2)
+  sll_int32,intent(in) :: N_mu
+  sll_int32,intent(in)  :: mode(2)
+  sll_real64,dimension(1:N_mu),intent(in) :: mu_points
+  sll_real64,dimension(1:N_mu),intent(in) :: mu_weights
+  sll_real64,dimension(1:Nc(1)+1,1:Nc(2)+1),intent(in) :: phi_init
+  sll_real64,dimension(1:Nc(1)+1,1:Nc(2)+1),intent(in) :: phi_qn
+  sll_int32  :: N_min(2),N_max(2)
+  sll_real64  :: gamma0,tmp1,lambda
+  sll_real64 :: eps,rho2d(2),mu2dmax(2),error(3)
+  sll_int32 :: i,j,ierr,p
+  
+  N_min = 1
+  N_max(1) = Nc(1)
+  N_max(2) = Nc(2)
+  
+  mu2dmax(1) = maxval(mu_points)
+  mu2dmax(2) = maxval(mu_points)
+  
+  gamma0=0._f64
+  eps=1.e-10
+  
+  call compute_N_bounds_polar_circle(N_min(1),N_max(1),Nc(1),2._f64*sqrt(2._f64*mu2dmax),eta_min(1),eta_max(1))
+  
+  do p = 1, N_mu
+    rho2d(1) = sqrt(2._f64*mu_points(p))
+    rho2d(2) = sqrt(2._f64*mu_points(p))
+    call solution_polar_circle(rho2d,mode,eta_min,eta_max,tmp1)
+    gamma0 = gamma0 + mu_weights(p)*dexp(-mu_points(p))*(lambda-tmp1**2)
+    !gamma0 = gamma0 + mu_weights(p)*(1._f64-tmp1**2)
+  enddo
+  !gamma0 = 1._f64-gamma0
+  
+  print *,'#gamma0val=',gamma0
+
+  print *,'#QN solver',N_min,N_max
+  call compute_error(phi_qn,phi_init,1._f64/gamma0,error,N_min,N_max)
+  print *,'#error subdomain=',error
+  call compute_error(phi_qn,phi_init,1._f64/gamma0,error,(/1,1/),Nc)
+  print *,'#error whole domain=',error
+
+
+!             call sll_gnuplot_2d( &
+!                  eta_min(1), &
+!                  eta_max(1), &
+!                  Nc(1)+1, &
+!                  eta_min(2), &
+!                  eta_max(2), &
+!                  Nc(2)+1, &
+!                  phi_qn-(1._f64/gamma0)*phi_init, &
+!                  'fdiff', &
+!                  0, &
+!                  ierr)
+
+
+  end subroutine test_solve_qn_polar_splines
+
+
 
 
   function compute_gamma0_quadrature( &
@@ -1177,167 +735,6 @@ contains
 
     
   end function compute_gamma0_quadrature 
-
- subroutine test_solve_qn_polar_new(Nc,eta_min,eta_max,mu_points,mu_weights,N_mu,mode,phi_init,phi_qn)
-  sll_int32,intent(in)  :: Nc(2)
-  sll_real64,intent(in) :: eta_min(2)
-  sll_real64,intent(in) :: eta_max(2)
-  sll_int32,intent(in) :: N_mu
-  sll_int32,intent(in)  :: mode(2)
-  sll_real64,dimension(1:N_mu),intent(in) :: mu_points
-  sll_real64,dimension(1:N_mu),intent(in) :: mu_weights
-  sll_real64,dimension(1:Nc(1)+1,1:Nc(2)+1),intent(in) :: phi_init
-  sll_real64,dimension(1:Nc(1)+1,1:Nc(2)+1),intent(in) :: phi_qn
-  sll_int32  :: N_min(2),N_max(2)
-  sll_real64  :: gamma0,tmp1
-  sll_real64 :: eps,rho2d(2),mu2dmax(2),error(3)
-  sll_int32 :: i,j,ierr,p
-  
-  N_min = 1
-  N_max(1) = Nc(1)
-  N_max(2) = Nc(2)
-  
-  mu2dmax(1) = maxval(mu_points)
-  mu2dmax(2) = maxval(mu_points)
-  
-  gamma0=0._f64
-  eps=1.e-10
-  
-  call compute_N_bounds_polar_circle(N_min(1),N_max(1),Nc(1),2._f64*sqrt(2._f64*mu2dmax),eta_min(1),eta_max(1))
-  
-  do p = 1, N_mu
-    rho2d(1) = sqrt(2._f64*mu_points(p))
-    rho2d(2) = sqrt(2._f64*mu_points(p))
-    call solution_polar_circle(rho2d,mode,eta_min,eta_max,tmp1)
-    gamma0 = gamma0 + mu_weights(p)*dexp(-mu_points(p))*tmp1**2
-    !gamma0 = gamma0 + mu_weights(p)*(1._f64-tmp1**2)
-  enddo
-  !gamma0 = 1._f64-gamma0
-  
-  print *,'#gamma0val=',gamma0
-
-  print *,'#QN solver',N_min,N_max
-  call compute_error(phi_qn,phi_init,1._f64/(1._f64-gamma0),error,N_min,N_max)
-  print *,'#error subdomain=',error
-  call compute_error(phi_qn,phi_init,1._f64/(1._f64-gamma0),error,(/1,1/),Nc)
-  print *,'#error whole domain=',error
-
-  end subroutine test_solve_qn_polar_new
-
-
-
-
-
-
-
- 
- 
- 
- 
-  !!!!!! TEST END ----------------------------------------
- 
-  
-  
- subroutine test_solve_qn_polar(quasineutral,mu_points,mu_weights,N_mu)
-  type(sll_plan_qn_polar)  :: quasineutral
-  sll_int32,intent(in) :: N_mu
-  sll_real64,dimension(1:N_mu),intent(in) :: mu_points
-  sll_real64,dimension(1:N_mu),intent(in) :: mu_weights
-  sll_real64,dimension(:,:,:),allocatable :: mat
-  sll_real64,dimension(:,:),allocatable :: phi,phi_restr,phi_init
-  sll_int32  :: mode(2),Nc(2),N_min(2),N_max(2)
-  sll_real64  :: eta_min(2),eta_max(2),gamma0,tmp1
-  sll_real64 :: eps,rho2d(2),mu2dmax(2),error(3)
-  sll_int32 :: i,j,ierr,p
-
-  Nc(1) = quasineutral%Nc(1)
-  Nc(2) = quasineutral%Nc(2)
-  
-  eta_min = quasineutral%eta_min
-  eta_max = quasineutral%eta_max
-  
-  mode(1) = 1
-  mode(2) = 1
-  
-  N_min = 1
-  N_max(1) = Nc(1)
-  N_max(2) = Nc(2)
-  
-  mu2dmax(1) = maxval(mu_points)
-  mu2dmax(2) = maxval(mu_points)
-  
-  gamma0=0._f64
-  eps=1.e-10
-  
-  SLL_ALLOCATE(mat(0:Nc(2)-1,0:Nc(1),0:Nc(1)),ierr)
-  SLL_ALLOCATE(phi(1:Nc(1)+1,1:Nc(2)+1),ierr)
-  SLL_ALLOCATE(phi_init(1:Nc(1)+1,1:Nc(2)+1),ierr)
-  SLL_ALLOCATE(phi_restr(1:Nc(1)+1,1:Nc(2)),ierr) 
- 
-  
-  call compute_init_f_polar(phi,mode,Nc,eta_min,eta_max)
-  phi_init = phi
-  phi_restr(1:Nc(1)+1,1:Nc(2)) = phi(1:Nc(1)+1,1:Nc(2))
-  
-  
-  call compute_N_bounds_polar_circle(N_min(1),N_max(1),Nc(1),2._f64*sqrt(2._f64*mu2dmax),eta_min(1),eta_max(1))
-  
-  do p = 1, N_mu
-    rho2d(1) = sqrt(2._f64*mu_points(p))
-    rho2d(2) = sqrt(2._f64*mu_points(p))
-    call solution_polar_circle(rho2d,mode,eta_min,eta_max,tmp1)
-    gamma0 = gamma0 + mu_weights(p)*dexp(-mu_points(p))*tmp1**2
-  enddo
-
-!  call compute_gamma0(mode,eta_min,eta_max,gamma0)
-!  print *,"gamma0 = ",gamma0
-
-  
-    ! Id-\sum_{\rho} exp(-\rho**2/2) J_{\rho}^2
-    mat = 0._f64
-    do p=1,N_mu
-      mat = mat - mu_weights(p)*quasineutral%mat_double_gyro_circ(p,:,:,:)*dexp(-mu_points(p))
-    enddo
-    do i=0,Nc(1)
-      mat(0,i,i) = mat(0,i,i) + 1._f64
-    enddo
-  
-
-  do i=0,N_min(1)-2
-    mat(0,i,:) = 0._f64
-    mat(0,i,i) = 1._f64-gamma0
-  enddo
-  do i=N_max(1),Nc(1)
-    mat(0,i,:) = 0._f64
-    mat(0,i,i) = 1._f64-gamma0
-  enddo
-  do j=1,Nc(2)-1
-    do i=0,N_min(1)-2
-      mat(j,i,:) = 0._f64
-    enddo
-    do i=N_max(1),Nc(1)
-      mat(j,i,:) = 0._f64
-    enddo
-  enddo
-
-  ! call test_solve_circulant_system(mat,Nc(1),Nc(2))
-
-  call solve_circulant_system(Nc(2),Nc(1),mat,phi_restr)
-
-  phi(1:Nc(1)+1,1:Nc(2)) = phi_restr(1:Nc(1)+1,1:Nc(2))
-  phi(1:Nc(1)+1,Nc(2)+1) = phi_restr(1:Nc(1)+1,1)
-
-  print *,'#QN solver'
-  call compute_error(phi,phi_init,1._f64/(1._f64-gamma0),error,N_min,N_max)
-  print *,'#error subdomain=',error
-  call compute_error(phi,phi_init,1._f64/(1._f64-gamma0),error,(/1,1/),Nc)
-  print *,'#error whole domain=',error
-
-  end subroutine test_solve_qn_polar
-  
-  
-  
-  
   
 
 subroutine solve_circulant_system(Ntheta,Nr,mat_circ,sol)
@@ -2358,8 +1755,8 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
       return
     endif
     call zero_bessel_dir_dir(mode,eta_min(1),eta_max(1),tmp)
-    val = 0._f64 !temporary because DBESJ not recognized on helios 
-    !val = DBESJN(0,tmp*rho(1)/eta_max(1))
+    !val = 0._f64 !temporary because DBESJ not recognized on helios 
+    val = DBESJN(0,tmp*rho(1)/eta_max(1))
     !print *,i,j,mode_max,alpha,tmp      
   end subroutine solution_polar_circle
 

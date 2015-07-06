@@ -39,6 +39,7 @@ implicit none
   sll_real64 :: rho2d(2),val
   sll_real64,dimension(:,:),allocatable :: phi,phi_restr,phi_init,phi_qn
   sll_int32  :: ierr,i
+  sll_real64 :: lambdatest
   
   eta_min(1) = 2._f64 ! 0.1_f64
   eta_max(1) = 18._f64 ! 0.9_f64
@@ -60,7 +61,7 @@ implicit none
   ! 3 : Gauss-Laguerre
 
   N_mu = 1
-  mu_max = 0.01_f64
+  mu_max = 1.00_f64
   N_points = 32
   
   val = 0._f64
@@ -82,7 +83,7 @@ implicit none
       mu_weights(0) = 1._f64
     else
       do i=1,N_mu
-        mu_points(i-1) = real(i-1,f64)*mu_max/real(N_mu,f64)
+        mu_points(i-1) = real(i,f64)*mu_max/real(N_mu,f64)
         mu_weights(i-1) = mu_max/real(N_mu,f64)
       enddo
     endif
@@ -145,14 +146,15 @@ implicit none
 
 
   
-  !print *,"mu_points =",mu_points
-  !print *,"mu_weights =",mu_weights
+  print *,"mu_points =",mu_points
+  print *,"mu_weights =",mu_weights
   
   call compute_init_f_polar(phi,mode,Nc,eta_min,eta_max)
   phi_init = phi
   phi_restr(1:Nc(1)+1,1:Nc(2)) = phi(1:Nc(1)+1,1:Nc(2))
 
-  lambda = 1._f64
+  lambdatest = 2.0_f64
+  lambda = lambdatest
 
   qn => new_qn_2d_polar_splines_solver( &
     eta_min, &
@@ -160,10 +162,9 @@ implicit none
     Nc, &
     N_points, &
     lambda)  
+    
+    
   call qn%precompute_qn( mu_points(0:N_mu-1), mu_weights(0:N_mu-1) , N_mu)
-  
-  
-  stop
   call qn%solve_qn(phi_restr)
 
 
@@ -175,8 +176,9 @@ implicit none
   phi_qn(1:Nc(1)+1,Nc(2)+1) = phi_restr(1:Nc(1)+1,1)
   
   
-  call test_solve_qn_polar_new(Nc,eta_min,eta_max, &
-    mu_points(0:N_mu-1),mu_weights(0:N_mu-1),N_mu,mode,phi_init,phi_qn)
+  
+  call test_solve_qn_polar_splines(Nc,eta_min,eta_max, &
+    mu_points(0:N_mu-1),mu_weights(0:N_mu-1),N_mu,mode,lambdatest,phi_init,phi_qn)
 
   if(err==0)then    
     print *, '#PASSED'
