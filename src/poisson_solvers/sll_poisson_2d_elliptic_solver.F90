@@ -227,8 +227,7 @@ contains
          case default
            print *,'interp_rho_case=',interp_rho_case
            call flush()
-           SLL_ERROR('initialize_poisson_2d_elliptic_solver&
-           &','bad interp_rho_case')    
+           SLL_ERROR('initialize_poisson_2d_elliptic_solver','bad interp_rho_case')    
        end select
      else
        poisson%interp_rho => new_cubic_spline_interpolator_2d( &
