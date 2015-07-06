@@ -50,8 +50,8 @@ IF(BUILD_TESTING)
 
   ADD_EXECUTABLE( test_gces_full_periodic unit_test_full_periodic.F90 )
   TARGET_LINK_LIBRARIES( test_gces_full_periodic sll_general_coordinate_elliptic_solvers )
-  ADD_TEST( NAME gces_full_periodic COMMAND test_gces_full_periodic )
-  SET_TESTS_PROPERTIES( gces_full_periodic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100 )
+  #ADD_TEST( NAME gces_full_periodic COMMAND test_gces_full_periodic )
+  #SET_TESTS_PROPERTIES( gces_full_periodic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100 )
 
   ADD_EXECUTABLE( test_gces_dirichlet unit_test_dirichlet.F90 )
   TARGET_LINK_LIBRARIES( test_gces_dirichlet sll_general_coordinate_elliptic_solvers )
