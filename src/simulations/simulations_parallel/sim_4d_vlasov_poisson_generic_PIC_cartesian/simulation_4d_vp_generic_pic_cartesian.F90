@@ -1,11 +1,22 @@
-!> Generic simulation algorithm for simple
-!> [[file:~/selalib/src/particle_methods/particle_types/simple_pic_4d_group.F90::sll_simple_pic_4d_group_module]] and
-!> ltpic [[?]] particles based on [[file:~/selalib/src/particle_methods/sll_pic_base.F90::sll_module_pic_base]].
+!> @ingroup particle_methods
 
-!> The base for this development was
-!> [[file:simulation_4d_vp_lt_pic_cartesian.F90::sll_simulation_4d_vp_lt_pic_cartesian_module]] which itself was based
-!> on
-!> [[file:~/selalib/src/simulations/simulations_parallel/sim_4d_vlasov_poisson_PIC_cartesian/simulation_4d_vp_pic_cartesian.F90::sll_pic_simulation_4d_cartesian_module]]
+!> @author MCP ALH
+
+!> @brief Generic simulation algorithm for PIC particles
+
+!> @details Generic simulation algorithm for simple PIC particles of type ::sll_simple_pic_4d_group_module <!--
+!> [[selalib:src/particle_methods/particle_types/simple_pic_4d_group.F90::sll_simple_pic_4d_group_module]] --> and LTPIC
+!> particles based on the generic class ::sll_module_pic_base <!--
+!> [[selalib:src/particle_methods/sll_pic_base.F90::sll_module_pic_base]] -->. The basis for this development was
+!> ::sll_simulation_4d_vp_lt_pic_cartesian_module <!--
+!> [[file:simulation_4d_vp_lt_pic_cartesian.F90::sll_simulation_4d_vp_lt_pic_cartesian_module]] --> which itself was
+!> based on ::sll_pic_simulation_4d_cartesian_module <!--
+!> [[selalib:src/simulations/simulations_parallel/sim_4d_vlasov_poisson_PIC_cartesian/simulation_4d_vp_pic_cartesian.F90::sll_pic_simulation_4d_cartesian_module]]
+!> -->.
+
+! (The doxygen page for this simulation is
+! [[selalib:doc/build/html/doxygen/html/namespacesll__simulation__4d__vp__generic__pic__cartesian__module.html]],
+! produced by [[elisp:(compile "cd ${SELALIB}/build && make doc")]])
 
 module sll_simulation_4d_vp_generic_pic_cartesian_module
 
@@ -36,7 +47,7 @@ module sll_simulation_4d_vp_generic_pic_cartesian_module
 
   implicit none
 
-  ! uses [[file:~/selalib/src/simulations/simulation_base_class.F90::sll_simulation_base_class]], called by
+  ! uses [[selalib:src/simulations/simulation_base_class.F90::sll_simulation_base_class]], called by
   ! [[file:unit_test_4d_vp_generic_pic_cartesian.F90::unit_test_4d_vp_generic_pic_cartesian]]. We have chosen to store
   ! all simulation parameters (both ltpic and simple) in this sim object.
 
@@ -59,7 +70,7 @@ module sll_simulation_4d_vp_generic_pic_cartesian_module
      !    sll_int32  :: guard_size
      !    sll_int32  :: array_size
      sll_real64, dimension(1:6) :: elec_params
-     type(sll_cartesian_mesh_2d),    pointer :: mesh_2d ! [[file:~/selalib/src/meshes/sll_cartesian_meshes.F90::sll_cartesian_mesh_2d]]
+     type(sll_cartesian_mesh_2d),    pointer :: mesh_2d ! [[selalib:src/meshes/sll_cartesian_meshes.F90::sll_cartesian_mesh_2d]]
      type(sll_charge_accumulator_2d_ptr), dimension(:), pointer     :: q_accumulator_ptr  ! called q_accumulator in Sever simulation
      type(sll_charge_accumulator_2d),     dimension(:), pointer     :: charge_accumulator
      type(electric_field_accumulator),                  pointer     :: E_accumulator
@@ -85,7 +96,7 @@ module sll_simulation_4d_vp_generic_pic_cartesian_module
   
 contains
 
-  ! redefines [[file:~/selalib/src/simulations/simulation_base_class.F90::init_from_file]]
+  ! redefines [[selalib:src/simulations/simulation_base_class.F90::init_from_file]]
   subroutine init_4d_generic_pic_cartesian   ( sim, filename )
     intrinsic :: trim
     class(sll_simulation_4d_vp_generic_pic_cartesian), intent(inout) :: sim
@@ -114,7 +125,7 @@ contains
     sll_int32   :: initial_density_identifier
 
     ! <<simple_pic_particle_group>>
-    ! [[file:~/selalib/src/particle_methods/particle_types/simple_pic_4d_group.F90::sll_simple_pic_4d_group]]
+    ! [[selalib:src/particle_methods/particle_types/simple_pic_4d_group.F90::sll_simple_pic_4d_group]]
     type(sll_simple_pic_4d_group),  pointer     :: simple_pic_particle_group
 
     ! <<particle_types>> <<lt_pic_particle_group>> this simulation can deal with simple or ltpic particle types
@@ -387,13 +398,13 @@ contains
 
   !> run_4d_lt_pic_cartesian: run the Vlasov-Poisson simulation
   !!
-  !! note 1: this is a skeleton-in-progress: some routines are not implemented, some variables are not needed
+  !! \note 1: this is a skeleton-in-progress: some routines are not implemented, some variables are not needed
   !!
-  !! note 2: use of cubic spline particles (routines with _CS) is disabled for now
+  !! \note 2: use of cubic spline particles (routines with _CS) is disabled for now
   !!
-  !! todo 1: run the code and later write a (non-virtual) remapping step with adequate frequency
+  !! \todo 1: run the code and later write a (non-virtual) remapping step with adequate frequency
   !!
-  !! todo 2: use a common type for PIC and LT_PIC (commented calls to PIC structures are labelled with "PIC_VERSION"
+  !! \todo 2: use a common type for PIC and LT_PIC (commented calls to PIC structures are labelled with "PIC_VERSION"
   !!
   !! this version written by MCP, ALH
 
@@ -496,7 +507,7 @@ contains
     accumE => sim%E_accumulator%e_acc
     call sum_accumulators( sim%q_accumulator_ptr, n_threads, ncx*ncy )
 
-    ! [[file:~/selalib/src/pic_utilities/sll_charge_to_density.F90::sll_convert_charge_to_rho_2d_per_per]]
+    ! [[selalib:src/pic_utilities/sll_charge_to_density.F90::sll_convert_charge_to_rho_2d_per_per]]
     call sll_convert_charge_to_rho_2d_per_per( sim%q_accumulator_ptr(1)%q, sim%rho )     ! this name not clear enough
 
     !! -- --  ?? [end]  -- --
@@ -558,7 +569,7 @@ contains
 
        !> This simulation does not have access to the particles (because they may be of different incompatible types
        !> like "ltpic" or "simple") so we use the standard interface defined in
-       !> [[file:~/selalib/src/particle_methods/sll_pic_base.F90::sll_particle_group_base]]
+       !> [[selalib:src/particle_methods/sll_pic_base.F90::sll_particle_group_base]]
 
        coords = sim%particle_group%get_v(k)
        bors = bors + coords(1)**2 + coords(2)**2
@@ -581,12 +592,12 @@ contains
     do k = 1, sim%number_particles
 
       ! particle position
-      coords=sim%particle_group%get_x(k) ! [[file:~/selalib/src/particle_methods/sll_pic_base.F90::get_v]]
+      coords=sim%particle_group%get_x(k) ! [[selalib:src/particle_methods/sll_pic_base.F90::get_v]]
       pp_x = coords(1)
       pp_y = coords(2)
 
       ! particle speed
-      coords=sim%particle_group%get_v(k) ! [[file:~/selalib/src/particle_methods/sll_pic_base.F90::get_v]]
+      coords=sim%particle_group%get_v(k) ! [[selalib:src/particle_methods/sll_pic_base.F90::get_v]]
       pp_vx = coords(1)
       pp_vy = coords(2)
 
@@ -596,7 +607,7 @@ contains
 
       call global_to_cell_offset(pp_x,pp_y,sim%mesh_2d,pp_icell,pp_dx,pp_dy)
 
-      ! [[file:~/selalib/src/pic_accumulators/sll_accumulators.h::SLL_INTERPOLATE_FIELD_IN_CELL]]
+      ! [[selalib:src/pic_accumulators/sll_accumulators.h::SLL_INTERPOLATE_FIELD_IN_CELL]]
       SLL_INTERPOLATE_FIELD_IN_CELL(Ex,Ey,accumE,pp_dx,pp_dy,tmp5,tmp6,pp_icell)
 
       !> Set particle speed
@@ -691,12 +702,12 @@ contains
 
 
          ! particle position
-         coords=sim%particle_group%get_x(k) ! [[file:~/selalib/src/particle_methods/sll_pic_base.F90::get_v]]
+         coords=sim%particle_group%get_x(k) ! [[selalib:src/particle_methods/sll_pic_base.F90::get_v]]
          pp_x = coords(1)
          pp_y = coords(2)
 
          ! particle speed
-         coords=sim%particle_group%get_v(k) ! [[file:~/selalib/src/particle_methods/sll_pic_base.F90::get_v]]
+         coords=sim%particle_group%get_v(k) ! [[selalib:src/particle_methods/sll_pic_base.F90::get_v]]
          pp_vx = coords(1)
          pp_vy = coords(2)
 
@@ -706,7 +717,7 @@ contains
 
          call global_to_cell_offset(pp_x,pp_y,sim%mesh_2d,pp_icell,pp_dx,pp_dy)
 
-         ! [[file:~/selalib/src/pic_accumulators/sll_accumulators.h::SLL_INTERPOLATE_FIELD_IN_CELL]]
+         ! [[selalib:src/pic_accumulators/sll_accumulators.h::SLL_INTERPOLATE_FIELD_IN_CELL]]
          SLL_INTERPOLATE_FIELD_IN_CELL(Ex,Ey,accumE,pp_dx,pp_dy,tmp5,tmp6,pp_icell)
 
          !> Set particle speed
@@ -873,7 +884,7 @@ contains
         do k = 1, sim%number_particles
 
              ! particle position
-             coords=sim%particle_group%get_x(k) ! [[file:~/selalib/src/particle_methods/sll_pic_base.F90::get_x]]
+             coords=sim%particle_group%get_x(k) ! [[selalib:src/particle_methods/sll_pic_base.F90::get_x]]
              pp_x = coords(1)
              pp_y = coords(2)
 
@@ -883,11 +894,11 @@ contains
 
              call global_to_cell_offset(pp_x,pp_y,sim%mesh_2d,pp_icell,pp_dx,pp_dy)
 
-             ! [[file:~/selalib/src/pic_accumulators/sll_accumulators.h::SLL_INTERPOLATE_FIELD_IN_CELL]]
+             ! [[selalib:src/pic_accumulators/sll_accumulators.h::SLL_INTERPOLATE_FIELD_IN_CELL]]
              SLL_INTERPOLATE_FIELD_IN_CELL(Ex,Ey,accumE,pp_dx,pp_dy,tmp5,tmp6,pp_icell)
 
              ! particle position
-             coords=sim%particle_group%get_v(k) ! [[file:~/selalib/src/particle_methods/sll_pic_base.F90::get_v]]
+             coords=sim%particle_group%get_v(k) ! [[selalib:src/particle_methods/sll_pic_base.F90::get_v]]
              pp_vx = coords(1)
              pp_vy = coords(2)
 

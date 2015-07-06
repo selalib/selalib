@@ -16,8 +16,9 @@
 !**************************************************************
 
 !> @ingroup particle_methods
-!> @brief
-!> Random particle initializers
+
+!> @brief Random particle initializers
+
 module sll_pic_random_initializers
 
 #include "sll_working_precision.h"
@@ -35,13 +36,13 @@ module sll_pic_random_initializers
 
 contains
 
-  ! initialize an abstract particle group with the landau f0 distribution
+  !> initialize an abstract particle group with the landau f0 distribution
   !
-  ! this routine takes as arguments a newly created particle group of type sll_particle_group_base
-  ! and it creates the particle list inside this group, using the public interface
+  !> this routine takes as arguments a newly created particle group of type sll_particle_group_base
+  !> and it creates the particle list inside this group, using the public interface
   !
-  ! note: here we assume that the abstract particles are in dimension 2Dx2V,
-  ! that they are allocated (with given number) and that they have a common weight
+  !> note: here we assume that the abstract particles are in dimension 2Dx2V,
+  !> that they are allocated (with given number) and that they have a common weight
   subroutine sll_pic_4d_random_unweighted_initializer_landau_f0 (   &
       thermal_speed, alpha, k_landau,                               &
       particle_group,                                               &

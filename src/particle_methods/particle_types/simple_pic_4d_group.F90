@@ -15,10 +15,9 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-
 !> @ingroup particle_methods
-!> @brief
-!> Module for groups of particles of type \ref sll_simple_pic_4d_particle
+!> @brief Module for groups of particles of type \ref sll_simple_pic_4d_particle
+
 module sll_simple_pic_4d_group_module
 
 #include "sll_working_precision.h"
@@ -36,39 +35,46 @@ module sll_simple_pic_4d_group_module
 
   implicit none
 
+  !> Group of \ref sll_simple_pic_4d_particle
   type, extends(sll_particle_group_base) :: sll_simple_pic_4d_group
 
-    ! the particles
+    !> @{
+    !> the particles
     sll_int32                                                   :: number_particles
     type(sll_simple_pic_4d_particle),   dimension(:), pointer   :: particle_list
     sll_real64                                                  :: common_weight
+    !> @}
 
-    ! the physical mesh used eg in the Poisson solver
+    !> @{
+    !> the physical mesh used eg in the Poisson solver
     type(sll_cartesian_mesh_2d), pointer    :: space_mesh_2d
     logical                                 :: domain_is_x_periodic
     logical                                 :: domain_is_y_periodic
+    !> @}
 
-    ! the initial density (put this in a separate object ?)
+    !> @{
+    !> the initial density (put this in a separate object ?)
     sll_real64      :: thermal_speed
     sll_real64      :: alpha
     sll_real64      :: k_landau
+    !> @}
 
   contains
 
-    ! Getters
+    !> Getters
     procedure :: get_x          => simple_pic_4d_get_x
     procedure :: get_v          => simple_pic_4d_get_v
     procedure :: get_charge     => simple_pic_4d_get_charge
     procedure :: get_mass       => simple_pic_4d_get_mass
     procedure :: get_cell_index => simple_pic_4d_get_cell_index
 
-    ! Setters
+    !> Setters
     procedure :: set_x                  => simple_pic_4d_set_x
     procedure :: set_v                  => simple_pic_4d_set_v
     procedure :: set_common_weight      => simple_pic_4d_set_common_weight
     procedure :: set_particle_weight    => simple_pic_4d_set_particle_weight
 
-    ! Initializers
+    !> Initializers
     procedure, pass(self) :: set_landau_parameters  => simple_pic_4d_set_landau_parameters
     procedure :: random_initializer     => simple_pic_4d_random_initializer
     procedure :: cartesian_initializer  => simple_pic_4d_cartesian_initializer
