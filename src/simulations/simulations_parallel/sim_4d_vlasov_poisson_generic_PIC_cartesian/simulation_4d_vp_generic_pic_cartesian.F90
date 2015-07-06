@@ -1,11 +1,22 @@
-!> Generic simulation algorithm for simple
-!> [[selalib:src/particle_methods/particle_types/simple_pic_4d_group.F90::sll_simple_pic_4d_group_module]] and
-!> ltpic [[?]] particles based on [[selalib:src/particle_methods/sll_pic_base.F90::sll_module_pic_base]].
+!> @ingroup particle_methods
 
-!> The base for this development was
-!> [[file:simulation_4d_vp_lt_pic_cartesian.F90::sll_simulation_4d_vp_lt_pic_cartesian_module]] which itself was based
-!> on
+!> @author MCP ALH
+
+!> @brief Generic simulation algorithm for PIC particles
+
+!> @details Generic simulation algorithm for simple PIC particles of type ::sll_simple_pic_4d_group_module <!--
+!> [[selalib:src/particle_methods/particle_types/simple_pic_4d_group.F90::sll_simple_pic_4d_group_module]] --> and LTPIC
+!> particles based on the generic class ::sll_module_pic_base <!--
+!> [[selalib:src/particle_methods/sll_pic_base.F90::sll_module_pic_base]] -->. The basis for this development was
+!> ::sll_simulation_4d_vp_lt_pic_cartesian_module <!--
+!> [[file:simulation_4d_vp_lt_pic_cartesian.F90::sll_simulation_4d_vp_lt_pic_cartesian_module]] --> which itself was
+!> based on ::sll_pic_simulation_4d_cartesian_module <!--
 !> [[selalib:src/simulations/simulations_parallel/sim_4d_vlasov_poisson_PIC_cartesian/simulation_4d_vp_pic_cartesian.F90::sll_pic_simulation_4d_cartesian_module]]
+!> -->.
+
+! (The doxygen page for this simulation is
+! [[selalib:doc/build/html/doxygen/html/namespacesll__simulation__4d__vp__generic__pic__cartesian__module.html]],
+! produced by [[elisp:(compile "cd ${SELALIB}/build && make doc")]])
 
 module sll_simulation_4d_vp_generic_pic_cartesian_module
 
@@ -387,13 +398,13 @@ contains
 
   !> run_4d_lt_pic_cartesian: run the Vlasov-Poisson simulation
   !!
-  !! note 1: this is a skeleton-in-progress: some routines are not implemented, some variables are not needed
+  !! \note 1: this is a skeleton-in-progress: some routines are not implemented, some variables are not needed
   !!
-  !! note 2: use of cubic spline particles (routines with _CS) is disabled for now
+  !! \note 2: use of cubic spline particles (routines with _CS) is disabled for now
   !!
-  !! todo 1: run the code and later write a (non-virtual) remapping step with adequate frequency
+  !! \todo 1: run the code and later write a (non-virtual) remapping step with adequate frequency
   !!
-  !! todo 2: use a common type for PIC and LT_PIC (commented calls to PIC structures are labelled with "PIC_VERSION"
+  !! \todo 2: use a common type for PIC and LT_PIC (commented calls to PIC structures are labelled with "PIC_VERSION"
   !!
   !! this version written by MCP, ALH
 
