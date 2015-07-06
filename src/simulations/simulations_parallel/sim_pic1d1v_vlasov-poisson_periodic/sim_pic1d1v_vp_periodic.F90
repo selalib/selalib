@@ -35,7 +35,7 @@ module sll_module_simulation_pic1d1v_vp_periodic
          sll_pic1d_ensure_boundary_conditions ,&
          sll_pic1d_ensure_periodicity  ,& 
          control_variate_xv ,& 
-         num_species, enable_deltaf, &  ! TODO these should be read from sim
+         num_species , enable_deltaf , &  ! TODO these should be read from sim
          SLL_PIC1D_TESTCASE_IONBEAM, SLL_PIC1D_TESTCASE_LANDAU, &
          SLL_PIC1D_TESTCASE_IONBEAM_ELECTRONS ,SLL_PIC1D_TESTCASE_QUIET ,&
          SLL_PIC1D_TESTCASE_BUMPONTAIL
@@ -69,7 +69,7 @@ module sll_module_simulation_pic1d1v_vp_periodic
 
     CHARACTER(LEN=256) :: root_path
 
-    ! TODO: use new enumerations
+    
     character(len=32) ::  ppusher    , psolver    , scenario
     sll_int32         ::  ppusher_int, psolver_int, scenario_int
 
@@ -254,11 +254,6 @@ contains
 !    endfunction
     
 
-  subroutine run_fake( sim )
-    class( sll_simulation_pic1d1v_vp_periodic ), intent( inout ) :: sim
-    character( len=64 ), parameter :: this_sub_name = "run_fake"
-    SLL_WARNING( this_sub_name, "'run' method not implemented" )   
-  end subroutine run_fake
 
 
   subroutine init_from_file( sim, filename )
@@ -339,7 +334,7 @@ contains
     
     sim%deltaf=deltaf
     sim%nstreams=nstreams
-    
+    enable_deltaf=deltaf
     sim%sdeg=sdeg
     sim%tsteps=tsteps
     sim%femp=femp
@@ -1563,7 +1558,7 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
 
         SLL_ASSERT(N==size( sim%species(sim%pushed_species)%particle))
         !Adjust weights
-        if (enable_deltaf .eqv. .TRUE.) then
+        if (sim%deltaf .eqv. .TRUE.) then
             ratio=control_variate_xv(sim%fsolver%BC(xnew), vnew )/&
                                 control_variate_xv(sim%fsolver%BC(xold), vold )
             !ratio=ratio/(N*coll_size)
@@ -1722,7 +1717,7 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
             write (file_id,*)  "set ylabel 'total. error'"
             write (file_id,*)  "plot '"//filename//"-errors.dat' using 1:3 with lines"
 
-        if (enable_deltaf .eqv. .TRUE.) then
+        if (sim%deltaf .eqv. .TRUE.) then
             write (file_id, *) "set term x11 7"
             write (file_id, *)  "set multiplot layout 2,1 rowsfirst title 'Time Development of Particle Weights'"
             write (file_id, *) "set autoscale x; set autoscale y"
