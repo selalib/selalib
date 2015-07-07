@@ -181,6 +181,8 @@ function new_bspline_1d( num_points, degree, xmin, xmax, bc_type, sl, sr )
   allocate(new_bspline_1d%dl(k))
   allocate(new_bspline_1d%dr(k))
 
+  new_bspline_1d%ilo = k
+
 end function new_bspline_1d
 
 !> @brief Returns a pointer to a heap-allocated bspline object.
@@ -1690,7 +1692,6 @@ work => this%bs1%bcoef
 call interv(tx,nx+kx,xi,leftx,this%bs1%ilo,mflag)
 call interv(ty,ny+ky,xj,lefty,this%bs2%ilo,mflag)
 
-klo = this%bs2%ilo
 do jj=1,ky
   jcmin = 1
   if ( kx <= leftx ) then
@@ -1745,6 +1746,7 @@ do jj=1,ky
   work(jj) = this%bs1%aj(1)
 end do
 
+klo = this%bs2%ilo
 call interv(ty(lefty-ky+1:ny+ky),ky+ky,xj,left,klo,mflag)
 
 jcmin = 1
