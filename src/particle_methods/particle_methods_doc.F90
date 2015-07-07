@@ -7,9 +7,7 @@
   ! "cd ${SELALIB}/build && make doc")]]. The Doxygen configuration file is [[selalib:doc/doxygen/Doxyfile]].
 
   !> @defgroup particle_methods sll_particle_methods 
-  !! @brief
-  !! Centralized location for all particle methods, in directory [[selalib:src/particle_methods]].
-  !! @details
+  !> @brief Centralized location for all particle methods, in directory [[selalib:src/particle_methods]].
   
   ! Local Variables:
   ! mode:F90
