@@ -1,6 +1,7 @@
 ADD_LIBRARY( sll_splines STATIC
   sll_cubic_splines.F90
   sll_quintic_splines.F90
+  sll_bsplines.F90
   sll_arbitrary_degree_splines.F90
   cubic_nonuniform_splines.F90 )
 TARGET_LINK_LIBRARIES( sll_splines
@@ -32,6 +33,9 @@ IF(BUILD_TESTING)
   ADD_EXECUTABLE( test_quintic_splines unit_test_quintic_splines.F90 )
   TARGET_LINK_LIBRARIES( test_quintic_splines sll_splines )
 
+  ADD_EXECUTABLE( test_bsplines unit_test_bsplines.F90 )
+  TARGET_LINK_LIBRARIES( test_bsplines sll_splines )
+
   ADD_EXECUTABLE( test_non_unif_splines unit_test_nonuniform.F90 )
   TARGET_LINK_LIBRARIES( test_non_unif_splines sll_splines )
 
@@ -44,9 +48,11 @@ IF(BUILD_TESTING)
   # Ctests
   ADD_TEST( NAME cubic_splines             COMMAND test_cubic_splines            )
   ADD_TEST( NAME quintic_splines           COMMAND test_quintic_splines          )
+  ADD_TEST( NAME bsplines                  COMMAND test_bsplines                 )
   ADD_TEST( NAME cubic_non_uniform_splines COMMAND test_non_unif_splines         )
   ADD_TEST( NAME splines_arbitrary_degree  COMMAND test_arbitrary_degree_splines )
   SET_TESTS_PROPERTIES( cubic_splines
+                        bsplines
                         cubic_non_uniform_splines
                         splines_arbitrary_degree
                         PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )

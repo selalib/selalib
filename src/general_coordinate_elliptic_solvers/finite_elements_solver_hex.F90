@@ -1,3 +1,5 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
 module finite_elements_solver_module
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -1603,3 +1605,5 @@ contains ! =============================================================
 
 
 end module finite_elements_solver_module
+
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
