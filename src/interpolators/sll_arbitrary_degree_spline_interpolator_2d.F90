@@ -2008,10 +2008,10 @@ x   = eta1
 y   = eta2
 val = 0.0_f64
 
-if (interpolator%bc1_min==SLL_PERIODIC .and. eta1<interpolator%eta1_min) x = eta1 + length1 
-if (interpolator%bc1_max==SLL_PERIODIC .and. eta1>interpolator%eta1_max) x = eta1 - length1
-if (interpolator%bc2_min==SLL_PERIODIC .and. eta2<interpolator%eta2_min) y = eta2 + length2
-if (interpolator%bc2_max==SLL_PERIODIC .and. eta2>interpolator%eta2_max) y = eta2 - length2
+!if (interpolator%bc1_min==SLL_PERIODIC .and. eta1<interpolator%eta1_min) x = eta1 + length1 
+!if (interpolator%bc1_max==SLL_PERIODIC .and. eta1>interpolator%eta1_max) x = eta1 - length1
+!if (interpolator%bc2_min==SLL_PERIODIC .and. eta2<interpolator%eta2_min) y = eta2 + length2
+!if (interpolator%bc2_max==SLL_PERIODIC .and. eta2>interpolator%eta2_max) y = eta2 - length2
 
 SLL_ASSERT( x >= interpolator%eta1_min )
 SLL_ASSERT( x <= interpolator%eta1_max )

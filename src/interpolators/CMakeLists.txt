@@ -5,6 +5,7 @@ SET( INTERPOLATORS_SRC_FILES
   sll_quintic_spline_interpolator_1d.F90
   sll_cubic_spline_interpolator_1d_nonuniform.F90
   sll_lagrange_interpolator_1d.F90 
+  sll_hermite_interpolator_1d.F90 
   sll_periodic_interpolator_1d.F90
   sll_cubic_spline_interpolator_2d.F90
   sll_hermite_interpolator_2d.F90
