@@ -106,6 +106,9 @@ contains
       
   end function process_outside_point_periodic
 
+
+
+
   ! set to limit case
   ! called when bc_type = SLL_SET_TO_LIMIT
   

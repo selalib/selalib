@@ -125,6 +125,8 @@ subroutine delete_arbitrary_degree_1d_interpolator( interpolator )
   sll_int32 :: ierr
   SLL_DEALLOCATE(interpolator%t,ierr)
   SLL_DEALLOCATE(interpolator%coeff_splines,ierr)
+  deallocate(interpolator%eta)
+  deallocate(interpolator%work)
 end subroutine delete_arbitrary_degree_1d_interpolator
 
 
@@ -233,7 +235,7 @@ interpolator%num_pts       = num_pts
 delta_eta = (eta_max - eta_min)/(num_pts-1)
 SLL_ALLOCATE(interpolator%eta(num_pts),ierr)
 do i = 1, num_pts
-   interpolator%eta(i) = eta_min + delta_eta*(i-1)
+  interpolator%eta(i) = eta_min + delta_eta*(i-1)
 end do
 
 k = spline_degree+1
@@ -1212,455 +1214,354 @@ case(0) ! periodic
 
 case (9) ! 2. dirichlet-left, dirichlet-right
 
-   interpolator%size_coeffs=  num_cells + sp_deg
-   interpolator%size_t = 2*sp_deg + num_cells + 1
-   nb_spline_eta = num_cells + sp_deg - 2
-   SLL_ASSERT( size(coeffs) == nb_spline_eta ) 
+  interpolator%size_coeffs=  num_cells + sp_deg
+  interpolator%size_t = 2*sp_deg + num_cells + 1
+  nb_spline_eta = num_cells + sp_deg - 2
+  SLL_ASSERT( size(coeffs) == nb_spline_eta ) 
 
-   do i = 1, sp_deg + 1
-     interpolator%t(i) = eta_min
-   enddo
-   eta = eta_min
-   do i = sp_deg + 2, num_cells + 1 + sp_deg
-     eta = eta + delta
-     interpolator%t(i) = eta
-   enddo
-   do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
-     interpolator%t(i) = eta
-   enddo
+  do i = 1, sp_deg + 1
+    interpolator%t(i) = eta_min
+  enddo
+  eta = eta_min
+  do i = sp_deg + 2, num_cells + 1 + sp_deg
+    eta = eta + delta
+    interpolator%t(i) = eta
+  enddo
+  do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
+    interpolator%t(i) = eta
+  enddo
 
-   do i = 1,nb_spline_eta
-     interpolator%coeff_splines(i + 1 ) =  coeffs(i)
-   end do
+  do i = 1,nb_spline_eta
+    interpolator%coeff_splines(i + 1 ) =  coeffs(i)
+  end do
 
-   interpolator%coeff_splines(1)               = interpolator%value_left
-   interpolator%coeff_splines(nb_spline_eta+2) = interpolator%value_right
+  interpolator%coeff_splines(1)               = interpolator%value_left
+  interpolator%coeff_splines(nb_spline_eta+2) = interpolator%value_right
 
 case(10) ! Neumann - Dirichlet
 
-   interpolator%size_coeffs= num_cells + sp_deg
-   interpolator%size_t     = 2*sp_deg + num_cells + 1
-   nb_spline_eta = num_cells + sp_deg - 1
+  interpolator%size_coeffs= num_cells + sp_deg
+  interpolator%size_t     = 2*sp_deg + num_cells + 1
+  nb_spline_eta = num_cells + sp_deg - 1
 
-   SLL_ASSERT( size(coeffs) == nb_spline_eta ) 
+  SLL_ASSERT( size(coeffs) == nb_spline_eta ) 
 
-   do i = 1, sp_deg + 1
-      interpolator%t(i) = eta_min
-   enddo
-   eta = eta_min
-   do i = sp_deg + 2, num_cells + 1 + sp_deg
-      eta = eta + delta
-      interpolator%t(i) = eta
-   enddo
-   do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
-      interpolator%t(i) = eta
-   enddo
+  do i = 1, sp_deg + 1
+     interpolator%t(i) = eta_min
+  enddo
+  eta = eta_min
+  do i = sp_deg + 2, num_cells + 1 + sp_deg
+     eta = eta + delta
+     interpolator%t(i) = eta
+  enddo
+  do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
+     interpolator%t(i) = eta
+  enddo
 
-   do i = 1,nb_spline_eta
-      interpolator%coeff_splines(i + 1 ) =  coeffs(i)
-   end do
-   interpolator%coeff_splines(nb_spline_eta+2) =  interpolator%value_right
+  do i = 1,nb_spline_eta
+     interpolator%coeff_splines(i + 1 ) =  coeffs(i)
+  end do
+  interpolator%coeff_splines(nb_spline_eta+2) =  interpolator%value_right
 
 case(12) ! Hermitte- Dirichlet
 
-   interpolator%size_coeffs= num_cells + sp_deg
-   interpolator%size_t     = 2*sp_deg + num_cells + 1
-   nb_spline_eta = num_cells + sp_deg - 1
-   SLL_ASSERT( size(coeffs) == nb_spline_eta ) 
-   do i = 1, sp_deg + 1
-      interpolator%t(i) = eta_min
-   enddo
-   eta = eta_min
-   do i = sp_deg + 2, num_cells + 1 + sp_deg
-      eta = eta + delta
-      interpolator%t(i) = eta
-   enddo
-   do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
-      interpolator%t(i) = eta
-   enddo
+  interpolator%size_coeffs= num_cells + sp_deg
+  interpolator%size_t     = 2*sp_deg + num_cells + 1
+  nb_spline_eta = num_cells + sp_deg - 1
+  SLL_ASSERT( size(coeffs) == nb_spline_eta ) 
+  do i = 1, sp_deg + 1
+     interpolator%t(i) = eta_min
+  enddo
+  eta = eta_min
+  do i = sp_deg + 2, num_cells + 1 + sp_deg
+     eta = eta + delta
+     interpolator%t(i) = eta
+  enddo
+  do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
+     interpolator%t(i) = eta
+  enddo
 
-   do i = 1,nb_spline_eta
-      interpolator%coeff_splines(i + 1 ) =  coeffs(i)
-   end do
-   interpolator%coeff_splines(nb_spline_eta+2) = interpolator%value_right
+  do i = 1,nb_spline_eta
+     interpolator%coeff_splines(i + 1 ) =  coeffs(i)
+  end do
+  interpolator%coeff_splines(nb_spline_eta+2) = interpolator%value_right
 
 case(17) ! Dirichlet-Neumann
 
-   interpolator%size_coeffs= num_cells + sp_deg
-   interpolator%size_t     = 2*sp_deg + num_cells + 1
-   nb_spline_eta = num_cells + sp_deg - 1
-   SLL_ASSERT( size(coeffs) == nb_spline_eta ) 
+  interpolator%size_coeffs= num_cells + sp_deg
+  interpolator%size_t     = 2*sp_deg + num_cells + 1
+  nb_spline_eta = num_cells + sp_deg - 1
+  SLL_ASSERT( size(coeffs) == nb_spline_eta ) 
 
-   do i = 1, sp_deg + 1
-      interpolator%t(i) = eta_min
-   enddo
-   eta = eta_min
-   do i = sp_deg + 2, num_cells + 1 + sp_deg
-      eta = eta + delta
-      interpolator%t(i) = eta
-   enddo
-   do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
-      interpolator%t(i) = eta
-   enddo
+  do i = 1, sp_deg + 1
+     interpolator%t(i) = eta_min
+  enddo
+  eta = eta_min
+  do i = sp_deg + 2, num_cells + 1 + sp_deg
+     eta = eta + delta
+     interpolator%t(i) = eta
+  enddo
+  do i = num_cells + sp_deg + 2, num_cells + 1 + 2*sp_deg
+     interpolator%t(i) = eta
+  enddo
 
-   do i = 1,nb_spline_eta
-      interpolator%coeff_splines(i + 1 ) =  coeffs(i)
-   end do
-   interpolator%coeff_splines(1) = interpolator%value_left
+  do i = 1,nb_spline_eta
+     interpolator%coeff_splines(i + 1 ) =  coeffs(i)
+  end do
+  interpolator%coeff_splines(1) = interpolator%value_left
 
 case default
 
-   interpolator%size_coeffs= num_cells + sp_deg
-   interpolator%size_t     = 2*sp_deg + num_cells + 1
-   nb_spline_eta = num_cells + sp_deg
+  interpolator%size_coeffs= num_cells + sp_deg
+  interpolator%size_t     = 2*sp_deg + num_cells + 1
+  nb_spline_eta = num_cells + sp_deg
 
-   SLL_ASSERT( size(coeffs) == nb_spline_eta ) 
+  SLL_ASSERT( size(coeffs) == nb_spline_eta ) 
 
-   do i = 1, sp_deg+1
-     interpolator%t(i) = eta_min
-   enddo
-   eta = eta_min
-   do i = sp_deg+2, num_cells+1+sp_deg
-     eta = eta + delta
+  do i = 1, sp_deg+1
+    interpolator%t(i) = eta_min
+  enddo
+  eta = eta_min
+  do i = sp_deg+2, num_cells+1+sp_deg
+    eta = eta + delta
+    interpolator%t(i) = eta
+  enddo
+  do i = num_cells+sp_deg+2, num_cells+1+2*sp_deg
      interpolator%t(i) = eta
-   enddo
-   do i = num_cells+sp_deg+2, num_cells+1+2*sp_deg
-      interpolator%t(i) = eta
-   enddo
+  enddo
 
-   do i = 1,nb_spline_eta
-      interpolator%coeff_splines(i ) = coeffs(i)
-   end do
+  do i = 1,nb_spline_eta
+     interpolator%coeff_splines(i ) = coeffs(i)
+  end do
 
 end select
 end subroutine set_coefficients_ad1d
 
   
-  !> @brief First derivative interpolation on the point eta
-  !> @details computing the values of the first derivative
-  !> with the interpolator arbitrary degree splines 1d
-  !> on the points eta of arbitrary degree splines 1d
-  !>
-  !> The parameters are
-  !> @param interpolator the type sll_arbitrary_degree_spline_interpolator_1d
-  !> @param[in] eta1 the point
-  !> @return val the values on the point eta of the first derivative
+!> @brief First derivative interpolation on the point eta
+!> @details computing the values of the first derivative
+!> with the interpolator arbitrary degree splines 1d
+!> on the points eta of arbitrary degree splines 1d
+!>
+!> The parameters are
+!> @param interpolator the type sll_arbitrary_degree_spline_interpolator_1d
+!> @param[in] eta1 the point
+!> @return val the values on the point eta of the first derivative
 
-  function interpolate_derivative_ad1d( &
-    interpolator, &
-    eta1 ) result(val)
+function interpolate_derivative_ad1d( interpolator, eta1 ) result(val)
 
-    class(sll_arbitrary_degree_spline_interpolator_1d), intent(in)  :: interpolator
-    sll_real64, intent(in)         :: eta1
-    sll_real64                     :: val
-    sll_int32 :: size_coeffs
-    sll_real64 :: res
-    sll_real64, dimension(:),pointer :: knot_tmp
-    sll_real64, dimension(:),pointer :: coef_tmp
+class(sll_arbitrary_degree_spline_interpolator_1d), intent(in)  :: interpolator
 
-    SLL_ASSERT( eta1 .ge. interpolator%eta_min )
-    SLL_ASSERT( eta1 .le. interpolator%eta_max )
+sll_real64, intent(in)           :: eta1
+sll_real64                       :: val
+sll_real64                       :: res
 
-    size_coeffs = interpolator%size_coeffs
+res = eta1
 
-    res = eta1
+if (interpolator%bc_selector == 0 ) then !periodic
 
-    select case (interpolator%bc_selector)
-    case (0) ! periodic
-!
-       if( res < interpolator%eta_min ) then
-          res = res+interpolator%eta_max-interpolator%eta_min
-       else if( res >  interpolator%eta_max ) then
-          res = res+interpolator%eta_min-interpolator%eta_max
-       end if
-    case (9) ! 2. dirichlet-left, dirichlet-right
-       SLL_ASSERT( res >= interpolator%eta_min )
-       SLL_ASSERT( res <= interpolator%eta_max )
-       if ( res > interpolator%eta_max) then
-          print*, 'problem  x > eta_max'
-          stop
-       end if
-       if ( res < interpolator%eta_min) then
-          print*, 'problem  x < eta_min'
-          stop
-       end if
-    case(10) ! Neumann - Dirichlet
-       SLL_ASSERT( res >= interpolator%eta_min )
-       SLL_ASSERT( res <= interpolator%eta_max )
-       if ( res > interpolator%eta_max) then
-          print*, 'problem  x > eta_max'
-          stop
-       end if
-       if ( res < interpolator%eta_min) then
-          print*, 'problem  x < eta_min'
-          stop
-       end if
-    case(12) ! Hermite - Dirichlet
-       SLL_ASSERT( res >= interpolator%eta_min )
-       SLL_ASSERT( res <= interpolator%eta_max )
-       if ( res > interpolator%eta_max) then
-          print*, 'problem  x > eta_max'
-          stop
-       end if
-       if ( res < interpolator%eta_min) then
-          print*, 'problem  x < eta_min'
-          stop
-       end if
-    case(17) ! Dirichlet - Neumann
-       SLL_ASSERT( res >= interpolator%eta_min )
-       SLL_ASSERT( res <= interpolator%eta_max )
-       if ( res > interpolator%eta_max) then
-          print*, 'problem  x > eta_max'
-          stop
-       end if
-       if ( res < interpolator%eta_min) then
-          print*, 'problem  x < eta_min'
-          stop
-       end if
-    case(18) ! Neumann - Neumann
-       SLL_ASSERT( res >= interpolator%eta_min )
-       SLL_ASSERT( res <= interpolator%eta_max )
-       if ( res > interpolator%eta_max) then
-          print*, 'problem  x > eta_max'
-          stop
-       end if
-       if ( res < interpolator%eta_min) then
-          print*, 'problem  x < eta_min'
-          stop
-       end if
-    case(20) ! Hermite - Neumann
-       SLL_ASSERT( res >= interpolator%eta_min )
-       SLL_ASSERT( res <= interpolator%eta_max )
-       if ( res > interpolator%eta_max) then
-          print*, 'problem  x > eta_max'
-          stop
-       end if
-       if ( res < interpolator%eta_min) then
-          print*, 'problem  x < eta_min'
-          stop
-       end if
-    case(33) ! Dirichlet - Hermite
-       SLL_ASSERT( res >= interpolator%eta_min )
-       SLL_ASSERT( res <= interpolator%eta_max )
-       if ( res > interpolator%eta_max) then
-          print*, 'problem  x > eta_max'
-          stop
-       end if
-       if ( res < interpolator%eta_min) then
-          print*, 'problem  x < eta_min'
-          stop
-       end if
-    case(34) ! Neumann - Hermite
-       SLL_ASSERT( res >= interpolator%eta_min )
-       SLL_ASSERT( res <= interpolator%eta_max )
-       if ( res > interpolator%eta_max) then
-          print*, 'problem  x > eta_max'
-          stop
-       end if
-       if ( res < interpolator%eta_min) then
-          print*, 'problem  x < eta_min'
-          stop
-       end if
-    case(36) ! Hermite - Hermite
-       SLL_ASSERT( res >= interpolator%eta_min )
-       SLL_ASSERT( res <= interpolator%eta_max )
-       if ( res > interpolator%eta_max) then
-          print*, 'problem  x > eta_max'
-          stop
-       end if
-       if ( res < interpolator%eta_min) then
-          print*, 'problem  x < eta_min'
-          stop
-       end if
+  if( res < interpolator%eta_min ) then
+    res = res+interpolator%eta_max-interpolator%eta_min
+  else if( res >  interpolator%eta_max ) then
+    res = res+interpolator%eta_min-interpolator%eta_max
+  end if
 
-    end select
+end if
 
-    knot_tmp =>  interpolator%t(1:interpolator%size_t)
-    coef_tmp => interpolator%coeff_splines(1:size_coeffs)
-  
-    val = bvalue( &
-         interpolator%deboor, &
-         knot_tmp,&
-         coef_tmp, &
-         size_coeffs, &
-         interpolator%spline_degree+1, &
-         res, &
-         1)
-  end function interpolate_derivative_ad1d
+SLL_ASSERT( res >= interpolator%eta_min )
+SLL_ASSERT( res <= interpolator%eta_max )
 
-  function interpolate_array_ad1d( &
-       this, num_points, data, coordinates)&
-    result(data_out)
-    class(sll_arbitrary_degree_spline_interpolator_1d),  intent(in)       :: this
-    !class(sll_cubic_spline_1D),  intent(in)      :: this
-    sll_int32,  intent(in)                 :: num_points
-    sll_real64, dimension(:), intent(in)   :: coordinates
-    sll_real64, dimension(:), intent(in)   :: data
-    sll_real64, dimension(num_points)      :: data_out
+val = bvalue( interpolator%deboor,          &
+              interpolator%t,               &
+              interpolator%coeff_splines,   &
+              interpolator%size_coeffs,     &
+              interpolator%spline_degree+1, &
+              res,                          &
+              1)
 
-    print *, 'interpolate_array_ad1d: not implemented'
-    data_out = -1000000._f64*data*coordinates*this%spline_degree
-  end function interpolate_array_ad1d
+end function interpolate_derivative_ad1d
 
-  function interpolate_1d_array_disp_ad1d( &
-       this,        &
-       num_points, &
-       data,     &
-       alpha) result(res)
+function interpolate_array_ad1d( this,         &
+                                 num_points,   &
+                                 data,         &
+                                 coordinates) result(res)
 
-    class(sll_arbitrary_degree_spline_interpolator_1d), intent(in)    :: this
-    sll_int32, intent(in)                          :: num_points
-    sll_real64, dimension(:), intent(in)         :: data
-    sll_real64, intent(in)         :: alpha
-    sll_real64, dimension(num_points) :: res
+class(sll_arbitrary_degree_spline_interpolator_1d), intent(in) :: this
 
-    print *, 'interpolate_1d_array_disp_ad1d: not implemented.'
-    res = -1000000._f64*alpha*data*this%spline_degree
-  end function interpolate_1d_array_disp_ad1d
+sll_int32,  intent(in)               :: num_points
+sll_real64, dimension(:), intent(in) :: coordinates
+sll_real64, dimension(:), intent(in) :: data
+sll_real64, dimension(num_points)    :: res
+sll_int32                            :: i
 
+do i = 1, num_points
 
-  function get_coefficients_ad1d(interpolator)
-    class(sll_arbitrary_degree_spline_interpolator_1d), intent(in)    :: interpolator
-    sll_real64, dimension(:), pointer            :: get_coefficients_ad1d
+  res(i) = bvalue( this%deboor,          &
+                   this%t,               &
+                   this%coeff_splines,   &
+                   this%size_coeffs,     &
+                   this%spline_degree+1, &
+                   coordinates(i),       &
+                   0)
+end do
 
-    get_coefficients_ad1d => interpolator%coeff_splines
-  end function get_coefficients_ad1d
+end function interpolate_array_ad1d
 
-  subroutine interpolate_values_ad1d( &
-       interpolator, &
-       num_pts, &
-       vals_to_interpolate, &
-       output_array )
+function interpolate_1d_array_disp_ad1d( &
+     this,        &
+     num_points, &
+     data,     &
+     alpha) result(res)
 
-    class(sll_arbitrary_degree_spline_interpolator_1d),  intent(in) :: interpolator
-    sll_int32,  intent(in)                 :: num_pts
-    sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
-    sll_real64, dimension(:), intent(out)  :: output_array
-    sll_int32 :: idx
+class(sll_arbitrary_degree_spline_interpolator_1d), intent(in)    :: this
+sll_int32, intent(in)                          :: num_points
+sll_real64, dimension(:), intent(in)         :: data
+sll_real64, intent(in)         :: alpha
+sll_real64, dimension(num_points) :: res
 
-    SLL_ASSERT(num_pts==size(vals_to_interpolate))
-    do idx=1,num_pts
-          output_array(idx)=interpolate_value_ad1d( &
-                                interpolator, &
-                                vals_to_interpolate(idx))
-    enddo
+print *, 'interpolate_1d_array_disp_ad1d: not implemented.'
+res = -1000000._f64*alpha*data*this%spline_degree
 
-!    print*, 'interpolate_values_ad1d NOT iMPLEMENTED YET'
-!    output_array = -1000000._f64*num_pts&
-!         *vals_to_interpolate*interpolator%spline_degree
-  end subroutine interpolate_values_ad1d
+end function interpolate_1d_array_disp_ad1d
 
-  subroutine interpolate_pointer_values_ad1d( &
+function get_coefficients_ad1d(interpolator)
+
+class(sll_arbitrary_degree_spline_interpolator_1d), intent(in)    :: interpolator
+sll_real64, dimension(:), pointer            :: get_coefficients_ad1d
+
+get_coefficients_ad1d => interpolator%coeff_splines
+
+end function get_coefficients_ad1d
+
+subroutine interpolate_values_ad1d( interpolator,        &
+                                    num_pts,             &
+                                    vals_to_interpolate, &
+                                    output_array )
+
+class(sll_arbitrary_degree_spline_interpolator_1d),  intent(in) :: interpolator
+sll_int32,  intent(in)                 :: num_pts
+sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
+sll_real64, dimension(:), intent(out)  :: output_array
+sll_int32 :: idx
+
+SLL_ASSERT(num_pts==size(vals_to_interpolate))
+do idx=1,num_pts
+  output_array(idx)=interpolate_value_ad1d( &
+                            interpolator, &
+                            vals_to_interpolate(idx))
+enddo
+
+end subroutine interpolate_values_ad1d
+
+subroutine interpolate_pointer_values_ad1d( &
        interpolator, &
        num_pts, &
        vals_to_interpolate, &
        output )
 
-    class(sll_arbitrary_degree_spline_interpolator_1d),  intent(in) :: interpolator
-    sll_int32,  intent(in)            :: num_pts
-    sll_real64, dimension(:), pointer :: vals_to_interpolate
-    sll_real64, dimension(:), pointer :: output
-    sll_int32 :: idx
+class(sll_arbitrary_degree_spline_interpolator_1d),  intent(in) :: interpolator
+sll_int32,  intent(in)            :: num_pts
+sll_real64, dimension(:), pointer :: vals_to_interpolate
+sll_real64, dimension(:), pointer :: output
+sll_int32 :: idx
 
-    SLL_ASSERT(num_pts==size(vals_to_interpolate))
-    do idx=1,num_pts
-          output(idx)=interpolate_value_ad1d( &
-                                interpolator, &
-                                vals_to_interpolate(idx))
-    enddo
-!    print*, 'interpolate_pointer_values_ad1d NOT iMPLEMENTED YET'
-!    output = -1000000._f64*num_pts&
-!         *vals_to_interpolate*interpolator%spline_degree
-  end subroutine interpolate_pointer_values_ad1d
+SLL_ASSERT(num_pts==size(vals_to_interpolate))
+do idx=1,num_pts
+      output(idx)=interpolate_value_ad1d( &
+                            interpolator, &
+                            vals_to_interpolate(idx))
+enddo
 
-  subroutine interpolate_derivatives_ad1d( &
-       interpolator, &
-       num_pts, &
-       vals_to_interpolate, &
-       output_array )
+end subroutine interpolate_pointer_values_ad1d
 
-    class(sll_arbitrary_degree_spline_interpolator_1d),  intent(in) :: interpolator
-    sll_int32,  intent(in)                 :: num_pts
-    sll_real64, dimension(:), intent(in) :: vals_to_interpolate
-    sll_real64, dimension(:), intent(out) :: output_array
-    sll_int32 :: idx
+subroutine interpolate_derivatives_ad1d( &
+     interpolator, &
+     num_pts, &
+     vals_to_interpolate, &
+     output_array )
 
-    SLL_ASSERT(num_pts==size(vals_to_interpolate))
-    do idx=1,num_pts
-          output_array(idx)=interpolate_derivative_ad1d( &
-                                interpolator, &
-                                vals_to_interpolate(idx))
-    enddo
-!    print*, 'interpolate_derivatives_ad1d NOT iMPLEMENTED YET'
-!    output_array = -1000000._f64*num_pts &
-!         *vals_to_interpolate*interpolator%spline_degree
-  end subroutine interpolate_derivatives_ad1d
+  class(sll_arbitrary_degree_spline_interpolator_1d),  intent(in) :: interpolator
+  sll_int32,  intent(in)                 :: num_pts
+  sll_real64, dimension(:), intent(in) :: vals_to_interpolate
+  sll_real64, dimension(:), intent(out) :: output_array
+  sll_int32 :: idx
 
-  subroutine interpolate_pointer_derivatives_ad1d( &
-       interpolator, &
-       num_pts, &
-       vals_to_interpolate, &
-       output )
-    class(sll_arbitrary_degree_spline_interpolator_1d),  intent(in) :: interpolator
-    sll_int32,  intent(in)              :: num_pts
-    sll_real64, dimension(:), pointer   :: vals_to_interpolate
-    sll_real64, dimension(:), pointer   :: output
-    sll_int32 :: idx
+  SLL_ASSERT(num_pts==size(vals_to_interpolate))
+  do idx=1,num_pts
+        output_array(idx)=interpolate_derivative_ad1d( &
+                              interpolator, &
+                              vals_to_interpolate(idx))
+  enddo
 
-    SLL_ASSERT(num_pts==size(vals_to_interpolate))
-    do idx=1,num_pts
-          output(idx)=interpolate_derivative_ad1d( &
-                                interpolator, &
-                                vals_to_interpolate(idx))
-    enddo
-!    output = -1000000.0_f64*num_pts&
-!         *vals_to_interpolate*interpolator%spline_degree
-!    print*, 'interpolate_pointer_derivatives_ad1d NOT iMPLEMENTED YET'
-  end subroutine interpolate_pointer_derivatives_ad1d
+end subroutine interpolate_derivatives_ad1d
 
-  function reconstruct_array(this, num_points, data) result(res)
-    ! dummy procedure
+subroutine interpolate_pointer_derivatives_ad1d( &
+     interpolator, &
+     num_pts, &
+     vals_to_interpolate, &
+     output )
 
-    class(sll_arbitrary_degree_spline_interpolator_1d),  intent(in) :: this
-    sll_int32, intent(in)                :: num_points! size of output array
-    sll_real64, dimension(:), intent(in) :: data   ! data to be interpolated
-    sll_real64, dimension(num_points)    :: res
-    res(:) = -1000000.0_f64*data*this%spline_degree
-    print*, 'reconstruct_array 1d not implemented yet'
-  end function reconstruct_array
+class(sll_arbitrary_degree_spline_interpolator_1d),  intent(in) :: interpolator
+sll_int32,  intent(in)              :: num_pts
+sll_real64, dimension(:), pointer   :: vals_to_interpolate
+sll_real64, dimension(:), pointer   :: output
+sll_int32 :: idx
 
-  ! The following two functions are wrong, the stencil to compute the
-  ! derivatives is valid only for uniform spacing between the points, the
-  ! specific coefficients chosen here using the eta coordinates is not to
-  ! be used. ABSOLUTE FIXME!!
-  function forward_fd_5pt( data,eta) 
-    sll_real64, dimension(:), intent(in) :: data
-    sll_real64, dimension(:), intent(in) :: eta
-    sll_real64, allocatable :: res(:,:)
-    sll_real64 :: forward_fd_5pt
+SLL_ASSERT(num_pts==size(vals_to_interpolate))
+do idx=1,num_pts
+      output(idx)=interpolate_derivative_ad1d( &
+                            interpolator, &
+                            vals_to_interpolate(idx))
+enddo
 
-    allocate(res(0:1,size(data)))
+end subroutine interpolate_pointer_derivatives_ad1d
 
-    call apply_fd(5,1,eta(1:5),data(1:5), eta(1),res(0:1,1))
+function reconstruct_array(this, num_points, data) result(res)
 
-    forward_fd_5pt = res(1,1) 
+  class(sll_arbitrary_degree_spline_interpolator_1d),  intent(in) :: this
+  sll_int32, intent(in)                :: num_points! size of output array
+  sll_real64, dimension(:), intent(in) :: data   ! data to be interpolated
+  sll_real64, dimension(num_points)    :: res
+  res(:) = -1000000.0_f64*data*this%spline_degree
+  print*, 'reconstruct_array 1d not implemented yet'
 
-  end function forward_fd_5pt
+end function reconstruct_array
 
-  function backward_fd_5pt( data,eta,li) result(res)
-    sll_real64, dimension(:), intent(in) :: data
-    sll_real64, dimension(:), intent(in) :: eta
-    sll_int32, intent(in)  :: li  ! last index of the array
-    sll_real64 :: res
+! The following two functions are wrong, the stencil to compute the
+! derivatives is valid only for uniform spacing between the points, the
+! specific coefficients chosen here using the eta coordinates is not to
+! be used. ABSOLUTE FIXME!!
+function forward_fd_5pt( data,eta) 
 
-    res = (0.25_f64*data(li-4)*(eta(li-5) - eta(li-4)) -&
-         (4.0_f64/3.0_f64)*  data(li-3)*(eta(li-4) - eta(li-3)) + &
-          3.0_f64*           data(li-2)*(eta(li-3) - eta(li-2)) - &
-          4.0_f64*           data(li-1)*(eta(li-2) - eta(li-1)) + &
-         (25.0_f64/12.0_f64)*data(li)*  (eta(li-1) - eta(li)) )
-  end function backward_fd_5pt
+sll_real64, dimension(:), intent(in) :: data
+sll_real64, dimension(:), intent(in) :: eta
+sll_real64, allocatable :: res(:,:)
+sll_real64 :: forward_fd_5pt
 
- subroutine bsplvd ( deboor, t, k, x, left, a, dbiatx, nderiv )
+allocate(res(0:1,size(data)))
+
+call apply_fd(5,1,eta(1:5),data(1:5), eta(1),res(0:1,1))
+
+forward_fd_5pt = res(1,1) 
+
+end function forward_fd_5pt
+
+function backward_fd_5pt( data,eta,li) result(res)
+
+sll_real64, dimension(:), intent(in) :: data
+sll_real64, dimension(:), intent(in) :: eta
+sll_int32, intent(in)  :: li  ! last index of the array
+sll_real64 :: res
+
+res = (0.25_f64*data(li-4)*(eta(li-5) - eta(li-4)) -&
+     (4.0_f64/3.0_f64)*  data(li-3)*(eta(li-4) - eta(li-3)) + &
+      3.0_f64*           data(li-2)*(eta(li-3) - eta(li-2)) - &
+      4.0_f64*           data(li-1)*(eta(li-2) - eta(li-1)) + &
+     (25.0_f64/12.0_f64)*data(li)*  (eta(li-1) - eta(li)) )
+
+end function backward_fd_5pt
+
+subroutine bsplvd ( deboor, t, k, x, left, a, dbiatx, nderiv )
 
     type(deboor_type) :: deboor
     sll_int32 :: k

@@ -12,9 +12,15 @@ program vlasov_ampere_2d
 
 use sll_simulation_2d_vlasov_ampere_cartesian
 use sll_common_array_initializers_module
+use sll_parallel_array_initializer_module
 use sll_collective
+use sll_buffer_loader_utilities_module
+use sll_remapper
+use sll_fft
 use sll_timer
 use sll_module_advection_1d_ampere
+
+!$ use omp_lib
 
 implicit none
 
@@ -147,17 +153,14 @@ time_init        = sim%time_init
 np_x1            = sim%mesh2d%num_cells1+1
 np_x2            = sim%mesh2d%num_cells2+1
 num_dof_x2       = sim%num_dof_x2
-if (MPI_MASTER) then
 
+if (MPI_MASTER) then
   print *,'#collective_size=',sll_get_collective_size(sll_world_collective)
   SLL_ALLOCATE(f_visu(np_x1,num_dof_x2),ierr)
   SLL_ALLOCATE(f_visu_buf1d(np_x1*num_dof_x2),ierr)
-
 else
-
   SLL_ALLOCATE(f_visu(1:1,1:1),ierr)          
   SLL_ALLOCATE(f_visu_buf1d(1:1),ierr)
-
 endif
 
 collective_size = sll_get_collective_size(sll_world_collective)
