@@ -46,7 +46,7 @@ program sim2d_gc_hex_splines
   sll_real64   :: h1, h2, f_min, x ,y,xx, yy
   sll_real64   :: r11,r12,r21,r22,det
   logical      :: inside
-  sll_int32    :: p = 6!-> degree of the approximation for the derivative
+  sll_int32    :: p = 6 ! degree of the approximation for the derivative
   sll_int32            :: IO_stat
   sll_int32, parameter :: input_file = 99
   character(len = 256) :: input_filename

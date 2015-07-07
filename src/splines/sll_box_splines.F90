@@ -396,6 +396,15 @@ contains  ! ****************************************************************
   end function chi_gen_val
 
 
+  !---------------------------------------------------------------------------
+  !> @brief Computes the value of a box spline
+  !> @details This function computes the value of a box spline of degree
+  !> deg at the point (x1,x2)
+  !> @param[in] spline box spline which contains the reference hexagonal mesh
+  !> @param[in] x1 real containing first coordinate of point
+  !> @param[in] x2 real containing second coordinate of point
+  !> @param[in] deg real containing the degree of the spline to be computed
+  !> @return the value of the box spline at (x1,x2)
   function compute_box_spline(spline, x1, x2, deg) result(val)
     type(sll_box_spline_2d), pointer    :: spline
     sll_real64, intent(in) :: x1
@@ -587,7 +596,6 @@ contains  ! ****************************************************************
   end function hex_interpolate_value
 
 
-  
   !---------------------------------------------------------
   !> @brief Computes indices of non null splines on a given cell
   !> @details The function returns for a given cell and a certain degree

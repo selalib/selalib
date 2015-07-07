@@ -487,12 +487,15 @@ end subroutine initialize_poisson_solver
 ! mors2  - tableau des numeros des termes des matrices "morse"         
 subroutine morse(npoel1, npoel2, ntri, nbt, nbs, mors1, mors2)
 
-sll_int32, intent(in) :: nbs, nbt
-sll_int32, dimension(:), intent(in) :: npoel1
-sll_int32, dimension(:), intent(in) :: npoel2
-sll_int32, dimension(3,nbt), intent(in) :: ntri
-sll_int32, dimension(:),   intent(out):: mors1, mors2
-sll_int32, dimension(20)  :: ilign
+sll_int32,                   intent(in)  :: nbt
+sll_int32,                   intent(in)  :: nbs
+sll_int32, dimension(:),     intent(in)  :: npoel1
+sll_int32, dimension(:),     intent(in)  :: npoel2
+sll_int32, dimension(3,nbt), intent(in)  :: ntri
+sll_int32, dimension(:),     intent(out) :: mors1
+sll_int32, dimension(:),     intent(out) :: mors2
+sll_int32, dimension(20)                 :: ilign
+
 sll_int32 :: l, itest1, itest2, js1, js2, is1, is2, is3, numel
 sll_int32 :: iel, nlign, nel, is, im, k
 
@@ -827,13 +830,8 @@ end do
 
 do is=1,this%ndiric
    nref=this%mesh%refs(this%ifron(is))
-   sdmb(this%ifron(is))=this%potfr(nref)
+   sdmb(this%ifron(is))=this%potfr(nref)*grandx
 end do
-
-do is=1,this%ndiric
-   sdmb(this%ifron(is))=sdmb(this%ifron(is))*grandx
-end do
-
 
 call desrem(this%iprof, this%grgr,sdmb,this%mesh%num_nodes,phi)
 

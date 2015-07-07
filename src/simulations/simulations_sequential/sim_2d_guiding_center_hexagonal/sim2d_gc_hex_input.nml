@@ -21,6 +21,14 @@
  cells_stp = 20
 /
 
+&test_case
+  ! Different models can be done with this simulation
+  ! choices are:
+  !        - "CIRCULAR" (for the circular advection)
+  !        - "GC" (for the guiding center model)
+  model_name="CIRCULAR"
+/
+
 &initial_function
   epsilon = 0.001
 /
