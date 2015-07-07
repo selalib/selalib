@@ -380,7 +380,7 @@ contains
     !    |
     !    +--0-----1-->
     ref_pts(:,1) = (/ 0._f64,          0.0_f64 /)
-    ref_pts(:,2) = (/ 1./sqrt(3._f64), 0.5_f64 /)
+    ref_pts(:,2) = (/ sqrt(3._f64)*0.5_f64, 0.5_f64 /)
     ref_pts(:,3) = (/ 0._f64,          1.0_f64 /)
     volume = 1._f64 / sll_sqrt3 ! volume of the reference triangle
 

@@ -1100,7 +1100,8 @@ base_field_pointer => rho
 select type( type_field => base_field_pointer)
 
 class is (sll_scalar_field_2d_discrete)
-
+  
+  
   coeff_rho => type_field%interp_2d%get_coefficients()
             
   do j=1,es%num_cells2+1
