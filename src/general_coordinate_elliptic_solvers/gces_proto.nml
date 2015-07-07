@@ -1,0 +1,18 @@
+&params
+  num_cells1 = 128
+  num_cells2 = 128 
+  spline_degree1 = 3
+  spline_degree2 = 3
+  mode1 = 2
+  mode2 = 2
+  alpha1 = 0.9
+  alpha2 = 0.9
+  eta1_min = 0.
+  eta1_max = 6.2831853071795864770
+  eta2_min = 0.
+  eta2_max = 6.2831853071795864770
+  rho_case = "SLL_DISCRETE"
+  !rho_case = "SLL_ANALYTIC"
+  !rho_interp2d_case = "SLL_ARBITRARY_DEGREE_SPLINES"
+  rho_interp2d_case = "SLL_CUBIC_SPLINES"
+/

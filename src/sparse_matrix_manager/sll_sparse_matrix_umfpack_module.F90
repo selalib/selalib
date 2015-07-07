@@ -24,28 +24,28 @@ use mod_umfpack
 use qsort_partition
 
 
-  !> @brief type for CSR format
-  type sll_csr_matrix
-    sll_int32 :: num_rows !< number of rows
-    sll_int32 :: num_cols !< number of columns
-    sll_int32 :: num_nz !< number of non zero elements
-    sll_int32, dimension(:), pointer :: row_ptr
-    sll_int32, dimension(:), pointer :: col_ind
-    sll_real64, dimension(:), pointer :: val
-        !................
-    !logical :: ol_use_mm_format
-    sll_int32, dimension(:), pointer :: opi_i
-        !................
-    ! work arrays for Umfpack
-    sll_int32, dimension(:), pointer :: Ai, Ap
-    integer(umf_void) :: umf_symbolic
-    integer(umf_void) :: umf_numeric
-    sll_real64, dimension(:), pointer :: umf_control
-  end type sll_csr_matrix
+!> @brief type for CSR format
+type sll_csr_matrix
 
-  interface sll_delete
-     module procedure delete_csr_matrix
-  end interface sll_delete
+  sll_int32                         :: num_rows !< number of rows
+  sll_int32                         :: num_cols !< number of columns
+  sll_int32                         :: num_nz   !< number of non zero elements
+  sll_int32,  dimension(:), pointer :: row_ptr
+  sll_int32,  dimension(:), pointer :: col_ind
+  sll_real64, dimension(:), pointer :: val
+  sll_int32,  dimension(:), pointer :: opi_i
+  sll_int32,  dimension(:), pointer :: Ai
+  sll_int32,  dimension(:), pointer :: Ap
+
+  integer(umf_void)                 :: umf_symbolic
+  integer(umf_void)                 :: umf_numeric
+  sll_real64, dimension(:), pointer :: umf_control
+
+end type sll_csr_matrix
+
+interface sll_delete
+  module procedure delete_csr_matrix
+end interface sll_delete
 
 contains
 
@@ -231,7 +231,7 @@ contains
     print*,'num_cols mat, num_cols mat_tot',mat_a%num_cols , mat%num_cols 
 
     
-    SLL_ALLOCATE(mat%row_ptr(mat%num_rows + 1),ierr)
+    SLL_ALLOCATE(mat%row_ptr(mat%num_rows+1),ierr)
     SLL_ALLOCATE(mat%col_ind(mat%num_nz),ierr)
     SLL_ALLOCATE(mat%val(mat%num_nz),ierr)
     mat%val(:) = 0.0_f64
@@ -370,7 +370,6 @@ contains
       mat%umf_numeric, &
       mat%umf_control, &
       info)
-
     
   end subroutine sll_factorize_csr_matrix
   
@@ -506,22 +505,25 @@ contains
                         ! li_A_1 IS THE ROW NUM, li_A_2 THE COLUMN NUM
                         ! INITIALIZATION OF THE SPARSE MATRIX
                         api_columns(li_A_1, 0) = api_columns(li_A_1, 0) + 1
-                        api_columns(li_A_1, api_columns(li_A_1, 0)) = li_A_2
-
+                
                         ! resizing the array
                         lpi_size(1) = SIZE(api_columns, 1)
                         lpi_size(2) = SIZE(api_columns, 2)
-                        if (lpi_size(2) < api_columns(li_A_1, 0)) then
-                            ALLOCATE(lpi_columns(lpi_size(1), lpi_size(2)))
+                        if (lpi_size(2) < api_columns(li_A_1, 0)+1) then
+                            ALLOCATE(lpi_columns(lpi_size(1), 0:lpi_size(2)-1))
                             lpi_columns = api_columns
 
                             DEALLOCATE(api_columns)
 
-                            ALLOCATE(api_columns(lpi_size(1), 2 * lpi_size(2)))
-                            api_columns(1:lpi_size(1), 1:lpi_size(2)) = lpi_columns(1:lpi_size(1), 1:lpi_size(2))
+                            ALLOCATE(api_columns(lpi_size(1), 0:2 * lpi_size(2)))
+                            api_columns(1:lpi_size(1), 0:lpi_size(2)-1) = lpi_columns(1:lpi_size(1), 0:lpi_size(2)-1)
 
                             DEALLOCATE(lpi_columns)
                         end if
+                        print *,'api_columns(li_A_1,0)=',api_columns(li_A_1,0)
+                        print *,'lpi_size(2)=',lpi_size(2)
+                        call flush()
+                        api_columns(li_A_1, api_columns(li_A_1, 0)) = li_A_2
 
 
                     end if

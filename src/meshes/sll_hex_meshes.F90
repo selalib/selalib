@@ -812,6 +812,69 @@ contains
   end function cells_to_origin
 
 
+  !---------------------------------------------------------------------------
+  !> @brief Computes the type of triangle of a given cell
+  !> @details Takes a given cell and determines if it is of type II if
+  !> is oriented as the cell#2 (triangle of edges: (0,0) (sqrt(3)/2, 1/2) (0,1))
+  !> or of type I otherwise (triangle of edges: (0,0) (-sqrt(3)/2, 1/2) (0,1))
+  !> @param[IN] num_ele integer index of the element
+  !> @param[IN] mesh hexagonal mesh
+  !> @param[OUT] val integer such as: val = 1 if triangle of type I, 2 if triangle
+  !> of type II, or -1 if there was an error
+  function cell_type(mesh, num_ele) result(val)
+    sll_int32, intent(in)  :: num_ele
+    class(sll_hex_mesh_2d) :: mesh
+    sll_int32  :: val
+    sll_int32  :: k1
+    sll_int32  :: k2
+    sll_int32  :: num_hex
+    sll_int32  :: lower_index
+    sll_real64 :: x1
+    sll_real64 :: y1
+    sll_real64 :: x2
+
+    !Initialization:
+    val = -1
+    
+    ! Getting center coordinates
+    x1 = mesh%center_cartesian_coord(1, num_ele)
+    y1 = mesh%center_cartesian_coord(2, num_ele)
+    ! Getting hexagonal coordinates
+    k1 = cart_to_hex1(mesh, x1, y1)
+    k2 = cart_to_hex2(mesh, x1, y1)
+    !Getting number of cells to origin:
+    num_hex = cells_to_origin(k1,k2)
+
+    ! If the cell is not on the boundary, we can determine the
+    ! type of cell only by pairity of the cell index. If it's
+    ! even then is of type II, if it's odd then it's of type I.
+    if ((num_hex .lt. mesh%num_cells).and.(mesh%num_cells.ne.1)) then
+       if (modulo(num_ele, 2) .eq. 1) then
+          val = 1
+       else
+          val = 2
+       end if
+    elseif (mesh%num_cells.eq.1) then
+       if ((num_ele.eq.1).or.(num_ele.eq.4).or.(num_ele.eq.6)) then
+          val = 1
+       else
+          val = 2
+       end if
+    else
+       ! we just see if the center of the cell is to the
+       ! right or left of the lower point
+       lower_index = hex_to_global(mesh, k1, k2)
+       x2 = mesh%cartesian_coord(1, lower_index)
+       if(x2 < x1) then 
+          val = 2
+       elseif (x2 > x1) then
+          val = 1
+       end if
+    end if
+                 
+  end function cell_type
+
+  
   !---------------------------------------------------------
   !> @brief Transform hexagonal coordinates to global index. 
   !> @details Takes the coordinates (k1,k2) on the (r1,r2) basis and
@@ -1323,15 +1386,14 @@ contains
   !> resp. the mesh's cells, edges and BC in the format of CAID and pigasus.
   !> This is was written in order to have a Poisson solver for the hex-mesh
   !> @param mesh hex-mesh that will be described
-  subroutine write_caid_files(mesh)
+  subroutine write_caid_files(mesh, spline_deg)
     type(sll_hex_mesh_2d), pointer :: mesh
     character(len=20),   parameter :: name_nodes = "boxsplines_nodes.txt"
     character(len=23),   parameter :: name_elemt = "boxsplines_elements.txt"
     character(len=24),   parameter :: name_diri  = "boxsplines_dirichlet.txt"
+    character(len=32),   parameter :: name_ele_i = "boxsplines_elements_internal.txt"
     sll_real64 :: x1, y1
     sll_real64 :: x_ver1, y_ver1
-    sll_real64 :: x_ver2, y_ver2
-    sll_real64 :: x_ver3, y_ver3
     sll_real64 :: a11, a12, a21, a22
     sll_real64 :: b1, b2
     sll_real64 :: scale
@@ -1342,10 +1404,13 @@ contains
     sll_int32  :: nen
     sll_int32  :: num_pts_tot
     sll_int32  :: num_ele
+    sll_int32  :: ele_int
     sll_int32  :: nei1, nei2, nei3
     sll_int32  :: num_cells_to_origin
     sll_int32  :: boundary
     sll_int32  :: dirichlet
+    sll_int32  :: type
+    sll_int32  :: dist
     sll_int32,  parameter :: out_unit=20
 
     ! Writing the nodes file....................
@@ -1381,8 +1446,7 @@ contains
     num_ele = mesh%num_triangles
     write(out_unit, "(i6)") num_ele
 
-    ! The (maximum) spline degree and scale are fix here
-    spline_deg = 1
+    ! The scale is fix here
     scale = 1._f64
     !... we write its global number
     write (out_unit, "(i6)") spline_deg
@@ -1391,8 +1455,11 @@ contains
     do i=1, num_ele
        !... we write its global number
        write (out_unit, "(i6)") i
+       !... we write its type (1 or 2)
+       type = cell_type(mesh, i)
+       write (out_unit, "(i6)") type
        !... we write the spline degree
-       write(out_unit, "((i6),(a,1x),(i6))") spline_deg, ",", spline_deg
+       write(out_unit, "(i6)") spline_deg
        !... we write the scale of the element
        write(out_unit, "((f22.17),(a,1x))",advance='no') scale, ","
        !... we write its neighbours
@@ -1404,13 +1471,18 @@ contains
        call get_cell_vertices_index(x1, y1, mesh, e1, e2, e3)
        write(out_unit, "((i6),(a,1x),(i6),(a,1x),(i6))") e1, ",",e2,",", e3
        !... we write the coordinate transformation (*)
+       if (type == 1) then
+          a11 = 0.5_f64 / mesh%num_cells
+          a12 = -sll_sqrt3/2._f64 / mesh%num_cells
+          a21 =  sll_sqrt3/2._f64 / mesh%num_cells
+          a22 = 0.5_f64 / mesh%num_cells
+       else
+          a11 = 1._f64 / mesh%num_cells
+          a12 = 0._f64 / mesh%num_cells
+          a21 = 0._f64 / mesh%num_cells
+          a22 = 1._f64 / mesh%num_cells
+       end if
        x_ver1 = mesh%cartesian_coord(1, e1); y_ver1 = mesh%cartesian_coord(2, e1)
-       x_ver2 = mesh%cartesian_coord(1, e2); y_ver2 = mesh%cartesian_coord(2, e2)
-       x_ver3 = mesh%cartesian_coord(1, e3); y_ver3 = mesh%cartesian_coord(2, e3)
-       a11 = (2._f64 * x_ver2 - x_ver1 - x_ver3) / sll_sqrt3
-       a12 = x_ver3 - x_ver1
-       a21 = (2._f64 * y_ver2 - y_ver1 - y_ver3) / sll_sqrt3
-       a22 = y_ver3 - y_ver1
        b1  = x_ver1
        b2  = y_ver1
        write(out_unit, "(5((f22.17), (a,1x)), (f22.17))") a11, ",", a12, ",", a21, ",", a22, ",", b1, ",", b2
@@ -1418,6 +1490,80 @@ contains
     print *, ""
     close(out_unit)
 
+    ! Writing the INTERNAL elements file....................
+    ! File containing general information about the INTERNAL* cells and
+    ! the transformation.
+    ! (*) By Internal we mean all cells which splines basis are contained
+    ! within the domain
+    open (unit=out_unit,file=name_ele_i,action="write",status="replace")
+
+    ! We first write the total number of cells/elements:
+    num_ele = mesh%num_triangles
+    ! We compute the number of elements that are fully contained:
+    ele_int = 6 * (mesh%num_cells - spline_deg + 1) * (mesh%num_cells - spline_deg + 1)
+ 
+    write(out_unit, "(i6)") ele_int
+
+    ! The scale is fixed here
+    scale = 1._f64
+    !... we write its global number
+    write (out_unit, "(i6)") spline_deg
+
+    ! For every element...
+    do i=1, num_ele
+       ! before writing the information we want to test if the elements is
+       ! not in the boundary.
+       ! For this first we get the vertices of the cell:
+       x1 = mesh%center_cartesian_coord(1, i)
+       y1 = mesh%center_cartesian_coord(2, i)
+       call get_cell_vertices_index(x1, y1, mesh, e1, e2, e3)
+
+       ! and we get the distance to the origin:
+       dist = 0
+       dist = dist + cells_to_origin(mesh%hex_coord(1, e1), mesh%hex_coord(2, e1))
+       dist = dist + cells_to_origin(mesh%hex_coord(1, e2), mesh%hex_coord(2, e2))
+       dist = dist + cells_to_origin(mesh%hex_coord(1, e3), mesh%hex_coord(2, e3))
+
+       if (dist .lt. (mesh%num_cells - spline_deg + 1)*3 ) then
+ 
+          !... we write its global number
+          write (out_unit, "(i6)") i
+          !... we write its type (1 or 2)
+          type = cell_type(mesh, i)
+          write (out_unit, "(i6)") type
+          !... we write the spline degree
+          write(out_unit, "(i6)") spline_deg
+          !... we write the scale of the element
+          write(out_unit, "((f22.17),(a,1x))",advance='no') scale, ","
+          !... we write its neighbours
+          call get_neighbours(mesh, i, nei1, nei2, nei3)
+          write(out_unit, "(3((i6),(a,1x)))",advance='no') nei1, ",", nei2, ",", nei3, ","
+          !... we write the indices of the edges
+          write(out_unit, "((i6),(a,1x),(i6),(a,1x),(i6))") e1, ",",e2,",", e3
+          !... we write the coordinate transformation (*)
+          if (type == 1) then
+             a11 = 0.5_f64 / mesh%num_cells
+             a12 = -sll_sqrt3/2._f64 / mesh%num_cells
+             a21 =  sll_sqrt3/2._f64 / mesh%num_cells
+             a22 = 0.5_f64 / mesh%num_cells
+          else
+             a11 = 1._f64 / mesh%num_cells
+             a12 = 0._f64 / mesh%num_cells
+             a21 = 0._f64 / mesh%num_cells
+             a22 = 1._f64 / mesh%num_cells
+          end if
+          x_ver1 = mesh%cartesian_coord(1, e1)
+          y_ver1 = mesh%cartesian_coord(2, e1)
+          b1  = x_ver1
+          b2  = y_ver1
+          write(out_unit, "(5((f22.17), (a,1x)), (f22.17))") &
+               a11, ",", a12, ",", a21, ",", a22, ",", b1, ",", b2
+       end if
+    end do
+    print *, ""
+    close(out_unit)
+
+    
     ! (*) The coordinate transformation : Is the transformation from the reference
     ! element to the current cell. As the reference element is the first cell of an
     ! hexagonal mesh of radius 1, the transformation is only a rotation followed by
@@ -1434,7 +1580,7 @@ contains
     write(out_unit, "(i6)") num_ele
 
     !The number of elements non-null is fixed here, this should be changed (TODO)
-    nen = 3
+    nen = 3*spline_deg*spline_deg
     dirichlet = 1
 
     ! For every element...

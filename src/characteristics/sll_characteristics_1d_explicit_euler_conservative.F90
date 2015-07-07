@@ -172,6 +172,9 @@ contains
       case (SLL_PERIODIC)
         output_min = output(Npts-1) - (eta_max-eta_min)
         output_max = output(1) + (eta_max-eta_min)
+        !print *,"output_min=",output_min
+        !print *,"output_max=",output_max
+        !stop
       case (SLL_SET_TO_LIMIT)
         output_min = 2._f64*eta_min-output(1)
         output_max = 2._f64*eta_max-output(Npts-1)
