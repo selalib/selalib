@@ -241,6 +241,12 @@ contains
     sll_int32 :: rho_degree1
     sll_int32 :: rho_degree2
     class(sll_interpolator_2d_base), pointer   :: interp_rho
+    logical :: precompute_rhs
+    logical :: with_constraint
+    logical :: with_constraint_loc    
+    logical :: zero_mean
+    logical :: zero_mean_loc    
+    sll_real64 :: eps_penalization
 
     !boundaries conditions
     !character(len=256) :: boundaries_conditions
@@ -287,7 +293,6 @@ contains
     character(len=256)      :: filename_loc
     logical :: feet_inside1 
     logical :: feet_inside2
-    logical :: precompute_rhs
 
     !here we do all the initialization
     !in future, we will use namelist file
@@ -351,7 +356,10 @@ contains
       precompute_rhs, &
       interp_rho_case, &
       rho_degree1, &
-      rho_degree2    
+      rho_degree2, &
+      with_constraint, &
+      eps_penalization, &
+      zero_mean    
       
      namelist /boundaries/ &
       bc_interp2d_eta1, &
@@ -431,6 +439,9 @@ contains
     rho_degree1 = 3
     rho_degree2 = 3
     precompute_rhs = .false.
+    with_constraint = .true.
+    eps_penalization = 0._f64
+    zero_mean = .true.
      
     !mudpack_method = SLL_NON_SEPARABLE_WITH_CROSS_TERMS  
 #ifdef MUDPACK
@@ -1321,11 +1332,17 @@ contains
         sim%b21 = 0._f64
         sim%b1  = 0._f64
         sim%b2  = 0._f64
-        if (sim%bc_eta1_left == SLL_PERIODIC .and. sim%bc_eta1_right == SLL_PERIODIC .and. &
-             sim%bc_eta2_left== SLL_PERIODIC .and. sim%bc_eta2_right== SLL_PERIODIC) then
-            sim%c   = 0.e-8_f64  ! entre 1e-8 et 1e-7
+        if ((sim%bc_eta1_left == SLL_PERIODIC .and. sim%bc_eta1_right == SLL_PERIODIC .and. &
+             sim%bc_eta2_left== SLL_PERIODIC .and. sim%bc_eta2_right== SLL_PERIODIC).or. &
+             (sim%bc_eta1_left == SLL_NEUMANN .and. sim%bc_eta1_right == SLL_NEUMANN .and. &
+             sim%bc_eta2_left== SLL_NEUMANN .and. sim%bc_eta2_right== SLL_NEUMANN)) then
+            sim%c   = eps_penalization  ! entre 1e-8 et 1e-7
+            with_constraint_loc = with_constraint
+            zero_mean_loc = zero_mean
         else
             sim%c   = 0._f64
+            with_constraint_loc = .false.
+            zero_mean_loc = .false.
         endif    
         
         sim%poisson => new_poisson_2d_elliptic_solver( &
@@ -1354,7 +1371,9 @@ contains
          sim%b2, & 
          sim%c, &
          interp_rho=interp_rho, &
-         precompute_rhs=precompute_rhs ) 
+         precompute_rhs=precompute_rhs, &
+         with_constraint = with_constraint_loc, &
+         zero_mean = zero_mean_loc ) 
       case default
         print *,'#bad poisson_case',poisson_solver
         print *,'#not implemented'
@@ -1921,10 +1940,12 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
     sll_real64, dimension(:), allocatable  :: l1_array
     sll_real64, dimension(:), allocatable  :: l2_array
     sll_real64, dimension(:), allocatable  :: e_array
+    sll_real64, dimension(:), allocatable  :: array
     
     sll_real64 :: eta1
     sll_real64 :: eta2
     sll_real64, dimension(:),allocatable :: data
+    sll_real64, dimension(:,:),allocatable :: data_2d
     sll_real64, dimension(1:2,1:2) :: jac_m
     sll_int32 :: i1
     sll_int32 :: i2
@@ -1938,7 +1959,10 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
     sll_real64 :: delta_eta2
     sll_real64 :: dphi_eta1
     sll_real64 :: dphi_eta2
-    sll_int32 :: ierr 
+    sll_int32 :: ierr
+    sll_real64 :: val
+    sll_real64 :: int_phi 
+    sll_real64 :: int_jac 
 
     
     Nc_eta1 = mesh_2d%num_cells1
@@ -1957,6 +1981,8 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
     SLL_ALLOCATE(l1_array(Nc_eta2+1),ierr)
     SLL_ALLOCATE(l2_array(Nc_eta2+1),ierr)
     SLL_ALLOCATE(e_array(Nc_eta2+1),ierr)
+    SLL_ALLOCATE(array(Nc_eta2+1),ierr)
+    SLL_ALLOCATE(data_2d(Nc_eta1+1,Nc_eta2+1),ierr)
  
     linf  = 0.0_f64
     !l1    = 0.0_f64
@@ -1996,6 +2022,18 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
       e_array(i2) = compute_integral_trapezoid_1d(data, Nc_eta1+1, delta_eta1)
 
       do i1=1,Nc_eta1+1
+        eta1 = eta1_min + (i1-1)* delta_eta1
+        jac_m  =  transformation%jacobian_matrix(eta1,eta2)
+        dphi_eta1 = -A2(i1,i2)* transformation%jacobian(eta1,eta2)
+        dphi_eta2 = A1(i1,i2)* transformation%jacobian(eta1,eta2)
+        data(i1) = abs( jac_m(2,2)*dphi_eta1 - jac_m(2,1)*dphi_eta2 ) + &
+          abs( -jac_m(1,2)*dphi_eta1 + jac_m(1,1)*dphi_eta2 )
+        !/abs(transformation%jacobian(eta1,eta2)) 
+      enddo
+      array(i2) = compute_integral_trapezoid_1d(data, Nc_eta1+1, delta_eta1)
+
+
+      do i1=1,Nc_eta1+1
        linf = max(linf,abs(f(i1,i2)))
       enddo
          
@@ -2006,6 +2044,48 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
     l2 = compute_integral_trapezoid_1d(l2_array, Nc_eta2+1, delta_eta2)
     l2 = sqrt(l2)
     e = compute_integral_trapezoid_1d(e_array, Nc_eta2+1, delta_eta2)
+    val = compute_integral_trapezoid_1d(array, Nc_eta2+1, delta_eta2)
+
+
+    !new diag
+    do i2 = 1, Nc_eta2+1
+      eta2 = eta2_min + (i2-1)* delta_eta2 
+      do i1=1,Nc_eta1+1
+        eta1 = eta1_min + (i1-1)* delta_eta1
+        data_2d(i1,i2) = phi(i1,i2)*abs(transformation%jacobian(eta1,eta2))
+      enddo
+    enddo 
+    
+    int_phi = compute_integral_trapezoid_2d( &
+      data_2d, &
+      Nc_eta1+1, &
+      Nc_eta2+1, &
+      delta_eta1, &
+      delta_eta2)
+
+    do i2 = 1, Nc_eta2+1
+      eta2 = eta2_min + (i2-1)* delta_eta2 
+      do i1=1,Nc_eta1+1
+        eta1 = eta1_min + (i1-1)* delta_eta1
+        data_2d(i1,i2) = abs(transformation%jacobian(eta1,eta2))
+      enddo
+    enddo 
+
+
+    int_jac = compute_integral_trapezoid_2d( &
+      data_2d, &
+      Nc_eta1+1, &
+      Nc_eta2+1, &
+      delta_eta1, &
+      delta_eta2)
+
+
+    do i2 = 1, Nc_eta2+1
+      do i1=1,Nc_eta1+1
+        data_2d(i1,i2) = phi(i1,i2) - int_phi/int_jac
+      enddo
+    enddo 
+
 
     !mass = mass*delta_eta2
     !l1 = l1*delta_eta2
@@ -2020,7 +2100,11 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
       mass, &
       e, &      
       maxval(abs(phi(1:Nc_eta1+1,1:Nc_eta2+1))), &
-      maxval(abs(fone(1:Nc_eta1+1,1:Nc_eta2+1)-1._f64))
+      val, &
+      maxval(abs(fone(1:Nc_eta1+1,1:Nc_eta2+1)-1._f64)), &
+      maxval(abs(data_2d)), &
+      int_phi, &
+      int_jac
    
     
   end subroutine time_history_diagnostic_collela
@@ -2554,6 +2638,50 @@ subroutine sll_DSG( eta1_min,eta1_max, eta2_min,eta2_max,n_eta1,n_eta2, f )
             
   end subroutine delete_guiding_center_2d_curvilinear
 
+  function compute_integral_trapezoid_2d( &
+    input, &
+    Npts1, &
+    Npts2, &
+    delta1, &
+    delta2) &
+    result (res)
+    sll_real64, dimension(:,:), intent(in) :: input
+    sll_int32, intent(in) :: Npts1
+    sll_int32, intent(in) :: Npts2
+    sll_real64, intent(in) :: delta1
+    sll_real64, intent(in) :: delta2
+    sll_real64 :: res
+    
+    sll_int32 :: i
+    sll_real64, dimension(:), allocatable :: array
+    sll_int32 :: ierr
+    
+    
+    if(size(input,1)<Npts1)then
+      print *,'size(input,1)=',size(input,1)
+      print *,'Npts1=',Npts1
+      SLL_ERROR('compute_integral_trapezoid_2d&
+      &','bad size1')
+    endif
+    if(size(input,2)<Npts2)then
+      print *,'size(input,2)=',size(input,2)
+      print *,'Npts2=',Npts2
+      SLL_ERROR('compute_integral_trapezoid_2d&
+      &','bad size2')
+    endif
 
+    SLL_ALLOCATE(array(Npts2),ierr)    
+
+    do i=1,Npts2
+      array(i) = compute_integral_trapezoid_1d( &
+        input(1:Npts1,i),&
+        Npts1, &
+        delta1)
+    enddo    
+    res = compute_integral_trapezoid_1d( &
+      array,&
+      Npts2, &
+      delta2)
+  end function compute_integral_trapezoid_2d
 
 end module sll_simulation_2d_guiding_center_curvilinear_module
