@@ -465,7 +465,6 @@ contains
     thread_id = 0
     save_nb = sim%num_iterations/10
 
-    print *, "AA 60"
     SLL_ALLOCATE( rho1d_send(1:(ncx+1)*(ncy+1)),    ierr)
     SLL_ALLOCATE( rho1d_receive(1:(ncx+1)*(ncy+1)), ierr)
 
@@ -478,8 +477,6 @@ contains
     SLL_ALLOCATE(diag_TOTenergy(0:sim%num_iterations-1), ierr)
     SLL_ALLOCATE(diag_AccMem(0:sim%num_iterations-1, 1:2), ierr)
 
-    print *, "AA 70"
-
     sort_nb = 10
     dt = sim%dt
     dt_q_over_m = dt * sim%particle_group%species%q_over_m()
@@ -490,16 +487,14 @@ contains
     rdy = 1._f64/sim%mesh_2d%delta_eta2
 
     !  ----------------------------------------------------------------------------------------------------
-    !  ------
-    !  ------  PREPARING THE TIME LOOP:
-    !  ------
-    !  ------  - begins with:
-    !  ------      * (x,y)^0_k, (vx, vy)^0_k  stored in particles
+    !>          The time loop is prepared by computing the E field
+    !>
+    !>          - starting from
+    !>              * (x,y)^0_k, (vx, vy)^0_k stored in the particle group
     !
-    !  ------  - ends with:
-    !  ------      * E^0 stored in sim%E1, sim%E2
-    !  ------      * (x,y)^0_k, (vx, vy)^{-1/2}_k  stored in particles
-    !  ------
+    !>          - we ends with
+    !>              * E^0 stored in sim%E1, sim%E2
+    !>              * (x,y)^0_k, (vx, vy)^{-1/2}_k  stored in the the particle group
     !  ----------------------------------------------------------------------------------------------------
 
     !! -- --  ?? [begin]  -- --
@@ -540,9 +535,10 @@ contains
                         sim%rho, 'rho_init_standPUSH', it, ierr )
     endif
 
-    !! -- --  Poisson solver (computing E^0) -- --
+    !> the initial field E^0 is obtained with a call to the Poisson solver. Note that here sim%rho has the proper sign
+    !> (hence there is no need to multiply it by an additional physical constant)
 
-    call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, -sim%rho )         !  I don't like this - sign...
+    call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
 
     if (sim%my_rank == 0) then
     it = 0
@@ -631,19 +627,18 @@ contains
     t2 = omp_get_wtime()!!   call sll_set_time_mark(t2)
 #endif
 
+
+
+
     !  ----------------------------------------------------------------------------------------------------
-    !  ------
-    !  ------  TIME LOOP
-    !  ------
-    !  ------  - begins with:
-    !  ------      * E^n stored in sim%E1, sim%E2
-    !  ------      * (x,y)^n_k, (vx, vy)^{n-1/2}_k  stored in particles
-    !  ------    (where n = it)
-    !  ------
-    !  ------  - ends with:
-    !  ------      * E^{n+1} stored in sim%E1, sim%E2
-    !  ------      * (x,y)^{n+1}_k, (vx, vy)^{n+1/2}_k  stored in particles
-    !  ------
+    !>          Content of the time loop:
+    !>          - starting from
+    !>              * E^n stored in sim%E1, sim%E2
+    !>              * (x,y)^n_k, (vx, vy)^{n-1/2}_k  stored in the particle group
+    !>            (with n = it)
+    !>          - we end with
+    !>              * E^{n+1} stored in sim%E1, sim%E2
+    !>              * (x,y)^{n+1}_k, (vx, vy)^{n+1/2}_k  stored in the particle group
     !  ----------------------------------------------------------------------------------------------------
 
     ! Time statistics
@@ -681,6 +676,8 @@ contains
        !  ------
        !  ------------------------------------------------------------------
 
+       !>           Particles are pushed as follows:
+
        some_val = 0.0_f64
 
        !$omp parallel PRIVATE(x,y,x1,y1,Ex,Ey,gi,tmp1,tmp2,tmp5,tmp6,off_x,off_y,ic_x,ic_y,thread_id,p_guard,q_accum)
@@ -698,8 +695,9 @@ contains
 
       do k = 1, sim%number_particles
 
-         !! -- --  v-push (v^{n-1/2} -> v^{n+1/2}  using  E^n)  [begin]  -- --
+         ! -- --  v-push [begin]  -- --
 
+         !>     * v-push: using E^n  we compute  v^{n-1/2} -> v^{n+1/2}
 
          ! particle position
          coords=sim%particle_group%get_x(k) ! [[selalib:src/particle_methods/sll_pic_base.F90::get_v]]
@@ -732,7 +730,9 @@ contains
 
          !! -- --  v-push [end]  -- --
 
-         !! -- --  x-push (x^n -> x^{n+1} using v^{n+1/2})  [begin]  -- --
+         !! -- --  x-push [begin]  -- --
+
+         !>     * x-push: using v^{n+1/2}  we compute x^n -> x^{n+1}
 
          coords(1) = pp_x + dt * pp_vx
          coords(2) = pp_y + dt * pp_vy
@@ -794,7 +794,10 @@ contains
 
       !! -- --  Poisson solver (computing E^{n+1}) -- --
 
-      call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, -sim%rho )      !  todo: replace - sign by Species charge...
+      !> In the time loop, the field E^{n+1} is obtained with a call to the Poisson solver.
+      !> Again, sim%rho has the proper sign so that we do not need to multiply it by an additional physical constant.
+
+      call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
 
       !! -- --  diagnostics (plotting) [begin]  -- --
 
