@@ -80,7 +80,7 @@ contains
     logical     :: UseCubicSplines
     sll_int32   :: NC_X,  NC_Y
     sll_real64  :: XMIN, XMAX, YMIN, YMAX
-    sll_real64  :: KX
+    sll_real64  :: KX, KY
     sll_real64  :: er, psi, omega_i, omega_r
     sll_int32, parameter  :: input_file = 99
     sll_int32, dimension(:), allocatable  :: rand_seed
@@ -93,6 +93,7 @@ contains
                           THERM_SPEED, dt, number_iterations, &
                           QoverM, ALPHA, UseCubicSplines
     namelist /grid_dims/  NC_X, NC_Y, XMIN, KX, YMIN, YMAX
+!!$    namelist /grid_dims/  NC_X, NC_Y, XMIN, KX, KY, YMIN, YMAX! le cas LANDAU 2D en X
     namelist /elec_params/ er, psi, omega_r, omega_i
     open(unit = input_file, file=trim(filename),IOStat=IO_stat)
     if( IO_stat /= 0 ) then
@@ -109,6 +110,7 @@ contains
 
 
     XMAX = (2._f64*sll_pi/KX)
+!!$    YMAX = (2._f64*sll_pi/KY)! le cas LANDAU 2D en X
     sim%use_cubic_splines = UseCubicSplines
     sim%thermal_speed_parts = THERM_SPEED
     sim%parts_number = NUM_PARTICLES
@@ -146,6 +148,8 @@ contains
     enddo
     
     pa_gr => sim%part_group
+!!$    call sll_initial_particles_4d_L2d( sim%thermal_speed_parts, & 
+!!$                                   ALPHA, KX, KY, sim%m2d,     &
     call sll_initial_particles_4d( sim%thermal_speed_parts, & 
                                    ALPHA, KX, sim%m2d,     &
                                    sim%parts_number,        &
@@ -227,7 +231,7 @@ contains
     type(field_accumulator_cell), dimension(:), pointer :: accumE
     type(field_accumulator_CS), dimension(:), pointer :: accumE_CS
     type(sll_particle_4d_guard), dimension(:), pointer :: p_guard
-    sll_real64, dimension(:,:), allocatable  ::  diag_energy
+    sll_real64, dimension(:,:), allocatable  ::  diag_energy!, diag_energyL2D
     sll_real64, dimension(:),   allocatable  ::  diag_TOTmoment
     sll_real64, dimension(:),   allocatable  ::  diag_TOTenergy
     sll_real64, dimension(:,:), allocatable :: diag_AccMem! a memory buffer
@@ -243,7 +247,7 @@ contains
     sll_int32  :: sort_nb
     sll_real64 :: some_val, une_cst
     sll_real64 :: val_lee, exval_ee
-    sll_real64 :: tot_ee, val_ee!val2
+    sll_real64 :: tot_ee, val_ee
     sll_real64 :: omega_i, omega_r, psi
     character(len=2) :: nom_thnb
     sll_real64 :: bors
@@ -262,9 +266,10 @@ contains
     SLL_ALLOCATE( sim%E2(1:ncx+1,1:ncy+1), ierr )
     SLL_ALLOCATE(phi(1:ncx+1, 1:ncy+1), ierr)
     SLL_ALLOCATE(diag_energy(1:save_nb, 1:5), ierr)
+!    SLL_ALLOCATE(diag_energyL2D(1:save_nb, 1:3), ierr)
 !!$    SLL_ALLOCATE(diag_TOTmoment(1:save_nb), ierr)
 !!$    SLL_ALLOCATE(diag_TOTenergy(0:sim%num_iterations-1), ierr)
-    SLL_ALLOCATE(diag_AccMem(0:sim%num_iterations-1, 1:2), ierr)
+!    SLL_ALLOCATE(diag_AccMem(0:sim%num_iterations-1, 1:2), ierr)
 
     sort_nb = 10
     p => sim%part_group%p_list
@@ -275,7 +280,6 @@ contains
     ymin = sim%m2d%eta2_min
     dtrdx = dt/sim%m2d%delta_eta1
     dtrdy = dt/sim%m2d%delta_eta2
-
 
     if (sim%use_cubic_splines) then
        accumE_CS => sim%E_accumulator_CS%e_acc
@@ -380,25 +384,22 @@ contains
        if (sim%my_rank == 0) then
           exval_ee = une_cst * exp(2._f64*omega_i*real(it,f64)*sim%dt) * &
                ( 0.5_f64 + 0.5_f64*cos(2._f64*(omega_r*real(it,f64)*sim%dt-psi)) )
-!          exval_ee = log( abs(exval_ee) )
+!!          exval_ee = log( abs(exval_ee) )
           call normL2_field_Ex ( val_lee, val_ee, ncx, ncy, &
                                  sim%E1,  &
                                  sim%m2d%delta_eta1, sim%m2d%delta_eta2 )
+!!          call electric_energy( val_ee, sim%E1, sim%E2, ncx, ncy, &
+!!                                sim%m2d%delta_eta1, sim%m2d%delta_eta2 )
+
           counter = 1 + mod(it,save_nb)
-          diag_energy(counter,:) = (/it*sim%dt,val_lee,log(sqrt(exval_ee)),val_ee,exval_ee/)
-!!$          valeur = 0.0_f64
-!!$          !       val2   = 0.0_f64
-!!$          do i = 1,ncx
-!!$             do j = 1,ncy
-!!$                valeur  = valeur + sim%E1(i,j)*sim%rho(i,j)
-!!$                !             val2 = val2 + sim%E1(i,j)**2 + sim%E2(i,j)**2
-!!$             enddo
-!!$          enddo
-!!$          diag_TOTmoment(counter) = valeur
+!!          diag_energyL2D(counter,:) = (/it*sim%dt, val_ee, log(sqrt(val_ee)) /)
+          diag_energy(counter,:) = (/ it*sim%dt, val_lee, 0.5_f64*log(exval_ee), &
+                                      val_ee, exval_ee /)
 
           if (mod(it+1,save_nb)==0) then
              do jj=1,save_nb
-                write(65,*) diag_energy(jj,1),diag_energy(jj,2),diag_energy(jj,3),diag_energy(jj,4),diag_energy(jj,5)!, diag_TOTmoment(jj)
+!                write(65,*) diag_energyL2D(jj,:)
+                write(65,*) diag_energy(jj,:)
              enddo
           endif
        endif
@@ -511,8 +512,8 @@ contains
           
        else 
 
-          !$omp parallel PRIVATE(x,y,Ex,Ey,gi,tmp5,tmp6,ic_x,ic_y,thread_id,p_guard,q_accum)
-          !$&omp FIRSTPRIVATE(dtqom,ncx,ncy,xmin,ymin,dtrdx,dtrdy)
+          !$omp parallel PRIVATE(i,x,y,Ex,Ey,gi,tmp5,tmp6,ic_x,ic_y,thread_id,p_guard,q_accum)
+          !$&omp FIRSTPRIVATE(dtqom,ncx,ncy,xmin,ymin,dtrdx,dtrdy,accumE)
 #ifdef _OPENMP
           thread_id = OMP_GET_THREAD_NUM()
 #endif
@@ -563,25 +564,15 @@ contains
           enddo
           !$omp end do
           sim%part_group%num_postprocess_particles(thread_id+1) = gi
-          !$omp end parallel
-
-#ifdef _OPENMP
-          ttime = omp_get_wtime()!! ttime = sll_time_elapsed_since(t3)
-          diag_AccMem(it,:) = (/ (it+1)*dt, &
-               (real(32*sim%parts_number*2,f64)+real(gi*2*8,f64) + real(4*32*ncx*ncy,f64) ) &
-               /(ttime-t3)/1e9 /)! access to memory in GB/sec
-!          
-!            2*sizeof(sim%q_accumulator%q_acc) + sizeof(sim%E_accumulator%e_acc))
-#endif
 
           ! Process the particles in the guard list. In the periodic case, no
           ! destruction of particles is needed, so this is simple.
 
-          !$omp parallel PRIVATE(x,y,ic_x,ic_y,tmp5,tmp6,p_guard,q_accum,thread_id)
-          !$&omp FIRSTPRIVATE(ncx,ncy,xmin,ymin,dtrdx,dtrdy)
-#ifdef _OPENMP
-          thread_id = OMP_GET_THREAD_NUM()
-#endif
+!!          !$omp parallel PRIVATE(i,x,y,ic_x,ic_y,tmp5,tmp6,p_guard,q_accum,thread_id)
+!!          !$&omp FIRSTPRIVATE(ncx,ncy,xmin,ymin,dtrdx,dtrdy)
+!!#ifdef _OPENMP
+!!          thread_id = OMP_GET_THREAD_NUM()
+!!#endif
           q_accum => sim%q_accumulator(thread_id+1)%q
           p_guard => sim%part_group%p_guard(thread_id+1)%g_list
           do i=1, sim%part_group%num_postprocess_particles(thread_id+1)
@@ -598,9 +589,15 @@ contains
              SLL_ACCUMULATE_PARTICLE_CHARGE(q_accum,p_guard(i)%p,tmp5,tmp6)
           end do
           !$omp end parallel
+!!$#ifdef _OPENMP
+!!$          ttime = omp_get_wtime()!! ttime = sll_time_elapsed_since(t3)
+!!$          diag_AccMem(it,:) = (/ (it+1)*dt, &
+!!$               (real(32*sim%parts_number*2,f64)+real(gi*2*8,f64) + real(4*32*ncx*ncy,f64) ) &
+!!$               /(ttime-t3)/1e9 /)! access to memory in GB/sec
+!!$!            2*sizeof(sim%q_accumulator%q_acc) + sizeof(sim%E_accumulator%e_acc))
+!!$#endif
           !       ! reset any counters
           gi = 0
-
        endif
        ! ----- END PUSH PARTICLES -----
        ! -----------------------------
@@ -661,7 +658,7 @@ contains
 #ifdef _OPENMP
     time = omp_get_wtime()!! time = sll_time_elapsed_since(t2)
     if (sim%my_rank ==0) then 
-       open(93,file='time_OptPush_omp.dat',position='append')
+       open(93,file='time_OptPush_omp_WITH_SCHEDULE.dat',position='append')
        write(93,*) '# Nb of threads   ||   time (sec)   ||   average pushes/sec'
        write(93,*) n_threads, time-t2, int(sim%num_iterations,i64)*int(sim%parts_number,i64)/(time-t2)
        close(93)
@@ -677,26 +674,26 @@ contains
 !!$       close(65)
     endif
 
-#ifdef _OPENMP
-    if (sim%my_rank==0) then! .and. thread_id==0) then
-       write(nom_thnb,'(i2.2)') n_threads
-       nom_thnb = trim(nom_thnb)
-       open(65,file='AccesstoMemory_rk0_th'//nom_thnb//'.dat')
-!    !!$    if (sim%my_rank==1) open(66,file='AccesstoMemory_rk1.dat')
-       write(65,*) diag_AccMem(0,:), diag_AccMem(0,2)
-       do jj = 1, sim%num_iterations-1
-          if ( mod(jj+1,sort_nb) == 0 ) then
-             write(65,*) diag_AccMem(jj,:), diag_AccMem(jj,2)
-!    !!$          if (sim%my_rank==1) write(66,*) diag_AccMem(jj,:), diag_AccMem(jj,2)
-          else
-             write(65,*) diag_AccMem(jj,:)
-!    !!$          if (sim%my_rank==1) write(66,*) diag_AccMem(jj,:)
-          endif
-       enddo
-       close(65) 
-!    !!$       close(66)
-    endif
-#endif
+!!$#ifdef _OPENMP
+!!$    if (sim%my_rank==0) then! .and. thread_id==0) then
+!!$       write(nom_thnb,'(i2.2)') n_threads
+!!$       nom_thnb = trim(nom_thnb)
+!!$       open(65,file='AccesstoMemory_rk0_th'//nom_thnb//'.dat')
+!!$!    !!$    if (sim%my_rank==1) open(66,file='AccesstoMemory_rk1.dat')
+!!$       write(65,*) diag_AccMem(0,:), diag_AccMem(0,2)
+!!$       do jj = 1, sim%num_iterations-1
+!!$          if ( mod(jj+1,sort_nb) == 0 ) then
+!!$             write(65,*) diag_AccMem(jj,:), diag_AccMem(jj,2)
+!!$!    !!$          if (sim%my_rank==1) write(66,*) diag_AccMem(jj,:), diag_AccMem(jj,2)
+!!$          else
+!!$             write(65,*) diag_AccMem(jj,:)
+!!$!    !!$          if (sim%my_rank==1) write(66,*) diag_AccMem(jj,:)
+!!$          endif
+!!$       enddo
+!!$       close(65) 
+!!$!    !!$       close(66)
+!!$    endif
+!!$#endif
 
     if (sim%world_size > 1 ) then
        SLL_DEALLOCATE_ARRAY(rho1d_send, ierr)
@@ -708,9 +705,10 @@ contains
     SLL_DEALLOCATE(sim%E2,    ierr)
     SLL_DEALLOCATE(phi, ierr)
     SLL_DEALLOCATE_ARRAY(diag_energy, ierr)
+!    SLL_DEALLOCATE_ARRAY(diag_energyL2D, ierr)
 !!$    SLL_DEALLOCATE_ARRAY(diag_TOTenergy, ierr)
 !!$    SLL_DEALLOCATE_ARRAY(diag_TOTmoment, ierr)
-    SLL_DEALLOCATE_ARRAY(diag_AccMem, ierr)
+!    SLL_DEALLOCATE_ARRAY(diag_AccMem, ierr)
   end subroutine run_4d_pic_cartesian
 
 
@@ -764,7 +762,7 @@ contains
     lee = 0._f64
     do j=1,ny
        do i=1,nx
-          lee = lee + e(i,j)**2!e(i,j)
+          lee = lee + e(i,j)**2
        enddo
     enddo
     lee = lee*dx*dy
