@@ -396,6 +396,15 @@ contains  ! ****************************************************************
   end function chi_gen_val
 
 
+  !---------------------------------------------------------------------------
+  !> @brief Computes the value of a box spline
+  !> @details This function computes the value of a box spline of degree
+  !> deg at the point (x1,x2)
+  !> @param[in] spline box spline which contains the reference hexagonal mesh
+  !> @param[in] x1 real containing first coordinate of point
+  !> @param[in] x2 real containing second coordinate of point
+  !> @param[in] deg real containing the degree of the spline to be computed
+  !> @return the value of the box spline at (x1,x2)
   function compute_box_spline(spline, x1, x2, deg) result(val)
     type(sll_box_spline_2d), pointer    :: spline
     sll_real64, intent(in) :: x1
@@ -587,7 +596,6 @@ contains  ! ****************************************************************
   end function hex_interpolate_value
 
 
-  
   !---------------------------------------------------------
   !> @brief Computes indices of non null splines on a given cell
   !> @details The function returns for a given cell and a certain degree
@@ -603,8 +611,6 @@ contains  ! ****************************************************************
     type(sll_hex_mesh_2d), pointer, intent(in) :: mesh
     sll_int32,  intent(in)  :: deg
     sll_int32,  intent(in)  :: cell_index
-    !PN do not work with ifort
-    !sll_int32, allocatable  :: index_nZ(:)
     sll_int32               :: index_nZ(3*deg*deg)
     sll_int32               :: ierr
     sll_int32               :: nei_point
@@ -619,8 +625,6 @@ contains  ! ****************************************************************
     
     ! Number of non zero splines on a cell:
     non_Zero = 3 * deg * deg
-    !PN Do not work with ifort
-    !PN SLL_ALLOCATE(index_nZ(non_Zero), ierr)
     index_nZ(1:non_Zero) = -1
     
     ! Getting the cell vertices which are the first indices of the non zero splines
@@ -776,7 +780,7 @@ contains  ! ****************************************************************
   !> @brief Writes on a file values of boxsplines on fekete points
   !> @details Following CAID structure, we write a file with the values
   !> of the basis function (box splines) on a reference element (triangle)
-  !> fekete points.
+  !> fekete points. Output for DJANGO.
   !> Output file : basis_values.txt
   !> @param[in] deg integer with degree of splines
   subroutine write_basis_values(deg, rule)
@@ -852,13 +856,13 @@ contains  ! ****************************************************************
           do idx = 0, nderiv
              do idy = 0, nderiv-idx
                 val = boxspline_val_der(x, y, deg, idx, idy)
-                write(out_unit, "(1(g20.10))", advance='no') val
-                write(out_unit, "(1(a,1x))", advance='no') ","
-                write(*, "(1(g20.10,1x))", advance='no') val
+                write(out_unit, "(1(g25.18))", advance='no') val
+                if ((idx<nderiv).or.(idy<nderiv-idx))  then
+                   write(out_unit, "(1(a,1x))", advance='no') ","
+                end if
              end do
           end do
           write(out_unit, *) ""
-          write(*, *) ""
        end do
     end do
 
@@ -869,8 +873,8 @@ contains  ! ****************************************************************
 
 
   !---------------------------------------------------------------------------
-  !> @brief Writes connectivity for CAID
-  !> @details write connectivity info for CAID/Pigasus. This function was
+  !> @brief Writes connectivity for CAID / DJANGO
+  !> @details write connectivity info for CAID/DJANGO. This function was
   !> intented to couple Pigasus poisson solver to the hex-mesh.
   !> Output file : boxsplines_connectivity.txt
   !> @param[in]  mesh pointer to the hexagonal mesh
@@ -880,11 +884,15 @@ contains  ! ****************************************************************
     sll_int32, intent(in)          :: deg
     sll_int32                      :: out_unit
     character(len=28), parameter   :: name = "boxsplines_connectivity.txt"
+    character(len=37), parameter   :: name2 = "boxsplines_connectivity_internal.txt"
     sll_int32                      :: nZ_indices(3*deg*deg)
     sll_int32  :: num_ele
+    sll_int32  :: ele_contained
     sll_int32  :: non_zero
     sll_int32  :: ierr
     sll_int32  :: i
+    sll_int32  :: s1, s2, s3
+    sll_int32  :: dist
     sll_int32  :: val
 
     ! Number of non Zero splines depends on the degree
@@ -911,7 +919,63 @@ contains  ! ****************************************************************
        end do
        write(out_unit,"(a)")""
     end do
+    
+    close(out_unit)
 
+    ! Now we want to write the connectivity only for elements
+    ! which all non zero box splines are contained in the domain
+    ! ie. all elements where ALL(non_zero_splines(mesh, ne, deg)).ne.-1
+    ! We know these are the elements that are more than deg-1 cells away
+    ! from the boundary
+    ! Remark: I could have done this with the writing of the file above,
+    ! nevertheless, I prefer to have two separated writings procedure to
+    ! avoid any confusion.
+
+    
+    ! We open file
+    call sll_new_file_id(out_unit, ierr)
+    open (unit=out_unit,file=name2,action="write",status="replace")
+
+    !We compute first the number of elements that are fully contained:
+    ele_contained = 6 * (mesh%num_cells - deg + 1) * (mesh%num_cells - deg + 1)
+    
+    ! We write total number of cells
+    write(out_unit, "(i6)") ele_contained
+
+    do num_ele = 1,mesh%num_triangles
+       ! before writing the information we want to test if the elements is
+       ! not in the boundary.
+       ! For this first we get the vertices of the cell:
+       call get_cell_vertices_index(mesh%center_cartesian_coord(1,num_ele), &
+            mesh%center_cartesian_coord(2,num_ele), &
+            mesh, &
+            s1, s2, s3)
+       ! and we get the distance to the origin:
+       dist = 0
+       dist = dist + cells_to_origin(mesh%hex_coord(1, s1), mesh%hex_coord(2, s1))
+       dist = dist + cells_to_origin(mesh%hex_coord(1, s2), mesh%hex_coord(2, s2))
+       dist = dist + cells_to_origin(mesh%hex_coord(1, s3), mesh%hex_coord(2, s3))
+
+       if (dist .lt. (mesh%num_cells - deg + 1)*3 ) then
+          ! We write cell ID number
+          write(out_unit, "(i6)") num_ele
+          ! We write number of non zero
+          write(out_unit, "(i6)") non_zero
+          ! We write the indices of the non zero splines
+          nZ_indices = non_zeros_splines(mesh, num_ele, deg)
+          do i=1,non_zero
+             val = nZ_indices(i)
+             if (val == -1) then
+                print *, "Error in write_connectivity: -1 found"
+                STOP
+             end if
+             write(out_unit, "(i6)", advance="no") val
+             write(out_unit, "(a)", advance="no") ","
+          end do
+          write(out_unit,"(a)")""
+       end if
+    end do
+    
     close(out_unit)
 
   end subroutine write_connectivity

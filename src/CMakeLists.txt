@@ -177,6 +177,8 @@ IF(F2008)
   ADD_SUBDIRECTORY( ode_integrators )
 ENDIF(F2008)
 
+# Container for all particle methods (mostly PIC)
+ADD_SUBDIRECTORY( particle_methods )
 
 IF(MPI_ENABLED)
    
@@ -233,6 +235,7 @@ IF(BUILD_PARALUTION)
   )
 ENDIF()
 
+
 IF(BUILD_JOREK)
 
   SET(GIT_LOGIN $ENV{USER} CACHE STRING "INRIA GForge login")
@@ -269,6 +272,37 @@ IF(BUILD_JOREK)
   FIND_PACKAGE(PETSc)
   ADD_SUBDIRECTORY(jorek)
 
+ENDIF()
+
+IF($ENV{PFUNIT})
+
+  INCLUDE(ExternalProject)
+
+  EXTERNALPROJECT_ADD(
+    pFUnit
+    PREFIX pFunit
+    GIT_REPOSITORY git://git.code.sf.net/p/pfunit/code
+    CMAKE_ARGS -DINSTALL_PATH=${CMAKE_BINARY_DIR})
+
+ENDIF()
+
+SET(BUILD_SPRNG OFF CACHE BOOL   "Build SPRNG libraries")
+SET(SPRNG_CXX_COMPILER ${CMAKE_CXX_COMPILER} CACHE FILEPATH  "CXX compiler for SPRNG")
+IF(BUILD_SPRNG)
+  IF(APPLE)
+    MESSAGE(STATUS "Warning: Build SPRNG library on mac is tricky")
+  ENDIF(APPLE)
+  INCLUDE(ExternalProject)
+  SET(SPRNG_VERSION 5 CACHE STRING "SPRNG version number")
+  EXTERNALPROJECT_ADD( sprng
+     URL  http://www.sprng.org/Version5.0/sprng${SPRNG_VERSION}.tar.bz2
+     SOURCE_DIR ${CMAKE_BINARY_DIR}/sprng
+     BINARY_DIR ${CMAKE_BINARY_DIR}/sprng
+     UPDATE_COMMAND autoreconf -if
+     CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/sprng/configure --prefix=${CMAKE_BINARY_DIR}/sprng --with-mpi=yes CXX=${SPRNG_CXX_COMPILER} OMPI_CXX=${SPRNG_CXX_COMPILER} LIBS=-lmpi_cxx
+     BUILD_COMMAND ${MAKE} 
+     INSTALL_COMMAND ""
+  )
 ENDIF()
 
 MESSAGE(STATUS "############################################################")

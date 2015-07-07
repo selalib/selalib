@@ -90,7 +90,7 @@ write(*,fmt='(A,F0.2,A)') '(Fortran) Solver ended after ', tsolver,'sec.'
 
 ! Print solver details
 if ( ierr .eq. 0 ) then
-  write(*,fmt='(A,I0,A,E11.5,A)') '(Fortran) Solver took ', iter, ' iterations with residual norm ', resnorm, '.'
+  write(*,fmt='(A,I0,A,E12.5,A)') '(Fortran) Solver took ', iter, ' iterations with residual norm ', resnorm, '.'
   write(*,fmt='(A,F0.2)') '(Fortran) Final L2 Norm(x)   = ', sqrt( sum( x**2 ) )
 else
   write(*,fmt='(A,I0)') '(Fortran) Solver returned status code ', ierr

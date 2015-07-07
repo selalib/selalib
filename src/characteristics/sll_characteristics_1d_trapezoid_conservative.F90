@@ -200,6 +200,7 @@ contains
     SLL_ASSERT(size(input)>=Npts)
     SLL_ASSERT(size(output)>=Npts)
     
+    
     call charac%A_interp%compute_interpolants( &
       A, &
       input, &
