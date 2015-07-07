@@ -84,47 +84,37 @@ module sll_cubic_splines
   !> This should be
   !> treated as an opaque type. No access to its internals is directly allowed.
   type, public :: sll_cubic_spline_2D
-     sll_int32 SLL_PRIV   :: num_pts_x1  !< PLEASE ADD DOCUMENTATION
-     sll_int32 SLL_PRIV   :: num_pts_x2  !< PLEASE ADD DOCUMENTATION
-     sll_real64 SLL_PRIV  :: x1_delta    !< PLEASE ADD DOCUMENTATION
-     sll_real64 SLL_PRIV  :: x1_rdelta   !< PLEASE ADD DOCUMENTATION
-     sll_real64 SLL_PRIV  :: x2_delta    !< PLEASE ADD DOCUMENTATION
-     sll_real64 SLL_PRIV  :: x2_rdelta   !< PLEASE ADD DOCUMENTATION
-     sll_real64 SLL_PRIV  :: x1_min      !< PLEASE ADD DOCUMENTATION
-     sll_real64 SLL_PRIV  :: x1_max      !< PLEASE ADD DOCUMENTATION
-     sll_real64 SLL_PRIV  :: x2_min      !< PLEASE ADD DOCUMENTATION
-     sll_real64 SLL_PRIV  :: x2_max      !< PLEASE ADD DOCUMENTATION
-     sll_int32 SLL_PRIV   :: x1_bc_type  !< PLEASE ADD DOCUMENTATION
-     sll_int32 SLL_PRIV   :: x2_bc_type  !< PLEASE ADD DOCUMENTATION
-     ! if data is not used, it should be deleted make a decision...
-     sll_real64, pointer SLL_PRIV :: data(:,:) => null()  !< data for the spline fit
-     sll_real64, pointer SLL_PRIV :: d1(:) => null()      !< scratch space D (L*D = F), refer to algorithm below. Size depends on BCs.
-     sll_real64, pointer SLL_PRIV :: d2(:) => null()      !< Second scratch space: 
-     sll_real64, pointer SLL_PRIV :: coeffs(:,:) => null()!< the spline coefficients:
-     !> PLEASE ADD DOCUMENTATION
-     sll_real64, pointer SLL_PRIV :: x1_min_slopes(:) => null() 
-     !> PLEASE ADD DOCUMENTATION
-     sll_real64, pointer SLL_PRIV :: x1_max_slopes(:) => null()
-     !> PLEASE ADD DOCUMENTATION
-     sll_real64, pointer SLL_PRIV :: x2_min_slopes(:) => null()
-     !> PLEASE ADD DOCUMENTATION
-     sll_real64, pointer SLL_PRIV :: x2_max_slopes(:) => null()
-     !> PLEASE ADD DOCUMENTATION
-     sll_real64, pointer SLL_PRIV :: x1_min_slopes_coeffs(:) => null()
-     !> PLEASE ADD DOCUMENTATION
-     sll_real64, pointer SLL_PRIV :: x1_max_slopes_coeffs(:) => null()
-     !> PLEASE ADD DOCUMENTATION
-     sll_real64, pointer SLL_PRIV :: x2_min_slopes_coeffs(:) => null()
-     !> PLEASE ADD DOCUMENTATION
-     sll_real64, pointer SLL_PRIV :: x2_max_slopes_coeffs(:) => null()
-     !> PLEASE ADD DOCUMENTATION
-     logical SLL_PRIV             :: compute_slopes_x1_min
-     !> PLEASE ADD DOCUMENTATION
-     logical SLL_PRIV             :: compute_slopes_x1_max
-     !> PLEASE ADD DOCUMENTATION
-     logical SLL_PRIV             :: compute_slopes_x2_min
-     !> PLEASE ADD DOCUMENTATION
-     logical SLL_PRIV             :: compute_slopes_x2_max
+    sll_int32  SLL_PRIV   :: num_pts_x1  !< PLEASE ADD DOCUMENTATION
+    sll_int32  SLL_PRIV   :: num_pts_x2  !< PLEASE ADD DOCUMENTATION
+    sll_real64 SLL_PRIV   :: x1_delta    !< PLEASE ADD DOCUMENTATION
+    sll_real64 SLL_PRIV   :: x1_rdelta   !< PLEASE ADD DOCUMENTATION
+    sll_real64 SLL_PRIV   :: x2_delta    !< PLEASE ADD DOCUMENTATION
+    sll_real64 SLL_PRIV   :: x2_rdelta   !< PLEASE ADD DOCUMENTATION
+    sll_real64 SLL_PRIV   :: x1_min      !< PLEASE ADD DOCUMENTATION
+    sll_real64 SLL_PRIV   :: x1_max      !< PLEASE ADD DOCUMENTATION
+    sll_real64 SLL_PRIV   :: x2_min      !< PLEASE ADD DOCUMENTATION
+    sll_real64 SLL_PRIV   :: x2_max      !< PLEASE ADD DOCUMENTATION
+    sll_int32  SLL_PRIV   :: x1_bc_type  !< PLEASE ADD DOCUMENTATION
+    sll_int32  SLL_PRIV   :: x2_bc_type  !< PLEASE ADD DOCUMENTATION
+    ! if data is not used, it should be deleted make a decision...
+    sll_real64, pointer SLL_PRIV :: data(:,:) => null()  !< data for the spline fit
+    sll_real64, pointer SLL_PRIV :: d1(:) => null()      !< scratch space D (L*D = F), 
+                                                         !< refer to algorithm below. 
+                                                         !< Size depends on BCs.
+    sll_real64, pointer SLL_PRIV :: d2(:) => null()      !< Second scratch space: 
+    sll_real64, pointer SLL_PRIV :: coeffs(:,:) => null()!< the spline coefficients:
+    sll_real64, pointer SLL_PRIV :: x1_min_slopes(:) => null() 
+    sll_real64, pointer SLL_PRIV :: x1_max_slopes(:) => null()
+    sll_real64, pointer SLL_PRIV :: x2_min_slopes(:) => null()
+    sll_real64, pointer SLL_PRIV :: x2_max_slopes(:) => null()
+    sll_real64, pointer SLL_PRIV :: x1_min_slopes_coeffs(:) => null()
+    sll_real64, pointer SLL_PRIV :: x1_max_slopes_coeffs(:) => null()
+    sll_real64, pointer SLL_PRIV :: x2_min_slopes_coeffs(:) => null()
+    sll_real64, pointer SLL_PRIV :: x2_max_slopes_coeffs(:) => null()
+    logical SLL_PRIV             :: compute_slopes_x1_min
+    logical SLL_PRIV             :: compute_slopes_x1_max
+    logical SLL_PRIV             :: compute_slopes_x2_min
+    logical SLL_PRIV             :: compute_slopes_x2_max
   end type sll_cubic_spline_2D
 
   !> @brief 
@@ -207,7 +197,8 @@ module sll_cubic_splines
            get_x1_delta,                      &
            get_x2_max,                        &
            get_x2_delta,                      &
-           deposit_value_2d
+           deposit_value_2d,                  &
+           get_coeff_cubic_spline_2d
 
 contains  ! ****************************************************************
 
@@ -2606,7 +2597,26 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     interpolate_x2_derivative_2D = 0.5_f64*rh2*(dx*(t1 + dx*t2) + t3)
   end function interpolate_x2_derivative_2D
 
+  subroutine get_coeff_cubic_spline_2d(spline, coeff)
+    type(sll_cubic_spline_2D), pointer :: spline
+    sll_real64, dimension(:), intent(out) :: coeff
+    sll_int32 :: i
+    sll_int32 :: j
+    sll_int32 :: num_pts_x1
+    sll_int32 :: num_pts_x2
 
+    num_pts_x1 = spline%num_pts_x1
+    num_pts_x2 = spline%num_pts_x2
+    
+    SLL_ASSERT(size(coeff)>=(num_pts_x1+2)*(num_pts_x2+2))
+    
+    do j=1,num_pts_x2+2
+      do i=1,num_pts_x1+2
+        coeff(i+(num_pts_x1+2)*(j-1)) = spline%coeffs(i-1,j-1)
+      enddo    
+    enddo
+  end subroutine get_coeff_cubic_spline_2d  
+    
   subroutine delete_cubic_spline_2D( spline )
     type(sll_cubic_spline_2D), pointer :: spline
     sll_int32                    :: ierr
