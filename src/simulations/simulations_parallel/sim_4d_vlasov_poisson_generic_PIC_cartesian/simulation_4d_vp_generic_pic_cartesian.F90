@@ -96,7 +96,9 @@ module sll_simulation_4d_vp_generic_pic_cartesian_module
   
 contains
 
-  ! redefines [[selalib:src/simulations/simulation_base_class.F90::init_from_file]]
+  !> redefines sll_simulation_base_class::init_from_file <!--
+  !> [[selalib:src/simulations/simulation_base_class.F90::init_from_file]] -->
+
   subroutine init_4d_generic_pic_cartesian   ( sim, filename )
     intrinsic :: trim
     class(sll_simulation_4d_vp_generic_pic_cartesian), intent(inout) :: sim
@@ -129,8 +131,7 @@ contains
     type(sll_simple_pic_4d_group),  pointer     :: simple_pic_particle_group
 
     ! <<particle_types>> <<lt_pic_particle_group>> this simulation can deal with simple or ltpic particle types
-    ! todo: activate
-    !     type(sll_lt_pic_4d_group),      pointer     :: lt_pic_particle_group
+    !> \todo activate type(sll_lt_pic_4d_group),      pointer     :: lt_pic_particle_group
 
 
     type(sll_charge_accumulator_2d),    pointer :: charge_accumulator
@@ -141,7 +142,7 @@ contains
     sll_int32   :: rand_seed_size
     sll_int32  :: thread_id
 
-    ! ALH - The generic simulation reads all parameters for both simple and ltpic options from the same file
+    !> The generic simulation reads all parameters for both simple and ltpic options from the same file
     namelist /sim_params/           THERM_SPEED,            &
                                     dt,                     &
                                     number_iterations,      &
@@ -395,8 +396,10 @@ contains
   end subroutine init_4d_generic_pic_cartesian
 
 
-
-  !> run_4d_lt_pic_cartesian: run the Vlasov-Poisson simulation
+  ! <<run_4d_generic_pic_cartesian>>
+  
+  !> Run the Vlasov-Poisson simulation. Redefines sll_simulation_base_class::run <!--
+  !> [[selalib:src/simulations/simulation_base_class.F90::run]] -->
   !!
   !! \note 1: this is a skeleton-in-progress: some routines are not implemented, some variables are not needed
   !!
