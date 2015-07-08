@@ -48,5 +48,19 @@
 /
 
 &interpolation
+  ! The interpolation method you can choose by executing the right
+  ! executable file (ie. test_2d_gc_hex_splines or test_2d_gc_hex_hermite)
+  ! but here you can specify some details for the method
+
+  ! For the spline interpolation:
   spline_degree = 2
+  
+  ! For the hermite interpolation:
+  ! Different hermite elements have been implemented, the following notations are used
+  !    Zienkiewicz with 9  degree of freedom => 9
+  !    Zienkiewicz with 10 degree of freedom => 10
+  !    Hsieh-Clough-Tocher (reduced)  => 11
+  !    Hsieh-Clough-Tocher (complete) => 12
+  !    Ganev-Dimitrov => 15
+  hermite_method = 9 
 /

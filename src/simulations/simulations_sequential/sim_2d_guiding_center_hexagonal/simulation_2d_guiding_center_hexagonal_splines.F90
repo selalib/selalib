@@ -22,13 +22,13 @@ program sim2d_gc_hex_splines
   sll_real64, dimension(:),   allocatable :: uyn, uyn_1
   sll_real64, dimension(:),   allocatable :: phi_interm
   sll_real64, dimension(:,:), allocatable :: matrix_poisson, l, u
-  sll_real64, dimension(:),   allocatable :: rho_tn_1   ! distribution at time n-1
   sll_real64, dimension(:),   allocatable :: rho_tn   ! distribution at time n
   sll_real64, dimension(:),   allocatable :: rho_tn1  ! distribution at time n+1
   sll_real64, dimension(:),   allocatable :: x1_char
   sll_real64, dimension(:),   allocatable :: x2_char
 
   sll_int32    :: spline_degree
+  sll_int32    :: hermite_method
   sll_int32    :: i,j, k1, k2, index_tab, type
   sll_int32    :: l1,l2
   sll_int32    :: i1,i2,i3
@@ -77,12 +77,13 @@ program sim2d_gc_hex_splines
        gauss_sig, &
        gauss_amp
 
-    namelist /time_iterations/ &
-      dt, &
-      tmax
+  namelist /time_iterations/ &
+       dt, &
+       tmax
 
-    namelist /interpolation/ &
-      spline_degree
+  namelist /interpolation/ &
+       spline_degree, &
+       hermite_method
 
   ! ----------------------------
   ! Setting default parameters
@@ -107,7 +108,8 @@ program sim2d_gc_hex_splines
   dt    = 0.1_f64
   ! Interpolation
   spline_degree = 2
-
+  hermite_method = 9
+  
   ! ----------------------------
   ! Reading from file
   ! ----------------------------
@@ -127,7 +129,6 @@ program sim2d_gc_hex_splines
      read(input_file, time_iterations)
      read(input_file, interpolation)
      close(input_file)
-     print *, "sigma = ", gauss_sig
   else
      print *,'#initialization with default parameters'
   endif
@@ -155,6 +156,7 @@ program sim2d_gc_hex_splines
         print *, "        Options are: 'GC' or 'CIRCULAR'."
         print *, "        Please change it in your namelist file."
      end if
+
      t = 0._f64
      nloops = 0
      count  = 0
@@ -183,7 +185,6 @@ program sim2d_gc_hex_splines
      l1 = 2*num_cells+1
      l2 = l1
 
-     SLL_ALLOCATE(rho_tn_1( n_points),ierr)
      SLL_ALLOCATE(rho_tn( n_points),ierr)
      SLL_ALLOCATE(rho_tn1( n_points ),ierr)
 
@@ -286,6 +287,7 @@ program sim2d_gc_hex_splines
            if (model_name.eq."CIRCULAR") then
               xx = x*cos(dt) - y*sin(dt)
               yy = x*sin(dt) + y*cos(dt)
+
            elseif (model_name.eq."GC") then
               ! We use Adams2 for solving ODE except for first step
               if ( t <= dt + 1e-6 ) then ! first step with euler
@@ -315,7 +317,6 @@ program sim2d_gc_hex_splines
 
 
         ! Updating the new field values ............
-        rho_tn_1 = rho_tn
         rho_tn = rho_tn1
         ! ...........................................
 
@@ -342,30 +343,33 @@ program sim2d_gc_hex_splines
            ! ...........................................
         end if
 
-        
         !*********************************************************
         !                  writing diagostics
         !*********************************************************
         if (model_name.eq."GC") then
            call hex_diagnostics_gc(rho_tn,t,mesh,uxn,uyn,nloops,spline_degree,tmax,cells_min,cells_max)
+           if (count == 10.and.nloops<10000.and.num_cells == cells_max) then
+              call int2string(nloops,filenum)
+              filename  = "center_guide_rho"//trim(filenum)
+              call write_field_hex_mesh_xmf(mesh, rho_tn1, trim(filename))
+              if (model_name.eq."GC") then
+                 filename  = "center_guide_phi"//trim(filenum)
+                 call write_field_hex_mesh_xmf(mesh, phi, trim(filename))
+              end if
+              count = 0
+           endif
         elseif (model_name.eq."CIRCULAR") then
            call hex_diagnostics_circ(rho_tn,t,mesh,nloops,spline_degree,tmax,cells_min,cells_max)
+           if (count == 10.and.nloops<10000.and.num_cells == cells_max) then
+              call int2string(nloops,filenum)
+              filename  = "circular_advection_rho"//trim(filenum)
+              call write_field_hex_mesh_xmf(mesh, rho_tn1, trim(filename))
+              count = 0
+           endif
         end if
-        if (count == 10.and.nloops<10000.and.num_cells == cells_max) then
-           call int2string(nloops,filenum)
-           filename  = "center_guide_rho"//trim(filenum)
-           call write_field_hex_mesh_xmf(mesh, rho_tn1, trim(filename))
-           if (model_name.eq."GC") then
-              filename  = "center_guide_phi"//trim(filenum)
-              call write_field_hex_mesh_xmf(mesh, phi, trim(filename))
-           end if
-           count = 0
-        endif
 
+     enddo ! end of time loop
 
-     enddo
-
-     SLL_DEALLOCATE_ARRAY(rho_tn_1,ierr)
      SLL_DEALLOCATE_ARRAY(rho_tn,ierr)
      SLL_DEALLOCATE_ARRAY(rho_tn1,ierr)
      SLL_DEALLOCATE_ARRAY(x1_char,ierr)
@@ -392,7 +396,7 @@ program sim2d_gc_hex_splines
      call cpu_time(t_end)
      print*, "time used =", t_end - t_init
 
-  end do
+  end do ! end of loop on space step (end of all simulations)
 
   ! Some test should probably be put here:
   print*, 'PASSED'
@@ -861,6 +865,5 @@ contains
     close (11)
 
   end subroutine write_center
-
 
 end program sim2d_gc_hex_splines
