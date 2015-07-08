@@ -65,6 +65,7 @@ module sll_simulation_4d_drift_kinetic_polar_one_mu_module
   use sll_module_gyroaverage_2d_polar_splines_solver
   use sll_module_gyroaverage_2d_polar_pade_solver
   use sll_hermite_interpolation_2d_module
+  use sll_module_qn_2d_polar_splines_solver
 
 
   implicit none
@@ -75,6 +76,7 @@ module sll_simulation_4d_drift_kinetic_polar_one_mu_module
   sll_int32, parameter :: SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW = 1 
   sll_int32, parameter :: SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW = 2 
   sll_int32, parameter :: SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW_PADE_EPSILON = 3 
+  sll_int32, parameter :: SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW_CIRCLE = 4
 
 !! choice of time scheme solver
 !! should be else where
@@ -137,6 +139,10 @@ module sll_simulation_4d_drift_kinetic_polar_one_mu_module
      !--> Gyroaverage
      sll_real64  :: mu 
      sll_int32  :: delta_f_method
+     !--> mu integration
+     sll_int32 :: N_mu_for_phi
+     sll_real64, dimension(:), pointer  :: mu_points_for_phi
+     sll_real64, dimension(:), pointer  :: mu_weights_for_phi
 
      !--> 4D logical mesh (r,theta,phi,vpar)
      !type(sll_cartesian_mesh_4d), pointer :: cartesian_mesh4d
@@ -205,6 +211,7 @@ module sll_simulation_4d_drift_kinetic_polar_one_mu_module
     class(sll_advection_1d_base), pointer :: adv_x4
     
     class(sll_gyroaverage_2d_base), pointer :: gyroaverage
+    class(qn_2d_polar_splines_solver), pointer :: qn
 
     class(sll_poisson_2d_base), pointer   :: poisson2d
     class(sll_poisson_2d_base), pointer   :: poisson2d_mean
@@ -314,12 +321,20 @@ contains
     character(len=256)      :: poisson2d_BC_rmax
     sll_int32 :: hermite_degree_eta1 
     sll_int32 :: hermite_degree_eta2 
-
+    character(len=256)                 :: mu_quadr_for_phi_case
+    !sll_int32 ::  quadrature_points_per_cell_for_phi
+    sll_int32                          :: N_mu_for_phi
+    sll_real64                         :: mu_max_for_phi
+    sll_int32                          :: N_mu_for_phi_user_defined
+    sll_real64, dimension(:), pointer  :: mu_points_for_phi_user_defined
+    sll_real64, dimension(:), pointer  :: mu_weights_for_phi_user_defined
+    
     
     sll_int32               :: order_x3
     sll_int32               :: order_x4
     sll_int32               :: poisson2d_BC(2)
     sll_real64, dimension(:,:), allocatable :: tmp_r
+    sll_real64, dimension(:), allocatable :: lambda
     sll_int32 :: i
     sll_int32 :: ierr
     !sll_int32  :: spline_degree
@@ -359,6 +374,8 @@ contains
       mmode, &
       nmode, &
       eps_perturb
+    namelist /sim_params_first/ & 
+      N_mu_for_phi_user_defined  
     namelist /sim_params/ &
       dt, & 
       number_iterations, &
@@ -384,7 +401,13 @@ contains
       gyroaverage_interp_degree_x2, &
       delta_f_method, &
       hermite_degree_eta1, &          
-      hermite_degree_eta2       
+      hermite_degree_eta2, &  
+      mu_quadr_for_phi_case, &
+      N_mu_for_phi, &
+      mu_max_for_phi, &
+      mu_points_for_phi_user_defined, &
+      mu_weights_for_phi_user_defined   
+ 
       
       !, spline_degree
 
@@ -396,6 +419,9 @@ contains
     read(input_file,mesh)
     read(input_file,equilibrium)
     read(input_file,perturbation)
+    read(input_file,sim_params_first)
+    SLL_ALLOCATE(mu_points_for_phi_user_defined(1:N_mu_for_phi_user_defined),ierr)        
+    SLL_ALLOCATE(mu_weights_for_phi_user_defined(1:N_mu_for_phi_user_defined),ierr)
     read(input_file,sim_params)
     close(input_file)
 
@@ -417,6 +443,7 @@ contains
     sim%kappaTe  = kappaTe
     sim%deltarTe = deltarTe
     
+    SLL_ALLOCATE(lambda(1:num_cells_x1+1),ierr)
     SLL_ALLOCATE(tmp_r(num_cells_x1+1,2),ierr)
     sim%delta_f_method=delta_f_method
     
@@ -459,6 +486,8 @@ contains
       case ("SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW_PADE_EPSILON")
         sim%QN_case = SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW_PADE_EPSILON 
         sim%pade_epsilon = pade_epsilon
+      case ("SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW_CIRCLE")
+        sim%QN_case = SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW_CIRCLE  
       case default
         print *,'#bad choice for QN_case', QN_case
         print *,'#in init_dk4d_polar'
@@ -531,6 +560,7 @@ contains
       print *,'#gyroaverage_N_points=',gyroaverage_N_points
       print *,'#gyroaverage_interp_degree=',gyroaverage_interp_degree_x1,gyroaverage_interp_degree_x2 
       print *,'#delta_f_method=',delta_f_method
+    
         
     endif
     sim%world_size = sll_get_collective_size(sll_world_collective)
@@ -708,19 +738,39 @@ contains
     end select
 
 
-  
+    !--> mu integration
 
+        do i=1,num_cells_x1+1
+          lambda(i) = 1._f64+(sim%Ti_r(i)/sim%Te_r(i))
+        enddo  
+ 
+ 
+        sim%qn => new_qn_2d_polar_splines_solver( &
+          eta_min_gyro, &
+          eta_max_gyro, &
+          Nc_gyro, &
+          gyroaverage_N_points, &
+          lambda, &
+          sim%Ti_r)
+          
+          
+    call initialize_mu_quadr_for_phi( &
+      sim%qn%quasineutral, &
+      mu_quadr_for_phi_case, &
+      N_mu_for_phi, &    
+      mu_max_for_phi, &
+      mu_points_for_phi_user_defined, &
+      mu_weights_for_phi_user_defined, &
+      N_mu_for_phi_user_defined) 
+      
+    call sim%qn%precompute_qn( &
+      sim%qn%quasineutral%mu_points_for_phi(:), &
+      sim%qn%quasineutral%mu_weights_for_phi(:), &
+      sim%qn%quasineutral%N_mu_for_phi)
 
-!    select case (sim%QN_case)
-!      case (SLL_NO_QUASI_NEUTRAL)
-!      case (SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW)
-!      case (SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW)
-!      case default
-!        print *,'#bad value for sim%QN_case'
-!        stop  
-!    end select        
-
-
+      print *,'#N_mu_for_phi=',sim%qn%quasineutral%N_mu_for_phi
+      print *,'#mu_points_for_phi=',sim%qn%quasineutral%mu_points_for_phi
+      print *,'#mu_weights_for_phi=',sim%qn%quasineutral%mu_weights_for_phi
 
     select case (interp_x1x2)
       case ("SLL_CUBIC_SPLINES")
@@ -2299,9 +2349,48 @@ subroutine gyroaverage_phi_dk( sim )
           sim%phi3d_seqx1x2, &
           sim%phi3d_seqx3 )  
 
-
+ case (SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW_CIRCLE)
     
-    
+        call compute_local_sizes( &
+          sim%layout3d_seqx1x2, &
+          loc3d_sz_x1, &
+          loc3d_sz_x2, &
+          loc3d_sz_x3 )
+          
+        select case (sim%delta_f_method)           
+          case (1)
+            do iloc1 = 1,loc3d_sz_x1  
+              sim%rho3d_seqx1x2(iloc1,:,:)=&
+              sim%rho3d_seqx1x2(iloc1,:,:)-sim%n0_r(iloc1)
+            enddo
+         
+            do iloc3 = 1,loc3d_sz_x3    
+              call sim%gyroaverage%compute_gyroaverage( &
+                sqrt(2*sim%mu), &
+                sim%rho3d_seqx1x2(1:nc_x1+1,1:nc_x2+1,iloc3))   
+            enddo
+         
+            do iloc2=1, loc3d_sz_x2
+              do iloc1=1, loc3d_sz_x1
+                sim%phi3d_seqx1x2(iloc1,iloc2,:) = &
+                ((sim%rho3d_seqx1x2(iloc1,iloc2,:)/sim%n0_r(iloc1)))*(sim%Ti_r(iloc1))**2
+              enddo
+            enddo
+      
+          case default
+            print *,'#bad value for sim%delta_f_method'
+            stop  
+        end select
+   
+        do iloc3=1, loc3d_sz_x3  
+          call sim%qn%solve_qn(sim%phi3d_seqx1x2(1:nc_x1+1,1:nc_x2,iloc3))      
+          sim%phi3d_seqx1x2(1:nc_x1+1,nc_x2+1,iloc3) = sim%phi3d_seqx1x2(1:nc_x1+1,1,iloc3)
+        enddo
+      
+        call apply_remap_3D( &
+          sim%remap_plan_seqx1x2_to_seqx3, &
+          sim%phi3d_seqx1x2, &
+          sim%phi3d_seqx3 )  
                             
  case (SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW)
     print *,'#SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW'

@@ -47,7 +47,8 @@ contains
     eta_max, &
     Nc, &
     N_points, &
-    lambda) &     
+    lambda, &
+    T_i) &     
     result(qn)
       
     type(qn_2d_polar_splines_solver),pointer :: qn
@@ -56,6 +57,7 @@ contains
     sll_int32, intent(in)  :: Nc(2)
     sll_int32, optional    :: N_points  
     sll_real64, dimension(:), intent(in)  :: lambda
+    sll_real64, dimension(:), intent(in)  :: T_i
     sll_int32 :: ierr
       
     SLL_ALLOCATE(qn,ierr)
@@ -65,7 +67,8 @@ contains
       eta_max, &
       Nc, &
       N_points, &
-      lambda)
+      lambda, &
+      T_i)
     
   end function new_qn_2d_polar_splines_solver
   
@@ -76,13 +79,15 @@ contains
     eta_max, &
     Nc, &
     N_points, &
-    lambda)
+    lambda, &
+    T_i)
     class(qn_2d_polar_splines_solver) :: qn
     sll_real64, intent(in) :: eta_min(2)
     sll_real64, intent(in) :: eta_max(2)
     sll_int32, intent(in)  :: Nc(2)
     sll_int32, intent(in)  :: N_points  
     sll_real64, dimension(:), intent(in)  :: lambda
+    sll_real64, dimension(:), intent(in)  :: T_i
     sll_int32 :: ierr
 
 
@@ -91,7 +96,8 @@ contains
           eta_max, &
           Nc, &
           N_points, &
-          lambda)
+          lambda, &
+          T_i)
  
 
   end subroutine initialize_qn_2d_polar_splines_solver

@@ -56,6 +56,7 @@ module sll_qn_2d_polar
      sll_comp64, dimension(:,:,:), pointer    :: mat_qn_inverse
      
      sll_real64, dimension(:), allocatable    :: lambda
+     sll_real64, dimension(:), allocatable    :: T_i
      ! solve \lambda(r)\phi-\tilde{\phi} = second member
      
      sll_real64, dimension(:), pointer        :: mu_points_for_phi
@@ -67,7 +68,7 @@ module sll_qn_2d_polar
 contains
 
 
-  function new_plan_qn_polar_splines(eta_min,eta_max,Nc,N_points,lambda) result(this)
+  function new_plan_qn_polar_splines(eta_min,eta_max,Nc,N_points,lambda,T_i) result(this)
 
     implicit none
 
@@ -76,6 +77,7 @@ contains
     sll_int32, intent(in)  :: Nc(2)
     sll_int32, intent(in)  :: N_points
     sll_real64, dimension(:), intent(in)    :: lambda
+    sll_real64, dimension(:), intent(in)    :: T_i
     type(sll_plan_qn_polar), pointer :: this
 
     sll_int32 :: err
@@ -83,6 +85,7 @@ contains
     SLL_ALLOCATE(this,err)
     SLL_ALLOCATE(this%points(3,N_points),err)
     SLL_ALLOCATE(this%lambda(1:Nc(1)+1),err)
+    SLL_ALLOCATE(this%T_i(1:Nc(1)+1),err)
     
     call compute_shape_circle(this%points,N_points) 
        
@@ -93,6 +96,7 @@ contains
     
   
     this%lambda=lambda
+    this%T_i=T_i
     
   end function new_plan_qn_polar_splines
 
@@ -539,7 +543,9 @@ contains
         do i=0,Nr
           mat_stock2(i,i) =   mat_stock2(i,i) - quasineutral%lambda(i+1)*(1._f64,0._f64)
         enddo
-        quasineutral%mat_qn_inverse(m,:,:) = quasineutral%mat_qn_inverse(m,:,:) - mu_weights(p)*mat_stock2(:,:)*dexp(-mu_points(p))
+        do i=0,Nr
+          quasineutral%mat_qn_inverse(m,i,:) = quasineutral%mat_qn_inverse(m,i,:) - mu_weights(p)*mat_stock2(i,:)*dexp(-mu_points(p)/quasineutral%T_i(i+1))
+        enddo
       enddo 
     enddo     
  ! Inversion des blocs
@@ -637,7 +643,7 @@ contains
 
 
 
- subroutine test_solve_qn_polar_splines(Nc,eta_min,eta_max,mu_points,mu_weights,N_mu,mode,lambda,phi_init,phi_qn)
+ subroutine test_solve_qn_polar_splines(Nc,eta_min,eta_max,mu_points,mu_weights,N_mu,mode,lambda,T_i,phi_init,phi_qn)
   sll_int32,intent(in)  :: Nc(2)
   sll_real64,intent(in) :: eta_min(2)
   sll_real64,intent(in) :: eta_max(2)
@@ -647,10 +653,14 @@ contains
   sll_real64,dimension(1:N_mu),intent(in) :: mu_weights
   sll_real64,dimension(1:Nc(1)+1,1:Nc(2)+1),intent(in) :: phi_init
   sll_real64,dimension(1:Nc(1)+1,1:Nc(2)+1),intent(in) :: phi_qn
+  sll_real64,dimension(1:Nc(1)+1),intent(in) :: lambda,T_i
   sll_int32  :: N_min(2),N_max(2)
-  sll_real64  :: gamma0,tmp1,lambda
+  sll_real64,dimension(:),allocatable :: gamma0
+  sll_real64  :: tmp1
   sll_real64 :: eps,rho2d(2),mu2dmax(2),error(3)
   sll_int32 :: i,j,ierr,p
+  
+  SLL_ALLOCATE(gamma0(1:Nc(1)+1),ierr)
   
   N_min = 1
   N_max(1) = Nc(1)
@@ -659,40 +669,43 @@ contains
   mu2dmax(1) = maxval(mu_points)
   mu2dmax(2) = maxval(mu_points)
   
-  gamma0=0._f64
   eps=1.e-10
+  gamma0 = 0._f64
   
   call compute_N_bounds_polar_circle(N_min(1),N_max(1),Nc(1),2._f64*sqrt(2._f64*mu2dmax),eta_min(1),eta_max(1))
-  
+
   do p = 1, N_mu
     rho2d(1) = sqrt(2._f64*mu_points(p))
     rho2d(2) = sqrt(2._f64*mu_points(p))
     call solution_polar_circle(rho2d,mode,eta_min,eta_max,tmp1)
-    gamma0 = gamma0 + mu_weights(p)*dexp(-mu_points(p))*(lambda-tmp1**2)
-    !gamma0 = gamma0 + mu_weights(p)*(1._f64-tmp1**2)
+    do i = 1, Nc(1)+1
+      gamma0(i) = gamma0(i) + mu_weights(p)*dexp(-mu_points(p)/T_i(i))*(lambda(i)-tmp1**2)
+    enddo
   enddo
-  !gamma0 = 1._f64-gamma0
+  do i = 1, Nc(1)+1
+    gamma0(i) = 1._f64/gamma0(i)
+  enddo
   
-  print *,'#gamma0val=',gamma0
+  ! print *,'#gamma0val=',gamma0
 
-  print *,'#QN solver',N_min,N_max
-  call compute_error(phi_qn,phi_init,1._f64/gamma0,error,N_min,N_max)
+  print *,'#N_min(1:2) / N_max(1:2) = ',N_min,' / ',N_max
+  call compute_error_1D(phi_qn,phi_init,gamma0,error,N_min,N_max)
   print *,'#error subdomain=',error
-  call compute_error(phi_qn,phi_init,1._f64/gamma0,error,(/1,1/),Nc)
+  call compute_error_1D(phi_qn,phi_init,gamma0,error,(/1,1/),Nc)
   print *,'#error whole domain=',error
 
 
-!             call sll_gnuplot_2d( &
-!                  eta_min(1), &
-!                  eta_max(1), &
-!                  Nc(1)+1, &
-!                  eta_min(2), &
-!                  eta_max(2), &
-!                  Nc(2)+1, &
-!                  phi_qn-(1._f64/gamma0)*phi_init, &
-!                  'fdiff', &
-!                  0, &
-!                  ierr)
+             call sll_gnuplot_2d( &
+                  eta_min(1), &
+                  eta_max(1), &
+                  Nc(1)+1, &
+                  eta_min(2), &
+                  eta_max(2), &
+                  Nc(2)+1, &
+                  phi_qn, &
+                  'fdiff', &
+                  0, &
+                  ierr)
 
 
   end subroutine test_solve_qn_polar_splines
@@ -1740,6 +1753,30 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
       
   end subroutine compute_error
 
+
+  subroutine compute_error_1D(f,f_init,J_factor,err,N_min,N_max)
+    sll_real64,dimension(:,:),intent(in)::f,f_init
+    sll_int32,intent(in)::N_min(2),N_max(2)
+    sll_real64,dimension(:),intent(in) :: J_factor
+    sll_real64,intent(out)::err(3)
+    sll_int32::i,j
+    sll_real64::tmp,delta
+    
+    err=0._f64
+    
+    do j=N_min(2),N_max(2)+1
+      do i=N_min(1),N_max(1)+1
+        tmp=f(i,j)-J_factor(i)*f_init(i,j)
+        err(1)=err(1)+abs(tmp)
+        err(2)=err(2)+abs(tmp)**2
+        err(3)=max(err(3),abs(tmp))        
+      enddo
+    enddo
+    delta=1._f64/(real((N_max(2)-N_min(2)),f64)* real((N_max(1)-N_min(1)),f64))
+    err(1)=err(1)*delta
+    err(2)=sqrt(err(2)*delta)
+      
+  end subroutine compute_error_1D
 
 
   subroutine solution_polar_circle(rho,mode,eta_min,eta_max,val)
