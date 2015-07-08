@@ -30,7 +30,7 @@ program sim2d_gc_hex_splines
   sll_int32    :: spline_degree
   sll_int32    :: hermite_method
   sll_int32    :: i,j, k1, k2, index_tab, type
-  sll_int32    :: l1,l2
+  sll_int32    :: width_band1,width_band2
   sll_int32    :: i1,i2,i3
   sll_int32    :: num_cells, n_points, n_triangle, n_points2
   sll_int32    :: cells_min, cells_max
@@ -160,7 +160,9 @@ program sim2d_gc_hex_splines
      t = 0._f64
      nloops = 0
      count  = 0
-
+     if (model_name.eq."CIRCULAR") then
+        dt = 0.1_f64 * 20._f64/mesh%num_cells
+     end if
      !*********************************************************
      !             allocation
      !*********************************************************
@@ -181,9 +183,8 @@ program sim2d_gc_hex_splines
      r22 = + mesh%r1_x1/det
      ! ---------------------------------------
 
-     ! TODO : what are these  ?
-     l1 = 2*num_cells+1
-     l2 = l1
+     width_band1 = 2*num_cells+1
+     width_band2 = width_band1
 
      SLL_ALLOCATE(rho_tn( n_points),ierr)
      SLL_ALLOCATE(rho_tn1( n_points ),ierr)
@@ -235,9 +236,9 @@ program sim2d_gc_hex_splines
      ! Poisson solver ------------------------
      if (model_name.eq."GC") then
         call hex_matrix_poisson( matrix_poisson, mesh,type=1)
-        call factolub_bande(matrix_poisson,l,u,n_points,l1,l2)
+        call factolub_bande(matrix_poisson,l,u,n_points,width_band1,width_band2)
         call hex_second_terme_poisson( second_term, mesh, rho_tn )
-        call solvlub_bande(l,u,phi_interm,second_term,n_points,l1,l2)
+        call solvlub_bande(l,u,phi_interm,second_term,n_points,width_band1,width_band2)
 
         do i = 1, mesh%num_pts_tot
            k1 = mesh%hex_coord(1, i)
@@ -252,7 +253,10 @@ program sim2d_gc_hex_splines
      if (model_name.eq."GC") then
         call hex_diagnostics_gc(rho_tn,t,mesh,uxn,uyn,nloops,spline_degree,tmax,cells_min,cells_max)
      elseif (model_name.eq."CIRCULAR") then
-        call hex_diagnostics_circ(rho_tn,t,mesh,nloops,spline_degree,tmax,cells_min,cells_max)
+        call hex_diagnostics_circ(rho_tn, t, &
+             mesh, nloops, spline_degree, &
+             tmax, cells_min, cells_max, &
+             gauss_x1, gauss_x2, gauss_sig, gauss_amp)
      end if
         
      !*********************************************************
@@ -304,7 +308,7 @@ program sim2d_gc_hex_splines
            h2 =  xx*r21 + yy*r22
 
            if ( abs(h1) >  radius-mesh%delta .or. abs(h2) >  radius-mesh%delta ) inside = .false.
-           if ( abs(xx) > (radius-mesh%delta)*sqrt(3._f64)*0.5_f64) inside = .false.
+           if ( abs(xx) > (radius-mesh%delta)*sll_sqrt3*0.5_f64) inside = .false.
 
            if ( inside ) then
               rho_tn1(i) = hex_interpolate_value(mesh, xx, yy, spline, spline_degree)
@@ -314,7 +318,6 @@ program sim2d_gc_hex_splines
 
 
         end do ! end of the computation of the mesh points
-
 
         ! Updating the new field values ............
         rho_tn = rho_tn1
@@ -326,7 +329,7 @@ program sim2d_gc_hex_splines
         if (model_name.eq."GC") then
            call hex_second_terme_poisson( second_term, mesh, rho_tn )
 
-           call solvlub_bande(l,u,phi_interm,second_term,n_points,l1,l2)
+           call solvlub_bande(l,u,phi_interm,second_term,n_points,width_band1,width_band2)
 
            do i = 1, mesh%num_pts_tot    ! need to re-index phi :
               k1 = mesh%hex_coord(1, i)
@@ -359,7 +362,7 @@ program sim2d_gc_hex_splines
               count = 0
            endif
         elseif (model_name.eq."CIRCULAR") then
-           call hex_diagnostics_circ(rho_tn,t,mesh,nloops,spline_degree,tmax,cells_min,cells_max)
+           call hex_diagnostics_circ(rho_tn,t,mesh,nloops,spline_degree,tmax,cells_min,cells_max, gauss_x1, gauss_x2, gauss_sig, gauss_amp)
            if (count == 10.and.nloops<10000.and.num_cells == cells_max) then
               call int2string(nloops,filenum)
               filename  = "circular_advection_rho"//trim(filenum)
@@ -517,7 +520,7 @@ contains
           if ( rho(i) < rho_min  ) rho_min  = rho(i)
        enddo
 
-       print*,"diagnostic for t = ",t
+       print *,"diagnostic for t = ",t
        energy  = sqrt(energy * mesh%delta**2)
        mass    = mass * mesh%delta**2
        norm_l1 = norm_l1 * mesh%delta**2
@@ -591,12 +594,21 @@ contains
   !> @param tmax: maximum time that the will simulation will run
   !> @param cells_min int: min number of cells the mesh will have during this simulation
   !> @param cells_max int: max number of cells the mesh will have during this simulation
+  !> @param gauss_x1 real: 1st coordinate of center of the bulb distribution function
+  !> @param gauss_x2 real: 2nd coordinate of center of the bulb distribution function
+  !> @param gauss_sig real: width of the bulb distribution function
+  !> @param gauss_amp real: amplitude of the bulb distribution function
   !> return 
-  subroutine hex_diagnostics_circ(rho,t,mesh,nloop,deg,tmax,cells_min,cells_max)
+  subroutine hex_diagnostics_circ(rho,t,mesh,nloop,deg,tmax,cells_min,cells_max, &
+       gauss_x1, gauss_x2, gauss_sig, gauss_amp)
     type(sll_hex_mesh_2d),  pointer  :: mesh
     sll_real64, dimension(:) :: rho
     sll_real64, intent(in)   :: t
     sll_real64, intent(in)   :: tmax
+    sll_real64, intent(in)   :: gauss_x1
+    sll_real64, intent(in)   :: gauss_x2
+    sll_real64, intent(in)   :: gauss_sig
+    sll_real64, intent(in)   :: gauss_amp
     sll_int32 , intent(in)   :: nloop
     sll_int32 , intent(in)   :: deg
     sll_int32 , intent(in)   :: cells_min, cells_max
@@ -605,6 +617,7 @@ contains
     sll_real64 :: norm_l1
     sll_real64 :: norm_l2
     sll_real64 :: norm_linf
+    sll_real64 :: x, y, f_exact
     sll_int32  :: i
     sll_int32  :: out_unit
     character(len = 50) :: filename
@@ -619,7 +632,6 @@ contains
 
     ! --------------------------------------------------
     ! Writing file in respect to time...................
-
     if (mesh%num_cells == cells_max) then
        call int2string(mesh%num_cells,filenum)
        call int2string(deg,splinedeg)
@@ -633,9 +645,17 @@ contains
        endif
 
        do i = 1,mesh%num_pts_tot
+          ! We compute the exact solution:
+          x = mesh%global_to_x1(i)*cos(2._f64*sll_pi*dt*nloops) - & 
+               mesh%global_to_x2(i)*sin(2._f64*sll_pi*dt*nloops)
+          y = mesh%global_to_x1(i)*sin(2._f64*sll_pi*dt*nloops) + &
+               mesh%global_to_x2(i)*cos(2._f64*sll_pi*dt*nloops)
+          f_exact = gauss_amp * exp(-0.5_f64* &
+               ((x-gauss_x1)**2 + (y-gauss_x2)**2) / gauss_sig**2 )
+          ! Then the errors:
           mass = mass + rho(i)
-          norm_l1 = norm_l1 + abs(rho(i))
-          norm_l2 = norm_l2 + rho(i)**2
+          norm_l1 = norm_l1 + abs(f_exact - rho(i))
+          norm_l2 = norm_l2 + (f_exact - rho(i))**2
           if ( abs(rho(i)) > norm_linf ) norm_linf = rho(i)
           if ( rho(i) < rho_min  ) rho_min  = rho(i)
        enddo
@@ -671,9 +691,17 @@ contains
        endif
        
        do i = 1,mesh%num_pts_tot
+          ! We compute the exact solution:
+          x = mesh%global_to_x1(i)*cos(2._f64*sll_pi*dt*nloops) - & 
+               mesh%global_to_x2(i)*sin(2._f64*sll_pi*dt*nloops)
+          y = mesh%global_to_x1(i)*sin(2._f64*sll_pi*dt*nloops) + &
+               mesh%global_to_x2(i)*cos(2._f64*sll_pi*dt*nloops)
+          f_exact = gauss_amp * exp(-0.5_f64* &
+               ((x-gauss_x1)**2 + (y-gauss_x2)**2) / gauss_sig**2 )
+          ! Then the errors:
           mass = mass + rho(i)
-          norm_l1 = norm_l1 + abs(rho(i))
-          norm_l2 = norm_l2 + rho(i)**2
+          norm_l1 = norm_l1 + abs(f_exact - rho(i))
+          norm_l2 = norm_l2 + (f_exact - rho(i))**2
           if ( abs(rho(i)) > norm_linf ) norm_linf = rho(i)
           if ( rho(i) < rho_min  ) rho_min  = rho(i)
        enddo

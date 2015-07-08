@@ -195,6 +195,9 @@ program sim2d_gc_hex_hermite
      t = 0._f64
      nloops = 0
      count  = 0
+     if (model_name.eq."CIRCULAR") then
+        dt = 0.1_f64 * 20._f64/mesh%num_cells
+     end if
 
      !*********************************************************
      !             allocation
@@ -426,7 +429,7 @@ program sim2d_gc_hex_hermite
            call hex_diagnostics_gc(rho2,t,mesh2,uxn2,uyn2,nloops,spline_degree,tmax,cells_min,cells_max)
         end if
      elseif (model_name.eq."CIRCULAR") then
-        call hex_diagnostics_circ(rho_tn,t,mesh,nloops,spline_degree,tmax,cells_min,cells_max)
+        call hex_diagnostics_circ(rho_tn,t,mesh,nloops,spline_degree,tmax,cells_min,cells_max,gauss_x1, gauss_x2, gauss_sig, gauss_amp)
      end if
 
 
@@ -689,7 +692,7 @@ program sim2d_gc_hex_hermite
               count = 0
            endif
         elseif (model_name.eq."CIRCULAR") then
-           call hex_diagnostics_circ(rho_tn,t,mesh,nloops,spline_degree,tmax,cells_min,cells_max)
+           call hex_diagnostics_circ(rho_tn,t,mesh,nloops,spline_degree,tmax,cells_min,cells_max, gauss_x1, gauss_x2, gauss_sig, gauss_amp)
            if (count == 10.and.nloops<10000.and.num_cells == cells_max) then
               call int2string(nloops,filenum)
               filename  = "circular_advection_rho"//trim(filenum)
@@ -1063,10 +1066,15 @@ contains
   !> @param cells_min int: min number of cells the mesh will have during this simulation
   !> @param cells_max int: max number of cells the mesh will have during this simulation
   !> return 
-  subroutine hex_diagnostics_circ(rho,t,mesh,nloop,deg,tmax,cells_min,cells_max)
+  subroutine hex_diagnostics_circ(rho,t,mesh,nloop,deg,tmax,cells_min,cells_max, &
+       gauss_x1, gauss_x2, gauss_sig, gauss_amp)
     type(sll_hex_mesh_2d),  pointer  :: mesh
     sll_real64, dimension(:) :: rho
     sll_real64, intent(in)   :: t
+    sll_real64, intent(in)   :: gauss_x1
+    sll_real64, intent(in)   :: gauss_x2
+    sll_real64, intent(in)   :: gauss_sig
+    sll_real64, intent(in)   :: gauss_amp
     sll_real64, intent(in)   :: tmax
     sll_int32 , intent(in)   :: nloop
     sll_int32 , intent(in)   :: deg
@@ -1076,6 +1084,7 @@ contains
     sll_real64 :: norm_l1
     sll_real64 :: norm_l2
     sll_real64 :: norm_linf
+    sll_real64 :: x, y, f_exact
     sll_int32  :: i
     sll_int32  :: out_unit
     character(len = 50) :: filename
@@ -1104,9 +1113,17 @@ contains
        endif
 
        do i = 1,mesh%num_pts_tot
+          ! We compute the exact solution:
+          x = mesh%global_to_x1(i)*cos(2._f64*sll_pi*dt*nloops) - & 
+               mesh%global_to_x2(i)*sin(2._f64*sll_pi*dt*nloops)
+          y = mesh%global_to_x1(i)*sin(2._f64*sll_pi*dt*nloops) + &
+               mesh%global_to_x2(i)*cos(2._f64*sll_pi*dt*nloops)
+          f_exact = gauss_amp * exp(-0.5_f64* &
+               ((x-gauss_x1)**2 + (y-gauss_x2)**2) / gauss_sig**2 )
+          ! Then the errors:
           mass = mass + rho(i)
-          norm_l1 = norm_l1 + abs(rho(i))
-          norm_l2 = norm_l2 + rho(i)**2
+          norm_l1 = norm_l1 + abs(f_exact - rho(i))
+          norm_l2 = norm_l2 + (f_exact - rho(i))**2
           if ( abs(rho(i)) > norm_linf ) norm_linf = rho(i)
           if ( rho(i) < rho_min  ) rho_min  = rho(i)
        enddo
@@ -1142,9 +1159,17 @@ contains
        endif
        
        do i = 1,mesh%num_pts_tot
+          ! We compute the exact solution:
+          x = mesh%global_to_x1(i)*cos(2._f64*sll_pi*dt*nloops) - & 
+               mesh%global_to_x2(i)*sin(2._f64*sll_pi*dt*nloops)
+          y = mesh%global_to_x1(i)*sin(2._f64*sll_pi*dt*nloops) + &
+               mesh%global_to_x2(i)*cos(2._f64*sll_pi*dt*nloops)
+          f_exact = gauss_amp * exp(-0.5_f64* &
+               ((x-gauss_x1)**2 + (y-gauss_x2)**2) / gauss_sig**2 )
+          ! Then the errors:
           mass = mass + rho(i)
-          norm_l1 = norm_l1 + abs(rho(i))
-          norm_l2 = norm_l2 + rho(i)**2
+          norm_l1 = norm_l1 + abs(f_exact - rho(i))
+          norm_l2 = norm_l2 + (f_exact - rho(i))**2
           if ( abs(rho(i)) > norm_linf ) norm_linf = rho(i)
           if ( rho(i) < rho_min  ) rho_min  = rho(i)
        enddo
