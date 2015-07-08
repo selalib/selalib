@@ -38,6 +38,9 @@ program sim2d_gc_hex_splines
   sll_int32    :: nloops,count, ierr, EXTRA_TABLES = 0
   sll_real64   :: center_mesh_x1, center_mesh_x2, radius
   sll_real64   :: epsilon
+  sll_real64   :: gauss_x1, gauss_x2
+  sll_real64   :: gauss_sig
+  sll_real64   :: gauss_amp
   sll_real64   :: dt
   sll_real64   :: tmax
   sll_real64   :: t
@@ -50,6 +53,7 @@ program sim2d_gc_hex_splines
   sll_int32            :: IO_stat
   sll_int32, parameter :: input_file = 99
   character(len = 256) :: input_filename
+  character(len = 256) :: model_name
   character(len = 50)  :: filename
   character(len = 4)   :: filenum
   character(len = 4)   :: degnum
@@ -63,44 +67,28 @@ program sim2d_gc_hex_splines
        cells_max, &
        cells_stp
 
+  namelist /test_case/ &
+       model_name
+
   namelist /initial_function/ &
-!      initial_function_case, &
-!      kmode_x1, &
-!      kmode_x2, &
-      epsilon
+       epsilon,   &
+       gauss_x1,  &
+       gauss_x2,  &
+       gauss_sig, &
+       gauss_amp
 
     namelist /time_iterations/ &
       dt, &
       tmax
-!      freq_diag, &
-!      freq_diag_time, &
-!      time_loop_case
 
     namelist /interpolation/ &
       spline_degree
 
-
-    ! namelist /advector/ &
-    !   advect2d_case, &   
-    !   f_interp2d_case, &
-    !   phi_interp2d_case, &
-    !   charac2d_case, &
-    !   A_interp_case, &
-    !   charac1d_x1_case, &
-    !   charac1d_x2_case, &
-    !   advect1d_x1_case, &   
-    !   advect1d_x2_case  
-
-    ! namelist /poisson/ &
-    !   poisson_case, &
-    !   poisson_solver, &
-    !   mudpack_method, &    
-    !   spline_degree_eta1, &
-    !   spline_degree_eta2    
-
   ! ----------------------------
   ! Setting default parameters
   ! ----------------------------
+  ! Test case :
+  model_name = "GC"  
   ! Mesh :
   center_mesh_x1 = 0._f64
   center_mesh_x2 = 0._f64
@@ -110,6 +98,10 @@ program sim2d_gc_hex_splines
   cells_stp = 20
   ! Initial function :
   epsilon = 0.001_f64
+  gauss_x1  = 2._f64
+  gauss_x2  = 2._f64
+  gauss_sig = 1._f64/( 2._f64 * sqrt(2._f64)) 
+  gauss_amp = 1.0_f64
   ! Time iterations:
   tmax  = 20._f64
   dt    = 0.1_f64
@@ -130,12 +122,12 @@ program sim2d_gc_hex_splines
      print *,'#initialization with filename:'
      print *,'#',trim(input_filename)
      read(input_file, geometry)
+     read(input_file, test_case)
      read(input_file, initial_function)
      read(input_file, time_iterations)
      read(input_file, interpolation)
-     ! read(input_file, advector)
-     ! read(input_file, poisson)
      close(input_file)
+     print *, "sigma = ", gauss_sig
   else
      print *,'#initialization with default parameters'
   endif
@@ -144,13 +136,25 @@ program sim2d_gc_hex_splines
   do num_cells = cells_min,cells_max,cells_stp
 
      call int2string(spline_degree,degnum)
-     print*, ""
-     print*," ********************************* "
-     print*,"     Guiding-Center Simulation"
-     print*,"        on a Hexagonal mesh"
-     print*,"   using boxsplines of deg =", degnum
-     print*," ********************************* "
-
+     if (model_name.eq."GC") then
+        print*, ""
+        print*," ********************************* "
+        print*,"     Guiding-Center Simulation"
+        print*,"        on a Hexagonal mesh"
+        print*,"   using boxsplines of deg =", degnum
+        print*," ********************************* "
+     elseif (model_name.eq."CIRCULAR") then
+        print*, ""
+        print*," ********************************* "
+        print*,"     Circular Advection Simulation"
+        print*,"        on a Hexagonal mesh"
+        print*,"   using boxsplines of deg =", degnum
+        print*," ********************************* "
+     else
+        print *, "ERROR : No recognized model name;"
+        print *, "        Options are: 'GC' or 'CIRCULAR'."
+        print *, "        Please change it in your namelist file."
+     end if
      t = 0._f64
      nloops = 0
      count  = 0
@@ -182,26 +186,33 @@ program sim2d_gc_hex_splines
      SLL_ALLOCATE(rho_tn_1( n_points),ierr)
      SLL_ALLOCATE(rho_tn( n_points),ierr)
      SLL_ALLOCATE(rho_tn1( n_points ),ierr)
+
      SLL_ALLOCATE(x1_char( n_points ),ierr)
      SLL_ALLOCATE(x2_char( n_points ),ierr)
 
      SLL_ALLOCATE(uxn( n_points),ierr)
      SLL_ALLOCATE(uyn( n_points ),ierr)
-     SLL_ALLOCATE(uxn_1( n_points),ierr)
-     SLL_ALLOCATE(uyn_1( n_points ),ierr)
-
+     
      SLL_ALLOCATE(dxuxn( n_points),ierr)
      SLL_ALLOCATE(dxuyn( n_points ),ierr)
      SLL_ALLOCATE(dyuxn( n_points),ierr)
      SLL_ALLOCATE(dyuyn( n_points ),ierr)
 
-     SLL_ALLOCATE(second_term( n_points),ierr)
-     SLL_ALLOCATE(phi( n_points),ierr)
-     SLL_ALLOCATE(phi_interm( n_points),ierr)
-     SLL_ALLOCATE(matrix_poisson( n_points,1 + 4*num_cells + 2 ) , ierr)
-     SLL_ALLOCATE(l( n_points,1 + 4*num_cells + 2 ) , ierr)
-     SLL_ALLOCATE(u( n_points,1 + 4*num_cells + 2), ierr)
+     if (model_name.eq."GC") then
+        ! variables only used in the guiding center model
+        SLL_ALLOCATE(phi( n_points),ierr)
+        SLL_ALLOCATE(phi_interm( n_points),ierr)
+        
+        SLL_ALLOCATE(uxn_1( n_points),ierr)
+        SLL_ALLOCATE(uyn_1( n_points ),ierr)
+        SLL_ALLOCATE(second_term( n_points),ierr)
 
+        SLL_ALLOCATE(matrix_poisson( n_points,1 + 4*num_cells + 2 ) , ierr)
+        SLL_ALLOCATE(l( n_points,1 + 4*num_cells + 2 ) , ierr)
+        SLL_ALLOCATE(u( n_points,1 + 4*num_cells + 2), ierr)
+     end if
+
+     
      call cpu_time(t_init)
 
      !*********************************************************
@@ -213,27 +224,36 @@ program sim2d_gc_hex_splines
      ! ---------------------------------------
 
      ! Initial distribution ------------------
-     call init_distr(rho_tn,mesh,epsilon)
+     if (model_name.eq."GC") then
+        call init_distr_gc(rho_tn,mesh,epsilon)
+     elseif (model_name.eq."CIRCULAR") then
+        call init_distr_circ(rho_tn,mesh,gauss_x1,gauss_x2,gauss_sig,gauss_amp)
+     end if
      ! ---------------------------------------
 
      ! Poisson solver ------------------------
-     call hex_matrix_poisson( matrix_poisson, mesh,type=1)
-     call factolub_bande(matrix_poisson,l,u,n_points,l1,l2)
-     call hex_second_terme_poisson( second_term, mesh, rho_tn )
-     call solvlub_bande(l,u,phi_interm,second_term,n_points,l1,l2)
+     if (model_name.eq."GC") then
+        call hex_matrix_poisson( matrix_poisson, mesh,type=1)
+        call factolub_bande(matrix_poisson,l,u,n_points,l1,l2)
+        call hex_second_terme_poisson( second_term, mesh, rho_tn )
+        call solvlub_bande(l,u,phi_interm,second_term,n_points,l1,l2)
 
-     do i = 1, mesh%num_pts_tot
-        k1 = mesh%hex_coord(1, i)
-        k2 = mesh%hex_coord(2, i)
-        call index_hex_to_global(mesh, k1, k2, index_tab)
-        phi(i) = phi_interm(index_tab)
-     enddo
-     call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type=1)
+        do i = 1, mesh%num_pts_tot
+           k1 = mesh%hex_coord(1, i)
+           k2 = mesh%hex_coord(2, i)
+           call index_hex_to_global(mesh, k1, k2, index_tab)
+           phi(i) = phi_interm(index_tab)
+        enddo
+        call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type=1)
+     end if
      ! ---------------------------------------
 
-     call hex_diagnostics(rho_tn,t,mesh,uxn,uyn,nloops,spline_degree,tmax,cells_min,cells_max)
-
-
+     if (model_name.eq."GC") then
+        call hex_diagnostics_gc(rho_tn,t,mesh,uxn,uyn,nloops,spline_degree,tmax,cells_min,cells_max)
+     elseif (model_name.eq."CIRCULAR") then
+        call hex_diagnostics_circ(rho_tn,t,mesh,nloops,spline_degree,tmax,cells_min,cells_max)
+     end if
+        
      !*********************************************************
      !                          Time loop
      !*********************************************************
@@ -263,20 +283,19 @@ program sim2d_gc_hex_splines
            !*************************************************
            !       computation of the characteristics
            !*************************************************
-
-           if ( t <= dt + 1e-6 ) then ! first step with euler
-
-              call compute_characteristic_euler_2d_hex( &
-                   x,y,uxn,uyn,i,xx,yy,dt )
-
-           else !the rest is done with Adams 2
-
-
-              call compute_characteristic_adams2_2d_hex( x,y,uxn,uyn,uxn_1,uyn_1,&
-                   dxuxn,dyuxn,dxuyn,dyuyn,i,xx,yy,dt)
-
-           endif
-
+           if (model_name.eq."CIRCULAR") then
+              xx = x*cos(dt) - y*sin(dt)
+              yy = x*sin(dt) + y*cos(dt)
+           elseif (model_name.eq."GC") then
+              ! We use Adams2 for solving ODE except for first step
+              if ( t <= dt + 1e-6 ) then ! first step with euler
+                 call compute_characteristic_euler_2d_hex( &
+                      x,y,uxn,uyn,i,xx,yy,dt )
+              else !the rest is done with Adams 2
+                 call compute_characteristic_adams2_2d_hex( x,y,uxn,uyn,uxn_1,uyn_1,&
+                      dxuxn,dyuxn,dxuyn,dyuyn,i,xx,yy,dt)
+              endif
+           end if
            
            inside = .true.
            h1 =  xx*r11 + yy*r12
@@ -303,35 +322,43 @@ program sim2d_gc_hex_splines
         !*********************************************************
         !      computing the solution of the poisson equation 
         !*********************************************************
+        if (model_name.eq."GC") then
+           call hex_second_terme_poisson( second_term, mesh, rho_tn )
 
-        call hex_second_terme_poisson( second_term, mesh, rho_tn ) 
+           call solvlub_bande(l,u,phi_interm,second_term,n_points,l1,l2)
 
-        call solvlub_bande(l,u,phi_interm,second_term,n_points,l1,l2)
+           do i = 1, mesh%num_pts_tot    ! need to re-index phi :
+              k1 = mesh%hex_coord(1, i)
+              k2 = mesh%hex_coord(2, i)
+              call index_hex_to_global(mesh, k1, k2, index_tab)
+              phi(i) = phi_interm(index_tab)
+           enddo
 
-        do i = 1, mesh%num_pts_tot    ! need to re-index phi :
-           k1 = mesh%hex_coord(1, i)
-           k2 = mesh%hex_coord(2, i)
-           call index_hex_to_global(mesh, k1, k2, index_tab)
-           phi(i) = phi_interm(index_tab)
-        enddo
+           call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type=1)
 
-        call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type=1)
+           ! Updating the new field values ............
+           uxn_1 = uxn
+           uyn_1 = uyn
+           ! ...........................................
+        end if
 
-        ! Updating the new field values ............
-        uxn_1 = uxn
-        uyn_1 = uyn
-        ! ...........................................
-
+        
         !*********************************************************
         !                  writing diagostics
         !*********************************************************
-        call hex_diagnostics(rho_tn,t,mesh,uxn,uyn,nloops,spline_degree,tmax,cells_min,cells_max)
+        if (model_name.eq."GC") then
+           call hex_diagnostics_gc(rho_tn,t,mesh,uxn,uyn,nloops,spline_degree,tmax,cells_min,cells_max)
+        elseif (model_name.eq."CIRCULAR") then
+           call hex_diagnostics_circ(rho_tn,t,mesh,nloops,spline_degree,tmax,cells_min,cells_max)
+        end if
         if (count == 10.and.nloops<10000.and.num_cells == cells_max) then
            call int2string(nloops,filenum)
            filename  = "center_guide_rho"//trim(filenum)
            call write_field_hex_mesh_xmf(mesh, rho_tn1, trim(filename))
-           filename  = "center_guide_phi"//trim(filenum)
-           call write_field_hex_mesh_xmf(mesh, phi, trim(filename))
+           if (model_name.eq."GC") then
+              filename  = "center_guide_phi"//trim(filenum)
+              call write_field_hex_mesh_xmf(mesh, phi, trim(filename))
+           end if
            count = 0
         endif
 
@@ -345,18 +372,20 @@ program sim2d_gc_hex_splines
      SLL_DEALLOCATE_ARRAY(x2_char,ierr)
      SLL_DEALLOCATE_ARRAY(uxn,ierr)
      SLL_DEALLOCATE_ARRAY(uyn,ierr)
-     SLL_DEALLOCATE_ARRAY(uxn_1,ierr)
-     SLL_DEALLOCATE_ARRAY(uyn_1,ierr)
      SLL_DEALLOCATE_ARRAY(dxuxn,ierr)
      SLL_DEALLOCATE_ARRAY(dxuyn,ierr)
      SLL_DEALLOCATE_ARRAY(dyuxn,ierr)
      SLL_DEALLOCATE_ARRAY(dyuyn,ierr)
-     SLL_DEALLOCATE_ARRAY(second_term,ierr)
-     SLL_DEALLOCATE_ARRAY(phi,ierr)
-     SLL_DEALLOCATE_ARRAY(phi_interm,ierr)
-     deallocate(matrix_poisson)
-     deallocate(l)
-     deallocate(u)
+     if (model_name.eq."GC") then
+        SLL_DEALLOCATE_ARRAY(uxn_1,ierr)
+        SLL_DEALLOCATE_ARRAY(uyn_1,ierr)
+        SLL_DEALLOCATE_ARRAY(second_term,ierr)
+        SLL_DEALLOCATE_ARRAY(phi,ierr)
+        SLL_DEALLOCATE_ARRAY(phi_interm,ierr)
+        deallocate(matrix_poisson)
+        deallocate(l)
+        deallocate(u)
+     end if
 
      call delete_hex_mesh_2d( mesh )
 
@@ -372,12 +401,11 @@ contains
 
   !*********initialization**************
 
-  subroutine init_distr(f_tn, mesh, epsilon)
+  subroutine init_distr_gc(f_tn, mesh, epsilon)
     type(sll_hex_mesh_2d), pointer :: mesh
     sll_real64, dimension(:)       :: f_tn
     sll_real64, intent(in) :: epsilon
     sll_real64 :: x, y
-    sll_real64 :: rho
     sll_real64 :: r
     sll_int32  :: i
 
@@ -393,29 +421,46 @@ contains
           f_tn(i) = 0._f64
        endif
     enddo
+  end subroutine init_distr_gc
 
+  subroutine init_distr_circ(f_tn, mesh, center_x1, center_x2, sigma, amplitude)
+    type(sll_hex_mesh_2d), pointer :: mesh
+    sll_real64, dimension(:)       :: f_tn
+    sll_real64, intent(in) :: center_x1
+    sll_real64, intent(in) :: center_x2
+    sll_real64, intent(in) :: sigma
+    sll_real64, intent(in) :: amplitude
+    sll_real64 :: x, y
+    sll_real64 :: r
+    sll_int32  :: i
 
-  end subroutine init_distr
+    do i = 1,mesh%num_pts_tot
+       x = mesh%cartesian_coord(1,i)
+       y = mesh%cartesian_coord(2,i)
 
+       f_tn(i) = amplitude * exp(-0.5_f64* &
+            ((x-center_x1)**2 + (y-center_x2)**2) / sigma**2 )
+    enddo
+  end subroutine init_distr_circ
 
   !-------------------------------------------------------------------------
   !> @brief Writes diagnostics files
-  !> @param Write two sort of documents: "diag_gc_spline*_*.dat" and 
+  !> @details Write two sort of documents: "diag_gc_spline*_*.dat" and 
   !> "diag_gc_spline*_nc.dat". Where important values (i.e. time of sim, errors, number
   !> of cells, etc) are written in order to compute diagnostics. The first file is for
   !> time evolutions, the second one is regarding the space discretization.
   !> @param rho real: contains the value of the density of the gc at time t
   !> @param t real: time of the simulation
   !> @param mesh sll_hex_mesh_2d: hexagonal mesh where the simulation is made
-  !> @param uxn real:
-  !> @param uyn real:
+  !> @param uxn real: equals sum( y_i) where (xi,yi) are the mesh points
+  !> @param uyn real: equals sum(-x_i) where (xi,yi) are the mesh points
   !> @param nloop int: number of loops done
   !> @param deg int: degree of the splines used for the interpolation method
   !> @param tmax: maximum time that the will simulation will run
   !> @param cells_min int: min number of cells the mesh will have during this simulation
   !> @param cells_max int: max number of cells the mesh will have during this simulation
   !> return 
-  subroutine hex_diagnostics(rho,t,mesh,uxn,uyn,nloop,deg,tmax,cells_min,cells_max)
+  subroutine hex_diagnostics_gc(rho,t,mesh,uxn,uyn,nloop,deg,tmax,cells_min,cells_max)
     type(sll_hex_mesh_2d),  pointer  :: mesh
     sll_real64, dimension(:) :: rho
     sll_real64, dimension(:) :: uxn
@@ -523,12 +568,127 @@ contains
             norm_linf, &
             energy
 
-    close(out_unit) 
+       close(out_unit) 
+    end if
+  end subroutine hex_diagnostics_gc
+
+  
+  !-------------------------------------------------------------------------
+  !> @brief Writes diagnostics files
+  !> @details Write two sort of documents: "diag_circ_spline*_*.dat" and 
+  !> "diag_circ_spline*_nc.dat". Where important values (i.e. time of sim, errors, number
+  !> of cells, etc) are written in order to compute diagnostics. The first file is for
+  !> time evolutions, the second one is regarding the space discretization.
+  !> @param rho real: contains the value of the density of the circ at time t
+  !> @param t real: time of the simulation
+  !> @param mesh sll_hex_mesh_2d: hexagonal mesh where the simulation is made
+  !> @param nloop int: number of loops done
+  !> @param deg int: degree of the splines used for the interpolation method
+  !> @param tmax: maximum time that the will simulation will run
+  !> @param cells_min int: min number of cells the mesh will have during this simulation
+  !> @param cells_max int: max number of cells the mesh will have during this simulation
+  !> return 
+  subroutine hex_diagnostics_circ(rho,t,mesh,nloop,deg,tmax,cells_min,cells_max)
+    type(sll_hex_mesh_2d),  pointer  :: mesh
+    sll_real64, dimension(:) :: rho
+    sll_real64, intent(in)   :: t
+    sll_real64, intent(in)   :: tmax
+    sll_int32 , intent(in)   :: nloop
+    sll_int32 , intent(in)   :: deg
+    sll_int32 , intent(in)   :: cells_min, cells_max
+    sll_real64 :: mass
+    sll_real64 :: rho_min
+    sll_real64 :: norm_l1
+    sll_real64 :: norm_l2
+    sll_real64 :: norm_linf
+    sll_int32  :: i
+    sll_int32  :: out_unit
+    character(len = 50) :: filename
+    character(len =  4) :: filenum
+    character(len =  4) :: splinedeg
+
+    mass      = 0._f64
+    rho_min   = rho(1)
+    norm_l1   = 0._f64
+    norm_l2   = 0._f64
+    norm_linf = 0._f64
+
+    ! --------------------------------------------------
+    ! Writing file in respect to time...................
+
+    if (mesh%num_cells == cells_max) then
+       call int2string(mesh%num_cells,filenum)
+       call int2string(deg,splinedeg)
+       filename  = "diag_circ_spline"//trim(splinedeg)//"_tmax"//trim(filenum)//".dat"
+       
+       call sll_new_file_id(out_unit, ierr)
+       if (nloop == 0) then
+          open(unit = out_unit, file=filename, action="write", status="replace")
+       else
+          open(unit = out_unit, file=filename, action="write", status="old",position = "append")
+       endif
+
+       do i = 1,mesh%num_pts_tot
+          mass = mass + rho(i)
+          norm_l1 = norm_l1 + abs(rho(i))
+          norm_l2 = norm_l2 + rho(i)**2
+          if ( abs(rho(i)) > norm_linf ) norm_linf = rho(i)
+          if ( rho(i) < rho_min  ) rho_min  = rho(i)
+       enddo
+
+       print*,"diagnostic for t = ",t
+       mass    = mass * mesh%delta**2
+       norm_l1 = norm_l1 * mesh%delta**2
+       norm_l2 = sqrt(norm_l2 * mesh%delta**2)
+
+       write(out_unit,"(7(g18.10,1x))") t, &
+            mass, &
+            rho_min, &
+            norm_l1, &
+            norm_l2, &
+            norm_linf
+
+       close(out_unit)
 
     end if
+    ! --------------------------------------------------
+    ! Writing file in respect to num_cells..............
+    if (t.gt.tmax) then !We write on this file only if it is the last time step
 
+       call int2string(deg,splinedeg)
+       filename  = "diag_circ_spline"//trim(splinedeg)//"_nc.dat"
 
-  end subroutine hex_diagnostics
+       if ( mesh%num_cells == cells_min ) then
+          call sll_new_file_id(out_unit, ierr)
+          open(unit = out_unit, file=filename, action="write", status="replace")
+       else
+          call sll_new_file_id(out_unit, ierr)
+          open(unit = out_unit, file=filename, action="write", status="old",position = "append")
+       endif
+       
+       do i = 1,mesh%num_pts_tot
+          mass = mass + rho(i)
+          norm_l1 = norm_l1 + abs(rho(i))
+          norm_l2 = norm_l2 + rho(i)**2
+          if ( abs(rho(i)) > norm_linf ) norm_linf = rho(i)
+          if ( rho(i) < rho_min  ) rho_min  = rho(i)
+       enddo
+
+       mass    = mass * mesh%delta**2
+       norm_l1 = norm_l1 * mesh%delta**2
+       norm_l2 = sqrt(norm_l2 * mesh%delta**2)
+
+       write(out_unit,"((i6,1x),7(g18.10,1x))") mesh%num_cells, &
+            t, &
+            mass, &
+            rho_min, &
+            norm_l1, &
+            norm_l2, &
+            norm_linf
+
+       close(out_unit) 
+    end if
+  end subroutine hex_diagnostics_circ
 
 
   subroutine assemble(rho,rho_edge,rho2,mesh,mesh2)
