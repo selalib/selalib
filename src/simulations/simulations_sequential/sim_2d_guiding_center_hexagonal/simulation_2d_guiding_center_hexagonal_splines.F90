@@ -161,7 +161,8 @@ program sim2d_gc_hex_splines
      nloops = 0
      count  = 0
      if (model_name.eq."CIRCULAR") then
-        dt = 0.1_f64 * 20._f64/mesh%num_cells
+        dt = 0.1_f64 * 20._f64/num_cells
+        print *, " ----> dt =", dt 
      end if
      !*********************************************************
      !             allocation
@@ -272,7 +273,6 @@ program sim2d_gc_hex_splines
         t = t + dt
         nloops = nloops + 1
         count = count + 1
-
 
         !*********************************************************
         !                     interpolation
@@ -646,10 +646,10 @@ contains
 
        do i = 1,mesh%num_pts_tot
           ! We compute the exact solution:
-          x = mesh%global_to_x1(i)*cos(2._f64*sll_pi*dt*nloops) - & 
-               mesh%global_to_x2(i)*sin(2._f64*sll_pi*dt*nloops)
-          y = mesh%global_to_x1(i)*sin(2._f64*sll_pi*dt*nloops) + &
-               mesh%global_to_x2(i)*cos(2._f64*sll_pi*dt*nloops)
+          x = mesh%cartesian_coord(1,i)*cos(t) - & 
+               mesh%cartesian_coord(2,i)*sin(t)
+          y = mesh%cartesian_coord(1,i)*sin(t) + & 
+               mesh%cartesian_coord(2,i)*cos(t)
           f_exact = gauss_amp * exp(-0.5_f64* &
                ((x-gauss_x1)**2 + (y-gauss_x2)**2) / gauss_sig**2 )
           ! Then the errors:
@@ -692,10 +692,10 @@ contains
        
        do i = 1,mesh%num_pts_tot
           ! We compute the exact solution:
-          x = mesh%global_to_x1(i)*cos(2._f64*sll_pi*dt*nloops) - & 
-               mesh%global_to_x2(i)*sin(2._f64*sll_pi*dt*nloops)
-          y = mesh%global_to_x1(i)*sin(2._f64*sll_pi*dt*nloops) + &
-               mesh%global_to_x2(i)*cos(2._f64*sll_pi*dt*nloops)
+          x = mesh%cartesian_coord(1,i)*cos(t) - & 
+               mesh%cartesian_coord(2,i)*sin(t)
+          y = mesh%cartesian_coord(1,i)*sin(t) + & 
+               mesh%cartesian_coord(2,i)*cos(t)
           f_exact = gauss_amp * exp(-0.5_f64* &
                ((x-gauss_x1)**2 + (y-gauss_x2)**2) / gauss_sig**2 )
           ! Then the errors:
