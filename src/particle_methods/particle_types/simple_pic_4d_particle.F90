@@ -21,10 +21,10 @@
 
 !> @brief Most simple particle model
 
-!> @details Mainly useful to compare against more advanced models. Defined in
-!> [[selalib:src/particle_methods/particle_types/simple_pic_4d_particle.F90]]. A group of sll_simple_pic_4d_particle is
-!> a sll_simple_pic_4d_group
-!> [[selalib:src/particle_methods/particle_types/simple_pic_4d_group.F90::sll_simple_pic_4d_group]]
+!> @details Mainly useful to compare against more advanced models. <!-- Defined in
+!> [[selalib:src/particle_methods/particle_types/simple_pic_4d_particle.F90]] --> A group of sll_simple_pic_4d_particle
+!> is a ::sll_simple_pic_4d_group
+!> <!-- [[selalib:src/particle_methods/particle_types/simple_pic_4d_group.F90::sll_simple_pic_4d_group]] -->
 
 module sll_simple_pic_4d_particle_module
 
@@ -36,6 +36,7 @@ module sll_simple_pic_4d_particle_module
 
   implicit none
 
+  ! <<sll_simple_pic_4d_particle>>
   type :: sll_simple_pic_4d_particle
      !> cell index in the x dimension (can be outside physical domain)
      sll_int32  :: i_cell_x
