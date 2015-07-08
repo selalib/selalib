@@ -27,8 +27,10 @@
   deltarTe = 0.1        !1.45
   !QN_case  = "SLL_NO_QUASI_NEUTRAL"
   !QN_case  = "SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW"
-  QN_case  = "SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW_WITH_PADE"
-  !QN_case  = "SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW_WITHOUT_PADE"
+  !QN_case  = "SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW" !CLASSICAL PADE 
+  !QN_case  = "SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW_PADE_EPSILON" !NEW PADE
+  QN_case  = "SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW_CIRCLE" !CIRCLE METHOD 
+  pade_epsilon = 1.0e-3 
   poisson2d_BC_rmin = "SLL_NEUMANN_MODE_0"
   poisson2d_BC_rmax = "SLL_DIRICHLET"
 /
@@ -41,7 +43,6 @@
 /
 
 &sim_params_first
-  !num_mu = 4
   num_mu = 2
   N_mu_for_phi_user_defined = 4
 /
@@ -73,6 +74,8 @@
   gyroaverage_case = "HERMITE_C1_PRECOMPUTE"
   !gyroaverage_case = "SPLINES"
   !gyroaverage_case = "PADE"
+  !gyroaverage_case = "PADE04"
+  !gyroaverage_case = "PADE24"
   !mus = 0. 0.5 1. 1.5 !0.1 !0.2
   !mu_weights = 0.25 0.25 0.25 0.25
   mus = 0. 1. 
