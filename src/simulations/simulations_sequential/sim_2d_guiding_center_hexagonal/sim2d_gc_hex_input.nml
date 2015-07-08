@@ -26,11 +26,20 @@
   ! choices are:
   !        - "CIRCULAR" (for the circular advection)
   !        - "GC" (for the guiding center model)
-  model_name="CIRCULAR"
+  model_name="GC"
 /
 
 &initial_function
+  ! For the GC test-case:
   epsilon = 0.001
+  ! For the Circular advection test-case:
+  gauss_x1  = 2.0
+  gauss_x2  = 2.0
+  ! The default value for gauss_sig (the width of the gaussian pulse)
+  ! is gauss_sig = 1.0/(2. * sqrt(2.)), as name list cannot sqrt, I
+  ! commented this part, but you can still edit this parameter:
+  !  gauss_sig = 1.0
+  gauss_amp = 1.0
 /
 
 &time_iterations
