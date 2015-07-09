@@ -37,6 +37,10 @@ module sll_simple_pic_4d_particle_module
   implicit none
 
   ! <<sll_simple_pic_4d_particle>>
+
+  !> @ingroup particle_methods
+
+  !> @class sll_simple_pic_4d_particle
   type :: sll_simple_pic_4d_particle
      !> cell index in the x dimension (can be outside physical domain)
      sll_int32  :: i_cell_x

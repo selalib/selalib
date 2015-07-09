@@ -2,7 +2,7 @@
 
 !> @author MCP ALH
 
-!> @brief Generic simulation algorithm for PIC particles
+!> @brief Generic simulation algorithms for PIC particles
 
 !> @details Generic simulation algorithm for simple PIC particles of type ::sll_simple_pic_4d_group_module <!--
 !> [[selalib:src/particle_methods/particle_types/simple_pic_4d_group.F90::sll_simple_pic_4d_group_module]] --> and LTPIC
@@ -15,7 +15,9 @@
 !> -->.
 
 ! (The doxygen page for this simulation is
-! [[selalib:doc/build/html/doxygen/html/namespacesll__simulation__4d__vp__generic__pic__cartesian__module.html]],
+!
+! [[elisp:(startup-persistent-process "epiphany-browser --new-window $SELALIB/doc/build/html/doxygen/html/namespacesll__simulation__4d__vp__generic__pic__cartesian__module.html")]],
+!
 ! produced by [[elisp:(compile "cd ${SELALIB}/build && make doc")]])
 
 module sll_simulation_4d_vp_generic_pic_cartesian_module
@@ -51,25 +53,48 @@ module sll_simulation_4d_vp_generic_pic_cartesian_module
   ! [[file:unit_test_4d_vp_generic_pic_cartesian.F90::unit_test_4d_vp_generic_pic_cartesian]]. We have chosen to store
   ! all simulation parameters (both ltpic and simple) in this sim object.
 
+  ! doxygen page [[elisp:(startup-persistent-process "epiphany-browser --new-window $SELALIB/doc/build/html/doxygen/html/structsll__simulation__4d__vp__generic__pic__cartesian__module_1_1sll__simulation__4d__vp__generic__pic__cartesian.html")]]
+  ! produced by [[elisp:(compile "cd ${SELALIB}/build && make doc")]])
+
+  !> @ingroup particle_methods
+
+  !> \brief Test simulation applied to PIC particles of type @ref sll_simple_pic_4d_particle
+  !> <!-- [[file:~/selalib/src/particle_methods/particle_types/simple_pic_4d_particle.F90::sll_simple_pic_4d_particle]]
+  !> -->
+  
   type, extends(sll_simulation_base_class) :: sll_simulation_4d_vp_generic_pic_cartesian
 
-     ! <<particle_group>> the abstract particle group
+     ! <<particle_group>>
+
+     !> the abstract particle group
+
      class(sll_particle_group_base),  pointer     :: particle_group
 
-     ! Physics/numerical parameters
+     !> @name Physics/numerical parameters
+     !> @{
+     
+     !> Time step
      sll_real64 :: dt
+
+     !> Total number of iteration
      sll_int32  :: num_iterations
+
+     !> Plot period in terms of number of iterations
      sll_int32  :: plot_period
+
+     !> unused at the moment
      sll_int32  :: remap_period
+
+     !> cf @ref sll_particle_group_base::set_landau_parameters
      sll_real64 :: thermal_speed_ions
+     
      sll_int32  :: number_particles
      sll_int32  :: virtual_particle_number
      logical :: domain_is_x_periodic
      logical :: domain_is_y_periodic
-
-     !    sll_int32  :: guard_size
-     !    sll_int32  :: array_size
      sll_real64, dimension(1:6) :: elec_params
+     !> @}
+     
      type(sll_cartesian_mesh_2d),    pointer :: mesh_2d ! [[selalib:src/meshes/sll_cartesian_meshes.F90::sll_cartesian_mesh_2d]]
      type(sll_charge_accumulator_2d_ptr), dimension(:), pointer     :: q_accumulator_ptr  ! called q_accumulator in Sever simulation
      type(sll_charge_accumulator_2d),     dimension(:), pointer     :: charge_accumulator
