@@ -105,7 +105,7 @@ module sll_module_simulation_pic1d1v_vp_periodic
     sll_real64,  allocatable:: steadyparticleposition(:) !Steady non-moving objects aka Ions
     sll_real64, dimension(:), allocatable :: fieldenergy, kineticenergy, impulse, &
     thermal_velocity_estimate, particleweight_mean ,particleweight_var, inhom_var ,&
-    push_error_mean, push_error_var
+    push_error_mean, push_error_var, total_momentum
      
      
      !error 
@@ -135,7 +135,7 @@ module sll_module_simulation_pic1d1v_vp_periodic
     procedure :: pic1d_adjustweights           => sll_pic1d_adjustweights
     procedure :: pic1d_write_result            => sll_pic1d_write_result
     procedure :: pic_1d_calc_push_error        => sll_pic_1d_calc_push_error
-    
+!    procedure :: total_momentum                => sll_total_momentum
   end type sll_simulation_pic1d1v_vp_periodic
 
   abstract interface
@@ -373,7 +373,7 @@ contains
      sll_real64           :: time
      type(sll_time_mark)  :: tstart, tstop
      logical              :: gnuplot_now
-                  
+     sll_real64, dimension(sim%tsteps)        ::   total_mass             
         sim%root_path=""
         sim%nmark=sim%nmark/coll_size
         print*, "#Core ", coll_rank, " handles particles", coll_rank*sim%nmark +1, "-", (coll_rank+1)*sim%nmark
@@ -395,7 +395,7 @@ contains
             SLL_CLEAR_ALLOCATE(sim%push_error_mean(1:sim%tsteps+1), ierr)
             SLL_CLEAR_ALLOCATE(sim%push_error_var(1:sim%tsteps+1), ierr)
             SLL_CLEAR_ALLOCATE(sim%inhom_var(1:sim%tsteps+1), ierr)
-            
+            SLL_CLEAR_ALLOCATE(sim%total_momentum(1:sim%tsteps+1), ierr)
             !particle caracterized  outputs
             SLL_CLEAR_ALLOCATE( sim%steadyparticleposition(1:sim%nmark),ierr)
             SLL_CLEAR_ALLOCATE(sim%particleposition(1:sim%nmark),ierr)
@@ -488,7 +488,7 @@ contains
           write (20,*) sim%eval_solution(1:sim%mesh_cells)
           close(20)
           print *, "#Field Energy                  " , &
-                  "Kinetic Energy                  ", "Inhom. Variance       "
+                  "Kinetic Energy                  ",    "Total energy          ","Total mass  ",  " Total momentum "
         endif
         
         !Write initial phasespace
@@ -536,20 +536,20 @@ contains
             end if
             
             ! Compute mean value and variance 
-            sim%particleweight_mean(timestep) = sum(sim%species(1)%particle%weight) &
-                                              / size(sim%species(1)%particle) ! WARNING: bug here
+            sim%particleweight_mean(timestep)       = sum(sim%species(1)%particle%weight) &
+                                                    / size(sim%species(1)%particle) ! WARNING: bug here
             
-            sim%particleweight_var(timestep) = sum(sim%species(1)%particle%weight**2) &
-                                             / size(sim%species(1)%particle)          &
-                                             - sim%particleweight_mean(timestep)**2
+            sim%particleweight_var(timestep)        = sum(sim%species(1)%particle%weight**2) &
+                                                    / size(sim%species(1)%particle)          &
+                                                    - sim%particleweight_mean(timestep)**2
 
             ! Other diagnostic quantities: kin. energy, el. energy, momentum, etc..
-            sim%kineticenergy(timestep) = sll_pic1d_calc_kineticenergy( sim%species(1:num_species),sim%deltaf )
-            sim%fieldenergy(timestep) = sll_pic1d_calc_fieldenergy(sim%species(1:num_species),sim)
-            sim%impulse(timestep) = sll_pic1d_calc_impulse(sim%species(1:num_species),sim%deltaf)
-
+            sim%kineticenergy(timestep)             = sll_pic1d_calc_kineticenergy( sim%species(1:num_species),sim%deltaf )
+            sim%fieldenergy(timestep)               = sll_pic1d_calc_fieldenergy(sim%species(1:num_species),sim)
+            sim%impulse(timestep)                   = sll_pic1d_calc_impulse(sim%species(1:num_species),sim%deltaf)
+            sim%total_momentum(timestep)            =sll_total_momentum(sim)
             sim%thermal_velocity_estimate(timestep) = sll_pic1d_calc_thermal_velocity(sim%species(1)%particle%vx,sim%species(1)%particle%weight)
-            sim%inhom_var(timestep) = sim%fsolver%calc_variance_rhs()
+            sim%inhom_var(timestep)                 = sim%fsolver%calc_variance_rhs()
             
             ! Gnuplot real-time plots
             if ( gnuplot_now ) then
@@ -568,10 +568,11 @@ contains
                     !                    stop
                 endif
             endif
-
+             total_mass=calculate_total_mass(sim)
+             
             ! Print electrostatic and kinetic energy to terminal
             if ((sim%gnuplot_inline_output .eqv. .FALSE.) .AND. coll_rank==0) then
-                print *, timestep, sim%fieldenergy(timestep),sim%kineticenergy(timestep),sim%inhom_var(timestep)
+                print *, timestep, sim%fieldenergy(timestep),sim%kineticenergy(timestep),sim%kineticenergy(timestep)+sim%fieldenergy(timestep),total_mass(timestep),sim%total_momentum(timestep)
             endif
             
             ! TODO: discover meaning of this line!
@@ -814,8 +815,38 @@ function sll_pic1d_calc_kineticenergy_offset(p_species ) &
         enddo
     end function
     
+    function calculate_total_mass(sim) result (total_mass)
+       integer   ::  i,k 
+       type(sll_simulation_pic1d1v_vp_periodic), intent(inout) :: sim
+       sll_real64 ,dimension(sim%tsteps)  :: total_mass
+
+     
+     do k=1, sim%tsteps  
+        total_mass(k)=sum((sim%species(1)%particle%weight))
+       
+           
+   end do 
+   
+       
+  end function     
     
     
+       
+   function sll_total_momentum(sim) result (momentum)   
+       type(sll_simulation_pic1d1v_vp_periodic), intent(inout) :: sim
+       sll_real64   :: momentum
+       integer      :: K
+       
+       momentum=dot_product(sim%species(1)%particle%vx,sim%species(1)%particle%weight) 
+       
+  end function     
+       
+       
+      
+       
+       
+       
+       
     
         function sll_pic1d_calc_kineticenergy(p_species, bool) &
             result(energy)
@@ -827,6 +858,7 @@ function sll_pic1d_calc_kineticenergy_offset(p_species ) &
         num_sp=size(p_species)
         energy=0
        do idx=1,num_sp
+       
             energy=energy + &
             sll_pic1d_calc_kineticenergy_weighted(p_species(idx)%particle%vx, &
                             p_species(idx)%particle%weight,1.0_f64/abs(p_species(idx)%qm))
@@ -1613,12 +1645,12 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
             write (file_id,*)  "#Finite Elements: 2^(", log(real(sim%mesh_cells,i64))/log(2.0_f64),")"
             write (file_id,*)  "#Size of MPI Collective: ", coll_size
 
-            write (file_id,*)  "time  ", "kineticenergy  ", "electrostaticenergy  ", "impulse  ", &
-                "vthermal  ", "weightmean   ", "weightvar  ", "perrormean  ", "perrorvar   "
+            write (file_id,*)  "time  ", "kineticenergy  ", "electrostaticenergy  ","total energy   ", "impulse  ", &
+                "vthermal  ", "weightmean   ", "weightvar  ", "perrormean  ", "perrorvar   ","total momentum           "
             do k=1,sim%tsteps+1
-                write (file_id,*)  sim%tstepw*(k-1), sim%kineticenergy(k), sim%fieldenergy(k), sim%impulse(k), &
+                write (file_id,*)  sim%tstepw*(k-1), sim%kineticenergy(k), sim%fieldenergy(k) ,total_energy(k), sim%impulse(k), &
                     sim%thermal_velocity_estimate(k), sim%particleweight_mean(k),sim%particleweight_var(k),&
-                    sim%push_error_mean(k), sim%push_error_var(k)
+                    sim%push_error_mean(k), sim%push_error_var(k), sim%total_momentum(k)
             enddo
             close(file_id)
 
