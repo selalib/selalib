@@ -163,7 +163,8 @@ contains
     sll_int32 :: psize
 
 
-    SLL_ALLOCATE(this%f_r(nr+1,ntheta+1),error)
+!    SLL_ALLOCATE(this%f_r(nr+1,ntheta+1),error)  ! TODO: why allocate here??
+
     SLL_ALLOCATE(this%fk(nr+1),error)
     SLL_ALLOCATE(this%phik(nr+1),error)
     SLL_ALLOCATE(this%mat(3*(nr-1)),error) ! periodic tridiagonal matrix
@@ -208,12 +209,14 @@ contains
     ! Layout and local sizes for tridiagonal solvers (1 per mode) in r direction
     this%layout_r => layout_r
     call compute_local_sizes(layout_r,nr_loc,na_loc)
-    SLL_CLEAR_ALLOCATE(this%f_r(1:nr_loc,1:na_loc),error)
+    SLL_ALLOCATE( this%f_r(1:nr_loc,1:na_loc), error )
+    this%f_r = (0.0_f64, 0.0_f64)
 
     ! Layout and local sizes for FFTs in theta-direction
     this%layout_a => layout_a
     call compute_local_sizes(layout_a,nr_loc,na_loc)
-    SLL_CLEAR_ALLOCATE(this%f_a(1:nr_loc,1:na_loc),error)
+    SLL_ALLOCATE( this%f_a(1:nr_loc,1:na_loc), error )
+    this%f_a = (0.0_f64, 0.0_f64)
 
     this%rmp_ra => new_remap_plan(this%layout_r, this%layout_a, this%f_r)
     this%rmp_ar => new_remap_plan(this%layout_a, this%layout_r, this%f_a)
@@ -304,7 +307,7 @@ contains
             -this%dlog_density(i)/(2._f64*dr)
           this%mat(3*(i-1)-1) =  2.0_f64/dr**2+(k/r)**2 &
             +this%inv_Te(i)
-          this%mat(3*(i-1)-2) = -1.0_f64/dr**2+1.0_f64/(2*dr*r) &
+          this%mat(3*(i-1)-2) = -1.0_f64/dr**2+1.0_f64/(2._f64*dr*r) &
             +this%dlog_density(i)/(2._f64*dr)
 
           this%fk(i) = this%f_r(i,j)
@@ -320,7 +323,7 @@ contains
 
         enddo
 
-        this%phik=0.0_f64
+        this%phik = (0.0_f64, 0.0_f64)
 
         !boundary condition at rmin
         if (bc(1)==SLL_DIRICHLET) then !Dirichlet
@@ -357,27 +360,27 @@ contains
 
         !boundary condition at rmin
         if(bc(1)==SLL_DIRICHLET)then !Dirichlet
-          this%phik(1)=0.0_f64
+          this%phik(1) = (0.0_f64, 0.0_f64)
         else if (bc(1)==SLL_NEUMANN) then
-          this%phik(1)=this%phik(2) !Neumann
+          this%phik(1) = this%phik(2) !Neumann
         else if (bc(1)==SLL_NEUMANN_MODE_0) then 
           if (k==0) then!Neumann for mode zero
-            this%phik(1)=this%phik(2)
+            this%phik(1) = this%phik(2)
           else !Dirichlet for other modes
-            this%phik(1)=0.0_f64
+            this%phik(1) = (0.0_f64, 0.0_f64)
           endif
         endif
 
         !boundary condition at rmax
         if (bc(2)==SLL_DIRICHLET) then !Dirichlet
-          this%phik(nr+1)=0.0_f64
+          this%phik(nr+1) = (0.0_f64, 0.0_f64)
         else if (bc(2)==SLL_NEUMANN) then
-          this%phik(nr+1)=this%phik(nr) !Neumann
+          this%phik(nr+1) = this%phik(nr) !Neumann
         else if (bc(2)==SLL_NEUMANN_MODE_0) then 
           if(k==0)then!Neumann for mode zero
-            this%phik(nr+1)=this%phik(nr)
+            this%phik(nr+1) = this%phik(nr)
           else !Dirichlet for other modes
-            this%phik(nr+1)=0.0_f64
+            this%phik(nr+1) = (0.0_f64, 0.0_f64)
           endif
         endif
 
@@ -407,7 +410,7 @@ contains
       do i=1,nr_loc
         !call fft_apply_plan(this%bw,this%f_a(i,1:ntheta),phi(i,1:ntheta,i_x3))
         call fft_apply_plan(this%bw,this%f_a(i,1:ntheta),this%f_a(i,1:ntheta))
-        phi(i,1:ntheta,i_x3) = real(this%f_a(i,1:ntheta))
+        phi(i,1:ntheta,i_x3) = real( this%f_a(i,1:ntheta), f64 )
       end do
     enddo
     
@@ -445,11 +448,6 @@ contains
     enddo
 
   end subroutine verify_argument_sizes_par
-
-
-
-
-
 
 
 end module sll_qn_solver_3d_polar_parallel_x1_module
