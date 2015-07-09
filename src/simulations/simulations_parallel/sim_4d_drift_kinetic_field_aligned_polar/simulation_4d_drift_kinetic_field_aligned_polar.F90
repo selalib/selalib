@@ -235,8 +235,8 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
     class(sll_advection_1d_base), pointer :: adv_x4
     type(oblic_2d_advector), pointer :: adv_x2x3
     
-    class(sll_poisson_2d_base), pointer   :: poisson2d
-    class(sll_poisson_2d_base), pointer   :: poisson2d_mean
+    class(sll_poisson_2d_base), pointer :: poisson2d
+    class(sll_poisson_2d_base), pointer :: poisson2d_mean
     class(sll_poisson_3d_base), pointer :: poisson3d
 
     !for computing advection field from phi
@@ -671,7 +671,7 @@ contains
     call initialize_b_unit_from_iota_profile( &
       sim%iota_r, &
       sim%x1_node, &
-      num_cells_x1+1, &
+      sim%m_x1%num_cells+1, &
       sim%m_x3%eta_max-sim%m_x3%eta_min, &
       sim%b_unit_x2, &
       sim%b_unit_x3)
@@ -679,33 +679,18 @@ contains
     ! Initialize equilibrium profiles
     call initialize_profiles_analytic(sim)    
 
-    ! 
+    ! Allocate f and fields with various layouts
+    ! TODO: data used for initialization should not be inside sim
     call allocate_fdistribu4d_and_QN_DK_parx1(sim)
 
-    
-    
-    
-    
+    ! Create (=allocate+initialize) Poisson's solver
     select case (poisson2d_case)
-      case ("POLAR_FFT")     
-        
-        sim%poisson2d_mean =>new_poisson_2d_polar( &
-          sim%m_x1%eta_min, &
-          sim%m_x1%eta_max, &
-          sim%m_x1%num_cells, &
-          sim%m_x2%num_cells, &
-          poisson2d_BC)
-
-        sim%poisson2d =>new_poisson_2d_polar( &
-          sim%m_x1%eta_min, &
-          sim%m_x1%eta_max, &
-          sim%m_x1%num_cells, &
-          sim%m_x2%num_cells, &
-          poisson2d_BC, &
-          dlog_density=sim%dlog_density_r, &
-          inv_Te=1._f64/sim%Te_r, &
-          poisson_case=SLL_POISSON_DRIFT_KINETIC)
-
+      case ("POLAR_FFT")
+        ! Wrapper around a loop of 2D Poisson's solvers, with 3D interface
+        ! Solves a quasi-neutral equation (of Poisson-type)
+        ! Input/output data is parallelized in x1=r
+        ! Internally it also uses parallelization in x2=theta
+        ! Needs both par-x1 and par-x2 layouts
         sim%poisson3d => new_qn_solver_3d_polar_parallel_x1_wrapper( &
           sim%layout2d_parx2, &
           sim%layout2d_parx1, &
@@ -2118,7 +2103,7 @@ contains
     sim%layout2d_parx2  => new_layout_2D( sll_world_collective )
     call initialize_layout_with_distributed_array( &
       sim%m_x1%num_cells+1, & 
-      sim%m_x2%num_cells, & 
+      sim%m_x2%num_cells, &    ! TODO: check if we should add "+1" 
       sim%nproc_x2, &
       sim%nproc_x1, &
       sim%layout2d_parx2 )
@@ -2193,6 +2178,10 @@ contains
       print *,'#num_proc_parx3x4:', sim%nproc_x1, sim%nproc_x2, &
                                     sim%nproc_x3, sim%nproc_x4
     endif
+
+    !--------------------------------------------------------------------------
+    ! Use MPI colors to deal with redundant data
+    !--------------------------------------------------------------------------
 
     k_min = get_layout_k_min( &
       sim%layout4d_parx3x4, &
