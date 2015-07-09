@@ -1,12 +1,14 @@
   ! [[shell:header\alh 'particle_methods_doc.F90']] (cf [[file:~/alh/bin/headeralh]])
   ! headeralh authors=- default=0 f90 start=25/06/15
 
-  ! This file creates the HTML page [[selalib:doc/build/html/doxygen/html/group__particle__methods.html]].
-  
-  ! The Doxygen documentation index is [[selalib:doc/build/html/doxygen/html/index.html]]. The Doxygen configuration
-  ! file is [[selalib:doc/doxygen/Doxyfile]].
-
   ! To rebuild the documentation: [[elisp:(compile "cd ${SELALIB}/build && make doc")]].
+
+  ! This file creates the HTML page
+  ! [[elisp:(startup-persistent-process "epiphany-browser --new-window $SELALIB/doc/build/html/doxygen/html/group__particle__methods.html")]].
+  
+  ! The Doxygen documentation index is
+  ! [[elisp:(startup-persistent-process "epiphany-browser --new-window $SELALIB/doc/build/html/doxygen/html/index.html")]]
+  ! The Doxygen configuration file is [[selalib:doc/doxygen/Doxyfile]].
 
   !> @defgroup particle_methods sll_particle_methods
 
