@@ -1099,17 +1099,17 @@ subroutine bsplvd ( this, k, x, left, nderiv )
   sll_int32,  intent(in)    :: nderiv
 
   sll_real64, allocatable   :: a(:,:)
-  sll_real64 :: factor
-  sll_real64 :: fkp1mm
-  sll_int32  :: i
-  sll_int32  :: ideriv
-  sll_int32  :: il
-  sll_int32  :: j
-  sll_int32  :: jlow
-  sll_int32  :: jp1mid
-  sll_int32  :: ldummy
-  sll_int32  :: m
-  sll_int32  :: mhigh
+  sll_real64                :: factor
+  sll_real64                :: fkp1mm
+  sll_int32                 :: i
+  sll_int32                 :: ideriv
+  sll_int32                 :: il
+  sll_int32                 :: j
+  sll_int32                 :: jlow
+  sll_int32                 :: jp1mid
+  sll_int32                 :: ldummy
+  sll_int32                 :: m
+  sll_int32                 :: mhigh
   
   allocate(a(k,k))
 
@@ -1159,12 +1159,10 @@ subroutine bsplvd ( this, k, x, left, nderiv )
     fkp1mm = real(k+1-m, kind = f64 )
     il = left
     i = k
-    !
     !  For J = 1,...,K, construct B-coefficients of (M-1)st derivative of
     !  B-splines from those for preceding derivative by differencing
     !  and store again in  A(.,J).  The fact that  A(I,J) = 0 for
     !  I < J is used.
-    !
     do ldummy = 1, k+1-m
       factor = fkp1mm / ( this%t(il+k+1-m) - this%t(il) )
       !  The assumption that T(LEFT) < T(LEFT+1) makes denominator
@@ -1259,13 +1257,15 @@ subroutine bsplvb ( this, jhigh, index, x, left, biatx )
   sll_real64, intent(out) :: biatx(:) ! (jhigh)
   
   sll_int32               :: i
+  sll_int32               :: j
   sll_real64              :: saved
   sll_real64              :: term
   
+  j = this%j
   if ( index == 1 ) then
-    this%j = 1
+    j = 1
     biatx(1) = 1.0_f64
-    if ( jhigh <= this%j ) return
+    if ( jhigh <= j ) return
   end if
   
   SLL_ASSERT ( this%t(left+1) > this%t(left) )
@@ -1283,22 +1283,24 @@ subroutine bsplvb ( this, jhigh, index, x, left, biatx )
   
   do
      
-    this%deltar(this%j) = this%t(left+this%j) - x
-    this%deltal(this%j) = x - this%t(left+1-this%j)
+    this%deltar(j) = this%t(left+j) - x
+    this%deltal(j) = x - this%t(left+1-j)
     
     saved = 0.0_f64
-    do i = 1, this%j
-       term = biatx(i) / ( this%deltar(i) + this%deltal(this%j+1-i) )
+    do i = 1, j
+       term = biatx(i) / ( this%deltar(i) + this%deltal(j+1-i) )
        biatx(i) = saved + this%deltar(i) * term
-       saved = this%deltal(this%j+1-i) * term
+       saved = this%deltal(j+1-i) * term
     end do
   
-    biatx(this%j+1) = saved
-    this%j = this%j + 1
+    biatx(j+1) = saved
+    j = j + 1
     
-    if ( jhigh <= this%j ) exit
+    if ( jhigh <= j ) exit
   
   end do
+
+  this%j = j
 
 end subroutine bsplvb
   
@@ -1449,9 +1451,6 @@ subroutine interv( xt, lxt, x, left, ilo, mflag )
 
 end subroutine interv
 
-
-
-
 !> @brief Returns the interpolated value of the derivative in the x1 
 !> direction at the point
 !> (x1,x2) using the spline decomposition stored in the spline object.
@@ -1459,7 +1458,7 @@ end subroutine interv
 !> @param[in] x2 second coordinate.
 !> @param[in] spline pointer to spline object.
 !> @returns the interpolated value of the derivative in the x1 
-function interpolate_x1_derivative_2D( x1, x2, spline )
+function interpolate_x1_derivative_2d( x1, x2, spline )
   sll_real64                          :: interpolate_x1_derivative_2D
   sll_real64, intent(in)              :: x1
   sll_real64, intent(in)              :: x2
@@ -1476,7 +1475,7 @@ end function interpolate_x1_derivative_2D
 !> @param[in] x2 second coordinate.
 !> @param[in] spline pointer to spline object.
 !> @return interpolate_x2_derivative_2D  interpolated value of the derivative 
-function interpolate_x2_derivative_2D( x1, x2, spline )
+function interpolate_x2_derivative_2d( x1, x2, spline )
   sll_real64                          :: interpolate_x2_derivative_2D
   intrinsic                           :: associated, int, real
   sll_real64, intent(in)              :: x1
@@ -1522,6 +1521,8 @@ sll_int32               :: mflag
 sll_int32               :: ierr
 sll_int32               :: jjj
 sll_int32               :: kkk
+sll_int32               :: nmkx
+sll_int32               :: nmky
 
 sll_real64              :: xi
 sll_real64              :: xj
@@ -1537,6 +1538,17 @@ tx   => this%bs1%t
 ty   => this%bs2%t
 work => this%bs1%bcoef
 
+if (this%bs1%bc_type == SLL_PERIODIC) then
+  nmkx = nx+kx
+else
+  nmkx = nx+kx+2
+end if
+if (this%bs1%bc_type == SLL_PERIODIC) then
+  nmky = ny+ky
+else
+  nmky = ny+ky+2
+end if
+
 SLL_CLEAR_ALLOCATE(aj(1:max(kx,ky)),ierr)
 SLL_CLEAR_ALLOCATE(dl(1:max(kx,ky)),ierr)
 SLL_CLEAR_ALLOCATE(dr(1:max(kx,ky)),ierr)
@@ -1546,10 +1558,10 @@ do j=1,ny
   ilo = kx
   klo = jlo
   xj  = this%bs2%tau(j)
-  call interv(ty,ny+ky,xj,lefty,jlo,mflag)
+  call interv(ty,nmky,xj,lefty,jlo,mflag)
   do i=1,nx
     xi = this%bs1%tau(i)
-    call interv(tx,nx+kx,xi,leftx,ilo,mflag)
+    call interv(tx,nmkx,xi,leftx,ilo,mflag)
     do jj=1,ky
       jcmin = 1
       if ( kx <= leftx ) then
@@ -1567,14 +1579,14 @@ do j=1,ny
         end do
       end if
       jcmax = kx
-      if ( nx < leftx ) then
-        jcmax = kx+nx-leftx
-        do jjj = 1, kx+nx-leftx
+      if ( nmkx-kx < leftx ) then
+        jcmax = nmkx-leftx
+        do jjj = 1, nmkx-leftx
           dr(jjj) = tx(leftx+jjj) - xi
         end do
-        do jjj = kx+nx-leftx, kx-1
+        do jjj = nmkx-leftx, kx-1
           aj(jjj+1) = 0.0_f64
-          dr(jjj) = dr(kx+nx-leftx)
+          dr(jjj) = dr(nmkx-leftx)
         end do
       else
         do jjj = 1, kx-1
@@ -1600,9 +1612,7 @@ do j=1,ny
       end do
       work(jj) = aj(1)
     end do
-
-    call interv(ty(lefty-ky+1:ny+ky),ky+ky,xj,left,klo,mflag)
-
+    call interv(ty(lefty-ky+1:nmky),ky+ky,xj,left,klo,mflag)
     jcmin = 1
     if ( ky <= left ) then
       do jjj = 1, ky-1
@@ -1644,7 +1654,6 @@ do j=1,ny
         llo = llo - 1
       end do
     end do
-
     do jjj = jderiv+1, ky-1
       llo = ky-jjj
       do kkk = 1, ky-jjj
@@ -1676,6 +1685,8 @@ sll_int32               :: llo
 sll_int32               :: mflag
 sll_int32               :: jjj
 sll_int32               :: kkk
+sll_int32               :: nmkx
+sll_int32               :: nmky
 
 sll_real64, pointer     :: tx(:)
 sll_real64, pointer     :: ty(:)
@@ -1689,8 +1700,19 @@ tx   => this%bs1%t
 ty   => this%bs2%t
 work => this%bs1%bcoef
 
-call interv(tx,nx+kx,xi,leftx,this%bs1%ilo,mflag)
-call interv(ty,ny+ky,xj,lefty,this%bs2%ilo,mflag)
+if (this%bs1%bc_type == SLL_PERIODIC) then
+  nmkx = nx+kx
+else
+  nmkx = nx+kx+2
+end if
+if (this%bs1%bc_type == SLL_PERIODIC) then
+  nmky = ny+ky
+else
+  nmky = ny+ky+2
+end if
+
+call interv(tx,nmkx,xi,leftx,this%bs1%ilo,mflag)
+call interv(ty,nmky,xj,lefty,this%bs2%ilo,mflag)
 
 do jj=1,ky
   jcmin = 1
@@ -1709,14 +1731,14 @@ do jj=1,ky
     end do
   end if
   jcmax = kx
-  if ( nx < leftx ) then
-    jcmax = kx+nx-leftx
-    do jjj = 1, kx+nx-leftx
+  if ( nmkx-kx < leftx ) then
+    jcmax = nmkx-leftx
+    do jjj = 1, nmkx-leftx
       this%bs1%dr(jjj) = tx(leftx+jjj) - xi
     end do
-    do jjj = kx+nx-leftx, kx-1
+    do jjj = nmkx-leftx, kx-1
       this%bs1%aj(jjj+1) = 0.0_f64
-      this%bs1%dr(jjj) = this%bs1%dr(kx+nx-leftx)
+      this%bs1%dr(jjj) = this%bs1%dr(nmkx-leftx)
     end do
   else
     do jjj = 1, kx-1
@@ -1747,7 +1769,7 @@ do jj=1,ky
 end do
 
 klo = this%bs2%ilo
-call interv(ty(lefty-ky+1:ny+ky),ky+ky,xj,left,klo,mflag)
+call interv(ty(lefty-ky+1:nmky),ky+ky,xj,left,klo,mflag)
 
 jcmin = 1
 if ( ky <= left ) then
@@ -1811,44 +1833,19 @@ sll_int32               :: n2
 sll_real64, intent(in)  :: x(:,:)
 sll_real64, intent(out) :: y(:,:)
 
-sll_int32               :: i1, i2
-sll_int32               :: k1, k2
+call interpolate_array_values_2d(this, n1, n2, x, y, 1, 0)
 
-
-
-k1 = this%bs1%k
-k2 = this%bs2%k
-
-!allocate(work(k2),tab1(n1),tab2(2*k2))
-
-do i2 = 1, n2
-do i1 = 1, n1
-end do
-end do
-
-
-    
 end subroutine interpolate_array_x1_derivatives_2d
 
-subroutine interpolate_array_x2_derivatives_2d(this, n1, n2, a_in, a_out)
+subroutine interpolate_array_x2_derivatives_2d(this, n1, n2, x, y)
 
-type(sll_bspline_2d)   :: this
-sll_int32              :: n1
-sll_int32              :: n2
-sll_real64, intent(in) :: a_in(:,:)
-sll_real64, intent(in) :: a_out(:,:)
+type(sll_bspline_2d)    :: this
+sll_int32               :: n1
+sll_int32               :: n2
+sll_real64, intent(in)  :: x(:,:)
+sll_real64, intent(out) :: y(:,:)
 
-sll_int32              :: i1, i2
-sll_int32              :: k1, k2
-
-k1 = this%bs1%k
-k2 = this%bs2%k
-
-do i2 = 1, n2
-do i1 = 1, n1
-
-end do
-end do
+call interpolate_array_values_2d(this, n1, n2, x, y, 0, 1)
 
 end subroutine interpolate_array_x2_derivatives_2d
 
