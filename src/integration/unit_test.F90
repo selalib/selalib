@@ -16,6 +16,7 @@ implicit none
 
 integer :: i,j,n
 sll_int32 :: ierr
+sll_int32 :: degree
 
 sll_real64, dimension(10) :: x, w
 sll_real64, dimension(:,:), allocatable :: d
@@ -164,7 +165,8 @@ write (*,"(a, f20.12, a ,/)") " aprox = ", app_res, " (expected = 1.)"
 
 !----------------------------------------
 rule = 1
-num_cells = 1
+degree = 2
+num_cells = 20
 mesh => new_hex_mesh_2d(num_cells)
 SLL_ALLOCATE(knots(3, mesh%num_pts_tot + 2*mesh%num_edges + mesh%num_triangles), ierr)
 SLL_ALLOCATE(LM(mesh%num_triangles, 10), ierr)
@@ -172,8 +174,8 @@ SLL_ALLOCATE(LM(mesh%num_triangles, 10), ierr)
 call initialize_knots_hexmesh(rule, mesh, knots, LM)
 
 ! Writing file for CAID:
-call write_quadrature(1)
-call write_connectivity(mesh, 1)
+call write_quadrature(rule)
+call write_connectivity(mesh, degree)
 ! ---------------------------------------
 
 

@@ -953,8 +953,9 @@ contains
  !                  print *, 'time for inverse jacobian: ', time
                    alpha1 = -deltat*(inv_j(1,1)*eta(3) + inv_j(1,2)*eta(4))
                    alpha2 = -deltat*(inv_j(2,1)*eta(3) + inv_j(2,2)*eta(4))
-                   eta1   = eta1+alpha1
-                   eta2   = eta2+alpha2
+                   
+                   eta1   = eta(1)+alpha1
+                   eta2   = eta(2)+alpha2
                    ! Apply the BCs between the patches. This involves:
                    ! - Checking if the eta coordinates are outside of the patch.
                    ! - Checking if the patch is connected in such direction.
