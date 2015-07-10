@@ -89,10 +89,7 @@ subroutine compute_rk4_field( &
   phi, &
   theta0, &
   phi0)
-<<<<<<< HEAD
-=======
-  
->>>>>>> origin/hex-mesh
+
   sll_real64, intent(in) :: R0
   sll_int32, intent(in) :: num_time_points
   sll_real64, intent(in) :: psipr
