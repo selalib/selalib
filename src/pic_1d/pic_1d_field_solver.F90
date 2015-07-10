@@ -212,7 +212,8 @@ contains
 
             case(SLL_SOLVER_FD)
                 this%problemsize=num_cells
-                this%fdsolver=>new(this%mesh,1,this%boundary_type,ierr)
+                ! here we have to add the possibility to change the degree of the finite differences
+                this%fdsolver=>new(this%mesh,2,spline_degree,this%boundary_type,ierr)
             case(SLL_SOLVER_FOURIER)
                 this%num_fourier_modes=spline_degree
                 this%problemsize=this%num_fourier_modes
@@ -376,7 +377,7 @@ contains
 
                 endif
             case(SLL_SOLVER_FD)
-                this%inhomogenity=-this%get_rhs_cic( this%BC(ppos),pweight)
+                this%inhomogenity=-this%fdsolver%get_rhs_klimontovich( this%BC(ppos),pweight)
             case(SLL_SOLVER_SPECTRAL)
                 this%inhomogenity=-this%get_rhs_cic( this%BC(ppos),pweight)
             case(SLL_SOLVER_FOURIER)
@@ -424,7 +425,7 @@ contains
                         get_rhs_from_klimontovich_density_weighted(this%BC(ppos),pweight)
                 endif
             case(SLL_SOLVER_FD)
-                this%inhomogenity=  this%inhomogenity +this%get_rhs_cic( this%BC(ppos),pweight)
+                this%inhomogenity=  this%inhomogenity +this%fdsolver%get_rhs_klimontovich( this%BC(ppos),pweight)
             case(SLL_SOLVER_SPECTRAL)
                 this%inhomogenity=    this%inhomogenity +this%get_rhs_cic( this%BC(ppos),pweight)
             case(SLL_SOLVER_FOURIER)
@@ -471,7 +472,7 @@ contains
             case(SLL_SOLVER_FD)
                 this%inhomogenity=this%inhomogenity + &
                     sign(1.0_f64, pspecies%qm)*&
-                    this%get_rhs_cic( this%BC(pspecies%particle%dx), pspecies%particle%weight)
+                    this%fdsolver%get_rhs_klimontovich( this%BC(pspecies%particle%dx), pspecies%particle%weight)
             case(SLL_SOLVER_SPECTRAL)
                 this%inhomogenity=this%inhomogenity + &
                     sign(1.0_f64, pspecies%qm)*this%get_rhs_cic( this%BC(pspecies%particle%dx),pspecies%particle%weight)
