@@ -557,6 +557,8 @@ contains
          SLL_DIRICHLET, &
          SLL_PERIODIC, &
          SLL_PERIODIC, &
+         SLL_HERMITE, &
+         SLL_PERIODIC, &
          x1_min, &
          x1_max, &
          x2_min, &

@@ -32,6 +32,7 @@ SET(SLL_MACROS
     ${SLL_DIR}/multigrid/mgd2_routines.h
     ${SLL_DIR}/remap/sll_remap.h
     ${SLL_DIR}/parallel_utilities/sll_parallel_utilities.h
+    ${SLL_DIR}/deboor_splines/sll_deboor_splines.h
 )
 
 FILE(COPY ${SLL_MACROS} DESTINATION ${CMAKE_BINARY_DIR}/include)
@@ -68,6 +69,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/utilities/tridiagonal.F90
     ${SLL_DIR}/utilities/fornberg.F90
     ${SLL_DIR}/utilities/sll_toeplitz_penta_diagonal.F90
+    ${SLL_DIR}/utilities/banfac.f90
+    ${SLL_DIR}/utilities/banslv.f90
     ${SLL_DIR}/lagrange_interpolation/sll_lagrange_interpolation.F90
     ${SLL_DIR}/file_io/sll_binary_io.F90
     ${SLL_DIR}/file_io/sll_gnuplot.F90
@@ -85,14 +88,10 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/fields/sll_scalar_field_2d_base.F90
     ${SLL_DIR}/fields/sll_scalar_field_2d.F90
     ${SLL_DIR}/general_coordinate_elliptic_solvers/sll_general_coordinate_elliptic_solver.F90
-    ${SLL_DIR}/general_coordinate_elliptic_solvers/sll_knots.F90
-    ${SLL_DIR}/general_coordinate_elliptic_solvers/connectivity_qn.f90
+    ${SLL_DIR}/splines/sll_bsplines.F90
     ${SLL_DIR}/splines/sll_cubic_splines.F90
     ${SLL_DIR}/splines/sll_arbitrary_degree_splines.F90
     ${SLL_DIR}/splines/cubic_nonuniform_splines.F90
-    ${SLL_DIR}/deboor_splines/banfac.f90
-    ${SLL_DIR}/deboor_splines/banslv.f90
-    ${SLL_DIR}/deboor_splines/knots.f90
     ${SLL_DIR}/deboor_splines/sll_module_deboor_splines_1d.F90
     ${SLL_DIR}/deboor_splines/sll_module_deboor_splines_2d.F90
     ${SLL_DIR}/hermite_interpolation/sll_hermite_interpolation_2d.F90
@@ -123,6 +122,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/integration/gauss_lobatto.F90
     ${SLL_DIR}/simulations/simulations_sequential/sim_CG_polar/sll_polar_operators.F90
     ${SLL_DIR}/simulations/simulations_sequential/sim_CG_polar/sll_advection_polar.F90
+    ${SLL_DIR}/sparse_matrix_manager/partition.F90
     ${SLL_DIR}/sparse_matrix_manager/sll_sparse_matrix_module.F90
     ${SLL_DIR}/time_solvers/sll_time_splitting_coeff.F90
     ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.F90
@@ -133,7 +133,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/fields/scalar_field_initializer_base.F90
     ${SLL_DIR}/distribution_function/sll_scalar_field_2d_old.F90
     ${SLL_DIR}/coordinate_transformations/sll_common_coordinate_transformations.F90
-    ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d_nurbs.F90	
+    ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d_nurbs.F90
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformation_2d_base.F90	
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d.F90
     ${SLL_DIR}/meshes_multipatch/sll_meshes_multipatch.F90
@@ -145,8 +145,20 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/distribution_function/distribution_function_initializer_4d.F90
     ${SLL_DIR}/distribution_function/sll_fdistribu4d_DK.F90
     ${SLL_DIR}/reduction/sll_reduction.F90
+    ${SLL_DIR}/random_deviate_generators/gaussian.F90
+    ${SLL_DIR}/random_deviate_generators/hammersley.F90
+    ${SLL_DIR}/random_deviate_generators/moment_matching.F90
+    ${SLL_DIR}/random_deviate_generators/sobol/sll_sobol.F90
+    ${SLL_DIR}/random_deviate_generators/prob/sll_prob.F90
+)
 
- )
+IF(F2008)
+  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
+    ${SLL_DIR}/vector_space/sll_vector_space_base.F90
+    ${SLL_DIR}/vector_space/sll_vector_space_real_arrays.F90
+    ${SLL_DIR}/ode_integrators/sll_ode_integrator_base.F90
+    ${SLL_DIR}/ode_integrators/rk_explicit.F90)
+ENDIF(F2008)
 
 IF(Fortran_COMPILER MATCHES "IBM")
 ELSE()
@@ -216,9 +228,10 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
   ${SLL_DIR}/file_io_parallel/sll_hdf5_io_parallel.F90
   ${SLL_DIR}/file_io_parallel/sll_xdmf_parallel.F90
+  ${SLL_DIR}/distribution_function_multipatch/sll_distribution_function_4d_multipatch.F90
   ${SLL_DIR}/simulations/simulations_parallel/sim_4d_qns_general/simulation_4d_qns_general.F90
   ${SLL_DIR}/simulations/simulations_parallel/sim_2d_vlasov_poisson_cartesian/simulation_2d_vlasov_poisson_cartesian.F90
-  ${SLL_DIR}/distribution_function_multipatch/sll_distribution_function_4d_multipatch.F90
+  ${SLL_DIR}/simulations/simulations_parallel/sim_2d_vlasov_poisson_cartesian/simulation_2d_vlasov_ampere_cartesian.F90
   ${SLL_DIR}/simulations/simulations_parallel/sim_4d_qns_general_multipatch/simulation_4d_qns_general_multipatch.F90
   ${SLL_DIR}/simulations/simulations_parallel/sim_4d_drift_kinetic_hybrid/simulation_4d_DK_hybrid.F90
   ${SLL_DIR}/simulations/simulations_parallel/sim_4d_drift_kinetic_polar/simulation_4d_drift_kinetic_polar.F90)

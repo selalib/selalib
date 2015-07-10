@@ -16,19 +16,19 @@ PROJECT(SeLaLib)
 ENABLE_LANGUAGE(Fortran)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
-SET(OPENMP_ENABLED        OFF CACHE BOOL "Enable use of OpenMP library")
-SET(MPI_ENABLED           ON  CACHE BOOL "Enable use of MPI library")
-SET(HDF5_ENABLED          ON  CACHE BOOL "Use HDF5 library for data output")
-SET(HDF5_PARALLEL_ENABLED OFF CACHE BOOL "Use Parallel HDF5")
-SET(FFTW_ENABLED          ON  CACHE BOOL "Enable use of FFTW library")
-SET(PASTIX_ENABLED        OFF CACHE BOOL "Build PasTiX solvers ")
-SET(SUITESPARSE_ENABLED   OFF CACHE BOOL "Enable UMFpack solvers")
-SET(BUILD_SIMULATIONS     ON  CACHE BOOL "Build selalib simulations")
-SET(BUILD_PACKAGE         OFF CACHE BOOL "Build selalib package")
-SET(BUILD_PARALUTION      OFF CACHE BOOL "Build paralution library")
-SET(BUILD_JOREK           OFF CACHE BOOL "Build jorek django solver")
-SET(PROCS                 4   CACHE STRING
-    "Number of MPI processes used in parallel tests")
+SET(OPENMP_ENABLED        OFF CACHE BOOL   "Enable use of OpenMP library")
+SET(MPI_ENABLED           ON  CACHE BOOL   "Enable use of MPI library")
+SET(HDF5_ENABLED          ON  CACHE BOOL   "Use HDF5 library for data output")
+SET(HDF5_PARALLEL_ENABLED OFF CACHE BOOL   "Use Parallel HDF5")
+SET(FFTW_ENABLED          ON  CACHE BOOL   "Enable use of FFTW library")
+SET(PASTIX_ENABLED        OFF CACHE BOOL   "Build PasTiX solvers ")
+SET(SUITESPARSE_ENABLED   OFF CACHE BOOL   "Enable UMFpack solvers")
+SET(BUILD_SIMULATIONS     ON  CACHE BOOL   "Build selalib simulations")
+SET(BUILD_PACKAGE         OFF CACHE BOOL   "Build selalib package")
+SET(BUILD_PARALUTION      OFF CACHE BOOL   "Build paralution library")
+SET(BUILD_JOREK           OFF CACHE BOOL   "Build jorek django solver")
+SET(PROCS                 4   CACHE STRING "Number of MPI processes for tests")
+SET(JOREK_GIT_BRANCH      selalib-branch CACHE STRING "Jorek branch to clone")
 
 IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   GET_FILENAME_COMPONENT(INSTALL_DIR "${CMAKE_SOURCE_DIR}/../usr" ABSOLUTE)
@@ -169,7 +169,16 @@ ADD_SUBDIRECTORY(gyroaverage)
 ADD_SUBDIRECTORY(maxwell_solvers)
 ADD_SUBDIRECTORY(ampere_solvers)
 ADD_SUBDIRECTORY(quasi_neutral_solvers)
+ADD_SUBDIRECTORY(descriptors)
 
+#Fortran version is checked in CMakeModules/FortranConfig.cmake
+IF(F2008)
+  ADD_SUBDIRECTORY( vector_space )
+  ADD_SUBDIRECTORY( ode_integrators )
+ENDIF(F2008)
+
+# Container for all particle methods (mostly PIC)
+ADD_SUBDIRECTORY( particle_methods )
 
 IF(MPI_ENABLED)
    
@@ -218,23 +227,82 @@ ENDIF(BUILD_SIMULATIONS)
 
 IF(BUILD_PARALUTION)
   INCLUDE(ExternalProject)
-  EXTERNALPROJECT_ADD(
-     paralution
-     SOURCE_DIR ${CMAKE_BINARY_DIR}/paralution
-     URL  http://www.paralution.com/downloads/paralution-1.0.0.tar.gz
-     CMAKE_ARGS -DSUPPORT_CUDA=OFF
+  SET(PARALUTION_VERSION 1.0.0 CACHE STRING "Paralution version number")
+  EXTERNALPROJECT_ADD( paralution
+     URL  http://www.paralution.com/downloads/paralution-${PARALUTION_VERSION}.tar.gz
+     CMAKE_ARGS -DSUPPORT_CUDA=OFF -DBUILD_EXAMPLES=OFF
      INSTALL_COMMAND ""
   )
 ENDIF()
 
+
 IF(BUILD_JOREK)
+
+  SET(GIT_LOGIN $ENV{USER} CACHE STRING "INRIA GForge login")
   INCLUDE(ExternalProject)
+
+  SET(JOREK_GIT_REPOSITORY git+ssh://${GIT_LOGIN}@scm.gforge.inria.fr/gitroot/jorek/jorek.git)
+
+  IF(APPLE)
+    SET(JOREK_CMAKE_ARGS -DBUILD_TESTING=OFF -DJOREK_DEBUG_TRACE=OFF -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DJOREK_SAVE_MATRIX=OFF)
+  ELSE(APPLE)
+    SET(JOREK_CMAKE_ARGS -DBUILD_TESTING=OFF -DJOREK_DEBUG_TRACE=OFF -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DJOREK_SAVE_MATRIX=OFF -DPETSC_DIR=${PETSC_DIR} -DPETSC_ARCH=${PETSC_ARCH})
+  ENDIF(APPLE)
+
+  IF(BUILD_PACKAGE)
+
+    EXTERNALPROJECT_ADD(
+      jorek
+      GIT_REPOSITORY ${JOREK_GIT_REPOSITORY}
+      GIT_TAG ${JOREK_GIT_BRANCH}
+      CMAKE_ARGS ${JOREK_CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+      )
+
+  ELSE()
+
+    EXTERNALPROJECT_ADD(
+      jorek
+      GIT_REPOSITORY ${JOREK_GIT_REPOSITORY}
+      GIT_TAG ${JOREK_GIT_BRANCH}
+      CMAKE_ARGS ${JOREK_CMAKE_ARGS}
+      INSTALL_COMMAND "")
+
+  ENDIF()
+  
+  FIND_PACKAGE(PETSc)
+  ADD_SUBDIRECTORY(jorek)
+
+ENDIF()
+
+IF($ENV{PFUNIT})
+
+  INCLUDE(ExternalProject)
+
   EXTERNALPROJECT_ADD(
-     jorek
-     SOURCE_DIR ${CMAKE_BINARY_DIR}/jorek
-     GIT_REPOSITORY git+ssh://scm.gforge.inria.fr/gitroot/jorek/jorek.git
-     GIT_TAG django-devel
-     CMAKE_ARGS -DCMAKE_Fortran_COMPILER=${MPI_Fortran_COMPILER} -DBUILD_TESTING=OFF
+    pFUnit
+    PREFIX pFunit
+    GIT_REPOSITORY git://git.code.sf.net/p/pfunit/code
+    CMAKE_ARGS -DINSTALL_PATH=${CMAKE_BINARY_DIR})
+
+ENDIF()
+
+SET(BUILD_SPRNG OFF CACHE BOOL   "Build SPRNG libraries")
+IF(BUILD_SPRNG)
+  FIND_PACKAGE(MPI REQUIRED CXX)
+  SET(SPRNG_CXX_COMPILER ${MPI_CXX_COMPILER} CACHE FILEPATH  "CXX compiler for SPRNG")
+  SET(SPRNG_LIBS "-lmpi_cxx" CACHE STRING  "LIBS configure argument for SPRNG")
+  IF(APPLE)
+    MESSAGE(STATUS "Warning: Build SPRNG library on mac is tricky")
+  ENDIF(APPLE)
+  INCLUDE(ExternalProject)
+  SET(SPRNG_VERSION 5 CACHE STRING "SPRNG version number")
+  EXTERNALPROJECT_ADD( sprng
+     URL  http://www.sprng.org/Version5.0/sprng${SPRNG_VERSION}.tar.bz2
+     SOURCE_DIR ${CMAKE_BINARY_DIR}/sprng
+     BINARY_DIR ${CMAKE_BINARY_DIR}/sprng
+     UPDATE_COMMAND autoreconf -if
+     CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/sprng/configure --prefix=${CMAKE_BINARY_DIR}/sprng --with-mpi=yes CXX=${SPRNG_CXX_COMPILER} LIBS=${SPRNG_LIBS}
+     BUILD_COMMAND ${MAKE} 
      INSTALL_COMMAND ""
   )
 ENDIF()
