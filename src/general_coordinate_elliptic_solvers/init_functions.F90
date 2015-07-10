@@ -15,6 +15,14 @@ function func_zero( eta1, eta2, params ) result(res)
   res = 0.0_8
 end function func_zero
 
+function func_four( eta1, eta2, params ) result(res)
+  real(8), intent(in) :: eta1
+  real(8), intent(in) :: eta2
+  real(8), dimension(:), intent(in) :: params
+  real(8) :: res
+  res = 4.0_8
+end function func_four
+
 function func_epsi( eta1, eta2, params ) result(res)
   real(8), intent(in) :: eta1
   real(8), intent(in) :: eta2
@@ -40,7 +48,7 @@ function source_term_perper( eta1, eta2) result(res)
   ! real(8), dimension(:), intent(in), optional :: params
   real(8) :: res
 
-  res =  0.001*cos(2*sll_pi*eta1)
+  res =  cos(2*sll_pi*eta1)
   !!-2*(2.0*sll_pi)**2*cos(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)! 0.001*cos(2*sll_pi*eta1)!
 end function source_term_perper
 
@@ -49,7 +57,7 @@ real(8) function sol_exacte_perper(eta1,eta2)
   real(8) :: eta1,eta2
   
   !real(8), dimension(:), intent(in), optional :: params
-  sol_exacte_perper = -0.001/((2*sll_pi)**2)*cos(2*sll_pi*eta1)!cos(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)!-0.001/((2*sll_pi)**2)*cos(2*sll_pi*eta1)
+  sol_exacte_perper = -1.0_8/((2*sll_pi)**2)*cos(2*sll_pi*eta1)!cos(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)!-0.001/((2*sll_pi)**2)*cos(2*sll_pi*eta1)
 end function sol_exacte_perper
 
 real(8) function sol_exacte_perper_der1(eta1,eta2)
@@ -57,7 +65,7 @@ real(8) function sol_exacte_perper_der1(eta1,eta2)
   real(8) :: eta1,eta2
   
   !real(8), dimension(:), intent(in), optional :: params
-  sol_exacte_perper_der1 = 0.001/(2*sll_pi)*sin(2*sll_pi*eta1) !-2.0*sll_pi*sin(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)
+  sol_exacte_perper_der1 = 1.0_8/(2*sll_pi)*sin(2*sll_pi*eta1) !-2.0*sll_pi*sin(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)
 end function sol_exacte_perper_der1
 real(8) function sol_exacte_perper_der2(eta1,eta2)
   use sll_constants
@@ -195,7 +203,6 @@ real(8) function rho_rtheta(eta1,eta2,params) ! in the path
   
   rho_rtheta = x*y*(-32.0*x**2 - 32.0*y**2 + 15.0)  
   
-  
 end function rho_rtheta
 
 
@@ -211,9 +218,7 @@ real(8) function sol_exacte_rtheta(eta1,eta2,params) ! in the path
   sol_exacte_rtheta = ( eta2**2-1)*(eta2**2-0.5**2)*eta2**2&
        *cos(2*sll_pi*eta1)*sin(2*sll_pi*eta1)
   
-    
 end function sol_exacte_rtheta
-
 
 !----------------------------------------------------------
 !  Solution for a colella change of coordinates 
@@ -221,9 +226,6 @@ end function sol_exacte_rtheta
 !   the matrix A is equal to identity 
 !   the scalar c is equal to zero 
 !-------------------------------------------------------------
-
-
-
 
 real(8) function source_term_chgt_perper(eta1,eta2) ! in the path
   use sll_constants
@@ -302,10 +304,6 @@ end function sol_exacte_chgt_perper_der2
 !   the matrix A is equal to identity 
 !   the scalar c is equal to zero 
 !-------------------------------------------------------------
-
-
-
-
 real(8) function source_term_chgt_perdir(eta1,eta2) ! in the path
   use sll_constants
   real(8),intent(in) :: eta1,eta2
@@ -322,8 +320,6 @@ real(8) function source_term_chgt_perdir(eta1,eta2) ! in the path
   
 end function source_term_chgt_perdir
 
-
-
 real(8) function sol_exacte_chgt_perdir(eta1,eta2)
   use sll_constants
   real(8) :: eta1,eta2
@@ -335,7 +331,6 @@ real(8) function sol_exacte_chgt_perdir(eta1,eta2)
   y =   eta2 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
   
   sol_exacte_chgt_perdir = cos(2*sll_pi*x)*sin(2*sll_pi*y)
-  
   
 end function sol_exacte_chgt_perdir
 
@@ -354,7 +349,6 @@ real(8) function sol_exacte_chgt_perdir_der1(eta1,eta2)
        + 2*sll_pi*cos(2*sll_pi*x)*cos(2*sll_pi*y)&
        * ( 2*sll_pi*0.1*cos(2* sll_pi*eta1) * sin(2*sll_pi*eta2) ) 
   
-  
 end function sol_exacte_chgt_perdir_der1
 
 real(8) function sol_exacte_chgt_perdir_der2(eta1,eta2)
@@ -372,7 +366,6 @@ real(8) function sol_exacte_chgt_perdir_der2(eta1,eta2)
        + 2*sll_pi*cos(2*sll_pi*x)*cos(2*sll_pi*y)&
        * ( 1.0_f64 + 2*sll_pi*0.1*sin(2* sll_pi*eta1) *cos(2*sll_pi*eta2) ) 
   
-  
 end function sol_exacte_chgt_perdir_der2
 
 !----------------------------------------------------------
@@ -381,8 +374,6 @@ end function sol_exacte_chgt_perdir_der2
 !   the matrix A is equal to identity 
 !   the scalar c is equal to zero 
 !-------------------------------------------------------------
-
-
 
 real(8) function source_term_chgt_dirdir(eta1,eta2) ! in the path
   use sll_constants
@@ -403,8 +394,6 @@ real(8) function source_term_chgt_dirdir(eta1,eta2) ! in the path
 end function source_term_chgt_dirdir
 
 
-
-
 real(8) function sol_exacte_chgt_dirdir(eta1,eta2)
   use sll_constants
   real(8) :: eta1,eta2
@@ -419,7 +408,6 @@ real(8) function sol_exacte_chgt_dirdir(eta1,eta2)
   sol_exacte_chgt_dirdir = sin(2* sll_pi*y)*sin(2* sll_pi*x)
   
 end function sol_exacte_chgt_dirdir
-
 
 real(8) function sol_exacte_chgt_dirdir_der1(eta1,eta2)
   use sll_constants
@@ -437,7 +425,6 @@ real(8) function sol_exacte_chgt_dirdir_der1(eta1,eta2)
        + 2*sll_pi*sin(2* sll_pi*x)*cos(2* sll_pi*y) &
        * ( 2*sll_pi*0.1*cos(2* sll_pi*eta1) * sin(2*sll_pi*eta2) )
 end function sol_exacte_chgt_dirdir_der1
-
 
 real(8) function sol_exacte_chgt_dirdir_der2(eta1,eta2)
   use sll_constants
@@ -457,18 +444,12 @@ real(8) function sol_exacte_chgt_dirdir_der2(eta1,eta2)
   
 end function sol_exacte_chgt_dirdir_der2
 
-
-
-
-
 !----------------------------------------------------------
 !  Solution for a colella change of coordinates 
 !   and dirchlet-periodic conditions
 !   the matrix A is equal to identity 
 !   the scalar c is equal to zero 
 !-------------------------------------------------------------
-
-
 
 real(8) function source_term_chgt_dirper(eta1,eta2) ! in the path
   use sll_constants
@@ -487,8 +468,6 @@ real(8) function source_term_chgt_dirper(eta1,eta2) ! in the path
   source_term_chgt_dirper = -2*(2*sll_pi)**2*sin(2*sll_pi*x)*cos(2*sll_pi*y)
   
 end function source_term_chgt_dirper
-
-
 
 
 real(8) function sol_exacte_chgt_dirper(eta1,eta2)
@@ -589,8 +568,6 @@ real(8) function jac22_adimension_chgt(eta1,eta2)
   jac22_adimension_chgt = 2*sll_pi
 end function jac22_adimension_chgt
 
-
-
 real(8) function sol_exacte_chgt_adim(eta1,eta2)
   use sll_constants
   real(8) :: eta1,eta2
@@ -601,11 +578,9 @@ real(8) function sol_exacte_chgt_adim(eta1,eta2)
   x =   2*sll_pi*eta1!+eta2)
   y =   2* sll_pi*eta2
   
-  
   sol_exacte_chgt_adim = cos(x)*cos(y)
   
 end function sol_exacte_chgt_adim
-
 
 real(8) function source_term_chgt_adim(eta1,eta2)
   use sll_constants
@@ -623,7 +598,7 @@ end function source_term_chgt_adim
 
 #define R_MIN 1.0_8
 #define R_MAX 2.0_8
-#define N_MOD 8
+#define N_MOD 4
 
 real(8) function f_cos( eta1, eta2)
 
@@ -636,17 +611,15 @@ real(8) function f_cos( eta1, eta2)
 
    real(8) :: eta1, eta2
    real(8) :: r, theta
-   real(8) :: r_min = R_MIN
-   real(8) :: r_max = R_MAX
-   real(8) :: n = N_MOD * sll_pi
+   real(8) :: n = N_MOD 
 
-   r = eta1 + R_MIN
-   theta = eta2 * sll_pi
+   r = eta1 * (R_MAX-R_MIN) + R_MIN
+   theta = eta2 * 2 * sll_pi
 
-   f_cos = -(r-r_max)*(r-r_min)*n*n*cos(n*theta)/r &
-           + ((r-r_max)*(r-r_min)*cos(n*theta)  &
-           + (r-r_max)*r*cos(n*theta) + (r-r_min)*r*cos(n*theta) &
-           + 2*((r-r_max)*cos(n*theta) + (r-r_min)*cos(n*theta) &
+   f_cos = -(r-R_MAX)*(r-R_MIN)*n*n*cos(n*theta)/r &
+           + ((r-R_MAX)*(r-R_MIN)*cos(n*theta)  &
+           + (r-R_MAX)*r*cos(n*theta) + (r-R_MIN)*r*cos(n*theta) &
+           + 2*((r-R_MAX)*cos(n*theta) + (r-R_MIN)*cos(n*theta) &
            + r*cos(n*theta))*r)/r
 
 end function f_cos
@@ -662,17 +635,15 @@ real(8) function f_sin( eta1, eta2)
 
    real(8) :: eta1, eta2
    real(8) :: r, theta
-   real(8) :: r_min = R_MIN
-   real(8) :: r_max = R_MAX
    integer :: n = N_MOD 
 
-   r = eta1 + R_MIN
-   theta = eta2 * sll_pi
+   r = eta1 * (R_MAX-R_MIN) + R_MIN
+   theta = eta2 * 2 * sll_pi
 
-   f_sin = -(r-r_max)*(r-r_min)*n*n*sin(n*theta)/r &
-         + ((r-r_max)*(r-r_min)*sin(n*theta) &
-         + (r-r_max)*r*sin(n*theta) + (r-r_min)*r*sin(n*theta) &
-         + 2*((r-r_max)*sin(n*theta) + (r-r_min)*sin(n*theta)  &
+   f_sin = -(r-R_MAX)*(r-R_MIN)*n*n*sin(n*theta)/r &
+         + ((r-R_MAX)*(r-R_MIN)*sin(n*theta) &
+         + (r-R_MAX)*r*sin(n*theta) + (r-R_MIN)*r*sin(n*theta) &
+         + 2*((r-R_MAX)*sin(n*theta) + (r-R_MIN)*sin(n*theta)  &
          + r*sin(n*theta))*r)/r
 
 end function f_sin
@@ -688,16 +659,14 @@ real(8) function u_sin_der1( eta1, eta2)
 
    real(8) :: eta1, eta2
    real(8) :: r, theta
-   real(8) :: r_min = R_MIN
-   real(8) :: r_max = R_MAX
-   real(8) :: n = N_MOD * sll_pi
+   real(8) :: n = N_MOD 
    
-   r = eta1 + R_MIN
-   theta = eta2 * sll_pi
+   r = eta1 * (R_MAX-R_MIN) + R_MIN
+   theta = eta2 * 2 * sll_pi
 
-   u_sin_der1 = (r - r_max)*(r - r_min)*sin(n*theta) &
-              + (r - r_max)*r*sin(n*theta) &
-              + (r - r_min)*r*sin(n*theta)
+   u_sin_der1 = (r - R_MAX)*(r - R_MIN)*sin(n*theta) &
+              + (r - R_MAX)*r*sin(n*theta) &
+              + (r - R_MIN)*r*sin(n*theta)
 
 end function u_sin_der1
 
@@ -712,14 +681,12 @@ real(8) function u_sin_der2( eta1, eta2)
 
    real(8) :: eta1, eta2
    real(8) :: r, theta
-   real(8) :: r_min = R_MIN
-   real(8) :: r_max = R_MAX
-   real(8) :: n = N_MOD * sll_pi
+   real(8) :: n = N_MOD 
    
    r = eta1 + R_MIN
-   theta = eta2 * sll_pi
+   theta = eta2 * 2 * sll_pi
 
-   u_sin_der2 = n*(r - r_max)*(r - r_min)*r*cos(n*theta)
+   u_sin_der2 = n*(r - R_MAX)*(r - R_MIN)*r*cos(n*theta)
 
 end function u_sin_der2
 
@@ -734,14 +701,12 @@ real(8) function u_sin( eta1, eta2)
 
    real(8) :: eta1, eta2
    real(8) :: r, theta
-   real(8) :: r_min = R_MIN
-   real(8) :: r_max = R_MAX
-   real(8) :: n = N_MOD * sll_pi
+   real(8) :: n = N_MOD 
    
-   r = eta1 + R_MIN
-   theta = eta2 * sll_pi
+   r = eta1 * (R_MAX-R_MIN) + R_MIN
+   theta = eta2 * 2 * sll_pi
 
-   u_sin = (r-r_min)*(r-r_max)*sin(n*theta)*r
+   u_sin = (r-R_MIN)*(r-R_MAX)*sin(n*theta)*r
 
 end function u_sin
 
@@ -756,14 +721,12 @@ real(8) function u_cos( eta1, eta2)
 
    real(8) :: eta1, eta2
    real(8) :: r, theta
-   real(8) :: r_min = R_MIN
-   real(8) :: r_max = R_MAX
-   real(8) :: n = N_MOD * sll_pi
+   real(8) :: n = N_MOD
    
-   r = eta1 + R_MIN
-   theta = eta2 * sll_pi
+   r = eta1 * (R_MAX-R_MIN) + R_MIN
+   theta = eta2 * 2 * sll_pi
 
-   u_cos = (r-r_min)*(r-r_max)*cos(n*theta)*r
+   u_cos = (r-R_MIN)*(r-R_MAX)*cos(n*theta)*r
 
 end function u_cos
 
@@ -778,15 +741,13 @@ real(8) function u_cos_der1( eta1, eta2)
 
    real(8) :: eta1, eta2
    real(8) :: r, theta
-   real(8) :: r_min = R_MIN
-   real(8) :: r_max = R_MAX
-   real(8) :: n = N_MOD * sll_pi
+   real(8) :: n = N_MOD
    
-   r = eta1 + R_MIN
-   theta = eta2 * sll_pi
-   u_cos_der1 = (r - r_max)*(r - r_min)*cos(n*theta) &
-              + (r - r_max)*r*cos(n*theta) &
-              + (r - r_min)*r*cos(n*theta)
+   r = eta1 * (R_MAX-R_MIN) + R_MIN
+   theta = eta2 * 2 * sll_pi
+   u_cos_der1 = (r - R_MAX)*(r - R_MIN)*cos(n*theta) &
+              + (r - R_MAX)*r*cos(n*theta) &
+              + (r - R_MIN)*r*cos(n*theta)
 
 end function u_cos_der1
 
@@ -801,13 +762,11 @@ real(8) function u_cos_der2( eta1, eta2)
 
    real(8) :: eta1, eta2
    real(8) :: r, theta
-   real(8) :: r_min = R_MIN
-   real(8) :: r_max = R_MAX
-   real(8) :: n = N_MOD * sll_pi
+   real(8) :: n = N_MOD
    
-   r = eta1 + R_MIN
-   theta = eta2 * sll_pi
-   u_cos_der2 = - n*(r - r_max)*(r - r_min)*r*sin(n*theta)
+   r = eta1 * (R_MAX-R_MIN) + R_MIN
+   theta = eta2 * 2 * sll_pi
+   u_cos_der2 = - n*(r - R_MAX)*(r - R_MIN)*r*sin(n*theta)
 
 end function u_cos_der2
 
