@@ -39,3 +39,9 @@ Damping Factor (fit): -0.17161 in [-0.19563,-0.14758] by 0.95%
 The demo result file is:
 demoresult.gnu
 
+%Bump on tail
+%FEM
+mpirun -np 2   ./bin/test_pic_1d nmark=500000,femp=6,sdeg=3,tstepw=0.1,tsteps=500,ppusher=\"verlet\",psolver=\"fem\",lalpha=0.04,scenario=\'bump\',deltaf=0
+
+%Fourier
+mpirun -np 2   ./bin/test_pic_1d nmark=500000,femp=6,sdeg=3,tstepw=0.1,tsteps=500,ppusher=\"verlet\",psolver=\"fourier\",lalpha=0.04,scenario=\'bump\',deltaf=0
