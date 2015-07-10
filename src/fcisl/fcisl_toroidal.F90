@@ -89,7 +89,7 @@ subroutine compute_rk4_field( &
   phi, &
   theta0, &
   phi0)
-  
+
   sll_real64, intent(in) :: R0
   sll_int32, intent(in) :: num_time_points
   sll_real64, intent(in) :: psipr
@@ -100,7 +100,6 @@ subroutine compute_rk4_field( &
   sll_real64, dimension(:), intent(out) :: phi
   sll_real64, intent(in) :: theta0
   sll_real64, intent(in) :: phi0
-  
   procedure(sll_scalar_initializer_2d), pointer :: func1
   sll_real64 :: params1(2)
   procedure(sll_scalar_initializer_2d), pointer :: func2
@@ -120,7 +119,6 @@ subroutine compute_rk4_field( &
   params2(1) = smallr
   params2(2) = R0
   params2(3) = F0 
-    
   theta(1) = theta0
   phi(1) = phi0
   do i=1,num_time_points-1
@@ -169,7 +167,6 @@ function toroidal_2(theta,phi,params) result(res)
   bigr = R0+smallr*cos(theta)
   res=F0/bigr
 end function toroidal_2
-
 
 
 
