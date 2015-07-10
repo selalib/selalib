@@ -31,19 +31,27 @@ module sll_poisson_1d_fd
 
         !> Spline basis
         !sll_int32 , private :: fd_degree !<Degree of the Bsplines
-        sll_int32 , private :: fd_degree !<Degree of the Bsplines
-
+        sll_int32 , private :: fd_degree !<Order of the finite differences
+        sll_int32 , private :: spline_degree !<Degree of the B-splines
+        
+        
         type(arbitrary_degree_spline_1d), pointer, private :: bspline  !<Bspline object
         class(sll_arbitrary_degree_spline_interpolator_1d), pointer, private :: interpolator
 
+
+        !Finite difference stencils with weights
+        sll_real64, dimension(:), allocatable :: stenw_dx    !gradient 
+        sll_real64, dimension(:), allocatable :: stenw_dxdx  !Laplace
+        
         sll_real64, dimension(:), allocatable :: fd_solution
         sll_real64, dimension(:), allocatable,private :: fd_solution_deriv
-
 
         !For Precomputation do one FFT of fd_matrix_first_line
         sll_real64, dimension(:), allocatable, private :: fd_matrix_first_line
         sll_comp64, dimension(:), allocatable, private :: fd_matrix_first_line_fourier
 
+        
+        
         !FFT Plans
         type(sll_fft_plan), pointer, private :: forward_fftplan => null()
         type(sll_fft_plan), pointer, private :: backward_fftplan => null()
@@ -61,10 +69,11 @@ module sll_poisson_1d_fd
         procedure,  pass(this) :: eval_solution_derivative=>poisson_1d_fd_eval_solution_derivative
         procedure, pass(this) :: H1seminorm_solution=>poisson_1d_fd_H1seminorm_solution
         procedure, pass(this) :: L2norm_solution=>poisson_1d_fd_L2norm_solution
-
+        procedure, pass(this) :: interp=>poisson_1d_fd_interp
         procedure, pass(this) :: set_solution=>poisson_1d_fd_set_solution
-!        procedure, pass(this) :: get_rhs_cic=>poisson_1d_fd_get_rhs_cic
-
+        procedure, pass(this) :: get_rhs_klimontovich=>poisson_1d_fd_get_rhs_from_klimontovich_density_weighted
+        procedure, pass(this),private :: set_stencil=>poisson_1d_fd_set_stencil
+        procedure,pass(this), public :: get_rhs_fun=>poisson_1d_fd_get_rhs_fun
 
     end type poisson_1d_fd
 
@@ -118,24 +127,28 @@ contains
     endsubroutine
 
 
-    function  new_poisson_1d_fd(cartesian_mesh_1d,fd_degree, bc_type,ierr) &
+    function  new_poisson_1d_fd(cartesian_mesh_1d,fd_degree, sp_degree,bc_type,ierr) &
             result(solver)
         type(poisson_1d_fd), pointer :: solver     !< Solver data structure
         class(sll_cartesian_mesh_1d), intent(in),pointer  :: cartesian_mesh_1d !< Logical mesh
         sll_int32, intent(out)                :: ierr    !< error code
         sll_int32, intent(in)                :: fd_degree !<Degree of the finite differences approximation
+        sll_int32, intent(in)                :: sp_degree !<Degree of the bsplines
+
         sll_int32, intent(in)               :: bc_type !< type of boundary connditions
 
         SLL_ALLOCATE(solver,ierr)
-        call sll_initialize_poisson_1d_fd(solver,  cartesian_mesh_1d,fd_degree,bc_type,ierr)
+        call sll_initialize_poisson_1d_fd(solver,  cartesian_mesh_1d,fd_degree,sp_degree,bc_type,ierr)
     endfunction
 
 
-    subroutine sll_initialize_poisson_1d_fd(this, cartesian_mesh_1d,fd_degree,bc_type, ierr)
+    subroutine sll_initialize_poisson_1d_fd(this, cartesian_mesh_1d,fd_degree,sp_degree, bc_type, ierr)
         class(poisson_1d_fd),intent(inout) :: this     !< Solver data structure
         class(sll_cartesian_mesh_1d), intent(in),pointer  :: cartesian_mesh_1d !< Logical mesh
         sll_int32, intent(out)                :: ierr    !< error code
-        sll_int32, intent(in)                :: fd_degree !<Degree of the bsplines
+        sll_int32, intent(in)                :: sp_degree !<Degree of the bsplines
+        sll_int32, intent(in)                :: fd_degree !<Degree of the finite differences
+
         sll_int32, intent(in)               :: bc_type !< type of boundary connditions
         ierr=0
         this%boundarycondition=bc_type !SLL_PERIODIC
@@ -143,13 +156,14 @@ contains
         !scale_matrix_equation=1.0_f64
         this%cartesian_mesh=>cartesian_mesh_1d
         this%num_cells=this%cartesian_mesh%num_cells
+        this%spline_degree=sp_degree
         this%fd_degree=fd_degree
+        
         !Allocate spline
         selectcase(this%boundarycondition)
             case(SLL_PERIODIC)
-                !this%bspline=>new_arbitrary_degree_spline_1d( fd_degree, &
-                    !sll_mesh_nodes(this%cartesian_mesh), sll_mesh_num_nodes(this%cartesian_mesh), &
-                    !PERIODIC_ARBITRARY_DEG_SPLINE)
+                this%bspline=>new_arbitrary_degree_spline_1d(this%spline_degree,this%cartesian_mesh%eta1_nodes(), this%cartesian_mesh%num_nodes(), &
+                    PERIODIC_ARBITRARY_DEG_SPLINE)
                 this%problem_size=this%num_cells
                 this%interpolator=>new_arbitrary_degree_1d_interpolator(this%num_cells, &
                     this%cartesian_mesh%eta_min, &
@@ -271,19 +285,18 @@ contains
         sll_real64, dimension(this%fd_degree*3) :: period
         sll_int32 :: periodlen
 
-
         SLL_CLEAR_ALLOCATE(this%fd_matrix_first_line(1:this%num_cells),ierr)
         this%fd_matrix_first_line=0.0_f64
-        selectcase(this%fd_degree)
-            case(1)
+        !selectcase(this%fd_degree)
+            !case(1)
                 !                  period=(/ 1.0_f64, 2.0_f64, 1.0_f64 /)
                 !                 periodlen=3
                 this%fd_matrix_first_line(1:2:1)=(/ -2.0_f64, 1.0_f64 /)
                 this%fd_matrix_first_line(this%num_cells)=1.0_f64
-            case default
-                print *, "Higher order Finite Differences are not implemented!"
-                stop
-        endselect
+         !   case default
+          !      print *, "Higher order Finite Differences are not implemented!"
+           !     stop
+        !endselect
 
     endsubroutine
 
@@ -303,6 +316,7 @@ contains
         sll_int32 :: N
         SLL_ASSERT(size(rhs)==this%num_cells)
             N=size(rhs)
+        
         this%fd_solution=poisson_1d_fd_solve_circulant_matrix_equation(this, &
             this%fd_matrix_first_line_fourier ,-rhs )
 
@@ -311,15 +325,17 @@ contains
             this%fd_solution(1)=0
         endif
 
-            this%fd_solution= this%fd_solution*this%cartesian_mesh%delta_eta*2
+            this%fd_solution=this%fd_solution*this%cartesian_mesh%delta_eta*2
+        
+        
         !Calculate the Electric field from the Potential
         !Central Difference
-         this%fd_solution_deriv=(cshift(this%fd_solution,-1)- &
+        this%fd_solution_deriv=(cshift(this%fd_solution,-1)- &
                                         cshift(this%fd_solution,1))&
-                                     /(2*(this%cartesian_mesh%delta_eta))
+                                     /(-2*(this%cartesian_mesh%delta_eta))
 
         !Set up Interpolation
-        call this%interpolator%compute_interpolants(this%fd_solution)
+        !call this%interpolator%compute_interpolants(this%fd_solution)
 
     endsubroutine
 
@@ -457,29 +473,67 @@ contains
 
     endfunction
 
+    
+    
+    subroutine poisson_1d_fd_interp(this, knots_eval, eval_solution , solution)
+    class(poisson_1d_fd),intent(inout) :: this
+        sll_real64, dimension(:), intent(in)     :: knots_eval
+        sll_real64, dimension(:), intent(out)     :: eval_solution
+        sll_real64, dimension(:), intent(in) :: solution
+        sll_real64, dimension(this%bspline%degree+1) :: b_contribution
+        sll_real64 :: celldx
+        sll_int :: b_idx, idx, jdx
+        sll_int :: b_contrib_idx
+      
+        SLL_ASSERT(size(knots_eval)==size(eval_solution))
+
+         eval_solution=0
+ 
+        do idx=1,size(knots_eval)
+           celldx=(knots_eval(idx)+this%cartesian_mesh%delta_eta*(this%bspline%degree+1)/2.0_f64)
+           celldx=this%cartesian_mesh%period(celldx) !periodicity
+           
+           b_idx=floor(celldx/this%cartesian_mesh%delta_eta)
+           celldx=mod(celldx,this%cartesian_mesh%delta_eta)
+           
+           
+           b_contribution=b_splines_at_x(this%bspline,1, celldx)
+          
+            !First spline has first support in first cell of interval
+            do b_contrib_idx=1, this%bspline%degree+1
+
+                
+                if (b_idx > this%num_cells) then
+                    b_idx = b_idx - this%num_cells
+                elseif (b_idx < 1) then
+                    b_idx = b_idx + this%num_cells
+                endif
+                
+                eval_solution(idx)=eval_solution(idx)+  b_contribution(b_contrib_idx)*solution(b_idx)
+                b_idx=b_idx+1
+            enddo
+        enddo
+    
+    !eval_solution=-eval_solution
+    endsubroutine
+    
+    
+    
+    
     !< Evaluates the first derivative of the solution at the given points knots_eval
     !< The Result is written into eval_solution
     subroutine poisson_1d_fd_eval_solution(this, knots_eval, eval_solution)
         class(poisson_1d_fd),intent(inout) :: this
         sll_real64, dimension(:), intent(in)     :: knots_eval
         sll_real64, dimension(:), intent(out)     :: eval_solution
+        sll_real64, dimension(this%bspline%degree+1) :: b_contribution
+        sll_real64 :: celldx
+        sll_int :: b_idx, idx
+        sll_int :: b_contrib_idx
+      
         SLL_ASSERT(size(knots_eval)==size(eval_solution))
-        !sll_int32 :: idx
-        !        eval_solution=
 
-                 !call this%interpolator%compute_interpolants(this%fd_solution)
-
-!         call  this%interpolator%interpolate_array_values( size(knots_eval), &
-!                    knots_eval, &
-!                        eval_solution )
-
-            call poisson_1d_fd_linear_interpol(this, this%fd_solution,knots_eval, eval_solution)
-
-           !do idx=1,size(knots_eval)
-           !eval_solution=this%interpolator%interpolate_array_values(knots_eval)
-           !eval_solution=interpolator%interpolate_derivative(interpolate_value)
-            !enddo
-
+        call this%interp( knots_eval, eval_solution, this%fd_solution)
     endsubroutine
 
     !< Evaluates the solution at the given points knots_eval
@@ -490,20 +544,8 @@ contains
         sll_real64, dimension(:), intent(out)     :: eval_solution
         SLL_ASSERT(size(knots_eval)==size(eval_solution))
 
-!
-!                 call this%interpolator%compute_interpolants(this%fd_solution_deriv)
-!
-!         call  this%interpolator%interpolate_array_values( size(knots_eval), &
-!                    knots_eval, &
-!                        eval_solution )
-
-call poisson_1d_fd_linear_interpol(this, this%fd_solution_deriv,knots_eval, eval_solution)
-
-!        call  this%interpolator%interpolate_array_derivatives(size(knots_eval), &
-!        knots_eval, &
-!            eval_solution )
-!        eval_solution=poisson_1d_fd_bspline_basis_to_realvals(this, this%fd_solution,&
-!            knots_eval, b_spline_derivatives_at_x)
+        call this%interp( knots_eval, eval_solution, this%fd_solution_deriv)
+       
     endsubroutine
 
     !    !<Gives the squared H1-seminorm of the solution $\Phi$: $|\nabla \Phi|^2$
@@ -593,37 +635,26 @@ call poisson_1d_fd_linear_interpol(this, this%fd_solution_deriv,knots_eval, eval
         sll_real64, dimension(:), intent(in) ::ppos
         sll_real64, dimension(:), intent(in) ::pweight
         sll_real64, dimension(this%num_cells) :: rhs
-        !procedure (b_splines_at_x), optional:: interpolfun_user
-        procedure (b_splines_at_x), pointer :: interpolfun
-        sll_int32 :: idx
+         sll_int32 :: idx
         sll_int32, dimension( size(ppos) ) :: cell
         sll_real64, dimension(this%bspline%degree+1) :: b_contribution
+        sll_real64 :: celldx
         sll_int :: b_idx
         sll_int :: b_contrib_idx
         rhs=0
 
         SLL_ASSERT( (size(pweight)==size(ppos) .OR. size(pweight)==1))
-        !        if (present(interpolfun_user)) then
-        !            interpolfun=>interpolfun_user
-        !        else
-        !            interpolfun=>b_splines_at_x
-        !        endif
-
-        interpolfun=>b_splines_at_x
-
-        cell= sll_cell(this%cartesian_mesh, ppos)
+ 
 
         do idx=1,size(ppos)
-
-
-            b_contribution=interpolfun(this%bspline,cell(idx), ppos(idx))
-            !b_contribution=interpolfun(bspline,5, particleposition(idx) - (cell-1)*(knots(2)-knots(1)))
-
-            !if  (this%boundarycondition==SLL_DIRICHLET) then
-            !                if (cell(idx)>this%num_cells-(this%bspline%degree+1) ) then
-            !                b_contribution((this%bspline%degree+1):(this%bspline%degree+1)-(this%num_cells-cell(idx)):-1)=0.0_f64
-            !                endif
-            !endif
+           celldx=(ppos(idx)+this%cartesian_mesh%delta_eta*(this%bspline%degree+1)/2.0_f64)
+           celldx=this%cartesian_mesh%period(celldx) !periodicity
+           
+           b_idx=floor(celldx/this%cartesian_mesh%delta_eta)
+           celldx=mod(celldx,this%cartesian_mesh%delta_eta)
+           
+           
+           b_contribution=b_splines_at_x(this%bspline,1, celldx)
 
 
             if (size(pweight)==1) then
@@ -632,32 +663,24 @@ call poisson_1d_fd_linear_interpol(this, this%fd_solution_deriv,knots_eval, eval
                 b_contribution=b_contribution*pweight(idx)
             endif
 
-            !Amount of splines equals the amount of
-            !b_contribution(1:bspline%degree+1)=b_period
-            !b_contribution(bspline%degree+2: bspline%degree*2 +1)=b_period(size(b_period)-1:1:-1)
             !First spline has first support in first cell of interval
             do b_contrib_idx=1, this%bspline%degree+1
-                !b_idx=cell + (b_contrib_idx- (bspline%degree+1))
-                b_idx=cell(idx) - b_contrib_idx+1
 
-
+                
                 if (b_idx > this%num_cells) then
                     b_idx = b_idx - this%num_cells
                 elseif (b_idx < 1) then
                     b_idx = b_idx + this%num_cells
                 endif
-
-                SLL_ASSERT(b_idx <= this%num_cells)
-                SLL_ASSERT(b_idx >= 1 )
+                
                 rhs(b_idx)=rhs(b_idx)+b_contribution(b_contrib_idx)
+                b_idx=b_idx+1
             enddo
-
         enddo
-
-        if (  this%boundarycondition==SLL_DIRICHLET ) then
-            rhs(1:this%bspline%degree+1)=0
-            rhs(this%num_cells-(this%bspline%degree):this%num_cells )=0
-        endif
+        
+        !normalize
+        rhs=rhs/this%cartesian_mesh%delta_eta  
+       
     endfunction
 
 
@@ -684,11 +707,71 @@ call poisson_1d_fd_linear_interpol(this, this%fd_solution_deriv,knots_eval, eval
                                         +(weight)*solution(idx_r )
             enddo
 
-
     endsubroutine
+ 
+ 
+    function poisson_1d_fd_get_rhs_fun(this, eval_function)      result( rhs )
+        class(poisson_1d_fd),intent(in) :: this     !< Solver data structure
+        procedure (poisson_1d_fd_rhs_function) :: eval_function
+        sll_real64, dimension(this%num_cells ) :: rhs !<Right hand side
+        sll_int32 :: idx 
+        sll_real64, dimension(this%num_cells +1)  :: knots
+        
+        
+        knots=this%cartesian_mesh%eta1_nodes()
+        rhs=eval_function(knots(1:this%num_cells))
+    endfunction
 
 
+    subroutine poisson_1d_fd_set_stencil(this, order)
+            class(poisson_1d_fd),intent(inout) :: this     !< Solver data structure
+        sll_int32, intent(in) :: order
+        sll_int32:: ierr
+        SLL_ALLOCATE(this%stenw_dx(1:order+1),ierr)
+        SLL_ALLOCATE(this%stenw_dxdx(1:order+1),ierr)
+        
+ 
+ SELECT CASE (order)
+ CASE (2)
+      ! Order = 2 
+this%stenw_dx=(/-1/2, 0, 1/2/)
+this%stenw_dxdx=(/1, -2, 1/)
 
+CASE (4)
+  ! Order = 4
+this%stenw_dx=(/1/12, -2/3, 0, 2/3, -1/12/)
+this%stenw_dxdx=(/-1/12, 4/3, -5/2, 4/3, -1/12/)
+    
+   CASE (6)
+    ! Order = 6
+this%stenw_dx=(/-1/60, 3/20, -3/4, 0, 3/4, -3/20, 1/60/)
+this%stenw_dxdx=(/1/90, -3/20, 3/2, -49/18, 3/2, -3/20, 1/90/)
+
+CASE (8)
+! Order = 8
+this%stenw_dx=(/1/280, -4/105, 1/5, -4/5, 0, 4/5, -1/5, 4/105, -1/280/)
+this%stenw_dxdx=(/-1/560, 8/315, -1/5, 8/5, -205/72, 8/5, -1/5, 8/315, -1/560/)
+
+CASE(10)
+! Order = 10
+this%stenw_dx=(/-1/1260, 5/504, -5/84, 5/21, -5/6, 0, 5/6, -5/21, 5/84, -5/504, 1/1260/)
+this%stenw_dxdx=(/1/3150, -5/1008, 5/126, -5/21, 5/3, -5269/1800, 5/3, -5/21, 5/126, -5/1008, 1/3150/)
+
+CASE(12)
+! Order = 12
+this%stenw_dx=(/1/5544, -1/385, 1/56, -5/63, 15/56, -6/7, 0, 6/7, -15/56, 5/63, -1/56, 1/385, -1/5544/)
+this%stenw_dxdx=(/-1/16632, 2/1925, -1/112, 10/189, -15/56, 12/7, -5369/1800, 12/7, -15/56, 10/189, -1/112, 2/1925, -1/16632/)
+   CASE DEFAULT
+      
+END SELECT
+
+
+    
+    
+    
+    end
+    
+    
     !    function poisson_1d_fd_calculate_residual(this) result(residuum)
     !                class(poisson_1d_fd),intent(inout) :: this
     !
