@@ -635,11 +635,18 @@ contains
     if (mesh%num_cells == cells_max) then
        call int2string(mesh%num_cells,filenum)
        call int2string(deg,splinedeg)
-       filename  = "diag_circ_spline"//trim(splinedeg)//"_tmax"//trim(filenum)//".dat"
+       filename  = "diag_circ_spline"//trim(splinedeg)//"_tmax"//trim(filenum)//".txt"
        
        call sll_new_file_id(out_unit, ierr)
        if (nloop == 0) then
           open(unit = out_unit, file=filename, action="write", status="replace")
+          write(out_unit,*) &
+               "time", ",",&
+               "mass", ",", &
+               "minimum value", ",", &
+               "l_1 norm", ",", &
+               "l_2 norm", ",",&
+               "l_\inf norm"
        else
           open(unit = out_unit, file=filename, action="write", status="old",position = "append")
        endif
@@ -665,11 +672,11 @@ contains
        norm_l1 = norm_l1 * mesh%delta**2
        norm_l2 = sqrt(norm_l2 * mesh%delta**2)
 
-       write(out_unit,"(7(g18.10,1x))") t, &
-            mass, &
-            rho_min, &
-            norm_l1, &
-            norm_l2, &
+       write(out_unit,"(5(g25.18,1a,1x),1(g25.18))") t, ",",&
+            mass, ",", &
+            rho_min, ",", &
+            norm_l1, ",", &
+            norm_l2, ",",&
             norm_linf
 
        close(out_unit)
@@ -680,11 +687,19 @@ contains
     if (t.gt.tmax) then !We write on this file only if it is the last time step
 
        call int2string(deg,splinedeg)
-       filename  = "diag_circ_spline"//trim(splinedeg)//"_nc.dat"
+       filename  = "diag_circ_spline"//trim(splinedeg)//"_nc.txt"
 
        if ( mesh%num_cells == cells_min ) then
           call sll_new_file_id(out_unit, ierr)
           open(unit = out_unit, file=filename, action="write", status="replace")
+          write(out_unit,*) &
+               "number of cells", ",",&
+               "time", ",",&
+               "mass", ",", &
+               "minimum value", ",", &
+               "l_1 norm", ",", &
+               "l_2 norm", ",",&
+               "l_\inf norm"
        else
           call sll_new_file_id(out_unit, ierr)
           open(unit = out_unit, file=filename, action="write", status="old",position = "append")
@@ -710,12 +725,13 @@ contains
        norm_l1 = norm_l1 * mesh%delta**2
        norm_l2 = sqrt(norm_l2 * mesh%delta**2)
 
-       write(out_unit,"((i6,1x),7(g18.10,1x))") mesh%num_cells, &
-            t, &
-            mass, &
-            rho_min, &
-            norm_l1, &
-            norm_l2, &
+       write(out_unit,"((i6,a,1x),5(g25.18,a,1x),(g25.18))") &
+            mesh%num_cells, ",", &
+            t, ",", &
+            mass, ",", &
+            rho_min, ",", &
+            norm_l1, ",", &
+            norm_l2, ",", &
             norm_linf
 
        close(out_unit) 
