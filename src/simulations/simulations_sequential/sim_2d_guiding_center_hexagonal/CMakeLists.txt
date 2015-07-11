@@ -25,9 +25,9 @@ TARGET_LINK_LIBRARIES( ${EXECUTABLE1} sll_simulations_sequential ${SIM_LIBS}
                                                                 euler_2d_hex)
 
 # First test :
-ADD_EXECUTABLE( ${EXECUTABLE2} simulation_${SIM_NAME1}.F90)
+ADD_EXECUTABLE( ${EXECUTABLE2} simulation_${SIM_NAME2}.F90)
 TARGET_LINK_LIBRARIES( ${EXECUTABLE2} sll_simulations_sequential ${SIM_LIBS}
-                                                                sll_box_splines
+                                                                hex_hermite
                                                                 sll_hex_meshes
                                                                 hex_poisson
                                                                 pivotbande
