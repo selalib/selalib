@@ -24,8 +24,6 @@ program sim2d_gc_hex_splines
   sll_real64, dimension(:,:), allocatable :: matrix_poisson, l, u
   sll_real64, dimension(:),   allocatable :: rho_tn   ! distribution at time n
   sll_real64, dimension(:),   allocatable :: rho_tn1  ! distribution at time n+1
-  sll_real64, dimension(:),   allocatable :: x1_char
-  sll_real64, dimension(:),   allocatable :: x2_char
 
   sll_int32    :: spline_degree
   sll_int32    :: hermite_method
@@ -185,9 +183,6 @@ program sim2d_gc_hex_splines
 
      SLL_ALLOCATE(rho_tn( n_points),ierr)
      SLL_ALLOCATE(rho_tn1( n_points ),ierr)
-
-     SLL_ALLOCATE(x1_char( n_points ),ierr)
-     SLL_ALLOCATE(x2_char( n_points ),ierr)
 
      SLL_ALLOCATE(uxn( n_points),ierr)
      SLL_ALLOCATE(uyn( n_points ),ierr)
@@ -371,8 +366,6 @@ program sim2d_gc_hex_splines
 
      SLL_DEALLOCATE_ARRAY(rho_tn,ierr)
      SLL_DEALLOCATE_ARRAY(rho_tn1,ierr)
-     SLL_DEALLOCATE_ARRAY(x1_char,ierr)
-     SLL_DEALLOCATE_ARRAY(x2_char,ierr)
      SLL_DEALLOCATE_ARRAY(uxn,ierr)
      SLL_DEALLOCATE_ARRAY(uyn,ierr)
      SLL_DEALLOCATE_ARRAY(dxuxn,ierr)

@@ -26,8 +26,6 @@ program sim2d_gc_hex_hermite
   sll_real64, dimension(:),   allocatable :: rho_tn_1 ! distribution at time n-1
   sll_real64, dimension(:),   allocatable :: rho_tn   ! distribution at time n
   sll_real64, dimension(:),   allocatable :: rho_tn1  ! distribution at time n+1
-  sll_real64, dimension(:),   allocatable :: x1_char
-  sll_real64, dimension(:),   allocatable :: x2_char
   sll_real64, dimension(:),   allocatable :: dxuxn_1,dyuxn_1,dxuyn_1,dyuyn_1
   sll_real64, dimension(:),   allocatable :: rho_tn_2,uxn_2,uyn_2
   sll_real64, dimension(:),   allocatable :: dxuxn_2,dyuxn_2,dxuyn_2,dyuyn_2
@@ -239,10 +237,7 @@ program sim2d_gc_hex_hermite
      SLL_ALLOCATE(rho_tn_1( n_points),ierr)
      SLL_ALLOCATE(rho_tn( n_points),ierr)
      SLL_ALLOCATE(rho_tn1( n_points ),ierr)
-
-     SLL_ALLOCATE(x1_char( n_points ),ierr)
-     SLL_ALLOCATE(x2_char( n_points ),ierr)
-
+     
      SLL_ALLOCATE(uxn( n_points),ierr)
      SLL_ALLOCATE(uyn( n_points ),ierr)
      
@@ -426,12 +421,12 @@ program sim2d_gc_hex_hermite
 
      if (model_name.eq."GC") then
         if ( hermite_method /= 15 ) then
-           call hex_diagnostics_gc(rho_tn,t,mesh,uxn,uyn,nloops,spline_degree,tmax,cells_min,cells_max)
+           call hex_diagnostics_gc(rho_tn,t,mesh,uxn,uyn,nloops,hermite_method,tmax,cells_min,cells_max)
         else
-           call hex_diagnostics_gc(rho2,t,mesh2,uxn2,uyn2,nloops,spline_degree,tmax,cells_min,cells_max)
+           call hex_diagnostics_gc(rho2,t,mesh2,uxn2,uyn2,nloops,hermite_method,tmax,cells_min,cells_max)
         end if
      elseif (model_name.eq."CIRCULAR") then
-        call hex_diagnostics_circ(rho_tn,t,mesh,nloops,spline_degree,tmax,cells_min,cells_max,gauss_x1, gauss_x2, gauss_sig, gauss_amp)
+        call hex_diagnostics_circ(rho_tn,t,mesh,nloops,hermite_method,tmax,cells_min,cells_max,gauss_x1, gauss_x2, gauss_sig, gauss_amp)
      end if
 
 
@@ -588,7 +583,6 @@ program sim2d_gc_hex_hermite
         !      computing the solution of the poisson equation 
         !*********************************************************
         if (model_name.eq."GC") then
-           print *, "MODEL IS GC"
            if ( hermite_method /= 15 ) then
               call hex_second_terme_poisson( second_term, mesh, rho_tn ) 
               call solvlub_bande(l,u,phi_interm,second_term,n_points,width_band1,width_band2)
@@ -684,7 +678,7 @@ program sim2d_gc_hex_hermite
         !                  writing diagostics
         !*********************************************************
         if (model_name.eq."GC") then
-           call hex_diagnostics_gc(rho_tn,t,mesh,uxn,uyn,nloops,spline_degree,tmax,cells_min,cells_max)
+           call hex_diagnostics_gc(rho_tn,t,mesh,uxn,uyn,nloops,hermite_method,tmax,cells_min,cells_max)
            if (count == 10.and.nloops<10000.and.num_cells == cells_max) then
               call int2string(nloops,filenum)
               filename  = "center_guide_rho"//trim(filenum)
@@ -696,7 +690,7 @@ program sim2d_gc_hex_hermite
               count = 0
            endif
         elseif (model_name.eq."CIRCULAR") then
-           call hex_diagnostics_circ(rho_tn,t,mesh,nloops,spline_degree,tmax,cells_min,cells_max, gauss_x1, gauss_x2, gauss_sig, gauss_amp)
+           call hex_diagnostics_circ(rho_tn,t,mesh,nloops,hermite_method,tmax,cells_min,cells_max, gauss_x1, gauss_x2, gauss_sig, gauss_amp)
            if (count == 10.and.nloops<10000.and.num_cells == cells_max) then
               call int2string(nloops,filenum)
               filename  = "circular_advection_rho"//trim(filenum)
@@ -710,8 +704,6 @@ program sim2d_gc_hex_hermite
      SLL_DEALLOCATE_ARRAY(rho_tn_1,ierr)
      SLL_DEALLOCATE_ARRAY(rho_tn,ierr)
      SLL_DEALLOCATE_ARRAY(rho_tn1,ierr)
-     SLL_DEALLOCATE_ARRAY(x1_char,ierr)
-     SLL_DEALLOCATE_ARRAY(x2_char,ierr)
      SLL_DEALLOCATE_ARRAY(uxn,ierr)
      SLL_DEALLOCATE_ARRAY(uyn,ierr)
      SLL_DEALLOCATE_ARRAY(dxuxn,ierr)
@@ -945,8 +937,8 @@ contains
 
   !-------------------------------------------------------------------------
   !> @brief Writes diagnostics files
-  !> @details Write two sort of documents: "diag_gc_spline*_*.dat" and 
-  !> "diag_gc_spline*_nc.dat". Where important values (i.e. time of sim, errors, number
+  !> @details Write two sort of documents: "diag_gc_hermite*_*.dat" and 
+  !> "diag_gc_hermite*_nc.dat". Where important values (i.e. time of sim, errors, number
   !> of cells, etc) are written in order to compute diagnostics. The first file is for
   !> time evolutions, the second one is regarding the space discretization.
   !> @param rho real: contains the value of the density of the gc at time t
@@ -955,12 +947,12 @@ contains
   !> @param uxn real: equals sum( y_i) where (xi,yi) are the mesh points
   !> @param uyn real: equals sum(-x_i) where (xi,yi) are the mesh points
   !> @param nloop int: number of loops done
-  !> @param deg int: degree of the splines used for the interpolation method
+  !> @param num_meth int: number of the method used for the interpolation method
   !> @param tmax: maximum time that the will simulation will run
   !> @param cells_min int: min number of cells the mesh will have during this simulation
   !> @param cells_max int: max number of cells the mesh will have during this simulation
   !> return 
-  subroutine hex_diagnostics_gc(rho,t,mesh,uxn,uyn,nloop,deg,tmax,cells_min,cells_max)
+  subroutine hex_diagnostics_gc(rho,t,mesh,uxn,uyn,nloop,num_meth,tmax,cells_min,cells_max)
     type(sll_hex_mesh_2d),  pointer  :: mesh
     sll_real64, dimension(:) :: rho
     sll_real64, dimension(:) :: uxn
@@ -968,7 +960,7 @@ contains
     sll_real64, intent(in)   :: t
     sll_real64, intent(in)   :: tmax
     sll_int32 , intent(in)   :: nloop
-    sll_int32 , intent(in)   :: deg
+    sll_int32 , intent(in)   :: num_meth
     sll_int32 , intent(in)   :: cells_min, cells_max
     sll_real64 :: mass
     sll_real64 :: rho_min
@@ -980,7 +972,7 @@ contains
     sll_int32  :: out_unit
     character(len = 50) :: filename
     character(len =  4) :: filenum
-    character(len =  4) :: splinedeg
+    character(len =  4) :: method
 
     energy    = 0._f64
     mass      = 0._f64
@@ -994,8 +986,8 @@ contains
 
     if (mesh%num_cells == cells_max) then
        call int2string(mesh%num_cells,filenum)
-       call int2string(deg,splinedeg)
-       filename  = "diag_gc_spline"//trim(splinedeg)//"_tmax"//trim(filenum)//".dat"
+       call int2string(num_meth, method)
+       filename  = "diag_gc_hermite"//trim(method)//"_tmax"//trim(filenum)//".dat"
        
        call sll_new_file_id(out_unit, ierr)
        if (nloop == 0) then
@@ -1034,8 +1026,8 @@ contains
     ! Writing file in respect to num_cells..............
     if (t.gt.tmax) then !We write on this file only if it is the last time step
 
-       call int2string(deg,splinedeg)
-       filename  = "diag_gc_spline"//trim(splinedeg)//"_nc.dat"
+       call int2string(num_meth,method)
+       filename  = "diag_gc_hermite"//trim(method)//"_nc.dat"
 
        if ( mesh%num_cells == cells_min ) then
           call sll_new_file_id(out_unit, ierr)
@@ -1075,20 +1067,20 @@ contains
   
   !-------------------------------------------------------------------------
   !> @brief Writes diagnostics files
-  !> @details Write two sort of documents: "diag_circ_spline*_*.dat" and 
-  !> "diag_circ_spline*_nc.dat". Where important values (i.e. time of sim, errors, number
+  !> @details Write two sort of documents: "diag_circ_hermite*_*.dat" and 
+  !> "diag_circ_hermite*_nc.dat". Where important values (i.e. time of sim, errors, number
   !> of cells, etc) are written in order to compute diagnostics. The first file is for
   !> time evolutions, the second one is regarding the space discretization.
   !> @param rho real: contains the value of the density of the circ at time t
   !> @param t real: time of the simulation
   !> @param mesh sll_hex_mesh_2d: hexagonal mesh where the simulation is made
   !> @param nloop int: number of loops done
-  !> @param deg int: degree of the splines used for the interpolation method
+  !> @param num_meth int: number of the method used for the interpolation method
   !> @param tmax: maximum time that the will simulation will run
   !> @param cells_min int: min number of cells the mesh will have during this simulation
   !> @param cells_max int: max number of cells the mesh will have during this simulation
   !> return 
-  subroutine hex_diagnostics_circ(rho,t,mesh,nloop,deg,tmax,cells_min,cells_max, &
+  subroutine hex_diagnostics_circ(rho,t,mesh,nloop,num_meth,tmax,cells_min,cells_max, &
        gauss_x1, gauss_x2, gauss_sig, gauss_amp)
     type(sll_hex_mesh_2d),  pointer  :: mesh
     sll_real64, dimension(:) :: rho
@@ -1099,7 +1091,7 @@ contains
     sll_real64, intent(in)   :: gauss_amp
     sll_real64, intent(in)   :: tmax
     sll_int32 , intent(in)   :: nloop
-    sll_int32 , intent(in)   :: deg
+    sll_int32 , intent(in)   :: num_meth
     sll_int32 , intent(in)   :: cells_min, cells_max
     sll_real64 :: mass
     sll_real64 :: rho_min
@@ -1111,7 +1103,7 @@ contains
     sll_int32  :: out_unit
     character(len = 50) :: filename
     character(len =  4) :: filenum
-    character(len =  4) :: splinedeg
+    character(len =  4) :: method
 
     mass      = 0._f64
     rho_min   = rho(1)
@@ -1124,8 +1116,8 @@ contains
 
     if (mesh%num_cells == cells_max) then
        call int2string(mesh%num_cells,filenum)
-       call int2string(deg,splinedeg)
-       filename  = "diag_circ_spline"//trim(splinedeg)//"_tmax"//trim(filenum)//".dat"
+       call int2string(num_meth, method)
+       filename  = "diag_circ_hermite"//trim(method)//"_tmax"//trim(filenum)//".dat"
        
        call sll_new_file_id(out_unit, ierr)
        if (nloop == 0) then
@@ -1162,13 +1154,13 @@ contains
        norm_l1 = norm_l1 * mesh%delta**2
        norm_l2 = sqrt(norm_l2 * mesh%delta**2)
 
-       write(out_unit,"(7(g18.10,1x))") t, &
-            mass, &
-            rho_min, &
-            norm_l1, &
-            norm_l2, &
+       write(out_unit,"(5(g25.18,1a,1x),1(g25.18))") t, ",",&
+            mass, ",", &
+            rho_min, ",", &
+            norm_l1, ",", &
+            norm_l2, ",",&
             norm_linf
-
+              
        close(out_unit)
 
     end if
@@ -1176,8 +1168,8 @@ contains
     ! Writing file in respect to num_cells..............
     if (t.gt.tmax) then !We write on this file only if it is the last time step
 
-       call int2string(deg,splinedeg)
-       filename  = "diag_circ_spline"//trim(splinedeg)//"_nc.dat"
+       call int2string(num_meth, method)
+       filename  = "diag_circ_hermite"//trim(method)//"_nc.dat"
 
        if ( mesh%num_cells == cells_min ) then
           call sll_new_file_id(out_unit, ierr)
@@ -1215,12 +1207,13 @@ contains
        norm_l1 = norm_l1 * mesh%delta**2
        norm_l2 = sqrt(norm_l2 * mesh%delta**2)
 
-       write(out_unit,"((i6,1x),7(g18.10,1x))") mesh%num_cells, &
-            t, &
-            mass, &
-            rho_min, &
-            norm_l1, &
-            norm_l2, &
+       write(out_unit,"((i6,a,1x),5(g25.18,a,1x),(g25.18))") &
+            mesh%num_cells, ",", &
+            t, ",", &
+            mass, ",", &
+            rho_min, ",", &
+            norm_l1, ",", &
+            norm_l2, ",", &
             norm_linf
 
        close(out_unit) 
