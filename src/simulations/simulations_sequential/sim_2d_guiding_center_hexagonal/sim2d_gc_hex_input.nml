@@ -7,7 +7,7 @@
 &geometry
  center_mesh_x1 = 0.0 ! mesh origin, fist coordinate
  center_mesh_x2 = 0.0 ! mesh origin, second coordinate
- radius = 14.0        ! mesh radius
+ radius =  8.0        ! mesh radius
  ! If you want to compare different space discretizations :
  ! cells_min = smallest discretization number of cells on a hex edge
  ! cells_max = largest discretization number of cells on a hex edge
