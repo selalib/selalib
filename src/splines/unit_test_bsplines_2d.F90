@@ -111,7 +111,7 @@ function g (x , y)
   sll_real64 :: y
   sll_real64 :: g
   
-  g = max(x-0.5_f64*nx,0.0_f64)**2 + max(y-0.5_f64*ny,0.0_f64)**3
+  g = max(x-0.5_f64*nx,0.0_f64)**2 + max(y-0.5_f64*ny,0.0_f64)*3
 
 end function g
 
