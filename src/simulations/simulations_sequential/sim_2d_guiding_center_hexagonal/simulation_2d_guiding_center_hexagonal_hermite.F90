@@ -58,7 +58,7 @@ program sim2d_gc_hex_hermite
 
   sll_int32    :: spline_degree
   sll_int32    :: hermite_method
-  sll_int32    :: i,j, k1, k2, index_tab, type
+  sll_int32    :: i, k1, k2, index_tab, type
   sll_int32    :: width_band1,width_band2
   sll_int32    :: i1,i2,i3
   sll_int32    :: num_cells, n_points, n_triangle, n_edge
@@ -71,11 +71,13 @@ program sim2d_gc_hex_hermite
   sll_real64   :: gauss_sig
   sll_real64   :: gauss_amp
   sll_real64   :: dt
+  sll_real64   :: aire
+  sll_real64   :: step
   sll_real64   :: tmax
   sll_real64   :: t
   sll_real64   :: t_init, t_end
-  sll_real64   :: t1,t2,t3,t4,t5,t6
-  sll_real64   :: h1, h2, f_min, x ,y,xx, yy
+  sll_real64   :: t3
+  sll_real64   :: h1, h2, x ,y,xx, yy
   sll_real64   :: r11,r12,r21,r22,det
   logical      :: inside
   sll_int32    :: p = 6 ! degree of the approximation for the derivative
@@ -137,7 +139,7 @@ program sim2d_gc_hex_hermite
   dt    = 0.1_f64
   ! Interpolation
   spline_degree = 2
-  hemite_method = 9
+  hermite_method = 9
   
   ! ----------------------------
   ! Reading from file
@@ -176,7 +178,7 @@ program sim2d_gc_hex_hermite
         print*,"     Guiding-Center Simulation"
         print*,"        on a Hexagonal mesh"
         print*,"   using hermite elements method # =", degnum
-        call print_method(num_method)
+        call print_method(hermite_method)
         print*," ********************************* "
      elseif (model_name.eq."CIRCULAR") then
         print*, ""
@@ -184,7 +186,7 @@ program sim2d_gc_hex_hermite
         print*,"     Circular Advection Simulation"
         print*,"        on a Hexagonal mesh"
         print*,"   using hermite elements method # =", degnum
-        call print_method(num_method)
+        call print_method(hermite_method)
         print*," ********************************* "
      else
         print *, "ERROR : No recognized model name;"
@@ -208,7 +210,7 @@ program sim2d_gc_hex_hermite
          radius=radius, EXTRA_TABLES = EXTRA_TABLES )
      call display_hex_mesh_2d(mesh)
 
-     if  ( num_method == 15 ) then
+     if  ( hermite_method == 15 ) then
         mesh2 => new_hex_mesh_2d( num_cells*2, center_mesh_x1, center_mesh_x2,&
              radius=radius, EXTRA_TABLES = EXTRA_TABLES ) 
      endif
@@ -279,7 +281,7 @@ program sim2d_gc_hex_hermite
         SLL_ALLOCATE(u( n_points,1 + 4*num_cells + 2), ierr)
      end if
 
-          if  ( num_method == 10 )  then
+     if  ( hermite_method == 10 )  then
         SLL_ALLOCATE(rho_center_tn ( n_triangle),ierr)
         SLL_ALLOCATE(rho_center_tn1( n_triangle),ierr)
         SLL_ALLOCATE(uxn_center( n_triangle),ierr)
@@ -313,7 +315,7 @@ program sim2d_gc_hex_hermite
         SLL_ALLOCATE(u_center( n_triangle,1 + 4*num_cells + 2), ierr)
      endif
 
-     if  ( num_method == 15 )  then
+     if  ( hermite_method == 15 )  then
 
         width_band1_2 = 4*num_cells+1
         width_band2_2 = width_band1_2
@@ -369,15 +371,15 @@ program sim2d_gc_hex_hermite
 
      ! Initial distribution ------------------
      if (model_name.eq."GC") then
-        call init_distr_gc(rho_tn, center_values_tn,edge_values_tn,hermite_method, mesh,epsilon)
+        call init_distr_gc(rho_tn,rho_center_tn,rho_edge_tn,hermite_method, mesh,epsilon)
      elseif (model_name.eq."CIRCULAR") then
-        call init_distr_circ(rho_tn, center_values_tn,edge_values_tn,hermite_method,mesh,gauss_x1,gauss_x2,gauss_sig,gauss_amp)
+        call init_distr_circ(rho_tn, rho_center_tn,rho_edge_tn,hermite_method,mesh,gauss_x1,gauss_x2,gauss_sig,gauss_amp)
      end if
      ! ---------------------------------------
 
      ! Poisson solver ------------------------
      if (model_name.eq."GC") then
-        if ( num_method /= 15 ) then
+        if ( hermite_method /= 15 ) then
            call hex_matrix_poisson( matrix_poisson, mesh,type=1)
            call factolub_bande(matrix_poisson,l,u,n_points,width_band1,width_band2)
            call hex_second_terme_poisson( second_term, mesh, rho_tn )
@@ -389,7 +391,7 @@ program sim2d_gc_hex_hermite
               phi(i) = phi_interm(index_tab)
            enddo
            call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type=1)
-           if ( num_method == 10 ) then
+           if ( hermite_method == 10 ) then
               do i = 1,mesh%num_triangles
                  x = mesh%center_cartesian_coord(1,i)
                  y = mesh%center_cartesian_coord(2,i)
@@ -399,7 +401,7 @@ program sim2d_gc_hex_hermite
               enddo
            end if
         end if
-        if ( num_method == 15 ) then
+        if ( hermite_method == 15 ) then
            call hex_matrix_poisson( matrix_poisson2, mesh2,1)
            call factolub_bande(matrix_poisson2,l2,u2,n_points2,width_band1_2,width_band2_2)
            call assemble(rho_tn,rho_edge_tn,rho2,mesh,mesh2)
@@ -423,7 +425,7 @@ program sim2d_gc_hex_hermite
      ! ---------------------------------------
 
      if (model_name.eq."GC") then
-        if ( num_method /= 15 ) then
+        if ( hermite_method /= 15 ) then
            call hex_diagnostics_gc(rho_tn,t,mesh,uxn,uyn,nloops,spline_degree,tmax,cells_min,cells_max)
         else
            call hex_diagnostics_gc(rho2,t,mesh2,uxn2,uyn2,nloops,spline_degree,tmax,cells_min,cells_max)
@@ -451,9 +453,8 @@ program sim2d_gc_hex_hermite
         !*********************************************************
         !                     interpolation
         !*********************************************************
-
         call  der_finite_difference( rho_tn, p, step, mesh, deriv )
-
+        
         do i=1, n_points
 
            x = mesh%cartesian_coord(1,i)
@@ -487,14 +488,14 @@ program sim2d_gc_hex_hermite
            if ( inside ) then
               call hermite_interpolation(i, xx, yy, rho_tn, rho_center_tn,&
                    rho_edge_tn, rho_tn1, mesh, deriv, aire,& 
-                   num_method)
+                   hermite_method)
            else
               rho_tn1(i) = 0._f64 ! dirichlet boundary condition
            endif
 
         end do ! end of the computation of the mesh points
 
-                if ( num_method == 10 ) then 
+        if ( hermite_method == 10 ) then 
 
            do i = 1,mesh%num_triangles
 
@@ -504,8 +505,10 @@ program sim2d_gc_hex_hermite
                  call compute_characteristic_euler_2d_hex( &
                    x,y,uxn_center,uyn_center,i,xx,yy,dt )
               else
-                 call compute_characteristic_adams2_2d_hex( x,y,uxn_center,uyn_center,uxn_1,uyn_1,&
-                   dxuxn,dyuxn,dxuyn,dyuyn,i,xx,yy,dt)
+                 call compute_characteristic_adams2_2d_hex(  &
+                      x,y,uxn_center,uyn_center,uxn_1_center,uyn_1_center, &
+                      dxuxn_center,dyuxn_center,dxuyn_center,dyuyn_center, &
+                      i,xx,yy,dt)
               endif
 
               inside = .true.
@@ -518,7 +521,7 @@ program sim2d_gc_hex_hermite
               if ( inside ) then
                  call hermite_interpolation(i, x, y, rho_tn, rho_center_tn,&
                       rho_edge_tn, rho_center_tn1, mesh, deriv, aire,& 
-                      num_method)
+                      hermite_method)
               else 
                  rho_center_tn1(i) = 0._f64 ! dirichlet boundary condition
               endif
@@ -526,8 +529,7 @@ program sim2d_gc_hex_hermite
            enddo! end of the computation of the center of the triangles
         endif
 
-
-        if ( num_method == 15 ) then 
+        if ( hermite_method == 15 ) then 
 
            ! besoin de la séparation ici pour avoir rho_tn et rho_edge_tn
 
@@ -555,7 +557,7 @@ program sim2d_gc_hex_hermite
               if ( inside ) then
                  call hermite_interpolation(i,xx,yy,rho_tn,rho_center_tn&
                       ,rho_edge_tn, rho_edge_tn1,mesh,deriv,aire,&
-                      num_method)
+                      hermite_method)
               else 
                  rho_edge_tn1(i) = 0._f64 ! dirichlet boundary condition
               endif
@@ -569,12 +571,13 @@ program sim2d_gc_hex_hermite
         rho_tn_2 = rho_tn_1
         rho_tn_1 = rho_tn
         rho_tn = rho_tn1
-        if ( num_method == 10 ) then
+
+        if ( hermite_method == 10 ) then
            rho_center_tn_2 = rho_center_tn_1
            rho_center_tn_1 = rho_center_tn
            rho_center_tn   = rho_center_tn1
         endif
-        if ( num_method == 15 ) then
+        if ( hermite_method == 15 ) then
            rho_edge_tn_2 = rho_edge_tn_1
            rho_edge_tn_1 = rho_edge_tn
            rho_edge_tn   = rho_edge_tn1
@@ -585,7 +588,8 @@ program sim2d_gc_hex_hermite
         !      computing the solution of the poisson equation 
         !*********************************************************
         if (model_name.eq."GC") then
-           if ( num_method /= 15 ) then
+           print *, "MODEL IS GC"
+           if ( hermite_method /= 15 ) then
               call hex_second_terme_poisson( second_term, mesh, rho_tn ) 
               call solvlub_bande(l,u,phi_interm,second_term,n_points,width_band1,width_band2)
            
@@ -597,7 +601,7 @@ program sim2d_gc_hex_hermite
               enddo
 
               call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type=1)
-              if ( num_method == 10 ) then
+              if ( hermite_method == 10 ) then
                  do i = 1,mesh%num_triangles
                     x = mesh%center_cartesian_coord(1,i)
                     y = mesh%center_cartesian_coord(2,i)
@@ -608,7 +612,7 @@ program sim2d_gc_hex_hermite
               endif
            endif
 
-           if ( num_method == 15 ) then
+           if ( hermite_method == 15 ) then
               call assemble(rho_tn,rho_edge_tn,rho2,mesh,mesh2)
               call hex_second_terme_poisson( second_term2, mesh2, rho2)
               call solvlub_bande(l2,u2,phi2_interm,second_term2,n_points2,width_band1_2,width_band2_2)
@@ -644,7 +648,7 @@ program sim2d_gc_hex_hermite
            dxuyn_1 = dxuyn
            dyuyn_1 = dyuyn
 
-           if ( num_method == 10 ) then
+           if ( hermite_method == 10 ) then
               uxn_2_center = uxn_1_center
               uxn_1_center = uxn_center
               uyn_2_center = uyn_1_center
@@ -658,7 +662,7 @@ program sim2d_gc_hex_hermite
               dxuyn_1_center = dxuyn_center
               dyuyn_1_center = dyuyn_center
            endif
-           if ( num_method == 15 ) then
+           if ( hermite_method == 15 ) then
               uxn_2_edge = uxn_1_edge
               uxn_1_edge = uxn_edge
               uyn_2_edge = uyn_1_edge
@@ -743,24 +747,40 @@ program sim2d_gc_hex_hermite
         deallocate(u)
      end if
 
-          if  ( num_method == 10 )  then
-
+     if  ( hermite_method == 10 )  then
         SLL_DEALLOCATE_ARRAY(rho_center_tn,ierr)
         SLL_DEALLOCATE_ARRAY(rho_center_tn1,ierr)
-        SLL_DEALLOCATE_ARRAY(phi_center_interm,ierr) 
-        SLL_DEALLOCATE_ARRAY(second_term_center,ierr)    
-        SLL_DEALLOCATE_ARRAY(phi_center,ierr) 
         SLL_DEALLOCATE_ARRAY(uxn_center,ierr)
         SLL_DEALLOCATE_ARRAY(uyn_center,ierr)
         SLL_DEALLOCATE_ARRAY(dxuxn_center,ierr)
         SLL_DEALLOCATE_ARRAY(dxuyn_center,ierr)
         SLL_DEALLOCATE_ARRAY(dyuxn_center,ierr)
         SLL_DEALLOCATE_ARRAY(dyuyn_center,ierr)
-        deallocate(matrix_poisson_center,l_center,u_center)
 
+        SLL_DEALLOCATE_ARRAY(rho_center_tn_1,ierr)
+        SLL_DEALLOCATE_ARRAY(uxn_1_center,ierr)
+        SLL_DEALLOCATE_ARRAY(uyn_1_center,ierr)
+        SLL_DEALLOCATE_ARRAY(dxuxn_1_center,ierr)
+        SLL_DEALLOCATE_ARRAY(dxuyn_1_center,ierr)
+        SLL_DEALLOCATE_ARRAY(dyuxn_1_center,ierr)
+        SLL_DEALLOCATE_ARRAY(dyuyn_1_center,ierr)
+
+        SLL_DEALLOCATE_ARRAY(rho_center_tn_2,ierr)
+        SLL_DEALLOCATE_ARRAY(uxn_2_center,ierr)
+        SLL_DEALLOCATE_ARRAY(uyn_2_center,ierr)
+        SLL_DEALLOCATE_ARRAY(dxuxn_2_center,ierr)
+        SLL_DEALLOCATE_ARRAY(dxuyn_2_center,ierr)
+        SLL_DEALLOCATE_ARRAY(dyuxn_2_center,ierr)
+        SLL_DEALLOCATE_ARRAY(dyuyn_2_center,ierr)
+
+        
+        SLL_DEALLOCATE_ARRAY(phi_center_interm,ierr) 
+        SLL_DEALLOCATE_ARRAY(second_term_center,ierr)    
+        SLL_DEALLOCATE_ARRAY(phi_center,ierr) 
+        deallocate(matrix_poisson_center,l_center,u_center)
      endif
 
-     if  ( num_method == 15 )  then
+     if  ( hermite_method == 15 )  then
 
         SLL_DEALLOCATE_ARRAY(rho_edge_tn,ierr)
         SLL_DEALLOCATE_ARRAY(rho_edge_tn1,ierr)
@@ -817,11 +837,13 @@ contains
 
   !*********initialization**************
 
-  subroutine init_distr_gc(f_tn,center_values_tn,edge_values_tn,num_method, mesh, epsilon)
+  subroutine init_distr_gc(f_tn,center_values_tn,edge_values_tn,hermite_method, mesh, epsilon)
     type(sll_hex_mesh_2d), pointer :: mesh
-    sll_real64, dimension(:)       :: f_tn, center_values_tn, edge_values_tn
+    sll_real64, dimension(:), intent(inout) :: f_tn
+    sll_real64, dimension(:), intent(inout) :: center_values_tn
+    sll_real64, dimension(:), intent(inout) :: edge_values_tn
     sll_real64, intent(in) :: epsilon
-    sll_int32  :: num_method
+    sll_int32,  intent(in) :: hermite_method
     sll_real64 :: x, y
     sll_real64 :: r
     sll_int32  :: i
@@ -838,7 +860,7 @@ contains
           f_tn(i) = 0._f64
        endif
     enddo
-        if ( num_method == 10 ) then 
+        if ( hermite_method == 10 ) then 
 
        do i = 1,mesh%num_triangles
           x = mesh%center_cartesian_coord(1,i)
@@ -855,7 +877,7 @@ contains
        enddo
 
     endif
-    if ( num_method == 15 ) then 
+    if ( hermite_method == 15 ) then 
 
        do i = 1,mesh%num_edges
           x = mesh%edge_center_cartesian_coord(1,i)
@@ -875,10 +897,10 @@ contains
 
   end subroutine init_distr_gc
 
-  subroutine init_distr_circ(f_tn,center_values_tn,edge_values_tn,num_method, mesh, center_x1, center_x2, sigma, amplitude)
+  subroutine init_distr_circ(f_tn,center_values_tn,edge_values_tn,hermite_method, mesh, center_x1, center_x2, sigma, amplitude)
     type(sll_hex_mesh_2d), pointer :: mesh
     sll_real64, dimension(:)       :: f_tn, center_values_tn, edge_values_tn
-    sll_int32,  intent(in) :: num_method
+    sll_int32,  intent(in) :: hermite_method
     sll_real64, intent(in) :: center_x1
     sll_real64, intent(in) :: center_x2
     sll_real64, intent(in) :: sigma
@@ -895,7 +917,7 @@ contains
             ((x-center_x1)**2 + (y-center_x2)**2) / sigma**2 )
     enddo
 
-        if ( num_method == 10 ) then 
+        if ( hermite_method == 10 ) then 
 
        do i = 1,mesh%num_triangles
           x = mesh%center_cartesian_coord(1,i)
@@ -905,7 +927,7 @@ contains
           center_values_tn(i) = amplitude * exp(-0.5_f64* &
             ((x-center_x1)**2 + (y-center_x2)**2) / sigma**2 )
        enddo
-    elseif ( num_method == 15 ) then 
+    elseif ( hermite_method == 15 ) then 
 
        do i = 1,mesh%num_edges
           x = mesh%edge_center_cartesian_coord(1,i)
@@ -1108,6 +1130,13 @@ contains
        call sll_new_file_id(out_unit, ierr)
        if (nloop == 0) then
           open(unit = out_unit, file=filename, action="write", status="replace")
+          write(out_unit,*) &
+               "time", ",",&
+               "mass", ",", &
+               "minimum value", ",", &
+               "l_1 norm", ",", &
+               "l_2 norm", ",",&
+               "l_\inf norm"
        else
           open(unit = out_unit, file=filename, action="write", status="old",position = "append")
        endif
@@ -1153,6 +1182,14 @@ contains
        if ( mesh%num_cells == cells_min ) then
           call sll_new_file_id(out_unit, ierr)
           open(unit = out_unit, file=filename, action="write", status="replace")
+          write(out_unit,*) &
+               "number of cells", ",",&
+               "time", ",",&
+               "mass", ",", &
+               "minimum value", ",", &
+               "l_1 norm", ",", &
+               "l_2 norm", ",",&
+               "l_\inf norm"
        else
           call sll_new_file_id(out_unit, ierr)
           open(unit = out_unit, file=filename, action="write", status="old",position = "append")
@@ -1191,157 +1228,83 @@ contains
   end subroutine hex_diagnostics_circ
 
 
+  ! assembling the values at the middle of the edges + the value at 
+  ! the vertices into one common array rho2
   subroutine assemble(rho,rho_edge,rho2,mesh,mesh2)
     type(sll_hex_mesh_2d), pointer :: mesh,mesh2
     sll_real64,dimension(:) :: rho,rho_edge,rho2
-    sll_int32               :: i,j,k,i1,i2
+    sll_int32               :: i,h1,h2,m1,m2,k1,k2,ne,ns, index_tab
+    sll_real64              :: eps = 1.e-6
 
-    rho2(1) = rho(1)
+    do i = 1,mesh2%num_pts_tot 
+       h1 = mesh2%hex_coord(1,i)
+       h2 = mesh2%hex_coord(2,i)
+       m1 = mod(h1,2)
+       m2 = mod(h2,2)
+       k1 = int(h1/2)
+       k2 = int(h2/2)
 
-    rho2(2) = rho_edge(3)
-    rho2(3) = rho_edge(2)
-    rho2(4) = rho_edge(1)
-    rho2(5) = rho_edge(15)
-    rho2(6) = rho_edge(17)
-    rho2(7) = rho_edge(19)
+       if (m1<0) k1 = k1 - 1
+       if (m2<0) k2 = k2 - 1
 
-    ! à optimiser quand ce sera validé
+       call index_hex_to_global(mesh, k1, k2, index_tab)
+       ns = mesh%global_indices(index_tab)
 
-    do i = 1,mesh%num_cells!mesh%num_pts_tot
-       do k = 1,6*i
-          j  = 6*i*(2*i-1)+2*k
-          i1 = 1+(i-1)*6+k
-          rho2(j)   = rho(i1)
-
-       enddo
-
-       do k = 1,i
-          ! first edge
-          j  = 6*i*(2*i-1)+2*k
-          i1 = 1+3*i*(i-1)+k
-          i2 = mesh%edge_center_index(1,i1)
-          rho2(j+1) = rho_edge(i2)
-          ! second edge
-          j  = 6*i*(2*i-1)+2*(k+i)
-          i1 = 1+3*i*(i-1)+k+  i+1
-          i2 = mesh%edge_center_index(3,i1)
-          rho2(j+1) = rho_edge(i2)
-          ! third edge
-          j  = 6*i*(2*i-1)+2*(k+2*i)
-          i1 = 1+3*i*(i-1)+k+2*i+1
-          i2 = mesh%edge_center_index(2,i1)
-          rho2(j+1) = rho_edge(i2)
-          ! fourth edge
-          j  = 6*i*(2*i-1)+2*(k+3*i)
-          i1 = 1+3*i*(i-1)+k+3*i+1
-          i2 = mesh%edge_center_index(1,i1)
-          rho2(j+1) = rho_edge(i2)
-          ! fifth edge
-          j  = 6*i*(2*i-1)+2*(k+4*i)
-          i1 = 1+3*i*(i-1)+k+4*i
-          i2 = mesh%edge_center_index(3,i1)
-          rho2(j+1) = rho_edge(i2)
-          ! sixth edge
-          j  = 6*i*(2*i-1)+2*(k+5*i)
-          i1 = 1+3*i*(i-1)+k+5*i
-          i2 = mesh%edge_center_index(2,i1)
-          rho2(j+1) = rho_edge(i2)
-
-       enddo
-
-       if (i<mesh%num_cells) then
-
-          !corners
-
-          j  = 6*i*(2*i-1)+2
-          i2 = mesh%edge_center_index(3,i1)
-          rho2(j) = rho_edge(i2)
-
-          j  = 6*i*(2*i-1)+2+i
-          i2 = mesh%edge_center_index(3,i1)
-          rho2(j) = rho_edge(i2)
-
-
-          do k = 2,i-1
-
-             ! first edge
-             j  = 6*i*(2*i-1)+2*k
-             i1 = 1+3*i*(i-1)+k
-             i2 = mesh%edge_center_index(3,i1)
-             rho2(j) = rho_edge(i2)
-             i2 = mesh%edge_center_index(2,i1)
-             rho2(j+1) = rho_edge(i2)
-
-             ! second edge
-             j  = 6*i*(2*i-1)+(k+i)
-             i1 = 1+3*i*(i-1)+k+  i+1
-             i2 = mesh%edge_center_index(2,i1)
-             rho2(j) = rho_edge(i2)
-             i2 = mesh%edge_center_index(1,i1)
-             rho2(j+1) = rho_edge(i2)
-             ! third edge
-             j  = 6*i*(2*i-1)+(k+2*i)
-             i1 = 1+3*i*(i-1)+k+2*i+1
-             i2 = mesh%edge_center_index(1,i1)
-             rho2(j) = rho_edge(i2)
-             i2 = mesh%edge_center_index(3,i1)
-             rho2(j+1) = rho_edge(i2)
-             ! fourth edge
-             j  = 6*i*(2*i-1)+(k+3*i)
-             i1 = 1+3*i*(i-1)+k+3*i+1
-             i2 = mesh%edge_center_index(2,i1)
-             rho2(j) = rho_edge(i2)
-             i2 = mesh%edge_center_index(3,i1)
-             rho2(j+1) = rho_edge(i2)
-             ! fifth edge
-             j  = 6*i*(2*i-1)+(k+4*i)
-             i1 = 1+3*i*(i-1)+k+4*i
-             i2 = mesh%edge_center_index(1,i1)
-             rho2(j) = rho_edge(i2)
-             i2 = mesh%edge_center_index(2,i1)
-             rho2(j+1) = rho_edge(i2)
-             ! sixth edge
-             j  = 6*i*(2*i-1)+2*(k+5*i)
-             i1 = 1+3*i*(i-1)+k+5*i
-             i2 = mesh%edge_center_index(1,i1)
-             rho2(j) = rho_edge(i2)
-             i2 = mesh%edge_center_index(3,i1)
-             rho2(j+1) = rho_edge(i2)
-
-          enddo
+       if ( abs(m1) > eps .and. abs(m2) > eps ) then
+          ne =  mesh%edge_center_index(2,ns)
+          rho2(i) = rho_edge(ne) 
+       elseif( abs(m1) < eps .and. abs(m2) > eps ) then
+          ne =  mesh%edge_center_index(1,ns)
+          rho2(i) = rho_edge(ne)
+       elseif( abs(m1) > eps .and. abs(m2) < eps ) then 
+          ne =  mesh%edge_center_index(3,ns)
+          rho2(i) = rho_edge(ne)
+       else
+          rho2(i) = rho(ns)
        endif
-
-
     enddo
-
 
   end subroutine assemble
 
+  ! deassembling the values at the middle of the edges + the value at 
+  ! the vertices into 2 separate arrays
   subroutine deassemble(rho,rho_edge,rho2,mesh,mesh2)
     type(sll_hex_mesh_2d), pointer :: mesh,mesh2
     sll_real64,dimension(:) :: rho,rho_edge,rho2
-    sll_int32               :: i,j,k,i1,i2,j1,j2
+    sll_int32               ::i,h1,h2,m1,m2,k1,k2,ne,ns
+    sll_real64              :: eps = 1.e-6
 
-    rho(1) = rho2(1)
 
-    do i = 1,mesh%num_cells!mesh2%num_pts_tot
-       i1 = 2*i
-       i2 = 2*i + 1
-       ! for i even (hexagone of middle point)
-       do k = 1,i2
-          rho_edge(j) = rho(j1)
-       enddo
+    do i = 1,mesh2%num_pts_tot 
+       h1 = mesh2%hex_coord(1,i)
+       h2 = mesh2%hex_coord(2,i)
+       m1 = mod(h1,2)
+       m2 = mod(h2,2)
+       k1 = int(h1/2)
+       k2 = int(h2/2)
 
-       ! for i odd (hexagone mix)
-       do k = 1,i
-          rho(j1) = rho2(j)
-          rho_edge(j2) = rho(j+1)
+       if (m1<0) k1 = k1 - 1
+       if (m2<0) k2 = k2 - 1
 
-       enddo
+       call index_hex_to_global(mesh, k1, k2, index_tab)
+       ns = mesh%global_indices(index_tab)
+
+       if ( abs(m1) > eps .and. abs(m2) > eps ) then
+          ne =  mesh%edge_center_index(2,ns)
+          rho_edge(ne) = rho2(i)
+       elseif( abs(m1) < eps .and. abs(m2) > eps ) then
+          ne =  mesh%edge_center_index(1,ns)
+          rho_edge(ne) = rho2(i)
+       elseif( abs(m1) > eps .and. abs(m2) < eps ) then 
+          ne =  mesh%edge_center_index(3,ns)
+          rho_edge(ne) = rho2(i)
+       else
+          rho(ns) = rho2(i)
+       endif
     enddo
 
-
   end subroutine deassemble
+  
 
   subroutine write_center(mesh,rho,name)
     type(sll_hex_mesh_2d), pointer :: mesh
