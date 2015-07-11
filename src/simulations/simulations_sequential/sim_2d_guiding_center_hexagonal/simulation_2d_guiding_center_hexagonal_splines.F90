@@ -29,10 +29,9 @@ program sim2d_gc_hex_splines
 
   sll_int32    :: spline_degree
   sll_int32    :: hermite_method
-  sll_int32    :: i,j, k1, k2, index_tab, type
+  sll_int32    :: i, k1, k2, index_tab, type
   sll_int32    :: width_band1,width_band2
-  sll_int32    :: i1,i2,i3
-  sll_int32    :: num_cells, n_points, n_triangle, n_points2
+  sll_int32    :: num_cells, n_points
   sll_int32    :: cells_min, cells_max
   sll_int32    :: cells_stp
   sll_int32    :: nloops,count, ierr, EXTRA_TABLES = 0
@@ -45,11 +44,10 @@ program sim2d_gc_hex_splines
   sll_real64   :: tmax
   sll_real64   :: t
   sll_real64   :: t_init, t_end
-  sll_real64   :: t1,t2,t3,t4,t5,t6
-  sll_real64   :: h1, h2, f_min, x ,y,xx, yy
+  sll_real64   :: t3
+  sll_real64   :: h1, h2, x ,y,xx, yy
   sll_real64   :: r11,r12,r21,r22,det
   logical      :: inside
-  sll_int32    :: p = 6 ! degree of the approximation for the derivative
   sll_int32            :: IO_stat
   sll_int32, parameter :: input_file = 99
   character(len = 256) :: input_filename
@@ -174,8 +172,6 @@ program sim2d_gc_hex_splines
      call display_hex_mesh_2d(mesh)
 
      n_points   = mesh%num_pts_tot
-     n_triangle = mesh%num_triangles
-
      det = (mesh%r1_x1*mesh%r2_x2 - mesh%r1_x2*mesh%r2_x1)/mesh%delta
 
      r11 = + mesh%r2_x2/det
@@ -438,7 +434,6 @@ contains
     sll_real64, intent(in) :: sigma
     sll_real64, intent(in) :: amplitude
     sll_real64 :: x, y
-    sll_real64 :: r
     sll_int32  :: i
 
     do i = 1,mesh%num_pts_tot
@@ -737,159 +732,6 @@ contains
        close(out_unit) 
     end if
   end subroutine hex_diagnostics_circ
-
-
-  subroutine assemble(rho,rho_edge,rho2,mesh,mesh2)
-    type(sll_hex_mesh_2d), pointer :: mesh,mesh2
-    sll_real64,dimension(:) :: rho,rho_edge,rho2
-    sll_int32               :: i,j,k,i1,i2
-
-    rho2(1) = rho(1)
-
-    rho2(2) = rho_edge(3)
-    rho2(3) = rho_edge(2)
-    rho2(4) = rho_edge(1)
-    rho2(5) = rho_edge(15)
-    rho2(6) = rho_edge(17)
-    rho2(7) = rho_edge(19)
-
-    ! à optimiser quand ce sera validé
-
-    do i = 1,mesh%num_cells!mesh%num_pts_tot
-       do k = 1,6*i
-          j  = 6*i*(2*i-1)+2*k
-          i1 = 1+(i-1)*6+k
-          rho2(j)   = rho(i1)
-
-       enddo
-
-       do k = 1,i
-          ! first edge
-          j  = 6*i*(2*i-1)+2*k
-          i1 = 1+3*i*(i-1)+k
-          i2 = mesh%edge_center_index(1,i1)
-          rho2(j+1) = rho_edge(i2)
-          ! second edge
-          j  = 6*i*(2*i-1)+2*(k+i)
-          i1 = 1+3*i*(i-1)+k+  i+1
-          i2 = mesh%edge_center_index(3,i1)
-          rho2(j+1) = rho_edge(i2)
-          ! third edge
-          j  = 6*i*(2*i-1)+2*(k+2*i)
-          i1 = 1+3*i*(i-1)+k+2*i+1
-          i2 = mesh%edge_center_index(2,i1)
-          rho2(j+1) = rho_edge(i2)
-          ! fourth edge
-          j  = 6*i*(2*i-1)+2*(k+3*i)
-          i1 = 1+3*i*(i-1)+k+3*i+1
-          i2 = mesh%edge_center_index(1,i1)
-          rho2(j+1) = rho_edge(i2)
-          ! fifth edge
-          j  = 6*i*(2*i-1)+2*(k+4*i)
-          i1 = 1+3*i*(i-1)+k+4*i
-          i2 = mesh%edge_center_index(3,i1)
-          rho2(j+1) = rho_edge(i2)
-          ! sixth edge
-          j  = 6*i*(2*i-1)+2*(k+5*i)
-          i1 = 1+3*i*(i-1)+k+5*i
-          i2 = mesh%edge_center_index(2,i1)
-          rho2(j+1) = rho_edge(i2)
-
-       enddo
-
-       if (i<mesh%num_cells) then
-
-          !corners
-
-          j  = 6*i*(2*i-1)+2
-          i2 = mesh%edge_center_index(3,i1)
-          rho2(j) = rho_edge(i2)
-
-          j  = 6*i*(2*i-1)+2+i
-          i2 = mesh%edge_center_index(3,i1)
-          rho2(j) = rho_edge(i2)
-
-
-          do k = 2,i-1
-
-             ! first edge
-             j  = 6*i*(2*i-1)+2*k
-             i1 = 1+3*i*(i-1)+k
-             i2 = mesh%edge_center_index(3,i1)
-             rho2(j) = rho_edge(i2)
-             i2 = mesh%edge_center_index(2,i1)
-             rho2(j+1) = rho_edge(i2)
-
-             ! second edge
-             j  = 6*i*(2*i-1)+(k+i)
-             i1 = 1+3*i*(i-1)+k+  i+1
-             i2 = mesh%edge_center_index(2,i1)
-             rho2(j) = rho_edge(i2)
-             i2 = mesh%edge_center_index(1,i1)
-             rho2(j+1) = rho_edge(i2)
-             ! third edge
-             j  = 6*i*(2*i-1)+(k+2*i)
-             i1 = 1+3*i*(i-1)+k+2*i+1
-             i2 = mesh%edge_center_index(1,i1)
-             rho2(j) = rho_edge(i2)
-             i2 = mesh%edge_center_index(3,i1)
-             rho2(j+1) = rho_edge(i2)
-             ! fourth edge
-             j  = 6*i*(2*i-1)+(k+3*i)
-             i1 = 1+3*i*(i-1)+k+3*i+1
-             i2 = mesh%edge_center_index(2,i1)
-             rho2(j) = rho_edge(i2)
-             i2 = mesh%edge_center_index(3,i1)
-             rho2(j+1) = rho_edge(i2)
-             ! fifth edge
-             j  = 6*i*(2*i-1)+(k+4*i)
-             i1 = 1+3*i*(i-1)+k+4*i
-             i2 = mesh%edge_center_index(1,i1)
-             rho2(j) = rho_edge(i2)
-             i2 = mesh%edge_center_index(2,i1)
-             rho2(j+1) = rho_edge(i2)
-             ! sixth edge
-             j  = 6*i*(2*i-1)+2*(k+5*i)
-             i1 = 1+3*i*(i-1)+k+5*i
-             i2 = mesh%edge_center_index(1,i1)
-             rho2(j) = rho_edge(i2)
-             i2 = mesh%edge_center_index(3,i1)
-             rho2(j+1) = rho_edge(i2)
-
-          enddo
-       endif
-
-
-    enddo
-
-
-  end subroutine assemble
-
-  subroutine deassemble(rho,rho_edge,rho2,mesh,mesh2)
-    type(sll_hex_mesh_2d), pointer :: mesh,mesh2
-    sll_real64,dimension(:) :: rho,rho_edge,rho2
-    sll_int32               :: i,j,k,i1,i2,j1,j2
-
-    rho(1) = rho2(1)
-
-    do i = 1,mesh%num_cells!mesh2%num_pts_tot
-       i1 = 2*i
-       i2 = 2*i + 1
-       ! for i even (hexagone of middle point)
-       do k = 1,i2
-          rho_edge(j) = rho(j1)
-       enddo
-
-       ! for i odd (hexagone mix)
-       do k = 1,i
-          rho(j1) = rho2(j)
-          rho_edge(j2) = rho(j+1)
-
-       enddo
-    enddo
-
-
-  end subroutine deassemble
 
   subroutine write_center(mesh,rho,name)
     type(sll_hex_mesh_2d), pointer :: mesh
