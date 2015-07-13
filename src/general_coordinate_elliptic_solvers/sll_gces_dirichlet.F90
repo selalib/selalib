@@ -96,7 +96,6 @@ type, public :: sll_gces_dirichlet
   sll_int32, dimension(:,:), pointer :: local_to_global_indices_col
   sll_int32, dimension(:,:), pointer :: local_to_global_indices_row
 
-  !!! contains the values of all splines in all gauss points
   sll_real64, dimension(:,:,:,:), pointer :: v_splines1
   sll_real64, dimension(:,:,:,:), pointer :: v_splines2
 
@@ -233,23 +232,21 @@ es%local_to_global_indices_mat = 0
 d = 0
 do j = 1, n2+k2
   do i = 1, n1+k1
+    a = i + (n1+k1)*(j-1)
     d = d + 1
-    global_indices(d) = d
+    global_indices(a) = d
   end do
 end do
 
 ! e is the element number
-! Compute the element nodes array that connects the global fucntion numbers to 
-! their local ordering on the
-! element
-e = 0
-do j = 1, n2    
+! Compute the element nodes array that connects the global function 
+! numbers to their local ordering on the element
+do j = 1, n2
   do i = 1, n1  
-    e = e+1
-    b = 0
+    e = (j-1)*n1 + i
     do jj = 0, k2
       do ii = 0, k1
-        b    =  b+1
+        b    =  jj*(k1+1) + ii + 1
         local_indices(b, e) = e + (j-1)*k1 + jj*(n1+k1) + ii 
       end do
     end do
@@ -319,6 +316,7 @@ es%rho_vec = 0.0_f64
 es%masse   = 0.0_f64
 es%stiff   = 0.0_f64
 
+!PN : Initialize knots
 do i = 1, k1+1
   es%t1(i) = eta1_min
 enddo
@@ -638,7 +636,6 @@ sll_real64, dimension(:,:,:), allocatable :: src
 sll_int32  :: ierr
 sll_int32  :: i
 sll_int32  :: j
-sll_int32  :: k
 sll_int32  :: icell
 sll_int32  :: g1
 sll_int32  :: g2
@@ -1065,7 +1062,7 @@ class is (sll_scalar_field_2d_discrete)
   coeff_rho => type_field%interp_2d%get_coefficients()
             
   es%rho_coeff_1d = 0.0_f64
-  !Loop over point mesh
+  
   do j=1,n2+1
     do i=1,n1+1
       es%rho_coeff_1d(i+(n1+1)*(j-1)) = coeff_rho(i,j)
@@ -1094,8 +1091,8 @@ class is (sll_scalar_field_2d_analytic)
   !$OMP END MASTER
   
   !$OMP DO SCHEDULE(STATIC,n2/nthreads) 
-  do j=1, n2
-    do i=1, n1
+  do j = 1, n2
+    do i = 1, n1
       M_rho_loc = 0.0_f64
       eta1  = es%eta1_min + (i-1)*es%delta_eta1
       eta2  = es%eta2_min + (j-1)*es%delta_eta2
@@ -1139,9 +1136,9 @@ class is (sll_scalar_field_2d_analytic)
 end select
 
 es%phi_vec = 0.0_f64  !PN: Is it useful ?
-  
+
 call sll_solve_csr_matrix(es%csr_mat, es%rho_vec, es%phi_vec)
-  
+
 call phi%interp_2d%set_coefficients(es%phi_vec)
 
 end subroutine solve_gces_dirichlet
@@ -1177,78 +1174,3 @@ end subroutine delete_gces_dirichlet
 
 end module sll_module_gces_dirichlet
 
-!PN: Compute values of basis functions on the mesh
-!PN: We use two functions from Carl DeBoor
-!PN:
-!PN: interv computes  left = max(i: xt(i) <= x < xt(lxt)).
-!PN: 
-!PN:   xt  assumed to be nondecreasing
-!PN:   x   the point whose location with respect to the 
-!PN        sequence xt is to be determined.
-!PN: 
-!PN: output
-!PN:
-!PN:  left, mflag.....both integers, whose value is
-!PN: 
-!PN:  1     -1      if             x <  xt(1)
-!PN:  i      0      if   xt(i)  <= x < xt(i+1)
-!PN:  i      0      if   xt(i)  <  x .eq. xt(i+1) .eq. xt(lxt)
-!PN:  i      1      if   xt(i)  <         xt(i+1) .eq. xt(lxt) .lt. x
-!PN: 
-!PN:  In particular,  mflag = 0  is the 'usual' case.  mflag .ne. 0
-!PN:  indicates that  x  lies outside the CLOSED interval
-!PN:  xt(1) .le. y .le. xt(lxt) . The asymmetric treatment of the
-!PN:  intervals is due to the decision to make all pp functions cont-
-!PN:  inuous from the right, but, by returning  mflag = 0  even if
-!PN:  x = xt(lxt), there is the option of having the computed pp function
-!PN:  continuous from the left at  xt(lxt) .
-!PN: 
-!PN:  The program is designed to be efficient in the common situation that
-!PN:  it is called repeatedly, with  x  taken from an increasing or decrea-
-!PN:  sing sequence. The first guess for left is therefore taken to be the val-
-!PN:  ue returned at the previous call and stored in the local variable  ilo . 
-!PN   A first check ascertains that  ilo .lt. lxt (this is nec-
-!PN:  essary since the present call may have nothing to do with the previ-
-!PN:  ous call). Then, if  xt(ilo) .le. x .lt. xt(ilo+1), we set  left =
-!PN:  ilo  and are done after just three comparisons.
-!PN:     Otherwise, we repeatedly double the difference  istep = ihi - ilo
-!PN:  while also moving  ilo  and  ihi  in the direction of  x , until
-!PN:                      xt(ilo) .le. x .lt. xt(ihi) ,
-!PN:  after which we use bisection to get, in addition, ilo+1 = ihi .
-!PN:  left = ilo  is then returned.
-!PN: 
-!PN:  splvb calculates value and deriv.s of all b-splines which do not vanish at x
-!PN: 
-!PN:  nput
-!PN:  t     the knot array, of length left+k (at least)
-!PN:  k     the order of the b-splines to be evaluated
-!PN:  x     the point at which these values are sought
-!PN:  left  an integer indicating the left endpoint of the interval of
-!PN:        interest. the  k  b-splines whose support contains the interval
-!PN:               (t(left), t(left+1))
-!PN:        are to be considered.
-!PN:  assumption  ---  it is assumed that
-!PN:               t(left) .lt. t(left+1)
-!PN:        division by zero will result otherwise (in  bsplvb ).
-!PN:        also, the output is as advertised only if
-!PN:               t(left) .le. x .le. t(left+1) .
-!PN:  nderiv   an integer indicating that values of b-splines and their
-!PN:        derivatives up to but not including the  nderiv-th  are asked
-!PN:        for. ( nderiv  is replaced internally by the integer  mhigh
-!PN:        in  (1,k)  closest to it.)
-!PN: 
-!PN:  work area 
-!PN:       an array of order (k,k), to contain b-coeff.s of the derivat-
-!PN:       ives of a certain order of the  k  b-splines of interest.
-!PN: 
-!PN:  output
-!PN:  dbiatx an array of order (k,nderiv). its entry  (i,m)  contains
-!PN:        value of  (m-1)st  derivative of  (left-k+i)-th  b-spline of
-!PN:        order  k  for knot sequence  t , i=1,...,k, m=1,...,nderiv.
-!PN: 
-!PN:  values at  x  of all the relevant b-splines of order k,k-1,...,
-!PN:  k+1-nderiv  are generated via  bsplvb  and stored temporarily in
-!PN:  dbiatx .  then, the b-coeffs of the required derivatives of the b-
-!PN:  splines of interest are generated by differencing, each from the pre-
-!PN:  ceding one of lower order, and combined with the values of b-splines
-!PN:  of corresponding order in  dbiatx  to produce the desired values .

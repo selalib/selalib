@@ -235,7 +235,7 @@ contains
     sll_int32, intent(in), optional :: num_run
 
     character(len=*), parameter :: this_sub_name = 'init_vp2d_par_cart'
-    character(len=128)          :: err_msg
+    character(len=300)          :: err_msg
 
     character(len=256) :: mesh_case_x1
     sll_int32          :: num_cells_x1
