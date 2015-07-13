@@ -252,7 +252,7 @@ contains
     if(present(size_eta2_coords))then
       !print *,'#Warning size_eta2_coords not used'
     endif    
-    call compute_bspline_2D( data_array, interpolator%spline )
+    call compute_bspline_2D( interpolator%spline, data_array )
   end subroutine
 
   function interpolate_value_cs2d( interpolator, eta1, eta2 ) result(val)
@@ -295,14 +295,14 @@ contains
     ! local variables
     sll_int32 :: i,j
     ! compute the interpolating spline coefficients
-    call compute_bspline_2D( data_in, this%spline )
+    call compute_bspline_2d( this%spline, data_in )
     do j = 1, num_points2
     do i = 1, num_points1
         data_out(i,j) = this%interpolate_value(eta1(i,j),eta2(i,j))
     end do
     end do
 
-  end function !spline_interpolate2d
+  end function spline_interpolate2d
 
   function spline_interpolate2d_disp(this,        &
                                      num_points1, &
@@ -337,7 +337,7 @@ contains
 !PN    delta_eta1 = get_x1_delta( this%spline ) !this%spline%x1_delta  
 !PN    delta_eta2 = get_x2_delta( this%spline ) !this%spline%x2_delta  
     
-    call compute_bspline_2D( data_in, this%spline )
+    call compute_bspline_2D( this%spline, data_in )
 
     if(this%bc_type1 == SLL_PERIODIC .and. &
        this%bc_type2 == SLL_PERIODIC ) then
