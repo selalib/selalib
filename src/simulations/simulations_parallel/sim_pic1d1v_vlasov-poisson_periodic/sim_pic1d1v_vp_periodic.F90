@@ -135,7 +135,7 @@ module sll_module_simulation_pic1d1v_vp_periodic
     procedure :: pic1d_adjustweights           => sll_pic1d_adjustweights
     procedure :: pic1d_write_result            => sll_pic1d_write_result
     procedure :: pic_1d_calc_push_error        => sll_pic_1d_calc_push_error
-!    procedure :: total_momentum                => sll_total_momentum
+    procedure :: get_total_momentum                => sll_total_momentum
   end type sll_simulation_pic1d1v_vp_periodic
 
   abstract interface
@@ -548,7 +548,7 @@ contains
             sim%kineticenergy(timestep)             = sll_pic1d_calc_kineticenergy( sim%species(1:num_species),sim%deltaf )
             sim%fieldenergy(timestep)               = sll_pic1d_calc_fieldenergy(sim%species(1:num_species),sim)
             sim%impulse(timestep)                   = sll_pic1d_calc_impulse(sim%species(1:num_species),sim%deltaf)
-            sim%total_momentum(timestep)            =sll_total_momentum(sim)
+            sim%total_momentum(timestep)            = sim%get_total_momentum()
             sim%thermal_velocity_estimate(timestep) = sll_pic1d_calc_thermal_velocity(sim%species(1)%particle%vx,sim%species(1)%particle%weight)
             sim%inhom_var(timestep)                 = sim%fsolver%calc_variance_rhs()
             total_mass(timestep)                    = calculate_total_mass(sim)
@@ -573,7 +573,8 @@ contains
              
             ! Print electrostatic and kinetic energy to terminal
             if ((sim%gnuplot_inline_output .eqv. .FALSE.) .AND. coll_rank==0) then
-                print *, timestep, sim%fieldenergy(timestep),sim%kineticenergy(timestep),sim%kineticenergy(timestep)+sim%fieldenergy(timestep),total_mass(timestep),sim%total_momentum(timestep)
+                print *, timestep, sim%fieldenergy(timestep),sim%kineticenergy(timestep),sim%kineticenergy(timestep)+sim%fieldenergy(timestep),&
+                total_mass(timestep),sim%total_momentum(timestep)
             endif
             
             ! TODO: discover meaning of this line!
@@ -820,7 +821,7 @@ function sll_pic1d_calc_kineticenergy_offset(p_species ) &
     
     function calculate_total_mass(sim) result (total_massk)
        integer   ::  i,k 
-       type(sll_simulation_pic1d1v_vp_periodic), intent(inout) :: sim
+       class(sll_simulation_pic1d1v_vp_periodic), intent(inout) :: sim
        sll_real64                                              :: total_massk
 
      
@@ -834,7 +835,7 @@ function sll_pic1d_calc_kineticenergy_offset(p_species ) &
     
        
    function sll_total_momentum(sim) result (momentum)   
-       type(sll_simulation_pic1d1v_vp_periodic), intent(inout) :: sim
+       class(sll_simulation_pic1d1v_vp_periodic), intent(inout) :: sim
        sll_real64   :: momentum
        integer      :: K
        
@@ -880,7 +881,7 @@ function sll_pic1d_calc_kineticenergy_offset(p_species ) &
   function sll_pic1d_calc_fieldenergy(p_species,sim) &
             result(energy)
         type( sll_particle_1d_group), dimension(:), intent(in) :: p_species
-        type(sll_simulation_pic1d1v_vp_periodic), intent(inout) :: sim
+        class(sll_simulation_pic1d1v_vp_periodic), intent(inout) :: sim
         sll_real64 :: energy
         !Only for constant case
         sll_int32 :: idx
