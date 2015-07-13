@@ -8,7 +8,6 @@ module sll_time_composition
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_assert.h"
 
   implicit none
 

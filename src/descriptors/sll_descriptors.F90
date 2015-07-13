@@ -15,7 +15,6 @@
 
 
 
-
 module sll_descriptors
 #include "sll_working_precision.h"
 type sll_vlasovpoisson_sim 
@@ -36,24 +35,20 @@ type(sll_vlasovpoisson_sim), parameter :: SLL_LANDAU_PROD = sll_vlasovpoisson_si
 type(sll_vlasovpoisson_sim), parameter :: SLL_TWOSTREAM = sll_vlasovpoisson_sim(4,"SLL_TWOSTREAM") 
 type(sll_vlasovpoisson_sim), parameter :: SLL_BUMPONTAIL = sll_vlasovpoisson_sim(5,"SLL_BUMPONTAIL") 
 
-type sll_field_eqn 
+type sll_boundary 
     sll_int32                  :: id
     character(len=32), private :: pname
   contains
-    procedure,  pass(self)      :: name=>name_field_eqn 
-    procedure,  pass(self)      :: parse=>parse_field_eqn
-  end type sll_field_eqn
+    procedure,  pass(self)      :: name=>name_boundary 
+    procedure,  pass(self)      :: parse=>parse_boundary
+  end type sll_boundary
   
   interface operator(.eq.)
-    module procedure sll_field_eqn_compare
+    module procedure sll_boundary_compare
   end interface 
  
-type(sll_field_eqn), parameter :: POISSON = sll_field_eqn(1,"POISSON") 
-type(sll_field_eqn), parameter :: AMPERE = sll_field_eqn(2,"AMPERE") 
-type(sll_field_eqn), parameter :: MAXWELL = sll_field_eqn(3,"MAXWELL") 
-type(sll_field_eqn), parameter :: ADIABATIC_WO_ZONAL = sll_field_eqn(4,"ADIABATIC_WO_ZONAL") 
-type(sll_field_eqn), parameter :: ADIABATIC = sll_field_eqn(5,"ADIABATIC") 
-type(sll_field_eqn), parameter :: QN_ADIABATIC = sll_field_eqn(6,"QN_ADIABATIC") 
+type(sll_boundary), parameter :: OPEN = sll_boundary(1,"OPEN") 
+type(sll_boundary), parameter :: CLOSED = sll_boundary(2,"CLOSED") 
 
 
 contains
@@ -63,7 +58,7 @@ contains
  !------------------- vlasovpoisson_sim -----------------------------------------
  pure function name_vlasovpoisson_sim( self ) result( r )
    class( sll_vlasovpoisson_sim ), intent( in ) :: self
-   character(len=len ( self%pname ) )     :: r
+   character(len=10)     :: r
    r = self%pname
  end function name_vlasovpoisson_sim  
   
@@ -76,7 +71,7 @@ contains
  subroutine parse_vlasovpoisson_sim(self, str)
     class( sll_vlasovpoisson_sim ), intent( inout ) :: self
     character(len=*), intent(in) :: str
-    character(len= len ( str ) ) :: strc
+    character(len=3) :: strc
       
      !Remove blanks left and right
      strc=adjustl(trim(str))
@@ -104,49 +99,38 @@ contains
       
 
  !----------------------------------------------------------------------
- !------------------- field_eqn -----------------------------------------
- pure function name_field_eqn( self ) result( r )
-   class( sll_field_eqn ), intent( in ) :: self
-   character(len=len ( self%pname ) )     :: r
+ !------------------- boundary -----------------------------------------
+ pure function name_boundary( self ) result( r )
+   class( sll_boundary ), intent( in ) :: self
+   character(len=10)     :: r
    r = self%pname
- end function name_field_eqn  
+ end function name_boundary  
   
- pure function sll_field_eqn_compare(bc1,bc2) result(compare)
-  type(sll_field_eqn), intent(in) :: bc1, bc2
+ pure function sll_boundary_compare(bc1,bc2) result(compare)
+  type(sll_boundary), intent(in) :: bc1, bc2
   logical :: compare
    compare = bc1%id .eq. bc2%id
- end function sll_field_eqn_compare
+ end function sll_boundary_compare
 
- subroutine parse_field_eqn(self, str)
-    class( sll_field_eqn ), intent( inout ) :: self
+ subroutine parse_boundary(self, str)
+    class( sll_boundary ), intent( inout ) :: self
     character(len=*), intent(in) :: str
-    character(len= len ( str ) ) :: strc
+    character(len=3) :: strc
       
      !Remove blanks left and right
      strc=adjustl(trim(str))
      
-    if (strc .eq. POISSON%name()) then  
-        self%id=POISSON%id
-        self%pname=POISSON%pname
-      elseif(strc .eq. AMPERE%name()) then  
-        self%id=AMPERE%id
-        self%pname=AMPERE%pname
-      elseif(strc .eq. MAXWELL%name()) then  
-        self%id=MAXWELL%id
-        self%pname=MAXWELL%pname
-      elseif(strc .eq. ADIABATIC_WO_ZONAL%name()) then  
-        self%id=ADIABATIC_WO_ZONAL%id
-        self%pname=ADIABATIC_WO_ZONAL%pname
-      elseif(strc .eq. ADIABATIC%name()) then  
-        self%id=ADIABATIC%id
-        self%pname=ADIABATIC%pname
-      elseif(strc .eq. QN_ADIABATIC%name()) then  
-        self%id=QN_ADIABATIC%id
-        self%pname=QN_ADIABATIC%pname
+    if (strc .eq. OPEN%name()) then  
+        self%id=OPEN%id
+        self%pname=OPEN%pname
+      elseif(strc .eq. CLOSED%name()) then  
+        self%id=CLOSED%id
+        self%pname=CLOSED%pname
       elseif  (.true.) then
     endif
     
- end subroutine parse_field_eqn
+ end subroutine parse_boundary
  !----------------------------------------------------------------------
       
+
 end module sll_descriptors

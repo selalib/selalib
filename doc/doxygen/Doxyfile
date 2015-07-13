@@ -1,4 +1,4 @@
-# Doxyfile 1.8.8
+# Doxyfile 1.8.9.1
 
 # This file describes the settings to be used by the documentation system
 # doxygen (www.doxygen.org) for a project.
@@ -281,7 +281,9 @@ OPTIMIZE_OUTPUT_VHDL   = NO
 # Note that for custom extensions you also need to set FILE_PATTERNS otherwise
 # the files are not read by doxygen.
 
-EXTENSION_MAPPING      = .h=FortranFree f=FortranFixed F90=FortranFree
+EXTENSION_MAPPING      = .h=FortranFree \
+                         f=FortranFixed \
+                         F90=FortranFree
 
 # If the MARKDOWN_SUPPORT tag is enabled then doxygen pre-processes all comments
 # according to the Markdown format, which allows for more readable
@@ -795,111 +797,72 @@ RECURSIVE              = YES
 # Note that relative paths are relative to the directory from which doxygen is
 # run.
 
-EXCLUDE = \
-@CMAKE_CURRENT_SOURCE_DIR@/AGMG \
-@CMAKE_CURRENT_SOURCE_DIR@/BSL \
-@CMAKE_CURRENT_SOURCE_DIR@/CSL \
-@CMAKE_CURRENT_SOURCE_DIR@/advection \
-@CMAKE_CURRENT_SOURCE_DIR@/advection_field \
-@CMAKE_CURRENT_SOURCE_DIR@/characteristics \
-@CMAKE_CURRENT_SOURCE_DIR@/collective \
-@CMAKE_CURRENT_SOURCE_DIR@/coordinate_transformation_multipatch \
-@CMAKE_CURRENT_SOURCE_DIR@/deboor_splines \
-@CMAKE_CURRENT_SOURCE_DIR@/descriptors \
-@CMAKE_CURRENT_SOURCE_DIR@/distribution_function \
-@CMAKE_CURRENT_SOURCE_DIR@/electric_field_accumulators \
-@CMAKE_CURRENT_SOURCE_DIR@/fft/fftpack \
-@CMAKE_CURRENT_SOURCE_DIR@/fft/fftw3 \
-@CMAKE_CURRENT_SOURCE_DIR@/fftpack \
-@CMAKE_CURRENT_SOURCE_DIR@/fishpack \
-@CMAKE_CURRENT_SOURCE_DIR@/jorek \
-@CMAKE_CURRENT_SOURCE_DIR@/lagrange_interpolation \
-@CMAKE_CURRENT_SOURCE_DIR@/linear_solvers \
-@CMAKE_CURRENT_SOURCE_DIR@/linearly_transformed_pic \
-@CMAKE_CURRENT_SOURCE_DIR@/meshes \
-@CMAKE_CURRENT_SOURCE_DIR@/mapped_meshes \
-@CMAKE_CURRENT_SOURCE_DIR@/mesh_calculus \
-@CMAKE_CURRENT_SOURCE_DIR@/mudpack \
-@CMAKE_CURRENT_SOURCE_DIR@/multigrid \
-@CMAKE_CURRENT_SOURCE_DIR@/non_linear_solvers \
-@CMAKE_CURRENT_SOURCE_DIR@/ode_solvers \
-@CMAKE_CURRENT_SOURCE_DIR@/ode_integrators \
-@CMAKE_CURRENT_SOURCE_DIR@/package \
-@CMAKE_CURRENT_SOURCE_DIR@/parallel_array_initializers \
-@CMAKE_CURRENT_SOURCE_DIR@/parallel_utilities \
-@CMAKE_CURRENT_SOURCE_DIR@/periodic_interpolation \
-@CMAKE_CURRENT_SOURCE_DIR@/pif \
-@CMAKE_CURRENT_SOURCE_DIR@/point_to_point_communications \
-@CMAKE_CURRENT_SOURCE_DIR@/python_scripts \
-@CMAKE_CURRENT_SOURCE_DIR@/quasi_neutral_solvers \
-@CMAKE_CURRENT_SOURCE_DIR@/reduction \
-@CMAKE_CURRENT_SOURCE_DIR@/timer \
-@CMAKE_CURRENT_SOURCE_DIR@/visu_pic \
-@CMAKE_CURRENT_SOURCE_DIR@/eulerian-finite-volume \
-@CMAKE_CURRENT_SOURCE_DIR@/CAID_coordinate_transformations \
-@CMAKE_CURRENT_SOURCE_DIR@/coordinate_transformations_multipatch \
-@CMAKE_CURRENT_SOURCE_DIR@/distribution_function_multipatch \
-@CMAKE_CURRENT_SOURCE_DIR@/fcisl \
-@CMAKE_CURRENT_SOURCE_DIR@/field_accumulators \
-@CMAKE_CURRENT_SOURCE_DIR@/fields \
-@CMAKE_CURRENT_SOURCE_DIR@/fields_multipatch \
-@CMAKE_CURRENT_SOURCE_DIR@/general_coordinate_elliptic_solvers_multipatch \
-@CMAKE_CURRENT_SOURCE_DIR@/gyroaverage \
-@CMAKE_CURRENT_SOURCE_DIR@/hermite_interpolation \
-@CMAKE_CURRENT_SOURCE_DIR@/meshes_multipatch \
-@CMAKE_CURRENT_SOURCE_DIR@/pic_1d \
-@CMAKE_CURRENT_SOURCE_DIR@/pic_accumulators \
-@CMAKE_CURRENT_SOURCE_DIR@/pic_methods \
-@CMAKE_CURRENT_SOURCE_DIR@/pic_particle_initializers \
-@CMAKE_CURRENT_SOURCE_DIR@/pic_particle_types \
-@CMAKE_CURRENT_SOURCE_DIR@/pic_utilities \
-@CMAKE_CURRENT_SOURCE_DIR@/random_deviate_generators \
-@CMAKE_CURRENT_SOURCE_DIR@/poisson_solvers \
-@CMAKE_CURRENT_SOURCE_DIR@/poisson_solvers_parallel \
-@CMAKE_CURRENT_SOURCE_DIR@/sparse_matrix_manager \
-@CMAKE_CURRENT_SOURCE_DIR@/maxwell_solvers \
-@CMAKE_CURRENT_SOURCE_DIR@/coordinate_transformations \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/bsl_examples \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_2d_guiding_center_PIC_cartesian \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_2d_guiding_center_curvilinear \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_2d_vlasov_poisson_cartesian \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_2d_vlasov_poisson_no_splitting \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_4d \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_4d_drift_kinetic_cartesian \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_4d_drift_kinetic_field_aligned_polar \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_4d_drift_kinetic_hybrid \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_4d_drift_kinetic_polar \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_4d_drift_kinetic_polar_multi_mu \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_4d_drift_kinetic_polar_one_mu \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_4d_mixed_qns_cartesian \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_4d_qns_general \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_4d_qns_general_multipatch \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_4d_vlasov_poisson_PIC_cartesian \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_4d_vlasov_poisson_cartesian \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_4d_vlasov_poisson_general \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_4d_vlasov_poisson_polar \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_6d \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_parallel/sim_general_vlasov_poisson_pif \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/bsl_examples \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/csl_examples \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_2d_analytic_field_cartesian \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_2d_analytic_field_curvilinear \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_2d_guiding_center_cartesian \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_2d_guiding_center_hexagonal \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_2d_guiding_center_polar \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_CG_curvilinear_2D \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_CG_polar \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_VlasovPoisson1D_cartesian_non_uniform \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_VlasovPoisson1D_curvilinear_analytic \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_VlasovPoisson1D_fourier_FEM \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_VlasovPoisson1D_various_programs \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_curvilinear_SL \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_guiding_center_2D_generalized_coords \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_guiding_center_2D_generalized_coords_mudpack \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_poisson_polar_test \
-@CMAKE_CURRENT_SOURCE_DIR@/simulations/simulations_sequential/sim_polar_SL \
-@CMAKE_CURRENT_SOURCE_DIR@/time_solvers \
-@CMAKE_CURRENT_SOURCE_DIR@/vector_space
+EXCLUDE                = @CMAKE_CURRENT_SOURCE_DIR@/sparse_matrix_manager \
+                         @CMAKE_CURRENT_SOURCE_DIR@/time_solvers \
+                         @CMAKE_CURRENT_SOURCE_DIR@/AGMG \
+                         @CMAKE_CURRENT_SOURCE_DIR@/CAID_coordinate_transformations \
+                         @CMAKE_CURRENT_SOURCE_DIR@/Makefile \
+                         @CMAKE_CURRENT_SOURCE_DIR@/advection \
+                         @CMAKE_CURRENT_SOURCE_DIR@/advection_field \
+                         @CMAKE_CURRENT_SOURCE_DIR@/assert \
+                         @CMAKE_CURRENT_SOURCE_DIR@/boundary_condition_descriptors \
+                         @CMAKE_CURRENT_SOURCE_DIR@/characteristics \
+                         @CMAKE_CURRENT_SOURCE_DIR@/collective \
+                         @CMAKE_CURRENT_SOURCE_DIR@/coordinate_transformations \
+                         @CMAKE_CURRENT_SOURCE_DIR@/coordinate_transformations_multipatch \
+                         @CMAKE_CURRENT_SOURCE_DIR@/descriptors \
+                         @CMAKE_CURRENT_SOURCE_DIR@/distribution_function \
+                         @CMAKE_CURRENT_SOURCE_DIR@/distribution_function_multipatch \
+                         @CMAKE_CURRENT_SOURCE_DIR@/errors \
+                         @CMAKE_CURRENT_SOURCE_DIR@/eulerian-finite-volume \
+                         @CMAKE_CURRENT_SOURCE_DIR@/external \
+                         @CMAKE_CURRENT_SOURCE_DIR@/fcisl \
+                         @CMAKE_CURRENT_SOURCE_DIR@/fftpack \
+                         @CMAKE_CURRENT_SOURCE_DIR@/field_accumulators \
+                         @CMAKE_CURRENT_SOURCE_DIR@/fields \
+                         @CMAKE_CURRENT_SOURCE_DIR@/fields_multipatch \
+                         @CMAKE_CURRENT_SOURCE_DIR@/fishpack \
+                         @CMAKE_CURRENT_SOURCE_DIR@/general_coordinate_elliptic_solvers_multipatch \
+                         @CMAKE_CURRENT_SOURCE_DIR@/gyroaverage \
+                         @CMAKE_CURRENT_SOURCE_DIR@/hermite_interpolation \
+                         @CMAKE_CURRENT_SOURCE_DIR@/jorek \
+                         @CMAKE_CURRENT_SOURCE_DIR@/jorek_poisson_2d \
+                         @CMAKE_CURRENT_SOURCE_DIR@/lagrange_interpolation \
+                         @CMAKE_CURRENT_SOURCE_DIR@/linearly_transformed_pic \
+                         @CMAKE_CURRENT_SOURCE_DIR@/maxwell_solvers \
+                         @CMAKE_CURRENT_SOURCE_DIR@/maxwell_solvers_parallel \
+                         @CMAKE_CURRENT_SOURCE_DIR@/mesh_calculus \
+                         @CMAKE_CURRENT_SOURCE_DIR@/meshes \
+                         @CMAKE_CURRENT_SOURCE_DIR@/meshes_multipatch \
+                         @CMAKE_CURRENT_SOURCE_DIR@/mudpack \
+                         @CMAKE_CURRENT_SOURCE_DIR@/multigrid \
+                         @CMAKE_CURRENT_SOURCE_DIR@/ode_integrators \
+                         @CMAKE_CURRENT_SOURCE_DIR@/ode_solvers \
+                         @CMAKE_CURRENT_SOURCE_DIR@/package \
+                         @CMAKE_CURRENT_SOURCE_DIR@/parallel_utilities \
+                         @CMAKE_CURRENT_SOURCE_DIR@/particle_methods/pic_1d_sheath \
+                         @CMAKE_CURRENT_SOURCE_DIR@/periodic_interpolation \
+                         @CMAKE_CURRENT_SOURCE_DIR@/pic_1d \
+                         @CMAKE_CURRENT_SOURCE_DIR@/pic_accumulators \
+                         @CMAKE_CURRENT_SOURCE_DIR@/pic_methods \
+                         @CMAKE_CURRENT_SOURCE_DIR@/pic_particle_initializers \
+                         @CMAKE_CURRENT_SOURCE_DIR@/pic_particle_types \
+                         @CMAKE_CURRENT_SOURCE_DIR@/pic_utilities \
+                         @CMAKE_CURRENT_SOURCE_DIR@/pif \
+                         @CMAKE_CURRENT_SOURCE_DIR@/point_to_point_communications \
+                         @CMAKE_CURRENT_SOURCE_DIR@/poisson_solvers \
+                         @CMAKE_CURRENT_SOURCE_DIR@/poisson_solvers_parallel \
+                         @CMAKE_CURRENT_SOURCE_DIR@/python_scripts \
+                         @CMAKE_CURRENT_SOURCE_DIR@/quasi_neutral_solvers \
+                         @CMAKE_CURRENT_SOURCE_DIR@/random_deviate_generators \
+                         @CMAKE_CURRENT_SOURCE_DIR@/reduction \
+                         @CMAKE_CURRENT_SOURCE_DIR@/simulations \
+                         @CMAKE_CURRENT_SOURCE_DIR@/sparse_matrix_manager \
+                         @CMAKE_CURRENT_SOURCE_DIR@/time_solvers \
+                         @CMAKE_CURRENT_SOURCE_DIR@/timer \
+                         @CMAKE_CURRENT_SOURCE_DIR@/vector_space \
+                         @CMAKE_CURRENT_SOURCE_DIR@/visu_pic \
+                         @CMAKE_CURRENT_SOURCE_DIR@/vector_space
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
@@ -915,7 +878,8 @@ EXCLUDE_SYMLINKS       = NO
 # Note that the wildcards are matched against the file with absolute path, so to
 # exclude all test directories for example use the pattern */test/*
 
-EXCLUDE_PATTERNS       = *umfpack* test_*
+EXCLUDE_PATTERNS       = *umfpack* \
+                         test_*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
@@ -1186,8 +1150,8 @@ HTML_STYLESHEET        = @CMAKE_CURRENT_SOURCE_DIR@/../doc/doxygen/stylesheet.cs
 # This is preferred over using HTML_STYLESHEET since it does not replace the
 # standard style sheet and is therefore more robust against future updates.
 # Doxygen will copy the style sheet files to the output directory.
-# Note: The order of the extra stylesheet files is of importance (e.g. the last
-# stylesheet in the list overrules the setting of the previous ones in the
+# Note: The order of the extra style sheet files is of importance (e.g. the last
+# style sheet in the list overrules the setting of the previous ones in the
 # list). For an example see the documentation.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
@@ -1204,7 +1168,7 @@ HTML_EXTRA_STYLESHEET  =
 HTML_EXTRA_FILES       =
 
 # The HTML_COLORSTYLE_HUE tag controls the color of the HTML output. Doxygen
-# will adjust the colors in the stylesheet and background images according to
+# will adjust the colors in the style sheet and background images according to
 # this color. Hue is specified as an angle on a colorwheel, see
 # http://en.wikipedia.org/wiki/Hue for more information. For instance the value
 # 0 represents red, 60 is yellow, 120 is green, 180 is cyan, 240 is blue, 300
@@ -1467,7 +1431,7 @@ DISABLE_INDEX          = NO
 # index structure (just like the one that is generated for HTML Help). For this
 # to work a browser that supports JavaScript, DHTML, CSS and frames is required
 # (i.e. any modern browser). Windows users are probably better off using the
-# HTML help feature. Via custom stylesheets (see HTML_EXTRA_STYLESHEET) one can
+# HTML help feature. Via custom style sheets (see HTML_EXTRA_STYLESHEET) one can
 # further fine-tune the look of the index. As an example, the default style
 # sheet generated by doxygen has an example that shows how to put an image at
 # the root of the tree instead of the PROJECT_NAME. Since the tree basically has
@@ -1746,6 +1710,17 @@ LATEX_HEADER           =
 
 LATEX_FOOTER           =
 
+# The LATEX_EXTRA_STYLESHEET tag can be used to specify additional user-defined
+# LaTeX style sheets that are included after the standard style sheets created
+# by doxygen. Using this option one can overrule certain style aspects. Doxygen
+# will copy the style sheet files to the output directory.
+# Note: The order of the extra style sheet files is of importance (e.g. the last
+# style sheet in the list overrules the setting of the previous ones in the
+# list).
+# This tag requires that the tag GENERATE_LATEX is set to YES.
+
+LATEX_EXTRA_STYLESHEET =
+
 # The LATEX_EXTRA_FILES tag can be used to specify one or more extra images or
 # other source files which should be copied to the LATEX_OUTPUT output
 # directory. Note that the files will be copied as-is; there are no commands or
@@ -1860,6 +1835,16 @@ RTF_STYLESHEET_FILE    =
 # This tag requires that the tag GENERATE_RTF is set to YES.
 
 RTF_EXTENSIONS_FILE    =
+
+# If the RTF_SOURCE_CODE tag is set to YES then doxygen will include source code
+# with syntax highlighting in the RTF output.
+#
+# Note that which sources are shown also depends on other settings such as
+# SOURCE_BROWSER.
+# The default value is: NO.
+# This tag requires that the tag GENERATE_RTF is set to YES.
+
+RTF_SOURCE_CODE        = NO
 
 #---------------------------------------------------------------------------
 # Configuration options related to the man page output
@@ -2394,13 +2379,11 @@ DIAFILE_DIRS           =
 # PlantUML is not used or called during a preprocessing step. Doxygen will
 # generate a warning when it encounters a \startuml command in this case and
 # will not generate output for the diagram.
-# This tag requires that the tag HAVE_DOT is set to YES.
 
 PLANTUML_JAR_PATH      =
 
 # When using plantuml, the specified paths are searched for files specified by
 # the !include statement in a plantuml block.
-# This tag requires that the tag HAVE_DOT is set to YES.
 
 PLANTUML_INCLUDE_PATH  =
 
