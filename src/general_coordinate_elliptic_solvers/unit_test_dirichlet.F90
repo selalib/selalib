@@ -24,20 +24,19 @@ implicit none
 #define ETA2MIN          (-1.0_f64)
 #define ETA2MAX          (+1.0_f64)
 
-type(sll_cartesian_mesh_2d), pointer                      :: mesh_2d
-class(sll_coordinate_transformation_2d_base), pointer     :: tau
-type(sll_gces_dirichlet)                                  :: es
-type(sll_arbitrary_degree_spline_interpolator_2d), target :: interp_phi
-type(sll_arbitrary_degree_spline_interpolator_2d), target :: interp_rho
-class(sll_scalar_field_2d_base), pointer                  :: a11_field_mat
-class(sll_scalar_field_2d_base), pointer                  :: a12_field_mat
-class(sll_scalar_field_2d_base), pointer                  :: a21_field_mat
-class(sll_scalar_field_2d_base), pointer                  :: a22_field_mat
-class(sll_scalar_field_2d_base), pointer                  :: b1_field_vect
-class(sll_scalar_field_2d_base), pointer                  :: b2_field_vect
-class(sll_scalar_field_2d_base), pointer                  :: c_field
-class(sll_scalar_field_2d_base), pointer                  :: rho
-type(sll_scalar_field_2d_discrete), pointer               :: phi
+type(sll_cartesian_mesh_2d),                       pointer :: mesh_2d
+class(sll_coordinate_transformation_2d_base),      pointer :: tau
+type(sll_gces_dirichlet)                                   :: es
+type(sll_arbitrary_degree_spline_interpolator_2d), target  :: interp_phi
+class(sll_scalar_field_2d_base),                   pointer :: a11_field_mat
+class(sll_scalar_field_2d_base),                   pointer :: a12_field_mat
+class(sll_scalar_field_2d_base),                   pointer :: a21_field_mat
+class(sll_scalar_field_2d_base),                   pointer :: a22_field_mat
+class(sll_scalar_field_2d_base),                   pointer :: b1_field_vect
+class(sll_scalar_field_2d_base),                   pointer :: b2_field_vect
+class(sll_scalar_field_2d_base),                   pointer :: c_field
+class(sll_scalar_field_2d_base),                   pointer :: rho
+type(sll_scalar_field_2d_discrete),                pointer :: phi
 
 sll_real64 :: acc
 sll_real64 :: normL2
@@ -46,11 +45,6 @@ sll_real64 :: normH1
 sll_real64, dimension(NUM_CELLS1+1,NUM_CELLS2+1) :: values
 sll_real64, dimension(NUM_CELLS1+1,NUM_CELLS2+1) :: calculated
 sll_real64, dimension(NUM_CELLS1+1,NUM_CELLS2+1) :: reference
-
-sll_real64, dimension(NUM_CELLS2+1) :: v1_min
-sll_real64, dimension(NUM_CELLS2+1) :: v1_max
-sll_real64, dimension(NUM_CELLS1+1) :: v2_min
-sll_real64, dimension(NUM_CELLS1+1) :: v2_max
 
 sll_int32  :: i, j, k
 sll_real64 :: h1,h2,node_val,ref
@@ -184,25 +178,10 @@ call initialize_ad2d_interpolator(             &
   ETA1MAX,                                     &
   ETA2MIN,                                     &
   ETA2MAX,                                     &
-  SLL_HERMITE,                                 &
-  SLL_HERMITE,                                 &
-  SLL_HERMITE,                                 &
-  SLL_HERMITE,                                 &
-  SPLINE_DEG1,                                 &
-  SPLINE_DEG2 )
-
-call initialize_ad2d_interpolator(             &
-  interp_rho,                                  &
-  NUM_CELLS1+1,                                &
-  NUM_CELLS2+1,                                &
-  ETA1MIN,                                     &
-  ETA1MAX,                                     &
-  ETA2MIN,                                     &
-  ETA2MAX,                                     &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
-  SLL_DIRICHLET,                               &
+  SLL_HERMITE,                               &
+  SLL_HERMITE,                               &
+  SLL_HERMITE,                               &
+  SLL_HERMITE,                               &
   SPLINE_DEG1,                                 &
   SPLINE_DEG2 )
 
@@ -210,9 +189,9 @@ phi => new_scalar_field_2d_discrete(           &
   "phi",                                       &
   interp_phi,                                  &
   tau,                                         &
-  SLL_HERMITE,                                 &
-  SLL_HERMITE,                                 &
-  SLL_HERMITE,                                 &
+  SLL_HERMITE,                               &
+  SLL_HERMITE,                               &
+  SLL_HERMITE,                               &
   SLL_HERMITE )
 
 rho => new_scalar_field_2d_analytic( &
@@ -224,21 +203,6 @@ rho => new_scalar_field_2d_analytic( &
 &    SLL_DIRICHLET,                  &
 &    SLL_DIRICHLET,                  &
 &    [0.0_f64]                       )
-
-!Set boundary conditions
-do j = 1, npts2
-  v1_min(j) = eta1(    1)**2+eta2(j)**2
-  v1_max(j) = eta1(npts1)**2+eta2(j)**2
-end do
-do i = 1, npts1
-  v2_min(i) = eta1(i)**2+eta2(    1)**2
-  v2_max(i) = eta1(i)**2+eta2(npts2)**2
-end do
-
-values = 0.0_f64
-call phi%set_field_data(values)
-!call set_boundary_value2d(interp_phi, v1_min, v1_max, v2_min, v2_max)
-call phi%update_interpolation_coefficients()
 
 integral_solution = 0.0_f64
 integral_exact_solution = 0.0_f64
@@ -293,8 +257,8 @@ end do
 integral_solution = sum(calculated)*h1*h2
 integral_exact_solution = sum(reference)*h1*h2
 
-do j=-50,50
-do i=-50,50
+do j=-100,100
+do i=-100,100
   write(41,*) i, j, phi%first_deriv_eta1_value_at_point(i*0.01_f64,j*0.01_f64) &
                   , 2*sll_pi*cos(2*sll_pi*i*0.01_f64)*sin(2*sll_pi*j*0.01_f64)
   write(42,*) i, j, phi%value_at_point(i*0.01_f64,j*0.01_f64) &

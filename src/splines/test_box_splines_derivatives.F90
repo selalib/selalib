@@ -34,7 +34,7 @@ sll_real64, dimension(:), allocatable :: splines_on_support
 
 
 ! Mesh initialization
-num_cells = 50
+num_cells = 20
 mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, radius = 2._f64)
 call sll_display(mesh)
 
@@ -46,18 +46,18 @@ SLL_ALLOCATE(dxf(mesh%num_pts_tot),ierr)
 SLL_ALLOCATE(dyf(mesh%num_pts_tot),ierr)
 
 
-do i=1, mesh%num_pts_tot
+! do i=1, mesh%num_pts_tot
 
-   x1 = mesh%global_to_x1(i)
-   x2 = mesh%global_to_x2(i)
+!    x1 = mesh%global_to_x1(i)
+!    x2 = mesh%global_to_x2(i)
 
-   ! Computing boxsplines of degree 2:
-   f(i) = compute_box_spline(spline, x1, x2, 2)
-   ! And derivatives :
-   dxf(i) = boxspline_val_der(x1, x2, 1, 1, 0)!boxspline_x1_derivative(x1, x2, 1)
-   dyf(i) = boxspline_val_der(x1, x2, 1, 0, 1)!boxspline_x2_derivative(x1, x2, 1)
+!    ! Computing boxsplines of degree 2:
+!    f(i) = compute_box_spline(spline, x1, x2, 2)
+!    ! And derivatives :
+!    dxf(i) = boxspline_val_der(x1, x2, 1, 1, 0)!boxspline_x1_derivative(x1, x2, 1)
+!    dyf(i) = boxspline_val_der(x1, x2, 1, 0, 1)!boxspline_x2_derivative(x1, x2, 1)
 
-end do
+! end do
 
 !Wrtting on docs:
 call write_field_hex_mesh_xmf(mesh,   f, "boxspline2")
@@ -70,8 +70,8 @@ SLL_DEALLOCATE_ARRAY(dxf, ierr)
 SLL_DEALLOCATE_ARRAY(dyf, ierr)
 
 
-!Writing file for CAID:
-deg = 1
+!Writing file for CAID/DJANGO:
+deg = 2
 rule = 1
 call write_basis_values(deg, rule)
 print *, ""

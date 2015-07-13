@@ -35,7 +35,7 @@ program unit_test
     sll_int32 :: tsteps = 100     !Number of timesteps
     sll_real64 :: tstepw=0.1_f64   !stepwidth
     sll_int32 :: nmark=40000        !Number of marker particles
-
+    sll_real64 :: final_time
     sll_int32 :: sdeg=3            !spline degree
 
     !    LOGICAL :: gnuplot_inline_output=.TRUE. !write gnuplot output during the simulation
@@ -84,12 +84,16 @@ program unit_test
     
     
     
-    namelist /params/ tsteps,nmark, ppusher, scenario, psolver,gnuplot_inline_output_user,deltaf,nstreams
+    namelist /params/ nmark,final_time  , ppusher, scenario, psolver,gnuplot_inline_output_user,deltaf,nstreams
     
-    namelist /numerical_params/nmark,sdeg,tstepw,femp
+    namelist /numerical_params/sdeg,tstepw,femp
+    
+    
+    
     
 NAMELIST /cmd/ tsteps, tstepw ,  scenario, nstreams, femp, sdeg, lalpha, lmode,&
         ppusher,gpinline,path,boxlenpi,deltaf, psolver
+
 
 !**************************************************************
     ! Read input data from file
@@ -104,6 +108,8 @@ NAMELIST /cmd/ tsteps, tstepw ,  scenario, nstreams, femp, sdeg, lalpha, lmode,&
     read(input_file,params)
     close(input_file)
 !**************************************************************
+
+tsteps=final_time/tstepw
 
     !Add input variables to namelist
     
@@ -210,7 +216,7 @@ NAMELIST /cmd/ tsteps, tstepw ,  scenario, nstreams, femp, sdeg, lalpha, lmode,&
 
 
     call destroy_sll_pic_1d
-  !  write(*,*) 'the length of the box =',interval_b-interval_a  
+   write(*,*) 'nber of steps  =',tsteps
     
 end program unit_test
 
