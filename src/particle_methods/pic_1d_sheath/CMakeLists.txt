@@ -33,8 +33,8 @@ TARGET_LINK_LIBRARIES( sll_pic_1d_sheath
   sll_utilities
   sll_interpolators
   sll_collective
-  sobol_lgpl
-  probability_lgpl
+  sll_prob
+  sll_sobol
   sll_visu_pic
   sll_timer )
 
