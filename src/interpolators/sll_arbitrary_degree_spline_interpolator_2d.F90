@@ -1643,12 +1643,12 @@ case(1170)  !left: Neumann, right: Neumann, bottom: Neuman, Top: Neumann
   SLL_ALLOCATE(interpolator%gtau_der2(my,nx+mx),ierr)
 
   interpolator%gtau                 = data_array(1:nx,1:ny)
-  taux_deriv(1)        = 1
-  taux_deriv(2)        = nx
+  taux_deriv(1)                     = 1
+  taux_deriv(2)                     = nx
   interpolator%gtau_der1(1,1:ny)    = 0.0_f64
   interpolator%gtau_der1(2,1:ny)    = 0.0_f64
-  tauy_deriv(1)        = 1
-  tauy_deriv(2)        = ny
+  tauy_deriv(1)                     = 1
+  tauy_deriv(2)                     = ny
   interpolator%gtau_der2(1,1:nx+mx) = 0.0_f64
   interpolator%gtau_der2(2,1:nx+mx) = 0.0_f64
 
@@ -2008,10 +2008,10 @@ x   = eta1
 y   = eta2
 val = 0.0_f64
 
-if (interpolator%bc1_min==SLL_PERIODIC .and. eta1<interpolator%eta1_min) x = eta1 + length1 
-if (interpolator%bc1_max==SLL_PERIODIC .and. eta1>interpolator%eta1_max) x = eta1 - length1
-if (interpolator%bc2_min==SLL_PERIODIC .and. eta2<interpolator%eta2_min) y = eta2 + length2
-if (interpolator%bc2_max==SLL_PERIODIC .and. eta2>interpolator%eta2_max) y = eta2 - length2
+!if (interpolator%bc1_min==SLL_PERIODIC .and. eta1<interpolator%eta1_min) x = eta1 + length1 
+!if (interpolator%bc1_max==SLL_PERIODIC .and. eta1>interpolator%eta1_max) x = eta1 - length1
+!if (interpolator%bc2_min==SLL_PERIODIC .and. eta2<interpolator%eta2_min) y = eta2 + length2
+!if (interpolator%bc2_max==SLL_PERIODIC .and. eta2>interpolator%eta2_max) y = eta2 - length2
 
 SLL_ASSERT( x >= interpolator%eta1_min )
 SLL_ASSERT( x <= interpolator%eta1_max )

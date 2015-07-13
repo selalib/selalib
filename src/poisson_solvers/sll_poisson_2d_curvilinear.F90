@@ -1056,6 +1056,76 @@ function compute_solution_size(bc_min,bc_max,num_cells, spline_degree) result(re
 end function compute_solution_size
 
 
+!knots(cell+1-degree)<= ..<= knots(cell)<=x <knots(cell+1) <=..<=knots(cell+degree)
+subroutine compute_b_spline_at_x( &
+  knots, &
+  cell, &
+  x, &
+  degree, &
+  out)
+  sll_real64, dimension(:), intent(in) :: knots
+  sll_int32, intent(in) :: cell
+  sll_real64, intent(in) :: x
+  sll_int32, intent(in) :: degree
+  sll_real64, dimension(:), intent(out) :: out
+  
+  sll_real64 :: tmp1
+  sll_real64 :: tmp2
+  sll_int32 :: ell
+  sll_int32 :: k
+  
+  out(1) = 1._f64
+  do ell=1,degree
+    tmp1 = (x-knots(cell+1-degree))/(knots(cell+1)-knots(cell+1-degree))*out(1)
+    out(1) = out(1) -tmp1
+    do k=2,ell
+      tmp2 = (x-knots(cell+k-degree))/(knots(cell+k)-knots(cell+k-degree))*out(k)
+      out(k) = out(k)+tmp1-tmp2
+      tmp1 = tmp2
+    enddo
+    out(ell+1) = tmp1
+  enddo
+  
+  
+  
+  
+end subroutine compute_b_spline_at_x
+
+function check_compute_b_spline_at_x( &
+  knots, &
+  cell, &
+  x, &
+  degree &
+  ) result(res)
+  sll_real64, dimension(:), intent(in) :: knots
+  sll_int32, intent(in) :: cell
+  sll_real64, intent(in) :: x
+  sll_int32, intent(in) :: degree
+  sll_real64 :: res
+  
+  sll_real64, dimension(:), allocatable :: splines1
+  sll_real64, dimension(:), allocatable :: splines2
+  sll_int32 :: ierr
+  
+  res = 0._f64
+  SLL_ALLOCATE(splines1(degree+1),ierr)
+  SLL_ALLOCATE(splines2(degree+1),ierr)
+
+  call bsplvb(knots,degree+1,cell,x,degree+1,splines2)
+  call compute_b_spline_at_x( &
+    knots, &
+    cell, &
+    x, &
+    degree, &
+    splines1)
+  res=maxval(abs(splines1-splines2))
+
+end function check_compute_b_spline_at_x
+
+
+
+
+
 subroutine compute_dbiatx( &
   knots, &
   knot_size, &
