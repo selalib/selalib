@@ -370,7 +370,6 @@ contains
       mat%umf_numeric, &
       mat%umf_control, &
       info)
-
     
   end subroutine sll_factorize_csr_matrix
   
@@ -506,22 +505,25 @@ contains
                         ! li_A_1 IS THE ROW NUM, li_A_2 THE COLUMN NUM
                         ! INITIALIZATION OF THE SPARSE MATRIX
                         api_columns(li_A_1, 0) = api_columns(li_A_1, 0) + 1
-                        api_columns(li_A_1, api_columns(li_A_1, 0)) = li_A_2
-
+                
                         ! resizing the array
                         lpi_size(1) = SIZE(api_columns, 1)
                         lpi_size(2) = SIZE(api_columns, 2)
-                        if (lpi_size(2) < api_columns(li_A_1, 0)) then
-                            ALLOCATE(lpi_columns(lpi_size(1), lpi_size(2)))
+                        if (lpi_size(2) < api_columns(li_A_1, 0)+1) then
+                            ALLOCATE(lpi_columns(lpi_size(1), 0:lpi_size(2)-1))
                             lpi_columns = api_columns
 
                             DEALLOCATE(api_columns)
 
-                            ALLOCATE(api_columns(lpi_size(1), 2 * lpi_size(2)))
-                            api_columns(1:lpi_size(1), 1:lpi_size(2)) = lpi_columns(1:lpi_size(1), 1:lpi_size(2))
+                            ALLOCATE(api_columns(lpi_size(1), 0:2 * lpi_size(2)))
+                            api_columns(1:lpi_size(1), 0:lpi_size(2)-1) = lpi_columns(1:lpi_size(1), 0:lpi_size(2)-1)
 
                             DEALLOCATE(lpi_columns)
                         end if
+                        print *,'api_columns(li_A_1,0)=',api_columns(li_A_1,0)
+                        print *,'lpi_size(2)=',lpi_size(2)
+                        call flush()
+                        api_columns(li_A_1, api_columns(li_A_1, 0)) = li_A_2
 
 
                     end if

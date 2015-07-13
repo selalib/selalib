@@ -189,7 +189,6 @@ IF(MPI_ENABLED)
    ADD_SUBDIRECTORY(point_to_point_communications)
    ADD_SUBDIRECTORY(distribution_function_multipatch)
    ADD_SUBDIRECTORY(poisson_solvers_parallel)
-   ADD_SUBDIRECTORY(pic_1d)
    ADD_SUBDIRECTORY(pif)
    #PN ADD_SUBDIRECTORY(maxwell_solvers_parallel)
 
@@ -288,20 +287,23 @@ ENDIF()
 
 SET(BUILD_SPRNG OFF CACHE BOOL   "Build SPRNG libraries")
 IF(BUILD_SPRNG)
-    IF(APPLE)
-    MESSAGE(STATUS "Warning: Build SPRNG library on mac is very tricky")
-    ENDIF(APPLE)
-    INCLUDE(ExternalProject)
-    SET(SPRNG_VERSION 5 CACHE STRING "SPRNG version number")
-    EXTERNALPROJECT_ADD( sprng
-       URL  http://www.sprng.org/Version5.0/sprng${SPRNG_VERSION}.tar.bz2
-       SOURCE_DIR ${CMAKE_BINARY_DIR}/sprng
-       BINARY_DIR ${CMAKE_BINARY_DIR}/sprng
-       UPDATE_COMMAND autoreconf -if
-       CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/sprng/configure --prefix=${CMAKE_BINARY_DIR}/sprng --with-mpi=yes CXX=${MPI_CXX_COMPILER} MPI_CXX=${MPI_CXX_COMPILER} LIBS=-lmpi_cxx
-       BUILD_COMMAND ${MAKE}
-       INSTALL_COMMAND ""
-    )
+  FIND_PACKAGE(MPI REQUIRED CXX)
+  SET(SPRNG_CXX_COMPILER ${MPI_CXX_COMPILER} CACHE FILEPATH  "CXX compiler for SPRNG")
+  SET(SPRNG_LIBS "-lmpi_cxx" CACHE STRING  "LIBS configure argument for SPRNG")
+  IF(APPLE)
+    MESSAGE(STATUS "Warning: Build SPRNG library on mac is tricky")
+  ENDIF(APPLE)
+  INCLUDE(ExternalProject)
+  SET(SPRNG_VERSION 5 CACHE STRING "SPRNG version number")
+  EXTERNALPROJECT_ADD( sprng
+     URL  http://www.sprng.org/Version5.0/sprng${SPRNG_VERSION}.tar.bz2
+     SOURCE_DIR ${CMAKE_BINARY_DIR}/sprng
+     BINARY_DIR ${CMAKE_BINARY_DIR}/sprng
+     UPDATE_COMMAND autoreconf -if
+     CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/sprng/configure --prefix=${CMAKE_BINARY_DIR}/sprng --with-mpi=yes CXX=${SPRNG_CXX_COMPILER} LIBS=${SPRNG_LIBS}
+     BUILD_COMMAND ${MAKE} 
+     INSTALL_COMMAND ""
+  )
 ENDIF()
 
 MESSAGE(STATUS "############################################################")
