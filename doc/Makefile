@@ -4,5 +4,6 @@ default: doc html
 html:
 	(cd sphinx; make html)
 doc:
-	(cd ../build; make doc)
+	(cd ../build; make doc-user)
+	(cd ../build; make doc-dev)
 
