@@ -475,47 +475,7 @@ contains
 
     
     
-    subroutine poisson_1d_fd_interp(this, knots_eval, eval_solution , solution)
-    class(poisson_1d_fd),intent(inout) :: this
-        sll_real64, dimension(:), intent(in)     :: knots_eval
-        sll_real64, dimension(:), intent(out)     :: eval_solution
-        sll_real64, dimension(:), intent(in) :: solution
-        sll_real64, dimension(this%bspline%degree+1) :: b_contribution
-        sll_real64 :: celldx
-        sll_int :: b_idx, idx, jdx
-        sll_int :: b_contrib_idx
-      
-        SLL_ASSERT(size(knots_eval)==size(eval_solution))
-
-         eval_solution=0
- 
-        do idx=1,size(knots_eval)
-           celldx=(knots_eval(idx)+this%cartesian_mesh%delta_eta*(this%bspline%degree+1)/2.0_f64)
-           celldx=this%cartesian_mesh%period(celldx) !periodicity
-           
-           b_idx=floor(celldx/this%cartesian_mesh%delta_eta)
-           celldx=mod(celldx,this%cartesian_mesh%delta_eta)
-           
-           
-           b_contribution=b_splines_at_x(this%bspline,1, celldx)
-          
-            !First spline has first support in first cell of interval
-            do b_contrib_idx=1, this%bspline%degree+1
-
-                
-                if (b_idx > this%num_cells) then
-                    b_idx = b_idx - this%num_cells
-                elseif (b_idx < 1) then
-                    b_idx = b_idx + this%num_cells
-                endif
-                
-                eval_solution(idx)=eval_solution(idx)+  b_contribution(b_contrib_idx)*solution(b_idx)
-                b_idx=b_idx+1
-            enddo
-        enddo
     
-    !eval_solution=-eval_solution
-    endsubroutine
     
     
     
@@ -627,7 +587,51 @@ contains
 
     endfunction
 
+subroutine poisson_1d_fd_interp(this, knots_eval, eval_solution , solution)
+    class(poisson_1d_fd),intent(inout) :: this
+        sll_real64, dimension(:), intent(in)     :: knots_eval
+        sll_real64, dimension(:), intent(out)     :: eval_solution
+        sll_real64, dimension(:), intent(in) :: solution
+        sll_real64, dimension(this%bspline%degree+1) :: b_contribution
+        sll_real64 :: celldx
+        sll_int :: b_idx, idx, jdx
+        sll_int :: b_contrib_idx
+      
+        SLL_ASSERT(size(knots_eval)==size(eval_solution))
+         print *, b_splines_at_x(this%bspline,1, this%cartesian_mesh%delta_eta*0)
 
+         eval_solution=0
+ 
+        do idx=1,size(knots_eval)
+
+        
+           celldx=(knots_eval(idx)+this%cartesian_mesh%delta_eta*(this%bspline%degree+1)/2.0_f64)
+           celldx=this%cartesian_mesh%period(celldx) !periodicity
+           
+           b_idx=floor(celldx/this%cartesian_mesh%delta_eta)
+           celldx=mod(celldx,this%cartesian_mesh%delta_eta)
+           
+           
+           b_contribution=b_splines_at_x(this%bspline,1, celldx)
+           b_contribution=b_contribution(this%bspline%degree+1:1:-1)
+
+            !First spline has first support in first cell of interval
+            do b_contrib_idx=1, this%bspline%degree+1
+
+                
+                if (b_idx > this%num_cells) then
+                    b_idx = b_idx - this%num_cells
+                elseif (b_idx < 1) then
+                    b_idx = b_idx + this%num_cells
+                endif
+                
+                eval_solution(idx)=eval_solution(idx)+  b_contribution(b_contrib_idx)*solution(b_idx)
+                b_idx=b_idx+1
+            enddo
+        enddo
+    
+    !eval_solution=-eval_solution
+    endsubroutine
 
     function poisson_1d_fd_get_rhs_from_klimontovich_density_weighted( this,&
             ppos, pweight) result(rhs)
@@ -655,7 +659,8 @@ contains
            
            
            b_contribution=b_splines_at_x(this%bspline,1, celldx)
-
+           b_contribution=b_contribution(this%bspline%degree+1:1:-1)
+           
 
             if (size(pweight)==1) then
                 b_contribution=b_contribution*pweight(1)
@@ -764,12 +769,7 @@ this%stenw_dxdx=(/-1/16632, 2/1925, -1/112, 10/189, -15/56, 12/7, -5369/1800, 12
    CASE DEFAULT
       
 END SELECT
-
-
-    
-    
-    
-    end
+    end subroutine
     
     
     !    function poisson_1d_fd_calculate_residual(this) result(residuum)
