@@ -162,10 +162,10 @@ contains
     open(file_id, file = trim(root_path)//plot_name//'_'//fin//'.dat')
     write (file_id,*)"distribution moments"
     write (file_id,*)  "#Time steps:", iplot
-    write(file_id,*)  "position     ","density     ","velocty     ","kinetic_energy     "
+    write(file_id,*) "space_step                  " ,"position                    ","density                      ","velocity                   ","kinetic_energy               "
   
     do i=1,self%nx
-      write(file_id,*)  x(i),self%n(i),self%nu(i)/self%n(i),self%nke(i)
+      write(file_id,*)  i,x(i),self%n(i),self%nu(i),self%nke(i)
     end do
   close(file_id)
   
