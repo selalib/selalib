@@ -136,7 +136,7 @@ module sll_module_simulation_pic1d1v_vp_periodic
     procedure :: pic1d_adjustweights           => sll_pic1d_adjustweights
     procedure :: pic1d_write_result            => sll_pic1d_write_result
     procedure :: pic_1d_calc_push_error        => sll_pic_1d_calc_push_error
-    procedure :: get_total_momentum                => sll_total_momentum
+    procedure :: get_total_momentum            => sll_total_momentum
   end type sll_simulation_pic1d1v_vp_periodic
 
   abstract interface
@@ -359,7 +359,7 @@ contains
   !============================================================================
 
   subroutine delete_pid1d_vp_periodic( sim )
-    class( sll_simulation_pic1d1v_vp_periodic ), intent( inout ) :: sim
+    type( sll_simulation_pic1d1v_vp_periodic ), intent( inout ) :: sim
     character( len=64 ), parameter :: this_sub_name = &
       "delete_pid1d_vp_periodic"
     SLL_WARNING( this_sub_name, "'delete' method not implemented" )   
@@ -369,8 +369,9 @@ contains
 
   subroutine run_pic_1d( sim )
      class( sll_simulation_pic1d1v_vp_periodic ), intent( inout ) :: sim
+     type( pic1d_eulerian_distribution )  :: phase_space_distribution
      integer              :: timestep
-     sll_int32            :: idx,jdx,kdx
+     sll_int32            :: idx,jdx,kdx,nx,nv
      sll_real64           :: time
      type(sll_time_mark)  :: tstart, tstop
      logical              :: gnuplot_now
@@ -404,6 +405,7 @@ contains
             SLL_CLEAR_ALLOCATE(sim%particlespeed(1:sim%nmark),ierr)
             SLL_CLEAR_ALLOCATE(sim%eval_solution(1:size(sim%knots)),ierr)
             SLL_CLEAR_ALLOCATE(total_mass(1:sim%tsteps+1), ierr)
+            
             if (coll_rank==0) write(*,*) "#PIC1D: Loading particles..."
             
             call sim%fsolver%set_num_sample(sim%nmark*coll_size)
@@ -427,6 +429,7 @@ contains
             
             ! Add ion background density to Poisson solver, if needed
             ! TODO: ask Jakob about exact behavior here...
+            
             select case( sim%scenario_int )
               case( SLL_PIC1D_TESTCASE_QUIET )
                 call sim%fsolver%set_ions_constant(0.0_f64)
@@ -525,8 +528,21 @@ contains
             gnuplot_now = (sim%nmark*coll_size<=10000 .AND. (sim%gnuplot_inline_output .eqv. .true.) .AND. (coll_rank==0) .AND. mod(timestep-1,sim%tsteps/100)==0)
             
             ! Write currrent phase-space to file
-            call sim%pic1d_write_phasespace( timestep )
+           
+!            call sim%pic1d_write_phasespace( timestep )
+            nx=floor(sqrt(sim%nmark/10.0_f64))+1
+            nv=nx
             
+            call phase_space_distribution%initialize(sim%interval_a-1,sim%interval_b+1,nx ,minval(sim%species(1)%particle%vx), maxval(sim%species(1)%particle%vx),nv)
+            
+            call phase_space_distribution%compute_f(sim%species(1)%particle%dx, sim%species(1)%particle%vx, &
+                sim%species(1)%particle%weight)
+            call phase_space_distribution%print_f('myversion',timestep)
+            
+            DEALLOCATE(phase_space_distribution%f)
+            DEALLOCATE(phase_space_distribution%n)
+            DEALLOCATE(phase_space_distribution%nu)
+            DEALLOCATE(phase_space_distribution%nke)
             ! Gnuplot real-time plots
             if (gnuplot_now) then
                 call particles_center_gnuplot_inline(pic_1d_allparticlepos(sim%species(1:num_species),sim%nmark), &
@@ -1788,49 +1804,7 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
 
         sim%push_error_mean=maxval(perror)
     end subroutine
-    
-    
-    
-!    
-!  function phase_space_distribution(sim) result(f)
-!      class( sll_simulation_pic1d1v_vp_periodic ), intent( inout ) :: sim
-!      sll_real64, allocatable,dimension(:,:)    :: f
-!      sll_int32                                 :: n,p,i,j,jj,kk
-!      sll_real64                                :: vmin,vmax,delta_x,delta_v
 
-!      n=floor(sqrt(sim%nmark/10.0_f64))+1
-!      delta_x=(sim%interval_b-sim%interval_a)/n
-!      vmax=maxval(sim%species(1)%particle%vx)
-!      vmin=minval(sim%species(1)%particle%vx)
-!      delta_v=(vmax-vmin)/n
-!      jj=int(maxval(sim%species(1)%particle%vx/delta_v))+int(n/2)
-!      
-!      kk=int(minval(sim%species(1)%particle%dx/delta_x))
-!      allocate(f(n,n))
-!      
-!      
-!      do p=1,sim%nmark
-!      i=int(sim%species(1)%particle(p)%dx/delta_x)+1
-!      j=int(sim%species(1)%particle(p)%vx/delta_v)+int(n/2)+2
-!    !  j=max(min(int(sim%species(1)%particle(p)%vx/delta_v)+int(n/2)+5,159),1)
-!      print *,j,jj,vmin,vmax,p
-!      
-!             
-!      f(i,j)=f(i,j)+sim%species(1)%particle(p)%weight
-!      end do
-!      f=f/(delta_x*delta_v) 
-!    end function
-!    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
 
 end module sll_module_simulation_pic1d1v_vp_periodic

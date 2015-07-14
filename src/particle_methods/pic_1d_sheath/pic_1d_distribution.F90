@@ -116,9 +116,12 @@ contains
     class( pic1d_eulerian_distribution ), intent( in ) :: self
     sll_real64                                         :: T(self%nx)
 
-    ! TODO: properly comment next line...
+    
     T = (2.0_f64*self%nke - self%nu**2/self%n) / self%n
-
+    !K*T/2=(kin_en-n*mean_velocity^2/2)/n
+    !n*mean_velocity^2/2=nu^2/(2*n)
+    !We fix K=1
+    
   end function pic1d_ed__mean_temperature
   
   !----------------------------------------------------------------------------
@@ -139,10 +142,33 @@ contains
   end subroutine pic1d_ed__print_f
   
   !----------------------------------------------------------------------------
-  subroutine pic1d_ed__print_moments( self, plot_name, iplot )
+  subroutine pic1d_ed__print_moments( self, plot_name, iplot,root_path )
     class( pic1d_eulerian_distribution ), intent( in ) :: self
     character( len=* )                  , intent( in ) :: plot_name
     sll_int32                           , intent( in ) :: iplot
+    CHARACTER(LEN=256)                  , intent( in ) :: root_path
+    character(len=4)     :: fin
+    integer , parameter  :: file_id=20 
+    sll_int32            :: i   
+    sll_real64           :: dx,x(self%nx)
+    
+        
+    dx = (self%xmax-self%xmin)/(self%nx-1)
+    do i=1,self%nx
+      x(i) = self%xmin + dx*(i-1)
+    end do
+                          
+    call int2string( iplot, fin )
+    open(file_id, file = trim(root_path)//plot_name//'_'//fin//'.dat')
+    write (file_id,*)"distribution moments"
+    write (file_id,*)  "#Time steps:", iplot
+    write(file_id,*)  "position     ","density     ","velocty     ","kinetic_energy     "
+  
+    do i=1,self%nx
+      write(file_id,*)  x(i),self%n(i),self%nu(i)/self%n(i),self%nke(i)
+    end do
+  close(file_id)
+  
   
   end subroutine pic1d_ed__print_moments
 
