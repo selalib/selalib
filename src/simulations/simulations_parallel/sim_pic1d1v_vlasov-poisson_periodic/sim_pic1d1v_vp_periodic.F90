@@ -39,6 +39,7 @@ module sll_module_simulation_pic1d1v_vp_periodic
          SLL_PIC1D_TESTCASE_IONBEAM, SLL_PIC1D_TESTCASE_LANDAU, &
          SLL_PIC1D_TESTCASE_IONBEAM_ELECTRONS ,SLL_PIC1D_TESTCASE_QUIET ,&
          SLL_PIC1D_TESTCASE_BUMPONTAIL
+  use pic_1d_distribution 
   
   implicit none
    
@@ -374,7 +375,7 @@ contains
      type(sll_time_mark)  :: tstart, tstop
      logical              :: gnuplot_now
      sll_real64,   dimension(:), allocatable       ::   total_mass     
-     sll_real64, allocatable,dimension(:,:)        :: f_distribution     
+    
         sim%root_path=""
         sim%nmark=sim%nmark/coll_size
         print*, "#Core ", coll_rank, " handles particles", coll_rank*sim%nmark +1, "-", (coll_rank+1)*sim%nmark
@@ -609,9 +610,8 @@ contains
                 call sll_set_time_mark(tstop)
                 print *, "Remaining Time: " , (sll_time_elapsed_between(tstart,tstop)/timestep)*real(sim%tsteps-timestep,i64)
             endif
-!            allocate(f_distribution(floor(sqrt(sim%nmark/10.0_f64))+1,floor(sqrt(sim%nmark/10.0_f64))+1))
-         f_distribution=phase_space_distribution(sim)
-!         desalocate(f)
+
+
         enddo
 
         ! Print final value of various diagnostic quantities (in dedicated arrays)
@@ -1791,36 +1791,36 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
     
     
     
-    
-  function phase_space_distribution(sim) result(f)
-      class( sll_simulation_pic1d1v_vp_periodic ), intent( inout ) :: sim
-      sll_real64, allocatable,dimension(:,:)    :: f
-      sll_int32                                 :: n,p,i,j,jj,kk
-      sll_real64                                :: vmin,vmax,delta_x,delta_v
+!    
+!  function phase_space_distribution(sim) result(f)
+!      class( sll_simulation_pic1d1v_vp_periodic ), intent( inout ) :: sim
+!      sll_real64, allocatable,dimension(:,:)    :: f
+!      sll_int32                                 :: n,p,i,j,jj,kk
+!      sll_real64                                :: vmin,vmax,delta_x,delta_v
 
-      n=floor(sqrt(sim%nmark/10.0_f64))+1
-      delta_x=(sim%interval_b-sim%interval_a)/n
-      vmax=maxval(sim%species(1)%particle%vx)
-      vmin=minval(sim%species(1)%particle%vx)
-      delta_v=(vmax-vmin)/n
-      jj=int(maxval(sim%species(1)%particle%vx/delta_v))+int(n/2)
-      
-      kk=int(minval(sim%species(1)%particle%dx/delta_x))
-      allocate(f(n,n))
-      
-      
-      do p=1,sim%nmark
-      i=int(sim%species(1)%particle(p)%dx/delta_x)+1
-      j=int(sim%species(1)%particle(p)%vx/delta_v)+int(n/2)+2
-    !  j=max(min(int(sim%species(1)%particle(p)%vx/delta_v)+int(n/2)+5,159),1)
-      print *,j,jj,vmin,vmax,p
-      
-             
-      f(i,j)=f(i,j)+sim%species(1)%particle(p)%weight
-      end do
-      f=f/(delta_x*delta_v) 
-    end function
-    
+!      n=floor(sqrt(sim%nmark/10.0_f64))+1
+!      delta_x=(sim%interval_b-sim%interval_a)/n
+!      vmax=maxval(sim%species(1)%particle%vx)
+!      vmin=minval(sim%species(1)%particle%vx)
+!      delta_v=(vmax-vmin)/n
+!      jj=int(maxval(sim%species(1)%particle%vx/delta_v))+int(n/2)
+!      
+!      kk=int(minval(sim%species(1)%particle%dx/delta_x))
+!      allocate(f(n,n))
+!      
+!      
+!      do p=1,sim%nmark
+!      i=int(sim%species(1)%particle(p)%dx/delta_x)+1
+!      j=int(sim%species(1)%particle(p)%vx/delta_v)+int(n/2)+2
+!    !  j=max(min(int(sim%species(1)%particle(p)%vx/delta_v)+int(n/2)+5,159),1)
+!      print *,j,jj,vmin,vmax,p
+!      
+!             
+!      f(i,j)=f(i,j)+sim%species(1)%particle(p)%weight
+!      end do
+!      f=f/(delta_x*delta_v) 
+!    end function
+!    
     
     
     
