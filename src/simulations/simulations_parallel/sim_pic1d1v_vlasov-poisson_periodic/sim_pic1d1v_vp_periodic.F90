@@ -538,7 +538,8 @@ contains
             call phase_space_distribution%compute_f(sim%species(1)%particle%dx, sim%species(1)%particle%vx, &
                 sim%species(1)%particle%weight)
             call phase_space_distribution%print_f('myversion',timestep)
-            
+            call phase_space_distribution%compute_moments()
+            call phase_space_distribution%print_moments('my_version_moments',timestep,sim%root_path)
             DEALLOCATE(phase_space_distribution%f)
             DEALLOCATE(phase_space_distribution%n)
             DEALLOCATE(phase_space_distribution%nu)
