@@ -24,7 +24,7 @@
 	
 ** Doxygen
   building: [[elisp:(compile "cd ${SELALIB}/build && make doc")]]
-  HTML index: selalib:doc/build/html/doxygen/html/index.html
+  HTML index: [[selalib:doc/build/html/doxygen/html/index.html]]
 
 ** Configuring
 *** extra packages
