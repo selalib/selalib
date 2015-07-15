@@ -58,9 +58,9 @@ module sll_simulation_4d_vp_generic_pic_cartesian_module
 
   !> @ingroup particle_methods
 
-  !> \brief Test simulation applied to PIC particles of type @ref sll_simple_pic_4d_particle
-  !> <!-- [[file:~/selalib/src/particle_methods/particle_types/simple_pic_4d_particle.F90::sll_simple_pic_4d_particle]]
-  !> -->
+  !> \brief Test simulation applied to PIC particles of type \ref sll_simple_pic_4d_particle
+  
+  ! [[file:~/selalib/src/particle_methods/particle_types/simple_pic_4d_particle.F90::sll_simple_pic_4d_particle]]
   
   type, extends(sll_simulation_base_class) :: sll_simulation_4d_vp_generic_pic_cartesian
 
@@ -94,9 +94,15 @@ module sll_simulation_4d_vp_generic_pic_cartesian_module
      logical :: domain_is_y_periodic
      sll_real64, dimension(1:6) :: elec_params
      !> @}
-     
-     type(sll_cartesian_mesh_2d),    pointer :: mesh_2d ! [[selalib:src/meshes/sll_cartesian_meshes.F90::sll_cartesian_mesh_2d]]
-     type(sll_charge_accumulator_2d_ptr), dimension(:), pointer     :: q_accumulator_ptr  ! called q_accumulator in Sever simulation
+
+     !> Underlying 2D cartesian mesh aaaALHWorkInProgressTODO \ref sll_cartesian_mesh_2d
+     ! [[selalib:src/meshes/sll_cartesian_meshes.F90::sll_cartesian_mesh_2d]]
+     type ( sll_cartesian_mesh_2d ),    pointer :: mesh_2d
+
+     !> called q_accumulator in Sever simulation
+     type(sll_charge_accumulator_2d_ptr), dimension(:), pointer     :: q_accumulator_ptr
+
+     !> aaaALHWorkInProgressTODO ::sll_charge_accumulator_2d
      type(sll_charge_accumulator_2d),     dimension(:), pointer     :: charge_accumulator
      type(electric_field_accumulator),                  pointer     :: E_accumulator
      logical :: use_lt_pic_scheme        ! if false then use pic scheme
@@ -115,6 +121,7 @@ module sll_simulation_4d_vp_generic_pic_cartesian_module
      procedure, pass(sim) :: run => run_4d_generic_pic_cartesian
   end type sll_simulation_4d_vp_generic_pic_cartesian
 
+  !> Standard Selalib deallocation
   interface sll_delete
      module procedure delete_4d_generic_pic_cartesian
   end interface sll_delete

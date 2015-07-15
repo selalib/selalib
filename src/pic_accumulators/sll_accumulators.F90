@@ -15,6 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> @brief aaaALHWorkInProgressTODO
 
 module sll_accumulators
 #include "sll_working_precision.h"
@@ -30,11 +31,13 @@ module sll_accumulators
      sll_real64 :: q_ne
   end type charge_accumulator_cell_2d
 
+  !> @brief aaaALHWorkInProgressTODO
   type sll_charge_accumulator_2d
      type(sll_cartesian_mesh_2d), pointer :: mesh
      type(charge_accumulator_cell_2d), dimension(:), pointer :: q_acc
   end type sll_charge_accumulator_2d
 
+  !> @brief aaaALHWorkInProgressTODO
   type sll_charge_accumulator_2d_ptr
      type(sll_charge_accumulator_2d), pointer :: q
   end type sll_charge_accumulator_2d_ptr
@@ -82,6 +85,7 @@ module sll_accumulators
      sll_real64 :: Ey_ne
   end type field_accumulator_cell
 
+  !> @brief aaaALHWorkInProgressTODO
   type electric_field_accumulator
      type(sll_cartesian_mesh_2d), pointer :: mesh
      type(field_accumulator_cell), dimension(:), pointer :: e_acc

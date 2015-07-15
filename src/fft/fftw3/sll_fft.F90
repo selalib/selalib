@@ -30,7 +30,8 @@ module sll_fft
   
   type sll_fft_plan
     fftw_plan                        :: fftw
-    sll_int32                        :: style
+    ! aaaALHWorkInProgressTODO sll_int32                        :: style
+    real(kind=f32)                        :: style
     sll_int32                        :: library
     sll_int32                        :: direction
     sll_int32                        :: problem_rank
