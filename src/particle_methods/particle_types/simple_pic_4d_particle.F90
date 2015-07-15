@@ -1,3 +1,6 @@
+!> @file simple_pic_4d_particle.F90
+!> aaaALHWorkInProgressTODO
+
 !**************************************************************
 !  Copyright INRIA
 !  Authors : 
@@ -15,16 +18,17 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @ingroup particle_methods
+! aaaALHWorkInProgressTODO !> @ingroup particle_methods
 
 !> @author MCP ALH
 
 !> @brief Most simple particle model
 
-!> @details Mainly useful to compare against more advanced models. <!-- Defined in
-!> [[selalib:src/particle_methods/particle_types/simple_pic_4d_particle.F90]] --> A group of sll_simple_pic_4d_particle
-!> is a ::sll_simple_pic_4d_group
-!> <!-- [[selalib:src/particle_methods/particle_types/simple_pic_4d_group.F90::sll_simple_pic_4d_group]] -->
+!> @details Mainly useful to compare against more advanced models. A group of sll_simple_pic_4d_particle
+!> is a @ref sll_simple_pic_4d_group
+
+! [[sll_simple_pic_4d_particle]]
+! [[selalib:src/particle_methods/particle_types/simple_pic_4d_group.F90::sll_simple_pic_4d_group]]
 
 module sll_simple_pic_4d_particle_module
 
@@ -38,10 +42,11 @@ module sll_simple_pic_4d_particle_module
 
   ! <<sll_simple_pic_4d_particle>>
 
-  !> @ingroup particle_methods
+  ! aaaALHWorkInProgressTODO !> @ingroup particle_methods
 
-  !> @class sll_simple_pic_4d_particle
+  ! aaaALHWorkInProgressTODO
   type :: sll_simple_pic_4d_particle
+     
      !> cell index in the x dimension (can be outside physical domain)
      sll_int32  :: i_cell_x
 

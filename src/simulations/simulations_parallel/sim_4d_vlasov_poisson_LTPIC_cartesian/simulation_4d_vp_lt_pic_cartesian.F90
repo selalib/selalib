@@ -1,5 +1,7 @@
-!> the base for this development was
-!> [[selalib:src/simulations/simulations_parallel/sim_4d_vlasov_poisson_PIC_cartesian/simulation_4d_vp_pic_cartesian.F90::sll_pic_simulation_4d_cartesian_module]]
+!> @details
+!> The base for this development was \ref sll_pic_simulation_4d_cartesian_module
+
+! [[selalib:src/simulations/simulations_parallel/sim_4d_vlasov_poisson_PIC_cartesian/simulation_4d_vp_pic_cartesian.F90::sll_pic_simulation_4d_cartesian_module]]
 
 module sll_simulation_4d_vp_lt_pic_cartesian_module
 
@@ -9,7 +11,6 @@ module sll_simulation_4d_vp_lt_pic_cartesian_module
 #include "sll_utilities.h"
 #include "sll_accumulators.h" 
 #include "particle_representation.h"
-
 
   use sll_constants
   use sll_simulation_base
