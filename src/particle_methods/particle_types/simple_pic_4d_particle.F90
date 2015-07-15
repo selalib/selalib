@@ -44,7 +44,8 @@ module sll_simple_pic_4d_particle_module
 
   ! aaaALHWorkInProgressTODO !> @ingroup particle_methods
 
-  ! aaaALHWorkInProgressTODO
+  ! aaaALHWorkInProgressTODO cited in group page but not found for references? namespace problem?
+   
   type :: sll_simple_pic_4d_particle
      
      !> cell index in the x dimension (can be outside physical domain)
