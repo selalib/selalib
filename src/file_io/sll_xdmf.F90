@@ -750,4 +750,83 @@ subroutine sll_plot_f_cartesian( iplot,      &
 
 end subroutine sll_plot_f_cartesian
 
+
+!> Plot 2d distribution function for VisIt
+!> @param[in]  iplot      plot counter.
+!> @param[in]  f          function values .
+!> @param[in]  nnodes_x1  nodes number on x1.
+!> @param[in]  nnodes_x2  nodes number on x2.
+!> @param[in]  array_name file name.
+!> @param[in]  mesh_name  file name for mesh
+!> @param[in]  time       Add time value on plot title.
+!> @param[in]  x1         2d-array for x1 (create mesh if provided)
+!> @param[in]  x2         2d-array for x2 (create mesh if provided)
+!> @details
+!> This routine will create a file named array_name_[iplot].xmf
+!> TODO suggestion: merge sll_plot_f and sll_plot_f_cartesian
+ 
+subroutine sll_plot_f( &
+  iplot, &
+  f, &  
+  nnodes_x1, &
+  nnodes_x2,  &
+  array_name, &
+  mesh_name, &
+  time, &
+  x1, &
+  x2)    
+
+  sll_int32,  intent(in) :: iplot
+  sll_real64, intent(in) :: f(:,:)
+  sll_int32,  intent(in) :: nnodes_x1
+  sll_int32,  intent(in) :: nnodes_x2
+  character(len=*), intent(in) :: array_name 
+  character(len=*), intent(in) :: mesh_name 
+  sll_real64, intent(in) :: time
+  sll_real64, intent(in), optional :: x1(:,:)
+  sll_real64, intent(in), optional :: x2(:,:)
+
+  sll_int32 :: file_id
+  sll_int32 :: ierr
+  character(len=4) :: cplot
+  
+  if (present(x1).and.present(x2)) then
+
+
+#ifndef NOHDF5
+    call sll_hdf5_file_create(trim(mesh_name)//"-x1.h5",file_id,ierr)
+    call sll_hdf5_write_array(file_id,x1,"/x1",ierr)
+    call sll_hdf5_file_close(file_id, ierr)
+    call sll_hdf5_file_create(trim(mesh_name)//"-x2.h5",file_id,ierr)
+    call sll_hdf5_write_array(file_id,x2,"/x2",ierr)
+    call sll_hdf5_file_close(file_id, ierr)
+#endif
+
+  end if
+
+  call int2string(iplot,cplot)
+  call sll_xdmf_open( &
+    trim(array_name)//cplot//".xmf", &
+    trim(mesh_name), &
+    nnodes_x1, &
+    nnodes_x2, &
+    file_id, &
+    ierr)
+
+  write(file_id,"(a,f8.3,a)") "<Time Value='",time,"'/>"
+
+  call sll_xdmf_write_array( &
+    trim(array_name)//cplot, &
+    f, &
+    "values", &
+    ierr, &
+    file_id, &
+    "Node")
+    
+  call sll_xdmf_close(file_id,ierr)
+
+end subroutine sll_plot_f
+
+
+
 end module sll_xdmf
