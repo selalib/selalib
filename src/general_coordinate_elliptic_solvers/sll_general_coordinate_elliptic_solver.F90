@@ -3593,49 +3593,42 @@ num_spl1 = es%num_cells1+es%spline_degree1
 num_spl2 = es%num_cells2+es%spline_degree2
 
   
-  if(es%precompute_rhs .eqv. .false.)then
-    SLL_ERROR('set_rho_coefficients_coordinates_elliptic_eq_prototype&
-    &','should not be used as es%precompute_rhs is set to false')             
-  endif
-   
-  if(present(rho_values).and.present(rho_coeff))then
-    SLL_ERROR('set_rho_coefficients_coordinates_elliptic_eq_prototype&
-    &','provide either rho_values or rho_coeff, not both')         
-  endif
-    
-  if(present(rho_values))then
-    if(es%use_cubic_splines)then
-      call compute_cubic_spline_2D( rho_values, es%cubic_spline )
-      call get_coeff_cubic_spline_2d(es%cubic_spline,es%rho_coeff_1d)
-    else
-    SLL_ERROR('set_rho_coefficients_coordinates_elliptic_eq_prototype&
-    &','spline coeff computed only with cubic splines for the moment&
-    & if precompute_rhs is true')                 
-    endif
+if(.not. es%precompute_rhs)then
+  SLL_ERROR('set_rho_coefficients_coordinates_elliptic_eq_prototype','should not be used as es%precompute_rhs is set to false')             
+endif
+ 
+if(present(rho_values).and.present(rho_coeff))then
+  SLL_ERROR('set_rho_coefficients_coordinates_elliptic_eq_prototype','provide either rho_values or rho_coeff, not both')         
+endif
+  
+if(present(rho_values))then
+  if(es%use_cubic_splines)then
+    call compute_cubic_spline_2D( rho_values, es%cubic_spline )
+    call get_coeff_cubic_spline_2d(es%cubic_spline,es%rho_coeff_1d)
   else
-    if(present(rho_coeff))then
-      if(size(rho_coeff,1)<num_spl1)then
-        print *,'#size(rho_coeff,1)=',size(rho_coeff,1)
-        call flush()
-        SLL_ERROR('set_rho_coefficients_coordinates_elliptic_eq_prototype&
-        &','bad size(rho_coeff,1)')
-      endif
-      if(size(rho_coeff,2)<num_spl2)then
-        print *,'#size(rho_coeff,2)=',size(rho_coeff,2)
-        call flush()
-        SLL_ERROR('set_rho_coefficients_coordinates_elliptic_eq_prototype&
-        &','bad size(rho_coeff,2)')
-      endif
-      do j = 1,num_spl2
-        do i = 1,num_spl1
-          es%rho_coeff_1d(i+num_spl1*(j-1)) = rho_coeff(i,j)
-        enddo
-      enddo
-    else
-      SLL_ERROR('set_rho_coefficients_coordinates_elliptic_eq_prototype&
-        &','provide rho_values or rho_coeff')     
-    endif
+  SLL_ERROR('set_rho_coefficients_coordinates_elliptic_eq_prototype','spline coeff computed only with cubic splines for the moment if precompute_rhs is true')                 
   endif
+else
+  if(present(rho_coeff))then
+    if(size(rho_coeff,1)<num_spl1)then
+      print *,'#size(rho_coeff,1)=',size(rho_coeff,1)
+      call flush()
+      SLL_ERROR('set_rho_coefficients_coordinates_elliptic_eq_prototype','bad size(rho_coeff,1)')
+    endif
+    if(size(rho_coeff,2)<num_spl2)then
+      print *,'#size(rho_coeff,2)=',size(rho_coeff,2)
+      call flush()
+      SLL_ERROR('set_rho_coefficients_coordinates_elliptic_eq_prototype','bad size(rho_coeff,2)')
+    endif
+    do j = 1,num_spl2
+      do i = 1,num_spl1
+        es%rho_coeff_1d(i+num_spl1*(j-1)) = rho_coeff(i,j)
+      enddo
+    enddo
+  else
+    SLL_ERROR('set_rho_coefficients_coordinates_elliptic_eq_prototype','provides rho_values or rho_coeff')     
+  endif
+endif
 
 end subroutine set_rho_coefficients_coordinates_elliptic_eq_prototype
 

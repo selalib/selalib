@@ -23,6 +23,7 @@ type(sll_bspline_2d), pointer :: bspline_2d
 
 sll_real64                    :: err1
 sll_real64                    :: err2
+sll_real64                    :: err3
 sll_int32                     :: i
 sll_int32                     :: j
 sll_int32,  parameter         :: d = 3
@@ -185,7 +186,7 @@ subroutine test_process_2d(bc1_type, bc2_type)
   call compute_bspline_2d(bspline_2d, ftau, sl1, sr1, sl2, sr2)
   call cpu_time(t1)
   do j = 1,nstep
-    call interpolate_array_values_2d( bspline_2d, n1, n2, ftau, gtau)
+    call interpolate_array_values_2d( bspline_2d, n1, n2, ftau, gtau, 0, 0)
   end do
   print*, "average error = ", sum(abs(gtau-cos(dpi*tau1)*cos(dpi*tau2)))/(n1*n2)
   print*, "maximum error = ", maxval(abs(gtau-cos(dpi*tau1)*cos(dpi*tau2)))
@@ -201,8 +202,10 @@ subroutine test_process_2d(bc1_type, bc2_type)
   do j = 1,nstep
     call interpolate_array_x2_derivatives_2d( bspline_2d, n1, n2, ftau, gtau)
   end do
-  print*, "average x2 derivatives error = ", sum(abs(gtau+dpi*sin(dpi*tau1)))/(n1*n2)
-  print*, "maximum x2 derivatives error = ", maxval(abs(gtau+dpi*sin(dpi*tau1)))
+  print*, "average x2 derivatives error = ", &
+    sum(abs(gtau+dpi*sin(dpi*tau2)*cos(dpi*tau1)))/(n1*n2)
+  print*, "maximum x2 derivatives error = ", &
+    maxval(abs(gtau+dpi*sin(dpi*tau2)*cos(dpi*tau1)))
   call cpu_time(t4)
 
   print*, ' time spent to compute interpolants             : ', t1-t0
@@ -210,28 +213,43 @@ subroutine test_process_2d(bc1_type, bc2_type)
   print*, ' time spent to interpolate array x1 derivatives : ', t3-t2
   print*, ' time spent to interpolate array x2 derivatives : ', t4-t3
   
-  !call cpu_time(t0)
-  !do j = 1,nstep
-  !  err1 = 0.0_f64
-  !  do i = 1, n
-  !    err1 = err1 + abs(interpolate_value(bspline_1d,x(i))-sin(dpi*x(i))) 
-  !  end do
-  !end do
-  !call cpu_time(t1)
-  !do j = 1,nstep
-  !  err2 = 0.0_f64
-  !  do i = 1, n
-  !    err2 = err2 + abs(interpolate_derivative(bspline_1d,x(i))-dpi*cos(dpi*x(i))) 
-  !  end do
-  !end do
-  !call cpu_time(t2)
-  !
-  !print*, "-------------------------------------------------"
-  !print*, " values error = ", err1 / n
-  !print*, " derivatives error = ", err2 / n
-  !print*, ' time spent in interpolate_value      : ', t1-t0
-  !print*, ' time spent in interpolate_derivative : ', t2-t1
-  !print*, "-------------------------------------------------"
+  call cpu_time(t0)
+  err1 = 0.0_f64
+  do j = 1, n2
+    do i = 1, n1
+      err1 = err1 + &
+        abs(interpolate_value_2d(bspline_2d,tau1(i,j),tau2(i,j),0,0) &
+            -cos(dpi*tau1(i,j))*cos(dpi*tau2(i,j)))
+    end do
+  end do
+  call cpu_time(t1)
+  err2 = 0.0_f64
+  do j = 1, n2
+    do i = 1, n1
+      err2 = err2 + &
+        abs(interpolate_value_2d(bspline_2d,tau1(i,j),tau2(i,j),1,0) &
+            +sin(dpi*tau1(i,j))*cos(dpi*tau2(i,j)))
+    end do
+  end do
+  call cpu_time(t2)
+  err2 = 0.0_f64
+  do j = 1, n2
+    do i = 1, n1
+      err3 = err3 + &
+        abs(interpolate_value_2d(bspline_2d,tau1(i,j),tau2(i,j),0,1) &
+            +sin(dpi*tau2(i,j))*cos(dpi*tau1(i,j)))
+    end do
+  end do
+  call cpu_time(t3)
+  
+  print*, "-------------------------------------------------"
+  print*, " values error         = ", err1 / (n1*n2)
+  print*, " x1 derivatives error = ", err2 / (n1*n2)
+  print*, " x2 derivatives error = ", err3 / (n1*n2)
+  print*, ' time spent in interpolate_value         : ', t1-t0
+  print*, ' time spent in interpolate_x1_derivative : ', t2-t1
+  print*, ' time spent in interpolate_x2_derivative : ', t3-t2
+  print*, "-------------------------------------------------"
 
   deallocate(tau1, tau2)
   deallocate(ftau, gtau)
