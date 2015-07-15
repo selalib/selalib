@@ -39,7 +39,9 @@ module sll_simple_pic_4d_group_module
 
   implicit none
 
-  !> Group of @ref sll_simple_pic_4d_particle <!-- [[file:simple_pic_4d_particle.F90::sll_simple_pic_4d_particle]] -->
+  !> Group of @ref sll_simple_pic_4d_particle
+
+  ! [[file:simple_pic_4d_particle.F90::sll_simple_pic_4d_particle]]
   
   type, extends(sll_particle_group_base) :: sll_simple_pic_4d_group
 
