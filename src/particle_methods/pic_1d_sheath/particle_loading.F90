@@ -39,7 +39,8 @@ module pic_1d_particle_loading
     use sll_constants
     use sll_collective
     use sll_particle_1d_description
-
+    use sll_sobol
+    use sll_prob
     implicit none
 
     !Definitions for different loadings

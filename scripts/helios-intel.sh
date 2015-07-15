@@ -11,7 +11,7 @@
 . /etc/profile.d/00-modules.sh
 module purge
 #module load cmake intel
-module load intelmpi hdf5_p fftw
+module load intelmpi hdf5_p fftw srun
 export FC=ifort
 export CC=icc
 export CXX=icpc

@@ -1,3 +1,0 @@
-
-
-diff3 -m ./probability_lgpl.f90 ./prob_wo.f90 ./prob.f90  > probability_lgpl.f90
