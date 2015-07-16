@@ -244,6 +244,11 @@ program sim2d_gc_hex_splines
 
      if (model_name.eq."GC") then
         call hex_diagnostics_gc(rho_tn,t,mesh,uxn,uyn,nloops,spline_degree,tmax,cells_min,cells_max)
+	call int2string(nloops,filenum)
+     	filename  = "guiding_center_rho"//trim(filenum)
+     	call write_field_hex_mesh_xmf(mesh, rho_tn1, trim(filename))
+     	filename  = "guiding_center_phi"//trim(filenum)
+     	call write_field_hex_mesh_xmf(mesh, phi, trim(filename))
      elseif (model_name.eq."CIRCULAR") then
         call hex_diagnostics_circ(rho_tn, t, &
              mesh, nloops, spline_degree, &
@@ -344,10 +349,10 @@ program sim2d_gc_hex_splines
            call hex_diagnostics_gc(rho_tn,t,mesh,uxn,uyn,nloops,spline_degree,tmax,cells_min,cells_max)
            if (count == 10.and.nloops<10000.and.num_cells == cells_max) then
               call int2string(nloops,filenum)
-              filename  = "center_guide_rho"//trim(filenum)
+              filename  = "guiding_center_rho"//trim(filenum)
               call write_field_hex_mesh_xmf(mesh, rho_tn1, trim(filename))
               if (model_name.eq."GC") then
-                 filename  = "center_guide_phi"//trim(filenum)
+                 filename  = "guiding_center_phi"//trim(filenum)
                  call write_field_hex_mesh_xmf(mesh, phi, trim(filename))
               end if
               count = 0

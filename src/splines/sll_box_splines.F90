@@ -35,7 +35,12 @@ type sll_box_spline_2d
    sll_real64, dimension(:), pointer :: coeffs !< Spline coefficients
 end type sll_box_spline_2d
 
-
+!> @brief Generic sub-routine defined for 2D box spline types.
+!> Deallocates the memory associated with the given box spline object.
+!> @param[inout] spline_object.
+interface sll_delete
+   module procedure delete_box_spline_2d
+end interface sll_delete
 
 contains  ! ****************************************************************
 
@@ -84,9 +89,9 @@ contains  ! ****************************************************************
   !> @param[in] deg integer representing the box spline degree
   !> @param[in] spline box spline type element, containting the mesh, bc, ...
   subroutine compute_coeff_box_spline_2d( data, deg, spline )
-    sll_real64, dimension(:), intent(in), target :: data
     sll_int32, intent(in)                        :: deg
-    type(sll_box_spline_2d), pointer, intent(in) :: spline
+    sll_real64, dimension(:), target,  intent(in) :: data
+    type(sll_box_spline_2d),  pointer, intent(in) :: spline
     sll_int32  :: bc
     sll_int32  :: bc_selector
 
@@ -146,8 +151,8 @@ contains  ! ****************************************************************
   !> @param[in] spline box spline type element, containting the mesh, bc, ...
   subroutine compute_coeff_box_spline_2d_diri( data, deg, spline )
     sll_real64, dimension(:), intent(in), target  :: data  ! data to be fit
-    type(sll_box_spline_2d), pointer              :: spline
     sll_int32, intent(in)                         :: deg
+    type(sll_box_spline_2d),  intent(in), pointer :: spline
     sll_int32  :: num_pts_tot
     sll_int32  :: k1_ref, k2_ref
     sll_int32  :: k
@@ -202,9 +207,9 @@ contains  ! ****************************************************************
   !> @param[in] deg integer representing the box spline degree
   !> @param[in] spline box spline type element, containting the mesh, bc, ...
   subroutine compute_coeff_box_spline_2d_prdc( data, deg, spline )
-    sll_real64, dimension(:), intent(in), target :: data  ! data to be fit
-    type(sll_box_spline_2d), pointer             :: spline
     sll_int32, intent(in)                        :: deg
+    sll_real64, dimension(:), intent(in), target  :: data  ! data to be fit
+    type(sll_box_spline_2d),  intent(in), pointer :: spline
     sll_int32  :: num_pts_tot
     sll_int32  :: i
 
@@ -225,9 +230,9 @@ contains  ! ****************************************************************
   !> @param[in] deg integer representing the box spline degree
   !> @param[in] spline box spline type element, containting the mesh, bc, ...
   subroutine compute_coeff_box_spline_2d_neum( data, deg, spline )
-    sll_real64, dimension(:), intent(in), target :: data  ! data to be fit
     sll_int32, intent(in)                        :: deg
-    type(sll_box_spline_2d), pointer             :: spline
+    sll_real64, dimension(:), intent(in), target  :: data  ! data to be fit
+    type(sll_box_spline_2d),  intent(in), pointer :: spline
     sll_int32  :: num_pts_tot
     sll_int32  :: i
 
@@ -317,26 +322,26 @@ contains  ! ****************************************************************
        val = 0._f64
        do K = -deg, CEILING(u)-1
           if ((x1_in.eq.0.).and.(x2_in.eq.0.8)) then
-             print *, " K = ", K
+!             print *, " K = ", K
           end if
           do L = -deg, CEILING(v)-1
              if ((x1_in.eq.0.).and.(x2_in.eq.0.8)) then
-                print *, "    L = ", L
+!                print *, "    L = ", L
              end if
              do i = 0,min(deg+K, deg+L)
                 if ((x1_in.eq.0.).and.(x2_in.eq.0.8)) then
-                   print *, "      i = ", i
+!                   print *, "      i = ", i
                 end if
                 coeff = (-1.0_f64)**(K+L+i)* &
                      choose(deg,i-K)*     &
                      choose(deg,i-L)*     &
                      choose(deg,i)
                 if ((x1_in.eq.0.).and.(x2_in.eq.0.8)) then
-                   print *, "      coeff = ", coeff
+ !                  print *, "      coeff = ", coeff
                 end if
                 do d = 0,deg-1
                    if ((x1_in.eq.0.).and.(x2_in.eq.0.8)) then
-                      print *, "          d = ", d
+  !                    print *, "          d = ", d
                    end if
                    aux=abs(v-L-u+K)
                    aux2=(u-K+v-L-aux)/2._f64
@@ -349,7 +354,7 @@ contains  ! ****************************************************************
                         * aux**(deg-1-d) &
                         * aux2**(2*deg-1+d)
                    if ((x1_in.eq.0.).and.(x2_in.eq.0.8)) then
-                      print *, "            aux, aux2, val = ", aux, aux2, val
+   !                   print *, "            aux, aux2, val = ", aux, aux2, val
                    end if
                 end do
              end do
@@ -406,7 +411,7 @@ contains  ! ****************************************************************
   !> @param[in] deg real containing the degree of the spline to be computed
   !> @return the value of the box spline at (x1,x2)
   function compute_box_spline(spline, x1, x2, deg) result(val)
-    type(sll_box_spline_2d), pointer    :: spline
+    type(sll_box_spline_2d), pointer, intent(in):: spline
     sll_real64, intent(in) :: x1
     sll_real64, intent(in) :: x2
     sll_int32,  intent(in) :: deg
@@ -980,6 +985,20 @@ contains  ! ****************************************************************
 
   end subroutine write_connectivity
 
+  !> @brief Generic sub-routine defined for 2D box spline types.
+  !> Deallocates the memory associated with the given box spline object.
+  !> @param[inout] spline_object.
+  subroutine delete_box_spline_2d(spline)
+    type(sll_box_spline_2d),  intent(inout), pointer :: spline
+    sll_int32 :: ierr
 
+    if( .not. associated(spline) ) then
+       print *, 'delete_box_spline_2D(): passed spline is not associated'
+       STOP
+    end if
+    call delete(spline%mesh)
+    SLL_DEALLOCATE(spline%coeffs, ierr)
+    SLL_DEALLOCATE(spline, ierr)
+  end subroutine delete_box_spline_2d
 
 end module sll_box_splines
