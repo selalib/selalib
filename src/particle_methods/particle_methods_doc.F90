@@ -14,7 +14,9 @@
 
   ! This "brief" appears in the Doxygen list of "Libraries" at [[selalib:doc/build/html/doxygen/html/modules.html]].
   
-  !> @brief Centralized location for all particle methods <!-- in directory [[selalib:src/particle_methods]] -->
+  !> @brief Centralized location for all particle methods
+
+  ! in directory [[selalib:src/particle_methods]]
   
   ! Local Variables:
   ! mode:F90
