@@ -124,6 +124,10 @@ module sll_simulation_2d_guiding_center_curvilinear_module
    sll_int32  :: freq_diag
    sll_int32  :: freq_diag_time
    character(len=256)      :: thdiag_filename
+   character(len=256)      :: thdiagp_filename
+   character(len=256)      :: mesh_name
+   character(len=256)      :: f_name
+   character(len=256)      :: phi_name
 
    !time_loop
    sll_int32 :: time_loop_case
@@ -468,8 +472,16 @@ contains
       write(str_num_run, *) num_run
       str_num_run = adjustl(str_num_run) 
       sim%thdiag_filename = "thdiag_"//trim(str_num_run)//".dat"
+      sim%thdiagp_filename = "thdiagp_"//trim(str_num_run)//".dat"
+      sim%mesh_name = "curvilinear_"//trim(str_num_run)
+      sim%f_name = "f_"//trim(str_num_run)//"_"
+      sim%phi_name = "phi_"//trim(str_num_run)//"_"
     else      
       sim%thdiag_filename = "thdiag.dat"
+      sim%thdiagp_filename = "thdiagp.dat"
+      sim%mesh_name = "curvilinear"
+      sim%f_name = "f_"
+      sim%phi_name = "phi_"
     endif
 
 
@@ -1440,6 +1452,7 @@ contains
     sll_int32 :: thdiag_id
     sll_int32 :: thdiagp_id
     sll_int32 :: iplot
+    sll_real64 :: time
     
     Nc_eta1 = sim%mesh_2d%num_cells1
     Nc_eta2 = sim%mesh_2d%num_cells2
@@ -1549,8 +1562,18 @@ contains
     thdiagp_id=thdiag_id+1
     call sll_ascii_file_create(sim%thdiag_filename, thdiag_id, ierr)
     !call sll_ascii_file_create('thdiag.dat', thdiag_id, ierr)
-    call sll_ascii_file_create('thdiagp.dat', thdiagp_id, ierr)
+    call sll_ascii_file_create(sim%thdiagp_filename, thdiagp_id, ierr)
     iplot = 0
+
+
+    !initialize mesh
+    call sll_plot_curvilinear_init( &
+      sim%mesh_2d, &
+      sim%transformation, &
+      sim%mesh_name )    
+
+
+
 
     do step=1,nb_step+1
       if(modulo(step-1,sim%freq_diag)==0)then 
@@ -1591,7 +1614,7 @@ contains
       
       
       
-      
+      time = real(step-1,f64)*dt
       if(modulo(step-1,sim%freq_diag_time)==0)then
         call time_history_diagnostic_collela( &
           thdiag_id , &    
@@ -1616,8 +1639,24 @@ contains
       endif            
 #ifndef NOHDF5
       if(modulo(step-1,sim%freq_diag)==0)then
-        call plot_f_curvilinear(iplot,f,sim%mesh_2d,sim%transformation)
-        call plot_phi_curvilinear(iplot,phi,sim%mesh_2d,sim%transformation)
+        call sll_plot_f( &
+          iplot, &
+          f, &  
+          Nc_eta1+1, &
+          Nc_eta2+1,  &
+          sim%f_name, &
+          sim%mesh_name, &
+          time )    
+        call sll_plot_f( &
+          iplot, &
+          phi, &  
+          Nc_eta1+1, &
+          Nc_eta2+1,  &
+          sim%phi_name, &
+          sim%mesh_name, &
+          time )    
+        !call plot_f_curvilinear(iplot,f,sim%mesh_2d,sim%transformation)
+        !call plot_phi_curvilinear(iplot,phi,sim%mesh_2d,sim%transformation)
         iplot = iplot+1  
       endif            
 #endif  
@@ -2683,5 +2722,69 @@ subroutine sll_DSG( eta1_min,eta1_max, eta2_min,eta2_max,n_eta1,n_eta2, f )
       Npts2, &
       delta2)
   end function compute_integral_trapezoid_2d
+
+  subroutine sll_plot_curvilinear_init( &
+    mesh_2d, &
+    transf, &
+    mesh_name )
+    
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
+    class(sll_coordinate_transformation_2d_base), pointer :: transf
+    character(len=*), intent(in) :: mesh_name 
+    
+    sll_real64, allocatable :: x1(:,:)
+    sll_real64, allocatable :: x2(:,:)
+    sll_real64, allocatable :: f(:,:)
+    sll_int32 :: ierr
+    sll_int32 :: i
+    sll_int32 :: j
+    sll_int32 :: num_pts1
+    sll_int32 :: num_pts2
+    sll_real64 :: eta1_min
+    sll_real64 :: eta1_max
+    sll_real64 :: eta2_min
+    sll_real64 :: eta2_max
+    sll_real64 :: delta1
+    sll_real64 :: delta2
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+
+    num_pts1 = mesh_2d%num_cells1+1
+    num_pts2 = mesh_2d%num_cells2+1
+    eta1_min = mesh_2d%eta1_min
+    eta1_max = mesh_2d%eta1_max
+    eta2_min = mesh_2d%eta2_min
+    eta2_max = mesh_2d%eta2_max
+    delta1 = mesh_2d%delta_eta1
+    delta2 = mesh_2d%delta_eta2
+    
+    SLL_ALLOCATE(x1(num_pts1,num_pts2),ierr)
+    SLL_ALLOCATE(x2(num_pts1,num_pts2),ierr)
+    SLL_ALLOCATE(f(num_pts1,num_pts2),ierr)
+    
+    f = 0._f64
+    
+    do j=1,num_pts2
+      eta2 = eta2_min+real(j-1,f64)*delta2
+      do i=1,num_pts1
+        eta1 = eta1_min+real(i-1,f64)*delta1
+        x1(i,j) = transf%x1(eta1,eta2)
+        x2(i,j) = transf%x2(eta1,eta2) 
+      enddo
+    enddo
+    call sll_plot_f( &
+      0, &
+      f, &  
+      num_pts1, &
+      num_pts2,  &
+      "f", & !dummy (for sll_plt_f, we should be able to
+      !initialize only the mesh TODO)
+      mesh_name, &
+      0._f64, &
+      x1, &
+      x2)    
+        
+  end subroutine sll_plot_curvilinear_init
+
 
 end module sll_simulation_2d_guiding_center_curvilinear_module
