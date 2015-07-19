@@ -1,5 +1,5 @@
 !> @file simple_pic_4d_particle.F90
-!> aaaALHWorkInProgressTODO
+!> AAA_ALH_TODO
 
 !**************************************************************
 !  Copyright INRIA
@@ -18,7 +18,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-! aaaALHWorkInProgressTODO !> @ingroup particle_methods
+! AAA_ALH_TODO !> @ingroup particle_methods
 
 !> @author MCP ALH
 
@@ -42,9 +42,9 @@ module sll_simple_pic_4d_particle_module
 
   ! <<sll_simple_pic_4d_particle>>
 
-  ! aaaALHWorkInProgressTODO !> @ingroup particle_methods
+  ! AAA_ALH_TODO !> @ingroup particle_methods
 
-  ! aaaALHWorkInProgressTODO cited in group page but not found for references? namespace problem?
+  ! AAA_ALH_TODO cited in group page but not found for references? namespace problem?
    
   type :: sll_simple_pic_4d_particle
      

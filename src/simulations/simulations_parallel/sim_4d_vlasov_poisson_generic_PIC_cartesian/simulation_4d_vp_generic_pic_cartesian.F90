@@ -95,14 +95,14 @@ module sll_simulation_4d_vp_generic_pic_cartesian_module
      sll_real64, dimension(1:6) :: elec_params
      !> @}
 
-     !> Underlying 2D cartesian mesh aaaALHWorkInProgressTODO \ref sll_cartesian_mesh_2d
+     !> Underlying 2D cartesian mesh AAA_ALH_TODO \ref sll_cartesian_mesh_2d
      ! [[selalib:src/meshes/sll_cartesian_meshes.F90::sll_cartesian_mesh_2d]]
      type ( sll_cartesian_mesh_2d ),    pointer :: mesh_2d
 
      !> called q_accumulator in Sever simulation
      type(sll_charge_accumulator_2d_ptr), dimension(:), pointer     :: q_accumulator_ptr
 
-     !> aaaALHWorkInProgressTODO ::sll_charge_accumulator_2d
+     !> AAA_ALH_TODO ::sll_charge_accumulator_2d
      type(sll_charge_accumulator_2d),     dimension(:), pointer     :: charge_accumulator
      type(electric_field_accumulator),                  pointer     :: E_accumulator
      logical :: use_lt_pic_scheme        ! if false then use pic scheme
