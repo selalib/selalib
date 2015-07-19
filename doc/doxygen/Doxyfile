@@ -2052,7 +2052,7 @@ INCLUDE_FILE_PATTERNS  =
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
 PREDEFINED             =
-###aaaALHWorkInProgressTODO sll_int32=integer(kind=4)						\
+### AAA_ALH_TODO sll_int32=integer(kind=4)						\
 ###                         sll_real64=real(kind=8)						\
 ###                         sll_int64=integer(kind=8)						\
 ###                         sll_real32=real(kind=4)						\
