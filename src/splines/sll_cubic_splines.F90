@@ -34,6 +34,7 @@ module sll_cubic_splines
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
+#include "sll_errors.h"
   use sll_tridiagonal  ! Used for 'slow' algorithm implementation
   use sll_boundary_condition_descriptors
   implicit none
@@ -286,10 +287,12 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     select case (bc_type)
     case (SLL_PERIODIC)
        if( present(sl) .or. present(sr) ) then
-          print *, 'new_cubic_spline_1D(): it is not allowed to specify the ',&
-               'end ifin the case of periodic boundary conditions. ', &
-               'Exiting program...'
-          STOP 'new_cubic_spline_1D'
+!          print *, 'new_cubic_spline_1D(): it is not allowed to specify the ',&
+!               'end ifin the case of periodic boundary conditions. ', &
+!               'Exiting program...'
+!          STOP 'new_cubic_spline_1D'
+         SLL_WARNING('new_cubic_spline_1D&
+         ','values of sl and sr are not taken into account')
        else
           ! Assign some value, but this value should never be used in the
           ! periodic case anyway.
@@ -1367,10 +1370,13 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
           present(const_slope_x1_min) .or. present(const_slope_x1_max) .or. &
           present(const_slope_x2_min) .or. present(const_slope_x2_max) )then
 
-          print *, 'new_cubic_spline_2D(): it is not allowed to specify the end', &
-               'slopes in the case of doubly periodic boundary conditions.', &
-               'Exiting program...'
-          STOP 'new_cubic_spline_2D'
+!          print *, 'new_cubic_spline_2D(): it is not allowed to specify the end', &
+!               'slopes in the case of doubly periodic boundary conditions.', &
+!               'Exiting program...'
+!          STOP 'new_cubic_spline_2D'
+          SLL_WARNING('new_cubic_spline_2D&
+         ','values of slopes are not taken into account&
+         as we are in periodic-periodic')
        else
           new_cubic_spline_2d%x1_min_slopes => null()
           new_cubic_spline_2d%x1_max_slopes => null()
@@ -1386,11 +1392,15 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
        if( &
           present(x2_min_slopes) .or. present(x2_max_slopes) .or. &
           present(const_slope_x2_min) .or. present(const_slope_x2_max) ) then
-          print *, 'new_cubic_spline_2D(): hermite-periodic case, it is not ', &
-               'allowed to specify the end slopes in the case of periodic ', &
-               'boundary conditions.', &
-               'Exiting program...'
-          STOP 'new_cubic_spline_2D'
+!          print *, 'new_cubic_spline_2D(): hermite-periodic case, it is not ', &
+!               'allowed to specify the end slopes in the case of periodic ', &
+!               'boundary conditions.', &
+!               'Exiting program...'
+!          STOP 'new_cubic_spline_2D'
+         SLL_WARNING('new_cubic_spline_2D&
+         ','values of slopes in x2 are not taken into account&
+         as we are periodic in x2')
+
        end if
        if( present(const_slope_x1_min) .and. present(x1_min_slopes) ) then
           print *, 'new_cubic_spline_2D(): hermite-periodic-case, it is not ', &
@@ -1464,6 +1474,10 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
                'boundary conditions.', &
                'Exiting program...'
           STOP 'new_cubic_spline_2D'
+         SLL_WARNING('new_cubic_spline_2D&
+         ','values of slopes in x1 are not taken into account&
+         as we are periodic in x1')
+
        end if
        if( present(const_slope_x2_min) .and. present(x2_min_slopes) ) then
           print *, 'new_cubic_spline_2D(): periodic-hermite case, it is not ', &

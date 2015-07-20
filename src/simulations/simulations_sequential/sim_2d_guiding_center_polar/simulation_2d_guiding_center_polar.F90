@@ -413,7 +413,9 @@ contains
           x2_min, &
           x2_max, &
           SLL_HERMITE, &
-          SLL_PERIODIC)
+          SLL_PERIODIC, &
+          const_eta1_min_slope = 0._f64, & !to prevent problem on the boundary
+          const_eta1_max_slope = 0._f64)
         A2_interp2d => new_cubic_spline_interpolator_2d( &
           Nc_x1+1, &
           Nc_x2+1, &
@@ -432,7 +434,9 @@ contains
           Nc_x1+1, &
           x1_min, &
           x1_max, &
-          SLL_HERMITE)
+          SLL_HERMITE, &
+          slope_left = 0._f64, &
+          slope_right = 0._f64)
       case default
         print *,'#bad A_interp_case',A_interp_case
         print *,'#not implemented'
@@ -450,7 +454,9 @@ contains
           x2_min, &
           x2_max, &
           SLL_HERMITE, &
-          SLL_PERIODIC)         
+          SLL_PERIODIC, &
+          const_eta1_min_slope = 0._f64, & !to prevent problem on the boundary
+          const_eta1_max_slope = 0._f64)         
       case default
         print *,'#bad phi_interp2d_case',phi_interp2d_case
         print *,'#not implemented'
