@@ -160,9 +160,9 @@ contains
                           
     call int2string( iplot, fin )
     open(file_id, file = trim(root_path)//plot_name//'_'//fin//'.dat')
-    write (file_id,*)"distribution moments"
+    write (file_id,*)"#distribution moments"
     write (file_id,*)  "#Time steps:", iplot
-    write(file_id,*) "space_step                  " ,"position                    ","density                      ","velocity                   ","kinetic_energy               "
+    write(file_id,*) "node_index                  " ,"x                    ","n                      ","u                   ","nke               "
   
     do i=1,self%nx
       write(file_id,*)  i,x(i),self%n(i),self%nu(i),self%nke(i)
