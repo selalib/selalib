@@ -13,10 +13,11 @@
       tsteps = 150
       sdeg   = 3
       femp   = 5
+      deltaf   = .FALSE.
       /
-&params
+&general_params
       scenario = "landau"
       gnuplot_inline_output_user = .FALSE.
-      deltaf   = .FALSE.
       nstreams = 1
+      frequency_of_printing = 1
       /
