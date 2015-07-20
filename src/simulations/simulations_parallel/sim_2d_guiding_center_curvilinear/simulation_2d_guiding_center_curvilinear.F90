@@ -886,7 +886,11 @@ contains
           eta2_min, &
           eta2_max, &
           sim%bc_interp2d_eta1, &
-          sim%bc_interp2d_eta2)
+          sim%bc_interp2d_eta2, &
+          const_eta1_min_slope = 0._f64, & 
+          const_eta1_max_slope = 0._f64, &
+          const_eta2_min_slope = 0._f64, &
+          const_eta2_max_slope = 0._f64 )
       case ("SLL_HERMITE")
         print*,"#f interpolation SLL_HERMITE"
         sim%f_interp2d => new_hermite_interpolator_2d( &
@@ -921,7 +925,11 @@ contains
           eta2_min, &
           eta2_max, &
           sim%bc_interp2d_eta1, &
-          sim%bc_interp2d_eta2)
+          sim%bc_interp2d_eta2, &
+          const_eta1_min_slope = 0._f64, & 
+          const_eta1_max_slope = 0._f64, &
+          const_eta2_min_slope = 0._f64, &
+          const_eta2_max_slope = 0._f64 )
       case ("SLL_HERMITE")
         print*,"#rho interpolation SLL_HERMITE"
         interp_rho => new_hermite_interpolator_2d( &
@@ -974,7 +982,11 @@ contains
           eta2_min, &
           eta2_max, &
           sim%bc_interp2d_eta1, &
-          sim%bc_interp2d_eta2)
+          sim%bc_interp2d_eta2, &
+          const_eta1_min_slope = 0._f64, & 
+          const_eta1_max_slope = 0._f64, &
+          const_eta2_min_slope = 0._f64, &
+          const_eta2_max_slope = 0._f64 )
        print*,"#A2_2d interpolation SLL_CUBIC_SPLINES"   
         sim%A2_interp2d => new_cubic_spline_interpolator_2d( &
           Nc_eta1+1, &
@@ -984,29 +996,41 @@ contains
           eta2_min, &
           eta2_max, &
           sim%bc_interp2d_eta1, &
-          sim%bc_interp2d_eta2)  
+          sim%bc_interp2d_eta2, &  
+          const_eta1_min_slope = 0._f64, & 
+          const_eta1_max_slope = 0._f64, &
+          const_eta2_min_slope = 0._f64, &
+          const_eta2_max_slope = 0._f64 )
        print*,"#A1_1d interpolation SLL_CUBIC_SPLINES"   
         sim%A1_interp1d_x1 => new_cubic_spline_interpolator_1d( &
           Nc_eta1+1, &
           eta1_min, &
           eta1_max, &
-          sim%bc_interp2d_eta1)
+          sim%bc_interp2d_eta1, &
+          slope_left = 0._f64, &
+          slope_right = 0._f64)
         sim%A1_interp1d_x2 => new_cubic_spline_interpolator_1d( &
           Nc_eta2+1, &
           eta2_min, &
           eta2_max, &
-          sim%bc_interp2d_eta2)
+          sim%bc_interp2d_eta2, &
+          slope_left = 0._f64, &
+          slope_right = 0._f64)
        print*,"#A2_1d interpolation SLL_CUBIC_SPLINES"     
         sim%A2_interp1d_x1 => new_cubic_spline_interpolator_1d( &
           Nc_eta1+1, &
           eta1_min, &
           eta1_max, &
-          sim%bc_interp2d_eta1)
+          sim%bc_interp2d_eta1, &
+          slope_left = 0._f64, &
+          slope_right = 0._f64)
         sim%A2_interp1d_x2 => new_cubic_spline_interpolator_1d( &
           Nc_eta2+1, &
           eta2_min, &
           eta2_max, &
-          sim%bc_interp2d_eta2)
+          sim%bc_interp2d_eta2, &
+          slope_left = 0._f64, &
+          slope_right = 0._f64)
       case default
         print *,'#bad A_interp_case',A_interp_case
         print *,'#not implemented'
@@ -1025,7 +1049,11 @@ contains
           eta2_min, &
           eta2_max, &
           sim%bc_interp2d_eta1, &
-          sim%bc_interp2d_eta2)         
+          sim%bc_interp2d_eta2, &
+          const_eta1_min_slope = 0._f64, & 
+          const_eta1_max_slope = 0._f64, &
+          const_eta2_min_slope = 0._f64, &
+          const_eta2_max_slope = 0._f64 )
       case default
         print *,'#bad phi_interp2d_case',phi_interp2d_case
         print *,'#not implemented'
@@ -1039,7 +1067,9 @@ contains
           Nc_eta1+1, &
           eta1_min, &
           eta1_max, &
-          sim%bc_interp2d_eta1)
+          sim%bc_interp2d_eta1, &
+          slope_left = 0._f64, &
+          slope_right = 0._f64)
       case ("SLL_HERMITE")
         sim%f_interp1d_x1 => new_hermite_interpolator_1d( &
           Nc_eta1+1, &
@@ -1062,7 +1092,9 @@ contains
           Nc_eta2+1, &
           eta2_min, &
           eta2_max, &
-          sim%bc_interp2d_eta2)
+          sim%bc_interp2d_eta2, &
+          slope_left = 0._f64, &
+          slope_right = 0._f64)
       case ("SLL_HERMITE")
         sim%f_interp1d_x2 => new_hermite_interpolator_1d( &
           Nc_eta2+1, &
@@ -1070,7 +1102,7 @@ contains
           eta2_max, &
           hermite_degree1, &          
           SLL_HERMITE_1d_C0, &
-          sim%bc_interp2d_eta2) 
+          sim%bc_interp2d_eta2 )
       case default
         print *,'#bad f_interp1d_x2_case',f_interp1d_x2_case
         print *,'#not implemented'
