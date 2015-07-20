@@ -99,7 +99,8 @@ module sll_module_simulation_pic1d1v_vp_periodic
     type(sll_particle_1d_group)           :: species(10)
     sll_real64 :: kineticenergy_offset, impulse_offset
     sll_real64 :: initial_fem_inhom , fem_inhom
-    sll_int64    ::  fastest_particle_idx
+    sll_int64  :: fastest_particle_idx
+    sll_int32  :: frequency_of_printing ! number of timesteps needed to generate one output_file 
     sll_real64, allocatable:: eval_solution(:)
     sll_real64,  allocatable:: particleposition(:)
     sll_real64,  allocatable :: particlespeed(:)
@@ -274,8 +275,9 @@ contains
     sll_int32 ::  sdeg
     sll_int32 ::  nmark
     sll_int32 ::  nstreams 
-    sll_int32  ::  femp
-
+    sll_int32 ::  femp
+    sll_int32 ::  frequency_of_printing
+    
     sll_real64 :: lalpha
     sll_real64 :: lmode
     sll_real64 :: tstepw
@@ -291,11 +293,11 @@ contains
     
     
     ! General parameters
-    namelist /params/ scenario, gnuplot_inline_output_user, deltaf, nstreams
+    namelist /params/ scenario, gnuplot_inline_output_user,  nstreams,frequency_of_printing
     
     ! Numerical parameters
     namelist /numerical_params/ nmark, ppusher, psolver, tstepw, tsteps, sdeg,&
-      femp
+      femp,deltaf
     
     ! Landau parameters
     namelist /landau_params/ lalpha, lmode, pi_unit, interval_a, interval_b
@@ -339,7 +341,7 @@ contains
     sim%sdeg=sdeg
     sim%tsteps=tsteps
     sim%femp=femp
-
+    sim%frequency_of_printing=frequency_of_printing
     sim%ppusher_int= match_enumeration('ppusher' ,sim%ppusher) 
     sim%psolver_int= match_enumeration('psolver' ,sim%psolver)
     sim%scenario_int= match_enumeration('scenario' ,sim%scenario)
@@ -519,6 +521,11 @@ contains
         
 !---------------------------### Main Loop
         time = 0.0_f64
+        nx=floor(sqrt(sim%nmark/10.0_f64))+1
+        nv=nx
+        call phase_space_distribution%initialize(sim%interval_a,sim%interval_b,nx ,& 
+        minval(sim%species(1)%particle%vx), maxval(sim%species(1)%particle%vx),nv)  
+        
         do timestep=1, sim%tsteps
         
             ! Compute time instant
@@ -530,20 +537,16 @@ contains
             ! Write currrent phase-space to file
            
 !            call sim%pic1d_write_phasespace( timestep )
-            nx=floor(sqrt(sim%nmark/10.0_f64))+1
-            nv=nx
+
             
-            call phase_space_distribution%initialize(sim%interval_a-1,sim%interval_b+1,nx ,minval(sim%species(1)%particle%vx), maxval(sim%species(1)%particle%vx),nv)
-            
-            call phase_space_distribution%compute_f(sim%species(1)%particle%dx, sim%species(1)%particle%vx, &
+            if (mod(timestep-1,sim%frequency_of_printing)==0) then
+                            
+                 call phase_space_distribution%compute_f(sim%species(1)%particle%dx, sim%species(1)%particle%vx, &
                 sim%species(1)%particle%weight)
-            call phase_space_distribution%print_f('myversion',timestep)
-            call phase_space_distribution%compute_moments()
-            call phase_space_distribution%print_moments('my_version_moments',timestep,sim%root_path)
-            DEALLOCATE(phase_space_distribution%f)
-            DEALLOCATE(phase_space_distribution%n)
-            DEALLOCATE(phase_space_distribution%nu)
-            DEALLOCATE(phase_space_distribution%nke)
+                 call phase_space_distribution%print_f('distribution_',timestep)
+                 call phase_space_distribution%compute_moments()
+                 call phase_space_distribution%print_moments('moment_output',timestep,sim%root_path)
+           end if  
             ! Gnuplot real-time plots
             if (gnuplot_now) then
                 call particles_center_gnuplot_inline(pic_1d_allparticlepos(sim%species(1:num_species),sim%nmark), &
@@ -627,7 +630,9 @@ contains
                 call sll_set_time_mark(tstop)
                 print *, "Remaining Time: " , (sll_time_elapsed_between(tstart,tstop)/timestep)*real(sim%tsteps-timestep,i64)
             endif
-
+            phase_space_distribution%vmin = minval(sim%species(1)%particle%vx)
+            phase_space_distribution%vmax = maxval(sim%species(1)%particle%vx)
+   !         print *,"min and max values of velocity:",phase_space_distribution%vmin,phase_space_distribution%vmax
 
         enddo
 
