@@ -16,7 +16,7 @@
   
   !> @brief Centralized location for all particle methods
 
-  ! in directory [[selalib:src/particle_methods]]
+  ! this is directory [[selalib:src/particle_methods]]
   
   ! Local Variables:
   ! mode:F90
