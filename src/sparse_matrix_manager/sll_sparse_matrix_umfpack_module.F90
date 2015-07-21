@@ -509,7 +509,10 @@ contains
                         ! resizing the array
                         lpi_size(1) = SIZE(api_columns, 1)
                         lpi_size(2) = SIZE(api_columns, 2)
-                        if (lpi_size(2) < api_columns(li_A_1, 0)+1) then
+                            
+                        do while (SIZE(api_columns, 2) < api_columns(li_A_1, 0)+1)
+
+                        !if (lpi_size(2) < api_columns(li_A_1, 0)+1) then
                             ALLOCATE(lpi_columns(lpi_size(1), 0:lpi_size(2)-1))
                             lpi_columns = api_columns
 
@@ -519,7 +522,8 @@ contains
                             api_columns(1:lpi_size(1), 0:lpi_size(2)-1) = lpi_columns(1:lpi_size(1), 0:lpi_size(2)-1)
 
                             DEALLOCATE(lpi_columns)
-                        end if
+                        enddo
+                        !end if
                         !print *,'api_columns(li_A_1,0)=',api_columns(li_A_1,0)
                         !print *,'lpi_size(2)=',lpi_size(2)
                         call flush()
