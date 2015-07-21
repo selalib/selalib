@@ -1,7 +1,8 @@
-!> @ingroup particle_methods
+  !> @ingroup particle_methods
 
-!> @brief Unit test for particles of type \ref sll_simple_pic_4d_particle <!--
-!> [[file:simple_pic_4d_particle.F90::sll_simple_pic_4d_particle]] -->
+  !> @brief Unit test for particles of type \ref sll_simple_pic_4d_particle_module::sll_simple_pic_4d_particle
+
+  ! [[file:simple_pic_4d_particle.F90::sll_simple_pic_4d_particle]]
 
 program simple_pic_4d_group_tester
 

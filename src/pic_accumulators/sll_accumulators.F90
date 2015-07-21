@@ -15,8 +15,6 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @brief AAA_ALH_TODO
-
 module sll_accumulators
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -31,7 +29,6 @@ module sll_accumulators
      sll_real64 :: q_ne
   end type charge_accumulator_cell_2d
 
-  !> @brief AAA_ALH_TODO
   type sll_charge_accumulator_2d
      type(sll_cartesian_mesh_2d), pointer :: mesh
      type(charge_accumulator_cell_2d), dimension(:), pointer :: q_acc
