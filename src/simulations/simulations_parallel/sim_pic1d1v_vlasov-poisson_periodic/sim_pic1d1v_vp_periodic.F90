@@ -412,7 +412,7 @@ contains
             
             call sim%fsolver%set_num_sample(sim%nmark*coll_size)
             call load_particle_species (sim%nmark, sim%interval_a, sim%interval_b ,&
-                                        sim%species)
+                                        sim%species, sim%scenario_int )
             sim%particle_qm = sim%species(1)%qm
             
             ! Wait here for all processors to be done with the instructions above
@@ -431,6 +431,7 @@ contains
             
             ! Add ion background density to Poisson solver, if needed
             ! TODO: ask Jakob about exact behavior here...
+            
             
             select case( sim%scenario_int )
               case( SLL_PIC1D_TESTCASE_QUIET )
@@ -468,7 +469,7 @@ contains
 
            !Start with PIC Method
            !Do the initial solve of the field
-           call sll_pic1d_ensure_boundary_conditions_species(sim%species(1:num_species)  )
+           call sll_pic1d_ensure_boundary_conditions_species(sim%species(1:num_species) , sim%scenario_int  )
 
 
            !Initial Solve
@@ -1056,7 +1057,7 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
 
         call sll_pic1d_adjustweights_advection_species(sim%fsolver,sim%species(1:num_species), species_05)
 
-        !call sll_pic1d_ensure_boundary_conditions_species(species_05)
+        !call sll_pic1d_ensure_boundary_conditions_species(species_05, sim%scenario_int)
         call sim%fsolver%set_species(species_05)
         call sim%fsolver%solve()
 
@@ -1075,7 +1076,7 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
             SLL_DEALLOCATE_ARRAY(DPhidx,ierr)
         enddo
 
-        call sll_pic1d_ensure_boundary_conditions_species(species_1)
+        call sll_pic1d_ensure_boundary_conditions_species(species_1, sim%scenario_int)
 
 
         call sll_pic1d_adjustweights_advection_species(sim%fsolver,sim%species(1:num_species), species_1)
@@ -1178,7 +1179,7 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
         h=sim%tstepw 
         x_0=sim%species(1)%particle%dx
         v_0=sim%species(1)%particle%vx
-        call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
+        call sll_pic1d_ensure_boundary_conditions(x_0, v_0,  sim%scenario_int)
       
         
                !--------------------Stage 1-------------------------------------------------
@@ -1188,7 +1189,7 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
         !--------------------Stage 2-------------------------------------------------
         x_1=x_0 + 0.5_f64*k_x1
         v_1=v_0 + 0.5_f64*k_v1
-        call sll_pic1d_ensure_boundary_conditions(x_1, v_1)
+        call sll_pic1d_ensure_boundary_conditions(x_1, v_1,  sim%scenario_int)
         call sim%pic1d_adjustweights(x_0,x_1,v_0,v_1)
         call sim%pic_1d_solve_qn(x_1)
         call sim%fsolver%evalE( x_1, stage_DPhidx)
@@ -1198,7 +1199,7 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
         !--------------------Stage 3-------------------------------------------------
         x_1=x_0 + 0.5_f64*k_x2
         v_1=v_0 + 0.5_f64*k_v2
-        call sll_pic1d_ensure_boundary_conditions(x_1, v_1)
+        call sll_pic1d_ensure_boundary_conditions(x_1, v_1,  sim%scenario_int)
         call sim%pic1d_adjustweights(x_0 + 0.5_f64*k_x1,x_1,v_0 + 0.5_f64*k_v1,v_1)
         call sim%pic_1d_solve_qn(x_1)
         call sim%fsolver%evalE(x_1, stage_DPhidx)
@@ -1207,7 +1208,7 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
         !--------------------Stage 4-------------------------------------------------
         x_1=x_0 + k_x3
         v_1=v_0 + k_v3
-        call sll_pic1d_ensure_boundary_conditions(x_1, v_1)
+        call sll_pic1d_ensure_boundary_conditions(x_1, v_1,  sim%scenario_int)
         call sim%pic1d_adjustweights(x_0 + 0.5_f64*k_x2,x_1,v_0 + 0.5_f64*k_v2,v_1)
         call sim%pic_1d_solve_qn(x_0 +  k_x3)
         call sim%fsolver%evalE(x_1, stage_DPhidx)
@@ -1216,7 +1217,7 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
         !Perform step---------------------------------------------------------------
         x_1= x_0 + (  k_x1 +  2.0_f64 *k_x2 +  2.0_f64*k_x3 + k_x4 )/6.0_f64
         v_1= v_0 + (  k_v1 +  2.0_f64 *k_v2 +  2.0_f64*k_v3 + k_v4)/6.0_f64
-        call sll_pic1d_ensure_boundary_conditions(x_1, v_1)
+        call sll_pic1d_ensure_boundary_conditions(x_1, v_1,  sim%scenario_int)
 
         call sim%pic1d_adjustweights(x_0 + 0.5_f64*k_x3,x_1,v_0 + 0.5_f64*k_v3,v_1)
 
@@ -1249,7 +1250,7 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
         weight=sim%species(sim%pushed_species)%particle%weight
         
         !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
-        call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
+        call sll_pic1d_ensure_boundary_conditions(x_0, v_0,  sim%scenario_int)
 
         !--------------------Stage 1-------------------------------------------------
         call sim%fsolver%evalE(x_0, stage_DPhidx)
@@ -1291,7 +1292,7 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
 
         call sim%pic_1d_calc_push_error(err_x,weight,t)
 
-        call sll_pic1d_ensure_boundary_conditions(x_1, v_1)
+        call sll_pic1d_ensure_boundary_conditions(x_1, v_1,  sim%scenario_int)
 
         call sim%pic1d_adjustweights(x_0,x_1,v_0,v_1)
         x_0=x_1
@@ -1317,7 +1318,7 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
          x_0=sim%species(sim%pushed_species)%particle%dx
          v_0=sim%species(sim%pushed_species)%particle%vx
         !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
-        call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
+        call sll_pic1d_ensure_boundary_conditions(x_0, v_0,  sim%scenario_int)
 
         !--------------------Stage 1-------------------------------------------------
         !call sll_bspline_fem_solver_1d_solve(x_0)
@@ -1335,7 +1336,7 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
         v_1= v_0 + k_v2
 
         !        x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
-        call sll_pic1d_ensure_boundary_conditions(x_1, v_1)
+        call sll_pic1d_ensure_boundary_conditions(x_1, v_1,  sim%scenario_int)
 
         call sim%pic1d_adjustweights(x_0,x_1,v_0,v_1)
         x_0=x_1
@@ -1361,7 +1362,7 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
         h=sim%tstepw
         x_0=sim%species(sim%pushed_species)%particle%dx
         v_0=sim%species(sim%pushed_species)%particle%vx
-        call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
+        call sll_pic1d_ensure_boundary_conditions(x_0, v_0,  sim%scenario_int)
 
         !--------------------Stage 1-------------------------------------------------
         call sim%fsolver%evalE(x_0, stage_DPhidx)
@@ -1384,7 +1385,7 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
         x_0= x_0 + (k_x1 + 4.0_f64 * k_x2 + k_x3)/6.0_f64
         v_0= v_0 + (k_v1 + 4.0_f64 * k_v2 + k_v3)/6.0_f64
 
-        call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
+        call sll_pic1d_ensure_boundary_conditions(x_0, v_0,  sim%scenario_int)
 
         call sim%pic_1d_solve_qn(x_0)
         sim%species(sim%pushed_species)%particle%vx=v_0
@@ -1407,7 +1408,7 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
          x_0=sim%species(sim%pushed_species)%particle%dx
          v_0=sim%species(sim%pushed_species)%particle%vx
          
-        call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
+        call sll_pic1d_ensure_boundary_conditions(x_0, v_0,  sim%scenario_int)
         !--------------------Stage 1-------------------------------------------------
         !call sll_bspline_fem_solver_1d_solve(x_0)
         call sim%fsolver%evalE(x_0, stage_DPhidx)
@@ -1424,7 +1425,7 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
         x_1= x_0 + 0.5_f64 *(k_x1+k_x2   )
         v_1= v_0 + 0.5_f64 *(k_v1+k_v2  )
         !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
-        call sll_pic1d_ensure_boundary_conditions(x_1, v_1)
+        call sll_pic1d_ensure_boundary_conditions(x_1, v_1,  sim%scenario_int)
 
         !call sll_pic1d_adjustweights(x_0+ k_x1,x_1,v_0 + k_v1,v_1)
         call sim%pic1d_adjustweights(x_0,x_1,v_0,v_1)
@@ -1470,7 +1471,7 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
 
         enddo
 
-        call sll_pic1d_ensure_boundary_conditions_species(species_1)
+        call sll_pic1d_ensure_boundary_conditions_species(species_1, sim%scenario_int)
 
         call sll_pic1d_adjustweights_advection_species(sim%fsolver,sim%species(1:num_species), species_1)
 
@@ -1497,7 +1498,7 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
         call sim%fsolver%evalE(x_0, DPhidx_0)
         x_1=x_0+ h*v_0 - ((h**2)/2.0_f64) *DPhidx_0*(-sim%particle_qm)
         x_1=sll_pic1d_ensure_periodicity(x_1,  sim%interval_a, sim%interval_b)
-        call sll_pic1d_ensure_boundary_conditions(x_1, v_0)
+        call sll_pic1d_ensure_boundary_conditions(x_1, v_0,  sim%scenario_int)
 
         call sim%pic_1d_solve_qn(x_1)
         call sim%fsolver%evalE(x_1, DPhidx_1)
@@ -1539,7 +1540,7 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
         v_0=v_1
 
         !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
-        call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
+        call sll_pic1d_ensure_boundary_conditions(x_0, v_0,  sim%scenario_int)
 
         call sim%pic_1d_solve_qn(x_0)
         sim%species(sim%pushed_species)%particle%dx=x_0
