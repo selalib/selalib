@@ -1691,9 +1691,9 @@ contains
                   kinetic_energy,                                &
                   potential_energy,                              &
                   kinetic_energy + potential_energy
-
              do k=0,nb_mode
-                write(th_diag_id,'(g20.12)',advance='no') abs(rho_mode(k))
+                write(th_diag_id,'(g20.12)',advance='no') real(rho_mode(k),f64)
+                write(th_diag_id,'(g20.12)',advance='no') aimag(rho_mode(k))
              enddo
 
              do k=0,nb_mode-1
