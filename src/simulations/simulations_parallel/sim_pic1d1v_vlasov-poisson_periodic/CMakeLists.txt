@@ -4,7 +4,7 @@ set(  EXECUTABLE "test_${TEST_NAME}"           )
 set( INSTALL_DIR "${INSTALL_DIR}/${TEST_NAME}" )
 
 file( GLOB INPUT_FILES "*.nml"         )
-file( GLOB   POST_PROC "*.dat" "*.gnu" )
+file( GLOB   POST_PROC "*.dat" "*.gnu" "*.py" )
 
 ADD_EXECUTABLE( ${EXECUTABLE} sim_${SIM_NAME}.F90 unit_test_${TEST_NAME}.F90 )
 TARGET_LINK_LIBRARIES( ${EXECUTABLE} sll_simulations_parallel sll_pic1d )
