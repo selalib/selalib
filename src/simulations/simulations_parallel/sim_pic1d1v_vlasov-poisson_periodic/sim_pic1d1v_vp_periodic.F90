@@ -57,10 +57,11 @@ module sll_module_simulation_pic1d1v_vp_periodic
   sll_int32, parameter :: SLL_PIC1D_PPUSHER_LEAPFROG_V = 8 !Variational Leapfrog
   sll_int32, parameter :: SLL_PIC1D_PPUSHER_RK3        = 9     ! Runge Kutta 3
   sll_int32, parameter :: SLL_PIC1D_PPUSHER_MERSON     = 10 !Merson 3-5 with integrated Err estimate
-    sll_int32, parameter :: SLL_SOLVER_FEM = 1
-    sll_int32, parameter :: SLL_SOLVER_FD = 2
-    sll_int32, parameter :: SLL_SOLVER_SPECTRAL = 3
-    sll_int32, parameter :: SLL_SOLVER_FOURIER = 4
+  sll_int32, parameter :: SLL_SOLVER_FEM = 1
+  sll_int32, parameter :: SLL_SOLVER_FD = 2
+  sll_int32, parameter :: SLL_SOLVER_SPECTRAL = 3
+  sll_int32, parameter :: SLL_SOLVER_FOURIER = 4
+  sll_int32 :: n_x,n_v
   !For parallelization MPI Rank and collective size
   sll_int32 :: coll_rank,coll_size
   sll_int32 :: ierr,i,j
@@ -293,7 +294,7 @@ contains
     
     
     ! General parameters
-    namelist /params/ scenario, gnuplot_inline_output_user,  nstreams,frequency_of_printing
+    namelist /params/ scenario, gnuplot_inline_output_user,  nstreams,frequency_of_printing,n_x,n_v
     
     ! Numerical parameters
     namelist /numerical_params/ nmark, ppusher, psolver, tstepw, tsteps, sdeg,&
@@ -522,8 +523,10 @@ contains
         
 !---------------------------### Main Loop
         time = 0.0_f64
-        nx=floor(sqrt(sim%nmark/10.0_f64))+1
-        nv=nx
+!        nx=floor(sqrt(sim%nmark/10.0_f64))+1
+!        nv=nx
+        nx=n_x
+        nv=n_v 
         call phase_space_distribution%initialize(sim%interval_a,sim%interval_b,nx ,& 
         minval(sim%species(1)%particle%vx), maxval(sim%species(1)%particle%vx),nv)  
         
