@@ -15,9 +15,11 @@
       femp   = 5
       deltaf   = .FALSE.
       /
-&general_params
+&params
       scenario = "landau"
       gnuplot_inline_output_user = .FALSE.
       nstreams = 1
       frequency_of_printing = 1
+      n_x = 300
+      n_v = 200
       /
