@@ -151,21 +151,21 @@ contains
     integer , parameter  :: file_id=20 
     sll_int32            :: i   
     sll_real64           :: dx,x(self%nx)
-    
+    sll_real64                                         :: T(self%nx)
         
     dx = (self%xmax-self%xmin)/(self%nx-1)
     do i=1,self%nx
       x(i) = self%xmin + dx*(i-1)
     end do
-                          
+    T=self%mean_temperature()                       
     call int2string( iplot, fin )
     open(file_id, file = trim(root_path)//plot_name//'_'//fin//'.dat')
     write (file_id,*)"#distribution moments"
     write (file_id,*)  "#Time steps:", iplot
-    write(file_id,*) "node_index                  " ,"x                    ","n                      ","u                   ","nke               "
+    write(file_id,*) "node_index                  " ,"x                    ","n                      ","u                   ","nke               ","Temperature            "
   
     do i=1,self%nx
-      write(file_id,*)  i,x(i),self%n(i),self%nu(i),self%nke(i)
+      write(file_id,*)  i,x(i),self%n(i),self%nu(i),self%nke(i),T(i)
     end do
   close(file_id)
   
