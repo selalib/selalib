@@ -246,7 +246,7 @@ program sim2d_gc_hex_splines
         call hex_diagnostics_gc(rho_tn,t,mesh,uxn,uyn,nloops,spline_degree,tmax,cells_min,cells_max)
 	call int2string(nloops,filenum)
      	filename  = "guiding_center_rho"//trim(filenum)
-     	call write_field_hex_mesh_xmf(mesh, rho_tn1, trim(filename))
+     	call write_field_hex_mesh_xmf(mesh, rho_tn, trim(filename))
      	filename  = "guiding_center_phi"//trim(filenum)
      	call write_field_hex_mesh_xmf(mesh, phi, trim(filename))
      elseif (model_name.eq."CIRCULAR") then
