@@ -190,7 +190,9 @@ contains
     
     mat%val(:) = 0.0_f64
     
-!    print *,mat%num_nz
+    print *,'#num_nz=',mat%num_nz
+    print *,'#num_rows=',mat%num_rows
+    print *,'#num_cols=',mat%num_cols
 !    !print *,umfpack_control
 !    stop
     
