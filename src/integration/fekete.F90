@@ -116,6 +116,7 @@ contains
   function fekete_points_and_weights(pxy) result(xyw)
     sll_real64, dimension(2, 3), intent(in) :: pxy
     sll_real64, dimension(3,10)             :: xyw
+    sll_real64, dimension(3,10)             :: xyw_copy
     ! Other variables
     sll_real64, dimension(3,3) :: ref_xyw
     sll_real64, dimension(2)   :: v1
@@ -255,6 +256,30 @@ contains
 
     ! Because the ordering of the fekete points as such is not really
     ! intuitive. We want to reorganize it.
+    ! Current order:
+    !       8
+    !       9    10
+    !       3     1   6
+    !       2     4   7   5
+    !
+    ! Order desired:
+    !      10
+    !       8    9
+    !       5    6   7 
+    !       1    2   3   4
+    
+    ! For that, first we create a copy
+    xyw_copy(:, :) = xyw(:,:)
+    xyw(:, 1)  = xyw_copy(:,2)
+    xyw(:, 2)  = xyw_copy(:,4)
+    xyw(:, 3)  = xyw_copy(:,7)
+    xyw(:, 4)  = xyw_copy(:,5)
+    xyw(:, 5)  = xyw_copy(:,3)
+    xyw(:, 6)  = xyw_copy(:,1)
+    xyw(:, 7)  = xyw_copy(:,6)
+    xyw(:, 8)  = xyw_copy(:,9)
+    xyw(:, 9)  = xyw_copy(:,10)
+    xyw(:, 10) = xyw_copy(:,8)
     
   end function fekete_points_and_weights
 
