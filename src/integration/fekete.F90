@@ -253,6 +253,9 @@ contains
        end if
     end do
 
+    ! Because the ordering of the fekete points as such is not really
+    ! intuitive. We want to reorganize it.
+    
   end function fekete_points_and_weights
 
 
@@ -386,7 +389,7 @@ contains
 
     ! Computing fekete points on that triangle
     quad_pw = fekete_points_and_weights(ref_pts)
-
+    
     call sll_new_file_id(out_unit, ierr)
     open (unit=out_unit,file=name,action="write",status="replace")
     
