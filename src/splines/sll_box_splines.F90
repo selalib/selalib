@@ -179,6 +179,8 @@ contains  ! ****************************************************************
              filter = pre_filter_pfir(spline%mesh, k, deg)
           elseif (deg .eq. 3) then
              filter = pre_filter_int(spline%mesh, k, deg)
+          elseif (deg .eq. 4) then
+             filter = pre_filter_pfir(spline%mesh, k, deg)
           else
              filter = 0._f64
              print *, "Error in compute_coeff_box_spline_2d_diri():"
