@@ -1,5 +1,4 @@
 !> @file simple_pic_4d_particle.F90
-!> AAA_ALH_TODO
 
 !**************************************************************
 !  Copyright INRIA
@@ -18,7 +17,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-! AAA_ALH_TODO !> @ingroup particle_methods
+!> @ingroup particle_methods
 
 !> @author MCP ALH
 
@@ -42,10 +41,8 @@ module sll_simple_pic_4d_particle_module
 
   ! <<sll_simple_pic_4d_particle>>
 
-  ! AAA_ALH_TODO !> @ingroup particle_methods
+  !> @ingroup particle_methods
 
-  ! AAA_ALH_TODO cited in group page but not found for references? namespace problem?
-   
   type :: sll_simple_pic_4d_particle
      
      !> cell index in the x dimension (can be outside physical domain)
