@@ -520,8 +520,8 @@ contains
 
                             DEALLOCATE(lpi_columns)
                         end if
-                        print *,'api_columns(li_A_1,0)=',api_columns(li_A_1,0)
-                        print *,'lpi_size(2)=',lpi_size(2)
+                        !print *,'api_columns(li_A_1,0)=',api_columns(li_A_1,0)
+                        !print *,'lpi_size(2)=',lpi_size(2)
                         call flush()
                         api_columns(li_A_1, api_columns(li_A_1, 0)) = li_A_2
 

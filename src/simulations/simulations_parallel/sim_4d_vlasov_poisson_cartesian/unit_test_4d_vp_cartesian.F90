@@ -38,7 +38,10 @@ program vlasov_poisson_4d
   endif
 
   count = command_argument_count()
-              print *, count
+  if(sll_get_collective_rank(sll_world_collective)==0)then
+    print *, '#count=',count
+  endif
+              
   call get_command_argument(1, filename)
   if (len_trim(filename) == 0)then
     sim => new_vlasov_par_poisson_seq_cart( )

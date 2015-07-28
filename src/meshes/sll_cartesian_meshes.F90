@@ -40,6 +40,7 @@ implicit none
      procedure, pass(mesh) :: cellnum => cell_cartesian_mesh_1d
      procedure, pass(mesh) :: area => length_cartesian_mesh_1d 
      procedure, pass(mesh) :: cell_margin => cell_margin_cartesian_mesh_1d
+     procedure, pass(mesh) :: period => period_cartesian_mesh_1d
   end type sll_cartesian_mesh_1d
 
 
@@ -1107,8 +1108,8 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
     sll_real64 :: length
     length=mesh%eta_max-mesh%eta_min
     SLL_ASSERT(length >=0)
-  endfunction length_cartesian_mesh_1d
-
+  endfunction length_cartesian_mesh_1d   
+  
   !> @brief Returns the area size for a 2D cartesian mesh
   !> @param mesh pointer to a sll_cartesian_mesh_2d object.
   function area_cartesian_mesh_2d( mesh) result(area)
@@ -1145,6 +1146,25 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
     SLL_ASSERT(area >=0)
   endfunction area_cartesian_mesh_4d
 
+  
+  
+  
+  !> @brief Returns coordinate in a periodic mesh
+  !> @param mesh pointer to a sll_cartesian_mesh_1d object.
+  !> @param point position
+  function period_cartesian_mesh_1d(mesh,point) result(posmod)
+    class(sll_cartesian_mesh_1d), intent(in) :: mesh
+    sll_real64, intent(in) :: point
+    sll_real64 :: posmod
+
+    posmod=modulo(point-mesh%eta_min,mesh%eta_max-mesh%eta_min ) + mesh%eta_min
+    
+    SLL_ASSERT(posmod >=mesh%eta_min)
+    SLL_ASSERT(posmod <=mesh%eta_max)
+  endfunction period_cartesian_mesh_1d   
+  
+  
+  
   
 #undef TEST_PRESENCE_AND_ASSIGN_VAL
 
