@@ -58,6 +58,9 @@ IF(BUILD_TESTING)
 
   ADD_EXECUTABLE( test_poisson_2d_fft test_poisson_2d_fft.F90 )
   TARGET_LINK_LIBRARIES( test_poisson_2d_fft sll_poisson_solvers )
+  
+  ADD_EXECUTABLE( test_poisson_1d_fd test_poisson_1d_fd.F90 )
+  TARGET_LINK_LIBRARIES( test_poisson_1d_fd sll_poisson_solvers )
 
   ADD_EXECUTABLE( test_poisson_1d_polar_solver test_poisson_1d_polar.F90 )
   TARGET_LINK_LIBRARIES( test_poisson_1d_polar_solver sll_poisson_solvers )

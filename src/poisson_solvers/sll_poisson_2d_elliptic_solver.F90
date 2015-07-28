@@ -111,7 +111,9 @@ contains
    interp_rho, &
    interp_rho_case, &
    control, &
-   precompute_rhs) 
+   precompute_rhs, &
+   with_constraint, &
+   zero_mean ) 
    
    class(poisson_2d_elliptic_solver),        target  :: poisson
    class(sll_coordinate_transformation_2d_base), pointer :: transf
@@ -144,6 +146,8 @@ contains
    character(len=256), optional  :: interp_rho_case
    sll_int32, intent(in), optional :: control
    logical, intent(in), optional :: precompute_rhs
+   logical, intent(in), optional :: with_constraint
+   logical, intent(in), optional :: zero_mean
    sll_int32 :: np_eta1
    sll_int32 :: np_eta2
    sll_int32 :: ierr
@@ -583,7 +587,9 @@ contains
         precompute_rhs=poisson%precompute_rhs, &
         rhs_bc1 = bc_interp2d_eta1, &
         rhs_bc2 = bc_interp2d_eta2, &
-        use_cubic_splines = use_cubic_splines)                
+        use_cubic_splines = use_cubic_splines, &
+        with_constraint = with_constraint, &
+        zero_mean = zero_mean)                
  
         
     ! compute matrix the field
@@ -631,7 +637,9 @@ contains
    interp_rho, &
    interp_rho_case, &
    control, &
-   precompute_rhs ) &
+   precompute_rhs, &
+   with_constraint, &
+   zero_mean ) &
    result(poisson)
    
    class(poisson_2d_elliptic_solver),        pointer  :: poisson
@@ -665,6 +673,8 @@ contains
    class(sll_interpolator_2d_base), pointer, optional :: interp_rho
    character(len=256), optional  :: interp_rho_case
    logical, intent(in), optional     :: precompute_rhs
+   logical, intent(in), optional     :: with_constraint
+   logical, intent(in), optional     :: zero_mean
    !sll_int32 :: np_eta1
    !sll_int32 :: np_eta2
    sll_int32 :: ierr
@@ -698,7 +708,9 @@ contains
    interp_rho, &
    interp_rho_case, &
    control, &
-   precompute_rhs)  
+   precompute_rhs, &
+   with_constraint, &
+   zero_mean)  
    
   end function new_poisson_2d_elliptic_solver
   
