@@ -1,12 +1,3 @@
-!> @ingroup particle_methods
-
-!> @author MCP ALH
-
-!> @brief Unit test for ::sll_simulation_4d_vp_generic_pic_cartesian_module
-
-! Program listed by Doxygen as part of the particle_methods in
-! [[selalib:doc/build/html/doxygen/html/group__particle__methods.html]]
-
 program pic_4d_cartesian
 
 #include "sll_working_precision.h"
