@@ -3,12 +3,10 @@
 
   ! To rebuild the documentation: [[elisp:(compile "cd ${SELALIB}/build && make doc")]].
 
-  ! This file creates the HTML page
-  ! [[elisp:(startup-persistent-process "epiphany-browser --new-window $SELALIB/doc/build/html/doxygen/html/group__particle__methods.html")]].
+  ! This file creates the page [[selalib:doc/build/html/doxygen/html/group__particle__methods.html]].
   
-  ! The Doxygen documentation index is
-  ! [[elisp:(startup-persistent-process "epiphany-browser --new-window $SELALIB/doc/build/html/doxygen/html/index.html")]]
-  ! The Doxygen configuration file is [[selalib:doc/doxygen/Doxyfile]].
+  ! The Doxygen documentation index is [[selalib:doc/build/html/doxygen/html/index.html]].  The Doxygen configuration
+  ! file is [[selalib:doc/doxygen/Doxyfile]].
 
   !> @defgroup particle_methods sll_particle_methods
 
