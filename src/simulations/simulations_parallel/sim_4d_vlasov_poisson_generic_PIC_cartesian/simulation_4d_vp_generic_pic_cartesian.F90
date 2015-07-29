@@ -16,7 +16,7 @@
 
 ! (The doxygen page for this simulation is
 !
-! [[elisp:(startup-persistent-process "epiphany-browser --new-window $SELALIB/doc/build/html/doxygen/html/namespacesll__simulation__4d__vp__generic__pic__cartesian__module.html")]],
+! [[selalib:doc/build/html/doxygen/html/namespacesll__simulation__4d__vp__generic__pic__cartesian__module.html]]
 !
 ! produced by [[elisp:(compile "cd ${SELALIB}/build && make doc")]])
 
@@ -53,7 +53,8 @@ module sll_simulation_4d_vp_generic_pic_cartesian_module
   ! [[file:unit_test_4d_vp_generic_pic_cartesian.F90::unit_test_4d_vp_generic_pic_cartesian]]. We have chosen to store
   ! all simulation parameters (both ltpic and simple) in this sim object.
 
-  ! doxygen page [[elisp:(startup-persistent-process "epiphany-browser --new-window $SELALIB/doc/build/html/doxygen/html/structsll__simulation__4d__vp__generic__pic__cartesian__module_1_1sll__simulation__4d__vp__generic__pic__cartesian.html")]]
+  ! doxygen page
+  ! [[selalib:doc/build/html/doxygen/html/structsll__simulation__4d__vp__generic__pic__cartesian__module_1_1sll__simulation__4d__vp__generic__pic__cartesian.html]]
   ! produced by [[elisp:(compile "cd ${SELALIB}/build && make doc")]])
 
   !> @ingroup particle_methods
