@@ -6,5 +6,6 @@ if( MPI_ENABLED )
   add_subdirectory( pic_1d_sheath )
   add_subdirectory( particle_types )
   add_subdirectory( particle_initializers )
+  add_subdirectory( bsl_lt_pic_utilities )
 endif( MPI_ENABLED )
 
