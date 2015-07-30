@@ -39,7 +39,9 @@ module sll_module_pic_base
 
     sll_int32                     :: dimension_x
     sll_int32                     :: dimension_v
-    
+
+    logical                       :: domain_is_periodic(3)
+
   contains
     ! Getters
     procedure( i_get_coords ), deferred :: get_x
@@ -59,9 +61,8 @@ module sll_module_pic_base
     procedure( dep_charge_2d), deferred :: deposit_charge_2d
 
     ! Initializers
-    procedure( set_landau_params    ),  deferred :: set_landau_parameters
-    procedure( rand_init            ),  deferred :: random_initializer
-    procedure( cart_init            ),  deferred :: cartesian_initializer
+    procedure( set_landau_params ),  deferred :: set_landau_parameters
+    procedure( init              ),  deferred :: initializer
 
   end type sll_particle_group_base
 
@@ -133,30 +134,14 @@ module sll_module_pic_base
 
   !----------------------------------------------------------------------------
   abstract interface
-   subroutine rand_init( self, number_particles, initial_density_identifier, rand_seed, rank, world_size)
+   subroutine init( self, initial_density_identifier, rand_seed, rank, world_size)
     use sll_working_precision
     import sll_particle_group_base
     class( sll_particle_group_base ), intent( inout ) :: self
-    sll_int32                       , intent( in    ) :: number_particles
     sll_int32                       , intent( in    ) :: initial_density_identifier
     sll_int32, dimension(:)         , intent( in ), optional :: rand_seed
     sll_int32                       , intent( in ), optional :: rank, world_size
-   end subroutine rand_init
-  end interface
-
-  !----------------------------------------------------------------------------
-  abstract interface
-   subroutine cart_init( self, nb_cells_x, nb_cells_v, x_min, x_max, v_min, v_max )
-    use sll_working_precision
-    import sll_particle_group_base
-    class( sll_particle_group_base ), intent( inout ) :: self
-    sll_int32                       , intent( in    ) :: nb_cells_x(3)
-    sll_int32                       , intent( in    ) :: nb_cells_v(3)
-    sll_real64                      , intent( in    ) :: x_min(3)
-    sll_real64                      , intent( in    ) :: x_max(3)
-    sll_real64                      , intent( in    ) :: v_min(3)
-    sll_real64                      , intent( in    ) :: v_max(3)
-   end subroutine cart_init
+   end subroutine init
   end interface
 
   !----------------------------------------------------------------------------

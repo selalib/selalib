@@ -17,6 +17,7 @@ type(sll_simple_pic_4d_group),  pointer     :: simple_pic_particle_group
 sll_int32 :: particle_group_id
 sll_int32 :: NC_X
 sll_int32 :: NC_Y
+sll_int32 :: number_particles
 sll_real64 :: SPECIES_CHARGE
 sll_real64 :: SPECIES_MASS
 sll_real64 :: XMIN, XMAX
@@ -34,6 +35,8 @@ DOMAIN_IS_Y_PERIODIC = .true.
 NC_X = 10
 NC_Y = 10
 
+number_particles = 10000
+
 XMIN = 0.
 XMAX = 1.
 
@@ -48,6 +51,7 @@ simple_pic_particle_group => sll_simple_pic_4d_group_new(       &
     particle_group_id,                                          &
     DOMAIN_IS_X_PERIODIC,                                       &
     DOMAIN_IS_Y_PERIODIC,                                       &
+    number_particles,                                           &
     mesh_2d )
 
   print *, 'PASSED'
