@@ -13,7 +13,8 @@ TARGET_LINK_LIBRARIES( ${EXECUTABLE}
   sll_simulations_parallel
   sll_working_precision
   sll_pic_interface
-  sll_simple_pic_particles )
+  sll_simple_pic_particles
+  sll_bsl_lt_pic_particles )
 
 INSTALL( TARGETS ${EXECUTABLE}                     DESTINATION ${INSTALL_DIR} )
 INSTALL( FILES  ${INPUT_FILES} README ${POST_PROC} DESTINATION ${INSTALL_DIR} )
