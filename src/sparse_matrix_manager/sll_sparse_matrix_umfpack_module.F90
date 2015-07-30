@@ -101,6 +101,7 @@ contains
     sll_int32 :: ierr
     SLL_ALLOCATE(mat, ierr)
     call initialize_csr_matrix( &
+    !call initialize_csr_matrix_classic( &
       mat, &
       num_rows, &
       num_cols, &
@@ -216,6 +217,126 @@ contains
     
    
   end subroutine initialize_csr_matrix
+
+subroutine initialize_csr_matrix_classic( mat,                            &
+                                  num_rows,                       &
+                                  num_cols,                       &
+                                  num_elements,                   &
+                                  local_to_global_row,            &
+                                  num_local_dof_row,              &
+                                  local_to_global_col,            & 
+                                  num_local_dof_col)
+
+type(sll_csr_matrix),      intent(inout) :: mat
+sll_int32,                 intent(in)    :: num_rows
+sll_int32,                 intent(in)    :: num_cols
+sll_int32,                 intent(in)    :: num_elements
+sll_int32, dimension(:,:), intent(in)    :: local_to_global_row
+sll_int32,                 intent(in)    :: num_local_dof_row
+sll_int32, dimension(:,:), intent(in)    :: local_to_global_col
+sll_int32,                 intent(in)    :: num_local_dof_col
+
+sll_int32                                :: num_nz
+sll_int32                                :: ierr
+sll_int32,  dimension(:,:), allocatable  :: lpi_col
+sll_int32,  dimension(:),   allocatable  :: lpi_occ
+sll_int32                                :: COEF
+sll_int32                                :: elt
+sll_int32                                :: ii
+sll_int32                                :: jj
+sll_int32                                :: row
+sll_int32                                :: col
+sll_int32                                :: i
+sll_int32                                :: flag
+sll_int32                                :: sz
+sll_int32                                :: result
+sll_int32                                :: lpi_size(2)
+logical                                  :: ll_done
+
+print *,'#initialize_csr_matrix'
+COEF = 6
+
+SLL_ALLOCATE(lpi_col(num_rows, 0:COEF*num_local_dof_col),ierr)
+SLL_ALLOCATE(lpi_occ(num_rows+1),ierr)
+
+lpi_col(:,:) = 0
+lpi_occ(:) = 0
+
+do elt = 1, num_elements  !Loop over cells
+  do ii = 1, num_local_dof_row
+    row = local_to_global_row(ii, elt) !Row number in matrix
+    if (row /= 0) then
+      do jj = 1, num_local_dof_col
+        col = local_to_global_col(jj, elt) !Column number in matrix
+        if (col /= 0) then
+          ll_done = .false.
+          ! WE CHECK IF IT IS THE FIRST OCCURANCE OF THE COUPLE (row, col)
+          if(lpi_col(row, 0)>COEF*num_local_dof_col)then
+            print *,'Pb of size:',lpi_col(row, 0),COEF*num_local_dof_col
+            stop
+          endif
+          do i = 1, lpi_col(row, 0)
+            if (lpi_col(row, i) == col) then
+              ll_done = .true.
+              exit
+            end if
+          end do
+          if (.not.ll_done) then
+            lpi_occ(row)                  = lpi_occ(row) + 1
+            lpi_col(row, 0)               = lpi_col(row, 0) + 1
+            lpi_col(row, lpi_col(row, 0)) = col
+          end if
+        end if
+      end do
+    end if
+  end do
+end do
+print *,'Size:',maxval(lpi_col(1:num_rows, 0)),COEF*num_local_dof_col
+
+! COUNT NON ZERO ELEMENTS
+num_nz = SUM(lpi_occ(1:num_rows))
+
+mat%num_rows = num_rows
+mat%num_cols = num_cols
+mat%num_nz   = num_nz   
+
+print *,'#num_rows=',num_rows
+print *,'#num_nz=',num_nz
+
+SLL_ALLOCATE(mat%row_ptr(num_rows + 1),ierr)
+SLL_ALLOCATE(mat%col_ind(num_nz),ierr)
+SLL_ALLOCATE(mat%val(num_nz),ierr)
+
+mat%row_ptr(1) = 1
+
+do i = 1, mat%num_rows
+  mat%row_ptr(i+1) = mat%row_ptr(1) + sum(lpi_occ(1:i))
+end do
+
+do elt = 1, num_elements
+  do ii = 1, num_local_dof_row
+    row = local_to_global_row(ii, elt)
+    if (row /= 0) then
+      if (lpi_col(row,0) /= 0) then
+        sz = lpi_col(row, 0)
+        call QsortC(lpi_col(row,1:sz))
+        do i = 1, sz
+          mat%col_ind(mat%row_ptr(row)+i-1) = lpi_col(row,i)
+        end do
+        lpi_col(row, 0) = 0
+      end if
+    end if
+  end do
+end do
+
+mat%val(:) = 0.0_f64
+SLL_DEALLOCATE_ARRAY(lpi_col,ierr)
+SLL_DEALLOCATE_ARRAY(lpi_occ,ierr)
+
+end subroutine initialize_csr_matrix_classic
+
+
+
  
   subroutine initialize_csr_matrix_with_constraint( &
     mat, &
@@ -362,7 +483,11 @@ contains
       mat%umf_control, &
       info)
 
-   
+    if (info(1) .lt. 0) then
+      print *, '#Error occurred in umf4sym: ', info(1)
+      stop
+    endif
+
     ! numeric factorization
     call umf4num( &
       mat%Ap, &
@@ -372,6 +497,11 @@ contains
       mat%umf_numeric, &
       mat%umf_control, &
       info)
+      
+    if (info(1) .lt. 0) then
+      print *, '#Error occurred in umf4num: ', info(1)
+      stop
+    endif
     
   end subroutine sll_factorize_csr_matrix
   
