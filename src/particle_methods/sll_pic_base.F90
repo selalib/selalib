@@ -12,7 +12,7 @@ module sll_module_pic_base
   public :: species_new, apply_periodic_bc_on_cartesian_mesh_2d, x_is_in_domain_2d
 
   !============================================================================
-  ! Particle species
+  !> @brief Particle species
   !============================================================================
   type, public :: sll_species
     !      character(len=64) :: name !< species name
@@ -30,7 +30,7 @@ module sll_module_pic_base
 !  end interface
 
   !============================================================================
-  ! Particle group
+  !> @brief Particle group
   !============================================================================
   type, public, abstract :: sll_particle_group_base
 

@@ -53,7 +53,7 @@
       remove selalib:build/CMakeCache.txt
 	
 ** Compiling
-   sequential compile, no install (useful to see errors): [[elisp:(compile "cd ${SELALIB}/build && make")]]
+   sequential compile, no install (useful to see errors): [[elisp:(compile "cd ${SELALIB}/build && make install")]]
    parallel compile + install: [[elisp:(compile "cd ${SELALIB}/build && make -j $NCPU install")]]
 
 ** Running

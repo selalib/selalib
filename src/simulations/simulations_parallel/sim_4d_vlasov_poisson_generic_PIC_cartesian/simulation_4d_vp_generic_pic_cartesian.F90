@@ -81,7 +81,8 @@ module sll_simulation_4d_vp_generic_pic_cartesian_module
      !> unused at the moment
      sll_int32  :: remap_period
 
-     !> cf @ref sll_particle_group_base::set_landau_parameters
+     !> cf sll_particle_group_base::set_landau_parameters <!--
+     !> [[selalib:src/particle_methods/sll_pic_base.F90::set_landau_parameters]] -->
      sll_real64 :: thermal_speed_ions
      
      sll_int32  :: number_particles
@@ -407,7 +408,7 @@ contains
   !!
   !! \todo 2: use a common type for PIC and LT_PIC (commented calls to PIC structures are labelled with "PIC_VERSION"
   !!
-  !! this version written by MCP, ALH
+  !! @author this version written by MCP, ALH
 
   subroutine run_4d_generic_pic_cartesian( sim )
     class(sll_simulation_4d_vp_generic_pic_cartesian), intent(inout)  :: sim
@@ -488,14 +489,16 @@ contains
     rdy = 1._f64/sim%mesh_2d%delta_eta2
 
     !  ----------------------------------------------------------------------------------------------------
-    !>          The time loop is prepared by computing the E field
+    !> ## The time loop is prepared by computing the \f$E\f$ field
     !>
-    !>          - starting from
-    !>              * (x,y)^0_k, (vx, vy)^0_k stored in the particle group
-    !
-    !>          - we ends with
-    !>              * \f$E^0\f$ stored in sim%E1, sim%E2
-    !>              * \f$(x,y)^0_k, (vx, vy)^{-1/2}_k\f$  stored in the the particle group
+    !> - starting from
+    !>   * \f$(x,y)^0_k\f$, \f$(v_x, v_y)^0_k\f$ stored in the particle group
+    !>     sll_simulation_4d_vp_generic_pic_cartesian::particle_group
+    !>
+    !> - we end with
+    !>   * \f$E^0\f$ stored in sim%E1, sim%E2
+    !>   * \f$(x,y)^0_k, (v_x, v_y)^{-1/2}_k\f$ stored in the the particle group
+    !>     sll_simulation_4d_vp_generic_pic_cartesian::particle_group
     !  ----------------------------------------------------------------------------------------------------
 
     !! -- --  ?? [begin]  -- --
@@ -536,8 +539,8 @@ contains
                         sim%rho, 'rho_init_standPUSH', it, ierr )
     endif
 
-    !> the initial field E^0 is obtained with a call to the Poisson solver. Note that here sim%rho has the proper sign
-    !> (hence there is no need to multiply it by an additional physical constant)
+    !> the initial field \f$E^0\f$ is obtained with a call to the Poisson solver. Note that here sim\%rho has the proper
+    !> sign (hence there is no need to multiply it by an additional physical constant)
 
     call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
 
@@ -566,7 +569,8 @@ contains
 
        !> This simulation does not have access to the particles (because they may be of different incompatible types
        !> like "ltpic" or "simple") so we use the standard interface defined in
-       !> [[selalib:src/particle_methods/sll_pic_base.F90::sll_particle_group_base]]
+       !> sll_module_pic_base::sll_particle_group_base <!--
+       !> [[selalib:src/particle_methods/sll_pic_base.F90::sll_particle_group_base]] -->
 
        coords = sim%particle_group%get_v(k)
        bors = bors + coords(1)**2 + coords(2)**2
@@ -607,7 +611,7 @@ contains
       ! [[selalib:src/pic_accumulators/sll_accumulators.h::SLL_INTERPOLATE_FIELD_IN_CELL]]
       SLL_INTERPOLATE_FIELD_IN_CELL(Ex,Ey,accumE,pp_dx,pp_dy,tmp5,tmp6,pp_icell)
 
-      !> Set particle speed
+      ! Set particle speed
       coords(1) = pp_vx - 0.5_f64 * dt_q_over_m * Ex
       coords(2) = pp_vy - 0.5_f64 * dt_q_over_m * Ey
       coords(3) = 0
@@ -615,7 +619,7 @@ contains
     enddo
     !$omp end parallel do
 
-    !! -- --  half v-push  [end]  -- --
+    ! -- --  half v-push  [end]  -- --
 
     ! this means (pi / KX_LANDAU) * (4._f64 * ALPHA * er)**2
     une_cst = (sll_pi / sim%elec_params(1)) * (4._f64 * sim%elec_params(2) * sim%elec_params(3))**2
@@ -625,21 +629,18 @@ contains
 
     if (sim%my_rank ==0) open(65,file='logE_standPush.dat')
 #ifdef _OPENMP
-    t2 = omp_get_wtime()!!   call sll_set_time_mark(t2)
+    t2 = omp_get_wtime() !   call sll_set_time_mark(t2)
 #endif
 
-
-
-
+    !AAA-ALH-HERE
     !  ----------------------------------------------------------------------------------------------------
-    !>          Content of the time loop:
+    !> ## Content of the time loop
     !>          - starting from
-    !>              * E^n stored in sim%E1, sim%E2
-    !>              * (x,y)^n_k, (vx, vy)^{n-1/2}_k  stored in the particle group
-    !>            (with n = it)
+    !>              - \f$E^n\f$ stored in sim\%E1, sim\%E2
+    !>              - \f$(x,y)^n_k\f$, \f$(v_x, v_y)^{n-1/2}_k\f$ stored in the particle group (with \f$n = it\f$)
     !>          - we end with
-    !>              * E^{n+1} stored in sim%E1, sim%E2
-    !>              * (x,y)^{n+1}_k, (vx, vy)^{n+1/2}_k  stored in the particle group
+    !>              - \f$E^{n+1}\f$ stored in sim\%E1, sim\%E2
+    !>              - \f$(x,y)^{n+1}_k\f$, \f$(v_x, v_y)^{n+1/2}_k\f$ stored in the particle group
     !  ----------------------------------------------------------------------------------------------------
 
     ! Time statistics
@@ -669,7 +670,7 @@ contains
           endif
        endif
 
-       !! -- --  diagnostics [end]  -- --
+       ! -- --  diagnostics [end]  -- --
 
        !  ------------------------------------------------------------------
        !  ------
@@ -677,7 +678,7 @@ contains
        !  ------
        !  ------------------------------------------------------------------
 
-       !>           Particles are pushed as follows:
+       !> ### Particles are pushed as follows
 
        some_val = 0.0_f64
 
@@ -697,8 +698,8 @@ contains
       do k = 1, sim%number_particles
 
          ! -- --  v-push [begin]  -- --
-
-         !>     * v-push: using E^n  we compute  v^{n-1/2} -> v^{n+1/2}
+         !> #### v-push
+         !> using \f$E^n\f$  we compute  \f$v^{n-1/2} \rightarrow v^{n+1/2}\f$
 
          ! particle position
          coords=sim%particle_group%get_x(k) ! [[selalib:src/particle_methods/sll_pic_base.F90::get_v]]
@@ -732,8 +733,8 @@ contains
          !! -- --  v-push [end]  -- --
 
          !! -- --  x-push [begin]  -- --
-
-         !>     * x-push: using v^{n+1/2}  we compute x^n -> x^{n+1}
+         !> #### x-push
+         !> using \f$v^{n+1/2}\f$  we compute \f$x^n \rightarrow x^{n+1}\f$
 
          coords(1) = pp_x + dt * pp_vx
          coords(2) = pp_y + dt * pp_vy
@@ -795,8 +796,8 @@ contains
 
       !! -- --  Poisson solver (computing E^{n+1}) -- --
 
-      !> In the time loop, the field E^{n+1} is obtained with a call to the Poisson solver.
-      !> Again, sim%rho has the proper sign so that we do not need to multiply it by an additional physical constant.
+      !> In the time loop, the field \f$E^{n+1}\f$ is obtained with a call to the Poisson solver.  Again, sim\%rho has
+      !> the proper sign so that we do not need to multiply it by an additional physical constant.
 
       call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
 
