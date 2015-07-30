@@ -1,4 +1,4 @@
-! Main program for
+! Main test program for
 ! [[file:simulation_4d_vp_generic_pic_cartesian.F90::sll_simulation_4d_vp_generic_pic_cartesian_module]]
 
 !> @ingroup particle_methods

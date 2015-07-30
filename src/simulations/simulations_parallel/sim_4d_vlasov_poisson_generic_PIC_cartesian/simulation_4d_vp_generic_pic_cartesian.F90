@@ -1,7 +1,5 @@
 !> @ingroup particle_methods
-
 !> @author MCP ALH
-
 !> @brief Generic simulation algorithms for PIC particles
 
 !> @details Generic simulation algorithm for simple PIC particles of type ::sll_simple_pic_4d_group_module <!--
@@ -15,9 +13,7 @@
 !> -->.
 
 ! (The doxygen page for this simulation is
-!
 ! [[selalib:doc/build/html/doxygen/html/namespacesll__simulation__4d__vp__generic__pic__cartesian__module.html]]
-!
 ! produced by [[elisp:(compile "cd ${SELALIB}/build && make doc")]])
 
 module sll_simulation_4d_vp_generic_pic_cartesian_module
@@ -59,15 +55,13 @@ module sll_simulation_4d_vp_generic_pic_cartesian_module
 
   !> @ingroup particle_methods
 
-  !> \brief Test simulation applied to PIC particles of type \ref sll_simple_pic_4d_particle_module::sll_simple_pic_4d_particle
-  
-  ! [[file:~/selalib/src/particle_methods/particle_types/simple_pic_4d_particle.F90::sll_simple_pic_4d_particle]]
+  !> @brief Test simulation applied to PIC particles of type
+  !> sll_simple_pic_4d_particle_module::sll_simple_pic_4d_particle <!--
+  !> [[file:~/selalib/src/particle_methods/particle_types/simple_pic_4d_particle.F90::sll_simple_pic_4d_particle]] -->
   
   type, extends(sll_simulation_base_class) :: sll_simulation_4d_vp_generic_pic_cartesian
 
-     ! <<particle_group>>
-
-     !> the abstract particle group
+     !> <!-- <<particle_group>> --> the abstract particle group
 
      class(sll_particle_group_base),  pointer     :: particle_group
 
@@ -530,8 +524,8 @@ contains
     !>              * (x,y)^0_k, (vx, vy)^0_k stored in the particle group
     !
     !>          - we ends with
-    !>              * E^0 stored in sim%E1, sim%E2
-    !>              * (x,y)^0_k, (vx, vy)^{-1/2}_k  stored in the the particle group
+    !>              * \f$E^0\f$ stored in sim%E1, sim%E2
+    !>              * \f$(x,y)^0_k, (vx, vy)^{-1/2}_k\f$  stored in the the particle group
     !  ----------------------------------------------------------------------------------------------------
 
     !! -- --  ?? [begin]  -- --
