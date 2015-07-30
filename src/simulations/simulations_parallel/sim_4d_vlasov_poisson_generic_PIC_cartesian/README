@@ -29,8 +29,8 @@
 ** Configuring
 *** extra packages
 
-   binutils is for gprof, linux-tools is for perf
-     [[elisp:(compile "sudo apt-get install -y libopenmpi-dev libfftw3-dev liblapack-dev libhdf5-mpi-dev binutils linux-tools")]]
+    binutils is for gprof, linux-tools is for perf
+    [[elisp:(compile "sudo apt-get install -y libopenmpi-dev libfftw3-dev liblapack-dev libhdf5-mpi-dev binutils linux-tools")]]
     
 *** configuration options
 
