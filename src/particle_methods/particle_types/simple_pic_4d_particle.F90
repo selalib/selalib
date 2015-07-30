@@ -58,10 +58,10 @@ module sll_simple_pic_4d_particle_module
      sll_real32 :: offset_y
 
      !> speed along X axis
-     sll_real64 :: v_x
+     sll_real64 :: vx
 
      !> speed along Y axis
-     sll_real64 :: v_y
+     sll_real64 :: vy
 
      sll_real32 :: weight
 
