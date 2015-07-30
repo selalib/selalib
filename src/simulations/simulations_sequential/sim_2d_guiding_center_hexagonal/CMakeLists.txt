@@ -14,6 +14,12 @@ set( TEST_NAME2  2d_gc_hex_hermite )
 set( SIM_NAME2   2d_guiding_center_hexagonal_hermite )
 set( EXECUTABLE2 "test_${TEST_NAME2}" )
 
+# Third test :
+set( TEST_NAME3  2d_rot_hex_splines )
+set( SIM_NAME3   2d_rotation_hexagonal_splines )
+set( EXECUTABLE3 "test_${TEST_NAME3}" )
+
+
 
 # First test :
 ADD_EXECUTABLE( ${EXECUTABLE1} simulation_${SIM_NAME1}.F90)
@@ -24,7 +30,7 @@ TARGET_LINK_LIBRARIES( ${EXECUTABLE1} sll_simulations_sequential ${SIM_LIBS}
                                                                 pivotbande
                                                                 euler_2d_hex)
 
-# First test :
+# Second test :
 ADD_EXECUTABLE( ${EXECUTABLE2} simulation_${SIM_NAME2}.F90)
 TARGET_LINK_LIBRARIES( ${EXECUTABLE2} sll_simulations_sequential ${SIM_LIBS}
                                                                 hex_hermite
@@ -33,9 +39,21 @@ TARGET_LINK_LIBRARIES( ${EXECUTABLE2} sll_simulations_sequential ${SIM_LIBS}
                                                                 pivotbande
                                                                 euler_2d_hex)
 
+# Third test :
+ADD_EXECUTABLE( ${EXECUTABLE3} simulation_${SIM_NAME3}.F90)
+TARGET_LINK_LIBRARIES(
+  ${EXECUTABLE3} 
+  sll_simulations_sequential
+  ${SIM_LIBS}
+  sll_box_splines
+  sll_hex_meshes)
+
+
+
 # Installing simulations
 INSTALL( TARGETS ${EXECUTABLE1} DESTINATION ${INSTALL_DIR} )
 INSTALL( TARGETS ${EXECUTABLE2} DESTINATION ${INSTALL_DIR} )
+INSTALL( TARGETS ${EXECUTABLE3} DESTINATION ${INSTALL_DIR} )
 INSTALL( FILES   ${INPUT_FILE}  README  DESTINATION ${INSTALL_DIR} )
 
 
