@@ -37,6 +37,7 @@ module sll_simulation_4d_vp_generic_pic_cartesian_module
 
   use sll_module_pic_base
   use sll_simple_pic_4d_group_module
+  use sll_bsl_lt_pic_4d_group_module
   use sll_particle_initializers_4d
   use sll_particle_sort_module
   use sll_charge_to_density_module
@@ -143,10 +144,10 @@ contains
     logical     :: DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC
     sll_int32   :: NC_X,  NC_Y
     sll_real64  :: XMIN, KX_LANDAU, XMAX, YMIN, YMAX
-    sll_int32   :: NUM_PARTS_X, NUM_PARTS_Y, NUM_PARTS_VX, NUM_PARTS_VY
-    sll_real64  :: REMAP_GRID_VX_MIN, REMAP_GRID_VX_MAX
-    sll_real64  :: REMAP_GRID_VY_MIN, REMAP_GRID_VY_MAX
-    sll_int32   :: SPLINE_DEGREE
+    sll_int32   :: number_parts_x, number_parts_y, number_parts_vx, number_parts_vy
+    sll_real64  :: remap_grid_vx_min, remap_grid_vx_max
+    sll_real64  :: remap_grid_vy_min, remap_grid_vy_max
+    sll_int32   :: spline_degree
     sll_int32   :: particle_group_id
     sll_int32   :: NVirtual_X_ForDeposition
     sll_int32   :: NVirtual_Y_ForDeposition
@@ -156,11 +157,8 @@ contains
 
     ! <<simple_pic_particle_group>>
     ! [[selalib:src/particle_methods/particle_types/simple_pic_4d_group.F90::sll_simple_pic_4d_group]]
-    type(sll_simple_pic_4d_group),  pointer     :: simple_pic_particle_group
-
-    ! <<particle_types>> <<lt_pic_particle_group>> this simulation can deal with simple or ltpic particle types
-    !> \todo activate type(sll_lt_pic_4d_group),      pointer     :: lt_pic_particle_group
-
+    type(sll_simple_pic_4d_group),      pointer     :: simple_pic_particle_group
+    type(sll_bsl_lt_pic_4d_group),      pointer     :: bsl_lt_pic_particle_group
 
     type(sll_charge_accumulator_2d),    pointer :: charge_accumulator
 
@@ -185,14 +183,14 @@ contains
 
     namelist /simple_pic_params/    NUM_PARTICLES
 
-    namelist /lt_pic_params/        NUM_PARTS_X,                &
-                                    NUM_PARTS_Y,                &
-                                    NUM_PARTS_VX,               &
-                                    NUM_PARTS_VY,               &
-                                    REMAP_GRID_VX_MIN,          &
-                                    REMAP_GRID_VX_MAX,          &
-                                    REMAP_GRID_VY_MIN,          &
-                                    REMAP_GRID_VY_MAX,          &
+    namelist /lt_pic_params/        number_parts_x,             &
+                                    number_parts_y,             &
+                                    number_parts_vx,            &
+                                    number_parts_vy,            &
+                                    remap_grid_vx_min,          &
+                                    remap_grid_vx_max,          &
+                                    remap_grid_vy_min,          &
+                                    remap_grid_vy_max,          &
                                     NVirtual_X_ForDeposition,   &
                                     NVirtual_Y_ForDeposition,   &
                                     NVirtual_VX_ForDeposition,  &
@@ -246,35 +244,36 @@ contains
                                               sim%mesh_2d%num_cells2   )
 
     print *, "AA"
-    ! initialize [[particle_group]]
+
+    ! construct [[particle_group]]
     if( sim%use_lt_pic_scheme )then
 
+      ! construct [[bsl_lt_particle_group]]
+      particle_group_id = 1
+      bsl_lt_pic_particle_group => sll_bsl_lt_pic_4d_group_new( &
+        SPECIES_CHARGE,                                             &
+        SPECIES_MASS,                                               &
+        particle_group_id,                                          &
+        DOMAIN_IS_X_PERIODIC,                                       &
+        DOMAIN_IS_Y_PERIODIC,                                       &
+        spline_degree,          &
+        number_parts_x,         &
+        number_parts_y,         &
+        number_parts_vx,        &
+        number_parts_vy,        &
+        remap_grid_vx_min,      &
+        remap_grid_vx_max,      &
+        remap_grid_vy_min,      &
+        remap_grid_vy_max,      &
+        sim%mesh_2d )
 
-        !       ! initialize [[lt_pic_particle_group]]
-        !       if( sim%use_cubic_splines )then
-        !          SPLINE_DEGREE = 3
-        !          print *, "Error (7634876568576) -- cubic spline particles not implemented yet"
-        !       else
-        !          SPLINE_DEGREE = 1
-        !       end if
-        !
-        !       sim%lt_pic_particle_group => sll_lt_pic_4d_group_new(    &
-        !            SPLINE_DEGREE,                                      &
-        !            NUM_PARTS_X,                                        &
-        !            NUM_PARTS_Y,                                        &
-        !            NUM_PARTS_VX,                                       &
-        !            NUM_PARTS_VY,                                       &
-        !            REMAP_GRID_VX_MIN,                                  &
-        !            REMAP_GRID_VX_MAX,                                  &
-        !            REMAP_GRID_VY_MIN,                                  &
-        !            REMAP_GRID_VY_MAX,                                  &
-        !            QoverM,                                             &
-        !            DOMAIN_IS_X_PERIODIC,                               &
-        !            DOMAIN_IS_Y_PERIODIC,                               &
-        !            sim%mesh_2d                                         &
-        !       )
+        print *, "AA5"
 
-        !todo: put this in the right place
+      ! here, [[particle_group]] will contain a reference to a bsl_lt_pic group
+      sim%particle_group => bsl_lt_pic_particle_group
+
+      !todo: finish the initialization and visualise the resulting density
+
         !       sim%lt_pic_particle_group%set_parameters(                        &
         !            n_virtual_x_for_deposition = NVirtual_X_ForDeposition,      &
         !            n_virtual_y_for_deposition = NVirtual_Y_ForDeposition,      &
@@ -311,77 +310,48 @@ contains
         !       sim%particle_group => sim%lt_pic_particle_group
 
     else
-       ! initialize [[simple_pic_particle_group]]
-        print *, "AA3"
+
+      ! construct [[simple_pic_particle_group]]
       particle_group_id = 0
+
+      sim%number_particles = NUM_PARTICLES
       simple_pic_particle_group => sll_simple_pic_4d_group_new(     &
             SPECIES_CHARGE,                                             &
             SPECIES_MASS,                                               &
             particle_group_id,                                          &
             DOMAIN_IS_X_PERIODIC,                                       &
             DOMAIN_IS_Y_PERIODIC,                                       &
+            NUM_PARTICLES,                                              &
             sim%mesh_2d )
-        print *, "AA5"
 
-        !! this gives a compilation error but I don't understand why.
-        !  Therefore I call the initialization for the base class pointer below...
-        !
-        !      call random_seed (SIZE=rand_seed_size)
-        !      SLL_ALLOCATE( rand_seed(1:rand_seed_size), ierr )
-        !      do j=1, rand_seed_size
-        !        rand_seed(j) = (-1)**j*(100 + 15*j)*(2*sim%my_rank + 1)
-        !      end do
-        !
-        !      call simple_pic_particle_group%simple_pic_4d_set_landau_parameters( sim%thermal_speed_ions, ALPHA, KX_LANDAU )
-        !
-        !      initial_density_identifier = 0     ! for the moment we only use one density (landau)
-        !      call simple_pic_particle_group%random_initializer( initial_density_identifier, rand_seed, sim%my_rank, sim%world_size )
-        !
-        !      SLL_DEALLOCATE_ARRAY(rand_seed, ierr)
-
-
-
-
-      ! [[particle_group]] will contain either a reference to a simple group or to an ltpic group as defined in
-      ! [[particle_types]]
+      ! here [[particle_group]] will contain a reference to a simple pic group
       sim%particle_group => simple_pic_particle_group
         
     end if
 
     print *, "AA7"
-    ! temporary (todo: put this with the mesh?)
+    ! put this with the particles only?
     sim%domain_is_x_periodic = DOMAIN_IS_X_PERIODIC
     sim%domain_is_y_periodic = DOMAIN_IS_Y_PERIODIC
 
+    ! initialization of the particle group
+    ! todo: clean up the initialization (write a structure for it)
+    call sim%particle_group%set_landau_parameters( sim%thermal_speed_ions, ALPHA, KX_LANDAU )
 
-    if( sim%use_lt_pic_scheme )then
+    print *, "rand_seed_size = ", rand_seed_size
+    print *, "sim%my_rank = ", sim%my_rank
+    call random_seed (SIZE=rand_seed_size)
+    SLL_ALLOCATE( rand_seed(1:rand_seed_size), ierr )
+    do j=1, rand_seed_size
+      print *, "(-1)**j*(100 + 15*j)*(2*sim%my_rank + 1) = ", (-1)**j*(100 + 15*j)*(2*sim%my_rank + 1)
 
-        ! write initialization here ?
+    rand_seed(j) = (-1)**j*(100 + 15*j)*(2*sim%my_rank + 1)
+    end do
 
-    else
+    initial_density_identifier = 0     ! for the moment we only use one density (landau)
+    call sim%particle_group%initializer( initial_density_identifier, rand_seed, sim%my_rank, sim%world_size )
+    SLL_DEALLOCATE_ARRAY(rand_seed, ierr)
 
-      print *, "rand_seed_size = ", rand_seed_size
-      print *, "sim%my_rank = ", sim%my_rank
-      call random_seed (SIZE=rand_seed_size)
-      SLL_ALLOCATE( rand_seed(1:rand_seed_size), ierr )
-      do j=1, rand_seed_size
-          print *, "(-1)**j*(100 + 15*j)*(2*sim%my_rank + 1) = ", (-1)**j*(100 + 15*j)*(2*sim%my_rank + 1)
-
-        rand_seed(j) = (-1)**j*(100 + 15*j)*(2*sim%my_rank + 1)
-      end do
-        print *, "AA8"
-      ! todo: clean up the initialization (write a structure for it, and improve how it is called)
-      call sim%particle_group%set_landau_parameters( sim%thermal_speed_ions, ALPHA, KX_LANDAU )
-
-      initial_density_identifier = 0     ! for the moment we only use one density (landau)
-      print *, "BEFORE SP 0 -- NUM_PARTICLES = ", NUM_PARTICLES
-      sim%number_particles = NUM_PARTICLES
-      call sim%particle_group%random_initializer( NUM_PARTICLES, initial_density_identifier, &
-                                                  rand_seed, sim%my_rank, sim%world_size )
-
-      SLL_DEALLOCATE_ARRAY(rand_seed, ierr)
-
-    end if
 
     !$omp parallel
 #ifdef _OPENMP
