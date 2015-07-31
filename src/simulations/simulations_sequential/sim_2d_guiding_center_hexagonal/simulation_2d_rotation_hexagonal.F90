@@ -183,7 +183,7 @@ use sll_ascii_io
     open(unit = input_file, file=trim(input_filename_loc),IOStat=IO_stat)
      if( IO_stat /= 0 ) then
        SLL_ERROR('rotation_2d_hexagonal_hermite, &
-       ','can not open file')
+       &','can not open file')
      end if
      print *,'#initialization with filename:'
      print *,'#',trim(input_filename_loc)
@@ -254,7 +254,7 @@ use sll_ascii_io
       num_method = SLL_HEX_GANEV_DIMITROV  
     case default    
       SLL_ERROR("rotation_2d_hexagonal_hermite&
-      ", "bad value of num_method_case")  
+      &", "bad value of num_method_case")  
   end select
   
   
