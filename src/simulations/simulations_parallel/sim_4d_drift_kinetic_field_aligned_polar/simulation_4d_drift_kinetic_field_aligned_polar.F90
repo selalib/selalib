@@ -73,6 +73,18 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
   use sll_fcisl_module
   use sll_module_derivative_2d_oblic
   use sll_module_advection_2d_oblic
+  
+  use sll_hdf5_io_serial, only: &
+    sll_hdf5_file_create,       &
+    sll_hdf5_write_array,       &
+    sll_hdf5_file_close
+
+  use sll_xml_io, only:    &
+    sll_xml_file_create,   &
+    sll_xml_grid_geometry, &
+    sll_xml_field,         &
+    sll_xml_file_close,    &
+    sll_xml_dataitem
 
   implicit none
 
@@ -237,6 +249,21 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
      module procedure delete_dk4d_field_aligned_polar
   end interface delete
 
+  !============================================================================
+  ! XDMF FILE
+  !============================================================================
+  type :: sll_t_xdmf_file
+    character(len=64) :: name
+    character(len=64) :: path
+    sll_int32         :: id
+  contains
+    procedure         :: create      => xdmf__create
+    procedure         :: write_grid  => xdmf__write_grid
+    procedure         :: write_array => xdmf__write_array
+    procedure         :: close       => xdmf__close
+  end type sll_t_xdmf_file
+
+ 
 !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 contains
 !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -961,7 +988,18 @@ contains
     sll_real64 :: dt
     sll_int32  :: th_diag_id
     sll_int32  :: i_plot 
- 
+
+    ! Output
+    character(len=4)        :: cplot
+    character(len=32)       :: filetype
+    character(len=64)       :: hdf5_file_name, xml_file_name, field_name
+    sll_int32               :: hdf5_file_id, error
+    type( sll_t_xdmf_file ) :: xdmf_file
+    logical, allocatable    :: info_list(:)
+    logical                 :: to_file
+    character(len=256)      :: dataset, dataset_x1, dataset_x2
+    sll_int32               :: dims(2)
+
     ! Shortcuts 
     dt = sim%dt    
     nc_x1 = sim%m_x1%num_cells ! GLOBAL number of cells along each direction
@@ -1002,10 +1040,16 @@ contains
     call initialize_fdistribu4d_DK(sim,sim%layout4d_parx1,sim%f4d_parx1)
 
     !--------------------------------------------------------------------------
+    ! Write mesh data to file (it does not change with time)
+    !--------------------------------------------------------------------------
+
+    call write_mesh_x1x2_polar( sim%m_x1, sim%m_x2, dataset_x1, dataset_x2 )
+
+    !--------------------------------------------------------------------------
     ! Time cycle
     !--------------------------------------------------------------------------
     i_plot = 0
-    do iter=1,sim%num_iterations    
+    do iter=1,sim%num_iterations
 
       ! Compute 3D charge density from 4D distribution function
       call compute_local_sizes( sim%layout4d_parx1, &
@@ -1085,9 +1129,23 @@ contains
           stop
       end select          
 
-      if(modulo(iter,sim%freq_diag)==0) then
+      if (modulo(iter,sim%freq_diag)==0) then
 
         i_plot = i_plot+1
+
+        ! Determine file names
+        call int2string( i_plot, cplot )
+        hdf5_file_name = 'diag2d_'//cplot//'.h5'  ! HDF5 file (heavy data)
+        xml_file_name  = 'diag2d_'//cplot//'.xmf' ! XML  file (light data)
+
+        ! Create new files
+        if (sll_get_collective_rank(sll_world_collective)==0) then
+          ! HDF5 file is created and closed (it will be referenced by name)
+          call sll_hdf5_file_create( hdf5_file_name, hdf5_file_id, file_err )
+          call sll_hdf5_file_close ( hdf5_file_id, file_err )
+          ! XML file is created and kept open
+          call xdmf_file%create( xml_file_name )
+        end if
 
         ! Get global indices of point that has:
         !  . r = (r_min+r_max)/2  (center value)
@@ -1125,16 +1183,44 @@ contains
         ! If point is in local domain, print slice of f on poloidal plane z=0
         if(loc4d(3) > 0) then
 #ifndef NOHDF5
-          call plot_f_polar( &
-            i_plot, &
+          field_name = 'f_x1x2'
+          call sll_hdf5_file_open  ( hdf5_file_name, file_id, error )
+          call sll_hdf5_write_array( file_id, &
             sim%f4d_parx3x4(:,:,loc4d(3),loc4d(4)), &
-            sim%m_x1,sim%m_x2)
+            '/'//field_name, &
+            error )
+          call sll_hdf5_file_close ( file_id, error )
+          to_file = .true.
+          dataset = trim( hdf5_file_name )//':/'//trim( field_name )
+!          call plot_f_polar( &
+!            hdf5_file_name, &
+!            i_plot, &
+!            sim%f4d_parx3x4(:,:,loc4d(3),loc4d(4)), &
+!            sim%m_x1, sim%m_x2 &
+!            dataset )
+!          call plot_f_polar( &
+!            i_plot, &
+!            sim%f4d_parx3x4(:,:,loc4d(3),loc4d(4)), &
+!            sim%m_x1,sim%m_x2)
 #endif
+        else
+          to_file = .false.
+          dataset = ''
         endif
 
-      endif
+        ! Send information about new datasets to master
+        call xdmf_collect_datasets( xdmf_file, &
+          dataset, dims, filetype, &
+          to_file )
 
-   enddo
+        ! Close the new XML file
+        if (sll_get_collective_rank( sll_world_collective )==0) then
+          call xdmf_file%close()
+        end if
+
+      endif !if (modulo(iter,sim%freq_diag)==0)
+
+    enddo !do iter=1,sim%num_iterations
    
   end subroutine run_dk4d_field_aligned_polar
 
@@ -2265,27 +2351,77 @@ contains
   !---------------------------------------------------
   ! Save the mesh structure
   !---------------------------------------------------
-  subroutine plot_f_polar(iplot,f,m_x1,m_x2)
-    use sll_xdmf
-    use sll_hdf5_io_serial
+  subroutine write_mesh_x1x2_polar( mesh_x1, mesh_x2, dataset_x1, dataset_x2 )
+    type(sll_cartesian_mesh_1d), intent(in   ) :: mesh_x1
+    type(sll_cartesian_mesh_1d), intent(in   ) :: mesh_x2
+    character(len=64)          , intent(  out) :: dataset_x1
+    character(len=64)          , intent(  out) :: dataset_x2
+
+    sll_real64, allocatable :: x1(:,:), x2(:,:)
+    sll_real64              :: r, dr, rmin, rmax, theta, dtheta
+    sll_int32               :: i, j, nnodes_x1, nnodes_x2
+    sll_int32               :: file_id, error
+
+    nnodes_x1 = mesh_x1%num_cells+1
+    nnodes_x2 = mesh_x2%num_cells+1
+    rmin      = mesh_x1%eta_min
+    rmax      = mesh_x1%eta_max
+    dr        = mesh_x1%delta_eta
+    dtheta    = mesh_x2%delta_eta
+
+    SLL_ALLOCATE( x1(nnodes_x1,nnodes_x2), error )
+    SLL_ALLOCATE( x2(nnodes_x1,nnodes_x2), error )
+
+    do j = 1,nnodes_x2
+      do i = 1,nnodes_x1
+        r       = rmin+real(i-1,f64)*dr
+        theta   = real(j-1,f64)*dtheta
+        x1(i,j) = r*cos(theta)
+        x2(i,j) = r*sin(theta)
+      end do
+    end do
+
+    call sll_hdf5_file_create( "mesh_x1x2_polar", file_id, error )
+    call sll_hdf5_write_array( file_id, x1, "/x1", error )
+    call sll_hdf5_write_array( file_id, x2, "/x2", error )
+    call sll_hdf5_file_close ( file_id, error )
+
+    dataset_x1 = "mesh_x1x2_polar:/x1"
+    dataset_x2 = "mesh_x1x2_polar:/x2"
+
+    deallocate(x1)
+    deallocate(x2)
+
+  end subroutine
+
+  !---------------------------------------------------
+  ! Save the mesh structure
+  !---------------------------------------------------
+  subroutine plot_f_polar( xml_file_id, hdf5_file_name, iplot, f, m_x1, m_x2 )
+    sll_int32                  , intent(in) :: xml_file_id
+    character(len=*)           , intent(in) :: hdf5_file_name
+    sll_int32                  , intent(in) :: iplot
+    sll_real64                 , intent(in) :: f(:,:)
+    type(sll_cartesian_mesh_1d), pointer    :: m_x1
+    type(sll_cartesian_mesh_1d), pointer    :: m_x2
+
     sll_int32 :: file_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1
     sll_real64, dimension(:,:), allocatable :: x2
     sll_int32 :: i, j
-    sll_int32, intent(in) :: iplot
     character(len=4)      :: cplot
     sll_int32             :: nnodes_x1, nnodes_x2
-    type(sll_cartesian_mesh_1d), pointer :: m_x1
-    type(sll_cartesian_mesh_1d), pointer :: m_x2
-    sll_real64, dimension(:,:), intent(in) :: f
     sll_real64 :: r
     sll_real64 :: theta
     sll_real64 :: rmin
     sll_real64 :: rmax
     sll_real64 :: dr
     sll_real64 :: dtheta
-    
+
+    character(len=*), parameter :: grid_file_name = 'polar_mesh.h5'
+    character(len=64) :: field_name, field_path
+
     
     nnodes_x1 = m_x1%num_cells+1
     nnodes_x2 = m_x2%num_cells+1
@@ -2310,23 +2446,50 @@ contains
           x2(i,j) = r*sin(theta)
         end do
       end do
-      call sll_hdf5_file_create("polar_mesh-x1.h5",file_id,error)
-      call sll_hdf5_write_array(file_id,x1,"/x1",error)
-      call sll_hdf5_file_close(file_id, error)
-      call sll_hdf5_file_create("polar_mesh-x2.h5",file_id,error)
-      call sll_hdf5_write_array(file_id,x2,"/x2",error)
-      call sll_hdf5_file_close(file_id, error)
+      call sll_hdf5_file_create( grid_file_name, file_id, error )
+      call sll_hdf5_write_array( file_id, x1, "/x1", error )
+      call sll_hdf5_write_array( file_id, x2, "/x2", error )
+      call sll_hdf5_file_close ( file_id, error )
+!      call sll_hdf5_file_create("polar_mesh-x1.h5",file_id,error)
+!      call sll_hdf5_write_array(file_id,x1,"/x1",error)
+!      call sll_hdf5_file_close(file_id, error)
+!      call sll_hdf5_file_create("polar_mesh-x2.h5",file_id,error)
+!      call sll_hdf5_write_array(file_id,x2,"/x2",error)
+!      call sll_hdf5_file_close(file_id, error)
       deallocate(x1)
       deallocate(x2)
 
     end if
 
-    call int2string(iplot,cplot)
-    call sll_xdmf_open("f_x1x2_"//cplot//".xmf","polar_mesh", &
-      nnodes_x1,nnodes_x2,file_id,error)
-    call sll_xdmf_write_array("f_x1x2_"//cplot,f,"values", &
-      error,file_id,"Node")
-    call sll_xdmf_close(file_id,error)
+    field_name = 'f_x1x2'
+    field_path = trim(hdf5_file_name)//':/'//trim(field_name)
+
+    call sll_hdf5_file_open  ( hdf5_file_name, file_id, error )
+    call sll_hdf5_write_array( file_id, f, '/'//field_name, error )
+    call sll_hdf5_file_close ( file_id, error )
+    call sll_xml_grid_geometry( xml_file_id, &
+      grid_file_name, &
+      nnodes_x1,      &
+      grid_file_name, &
+      nnodes_x2,      &
+      'x1',           &
+      'x2',           &
+      'Uniform' ) 
+    call sll_xml_field( xml_file_id, &
+      field_name, &
+      field_path, &
+      nnodes_x1,  &
+      nnodes_x2,  &
+      'HDF',      &
+      'Node' )
+
+!    call int2string(iplot,cplot)
+!    call sll_xdmf_open("f_x1x2_"//cplot//".xmf","polar_mesh", &
+!      nnodes_x1,nnodes_x2,file_id,error)
+!    call sll_xdmf_write_array("f_x1x2_"//cplot,f,"values", &
+!      error,file_id,"Node")
+!    call sll_xdmf_close(file_id,error)
+
   end subroutine plot_f_polar
 
 #endif
@@ -2404,9 +2567,165 @@ contains
 
 #endif
 
+!==============================================================================
+! UTILITIES
+!==============================================================================
+  subroutine split( path, head, tail )
+    character(len=*), intent(in   ) :: path
+    character(len=*), intent(  out) :: head
+    character(len=*), intent(  out) :: tail
 
+    sll_int32 :: nc
+    sll_int32 :: i
 
-  
+    ! Number of non-blank characters in path string
+    nc = len_trim( path, i32 )
+
+    ! If last character is '/', tail is empty
+    if (path(nc:nc) == '/') then
+      head = path(1:nc)
+      tail = ''
+    end if
+
+    ! Search backwards (from right to left) for '/' character, and split path
+    do i = nc-1,1,-1
+      if (path(i:i) == '/') then
+        head = path(1:i) 
+        tail = path(i+1:nc)
+        return
+      end if
+    end do
+
+    ! If no '/' character was found, head is empty
+    head = ''
+    tail = path(1:nc)
+
+  end subroutine split
+
+!==============================================================================
+! XDMF FILE
+!==============================================================================
+  subroutine xdmf__create( self, xml_file_name )
+    class(sll_t_xdmf_file), intent(inout) :: self
+    character(len=*)      , intent(in   ) :: xml_file_name
+
+    sll_int32 :: xml_file_id, error
+
+    call sll_xml_file_create( xml_file_name, xml_file_id, error )
+    SLL_ASSERT( error == 0 )
+
+    self%name = xml_file_name
+    self%id   = xml_file_id
+
+  end subroutine xdmf__create
+ 
+!------------------------------------------------------------------------------
+  subroutine xdmf__write_grid( self, x1_path, x2_path, dims )
+    class(sll_t_xdmf_file), intent(inout) :: self
+    character(len=*)      , intent(in   ) :: x1_path
+    character(len=*)      , intent(in   ) :: x2_path
+    sll_int32             , intent(in   ) :: dims(2)
+
+    character(len=256) :: x1_group
+    character(len=256) :: x2_group
+    character(len=64)  :: x1_dataset
+    character(len=64)  :: x2_dataset
+
+    call split( x1_path, x1_group, x1_dataset )
+    call split( x2_path, x2_group, x2_dataset )
+
+    call sll_xml_grid_geometry( self%id, &
+      x1_group,   &
+      dims(1),    &
+      x2_group,   &
+      dims(2),    &
+      x1_dataset, &
+      x2_dataset, &
+      'Uniform' ) 
+
+  end subroutine xdmf__write_grid
+
+!------------------------------------------------------------------------------
+  subroutine xdmf__write_array( self, path, dims, filetype )
+    class(sll_t_xdmf_file), intent(inout) :: self
+    character(len=*)      , intent(in   ) :: path
+    sll_int32             , intent(in   ) :: dims(2)
+    character(len=*)      , intent(in   ) :: filetype
+
+    character(len=256) :: group
+    character(len=64)  :: dataset
+
+    SLL_ASSERT( filetype == 'HDF' .or. filetype == 'Binary' )
+    call split( path, group, dataset )
+
+    write( self%id,"(a)" ) &
+    "<Attribute Name='"//trim(dataset)// &
+    "' AttributeType='Scalar' Center='Node'>"
+    call sll_xml_dataitem( self%id, path, dims(1), dims(2), filetype )
+    write( self%id,"(a)" ) "</Attribute>"
+
+  end subroutine xdmf__write_array
+
+!------------------------------------------------------------------------------
+  subroutine xdmf__close( self )
+    class(sll_t_xdmf_file), intent(inout) :: self
+
+    sll_int32 :: error
+
+    call sll_xml_file_close( self%id, error )
+    SLL_ASSERT( error == 0 )
+
+  end subroutine xdmf__close
+
+!==============================================================================
+! COLLECTIVE OPERATIONS for XDMF file
+!==============================================================================
+  subroutine xdmf_collect_datasets( xdmf_file, &
+    dataset, dims, filetype, &
+    to_file )
+
+    use mpi
+
+    type(sll_t_xdmf_file), intent(inout) :: xdmf_file
+    character(len=*)     , intent(in   ) :: dataset
+    sll_int32            , intent(in   ) :: dims(2)
+    character(len=*)     , intent(in   ) :: filetype
+    logical              , intent(in   ) :: to_file
+
+    logical              :: buf(1)    ! buffer for send (all processes)
+    logical, allocatable :: recbuf(:) ! buffer for receive (only master)
+    sll_int32            :: i, comm, np, ierr, status(mpi_status_size)
+
+    ! Some info about communicator
+    comm = sll_world_collective%comm
+    np   = sll_get_collective_size( sll_world_collective )
+
+    ! MASTER
+    if (sll_get_collective_rank( sll_world_collective )==0) then
+      allocate( recbuf(0:np-1) )
+      recbuf(0) = to_file
+      ! Check sizes
+      call mpi_gather( mpi_in_place, 1, mpi_logical, recbuf, 1, mpi_logical, 0, ierr )
+      do i=1,count( recbuf )
+        ! Check sizes
+        call mpi_recv( dataset, np*len( dataset ), mpi_character, mpi_any_source, mpi_any_tag, comm, status, ierr )
+        call xdmf_file%write_array( dataset, dims, filetype )
+      enddo
+
+    ! NOT MASTER
+    else
+      buf(1) = to_file
+      ! Check sizes
+      call mpi_gather( buf, 1, mpi_logical, recbuf, 0, 0, 0, comm, ierr )
+      if (buf(1)) then
+        call mpi_send( dataset, len( dataset ), mpi_character, 0, 9, comm, ierr )
+      end if
+
+    end if
+
+  end subroutine xdmf_collect_datasets
+
+!==============================================================================
 
 end module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
 
@@ -2428,7 +2747,7 @@ end module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
 !    a )
 !    sll_real64, dimension(:), intent(out) :: B_x2_array
 !    sll_real64, dimension(:), intent(in) :: x1_array
-!    sll_int32, intent(in) :: num_points_x1
+!    sll_int32, inent(in) :: num_points_x1
 !    sll_real64, intent(in) :: R
 !    sll_real64, intent(in) :: a
 !    sll_real64 :: q
@@ -2448,7 +2767,7 @@ end module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
 !        num_points_x1
 !      stop
 !    endif
-!    do i=1,num_points_x1    
+!    do           i=1,num_points_x1    
 !      x1 = x1_array(i)
 !      q = 1+(x1/a)**2
 !      B_x2_array(i) = 1._f64+(x1/(R*q))**2
