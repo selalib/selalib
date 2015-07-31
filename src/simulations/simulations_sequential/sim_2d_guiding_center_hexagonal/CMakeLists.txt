@@ -19,6 +19,10 @@ set( TEST_NAME3  2d_rot_hex_splines )
 set( SIM_NAME3   2d_rotation_hexagonal_splines )
 set( EXECUTABLE3 "test_${TEST_NAME3}" )
 
+# Fourth test :
+set( TEST_NAME4  2d_rot_hex )
+set( SIM_NAME4   2d_rotation_hexagonal )
+set( EXECUTABLE4 "test_${TEST_NAME4}" )
 
 
 # First test :
@@ -47,6 +51,17 @@ TARGET_LINK_LIBRARIES(
   ${SIM_LIBS}
   sll_box_splines
   sll_hex_meshes)
+
+# Fourth test :
+ADD_EXECUTABLE( ${EXECUTABLE4} simulation_${SIM_NAME4}.F90)
+TARGET_LINK_LIBRARIES(
+  ${EXECUTABLE4} 
+  sll_simulations_sequential
+  ${SIM_LIBS}
+  hex_hermite
+  sll_box_splines
+  sll_hex_meshes)
+
 
 
 
