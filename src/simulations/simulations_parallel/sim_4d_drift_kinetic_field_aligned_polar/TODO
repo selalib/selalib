@@ -1,0 +1,28 @@
+TODO
+====
+
+Scalar diagnostics Y(t)
+-----------------------
+  . L1-norm( f )
+  . L2-norm( f )
+  . max( f )
+  . min( f )
+  . Electrostatic energy
+  . Kinetic energy
+
+>> Should be computed at EACH time-step, and saved to a single HDF5 file
+
+3D arrays
+---------
+  . phi (electrostatic potential)
+
+>> Saved to file every 'output3d_interval' time-steps
+
+4D arrays
+---------
+  . f (distribution function = full solution)
+
+>> Saved to file every 'output4d_interval' time-steps
+>> Each processor saves its own part of f, parallelized in x1=r
+
+
