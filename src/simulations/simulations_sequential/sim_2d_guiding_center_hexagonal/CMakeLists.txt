@@ -24,6 +24,12 @@ set( TEST_NAME4  2d_rot_hex )
 set( SIM_NAME4   2d_rotation_hexagonal )
 set( EXECUTABLE4 "test_${TEST_NAME4}" )
 
+# Fifth test :
+set( TEST_NAME5  2d_rot_polar )
+set( SIM_NAME5   2d_rotation_polar )
+set( EXECUTABLE5 "test_${TEST_NAME5}" )
+
+
 
 # First test :
 ADD_EXECUTABLE( ${EXECUTABLE1} simulation_${SIM_NAME1}.F90)
@@ -56,6 +62,16 @@ TARGET_LINK_LIBRARIES(
 ADD_EXECUTABLE( ${EXECUTABLE4} simulation_${SIM_NAME4}.F90)
 TARGET_LINK_LIBRARIES(
   ${EXECUTABLE4} 
+  sll_simulations_sequential
+  ${SIM_LIBS}
+  hex_hermite
+  sll_box_splines
+  sll_hex_meshes)
+
+# Fifth test :
+ADD_EXECUTABLE( ${EXECUTABLE5} simulation_${SIM_NAME5}.F90)
+TARGET_LINK_LIBRARIES(
+  ${EXECUTABLE5} 
   sll_simulations_sequential
   ${SIM_LIBS}
   hex_hermite

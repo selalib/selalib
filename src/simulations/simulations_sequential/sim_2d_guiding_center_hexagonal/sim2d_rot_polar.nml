@@ -1,0 +1,22 @@
+&geometry
+    rmin = 1e-5
+    rmax = 8.
+    num_cells1 = 128
+    num_cells2 = 128
+/
+&initial_function
+    gauss_x1 = 2.0
+    gauss_x2 = 2.0
+    gauss_sig = 0.353553390593
+    gauss_amp = 1.0
+/
+&time_iterations
+    dt = 0.125
+    number_iterations = 160
+    freq_diag = 320
+    freq_diag_time = 160
+/
+&interpolation
+    num_method_case = 'SLL_CUBIC_SPLINES'
+    p = 6
+/
