@@ -14,14 +14,16 @@ sll_int32                   :: error
 sll_real64                  :: x1
 sll_real64                  :: x2
 sll_int32                   :: i
+sll_int32                   :: i_elmt
 sll_int32                   :: nei1
 sll_int32                   :: nei2
 sll_int32                   :: nei3
 sll_int32                   :: type
 sll_int32                   :: spline_degree
+sll_int32, allocatable      :: connectivity(:)
 
-num_cells = 20
-spline_degree = 2
+num_cells = 4
+spline_degree = 1
 
 print *, ""
 print *, "Creating a mesh with", num_cells, "cells, mesh coordinates written in ./hex_mesh_coo.txt"
@@ -46,14 +48,29 @@ call write_caid_files(mesh, spline_degree)
 call delete(mesh)
 
 ! TESTING NEIGHBOURS :
-num_cells = 2
+num_cells = 4
 mesh => new_hex_mesh_2d(num_cells)
 
+! do i = 1, mesh%num_triangles
+!    call get_neighbours(mesh, i, nei1, nei2, nei3)
+!    type = cell_type(mesh, i)
+!    print *, "i =", i, "type:", type, "neighbourcells =", nei1, nei2, nei3
+! end do
+
+
+SLL_ALLOCATE(connectivity(mesh%num_triangles), i)
+connectivity(:) = -1
+print *, ""
 do i = 1, mesh%num_triangles
-   call get_neighbours(mesh, i, nei1, nei2, nei3)
-   type = cell_type(mesh, i)
-   print *, "i =", i, "type:", type, "neighbourcells =", nei1, nei2, nei3
+   i_elmt = change_elements_notation(mesh, i)
+!   print *, i, "===>", i_elmt
+   connectivity(i_elmt) = i
 end do
+
+do i = 1, mesh%num_triangles
+   print *, "---- the element", i, "was in charles notation:", connectivity(i)
+end do
+
 
 call delete(mesh)
 
