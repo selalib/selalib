@@ -173,13 +173,6 @@ SLL_ALLOCATE(LM(mesh%num_triangles, 10), ierr)
 
 call initialize_knots_hexmesh(rule, mesh, knots, LM)
 
-! Writing file for CAID:
-call write_quadrature(rule)
-call write_connectivity(mesh, degree)
-! ---------------------------------------
-
-
-
 print*, 'PASSED'
 
 end program integration_tester

@@ -380,7 +380,7 @@ contains
   !> @brief Writes fekete points coordinates of a hex-mesh reference triangle
   !> @details Takes the reference triangle of a hexmesh and computes the
   !> fekete points on it. Then it writes the results in a file following
-  !> CAID nomenclature. 
+  !> CAID/Django nomenclature. 
   !> Output file : quadrature.txt
   !> @param[in]  rule integer for the fekete quadrature rule
   subroutine write_quadrature(rule)
