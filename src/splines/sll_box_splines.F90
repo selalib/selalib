@@ -987,6 +987,18 @@ contains  ! ****************************************************************
 
   end subroutine write_connectivity
 
+  
+  !> @brief This function is supposed to write all django input files
+  !> needed for a Django/Jorek simulation.
+  !> @param[in] mesh hexagonal mesh on which the simulation will be done
+  !> @param[in] deg integer degree of the splines that will be used for the
+  !> interpolation
+  subroutine write_all_django_files(mesh, deg)
+    type(sll_hex_mesh_2d), pointer :: mesh
+    sll_int32, intent(in)          :: deg
+
+  end subroutine write_all_django_files
+  
   !> @brief Generic sub-routine defined for 2D box spline types.
   !> Deallocates the memory associated with the given box spline object.
   !> @param[inout] spline_object.
