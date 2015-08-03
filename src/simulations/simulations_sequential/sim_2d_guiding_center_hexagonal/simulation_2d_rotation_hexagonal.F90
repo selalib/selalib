@@ -17,6 +17,7 @@ use sll_ascii_io
   sll_int32, parameter :: SLL_HEX_HCTR = 11 
   sll_int32, parameter :: SLL_HEX_HCTC = 12 
   sll_int32, parameter :: SLL_HEX_GANEV_DIMITROV = 15 
+  sll_int32, parameter :: SLL_HEX_NOTHING = 0 
 
   type(sll_hex_mesh_2d),   pointer        :: mesh
   type(sll_box_spline_2d), pointer        :: spline
@@ -99,7 +100,13 @@ use sll_ascii_io
   sll_real64 :: l2_err_loc
   sll_real64 :: rho_min
   sll_real64 :: rho_min_loc
-
+  sll_real64 :: time_compute_interpolant
+  sll_real64 :: time_interpolate
+  sll_real64 :: time_t0
+  sll_real64 :: time_t1
+  sll_int32 :: total_num_pts
+  sll_real64 :: cosdt
+  sll_real64 :: sindt
 
 
   namelist /geometry/ &
@@ -128,6 +135,9 @@ use sll_ascii_io
 
 
   call cpu_time(t_init)
+  time_interpolate = 0._f64
+  time_compute_interpolant = 0._f64
+  
   
   ! ----------------------------
   ! Default parameters
@@ -252,6 +262,8 @@ use sll_ascii_io
       num_method = SLL_HEX_HCTC  
     case ("SLL_HEX_GANEV_DIMITROV")
       num_method = SLL_HEX_GANEV_DIMITROV  
+    case ("SLL_HEX_NOTHING")
+      num_method = SLL_HEX_NOTHING  
     case default    
       SLL_ERROR("rotation_2d_hexagonal_hermite&
       &", "bad value of num_method_case")  
@@ -343,22 +355,29 @@ use sll_ascii_io
     ! Compute interpolants
     ! ----------------------------
 
-    
+    call cpu_time(time_t0)
     if(num_method==SLL_HEX_SPLINES)then
       call compute_coeff_box_spline_2d( rho_tn, spline_degree, spline )
+    elseif(num_method == SLL_HEX_NOTHING)then
     else
       call  der_finite_difference( rho_tn, p, mesh%delta, mesh, deriv)
     endif
+    call cpu_time(time_t1)
+    time_compute_interpolant = time_compute_interpolant+time_t1-time_t0 
 
     ! ----------------------------
     ! Interpolation at vertices
     ! ----------------------------
-
+    call cpu_time(time_t0)
+    
+    cosdt = cos(dt)
+    sindt = sin(dt)
+    
     do i=1, n_points
       x = mesh%cartesian_coord(1,i)
       y = mesh%cartesian_coord(2,i)
-      xx = x*cos(dt) - y*sin(dt)
-      yy = x*sin(dt) + y*cos(dt)
+      xx = x*cosdt - y*sindt
+      yy = x*sindt + y*cosdt
 
       inside = .true.
       h1 =  xx*r11 + yy*r12
@@ -370,6 +389,8 @@ use sll_ascii_io
       if ( inside ) then
         if(num_method==SLL_HEX_SPLINES)then
           rho_tn1(i) = hex_interpolate_value(mesh, xx, yy, spline, spline_degree)
+        elseif(num_method==SLL_HEX_NOTHING)then
+          rho_tn1(i) = rho_tn(i)
         else
 		  call hermite_interpolation( &
 		    i, &
@@ -467,6 +488,7 @@ use sll_ascii_io
         endif
       enddo
     endif
+    call cpu_time(time_t1)
 
     ! ----------------------------
     ! Update solution
@@ -479,6 +501,7 @@ use sll_ascii_io
     if(use_edge)then
       edge_values_tn = edge_values_tn1
     endif
+    time_interpolate = time_interpolate+time_t1-time_t0 
 
 
     ! ----------------------------
@@ -562,9 +585,26 @@ use sll_ascii_io
   call cpu_time(t_end)
   
   print *, &
-    '#cpu time,min of rho_min', &
+    '#cpu time,interpo-lant/late', &
     t_end-t_init, &
-    rho_min    
+    time_compute_interpolant, &
+    time_interpolate
+  
+  total_num_pts = compute_num_tot_points( &
+    num_cells, &
+    use_edge=use_edge, &
+    use_center=use_center)
+  
+  print *, &
+    '#efficiency', &
+    real(total_num_pts,f64)*real(number_iterations,f64) &
+    /(1.e6_f64*(t_end-t_init)), &
+    real(total_num_pts,f64)*real(number_iterations,f64) &
+    /(1.e6_f64*(time_compute_interpolant+time_interpolate))
+
+    
+    
+    !real(use_edge,f64),real(use_tri,f64)   
   print *, &
     '#max of err (l1,l2,linf)', &
     l1_err, &
@@ -580,7 +620,9 @@ use sll_ascii_io
     l2_err, &
     linf_err, &
     linf_err_center, &
-    linf_err_edge
+    linf_err_edge, &
+    time_compute_interpolant, &
+    time_interpolate
 
   close(thdiag_0d_id)
   
@@ -665,5 +707,57 @@ contains
     
   end subroutine gaussian_at_t
 
+  function compute_num_tot_points( &
+    num_cells, &
+    use_edge, &
+    use_center) &
+    result(res)
+    
+    sll_int32, intent(in) :: num_cells
+    logical, intent(in), optional :: use_edge
+    logical, intent(in), optional :: use_center
+    sll_int32 :: res
+         
+    logical :: use_center_loc
+    logical :: use_edge_loc
+    sll_int32 :: use_center_int
+    sll_int32 :: use_edge_int
+    sll_int32 :: num_pts
+    sll_int32 :: num_edges
+    sll_int32 :: num_tri
+    
+
+    
+    if(present(use_center))then
+      use_center_loc = use_center
+    else
+      use_center_loc = .false.  
+    endif
+    if(present(use_edge))then
+      use_edge_loc = use_edge
+    else
+      use_edge_loc = .false.  
+    endif
+    
+    if(use_edge_loc)then
+      use_edge_int = 1
+    else
+      use_edge_int = 0
+    endif
+
+    if(use_center_loc)then
+      use_center_int = 1
+    else
+      use_center_int = 0
+    endif
+    
+    
+    num_pts=3*num_cells*(num_cells+1)+1
+    num_edges=3*num_cells*(3*num_cells+1)
+    num_tri=6*num_cells**2
+
+    res = num_pts+use_center_int*num_tri
+    res = res+use_edge_int*num_edges  
+  end function compute_num_tot_points
 
 end program rotation_2d_hexagonal
