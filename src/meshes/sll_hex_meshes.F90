@@ -1363,6 +1363,159 @@ contains
   end subroutine get_edge_index
 
 
+  !> @brief Function that allows to change from the current element notation
+  !> to one more intuitive
+  !> @details As the notations of the elements, chosen by Charles, is not
+  !> really intuitive, this functions allow to go from that one, to one
+  !> easier to understand. It will give the index of the element in the new
+  !> notation system, when given an index of the older system.
+  !> Here is the difference between the two notation for a mesh of 6 elements
+  !> (ie. nc = 1):
+  !>      Charles notation:  || New notation:
+  !>           /|\           ||       /|\
+  !>         / 1|2 \         ||     / 2|1 \
+  !>        | 3\|/6 |        ||    | 3\|/6 |      The new notation system
+  !>        | /4|5\ |        ||    | /4|5\ |      respects more the hexagonal
+  !>           \|/           ||       \|/         notation style.
+  !> @param[in]  mesh pointer to the hexagonal mesh
+  !> @param[in]  i_elmt_old integer index of an element in Charles notation
+  !> @param[out] i_elmt integer index of an element in the new notation system.
+  function change_elements_notation(mesh, i_elmt_old) result(i_elmt)
+    type(sll_hex_mesh_2d), pointer :: mesh
+    sll_int32, intent(in) :: i_elmt_old
+    sll_int32 :: i_elmt
+    sll_int32 :: e1, e2, e3
+    sll_int32 :: j1, j2, j3
+    sll_int32 :: e1_k1, e1_k2
+    sll_int32 :: e2_k1, e2_k2
+    sll_int32 :: e3_k1, e3_k2
+    sll_int32 :: e1_distance
+    sll_int32 :: e2_distance
+    sll_int32 :: e3_distance
+    sll_int32 :: sixth
+    sll_int32 :: layer
+    sll_int32 :: npts_layer
+    sll_int32 :: npts_layer_1
+    sll_int32 :: displacement
+
+    ! Getting cell vertices
+    call get_cell_vertices_index(mesh%center_cartesian_coord(1,i_elmt_old), &
+         mesh%center_cartesian_coord(2,i_elmt_old), &
+         mesh, &
+         e1, e2, e3)
+
+    ! Getting their hexagonal coordinates
+    e1_k1 = mesh%hex_coord(1,e1)
+    e1_k2 = mesh%hex_coord(2,e1)
+    e2_k1 = mesh%hex_coord(1,e2)
+    e2_k2 = mesh%hex_coord(2,e2)
+    e3_k1 = mesh%hex_coord(1,e3)
+    e3_k2 = mesh%hex_coord(2,e3)
+
+    ! Getting their distance to origin:
+    e1_distance = cells_to_origin(e1_k1, e1_k2)
+    e2_distance = cells_to_origin(e2_k1, e2_k2)
+    e3_distance = cells_to_origin(e3_k1, e3_k2)
+
+    ! computing on which hexagonal layer is the cell
+    layer = e1_distance + e2_distance + e3_distance
+    layer = layer / 3
+
+    !Computing on which sixth of the hexagon are we:
+    if ((e1_k1 >= 0).and.(e1_k2 >= 0).and.&
+         (e2_k1 >= 0).and.(e2_k2 >= 0).and.&
+         (e3_k1 >= 0).and.(e3_k2 >= 0)) then
+       if (e1_k1+e2_k1+e3_k1 .gt. e1_k2+e2_k2+e3_k2) then
+          sixth = 1
+       else
+          sixth = 2
+       end if
+    elseif ((e1_k1 <= 0).and.(e1_k2 <= 0).and.&
+         (e2_k1 <= 0).and.(e2_k2 <= 0).and.&
+         (e3_k1 <= 0).and.(e3_k2 <= 0)) then
+       if (abs(e1_k1+e2_k1+e3_k1).gt.abs(e1_k2+e2_k2+e3_k2)) then
+          sixth = 4
+       else
+          sixth = 5
+       endif
+    elseif ((e1_k1 <= 0).and.(e1_k2 >= 0).and.&
+         (e2_k1 <= 0).and.(e2_k2 >= 0).and.&
+         (e3_k1 <= 0).and.(e3_k2 >= 0)) then
+       sixth = 3
+    else
+       sixth = 6
+    end if
+!    print *, "sixth =", sixth
+    
+    ! Treating the first layer separetly
+    if (layer.eq.0) then
+       i_elmt = sixth
+    else
+       ! founding the displacement:
+       npts_layer = 3 * (layer + 1) * layer + 1
+       npts_layer_1 = 3 * (layer - 1) * layer + 1
+!       print *, "npts_layer et -1", npts_layer, npts_layer_1
+       j1 = e1 - npts_layer
+       j2 = e2 - npts_layer
+       j3 = e3 - npts_layer
+!       print *, "j1, j2, j3", j1, j2, j3
+       if (j1 <= 0) then
+          if (j2 <= 0) then
+             displacement = e3 - npts_layer
+             if (MOD(sixth,2).eq.1) then
+                displacement = 2*(displacement-1) - (sixth - 1)
+             else
+                displacement = 2*(displacement-1) - (sixth - 1)
+             endif
+          elseif (j3 <= 0) then
+             displacement = e2 -npts_layer
+             if (MOD(sixth,2).eq.1) then
+                displacement = 2*(displacement-1) - (sixth - 1)
+             else
+                displacement = 2*(displacement-1) - (sixth - 1)
+             end if
+          else
+             displacement = e1 - npts_layer_1
+             if (MOD(sixth,2).eq.1) then
+                displacement = 2*(displacement-1) + sixth
+             else
+                displacement = 2*(displacement-1) + sixth
+             end if
+          end if
+       elseif (j2 <= 0) then
+          if (j3 <= 0) then
+             displacement = e1 - npts_layer
+             if (MOD(sixth,2).eq.1) then
+                displacement = 2*(displacement-1) - (sixth - 1)
+             else
+                displacement = 2*(displacement-1) - (sixth - 1)
+             end if
+          else
+             displacement = e2 - npts_layer_1
+             if ((sixth.eq.6).and.(j1.eq.1)) then
+                displacement = e3 - npts_layer_1
+             elseif ((sixth.eq.6).and.(j3.eq.1)) then
+                displacement = e1 - npts_layer_1
+             else
+                displacement = 2*(displacement-1) + sixth
+             end if
+          end if
+       else
+          displacement = e3 - npts_layer_1
+          if (MOD(sixth,2).eq.1) then
+             displacement = 2*(displacement-1) + sixth
+          else
+             displacement = 2*(displacement-1) + sixth
+          end if
+       end if
+       
+       ! result
+       i_elmt = 6*layer*layer + displacement
+!       print *, "layer =", layer, "disp =", displacement
+    end if
+  end function change_elements_notation
+
+  
   !---------------------------------------------------------------------------
   !> @brief Displays hexagonal mesh in terminal
   !> @details Displays a simple text describing the mesh to the terminal
@@ -1466,7 +1619,11 @@ contains
        x1 = mesh%center_cartesian_coord(1, i)
        y1 = mesh%center_cartesian_coord(2, i)
        call get_cell_vertices_index(x1, y1, mesh, e1, e2, e3)
-       write(out_unit, "((i6),(a,1x),(i6),(a,1x),(i6))") e1, ",",e2,",", e3
+       if (type.eq.2) then
+          write(out_unit, "((i6),(a,1x),(i6),(a,1x),(i6))") e1, ",",e2,",", e3
+       else
+          write(out_unit, "((i6),(a,1x),(i6),(a,1x),(i6))") e1, ",",e3,",", e2
+       end if
        !... we write the coordinate transformation (*)
        if (type == 1) then
           a11 = 0.5_f64 / mesh%num_cells
@@ -1522,7 +1679,6 @@ contains
        write(out_unit, *) ""
     end do
     close(out_unit)
-
 
   end subroutine write_caid_files
 

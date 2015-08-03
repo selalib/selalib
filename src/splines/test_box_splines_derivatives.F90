@@ -81,12 +81,12 @@ program box_spline_tester
   SLL_DEALLOCATE_ARRAY(dyf, ierr)
 
 
-  !Writing file for CAID/DJANGO:
-  ! degree = 1
-  ! rule = 1
-  ! call write_basis_values(degree, rule)
-  ! print *, ""
-  ! print *, "Done writing CAID file : basis_value.txt"
+  ! !Writing file for CAID/DJANGO:
+  degree = 2
+  rule = 1
+  call write_basis_values(degree, rule)
+  print *, ""
+  print *, "Done writing CAID file : basis_value.txt"
 
 
   ! ! Computing non null splines on one cell:
