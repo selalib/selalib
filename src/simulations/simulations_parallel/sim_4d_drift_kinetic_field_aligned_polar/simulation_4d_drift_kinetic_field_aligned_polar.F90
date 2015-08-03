@@ -991,11 +991,10 @@ contains
 
     ! Output
     character(len=4)        :: cplot
-    character(len=32)       :: filetype
+    character(len=*), parameter :: filetype="HDF"
     character(len=64)       :: hdf5_file_name, xml_file_name, field_name
     sll_int32               :: hdf5_file_id, error
     type( sll_t_xdmf_file ) :: xdmf_file
-    logical, allocatable    :: info_list(:)
     logical                 :: to_file
     character(len=256)      :: dataset, dataset_x1, dataset_x2
     sll_int32               :: dims(2)
@@ -1143,8 +1142,10 @@ contains
           ! HDF5 file is created and closed (it will be referenced by name)
           call sll_hdf5_file_create( hdf5_file_name, hdf5_file_id, file_err )
           call sll_hdf5_file_close ( hdf5_file_id, file_err )
-          ! XML file is created and kept open
+          ! XML file is created with a grid and kept open
           call xdmf_file%create( xml_file_name )
+          dims = [sim%m_x1%num_cells+1, sim%m_x2%num_cells+1]
+          call xdmf_file%write_grid( dataset_x1, dataset_x2, dims )
         end if
 
         ! Get global indices of point that has:
@@ -2381,16 +2382,16 @@ contains
       end do
     end do
 
-    call sll_hdf5_file_create( "mesh_x1x2_polar", file_id, error )
+    call sll_hdf5_file_create( "mesh_x1x2_polar.h5", file_id, error )
     call sll_hdf5_write_array( file_id, x1, "/x1", error )
     call sll_hdf5_write_array( file_id, x2, "/x2", error )
     call sll_hdf5_file_close ( file_id, error )
 
-    dataset_x1 = "mesh_x1x2_polar:/x1"
-    dataset_x2 = "mesh_x1x2_polar:/x2"
+    dataset_x1 = "mesh_x1x2_polar.h5:/x1"
+    dataset_x2 = "mesh_x1x2_polar.h5:/x2"
 
-    deallocate(x1)
-    deallocate(x2)
+    deallocate( x1 )
+    deallocate( x2 )
 
   end subroutine
 
@@ -2410,7 +2411,6 @@ contains
     sll_real64, dimension(:,:), allocatable :: x1
     sll_real64, dimension(:,:), allocatable :: x2
     sll_int32 :: i, j
-    character(len=4)      :: cplot
     sll_int32             :: nnodes_x1, nnodes_x2
     sll_real64 :: r
     sll_real64 :: theta
@@ -2634,6 +2634,10 @@ contains
     call split( x1_path, x1_group, x1_dataset )
     call split( x2_path, x2_group, x2_dataset )
 
+    ! Remove ':/' characters from end of group name
+    x1_group = x1_group(1:len_trim( x1_group )-2)
+    x2_group = x2_group(1:len_trim( x2_group )-2)
+
     call sll_xml_grid_geometry( self%id, &
       x1_group,   &
       dims(1),    &
@@ -2694,31 +2698,51 @@ contains
 
     logical              :: buf(1)    ! buffer for send (all processes)
     logical, allocatable :: recbuf(:) ! buffer for receive (only master)
-    sll_int32            :: i, comm, np, ierr, status(mpi_status_size)
+    sll_int32            :: i, comm, np, rank, ierr
+    sll_int32            :: mpi_status(mpi_status_size)
+    character(len=8)     :: rank_str
 
     ! Some info about communicator
     comm = sll_world_collective%comm
     np   = sll_get_collective_size( sll_world_collective )
+    rank = sll_get_collective_rank( sll_world_collective )
 
     ! MASTER
-    if (sll_get_collective_rank( sll_world_collective )==0) then
+    if (rank==0) then
       allocate( recbuf(0:np-1) )
       recbuf(0) = to_file
       ! Check sizes
-      call mpi_gather( mpi_in_place, 1, mpi_logical, recbuf, 1, mpi_logical, 0, ierr )
-      do i=1,count( recbuf )
-        ! Check sizes
-        call mpi_recv( dataset, np*len( dataset ), mpi_character, mpi_any_source, mpi_any_tag, comm, status, ierr )
+      !    MPI_GATHER( SENDBUF, SENDCOUNT, SENDTYPE, RECVBUF, RECVCOUNT, RECVTYPE, ROOT, COMM, IERROR )
+      call mpi_gather( mpi_in_place, 1, mpi_logical, recbuf, 1, mpi_logical, 0, comm, ierr )
+      print *, "PROC #0: gather"
+      ! Write array info on XDMF file
+      if (to_file) then
         call xdmf_file%write_array( dataset, dims, filetype )
-      enddo
+        print *, "PROC #0: write array info to xmf"
+      end if
+
+      print *, "PROC #0: recbuf = ", recbuf
+      do i=1,count( recbuf(1:) )
+        ! Check sizes
+        !    MPI_RECV( BUF, COUNT, DATATYPE, SOURCE, TAG, COMM, STATUS, IERROR )
+        call mpi_recv( dataset, len( dataset ), mpi_character, mpi_any_source, mpi_any_tag, comm, mpi_status, ierr )
+        print *, "PROC #0: receive data from processor ", mpi_status( mpi_source )
+        call xdmf_file%write_array( dataset, dims, filetype )
+      end do
 
     ! NOT MASTER
     else
       buf(1) = to_file
+      allocate( recbuf(1) )
       ! Check sizes
+      !    MPI_GATHER( SENDBUF, SENDCOUNT, SENDTYPE, RECVBUF, RECVCOUNT, RECVTYPE, ROOT, COMM, IERROR )
       call mpi_gather( buf, 1, mpi_logical, recbuf, 0, 0, 0, comm, ierr )
+      write( rank_str, '(i8)' ) rank
+      print *, "PROC #"//trim( adjustl( rank_str ) )//": gather"
       if (buf(1)) then
+        !    MPI_SEND( BUF, COUNT, DATATYPE, DEST, TAG, COMM, IERROR )
         call mpi_send( dataset, len( dataset ), mpi_character, 0, 9, comm, ierr )
+        print *, "PROC #"//trim( adjustl( rank_str ) )//": send"
       end if
 
     end if
