@@ -124,6 +124,9 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
     type(sll_cartesian_mesh_1d), pointer :: m_x3
     type(sll_cartesian_mesh_1d), pointer :: m_x4
     
+    ! Instantaneous time value (updated at the end of the time-step)
+    sll_real64 :: time
+
     ! Physics/numerical parameters
     sll_real64 :: dt
     sll_int32  :: num_iterations
@@ -259,6 +262,7 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
   contains
     procedure         :: create      => xdmf__create
     procedure         :: write_grid  => xdmf__write_grid
+    procedure         :: change_grid => xdmf__change_grid
     procedure         :: write_array => xdmf__write_array
     procedure         :: close       => xdmf__close
   end type sll_t_xdmf_file
@@ -492,6 +496,12 @@ contains
     read(input_file,perturbation)
     read(input_file,sim_params)
     close(input_file)
+
+    !==========================================================================
+    ! Set initial time value (it may be != 0 if the simulation is restarted)
+    !==========================================================================
+
+    sim%time = 0.0_f64
 
     !==========================================================================
     ! Create various data structures and operators in simulation
@@ -996,8 +1006,10 @@ contains
     sll_int32               :: hdf5_file_id, error
     type( sll_t_xdmf_file ) :: xdmf_file
     logical                 :: to_file
-    character(len=256)      :: dataset, dataset_x1, dataset_x2
-    sll_int32               :: dims(2)
+    character(len=256)      :: dataset
+    character(len=256)      :: dataset_x1_polar, dataset_x2_polar
+    character(len=256)      :: dataset_x2_cart , dataset_x3_cart
+    sll_int32               :: dims_x1x2(2), dims_x2x3(2)
 
     ! Shortcuts 
     dt = sim%dt    
@@ -1042,7 +1054,15 @@ contains
     ! Write mesh data to file (it does not change with time)
     !--------------------------------------------------------------------------
 
-    call write_mesh_x1x2_polar( sim%m_x1, sim%m_x2, dataset_x1, dataset_x2 )
+    ! (r,theta) slice: poloidal plane
+    dims_x1x2 = [sim%m_x1%num_cells+1, sim%m_x2%num_cells+1]
+    call write_mesh_x1x2_polar( sim%m_x1, sim%m_x2, &
+      dataset_x1_polar, dataset_x2_polar )
+
+    ! (theta,z) slice: flux surface
+    dims_x2x3 = [sim%m_x2%num_cells+1, sim%m_x3%num_cells+1]
+    call write_mesh_x2x3_cart ( sim%m_x2, sim%m_x3, &
+      dataset_x2_cart , dataset_x3_cart  )
 
     !--------------------------------------------------------------------------
     ! Time cycle
@@ -1128,6 +1148,16 @@ contains
           stop
       end select          
 
+      !------------------------------------------------------------------------
+      ! Update time value
+      !------------------------------------------------------------------------
+
+      ! TODO: time should be incremented, but roundoff could be an issue
+      sim%time = iter*dt
+
+      !------------------------------------------------------------------------
+      ! Write "heavy" diagnostics
+      !------------------------------------------------------------------------
       if (modulo(iter,sim%freq_diag)==0) then
 
         i_plot = i_plot+1
@@ -1142,10 +1172,25 @@ contains
           ! HDF5 file is created and closed (it will be referenced by name)
           call sll_hdf5_file_create( hdf5_file_name, hdf5_file_id, file_err )
           call sll_hdf5_file_close ( hdf5_file_id, file_err )
-          ! XML file is created with a grid and kept open
+          ! XML file is created and kept open
           call xdmf_file%create( xml_file_name )
-          dims = [sim%m_x1%num_cells+1, sim%m_x2%num_cells+1]
-          call xdmf_file%write_grid( dataset_x1, dataset_x2, dims )
+        end if
+
+        ! Wait for files to be available to other processors
+        call sll_collective_barrier( sll_world_collective )
+
+        !----------------------------------------------------------------------
+        ! Flux surface plot: f_x2x3
+        !----------------------------------------------------------------------
+
+        ! Write new grid to XML file
+        if (sll_get_collective_rank(sll_world_collective)==0) then
+          call xdmf_file%write_grid( &
+            'mesh_x2x3_cart', &
+            dataset_x2_cart, &
+            dataset_x3_cart, &
+            dims_x2x3, &
+            sim%time )
         end if
 
         ! Get global indices of point that has:
@@ -1161,12 +1206,49 @@ contains
         ! If point is in local domain, print slice of f on flux surface
         if(loc4d(1) > 0) then
 #ifndef NOHDF5
-          call plot_f_cartesian( &
-            i_plot, &
+!          call plot_f_cartesian( &
+!            i_plot, &
+!            sim%f4d_parx1(loc4d(1),:,:,loc4d(4)), &
+!            sim%m_x2,sim%m_x3)
+          field_name = 'f_x2x3'
+          call sll_hdf5_file_open  ( hdf5_file_name, file_id, error )
+          call sll_hdf5_write_array( file_id, &
             sim%f4d_parx1(loc4d(1),:,:,loc4d(4)), &
-            sim%m_x2,sim%m_x3)
+            '/'//field_name, &
+            error )
+          call sll_hdf5_file_close ( file_id, error )
+          to_file = .true.
+          dataset = trim( hdf5_file_name )//':/'//trim( field_name )
 #endif
-        endif
+        else
+          to_file = .false.
+          dataset = ''
+        end if
+
+        ! Send information about new datasets to master
+        call xdmf_collect_datasets( xdmf_file, &
+          dataset, dims_x2x3, filetype, &
+          to_file )
+
+        ! TODO: should we close the grid here?
+
+        ! Wait for files to be available to other processors
+        call sll_collective_barrier( sll_world_collective )
+
+        !----------------------------------------------------------------------
+        ! Polar plot: f_x1x2
+        !----------------------------------------------------------------------
+
+        ! Write new grid to XML file
+        ! TODO: should we use "create_grid" here?
+        if (sll_get_collective_rank(sll_world_collective)==0) then
+          call xdmf_file%change_grid( &
+            'mesh_x1x2_polar', &
+            dataset_x1_polar, &
+            dataset_x2_polar, &
+            dims_x1x2, &
+            sim%time )
+        end if
 
         ! Copy f distributed in x1 into f distributed in (x3,x4)
         call apply_remap_4D( &
@@ -1193,16 +1275,6 @@ contains
           call sll_hdf5_file_close ( file_id, error )
           to_file = .true.
           dataset = trim( hdf5_file_name )//':/'//trim( field_name )
-!          call plot_f_polar( &
-!            hdf5_file_name, &
-!            i_plot, &
-!            sim%f4d_parx3x4(:,:,loc4d(3),loc4d(4)), &
-!            sim%m_x1, sim%m_x2 &
-!            dataset )
-!          call plot_f_polar( &
-!            i_plot, &
-!            sim%f4d_parx3x4(:,:,loc4d(3),loc4d(4)), &
-!            sim%m_x1,sim%m_x2)
 #endif
         else
           to_file = .false.
@@ -1211,10 +1283,16 @@ contains
 
         ! Send information about new datasets to master
         call xdmf_collect_datasets( xdmf_file, &
-          dataset, dims, filetype, &
+          dataset, dims_x1x2, filetype, &
           to_file )
 
+        ! Wait for files to be available to other processors
+        call sll_collective_barrier( sll_world_collective )
+
+        !----------------------------------------------------------------------
         ! Close the new XML file
+        !----------------------------------------------------------------------
+
         if (sll_get_collective_rank( sll_world_collective )==0) then
           call xdmf_file%close()
         end if
@@ -2355,8 +2433,8 @@ contains
   subroutine write_mesh_x1x2_polar( mesh_x1, mesh_x2, dataset_x1, dataset_x2 )
     type(sll_cartesian_mesh_1d), intent(in   ) :: mesh_x1
     type(sll_cartesian_mesh_1d), intent(in   ) :: mesh_x2
-    character(len=64)          , intent(  out) :: dataset_x1
-    character(len=64)          , intent(  out) :: dataset_x2
+    character(len=*)           , intent(  out) :: dataset_x1
+    character(len=*)           , intent(  out) :: dataset_x2
 
     sll_real64, allocatable :: x1(:,:), x2(:,:)
     sll_real64              :: r, dr, rmin, rmax, theta, dtheta
@@ -2395,6 +2473,52 @@ contains
 
   end subroutine
 
+  !---------------------------------------------------
+  ! Save the mesh structure
+  !---------------------------------------------------
+  subroutine write_mesh_x2x3_cart( mesh_x2, mesh_x3, dataset_x2, dataset_x3 )
+    type(sll_cartesian_mesh_1d), intent(in   ) :: mesh_x2
+    type(sll_cartesian_mesh_1d), intent(in   ) :: mesh_x3
+    character(len=*)           , intent(  out) :: dataset_x2
+    character(len=*)           , intent(  out) :: dataset_x3
+
+    sll_real64, allocatable :: x2(:,:), x3(:,:)
+    sll_int32               :: i, j, nnodes_x2, nnodes_x3
+    sll_int32               :: file_id, error
+
+    nnodes_x2 = mesh_x2%num_cells+1
+    nnodes_x3 = mesh_x3%num_cells+1
+
+    SLL_ALLOCATE( x2(nnodes_x2,nnodes_x3), error )
+    SLL_ALLOCATE( x3(nnodes_x2,nnodes_x3), error )
+
+    do i = 1,nnodes_x2
+      x2(i,:) = mesh_x2%eta1_node( i )
+    end do
+
+    do j = 1,nnodes_x3
+      x3(:,j) = mesh_x3%eta1_node( j )
+    end do
+
+!    do j = 1,nnodes_x3
+!      do i = 1,nnodes_x2
+!        x2(i,j) = mesh_x2%eta1_node( i )
+!        x3(i,j) = mesh_x3%eta1_node( j )
+!      end do
+!    end do
+
+    call sll_hdf5_file_create( "mesh_x2x3_cart.h5", file_id, error )
+    call sll_hdf5_write_array( file_id, x2, "/x2", error )
+    call sll_hdf5_write_array( file_id, x3, "/x3", error )
+    call sll_hdf5_file_close ( file_id, error )
+
+    dataset_x2 = "mesh_x2x3_cart.h5:/x2"
+    dataset_x3 = "mesh_x2x3_cart.h5:/x3"
+
+    deallocate( x2 )
+    deallocate( x3 )
+
+  end subroutine
   !---------------------------------------------------
   ! Save the mesh structure
   !---------------------------------------------------
@@ -2620,34 +2744,51 @@ contains
   end subroutine xdmf__create
  
 !------------------------------------------------------------------------------
-  subroutine xdmf__write_grid( self, x1_path, x2_path, dims )
+  subroutine xdmf__write_grid( self, grid_name, x1_path, x2_path, dims, time )
     class(sll_t_xdmf_file), intent(inout) :: self
+    character(len=*)      , intent(in   ) :: grid_name
     character(len=*)      , intent(in   ) :: x1_path
     character(len=*)      , intent(in   ) :: x2_path
     sll_int32             , intent(in   ) :: dims(2)
+    sll_real64, optional  , intent(in   ) :: time
 
-    character(len=256) :: x1_group
-    character(len=256) :: x2_group
-    character(len=64)  :: x1_dataset
-    character(len=64)  :: x2_dataset
+    ! Open 'Grid' block
+    write( self%id,"(a)" ) &
+        "<Grid Name='"//trim( adjustl( grid_name ) )//"' GridType='Uniform'>"
 
-    call split( x1_path, x1_group, x1_dataset )
-    call split( x2_path, x2_group, x2_dataset )
+    ! If time was provided, add 'Time' block
+    if (present( time )) then
+      write( self%id, "(a13,g15.3,a3)" ) "<Time Value='",time,"'/>"
+    end if
 
-    ! Remove ':/' characters from end of group name
-    x1_group = x1_group(1:len_trim( x1_group )-2)
-    x2_group = x2_group(1:len_trim( x2_group )-2)
+    ! Add 'Topology' block
+    write( self%id,"(a,2i5,a)" ) &
+        "<Topology TopologyType='2DSMesh' NumberOfElements='", &
+        dims(2), dims(1), "'/>"
 
-    call sll_xml_grid_geometry( self%id, &
-      x1_group,   &
-      dims(1),    &
-      x2_group,   &
-      dims(2),    &
-      x1_dataset, &
-      x2_dataset, &
-      'Uniform' ) 
+    ! Add 'Geometry' block with two dataitems
+    write( self%id,"(a)" ) "<Geometry GeometryType='X_Y'>"
+    call sll_xml_dataitem( self%id, trim( adjustl( x1_path ) ), &
+      dims(1), dims(2), 'HDF' )
+    call sll_xml_dataitem( self%id, trim( adjustl( x2_path ) ), &
+      dims(1), dims(2), 'HDF' )
+    write( self%id,"(a)" ) "</Geometry>"
 
   end subroutine xdmf__write_grid
+
+!------------------------------------------------------------------------------
+  subroutine xdmf__change_grid( self, grid_name, x1_path, x2_path, dims, time )
+    class(sll_t_xdmf_file), intent(inout) :: self
+    character(len=*)      , intent(in   ) :: grid_name
+    character(len=*)      , intent(in   ) :: x1_path
+    character(len=*)      , intent(in   ) :: x2_path
+    sll_int32             , intent(in   ) :: dims(2)
+    sll_real64, optional  , intent(in   ) :: time
+
+    write( self%id, "(a)" ) "</Grid>"
+    call self%write_grid( grid_name, x1_path, x2_path, dims, time )
+
+  end subroutine xdmf__change_grid
 
 !------------------------------------------------------------------------------
   subroutine xdmf__write_array( self, path, dims, filetype )
