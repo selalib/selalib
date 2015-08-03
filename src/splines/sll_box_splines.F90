@@ -891,7 +891,6 @@ contains  ! ****************************************************************
     sll_int32, intent(in)          :: deg
     sll_int32                      :: out_unit
     character(len=28), parameter   :: name = "boxsplines_connectivity.txt"
-    character(len=37), parameter   :: name2 = "boxsplines_connectivity_internal.txt"
     sll_int32                      :: nZ_indices(3*deg*deg)
     sll_int32  :: num_ele
     sll_int32  :: ele_contained
@@ -914,7 +913,7 @@ contains  ! ****************************************************************
 
     do num_ele = 1,mesh%num_triangles
        ! We write cell ID number
-       write(out_unit, "(i6)") num_ele
+       write(out_unit, "(i6)") change_elements_notation(mesh, num_ele)
        ! We write number of non zero
        write(out_unit, "(i6)") non_zero
        ! We write the indices of the non zero splines
@@ -929,74 +928,31 @@ contains  ! ****************************************************************
     
     close(out_unit)
 
-    ! Now we want to write the connectivity only for elements
-    ! which all non zero box splines are contained in the domain
-    ! ie. all elements where ALL(non_zero_splines(mesh, ne, deg)).ne.-1
-    ! We know these are the elements that are more than deg-1 cells away
-    ! from the boundary
-    ! Remark: I could have done this with the writing of the file above,
-    ! nevertheless, I prefer to have two separated writings procedure to
-    ! avoid any confusion.
-
-    
-    ! We open file
-    call sll_new_file_id(out_unit, ierr)
-    open (unit=out_unit,file=name2,action="write",status="replace")
-
-    !We compute first the number of elements that are fully contained:
-    ele_contained = 6 * (mesh%num_cells - deg + 1) * (mesh%num_cells - deg + 1)
-    
-    ! We write total number of cells
-    write(out_unit, "(i6)") ele_contained
-
-    do num_ele = 1,mesh%num_triangles
-       ! before writing the information we want to test if the elements is
-       ! not in the boundary.
-       ! For this first we get the vertices of the cell:
-       call get_cell_vertices_index(mesh%center_cartesian_coord(1,num_ele), &
-            mesh%center_cartesian_coord(2,num_ele), &
-            mesh, &
-            s1, s2, s3)
-       ! and we get the distance to the origin:
-       dist = 0
-       dist = dist + cells_to_origin(mesh%hex_coord(1, s1), mesh%hex_coord(2, s1))
-       dist = dist + cells_to_origin(mesh%hex_coord(1, s2), mesh%hex_coord(2, s2))
-       dist = dist + cells_to_origin(mesh%hex_coord(1, s3), mesh%hex_coord(2, s3))
-
-       if (dist .lt. (mesh%num_cells - deg + 1)*3 ) then
-          ! We write cell ID number
-          write(out_unit, "(i6)") num_ele
-          ! We write number of non zero
-          write(out_unit, "(i6)") non_zero
-          ! We write the indices of the non zero splines
-          nZ_indices = non_zeros_splines(mesh, num_ele, deg)
-          do i=1,non_zero
-             val = nZ_indices(i)
-             if (val == -1) then
-                print *, "Error in write_connectivity: -1 found"
-                STOP
-             end if
-             write(out_unit, "(i6)", advance="no") val
-             write(out_unit, "(a)", advance="no") ","
-          end do
-          write(out_unit,"(a)")""
-       end if
-    end do
-    
-    close(out_unit)
-
   end subroutine write_connectivity
 
   
   !> @brief This function is supposed to write all django input files
   !> needed for a Django/Jorek simulation.
-  !> @param[in] mesh hexagonal mesh on which the simulation will be done
+  !> @param[in] num_cells integer number of cells in a radius of the hexagonal
+  !> mesh
   !> @param[in] deg integer degree of the splines that will be used for the
   !> interpolation
-  subroutine write_all_django_files(mesh, deg)
-    type(sll_hex_mesh_2d), pointer :: mesh
+  subroutine write_all_django_files(num_cells, deg)
+    sll_int32, intent(in)          :: num_cells
     sll_int32, intent(in)          :: deg
+    type(sll_hex_mesh_2d), pointer :: mesh
+    sll_int32 :: rule
 
+    mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, radius = 1._f64)
+    
+    call write_caid_files(mesh, deg)
+    call write_connectivity(mesh, deg)
+    
+    if (deg .le. 2) then
+       rule = 1
+       call write_basis_values(deg, rule)
+       call write_quadrature(rule)
+    end if
   end subroutine write_all_django_files
   
   !> @brief Generic sub-routine defined for 2D box spline types.

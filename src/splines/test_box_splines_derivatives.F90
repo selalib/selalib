@@ -81,14 +81,6 @@ program box_spline_tester
   SLL_DEALLOCATE_ARRAY(dyf, ierr)
 
 
-  ! !Writing file for CAID/DJANGO:
-  degree = 2
-  rule = 1
-  call write_basis_values(degree, rule)
-  print *, ""
-  print *, "Done writing CAID file : basis_value.txt"
-
-
   ! ! Computing non null splines on one cell:
   ! SLL_ALLOCATE(splines_on_support(degree*degree*3),ierr)
   ! splines_on_support = non_zeros_splines(mesh, 2, degree)
@@ -101,6 +93,11 @@ program box_spline_tester
   ! SLL_DEALLOCATE_ARRAY(splines_on_support, ierr)
   ! call sll_delete(spline) !also deletes the mesh
 
+  ! Writing all django files
+  num_cells = 1
+  degree = 1
+  call write_all_django_files(num_cells, degree)
+  
   ! Testing degree 3 boxsplines:
   print *, ""
   print *, "------------ testing degree 3 -----------"

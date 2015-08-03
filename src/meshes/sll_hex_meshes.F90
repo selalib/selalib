@@ -1398,6 +1398,11 @@ contains
     sll_int32 :: npts_layer_1
     sll_int32 :: displacement
 
+    if (i_elmt_old.eq.-1) then
+       i_elmt = -1
+       return
+    end if
+    
     ! Getting cell vertices
     call get_cell_vertices_index(mesh%center_cartesian_coord(1,i_elmt_old), &
          mesh%center_cartesian_coord(2,i_elmt_old), &
@@ -1445,20 +1450,17 @@ contains
     else
        sixth = 6
     end if
-!    print *, "sixth =", sixth
     
-    ! Treating the first layer separetly
     if (layer.eq.0) then
+       ! Treating the first layer separetly
        i_elmt = sixth
     else
        ! founding the displacement:
        npts_layer = 3 * (layer + 1) * layer + 1
        npts_layer_1 = 3 * (layer - 1) * layer + 1
-!       print *, "npts_layer et -1", npts_layer, npts_layer_1
        j1 = e1 - npts_layer
        j2 = e2 - npts_layer
        j3 = e3 - npts_layer
-!       print *, "j1, j2, j3", j1, j2, j3
        if (j1 <= 0) then
           if (j2 <= 0) then
              displacement = e3 - npts_layer
@@ -1511,7 +1513,6 @@ contains
        
        ! result
        i_elmt = 6*layer*layer + displacement
-!       print *, "layer =", layer, "disp =", displacement
     end if
   end function change_elements_notation
 
@@ -1604,7 +1605,7 @@ contains
     ! For every element...
     do i=1, num_ele
        !... we write its global number
-       write (out_unit, "(i6)") i
+       write (out_unit, "(i6)") change_elements_notation(mesh, i)
        !... we write its type (1 or 2)
        type = cell_type(mesh, i)
        write (out_unit, "(i6)") type
@@ -1614,7 +1615,10 @@ contains
        write(out_unit, "((f22.17),(a,1x))",advance='no') scale, ","
        !... we write its neighbours
        call get_neighbours(mesh, i, nei1, nei2, nei3)
-       write(out_unit, "(3((i6),(a,1x)))",advance='no') nei1, ",", nei2, ",", nei3, ","
+       write(out_unit, "(3((i6),(a,1x)))",advance='no') &
+            change_elements_notation(mesh, nei1), ",", &
+            change_elements_notation(mesh, nei2), ",", &
+            change_elements_notation(mesh, nei3)
        !... we write the indices of the edges
        x1 = mesh%center_cartesian_coord(1, i)
        y1 = mesh%center_cartesian_coord(2, i)
@@ -1662,14 +1666,14 @@ contains
     num_ele = mesh%num_triangles
     write(out_unit, "(i6)") num_ele
 
-    !The number of elements non-null is fixed here, this should be changed (TODO)
+    ! The number of splines non null in a cell depends on the degree
     nen = 3*spline_deg*spline_deg
     dirichlet = 1
 
     ! For every element...
     do i=1, num_ele
        !... we write its global number
-       write (out_unit, "(i6)") i
+       write (out_unit, "(i6)") change_elements_notation(mesh, i)
        !... we write the number of elements non-nul
        write (out_unit, "(i6)") nen
        do j=1,nen 
