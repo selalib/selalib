@@ -1587,9 +1587,9 @@ contains
 !        end do
 !     end do   
 !     stop  
-    print *,maxval(phi)
-    print *,maxval(A1)
-    print *,maxval(A2)
+    print *,maxval(phi),minval(phi)
+    print *,maxval(A1),minval(A1)
+    print *,maxval(A2),maxval(A2)
 
     thdiagp_id=thdiag_id+1
     call sll_ascii_file_create(sim%thdiag_filename, thdiag_id, ierr)
