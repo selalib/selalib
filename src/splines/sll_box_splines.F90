@@ -831,7 +831,7 @@ contains  ! ****************************************************************
     ! Computing fekete points on equilateral reference triangle
     ! ie. triangle of vertices : (0,0) (0,1) and (1,0)
     ! see $SELALIB/src/integration/fekete.F90 for more info
-    quad_pw = fekete_points_and_weights(ref_pts)
+    quad_pw = fekete_points_and_weights(ref_pts, 1)
 
     nonZero = 3*deg*deg !> Number of non null box splines on a cell
     nderiv  = 1 !> Number of derivatives to be computed
