@@ -795,6 +795,7 @@ contains  ! ****************************************************************
     sll_int32,  intent(in)      :: rule
     sll_real64, dimension(2, 3) :: ref_pts
     sll_real64, dimension(:, :), allocatable :: quad_pw
+    sll_real64, dimension(:, :), allocatable :: disp_vec
     sll_int32,  parameter       :: out_unit=20
     character(len=*), parameter :: name = "basis_values.txt"
     sll_real64  :: x
@@ -824,8 +825,8 @@ contains  ! ****************************************************************
     !    |
     !    +--0-----1-->
     ref_pts(:,1) = (/ 0._f64,               0.0_f64 /)
-    ref_pts(:,2) = (/ 0._f64,               1.0_f64 /)
-    ref_pts(:,3) = (/ sqrt(3._f64)*0.5_f64, 0.5_f64 /)
+    ref_pts(:,2) = (/ sqrt(3._f64)*0.5_f64, 0.5_f64 /)
+    ref_pts(:,3) = (/ 0._f64,               1.0_f64 /)
     
     ! Computing fekete points on the reference triangle
     call fekete_order_num ( rule, num_fek )
@@ -834,7 +835,14 @@ contains  ! ****************************************************************
 
     nonZero = 3*deg*deg !> Number of non null box splines on a cell
     nderiv  = 1 !> Number of derivatives to be computed
-    
+
+    !> The displament vector correspond to the translation
+    !> done to obtain the other non null basis functions
+    SLL_ALLOCATE(disp_vec(2, nonZero), ierr)
+    disp_vec(:,1) = 0._f64
+    disp_vec(:,2) = ref_pts(:,1) - ref_pts(:,2)
+    disp_vec(:,3) = ref_pts(:,1) - ref_pts(:,3)
+        
     open (unit=out_unit,file=name,action="write",status="replace")
 
     write(out_unit, "(i6)") deg
@@ -842,8 +850,8 @@ contains  ! ****************************************************************
 
     do ind_nZ = 1, nonZero
        do ind_fek = 1, num_fek
-          x = quad_pw(1, ind_fek)
-          y = quad_pw(2, ind_fek)
+          x = quad_pw(1, ind_fek) + disp_vec(1, ind_nZ)
+          y = quad_pw(2, ind_fek) + disp_vec(2, ind_nZ)
           do idx = 0, nderiv
              do idy = 0, nderiv-idx
                 val = boxspline_val_der(x, y, deg, idx, idy)
@@ -858,7 +866,9 @@ contains  ! ****************************************************************
     end do
 
     close(out_unit)
-
+    SLL_DEALLOCATE_ARRAY(disp_vec, ierr)
+    SLL_DEALLOCATE_ARRAY(quad_pw, ierr)
+    
   end subroutine write_basis_values
 
 

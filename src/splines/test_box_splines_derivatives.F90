@@ -94,29 +94,31 @@ program box_spline_tester
   ! call sll_delete(spline) !also deletes the mesh
 
   ! Writing all django files
-  num_cells = 20
+  num_cells = 40
   degree = 1
-  rule = 2
+  rule = 4
   call write_all_django_files(num_cells, degree, rule)
-  print *, "*********** wrote all django files for nc, deg =", num_cells, degree
+  print *, "*********** wrote all django files ***********"
+  print *, "   - number of cells    : ", num_cells
+  print *, "   - degree of splines  :", degree
+  print *, "   - rule of quadrature :", rule
   print *, ""
   
   ! Testing degree 3 boxsplines:
-  print *, ""
-  print *, "------------ testing degree 3 -----------"
-  num_cells = 3
-  mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, radius = 1._f64)
-  call sll_display(mesh)
-  degree = 3
-  spline => new_box_spline_2d(mesh, SLL_DIRICHLET)
-  SLL_ALLOCATE(f(mesh%num_pts_tot),ierr)
-  do i=1, mesh%num_pts_tot
-     x1 = mesh%global_to_x1(i)
-     x2 = mesh%global_to_x2(i)
-     f(i) = compute_box_spline(spline, x1, x2, degree)
-  end do
-
-  print *, sum(f)
-  call write_field_hex_mesh_xmf(mesh, f, "chi3")
+  ! print *, ""
+  ! print *, "------------ testing degree 3 -----------"
+  ! num_cells = 3
+  ! mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, radius = 1._f64)
+  ! call sll_display(mesh)
+  ! degree = 3
+  ! spline => new_box_spline_2d(mesh, SLL_DIRICHLET)
+  ! SLL_ALLOCATE(f(mesh%num_pts_tot),ierr)
+  ! do i=1, mesh%num_pts_tot
+  !    x1 = mesh%global_to_x1(i)
+  !    x2 = mesh%global_to_x2(i)
+  !    f(i) = compute_box_spline(spline, x1, x2, degree)
+  ! end do
+  ! print *, sum(f)
+  ! call write_field_hex_mesh_xmf(mesh, f, "chi3")
 
 end program box_spline_tester
