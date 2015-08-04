@@ -794,8 +794,7 @@ contains  ! ****************************************************************
     sll_int32,  intent(in)      :: deg
     sll_int32,  intent(in)      :: rule
     sll_real64, dimension(2, 3) :: ref_pts
-    sll_real64, dimension(3,10) :: quad_pw
-    sll_real64, allocatable     :: disp_vec(:,:) !> displacement vectors
+    sll_real64, dimension(:, :), allocatable :: quad_pw
     sll_int32,  parameter       :: out_unit=20
     character(len=*), parameter :: name = "basis_values.txt"
     sll_real64  :: x
@@ -828,29 +827,14 @@ contains  ! ****************************************************************
     ref_pts(:,2) = (/ 0._f64,               1.0_f64 /)
     ref_pts(:,3) = (/ sqrt(3._f64)*0.5_f64, 0.5_f64 /)
     
-    ! Computing fekete points on equilateral reference triangle
-    ! ie. triangle of vertices : (0,0) (0,1) and (1,0)
-    ! see $SELALIB/src/integration/fekete.F90 for more info
-    quad_pw = fekete_points_and_weights(ref_pts, 1)
+    ! Computing fekete points on the reference triangle
+    call fekete_order_num ( rule, num_fek )
+    SLL_ALLOCATE(quad_pw(1:3, 1:num_fek), ierr)
+    quad_pw = fekete_points_and_weights(ref_pts, rule)
 
     nonZero = 3*deg*deg !> Number of non null box splines on a cell
     nderiv  = 1 !> Number of derivatives to be computed
-    !> The displament vector correspond to the translation
-    !> done to obtain the other non null basis functions
-    SLL_ALLOCATE(disp_vec(2, nonZero), ierr)
-    disp_vec(:,1) = 0._f64
-    disp_vec(:,2) = ref_pts(:,1) - ref_pts(:,2)
-    disp_vec(:,3) = ref_pts(:,1) - ref_pts(:,3)
     
-    if (rule .eq. 1) then
-       num_fek = 10 !> Number of fekete points on a cell
-    else
-       print *, ""
-       print *, "ERROR in write_basis_value() : rule not implemented yet"
-       num_fek = 0
-       STOP
-    end if
-
     open (unit=out_unit,file=name,action="write",status="replace")
 
     write(out_unit, "(i6)") deg
@@ -858,8 +842,8 @@ contains  ! ****************************************************************
 
     do ind_nZ = 1, nonZero
        do ind_fek = 1, num_fek
-          x = quad_pw(1, ind_fek) + disp_vec(1, ind_nZ)
-          y = quad_pw(2, ind_fek) + disp_vec(2, ind_nZ)
+          x = quad_pw(1, ind_fek)
+          y = quad_pw(2, ind_fek)
           do idx = 0, nderiv
              do idy = 0, nderiv-idx
                 val = boxspline_val_der(x, y, deg, idx, idy)
@@ -937,22 +921,19 @@ contains  ! ****************************************************************
   !> mesh
   !> @param[in] deg integer degree of the splines that will be used for the
   !> interpolation
-  subroutine write_all_django_files(num_cells, deg)
+  subroutine write_all_django_files(num_cells, deg, rule)
     sll_int32, intent(in)          :: num_cells
     sll_int32, intent(in)          :: deg
+    sll_int32, intent(in)          :: rule
     type(sll_hex_mesh_2d), pointer :: mesh
-    sll_int32 :: rule
 
     mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, radius = 1._f64)
     
     call write_caid_files(mesh, deg)
-    call write_connectivity(mesh, deg)
-    
-    if (deg .le. 2) then
-       rule = 1
-       call write_basis_values(deg, rule)
-       call write_quadrature(rule)
-    end if
+    call write_connectivity(mesh, deg)    
+    call write_basis_values(deg, rule)
+    call write_quadrature(rule)
+
   end subroutine write_all_django_files
   
   !> @brief Generic sub-routine defined for 2D box spline types.
