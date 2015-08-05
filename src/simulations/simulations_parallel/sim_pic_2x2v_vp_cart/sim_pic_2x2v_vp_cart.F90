@@ -1,3 +1,7 @@
+! Simulation of 2x2v Vlasov-Poisson with simple PIC method, periodic boundary conditions and Landau initial values along x1 only.
+
+! TODO: Can be made more general
+
 module sll_m_sim_pic_2x2v_vp_cart
 
 #include "sll_working_precision.h"
@@ -12,7 +16,7 @@ module sll_m_sim_pic_2x2v_vp_cart
   use sll_module_poisson_2d_base
   use sll_module_pic_base
   use sll_m_particle_initializer
-  use sll_module_particle_group_2x2v
+  use sll_m_particle_group_2x2v
   use sll_m_kernel_smoother_base
   use sll_m_kernel_smoother_spline_2d
   use sll_module_poisson_2d_fft ! TODO: Use generic interface
@@ -71,7 +75,7 @@ module sll_m_sim_pic_2x2v_vp_cart
   
 contains
 !------------------------------------------------------------------------------!
-
+  ! Read in the simulation parameters from input file
   subroutine init_pic_2x2v (sim, filename)
     class(sll_sim_pic_2x2v_vp_cart), intent(inout) :: sim
     character(len=*), intent(in)                                :: filename
@@ -168,28 +172,21 @@ contains
          sim%degree_smoother)
     sim%kernel_smoother => sim%specific_kernel_smoother
 
-    print*, 'h1'
     ! Initialize position and velocity of the particles.
     call sll_particle_initialize_landaux1_2x2v (sim%particle_group, sim%landau_param, &
          [sim%mesh%eta1_min, sim%mesh%eta2_min] , &
          [sim%mesh%eta1_max - sim%mesh%eta1_min, sim%mesh%eta1_max -sim%mesh%eta2_min], &
          sim%thermal_velocity, rnd_seed)
 
-    print*, 'h2'
     ! Initialize the time-splitting propagator
     sim%specific_propagator => sll_new_splitting_pic_2x2v_vp(sim%poisson_solver, sim%kernel_smoother, sim%particle_group)
     sim%propagator => sim%specific_propagator
-
-    !print*, sim%specific_particle_group%particle_array(:,1)
-    !print*, sim%specific_particle_group%particle_array(:,2)
-    !print*, sim%specific_particle_group%particle_array(:,3)
-    !print*, sim%specific_particle_group%particle_array(:,4)
-    !write(10,*) sim%specific_particle_group%particle_array
 
 
     print*, 'Time loop'
     ! Time loop
     do j=1, sim%n_time_steps
+       ! Lee splitting
        call sim%propagator%operatorT(sim%delta_t)
        call sim%propagator%operatorV(sim%delta_t)
 
@@ -206,7 +203,7 @@ contains
 
 !------------------------------------------------------------------------------!
 
-  subroutine delete_pic_2x2v (sim, filename)
+  subroutine delete_pic_2x2v (sim)
     class(sll_sim_pic_2x2v_vp_cart), intent(inout) :: sim
   end subroutine delete_pic_2x2v
 
