@@ -1,6 +1,7 @@
 module sll_module_pic_base
 
 #include "sll_working_precision.h"
+#include "sll_memory.h"
 
   implicit none
   private
@@ -29,7 +30,8 @@ module sll_module_pic_base
 
     class( sll_species ), pointer :: species
     sll_int32                     :: id
-    sll_int32                     :: n_particles !< number of particles
+    sll_int32                     :: n_particles !< number of particles local to the processor
+    sll_int32                     :: n_total_particles !< number of particles in total simulation
     
   contains
     ! Getters
@@ -115,7 +117,7 @@ contains
     type(sll_species), pointer  :: res
     sll_int32  :: ierr
 
-    !SLL_ALLOCATE( res, ierr )
+    SLL_ALLOCATE( res, ierr )
     !    res%name =
     res%q = species_charge
     res%m = species_mass
