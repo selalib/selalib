@@ -626,6 +626,7 @@ contains  ! ****************************************************************
     sll_int32               :: edge1, edge2, edge3
     sll_int32               :: first
     sll_int32               :: last
+    sll_int32               :: type
     sll_int32               :: i, j
     sll_int32               :: last_point
     sll_int32               :: current_nZ
@@ -633,16 +634,30 @@ contains  ! ****************************************************************
     ! Number of non zero splines on a cell:
     non_Zero = 3 * deg * deg
     index_nZ(1:non_Zero) = -1
+
+    !type of cell
+    type = cell_type(mesh, cell_index)
     
     ! Getting the cell vertices which are the first indices of the non zero splines
     call get_cell_vertices_index(mesh%center_cartesian_coord(1,cell_index), &
          mesh%center_cartesian_coord(2,cell_index),&
          mesh, &
          edge1, edge2, edge3)
-    index_nZ(1) = edge1
-    index_nZ(2) = edge2
-    index_nZ(3) = edge3
 
+    ! index_nZ(1) = edge1
+    ! index_nZ(2) = edge2
+    ! index_nZ(3) = edge3
+    
+    if (type.eq.2) then
+       index_nZ(1) = edge1
+       index_nZ(2) = edge2
+       index_nZ(3) = edge3    
+    else
+       index_nZ(1) = edge1
+       index_nZ(2) = edge3
+       index_nZ(3) = edge2
+    end if
+    
     current_nZ = 4
     do distance = 1,deg-1
        first = 1 + (distance-1)*(distance-1)*3
