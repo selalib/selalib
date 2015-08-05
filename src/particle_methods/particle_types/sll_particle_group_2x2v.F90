@@ -51,9 +51,10 @@ end type sll_particle_group_2x2v
 
 contains
 
-  function sll_new_particle_group_2x2v(n_particles, charge, mass) result(self)
+  function sll_new_particle_group_2x2v(n_particles, n_total_particles, charge, mass) result(self)
     class( sll_particle_group_2x2v ),  pointer :: self
     sll_int32                       , intent( in )    :: n_particles
+    sll_int32                       , intent( in )    :: n_total_particles
     sll_real64                      , intent( in )    :: charge
     sll_real64                      , intent( in )    :: mass
     
@@ -61,6 +62,7 @@ contains
 
     SLL_ALLOCATE(self, ierr)
     self%n_particles = n_particles
+    self%n_total_particles = n_total_particles
     SLL_ALLOCATE(self%particle_array(self%n_particles,5), ierr) 
     self%species => species_new( charge, mass)
 
