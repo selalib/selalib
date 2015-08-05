@@ -11,13 +11,14 @@ use sll_ascii_io
   use sll_box_splines
   use sll_interpolation_hex_hermite
   implicit none
-  sll_int32, parameter :: SLL_HEX_SPLINES = 1 
+  sll_int32, parameter :: SLL_HEX_SPLINES = 2 
   sll_int32, parameter :: SLL_HEX_Z9 = 9 
   sll_int32, parameter :: SLL_HEX_Z10 = 10 
   sll_int32, parameter :: SLL_HEX_HCTR = 11 
   sll_int32, parameter :: SLL_HEX_HCTC = 12 
   sll_int32, parameter :: SLL_HEX_GANEV_DIMITROV = 15 
   sll_int32, parameter :: SLL_HEX_NOTHING = 0 
+  sll_int32, parameter :: SLL_HEX_P1 = 1 
 
   type(sll_hex_mesh_2d),   pointer        :: mesh
   type(sll_box_spline_2d), pointer        :: spline
@@ -264,6 +265,8 @@ use sll_ascii_io
       num_method = SLL_HEX_GANEV_DIMITROV  
     case ("SLL_HEX_NOTHING")
       num_method = SLL_HEX_NOTHING  
+    case ("SLL_HEX_P1")
+      num_method = SLL_HEX_P1 
     case default    
       SLL_ERROR("rotation_2d_hexagonal_hermite&
       &", "bad value of num_method_case")  
@@ -359,6 +362,7 @@ use sll_ascii_io
     if(num_method==SLL_HEX_SPLINES)then
       call compute_coeff_box_spline_2d( rho_tn, spline_degree, spline )
     elseif(num_method == SLL_HEX_NOTHING)then
+    elseif(num_method == SLL_HEX_P1)then
     else
       call  der_finite_difference( rho_tn, p, mesh%delta, mesh, deriv)
     endif
@@ -378,19 +382,28 @@ use sll_ascii_io
       y = mesh%cartesian_coord(2,i)
       xx = x*cosdt - y*sindt
       yy = x*sindt + y*cosdt
-
+      
       inside = .true.
       h1 =  xx*r11 + yy*r12
       h2 =  xx*r21 + yy*r22
 
       if ( abs(h1) >  radius-mesh%delta .or. abs(h2) >  radius-mesh%delta ) inside = .false.
       if ( abs(xx) > (radius-mesh%delta)*sll_sqrt3*0.5_f64) inside = .false.
-
+      
       if ( inside ) then
         if(num_method==SLL_HEX_SPLINES)then
           rho_tn1(i) = hex_interpolate_value(mesh, xx, yy, spline, spline_degree)
         elseif(num_method==SLL_HEX_NOTHING)then
           rho_tn1(i) = rho_tn(i)
+        elseif(num_method==SLL_HEX_P1)then
+          rho_tn1(i) = rho_tn(i)
+		  call p1_interpolation( &
+		    i, &
+		    xx, &
+		    yy, &
+		    rho_tn, &
+		    rho_tn1, &
+		    mesh)
         else
 		  call hermite_interpolation( &
 		    i, &
@@ -408,8 +421,10 @@ use sll_ascii_io
       else
         rho_tn1(i) = 0._f64 ! dirichlet boundary condition
       endif
+      
+      
     enddo
-
+    
 
     ! ----------------------------
     ! Interpolation at center of triangles
@@ -643,6 +658,7 @@ contains
     use_edge, &
     center_values_t, &
     edge_values_t)
+    implicit none
     type(sll_hex_mesh_2d), pointer :: mesh
     sll_real64, intent(inout) :: f_t(:)
     sll_real64, intent(in) :: t
@@ -712,6 +728,7 @@ contains
     use_edge, &
     use_center) &
     result(res)
+    implicit none
     
     sll_int32, intent(in) :: num_cells
     logical, intent(in), optional :: use_edge
@@ -759,5 +776,93 @@ contains
     res = num_pts+use_center_int*num_tri
     res = res+use_edge_int*num_edges  
   end function compute_num_tot_points
+
+
+  subroutine p1_interpolation( &
+    num, &
+    x, &
+    y, &
+    f_tn, &
+    output_tn1, &
+    mesh )
+    implicit none
+    sll_int32,intent(in) :: num
+    sll_real64,intent(in) :: x
+    sll_real64,intent(in) :: y
+    sll_real64, intent(in) :: f_tn(:)
+    sll_real64, intent(out) :: output_tn1(:)
+    type(sll_hex_mesh_2d), pointer :: mesh
+    sll_int32 :: i
+    sll_int32 :: i1
+    sll_int32 :: i2
+    sll_int32 :: i3
+    sll_real64 :: x1
+    sll_real64 :: x2
+    sll_real64 :: x3
+    sll_real64 :: y1
+    sll_real64 :: y2
+    sll_real64 :: y3
+    sll_int32 :: k11
+    sll_int32 :: k12
+    sll_real64 :: freedom(3)
+    sll_real64 :: base(3)
+    sll_real64 :: f
+    sll_real64                 :: a2
+    sll_real64                 :: x1x,x2x,x3x,y1y,y2y,y3y
+    sll_real64 :: aire
+    sll_real64                 :: l1, l2, l3
+    
+    aire = mesh%delta**2*sqrt(3._f64)*0.25_f64
+    !return
+    call get_cell_vertices_index( x, y, mesh, i1, i2, i3 )
+
+    x1 = mesh%cartesian_coord(1,i1) 
+    x2 = mesh%cartesian_coord(1,i2) 
+    x3 = mesh%cartesian_coord(1,i3) 
+    y1 = mesh%cartesian_coord(2,i1) 
+    y2 = mesh%cartesian_coord(2,i2) 
+    y3 = mesh%cartesian_coord(2,i3) 
+
+
+    !k11 = mesh%hex_coord(1,i1) 
+    !k12 = mesh%hex_coord(2,i1) 
+
+    ! get the first 3 degrees of freedom
+
+    ! values at the vertices of the triangle
+
+    freedom(1) = f_tn(i1)
+    freedom(2) = f_tn(i2)
+    freedom(3) = f_tn(i3)
+
+    a2  = 0.5_f64/aire
+    y3y = y3 - y
+    y2y = y2 - y
+    y1y = y1 - y
+    x3x = x3 - x
+    x2x = x2 - x
+    x1x = x1 - x
+
+    l1   = a2 * abs( x2x*y3y - x3x*y2y )    ! barycentric coordinates
+    l2   = a2 * abs( x1x*y3y - x3x*y1y ) 
+    l3   = 1._f64 - l1 - l2
+
+
+    base(1) = l1
+    base(2) = l2
+    base(3) = l3
+
+    f = 0._f64
+
+    do i = 1,3
+       f = f + freedom(i)*base(i)
+    enddo
+
+    output_tn1(num) = f    
+    
+
+  
+  end subroutine p1_interpolation  
+  
 
 end program rotation_2d_hexagonal
