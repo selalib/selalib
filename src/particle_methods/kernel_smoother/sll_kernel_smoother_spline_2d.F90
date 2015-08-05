@@ -85,16 +85,13 @@ contains
              index1d(2) = this%index_grid(i_part,2)+i2-2
              index2d = index_1dto2d_column_major(this,index1d)
              rho_dofs(index2d) = rho_dofs(index2d) +&
-                  particle_group%get_charge(i_part) * &
+                  (particle_group%get_charge(i_part) * &
                   this%values_grid(i_part, 1, i1) *&
-                  this%values_grid(i_part, 2, i2)
+                  this%values_grid(i_part, 2, i2)) *&
+                  real(product(this%n_grid), f64)
           end do
        end do
     end do
-    
-    ! Scale with 
-    rho_dofs = rho_dofs * real(product(this%n_grid), f64)
-    !print*, rho_dofs
 
 
   end subroutine accumulate_rho_from_klimontovich_spline_2d
@@ -106,7 +103,30 @@ contains
     class( sll_particle_group_base), intent(in)     :: particle_group
     sll_real64, intent(inout)                       :: j_dofs(:)
     sll_int32, intent(in)                           :: component
+    
+    !local variables
+    sll_int32 :: i_part, i1, i2, index2d
+    sll_int32 :: index1d(2)
+    sll_real64 :: vpart(3)
 
+    do i_part = 1, particle_group%n_particles
+       index1d = this%index_grid(i_part,:)
+       do i1 = 1, this%n_span
+          index1d(1) = this%index_grid(i_part,1)+i1-2
+          do i2 = 1, this%n_span
+             index1d(2) = this%index_grid(i_part,2)+i2-2
+             index2d = index_1dto2d_column_major(this,index1d)
+             vpart = particle_group%get_v(i_part)
+             j_dofs(index2d) = j_dofs(index2d) +&
+                  (particle_group%get_charge(i_part) * &
+                  vpart(component)
+                  this%values_grid(i_part, 1, i1) *&
+                  this%values_grid(i_part, 2, i2)) * &
+                  real(product(this%n_grid), f64)
+          end do
+       end do
+    end do
+   
 
   end subroutine accumulate_j_from_klimontovich_spline_2d
   
