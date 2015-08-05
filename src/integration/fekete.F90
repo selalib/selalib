@@ -889,7 +889,9 @@ contains
     ref_pts(:,1) = (/ 0._f64,          0.0_f64 /)
     ref_pts(:,2) = (/ sqrt(3._f64)*0.5_f64, 0.5_f64 /)
     ref_pts(:,3) = (/ 0._f64,          1.0_f64 /)
-    volume = 1._f64 / sll_sqrt3 ! volume of the reference triangle
+    call triangle_area(ref_pts, volume)
+    print *, "area triangle = ", volume
+!    volume = 1._f64 / sll_sqrt3 ! volume of the reference triangle
 
     ! Computing fekete points on that triangle
     call fekete_order_num(rule, num_fek)
@@ -909,5 +911,20 @@ contains
     end do
     close(out_unit)
   end subroutine write_quadrature
+
+  subroutine triangle_area ( node_xy, area )
+    implicit none
+
+  sll_real64 :: area
+  sll_real64 :: node_xy(2,3)
+
+  area = 0.5D+00 * ( &
+       node_xy(1,1) * ( node_xy(2,2) - node_xy(2,3) ) &
+       + node_xy(1,2) * ( node_xy(2,3) - node_xy(2,1) ) &
+       + node_xy(1,3) * ( node_xy(2,1) - node_xy(2,2) ) )
+
+  return
+end subroutine triangle_area
+
   
 end module fekete_integration

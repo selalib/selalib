@@ -1618,7 +1618,7 @@ contains
        write(out_unit, "(3((i6),(a,1x)))",advance='no') &
             change_elements_notation(mesh, nei1), ",", &
             change_elements_notation(mesh, nei2), ",", &
-            change_elements_notation(mesh, nei3)
+            change_elements_notation(mesh, nei3), ","
        !... we write the indices of the edges
        x1 = mesh%center_cartesian_coord(1, i)
        y1 = mesh%center_cartesian_coord(2, i)
