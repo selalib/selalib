@@ -481,8 +481,11 @@ contains
 
     sort_nb = 10
     dt = sim%dt
+
+    ! <<dt_q_over_m>>
     dt_q_over_m = dt * sim%particle_group%species%q_over_m()
     print*,  "dt_q_over_m = ", dt_q_over_m
+    
     xmin = sim%mesh_2d%eta1_min
     ymin = sim%mesh_2d%eta2_min
     rdx = 1._f64/sim%mesh_2d%delta_eta1
@@ -496,7 +499,7 @@ contains
     !>     sll_simulation_4d_vp_generic_pic_cartesian::particle_group
     !>
     !> - we end with
-    !>   * \f$E^0\f$ stored in sim%E1, sim%E2
+    !>   * \f$E^0\f$ stored in sim\%E1 (\f$E^0_x\f$), sim\%E2 (\f$E^0_y\f$)
     !>   * \f$(x,y)^0_k, (v_x, v_y)^{-1/2}_k\f$ stored in the the particle group
     !>     sll_simulation_4d_vp_generic_pic_cartesian::particle_group
     !  ----------------------------------------------------------------------------------------------------
@@ -539,8 +542,9 @@ contains
                         sim%rho, 'rho_init_standPUSH', it, ierr )
     endif
 
-    !> the initial field \f$E^0\f$ is obtained with a call to the Poisson solver. Note that here sim\%rho has the proper
-    !> sign (hence there is no need to multiply it by an additional physical constant)
+    !> The initial field \f$E^0\f$ is obtained with a call to the Poisson solver. Note that here sim\%rho has the proper
+    !> sign (hence there is no need to multiply it by an additional physical constant). The resulting field \f$E^0_x\f$
+    !> is stored in sim\%E1, and \f$E^0_y\f$ in sim\%E2.
 
     call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
 
@@ -611,7 +615,7 @@ contains
       ! [[selalib:src/pic_accumulators/sll_accumulators.h::SLL_INTERPOLATE_FIELD_IN_CELL]]
       SLL_INTERPOLATE_FIELD_IN_CELL(Ex,Ey,accumE,pp_dx,pp_dy,tmp5,tmp6,pp_icell)
 
-      ! Set particle speed
+      ! Set particle speed [[dt_q_over_m]]
       coords(1) = pp_vx - 0.5_f64 * dt_q_over_m * Ex
       coords(2) = pp_vy - 0.5_f64 * dt_q_over_m * Ey
       coords(3) = 0
@@ -720,7 +724,7 @@ contains
          ! [[selalib:src/pic_accumulators/sll_accumulators.h::SLL_INTERPOLATE_FIELD_IN_CELL]]
          SLL_INTERPOLATE_FIELD_IN_CELL(Ex,Ey,accumE,pp_dx,pp_dy,tmp5,tmp6,pp_icell)
 
-         !> Set particle speed
+         ! Set particle speed [[dt_q_over_m]]
          coords(1) = pp_vx + dt_q_over_m * Ex
          coords(2) = pp_vy + dt_q_over_m * Ey
          coords(3) = 0
@@ -907,7 +911,7 @@ contains
              pp_vx = coords(1)
              pp_vy = coords(2)
 
-            ! todo: check the energy diagnostics (dt_q_over_m??)
+            ! todo: check the energy diagnostics ([[dt_q_over_m]]??)
              some_val = some_val &
                     + (pp_vx + 0.5_f64 * dt_q_over_m * Ex)**2 &
                     + (pp_vy + 0.5_f64 * dt_q_over_m * Ey)**2
