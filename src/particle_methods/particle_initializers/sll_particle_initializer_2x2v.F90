@@ -73,9 +73,7 @@ contains
     x = 0.0_f64
     v = 0.0_f64
 
-    print*, 'c'
-    !call random_seed (put=rnd_seed)
-    print*, 'd'
+    call random_seed (put=rnd_seed)
 
     i_part = 0
     do while( i_part < particle_group%n_particles)
@@ -96,7 +94,8 @@ contains
 
           call particle_group%set_x(i_part, x)
           call particle_group%set_v(i_part, v)
-          call particle_group%set_weight(i_part, 1.0_f64/real(particle_group%n_particles, f64))
+          call particle_group%set_weight(i_part, &
+               1.0_f64/real(particle_group%n_total_particles, f64))
        end if
     end do
 
