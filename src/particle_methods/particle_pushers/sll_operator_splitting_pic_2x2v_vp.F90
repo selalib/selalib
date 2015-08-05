@@ -9,6 +9,7 @@ module sll_m_operator_splitting_pic_2x2v_vp
   use sll_module_pic_base
   use sll_m_kernel_smoother_base
   use sll_operator_splitting
+  use sll_collective
   
   use sll_module_poisson_2d_fft
 
@@ -20,6 +21,7 @@ module sll_m_operator_splitting_pic_2x2v_vp
      class(sll_particle_group_base), pointer :: particle_group
 
      sll_real64, allocatable ::  rho_dofs(:)
+     sll_real64, allocatable ::  rho_dofs_local(:)
      !sll_real64, allocatable :: j1_dofs(:)
      !sll_real64, allocatable :: j2_dofs(:)
      sll_real64, allocatable :: rho_2d(:,:)
@@ -65,9 +67,14 @@ contains
 
     ! Assemble right-hand-side
     call this%kernel_smoother%compute_shape_factors(this%particle_group)
-    this%rho_dofs = 0.0_f64
+    this%rho_dofs_local = 0.0_f64
     call this%kernel_smoother%accumulate_rho_from_klimontovich(this%particle_group, &
-         this%rho_dofs)
+         this%rho_dofs_local)
+
+    !this%rho_dofs = this%rho_dofs_local
+    this%rho_dofs = 0.0_f64
+    call sll_collective_allreduce( sll_world_collective, this%rho_dofs_local, &
+         this%kernel_smoother%n_dofs, MPI_SUM, this%rho_dofs)
     !call this%kernel_smoother%accumulate_j_from_klimontovich(this%particle_group, this%j1_dofs, 1)
     !call this%kernel_smoother%accumulate_j_from_klimontovich(this%particle_group, this%j2_dofs, 2)
 
@@ -76,8 +83,8 @@ contains
     this%rho_2d(1:this%kernel_smoother%n_grid(1),1:this%kernel_smoother%n_grid(2)) = &
          -1.0_f64 +&
          reshape(this%rho_dofs, this%kernel_smoother%n_grid(1:2) )
-    !this%rho_2d(this%kernel_smoother%n_grid(1)+1,:) = this%rho_2d(1,:)
-    !this%rho_2d(:,this%kernel_smoother%n_grid(2)+1) = this%rho_2d(:,1)
+    this%rho_2d(this%kernel_smoother%n_grid(1)+1,:) = this%rho_2d(1,:)
+    this%rho_2d(:,this%kernel_smoother%n_grid(2)+1) = this%rho_2d(:,1)
     ! Solve Poisson problem
     call this%poisson_solver%compute_E_from_rho(this%efield1, this%efield2, this%rho_2d)
     ! 
@@ -144,6 +151,7 @@ contains
     this%particle_group => particle_group
 
     SLL_ALLOCATE(this%rho_dofs(this%kernel_smoother%n_dofs), ierr)
+    SLL_ALLOCATE(this%rho_dofs_local(this%kernel_smoother%n_dofs), ierr)
     SLL_ALLOCATE(this%rho_2d(this%kernel_smoother%n_grid(1)+1, this%kernel_smoother%n_grid(2)+1), ierr)
     SLL_ALLOCATE(this%efield1(this%kernel_smoother%n_grid(1)+1, this%kernel_smoother%n_grid(2)+1), ierr)   
     SLL_ALLOCATE(this%efield2(this%kernel_smoother%n_grid(1)+1, this%kernel_smoother%n_grid(2)+1), ierr)
