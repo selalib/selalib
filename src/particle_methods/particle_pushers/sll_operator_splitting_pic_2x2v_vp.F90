@@ -30,7 +30,7 @@ module sll_m_operator_splitting_pic_2x2v_vp
      sll_real64, allocatable :: rho_2d(:,:)                      !< 2d representation of \a rho_dofs for use in Poisson solver.
      sll_real64, allocatable :: efield1(:,:) !< 2d representation of electric field, first component for use in Poisson solver. 
      sll_real64, allocatable :: efield2(:,:) !< 2d representation of electric field, second component for use in Poisson solver. 
-     sll_real64, allocatable :: efield(:,:) !< Electric field at particle positions.
+     sll_real64, allocatable :: efield(:,:)  !< Electric field at particle positions.
 
    contains
      procedure :: operatorT => advection_x_pic_2x2v_vp  !< Operator for x advection
