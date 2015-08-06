@@ -16,6 +16,7 @@
 !> @author
 !> Michel Mehrenberger (mehrenbe@math.unistra.fr)
 !> Edwin Chacon Golcher
+!> Yaman Güçlü (yaman.guclu@gmail.com)
 !> @brief 
 !> Simulation class to solve drift kinetic equation in polar coordinates
 !> (3d space (x1=r,x2=theta,x3=z) 1d velocity (x4=v))
@@ -261,9 +262,9 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
     type(sll_collective_t), pointer  :: comm => null()
   contains
     procedure         :: create           => xdmf__create
-    procedure         :: write_grid       => xdmf__write_grid
-    procedure         :: change_grid      => xdmf__change_grid
-    procedure         :: write_array      => xdmf__write_array
+    procedure         :: new_grid         => xdmf__new_grid
+    procedure         :: close_grid       => xdmf__close_grid
+    procedure         :: write_array      => xdmf__write_array   ! not parallel
     procedure         :: collect_datasets => xdmf__collect_datasets
     procedure         :: close            => xdmf__close
   end type sll_t_xdmf_file
@@ -1186,7 +1187,7 @@ contains
         !----------------------------------------------------------------------
 
         ! Write new grid to XML file
-        call xdmf_file%write_grid( &
+        call xdmf_file%new_grid( &
           'mesh_x2x3_cart', &
           dataset_x2_cart, &
           dataset_x3_cart, &
@@ -1198,18 +1199,12 @@ contains
         !  . theta = 0
         !  . z = 0
         !  . v = 0 (center value)
-!        loc4d = global_to_local( sim%layout4d_parx1,[nc_x1/2+1,1,1,nc_x4/2+1] )
         loc4d(1:4)  = global_to_local( &
           sim%layout4d_parx1, &
           [nc_x1/2+1,1,1,nc_x4/2+1] )
 
         ! If point is in local domain, print slice of f on flux surface
         if(loc4d(1) > 0) then
-#ifndef NOHDF5
-!          call plot_f_cartesian( &
-!            i_plot, &
-!            sim%f4d_parx1(loc4d(1),:,:,loc4d(4)), &
-!            sim%m_x2,sim%m_x3)
           field_name = 'f_x2x3'
           call sll_hdf5_file_open  ( hdf5_file_name, file_id, error )
           call sll_hdf5_write_array( file_id, &
@@ -1219,7 +1214,6 @@ contains
           call sll_hdf5_file_close ( file_id, error )
           to_file = .true.
           dataset = trim( hdf5_file_name )//':/'//trim( field_name )
-#endif
         else
           to_file = .false.
           dataset = ''
@@ -1228,18 +1222,15 @@ contains
         ! Send information about new datasets to master
         call xdmf_file%collect_datasets( dataset,dims_x2x3,filetype,to_file )
 
-        ! TODO: should we close the grid here?
-
-        ! Wait for files to be available to other processors
-        call sll_collective_barrier( sll_world_collective )
+        ! Close the grid element
+        call xdmf_file%close_grid()
 
         !----------------------------------------------------------------------
         ! Polar plot: f_x1x2
         !----------------------------------------------------------------------
 
         ! Write new grid to XML file
-        ! TODO: should we use "create_grid" here?
-        call xdmf_file%change_grid( &
+        call xdmf_file%new_grid( &
           'mesh_x1x2_polar', &
           dataset_x1_polar, &
           dataset_x2_polar, &
@@ -1277,13 +1268,10 @@ contains
           dataset = ''
         endif
 
-        ! Wait for HDF5 file to be available to other processors
-        call sll_collective_barrier( sll_world_collective )
-
         ! Send information about new datasets to master
         call xdmf_file%collect_datasets( dataset,dims_x1x2,filetype,to_file )
 
-        ! Close the new XML file
+        ! Close the new XML file (also closes the grid)
         call xdmf_file%close()
 
       endif !if (modulo(iter,sim%freq_diag)==0)
@@ -2408,14 +2396,6 @@ contains
 
   end subroutine solve_quasi_neutral_parx1
 
- 
- 
-  
-
-#ifndef NOHDF5
-!*********************
-!*********************
-
   !---------------------------------------------------
   ! Save the mesh structure
   !---------------------------------------------------
@@ -2489,13 +2469,6 @@ contains
       x3(:,j) = mesh_x3%eta1_node( j )
     end do
 
-!    do j = 1,nnodes_x3
-!      do i = 1,nnodes_x2
-!        x2(i,j) = mesh_x2%eta1_node( i )
-!        x3(i,j) = mesh_x3%eta1_node( j )
-!      end do
-!    end do
-
     call sll_hdf5_file_create( "mesh_x2x3_cart.h5", file_id, error )
     call sll_hdf5_write_array( file_id, x2, "/x2", error )
     call sll_hdf5_write_array( file_id, x3, "/x3", error )
@@ -2508,177 +2481,6 @@ contains
     deallocate( x3 )
 
   end subroutine
-  !---------------------------------------------------
-  ! Save the mesh structure
-  !---------------------------------------------------
-  subroutine plot_f_polar( xml_file_id, hdf5_file_name, iplot, f, m_x1, m_x2 )
-    sll_int32                  , intent(in) :: xml_file_id
-    character(len=*)           , intent(in) :: hdf5_file_name
-    sll_int32                  , intent(in) :: iplot
-    sll_real64                 , intent(in) :: f(:,:)
-    type(sll_cartesian_mesh_1d), pointer    :: m_x1
-    type(sll_cartesian_mesh_1d), pointer    :: m_x2
-
-    sll_int32 :: file_id
-    sll_int32 :: error
-    sll_real64, dimension(:,:), allocatable :: x1
-    sll_real64, dimension(:,:), allocatable :: x2
-    sll_int32 :: i, j
-    sll_int32             :: nnodes_x1, nnodes_x2
-    sll_real64 :: r
-    sll_real64 :: theta
-    sll_real64 :: rmin
-    sll_real64 :: rmax
-    sll_real64 :: dr
-    sll_real64 :: dtheta
-
-    character(len=*), parameter :: grid_file_name = 'polar_mesh.h5'
-    character(len=64) :: field_name, field_path
-
-    
-    nnodes_x1 = m_x1%num_cells+1
-    nnodes_x2 = m_x2%num_cells+1
-    rmin = m_x1%eta_min
-    rmax = m_x1%eta_max
-    dr = m_x1%delta_eta
-    dtheta = m_x2%delta_eta
-    
-    !print *,'#maxf=',iplot,maxval(f),minval(f)
-    
-
-    
-    if (iplot == 1) then
-
-      SLL_ALLOCATE(x1(nnodes_x1,nnodes_x2), error)
-      SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
-      do j = 1,nnodes_x2
-        do i = 1,nnodes_x1
-          r       = rmin+real(i-1,f64)*dr
-          theta   = real(j-1,f64)*dtheta
-          x1(i,j) = r*cos(theta)
-          x2(i,j) = r*sin(theta)
-        end do
-      end do
-      call sll_hdf5_file_create( grid_file_name, file_id, error )
-      call sll_hdf5_write_array( file_id, x1, "/x1", error )
-      call sll_hdf5_write_array( file_id, x2, "/x2", error )
-      call sll_hdf5_file_close ( file_id, error )
-!      call sll_hdf5_file_create("polar_mesh-x1.h5",file_id,error)
-!      call sll_hdf5_write_array(file_id,x1,"/x1",error)
-!      call sll_hdf5_file_close(file_id, error)
-!      call sll_hdf5_file_create("polar_mesh-x2.h5",file_id,error)
-!      call sll_hdf5_write_array(file_id,x2,"/x2",error)
-!      call sll_hdf5_file_close(file_id, error)
-      deallocate(x1)
-      deallocate(x2)
-
-    end if
-
-    field_name = 'f_x1x2'
-    field_path = trim(hdf5_file_name)//':/'//trim(field_name)
-
-    call sll_hdf5_file_open  ( hdf5_file_name, file_id, error )
-    call sll_hdf5_write_array( file_id, f, '/'//field_name, error )
-    call sll_hdf5_file_close ( file_id, error )
-    call sll_xml_grid_geometry( xml_file_id, &
-      grid_file_name, &
-      nnodes_x1,      &
-      grid_file_name, &
-      nnodes_x2,      &
-      'x1',           &
-      'x2',           &
-      'Uniform' ) 
-    call sll_xml_field( xml_file_id, &
-      field_name, &
-      field_path, &
-      nnodes_x1,  &
-      nnodes_x2,  &
-      'HDF',      &
-      'Node' )
-
-!    call int2string(iplot,cplot)
-!    call sll_xdmf_open("f_x1x2_"//cplot//".xmf","polar_mesh", &
-!      nnodes_x1,nnodes_x2,file_id,error)
-!    call sll_xdmf_write_array("f_x1x2_"//cplot,f,"values", &
-!      error,file_id,"Node")
-!    call sll_xdmf_close(file_id,error)
-
-  end subroutine plot_f_polar
-
-#endif
-
-#ifndef NOHDF5
-!*********************
-!*********************
-
-  !---------------------------------------------------
-  ! Save the mesh structure
-  !---------------------------------------------------
-  subroutine plot_f_cartesian(iplot,f,m_x1,m_x2)
-    use sll_xdmf
-    use sll_hdf5_io_serial
-    sll_int32 :: file_id
-    sll_int32 :: error
-    sll_real64, dimension(:,:), allocatable :: x1
-    sll_real64, dimension(:,:), allocatable :: x2
-    sll_int32 :: i, j
-    sll_int32, intent(in) :: iplot
-    character(len=4)      :: cplot
-    sll_int32             :: nnodes_x1, nnodes_x2
-    type(sll_cartesian_mesh_1d), pointer :: m_x1
-    type(sll_cartesian_mesh_1d), pointer :: m_x2
-    sll_real64, dimension(:,:), intent(in) :: f
-    sll_real64 :: r
-    sll_real64 :: theta
-    sll_real64 :: rmin
-    sll_real64 :: rmax
-    sll_real64 :: dr
-    sll_real64 :: dtheta
-    
-    
-    nnodes_x1 = m_x1%num_cells+1
-    nnodes_x2 = m_x2%num_cells+1
-    rmin = m_x1%eta_min
-    rmax = m_x1%eta_max
-    dr = m_x1%delta_eta
-    dtheta = m_x2%delta_eta
-    
-    !print *,'#maxf=',iplot,maxval(f),minval(f)
-    
-
-    
-    if (iplot == 1) then
-
-      SLL_ALLOCATE(x1(nnodes_x1,nnodes_x2), error)
-      SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
-      do j = 1,nnodes_x2
-        do i = 1,nnodes_x1
-          r       = rmin+real(i-1,f64)*dr
-          theta   = real(j-1,f64)*dtheta
-          x1(i,j) = r!*cos(theta)
-          x2(i,j) = theta!*sin(theta)
-        end do
-      end do
-      call sll_hdf5_file_create("cartesian_mesh-x1.h5",file_id,error)
-      call sll_hdf5_write_array(file_id,x1,"/x1",error)
-      call sll_hdf5_file_close(file_id, error)
-      call sll_hdf5_file_create("cartesian_mesh-x2.h5",file_id,error)
-      call sll_hdf5_write_array(file_id,x2,"/x2",error)
-      call sll_hdf5_file_close(file_id, error)
-      deallocate(x1)
-      deallocate(x2)
-
-    end if
-
-    call int2string(iplot,cplot)
-    call sll_xdmf_open("f_x2x3_"//cplot//".xmf","cartesian_mesh", &
-      nnodes_x1,nnodes_x2,file_id,error)
-    call sll_xdmf_write_array("f_x2x3_"//cplot,f,"values", &
-      error,file_id,"Node")
-    call sll_xdmf_close(file_id,error)
-  end subroutine plot_f_cartesian
-
-#endif
 
 !==============================================================================
 ! UTILITIES
@@ -2719,7 +2521,7 @@ contains
 ! XDMF FILE
 !==============================================================================
   subroutine xdmf__create( self, xml_file_name, comm )
-    class(sll_t_xdmf_file), intent(inout) :: self
+    class(sll_t_xdmf_file), intent(  out) :: self
     character(len=*)      , intent(in   ) :: xml_file_name
     type(sll_collective_t), pointer       :: comm
 
@@ -2750,7 +2552,7 @@ contains
   end subroutine xdmf__create
  
 !------------------------------------------------------------------------------
-  subroutine xdmf__write_grid( self, grid_name, x1_path, x2_path, dims, time )
+  subroutine xdmf__new_grid( self, grid_name, x1_path, x2_path, dims, time )
     class(sll_t_xdmf_file), intent(in) :: self
     character(len=*)      , intent(in) :: grid_name
     character(len=*)      , intent(in) :: x1_path
@@ -2785,26 +2587,21 @@ contains
       dims(1), dims(2), 'HDF' )
     write( self%id,"(a)" ) "</Geometry>"
 
-  end subroutine xdmf__write_grid
+  end subroutine xdmf__new_grid
 
 !------------------------------------------------------------------------------
-  subroutine xdmf__change_grid( self, grid_name, x1_path, x2_path, dims, time )
-    class(sll_t_xdmf_file), intent(inout) :: self
-    character(len=*)      , intent(in   ) :: grid_name
-    character(len=*)      , intent(in   ) :: x1_path
-    character(len=*)      , intent(in   ) :: x2_path
-    sll_int32             , intent(in   ) :: dims(2)
-    sll_real64, optional  , intent(in   ) :: time
+  subroutine xdmf__close_grid( self )
+    class(sll_t_xdmf_file), intent(in) :: self
 
     !----------------------------------------------------
     ! ONLY MASTER WRITES TO FILE
     if (sll_get_collective_rank( self%comm ) /= 0) return
     !----------------------------------------------------
 
+    ! Close grid element
     write( self%id, "(a)" ) "</Grid>"
-    call self%write_grid( grid_name, x1_path, x2_path, dims, time )
 
-  end subroutine xdmf__change_grid
+  end subroutine xdmf__close_grid
 
 !------------------------------------------------------------------------------
   subroutine xdmf__write_array( self, path, dims, filetype )
@@ -2848,9 +2645,7 @@ contains
 
   end subroutine xdmf__close
 
-!==============================================================================
-! COLLECTIVE OPERATIONS for XDMF file
-!==============================================================================
+!------------------------------------------------------------------------------
   subroutine xdmf__collect_datasets( self, &
     dataset, dims, filetype, &
     to_file )
