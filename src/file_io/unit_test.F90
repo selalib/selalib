@@ -210,6 +210,178 @@ call sll_xdmf_curv3d_nodes( "test_curv3d", df, "f3_3d", x1, x2, x3, "HDF5")
 
 end subroutine test_io_3d
 
+
+!> Example of use of sll_plot_f
+!> inside a loop
+
+subroutine test_sll_plot_f()
+  sll_int32 :: iplot
+  sll_real64, allocatable :: f(:,:)
+  sll_real64, allocatable :: phi(:,:)
+  sll_int32 :: nnodes_x1
+  sll_int32 :: nnodes_x2
+  character(len=256) :: f_name
+  character(len=256) :: phi_name
+  character(len=256) :: mesh_name
+  sll_real64 :: time
+  sll_real64, allocatable :: x1(:,:)
+  sll_real64, allocatable :: x2(:,:)
+  sll_real64 :: eta1_min
+  sll_real64 :: eta1_max
+  sll_real64 :: eta2_min
+  sll_real64 :: eta2_max
+  
+  
+  sll_int32 :: step
+  sll_int32 :: num_iterations
+  sll_int32 :: freq_diag
+  sll_real64 :: dt
+  sll_int32 :: ierr
+  sll_int32 :: i
+  sll_int32 :: j
+  sll_real64 :: delta1
+  sll_real64 :: delta2
+  sll_real64 :: eta1
+  sll_real64 :: eta2
+  !parameters for diocotron initial function
+  sll_real64 :: r_minus
+  sll_real64 :: r_plus
+  sll_real64 :: eps
+  sll_int32 :: k_mode
+  sll_real64 :: alpha
+  sll_real64 :: x
+  sll_real64 :: y
+  sll_real64 :: r
+  sll_real64 :: theta
+  sll_real64 :: x1_old
+  sll_real64 :: x2_old
+  sll_real64 :: res
+  
+  
+  
+  
+  
+  nnodes_x1 = 65
+  nnodes_x2 = 65
+  freq_diag = 20
+  num_iterations = 100
+  dt = 0.01_f64
+  f_name = "my-f"
+  phi_name = "my-phi"
+  mesh_name = "my-polar-mesh"
+  eta1_min = 1._f64
+  eta2_min = 0._f64
+  eta1_max = 10._f64
+  eta2_max = 2._f64*sll_pi
+  r_minus = 4._f64
+  r_plus = 5._f64
+  k_mode = 3
+  eps = 0.5_f64
+  alpha = 2._f64*sll_pi
+  
+  
+  !first we initialize the mesh
+  !we use here a polar geometry
+  !we could use a coordinate transformation
+  !but there is no dependency to coordinate transf
+  !at this level
+  !TODO suggestion: add dependency?
+  !TODO suggestion: add namelist file if necessary
+  
+  !allocations
+  SLL_ALLOCATE(f(nnodes_x1,nnodes_x2),ierr)
+  SLL_ALLOCATE(x1(nnodes_x1,nnodes_x2),ierr)
+  SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2),ierr)
+  
+  delta1 = (eta1_max-eta1_min)/real(nnodes_x1-1,f64)
+  delta2 = (eta2_max-eta2_min)/real(nnodes_x2-1,f64)
+    
+  !first initialization for mesh
+  do j=1,nnodes_x2
+    eta2 = eta2_min+real(j-1,f64)*delta2
+    do i=1,nnodes_x1
+      eta1 = eta1_min+real(i-1,f64)*delta1
+      x1(i,j) = eta1*cos(eta2)
+      x2(i,j) = eta1*sin(eta2)
+    enddo 
+  enddo
+  !values for f are arbitrary here
+  iplot = 0
+  time = 0._f64
+  f = 0._f64
+  call sll_plot_f( &
+    iplot, &
+    f, &  
+    nnodes_x1, &
+    nnodes_x2,  &
+    f_name, &
+    mesh_name, &
+    time, &
+    x1, &
+    x2)    
+  
+  
+  do step = 1, num_iterations+1
+
+    time = real(step-1,f64)*dt
+    do j=1,nnodes_x2
+      eta2 = eta2_min+real(j-1,f64)*delta2
+      do i=1,nnodes_x1
+        eta1 = eta1_min+real(i-1,f64)*delta1
+        x1_old = eta1*cos(eta2)
+        x2_old = eta1*sin(eta2)
+        !perform rotation
+        x = cos(alpha*time)*x1_old-sin(alpha*time)*x2_old
+        y = sin(alpha*time)*x1_old+cos(alpha*time)*x2_old        
+        !eval function        
+        r= sqrt(x**2+y**2)    
+        if (y>=0._f64) then
+          theta = acos(x/r)
+        else
+          theta = 2._f64*sll_pi-acos(x/r)
+        endif
+        if((r>=r_minus).and.(r<=r_plus))then
+          res = (1.0_f64+eps*cos(k_mode*theta))
+        else
+          res = 0._f64  
+        endif
+        f(i,j) = res         
+      enddo 
+    enddo
+    
+    
+    
+    if(modulo(step-1,freq_diag)==0)then
+      call sll_plot_f( &
+        iplot, &
+        f, &  
+        nnodes_x1, &
+        nnodes_x2,  &
+        f_name, &
+        mesh_name, &
+        time, &
+        x1, &
+        x2)    
+      phi = f*f
+      call sll_plot_f( &
+        iplot, &
+        phi, &  
+        nnodes_x1, &
+        nnodes_x2,  &
+        phi_name, &
+        mesh_name, &
+        time, &
+        x1, &
+        x2)    
+      iplot = iplot+1  
+    endif  
+  
+  enddo
+
+
+end subroutine test_sll_plot_f
+
+
 end module test_io
 
 !>Unit test program for xdmf outputs
@@ -223,6 +395,8 @@ implicit none
 call test_io_2d()
 
 call test_io_3d()
+
+call test_sll_plot_f()
 
 print*,"PASSED"
 
