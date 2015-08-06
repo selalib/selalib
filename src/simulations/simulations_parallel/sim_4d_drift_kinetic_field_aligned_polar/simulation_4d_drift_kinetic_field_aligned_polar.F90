@@ -256,15 +256,16 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
   ! XDMF FILE
   !============================================================================
   type :: sll_t_xdmf_file
-    character(len=64) :: name
-    character(len=64) :: path
-    sll_int32         :: id
+    character(len=64)                :: name
+    sll_int32                        :: id
+    type(sll_collective_t), pointer  :: comm => null()
   contains
-    procedure         :: create      => xdmf__create
-    procedure         :: write_grid  => xdmf__write_grid
-    procedure         :: change_grid => xdmf__change_grid
-    procedure         :: write_array => xdmf__write_array
-    procedure         :: close       => xdmf__close
+    procedure         :: create           => xdmf__create
+    procedure         :: write_grid       => xdmf__write_grid
+    procedure         :: change_grid      => xdmf__change_grid
+    procedure         :: write_array      => xdmf__write_array
+    procedure         :: collect_datasets => xdmf__collect_datasets
+    procedure         :: close            => xdmf__close
   end type sll_t_xdmf_file
 
  
@@ -1172,26 +1173,25 @@ contains
           ! HDF5 file is created and closed (it will be referenced by name)
           call sll_hdf5_file_create( hdf5_file_name, hdf5_file_id, file_err )
           call sll_hdf5_file_close ( hdf5_file_id, file_err )
-          ! XML file is created and kept open
-          call xdmf_file%create( xml_file_name )
         end if
 
-        ! Wait for files to be available to other processors
+        ! Wait for HDF5 file to be available to other processors
         call sll_collective_barrier( sll_world_collective )
+
+        ! XML file is created and kept open
+        call xdmf_file%create( xml_file_name, sll_world_collective )
 
         !----------------------------------------------------------------------
         ! Flux surface plot: f_x2x3
         !----------------------------------------------------------------------
 
         ! Write new grid to XML file
-        if (sll_get_collective_rank(sll_world_collective)==0) then
-          call xdmf_file%write_grid( &
-            'mesh_x2x3_cart', &
-            dataset_x2_cart, &
-            dataset_x3_cart, &
-            dims_x2x3, &
-            sim%time )
-        end if
+        call xdmf_file%write_grid( &
+          'mesh_x2x3_cart', &
+          dataset_x2_cart, &
+          dataset_x3_cart, &
+          dims_x2x3, &
+          sim%time )
 
         ! Get global indices of point that has:
         !  . r = (r_min+r_max)/2  (center value)
@@ -1226,9 +1226,7 @@ contains
         end if
 
         ! Send information about new datasets to master
-        call xdmf_collect_datasets( xdmf_file, &
-          dataset, dims_x2x3, filetype, &
-          to_file )
+        call xdmf_file%collect_datasets( dataset,dims_x2x3,filetype,to_file )
 
         ! TODO: should we close the grid here?
 
@@ -1241,14 +1239,12 @@ contains
 
         ! Write new grid to XML file
         ! TODO: should we use "create_grid" here?
-        if (sll_get_collective_rank(sll_world_collective)==0) then
-          call xdmf_file%change_grid( &
-            'mesh_x1x2_polar', &
-            dataset_x1_polar, &
-            dataset_x2_polar, &
-            dims_x1x2, &
-            sim%time )
-        end if
+        call xdmf_file%change_grid( &
+          'mesh_x1x2_polar', &
+          dataset_x1_polar, &
+          dataset_x2_polar, &
+          dims_x1x2, &
+          sim%time )
 
         ! Copy f distributed in x1 into f distributed in (x3,x4)
         call apply_remap_4D( &
@@ -1281,21 +1277,14 @@ contains
           dataset = ''
         endif
 
-        ! Send information about new datasets to master
-        call xdmf_collect_datasets( xdmf_file, &
-          dataset, dims_x1x2, filetype, &
-          to_file )
-
-        ! Wait for files to be available to other processors
+        ! Wait for HDF5 file to be available to other processors
         call sll_collective_barrier( sll_world_collective )
 
-        !----------------------------------------------------------------------
-        ! Close the new XML file
-        !----------------------------------------------------------------------
+        ! Send information about new datasets to master
+        call xdmf_file%collect_datasets( dataset,dims_x1x2,filetype,to_file )
 
-        if (sll_get_collective_rank( sll_world_collective )==0) then
-          call xdmf_file%close()
-        end if
+        ! Close the new XML file
+        call xdmf_file%close()
 
       endif !if (modulo(iter,sim%freq_diag)==0)
 
@@ -2729,28 +2718,50 @@ contains
 !==============================================================================
 ! XDMF FILE
 !==============================================================================
-  subroutine xdmf__create( self, xml_file_name )
+  subroutine xdmf__create( self, xml_file_name, comm )
     class(sll_t_xdmf_file), intent(inout) :: self
     character(len=*)      , intent(in   ) :: xml_file_name
+    type(sll_collective_t), pointer       :: comm
 
-    sll_int32 :: xml_file_id, error
+    sll_int32  :: xml_file_id, error
+    sll_real32 :: bcast_buf(1)
 
-    call sll_xml_file_create( xml_file_name, xml_file_id, error )
-    SLL_ASSERT( error == 0 )
+    ! Master creates XML file and writes header
+    if (sll_get_collective_rank( comm ) == 0) then
+      call sll_xml_file_create( xml_file_name, xml_file_id, error )
+      SLL_ASSERT( error == 0 )
+      bcast_buf(1) = real( xml_file_id, f32 )
+    end if
 
-    self%name = xml_file_name
-    self%id   = xml_file_id
+    ! Master broadcasts file ID to all other processes
+    ! TODO: add 'sll_collective_bcast_int32' to SeLaLib
+    call sll_collective_bcast( comm, bcast_buf, 1, 0 )
+    
+    ! Non-master procs read file ID from buffer
+    if (sll_get_collective_rank( comm ) == 0) then
+      xml_file_id = int( bcast_buf(1), i32 )
+    end if
 
+    ! Fill in fields
+    self%name =  xml_file_name
+    self%id   =  xml_file_id
+    self%comm => comm
+  
   end subroutine xdmf__create
  
 !------------------------------------------------------------------------------
   subroutine xdmf__write_grid( self, grid_name, x1_path, x2_path, dims, time )
-    class(sll_t_xdmf_file), intent(inout) :: self
-    character(len=*)      , intent(in   ) :: grid_name
-    character(len=*)      , intent(in   ) :: x1_path
-    character(len=*)      , intent(in   ) :: x2_path
-    sll_int32             , intent(in   ) :: dims(2)
-    sll_real64, optional  , intent(in   ) :: time
+    class(sll_t_xdmf_file), intent(in) :: self
+    character(len=*)      , intent(in) :: grid_name
+    character(len=*)      , intent(in) :: x1_path
+    character(len=*)      , intent(in) :: x2_path
+    sll_int32             , intent(in) :: dims(2)
+    sll_real64, optional  , intent(in) :: time
+
+    !----------------------------------------------------
+    ! ONLY MASTER WRITES TO FILE
+    if (sll_get_collective_rank( self%comm ) /= 0) return
+    !----------------------------------------------------
 
     ! Open 'Grid' block
     write( self%id,"(a)" ) &
@@ -2785,6 +2796,11 @@ contains
     sll_int32             , intent(in   ) :: dims(2)
     sll_real64, optional  , intent(in   ) :: time
 
+    !----------------------------------------------------
+    ! ONLY MASTER WRITES TO FILE
+    if (sll_get_collective_rank( self%comm ) /= 0) return
+    !----------------------------------------------------
+
     write( self%id, "(a)" ) "</Grid>"
     call self%write_grid( grid_name, x1_path, x2_path, dims, time )
 
@@ -2792,13 +2808,18 @@ contains
 
 !------------------------------------------------------------------------------
   subroutine xdmf__write_array( self, path, dims, filetype )
-    class(sll_t_xdmf_file), intent(inout) :: self
-    character(len=*)      , intent(in   ) :: path
-    sll_int32             , intent(in   ) :: dims(2)
-    character(len=*)      , intent(in   ) :: filetype
+    class(sll_t_xdmf_file), intent(in) :: self
+    character(len=*)      , intent(in) :: path
+    sll_int32             , intent(in) :: dims(2)
+    character(len=*)      , intent(in) :: filetype
 
     character(len=256) :: group
     character(len=64)  :: dataset
+
+    !----------------------------------------------------
+    ! ONLY MASTER WRITES TO FILE
+    if (sll_get_collective_rank( self%comm ) /= 0) return
+    !----------------------------------------------------
 
     SLL_ASSERT( filetype == 'HDF' .or. filetype == 'Binary' )
     call split( path, group, dataset )
@@ -2813,9 +2834,14 @@ contains
 
 !------------------------------------------------------------------------------
   subroutine xdmf__close( self )
-    class(sll_t_xdmf_file), intent(inout) :: self
+    class(sll_t_xdmf_file), intent(in) :: self
 
     sll_int32 :: error
+
+    !----------------------------------------------------
+    ! ONLY MASTER WRITES TO FILE
+    if (sll_get_collective_rank( self%comm ) /= 0) return
+    !----------------------------------------------------
 
     call sll_xml_file_close( self%id, error )
     SLL_ASSERT( error == 0 )
@@ -2825,17 +2851,17 @@ contains
 !==============================================================================
 ! COLLECTIVE OPERATIONS for XDMF file
 !==============================================================================
-  subroutine xdmf_collect_datasets( xdmf_file, &
+  subroutine xdmf__collect_datasets( self, &
     dataset, dims, filetype, &
     to_file )
 
     use mpi
 
-    type(sll_t_xdmf_file), intent(inout) :: xdmf_file
-    character(len=*)     , intent(in   ) :: dataset
-    sll_int32            , intent(in   ) :: dims(2)
-    character(len=*)     , intent(in   ) :: filetype
-    logical              , intent(in   ) :: to_file
+    class(sll_t_xdmf_file), intent(in) :: self
+    character(len=*)      , intent(in) :: dataset
+    sll_int32             , intent(in) :: dims(2)
+    character(len=*)      , intent(in) :: filetype
+    logical               , intent(in) :: to_file
 
     logical              :: buf(1)    ! buffer for send (all processes)
     logical, allocatable :: recbuf(:) ! buffer for receive (only master)
@@ -2844,9 +2870,9 @@ contains
     character(len=8)     :: rank_str
 
     ! Some info about communicator
-    comm = sll_world_collective%comm
-    np   = sll_get_collective_size( sll_world_collective )
-    rank = sll_get_collective_rank( sll_world_collective )
+    comm = self%comm%comm
+    np   = sll_get_collective_size( self%comm )
+    rank = sll_get_collective_rank( self%comm )
 
     ! MASTER
     if (rank==0) then
@@ -2858,7 +2884,7 @@ contains
       print *, "PROC #0: gather"
       ! Write array info on XDMF file
       if (to_file) then
-        call xdmf_file%write_array( dataset, dims, filetype )
+        call self%write_array( dataset, dims, filetype )
         print *, "PROC #0: write array info to xmf"
       end if
 
@@ -2868,7 +2894,7 @@ contains
         !    MPI_RECV( BUF, COUNT, DATATYPE, SOURCE, TAG, COMM, STATUS, IERROR )
         call mpi_recv( dataset, len( dataset ), mpi_character, mpi_any_source, mpi_any_tag, comm, mpi_status, ierr )
         print *, "PROC #0: receive data from processor ", mpi_status( mpi_source )
-        call xdmf_file%write_array( dataset, dims, filetype )
+        call self%write_array( dataset, dims, filetype )
       end do
 
     ! NOT MASTER
@@ -2888,7 +2914,7 @@ contains
 
     end if
 
-  end subroutine xdmf_collect_datasets
+  end subroutine xdmf__collect_datasets
 
 !==============================================================================
 
