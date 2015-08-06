@@ -1100,7 +1100,8 @@ base_field_pointer => rho
 select type( type_field => base_field_pointer)
 
 class is (sll_scalar_field_2d_discrete)
-
+  
+  
   coeff_rho => type_field%interp_2d%get_coefficients()
             
   do j=1,es%num_cells2+1
@@ -1188,7 +1189,7 @@ class is (sll_scalar_field_2d_analytic)
   !$OMP END PARALLEL
 
   es%rho_vec(1:es%num_cells1*es%num_cells2) =  &
-    es%rho_vec(1:es%num_cells1*es%num_cells2) - int_rho/int_jac
+    es%rho_vec(1:es%num_cells1*es%num_cells2) - sum(es%rho_vec)/int_jac*es%masse
      
 end select
 

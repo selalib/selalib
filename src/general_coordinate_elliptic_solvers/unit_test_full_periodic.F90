@@ -17,12 +17,13 @@ implicit none
 
 #define SPLINE_DEG1       3
 #define SPLINE_DEG2       3
-#define NUM_CELLS1        128
-#define NUM_CELLS2        128
+#define NUM_CELLS1        256
+#define NUM_CELLS2        256
 #define ETA1MIN          (-1.0_f64)
 #define ETA1MAX          (+1.0_f64)
 #define ETA2MIN          (-1.0_f64)
 #define ETA2MAX          (+1.0_f64)
+#define ALPHA            (0.9_f64)
 
 type(sll_cartesian_mesh_2d), pointer                      :: mesh_2d
 class(sll_coordinate_transformation_2d_base), pointer     :: tau
@@ -39,6 +40,10 @@ class(sll_scalar_field_2d_base), pointer                  :: c_field
 class(sll_scalar_field_2d_base), pointer                  :: rho
 type(sll_scalar_field_2d_discrete), pointer               :: phi
 
+sll_int32, parameter :: SLL_ANALYTIC = 0
+sll_int32, parameter :: SLL_DISCRETE = 1
+sll_int32 :: rho_case
+
 sll_real64 :: acc
 sll_real64 :: normL2
 sll_real64 :: normH1
@@ -46,6 +51,7 @@ sll_real64 :: normH1
 sll_real64, dimension(NUM_CELLS1+1,NUM_CELLS2+1) :: values
 sll_real64, dimension(NUM_CELLS1+1,NUM_CELLS2+1) :: calculated
 sll_real64, dimension(NUM_CELLS1+1,NUM_CELLS2+1) :: reference
+sll_real64, dimension(NUM_CELLS1+1,NUM_CELLS2+1) :: tab_rho
 
 sll_real64, dimension(NUM_CELLS2+1) :: v1_min
 sll_real64, dimension(NUM_CELLS2+1) :: v1_max
@@ -57,12 +63,17 @@ sll_real64 :: h1,h2,node_val,ref
 sll_real64 :: eta1(NUM_CELLS1+1)
 sll_real64 :: eta2(NUM_CELLS2+1)
 sll_int32  :: npts1,npts2
-sll_int32  :: cell 
+sll_int32  :: cell
+sll_real64 :: x1 
+sll_real64 :: x2 
 
 real(8) :: integral_solution
 real(8) :: integral_exact_solution
 
 sll_real64 :: grad1_node_val,grad2_node_val,grad1ref,grad2ref
+
+!rho_case = SLL_DISCRETE
+rho_case = SLL_ANALYTIC
 
 mesh_2d => new_cartesian_mesh_2d( NUM_CELLS1, &
                                   NUM_CELLS2, &
@@ -83,6 +94,12 @@ do j=1,npts2
   end do
 end do
 
+  do j=1,npts2
+    do i=1,npts1
+      tab_rho(i,j) = rhs(eta1(i),eta2(j), [0._f64])
+    end do
+  end do
+
 normL2 = 0.0_f64
 normH1 = 0.0_f64
 
@@ -91,16 +108,28 @@ print*, " test case witout change of coordinates"
 print*, " dirichlet-dirichlet boundary conditions"
 print*, "-------------------------------------------------------------"
 
-tau => new_coordinate_transformation_2d_analytic( &
-&      "analytic",                                &
-&      mesh_2d,                                   &
-&      identity_x1,                               &
-&      identity_x2,                               &
-&      identity_jac11,                            &
-&      identity_jac12,                            &
-&      identity_jac21,                            &
-&      identity_jac22,                            &
-&      [0.0_f64]                                  )
+!tau => new_coordinate_transformation_2d_analytic( &
+!&      "analytic",                                &
+!&      mesh_2d,                                   &
+!&      identity_x1,                               &
+!&      identity_x2,                               &
+!&      identity_jac11,                            &
+!&      identity_jac12,                            &
+!&      identity_jac21,                            &
+!&      identity_jac22,                            &
+!&      [0.0_f64]                                  )
+
+  tau => new_coordinate_transformation_2d_analytic( &
+       "analytic",                                &
+       mesh_2d,                                   &
+       sinprod_x1,                                &
+       sinprod_x2,                                &
+       sinprod_jac11,                             &
+       sinprod_jac12,                             &
+       sinprod_jac21,                             &
+       sinprod_jac22,                             &
+       (/ ALPHA, ALPHA, 2._f64, 2._f64/) )
+
 
 a11_field_mat => new_scalar_field_2d_analytic( &
   one,                                         &
@@ -215,6 +244,8 @@ phi => new_scalar_field_2d_discrete(           &
   SLL_PERIODIC,                                &
   SLL_PERIODIC )
 
+if(rho_case==SLL_ANALYTIC)then
+
 rho => new_scalar_field_2d_analytic( &
 &    rhs,                            &
 &    "rho",                          &     
@@ -224,6 +255,27 @@ rho => new_scalar_field_2d_analytic( &
 &    SLL_PERIODIC,                   &
 &    SLL_PERIODIC,                   &
 &    [0.0_f64]                       )
+
+endif
+if(rho_case==SLL_DISCRETE)then
+
+  rho => new_scalar_field_2d_discrete( &
+       "rhototo",                   &
+       interp_rho,                  &
+       tau,                              &
+       SLL_PERIODIC,                   &
+       SLL_PERIODIC,                   &
+       SLL_PERIODIC,                   &
+       SLL_PERIODIC,                   &
+       eta1,                           &
+       NUM_CELLS1,                     &
+       eta2,                           &
+       NUM_CELLS2)  
+
+  call rho%set_field_data(tab_rho)
+  call rho%update_interpolation_coefficients()
+
+endif
 
 integral_solution = 0.0_f64
 integral_exact_solution = 0.0_f64
@@ -249,7 +301,7 @@ call factorize_mat_es( es,            &
 &                      b2_field_vect, &
 &                      c_field        )
 
-do k = 1, 10
+do k = 1, 1
   call sll_solve( es, rho, phi)
 end do
 
@@ -262,13 +314,15 @@ normL2 = 0.0_f64
 normH1 = 0.0_f64
 do j=1,npts2
 do i=1,npts1
+  x1 = tau%x1(eta1(i),eta2(j))
+  x2 = tau%x2(eta1(i),eta2(j))
   node_val        = phi%value_at_point(eta1(i),eta2(j))
   calculated(i,j) = node_val
   grad1_node_val  = phi%first_deriv_eta1_value_at_point(eta1(i), eta2(j))
   grad2_node_val  = phi%first_deriv_eta2_value_at_point(eta1(i), eta2(j))
-  ref             = cos(2*sll_pi*eta1(i)) * cos(2*sll_pi*eta2(j))
-  grad1ref        =-2*sll_pi*sin(2*sll_pi*eta1(i))*cos(2*sll_pi*eta2(j))
-  grad2ref        =-2*sll_pi*sin(2*sll_pi*eta2(j))*cos(2*sll_pi*eta1(i))
+  ref             = cos(2*sll_pi*x1) * cos(2*sll_pi*x2)
+  grad1ref        =-2*sll_pi*sin(2*sll_pi*x1)*cos(2*sll_pi*x2)
+  grad2ref        =-2*sll_pi*sin(2*sll_pi*x2)*cos(2*sll_pi*x1)
   reference(i,j)  = ref
   normL2          = normL2 + (node_val-ref)**2*h1*h2
   normH1          = normH1 + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2
@@ -338,8 +392,12 @@ real(8), intent(in) :: eta2
 real(8), dimension(:), intent(in) :: params
 real(8) :: res
 real(8) :: pi
+real(8) :: x1
+real(8) :: x2
+x1 = sinprod_x1(eta1,eta2,(/ ALPHA, ALPHA, 2._f64, 2._f64/))
+x2 = sinprod_x2(eta1,eta2,(/ ALPHA, ALPHA, 2._f64, 2._f64/))
 pi = 4d0*atan(1d0)
-res = -8*pi*pi*cos(2*pi*eta1)*cos(2*pi*eta2)
+res = -8*pi*pi*cos(2*pi*x1)*cos(2*pi*x2)
 end function rhs
 
 function sol( eta1, eta2, params ) result(res)
@@ -348,8 +406,12 @@ real(8), intent(in) :: eta2
 real(8), dimension(:), intent(in) :: params
 real(8) :: res
 real(8) :: pi
+real(8) :: x1
+real(8) :: x2
+x1 = sinprod_x1(eta1,eta2,(/ ALPHA, ALPHA, 2._f64, 2._f64/))
+x2 = sinprod_x2(eta1,eta2,(/ ALPHA, ALPHA, 2._f64, 2._f64/))
 pi = 4d0*atan(1d0)
-res = cos(2*pi*eta1)*cos(2*pi*eta2)
+res = cos(2*pi*x1)*cos(2*pi*x2)
 end function sol
 
 end program test_gces_full_periodic
