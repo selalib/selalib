@@ -50,15 +50,18 @@ contains
     ! local variables
     sll_real64 :: xi(3)
     sll_int32 :: i_part
-    
+    sll_real64 :: spline_val(this%n_span)
+
     do i_part = 1, particle_group%n_particles
        xi = particle_group%get_x(i_part)
        xi(1:2) = (xi(1:2) - this%domain(:,1)) /&
             this%delta_x
-       this%index_grid(i_part,:) = ceiling(xi(1:2))
-       xi(1:2) = xi(1:2) - real(this%index_grid(i_part,:) -1,f64)
-       this%values_grid(i_part,1,:) = uniform_b_splines_at_x(this%spline_degree, xi(1))!basis_functions(xi) ! TODO
-        this%values_grid(i_part,2,:) = uniform_b_splines_at_x(this%spline_degree, xi(2))
+       this%index_grid(:,i_part) = ceiling(xi(1:2))
+       xi(1:2) = xi(1:2) - real(this%index_grid(:,i_part) -1,f64)
+       spline_val = uniform_b_splines_at_x(this%spline_degree, xi(1))!basis_functions(xi) ! TODO
+       this%values_grid(:,1,i_part) = spline_val
+       spline_val = uniform_b_splines_at_x(this%spline_degree, xi(2))
+       this%values_grid(:,2,i_part) = spline_val
     end do
 
     !write(21,*) this%values_grid
@@ -86,8 +89,8 @@ contains
              index2d = index_1dto2d_column_major(this,index1d)
              rho_dofs(index2d) = rho_dofs(index2d) +&
                   (particle_group%get_charge(i_part) * &
-                  this%values_grid(i_part, 1, i1) *&
-                  this%values_grid(i_part, 2, i2)) *&
+                  this%values_grid(i1, 1, i_part) *&
+                  this%values_grid(i2, 2, i_part)) *&
                   real(product(this%n_grid), f64)
           end do
        end do
@@ -110,18 +113,18 @@ contains
     sll_real64 :: vpart(3)
 
     do i_part = 1, particle_group%n_particles
-       index1d = this%index_grid(i_part,:)
+       index1d = this%index_grid(:,i_part)
        do i1 = 1, this%n_span
-          index1d(1) = this%index_grid(i_part,1)+i1-2
+          index1d(1) = this%index_grid(1,i_part)+i1-2
           do i2 = 1, this%n_span
-             index1d(2) = this%index_grid(i_part,2)+i2-2
+             index1d(2) = this%index_grid(2,i_part)+i2-2
              index2d = index_1dto2d_column_major(this,index1d)
              vpart = particle_group%get_v(i_part)
              j_dofs(index2d) = j_dofs(index2d) +&
                   (particle_group%get_charge(i_part) * &
-                  vpart(component)
-                  this%values_grid(i_part, 1, i1) *&
-                  this%values_grid(i_part, 2, i2)) * &
+                  vpart(component) * &
+                  this%values_grid(i1,1,i_part) *&
+                  this%values_grid(i2,2,i_part)) * &
                   real(product(this%n_grid), f64)
           end do
        end do
@@ -144,14 +147,14 @@ contains
     do i_part = 1, particle_group%n_particles
        particle_values(i_part) = 0.0_f64
        do i1 = 1, this%n_span
-          index1d(1) = this%index_grid(i_part,1)+i1-2
+          index1d(1) = this%index_grid(1,i_part)+i1-2
           do i2 = 1, this%n_span
-             index1d(2) = this%index_grid(i_part,2)+i2-2
+             index1d(2) = this%index_grid(2,i_part)+i2-2
              index2d = index_1dto2d_column_major(this,index1d)
              particle_values(i_part ) = particle_values(i_part) + &
                   rho_dofs(index2d) *  &
-                  this%values_grid(i_part, 1, i1) *&
-                  this%values_grid(i_part, 2, i2)
+                  this%values_grid(i1,1, i_part) *&
+                  this%values_grid(i2, 2, i_part)
           end do
        end do
     end do
@@ -218,8 +221,8 @@ contains
     this%n_span = spline_degree + 1
 
     ! Initialize sparse structure for shape factors
-    SLL_ALLOCATE(this%index_grid(no_particles, 2),ierr)
-    SLL_ALLOCATE(this%values_grid(no_particles, 2, this%n_span),ierr)
+    SLL_ALLOCATE(this%index_grid(2, no_particles),ierr)
+    SLL_ALLOCATE(this%values_grid(this%n_span, 2, no_particles),ierr)
 
   end function sll_new_smoother_spline_2d
 
