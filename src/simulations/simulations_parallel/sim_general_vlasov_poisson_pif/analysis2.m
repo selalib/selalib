@@ -25,6 +25,9 @@ cd '/home/mrbobble/DATA/Studium/Promotion/helios/B1/results'
 prefix='landau_diagB-1';modeidx=4;
 
 
+cd '/home/mrbobble/DATA/Studium/Promotion/helios/B1Analysis'
+prefix='B100Analysis';
+
 
 DATA = csvread([prefix,'_result.csv'],2);
 
@@ -55,15 +58,38 @@ semilogy(time, l2potential(1)*exp(gamma.*time))
 
 semilogy(time,phi(15,:));
 
-
+close all;
 %------------- Fourier transform in time
- 
-size(phi)
-
 phim=[fliplr(phi), phi   ];
 phim=abs(fft(phim,[],2));
+dt=time(2)-time(1);
+ phim=phim(:,2:end/2);
+omega=[0, 2*pi./( (size(phim,2):-1:2)*dt)];
+
+T= (size(phim,2):-1:1)*dt
+
+plot(T)
+
+modeidx=15
+plot(omega)
+for idx=1:size(phim,1)
+semilogy(time,phi(idx,:));
+%    semilogy(phim(idx,:).')
+legend(sprintf('mode= %d %d %d', unitmode(idx,:)))
+pause(2);
+end    
+    phim=phim(modeidx,:)
+
+semilogy(phim(15,:))
+
+semilogy(omega,phim.')
+xlabel('omega');
+
 
 semilogy(phim.')
+
+semilogy(phi(15,:).')
+
 
 % 
 % fphim=fft(log(phim));
