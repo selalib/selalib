@@ -188,9 +188,9 @@ module sll_collective
 
   !> @brief Gathers together values from a group of processes.
   interface sll_collective_gather
-     !> @brief Gathers together values of real type from a group of processes.
-     module procedure sll_collective_gather_real32, &
-          sll_collective_gather_real64
+     module procedure sll_collective_gather_real32
+     module procedure sll_collective_gather_real64
+     module procedure sll_collective_gather_logical
   end interface
 
   !> @brief Gathers data from all tasks and distribute the combined
@@ -640,6 +640,32 @@ contains !************************** Operations **************************
     call sll_test_mpi_error( ierr, &
          'sll_collective_gather_real(): MPI_GATHER()' )
   end subroutine sll_collective_gather_real64
+
+
+  subroutine sll_collective_gather_logical( col, send_buf, root, rec_buf )
+    type(sll_collective_t), pointer    :: col
+    logical,                intent(in) :: send_buf(:)
+    sll_int32,              intent(in) :: root
+    logical,                intent(in) :: rec_buf(:)
+
+    sll_int32 :: send_sz, ierr
+
+    ! Get message size
+    send_sz = size( send_buf )
+
+    ! Root: Verify that receive buffer is of correct size
+    if (col%rank == root) then
+      SLL_ASSERT( size( rec_buf ) == send_sz * col%size )
+    end if
+
+    !Note that the 5th argument at the root indicates the number of items
+    !it receives from each task. It is not the total number of items received.
+    call MPI_GATHER( send_buf, send_sz, MPI_LOGICAL, rec_buf, send_sz, &
+         MPI_LOGICAL, root, col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_gather_real(): MPI_GATHER()' )
+  end subroutine sll_collective_gather_logical
+
 
   !> @brief Gathers real values into specified locations from all processes in a group
   !> @param[in] col Wrapper around the communicator
