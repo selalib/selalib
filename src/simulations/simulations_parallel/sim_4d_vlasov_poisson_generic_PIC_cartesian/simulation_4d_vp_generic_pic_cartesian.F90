@@ -492,7 +492,9 @@ contains
     rdy = 1._f64/sim%mesh_2d%delta_eta2
 
     !  ----------------------------------------------------------------------------------------------------
-    !> ## The time loop is prepared by computing the \f$E\f$ field
+    !> ## Time loop initialisation
+    !>
+    !> The time loop is prepared by computing the \f$E\f$ field
     !>
     !> - starting from
     !>   * \f$(x,y)^0_k\f$, \f$(v_x, v_y)^0_k\f$ stored in the particle group
@@ -654,12 +656,14 @@ contains
     do it = 0, sim%num_iterations-1
 
        print *, "BEGIN one loop in time, it = ", it
-       !! -- --  diagnostics (computing energy) [begin]  -- --
+       !! -- --  <<diagnostics>> (computing energy) [begin]  -- --
 
        if (sim%my_rank == 0) then
           exval_ee = une_cst * exp(2._f64 * omega_i * real(it,f64) * sim%dt)                          &
                              * ( 0.5_f64 + 0.5_f64 * cos(2._f64 * (omega_r * real(it,f64) * sim%dt - psi)) )
           exval_ee = max(exval_ee, 1e-30_f64)    ! to avoid taking the log of 0
+
+          ! [[normL2_field_Ex]]
           call normL2_field_Ex ( val_lee, val_ee, ncx, ncy,                         &
                                  sim%E1,                                            &
                                  sim%mesh_2d%delta_eta1, sim%mesh_2d%delta_eta2 )
@@ -1001,6 +1005,7 @@ contains
 !    y = modulo(y,mesh%eta2_max - mesh%eta2_min)! Sinon, il faut modulo(...) + xmin/mesh%delta_x
 !  end subroutine apply_periodic_bc
 
+  ! <<normL2_field_Ex>>
   subroutine normL2_field_Ex (lee,ee,nx,ny,e,dx,dy)
     sll_real64, intent(out) :: lee, ee
     sll_real64, intent(in) :: dx,dy
