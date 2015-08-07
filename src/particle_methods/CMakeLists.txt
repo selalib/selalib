@@ -7,6 +7,7 @@ if( MPI_ENABLED )
   add_subdirectory( particle_initializers )
   add_subdirectory( particle_types )
   add_subdirectory( kernel_smoother )
+  add_subdirectory( maxwell_kernel )
   add_subdirectory( particle_pushers )
 endif( MPI_ENABLED )
 
