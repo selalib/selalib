@@ -2525,23 +2525,22 @@ contains
     character(len=*)      , intent(in   ) :: xml_file_name
     type(sll_collective_t), pointer       :: comm
 
-    sll_int32  :: xml_file_id, error
-    sll_real32 :: bcast_buf(1)
+    sll_int32 :: xml_file_id, error
+    sll_int32 :: bcast_buf(1)
 
     ! Master creates XML file and writes header
     if (sll_get_collective_rank( comm ) == 0) then
       call sll_xml_file_create( xml_file_name, xml_file_id, error )
       SLL_ASSERT( error == 0 )
-      bcast_buf(1) = real( xml_file_id, f32 )
+      bcast_buf(1) = xml_file_id
     end if
 
     ! Master broadcasts file ID to all other processes
-    ! TODO: add 'sll_collective_bcast_int32' to SeLaLib
-    call sll_collective_bcast( comm, bcast_buf, 1, 0 )
+    call sll_collective_bcast( comm, bcast_buf, 0 )
     
     ! Non-master procs read file ID from buffer
     if (sll_get_collective_rank( comm ) == 0) then
-      xml_file_id = int( bcast_buf(1), i32 )
+      xml_file_id = bcast_buf(1)
     end if
 
     ! Fill in fields
