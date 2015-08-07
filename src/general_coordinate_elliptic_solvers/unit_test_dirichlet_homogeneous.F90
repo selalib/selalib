@@ -251,7 +251,7 @@ end do
 integral_solution       = 0.0_f64
 integral_exact_solution = 0.0_f64
 
-call phi%write_to_file(0)
+call phi%write_to_file(1)
 
 normL2 = 0.0_f64
 normH1 = 0.0_f64
