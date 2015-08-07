@@ -2668,13 +2668,16 @@ contains
     np   = sll_get_collective_size( self%comm )
     rank = sll_get_collective_rank( self%comm )
 
+    ! Fill in send buffer (all processes)
+    buf(1) = to_file
+
     ! MASTER
     if (rank==0) then
       allocate( recbuf(0:np-1) )
-      recbuf(0) = to_file
-      ! Check sizes
-      !    MPI_GATHER( SENDBUF, SENDCOUNT, SENDTYPE, RECVBUF, RECVCOUNT, RECVTYPE, ROOT, COMM, IERROR )
-      call mpi_gather( mpi_in_place, 1, mpi_logical, recbuf, 1, mpi_logical, 0, comm, ierr )
+!      recbuf(0) = to_file
+!      !    MPI_GATHER( SENDBUF, SENDCOUNT, SENDTYPE, RECVBUF, RECVCOUNT, RECVTYPE, ROOT, COMM, IERROR )
+!      call mpi_gather( mpi_in_place, 1, mpi_logical, recbuf, 1, mpi_logical, 0, comm, ierr )
+      call sll_collective_gather( self%comm, buf, 0, recbuf )
       print *, "PROC #0: gather"
       ! Write array info on XDMF file
       if (to_file) then
@@ -2684,7 +2687,6 @@ contains
 
       print *, "PROC #0: recbuf = ", recbuf
       do i=1,count( recbuf(1:) )
-        ! Check sizes
         !    MPI_RECV( BUF, COUNT, DATATYPE, SOURCE, TAG, COMM, STATUS, IERROR )
         call mpi_recv( dataset, len( dataset ), mpi_character, mpi_any_source, mpi_any_tag, comm, mpi_status, ierr )
         print *, "PROC #0: receive data from processor ", mpi_status( mpi_source )
@@ -2693,11 +2695,10 @@ contains
 
     ! NOT MASTER
     else
-      buf(1) = to_file
-      allocate( recbuf(1) )
-      ! Check sizes
-      !    MPI_GATHER( SENDBUF, SENDCOUNT, SENDTYPE, RECVBUF, RECVCOUNT, RECVTYPE, ROOT, COMM, IERROR )
-      call mpi_gather( buf, 1, mpi_logical, recbuf, 0, 0, 0, comm, ierr )
+!      allocate( recbuf(1) )
+!      !    MPI_GATHER( SENDBUF, SENDCOUNT, SENDTYPE, RECVBUF, RECVCOUNT, RECVTYPE, ROOT, COMM, IERROR )
+!      call mpi_gather( buf, 1, mpi_logical, recbuf, 0, 0, 0, comm, ierr )
+      call sll_collective_gather( self%comm, buf, 0, recbuf )
       write( rank_str, '(i8)' ) rank
       print *, "PROC #"//trim( adjustl( rank_str ) )//": gather"
       if (buf(1)) then
