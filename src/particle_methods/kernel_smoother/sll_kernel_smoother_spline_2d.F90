@@ -56,8 +56,9 @@ contains
        xi = particle_group%get_x(i_part)
        xi(1:2) = (xi(1:2) - this%domain(:,1)) /&
             this%delta_x
-       this%index_grid(:,i_part) = ceiling(xi(1:2)) - this%spline_degree
+       this%index_grid(:,i_part) = ceiling(xi(1:2))
        xi(1:2) = xi(1:2) - real(this%index_grid(:,i_part) -1,f64)
+       this%index_grid(:,i_part) =  this%index_grid(:,i_part) - this%spline_degree
        spline_val = uniform_b_splines_at_x(this%spline_degree, xi(1))!basis_functions(xi) ! TODO
        this%values_grid(:,1,i_part) = spline_val
        spline_val = uniform_b_splines_at_x(this%spline_degree, xi(2))

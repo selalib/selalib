@@ -52,11 +52,12 @@ contains
     sll_real64 :: spline_val(this%n_span)
 
     do i_part = 1, particle_group%n_particles
-       xi = particle_group%get_x(i_part) - this%spline_degree
+       xi = particle_group%get_x(i_part)
        xi(1) = (xi(1) - this%domain(1,1)) /&
             this%delta_x(1)
        this%index_grid(:,i_part) = ceiling(xi(1))
        xi(1) = xi(1) - real(this%index_grid(1,i_part) -1,f64)
+       this%index_grid(:,i_part) =  this%index_grid(:,i_part) - this%spline_degree
        spline_val = uniform_b_splines_at_x(this%spline_degree, xi(1))
        this%values_grid(:,1,i_part) = spline_val
     end do
