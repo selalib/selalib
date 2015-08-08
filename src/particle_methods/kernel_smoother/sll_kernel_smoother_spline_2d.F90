@@ -1,7 +1,7 @@
 !> @ingroup particle_methods
 !> @author Katharina Kormann
 !> @brief Kernel smoother for 2d with splines of arbitrary degree placed on a uniform mesh.
-!> @details ...
+!> @details  Spline with index i starts at point i
 module sll_m_kernel_smoother_spline_2d
 
 #include "sll_working_precision.h"
@@ -56,7 +56,7 @@ contains
        xi = particle_group%get_x(i_part)
        xi(1:2) = (xi(1:2) - this%domain(:,1)) /&
             this%delta_x
-       this%index_grid(:,i_part) = ceiling(xi(1:2))
+       this%index_grid(:,i_part) = ceiling(xi(1:2)) - this%spline_degree
        xi(1:2) = xi(1:2) - real(this%index_grid(:,i_part) -1,f64)
        spline_val = uniform_b_splines_at_x(this%spline_degree, xi(1))!basis_functions(xi) ! TODO
        this%values_grid(:,1,i_part) = spline_val
