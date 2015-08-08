@@ -187,12 +187,13 @@ contains
     this%n_dofs = this%n_fmodes*2 + 1
 
     do i=1,this%n_fmodes
-       this%kEB(i) = sll_pi/Lx * real(i, f64)
+       this%kEB(i) = 2.0_f64*sll_pi/Lx * real(i, f64)
     end do
 
     this%n_particles = n_particles
 
     SLL_ALLOCATE(this%shape_factors(this%n_fmodes*2, this%n_particles), ierr)
+    
 
   end function sll_new_pic_maxwell_1d_fourier_modes
 
