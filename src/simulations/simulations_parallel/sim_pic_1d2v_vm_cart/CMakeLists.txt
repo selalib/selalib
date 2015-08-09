@@ -15,7 +15,7 @@ TARGET_LINK_LIBRARIES( ${EXECUTABLE}
   sll_particle_types
   sll_kernel_smoothers
   sll_particle_pushers
-  sll_pic_maxwell)
+  sll_maxwell_solvers)
 
 INSTALL( TARGETS ${EXECUTABLE}                     DESTINATION ${INSTALL_DIR} )
 INSTALL( FILES  ${INPUT_FILES} README ${POST_PROC} DESTINATION ${INSTALL_DIR} )
