@@ -58,8 +58,10 @@ contains
        xi = particle_group%get_x(i_part)
        xi(1) = (xi(1) - this%domain(1,1)) /&
             this%delta_x(1)
+       ! This is the index of the last spline the particle contributes to
        this%index_grid(:,i_part) = ceiling(xi(1))
        xi(1) = xi(1) - real(this%index_grid(1,i_part) -1,f64)
+       ! Now we subtract the degree of the spline to get the index of the first spline.
        this%index_grid(:,i_part) =  this%index_grid(:,i_part) - this%spline_degree
        spline_val = uniform_b_splines_at_x(this%spline_degree, xi(1))
        this%values_grid(:,1,i_part) = spline_val
@@ -75,8 +77,8 @@ contains
     sll_real64, intent(inout)                       :: rho_dofs(:)
     
     !local variables
-    sll_int32 :: i_part, i1, i2, index2d
-    sll_int32 :: index1d(2)
+    sll_int32 :: i_part, i1
+    sll_int32 :: index1d
 
     do i_part = 1, particle_group%n_particles
        do i1 = 1, this%n_span
@@ -171,7 +173,7 @@ contains
     this%n_span = spline_degree + 1
 
     ! Initialize sparse structure for shape factors
-    SLL_ALLOCATE(this%index_grid(2, no_particles),ierr)
+    SLL_ALLOCATE(this%index_grid(1, no_particles),ierr)
     SLL_ALLOCATE(this%values_grid(this%n_span, 1, no_particles),ierr)
 
   end function sll_new_smoother_spline_1d
