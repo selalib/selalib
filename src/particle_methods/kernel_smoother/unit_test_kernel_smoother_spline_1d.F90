@@ -18,6 +18,7 @@ program unit_test_kernel_smoother_spline_1d
   sll_int32 :: spline_degree
   sll_real64 :: domain(2)
   sll_real64 :: x_vec(4)
+  sll_real64 :: v_vec(4,2)
 
   ! helper variables
   sll_int32  :: i_part 
@@ -32,6 +33,9 @@ program unit_test_kernel_smoother_spline_1d
   ! Rho dofs
   sll_real64 :: rho_dofs(10)
   sll_real64 :: rho_dofs_ref(10)
+  ! J dofs
+  sll_real64 :: j_dofs(10)
+  sll_real64 :: j_dofs_ref(10)
 
   ! For evaluation check
   sll_real64 :: particle_values(4)
@@ -47,6 +51,8 @@ program unit_test_kernel_smoother_spline_1d
   spline_degree = 3 ! Spline degree
   domain = [0.0_f64, 2.0_f64] ! x_min, x_max
   x_vec = [0.1_f64, 0.65_f64, 0.7_f64, 1.5_f64] ! Particle positions
+  v_vec(:,1) = [1.5_f64, 0.0_f64, 0.0_f64, 0.0_f64]
+  v_vec(:,2) = [0.0_f64, 0.5_f64, 0.0_f64, 0.0_f64]
 
   ! We need to initialize the particle group
   specific_particle_group => sll_new_particle_group_1d2v(n_particles, &
@@ -56,6 +62,8 @@ program unit_test_kernel_smoother_spline_1d
      xi(1) = x_vec(i_part)
      call specific_particle_group%set_x(i_part, xi)
      call specific_particle_group%set_weight(i_part, 1/real(n_particles,f64))
+     xi(1:2) = v_vec(i_part,:)
+     call specific_particle_group%set_v(i_part, xi)
   end do
   
   particle_group => specific_particle_group
@@ -96,7 +104,22 @@ program unit_test_kernel_smoother_spline_1d
      passed = .FALSE.
   end if
 
-  ! TODO: Test j accumulations
+  ! Test j accumulations
+  j_dofs = 0.0_f64
+  call kernel%accumulate_j_from_klimontovich(particle_group, j_dofs, 1)
+  j_dofs_ref = 0.0_f64  
+  j_dofs_ref(8:10) = values_grid(1:3,1,1)*v_vec(1,1)
+  j_dofs_ref(1) = values_grid(4,1,1)*v_vec(1,1)
+  j_dofs_ref(1:4) = j_dofs_ref(1:4) + values_grid(:,1,2)*v_vec(2,1) + &
+       values_grid(:,1,3)*v_vec(3,1)
+  j_dofs_ref(5:8) = j_dofs_ref(5:8) + values_grid(:,1,4)*v_vec(4,1)
+  j_dofs_ref = j_dofs_ref * real(n_cells,f64)/real(n_particles, f64)
+  error = maxval(abs(j_dofs-j_dofs_ref))
+  if (error > 1.e-14) then
+     passed = .FALSE.
+  end if
+
+
   ! Test function evaluation
   call kernel%evaluate_kernel_function(particle_group, rho_dofs, &
        particle_values)
