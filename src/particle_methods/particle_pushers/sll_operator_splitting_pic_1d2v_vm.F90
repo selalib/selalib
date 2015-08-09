@@ -83,25 +83,26 @@ contains
        xi = (x_new(1) - this%x_min) /&
             this%delta_x
        index_new = floor(xi)
-       r_new = xi - real(index_old ,f64) 
+       r_new = xi - real(index_new ,f64) 
 
-
-       ! Evaluate primitive at r_old and subtract from integrated j
+       ! Evaluate primitive at r_old and subtract from integrated j, if going backwards also subtract the value of the whole integral.
        primitive = primitive_uniform_cubic_b_spline_at_x( r_old )
+       ! If we are integrating to the right, we need to also use the value of the primitive at the right interval bound. If larger, we would need the lower but it is zero by our normalization.   
        if (index_old < index_new) then
-          primitive = primitive + this%cell_integrals
+          primitive = primitive - this%cell_integrals
        end if
-
+       ! Now, we loop through the DoFs and add the contributions.
        ind = 1
        do i_grid = index_old - this%spline_degree, index_old
           i_mod = modulo(i_grid, n_cells ) + 1
           this%j_dofs_local(i_mod,:) = this%j_dofs_local(i_mod,:) - &
                primitive(ind)*vi (1:2)
           ind = ind + 1
-       end do
+       end do      
+       ! Now contribution from r_new
        primitive = primitive_uniform_cubic_b_spline_at_x( r_new )
        if (index_old > index_new) then
-          primitive = primitive + this%cell_integrals
+          primitive = primitive - this%cell_integrals
        end if 
        ind = 1
        do i_grid = index_new - this%spline_degree, index_new
@@ -110,8 +111,7 @@ contains
                primitive(ind)*vi(1:2)
           ind = ind + 1
        end do
-       
-       ! If |index_new - index_old|<2, we are done. Otherwise, we have to account for the piecewise definition of the spline
+       ! If |index_new - index_old|<2, we are done. Otherwise, we have to account for the piecewise definition of the spline and add the contributions from the intervals inbetween. These are always integrals over the whole integrals.
        ! First if index_old<index_new-1: Add the whole integrals.
        do j = index_old+1, index_new-1
           ind = 1
@@ -134,13 +134,15 @@ contains
        end do 
 
     end do
+    
 
     this%j_dofs = 0.0_f64
     !     ! MPI to sum up contributions from each processor
     call sll_collective_allreduce( sll_world_collective, this%j_dofs_local(:,1), &
          n_cells, MPI_SUM, this%j_dofs(:,1))
     call sll_collective_allreduce( sll_world_collective, this%j_dofs_local(:,2), &
-         n_cells*2, MPI_SUM, this%j_dofs(:,2))
+         n_cells, MPI_SUM, this%j_dofs(:,2))
+
 
 
     ! Finally update the electric field
@@ -150,7 +152,8 @@ contains
     ! Finally, we recompute the shape factors for the new positions such that we can evaluate the electric and magnetic fields
    call  this%kernel_smoother%compute_shape_factors(this%particle_group)
 
-  end subroutine operatorHf_pic_1d2v_vm
+
+ end subroutine operatorHf_pic_1d2v_vm
   
   !---------------------------------------------------------------------------!
   ! Push H_E
@@ -274,7 +277,7 @@ contains
     primitive(4) = xx(3)/24.0_f64
     primitive(3) = (x + 1.5_f64*xx(1) + xx(2) - 0.75_f64* xx(3))/6.0_f64
     primitive(2) = (4.0_f64*x - 2.0_f64* xx(2) + 0.75_f64* xx(3))/6.0_f64
-    primitive(1) = (1.0_f64 - (1.0_f64)**4)/24.0_f64
+    primitive(1) = (1.0_f64 - (1.0_f64-x)**4)/24.0_f64
 
   end function primitive_uniform_cubic_b_spline_at_x
 
