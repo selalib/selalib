@@ -49,7 +49,11 @@ module sll_m_operator_splitting_pic_1d2v_vm
 contains
 
   !---------------------------------------------------------------------------!
-  !> Push Hf
+  !> Push Hf: Equations to solve are
+  !> \partial_t f + v_1 \partial_{x_1} f = 0    -> X_new = X_old + dt V_1
+  !> \partial_t E_1 = - \int v_1 f(t,x_1, v) dv -> E_{1,new} = E_{1,old} - \int \int v_1 f(t,x_1+s v_1,v) dv ds
+  !> \partial_t E_2 = - \int v_2 f(t,x_1, v) dv -> E_{2,new} = E_{2,old} - \int \int v_2 f(t,x_1+s v_1,v) dv ds
+  !> \partial_t B = 0 => B_new = B_old
   subroutine operatorHf_pic_1d2v_vm(this, dt)
     class(sll_operator_splitting_pic_1d2v_vm), intent(inout) :: this !< time splitting object 
     sll_real64, intent(in) :: dt   !< time step
@@ -65,27 +69,42 @@ contains
     this%j_dofs_local = 0.0_f64
     n_cells = this%kernel_smoother%n_dofs
 
-    ! For each particle compute the index of the first DoF on the grid it contributes to and its position (normalized to cell size one).
+    ! Here we have to accumulate j and integrate over the time interval.
+    ! At each k=1,...,n_grid, we have for s \in [0,dt]:
+    ! j_k(s) = 1/L_x \sum_{i=1,..,N_p} q_i N((x_k+sv_{1,k}-x_i)/h)/h v_k,
+    ! where h is the grid spacing and N the normalized B-spline
+    ! In order to accumulate the integrated j, we normalize the values of x to the grid spacing, calling them y, we have
+    ! j_k(s) = 1/L_x  \sum_{i=1,..,N_p} q_i N(y_k+s/h v_{1,k}-y_i)/h v_k.
+    ! Now, we want the integral 
+    ! \int_{0..dt} j_k(s) d s = 1/Lx \sum_{i=1,..,N_p} q_i v_k \int_{0..dt} N(y_k+s/h v_{1,k}-y_i)/h ds =  1/Lx \sum_{i=1,..,N_p} q_i v_k  \int_{0..dt/h}  N(y_k + w v_{1,k}-y_i) dw
+
+
+    ! For each particle compute the index of the first DoF on the grid it contributes to and its position (normalized to cell size one). Note: j_dofs(_local) does not hold the values for j itself but for the integrated j.
     ! Then update particle position:  X_new = X_old + dt * V
-    do i_part=1,this%particle_group%n_particles       
+    do i_part=1,this%particle_group%n_particles  
+       ! Read out particle position and velocity
        x_new = this%particle_group%get_x(i_part)
-       vi = this%particle_group%get_v(i_part)*this%particle_group%get_charge(i_part)
+       vi = this%particle_group%get_v(i_part)
+       ! Compute index_old, the index of the last DoF on the grid the particle contributes to, and r_old, its position (normalized to cell size one).
        xi = (x_new(1) - this%x_min) /&
             this%delta_x
        index_old = floor(xi)
        r_old = xi - real(index_old,f64)
 
        ! Then update particle position:  X_new = X_old + dt * V
-       x_new = this%particle_group%get_x(i_part) + dt * this%particle_group%get_v(i_part) 
+       x_new = this%particle_group%get_x(i_part) + dt * vi
        call this%particle_group%set_x(i_part, x_new)
 
-       ! Compute the new box index and normalized position.
+       ! Compute the new box index index_new and normalized position r_old.
        xi = (x_new(1) - this%x_min) /&
             this%delta_x
        index_new = floor(xi)
        r_new = xi - real(index_new ,f64) 
 
-       ! Evaluate primitive at r_old and subtract from integrated j, if going backwards also subtract the value of the whole integral.
+       ! Scale vi by weight to combine both factors for accumulation of integral over j
+       vi = vi**this%particle_group%get_charge(i_part)
+
+       ! Compute the primitive at r_old for each interval
        primitive = primitive_uniform_cubic_b_spline_at_x( r_old )
        ! If we are integrating to the right, we need to also use the value of the primitive at the right interval bound. If larger, we would need the lower but it is zero by our normalization.   
        if (index_old < index_new) then
@@ -99,7 +118,7 @@ contains
                primitive(ind)*vi (1:2)
           ind = ind + 1
        end do      
-       ! Now contribution from r_new
+       ! Now contribution from r_new in the same way but different sign
        primitive = primitive_uniform_cubic_b_spline_at_x( r_new )
        if (index_old > index_new) then
           primitive = primitive - this%cell_integrals
@@ -135,28 +154,33 @@ contains
 
     end do
     
+    ! Finally, we still need to scale with 1/this%Lx.
+    this%j_dofs_local = this%j_dofs_local/this%Lx
 
     this%j_dofs = 0.0_f64
-    !     ! MPI to sum up contributions from each processor
+    ! MPI to sum up contributions from each processor
     call sll_collective_allreduce( sll_world_collective, this%j_dofs_local(:,1), &
          n_cells, MPI_SUM, this%j_dofs(:,1))
     call sll_collective_allreduce( sll_world_collective, this%j_dofs_local(:,2), &
          n_cells, MPI_SUM, this%j_dofs(:,2))
 
 
+    ! Update the electric field
+    this%efield_dofs(:,:) = this%efield_dofs(:,:) - this%j_dofs(:,:)
 
-    ! Finally update the electric field
-    this%efield_dofs(:,:) = this%efield_dofs(:,:) - this%j_dofs(:,:)/this%Lx
 
-
-    ! Finally, we recompute the shape factors for the new positions such that we can evaluate the electric and magnetic fields
+    ! Finally, we recompute the shape factors for the new positions such that we can evaluate the electric and magnetic fields when calling the operators H_E and H_B
    call  this%kernel_smoother%compute_shape_factors(this%particle_group)
 
 
  end subroutine operatorHf_pic_1d2v_vm
   
   !---------------------------------------------------------------------------!
-  ! Push H_E
+  !> Push H_E: Equations to be solved
+  !> \partial_t f + E_1 \partial_{v_1} f + E_2 \partial_{v_2} f = 0 -> V_new = V_old + dt * E
+  !> \partial_t E_1 = 0 -> E_{1,new} = E_{1,old} 
+  !> \partial_t E_2 = 0 -> E_{2,new} = E_{2,old}
+  !> \partial_t B- \partial_{x_1} E_2 = 0 => B_new = B_old - dt \partial_{x_1} E_2
   subroutine operatorHE_pic_1d2v_vm(this, dt)
     class(sll_operator_splitting_pic_1d2v_vm), intent(inout) :: this !< time splitting object 
     sll_real64, intent(in) :: dt   !< time step
@@ -187,7 +211,11 @@ contains
   
 
   !---------------------------------------------------------------------------!
-  ! Push H_B
+  !> Push H_B: Equations to be solved
+  !> \partial_t f + B v_2 \partial_{v_1} f - B v_1 \partial_{v_2} f = 0 -> V_new = V_old + dt * (cos(B dt)  sin(B dt) \\ -sin(B dt) cos(B dt)) * V_old
+  !> \partial_t E_1 = 0 -> E_{1,new} = E_{1,old}
+  !> \partial_t E_2 = - \partial_{x_1} B -> E_{2,new} = E_{2,old}-dt*\partial_{x_1} B
+  !> \partial_t B = 0 => B_new = B_old
   subroutine operatorHB_pic_1d2v_vm(this, dt)
     class(sll_operator_splitting_pic_1d2v_vm), intent(inout) :: this !< time splitting object 
     sll_real64, intent(in) :: dt   !< time step
@@ -200,7 +228,7 @@ contains
     call this%kernel_smoother%evaluate_kernel_function(this%particle_group, &
          this%bfield_dofs, this%bfield)
 
-    ! V_new = V_old + dt * E
+    ! V_new = V_old + dt * (cos(B dt)  sin(B dt) \\ -sin(B dt) cos(B dt)) * V_old
     do i_part=1,this%particle_group%n_particles
        v_old = this%particle_group%get_v(i_part)
        v_new(1) = v_old(1) * cos(this%bfield(i_part)*dt) + &
@@ -263,7 +291,7 @@ contains
   end function sll_new_splitting_pic_1d2v_vm
 
 
-  ! Compute the primitive of the cubic B-spline in each intervall at x. Primitive function normalized such that it is 0 at x=0. Analogon to uniform_b_spline_at_x in arbitrary degree splines for primitive, but specific for cubic.
+  !> Compute the primitive of the cubic B-spline in each intervall at x. Primitive function normalized such that it is 0 at x=0. Analogon to uniform_b_spline_at_x in arbitrary degree splines for primitive, but specific for cubic.
   function primitive_uniform_cubic_b_spline_at_x( x) result(primitive)
     sll_real64, intent(in)  :: x !< position where to evaluate the primitive
     sll_real64 :: primitive(4) !< value of the primitive for each of the four intervals.
