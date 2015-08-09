@@ -112,9 +112,11 @@ contains
     read(input_file, pic_params)
     close (input_file)
 
+    ! Set MPI parameters
     sim%world_size = sll_get_collective_size(sll_world_collective)
     sim%rank = sll_get_collective_rank(sll_world_collective)
 
+    ! Copy the read parameters into the simulation parameters
     sim%delta_t = delta_t
     sim%n_time_steps = n_time_steps
     sim%landau_param = [alpha, n_mode*2.0_f64 * sll_pi/(x1_max - x1_min)]
@@ -145,18 +147,17 @@ contains
     sll_real64 :: eenergy
     sll_int32 :: th_diag_id
 
-     ! Kernel smoother for rho (only used for initialization
-     class(sll_kernel_smoother_spline_1d), pointer :: kernel_smoother_rho
+    ! Kernel smoother for rho (only used for initialization)
+    class(sll_kernel_smoother_spline_1d), pointer :: kernel_smoother_rho
 
-
+    ! Initialize file for diagnostics
     if (sim%rank == 0) then
        call sll_ascii_file_create('thdiag.dat', th_diag_id, ierr)
     end if
 
-    ! Initialize the particles   
+    ! Initialize the particles   (mass and charge set to 1.0)
      sim%specific_particle_group => sll_new_particle_group_1d2v(sim%n_particles, &
          sim%n_total_particles ,1.0_f64, 1.0_f64)
-    
     sim%particle_group => sim%specific_particle_group
 
     ! Initialize the field solver
@@ -206,17 +207,17 @@ contains
 
     ! Efield 2 to zero
     sim%propagator%efield_dofs(:,2) = 0.0_f64
-    ! Bfield = beta*cos(kx): Use b = M{-1}
+    ! Bfield = beta*cos(kx): Use b = M{-1}(N_i,beta*cos(kx))
     ! TODO
     sim%propagator%bfield_dofs = 0.0_f64
 
     ! End field initialization
 
     ! Diagnostics
-    ! TODO : Output needs to be changes.
+    ! TODO : Output needs to be changed.
     write(th_diag_id,'(f12.5,2g20.12,2g20.12,2g20.12)' ) &
-         0.0_f64,  sim%propagator%efield_dofs(2,:), &
-         sim%propagator%bfield(2)
+         0.0_f64,  sum(sim%propagator%efield_dofs(:,1)**2)*sim%mesh%delta_eta, &
+         sum(sim%propagator%bfield**2)*sim%mesh%delta_eta
     print*, 'Time loop'
     ! Time loop
     do j=1, sim%n_time_steps
@@ -231,9 +232,10 @@ contains
           eenergy = sum(sim%propagator%efield_dofs(:,1)**2)*&
                sim%mesh%delta_eta
           write(th_diag_id,'(f12.5,2g20.12,2g20.12,2g20.12)' ) &
-               real(j,f64)*sim%delta_t,  sim%propagator%efield_dofs(2,:)**2 +&
-               sim%propagator%efield_dofs(2+sim%degree_smoother,:)**2, &
-               sim%propagator%bfield(2)**2 + sim%propagator%bfield(2+sim%degree_smoother)**2
+               real(j,f64)*sim%delta_t,  &
+               sum(sim%propagator%efield_dofs(:,1)**2)*sim%mesh%delta_eta, &
+               sum(sim%propagator%efield_dofs(:,2)**2)*sim%mesh%delta_eta, &
+               sum(sim%propagator%bfield**2)*sim%mesh%delta_eta
        end if
     end do
     
