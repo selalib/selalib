@@ -12,9 +12,12 @@ module sll_m_kernel_smoother_spline_1d
   use sll_arbitrary_degree_splines
   
   implicit none
+  private
+
+  public :: sll_new_smoother_spline_1d
   
   !>  Spline kernel smoother in1d.
-  type, extends(sll_kernel_smoother_base) :: sll_kernel_smoother_spline_1d
+  type, public, extends(sll_kernel_smoother_base) :: sll_kernel_smoother_spline_1d
 
      ! Information about the 1d mesh
      sll_real64 :: delta_x(1)  !< Value of grid spacing along both directions.
@@ -144,7 +147,7 @@ contains
   function sll_new_smoother_spline_1d(domain, n_grid, no_particles, spline_degree) result (this)
     class( sll_kernel_smoother_spline_1d), pointer   :: this
     sll_int32, intent(in) :: n_grid(1)
-    sll_real64, intent(in) :: domain(1,2)
+    sll_real64, intent(in) :: domain(2)
     sll_int32, intent(in) :: no_particles
     sll_int32, intent(in) :: spline_degree !< Degree of smoothing kernel spline
 
@@ -154,11 +157,11 @@ contains
     SLL_ALLOCATE( this, ierr)
 
     ! Store grid information
-    this%domain = domain
+    this%domain(1,:) = domain
     SLL_ALLOCATE(this%n_grid(1), ierr)
     this%n_grid = n_grid
     this%n_dofs = product(n_grid)
-    this%delta_x = (domain(:,2)-domain(:,1))/real(n_grid, f64)
+    this%delta_x = (this%domain(:,2)-this%domain(:,1))/real(n_grid, f64)
 
     ! Store basis function information
     this%no_particles = no_particles
