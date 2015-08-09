@@ -225,6 +225,8 @@ contains
 
   end function x_is_in_domain_2d
 
+  ! <<apply_periodic_bc_on_cartesian_mesh_2d>>
+  
   ! todo: put this in the right module (with the meshes...)
 
   subroutine apply_periodic_bc_on_cartesian_mesh_2d( mesh, x, y )
