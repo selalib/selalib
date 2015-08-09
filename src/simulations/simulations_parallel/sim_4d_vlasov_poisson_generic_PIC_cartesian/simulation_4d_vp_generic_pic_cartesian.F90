@@ -754,19 +754,23 @@ contains
                                        sim%domain_is_x_periodic,                    &
                                        sim%domain_is_y_periodic )                   &
                ) then
-           !! -- -- put outside particles back in domain
+            !! -- -- put outside particles back in domain
+            ! [[file:~/selalib/src/particle_methods/sll_pic_base.F90::apply_periodic_bc_on_cartesian_mesh_2d]]
            call apply_periodic_bc_on_cartesian_mesh_2d( sim%mesh_2d, coords(1), coords(2))
          end if
 
+         ! [[file:~/selalib/src/particle_methods/sll_pic_base.F90::set_x]]
          call sim%particle_group%set_x(k, coords)
 
       end do
 
-
+      !> ### Charge deposit
+      
       print *, "deposit charge begin"
 
       call sll_set_time_mark(deposit_time_mark)
 
+      ! [[file:~/selalib/src/particle_methods/sll_pic_base.F90::deposit_charge_2d]]
       charge_accumulator => sim%q_accumulator_ptr(thread_id+1)%q
       call sim%particle_group%deposit_charge_2d( charge_accumulator )
 
@@ -802,11 +806,12 @@ contains
 
       !! -- --  parallel communications for rho ?? [end]  -- --
 
-      !! -- --  Poisson solver (computing E^{n+1}) -- --
+      !> ### Poisson solver (computing \f$E^{n+1}\f$)
 
       !> In the time loop, the field \f$E^{n+1}\f$ is obtained with a call to the Poisson solver.  Again, sim\%rho has
       !> the proper sign so that we do not need to multiply it by an additional physical constant.
 
+      ! [[file:~/selalib/src/poisson_solvers/sll_poisson_2d_base.F90::compute_E_from_rho]]
       call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
 
       !! -- --  diagnostics (plotting) [begin]  -- --
