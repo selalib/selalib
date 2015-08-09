@@ -146,6 +146,10 @@ contains
     ! Finally update the electric field
     this%efield_dofs(:,:) = this%efield_dofs(:,:) - this%j_dofs(:,:)/this%Lx
 
+
+    ! Finally, we recompute the shape factors for the new positions such that we can evaluate the electric and magnetic fields
+   call  this%kernel_smoother%compute_shape_factors(this%particle_group)
+
   end subroutine operatorHf_pic_1d2v_vm
   
   !---------------------------------------------------------------------------!
@@ -250,6 +254,7 @@ contains
     
     this%cell_integrals = [1,11,11,1]
     this%cell_integrals = this%cell_integrals / 24.0_f64
+
     
 
   end function sll_new_splitting_pic_1d2v_vm
