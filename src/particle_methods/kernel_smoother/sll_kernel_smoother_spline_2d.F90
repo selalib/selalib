@@ -12,9 +12,12 @@ module sll_m_kernel_smoother_spline_2d
   use sll_arbitrary_degree_splines
   
   implicit none
+  private
+
+  public :: sll_new_smoother_spline_2d
   
   !>  Spline kernel smoother in 2d.
-  type, extends(sll_kernel_smoother_base) :: sll_kernel_smoother_spline_2d
+  type, public, extends(sll_kernel_smoother_base) :: sll_kernel_smoother_spline_2d
 
      ! Information about the 2d mesh
      sll_real64 :: delta_x(2)  !< Value of grid spacing along both directions.
