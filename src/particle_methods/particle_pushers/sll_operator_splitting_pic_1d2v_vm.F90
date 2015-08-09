@@ -135,14 +135,16 @@ contains
 
     end do
 
+    this%j_dofs = 0.0_f64
     !     ! MPI to sum up contributions from each processor
     call sll_collective_allreduce( sll_world_collective, this%j_dofs_local(:,1), &
          n_cells, MPI_SUM, this%j_dofs(:,1))
     call sll_collective_allreduce( sll_world_collective, this%j_dofs_local(:,2), &
          n_cells*2, MPI_SUM, this%j_dofs(:,2))
-    
+
+
     ! Finally update the electric field
-    this%efield_dofs(:,:) = this%efield_dofs(:,:) - dt/this%Lx*this%j_dofs(:,:)
+    this%efield_dofs(:,:) = this%efield_dofs(:,:) - this%j_dofs(:,:)/this%Lx
 
   end subroutine operatorHf_pic_1d2v_vm
   
@@ -244,6 +246,7 @@ contains
     this%spline_degree = 3
     this%x_min = x_min
     this%Lx = Lx
+    this%delta_x = this%Lx/this%kernel_smoother%n_dofs
     
     this%cell_integrals = [1,11,11,1]
     this%cell_integrals = this%cell_integrals / 24.0_f64

@@ -21,7 +21,7 @@ module sll_m_sim_pic_1d2v_vm_cart
   use sll_m_kernel_smoother_base
   use sll_m_kernel_smoother_spline_1d
   use sll_m_maxwell_1d_base
-!  use sll_maxwell_1d_fem
+  use sll_m_maxwell_1d_fem
 
     type, extends(sll_simulation_base_class) :: sll_sim_pic_1d2v_vm_cart
 
@@ -121,8 +121,8 @@ contains
     sim%thermal_velocity = [thermal_v, thermal_v* sqrt(T_r)]
     sim%beta = beta
 
-    sim%n_gcells = ng_x1
-    sim%mesh => new_cartesian_mesh_1d( ng_x1, &
+    sim%n_gcells = ng_x
+    sim%mesh => new_cartesian_mesh_1d( ng_x, &
          x1_min, x1_max)
     sim%domain = [x1_min, x1_max, x1_max - x1_min ]
 
@@ -160,7 +160,7 @@ contains
     sim%particle_group => sim%specific_particle_group
 
     ! Initialize the field solver
-    sim%specific_maxwell_solver => sll_new_maxwell_1d_fem()
+    sim%specific_maxwell_solver => sll_new_maxwell_1d_fem(sim%domain(1:2))
     sim%maxwell_solver => sim%specific_maxwell_solver
 
     ! Initialize kernel smoother    
@@ -189,8 +189,7 @@ contains
 
     ! Set the initial fields
     ! Efield 1 by Poisson
-
-    kernel_smoother_rho => sll_new_smoother_spline_1d(sim%domain, [sim%n_gcells], &
+    kernel_smoother_rho => sll_new_smoother_spline_1d(sim%domain(1:2), [sim%n_gcells], &
          sim%n_particles, sim%degree_smoother-1) 
     call kernel_smoother_rho%compute_shape_factors(sim%particle_group)
     sim%propagator%j_dofs_local = 0.0_f64
@@ -198,7 +197,8 @@ contains
          sim%propagator%j_dofs_local(:,1))
     ! MPI to sum up contributions from each processor
     sim%propagator%j_dofs = 0.0_f64
-    call sll_collective_allreduce( sll_world_collective, sim%propagator%j_dofs_local(:,1), &
+    call sll_collective_allreduce( sll_world_collective, &
+         sim%propagator%j_dofs_local(:,1), &
          sim%n_gcells, MPI_SUM, sim%propagator%j_dofs(:,1))
     ! Solve Poisson problem
     call sim%maxwell_solver%compute_E_from_rho(sim%propagator%efield_dofs(:,1),&

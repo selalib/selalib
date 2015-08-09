@@ -16,5 +16,4 @@
 
 &pic_params
         n_particles = 100000
-        degree_smoother = 4
 /
