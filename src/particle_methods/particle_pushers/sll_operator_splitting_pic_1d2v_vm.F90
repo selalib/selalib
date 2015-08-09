@@ -102,7 +102,7 @@ contains
        r_new = xi - real(index_new ,f64) 
 
        ! Scale vi by weight to combine both factors for accumulation of integral over j
-       vi = vi**this%particle_group%get_charge(i_part)
+       vi = vi*this%particle_group%get_charge(i_part)
 
        ! Compute the primitive at r_old for each interval
        primitive = primitive_uniform_cubic_b_spline_at_x( r_old )
@@ -153,9 +153,6 @@ contains
        end do 
 
     end do
-    
-    ! Finally, we still need to scale with 1/this%Lx.
-    this%j_dofs_local = this%j_dofs_local/this%Lx
 
     this%j_dofs = 0.0_f64
     ! MPI to sum up contributions from each processor
@@ -165,9 +162,8 @@ contains
          n_cells, MPI_SUM, this%j_dofs(:,2))
 
 
-    ! Update the electric field
-    this%efield_dofs(:,:) = this%efield_dofs(:,:) - this%j_dofs(:,:)
-
+    ! Update the electric field. Also, we still need to scale with 1/Lx
+    this%efield_dofs = this%efield_dofs - this%j_dofs/this%Lx
 
     ! Finally, we recompute the shape factors for the new positions such that we can evaluate the electric and magnetic fields when calling the operators H_E and H_B
    call  this%kernel_smoother%compute_shape_factors(this%particle_group)
