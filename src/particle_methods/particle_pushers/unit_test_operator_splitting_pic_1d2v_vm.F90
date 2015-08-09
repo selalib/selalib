@@ -103,7 +103,6 @@ program unit_test_operator_splitting_pic_1d2v_vm
        3.4261248779296871E-002_f64,   4.5886212158203141E-002_f64];
 
   error = maxval(abs(j_dofs_ref-propagator%j_dofs))
-  print*, error
   if (error > 1.e-14) then
      passed = .FALSE.
   end if
@@ -116,7 +115,7 @@ program unit_test_operator_splitting_pic_1d2v_vm
   end do
 
   ! Test over three intervals
-  delta_t = 0.25
+  delta_t = 0.25_f64
   call propagator%operatorHf(delta_t)
   j_dofs_ref(:,2) = 0.0_f64
   j_dofs_ref(:,1) =   [0.27460861206054676_f64, &
@@ -126,9 +125,7 @@ program unit_test_operator_splitting_pic_1d2v_vm
        9.7656249999999913E-004_f64,   7.5195312499999986E-002_f64, &
        0.29742050170898438_f64 ];
 
-  print*, propagator%j_dofs
   error = maxval(abs(j_dofs_ref-propagator%j_dofs))
-  print*, error
   if (error > 1.e-14) then
      passed = .FALSE.
   end if
