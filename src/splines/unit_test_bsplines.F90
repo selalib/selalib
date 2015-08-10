@@ -232,7 +232,7 @@ subroutine test_process_2d(bc1_type, bc2_type)
     end do
   end do
   call cpu_time(t2)
-  err2 = 0.0_f64
+  err3 = 0.0_f64
   do j = 1, n2
     do i = 1, n1
       err3 = err3 + &
