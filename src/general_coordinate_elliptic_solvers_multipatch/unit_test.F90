@@ -205,13 +205,13 @@ print *, 'updating multipatch field interpolation coefficients...'
 call phi_field_diff%update_interpolation_coefficients()
 
 print *, 'writing to file...'
-call phi_field_scal%write_to_file(0)
+call phi_field_scal%write_to_file(1)
 
 print *, 'writing to file...'
-call phi_field_ex%write_to_file(0)
+call phi_field_ex%write_to_file(1)
 
 print *, 'writing to file...'
-call phi_field_diff%write_to_file(0)
+call phi_field_diff%write_to_file(1)
 
 print*, 'delete object'
 call sll_delete(T)
