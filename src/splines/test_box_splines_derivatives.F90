@@ -95,7 +95,7 @@ program box_spline_tester
 
   ! Writing all django files
   num_cells = 20
-  degree = 1
+  degree = 2
   rule = 1
   call write_all_django_files(num_cells, degree, rule)
   print *, "*********** wrote all django files ***********"
