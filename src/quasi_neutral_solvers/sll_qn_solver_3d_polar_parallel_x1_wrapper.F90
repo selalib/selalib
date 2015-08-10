@@ -23,9 +23,15 @@ module sll_qn_solver_3d_polar_parallel_x1_wrapper_module
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-!use sll_boundary_condition_descriptors
+  use sll_boundary_condition_descriptors
+  use sll_remapper, only: &
+    layout_2D
   use sll_module_poisson_3d_base
-  use sll_qn_solver_3d_polar_parallel_x1_module
+  use sll_qn_solver_3d_polar_parallel_x1_module, only: &
+    sll_qn_solver_3d_polar_parallel_x1, &
+    new, &
+    solve_qns3d_polar
+
 implicit none
 
 
@@ -60,20 +66,23 @@ contains
     dlog_density, &
     inv_Te) &
     result(poisson)
-    type(qn_solver_3d_polar_parallel_x1_wrapper),pointer :: poisson
-    type(layout_2D), pointer :: layout_x1 !< sequential in x1 direction
-    type(layout_2D), pointer :: layout_x2 !< sequential in x2 direction
-    sll_real64               :: x1_min    !< rmin
-    sll_real64               :: x1_max    !< rmax
-    sll_int32                :: num_cells_x1      !< number of cells radial
-    sll_int32                :: num_cells_x2  !< number of cells angular
-    sll_int32                :: num_cells_x3  !< number of cells in x3 direction
-    sll_int32, optional      :: bc_rmin !< radial boundary conditions
-    sll_int32, optional      :: bc_rmax !< radial boundary conditions
-    sll_real64,dimension(:), optional :: dlog_density !< for quasi neutral solver
-    sll_real64,dimension(:), optional :: inv_Te       !< for quasi neutral solver
+    
+    type(layout_2D), pointer         :: layout_x1 !< sequential in x1 direction
+    type(layout_2D), pointer         :: layout_x2 !< sequential in x2 direction
+    sll_real64          , intent(in) :: x1_min    !< rmin
+    sll_real64          , intent(in) :: x1_max    !< rmax
+    sll_int32           , intent(in) :: num_cells_x1      !< number of cells radial
+    sll_int32           , intent(in) :: num_cells_x2  !< number of cells angular
+    sll_int32           , intent(in) :: num_cells_x3  !< number of cells in x3 direction
+    sll_int32,  optional, intent(in) :: bc_rmin !< radial boundary conditions
+    sll_int32,  optional, intent(in) :: bc_rmax !< radial boundary conditions
+    sll_real64, optional, intent(in) :: dlog_density(:) !< for quasi neutral solver
+    sll_real64, optional, intent(in) :: inv_Te(:)    !< for quasi neutral solver
+    
+    type(qn_solver_3d_polar_parallel_x1_wrapper), pointer :: poisson
+
     sll_int32 :: ierr
-      
+
     SLL_ALLOCATE(poisson,ierr)
     call initialize_qn_solver_3d_polar_parallel_x1_wrapper( &
       poisson, &
@@ -88,10 +97,10 @@ contains
       bc_rmax, &
       dlog_density, &
       inv_Te)
-    
+
   end function new_qn_solver_3d_polar_parallel_x1_wrapper
   
-  
+  ! TODO: check if this can be made a type-bound method
   subroutine initialize_qn_solver_3d_polar_parallel_x1_wrapper( &
     poisson, &
     layout_x1, &
@@ -105,19 +114,19 @@ contains
     bc_rmax, &
     dlog_density, &
     inv_Te)
-    implicit none
-    type(qn_solver_3d_polar_parallel_x1_wrapper)  :: poisson     !< Poisson solver class
-    type(layout_2D), pointer :: layout_x1 !< sequential in x1 direction
-    type(layout_2D), pointer :: layout_x2 !< sequential in x2 direction
-    sll_real64               :: x1_min    !< rmin
-    sll_real64               :: x1_max    !< rmax
-    sll_int32                :: num_cells_x1      !< number of cells radial
-    sll_int32                :: num_cells_x2  !< number of cells angular
-    sll_int32                :: num_cells_x3  !< number of cells in x3 direction
-    sll_int32, optional      :: bc_rmin !< radial boundary conditions
-    sll_int32, optional      :: bc_rmax !< radial boundary conditions
-    sll_real64,dimension(:), optional :: dlog_density !< for quasi neutral solver
-    sll_real64,dimension(:), optional :: inv_Te       !< for quasi neutral solver
+
+    type(qn_solver_3d_polar_parallel_x1_wrapper), intent(inout)  :: poisson     !< Poisson solver class
+    type(layout_2D), pointer         :: layout_x1 !< sequential in x1 direction
+    type(layout_2D), pointer         :: layout_x2 !< sequential in x2 direction
+    sll_real64          , intent(in) :: x1_min    !< rmin
+    sll_real64          , intent(in) :: x1_max    !< rmax
+    sll_int32           , intent(in) :: num_cells_x1      !< number of cells radial
+    sll_int32           , intent(in) :: num_cells_x2  !< number of cells angular
+    sll_int32           , intent(in) :: num_cells_x3  !< number of cells in x3 direction
+    sll_int32,  optional, intent(in) :: bc_rmin !< radial boundary conditions
+    sll_int32,  optional, intent(in) :: bc_rmax !< radial boundary conditions
+    sll_real64, optional, intent(in) :: dlog_density(:) !< for quasi neutral solver
+    sll_real64, optional, intent(in) :: inv_Te(:)       !< for quasi neutral solver
     !local variables
     
     poisson%poiss => new( &
@@ -132,12 +141,7 @@ contains
       bc_rmax, &
       dlog_density, &
       inv_Te)
-      
-    
-    
-    
-    
-    
+          
   end subroutine initialize_qn_solver_3d_polar_parallel_x1_wrapper
   
   subroutine compute_phi_from_rho_3d_qns_polar_par_x1( poisson, phi, rho )
