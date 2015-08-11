@@ -221,7 +221,7 @@ contains
     print*, 'Time loop'
     ! Time loop
     do j=1, sim%n_time_steps
-       ! Lee splitting
+       ! Lie splitting
        call sim%propagator%operatorHf(sim%delta_t)
        call sim%propagator%operatorHE(sim%delta_t)
        call sim%propagator%operatorHB(sim%delta_t)
