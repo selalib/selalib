@@ -94,8 +94,8 @@ program box_spline_tester
   ! call sll_delete(spline) !also deletes the mesh
 
   ! Writing all django files
-  num_cells = 20
-  degree = 2
+  num_cells = 40
+  degree = 1
   rule = 1
   call write_all_django_files(num_cells, degree, rule)
   print *, "*********** wrote all django files ***********"

@@ -28,9 +28,6 @@ contains
     sll_real64                 :: weight
     sll_int32                  :: k1, k2
 
-    k1 = mesh%global_to_hex1(local_index)
-    k2 = mesh%global_to_hex2(local_index)
-
     if (deg .eq. 1) then 
        ! prefiltre PIIR2 for box-splines chi2
        ! with coefficients h0 = 11/12 and h1 = 1/24
@@ -75,12 +72,16 @@ contains
           end if
        else if (local_index .le. 37) then
           !Third hexagon
+          k1 = mesh%global_to_hex1(local_index)
+          k2 = mesh%global_to_hex2(local_index)
           if ((k1.eq.0).or.(k2.eq.0).or.(k1.eq.k2)) then
              weight = -23._f64/576000._f64
           else
              weight = -109._f64/288000._f64
           end if
        else if (local_index .le. 61) then
+          k1 = mesh%global_to_hex1(local_index)
+          k2 = mesh%global_to_hex2(local_index)
           ! Forth hexagon
           if ((k1.eq.0).or.(k2.eq.0).or.(k1.eq.k2)) then
              weight = -1._f64/13824000._f64
@@ -118,6 +119,8 @@ contains
              weight = 1067._f64/144000._f64
           end if
        else if (local_index .le. 37) then
+          k1 = mesh%global_to_hex1(local_index)
+          k2 = mesh%global_to_hex2(local_index)
           !Third hexagon
           if ((k1.eq.0).or.(k2.eq.0).or.(k1.eq.k2)) then
              weight = -23._f64/576000._f64
@@ -125,6 +128,8 @@ contains
              weight = -109._f64/288000._f64
           end if
        else if (local_index .le. 61) then
+          k1 = mesh%global_to_hex1(local_index)
+          k2 = mesh%global_to_hex2(local_index)
           ! Forth hexagon
           if ((k1.eq.0).or.(k2.eq.0).or.(k1.eq.k2)) then
              weight = -1._f64/13824000._f64
@@ -202,13 +207,11 @@ contains
     sll_int32, intent(in)     :: local_index
     sll_int32, intent(in)     :: deg
     sll_real64                :: weight
-    sll_int32                 :: k1, k2
 
-    k1 = mesh%global_to_hex1(local_index)
-    k2 = mesh%global_to_hex2(local_index)
     weight = 0._f64
 
-    if (deg .eq. 1) then 
+    select case(deg)
+       case(1)
        ! prefiltre PFIR for box-splines chi2
        ! with coefficients h0 = 5/4 and h1 = -1/24
 
@@ -219,7 +222,7 @@ contains
        else
           weight = 0._f64
        end if
-    else if (deg .eq. 2) then 
+    case(2)
        ! prefiltre PFIR for box-splines of deg =2 chi4
        ! with coefficients h0 = 37/20 h1 =-41/240 h2 = 7/240
        if (local_index .eq. 1) then
@@ -231,13 +234,13 @@ contains
        else
           weight = 0._f64
        end if
-    else if (deg .eq. 4) then 
+    case(4)
        ! prefiltre PFIR for box-splines of deg =3 chi6
        ! with coefficients  h0 : -300538194444442.,    h1 : 100179398148148.,   h2 : -100179398148149.0,  h3 : 50089699074074.4, h4 : -0.0102843915343915
        if (local_index .eq. 1) then
           weight = -300538194444442._f64
        else if (local_index .le. 7) then
-          weight = 100179398148148.0
+          weight = 100179398148148.0_f64
        else if ((local_index.le.19).and.(modulo(local_index, 2).eq.1)) then
           weight = -100179398148149.0_f64
        else if ((local_index.le.19).and.(modulo(local_index, 2).eq.0)) then
@@ -247,12 +250,12 @@ contains
        else
           weight = 0._f64
        end if
-    else  
-        print *, 'ERROR: pre_filter_pfir(...): ', &
-             '     function not implemented for splines of degree > 4'
-        print *, "Exiting..."
-        STOP
-    end if
+    case default
+       print *, 'ERROR: pre_filter_pfir(...): ', &
+            '     function not implemented for splines of degree > 4'
+       print *, "Exiting..."
+       STOP
+    end select
   end function pre_filter_pfir
 
 
@@ -270,17 +273,15 @@ contains
     sll_int32, intent(in)     :: local_index
     sll_int32, intent(in)     :: deg
     sll_real64                :: weight
-    sll_int32                 :: k1, k2
-    k1 = mesh%global_to_hex1(local_index)
-    k2 = mesh%global_to_hex2(local_index)
 
-    if (deg .eq. 1) then
+    select case(deg)
+    case(1)
        if (local_index.eq.1) then
           weight = 1._f64
        else
           weight = 0._f64
        end if
-    else if (deg .eq. 2) then 
+    case(2)
        ! prefiltre int for box-splines chi2
        if (local_index .eq. 1) then
           weight = 0.5_f64
@@ -289,7 +290,7 @@ contains
        else
           weight = 0._f64
        end if
-    elseif (deg .eq. 3) then 
+    case(3)
        ! prefiltre int for box-splines chi3
        ! with coefficients h0 = 3/4 and h1 = 1/24
        if (local_index .eq. 1) then
@@ -301,12 +302,12 @@ contains
        else
           weight = 0._f64
        end if
-    else if (deg .gt. 3) then 
+    case default
        print *, 'ERROR: pre_filter_int(...): ', &
             '     function not implemented for degree > 2 splines '
        print *, "Exiting..."
        STOP
-    end if
+    end select
   end function pre_filter_int
 
 
