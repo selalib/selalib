@@ -89,12 +89,9 @@ contains  ! ****************************************************************
   !> @param[in] deg integer representing the box spline degree
   !> @param[in] spline box spline type element, containting the mesh, bc, ...
   subroutine compute_coeff_box_spline_2d( data, deg, spline )
-    sll_int32, intent(in)                        :: deg
+    sll_int32, intent(in)                         :: deg
     sll_real64, dimension(:), target,  intent(in) :: data
     type(sll_box_spline_2d),  pointer, intent(in) :: spline
-    sll_int32  :: bc
-    sll_int32  :: bc_selector
-
 
     if( .not. associated(spline) ) then
        ! FIXME: THROW ERROR
@@ -104,41 +101,24 @@ contains  ! ****************************************************************
        STOP
     end if
 
-    bc = spline%bc_type
-
-    ! Treat the bc_selector variable essentially like a bit field, to
-    ! accumulate the information on the different boundary conditions
-    ! given. This scheme allows to add more types of boundary conditions
-    ! if necessary.
-    bc_selector = 0
-
     ! We make every case explicit to facilitate adding more BC types in
     ! the future.
-    if( spline%bc_type .eq. SLL_DIRICHLET ) then
-       bc_selector = bc_selector + 1
-    end if
-    if( spline%bc_type .eq. SLL_PERIODIC ) then
-       bc_selector = bc_selector + 2
-    end if
-    if( spline%bc_type .eq. SLL_NEUMANN ) then
-       bc_selector = bc_selector + 4
-    end if
-
-    select case (bc_selector)
-       case ( 1 )
-          ! boundary condition type is dirichlet
-          call compute_coeff_box_spline_2d_diri( data, deg, spline )
-       case ( 2 )
+    select case(spline%bc_type)
+    case(SLL_DIRICHLET)
+       ! boundary condition type is dirichlet
+       call compute_coeff_box_spline_2d_diri( data, deg, spline )
+    case(SLL_PERIODIC)
           ! boundary condition type is periodic
           call compute_coeff_box_spline_2d_prdc( data, deg, spline )
-       case ( 4 )
-          ! boundary condition type is neumann
-          call compute_coeff_box_spline_2d_neum( data, deg, spline )
-       case default
-          print *, 'ERROR: compute_coeff_box_spline_2d(): ', &
+    case(SLL_NEUMANN)
+       ! boundary condition type is neumann
+       call compute_coeff_box_spline_2d_neum( data, deg, spline )
+    case default
+       print *, 'ERROR: compute_coeff_box_spline_2d(): ', &
             'did not recognize given boundary condition combination.'
        STOP
     end select
+
   end subroutine compute_coeff_box_spline_2d
 
 
@@ -157,38 +137,47 @@ contains  ! ****************************************************************
     sll_int32  :: k1_ref, k2_ref
     sll_int32  :: k
     sll_int32  :: i
+    sll_int32  :: ierr
     sll_int32  :: nei
     sll_int32  :: num_pts_radius
     sll_real64 :: filter
-
+    sll_real64, allocatable, dimension(:) :: filter_array
+    
     num_pts_tot = spline%mesh%num_pts_tot
     ! we will work on a radius of 'deg' cells
     ! we compute the number of total points on that radius
-    num_pts_radius = 3*(2*deg)*(2*deg+1) + 1
+    num_pts_radius = 3*deg*(deg+1) + 1
 
+    ! Create a table for the filter values and fill it:
+    SLL_ALLOCATE(filter_array(num_pts_radius), ierr)
+    do k = 1, num_pts_radius
+       select case(deg)
+       case(2)
+          filter_array(k) = pre_filter_pfir(spline%mesh, k, deg)
+       case(3)
+          filter_array(k) = pre_filter_int(spline%mesh, k, deg)
+       case(4)
+          filter_array(k) = pre_filter_pfir(spline%mesh, k, deg)
+       case default
+          filter = 0._f64
+          print *, "Error in compute_coeff_box_spline_2d_diri():"
+          print *, "       Filter not yet defined"
+          STOP
+       end select
+    end do
+    
     do i = 1, num_pts_tot
 
        spline%coeffs(i) = real(0,f64)
        k1_ref = spline%mesh%global_to_hex1(i)
        k2_ref = spline%mesh%global_to_hex2(i)
-
+       
        ! We don't need to fo through all points, just till a certain radius
        ! which depends on the degree of the spline we are evaluating
        do k = 1, num_pts_radius
-          if (deg .le. 2) then
-             filter = pre_filter_pfir(spline%mesh, k, deg)
-          elseif (deg .eq. 3) then
-             filter = pre_filter_int(spline%mesh, k, deg)
-          elseif (deg .eq. 4) then
-             filter = pre_filter_pfir(spline%mesh, k, deg)
-          else
-             filter = 0._f64
-             print *, "Error in compute_coeff_box_spline_2d_diri():"
-             print *, "       Filter not yet defined"
-             STOP
-          end if
+          filter = filter_array(k)
           nei = spline%mesh%local_hex_to_global(k1_ref, k2_ref, k)
-          if ((nei .lt. num_pts_tot).and.(nei .gt. 0)) then
+          if ((nei .le. num_pts_tot).and.(nei .gt. 0)) then
              spline%coeffs(i) = spline%coeffs(i) + data(nei) * filter
           else
              ! Boundary conditions (BC) to be treated here :
@@ -446,6 +435,7 @@ contains  ! ****************************************************************
     sll_real64             :: k1_basis
     sll_real64             :: k2_basis
     sll_real64             :: x1_basis
+    sll_real64             :: inv_delta_q
     sll_real64             :: q11, q12
     sll_real64             :: q21, q22
     sll_real64             :: r11, r12
@@ -454,8 +444,8 @@ contains  ! ****************************************************************
     ! Algorithms basis
     r11 = 0.5_f64
     r12 = -sll_sqrt3 * 0.5_f64
-    r21 = 0.5_f64
-    r22 =  sll_sqrt3 * 0.5_f64
+    r21 =  r11
+    r22 = -r12
 
     ! Getting mesh generator vectors coordinates
     q11 = spline%mesh%r1_x1
@@ -465,8 +455,9 @@ contains  ! ****************************************************************
 
     !change of basis :
     delta_q  = q11*q22 - q12*q21
-    k1_basis = 1./delta_q*(q22*x1 - q21*x2)
-    k2_basis = 1./delta_q*(q11*x2 - q12*x1)
+    inv_delta_q = 1._f64/delta_q
+    k1_basis = inv_delta_q*(q22*x1 - q21*x2)
+    k2_basis = inv_delta_q*(q11*x2 - q12*x1)
     x1_basis = r11*k1_basis+r21*k2_basis
   end function change_basis_x1
 
@@ -485,6 +476,7 @@ contains  ! ****************************************************************
     sll_real64, intent(in) :: x1
     sll_real64, intent(in) :: x2
     sll_real64             :: delta_q
+    sll_real64             :: inv_delta_q
     sll_real64             :: k1_basis
     sll_real64             :: k2_basis
     sll_real64             :: x2_basis
@@ -495,10 +487,10 @@ contains  ! ****************************************************************
 
     ! Getting spline generator vectors coordinates
     ! Algorithms basis
-    r11 = 0.5_f64
-    r12 = -sll_sqrt3 * 0.5_f64
-    r21 = 0.5_f64
-    r22 =  sll_sqrt3 * 0.5_f64
+    r11 =  0.5_f64
+    r12 = -0.5_f64 * sll_sqrt3
+    r21 =  r11
+    r22 = -r12
 
     ! Getting mesh generator vectors coordinates
     q11 = spline%mesh%r1_x1
@@ -508,8 +500,9 @@ contains  ! ****************************************************************
 
     !change of basis :
     delta_q  = q11*q22 - q12*q21
-    k1_basis = 1./delta_q*(q22*x1 - q21*x2)
-    k2_basis = 1./delta_q*(q11*x2 - q12*x1)
+    inv_delta_q = 1._f64/delta_q
+    k1_basis = inv_delta_q*(q22*x1 - q21*x2)
+    k2_basis = inv_delta_q*(q11*x2 - q12*x1)
     x2_basis = r12*k1_basis+r22*k2_basis
 
   end function change_basis_x2
