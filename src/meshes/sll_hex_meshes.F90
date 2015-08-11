@@ -675,13 +675,13 @@ contains
     if (k1.le.0) then
        k    = num_cells + k1
        !this value is always an integer, floor avoids the transformation
-       nk1  = floor( num_cells*k + k*(k+1)*0.5 )
+       nk1  = num_cells*k + FLOOR( k*(k+1)*0.5 )
        nk2  = k2 + num_cells_plus1
     else
        ! n0 is the total number of points from (-num_cells,-num_cells) to
        ! ( 0, numcells)
-       n0  = floor( num_cells**2 + num_cells*num_cells_plus1*0.5 )
-       nk1 = n0 + k1*(2*num_cells + 1) - floor( k1*(k1-1)*0.5 )
+       n0  =  num_cells**2 + FLOOR(num_cells*num_cells_plus1*0.5 )
+       nk1 = n0 + k1*(2*num_cells + 1) - FLOOR( k1*(k1-1)*0.5 )
        nk2 = k2 + num_cells_plus1 - k1
     endif
 
@@ -1021,10 +1021,10 @@ contains
     if ((ref_index.le.mesh%num_pts_tot).and.(ref_index.gt.0) &
          .and.(global.le.mesh%num_pts_tot).and.(global.gt.0)) then
 
-       k1_ref = mesh%global_to_hex1(ref_index)
-       k2_ref = mesh%global_to_hex2(ref_index)
-       k1_glob = mesh%global_to_hex1(global)
-       k2_glob = mesh%global_to_hex2(global)
+       k1_ref  = mesh%hex_coord(1,ref_index)
+       k2_ref  = mesh%hex_coord(2,ref_index)
+       k1_glob = mesh%hex_coord(1,global)
+       k2_glob = mesh%hex_coord(2,global)
 
        local = mesh%hex_to_global(k1_ref - k1_glob, k2_ref - k2_glob)
     else
