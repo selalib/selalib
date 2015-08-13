@@ -657,7 +657,7 @@ contains
 
        print *, "BEGIN one loop in time, it = ", it
        !! -- --  <<diagnostics>> (computing energy) [begin]  -- --
-
+       AAA-ALH-HERE
        if (sim%my_rank == 0) then
           exval_ee = une_cst * exp(2._f64 * omega_i * real(it,f64) * sim%dt)                          &
                              * ( 0.5_f64 + 0.5_f64 * cos(2._f64 * (omega_r * real(it,f64) * sim%dt - psi)) )
