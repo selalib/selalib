@@ -79,8 +79,8 @@ program unit_test_operator_splitting_pic_1d2v_vm
   
   particle_group => specific_particle_group
 
-  ! Initialize the field solver (NOTE: IS JUST A DUMMY AT THE MOMENT)
-  specific_maxwell_solver => sll_new_maxwell_1d_fem(domain(1:2))
+  ! Initialize the field solver 
+  specific_maxwell_solver => sll_new_maxwell_1d_fem(domain, n_cells, spline_degree)
   maxwell_solver => specific_maxwell_solver
 
   ! Initialize the kernel

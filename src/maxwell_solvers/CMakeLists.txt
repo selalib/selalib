@@ -36,6 +36,12 @@ ENDIF(FFTW_FOUND AND FFTW_ENABLED)
 
 IF(BUILD_TESTING)
 
+   ADD_EXECUTABLE(test_maxwell_1d_fem unit_test_1d_maxwell_fem.F90)
+   TARGET_LINK_LIBRARIES(test_maxwell_1d_fem sll_maxwell_solvers)
+
+   ADD_TEST(NAME maxwell_1d_fem COMMAND test_maxwell_1d_fem)
+   SET_TESTS_PROPERTIES(maxwell_1d_fem PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
    ADD_EXECUTABLE(test_maxwell_2d_fdtd unit_test_2d_fdtd.F90)
    TARGET_LINK_LIBRARIES(test_maxwell_2d_fdtd sll_maxwell_solvers)
 
