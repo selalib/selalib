@@ -161,7 +161,8 @@ contains
     sim%particle_group => sim%specific_particle_group
 
     ! Initialize the field solver
-    sim%specific_maxwell_solver => sll_new_maxwell_1d_fem(sim%domain(1:2))
+    sim%specific_maxwell_solver => sll_new_maxwell_1d_fem(sim%domain(1:2), sim%n_gcells, &
+         sim%degree_smoother)
     sim%maxwell_solver => sim%specific_maxwell_solver
 
     ! Initialize kernel smoother    
