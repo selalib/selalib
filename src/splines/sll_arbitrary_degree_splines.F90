@@ -57,7 +57,8 @@ module sll_arbitrary_degree_splines
             new_arbitrary_degree_spline_1d,       &
             b_spline_derivatives_at_x,            &
             uniform_b_spline_derivatives_at_x,    &
-            uniform_b_splines_and_derivs_at_x
+            uniform_b_splines_and_derivs_at_x,    &
+            eval_uniform_periodic_spline_curve
 
 contains
 
@@ -944,4 +945,29 @@ contains
     uniform_b_splines_and_derivs_at_x(1,1:degree+1) = splines(1:degree+1)
   end function uniform_b_splines_and_derivs_at_x
 
+  !> Evaluate uniform periodic spline curve defined by coefficients scoef at knots 
+  function eval_uniform_periodic_spline_curve(degree, scoef) result(sval)
+    sll_int32  :: degree   ! spline degree
+    !sll_int32  :: npoints  ! number of points where spline is evaluated
+    sll_real64 :: scoef(:) 
+    sll_real64, pointer :: sval(:) 
+    ! local variables
+    sll_real64 :: bspl(degree+1)
+    sll_real64 :: val 
+    sll_int32 :: i,j, imj, ierr, n
+
+    ! get bspline values at knots
+    bspl = uniform_b_splines_at_x(degree, 0.0_f64)
+    n = size(scoef)
+    SLL_ALLOCATE(sval(n), ierr)
+    do i= 1, n
+       val = 0.0_f64
+       do j=1, degree
+          imj = mod(i-1-j+n,n) + 1 
+          val = val + bspl(j)*scoef(imj)
+          !print*, i,j, imj, bspl(j),val
+       enddo
+       sval(i) = val 
+    end do
+  end function eval_uniform_periodic_spline_curve
 end module sll_arbitrary_degree_splines
