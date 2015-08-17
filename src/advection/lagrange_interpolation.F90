@@ -126,9 +126,9 @@ contains
     SLL_ASSERT( degree   >= 0 )
 
     if( (x < xi(1)) .or. (x > xi(degree+1)) ) then
-       print *, 'lagrange_interpolate() warning: x is outside of the range ', &
-            'xi given as argument.'
-       print *, 'x = ', x, 'xmin = ', xi(1), 'xmax = ',xi(degree+1)
+       !print *, 'lagrange_interpolate() warning: x is outside of the range ', &
+       !     'xi given as argument.'
+       !print *, 'x = ', x, 'xmin = ', xi(1), 'xmax = ',xi(degree+1)
     end if
 
     ! Load the local array with the values of y(i), which are also the values

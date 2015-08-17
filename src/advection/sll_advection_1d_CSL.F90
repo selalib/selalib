@@ -231,7 +231,11 @@ contains
       adv%eta_coords, &
       adv%charac_feet)
 
-
+    !print *,'#eta_min=',eta_min,eta_max
+    !do i=1,Npts
+    !  print *,i,adv%charac_feet(i)
+    !enddo
+    !stop
     do i=1,Npts
       if((adv%charac_feet(i)<=eta_min).or.(adv%charac_feet(i)>=eta_max))then
         adv%charac_feet_i(i) = &
@@ -252,9 +256,20 @@ contains
 !    enddo
     
     
-    call function_to_primitive(adv%buf1d,adv%eta_coords_unit,Npts-1,mean)
+    call function_to_primitive_csl(adv%buf1d,adv%eta_coords_unit,Npts-1,mean)
 
     !adv%buf1d(1:Npts) = adv%buf1d(1:Npts)*(adv%eta_coords(Npts)-adv%eta_coords(1))
+    
+    print *,mean
+    if(mean<0.95)then
+      print *,'#mean value=',mean
+      !print *,'#charac=',adv%charac_feet(Npts)-adv%charac_feet(1)
+      !do i=1,Npts-1
+      !  print *,i,(adv%charac_feet(i+1)-adv%charac_feet(i))
+      !enddo
+      
+      stop
+    endif
     !print *,'#mean=',mean
 !
 !    do i=1,Npts
@@ -293,9 +308,10 @@ contains
 
     
     
-    call primitive_to_function( &
+    call primitive_to_function_csl( &
       adv%buf1d_out, &
       adv%eta_coords_unit, &
+      !adv%eta_coords_unit, &
       adv%eta_coords_unit_back, &
       Npts-1, &
       mean)
@@ -350,7 +366,7 @@ contains
           
   end subroutine CSL_advect_1d_constant
 
-  subroutine function_to_primitive(f,node_positions,N,M)
+  subroutine function_to_primitive_csl(f,node_positions,N,M)
     sll_real64,dimension(:),intent(inout) :: f
     sll_real64,dimension(:),intent(in) :: node_positions
     sll_int32,intent(in):: N
@@ -376,14 +392,12 @@ contains
     f(N+1)=f(N)+tmp
     
     
-    !print *,f(1),f(N+1) 
+    !print *,M,f(1),f(N+1) 
 
-  end subroutine function_to_primitive
-
-
+  end subroutine function_to_primitive_csl
 
 
-  subroutine primitive_to_function( &
+  subroutine primitive_to_function_csl( &
     f, &
     node_positions, &
     node_positions_back, &
@@ -404,12 +418,16 @@ contains
     f(N)=tmp-f(N)+M*(node_positions_back(N+1)-node_positions_back(N))
 
 
+
+
     !from mean compute f
     do i=1,N
       f(i)=f(i)/(node_positions(i+1)-node_positions(i))
     enddo
     !f(N+1) = f(1)
-  end subroutine primitive_to_function
+  end subroutine primitive_to_function_csl
+
+
 
 
   subroutine delete_CSL_1d_advector( adv )

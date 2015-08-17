@@ -47,6 +47,10 @@ module sll_time_splitting_coeff_module
   sll_int32, parameter :: SLL_ORDER6VPnew2_VTV     = 10 
   sll_int32, parameter :: SLL_ORDER6VP2D_VTV     = 11 
   sll_int32, parameter :: SLL_ORDER6VPOT_VTV     = 12 
+  sll_int32, parameter :: SLL_ORDER6_TVT           = 13 
+  sll_int32, parameter :: SLL_ORDER6VPOTnew1_VTV     = 14 
+  sll_int32, parameter :: SLL_ORDER6VPOTnew2_VTV     = 15 
+  sll_int32, parameter :: SLL_ORDER6VPOTnew3_VTV     = 16 
 
   type splitting_coeff
     sll_int32 :: split_case
@@ -187,7 +191,7 @@ contains
         split%split_step(5) = split%split_step(3)
         split%split_step(6) = split%split_step(2)
         split%split_step(7) = split%split_step(1)
-      case (SLL_ORDER6_VTV) ! Order 6 VTV
+      case (SLL_ORDER6_VTV) ! Order 6 VTV (O6-11 of Blanes)
         split%nb_split_step = 23
         SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
         split%split_begin_T = .false.
@@ -214,6 +218,40 @@ contains
         split%split_step(21) = split%split_step(3)
         split%split_step(22) = split%split_step(2)
         split%split_step(23) = split%split_step(1)          
+      case (SLL_ORDER6_TVT) ! Order 6 TVT (O6-14 of Blanes)
+        split%nb_split_step = 29
+        SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
+        split%split_begin_T = .true.
+        split%split_step(1) = 0.0378593198406116_f64     
+        split%split_step(2) = 0.09171915262446165_f64        
+        split%split_step(3) = 0.102635633102435_f64        
+        split%split_step(4) = 0.183983170005006_f64        
+        split%split_step(5) = -0.0258678882665587_f64      
+        split%split_step(6) = -0.05653436583288827_f64      
+        split%split_step(7) = 0.314241403071447_f64        
+        split%split_step(8) = 0.004914688774712854_f64        
+        split%split_step(9) = -0.130144459517415_f64        
+        split%split_step(10) = 0.143761127168358_f64        
+        split%split_step(11) = 0.106417700369543_f64       
+        split%split_step(12) = 0.328567693746804_f64        
+        split%split_step(13) = -0.00879424312851058_f64        
+        split%split_step(14) = -0.196411466486454234_f64        
+        split%split_step(15) = 0.20730506905689536_f64                
+        split%split_step(16) = split%split_step(14)
+        split%split_step(17) = split%split_step(13)
+        split%split_step(18) = split%split_step(12)
+        split%split_step(19) = split%split_step(11)
+        split%split_step(20) = split%split_step(10)
+        split%split_step(21) = split%split_step(9)
+        split%split_step(22) = split%split_step(8)
+        split%split_step(23) = split%split_step(7)          
+        split%split_step(24) = split%split_step(6)          
+        split%split_step(25) = split%split_step(5)          
+        split%split_step(26) = split%split_step(4)          
+        split%split_step(27) = split%split_step(3)          
+        split%split_step(28) = split%split_step(2)          
+        split%split_step(29) = split%split_step(1)
+                  
       case (SLL_ORDER6VP_TVT) ! Order 6 for Vlasov-Poisson TVT 
         if(present(dt))then
           split%nb_split_step = 9
@@ -363,6 +401,151 @@ contains
           print *,'#provide dt for use of case SLL_ORDER6VPOT_VTV=',SLL_ORDER6VPOT_VTV
           stop
         endif  
+
+      case (SLL_ORDER6VPOTnew1_VTV) ! Order 6 for Vlasov-Poisson VTV 2D with potential modif
+        !we change also sign here
+        if(present(dt))then        
+          split%nb_split_step = 9
+          split%dim_split_V = 2
+          SLL_ALLOCATE(split%split_step(14),ierr)
+          split%split_begin_T = .false.
+          !b1 a1 b2 a2 b3 a2 b2 a1 b1 
+          !b1
+          split%split_step(1) = 0.359950808794143627485664_f64&
+            +2._f64*dt**2*(0._f64)
+          split%split_step(2) = dt**2*(0._f64)            
+          !a1
+          split%split_step(3) = 1.079852426382430882456991_f64
+          !b2
+          split%split_step(4) = -0.1437147273026540434771131_f64&
+            +2._f64*dt**2*(0.0139652542242388403673_f64)
+          split%split_step(5) = dt**2*(0.0139652542242388403673_f64)
+          !a2
+          split%split_step(6) = -0.579852426382430882456991_f64
+          !b3
+          split%split_step(7) = 0.567527837017020831982899_f64&
+            +2._f64*dt**2*(0.039247029382345626020_f64)
+          split%split_step(8) = dt**2*(0.039247029382345626020_f64)
+          !a2
+          split%split_step(9) = split%split_step(6)
+          !b2
+          split%split_step(10) = split%split_step(4)
+          split%split_step(11) = split%split_step(5)
+          !a1
+          split%split_step(12) = split%split_step(3)
+          !b1
+          split%split_step(13) = split%split_step(1)
+          split%split_step(14) = split%split_step(2)
+        else
+          print *,'#provide dt for use of case SLL_ORDER6VPOTnew1_VTV=', &
+            SLL_ORDER6VPOTnew1_VTV
+          stop
+        endif  
+
+
+
+      case (SLL_ORDER6VPOTnew2_VTV) ! Order 6 for Vlasov-Poisson VTV 2D with potential modif
+        !warning we try with sign change of dt**2
+        !this seems to be the right choice
+        if(present(dt))then        
+          split%nb_split_step = 11
+          split%dim_split_V = 2
+          SLL_ALLOCATE(split%split_step(17),ierr)
+          split%split_begin_T = .false.
+          !b1 a1 b2 a2 b3 a3 b3 a2 b2 a1 b1
+          !b1
+          split%split_step(1) = 0.086971698963920047813358_f64&
+            +2._f64*dt**2*(1.98364114652831655458915e-6_f64)
+          split%split_step(2) = dt**2*(1.98364114652831655458915e-6_f64)            
+          !a1
+          split%split_step(3) = 0.303629319055488881944104_f64
+          !b2
+          split%split_step(4) = 0.560744966588102145251453_f64&
+            -2._f64*dt**2*(0.00553752115152236516667268_f64)
+          split%split_step(5) = -dt**2*(0.00553752115152236516667268_f64)
+          !a2
+          split%split_step(6) = 0.303629319055488881944104_f64
+          !b3
+          split%split_step(7) = -0.1477166655520221930648117_f64&
+            -2._f64*dt**2*(0.00284218110811634663914191_f64)
+          split%split_step(8) = -dt**2*(0.00284218110811634663914191_f64)
+          !a3
+          split%split_step(9) = -0.2145172762219555277764167_f64
+          !b3
+          split%split_step(10) = split%split_step(7)
+          split%split_step(11) = split%split_step(8)
+          !a2
+          split%split_step(12) = split%split_step(6)
+          !b2
+          split%split_step(13) = split%split_step(4)
+          split%split_step(14) = split%split_step(5)
+          !a1
+          split%split_step(15) = split%split_step(3)
+          !b1
+          split%split_step(16) = split%split_step(1)
+          split%split_step(17) = split%split_step(2)
+        else
+          print *,'#provide dt for use of case SLL_ORDER6VPOT_VTV=',SLL_ORDER6VPOT_VTV
+          stop
+        endif  
+
+
+      case (SLL_ORDER6VPOTnew3_VTV) ! Order 6 for Vlasov-Poisson VTV 2D with potential modif
+        !we change also sign
+        if(present(dt))then        
+          split%nb_split_step = 13
+          split%dim_split_V = 2
+          SLL_ALLOCATE(split%split_step(20),ierr)
+          split%split_begin_T = .false.
+          !b1 a1 b2 a2 b3 a3 b4 a3 b3 a2 b2 a1 b1
+          !b1
+          split%split_step(1) = 0.0482332301753032567427580_f64&
+            +2._f64*dt**2*(0.0002566567904012107264_f64)
+          split%split_step(2) = dt**2*(0.0002566567904012107264_f64)            
+          !a1
+          split%split_step(3) = 0.2701015188126056215752542_f64
+          !b2
+          split%split_step(4) = 0.0482332301753032567427580_f64&
+            +2._f64*dt**2*(0.0009439771580927593579_f64)
+          split%split_step(5) = dt**2*(0.0009439771580927593579_f64)
+          !a2
+          split%split_step(6) = -0.108612186368692920020654_f64
+          !b3
+          split%split_step(7) = 0.2361392603742494444753990_f64&
+            -2._f64*dt**2*(0.002494619878121813220_f64)
+          split%split_step(8) = -dt**2*(0.002494619878121813220_f64)
+          !a3
+          split%split_step(9) = 0.3385106675560872984454001_f64
+          !b4
+          split%split_step(10) = 0.3347885585502880840781703_f64&
+            -2._f64*dt**2*(0.002670269183371982607658111_f64)
+          split%split_step(11) = -dt**2*(0.002670269183371982607658111_f64)
+          !a3
+          split%split_step(12) = split%split_step(9)
+          !b3
+          split%split_step(13) = split%split_step(7)
+          split%split_step(14) = split%split_step(8)
+          !a2
+          split%split_step(15) = split%split_step(6)
+          !b2
+          split%split_step(16) = split%split_step(4)
+          split%split_step(17) = split%split_step(5)
+          !a1
+          split%split_step(18) = split%split_step(3)
+          !b1
+          split%split_step(19) = split%split_step(1)
+          split%split_step(20) = split%split_step(2)
+        else
+          print *,'#provide dt for use of case SLL_ORDER6VPOT_VTV=',SLL_ORDER6VPOT_VTV
+          stop
+        endif  
+
+
+
+
+
+
+
       case (SLL_ORDER6VPnew2_VTV) ! Order 6 for Vlasov-Poisson VTV (new2)
         if(present(dt))then        
           split%nb_split_step = 11
