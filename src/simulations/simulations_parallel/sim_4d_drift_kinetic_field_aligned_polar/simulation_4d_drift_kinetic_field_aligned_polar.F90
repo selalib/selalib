@@ -2660,7 +2660,9 @@ contains
     logical              :: buf(1)    ! buffer for send (all processes)
     logical, allocatable :: recbuf(:) ! buffer for receive (only master)
     sll_int32            :: i, comm, np, rank, ierr
-    sll_int32            :: mpi_status(mpi_status_size)
+    !sll_int32            :: mpi_status(mpi_status_size) !PN change name because
+    ! there is a conflict when we use MPICH as MPI library
+    sll_int32            :: ompi_status(mpi_status_size)
     character(len=8)     :: rank_str
 
     ! Some info about communicator
@@ -2688,8 +2690,8 @@ contains
       print *, "PROC #0: recbuf = ", recbuf
       do i=1,count( recbuf(1:) )
         !    MPI_RECV( BUF, COUNT, DATATYPE, SOURCE, TAG, COMM, STATUS, IERROR )
-        call mpi_recv( dataset, len( dataset ), mpi_character, mpi_any_source, mpi_any_tag, comm, mpi_status, ierr )
-        print *, "PROC #0: receive data from processor ", mpi_status( mpi_source )
+        call mpi_recv( dataset, len( dataset ), mpi_character, mpi_any_source, mpi_any_tag, comm, ompi_status, ierr )
+        print *, "PROC #0: receive data from processor ", ompi_status( mpi_source )
         call self%write_array( dataset, dims, filetype )
       end do
 
