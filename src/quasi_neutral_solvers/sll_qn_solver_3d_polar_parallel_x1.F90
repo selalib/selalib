@@ -45,7 +45,7 @@ module sll_qn_solver_3d_polar_parallel_x1_module
     type(sll_fft_plan), pointer :: bw       !< Inverse FFT plan
     sll_comp64, dimension(:), pointer :: fk       !< RHSf fft
     sll_comp64, dimension(:), pointer :: phik     !< Potential fft
-    sll_real64, dimension(:), pointer :: mat      !< Matrix
+    sll_real64, dimension(:), pointer :: mat      !< Matrix (sparse format)
     sll_real64, dimension(:), pointer :: cts      !< Lapack coefficient
     sll_int32,  dimension(:), pointer :: ipiv     !< Lapack pivot indices
     type(layout_2D),  pointer :: layout_r !< layout sequential in r
@@ -92,22 +92,21 @@ contains
     dlog_density, &
     inv_Te) &
     result(this)
-    implicit none
-    type(sll_qn_solver_3d_polar_parallel_x1), pointer  :: this     !< Poisson solver class
-    type(layout_2D), pointer :: layout_r !< sequential in r direction
-    type(layout_2D), pointer :: layout_a !< sequential in theta direction
-
-
-    sll_real64               :: rmin    !< rmin
-    sll_real64               :: rmax    !< rmax
-    sll_int32                :: nr      !< number of cells radial
-    sll_int32                :: ntheta  !< number of cells angular
-    sll_int32                :: num_cells_x3  !< number of cells in x3 direction
-    sll_int32, optional      :: bc_rmin !< radial boundary conditions
-    sll_int32, optional      :: bc_rmax !< radial boundary conditions
-    sll_real64,dimension(:),optional :: dlog_density !< for quasi neutral solver
-    sll_real64,dimension(:),optional :: inv_Te       !< for quasi neutral solver
     
+    type(layout_2D), pointer        :: layout_r !< sequential in r direction
+    type(layout_2D), pointer        :: layout_a !< sequential in theta direction
+    sll_real64         , intent(in) :: rmin     !< rmin
+    sll_real64         , intent(in) :: rmax     !< rmax
+    sll_int32          , intent(in) :: nr       !< number of cells radial
+    sll_int32          , intent(in) :: ntheta   !< number of cells angular
+    sll_int32          , intent(in) :: num_cells_x3  !< number of cells in x3 direction
+    sll_int32, optional, intent(in) :: bc_rmin  !< radial boundary conditions
+    sll_int32, optional, intent(in) :: bc_rmax  !< radial boundary conditions
+    sll_real64,optional, intent(in) :: dlog_density(:) !< for quasi neutral solver
+    sll_real64,optional, intent(in) :: inv_Te(:)     !< for quasi neutral solver
+
+    type(sll_qn_solver_3d_polar_parallel_x1), pointer :: this     !< Poisson solver class
+
     !local variables
     sll_int32 :: ierr
     
@@ -144,33 +143,31 @@ contains
     dlog_density, &
     inv_Te)
 
-    implicit none
-    type(sll_qn_solver_3d_polar_parallel_x1)  :: this     !< Poisson solver class
-    type(layout_2D), pointer :: layout_r !< sequential in r direction
-    type(layout_2D), pointer :: layout_a !< sequential in theta direction
+    type(sll_qn_solver_3d_polar_parallel_x1), intent(inout) :: this !< Poisson solver class
+    type(layout_2D), pointer        :: layout_r !< sequential in r direction
+    type(layout_2D), pointer        :: layout_a !< sequential in theta direction
+    sll_real64         , intent(in) :: rmin     !< rmin
+    sll_real64         , intent(in) :: rmax     !< rmax
+    sll_int32          , intent(in) :: nr       !< number of cells radial
+    sll_int32          , intent(in) :: ntheta   !< number of cells angular
+    sll_int32          , intent(in) :: num_cells_x3  !< number of cells in x3 direction
+    sll_int32, optional, intent(in) :: bc_rmin  !< radial boundary conditions
+    sll_int32, optional, intent(in) :: bc_rmax  !< radial boundary conditions
+    sll_real64,optional, intent(in) :: dlog_density(:) !< for quasi neutral solver
+    sll_real64,optional, intent(in) :: inv_Te(:)       !< for quasi neutral solver
 
-
-    sll_real64               :: rmin    !< rmin
-    sll_real64               :: rmax    !< rmax
-    sll_int32                :: nr      !< number of cells radial
-    sll_int32                :: ntheta  !< number of cells angular
-    sll_int32                :: num_cells_x3  !< number of cells in x3 direction
-    sll_int32, optional      :: bc_rmin !< radial boundary conditions
-    sll_int32, optional      :: bc_rmax !< radial boundary conditions
-    sll_real64,dimension(:),optional :: dlog_density !< for quasi neutral solver
-    sll_real64,dimension(:),optional :: inv_Te       !< for quasi neutral solver
-
-    sll_int32                :: error
-    sll_comp64, dimension(:), allocatable :: buf
+    sll_int32               :: error
+    sll_comp64, allocatable :: buf(:)
     sll_int32 :: nr_loc
     sll_int32 :: na_loc
     sll_int32 :: psize
 
 
-    SLL_ALLOCATE(this%f_r(nr+1,ntheta+1),error)
+!    SLL_ALLOCATE(this%f_r(nr+1,ntheta+1),error)  ! TODO: why allocate here??
+
     SLL_ALLOCATE(this%fk(nr+1),error)
     SLL_ALLOCATE(this%phik(nr+1),error)
-    SLL_ALLOCATE(this%mat(3*(nr-1)),error)
+    SLL_ALLOCATE(this%mat(3*(nr-1)),error) ! periodic tridiagonal matrix
     SLL_ALLOCATE(this%cts(7*(nr-1)),error)
     SLL_ALLOCATE(this%ipiv(nr-1),error)
     SLL_ALLOCATE(this%dlog_density(nr+1),error)
@@ -186,8 +183,6 @@ contains
       this%inv_Te = inv_Te
     endif
 
-
-
     this%rmin=rmin
     this%rmax=rmax
     this%dr=(rmax-rmin)/nr
@@ -199,6 +194,7 @@ contains
       this%bc(1)=bc_rmin
       this%bc(2)=bc_rmax
     else
+      ! TODO: maybe raise an error here?
       this%bc(1)=-1
       this%bc(2)=-1
     end if
@@ -210,25 +206,26 @@ contains
 
     psize = sll_get_collective_size(sll_world_collective)
 
+    ! Layout and local sizes for tridiagonal solvers (1 per mode) in r direction
     this%layout_r => layout_r
     call compute_local_sizes(layout_r,nr_loc,na_loc)
-    SLL_CLEAR_ALLOCATE(this%f_r(1:nr_loc,1:na_loc),error)
+    SLL_ALLOCATE( this%f_r(1:nr_loc,1:na_loc), error )
+    this%f_r = (0.0_f64, 0.0_f64)
 
     ! Layout and local sizes for FFTs in theta-direction
     this%layout_a => layout_a
     call compute_local_sizes(layout_a,nr_loc,na_loc)
-    SLL_CLEAR_ALLOCATE(this%f_a(1:nr_loc,1:na_loc),error)
+    SLL_ALLOCATE( this%f_a(1:nr_loc,1:na_loc), error )
+    this%f_a = (0.0_f64, 0.0_f64)
 
     this%rmp_ra => new_remap_plan(this%layout_r, this%layout_a, this%f_r)
     this%rmp_ar => new_remap_plan(this%layout_a, this%layout_r, this%f_a)
 
-
   end subroutine initialize_qn_solver_3d_polar_parallel_x1
+
 
   !>delete a sll_poisson_polar object
   subroutine delete_qn_solver_3d_polar_parallel_x1(this)
-
-    implicit none
 
     type(sll_qn_solver_3d_polar_parallel_x1), pointer :: this !< Poisson solver object
     sll_int32 :: err
@@ -246,17 +243,8 @@ contains
   end subroutine delete_qn_solver_3d_polar_parallel_x1
 
 
-
-
-
-
-
-
-
   !> Solve the 3d quasi neutral equation and get the potential
   subroutine solve_qns3d_polar(this,rhs,phi)
-
-    implicit none
 
     type(sll_qn_solver_3d_polar_parallel_x1) :: this !< Poisson solver object
     sll_real64, dimension(:,:,:), intent(in)  :: rhs !< Charge density
@@ -264,23 +252,24 @@ contains
 
     sll_real64 :: rmin,dr
     sll_int32  :: nr, ntheta,bc(2)
-    sll_int32 :: nc_x3
+    sll_int32  :: nc_x3
     sll_real64 :: r
     sll_int32  :: i, j, k
-    sll_int32 :: i_x3
+    sll_int32  :: i_x3
     sll_int32  :: nr_loc
     sll_int32  :: na_loc
     sll_int32  :: global(2)
 
     nr     = this%nr
     ntheta = this%nt
-    nc_x3 = this%num_cells_x3
+    nc_x3  = this%num_cells_x3
     rmin   = this%rmin
     dr     = this%dr
     bc     = this%bc
 
     !print *,'nc_x3=',this%num_cells_x3,sll_get_collective_rank(sll_world_collective)
 
+    ! Loop through z direction: solve 2D QN-Poisson on each polar plane
     do i_x3=1,nc_x3+1
 
       call verify_argument_sizes_par(this%layout_a, rhs(:,:,i_x3))
@@ -288,11 +277,10 @@ contains
 
       call compute_local_sizes( this%layout_a, nr_loc, na_loc )
 
+      ! Compute one FFT along theta at each r location
       do i=1,nr_loc
         call fft_apply_plan(this%fw,this%f_a(i,1:ntheta),this%f_a(i,1:ntheta))
       end do
-
-
 
       !REMAP
       call apply_remap_2D( this%rmp_ar, this%f_a, this%f_r )
@@ -319,7 +307,7 @@ contains
             -this%dlog_density(i)/(2._f64*dr)
           this%mat(3*(i-1)-1) =  2.0_f64/dr**2+(k/r)**2 &
             +this%inv_Te(i)
-          this%mat(3*(i-1)-2) = -1.0_f64/dr**2+1.0_f64/(2*dr*r) &
+          this%mat(3*(i-1)-2) = -1.0_f64/dr**2+1.0_f64/(2._f64*dr*r) &
             +this%dlog_density(i)/(2._f64*dr)
 
           this%fk(i) = this%f_r(i,j)
@@ -335,7 +323,7 @@ contains
 
         enddo
 
-        this%phik=0.0_f64
+        this%phik = (0.0_f64, 0.0_f64)
 
         !boundary condition at rmin
         if (bc(1)==SLL_DIRICHLET) then !Dirichlet
@@ -372,27 +360,27 @@ contains
 
         !boundary condition at rmin
         if(bc(1)==SLL_DIRICHLET)then !Dirichlet
-          this%phik(1)=0.0_f64
+          this%phik(1) = (0.0_f64, 0.0_f64)
         else if (bc(1)==SLL_NEUMANN) then
-          this%phik(1)=this%phik(2) !Neumann
+          this%phik(1) = this%phik(2) !Neumann
         else if (bc(1)==SLL_NEUMANN_MODE_0) then 
           if (k==0) then!Neumann for mode zero
-            this%phik(1)=this%phik(2)
+            this%phik(1) = this%phik(2)
           else !Dirichlet for other modes
-            this%phik(1)=0.0_f64
+            this%phik(1) = (0.0_f64, 0.0_f64)
           endif
         endif
 
         !boundary condition at rmax
         if (bc(2)==SLL_DIRICHLET) then !Dirichlet
-          this%phik(nr+1)=0.0_f64
+          this%phik(nr+1) = (0.0_f64, 0.0_f64)
         else if (bc(2)==SLL_NEUMANN) then
-          this%phik(nr+1)=this%phik(nr) !Neumann
+          this%phik(nr+1) = this%phik(nr) !Neumann
         else if (bc(2)==SLL_NEUMANN_MODE_0) then 
           if(k==0)then!Neumann for mode zero
-            this%phik(nr+1)=this%phik(nr)
+            this%phik(nr+1) = this%phik(nr)
           else !Dirichlet for other modes
-            this%phik(nr+1)=0.0_f64
+            this%phik(nr+1) = (0.0_f64, 0.0_f64)
           endif
         endif
 
@@ -422,7 +410,7 @@ contains
       do i=1,nr_loc
         !call fft_apply_plan(this%bw,this%f_a(i,1:ntheta),phi(i,1:ntheta,i_x3))
         call fft_apply_plan(this%bw,this%f_a(i,1:ntheta),this%f_a(i,1:ntheta))
-        phi(i,1:ntheta,i_x3) = real(this%f_a(i,1:ntheta))
+        phi(i,1:ntheta,i_x3) = real( this%f_a(i,1:ntheta), f64 )
       end do
     enddo
     
@@ -460,11 +448,6 @@ contains
     enddo
 
   end subroutine verify_argument_sizes_par
-
-
-
-
-
 
 
 end module sll_qn_solver_3d_polar_parallel_x1_module

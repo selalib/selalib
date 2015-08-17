@@ -327,7 +327,6 @@ subroutine run_generalvp_pif(sim)
   character(len=4) :: timestr
   integer(hid_t) :: hdata_id    !< HDF5 data file for each timestep
 
-  
 call sll_collective_barrier(sll_world_collective)
  !really global variables
  sim%coll_rank = sll_get_collective_rank( sll_world_collective )
@@ -663,17 +662,17 @@ end subroutine
 subroutine init_particle_generalvp_pif(sim)
   class(sll_simulation_general_vlasov_poisson_pif), intent(inout) :: sim
 
-sll_int32 :: idx, ierr
-sll_int64 :: seed
+  sll_int32 :: idx, ierr
+  sll_int64 :: seed
 
-SLL_ALLOCATE(sim%particle(2*sim%dimx+1,sim%npart_loc),ierr)
+  SLL_ALLOCATE( sim%particle(2*sim%dimx+1,sim%npart_loc), ierr )
 
-!Generate random numbers
-seed=10+ sim%RND_OFFSET + sim%coll_rank*sim%npart_loc
-do idx=1,sim%npart_loc
-!call i8_sobol_generate ( int(dimx,8) , npart, RND_OFFSET , particle(1:2*dimx,:))            
-call i8_sobol( int(2*sim%dimx,8), seed, sim%particle(1:2*sim%dimx,idx))
-end do
+  !Generate random numbers
+  seed = 10 + sim%RND_OFFSET + sim%coll_rank*sim%npart_loc
+  do idx=1,sim%npart_loc
+    !call i8_sobol_generate ( int(dimx,8) , npart, RND_OFFSET , particle(1:2*dimx,:))
+    call i8_sobol( int(2*sim%dimx,8), seed, sim%particle(1:2*sim%dimx,idx) )
+  end do
 end subroutine init_particle_generalvp_pif
 
 !allocates space
@@ -731,32 +730,34 @@ end subroutine calculate_diagnostics_generalvp_pif
 subroutine init_particle_prior_maxwellian_generalvp_pif(sim)
   class(sll_simulation_general_vlasov_poisson_pif), intent(inout) :: sim
 
-sll_int32 :: idx,jdx,ierr
+  sll_int32  :: idx,jdx,ierr
+  sll_real64 :: v_cdf
 
-!scale to boxlength
-do idx=1,sim%npart_loc
-sim%particle(sim%maskx,idx)=sim%boxlen*sim%particle(sim%maskx,idx)
-end do
-
-!load gaussian profile
-do idx=1,size(sim%particle,2)
- do jdx=1, size(sim%maskv)
-  call normal_cdf_inv( sim%particle(sim%maskv(jdx),idx), 0.0_f64 , 1.0_f64, sim%particle(sim%maskv(jdx),idx))
- end do
-end do
-
-!set temperature and impulse
- do idx=1, size(sim%maskv)
-! print *, sum(sim%particle(sim%maskv(idx),:))/sim%npart
- !call match_moment_1D_linear_real64(sim%particle(sim%maskv(idx),:), 0.0_f64, 1.0_f64)
-! print *, sum(sim%particle(sim%maskv(idx),:))/sim%npart
+  !scale to boxlength
+  do idx=1,sim%npart_loc
+    sim%particle(sim%maskx,idx) = sim%boxlen * sim%particle(sim%maskx,idx)
   end do
 
- !print *,minval(sim%particle(sim%maskx,:)), maxval(sim%particle(sim%maskx,:))
- !  print *,minval(sim%particle(sim%maskv,:)), maxval(sim%particle(sim%maskv,:))
+  !load gaussian profile
+  do idx=1,size(sim%particle,2)
+   do jdx=1, size(sim%maskv)
+    v_cdf = sim%particle(sim%maskv(jdx),idx)
+    call normal_cdf_inv( v_cdf, 0.0_f64 , 1.0_f64, sim%particle(sim%maskv(jdx),idx) )
+   end do
+  end do
+
+  !set temperature and impulse
+  ! do idx=1, size(sim%maskv)
+  ! print *, sum(sim%particle(sim%maskv(idx),:))/sim%npart
+   !call match_moment_1D_linear_real64(sim%particle(sim%maskv(idx),:), 0.0_f64, 1.0_f64)
+  ! print *, sum(sim%particle(sim%maskv(idx),:))/sim%npart
+  ! end do
   
-SLL_ALLOCATE(sim%prior_weight(1:sim%npart_loc),ierr)
-sim%prior_weight=1.0/product(sim%boxlen)
+   !print *,minval(sim%particle(sim%maskx,:)), maxval(sim%particle(sim%maskx,:))
+   !  print *,minval(sim%particle(sim%maskv,:)), maxval(sim%particle(sim%maskv,:))
+
+  SLL_ALLOCATE( sim%prior_weight(1:sim%npart_loc), ierr )
+  sim%prior_weight = 1.0 / product(sim%boxlen)
 
 end subroutine init_particle_prior_maxwellian_generalvp_pif
 
