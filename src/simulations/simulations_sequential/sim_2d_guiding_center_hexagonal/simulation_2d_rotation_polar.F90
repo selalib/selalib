@@ -287,8 +287,7 @@ use sll_ascii_io
         SLL_HERMITE_DIRICHLET, &
         SLL_HERMITE_PERIODIC)
     case default    
-      SLL_ERROR("rotation_2d_polar&
-      &", "bad value of num_method_case")  
+      SLL_ERROR("rotation_2d_polar", "bad value of num_method_case")  
   end select
   
   
