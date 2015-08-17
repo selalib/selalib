@@ -268,8 +268,7 @@ use sll_ascii_io
     case ("SLL_HEX_P1")
       num_method = SLL_HEX_P1 
     case default    
-      SLL_ERROR("rotation_2d_hexagonal_hermite&
-      &", "bad value of num_method_case")  
+      SLL_ERROR("rotation_2d_hexagonal_hermite", "bad value of num_method_case")  
   end select
   
   
