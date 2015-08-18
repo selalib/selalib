@@ -1,5 +1,5 @@
 !> @ingroup splines
-!> Contains bsplines documentation
+!> Contains bsplines implementation
 module sll_bsplines
 
 #include "sll_memory.h"
@@ -15,7 +15,7 @@ private
 !> @brief 
 !> basic type for one-dimensional B-spline data. 
 !> @details This should be
-!> treated as an opaque type. No access to its internals is directly allowed.
+!> treated as an opaque type. It is better to use it through interpolator
 type, public :: sll_bspline_1d
 
   sll_int32                 :: n
@@ -45,6 +45,10 @@ type, public :: sll_bspline_1d
 
 end type sll_bspline_1d
 
+!> @brief 
+!> basic type for two-dimensional B-spline data. 
+!> @details 
+!> treated as an opaque type. No access to its internals is directly allowed.
 type, public :: sll_bspline_2d
 
   type(sll_bspline_1d), pointer :: bs1
