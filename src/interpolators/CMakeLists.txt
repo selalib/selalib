@@ -38,6 +38,7 @@ IF(BUILD_TESTING)
   SLL_TEST( arbitrary_degree_spline_1d_neumann sll_interpolators )
   SLL_TEST( quintic_spline_interpolator_1d sll_interpolators )
   SLL_TEST( bspline_interpolator_1d sll_interpolators )
+  SLL_TEST( bspline_interpolator_2d sll_interpolators )
 
   SET_TESTS_PROPERTIES( cubic_spline_interpolator_1d 
                         PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 5 )
