@@ -38,41 +38,45 @@ private
 !> respect to their use, as described by the interpolator_2d_base class.
 !> Where the diverse interpolators diverge is in the way to initialize them.
 type, extends(sll_interpolator_2d_base), public :: sll_bspline_interpolator_2d
-   sll_int32                      :: npts1    !< Number of points along x direction
-   sll_int32                      :: npts2    !< Number of points along y direction
-   type(sll_bspline_2D), pointer  :: spline   !< The spline object to store coefficients
-   sll_int32                      :: bc_type1 !< Boundady condition for x
-   sll_int32                      :: bc_type2 !< Boundary condition for y
-   sll_real64, pointer            :: interpolation_points(:,:) !< positions
- contains
+
+  sll_int32                      :: npts1    !< Number of points along x direction
+  sll_int32                      :: npts2    !< Number of points along y direction
+  type(sll_bspline_2D), pointer  :: spline   !< The spline object to store coefficients
+  sll_int32                      :: bc_type1 !< Boundady condition for x
+  sll_int32                      :: bc_type2 !< Boundary condition for y
+  sll_real64, pointer            :: interpolation_points(:,:) !< positions
+
+contains
+
   !> Allocate data, set dimensions and boundary conditions
-   procedure, pass(interpolator) :: initialize=>initialize_cs2d_interpolator
+  procedure, pass(interpolator) :: initialize=>initialize_bs2d_interpolator
   !> Compute bspline coefficients
-   procedure :: compute_interpolants => compute_interpolants_cs2d
+  procedure :: compute_interpolants => compute_interpolants_bs2d
   !> Interpolate single value from last interpolants computed
-   procedure :: interpolate_value => interpolate_value_cs2d
+  procedure :: interpolate_value => interpolate_value_bs2d
   !> Interpolate first derivative from last inteprolants computed
-   procedure :: interpolate_derivative_eta1 => interpolate_deriv1_cs2d
+  procedure :: interpolate_derivative_eta1 => interpolate_deriv1_bs2d
   !> Interpolate first derivative from last inteprolants computed
-   procedure :: interpolate_derivative_eta2 => interpolate_deriv2_cs2d
+  procedure :: interpolate_derivative_eta2 => interpolate_deriv2_bs2d
   !> PLEASE ADD DOCUMENTATION
-   procedure, pass :: interpolate_array => spline_interpolate2d
+  procedure, pass :: interpolate_array => spline_interpolate2d
   !> PLEASE ADD DOCUMENTATION
-   procedure, pass :: interpolate_array_disp => spline_interpolate2d_disp
+  procedure, pass :: interpolate_array_disp => spline_interpolate2d_disp
   !> PLEASE ADD DOCUMENTATION
-   procedure, pass :: set_coefficients => set_coefficients_cs2d
+  procedure, pass :: set_coefficients => set_coefficients_bs2d
   !> PLEASE ADD DOCUMENTATION
-   procedure, pass :: get_coefficients => get_coefficients_cs2d
+  procedure, pass :: get_coefficients => get_coefficients_bs2d
   !> PLEASE ADD DOCUMENTATION
-   procedure, pass :: coefficients_are_set => coefficients_are_set_cs2d
+  procedure, pass :: coefficients_are_set => coefficients_are_set_bs2d
   !> PLEASE ADD DOCUMENTATION
-   procedure, pass :: delete => delete_bspline_interpolator_2d
-  ! procedure, pass :: compute_spline_coefficients => compute_spl_coeff_cs2d
+  procedure, pass :: delete => delete_bspline_interpolator_2d
+  ! procedure, pass :: compute_spline_coefficients => compute_spl_coeff_bs2d
+
 end type sll_bspline_interpolator_2d
 
 !> Pointer to this interpolator derived type
 type :: sll_bspline_interpolator_2d_ptr
-   type(sll_bspline_interpolator_2d), pointer :: interp
+  type(sll_bspline_interpolator_2d), pointer :: interp
 end type sll_bspline_interpolator_2d_ptr
 
   
@@ -149,19 +153,10 @@ contains
       eta1_max_slopes,            &
       eta2_min_slopes,            &
       eta2_max_slopes )
-
      
   end function  new_bspline_interpolator_2d
 
-
-  ! We allow to use the enumerators of the splines module in this interpolator
-  ! because:
-  ! a. This is just a wrapper and is intimately related to the underlying
-  !    cubic splines module.
-  ! b. There is no uniform interface for the initialization anyway.
-  ! The underlying implementation with the splines module could be hidden but
-  ! I can't see a compelling reason why.
-  subroutine initialize_cs2d_interpolator( &
+  subroutine initialize_bs2d_interpolator( &
     interpolator,                          &
     npts1,                                 &
     npts2,                                 &
@@ -181,27 +176,28 @@ contains
     eta2_max_slopes )
 
     class(sll_bspline_interpolator_2d), intent(inout) :: interpolator
-    sll_int32, intent(in)                         :: npts1
-    sll_int32, intent(in)                         :: npts2
-    sll_real64, intent(in)                        :: eta1_min
-    sll_real64, intent(in)                        :: eta1_max
-    sll_real64, intent(in)                        :: eta2_min
-    sll_real64, intent(in)                        :: eta2_max
-    sll_int32, intent(in), optional               :: eta1_bc_type
-    sll_int32, intent(in), optional               :: eta2_bc_type
-    sll_real64, intent(in), optional              :: const_eta1_min_slope
-    sll_real64, intent(in), optional              :: const_eta1_max_slope
-    sll_real64, intent(in), optional              :: const_eta2_min_slope
-    sll_real64, intent(in), optional              :: const_eta2_max_slope
-    sll_real64, dimension(:),intent(in), optional :: eta1_min_slopes
-    sll_real64, dimension(:),intent(in), optional :: eta1_max_slopes
-    sll_real64, dimension(:),intent(in), optional :: eta2_min_slopes
-    sll_real64, dimension(:),intent(in), optional :: eta2_max_slopes
+    sll_int32,  intent(in)                            :: npts1
+    sll_int32,  intent(in)                            :: npts2
+    sll_real64, intent(in)                            :: eta1_min
+    sll_real64, intent(in)                            :: eta1_max
+    sll_real64, intent(in)                            :: eta2_min
+    sll_real64, intent(in)                            :: eta2_max
+    sll_int32,  intent(in),              optional     :: eta1_bc_type
+    sll_int32,  intent(in),              optional     :: eta2_bc_type
+    sll_real64, intent(in),              optional     :: const_eta1_min_slope
+    sll_real64, intent(in),              optional     :: const_eta1_max_slope
+    sll_real64, intent(in),              optional     :: const_eta2_min_slope
+    sll_real64, intent(in),              optional     :: const_eta2_max_slope
+    sll_real64, dimension(:),intent(in), optional     :: eta1_min_slopes
+    sll_real64, dimension(:),intent(in), optional     :: eta1_max_slopes
+    sll_real64, dimension(:),intent(in), optional     :: eta2_min_slopes
+    sll_real64, dimension(:),intent(in), optional     :: eta2_max_slopes
 
-    interpolator%npts1 = npts1
-    interpolator%npts2 = npts2
+    interpolator%npts1    = npts1
+    interpolator%npts2    = npts2
     interpolator%bc_type1 = eta1_bc_type
     interpolator%bc_type2 = eta2_bc_type
+
 !PN    interpolator%spline => new_bspline_2D( &
 !PN         npts1, &
 !PN         npts2, &
@@ -219,9 +215,10 @@ contains
 !PN         x1_max_slopes=eta1_max_slopes, &
 !PN         x2_min_slopes=eta2_min_slopes, &
 !PN         x2_max_slopes=eta2_max_slopes )
+
   end subroutine
 
-  subroutine compute_interpolants_cs2d( &
+  subroutine compute_interpolants_bs2d( &
        interpolator, &
        data_array, &
        eta1_coords, &
@@ -249,7 +246,7 @@ contains
     call compute_bspline_2D( interpolator%spline, data_array )
   end subroutine
 
-  function interpolate_value_cs2d( interpolator, eta1, eta2 ) result(val)
+  function interpolate_value_bs2d( interpolator, eta1, eta2 ) result(val)
     class(sll_bspline_interpolator_2d), intent(in) :: interpolator
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
@@ -257,7 +254,7 @@ contains
 !PN    val = interpolate_value_2D( eta1, eta2, interpolator%spline )
   end function
 
-  function interpolate_deriv1_cs2d( interpolator, eta1, eta2 ) result(val)
+  function interpolate_deriv1_bs2d( interpolator, eta1, eta2 ) result(val)
     class(sll_bspline_interpolator_2d), intent(in) :: interpolator
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
@@ -265,7 +262,7 @@ contains
 !PN    val = interpolate_x1_derivative_2D(eta1,eta2,interpolator%spline)
   end function
 
-  function interpolate_deriv2_cs2d( interpolator, eta1, eta2 ) result(val)
+  function interpolate_deriv2_bs2d( interpolator, eta1, eta2 ) result(val)
     class(sll_bspline_interpolator_2d), intent(in) :: interpolator
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
@@ -378,7 +375,7 @@ contains
     end if
   end function 
 
-  subroutine set_coefficients_cs2d(  &
+  subroutine set_coefficients_bs2d(  &
        interpolator,                 &
        coeffs_1d,                    &
        coeffs_2d,                    &
@@ -399,7 +396,7 @@ contains
     sll_int32,                          intent(in), optional :: size_knots1
     sll_int32,                          intent(in), optional :: size_knots2
 
-    print*, 'set_coefficients_cs2d(): This function has not been implemented yet.'
+    print*, 'set_coefficients_bs2d(): This function has not been implemented yet.'
     print*, interpolator%npts1
 
     if(present(coeffs_1d))     print*,'coeffs_1d present but not used'
@@ -407,15 +404,15 @@ contains
     if(present(coeff2d_size1)) print*,'coeff2d_size1 present but not used'
     if(present(coeff2d_size2)) print*,'coeff2d_size2 present but not used'
     if(present(knots1))        print*,'knots1 present but not used'
-    if(present(knots2))        print *,'knots2 present but not used'
-    if(present(size_knots1))   print *,'size_knots1 present but not used'
-    if(present(size_knots2))   print *,'size_knots2 present but not used'
+    if(present(knots2))        print*,'knots2 present but not used'
+    if(present(size_knots1))   print*,'size_knots1 present but not used'
+    if(present(size_knots2))   print*,'size_knots2 present but not used'
 
     stop
 
-  end subroutine !set_coefficients_cs2d
+  end subroutine !set_coefficients_bs2d
   
-!!$  subroutine compute_spl_coeff_cs2d(interpolator, &
+!!$  subroutine compute_spl_coeff_bs2d(interpolator, &
 !!$       data_array, &
 !!$       eta1_coords, &
 !!$       size_eta1_coords, &
@@ -428,30 +425,30 @@ contains
 !!$    sll_int32, intent(in), optional                     :: size_eta1_coords
 !!$    sll_int32, intent(in),optional                      :: size_eta2_coords
 !!$
-!!$    print *, 'compute_coefficients_cs2d(): ERROR: This function has not been',&
+!!$    print *, 'compute_coefficients_bs2d(): ERROR: This function has not been',&
 !!$         'implemented yet.'
 !!$    stop
-!!$  end subroutine compute_spl_coeff_cs2d
+!!$  end subroutine compute_spl_coeff_bs2d
   
 
-  function get_coefficients_cs2d(interpolator)
+  function get_coefficients_bs2d(interpolator)
     class(sll_bspline_interpolator_2d), intent(in)    :: interpolator
-    sll_real64, dimension(:,:), pointer            :: get_coefficients_cs2d     
+    sll_real64, dimension(:,:), pointer            :: get_coefficients_bs2d     
     
-    print *, 'get_coefficients_cs2d(): ERROR: This function has not been ', &
+    print *, 'get_coefficients_bs2d(): ERROR: This function has not been ', &
          'implemented yet.'
-    get_coefficients_cs2d => null()
+    get_coefficients_bs2d => null()
     print *,interpolator%npts1    
     stop      
-  end function get_coefficients_cs2d
+  end function get_coefficients_bs2d
 
-  function coefficients_are_set_cs2d( interpolator ) result(res)
+  function coefficients_are_set_bs2d( interpolator ) result(res)
     class(sll_bspline_interpolator_2d), intent(in) :: interpolator
     logical :: res
     res = .false.
-    print *, 'coefficients_are_set_cs2d(): this function has not been implemented yet.'
+    print *, 'coefficients_are_set_bs2d(): this function has not been implemented yet.'
     print *,'#',interpolator%npts1
     !stop
-  end function coefficients_are_set_cs2d
+  end function coefficients_are_set_bs2d
 
 end module sll_module_bspline_interpolator_2d

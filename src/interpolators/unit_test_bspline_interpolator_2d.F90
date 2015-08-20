@@ -44,10 +44,18 @@ do i=1,NPTS1
 end do
 end do
   
-!call interpolator%initialize(NPTS1,X1MIN,X2MAX,SPL_DEG1,SLL_DIRICHLET)
-!
-!call interpolator%compute_interpolants(y)
-!  
+interpolator => new_bspline_interpolator_2d( &
+  NPTS1,                                     &
+  NPTS2,                                     &
+  X1MIN,                                     &
+  X1MAX,                                     &
+  X2MIN,                                     &
+  X2MAX,                                     &
+  SLL_DIRICHLET,                             &
+  SLL_DIRICHLET)
+
+call interpolator%compute_interpolants(y)
+  
 normL2 = 0.0_f64
 normH1 = 0.0_f64
 do j=1,NPTS2
@@ -61,33 +69,38 @@ do i=1,NPTS1
   write(12,*) x(i,j), y(i,j), dg_dy_int(i,j), dg_dy_ref(i,j)
 end do
 end do
-!
-!normL2 = sum((y_int-y_ref)**2*h)
-!normH1 = sum((dy_int-dy_ref)**2*h)
-!  
-!print*,'--------------------------------------------'
-!print*,' Average error in nodes', sum(abs(y_int-y_ref))/NPTS
-!print*,' Max     error in nodes', maxval(abs(y_int-y_ref))
-!print*,'--------------------------------------------'
-!print*,' Average error in nodes first derivative',sum(abs(dy_int-dy_ref))/NPTS
-!print*,' Max     error in nodes first derivative',maxval(abs(dy_int-dy_ref))
-!print*,'--------------------------------------------'
-!print*,' Norm L2 error ', sqrt(normL2), h**(SPL_DEG)
-!print*,'--------------------------------------------'
-!print*,' Norm H1 error ', sqrt(normH1), h**(SPL_DEG-2)
-!print*,'--------------------------------------------'
-!
-!if(( sqrt(normL2) <= h**(SPL_DEG)) .AND. &
-!   ( sqrt(normH1) <= h**(SPL_DEG-2))) then
-!  print *, 'PASSED'
-!else
-!  print *, 'FAILED'
-!end if
-!
-!call sll_delete(interpolator)
+
+normL2 = sum((    g_int -     g_ref)**2*h1*h2)
+normH1 = sum((dg_dx_int - dg_dx_ref)**2*h1*h2)
+normH1 = sum((dg_dy_int - dg_dy_ref)**2*h2*h2)
+  
+print*,'--------------------------------------------'
+print*,' Average error in nodes', sum(abs(g_int-g_ref))/(NPTS1*NPTS2)
+print*,' Max     error in nodes', maxval(abs(g_int-g_ref))
+print*,'--------------------------------------------'
+print*,' Average error in nodes first derivative x1',sum(abs(dg_dx_int-dg_dx_ref))/(NPTS1*NPTS2)
+print*,' Max     error in nodes first derivative x1',maxval(abs(dg_dx_int-dg_dx_ref))
+print*,'--------------------------------------------'
+print*,' Average error in nodes first derivative x2',sum(abs(dg_dy_int-dg_dy_ref))/(NPTS1*NPTS2)
+print*,' Max     error in nodes first derivative x2',maxval(abs(dg_dy_int-dg_dy_ref))
+print*,'--------------------------------------------'
+print*,' Norm L2 error ', sqrt(normL2), h1**(SPL_DEG1)
+print*,'--------------------------------------------'
+print*,' Norm H1 error ', sqrt(normH1), h1**(SPL_DEG1-2)
+print*,'--------------------------------------------'
+
+if(( sqrt(normL2) <= h1**(SPL_DEG1)) .and. &
+   ( sqrt(normH1) <= h1**(SPL_DEG1-2))) then
+  print *, 'PASSED'
+else
+  print *, 'FAILED'
+end if
+
+call sll_delete(interpolator)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   function f(x,y)
   
