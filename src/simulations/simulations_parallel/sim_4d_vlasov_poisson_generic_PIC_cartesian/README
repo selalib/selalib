@@ -57,25 +57,37 @@
    parallel compile + install: [[elisp:(compile "cd ${SELALIB}/build && make -j $NCPU install")]]
 
 ** Running
-   - Create output directory
+*** setup
+**** Create output directory
 
      [[elisp:(compile "mkdir -p ~/selalib/usr/simulations/simulations_parallel/4d_vp_generic_pic_cartesian/run")]]
 
-   - View directory contents
+**** View directory contents
 
-     [[elisp:(startup-persistent-process "rox-filer ~/selalib/usr/simulations/simulations_parallel/4d_vp_generic_pic_cartesian/run")]]
+     [[elisp:(startup-persistent-process "rox-filer ~/selalib/usr/simulations/simulations_parallel/4d_vp_generic_pic_cartesian")]]
 
-   - Parameters file
+**** Parameters file
 
      file:params_generic_pic_4d.nml
 
-   - Run simulation within directory (NB: mpirun is not required at the moment)
+*** Run
+**** within directory (NB: mpirun is not required at the moment)
 
      [[elisp:(compile "cd ${SELALIB}/usr/simulations/simulations_parallel/4d_vp_generic_pic_cartesian/run && ../test_4d_vp_generic_pic_cartesian ../params_generic_pic_4d.nml")]]
 
-   - complete make install + run
+**** complete make install + run
 
      [[elisp:(compile "cd ${SELALIB}/build && make -j $NCPU install && cd ${SELALIB}/usr/simulations/simulations_parallel/4d_vp_generic_pic_cartesian/run && ../test_4d_vp_generic_pic_cartesian ../params_generic_pic_4d.nml")]]
+
+*** plot
+
+AAA-ALH-HERE
+-- pour representer les points reconstruits ou bien les points de f_target dont la vitesse est donnee
+
+vx = 3
+vy = 0
+
+splot 'target_values_test_init4D.dat' u 1:2:(abs(($3)-vx)<0.01 && abs(($4)-vy)<0.01 ? $6 : 1/0) w p, '' u 1:2:(abs(($3)-vx)<0.01 && abs(($4)-vy)<0.01 ? $5 : 1/0) w p lc "blue"
 
 ** <<Debugging>>
 
