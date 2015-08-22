@@ -39,10 +39,12 @@ module sll_m_sim_pic_1d2v_vm_cart
      ! Specific
      class(sll_maxwell_1d_fem), pointer :: specific_maxwell_solver
 
-     ! Abstract kernel smoother
-     class(sll_kernel_smoother_base), pointer :: kernel_smoother
+     ! Abstract kernel smoothers
+     class(sll_kernel_smoother_base), pointer :: kernel_smoother_0     
+     class(sll_kernel_smoother_base), pointer :: kernel_smoother_1
      ! Specific kernel smoother
-     class(sll_kernel_smoother_spline_1d), pointer :: specific_kernel_smoother
+     class(sll_kernel_smoother_spline_1d), pointer :: specific_kernel_smoother_0
+     class(sll_kernel_smoother_spline_1d), pointer :: specific_kernel_smoother_1
 
 
      ! Specific operator splitting
@@ -166,10 +168,14 @@ contains
     sim%maxwell_solver => sim%specific_maxwell_solver
 
     ! Initialize kernel smoother    
-    sim%specific_kernel_smoother => sll_new_smoother_spline_1d(&
+    sim%specific_kernel_smoother_1 => sll_new_smoother_spline_1d(&
          sim%domain, [sim%n_gcells], &
          sim%n_particles, sim%degree_smoother) 
-    sim%kernel_smoother => sim%specific_kernel_smoother
+    sim%kernel_smoother_1 => sim%specific_kernel_smoother_1
+    sim%specific_kernel_smoother_0 => &
+         sll_new_smoother_spline_1d(sim%domain(1:2), [sim%n_gcells], &
+         sim%n_particles, sim%degree_smoother-1) 
+    sim%kernel_smoother_0 => sim%specific_kernel_smoother_0
     
     ! Set the seed for the random initialization
     call random_seed(size=rnd_seed_size)
@@ -186,16 +192,14 @@ contains
 
     ! Initialize the time-splitting propagator
     sim%propagator => sll_new_splitting_pic_1d2v_vm(sim%maxwell_solver, &
-         sim%kernel_smoother, sim%particle_group, &
+         sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
          sim%domain(1), sim%domain(3))
 
     ! Set the initial fields
     ! Efield 1 by Poisson
-    kernel_smoother_rho => sll_new_smoother_spline_1d(sim%domain(1:2), [sim%n_gcells], &
-         sim%n_particles, sim%degree_smoother-1) 
-    call kernel_smoother_rho%compute_shape_factors(sim%particle_group)
+    call sim%kernel_smoother_0%compute_shape_factors(sim%particle_group)
     sim%propagator%j_dofs_local = 0.0_f64
-    call kernel_smoother_rho%accumulate_rho_from_klimontovich(sim%particle_group, &
+    call sim%kernel_smoother_0%accumulate_rho_from_klimontovich(sim%particle_group, &
          sim%propagator%j_dofs_local(:,1))
     ! MPI to sum up contributions from each processor
     sim%propagator%j_dofs = 0.0_f64
@@ -218,6 +222,7 @@ contains
     ! TODO : Output needs to be changed.
     write(th_diag_id,'(f12.5,2g20.12,2g20.12,2g20.12)' ) &
          0.0_f64,  sum(sim%propagator%efield_dofs(:,1)**2)*sim%mesh%delta_eta, &
+         sum(sim%propagator%efield_dofs(:,2)**2)*sim%mesh%delta_eta, &
          sum(sim%propagator%bfield**2)*sim%mesh%delta_eta
     print*, 'Time loop'
     ! Time loop

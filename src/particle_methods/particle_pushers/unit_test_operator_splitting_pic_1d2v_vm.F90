@@ -19,9 +19,11 @@ program unit_test_operator_splitting_pic_1d2v_vm
   class(sll_operator_splitting_pic_1d2v_vm), pointer :: propagator
 
   ! Abstract kernel smoother
-  class(sll_kernel_smoother_base), pointer :: kernel
+  class(sll_kernel_smoother_base), pointer :: kernel_0
+  class(sll_kernel_smoother_base), pointer :: kernel_1
   ! Specific kernel smoother
-  class(sll_kernel_smoother_spline_1d),pointer :: specific_kernel
+  class(sll_kernel_smoother_spline_1d),pointer :: specific_kernel_0
+  class(sll_kernel_smoother_spline_1d),pointer :: specific_kernel_1
   ! Abstract particle group
   class(sll_particle_group_base), pointer :: particle_group
   ! Specific particle group
@@ -49,7 +51,7 @@ program unit_test_operator_splitting_pic_1d2v_vm
   sll_real64 :: j_dofs_ref(10,2)
 
 
-  
+  ! Note: Test is only serial.
   call sll_boot_collective()
   
   ! 
@@ -63,7 +65,8 @@ program unit_test_operator_splitting_pic_1d2v_vm
   domain = [0.0_f64, 2.0_f64] ! x_min, x_max
   x_vec = [0.1_f64, 0.65_f64, 0.7_f64, 1.5_f64] ! Particle positions
   v_vec(:,1) = [1.5_f64, 0.0_f64, 0.0_f64, 0.0_f64]
-  v_vec(:,2) = [0.0_f64, 0.0_f64, 0.1_f64, 0.0_f64]
+  v_vec(:,2) = v_vec(:,1)
+  !v_vec(:,2) = [0.0_f64, 0.0_f64, 0.1_f64, 0.0_f64]
 
   ! We need to initialize the particle group
   specific_particle_group => sll_new_particle_group_1d2v(n_particles, &
@@ -84,19 +87,27 @@ program unit_test_operator_splitting_pic_1d2v_vm
   maxwell_solver => specific_maxwell_solver
 
   ! Initialize the kernel
-  specific_kernel => sll_new_smoother_spline_1d(&
+  specific_kernel_0 => sll_new_smoother_spline_1d(&
+       domain, [n_cells], n_particles, spline_degree-1)
+  kernel_0 => specific_kernel_0
+  specific_kernel_1 => sll_new_smoother_spline_1d(&
        domain, [n_cells], n_particles, spline_degree)
-  kernel => specific_kernel
+  kernel_1 => specific_kernel_1
 
   ! Initialize propagator
   propagator => sll_new_splitting_pic_1d2v_vm(&
-       maxwell_solver, kernel, particle_group, domain(1), domain(2)-domain(1))
+       maxwell_solver, kernel_0, kernel_1,&
+       particle_group, domain(1), domain(2)-domain(1))
 
   ! Tests over one interval
   delta_t = 0.03_f64
   call propagator%operatorHf(delta_t)
-  j_dofs_ref(:,2) = 0.0_f64
-  j_dofs_ref(:,1) =   [3.3403381347656275E-003_f64,   0.0000000000000000_f64, &
+  j_dofs_ref(:,1) = [ 1.6004882812500010E-002_f64,   0.0000000000000000_f64, &
+       0.0000000000000000_f64,        0.0000000000000000_f64, &
+       0.0000000000000000_f64,        0.0000000000000000_f64, &
+       0.0000000000000000_f64,        0.0000000000000000_f64, &
+       6.5126953124999970E-003_f64,   6.1857421875000040E-002_f64];
+  j_dofs_ref(:,2) =   [3.3403381347656275E-003_f64,   0.0000000000000000_f64, &
        0.0000000000000000_f64,        0.0000000000000000_f64, &
        0.0000000000000000_f64,        0.0000000000000000_f64, &
        0.0000000000000000_f64,        8.8720092773437315E-004_f64, &
@@ -117,8 +128,12 @@ program unit_test_operator_splitting_pic_1d2v_vm
   ! Test over three intervals
   delta_t = 0.25_f64
   call propagator%operatorHf(delta_t)
-  j_dofs_ref(:,2) = 0.0_f64
-  j_dofs_ref(:,1) =   [0.27460861206054676_f64, &
+  j_dofs_ref(:,1) = [0.35192871093750000_f64,       0.15258789062499989_f64, &
+       3.2958984374999883E-003_f64,   0.0000000000000000_f64, &
+       0.0000000000000000_f64,        0.0000000000000000_f64, &
+       0.0000000000000000_f64,        0.0000000000000000_f64, &
+       7.8124999999999931E-003_f64,  0.18750000000000000_f64];
+  j_dofs_ref(:,2) =   [0.27460861206054676_f64, &
        5.4615020751953063E-002_f64,   3.0899047851562354E-004_f64,   &
        0.0000000000000000_f64,         0.0000000000000000_f64, &
        0.0000000000000000_f64,        0.0000000000000000_f64, &
@@ -129,7 +144,6 @@ program unit_test_operator_splitting_pic_1d2v_vm
   if (error > 1.e-14) then
      passed = .FALSE.
   end if
-
 
   if (passed .EQV. .TRUE.) then
      print*, 'PASSED'
