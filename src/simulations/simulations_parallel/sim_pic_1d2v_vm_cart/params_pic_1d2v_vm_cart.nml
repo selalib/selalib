@@ -1,6 +1,6 @@
 &sim_params
-        delta_t = 0.1
-        n_time_steps = 100
+        delta_t = 0.05
+        n_time_steps = 10000
         alpha = 0.1
         n_mode = 1
         thermal_v = 0.02
