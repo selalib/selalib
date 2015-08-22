@@ -21,7 +21,8 @@ module sll_m_operator_splitting_pic_1d2v_vm
   !> Operator splitting type for Vlasov-Maxwell 1d2v
   type :: sll_operator_splitting_pic_1d2v_vm
      class(sll_maxwell_1d_base), pointer  :: maxwell_solver      !< Maxwell solver
-     class(sll_kernel_smoother_base), pointer :: kernel_smoother  !< Kernel smoother
+     class(sll_kernel_smoother_base), pointer :: kernel_smoother_0  !< Kernel smoother (order p)
+     class(sll_kernel_smoother_base), pointer :: kernel_smoother_1  !< Kernel smoother (order p+1)
      class(sll_particle_group_base), pointer  :: particle_group    !< Particle group
 
      sll_int32 :: spline_degree !< Degree of the spline for j,B. Here 3.
@@ -29,7 +30,8 @@ module sll_m_operator_splitting_pic_1d2v_vm
      sll_real64 :: x_min !< Lower bound for x domain
      sll_real64 :: delta_x !< Grid spacing
 
-     sll_real64 :: cell_integrals(4) !< Integral over the spline function on each interval
+     sll_real64 :: cell_integrals_0(3) !< Integral over the spline function on each interval (order p)
+     sll_real64 :: cell_integrals_1(4) !< Integral over the spline function on each interval (order p+1)
 
 
      sll_real64, allocatable :: efield_dofs(:,:) !< DoFs describing the two components of the electric field
@@ -64,10 +66,11 @@ contains
     sll_int32  :: n_cells
     sll_real64 :: r_new, r_old
     sll_int32 :: index_new, index_old
-    sll_real64 :: primitive(4)
+    sll_real64 :: primitive_1(4)
+    sll_real64 :: primitive_0(3)
 
     this%j_dofs_local = 0.0_f64
-    n_cells = this%kernel_smoother%n_dofs
+    n_cells = this%kernel_smoother_0%n_dofs
 
     ! Here we have to accumulate j and integrate over the time interval.
     ! At each k=1,...,n_grid, we have for s \in [0,dt]:
@@ -104,50 +107,79 @@ contains
        ! Scale vi by weight to combine both factors for accumulation of integral over j
        vi = vi*this%particle_group%get_charge(i_part)
 
-       ! Compute the primitive at r_old for each interval
-       primitive = primitive_uniform_cubic_b_spline_at_x( r_old )
+       ! Compute the primitives at r_old for each interval
+       primitive_0 = primitive_uniform_quadratic_b_spline_at_x( r_old )
+       primitive_1 = primitive_uniform_cubic_b_spline_at_x( r_old )
        ! If we are integrating to the right, we need to also use the value of the primitive at the right interval bound. If larger, we would need the lower but it is zero by our normalization.   
        if (index_old < index_new) then
-          primitive = primitive - this%cell_integrals
+          primitive_0 = primitive_0 - this%cell_integrals_0
+          primitive_1 = primitive_1 - this%cell_integrals_1
        end if
        ! Now, we loop through the DoFs and add the contributions.
        ind = 1
-       do i_grid = index_old - this%spline_degree, index_old
+       i_mod = modulo(index_old - this%spline_degree, n_cells ) + 1
+       this%j_dofs_local(i_mod,2) = this%j_dofs_local(i_mod,2) - &
+            primitive_1(ind)*vi (2)
+       ind = ind+1
+       do i_grid = index_old - this%spline_degree + 1, index_old
           i_mod = modulo(i_grid, n_cells ) + 1
-          this%j_dofs_local(i_mod,:) = this%j_dofs_local(i_mod,:) - &
-               primitive(ind)*vi (1:2)
+          this%j_dofs_local(i_mod,2) = this%j_dofs_local(i_mod,2) - &
+               primitive_1(ind)*vi (2)
+          this%j_dofs_local(i_mod,1) = this%j_dofs_local(i_mod,1) - &
+               primitive_0(ind-1)*vi (1)
           ind = ind + 1
        end do      
        ! Now contribution from r_new in the same way but different sign
-       primitive = primitive_uniform_cubic_b_spline_at_x( r_new )
+       primitive_0 = primitive_uniform_quadratic_b_spline_at_x( r_new )
+       primitive_1 = primitive_uniform_cubic_b_spline_at_x( r_new )
        if (index_old > index_new) then
-          primitive = primitive - this%cell_integrals
+          primitive_0 = primitive_0 - this%cell_integrals_0
+          primitive_1 = primitive_1 - this%cell_integrals_1
        end if 
+
        ind = 1
-       do i_grid = index_new - this%spline_degree, index_new
+       i_mod = modulo(index_new - this%spline_degree, n_cells ) + 1
+       this%j_dofs_local(i_mod,2) = this%j_dofs_local(i_mod,2) + &
+            primitive_1(ind)*vi(2)
+       ind = ind + 1
+       do i_grid = index_new - this%spline_degree + 1, index_new
           i_mod = modulo(i_grid, n_cells ) + 1
-          this%j_dofs_local(i_mod,:) = this%j_dofs_local(i_mod,:) + &
-               primitive(ind)*vi(1:2)
+          this%j_dofs_local(i_mod,2) = this%j_dofs_local(i_mod,2) + &
+               primitive_1(ind)*vi(2)
+          this%j_dofs_local(i_mod,1) = this%j_dofs_local(i_mod,1) + &
+               primitive_0(ind-1)*vi(1)
           ind = ind + 1
        end do
        ! If |index_new - index_old|<2, we are done. Otherwise, we have to account for the piecewise definition of the spline and add the contributions from the intervals inbetween. These are always integrals over the whole integrals.
        ! First if index_old<index_new-1: Add the whole integrals.
        do j = index_old+1, index_new-1
           ind = 1
-          do i_grid = j - this%spline_degree, j
+          i_mod = modulo(j - this%spline_degree, n_cells ) + 1
+          this%j_dofs_local(i_mod,2) = this%j_dofs_local(i_mod,2) + &
+               this%cell_integrals_1(ind)*vi(2)
+          ind = ind + 1
+          do i_grid = j - this%spline_degree + 1, j
              i_mod = modulo(i_grid, n_cells ) + 1
-             this%j_dofs_local(i_mod,:) = this%j_dofs_local(i_mod,:) + &
-                  this%cell_integrals(ind)*vi(1:2)
+             this%j_dofs_local(i_mod,2) = this%j_dofs_local(i_mod,2) + &
+                  this%cell_integrals_1(ind)*vi(2)
+             this%j_dofs_local(i_mod,1) = this%j_dofs_local(i_mod,1) + &
+                  this%cell_integrals_0(ind-1)*vi(1)
              ind = ind + 1
           end do
        end do
        ! Then if index_old>index_new-1: Subtract the whole integrals.
        do j = index_new+1, index_old-1
           ind = 1
-          do i_grid = j - this%spline_degree, j
+          i_mod = modulo(j - this%spline_degree, n_cells ) + 1
+          this%j_dofs_local(i_mod,2) = this%j_dofs_local(i_mod,2) - &
+               this%cell_integrals_1(ind)*vi(2)
+          ind = ind + 1
+          do i_grid = j - this%spline_degree + 1, j
              i_mod = modulo(i_grid, n_cells ) + 1
-             this%j_dofs_local(i_mod,:) = this%j_dofs_local(i_mod,:) - &
-                  this%cell_integrals(ind)*vi(1:2)
+             this%j_dofs_local(i_mod,2) = this%j_dofs_local(i_mod,2) - &
+                  this%cell_integrals_1(ind)*vi(2)
+             this%j_dofs_local(i_mod,1) = this%j_dofs_local(i_mod,1) - &
+                  this%cell_integrals_0(ind-1)*vi(1)
              ind = ind + 1
           end do
        end do 
@@ -166,8 +198,8 @@ contains
     this%efield_dofs = this%efield_dofs - this%j_dofs/this%Lx
 
     ! Finally, we recompute the shape factors for the new positions such that we can evaluate the electric and magnetic fields when calling the operators H_E and H_B
-   call  this%kernel_smoother%compute_shape_factors(this%particle_group)
-
+   call  this%kernel_smoother_0%compute_shape_factors(this%particle_group)
+   call  this%kernel_smoother_1%compute_shape_factors(this%particle_group)
 
  end subroutine operatorHf_pic_1d2v_vm
   
@@ -185,10 +217,10 @@ contains
     sll_int32 :: i_part
     sll_real64 :: v_new(3)
 
-    ! Evaluate efield at particle positions
-    call this%kernel_smoother%evaluate_kernel_function(this%particle_group, &
+    ! Evaluate efield at particle positions (quadratic for E_x and cubic for E_y)
+    call this%kernel_smoother_0%evaluate_kernel_function(this%particle_group, &
          this%efield_dofs(:,1), this%efield(:,1))
-    call this%kernel_smoother%evaluate_kernel_function(this%particle_group, &
+    call this%kernel_smoother_1%evaluate_kernel_function(this%particle_group, &
          this%efield_dofs(:,2), this%efield(:,1))
 
     ! V_new = V_old + dt * E
@@ -220,8 +252,8 @@ contains
     sll_int32 :: i_part
     sll_real64 :: v_old(3), v_new(3)
 
-    ! Evaluate bfield at particle positions
-    call this%kernel_smoother%evaluate_kernel_function(this%particle_group, &
+    ! Evaluate bfield at particle positions (splines of order p+1)
+    call this%kernel_smoother_1%evaluate_kernel_function(this%particle_group, &
          this%bfield_dofs, this%bfield)
 
     ! V_new = V_old + dt * (cos(B dt)  sin(B dt) \\ -sin(B dt) cos(B dt)) * V_old
@@ -247,13 +279,15 @@ contains
   !> Constructor.
   function sll_new_splitting_pic_1d2v_vm(&
        maxwell_solver, &
-       kernel_smoother, &
+       kernel_smoother_0, &
+       kernel_smoother_1, &
        particle_group, &
        x_min, &
        Lx) result(this)
     class(sll_operator_splitting_pic_1d2v_vm), pointer :: this !< time splitting object 
     class(sll_maxwell_1d_base), pointer, intent(in)  :: maxwell_solver      !< Maxwell solver
-    class(sll_kernel_smoother_base), pointer, intent(in) :: kernel_smoother  !< Kernel smoother
+    class(sll_kernel_smoother_base), pointer, intent(in) :: kernel_smoother_0  !< Kernel smoother
+    class(sll_kernel_smoother_base), pointer, intent(in) :: kernel_smoother_1  !< Kernel smoother
     class(sll_particle_group_base),pointer, intent(in) :: particle_group !< Particle group
     sll_real64, intent(in) :: x_min !< Lower bound of x domain
     sll_real64, intent(in) :: Lx !< Length of the domain in x direction.
@@ -264,25 +298,29 @@ contains
     SLL_ALLOCATE(this, ierr)
 
     this%maxwell_solver => maxwell_solver
-    this%kernel_smoother => kernel_smoother
+    this%kernel_smoother_0 => kernel_smoother_0
+    this%kernel_smoother_1 => kernel_smoother_1
     this%particle_group => particle_group
 
-    SLL_ALLOCATE(this%efield_dofs(this%kernel_smoother%n_dofs,2), ierr)
-    SLL_ALLOCATE(this%bfield_dofs(this%kernel_smoother%n_dofs), ierr)
+    ! TODO: Check that n_dofs is the same for both kernel smoothers.
+
+    SLL_ALLOCATE(this%efield_dofs(this%kernel_smoother_1%n_dofs,2), ierr)
+    SLL_ALLOCATE(this%bfield_dofs(this%kernel_smoother_1%n_dofs), ierr)
     SLL_ALLOCATE(this%efield(this%particle_group%n_particles,2), ierr)
     SLL_ALLOCATE(this%bfield(this%particle_group%n_particles), ierr)
-    SLL_ALLOCATE(this%j_dofs(this%kernel_smoother%n_dofs,2), ierr)
-    SLL_ALLOCATE(this%j_dofs_local(this%kernel_smoother%n_dofs,2), ierr)
+    SLL_ALLOCATE(this%j_dofs(this%kernel_smoother_1%n_dofs,2), ierr)
+    SLL_ALLOCATE(this%j_dofs_local(this%kernel_smoother_1%n_dofs,2), ierr)
 
     this%spline_degree = 3
     this%x_min = x_min
     this%Lx = Lx
-    this%delta_x = this%Lx/this%kernel_smoother%n_dofs
+    this%delta_x = this%Lx/this%kernel_smoother_1%n_dofs
     
-    this%cell_integrals = [1,11,11,1]
-    this%cell_integrals = this%cell_integrals / 24.0_f64
+    this%cell_integrals_0 = [0.5_f64, 2.0_f64, 0.5_f64]
+    this%cell_integrals_0 = this%cell_integrals_0 / 3.0_f64
 
-    
+    this%cell_integrals_1 = [1.0_f64,11.0_f64,11.0_f64,1.0_f64]
+    this%cell_integrals_1 = this%cell_integrals_1 / 24.0_f64
 
   end function sll_new_splitting_pic_1d2v_vm
 
@@ -304,6 +342,22 @@ contains
     primitive(1) = (1.0_f64 - (1.0_f64-x)**4)/24.0_f64
 
   end function primitive_uniform_cubic_b_spline_at_x
+
+  !> Compute the primitive of the quadratic B-spline in each intervall at x. Primitive function normalized such that it is 0 at x=0. Analogon to uniform_b_spline_at_x in arbitrary degree splines for primitive, but specific for quadratic.
+  function primitive_uniform_quadratic_b_spline_at_x( x) result(primitive)
+    sll_real64, intent(in)  :: x !< position where to evaluate the primitive
+    sll_real64 :: primitive(3) !< value of the primitive for each of the three intervals.
+
+    sll_real64 :: xx(2)
+
+    xx(1) = x**2
+    xx(2) = x*xx(1)
+
+    primitive(3) = xx(2)/6.0_f64
+    primitive(2) = (x + xx(1))*0.5_f64-xx(2)/3.0_f64
+    primitive(1) = (1.0_f64 - (1.0_f64-x)**3)/6.0_f64
+
+  end function primitive_uniform_quadratic_b_spline_at_x
 
 
 
