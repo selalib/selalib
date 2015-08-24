@@ -6,11 +6,69 @@
 !> Reference : Condat2006 "Three-directional box splines"
 module hex_pre_filters
 #include "sll_working_precision.h"
+#include "sll_memory.h"
   use sll_hex_meshes
 
+  
+  
   implicit none
 
 contains 
+
+    !---------------------------------------------------------------------------
+  !> @brief Pre-filter PFIR to compute the box splines coefficients 
+  !> @details Pre-filter to compute the box splines coefficients.
+  !> Reference : @Condat and Van De Ville (2007)
+  !> "Quasi-interpolating spline models for hexagonally-sampled data."
+  !> @param[IN] mesh sll_hex_mesh_2d hexagonal mesh containing the mesh description
+  !> @param[IN] deg integer representing the degree of the spline
+  !> @param[OUT] weight float containing the filter (aka weight) at the local index
+  subroutine pre_filter_pfir(mesh, deg, weight_tab)
+    sll_real64, allocatable, intent(out) :: weight_tab(:)
+    type(sll_hex_mesh_2d)     :: mesh
+    sll_int32, intent(in)     :: deg
+    sll_int32                 :: num_wei
+    sll_int32                 :: ierr
+    sll_int32                 :: index
+
+    num_wei = 3*deg*(deg+1) + 1
+    SLL_ALLOCATE(weight_tab(num_wei), ierr)
+    weight_tab(:) = 0.0_f64
+
+    select case(deg)
+    case(1)
+       ! prefiltre PFIR for box-splines chi2
+       ! with coefficients h0 = 5/4 and h1 = -1/24
+       weight_tab(1) = 5._f64/4._f64
+       weight_tab(2:7) = -1._f64/24._f64
+    case(2)
+       ! prefiltre PFIR for box-splines of deg =2 chi4
+       ! with coefficients h0 = 37/20 h1 =-41/240 h2 = 7/240
+       weight_tab(1)   = 37._f64/20._f64
+       weight_tab(2:7) = -41._f64/240._f64
+       do index=8,18,2
+          weight_tab(index+1) = 7._f64/240._f64
+       end do
+    case(4)
+       ! prefiltre PFIR for box-splines of deg =3 chi6
+       ! with coefficients  h0 : -300538194444442.,
+       ! h1 : 100179398148148.,   h2 : -100179398148149.0,
+       ! h3 : 50089699074074.4, h4 : -0.0102843915343915
+       weight_tab(1)   = -300538194444442._f64
+       weight_tab(2:7) = 100179398148148.0_f64
+       do index=8,18,2
+          weight_tab(index+1) = -100179398148149.0_f64
+          weight_tab(index)   =  50089699074074.4_f64
+       end do
+    case default
+       print *, 'ERROR: pre_filter_pfir(...): ', &
+            '     function not implemented for splines of degree > 4'
+       print *, "Exiting..."
+       STOP
+    end select
+
+  end subroutine pre_filter_pfir
+
 
   !---------------------------------------------------------------------------
   !> @brief Pre-filter PIIR2 to compute the box splines coefficients
@@ -25,8 +83,11 @@ contains
     type(sll_hex_mesh_2d)      :: mesh 
     sll_int32, intent(in)      :: local_index
     sll_int32, intent(in)      :: deg
+    sll_real64, allocatable    :: weights_tab(:)
     sll_real64                 :: weight
     sll_int32                  :: k1, k2
+    sll_int32                  :: ierr
+    sll_int32                  :: i
 
     if (deg .eq. 1) then 
        ! prefiltre PIIR2 for box-splines chi2
@@ -35,16 +96,16 @@ contains
        ! prefilter = |0  h0 0 | * |h1 h0 h1| * |h0 0  0 |
        !             |0  0  h1|   |0  0  0 |   |h1 0  0 |
        ! where '*' symbolizes the 2d convolution operator
-       if (local_index .eq. 1) then
-          weight = 1775._f64/2304._f64
-       else if (local_index .le. 7) then
-          weight = 253._f64/6912._f64
-       else if (local_index .le. 19) then
-          if (modulo(local_index, 2) .eq. 0) then
-             weight = 1._f64/13824._f64
-          else
-             weight = 11._f64/6912._f64
-          end if
+       SLL_ALLOCATE(weights_tab(19), ierr)
+       weights_tab(1)   = 1775._f64/2304._f64
+       weights_tab(2:7) = 253._f64/6912._f64
+       do i=8,18,2
+          weights_tab(i)   = 1.0_f64/13824._f64
+          weights_tab(i+1) = 11._f64/6912._f64
+       end do
+
+       if (local_index .le. 19) then
+          weight = weights_tab(local_index)
        else
           weight = 0._f64
        end if
@@ -191,73 +252,6 @@ contains
 
     end if
   end function pre_filter_piir1
-
-
-  !---------------------------------------------------------------------------
-  !> @brief Pre-filter PFIR to compute the box splines coefficients 
-  !> @details Pre-filter to compute the box splines coefficients.
-  !> Reference : @Condat and Van De Ville (2007)
-  !> "Quasi-interpolating spline models for hexagonally-sampled data."
-  !> @param[IN] mesh sll_hex_mesh_2d hexagonal mesh containing the mesh description
-  !> @param[IN] local_index integer representing the local index of the point we want the filter
-  !> @param[IN] deg integer representing the degree of the spline
-  !> @param[OUT] weight float containing the filter (aka weight) at the local index
-  function pre_filter_pfir(mesh, local_index, deg) result(weight)
-    type(sll_hex_mesh_2d) :: mesh 
-    sll_int32, intent(in)     :: local_index
-    sll_int32, intent(in)     :: deg
-    sll_real64                :: weight
-
-    weight = 0._f64
-
-    select case(deg)
-       case(1)
-       ! prefiltre PFIR for box-splines chi2
-       ! with coefficients h0 = 5/4 and h1 = -1/24
-
-       if (local_index .eq. 1) then
-          weight = 5._f64/4._f64
-       else if (local_index .le. 7) then
-          weight = -1._f64/24._f64
-       else
-          weight = 0._f64
-       end if
-    case(2)
-       ! prefiltre PFIR for box-splines of deg =2 chi4
-       ! with coefficients h0 = 37/20 h1 =-41/240 h2 = 7/240
-       if (local_index .eq. 1) then
-          weight = 37._f64/20._f64
-       else if (local_index .le. 7) then
-          weight = -41._f64/240._f64
-       else if ((local_index.le.19).and.(modulo(local_index, 2).eq.1)) then
-          weight = 7._f64/240._f64
-       else
-          weight = 0._f64
-       end if
-    case(4)
-       ! prefiltre PFIR for box-splines of deg =3 chi6
-       ! with coefficients  h0 : -300538194444442.,    h1 : 100179398148148.,   h2 : -100179398148149.0,  h3 : 50089699074074.4, h4 : -0.0102843915343915
-       if (local_index .eq. 1) then
-          weight = -300538194444442._f64
-       else if (local_index .le. 7) then
-          weight = 100179398148148.0_f64
-       else if ((local_index.le.19).and.(modulo(local_index, 2).eq.1)) then
-          weight = -100179398148149.0_f64
-       else if ((local_index.le.19).and.(modulo(local_index, 2).eq.0)) then
-          weight = 50089699074074.4_f64
-       else if ((local_index.le.37).and.(modulo(local_index, 2).eq.1)) then
-          weight = -0.0102843915343915_f64
-       else
-          weight = 0._f64
-       end if
-    case default
-       print *, 'ERROR: pre_filter_pfir(...): ', &
-            '     function not implemented for splines of degree > 4'
-       print *, "Exiting..."
-       STOP
-    end select
-  end function pre_filter_pfir
-
 
   !---------------------------------------------------------------------------
   !> @brief Pre-filter PINT to compute the box splines coefficients 
