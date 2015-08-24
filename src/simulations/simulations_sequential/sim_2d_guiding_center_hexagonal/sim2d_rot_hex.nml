@@ -15,6 +15,7 @@
 &time_iterations
   dt = 0.05
   number_iterations = 100
+  freq_diag = 10
 /
 
 &interpolation
