@@ -22,6 +22,7 @@ module sll_m_sim_pic_1d2v_vm_cart
   use sll_m_kernel_smoother_spline_1d
   use sll_m_maxwell_1d_base
   use sll_m_maxwell_1d_fem
+  use sll_arbitrary_degree_splines
 
     type, extends(sll_simulation_base_class) :: sll_sim_pic_1d2v_vm_cart
 
@@ -213,39 +214,69 @@ contains
     ! Efield 2 to zero
     sim%propagator%efield_dofs(:,2) = 0.0_f64
     ! Bfield = beta*cos(kx): Use b = M{-1}(N_i,beta*cos(kx))
-    ! TODO
-    sim%propagator%bfield_dofs = 0.0_f64
+    call L2projection(sim%specific_maxwell_solver, beta_cos_k, sim%degree_smoother-1, &
+         sim%propagator%bfield_dofs) 
+    !print*, sim%propagator%bfield_dofs
 
     ! End field initialization
 
     ! Diagnostics
-    ! TODO : Output needs to be changed.
-    write(th_diag_id,'(f12.5,2g20.12,2g20.12,2g20.12)' ) &
-         0.0_f64,  sum(sim%propagator%efield_dofs(:,1)**2)*sim%mesh%delta_eta, &
-         sum(sim%propagator%efield_dofs(:,2)**2)*sim%mesh%delta_eta, &
+    if (sim%rank == 0) then
+       ! Compute fields at grid points from dofs
+       sim%propagator%efield(:,1) = eval_uniform_periodic_spline_curve(sim%degree_smoother-1, &
+            sim%propagator%efield_dofs(:,1))
+       sim%propagator%efield(:,2) = eval_uniform_periodic_spline_curve(sim%degree_smoother, &
+            sim%propagator%efield_dofs(:,2))
+       sim%propagator%bfield = eval_uniform_periodic_spline_curve(sim%degree_smoother-1, &
+            sim%propagator%bfield_dofs)
+       write(th_diag_id,'(f12.5,2g20.12,2g20.12,2g20.12)' ) &
+         0.0_f64,  sum(sim%propagator%efield(:,1)**2)*sim%mesh%delta_eta, &
+         sum(sim%propagator%efield(:,2)**2)*sim%mesh%delta_eta, &
          sum(sim%propagator%bfield**2)*sim%mesh%delta_eta
-    print*, 'Time loop'
+
+       print*, 'Time loop'
+    end if
     ! Time loop
     do j=1, sim%n_time_steps
        ! Lie splitting
-       call sim%propagator%operatorHf(sim%delta_t)
-       call sim%propagator%operatorHE(sim%delta_t)
+!!$       call sim%propagator%operatorHf(sim%delta_t)
+!!$       call sim%propagator%operatorHE(sim%delta_t)
+!!$       call sim%propagator%operatorHB(sim%delta_t)
+       ! Strang splitting
+       call sim%propagator%operatorHf(0.5_f64*sim%delta_t)
+       call sim%propagator%operatorHE(0.5_f64*sim%delta_t)
        call sim%propagator%operatorHB(sim%delta_t)
+       call sim%propagator%operatorHE(0.5_f64*sim%delta_t)
+       call sim%propagator%operatorHf(0.5_f64*sim%delta_t)
 
        ! Diagnostics
-       !TODO
        if (sim%rank == 0) then
-          eenergy = sum(sim%propagator%efield_dofs(:,1)**2)*&
-               sim%mesh%delta_eta
+          print*, 'Iteration=', j 
+          ! Compute fields at grid points from dofs
+          sim%propagator%efield(:,1) = eval_uniform_periodic_spline_curve(sim%degree_smoother-1, &
+               sim%propagator%efield_dofs(:,1))
+          sim%propagator%efield(:,2) = eval_uniform_periodic_spline_curve(sim%degree_smoother, &
+               sim%propagator%efield_dofs(:,2))
+          sim%propagator%bfield = eval_uniform_periodic_spline_curve(sim%degree_smoother-1, &
+               sim%propagator%bfield_dofs)
+
+          !eenergy = sum(sim%propagator%efield(:,1)**2)*&
+          !     sim%mesh%delta_eta
           write(th_diag_id,'(f12.5,2g20.12,2g20.12,2g20.12)' ) &
                real(j,f64)*sim%delta_t,  &
-               sum(sim%propagator%efield_dofs(:,1)**2)*sim%mesh%delta_eta, &
-               sum(sim%propagator%efield_dofs(:,2)**2)*sim%mesh%delta_eta, &
+               sum(sim%propagator%efield(:,1)**2)*sim%mesh%delta_eta, &
+               sum(sim%propagator%efield(:,2)**2)*sim%mesh%delta_eta, &
                sum(sim%propagator%bfield**2)*sim%mesh%delta_eta
        end if
     end do
     
+  contains
+    function beta_cos_k(x)
+      sll_real64             :: beta_cos_k
+      sll_real64, intent(in) :: x
 
+      beta_cos_k = sim%beta * cos(2*sll_pi*x/sim%domain(3)) 
+    end function beta_cos_k
   end subroutine run_pic_1d2v_vm
 
 !------------------------------------------------------------------------------!
