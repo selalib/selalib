@@ -12,6 +12,7 @@ program box_spline_tester
 #include "sll_assert.h"
 
   use sll_box_splines
+  use hex_pre_filters
   implicit none
 
   ! Variable to check is successful. By default it is the case.
@@ -28,6 +29,9 @@ program box_spline_tester
   sll_int32    :: i
   sll_real64   :: x1
   sll_real64   :: x2
+  sll_real64   :: somme
+  sll_real64   :: val
+  sll_real64, dimension(:), allocatable :: filters
   sll_real64, dimension(:), allocatable :: f
   sll_real64, dimension(:), allocatable :: dxf
   sll_real64, dimension(:), allocatable :: dyf
@@ -98,6 +102,7 @@ program box_spline_tester
   degree = 1
   rule = 1
   call write_all_django_files(num_cells, degree, rule)
+  print *, ""
   print *, "*********** wrote all django files ***********"
   print *, "   - number of cells    : ", num_cells
   print *, "   - degree of splines  :", degree
@@ -120,5 +125,21 @@ program box_spline_tester
   ! end do
   ! print *, sum(f)
   ! call write_field_hex_mesh_xmf(mesh, f, "chi3")
+
+
+  ! Testing pre-filter:
+  degree = 1
+  print *, ""
+  print *, " ********** Testing the prefilters ********"
+  print *, " ***************** PFIR *******************"
+  print *, " Degree = ", degree
+  somme = 0._f64
+  call pre_filter_pfir(mesh, degree, filters)
+  do i=1, 3*(degree+1)*(degree)+1
+     val = filters(i)
+     somme = somme + val
+     print *, "     ", i, " ---->", val
+  end do
+  print *, "     sum =", somme
 
 end program box_spline_tester

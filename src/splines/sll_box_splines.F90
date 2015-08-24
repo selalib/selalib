@@ -149,22 +149,8 @@ contains  ! ****************************************************************
     num_pts_radius = 3*deg*(deg+1) + 1
 
     ! Create a table for the filter values and fill it:
-    SLL_ALLOCATE(filter_array(num_pts_radius), ierr)
-    do k = 1, num_pts_radius
-       select case(deg)
-       case(2)
-          filter_array(k) = pre_filter_pfir(spline%mesh, k, deg)
-       case(3)
-          filter_array(k) = pre_filter_int(spline%mesh, k, deg)
-       case(4)
-          filter_array(k) = pre_filter_pfir(spline%mesh, k, deg)
-       case default
-          filter = 0._f64
-          print *, "Error in compute_coeff_box_spline_2d_diri():"
-          print *, "       Filter not yet defined"
-          STOP
-       end select
-    end do
+
+    call pre_filter_pfir(spline%mesh, deg, filter_array)
     
     do i = 1, num_pts_tot
 
