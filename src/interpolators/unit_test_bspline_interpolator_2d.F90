@@ -39,9 +39,9 @@ print *, '              Dirichlet'
 print *, '***********************************************************'
   
 do j=1,NPTS2
-do i=1,NPTS1
-  y(i,j)  = f(X1MIN+(i-1)*h1,X2MIN+(j-1)*h2)
-end do
+  do i=1,NPTS1
+    y(i,j)  = f(X1MIN+(i-1)*h1,X2MIN+(j-1)*h2)
+  end do
 end do
   
 interpolator => new_bspline_interpolator_2d( &
@@ -51,10 +51,14 @@ interpolator => new_bspline_interpolator_2d( &
   X1MAX,                                     &
   X2MIN,                                     &
   X2MAX,                                     &
+  SPL_DEG1,                                  &
+  SPL_DEG2,                                  &
   SLL_DIRICHLET,                             &
   SLL_DIRICHLET)
 
+
 call interpolator%compute_interpolants(y)
+stop
   
 normL2 = 0.0_f64
 normH1 = 0.0_f64

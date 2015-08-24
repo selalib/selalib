@@ -41,9 +41,11 @@ type, extends(sll_interpolator_2d_base), public :: sll_bspline_interpolator_2d
 
   sll_int32                      :: npts1    !< Number of points along x direction
   sll_int32                      :: npts2    !< Number of points along y direction
-  type(sll_bspline_2D), pointer  :: spline   !< The spline object to store coefficients
-  sll_int32                      :: bc_type1 !< Boundady condition for x
-  sll_int32                      :: bc_type2 !< Boundary condition for y
+  type(sll_bspline_2d), pointer  :: spline   !< The spline object to store coefficients
+  sll_int32                      :: spline_degree1 !< Boundady condition for x
+  sll_int32                      :: spline_degree2 !< Boundary condition for y
+  sll_int32                      :: bc_type1       !< Boundady condition for x
+  sll_int32                      :: bc_type2       !< Boundary condition for y
   sll_real64, pointer            :: interpolation_points(:,:) !< positions
 
 contains
@@ -78,7 +80,6 @@ end type sll_bspline_interpolator_2d
 type :: sll_bspline_interpolator_2d_ptr
   type(sll_bspline_interpolator_2d), pointer :: interp
 end type sll_bspline_interpolator_2d_ptr
-
   
 !> Deallocate the interpolator object
 interface sll_delete
@@ -95,7 +96,7 @@ contains
 !PN    call sll_delete(interpolator%spline)
   end subroutine delete_bspline_interpolator_2d
   
-  !> PLEASE ADD DOCUMENTATION
+  !> Create a pointer to a 2d interpolator using bsplines.
   function new_bspline_interpolator_2d( &
     npts1,                              &
     npts2,                              &
@@ -103,6 +104,8 @@ contains
     eta1_max,                           &
     eta2_min,                           &
     eta2_max,                           &
+    spline_degree1,                     &
+    spline_degree2,                     &
     eta1_bc_type,                       &
     eta2_bc_type,                       &
     const_eta1_min_slope,               &
@@ -122,8 +125,10 @@ contains
     sll_real64,               intent(in)           :: eta1_max
     sll_real64,               intent(in)           :: eta2_min
     sll_real64,               intent(in)           :: eta2_max
-    sll_int32,                intent(in), optional :: eta1_bc_type
-    sll_int32,                intent(in), optional :: eta2_bc_type
+    sll_int32,                intent(in)           :: spline_degree1
+    sll_int32,                intent(in)           :: spline_degree2
+    sll_int32,                intent(in)           :: eta1_bc_type
+    sll_int32,                intent(in)           :: eta2_bc_type
     sll_real64,               intent(in), optional :: const_eta1_min_slope
     sll_real64,               intent(in), optional :: const_eta1_max_slope
     sll_real64,               intent(in), optional :: const_eta2_min_slope
@@ -143,6 +148,8 @@ contains
       eta1_max,                   &
       eta2_min,                   &
       eta2_max,                   &
+      spline_degree1,             &
+      spline_degree2,             &
       eta1_bc_type,               &
       eta2_bc_type,               &
       const_eta1_min_slope,       &
@@ -154,7 +161,7 @@ contains
       eta2_min_slopes,            &
       eta2_max_slopes )
      
-  end function  new_bspline_interpolator_2d
+  end function new_bspline_interpolator_2d
 
   subroutine initialize_bs2d_interpolator( &
     interpolator,                          &
@@ -164,6 +171,8 @@ contains
     eta1_max,                              &
     eta2_min,                              &
     eta2_max,                              &
+    spline_degree1,                        &
+    spline_degree2,                        &
     eta1_bc_type,                          &
     eta2_bc_type,                          &
     const_eta1_min_slope,                  &
@@ -182,6 +191,8 @@ contains
     sll_real64, intent(in)                            :: eta1_max
     sll_real64, intent(in)                            :: eta2_min
     sll_real64, intent(in)                            :: eta2_max
+    sll_int32,  intent(in)                            :: spline_degree1
+    sll_int32,  intent(in)                            :: spline_degree2
     sll_int32,  intent(in),              optional     :: eta1_bc_type
     sll_int32,  intent(in),              optional     :: eta2_bc_type
     sll_real64, intent(in),              optional     :: const_eta1_min_slope
@@ -198,52 +209,47 @@ contains
     interpolator%bc_type1 = eta1_bc_type
     interpolator%bc_type2 = eta2_bc_type
 
-!PN    interpolator%spline => new_bspline_2D( &
-!PN         npts1, &
-!PN         npts2, &
-!PN         eta1_min, &
-!PN         eta1_max, &
-!PN         eta2_min, &
-!PN         eta2_max, &
-!PN         eta1_bc_type, &
-!PN         eta2_bc_type, &
-!PN         const_slope_x1_min=const_eta1_min_slope, &
-!PN         const_slope_x1_max=const_eta1_max_slope, &
-!PN         const_slope_x2_min=const_eta2_min_slope, &
-!PN         const_slope_x2_max=const_eta2_max_slope, &
-!PN         x1_min_slopes=eta1_min_slopes, &
-!PN         x1_max_slopes=eta1_max_slopes, &
-!PN         x2_min_slopes=eta2_min_slopes, &
-!PN         x2_max_slopes=eta2_max_slopes )
+    interpolator%spline => new_bspline_2d( &
+         npts1,                            &
+         spline_degree1,                   &
+         eta1_min,                         &
+         eta1_max,                         &
+         eta1_bc_type,                     &
+         npts2,                            &
+         spline_degree2,                   &
+         eta2_min,                         &
+         eta2_max,                         &
+         eta2_bc_type,                     &
+         const_eta1_min_slope,             &
+         const_eta1_max_slope,             &
+         const_eta2_min_slope,             &
+         const_eta2_max_slope              &
+    )
 
-  end subroutine
+  end subroutine initialize_bs2d_interpolator
 
   subroutine compute_interpolants_bs2d( &
-       interpolator, &
-       data_array, &
-       eta1_coords, &
-       size_eta1_coords, &
-       eta2_coords, &
+       interpolator,                    &
+       data_array,                      &
+       eta1_coords,                     &
+       size_eta1_coords,                &
+       eta2_coords,                     &
        size_eta2_coords )
-    class(sll_bspline_interpolator_2d), intent(inout) :: interpolator
-    sll_real64, dimension(:,:), intent(in) :: data_array
-    sll_real64, dimension(:), intent(in),optional   :: eta1_coords
-    sll_real64, dimension(:), intent(in),optional   :: eta2_coords
-    sll_int32, intent(in), optional                 :: size_eta1_coords
-    sll_int32, intent(in),optional                  :: size_eta2_coords
-    if(present(eta1_coords))then
-      !print *,'#Warning eta1_coords not used'
-    endif
-    if(present(eta2_coords))then
-      !print *,'#Warning eta2_coords not used'
-    endif
-    if(present(size_eta1_coords))then
-      !print *,'#Warning size_eta1_coords not used'
-    endif
-    if(present(size_eta2_coords))then
-      !print *,'#Warning size_eta2_coords not used'
-    endif    
-    call compute_bspline_2D( interpolator%spline, data_array )
+
+    class(sll_bspline_interpolator_2d), intent(inout)        :: interpolator
+    sll_real64, dimension(:,:),         intent(in)           :: data_array
+    sll_real64, dimension(:),           intent(in), optional :: eta1_coords
+    sll_real64, dimension(:),           intent(in), optional :: eta2_coords
+    sll_int32,                          intent(in), optional :: size_eta1_coords
+    sll_int32,                          intent(in), optional :: size_eta2_coords
+
+    if(present(eta1_coords))      print *,'#Warning eta1_coords not used'
+    if(present(eta2_coords))      print *,'#Warning eta2_coords not used'
+    if(present(size_eta1_coords)) print *,'#Warning size_eta1_coords not used'
+    if(present(size_eta2_coords)) print *,'#Warning size_eta2_coords not used'
+
+    call compute_bspline_2d( interpolator%spline, data_array )
+
   end subroutine
 
   function interpolate_value_bs2d( interpolator, eta1, eta2 ) result(val)
@@ -251,7 +257,7 @@ contains
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
-!PN    val = interpolate_value_2D( eta1, eta2, interpolator%spline )
+!PN    val = interpolate_value_2d( eta1, eta2, interpolator%spline )
   end function
 
   function interpolate_deriv1_bs2d( interpolator, eta1, eta2 ) result(val)
@@ -259,7 +265,7 @@ contains
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
-!PN    val = interpolate_x1_derivative_2D(eta1,eta2,interpolator%spline)
+!PN    val = interpolate_x1_derivative_2d(eta1,eta2,interpolator%spline)
   end function
 
   function interpolate_deriv2_bs2d( interpolator, eta1, eta2 ) result(val)
@@ -268,7 +274,7 @@ contains
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
 
-!PN    val = interpolate_x2_derivative_2D(eta1,eta2,interpolator%spline)
+!PN    val = interpolate_x2_derivative_2d(eta1,eta2,interpolator%spline)
 
   end function
 
@@ -328,7 +334,7 @@ contains
 !PN    delta_eta1 = get_x1_delta( this%spline ) !this%spline%x1_delta  
 !PN    delta_eta2 = get_x2_delta( this%spline ) !this%spline%x2_delta  
     
-    call compute_bspline_2D( this%spline, data_in )
+    call compute_bspline_2d( this%spline, data_in )
 
     if(this%bc_type1 == SLL_PERIODIC .and. &
        this%bc_type2 == SLL_PERIODIC ) then
