@@ -17,7 +17,7 @@ sll_int32  :: i, j, k, l
 sll_int32  :: n1, n2, n3, n4
 sll_int32  :: error
 sll_real64 :: x, y, vx, vy, v2, kx, ky, eps
-sll_int32  :: iplot = 0
+sll_int32  :: iplot = 1
 
 mx => new_cartesian_mesh_2d(100,100, 0.0_f64, 12.56_f64, 0.0_f64, 12.56_f64)
 mv => new_cartesian_mesh_2d(64,64,-6.0_f64,6.0_f64,-6.0_f64,6.0_f64)
