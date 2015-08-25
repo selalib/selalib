@@ -435,7 +435,7 @@ use sll_ascii_io
 !          p, &
 !          rho_tn, &
 !          deriv)
-        call compute_derivative_new( &
+        call compute_derivative_mitchell( &
           index1, &
           hex_stencil, &
           num_cells, &
@@ -2377,6 +2377,205 @@ contains
     
     
   end subroutine compute_derivative_new
+
+
+
+  subroutine compute_derivative_mitchell( &
+    index, &
+    stencil, &
+    num_cells, &
+    p, &
+    rho_tn, &
+    deriv)
+    sll_int32, intent(in) :: index(:,:)
+    sll_int32, intent(in) :: stencil(:,:)
+    sll_int32, intent(in) :: num_cells
+    sll_int32, intent(in) :: p
+    sll_real64, intent(in) :: rho_tn(:)
+    sll_real64, intent(out) :: deriv(:,:)
+    
+    sll_int32 :: i
+    sll_int32 :: r_left
+    sll_int32 :: s_left
+    sll_int32 :: r_right
+    sll_int32 :: s_right
+    sll_int32 :: ierr
+    sll_real64, allocatable :: w_left(:)
+    sll_real64, allocatable :: w_right(:)
+    sll_int32 :: num_pts_tot
+    sll_int32 :: j
+    sll_int32 :: ii
+    sll_int32 :: jj
+    sll_real64 :: tmp
+    sll_int32 :: ind
+
+
+
+
+    r_left=-p/2
+    s_left=(p+1)/2
+    SLL_ALLOCATE( w_left(r_left:s_left),ierr )
+    call compute_w_hermite(w_left,r_left,s_left)
+
+
+    r_right=(-p+1)/2
+    s_right=p/2+1
+    SLL_ALLOCATE( w_right(r_right:s_right),ierr )
+    if((2*(p/2)-p)==0)then
+      w_right(r_right:s_right) = w_left(r_left:s_left)
+    else
+      w_right(r_right:s_right) = -w_left(s_left:r_left:-1)
+    endif    
+
+    !print *,'#left',r_left,s_left,w_left
+    !print *,'#right',r_right,s_right,w_right
+    
+    num_pts_tot = 3*num_cells*(num_cells+1)+1
+
+    
+    
+    
+    
+    !on cartesian mesh, we have for p odd
+    ! 9*num_cells storage
+    !f(0,0)
+    !fx(0,0)
+    !fx(1,0)
+    !fy(0,0)
+    !fy(0,1)
+    !fxy(0,0)
+    !fxy(1,0)
+    !fxy(0,1)
+    !fxy(1,1)
+    !dof to add: 7
+    !f(0,1),f(1,0),f(1,1)
+    !fx(0,1),fx(1,1),fy(1,0),fy(1,1)
+    !on cartesian mesh, we have for p even
+    ! 4*num_cells storage
+    !f(0,0)
+    !fx(0,0)
+    !fy(0,0)
+    !fxy(0,0)
+    !dof to add: 12 
+    !f(1,0),fx(1,0),fy(1,0),fxy(1,0)
+    !f(0,1),fx(0,1),fy(0,1),fxy(0,1)
+    !f(1,1),fx(1,1),fy(1,1),fxy(1,1)
+    
+    !on hexagonal grid, we have for p odd
+    ! 13*num_cells storage
+    ! 8 for p and 8 for n
+    !f(0,0) p+n
+    !fr1(0,0) p
+    !fr1(1,0) p
+    !fr3(0,0) p+n
+    !fr3(1,1) p+n
+    !frrp(0,0) p
+    !frrp(1,0) p
+    !frrp(1,1) p
+    !fr2(0,0) n
+    !fr2(0,1) n
+    !frrn(0,0) n
+    !frrn(0,1) n
+    !frrn(1,1) n
+    !dof to add:
+    ! 4 for p and 4 for n
+    !f(1,0) p
+    !f(1,1) p+n
+    !f(0,1) n
+    !fr2(1,0) p
+    !fr2(1,1) p
+    !fr1(0,1) n
+    !fr1(1,1) n
+    !on hexagonal grid, we have for p even
+    ! 7*num_cells storage
+    ! 5 for p and 4 for n
+    !f(0,0) p+n
+    !fr1(0,0) p
+    !fr3(0,0) p+n
+    !frrp(0,0) p
+    !frrp(1,0) p
+    !fr2(0,0) n
+    !frrn(0,0) n
+    !dof to add: 7 for p and 8 for n
+    !f(0,1) n
+    !f(1,0) p
+    !f(1,1) p+n
+    !fr2(0,1) n
+    !fr2(1,0) p
+    !fr2(1,1) p
+    !fr1(0,1) n
+    !fr1(1,0) p
+    !fr1(1,1) n
+    !fr3(1,1) p+n
+    !frrp(1,1) p
+    !frrn(0,1) n
+    !frrn(1,1) n
+    !          x
+    !      x       x
+    !          x
+    !      x       x 
+    !          x
+    ! frrp(0,0) : r13
+    ! frrp(1,0) : -r12
+    ! frrp(1,1) : r23
+    ! frrn(0,0) : r23
+    ! frrn(0,1) : -r12
+    ! frrn(1,1) : r13
+    
+    !for the moment, we use the same storage for p odd
+    ! and even
+
+
+    
+    do i=1,num_pts_tot
+      deriv(1,i) =  rho_tn(i)
+      ii=0
+      
+      tmp=0._f64
+      do j=r_left,s_left
+        ii=ii+1
+        tmp = tmp+w_left(j)*rho_tn(stencil(ii,i))        
+      enddo
+      deriv(2,i) = tmp
+      tmp=0._f64
+      do j=r_right,s_right
+        ii=ii+1
+        tmp = tmp+w_right(j)*rho_tn(stencil(ii,i))        
+      enddo
+      deriv(3,i) = tmp
+
+      tmp=0._f64
+      do j=r_left,s_left
+        ii=ii+1
+        tmp = tmp+w_left(j)*rho_tn(stencil(ii,i))        
+      enddo
+      deriv(4,i) = tmp
+      tmp=0._f64
+      do j=r_right,s_right
+        ii=ii+1
+        tmp = tmp+w_right(j)*rho_tn(stencil(ii,i))        
+      enddo
+      deriv(5,i) = tmp
+
+      tmp=0._f64
+      do j=r_left,s_left
+        ii=ii+1
+        tmp = tmp+w_left(j)*rho_tn(stencil(ii,i))        
+      enddo
+      deriv(6,i) = tmp
+      tmp=0._f64
+      do j=r_right,s_right
+        ii=ii+1
+        tmp = tmp+w_right(j)*rho_tn(stencil(ii,i))        
+      enddo
+      deriv(7,i) = tmp
+            
+    enddo
+    
+        
+    
+    
+  end subroutine compute_derivative_mitchell
 
 
 
