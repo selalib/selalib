@@ -20,11 +20,13 @@ use sll_ascii_io
   sll_int32, parameter :: SLL_HEX_NOTHING = 0 
   sll_int32, parameter :: SLL_HEX_P1 = 1 
   sll_int32, parameter :: SLL_HEX_P1_new = 3 
+  sll_int32, parameter :: SLL_HEX_MITCHELL = 4 
+  sll_int32, parameter :: SLL_HEX_Z9_new = 90 
 
   type(sll_hex_mesh_2d),   pointer        :: mesh
   type(sll_box_spline_2d), pointer        :: spline
   sll_real64, allocatable :: deriv(:,:)
-  sll_real64, allocatable :: deriv_new(:,:)
+  !sll_real64, allocatable :: deriv_new(:,:)
   sll_real64, dimension(:), allocatable :: center_values_tn
   sll_real64, dimension(:), allocatable :: edge_values_tn
   sll_real64, dimension(:), allocatable :: center_values_tn1
@@ -111,8 +113,12 @@ use sll_ascii_io
   sll_real64 :: cosdt
   sll_real64 :: sindt
   sll_int32, allocatable :: index1(:,:)
+  sll_int32, allocatable :: bounds1(:,:)
+  sll_int32, allocatable :: bounds2(:,:)
   sll_real64, allocatable :: positions(:,:)
   sll_real64 :: r_vec(2,2)
+  sll_int32, allocatable :: hex_stencil(:,:)
+  sll_int32 :: size_hex_stencil
 
   namelist /geometry/ &
     center_mesh_x1, &
@@ -259,6 +265,8 @@ use sll_ascii_io
       num_method = SLL_HEX_SPLINES
     case ("SLL_HEX_Z9")
       num_method = SLL_HEX_Z9  
+    case ("SLL_HEX_Z9_new")
+      num_method = SLL_HEX_Z9_new  
     case ("SLL_HEX_Z10")
       num_method = SLL_HEX_Z10  
     case ("SLL_HEX_HCTR")
@@ -273,6 +281,8 @@ use sll_ascii_io
       num_method = SLL_HEX_P1 
     case ("SLL_HEX_P1_new")
       num_method = SLL_HEX_P1_new 
+    case ("SLL_HEX_MITCHELL")
+      num_method = SLL_HEX_MITCHELL 
     case default    
       SLL_ERROR("rotation_2d_hexagonal_hermite", "bad value of num_method_case")  
   end select
@@ -317,9 +327,12 @@ use sll_ascii_io
   
   if(num_method==SLL_HEX_SPLINES)then
     spline => new_box_spline_2d(mesh, SLL_DIRICHLET)
+  else if(num_method==SLL_HEX_MITCHELL)then
+    SLL_ALLOCATE(deriv(13,n_points),ierr)  
+  else if(num_method==SLL_HEX_Z9_new)then
+    SLL_ALLOCATE(deriv(7,n_points),ierr)  
   else
     SLL_ALLOCATE(deriv(6,n_points),ierr)  
-    SLL_ALLOCATE(deriv_new(6,n_points),ierr)  
   endif
   SLL_ALLOCATE(rho_tn(n_points),ierr)
   SLL_ALLOCATE(rho_tn1(n_points),ierr)
@@ -365,8 +378,23 @@ use sll_ascii_io
   ! ----------------------------
 
   SLL_ALLOCATE(index1(2*num_cells+1,2*num_cells+1),ierr) 
-  call get_numerotation_new(mesh,index1) 
+  call get_numerotation_new(mesh,index1)
+  SLL_ALLOCATE(bounds1(2,2*num_cells+1),ierr)
+  call compute_bounds1(index1,bounds1,num_cells) 
+  SLL_ALLOCATE(bounds2(2,2*num_cells+1),ierr)
+  call compute_bounds2(index1,bounds2,num_cells) 
 
+  size_hex_stencil = compute_size_hex_stencil( &
+    index1, &
+    num_cells, &
+    p)
+
+  SLL_ALLOCATE(hex_stencil(size_hex_stencil,n_points),ierr)  
+  call compute_hex_stencil( &
+    index1, &
+    num_cells, &
+    p, &
+    hex_stencil)  
 
   
   ! ----------------------------
@@ -395,7 +423,38 @@ use sll_ascii_io
       case (SLL_HEX_NOTHING)
       case (SLL_HEX_P1)
       case (SLL_HEX_P1_new)
-        call compute_derivative(index1,num_cells,p,rho_tn,deriv_new)
+      case (SLL_HEX_MITCHELL)
+!        call compute_derivative( &
+!          index1, &
+!          bounds1, &
+!          bounds2, &
+!          num_cells, &
+!          p, &
+!          rho_tn, &
+!          deriv)
+        call compute_derivative_new( &
+          index1, &
+          hex_stencil, &
+          num_cells, &
+          p, &
+          rho_tn, &
+          deriv)
+      case (SLL_HEX_Z9_new)
+!        call compute_derivative( &
+!          index1, &
+!          bounds1, &
+!          bounds2, &
+!          num_cells, &
+!          p, &
+!          rho_tn, &
+!          deriv)
+        call compute_derivative_new( &
+          index1, &
+          hex_stencil, &
+          num_cells, &
+          p, &
+          rho_tn, &
+          deriv)
       case default
         call  der_finite_difference( rho_tn, p, mesh%delta, mesh, deriv) 
     end select  
@@ -483,7 +542,23 @@ use sll_ascii_io
           index1, &
           rho_tn, &
           rho_tn1, &
-          positions)        
+          positions)
+      case (SLL_HEX_MITCHELL)            
+        call interpolate_mitchell( &
+          radius, &
+          num_cells, &
+          index1, &
+          deriv, &
+          rho_tn1, &
+          positions)
+      case (SLL_HEX_Z9_new)            
+        call interpolate_z9_new( &
+          radius, &
+          num_cells, &
+          index1, &
+          deriv, &
+          rho_tn1, &
+          positions)
       case default
         do i=1, n_points
           x = mesh%cartesian_coord(1,i)
@@ -1585,40 +1660,351 @@ contains
     
   end subroutine interpolate_p1_new
 
-  subroutine compute_derivative(index,num_cells,p,rho_tn,deriv)
+  subroutine compute_bounds1( &
+    index, &
+    bounds1, &
+    num_cells)
+    sll_int32, intent(in) :: index(:,:)
+    sll_int32, intent(out) :: bounds1(:,:)
+    sll_int32, intent(in) :: num_cells
+    sll_int32 :: i
+    sll_int32 :: j
+
+    do j=-num_cells,num_cells
+      i=-num_cells
+      do while(index1(num_cells+1+i,num_cells+1+j)==0)
+        i=i+1
+      enddo
+      bounds1(1,j+num_cells+1) = i
+      do while((i<=num_cells-1).and.(index1(num_cells+1+i,num_cells+1+j)/=0))
+        i=i+1
+      enddo
+      if((i==num_cells).and.(index1(num_cells+1+i,num_cells+1+j)/=0))then
+        i=i+1
+      endif
+      i=i-1
+      bounds1(2,j+num_cells+1) = i      
+    enddo
+
+
+
+  end subroutine compute_bounds1
+
+
+  subroutine compute_bounds2( &
+    index, &
+    bounds2, &
+    num_cells)
+    sll_int32, intent(in) :: index(:,:)
+    sll_int32, intent(out) :: bounds2(:,:)
+    sll_int32, intent(in) :: num_cells
+    sll_int32 :: i
+    sll_int32 :: j
+
+    do i=-num_cells,num_cells
+      j=-num_cells
+      do while(index1(num_cells+1+i,num_cells+1+j)==0)
+        j=j+1
+      enddo
+      bounds2(1,i+num_cells+1) = j
+      do while((j<=num_cells-1).and.(index1(num_cells+1+i,num_cells+1+j)/=0))
+        j=j+1
+      enddo
+      if((j==num_cells).and.(index1(num_cells+1+i,num_cells+1+j)/=0))then
+        j=j+1
+      endif
+      j=j-1
+      bounds2(2,i+num_cells+1) = j      
+    enddo
+
+
+
+  end subroutine compute_bounds2
+  
+  
+  subroutine compute_hex_coord(index,num_cells,hex_coord)
+    sll_int32, intent(in) :: index(:,:)
+    sll_int32, intent(in) :: num_cells
+    sll_int32, intent(out) :: hex_coord(:,:)
+    
+    sll_int32 :: i
+    sll_int32 :: j
+    sll_int32 :: num_pts_tot
+    sll_int32 :: ind
+
+    num_pts_tot = 3*num_cells*(num_cells+1)+1
+    
+    
+    do j=1,2*num_cells+1
+      do i=1,2*num_cells+1
+        ind = index(i,j)
+        if(ind/=0)then
+          hex_coord(1,ind) = i
+          hex_coord(2,ind) = j
+        endif
+      enddo    
+    enddo
+    
+    
+  end subroutine compute_hex_coord
+  
+  function compute_size_hex_stencil( &
+    index, &
+    num_cells, &
+    p) &
+    result(res)
     sll_int32, intent(in) :: index(:,:)
     sll_int32, intent(in) :: num_cells
     sll_int32, intent(in) :: p
+    sll_int32 :: res
+
+    sll_int32 :: r_left
+    sll_int32 :: s_left
+    sll_int32 :: r_right
+    sll_int32 :: s_right
+
+    r_left=-p/2
+    s_left=(p+1)/2
+    r_right=(-p+1)/2
+    s_right=p/2+1
+
+    res = s_left-r_left+1        
+    res = res+s_right-r_right+1
+    res = res*3
+    
+  end function compute_size_hex_stencil
+
+  subroutine compute_hex_stencil( &
+    index, &
+    num_cells, &
+    p, &
+    stencil)
+    sll_int32, intent(in) :: index(:,:)
+    sll_int32, intent(in) :: num_cells
+    sll_int32, intent(in) :: p
+    sll_int32, intent(out) :: stencil(:,:)
+        
+    
+    sll_int32 :: r_left
+    sll_int32 :: s_left
+    sll_int32 :: r_right
+    sll_int32 :: s_right
+    sll_int32 :: r
+    sll_int32 :: s
+    sll_int32 :: num_pts_tot
+    sll_int32, allocatable :: bounds1(:,:)
+    sll_int32, allocatable :: hex_coord(:,:)
+    sll_int32 :: ierr
+    sll_int32 :: hex1
+    sll_int32 :: hex2
+    sll_int32 :: ii 
+    sll_int32 :: hex1_loc
+    sll_int32 :: hex2_loc
+    sll_int32 :: j
+    sll_int32 :: num
+    sll_int32 :: jj
+    sll_int32 :: tmp
+    sll_int32 :: k
+    sll_int32 :: a1(6)
+    sll_int32 :: a2(6)
+    sll_int32 :: r_tab(6)
+    sll_int32 :: s_tab(6)
+ 
+
+    num_pts_tot = 3*num_cells*(num_cells+1)+1
+
+    SLL_ALLOCATE(bounds1(2,2*num_cells+1),ierr) 
+    call compute_bounds1(index,bounds1,num_cells) 
+    SLL_ALLOCATE(hex_coord(2,num_pts_tot),ierr) 
+    call compute_hex_coord(index,num_cells,hex_coord)
+
+    r_left=-p/2
+    s_left=(p+1)/2
+    r_right=(-p+1)/2
+    s_right=p/2+1
+    !r = min(r_left,r_right)
+    !s = max(s_left,s_right)
+    
+    a1(1) = 1
+    a2(1) = 0
+    r_tab(1) = r_left
+    s_tab(1) = s_left
+    a1(2) = 1
+    a2(2) = 0
+    r_tab(2) = r_right
+    s_tab(2) = s_right
+    a1(3) = 0
+    a2(3) = 1
+    r_tab(3) = r_left
+    s_tab(3) = s_left
+    a1(4) = 0
+    a2(4) = 1
+    r_tab(4) = r_right
+    s_tab(4) = s_right
+    a1(5) = 1
+    a2(5) = 1
+    r_tab(5) = r_left
+    s_tab(5) = s_left
+    a1(6) = 1
+    a2(6) = 1
+    r_tab(6) = r_right
+    s_tab(6) = s_right
+    
+
+    do i=1,num_pts_tot
+      hex1 = hex_coord(1,i)  
+      hex2 = hex_coord(2,i)
+      ii=0
+      
+      do k=1,6
+        do j=r_tab(k),s_tab(k)
+          hex1_loc = hex1+a1(k)*j
+          if(hex1_loc<1)then
+            hex1_loc = 1
+          endif
+          if(hex1_loc>2*num_cells+1)then
+            hex1_loc = 2*num_cells+1
+          endif
+          hex2_loc = hex2+a2(k)*j
+          if(hex2_loc<1)then
+            hex2_loc = 1
+          endif
+          if(hex2_loc>2*num_cells+1)then
+            hex2_loc = 2*num_cells+1
+          endif
+          ii=ii+1
+          stencil(ii,i) = index(hex1_loc,hex2_loc)          
+        enddo
+        ii=ii-(s_tab(k)-r_tab(k)+1)
+        num=0
+        do while (stencil(ii,i)==0)
+          ii=ii+1
+          num=num+1
+        enddo
+        tmp = stencil(ii,i)
+        !ii=ii-(s_tab(k)-r_tab(k)+1)
+        do jj=1,num
+          !stencil(ii+jj-1,i) = tmp
+          ii=ii-1
+          stencil(ii,i) = tmp
+        enddo
+        ii=ii+(s_tab(k)-r_tab(k)+1)
+        num = 0
+        do while (stencil(ii,i)==0)
+          ii=ii-1
+          num=num+1
+        enddo
+        tmp = stencil(ii,i)
+        do jj=1,num
+          ii=ii+1
+          stencil(ii,i) = tmp
+        enddo
+      enddo  
+    enddo
+
+!    do j=-num_cells,num_cells
+!      ii=0
+!      do i=bounds1(1,j+num_cells+1),bounds1(2,j+num_cells+1)
+!        ii=ii+1
+!        bufin1(ii) = rho_tn(index1(num_cells+1+i,num_cells+1+j))  
+!      enddo
+!      do i=r,0
+!        bufin1(i) = bufin1(1)
+!      enddo
+!      do i=ii+1,ii+s
+!        bufin1(i) = bufin1(ii)
+!      enddo
+!      do i=1,ii
+!        tmp=0._f64
+!        do jj = r_left,s_left
+!          tmp = tmp+w_left(jj)*bufin1(i+jj)  
+!        enddo
+!        ind = index1(num_cells+1+i+bounds1(1,j+num_cells+1)-1,num_cells+1+j)
+!        deriv(1,ind) = bufin1(i)
+!        deriv(2,ind) = tmp
+!        tmp=0._f64
+!        do jj = r_right,s_right
+!          tmp = tmp+w_right(jj)*bufin1(i+jj)  
+!        enddo
+!        deriv(3,ind) = tmp        
+!      enddo      
+!    enddo
+
+
+        
+  end subroutine compute_hex_stencil 
+
+  subroutine compute_derivative( &
+    index, &
+    bounds1, &
+    bounds2, &
+    num_cells, &
+    p, &
+    rho_tn, &
+    deriv)
+    sll_int32, intent(in) :: index(:,:)
+    sll_int32, intent(in) :: bounds1(:,:)
+    sll_int32, intent(in) :: bounds2(:,:)
+    sll_int32, intent(in) :: num_cells
+    sll_int32, intent(in) :: p
     sll_real64, intent(in) :: rho_tn(:)
-    sll_real64, intent(in) :: deriv(:,:)
+    sll_real64, intent(out) :: deriv(:,:)
     
     sll_int32 :: i
+    sll_int32 :: r_left
+    sll_int32 :: s_left
+    sll_int32 :: r_right
+    sll_int32 :: s_right
     sll_int32 :: r
     sll_int32 :: s
     sll_int32 :: ierr
     sll_int32 :: p2
-    sll_real64, allocatable :: w(:)
+    sll_real64, allocatable :: w_left(:)
+    sll_real64, allocatable :: w_right(:)
+    sll_int32 :: num_pts_tot
+    !sll_int32, allocatable :: bounds1(:,:)
+    !sll_int32, allocatable :: bounds2(:,:)
+    sll_int32, allocatable :: bounds3(:,:)
+    sll_int32 :: maxi1
+    sll_real64, allocatable :: bufin1(:)
+    sll_real64, allocatable :: bufout1(:)
+    sll_int32 :: j
+    sll_int32 :: ii
+    sll_int32 :: jj
+    sll_real64 :: tmp
+    sll_int32 :: ind
 
-    p2 = p/2
 
-    if ( (p2)*2 == p ) then !if p is even
-       r = -p2       
-       s = p2
-    else  !if p is odd
-       r = -p2 - 1 ! de-centered to the left      
-       s =  p2 !+ 1 ! de-centered to the right
-    endif
 
-    SLL_ALLOCATE( w(r:s),ierr )
+    r_left=-p/2
+    s_left=(p+1)/2
+    SLL_ALLOCATE( w_left(r_left:s_left),ierr )
+    call compute_w_hermite(w_left,r_left,s_left)
 
-    call compute_w_hermite(w,r,s) 
+
+    r_right=(-p+1)/2
+    s_right=p/2+1
+    SLL_ALLOCATE( w_right(r_right:s_right),ierr )
+    if((2*(p/2)-p)==0)then
+      w_right(r_right:s_right) = w_left(r_left:s_left)
+    else
+      w_right(r_right:s_right) = -w_left(s_left:r_left:-1)
+    endif    
+
+    r = min(r_left,r_right)
+    s = max(s_left,s_right)
+    
+    num_pts_tot = 3*num_cells*(num_cells+1)+1
+
+!    do i=1,num_pts_tot
+!      deriv(1,i) = rho_tn(i)
+!    enddo
     
     
-    print *,'#r,s=',r,s
-    print *,'#w=',w(r:s)    
     
     
     !on cartesian mesh, we have for p odd
+    ! 9*num_cells storage
     !f(0,0)
     !fx(0,0)
     !fx(1,0)
@@ -1628,18 +2014,23 @@ contains
     !fxy(1,0)
     !fxy(0,1)
     !fxy(1,1)
-    !dof to add: f(0,1),f(1,0),f(1,1)
-    ! fx(0,1),fx(1,1),fy(1,0),fy(1,1)
-    !or for p even
+    !dof to add: 7
+    !f(0,1),f(1,0),f(1,1)
+    !fx(0,1),fx(1,1),fy(1,0),fy(1,1)
+    !on cartesian mesh, we have for p even
+    ! 4*num_cells storage
     !f(0,0)
     !fx(0,0)
     !fy(0,0)
     !fxy(0,0)
-    !dof to add: f(1,0),fx(1,0),fy(1,0),fxy(1,0)
+    !dof to add: 12 
+    !f(1,0),fx(1,0),fy(1,0),fxy(1,0)
     !f(0,1),fx(0,1),fy(0,1),fxy(0,1)
     !f(1,1),fx(1,1),fy(1,1),fxy(1,1)
     
-    !on hexagonal grid, we have for odd p
+    !on hexagonal grid, we have for p odd
+    ! 13*num_cells storage
+    ! 8 for p and 8 for n
     !f(0,0) p+n
     !fr1(0,0) p
     !fr1(1,0) p
@@ -1651,9 +2042,10 @@ contains
     !fr2(0,0) n
     !fr2(0,1) n
     !frrn(0,0) n
-    !frrn(1,0) n
+    !frrn(0,1) n
     !frrn(1,1) n
     !dof to add:
+    ! 4 for p and 4 for n
     !f(1,0) p
     !f(1,1) p+n
     !f(0,1) n
@@ -1661,8 +2053,831 @@ contains
     !fr2(1,1) p
     !fr1(0,1) n
     !fr1(1,1) n
+    !on hexagonal grid, we have for p even
+    ! 7*num_cells storage
+    ! 5 for p and 4 for n
+    !f(0,0) p+n
+    !fr1(0,0) p
+    !fr3(0,0) p+n
+    !frrp(0,0) p
+    !frrp(1,0) p
+    !fr2(0,0) n
+    !frrn(0,0) n
+    !dof to add: 7 for p and 8 for n
+    !f(0,1) n
+    !f(1,0) p
+    !f(1,1) p+n
+    !fr2(0,1) n
+    !fr2(1,0) p
+    !fr2(1,1) p
+    !fr1(0,1) n
+    !fr1(1,0) p
+    !fr1(1,1) n
+    !fr3(1,1) p+n
+    !frrp(1,1) p
+    !frrn(0,1) n
+    !frrn(1,1) n
+    !          x
+    !      x       x
+    !          x
+    !      x       x 
+    !          x
+    ! frrp(0,0) : r13
+    ! frrp(1,0) : -r12
+    ! frrp(1,1) : r23
+    ! frrn(0,0) : r23
+    ! frrn(0,1) : -r12
+    ! frrn(1,1) : r13
+    
+    !for the moment, we use the same storage for p odd
+    ! and even
+
+
+    !SLL_ALLOCATE(bounds1(2,2*num_cells+1),ierr) 
+    
+!    maxi1 = 0
+!    do j=-num_cells,num_cells
+!      maxi1 = max(maxi1,bounds1(2,j)-bounds1(1,j)+1)
+!    enddo
+    
+    maxi1 = 2*num_cells+1
+    
+    !print *,'#maxi1=',maxi1
+    
+    !return
+    
+    SLL_ALLOCATE(bufin1(r:maxi1+s),ierr)
+    SLL_ALLOCATE(bufout1(maxi1),ierr)
+
+    !deriv = 0._f64
+    
+        
+    do j=-num_cells,num_cells
+      ii=0
+      do i=bounds1(1,j+num_cells+1),bounds1(2,j+num_cells+1)
+        ii=ii+1
+        bufin1(ii) = rho_tn(index1(num_cells+1+i,num_cells+1+j))  
+      enddo
+      do i=r,0
+        bufin1(i) = bufin1(1)
+      enddo
+      do i=ii+1,ii+s
+        bufin1(i) = bufin1(ii)
+      enddo
+      do i=1,ii
+        tmp=0._f64
+        do jj = r_left,s_left
+          tmp = tmp+w_left(jj)*bufin1(i+jj)  
+        enddo
+        ind = index1(num_cells+1+i+bounds1(1,j+num_cells+1)-1,num_cells+1+j)
+        deriv(1,ind) = bufin1(i)
+        deriv(2,ind) = tmp
+        tmp=0._f64
+        do jj = r_right,s_right
+          tmp = tmp+w_right(jj)*bufin1(i+jj)  
+        enddo
+        deriv(3,ind) = tmp        
+      enddo      
+    enddo
+
+
+    do i=-num_cells,num_cells
+      ii=0
+      do j=bounds2(1,i+num_cells+1),bounds2(2,i+num_cells+1)
+        ii=ii+1
+        bufin1(ii) = rho_tn(index1(num_cells+1+i,num_cells+1+j))  
+      enddo
+      do j=r,0
+        bufin1(j) = bufin1(1)
+      enddo
+      do j=ii+1,ii+s
+        bufin1(j) = bufin1(ii)
+      enddo
+      do j=1,ii
+        tmp=0._f64
+        do jj = r_left,s_left
+          tmp = tmp+w_left(jj)*bufin1(j+jj)  
+        enddo
+        ind = index1(num_cells+1+i,num_cells+1+j+bounds2(1,i+num_cells+1)-1)
+        !deriv(1,ind) = bufin1(j)
+        deriv(4,ind) = tmp
+        tmp=0._f64
+        do jj = r_right,s_right
+          tmp = tmp+w_right(jj)*bufin1(j+jj)  
+        enddo
+        deriv(5,ind) = tmp        
+      enddo      
+    enddo
+
+
+
+    
+    
     
     
   end subroutine compute_derivative
+
+
+  subroutine compute_derivative_new( &
+    index, &
+    stencil, &
+    num_cells, &
+    p, &
+    rho_tn, &
+    deriv)
+    sll_int32, intent(in) :: index(:,:)
+    sll_int32, intent(in) :: stencil(:,:)
+    sll_int32, intent(in) :: num_cells
+    sll_int32, intent(in) :: p
+    sll_real64, intent(in) :: rho_tn(:)
+    sll_real64, intent(out) :: deriv(:,:)
+    
+    sll_int32 :: i
+    sll_int32 :: r_left
+    sll_int32 :: s_left
+    sll_int32 :: r_right
+    sll_int32 :: s_right
+    sll_int32 :: ierr
+    sll_real64, allocatable :: w_left(:)
+    sll_real64, allocatable :: w_right(:)
+    sll_int32 :: num_pts_tot
+    sll_int32 :: j
+    sll_int32 :: ii
+    sll_int32 :: jj
+    sll_real64 :: tmp
+    sll_int32 :: ind
+
+
+
+
+    r_left=-p/2
+    s_left=(p+1)/2
+    SLL_ALLOCATE( w_left(r_left:s_left),ierr )
+    call compute_w_hermite(w_left,r_left,s_left)
+
+
+    r_right=(-p+1)/2
+    s_right=p/2+1
+    SLL_ALLOCATE( w_right(r_right:s_right),ierr )
+    if((2*(p/2)-p)==0)then
+      w_right(r_right:s_right) = w_left(r_left:s_left)
+    else
+      w_right(r_right:s_right) = -w_left(s_left:r_left:-1)
+    endif    
+
+    !print *,'#left',r_left,s_left,w_left
+    !print *,'#right',r_right,s_right,w_right
+    
+    num_pts_tot = 3*num_cells*(num_cells+1)+1
+
+    
+    
+    
+    
+    !on cartesian mesh, we have for p odd
+    ! 9*num_cells storage
+    !f(0,0)
+    !fx(0,0)
+    !fx(1,0)
+    !fy(0,0)
+    !fy(0,1)
+    !fxy(0,0)
+    !fxy(1,0)
+    !fxy(0,1)
+    !fxy(1,1)
+    !dof to add: 7
+    !f(0,1),f(1,0),f(1,1)
+    !fx(0,1),fx(1,1),fy(1,0),fy(1,1)
+    !on cartesian mesh, we have for p even
+    ! 4*num_cells storage
+    !f(0,0)
+    !fx(0,0)
+    !fy(0,0)
+    !fxy(0,0)
+    !dof to add: 12 
+    !f(1,0),fx(1,0),fy(1,0),fxy(1,0)
+    !f(0,1),fx(0,1),fy(0,1),fxy(0,1)
+    !f(1,1),fx(1,1),fy(1,1),fxy(1,1)
+    
+    !on hexagonal grid, we have for p odd
+    ! 13*num_cells storage
+    ! 8 for p and 8 for n
+    !f(0,0) p+n
+    !fr1(0,0) p
+    !fr1(1,0) p
+    !fr3(0,0) p+n
+    !fr3(1,1) p+n
+    !frrp(0,0) p
+    !frrp(1,0) p
+    !frrp(1,1) p
+    !fr2(0,0) n
+    !fr2(0,1) n
+    !frrn(0,0) n
+    !frrn(0,1) n
+    !frrn(1,1) n
+    !dof to add:
+    ! 4 for p and 4 for n
+    !f(1,0) p
+    !f(1,1) p+n
+    !f(0,1) n
+    !fr2(1,0) p
+    !fr2(1,1) p
+    !fr1(0,1) n
+    !fr1(1,1) n
+    !on hexagonal grid, we have for p even
+    ! 7*num_cells storage
+    ! 5 for p and 4 for n
+    !f(0,0) p+n
+    !fr1(0,0) p
+    !fr3(0,0) p+n
+    !frrp(0,0) p
+    !frrp(1,0) p
+    !fr2(0,0) n
+    !frrn(0,0) n
+    !dof to add: 7 for p and 8 for n
+    !f(0,1) n
+    !f(1,0) p
+    !f(1,1) p+n
+    !fr2(0,1) n
+    !fr2(1,0) p
+    !fr2(1,1) p
+    !fr1(0,1) n
+    !fr1(1,0) p
+    !fr1(1,1) n
+    !fr3(1,1) p+n
+    !frrp(1,1) p
+    !frrn(0,1) n
+    !frrn(1,1) n
+    !          x
+    !      x       x
+    !          x
+    !      x       x 
+    !          x
+    ! frrp(0,0) : r13
+    ! frrp(1,0) : -r12
+    ! frrp(1,1) : r23
+    ! frrn(0,0) : r23
+    ! frrn(0,1) : -r12
+    ! frrn(1,1) : r13
+    
+    !for the moment, we use the same storage for p odd
+    ! and even
+
+
+    
+    do i=1,num_pts_tot
+      deriv(1,i) =  rho_tn(i)
+      ii=0
+      
+      tmp=0._f64
+      do j=r_left,s_left
+        ii=ii+1
+        tmp = tmp+w_left(j)*rho_tn(stencil(ii,i))        
+      enddo
+      deriv(2,i) = tmp
+      tmp=0._f64
+      do j=r_right,s_right
+        ii=ii+1
+        tmp = tmp+w_right(j)*rho_tn(stencil(ii,i))        
+      enddo
+      deriv(3,i) = tmp
+
+      tmp=0._f64
+      do j=r_left,s_left
+        ii=ii+1
+        tmp = tmp+w_left(j)*rho_tn(stencil(ii,i))        
+      enddo
+      deriv(4,i) = tmp
+      tmp=0._f64
+      do j=r_right,s_right
+        ii=ii+1
+        tmp = tmp+w_right(j)*rho_tn(stencil(ii,i))        
+      enddo
+      deriv(5,i) = tmp
+
+      tmp=0._f64
+      do j=r_left,s_left
+        ii=ii+1
+        tmp = tmp+w_left(j)*rho_tn(stencil(ii,i))        
+      enddo
+      deriv(6,i) = tmp
+      tmp=0._f64
+      do j=r_right,s_right
+        ii=ii+1
+        tmp = tmp+w_right(j)*rho_tn(stencil(ii,i))        
+      enddo
+      deriv(7,i) = tmp
+            
+    enddo
+    
+        
+    
+    
+  end subroutine compute_derivative_new
+
+
+
+
+  subroutine interpolate_mitchell( &
+    radius, &
+    num_cells, &
+    index1, &
+    deriv, &
+    rho_tn1, &
+    positions, &
+    r )
+    sll_real64, intent(in) :: radius
+    sll_int32, intent(in) :: num_cells
+    sll_int32, intent(in) :: index1(:,:)
+    sll_real64, intent(in) :: deriv(:,:)
+    sll_real64, intent(out) :: rho_tn1(:)
+    sll_real64, intent(in) :: positions(:,:)
+    sll_real64, intent(in), optional :: r(2,2)
+    !sll_real64, intent(in) :: dt
+    
+    sll_int32 :: i
+    sll_real64 :: xx
+    sll_real64 :: yy
+    sll_real64 :: det
+    sll_real64 :: r11
+    sll_real64 :: r12
+    sll_real64 :: r21
+    sll_real64 :: r22
+    sll_real64 :: h1
+    sll_real64 :: h2
+    sll_int32 :: i1
+    sll_int32 :: i2
+    sll_int32 :: i3
+    sll_int32 :: ii
+    sll_int32 :: jj
+    sll_real64 :: a2
+    sll_int32 :: s
+    sll_real64 :: freedom(12)
+    sll_real64 :: base(12)
+    sll_real64 :: lam(3)
+    sll_real64 :: f
+    sll_real64 :: r1_x1
+    sll_real64 :: r1_x2
+    sll_real64 :: r2_x1
+    sll_real64 :: r2_x2
+    sll_real64 :: delta
+    sll_int32 :: num_pts_tot
+    sll_real64 :: x2p
+    sll_real64 :: x3p
+    sll_real64 :: x2n
+    sll_real64 :: x3n
+    sll_real64 :: y2p
+    sll_real64 :: y3p
+    sll_real64 :: y2n
+    sll_real64 :: y3n
+    
+
+
+    delta = radius/real(num_cells,f64)
+    r1_x1 = sqrt(3._f64) * 0.5_f64*delta
+    r1_x2 = 0.5_f64*delta
+    r2_x1 = -r1_x1
+    r2_x2 = r1_x2
+
+    if(present(r))then
+    if(abs(r1_x1-r(1,1))>1.e-14)then
+      print *,'#value for r1_x1 not supported'
+      stop
+    endif
+    if(abs(r2_x2-r(2,2))>1.e-14)then
+      print *,'#value for r2_x2 not supported'
+      stop
+    endif
+    if(abs(r1_x2-r(1,2))>1.e-14)then
+      print *,'#value for r1_x2 not supported'
+      stop
+    endif
+    if(abs(r2_x1-r(2,1))>1.e-14)then
+      print *,'#value for r2_x1 not supported'
+      stop
+    endif
+    endif
+    num_pts_tot = 3*num_cells*(num_cells+1)+1
+    det = r1_x1*r2_x2-r1_x2*r2_x1
+    r11 = r2_x2/det
+    r12 = -r2_x1/det
+    r21 = -r1_x2/det
+    r22 = r1_x1/det
+    
+    a2  = 2._f64/(delta**2*sqrt(3._f64))
+    x2p = a2*r1_x1
+    y2p = -a2*r1_x2
+    x3p = -a2*(r1_x1+r2_x1)
+    y3p = a2*(r1_x2+r2_x2)
+
+    x3n = -a2*r2_x1
+    y3n = a2*r2_x2
+    x2n = a2*(r1_x1+r2_x1)
+    y2n = -a2*(r1_x2+r2_x2)
+
+    
+    do i=1,num_pts_tot
+      xx = positions(1,i)
+      yy = positions(2,i)
+      h1 =  xx*r11 + yy*r12
+      h2 =  xx*r21 + yy*r22
+      ii = floor(h1)
+      jj = floor(h2)        
+      h1 = h1-real(ii,f64)
+      h2 = h2-real(jj,f64)
+      if(ii>=num_cells)then
+        ii=num_cells-1
+        h1 = 1._f64
+      endif
+      if(ii<=-num_cells)then
+        ii=-num_cells
+        h1 = 0._f64
+      endif
+      if(jj>=num_cells)then
+        jj=num_cells-1
+        h2 = 1._f64
+      endif
+      if(jj<=-num_cells)then
+        jj=-num_cells
+        h2 = 0._f64
+      endif
+      
+      xx = r1_x1*h1+r2_x1*h2
+      yy = r1_x2*h1+r2_x2*h2
+      i1 = index1(num_cells+1+ii,num_cells+1+jj)
+      if ( xx >= 0._f64 ) then
+        i2 = index1(num_cells+1+ii+1,num_cells+1+jj)          
+        i3 = index1(num_cells+1+ii+1,num_cells+1+jj+1)
+        lam(2) = y3p*xx+x3p*yy
+        lam(3) = y2p*xx+x2p*yy
+      else
+        i2 = index1(num_cells+1+ii+1,num_cells+1+jj+1)
+        i3 = index1(num_cells+1+ii,num_cells+1+jj+1)
+        lam(2) = y3n*xx+x3n*yy
+        lam(3) = y2n*xx+x2n*yy
+      endif
+      freedom = 0._f64
+      if(i1/=0)then
+        freedom(1) = deriv(1,i1)
+      else
+        freedom(1) = 0._f64
+      endif
+      if(i2/=0)then
+        freedom(2) = deriv(1,i2)
+      else
+        freedom(2) = 0._f64
+      endif
+      if(i3/=0)then
+        freedom(3) = deriv(1,i3)
+      else
+        freedom(3) = 0._f64
+      endif
+      lam(1) = 1._f64-lam(2)-lam(3)
+
+      base(1) =  lam(1)**2*(3._f64-2._f64*lam(1)+6._f64*lam(2)*lam(3))      
+      base(2) =  lam(2)**2*(3._f64-2._f64*lam(2)+6._f64*lam(3)*lam(1))      
+      base(3) =  lam(3)**2*(3._f64-2._f64*lam(3)+6._f64*lam(1)*lam(2))      
+      
+      base(4) = lam(1)**2*lam(2)*(1._f64+2._f64*lam(3))
+      base(5) = lam(2)**2*lam(1)*(1._f64+2._f64*lam(3))
+      
+      base(6) = lam(2)**2*lam(3)*(1._f64+2._f64*lam(1))
+      base(7) = lam(3)**2*lam(2)*(1._f64+2._f64*lam(1))
+
+      base(8) = lam(3)**2*lam(1)*(1._f64+2._f64*lam(2))
+      base(9) = lam(1)**2*lam(3)*(1._f64+2._f64*lam(2))
+      
+      base(10) = lam(1)**2*lam(2)*lam(3)
+      base(11) = lam(2)**2*lam(3)*lam(1)
+      base(12) = lam(3)**2*lam(1)*lam(2)
+      
+      !L[0]=p**2*(3-2*p+6*q*r) f(0,0) p+n -> deriv(1,i1)
+      !L[1]=q**2*(3-2*q+6*r*p) f(1,0) p; f(1,1) n -> deriv(1,i2)
+      !L[2]=r**2*(3-2*r+6*p*q) f(1,1) p; f(0,1) n -> deriv(i,i3)
+      !L[3]=p**2*q*(1+2*r)     fr1(0,0) p; fr3(0,0) n 
+      !L[4]=q**2*p*(1+2*r)     fr1(1,0) p; fr3(1,1) n
+      !L[5]=p**2*q**2/24      0
+      !L[6]=q**2*r*(1+2*p)  
+      !L[7]=r**2*q*(1+2*p)
+      !L[8]=q**2*r**2/24)      0
+      !L[9]=r**2*p*(1+2*q)
+      !L[10]=p**2*r*(1+2*q)
+      !L[11]=r**2*p**2/24      0
+      !L[12]=p**2*q*r          frrp(0,0) p; frrn(0,0) n
+      !L[13]=q**2*r*p          frrp(1,0) p; frrn(1,1) n
+      !L[14]=r**2*p*q          frrp(1,1) p; frrn(0,1) n
+      
+      
+      
+      f = 0._f64
+      do s = 1,12
+        f = f + freedom(s)*base(s)
+      enddo
+      rho_tn1(i) = f    
+      !L[0]=p**2*(3-2*p+6*q*r) f(0,0) p+n -> deriv(1,i1)
+      !L[1]=q**2*(3-2*q+6*r*p) f(1,0) p; f(1,1) n -> deriv(1,i2)
+      !L[2]=r**2*(3-2*r+6*p*q) f(1,1) p; f(0,1) n -> deriv(i,i3)
+      !L[3]-p**2*q*(1+2*r)     fr1(0,0) p; fr3(0,0) n 
+      !L[4]=q**2*p*(1+2*r)     fr1(1,0) p; fr3(1,1) n
+      !L[5]-=p**2*q**2/24      0
+      !L[6]=q**2*r*(1+2*p)  
+      !L[7]=r**2*q*(1+2*p)
+      !L[8]=q**2*r**2/24)      0
+      !L[9]=r**2*p*(1+2*q)
+      !L[10]=p**2*r*(1+2*q)
+      !L[11]=r**2*p**2/24      0
+      !L[12]=p**2*q*r          frrp(0,0) p; frrn(0,0) n
+      !L[13]=q**2*r*p          frrp(1,0) p; frrn(1,1) n
+      !L[14]=r**2*p*q          frrp(1,1) p; frrn(0,1) n
+
+
+
+    enddo
+    
+  end subroutine interpolate_mitchell
+
+
+  subroutine interpolate_z9_new( &
+    radius, &
+    num_cells, &
+    index1, &
+    deriv, &
+    rho_tn1, &
+    positions, &
+    r )
+    sll_real64, intent(in) :: radius
+    sll_int32, intent(in) :: num_cells
+    sll_int32, intent(in) :: index1(:,:)
+    sll_real64, intent(in) :: deriv(:,:)
+    sll_real64, intent(out) :: rho_tn1(:)
+    sll_real64, intent(in) :: positions(:,:)
+    sll_real64, intent(in), optional :: r(2,2)
+    !sll_real64, intent(in) :: dt
+    
+    sll_int32 :: i
+    sll_real64 :: xx
+    sll_real64 :: yy
+    sll_real64 :: det
+    sll_real64 :: r11
+    sll_real64 :: r12
+    sll_real64 :: r21
+    sll_real64 :: r22
+    sll_real64 :: h1
+    sll_real64 :: h2
+    sll_int32 :: i1
+    sll_int32 :: i2
+    sll_int32 :: i3
+    sll_int32 :: ii
+    sll_int32 :: jj
+    sll_real64 :: a2
+    sll_int32 :: s
+    sll_real64 :: freedom(9)
+    sll_real64 :: base(9)
+    sll_real64 :: lam(3)
+    sll_real64 :: f
+    sll_real64 :: r1_x1
+    sll_real64 :: r1_x2
+    sll_real64 :: r2_x1
+    sll_real64 :: r2_x2
+    sll_real64 :: delta
+    sll_int32 :: num_pts_tot
+    sll_real64 :: x2p
+    sll_real64 :: x3p
+    sll_real64 :: x2n
+    sll_real64 :: x3n
+    sll_real64 :: y2p
+    sll_real64 :: y3p
+    sll_real64 :: y2n
+    sll_real64 :: y3n
+    
+    sll_real64     :: phi, p05
+    sll_real64     :: l12, l22, l32, ksi1, ksi2, ksi3 
+    sll_real64     :: ksi12, ksi13, ksi21, ksi23, ksi31, ksi32 
+
+    
+
+
+    delta = radius/real(num_cells,f64)
+    r1_x1 = sqrt(3._f64) * 0.5_f64*delta
+    r1_x2 = 0.5_f64*delta
+    r2_x1 = -r1_x1
+    r2_x2 = r1_x2
+
+    if(present(r))then
+    if(abs(r1_x1-r(1,1))>1.e-14)then
+      print *,'#value for r1_x1 not supported'
+      stop
+    endif
+    if(abs(r2_x2-r(2,2))>1.e-14)then
+      print *,'#value for r2_x2 not supported'
+      stop
+    endif
+    if(abs(r1_x2-r(1,2))>1.e-14)then
+      print *,'#value for r1_x2 not supported'
+      stop
+    endif
+    if(abs(r2_x1-r(2,1))>1.e-14)then
+      print *,'#value for r2_x1 not supported'
+      stop
+    endif
+    endif
+    num_pts_tot = 3*num_cells*(num_cells+1)+1
+    det = r1_x1*r2_x2-r1_x2*r2_x1
+    r11 = r2_x2/det
+    r12 = -r2_x1/det
+    r21 = -r1_x2/det
+    r22 = r1_x1/det
+    
+    a2  = 2._f64/(delta**2*sqrt(3._f64))
+    x2p = a2*r1_x1
+    y2p = -a2*r1_x2
+    x3p = -a2*(r1_x1+r2_x1)
+    y3p = a2*(r1_x2+r2_x2)
+
+    x3n = -a2*r2_x1
+    y3n = a2*r2_x2
+    x2n = a2*(r1_x1+r2_x1)
+    y2n = -a2*(r1_x2+r2_x2)
+
+    
+    do i=1,num_pts_tot
+      xx = positions(1,i)
+      yy = positions(2,i)
+      h1 =  xx*r11 + yy*r12
+      h2 =  xx*r21 + yy*r22
+      ii = floor(h1)
+      jj = floor(h2)        
+      h1 = h1-real(ii,f64)
+      h2 = h2-real(jj,f64)
+      if(ii>=num_cells)then
+        ii=num_cells-1
+        h1 = 1._f64
+      endif
+      if(ii<=-num_cells)then
+        ii=-num_cells
+        h1 = 0._f64
+      endif
+      if(jj>=num_cells)then
+        jj=num_cells-1
+        h2 = 1._f64
+      endif
+      if(jj<=-num_cells)then
+        jj=-num_cells
+        h2 = 0._f64
+      endif
+      
+      xx = r1_x1*h1+r2_x1*h2
+      yy = r1_x2*h1+r2_x2*h2
+      i1 = index1(num_cells+1+ii,num_cells+1+jj)
+      if ( xx >= 0._f64 ) then
+        i2 = index1(num_cells+1+ii+1,num_cells+1+jj)          
+        i3 = index1(num_cells+1+ii+1,num_cells+1+jj+1)
+        lam(2) = y3p*xx+x3p*yy
+        lam(3) = y2p*xx+x2p*yy
+      else
+        i2 = index1(num_cells+1+ii+1,num_cells+1+jj+1)
+        i3 = index1(num_cells+1+ii,num_cells+1+jj+1)
+        lam(2) = y3n*xx+x3n*yy
+        lam(3) = y2n*xx+x2n*yy
+      endif
+      freedom = 0._f64
+      if(i1/=0)then
+        freedom(1) = deriv(1,i1)
+      else
+        freedom(1) = 0._f64
+      endif
+      if(i2/=0)then
+        freedom(2) = deriv(1,i2)
+      else
+        freedom(2) = 0._f64
+      endif
+      if(i3/=0)then
+        freedom(3) = deriv(1,i3)
+      else
+        freedom(3) = 0._f64
+      endif
+
+!      if(xx>0._f64)then
+!        if(i1/=0)then
+!          freedom(4) = deriv(2,i1)
+!          freedom(5) = deriv(3,i1)
+!          freedom(8) = deriv(6,i1) 
+!          freedom(9) = deriv(7,i1) 
+!        endif
+!        if(i2/=0)then  
+!          freedom(6) = deriv(4,i2) 
+!          freedom(7) = deriv(5,i2)
+!        endif  
+!      else
+!        if(i1/=0)then
+!          freedom(4) = deriv(6,i1)
+!          freedom(5) = deriv(7,i1)
+!          freedom(8) = deriv(4,i1) 
+!          freedom(9) = deriv(5,i1)       
+!        endif
+!        if(i3/=0)then
+!          freedom(6) = deriv(3,i3) 
+!          freedom(7) = deriv(2,i3)
+!        endif  
+!      endif      
+
+
+      if(xx>0._f64)then
+        if(i1/=0)then
+          freedom(4) = deriv(2,i1)
+          freedom(5) = deriv(6,i1)
+          freedom(7) = -deriv(3,i1)
+          freedom(8) = -deriv(7,i1)            
+        endif
+        if(i2/=0)then  
+          freedom(6) = deriv(4,i2)
+          freedom(9) = -deriv(5,i2) 
+        endif  
+      else
+!        if(i1/=0)then
+!          freedom(4) = deriv(4,i1)
+!          freedom(5) = deriv(6,i1)
+!          freedom(7) = -deriv(5,i1)
+!          freedom(8) = -deriv(7,i1) 
+!        endif
+!        if(i3/=0)then
+!          freedom(6) = -deriv(3,i3) 
+!          freedom(9) = deriv(4,i3)       
+!        endif  
+        if(i1/=0)then
+          freedom(4) = deriv(6,i1)
+          freedom(5) = deriv(4,i1)
+          freedom(7) = -deriv(7,i1)
+          freedom(8) = -deriv(5,i1)
+        endif
+        if(i3/=0)then
+          freedom(6) = -deriv(4,i3)
+          freedom(9) = deriv(3,i3) 
+        endif  
+      endif      
+
+      
+!      if(maxval(abs(freedom))>1e-1.and.i1/=0 .and. i2/=0 .and. i3/=0)then
+!      print *,xx,i1,i2,i3
+!      do s=1,9
+!        print *,s,freedom(s)
+!      enddo
+!      print *,deriv(:,i1)
+!      print *,deriv(:,i2)
+!      print *,deriv(:,i3)
+!       stop
+!      endif
+      
+      lam(1) = 1._f64-lam(2)-lam(3)
+
+      phi = lam(1)*lam(2)*lam(3)  ! "bubble function"
+
+      ksi1 = lam(1)**3 - phi
+      ksi2 = lam(2)**3 - phi
+      ksi3 = lam(3)**3 - phi
+
+      ! optimization variables
+
+      p05 = phi*0.5_f64
+      l12 = lam(1)**2
+      l22 = lam(2)**2
+      l32 = lam(3)**2
+
+      ksi12 = l12*lam(2) + p05
+      ksi13 = l12*lam(3) + p05
+      ksi21 = l22*lam(1) + p05
+      ksi23 = l22*lam(3) + p05
+      ksi31 = l32*lam(1) + p05
+      ksi32 = l32*lam(2) + p05
+
+      base(1) = 3._f64 * l12 - 2._f64*ksi1 
+      base(2) = 3._f64 * l22 - 2._f64*ksi2 
+      base(3) = 3._f64 * l32 - 2._f64*ksi3 
+      base(4) = ksi12 
+      base(5) = ksi13
+      base(6) = ksi21
+      base(7) = ksi23
+      base(8) = ksi31
+      base(9) = ksi32      
+
+!      base(4) = ksi12 
+!      base(5) = ksi21
+!      base(6) = ksi23
+!      base(7) = ksi32
+!      base(8) = ksi13
+!      base(9) = ksi31      
+
+      
+      f = 0._f64
+      do s = 1,9
+        f = f + freedom(s)*base(s)
+      enddo
+      rho_tn1(i) = f    
+    enddo
+    
+  end subroutine interpolate_z9_new
+
+
+
 
 end program rotation_2d_hexagonal
