@@ -403,14 +403,23 @@ end do
 end subroutine compute_df_cic
 
 subroutine compute_df_m4(xp, yp, wp, xmin, xmax, nx, ymin, ymax, ny, df)
-sll_real64, dimension(:), intent(in) :: xp, yp, wp
-sll_real64, intent(in) :: xmin, xmax, ymin, ymax
-sll_int32 :: ip, jp, kp
-sll_real64 :: xt, yt
-sll_int32 :: nx, ny
-sll_real64, dimension(nx,ny), intent(out) :: df
-sll_real64 :: x, cx, cm1x, cm2x, cp1x, cp2x
-sll_real64 :: y, cy, cm1y, cm2y, cp1y, cp2y
+sll_real64, intent(in ) :: xp(:)
+sll_real64, intent(in ) :: yp(:)
+sll_real64, intent(in ) :: wp(:)
+sll_real64, intent(in ) :: xmin
+sll_real64, intent(in ) :: xmax
+sll_int32 , intent(in ) :: nx
+sll_real64, intent(in ) :: ymin
+sll_real64, intent(in ) :: ymax
+sll_int32 , intent(in ) :: ny
+sll_real64, intent(out) :: df(nx,ny)
+
+sll_int32  :: ip, jp, kp
+sll_real64 :: xt, x, cx, cm1x, cm2x, cp1x, cp2x
+sll_real64 :: yt, y, cy, cm1y, cm2y, cp1y, cp2y
+
+! Initialize output array to zero
+df = 0.0_f64
 
 do kp = 1, size(xp)
 
@@ -492,14 +501,19 @@ subroutine distribution_m4_gnuplot(plot_name, x, v, w, &
                              xmin, xmax, nx,     &
                              vmin, vmax, nv, iplot)
 character(len=*), intent(in) :: plot_name
-sll_real64, dimension(:), intent(in) :: x
-sll_real64, dimension(:), intent(in) :: v
-sll_real64, dimension(:), intent(in) :: w
-sll_int32, intent(in) :: nx
-sll_int32, intent(in) :: nv
-sll_int32 :: iplot, error
-sll_real64, dimension(nx,nv) :: df
-sll_real64 :: xmin, xmax, vmin, vmax
+sll_real64,       intent(in) :: x(:)
+sll_real64,       intent(in) :: v(:)
+sll_real64,       intent(in) :: w(:)
+sll_real64,       intent(in) :: xmin
+sll_real64,       intent(in) :: xmax
+sll_int32 ,       intent(in) :: nx
+sll_real64,       intent(in) :: vmin
+sll_real64,       intent(in) :: vmax
+sll_int32 ,       intent(in) :: nv
+sll_int32 ,       intent(in) :: iplot
+
+sll_int32        :: error
+sll_real64       :: df(nx,nv)
 character(len=4) :: fin
 
 call int2string(iplot, fin)
