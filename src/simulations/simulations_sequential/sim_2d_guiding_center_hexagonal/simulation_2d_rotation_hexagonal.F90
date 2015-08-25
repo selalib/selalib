@@ -415,7 +415,10 @@ use sll_ascii_io
     ! ----------------------------
     ! Compute interpolants
     ! ----------------------------
-
+    
+    !rho_tn = 0._f64
+    !rho_tn(n_points/2) = 1._f64
+     
     call cpu_time(time_t0)
     select case (num_method)
       case (SLL_HEX_SPLINES)
@@ -2653,7 +2656,9 @@ contains
     sll_real64     :: phi, p05
     sll_real64     :: l12, l22, l32, ksi1, ksi2, ksi3 
     sll_real64     :: ksi12, ksi13, ksi21, ksi23, ksi31, ksi32 
-
+    
+    !sll_real64 :: err
+    !sll_real64 :: err_loc
     
 
 
@@ -2698,7 +2703,9 @@ contains
     y3n = a2*r2_x2
     x2n = a2*(r1_x1+r2_x1)
     y2n = -a2*(r1_x2+r2_x2)
-
+    
+    !err = 0._f64
+    
     
     do i=1,num_pts_tot
       xx = positions(1,i)
@@ -2811,8 +2818,8 @@ contains
           freedom(8) = -deriv(5,i1)
         endif
         if(i3/=0)then
-          freedom(6) = -deriv(4,i3)
-          freedom(9) = deriv(3,i3) 
+          freedom(6) = -deriv(3,i3)
+          freedom(9) = deriv(2,i3) 
         endif  
       endif      
 
@@ -2855,8 +2862,10 @@ contains
       base(3) = 3._f64 * l32 - 2._f64*ksi3 
       base(4) = ksi12 
       base(5) = ksi13
-      base(6) = ksi21
-      base(7) = ksi23
+      !base(6) = ksi21
+      !base(7) = ksi23
+      base(6) = ksi23
+      base(7) = ksi21
       base(8) = ksi31
       base(9) = ksi32      
 
@@ -2872,9 +2881,30 @@ contains
       do s = 1,9
         f = f + freedom(s)*base(s)
       enddo
-      rho_tn1(i) = f    
+      rho_tn1(i) = f
+      
+      !check solution in P1 case
+!      err_loc = abs(rho_tn1(i) &
+!        -freedom(1)*lam(1)-freedom(2)*lam(2)-freedom(3)*lam(3))
+!      err = max(err,err_loc)
+      
+      !if((maxval(abs(freedom(1:3)))<1.e-10) .and. (err_loc>1e-4))then
+!      if(err_loc>1e-4)then
+!        print *,'#i,err_loc=',i,err_loc
+!        print *,'#lam=',lam
+!        print *,'#freedom=',freedom
+!        print *,'#i1,i2,i3=',i1,i2,i3
+!        print *,'#deriv(:,i1)=',deriv(:,i1)
+!        print *,'#deriv(:,i2)=',deriv(:,i2)
+!        print *,'#deriv(:,i3)=',deriv(:,i3)
+!        print *,'#xx=',xx
+!        !stop
+!      endif
+      
+          
     enddo
     
+    !print *,'#err with p1=',err
   end subroutine interpolate_z9_new
 
 
