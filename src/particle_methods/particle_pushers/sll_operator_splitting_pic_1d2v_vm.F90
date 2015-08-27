@@ -95,7 +95,7 @@ contains
        r_old = xi - real(index_old,f64)
 
        ! Then update particle position:  X_new = X_old + dt * V
-       x_new = this%particle_group%get_x(i_part) + dt * vi
+       x_new = modulo(this%particle_group%get_x(i_part) + dt * vi, this%Lx)
        call this%particle_group%set_x(i_part, x_new)
 
        ! Compute the new box index index_new and normalized position r_old.
@@ -208,7 +208,7 @@ contains
   !> \partial_t f + E_1 \partial_{v_1} f + E_2 \partial_{v_2} f = 0 -> V_new = V_old + dt * E
   !> \partial_t E_1 = 0 -> E_{1,new} = E_{1,old} 
   !> \partial_t E_2 = 0 -> E_{2,new} = E_{2,old}
-  !> \partial_t B + \partial_{x_1} E_2 = 0 => B_new = B_old + dt \partial_{x_1} E_2
+  !> \partial_t B + \partial_{x_1} E_2 = 0 => B_new = B_old - dt \partial_{x_1} E_2
   subroutine operatorHE_pic_1d2v_vm(this, dt)
     class(sll_operator_splitting_pic_1d2v_vm), intent(inout) :: this !< time splitting object 
     sll_real64, intent(in) :: dt   !< time step
@@ -221,7 +221,7 @@ contains
     call this%kernel_smoother_0%evaluate_kernel_function(this%particle_group, &
          this%efield_dofs(:,1), this%efield(:,1))
     call this%kernel_smoother_1%evaluate_kernel_function(this%particle_group, &
-         this%efield_dofs(:,2), this%efield(:,1))
+         this%efield_dofs(:,2), this%efield(:,2))
 
     ! V_new = V_old + dt * E
     do i_part=1,this%particle_group%n_particles
