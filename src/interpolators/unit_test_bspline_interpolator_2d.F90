@@ -53,8 +53,8 @@ interpolator => new_bspline_interpolator_2d( &
   X2MAX,                                     &
   SPL_DEG1,                                  &
   SPL_DEG2,                                  &
-  SLL_DIRICHLET,                             &
-  SLL_DIRICHLET)
+  SLL_PERIODIC,                              &
+  SLL_PERIODIC)
 
 
 call interpolator%compute_interpolants(y)
