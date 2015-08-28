@@ -226,15 +226,16 @@ contains
          const_eta2_max_slope              &
     )
 
+
   end subroutine initialize_bs2d_interpolator
 
   subroutine compute_interpolants_bs2d( &
-       interpolator,                    &
-       data_array,                      &
-       eta1_coords,                     &
-       size_eta1_coords,                &
-       eta2_coords,                     &
-       size_eta2_coords )
+    interpolator,                       &
+    data_array,                         &
+    eta1_coords,                        &
+    size_eta1_coords,                   &
+    eta2_coords,                        &
+    size_eta2_coords )
 
     class(sll_bspline_interpolator_2d), intent(inout)        :: interpolator
     sll_real64, dimension(:,:),         intent(in)           :: data_array
@@ -243,10 +244,10 @@ contains
     sll_int32,                          intent(in), optional :: size_eta1_coords
     sll_int32,                          intent(in), optional :: size_eta2_coords
 
-    if(present(eta1_coords))      print *,'#Warning eta1_coords not used'
-    if(present(eta2_coords))      print *,'#Warning eta2_coords not used'
-    if(present(size_eta1_coords)) print *,'#Warning size_eta1_coords not used'
-    if(present(size_eta2_coords)) print *,'#Warning size_eta2_coords not used'
+    if (present(eta1_coords))      print*, '#Warning eta1_coords not used'
+    if (present(eta2_coords))      print*, '#Warning eta2_coords not used'
+    if (present(size_eta1_coords)) print*, '#Warning size_eta1_coords not used'
+    if (present(size_eta2_coords)) print*, '#Warning size_eta2_coords not used'
 
     call compute_bspline_2d( interpolator%spline, data_array )
 
