@@ -468,13 +468,18 @@ subroutine compute_bspline_2d(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
   else
     call build_system_with_derivative(this%bs1)
   end if
+
   if ( this%bs2%bc_type == SLL_PERIODIC) then
     call build_system(this%bs2)
   else
     call build_system_with_derivative(this%bs2)
   end if
 
-  call update_bspline_2d(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
+  if ( present(sl1_l) .and. present(sl1_r) .and. present(sl2_l) .and. present(sl2_r) ) then
+    call update_bspline_2d(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
+  else
+    call update_bspline_2d(this, gtau)
+  end if
 
 end subroutine compute_bspline_2d
 
@@ -497,6 +502,9 @@ subroutine update_bspline_2d(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
   n1 = size(this%bs1%bcoef)
   n2 = size(this%bs2%bcoef)
 
+  print*, 'n1=', n1
+  print*, 'n2=', n2
+
   SLL_CLEAR_ALLOCATE(bwork(1:n2,1:n1),ierr)
 
   if (present(sl1_l) .and. present(sl1_r)) then
@@ -511,6 +519,7 @@ subroutine update_bspline_2d(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
     end do
   end if
 
+  stop
 
   if (present(sl2_l) .and. present(sl2_r)) then
     do i = 1, n1
@@ -564,7 +573,7 @@ subroutine update_bspline_1d(this, gtau, slope_min, slope_max)
       this%bcoef(2)   = slope_min
     else
       if(this%compute_sl) then
-        call apply_fd(k+1,1,this%tau(1:k+1),gtau(1:k+1),this%tau(1),slope(0:1))
+        !call apply_fd(k+1,1,this%tau(1:k+1),gtau(1:k+1),this%tau(1),slope(0:1))
         this%bcoef(2) = slope(1)
       else
         this%bcoef(2) = this%sl
@@ -575,7 +584,7 @@ subroutine update_bspline_1d(this, gtau, slope_min, slope_max)
       this%bcoef(n+1) = slope_max
     else
       if(this%compute_sr) then
-        call apply_fd(k+1,1,this%tau(n-k-1:n),gtau(n-k-1:n),this%tau(n),slope(0:1))
+        !call apply_fd(k+1,1,this%tau(n-k-1:n),gtau(n-k-1:n),this%tau(n),slope(0:1))
         this%bcoef(n+1) = slope(1)
       else
         this%bcoef(n+1) = this%sr
