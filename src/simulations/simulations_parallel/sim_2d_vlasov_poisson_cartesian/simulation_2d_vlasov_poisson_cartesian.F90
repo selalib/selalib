@@ -1682,7 +1682,9 @@ contains
                 rho_mode(k)=fft_get_mode(pfwd,buf_fft,k)
              enddo
 
-             write(th_diag_id,'(f12.5,7g20.12)',advance='no') &
+             !write(th_diag_id,'(8g20.12)',advance='no') &
+             !write(th_diag_id,'(8d25.15)',advance='no') &
+             write(th_diag_id,'(8g25.15)',advance='no') &
                   time,                                          &
                   mass,                                          &
                   l1norm,                                        &
@@ -1692,15 +1694,15 @@ contains
                   potential_energy,                              &
                   kinetic_energy + potential_energy
              do k=0,nb_mode
-                write(th_diag_id,'(g20.12)',advance='no') real(rho_mode(k),f64)
-                write(th_diag_id,'(g20.12)',advance='no') aimag(rho_mode(k))
+                write(th_diag_id,'(1g25.15)',advance='no') real(rho_mode(k),f64)
+                write(th_diag_id,'(1g25.15)',advance='no') aimag(rho_mode(k))
              enddo
 
              do k=0,nb_mode-1
-                write(th_diag_id,'(g20.12)',advance='no') f_hat_x2(k+1)
+                write(th_diag_id,'(1g25.15)',advance='no') f_hat_x2(k+1)
              enddo
 
-             write(th_diag_id,'(g20.12)') f_hat_x2(nb_mode+1)
+             write(th_diag_id,'(1g25.15)') f_hat_x2(nb_mode+1)
 
              call sll_binary_write_array_1d(efield_id,efield(1:np_x1-1),ierr)
              call sll_binary_write_array_1d(rhotot_id,rho(1:np_x1-1),ierr)
