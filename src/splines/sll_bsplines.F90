@@ -465,10 +465,8 @@ subroutine compute_bspline_2d(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
   sll_real64, optional    :: sl2_r
 
   if ( this%bs1%bc_type == SLL_PERIODIC) then
-    print*, 'periodic'
     call build_system(this%bs1)
   else
-    print*, 'not periodic'
     call build_system_with_derivative(this%bs1)
   end if
 
@@ -1712,19 +1710,15 @@ ty   => this%bs2%t
 work => this%bs1%bcoef
 
 if (this%bs1%bc_type == SLL_PERIODIC) then
-  print*, 'periodic'
   nmkx = nx+kx
 else
   nmkx = nx+kx+2
 end if
 if (this%bs1%bc_type == SLL_PERIODIC) then
-  print*, 'periodic'
   nmky = ny+ky
 else
   nmky = ny+ky+2
 end if
-
-print*, size(tx), size(ty), nmkx, nmky
 
 call interv(tx,nmkx,xi,leftx,this%bs1%ilo,mflag)
 call interv(ty,nmky,xj,lefty,this%bs2%ilo,mflag)

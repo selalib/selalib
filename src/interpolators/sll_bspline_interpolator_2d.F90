@@ -260,7 +260,6 @@ contains
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
 
-    print*, 'eta1, eta2=', eta1, eta2
     val = interpolate_value_2d( interpolator%spline, eta1, eta2, 0, 0 )
 
   end function
