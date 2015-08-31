@@ -114,18 +114,6 @@ function new_bspline_1d( num_points, degree, xmin, xmax, bc_type, sl, sr )
 
   SLL_ALLOCATE( new_bspline_1d, ierr )
 
-  if (present(sl)) then
-    new_bspline_1d%sl = sl
-    new_bspline_1d%compute_sl = .false.
-  else
-    new_bspline_1d%compute_sl = .true.
-  end if
-  if (present(sr)) then
-    new_bspline_1d%sr = sr
-    new_bspline_1d%compute_sr = .false.
-  else
-    new_bspline_1d%compute_sr = .true.
-  end if
 
   k = degree+1
   n = num_points
@@ -162,6 +150,19 @@ function new_bspline_1d( num_points, degree, xmin, xmax, bc_type, sl, sr )
     new_bspline_1d%t(n+1:n+k) = xmax
        
   else
+
+    if (present(sl)) then
+      new_bspline_1d%sl = sl
+      new_bspline_1d%compute_sl = .false.
+    else
+      new_bspline_1d%compute_sl = .true.
+    end if
+    if (present(sr)) then
+      new_bspline_1d%sr = sr
+      new_bspline_1d%compute_sr = .false.
+    else
+      new_bspline_1d%compute_sr = .true.
+    end if
 
     SLL_ALLOCATE(new_bspline_1d%t(n+k+m),           ierr)
     SLL_ALLOCATE(new_bspline_1d%bcoef(n+m),         ierr)
@@ -464,8 +465,10 @@ subroutine compute_bspline_2d(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
   sll_real64, optional    :: sl2_r
 
   if ( this%bs1%bc_type == SLL_PERIODIC) then
+    print*, 'periodic'
     call build_system(this%bs1)
   else
+    print*, 'not periodic'
     call build_system_with_derivative(this%bs1)
   end if
 
@@ -502,9 +505,6 @@ subroutine update_bspline_2d(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
   n1 = size(this%bs1%bcoef)
   n2 = size(this%bs2%bcoef)
 
-  print*, 'n1=', n1
-  print*, 'n2=', n2
-
   SLL_CLEAR_ALLOCATE(bwork(1:n2,1:n1),ierr)
 
   if (present(sl1_l) .and. present(sl1_r)) then
@@ -518,8 +518,6 @@ subroutine update_bspline_2d(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
       bwork(j,:) = this%bs1%bcoef
     end do
   end if
-
-  stop
 
   if (present(sl2_l) .and. present(sl2_r)) then
     do i = 1, n1
@@ -1714,15 +1712,19 @@ ty   => this%bs2%t
 work => this%bs1%bcoef
 
 if (this%bs1%bc_type == SLL_PERIODIC) then
+  print*, 'periodic'
   nmkx = nx+kx
 else
   nmkx = nx+kx+2
 end if
 if (this%bs1%bc_type == SLL_PERIODIC) then
+  print*, 'periodic'
   nmky = ny+ky
 else
   nmky = ny+ky+2
 end if
+
+print*, size(tx), size(ty), nmkx, nmky
 
 call interv(tx,nmkx,xi,leftx,this%bs1%ilo,mflag)
 call interv(ty,nmky,xj,lefty,this%bs2%ilo,mflag)

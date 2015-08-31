@@ -254,11 +254,15 @@ contains
   end subroutine
 
   function interpolate_value_bs2d( interpolator, eta1, eta2 ) result(val)
+
     class(sll_bspline_interpolator_2d), intent(in) :: interpolator
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
-!PN    val = interpolate_value_2d( eta1, eta2, interpolator%spline )
+
+    print*, 'eta1, eta2=', eta1, eta2
+    val = interpolate_value_2d( interpolator%spline, eta1, eta2, 0, 0 )
+
   end function
 
   function interpolate_deriv1_bs2d( interpolator, eta1, eta2 ) result(val)
