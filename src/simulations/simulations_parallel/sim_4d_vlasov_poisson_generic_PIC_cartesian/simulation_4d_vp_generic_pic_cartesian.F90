@@ -538,10 +538,12 @@ contains
     !! -- --  MPI communications of rho [end]  -- --
 
     if (sim%my_rank == 0) then
-    it = 0
-    call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
-                        sim%mesh_2d%eta2_max, ncy+1,                        &
-                        sim%rho, 'rho_init_standPUSH', it, ierr )
+       it = 0
+
+       ! <<rho_init_standPUSH>> This will also generate the corresponding gnuplot script
+       call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
+            sim%mesh_2d%eta2_max, ncy+1,                        &
+            sim%rho, 'rho_init_standPUSH', it, ierr )
     endif
 
     !> The initial field \f$E^0\f$ is obtained with a call to the Poisson solver. Note that here sim\%rho has the proper
