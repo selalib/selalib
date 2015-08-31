@@ -442,8 +442,8 @@ phi(i,j) = (1.0_f64+eps*cos(mode_theta*theta)) *exp(-(r-10._f64)**2/4._f64) !*si
 
 stop  
   
-  call test_solve_qn_polar_new(Nc,eta_min,eta_max, &
-    mu_points(1:N_mu),mu_weights(1:N_mu),N_mu,mode,phi_init,phi_qn)
+!  call test_solve_qn_polar_new(Nc,eta_min,eta_max, &
+!    mu_points(1:N_mu),mu_weights(1:N_mu),N_mu,mode,phi_init,phi_qn)
 
   
   
