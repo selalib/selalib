@@ -43,6 +43,8 @@ do j=1,NPTS2
     x(i,j)     = X1MIN+(i-1)*h1
     y(i,j)     = X2MIN+(j-1)*h2
     g_ref(i,j) = f(x(i,j),y(i,j))
+    dg_dx_ref(i,j) = df_dx(x(i,j),y(i,j))
+    dg_dy_ref(i,j) = df_dy(x(i,j),y(i,j))
   end do
 end do
   
@@ -63,16 +65,16 @@ call interpolator%compute_interpolants(g_ref)
 normL2 = 0.0_f64
 normH1 = 0.0_f64
 do j=1,NPTS2
-do i=1,NPTS1
-  print *, i, j
-  g_int(i,j)  = interpolator%interpolate_value(x(i,j),y(i,j))
-  !dg_dx_int(i,j) = interpolator%interpolate_derivative_eta1(x(i,j),y(i,j))
-  !dg_dx_ref(i,j) = df_dx(x(i,j),y(i,j))
-  !write(10,*) x(i,j), y(i,j), g_int(i,j), g_ref(i,j)
-  !write(11,*) x(i,j), y(i,j), dg_dx_int(i,j), dg_dx_ref(i,j)
-  !write(12,*) x(i,j), y(i,j), dg_dy_int(i,j), dg_dy_ref(i,j)
+  do i=1,NPTS1
+    g_int(i,j)  = interpolator%interpolate_value(x(i,j),y(i,j))
+    !dg_dx_int(i,j) = interpolator%interpolate_derivative_eta1(x(i,j),y(i,j))
+    write(10,*) x(i,j), y(i,j), g_int(i,j), g_ref(i,j)
+    !write(11,*) x(i,j), y(i,j), dg_dx_int(i,j), dg_dx_ref(i,j)
+    !write(12,*) x(i,j), y(i,j), dg_dy_int(i,j), dg_dy_ref(i,j)
+  end do
+  write(10,*) 
 end do
-end do
+close(10)
 
 normL2 = sum((    g_int -     g_ref)**2*h1*h2)
 !normH1 = sum((dg_dx_int - dg_dx_ref)**2*h1*h2)
@@ -95,7 +97,7 @@ print*,' Max     error in nodes                     ', maxval(abs(g_int-g_ref))
 !
 !if(( sqrt(normL2) <= h1**(SPL_DEG1)) .and. &
 !   ( sqrt(normH1) <= h1**(SPL_DEG1-2))) then
-!  print *, 'PASSED'
+  print *, 'PASSED'
 !else
 !  print *, 'FAILED'
 !end if
