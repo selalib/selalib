@@ -1,3 +1,7 @@
+!PN This test is only for bsplines 2d
+!PN It is used to test different boundary conditions
+!PN Data values are also displayed on the screen
+!PN This test is dedicated for debug not for continuous integration
 program test_bsplines_2d
 
 #include "sll_working_precision.h"
@@ -35,7 +39,7 @@ bspline_2d => new_bspline_2d( nx, kx-1, 1.0_f64, nx*1.0_f64, SLL_PERIODIC, &
 taux => bspline_2d%bs1%tau
 tauy => bspline_2d%bs2%tau
 
-! generate and print out function values
+! generate and print out function valpes
 print 620,(tauy(i),i=1,ny)
 do i=1,nx
   do j=1,ny
@@ -49,11 +53,16 @@ call compute_bspline_2d( bspline_2d, gtau)
 call cpu_time(t1)
 
 ! evaluate interpolation error at mesh points and print out
-! call interpolate_array_values_2d(bspline_2d, nx, ny, gtau, htau)
-do j=1,ny
-  do i=1,nx
-    htau(i,j) = interpolate_value_2d(bspline_2d, taux(i), tauy(j), 0, 0)
-  end do
+call interpolate_array_values_2d(bspline_2d, nx, ny, gtau, htau, 0, 0)
+!do j=1,ny
+!  do i=1,nx
+!    htau(i,j) = interpolate_value_2d(bspline_2d, taux(i), tauy(j), 0, 0)
+!  end do
+!end do
+
+print 630,(tauy(j),j=1,ny)
+do i=1,nx
+  print 632,taux(i),(htau(i,j),j=1,ny)
 end do
 
 call cpu_time(t2)
@@ -76,6 +85,7 @@ print*, 'Time to interpolate values   ', t2-t1
 print*, 'PASSED'
 
 620 format(' given data'//5x,11f8.1)
+630 format(' interpolated data'//5x,11f8.1)
 632 format(f5.1,11f8.4)
 640 format(//' interpolation error'//5x,11f8.1)
 

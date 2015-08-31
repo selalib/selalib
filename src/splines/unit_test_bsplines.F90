@@ -1,13 +1,5 @@
-! N,           the number of data points for the interpolation.
-! K,           the order of the spline.
-! TAU(N),      the data point abscissas. TAU should be strictly increasing.
-! GTAU(N),     the data ordinates.
-! T(N+K+2),    the knot sequence.
-!
-! Q((2*K-1)*(N+2)) is the triangular factorization
-! of the coefficient matrix of the linear system for the B-coefficients 
-! BCOEF(N+M), the B-spline coefficients of the interpolant.
-
+!PN This is a general test for bsplines 1d and 2d
+!PN This test is used to test performance and precision
 program test_bsplines
 #include "sll_memory.h"
 #include "sll_working_precision.h"
