@@ -675,13 +675,13 @@ contains
     if (k1.le.0) then
        k    = num_cells + k1
        !this value is always an integer, floor avoids the transformation
-       nk1  = floor( num_cells*k + k*(k+1)*0.5 )
+       nk1  = num_cells*k + FLOOR( k*(k+1)*0.5 )
        nk2  = k2 + num_cells_plus1
     else
        ! n0 is the total number of points from (-num_cells,-num_cells) to
        ! ( 0, numcells)
-       n0  = floor( num_cells**2 + num_cells*num_cells_plus1*0.5 )
-       nk1 = n0 + k1*(2*num_cells + 1) - floor( k1*(k1-1)*0.5 )
+       n0  =  num_cells**2 + FLOOR(num_cells*num_cells_plus1*0.5 )
+       nk1 = n0 + k1*(2*num_cells + 1) - FLOOR( k1*(k1-1)*0.5 )
        nk2 = k2 + num_cells_plus1 - k1
     endif
 
@@ -1021,10 +1021,10 @@ contains
     if ((ref_index.le.mesh%num_pts_tot).and.(ref_index.gt.0) &
          .and.(global.le.mesh%num_pts_tot).and.(global.gt.0)) then
 
-       k1_ref = mesh%global_to_hex1(ref_index)
-       k2_ref = mesh%global_to_hex2(ref_index)
-       k1_glob = mesh%global_to_hex1(global)
-       k2_glob = mesh%global_to_hex2(global)
+       k1_ref  = mesh%hex_coord(1,ref_index)
+       k2_ref  = mesh%hex_coord(2,ref_index)
+       k1_glob = mesh%hex_coord(1,global)
+       k2_glob = mesh%hex_coord(2,global)
 
        local = mesh%hex_to_global(k1_ref - k1_glob, k2_ref - k2_glob)
     else
@@ -1363,6 +1363,160 @@ contains
   end subroutine get_edge_index
 
 
+  !> @brief Function that allows to change from the current element notation
+  !> to one more intuitive
+  !> @details As the notations of the elements, chosen by Charles, is not
+  !> really intuitive, this functions allow to go from that one, to one
+  !> easier to understand. It will give the index of the element in the new
+  !> notation system, when given an index of the older system.
+  !> Here is the difference between the two notation for a mesh of 6 elements
+  !> (ie. nc = 1):
+  !>      Charles notation:  || New notation:
+  !>           /|\           ||       /|\
+  !>         / 1|2 \         ||     / 2|1 \
+  !>        | 3\|/6 |        ||    | 3\|/6 |      The new notation system
+  !>        | /4|5\ |        ||    | /4|5\ |      respects more the hexagonal
+  !>           \|/           ||       \|/         notation style.
+  !> @param[in]  mesh pointer to the hexagonal mesh
+  !> @param[in]  i_elmt_old integer index of an element in Charles notation
+  !> @param[out] i_elmt integer index of an element in the new notation system.
+  function change_elements_notation(mesh, i_elmt_old) result(i_elmt)
+    type(sll_hex_mesh_2d), pointer :: mesh
+    sll_int32, intent(in) :: i_elmt_old
+    sll_int32 :: i_elmt
+    sll_int32 :: e1, e2, e3
+    sll_int32 :: j1, j2, j3
+    sll_int32 :: e1_k1, e1_k2
+    sll_int32 :: e2_k1, e2_k2
+    sll_int32 :: e3_k1, e3_k2
+    sll_int32 :: e1_distance
+    sll_int32 :: e2_distance
+    sll_int32 :: e3_distance
+    sll_int32 :: sixth
+    sll_int32 :: layer
+    sll_int32 :: npts_layer
+    sll_int32 :: npts_layer_1
+    sll_int32 :: displacement
+
+    if (i_elmt_old.eq.-1) then
+       i_elmt = -1
+       return
+    end if
+    
+    ! Getting cell vertices
+    call get_cell_vertices_index(mesh%center_cartesian_coord(1,i_elmt_old), &
+         mesh%center_cartesian_coord(2,i_elmt_old), &
+         mesh, &
+         e1, e2, e3)
+
+    ! Getting their hexagonal coordinates
+    e1_k1 = mesh%hex_coord(1,e1)
+    e1_k2 = mesh%hex_coord(2,e1)
+    e2_k1 = mesh%hex_coord(1,e2)
+    e2_k2 = mesh%hex_coord(2,e2)
+    e3_k1 = mesh%hex_coord(1,e3)
+    e3_k2 = mesh%hex_coord(2,e3)
+
+    ! Getting their distance to origin:
+    e1_distance = cells_to_origin(e1_k1, e1_k2)
+    e2_distance = cells_to_origin(e2_k1, e2_k2)
+    e3_distance = cells_to_origin(e3_k1, e3_k2)
+
+    ! computing on which hexagonal layer is the cell
+    layer = e1_distance + e2_distance + e3_distance
+    layer = layer / 3
+
+    !Computing on which sixth of the hexagon are we:
+    if ((e1_k1 >= 0).and.(e1_k2 >= 0).and.&
+         (e2_k1 >= 0).and.(e2_k2 >= 0).and.&
+         (e3_k1 >= 0).and.(e3_k2 >= 0)) then
+       if (e1_k1+e2_k1+e3_k1 .gt. e1_k2+e2_k2+e3_k2) then
+          sixth = 1
+       else
+          sixth = 2
+       end if
+    elseif ((e1_k1 <= 0).and.(e1_k2 <= 0).and.&
+         (e2_k1 <= 0).and.(e2_k2 <= 0).and.&
+         (e3_k1 <= 0).and.(e3_k2 <= 0)) then
+       if (abs(e1_k1+e2_k1+e3_k1).gt.abs(e1_k2+e2_k2+e3_k2)) then
+          sixth = 4
+       else
+          sixth = 5
+       endif
+    elseif ((e1_k1 <= 0).and.(e1_k2 >= 0).and.&
+         (e2_k1 <= 0).and.(e2_k2 >= 0).and.&
+         (e3_k1 <= 0).and.(e3_k2 >= 0)) then
+       sixth = 3
+    else
+       sixth = 6
+    end if
+    
+    if (layer.eq.0) then
+       ! Treating the first layer separetly
+       i_elmt = sixth
+    else
+       ! founding the displacement:
+       npts_layer = 3 * (layer + 1) * layer + 1
+       npts_layer_1 = 3 * (layer - 1) * layer + 1
+       j1 = e1 - npts_layer
+       j2 = e2 - npts_layer
+       j3 = e3 - npts_layer
+       if (j1 <= 0) then
+          if (j2 <= 0) then
+             displacement = e3 - npts_layer
+             if (MOD(sixth,2).eq.1) then
+                displacement = 2*(displacement-1) - (sixth - 1)
+             else
+                displacement = 2*(displacement-1) - (sixth - 1)
+             endif
+          elseif (j3 <= 0) then
+             displacement = e2 -npts_layer
+             if (MOD(sixth,2).eq.1) then
+                displacement = 2*(displacement-1) - (sixth - 1)
+             else
+                displacement = 2*(displacement-1) - (sixth - 1)
+             end if
+          else
+             displacement = e1 - npts_layer_1
+             if (MOD(sixth,2).eq.1) then
+                displacement = 2*(displacement-1) + sixth
+             else
+                displacement = 2*(displacement-1) + sixth
+             end if
+          end if
+       elseif (j2 <= 0) then
+          if (j3 <= 0) then
+             displacement = e1 - npts_layer
+             if (MOD(sixth,2).eq.1) then
+                displacement = 2*(displacement-1) - (sixth - 1)
+             else
+                displacement = 2*(displacement-1) - (sixth - 1)
+             end if
+          else
+             displacement = e2 - npts_layer_1
+             if ((sixth.eq.6).and.(j1.eq.1)) then
+                displacement = e3 - npts_layer_1
+             elseif ((sixth.eq.6).and.(j3.eq.1)) then
+                displacement = e1 - npts_layer_1
+             else
+                displacement = 2*(displacement-1) + sixth
+             end if
+          end if
+       else
+          displacement = e3 - npts_layer_1
+          if (MOD(sixth,2).eq.1) then
+             displacement = 2*(displacement-1) + sixth
+          else
+             displacement = 2*(displacement-1) + sixth
+          end if
+       end if
+       
+       ! result
+       i_elmt = 6*layer*layer + displacement
+    end if
+  end function change_elements_notation
+
+  
   !---------------------------------------------------------------------------
   !> @brief Displays hexagonal mesh in terminal
   !> @details Displays a simple text describing the mesh to the terminal
@@ -1391,7 +1545,6 @@ contains
     character(len=20),   parameter :: name_nodes = "boxsplines_nodes.txt"
     character(len=23),   parameter :: name_elemt = "boxsplines_elements.txt"
     character(len=24),   parameter :: name_diri  = "boxsplines_dirichlet.txt"
-    character(len=32),   parameter :: name_ele_i = "boxsplines_elements_internal.txt"
     sll_real64 :: x1, y1
     sll_real64 :: x_ver1, y_ver1
     sll_real64 :: a11, a12, a21, a22
@@ -1404,13 +1557,11 @@ contains
     sll_int32  :: nen
     sll_int32  :: num_pts_tot
     sll_int32  :: num_ele
-    sll_int32  :: ele_int
     sll_int32  :: nei1, nei2, nei3
     sll_int32  :: num_cells_to_origin
     sll_int32  :: boundary
     sll_int32  :: dirichlet
     sll_int32  :: type
-    sll_int32  :: dist
     sll_int32,  parameter :: out_unit=20
 
     ! Writing the nodes file....................
@@ -1454,7 +1605,7 @@ contains
     ! For every element...
     do i=1, num_ele
        !... we write its global number
-       write (out_unit, "(i6)") i
+       write (out_unit, "(i6)") change_elements_notation(mesh, i)
        !... we write its type (1 or 2)
        type = cell_type(mesh, i)
        write (out_unit, "(i6)") type
@@ -1464,12 +1615,19 @@ contains
        write(out_unit, "((f22.17),(a,1x))",advance='no') scale, ","
        !... we write its neighbours
        call get_neighbours(mesh, i, nei1, nei2, nei3)
-       write(out_unit, "(3((i6),(a,1x)))",advance='no') nei1, ",", nei2, ",", nei3, ","
+       write(out_unit, "(3((i6),(a,1x)))",advance='no') &
+            change_elements_notation(mesh, nei1), ",", &
+            change_elements_notation(mesh, nei2), ",", &
+            change_elements_notation(mesh, nei3), ","
        !... we write the indices of the edges
        x1 = mesh%center_cartesian_coord(1, i)
        y1 = mesh%center_cartesian_coord(2, i)
        call get_cell_vertices_index(x1, y1, mesh, e1, e2, e3)
-       write(out_unit, "((i6),(a,1x),(i6),(a,1x),(i6))") e1, ",",e2,",", e3
+       if (type.eq.2) then
+          write(out_unit, "((i6),(a,1x),(i6),(a,1x),(i6))") e1, ",",e2,",", e3
+       else
+          write(out_unit, "((i6),(a,1x),(i6),(a,1x),(i6))") e1, ",",e3,",", e2
+       end if
        !... we write the coordinate transformation (*)
        if (type == 1) then
           a11 = 0.5_f64 / mesh%num_cells
@@ -1482,83 +1640,12 @@ contains
           a21 = 0._f64 / mesh%num_cells
           a22 = 1._f64 / mesh%num_cells
        end if
-       x_ver1 = mesh%cartesian_coord(1, e1); y_ver1 = mesh%cartesian_coord(2, e1)
+       x_ver1 = mesh%cartesian_coord(1, e1)
+       y_ver1 = mesh%cartesian_coord(2, e1)
        b1  = x_ver1
        b2  = y_ver1
-       write(out_unit, "(5((f22.17), (a,1x)), (f22.17))") a11, ",", a12, ",", a21, ",", a22, ",", b1, ",", b2
-    end do
-    print *, ""
-    close(out_unit)
-
-    ! Writing the INTERNAL elements file....................
-    ! File containing general information about the INTERNAL* cells and
-    ! the transformation.
-    ! (*) By Internal we mean all cells which splines basis are contained
-    ! within the domain
-    open (unit=out_unit,file=name_ele_i,action="write",status="replace")
-
-    ! We first write the total number of cells/elements:
-    num_ele = mesh%num_triangles
-    ! We compute the number of elements that are fully contained:
-    ele_int = 6 * (mesh%num_cells - spline_deg + 1) * (mesh%num_cells - spline_deg + 1)
- 
-    write(out_unit, "(i6)") ele_int
-
-    ! The scale is fixed here
-    scale = 1._f64
-    !... we write its global number
-    write (out_unit, "(i6)") spline_deg
-
-    ! For every element...
-    do i=1, num_ele
-       ! before writing the information we want to test if the elements is
-       ! not in the boundary.
-       ! For this first we get the vertices of the cell:
-       x1 = mesh%center_cartesian_coord(1, i)
-       y1 = mesh%center_cartesian_coord(2, i)
-       call get_cell_vertices_index(x1, y1, mesh, e1, e2, e3)
-
-       ! and we get the distance to the origin:
-       dist = 0
-       dist = dist + cells_to_origin(mesh%hex_coord(1, e1), mesh%hex_coord(2, e1))
-       dist = dist + cells_to_origin(mesh%hex_coord(1, e2), mesh%hex_coord(2, e2))
-       dist = dist + cells_to_origin(mesh%hex_coord(1, e3), mesh%hex_coord(2, e3))
-
-       if (dist .lt. (mesh%num_cells - spline_deg + 1)*3 ) then
- 
-          !... we write its global number
-          write (out_unit, "(i6)") i
-          !... we write its type (1 or 2)
-          type = cell_type(mesh, i)
-          write (out_unit, "(i6)") type
-          !... we write the spline degree
-          write(out_unit, "(i6)") spline_deg
-          !... we write the scale of the element
-          write(out_unit, "((f22.17),(a,1x))",advance='no') scale, ","
-          !... we write its neighbours
-          call get_neighbours(mesh, i, nei1, nei2, nei3)
-          write(out_unit, "(3((i6),(a,1x)))",advance='no') nei1, ",", nei2, ",", nei3, ","
-          !... we write the indices of the edges
-          write(out_unit, "((i6),(a,1x),(i6),(a,1x),(i6))") e1, ",",e2,",", e3
-          !... we write the coordinate transformation (*)
-          if (type == 1) then
-             a11 = 0.5_f64 / mesh%num_cells
-             a12 = -sll_sqrt3/2._f64 / mesh%num_cells
-             a21 =  sll_sqrt3/2._f64 / mesh%num_cells
-             a22 = 0.5_f64 / mesh%num_cells
-          else
-             a11 = 1._f64 / mesh%num_cells
-             a12 = 0._f64 / mesh%num_cells
-             a21 = 0._f64 / mesh%num_cells
-             a22 = 1._f64 / mesh%num_cells
-          end if
-          x_ver1 = mesh%cartesian_coord(1, e1)
-          y_ver1 = mesh%cartesian_coord(2, e1)
-          b1  = x_ver1
-          b2  = y_ver1
-          write(out_unit, "(5((f22.17), (a,1x)), (f22.17))") &
-               a11, ",", a12, ",", a21, ",", a22, ",", b1, ",", b2
-       end if
+       write(out_unit, "(5((f22.17), (a,1x)), (f22.17))") &
+            a11, ",", a12, ",", a21, ",", a22, ",", b1, ",", b2
     end do
     print *, ""
     close(out_unit)
@@ -1579,14 +1666,14 @@ contains
     num_ele = mesh%num_triangles
     write(out_unit, "(i6)") num_ele
 
-    !The number of elements non-null is fixed here, this should be changed (TODO)
+    ! The number of splines non null in a cell depends on the degree
     nen = 3*spline_deg*spline_deg
     dirichlet = 1
 
     ! For every element...
     do i=1, num_ele
        !... we write its global number
-       write (out_unit, "(i6)") i
+       write (out_unit, "(i6)") change_elements_notation(mesh, i)
        !... we write the number of elements non-nul
        write (out_unit, "(i6)") nen
        do j=1,nen 
@@ -1596,7 +1683,6 @@ contains
        write(out_unit, *) ""
     end do
     close(out_unit)
-
 
   end subroutine write_caid_files
 

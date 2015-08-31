@@ -35,7 +35,12 @@ type sll_box_spline_2d
    sll_real64, dimension(:), pointer :: coeffs !< Spline coefficients
 end type sll_box_spline_2d
 
-
+!> @brief Generic sub-routine defined for 2D box spline types.
+!> Deallocates the memory associated with the given box spline object.
+!> @param[inout] spline_object.
+interface sll_delete
+   module procedure delete_box_spline_2d
+end interface sll_delete
 
 contains  ! ****************************************************************
 
@@ -84,12 +89,9 @@ contains  ! ****************************************************************
   !> @param[in] deg integer representing the box spline degree
   !> @param[in] spline box spline type element, containting the mesh, bc, ...
   subroutine compute_coeff_box_spline_2d( data, deg, spline )
-    sll_real64, dimension(:), intent(in), target :: data
-    sll_int32, intent(in)                        :: deg
-    type(sll_box_spline_2d), pointer, intent(in) :: spline
-    sll_int32  :: bc
-    sll_int32  :: bc_selector
-
+    sll_int32, intent(in)                         :: deg
+    sll_real64, dimension(:), target,  intent(in) :: data
+    type(sll_box_spline_2d),  pointer, intent(in) :: spline
 
     if( .not. associated(spline) ) then
        ! FIXME: THROW ERROR
@@ -99,41 +101,24 @@ contains  ! ****************************************************************
        STOP
     end if
 
-    bc = spline%bc_type
-
-    ! Treat the bc_selector variable essentially like a bit field, to
-    ! accumulate the information on the different boundary conditions
-    ! given. This scheme allows to add more types of boundary conditions
-    ! if necessary.
-    bc_selector = 0
-
     ! We make every case explicit to facilitate adding more BC types in
     ! the future.
-    if( spline%bc_type .eq. SLL_DIRICHLET ) then
-       bc_selector = bc_selector + 1
-    end if
-    if( spline%bc_type .eq. SLL_PERIODIC ) then
-       bc_selector = bc_selector + 2
-    end if
-    if( spline%bc_type .eq. SLL_NEUMANN ) then
-       bc_selector = bc_selector + 4
-    end if
-
-    select case (bc_selector)
-       case ( 1 )
-          ! boundary condition type is dirichlet
-          call compute_coeff_box_spline_2d_diri( data, deg, spline )
-       case ( 2 )
+    select case(spline%bc_type)
+    case(SLL_DIRICHLET)
+       ! boundary condition type is dirichlet
+       call compute_coeff_box_spline_2d_diri( data, deg, spline )
+    case(SLL_PERIODIC)
           ! boundary condition type is periodic
           call compute_coeff_box_spline_2d_prdc( data, deg, spline )
-       case ( 4 )
-          ! boundary condition type is neumann
-          call compute_coeff_box_spline_2d_neum( data, deg, spline )
-       case default
-          print *, 'ERROR: compute_coeff_box_spline_2d(): ', &
+    case(SLL_NEUMANN)
+       ! boundary condition type is neumann
+       call compute_coeff_box_spline_2d_neum( data, deg, spline )
+    case default
+       print *, 'ERROR: compute_coeff_box_spline_2d(): ', &
             'did not recognize given boundary condition combination.'
        STOP
     end select
+
   end subroutine compute_coeff_box_spline_2d
 
 
@@ -146,42 +131,39 @@ contains  ! ****************************************************************
   !> @param[in] spline box spline type element, containting the mesh, bc, ...
   subroutine compute_coeff_box_spline_2d_diri( data, deg, spline )
     sll_real64, dimension(:), intent(in), target  :: data  ! data to be fit
-    type(sll_box_spline_2d), pointer              :: spline
     sll_int32, intent(in)                         :: deg
+    type(sll_box_spline_2d),  intent(in), pointer :: spline
     sll_int32  :: num_pts_tot
     sll_int32  :: k1_ref, k2_ref
     sll_int32  :: k
     sll_int32  :: i
+    sll_int32  :: ierr
     sll_int32  :: nei
     sll_int32  :: num_pts_radius
     sll_real64 :: filter
-
+    sll_real64, allocatable, dimension(:) :: filter_array
+    
     num_pts_tot = spline%mesh%num_pts_tot
     ! we will work on a radius of 'deg' cells
     ! we compute the number of total points on that radius
-    num_pts_radius = 3*(2*deg)*(2*deg+1) + 1
+    num_pts_radius = 3*deg*(deg+1) + 1
 
+    ! Create a table for the filter values and fill it:
+
+    call pre_filter_pfir(spline%mesh, deg, filter_array)
+    
     do i = 1, num_pts_tot
 
        spline%coeffs(i) = real(0,f64)
        k1_ref = spline%mesh%global_to_hex1(i)
        k2_ref = spline%mesh%global_to_hex2(i)
-
+       
        ! We don't need to fo through all points, just till a certain radius
        ! which depends on the degree of the spline we are evaluating
        do k = 1, num_pts_radius
-          if (deg .le. 2) then
-             filter = pre_filter_pfir(spline%mesh, k, deg)
-          elseif (deg .eq. 3) then
-             filter = pre_filter_int(spline%mesh, k, deg)
-          else
-             filter = 0._f64
-             print *, "Error in compute_coeff_box_spline_2d_diri():"
-             print *, "       Filter not yet defined"
-             STOP
-          end if
+          filter = filter_array(k)
           nei = spline%mesh%local_hex_to_global(k1_ref, k2_ref, k)
-          if ((nei .lt. num_pts_tot).and.(nei .gt. 0)) then
+          if ((nei .le. num_pts_tot).and.(nei .gt. 0)) then
              spline%coeffs(i) = spline%coeffs(i) + data(nei) * filter
           else
              ! Boundary conditions (BC) to be treated here :
@@ -202,9 +184,9 @@ contains  ! ****************************************************************
   !> @param[in] deg integer representing the box spline degree
   !> @param[in] spline box spline type element, containting the mesh, bc, ...
   subroutine compute_coeff_box_spline_2d_prdc( data, deg, spline )
-    sll_real64, dimension(:), intent(in), target :: data  ! data to be fit
-    type(sll_box_spline_2d), pointer             :: spline
     sll_int32, intent(in)                        :: deg
+    sll_real64, dimension(:), intent(in), target  :: data  ! data to be fit
+    type(sll_box_spline_2d),  intent(in), pointer :: spline
     sll_int32  :: num_pts_tot
     sll_int32  :: i
 
@@ -225,9 +207,9 @@ contains  ! ****************************************************************
   !> @param[in] deg integer representing the box spline degree
   !> @param[in] spline box spline type element, containting the mesh, bc, ...
   subroutine compute_coeff_box_spline_2d_neum( data, deg, spline )
-    sll_real64, dimension(:), intent(in), target :: data  ! data to be fit
     sll_int32, intent(in)                        :: deg
-    type(sll_box_spline_2d), pointer             :: spline
+    sll_real64, dimension(:), intent(in), target  :: data  ! data to be fit
+    type(sll_box_spline_2d),  intent(in), pointer :: spline
     sll_int32  :: num_pts_tot
     sll_int32  :: i
 
@@ -317,26 +299,26 @@ contains  ! ****************************************************************
        val = 0._f64
        do K = -deg, CEILING(u)-1
           if ((x1_in.eq.0.).and.(x2_in.eq.0.8)) then
-             print *, " K = ", K
+!             print *, " K = ", K
           end if
           do L = -deg, CEILING(v)-1
              if ((x1_in.eq.0.).and.(x2_in.eq.0.8)) then
-                print *, "    L = ", L
+!                print *, "    L = ", L
              end if
              do i = 0,min(deg+K, deg+L)
                 if ((x1_in.eq.0.).and.(x2_in.eq.0.8)) then
-                   print *, "      i = ", i
+!                   print *, "      i = ", i
                 end if
                 coeff = (-1.0_f64)**(K+L+i)* &
                      choose(deg,i-K)*     &
                      choose(deg,i-L)*     &
                      choose(deg,i)
                 if ((x1_in.eq.0.).and.(x2_in.eq.0.8)) then
-                   print *, "      coeff = ", coeff
+ !                  print *, "      coeff = ", coeff
                 end if
                 do d = 0,deg-1
                    if ((x1_in.eq.0.).and.(x2_in.eq.0.8)) then
-                      print *, "          d = ", d
+  !                    print *, "          d = ", d
                    end if
                    aux=abs(v-L-u+K)
                    aux2=(u-K+v-L-aux)/2._f64
@@ -349,7 +331,7 @@ contains  ! ****************************************************************
                         * aux**(deg-1-d) &
                         * aux2**(2*deg-1+d)
                    if ((x1_in.eq.0.).and.(x2_in.eq.0.8)) then
-                      print *, "            aux, aux2, val = ", aux, aux2, val
+   !                   print *, "            aux, aux2, val = ", aux, aux2, val
                    end if
                 end do
              end do
@@ -406,7 +388,7 @@ contains  ! ****************************************************************
   !> @param[in] deg real containing the degree of the spline to be computed
   !> @return the value of the box spline at (x1,x2)
   function compute_box_spline(spline, x1, x2, deg) result(val)
-    type(sll_box_spline_2d), pointer    :: spline
+    type(sll_box_spline_2d), pointer, intent(in):: spline
     sll_real64, intent(in) :: x1
     sll_real64, intent(in) :: x2
     sll_int32,  intent(in) :: deg
@@ -439,6 +421,7 @@ contains  ! ****************************************************************
     sll_real64             :: k1_basis
     sll_real64             :: k2_basis
     sll_real64             :: x1_basis
+    sll_real64             :: inv_delta_q
     sll_real64             :: q11, q12
     sll_real64             :: q21, q22
     sll_real64             :: r11, r12
@@ -447,8 +430,8 @@ contains  ! ****************************************************************
     ! Algorithms basis
     r11 = 0.5_f64
     r12 = -sll_sqrt3 * 0.5_f64
-    r21 = 0.5_f64
-    r22 =  sll_sqrt3 * 0.5_f64
+    r21 =  r11
+    r22 = -r12
 
     ! Getting mesh generator vectors coordinates
     q11 = spline%mesh%r1_x1
@@ -458,8 +441,9 @@ contains  ! ****************************************************************
 
     !change of basis :
     delta_q  = q11*q22 - q12*q21
-    k1_basis = 1./delta_q*(q22*x1 - q21*x2)
-    k2_basis = 1./delta_q*(q11*x2 - q12*x1)
+    inv_delta_q = 1._f64/delta_q
+    k1_basis = inv_delta_q*(q22*x1 - q21*x2)
+    k2_basis = inv_delta_q*(q11*x2 - q12*x1)
     x1_basis = r11*k1_basis+r21*k2_basis
   end function change_basis_x1
 
@@ -478,6 +462,7 @@ contains  ! ****************************************************************
     sll_real64, intent(in) :: x1
     sll_real64, intent(in) :: x2
     sll_real64             :: delta_q
+    sll_real64             :: inv_delta_q
     sll_real64             :: k1_basis
     sll_real64             :: k2_basis
     sll_real64             :: x2_basis
@@ -488,10 +473,10 @@ contains  ! ****************************************************************
 
     ! Getting spline generator vectors coordinates
     ! Algorithms basis
-    r11 = 0.5_f64
-    r12 = -sll_sqrt3 * 0.5_f64
-    r21 = 0.5_f64
-    r22 =  sll_sqrt3 * 0.5_f64
+    r11 =  0.5_f64
+    r12 = -0.5_f64 * sll_sqrt3
+    r21 =  r11
+    r22 = -r12
 
     ! Getting mesh generator vectors coordinates
     q11 = spline%mesh%r1_x1
@@ -501,8 +486,9 @@ contains  ! ****************************************************************
 
     !change of basis :
     delta_q  = q11*q22 - q12*q21
-    k1_basis = 1./delta_q*(q22*x1 - q21*x2)
-    k2_basis = 1./delta_q*(q11*x2 - q12*x1)
+    inv_delta_q = 1._f64/delta_q
+    k1_basis = inv_delta_q*(q22*x1 - q21*x2)
+    k2_basis = inv_delta_q*(q11*x2 - q12*x1)
     x2_basis = r12*k1_basis+r22*k2_basis
 
   end function change_basis_x2
@@ -619,6 +605,7 @@ contains  ! ****************************************************************
     sll_int32               :: edge1, edge2, edge3
     sll_int32               :: first
     sll_int32               :: last
+    sll_int32               :: type
     sll_int32               :: i, j
     sll_int32               :: last_point
     sll_int32               :: current_nZ
@@ -626,16 +613,30 @@ contains  ! ****************************************************************
     ! Number of non zero splines on a cell:
     non_Zero = 3 * deg * deg
     index_nZ(1:non_Zero) = -1
+
+    !type of cell
+    type = cell_type(mesh, cell_index)
     
     ! Getting the cell vertices which are the first indices of the non zero splines
     call get_cell_vertices_index(mesh%center_cartesian_coord(1,cell_index), &
          mesh%center_cartesian_coord(2,cell_index),&
          mesh, &
          edge1, edge2, edge3)
-    index_nZ(1) = edge1
-    index_nZ(2) = edge2
-    index_nZ(3) = edge3
 
+    ! index_nZ(1) = edge1
+    ! index_nZ(2) = edge2
+    ! index_nZ(3) = edge3
+    
+    if (type.eq.2) then
+       index_nZ(1) = edge1
+       index_nZ(2) = edge2
+       index_nZ(3) = edge3    
+    else
+       index_nZ(1) = edge1
+       index_nZ(2) = edge3
+       index_nZ(3) = edge2
+    end if
+    
     current_nZ = 4
     do distance = 1,deg-1
        first = 1 + (distance-1)*(distance-1)*3
@@ -787,8 +788,8 @@ contains  ! ****************************************************************
     sll_int32,  intent(in)      :: deg
     sll_int32,  intent(in)      :: rule
     sll_real64, dimension(2, 3) :: ref_pts
-    sll_real64, dimension(3,10) :: quad_pw
-    sll_real64, allocatable     :: disp_vec(:,:) !> displacement vectors
+    sll_real64, dimension(:, :), allocatable :: quad_pw
+    sll_real64, dimension(:, :), allocatable :: disp_vec
     sll_int32,  parameter       :: out_unit=20
     character(len=*), parameter :: name = "basis_values.txt"
     sll_real64  :: x
@@ -818,32 +819,24 @@ contains  ! ****************************************************************
     !    |
     !    +--0-----1-->
     ref_pts(:,1) = (/ 0._f64,               0.0_f64 /)
-    ref_pts(:,2) = (/ 0._f64,               1.0_f64 /)
-    ref_pts(:,3) = (/ sqrt(3._f64)*0.5_f64, 0.5_f64 /)
+    ref_pts(:,2) = (/ sqrt(3._f64)*0.5_f64, 0.5_f64 /)
+    ref_pts(:,3) = (/ 0._f64,               1.0_f64 /)
     
-    ! Computing fekete points on equilateral reference triangle
-    ! ie. triangle of vertices : (0,0) (0,1) and (1,0)
-    ! see $SELALIB/src/integration/fekete.F90 for more info
-    quad_pw = fekete_points_and_weights(ref_pts)
+    ! Computing fekete points on the reference triangle
+    call fekete_order_num ( rule, num_fek )
+    SLL_ALLOCATE(quad_pw(1:3, 1:num_fek), ierr)
+    quad_pw = fekete_points_and_weights(ref_pts, rule)
 
     nonZero = 3*deg*deg !> Number of non null box splines on a cell
     nderiv  = 1 !> Number of derivatives to be computed
+
     !> The displament vector correspond to the translation
     !> done to obtain the other non null basis functions
     SLL_ALLOCATE(disp_vec(2, nonZero), ierr)
     disp_vec(:,1) = 0._f64
     disp_vec(:,2) = ref_pts(:,1) - ref_pts(:,2)
     disp_vec(:,3) = ref_pts(:,1) - ref_pts(:,3)
-    
-    if (rule .eq. 1) then
-       num_fek = 10 !> Number of fekete points on a cell
-    else
-       print *, ""
-       print *, "ERROR in write_basis_value() : rule not implemented yet"
-       num_fek = 0
-       STOP
-    end if
-
+        
     open (unit=out_unit,file=name,action="write",status="replace")
 
     write(out_unit, "(i6)") deg
@@ -867,7 +860,9 @@ contains  ! ****************************************************************
     end do
 
     close(out_unit)
-
+    SLL_DEALLOCATE_ARRAY(disp_vec, ierr)
+    SLL_DEALLOCATE_ARRAY(quad_pw, ierr)
+    
   end subroutine write_basis_values
 
 
@@ -884,7 +879,6 @@ contains  ! ****************************************************************
     sll_int32, intent(in)          :: deg
     sll_int32                      :: out_unit
     character(len=28), parameter   :: name = "boxsplines_connectivity.txt"
-    character(len=37), parameter   :: name2 = "boxsplines_connectivity_internal.txt"
     sll_int32                      :: nZ_indices(3*deg*deg)
     sll_int32  :: num_ele
     sll_int32  :: ele_contained
@@ -907,7 +901,7 @@ contains  ! ****************************************************************
 
     do num_ele = 1,mesh%num_triangles
        ! We write cell ID number
-       write(out_unit, "(i6)") num_ele
+       write(out_unit, "(i6)") change_elements_notation(mesh, num_ele)
        ! We write number of non zero
        write(out_unit, "(i6)") non_zero
        ! We write the indices of the non zero splines
@@ -922,64 +916,44 @@ contains  ! ****************************************************************
     
     close(out_unit)
 
-    ! Now we want to write the connectivity only for elements
-    ! which all non zero box splines are contained in the domain
-    ! ie. all elements where ALL(non_zero_splines(mesh, ne, deg)).ne.-1
-    ! We know these are the elements that are more than deg-1 cells away
-    ! from the boundary
-    ! Remark: I could have done this with the writing of the file above,
-    ! nevertheless, I prefer to have two separated writings procedure to
-    ! avoid any confusion.
-
-    
-    ! We open file
-    call sll_new_file_id(out_unit, ierr)
-    open (unit=out_unit,file=name2,action="write",status="replace")
-
-    !We compute first the number of elements that are fully contained:
-    ele_contained = 6 * (mesh%num_cells - deg + 1) * (mesh%num_cells - deg + 1)
-    
-    ! We write total number of cells
-    write(out_unit, "(i6)") ele_contained
-
-    do num_ele = 1,mesh%num_triangles
-       ! before writing the information we want to test if the elements is
-       ! not in the boundary.
-       ! For this first we get the vertices of the cell:
-       call get_cell_vertices_index(mesh%center_cartesian_coord(1,num_ele), &
-            mesh%center_cartesian_coord(2,num_ele), &
-            mesh, &
-            s1, s2, s3)
-       ! and we get the distance to the origin:
-       dist = 0
-       dist = dist + cells_to_origin(mesh%hex_coord(1, s1), mesh%hex_coord(2, s1))
-       dist = dist + cells_to_origin(mesh%hex_coord(1, s2), mesh%hex_coord(2, s2))
-       dist = dist + cells_to_origin(mesh%hex_coord(1, s3), mesh%hex_coord(2, s3))
-
-       if (dist .lt. (mesh%num_cells - deg + 1)*3 ) then
-          ! We write cell ID number
-          write(out_unit, "(i6)") num_ele
-          ! We write number of non zero
-          write(out_unit, "(i6)") non_zero
-          ! We write the indices of the non zero splines
-          nZ_indices = non_zeros_splines(mesh, num_ele, deg)
-          do i=1,non_zero
-             val = nZ_indices(i)
-             if (val == -1) then
-                print *, "Error in write_connectivity: -1 found"
-                STOP
-             end if
-             write(out_unit, "(i6)", advance="no") val
-             write(out_unit, "(a)", advance="no") ","
-          end do
-          write(out_unit,"(a)")""
-       end if
-    end do
-    
-    close(out_unit)
-
   end subroutine write_connectivity
 
+  
+  !> @brief This function is supposed to write all django input files
+  !> needed for a Django/Jorek simulation.
+  !> @param[in] num_cells integer number of cells in a radius of the hexagonal
+  !> mesh
+  !> @param[in] deg integer degree of the splines that will be used for the
+  !> interpolation
+  subroutine write_all_django_files(num_cells, deg, rule)
+    sll_int32, intent(in)          :: num_cells
+    sll_int32, intent(in)          :: deg
+    sll_int32, intent(in)          :: rule
+    type(sll_hex_mesh_2d), pointer :: mesh
 
+    mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, radius = 1._f64)
+    
+    call write_caid_files(mesh, deg)
+    call write_connectivity(mesh, deg)    
+    call write_basis_values(deg, rule)
+    call write_quadrature(rule)
+
+  end subroutine write_all_django_files
+  
+  !> @brief Generic sub-routine defined for 2D box spline types.
+  !> Deallocates the memory associated with the given box spline object.
+  !> @param[inout] spline_object.
+  subroutine delete_box_spline_2d(spline)
+    type(sll_box_spline_2d),  intent(inout), pointer :: spline
+    sll_int32 :: ierr
+
+    if( .not. associated(spline) ) then
+       print *, 'delete_box_spline_2D(): passed spline is not associated'
+       STOP
+    end if
+    call delete(spline%mesh)
+    SLL_DEALLOCATE(spline%coeffs, ierr)
+    SLL_DEALLOCATE(spline, ierr)
+  end subroutine delete_box_spline_2d
 
 end module sll_box_splines
