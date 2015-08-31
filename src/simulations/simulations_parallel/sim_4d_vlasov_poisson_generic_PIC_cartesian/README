@@ -81,6 +81,7 @@
 
 *** plot
 
+    A Gnuplot script is generated at [[file:simulation_4d_vp_generic_pic_cartesian.F90::rho_init_standPUSH]]
 AAA-ALH-HERE
 -- pour representer les points reconstruits ou bien les points de f_target dont la vitesse est donnee
 
