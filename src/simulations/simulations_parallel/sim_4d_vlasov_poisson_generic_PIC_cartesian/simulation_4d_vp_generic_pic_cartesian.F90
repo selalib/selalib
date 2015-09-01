@@ -552,16 +552,18 @@ contains
 
     call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
 
+    ! <<Ex_Ey_output>>
     if (sim%my_rank == 0) then
-    it = 0
-    print *, "writing Ex, Ey in gnuplot format for iteration # it = ", it
-    call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
-                        sim%mesh_2d%eta2_max, ncy+1,                        &
-                        sim%E1, 'Ex', it, ierr )
+       it = 0
+       
+       print *, "writing Ex, Ey in gnuplot format for iteration # it = ", it
+       call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
+            sim%mesh_2d%eta2_max, ncy+1,                        &
+            sim%E1, 'Ex', it, ierr )
 
-    call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
-                        sim%mesh_2d%eta2_max, ncy+1,                        &
-                        sim%E2, 'Ey', it, ierr )
+       call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
+            sim%mesh_2d%eta2_max, ncy+1,                        &
+            sim%E2, 'Ey', it, ierr )
 
     endif
 
