@@ -21,6 +21,7 @@ use sll_ascii_io
   sll_int32, parameter :: SLL_HEX_P1 = 1 
   sll_int32, parameter :: SLL_HEX_P1_new = 3 
   sll_int32, parameter :: SLL_HEX_MITCHELL = 4 
+  sll_int32, parameter :: SLL_HEX_MITCHELL_new = 40 
   sll_int32, parameter :: SLL_HEX_Z9_new = 90 
 
   type(sll_hex_mesh_2d),   pointer        :: mesh
@@ -283,6 +284,8 @@ use sll_ascii_io
       num_method = SLL_HEX_P1_new 
     case ("SLL_HEX_MITCHELL")
       num_method = SLL_HEX_MITCHELL 
+    case ("SLL_HEX_MITCHELL_new")
+      num_method = SLL_HEX_MITCHELL_new 
     case default    
       SLL_ERROR("rotation_2d_hexagonal_hermite", "bad value of num_method_case")  
   end select
@@ -328,6 +331,8 @@ use sll_ascii_io
   if(num_method==SLL_HEX_SPLINES)then
     spline => new_box_spline_2d(mesh, SLL_DIRICHLET)
   else if(num_method==SLL_HEX_MITCHELL)then
+    SLL_ALLOCATE(deriv(13,n_points),ierr)  
+  else if(num_method==SLL_HEX_MITCHELL_new)then
     SLL_ALLOCATE(deriv(13,n_points),ierr)  
   else if(num_method==SLL_HEX_Z9_new)then
     SLL_ALLOCATE(deriv(7,n_points),ierr)  
@@ -384,18 +389,43 @@ use sll_ascii_io
   SLL_ALLOCATE(bounds2(2,2*num_cells+1),ierr)
   call compute_bounds2(index1,bounds2,num_cells) 
 
-  size_hex_stencil = compute_size_hex_stencil( &
-    index1, &
-    num_cells, &
-    p)
 
-  SLL_ALLOCATE(hex_stencil(size_hex_stencil,n_points),ierr)  
-  call compute_hex_stencil( &
-    index1, &
-    num_cells, &
-    p, &
-    hex_stencil)  
-
+  select case (num_method)
+    case(SLL_HEX_MITCHELL)
+      size_hex_stencil = compute_size_hex_stencil( &
+        index1, &
+        num_cells, &
+        p)
+      SLL_ALLOCATE(hex_stencil(size_hex_stencil,n_points),ierr)  
+      call compute_hex_stencil( &
+        index1, &
+        num_cells, &
+        p, &
+        hex_stencil)  
+    case(SLL_HEX_Z9_new)
+      size_hex_stencil = compute_size_hex_stencil( &
+        index1, &
+        num_cells, &
+        p)
+      SLL_ALLOCATE(hex_stencil(size_hex_stencil,n_points),ierr)  
+      call compute_hex_stencil( &
+        index1, &
+        num_cells, &
+        p, &
+        hex_stencil)  
+    case(SLL_HEX_MITCHELL_new)
+      size_hex_stencil = compute_size_hex_stencil( &
+        index1, &
+        num_cells, &
+        p)
+      SLL_ALLOCATE(hex_stencil(size_hex_stencil,n_points),ierr)  
+      call compute_hex_stencil_new( &
+        index1, &
+        num_cells, &
+        p, &
+        hex_stencil)  
+    case default
+  end select  
   
   ! ----------------------------
   ! Time loop
@@ -436,6 +466,22 @@ use sll_ascii_io
 !          rho_tn, &
 !          deriv)
         call compute_derivative_mitchell( &
+          index1, &
+          hex_stencil, &
+          num_cells, &
+          p, &
+          rho_tn, &
+          deriv)
+      case (SLL_HEX_MITCHELL_new)
+!        call compute_derivative( &
+!          index1, &
+!          bounds1, &
+!          bounds2, &
+!          num_cells, &
+!          p, &
+!          rho_tn, &
+!          deriv)
+        call compute_derivative_mitchell_new( &
           index1, &
           hex_stencil, &
           num_cells, &
@@ -548,6 +594,14 @@ use sll_ascii_io
           positions)
       case (SLL_HEX_MITCHELL)            
         call interpolate_mitchell( &
+          radius, &
+          num_cells, &
+          index1, &
+          deriv, &
+          rho_tn1, &
+          positions)
+      case (SLL_HEX_MITCHELL_new)            
+        call interpolate_mitchell_new( &
           radius, &
           num_cells, &
           index1, &
@@ -1937,6 +1991,127 @@ contains
         
   end subroutine compute_hex_stencil 
 
+
+  subroutine compute_hex_stencil_new( &
+    index, &
+    num_cells, &
+    p, &
+    stencil)
+    sll_int32, intent(in) :: index(:,:)
+    sll_int32, intent(in) :: num_cells
+    sll_int32, intent(in) :: p
+    sll_int32, intent(out) :: stencil(:,:)
+        
+    
+    sll_int32 :: r_left
+    sll_int32 :: s_left
+    sll_int32 :: r_right
+    sll_int32 :: s_right
+    sll_int32 :: r
+    sll_int32 :: s
+    sll_int32 :: num_pts_tot
+    sll_int32, allocatable :: bounds1(:,:)
+    sll_int32, allocatable :: hex_coord(:,:)
+    sll_int32 :: ierr
+    sll_int32 :: hex1
+    sll_int32 :: hex2
+    sll_int32 :: ii 
+    sll_int32 :: hex1_loc
+    sll_int32 :: hex2_loc
+    sll_int32 :: j
+    sll_int32 :: num
+    sll_int32 :: jj
+    sll_int32 :: tmp
+    sll_int32 :: k
+    sll_int32 :: a1(6)
+    sll_int32 :: a2(6)
+ 
+
+    num_pts_tot = 3*num_cells*(num_cells+1)+1
+
+    SLL_ALLOCATE(bounds1(2,2*num_cells+1),ierr) 
+    call compute_bounds1(index,bounds1,num_cells) 
+    SLL_ALLOCATE(hex_coord(2,num_pts_tot),ierr) 
+    call compute_hex_coord(index,num_cells,hex_coord)
+
+    r_left=-p/2
+    s_left=(p+1)/2
+    r_right=(-p+1)/2
+    s_right=p/2+1
+    !r = min(r_left,r_right)
+    !s = max(s_left,s_right)
+    
+    a1(1) = 1
+    a2(1) = 0
+    a1(2) = 1
+    a2(2) = 1
+    a1(3) = 0
+    a2(3) = 1
+    a1(4) = -1
+    a2(4) = 0
+    a1(5) = -1
+    a2(5) = -1
+    a1(6) = 0
+    a2(6) = -1
+    
+
+    do i=1,num_pts_tot
+      hex1 = hex_coord(1,i)  
+      hex2 = hex_coord(2,i)
+      ii=0
+      
+      do k=1,6
+        do j=r_left,s_left
+          hex1_loc = hex1+a1(k)*j
+          if(hex1_loc<1)then
+            hex1_loc = 1
+          endif
+          if(hex1_loc>2*num_cells+1)then
+            hex1_loc = 2*num_cells+1
+          endif
+          hex2_loc = hex2+a2(k)*j
+          if(hex2_loc<1)then
+            hex2_loc = 1
+          endif
+          if(hex2_loc>2*num_cells+1)then
+            hex2_loc = 2*num_cells+1
+          endif
+          ii=ii+1
+          stencil(ii,i) = index(hex1_loc,hex2_loc)          
+        enddo
+        ii=ii-(s_left-r_left+1)
+        num=0
+        do while (stencil(ii,i)==0)
+          ii=ii+1
+          num=num+1
+        enddo
+        tmp = stencil(ii,i)
+        !ii=ii-(s_tab(k)-r_tab(k)+1)
+        do jj=1,num
+          !stencil(ii+jj-1,i) = tmp
+          ii=ii-1
+          stencil(ii,i) = tmp
+        enddo
+        ii=ii+(s_left-r_left+1)
+        num = 0
+        do while (stencil(ii,i)==0)
+          ii=ii-1
+          num=num+1
+        enddo
+        tmp = stencil(ii,i)
+        do jj=1,num
+          ii=ii+1
+          stencil(ii,i) = tmp
+        enddo
+      enddo  
+    enddo
+  end subroutine compute_hex_stencil_new 
+
+
+
+
+
+
   subroutine compute_derivative( &
     index, &
     bounds1, &
@@ -2408,7 +2583,8 @@ contains
     sll_int32 :: jj
     sll_real64 :: tmp
     sll_int32 :: ind
-
+    
+    sll_int32, allocatable :: loc_stencil(:,:)
 
 
 
@@ -2429,6 +2605,8 @@ contains
 
     !print *,'#left',r_left,s_left,w_left
     !print *,'#right',r_right,s_right,w_right
+    
+    !stop
     
     num_pts_tot = 3*num_cells*(num_cells+1)+1
 
@@ -2572,10 +2750,166 @@ contains
             
     enddo
     
+    
+    SLL_ALLOCATE( loc_stencil(r_left:s_left,3),ierr )
+    
+    !we have to do a second loop to compute the mixed
+    !derivatives
+    do i=1,num_pts_tot      
+      
+      !first take the three needed stencil 
+      ii=0
+      do j=r_left,s_left
+        ii=ii+1
+        loc_stencil(j,1) = stencil(ii,i)
+      enddo
+      ii = ii+s_right-r_right+1
+      do j=r_left,s_left
+        ii=ii+1
+        loc_stencil(j,2) = stencil(ii,i)
+      enddo
+      ii = ii+s_right-r_right+1
+      do j=r_left,s_left
+        ii=ii+1
+        loc_stencil(j,3) = stencil(ii,i)
+      enddo
+      
+      !now, we compute the 6 mixed derivatives
+      ii=0
+      
+      tmp=0._f64
+      do j=r_left,s_left
+        tmp = tmp+w_left(j)*deriv(2,loc_stencil(j,3))        
+      enddo
+      deriv(8,i) = tmp
+
+      tmp=0._f64
+      do j=r_left,s_left
+        tmp = tmp+w_left(j)*deriv(3,loc_stencil(j,2))        
+      enddo
+      deriv(9,i) = tmp
+
+      tmp=0._f64
+      do j=r_left,s_left
+        tmp = tmp+w_left(j)*deriv(4,loc_stencil(j,3))        
+      enddo
+      deriv(10,i) = tmp
+
+      tmp=0._f64
+      do j=r_left,s_left
+        tmp = tmp+w_left(j)*deriv(5,loc_stencil(j,1))        
+      enddo
+      deriv(11,i) = tmp
+
+      tmp=0._f64
+      do j=r_left,s_left
+        tmp = tmp+w_left(j)*deriv(7,loc_stencil(j,1))        
+      enddo
+      deriv(12,i) = tmp
+
+      tmp=0._f64
+      do j=r_left,s_left
+        tmp = tmp+w_left(j)*deriv(7,loc_stencil(j,2))        
+      enddo
+      deriv(13,i) = tmp
+      
+      
+    enddo    
+        
         
     
     
   end subroutine compute_derivative_mitchell
+
+
+
+
+
+  subroutine compute_derivative_mitchell_new( &
+    index, &
+    stencil, &
+    num_cells, &
+    p, &
+    rho_tn, &
+    deriv)
+    sll_int32, intent(in) :: index(:,:)
+    sll_int32, intent(in) :: stencil(:,:)
+    sll_int32, intent(in) :: num_cells
+    sll_int32, intent(in) :: p
+    sll_real64, intent(in) :: rho_tn(:)
+    sll_real64, intent(out) :: deriv(:,:)
+    
+    sll_int32 :: i
+    sll_int32 :: r_left
+    sll_int32 :: s_left
+    sll_int32 :: r_right
+    sll_int32 :: s_right
+    sll_int32 :: ierr
+    sll_real64, allocatable :: w_left(:)
+    sll_real64, allocatable :: w_right(:)
+    sll_int32 :: num_pts_tot
+    sll_int32 :: j
+    sll_int32 :: ii
+    sll_int32 :: jj
+    sll_real64 :: tmp
+    sll_int32 :: ind
+    
+    sll_int32 :: k
+
+
+
+    r_left=-p/2
+    s_left=(p+1)/2
+    SLL_ALLOCATE( w_left(r_left:s_left),ierr )
+    call compute_w_hermite(w_left,r_left,s_left)
+
+
+
+    !print *,'#left',r_left,s_left,w_left
+    
+    num_pts_tot = 3*num_cells*(num_cells+1)+1
+ 
+    
+    do i=1,num_pts_tot
+      deriv(1,i) =  rho_tn(i)
+      ii=0
+      
+      do k=1,6
+        tmp=0._f64
+        do j=r_left,s_left
+          ii=ii+1
+          tmp = tmp+w_left(j)*rho_tn(stencil(ii,i))        
+        enddo
+        deriv(k+1,i) = tmp
+      enddo
+    enddo      
+    
+    !we have to do a second loop to compute the mixed
+    !derivatives
+    do i=1,num_pts_tot      
+      ii=0
+      do k=1,5
+        tmp=0._f64
+        do j=r_left,s_left
+          ii=ii+1
+          tmp = tmp+w_left(j)*deriv(k+2,stencil(ii,i))        
+        enddo
+        deriv(k+7,i) = tmp
+      enddo
+
+      tmp=0._f64
+      do j=r_left,s_left
+        ii=ii+1
+        tmp = tmp+w_left(j)*deriv(2,stencil(ii,i))        
+      enddo
+      deriv(13,i) = tmp
+      
+    enddo    
+        
+        
+    
+    
+  end subroutine compute_derivative_mitchell_new
 
 
 
@@ -2633,7 +2967,10 @@ contains
     sll_real64 :: y2n
     sll_real64 :: y3n
     
-
+    sll_real64 :: err_loc
+    sll_real64 :: err
+    
+    err = 0._f64
 
     delta = radius/real(num_cells,f64)
     r1_x1 = sqrt(3._f64) * 0.5_f64*delta
@@ -2719,21 +3056,56 @@ contains
         lam(3) = y2n*xx+x2n*yy
       endif
       freedom = 0._f64
-      if(i1/=0)then
-        freedom(1) = deriv(1,i1)
+      
+      if(xx>=0.)then
+      
+        if(i1/=0)then
+          freedom(1) = deriv(1,i1)
+          freedom(4) = deriv(2,i1)
+          freedom(5) = -deriv(3,i1)
+          freedom(8) = -deriv(7,i1)          
+          freedom(9) = deriv(6,i1)          
+          freedom(10) = deriv(8,i1)          
+          freedom(11) = -deriv(9,i1)          
+          freedom(12) = deriv(13,i1)          
+        endif
+        if(i2/=0)then
+          freedom(2) = deriv(1,i2)
+          freedom(6) = deriv(4,i2)
+          freedom(7) = -deriv(5,i2)
+        endif
+        if(i3/=0)then
+          freedom(3) = deriv(1,i3)
+        endif
+        
+         
+        
       else
-        freedom(1) = 0._f64
+
+        if(i1/=0)then
+          freedom(1) = deriv(1,i1)
+          freedom(4) = deriv(6,i1)
+          freedom(5) = -deriv(7,i1)
+          freedom(8) = -deriv(5,i1)
+          freedom(9) = deriv(4,i1)
+          freedom(10) = deriv(10,i1)
+          freedom(11) = deriv(12,i1)
+          freedom(12) = -deriv(11,i1)
+        endif
+        if(i2/=0)then
+          freedom(2) = deriv(1,i2)
+        endif
+        if(i3/=0)then
+          freedom(3) = deriv(1,i3)
+          freedom(6) = -deriv(3,i3)
+          freedom(7) = deriv(2,i3)
+        endif
+      
+      
       endif
-      if(i2/=0)then
-        freedom(2) = deriv(1,i2)
-      else
-        freedom(2) = 0._f64
-      endif
-      if(i3/=0)then
-        freedom(3) = deriv(1,i3)
-      else
-        freedom(3) = 0._f64
-      endif
+      
+      !freedom(10:12) = 0._f64
+        
       lam(1) = 1._f64-lam(2)-lam(3)
 
       base(1) =  lam(1)**2*(3._f64-2._f64*lam(1)+6._f64*lam(2)*lam(3))      
@@ -2793,10 +3165,317 @@ contains
       !L[14]=r**2*p*q          frrp(1,1) p; frrn(0,1) n
 
 
+      !check solution in P1 case
+!      err_loc = abs(rho_tn1(i) &
+!        -freedom(1)*lam(1)-freedom(2)*lam(2)-freedom(3)*lam(3))
+!      err = max(err,err_loc)
+!      
+!      !if((maxval(abs(freedom(1:3)))<1.e-10) .and. (err_loc>1e-4))then
+!      if(err_loc>1e-5)then
+!        print *,'#i,err_loc=',i,err_loc
+!        print *,'#lam=',lam
+!        print *,'#freedom=',freedom
+!        print *,'#i1,i2,i3=',i1,i2,i3
+!        print *,'#deriv(:,i1)=',deriv(:,i1)
+!        print *,'#deriv(:,i2)=',deriv(:,i2)
+!        print *,'#deriv(:,i3)=',deriv(:,i3)
+!        print *,'#xx=',xx
+!        stop
+!      endif
+
+
+
+
 
     enddo
     
+    !print *,'#err with p1=',err
+    
+    
   end subroutine interpolate_mitchell
+
+
+  subroutine interpolate_mitchell_new( &
+    radius, &
+    num_cells, &
+    index1, &
+    deriv, &
+    rho_tn1, &
+    positions, &
+    r )
+    sll_real64, intent(in) :: radius
+    sll_int32, intent(in) :: num_cells
+    sll_int32, intent(in) :: index1(:,:)
+    sll_real64, intent(in) :: deriv(:,:)
+    sll_real64, intent(out) :: rho_tn1(:)
+    sll_real64, intent(in) :: positions(:,:)
+    sll_real64, intent(in), optional :: r(2,2)
+    !sll_real64, intent(in) :: dt
+    
+    sll_int32 :: i
+    sll_real64 :: xx
+    sll_real64 :: yy
+    sll_real64 :: det
+    sll_real64 :: r11
+    sll_real64 :: r12
+    sll_real64 :: r21
+    sll_real64 :: r22
+    sll_real64 :: h1
+    sll_real64 :: h2
+    sll_int32 :: i1
+    sll_int32 :: i2
+    sll_int32 :: i3
+    sll_int32 :: ii
+    sll_int32 :: jj
+    sll_real64 :: a2
+    sll_int32 :: s
+    sll_real64 :: freedom(12)
+    sll_real64 :: base(12)
+    sll_real64 :: lam(3)
+    sll_real64 :: f
+    sll_real64 :: r1_x1
+    sll_real64 :: r1_x2
+    sll_real64 :: r2_x1
+    sll_real64 :: r2_x2
+    sll_real64 :: delta
+    sll_int32 :: num_pts_tot
+    sll_real64 :: x2p
+    sll_real64 :: x3p
+    sll_real64 :: x2n
+    sll_real64 :: x3n
+    sll_real64 :: y2p
+    sll_real64 :: y3p
+    sll_real64 :: y2n
+    sll_real64 :: y3n
+    
+    sll_real64 :: err_loc
+    sll_real64 :: err
+    
+    err = 0._f64
+
+    delta = radius/real(num_cells,f64)
+    r1_x1 = sqrt(3._f64) * 0.5_f64*delta
+    r1_x2 = 0.5_f64*delta
+    r2_x1 = -r1_x1
+    r2_x2 = r1_x2
+
+    if(present(r))then
+    if(abs(r1_x1-r(1,1))>1.e-14)then
+      print *,'#value for r1_x1 not supported'
+      stop
+    endif
+    if(abs(r2_x2-r(2,2))>1.e-14)then
+      print *,'#value for r2_x2 not supported'
+      stop
+    endif
+    if(abs(r1_x2-r(1,2))>1.e-14)then
+      print *,'#value for r1_x2 not supported'
+      stop
+    endif
+    if(abs(r2_x1-r(2,1))>1.e-14)then
+      print *,'#value for r2_x1 not supported'
+      stop
+    endif
+    endif
+    num_pts_tot = 3*num_cells*(num_cells+1)+1
+    det = r1_x1*r2_x2-r1_x2*r2_x1
+    r11 = r2_x2/det
+    r12 = -r2_x1/det
+    r21 = -r1_x2/det
+    r22 = r1_x1/det
+    
+    a2  = 2._f64/(delta**2*sqrt(3._f64))
+    x2p = a2*r1_x1
+    y2p = -a2*r1_x2
+    x3p = -a2*(r1_x1+r2_x1)
+    y3p = a2*(r1_x2+r2_x2)
+
+    x3n = -a2*r2_x1
+    y3n = a2*r2_x2
+    x2n = a2*(r1_x1+r2_x1)
+    y2n = -a2*(r1_x2+r2_x2)
+    
+    
+    do i=1,num_pts_tot
+      xx = positions(1,i)
+      yy = positions(2,i)
+      h1 =  xx*r11 + yy*r12
+      h2 =  xx*r21 + yy*r22
+      ii = floor(h1)
+      jj = floor(h2)        
+      h1 = h1-real(ii,f64)
+      h2 = h2-real(jj,f64)
+      if(ii>=num_cells)then
+        ii=num_cells-1
+        h1 = 1._f64
+      endif
+      if(ii<=-num_cells)then
+        ii=-num_cells
+        h1 = 0._f64
+      endif
+      if(jj>=num_cells)then
+        jj=num_cells-1
+        h2 = 1._f64
+      endif
+      if(jj<=-num_cells)then
+        jj=-num_cells
+        h2 = 0._f64
+      endif
+      
+      xx = r1_x1*h1+r2_x1*h2
+      yy = r1_x2*h1+r2_x2*h2
+      i1 = index1(num_cells+1+ii,num_cells+1+jj)
+      if ( xx >= 0._f64 ) then
+        i2 = index1(num_cells+1+ii+1,num_cells+1+jj)          
+        i3 = index1(num_cells+1+ii+1,num_cells+1+jj+1)
+        lam(2) = y3p*xx+x3p*yy
+        lam(3) = y2p*xx+x2p*yy
+      else
+        i2 = index1(num_cells+1+ii+1,num_cells+1+jj+1)
+        i3 = index1(num_cells+1+ii,num_cells+1+jj+1)
+        lam(2) = y3n*xx+x3n*yy
+        lam(3) = y2n*xx+x2n*yy
+      endif
+      freedom = 0._f64
+      
+      if(xx>=0.)then
+      
+        if(i1/=0)then
+          freedom(1) = deriv(1,i1)
+          freedom(4) = deriv(2,i1)
+          freedom(9) = deriv(3,i1)
+          freedom(10) = deriv(8,i1)
+        endif
+        if(i2/=0)then
+          freedom(2) = deriv(1,i2)
+          freedom(5) = deriv(5,i2)
+          freedom(6) = deriv(4,i2)
+          freedom(11) = deriv(10,i2)
+        endif
+        if(i3/=0)then
+          freedom(3) = deriv(1,i3)
+          freedom(7) = deriv(7,i3)
+          freedom(8) = deriv(6,i3)
+          freedom(12) = deriv(12,i3)
+        endif
+        
+         
+        
+      else
+
+        if(i1/=0)then
+          freedom(1) = deriv(1,i1)
+          freedom(4) = deriv(3,i1)
+          freedom(9) = deriv(4,i1)
+          freedom(10) = deriv(9,i1)
+        endif
+        if(i2/=0)then
+          freedom(2) = deriv(1,i2)
+          freedom(5) = deriv(6,i2)
+          freedom(6) = deriv(5,i2)
+          freedom(11) = deriv(11,i2)
+        endif
+        if(i3/=0)then
+          freedom(3) = deriv(1,i3)
+          freedom(7) = deriv(2,i3)
+          freedom(8) = deriv(7,i3)
+          freedom(12) = deriv(13,i3)
+        endif
+      
+      
+      endif
+      
+      !freedom(10:12) = 0._f64
+        
+      lam(1) = 1._f64-lam(2)-lam(3)
+
+      base(1) =  lam(1)**2*(3._f64-2._f64*lam(1)+6._f64*lam(2)*lam(3))      
+      base(2) =  lam(2)**2*(3._f64-2._f64*lam(2)+6._f64*lam(3)*lam(1))      
+      base(3) =  lam(3)**2*(3._f64-2._f64*lam(3)+6._f64*lam(1)*lam(2))      
+      
+      base(4) = lam(1)**2*lam(2)*(1._f64+2._f64*lam(3))
+      base(5) = lam(2)**2*lam(1)*(1._f64+2._f64*lam(3))
+      
+      base(6) = lam(2)**2*lam(3)*(1._f64+2._f64*lam(1))
+      base(7) = lam(3)**2*lam(2)*(1._f64+2._f64*lam(1))
+
+      base(8) = lam(3)**2*lam(1)*(1._f64+2._f64*lam(2))
+      base(9) = lam(1)**2*lam(3)*(1._f64+2._f64*lam(2))
+      
+      base(10) = lam(1)**2*lam(2)*lam(3)
+      base(11) = lam(2)**2*lam(3)*lam(1)
+      base(12) = lam(3)**2*lam(1)*lam(2)
+      
+      !L[0]=p**2*(3-2*p+6*q*r) f(0,0) p+n -> deriv(1,i1)
+      !L[1]=q**2*(3-2*q+6*r*p) f(1,0) p; f(1,1) n -> deriv(1,i2)
+      !L[2]=r**2*(3-2*r+6*p*q) f(1,1) p; f(0,1) n -> deriv(i,i3)
+      !L[3]=p**2*q*(1+2*r)     fr1(0,0) p; fr3(0,0) n 
+      !L[4]=q**2*p*(1+2*r)     fr1(1,0) p; fr3(1,1) n
+      !L[5]=p**2*q**2/24      0
+      !L[6]=q**2*r*(1+2*p)  
+      !L[7]=r**2*q*(1+2*p)
+      !L[8]=q**2*r**2/24)      0
+      !L[9]=r**2*p*(1+2*q)
+      !L[10]=p**2*r*(1+2*q)
+      !L[11]=r**2*p**2/24      0
+      !L[12]=p**2*q*r          frrp(0,0) p; frrn(0,0) n
+      !L[13]=q**2*r*p          frrp(1,0) p; frrn(1,1) n
+      !L[14]=r**2*p*q          frrp(1,1) p; frrn(0,1) n
+      
+      
+      
+      f = 0._f64
+      do s = 1,12
+        f = f + freedom(s)*base(s)
+      enddo
+      rho_tn1(i) = f    
+      !L[0]=p**2*(3-2*p+6*q*r) f(0,0) p+n -> deriv(1,i1)
+      !L[1]=q**2*(3-2*q+6*r*p) f(1,0) p; f(1,1) n -> deriv(1,i2)
+      !L[2]=r**2*(3-2*r+6*p*q) f(1,1) p; f(0,1) n -> deriv(i,i3)
+      !L[3]-p**2*q*(1+2*r)     fr1(0,0) p; fr3(0,0) n 
+      !L[4]=q**2*p*(1+2*r)     fr1(1,0) p; fr3(1,1) n
+      !L[5]-=p**2*q**2/24      0
+      !L[6]=q**2*r*(1+2*p)  
+      !L[7]=r**2*q*(1+2*p)
+      !L[8]=q**2*r**2/24)      0
+      !L[9]=r**2*p*(1+2*q)
+      !L[10]=p**2*r*(1+2*q)
+      !L[11]=r**2*p**2/24      0
+      !L[12]=p**2*q*r          frrp(0,0) p; frrn(0,0) n
+      !L[13]=q**2*r*p          frrp(1,0) p; frrn(1,1) n
+      !L[14]=r**2*p*q          frrp(1,1) p; frrn(0,1) n
+
+
+      !check solution in P1 case
+!      err_loc = abs(rho_tn1(i) &
+!        -freedom(1)*lam(1)-freedom(2)*lam(2)-freedom(3)*lam(3))
+!      err = max(err,err_loc)
+!      
+!      !if((maxval(abs(freedom(1:3)))<1.e-10) .and. (err_loc>1e-4))then
+!      if(err_loc>1e-5)then
+!        print *,'#i,err_loc=',i,err_loc
+!        print *,'#lam=',lam
+!        print *,'#freedom=',freedom
+!        print *,'#i1,i2,i3=',i1,i2,i3
+!        print *,'#deriv(:,i1)=',deriv(:,i1)
+!        print *,'#deriv(:,i2)=',deriv(:,i2)
+!        print *,'#deriv(:,i3)=',deriv(:,i3)
+!        print *,'#xx=',xx
+!        stop
+!      endif
+!
+
+
+
+
+    enddo
+    
+    !print *,'#err with p1=',err
+    
+    
+  end subroutine interpolate_mitchell_new
+
+
 
 
   subroutine interpolate_z9_new( &
@@ -2988,7 +3667,7 @@ contains
 !      endif      
 
 
-      if(xx>0._f64)then
+      if(xx>=0._f64)then
         if(i1/=0)then
           freedom(4) = deriv(2,i1)
           freedom(5) = deriv(6,i1)
