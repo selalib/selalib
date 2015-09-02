@@ -1,0 +1,2 @@
+add_executable( test_ode_integrators test_ode_integrators.F90 )
+target_link_libraries( test_ode_integrators sll_ode_integrators sll_assert )
