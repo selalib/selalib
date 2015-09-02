@@ -140,15 +140,9 @@ program test_ode_integrators
   class( sll_ode_integrator_base ), allocatable :: odeint
 
   !----------------------------------------------------------------------------
-  ! Get input arguments
+  ! Get input arguments (from command line)
   call parse_input_arguments( ode_selector, odeint_selector, h_factor )
 
-  ! Print values
-  print *, ode_selector
-  print *, odeint_selector
-  print *, h_factor
-
-  !----------------------------------------------------------------------------
   ! Initial conditions (from test-case)
   t  = 0.0_f64
   z0 = [1.0_f64, 0.0_f64]
