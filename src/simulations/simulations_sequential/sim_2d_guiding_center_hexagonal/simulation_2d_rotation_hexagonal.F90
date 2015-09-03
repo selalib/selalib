@@ -2025,6 +2025,105 @@ contains
     sll_int32 :: k
     sll_int32 :: a1(6)
     sll_int32 :: a2(6)
+    logical :: inside
+    
+ 
+
+    num_pts_tot = 3*num_cells*(num_cells+1)+1
+
+    SLL_ALLOCATE(bounds1(2,2*num_cells+1),ierr) 
+    call compute_bounds1(index,bounds1,num_cells) 
+    SLL_ALLOCATE(hex_coord(2,num_pts_tot),ierr) 
+    call compute_hex_coord(index,num_cells,hex_coord)
+
+    r_left=-p/2
+    s_left=(p+1)/2
+    r_right=(-p+1)/2
+    s_right=p/2+1
+    !r = min(r_left,r_right)
+    !s = max(s_left,s_right)
+    
+    a1(1) = 1
+    a2(1) = 0
+    a1(2) = 1
+    a2(2) = 1
+    a1(3) = 0
+    a2(3) = 1
+    a1(4) = -1
+    a2(4) = 0
+    a1(5) = -1
+    a2(5) = -1
+    a1(6) = 0
+    a2(6) = -1
+    
+
+    do i=1,num_pts_tot
+      hex1 = hex_coord(1,i)  
+      hex2 = hex_coord(2,i)
+      ii=0      
+      do k=1,6
+        do j=r_left,s_left
+          hex1_loc = hex1+a1(k)*j
+          inside = .true.
+          if(hex1_loc<1)then
+            inside = .false.
+          endif
+          if(hex1_loc>2*num_cells+1)then
+            inside = .false.
+          endif
+          hex2_loc = hex2+a2(k)*j
+          if(hex2_loc<1)then
+            inside = .false.
+          endif
+          if(hex2_loc>2*num_cells+1)then
+            inside = .false.
+          endif
+          ii=ii+1
+          if(inside)then
+            stencil(ii,i) = index(hex1_loc,hex2_loc)
+          else
+            stencil(ii,i) = 0
+          endif            
+        enddo
+      enddo  
+    enddo
+  end subroutine compute_hex_stencil_new 
+
+
+
+  subroutine compute_hex_stencil_old( &
+    index, &
+    num_cells, &
+    p, &
+    stencil)
+    sll_int32, intent(in) :: index(:,:)
+    sll_int32, intent(in) :: num_cells
+    sll_int32, intent(in) :: p
+    sll_int32, intent(out) :: stencil(:,:)
+        
+    
+    sll_int32 :: r_left
+    sll_int32 :: s_left
+    sll_int32 :: r_right
+    sll_int32 :: s_right
+    sll_int32 :: r
+    sll_int32 :: s
+    sll_int32 :: num_pts_tot
+    sll_int32, allocatable :: bounds1(:,:)
+    sll_int32, allocatable :: hex_coord(:,:)
+    sll_int32 :: ierr
+    sll_int32 :: hex1
+    sll_int32 :: hex2
+    sll_int32 :: ii 
+    sll_int32 :: hex1_loc
+    sll_int32 :: hex2_loc
+    sll_int32 :: j
+    sll_int32 :: num
+    sll_int32 :: jj
+    sll_int32 :: tmp
+    sll_int32 :: k
+    sll_int32 :: a1(6)
+    sll_int32 :: a2(6)
  
 
     num_pts_tot = 3*num_cells*(num_cells+1)+1
@@ -2105,7 +2204,7 @@ contains
         enddo
       enddo  
     enddo
-  end subroutine compute_hex_stencil_new 
+  end subroutine compute_hex_stencil_old 
 
 
 
@@ -2878,7 +2977,9 @@ contains
         tmp=0._f64
         do j=r_left,s_left
           ii=ii+1
-          tmp = tmp+w_left(j)*rho_tn(stencil(ii,i))        
+          if(stencil(ii,i)/=0)then
+            tmp = tmp+w_left(j)*rho_tn(stencil(ii,i))
+          endif          
         enddo
         deriv(k+1,i) = tmp
       enddo
@@ -2892,7 +2993,9 @@ contains
         tmp=0._f64
         do j=r_left,s_left
           ii=ii+1
-          tmp = tmp+w_left(j)*deriv(k+2,stencil(ii,i))        
+          if(stencil(ii,i)/=0)then
+            tmp = tmp+w_left(j)*deriv(k+2,stencil(ii,i))
+          endif          
         enddo
         deriv(k+7,i) = tmp
       enddo
@@ -2900,7 +3003,9 @@ contains
       tmp=0._f64
       do j=r_left,s_left
         ii=ii+1
-        tmp = tmp+w_left(j)*deriv(2,stencil(ii,i))        
+        if(stencil(ii,i)/=0)then
+          tmp = tmp+w_left(j)*deriv(2,stencil(ii,i))
+        endif          
       enddo
       deriv(13,i) = tmp
       
