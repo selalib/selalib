@@ -243,6 +243,4 @@ contains
     y = mesh%eta2_min + modulo(y - mesh%eta2_min, mesh%eta2_max - mesh%eta2_min)
   end subroutine apply_periodic_bc_on_cartesian_mesh_2d
 
-
-
 end module sll_module_pic_base
