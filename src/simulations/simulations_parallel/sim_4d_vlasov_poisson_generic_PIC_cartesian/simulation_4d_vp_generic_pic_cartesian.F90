@@ -34,6 +34,7 @@ module sll_simulation_4d_vp_generic_pic_cartesian_module
   use sll_module_poisson_2d_base
   use sll_gnuplot
   use sll_collective
+  use sll_ascii_io
 
   use sll_module_pic_base
   use sll_simple_pic_4d_group_module
@@ -62,8 +63,10 @@ module sll_simulation_4d_vp_generic_pic_cartesian_module
   
   type, extends(sll_simulation_base_class) :: sll_simulation_4d_vp_generic_pic_cartesian
 
-     !> <!-- <<particle_group>> --> the abstract particle group
-
+     !> the abstract particle group
+     
+     ! <<particle_group>> of type [[file:~/selalib/src/particle_methods/sll_pic_base.F90::sll_particle_group_base]]
+     
      class(sll_particle_group_base),  pointer     :: particle_group
 
      !> @name Physics/numerical parameters
@@ -125,6 +128,57 @@ module sll_simulation_4d_vp_generic_pic_cartesian_module
   end interface sll_delete
   
 contains
+
+  ! <<particles_snapshot>> ALH - gnuplot-compatible output of all particles with their position and speed at a given
+  ! time
+
+  subroutine particles_snapshot(time,sim)
+
+    class(sll_simulation_4d_vp_generic_pic_cartesian), intent(in) :: sim
+    
+    ! Actual time
+    
+    sll_real64::time
+
+    ! Local data
+    
+    sll_int32          :: fileid
+    character(len=100) :: filename
+    sll_int32          :: error
+    sll_int32          :: k
+    sll_real64         :: x(3),v(3)
+    
+    ! creating unique file name [[http://www.cs.mtu.edu/~shene/COURSES/cs201/NOTES/chap05/format.html]]
+
+    write(filename,'(A19,F0.3,A4)') 'particles_snapshot_',time,'.gnu'
+
+    ! Inspired from [[file:~/selalib/src/file_io/sll_gnuplot.F90::subroutine sll_gnuplot_corect_2d]]. Calls
+    ! [[file:~/selalib/src/file_io/sll_ascii_io.F90::sll_ascii_file_create]]
+
+    call sll_ascii_file_create(filename,fileid,error)
+
+    ! placing data inside the gnuplot script
+    ! [[http://stackoverflow.com/questions/12722048/gnuplot-data-points-in-script]]
+    
+    write(fileid,*) 'set xrange [',sim%mesh_2d%eta1_min,':',sim%mesh_2d%eta1_max,']'
+    write(fileid,*) 'set yrange [',sim%mesh_2d%eta2_min,':',sim%mesh_2d%eta2_max,']'
+    write(fileid,*) 'set size ratio -1'
+    write(fileid,*) 'plot "-" using 1:2:3:4 with vectors'
+
+    ! Loop over all particles. Do not display all particles for a clearer picture. AAA_ALH_HERE try with less particles.
+    
+    do k = 1,sim%number_particles,1000
+
+       ! reference to [[particle_group]] of type
+       ! [[file:~/selalib/src/particle_methods/sll_pic_base.F90::sll_particle_group_base]]
+       
+       x = sim%particle_group%get_x(k)
+       v = sim%particle_group%get_v(k)
+       
+       write(fileid,*) x(1),x(2),v(1),v(2)
+    enddo
+    close(fileid)
+  end subroutine particles_snapshot
 
   !> redefines sll_simulation_base_class::init_from_file <!--
   !> [[selalib:src/simulations/simulation_base_class.F90::init_from_file]] -->
@@ -552,7 +606,9 @@ contains
 
     call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
 
-    ! <<Ex_Ey_output>>
+    ! <<Ex_Ey_output>> using the [[selalib:src/file_io/sll_gnuplot.F90::sll_gnuplot_2d]] interface and most probably the
+    ! [[file:~/selalib/src/file_io/sll_gnuplot.F90::sll_gnuplot_corect_2d]] implementation.
+    
     if (sim%my_rank == 0) then
        it = 0
        
@@ -656,6 +712,9 @@ contains
     ! Time statistics
     call sll_set_time_mark(loop_time_mark)
     deposit_time=0
+
+    ! First snapshot at time 0 [[particles_snapshot]]
+    call particles_snapshot(0.0_8,sim)
     
     do it = 0, sim%num_iterations-1
 
@@ -939,6 +998,9 @@ contains
 
        !! -- --  diagnostics [end]  -- --
 
+        ! Another snapshot after each iteration [[particles_snapshot]]
+        call particles_snapshot(it*dt,sim)
+            
     print *, "end one loop in time"
     enddo
 
