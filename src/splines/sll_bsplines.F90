@@ -476,14 +476,22 @@ subroutine compute_bspline_2d(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
     call build_system_with_derivative(this%bs2)
   end if
 
-  if ( present(sl1_l) .and. present(sl1_r) .and. present(sl2_l) .and. present(sl2_r) ) then
-    call update_bspline_2d(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
-  else
-    call update_bspline_2d(this, gtau)
-  end if
+  if (present(sl1_l)) this%bs1%sl = sl1_l
+  if (present(sl1_r)) this%bs1%sr = sl1_r
+  if (present(sl2_l)) this%bs2%sl = sl2_l
+  if (present(sl2_r)) this%bs2%sr = sl2_r
+
+
+  call update_bspline_2d(this, gtau, this%bs1%sl, this%bs1%sr, this%bs2%sl, this%bs2%sr)
 
 end subroutine compute_bspline_2d
 
+!> @brief 
+!> update 2 values before computing bsplines coefficientcs
+!> @details
+!> If the points positions did not change use this function instead
+!> of compute_spline_2d. You still need to call compute_spline_2d at
+!> the begginning to build the linear system.
 subroutine update_bspline_2d(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
 
   type(sll_bspline_2d)    :: this 
@@ -503,31 +511,26 @@ subroutine update_bspline_2d(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
   n1 = size(this%bs1%bcoef)
   n2 = size(this%bs2%bcoef)
 
+  print*, 'n1,n2=', n1, n2
+
   SLL_CLEAR_ALLOCATE(bwork(1:n2,1:n1),ierr)
 
-  if (present(sl1_l) .and. present(sl1_r)) then
-    do j = 1, n2
-      call update_bspline_1d( this%bs1, gtau(:,j), sl1_l, sl1_r)
-      bwork(j,:) = this%bs1%bcoef
-    end do
-  else
-    do j = 1, n2
-      call update_bspline_1d( this%bs1, gtau(:,j))
-      bwork(j,:) = this%bs1%bcoef
-    end do
-  end if
+  if (present(sl1_l)) this%bs1%sl = sl1_l
+  if (present(sl1_r)) this%bs1%sr = sl1_r
+  if (present(sl2_l)) this%bs2%sl = sl2_l
+  if (present(sl2_r)) this%bs2%sr = sl2_r
 
-  if (present(sl2_l) .and. present(sl2_r)) then
-    do i = 1, n1
-      call update_bspline_1d( this%bs2, bwork(:,i), sl2_l, sl2_r)
-      this%bcoef(i,:) = this%bs2%bcoef(:)
-    end do
-  else
-    do i = 1, n1
-      call update_bspline_1d( this%bs2, bwork(:,i))
-      this%bcoef(i,:) = this%bs2%bcoef(:)
-    end do
-  end if
+  do j = 1, this%bs2%n
+    print*, 'j=',j
+    call update_bspline_1d( this%bs1, gtau(:,j), this%bs1%sl, this%bs1%sr)
+    bwork(j,:) = this%bs1%bcoef
+  end do
+
+  do i = 1, n1
+    print*, 'i=',i
+    call update_bspline_1d( this%bs2, bwork(:,i), this%bs2%sl, this%bs2%sr)
+    this%bcoef(i,:) = this%bs2%bcoef(:)
+  end do
 
   deallocate(bwork)
 
