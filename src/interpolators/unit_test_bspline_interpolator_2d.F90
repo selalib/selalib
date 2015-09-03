@@ -8,8 +8,8 @@ use sll_boundary_condition_descriptors
 
 implicit none
 
-#define NPTS1    101
-#define NPTS2    101
+#define NPTS1    5
+#define NPTS2    5
 #define SPL_DEG1 3
 #define SPL_DEG2 3
 #define X1MIN    0.0_f64
