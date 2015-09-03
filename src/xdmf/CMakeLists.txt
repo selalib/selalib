@@ -1,0 +1,7 @@
+ADD_LIBRARY( sll_xdmf STATIC sll_xml.F90 )
+
+# Tests
+IF( BUILD_TESTING )
+  ADD_SUBDIRECTORY( testing )
+ENDIF( BUILD_TESTING )
+
