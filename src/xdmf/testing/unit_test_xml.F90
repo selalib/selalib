@@ -1,20 +1,22 @@
 program test_xml
 
-use sll_m_xml, only: t_xml_document, t_xml_element
+  use sll_m_xml, only: &
+    sll_t_xml_document, &
+    sll_t_xml_element
 
-implicit none
+  implicit none
 
   !----------------------------------------------------------------------------
-  ! VARIABLE DECLARATION
+  ! VARIABLES DECLARATION
   !----------------------------------------------------------------------------
 
-  type(t_xml_document)         :: xml_doc
-  type(t_xml_element), pointer :: root, domain, grid1, grid2
-  type(t_xml_element), pointer :: time, topology, geometry, dataitem, field
-  character(len=256)           :: header
+  type(sll_t_xml_document)         :: xml_doc
+  type(sll_t_xml_element), pointer :: root, domain, grid1, grid2
+  type(sll_t_xml_element), pointer :: time, topology, geometry, dataitem, field
+  character(len=256)               :: header
 
-  character(len=256)           :: reference_filename
-  logical                      :: file_exists, equal, empty
+  character(len=256)               :: reference_filename
+  logical                          :: file_exists, equal, empty
 
   !----------------------------------------------------------------------------
   ! PARSE INPUT
