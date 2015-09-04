@@ -15,13 +15,35 @@ module sll_m_xdmf
     sll_xml_file_close,    &
     sll_xml_dataitem
 
+  use sll_m_xml, only: &
+    sll_t_xml_document,    &
+    sll_t_xml_element
+
+  implicit none
+  private
+
 !==============================================================================
-! XDMF FILE
+! User-defined types
 !==============================================================================
-  type :: sll_t_xdmf_file
+
+  !----------------------------------------------------------------------------
+  !> Pointer to grid
+  type :: t_grid_ptr
+    type(sll_t_xml_element), pointer :: p
+    sll_int32, allocatable           :: dims(:)
+  end type t_grid_ptr
+
+  !----------------------------------------------------------------------------
+  !> XDMF file
+  type, public :: sll_t_xdmf_file
     character(len=64)                :: name
     sll_int32                        :: id
-    type(sll_collective_t), pointer  :: comm => null()
+    ! NEW:
+    sll_real64                            :: time   =  0.0_f64
+    type(sll_collective_t)  , pointer     :: comm   => null()
+    type(sll_t_xml_element) , pointer     :: domain => null()
+    type(sll_t_xml_document), allocatable :: xml_doc
+    type(t_grid_ptr)        , allocatable :: grids(:)
   contains
     procedure         :: create           => xdmf__create
     procedure         :: new_grid         => xdmf__new_grid
@@ -29,6 +51,13 @@ module sll_m_xdmf
     procedure         :: write_array      => xdmf__write_array   ! not parallel
     procedure         :: collect_datasets => xdmf__collect_datasets
     procedure         :: close            => xdmf__close
+    ! NEW:
+    procedure :: init      => t_xdmf__init
+    procedure :: write     => t_xdmf__write
+    procedure :: delete    => t_xdmf__delete
+    procedure :: add_grid  => t_xdmf__add_grid
+    procedure :: add_field => t_xdmf__add_field
+
   end type sll_t_xdmf_file
 
 !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -36,8 +65,195 @@ contains
 !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 !==============================================================================
+! NEW
+!==============================================================================
+  subroutine t_xdmf__init( self, time, comm )
+    class(sll_t_xdmf_file), intent(  out) :: self
+    sll_real64            , intent(in   ) :: time
+    type(sll_collective_t), pointer       :: comm
+
+    type(sll_t_xml_element), pointer :: root
+
+    ! Fill in fields
+    self%name =  "Not defined"
+    self%id   =  999
+    self%time =  time
+    self%comm => comm
+
+    !----------------------------------------------------
+    ! ONLY MASTER WRITES TO FILE
+    if (sll_get_collective_rank( self%comm ) /= 0) return
+    !----------------------------------------------------
+
+    ! Allocate XML document
+    allocate( self%xml_doc )
+
+    ! Add header
+    call self%xml_doc%add_header_line( "<?xml version='1.0' ?>" )
+    call self%xml_doc%add_header_line( "<!DOCTYPE Xdmf SYSTEM 'Xdmf.dtd' []>" )
+
+    ! Create root element (only one may exist!)
+    root => self%xml_doc%new_element( 'Xdmf' )
+    call root%add_attribute( 'Version', '2.0' )
+
+    ! Add Domain element to root (only one for our purposes)
+    self%domain => root%new_element( 'Domain' )
+
+  end subroutine t_xdmf__init
+
+  !----------------------------------------------------------------------------
+  subroutine t_xdmf__write( self, fname )
+    class(sll_t_xdmf_file), intent(in) :: self
+    character(len=*)      , intent(in) :: fname
+
+    !----------------------------------------------------
+    ! ONLY MASTER WRITES TO FILE
+    if (sll_get_collective_rank( self%comm ) /= 0) return
+    !----------------------------------------------------
+
+    call self%xml_doc%write( fname )
+
+  end subroutine t_xdmf__write
+
+  !----------------------------------------------------------------------------
+  subroutine t_xdmf__delete( self )
+    class(sll_t_xdmf_file), intent(inout) :: self
+
+    self%time   =  0.0_f64
+    self%comm   => null()
+    self%domain => null()
+
+    if (allocated( self%xml_doc )) then
+      call self%xml_doc%delete()
+      deallocate( self%xml_doc )
+    end if
+
+    if (allocated( self%grids )) then
+      deallocate( self%grids )
+    end if
+
+  end subroutine t_xdmf__delete
+
+  !----------------------------------------------------------------------------
+  subroutine t_xdmf__add_grid( self, grid_name, x1_path, x2_path, dims, gid )
+    class(sll_t_xdmf_file), intent(inout) :: self
+    character(len=*)      , intent(in   ) :: grid_name
+    character(len=*)      , intent(in   ) :: x1_path
+    character(len=*)      , intent(in   ) :: x2_path
+    sll_int32             , intent(in   ) :: dims(2)
+    sll_int32             , intent(  out) :: gid
+
+    sll_int32 :: ng
+    character(len=64)                :: time_str, dims_str
+    type(sll_t_xml_element), pointer :: grid, geometry
+    type(sll_t_xml_element), pointer :: time, topology, dataitem
+    type(t_grid_ptr), allocatable    :: tmp(:)
+
+    !----------------------------------------------------
+    ! ONLY MASTER WRITES TO FILE
+    if (sll_get_collective_rank( self%comm ) /= 0) return
+    !----------------------------------------------------
+
+    ! Prepare strings with data
+    write( time_str, '(f3.1)' ) self%time ! TODO: investigate format options
+    write( dims_str, * ) dims             ! TODO: as above
+
+    ! Add new grid to domain
+    grid => self%domain%new_element( 'Grid' )
+    call grid%add_attribute( 'Name', trim( grid_name ) )
+    call grid%add_attribute( 'GridType', 'Uniform' ) ! only option for now
+
+    ! Add time to grid
+    time => grid%new_element( 'Time' )
+    call time%add_attribute( 'Value', trim( adjustl( time_str ) ) )
+
+    ! Add topology to grid
+    topology => grid%new_element( 'Topology' )
+    call topology%add_attribute( 'TopologyType', '2DSMesh' ) ! only option now
+    call topology%add_attribute( 'NumberOfElements', trim( dims_str ) )
+    
+    ! Add geometry to grid
+    geometry => grid%new_element( 'Geometry' )
+    call geometry%add_attribute( 'GeometryType', 'X_Y' ) ! only option for now
+
+    ! Add X axis to geometry
+    dataitem => geometry%new_element( 'DataItem' )
+    call dataitem%add_attribute( 'Dimensions', trim( dims_str ) )
+    call dataitem%add_attribute( 'NumberType', 'Float' )
+    call dataitem%add_attribute( 'Precision' , '8'     )
+    call dataitem%add_attribute( 'Format'    , 'HDF'   ) ! only option for now
+    call dataitem%add_chardata( trim( x1_path ) )        ! only option for now
+
+    ! Add Y axis to geometry
+    dataitem => geometry%new_element( 'DataItem' )
+    call dataitem%add_attribute( 'Dimensions', trim( dims_str ) )
+    call dataitem%add_attribute( 'NumberType', 'Float' )
+    call dataitem%add_attribute( 'Precision' , '8'     )
+    call dataitem%add_attribute( 'Format'    , 'HDF'   ) ! only option for now
+    call dataitem%add_chardata( trim( x2_path ) )        ! only option for now
+
+    ! Determine size of 'self%grids' array
+    if (allocated( self%grids )) then
+      ng = size( self%grids )
+    else
+      ng = 0
+    end if
+
+    ! Extend 'self%grids' array and store pointer to new grid
+    allocate( tmp(ng+1) )
+    tmp(1:ng) = self%grids(1:ng)
+    tmp(ng+1)%p    => grid
+    tmp(ng+1)%dims =  dims
+    call move_alloc( from=tmp, to=self%grids )
+
+    ! Return the grid id, i.e. the last index in the 'self%grids' array
+    gid = ng+1
+
+  end subroutine t_xdmf__add_grid
+
+  !----------------------------------------------------------------------------
+  subroutine t_xdmf__add_field( self, grid_id, field_name, field_path )
+    class(sll_t_xdmf_file), intent(inout) :: self
+    sll_int32             , intent(in   ) :: grid_id
+    character(len=*)      , intent(in   ) :: field_name
+    character(len=*)      , intent(in   ) :: field_path
+
+    type(sll_t_xml_element), pointer :: grid, field, dataitem
+    character(len=64)                :: dims_str
+
+    !----------------------------------------------------
+    ! ONLY MASTER WRITES TO FILE
+    if (sll_get_collective_rank( self%comm ) /= 0) return
+    !----------------------------------------------------
+
+    ! Prepare strings with data
+    write( dims_str, * ) self%grids( grid_id )%dims
+
+    field => self%grids( grid_id )%p%new_element( 'Attribute' )
+    call field%add_attribute( 'Name'         , trim( field_name ) )
+    call field%add_attribute( 'AttributeType', 'Scalar' ) ! only option for now
+    call field%add_attribute( 'Center'       , 'Node'   ) ! only option for now
+
+    dataitem => field%new_element( 'DataItem' )
+    call dataitem%add_attribute( 'Dimensions', trim( adjustl( dims_str ) ) )
+    call dataitem%add_attribute( 'NumberType', 'Float' )
+    call dataitem%add_attribute( 'Precision' , '8'     )
+    call dataitem%add_attribute( 'Format'    , 'HDF'   ) ! only option for now
+    call dataitem%add_chardata( trim( adjustl( field_path ) ) )
+
+  end subroutine t_xdmf__add_field
+
+!==============================================================================
 ! UTILITIES
 !==============================================================================
+
+!  subroutine print_int_to_short_str( int_array, string )
+!    sll_int32         , intent(in   ) :: int_array(:)
+!    character(len=256), intent(  out) :: string
+!
+!  end subroutine print_int_to_short_str
+
+  !----------------------------------------------------------------------------
   subroutine split( path, head, tail )
     character(len=*), intent(in   ) :: path
     character(len=*), intent(  out) :: head
@@ -92,7 +308,7 @@ contains
     call sll_collective_bcast( comm, bcast_buf, 0 )
 
     ! Non-master procs read file ID from buffer
-    if (sll_get_collective_rank( comm ) == 0) then
+    if (sll_get_collective_rank( comm ) /= 0) then
       xml_file_id = bcast_buf(1)
     end if
 
