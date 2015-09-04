@@ -481,7 +481,6 @@ subroutine compute_bspline_2d(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
   if (present(sl2_l)) this%bs2%sl = sl2_l
   if (present(sl2_r)) this%bs2%sr = sl2_r
 
-
   call update_bspline_2d(this, gtau, this%bs1%sl, this%bs1%sr, this%bs2%sl, this%bs2%sr)
 
 end subroutine compute_bspline_2d
@@ -506,28 +505,37 @@ subroutine update_bspline_2d(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
   sll_int32               :: j
   sll_int32               :: n1
   sll_int32               :: n2
+  sll_int32               :: bc1
+  sll_int32               :: bc2
   sll_int32               :: ierr
+
+  sll_int32               :: m1
   
-  n1 = size(this%bs1%bcoef)
-  n2 = size(this%bs2%bcoef)
+  n1 = this%bs1%n
+  n2 = this%bs2%n
 
-  print*, 'n1,n2=', n1, n2
+  bc1 = this%bs1%bc_type
+  bc2 = this%bs2%bc_type
 
-  SLL_CLEAR_ALLOCATE(bwork(1:n2,1:n1),ierr)
+  if ( bc1 == SLL_PERIODIC ) then
+    m1 = 0
+  else
+    m1 = 2
+  end if
+
+  SLL_CLEAR_ALLOCATE(bwork(1:n2,1:n1+m1),ierr)
 
   if (present(sl1_l)) this%bs1%sl = sl1_l
   if (present(sl1_r)) this%bs1%sr = sl1_r
   if (present(sl2_l)) this%bs2%sl = sl2_l
   if (present(sl2_r)) this%bs2%sr = sl2_r
 
-  do j = 1, this%bs2%n
-    print*, 'j=',j
+  do j = 1, n2
     call update_bspline_1d( this%bs1, gtau(:,j), this%bs1%sl, this%bs1%sr)
     bwork(j,:) = this%bs1%bcoef
   end do
 
-  do i = 1, n1
-    print*, 'i=',i
+  do i = 1, n1+m1
     call update_bspline_1d( this%bs2, bwork(:,i), this%bs2%sl, this%bs2%sr)
     this%bcoef(i,:) = this%bs2%bcoef(:)
   end do
@@ -558,9 +566,10 @@ subroutine update_bspline_1d(this, gtau, slope_min, slope_max)
   n = this%n
   k = this%k
 
+  SLL_ASSERT(size(gtau) == n)
+
   if (this%bc_type == SLL_PERIODIC) then
 
-    SLL_ASSERT(size(gtau) == n)
     this%bcoef = gtau
     call banslv ( this%q, k+k-1, n, k-1, k-1, this%bcoef )
 
@@ -568,26 +577,22 @@ subroutine update_bspline_1d(this, gtau, slope_min, slope_max)
 
     this%bcoef(1)   = gtau(1)
 
-    if (present(slope_min)) then
-      this%bcoef(2)   = slope_min
+    if(this%compute_sl) then
+      call apply_fd(k+1,1,this%tau(1:k+1),gtau(1:k+1),this%tau(1),slope(0:1))
+      this%bcoef(2) = slope(1)
+    else if (present(slope_min)) then
+      this%bcoef(2) = slope_min
     else
-      if(this%compute_sl) then
-        !call apply_fd(k+1,1,this%tau(1:k+1),gtau(1:k+1),this%tau(1),slope(0:1))
-        this%bcoef(2) = slope(1)
-      else
-        this%bcoef(2) = this%sl
-      end if
+      this%bcoef(2) = this%sl
     end if
     this%bcoef(3:n) = gtau(2:n-1)
-    if (present(slope_max)) then
+    if(this%compute_sr) then
+      call apply_fd(k+1,1,this%tau(n-k-1:n),gtau(n-k-1:n),this%tau(n),slope(0:1))
+      this%bcoef(n+1) = slope(1)
+    else if (present(slope_max)) then
       this%bcoef(n+1) = slope_max
     else
-      if(this%compute_sr) then
-        !call apply_fd(k+1,1,this%tau(n-k-1:n),gtau(n-k-1:n),this%tau(n),slope(0:1))
-        this%bcoef(n+1) = slope(1)
-      else
-        this%bcoef(n+1) = this%sr
-      end if
+      this%bcoef(n+1) = this%sr
     end if
     this%bcoef(n+2) = gtau(n)
 
