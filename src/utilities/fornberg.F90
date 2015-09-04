@@ -55,9 +55,7 @@ contains
     sll_real64 :: c(0:nin-1, 0:maxorder)
 
     call populate_weights(xtgt, xdata, nin-1, maxorder, c)
-    print*, 'weights computed'
     forall(j=0:maxorder) out(j) = sum(c(0:,j)*ydata)
-    print*, 'derivative computed'
     
   end subroutine
 

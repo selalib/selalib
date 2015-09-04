@@ -266,6 +266,7 @@ contains
   end function
 
   function interpolate_deriv1_bs2d( interpolator, eta1, eta2 ) result(val)
+
     class(sll_bspline_interpolator_2d), intent(in) :: interpolator
     sll_real64,                         intent(in) :: eta1
     sll_real64,                         intent(in) :: eta2
@@ -288,9 +289,12 @@ contains
 
   end function
 
-  function spline_interpolate2d(this, num_points1, num_points2, data_in, &
-                                eta1, eta2) &
-       result(data_out)
+  function spline_interpolate2d(this,              &
+                                num_points1,       &
+                                num_points2,       &
+                                data_in,           &
+                                eta1,              &
+                                eta2) result(data_out)
 
     class(sll_bspline_interpolator_2d),  intent(in) :: this
     sll_int32,  intent(in)                          :: num_points1
@@ -299,14 +303,16 @@ contains
     sll_real64, dimension(:,:),          intent(in) :: eta2
     sll_real64, dimension(:,:),          intent(in) :: data_in
     sll_real64, dimension(num_points1,num_points2)  :: data_out
-    ! local variables
-    sll_int32 :: i,j
-    ! compute the interpolating spline coefficients
+
+    sll_int32 :: i
+    sll_int32 :: j
+
     call compute_bspline_2d( this%spline, data_in )
+
     do j = 1, num_points2
-    do i = 1, num_points1
+      do i = 1, num_points1
         data_out(i,j) = this%interpolate_value(eta1(i,j),eta2(i,j))
-    end do
+      end do
     end do
 
   end function spline_interpolate2d
