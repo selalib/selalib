@@ -179,13 +179,9 @@ spl_fsl => new_cubic_spline_2D(Neta1+1, Neta2+1, &
 ! Analytic distribution function and data for the mesh
 open(unit=900,file='f0.dat')
 do i=1,Neta1+1
-  eta1 = eta1_min + real(i-1,f64)*delta_eta1
+  eta1 = eta1_min + (i-1)*delta_eta1
   do j=1,Neta2+1
-    eta2 = eta2_min + real(j-1,f64)*delta_eta2
-    
-    ! total displacement
-    eta1tot(i,j) = eta1
-    eta2tot(i,j) = eta2
+    eta2 = eta2_min + (j-1)*delta_eta2
     
     x1_min = eta1_min
     x2_min = eta2_min
@@ -200,7 +196,7 @@ do i=1,Neta1+1
     
     f(i,j) = exp(-2_f64*(eta1-eta1c)**2)*exp(-2_f64*(eta2-eta2c)**2)
 
-    write(900,*) x1_array(i,j),x2_array(i,j),eta1,eta2,f(i,j)
+    write(900,*) eta1, eta2, f(i,j)
   enddo
   write(900,*)
 enddo
@@ -217,6 +213,10 @@ diag = 0._f64
 tmp1 = sum(f)*delta_eta1*delta_eta2
   
 diag = tmp1  ! analytic solution
+
+! total displacement
+eta1tot = x1_array
+eta2tot = x2_array
 
 do step=1,nb_step ! ---- * Evolution in time * ----
   
@@ -255,8 +255,7 @@ do step=1,nb_step ! ---- * Evolution in time * ----
         
       eta1 = x1 
       eta2 = x2
-        
-          					
+
       ! --- Evaluation of f ---
       f(i,j) = exp(-2_f64*(eta1-eta1c)**2)*exp(-2_f64*(eta2-eta2c)**2)
       
@@ -269,10 +268,7 @@ do step=1,nb_step ! ---- * Evolution in time * ----
       eta1 = eta1_min + real(i-1,f64)*delta_eta1
       eta2 = eta2_min + real(j-1,f64)*delta_eta2
       
-      call displacement()
-      
-      eta1 = x1 
-      eta2 = x2
+      call displacement(dt, eta1, eta2)
       
       call apply_bc()
       
@@ -281,24 +277,17 @@ do step=1,nb_step ! ---- * Evolution in time * ----
         
       ! ------------ FSL part -----------------
         
-      dt = -dt
-        
       eta1 = eta1_min + real(i-1,f64)*delta_eta1
       eta2 = eta2_min + real(j-1,f64)*delta_eta2
         
       ! --- Displacement ---
-      call displacement()
+      call displacement(-dt, eta1, eta2)
         
-      eta1 = x1 
-      eta2 = x2
-                        
       call apply_bc()
         
       eta1feet(i,j) = eta1
       eta2feet(i,j) = eta2
 				
-      dt = -dt
-
     enddo
   enddo
 
@@ -421,7 +410,10 @@ subroutine apply_bc()
 
 end subroutine apply_bc
 
-subroutine displacement()
+subroutine displacement(dt, x1, x2)
+sll_real64, intent(in)  :: dt
+sll_real64, intent(out) :: x1
+sll_real64, intent(out) :: x2
 
   ! --- Displacement ---
   
