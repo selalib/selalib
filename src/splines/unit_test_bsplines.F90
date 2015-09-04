@@ -1,6 +1,6 @@
 !PN This is a general test for bsplines 1d and 2d
 !PN This test is used to test performance and precision
-program test_bsplines
+program test_bsplines_1d
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_constants.h"
@@ -16,6 +16,9 @@ type(sll_bspline_2d), pointer :: bspline_2d
 sll_real64                    :: err1
 sll_real64                    :: err2
 sll_real64                    :: err3
+sll_real64                    :: err4
+sll_real64                    :: err5
+sll_real64                    :: err6
 sll_int32                     :: i
 sll_int32                     :: j
 sll_int32,  parameter         :: d = 3
@@ -25,17 +28,22 @@ sll_int32,  parameter :: m = 2
 sll_real64            :: t0, t1, t2, t3, t4
 sll_int32             :: ierr
 
-
+print*,'***************************************************************'
 print*,'*** 1D PERIODIC ***'
+print*,'***************************************************************'
 call test_process_1d(SLL_PERIODIC)
+print*,'***************************************************************'
 print*,'*** 1D HERMITE ***'
+print*,'***************************************************************'
 call test_process_1d(SLL_HERMITE)
-
+print*,'***************************************************************'
 print*,'*** 2D PERIODIC ***'
+print*,'***************************************************************'
 call test_process_2d(SLL_PERIODIC,SLL_PERIODIC)
-print*,'*** 2D HERMITE ***'
-call test_process_2d(SLL_HERMITE,SLL_HERMITE)
-print*, 'PASSED'
+!print*,'***************************************************************'
+!print*,'*** 2D HERMITE  ***'
+!print*,'***************************************************************'
+!call test_process_2d(SLL_HERMITE,SLL_HERMITE)
 
 contains
 
@@ -53,7 +61,7 @@ subroutine test_process_1d(bc_type)
   sll_real64, dimension(:), allocatable :: gtau
   sll_real64, dimension(:), allocatable :: htau
 
-  sll_int32,  parameter                 :: n = 512
+  sll_int32,  parameter                 :: n = 100
   sll_real64                            :: h
   
   SLL_ALLOCATE(x(n),ierr)
@@ -79,19 +87,22 @@ subroutine test_process_1d(bc_type)
   do j = 1,nstep
     call interpolate_array_values( bspline_1d, n, x, y)
   end do
-  print*, "average values error      = ", sum(abs(y-cos(2*sll_pi*x)))/n
-  print*, "maximum values error      = ", maxval(abs(y-cos(2*sll_pi*x)))
+  print*, " average values error      = ", sum(abs(y-cos(2*sll_pi*x)))/n
+  print*, " maximum values error      = ", maxval(abs(y-cos(2*sll_pi*x)))
   call cpu_time(t2)
   do j = 1,nstep
     call interpolate_array_derivatives( bspline_1d, n, x, y)
   end do
-  print*, "average derivatives error = ", sum(abs(y+2*sll_pi*sin(2*sll_pi*x)))/n
-  print*, "maximum derivatives error = ", maxval(abs(y+2*sll_pi*sin(2*sll_pi*x)))
+  print*, " average derivatives error = ", sum(abs(y+2*sll_pi*sin(2*sll_pi*x)))/n
+  print*, " maximum derivatives error = ", maxval(abs(y+2*sll_pi*sin(2*sll_pi*x)))
   call cpu_time(t3)
 
+  print*, ' ------------------------------------------------------- '
+  print*, ' CPU time '
   print*, ' time spent to compute interpolants          : ', t1-t0
   print*, ' time spent to interpolate array values      : ', t2-t1
   print*, ' time spent to interpolate array derivatives : ', t3-t2
+  print*, ' ------------------------------------------------------- '
   
   htau = sin(2*sll_pi*bspline_1d%tau)
   call update_bspline_1d(bspline_1d, htau)
@@ -128,7 +139,6 @@ subroutine test_process_1d(bc_type)
   print*, "-------------------------------------------------"
 
 end subroutine test_process_1d
-
 
 subroutine test_process_2d(bc1_type, bc2_type)
 
@@ -180,30 +190,34 @@ subroutine test_process_2d(bc1_type, bc2_type)
   do j = 1,nstep
     call interpolate_array_values_2d( bspline_2d, n1, n2, ftau, gtau, 0, 0)
   end do
-  print*, "average error = ", sum(abs(gtau-cos(dpi*tau1)*cos(dpi*tau2)))/(n1*n2)
-  print*, "maximum error = ", maxval(abs(gtau-cos(dpi*tau1)*cos(dpi*tau2)))
+  err1 = sum(abs(gtau-cos(dpi*tau1)*cos(dpi*tau2)))/(n1*n2)
+  err2 = maxval(abs(gtau-cos(dpi*tau1)*cos(dpi*tau2)))
   call cpu_time(t2)
   do j = 1,nstep
     call interpolate_array_x1_derivatives_2d( bspline_2d, n1, n2, ftau, gtau)
   end do
-  print*, "average x1 derivatives error = ", &
-    sum(abs(gtau+dpi*sin(dpi*tau1)*cos(dpi*tau2)))/(n1*n2)
-  print*, "maximum x1 derivatives error = ", &
-    maxval(abs(gtau+dpi*cos(dpi*tau1)*sin(dpi*tau2)))
+  err3 = sum(abs(gtau+dpi*sin(dpi*tau1)*cos(dpi*tau2)))/(n1*n2)
+  err4 = maxval(abs(gtau+dpi*cos(dpi*tau1)*sin(dpi*tau2)))
   call cpu_time(t3)
   do j = 1,nstep
     call interpolate_array_x2_derivatives_2d( bspline_2d, n1, n2, ftau, gtau)
   end do
-  print*, "average x2 derivatives error = ", &
-    sum(abs(gtau+dpi*sin(dpi*tau2)*cos(dpi*tau1)))/(n1*n2)
-  print*, "maximum x2 derivatives error = ", &
-    maxval(abs(gtau+dpi*sin(dpi*tau2)*cos(dpi*tau1)))
+  err5 = sum(abs(gtau+dpi*sin(dpi*tau2)*cos(dpi*tau1)))/(n1*n2)
+  err6 = maxval(abs(gtau+dpi*sin(dpi*tau2)*cos(dpi*tau1)))
   call cpu_time(t4)
 
+  print*, "-----------------------------------------------------------"
+  print*, " average error                                  : ", err1
+  print*, " maximum error                                  : ", err2
+  print*, " average x1 derivatives error                   : ", err3
+  print*, " maximum x1 derivatives error                   : ", err4
+  print*, " average x2 derivatives error                   : ", err5
+  print*, " maximum x2 derivatives error                   : ", err6
   print*, ' time spent to compute interpolants             : ', t1-t0
   print*, ' time spent to interpolate array values         : ', t2-t1
   print*, ' time spent to interpolate array x1 derivatives : ', t3-t2
   print*, ' time spent to interpolate array x2 derivatives : ', t4-t3
+  print*, "-----------------------------------------------------------"
   
   call cpu_time(t0)
   err1 = 0.0_f64
@@ -249,4 +263,4 @@ subroutine test_process_2d(bc1_type, bc2_type)
 end subroutine test_process_2d
 
 
-end program test_bsplines
+end program test_bsplines_1d

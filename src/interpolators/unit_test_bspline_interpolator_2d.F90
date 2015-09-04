@@ -8,8 +8,8 @@ use sll_boundary_condition_descriptors
 
 implicit none
 
-#define NPTS1    5
-#define NPTS2    5
+#define NPTS1    101
+#define NPTS2    101
 #define SPL_DEG1 3
 #define SPL_DEG2 3
 #define X1MIN    0.0_f64
@@ -97,13 +97,13 @@ normH1 = sum((dg_dx_int - dg_dx_ref)**2*h1*h2)
 normH1 = sum((dg_dy_int - dg_dy_ref)**2*h2*h2)
   
 print*,'--------------------------------------------'
-print*,' Average error in nodes                     ', sum(abs(g_int-g_ref))/(NPTS1*NPTS2)
+print*,' Average error in nodes                     ', sum(abs(g_int-g_ref))/real(NPTS1*NPTS2,f64)
 print*,' Max     error in nodes                     ', maxval(abs(g_int-g_ref))
 print*,'--------------------------------------------'
-print*,' Average error in nodes first derivative x1 ', sum(abs(dg_dx_int-dg_dx_ref))/(NPTS1*NPTS2)
+print*,' Average error in nodes first derivative x1 ', sum(abs(dg_dx_int-dg_dx_ref))/real(NPTS1*NPTS2,f64)
 print*,' Max     error in nodes first derivative x1 ', maxval(abs(dg_dx_int-dg_dx_ref))
 print*,'--------------------------------------------'
-print*,' Average error in nodes first derivative x2 ', sum(abs(dg_dy_int-dg_dy_ref))/(NPTS1*NPTS2)
+print*,' Average error in nodes first derivative x2 ', sum(abs(dg_dy_int-dg_dy_ref))/real(NPTS1*NPTS2,f64)
 print*,' Max     error in nodes first derivative x2 ', maxval(abs(dg_dy_int-dg_dy_ref))
 print*,'--------------------------------------------'
 print*,' Norm L2 error                              ', sqrt(normL2), h1**(SPL_DEG1)
