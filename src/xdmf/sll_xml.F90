@@ -12,155 +12,157 @@
 !------------------------------------------------------------------------------
 module sll_m_xml
 
- implicit none
-
- character, parameter :: nl = achar(10)  ! newline character
- integer  , parameter :: maxlen = 256    ! max string length
-
- !=============================================================================
- ! USER-DEFINED TYPES
- !=============================================================================
-
- !-----------------------------------------------------------------------------
- !> Base class for all the XML entities which can appear in content
- type, abstract :: c_xml_item
- contains
-  procedure(i_xml_item__write ), deferred :: write
-  procedure(i_xml_item__delete), deferred :: delete
- end type c_xml_item
-
- !-----------------------------------------------------------------------------
- !> XML type: linked list of XML entities, used in element content
- type, extends(c_xml_item) :: t_xml_content
-   class(c_xml_item)   , allocatable :: item
-   type (t_xml_content), pointer     :: next => null()
- contains
-   procedure :: write       => t_xml_content__write
-   procedure :: delete      => t_xml_content__delete
-   procedure :: new_content => t_xml_content__new_content
- end type
+  implicit none
+  private
  
- !-----------------------------------------------------------------------------
- !> XML attribute type
- type :: t_xml_attribute
-!  character(len=:), allocatable :: name
-  character(len=maxlen) :: name
-  ! Notice: it could be useful introducing a type for the attvalue,
-  ! representing the formal definition
-  !  AttValue ::=  '"' ([^<&"] | Reference)* '"'
-  !             |  "'" ([^<&'] | Reference)* "'"
-!  character(len=:), allocatable :: attvalue
-  character(len=maxlen) :: attvalue
- contains
-  procedure :: to_string => attribute_name_val_string
- end type t_xml_attribute
+  character, parameter :: nl = achar(10)  ! newline character
+  integer  , parameter :: maxlen = 256    ! max string length
+ 
+  !============================================================================
+  ! USER-DEFINED TYPES
+  !============================================================================
+ 
+  !----------------------------------------------------------------------------
+  !> Base class for all the XML entities which can appear in content
+  type, abstract :: c_xml_item
+  contains
+   procedure(i_xml_item__write ), deferred :: write
+   procedure(i_xml_item__delete), deferred :: delete
+  end type c_xml_item
+ 
+  !----------------------------------------------------------------------------
+  !> XML type: linked list of XML entities, used in element content
+  type, extends(c_xml_item) :: t_xml_content
+    class(c_xml_item)   , allocatable :: item
+    type (t_xml_content), pointer     :: next => null()
+  contains
+    procedure :: write       => t_xml_content__write
+    procedure :: delete      => t_xml_content__delete
+    procedure :: new_content => t_xml_content__new_content
+  end type
+  
+  !----------------------------------------------------------------------------
+  !> XML attribute type
+  type :: t_xml_attribute
+!    character(len=:), allocatable :: name
+    character(len=maxlen) :: name
+!   Notice: it could be useful introducing a type for the attvalue,
+!   representing the formal definition
+!   AttValue ::=  '"' ([^<&"] | Reference)* '"'
+!            |  "'" ([^<&'] | Reference)* "'"
+!    character(len=:), allocatable :: attvalue
+    character(len=maxlen) :: attvalue
+  contains
+    procedure :: to_string => attribute_name_val_string
+  end type t_xml_attribute
 
- !-----------------------------------------------------------------------------
- !> XML element type
- type, extends(c_xml_item) :: t_xml_element
-!   character(len=:),  allocatable :: name
-   character(len=maxlen)              :: name
-   type(t_xml_attribute), allocatable :: attributes(:)
-   type(t_xml_content)  , allocatable :: content
- contains
-   procedure :: write                => t_xml_element__write
-   procedure :: delete               => t_xml_element__delete
-   procedure :: new_element          => t_xml_element__new_element
-   procedure :: add_attribute        => t_xml_element__add_attribute
-   procedure :: add_chardata_string  => t_xml_element__add_chardata_string
-   procedure :: add_chardata_printer => t_xml_element__add_chardata_printer
-   generic   :: add_chardata   => add_chardata_string, add_chardata_printer
- end type t_xml_element
+  !----------------------------------------------------------------------------
+  !> XML element type
+  type, public, extends(c_xml_item) :: sll_t_xml_element
+!    character(len=:)     ,  allocatable :: name
+    character(len=maxlen)              :: name
+    type(t_xml_attribute), allocatable :: attributes(:)
+    type(t_xml_content)  , allocatable :: content
+  contains
+    procedure :: write                => t_xml_element__write
+    procedure :: delete               => t_xml_element__delete
+    procedure :: new_element          => t_xml_element__new_element
+    procedure :: add_attribute        => t_xml_element__add_attribute
+    procedure :: add_chardata_string  => t_xml_element__add_chardata_string
+    procedure :: add_chardata_printer => t_xml_element__add_chardata_printer
+    generic   :: add_chardata   => add_chardata_string, add_chardata_printer
+  end type sll_t_xml_element
 
- !-----------------------------------------------------------------------------
- !> XML document type
- type, public :: t_xml_document
-   character(len=maxlen), allocatable :: header_lines(:)
-   type(t_xml_element)  , allocatable :: root
- contains
-   procedure :: add_header_line => t_xml_document__add_header_line
-   procedure :: new_element     => t_xml_document__new_element
-   procedure :: write           => t_xml_document__write
-   procedure :: delete          => t_xml_document__delete
- end type t_xml_document
+  !----------------------------------------------------------------------------
+  !> XML document type
+  type, public :: sll_t_xml_document
+    character(len=maxlen)  , allocatable :: header_lines(:)
+    type(sll_t_xml_element), allocatable :: root
+  contains
+    procedure :: add_header_line => t_xml_document__add_header_line
+    procedure :: new_element     => t_xml_document__new_element
+    procedure :: write           => t_xml_document__write
+    procedure :: delete          => t_xml_document__delete
+  end type sll_t_xml_document
 
- !-----------------------------------------------------------------------------
- !> XML abstract class: generic printer for writing chardata to file
- type, abstract :: c_text_data_printer
- contains
-  procedure(i_print_text    ), deferred, pass(self) :: print_text
-  procedure(i_delete_printer), deferred, pass(self) :: delete
- end type c_text_data_printer
+  !----------------------------------------------------------------------------
+  !> XML abstract class: generic printer for writing chardata to file
+  type, abstract :: c_text_data_printer
+  contains
+    procedure(i_print_text    ), deferred, pass(self) :: print_text
+    procedure(i_delete_printer), deferred, pass(self) :: delete
+  end type c_text_data_printer
+ 
+  !----------------------------------------------------------------------------
+  !> XML type: default printer for writing chardata
+  type, extends(c_text_data_printer) :: t_default_text_data_printer
+!    character(len=:), allocatable :: text
+    character(len=maxlen) :: text
+  contains
+    procedure, pass(self) :: print_text => default_print_text
+    procedure, pass(self) :: delete     => default_delete
+  end type t_default_text_data_printer
 
- !-----------------------------------------------------------------------------
- !> XML type: default printer for writing chardata
- type, extends(c_text_data_printer) :: t_default_text_data_printer
-!  character(len=:), allocatable :: text
-  character(len=maxlen) :: text
- contains
-  procedure, pass(self) :: print_text => default_print_text
-  procedure, pass(self) :: delete     => default_delete
- end type t_default_text_data_printer
+  !----------------------------------------------------------------------------
+  !> XML type: chardata
+  type, extends(c_xml_item) :: t_xml_chardata
+    class(c_text_data_printer), allocatable :: chardata
+  contains
+    procedure :: write  => t_xml_chardata__write
+    procedure :: delete => t_xml_chardata__delete
+  end type t_xml_chardata
 
- !-----------------------------------------------------------------------------
- !> XML type: chardata
- type, extends(c_xml_item) :: t_xml_chardata
-   class(c_text_data_printer), allocatable :: chardata
- contains
-   procedure :: write  => t_xml_chardata__write
-   procedure :: delete => t_xml_chardata__delete
- end type t_xml_chardata
+  !============================================================================
+  ! ABSTRACT INTERFACES
+  !============================================================================
 
- !=============================================================================
- ! ABSTRACT INTERFACES
- !=============================================================================
+  !----------------------------------------------------------------------------
+  !> Write XML content to file
+  abstract interface
+   subroutine i_xml_item__write( self, indent, fid )
+    import :: c_xml_item
+    implicit none
+    class(c_xml_item), intent(in) :: self
+    integer          , intent(in) :: indent
+    integer          , intent(in) :: fid
+   end subroutine i_xml_item__write
+  end interface
+ 
+  !----------------------------------------------------------------------------
+  !> Delete XML item (deallocate everything)
+  abstract interface
+   subroutine i_xml_item__delete( self )
+    import :: c_xml_item
+    implicit none
+    class(c_xml_item), intent(inout) :: self
+   end subroutine i_xml_item__delete
+  end interface
+ 
+  !----------------------------------------------------------------------------
+  !> Write chardata to file
+  abstract interface
+   subroutine i_print_text( self, indent, fid )
+    import :: c_text_data_printer
+    implicit none
+    class(c_text_data_printer), intent(in) :: self
+    integer                   , intent(in) :: indent
+    integer                   , intent(in) :: fid
+   end subroutine i_print_text
+  end interface
+ 
+  !----------------------------------------------------------------------------
+  !> Delete chardata printer
+  abstract interface
+   subroutine i_delete_printer( self )
+    import :: c_text_data_printer
+    implicit none
+    class(c_text_data_printer), intent(inout) :: self
+   end subroutine i_delete_printer
+  end interface
 
- !------------------------------------
- !> Write XML content to file
- abstract interface
-  subroutine i_xml_item__write( self, indent, fid )
-   import :: c_xml_item
-   implicit none
-   class(c_xml_item), intent(in) :: self
-   integer          , intent(in) :: indent
-   integer          , intent(in) :: fid
-  end subroutine i_xml_item__write
- end interface
-
- !------------------------------------
- !> Delete XML item (deallocate everything)
- abstract interface
-  subroutine i_xml_item__delete( self )
-   import :: c_xml_item
-   implicit none
-   class(c_xml_item), intent(inout) :: self
-  end subroutine i_xml_item__delete
- end interface
-
- !------------------------------------
- !> Write chardata to file
- abstract interface
-  subroutine i_print_text( self, indent, fid )
-   import :: c_text_data_printer
-   implicit none
-   class(c_text_data_printer), intent(in) :: self
-   integer                   , intent(in) :: indent
-   integer                   , intent(in) :: fid
-  end subroutine i_print_text
- end interface
-
- !------------------------------------
- !> Delete chardata printer
- abstract interface
-  subroutine i_delete_printer( self )
-   import :: c_text_data_printer
-   implicit none
-   class(c_text_data_printer), intent(inout) :: self
-  end subroutine i_delete_printer
- end interface
-!------------------------------------------------------------------------------
-
+!>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 contains
+!>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 !------------------------------------------------------------------------------
   recursive subroutine t_xml_content__write( self, indent, fid )
@@ -221,8 +223,8 @@ contains
 
 !------------------------------------------------------------------------------
   subroutine t_xml_document__add_header_line( self, line )
-    class(t_xml_document), intent(inout) :: self
-    character(len=*)     , intent(in   ) :: line
+    class(sll_t_xml_document), intent(inout) :: self
+    character(len=*)         , intent(in   ) :: line
 
     integer :: nl
     character(len=maxlen), allocatable :: tmp(:)
@@ -243,10 +245,10 @@ contains
 
 !------------------------------------------------------------------------------
   function t_xml_document__new_element( self, name ) result( new_root )
-    class(t_xml_document), target, intent(inout) :: self
-    character(len=*)             , intent(in   ) :: name
+    class(sll_t_xml_document), target, intent(inout) :: self
+    character(len=*)                 , intent(in   ) :: name
 
-    type(t_xml_element), pointer :: new_root
+    type(sll_t_xml_element), pointer :: new_root
 
     if (allocated( self%root )) then
       ! TODO: give error!!! Only one root element may exist
@@ -261,8 +263,8 @@ contains
 
 !------------------------------------------------------------------------------
   subroutine t_xml_document__write( self, fname )
-    class(t_xml_document), intent(in) :: self
-    character(len=*)     , intent(in) :: fname
+    class(sll_t_xml_document), intent(in) :: self
+    character(len=*)         , intent(in) :: fname
 
     integer :: fid, i
 
@@ -288,7 +290,7 @@ contains
 
 !------------------------------------------------------------------------------
   subroutine t_xml_document__delete( self )
-    class(t_xml_document), intent(inout) :: self
+    class(sll_t_xml_document), intent(inout) :: self
 
     ! Remove header lines
     if (allocated( self%header_lines )) deallocate( self%header_lines )
@@ -303,9 +305,9 @@ contains
 
 !------------------------------------------------------------------------------
   subroutine t_xml_element__write( self, indent, fid )
-    class(t_xml_element), intent(in) :: self
-    integer             , intent(in) :: indent
-    integer             , intent(in) :: fid
+    class(sll_t_xml_element), intent(in) :: self
+    integer                 , intent(in) :: indent
+    integer                 , intent(in) :: fid
 
     logical :: empty_element
     integer :: na, i
@@ -344,7 +346,7 @@ contains
 
 !------------------------------------------------------------------------------
   subroutine t_xml_element__delete( self )
-    class(t_xml_element), intent(inout) :: self
+    class(sll_t_xml_element), intent(inout) :: self
 
     ! Deallocate attributes
     if (allocated( self%attributes )) then
@@ -361,9 +363,9 @@ contains
 
 !------------------------------------------------------------------------------
   subroutine t_xml_element__add_attribute( self, name, attvalue )
-    class(t_xml_element), intent(inout) :: self
-    character(len=*)    , intent(in   ) :: name
-    character(len=*)    , intent(in   ) :: attvalue
+    class(sll_t_xml_element), intent(inout) :: self
+    character(len=*)        , intent(in   ) :: name
+    character(len=*)        , intent(in   ) :: attvalue
 
     integer :: na
     type( t_xml_attribute ), allocatable :: tmp(:)
@@ -385,8 +387,8 @@ contains
 
 !------------------------------------------------------------------------------
   subroutine t_xml_element__add_chardata_string( self, string )
-    class(t_xml_element), target, intent(inout) :: self
-    character(len=*),             intent(in   ) :: string
+    class(sll_t_xml_element), target, intent(inout) :: self
+    character(len=*),                 intent(in   ) :: string
 
     type(t_xml_content), pointer :: new_cont  ! local variable
 
@@ -404,7 +406,8 @@ contains
 
     ! Create new default data printer inside the chardata
     allocate( t_default_text_data_printer :: new_item%chardata )
-    select type( new_cdata => new_item%chardata ); type is( t_default_text_data_printer )
+    select type( new_cdata => new_item%chardata )
+           type is( t_default_text_data_printer )
 
     ! Add text to printer
     new_cdata%text = adjustl( string )
@@ -416,8 +419,8 @@ contains
 
 !------------------------------------------------------------------------------
   subroutine t_xml_element__add_chardata_printer( self, printer )
-    class(t_xml_element), target, intent(inout) :: self
-    class(c_text_data_printer),   intent(in   ) :: printer
+    class(sll_t_xml_element), target, intent(inout) :: self
+    class(c_text_data_printer),       intent(in   ) :: printer
 
     type(t_xml_content), pointer :: new_cont  ! local variable
 
@@ -442,11 +445,11 @@ contains
 
 !------------------------------------------------------------------------------
   function t_xml_element__new_element( self, name ) result( new_elem )
-    class(t_xml_element), target, intent(inout) :: self
-    character(len=*),             intent(in   ) :: name
+    class(sll_t_xml_element), target, intent(inout) :: self
+    character(len=*),                 intent(in   ) :: name
 
-    type(t_xml_element), pointer :: new_elem  ! output argument
-    type(t_xml_content), pointer :: new_cont  ! local variable
+    type(sll_t_xml_element), pointer :: new_elem  ! output argument
+    type(    t_xml_content), pointer :: new_cont  ! local variable
 
     ! Allocate new content (container)
     if (.not. allocated( self%content )) then
@@ -457,8 +460,8 @@ contains
     end if
 
     ! Create new element inside the container
-    allocate( t_xml_element :: new_cont%item )
-    select type( new_item => new_cont%item ); type is( t_xml_element )
+    allocate( sll_t_xml_element :: new_cont%item )
+    select type( new_item => new_cont%item ); type is( sll_t_xml_element )
       new_elem => new_item
       new_elem%name = name
     end select
