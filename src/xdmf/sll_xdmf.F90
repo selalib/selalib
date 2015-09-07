@@ -75,8 +75,8 @@ contains
     type(sll_t_xml_element), pointer :: root
 
     ! Fill in fields
-    self%name =  "Not defined"
-    self%id   =  999
+    self%name =  "Not defined"  ! old
+    self%id   =  999            ! old
     self%time =  time
     self%comm => comm
 
@@ -143,11 +143,12 @@ contains
     sll_int32             , intent(in   ) :: dims(2)
     sll_int32             , intent(  out) :: gid
 
-    sll_int32 :: ng
-    character(len=64)                :: time_str, dims_str
+    sll_int32                        :: ng
+    character(len=64)                :: time_str
+    character(len=:), allocatable    :: dims_str
+    type(t_grid_ptr), allocatable    :: tmp(:)
     type(sll_t_xml_element), pointer :: grid, geometry
     type(sll_t_xml_element), pointer :: time, topology, dataitem
-    type(t_grid_ptr), allocatable    :: tmp(:)
 
     !----------------------------------------------------
     ! ONLY MASTER WRITES TO FILE
@@ -156,7 +157,7 @@ contains
 
     ! Prepare strings with data
     write( time_str, '(f3.1)' ) self%time ! TODO: investigate format options
-    write( dims_str, * ) dims             ! TODO: as above
+    call ints_to_string( dims, dims_str )
 
     ! Add new grid to domain
     grid => self%domain%new_element( 'Grid' )
@@ -170,7 +171,7 @@ contains
     ! Add topology to grid
     topology => grid%new_element( 'Topology' )
     call topology%add_attribute( 'TopologyType', '2DSMesh' ) ! only option now
-    call topology%add_attribute( 'NumberOfElements', trim( dims_str ) )
+    call topology%add_attribute( 'NumberOfElements', dims_str )
     
     ! Add geometry to grid
     geometry => grid%new_element( 'Geometry' )
@@ -178,18 +179,18 @@ contains
 
     ! Add X axis to geometry
     dataitem => geometry%new_element( 'DataItem' )
-    call dataitem%add_attribute( 'Dimensions', trim( dims_str ) )
-    call dataitem%add_attribute( 'NumberType', 'Float' )
-    call dataitem%add_attribute( 'Precision' , '8'     )
-    call dataitem%add_attribute( 'Format'    , 'HDF'   ) ! only option for now
+    call dataitem%add_attribute( 'Dimensions', dims_str )
+    call dataitem%add_attribute( 'NumberType', 'Float'  )
+    call dataitem%add_attribute( 'Precision' , '8'      )
+    call dataitem%add_attribute( 'Format'    , 'HDF'    ) ! only option for now
     call dataitem%add_chardata( trim( x1_path ) )        ! only option for now
 
     ! Add Y axis to geometry
     dataitem => geometry%new_element( 'DataItem' )
-    call dataitem%add_attribute( 'Dimensions', trim( dims_str ) )
-    call dataitem%add_attribute( 'NumberType', 'Float' )
-    call dataitem%add_attribute( 'Precision' , '8'     )
-    call dataitem%add_attribute( 'Format'    , 'HDF'   ) ! only option for now
+    call dataitem%add_attribute( 'Dimensions', dims_str )
+    call dataitem%add_attribute( 'NumberType', 'Float'  )
+    call dataitem%add_attribute( 'Precision' , '8'      )
+    call dataitem%add_attribute( 'Format'    , 'HDF'    ) ! only option for now
     call dataitem%add_chardata( trim( x2_path ) )        ! only option for now
 
     ! Determine size of 'self%grids' array
@@ -218,8 +219,8 @@ contains
     character(len=*)      , intent(in   ) :: field_name
     character(len=*)      , intent(in   ) :: field_path
 
+    character(len=:), allocatable    :: dims_str
     type(sll_t_xml_element), pointer :: grid, field, dataitem
-    character(len=64)                :: dims_str
 
     !----------------------------------------------------
     ! ONLY MASTER WRITES TO FILE
@@ -227,18 +228,20 @@ contains
     !----------------------------------------------------
 
     ! Prepare strings with data
-    write( dims_str, * ) self%grids( grid_id )%dims
+    call ints_to_string( self%grids( grid_id )%dims, dims_str )
 
+    ! Create new field (scalar, nodal)
     field => self%grids( grid_id )%p%new_element( 'Attribute' )
     call field%add_attribute( 'Name'         , trim( field_name ) )
     call field%add_attribute( 'AttributeType', 'Scalar' ) ! only option for now
     call field%add_attribute( 'Center'       , 'Node'   ) ! only option for now
 
+    ! Add new dataitem
     dataitem => field%new_element( 'DataItem' )
-    call dataitem%add_attribute( 'Dimensions', trim( adjustl( dims_str ) ) )
-    call dataitem%add_attribute( 'NumberType', 'Float' )
-    call dataitem%add_attribute( 'Precision' , '8'     )
-    call dataitem%add_attribute( 'Format'    , 'HDF'   ) ! only option for now
+    call dataitem%add_attribute( 'Dimensions', dims_str )
+    call dataitem%add_attribute( 'NumberType', 'Float'  )
+    call dataitem%add_attribute( 'Precision' , '8'      )
+    call dataitem%add_attribute( 'Format'    , 'HDF'    ) ! only option for now
     call dataitem%add_chardata( trim( adjustl( field_path ) ) )
 
   end subroutine t_xdmf__add_field
@@ -247,11 +250,44 @@ contains
 ! UTILITIES
 !==============================================================================
 
-!  subroutine print_int_to_short_str( int_array, string )
-!    sll_int32         , intent(in   ) :: int_array(:)
-!    character(len=256), intent(  out) :: string
-!
-!  end subroutine print_int_to_short_str
+  subroutine ints_to_string( ints, str )
+    integer,                       intent(in   ) :: ints(:)
+    character(len=:), allocatable, intent(  out) :: str
+
+    sll_int32                      :: i, ni, nc, lc, str_len
+    character(len=11), allocatable :: tmp(:)
+    integer          , allocatable :: ints_len(:)
+
+    ! Allocate an homogeneous array of character
+    ni = size( ints )
+    allocate( tmp(ni) )
+    allocate( ints_len(ni) )
+
+    ! Write integers to an omogeneous array of character,
+    ! as left-justified strings, and store length of each trimmed string
+    do i = 1, ni
+      write( tmp(i), '(i11)' ) ints(i)
+      tmp(i)      = adjustl ( tmp(i) )
+      ints_len(i) = len_trim( tmp(i), i32 )
+    end do
+
+    ! Allocate single string with minimum length
+    str_len = sum( ints_len ) + ni - 1
+    allocate( character(len=str_len) :: str )
+
+    ! Write trimmed strings to single string, separated by blank space
+    lc = 0
+    do i = 1, ni
+      nc = ints_len(i)
+      str(lc+1:lc+nc) = trim( tmp(i) )
+      lc = lc+nc
+      if (i /= ni) then
+        str(lc+1:lc+1) = ' '
+        lc = lc+1
+      end if
+    end do
+
+  end subroutine ints_to_string
 
   !----------------------------------------------------------------------------
   subroutine split( path, head, tail )
