@@ -80,7 +80,7 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
     sll_hdf5_write_array,       &
     sll_hdf5_file_close
 
-  use sll_m_xdmf, only: &
+  use sll_m_xdmf_parallel, only: &
     sll_t_xdmf_file
 
   implicit none
