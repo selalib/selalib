@@ -1,4 +1,4 @@
-module sll_m_xdmf
+module sll_m_xdmf_parallel
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -251,12 +251,12 @@ contains
 !==============================================================================
 
   subroutine ints_to_string( ints, str )
-    integer,                       intent(in   ) :: ints(:)
+    sll_int32,                     intent(in   ) :: ints(:)
     character(len=:), allocatable, intent(  out) :: str
 
     sll_int32                      :: i, ni, nc, lc, str_len
     character(len=11), allocatable :: tmp(:)
-    integer          , allocatable :: ints_len(:)
+    sll_int32        , allocatable :: ints_len(:)
 
     ! Allocate an homogeneous array of character
     ni = size( ints )
@@ -520,4 +520,4 @@ contains
 
 !==============================================================================
 
-end module sll_m_xdmf
+end module sll_m_xdmf_parallel

@@ -1,4 +1,4 @@
-program test_xdmf
+program test_xdmf_parallel
 
 #include "sll_working_precision.h"
 
@@ -8,7 +8,7 @@ program test_xdmf
     sll_halt_collective,    &
     sll_get_collective_rank
 
-  use sll_m_xdmf, only: &
+  use sll_m_xdmf_parallel, only: &
     sll_t_xdmf_file
 
   implicit none
@@ -200,4 +200,4 @@ contains
 
   end function empty_file
 
-end program test_xdmf
+end program test_xdmf_parallel
