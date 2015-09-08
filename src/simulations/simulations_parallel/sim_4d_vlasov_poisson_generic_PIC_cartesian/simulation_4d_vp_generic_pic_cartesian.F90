@@ -714,7 +714,7 @@ contains
     deposit_time=0
 
     ! First snapshot at time 0 [[particles_snapshot]]
-    call particles_snapshot(0.0_8,sim)
+    ! AAA_ALH_TODO call particles_snapshot(0.0_8,sim)
     
     do it = 0, sim%num_iterations-1
 
@@ -999,7 +999,7 @@ contains
        !! -- --  diagnostics [end]  -- --
 
         ! Another snapshot after each iteration [[particles_snapshot]]
-        call particles_snapshot(it*dt,sim)
+        ! AAA_ALH_TODO call particles_snapshot(it*dt,sim)
             
     print *, "end one loop in time"
     enddo
