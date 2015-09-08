@@ -81,7 +81,7 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
     sll_hdf5_file_close
 
   use sll_m_xdmf_parallel, only: &
-    sll_t_xdmf_file
+    sll_t_xdmf_parallel_file
 
   implicit none
 
@@ -985,7 +985,7 @@ contains
     character(len=*), parameter :: filetype="HDF"
     character(len=64)       :: hdf5_file_name, xml_file_name, field_name
     sll_int32               :: hdf5_file_id, error
-    type( sll_t_xdmf_file ) :: xdmf_file
+    type( sll_t_xdmf_parallel_file ) :: xdmf_file
     logical                 :: to_file
     character(len=256)      :: dataset
     character(len=256)      :: dataset_x1_polar, dataset_x2_polar

@@ -15,9 +15,8 @@ module sll_m_xdmf_parallel
     sll_xml_file_close,    &
     sll_xml_dataitem
 
-  use sll_m_xml, only: &
-    sll_t_xml_document,    &
-    sll_t_xml_element
+  use sll_m_xdmf, only: &
+    sll_t_xdmf_file
 
   implicit none
   private
@@ -27,24 +26,17 @@ module sll_m_xdmf_parallel
 !==============================================================================
 
   !----------------------------------------------------------------------------
-  !> Pointer to grid
-  type :: t_grid_ptr
-    type(sll_t_xml_element), pointer :: p
-    sll_int32, allocatable           :: dims(:)
-  end type t_grid_ptr
-
-  !----------------------------------------------------------------------------
-  !> XDMF file
-  type, public :: sll_t_xdmf_file
+  !> XDMF parallel file
+  type, public :: sll_t_xdmf_parallel_file
+    ! OLD:
     character(len=64)                :: name
     sll_int32                        :: id
     ! NEW:
-    sll_real64                            :: time   =  0.0_f64
-    type(sll_collective_t)  , pointer     :: comm   => null()
-    type(sll_t_xml_element) , pointer     :: domain => null()
-    type(sll_t_xml_document), allocatable :: xml_doc
-    type(t_grid_ptr)        , allocatable :: grids(:)
+    type(sll_collective_t), pointer    :: comm => null()
+    sll_int32                          :: rank = -1
+    type(sll_t_xdmf_file), allocatable :: xdmf_file
   contains
+    ! OLD:
     procedure         :: create           => xdmf__create
     procedure         :: new_grid         => xdmf__new_grid
     procedure         :: close_grid       => xdmf__close_grid
@@ -52,13 +44,13 @@ module sll_m_xdmf_parallel
     procedure         :: collect_datasets => xdmf__collect_datasets
     procedure         :: close            => xdmf__close
     ! NEW:
-    procedure :: init      => t_xdmf__init
-    procedure :: write     => t_xdmf__write
-    procedure :: delete    => t_xdmf__delete
-    procedure :: add_grid  => t_xdmf__add_grid
-    procedure :: add_field => t_xdmf__add_field
+    procedure :: init      => t_xdmf_parallel__init
+    procedure :: write     => t_xdmf_parallel__write
+    procedure :: delete    => t_xdmf_parallel__delete
+    procedure :: add_grid  => t_xdmf_parallel__add_grid
+    procedure :: add_field => t_xdmf_parallel__add_field
 
-  end type sll_t_xdmf_file
+  end type sll_t_xdmf_parallel_file
 
 !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 contains
@@ -67,229 +59,90 @@ contains
 !==============================================================================
 ! NEW
 !==============================================================================
-  subroutine t_xdmf__init( self, time, comm )
-    class(sll_t_xdmf_file), intent(  out) :: self
-    sll_real64            , intent(in   ) :: time
-    type(sll_collective_t), pointer       :: comm
+  subroutine t_xdmf_parallel__init( self, time, comm )
+    class(sll_t_xdmf_parallel_file), intent(  out) :: self
+    sll_real64                     , intent(in   ) :: time
+    type(sll_collective_t)         , pointer       :: comm
 
-    type(sll_t_xml_element), pointer :: root
-
-    ! Fill in fields
+    ! Fill in fields (old)
     self%name =  "Not defined"  ! old
     self%id   =  999            ! old
-    self%time =  time
+
+    ! Fill in fields (new)
     self%comm => comm
-
-    !----------------------------------------------------
-    ! ONLY MASTER WRITES TO FILE
-    if (sll_get_collective_rank( self%comm ) /= 0) return
-    !----------------------------------------------------
-
-    ! Allocate XML document
-    allocate( self%xml_doc )
-
-    ! Add header
-    call self%xml_doc%add_header_line( "<?xml version='1.0' ?>" )
-    call self%xml_doc%add_header_line( "<!DOCTYPE Xdmf SYSTEM 'Xdmf.dtd' []>" )
-
-    ! Create root element (only one may exist!)
-    root => self%xml_doc%new_element( 'Xdmf' )
-    call root%add_attribute( 'Version', '2.0' )
-
-    ! Add Domain element to root (only one for our purposes)
-    self%domain => root%new_element( 'Domain' )
-
-  end subroutine t_xdmf__init
-
-  !----------------------------------------------------------------------------
-  subroutine t_xdmf__write( self, fname )
-    class(sll_t_xdmf_file), intent(in) :: self
-    character(len=*)      , intent(in) :: fname
-
-    !----------------------------------------------------
-    ! ONLY MASTER WRITES TO FILE
-    if (sll_get_collective_rank( self%comm ) /= 0) return
-    !----------------------------------------------------
-
-    call self%xml_doc%write( fname )
-
-  end subroutine t_xdmf__write
-
-  !----------------------------------------------------------------------------
-  subroutine t_xdmf__delete( self )
-    class(sll_t_xdmf_file), intent(inout) :: self
-
-    self%time   =  0.0_f64
-    self%comm   => null()
-    self%domain => null()
-
-    if (allocated( self%xml_doc )) then
-      call self%xml_doc%delete()
-      deallocate( self%xml_doc )
-    end if
-
-    if (allocated( self%grids )) then
-      deallocate( self%grids )
-    end if
-
-  end subroutine t_xdmf__delete
-
-  !----------------------------------------------------------------------------
-  subroutine t_xdmf__add_grid( self, grid_name, x1_path, x2_path, dims, gid )
-    class(sll_t_xdmf_file), intent(inout) :: self
-    character(len=*)      , intent(in   ) :: grid_name
-    character(len=*)      , intent(in   ) :: x1_path
-    character(len=*)      , intent(in   ) :: x2_path
-    sll_int32             , intent(in   ) :: dims(2)
-    sll_int32             , intent(  out) :: gid
-
-    sll_int32                        :: ng
-    character(len=64)                :: time_str
-    character(len=:), allocatable    :: dims_str
-    type(t_grid_ptr), allocatable    :: tmp(:)
-    type(sll_t_xml_element), pointer :: grid, geometry
-    type(sll_t_xml_element), pointer :: time, topology, dataitem
-
-    !----------------------------------------------------
-    ! ONLY MASTER WRITES TO FILE
-    if (sll_get_collective_rank( self%comm ) /= 0) return
-    !----------------------------------------------------
-
-    ! Prepare strings with data
-    write( time_str, '(f3.1)' ) self%time ! TODO: investigate format options
-    call ints_to_string( dims, dims_str )
-
-    ! Add new grid to domain
-    grid => self%domain%new_element( 'Grid' )
-    call grid%add_attribute( 'Name', trim( grid_name ) )
-    call grid%add_attribute( 'GridType', 'Uniform' ) ! only option for now
-
-    ! Add time to grid
-    time => grid%new_element( 'Time' )
-    call time%add_attribute( 'Value', trim( adjustl( time_str ) ) )
-
-    ! Add topology to grid
-    topology => grid%new_element( 'Topology' )
-    call topology%add_attribute( 'TopologyType', '2DSMesh' ) ! only option now
-    call topology%add_attribute( 'NumberOfElements', dims_str )
+    self%rank =  sll_get_collective_rank( comm )
     
-    ! Add geometry to grid
-    geometry => grid%new_element( 'Geometry' )
-    call geometry%add_attribute( 'GeometryType', 'X_Y' ) ! only option for now
-
-    ! Add X axis to geometry
-    dataitem => geometry%new_element( 'DataItem' )
-    call dataitem%add_attribute( 'Dimensions', dims_str )
-    call dataitem%add_attribute( 'NumberType', 'Float'  )
-    call dataitem%add_attribute( 'Precision' , '8'      )
-    call dataitem%add_attribute( 'Format'    , 'HDF'    ) ! only option for now
-    call dataitem%add_chardata( trim( x1_path ) )        ! only option for now
-
-    ! Add Y axis to geometry
-    dataitem => geometry%new_element( 'DataItem' )
-    call dataitem%add_attribute( 'Dimensions', dims_str )
-    call dataitem%add_attribute( 'NumberType', 'Float'  )
-    call dataitem%add_attribute( 'Precision' , '8'      )
-    call dataitem%add_attribute( 'Format'    , 'HDF'    ) ! only option for now
-    call dataitem%add_chardata( trim( x2_path ) )        ! only option for now
-
-    ! Determine size of 'self%grids' array
-    if (allocated( self%grids )) then
-      ng = size( self%grids )
-    else
-      ng = 0
+    ! MASTER: Allocate and initialize sequential XDMF file
+    if (self%rank == 0) then
+      allocate( self%xdmf_file )
+      call self%xdmf_file%init( time )
     end if
 
-    ! Extend 'self%grids' array and store pointer to new grid
-    allocate( tmp(ng+1) )
-    tmp(1:ng) = self%grids(1:ng)
-    tmp(ng+1)%p    => grid
-    tmp(ng+1)%dims =  dims
-    call move_alloc( from=tmp, to=self%grids )
-
-    ! Return the grid id, i.e. the last index in the 'self%grids' array
-    gid = ng+1
-
-  end subroutine t_xdmf__add_grid
+  end subroutine t_xdmf_parallel__init
 
   !----------------------------------------------------------------------------
-  subroutine t_xdmf__add_field( self, grid_id, field_name, field_path )
-    class(sll_t_xdmf_file), intent(inout) :: self
-    sll_int32             , intent(in   ) :: grid_id
-    character(len=*)      , intent(in   ) :: field_name
-    character(len=*)      , intent(in   ) :: field_path
+  subroutine t_xdmf_parallel__write( self, fname )
+    class(sll_t_xdmf_parallel_file), intent(in) :: self
+    character(len=*)               , intent(in) :: fname
 
-    character(len=:), allocatable    :: dims_str
-    type(sll_t_xml_element), pointer :: grid, field, dataitem
+    ! MASTER: write XDMF file 
+    call self%xdmf_file%write( fname )
 
-    !----------------------------------------------------
-    ! ONLY MASTER WRITES TO FILE
-    if (sll_get_collective_rank( self%comm ) /= 0) return
-    !----------------------------------------------------
+  end subroutine t_xdmf_parallel__write
 
-    ! Prepare strings with data
-    call ints_to_string( self%grids( grid_id )%dims, dims_str )
+  !----------------------------------------------------------------------------
+  subroutine t_xdmf_parallel__delete( self )
+    class(sll_t_xdmf_parallel_file), intent(inout) :: self
 
-    ! Create new field (scalar, nodal)
-    field => self%grids( grid_id )%p%new_element( 'Attribute' )
-    call field%add_attribute( 'Name'         , trim( field_name ) )
-    call field%add_attribute( 'AttributeType', 'Scalar' ) ! only option for now
-    call field%add_attribute( 'Center'       , 'Node'   ) ! only option for now
+    ! MASTER: delete and deallocate sequential XDMF file
+    if (self%rank == 0) then
+      if (allocated( self%xdmf_file )) then
+        call self%xdmf_file%delete()
+        deallocate( self%xdmf_file )
+      end if
+    end if
 
-    ! Add new dataitem
-    dataitem => field%new_element( 'DataItem' )
-    call dataitem%add_attribute( 'Dimensions', dims_str )
-    call dataitem%add_attribute( 'NumberType', 'Float'  )
-    call dataitem%add_attribute( 'Precision' , '8'      )
-    call dataitem%add_attribute( 'Format'    , 'HDF'    ) ! only option for now
-    call dataitem%add_chardata( trim( adjustl( field_path ) ) )
+    ! Reset internal fields
+    self%comm => null()
+    self%rank = -1
 
-  end subroutine t_xdmf__add_field
+  end subroutine t_xdmf_parallel__delete
+
+  !----------------------------------------------------------------------------
+  subroutine t_xdmf_parallel__add_grid( self, grid_name, x1_path, x2_path, dims, gid )
+    class(sll_t_xdmf_parallel_file), intent(inout) :: self
+    character(len=*)               , intent(in   ) :: grid_name
+    character(len=*)               , intent(in   ) :: x1_path
+    character(len=*)               , intent(in   ) :: x2_path
+    sll_int32                      , intent(in   ) :: dims(2)
+    sll_int32                      , intent(  out) :: gid
+
+    ! MASTER: add grid to sequential XDMF file
+    ! TODO: other processes might want to add a grid
+    if (self%rank == 0) then
+      call self%xdmf_file%add_grid( grid_name, x1_path, x2_path, dims, gid )
+    end if
+
+  end subroutine t_xdmf_parallel__add_grid
+
+  !----------------------------------------------------------------------------
+  subroutine t_xdmf_parallel__add_field( self, grid_id, field_name, field_path )
+    class(sll_t_xdmf_parallel_file), intent(inout) :: self
+    sll_int32                      , intent(in   ) :: grid_id
+    character(len=*)               , intent(in   ) :: field_name
+    character(len=*)               , intent(in   ) :: field_path
+
+    ! MASTER: add field to grid in sequential XDMF file
+    if (self%rank == 0) then
+      call self%xdmf_file%add_field( grid_id, field_name, field_path )
+    end if
+
+  end subroutine t_xdmf_parallel__add_field
 
 !==============================================================================
 ! UTILITIES
 !==============================================================================
 
-  subroutine ints_to_string( ints, str )
-    sll_int32,                     intent(in   ) :: ints(:)
-    character(len=:), allocatable, intent(  out) :: str
-
-    sll_int32                      :: i, ni, nc, lc, str_len
-    character(len=11), allocatable :: tmp(:)
-    sll_int32        , allocatable :: ints_len(:)
-
-    ! Allocate an homogeneous array of character
-    ni = size( ints )
-    allocate( tmp(ni) )
-    allocate( ints_len(ni) )
-
-    ! Write integers to an omogeneous array of character,
-    ! as left-justified strings, and store length of each trimmed string
-    do i = 1, ni
-      write( tmp(i), '(i11)' ) ints(i)
-      tmp(i)      = adjustl ( tmp(i) )
-      ints_len(i) = len_trim( tmp(i), i32 )
-    end do
-
-    ! Allocate single string with minimum length
-    str_len = sum( ints_len ) + ni - 1
-    allocate( character(len=str_len) :: str )
-
-    ! Write trimmed strings to single string, separated by blank space
-    lc = 0
-    do i = 1, ni
-      nc = ints_len(i)
-      str(lc+1:lc+nc) = trim( tmp(i) )
-      lc = lc+nc
-      if (i /= ni) then
-        str(lc+1:lc+1) = ' '
-        lc = lc+1
-      end if
-    end do
-
-  end subroutine ints_to_string
-
-  !----------------------------------------------------------------------------
   subroutine split( path, head, tail )
     character(len=*), intent(in   ) :: path
     character(len=*), intent(  out) :: head
@@ -323,12 +176,12 @@ contains
   end subroutine split
 
 !==============================================================================
-! XDMF FILE
+! XDMF FILE (OLD)
 !==============================================================================
   subroutine xdmf__create( self, xml_file_name, comm )
-    class(sll_t_xdmf_file), intent(  out) :: self
-    character(len=*)      , intent(in   ) :: xml_file_name
-    type(sll_collective_t), pointer       :: comm
+    class(sll_t_xdmf_parallel_file), intent(  out) :: self
+    character(len=*)               , intent(in   ) :: xml_file_name
+    type(sll_collective_t)         , pointer       :: comm
 
     sll_int32 :: xml_file_id, error
     sll_int32 :: bcast_buf(1)
@@ -357,12 +210,12 @@ contains
 
 !------------------------------------------------------------------------------
   subroutine xdmf__new_grid( self, grid_name, x1_path, x2_path, dims, time )
-    class(sll_t_xdmf_file), intent(in) :: self
-    character(len=*)      , intent(in) :: grid_name
-    character(len=*)      , intent(in) :: x1_path
-    character(len=*)      , intent(in) :: x2_path
-    sll_int32             , intent(in) :: dims(2)
-    sll_real64, optional  , intent(in) :: time
+    class(sll_t_xdmf_parallel_file), intent(in) :: self
+    character(len=*)               , intent(in) :: grid_name
+    character(len=*)               , intent(in) :: x1_path
+    character(len=*)               , intent(in) :: x2_path
+    sll_int32                      , intent(in) :: dims(2)
+    sll_real64, optional           , intent(in) :: time
 
     !----------------------------------------------------
     ! ONLY MASTER WRITES TO FILE
@@ -395,7 +248,7 @@ contains
 
 !------------------------------------------------------------------------------
   subroutine xdmf__close_grid( self )
-    class(sll_t_xdmf_file), intent(in) :: self
+    class(sll_t_xdmf_parallel_file), intent(in) :: self
 
     !----------------------------------------------------
     ! ONLY MASTER WRITES TO FILE
@@ -409,10 +262,10 @@ contains
 
 !------------------------------------------------------------------------------
   subroutine xdmf__write_array( self, path, dims, filetype )
-    class(sll_t_xdmf_file), intent(in) :: self
-    character(len=*)      , intent(in) :: path
-    sll_int32             , intent(in) :: dims(2)
-    character(len=*)      , intent(in) :: filetype
+    class(sll_t_xdmf_parallel_file), intent(in) :: self
+    character(len=*)               , intent(in) :: path
+    sll_int32                      , intent(in) :: dims(2)
+    character(len=*)               , intent(in) :: filetype
 
     character(len=256) :: group
     character(len=64)  :: dataset
@@ -435,7 +288,7 @@ contains
 
 !------------------------------------------------------------------------------
   subroutine xdmf__close( self )
-    class(sll_t_xdmf_file), intent(in) :: self
+    class(sll_t_xdmf_parallel_file), intent(in) :: self
 
     sll_int32 :: error
 
@@ -456,11 +309,11 @@ contains
 
     use mpi
 
-    class(sll_t_xdmf_file), intent(in) :: self
-    character(len=*)      , intent(in) :: dataset
-    sll_int32             , intent(in) :: dims(2)
-    character(len=*)      , intent(in) :: filetype
-    logical               , intent(in) :: to_file
+    class(sll_t_xdmf_parallel_file), intent(in) :: self
+    character(len=*)               , intent(in) :: dataset
+    sll_int32                      , intent(in) :: dims(2)
+    character(len=*)               , intent(in) :: filetype
+    logical                        , intent(in) :: to_file
 
     logical              :: buf(1)    ! buffer for send (all processes)
     logical, allocatable :: recbuf(:) ! buffer for receive (only master)
