@@ -59,10 +59,10 @@ IF(BUILD_TESTING)
   ADD_TEST( NAME bsplines_2d               COMMAND test_bsplines_2d              )
   ADD_TEST( NAME cubic_non_uniform_splines COMMAND test_non_unif_splines         )
   ADD_TEST( NAME splines_arbitrary_degree  COMMAND test_arbitrary_degree_splines )
-  ADD_TEST( NAME cubic_splines_deposit     COMMAND test_cubic_splines_deposit    )
+  #ADD_TEST( NAME cubic_splines_deposit     COMMAND test_cubic_splines_deposit    )
 
   SET_TESTS_PROPERTIES( cubic_splines
-                        cubic_splines_deposit
+                        #cubic_splines_deposit
                         bsplines_1d
                         bsplines_2d
                         cubic_non_uniform_splines
