@@ -9,7 +9,7 @@ program test_xdmf_parallel
     sll_get_collective_rank
 
   use sll_m_xdmf_parallel, only: &
-    sll_t_xdmf_file
+    sll_t_xdmf_parallel_file
 
   implicit none
 
@@ -17,10 +17,10 @@ program test_xdmf_parallel
   ! VARIABLES DECLARATION
   !----------------------------------------------------------------------------
 
-  type(sll_t_xdmf_file) :: xdmf_file
-  sll_int32             :: gid_cart, gid_polar
-  character(len=256)    :: reference_filename
-  logical               :: file_exists
+  type(sll_t_xdmf_parallel_file) :: xdmf_file
+  sll_int32                      :: gid_cart, gid_polar
+  character(len=256)             :: reference_filename
+  logical                        :: file_exists
 
   !----------------------------------------------------------------------------
   ! PARSE INPUT
