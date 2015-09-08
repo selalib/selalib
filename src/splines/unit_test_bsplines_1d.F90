@@ -44,6 +44,7 @@ print*,'***************************************************************'
 print*,'*** 2D HERMITE  ***'
 print*,'***************************************************************'
 call test_process_2d(SLL_HERMITE,SLL_HERMITE)
+print*,'PASSED'
 
 contains
 
