@@ -53,7 +53,7 @@ call compute_bspline_2d( bspline_2d, gtau)
 call cpu_time(t1)
 
 ! evaluate interpolation error at mesh points and print out
-call interpolate_array_values_2d(bspline_2d, nx, ny, gtau, htau, 0, 0)
+call interpolate_array_values_2d(bspline_2d, nx, ny, gtau, htau)
 !do j=1,ny
 !  do i=1,nx
 !    htau(i,j) = interpolate_value_2d(bspline_2d, taux(i), tauy(j), 0, 0)
