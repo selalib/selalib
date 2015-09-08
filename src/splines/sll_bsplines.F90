@@ -65,10 +65,10 @@ public :: compute_bspline_1d
 public :: compute_bspline_2d
 public :: update_bspline_1d
 public :: update_bspline_2d
-public :: interpolate_value
-public :: interpolate_derivative
-public :: interpolate_array_values
-public :: interpolate_array_derivatives
+public :: interpolate_value_1d
+public :: interpolate_derivative_1d
+public :: interpolate_array_values_1d
+public :: interpolate_array_derivatives_1d
 public :: interpolate_array_values_2d
 public :: interpolate_value_2d
 public :: interpolate_array_x1_derivatives_2d
@@ -612,7 +612,7 @@ end subroutine update_bspline_1d
 !> results of the interpolation.
 !> @param[inout] spline the spline object pointer, duly initialized and 
 !> already operated on by the compute_bspline_1d() subroutine.
-function interpolate_value( this, x) result(y)
+function interpolate_value_1d( this, x) result(y)
 
   type(sll_bspline_1d)    :: this 
   sll_real64, intent(in)  :: x
@@ -693,11 +693,8 @@ function interpolate_value( this, x) result(y)
   
   y = this%aj(1)
   
-end function interpolate_value
+end function interpolate_value_1d
 
-!> @brief returns the values of the derivatives evaluated at a 
-!> collection of abscissae stored by a 1D array in another output 
-!> array. The spline coefficients
 !> @brief returns the values of the images of a collection of 
 !> abscissae, represented by a 1D array in another output array. 
 !> The spline coefficients used are stored in the spline object pointer.
@@ -709,7 +706,7 @@ end function interpolate_value
 !> interpolated.
 !> @param[inout] spline the spline object pointer, duly initialized and 
 !> already operated on by the compute_bspline_1d() subroutine.
-subroutine interpolate_array_values( this, n, x, y)
+subroutine interpolate_array_values_1d( this, n, x, y)
 
   type(sll_bspline_1d), pointer     :: this 
   sll_int32,            intent(in)  :: n
@@ -812,7 +809,7 @@ subroutine interpolate_array_values( this, n, x, y)
   
   deallocate(aj,dl,dr)
 
-end subroutine interpolate_array_values
+end subroutine interpolate_array_values_1d
 
 !> @brief returns the values of the derivatives evaluated at a 
 !> collection of abscissae stored by a 1D array in another output 
@@ -826,7 +823,7 @@ end subroutine interpolate_array_values
 !> interpolated.
 !> @param[inout] spline the spline object pointer, duly initialized and 
 !> already operated on by the compute_bspline_1d() subroutine.
-subroutine interpolate_array_derivatives( this, n, x, y)
+subroutine interpolate_array_derivatives_1d( this, n, x, y)
 
   type(sll_bspline_1d)    :: this 
   sll_int32,  intent(in)  :: n
@@ -958,9 +955,9 @@ subroutine interpolate_array_derivatives( this, n, x, y)
 
   deallocate(aj,dl,dr)
 
-end subroutine interpolate_array_derivatives
+end subroutine interpolate_array_derivatives_1d
 
-function interpolate_derivative( this, x) result(y)
+function interpolate_derivative_1d( this, x) result(y)
 
   type(sll_bspline_1d)    :: this 
   sll_real64, intent(in)  :: x
@@ -1072,7 +1069,7 @@ function interpolate_derivative( this, x) result(y)
   
   y = this%aj(1)
   
-end function interpolate_derivative
+end function interpolate_derivative_1d
 
 !>@brief
 !> Calculates the nonvanishing B-splines and derivatives at X.
@@ -1481,6 +1478,8 @@ function interpolate_x1_derivative_2d( x1, x2, spline )
   sll_real64, intent(in)              :: x2
   type(sll_bspline_2D), pointer       :: spline
 
+  !interpolate_x1_derivative_2d = interpolate_value_2d(spline, x1, x2, 1, 0) 
+
 end function interpolate_x1_derivative_2D
 
 !> @brief 
@@ -1493,11 +1492,13 @@ end function interpolate_x1_derivative_2D
 !> @param[in] spline pointer to spline object.
 !> @return interpolate_x2_derivative_2D  interpolated value of the derivative 
 function interpolate_x2_derivative_2d( x1, x2, spline )
-  sll_real64                          :: interpolate_x2_derivative_2D
-  intrinsic                           :: associated, int, real
-  sll_real64, intent(in)              :: x1
-  sll_real64, intent(in)              :: x2
+  sll_real64                     :: interpolate_x2_derivative_2d
+  sll_real64, intent(in)         :: x1
+  sll_real64, intent(in)         :: x2
   type(sll_bspline_2D), pointer  :: spline
+
+  !interpolate_x2_derivative_2d = interpolate_value_2d(spline, x1, x2, 0, 1) 
+
 end function interpolate_x2_derivative_2D
 
 
@@ -1508,15 +1509,13 @@ subroutine delete_bspline_2D( spline )
   type(sll_bspline_2D), pointer :: spline
 end subroutine delete_bspline_2D 
 
-subroutine interpolate_array_values_2d(this, n1, n2, x, y, ideriv, jderiv)
+subroutine interpolate_array_values_2d(this, n1, n2, x, y)
 
 type(sll_bspline_2d)    :: this
 sll_int32               :: n1
 sll_int32               :: n2
 sll_real64, intent(in)  :: x(:,:)
 sll_real64, intent(out) :: y(:,:)
-sll_int32               :: ideriv
-sll_int32               :: jderiv
 
 sll_int32               :: i
 sll_int32               :: j, jj
@@ -1524,9 +1523,10 @@ sll_int32               :: i1, i2
 sll_int32               :: k1, k2
 sll_int32               :: jc, jcmin, jcmax
 
-sll_real64, allocatable :: aj(:)
-sll_real64, allocatable :: dl(:)
-sll_real64, allocatable :: dr(:)
+sll_real64, allocatable :: ajx(:), ajy(:)
+sll_real64, allocatable :: dlx(:), dly(:)
+sll_real64, allocatable :: drx(:), dry(:)
+sll_real64, allocatable :: wrk(:)
 
 sll_int32               :: nx, kx, ny, ky
 sll_int32               :: left, leftx, lefty
@@ -1545,33 +1545,35 @@ sll_real64              :: xi
 sll_real64              :: xj
 sll_real64, pointer     :: tx(:)
 sll_real64, pointer     :: ty(:)
-sll_real64, pointer     :: work(:)
 
-nx   = n1
-ny   = n2
-kx   = this%bs1%k
-ky   = this%bs2%k
+nx   =  this%bs1%n
+ny   =  this%bs2%n
+kx   =  this%bs1%k
+ky   =  this%bs2%k
 tx   => this%bs1%t
 ty   => this%bs2%t
-work => this%bs1%bcoef
 
 if (this%bs1%bc_type == SLL_PERIODIC) then
   nmkx = nx+kx
 else
   nmkx = nx+kx+2
 end if
-if (this%bs1%bc_type == SLL_PERIODIC) then
+if (this%bs2%bc_type == SLL_PERIODIC) then
   nmky = ny+ky
 else
   nmky = ny+ky+2
 end if
 
-SLL_CLEAR_ALLOCATE(aj(1:max(kx,ky)),ierr)
-SLL_CLEAR_ALLOCATE(dl(1:max(kx,ky)),ierr)
-SLL_CLEAR_ALLOCATE(dr(1:max(kx,ky)),ierr)
+SLL_CLEAR_ALLOCATE(ajx(1:kx),ierr)
+SLL_CLEAR_ALLOCATE(dlx(1:kx),ierr)
+SLL_CLEAR_ALLOCATE(drx(1:kx),ierr)
+SLL_CLEAR_ALLOCATE(ajy(1:ky),ierr)
+SLL_CLEAR_ALLOCATE(dly(1:ky),ierr)
+SLL_CLEAR_ALLOCATE(dry(1:ky),ierr)
+SLL_CLEAR_ALLOCATE(wrk(1:nmkx),ierr)
 
 jlo = ky
-do j=1,ny
+do j=1,n2
   ilo = kx
   klo = jlo
   xj  = this%bs2%tau(j)
@@ -1583,115 +1585,105 @@ do j=1,ny
       jcmin = 1
       if ( kx <= leftx ) then
         do jjj = 1, kx-1
-          dl(jjj) = xi - tx(leftx+1-jjj)
+          dlx(jjj) = xi - tx(leftx+1-jjj)
         end do
       else
         jcmin = 1-(leftx-kx)
         do jjj = 1, leftx
-          dl(jjj) = xi - tx(leftx+1-jjj)
+          dlx(jjj) = xi - tx(leftx+1-jjj)
         end do
         do jjj = leftx, kx-1
-          aj(kx-jjj) = 0.0_f64
-          dl(jjj) = dl(leftx)
+          ajx(kx-jjj) = 0.0_f64
+          dlx(jjj) = dlx(leftx)
         end do
       end if
       jcmax = kx
       if ( nmkx-kx < leftx ) then
         jcmax = nmkx-leftx
         do jjj = 1, nmkx-leftx
-          dr(jjj) = tx(leftx+jjj) - xi
+          drx(jjj) = tx(leftx+jjj) - xi
         end do
         do jjj = nmkx-leftx, kx-1
-          aj(jjj+1) = 0.0_f64
-          dr(jjj) = dr(nmkx-leftx)
+          ajx(jjj+1) = 0.0_f64
+          drx(jjj) = drx(nmkx-leftx)
         end do
       else
         do jjj = 1, kx-1
-          dr(jjj) = tx(leftx+jjj) - xi
+          drx(jjj) = tx(leftx+jjj) - xi
         end do
       end if
       do jc = jcmin, jcmax
-        aj(jc) = this%bcoef(leftx-kx+jc,lefty-ky+jj)
+        ajx(jc) = this%bcoef(leftx-kx+jc,lefty-ky+jj)
       end do
-      do jjj = 1, ideriv
-        llo = kx-jjj
-        do kkk = 1, kx - jjj
-          aj(kkk) = ((aj(kkk+1)-aj(kkk))/(dl(llo)+dr(kkk)))*(kx-jjj)
-          llo = llo - 1
-        end do
-      end do
-      do jjj = ideriv+1, kx-1
+      do jjj = 1, kx-1
         llo = kx-jjj
         do kkk = 1, kx-jjj
-          aj(kkk) = (aj(kkk+1)*dl(llo)+aj(kkk)*dr(kkk))/(dl(llo)+dr(kkk))
+          ajx(kkk) = (ajx(kkk+1)*dlx(llo)+ajx(kkk)*drx(kkk))/(dlx(llo)+drx(kkk))
           llo = llo - 1
         end do
       end do
-      work(jj) = aj(1)
+      wrk(jj) = ajx(1)
     end do
     call interv(ty(lefty-ky+1:nmky),ky+ky,xj,left,klo,mflag)
     jcmin = 1
     if ( ky <= left ) then
       do jjj = 1, ky-1
-        dl(jjj) = xj - ty(lefty-ky+left+1-jjj)
+        dly(jjj) = xj - ty(lefty-ky+left+1-jjj)
       end do
     else
       jcmin = 1-(left-ky)
       do jjj = 1, left
-        dl(jjj) = xj - ty(lefty-ky+left+1-jjj)
+        dly(jjj) = xj - ty(lefty-ky+left+1-jjj)
       end do
       do jjj = left, ky-1
-        aj(ky-jjj) = 0.0_f64
-        dl(jjj) = dl(left)
+        ajy(ky-jjj) = 0.0_f64
+        dly(jjj) = dly(left)
       end do
     end if
     jcmax = ky
     if ( ky < left ) then
       jcmax = ky+ky-left
       do jjj = 1, ky+ky-left
-        dr(jjj) = ty(lefty-ky+left+jjj) - xj
+        dry(jjj) = ty(lefty-ky+left+jjj) - xj
       end do
       do jjj = ky+ky-left, ky-1
-        aj(jjj+1) = 0.0_f64
-        dr(jjj) = dr(ky+ky-left)
+        ajy(jjj+1) = 0.0_f64
+        dry(jjj) = dry(ky+ky-left)
       end do
     else
       do jjj = 1, ky-1
-        dr(jjj) = ty(lefty-ky+left+jjj) - xj
+        dry(jjj) = ty(lefty-ky+left+jjj) - xj
       end do
     end if
     do jc = jcmin, jcmax
-      aj(jc) = work(left-ky+jc)
+      ajy(jc) = wrk(left-ky+jc)
     end do
-
-    do jjj = 1, jderiv
-      llo = ky - jjj
-      do kkk = 1, ky - jjj
-        aj(kkk) = ((aj(kkk+1)-aj(kkk))/(dl(llo)+dr(kkk)))*(ky-jjj)
-        llo = llo - 1
-      end do
-    end do
-    do jjj = jderiv+1, ky-1
+    do jjj = 1, ky-1
       llo = ky-jjj
       do kkk = 1, ky-jjj
-        aj(kkk) = (aj(kkk+1)*dl(llo)+aj(kkk)*dr(kkk))/(dl(llo)+dr(kkk))
+        ajy(kkk) = (ajy(kkk+1)*dly(llo)+ajy(kkk)*dry(kkk))/(dly(llo)+dry(kkk))
         llo = llo - 1
       end do
     end do
-    y(i,j) = aj(1)
+    y(i,j) = ajy(1)
   end do
 end do
 
+deallocate(ajx)
+deallocate(dlx)
+deallocate(drx)
+deallocate(ajy)
+deallocate(dly)
+deallocate(dry)
+deallocate(wrk)
 end subroutine interpolate_array_values_2d
 
-function interpolate_value_2d(this, xi, xj, ideriv, jderiv) result (y)
+function interpolate_value_2d(this, xi, xj ) result (y)
 
 type(sll_bspline_2d)    :: this
 sll_real64, intent(in)  :: xi
 sll_real64, intent(in)  :: xj
 sll_real64              :: y
-sll_int32, intent(in)   :: ideriv
-sll_int32, intent(in)   :: jderiv
 
 sll_int32               :: jj
 sll_int32               :: jc, jcmin, jcmax
@@ -1765,15 +1757,7 @@ do jj=1,ky
   do jc = jcmin, jcmax
     this%bs1%aj(jc) = this%bcoef(leftx-kx+jc,lefty-ky+jj)
   end do
-  do jjj = 1, ideriv
-    llo = kx-jjj
-    do kkk = 1, kx - jjj
-      this%bs1%aj(kkk) = ((this%bs1%aj(kkk+1)-this%bs1%aj(kkk)) &
-                         /(this%bs1%dl(llo)+this%bs1%dr(kkk)))*(kx-jjj)
-      llo = llo - 1
-    end do
-  end do
-  do jjj = ideriv+1, kx-1
+  do jjj = 1, kx-1
     llo = kx-jjj
     do kkk = 1, kx-jjj
       this%bs1%aj(kkk) = (this%bs1%aj(kkk+1)*this%bs1%dl(llo)+ &
@@ -1821,15 +1805,7 @@ end if
 do jc = jcmin, jcmax
   this%bs2%aj(jc) = work(left-ky+jc)
 end do
-do jjj = 1, jderiv
-  llo = ky - jjj
-  do kkk = 1, ky - jjj
-    this%bs2%aj(kkk) = ((this%bs2%aj(kkk+1)-this%bs2%aj(kkk)) &
-                       /(this%bs2%dl(llo)+this%bs2%dr(kkk)))*(ky-jjj)
-    llo = llo - 1
-  end do
-end do
-do jjj = jderiv+1, ky-1
+do jjj = 1, ky-1
   llo = ky-jjj
   do kkk = 1, ky-jjj
     this%bs2%aj(kkk) = (this%bs2%aj(kkk+1)*this%bs2%dl(llo)+ &
@@ -1845,24 +1821,24 @@ end function interpolate_value_2d
 subroutine interpolate_array_x1_derivatives_2d(this, n1, n2, x, y)
 
 type(sll_bspline_2d)    :: this
-sll_int32               :: n1
-sll_int32               :: n2
+sll_int32,  intent(in)  :: n1
+sll_int32,  intent(in)  :: n2
 sll_real64, intent(in)  :: x(:,:)
 sll_real64, intent(out) :: y(:,:)
 
-call interpolate_array_values_2d(this, n1, n2, x, y, 1, 0)
+!call interpolate_array_values_2d(this, n1, n2, x, y, 1, 0)
 
 end subroutine interpolate_array_x1_derivatives_2d
 
 subroutine interpolate_array_x2_derivatives_2d(this, n1, n2, x, y)
 
 type(sll_bspline_2d)    :: this
-sll_int32               :: n1
-sll_int32               :: n2
+sll_int32,  intent(in)  :: n1
+sll_int32,  intent(in)  :: n2
 sll_real64, intent(in)  :: x(:,:)
 sll_real64, intent(out) :: y(:,:)
 
-call interpolate_array_values_2d(this, n1, n2, x, y, 0, 1)
+!call interpolate_array_values_2d(this, n1, n2, x, y, 0, 1)
 
 end subroutine interpolate_array_x2_derivatives_2d
 
