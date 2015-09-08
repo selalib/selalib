@@ -1509,13 +1509,15 @@ subroutine delete_bspline_2D( spline )
   type(sll_bspline_2D), pointer :: spline
 end subroutine delete_bspline_2D 
 
-subroutine interpolate_array_values_2d(this, n1, n2, x, y)
+subroutine interpolate_array_values_2d(this, n1, n2, x, y, ideriv, jderiv)
 
 type(sll_bspline_2d)    :: this
 sll_int32               :: n1
 sll_int32               :: n2
 sll_real64, intent(in)  :: x(:,:)
 sll_real64, intent(out) :: y(:,:)
+sll_int32               :: ideriv
+sll_int32               :: jderiv
 
 sll_int32               :: i
 sll_int32               :: j, jj
@@ -1615,7 +1617,14 @@ do j=1,n2
       do jc = jcmin, jcmax
         ajx(jc) = this%bcoef(leftx-kx+jc,lefty-ky+jj)
       end do
-      do jjj = 1, kx-1
+      do jjj = 1, ideriv
+        llo = kx - jjj
+        do kkk = 1, kx - jjj
+          ajx(kkk) = ((ajx(kkk+1)-ajx(kkk))/(dlx(llo)+drx(kkk)))*(kx-jjj)
+          llo = llo-1
+        end do
+      end do
+      do jjj = ideriv+1, kx-1
         llo = kx-jjj
         do kkk = 1, kx-jjj
           ajx(kkk) = (ajx(kkk+1)*dlx(llo)+ajx(kkk)*drx(kkk))/(dlx(llo)+drx(kkk))
@@ -1658,7 +1667,14 @@ do j=1,n2
     do jc = jcmin, jcmax
       ajy(jc) = wrk(left-ky+jc)
     end do
-    do jjj = 1, ky-1
+    do jjj = 1, jderiv
+      llo = ky - jjj
+      do kkk = 1, ky - jjj
+        ajy(kkk) = ((ajy(kkk+1)-ajy(kkk))/(dly(llo)+dry(kkk)))*(ky-jjj)
+        llo = llo-1
+      end do
+    end do
+    do jjj = jderiv+1, ky-1
       llo = ky-jjj
       do kkk = 1, ky-jjj
         ajy(kkk) = (ajy(kkk+1)*dly(llo)+ajy(kkk)*dry(kkk))/(dly(llo)+dry(kkk))
@@ -1678,11 +1694,13 @@ deallocate(dry)
 deallocate(wrk)
 end subroutine interpolate_array_values_2d
 
-function interpolate_value_2d(this, xi, xj ) result (y)
+function interpolate_value_2d(this, xi, xj, ideriv, jderiv ) result (y)
 
 type(sll_bspline_2d)    :: this
 sll_real64, intent(in)  :: xi
 sll_real64, intent(in)  :: xj
+sll_int32,  intent(in)  :: ideriv
+sll_int32,  intent(in)  :: jderiv
 sll_real64              :: y
 
 sll_int32               :: jj
@@ -1699,7 +1717,8 @@ sll_int32               :: nmky
 
 sll_real64, pointer     :: tx(:)
 sll_real64, pointer     :: ty(:)
-sll_real64, pointer     :: work(:)
+
+sll_real64, allocatable :: work(:)
 
 nx   =  this%bs1%n
 ny   =  this%bs2%n
@@ -1707,7 +1726,9 @@ kx   =  this%bs1%k
 ky   =  this%bs2%k
 tx   => this%bs1%t
 ty   => this%bs2%t
-work => this%bs1%bcoef
+
+allocate(work(size(this%bs1%bcoef)))
+work = 0.0_f64
 
 if (this%bs1%bc_type == SLL_PERIODIC) then
   nmkx = nx+kx
@@ -1757,7 +1778,14 @@ do jj=1,ky
   do jc = jcmin, jcmax
     this%bs1%aj(jc) = this%bcoef(leftx-kx+jc,lefty-ky+jj)
   end do
-  do jjj = 1, kx-1
+  do jjj = 1, ideriv
+    llo = kx - jjj
+    do kkk = 1, kx - jjj
+      this%bs1%aj(kkk) = ((this%bs1%aj(kkk+1)-this%bs1%aj(kkk))/(this%bs1%dl(llo)+this%bs1%dr(kkk)))*(kx-jjj)
+      llo = llo-1
+    end do
+  end do
+  do jjj = ideriv+1, kx-1
     llo = kx-jjj
     do kkk = 1, kx-jjj
       this%bs1%aj(kkk) = (this%bs1%aj(kkk+1)*this%bs1%dl(llo)+ &
@@ -1805,7 +1833,14 @@ end if
 do jc = jcmin, jcmax
   this%bs2%aj(jc) = work(left-ky+jc)
 end do
-do jjj = 1, ky-1
+do jjj = 1, jderiv
+  llo = ky - jjj
+  do kkk = 1, ky - jjj
+    this%bs2%aj(kkk) = ((this%bs2%aj(kkk+1)-this%bs2%aj(kkk))/(this%bs2%dl(llo)+this%bs2%dr(kkk)))*(ky-jjj)
+    llo = llo-1
+  end do
+end do
+do jjj = jderiv+1, ky-1
   llo = ky-jjj
   do kkk = 1, ky-jjj
     this%bs2%aj(kkk) = (this%bs2%aj(kkk+1)*this%bs2%dl(llo)+ &

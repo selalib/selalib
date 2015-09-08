@@ -28,18 +28,18 @@ sll_int32,  parameter         :: m = 2
 sll_real64                    :: t0, t1, t2, t3, t4
 sll_int32                     :: ierr
 
-print*,'***************************************************************'
-print*,'*** 1D PERIODIC ***'
-print*,'***************************************************************'
-call test_process_1d(SLL_PERIODIC)
-print*,'***************************************************************'
-print*,'*** 1D HERMITE ***'
-print*,'***************************************************************'
-call test_process_1d(SLL_HERMITE)
-print*,'***************************************************************'
-print*,'*** 2D PERIODIC ***'
-print*,'***************************************************************'
-call test_process_2d(SLL_PERIODIC,SLL_PERIODIC)
+!print*,'***************************************************************'
+!print*,'*** 1D PERIODIC ***'
+!print*,'***************************************************************'
+!call test_process_1d(SLL_PERIODIC)
+!print*,'***************************************************************'
+!print*,'*** 1D HERMITE ***'
+!print*,'***************************************************************'
+!call test_process_1d(SLL_HERMITE)
+!print*,'***************************************************************'
+!print*,'*** 2D PERIODIC ***'
+!print*,'***************************************************************'
+!call test_process_2d(SLL_PERIODIC,SLL_PERIODIC)
 print*,'***************************************************************'
 print*,'*** 2D HERMITE  ***'
 print*,'***************************************************************'
@@ -150,12 +150,15 @@ subroutine test_process_2d(bc1_type, bc2_type)
   sll_real64, allocatable :: tau1(:,:)
   sll_real64, allocatable :: tau2(:,:)
 
-  sll_int32,  parameter   :: n1 = 512
-  sll_int32,  parameter   :: n2 = 512
+  sll_int32,  parameter   :: n1 = 64
+  sll_int32,  parameter   :: n2 = 64
   sll_real64              :: sl1      ! slopes at boundaries
   sll_real64              :: sr1      ! slopes at boundaries
   sll_real64              :: sl2      ! slopes at boundaries
   sll_real64              :: sr2      ! slopes at boundaries
+
+  sll_real64              :: f
+
   sll_real64, parameter   :: dpi = 2*sll_pi
 
   sll_real64, parameter   :: x1_min = 0.0_f64
@@ -171,7 +174,7 @@ subroutine test_process_2d(bc1_type, bc2_type)
   allocate(tau1(n1,n2), tau2(n1,n2))
   
   do j = 1, n2
-    do i = i, n1
+    do i = 1, n1
       tau1(i,j) = bspline_2d%bs1%tau(i)
       tau2(i,j) = bspline_2d%bs2%tau(j)
     end do
@@ -188,19 +191,19 @@ subroutine test_process_2d(bc1_type, bc2_type)
   call compute_bspline_2d(bspline_2d, ftau, sl1, sr1, sl2, sr2)
   call cpu_time(t1)
   do j = 1,nstep
-    call interpolate_array_values_2d( bspline_2d, n1, n2, ftau, gtau)
+    call interpolate_array_values_2d( bspline_2d, n1, n2, ftau, gtau, 0, 0)
   end do
   err1 = sum(abs(gtau-cos(dpi*tau1)*cos(dpi*tau2)))/(n1*n2)
   err2 = maxval(abs(gtau-cos(dpi*tau1)*cos(dpi*tau2)))
   call cpu_time(t2)
   do j = 1,nstep
-    call interpolate_array_values_2d( bspline_2d, n1, n2, ftau, gtau)
+    call interpolate_array_values_2d( bspline_2d, n1, n2, ftau, gtau, 1, 0)
   end do
   err3 = sum(abs(gtau+dpi*sin(dpi*tau1)*cos(dpi*tau2)))/(n1*n2)
-  err4 = maxval(abs(gtau+dpi*cos(dpi*tau1)*sin(dpi*tau2)))
+  err4 = maxval(abs(gtau+dpi*sin(dpi*tau1)*cos(dpi*tau2)))
   call cpu_time(t3)
   do j = 1,nstep
-    call interpolate_array_values_2d( bspline_2d, n1, n2, ftau, gtau)
+    call interpolate_array_values_2d( bspline_2d, n1, n2, ftau, gtau, 0, 1)
   end do
   err5 = sum(abs(gtau+dpi*sin(dpi*tau2)*cos(dpi*tau1)))/(n1*n2)
   err6 = maxval(abs(gtau+dpi*sin(dpi*tau2)*cos(dpi*tau1)))
@@ -220,42 +223,43 @@ subroutine test_process_2d(bc1_type, bc2_type)
   print*, "-----------------------------------------------------------"
   
   call cpu_time(t0)
+  call compute_bspline_2d(bspline_2d, ftau, sl1, sr1, sl2, sr2)
+  call cpu_time(t1)
   err1 = 0.0_f64
   do j = 1, n2
     do i = 1, n1
-      err1 = err1 + &
-        abs(interpolate_value_2d(bspline_2d,tau1(i,j),tau2(i,j)) &
-            -cos(dpi*tau1(i,j))*cos(dpi*tau2(i,j)))
-    end do
-  end do
-  call cpu_time(t1)
-  err2 = 0.0_f64
-  do j = 1, n2
-    do i = 1, n1
-      err2 = err2 + &
-        abs(interpolate_value_2d(bspline_2d,tau1(i,j),tau2(i,j)) &
-            +sin(dpi*tau1(i,j))*cos(dpi*tau2(i,j)))
+      f = interpolate_value_2d(bspline_2d,tau1(i,j),tau2(i,j),0,0)
+      err1 = err1 + abs(f-ftau(i,j))
+      write(10,*) tau1(i,j), tau2(i,j), f, ftau(i,j)
     end do
   end do
   call cpu_time(t2)
-  err3 = 0.0_f64
+  err2 = 0.0_f64
   do j = 1, n2
     do i = 1, n1
-      err3 = err3 + &
-        abs(interpolate_value_2d(bspline_2d,tau1(i,j),tau2(i,j)) &
-            +sin(dpi*tau2(i,j))*cos(dpi*tau1(i,j)))
+      f = interpolate_value_2d(bspline_2d,tau1(i,j),tau2(i,j),1,0)
+      err2 = err2 + abs(f+dpi*sin(dpi*tau1(i,j))*cos(dpi*tau2(i,j)))
     end do
   end do
   call cpu_time(t3)
+  err3 = 0.0_f64
+  do j = 1, n2
+    do i = 1, n1
+      f = interpolate_value_2d(bspline_2d,tau1(i,j),tau2(i,j),0,1)
+      err3 = err3 + abs(f+dpi*sin(dpi*tau2(i,j))*cos(dpi*tau1(i,j)))
+    end do
+  end do
+  call cpu_time(t4)
   
-  print*, "-------------------------------------------------"
-  print*, " values error         = ", err1 / (n1*n2)
-  print*, " x1 derivatives error = ", err2 / (n1*n2)
-  print*, " x2 derivatives error = ", err3 / (n1*n2)
-  print*, ' time spent in interpolate_value         : ', t1-t0
-  print*, ' time spent in interpolate_x1_derivative : ', t2-t1
-  print*, ' time spent in interpolate_x2_derivative : ', t3-t2
-  print*, "-------------------------------------------------"
+  print*, "----------------------------------------------------------"
+  print*, " values error                            : ", err1/(n1*n2)
+  print*, " x1 derivatives error                    : ", err2/(n1*n2)
+  print*, " x2 derivatives error                    : ", err3/(n1*n2)
+  print*, ' time spent to compute interpolants      : ', t1-t0
+  print*, ' time spent in interpolate_value         : ', t2-t1
+  print*, ' time spent in interpolate_x1_derivative : ', t3-t2
+  print*, ' time spent in interpolate_x2_derivative : ', t4-t3
+  print*, "----------------------------------------------------------"
 
   deallocate(tau1, tau2)
   deallocate(ftau, gtau)
