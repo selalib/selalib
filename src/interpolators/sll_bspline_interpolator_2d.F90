@@ -261,7 +261,7 @@ contains
 
     sll_real64 :: val
 
-    val = interpolate_value_2d( interpolator%spline, eta1, eta2, 0, 0 )
+    val = interpolate_value_2d( interpolator%spline, eta1, eta2 )
 
   end function
 
@@ -273,7 +273,7 @@ contains
 
     sll_real64 :: val
 
-    val = interpolate_value_2d( interpolator%spline, eta1, eta2, 1, 0)
+    val = interpolate_value_2d( interpolator%spline, eta1, eta2 )
 
   end function
 
@@ -285,7 +285,7 @@ contains
 
     sll_real64 :: val
 
-    val = interpolate_value_2d( interpolator%spline, eta1, eta2, 0, 1)
+    val = interpolate_value_2d( interpolator%spline, eta1, eta2 )
 
   end function
 
