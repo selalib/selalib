@@ -16,6 +16,6 @@ TARGET_LINK_LIBRARIES( test_xdmf_parallel
   sll_collective
   sll_xdmf )
 
-ADD_TEST( NAME xdmf_parallel COMMAND test_xdmf_parallel ${XML_REFERENCE_FILE} )
+ADD_MPI_TEST( xdmf_parallel test_xdmf_parallel ${PROCS} ${XML_REFERENCE_FILE} )
 SET_TESTS_PROPERTIES( xdmf_parallel PROPERTIES PASS_REGULAR_EXPRESSION "PASSED"
-  TIMEOUT 1 )
+  TIMEOUT 10 )

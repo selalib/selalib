@@ -2,10 +2,11 @@ program test_xdmf_parallel
 
 #include "sll_working_precision.h"
 
-  use sll_collective, only: &
-    sll_world_collective,   &
-    sll_boot_collective,    &
-    sll_halt_collective,    &
+  use sll_collective, only:  &
+    sll_world_collective,    &
+    sll_boot_collective,     &
+    sll_halt_collective,     &
+    sll_get_collective_size, &
     sll_get_collective_rank
 
   use sll_m_xdmf_parallel, only: &
@@ -18,9 +19,9 @@ program test_xdmf_parallel
   !----------------------------------------------------------------------------
 
   type(sll_t_xdmf_parallel_file) :: xdmf_file
-  sll_int32                      :: gid_cart, gid_polar
+  sll_int32                      :: send_rank, gid_cart, gid_polar
   character(len=256)             :: reference_filename
-  logical                        :: file_exists
+  logical                        :: file_exists, to_file
 
   !----------------------------------------------------------------------------
   ! PARSE INPUT
@@ -51,6 +52,10 @@ program test_xdmf_parallel
   !----------------------------------------------------------------------------
 
   call sll_boot_collective()
+
+  ! Choose which processor will send data to the XDMF file
+  send_rank =  sll_get_collective_size( sll_world_collective ) -1
+  to_file   = (sll_get_collective_rank( sll_world_collective ) == send_rank)
 
   !----------------------------------------------------------------------------
   ! XDMF FILE CREATION
@@ -83,14 +88,16 @@ program test_xdmf_parallel
   call xdmf_file%add_field( &
     grid_id    = gid_cart, &
     field_name = 'f_x2x3', &
-    field_path = 'diag2d_0001.h5:/f_x2x3' )
+    field_path = 'diag2d_0001.h5:/f_x2x3', &
+    to_file    = to_file )
 
   ! Add 2D dataset to Grid 2
   !-------------------------
   call xdmf_file%add_field( &
     grid_id    = gid_polar, &
     field_name = 'f_x1x2', &
-    field_path = 'diag2d_0001.h5:/f_x1x2' )
+    field_path = 'diag2d_0001.h5:/f_x1x2', &
+    to_file    = to_file )
 
   ! Write XDMF file, then delete object
   !------------------------------------
