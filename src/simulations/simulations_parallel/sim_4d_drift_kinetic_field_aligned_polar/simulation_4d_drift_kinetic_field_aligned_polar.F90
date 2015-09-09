@@ -987,10 +987,12 @@ contains
     sll_int32               :: hdf5_file_id, error
     type( sll_t_xdmf_parallel_file ) :: xdmf_file
     logical                 :: to_file
-    character(len=256)      :: dataset
+    character(len=256)      :: field_path
+!    character(len=256)      :: dataset
     character(len=256)      :: dataset_x1_polar, dataset_x2_polar
     character(len=256)      :: dataset_x2_cart , dataset_x3_cart
     sll_int32               :: dims_x1x2(2), dims_x2x3(2)
+    sll_int32               ::  gid_x1x2   ,  gid_x2x3
 
     ! Shortcuts 
     dt = sim%dt    
@@ -1158,20 +1160,28 @@ contains
         ! Wait for HDF5 file to be available to other processors
         call sll_collective_barrier( sll_world_collective )
 
-        ! XML file is created and kept open
-        call xdmf_file%create( xml_file_name, sll_world_collective )
+        ! Initialize parallel XDMF file
+        call xdmf_file%init( sim%time, sll_world_collective )
 
-        !----------------------------------------------------------------------
-        ! Flux surface plot: f_x2x3
-        !----------------------------------------------------------------------
-
-        ! Write new grid to XML file
-        call xdmf_file%new_grid( &
+        ! Add cartesian grid (x2,x3) to XDMF file
+        call xdmf_file%add_grid( &
           'mesh_x2x3_cart', &
           dataset_x2_cart, &
           dataset_x3_cart, &
           dims_x2x3, &
-          sim%time )
+          gid_x2x3 )
+
+        ! Add polar grid (x1,x2) to XDMF file
+        call xdmf_file%add_grid( &
+          'mesh_x1x2_polar', &
+          dataset_x1_polar, &
+          dataset_x2_polar, &
+          dims_x1x2, &
+          gid_x1x2 )
+
+        !----------------------------------------------------------------------
+        ! Flux surface plot: f_x2x3
+        !----------------------------------------------------------------------
 
         ! Get global indices of point that has:
         !  . r = (r_min+r_max)/2  (center value)
@@ -1191,30 +1201,19 @@ contains
             '/'//field_name, &
             error )
           call sll_hdf5_file_close ( file_id, error )
-          to_file = .true.
-          dataset = trim( hdf5_file_name )//':/'//trim( field_name )
+          to_file    = .true.
+          field_path = trim( hdf5_file_name )//':/'//trim( field_name )
         else
-          to_file = .false.
-          dataset = ''
+          to_file    = .false.
+          field_path = ''
         end if
 
-        ! Send information about new datasets to master
-        call xdmf_file%collect_datasets( dataset,dims_x2x3,filetype,to_file )
-
-        ! Close the grid element
-        call xdmf_file%close_grid()
+        ! Add field to appropriate grid in XDMF file
+        call xdmf_file%add_field( gid_x2x3, field_name, field_path, to_file )
 
         !----------------------------------------------------------------------
         ! Polar plot: f_x1x2
         !----------------------------------------------------------------------
-
-        ! Write new grid to XML file
-        call xdmf_file%new_grid( &
-          'mesh_x1x2_polar', &
-          dataset_x1_polar, &
-          dataset_x2_polar, &
-          dims_x1x2, &
-          sim%time )
 
         ! Copy f distributed in x1 into f distributed in (x3,x4)
         call apply_remap_4D( &
@@ -1239,19 +1238,22 @@ contains
             '/'//field_name, &
             error )
           call sll_hdf5_file_close ( file_id, error )
-          to_file = .true.
-          dataset = trim( hdf5_file_name )//':/'//trim( field_name )
+          to_file    = .true.
+          field_path = trim( hdf5_file_name )//':/'//trim( field_name )
 #endif
         else
-          to_file = .false.
-          dataset = ''
+          to_file    = .false.
+          field_path = ''
         endif
 
-        ! Send information about new datasets to master
-        call xdmf_file%collect_datasets( dataset,dims_x1x2,filetype,to_file )
+        ! Add field to appropriate grid in XDMF file
+        call xdmf_file%add_field( gid_x1x2, field_name, field_path, to_file )
 
-        ! Close the new XML file (also closes the grid)
-        call xdmf_file%close()
+        !----------------------------------------------------------------------
+        ! Write XML document, then delete XDMF file contents
+        !----------------------------------------------------------------------
+        call xdmf_file%write( xml_file_name )
+        call xdmf_file%delete()
 
       endif !if (modulo(iter,sim%freq_diag)==0)
 
