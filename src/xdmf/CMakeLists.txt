@@ -1,8 +1,8 @@
-SET( XDMF_SRC sll_xml.F90 sll_xdmf.F90 )
+SET( XDMF_SRC sll_m_xml.F90 sll_m_xdmf.F90 )
 SET( XDMF_DEP sll_working_precision )
 
 IF (MPI_ENABLED AND HDF5_ENABLED AND HDF5_PARALLEL_ENABLED) 
-  SET( XDMF_SRC ${XDMF_SRC} sll_xdmf_parallel.F90 )
+  SET( XDMF_SRC ${XDMF_SRC} sll_m_xdmf_parallel.F90 )
   SET( XDMF_DEP ${XDMF_DEP} sll_assert sll_collective sll_file_io )
 ENDIF()
 
