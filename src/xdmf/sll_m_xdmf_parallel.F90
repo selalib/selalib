@@ -118,6 +118,15 @@ contains
       to_file )
 
     use mpi
+!    use mpi, only: &
+!      mpi_status_size, &
+!      mpi_integer,     &
+!      mpi_character,   &
+!      mpi_source,      &
+!      mpi_any_source,  &
+!      mpi_any_tag,     &
+!      mpi_send,        &
+!      mpi_recv
 
     class(sll_t_xdmf_parallel_file), intent(inout) :: self
     sll_int32                      , intent(in   ) :: grid_id
@@ -211,43 +220,5 @@ contains
     end if
 
   end subroutine t_xdmf_parallel__add_field
-
-!==============================================================================
-! UTILITIES
-!==============================================================================
-
-  subroutine split( path, head, tail )
-    character(len=*), intent(in   ) :: path
-    character(len=*), intent(  out) :: head
-    character(len=*), intent(  out) :: tail
-
-    sll_int32 :: nc
-    sll_int32 :: i
-
-    ! Number of non-blank characters in path string
-    nc = len_trim( path, i32 )
-
-    ! If last character is '/', tail is empty
-    if (path(nc:nc) == '/') then
-      head = path(1:nc)
-      tail = ''
-    end if
-
-    ! Search backwards (from right to left) for '/' character, and split path
-    do i = nc-1,1,-1
-      if (path(i:i) == '/') then
-        head = path(1:i) 
-        tail = path(i+1:nc)
-        return
-      end if
-    end do
-
-    ! If no '/' character was found, head is empty
-    head = ''
-    tail = path(1:nc)
-
-  end subroutine split
-
-!==============================================================================
 
 end module sll_m_xdmf_parallel
