@@ -9,8 +9,8 @@ program test_xdmf_parallel
     sll_get_collective_size, &
     sll_get_collective_rank
 
-  use sll_m_xdmf_parallel, only: &
-    sll_t_xdmf_parallel_file
+  use sll_m_xdmf_parallel, only: sll_t_xdmf_parallel_file
+  use sll_m_io_utilities , only: sll_f_check_equal_files
 
   implicit none
 
@@ -40,7 +40,7 @@ program test_xdmf_parallel
 
   ! Check that file exists    
   !-----------------------
-  inquire( file=trim( reference_filename ), exist=file_exists )
+  inquire( file=reference_filename, exist=file_exists )
   if (.not. file_exists) then
     write(*,*) &
       "ERROR: reference file '"//trim( reference_filename )//"' does not exist"
@@ -112,7 +112,7 @@ program test_xdmf_parallel
 
     ! Compare to reference file
     !--------------------------
-    if (equal_files( 'out.xdmf', trim( reference_filename ) )) then
+    if (sll_f_check_equal_files( 'out.xdmf', reference_filename )) then
       write(*,*) "PASSED"
     else
       write(*,*) "ERROR: output file does not match reference"
@@ -129,82 +129,5 @@ program test_xdmf_parallel
   !----------------------------------------------------------------------------
 
   call sll_halt_collective()
-
-!==============================================================================
-contains
-!==============================================================================
-
-  subroutine remove_file( filename )
-    character(len=*), intent(in) :: filename
-
-    integer :: iunit
-
-    open( newunit=iunit, file=filename, status='OLD' )
-    close( iunit, status='DELETE' )
-
-  end subroutine
-
-  !----------------------------------------------------------------------------
-  subroutine read_file( filename, str )
-    character(len=*),              intent(in   ) :: filename
-    character(len=:), allocatable, intent(  out) :: str
-
-    integer :: iunit, istat, filesize
-    character(len=1) :: c
-
-    ! Open required file
-    open( newunit=iunit, file=filename, status='OLD', &
-      form='UNFORMATTED', access='STREAM' )
-
-    ! How many characters in file
-    inquire( file=filename, size=filesize )
-    if (filesize < 0) then
-      write(*,*) 'ERROR: negative file size'
-      stop
-    end if
-
-    ! Read whole file into one string
-    allocate( character(len=filesize) :: str )
-    read( iunit, pos=1 ) str
-
-    ! Make sure it was all read by trying to read more
-    read( iunit, pos=filesize+1, iostat=istat ) c
-    if (.not. IS_IOSTAT_END(istat)) then
-      write(*,*) 'Error: file was not completely read'
-      stop
-    end if
-
-    ! Close file
-    close( iunit, iostat=istat )
-
-  end subroutine read_file
-
-  !----------------------------------------------------------------------------
-  function equal_files( filename1, filename2 ) result( equal )
-    character(len=*), intent(in   ) :: filename1
-    character(len=*), intent(in   ) :: filename2
-    logical :: equal
-
-    character(len=:), allocatable :: str1
-    character(len=:), allocatable :: str2
-
-    call read_file( filename1, str1 )
-    call read_file( filename2, str2 )
-
-    equal = (str1 == str2)
-    
-  end function equal_files
-
-  !----------------------------------------------------------------------------
-  function empty_file( filename ) result( empty )
-    character(len=*), intent(in) :: filename
-    logical :: empty
-
-    integer :: filesize
-
-    inquire( file=filename, size=filesize )
-    empty = (filesize == 0)
-
-  end function empty_file
 
 end program test_xdmf_parallel

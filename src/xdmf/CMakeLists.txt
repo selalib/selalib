@@ -1,4 +1,4 @@
-SET( XDMF_SRC sll_m_xml.F90 sll_m_xdmf.F90 )
+SET( XDMF_SRC sll_m_xml.F90 sll_m_xdmf.F90 sll_m_io_utilities.F90 )
 SET( XDMF_DEP sll_working_precision )
 
 IF (MPI_ENABLED AND HDF5_ENABLED AND HDF5_PARALLEL_ENABLED) 
