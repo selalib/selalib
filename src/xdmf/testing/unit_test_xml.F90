@@ -1,8 +1,13 @@
 program test_xml
 
-  use sll_m_xml, only: &
+  use sll_m_xml, only:  &
     sll_t_xml_document, &
     sll_t_xml_element
+
+  use sll_m_io_utilities, only: &
+    sll_f_check_equal_files,    &
+    sll_f_check_empty_file,     &
+    sll_s_remove_file
 
   implicit none
 
@@ -168,13 +173,13 @@ program test_xml
 
   ! Compare to reference files
   !---------------------------
-  equal = equal_files( 'out1.xml', trim( reference_filename ) )
-  empty = empty_file ( 'out2.xml' )
+  equal = sll_f_check_equal_files( 'out1.xml', reference_filename )
+  empty = sll_f_check_empty_file ( 'out2.xml' )
 
   ! Remove temporary files
   !-----------------------
-  call remove_file( 'out1.xml' )
-  call remove_file( 'out2.xml' )
+  call sll_s_remove_file( 'out1.xml' )
+  call sll_s_remove_file( 'out2.xml' )
 
   ! Check test
   !-----------
@@ -184,82 +189,5 @@ program test_xml
     if (.not. equal) write(*,*) "ERROR: output file 1 does not match reference"
     if (.not. empty) write(*,*) "ERROR: output file 2 is not empty"
   end if
-
-!==============================================================================
-contains
-!==============================================================================
-
-  subroutine remove_file( filename )
-    character(len=*), intent(in) :: filename
-
-    integer :: iunit
-
-    open( newunit=iunit, file=filename, status='OLD' )
-    close( iunit, status='DELETE' )
-
-  end subroutine
-
-  !----------------------------------------------------------------------------
-  subroutine read_file( filename, str )
-    character(len=*),              intent(in   ) :: filename
-    character(len=:), allocatable, intent(  out) :: str
-
-    integer :: iunit, istat, filesize
-    character(len=1) :: c
-
-    ! Open required file
-    open( newunit=iunit, file=filename, status='OLD', &
-      form='UNFORMATTED', access='STREAM' )
-
-    ! How many characters in file
-    inquire( file=filename, size=filesize )
-    if (filesize < 0) then
-      write(*,*) 'ERROR: negative file size'
-      stop
-    end if
-
-    ! Read whole file into one string
-    allocate( character(len=filesize) :: str )
-    read( iunit, pos=1 ) str
-
-    ! Make sure it was all read by trying to read more
-    read( iunit, pos=filesize+1, iostat=istat ) c
-    if (.not. IS_IOSTAT_END(istat)) then
-      write(*,*) 'Error: file was not completely read'
-      stop
-    end if
-
-    ! Close file
-    close( iunit, iostat=istat )
-
-  end subroutine read_file
-
-  !----------------------------------------------------------------------------
-  function equal_files( filename1, filename2 ) result( equal )
-    character(len=*), intent(in   ) :: filename1
-    character(len=*), intent(in   ) :: filename2
-    logical :: equal
-
-    character(len=:), allocatable :: str1
-    character(len=:), allocatable :: str2
-
-    call read_file( filename1, str1 )
-    call read_file( filename2, str2 )
-
-    equal = (str1 == str2)
-    
-  end function equal_files
-
-  !----------------------------------------------------------------------------
-  function empty_file( filename ) result( empty )
-    character(len=*), intent(in) :: filename
-    logical :: empty
-
-    integer :: filesize
-
-    inquire( file=filename, size=filesize )
-    empty = (filesize == 0)
-
-  end function empty_file
 
 end program test_xml

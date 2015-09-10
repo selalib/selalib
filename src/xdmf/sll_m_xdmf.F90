@@ -6,6 +6,9 @@ module sll_m_xdmf
     sll_t_xml_document,    &
     sll_t_xml_element
 
+  use sll_m_io_utilities, only: &
+    sll_s_ints_to_string
+
   implicit none
   private
 
@@ -114,7 +117,7 @@ contains
 
     ! Prepare strings with data
     write( time_str, '(f3.1)' ) self%time ! TODO: investigate format options
-    call ints_to_string( dims, dims_str )
+    call sll_s_ints_to_string( dims, dims_str )
 
     ! Add new grid to domain
     grid => self%xml_domain%new_element( 'Grid' )
@@ -181,7 +184,7 @@ contains
     type(sll_t_xml_element), pointer :: grid, field, dataitem
 
     ! Prepare strings with data
-    call ints_to_string( self%grids( grid_id )%dims, dims_str )
+    call sll_s_ints_to_string( self%grids( grid_id )%dims, dims_str )
 
     ! Create new field (scalar, nodal)
     field => self%grids( grid_id )%xml_grid%new_element( 'Attribute' )
@@ -198,86 +201,5 @@ contains
     call dataitem%add_chardata( trim( adjustl( field_path ) ) )
 
   end subroutine t_xdmf__add_field
-
-!==============================================================================
-! UTILITIES
-!==============================================================================
-
-  !----------------------------------------------------------------------------
-  !> Write an array of integers to a single string:
-  !>   . Numbers are separated by a blank space;  
-  !>   . String is allocated here with minimum length.
-  subroutine ints_to_string( ints, str )
-    sll_int32,                     intent(in   ) :: ints(:)
-    character(len=:), allocatable, intent(  out) :: str
-
-    sll_int32                      :: i, ni, nc, lc, str_len
-    character(len=11), allocatable :: tmp(:)
-    sll_int32        , allocatable :: ints_len(:)
-
-    ! Allocate an homogeneous array of character
-    ni = size( ints )
-    allocate( tmp(ni) )
-    allocate( ints_len(ni) )
-
-    ! Write integers to an omogeneous array of character,
-    ! as left-justified strings, and store length of each trimmed string
-    do i = 1, ni
-      write( tmp(i), '(i11)' ) ints(i)
-      tmp(i)      = adjustl ( tmp(i) )
-      ints_len(i) = len_trim( tmp(i), i32 )
-    end do
-
-    ! Allocate single string with minimum length
-    str_len = sum( ints_len ) + ni - 1
-    allocate( character(len=str_len) :: str )
-
-    ! Write trimmed strings to single string, separated by blank space
-    lc = 0
-    do i = 1, ni
-      nc = ints_len(i)
-      str(lc+1:lc+nc) = trim( tmp(i) )
-      lc = lc+nc
-      if (i /= ni) then
-        str(lc+1:lc+1) = ' '
-        lc = lc+1
-      end if
-    end do
-
-  end subroutine ints_to_string
-
-  !----------------------------------------------------------------------------
-  !> Split path into head (directory) and tail (file)
-  subroutine split( path, head, tail )
-    character(len=*), intent(in   ) :: path
-    character(len=*), intent(  out) :: head
-    character(len=*), intent(  out) :: tail
-
-    sll_int32 :: nc
-    sll_int32 :: i
-
-    ! Number of non-blank characters in path string
-    nc = len_trim( path, i32 )
-
-    ! If last character is '/', tail is empty
-    if (path(nc:nc) == '/') then
-      head = path(1:nc)
-      tail = ''
-    end if
-
-    ! Search backwards (from right to left) for '/' character, and split path
-    do i = nc-1,1,-1
-      if (path(i:i) == '/') then
-        head = path(1:i) 
-        tail = path(i+1:nc)
-        return
-      end if
-    end do
-
-    ! If no '/' character was found, head is empty
-    head = ''
-    tail = path(1:nc)
-
-  end subroutine split
 
 end module sll_m_xdmf
