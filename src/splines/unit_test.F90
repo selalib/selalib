@@ -1,4 +1,3 @@
-
 !*****************************************************************************
 !
 ! Selalib      
@@ -22,23 +21,25 @@ program spline_tester
 #include "sll_constants.h"
   
 #define PRINT_SPLINE_COEFFS 0
-  use util_constants
-  use test_processes_module
-  implicit none
 
-  intrinsic :: cos
+use util_constants
+use test_processes_module
+implicit none
 
-  sll_int32                              :: ok
- 
+intrinsic :: cos
 
-  sll_int32, parameter                   :: nbtest = 12
-  logical                                :: test_passed
-  logical                                :: test_flag
-  print *, 'Test of the 1D spline: '
-  ok = 1
-  test_passed = .true.
+sll_int32                              :: ok
+
+
+sll_int32, parameter                   :: nbtest = 12
+logical                                :: test_passed
+logical                                :: test_flag
+print *, 'Test of the 1D spline: '
+ok = 1
+test_passed = .true.
 
 #if 0
+
   do i_test=1,nbtest     
      call test_process_1d(i_test, ok)     
   enddo
@@ -277,6 +278,8 @@ program spline_tester
      print *, 'Cuplines unit test: FAILED'
      print *, ' '
   endif
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
 contains
 
@@ -359,4 +362,5 @@ contains
     endif
 
   end subroutine test_2d_cubic_splines_periodic
+
 end program spline_tester
