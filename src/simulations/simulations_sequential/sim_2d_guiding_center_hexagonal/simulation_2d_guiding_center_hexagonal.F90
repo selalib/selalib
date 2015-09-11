@@ -8,6 +8,7 @@ program sim2d_gc_hex
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_errors.h"
+use sll_ascii_io
 
   use sll_constants
   use euler_2d_hex
@@ -78,11 +79,32 @@ program sim2d_gc_hex
   logical      :: inside
   sll_int32            :: IO_stat
   sll_int32, parameter :: input_file = 99
+  
   character(len = 256) :: input_filename
-  character(len = 50)  :: filename
-  character(len = 4)   :: filenum
+  character(len = 256) :: input_filename_loc
+  !sll_int32 :: count
+  character(len=256) :: rho_name
+  character(len=256) :: phi_name
+  character(len=256)  :: filename
+  character(len=4)   :: filenum
+  logical :: use_num
+  sll_int32 :: num_run
+  character(len=256)  :: str_num_run
+  sll_int32 :: thdiag_1d_id
+  !sll_int32 :: thdiag_0d_id
+  character(len=256)  :: thdiag_1d_filename
+  !character(len=256)  :: thdiag_0d_filename
+
+
+  !character(len = 256) :: input_filename
+  !character(len = 50)  :: filename
+  !character(len = 4)   :: filenum
   character(len = 4)   :: degnum
   sll_int32 :: p
+  sll_int32 :: k_mode
+  sll_int32 :: freq_diag
+  sll_int32 :: freq_diag_time
+  sll_int32 :: step
 
 
   namelist /geometry/ &
@@ -96,11 +118,14 @@ program sim2d_gc_hex
        gauss_x1,  &
        gauss_x2,  &
        gauss_sig, &
-       gauss_amp
+       gauss_amp, &
+       k_mode
 
   namelist /time_iterations/ &
        dt, &
-       tmax
+       tmax, &
+       freq_diag, &
+       freq_diag_time
 
   namelist /interpolation/ &
        spline_degree, &
@@ -123,6 +148,7 @@ program sim2d_gc_hex
   gauss_x2  = 2._f64
   gauss_sig = 1._f64/( 2._f64 * sqrt(2._f64)) 
   gauss_amp = 1.0_f64
+  k_mode = 6
   ! Time iterations:
   tmax  = 20._f64
   dt    = 0.1_f64
@@ -131,28 +157,54 @@ program sim2d_gc_hex
   hermite_method = 9
   num_method_case = "SLL_HEX_Z9"
   p = 6
-  
-  ! ----------------------------
-  ! Reading from file
-  ! ----------------------------
+  freq_diag_time = 1
+  freq_diag = 10
+
+
+
   call get_command_argument(1, input_filename)
-  if(len_trim(input_filename).gt.0)then
-     open(unit = input_file, file=trim(input_filename),IOStat=IO_stat)
+  
+  if (len_trim(input_filename) == 0)then
+    use_num = .false.
+    print *,'#initialization with default parameters'
+  else
+    call get_command_argument(2, str_num_run)
+    if(len_trim(str_num_run) == 0)then
+      use_num = .false.      
+      input_filename_loc = trim(input_filename)//".nml"
+    else
+      use_num = .true. 
+      read(str_num_run, *) num_run
+      input_filename_loc = trim(input_filename)//"_"//trim(str_num_run)//".nml"        
+    endif
+    open(unit = input_file, file=trim(input_filename_loc),IOStat=IO_stat)
      if( IO_stat /= 0 ) then
-        print *, '#simulation_2d_guiding_center_hexagonal_splines() failed to open file ', &
-             trim(input_filename)
-        STOP
+       SLL_ERROR('simulation_2d_guiding_center_hexagonal, &
+         &','can not open file')
      end if
      print *,'#initialization with filename:'
-     print *,'#',trim(input_filename)
+     print *,'#',trim(input_filename_loc)
      read(input_file, geometry)
      read(input_file, initial_function)
      read(input_file, time_iterations)
      read(input_file, interpolation)
      close(input_file)
-  else
-     print *,'#initialization with default parameters'
   endif
+
+  if(use_num)then
+    rho_name = "rho_"//trim(str_num_run)//"_"
+    phi_name = "phi_"//trim(str_num_run)//"_"
+    thdiag_1d_filename = "thdiag_1d_"//trim(str_num_run)//".dat"
+    !thdiag_0d_filename = "thdiag_0d_"//trim(str_num_run)//".dat"
+  else
+    rho_name = "rho_"
+    phi_name = "phi_"        
+    thdiag_1d_filename = "thdiag_1d.dat"
+    !thdiag_0d_filename = "thdiag_0d.dat"
+  endif
+
+  call sll_ascii_file_create(thdiag_1d_filename, thdiag_1d_id, ierr)
+  
 
   select case (num_method_case)
     case ("SLL_HEX_SPLINES")
@@ -304,7 +356,7 @@ program sim2d_gc_hex
      ! ---------------------------------------
 
      ! Initial distribution ------------------
-        call init_distr_gc(rho_tn,mesh,epsilon)
+        call init_distr_gc(rho_tn,mesh,epsilon,k_mode)
      ! ---------------------------------------
 
      ! Poisson solver ------------------------
@@ -322,12 +374,13 @@ program sim2d_gc_hex
         call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type=1)
      ! ---------------------------------------
 
-        call hex_diagnostics_gc(rho_tn,t,mesh,uxn,uyn,nloops,spline_degree,tmax)
-	call int2string(nloops,filenum)
-     	filename  = "guiding_center_rho"//trim(filenum)
-     	call write_field_hex_mesh_xmf(mesh, rho_tn, trim(filename))
-     	filename  = "guiding_center_phi"//trim(filenum)
-     	call write_field_hex_mesh_xmf(mesh, phi, trim(filename))
+        !call hex_diagnostics_gc(rho_tn,t,mesh,uxn,uyn,nloops,spline_degree,tmax)
+        call hex_diagnostics_gc(rho_tn,t,mesh,uxn,uyn,thdiag_1d_id)
+!	call int2string(nloops,filenum)
+!     	filename  = "guiding_center_rho"//trim(filenum)
+!     	call write_field_hex_mesh_xmf(mesh, rho_tn, trim(filename))
+!     	filename  = "guiding_center_phi"//trim(filenum)
+!     	call write_field_hex_mesh_xmf(mesh, phi, trim(filename))
         
      !*********************************************************
      !                          Time loop
@@ -336,12 +389,12 @@ program sim2d_gc_hex
      call cpu_time(t3)
 
      print*,"fin init",t3 - t_init
-
+     step = 0
      do while (t .lt. tmax)
-
+        step = step+1 
         t = t + dt
         nloops = nloops + 1
-        count = count + 1
+        !count = count + 1
 
         !*********************************************************
         !                     interpolation
@@ -596,19 +649,39 @@ program sim2d_gc_hex
            ! ...........................................
 
         !*********************************************************
-        !                  writing diagostics
+        !                  writing diagnostics
         !*********************************************************
-           call hex_diagnostics_gc(rho_tn,t,mesh,uxn,uyn,nloops,spline_degree,tmax)
-           if (count == 10.and.nloops<10000) then
-              call int2string(nloops,filenum)
-              filename  = "guiding_center_rho"//trim(filenum)
-              call write_field_hex_mesh_xmf(mesh, rho_tn1, trim(filename))
-                 filename  = "guiding_center_phi"//trim(filenum)
-                 call write_field_hex_mesh_xmf(mesh, phi, trim(filename))
-              count = 0
+           if(modulo(step,freq_diag_time)==0)then
+             call hex_diagnostics_gc( &
+               rho_tn, &
+               t, &
+               mesh, &
+               uxn, &
+               uyn, &
+               thdiag_1d_id)
+           endif
+           if(modulo(step,freq_diag)==0)then
+           !if (count == 10.and.nloops<10000) then
+             count = count+1 
+             print *,"##time,step,count",t,step,count 
+             call int2string(count,filenum)
+             filename  = trim(rho_name)//trim(filenum)
+             call write_field_hex_mesh_xmf(mesh, rho_tn1, trim(filename))                
+             filename  = trim(phi_name)//trim(filenum)
+             call write_field_hex_mesh_xmf(mesh, phi, trim(filename))                
+         
+              !call int2string(nloops,filenum)
+              !filename  = "guiding_center_rho"//trim(filenum)
+              !call write_field_hex_mesh_xmf(mesh, rho_tn1, trim(filename))
+              !   filename  = "guiding_center_phi"//trim(filenum)
+              !   call write_field_hex_mesh_xmf(mesh, phi, trim(filename))
+              !count = 0
            endif
 
      enddo ! end of time loop
+
+     close(thdiag_1d_id)
+
 
      SLL_DEALLOCATE_ARRAY(rho_tn,ierr)
      SLL_DEALLOCATE_ARRAY(rho_tn1,ierr)
@@ -630,7 +703,7 @@ program sim2d_gc_hex
      call delete_hex_mesh_2d( mesh )
 
      call cpu_time(t_end)
-     print*, "time used =", t_end - t_init
+     print*, "#time used =", t_end - t_init
 
 
   ! Some test should probably be put here:
@@ -640,10 +713,11 @@ contains
 
   !*********initialization**************
 
-  subroutine init_distr_gc(f_tn, mesh, epsilon)
+  subroutine init_distr_gc(f_tn, mesh, epsilon, k_mode)
     type(sll_hex_mesh_2d), pointer :: mesh
     sll_real64, dimension(:)       :: f_tn
     sll_real64, intent(in) :: epsilon
+    sll_int32, intent(in) :: k_mode
     sll_real64 :: x, y
     sll_real64 :: r
     sll_int32  :: i
@@ -654,7 +728,7 @@ contains
        r = sqrt( x**2 + y**2 )
 
        if ( r <= 8._f64  .and. r >= 5._f64 ) then
-          f_tn(i) = (1._f64 + epsilon * cos( 9._f64 * atan2(y,x)) )*&
+          f_tn(i) = (1._f64 + epsilon * cos( real(k_mode,f64) * atan2(y,x)) )*&
                exp( -4._f64*(r-6.5_f64)**2)
        else
           f_tn(i) = 0._f64
@@ -680,15 +754,16 @@ contains
   !> @param cells_min int: min number of cells the mesh will have during this simulation
   !> @param cells_max int: max number of cells the mesh will have during this simulation
   !> return 
-  subroutine hex_diagnostics_gc(rho,t,mesh,uxn,uyn,nloop,deg,tmax)
+  !subroutine hex_diagnostics_gc(rho,t,mesh,uxn,uyn,nloop,deg,tmax,out_unit)
+  subroutine hex_diagnostics_gc(rho,t,mesh,uxn,uyn,out_unit)
     type(sll_hex_mesh_2d),  pointer  :: mesh
     sll_real64, dimension(:) :: rho
     sll_real64, dimension(:) :: uxn
     sll_real64, dimension(:) :: uyn
     sll_real64, intent(in)   :: t
-    sll_real64, intent(in)   :: tmax
-    sll_int32 , intent(in)   :: nloop
-    sll_int32 , intent(in)   :: deg
+    !sll_real64, intent(in)   :: tmax
+    !sll_int32 , intent(in)   :: nloop
+    !sll_int32 , intent(in)   :: deg
     !sll_int32 , intent(in)   :: cells_min, cells_max
     sll_real64 :: mass
     sll_real64 :: rho_min
@@ -697,7 +772,7 @@ contains
     sll_real64 :: norm_linf
     sll_real64 :: energy
     sll_int32  :: i
-    sll_int32  :: out_unit
+    sll_int32,intent(in)  :: out_unit
     character(len = 50) :: filename
     character(len =  4) :: filenum
     character(len =  4) :: splinedeg
@@ -713,16 +788,16 @@ contains
     ! Writing file in respect to time...................
 
     !if (mesh%num_cells == cells_max) then
-       call int2string(mesh%num_cells,filenum)
-       call int2string(deg,splinedeg)
-       filename  = "diag_gc_spline"//trim(splinedeg)//"_tmax"//trim(filenum)//".dat"
+       !call int2string(mesh%num_cells,filenum)
+       !call int2string(deg,splinedeg)
+       !filename  = "diag_gc_spline"//trim(splinedeg)//"_tmax"//trim(filenum)//".dat"
        
-       call sll_new_file_id(out_unit, ierr)
-       if (nloop == 0) then
-          open(unit = out_unit, file=filename, action="write", status="replace")
-       else
-          open(unit = out_unit, file=filename, action="write", status="old",position = "append")
-       endif
+       !call sll_new_file_id(out_unit, ierr)
+       !if (nloop == 0) then
+       !   open(unit = out_unit, file=filename, action="write", status="replace")
+       !else
+       !   open(unit = out_unit, file=filename, action="write", status="old",position = "append")
+       !endif
 
        do i = 1,mesh%num_pts_tot
           mass = mass + rho(i)
@@ -733,7 +808,7 @@ contains
           if ( rho(i) < rho_min  ) rho_min  = rho(i)
        enddo
 
-       print *,"diagnostic for t = ",t
+       !print *,"diagnostic for t = ",t
        energy  = sqrt(energy * mesh%delta**2)
        mass    = mass * mesh%delta**2
        norm_l1 = norm_l1 * mesh%delta**2
@@ -747,49 +822,49 @@ contains
             norm_linf, &
             energy
 
-       close(out_unit)
+       !close(out_unit)
 
     !end if
     ! --------------------------------------------------
     ! Writing file in respect to num_cells..............
-    if (t.gt.tmax) then !We write on this file only if it is the last time step
-
-       call int2string(deg,splinedeg)
-       filename  = "diag_gc_spline"//trim(splinedeg)//"_nc.dat"
-
-       !if ( mesh%num_cells == cells_min ) then
-          call sll_new_file_id(out_unit, ierr)
-          open(unit = out_unit, file=filename, action="write", status="replace")
-       !else
-       !   call sll_new_file_id(out_unit, ierr)
-       !   open(unit = out_unit, file=filename, action="write", status="old",position = "append")
-       !endif
-       
-       do i = 1,mesh%num_pts_tot
-          mass = mass + rho(i)
-          norm_l1 = norm_l1 + abs(rho(i))
-          norm_l2 = norm_l2 + rho(i)**2
-          energy = energy + uxn(i)**2 + uyn(i)**2
-          if ( abs(rho(i)) > norm_linf ) norm_linf = rho(i)
-          if ( rho(i) < rho_min  ) rho_min  = rho(i)
-       enddo
-
-       energy  = sqrt(energy * mesh%delta**2)
-       mass    = mass * mesh%delta**2
-       norm_l1 = norm_l1 * mesh%delta**2
-       norm_l2 = sqrt(norm_l2 * mesh%delta**2)
-
-       write(out_unit,"((i6,1x),7(g18.10,1x))") mesh%num_cells, &
-            t, &
-            mass, &
-            rho_min, &
-            norm_l1, &
-            norm_l2, &
-            norm_linf, &
-            energy
-
-       close(out_unit) 
-    end if
+!    if (t.gt.tmax) then !We write on this file only if it is the last time step
+!
+!       call int2string(deg,splinedeg)
+!       filename  = "diag_gc_spline"//trim(splinedeg)//"_nc.dat"
+!
+!       !if ( mesh%num_cells == cells_min ) then
+!          call sll_new_file_id(out_unit, ierr)
+!          open(unit = out_unit, file=filename, action="write", status="replace")
+!       !else
+!       !   call sll_new_file_id(out_unit, ierr)
+!       !   open(unit = out_unit, file=filename, action="write", status="old",position = "append")
+!       !endif
+!       
+!       do i = 1,mesh%num_pts_tot
+!          mass = mass + rho(i)
+!          norm_l1 = norm_l1 + abs(rho(i))
+!          norm_l2 = norm_l2 + rho(i)**2
+!          energy = energy + uxn(i)**2 + uyn(i)**2
+!          if ( abs(rho(i)) > norm_linf ) norm_linf = rho(i)
+!          if ( rho(i) < rho_min  ) rho_min  = rho(i)
+!       enddo
+!
+!       energy  = sqrt(energy * mesh%delta**2)
+!       mass    = mass * mesh%delta**2
+!       norm_l1 = norm_l1 * mesh%delta**2
+!       norm_l2 = sqrt(norm_l2 * mesh%delta**2)
+!
+!       write(out_unit,"((i6,1x),7(g18.10,1x))") mesh%num_cells, &
+!            t, &
+!            mass, &
+!            rho_min, &
+!            norm_l1, &
+!            norm_l2, &
+!            norm_linf, &
+!            energy
+!
+!       close(out_unit) 
+!    end if
   end subroutine hex_diagnostics_gc
 
 
