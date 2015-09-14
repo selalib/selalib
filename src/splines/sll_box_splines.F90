@@ -1,6 +1,6 @@
 !> @ingroup splines
 !> @author Laura S. Mendoza
-!> @brief Provides capabilities for values and derivatives 
+!> @brief Provides capabilities for values and derivatives
 !> interpolation with box splines on a hexagonal mesh
 !> @details This modules contains the computation of boxsplines
 !> of arbitrary degree. There is a special optimized algorithm
@@ -239,7 +239,8 @@ contains  ! ****************************************************************
     else if (n .lt. k) then
        res = 0._f64
     else
-       res = real(sll_factorial(n),f64) / real((sll_factorial(k) * sll_factorial(n - k)), f64)
+       res = real(sll_factorial(n),f64) / real((sll_factorial(k) &
+            * sll_factorial(n - k)), f64)
     end if
   end function choose
 
@@ -619,7 +620,7 @@ contains  ! ****************************************************************
     !type of cell
     type = cell_type(mesh, cell_index)
     
-    ! Getting the cell vertices which are the first indices of the non zero splines
+    !Getting the cell vertices which are the 1st indices of the non null splines
     call get_cell_vertices_index(mesh%center_cartesian_coord(1,cell_index), &
          mesh%center_cartesian_coord(2,cell_index),&
          mesh, &
@@ -1000,14 +1001,14 @@ contains  ! ****************************************************************
     type(sll_hex_mesh_2d), pointer :: mesh
 
     mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, radius = 1._f64)
-    
+
     call write_caid_files(mesh, deg)
-    call write_connectivity(mesh, deg)    
+    call write_connectivity(mesh, deg)
     call write_basis_values(deg, rule)
     call write_quadrature(rule)
 
   end subroutine write_all_django_files
-  
+
   !> @brief Generic sub-routine defined for 2D box spline types.
   !> Deallocates the memory associated with the given box spline object.
   !> @param[inout] spline_object.
