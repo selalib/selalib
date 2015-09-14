@@ -21,6 +21,8 @@ module sll_box_splines
 use hex_pre_filters
 use sll_hex_meshes
 use fekete_integration
+use gauss_triangle_integration
+
 
 implicit none
 
@@ -777,6 +779,68 @@ contains  ! ****************************************************************
   end function boxspline_val_der
 
 
+    !---------------------------------------------------------------------------
+  !> @brief Writes fekete points coordinates of a hex-mesh reference triangle
+  !> @details Takes the reference triangle of a hexmesh and computes the
+  !> fekete points on it. Then it writes the results in a file following
+  !> CAID/Django nomenclature.
+  !> Output file : quadrature.txt
+  !> @param[in]  rule integer for the fekete quadrature rule
+  subroutine write_quadrature(rule)
+    sll_int32, intent(in)       :: rule
+    sll_int32                   :: out_unit
+    character(len=14), parameter :: name = "quadrature.txt"
+    sll_real64, dimension(2, 3) :: ref_pts
+    sll_real64, dimension(:,:), allocatable :: quad_pw
+    sll_int32  :: num_fek
+    sll_int32  :: i
+    sll_real64 :: x
+    sll_real64 :: y
+    sll_real64 :: w
+    sll_real64 :: volume
+    sll_int32  :: ierr
+    ! Definition of reference triangle, such that:
+    !    |
+    !    1  3
+    !    |  |  \
+    !    |  |   \
+    !    |  |    \
+    !    |  |     \
+    !    |  | _____\
+    !    0  1      2
+    !    |
+    !    +--0-----1-->
+    ref_pts(:,1) = (/ 0._f64, 0.0_f64 /)
+    ref_pts(:,2) = (/ 1._f64, 0.0_f64 /)
+!    ref_pts(:,2) = (/ sqrt(3._f64)/2._f64, 0.5_f64 /)
+    ref_pts(:,3) = (/ 0._f64, 1.0_f64 /)
+
+    call triangle_area(ref_pts, volume)
+    print *, "area triangle = ", volume
+
+    ! Computing fekete points on that triangle
+    call fekete_order_num(rule, num_fek)
+    SLL_ALLOCATE(quad_pw(1:3, 1:num_fek), ierr)
+    quad_pw = fekete_points_and_weights(ref_pts, rule)
+    ! For Gaussian quadrature rule:
+    ! num_fek = rule + 1
+    ! SLL_ALLOCATE(quad_pw(1:3, 1:num_fek), ierr)
+    ! quad_pw = gauss_triangle_points_and_weights(ref_pts, rule)
+
+    call sll_new_file_id(out_unit, ierr)
+    open (unit=out_unit,file=name,action="write",status="replace")
+
+    write(out_unit, "(i6)") num_fek
+
+    do i=1,num_fek
+       x = quad_pw(1,i)
+       y = quad_pw(2,i)
+       w = quad_pw(3,i) * volume
+       write(out_unit, "(2(g25.17,a,1x),(g25.17))") x, ",", y, ",", w
+    end do
+    close(out_unit)
+  end subroutine write_quadrature
+
   !---------------------------------------------------------------------------
   !> @brief Writes on a file values of boxsplines on fekete points
   !> @details Following CAID structure, we write a file with the values
@@ -806,27 +870,31 @@ contains  ! ****************************************************************
     sll_int32   :: idx, idy
     sll_int32   :: num_fek
     sll_int32   :: ind_fek
-
     ! Definition of reference triangle, such that:
     !    |
     !    1  3
-    !    |  | \
-    !    |  |  \2
-    !    |  |   /   same cell that first cell of
-    !    |  |  /    a simple hexagon of radius 1.
-    !    |  | /
-    !    0  1
+    !    |  |  \
+    !    |  |   \
+    !    |  |    \
+    !    |  |     \ 
+    !    |  | _____\
+    !    0  1      2
     !    |
     !    +--0-----1-->
-    ref_pts(:,1) = (/ 0._f64,               0.0_f64 /)
-    ref_pts(:,2) = (/ sqrt(3._f64)*0.5_f64, 0.5_f64 /)
-    ref_pts(:,3) = (/ 0._f64,               1.0_f64 /)
+    ref_pts(:,1) = (/ 0._f64, 0.0_f64 /)
+!    ref_pts(:,2) = (/ 1._f64, 0.0_f64 /)
+    ref_pts(:,2) = (/ sqrt(3._f64)/2._f64, 0.5_f64 /)
+    ref_pts(:,3) = (/ 0._f64, 1.0_f64 /)
     
     ! Computing fekete points on the reference triangle
     call fekete_order_num ( rule, num_fek )
     SLL_ALLOCATE(quad_pw(1:3, 1:num_fek), ierr)
     quad_pw = fekete_points_and_weights(ref_pts, rule)
-
+    ! ! For Gaussian qudrature:
+    ! num_fek = rule + 1
+    ! SLL_ALLOCATE(quad_pw(1:3, 1:num_fek), ierr)
+    ! quad_pw = gauss_triangle_points_and_weights(ref_pts, rule)
+    
     nonZero = 3*deg*deg !> Number of non null box splines on a cell
     nderiv  = 1 !> Number of derivatives to be computed
 
