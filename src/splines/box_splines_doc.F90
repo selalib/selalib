@@ -9,8 +9,16 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup splines sll_splines
+!> @defgroup meshes sll_box_splines
 !> @brief
-!> Library to use splines
+!> Box splines library: splines that can defined on a hexagonal mesh
+!> (see hex_meshes).
+!> @author Laura Mendoza
 !> @details
-!> Low level modules for sll_interpolators.
+!>
+!> <b> How to use it </b>
+!> - Link with   <code>-lsll_box_splines</code>
+!> - Add <code> use sll_box_splines </code>
+!>
+!> <b> Examples </b>
+!> @snippet meshes/test_box_splines_deriv.F90 example

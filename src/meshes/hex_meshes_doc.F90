@@ -9,8 +9,16 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup splines sll_splines
+!> @defgroup meshes sll_hex_meshes
 !> @brief
-!> Library to use splines
+!> Hexagonal meshes library: three directional meshes discretized by equilateral
+!> triangles.
+!> @author Laura Mendoza
 !> @details
-!> Low level modules for sll_interpolators.
+!>
+!> <b> How to use it </b>
+!> - Link with   <code>-lsll_hex_meshes</code>
+!> - Add <code> use sll_hex_meshes </code>
+!>
+!> <b> Examples </b>
+!> @snippet meshes/test_hex_meshes.F90 example

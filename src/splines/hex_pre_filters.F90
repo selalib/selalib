@@ -9,20 +9,18 @@ module hex_pre_filters
 #include "sll_memory.h"
   use sll_hex_meshes
 
-  
-  
   implicit none
 
-contains 
+contains
 
-    !---------------------------------------------------------------------------
-  !> @brief Pre-filter PFIR to compute the box splines coefficients 
+  !---------------------------------------------------------------------------
+  !> @brief Pre-filter PFIR to compute the box splines coefficients
   !> @details Pre-filter to compute the box splines coefficients.
   !> Reference : @Condat and Van De Ville (2007)
   !> "Quasi-interpolating spline models for hexagonally-sampled data."
-  !> @param[IN] mesh sll_hex_mesh_2d hexagonal mesh containing the mesh description
-  !> @param[IN] deg integer representing the degree of the spline
-  !> @param[OUT] weight float containing the filter (aka weight) at the local index
+  !> @param[IN] mesh sll_hex_mesh_2d: hex-mesh containing the mesh description
+  !> @param[IN] deg integer: representing the degree of the spline
+  !> @param[OUT] weight float: filter (aka weight) at the local index
   subroutine pre_filter_pfir(mesh, deg, weight_tab)
     sll_real64, allocatable, intent(out) :: weight_tab(:)
     type(sll_hex_mesh_2d)     :: mesh
@@ -74,13 +72,13 @@ contains
   !> @brief Pre-filter PIIR2 to compute the box splines coefficients
   !> @details Pre-filter PIIR2 to compute the box splines coefficients.
   !> Reference: Condat and Van De Ville (2007),
-  !> "Quasi-interpolating spline models for hexagonally-sampled data." 
-  !> @param[IN] mesh sll_hex_mesh_2d hexagonal mesh containing the mesh description
-  !> @param[IN] local_index integer representing the local index of the point we want the filter
-  !> @param[IN] deg integer representing the degree of the spline
-  !> @param[OUT] weight float containing the filter (aka weight) at the local index
+  !> "Quasi-interpolating spline models for hexagonally-sampled data."
+  !> @param[IN] mesh sll_hex_mesh_2d: hex-mesh containing the mesh description
+  !> @param[IN] local_index integer: local index of the point we want the filter
+  !> @param[IN] deg integer: degree of the spline
+  !> @param[OUT] weight float: filter (aka weight) at the local index
   function pre_filter_piir2(mesh, local_index, deg) result(weight)
-    type(sll_hex_mesh_2d)      :: mesh 
+    type(sll_hex_mesh_2d)      :: mesh
     sll_int32, intent(in)      :: local_index
     sll_int32, intent(in)      :: deg
     sll_real64, allocatable    :: weights_tab(:)
@@ -89,7 +87,7 @@ contains
     sll_int32                  :: ierr
     sll_int32                  :: i
 
-    if (deg .eq. 1) then 
+    if (deg .eq. 1) then
        ! prefiltre PIIR2 for box-splines chi2
        ! with coefficients h0 = 11/12 and h1 = 1/24
        !             |h1 0  0 |   |0  0  0 |   |h1 0  0 |
@@ -156,15 +154,16 @@ contains
        end if
     else if (deg .eq. 3) then 
        ! prefiltre PIIR2 for box-splines chi6
-       ! with coefficients h0 = 173863/241920, h1 = 47309/322560, h2 = -209/32256
-       !                   h3 = 457/967680
-       !         |h3 0  0  0  0  0  0 |   |0  0  0  0  0  0  0 |   |h3 0  0  0  0  0  0 |
-       !         |0  h2 0  0  0  0  0 |   |0  0  0  0  0  0  0 |   |h2 0  0  0  0  0  0 |
-       !         |0  0  h1 0  0  0  0 |   |0  0  0  0  0  0  0 |   |h1 0  0  0  0  0  0 |
-       ! priir2= |0  0  0  h0 0  0  0 | * |h3 h2 h1 h0 h1 h2 h3| * |h0 0  0  0  0  0  0 |
-       !         |0  0  0  0  h1 0  0 |   |0  0  0  0  0  0  0 |   |h1 0  0  0  0  0  0 |
-       !         |0  0  0  0  0  h2 0 |   |0  0  0  0  0  0  0 |   |h2 0  0  0  0  0  0 |
-       !         |0  0  0  0  0  0  h3|   |0  0  0  0  0  0  0 |   |h3 0  0  0  0  0  0 |
+       ! with coefficients h0 = 173863/241920, h1 = 47309/322560,
+       !                   h2 = -209/32256,    h3 = 457/967680
+       !  piir2 = &
+       !|h3 0  0  0  0  0  0 |   |0  0  0  0  0  0  0 |   |h3 0  0  0  0  0  0 |
+       !|0  h2 0  0  0  0  0 |   |0  0  0  0  0  0  0 |   |h2 0  0  0  0  0  0 |
+       !|0  0  h1 0  0  0  0 |   |0  0  0  0  0  0  0 |   |h1 0  0  0  0  0  0 |
+       !|0  0  0  h0 0  0  0 | * |h3 h2 h1 h0 h1 h2 h3| * |h0 0  0  0  0  0  0 |
+       !|0  0  0  0  h1 0  0 |   |0  0  0  0  0  0  0 |   |h1 0  0  0  0  0  0 |
+       !|0  0  0  0  0  h2 0 |   |0  0  0  0  0  0  0 |   |h2 0  0  0  0  0  0 |
+       !|0  0  0  0  0  0  h3|   |0  0  0  0  0  0  0 |   |h3 0  0  0  0  0  0 |
        ! where '*' symbolizes the 2d convolution operator
        if (local_index .eq. 1) then
           ! origin
@@ -206,16 +205,16 @@ contains
   end function pre_filter_piir2
 
   !---------------------------------------------------------------------------
-  !> @brief Pre-filter PIIR1 to compute the box splines coefficients 
+  !> @brief Pre-filter PIIR1 to compute the box splines coefficients
   !> @details Pre-filter to compute the box splines coefficients.
   !> Reference : @Condat and Van De Ville (2007)
   !> "Quasi-interpolating spline models for hexagonally-sampled data."
-  !> @param[IN] mesh sll_hex_mesh_2d hexagonal mesh containing the mesh description
-  !> @param[IN] local_index integer representing the local index of the point we want the filter
-  !> @param[IN] deg integer representing the degree of the spline
-  !> @param[OUT] weight float containing the filter (aka weight) at the local index
+  !> @param[IN] mesh sll_hex_mesh_2d: hex-mesh containing the mesh description
+  !> @param[IN] local_index integer: local index of the point we want the filter
+  !> @param[IN] deg integer: degree of the spline
+  !> @param[OUT] weight float: filter (aka weight) at the local index
   function pre_filter_piir1(mesh, local_index, deg) result(weight)
-    type(sll_hex_mesh_2d)     :: mesh 
+    type(sll_hex_mesh_2d)     :: mesh
     sll_int32, intent(in)     :: local_index
     sll_int32, intent(in)     :: deg
     sll_real64                :: weight
@@ -223,7 +222,7 @@ contains
     k1 = mesh%global_to_hex1(local_index)
     k2 = mesh%global_to_hex2(local_index)
 
-    if (deg .eq. 1) then 
+    if (deg .eq. 1) then
        ! prefiltre PIIR1 for box-splines chi2
        ! with coefficients h0 = 3/4 and h1 = 1/24
        if (local_index .eq. 1) then
@@ -233,7 +232,7 @@ contains
        else
           weight = 0._f64
        end if
-    else if (deg .eq. 2) then 
+    else if (deg .eq. 2) then
        ! prefiltre PIIR1 for box-splines of deg =2 chi4
        ! with coefficients h0 = 29/60 h1 = 7/80 h2 = -1/720
        if (local_index .eq. 1) then
@@ -254,14 +253,14 @@ contains
   end function pre_filter_piir1
 
   !---------------------------------------------------------------------------
-  !> @brief Pre-filter PINT to compute the box splines coefficients 
+  !> @brief Pre-filter PINT to compute the box splines coefficients
   !> @details Pre-filter to compute the box splines coefficients.
   !> Reference : @Condat and Van De Ville (2007)
   !> "Quasi-interpolating spline models for hexagonally-sampled data."
-  !> @param[IN] mesh sll_hex_mesh_2d hexagonal mesh containing the mesh description
-  !> @param[IN] local_index integer representing the local index of the point we want the filter
-  !> @param[IN] deg integer representing the degree of the spline
-  !> @param[OUT] weight float containing the filter (aka weight) at the local index
+  !> @param[IN] mesh sll_hex_mesh_2d: hex-mesh containing the mesh description
+  !> @param[IN] local_index integer: local index of the point we want the filter
+  !> @param[IN] deg integer: degree of the spline
+  !> @param[OUT] weight float: filter (aka weight) at the local index
   function pre_filter_int(mesh, local_index, deg) result(weight)
     type(sll_hex_mesh_2d) :: mesh
     sll_int32, intent(in)     :: local_index
