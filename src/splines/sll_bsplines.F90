@@ -61,6 +61,11 @@ type, public :: sll_bspline_2d
 
 end type sll_bspline_2d
 
+interface compute_bspline_2d
+  module procedure compute_bspline_2d_with_constant_slopes
+  module procedure compute_bspline_2d_with_variable_slopes
+end interface compute_bspline_2d
+
 public :: new_bspline_1d
 public :: new_bspline_2d
 public :: delete_bspline_1d
@@ -245,7 +250,11 @@ function new_bspline_2d( nx1, degree1, x1_min, x1_max, bc1, &
   sll_int32                        :: n2
   sll_int32                        :: ierr
 
-  SLL_ALLOCATE( new_bspline_2d, ierr )
+  SLL_ALLOCATE(new_bspline_2d, ierr )
+  SLL_ALLOCATE(new_bspline_2d%x1_min_slopes(1:nx2), ierr)
+  SLL_ALLOCATE(new_bspline_2d%x1_max_slopes(1:nx2), ierr)
+  SLL_ALLOCATE(new_bspline_2d%x2_min_slopes(1:nx1), ierr)
+  SLL_ALLOCATE(new_bspline_2d%x2_max_slopes(1:nx1), ierr)
 
   if (present(sl1) .and. present(sr1)) then
     new_bspline_2d%bs1 => new_bspline_1d(nx1,degree1,x1_min,x1_max,bc1,sl1,sr1)
@@ -263,15 +272,11 @@ function new_bspline_2d( nx1, degree1, x1_min, x1_max, bc1, &
   n2 = size(new_bspline_2d%bs2%bcoef)
   SLL_CLEAR_ALLOCATE(new_bspline_2d%bcoef(1:n1,1:n2), ierr)
 
-  SLL_ALLOCATE(new_bspline_2d%x1_min_slopes(1:n2), ierr)
-  SLL_ALLOCATE(new_bspline_2d%x1_max_slopes(1:n2), ierr)
-  SLL_ALLOCATE(new_bspline_2d%x2_min_slopes(1:n1), ierr)
-  SLL_ALLOCATE(new_bspline_2d%x2_max_slopes(1:n1), ierr)
 
-  new_bspline_2d%x1_min_slopes(:) = sl1
-  new_bspline_2d%x1_max_slopes(:) = sr1
-  new_bspline_2d%x2_min_slopes(:) = sl2
-  new_bspline_2d%x2_max_slopes(:) = sr2
+  if (present(sl1)) new_bspline_2d%x1_min_slopes(:) = sl1
+  if (present(sr1)) new_bspline_2d%x1_max_slopes(:) = sr1
+  if (present(sl2)) new_bspline_2d%x2_min_slopes(:) = sl2
+  if (present(sr2)) new_bspline_2d%x2_max_slopes(:) = sr2
 
 end function new_bspline_2d
 
@@ -468,7 +473,7 @@ subroutine compute_bspline_1d(this, gtau, slope_min, slope_max)
 
 end subroutine compute_bspline_1d
 
-subroutine compute_bspline_2d(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
+subroutine compute_bspline_2d_with_constant_slopes(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
 
   type(sll_bspline_2d)    :: this 
   sll_real64, intent(in)  :: gtau(:,:)
@@ -496,13 +501,48 @@ subroutine compute_bspline_2d(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
 
   call update_bspline_2d(this, gtau)
 
-end subroutine compute_bspline_2d
+end subroutine compute_bspline_2d_with_constant_slopes
+
+subroutine compute_bspline_2d_with_variable_slopes(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
+
+  type(sll_bspline_2d)    :: this 
+  sll_real64, intent(in)  :: gtau(:,:)
+  sll_real64, intent(in)  :: sl1_l(:)
+  sll_real64, intent(in)  :: sl1_r(:)
+  sll_real64, intent(in)  :: sl2_l(:)
+  sll_real64, intent(in)  :: sl2_r(:)
+
+  if ( this%bs1%bc_type == SLL_PERIODIC) then
+    call build_system(this%bs1)
+  else
+    call build_system_with_derivative(this%bs1)
+  end if
+
+  if ( this%bs2%bc_type == SLL_PERIODIC) then
+    call build_system(this%bs2)
+  else
+    call build_system_with_derivative(this%bs2)
+  end if
+
+  SLL_ASSERT(size(sl1_l) == this%bs2%n)
+  this%x1_min_slopes = sl1_l
+  SLL_ASSERT(size(sl1_r) == this%bs2%n)
+  this%x1_max_slopes = sl1_r
+  SLL_ASSERT(size(sl2_l) == this%bs1%n)
+  this%x2_min_slopes = sl2_l
+  SLL_ASSERT(size(sl2_r) == this%bs1%n)
+  this%x2_max_slopes = sl2_r
+
+  call update_bspline_2d(this, gtau)
+
+end subroutine compute_bspline_2d_with_variable_slopes
+
 
 !> @brief 
 !> update 2 values before computing bsplines coefficientcs
 !> @details
 !> If the points positions did not change use this function instead
-!> of compute_spline_2d. You still need to call compute_spline_2d at
+!> of compute_bspline_2d. You still need to call compute_bspline_2d at
 !> the begginning to build the linear system.
 subroutine update_bspline_2d(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
 
