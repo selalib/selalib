@@ -41,6 +41,7 @@
 /
 
 &poisson
+  ampere_solver = "SLL_VLASOV_AMPERE"
   poisson_solver = "SLL_FFT"
   !poisson_solver = "SLL_POLAR"
 /
