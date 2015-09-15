@@ -80,8 +80,8 @@ subroutine test_process_1d(bc_type)
   print*, 'bspline_1d allocated'
   
   gtau = cos(2*sll_pi*bspline_1d%tau)
-  slope_min = -sin(2*sll_pi*tau_min)*2*sll_pi
-  slope_max = -sin(2*sll_pi*tau_max)*2*sll_pi
+  slope_min = -sin(2.0_f64*sll_pi*tau_min)*2.0_f64*sll_pi
+  slope_max = -sin(2.0_f64*sll_pi*tau_max)*2.0_f64*sll_pi
   call cpu_time(t0)
   call compute_bspline_1d(bspline_1d, gtau, slope_min, slope_max)
   call cpu_time(t1)
@@ -153,10 +153,10 @@ subroutine test_process_2d(bc1_type, bc2_type)
 
   sll_int32,  parameter   :: n1 = 64
   sll_int32,  parameter   :: n2 = 64
-  sll_real64              :: sl1      ! slopes at boundaries
-  sll_real64              :: sr1      ! slopes at boundaries
-  sll_real64              :: sl2      ! slopes at boundaries
-  sll_real64              :: sr2      ! slopes at boundaries
+  sll_real64              :: sl1(n2)      ! slopes at boundaries
+  sll_real64              :: sr1(n2)      ! slopes at boundaries
+  sll_real64              :: sl2(n1)      ! slopes at boundaries
+  sll_real64              :: sr2(n1)      ! slopes at boundaries
 
   sll_real64              :: f
 
@@ -183,10 +183,10 @@ subroutine test_process_2d(bc1_type, bc2_type)
   
   ftau = cos(2*sll_pi*tau1) * cos(2*sll_pi*tau2)
 
-  sl1 = -sin(2*sll_pi*x1_min)*2*sll_pi
-  sr1 = -sin(2*sll_pi*x1_max)*2*sll_pi
-  sl2 = -sin(2*sll_pi*x2_min)*2*sll_pi
-  sr2 = -sin(2*sll_pi*x2_max)*2*sll_pi
+  sl1 = - sin(2*sll_pi*x1_min) * 2.0_f64*sll_pi * cos(2*sll_pi*tau2( 1, :))
+  sr1 = - sin(2*sll_pi*x1_max) * 2.0_f64*sll_pi * cos(2*sll_pi*tau2(n1, :))
+  sl2 = - sin(2*sll_pi*x2_min) * 2.0_f64*sll_pi * cos(2*sll_pi*tau1( :, 1))
+  sr2 = - sin(2*sll_pi*x2_max) * 2.0_f64*sll_pi * cos(2*sll_pi*tau1( :,n2))
 
   call cpu_time(t0)
   call compute_bspline_2d(bspline_2d, ftau, sl1, sr1, sl2, sr2)
@@ -194,19 +194,19 @@ subroutine test_process_2d(bc1_type, bc2_type)
   do j = 1,nstep
     call interpolate_array_values_2d( bspline_2d, n1, n2, ftau, gtau, 0, 0)
   end do
-  err1 = sum(abs(gtau-cos(dpi*tau1)*cos(dpi*tau2)))/(n1*n2)
+  err1 = sum(abs(gtau-cos(dpi*tau1)*cos(dpi*tau2)))/real(n1*n2,f64)
   err2 = maxval(abs(gtau-cos(dpi*tau1)*cos(dpi*tau2)))
   call cpu_time(t2)
   do j = 1,nstep
     call interpolate_array_values_2d( bspline_2d, n1, n2, ftau, gtau, 1, 0)
   end do
-  err3 = sum(abs(gtau+dpi*sin(dpi*tau1)*cos(dpi*tau2)))/(n1*n2)
+  err3 = sum(abs(gtau+dpi*sin(dpi*tau1)*cos(dpi*tau2)))/real(n1*n2,f64)
   err4 = maxval(abs(gtau+dpi*sin(dpi*tau1)*cos(dpi*tau2)))
   call cpu_time(t3)
   do j = 1,nstep
     call interpolate_array_values_2d( bspline_2d, n1, n2, ftau, gtau, 0, 1)
   end do
-  err5 = sum(abs(gtau+dpi*sin(dpi*tau2)*cos(dpi*tau1)))/(n1*n2)
+  err5 = sum(abs(gtau+dpi*sin(dpi*tau2)*cos(dpi*tau1)))/real(n1*n2,f64)
   err6 = maxval(abs(gtau+dpi*sin(dpi*tau2)*cos(dpi*tau1)))
   call cpu_time(t4)
 
@@ -233,6 +233,7 @@ subroutine test_process_2d(bc1_type, bc2_type)
       err1 = err1 + abs(f-ftau(i,j))
       write(10,*) tau1(i,j), tau2(i,j), f, ftau(i,j)
     end do
+    write(10,*) 
   end do
   call cpu_time(t2)
   err2 = 0.0_f64
