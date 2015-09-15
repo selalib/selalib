@@ -54,11 +54,13 @@
 /
 
 &poisson
-  ampere_solver = "SLL_PSTD"
+  ampere_solver = "SLL_VLASOV_AMPERE"
   poisson_solver = "SLL_FFT"
   !poisson_solver = "SLL_POLAR"
 /
 
+&berk_breizman
+ /
 
 &drive
   drive_type = "SLL_NO_DRIVE"
