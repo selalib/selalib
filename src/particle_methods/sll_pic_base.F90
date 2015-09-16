@@ -64,6 +64,9 @@ module sll_module_pic_base
     procedure( set_landau_params ),  deferred :: set_landau_parameters
     procedure( init              ),  deferred :: initializer
 
+    ! Visualize
+    procedure( vis ),  deferred :: visualize_f_slice_x_vx
+
   end type sll_particle_group_base
 
   !----------------------------------------------------------------------------
@@ -142,6 +145,18 @@ module sll_module_pic_base
     sll_int32, dimension(:)         , intent( in ), optional :: rand_seed
     sll_int32                       , intent( in ), optional :: rank, world_size
    end subroutine init
+  end interface
+
+  !----------------------------------------------------------------------------
+  abstract interface
+   subroutine vis( self, array_name, iplot )
+    use sll_working_precision
+    import sll_particle_group_base
+    class( sll_particle_group_base ), intent( inout ) :: self
+    character(len=*),                   intent(in)      :: array_name   !< field name
+    sll_int32,                          intent(in)      :: iplot        !< plot counter
+
+   end subroutine vis
   end interface
 
   !----------------------------------------------------------------------------

@@ -23,10 +23,10 @@
 
 &lt_pic_params
     spline_degree          = 1
-    NUMBER_PARTS_X         = 70        !  Particle remapping grid // voir l'influence
+    NUMBER_PARTS_X         = 70         !  Particle remapping grid // voir l'influence
     NUMBER_PARTS_Y         = 20         !  Particle remapping grid // voir l'influence
-    NUMBER_PARTS_VX        = 30        !  Particle remapping grid // voir l'influence
-    NUMBER_PARTS_VY        = 6         !  Particle remapping grid // voir l'influence
+    NUMBER_PARTS_VX        = 30         !  Particle remapping grid // voir l'influence
+    NUMBER_PARTS_VY        = 6          !  Particle remapping grid // voir l'influence
     REMAP_GRID_VX_MIN   = -4.0      !  Particle remapping grid // voir l'influence
     REMAP_GRID_VX_MAX   = 4.0       !  Particle remapping grid // voir l'influence
     REMAP_GRID_VY_MIN   = -4.0      !  Particle remapping grid // voir l'influence
