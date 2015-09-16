@@ -2800,7 +2800,8 @@ end subroutine
   !        [[file:~/mcp/maltpic/ltpic-bsl.tex::BSL_remapping_step_1]].  Algorithm from
   !        [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr]] (but without the deposition step)
   !
-  !        -- this function should be a faster alternative to [[sll_lt_pic_4d_write_f_on_remap_grid]] --
+  !        Note: This routine is an evolution from sll_lt_pic_4d_write_bsl_f_on_remap_grid (which will be eventually
+  !        discarded) and should be a faster alternative.
   !
   !        Note: the (x,y)-projection of the remapping grid may be larger than the "Poisson" 2d mesh associated with the
   !        particle group (in particular if the (x,y) domain is not periodic)
@@ -2835,12 +2836,12 @@ end subroutine
   !
   !  - given_total_density is an optional argument that is given to make the deposition method conservative
   !    (note: it may be used also in the 'write_f' scenario, but one has to define what conservative means in this case)
-  !
-  !  Note: This routine is an evolution from sll_lt_pic_4d_write_bsl_f_on_remap_grid (which will be eventually discarded)
 
   ! todo: Treat the non-periodic case. In this case we can place the virtual particles slightly off the boundaries of the
   ! todo: virtual cells, so that we do not need a special treatment for the particles on the right (x and y) domain boundaries
 
+  ! Latex documentation at [[file:~/maltpic/ltpic-bsl.tex::sll_lt_pic_4d_write_f_on_grid_or_deposit]]
+  
   subroutine sll_lt_pic_4d_write_f_on_grid_or_deposit (p_group, q_accumulator,      &
                                                        scenario_is_deposition,      &
                                                        use_remapping_grid,          &
@@ -3091,7 +3092,7 @@ end subroutine
 
     ! --- end of declarations
 
-    ! -- creating g the virtual grid [begin] --
+    ! -- <<creating_g_the_virtual_grid>> [begin] --
 
     if( scenario_is_deposition )then
 
@@ -3108,8 +3109,8 @@ end subroutine
             stop
 
 
-            ! an extra cell is needed outside (in every direction) so that the approximation of f(t_n) by regular
-            ! splines located at the virtual nodes is accurate close to the domain boundaries
+            ! <<extra_cell>> an extra cell is needed outside (in every direction) so that the approximation of f(t_n) by
+            ! regular splines located at the virtual nodes is accurate close to the domain boundaries
             num_virtual_cells_x = p_group%mesh%num_cells1 + 2
             virtual_grid_x_min = p_group%mesh%eta1_min - p_group%mesh%delta_eta1
             virtual_grid_x_max = p_group%mesh%eta1_max + p_group%mesh%delta_eta1
@@ -3126,7 +3127,7 @@ end subroutine
             virtual_grid_y_max = p_group%mesh%eta2_max + p_group%mesh%delta_eta2
         end if
 
-        ! Because the Poisson mesh does not prescribe any resolution in velocity
+        ! <<velocity_resolution>> Because the Poisson mesh does not prescribe any resolution in velocity
         ! the resolution of the 'virtual' cells in the velocity dimensions is inferred from the remapping (or initial) grid
         num_virtual_cells_vx = p_group%number_parts_vx
         virtual_grid_vx_min = p_group%remapping_grid%eta3_min
@@ -3170,6 +3171,7 @@ end subroutine
             number_virtual_particles_vx = p_group%number_parts_vx
             number_virtual_particles_vy = p_group%number_parts_vy
 
+            ! <<virtual_cells_contain_whole_domain>>
             num_virtual_cells_x =  int(ceiling(number_virtual_particles_x * 1. / n_virtual_x) )
             num_virtual_cells_y =  int(ceiling(number_virtual_particles_y * 1. / n_virtual_y) )
             num_virtual_cells_vx = int(ceiling(number_virtual_particles_vx * 1. / n_virtual_vx))
@@ -3223,8 +3225,9 @@ end subroutine
 
     track_markers_outside_domain = p_group%track_markers_outside_domain
 
-    ! Preparatory work: find out the particle which is closest to each cell center by looping over all particles and
-    ! noting which virtual cell contains it. The leftmost virtual cell in each dimension may not be complete.
+    ! <<find_cell_centers>> Preparatory work: find out the particle which is closest to each cell center by looping over
+    ! all particles and noting which virtual cell contains it. The leftmost virtual cell in each dimension may not be
+    ! complete.
 
     SLL_ALLOCATE(closest_particle(num_virtual_cells_x,num_virtual_cells_y,num_virtual_cells_vx,num_virtual_cells_vy),ierr)
     closest_particle(:,:,:,:) = 0
@@ -3328,11 +3331,12 @@ end subroutine
             l >= 1 .and. l <= num_virtual_cells_vx .and. &
             m >= 1 .and. m <= num_virtual_cells_vy  )then
 
-          call update_closest_particle_arrays(k,                         &
-                                              x_aux, y_aux, vx_aux, vy_aux,   &
-                                              i, j, l, m,                     &
-                                              h_virtual_cell_x, h_virtual_cell_y, h_virtual_cell_vx, h_virtual_cell_vy,   &
-                                              closest_particle,               &
+          ! [[update_closest_particle_arrays]]
+          call update_closest_particle_arrays(k,                                                                        &
+                                              x_aux, y_aux, vx_aux, vy_aux,                                             &
+                                              i, j, l, m,                                                               &
+                                              h_virtual_cell_x, h_virtual_cell_y, h_virtual_cell_vx, h_virtual_cell_vy, &
+                                              closest_particle,                                                         &
                                               closest_particle_distance)
 
        end if
@@ -3344,6 +3348,7 @@ end subroutine
        end if
     end do
 
+    !  <<impose_particle_closest_to_first_corner>>
     closest_particle(1,1,1,1) = k_particle_closest_to_first_corner
 
     ! Periodicity treatments copied from [[sll_lt_pic_4d_write_f_on_remap_grid-periodicity]]
@@ -3420,8 +3425,10 @@ end subroutine
           do l = 1,num_virtual_cells_vx
              do m = 1,num_virtual_cells_vy
 
+                ! <<create_virtual_particles>>
                 ! [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:create_virtual_particles]] Create a temporary set of
                 ! virtual particles inside the cell.
+                !
                 ! Note: as written above in the remapping scenario the virtual particles coincide with the existing
                 ! remapping_grid [[file:../pic_particle_types/lt_pic_4d_group.F90::sll_lt_pic_4d_group-remapping_grid]]
                 ! defined in p_group [[file:../pic_particle_types/lt_pic_4d_group.F90::sll_lt_pic_4d_group]].
@@ -3465,7 +3472,7 @@ end subroutine
     end do
 
 
-
+                ! <<set_closest_particle_in_empty_cells>>
                 if(k == 0) then
 
                     if( i > 1 )then
@@ -3501,9 +3508,9 @@ end subroutine
                 k = closest_particle(i,j,l,m)
                 SLL_ASSERT(k /= 0)
 
-               ! [[file:~/mcp/maltpic/ltpic-bsl.tex::hat-bz*]] Compute backward image of l-th virtual node by the
-               ! k-th backward flow. MCP -> oui, avec la matrice de deformation calculée avec la fonction
-               ! [[get_ltp_deformation_matrix]] pour la particule k. Calling [[get_ltp_deformation_matrix]]
+               ! <<get_deformation_matrix>> [[file:~/mcp/maltpic/ltpic-bsl.tex::hat-bz*]] Compute backward image of l-th
+               ! virtual node by the k-th backward flow. MCP -> oui, avec la matrice de deformation calculée avec la
+               ! fonction [[get_ltp_deformation_matrix]] pour la particule k. Calling [[get_ltp_deformation_matrix]]
                ! with parameters inspired from [[sll_lt_pic_4d_write_f_on_remap_grid-get_ltp_deformation_matrix]]
 
                call get_ltp_deformation_matrix (               &
@@ -3535,7 +3542,7 @@ end subroutine
                     part_radius_vy                             &
                     )
 
-               ! Find position of particle k at time 0
+               ! <<find_position_of_particle_k_at_time_0>>
                ! [[get_initial_position_on_cartesian_grid_from_particle_index]]
 
                call get_initial_position_on_cartesian_grid_from_particle_index(k,   &
@@ -3640,9 +3647,9 @@ end subroutine
                            d4_vy = d44 * vy_to_vyk
 
 
-                           ! The index may go out of the domain for higher values of x,y,vx,vy in each dimension
-                           ! (because the corners of the corresponding virtual cell do not correspond to existing
-                           ! real particles). In that case, just ignore that value.
+                           ! <<check_virtual_particle_index>> The index may go out of the domain for higher values of
+                           ! x,y,vx,vy in each dimension (because the corners of the corresponding virtual cell do not
+                           ! correspond to existing real particles). In that case, just ignore that value.
 
                            if( scenario_is_deposition                                    &
                                 .or. (      i_x  <= number_virtual_particles_x     &
@@ -3705,8 +3712,9 @@ end subroutine
                                 !          * (vx_t0**2 + vy_t0**2)       &
                                 !         )
 
-                              else
+                              else ! i.e. if(p_group%use_exact_f0 == .false)
 
+                                 ! <<find_k_prime_step_by_step>>
                                   find_k_prime_step_by_step = .false.
 
                                   if( find_k_prime_step_by_step )then
@@ -3792,8 +3800,9 @@ end subroutine
 
                                   else
 
-                                    ! find directly the index kprime of the lower left particle on the remapping grid
-                                    ! that contains z_t0, the position of the virtual particle at time = 0
+                                    ! <<compute_kprime>> find directly the index kprime of the lower left particle on the
+                                    ! remapping grid that contains z_t0, the position of the virtual particle at time =
+                                    ! 0
 
                                     ! here (x_t0, y_t0, vx_t0, vy_t0) is the (approx) position of the virtual particle at time t=0
 
@@ -3870,15 +3879,16 @@ end subroutine
 
                                   SLL_ASSERT(kprime >= 0)
 
-                                  ! If we end up with kprime == 0, it means that we have not found a cell that contains
-                                  ! the particle so we just set that (virtual) particle value to zero
+                                  ! <<compute_f_value_on_virtual_particle>> If we end up with kprime == 0, it means that
+                                  ! we have not found a cell that contains the particle so we just set that (virtual)
+                                  ! particle value to zero
 
                                   f_value_on_virtual_particle = 0
 
                                   if (kprime /= 0) then
 
-                                     ! kprime is the left-most vertex of the hypercube. find all the other vertices
-                                     ! through the neighbour pointers in
+                                     ! <<build_hypercube>> kprime is the left-most vertex of the hypercube. find all the
+                                     ! other vertices through the neighbour pointers in
                                      ! [[file:../pic_particle_types/lt_pic_4d_particle.F90::neighbour_pointers]]
 
                                      hcube(1,1,1,1) = kprime
@@ -3954,6 +3964,7 @@ end subroutine
 
                                           ! MCP [END-DEBUG]
 
+                                        ! <<get_values_at_the_hypercube_vertices>>
                                         ! [[file:~/mcp/maltpic/ltpic-bsl.tex::affine-fn*]] use the values of f0 at these
                                         ! neighbours to interpolate the value of f0 at
                                         ! [[file:~/mcp/maltpic/ltpic-bsl.tex::hat-bz*]]. MCP -> oui. Ici si tu utilises
@@ -4019,7 +4030,8 @@ end subroutine
                                   end if     ! test on (k_prime \=0 )
                               end if    ! test on (use_exact_f0)
 
-                              ! now f_value_on_virtual_particle has been computed we can use it
+                              ! <<store_f_value_on_virtual_particle>> now f_value_on_virtual_particle has been computed
+                              ! we can use it
 
                               if( f_value_on_virtual_particle /= 0 )then
 
@@ -4123,8 +4135,8 @@ end subroutine
 
 
 
-  ! update the arrays closest_particle and closest_particle_distance with the index of the given particle
-  ! if closer to what had been stored up to now.
+  ! <<update_closest_particle_arrays>> update the arrays closest_particle and closest_particle_distance with the index
+  ! of the given particle if closer to what had been stored up to now.
 
   ! x_aux : x_particle - x_min_virtual_mesh   and  similarly for y, vx, vy
   subroutine update_closest_particle_arrays(k_part,                         &
