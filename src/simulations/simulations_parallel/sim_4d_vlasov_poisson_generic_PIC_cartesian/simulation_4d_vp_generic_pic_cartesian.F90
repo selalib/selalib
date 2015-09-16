@@ -43,7 +43,7 @@ module sll_simulation_4d_vp_generic_pic_cartesian_module
   use sll_particle_sort_module
   use sll_charge_to_density_module
   use sll_pic_utilities
-  use sll_representation_conversion_module
+  ! use sll_representation_conversion_module
 
   implicit none
 
@@ -238,7 +238,8 @@ contains
 
     namelist /simple_pic_params/    NUM_PARTICLES
 
-    namelist /lt_pic_params/        number_parts_x,             &
+    namelist /lt_pic_params/        spline_degree,              &
+                                    number_parts_x,             &
                                     number_parts_y,             &
                                     number_parts_vx,            &
                                     number_parts_vy,            &
@@ -320,6 +321,10 @@ contains
         remap_grid_vx_max,      &
         remap_grid_vy_min,      &
         remap_grid_vy_max,      &
+        NVirtual_X_ForDeposition,   &
+        NVirtual_Y_ForDeposition,   &
+        NVirtual_VX_ForDeposition,  &
+        NVirtual_VY_ForDeposition,  &
         sim%mesh_2d )
 
         print *, "AA5"
@@ -327,7 +332,7 @@ contains
       ! here, [[particle_group]] will contain a reference to a bsl_lt_pic group
       sim%particle_group => bsl_lt_pic_particle_group
 
-      !todo: finish the initialization and visualise the resulting density
+      !todo: finish the initialization and visualize the resulting density
 
         !       sim%lt_pic_particle_group%set_parameters(                        &
         !            n_virtual_x_for_deposition = NVirtual_X_ForDeposition,      &
@@ -478,7 +483,6 @@ contains
     sll_real32 :: off_x, off_y,off_x1,off_y1
     sll_real64 :: xmin, ymin
     sll_real64 :: rdx, rdy
-    sll_int32  :: icell
     ! sll_int32  :: gi ! counter index for guard list
     sll_real64 :: Ex, Ey, Ex1, Ey1, Ex_CS, Ey_CS
     sll_real64 :: dt_q_over_m ! dt * qoverm
@@ -487,7 +491,7 @@ contains
     sll_real64 :: dt
     sll_real64 :: pp_x,pp_y,pp_vx, pp_vy
     sll_real32 :: pp_dx, pp_dy
-    sll_int32  :: pp_icell
+    sll_int32  :: pp_icell, pp_icell_x, pp_icell_y
     type(field_accumulator_cell), dimension(:), pointer :: accumE
     ! type(sll_generic_pic_4d_particle_guard), dimension(:), pointer :: p_guard
     sll_real64, dimension(:,:), allocatable  ::  diag_energy
@@ -672,10 +676,12 @@ contains
       !> because the base PIC class does not give access to this type of info (because some particles may not have
       !> it). \todo we may want to optimize this out for speed
 
-      call global_to_cell_offset(pp_x,pp_y,sim%mesh_2d,pp_icell,pp_dx,pp_dy)
+      call global_to_cell_offset_extended(pp_x, pp_y, sim%mesh_2d, pp_icell_x, pp_icell_y, pp_dx, pp_dy)
+      call get_poisson_cell_index(sim%mesh_2d, pp_icell_x, pp_icell_y, pp_icell)
 
       ! [[selalib:src/pic_accumulators/sll_accumulators.h::SLL_INTERPOLATE_FIELD_IN_CELL]]
-      SLL_INTERPOLATE_FIELD_IN_CELL(Ex,Ey,accumE,pp_dx,pp_dy,tmp5,tmp6,pp_icell)
+      SLL_INTERPOLATE_FIELD_IN_CELL(Ex,Ey, accumE, pp_dx, pp_dy, tmp5,tmp6, pp_icell)
+
 
       ! Set particle speed [[dt_q_over_m]]
       coords(1) = pp_vx - 0.5_f64 * dt_q_over_m * Ex
@@ -718,7 +724,7 @@ contains
     
     do it = 0, sim%num_iterations-1
 
-       print *, "BEGIN one loop in time, it = ", it
+       print *, "BEGIN one loop in time, it+1 = ", it+1, " / ", sim%num_iterations
        !! -- --  <<diagnostics>> (computing energy) [begin]  -- --
        !AAA-ALH-HERE
        if (sim%my_rank == 0) then
@@ -786,10 +792,11 @@ contains
          !> because the base PIC class does not give access to this type of info (because some particles may not
          !> have it). \todo we may want to optimize this out for speed
 
-         call global_to_cell_offset(pp_x,pp_y,sim%mesh_2d,pp_icell,pp_dx,pp_dy)
+         call global_to_cell_offset_extended(pp_x, pp_y, sim%mesh_2d, pp_icell_x, pp_icell_y, pp_dx, pp_dy)
+         call get_poisson_cell_index(sim%mesh_2d, pp_icell_x, pp_icell_y, pp_icell)
 
          ! [[selalib:src/pic_accumulators/sll_accumulators.h::SLL_INTERPOLATE_FIELD_IN_CELL]]
-         SLL_INTERPOLATE_FIELD_IN_CELL(Ex,Ey,accumE,pp_dx,pp_dy,tmp5,tmp6,pp_icell)
+         SLL_INTERPOLATE_FIELD_IN_CELL(Ex,Ey, accumE, pp_dx, pp_dy, tmp5,tmp6, pp_icell)
 
          ! Set particle speed [[dt_q_over_m]]
          coords(1) = pp_vx + dt_q_over_m * Ex
@@ -971,14 +978,21 @@ contains
 
              !> compute cell dx and dy again locally (although we could extract this info for some types of particles)
              !> because the base PIC class does not give access to this type of info (because some particles may not
-             !> have it). \todo we may want to optimize this out for speed
+             !> have it).  todo: we may want to optimize this out for speed
 
-             call global_to_cell_offset(pp_x,pp_y,sim%mesh_2d,pp_icell,pp_dx,pp_dy)
+             call global_to_cell_offset_extended(pp_x, pp_y, sim%mesh_2d, pp_icell_x, pp_icell_y, pp_dx, pp_dy)
+             call get_poisson_cell_index(sim%mesh_2d, pp_icell_x, pp_icell_y, pp_icell)
 
              ! [[selalib:src/pic_accumulators/sll_accumulators.h::SLL_INTERPOLATE_FIELD_IN_CELL]]
-             SLL_INTERPOLATE_FIELD_IN_CELL(Ex,Ey,accumE,pp_dx,pp_dy,tmp5,tmp6,pp_icell)
+             SLL_INTERPOLATE_FIELD_IN_CELL(Ex,Ey, accumE, pp_dx, pp_dy, tmp5,tmp6, pp_icell)
 
-             ! particle position
+
+             ! call global_to_cell_offset(pp_x,pp_y,sim%mesh_2d,pp_icell,pp_dx,pp_dy)
+
+             ! ! [[selalib:src/pic_accumulators/sll_accumulators.h::SLL_INTERPOLATE_FIELD_IN_CELL]]
+             ! SLL_INTERPOLATE_FIELD_IN_CELL(Ex,Ey,accumE,pp_dx,pp_dy,tmp5,tmp6,pp_icell)
+
+             ! particle speed
              coords=sim%particle_group%get_v(k) ! [[selalib:src/particle_methods/sll_pic_base.F90::get_v]]
              pp_vx = coords(1)
              pp_vy = coords(2)
