@@ -160,12 +160,13 @@ module sll_module_pic_base
 
   !----------------------------------------------------------------------------
   abstract interface
-   subroutine dep_charge_2d( self, charge_accumulator )
+   subroutine dep_charge_2d( self, charge_accumulator, target_total_charge )
     use sll_working_precision
 #include "sll_accumulators.h"
     import sll_particle_group_base
     class( sll_particle_group_base ),           intent( inout ) :: self
     type( sll_charge_accumulator_2d ), pointer, intent( inout ) :: charge_accumulator
+    sll_real64,                                 intent(in), optional :: target_total_charge
    end subroutine dep_charge_2d
   end interface
 
