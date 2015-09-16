@@ -6,7 +6,7 @@
         SPECIES_CHARGE      = -1.0
         SPECIES_MASS        = 1.0
         ALPHA  = 0.5
-        UseLtPicScheme = .false.         ! pour utiliser du PIC standard ou bien du LTPIC-BSL
+        UseLtPicScheme = .true.         ! pour utiliser du PIC standard ou bien du LTPIC-BSL
 /
 
 

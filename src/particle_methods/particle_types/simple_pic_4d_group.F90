@@ -304,18 +304,22 @@ contains
    end subroutine simple_pic_4d_initializer
 
 
-  subroutine simple_pic_4d_deposit_charge_2d( self, charge_accumulator )
+  subroutine simple_pic_4d_deposit_charge_2d( self, charge_accumulator, target_total_charge )
     class( sll_simple_pic_4d_group ),           intent( inout )  :: self
     type( sll_charge_accumulator_2d ), pointer, intent( inout ) :: charge_accumulator
+    sll_real64,                                 intent(in), optional :: target_total_charge             ! for a check (if present)
 
     type( charge_accumulator_cell_2d ), pointer             :: charge_accumulator_cell
     type(sll_simple_pic_4d_particle), pointer :: particle
     sll_int32       :: i_part, i_cell
     sll_real64      :: xy_part(3)
     sll_real64      :: particle_charge
+    sll_real64      :: deposited_charge
     sll_real64      :: dx, dy
 
     call reset_charge_accumulator_to_zero ( charge_accumulator )
+
+    deposited_charge = 0
 
     particle_charge = simple_pic_4d_get_common_charge(self)
     do i_part = 1, self%number_particles
@@ -336,10 +340,19 @@ contains
         charge_accumulator_cell%q_se = charge_accumulator_cell%q_se + particle_charge *            dx  * (1.0_f64 - dy)
         charge_accumulator_cell%q_nw = charge_accumulator_cell%q_nw + particle_charge * (1.0_f64 - dx) *            dy
         charge_accumulator_cell%q_ne = charge_accumulator_cell%q_ne + particle_charge *            dx  *            dy
+        deposited_charge = deposited_charge + particle_charge
 
       else ! particle not in domain (should store the reference for later processing)
         print*, "Error (097647687): for the moment every particle should be in the (periodic) 2d domain..."
         stop
+      end if
+
+      if( present(target_total_charge) )then
+        if( abs( deposited_charge - target_total_charge ) > 0.0000001 * abs(target_total_charge) )then
+           print*, "Warning (8756537654) in [simple_pic_4d_deposit_charge_2d]: deposited_charge and target_total_charge differ"
+           print*, "Warning (8756537654) deposited_charge    = ", deposited_charge
+           print*, "Warning (8756537654) target_total_charge = ", target_total_charge
+        end if
       end if
 
     end do
