@@ -1020,6 +1020,7 @@ contains
     
     sll_int32           :: ierr
     sll_int32           :: i
+    sll_int32           :: j
     
     procedure(sll_scalar_initializer_2d), pointer :: init_func
     
@@ -1229,8 +1230,12 @@ contains
     endif
     
 
-    vx => sim%x2_array
-    F0 = (0.9_f64*exp(-0.5_f64*vx**2)+0.2_f64*exp(-0.5_f64*(vx-4.5_f64)**2/0.5**2))
+    F0 = (0.9_f64*exp(-0.5_f64*sim%node_positions_x2**2) &
+         +0.2_f64*exp(-0.5_f64*(sim%node_positions_x2-4.5_f64)**2/0.5**2))/sqrt(2.0_f64*sll_pi)
+
+    do j = 1, np_x2
+      write(12,*) sim%node_positions_x2(j), F0(j)
+    end do
 
     iplot = iplot+1  
     
@@ -1307,40 +1312,55 @@ contains
     type(layout_2D), intent(in),    pointer        :: layout_x1
     sll_real64,      intent(in),    dimension(:)   :: F0
     sll_real64,      intent(inout), dimension(:,:) :: f_x1
-    sll_real64 :: delta_t
+    sll_real64,      intent(in)                    :: delta_t
+
     sll_int32  :: ig_omp
     sll_int32  :: i_omp
+    sll_int32  :: i
+    sll_int32  :: j
     sll_int32  :: global_indices(2)
     sll_int32  :: local_size_x1
     sll_int32  :: local_size_x2
-    sll_int32  :: np_x1
+    sll_int32  :: np_x1, np_x2
     sll_int32  :: tid
     sll_real64 :: alpha_omp
     
     np_x1 = sim%mesh2d%num_cells1+1
+    np_x2 = sim%mesh2d%num_cells2+1
     call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
     global_indices = local_to_global( layout_x1, (/1, 1/) )
     
     tid=1          
 
-    !$OMP PARALLEL DEFAULT(SHARED) &
-    !$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid) 
-    !advection in x
-    !$ tid = omp_get_thread_num()+1
-    !$OMP DO
-    do i_omp = 1, local_size_x2
-    
-      ig_omp    = i_omp+global_indices(2)-1
-      f1d_omp_in(1:np_x1,tid) = f_x1(1:np_x1,i_omp)
-      
-      f1d_omp_out(1:np_x1,tid) = (1.0_f64-sim%nu_a*delta_t) * f1d_omp_in(1:np_x1,tid)  &
-                                 + sim%nu_a * delta_t * F0(ig_omp)
-    
-      f_x1(1:np_x1,i_omp)=f1d_omp_out(1:np_x1,tid)
-    
+    do j = 1, np_x2
+    do i = 1, np_x1
+      f_x1(i,j) = exp(-sim%nu_a*delta_t) * f_x1(i,j) + (1.0_f64- exp(-sim%nu_a*delta_t)) * F0(j)
     end do
-    !$OMP END DO          
-    !$OMP END PARALLEL
+    end do
+
+!    !$OMP END DO          
+!    !$OMP END PARALLEL
+!    !$OMP PARALLEL DEFAULT(SHARED) &
+!    !$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid) 
+!    !advection in x
+!    !$ tid = omp_get_thread_num()+1
+!    !$OMP DO
+!    do i_omp = 1, local_size_x2
+!    
+!      ig_omp    = i_omp+global_indices(2)-1
+!      f1d_omp_in(1:np_x1,tid) = f_x1(1:np_x1,i_omp)
+!      
+!      !f1d_omp_out(1:np_x1,tid) = (1.0_f64-sim%nu_a*delta_t) * f1d_omp_in(1:np_x1,tid)  &
+!      !                           + sim%nu_a * delta_t * F0(ig_omp)
+!
+!      f1d_omp_out(1:np_x1,tid) = exp(-sim%nu_a*delta_t) * f1d_omp_in(1:np_x1,tid)  &
+!                                 + (1.0_f64- exp(-sim%nu_a*delta_t)) * F0(ig_omp)
+!    
+!      f_x1(1:np_x1,i_omp)=f1d_omp_out(1:np_x1,tid)
+!    
+!    end do
+!    !$OMP END DO          
+!    !$OMP END PARALLEL
     
   end subroutine collision
     
@@ -1537,6 +1557,66 @@ contains
     !$OMP END PARALLEL
     
   end subroutine advection_v
+
+  subroutine compute_current(sim, layout_x1, f_x1, current)
+    
+    class(sll_simulation_2d_vlasov_ampere_cart), intent(inout) :: sim
+    type(layout_2d), pointer :: layout_x1
+    sll_real64      :: current(:)
+    sll_real64      :: f_x1(:,:)
+    sll_int32       :: np_x1
+    sll_int32       :: i
+    sll_int32       :: ig
+    sll_int32       :: ierr
+    sll_int32  :: global_indices(2)
+    sll_int32  :: local_size_x1
+    sll_int32  :: local_size_x2
+    sll_real64 :: v
+    sll_int32  :: j
+    sll_int32  :: gj
+    sll_real64, dimension(:), allocatable :: rho_loc
+    
+    np_x1 = sim%mesh2d%num_cells1+1
+    SLL_ALLOCATE(rho_loc(np_x1),ierr)
+    call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
+    global_indices = local_to_global( layout_x1, (/1, 1/) )
+    
+    do i = 1,local_size_x1
+      rho_loc(i) = 0._f64
+      do j = 1,local_size_x2
+        global_indices = local_to_global( layout_x1, (/i, j/) )
+        gj = global_indices(2)
+        v  = sim%node_positions_x2(gj)
+        rho_loc(i) = rho_loc(i)+f_x1(i,j)*sim%integration_weight(gj)*v
+      end do
+    end do
+    
+    call sll_collective_allreduce( sll_world_collective, &
+                                   rho_loc,              &
+                                   np_x1,                &
+                                   MPI_SUM,              &
+                                   current )
+
+    current = current - sum(current) / np_x1
+    
+  end subroutine compute_current
+
+  subroutine solve_ampere(sim, efield, current, delta_t)
+    
+    class(sll_simulation_2d_vlasov_ampere_cart), intent(inout) :: sim
+    sll_real64, intent(in)                                     :: current(:)
+    sll_real64, intent(inout)                                  :: efield(:)
+    sll_real64, intent(in)                                     :: delta_t
+    
+    if (sim%gamma_d > 0.0_f64) then
+      efield = exp(-sim%gamma_d*delta_t) * efield &
+               - current * (1.0_f64-exp(-sim%gamma_d*delta_t))/sim%gamma_d
+    else
+      efield = exp(-sim%gamma_d*delta_t) * efield - current * delta_t
+    end if
+    
+    
+  end subroutine solve_ampere
     
     
   subroutine gnuplot_write( sim, layout_x1, f, fname, intfname)
