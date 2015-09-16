@@ -16,14 +16,26 @@
 /
 
 &time_iterations
-  dt = 0.2
+  dt = 1.0
   number_iterations = 500
   freq_diag = 10
   freq_diag_time = 1
+  !split_case = "SLL_STRANG_VTV" 
+  !split_case = "SLL_STRANG_TVT" 
+  split_case = "SLL_ORDER6VPnew1_VTV" 
+  !split_case = "SLL_ORDER6VPnew2_VTV" 
+  !split_case = "SLL_ORDER6_VTV"
+  !split_case = "SLL_LIE_TV"
 /
 
 
 &advector
+ !advector_x1 = "SLL_SPLINES"
+ !order_x1 = 4
+ advector_x1 = "SLL_LAGRANGE"
+ order_x1 = 10
+ !advector_x2 = "SLL_SPLINES"
+ !order_x2 = 4
  advector_x2 = "SLL_LAGRANGE"
  order_x2 = 10
 /
@@ -31,6 +43,7 @@
 &poisson
   ampere_solver = "SLL_VLASOV_AMPERE"
   poisson_solver = "SLL_FFT"
+  !poisson_solver = "SLL_POLAR"
 /
 
 &berk_breizman
@@ -40,5 +53,15 @@
 
 &drive
   drive_type = "SLL_NO_DRIVE"
+ !drive_type = "SLL_KEEN_DRIVE"  
+  !keen_t0 = 0.
+  !keen_tL = 69.
+  !keen_tR = 307.
+  !keen_twL = 20.
+  !keen_twR = 20.
+  !keen_tflat = 100.
+  !keen_turn_drive_off = .true.
+  !keen_Edrmax = 0.2
+  !keen_omegadr = 0.37	
 /
 
