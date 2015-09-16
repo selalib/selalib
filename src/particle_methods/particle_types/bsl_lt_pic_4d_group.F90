@@ -38,6 +38,7 @@ module sll_bsl_lt_pic_4d_group_module
   use sll_module_pic_base
   use sll_bsl_lt_pic_4d_particle_module
   use sll_bsl_lt_pic_4d_utilities_module
+  use sll_gnuplot
 
   implicit none
 
@@ -110,6 +111,8 @@ module sll_bsl_lt_pic_4d_group_module
     !> @}
     
     procedure :: deposit_charge_2d          => bsl_lt_pic_4d_deposit_charge_2d
+
+    procedure :: visualize_f_slice_x_vx     => bsl_lt_pic_4d_visualize_f_slice_x_vx    !  plot_f_slice_x_vx
 
     procedure :: bsl_lt_pic_4d_initializer_landau_f0
     procedure :: bsl_lt_pic_4d_write_landau_density_on_remap_grid
@@ -342,6 +345,8 @@ contains
     use_remapping_grid = .false.
     nullify(dummy_grid_4d)
     nullify(dummy_array_2d)
+    call reset_charge_accumulator_to_zero ( charge_accumulator )
+
     if( present(target_total_charge) )then
         ! is there a best way to transfer the "presence" of the optional argument?
         call self%bsl_lt_pic_4d_write_f_on_grid_or_deposit(charge_accumulator,              &
@@ -366,11 +371,123 @@ contains
                                                            self%NVirtual_VY_ForDeposition )
     end if
 
-    call reset_charge_accumulator_to_zero ( charge_accumulator )
-
-
   end subroutine bsl_lt_pic_4d_deposit_charge_2d
 
+
+    !! bsl_lt_pic_4d_visualize_f_slice_x_vx  plots an approximation of f_x_vx = \int \int f(x,y,v_x,v_y) d y d v_y
+    !  using a 4d grid:
+    !   - the nodes in x and v_x are used to plot the values of f_x_vx
+    !     and
+    !     the nodes in y and v_y are used to approximate the integrals along y and v_y
+    !
+    !  - Grid dimensions: here we give
+    !       -)  n_virtual_cells_D: the number of "virtual cells" (where the backward flow is linearized) per dimension D
+    !           ("virtual" corresponds to the terminology used in the function bsl_lt_pic_4d_write_f_on_grid_or_deposit)
+    !       -)  n_virtual_D: the number of virtual nodes (or virtual particles) per virtual cells, in the dimension D.
+    !    Then the number of plotted ("virtual") nodes is
+    !       n_virtual_D * n_virtual_cells_D per dimension D
+
+  subroutine bsl_lt_pic_4d_visualize_f_slice_x_vx(self, array_name, iplot)
+
+    class( sll_bsl_lt_pic_4d_group ),   intent( inout ) :: self
+    character(len=*),                   intent(in)      :: array_name !< field name
+    sll_int32,                          intent(in)      :: iplot      !< plot counter
+    character(len=4)                                    :: cplot
+
+    sll_real64                  :: plot_grid_x_min
+    sll_real64                  :: plot_grid_x_max
+    sll_real64                  :: plot_grid_y_min
+    sll_real64                  :: plot_grid_y_max
+    sll_real64                  :: plot_grid_vx_min
+    sll_real64                  :: plot_grid_vx_max
+    sll_real64                  :: plot_grid_vy_min
+    sll_real64                  :: plot_grid_vy_max
+    sll_int32                   :: n_virtual_cells_x
+    sll_int32                   :: n_virtual_cells_y
+    sll_int32                   :: n_virtual_cells_vx
+    sll_int32                   :: n_virtual_cells_vy
+    sll_int32                   :: n_virtual_x
+    sll_int32                   :: n_virtual_y
+    sll_int32                   :: n_virtual_vx
+    sll_int32                   :: n_virtual_vy
+    sll_int32 :: ierr
+    sll_int32 :: num_virtual_parts_x
+    sll_int32 :: num_virtual_parts_y
+    sll_int32 :: num_virtual_parts_vx
+    sll_int32 :: num_virtual_parts_vy
+
+    logical       :: scenario_is_deposition
+    logical       :: use_remapping_grid
+    sll_real64, dimension(:,:),       pointer :: x_vx_grid_values
+    type(sll_cartesian_mesh_4d),      pointer :: plotting_grid_4d
+    type(sll_charge_accumulator_2d),  pointer :: dummy_q_accumulator
+
+    nullify(dummy_q_accumulator)
+
+    ! use parameters from the particle group -- may be changed, also by introducing specific grid parameters for visualization...
+    plot_grid_x_min = self%remapping_grid%eta1_min
+    plot_grid_x_max = self%remapping_grid%eta1_max
+    plot_grid_y_min = self%remapping_grid%eta2_min
+    plot_grid_y_max = self%remapping_grid%eta2_max
+    plot_grid_vx_min = self%remapping_grid%eta3_min
+    plot_grid_vx_max = self%remapping_grid%eta3_max
+    plot_grid_vy_min = self%remapping_grid%eta4_min
+    plot_grid_vy_max = self%remapping_grid%eta4_max
+    n_virtual_cells_x = self%remapping_grid%num_cells1
+    n_virtual_cells_y = self%remapping_grid%num_cells2
+    n_virtual_cells_vx = self%remapping_grid%num_cells3
+    n_virtual_cells_vy = self%remapping_grid%num_cells4
+    n_virtual_x = self%NVirtual_X_ForDeposition
+    n_virtual_y = self%NVirtual_Y_ForDeposition
+    n_virtual_vx = self%NVirtual_VX_ForDeposition
+    n_virtual_vy = self%NVirtual_VY_ForDeposition
+
+    ! number of points in the grid
+    num_virtual_parts_x =  n_virtual_cells_x *  n_virtual_x
+    num_virtual_parts_y =  n_virtual_cells_y *  n_virtual_y
+    num_virtual_parts_vx = n_virtual_cells_vx * n_virtual_vx
+    num_virtual_parts_vy = n_virtual_cells_vy * n_virtual_vy
+
+    !    print *, " plot A"
+
+    SLL_ALLOCATE( x_vx_grid_values(num_virtual_parts_x,num_virtual_parts_vx),ierr)
+
+    plotting_grid_4d => new_cartesian_mesh_4d( num_virtual_parts_x-1,     &
+                                             num_virtual_parts_y-1,     &
+                                             num_virtual_parts_vx-1,    &
+                                             num_virtual_parts_vy-1,    &
+                                             plot_grid_x_min,           &
+                                             plot_grid_x_max,           &
+                                             plot_grid_y_min,           &
+                                             plot_grid_y_max,           &
+                                             plot_grid_vx_min,          &
+                                             plot_grid_vx_max,          &
+                                             plot_grid_vy_min,          &
+                                             plot_grid_vy_max           &
+                                            )
+
+    scenario_is_deposition = .false.
+    use_remapping_grid = .false.
+
+    ! print *, "plot C"
+
+    call self%bsl_lt_pic_4d_write_f_on_grid_or_deposit(dummy_q_accumulator,         &
+                                                       scenario_is_deposition,      &
+                                                       use_remapping_grid,          &
+                                                       plotting_grid_4d,            &
+                                                       x_vx_grid_values,            &
+                                                       n_virtual_x,                 &
+                                                       n_virtual_y,                 &
+                                                       n_virtual_vx,                &
+                                                       n_virtual_vy)
+
+    ! print *, "plot T"
+
+    call sll_gnuplot_2d(plot_grid_x_min,  plot_grid_x_max,  num_virtual_parts_x,    &
+                        plot_grid_vx_min, plot_grid_vx_max, num_virtual_parts_vx,   &
+                        x_vx_grid_values, array_name, iplot, ierr )
+
+  end subroutine bsl_lt_pic_4d_visualize_f_slice_x_vx
 
   !----------------------------------------------------------------------------
   ! Constructor
@@ -871,144 +988,6 @@ contains
   end subroutine bsl_lt_pic_4d_compute_new_particles
 
 
-!!!!!!!!!!!! ---------------------------------------------!!!!!!!!!!!! ---------------------------------------------!!!!!!!!!!!! ---------------------------------------------
-!!
-!!          OLD version
-!!
-!!!!!!!!!!!! ---------------------------------------------!!!!!!!!!!!! ---------------------------------------------!!!!!!!!!!!! ---------------------------------------------
-
-    !  function sll_lt_pic_4d_group_new( &
-    !!  function new_lt_particle_4d_group( &   ! old name
-    !        spline_degree,     &
-    !        number_parts_x,    &
-    !        number_parts_y,    &
-    !        number_parts_vx,   &
-    !        number_parts_vy,   &
-    !        remap_grid_vx_min, &
-    !        remap_grid_vx_max, &
-    !        remap_grid_vy_min, &
-    !        remap_grid_vy_max, &
-    !        !        particle_array_size, &
-    !        !        guard_list_size,     &
-    !        qoverm,              &
-    !        domain_is_x_periodic,&
-    !        domain_is_y_periodic,&
-    !        mesh ) result(res)
-    !
-    !    type(sll_lt_pic_4d_group), pointer :: res
-    !
-    !    sll_int32, intent(in)   :: spline_degree
-    !    sll_int32, intent(in)   :: number_parts_x
-    !    sll_int32, intent(in)   :: number_parts_y
-    !    sll_int32, intent(in)   :: number_parts_vx
-    !    sll_int32, intent(in)   :: number_parts_vy
-    !    sll_real64, intent(in)  :: remap_grid_vx_min
-    !    sll_real64, intent(in)  :: remap_grid_vx_max
-    !    sll_real64, intent(in)  :: remap_grid_vy_min
-    !    sll_real64, intent(in)  :: remap_grid_vy_max
-    !    sll_real64, intent(in)  :: qoverm
-    !    logical, intent(in)      :: domain_is_x_periodic
-    !    logical, intent(in)      :: domain_is_y_periodic
-    !
-    !    !        sll_int32, intent(in)   :: particle_array_size
-    !    !        sll_int32, intent(in)   :: guard_list_size
-    !    sll_int32   :: particle_array_size
-    !    sll_int32   :: guard_list_size
-    !
-    !    type(sll_cartesian_mesh_2d), pointer :: mesh
-    !    sll_int32   :: ierr
-    !    sll_int32   :: number_particles
-    !    sll_int32   :: remap_grid_number_cells_x
-    !    sll_int32   :: remap_grid_number_cells_y
-    !    sll_int32   :: remap_grid_number_cells_vx
-    !    sll_int32   :: remap_grid_number_cells_vy
-    !    sll_real64  :: remap_grid_x_min
-    !    sll_real64  :: remap_grid_x_max
-    !    sll_real64  :: remap_grid_y_min
-    !    sll_real64  :: remap_grid_y_max
-    !
-    !    number_particles = number_parts_x * number_parts_y * number_parts_vx * number_parts_vy
-    !    particle_array_size = number_particles
-    !    guard_list_size = number_particles
-    !    !    if( number_particles > particle_array_size ) then
-    !    !       print *, 'sll_lt_pic_4d_group_new(): ERROR (code=6454357),  number_particles should not ', &
-    !    !            'be greater than the requested memory size, particle_array_size.'
-    !    !       print *, 'note: number_particles, particle_array_size = ', number_particles, particle_array_size
-    !    !       STOP
-    !    !    end if
-    !
-    !    SLL_ALLOCATE( res, ierr )
-    !    res%spline_degree = spline_degree
-    !    res%number_parts_x   = number_parts_x
-    !    res%number_parts_y   = number_parts_y
-    !    res%number_parts_vx  = number_parts_vx
-    !    res%number_parts_vy  = number_parts_vy
-    !    res%number_particles = number_particles
-    !    res%active_particles = number_particles
-    !    res%guard_list_size  = guard_list_size
-    !    res%qoverm           = qoverm
-    !    res%domain_is_x_periodic = domain_is_x_periodic
-    !    res%domain_is_y_periodic = domain_is_y_periodic
-    !    res%track_markers_outside_domain = .false.
-    !    res%use_exact_f0 = .false.
-    !    SLL_ALLOCATE( res%p_list(particle_array_size), ierr )
-    !    SLL_ALLOCATE( res%p_guard(guard_list_size), ierr )
-    !    SLL_ALLOCATE( res%target_values(number_parts_x, number_parts_y, number_parts_vx, number_parts_vy), ierr )
-    !
-    !    ! MCP [DEBUG]
-    !    SLL_ALLOCATE( res%debug_bsl_remap(number_parts_x, number_parts_y, number_parts_vx, number_parts_vy,4,3), ierr )
-    !
-    !    ! physical mesh, used for Poisson solver
-    !    if (.not.associated(mesh) ) then
-    !       print*, 'sll_lt_pic_4d_group_new(): ERROR, passed mesh not associated'
-    !    endif
-    !    res%mesh => mesh
-    !
-    !    ! phase space grid to initialize and remap the particles
-    !    remap_grid_x_min = mesh%eta1_min
-    !    remap_grid_x_max = mesh%eta1_max
-    !    remap_grid_y_min = mesh%eta2_min
-    !    remap_grid_y_max = mesh%eta2_max
-    !
-    !    if( domain_is_x_periodic )then
-    !        remap_grid_number_cells_x = number_parts_x
-    !    else
-    !        remap_grid_number_cells_x = number_parts_x - 1
-    !    end if
-    !    if( domain_is_y_periodic )then
-    !        remap_grid_number_cells_y = number_parts_y
-    !    else
-    !        remap_grid_number_cells_y = number_parts_y - 1
-    !    end if
-    !    remap_grid_number_cells_vx = number_parts_vx - 1
-    !    remap_grid_number_cells_vy = number_parts_vy - 1
-    !    res%remapping_grid => new_cartesian_mesh_4d(  remap_grid_number_cells_x,        &
-    !                                                remap_grid_number_cells_y,        &
-    !                                                remap_grid_number_cells_vx,       &
-    !                                                remap_grid_number_cells_vy,       &
-    !                                                remap_grid_x_min,   &
-    !                                                remap_grid_x_max,   &
-    !                                                remap_grid_y_min,   &
-    !                                                remap_grid_y_max,   &
-    !                                                remap_grid_vx_min,  &
-    !                                                remap_grid_vx_max,  &
-    !                                                remap_grid_vy_min,  &
-    !                                                remap_grid_vy_max   &
-    !                                              )
-    !
-    !
-    !
-    !    if( spline_degree == 3) then  ! ( otherwise, no need... )
-    !        SLL_ALLOCATE( res%ltpic_interpolation_coefs(-1:1), ierr )
-    !           res%ltpic_interpolation_coefs(-1) = -1./6.
-    !           res%ltpic_interpolation_coefs(0)  =  8./6.
-    !           res%ltpic_interpolation_coefs(1)  =  -1./6.
-    !    end if
-    !
-    !
-    !
-    !  end function sll_lt_pic_4d_group_new
-
   ! <<bsl_lt_pic_4d_write_f_on_grid_or_deposit>> <<ALH>> has two scenarios:
   !  - 1.  the "write f" scenario:
   !        write the density on the (phase-space) remapping grid, using the method described
@@ -1290,9 +1269,9 @@ contains
     ! --- end of declarations
 
     ! -- creating g the virtual grid [begin] --
+    ! print *, "WRITE F AA"
 
     if( scenario_is_deposition )then
-
 
         ! todo: modify the code with offset virtual particles to deposit the charge on the Poisson cells
 
@@ -1361,6 +1340,8 @@ contains
 
         if( use_remapping_grid )then
 
+            ! print *, "WRITE F AA -- A"
+
             g => p_group%remapping_grid
 
             number_virtual_particles_x = p_group%number_parts_x
@@ -1388,6 +1369,8 @@ contains
 
         else
 
+            ! print *, "WRITE F AA -- B"
+
             ! then use the given 4d grid and write values in given (x, vx for now) array given_array_2d
             g => given_grid_4d
 
@@ -1410,6 +1393,8 @@ contains
             SLL_ASSERT(size(given_array_2d,1) == number_virtual_particles_x)
             SLL_ASSERT(size(given_array_2d,2) == number_virtual_particles_vx)
             given_array_2d(:,:) = 0
+
+            ! print *, "WRITE F AA -- B2"
 
         end if
 
@@ -1487,6 +1472,7 @@ contains
 
     do k=1, p_group%number_particles ! [[file:../pic_particle_types/lt_pic_4d_group.F90::number_particles]]
 
+       ! print *, "WRITE F CC "
        ! find absolute (x,y,vx,vy) coordinates for k-th particle.
        coords = p_group%get_x(k)
        x = coords(1)
@@ -1522,7 +1508,7 @@ contains
                                               h_virtual_cell_x, h_virtual_cell_y, h_virtual_cell_vx, h_virtual_cell_vy,   &
                                               closest_particle,               &
                                               closest_particle_distance)
-
+         ! print *, "WRITE F CD "
        end if
 
        particle_distance_to_first_corner = abs(x_aux) + abs(y_aux) + abs(vx_aux) + abs(vy_aux)      !  (why not L1 after all)
@@ -1575,6 +1561,8 @@ contains
 
           do l = 1,num_virtual_cells_vx
              do m = 1,num_virtual_cells_vy
+
+                ! print *, "WRITE F DDF"
 
                 ! [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:create_virtual_particles]] Create a temporary set of
                 ! virtual particles inside the cell.
@@ -1876,6 +1864,8 @@ contains
 
                                 ! here (x_t0, y_t0, vx_t0, vy_t0) is the (approx) position of the virtual particle at time t=0
 
+                                ! print *, "WRITE F FFFGF "
+
                                 x_t0_to_xk_t0   = d1_x + d1_y + d1_vx + d1_vy
                                 y_t0_to_yk_t0   = d2_x + d2_y + d2_vx + d2_vy
                                 vx_t0_to_vxk_t0 = d3_x + d3_y + d3_vx + d3_vy
@@ -2125,7 +2115,7 @@ contains
 
 
                                     else
-
+                                        ! print *, "WRITE F RTRT "
                                         if( use_remapping_grid )then
                                             p_group%target_values(i_x,i_y,i_vx,i_vy) = f_value_on_virtual_particle
                                         else
@@ -2148,6 +2138,8 @@ contains
     end do
 
     if( scenario_is_deposition .and. present(target_total_charge) )then
+
+        print *, "[DEBUG 097868789785] -- deposited_charge, target_total_charge = ", deposited_charge, target_total_charge
 
         if( deposited_charge == 0 )then
             print *, "WARNING (76576537475) -- total deposited charge is zero, which is strange..."

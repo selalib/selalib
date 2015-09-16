@@ -202,6 +202,7 @@ contains
     sll_int32   :: number_parts_x, number_parts_y, number_parts_vx, number_parts_vy
     sll_real64  :: remap_grid_vx_min, remap_grid_vx_max
     sll_real64  :: remap_grid_vy_min, remap_grid_vy_max
+    sll_real64  :: target_charge
     sll_int32   :: spline_degree
     sll_int32   :: particle_group_id
     sll_int32   :: NVirtual_X_ForDeposition
@@ -332,43 +333,6 @@ contains
       ! here, [[particle_group]] will contain a reference to a bsl_lt_pic group
       sim%particle_group => bsl_lt_pic_particle_group
 
-      !todo: finish the initialization and visualize the resulting density
-
-        !       sim%lt_pic_particle_group%set_parameters(                        &
-        !            n_virtual_x_for_deposition = NVirtual_X_ForDeposition,      &
-        !            n_virtual_y_for_deposition = NVirtual_Y_ForDeposition,      &
-        !            n_virtual_vx_for_deposition = NVirtual_VX_ForDeposition,    &
-        !            n_virtual_vy_for_deposition = NVirtual_VY_ForDeposition     &
-        !       )
-
-        !       print *, "WARNING 65373654 -- writing landau parameters in the particle group -- this is temporary..."
-        !       sim%lt_pic_particle_group%thermal_speed = sim%thermal_speed_ions   !  temporary or not?
-        !       sim%lt_pic_particle_group%alpha_landau = ALPHA    !  temporary or not?
-        !       sim%lt_pic_particle_group%k_landau = KX_LANDAU    !  temporary or not?
-
-        !       call sll_generic_pic_4d_init_landau (                &
-        !            sim%thermal_speed_ions,                     &
-        !            ALPHA, KX_LANDAU,                           &
-        !            sim%lt_pic_particle_group )
-        !
-        !       sim%ions_number = sim%lt_pic_particle_group%number_particles
-        !       SLL_ASSERT( sim%ions_number == NUM_PARTS_X * NUM_PARTS_Y * NUM_PARTS_VX * NUM_PARTS_VY)
-        !
-        !       print *, "sim%ions_number (pushed markers) = ", sim%ions_number
-        !
-        !       sim%virtual_particle_number =                                               &
-        !            sim%n_virtual_x_for_deposition * sim%mesh_2d%num_cells1               &
-        !            * sim%n_virtual_y_for_deposition * sim%mesh_2d%num_cells2               &
-        !            * sim%n_virtual_vx_for_deposition * sim%lt_pic_particle_group%number_parts_vx      &
-        !            * sim%n_virtual_vy_for_deposition * sim%lt_pic_particle_group%number_parts_vy
-        !
-        !       print *, "sim%virtual_particle_number (deposited particles) = ", sim%virtual_particle_number
-        !
-        !       ! [[particle_group]] will contain either a reference to a simple group or to an ltpic group as defined in
-        !       ! [[particle_types]]
-        !
-        !       sim%particle_group => sim%lt_pic_particle_group
-
     else
 
       ! construct [[simple_pic_particle_group]]
@@ -390,12 +354,11 @@ contains
     end if
 
     print *, "AA7"
-    ! put this with the particles only?
     sim%domain_is_x_periodic = DOMAIN_IS_X_PERIODIC
     sim%domain_is_y_periodic = DOMAIN_IS_Y_PERIODIC
 
     ! initialization of the particle group
-    ! todo: clean up the initialization (write a structure for it)
+    ! todo: should we write a structure for the initialization?
     call sim%particle_group%set_landau_parameters( sim%thermal_speed_ions, ALPHA, KX_LANDAU )
 
     print *, "rand_seed_size = ", rand_seed_size
@@ -403,9 +366,7 @@ contains
     call random_seed (SIZE=rand_seed_size)
     SLL_ALLOCATE( rand_seed(1:rand_seed_size), ierr )
     do j=1, rand_seed_size
-      print *, "(-1)**j*(100 + 15*j)*(2*sim%my_rank + 1) = ", (-1)**j*(100 + 15*j)*(2*sim%my_rank + 1)
-
-    rand_seed(j) = (-1)**j*(100 + 15*j)*(2*sim%my_rank + 1)
+      rand_seed(j) = (-1)**j*(100 + 15*j)*(2*sim%my_rank + 1)
     end do
 
     initial_density_identifier = 0     ! for the moment we only use one density (landau)
@@ -445,8 +406,10 @@ contains
 
    charge_accumulator => sim%q_accumulator_ptr(thread_id+1)%q
 
+   target_charge = SPECIES_CHARGE * 1._f64 * (XMAX - XMIN) * (YMAX - YMIN)
+
    print *, "AA 50"
-   call sim%particle_group%deposit_charge_2d( charge_accumulator )
+   call sim%particle_group%deposit_charge_2d( charge_accumulator, target_charge)
 
    !! -- --  First charge deposition [end]  -- --
 
@@ -463,9 +426,8 @@ contains
   !!
   !! \note 2: use of cubic spline particles (routines with _CS) is disabled for now
   !!
-  !! \todo 1: run the code and later write a (non-virtual) remapping step with adequate frequency
+  !! \todo 1: write and check the remapping step with adequate frequency
   !!
-  !! \todo 2: use a common type for PIC and LT_PIC (commented calls to PIC structures are labelled with "PIC_VERSION"
   !!
   !! @author this version written by MCP, ALH
 
@@ -674,7 +636,7 @@ contains
 
       !> compute cell dx and dy again locally (although we could extract this info for some types of particles)
       !> because the base PIC class does not give access to this type of info (because some particles may not have
-      !> it). \todo we may want to optimize this out for speed
+      !> it)
 
       call global_to_cell_offset_extended(pp_x, pp_y, sim%mesh_2d, pp_icell_x, pp_icell_y, pp_dx, pp_dy)
       call get_poisson_cell_index(sim%mesh_2d, pp_icell_x, pp_icell_y, pp_icell)
@@ -790,7 +752,7 @@ contains
 
          !> compute cell dx and dy again locally (although we could extract this info for some types of particles)
          !> because the base PIC class does not give access to this type of info (because some particles may not
-         !> have it). \todo we may want to optimize this out for speed
+         !> have it).
 
          call global_to_cell_offset_extended(pp_x, pp_y, sim%mesh_2d, pp_icell_x, pp_icell_y, pp_dx, pp_dy)
          call get_poisson_cell_index(sim%mesh_2d, pp_icell_x, pp_icell_y, pp_icell)
@@ -888,33 +850,11 @@ contains
 
       if (sim%my_rank == 0 .and. mod(it, sim%plot_period)==0 ) then
 
-        print *, "writing f slice in gnuplot format for iteration # it = ", it, " / ", sim%num_iterations
+        print *, "plotting f slice in gnuplot format for iteration # it = ", it, " / ", sim%num_iterations
+        call sim%particle_group%visualize_f_slice_x_vx("f_slice", it)
 
-        ! todo: use a slice plotting routine here
-
-            ! this one works for lt_pic:
-!            call plot_f_slice_x_vx(sim%part_group,           &
-!                                   sim%part_group%remapping_grid%eta1_min,   &
-!                                   sim%part_group%remapping_grid%eta1_max,   &
-!                                   sim%part_group%remapping_grid%eta2_min,   &
-!                                   sim%part_group%remapping_grid%eta2_max,   &
-!                                   sim%part_group%remapping_grid%eta3_min,   &
-!                                   sim%part_group%remapping_grid%eta3_max,   &
-!                                   sim%part_group%remapping_grid%eta4_min,   &
-!                                   sim%part_group%remapping_grid%eta4_max,   &
-!                                   sim%part_group%remapping_grid%num_cells1, &
-!                                   sim%part_group%remapping_grid%num_cells2, &
-!                                   sim%part_group%remapping_grid%num_cells3, &
-!                                   sim%part_group%remapping_grid%num_cells4, &
-!                                   sim%n_virtual_x_for_deposition,    &
-!                                   sim%n_virtual_y_for_deposition,    &
-!                                   sim%n_virtual_vx_for_deposition,   &
-!                                   sim%n_virtual_vy_for_deposition,   &
-!                                   "f_slice", it)
-
-       end if
-
-        ! todo: remap and plot here
+        ! todo: write conditional remapping here
+      end if
 
 !        if (sim%my_rank == 0 .and. mod(it+1, sim%remap_period)==0 ) then
 !

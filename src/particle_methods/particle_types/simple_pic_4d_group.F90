@@ -88,7 +88,9 @@ module sll_simple_pic_4d_group_module
     procedure, pass(self) :: set_landau_parameters  => simple_pic_4d_set_landau_parameters
     procedure :: initializer                        => simple_pic_4d_initializer
     !> @}
-    
+
+    procedure :: visualize_f_slice_x_vx     => simple_pic_4d_visualize_f_slice_x_vx
+
     procedure :: deposit_charge_2d          => simple_pic_4d_deposit_charge_2d
 
   end type sll_simple_pic_4d_group
@@ -358,6 +360,20 @@ contains
     end do
 
   end subroutine simple_pic_4d_deposit_charge_2d
+
+  !----------------------------------------------------------------------------
+  subroutine simple_pic_4d_visualize_f_slice_x_vx(self, array_name, iplot)
+
+    class( sll_simple_pic_4d_group ),   intent( inout ) :: self
+    character(len=*),                   intent(in)      :: array_name !< field name
+    sll_int32,                          intent(in)      :: iplot      !< plot counter
+    character(len=4)                                    :: cplot
+
+    print*, " ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------"
+    print*, " WARNING (956542375763) -- this function (simple_pic_4d_visualize_f_slice_x_vx) does nothing, need to be implemented!"
+    print*, " ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------"
+
+  end subroutine simple_pic_4d_visualize_f_slice_x_vx
 
   !----------------------------------------------------------------------------
   ! Constructor
