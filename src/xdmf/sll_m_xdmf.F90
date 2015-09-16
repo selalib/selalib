@@ -1,3 +1,14 @@
+!------------------------------------------------------------------------------
+! SELALIB
+!------------------------------------------------------------------------------
+! MODULE:   sll_m_xdmf
+!
+! DESCRIPTION:
+!> @ingroup xdmf
+!> @authors Yaman Güçlü - <yaman.guclu@gmail.com>
+!> @brief   Construct the XML component of an XDMF database (sequential).
+!> @todo    Add detailed description
+!------------------------------------------------------------------------------
 module sll_m_xdmf
 
 #include "sll_working_precision.h"
@@ -10,9 +21,14 @@ module sll_m_xdmf
     sll_s_ints_to_string
 
   implicit none
+
+  public :: &
+    sll_t_xdmf_file
+
   private
 
-  !----------------------------------------------------------------------------
+!==============================================================================
+
   !> Pointer to grid
   type :: t_xdmf_grid
     type(sll_t_xml_element), pointer :: xml_grid

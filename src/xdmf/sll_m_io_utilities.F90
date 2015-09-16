@@ -1,3 +1,14 @@
+!------------------------------------------------------------------------------
+! SELALIB
+!------------------------------------------------------------------------------
+! MODULE:   sll_m_io_utilities
+!
+! DESCRIPTION:
+!> @ingroup xdmf
+!> @authors Yaman Güçlü - <yaman.guclu@gmail.com>
+!> @brief   Collection of functions/subroutines operating on files and strings
+!> @todo    Add detailed description
+!------------------------------------------------------------------------------
 module sll_m_io_utilities
 
 #include "sll_working_precision.h"
@@ -11,6 +22,8 @@ module sll_m_io_utilities
     sll_f_check_empty_file,  &
     sll_s_ints_to_string,    &
     sll_s_split_path
+
+  private
 
 !==============================================================================
 contains
