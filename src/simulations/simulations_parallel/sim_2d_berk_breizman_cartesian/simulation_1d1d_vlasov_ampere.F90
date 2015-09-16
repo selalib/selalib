@@ -1028,8 +1028,7 @@ contains
     sll_real64, dimension(:,:), pointer :: f_x1_equil
     
     sll_real64, dimension(:),   pointer :: rho
-    sll_real64, dimension(:),   pointer :: efield_0
-    sll_real64, dimension(:),   pointer :: efield_1
+    sll_real64, dimension(:),   pointer :: efield
     sll_real64, dimension(:),   pointer :: e_app
     sll_real64, dimension(:),   pointer :: current
     sll_real64, dimension(:),   pointer :: F0
@@ -1122,8 +1121,7 @@ contains
     
     SLL_ALLOCATE(rho(np_x1),ierr)
     SLL_ALLOCATE(current(np_x1),ierr)
-    SLL_ALLOCATE(efield_0(np_x1),ierr)
-    SLL_ALLOCATE(efield_1(np_x1),ierr)
+    SLL_ALLOCATE(efield(np_x1),ierr)
     SLL_ALLOCATE(e_app(np_x1),ierr)
     SLL_ALLOCATE(f1d(max(np_x1,np_x2)),ierr)
     SLL_ALLOCATE(f1d_omp_in(max(np_x1,np_x2),sim%num_threads),ierr)
@@ -1198,10 +1196,8 @@ contains
     f_visu = reshape(f_visu_buf1d, shape(f_visu))
     
     call compute_rho(sim, layout_x1, f_x1, rho)
-
-
     
-    call sim%poisson%compute_E_from_rho( efield_0, rho )
+    call sim%poisson%compute_E_from_rho( efield, rho )
         
     ! Ponderomotive force at initial time. We use a sine wave
     ! with parameters k_dr and omega_dr.
@@ -1213,7 +1209,7 @@ contains
       e_app = 0._f64
     end if
     
-    if (MPI_MASTER) call write_init_files(sim, efield_0, rho, e_app)
+    if (MPI_MASTER) call write_init_files(sim, efield, rho, e_app)
     
     call load_buffer_2d( layout_x1, f_x1-f_x1_equil, f_x1_buf1d )
     
@@ -1233,41 +1229,38 @@ contains
     endif
     
 
-    F0 =   0.9_f64*exp(-0.5_f64*sim%node_positions_x2**2) &
-         + 0.2_f64*exp(-0.5_f64*(sim%node_positions_x2-4.5_f64)**2/0.5**2)
-    F0 = F0 / sqrt(2.0_f64*sll_pi)
+    vx => sim%x2_array
+    F0 = (0.9_f64*exp(-0.5_f64*vx**2)+0.2_f64*exp(-0.5_f64*(vx-4.5_f64)**2/0.5**2))
 
     iplot = iplot+1  
     
     do istep = 1, sim%num_iterations
     
-      efield_1 = efield_0
-
-      call advection_ampere_x(sim, layout_x1, efield_1, f_x1, 0.5_f64*sim%dt)
+      call advection_ampere_x(sim,       &
+                              layout_x1, &
+                              efield,    &
+                              f_x1,      &
+                              0.5_f64*sim%dt)
     
       call collision( sim, layout_x1, F0, f_x1, 0.5_f64*sim%dt)
-
-      call compute_current(sim, layout_x1, f_x1, current)
-
-      call solve_ampere(sim, efield_0, current, 0.5_f64*sim%dt)
 
       call apply_remap_2D( remap_plan_x1_x2, f_x1, f_x2 )
 
-      call advection_v(sim, layout_x2, f_x2, efield_0, e_app, sim%dt)
+      call advection_v(sim, layout_x2, f_x2, efield, e_app, sim%dt)
 
       call apply_remap_2D( remap_plan_x2_x1, f_x2, f_x1 )
 
-      call compute_current(sim, layout_x1, f_x1, current)
-
-      call solve_ampere(sim, efield_0, current, 0.5_f64*sim%dt)
-
       call collision( sim, layout_x1, F0, f_x1, 0.5_f64*sim%dt)
 
-      call advection_ampere_x(sim, layout_x1, efield_1, f_x1, 0.5_f64*sim%dt)
+      call advection_ampere_x(sim,       &
+                              layout_x1, &
+                              efield,    &
+                              f_x1,      &
+                              0.5_f64*sim%dt)
     
       if (mod(istep,sim%freq_diag_time)==0) then
     
-        call diagnostics(sim, layout_x1, f_x1, rho, efield_0, e_app)
+        call diagnostics(sim, layout_x1, f_x1, rho, efield, e_app)
         
         if (mod(istep,sim%freq_diag_restart)==0) then          
           call save_for_restart(layout_x1, f_x1)
@@ -1279,8 +1272,8 @@ contains
             print *,'#step=',istep,sim%time_init+real(istep,f64)*sim%dt,'iplot=',iplot
           endif
     
-          !call gnuplot_write(sim, layout_x1, f_x1-f_x1_equil, 'deltaf', 'intdeltafdx')
-          !call gnuplot_write(sim, layout_x1, f_x1,                 'f',      'intfdx')
+          call gnuplot_write(sim, layout_x1, f_x1-f_x1_equil, 'deltaf', 'intdeltafdx')
+          call gnuplot_write(sim, layout_x1, f_x1,                 'f',      'intfdx')
     
           iplot = iplot+1  
                     
@@ -1340,8 +1333,8 @@ contains
       ig_omp    = i_omp+global_indices(2)-1
       f1d_omp_in(1:np_x1,tid) = f_x1(1:np_x1,i_omp)
       
-      f1d_omp_out(1:np_x1,tid) = exp(-sim%nu_a*delta_t) * f1d_omp_in(1:np_x1,tid)  &
-                                 + (1.0_f64- exp(-sim%nu_a*delta_t)) * F0(ig_omp)
+      f1d_omp_out(1:np_x1,tid) = (1.0_f64-sim%nu_a*delta_t) * f1d_omp_in(1:np_x1,tid)  &
+                                 + sim%nu_a * delta_t * F0(ig_omp)
     
       f_x1(1:np_x1,i_omp)=f1d_omp_out(1:np_x1,tid)
     
@@ -1484,62 +1477,6 @@ contains
     rho = sim%factor_x2_1*1._f64-sim%factor_x2_rho*rho
     
   end subroutine compute_rho
-
-  subroutine compute_current(sim, layout_x1, f_x1, current)
-    
-    class(sll_simulation_2d_vlasov_ampere_cart), intent(inout) :: sim
-    type(layout_2d), pointer :: layout_x1
-    sll_real64      :: current(:)
-    sll_real64      :: f_x1(:,:)
-    sll_int32       :: np_x1
-    sll_int32       :: i
-    sll_int32       :: ig
-    sll_int32       :: ierr
-    sll_int32  :: global_indices(2)
-    sll_int32  :: local_size_x1
-    sll_int32  :: local_size_x2
-    sll_real64 :: v
-    sll_int32  :: j
-    sll_int32  :: gj
-    sll_real64, dimension(:), allocatable :: rho_loc
-    
-    np_x1 = sim%mesh2d%num_cells1+1
-    SLL_ALLOCATE(rho_loc(np_x1),ierr)
-    call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
-    global_indices = local_to_global( layout_x1, (/1, 1/) )
-    
-    do i = 1,local_size_x1
-      rho_loc(i) = 0._f64
-      do j = 1,local_size_x2
-        global_indices = local_to_global( layout_x1, (/i, j/) )
-        gj = global_indices(2)
-        v  = sim%node_positions_x2(gj)
-        rho_loc(i) = rho_loc(i)+f_x1(i,j)*sim%integration_weight(gj)*v
-      end do
-    end do
-    
-    call sll_collective_allreduce( sll_world_collective, &
-                                   rho_loc,              &
-                                   np_x1,                &
-                                   MPI_SUM,              &
-                                   current )
-    
-  end subroutine compute_current
-
-  subroutine solve_ampere(sim, efield, current, delta_t)
-    
-    class(sll_simulation_2d_vlasov_ampere_cart), intent(inout) :: sim
-    sll_real64, intent(in)                                     :: current(:)
-    sll_real64, intent(inout)                                  :: efield(:)
-    sll_real64, intent(in)                                     :: delta_t
-    
-    efield = exp(-sim%gamma_d*delta_t) * efield &
-             - current * (1.0_f64-exp(-sim%gamma_d*delta_t))/sim%gamma_d
-    
-    
-  end subroutine solve_ampere
-
-
     
   subroutine advection_v(sim, layout_x2, f_x2, efield, e_app, delta_t)
 
