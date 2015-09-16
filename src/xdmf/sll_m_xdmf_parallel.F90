@@ -1,3 +1,14 @@
+!------------------------------------------------------------------------------
+! SELALIB
+!------------------------------------------------------------------------------
+! MODULE:   sll_m_xdmf_parallel
+!
+! DESCRIPTION:
+!> @ingroup xdmf
+!> @authors Yaman Güçlü - <yaman.guclu@gmail.com>
+!> @brief   Construct the XML component of an XDMF database (parallel).
+!> @todo    Add detailed description
+!------------------------------------------------------------------------------
 module sll_m_xdmf_parallel
 
 #include "sll_working_precision.h"
@@ -14,9 +25,14 @@ module sll_m_xdmf_parallel
     sll_t_xdmf_file
 
   implicit none
+
+  public :: &
+    sll_t_xdmf_parallel_file
+
   private
 
-  !----------------------------------------------------------------------------
+!==============================================================================
+
   !> Maximum length of variable-length strings to be passed through MPI
   integer, parameter :: maxlen = 256
 

@@ -13,8 +13,15 @@
 module sll_m_xml
 
   implicit none
+
+  public :: &
+    sll_t_xml_document, &
+    sll_t_xml_element
+
   private
  
+!==============================================================================
+
   character, parameter :: nl = achar(10)  ! newline character
   integer  , parameter :: maxlen = 256    ! max string length
  
