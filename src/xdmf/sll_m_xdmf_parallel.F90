@@ -21,7 +21,7 @@ module sll_m_xdmf_parallel
     sll_collective_bcast,    &
     sll_collective_gather
 
-  use sll_m_xdmf, only: &
+  use sll_m_xdmf_sequential, only: &
     sll_t_xdmf_file
 
   implicit none
