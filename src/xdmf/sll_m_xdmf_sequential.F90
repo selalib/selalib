@@ -1,7 +1,7 @@
 !------------------------------------------------------------------------------
 ! SELALIB
 !------------------------------------------------------------------------------
-! MODULE:   sll_m_xdmf
+! MODULE:   sll_m_xdmf_sequential
 !
 ! DESCRIPTION:
 !> @ingroup xdmf
@@ -9,7 +9,7 @@
 !> @brief   Construct the XML component of an XDMF database (sequential).
 !> @todo    Add detailed description
 !------------------------------------------------------------------------------
-module sll_m_xdmf
+module sll_m_xdmf_sequential
 
 #include "sll_working_precision.h"
 
@@ -218,4 +218,4 @@ contains
 
   end subroutine t_xdmf__add_field
 
-end module sll_m_xdmf
+end module sll_m_xdmf_sequential
