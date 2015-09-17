@@ -8,6 +8,5 @@ target_link_libraries( sll_ode_integrators
                        sll_errors )
 # Tests
 if( BUILD_TESTING )
-  add_executable( test_ode_integrators test_ode_integrators.F90 )
-  target_link_libraries( test_ode_integrators sll_ode_integrators sll_assert)
+  add_subdirectory( testing )
 endif( BUILD_TESTING )
