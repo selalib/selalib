@@ -266,12 +266,14 @@ contains
     sll_real64 :: eps_sp1
     sll_real64 :: sigma_sp1
     sll_real64 :: v0_sp1
+    sll_real64 :: factor1_sp1
     sll_real64 :: alpha_gaussian_sp1
     character(len=256) :: initial_function_case_sp2
     sll_real64 :: kmode_sp2
     sll_real64 :: eps_sp2
     sll_real64 :: sigma_sp2
     sll_real64 :: v0_sp2
+    sll_real64 :: factor1_sp2
     sll_real64 :: alpha_gaussian_sp2
     character(len=256) :: restart_file
     logical :: time_init_from_restart_file
@@ -361,12 +363,14 @@ contains
       eps_sp1, &
       sigma_sp1, &
       v0_sp1, &
+      factor1_sp1, &
       alpha_gaussian_sp1, &
       initial_function_case_sp2, &
       kmode_sp2, &
       eps_sp2, &
       sigma_sp2, &
       v0_sp2, &
+      factor1_sp2, &
       alpha_gaussian_sp2, &
       restart_file, &
       time_init_from_restart_file
@@ -451,6 +455,7 @@ contains
     eps_sp1 = 0.001_f64
     sigma_sp1 = 1._f64
     v0_sp1 = 0._f64
+    factor1_sp1 = 1._f64/sqrt(2._f64*sll_pi)
     !initial_function_case = "SLL_BEAM"
     alpha_gaussian_sp1 = 0.2_f64
     !initial_function_case = "SLL_PLASMA_SHEATH"
@@ -462,6 +467,7 @@ contains
     eps_sp2 = 0.001_f64
     sigma_sp2 = 1._f64
     v0_sp2 = 0._f64
+    factor1_sp2 = 1._f64/sqrt(2._f64*sll_pi)
     !initial_function_case = "SLL_BEAM"
     alpha_gaussian_sp2 = 0.2_f64
     !initial_function_case = "SLL_PLASMA_SHEATH"
@@ -650,9 +656,11 @@ contains
        sim%eps_sp1 = eps_sp1
     case ("SLL_TWO_STREAM_INSTABILITY")
        sim%init_func_sp1 => sll_two_stream_instability_initializer_2d
-       SLL_ALLOCATE(sim%params_sp1(2),ierr)
+       SLL_ALLOCATE(sim%params_sp1(4),ierr)
        sim%params_sp1(1) = kmode_sp1
        sim%params_sp1(2) = eps_sp1
+       sim%params_sp1(3) = sigma_sp1
+       sim%params_sp1(4) = factor1_sp1
        sim%nrj0_sp1 = 0._f64  !compute the right value
        !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
        !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
@@ -705,9 +713,11 @@ contains
        sim%eps_sp2 = eps_sp2
     case ("SLL_TWO_STREAM_INSTABILITY")
        sim%init_func_sp2 => sll_two_stream_instability_initializer_2d
-       SLL_ALLOCATE(sim%params_sp2(2),ierr)
+       SLL_ALLOCATE(sim%params_sp2(4),ierr)
        sim%params_sp2(1) = kmode_sp2
        sim%params_sp2(2) = eps_sp2
+       sim%params_sp2(3) = sigma_sp2
+       sim%params_sp2(4) = factor1_sp2
        sim%nrj0_sp2 = 0._f64  !compute the right value
        !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
        !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
@@ -1376,7 +1386,6 @@ contains
     SLL_ALLOCATE(f_hat_x2_sp2(nb_mode+1),ierr)
 
 
-
     !temporary poisson
     !N_buf_poisson=2*(np_x1-1)+15  
     !allocate(buf_poisson(N_buf_poisson))
@@ -1434,6 +1443,7 @@ contains
        sim%init_func_sp1, &
        sim%params_sp1)
 
+
     call sll_2d_parallel_array_initializer_cartesian( &
        layout_x1_sp2, &
        sim%x1_array, &
@@ -1441,6 +1451,8 @@ contains
        f_x1_sp2, &
        sim%init_func_sp2, &
        sim%params_sp2)
+
+
 
     iproc = sll_get_collective_rank(sll_world_collective)
     call int2string(iproc, cproc)
@@ -1561,7 +1573,7 @@ contains
 
 
 
-      print *,'#maxf',maxval(f_visu_sp1), minval(f_visu_sp1) 
+      print *,'#maxfe = maxf_sp1',maxval(f_visu_sp1), minval(f_visu_sp1) 
 
     endif
 
@@ -1585,7 +1597,7 @@ contains
 
 
 
-      print *,'#maxf',maxval(f_visu_sp2), minval(f_visu_sp2) 
+      print *,'#maxfi = maxf_sp2',maxval(f_visu_sp2), minval(f_visu_sp2) 
 
     endif
     
