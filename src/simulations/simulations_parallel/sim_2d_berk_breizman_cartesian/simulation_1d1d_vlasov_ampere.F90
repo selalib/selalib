@@ -957,11 +957,11 @@ iplot = iplot+1
 do istep = 1, sim%num_iterations
 
 
-  call compute_current(sim, layout_x1, f_x1, current)
-  call solve_ampere(sim, efield, current, 0.5_f64*sim%dt)
-  call advection_x( sim, layout_x1, f_x1, 0.5_f64*sim%dt)
+  !call compute_current(sim, layout_x1, f_x1, current)
+  !call solve_ampere(sim, efield, current, 0.5_f64*sim%dt)
+  !call advection_x( sim, layout_x1, f_x1, 0.5_f64*sim%dt)
   !call advection_poisson_x( sim, layout_x1, f_x1, efield, rho, 0.5_f64*sim%dt)
-  !call advection_ampere_x(sim, layout_x1, efield, f_x1, 0.5_f64*sim%dt)
+  call advection_ampere_x(sim, layout_x1, efield, f_x1, 0.5_f64*sim%dt)
 
   call collision( sim, layout_x1, F0, f_x1, 0.5_f64*sim%dt)
 
@@ -973,11 +973,11 @@ do istep = 1, sim%num_iterations
 
   call collision( sim, layout_x1, F0, f_x1, 0.5_f64*sim%dt)
 
-  call compute_current(sim, layout_x1, f_x1, current)
-  call solve_ampere(sim, efield, current, 0.5_f64*sim%dt)
-  call advection_x( sim, layout_x1, f_x1, 0.5_f64*sim%dt)
+  !call compute_current(sim, layout_x1, f_x1, current)
+  !call solve_ampere(sim, efield, current, 0.5_f64*sim%dt)
+  !call advection_x( sim, layout_x1, f_x1, 0.5_f64*sim%dt)
   !call advection_poisson_x( sim, layout_x1, f_x1, efield, rho, 0.5_f64*sim%dt)
-  !call advection_ampere_x(sim, layout_x1, efield, f_x1, 0.5_f64*sim%dt)
+  call advection_ampere_x(sim, layout_x1, efield, f_x1, 0.5_f64*sim%dt)
 
   if (mod(istep,sim%freq_diag_time)==0) then
 
@@ -1153,25 +1153,26 @@ sll_int32  :: global_indices(2)
 sll_real64 :: delta_t
 sll_int32  :: nc_x1
 sll_int32  :: np_x1
-sll_comp64 :: s
+sll_comp64 :: s0, s1
 sll_int32  :: tid, ig_omp, i, i_omp
 sll_real64 :: alpha_omp
+sll_real64 :: L
 
 call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
 global_indices = local_to_global( layout_x1, (/1, 1/) )
 
 np_x1 = sim%mesh2d%num_cells1+1
 nc_x1 = np_x1-1
-
-tid=1          
-
+tid   = 1          
 
 !$OMP PARALLEL DEFAULT(SHARED) &
 !$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid) 
 !advection in x
 !$ tid = omp_get_thread_num()+1
 
-sim%advect_ampere_x1(tid)%ptr%rk = cmplx(0.0,0.0,kind=f64)
+sim%advect_ampere_x1(tid)%ptr%r0 = cmplx(0.0,0.0,kind=f64)
+sim%advect_ampere_x1(tid)%ptr%r1 = cmplx(0.0,0.0,kind=f64)
+
 !$OMP DO 
 do i_omp = 1, local_size_x2
 
@@ -1184,15 +1185,20 @@ do i_omp = 1, local_size_x2
   call fft_apply_plan(sim%advect_ampere_x1(tid)%ptr%fwx,  &
                       sim%advect_ampere_x1(tid)%ptr%d_dx, &
                       sim%advect_ampere_x1(tid)%ptr%fk)
+
+  sim%advect_ampere_x1(tid)%ptr%r0(2:nc_x1/2+1) =    &
+       sim%advect_ampere_x1(tid)%ptr%r0(2:nc_x1/2+1) &
+     + sim%advect_ampere_x1(tid)%ptr%fk(2:nc_x1/2+1) * sim%integration_weight(ig_omp)
+
   do i = 2, nc_x1/2+1
-    sim%advect_ampere_x1(tid)%ptr%fk(i) = &
+    sim%advect_ampere_x1(tid)%ptr%fk(i) =  &
        sim%advect_ampere_x1(tid)%ptr%fk(i) & 
        * cmplx(cos(sim%advect_ampere_x1(tid)%ptr%kx(i)*alpha_omp), &
               -sin(sim%advect_ampere_x1(tid)%ptr%kx(i)*alpha_omp),kind=f64)
   end do
 
-  sim%advect_ampere_x1(tid)%ptr%rk(2:nc_x1/2+1) = &
-       sim%advect_ampere_x1(tid)%ptr%rk(2:nc_x1/2+1) &
+  sim%advect_ampere_x1(tid)%ptr%r1(2:nc_x1/2+1) =    &
+       sim%advect_ampere_x1(tid)%ptr%r1(2:nc_x1/2+1) &
      + sim%advect_ampere_x1(tid)%ptr%fk(2:nc_x1/2+1) * sim%integration_weight(ig_omp)
 
   call fft_apply_plan(sim%advect_ampere_x1(tid)%ptr%bwx, &
@@ -1214,27 +1220,34 @@ call fft_apply_plan(sim%advect_ampere_x1(1)%ptr%fwx,  &
                     sim%advect_ampere_x1(1)%ptr%d_dx, &
                     sim%advect_ampere_x1(1)%ptr%ek)
 
+#ifdef _OPENMP
 do i = 2, nc_x1/2+1
-  s = cmplx(0.0,0.0,kind=f64)
+  s0 = cmplx(0.0,0.0,kind=f64)
+  s1 = cmplx(0.0,0.0,kind=f64)
   do tid = 1, sim%num_threads
-    s = s + sim%advect_ampere_x1(tid)%ptr%rk(i)
+    s0 = s0 + sim%advect_ampere_x1(tid)%ptr%r0(i)
+    s1 = s1 + sim%advect_ampere_x1(tid)%ptr%r1(i)
   end do
-  sim%advect_ampere_x1(1)%ptr%rk(i) = s
+  sim%advect_ampere_x1(1)%ptr%r0(i) = s0
+  sim%advect_ampere_x1(1)%ptr%r1(i) = s1
 end do
+#endif
 
+L =  sim%L / (2.0_f64*sll_pi)
+
+
+sim%advect_ampere_x1(1)%ptr%ek(1) = 0.0_f64
 do i = 2, nc_x1/2+1
-  sim%advect_ampere_x1(1)%ptr%ek(i) =  &
-     - sim%advect_ampere_x1(1)%ptr%rk(i) * sim%L / (2.0_f64*sll_pi) / cmplx(0.,real(i-1,f64),kind=f64)
+  sim%advect_ampere_x1(1)%ptr%ek(i) = - L / cmplx(0.0_f64,real(i-1,f64),f64) * &
+     (sim%advect_ampere_x1(1)%ptr%r1(i)-sim%gamma_d*sim%advect_ampere_x1(1)%ptr%r0(i))
 end do
 
 call fft_apply_plan(sim%advect_ampere_x1(1)%ptr%bwx, &
                     sim%advect_ampere_x1(1)%ptr%ek,  &
                     efield)
 
-efield(1:nc_x1) = efield(1:nc_x1)/nc_x1
-efield(np_x1)   = efield(1)
-
-efield = efield*(1.0_f64 + sim%gamma_d*delta_t)
+efield(np_x1) = efield(1)
+efield        = efield/nc_x1
 
 end subroutine advection_ampere_x
   
@@ -1366,20 +1379,22 @@ current = current - sum(current) / real(np_x1,f64)
   
 end subroutine compute_current
 
-subroutine solve_ampere(sim, efield, current, delta_t)
+subroutine solve_ampere(sim, e, j, delta_t)
   
 class(sll_simulation_2d_vlasov_ampere_cart), intent(inout) :: sim
-sll_real64,                                  intent(inout) :: efield(:)
-sll_real64,                                  intent(in)    :: current(:)
+sll_real64,                                  intent(inout) :: e(:)
+sll_real64,                                  intent(in)    :: j(:)
 sll_real64,                                  intent(in)    :: delta_t
 
-sll_real64 :: a, b
+sll_real64 :: a, g
+
+g = sim%gamma_d
+a = exp(-g*delta_t)
 
 if (sim%gamma_d > 0.0_f64) then
-  efield = exp(-sim%gamma_d*delta_t) * efield &
-           + current * (1.0_f64-exp(-sim%gamma_d*delta_t))/sim%gamma_d
+  e = a * e + j * (1.0_f64-a)/g
 else
-  efield = exp(-sim%gamma_d*delta_t) * efield + current * delta_t
+  e = a * e + j * delta_t
 end if
 
 !a = 1.0_f64-0.5_f64*sim%gamma_d*delta_t

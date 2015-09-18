@@ -45,7 +45,8 @@ type,extends(sll_advection_1d_base), public :: ampere_1d_advector
   type(sll_fft_plan),       pointer :: fwx
   type(sll_fft_plan),       pointer :: bwx
   sll_comp64, dimension(:), pointer :: fk
-  sll_comp64, dimension(:), pointer :: rk
+  sll_comp64, dimension(:), pointer :: r0
+  sll_comp64, dimension(:), pointer :: r1
   sll_comp64, dimension(:), pointer :: ek
 
 contains
@@ -104,7 +105,8 @@ subroutine initialize( adv, nc_eta1, eta1_min, eta1_max )
   SLL_CLEAR_ALLOCATE(adv%d_dx(1:nc_eta1), error)
   SLL_CLEAR_ALLOCATE(adv%fk(1:nc_eta1/2+1), error)
   SLL_CLEAR_ALLOCATE(adv%ek(1:nc_eta1/2+1), error)
-  SLL_CLEAR_ALLOCATE(adv%rk(1:nc_eta1/2+1), error)
+  SLL_CLEAR_ALLOCATE(adv%r0(1:nc_eta1/2+1), error)
+  SLL_CLEAR_ALLOCATE(adv%r1(1:nc_eta1/2+1), error)
 
   adv%fwx => fft_new_plan(nc_eta1, adv%d_dx,  adv%fk)
   adv%bwx => fft_new_plan(nc_eta1, adv%fk, adv%d_dx)
