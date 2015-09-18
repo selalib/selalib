@@ -32,10 +32,10 @@
 module fornberg
 #include "sll_working_precision.h"
 
-  implicit none
+implicit none
 
-  private
-  public apply_fd, populate_weights
+private
+public apply_fd, populate_weights
 
 contains
 
@@ -55,7 +55,8 @@ contains
     sll_real64 :: c(0:nin-1, 0:maxorder)
 
     call populate_weights(xtgt, xdata, nin-1, maxorder, c)
-    forall(j=0:maxorder) out(j) = sum(c(0:, j)*ydata)
+    forall(j=0:maxorder) out(j) = sum(c(0:,j)*ydata)
+    
   end subroutine
 
   !> @param[in] z location where approximations are to be accurate,
@@ -78,16 +79,16 @@ contains
     sll_real64, intent(in)  :: x(0:nd)
     sll_real64, intent(out) :: c(0:nd, 0:m)
 
+    sll_int32  :: i, j, k, mn
     sll_real64 :: c1, c2, c3, c4, c5
-    sll_int32 :: i, j, k, mn
 
-    c1 = 1
-    c4 = x(0)-z
-    c = 0
-    c(0,0) = 1
+    c1     = 1.0_f64
+    c4     = x(0)-z
+    c      = 0.0_f64
+    c(0,0) = 1.0_f64
     do i=1,nd
       mn = min(i, m)
-      c2 = 1
+      c2 = 1.0_f64
       c5 = c4
       c4 = x(i)-z
       do j=0,i-1
@@ -106,6 +107,6 @@ contains
       end do
       c1 = c2
     end do
-  end subroutine
+  end subroutine populate_weights
 
 end module
