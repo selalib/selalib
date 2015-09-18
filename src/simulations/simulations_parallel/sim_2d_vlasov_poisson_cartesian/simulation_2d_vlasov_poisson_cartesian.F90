@@ -1390,7 +1390,7 @@ contains
                !advection in x
                !$ tid = omp_get_thread_num()+1
                
-               sim%advect_ampere_x1(tid)%ptr%rk = cmplx(0.0,0.0,kind=f64)
+               sim%advect_ampere_x1(tid)%ptr%r1 = cmplx(0.0,0.0,kind=f64)
                !$OMP DO 
                do i_omp = 1, local_size_x2
                
@@ -1412,8 +1412,8 @@ contains
                               kind=f64)
                  end do
                
-                 sim%advect_ampere_x1(tid)%ptr%rk(2:nc_x1/2+1) = &
-                      sim%advect_ampere_x1(tid)%ptr%rk(2:nc_x1/2+1) &
+                 sim%advect_ampere_x1(tid)%ptr%r1(2:nc_x1/2+1) = &
+                      sim%advect_ampere_x1(tid)%ptr%r1(2:nc_x1/2+1) &
                     + sim%advect_ampere_x1(tid)%ptr%fk(2:nc_x1/2+1) &
                     * sim%integration_weight(ig_omp)
                
@@ -1432,7 +1432,7 @@ contains
                rk_loc = cmplx(0.0,0.0,kind=f64)
                do i = 2, nc_x1/2+1
                  do tid = 1, sim%num_threads
-                   rk_loc(i) = rk_loc(i) + sim%advect_ampere_x1(tid)%ptr%rk(i)
+                   rk_loc(i) = rk_loc(i) + sim%advect_ampere_x1(tid)%ptr%r1(i)
                  end do
                end do
                
@@ -1442,7 +1442,7 @@ contains
                     rk_loc,                                         &
                     nc_x1/2+1,                                      &
                     MPI_SUM,                                        &
-                    sim%advect_ampere_x1(1)%ptr%rk )
+                    sim%advect_ampere_x1(1)%ptr%r1 )
                
                sim%advect_ampere_x1(tid)%ptr%d_dx = efield(1:nc_x1)
                call fft_apply_plan(sim%advect_ampere_x1(1)%ptr%fwx,  &
@@ -1452,7 +1452,7 @@ contains
                
                do i = 2, nc_x1/2+1
                  sim%advect_ampere_x1(1)%ptr%ek(i) =  &
-                    - sim%advect_ampere_x1(1)%ptr%rk(i) &
+                    - sim%advect_ampere_x1(1)%ptr%r1(i) &
                     * (sim%mesh2d%eta1_max-sim%mesh2d%eta1_min) &
                     / (2*sll_pi*cmplx(0.,i-1,kind=f64))
                end do
