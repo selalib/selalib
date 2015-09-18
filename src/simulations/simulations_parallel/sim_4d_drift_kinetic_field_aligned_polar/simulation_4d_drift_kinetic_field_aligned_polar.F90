@@ -75,12 +75,8 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
   use sll_module_derivative_2d_oblic
   use sll_module_advection_2d_oblic
   
-  use sll_hdf5_io_serial, only: &
-    sll_hdf5_file_create,       &
-    sll_hdf5_write_array,       &
-    sll_hdf5_file_close
-
-  use sll_m_xdmf_parallel, only: &
+  use sll_m_xdmf, only: &
+    sll_t_hdf5_serial,  &
     sll_t_xdmf_parallel_file
 
   implicit none
@@ -985,10 +981,10 @@ contains
     character(len=*), parameter :: filetype="HDF"
     character(len=64)       :: hdf5_file_name, xml_file_name, field_name
     sll_int32               :: hdf5_file_id, error
+    type( sll_t_hdf5_serial ) :: hdf5_file
     type( sll_t_xdmf_parallel_file ) :: xdmf_file
     logical                 :: to_file
     character(len=256)      :: field_path
-!    character(len=256)      :: dataset
     character(len=256)      :: dataset_x1_polar, dataset_x2_polar
     character(len=256)      :: dataset_x2_cart , dataset_x3_cart
     sll_int32               :: dims_x1x2(2), dims_x2x3(2)
@@ -1003,12 +999,13 @@ contains
     
     !*** Saving of the radial profiles in HDF5 file ***
     if (sll_get_collective_rank(sll_world_collective)==0) then
-      call sll_hdf5_file_create(filename_prof,file_id,file_err)
-      call sll_hdf5_write_array_1d(file_id,sim%n0_r,'n0_r',file_err)
-      call sll_hdf5_write_array_1d(file_id,sim%Ti_r,'Ti_r',file_err)
-      call sll_hdf5_write_array_1d(file_id,sim%Te_r,'Te_r',file_err)
-      call sll_hdf5_file_close(file_id,file_err)
-      
+      call hdf5_file%init( filename_prof )
+      call hdf5_file%create()
+      call hdf5_file%write_array( sim%n0_r, 'n0_r' )
+      call hdf5_file%write_array( sim%Ti_r, 'Ti_r' )
+      call hdf5_file%write_array( sim%Te_r, 'Te_r' )
+      call hdf5_file%delete()
+
       call sll_gnuplot_1d(sim%n0_r,'n0_r_init',ierr)
       call sll_gnuplot_1d(sim%Ti_r,'Ti_r_init',ierr)
       call sll_gnuplot_1d(sim%Te_r,'Te_r_init',ierr)
@@ -1150,11 +1147,13 @@ contains
         hdf5_file_name = 'diag2d_'//cplot//'.h5'  ! HDF5 file (heavy data)
         xml_file_name  = 'diag2d_'//cplot//'.xmf' ! XML  file (light data)
 
-        ! Create new files
+        ! Initialize HDF5 wrapper
+        call hdf5_file%init( hdf5_file_name )
+
+        ! MASTER: Create new HDF5 file and close it
         if (sll_get_collective_rank(sll_world_collective)==0) then
-          ! HDF5 file is created and closed (it will be referenced by name)
-          call sll_hdf5_file_create( hdf5_file_name, hdf5_file_id, file_err )
-          call sll_hdf5_file_close ( hdf5_file_id, file_err )
+          call hdf5_file%create()
+          call hdf5_file%close()
         end if
 
         ! Wait for HDF5 file to be available to other processors
@@ -1195,12 +1194,10 @@ contains
         ! If point is in local domain, print slice of f on flux surface
         if(loc4d(1) > 0) then
           field_name = 'f_x2x3'
-          call sll_hdf5_file_open  ( hdf5_file_name, file_id, error )
-          call sll_hdf5_write_array( file_id, &
-            sim%f4d_parx1(loc4d(1),:,:,loc4d(4)), &
-            '/'//field_name, &
-            error )
-          call sll_hdf5_file_close ( file_id, error )
+          call hdf5_file%open()
+          call hdf5_file%write_array( sim%f4d_parx1(loc4d(1),:,:,loc4d(4)), &
+                                      '/'//field_name )
+          call hdf5_file%close()
           to_file    = .true.
           field_path = trim( hdf5_file_name )//':/'//trim( field_name )
         else
@@ -1232,12 +1229,10 @@ contains
         if(loc4d(3) > 0) then
 #ifndef NOHDF5
           field_name = 'f_x1x2'
-          call sll_hdf5_file_open  ( hdf5_file_name, file_id, error )
-          call sll_hdf5_write_array( file_id, &
-            sim%f4d_parx3x4(:,:,loc4d(3),loc4d(4)), &
-            '/'//field_name, &
-            error )
-          call sll_hdf5_file_close ( file_id, error )
+          call hdf5_file%open()
+          call hdf5_file%write_array( sim%f4d_parx3x4(:,:,loc4d(3),loc4d(4)), &
+                                      '/'//field_name )
+          call hdf5_file%close()
           to_file    = .true.
           field_path = trim( hdf5_file_name )//':/'//trim( field_name )
 #endif
@@ -1254,6 +1249,9 @@ contains
         !----------------------------------------------------------------------
         call xdmf_file%write( xml_file_name )
         call xdmf_file%delete()
+
+        ! Delete HDF5 wrapper (will be initialized again)
+        call hdf5_file%delete()
 
       endif !if (modulo(iter,sim%freq_diag)==0)
 
@@ -2390,6 +2388,7 @@ contains
     sll_real64              :: r, dr, rmin, rmax, theta, dtheta
     sll_int32               :: i, j, nnodes_x1, nnodes_x2
     sll_int32               :: file_id, error
+    type(sll_t_hdf5_serial) :: hdf5_file
 
     nnodes_x1 = mesh_x1%num_cells+1
     nnodes_x2 = mesh_x2%num_cells+1
@@ -2410,10 +2409,11 @@ contains
       end do
     end do
 
-    call sll_hdf5_file_create( "mesh_x1x2_polar.h5", file_id, error )
-    call sll_hdf5_write_array( file_id, x1, "/x1", error )
-    call sll_hdf5_write_array( file_id, x2, "/x2", error )
-    call sll_hdf5_file_close ( file_id, error )
+    call hdf5_file%init( "mesh_x1x2_polar.h5" )
+    call hdf5_file%create()
+    call hdf5_file%write_array( x1, "/x1" )
+    call hdf5_file%write_array( x2, "/x2" )
+    call hdf5_file%delete()
 
     dataset_x1 = "mesh_x1x2_polar.h5:/x1"
     dataset_x2 = "mesh_x1x2_polar.h5:/x2"

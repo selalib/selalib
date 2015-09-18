@@ -12,7 +12,6 @@
 module sll_m_xdmf_parallel
 
 #include "sll_working_precision.h"
-#include "sll_assert.h"
 
   use sll_collective, only:  &
     sll_collective_t,        &
