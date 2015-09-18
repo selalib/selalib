@@ -1,6 +1,6 @@
 &geometry
   mesh_case_x1 = "SLL_LANDAU_MESH"
-  num_cells_x1 = 256
+  num_cells_x1 = 64
   x1_min = 0.0
   nbox_x1 = 1
   mesh_case_x2 = "SLL_CARTESIAN_MESH"
@@ -16,15 +16,17 @@
 /
 
 &time_iterations
-  dt = .1
-  number_iterations = 14000
+  dt = 0.1
+  number_iterations = 1000
   freq_diag = 100
   freq_diag_time = 1
 /
 
 
 &advector
- advector_x2 = "SLL_LAGRANGE"
+ advector_x1 = "SLL_SPLINES"
+ order_x1 = 10
+ advector_x2 = "SLL_SPLINES"
  order_x2 = 10
 /
 
@@ -34,8 +36,8 @@
 /
 
 &berk_breizman
-  gamma_d = 1.0
-  nu_a    = 0.12589
+  gamma_d =  1.0
+  nu_a    =  0.12589
 /
 
 &drive
