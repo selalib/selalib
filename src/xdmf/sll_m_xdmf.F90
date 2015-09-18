@@ -18,4 +18,7 @@ module sll_m_xdmf
   use sll_m_xdmf_parallel, only: &
       sll_t_xdmf_parallel_file
 
+  use sll_m_hdf5_serial, only: &
+      sll_t_hdf5_serial
+
 end module sll_m_xdmf
