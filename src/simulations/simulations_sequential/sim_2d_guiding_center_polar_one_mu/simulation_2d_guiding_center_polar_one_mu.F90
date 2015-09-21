@@ -544,55 +544,55 @@ contains
           Nc_x2, &
           !(/SLL_NEUMANN_MODE_0, SLL_DIRICHLET/))
           (/SLL_DIRICHLET, SLL_DIRICHLET/))
-      case ("SLL_ELLIPTIC_FINITE_ELEMENT_SOLVER")
-        transformation => new_coordinate_transformation_2d_analytic( &
-          "analytic_polar_transformation", &
-          sim%mesh_2d, &
-          polar_x1, &
-          polar_x2, &
-          polar_jac11, &
-          polar_jac12, &
-          polar_jac21, &
-          polar_jac22, &
-          params=(/0._f64,0._f64,0._f64,0._f64/))  
-
-        SLL_ALLOCATE(b11(Nc_x1+1,Nc_x2+1),ierr)
-        SLL_ALLOCATE(b12(Nc_x1+1,Nc_x2+1),ierr)
-        SLL_ALLOCATE(b21(Nc_x1+1,Nc_x2+1),ierr)
-        SLL_ALLOCATE(b22(Nc_x1+1,Nc_x2+1),ierr)
-        SLL_ALLOCATE(b1(Nc_x1+1,Nc_x2+1),ierr)
-        SLL_ALLOCATE(b2(Nc_x1+1,Nc_x2+1),ierr)
-        SLL_ALLOCATE(c(Nc_x1+1,Nc_x2+1),ierr)
-        
-        b11 = 1._f64
-        b22 = 1._f64
-        b12 = 0._f64
-        b21 = 0._f64
-        c = 0._f64
-        
-        sim%poisson => new_poisson_2d_elliptic_solver( &
-         transformation,&
-         spline_degree_eta1, &
-         spline_degree_eta2, &
-         Nc_x1, &
-         Nc_x2, &
-         ES_GAUSS_LEGENDRE, &
-         ES_GAUSS_LEGENDRE, &
-         SLL_DIRICHLET, &
-         SLL_DIRICHLET, &
-         SLL_PERIODIC, &
-         SLL_PERIODIC, &
-         x1_min, &
-         x1_max, &
-         x2_min, &
-         x2_max, &
-         b11, & 
-         b12, & 
-         b21, & 
-         b22, & 
-         b1, & 
-         b2, & 
-         c ) 
+!      case ("SLL_ELLIPTIC_FINITE_ELEMENT_SOLVER")
+!        transformation => new_coordinate_transformation_2d_analytic( &
+!          "analytic_polar_transformation", &
+!          sim%mesh_2d, &
+!          polar_x1, &
+!          polar_x2, &
+!          polar_jac11, &
+!          polar_jac12, &
+!          polar_jac21, &
+!          polar_jac22, &
+!          params=(/0._f64,0._f64,0._f64,0._f64/))  
+!
+!        SLL_ALLOCATE(b11(Nc_x1+1,Nc_x2+1),ierr)
+!        SLL_ALLOCATE(b12(Nc_x1+1,Nc_x2+1),ierr)
+!        SLL_ALLOCATE(b21(Nc_x1+1,Nc_x2+1),ierr)
+!        SLL_ALLOCATE(b22(Nc_x1+1,Nc_x2+1),ierr)
+!        SLL_ALLOCATE(b1(Nc_x1+1,Nc_x2+1),ierr)
+!        SLL_ALLOCATE(b2(Nc_x1+1,Nc_x2+1),ierr)
+!        SLL_ALLOCATE(c(Nc_x1+1,Nc_x2+1),ierr)
+!        
+!        b11 = 1._f64
+!        b22 = 1._f64
+!        b12 = 0._f64
+!        b21 = 0._f64
+!        c = 0._f64
+!        
+!        sim%poisson => new_poisson_2d_elliptic_solver( &
+!         transformation,&
+!         spline_degree_eta1, &
+!         spline_degree_eta2, &
+!         Nc_x1, &
+!         Nc_x2, &
+!         ES_GAUSS_LEGENDRE, &
+!         ES_GAUSS_LEGENDRE, &
+!         SLL_DIRICHLET, &
+!         SLL_DIRICHLET, &
+!         SLL_PERIODIC, &
+!         SLL_PERIODIC, &
+!         x1_min, &
+!         x1_max, &
+!         x2_min, &
+!         x2_max, &
+!         b11, & 
+!         b12, & 
+!         b21, & 
+!         b22, & 
+!         b1, & 
+!         b2, & 
+!         c ) 
 #ifdef MUDPACK
       case ("SLL_MUDPACK_CURVILINEAR")     
         transformation => new_coordinate_transformation_2d_analytic( &
