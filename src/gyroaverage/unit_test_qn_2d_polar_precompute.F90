@@ -214,6 +214,8 @@ implicit none
   
   print *,'gamma0 num=',gamma0_num
   
+  gamma0 = 1._f64
+  
   call compute_gamma0(mode,eta_min,eta_max,gamma0)
 
   print *,'gamma0=',gamma0,gamma0-gamma0_num,gamma0-(1._f64-gamma0_num)
