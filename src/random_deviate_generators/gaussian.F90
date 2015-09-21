@@ -13,7 +13,6 @@ contains
   !>Returns a value of random variable following the Gaussian probability 
   !>density with zero mean and unit variance, using standart function "random" 
   !>as the source of uniform deviates.
-  !>It's a copy-and-paste from Numerical Recipes
   !>\author Sever Hirstoaga
   !>\date created: 2012-05-31
   function gaussian_deviate()
@@ -42,10 +41,9 @@ contains
     endif
   end function gaussian_deviate
   
-  subroutine gaussian_deviate_2D(res)! returns in 'harvest' a normally
+  subroutine gaussian_deviate_2D(res)! a normally
 !   distributed deviate with zero mean and unit variance, using
 !   random as the source of uniform deviates  !!!!!
-!   It's from Numerical Recipes  !
     implicit none
     sll_real64,intent(out) :: res(1:2)
     sll_real64 :: rsq, v1, v2

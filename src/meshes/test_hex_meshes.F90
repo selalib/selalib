@@ -17,11 +17,14 @@ sll_int32                   :: i
 sll_int32                   :: nei1
 sll_int32                   :: nei2
 sll_int32                   :: nei3
+sll_int32                   :: type
+sll_int32                   :: spline_degree
 
-num_cells = 1
+num_cells = 20
+spline_degree = 2
 
 print *, ""
-print *, "Creating a mesh with 40 cells, mesh coordinates written in ./hex_mesh_coo.txt"
+print *, "Creating a mesh with", num_cells, "cells, mesh coordinates written in ./hex_mesh_coo.txt"
 mesh => new_hex_mesh_2d(num_cells)
 call sll_display(mesh)
 call write_hex_mesh_2d(mesh,"hex_mesh_coo.txt")
@@ -38,7 +41,7 @@ end do
 
 call write_field_hex_mesh_xmf(mesh, field, 'field')
 
-call write_caid_files(mesh)
+call write_caid_files(mesh, spline_degree)
 
 call delete(mesh)
 
@@ -48,7 +51,8 @@ mesh => new_hex_mesh_2d(num_cells)
 
 do i = 1, mesh%num_triangles
    call get_neighbours(mesh, i, nei1, nei2, nei3)
-   print *, "i =", i, "neighbourcells =", nei1, nei2, nei3
+   type = cell_type(mesh, i)
+   print *, "i =", i, "type:", type, "neighbourcells =", nei1, nei2, nei3
 end do
 
 call delete(mesh)
