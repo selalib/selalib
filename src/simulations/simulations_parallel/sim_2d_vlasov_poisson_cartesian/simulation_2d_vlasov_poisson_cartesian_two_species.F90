@@ -52,9 +52,9 @@ use sll_poisson_1d_periodic
 use sll_module_poisson_1d_periodic_solver
 use sll_module_poisson_1d_polar_solver
 use sll_module_advection_1d_ampere
-#ifdef _OPENMP
-use omp_lib
-#endif
+!#ifdef _OPENMP
+!use omp_lib
+!#endif
 
 
   implicit none
@@ -419,13 +419,13 @@ contains
 
     num_threads = 1
 
-#ifdef _OPENMP
-!$OMP PARALLEL SHARED(num_threads)
-    if(omp_get_thread_num()==0)then
-      num_threads =  omp_get_num_threads()      
-    endif
-!$OMP END PARALLEL
-#endif
+!#ifdef _OPENMP
+!!$OMP PARALLEL SHARED(num_threads)
+!    if(omp_get_thread_num()==0)then
+!      num_threads =  omp_get_num_threads()      
+!    endif
+!!$OMP END PARALLEL
+!#endif
    sim%num_threads = num_threads
    print *,'#num_threads=',num_threads
 
@@ -802,11 +802,11 @@ contains
     SLL_ALLOCATE(sim%advect_x2_sp2(num_threads),ierr)
 
     tid = 1
-#ifdef _OPENMP
-!$OMP PARALLEL DEFAULT(SHARED) &
-!$OMP PRIVATE(tid)
-    tid = omp_get_thread_num()+1
-#endif
+!#ifdef _OPENMP
+!!$OMP PARALLEL DEFAULT(SHARED) &
+!!$OMP PRIVATE(tid)
+!    tid = omp_get_thread_num()+1
+!#endif
     select case (advector_x1_sp1)
       case ("SLL_SPLINES") ! arbitrary order periodic splines
         sim%advect_x1_sp1(tid)%ptr => new_periodic_1d_advector( &
@@ -945,9 +945,9 @@ contains
         stop 
     end select
 
-#ifdef _OPENMP
-!$OMP END PARALLEL
-#endif
+!#ifdef _OPENMP
+!!$OMP END PARALLEL
+!#endif
     select case (advection_form_x2_sp1)
       case ("SLL_ADVECTIVE")
         sim%advection_form_x2_sp1 = SLL_ADVECTIVE
@@ -1706,13 +1706,13 @@ contains
         if(split_T) then
           !! T ADVECTION 
           tid=1          
-#ifdef _OPENMP
-!$OMP PARALLEL DEFAULT(SHARED) &
-!$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid) 
-          !advection in x
-          tid = omp_get_thread_num()+1
-!$OMP DO
-#endif
+!#ifdef _OPENMP
+!!$OMP PARALLEL DEFAULT(SHARED) &
+!!$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid) 
+!          !advection in x
+!          tid = omp_get_thread_num()+1
+!!$OMP DO
+!#endif
 
           do i_omp = 1, local_size_x2_sp1
              ig_omp = i_omp+global_indices_sp1(2)-1
@@ -1740,10 +1740,10 @@ contains
              f_x1_sp2(1:np_x1,i_omp)=f1d_omp_out_sp2(1:np_x1,tid)
              
           end do
-#ifdef _OPENMP
-!$OMP END DO          
-!$OMP END PARALLEL
-#endif
+!#ifdef _OPENMP
+!!$OMP END DO          
+!!$OMP END PARALLEL
+!#endif
           t_step = t_step+sim%split%split_step(split_istep)
           !computation of electric field
           rho_loc_sp1 = 0._f64
@@ -1810,13 +1810,13 @@ contains
            global_indices_sp2(1:2) = local_to_global( layout_x2_sp2, (/1, 1/) )
            tid = 1
            
-#ifdef _OPENMP
-!$OMP PARALLEL DEFAULT(SHARED) &
-!$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid,mean_omp,f1d) 
-          !advection in v
-          tid = omp_get_thread_num()+1
-!$OMP DO
-#endif
+!#ifdef _OPENMP
+!!$OMP PARALLEL DEFAULT(SHARED) &
+!!$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid,mean_omp,f1d) 
+!          !advection in v
+!          tid = omp_get_thread_num()+1
+!!$OMP DO
+!#endif
           !advection in v
           do i_omp = 1,local_size_x1_sp1
              ig_omp=i_omp+global_indices_sp1(1)-1
@@ -1856,10 +1856,10 @@ contains
              f_x2_sp2(i_omp,1:num_dof_x2_sp2) = f1d_omp_out_sp2(1:num_dof_x2_sp2,tid)
              
           end do
-#ifdef _OPENMP
-!$OMP END DO          
-!$OMP END PARALLEL
-#endif
+!#ifdef _OPENMP
+!!$OMP END DO          
+!!$OMP END PARALLEL
+!#endif
          !transposition
          call apply_remap_2D( remap_plan_x2_x1_sp1, f_x2_sp1, f_x1_sp1 )
          call apply_remap_2D( remap_plan_x2_x1_sp2, f_x2_sp2, f_x1_sp2 )
