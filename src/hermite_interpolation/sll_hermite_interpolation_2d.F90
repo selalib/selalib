@@ -203,7 +203,21 @@ contains  !*********************************************************************
         print *,'#in compute_interpolants_hermite_2d'
         stop          
       endif
-    else   
+    else if((interp%bc(1)==SLL_HERMITE_PERIODIC).and.&
+      (interp%bc(2)==SLL_HERMITE_PERIODIC)) then
+      if((interp%continuity(1)==SLL_HERMITE_C0).and.&
+        (interp%continuity(2)==SLL_HERMITE_C0)) then         
+        call hermite_coef_per_per(f,interp%deriv,interp%Nc,interp%degree)
+      else
+        print *,'#interp%continuity=', interp%continuity
+        print *,'#possible_value=', SLL_HERMITE_C0
+        print *,'#not implemented for the moment'
+        print *,'#in compute_interpolants_hermite_2d'
+        stop          
+      endif
+    
+    else  
+       
       print *,'#interp%bc=', interp%bc
       print *,'#possible_value=', SLL_HERMITE_DIRICHLET, SLL_HERMITE_PERIODIC     
       print *,'#not implemented for the moment'
@@ -292,6 +306,87 @@ subroutine compute_w_hermite(w,r,s)
 
   
   end subroutine compute_w_hermite
+
+
+
+subroutine compute_hermite_derivatives_periodic1(f,num_points1,num_points2,p,buf)
+  sll_real64, dimension(:,:), intent(in) :: f !> input 2d function
+  sll_int32, intent(in) :: num_points1 !> 
+  sll_int32, intent(in) :: num_points2 !> 
+  sll_int32, intent(in) :: p !> order of finite difference
+  sll_real64, dimension(:,:,:), intent(out) :: buf 
+  
+  sll_real64 :: w_left(-p/2:(p+1)/2)
+  sll_real64 :: w_right((-p+1)/2:p/2+1)
+  sll_int32 :: r_left
+  sll_int32 :: s_left
+  sll_int32 :: r_right
+  sll_int32 :: s_right
+  sll_int32 :: i
+  sll_int32 :: j
+  sll_real64 :: tmp
+  sll_int32 :: ii
+  sll_int32 :: ind
+      
+  r_left=-p/2
+  s_left=(p+1)/2
+  r_right=(-p+1)/2
+  s_right=p/2+1   
+  call compute_w_hermite(w_left,r_left,s_left)
+  if(((2*p/2)-p)==0)then
+    w_right(r_right:s_right) = w_left(r_left:s_left)
+  else
+    w_right(r_right:s_right) = -w_left(s_left:r_left:-1)
+  endif    
+  
+  do j=1,num_points2
+    do i=1,num_points1
+      buf(1,i,j) = f(i,j)  !f(0)
+      tmp=0._f64
+      do ii=r_left,s_left
+        ind=modulo(i+ii-2+num_points1,num_points1-1)+1
+        tmp=tmp+w_left(ii)*f(ind,j)
+      enddo
+      buf(2,i,j)=tmp !df(0)
+      tmp=0._f64
+      do ii=r_right,s_right
+        ind=modulo(i+ii-2+num_points1,num_points1-1)+1
+        tmp=tmp+w_right(ii)*f(ind,j)
+      enddo
+      buf(3,i,j)=tmp !df(1)      
+    enddo
+  enddo
+  
+end subroutine compute_hermite_derivatives_periodic1
+
+
+
+
+!function compute_hermite_r_left(p) result(res)
+!  sll_int32, intent(in) :: p
+!  sll_int32 :: res
+!  res = -p/2  
+!end function compute_hermite_r_left
+!
+!
+!function compute_hermite_s_left(p) result(res)
+!  sll_int32, intent(in) :: p
+!  sll_int32 :: res
+!  res = (p+1)/2  
+!end function compute_hermite_s_left
+!
+!
+!function compute_hermite_r_right(p) result(res)
+!  sll_int32, intent(in) :: p
+!  sll_int32 :: res
+!  res = (-p+1)/2  
+!end function compute_hermite_r_right
+!
+!function compute_hermite_s_right(p) result(res)
+!  sll_int32, intent(in) :: p
+!  sll_int32 :: res
+!  res = p/2/+1  
+!end function compute_hermite_s_right
 
 
 subroutine hermite_coef_nat_per(f,buf3d,N,d)
@@ -395,6 +490,117 @@ subroutine hermite_coef_nat_per(f,buf3d,N,d)
     !print *,'d=',d,maxval(abs(buf3d))
     
   end subroutine hermite_coef_nat_per
+
+
+subroutine hermite_coef_per_per(f,buf3d,N,d)
+    sll_int32,intent(in)::N(2),d(2)
+    sll_real64,dimension(N(1)+1,N(2)),intent(in)::f
+    sll_real64,dimension(9,N(1)+1,N(2)+1),intent(out)::buf3d
+    sll_real64 ::w_left_1(-d(1)/2:(d(1)+1)/2),w_right_1((-d(1)+1)/2:d(1)/2+1)
+    sll_real64 ::w_left_2(-d(2)/2:(d(2)+1)/2),w_right_2((-d(2)+1)/2:d(2)/2+1)
+    sll_real64 ::tmp
+    sll_int32  ::i,j,ii,r_left(2),r_right(2),s_left(2),s_right(2),ind 
+    r_left=-d/2
+    s_left=(d+1)/2
+    r_right=(-d+1)/2
+    s_right=d/2+1
+    
+    
+    call compute_w_hermite(w_left_1,r_left(1),s_left(1))
+    call compute_w_hermite(w_left_2,r_left(2),s_left(2))    
+    if((2*(d(1)/2)-d(1))==0)then
+      w_right_1(r_right(1):s_right(1)) = w_left_1(r_left(1):s_left(1))
+    else
+      w_right_1(r_right(1):s_right(1)) = -w_left_1(s_left(1):r_left(1):-1)
+    endif    
+
+    if((2*(d(2)/2)-d(2))==0)then
+      w_right_2(r_right(2):s_right(2)) = w_left_2(r_left(2):s_left(2))
+    else
+      w_right_2(r_right(2):s_right(2)) = -w_left_2(s_left(2):r_left(2):-1)
+    endif    
+    
+    !print *,'w(',r_left(1),':',s_left(1),')=',w_left_1(r_left(1):s_left(1))
+    !print *,'w(',r_right(1),':',s_right(1),')=',w_right_1(r_right(1):s_right(1))
+
+    
+    do j=1,N(2)
+      do i=1,N(1)+1
+        buf3d(1,i,j)=f(i,j) !f(0,0)
+        tmp=0._f64
+        do ii=r_left(1),s_left(1)
+          !ind=i+ii;if(ind>N(1)+1) ind=2*(N(1)+1)-ind;if(ind<1) ind=2-ind
+          ind=modulo(i+ii-1+N(1),N(1))+1
+          tmp=tmp+w_left_1(ii)*f(ind,j)
+        enddo
+        buf3d(2,i,j)=tmp !fx(0,0)
+        tmp=0._f64
+        do ii=r_right(1),s_right(1)
+          !ind=i+ii;if(ind>N(1)+1) ind=2*(N(1)+1)-ind;if(ind<1) ind=2-ind
+          ind=modulo(i+ii-1+N(1),N(1))+1          
+          tmp=tmp+w_right_1(ii)*f(ind,j)
+        enddo
+        buf3d(3,i,j)=tmp !fx(1,0)       
+      enddo
+    enddo
+    do i=1,N(1)+1
+      do j=1,N(2)
+        tmp=0._f64
+        do ii=r_left(2),s_left(2)
+          ind=modulo(j+ii-1+N(2),N(2))+1
+          tmp=tmp+w_left_2(ii)*f(i,ind)
+        enddo
+        buf3d(4,i,j)=tmp !fy(0,0)
+        tmp=0._f64
+        do ii=r_right(2),s_right(2)
+          ind=modulo(j+ii-1+N(2),N(2))+1
+          tmp=tmp+w_right_2(ii)*f(i,ind)
+        enddo
+        buf3d(5,i,j)=tmp !fy(0,1)               
+      enddo
+    enddo
+
+    do j=1,N(2)
+      do i=1,N(1)+1
+        tmp=0._f64
+        do ii=r_left(1),s_left(1)
+          !ind=i+ii;if(ind>N(1)+1) ind=2*(N(1)+1)-ind;if(ind<1) ind=2-ind
+          ind=modulo(i+ii-1+N(1),N(1))+1
+          tmp=tmp+w_left_1(ii)*buf3d(4,ind,j)
+        enddo
+        buf3d(6,i,j)=tmp !fxy(0,0)
+        tmp=0._f64
+        do ii=r_right(1),s_right(1)
+          !ind=i+ii;if(ind>N(1)+1) ind=2*(N(1)+1)-ind;if(ind<1) ind=2-ind
+          ind=modulo(i+ii-1+N(1),N(1))+1
+          tmp=tmp+w_right_1(ii)*buf3d(4,ind,j)
+        enddo
+        buf3d(7,i,j)=tmp !fxy(1,0)       
+        tmp=0._f64
+        do ii=r_left(1),s_left(1)
+          !ind=i+ii;if(ind>N(1)+1) ind=2*(N(1)+1)-ind;if(ind<1) ind=2-ind
+          ind=modulo(i+ii-1+N(1),N(1))+1
+          tmp=tmp+w_left_1(ii)*buf3d(5,ind,j)
+        enddo
+        buf3d(8,i,j)=tmp  !fxy(0,1)
+        tmp=0._f64
+        do ii=r_right(1),s_right(1)
+          !ind=i+ii;if(ind>N(1)+1) ind=2*(N(1)+1)-ind;if(ind<1) ind=2-ind
+          ind=modulo(i+ii-1+N(1),N(1))+1
+          tmp=tmp+w_right_1(ii)*buf3d(5,ind,j)
+        enddo
+        buf3d(9,i,j)=tmp !fxy(1,1)        
+      enddo
+    enddo
+
+    buf3d(:,:,N(2)+1)=buf3d(:,:,1)
+    
+    
+    !print *,'d=',d,maxval(abs(buf3d))
+    
+  end subroutine hermite_coef_per_per
+
+
 
 
   function interpolate_value_hermite_2d( eta1, eta2, interp ) result(res)

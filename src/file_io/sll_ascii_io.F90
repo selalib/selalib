@@ -93,11 +93,50 @@ end subroutine
 
 
 !> Write a 1d array ASCII format
-subroutine sll_ascii_write_array_1d(file_id,array,error)
+subroutine sll_ascii_write_array_1d(file_id,array,error,num_points,array2,array3)
 sll_int32 , intent(in)  :: file_id
 sll_int32 , intent(out) :: error
 sll_real64, intent(in)  :: array(:)
-write(file_id,*,IOSTAT=error) array
+sll_int32, intent(in), optional :: num_points
+sll_real64, intent(in), optional  :: array2(:)
+sll_real64, intent(in), optional  :: array3(:)
+sll_int32 :: i
+
+if(.not.present(num_points))then
+  write(file_id,*,IOSTAT=error) array
+else
+  if(size(array)<num_points)then
+    print *,'#bad size for array'
+    print *,'#at line/file',__LINE__,__FILE__
+    stop
+  endif
+  if(present(array2))then
+    if(size(array2)<num_points)then
+      print *,'#bad size for array2'
+      print *,'#at line/file',__LINE__,__FILE__
+      stop      
+    endif
+    if(present(array3))then
+      if(size(array3)<num_points)then
+        print *,'#bad size for array3'
+        print *,'#at line/file',__LINE__,__FILE__
+        stop      
+      endif
+      do i=1,num_points
+        write(file_id,*,IOSTAT=error) array(i),array2(i),array3(i)
+      enddo            
+    else
+      do i=1,num_points
+        write(file_id,*,IOSTAT=error) array(i),array2(i)
+      enddo
+    endif
+  else
+    do i=1,num_points
+      write(file_id,*,IOSTAT=error) array(i)
+    enddo
+      
+  endif
+endif
 end subroutine
 
 !> Write a 2d array ASCII format

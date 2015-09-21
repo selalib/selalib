@@ -13,7 +13,7 @@ IF (Fortran_COMPILER_NAME MATCHES ifort)
   STRING(REGEX MATCH "1[0-9]\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
 ELSE()
   EXEC_PROGRAM(${CMAKE_Fortran_COMPILER} ARGS "--version" OUTPUT_VARIABLE source_path)
-  STRING(REGEX MATCH "4\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
+  STRING(REGEX MATCH "[4-5]\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
 ENDIF()
 MESSAGE(STATUS "Fortran ${Fortran_COMPILER_NAME}-${Fortran_COMPILER_VERSION}")
 
@@ -21,7 +21,8 @@ MESSAGE(STATUS "Fortran ${Fortran_COMPILER_NAME}-${Fortran_COMPILER_VERSION}")
 IF(Fortran_COMPILER_NAME MATCHES gfortran)
   ADD_DEFINITIONS(-DGFORTRAN)
   SET(CMAKE_Fortran_FLAGS_RELEASE "-w -ffree-line-length-none -fall-intrinsics -O3 -fPIC")
-  SET(CMAKE_Fortran_FLAGS_DEBUG "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2008 -fall-intrinsics -fbounds-check -fbacktrace -ffpe-trap=zero,overflow -O0 -fcheck-array-temporaries")
+#  SET(CMAKE_Fortran_FLAGS_DEBUG "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2008 -fall-intrinsics -fbounds-check -fbacktrace -ffpe-trap=zero,overflow -O0 -fcheck-array-temporaries")
+  SET(CMAKE_Fortran_FLAGS_DEBUG "-g -O0 -Wall -cpp -ffree-line-length-none -std=f2008 -pedantic -Wconversion -Wconversion-extra -Wintrinsics-std -fcheck=all -fall-intrinsics -finit-real=snan -finit-integer=-9999 -fbounds-check -fbacktrace -ffpe-trap=invalid,zero,overflow -fcheck-array-temporaries")
 
 ELSEIF(Fortran_COMPILER_NAME MATCHES ifort)
 
