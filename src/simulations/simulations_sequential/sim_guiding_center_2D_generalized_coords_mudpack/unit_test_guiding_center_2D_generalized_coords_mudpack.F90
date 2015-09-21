@@ -1,7 +1,7 @@
 program guiding_center_2d_curvilinear_mudpack
- use sll_simulation_2d_guiding_center_curvilinear_mudpack_module
+ use sll_simulation_2d_gc_curvilinear_mudpack_module
  implicit none
- class(sll_simulation_2d_guiding_center_curvilinear_mudpack), pointer :: sim
+ class(sll_simulation_2d_gc_curvilinear_mudpack), pointer :: sim
  !type(sll_cartesian_mesh_2d), pointer      :: M
  !class(sll_coordinate_transformation_2d_base), pointer :: transformation
  

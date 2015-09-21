@@ -235,7 +235,7 @@ contains
     sll_int32, intent(in), optional :: num_run
 
     character(len=*), parameter :: this_sub_name = 'init_vp2d_par_cart'
-    character(len=128)          :: err_msg
+    character(len=300)          :: err_msg
 
     character(len=256) :: mesh_case_x1
     sll_int32          :: num_cells_x1
@@ -689,6 +689,8 @@ contains
         sim%split => new_time_splitting_coeff(SLL_TRIPLE_JUMP_VTV)
       case ("SLL_ORDER6_VTV") 
         sim%split => new_time_splitting_coeff(SLL_ORDER6_VTV)
+      case ("SLL_ORDER6_TVT") 
+        sim%split => new_time_splitting_coeff(SLL_ORDER6_TVT)
       case ("SLL_ORDER6VP_TVT") 
         sim%split => new_time_splitting_coeff(SLL_ORDER6VP_TVT,dt=dt)
       case ("SLL_ORDER6VP_VTV") 
