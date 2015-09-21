@@ -1090,6 +1090,169 @@ end subroutine compute_gyroaverage_pade_polar
 
 
 
+subroutine compute_gyroaverage_pade_high_order_polar(gyro,f,rho,order)
+  type(sll_plan_gyroaverage_polar)  :: gyro
+  sll_real64,dimension(:,:),intent(inout) :: f
+  sll_real64,dimension(:,:),allocatable :: fcomp
+  sll_real64,dimension(:),allocatable :: buf
+  sll_real64,dimension(:),allocatable :: diagm1_left,diag_left,diagp1_left,diagm2_left,diagp2_left
+  sll_real64,dimension(:),allocatable :: diagm1_right,diag_right,diagp1_right,fbuf
+  sll_int32,intent(in) :: order(2)
+  sll_real64,intent(in)::rho
+  sll_int32 ::i,k
+  sll_real64::dr,a,b,c,ri,rip1,rip2,nfloat
+  sll_int32 ::error
+  
+  if((order(1)==0).and.(order(2)==2))then
+     a=-(rho**2)/4._f64
+     b=0._f64
+     c=0._f64
+  elseif((order(1)==0).and.(order(2)==4))then
+     a=-(rho**2)/4._f64
+     b=3._f64*(rho**4)/64._f64
+     c=0._f64
+  elseif((order(1)==2).and.(order(2)==4))then
+     a=-2._f64*(rho**2)/27._f64
+     b=5._f64*(rho**4)/1728._f64
+     c=19._f64*(rho**2)/108._f64
+  else
+      print *,'#bad value of pade_order=', order
+      print *,'#not implemented'
+      print *,'#in compute_gyroaverage_pade_high_order_polar'
+      stop  
+  endif
+  
+  dr=(gyro%eta_max(1)-gyro%eta_min(1))/real(gyro%Nc(1),f64)
+  
+  SLL_ALLOCATE(buf(1:2*gyro%Nc(2)+15),error)
+  SLL_ALLOCATE(fcomp(1:gyro%Nc(1)+1,1:gyro%Nc(2)),error)
+  SLL_ALLOCATE(diagm2_left(1:gyro%Nc(1)+1),error)
+  SLL_ALLOCATE(diagm1_left(1:gyro%Nc(1)+1),error)
+  SLL_ALLOCATE(diag_left(1:gyro%Nc(1)+1),error)
+  SLL_ALLOCATE(diagp1_left(1:gyro%Nc(1)+1),error)
+  SLL_ALLOCATE(diagp2_left(1:gyro%Nc(1)+1),error)
+  SLL_ALLOCATE(diagm1_right(1:gyro%Nc(1)+1),error)
+  SLL_ALLOCATE(diag_right(1:gyro%Nc(1)+1),error)
+  SLL_ALLOCATE(diagp1_right(1:gyro%Nc(1)+1),error)
+  SLL_ALLOCATE(fbuf(1:gyro%Nc(1)+1),error)
+  
+  
+  fcomp(1:gyro%Nc(1)+1,1:gyro%Nc(2))=f(1:gyro%Nc(1)+1,1:gyro%Nc(2))
+  
+  
+  !*** Perform FFT 1D in theta direction of ***
+  !***   the system solution                ***
+  call dffti(gyro%Nc(2),buf)
+  do i=1,gyro%Nc(1)+1
+     call dfftf(gyro%Nc(2),fcomp(i,:),buf)
+  enddo
+  fcomp=fcomp/real(gyro%Nc(2),f64)
+  
+  !***POISSON
+  do k=1,gyro%Nc(2)
+     nfloat=floor(k/2._f64)*1._f64
+     do i=1,gyro%Nc(1)-1
+        ri=gyro%eta_min(1)+(gyro%eta_max(1)-gyro%eta_min(1))*real(i-1,f64)/real(gyro%Nc(1),f64)
+        rip1=gyro%eta_min(1)+(gyro%eta_max(1)-gyro%eta_min(1))*real(i,f64)/real(gyro%Nc(1),f64)
+        rip2=gyro%eta_min(1)+(gyro%eta_max(1)-gyro%eta_min(1))*real(i+1,f64)/real(gyro%Nc(1),f64)
+      
+      ! gauche
+        
+        diagm2_left(i+2)=b/dr**4 + &
+           (2._f64*b/rip2)*(-1._f64/(2._f64*dr**3))
+           
+        diagm1_left(i+1)=-4._f64*b/dr**4 + &
+           (2._f64*b/rip1)*(2._f64/(2._f64*dr**3)) + &
+           (a-(b*(2._f64*(nfloat**2)+1._f64)/rip1**2)) * (1._f64/dr**2) + &
+           (a/rip1+b*(2._f64*(nfloat**2)+1._f64)/(rip1**3)) * (-1._f64/(2._f64*dr)) 
+     		
+        diag_left(i)=6._f64*b/dr**4 + &
+           (a-(b*(2._f64*(nfloat**2)+1._f64)/ri**2)) * (-2._f64/dr**2) + &
+           (1._f64-a*(nfloat**2)/(rip1**2)+b*(nfloat**2)*(nfloat**2-4._f64)/(ri**4))
+        	
+        diagp1_left(i)=-4._f64*b/dr**4 + &
+           (2._f64*b/ri)*(-2._f64/(2._f64*dr**3)) + &
+           (a-(b*(2._f64*(nfloat**2)+1._f64)/ri**2)) * (1._f64/dr**2) + &
+           (a/ri+b*(2._f64*(nfloat**2)+1._f64)/(ri**3)) * (1._f64/(2._f64*dr))        
+        		
+        diagp2_left(i)=b/dr**4 + &
+           (2._f64*b/ri)*(1._f64/(2._f64*dr**3))
+      
+      ! droite
+          
+        diagm1_right(i+1)= c * (1._f64/dr**2) + &
+           (c/rip1) * (-1._f64/(2._f64*dr)) 
+     		
+        diag_right(i)= c * (-2._f64/dr**2) + &
+           (1._f64-c*(nfloat**2)/(rip1**2))
+        	
+        diagp1_right(i)= c * (1._f64/dr**2) + &
+           (c/ri) * (1._f64/(2._f64*dr))
+
+
+     enddo
+     diagm1_left(1)=0._f64
+     diagm2_left(1)=0._f64
+     diagm2_left(2)=0._f64
+     diagp1_left(gyro%Nc(1)+1)=0._f64
+     diagp2_left(gyro%Nc(1)+1)=0._f64
+     diagp2_left(gyro%Nc(1))=0._f64
+     !***  Dirichlet boundary conditions ***	
+     diag_left(1)=1._f64  
+     diagp1_left(1)=0._f64
+     diagp2_left(1)=0._f64
+     diagm1_left(2)=0._f64
+     diag_left(2)=1._f64
+     diagp1_left(2)=0._f64
+     diagp2_left(2)=0._f64
+     diagm1_left(gyro%Nc(1))=0._f64
+     diagm2_left(gyro%Nc(1))=0._f64
+     diag_left(gyro%Nc(1))=1._f64
+     diagp1_left(gyro%Nc(1))=0._f64
+     diagm1_left(gyro%Nc(1)+1)=0._f64
+     diagm2_left(gyro%Nc(1)+1)=0._f64
+     diag_left(gyro%Nc(1)+1)=1._f64
+    
+    
+     diagm1_right(1)=0._f64
+     diagp1_right(gyro%Nc(1)+1)=0._f64
+     !***  Dirichlet boundary conditions ***	
+     diag_right(1)=1._f64  
+     diagp1_right(1)=0._f64
+     diagm1_right(2)=0._f64
+     diag_right(2)=1._f64
+     diagp1_right(2)=0._f64
+     diagm1_right(gyro%Nc(1))=0._f64
+     diag_right(gyro%Nc(1))=1._f64
+     diagp1_right(gyro%Nc(1))=0._f64
+     diagm1_right(gyro%Nc(1)+1)=0._f64
+     diag_right(gyro%Nc(1)+1)=1._f64
+     
+     
+     ! droite
+     fbuf(1:gyro%Nc(1)+1) = fcomp(1:gyro%Nc(1)+1,k)
+     do i=2,gyro%Nc(1)
+        fcomp(i,k)=diagm1_right(i)*fbuf(i-1)+diag_right(i)*fbuf(i)+diagp1_right(i)*fbuf(i+1)
+     enddo
+     
+     !*** Solve penta ***
+     call penta(gyro%Nc(1)+1,diagm2_left,diagm1_left,diag_left,diagp1_left,diagp2_left,fcomp(1:gyro%Nc(1)+1,k),f(1:gyro%Nc(1)+1,k))
+  enddo
+  
+  !*** Perform FFT 1D inverse ***
+  do i=1,gyro%Nc(1)+1
+     call dfftb(gyro%Nc(2),f(i,1:gyro%Nc(2)),buf)
+  enddo
+  
+  !*** duplicate periodic value ***
+  f(1:gyro%Nc(1)+1,gyro%Nc(2)+1)=f(1:gyro%Nc(1)+1,1)
+  
+end subroutine compute_gyroaverage_pade_high_order_polar
+
+
+
+
+
 subroutine hermite_coef_nat_per(f,buf3d,N,d)
   sll_int32,intent(in)::N(2),d(2)
   sll_real64,dimension(N(1)+1,N(2)),intent(in)::f
@@ -1913,6 +2076,71 @@ subroutine solve_tridiag(a,b,c,v,x,n)
   end do backsub
   
 end subroutine solve_tridiag
+
+
+      subroutine penta(n,e,a,b,c,f,d,x)
+!************************** P E N T A ***************************
+!                                                               *
+!     Solution of a linear system of algebraic equations with   *
+!     a pentadiagonal matrix of coefficients.(No pivoting)      *
+!     Equation no. i :                                          *
+!                                                               *
+!     e(i)*x(i-2)+ a(i)*x(i-1) + b(i)*x(i) +                    *
+!     c(i)*x(i+1) + f(i)*x(i+2)  = d(i), i = 1,2,...n           *
+!                                                               *
+!                       === Use ===                             *
+!                                                               *
+!                  call penta(n,a,b,c,d,x)                      *
+!                            or                                 *
+!                  call penta(n,a,b,c,d,d)                      *
+!                                                               *
+!      In the last case, vector d contains the solution.        *
+!                                                               *
+!                     === Input ===                             *
+!                                                               *
+!     n ....... integer     . Number of equations               *
+!     e(1:n) .. real vector . Lowest diagonal.Elements e(1)     *
+!                             and e(2) are not used             *
+!     a(1:n) .. real vector . Lower diagonal.Element a(1)       *
+!                                            is not used.       *
+!     b(1:n) .. real vector . Main diagonal                     *
+!     c(1:n) .. real vector . Upper diagonal.Element c(n)       *
+!                                            is not used.       *
+!     f(1:n) .. real vector . Uppermost diagonal.Elements       *
+!                             f(n-1)and f(n) are not used.      *
+!     d(1:n) .. real vector . Right hand side of the system.    *
+!                                                               *
+!                     === Output ===                            *
+!                                                               *
+!     x(1:n) .. real vector . The solution vector               *
+!                                                               *
+!********************** fortran 90 ******************************
+      implicit none
+      sll_int32, intent(in) :: n
+      sll_real64, intent(inout), dimension(n) :: e,a,b,c,f,d
+      sll_real64, intent(out) :: x(n)
+	  !  --- Local variables ---
+      sll_int32 :: i
+      sll_real64 :: q
+      do i = 2,n-1
+         q = a(i)/b(i-1)
+         b(i) = b(i) - q*c(i-1)
+         c(i) = c(i) - q*f(i-1)
+         d(i) = d(i) - q*d(i-1)
+         q = e(i+1)/b(i-1)
+         a(i+1) = a(i+1) - q*c(i-1)
+         b(i+1) = b(i+1) - q*f(i-1)
+         d(i+1) = d(i+1) - q*d(i-1)
+      end do
+      q = a(n)/b(n-1)
+      b(n) = b(n) - q*c(n-1)
+      x(n) = (d(n) - q*d(n-1))/b(n)
+      x(n-1) = (d(n-1) - c(n-1)*x(n))/b(n-1)
+      do i = n-2,1,-1
+         x(i) = (d(i) - f(i)*x(i+2) - c(i)*x(i+1))/b(i)
+      end do
+      return
+      end subroutine penta
 
 
 
