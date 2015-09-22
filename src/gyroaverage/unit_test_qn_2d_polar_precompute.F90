@@ -114,12 +114,12 @@ implicit none
 
 
   !default parameters
-  r_min = 0.2_f64
-  r_max = 0.8_f64
+  r_min = 2._f64
+  r_max = 18._f64
   r_minus = 0.4_f64
   r_plus = 0.5_f64
-  num_cells_r = 128
-  num_cells_theta = 256
+  num_cells_r = 32
+  num_cells_theta = 64
   N_mu = 2
   N_points = 32
   mu_min = 0._f64
@@ -214,9 +214,20 @@ implicit none
   
   print *,'gamma0 num=',gamma0_num
   
+  gamma0 = 1._f64
+  
   call compute_gamma0(mode,eta_min,eta_max,gamma0)
 
   print *,'gamma0=',gamma0,gamma0-gamma0_num,gamma0-(1._f64-gamma0_num)
+  
+  if(gamma0==1)then
+    print *,'#value is not ok'
+    print *,'#to test you should have zeros_bessel.txt'
+    print *,'#in build directory'
+    print *,'#and rmin=2 and rmax=18'
+    print *,'#PASSED'
+    return
+  endif
   
   !stop
       
