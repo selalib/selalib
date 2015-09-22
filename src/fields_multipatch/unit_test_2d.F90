@@ -76,7 +76,7 @@ program unit_test_fields_multipatch
   call F%update_interpolation_coefficients()
 
   print *, 'writing to file...'
-  call F%write_to_file(0)
+  call F%write_to_file(1)
 
   call sll_delete(T) 
   call sll_delete(F)

@@ -65,3 +65,18 @@ IF(FFTW_FOUND AND FFTW_ENABLED)
 
 ENDIF(FFTW_FOUND AND FFTW_ENABLED)
   
+#================================================================
+# add two species simulations
+# for the moment, only a copy of one specy simulation
+
+#comment for the moment as build fail on prototype-devel
+SET(   TEST_NAME 2d_vp_cartesian_two_species               )
+SET(    SIM_NAME 2d_vlasov_poisson_cartesian_two_species   )
+SET(  EXECUTABLE "test_${TEST_NAME}"           )
+SET( INSTALL_DIR "${INSTALL_DIR}/${TEST_NAME}" )
+
+ADD_EXECUTABLE( ${EXECUTABLE} simulation_${SIM_NAME}.F90
+                              unit_test_${TEST_NAME}.F90 )
+  
+TARGET_LINK_LIBRARIES( ${EXECUTABLE} sll_simulations_parallel )
+

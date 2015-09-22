@@ -4,7 +4,7 @@
 !     CALVI project team
 !  
 !  This code SeLaLib (for Semi-Lagrangian-Library) 
-!  is a parallel library for simulating the plasma turbulence 
+!  is a parllel library for simulating the plasma turbulence 
 !  in a tokamak.
 !  
 !  This software is governed by the CeCILL-B license 
@@ -72,6 +72,7 @@ module sll_simulation_4d_vlasov_parallel_poisson_sequential_cartesian
    procedure(sll_scalar_initializer_4d), nopass, pointer :: init_func
    sll_real64, dimension(:), pointer :: params
    sll_real64 :: nrj0   
+   sll_real64 :: l20   
 
    !time_iterations
    sll_real64 :: dt
@@ -101,6 +102,8 @@ module sll_simulation_4d_vlasov_parallel_poisson_sequential_cartesian
      procedure, pass(sim) :: init_from_file => init_vp4d_fake
      
   end type sll_simulation_4d_vlasov_par_poisson_seq_cart
+  
+  
 
 contains
   
@@ -377,6 +380,8 @@ contains
         sim%params(3) = eps        
         sim%nrj0 = (0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
           *(1._f64/kmode_x1**2+1._f64/kmode_x2**2) 
+        sim%l20 = (2._f64*sll_pi/kmode_x1)*(2._f64*sll_pi/kmode_x2)*0.25_f64
+        sim%l20 =sim%l20*(1._f64+0.25_f64*(eps**2))/sll_pi           
       case ("SLL_LANDAU_TWO_MODES")
         sim%init_func => sll_landau_mode_initializer_4d
         SLL_ALLOCATE(sim%params(6),ierr)
@@ -395,6 +400,9 @@ contains
         sim%nrj0 = sim%nrj0+(eps_l*sll_pi)**2/(kmode_x1*kmode_x2) &
           *1._f64/(lmode_x1**2+lmode_x2**2)
         endif
+        sim%l20 = (2._f64*sll_pi/kmode_x1)*(2._f64*sll_pi/kmode_x2)*0.25_f64
+        sim%l20 =sim%l20*(1._f64+0.25_f64*(eps**2+eps_l**2))/sll_pi           
+
       case ("SLL_LANDAU_TWO_MODES_COS_SUM")
         sim%init_func => sll_landau_mode_initializer_cos_sum_4d
         SLL_ALLOCATE(sim%params(6),ierr)
@@ -410,7 +418,9 @@ contains
           sim%nrj0 = 2._f64*(eps*sll_pi)**2/(kmode_x1*kmode_x2*(kmode_x1**2+kmode_x2**2))
           sim%nrj0 = sim%nrj0+ &
             2._f64*(eps_l*sll_pi)**2/(lmode_x1*lmode_x2*(lmode_x1**2+lmode_x2**2))
-        endif           
+        endif
+        sim%l20 = (2._f64*sll_pi/kmode_x1)*(2._f64*sll_pi/kmode_x2)*0.25_f64
+        sim%l20 =sim%l20*(1._f64+0.5_f64*(eps**2+eps_l**2))/sll_pi           
       case default
         print *,'#init_func_case not implemented'
         print *,'#in initialize_vlasov_par_poisson_seq_cart'  
@@ -437,6 +447,8 @@ contains
         sim%split => new_time_splitting_coeff(SLL_TRIPLE_JUMP_VTV)
       case ("SLL_ORDER6_VTV") 
         sim%split => new_time_splitting_coeff(SLL_ORDER6_VTV)
+      case ("SLL_ORDER6_TVT") 
+        sim%split => new_time_splitting_coeff(SLL_ORDER6_TVT)
       case ("SLL_ORDER6VP_TVT") 
         sim%split => new_time_splitting_coeff(SLL_ORDER6VP_TVT,dt=dt)
       case ("SLL_ORDER6VP_VTV") 
@@ -449,6 +461,12 @@ contains
         sim%split => new_time_splitting_coeff(SLL_ORDER6VP2D_VTV,dt=dt)
       case ("SLL_ORDER6VPOT_VTV") 
         sim%split => new_time_splitting_coeff(SLL_ORDER6VPOT_VTV,dt=dt)
+      case ("SLL_ORDER6VPOTnew1_VTV") 
+        sim%split => new_time_splitting_coeff(SLL_ORDER6VPOTnew1_VTV,dt=dt)
+      case ("SLL_ORDER6VPOTnew2_VTV") 
+        sim%split => new_time_splitting_coeff(SLL_ORDER6VPOTnew2_VTV,dt=dt)
+      case ("SLL_ORDER6VPOTnew3_VTV") 
+        sim%split => new_time_splitting_coeff(SLL_ORDER6VPOTnew3_VTV,dt=dt)
       case ("SLL_ORDER6VPnew2_VTV") 
         sim%split => new_time_splitting_coeff(SLL_ORDER6VPnew2_VTV,dt=dt)
       case default
@@ -576,6 +594,9 @@ contains
     sll_real64, dimension(:,:,:,:), allocatable :: f_seq_x1x2
     sll_real64, dimension(:,:), allocatable :: rho_split
     sll_real64, dimension(:,:), allocatable :: rho_full
+    sll_real64, dimension(:,:,:), allocatable :: data_diag_2d_split
+    sll_real64, dimension(:,:,:), allocatable :: data_diag_2d_full
+    sll_real64 :: data_diag_0d(3)
     sll_real64, dimension(:,:), allocatable :: intfdx_split
     sll_real64, dimension(:,:), allocatable :: intfdx_full
     sll_real64, dimension(:,:), allocatable :: E_x1
@@ -631,9 +652,11 @@ contains
     sll_real64 :: tmp
     sll_real64 :: ekin0
     sll_real64 :: nrj0
+    sll_real64 :: mass0
     sll_real64 :: nrj_jac
     sll_int32 :: ii
-    
+    sll_int32 :: i
+        
     time = 0.0_f64
     world_size = sll_get_collective_size(sll_world_collective)
     my_rank    = sll_get_collective_rank(sll_world_collective)
@@ -707,6 +730,7 @@ contains
     
     SLL_ALLOCATE(rho_full(nc_x1+1,nc_x2+1),ierr)
     SLL_ALLOCATE(intfdx_full(nc_x3+1,nc_x4+1),ierr)
+    SLL_ALLOCATE(data_diag_2d_full(nc_x3+1,nc_x4+1,3),ierr)
     SLL_ALLOCATE(E_x1(nc_x1+1,nc_x2+1),ierr)
     SLL_ALLOCATE(E_x2(nc_x1+1,nc_x2+1),ierr)
     SLL_ALLOCATE(field_x1(nc_x1+1,nc_x2+1,sim%split%dim_split_V),ierr)
@@ -768,6 +792,7 @@ contains
          layout2d_par_x3x4 )
     call compute_local_sizes( layout2d_par_x3x4, loc_sz_x3, loc_sz_x4)
     SLL_ALLOCATE(intfdx_split(loc_sz_x3,loc_sz_x4),ierr)
+    SLL_ALLOCATE(data_diag_2d_split(loc_sz_x3,loc_sz_x4,3),ierr)
     SLL_ALLOCATE(send_buf_x3x4(loc_sz_x3*loc_sz_x4), ierr)
 
 
@@ -793,21 +818,33 @@ contains
       nc_x4+1, &
       delta3, &    
       delta4) 
-    call load_buffer_2d( layout2d_par_x1x2, rho_split, send_buf_x1x2 )
-    recv_sz(:) = receive_counts_array_2d( layout2d_par_x1x2, world_size )    
-    send_size = size(send_buf_x1x2)
-    call compute_displacements_array_2d( &
-         layout2d_par_x1x2, &
-         world_size, &
-         disps )
-    call sll_collective_allgatherv_real64( &
-         sll_world_collective, &
-         send_buf_x1x2, &
-         send_size, &
-         recv_sz, &
-         disps, &
-         recv_buf_x1x2 )
-    call unload_buffer_2d(layout2d_par_x1x2, recv_buf_x1x2, rho_full)
+
+    call split_to_full( &
+      rho_split, &
+      layout2d_par_x1x2, &
+      world_size, &
+      send_buf_x1x2, &
+      recv_sz, &
+      disps, &
+      recv_buf_x1x2, &
+      rho_full)
+
+
+!    call load_buffer_2d( layout2d_par_x1x2, rho_split, send_buf_x1x2 )
+!    recv_sz(:) = receive_counts_array_2d( layout2d_par_x1x2, world_size )    
+!    send_size = size(send_buf_x1x2)
+!    call compute_displacements_array_2d( &
+!         layout2d_par_x1x2, &
+!         world_size, &
+!         disps )
+!    call sll_collective_allgatherv_real64( &
+!         sll_world_collective, &
+!         send_buf_x1x2, &
+!         send_size, &
+!         recv_sz, &
+!         disps, &
+!         recv_buf_x1x2 )
+!    call unload_buffer_2d(layout2d_par_x1x2, recv_buf_x1x2, rho_full)
 
     call solve(sim%poisson,E_x1,E_x2,rho_full,nrj)
     call compute_jacobian( &
@@ -838,7 +875,7 @@ contains
     ekin = (sim%mesh_x1%eta_max-sim%mesh_x1%eta_min) &
       *(sim%mesh_x2%eta_max-sim%mesh_x2%eta_min) ! analytic expression
     intfdx_full = 0._f64 ! to compute correctly
-    
+    mass0 = ekin
     nrj0=sim%nrj0
     ekin0=ekin
     
@@ -920,14 +957,22 @@ contains
 		  0, &
 		  ierr)
       endif
-      write(th_diag_id,'(7g20.12)') &
+      write(th_diag_id,'(13g20.12)') &
         time, &
         nrj, &
         ekin, &
         nrj0, &
         ekin0, &
         maxval(abs(jacobian_E)), &
-        nrj_jac !0.5*nrj+ekin
+        nrj_jac, &
+        mass0, &
+        mass0, &
+        sim%l20, &
+        mass0, &
+        mass0, &
+        sim%l20
+        
+         !0.5*nrj+ekin
     endif
 
     
@@ -1002,21 +1047,31 @@ contains
             nc_x4+1, &
             delta3, &    
             delta4) 
-          call load_buffer_2d( layout2d_par_x1x2, rho_split, send_buf_x1x2 )
-          recv_sz(:) = receive_counts_array_2d( layout2d_par_x1x2, world_size )    
-          send_size = size(send_buf_x1x2)
-          call compute_displacements_array_2d( &
+          call split_to_full( &
+            rho_split, &
             layout2d_par_x1x2, &
             world_size, &
-            disps )
-          call sll_collective_allgatherv_real64( &
-            sll_world_collective, &
             send_buf_x1x2, &
-            send_size, &
             recv_sz, &
             disps, &
-            recv_buf_x1x2 )
-          call unload_buffer_2d(layout2d_par_x1x2, recv_buf_x1x2, rho_full)
+            recv_buf_x1x2, &
+            rho_full)
+!          call load_buffer_2d( layout2d_par_x1x2, rho_split, send_buf_x1x2 )
+!          recv_sz(:) = receive_counts_array_2d( layout2d_par_x1x2, world_size )    
+!          send_size = size(send_buf_x1x2)
+!          call compute_displacements_array_2d( &
+!            layout2d_par_x1x2, &
+!            world_size, &
+!            disps )
+!          call sll_collective_allgatherv_real64( &
+!            sll_world_collective, &
+!            send_buf_x1x2, &
+!            send_size, &
+!            recv_sz, &
+!            disps, &
+!            recv_buf_x1x2 )
+!          call unload_buffer_2d(layout2d_par_x1x2, recv_buf_x1x2, rho_full)
+
           call solve(sim%poisson,E_x1,E_x2,rho_full,nrj)
           call compute_jacobian( &
             E_x1, &
@@ -1096,32 +1151,55 @@ contains
       if (mod(istep,sim%freq_diag_time)==0) then
         time = real(istep,f64)*sim%dt
         
+
+        call compute_reduction_diag_4d_to_2d_direction12(&
+          f_seq_x1x2, &
+          data_diag_2d_split(:,:,1:3), &
+          loc_sz_x1, &
+          loc_sz_x2, &
+          loc_sz_x3, &
+          loc_sz_x4, &
+		  delta1, &    
+		  delta2)
+
         
         
-        call compute_reduction_4d_to_2d_direction12(&
-            f_seq_x1x2, &
-            intfdx_split, &
-            loc_sz_x1, &
-            loc_sz_x2, &
-            loc_sz_x3, &
-            loc_sz_x4, &
-            delta1, &    
-            delta2) 
-        call load_buffer_2d( layout2d_par_x3x4, intfdx_split, send_buf_x3x4 )
-        recv_sz(:) = receive_counts_array_2d( layout2d_par_x3x4, world_size )    
-        send_size = size(send_buf_x3x4)
-        call compute_displacements_array_2d( &
+!        call compute_reduction_4d_to_2d_direction12(&
+!            f_seq_x1x2, &
+!            intfdx_split, &
+!            loc_sz_x1, &
+!            loc_sz_x2, &
+!            loc_sz_x3, &
+!            loc_sz_x4, &
+!            delta1, &    
+!            delta2) 
+        do i=1,3
+          call split_to_full( &
+            data_diag_2d_split(:,:,i), &
             layout2d_par_x3x4, &
             world_size, &
-            disps )
-        call sll_collective_allgatherv_real64( &
-            sll_world_collective, &
             send_buf_x3x4, &
-            send_size, &
             recv_sz, &
             disps, &
-            recv_buf_x3x4 )
-        call unload_buffer_2d(layout2d_par_x3x4, recv_buf_x3x4, intfdx_full)
+            recv_buf_x3x4, &
+            data_diag_2d_full(:,:,i))
+        enddo
+        intfdx_full = data_diag_2d_full(:,:,1)
+!        call load_buffer_2d( layout2d_par_x3x4, intfdx_split, send_buf_x3x4 )
+!        recv_sz(:) = receive_counts_array_2d( layout2d_par_x3x4, world_size )    
+!        send_size = size(send_buf_x3x4)
+!        call compute_displacements_array_2d( &
+!            layout2d_par_x3x4, &
+!            world_size, &
+!            disps )
+!        call sll_collective_allgatherv_real64( &
+!            sll_world_collective, &
+!            send_buf_x3x4, &
+!            send_size, &
+!            recv_sz, &
+!            disps, &
+!            recv_buf_x3x4 )
+!        call unload_buffer_2d(layout2d_par_x3x4, recv_buf_x3x4, intfdx_full)
         if (mod(istep,sim%freq_diag)==0) then
           if(sll_get_collective_rank(sll_world_collective)==0) then
             call sll_binary_write_array_2d(intfdx_id,intfdx_full(1:nc_x3+1,1:nc_x4+1),ierr)
@@ -1144,20 +1222,39 @@ contains
             nc_x4+1, &
             delta3, &    
             delta4) 
-        
+        do i=1,3
+          call compute_reduction_2d_to_0d(&
+            data_diag_2d_full(:,:,i), &
+            data_diag_0d(i), &
+            nc_x3+1, &
+            nc_x4+1, &
+            delta3, &    
+            delta4) 
+        enddo
+
+
+
         
         
         
         
         if(sll_get_collective_rank(sll_world_collective)==0) then
-          write(th_diag_id,'(7g20.12)') &
+          write(th_diag_id,'(13g20.12)') &
             time, &
             nrj, &
             ekin, &
             nrj0, &
             ekin0, &
             maxval(abs(jacobian_E)), &
-            nrj_jac!,ekin+0.5_f64*nrj
+            nrj_jac, &
+            data_diag_0d(1), &
+            data_diag_0d(2), &
+            data_diag_0d(3), &
+            mass0, &
+            mass0, &
+            sim%l20
+            
+            !,ekin+0.5_f64*nrj
         endif
       endif
       if (mod(istep,sim%freq_diag)==0) then
@@ -1249,7 +1346,46 @@ contains
     endif
     
   end subroutine run_vp4d_cartesian    
-  
+
+
+  subroutine split_to_full( &
+    split, &
+    layout2d, &
+    world_size, &
+    send_buf, &
+    recv_sz, &
+    disps, &
+    recv_buf, &
+    full)
+    sll_real64, dimension(:,:), intent(in) :: split
+    type(layout_2D), pointer :: layout2d
+    sll_int32, intent(in) :: world_size
+    sll_real64, dimension(:), intent(inout) :: send_buf
+    sll_int32, dimension(:), intent(inout) :: recv_sz
+    sll_int32, dimension(:), intent(inout) :: disps
+    sll_real64, dimension(:), intent(inout) :: recv_buf
+    sll_real64, dimension(:,:), intent(inout) :: full
+    sll_int32 :: send_size
+
+    call load_buffer_2d( layout2d, split, send_buf )
+    recv_sz(:) = receive_counts_array_2d( layout2d, world_size )    
+    send_size = size(send_buf)
+    call compute_displacements_array_2d( &
+      layout2d, &
+      world_size, &
+      disps )
+    call sll_collective_allgatherv_real64( &
+      sll_world_collective, &
+      send_buf, &
+      send_size, &
+      recv_sz, &
+      disps, &
+      recv_buf )
+    call unload_buffer_2d(layout2d, recv_buf, full)
+    
+  end subroutine split_to_full    
+
+
   
   subroutine compute_jacobian(E_x1,E_x2,nc_x1,nc_x2,factor,r,s,jac_E)
     sll_real64, dimension(:,:), intent(in) :: E_x1
