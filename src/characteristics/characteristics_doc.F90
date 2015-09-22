@@ -11,12 +11,16 @@
 
 !> @defgroup characteristics sll_characteristics 
 !> @brief 
-!> Description of characteristics library (72 characters)
-!> @author Selalib team 
+!> computes the characteristics for advection
+!> @author Michel Mehrenberger
 !> You can add a contact, do not put your email to prevent spam.
 !> @details
-!> Long description of  characteristics, you can add some references or math equations.
-!>
+!> computes the characteristics
+!> it is then used for the advection
+!> in combination with interpolation for the BSL method
+!> there exists conservative versions
+!> that are used with CSL (more in development)
+
 !> <b> Headers file available </b>
 !>  - sll_characteristics.h
 !>
