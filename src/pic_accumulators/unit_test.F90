@@ -43,9 +43,6 @@ program accumulate_tester
   call sll_initial_particles_4d(THERM_SPEED, &
         ALPHA, KX, m2d, &
  	NUM_PARTICLES, part_group )
-!!$  call sll_initialize_some4Dfunction( THERM_SPEED, &
-!!$       ALPHA, KX, m2d, &
-!!$       NUM_PARTICLES, part_group )
 
   all_charge => new_charge_accumulator_2d( m2d )
 
