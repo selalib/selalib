@@ -23,9 +23,9 @@
 /
 
 &advector
- advector_x1 = "SLL_SPLINES"
+ advector_x1 = "SLL_LAGRANGE"
  order_x1    = 10
- advector_x2 = "SLL_SPLINES"
+ advector_x2 = "SLL_LAGRANGE"
  order_x2    = 10
 /
 
@@ -35,7 +35,7 @@
 /
 
 &berk_breizman
-  gamma_d =  1.0
+  gamma_d =  0.0
   nu_a    =  0.12589
 /
 

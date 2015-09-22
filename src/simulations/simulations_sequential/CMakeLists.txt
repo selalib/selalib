@@ -40,3 +40,4 @@ ENDIF(HDF5_ENABLED)
 
 ADD_SUBDIRECTORY(bsl_examples)
 ADD_SUBDIRECTORY(csl_examples)
+ADD_SUBDIRECTORY(fsl_examples)
