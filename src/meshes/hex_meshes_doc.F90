@@ -9,7 +9,7 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup meshes sll_hex_meshes
+!> @defgroup hex_meshes sll_hex_meshes
 !> @brief
 !> Hexagonal meshes library: three directional meshes discretized by equilateral
 !> triangles.
