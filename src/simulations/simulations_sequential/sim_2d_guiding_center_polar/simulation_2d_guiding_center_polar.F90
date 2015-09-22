@@ -64,6 +64,7 @@ module sll_simulation_2d_guiding_center_polar_module
 
    !geometry
    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
+   class(sll_coordinate_transformation_2d_base), pointer :: transformation
 
 
    !initial function
@@ -86,6 +87,10 @@ module sll_simulation_2d_guiding_center_polar_module
    sll_int32  :: num_iterations
    sll_int32  :: freq_diag
    sll_int32  :: freq_diag_time
+   character(len=256)      :: thdiag_filename
+   character(len=256)      :: mesh_name
+   character(len=256)      :: f_name
+   character(len=256)      :: phi_name
 
    !time_loop
    sll_int32 :: time_loop_case
@@ -99,23 +104,25 @@ module sll_simulation_2d_guiding_center_polar_module
 
 contains
 
-  function new_guiding_center_2d_polar(filename) result(sim)
+  function new_guiding_center_2d_polar(filename,num_run) result(sim)
     type(sll_simulation_2d_guiding_center_polar), pointer :: sim    
     character(len=*), intent(in), optional :: filename
+    sll_int32, intent(in), optional :: num_run
     sll_int32 :: ierr
     
     SLL_ALLOCATE(sim,ierr)
     
-    call initialize_guiding_center_2d_polar(sim,filename)
+    call initialize_guiding_center_2d_polar(sim,filename,num_run)
     
   
   
   end function new_guiding_center_2d_polar
   
-  subroutine initialize_guiding_center_2d_polar(sim,filename)
+  subroutine initialize_guiding_center_2d_polar(sim,filename,num_run)
     class(sll_simulation_2d_guiding_center_polar), intent(inout) :: sim
     
     character(len=*), intent(in), optional :: filename
+    sll_int32, intent(in), optional :: num_run
     sll_int32             :: IO_stat
     sll_int32, parameter  :: input_file = 99
     
@@ -155,7 +162,11 @@ contains
     !character(len=256) :: mudpack_method    
     sll_int32 :: spline_degree_eta1
     sll_int32 :: spline_degree_eta2
-
+    character(len=256) :: bc_min_case
+    character(len=256) :: bc_max_case
+    sll_int32 :: bc_min
+    sll_int32 :: bc_max
+    
     !local variables
     sll_int32 :: Nc_x1
     sll_int32 :: Nc_x2
@@ -185,6 +196,10 @@ contains
 !    sll_real64, dimension(:,:), allocatable :: cy_2d
 !    sll_real64, dimension(:,:), allocatable :: ce_2d
     sll_int32 :: ierr
+    character(len=256)      :: str_num_run
+    character(len=256)      :: filename_loc
+
+
 
     namelist /geometry/ &
       mesh_case, &
@@ -221,7 +236,9 @@ contains
       poisson_case, &
       poisson_solver, &
       spline_degree_eta1, &
-      spline_degree_eta2    
+      spline_degree_eta2, &
+      bc_min_case, &
+      bc_max_case    
 
 
     !set default parameters
@@ -239,6 +256,8 @@ contains
     r_plus = 5._f64
     kmode_x2 = 3._f64
     eps = 1.e-6_f64
+    bc_min_case = "SLL_NEUMANN_MODE0"
+    bc_max_case = "SLL_DIRICHLET"
     
     !time_iterations
     dt = 0.1_f64
@@ -265,11 +284,37 @@ contains
     !poisson_solver = "SLL_ELLIPTIC_FINITE_ELEMENT_SOLVER" !use with "SLL_PHI_FROM_RHO"
     !poisson_solver = "SLL_MUDPACK_CURVILINEAR"   !use with "SLL_PHI_FROM_RHO"    
     spline_degree_eta1 = 3
-    spline_degree_eta2 = 3    
+    spline_degree_eta2 = 3
+    bc_min_case = "SLL_NEUMANN_MODE_0"    
+    bc_max_case = "SLL_DIRICHLET"    
+
+    if(present(num_run))then
+      write(str_num_run, *) num_run
+      str_num_run = adjustl(str_num_run) 
+      sim%thdiag_filename = "thdiag_"//trim(str_num_run)//".dat"
+      sim%mesh_name = "polar_"//trim(str_num_run)
+      sim%f_name = "f_"//trim(str_num_run)//"_"
+      sim%phi_name = "phi_"//trim(str_num_run)//"_"
+    else      
+      sim%thdiag_filename = "thdiag.dat"
+      sim%mesh_name = "curvilinear"
+      sim%f_name = "f_"
+      sim%phi_name = "phi_"
+    endif
+
+
 
 
     if(present(filename))then
-      open(unit = input_file, file=trim(filename)//'.nml',IOStat=IO_stat)
+
+      filename_loc = filename
+      filename_loc = adjustl(filename_loc)
+      if(present(num_run)) then
+        filename_loc = trim(filename)//"_"//trim(str_num_run)
+        !filename_loc = adjustl(filename_loc)
+        !print *,'filename_loc=',filename_loc
+      endif
+      open(unit = input_file, file=trim(filename_loc)//'.nml',IOStat=IO_stat)
         if( IO_stat /= 0 ) then
           print *, '#initialize_guiding_center_2d_polar() failed to open file ', &
           trim(filename)//'.nml'
@@ -368,7 +413,9 @@ contains
           x2_min, &
           x2_max, &
           SLL_HERMITE, &
-          SLL_PERIODIC)
+          SLL_PERIODIC, &
+          const_eta1_min_slope = 0._f64, & !to prevent problem on the boundary
+          const_eta1_max_slope = 0._f64)
         A2_interp2d => new_cubic_spline_interpolator_2d( &
           Nc_x1+1, &
           Nc_x2+1, &
@@ -387,7 +434,9 @@ contains
           Nc_x1+1, &
           x1_min, &
           x1_max, &
-          SLL_HERMITE)
+          SLL_HERMITE, &
+          slope_left = 0._f64, &
+          slope_right = 0._f64)
       case default
         print *,'#bad A_interp_case',A_interp_case
         print *,'#not implemented'
@@ -405,7 +454,9 @@ contains
           x2_min, &
           x2_max, &
           SLL_HERMITE, &
-          SLL_PERIODIC)         
+          SLL_PERIODIC, &
+          const_eta1_min_slope = 0._f64, & !to prevent problem on the boundary
+          const_eta1_max_slope = 0._f64)         
       case default
         print *,'#bad phi_interp2d_case',phi_interp2d_case
         print *,'#not implemented'
@@ -509,6 +560,44 @@ contains
         print *,'#in initialize_guiding_center_2d_cartesian'
         stop
     end select
+    select case(bc_min_case)
+      case("SLL_DIRICHLET")
+        bc_min = SLL_DIRICHLET
+      case("SLL_NEUMANN")
+        bc_min = SLL_NEUMANN
+      case("SLL_NEUMANN_MODE_0")
+        bc_min = SLL_NEUMANN_MODE_0
+      case default
+        print *,'#bad bc_min',bc_min
+        print *,'#not implemented'
+        print *,'#in initialize_guiding_center_2d_cartesian'
+        stop
+    end select
+    select case(bc_max_case)
+      case("SLL_DIRICHLET")
+        bc_max = SLL_DIRICHLET
+      case("SLL_NEUMANN")
+        bc_max = SLL_NEUMANN
+      case("SLL_NEUMANN_MODE_0")
+        bc_max = SLL_NEUMANN_MODE_0
+      case default
+        print *,'#bad bc_max',bc_max
+        print *,'#not implemented'
+        print *,'#in initialize_guiding_center_2d_cartesian'
+        stop
+    end select
+
+        sim%transformation => new_coordinate_transformation_2d_analytic( &
+          "analytic_polar_transformation", &
+          sim%mesh_2d, &
+          polar_x1, &
+          polar_x2, &
+          polar_jac11, &
+          polar_jac12, &
+          polar_jac21, &
+          polar_jac22, &
+          params=(/0._f64,0._f64,0._f64,0._f64/))  
+
 
     select case(poisson_solver)    
       case ("SLL_POLAR_FFT")     
@@ -517,7 +606,8 @@ contains
           x1_max, &
           Nc_x1, &
           Nc_x2, &
-          (/SLL_NEUMANN_MODE_0, SLL_DIRICHLET/))
+          (/bc_min,bc_max/))
+          !(/SLL_NEUMANN_MODE_0, SLL_DIRICHLET/))
           !(/SLL_DIRICHLET, SLL_DIRICHLET/))
       case ("SLL_ELLIPTIC_FINITE_ELEMENT_SOLVER")
         transformation => new_coordinate_transformation_2d_analytic( &
@@ -556,6 +646,8 @@ contains
          SLL_DIRICHLET, &
          SLL_DIRICHLET, &
          SLL_PERIODIC, &
+         SLL_PERIODIC, &
+         SLL_HERMITE, &
          SLL_PERIODIC, &
          x1_min, &
          x1_max, &
@@ -666,6 +758,7 @@ contains
     sll_int32 :: thdiag_id = 99 
     sll_int32             :: IO_stat
     sll_int32 :: iplot
+    sll_real64 :: time
     
     Nc_x1 = sim%mesh_2d%num_cells1
     Nc_x2 = sim%mesh_2d%num_cells2
@@ -704,13 +797,20 @@ contains
     call compute_field_from_phi_2d_polar(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)
     
     
+    call sll_ascii_file_create(sim%thdiag_filename, thdiag_id, ierr)
     
     
-    open(unit = thdiag_id, file='thdiag.dat',IOStat=IO_stat)
-    if( IO_stat /= 0 ) then
-       print *, '#run_gc2d_polar(sim) failed to open file thdiag.dat'
-       STOP
-    end if
+!    open(unit = thdiag_id, file='thdiag.dat',IOStat=IO_stat)
+!    if( IO_stat /= 0 ) then
+!       print *, '#run_gc2d_polar(sim) failed to open file thdiag.dat'
+!       STOP
+!    end if
+
+    call sll_plot_polar_init( &
+      sim%mesh_2d, &
+      sim%transformation, &
+      sim%mesh_name )    
+
     
     iplot = 0
 
@@ -718,6 +818,8 @@ contains
       f_old = f
       call sim%poisson%compute_phi_from_rho( phi, f_old )
       call compute_field_from_phi_2d_polar(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)      
+
+      time = real(step-1,f64)*dt
       
       if(modulo(step-1,sim%freq_diag_time)==0)then
         call time_history_diagnostic_gc_polar( &
@@ -734,7 +836,23 @@ contains
 #ifndef NOHDF5
       if(modulo(step-1,sim%freq_diag)==0)then
         print*,"#step= ", step
-        call plot_f_polar(iplot,f,sim%mesh_2d)
+        call sll_plot_f( &
+          iplot, &
+          f, &  
+          Nc_x1+1, &
+          Nc_x2+1,  &
+          sim%f_name, &
+          sim%mesh_name, &
+          time )    
+        call sll_plot_f( &
+          iplot, &
+          phi, &  
+          Nc_x1+1, &
+          Nc_x2+1,  &
+          sim%phi_name, &
+          sim%mesh_name, &
+          time )    
+!        call plot_f_polar(iplot,f,sim%mesh_2d)
         iplot = iplot+1  
       endif            
 #endif
@@ -1001,6 +1119,69 @@ contains
   end subroutine plot_f_polar
 
 #endif
+
+  subroutine sll_plot_polar_init( &
+    mesh_2d, &
+    transf, &
+    mesh_name )
+    
+    type(sll_cartesian_mesh_2d), pointer :: mesh_2d
+    class(sll_coordinate_transformation_2d_base), pointer :: transf
+    character(len=*), intent(in) :: mesh_name 
+    
+    sll_real64, allocatable :: x1(:,:)
+    sll_real64, allocatable :: x2(:,:)
+    sll_real64, allocatable :: f(:,:)
+    sll_int32 :: ierr
+    sll_int32 :: i
+    sll_int32 :: j
+    sll_int32 :: num_pts1
+    sll_int32 :: num_pts2
+    sll_real64 :: eta1_min
+    sll_real64 :: eta1_max
+    sll_real64 :: eta2_min
+    sll_real64 :: eta2_max
+    sll_real64 :: delta1
+    sll_real64 :: delta2
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+
+    num_pts1 = mesh_2d%num_cells1+1
+    num_pts2 = mesh_2d%num_cells2+1
+    eta1_min = mesh_2d%eta1_min
+    eta1_max = mesh_2d%eta1_max
+    eta2_min = mesh_2d%eta2_min
+    eta2_max = mesh_2d%eta2_max
+    delta1 = mesh_2d%delta_eta1
+    delta2 = mesh_2d%delta_eta2
+    
+    SLL_ALLOCATE(x1(num_pts1,num_pts2),ierr)
+    SLL_ALLOCATE(x2(num_pts1,num_pts2),ierr)
+    SLL_ALLOCATE(f(num_pts1,num_pts2),ierr)
+    
+    f = 0._f64
+    
+    do j=1,num_pts2
+      eta2 = eta2_min+real(j-1,f64)*delta2
+      do i=1,num_pts1
+        eta1 = eta1_min+real(i-1,f64)*delta1
+        x1(i,j) = transf%x1(eta1,eta2)
+        x2(i,j) = transf%x2(eta1,eta2) 
+      enddo
+    enddo
+    call sll_plot_f( &
+      0, &
+      f, &  
+      num_pts1, &
+      num_pts2,  &
+      "f", & !dummy (for sll_plt_f, we should be able to
+      !initialize only the mesh TODO)
+      mesh_name, &
+      0._f64, &
+      x1, &
+      x2)    
+        
+  end subroutine sll_plot_polar_init
 
 
 

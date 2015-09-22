@@ -119,11 +119,95 @@ contains
     !close(90)
   end subroutine sll_initial_particles_4d
 
+  subroutine sll_initial_particles_4d_L2d( &
+              thermal_speed, alpha, &
+              kx, ky, m2d,                     &
+              num_particles,           &
+              p_group,                 &
+              rand_seed, rank, worldsize )
+    sll_real64, intent(in) :: thermal_speed, alpha
+    sll_real64, intent(in) :: kx, ky
+    type(sll_cartesian_mesh_2d), intent(in) :: m2d
+    sll_int32, intent(in)  :: num_particles
+    type(sll_particle_group_4d), pointer, intent(inout) :: p_group
+    sll_int32  :: j, ii, ll
+    sll_int32  :: ncx, ic_x,ic_y
+    sll_real64 :: x, y, vx, vy, nu, z
+    sll_real64 :: xmin, ymin, rdx, rdy
+    sll_real32 :: weight!  sll_real64 :: weight!
+    sll_real32 :: off_x,off_y!  sll_real64 :: off_x,off_y
+    sll_real64 :: tmp1, tmp2
+    sll_int32, dimension(:), intent(in), optional  :: rand_seed
+    sll_int32, optional  :: rank, worldsize
+    character(len=8)  :: rank_name
+    character(len=40) :: nomfile
+    sll_real64 :: yo, val(1:2)
+
+    if ( present(rand_seed) ) then
+       call random_seed (put=rand_seed)
+    endif
+
+    if( present(worldsize) ) then
+       weight = (m2d%eta1_max - m2d%eta1_min) * &
+            (m2d%eta2_max - m2d%eta2_min)/real(worldsize*num_particles,f64)
+    else
+       weight = (m2d%eta1_max - m2d%eta1_min) * &
+            (m2d%eta2_max - m2d%eta2_min)/real(num_particles,f64)
+    endif
+
+    rdx = 1._f64/m2d%delta_eta1
+    rdy = 1._f64/m2d%delta_eta2
+    xmin = m2d%eta1_min
+    ymin = m2d%eta2_min
+    ncx  = m2d%num_cells1
+
+!!$    if(present(rank)) then
+!!$       write(rank_name,'(i8)') rank
+!!$    else
+!!$       rank_name = '00000000'
+!!$    end if
+!!$    nomfile='initialparts_'//trim(adjustl(rank_name))//'.dat'
+!!$    open(90, file=nomfile)
+!!$
+!!$    write(90,*) '#  POSITIONS in 2d    |||    VELOCITIES in 2d'
+
+    j=1
+    ii=1
+    !Rejection sampling 
+    ll = 0
+    do while ( j <= num_particles )
+       call random_number(x)
+       x = (m2d%eta1_max - xmin)*x + xmin
+       call random_number(y)
+       y = (m2d%eta2_max - ymin)*y + ymin
+       call random_number(z)
+       z = (1._f64+alpha)*z
+       if (eval_landau2d(alpha, kx, x, ky, y) >= z ) then
+          call gaussian_deviate_2D(val)
+          vx = val(1)*thermal_speed
+          vy = val(2)*thermal_speed
+          !if (j<=50000) write(90,*) x, y, vx, vy 
+          SET_PARTICLE_VALUES(p_group%p_list(j),x,y,vx,vy,weight,xmin,ymin,ncx,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
+          j = j + 1          
+       else
+          ll=ll+1
+       endif
+    end do
+    print*, 'nb d echecs', ll
+    !close(90)
+  end subroutine sll_initial_particles_4d_L2d
+
 
   function eval_landau(alp, kx, x)
     sll_real64 :: alp, kx, x
     sll_real64 :: eval_landau
     eval_landau = 1._f64 + alp * cos(kx * x)
   end function eval_landau
+
+  function eval_landau2d(alp, kx, x, ky, y)
+    sll_real64 :: alp, kx, x, ky, y
+    sll_real64 :: eval_landau2d
+    eval_landau2d = 1._f64 + alp * cos(kx * x)*cos(ky * y)
+  end function eval_landau2d
 
 end module sll_particle_initializers_4d

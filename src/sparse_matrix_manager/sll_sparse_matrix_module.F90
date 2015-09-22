@@ -46,12 +46,9 @@ end interface sll_delete
 contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-
 subroutine delete_csr_matrix(csr_mat)
-  type(sll_csr_matrix),pointer :: csr_mat
-
-  nullify(csr_mat)
-    
+type(sll_csr_matrix),pointer :: csr_mat
+nullify(csr_mat)
 end subroutine delete_csr_matrix
 
 !> @brief allocates the memory space for a new CSR matrix,
@@ -78,14 +75,14 @@ function new_csr_matrix( &
   num_local_dof_col)     &
   result(mat)
 
-type(sll_csr_matrix), pointer :: mat
-sll_int32, intent(in) :: num_rows
-sll_int32, intent(in) :: num_cols
-sll_int32, intent(in) :: num_elements
-sll_int32, dimension(:,:), intent(in) :: local_to_global_row
-sll_int32, dimension(:,:), intent(in) :: local_to_global_col
-sll_int32, intent(in) :: num_local_dof_row
-sll_int32, intent(in) :: num_local_dof_col
+type(sll_csr_matrix), pointer            :: mat
+sll_int32,                    intent(in) :: num_rows
+sll_int32,                    intent(in) :: num_cols
+sll_int32,                    intent(in) :: num_elements
+sll_int32, dimension(:,:),    intent(in) :: local_to_global_row
+sll_int32, dimension(:,:),    intent(in) :: local_to_global_col
+sll_int32,                    intent(in) :: num_local_dof_row
+sll_int32,                    intent(in) :: num_local_dof_col
 
 sll_int32 :: ierr
 
@@ -115,15 +112,15 @@ end function new_csr_matrix
 !> @param[in] local_to_global_col : local_to_global_col(\ell,i) gives the global 
 !> column index of the matrix, for the element i and local degree of freedom \ell
 !> @param[in] num_local_dof_col : number of local degrees of freedom for the columns
-subroutine initialize_csr_matrix( &
-  mat,                            &
-  num_rows,                       &
-  num_cols,                       &
-  num_elements,                   &
-  local_to_global_row,            &
-  num_local_dof_row,              &
-  local_to_global_col,            & 
-  num_local_dof_col)
+
+subroutine initialize_csr_matrix( mat,                            &
+                                  num_rows,                       &
+                                  num_cols,                       &
+                                  num_elements,                   &
+                                  local_to_global_row,            &
+                                  num_local_dof_row,              &
+                                  local_to_global_col,            & 
+                                  num_local_dof_col)
 
 type(sll_csr_matrix),      intent(inout) :: mat
 sll_int32,                 intent(in)    :: num_rows
@@ -136,14 +133,14 @@ sll_int32,                 intent(in)    :: num_local_dof_col
 
 sll_int32                                :: num_nz
 sll_int32                                :: ierr
-sll_int32,  dimension(:,:), allocatable  :: lpi_columns
+sll_int32,  dimension(:,:), allocatable  :: lpi_col
 sll_int32,  dimension(:),   allocatable  :: lpi_occ
 sll_int32                                :: COEF
-sll_int32                                :: e
-sll_int32                                :: b_1
-sll_int32                                :: A_1
-sll_int32                                :: b_2
-sll_int32                                :: A_2
+sll_int32                                :: elt
+sll_int32                                :: ii
+sll_int32                                :: jj
+sll_int32                                :: row
+sll_int32                                :: col
 sll_int32                                :: i
 sll_int32                                :: flag
 sll_int32                                :: sz
@@ -152,64 +149,38 @@ sll_int32                                :: lpi_size(2)
 logical                                  :: ll_done
 
 print *,'#initialize_csr_matrix'
-COEF = 10
+COEF = 6
 
-SLL_ALLOCATE(lpi_columns(num_rows, 0:COEF*num_local_dof_col),ierr)
+SLL_ALLOCATE(lpi_col(num_rows, 0:COEF*num_local_dof_col),ierr)
 SLL_ALLOCATE(lpi_occ(num_rows+1),ierr)
 
-lpi_columns(:,:) = 0
+lpi_col(:,:) = 0
 lpi_occ(:) = 0
 
-! WE FIRST COMPUTE, FOR EACH ROW, THE NUMBER OF COLUMNS THAT WILL BE USED
-do e = 1, num_elements
-
-  do b_1 = 1, num_local_dof_row
-
-    A_1 = local_to_global_row(b_1, e)
-
-    if (A_1 == 0) cycle
-
-    do b_2 = 1, num_local_dof_col
-
-      A_2 = local_to_global_col(b_2, e)
-      if (A_2 == 0) cycle
-
-      ll_done = .false.
-      ! WE CHECK IF IT IS THE FIRST OCCURANCE OF THE COUPLE (A_1, A_2)
-      do i = 1, lpi_columns(A_1, 0)
-        if (lpi_columns(A_1, i) /= A_2) cycle
-        ll_done = .true.
-        exit
-      end do
-
-      if (.not.ll_done) then
-
-        lpi_occ(A_1) = lpi_occ(A_1) + 1
-
-        ! A_1 IS THE ROW NUM, A_2 THE COLUMN NUM
-        ! INITIALIZATION OF THE SPARSE MATRIX
-        lpi_columns(A_1, 0) = lpi_columns(A_1, 0) + 1
-        lpi_columns(A_1, lpi_columns(A_1, 0)) = A_2
-
-        ! resizing the array
-        lpi_size(1) = SIZE(lpi_columns, 1)
-        lpi_size(2) = SIZE(lpi_columns, 2)
-        if (lpi_size(2) < lpi_columns(A_1, 0)) then
-          ALLOCATE(lpi_columns(lpi_size(1), lpi_size(2)))
-          lpi_columns = lpi_columns
-          DEALLOCATE(lpi_columns)
-          ALLOCATE(lpi_columns(lpi_size(1), 2 * lpi_size(2)))
-          lpi_columns(1:lpi_size(1),1:lpi_size(2)) = &
-            lpi_columns(1:lpi_size(1), 1:lpi_size(2))
-          DEALLOCATE(lpi_columns)
+do elt = 1, num_elements  !Loop over cells
+  do ii = 1, num_local_dof_row
+    row = local_to_global_row(ii, elt) !Row number in matrix
+    if (row /= 0) then
+      do jj = 1, num_local_dof_col
+        col = local_to_global_col(jj, elt) !Column number in matrix
+        if (col /= 0) then
+          ll_done = .false.
+          ! WE CHECK IF IT IS THE FIRST OCCURANCE OF THE COUPLE (row, col)
+          do i = 1, lpi_col(row, 0)
+            if (lpi_col(row, i) == col) then
+              ll_done = .true.
+              exit
+            end if
+          end do
+          if (.not.ll_done) then
+            lpi_occ(row)                  = lpi_occ(row) + 1
+            lpi_col(row, 0)               = lpi_col(row, 0) + 1
+            lpi_col(row, lpi_col(row, 0)) = col
+          end if
         end if
-
-      end if
-
-    end do
-
+      end do
+    end if
   end do
-
 end do
 
 ! COUNT NON ZERO ELEMENTS
@@ -229,34 +200,27 @@ SLL_ALLOCATE(mat%val(num_nz),ierr)
 mat%row_ptr(1) = 1
 
 do i = 1, mat%num_rows
-  mat%row_ptr(i + 1) = mat%row_ptr(1) + SUM(lpi_occ(1: i))
+  mat%row_ptr(i+1) = mat%row_ptr(1) + sum(lpi_occ(1:i))
 end do
 
-do e = 1, num_elements
-
-  do b_1 = 1, num_local_dof_row
-
-    A_1 = local_to_global_row(b_1, e)
-
-    if (A_1 == 0) cycle
-    if (lpi_columns(A_1, 0) == 0) cycle
-
-    sz = lpi_columns(A_1, 0)
-
-    call QsortC(lpi_columns(A_1, 1: sz))
-
-    do i = 1, sz
-       mat%col_ind(mat%row_ptr(A_1)+i-1) = lpi_columns(A_1,i)
-    end do
-
-    lpi_columns(A_1, 0) = 0
-
-    end do
-
- end do
+do elt = 1, num_elements
+  do ii = 1, num_local_dof_row
+    row = local_to_global_row(ii, elt)
+    if (row /= 0) then
+      if (lpi_col(row,0) /= 0) then
+        sz = lpi_col(row, 0)
+        call QsortC(lpi_col(row,1:sz))
+        do i = 1, sz
+          mat%col_ind(mat%row_ptr(row)+i-1) = lpi_col(row,i)
+        end do
+        lpi_col(row, 0) = 0
+      end if
+    end if
+  end do
+end do
 
 mat%val(:) = 0.0_f64
-SLL_DEALLOCATE_ARRAY(lpi_columns,ierr)
+SLL_DEALLOCATE_ARRAY(lpi_col,ierr)
 SLL_DEALLOCATE_ARRAY(lpi_occ,ierr)
 
 end subroutine initialize_csr_matrix
@@ -290,7 +254,6 @@ SLL_ALLOCATE(mat, ierr)
 call initialize_csr_matrix_with_constraint( mat, mat_a)
 
 end function new_csr_matrix_with_constraint
-
 
 subroutine sll_factorize_csr_matrix(mat)
 
@@ -326,38 +289,16 @@ integer :: i
 integer :: s
 integer :: k
 
-
 num_rows_out = num_rows_in+1
-num_nz_out = num_nz_in+2*num_rows_in
+num_nz_out   = num_nz_in+2*num_rows_in
 
-if(size(ia_in)<num_rows_in+1) then
-  print *, '#problem of size of ia_in', size(ia_in),num_rows_in+1
-  stop
-endif
-if(size(ja_in)<num_nz_in) then
-  print *, '#problem of size of ja_in', size(ja_in),num_nz_in
-  stop
-endif
-if(size(a_in)<num_nz_in) then
-  print *, '#problem of size of a_in', size(a_in),num_nz_in
-  stop
-endif
-if(size(ia_out)<num_rows_out+1) then
-  print *, '#problem of size of ia_out', size(ia_out),num_rows_out+1
-  stop
-endif
-if(size(ja_out)<num_nz_out) then
-  print *, '#problem of size of ja_out', size(ja_out),num_nz_out
-  stop
-endif
-if(size(a_out)<num_nz_out) then
-  print *, '#problem of size of a_out', size(a_out),num_nz_out
-  stop
-endif
-if(ia_in(num_rows_in+1).ne.num_nz_in+1)then
-  print *,'#bad value of ia_in(num_rows_in+1)', ia_in(num_rows_in+1),num_nz_in+1
-  stop
-endif
+SLL_ASSERT(size(ia_in)          >= num_rows_in+1)
+SLL_ASSERT(size(ja_in)          >= num_nz_in)
+SLL_ASSERT(size(a_in)           >= num_nz_in)
+SLL_ASSERT(size(ia_out)         >= num_rows_out+1)
+SLL_ASSERT(size(ja_out)         >= num_nz_out)
+SLL_ASSERT(size(a_out)          >= num_nz_out)
+SLL_ASSERT(ia_in(num_rows_in+1) == num_nz_in+1)
 
 s = 1
 do i=1,num_rows_in
@@ -379,10 +320,7 @@ do i=1,num_rows_in
 enddo
 ia_out(num_rows_in+2) = s
  
-if(ia_out(num_rows_out+1).ne.num_nz_out+1)then
-  print *,'#bad value of ia_out(num_rows_out+1)',ia_out(num_rows_out+1),num_nz_out+1
-  stop
-endif
+SLL_ASSERT(ia_out(num_rows_out+1) == num_nz_out+1)
   
 end subroutine csr_add_one_constraint
   
@@ -407,18 +345,17 @@ end do
 
 end subroutine sll_mult_csr_matrix_vector
 
-subroutine sll_add_to_csr_matrix(mat, val, a, aprime)
+subroutine sll_add_to_csr_matrix(mat, val, row, col)
 
 type(sll_csr_matrix), intent(inout) :: mat
 sll_real64,           intent(in)    :: val
-sll_int32,            intent(in)    :: a
-sll_int32,            intent(in)    :: aprime
+sll_int32,            intent(in)    :: row
+sll_int32,            intent(in)    :: col
 
 sll_int32 :: k
 
-! THE CURRENT LINE IS self%row_ptr(ai_A)
-do k = mat%row_ptr(a), mat%row_ptr(a+1) - 1
-  if (mat%col_ind(k) == aprime) then
+do k = mat%row_ptr(row), mat%row_ptr(row+1) - 1
+  if (mat%col_ind(k) == col) then
     mat%val(k) = mat%val(k) + val
     exit
   end if
