@@ -37,6 +37,14 @@ type :: sll_advection_tri_mesh
 
 end type sll_advection_tri_mesh
 
+! type :: sll_degree_of_freedom
+!    sll_real64, dimension(:),  pointer :: func !> values of the distribution function
+!    sll_real64, dimension(:),  pointer :: deriv !> values of the derivatives of the distribution
+!    sll_real64, dimension(:),  pointer :: deriv2 !> values of the 2nd derivatives of the distribution
+
+!    sll_real64 :: epsilon
+! end type sll_degree_of_freedom
+
 contains
 
 !> @brief allocates the memory space for a new 2D advection
@@ -112,7 +120,132 @@ function new_advection_2d_tri_mesh( mesh ) result(adv)
 
 end function new_advection_2d_tri_mesh
 
+!> @brief Computes degrees of freedom on one point
+!> @details Computes on a point the degrees of freedom (dof):
+!> For every annexing triangle we compute the first derivatives (following the triangle
+!> edges e1, e2, and e3) and the crossed derivatives (following e1+e2, e2+e3, and e1+e3).
+!> they are computed using the values of the function at the vertices. 
+!> @params f_val [intent IN] real vector containing the function values
+!> at the vertices of annexing triangles
+!> @params f_der [intent OUT] real vector containing the values of the first
+!> derivatives following the vertices
+!> @params f_der2 [intent OUT] real vector containing the values of the second
+!> derivatives aka. crossed derivatives (see details)
+!> @params degree [intent IN] integer value of the number of cells parting from the point
+!> @params epsilon [intent IN] real value of the small distance to compute the dof
+subroutine compute_derivatives(f_val, f_der, f_der2, degree, epsilon)
+  sll_real64, dimension(:),  intent(in)  :: f_val  !> values of the distribution function
+  sll_real64, dimension(:),  intent(out) :: f_der  !> values of the derivatives of the distribution
+  sll_real64, dimension(:),  intent(out) :: f_der2 !> values of the 2nd derivatives of the distribution
+  sll_int32,  intent(in) :: degree
+  sll_real64, intent(in) :: epsilon
+  sll_int32  :: i
+  sll_int32  :: i1
+  sll_int32  :: i2
+  sll_int32  :: i3 
 
+  i1 = 2 !>
+  i2 = 3 !>
+  i3 = 4 !>
+  do i=1,degree
+     f_der(i)  = (f_val(i1) - f_val(1))/epsilon
+     f_der2(i) = (f_val(i2) - f_val(i1) - f_val(i3) + f_val(1))/(epsilon*epsilon)
+     i1 = i3
+     i2 = i2+2
+     i3 = modulo(i3+1,2*degree)+1
+  end do
+end subroutine compute_derivatives
+
+!> @brief computes the coordinates of the poisition of the degrees of freedom (dof)
+!> @details computes the coordinates of the poisition of the degrees of freedom (dof)
+!> in respect to a point (advected or not). These positions won't be really advected
+!> because they are at a small distance from the meshes nodes
+!> @param x1_adv real first coordinate of a mesh point (advected or not)
+!> @param x2_adv real second coordinate of a mesh point (advected or not)
+!> @param x1_coo real vector first coordinates of neighbouring vertices
+!> @param x2_coo real vector second coordinates of neighbouring vertices
+!> @param degree int containing the degree of the triangulation (ie the number of cells
+!> that have the point (x1_adv, x2_adv).
+!> @param epsilon real containting the small displacement of the dof
+!> @param x1_dof real vector containing the computed first coordinates of the dof
+!> @param x2_dof real vector containing the computed second coordinates of the dof
+subroutine compute_coordinates_dof(x1_adv, x2_adv, x1_coo, x2_coo, degree, epsilon, x1_dof, x2_dof)
+  sll_real64, intent(in)  :: x1_adv
+  sll_real64, intent(in)  :: x2_adv 
+  sll_real64, dimension(:), intent(in)  :: x1_coo !> coordinates of neighbouring vertices
+  sll_real64, dimension(:), intent(in)  :: x2_coo !> coordinates of neighbouring vertices
+  sll_int32,  intent(in) :: degree
+  sll_real64, intent(in) :: epsilon
+  sll_real64, dimension(:),  intent(out) :: x1_dof !> size 2*degree + 1
+  sll_real64, dimension(:),  intent(out) :: x2_dof !> size 2*degree + 1
+  sll_int32 :: i
+  sll_int32 :: i1
+  sll_int32 :: i2
+
+  x1_dof(1)=x1_adv
+  x2_dof(1)=x2_adv
+  i1 = 2 !>
+  i2 = 3 !>
+
+  do i=1,degree
+     x1_dof(2*i) = x1_dof(1) + epsilon*(x1_coo(i1) - x1_coo(1))
+     x2_dof(2*i) = x2_dof(1) + epsilon*(x2_coo(i1) - x2_coo(1))
+
+     x1_dof(2*i+1) = x1_dof(1) + epsilon*(x1_coo(i1)-x1_coo(1)*2.0_f64+x1_coo(i2))
+     x2_dof(2*i+1) = x2_dof(1) + epsilon*(x2_coo(i1)-x2_coo(1)*2.0_f64+x2_coo(i2))
+
+     i1 = i2
+     i2 = modulo(i2-1, degree) + 2
+  end do
+end subroutine compute_coordinates_dof
+
+!> @brief evaluation at barycentric points of one cell
+!> @param lam real vector containing the barycentric coordinates of the edges of the cell
+!> @param func_loc real vector containg values of the function at dof points of one cell
+!> func_loc = [f1, f2, f3]
+!> @param der_loc real vector containg values of the derivatives at dof points of one cell (edge by edge)
+!> der_loc = [df12, df13, df23, df21, df31, df32]
+!> @param der2_loc real vector containg values of the 2nd derivatives at dof points one cell (edge by edge)
+!> func_loc = [d2f1, d2f2, d2f3]
+function eval_at_lambda(lam, func_loc, der_loc, der2_loc) result(out)
+  sll_real64, dimension(3), intent(in) :: lam
+  sll_real64, dimension(3), intent(in) :: func_loc
+  sll_real64, dimension(6), intent(in) :: der_loc
+  sll_real64, dimension(3), intent(in) :: der2_loc
+  sll_real64 :: out
+
+  !> Sum over functions at edges
+  !> func_loc = [f1, f2, f3]
+  !> formula: out += fi * lam(i)**2 * ((3-2*lam(i) + 6*lam(j)*lam(k))
+  !> where i, j, k are the edges of the cell/triangle
+  out = lam(1)**2*(3._f64-2._f64*lam(1)+6._f64*lam(2)*lam(3))*func_loc(1)
+  out = out + lam(2)**2*(3._f64-2._f64*lam(2)+6._f64*lam(3)*lam(1))*func_loc(2)
+  out = out + lam(3)**2*(3._f64-2._f64*lam(3)+6._f64*lam(1)*lam(2))*func_loc(3)
+  
+  !Sum over first derivatives
+  !> der_loc = [df12, df13, df23, df21, df31, df32]
+  !> fomula : out += dfij * lamb(i)**2 * lam(j) * (1 + 2 * lam(k))
+  !> where i, j, k are the edges of the cell/triangle
+  out = out +  lam(1)**2*lam(2)*(1+2*lam(3)) * der_loc(1) !df12
+  out = out +  lam(1)**2*lam(3)*(1+2*lam(2)) * der_loc(2) !df13
+  out = out +  lam(2)**2*lam(3)*(1+2*lam(1)) * der_loc(3) !df23
+  out = out +  lam(2)**2*lam(1)*(1+2*lam(3)) * der_loc(4) !df21
+  out = out +  lam(3)**2*lam(1)*(1+2*lam(2)) * der_loc(5) !df31
+  out = out +  lam(3)**2*lam(2)*(1+2*lam(1)) * der_loc(6) !df32
+
+  !> Sum over second derivatives
+  !> func_loc = [d2f1, d2f2, d2f3]
+  !> formula: out += d2fi * lam(i)**2 * lam(j) * lam(k)
+  !> where i, j, k are the edges of the cell/triangle
+  out = out + lam(1)**2*lam(2)*lam(3) * der2_loc(1)
+  out = out + lam(2)**2*lam(3)*lam(1) * der2_loc(2)
+  out = out + lam(3)**2*lam(1)*lam(2) * der2_loc(3)
+  
+end function eval_at_lambda
+
+subroutine interpolation_mitchell()
+  
+end subroutine 
 !> @brief 
 !> Compute characterisitic origin in triangular mesh
 !> @details
