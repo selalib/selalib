@@ -9,15 +9,16 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup meshes sll_meshes
+!> @defgroup hex_meshes sll_hex_meshes
 !> @brief
-!> Logical mesh basic types
-!> @author Edwin Chacon-Golcher
+!> Hexagonal meshes library: three directional meshes discretized by equilateral
+!> triangles.
+!> @author Laura Mendoza
 !> @details
 !>
 !> <b> How to use it </b>
-!> - Link with   <code>-lsll_meshes</code>
-!> - Add <code> use sll_meshes </code>
+!> - Link with   <code>-lsll_hex_meshes</code>
+!> - Add <code> use sll_hex_meshes </code>
 !>
 !> <b> Examples </b>
-!> @snippet meshes/unit_test.F90 example
+!> @snippet meshes/test_hex_meshes.F90 example

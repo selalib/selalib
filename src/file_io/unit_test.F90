@@ -362,10 +362,10 @@ subroutine test_sll_plot_f()
         time, &
         x1, &
         x2)    
-      phi = f*f
+      !PN phi = f*f
       call sll_plot_f( &
         iplot, &
-        phi, &  
+        f*f, &  !PN phi, 
         nnodes_x1, &
         nnodes_x2,  &
         phi_name, &

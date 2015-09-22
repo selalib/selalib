@@ -8,26 +8,9 @@
  center_mesh_x1 = 0.0 ! mesh origin, fist coordinate
  center_mesh_x2 = 0.0 ! mesh origin, second coordinate
  radius = 14.0        ! mesh radius
- ! If you want to compare different space discretizations :
- ! cells_min = smallest discretization number of cells on a hex edge
- ! cells_max = largest discretization number of cells on a hex edge
- ! cells_stp = step of incrementation between cells_min and cells_max
- ! ie. cells_min = 20 cells_max = 60 cells_step = 20
- ! => 3 simulation w/ num_cells = 20, 40 and 60
- ! ie2. cells_min = cells_max (and cells_step = any number)
- ! => 1 simulation w num_cells = cells_mins = cells_max 
- cells_min = 30
- cells_max = 30
- cells_stp = 20
+ num_cells = 80
 /
 
-&test_case
-  ! Different models can be done with this simulation
-  ! choices are:
-  !        - "CIRCULAR" (for the circular advection)
-  !        - "GC" (for the guiding center model)
-  model_name="GC"
-/
 
 &initial_function
   ! For the GC test-case:
@@ -44,7 +27,7 @@
 
 &time_iterations
   dt = 0.1
-  tmax = 10
+  tmax = 110
 /
 
 &interpolation
@@ -54,7 +37,7 @@
 
   ! For the spline interpolation:
   spline_degree = 2
-  
+  num_method_case = "SLL_HEX_MITCHELL_new"
   ! For the hermite interpolation:
   ! Different hermite elements have been implemented, the following notations are used
   !    Zienkiewicz with 9  degree of freedom => 9

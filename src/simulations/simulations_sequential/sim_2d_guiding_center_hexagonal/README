@@ -1,7 +1,7 @@
 ***************************************************************************
 *       README FILE FOR sim_2d_guiding_center_hexagonal DIRECTORY
 *                     author  : Laura Mendoza
-*                     modified: 19 Nov. 2014
+*                     modified: 8 July 2015
 ***************************************************************************
 
 Directory structure
@@ -13,7 +13,7 @@ Directory structure
    run/                       -- directory
 Description
 ===========
-Using the SL we solve the guiding center simulation on a hexagonal mesh
+Using the SLS we solve the guiding center simulation on a hexagonal mesh
 (regular quilateral triangle lattice with hexagonal shape).
 Two simulations for the guiding center on a hexagonal mesh are available,
 depending on the interpolation method used :
@@ -23,17 +23,22 @@ depending on the interpolation method used :
 
 They were developped in order to compare both interpolation methods.
 
+*Remark: I have added the option to also do a circular advection simulation,
+         as it is a real simple simulation that is not worth having its own directory.
+	 By default the simulation will run the guiding-center simulation, if you
+	 want to try the cricular advection test-case, please see namelist file.
 
 HOWTO
 =====
 0. Create "run/" directory and move to it
      $ mkdir run
+     $ cp sim2d_gc_hex_input.nml run/
      $ cd run
 
 
 1. Run simulation(s) within directory
-     $ ../test_2d_gc_hex_hermite sim2d_gx_hex_input.nml
-     $ ../test_2d_gc_hex_splines sim2d_gx_hex_input.nml
+     $ ../test_2d_gc_hex_hermite sim2d_gc_hex_input.nml
+     $ ../test_2d_gc_hex_splines sim2d_gc_hex_input.nml
 
    You can also run the simulation without an input file
 
