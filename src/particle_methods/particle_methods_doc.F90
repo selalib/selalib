@@ -9,10 +9,20 @@
   ! file is [[selalib:doc/doxygen/Doxyfile]].
 
   !> @defgroup particle_methods sll_particle_methods
+  !! @authors Martin Campos Pinto   - <campos@ann.jussieu.fr>
+  !! @authors Antoine Le Hyaric     - <Antoine.Le_Hyaric@upmc.fr>
 
   ! This "brief" appears in the Doxygen list of "Libraries" at [[selalib:doc/build/html/doxygen/html/modules.html]].
   
   !> @brief Centralized location for all particle methods
+  
+  !> @details
+  !! In this directory we are implementing an abstract class of particle method and two classes which 
+  !! extend it: 
+  !! - one is a "simple" PIC method based on the one implemented by Sever and Edwin, but with no optimization
+  !! - the other one is a remapped PIC method which follows from the BSL and LTPIC approach
+  !! These classes (and the corresponding deposition and remapping schemes) are used in a simulation 
+  !! implemented in the module sll_simulation_4d_vp_generic_pic_cartesian_module
 
   ! this is directory [[selalib:src/particle_methods]]
   
