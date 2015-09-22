@@ -11,12 +11,19 @@
 
 !> @defgroup gyroaverage sll_gyroaverage 
 !> @brief 
-!> Description of gyroaverage library (72 characters)
+!> Compute the gyroaverage operator in a polar mesh.
 !> @author Selalib team 
-!> You can add a contact, do not put your email to prevent spam.
+!> Michel Mehrenberger
+!> Christophe Steiner
 !> @details
-!> Long description of  gyroaverage, you can add some references or math equations.
-!>
+!> Three methods for computing the gyroaverage operator in a 2D polar mesh are implemented ( Hermite, Pade , splines). The description of these methods are given in :
+!> Gyroaverage for a polar mesh
+!> C. Steiner, M. Mehrenberger, N. Crouseilles, V. Grandgirard, G. Latu, F. Rozar
+!> EPJD 2015
+!> Two methods for solving the quasi-neutrality equation are implemented ( Pade , circles ). The description of these methods are given in :
+!> Résolution numérique de l'opérateur de gyromoyenne, schémas d'advection et couplage. Applications à l'équation de Vlasov.
+!> C. Steiner
+!> Thesis 2014, Chapter 9
 !> <b> Headers file available </b>
 !>  - sll_gyroaverage.h
 !>
