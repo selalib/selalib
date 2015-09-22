@@ -79,17 +79,17 @@ contains
   !> Not implemented
   procedure :: reconstruct_array
   !> Destory the derived type and free memory
-  procedure :: delete => delete_b1d_interpolator
+  procedure :: delete => delete_bs1d_interpolator
 
 end type sll_bspline_interpolator_1d
 
 !> Deallocate
 interface sll_delete
-   module procedure delete_b1d_interpolator
+   module procedure delete_bs1d_interpolator
 end interface sll_delete
 
 public sll_delete 
-public new_b1d_interpolator
+public new_bspline_interpolator_1d
 public set_values_at_boundary1d
 public initialize_bs1d_interpolator
 
@@ -101,13 +101,13 @@ contains
 !> @details
 !> The parameters are
 !> @param interpolator the type sll_bspline_interpolator_1d
-subroutine delete_b1d_interpolator( interpolator )
+subroutine delete_bs1d_interpolator( interpolator )
 
 class(sll_bspline_interpolator_1d), intent(inout) :: interpolator
 
 call delete_bspline_1d(interpolator%bspline)
 
-end subroutine delete_b1d_interpolator
+end subroutine delete_bs1d_interpolator
 
 !> @brief Initialization of a pointer interpolator arbitrary degree splines 1d.
 !> @details To have the interpolator arbitrary degree splines 1d such as a pointer
@@ -120,13 +120,14 @@ end subroutine delete_b1d_interpolator
 !> @param[in] spl_deg the degree of B-spline
 !> @return the type interpolator arbitrary degree splines 1d
 
-function new_b1d_interpolator( num_pts, &
-                               eta_min, &
-                               eta_max, &
-                               spl_deg, &
-                               bc_type, &
-                               slope_l, &
-                               slope_r) result(interpo)
+function new_bspline_interpolator_1d( &
+  num_pts,                            &
+  eta_min,                            &
+  eta_max,                            &
+  spl_deg,                            &
+  bc_type,                            &
+  slope_l,                            &
+  slope_r) result(interpo)
 
 class(sll_bspline_interpolator_1d),pointer :: interpo
 
@@ -165,7 +166,7 @@ else
 end if
                                            
 
-end function new_b1d_interpolator
+end function new_bspline_interpolator_1d
 
 !> @brief Initialization of interpolator arbitrary degree splines 1d.
 !> @details To have the interpolator arbitrary degree splines 1d
@@ -326,7 +327,7 @@ if (interpo%bc_type == SLL_PERIODIC) then ! periodic
 
 end if
 
-val = interpolate_value( interpo%bspline, res)
+val = interpolate_value_1d( interpo%bspline, res)
 
 end function interpolate_value_bs1d
 
@@ -384,7 +385,7 @@ end if
 SLL_ASSERT( res >= interpo%eta_min )
 SLL_ASSERT( res <= interpo%eta_max )
 
-val = interpolate_derivative( interpo%bspline, res )
+val = interpolate_derivative_1d( interpo%bspline, res )
 
 end function interpolate_derivative_bs1d
 
@@ -401,7 +402,7 @@ sll_real64, dimension(:), intent(in) :: data
 sll_real64, dimension(num_points)    :: res
 
 call compute_bspline_1d( this%bspline, data)
-call interpolate_array_values( this%bspline, num_points, coordinates, res)
+call interpolate_array_values_1d( this%bspline, num_points, coordinates, res)
 
 end function interpolate_array_bs1d
 
@@ -440,7 +441,7 @@ sll_int32,                          intent(in)  :: num_pts
 sll_real64, dimension(:),           intent(in)  :: vals_to_interpolate
 sll_real64, dimension(:),           intent(out) :: output_array
 
-call interpolate_array_values(interpolator%bspline, &
+call interpolate_array_values_1d(interpolator%bspline, &
                               num_pts,              &
                               vals_to_interpolate,  &
                               output_array)
@@ -457,7 +458,7 @@ sll_int32,                           intent(in) :: num_pts
 sll_real64, dimension(:),            pointer    :: vals_to_interpolate
 sll_real64, dimension(:),            pointer    :: output
 
-call interpolate_array_values(interpolator%bspline, &
+call interpolate_array_values_1d(interpolator%bspline, &
                               num_pts,              &
                               vals_to_interpolate,  &
                               output)
@@ -474,7 +475,7 @@ sll_int32,                          intent(in)  :: num_pts
 sll_real64, dimension(:),           intent(in)  :: vals_to_interpolate
 sll_real64, dimension(:),           intent(out) :: output_array
 
-call interpolate_array_derivatives(interpolator%bspline, &
+call interpolate_array_derivatives_1d(interpolator%bspline, &
                                    num_pts,              &
                                    vals_to_interpolate,  &
                                    output_array)
@@ -491,7 +492,7 @@ sll_int32,                          intent(in) :: num_pts
 sll_real64, dimension(:), pointer              :: vals_to_interpolate
 sll_real64, dimension(:), pointer              :: output
 
-call interpolate_array_derivatives( interpolator%bspline, &
+call interpolate_array_derivatives_1d( interpolator%bspline, &
                                     num_pts,              &
                                     vals_to_interpolate,  &
                                     output)
