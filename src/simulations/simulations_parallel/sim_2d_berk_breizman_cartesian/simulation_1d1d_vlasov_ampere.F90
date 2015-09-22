@@ -411,8 +411,6 @@ if (present(filename)) then
   
   if(present(num_run)) then
     filename_loc = trim(filename)//"_"//trim(str_num_run)
-    !filename_loc = adjustl(filename_loc)
-    !print *,'filename_loc=',filename_loc
   endif
 
   call sll_new_file_id(input_file, ierr)
@@ -815,7 +813,8 @@ sll_real64, dimension(:,:), pointer :: f_x2
 
 sll_real64, dimension(:),   pointer :: rho
 sll_real64, dimension(:),   pointer :: efield
-sll_real64, dimension(:),   pointer :: current
+sll_real64, dimension(:),   pointer :: j0
+sll_real64, dimension(:),   pointer :: j1
 sll_real64, dimension(:),   pointer :: F0
 
 type(layout_2D),            pointer :: layout_x1
@@ -823,6 +822,8 @@ type(layout_2D),            pointer :: layout_x2
 type(remap_plan_2D_real64), pointer :: remap_plan_x1_x2
 type(remap_plan_2D_real64), pointer :: remap_plan_x2_x1
 sll_real64, dimension(:),   pointer :: f1d
+sll_int32                           :: nc_x1
+sll_int32                           :: nc_x2
 sll_int32                           :: np_x1
 sll_int32                           :: np_x2
 sll_int32                           :: nproc_x1
@@ -835,6 +836,7 @@ sll_int32                           :: local_size_x2
 sll_int32  :: nb_mode 
 sll_int32  :: num_dof_x2 
 sll_real64 :: time_init
+sll_real64 :: dx, dv
  
 ! for parallelization (output of distribution function in one single file)
 sll_int32                              :: collective_size
@@ -846,6 +848,8 @@ iplot = 1
 
 nb_mode          = sim%nb_mode
 time_init        = sim%time_init
+nc_x1            = sim%mesh2d%num_cells1
+nc_x2            = sim%mesh2d%num_cells2
 np_x1            = sim%mesh2d%num_cells1+1
 np_x2            = sim%mesh2d%num_cells2+1
 num_dof_x2       = sim%num_dof_x2
@@ -895,7 +899,8 @@ remap_plan_x1_x2 => NEW_REMAP_PLAN(layout_x1, layout_x2, f_x1)
 remap_plan_x2_x1 => NEW_REMAP_PLAN(layout_x2, layout_x1, f_x2)
 
 SLL_ALLOCATE(rho(np_x1),ierr)
-SLL_ALLOCATE(current(np_x1),ierr)
+SLL_ALLOCATE(j0(np_x1),ierr)
+SLL_ALLOCATE(j1(np_x1),ierr)
 SLL_ALLOCATE(efield(np_x1),ierr)
 SLL_ALLOCATE(f1d(max(np_x1,np_x2)),ierr)
 SLL_ALLOCATE(f1d_omp_in(max(np_x1,np_x2),sim%num_threads),ierr)
@@ -935,9 +940,22 @@ call sll_collective_gatherv_real64( sll_world_collective,        &
 f_visu = reshape(f_visu_buf1d, shape(f_visu))
 
 call compute_rho(sim, layout_x1, f_x1, rho)
-
 call sim%poisson%compute_E_from_rho( efield, rho )
-do i = 1, np_x1
+
+efield(1) = 0.0_f64
+dx = sim%mesh2d%delta_eta1
+dv = sim%mesh2d%delta_eta2
+do i = 1, nc_x1
+  rho(i) = sum(f_x1(i,:))*dv
+end do
+rho(np_x1) = rho(1)
+do i = 2, nc_x1
+  efield(i) = efield(i-1)+0.5*(rho(i-1)+rho(i)-2.)*dx
+end do
+efield(1:nc_x1) = efield - sum(efield(1:nc_x1)) / nc_x1
+efield(1) = efield(np_x1)
+print*,'ee=', sum(efield(1:nc_x1)*efield(1:nc_x1)) / nc_x1
+do i = 1, nc_x1
   write(11,*) sim%x1_array(i), efield(i), rho(i)
 end do
     
@@ -952,20 +970,37 @@ do j = 1, np_x2
   write(12,*) sim%node_positions_x2(j), F0(j)
 end do
 
+do j = 1, nc_x2
+  do i = 1, nc_x1
+    write(13,*) sim%x1_array(i), sim%x2_array(j), f_x1(i,j)
+  end do
+  write(13,*) 
+end do
+
 iplot = iplot+1  
+call diagnostics(sim, layout_x1, f_x1, efield)
 
 do istep = 1, sim%num_iterations
 
-
-  !call compute_current(sim, layout_x1, f_x1, current)
-  !call solve_ampere(sim, efield, current, 0.5_f64*sim%dt)
-  !call advection_x( sim, layout_x1, f_x1, 0.5_f64*sim%dt)
+  call compute_current(sim, layout_x1, f_x1, j0)
+  call solve_ampere(sim, efield, j0, 0.5_f64*sim%dt)
+  call advection_x( sim, layout_x1, f_x1, 0.5_f64*sim%dt)
   !call advection_poisson_x( sim, layout_x1, f_x1, efield, rho, 0.5_f64*sim%dt)
-  call advection_ampere_x(sim, layout_x1, efield, f_x1, 0.5_f64*sim%dt)
+  !call advection_ampere_x(sim, layout_x1, efield, f_x1, 0.5_f64*sim%dt)
 
   call collision( sim, layout_x1, F0, f_x1, 0.5_f64*sim%dt)
 
   call apply_remap_2D( remap_plan_x1_x2, f_x1, f_x2 )
+
+  if (mod(istep,sim%freq_diag_time)==0) then
+    call diagnostics(sim, layout_x1, f_x1, efield)
+    if (mod(istep,sim%freq_diag)==0) then          
+      if (MPI_MASTER) then        
+        print *,'#step=',istep,sim%time_init+real(istep,f64)*sim%dt,'iplot=',iplot
+      endif
+      iplot = iplot+1  
+    endif
+  end if
 
   call advection_v(sim, layout_x2, f_x2, efield, sim%dt)
 
@@ -973,27 +1008,12 @@ do istep = 1, sim%num_iterations
 
   call collision( sim, layout_x1, F0, f_x1, 0.5_f64*sim%dt)
 
-  !call compute_current(sim, layout_x1, f_x1, current)
-  !call solve_ampere(sim, efield, current, 0.5_f64*sim%dt)
-  !call advection_x( sim, layout_x1, f_x1, 0.5_f64*sim%dt)
+  call compute_current(sim, layout_x1, f_x1, j0)
+  call solve_ampere(sim, efield, j0, 0.5_f64*sim%dt)
+  call advection_x( sim, layout_x1, f_x1, 0.5_f64*sim%dt)
   !call advection_poisson_x( sim, layout_x1, f_x1, efield, rho, 0.5_f64*sim%dt)
-  call advection_ampere_x(sim, layout_x1, efield, f_x1, 0.5_f64*sim%dt)
+  !call advection_ampere_x(sim, layout_x1, efield, f_x1, 0.5_f64*sim%dt)
 
-  if (mod(istep,sim%freq_diag_time)==0) then
-
-    call diagnostics(sim, layout_x1, f_x1, efield)
-    
-    if (mod(istep,sim%freq_diag)==0) then          
-
-      if (MPI_MASTER) then        
-        print *,'#step=',istep,sim%time_init+real(istep,f64)*sim%dt,'iplot=',iplot
-      endif
-
-      iplot = iplot+1  
-                
-    endif
-
- end if
 
 enddo
 
@@ -1009,34 +1029,34 @@ sll_real64,      intent(in),    dimension(:)   :: F0
 sll_real64,      intent(inout), dimension(:,:) :: f_x1
 sll_real64,      intent(in)                    :: delta_t
 
-sll_int32  :: ig_omp
-sll_int32  :: i_omp
+sll_int32  :: gj
+sll_int32  :: j
 sll_int32  :: global_indices(2)
 sll_int32  :: local_size_x1
 sll_int32  :: local_size_x2
 sll_int32  :: np_x1, np_x2
 sll_int32  :: tid
+sll_real64 :: nu_a, coef
 
+nu_a  = sim%nu_a
 np_x1 = sim%mesh2d%num_cells1+1
 np_x2 = sim%mesh2d%num_cells2+1
 call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
 global_indices = local_to_global( layout_x1, (/1, 1/) )
 
-tid=1          
+coef = exp(-nu_a*delta_t)
+tid=1
 
 !$OMP PARALLEL DEFAULT(SHARED) &
-!$OMP PRIVATE(i_omp,ig_omp,tid) 
+!$OMP PRIVATE(j,gj,tid) 
 !$ tid = omp_get_thread_num()+1
 !$OMP DO
-do i_omp = 1, local_size_x2
+do j = 1, local_size_x2
 
-  ig_omp    = i_omp+global_indices(2)-1
-  f1d_omp_in(1:np_x1,tid) = f_x1(1:np_x1,i_omp)
-  
-  f1d_omp_out(1:np_x1,tid) = exp(-sim%nu_a*delta_t) * f1d_omp_in(1:np_x1,tid)  &
-                             + (1.0_f64- exp(-sim%nu_a*delta_t)) * F0(ig_omp)
-
-  f_x1(1:np_x1,i_omp)=f1d_omp_out(1:np_x1,tid)
+  gj                 = global_indices(2)-1+j
+  f1d_omp_in(:,tid)  = f_x1(:,j)
+  f1d_omp_out(:,tid) = coef*f1d_omp_in(:,tid)+(1.0_f64-coef) * F0(gj)
+  f_x1(:,j)          = f1d_omp_out(:,tid)
 
 end do
 !$OMP END DO          
@@ -1142,6 +1162,7 @@ efield = efield*(1.0_f64 - sim%gamma_d*delta_t)
 end subroutine advection_poisson_x
     
 subroutine advection_ampere_x(sim, layout_x1, efield, f_x1, delta_t)
+
 class(sll_simulation_2d_vlasov_ampere_cart), intent(inout) :: sim
 type(layout_2d) , pointer :: layout_x1
 sll_real64 :: efield(:)
@@ -1259,6 +1280,7 @@ sll_real64      :: rho(:)
 sll_real64      :: f_x1(:,:)
 sll_int32       :: local_size_x1, local_size_x2
 sll_int32       :: global_indices(2)
+sll_int32       :: nc_x1
 sll_int32       :: np_x1
 sll_int32       :: i
 sll_int32       :: ig
@@ -1266,26 +1288,30 @@ sll_int32       :: ierr
 
 sll_real64, dimension(:), allocatable :: rho_loc
 
+nc_x1 = sim%mesh2d%num_cells1
 np_x1 = sim%mesh2d%num_cells1+1
-SLL_ALLOCATE(rho_loc(np_x1),ierr)
+SLL_ALLOCATE(rho_loc(nc_x1),ierr)
 
 call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
 global_indices = local_to_global( layout_x1, (/1, 1/) )
 
 rho_loc = 0._f64
 ig = global_indices(2)-1
-do i=1,np_x1
+do i=1,nc_x1
   rho_loc(i)=rho_loc(i)+sum(f_x1(i,1:local_size_x2)                     &
                        *sim%integration_weight(1+ig:local_size_x2+ig))
 end do
     
 call sll_collective_allreduce( sll_world_collective, &
                                rho_loc,              &
-                               np_x1,                &
+                               nc_x1,                &
                                MPI_SUM,              &
                                rho )
 
-rho = sim%factor_x2_1-sim%factor_x2_rho*rho
+rho(np_x1) = rho(1)
+!rho = sim%factor_x2_1-sim%factor_x2_rho*rho
+rho = rho - sum(rho)/np_x1
+
 
 deallocate(rho_loc)
   
@@ -1342,6 +1368,7 @@ type(layout_2d), pointer                                   :: layout_x1
 sll_real64,                                  intent(in)    :: f_x1(:,:)
 sll_real64,                                  intent(out)   :: current(:)
 
+sll_int32               :: nc_x1
 sll_int32               :: np_x1
 sll_int32               :: i
 sll_int32               :: ierr
@@ -1351,28 +1378,25 @@ sll_int32               :: local_size_x2
 sll_real64              :: v
 sll_int32               :: j
 sll_int32               :: gj
-sll_real64, allocatable :: rho_loc(:)
+sll_real64, allocatable :: j_loc(:)
 
+nc_x1 = sim%mesh2d%num_cells1
 np_x1 = sim%mesh2d%num_cells1+1
-SLL_ALLOCATE(rho_loc(np_x1),ierr)
+SLL_ALLOCATE(j_loc(nc_x1),ierr)
 call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
 global_indices = local_to_global( layout_x1, (/1, 1/) )
 
-do i = 1,local_size_x1
-  rho_loc(i) = 0._f64
+do i = 1,nc_x1
+  j_loc(i) = 0._f64
   do j = 1,local_size_x2
     global_indices = local_to_global( layout_x1, (/i, j/) )
     gj = global_indices(2)
     v  = sim%node_positions_x2(gj)
-    rho_loc(i) = rho_loc(i)+f_x1(i,j)*sim%integration_weight(gj)*v
+    j_loc(i) = j_loc(i)+f_x1(i,j)*sim%integration_weight(gj)*v
   end do
 end do
 
-call sll_collective_allreduce( sll_world_collective, &
-                               rho_loc,              &
-                               np_x1,                &
-                               MPI_SUM,              &
-                               current )
+call sll_collective_allreduce( sll_world_collective, j_loc, nc_x1, MPI_SUM, current)
 
 current(np_x1) = current(1)
 current = current - sum(current) / real(np_x1,f64)
