@@ -10,9 +10,9 @@
 
 
 !> @defgroup pic_accumulators sll_pic_accumulators 
-!> @brief 
-!> Description of pic_accumulators library (72 characters)
-!> @author Selalib team 
+!> @brief Basic types for charge accumulation and electric field accumulator
+!>        in a 2D PIC code
+!> @author Sever Hirstoaga
 !> You can add a contact, do not put your email to prevent spam.
 !> @details
 !> Long description of  pic_accumulators, you can add some references or math equations.

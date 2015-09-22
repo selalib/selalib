@@ -494,6 +494,8 @@ contains
     sll_real64 :: eps
     sll_real64 :: kx
     sll_real64 :: factor1
+    sll_real64 :: v0
+    sll_real64 :: sigma
 
     if( .not. present(params) ) then
        print *, 'sll_landau_initializer_2d, error: the params array must ', &
@@ -503,10 +505,19 @@ contains
     SLL_ASSERT(size(params)>=2)
     kx = params(1)
     eps = params(2)
+    v0 = 0._f64
+    if(size(params)>=3)then
+      v0 = params(3)
+    endif
+    sigma = 1._f64
+    if(size(params)>=4)then
+      sigma = params(4)
+    endif
 
-    factor1 = 1.0_f64/sqrt(2.0_f64*sll_pi)
+    !factor1 = 1.0_f64/sqrt(2.0_f64*sll_pi)
+    factor1 = 1/(sigma*sqrt(2.0_f64*sll_pi))
     sll_landau_initializer_2d = factor1 * &
-         (1.0_f64+eps*cos(kx*x))*exp(-0.5_f64*vx**2)
+         (1.0_f64+eps*cos(kx*x))*exp(-0.5_f64*(vx-v0)**2/sigma**2)
   end function sll_landau_initializer_2d
 
 
@@ -543,6 +554,7 @@ contains
     sll_real64 :: eps
     sll_real64 :: kx
     sll_real64 :: factor1
+    sll_real64 :: sigma
 
     if( .not. present(params) ) then
        print *, 'sll_two_stream_instability_initializer_2d, error: the params array must ', &
@@ -553,8 +565,19 @@ contains
     kx = params(1)
     eps = params(2)
     factor1 = 1.0_f64/sqrt(2.0_f64*sll_pi)
-    res = factor1 * (1._f64+eps*cos(kx*x))*vx**2*exp(-0.5_f64*vx**2)
+    sigma = 1._f64
+    if(size(params)>=3)then
+      sigma = params(3)
+    endif
+    if(size(params)>=4)then
+      factor1 = params(4)
+    endif
+    
+    res = factor1 * (1._f64+eps*cos(kx*x))*vx**2*exp(-0.5_f64*vx**2/sigma**2)
   end function sll_two_stream_instability_initializer_2d
+
+
+
 
 
   

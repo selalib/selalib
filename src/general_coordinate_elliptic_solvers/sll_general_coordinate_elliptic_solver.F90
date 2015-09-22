@@ -129,6 +129,8 @@ type, public :: general_coordinate_elliptic_solver
   logical                                 :: use_cubic_splines
   sll_int32                               :: rho_degree1
   sll_int32                               :: rho_degree2
+  logical                                 :: with_constraint
+  logical                                 :: zero_mean
 
 end type general_coordinate_elliptic_solver
 
@@ -843,7 +845,9 @@ function new_general_elliptic_solver_prototype( spline_degree1,   &
                                       rhs_bc2,          &
                                       use_cubic_splines, &
                                       rho_degree1, &
-                                      rho_degree2 ) result(es)
+                                      rho_degree2, &
+                                      with_constraint, &
+                                      zero_mean ) result(es)
 
 type(general_coordinate_elliptic_solver), pointer :: es
 
@@ -867,6 +871,8 @@ sll_int32,  intent(in), optional :: rhs_bc2
 logical, intent(in), optional :: use_cubic_splines
 sll_int32, intent(in), optional :: rho_degree1
 sll_int32, intent(in), optional :: rho_degree2
+logical, intent(in), optional :: with_constraint
+logical, intent(in), optional :: zero_mean
 
 sll_int32 :: ierr
 
@@ -892,7 +898,9 @@ call initialize_general_elliptic_solver_prototype( es,               &
 &                rhs_bc2,          &
 &                use_cubic_splines,&
 &                rho_degree1,      &
-&                rho_degree2 )
+&                rho_degree2,      &
+&                with_constraint,  &
+&                zero_mean )
    
 end function new_general_elliptic_solver_prototype
 
@@ -2709,7 +2717,9 @@ subroutine initialize_general_elliptic_solver_prototype( &
        rhs_bc2,                                &
        use_cubic_splines,                      &
        rho_degree1,                            &
-       rho_degree2)
+       rho_degree2,                            &
+       with_constraint,                        &
+       zero_mean)
     
 type(general_coordinate_elliptic_solver), intent(out) :: es
 
@@ -2733,7 +2743,8 @@ sll_int32,  intent(in), optional :: rhs_bc2
 logical, intent(in), optional :: use_cubic_splines
 sll_int32, intent(in), optional :: rho_degree1
 sll_int32, intent(in), optional :: rho_degree2
-
+logical, intent(in), optional :: with_constraint
+logical, intent(in), optional :: zero_mean
 sll_int32 :: num_splines1
 sll_int32 :: num_splines2
 sll_int32 :: vec_sz ! for rho_vec allocation
@@ -2765,6 +2776,8 @@ if(present(use_cubic_splines))then
 else
   es%use_cubic_splines = .false.
 endif
+
+
 
 if(es%use_cubic_splines)then
   if(present(rhs_bc1) .and. present(rhs_bc2))then
@@ -2964,6 +2977,18 @@ else
   es%perper  = .false.  
 endif
 
+if(present(with_constraint))then
+  es%with_constraint = with_constraint
+else
+  es%with_constraint = es%perper
+endif
+if(present(zero_mean))then
+  es%zero_mean = zero_mean
+else
+  es%zero_mean = es%perper
+endif
+
+
 es%total_num_splines1=compute_total_num_splines( &
   num_cells1, &    
   spline_degree1, &
@@ -2997,7 +3022,7 @@ SLL_ALLOCATE(es%stiff(vec_sz),ierr)
 
 solution_size = es%total_num_splines1*es%total_num_splines2
 
-if(es%perper) then
+if(es%with_constraint) then
   SLL_ALLOCATE(es%tmp_rho_vec(solution_size+1),ierr)
   SLL_ALLOCATE(es%phi_vec(solution_size+1),ierr)
 else
@@ -3507,7 +3532,7 @@ call flush()
 es%intjac = sum(es%masse)
 print *,'#begin of sll_factorize_csr_matrix'
 
-if (es%perper) then
+if (es%with_constraint) then
 
  es%csr_mat_with_constraint => new_csr_matrix_with_constraint(es%csr_mat)  
 
@@ -3795,7 +3820,7 @@ call compute_index_coeff( &
 
   !if (es%perper) es%rho_vec = es%rho_vec - int_rho/int_jac
   print *,'sum(es%rho_vec)=',int_rho,sum(es%rho_vec)
-  if (es%perper) es%rho_vec = es%rho_vec - sum(es%rho_vec)/es%intjac*es%masse
+  if (es%zero_mean) es%rho_vec = es%rho_vec - sum(es%rho_vec)/es%intjac*es%masse
   print *,'after sum(es%rho_vec)=',sum(es%rho_vec)
 
 bc1_min = es%bc1_min
@@ -3819,7 +3844,7 @@ es%phi_vec(:)     = 0.0_f64  !PN: Is it useful ?
 
   
 
-if(es%perper)then
+if(es%with_constraint)then
   call sll_solve_csr_matrix(es%csr_mat_with_constraint, &
                             es%tmp_rho_vec,             &
                             es%phi_vec)
