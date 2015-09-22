@@ -235,7 +235,7 @@ contains
     sll_int32, intent(in), optional :: num_run
 
     character(len=*), parameter :: this_sub_name = 'init_vp2d_par_cart'
-    character(len=128)          :: err_msg
+    character(len=300)          :: err_msg
 
     character(len=256) :: mesh_case_x1
     sll_int32          :: num_cells_x1
@@ -689,6 +689,8 @@ contains
         sim%split => new_time_splitting_coeff(SLL_TRIPLE_JUMP_VTV)
       case ("SLL_ORDER6_VTV") 
         sim%split => new_time_splitting_coeff(SLL_ORDER6_VTV)
+      case ("SLL_ORDER6_TVT") 
+        sim%split => new_time_splitting_coeff(SLL_ORDER6_TVT)
       case ("SLL_ORDER6VP_TVT") 
         sim%split => new_time_splitting_coeff(SLL_ORDER6VP_TVT,dt=dt)
       case ("SLL_ORDER6VP_VTV") 
@@ -1680,7 +1682,9 @@ contains
                 rho_mode(k)=fft_get_mode(pfwd,buf_fft,k)
              enddo
 
-             write(th_diag_id,'(f12.5,7g20.12)',advance='no') &
+             !write(th_diag_id,'(8g20.12)',advance='no') &
+             !write(th_diag_id,'(8d25.15)',advance='no') &
+             write(th_diag_id,'(8g25.15)',advance='no') &
                   time,                                          &
                   mass,                                          &
                   l1norm,                                        &
@@ -1689,16 +1693,16 @@ contains
                   kinetic_energy,                                &
                   potential_energy,                              &
                   kinetic_energy + potential_energy
-
              do k=0,nb_mode
-                write(th_diag_id,'(g20.12)',advance='no') abs(rho_mode(k))
+                write(th_diag_id,'(1g25.15)',advance='no') real(rho_mode(k),f64)
+                write(th_diag_id,'(1g25.15)',advance='no') aimag(rho_mode(k))
              enddo
 
              do k=0,nb_mode-1
-                write(th_diag_id,'(g20.12)',advance='no') f_hat_x2(k+1)
+                write(th_diag_id,'(1g25.15)',advance='no') f_hat_x2(k+1)
              enddo
 
-             write(th_diag_id,'(g20.12)') f_hat_x2(nb_mode+1)
+             write(th_diag_id,'(1g25.15)') f_hat_x2(nb_mode+1)
 
              call sll_binary_write_array_1d(efield_id,efield(1:np_x1-1),ierr)
              call sll_binary_write_array_1d(rhotot_id,rho(1:np_x1-1),ierr)

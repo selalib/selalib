@@ -63,7 +63,7 @@ implicit none
   
   N_points = 32
   
-  val = 0._f64
+  val = 1._f64
   call compute_gamma0(mode,eta_min,eta_max,val)
   print *,"gamma0 = ",val
   

@@ -32,7 +32,7 @@ SLL_ALLOCATE(x2(n1,n2),error)
 do j = 1, n2
    eta2(j) = (j-1) * (eta2_max-eta2_min)/(n2-1)
    do i = 1, n1
-      eta1(i) =  eta1_min + (i-1) * (eta1_max-eta1_min) / float(n1-1)
+      eta1(i) =  eta1_min + (i-1) * (eta1_max-eta1_min) / real(n1-1,f64)
       x1(i,j) = eta1(i) * cos(eta2(j))
       x2(i,j) = eta1(i) * sin(eta2(j))
    end do
@@ -42,7 +42,9 @@ SLL_ALLOCATE(array(n1,n2),error)
 
 array = cos(2.*x1)*exp(-x2*x2)
 
-iplot = 0
+! Set plot index to 1, otherwise a new file id is not computed (dangerous!)
+iplot = 1
+
 call sll_gnuplot_2d(eta1_min, eta1_max, n1, &
                     eta2_min, eta2_max, n2, &
                     array, 'plot_1', iplot, error)
