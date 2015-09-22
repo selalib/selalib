@@ -10,13 +10,14 @@
 
 
 !> @defgroup pic_particle_types sll_pic_particle_types 
-!> @brief 
-!> Description of pic_particle_types library (72 characters)
-!> @author Selalib team 
+!> @brief Contains basic particle and particle group types 
+!>        for 2d and 4d PIC simulations
+!> @author Sever Hirstoaga
 !> You can add a contact, do not put your email to prevent spam.
-!> @details
-!> Long description of  pic_particle_types, you can add some references or math equations.
-!>
+!> @details  The particle_representation.h file contains Macros
+!>           for conversion between standard (position,velocity) 
+!>           particle type and the type defined in the module
+!>           sll_particle_representations.
 !> <b> Headers file available </b>
 !>  - sll_pic_particle_types.h
 !>
