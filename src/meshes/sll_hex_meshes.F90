@@ -4,6 +4,8 @@
 ! MODULE: sll_hex_meshes
 !
 ! DESCRIPTION:
+!> @ingroup hex_meshes
+!>
 !> @file sll_hex_meshes.F90
 !>
 !> @author
