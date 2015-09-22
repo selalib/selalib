@@ -226,7 +226,7 @@ implicit none
     print *,'#in build directory'
     print *,'#and rmin=2 and rmax=18'
     print *,'#PASSED'
-    return
+    stop
   endif
   
   !stop
