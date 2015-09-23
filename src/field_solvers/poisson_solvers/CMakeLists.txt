@@ -43,9 +43,6 @@ TARGET_LINK_LIBRARIES( hex_poisson sll_hex_meshes )
 ADD_LIBRARY( tri_poisson STATIC tri_poisson.F90 )
 TARGET_LINK_LIBRARIES( tri_poisson sll_tri_meshes )
 
-ADD_LIBRARY ( pivotbande STATIC ../utilities/pivotbande.F90)
-TARGET_LINK_LIBRARIES( pivotbande )
-
 # Tests
 IF(BUILD_TESTING)
 
@@ -127,7 +124,7 @@ IF(BUILD_TESTING)
                                            ${LAPACK_LIBRARIES} 
                                            ${BLAS_LIBRARIES})
 
-  ADD_EXECUTABLE( test_hex_poisson ../utilities/pivotbande.F90 test_hex_poisson.F90 )
-  TARGET_LINK_LIBRARIES( test_hex_poisson hex_poisson sll_constants )
+  ADD_EXECUTABLE( test_hex_poisson test_hex_poisson.F90 )
+  TARGET_LINK_LIBRARIES( test_hex_poisson hex_poisson sll_utilities sll_constants )
 
 ENDIF(BUILD_TESTING)
