@@ -209,7 +209,6 @@ ADD_SUBDIRECTORY(visu_pic)
 ADD_SUBDIRECTORY(time_solvers)
 ADD_SUBDIRECTORY(distribution_function)
 ADD_SUBDIRECTORY(ode_solvers)
-ADD_SUBDIRECTORY(advection_field)
 ADD_SUBDIRECTORY(mesh_calculus)
 
 IF(BUILD_PACKAGE)
