@@ -40,7 +40,7 @@ TARGET_LINK_LIBRARIES( ${EXECUTABLE1} sll_simulations_sequential ${SIM_LIBS}
                                                                 sll_box_splines
                                                                 sll_hex_meshes
                                                                 hex_poisson
-                                                                pivotbande
+                                                                sll_utilities
                                                                 euler_2d_hex)
 
 # Second test :
@@ -49,7 +49,7 @@ TARGET_LINK_LIBRARIES( ${EXECUTABLE2} sll_simulations_sequential ${SIM_LIBS}
                                                                 hex_hermite
                                                                 sll_hex_meshes
                                                                 hex_poisson
-                                                                pivotbande
+                                                                sll_utilities
                                                                 euler_2d_hex)
 
 # Third test :
@@ -79,7 +79,7 @@ TARGET_LINK_LIBRARIES( ${EXECUTABLE5} sll_simulations_sequential ${SIM_LIBS}
                                                                 sll_hex_meshes
                                                                 hex_hermite
                                                                 hex_poisson
-                                                                pivotbande
+                                                                sll_utilities
                                                                 euler_2d_hex)
 
 
