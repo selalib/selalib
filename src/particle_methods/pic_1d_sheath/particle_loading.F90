@@ -77,13 +77,13 @@ module pic_1d_particle_loading
     sll_int32,private :: coll_rank, coll_size
 
     !Parameters for different loading types
-    sll_int32 ::  pic1d_testcase = SLL_PIC1D_TESTCASE_LANDAU
+    !sll_int32 ::  pic1d_testcase = SLL_PIC1D_TESTCASE_LANDAU
     sll_int32 :: num_species
     sll_real64 :: landau_alpha=0.01_f64
     sll_real64 :: landau_mode=0.4_f64
 
-    sll_real64 :: bumpontail_a=0.4_f64
-    !sll_real64 :: bumpontail_a=0.04_f64
+    !sll_real64 :: bumpontail_a=0.4_f64
+    sll_real64 :: bumpontail_a=0.04_f64
     sll_real64 :: bumpontail_v0=4.0_f64
     sll_real64 :: bumpontail_sigma=0.5_f64
     sll_real64 :: plasma_size=0.25_f64 !Relative size of plasma
@@ -892,7 +892,7 @@ endsubroutine
 
 
 
-subroutine  load_particle_species (nparticles, interval_a_user, interval_b_user, particle_species)
+subroutine  load_particle_species (nparticles, interval_a_user, interval_b_user, particle_species,pic1d_testcase )
 
     !    steadyparticleposition, &
         !        particleposition, particlespeed, particleweight, particleweight_constant, particle_qm)
@@ -903,6 +903,7 @@ subroutine  load_particle_species (nparticles, interval_a_user, interval_b_user,
     integer, intent(in) :: nparticles
     sll_real64, intent(in) ::interval_a_user
     sll_real64, intent(in) :: interval_b_user
+    sll_int32, intent(in) :: pic1d_testcase
     type(sll_particle_1d_group), dimension(10) ::   particle_species
     sll_int32 :: idx
     sll_real64 :: funlandau,x
@@ -1135,7 +1136,7 @@ subroutine  load_particle_species (nparticles, interval_a_user, interval_b_user,
                 particle_species(3)%particle%weight=0
 
                 do idx=1,num_species
-                    call sll_pic1d_ensure_boundary_conditions(  particle_species(idx)%particle%dx, particle_species(idx)%particle%vx)
+                    call sll_pic1d_ensure_boundary_conditions(  particle_species(idx)%particle%dx, particle_species(idx)%particle%vx,pic1d_testcase)
                 enddo
 
             endif
@@ -1316,24 +1317,24 @@ endsubroutine
 
 
 
-subroutine sll_pic1d_ensure_boundary_conditions_species(particle_species )
+subroutine sll_pic1d_ensure_boundary_conditions_species(particle_species ,pic1d_testcase)
     type(sll_particle_1d_group), dimension(:), intent(inout)::   particle_species
     sll_int32 :: num_species, numpart, jdx
-
+    sll_int32, intent(in) :: pic1d_testcase
     num_species=size(particle_species)
     SLL_ASSERT(num_species==size(particle_species))
 
     do jdx=1,num_species
         call sll_pic1d_ensure_boundary_conditions(particle_species(jdx)%particle%dx,&
-            particle_species(jdx)%particle%vx )
+            particle_species(jdx)%particle%vx,pic1d_testcase )
     enddo
 endsubroutine
 
 
-subroutine sll_pic1d_ensure_boundary_conditions( particle_position, particlespeed)
+subroutine sll_pic1d_ensure_boundary_conditions( particle_position, particlespeed,pic1d_testcase)
     sll_real64, dimension(:) ,intent(inout) :: particle_position
     sll_real64, dimension(:) ,intent(inout) :: particlespeed
-
+    sll_int32, intent(in) :: pic1d_testcase
 
     selectcase (pic1d_testcase)
 

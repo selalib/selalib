@@ -39,9 +39,9 @@ program unit_test_poisson_1d_fd
             print *, "--------------------------------------------------------------------------------------"
 
             print *, "Starting test at Spline degree ", jdx ," with ", 2**idx, " Cells"
-            call test_poisson_solver(idx, jdx,1000000)
-            
-            !call test_monte_carlo(idx, jdx,1000000)
+            !call test_poisson_solver(idx, jdx,1000000)
+            call test_momentum(idx, jdx,20000)
+            !call test_monte_carlo(idx, jdx,500000)
         enddo
 
     enddo
@@ -220,6 +220,74 @@ contains
         !call delete(mesh_eval)
     endsubroutine
 
+    
+    
+        subroutine test_momentum(test_power_two, spline_degree,npart)
+        implicit none
+        integer :: ierr
+        sll_real64 :: interval_a=0, interval_b=1.0_f64
+        class(sll_cartesian_mesh_1d), pointer :: mesh=>null()    !Finite Element mesh
+        class(sll_cartesian_mesh_1d), pointer :: mesh_eval=>null()  !evaluation mesh
+        class(poisson_1d_fd), pointer :: solver=>null()
+        sll_int32, intent(in) :: test_power_two
+        sll_int32, intent(in) :: spline_degree
+        sll_real64, dimension(test_power_two) :: numerical_error
+        sll_real64, dimension(test_power_two) :: numerical_error_deriv
+        sll_real64, dimension(test_power_two) :: mode_error
+        sll_real64 :: num_error_sum
+        sll_int32, intent(in) ::  npart !<Number of particles
+        sll_int32 :: idx, jdx,node
+        sll_int32 :: test_dimension, test_mode
+        sll_real64, dimension(npart) :: xx,ww, Phi, E
+        sll_real64, dimension(2**test_power_two) :: rhs, rhsfun
+
+        test_dimension=2**test_power_two
+
+        mesh=>new_cartesian_mesh_1d( test_dimension, interval_a, interval_b )
+        solver=>new_poisson_1d_fd(mesh, 2,spline_degree, SLL_PERIODIC, ierr)
+
+        call random_number(xx)
+        xx=xx*(interval_b- interval_a)+interval_a
+        
+        
+        !print *, "Nodes:" , mesh%eta1_nodes()
+        
+        numerical_error=0.0_f64
+        do  test_mode=0,test_power_two-2,1
+            print *, "--Test Mode: ", 2**test_mode,   " -----------------------------------------"
+
+            testfunction_test_mode=1.0_f64*(2**(test_mode))
+            
+            ww=sll_poisson_1d_fd_testfunction(xx)/(interval_b- interval_a)
+        
+  
+            rhs=solver%get_rhs_klimontovich(xx(1:npart),ww(1:npart))/npart    
+   
+            !call solver%set_solution(rhs)
+   
+            call solver%solve(rhs)
+            call solver%eval_solution_derivative(xx,E)
+            call solver%eval_solution(xx,Phi)
+
+   
+           print *, "Int[E]= ", sum(E*ww)/npart,"	Int[Phi]= ", sum(Phi*ww)/npart
+
+   
+   
+           enddo
+            
+              call solver%delete(ierr)
+
+    end subroutine
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     subroutine test_monte_carlo(test_power_two, spline_degree,npartmax)
         implicit none
