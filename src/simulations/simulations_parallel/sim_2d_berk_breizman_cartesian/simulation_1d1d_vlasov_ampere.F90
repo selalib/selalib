@@ -57,8 +57,7 @@ private
 integer, parameter, public :: SLL_ADVECTIVE    = 0
 integer, parameter, public :: SLL_CONSERVATIVE = 1
 
-type, public, extends(sll_simulation_base_class) :: &
-     sll_simulation_2d_vlasov_ampere_cart
+type, public, extends(sll_simulation_base_class) :: sll_simulation_2d_vlasov_ampere_cart
 
  sll_int32                            :: num_threads
  type(sll_cartesian_mesh_2d), pointer :: mesh2d
@@ -75,33 +74,30 @@ type, public, extends(sll_simulation_base_class) :: &
  sll_int32,  dimension(:),   pointer  :: bloc_index_x1
  sll_int32,  dimension(:),   pointer  :: bloc_index_x2
  
- sll_real64                 :: kx
- sll_real64                 :: eps
+ sll_real64                           :: kx
+ sll_real64                           :: eps
 
- !MM initial function
  procedure(sll_scalar_initializer_2d), nopass, pointer :: init_func
  sll_real64, dimension(:), pointer                     :: params
 
- sll_real64 :: nrj0
- sll_real64 :: dt
- sll_int32  :: num_iterations 
- sll_int32  :: freq_diag
- sll_int32  :: freq_diag_time
- sll_int32  :: nb_mode
- sll_real64 :: time_init
-
- character(len=256)      :: thdiag_filename
-
- logical    :: driven 
- sll_real64 :: t0
- sll_real64 :: twL
- sll_real64 :: twR
- sll_real64 :: tflat
- sll_real64 :: tL
- sll_real64 :: tR
- sll_real64 :: Edrmax
- sll_real64 :: omegadr
- logical    :: turn_drive_off
+ sll_real64          :: nrj0
+ sll_real64          :: dt
+ sll_int32           :: num_iterations 
+ sll_int32           :: freq_diag
+ sll_int32           :: freq_diag_time
+ sll_int32           :: nb_mode
+ sll_real64          :: time_init
+ character(len=256)  :: thdiag_filename
+ logical             :: driven 
+ sll_real64          :: t0
+ sll_real64          :: twL
+ sll_real64          :: twR
+ sll_real64          :: tflat
+ sll_real64          :: tL
+ sll_real64          :: tR
+ sll_real64          :: Edrmax
+ sll_real64          :: omegadr
+ logical             :: turn_drive_off
 
  type(sll_advection_1d_base_ptr), dimension(:), pointer :: advect_x1 
  type(sll_advection_1d_base_ptr), dimension(:), pointer :: advect_x2
@@ -120,33 +116,33 @@ type, public, extends(sll_simulation_base_class) :: &
  sll_real64         :: gamma_d
  sll_real64         :: nu_a 
          
- contains !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+contains !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-   procedure, pass(sim) :: run => run_va2d_cartesian
-   procedure, pass(sim) :: init_from_file => init_va2d_fake !init_va2d_par_cart
+ procedure, pass(sim) :: run => run_va2d_cartesian
+ procedure, pass(sim) :: init_from_file => init_va2d_fake !init_va2d_par_cart
 
 end type sll_simulation_2d_vlasov_ampere_cart
 
 interface delete
-   module procedure delete_va2d_par_cart
+  module procedure delete_va2d_par_cart
 end interface delete
 
 public delete_va2d_par_cart
 public new_va2d_par_cart
 
-sll_int32                          :: istep
-sll_int32                          :: iplot
-sll_int32                          :: adr_id
-sll_int32                          :: edr_id
-sll_int32                          :: t_id
-sll_int32                          :: deltaf_id
-sll_int32                          :: rhotot_id
-sll_int32                          :: efield_id
-sll_int32                          :: thdiag_id
-sll_real64                         :: time
+sll_int32                               :: istep
+sll_int32                               :: iplot
+sll_int32                               :: adr_id
+sll_int32                               :: edr_id
+sll_int32                               :: t_id
+sll_int32                               :: deltaf_id
+sll_int32                               :: rhotot_id
+sll_int32                               :: efield_id
+sll_int32                               :: thdiag_id
+sll_real64                              :: time
 
-sll_int32, dimension(:),    allocatable :: collective_displs
-sll_int32, dimension(:),    allocatable :: collective_recvcnts
+sll_int32,  dimension(:),   allocatable :: collective_displs
+sll_int32,  dimension(:),   allocatable :: collective_recvcnts
 
 sll_real64, dimension(:),   allocatable :: buf_fft
 sll_real64, dimension(:),   allocatable :: f_x1_buf1d
@@ -165,10 +161,9 @@ contains
 function new_va2d_par_cart( filename, num_run ) result(sim)    
 
 type(sll_simulation_2d_vlasov_ampere_cart), pointer :: sim    
-character(len=*), intent(in), optional               :: filename
-sll_int32, intent(in), optional                      :: num_run
-
-sll_int32                                            :: ierr
+character(len=*), intent(in), optional              :: filename
+sll_int32, intent(in), optional                     :: num_run
+sll_int32                                           :: ierr
 
 SLL_ALLOCATE(sim, ierr)
 call init_va2d_par_cart( sim, filename, num_run )
@@ -374,32 +369,32 @@ every_x2                           = 1
 
     
 !initial_function
-initial_function_case       = "SLL_LANDAU"   !"SLL_BEAM"
-kmode                       = 0.5_f64
-eps                         = 0.001_f64
-alpha_gaussian              = 0.2_f64
+initial_function_case = "SLL_LANDAU"   !"SLL_BEAM"
+kmode                 = 0.5_f64
+eps                   = 0.001_f64
+alpha_gaussian        = 0.2_f64
 
 !time_iterations
-dt                          = 0.1_f64
-number_iterations           = 600
-freq_diag                   = 100
-freq_diag_time              = 1
-nb_mode                     = 5
-time_init                   = 0._f64
-split_case                  = "SLL_STRANG_VTV" 
+dt                    = 0.1_f64
+number_iterations     = 600
+freq_diag             = 100
+freq_diag_time        = 1
+nb_mode               = 5
+time_init             = 0._f64
+split_case            = "SLL_STRANG_VTV" 
 
 !advector
-advector_x1                 = "SLL_LAGRANGE"
-order_x1                    = 4
-advector_x2                 = "SLL_LAGRANGE"
-order_x2                    = 4
-factor_x1                   = 1._f64
-factor_x2_rho               = 1._f64
-factor_x2_1                 = 1._f64
+advector_x1           = "SLL_LAGRANGE"
+order_x1              = 4
+advector_x2           = "SLL_LAGRANGE"
+order_x2              = 4
+factor_x1             = 1._f64
+factor_x2_rho         = 1._f64
+factor_x2_1           = 1._f64
 
-integration_case            = "SLL_TRAPEZOID" 
-poisson_solver              = "SLL_FFT"
-drive_type                  = "SLL_NO_DRIVE"  
+integration_case      = "SLL_TRAPEZOID" 
+poisson_solver        = "SLL_FFT"
+drive_type            = "SLL_NO_DRIVE"  
 
 sim%thdiag_filename = "thdiag.dat"
 call sll_ascii_file_create(sim%thdiag_filename, thdiag_id, ierr)
@@ -466,6 +461,7 @@ sim%bloc_index_x1(sim%num_bloc_x1) = num_cells_x1+1
 select case (mesh_case_x2)
 
   case ("SLL_CARTESIAN_MESH")
+
     mesh_x2 => new_cartesian_mesh_1d(num_cells_x2,eta_min=x2_min, eta_max=x2_max)
     call get_node_positions( mesh_x2, sim%x2_array )
     SLL_ALLOCATE(sim%x2_array_omp(num_cells_x2+1,0:sim%num_threads-1),ierr)
@@ -570,19 +566,18 @@ select case (initial_function_case)
 end select
 
 !time iterations
-sim%dt                = dt
-sim%num_iterations    = number_iterations
-sim%freq_diag         = freq_diag
-sim%freq_diag_time    = freq_diag_time
-sim%nb_mode           = nb_mode
-sim%time_init         = time_init
+sim%dt             = dt
+sim%num_iterations = number_iterations
+sim%freq_diag      = freq_diag
+sim%freq_diag_time = freq_diag_time
+sim%nb_mode        = nb_mode
+sim%time_init      = time_init
 
 if (sim%nb_mode<0) then
   write( err_msg,* ) '#bad value of nb_mode=', nb_mode, '; #should be >=0'
   SLL_ERROR( this_sub_name, err_msg )
 endif
 
-!advector
 SLL_ALLOCATE(sim%advect_x1(num_threads),ierr)
 SLL_ALLOCATE(sim%advect_x2(num_threads),ierr)
 
@@ -590,9 +585,9 @@ SLL_ALLOCATE(sim%advect_x2(num_threads),ierr)
 !$OMP PRIVATE(tid)
 
 #ifdef _OPENMP
-    tid = omp_get_thread_num()+1
+tid = omp_get_thread_num()+1
 #else
-    tid = 1
+tid = 1
 #endif
 
 print*,'Advection x1 :', advector_x1
@@ -982,15 +977,14 @@ call diagnostics(sim, layout_x1, f_x1, efield)
 
 do istep = 1, sim%num_iterations
 
-  call compute_current(sim, layout_x1, f_x1, j0)
-  call solve_ampere(sim, efield, j0, 0.5_f64*sim%dt)
-  call advection_x( sim, layout_x1, f_x1, 0.5_f64*sim%dt)
-  !call advection_poisson_x( sim, layout_x1, f_x1, efield, rho, 0.5_f64*sim%dt)
+  !call compute_current(sim, layout_x1, f_x1, j0)
+  !call solve_ampere(sim, efield, j0, 0.5_f64*sim%dt)
+  !call advection_x( sim, layout_x1, f_x1, 0.5_f64*sim%dt)
+  call advection_poisson_x( sim, layout_x1, f_x1, efield, rho, 0.5_f64*sim%dt)
   !call advection_ampere_x(sim, layout_x1, efield, f_x1, 0.5_f64*sim%dt)
 
-  call collision( sim, layout_x1, F0, f_x1, 0.5_f64*sim%dt)
+  !call collision( sim, layout_x1, F0, f_x1, 0.5_f64*sim%dt)
 
-  call apply_remap_2D( remap_plan_x1_x2, f_x1, f_x2 )
 
   if (mod(istep,sim%freq_diag_time)==0) then
     call diagnostics(sim, layout_x1, f_x1, efield)
@@ -1002,16 +996,16 @@ do istep = 1, sim%num_iterations
     endif
   end if
 
+  call apply_remap_2D( remap_plan_x1_x2, f_x1, f_x2 )
   call advection_v(sim, layout_x2, f_x2, efield, sim%dt)
-
   call apply_remap_2D( remap_plan_x2_x1, f_x2, f_x1 )
 
-  call collision( sim, layout_x1, F0, f_x1, 0.5_f64*sim%dt)
+  !call collision( sim, layout_x1, F0, f_x1, 0.5_f64*sim%dt)
 
-  call compute_current(sim, layout_x1, f_x1, j0)
-  call solve_ampere(sim, efield, j0, 0.5_f64*sim%dt)
-  call advection_x( sim, layout_x1, f_x1, 0.5_f64*sim%dt)
-  !call advection_poisson_x( sim, layout_x1, f_x1, efield, rho, 0.5_f64*sim%dt)
+  !call compute_current(sim, layout_x1, f_x1, j0)
+  !call solve_ampere(sim, efield, j0, 0.5_f64*sim%dt)
+  !call advection_x( sim, layout_x1, f_x1, 0.5_f64*sim%dt)
+  call advection_poisson_x( sim, layout_x1, f_x1, efield, rho, 0.5_f64*sim%dt)
   !call advection_ampere_x(sim, layout_x1, efield, f_x1, 0.5_f64*sim%dt)
 
 
@@ -1256,7 +1250,6 @@ end do
 
 L =  sim%L / (2.0_f64*sll_pi)
 
-
 sim%advect_ampere_x1(1)%ptr%ek(1) = 0.0_f64
 do i = 2, nc_x1/2+1
   sim%advect_ampere_x1(1)%ptr%ek(i) = - L / cmplx(0.0_f64,real(i-1,f64),f64) * &
@@ -1344,7 +1337,7 @@ do i_omp = 1,local_size_x1
 
   ig_omp=i_omp+global_indices(1)-1
 
-  alpha_omp = - efield(ig_omp)
+  alpha_omp = efield(ig_omp)
 
   f1d_omp_in(1:sim%num_dof_x2,tid) = f_x2(i_omp,1:sim%num_dof_x2)
 
