@@ -35,8 +35,8 @@
 /
 
 &berk_breizman
-  gamma_d =  0.0
-  nu_a    =  0.0 !12589
+  gamma_d =  1.0
+  nu_a    =  0.01
 /
 
 &drive
