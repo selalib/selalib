@@ -4,8 +4,6 @@
 ! - parallel
 
 program vlasov_ampere_2d
-#include "selalib.h"
-#include "selalib-mpi.h"
 #include "sll_working_precision.h"
 
 use gaussian

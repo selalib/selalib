@@ -20,6 +20,10 @@
 !>  the  first_charge_accumulation (should be put elsewhere).
 !> Module  sll_charge_to_density_module contains conversion of data (charge +
 !> electric field) from the convenient (to the optimized push) structure to the mesh one.
+!> Module 
+
+!>  
+!>
 !>  
 !>
 !> <b> Headers file available </b>
@@ -41,3 +45,32 @@
 !> call solve(my_type, your_result)
 !> \endcode
 !>
+
+
+!> @defgroup pic_utilities sll_quadtree
+!> @brief Quadtree sorting structure for particles
+!>       
+!> @author Eric Sonnendrücker (maintained by Jakob Ameres)
+!> You can add a contact, do not put your email to prevent spam.
+!>
+!> @defgroup pic_utilities sll_quadtree
+!> @brief Quadtree sorting structure for particles
+!>       
+!> @author Eric Sonnendrücker (maintained by Jakob Ameres)
+!> You can add a contact, do not put your email to prevent spam.
+!>
+
+
+!> @defgroup pic_utilities sll_quadtree
+!> @brief Quadtree sorting structure for particles
+!>       
+!> @author Eric Sonnendrücker (maintained by Jakob Ameres)
+!> You can add a contact, do not put your email to prevent spam.
+!>
+!> @defgroup pic_utilities sll_particle_method_descriptors
+!> @brief Descriptors for particle methods
+!>       
+!> @author Jakob Ameres
+!>
+!> @details  Will be obsolete in the future due tue
+!> sll_descriptors

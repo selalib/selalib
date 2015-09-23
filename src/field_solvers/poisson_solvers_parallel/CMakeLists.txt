@@ -8,6 +8,8 @@
 # when debugging this specific module.
 IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
+  SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+
   SET( POISSON_PARALLEL_SRCS
     sll_poisson_polar_parallel.F90 
     sll_poisson_3d_periodic_par.F90 

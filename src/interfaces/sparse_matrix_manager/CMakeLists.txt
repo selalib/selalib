@@ -54,6 +54,7 @@ ENDIF()
 IF(BUILD_TESTING)
 
   IF(MPI_ENABLED)
+    SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
     ADD_EXECUTABLE( test_sparse_matrix unit_test_sparse_matrix.F90 )
     TARGET_LINK_LIBRARIES( test_sparse_matrix sll_sparse_matrix sll_collective )
     ADD_TEST( NAME sparse_matrix COMMAND test_sparse_matrix )

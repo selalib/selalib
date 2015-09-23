@@ -45,7 +45,7 @@ IF(FFTW_FOUND AND FFTW_ENABLED)
   ADD_EXECUTABLE( ${EXECUTABLE} simulation_${SIM_NAME}.F90
                                 unit_test_${TEST_NAME}.F90 )
     
-  TARGET_LINK_LIBRARIES( ${EXECUTABLE} sll_simulations_parallel sll_ampere_solvers )
+  TARGET_LINK_LIBRARIES( ${EXECUTABLE} sll_simulations_parallel )
   
   INSTALL( TARGETS ${EXECUTABLE} DESTINATION ${INSTALL_DIR} )
   
@@ -56,12 +56,12 @@ IF(FFTW_FOUND AND FFTW_ENABLED)
     SET_TESTS_PROPERTIES( ${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
   ENDIF(BUILD_TESTING)
   
-  ADD_EXECUTABLE( vm2d_spectral sll_vlasov2d_base.F90
-                                sll_vlasov2d_spectral.F90
-                                init_functions.F90
-                                vm2d_spectral.F90)
-    
-  TARGET_LINK_LIBRARIES( vm2d_spectral sll_simulations_parallel sll_ampere_solvers)
+  #ADD_EXECUTABLE( vm2d_spectral sll_vlasov2d_base.F90
+  #                              sll_vlasov2d_spectral.F90
+  #                              init_functions.F90
+  #                              vm2d_spectral.F90)
+  #  
+  #TARGET_LINK_LIBRARIES( vm2d_spectral sll_ampere_solvers )
 
 ENDIF(FFTW_FOUND AND FFTW_ENABLED)
   
