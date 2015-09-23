@@ -5,29 +5,28 @@
 ! in file Doxyfile.in (line 691) if it is excluded. 
 ! Type 'make doc' in build directory.
 ! To check the results, open : 
-! selalib/doc/build/html/doxygen/html/defgroup pic_particle_initializerss.html 
+! selalib/doc/build/html/doxygen/html/defgroup pic_particle_typess.html 
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup pic_particle_initializers sll_pic_particle_initializers 
-!> @brief  Contains initialization routines for several distribution functions
-!>         in 2d and 4d PIC framework.
+!> @defgroup pic_particle_types sll_pic_particle_types 
+!> @brief  4d PIC simulation for Landau damping test-case
+!>        
 !> @author Sever Hirstoaga
 !> You can add a contact, do not put your email to prevent spam.
-!> @details
-!> Long description of  pic_particle_initializers, you can add some references or math equations.
-!>
+!> @details A Vlasov-Poisson equation on a cartesian mesh,
+!>          biperiodic physical domain
 !> <b> Headers file available </b>
-!>  - sll_pic_particle_initializers.h
+!>  - sll_pic_particle_types.h
 !>
 !> <b> Modules available </b>
 !>  List fortran module available
-!>  - sll_pic_particle_initializers
+!>  - sll_pic_particle_types
 !>
 !> <b> How to use it </b>
-!> - Header file : \code #include 'sll_pic_particle_initializers.h' \endcode
+!> - Header file : \code #include 'sll_pic_particle_types.h' \endcode
 !> - Link with   <code>-lsll_%s</code>
-!> - Add <code> use sll_pic_particle_initializers </code>
+!> - Add <code> use sll_pic_particle_types </code>
 !>
 !> <b> Examples </b>
 !> -Add some fortran lines to explain how ti use the library

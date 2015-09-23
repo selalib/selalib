@@ -12,10 +12,12 @@
 !> @defgroup reduction sll_reduction 
 !> @brief 
 !> Description of reduction library (72 characters)
-!> @author Selalib team 
+!> compute averages in some directions
+!> @author Michel Mehrenberger 
 !> You can add a contact, do not put your email to prevent spam.
 !> @details
-!> Long description of  reduction, you can add some references or math equations.
+!> computes the averages in some directions
+!> as for example when computing rho
 !>
 !> <b> Headers file available </b>
 !>  - sll_reduction.h
