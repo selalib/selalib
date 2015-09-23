@@ -1,21 +1,21 @@
 &landau_params
-      lalpha=5
+      lalpha=0.05
       lmode=0.5  
       pi_unit=.true.
       interval_a=0
       interval_b=4
      / 
 &numerical_params
-      nmark=40000
       sdeg=4  
-      tstepw=10
-      femp=5
+      tstepw=0.05
+      femp=6
       /
 &params
-      tsteps  = 50
-      ppusher="euler"
+      nmark=100000
+      final_time=10
+      ppusher="verlet"
       scenario="landau"
-      psolver="fd"
+      psolver="fem"
       gnuplot_inline_output_user=.FALSE.
       deltaf=.FALSE.
       nstreams=1
