@@ -1,4 +1,4 @@
-SET(SLL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
+SET(SLL_DIR ${CMAKE_SOURCE_DIR})
 
 SET(SLL_MACROS
     ${CMAKE_CURRENT_SOURCE_DIR}/selalib.h
@@ -14,10 +14,10 @@ SET(SLL_MACROS
     ${SLL_DIR}/poisson_solvers/sll_poisson_solvers.h
     ${SLL_DIR}/interpolators/sll_interpolators.h
     ${SLL_DIR}/splines/sll_splines.h
-    ${SLL_DIR}/file_io/sll_file_io.h
-    ${SLL_DIR}/file_io_parallel/sll_file_io_parallel.h
-    ${SLL_DIR}/fft/sll_fft.h
-    ${SLL_DIR}/fft/sll_fftw.h
+    ${SLL_DIR}/io/file_io/sll_file_io.h
+    ${SLL_DIR}/io/file_io_parallel/sll_file_io_parallel.h
+    ${SLL_DIR}/interfaces/fft/sll_fft.h
+    ${SLL_DIR}/interfaces/fft/sll_fftw.h
     ${SLL_DIR}/integration/sll_integration.h
     ${SLL_DIR}/fields/sll_field_1d.h
     ${SLL_DIR}/fields/sll_field_2d.h
@@ -28,8 +28,6 @@ SET(SLL_MACROS
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations.h
     ${SLL_DIR}/pic_accumulators/sll_accumulators.h
     ${SLL_DIR}/pic_particle_types/particle_representation.h
-    ${SLL_DIR}/multigrid/compdir.inc
-    ${SLL_DIR}/multigrid/mgd2_routines.h
     ${SLL_DIR}/remap/sll_remap.h
     ${SLL_DIR}/parallel_utilities/sll_parallel_utilities.h
     ${SLL_DIR}/deboor_splines/sll_deboor_splines.h
@@ -72,14 +70,14 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/utilities/banfac.f90
     ${SLL_DIR}/utilities/banslv.f90
     ${SLL_DIR}/lagrange_interpolation/sll_lagrange_interpolation.F90
-    ${SLL_DIR}/file_io/sll_binary_io.F90
-    ${SLL_DIR}/file_io/sll_gnuplot.F90
-    ${SLL_DIR}/file_io/sll_hdf5_io_serial.F90
-    ${SLL_DIR}/file_io/sll_xdmf.F90
-    ${SLL_DIR}/file_io/sll_ascii_io.F90
-    ${SLL_DIR}/file_io/sll_xml_io.F90
-    ${SLL_DIR}/file_io/sll_plotmtv.F90
-    ${SLL_DIR}/file_io/sll_tri_mesh_xmf.F90
+    ${SLL_DIR}/io/file_io/sll_binary_io.F90
+    ${SLL_DIR}/io/file_io/sll_gnuplot.F90
+    ${SLL_DIR}/io/file_io/sll_hdf5_io_serial.F90
+    ${SLL_DIR}/io/file_io/sll_xdmf.F90
+    ${SLL_DIR}/io/file_io/sll_ascii_io.F90
+    ${SLL_DIR}/io/file_io/sll_xml_io.F90
+    ${SLL_DIR}/io/file_io/sll_plotmtv.F90
+    ${SLL_DIR}/io/file_io/sll_tri_mesh_xmf.F90
     ${SLL_DIR}/visu_pic/sll_visu_pic.F90
     ${SLL_DIR}/timer/sll_timer.F90
     ${SLL_DIR}/fields/sll_scalar_field_1d_base.F90
@@ -220,14 +218,14 @@ IF(MPI_ENABLED)
   ${SLL_DIR}/parallel_utilities/sll_common_array_initializers_module.F90
   ${SLL_DIR}/parallel_utilities/sll_parallel_array_initializer_module.F90
   ${SLL_DIR}/parallel_utilities/buffer_loader_utilities.F90
-  ${SLL_DIR}/file_io_parallel/sll_gnuplot_parallel.F90)
+  ${SLL_DIR}/io/file_io_parallel/sll_gnuplot_parallel.F90)
 ENDIF(MPI_ENABLED)
 
 IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
-  ${SLL_DIR}/file_io_parallel/sll_hdf5_io_parallel.F90
-  ${SLL_DIR}/file_io_parallel/sll_xdmf_parallel.F90
+  ${SLL_DIR}/io/file_io_parallel/sll_hdf5_io_parallel.F90
+  ${SLL_DIR}/io/file_io_parallel/sll_xdmf_parallel.F90
   ${SLL_DIR}/distribution_function_multipatch/sll_distribution_function_4d_multipatch.F90
   ${SLL_DIR}/simulations/simulations_parallel/sim_4d_qns_general/simulation_4d_qns_general.F90
   ${SLL_DIR}/simulations/simulations_parallel/sim_2d_vlasov_poisson_cartesian/simulation_2d_vlasov_poisson_cartesian.F90
