@@ -122,13 +122,14 @@ ELSE()
    ENABLE_TESTING()
 ENDIF(BUILD_PACKAGE)
 
+
+FILE(GLOB_RECURSE SLL_MACROS ${PROJECT_SOURCE_DIR} "*.h")
+FILE(COPY ${SLL_MACROS} DESTINATION ${CMAKE_BINARY_DIR}/include)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/modules)
 
-ADD_SUBDIRECTORY(package)
-ADD_SUBDIRECTORY(fftpack)
-ADD_SUBDIRECTORY(mudpack)
-ADD_SUBDIRECTORY(fishpack)
+
+ADD_SUBDIRECTORY(interfaces)
 ADD_SUBDIRECTORY(memory)
 ADD_SUBDIRECTORY(working_precision)
 ADD_SUBDIRECTORY(assert)
@@ -136,18 +137,15 @@ ADD_SUBDIRECTORY(errors)
 ADD_SUBDIRECTORY(constants)
 ADD_SUBDIRECTORY(boundary_condition_descriptors)
 ADD_SUBDIRECTORY(utilities)
-ADD_SUBDIRECTORY(file_io)
 ADD_SUBDIRECTORY(timer)
 ADD_SUBDIRECTORY(splines)
 ADD_SUBDIRECTORY(meshes)
 ADD_SUBDIRECTORY(lagrange_interpolation)
 ADD_SUBDIRECTORY(hermite_interpolation)
 ADD_SUBDIRECTORY(integration)
-ADD_SUBDIRECTORY(fft)
 ADD_SUBDIRECTORY(periodic_interpolation)
 ADD_SUBDIRECTORY(deboor_splines)
 ADD_SUBDIRECTORY(reduction)
-
 ADD_SUBDIRECTORY(pic_particle_types)
 ADD_SUBDIRECTORY(random_deviate_generators)
 ADD_SUBDIRECTORY(pic_particle_initializers)
@@ -155,11 +153,7 @@ ADD_SUBDIRECTORY(pic_accumulators)
 ADD_SUBDIRECTORY(pic_utilities)
 ADD_SUBDIRECTORY(field_accumulators)
 ADD_SUBDIRECTORY(CAID_coordinate_transformations)
-#ADD_SUBDIRECTORY(CAID_coordinate_transformations/circle_mp5)	
-#ADD_SUBDIRECTORY(CAID_coordinate_transformations/mhdeq)
-#ADD_SUBDIRECTORY(CAID_coordinate_transformations/identity)
 ADD_SUBDIRECTORY(CAID_coordinate_transformations/square_4p_n10)
-
 ADD_SUBDIRECTORY(interpolators)
 ADD_SUBDIRECTORY(coordinate_transformations)
 ADD_SUBDIRECTORY(characteristics)
@@ -170,6 +164,7 @@ ADD_SUBDIRECTORY(maxwell_solvers)
 ADD_SUBDIRECTORY(ampere_solvers)
 ADD_SUBDIRECTORY(quasi_neutral_solvers)
 ADD_SUBDIRECTORY(descriptors)
+ADD_SUBDIRECTORY(io)
 
 #Fortran version is checked in CMakeModules/FortranConfig.cmake
 IF(F2008)
@@ -184,7 +179,6 @@ IF(MPI_ENABLED)
    
    SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
    ADD_SUBDIRECTORY(collective)
-   ADD_SUBDIRECTORY(file_io_parallel)
    ADD_SUBDIRECTORY(remap)
    ADD_SUBDIRECTORY(point_to_point_communications)
    ADD_SUBDIRECTORY(distribution_function_multipatch)
@@ -199,12 +193,9 @@ ADD_SUBDIRECTORY(fields)
 ADD_SUBDIRECTORY(meshes_multipatch)
 ADD_SUBDIRECTORY(coordinate_transformations_multipatch)
 ADD_SUBDIRECTORY(fields_multipatch)
-ADD_SUBDIRECTORY(AGMG)
-ADD_SUBDIRECTORY(sparse_matrix_manager)
 ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers)
 ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers_multipatch)
 ADD_SUBDIRECTORY(poisson_solvers)
-ADD_SUBDIRECTORY(multigrid)
 ADD_SUBDIRECTORY(visu_pic)
 ADD_SUBDIRECTORY(time_solvers)
 ADD_SUBDIRECTORY(distribution_function)
@@ -212,6 +203,7 @@ ADD_SUBDIRECTORY(ode_solvers)
 ADD_SUBDIRECTORY(mesh_calculus)
 
 IF(BUILD_PACKAGE)
+  MESSAGE(SEND_ERR "Build external library is unavailable temporarly")
   MESSAGE(STATUS "SeLaLib will be installed in directory ${CMAKE_INSTALL_PREFIX}")
 ENDIF(BUILD_PACKAGE)
 
@@ -231,45 +223,6 @@ IF(BUILD_PARALUTION)
      CMAKE_ARGS -DSUPPORT_CUDA=OFF -DBUILD_EXAMPLES=OFF
      INSTALL_COMMAND ""
   )
-ENDIF()
-
-
-IF(BUILD_JOREK)
-
-  SET(GIT_LOGIN $ENV{USER} CACHE STRING "INRIA GForge login")
-  INCLUDE(ExternalProject)
-
-  SET(JOREK_GIT_REPOSITORY git+ssh://${GIT_LOGIN}@scm.gforge.inria.fr/gitroot/jorek/jorek.git)
-
-  IF(APPLE)
-    SET(JOREK_CMAKE_ARGS -DBUILD_TESTING=OFF -DJOREK_DEBUG_TRACE=OFF -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DJOREK_SAVE_MATRIX=OFF)
-  ELSE(APPLE)
-    SET(JOREK_CMAKE_ARGS -DBUILD_TESTING=OFF -DJOREK_DEBUG_TRACE=OFF -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DJOREK_SAVE_MATRIX=OFF -DPETSC_DIR=${PETSC_DIR} -DPETSC_ARCH=${PETSC_ARCH})
-  ENDIF(APPLE)
-
-  IF(BUILD_PACKAGE)
-
-    EXTERNALPROJECT_ADD(
-      jorek
-      GIT_REPOSITORY ${JOREK_GIT_REPOSITORY}
-      GIT_TAG ${JOREK_GIT_BRANCH}
-      CMAKE_ARGS ${JOREK_CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-      )
-
-  ELSE()
-
-    EXTERNALPROJECT_ADD(
-      jorek
-      GIT_REPOSITORY ${JOREK_GIT_REPOSITORY}
-      GIT_TAG ${JOREK_GIT_BRANCH}
-      CMAKE_ARGS ${JOREK_CMAKE_ARGS}
-      INSTALL_COMMAND "")
-
-  ENDIF()
-  
-  FIND_PACKAGE(PETSc)
-  ADD_SUBDIRECTORY(jorek)
-
 ENDIF()
 
 IF($ENV{PFUNIT})
