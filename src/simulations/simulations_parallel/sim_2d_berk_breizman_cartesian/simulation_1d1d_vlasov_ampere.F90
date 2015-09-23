@@ -980,10 +980,10 @@ do istep = 1, sim%num_iterations
   !call compute_current(sim, layout_x1, f_x1, j0)
   !call solve_ampere(sim, efield, j0, 0.5_f64*sim%dt)
   !call advection_x( sim, layout_x1, f_x1, 0.5_f64*sim%dt)
-  call advection_poisson_x( sim, layout_x1, f_x1, efield, rho, 0.5_f64*sim%dt)
-  !call advection_ampere_x(sim, layout_x1, efield, f_x1, 0.5_f64*sim%dt)
+  !call advection_poisson_x( sim, layout_x1, f_x1, efield, rho, 0.5_f64*sim%dt)
+  call advection_ampere_x(sim, layout_x1, efield, f_x1, 0.5_f64*sim%dt)
 
-  !call collision( sim, layout_x1, F0, f_x1, 0.5_f64*sim%dt)
+  call collision( sim, layout_x1, F0, f_x1, 0.5_f64*sim%dt)
 
 
   if (mod(istep,sim%freq_diag_time)==0) then
@@ -1000,13 +1000,13 @@ do istep = 1, sim%num_iterations
   call advection_v(sim, layout_x2, f_x2, efield, sim%dt)
   call apply_remap_2D( remap_plan_x2_x1, f_x2, f_x1 )
 
-  !call collision( sim, layout_x1, F0, f_x1, 0.5_f64*sim%dt)
+  call collision( sim, layout_x1, F0, f_x1, 0.5_f64*sim%dt)
 
   !call compute_current(sim, layout_x1, f_x1, j0)
   !call solve_ampere(sim, efield, j0, 0.5_f64*sim%dt)
   !call advection_x( sim, layout_x1, f_x1, 0.5_f64*sim%dt)
-  call advection_poisson_x( sim, layout_x1, f_x1, efield, rho, 0.5_f64*sim%dt)
-  !call advection_ampere_x(sim, layout_x1, efield, f_x1, 0.5_f64*sim%dt)
+  !call advection_poisson_x( sim, layout_x1, f_x1, efield, rho, 0.5_f64*sim%dt)
+  call advection_ampere_x(sim, layout_x1, efield, f_x1, 0.5_f64*sim%dt)
 
 
 enddo
@@ -1039,7 +1039,7 @@ call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
 global_indices = local_to_global( layout_x1, (/1, 1/) )
 
 coef = exp(-nu_a*delta_t)
-tid=1
+tid  = 1
 
 !$OMP PARALLEL DEFAULT(SHARED) &
 !$OMP PRIVATE(j,gj,tid) 
@@ -1151,7 +1151,7 @@ end do
 call compute_rho(sim, layout_x1, f_x1, rho)
 call sim%poisson%compute_E_from_rho( efield, rho )
 
-efield = efield*(1.0_f64 - sim%gamma_d*delta_t)
+!efield = efield*(1.0_f64 - sim%gamma_d*delta_t)
   
 end subroutine advection_poisson_x
     
@@ -1172,6 +1172,8 @@ sll_comp64 :: s0, s1
 sll_int32  :: tid, ig_omp, i, i_omp
 sll_real64 :: alpha_omp
 sll_real64 :: L
+sll_real64 :: gamma_d
+
 
 call compute_local_sizes( layout_x1, local_size_x1, local_size_x2 )
 global_indices = local_to_global( layout_x1, (/1, 1/) )
@@ -1249,11 +1251,12 @@ end do
 #endif
 
 L =  sim%L / (2.0_f64*sll_pi)
+gamma_d = sim%gamma_d * delta_t
 
 sim%advect_ampere_x1(1)%ptr%ek(1) = 0.0_f64
 do i = 2, nc_x1/2+1
-  sim%advect_ampere_x1(1)%ptr%ek(i) = - L / cmplx(0.0_f64,real(i-1,f64),f64) * &
-     (sim%advect_ampere_x1(1)%ptr%r1(i)-sim%gamma_d*sim%advect_ampere_x1(1)%ptr%r0(i))
+  sim%advect_ampere_x1(1)%ptr%ek(i) = + L / cmplx(0.0_f64,real(i-1,f64),f64) * &
+     (sim%advect_ampere_x1(1)%ptr%r1(i)-gamma_d*sim%advect_ampere_x1(1)%ptr%r0(i))
 end do
 
 call fft_apply_plan(sim%advect_ampere_x1(1)%ptr%bwx, &
@@ -1470,7 +1473,7 @@ l1norm           = tmp(2)  * dx
 l2norm           = tmp(3)  * dx
 momentum         = tmp(4)  * dx
 kinetic_energy   = 0.5_f64 * tmp(5) * dx
-potential_energy = 0.5_f64 * sum(efield(1:np_x1-1)**2) * dx
+potential_energy = sum(efield(1:np_x1-1)**2) * dx
 
 if (MPI_MASTER) then                  
 
