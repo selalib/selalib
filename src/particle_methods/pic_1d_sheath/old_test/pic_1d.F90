@@ -252,6 +252,7 @@ contains
         endif
    
     endsubroutine new_sll_pic_1d
+    
 
     !<Destructor
     subroutine destroy_sll_pic_1d()
@@ -547,7 +548,7 @@ contains
         !---------------------------### Main Loop ###----------------------------------------------------
         time=0.0_f64
         do timestep=1, timesteps
-            time=timestepwidth*timestepwidth*(timestep-1)
+            time=timestepwidth*(timestep-1)
 
             call sll_pic1d_write_phasespace(timestep,species(1:num_species))
 
@@ -831,7 +832,7 @@ contains
                 !                call fsolver%solve()
         endselect
 
-    endsubroutine
+    end subroutine
 
     !Dummy function for solving the potential Phi
     !Input x \in [a, b] is the position in the electric field
@@ -1785,7 +1786,7 @@ contains
             !particleweight = particleweight_constant - (particleweight_constant)
         endif
 
-    endsubroutine
+    end subroutine
 
 
     !    !<Dummy function for Electric field

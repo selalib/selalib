@@ -27,7 +27,10 @@
   deltarTe = 0.1        !1.45
   !QN_case  = "SLL_NO_QUASI_NEUTRAL"
   !QN_case  = "SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW"
-  QN_case  = "SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW"
+  !QN_case  = "SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW" !CLASSICAL PADE 
+  !QN_case  = "SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW_PADE_EPSILON" !NEW PADE
+  QN_case  = "SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW_CIRCLE" !CIRCLE METHOD 
+  pade_epsilon = 1.0e-3 
   poisson2d_BC_rmin = "SLL_NEUMANN_MODE_0"
   poisson2d_BC_rmax = "SLL_DIRICHLET"
 /
@@ -40,16 +43,16 @@
 /
 
 &sim_params_first
-  !num_mu = 4
   num_mu = 2
+  N_mu_for_phi_user_defined = 4
 /
 
 &sim_params
   dt                = 8
-  number_iterations = 2
-  !number_iterations = 1
+  number_iterations = 1
+  !number_iterations = 2
   freq_diag_time = 1
-  freq_diag = 100
+  freq_diag = 10000
   !time_loop_case = "SLL_TIME_LOOP_EULER" 
   time_loop_case = "SLL_TIME_LOOP_PREDICTOR_CORRECTOR"
   !charac2d_case =  "SLL_CHARAC_EULER"
@@ -71,10 +74,20 @@
   gyroaverage_case = "HERMITE_C1_PRECOMPUTE"
   !gyroaverage_case = "SPLINES"
   !gyroaverage_case = "PADE"
+  !gyroaverage_case = "PADE04"
+  !gyroaverage_case = "PADE24"
   !mus = 0. 0.5 1. 1.5 !0.1 !0.2
   !mu_weights = 0.25 0.25 0.25 0.25
   mus = 0. 1. 
   mu_weights = 0.5 0.5
+  mu_quadr_for_phi_case = "SLL_USER_DEFINED"
+  !mu_quadr_for_phi_case = "SLL_LIN_LEE"
+  !mu_quadr_for_phi_case = "SLL_RECTANGLES"
+  !mu_quadr_for_phi_case = "SLL_SIMPSON"
+  N_mu_for_phi = 17  ! must be odd for Simpson method
+  mu_max_for_phi = 30.0
+  mu_points_for_phi_user_defined = 0. 0.5 1. 1.5 
+  mu_weights_for_phi_user_defined = 0.25 0.25 0.25 0.25
   gyroaverage_N_points = 1024
   gyroaverage_interp_degree_x1 = 3
   gyroaverage_interp_degree_x2 = 3
