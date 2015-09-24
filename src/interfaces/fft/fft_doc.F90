@@ -5,7 +5,7 @@
 !
 ! DESCRIPTION:
 !> @defgroup fft sll_fft
-!> @author Edwin Chacon-Golcher & Samuel De Santis
+!> @author Edwin Chacon-Golcher, Samuel De Santis and Pierre Navaro.
 !> @brief Interface around fftpack, fftw and the selalib fft.
 !> @details 
 !> 

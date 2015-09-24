@@ -12,7 +12,7 @@
 !> @defgroup distribution_function sll_distribution_function 
 !> @brief 
 !> Derived type to describe a distribution function
-!> @author Pierre Navaro
+!> @author Edwin Chacon-Golcher, Pierre Navaro.
 !> @details
 !> Initially, this type was designed to contain procedures to save and 
 !> write output files for plotting.

@@ -12,6 +12,7 @@
 !> @defgroup interpolators sll_interpolators 
 !! @brief
 !! Classes for numerical interpolation.
+!! @authors Edwin-Chacon Golcher, Aurore Back and Pierre Navaro.
 !! @details
 !! PLEASE ADD DOCUMENTATION 
 !!

@@ -12,8 +12,7 @@
 !> @defgroup fields sll_fields 
 !> @brief 
 !> Field objects.
-!> @author 
-!> Selalib team 
+!> @author Edwin Chacon-Golcher and Pierre Navaro.
 !> @details
 !>
 !> <b> Headers file available </b>
