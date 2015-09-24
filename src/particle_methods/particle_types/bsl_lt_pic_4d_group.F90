@@ -52,7 +52,7 @@ module sll_bsl_lt_pic_4d_group_module
     sll_int32                                                   :: number_parts_y
     sll_int32                                                   :: number_parts_vx
     sll_int32                                                   :: number_parts_vy
-    sll_int32                                                   :: number_particles
+    ! sll_int32                                                   :: number_particles
     type(sll_bsl_lt_pic_4d_particle),   dimension(:), pointer   :: particle_list
     !> @}
 
@@ -63,10 +63,10 @@ module sll_bsl_lt_pic_4d_group_module
 
     !> @name The parameters for the BSL-LTPIC charge deposition (! number of virtual particles per deposition cell, per dimension)
     !> @{
-    sll_int32                                                   :: NVirtual_X_ForDeposition
-    sll_int32                                                   :: NVirtual_Y_ForDeposition
-    sll_int32                                                   :: NVirtual_VX_ForDeposition
-    sll_int32                                                   :: NVirtual_VY_ForDeposition
+    sll_int32                                                   :: N_virtual_particles_per_deposition_cell_x
+    sll_int32                                                   :: N_virtual_particles_per_deposition_cell_y
+    sll_int32                                                   :: N_virtual_particles_per_deposition_cell_vx
+    sll_int32                                                   :: N_virtual_particles_per_deposition_cell_vy
     !> @}
 
     !> @name The remapping grid in phase space and quasi-interpolation coefficients (for cubic spline particle shapes)
@@ -74,6 +74,10 @@ module sll_bsl_lt_pic_4d_group_module
     type(sll_cartesian_mesh_4d),                pointer         :: remapping_grid
     sll_real64, dimension(:,:,:,:),             pointer         :: target_values
     sll_real64, dimension(:),                   pointer         :: lt_pic_interpolation_coefs
+    sll_int32                                                   :: N_remapping_nodes_per_virtual_cell_x
+    sll_int32                                                   :: N_remapping_nodes_per_virtual_cell_y
+    sll_int32                                                   :: N_remapping_nodes_per_virtual_cell_vx
+    sll_int32                                                   :: N_remapping_nodes_per_virtual_cell_vy
     !> @}
 
     !> @name The initial density (at some point this should be put in a separate initializer object)
@@ -111,11 +115,12 @@ module sll_bsl_lt_pic_4d_group_module
     !> @}
     
     procedure :: deposit_charge_2d          => bsl_lt_pic_4d_deposit_charge_2d
-
-    procedure :: visualize_f_slice_x_vx     => bsl_lt_pic_4d_visualize_f_slice_x_vx    !  plot_f_slice_x_vx
+    procedure :: remap                      => bsl_lt_pic_4d_remap
+    procedure :: visualize_f_slice_x_vx     => bsl_lt_pic_4d_visualize_f_slice_x_vx
 
     procedure :: bsl_lt_pic_4d_initializer_landau_f0
     procedure :: bsl_lt_pic_4d_write_landau_density_on_remap_grid
+    procedure :: bsl_lt_pic_4d_write_f_on_remapping_grid
     procedure :: bsl_lt_pic_4d_compute_new_particles
     procedure :: bsl_lt_pic_4d_write_f_on_grid_or_deposit
     procedure :: get_ltp_deformation_matrix
@@ -354,10 +359,10 @@ contains
                                                            use_remapping_grid,              &
                                                            dummy_grid_4d,                   &
                                                            dummy_array_2d,                  &
-                                                           self%NVirtual_X_ForDeposition,   &
-                                                           self%NVirtual_Y_ForDeposition,   &
-                                                           self%NVirtual_VX_ForDeposition,  &
-                                                           self%NVirtual_VY_ForDeposition,  &
+                                                           self%N_virtual_particles_per_deposition_cell_x,   &
+                                                           self%N_virtual_particles_per_deposition_cell_y,   &
+                                                           self%N_virtual_particles_per_deposition_cell_vx,  &
+                                                           self%N_virtual_particles_per_deposition_cell_vy,  &
                                                            target_total_charge )
     else
         call self%bsl_lt_pic_4d_write_f_on_grid_or_deposit(charge_accumulator,              &
@@ -365,16 +370,17 @@ contains
                                                            use_remapping_grid,              &
                                                            dummy_grid_4d,                   &
                                                            dummy_array_2d,                  &
-                                                           self%NVirtual_X_ForDeposition,   &
-                                                           self%NVirtual_Y_ForDeposition,   &
-                                                           self%NVirtual_VX_ForDeposition,  &
-                                                           self%NVirtual_VY_ForDeposition )
+                                                           self%N_virtual_particles_per_deposition_cell_x,   &
+                                                           self%N_virtual_particles_per_deposition_cell_y,   &
+                                                           self%N_virtual_particles_per_deposition_cell_vx,  &
+                                                           self%N_virtual_particles_per_deposition_cell_vy )
     end if
 
   end subroutine bsl_lt_pic_4d_deposit_charge_2d
 
 
     !! bsl_lt_pic_4d_visualize_f_slice_x_vx  plots an approximation of f_x_vx = \int \int f(x,y,v_x,v_y) d y d v_y
+    !todo: update this doc
     !  using a 4d grid:
     !   - the nodes in x and v_x are used to plot the values of f_x_vx
     !     and
@@ -437,10 +443,10 @@ contains
     n_virtual_cells_y = self%remapping_grid%num_cells2
     n_virtual_cells_vx = self%remapping_grid%num_cells3
     n_virtual_cells_vy = self%remapping_grid%num_cells4
-    n_virtual_x = self%NVirtual_X_ForDeposition
-    n_virtual_y = self%NVirtual_Y_ForDeposition
-    n_virtual_vx = self%NVirtual_VX_ForDeposition
-    n_virtual_vy = self%NVirtual_VY_ForDeposition
+    n_virtual_x = self%N_virtual_particles_per_deposition_cell_x
+    n_virtual_y = self%N_virtual_particles_per_deposition_cell_y
+    n_virtual_vx = self%N_virtual_particles_per_deposition_cell_vx
+    n_virtual_vy = self%N_virtual_particles_per_deposition_cell_vy
 
     ! number of points in the grid
     num_virtual_parts_x =  n_virtual_cells_x *  n_virtual_x
@@ -507,10 +513,14 @@ contains
         remap_grid_vx_max,      &
         remap_grid_vy_min,      &
         remap_grid_vy_max,      &
-        NVirtual_X_ForDeposition,   &
-        NVirtual_Y_ForDeposition,   &
-        NVirtual_VX_ForDeposition,  &
-        NVirtual_VY_ForDeposition,  &
+        N_virtual_particles_per_deposition_cell_x,   &
+        N_virtual_particles_per_deposition_cell_y,   &
+        N_virtual_particles_per_deposition_cell_vx,  &
+        N_virtual_particles_per_deposition_cell_vy,  &
+        N_remapping_nodes_per_virtual_cell_x,        &
+        N_remapping_nodes_per_virtual_cell_y,        &
+        N_remapping_nodes_per_virtual_cell_vx,        &
+        N_remapping_nodes_per_virtual_cell_vy,        &
         space_mesh_2d ) result(res)
 
     type( sll_bsl_lt_pic_4d_group ), pointer :: res
@@ -529,10 +539,14 @@ contains
     sll_real64, intent(in)  :: remap_grid_vx_max
     sll_real64, intent(in)  :: remap_grid_vy_min
     sll_real64, intent(in)  :: remap_grid_vy_max
-    sll_int32, intent(in)   :: NVirtual_X_ForDeposition
-    sll_int32, intent(in)   :: NVirtual_Y_ForDeposition
-    sll_int32, intent(in)   :: NVirtual_VX_ForDeposition
-    sll_int32, intent(in)   :: NVirtual_VY_ForDeposition
+    sll_int32, intent(in)   :: N_virtual_particles_per_deposition_cell_x
+    sll_int32, intent(in)   :: N_virtual_particles_per_deposition_cell_y
+    sll_int32, intent(in)   :: N_virtual_particles_per_deposition_cell_vx
+    sll_int32, intent(in)   :: N_virtual_particles_per_deposition_cell_vy
+    sll_int32, intent(in)   :: N_remapping_nodes_per_virtual_cell_x
+    sll_int32, intent(in)   :: N_remapping_nodes_per_virtual_cell_y
+    sll_int32, intent(in)   :: N_remapping_nodes_per_virtual_cell_vx
+    sll_int32, intent(in)   :: N_remapping_nodes_per_virtual_cell_vy
     type(sll_cartesian_mesh_2d), pointer, intent(in) :: space_mesh_2d
 
     sll_int32               :: remap_grid_number_cells_x
@@ -576,10 +590,15 @@ contains
     res%domain_is_periodic(1) = domain_is_x_periodic
     res%domain_is_periodic(2) = domain_is_y_periodic
 
-    res%NVirtual_X_ForDeposition = NVirtual_X_ForDeposition
-    res%NVirtual_Y_ForDeposition = NVirtual_Y_ForDeposition
-    res%NVirtual_VX_ForDeposition = NVirtual_VX_ForDeposition
-    res%NVirtual_VY_ForDeposition = NVirtual_VY_ForDeposition
+    res%N_virtual_particles_per_deposition_cell_x = N_virtual_particles_per_deposition_cell_x
+    res%N_virtual_particles_per_deposition_cell_y = N_virtual_particles_per_deposition_cell_y
+    res%N_virtual_particles_per_deposition_cell_vx = N_virtual_particles_per_deposition_cell_vx
+    res%N_virtual_particles_per_deposition_cell_vy = N_virtual_particles_per_deposition_cell_vy
+
+    res%N_remapping_nodes_per_virtual_cell_x = N_remapping_nodes_per_virtual_cell_x
+    res%N_remapping_nodes_per_virtual_cell_y = N_remapping_nodes_per_virtual_cell_y
+    res%N_remapping_nodes_per_virtual_cell_vx = N_remapping_nodes_per_virtual_cell_vx
+    res%N_remapping_nodes_per_virtual_cell_vy = N_remapping_nodes_per_virtual_cell_vy
 
     !> create the particle list and the array of target values
     SLL_ALLOCATE( res%target_values(number_parts_x, number_parts_y, number_parts_vx, number_parts_vy), ierr )
@@ -986,6 +1005,49 @@ contains
     end do
 
   end subroutine bsl_lt_pic_4d_compute_new_particles
+
+
+  ! initialize new particles using the node values on the remapping grid, as computed with the bsl_lt_pic method.
+  subroutine bsl_lt_pic_4d_remap ( self )
+    class(sll_bsl_lt_pic_4d_group),intent(inout) :: self
+
+    call self%bsl_lt_pic_4d_write_f_on_remapping_grid()
+    call self%bsl_lt_pic_4d_compute_new_particles()
+
+  end subroutine bsl_lt_pic_4d_remap
+
+
+
+  ! <<bsl_lt_pic_4d_write_f_on_remapping_grid>> <<ALH>> reconstructs f (with the bsl_lt_pic approach) on the remapping grid,
+  ! and write the computed values there so that new particles can be initialized based on these node values.
+
+  subroutine bsl_lt_pic_4d_write_f_on_remapping_grid( self )
+
+    class(sll_bsl_lt_pic_4d_group),intent(inout) :: self
+    type(sll_charge_accumulator_2d),pointer :: dummy_q_accumulator
+    type(sll_cartesian_mesh_4d),    pointer :: dummy_grid_4d
+    sll_real64, dimension(:,:),     pointer :: dummy_array_2d
+    logical       :: scenario_is_deposition
+    logical       :: use_remapping_grid
+
+    nullify(dummy_q_accumulator)
+    nullify(dummy_grid_4d)
+    nullify(dummy_array_2d)
+
+    scenario_is_deposition = .false.
+    use_remapping_grid = .true.
+
+    call self%bsl_lt_pic_4d_write_f_on_grid_or_deposit( dummy_q_accumulator,                            &
+                                                        scenario_is_deposition,                         &
+                                                        use_remapping_grid,                             &
+                                                        dummy_grid_4d,                                  &
+                                                        dummy_array_2d,                                 &
+                                                        self%N_remapping_nodes_per_virtual_cell_x,      &
+                                                        self%N_remapping_nodes_per_virtual_cell_y,      &
+                                                        self%N_remapping_nodes_per_virtual_cell_vx,     &
+                                                        self%N_remapping_nodes_per_virtual_cell_vy)
+
+  end subroutine bsl_lt_pic_4d_write_f_on_remapping_grid
 
 
   ! <<bsl_lt_pic_4d_write_f_on_grid_or_deposit>> <<ALH>> has two scenarios:

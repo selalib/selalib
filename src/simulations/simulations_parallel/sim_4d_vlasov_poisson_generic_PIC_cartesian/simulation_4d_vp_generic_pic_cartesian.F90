@@ -205,10 +205,15 @@ contains
     sll_real64  :: target_charge
     sll_int32   :: spline_degree
     sll_int32   :: particle_group_id
-    sll_int32   :: NVirtual_X_ForDeposition
-    sll_int32   :: NVirtual_Y_ForDeposition
-    sll_int32   :: NVirtual_VX_ForDeposition
-    sll_int32   :: NVirtual_VY_ForDeposition
+    sll_int32   :: N_virtual_particles_per_deposition_cell_x
+    sll_int32   :: N_virtual_particles_per_deposition_cell_y
+    sll_int32   :: N_virtual_particles_per_deposition_cell_vx
+    sll_int32   :: N_virtual_particles_per_deposition_cell_vy
+    sll_int32   :: N_remapping_nodes_per_virtual_cell_x
+    sll_int32   :: N_remapping_nodes_per_virtual_cell_y
+    sll_int32   :: N_remapping_nodes_per_virtual_cell_vx
+    sll_int32   :: N_remapping_nodes_per_virtual_cell_vy
+
     sll_int32   :: initial_density_identifier
 
     ! <<simple_pic_particle_group>>
@@ -248,10 +253,14 @@ contains
                                     remap_grid_vx_max,          &
                                     remap_grid_vy_min,          &
                                     remap_grid_vy_max,          &
-                                    NVirtual_X_ForDeposition,   &
-                                    NVirtual_Y_ForDeposition,   &
-                                    NVirtual_VX_ForDeposition,  &
-                                    NVirtual_VY_ForDeposition,  &
+                                    N_virtual_particles_per_deposition_cell_x,      &
+                                    N_virtual_particles_per_deposition_cell_y,      &
+                                    N_virtual_particles_per_deposition_cell_vx,     &
+                                    N_virtual_particles_per_deposition_cell_vy,     &
+                                    N_remapping_nodes_per_virtual_cell_x,           &
+                                    N_remapping_nodes_per_virtual_cell_y,           &
+                                    N_remapping_nodes_per_virtual_cell_vx,          &
+                                    N_remapping_nodes_per_virtual_cell_vy,          &
                                     remap_period
 
     namelist /elec_params/          er, psi, omega_r, omega_i
@@ -300,7 +309,7 @@ contains
                                               sim%mesh_2d%eta2_max,    &
                                               sim%mesh_2d%num_cells2   )
 
-    print *, "AA"
+    print *, "[simulation] constructing the particle group..."
 
     ! construct [[particle_group]]
     if( sim%use_lt_pic_scheme )then
@@ -308,27 +317,29 @@ contains
       ! construct [[bsl_lt_particle_group]]
       particle_group_id = 1
       bsl_lt_pic_particle_group => sll_bsl_lt_pic_4d_group_new( &
-        SPECIES_CHARGE,                                             &
-        SPECIES_MASS,                                               &
-        particle_group_id,                                          &
-        DOMAIN_IS_X_PERIODIC,                                       &
-        DOMAIN_IS_Y_PERIODIC,                                       &
-        spline_degree,          &
-        number_parts_x,         &
-        number_parts_y,         &
-        number_parts_vx,        &
-        number_parts_vy,        &
-        remap_grid_vx_min,      &
-        remap_grid_vx_max,      &
-        remap_grid_vy_min,      &
-        remap_grid_vy_max,      &
-        NVirtual_X_ForDeposition,   &
-        NVirtual_Y_ForDeposition,   &
-        NVirtual_VX_ForDeposition,  &
-        NVirtual_VY_ForDeposition,  &
+        SPECIES_CHARGE,                                 &
+        SPECIES_MASS,                                   &
+        particle_group_id,                              &
+        DOMAIN_IS_X_PERIODIC,                           &
+        DOMAIN_IS_Y_PERIODIC,                           &
+        spline_degree,                                  &
+        number_parts_x,                                 &
+        number_parts_y,                                 &
+        number_parts_vx,                                &
+        number_parts_vy,                                &
+        remap_grid_vx_min,                              &
+        remap_grid_vx_max,                              &
+        remap_grid_vy_min,                              &
+        remap_grid_vy_max,                              &
+        N_virtual_particles_per_deposition_cell_x,      &
+        N_virtual_particles_per_deposition_cell_y,      &
+        N_virtual_particles_per_deposition_cell_vx,     &
+        N_virtual_particles_per_deposition_cell_vy,     &
+        N_remapping_nodes_per_virtual_cell_x,           &
+        N_remapping_nodes_per_virtual_cell_y,           &
+        N_remapping_nodes_per_virtual_cell_vx,          &
+        N_remapping_nodes_per_virtual_cell_vy,          &
         sim%mesh_2d )
-
-        print *, "AA5"
 
       ! here, [[particle_group]] will contain a reference to a bsl_lt_pic group
       sim%particle_group => bsl_lt_pic_particle_group
@@ -338,7 +349,6 @@ contains
       ! construct [[simple_pic_particle_group]]
       particle_group_id = 0
 
-      sim%number_particles = NUM_PARTICLES
       simple_pic_particle_group => sll_simple_pic_4d_group_new(     &
             SPECIES_CHARGE,                                             &
             SPECIES_MASS,                                               &
@@ -353,7 +363,8 @@ contains
         
     end if
 
-    print *, "AA7"
+    sim%number_particles = sim%particle_group%number_particles
+
     sim%domain_is_x_periodic = DOMAIN_IS_X_PERIODIC
     sim%domain_is_y_periodic = DOMAIN_IS_Y_PERIODIC
 
@@ -853,13 +864,14 @@ contains
         print *, "plotting f slice in gnuplot format for iteration # it = ", it, " / ", sim%num_iterations
         call sim%particle_group%visualize_f_slice_x_vx("f_slice", it)
 
-        ! todo: write conditional remapping here
       end if
 
-!        if (sim%my_rank == 0 .and. mod(it+1, sim%remap_period)==0 ) then
-!
-!
-!            print *, "remapping f..."
+      if (sim%use_lt_pic_scheme .and. sim%my_rank == 0 .and. mod(it+1, sim%remap_period)==0 ) then
+        ! note: condition on rank == 0 needs to be revised for the actual parallel version...
+
+        print *, "remapping f..."
+        call sim%particle_group%remap()
+
 !            call sll_lt_pic_4d_remap(sim%part_group)
 !
 !            print *, "writing (remapped) f slice in gnuplot format for iteration # it = ", it, " / ", sim%num_iterations
@@ -882,9 +894,9 @@ contains
 !                                   sim%n_virtual_vx_for_deposition,   &
 !                                   sim%n_virtual_vy_for_deposition,   &
 !                                   "f_slice_remapped", it)
-!        end if
+       end if
 
-        if (sim%my_rank == 0 .and. mod(it+1, sim%plot_period)==0 ) then
+       if (sim%my_rank == 0 .and. mod(it+1, sim%plot_period)==0 ) then
 
             print *, "writing Ex, Ey  in gnuplot format for iteration # it = ", it+1, " / ", sim%num_iterations
             call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
@@ -896,7 +908,7 @@ contains
                                 sim%E2, 'Ey', it+1, ierr )
             print *, "done."
 
-        end if
+       end if
 
        !! -- --  diagnostics (plotting E ) [end]  -- --
 
