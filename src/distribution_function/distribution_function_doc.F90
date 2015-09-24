@@ -11,28 +11,9 @@
 
 !> @defgroup distribution_function sll_distribution_function 
 !> @brief 
-!> Description of distribution_function library (72 characters)
-!> @author Selalib team 
-!> You can add a contact, do not put your email to prevent spam.
+!> Derived type to describe a distribution function
+!> @author Pierre Navaro
 !> @details
-!> Long description of  distribution_function, you can add some references or math equations.
-!>
-!> <b> Headers file available </b>
-!>  - sll_distribution_function.h
-!>
-!> <b> Modules available </b>
-!>  List fortran module available
-!>  - sll_distribution_function
-!>
-!> <b> How to use it </b>
-!> - Header file : \code #include 'sll_distribution_function.h' \endcode
-!> - Link with   <code>-lsll_%s</code>
-!> - Add <code> use sll_distribution_function </code>
-!>
-!> <b> Examples </b>
-!> -Add some fortran lines to explain how ti use the library
-!> \code
-!> call initialize(my_type, arg_1, arg_2)
-!> call solve(my_type, your_result)
-!> \endcode
-!>
+!> Initially, this type was designed to contain procedures to save and 
+!> write output files for plotting.
+!> This type is now deprecated and replaced by a classic fortran array.
