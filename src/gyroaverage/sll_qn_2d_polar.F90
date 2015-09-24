@@ -704,7 +704,7 @@ contains
                   Nc(2)+1, &
                   phi_qn, &
                   'fdiff', &
-                  0, &
+                  1, &
                   ierr)
 
 
