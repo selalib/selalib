@@ -553,6 +553,8 @@ subroutine update_bspline_2d(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
   sll_real64, optional    :: sl2_l
   sll_real64, optional    :: sl2_r
   sll_real64, allocatable :: bwork(:,:)
+  sll_real64, allocatable :: coeff1(:)
+  sll_real64, allocatable :: coeff2(:)
 
   sll_int32               :: i
   sll_int32               :: j
@@ -587,9 +589,15 @@ subroutine update_bspline_2d(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
     call update_bspline_1d( this%bs1, gtau(:,j), this%x1_min_slopes(j), this%x1_max_slopes(j))
     bwork(j,:) = this%bs1%bcoef
   end do
+  
+  SLL_CLEAR_ALLOCATE(coeff1(1:n1+m1), ierr)
+  SLL_CLEAR_ALLOCATE(coeff2(1:n1+m1), ierr)
+
+  coeff1(1:n1) = this%x2_min_slopes(:)
+  coeff2(1:n1) = this%x2_max_slopes(:)
 
   do i = 1, n1+m1
-    call update_bspline_1d( this%bs2, bwork(:,i), this%x2_min_slopes(i), this%x2_max_slopes(i))
+    call update_bspline_1d( this%bs2, bwork(:,i), coeff1(i), coeff2(i))
     this%bcoef(i,:) = this%bs2%bcoef(:)
   end do
 
