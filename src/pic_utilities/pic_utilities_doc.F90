@@ -10,12 +10,21 @@
 
 
 !> @defgroup pic_utilities sll_pic_utilities 
-!> @brief 
-!> Description of pic_utilities library (72 characters)
-!> @author Selalib team 
+!> @brief Sorting algorithm and needed conversion tools
+!>       
+!> @author Sever Hirstoaga
 !> You can add a contact, do not put your email to prevent spam.
-!> @details
-!> Long description of  pic_utilities, you can add some references or math equations.
+!> @details  Module sll_particle_sort_module contains 
+!> sequential algorithm for sorting particles by cell number.
+!> Module sll_pic_utilities contains 
+!>  the  first_charge_accumulation (should be put elsewhere).
+!> Module  sll_charge_to_density_module contains conversion of data (charge +
+!> electric field) from the convenient (to the optimized push) structure to the mesh one.
+!> Module 
+
+!>  
+!>
+!>  
 !>
 !> <b> Headers file available </b>
 !>  - sll_pic_utilities.h
@@ -36,3 +45,32 @@
 !> call solve(my_type, your_result)
 !> \endcode
 !>
+
+
+!> @defgroup pic_utilities sll_quadtree
+!> @brief Quadtree sorting structure for particles
+!>       
+!> @author Eric Sonnendrücker (maintained by Jakob Ameres)
+!> You can add a contact, do not put your email to prevent spam.
+!>
+!> @defgroup pic_utilities sll_quadtree
+!> @brief Quadtree sorting structure for particles
+!>       
+!> @author Eric Sonnendrücker (maintained by Jakob Ameres)
+!> You can add a contact, do not put your email to prevent spam.
+!>
+
+
+!> @defgroup pic_utilities sll_quadtree
+!> @brief Quadtree sorting structure for particles
+!>       
+!> @author Eric Sonnendrücker (maintained by Jakob Ameres)
+!> You can add a contact, do not put your email to prevent spam.
+!>
+!> @defgroup pic_utilities sll_particle_method_descriptors
+!> @brief Descriptors for particle methods
+!>       
+!> @author Jakob Ameres
+!>
+!> @details  Will be obsolete in the future due tue
+!> sll_descriptors

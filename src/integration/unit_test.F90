@@ -16,6 +16,7 @@ implicit none
 
 integer :: i,j,n
 sll_int32 :: ierr
+sll_int32 :: degree
 
 sll_real64, dimension(10) :: x, w
 sll_real64, dimension(:,:), allocatable :: d
@@ -26,10 +27,9 @@ character(len=18) :: string
 ! For the fekete quadrature:
 sll_real64, dimension(2, 3) :: pxy1
 sll_real64, dimension(2, 3) :: pxy2
-sll_real64, dimension(3,10) :: xyw
+sll_real64, dimension(:,:), allocatable :: xyw
 sll_real64 :: app_res
 sll_int32  :: rule
-sll_int32  :: degree
 sll_int32  :: num_cells
 type(sll_hex_mesh_2d), pointer :: mesh
 sll_real64, dimension(:,:), allocatable     :: knots
@@ -147,37 +147,25 @@ pxy2(:,1) = (/ 1._f64, 0._f64 /)
 pxy2(:,2) = (/ 1._f64, 1._f64 /)
 pxy2(:,3) = (/ 0._f64, 1._f64 /)
 
+rule = 2
+call fekete_order_num ( rule, n )
+SLL_ALLOCATE(xyw(1:3, 1:n), ierr)
+
 write(*,"(a)") " Computing Fekete points and weights on reference triangle "
 write(*,"(/,a)") "           x                   y                    w"
-xyw = fekete_points_and_weights(pxy1)
+xyw = fekete_points_and_weights(pxy1, rule)
 
-do j = 1, 10
+do j = 1, n
    write(*, string) (xyw(i,j), i = 1, 3)
 end do
 
-write(*,"(/,a)") " --Test for a constant real function (=1) "
-write(*,"(a)") "    on the squared domain [0,1]^2 divided on 2 triangles "
+print *, "sum weights = ", SUM(xyw(3,:))
+! write(*,"(/,a)") " --Test for a constant real function (=1) "
+! write(*,"(a)") "    on the squared domain [0,1]^2 divided on 2 triangles "
 
-app_res = fekete_integral(one_2D, pxy1) + fekete_integral(one_2D, pxy2)
+! app_res = fekete_integral(one_2D, pxy1) + fekete_integral(one_2D, pxy2)
 
-write (*,"(a, f20.12, a ,/)") " aprox = ", app_res, " (expected = 1.)"
-
-
-!----------------------------------------
-rule = 1
-degree = 2
-num_cells = 20
-mesh => new_hex_mesh_2d(num_cells)
-SLL_ALLOCATE(knots(3, mesh%num_pts_tot + 2*mesh%num_edges + mesh%num_triangles), ierr)
-SLL_ALLOCATE(LM(mesh%num_triangles, 10), ierr)
-
-call initialize_knots_hexmesh(rule, mesh, knots, LM)
-
-! Writing file for CAID:
-call write_quadrature(rule)
-call write_connectivity(mesh, degree)
-! ---------------------------------------
-
+! write (*,"(a, f20.12, a ,/)") " aprox = ", app_res, " (expected = 1.)"
 
 
 print*, 'PASSED'
