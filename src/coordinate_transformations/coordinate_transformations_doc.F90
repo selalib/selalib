@@ -12,7 +12,7 @@
 !> @defgroup coordinate_transformations sll_coordinate_transformations 
 !> @brief 
 !> Coordinate transformations (analytic and discrete)
-!> @author Edwin Chacon-Golcher
+!> @author Edwin Chacon-Golcher, Pierre Navaro.
 !> @details
 !> If you want to add a analytical coordinate transformation, 
 !> implement it in

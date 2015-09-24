@@ -15,7 +15,7 @@
 !> @details
 !> This file should contain all mathematical and physical 
 !> constants to be used library-wide.
-!> @author Selalib team 
+!> @author Pierre Navaro
 !>
 !> <b> Headers file available </b>
 !>  - sll_constants.h
