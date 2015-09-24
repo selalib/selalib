@@ -11,11 +11,11 @@
 
 !> @defgroup fcisl sll_fcisl 
 !> @brief 
-!> Description of fcisl library (72 characters)
+!> field aligned interpolation
 !> @author Selalib team 
-!> You can add a contact, do not put your email to prevent spam.
+!> Michel, Yaman
 !> @details
-!> Long description of  fcisl, you can add some references or math equations.
+!> In development
 !>
 !> <b> Headers file available </b>
 !>  - sll_fcisl.h

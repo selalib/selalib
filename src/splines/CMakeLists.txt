@@ -49,9 +49,6 @@ IF(BUILD_TESTING)
   ADD_EXECUTABLE( test_box_splines_derivatives test_box_splines_derivatives.F90 )
   TARGET_LINK_LIBRARIES( test_box_splines_derivatives sll_box_splines )
 
-  ADD_EXECUTABLE( test_cubic_splines_deposit unit_test_deposit.F90 )
-  TARGET_LINK_LIBRARIES( test_cubic_splines_deposit sll_splines sll_fft )
-
   # Ctests
   ADD_TEST( NAME cubic_splines             COMMAND test_cubic_splines            )
   ADD_TEST( NAME quintic_splines           COMMAND test_quintic_splines          )
@@ -59,10 +56,8 @@ IF(BUILD_TESTING)
   ADD_TEST( NAME bsplines_2d               COMMAND test_bsplines_2d              )
   ADD_TEST( NAME cubic_non_uniform_splines COMMAND test_non_unif_splines         )
   ADD_TEST( NAME splines_arbitrary_degree  COMMAND test_arbitrary_degree_splines )
-  #ADD_TEST( NAME cubic_splines_deposit     COMMAND test_cubic_splines_deposit    )
 
   SET_TESTS_PROPERTIES( cubic_splines
-                        #cubic_splines_deposit
                         bsplines_1d
                         bsplines_2d
                         cubic_non_uniform_splines
