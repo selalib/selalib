@@ -451,7 +451,7 @@ phi(i,j) = (1.0_f64+eps*cos(mode_theta*theta)) *exp(-(r-10._f64)**2/4._f64) !*si
     call compute_error(phi_qn,phi_init,1-gamma0_num,error,(/1,1/),Nc)
     print *,'#error whole domain=',error
 
-stop  
+!stop  
   
 !  call test_solve_qn_polar_new(Nc,eta_min,eta_max, &
 !    mu_points(1:N_mu),mu_weights(1:N_mu),N_mu,mode,phi_init,phi_qn)
