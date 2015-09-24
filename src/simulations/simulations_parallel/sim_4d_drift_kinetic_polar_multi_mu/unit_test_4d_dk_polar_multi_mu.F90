@@ -15,7 +15,7 @@ program drift_kinetic_polar_multi_mu
   character(len=256) :: filename_local
   type(sll_simulation_4d_drift_kinetic_polar_multi_mu) :: simulation
   type(sll_time_mark)  :: t0
-  sll_real64 :: time 
+  sll_real64 :: time,time1,time2 
   call sll_boot_collective()
   if(sll_get_collective_rank(sll_world_collective)==0)then
     print *, '#Booting parallel environment...'
@@ -28,7 +28,15 @@ program drift_kinetic_polar_multi_mu
   call getarg(1, filename)
   filename_local = trim(filename)
   call simulation%init_from_file(filename_local)
+!if(sll_get_collective_rank(sll_world_collective)==0)then
+!  time1 = sll_time_elapsed_since(t0)
+!  print *, '#time elapsed for init : ',time1
+!endif     
   call simulation%run( )
+!if(sll_get_collective_rank(sll_world_collective)==0)then
+!  time2 = sll_time_elapsed_since(t0)
+!  print *, '#time elapsed for run : ', time2 - time1
+!endif  
   call delete_dk4d_polar(simulation)
   if(sll_get_collective_rank(sll_world_collective)==0)then
     print *, '#reached end of dk4d_polar_multi_mu test'

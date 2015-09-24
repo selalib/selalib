@@ -290,4 +290,73 @@ contains
 
   end function gauss_legendre_points_and_weights
 
+  function gauss_legendre_points(npoints, a, b ) result(xw)
+    sll_int32, intent(in)              :: npoints
+    sll_real64, intent(in), optional   :: a
+    sll_real64, intent(in), optional   :: b
+    sll_real64, dimension(1:npoints) :: xw
+    sll_real64, dimension(1:npoints)   :: xk
+    sll_real64, dimension(1:npoints)   :: wk 
+    sll_real64                         :: c1
+    sll_real64                         :: c2
+    sll_int32                          :: k
+
+    SLL_ASSERT( npoints >= 1 )
+    
+    xk(:) = 0.0_f64
+    wk(:) = 0.0_f64
+    
+    ! fill out the xk and wk arrays.
+    select case(npoints)
+       SELECT_CASES
+    end select
+    
+    if(present(a) .and. present(b)) then
+       ! need to map the interval [-1,1] into the interval [a,b].
+       c1 = 0.5_f64*(b-a)
+       c2 = 0.5_f64*(b+a)
+       do k=1,npoints
+          xw(k) = c1*xk(k) + c2
+       end do
+    else ! use default values in the [-1,1] interval
+       xw(1:npoints) = xk(1:npoints)
+    end if
+
+  end function gauss_legendre_points
+
+  function gauss_legendre_weights(npoints, a, b ) result(xw)
+    sll_int32, intent(in)              :: npoints
+    sll_real64, intent(in), optional   :: a
+    sll_real64, intent(in), optional   :: b
+    sll_real64, dimension(1:npoints) :: xw
+    sll_real64, dimension(1:npoints)   :: xk
+    sll_real64, dimension(1:npoints)   :: wk 
+    sll_real64                         :: c1
+    sll_real64                         :: c2
+    sll_int32                          :: k
+
+    SLL_ASSERT( npoints >= 1 )
+    
+    xk(:) = 0.0_f64
+    wk(:) = 0.0_f64
+    
+    ! fill out the xk and wk arrays.
+    select case(npoints)
+       SELECT_CASES
+    end select
+    
+    if(present(a) .and. present(b)) then
+       ! need to map the interval [-1,1] into the interval [a,b].
+       c1 = 0.5_f64*(b-a)
+       c2 = 0.5_f64*(b+a)
+       do k=1,npoints
+          xw(k) = wk(k)*c1
+       end do
+    else ! use default values in the [-1,1] interval
+       xw(1:npoints) = wk(1:npoints)
+    end if
+
+  end function gauss_legendre_weights
+
+
 end module gauss_legendre_integration

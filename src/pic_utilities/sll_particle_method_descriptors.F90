@@ -1,9 +1,7 @@
-!**************************************************************
-!  Authors: Jakob Ameres, jakob.ameres@tum.de
-!  
-!**************************************************************
-
-
+ !> @ingroup pic_utilities
+ !> @author Jakob Ameres
+ !> @brief Descriptors for particle methods
+ !> @details Should be replaced by sll_descriptors
 module sll_particle_method_descriptors
 #include "sll_working_precision.h"
 

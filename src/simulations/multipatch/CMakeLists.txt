@@ -1,0 +1,5 @@
+ADD_SUBDIRECTORY(distribution_function_multipatch)
+ADD_SUBDIRECTORY(meshes_multipatch)
+ADD_SUBDIRECTORY(coordinate_transformations_multipatch)
+ADD_SUBDIRECTORY(fields_multipatch)
+ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers_multipatch)
