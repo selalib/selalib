@@ -24,7 +24,10 @@ TARGET_LINK_LIBRARIES( sll_gyroaverage
 
 # Ctests
 IF(BUILD_TESTING)
-  
+
+  SET( INPUT_FILES zeros_bessel.txt )
+  FILE( COPY ${INPUT_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
+
   ADD_EXECUTABLE( test_gyroaverage_2d_polar_hermite
     unit_test_gyroaverage_2d_polar_hermite.F90 )
 
