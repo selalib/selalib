@@ -1,40 +1,5 @@
 SET(SLL_DIR ${CMAKE_SOURCE_DIR})
 
-SET(SLL_MACROS
-    ${CMAKE_CURRENT_SOURCE_DIR}/selalib.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/selalib-mpi.h
-    ${SLL_DIR}/memory/sll_memory.h
-    ${SLL_DIR}/working_precision/sll_working_precision.h
-    ${SLL_DIR}/assert/sll_assert.h
-    ${SLL_DIR}/constants/sll_constants.h
-    ${SLL_DIR}/errors/sll_errors.h
-    ${SLL_DIR}/utilities/sll_utilities.h
-    ${SLL_DIR}/maxwell_solvers/sll_maxwell_solvers_macros.h
-    ${SLL_DIR}/maxwell_solvers/sll_maxwell_solvers.h
-    ${SLL_DIR}/poisson_solvers/sll_poisson_solvers.h
-    ${SLL_DIR}/interpolators/sll_interpolators.h
-    ${SLL_DIR}/splines/sll_splines.h
-    ${SLL_DIR}/io/file_io/sll_file_io.h
-    ${SLL_DIR}/io/file_io_parallel/sll_file_io_parallel.h
-    ${SLL_DIR}/interfaces/fft/sll_fft.h
-    ${SLL_DIR}/interfaces/fft/sll_fftw.h
-    ${SLL_DIR}/integration/sll_integration.h
-    ${SLL_DIR}/fields/sll_field_1d.h
-    ${SLL_DIR}/fields/sll_field_2d.h
-    ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.h
-    ${SLL_DIR}/meshes/sll_meshes.h
-    ${SLL_DIR}/meshes/sll_cartesian_meshes.h
-    ${SLL_DIR}/fields/sll_fields.h
-    ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations.h
-    ${SLL_DIR}/pic_accumulators/sll_accumulators.h
-    ${SLL_DIR}/pic_particle_types/particle_representation.h
-    ${SLL_DIR}/remap/sll_remap.h
-    ${SLL_DIR}/parallel_utilities/sll_parallel_utilities.h
-    ${SLL_DIR}/deboor_splines/sll_deboor_splines.h
-)
-
-FILE(COPY ${SLL_MACROS} DESTINATION ${CMAKE_BINARY_DIR}/include)
-
 SET(SLL_SOURCE_FILES
     ${SLL_DIR}/memory/sll_memory.F90
     ${SLL_DIR}/working_precision/sll_working_precision.F90
@@ -166,58 +131,43 @@ ELSE()
 ENDIF()
 
 IF(${FFT_LIB} MATCHES "FFTPACK")
-
-  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
-      ${SLL_DIR}/fft/fftpack/sll_fft.F90
-
-      )
+  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} ${SLL_DIR}/fft/fftpack/sll_fft.F90)
 ELSEIF(${FFT_LIB} MATCHES "FFTW")
-
-  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
-      ${SLL_DIR}/fft/fftw3/sll_fft.F90)
-
+  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} ${SLL_DIR}/fft/fftw3/sll_fft.F90) 
 ELSE()
-
-  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
-      ${SLL_DIR}/fft/sllfft/sll_fft.F90)
-
+  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} ${SLL_DIR}/fft/sllfft/sll_fft.F90)
 ENDIF()
 
-# Got the impression that this maxwell solver is made to work with FFTW only,
-# thus I'm including the following. Intent needs to be made more explicit if 
-# this is not the case. ECG
 IF(FFTW_ENABLED)
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
-    ${SLL_DIR}/fft/fftw3.F90
-    ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_pstd.F90
-    ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_fftw.F90
-    ${SLL_DIR}/multigrid/sll_multigrid_2d.F90
-    ${SLL_DIR}/multigrid/mgd2_periodic.F
+    ${SLL_DIR}/interfaces/fft/fftw3.F90
+    ${SLL_DIR}/field_solvers/maxwell_solvers/sll_maxwell_2d_pstd.F90
+    ${SLL_DIR}/field_solvers/poisson_solvers/sll_poisson_2d_periodic_fftw.F90
   )
 ENDIF()
 
 SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
-  ${SLL_DIR}/poisson_solvers/sll_mudpack.F90
+  ${SLL_DIR}/field_solvers/poisson_solvers/sll_mudpack.F90
 )
 
 IF(SUITESPARSE_ENABLED)
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
-        ${SLL_DIR}/sparse_matrix_manager/spm_umfpack.F90
-	${SLL_DIR}/sparse_matrix_manager/sll_sparse_matrix_umfpack_module.F90
+    ${SLL_DIR}/interfaces/sparse_matrix_manager/spm_umfpack.F90
+    ${SLL_DIR}/interfaces/sparse_matrix_manager/sll_sparse_matrix_umfpack_module.F90
   )
 ENDIF(SUITESPARSE_ENABLED)
 
 IF(MPI_ENABLED)
  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
-  ${SLL_DIR}/collective/sll_collective.F90
-  ${SLL_DIR}/remap/sll_remap.F90
-  ${SLL_DIR}/point_to_point_communications/sll_point_to_point_comms.F90
-  ${SLL_DIR}/poisson_solvers_parallel/sll_poisson_2d_periodic_cartesian_par.F90
-  ${SLL_DIR}/poisson_solvers_parallel/sll_poisson_polar_parallel.F90
+  ${SLL_DIR}/parallelization/collective/sll_collective.F90
+  ${SLL_DIR}/parallelization/remap/sll_remap.F90
+  ${SLL_DIR}/parallelization/point_to_point_communications/sll_point_to_point_comms.F90
+  ${SLL_DIR}/field_solvers/poisson_solvers_parallel/sll_poisson_2d_periodic_cartesian_par.F90
+  ${SLL_DIR}/field_solvers/poisson_solvers_parallel/sll_poisson_polar_parallel.F90
   ${SLL_DIR}/simulations/simulation_base_class.F90
-  ${SLL_DIR}/parallel_utilities/sll_common_array_initializers_module.F90
-  ${SLL_DIR}/parallel_utilities/sll_parallel_array_initializer_module.F90
-  ${SLL_DIR}/parallel_utilities/buffer_loader_utilities.F90
+  ${SLL_DIR}/parallelization/parallel_utilities/sll_common_array_initializers_module.F90
+  ${SLL_DIR}/parallelization/parallel_utilities/sll_parallel_array_initializer_module.F90
+  ${SLL_DIR}/parallelization/parallel_utilities/buffer_loader_utilities.F90
   ${SLL_DIR}/io/file_io_parallel/sll_gnuplot_parallel.F90)
 ENDIF(MPI_ENABLED)
 
