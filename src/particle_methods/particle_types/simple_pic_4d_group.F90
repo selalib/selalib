@@ -47,7 +47,7 @@ module sll_simple_pic_4d_group_module
 
     !> @name The particles
     !> @{
-    sll_int32                                                   :: number_particles
+    ! sll_int32                                                   :: number_particles
     type(sll_simple_pic_4d_particle),   dimension(:), pointer   :: particle_list
     sll_real64                                                  :: common_weight
     !> @}
@@ -89,9 +89,10 @@ module sll_simple_pic_4d_group_module
     procedure :: initializer                        => simple_pic_4d_initializer
     !> @}
 
+    procedure :: deposit_charge_2d          => simple_pic_4d_deposit_charge_2d
+    procedure :: remap                      => simple_pic_4d_remap
     procedure :: visualize_f_slice_x_vx     => simple_pic_4d_visualize_f_slice_x_vx
 
-    procedure :: deposit_charge_2d          => simple_pic_4d_deposit_charge_2d
 
   end type sll_simple_pic_4d_group
 
@@ -360,6 +361,17 @@ contains
     end do
 
   end subroutine simple_pic_4d_deposit_charge_2d
+
+  !----------------------------------------------------------------------------
+  subroutine simple_pic_4d_remap(self)
+
+    class( sll_simple_pic_4d_group ),   intent( inout ) :: self
+
+    print*, " ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------"
+    print*, " WARNING (765764768675) -- remap routine called for a group of simple_pic_4d particles has no effect...              "
+    print*, " ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------"
+
+  end subroutine simple_pic_4d_remap
 
   !----------------------------------------------------------------------------
   subroutine simple_pic_4d_visualize_f_slice_x_vx(self, array_name, iplot)
