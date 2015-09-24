@@ -186,7 +186,7 @@ contains
     print*, 'Time loop'
     ! Time loop
     do j=1, sim%n_time_steps
-       ! Lee splitting
+       ! Lie splitting
        call sim%propagator%operatorT(sim%delta_t)
        call sim%propagator%operatorV(sim%delta_t)
 
