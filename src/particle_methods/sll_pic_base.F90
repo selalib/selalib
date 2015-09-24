@@ -39,6 +39,7 @@ module sll_module_pic_base
 
     sll_int32                     :: dimension_x
     sll_int32                     :: dimension_v
+    sll_int32                     :: number_particles
 
     logical                       :: domain_is_periodic(3)
 
@@ -63,6 +64,9 @@ module sll_module_pic_base
     ! Initializers
     procedure( set_landau_params ),  deferred :: set_landau_parameters
     procedure( init              ),  deferred :: initializer
+
+    ! Remapping
+    procedure( no_arg ), deferred :: remap
 
     ! Visualize
     procedure( vis ),  deferred :: visualize_f_slice_x_vx
@@ -149,6 +153,16 @@ module sll_module_pic_base
 
   !----------------------------------------------------------------------------
   abstract interface
+   subroutine no_arg( self )
+    use sll_working_precision
+    import sll_particle_group_base
+    class( sll_particle_group_base ), intent( inout ) :: self
+
+   end subroutine no_arg
+  end interface
+
+  !----------------------------------------------------------------------------
+  abstract interface
    subroutine vis( self, array_name, iplot )
     use sll_working_precision
     import sll_particle_group_base
@@ -215,8 +229,6 @@ contains
     r = self%q / self%m
 
   end function get_q_over_m
-
-
 
   ! todo: put this in the right module (with the meshes...)
 

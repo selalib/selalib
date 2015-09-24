@@ -2,7 +2,7 @@
         THERM_SPEED         = 1.0
         dt                  =  0.1
         number_iterations   = 60
-        plot_period         = 20
+        plot_period         = 1
         SPECIES_CHARGE      = -1.0
         SPECIES_MASS        = 1.0
         ALPHA  = 0.5
@@ -31,10 +31,14 @@
     REMAP_GRID_VX_MAX   = 4.0       !  Particle remapping grid // voir l'influence
     REMAP_GRID_VY_MIN   = -4.0      !  Particle remapping grid // voir l'influence
     REMAP_GRID_VY_MAX   = 4.0       !  Particle remapping grid // voir l'influence
-    NVirtual_X_ForDeposition = 2    !  local virtual grid // voir l'influence
-    NVirtual_Y_ForDeposition = 1    !  local virtual grid // voir l'influence
-    NVirtual_VX_ForDeposition = 2   !  local virtual grid // voir l'influence
-    NVirtual_VY_ForDeposition = 1   !  local virtual grid // voir l'influence
+    N_virtual_particles_per_deposition_cell_x = 2           ! size of the virtual grid in one deposition cell
+    N_virtual_particles_per_deposition_cell_y = 1           ! size of the virtual grid in one deposition cell
+    N_virtual_particles_per_deposition_cell_vx = 2          ! size of the virtual grid in one deposition cell
+    N_virtual_particles_per_deposition_cell_vy = 1          ! size of the virtual grid in one deposition cell
+    N_remapping_nodes_per_virtual_cell_x = 2       ! size of the virtual cells to gather the reconstruction of f on remapping grid
+    N_remapping_nodes_per_virtual_cell_y = 2       ! size of the virtual cells to gather the reconstruction of f on remapping grid
+    N_remapping_nodes_per_virtual_cell_vx = 2      ! size of the virtual cells to gather the reconstruction of f on remapping grid
+    N_remapping_nodes_per_virtual_cell_vy = 2      ! size of the virtual cells to gather the reconstruction of f on remapping grid
     remap_period        = 10        !  voir l'influence
 /
 
