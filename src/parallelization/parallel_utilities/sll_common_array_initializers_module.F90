@@ -2,7 +2,6 @@ module sll_common_array_initializers_module
 #include "sll_assert.h" 
 #include "sll_working_precision.h"
 #include "sll_constants.h"
-#include "sll_utilities.h"
 #include "sll_errors.h"
 
   implicit none
