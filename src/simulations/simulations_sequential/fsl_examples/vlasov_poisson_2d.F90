@@ -7,45 +7,40 @@ program test_deposit_cubic_splines
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-
+!include "fftw3.f90"
 use sll_cubic_splines
 use sll_constants
 use sll_boundary_condition_descriptors
-use sll_fft
-
+use sll_fftw
 implicit none
 
-type(sll_cubic_spline_2D), pointer :: spl_bsl
+type(C_PTR) :: PlnFwd,PlnBwd
 type(sll_cubic_spline_2D), pointer :: spl_fsl
-
-sll_int32  :: N,Neta1,Neta2,mesh_case,test_case,step,nb_step,visu_step,field_case
-sll_int32  :: i,j,bc1_type,bc2_type,err,it
-sll_int32  :: i1,i2,i3
+sll_int32  :: N,Neta1,Neta2,step,nb_step
+sll_int32  :: i,j,bc1_type,bc2_type,err
 sll_real64 :: eta1,delta_eta1,eta1_min,eta1_max,eta2,delta_eta2,eta2_min,eta2_max
-sll_real64 :: x1,x2,x1_min,x2_min,x1_max,x2_max,x1c,x2c,x1t,x2t,dt
-sll_real64 :: T,alpha_mesh, errN
-sll_real64 :: val,val_bsl,val_fsl,tmp1,tmp2
-sll_real64 :: val_spe 
-sll_real64 :: a1,a2,eta1t,eta2t,eta1c,eta2c,k1eta1,k2eta1,k3eta1,k4eta1,k1eta2,k2eta2,k3eta2,k4eta2
-sll_real64,dimension(:,:), pointer :: f
-sll_real64,dimension(:,:), pointer :: fh_bsl
+sll_real64 :: x1_min,x2_min,x1_max,x2_max
+sll_real64 :: T
+sll_real64 :: eps
+sll_real64 :: eta1c,eta2c
+sll_real64,dimension(:,:), pointer :: f0
 sll_real64,dimension(:,:), pointer :: fh_fsl
-sll_real64,dimension(:,:), pointer :: fh_spe
-sll_real64,dimension(:,:), pointer :: x1_array,x2_array,eta1feet,eta2feet,eta1tot,eta2tot,x1tot,x2tot
-sll_real64,dimension(:,:), pointer :: diag
-character(len=20) :: conv_name, mass_name
-character(len=3)  :: mesh_name, field_name, time_name
-  
-sll_int32                         :: nc_eta1, nc_eta2
-sll_real64, dimension(:), pointer :: d_dx1, d_dx2
-sll_real64, dimension(:), pointer :: kx1, kx2
-type(sll_fft_plan),       pointer :: fwx1, fwx2
-type(sll_fft_plan),       pointer :: bwx1, bwx2
-sll_comp64, dimension(:), pointer :: fk1, fk2
-
+sll_real64,dimension(:,:), pointer :: x1_array,x2_array,eta1feet,eta2feet
+sll_int32                         :: nc_eta1
+sll_real64, dimension(:), pointer :: d_dx1
+!type(sll_fft_plan),       pointer :: fwx1
+!type(sll_fft_plan),       pointer :: bwx1
+sll_comp64, dimension(:), pointer :: fk1
 sll_int32     :: error
-sll_real64    :: kx10
-sll_real64    :: kx20
+
+integer(4),parameter ::  ntau =256
+complex(8) :: temp1(0:ntau-1),temp2(0:ntau-1),Ftilde2(0:ntau-1), AF1(0:ntau-1), AF2(0:ntau-1)
+real(8)    :: k,h,r0,v0
+complex(8) :: w10, w20,f,sumup1,sumup2,ff2
+real(8)    :: tau(0:ntau-1), ltau(0:ntau-1)
+complex(8) :: bw10(0:ntau-1),bw20(0:ntau-1),F1(0:ntau-1),F2(0:ntau-1),Ftilde1(0:ntau-1)
+complex(8) :: Term2(0:ntau-1),Term1(0:ntau-1)
+integer(4) :: m
 
 N=128
 Neta1 = N
@@ -54,71 +49,52 @@ Neta2 = N
 ! mesh type : cartesian
 ! domain    : square [eta1_min eta1_max] x [eta2_min eta2_max]
 ! BC        : periodic-periodic
-eta1_min = 0._f64
-eta1_max = 2._f64*sll_pi
-eta2_min = 0._f64
-eta2_max = 2._f64*sll_pi
+eta1_min = -4._f64
+eta1_max = 4._f64
+eta2_min = -4._f64
+eta2_max = 4._f64
+
+nc_eta1    = ntau
 
 
-nc_eta1    = Neta1
-nc_eta2    = Neta2
-
-SLL_CLEAR_ALLOCATE(d_dx1(1:nc_eta1), error)
-SLL_CLEAR_ALLOCATE(d_dx2(1:nc_eta2), error)
-SLL_CLEAR_ALLOCATE(fk1(1:nc_eta1/2+1), error)
-SLL_CLEAR_ALLOCATE(fk2(1:nc_eta2/2+1), error)
-
-fwx1 => fft_new_plan(nc_eta1, d_dx1, fk1)
-bwx1 => fft_new_plan(nc_eta1,   fk1, d_dx1)
-fwx2 => fft_new_plan(nc_eta2, d_dx2, fk2)
-bwx2 => fft_new_plan(nc_eta2,   fk2, d_dx2)
-
-SLL_CLEAR_ALLOCATE(kx1(1:nc_eta1/2+1), error)
-SLL_CLEAR_ALLOCATE(kx2(1:nc_eta2/2+1), error)
- 
-kx10 = 2._f64*sll_pi/(eta1_max-eta1_min)
-kx20 = 2._f64*sll_pi/(eta2_max-eta2_min)
-
-kx1(1) = 1.0_f64
-do i=2,nc_eta1/2+1
-   kx1(i) = (i-1)*kx10
-end do
-kx2(1) = 1.0_f64
-do j=2,nc_eta2/2+1
-   kx2(j) = (j-1)*kx20
-end do
+PlnFwd = fftw_plan_dft_1d(ntau,Ftilde2,Ftilde1,FFTW_FORWARD, FFTW_ESTIMATE+FFTW_UNALIGNED)
+PlnBwd = fftw_plan_dft_1d(ntau,Ftilde1,Ftilde2,FFTW_BACKWARD,FFTW_ESTIMATE+FFTW_UNALIGNED)
+!SLL_CLEAR_ALLOCATE(d_dx1(1:nc_eta1+1), error)
+!SLL_CLEAR_ALLOCATE(fk1(1:nc_eta1/2+1), error)
+!fwx1 => fft_new_plan(nc_eta1, d_dx1, fk1)
+!bwx1 => fft_new_plan(nc_eta1, fk1, d_dx1)
+!
+!SLL_CLEAR_ALLOCATE(kx1(1:nc_eta1/2+1), error)
+!kx10 = 2._f64*sll_pi/(eta1_max-eta1_min)
+!kx1(1) = 1.0_f64
+!do i=2,nc_eta1/2+1
+!   kx1(i) = (i-1)*kx10
+!end do
 
 ! ---- * Parameters * ----
 
-! --- Space and time parameters ---
-! For the python script curvilinear-exe.py
-!namelist /param/ N,T,mesh_case,test_case,field_case
-!read(*,NML=param);open(unit=900,file="gyrof.param");write(900,NML=param);close(900)
-
+! --- Space and time parameters --
 
 ! Final time
-T = .1_f64
+T =1._f64
 
 ! -- mesh type --
 ! 1 : cartesian
-mesh_case = 1
+!mesh_case = 1
 
 ! -- distribution function --
 ! 4 : centered gaussian in eta1 and eta2
-test_case = 4
+!test_case = 4
 
 ! -- advecton field --
 ! 1 : translation of vector (a1,a2)
 ! 2 : rotation
 ! 3 : non homogeneous rotation
 ! 4 : divergence free complex symmetric field (polar mesh only)
-field_case = 1
-
-a1=4._f64
-a2=1._f64
+!field_case = 1
 
 ! -- visualization parameters --
-visu_step = 1
+!visu_step = 1
   
 ! ---- * Construction of the mesh * ----
   
@@ -135,43 +111,34 @@ delta_eta1 = (eta1_max-eta1_min)/real(Neta1,f64)
 delta_eta2 = (eta2_max-eta2_min)/real(Neta2,f64)
 
 ! time step and number of steps
-dt = T*delta_eta1 
-nb_step = floor(T/dt)
+k = 0.05d0
+nb_step = floor(T/k)
+eps=0.1d0
+h=2.0d0*sll_pi/ntau
 
 ! ---- * Messages * ----
   
 print *,'# N=',N
-print *,'# T=',real(nb_step,f64)*dt
-print *,'# mesh_case=',mesh_case
-print *,'# test_case=',test_case
-print *,'# field_case=',field_case
+print *,'# T=',T
+print *,'# eps=',eps
+!print *,'# mesh_case=',mesh_case
+!print *,'# test_case=',test_case
+!print *,'# field_case=',field_case
     
 ! ---- * Allocation and creation of the splines * ----
 	
 ! allocations of the arrays
-SLL_ALLOCATE(f(Neta1+1,Neta2+1), err)
-SLL_ALLOCATE(fh_bsl(Neta1+1,Neta2+1), err)
+SLL_ALLOCATE(f0(Neta1+1,Neta2+1), err)
 SLL_ALLOCATE(fh_fsl(Neta1+1,Neta2+1), err)
-SLL_ALLOCATE(fh_spe(Neta1+1,Neta2+1), err)
 SLL_ALLOCATE(x1_array(Neta1+1,Neta2+1), err)
 SLL_ALLOCATE(x2_array(Neta1+1,Neta2+1), err)
 SLL_ALLOCATE(eta1feet(Neta1+1,Neta2+1), err)
 SLL_ALLOCATE(eta2feet(Neta1+1,Neta2+1), err)
-SLL_ALLOCATE(eta1tot(Neta1+1,Neta2+1), err)
-SLL_ALLOCATE(eta2tot(Neta1+1,Neta2+1), err)
-SLL_ALLOCATE(x1tot(Neta1+1,Neta2+1), err)
-SLL_ALLOCATE(x2tot(Neta1+1,Neta2+1), err)
-SLL_ALLOCATE(diag(10,0:nb_step), err)
-	
-! creation of the splines
-spl_bsl => new_cubic_spline_2D(Neta1+1, Neta2+1, &
-  eta1_min, eta1_max, &
-  0._f64, 2._f64*sll_pi, &
-  bc1_type, bc2_type)
+!SLL_ALLOCATE(diag(10,0:nb_step), err)
 
 spl_fsl => new_cubic_spline_2D(Neta1+1, Neta2+1, &
   eta1_min, eta1_max, &
-  0._f64, 2._f64*sll_pi, &
+  eta2_min, eta2_max, &
   bc1_type, bc2_type)
   
 ! ---- * Initializations * ----
@@ -188,201 +155,256 @@ do i=1,Neta1+1
     x1_max = eta1_max
     x2_max = eta2_max
     
-    x1c = 0.5_f64*(x1_min+x1_max)
-    x2c = 0.5_f64*(x2_min+x2_max)
-    
     x1_array(i,j) = eta1
     x2_array(i,j) = eta2
     
-    f(i,j) = exp(-2_f64*(eta1-eta1c)**2)*exp(-2_f64*(eta2-eta2c)**2)
+    f0(i,j) = exp(-2_f64*(eta1-eta1c)**2)*exp(-2_f64*(eta2-eta2c)**2)
 
-    write(900,*) eta1, eta2, f(i,j)
+    write(900,*) eta1, eta2, f0(i,j)
   enddo
   write(900,*)
 enddo
 close(900)
 
-! Distribution functions for the four methods
-fh_bsl    = f
-fh_fsl    = f
-fh_spe    = f
-  
-! Diagnostic with the weighted mass (temp1) and the "classical" mass (temp2) 
-diag = 0._f64
+fh_fsl   = f0
+fh_fsl(:,Neta2+1)   = fh_fsl(:,1)
+call compute_cubic_spline_2D(fh_fsl,spl_fsl)
 
-tmp1 = sum(f)*delta_eta1*delta_eta2
-  
-diag = tmp1  ! analytic solution
 
-! total displacement
-eta1tot = x1_array
-eta2tot = x2_array
+do m=0,ntau-1
+    tau(m)=dble(m)*h
+enddo
+m=ntau/2
+ltau=(/ (n, n=0,m-1), (n, n=-m,-1 )/)
 
-do step=1,nb_step ! ---- * Evolution in time * ----
-  
-  fh_bsl(:,Neta2+1)    = fh_bsl(:,1)
-  fh_fsl(:,Neta2+1)    = fh_fsl(:,1)
-      
-  call compute_cubic_spline_2D(fh_bsl,spl_bsl)
-  call compute_cubic_spline_2D(fh_fsl,spl_fsl)
-    
-  do i=1,Neta1+1
-    do j=1,Neta2+1
-              
-      ! ------------ Analytic part -----------------
-      
-      ! --- Total displacement init ---
-      
-      eta1 = eta1tot(i,j)
-      eta2 = eta2tot(i,j)
-      
-      x1tot(i,j) = eta1
-      x2tot(i,j) = eta2
-    
-      ! translation
-      if (field_case==1) then
-        x1 = x1tot(i,j) + 0.01_f64*a1*dt
-        x2 = x2tot(i,j) + 0.01_f64*a2*dt
-      else if (field_case==2) then                   
-        ! rotation
-        x1 = cos(dt)*(x1tot(i,j)-x1c)  + sin(dt)*(x2tot(i,j)-x2c) + x1c
-        x2 = -sin(dt)*(x1tot(i,j)-x1c) + cos(dt)*(x2tot(i,j)-x2c) + x2c
-      else if (field_case==3) then
-        ! non homogeneous equation
-        x1 = (x1tot(i,j)-x1c)*cos(sqrt(a1*a2)*dt) - (x2tot(i,j)-x2c)*sqrt(a2/a1)*sin(sqrt(a1*a2)*dt) + x1c
-        x2 = (x1tot(i,j)-x1c)*sqrt(a1/a2)*sin(sqrt(a1*a2)*dt) + (x2tot(i,j)-x2c)*cos(sqrt(a1*a2)*dt) + x2c
-      end if
-        
-      eta1 = x1 
-      eta2 = x2
-
-      ! --- Evaluation of f ---
-      f(i,j) = exp(-2_f64*(eta1-eta1c)**2)*exp(-2_f64*(eta2-eta2c)**2)
-      
-      ! --- Total displacement update ---
-      eta1tot(i,j) = eta1
-      eta2tot(i,j) = eta2
-       
-      ! ------------ BSL part -----------------
-       
-      eta1 = eta1_min + real(i-1,f64)*delta_eta1
-      eta2 = eta2_min + real(j-1,f64)*delta_eta2
-      
-      call displacement(dt, eta1, eta2)
-      
-      call apply_bc()
-      
-      ! --- Interpolation ---
-      fh_bsl(i,j)    = interpolate_value_2D(eta1,eta2,spl_bsl)
-        
-      !
-        
-      eta1 = eta1_min + real(i-1,f64)*delta_eta1
-      eta2 = eta2_min + real(j-1,f64)*delta_eta2
-        
-      ! --- Displacement ---
-      call displacement(-dt, eta1, eta2)
-        
-      call apply_bc()
-        
-      eta1feet(i,j) = eta1
-      eta2feet(i,j) = eta2
-				
+do i=1,Neta1+1
+do j=1,Neta2+1
+    r0=x1_array(i,j)
+    v0=x2_array(i,j)
+    w10=(r0-sll_i1*v0)/2.0d0
+    w20=-0.5d0*(r0+sll_i1*v0)
+    do m=0,ntau-1
+        f=(cdexp(sll_i1*tau(m))*w10-cdexp(-sll_i1*tau(m))*w20)*(dcos(2.0d0*tau(m)))**2.0d0
+        F1(m)=-sll_i1*0.5d0*f*cdexp(-sll_i1*tau(m))
+        F2(m)=-sll_i1*0.5d0*f*cdexp(sll_i1*tau(m))
     enddo
-  enddo
+    call fft_apply_plan(fwx1, F1, Ftilde1)
+    call fft_apply_plan(fwx1, F2, Ftilde2)
+!    call fftw_execute_dft(PlnFwd, F1, Ftilde1)
+!    call fftw_execute_dft(PlnFwd, F2, Ftilde2)
+    Ftilde1=Ftilde1/dble(ntau)
+    Ftilde2=Ftilde2/dble(ntau)
+    do m=0,ntau-1
+        sumup1=tau(m)*Ftilde1(0)
+        sumup2=tau(m)*Ftilde2(0)
+        do n=1,ntau-1
+            sumup1=sumup1-sll_i1*Ftilde1(n)/ltau(n)*(cdexp(sll_i1*ltau(n)*tau(m))-1.0d0)
+            sumup2=sumup2-sll_i1*Ftilde2(n)/ltau(n)*(cdexp(sll_i1*ltau(n)*tau(m))-1.0d0)
+        enddo
+        bw10(m)=w10-eps*tau(m)*Ftilde1(0)+eps*sumup1
+        bw20(m)=w20-eps*tau(m)*Ftilde2(0)+eps*sumup2
+    enddo
+        !!! For 2nd order initial correction
+    f=0.0d0
+    ff2=0.0d0
+    do n=1,ntau-1
+        f=f+Ftilde1(n)/sll_i1/ltau(n)  !AF1_0
+        ff2=ff2+Ftilde2(n)/sll_i1/ltau(n) !AF2_0
+    enddo
+    do m=0,ntau-1
+        temp1(m)=tau(m)*Ftilde1(0)
+        temp2(m)=tau(m)*Ftilde2(0)
+        do n=1,ntau-1
+            temp1(m)=(cdexp(sll_i1*tau(m)*ltau(n))-1.0d0)*(Ftilde1(n)/sll_i1/ltau(n))+temp1(m)
+            temp2(m)=(cdexp(sll_i1*tau(m)*ltau(n))-1.0d0)*(Ftilde2(n)/sll_i1/ltau(n))+temp2(m)
+        enddo
+    enddo
+    AF1=temp1-tau*Ftilde1(0)+f
+    AF2=temp2-tau*Ftilde2(0)+ff2
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    do m=0,ntau-1
+        sumup1=(cdexp(sll_i1*tau(m))*f-cdexp(-sll_i1*tau(m))*ff2)*(dcos(2*tau(m)))**2.0d0
+        temp1(m)=-0.5d0*sll_i1*cdexp(-sll_i1*tau(m))*sumup1 !dwFh10_1
+        temp2(m)=-0.5d0*sll_i1*cdexp(sll_i1*tau(m))*sumup1  !dwFh10_2
+    enddo
+    call fft_apply_plan(fwx1,temp1, Term1)
+    call fft_apply_plan(fwx1,temp2, Term2)
+!    call fftw_execute_dft(PlnFwd,temp1, Term1)
+!    call fftw_execute_dft(PlnFwd,temp2, Term2)
+    Term1=Term1/dble(ntau)
+    Term2=Term2/dble(ntau)
+    do m=0,ntau-1
+        temp1(m)=tau(m)*Term1(0)
+        temp2(m)=tau(m)*Term2(0)
+        do n=1,ntau-1
+            temp1(m)=(cdexp(sll_i1*tau(m)*ltau(n))-1.0d0)*(Term1(n)/sll_i1/ltau(n))+temp1(m)
+            temp2(m)=(cdexp(sll_i1*tau(m)*ltau(n))-1.0d0)*(Term2(n)/sll_i1/ltau(n))+temp2(m)
+        enddo
+    enddo
+    bw10=bw10-eps**2.0d0*(temp1-tau*Term1(0))
+    bw20=bw20-eps**2.0d0*(temp2-tau*Term2(0))
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    do m=0,ntau-1
+        f=(cdexp(sll_i1*tau(m))*AF1(m)-cdexp(-sll_i1*tau(m))*AF2(m))*(dcos(2*tau(m)))**2
+        temp1(m)=-0.5d0*sll_i1*cdexp(-sll_i1*tau(m))*f !dwFAF1
+        temp2(m)=-0.5d0*sll_i1*cdexp(sll_i1*tau(m))*f  !dwFAF2
+        f=(cdexp(sll_i1*tau(m))*Ftilde1(0)-cdexp(-sll_i1*tau(m))*Ftilde2(0))*(dcos(2*tau(m)))**2
+        AF1(m)=-0.5d0*sll_i1*cdexp(-sll_i1*tau(m))*f   !dwFPiF1
+        AF2(m)=-0.5d0*sll_i1*cdexp(sll_i1*tau(m))*f    !dwFPiF2
+    enddo
+    call fft_apply_plan(fwx1, AF1, F1)
+    call fft_apply_plan(fwx1, AF2, F2)
+!    call fftw_execute_dft(PlnFwd, AF1, F1)
+!    call fftw_execute_dft(PlnFwd, AF2, F2)
+    F1=F1/dble(ntau)
+    F2=F2/dble(ntau)
+    f=0.0d0
+    ff2=0.0d0
+    do n=1,ntau-1
+        f=f+F1(n)/sll_i1/ltau(n)  !AdwFPiF1_0
+        ff2=ff2+F2(n)/sll_i1/ltau(n) !AdwFPiF2_0
+    enddo
+    do m=0,ntau-1
+        Ftilde1(m)=tau(m)*F1(0)
+        Ftilde2(m)=tau(m)*F2(0)
+        do n=1,ntau-1
+            Ftilde1(m)=(cdexp(sll_i1*tau(m)*ltau(n))-1.0d0)*(F1(n)/sll_i1/ltau(n))+Ftilde1(m)
+            Ftilde2(m)=(cdexp(sll_i1*tau(m)*ltau(n))-1.0d0)*(F2(n)/sll_i1/ltau(n))+Ftilde2(m)
+        enddo
+    enddo
+    AF1=Ftilde1-tau*F1(0)+f    !AdwFPiF1
+    AF2=Ftilde2-tau*F2(0)+ff2  !AdwFPiF2
+    F1=temp1-AF1 !z1
+    F2=temp2-AF2
+    call fft_apply_plan(fwx1, F1, Ftilde1)
+    call fft_apply_plan(fwx1, F2, Ftilde2)
+!    call fftw_execute_dft(PlnFwd, F1, Ftilde1)
+!    call fftw_execute_dft(PlnFwd, F2, Ftilde2)
+    Ftilde1=Ftilde1/dble(ntau)
+    Ftilde2=Ftilde2/dble(ntau)
+    do m=0,ntau-1
+        temp1(m)=tau(m)*Ftilde1(0)
+        temp2(m)=tau(m)*Ftilde2(0)
+        do n=1,ntau-1
+            temp1(m)=(cdexp(sll_i1*tau(m)*ltau(n))-1.0d0)*(Ftilde1(n)/sll_i1/ltau(n))+temp1(m)
+            temp2(m)=(cdexp(sll_i1*tau(m)*ltau(n))-1.0d0)*(Ftilde2(n)/sll_i1/ltau(n))+temp2(m)
+        enddo
+    enddo
+    AF1=temp1-tau*Ftilde1(0) !h2_1
+    AF2=temp2-tau*Ftilde2(0) !h2_2
+    bw10=bw10+eps**2.0d0*AF1
+    bw20=bw20+eps**2.0d0*AF2
+    do step=1,nb_step ! ---- * Evolution in time * ----
+        do m=0,ntau-1
+            f=(cdexp(sll_i1*tau(m))*bw10(m)-cdexp(-sll_i1*tau(m))*bw20(m))*(dcos(2.0d0*tau(m)))**2.0d0
+            F1(m)=-f*cdexp(-sll_i1*tau(m))*0.5d0*sll_i1
+            F2(m)=-0.5d0*sll_i1*f*cdexp(sll_i1*tau(m))
+        enddo
+        temp1=bw10+k/2.0d0*F1
+        temp2=bw20+k/2.0d0*F2
+        call fft_apply_plan(fwx1, temp1, Ftilde1)
+        call fft_apply_plan(fwx1, temp2, Ftilde2)
+!        call fftw_execute_dft(PlnFwd, temp1, Ftilde1)
+!        call fftw_execute_dft(PlnFwd, temp2, Ftilde2)
+        do m=0,ntau-1
+            Ftilde1(m)=Ftilde1(m)/(1.0d0+sll_i1*k/2.0d0*ltau(m)/eps)
+            Ftilde2(m)=Ftilde2(m)/(1.0d0+sll_i1*k/2.0d0*ltau(m)/eps)
+        enddo
+        call fft_apply_plan(bwx1, Ftilde1,AF1)
+        call fft_apply_plan(bwx1, Ftilde2,AF2)
+!        call fftw_execute_dft(PlnBwd, Ftilde1,AF1)
+!        call fftw_execute_dft(PlnBwd, Ftilde2,AF2)
+        AF1=AF1/dble(ntau) !w1_h
+        AF2=AF2/dble(ntau) !w2_h
+        do m=0,ntau-1
+            f=(cdexp(sll_i1*tau(m))*AF1(m)-cdexp(-sll_i1*tau(m))*AF2(m))*(dcos(2.0d0*tau(m)))**2.0d0
+            F1(m)=-f*cdexp(-sll_i1*tau(m))*0.5d0*sll_i1
+            F2(m)=-0.5d0*sll_i1*f*cdexp(sll_i1*tau(m))
+        enddo
+        call fft_apply_plan(fwx1, F1,  Ftilde1)
+        call fft_apply_plan(fwx1, F2,  Ftilde2)
+        call fft_apply_plan(fwx1, bw10, F1)
+        call fft_apply_plan(fwx1, bw20, F2)
+!        call fftw_execute_dft(PlnFwd, F1,  Ftilde1)
+!        call fftw_execute_dft(PlnFwd, F2,  Ftilde2)
+!        call fftw_execute_dft(PlnFwd, bw10, F1)
+!        call fftw_execute_dft(PlnFwd, bw20, F2)
+        do m=0,ntau-1
+            temp1(m)=(F1(m)*(1-sll_i1*k/eps/2.0d0*ltau(m))+k*Ftilde1(m))/(1.0d0+sll_i1*k/2.0d0*ltau(m)/eps)
+            temp2(m)=(F2(m)*(1-sll_i1*k/eps/2.0d0*ltau(m))+k*Ftilde2(m))/(1.0d0+sll_i1*k/2.0d0*ltau(m)/eps)
+        enddo
+        call fft_apply_plan(fwx1, temp1,bw10)
+        call fft_apply_plan(fwx1, temp2,bw20)
+!        call fftw_execute_dft(PlnBwd, temp1,bw10)
+!        call fftw_execute_dft(PlnBwd, temp2,bw20)
+        bw10=bw10/dble(ntau)
+        bw20=bw20/dble(ntau)
+    enddo
+    call fft_apply_plan(fwx1,bw10,temp1)
+    call fft_apply_plan(fwx1,bw20,temp2)
+!    call fftw_execute_dft(PlnFwd,bw10,temp1)
+!    call fftw_execute_dft(PlnFwd,bw20,temp2)
+    temp1=temp1/dble(ntau)
+    temp2=temp2/dble(ntau)
+    sumup1=0.0d0
+    sumup2=0.0d0
+    do n=0,ntau-1
+        sumup1=sumup1+temp1(n)*cdexp(sll_i1*ltau(n)*T/eps)
+        sumup2=sumup2+temp2(n)*cdexp(sll_i1*ltau(n)*T/eps)
+    enddo
+    eta1=dreal(cdexp(sll_i1*T/eps)*sumup1-cdexp(-sll_i1*T/eps)*sumup2)
+    eta2=dreal(sll_i1*cdexp(sll_i1*T/eps)*sumup1+sll_i1*cdexp(-sll_i1*T/eps)*sumup2)
+    call apply_bc()
+    eta1feet(i,j)=eta1
+    eta2feet(i,j)=eta2
+enddo
+enddo
 
+call fft_delete_plan(fwx1)
+call fft_delete_plan(bwx1)
+!call fftw_destroy_plan(PlnFwd)
+!call fftw_destroy_plan(PlnBwd)
   ! --- Deposition FSL ---
     
-  call deposit_value_2D(eta1feet,eta2feet,spl_fsl,fh_fsl)
-
-  ! --- Spectral ---
-
-  do j = 1, nc_eta2+1
-
-    d_dx1 = fh_spe(1:nc_eta1,j)
-    call fft_apply_plan(fwx1, d_dx1, fk1)
-    do i = 2, nc_eta1/2+1
-      fk1(i) = fk1(i)*cmplx(cos(kx1(i)*0.01*a1*dt),sin(kx1(i)*0.01*a1*dt),kind=f64)
-    end do
-    call fft_apply_plan(bwx1, fk1, d_dx1)
-  
-    fh_spe(1:nc_eta1,j) = d_dx1 / nc_eta1
-
-  end do
-
-  fh_spe(nc_eta1+1,:) = fh_spe(1,:)
-                    
-  do i = 1, nc_eta1+1
-
-    d_dx2 = fh_spe(i,1:nc_eta2)
-    call fft_apply_plan(fwx2, d_dx2, fk2)
-    do j = 2, nc_eta2/2+1
-      fk2(j) = fk2(j)*cmplx(cos(kx2(j)*0.01*a2*dt),sin(kx2(j)*0.01*a2*dt),kind=f64)
-    end do
-    call fft_apply_plan(bwx2, fk2, d_dx2)
-  
-    fh_spe(i,1:nc_eta2) = d_dx2 / nc_eta2
-
-  end do
-
-  fh_spe(:,nc_eta2+1) = fh_spe(:,1)
-				
-  ! ------------ Diagnostics -----------------
-    
-  diag(1,step) = sum(f)*delta_eta1*delta_eta2
-  diag(2,step) = sum(fh_bsl)*delta_eta1*delta_eta2
-  diag(3,step) = sum(fh_fsl)*delta_eta1*delta_eta2
-  diag(4,step) = sum(fh_spe)*delta_eta1*delta_eta2
-
-enddo
-  
-! --- diagnostics ---
+call deposit_value_2D(eta1feet,eta2feet,spl_fsl,fh_fsl)
 
 ! File name
 
-mesh_name = "crt"
+!mesh_name = "crt"
+!
+!SELECT CASE (field_case)
+!  CASE (1)
+!    field_name = "trs"
+!  CASE (2)
+!    field_name = "rot"
+!  CASE (3)
+!    field_name = "rnh"
+!END SELECT
 
-SELECT CASE (field_case)
-  CASE (1)
-    field_name = "trs"
-  CASE (2)
-    field_name = "rot"
-  CASE (3)
-    field_name = "rnh"
-END SELECT
+!i1 = int(T)/100
+!i2 =(int(T)-100*i1)/10
+!i3 = int(T)-100*i1-10*i2
+!time_name = char(i1+48)//char(i2+48)//char(i3+48)
+!
+!conv_name = 'Conv_'//mesh_name//'_'//field_name//'_'//time_name//'.dat'
+!mass_name = 'Mass_'//mesh_name//'_'//field_name//'_'//time_name//'.dat'
+!  
+!val_bsl    = maxval(abs(f-fh_bsl))
+!val_fsl    = maxval(abs(f-fh_fsl))
+!val_spe    = maxval(abs(f-fh_spe))
+!val        = maxval(abs(fh_fsl-fh_bsl))
 
-i1 = int(T)/100
-i2 =(int(T)-100*i1)/10
-i3 = int(T)-100*i1-10*i2
-time_name = char(i1+48)//char(i2+48)//char(i3+48)
-
-conv_name = 'Conv_'//mesh_name//'_'//field_name//'_'//time_name//'.dat'
-mass_name = 'Mass_'//mesh_name//'_'//field_name//'_'//time_name//'.dat'
-  
-val_bsl    = maxval(abs(f-fh_bsl))
-val_fsl    = maxval(abs(f-fh_fsl))
-val_spe    = maxval(abs(f-fh_spe))
-val        = maxval(abs(fh_fsl-fh_bsl))
-
-write(*,*) N,'bsl:',val_bsl,'fsl:',val_fsl,'spe:',val_spe
-
+!write(*,*) N,'fsl:',val_fsl
 open(unit=850,file='fh.dat')  
 do i=1,Neta1+1
-  eta1 = eta1_min+real(i-1,f64)*delta_eta1
   do j=1,Neta2+1
-    eta2 = eta2_min + real(j-1,f64)*delta_eta2
-    write(850,*) eta1,eta2,x1_array(i,j),x2_array(i,j),f(i,j),fh_bsl(i,j),fh_fsl(i,j), fh_spe(i,j)
+    write(850,*) x1_array(i,j),x2_array(i,j),fh_fsl(i,j)
   enddo
   write(850,*) ' '
 enddo
 close(850)
 
-call fft_delete_plan(fwx1)
-call fft_delete_plan(bwx1)
-call fft_delete_plan(fwx2)
-call fft_delete_plan(bwx2)
-  
-contains
+end program
 
 subroutine apply_bc()
 
@@ -410,27 +432,5 @@ subroutine apply_bc()
 
 end subroutine apply_bc
 
-subroutine displacement(dt, x1, x2)
-sll_real64, intent(in)  :: dt
-sll_real64, intent(out) :: x1
-sll_real64, intent(out) :: x2
 
-  ! --- Displacement ---
-  
-  ! translation
-  if (field_case==1) then
-    x1 = x1_array(i,j) + 0.01_f64*a1*dt
-    x2 = x2_array(i,j) + 0.01_f64*a2*dt
-  else if (field_case==2) then                   
-    x1 = cos(dt)*(x1_array(i,j)-x1c)  + sin(dt)*(x2_array(i,j)-x2c) + x1c
-    x2 = -sin(dt)*(x1_array(i,j)-x1c) + cos(dt)*(x2_array(i,j)-x2c) + x2c
-  else if (field_case==3) then
-    x1 = (x1_array(i,j)-x1c)*cos(sqrt(a1*a2)*dt) - (x2_array(i,j)-x2c)*sqrt(a2/a1)*sin(sqrt(a1*a2)*dt) + x1c
-    x2 = (x1_array(i,j)-x1c)*sqrt(a1/a2)*sin(sqrt(a1*a2)*dt) + (x2_array(i,j)-x2c)*cos(sqrt(a1*a2)*dt) + x2c
-  end if
-
-end subroutine displacement
-
-
-end program
 
