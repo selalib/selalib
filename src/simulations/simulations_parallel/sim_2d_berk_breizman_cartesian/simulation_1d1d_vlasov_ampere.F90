@@ -1256,7 +1256,9 @@ gamma_d = sim%gamma_d * delta_t
 sim%advect_ampere_x1(1)%ptr%ek(1) = 0.0_f64
 do i = 2, nc_x1/2+1
   sim%advect_ampere_x1(1)%ptr%ek(i) = + L / cmplx(0.0_f64,real(i-1,f64),f64) * &
-     (sim%advect_ampere_x1(1)%ptr%r1(i)-gamma_d*sim%advect_ampere_x1(1)%ptr%r0(i))
+     (sim%advect_ampere_x1(1)%ptr%r1(i)-sim%advect_ampere_x1(1)%ptr%r0(i))     &
+      +(1.0_f64-gamma_d) *  sim%advect_ampere_x1(1)%ptr%ek(i)
+     
 end do
 
 call fft_apply_plan(sim%advect_ampere_x1(1)%ptr%bwx, &
