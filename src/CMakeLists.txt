@@ -173,16 +173,12 @@ ENDIF(F2008)
 # Container for all particle methods (mostly PIC)
 ADD_SUBDIRECTORY( particle_methods )
 
-# New output facilities for creating an XDMF database (WIP)
-ADD_SUBDIRECTORY( xdmf_io )
-
 IF(MPI_ENABLED)
    
    SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
    ADD_SUBDIRECTORY(parallelization)
    ADD_SUBDIRECTORY(pif)
    #PN ADD_SUBDIRECTORY(maxwell_solvers_parallel)
-   ADD_SUBDIRECTORY( xdmf_io_parallel )
 
 ENDIF()
 
