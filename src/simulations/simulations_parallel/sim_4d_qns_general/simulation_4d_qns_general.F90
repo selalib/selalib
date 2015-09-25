@@ -791,19 +791,18 @@ call compute_charge_density( &
      sim%partial_reduction,  &
      sim%rho_split )
 
-global_indices(1:2) =  &
-     local_to_global( sim%split_rho_layout, (/1, 1/) )
+global_indices(1:2) = local_to_global( sim%split_rho_layout, (/1, 1/) )
 
 call sll_gnuplot_rect_2d_parallel( &
-     sim%mesh2d_x%eta1_min, &
-     sim%mesh2d_x%delta_eta1, &
-     sim%mesh2d_x%eta2_min, &
-     sim%mesh2d_x%delta_eta2, &
-     size(sim%rho_split,1), &
-     size(sim%rho_split,2), &
-     sim%rho_split, &
-     "rho_split", &
-     0, &
+     sim%mesh2d_x%eta1_min,        &
+     sim%mesh2d_x%delta_eta1,      &
+     sim%mesh2d_x%eta2_min,        &
+     sim%mesh2d_x%delta_eta2,      &
+     size(sim%rho_split,1),        &
+     size(sim%rho_split,2),        &
+     sim%rho_split,                &
+     "rho_split",                  &
+     0,                            &
      ierr )
 
 call load_buffer( sim%split_rho_layout, sim%rho_split, send_buf )

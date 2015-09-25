@@ -798,6 +798,7 @@ RECURSIVE              = YES
 # run.
 
 EXCLUDE                = @CMAKE_CURRENT_SOURCE_DIR@/interfaces \
+                         @CMAKE_CURRENT_SOURCE_DIR@/particle_methods/pic_1d_sheath \
                          @CMAKE_CURRENT_SOURCE_DIR@/CAID_coordinate_transformations \
                          @CMAKE_CURRENT_SOURCE_DIR@/Makefile \
                          @CMAKE_CURRENT_SOURCE_DIR@/python_scripts \

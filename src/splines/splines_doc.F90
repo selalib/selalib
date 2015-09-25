@@ -12,5 +12,6 @@
 !> @defgroup splines sll_splines
 !> @brief
 !> Library to use splines
+!> @authors Edwin Chacon-Golcher and Pierre Navaro.
 !> @details
 !> Low level modules for sll_interpolators.
