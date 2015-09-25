@@ -1,24 +1,24 @@
 module sll_m_xdmf
 
-  use sll_m_io_utilities, only: &
-      sll_s_remove_file,        &
-      sll_s_read_file,          &
-      sll_f_check_equal_files,  &
-      sll_f_check_empty_file,   &
-      sll_s_ints_to_string,     &
-      sll_s_split_path
+use sll_m_io_utilities, only: &
+    sll_s_remove_file,        &  ! delete an existing file
+    sll_s_read_file,          &  ! read file into string
+    sll_f_check_equal_files,  &  ! verify if 2 files are identical
+    sll_f_check_empty_file,   &  ! verify if a file is totally empty
+    sll_s_ints_to_string,     &  ! write integer array into a string
+    sll_s_split_path             ! split path string into dirname + filename
 
-  use sll_m_xml, only:    &
-      sll_t_xml_document, &
-      sll_t_xml_element
+use sll_m_xml, only:    &
+    sll_t_xml_document, &        ! XML document tree, only for output
+    sll_t_xml_element            ! most basic object in an XML tree
 
-  use sll_m_xdmf_sequential, only: &
-      sll_t_xdmf_file
+use sll_m_xdmf_sequential, only: &
+    sll_t_xdmf_file              ! helper: XML doc creation in XDMF database
 
-  use sll_m_xdmf_parallel, only: &
-      sll_t_xdmf_parallel_file
+use sll_m_xdmf_parallel, only: &
+    sll_t_xdmf_parallel_file     ! as above, but with parallel interface
 
-  use sll_m_hdf5_serial, only: &
-      sll_t_hdf5_serial
+use sll_m_hdf5_serial, only: &
+    sll_t_hdf5_serial            ! OO wrapper to Pierre's sll_hdf5_io_serial
 
 end module sll_m_xdmf
