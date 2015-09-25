@@ -9,3 +9,7 @@ TARGET_LINK_LIBRARIES(fsl_landau_2d sll_interpolators
                                     sll_poisson_solvers
                                     sll_maxwell_solvers )
 
+IF(FFTW_FOUND AND FFTW_ENABLED)
+  ADD_EXECUTABLE(test_fftw3 test_fftw3.F90)
+  TARGET_LINK_LIBRARIES(test_fftw3 ${FFTW_LIBRARIES} )
+ENDIF(FFTW_FOUND AND FFTW_ENABLED)
