@@ -118,10 +118,10 @@ contains
     ! TODO: other processes might want to add a grid
     if (self%rank == 0) then
       call self%xdmf_file%add_grid( grid_name, x1_path, x2_path, dims, gid )
+      buf_gid(1) = gid
     end if
 
     ! Broadcast grid ID to all other processes
-    buf_gid(1) = gid
     call sll_collective_bcast( self%comm, buf_gid, 0 )
     gid = buf_gid(1)
 
