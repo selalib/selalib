@@ -12,9 +12,8 @@
 !> @defgroup deboor_splines sll_deboor_splines 
 !> @brief 
 !> Library to compute Bsplines of arbitrary degree using deboor algorithm.
-!> @author Aurore Back 
+!> @author Aurore Back, Pierre Navaro.
 !> @details
 !> This is a implementation in Fortran 90 of deboor splines. Original F77 files are available
 !> on Carl de Boor webpage http://pages.cs.wisc.edu/~deboor/
 !>
-!> Pierre Navaro is the new referent for this directory.

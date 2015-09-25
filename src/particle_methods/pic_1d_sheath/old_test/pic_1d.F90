@@ -1,3 +1,4 @@
+
 module sll_pic_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -132,7 +133,7 @@ module sll_pic_1d
     sll_int32, parameter :: SLL_PIC1D_PPUSHER_LEAPFROG_V       = 8 !Variational Leapfrog
     sll_int32, parameter :: SLL_PIC1D_PPUSHER_RK3        =9     ! Runge Kutta 3
     sll_int32, parameter ::  SLL_PIC1D_PPUSHER_MERSON =10 !Merson 3-5 with integrated Err estimate
-    sll_real64 ::  particle_qm !<mass to electron mass ratio, with the sign of the charge
+    sll_real64 ::  particle_qm !< mass to electron mass ratio, with the sign of the charge
     
 !    sll_int32, parameter :: SLL_PIC1D_FULLF       = 1            useless variables
 !    sll_int32, parameter :: SLL_PIC1D_DELTAF       = 2           useless variables
@@ -141,7 +142,7 @@ module sll_pic_1d
     !Bspline knots
     sll_real64,  allocatable, private   :: knots(:) 
     sll_int32 :: pushed_species
-    class(pic_1d_field_solver), pointer :: fsolver  !<Field solver
+    class(pic_1d_field_solver), pointer :: fsolver  !< Field solver
     
     
     
@@ -162,18 +163,18 @@ module sll_pic_1d
     abstract interface
         function sll_pic_1d_electric_field_external(x,t) result(E)
             use sll_working_precision
-            sll_real64, intent(in) :: x(:) !<Position
-            sll_real64, intent(in)  :: t  !<Time
+            sll_real64, intent(in) :: x(:) !< Position
+            sll_real64, intent(in)  :: t  !< Time
             sll_real64, dimension(size(x)) :: E
-        endfunction
+        end function
     endinterface
 
-    procedure(sll_pic_1d_electric_field_external), pointer:: Eex !<External (time dependent) electric field
+    procedure(sll_pic_1d_electric_field_external), pointer:: Eex !< External (time dependent) electric field
 
 
 contains
 
-    !<Creates a new instance if pic_1d and sets all the parameters given as input
+    ! Creates a new instance if pic_1d and sets all the parameters given as input
     !parameters given by user are marked with _user
     subroutine new_sll_pic_1d(mesh_cells_user, spline_degree_user, numberofparticles_user,&
             timesteps_user, timestepwidth_user,particle_pusher_user, psolver_user )
@@ -254,7 +255,7 @@ contains
     endsubroutine new_sll_pic_1d
     
 
-    !<Destructor
+    ! Destructor
     subroutine destroy_sll_pic_1d()
         call fsolver%delete()
         call sll_halt_collective()
@@ -289,8 +290,8 @@ contains
 
 
 
-    !<Calculates Error estimates for different Testcases using preknown analytical
-    !<solutions. Call after the first field solve.
+    ! Calculates Error estimates for different Testcases using preknown analytical
+    ! solutions. Call after the first field solve.
     subroutine sll_pic_1d_initial_error_estimates()
         sll_real64 ::  num_err_noise_max, num_err_noise_l2, num_err_seminorm
 !        sll_real64 :: num_err_mean
@@ -791,7 +792,7 @@ contains
     endsubroutine
 
 
-    !<Only relevant for solving the QN in the pusher
+    ! Only relevant for solving the QN in the pusher
     subroutine sll_pic_1d_solve_qn(particleposition_selected)
         sll_real64, dimension(:),intent(in) :: particleposition_selected
         sll_int32 ::jdx
@@ -851,7 +852,7 @@ contains
     !        x_trunc=sll_pic1d_ensure_periodicity(x,knots_mesh(1), knots_mesh(size(knots_mesh)))
     !
     !        DPhidx=bspline_basis_to_realvals(bspline, knots_mesh, fem_Phi_solution, x_trunc, b_spline_derivatives_at_x)
-    !    endfunction
+    !    end function
 
 
 
@@ -876,7 +877,7 @@ contains
     !
     !            fem_Phi_solution=sll_bspline_fem_solve_poisson_1d(arbitrarydegree1D, knots,fem_inhomogenity)
     !
-    !    endfunction
+    !    end function
 
 
 !    subroutine sll_pic_1d_rungekutta( species, h, t  )
@@ -952,7 +953,7 @@ contains
 
 
 
-    !<Merson scheme with built in error estimate for each particle
+    ! Merson scheme with built in error estimate for each particle
     subroutine sll_pic_1d_merson4(x_0, v_0, h, t, weight)
         sll_real64, intent(in):: h
         sll_real64, intent(in):: t
@@ -1218,7 +1219,7 @@ contains
     !        call sll_pic_1d_solve_qn(x_0)
     !    endsubroutine
 
-    !<From Erics lecture notes on Vaslov Equations
+    ! From Erics lecture notes on Vaslov Equations
     subroutine sll_pic_1d_Verlet_scheme(species_0, h, t)
         type(sll_particle_1d_group), dimension(:), intent(inout) :: species_0
         sll_int32 :: jdx, num_part
@@ -1361,7 +1362,7 @@ contains
 
         push_error_mean=maxval(perror)
     endsubroutine
-    !    !<Nonrelativistic kinetic energy 0.5*m*v^2
+    !    Nonrelativistic kinetic energy 0.5*m*v^2
     !    function sll_pic1d_calc_kineticenergy(relmass,  particlespeed , particleweight ) &
         !            result(energy)
     !        sll_real64, DIMENSION(:), intent(in) :: particlespeed
@@ -1373,10 +1374,10 @@ contains
     !
     !        energy=0.5_f64*dot_product(particleweight*relmass,particlespeed**2)
     !        call sll_collective_globalsum(sll_world_collective, energy, 0)
-    !    endfunction
+    !    end function
 
 
-    !<Nonrelativistic kinetic energy 0.5*m*v^2
+    ! Nonrelativistic kinetic energy 0.5*m*v^2
     function sll_pic1d_calc_kineticenergy(p_species ) &
             result(energy)
         type( sll_particle_1d_group), dimension(:), intent(in) :: p_species
@@ -1393,7 +1394,7 @@ contains
 
         call sll_collective_globalsum(sll_world_collective, energy, 0)
         energy=energy+kineticenergy_offset
-    endfunction
+    end function
 
     function sll_pic1d_calc_kineticenergy_offset(p_species ) &
             result(energy)
@@ -1410,10 +1411,10 @@ contains
         enddo
 
         call sll_collective_globalsum(sll_world_collective, energy, 0)
-    endfunction
+    end function
 
 
-    !<Calculate the kinetic energy for markers, in a consistent way
+    ! Calculate the kinetic energy for markers, in a consistent way
     function sll_pic1d_calc_kineticenergy_weighted( particle_v, particle_weight, particlemass ) &
             result(energy)
         sll_real64, dimension(:),intent(in) :: particle_v,particle_weight
@@ -1423,9 +1424,9 @@ contains
 
         energy= 0.5_f64*particlemass*&
                 dot_product(particle_weight, particle_v**2)
-    endfunction
+    end function
 
-    !<overall impulse 0.5*m*v
+    ! overall impulse 0.5*m*v
     function sll_pic1d_calc_impulse(p_species) &
             result(impulse)
         type( sll_particle_1d_group), dimension(:), intent(in) :: p_species
@@ -1442,7 +1443,7 @@ contains
         call sll_collective_globalsum(sll_world_collective, impulse, 0)
 
         impulse=impulse+impulse_offset
-    endfunction
+    end function
 
     function sll_pic1d_calc_impulse_offset(p_species) &
             result(impulse)
@@ -1459,7 +1460,7 @@ contains
         enddo
 
         call sll_collective_globalsum(sll_world_collective, impulse, 0)
-    endfunction
+    end function
 
 
 
@@ -1472,10 +1473,10 @@ contains
 
         impulse= 0.5_f64*particlemass*&
                 dot_product(particle_weight, particle_v)
-    endfunction
+    end function
 
 
-    !<Thermal velocity, mostly defined as the variance of the particle velocity
+    ! Thermal velocity, mostly defined as the variance of the particle velocity
     function sll_pic1d_calc_thermal_velocity(particlespeed, particleweight) &
             result(vth)
         sll_real64, DIMENSION(:), intent(in) :: particlespeed
@@ -1488,12 +1489,12 @@ contains
 
         vth=dot_product((particlespeed-mean)**2,particleweight)
         call sll_collective_globalsum(sll_world_collective, vth, 0)
-    endfunction
+    end function
 
 
-    !<Nonrelativistic field energy, namely $|\nabla \Phi$|^2$
-    !<which is nothing else than the H1 seminorm of the self generated field
-    !<additionally we add the potential energy by the external field E
+    ! Nonrelativistic field energy, namely $|\nabla \Phi$|^2$
+    ! which is nothing else than the H1 seminorm of the self generated field
+    ! additionally we add the potential energy by the external field E
     function sll_pic1d_calc_fieldenergy(p_species) &
             result(energy)
         type( sll_particle_1d_group), dimension(:), intent(in) :: p_species
@@ -1516,7 +1517,7 @@ contains
         if (coll_rank==0)  energy=energy+fsolver%fieldenergy()
 
 
-    endfunction
+    end function
 
 
 
@@ -1697,9 +1698,9 @@ contains
     !
     !        SLL_ASSERT(particle_position>=interval_a)
     !        SLL_ASSERT(particle_position<=interval_b)
-    !    endfunction
+    !    end function
 
-    !> \brief Check whether timestepwidth is accurate and scale down, when particles are to fast
+    ! Check whether timestepwidth is accurate and scale down, when particles are to fast
     subroutine sll_pic1d_check_timescale( particle_position, &
             interval_a, interval_b, timestepwidth)
         sll_real64, intent(in)::interval_a, interval_b
@@ -1721,7 +1722,7 @@ contains
 
 
 
-    !> \brief Adjust the weights after advection step
+    ! Adjust the weights after advection step
     subroutine sll_pic1d_adjustweights_advection_species(species_old, species_new)
         type(sll_particle_1d_group), dimension(:), intent(in) :: species_old
         type(sll_particle_1d_group), dimension(:), intent(inout) :: species_new
@@ -1789,18 +1790,18 @@ contains
     end subroutine
 
 
-    !    !<Dummy function for Electric field
+    !    Dummy function for Electric field
     !    function sll_pic_1d_electric_field(x) result(E)
     !        sll_real64, dimension(:), intent(in) :: x
     !        !sll_real64, intent(in) :: t
     !        sll_real64, dimension(size(x)) :: E
     !        E=0
     !        if (pic1d_testcase == SLL_PIC1D_TESTCASE_IONBEAM)         E=1.0_f64
-    !    endfunction
+    !    end function
 
 
 
-    !<Dummy function for Electric field
+    ! Dummy function for Electric field
     function pic_1d_electric_field_external(x,t) result(E)
         sll_real64, dimension(:), intent(in) :: x
         sll_real64, intent(in) :: t
@@ -1808,7 +1809,7 @@ contains
         E=0.0_f64
         if (pic1d_testcase == SLL_PIC1D_TESTCASE_IONBEAM)   E=0
 
-    endfunction
+    end function
 
 
 
@@ -1826,7 +1827,7 @@ contains
             ppos(1+off:npart+off)=p_species(idx)%particle%dx
             off=npart
         enddo
-    endfunction
+    end function
 
     function pic_1d_allparticlev(p_species) result( pv)
         type( sll_particle_1d_group), dimension(:), intent(in) :: p_species
@@ -1842,7 +1843,7 @@ contains
             pv(1+off:npart+off)=p_species(idx)%particle%vx
             off=npart
         enddo
-    endfunction
+    end function
 
     function pic_1d_allparticleqm(p_species) result( qm)
         type( sll_particle_1d_group), dimension(:), intent(in) :: p_species
@@ -1856,9 +1857,7 @@ contains
             qm(1+off:npart+off)=p_species(idx)%qm
             off=npart
         enddo
-    endfunction
+    end function
 
-endmodule  sll_pic_1d
-
-
+end module  sll_pic_1d
 
