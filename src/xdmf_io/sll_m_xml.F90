@@ -4,7 +4,7 @@
 ! MODULE:   sll_m_xml
 !
 ! DESCRIPTION:
-!> @ingroup xdmf
+!> @ingroup xdmf_io
 !> @authors Yaman Güçlü    - <yaman.guclu@gmail.com>
 !> @authors Marco Restelli - <marco.restelli@gmail.com>
 !> @brief   Facilities for constructing an XML tree and printing it to file.

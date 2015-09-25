@@ -75,9 +75,8 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
   use sll_module_derivative_2d_oblic
   use sll_module_advection_2d_oblic
   
-  use sll_m_xdmf, only: &
-    sll_t_hdf5_serial,  &
-    sll_t_xdmf_parallel_file
+  use sll_xdmf_io         , only: sll_t_hdf5_serial
+  use sll_xdmf_io_parallel, only: sll_t_xdmf_parallel_file
 
   implicit none
 

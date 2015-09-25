@@ -4,7 +4,7 @@
 ! MODULE:   sll_m_xdmf_parallel
 !
 ! DESCRIPTION:
-!> @ingroup xdmf
+!> @ingroup xdmf_io_parallel
 !> @authors Yaman Güçlü - <yaman.guclu@gmail.com>
 !> @brief   Construct the XML component of an XDMF database (parallel).
 !> @todo    Add detailed description
@@ -20,7 +20,7 @@ module sll_m_xdmf_parallel
     sll_collective_bcast,    &
     sll_collective_gather
 
-  use sll_m_xdmf_sequential, only: &
+  use sll_m_xdmf_serial, only: &
     sll_t_xdmf_file
 
   implicit none

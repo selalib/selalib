@@ -4,7 +4,7 @@
 ! MODULE:   sll_m_hdf5_serial
 !
 ! DESCRIPTION:
-!> @ingroup xdmf
+!> @ingroup xdmf_io
 !> @authors Yaman Güçlü - <yaman.guclu@gmail.com>
 !> @brief   Simple object-oriented wrapper to Pierre's "sll_hdf5_io_serial".
 !> @todo    Add detailed description
