@@ -11,11 +11,11 @@
 
 !> @defgroup point_to_point_communications sll_point_to_point_communications 
 !> @brief 
-!> Description of point_to_point_communications library (72 characters)
+!> Draft for domain partitioning. 
 !> @author Selalib team 
 !> You can add a contact, do not put your email to prevent spam.
 !> @details
-!> Long description of  point_to_point_communications, you can add some references or math equations.
+!> Should be deleted and will be replaced by new implementation. However, eulerian-finite-volume.
 !>
 !> <b> Headers file available </b>
 !>  - sll_point_to_point_communications.h

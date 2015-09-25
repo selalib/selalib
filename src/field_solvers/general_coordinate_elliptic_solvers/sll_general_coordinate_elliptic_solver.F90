@@ -296,22 +296,19 @@ call initconnectivity_new(   &
   bc2_max,                   &
   es%local_to_global_indices )
 
-
-
-
 !old way to compute initconnectivity
 !just for check for the moment
 !when everything is checked
 !this part will be removed (begin)
-call initconnectivity( &
-  num_cells1, &
-  num_cells2, &
-  spline_degree1, &
-  spline_degree2, &
-  bc1_min, &
-  bc1_max, &
-  bc2_min, &
-  bc2_max, &
+call initconnectivity(          &
+  num_cells1,                   &
+  num_cells2,                   &
+  spline_degree1,               &
+  spline_degree2,               &
+  bc1_min,                      &
+  bc1_max,                      &
+  bc2_min,                      &
+  bc2_max,                      &
   local_to_global_indices_check )
 
 ierr = maxval(abs(local_to_global_indices_check-es%local_to_global_indices))
@@ -1057,8 +1054,8 @@ sll_real64 :: intjac
 
 !sll_real64, allocatable :: dense_matrix(:,:)
 
-!$ sll_int32 :: tid=0
-!$ sll_int32 :: nthreads=1
+sll_int32 :: tid=0
+sll_int32 :: nthreads=1
 
 bc1_min    = es%bc1_min
 bc1_max    = es%bc1_max
@@ -1099,33 +1096,33 @@ SLL_CLEAR_ALLOCATE(M_bv(1:nspl,1:nspl),ierr)
 SLL_CLEAR_ALLOCATE(mass(1:nspl),ierr)
 SLL_CLEAR_ALLOCATE(stif(1:nspl),ierr)
 
-!$OMP PARALLEL DEFAULT(NONE) &
-!$OMP SHARED( es, c_field, &
-!$OMP a11_field_mat, a12_field_mat, a21_field_mat, a22_field_mat, &
-!$OMP b1_field_vect, b2_field_vect, spl_deg_1, spl_deg_2, source, intjac ) &
-!$OMP FIRSTPRIVATE(nc_1, nc_2, delta1, delta2, eta1_min, eta2_min, &
-!$OMP bc1_min, bc1_max, bc2_min, bc2_max, num_pts_g1, num_pts_g2)  &
-!$OMP PRIVATE(nthreads, tid, &
-!$OMP i,j,eta1,eta2,mass,stif, &
-!$OMP yg,wyg,jg,ig,xg,wxg, &
-!$OMP wxy,val_c,val_a11,val_a12,val_a21,val_a22, &
-!$OMP val_b1, val_b1_der1, val_b1_der2, &
-!$OMP val_b2, val_b2_der1, val_b2_der2, &
-!$OMP icell, ii, jj, kk, ll, mm, nn,   &
-!$OMP jac_mat, val_jac, wxy_by_val_jac, wxy_val_jac, &
-!$OMP B11, B12, B21, B22, MC, C1, C2, &
-!$OMP v1, v2, v3, v4, r1, r2, d1, d2, d3, d4, &
-!$OMP v3v4, d3v4, v3d4, &
-!$OMP M_c,K_11,K_12,K_21,K_22,M_bv,S_b1,S_b2, &
-!$OMP index_coef2, index_coef1, &
-!$OMP index1, index2, index3, index4, &
-!$OMP a, b, x, y, aprime, bprime, nbsp, nbsp1, &
-!$OMP r1r2, v1v2, d1v2, v1d2, elt_mat_global )
-
-!$ tid = omp_get_thread_num()
-!$ nthreads = omp_get_num_threads()
-!$ if (tid == 0) print *, 'Number of threads = ', nthreads
-!$OMP DO SCHEDULE(STATIC,nc_2/nthreads) REDUCTION(+:intjac)
+!!$OMP PARALLEL DEFAULT(NONE) &
+!!$OMP SHARED( es, c_field, &
+!!$OMP a11_field_mat, a12_field_mat, a21_field_mat, a22_field_mat, &
+!!$OMP b1_field_vect, b2_field_vect, spl_deg_1, spl_deg_2, source, intjac ) &
+!!$OMP FIRSTPRIVATE(nc_1, nc_2, delta1, delta2, eta1_min, eta2_min, &
+!!$OMP bc1_min, bc1_max, bc2_min, bc2_max, num_pts_g1, num_pts_g2)  &
+!!$OMP PRIVATE(nthreads, tid, &
+!!$OMP i,j,eta1,eta2,mass,stif, &
+!!$OMP yg,wyg,jg,ig,xg,wxg, &
+!!$OMP wxy,val_c,val_a11,val_a12,val_a21,val_a22, &
+!!$OMP val_b1, val_b1_der1, val_b1_der2, &
+!!$OMP val_b2, val_b2_der1, val_b2_der2, &
+!!$OMP icell, ii, jj, kk, ll, mm, nn,   &
+!!$OMP jac_mat, val_jac, wxy_by_val_jac, wxy_val_jac, &
+!!$OMP B11, B12, B21, B22, MC, C1, C2, &
+!!$OMP v1, v2, v3, v4, r1, r2, d1, d2, d3, d4, &
+!!$OMP v3v4, d3v4, v3d4, &
+!!$OMP M_c,K_11,K_12,K_21,K_22,M_bv,S_b1,S_b2, &
+!!$OMP index_coef2, index_coef1, &
+!!$OMP index1, index2, index3, index4, &
+!!$OMP a, b, x, y, aprime, bprime, nbsp, nbsp1, &
+!!$OMP r1r2, v1v2, d1v2, v1d2, elt_mat_global )
+!
+!!$ tid = omp_get_thread_num()
+!!$ nthreads = omp_get_num_threads()
+!!$ if (tid == 0) print *, 'Number of threads = ', nthreads
+!!$OMP DO SCHEDULE(STATIC,nc_2/nthreads) REDUCTION(+:intjac)
 do j = 1, nc_2
 do i = 1, nc_1
         
@@ -1344,7 +1341,7 @@ do i = 1, nc_1
 end do
 end do
 
-!$OMP END PARALLEL
+!!$OMP END PARALLEL
 
 !#ifdef DEBUG
 !allocate(dense_matrix(es%csr_mat%num_rows,es%csr_mat%num_cols))

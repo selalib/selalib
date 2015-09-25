@@ -190,7 +190,7 @@ ADD_SUBDIRECTORY(ode_solvers)
 ADD_SUBDIRECTORY(mesh_calculus)
 
 IF(BUILD_PACKAGE)
-  MESSAGE(SEND_ERROR "Build external library is unavailable temporarly")
+  ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../package ${CMAKE_BINARY_DIR}/package)
   MESSAGE(STATUS "SeLaLib will be installed in directory ${CMAKE_INSTALL_PREFIX}")
 ENDIF(BUILD_PACKAGE)
 
