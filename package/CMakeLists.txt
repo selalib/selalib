@@ -222,10 +222,10 @@ IF(BUILD_PACKAGE)
           ${CMAKE_CURRENT_SOURCE_DIR}/../doc/sphinx/_static/logo2.png 
           ${CMAKE_BINARY_DIR}/${DIST_NAME}/
   COMMAND ${CMAKE_COMMAND} -E copy_directory 
-          ${CMAKE_CURRENT_SOURCE_DIR}/../fftpack 
+          ${CMAKE_CURRENT_SOURCE_DIR}/../src/interfaces/fftpack 
           ${CMAKE_BINARY_DIR}/${DIST_NAME}/fftpack
   COMMAND ${CMAKE_COMMAND} -E copy_directory 
-          ${CMAKE_CURRENT_SOURCE_DIR}/../mudpack 
+          ${CMAKE_CURRENT_SOURCE_DIR}/../src/interfaces/mudpack 
           ${CMAKE_BINARY_DIR}/${DIST_NAME}/mudpack
   COMMAND ${CMAKE_COMMAND} -E copy_directory 
           ${CMAKE_CURRENT_SOURCE_DIR}/examples 
