@@ -1,4 +1,4 @@
-module sll_m_xdmf
+module sll_xdmf_io
 
 use sll_m_io_utilities, only: &
     sll_s_remove_file,        &  ! delete an existing file
@@ -12,13 +12,10 @@ use sll_m_xml, only:    &
     sll_t_xml_document, &        ! XML document tree, only for output
     sll_t_xml_element            ! most basic object in an XML tree
 
-use sll_m_xdmf_sequential, only: &
+use sll_m_xdmf_serial, only: &
     sll_t_xdmf_file              ! helper: XML doc creation in XDMF database
-
-use sll_m_xdmf_parallel, only: &
-    sll_t_xdmf_parallel_file     ! as above, but with parallel interface
 
 use sll_m_hdf5_serial, only: &
     sll_t_hdf5_serial            ! OO wrapper to Pierre's sll_hdf5_io_serial
 
-end module sll_m_xdmf
+end module sll_xdmf_io
