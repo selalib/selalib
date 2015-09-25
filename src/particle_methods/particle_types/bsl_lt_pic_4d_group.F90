@@ -100,18 +100,18 @@ module sll_bsl_lt_pic_4d_group_module
     
     !> @name Setters
     !> @{
-    procedure :: set_x                  => bsl_lt_pic_4d_set_x
-    procedure :: set_v                  => bsl_lt_pic_4d_set_v
+    procedure :: set_x                      => bsl_lt_pic_4d_set_x
+    procedure :: set_v                      => bsl_lt_pic_4d_set_v
 
     ! todo: use only one function with particle index as optional parameter
-    procedure :: set_common_weight      => bsl_lt_pic_4d_set_common_weight     ! not to be called for this class
-    procedure :: set_particle_weight    => bsl_lt_pic_4d_set_particle_weight
+    procedure :: set_common_weight          => bsl_lt_pic_4d_set_common_weight     ! not to be called for this class
+    procedure :: set_particle_weight        => bsl_lt_pic_4d_set_particle_weight
     !> @}
     
     !> @name Initializers
     !> @{
-    procedure, pass(self) :: set_landau_parameters  => bsl_lt_pic_4d_set_landau_parameters
-    procedure             :: initializer     => bsl_lt_pic_4d_initializer
+    procedure :: set_landau_parameters      =>  bsl_lt_pic_4d_set_landau_parameters
+    procedure :: initializer                =>  bsl_lt_pic_4d_initializer
     !> @}
     
     procedure :: deposit_charge_2d          => bsl_lt_pic_4d_deposit_charge_2d
@@ -119,6 +119,8 @@ module sll_bsl_lt_pic_4d_group_module
     procedure :: visualize_f_slice_x_vx     => bsl_lt_pic_4d_visualize_f_slice_x_vx
 
     procedure :: bsl_lt_pic_4d_initializer_landau_f0
+    procedure :: bsl_lt_pic_4d_initializer_hat_f0
+    procedure :: bsl_lt_pic_4d_write_hat_density_on_remap_grid
     procedure :: bsl_lt_pic_4d_write_landau_density_on_remap_grid
     procedure :: bsl_lt_pic_4d_write_f_on_remapping_grid
     procedure :: bsl_lt_pic_4d_compute_new_particles
@@ -293,7 +295,7 @@ contains
     class( sll_bsl_lt_pic_4d_group ), intent( inout ) :: self
     sll_real64                      , intent( in    ) :: s
 
-    print*, "Error (9O8657864) -- this subroutine is not implemented for bsl_lt_pic_4d_group objects"
+    print*, "Error (9O8657864) -- this subroutine is not implemented for sll_bsl_lt_pic_4d_group objects"
     stop
 
   end subroutine bsl_lt_pic_4d_set_common_weight
@@ -660,7 +662,6 @@ contains
 
   end subroutine bsl_lt_pic_4d_initializer
 
-
   ! initialize the bsl_lt_pic group with the landau f0 distribution
   subroutine bsl_lt_pic_4d_initializer_landau_f0 (          &
               p_group, thermal_speed, alpha, k_landau       &
@@ -673,6 +674,19 @@ contains
     call p_group%bsl_lt_pic_4d_compute_new_particles()
 
   end subroutine bsl_lt_pic_4d_initializer_landau_f0
+
+  ! initialize the bsl_lt_pic group with a tensor product hat function with max value = basis_height + hat_shift at (x0,y0,vx0,vy0)
+  subroutine bsl_lt_pic_4d_initializer_hat_f0 (                                             &
+              p_group, x0, y0, vx0, vy0, r_x, r_y, r_vx, r_vy, basis_height, hat_shift      &
+          )
+    class(sll_bsl_lt_pic_4d_group), intent(inout)       :: p_group
+    sll_real64, intent(in)                              :: x0, y0, vx0, vy0, r_x, r_y, r_vx, r_vy, basis_height, hat_shift
+
+    call p_group%bsl_lt_pic_4d_write_hat_density_on_remap_grid( x0, y0, vx0, vy0, r_x, r_y, r_vx, r_vy, basis_height, hat_shift )
+    call p_group%bsl_lt_pic_4d_compute_new_particles()
+
+  end subroutine bsl_lt_pic_4d_initializer_hat_f0
+
 
   subroutine bsl_lt_pic_4d_write_landau_density_on_remap_grid(    &
               p_group,                              &
@@ -705,7 +719,6 @@ contains
     sll_real64 :: y_j
     sll_real64 :: vx_j
     sll_real64 :: vy_j
-    type(sll_cartesian_mesh_2d),      pointer  :: m2d
     sll_real64 :: f_x, f_y, f_vx, f_vy
 
     number_particles = p_group%number_particles
@@ -726,9 +739,6 @@ contains
     parts_y_min    = p_group%remapping_grid%eta2_min
     parts_vx_min   = p_group%remapping_grid%eta3_min
     parts_vy_min   = p_group%remapping_grid%eta4_min
-
-    ! Poisson mesh associated to the particles
-    m2d => p_group%space_mesh_2d
 
     ! compute the values of f0 on the (cartesian, phase-space) remapping grid
     x_j = parts_x_min
@@ -755,11 +765,81 @@ contains
   end subroutine bsl_lt_pic_4d_write_landau_density_on_remap_grid
 
 
-  function eval_landau_fx(alpha, kx, x)
-    sll_real64 :: alpha, kx, x
-    sll_real64 :: eval_landau_fx
-    eval_landau_fx = 1._f64 + alpha * cos(kx * x)
-  end function eval_landau_fx
+  ! <<bsl_lt_pic_4d_write_hat_density_on_remap_grid>>
+  subroutine bsl_lt_pic_4d_write_hat_density_on_remap_grid ( &
+        p_group,                &
+        x0, y0, vx0, vy0,       &
+        r_x, r_y, r_vx, r_vy,   &
+        basis_height, hat_shift &
+      )
+
+    class(sll_bsl_lt_pic_4d_group), intent(inout)       :: p_group
+    sll_real64, intent(in)                          :: x0, y0, vx0, vy0
+    sll_real64, intent(in)                          :: r_x, r_y, r_vx, r_vy
+    sll_real64, intent(in)                          :: basis_height, hat_shift
+
+    sll_int32 :: j_x
+    sll_int32 :: j_y
+    sll_int32 :: j_vx
+    sll_int32 :: j_vy
+    sll_int32 :: number_particles
+    sll_int32 :: number_parts_x
+    sll_int32 :: number_parts_y
+    sll_int32 :: number_parts_vx
+    sll_int32 :: number_parts_vy
+    sll_real64 :: h_parts_x
+    sll_real64 :: h_parts_y
+    sll_real64 :: h_parts_vx
+    sll_real64 :: h_parts_vy
+    sll_real64 :: parts_x_min
+    sll_real64 :: parts_y_min
+    sll_real64 :: parts_vx_min
+    sll_real64 :: parts_vy_min
+    sll_real64 :: x_j
+    sll_real64 :: y_j
+    sll_real64 :: vx_j
+    sll_real64 :: vy_j
+    sll_real64 :: f_x, f_y, f_vx, f_vy
+
+    number_particles = p_group%number_particles
+
+    number_parts_x  = p_group%number_parts_x
+    number_parts_y  = p_group%number_parts_y
+    number_parts_vx = p_group%number_parts_vx
+    number_parts_vy = p_group%number_parts_vy
+
+    h_parts_x    = p_group%remapping_grid%delta_eta1
+    h_parts_y    = p_group%remapping_grid%delta_eta2
+    h_parts_vx   = p_group%remapping_grid%delta_eta3
+    h_parts_vy   = p_group%remapping_grid%delta_eta4
+
+    parts_x_min    = p_group%remapping_grid%eta1_min
+    parts_y_min    = p_group%remapping_grid%eta2_min
+    parts_vx_min   = p_group%remapping_grid%eta3_min
+    parts_vy_min   = p_group%remapping_grid%eta4_min
+
+    ! compute the values of f0 on the (cartesian, phase-space) remapping grid
+    x_j = parts_x_min
+    do j_x = 1, number_parts_x
+      y_j = parts_y_min
+      do j_y = 1, number_parts_y
+        vx_j = parts_vx_min
+        do j_vx = 1, number_parts_vx
+          vy_j = parts_vy_min
+          do j_vy = 1, number_parts_vy
+            p_group%target_values(j_x,j_y,j_vx,j_vy) = eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, &
+                                                                         basis_height, hat_shift,         &
+                                                                         x_j, y_j, vx_j, vy_j)
+            vy_j = vy_j + h_parts_vy
+          end do
+          vx_j = vx_j + h_parts_vx
+        end do
+        y_j = y_j + h_parts_y
+      end do
+      x_j = x_j + h_parts_x
+    end do
+
+  end subroutine bsl_lt_pic_4d_write_hat_density_on_remap_grid
 
 
   ! position the particle on the cartesian remapping grid
@@ -802,7 +882,6 @@ contains
     sll_real64 :: vx_j
     sll_real64 :: vy_j
     sll_real32 :: d_vol
-    type(sll_cartesian_mesh_2d),    pointer :: m2d
     sll_int32,  dimension(:,:,:,:), pointer :: particle_indices    !  why pointer ?
     sll_real64, dimension(3)                :: coords
 
@@ -822,9 +901,6 @@ contains
     parts_y_min    = p_group%remapping_grid%eta2_min
     parts_vx_min   = p_group%remapping_grid%eta3_min
     parts_vy_min   = p_group%remapping_grid%eta4_min
-
-    ! Poisson mesh associated to the particles
-    m2d => p_group%space_mesh_2d
 
     SLL_ALLOCATE( particle_indices(number_parts_x, number_parts_y, number_parts_vx, number_parts_vy), ierr )
     particle_indices(:,:,:,:) = 0
@@ -910,18 +986,6 @@ contains
             coords(1) = vx_j
             coords(2) = vy_j
             call p_group%set_v( k, coords )
-
-            !            call global_to_cell_offset_extended(    &
-            !                    x_j, y_j, &
-            !                    m2d,      &
-            !                    p_group%particle_list(k)%i_cell_x, &
-            !                    p_group%particle_list(k)%i_cell_y, &
-            !                    p_group%particle_list(k)%dx, &
-            !                    p_group%particle_list(k)%dy )
-
-            !            p_group%particle_list(k)%vx = vx_j
-            !            p_group%particle_list(k)%vy = vy_j
-
 
             !> set the particle connectivity
             particle_indices( j_x, j_y, j_vx, j_vy ) = k

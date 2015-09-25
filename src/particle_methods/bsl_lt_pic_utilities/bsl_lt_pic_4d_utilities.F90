@@ -26,6 +26,7 @@ module sll_bsl_lt_pic_4d_utilities_module
   use sll_constants, only: sll_pi
 !  use sll_bsl_lt_pic_4d_particle_module
   use sll_cartesian_meshes
+  use sll_working_precision
   use sll_bsl_lt_pic_4d_particle_module
 
 !  use sll_representation_conversion_module
@@ -105,7 +106,7 @@ contains
   end subroutine get_poisson_cell_index
 
 
-subroutine get_particle_index_from_initial_position_on_cartesian_grid (j_x, j_y, j_vx, j_vy,                            &
+  subroutine get_particle_index_from_initial_position_on_cartesian_grid (j_x, j_y, j_vx, j_vy,                            &
                                                                        n_parts_x, n_parts_y, n_parts_vx, n_parts_vy,    &
                                                                        k                                                &
                                                                        )
@@ -130,12 +131,12 @@ subroutine get_particle_index_from_initial_position_on_cartesian_grid (j_x, j_y,
 
     SLL_ASSERT( k <= n_parts_x * n_parts_y * n_parts_vx * n_parts_vy )
 
-end subroutine get_particle_index_from_initial_position_on_cartesian_grid
+  end subroutine get_particle_index_from_initial_position_on_cartesian_grid
 
 
   ! <<get_initial_position_on_cartesian_grid_from_particle_index>>
 
-subroutine get_initial_position_on_cartesian_grid_from_particle_index (k,                                               &
+  subroutine get_initial_position_on_cartesian_grid_from_particle_index (k,                                               &
                                                                        n_parts_x, n_parts_y, n_parts_vx, n_parts_vy,    &
                                                                        j_x, j_y, j_vx, j_vy                             &
                                                                        )
@@ -166,12 +167,12 @@ subroutine get_initial_position_on_cartesian_grid_from_particle_index (k,       
     ! here, k_aux = (j_x-1)
     j_x = k_aux + 1
 
-end subroutine
+  end subroutine
 
   ! <<onestep>> <<ALH>> utility function for finding the neighbours of a particle, used by [[ONESTEPMACRO]]. "dim"
   ! corresponds to one of x,y,vx,vy.
 
-subroutine onestep(dim,dim_t0,kprime,p_list,h_parts_dim)
+  subroutine onestep(dim,dim_t0,kprime,p_list,h_parts_dim)
 
     sll_int :: dim
     sll_real64 :: dim_t0
@@ -269,7 +270,7 @@ subroutine onestep(dim,dim_t0,kprime,p_list,h_parts_dim)
        endif
        j = j + 1
     end do
-end subroutine onestep
+  end subroutine onestep
 
   ! <<sll_pic_shape>>
   !> sll_pic_shape(degree, x, y, vx, vy, inv_hx, inv_hy, inv_hvx, inv_hvy)
@@ -284,7 +285,7 @@ end subroutine onestep
   !!    and |x| >= hx (resp. |x| >= 2*hx), then sll_pic_shape returns 0
   !!    (and similarly for y, vx, vy)
 
-function sll_pic_shape( &
+  function sll_pic_shape( &
     degree,             &
     x, y, vx, vy,       &
     inv_hx, inv_hy, inv_hvx, inv_hvy   &
@@ -303,13 +304,13 @@ function sll_pic_shape( &
             * inv_hy  * sll_b_spline(degree,inv_hy  * y ) &
             * inv_hvx * sll_b_spline(degree,inv_hvx * vx) &
             * inv_hvy * sll_b_spline(degree,inv_hvy * vy)
-end function sll_pic_shape
+  end function sll_pic_shape
 
 
   !> added by MCP
   !! 4d-reference B-spline shape function (independent of the grid resolution), function support is [-part_cp, part_cp]^4
   !! with part_cp = (degree +1)/2
-function sll_ref_pic_shape( &
+  function sll_ref_pic_shape( &
     degree,     &
     x,y,vx,vy &
     ) &
@@ -322,13 +323,13 @@ function sll_ref_pic_shape( &
 !    sll_int32 :: ierr
 
     ref_shape = sll_b_spline(degree,x) * sll_b_spline(degree,y) * sll_b_spline(degree,vx) * sll_b_spline(degree, vy)
-end function sll_ref_pic_shape
+  end function sll_ref_pic_shape
 
 
   ! added by MCP
   ! <<sll_b_spline>>
   ! univariate centered (and reference, ie independent of the grid resolution) B-splines. Support is ( -(degree+1)/2, (degree+1)/2 )
-function sll_b_spline( &
+  function sll_b_spline( &
     degree, &
     x       &
     ) &
@@ -403,38 +404,38 @@ function sll_b_spline( &
     print *, 'sll_b_spline(): ERROR, invalid value of argument degree ', degree
     STOP
     return
-end function sll_b_spline
+  end function sll_b_spline
 
-subroutine apply_periodic_bc_x( mesh, x)
+  subroutine apply_periodic_bc_x( mesh, x)
 
-    use sll_cartesian_meshes
+!    use sll_cartesian_meshes
     ! [[file:../working_precision/sll_working_precision.h]]
-    use sll_working_precision
+!    use sll_working_precision
 
     type(sll_cartesian_mesh_2d), pointer :: mesh
     sll_real64, intent(inout) :: x
 
     x = mesh%eta1_min + modulo(x - mesh%eta1_min, mesh%eta1_max - mesh%eta1_min)
-end subroutine apply_periodic_bc_x
+  end subroutine apply_periodic_bc_x
 
 
-subroutine apply_periodic_bc_y( mesh, y)
+  subroutine apply_periodic_bc_y( mesh, y)
 
-    use sll_cartesian_meshes
+!    use sll_cartesian_meshes
     ! [[file:../working_precision/sll_working_precision.h]]
-    use sll_working_precision
+!    use sll_working_precision
 
     type(sll_cartesian_mesh_2d), pointer, intent(in) :: mesh
     sll_real64, intent(inout) :: y
 
     y = mesh%eta2_min + modulo(y - mesh%eta2_min, mesh%eta2_max - mesh%eta2_min)
-end subroutine apply_periodic_bc_y
+  end subroutine apply_periodic_bc_y
 
   ! update the arrays closest_particle and closest_particle_distance with the index of the given particle
   ! if closer to what had been stored up to now.
 
   ! x_aux : x_particle - x_min_virtual_mesh   and  similarly for y, vx, vy
-subroutine update_closest_particle_arrays(k_part,                         &
+  subroutine update_closest_particle_arrays(k_part,                         &
                                             x_aux, y_aux, vx_aux, vy_aux,   &
                                             i, j, l, m,                     &
                                             h_virtual_cell_x, h_virtual_cell_y, h_virtual_cell_vx, h_virtual_cell_vy,   &
@@ -463,9 +464,74 @@ subroutine update_closest_particle_arrays(k_part,                         &
          closest_particle_distance(i,j,l,m) = square_dist_to_cell_center
       end if
 
-end subroutine update_closest_particle_arrays
+  end subroutine update_closest_particle_arrays
 
+  function eval_landau_fx(alpha, kx, x)
+    sll_real64 :: alpha, kx, x
+    sll_real64 :: eval_landau_fx
+    eval_landau_fx = 1._f64 + alpha * cos(kx * x)
+  end function eval_landau_fx
 
+  function eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, hat_shift, x, y, vx, vy)
+    sll_real64 :: x0,y0,vx0,vy0             ! centers of the hat
+    sll_real64 :: r_x,r_y,r_vx,r_vy         ! radii of the hat
+    sll_real64 :: basis_height, hat_shift
+    sll_real64 :: x, y, vx, vy
+    sll_real64 :: eval_hat_function
 
+    sll_real64 :: inv_r_x
+    sll_real64 :: inv_r_y
+    sll_real64 :: inv_r_vx
+    sll_real64 :: inv_r_vy
+
+    inv_r_x  = 1./r_x
+    inv_r_y  = 1./r_y
+    inv_r_vx = 1./r_vx
+    inv_r_vy = 1./r_vy
+
+    eval_hat_function = basis_height + hat_shift * max(0._f64, 1. - inv_r_x*abs(x-x0) )             &
+                                                 * max(0._f64, 1. - inv_r_y*abs(y-y0) )             &
+                                                 * max(0._f64, 1. - inv_r_vx*abs(vx-vx0) )          &
+                                                 * max(0._f64, 1. - inv_r_vy*abs(vy-vy0) )
+  end function eval_hat_function
+
+  ! todo: put this in the right module (with the meshes?)
+  ! tells whether the given point is in the given domain, with boolean arguments for the domain periodicity
+  ! (taken from previous function in_bounds_periodic)
+  function x_is_in_domain_2d( x, y, mesh, x_periodic, y_periodic ) result(res)
+
+!    use sll_cartesian_meshes
+    sll_real64,                     intent( in )            :: x, y
+    type(sll_cartesian_mesh_2d),    intent( in ), pointer   :: mesh
+    logical,                        intent( in )            :: x_periodic
+    logical,                        intent( in )            :: y_periodic
+    logical     :: res
+
+    res = ( x >= mesh%eta1_min )                                                                                    &
+          .and.                                                                                                     &
+          ( ( x < mesh%eta1_max .and. x_periodic ) .or. ( x <= mesh%eta1_max .and. .not. x_periodic ) )             &
+          .and.                                                                                                     &
+          ( y >= mesh%eta2_min )                                                                                    &
+          .and.                                                                                                     &
+          ( ( y < mesh%eta2_max .and. y_periodic ) .or. ( y <= mesh%eta2_max .and. .not. y_periodic) )
+
+  end function x_is_in_domain_2d
+
+  ! <<apply_periodic_bc_on_cartesian_mesh_2d>>
+
+  ! todo: put this in the right module (with the meshes?)
+  subroutine apply_periodic_bc_on_cartesian_mesh_2d( mesh, x, y )
+
+!    use sll_cartesian_meshes
+    ! [[file:../working_precision/sll_working_precision.h]]
+!    use sll_working_precision
+
+    type(sll_cartesian_mesh_2d), pointer :: mesh
+    sll_real64, intent(inout) :: x
+    sll_real64, intent(inout) :: y
+
+    x = mesh%eta1_min + modulo(x - mesh%eta1_min, mesh%eta1_max - mesh%eta1_min)
+    y = mesh%eta2_min + modulo(y - mesh%eta2_min, mesh%eta2_max - mesh%eta2_min)
+  end subroutine apply_periodic_bc_on_cartesian_mesh_2d
 
 end module  sll_bsl_lt_pic_4d_utilities_module
