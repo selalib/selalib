@@ -495,9 +495,9 @@ contains !************************** Operations **************************
   !> @param[in] buffer Array of type 'sll_int32'
   !> @param[in] root   Rank of broadcast root
   subroutine sll_collective_bcast_int32( col, buffer, root )
-    type(sll_collective_t), pointer    :: col
-    sll_int32,              intent(in) :: buffer(:)
-    sll_int32,              intent(in) :: root
+    type(sll_collective_t), pointer       :: col
+    sll_int32,              intent(inout) :: buffer(:)
+    sll_int32,              intent(in)    :: root
 
     sll_int32 :: ierr
 
