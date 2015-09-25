@@ -11,28 +11,12 @@
 
 !> @defgroup collective sll_collective 
 !> @brief 
-!> Description of collective library (72 characters)
-!> @author Selalib team 
-!> You can add a contact, do not put your email to prevent spam.
+!> Interface to simplify MPI library calls
+!> @author Edwin Chacon-Golcher, Pierre Navaro.
 !> @details
-!> Long description of  collective, you can add some references or math equations.
-!>
-!> <b> Headers file available </b>
-!>  - sll_collective.h
+!> This interface is used to prevent some probleme when
+!> multiple threading is enabled or not in your MPI implementation.
 !>
 !> <b> Modules available </b>
-!>  List fortran module available
 !>  - sll_collective
-!>
-!> <b> How to use it </b>
-!> - Header file : \code #include 'sll_collective.h' \endcode
-!> - Link with   <code>-lsll_%s</code>
-!> - Add <code> use sll_collective </code>
-!>
-!> <b> Examples </b>
-!> -Add some fortran lines to explain how ti use the library
-!> \code
-!> call initialize(my_type, arg_1, arg_2)
-!> call solve(my_type, your_result)
-!> \endcode
 !>

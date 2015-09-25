@@ -11,8 +11,7 @@
 
 !> @defgroup general_coordinate_elliptic_solvers sll_general_coordinate_elliptic_solvers 
 !> @brief 
-!> General coordinate elliptic solvers
-!> @author
-!> Aurore Back
+!> General coordinate elliptic solver.
+!> @author Aurore Back and Pierre Navaro.
 !> @details
-!> PLEASE ADD DOCUMENTATION
+!> This solver uses the splines finite elements numerical method.

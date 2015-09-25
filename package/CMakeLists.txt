@@ -1,5 +1,8 @@
 SET(SLL_DIR ${CMAKE_SOURCE_DIR})
 
+FILE(GLOB_RECURSE SLL_MACROS ${PROJECT_SOURCE_DIR} "*.h")
+
+
 SET(SLL_SOURCE_FILES
     ${SLL_DIR}/memory/sll_memory.F90
     ${SLL_DIR}/working_precision/sll_working_precision.F90
@@ -50,7 +53,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/field_accumulators/sll_field_accumulators_2d.F90
     ${SLL_DIR}/fields/sll_scalar_field_2d_base.F90
     ${SLL_DIR}/fields/sll_scalar_field_2d.F90
-    ${SLL_DIR}/general_coordinate_elliptic_solvers/sll_general_coordinate_elliptic_solver.F90
+    ${SLL_DIR}/field_solvers/general_coordinate_elliptic_solvers/sll_general_coordinate_elliptic_solver.F90
     ${SLL_DIR}/splines/sll_bsplines.F90
     ${SLL_DIR}/splines/sll_cubic_splines.F90
     ${SLL_DIR}/splines/sll_arbitrary_degree_splines.F90
@@ -67,26 +70,26 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/interpolators/sll_arbitrary_degree_spline_interpolator_2d.F90
     ${SLL_DIR}/interpolators/sll_periodic_interpolator_1d.F90
     ${SLL_DIR}/interpolators/sll_lagrange_interpolator_1d.F90
-    ${SLL_DIR}/maxwell_solvers/sll_maxwell_solvers_base.F90
-    ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_fdtd.F90
+    ${SLL_DIR}/field_solvers/maxwell_solvers/sll_maxwell_solvers_base.F90
+    ${SLL_DIR}/field_solvers/maxwell_solvers/sll_maxwell_2d_fdtd.F90
     ${SLL_DIR}/periodic_interpolation/periodic_interp.F90
-    ${SLL_DIR}/poisson_solvers/sll_poisson_1d_periodic.F90
-    ${SLL_DIR}/poisson_solvers/sll_poisson_2d_polar.F90
-    ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_fftpack.F90
-    ${SLL_DIR}/poisson_solvers/sll_poisson_1d_base.F90
-    ${SLL_DIR}/poisson_solvers/sll_poisson_1d_periodic_solver.F90
-    ${SLL_DIR}/poisson_solvers/sll_poisson_1d_polar_solver.F90
-    ${SLL_DIR}/poisson_solvers/sll_poisson_2d_polar_solver.F90
-    ${SLL_DIR}/poisson_solvers/sll_poisson_2d_base.F90
-    ${SLL_DIR}/fft/sll_fft_utils.F90
+    ${SLL_DIR}/field_solvers/poisson_solvers/sll_poisson_1d_periodic.F90
+    ${SLL_DIR}/field_solvers/poisson_solvers/sll_poisson_2d_polar.F90
+    ${SLL_DIR}/field_solvers/poisson_solvers/sll_poisson_2d_periodic_fftpack.F90
+    ${SLL_DIR}/field_solvers/poisson_solvers/sll_poisson_1d_base.F90
+    ${SLL_DIR}/field_solvers/poisson_solvers/sll_poisson_1d_periodic_solver.F90
+    ${SLL_DIR}/field_solvers/poisson_solvers/sll_poisson_1d_polar_solver.F90
+    ${SLL_DIR}/field_solvers/poisson_solvers/sll_poisson_2d_polar_solver.F90
+    ${SLL_DIR}/field_solvers/poisson_solvers/sll_poisson_2d_base.F90
+    ${SLL_DIR}/interfaces/fft/sll_fft_utils.F90
     ${SLL_DIR}/integration/rectangle.F90
     ${SLL_DIR}/integration/trapz.F90
     ${SLL_DIR}/integration/gauss_legendre.F90
     ${SLL_DIR}/integration/gauss_lobatto.F90
     ${SLL_DIR}/simulations/simulations_sequential/sim_CG_polar/sll_polar_operators.F90
     ${SLL_DIR}/simulations/simulations_sequential/sim_CG_polar/sll_advection_polar.F90
-    ${SLL_DIR}/sparse_matrix_manager/partition.F90
-    ${SLL_DIR}/sparse_matrix_manager/sll_sparse_matrix_module.F90
+    ${SLL_DIR}/interfaces/sparse_matrix_manager/partition.F90
+    ${SLL_DIR}/interfaces/sparse_matrix_manager/sll_sparse_matrix_module.F90
     ${SLL_DIR}/time_solvers/sll_time_splitting_coeff.F90
     ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.F90
     ${SLL_DIR}/meshes/sll_meshes_base.F90
@@ -99,11 +102,11 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d_nurbs.F90
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformation_2d_base.F90	
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d.F90
-    ${SLL_DIR}/meshes_multipatch/sll_meshes_multipatch.F90
-    ${SLL_DIR}/coordinate_transformations_multipatch/sll_coordinate_transformation_multipatch.F90
-    ${SLL_DIR}/fields_multipatch/sll_scalar_field_2d_multipatch.F90
-    ${SLL_DIR}/sparse_matrix_manager/sll_sparse_matrix_mp_module.F90
-    ${SLL_DIR}/general_coordinate_elliptic_solvers_multipatch/sll_general_coordinate_elliptic_solver_multipatch.F90
+    ${SLL_DIR}/simulations/multipatch/meshes_multipatch/sll_meshes_multipatch.F90
+    ${SLL_DIR}/simulations/multipatch/coordinate_transformations_multipatch/sll_coordinate_transformation_multipatch.F90
+    ${SLL_DIR}/simulations/multipatch/fields_multipatch/sll_scalar_field_2d_multipatch.F90
+    ${SLL_DIR}/simulations/multipatch/general_coordinate_elliptic_solvers_multipatch/sll_general_coordinate_elliptic_solver_multipatch.F90
+    ${SLL_DIR}/interfaces/sparse_matrix_manager/sll_sparse_matrix_mp_module.F90
     ${SLL_DIR}/mesh_calculus/sll_mesh_calculus_module.F90
     ${SLL_DIR}/distribution_function/distribution_function_initializer_4d.F90
     ${SLL_DIR}/distribution_function/sll_fdistribu4d_DK.F90
@@ -131,11 +134,11 @@ ELSE()
 ENDIF()
 
 IF(${FFT_LIB} MATCHES "FFTPACK")
-  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} ${SLL_DIR}/fft/fftpack/sll_fft.F90)
+  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} ${SLL_DIR}/interfaces/fft/fftpack/sll_fft.F90)
 ELSEIF(${FFT_LIB} MATCHES "FFTW")
-  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} ${SLL_DIR}/fft/fftw3/sll_fft.F90) 
+  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} ${SLL_DIR}/interfaces/fft/fftw3/sll_fft.F90) 
 ELSE()
-  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} ${SLL_DIR}/fft/sllfft/sll_fft.F90)
+  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} ${SLL_DIR}/interfaces/fft/sllfft/sll_fft.F90)
 ENDIF()
 
 IF(FFTW_ENABLED)
@@ -176,11 +179,11 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
   ${SLL_DIR}/io/file_io_parallel/sll_hdf5_io_parallel.F90
   ${SLL_DIR}/io/file_io_parallel/sll_xdmf_parallel.F90
-  ${SLL_DIR}/distribution_function_multipatch/sll_distribution_function_4d_multipatch.F90
+  ${SLL_DIR}/simulations/multipatch/distribution_function_multipatch/sll_distribution_function_4d_multipatch.F90
   ${SLL_DIR}/simulations/simulations_parallel/sim_4d_qns_general/simulation_4d_qns_general.F90
   ${SLL_DIR}/simulations/simulations_parallel/sim_2d_vlasov_poisson_cartesian/simulation_2d_vlasov_poisson_cartesian.F90
   ${SLL_DIR}/simulations/simulations_parallel/sim_2d_vlasov_poisson_cartesian/simulation_2d_vlasov_ampere_cartesian.F90
-  ${SLL_DIR}/simulations/simulations_parallel/sim_4d_qns_general_multipatch/simulation_4d_qns_general_multipatch.F90
+  ${SLL_DIR}/simulations/multipatch/sim_4d_qns_general_multipatch/simulation_4d_qns_general_multipatch.F90
   ${SLL_DIR}/simulations/simulations_parallel/sim_4d_drift_kinetic_hybrid/simulation_4d_DK_hybrid.F90
   ${SLL_DIR}/simulations/simulations_parallel/sim_4d_drift_kinetic_polar/simulation_4d_drift_kinetic_polar.F90)
 
@@ -214,16 +217,22 @@ IF(BUILD_PACKAGE)
           ${CMAKE_CURRENT_SOURCE_DIR}/macports/Doxyfile.in 
           ${CMAKE_BINARY_DIR}/${DIST_NAME}/Doxyfile
   COMMAND ${CMAKE_COMMAND} -E copy 
-          ${CMAKE_CURRENT_SOURCE_DIR}/../documentation.f90 
+          ${CMAKE_CURRENT_SOURCE_DIR}/../src/documentation.f90 
           ${CMAKE_BINARY_DIR}/${DIST_NAME}/
   COMMAND ${CMAKE_COMMAND} -E copy 
-          ${CMAKE_CURRENT_SOURCE_DIR}/../../doc/sphinx/_static/logo2.png 
+          ${CMAKE_CURRENT_SOURCE_DIR}/selalib-mpi.h
+          ${CMAKE_BINARY_DIR}/${DIST_NAME}/include
+  COMMAND ${CMAKE_COMMAND} -E copy 
+          ${CMAKE_CURRENT_SOURCE_DIR}/selalib.h
+          ${CMAKE_BINARY_DIR}/${DIST_NAME}/include
+  COMMAND ${CMAKE_COMMAND} -E copy 
+          ${CMAKE_CURRENT_SOURCE_DIR}/../doc/sphinx/_static/logo2.png 
           ${CMAKE_BINARY_DIR}/${DIST_NAME}/
   COMMAND ${CMAKE_COMMAND} -E copy_directory 
-          ${CMAKE_CURRENT_SOURCE_DIR}/../fftpack 
+          ${CMAKE_CURRENT_SOURCE_DIR}/../src/interfaces/fftpack 
           ${CMAKE_BINARY_DIR}/${DIST_NAME}/fftpack
   COMMAND ${CMAKE_COMMAND} -E copy_directory 
-          ${CMAKE_CURRENT_SOURCE_DIR}/../mudpack 
+          ${CMAKE_CURRENT_SOURCE_DIR}/../src/interfaces/mudpack 
           ${CMAKE_BINARY_DIR}/${DIST_NAME}/mudpack
   COMMAND ${CMAKE_COMMAND} -E copy_directory 
           ${CMAKE_CURRENT_SOURCE_DIR}/examples 
@@ -239,19 +248,19 @@ IF(BUILD_PACKAGE)
            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
            COMMENT "Generating Release" VERBATIM)
    
-   ADD_CUSTOM_TARGET(make_source_dir 
-   COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/${DIST_NAME}/src)
-   ADD_DEPENDENCIES(release make_source_dir)
-   
-   FOREACH(_file ${SLL_SOURCE_FILES})
-      get_filename_component(_target ${_file} NAME_WE)
-      ADD_CUSTOM_TARGET(${_target}_f90 ${CMAKE_COMMAND} 
-      -E copy ${_file} ${CMAKE_BINARY_DIR}/${DIST_NAME}/src)
-      ADD_DEPENDENCIES(release ${_target}_f90)
-      ADD_DEPENDENCIES(${_target}_f90 make_source_dir)
-   ENDFOREACH(_file)
-   
-   INSTALL( CODE
+  ADD_CUSTOM_TARGET(make_source_dir 
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/${DIST_NAME}/src)
+  ADD_DEPENDENCIES(release make_source_dir)
+  
+  FOREACH(_file ${SLL_SOURCE_FILES})
+     get_filename_component(_target ${_file} NAME_WE)
+     ADD_CUSTOM_TARGET(${_target}_f90 ${CMAKE_COMMAND} 
+     -E copy ${_file} ${CMAKE_BINARY_DIR}/${DIST_NAME}/src)
+     ADD_DEPENDENCIES(release ${_target}_f90)
+     ADD_DEPENDENCIES(${_target}_f90 make_source_dir)
+  ENDFOREACH(_file)
+  
+  INSTALL( CODE
       "EXECUTE_PROCESS(COMMAND \"${CMAKE_COMMAND}\" -E copy_directory \"${CMAKE_Fortran_MODULE_DIRECTORY}\" \"${CMAKE_INSTALL_PREFIX}/include/selalib\")")
    
    INSTALL(FILES ${SLL_MACROS}  DESTINATION include/selalib  )
