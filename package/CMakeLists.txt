@@ -2,7 +2,6 @@ SET(SLL_DIR ${CMAKE_SOURCE_DIR})
 
 FILE(GLOB_RECURSE SLL_MACROS ${PROJECT_SOURCE_DIR} "*.h")
 
-LIST(APPEND SLL_MACROS "selalib.h" "selalib-mpi.h")
 
 SET(SLL_SOURCE_FILES
     ${SLL_DIR}/memory/sll_memory.F90
@@ -220,6 +219,12 @@ IF(BUILD_PACKAGE)
   COMMAND ${CMAKE_COMMAND} -E copy 
           ${CMAKE_CURRENT_SOURCE_DIR}/../src/documentation.f90 
           ${CMAKE_BINARY_DIR}/${DIST_NAME}/
+  COMMAND ${CMAKE_COMMAND} -E copy 
+          ${CMAKE_CURRENT_SOURCE_DIR}/selalib-mpi.h
+          ${CMAKE_BINARY_DIR}/${DIST_NAME}/include
+  COMMAND ${CMAKE_COMMAND} -E copy 
+          ${CMAKE_CURRENT_SOURCE_DIR}/selalib.h
+          ${CMAKE_BINARY_DIR}/${DIST_NAME}/include
   COMMAND ${CMAKE_COMMAND} -E copy 
           ${CMAKE_CURRENT_SOURCE_DIR}/../doc/sphinx/_static/logo2.png 
           ${CMAKE_BINARY_DIR}/${DIST_NAME}/
