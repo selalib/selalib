@@ -182,6 +182,7 @@ IF(MPI_ENABLED)
    ADD_SUBDIRECTORY(parallelization)
    ADD_SUBDIRECTORY(pif)
    #PN ADD_SUBDIRECTORY(maxwell_solvers_parallel)
+   ADD_SUBDIRECTORY( xdmf_io_parallel )
 
 ENDIF()
 

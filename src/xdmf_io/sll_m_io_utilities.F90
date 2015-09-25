@@ -4,7 +4,7 @@
 ! MODULE:   sll_m_io_utilities
 !
 ! DESCRIPTION:
-!> @ingroup xdmf
+!> @ingroup xdmf_io
 !> @authors Yaman Güçlü - <yaman.guclu@gmail.com>
 !> @brief   Collection of functions/subroutines operating on files and strings
 !> @todo    Add detailed description
