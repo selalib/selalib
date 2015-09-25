@@ -174,7 +174,7 @@ ENDIF(F2008)
 ADD_SUBDIRECTORY( particle_methods )
 
 # New output facilities for creating an XDMF database (WIP)
-ADD_SUBDIRECTORY( xdmf )
+ADD_SUBDIRECTORY( xdmf_io )
 
 IF(MPI_ENABLED)
    
