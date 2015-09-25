@@ -26,7 +26,18 @@ TARGET_LINK_LIBRARIES( sll_bsl_lt_pic_particles
   sll_bsl_lt_pic_utilities
   sll_pic_accumulators )
 
-#  sll_pic_interface_initializers )
+
+ADD_EXECUTABLE(test_bsl_lt_pic_4d_remap unit_test_bsl_lt_pic_4d.F90)
+
+TARGET_LINK_LIBRARIES(test_bsl_lt_pic_4d_remap
+  sll_timer
+  sll_constants
+  sll_working_precision
+  sll_assert
+  sll_bsl_lt_pic_utilities
+  sll_bsl_lt_pic_particles
+  )
+
 
 # Ctest
 IF(BUILD_TESTING)
