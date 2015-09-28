@@ -3127,8 +3127,8 @@ end subroutine
             virtual_grid_y_max = p_group%mesh%eta2_max + p_group%mesh%delta_eta2
         end if
 
-        ! <<velocity_resolution>> Because the Poisson mesh does not prescribe any resolution in velocity
-        ! the resolution of the 'virtual' cells in the velocity dimensions is inferred from the remapping (or initial) grid
+        ! <<velocity_resolution>> Because the Poisson mesh does not prescribe any resolution in velocity the resolution
+        ! of the 'virtual' cells in the velocity dimensions is inferred from the remapping (or initial) grid
         num_virtual_cells_vx = p_group%number_parts_vx
         virtual_grid_vx_min = p_group%remapping_grid%eta3_min
         virtual_grid_vx_max = p_group%remapping_grid%eta3_max
