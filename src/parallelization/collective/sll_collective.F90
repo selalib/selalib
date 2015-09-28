@@ -21,9 +21,10 @@
 ! MODULE: sll_collective
 !
 ! DESCRIPTION:
-!> @file sll_collective.F90
-!> @defgroup collective sll_collective
-!> @author Module Author Name and Affiliation
+!> @ingroup collective
+!> @author Edwin Chacon-Golcher
+!> @par Contact
+!>      Yaman Güçlü - <yaman.guclu@gmail.com>
 !> @brief Parallelizing facility.
 !> @details Selalib applies the principle of modularization throughout all
 !> levels of abstraction of the library and aims at keeping third-party
@@ -491,9 +492,9 @@ contains !************************** Operations **************************
 
   !> @brief Broadcasts an array of type 'sll_int32' from the process
   !>        with rank "root" to all other processes of the communicator
-  !> @param     col    Wrapper around the communicator
-  !> @param[in] buffer Array of type 'sll_int32'
-  !> @param[in] root   Rank of broadcast root
+  !> @param        col    Wrapper around the communicator
+  !> @param[inout] buffer Array of type 'sll_int32'
+  !> @param[in]    root   Rank of broadcast root
   subroutine sll_collective_bcast_int32( col, buffer, root )
     type(sll_collective_t), pointer       :: col
     sll_int32,              intent(inout) :: buffer(:)
@@ -509,13 +510,13 @@ contains !************************** Operations **************************
 
   !> @brief Broadcasts an array of type 'sll_int64' from the process
   !>        with rank "root" to all other processes of the communicator
-  !> @param     col    Wrapper around the communicator
-  !> @param[in] buffer Array of type 'sll_int64'
-  !> @param[in] root   Rank of broadcast root
+  !> @param        col    Wrapper around the communicator
+  !> @param[inout] buffer Array of type 'sll_int64'
+  !> @param[in]    root   Rank of broadcast root
   subroutine sll_collective_bcast_int64( col, buffer, root )
-    type(sll_collective_t), pointer    :: col
-    sll_int64,              intent(in) :: buffer(:)
-    sll_int32,              intent(in) :: root
+    type(sll_collective_t), pointer       :: col
+    sll_int64,              intent(inout) :: buffer(:)
+    sll_int32,              intent(in)    :: root
 
     sll_int32 :: ierr
 
@@ -525,71 +526,80 @@ contains !************************** Operations **************************
   end subroutine sll_collective_bcast_int64
 
 
-  ! Start with something simple, like a buffer of 'real's...
-  !> @brief Broadcasts a message from the process with rank "root"
-  !>        to all other processes of the communicator
-  !> @param col Wrapper around the communicator
-  !> @param[in] buffer starting address of buffer
-  !> @param[in] size number of entries in buffer
-  !> @param[in] root rank of broadcast root
+  !> @brief Broadcasts an array of type 'sll_real32' from the process
+  !>        with rank "root" to all other processes of the communicator
+  !> @param        col    Wrapper around the communicator
+  !> @param[inout] buffer Array of type 'sll_real32'
+  !> @param[in]    size   Number of entries in buffer \todo WHY DO WE NEED IT?
+  !> @param[in]    root   Rank of broadcast root
   subroutine sll_collective_bcast_real32( col, buffer, size, root )
-    type(sll_collective_t), pointer      :: col
-    sll_real32, dimension(:), intent(in) :: buffer ! what would change...
-    sll_int32, intent(in)                :: size
-    sll_int32, intent(in)                :: root
-    sll_int32                            :: ierr
+    type(sll_collective_t), pointer       :: col
+    sll_real32,             intent(inout) :: buffer(:)
+    sll_int32,              intent(in)    :: size
+    sll_int32,              intent(in)    :: root
+
+    sll_int32 :: ierr
+
     call MPI_BCAST( buffer, size, MPI_REAL, root, col%comm, ierr )
     call sll_test_mpi_error( ierr, &
          'sll_collective_bcast_real32(): MPI_BCAST()' )
   end subroutine sll_collective_bcast_real32
 
-  ! Start with something simple, like a buffer of 'real's...
-  !> @brief Broadcasts a message from the process with rank "root"
-  !>        to all other processes of the communicator
-  !> @param col Wrapper around the communicator
-  !> @param[in] buffer starting address of buffer
-  !> @param[in] size number of entries in buffer
-  !> @param[in] root rank of broadcast root
+
+  !> @brief Broadcasts an array of type 'sll_real64' from the process
+  !>        with rank "root" to all other processes of the communicator
+  !> @param        col    Wrapper around the communicator
+  !> @param[inout] buffer Array of type 'sll_real64'
+  !> @param[in]    size   Number of entries in buffer \todo WHY DO WE NEED IT?
+  !> @param[in]    root   Rank of broadcast root
   subroutine sll_collective_bcast_real64( col, buffer, size, root )
-    type(sll_collective_t), pointer      :: col
-    sll_real64, dimension(:), intent(in) :: buffer ! what would change...
-    sll_int32, intent(in)                :: size
-    sll_int32, intent(in)                :: root
-    sll_int32                            :: ierr
+    type(sll_collective_t), pointer       :: col
+    sll_real64,             intent(inout) :: buffer(:)
+    sll_int32,              intent(in)    :: size
+    sll_int32,              intent(in)    :: root
+
+    sll_int32 :: ierr
+
     call MPI_BCAST( buffer, size, MPI_REAL8, root, col%comm, ierr )
     call sll_test_mpi_error( ierr, &
          'sll_collective_bcast_real64(): MPI_BCAST()' )
   end subroutine sll_collective_bcast_real64
 
-  !> @brief Broadcasts a message from the process with rank "root"
-  !>        to all other processes of the communicator
-  !> @param col Wrapper around the communicator
-  !> @param[in] buffer starting address of buffer
-  !> @param[in] size number of entries in buffer
-  !> @param[in] root rank of broadcast root
+
+  !> @brief Broadcasts an array of type 'sll_comp64' from the process
+  !>        with rank "root" to all other processes of the communicator
+  !> @param        col    Wrapper around the communicator
+  !> @param[inout] buffer Array of type 'sll_comp64'
+  !> @param[in]    size   Number of entries in buffer \todo WHY DO WE NEED IT?
+  !> @param[in]    root   Rank of broadcast root
   subroutine sll_collective_bcast_comp64( col, buffer, size, root )
-    type(sll_collective_t), pointer      :: col
-    sll_comp64, dimension(:), intent(in) :: buffer ! what would change...
-    sll_int32, intent(in)                :: size
-    sll_int32, intent(in)                :: root
-    sll_int32                            :: ierr
+    type(sll_collective_t), pointer       :: col
+    sll_comp64,             intent(inout) :: buffer(:)
+    sll_int32,              intent(in)    :: size
+    sll_int32,              intent(in)    :: root
+
+    sll_int32 :: ierr
+
     call MPI_BCAST( buffer, size, MPI_DOUBLE_COMPLEX, root, col%comm, ierr )
     call sll_test_mpi_error( ierr, &
          'sll_collective_bcast_comp64(): MPI_BCAST()' )
   end subroutine sll_collective_bcast_comp64
 
-  !> @brief Broadcasts a message from the process with rank "root"
-  !>        to all other processes of the communicator
-  !> @param col Wrapper around the communicator
-  !> @param[in] buffer starting address of buffer
-  !> @param[in] size number of entries in buffer
-  !> @param[in] root rank of broadcast root
+
+  !> @brief Broadcasts an array of type 'sll_comp32' from the process
+  !>        with rank "root" to all other processes of the communicator
+  !> @param        col    Wrapper around the communicator
+  !> @param[inout] buffer Array of type 'sll_comp32'
+  !> @param[in]    size   Number of entries in buffer \todo WHY DO WE NEED IT?
+  !> @param[in]    root   Rank of broadcast root
   subroutine sll_collective_bcast_comp32( col, buffer, size, root )
-    type(sll_collective_t), pointer      :: col
-    sll_comp32, dimension(:), intent(in) :: buffer ! what would change...
-    sll_int32, intent(in)                :: size
-    sll_int32, intent(in)                :: root
-    sll_int32                            :: ierr
+    type(sll_collective_t), pointer       :: col
+    sll_comp32,             intent(inout) :: buffer(:)
+    sll_int32,              intent(in)    :: size
+    sll_int32,              intent(in)    :: root
+
+    sll_int32 :: ierr
+
     call MPI_BCAST( buffer, size, MPI_COMPLEX, root, col%comm, ierr )
     call sll_test_mpi_error( ierr, &
          'sll_collective_bcast_comp32(): MPI_BCAST()' )
