@@ -7,12 +7,14 @@ program test_deposit_cubic_splines
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-!include "fftw3.f90"
 use sll_cubic_splines
 use sll_constants
 use sll_boundary_condition_descriptors
-use sll_fftw
+use sll_fft
+use iso_c_binding
 implicit none
+
+include "fftw3.f03"
 
 type(C_PTR) :: PlnFwd,PlnBwd
 type(sll_cubic_spline_2D), pointer :: spl_fsl
@@ -28,8 +30,8 @@ sll_real64,dimension(:,:), pointer :: fh_fsl
 sll_real64,dimension(:,:), pointer :: x1_array,x2_array,eta1feet,eta2feet
 sll_int32                         :: nc_eta1
 sll_real64, dimension(:), pointer :: d_dx1
-!type(sll_fft_plan),       pointer :: fwx1
-!type(sll_fft_plan),       pointer :: bwx1
+type(sll_fft_plan),       pointer :: fwx1
+type(sll_fft_plan),       pointer :: bwx1
 sll_comp64, dimension(:), pointer :: fk1
 sll_int32     :: error
 
