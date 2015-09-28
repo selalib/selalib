@@ -9,14 +9,11 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup collective sll_collective 
+!> @defgroup collective sll_collective
 !> @brief 
 !> Interface to simplify MPI library calls
-!> @author Edwin Chacon-Golcher, Pierre Navaro.
+!> @authors Edwin Chacon-Golcher, Pierre Navaro.
 !> @details
 !> This interface is used to prevent some probleme when
 !> multiple threading is enabled or not in your MPI implementation.
-!>
-!> <b> Modules available </b>
-!>  - sll_collective
 !>
