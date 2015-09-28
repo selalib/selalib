@@ -311,7 +311,7 @@ contains
   end subroutine t_xml_document__delete
 
 !------------------------------------------------------------------------------
-  subroutine t_xml_element__write( self, indent, fid )
+  recursive subroutine t_xml_element__write( self, indent, fid )
     class(sll_t_xml_element), intent(in) :: self
     integer                 , intent(in) :: indent
     integer                 , intent(in) :: fid
@@ -352,7 +352,7 @@ contains
   end subroutine t_xml_element__write
 
 !------------------------------------------------------------------------------
-  subroutine t_xml_element__delete( self )
+  recursive subroutine t_xml_element__delete( self )
     class(sll_t_xml_element), intent(inout) :: self
 
     ! Deallocate attributes
