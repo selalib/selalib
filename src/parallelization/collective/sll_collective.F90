@@ -21,9 +21,10 @@
 ! MODULE: sll_collective
 !
 ! DESCRIPTION:
-!> @file sll_collective.F90
-!> @defgroup collective sll_collective
-!> @author Module Author Name and Affiliation
+!> @ingroup collective
+!> @author Edwin Chacon-Golcher
+!> @par Contact
+!>      Yaman Güçlü - <yaman.guclu@gmail.com>
 !> @brief Parallelizing facility.
 !> @details Selalib applies the principle of modularization throughout all
 !> levels of abstraction of the library and aims at keeping third-party
