@@ -469,7 +469,7 @@ contains
     ! Create new element inside the container
     allocate( sll_t_xml_element :: new_cont%item )
     select type( new_item => new_cont%item ); type is( sll_t_xml_element )
-      new_elem = new_item
+      new_elem => new_item
       new_elem%name = name
     end select
 
