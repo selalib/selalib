@@ -239,10 +239,10 @@ contains
                                     ALPHA,                  &
                                     UseLtPicScheme
 
+    namelist /elec_params/          er, psi, omega_r, omega_i
+
     namelist /grid_dims/            NC_X, NC_Y, XMIN, KX_LANDAU, YMIN, YMAX, &
                                     DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC
-
-    namelist /simple_pic_params/    NUM_PARTICLES
 
     namelist /lt_pic_params/        spline_degree,              &
                                     number_parts_x,             &
@@ -262,8 +262,7 @@ contains
                                     N_remapping_nodes_per_virtual_cell_vx,          &
                                     N_remapping_nodes_per_virtual_cell_vy,          &
                                     remap_period
-
-    namelist /elec_params/          er, psi, omega_r, omega_i
+    namelist /simple_pic_params/    NUM_PARTICLES
 
     print *, "AA0"
 
@@ -275,10 +274,13 @@ contains
 
     print *, "AA1"
     read(input_file, sim_params)
-    read(input_file, grid_dims)
-    read(input_file, lt_pic_params)
-    read(input_file, simple_pic_params)
     read(input_file, elec_params)
+    read(input_file, grid_dims)
+    if( UseLtPicScheme )then
+        read(input_file, lt_pic_params)
+    else
+        read(input_file, simple_pic_params)
+    end if
     close(input_file)
 
     sim%world_size = sll_get_collective_size(sll_world_collective)
