@@ -15,12 +15,12 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-module sll_module_characteristics_1d_explicit_euler
+module sll_m_characteristics_1d_explicit_euler
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 use sll_boundary_condition_descriptors
-use sll_module_characteristics_1d_base
+use sll_m_characteristics_1d_base
 implicit none
 private
 
@@ -186,4 +186,4 @@ contains
 
   
   
-end module sll_module_characteristics_1d_explicit_euler
+end module sll_m_characteristics_1d_explicit_euler

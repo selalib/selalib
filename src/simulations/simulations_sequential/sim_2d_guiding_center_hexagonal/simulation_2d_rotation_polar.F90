@@ -10,7 +10,7 @@ program rotation_2d_polar
 use sll_ascii_io
 
   use sll_constants
-  use sll_module_hermite_interpolator_2d
+  use sll_m_hermite_interpolator_2d
   use sll_hermite_interpolation_2d_module
   implicit none
 

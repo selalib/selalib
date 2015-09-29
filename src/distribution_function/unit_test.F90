@@ -6,9 +6,9 @@ program unit_test
   use distribution_function
   use sll_common_coordinate_transformations
   use sll_cartesian_meshes
-  use sll_module_coordinate_transformations_2d
+  use sll_m_coordinate_transformations_2d
   use sll_landau_2d_initializer
-  use sll_module_cubic_spline_interpolator_1d
+  use sll_m_cubic_spline_interpolator_1d
   implicit none
  
   sll_int32 :: nc_eta1, nc_eta2

@@ -30,23 +30,23 @@
 !> @brief Elliptic solver on 2d curvilinear mesh
 !> @details This solver works with analytical 
 !> and discrete coordinate transformations.
-module sll_module_gces_dirichlet
+module sll_m_gces_dirichlet
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_errors.h"
 
 use sll_boundary_condition_descriptors
-use sll_module_scalar_field_2d_base, only: sll_scalar_field_2d_base
-use sll_module_scalar_field_2d, only: sll_scalar_field_2d_analytic,  &
+use sll_m_scalar_field_2d_base, only: sll_scalar_field_2d_base
+use sll_m_scalar_field_2d, only: sll_scalar_field_2d_analytic,  &
                                       sll_scalar_field_2d_discrete
-use sll_module_interpolators_2d_base, only: sll_interpolator_2d_base
-use sll_module_arbitrary_degree_spline_interpolator_1d, only:        &
+use sll_m_interpolators_2d_base, only: sll_interpolator_2d_base
+use sll_m_arbitrary_degree_spline_interpolator_1d, only:        &
   sll_arbitrary_degree_spline_interpolator_1d,                       &
   new_arbitrary_degree_1d_interpolator
-use sll_module_arbitrary_degree_spline_interpolator_2d, only:        &
+use sll_m_arbitrary_degree_spline_interpolator_2d, only:        &
   sll_arbitrary_degree_spline_interpolator_2d
-use sll_module_arbitrary_degree_spline_interpolator_1d, only:        &
+use sll_m_arbitrary_degree_spline_interpolator_1d, only:        &
   interv, deboor_type, bsplvd
 use sll_sparse_matrix_module, only : sll_csr_matrix,                 &
                                      new_csr_matrix,                 &
@@ -1172,5 +1172,5 @@ call sll_delete(es%csr_mat_src)
 
 end subroutine delete_gces_dirichlet
 
-end module sll_module_gces_dirichlet
+end module sll_m_gces_dirichlet
 

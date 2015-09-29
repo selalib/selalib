@@ -25,12 +25,12 @@
 
 
 !> @ingroup poisson_solvers
-module sll_module_poisson_2d_polar_parallel_solver
+module sll_m_poisson_2d_polar_parallel_solver
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 !use sll_boundary_condition_descriptors
-use sll_module_poisson_2d_base
+use sll_m_poisson_2d_base
 use sll_poisson_polar_parallel
 implicit none
 
@@ -251,4 +251,4 @@ contains
   
   
   
-end module sll_module_poisson_2d_polar_parallel_solver
+end module sll_m_poisson_2d_polar_parallel_solver

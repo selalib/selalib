@@ -8,7 +8,7 @@ module distribution_function
 
 use sll_constants
 use sll_utilities   ! for int2string
-use sll_module_interpolators_1d_base
+use sll_m_interpolators_1d_base
 use sll_coordinate_transformation_2d_base_module
 use sll_scalar_field_2d_old
 use sll_scalar_field_initializers_base

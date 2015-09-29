@@ -1,7 +1,7 @@
 program unit_test_fields_multipatch
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-  use sll_module_scalar_field_2d_multipatch
+  use sll_m_scalar_field_2d_multipatch
   use sll_coordinate_transformation_multipatch_module
   implicit none
 

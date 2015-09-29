@@ -21,8 +21,8 @@ program test_poisson_2d_polar
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-use sll_module_poisson_2d_base
-use sll_module_poisson_2d_polar
+use sll_m_poisson_2d_base
+use sll_m_poisson_2d_polar
 use sll_boundary_condition_descriptors
 
 implicit none

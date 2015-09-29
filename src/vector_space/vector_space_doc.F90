@@ -46,8 +46,8 @@
 !! -->
 !!  + Import Fortran modules:
 !!    \code
-!!      use sll_module_vector_space_base
-!!      use sll_module_vector_space_real_arrays
+!!      use sll_m_vector_space_base
+!!      use sll_m_vector_space_real_arrays
 !!    \endcode
 !!  + Add dependency to *CMakeLists.txt*:
 !!    \code

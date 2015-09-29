@@ -5,7 +5,7 @@
 !> This decribes two methods
 !>   - compute_phi_from_rho
 !>   - compute_e_from_rho
-module sll_module_poisson_1d_base
+module sll_m_poisson_1d_base
 #include "sll_working_precision.h"
   implicit none
   
@@ -46,5 +46,5 @@ module sll_module_poisson_1d_base
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
-end module sll_module_poisson_1d_base
+end module sll_m_poisson_1d_base
 

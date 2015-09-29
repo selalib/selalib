@@ -5,8 +5,8 @@ program fcisl_toroidal_test
 #include "sll_file_io.h"
   use sll_fcisl_toroidal_module
   use sll_constants
-  use sll_module_interpolators_2d_base
-  use sll_module_cubic_spline_interpolator_2d
+  use sll_m_interpolators_2d_base
+  use sll_m_cubic_spline_interpolator_2d
 
 implicit none
 

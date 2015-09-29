@@ -20,7 +20,7 @@
 !> Abstract class for advection
 !> @details
 !> Solves \f$ \partial_t f + A \partial_x f = 0 \f$
-module sll_module_advection_1d_base
+module sll_m_advection_1d_base
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 
@@ -97,4 +97,4 @@ end interface
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
-end module sll_module_advection_1d_base
+end module sll_m_advection_1d_base

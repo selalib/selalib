@@ -28,13 +28,13 @@
 !!do not hesitate to take large odd p, like the favourite p=17
 !!@todo
 !! for the moment only in implementation for the case DIRICHLET x PERIODIC
-module sll_module_hermite_interpolator_2d
+module sll_m_hermite_interpolator_2d
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-use sll_module_interpolators_2d_base
+use sll_m_interpolators_2d_base
 use sll_hermite_interpolation_2d_module
 implicit none
 private
@@ -420,4 +420,4 @@ contains
 
 
 
-end module sll_module_hermite_interpolator_2d
+end module sll_m_hermite_interpolator_2d

@@ -21,7 +21,7 @@
 
 &time_iterations
   dt = 0.05
-  number_iterations  = 2000
+  number_iterations  = 2 !000
   freq_diag = 80
   freq_diag_time = 1
   !time_loop_case = "SLL_EULER"

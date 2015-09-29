@@ -5,13 +5,13 @@ program test_general_elliptic_solver
 #include "sll_file_io.h"
 
 use sll_cartesian_meshes
-use sll_module_coordinate_transformations_2d
+use sll_m_coordinate_transformations_2d
 use sll_common_coordinate_transformations
-use sll_module_scalar_field_2d
+use sll_m_scalar_field_2d
 use sll_constants
-use sll_module_arbitrary_degree_spline_interpolator_2d
+use sll_m_arbitrary_degree_spline_interpolator_2d
 use sll_timer
-use sll_module_deboor_splines_2d
+use sll_m_deboor_splines_2d
 
 #ifdef _UMFPACK
   use sll_general_coordinate_elliptic_solver_module_umfpack

@@ -15,7 +15,7 @@ program test_maxwell_2d_diga_wave
 #include "sll_coordinate_transformations.h"
 
     use sll_dg_fields
-    use sll_module_maxwell_2d_diga
+    use sll_m_maxwell_2d_diga
     use sll_maxwell_solvers_base
 
     implicit none
