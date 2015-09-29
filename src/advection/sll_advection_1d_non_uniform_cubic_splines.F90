@@ -15,14 +15,14 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-! for the moment mimic of sll_module_periodic_interpolator_1d.F90
+! for the moment mimic of sll_m_periodic_interpolator_1d.F90
 
-module sll_module_advection_1d_non_uniform_cubic_splines
+module sll_m_advection_1d_non_uniform_cubic_splines
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 use sll_boundary_condition_descriptors
-use sll_module_advection_1d_base
+use sll_m_advection_1d_base
 use cubic_non_uniform_splines
 
 implicit none
@@ -358,4 +358,4 @@ contains
   end subroutine delete_non_unif_cubic_splines_1d_adv
 
 
-end module sll_module_advection_1d_non_uniform_cubic_splines
+end module sll_m_advection_1d_non_uniform_cubic_splines

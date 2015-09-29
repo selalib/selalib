@@ -7,10 +7,10 @@ program landau_4d
 #include "sll_maxwell_solvers_macros.h"
 
 use sll_constants
-use sll_module_interpolators_1d_base
-use sll_module_cubic_spline_interpolator_1d
+use sll_m_interpolators_1d_base
+use sll_m_cubic_spline_interpolator_1d
 use sll_utilities, only: int2string
-use sll_module_maxwell_2d_pstd
+use sll_m_maxwell_2d_pstd
 
 implicit none
   

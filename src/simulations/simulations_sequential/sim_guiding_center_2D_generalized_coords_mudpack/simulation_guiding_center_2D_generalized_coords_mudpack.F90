@@ -14,16 +14,16 @@ module sll_simulation_2d_gc_curvilinear_mudpack_module
 #include "sll_poisson_solvers.h"
   use sll_constants
   use sll_cartesian_meshes  
-  use sll_module_advection_1d_periodic
-  use sll_module_advection_2d_BSL
-  use sll_module_characteristics_2d_explicit_euler
-  use sll_module_characteristics_2d_verlet
+  use sll_m_advection_1d_periodic
+  use sll_m_advection_2d_BSL
+  use sll_m_characteristics_2d_explicit_euler
+  use sll_m_characteristics_2d_verlet
   use sll_reduction_module
   use sll_simulation_base
-  use sll_module_cubic_spline_interpolator_2d
-  use sll_module_cubic_spline_interpolator_1d
+  use sll_m_cubic_spline_interpolator_2d
+  use sll_m_cubic_spline_interpolator_1d
   use sll_coordinate_transformation_2d_base_module
-  use sll_module_coordinate_transformations_2d
+  use sll_m_coordinate_transformations_2d
   use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
   use sll_mudpack_curvilinear

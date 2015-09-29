@@ -37,13 +37,13 @@ module sll_general_coordinate_elliptic_solver_module
 #include "sll_errors.h"
 
 use sll_boundary_condition_descriptors
-use sll_module_scalar_field_2d_base, only: sll_scalar_field_2d_base
-use sll_module_scalar_field_2d, only: sll_scalar_field_2d_analytic,  &
+use sll_m_scalar_field_2d_base, only: sll_scalar_field_2d_base
+use sll_m_scalar_field_2d, only: sll_scalar_field_2d_analytic,  &
                                       sll_scalar_field_2d_discrete
-use sll_module_interpolators_2d_base, only: sll_interpolator_2d_base
-use sll_module_arbitrary_degree_spline_interpolator_2d, only:        &
+use sll_m_interpolators_2d_base, only: sll_interpolator_2d_base
+use sll_m_arbitrary_degree_spline_interpolator_2d, only:        &
   sll_arbitrary_degree_spline_interpolator_2d
-use sll_module_arbitrary_degree_spline_interpolator_1d, only:        &
+use sll_m_arbitrary_degree_spline_interpolator_1d, only:        &
   interv, deboor_type, bsplvd
 use sll_cubic_splines  
 use gauss_legendre_integration

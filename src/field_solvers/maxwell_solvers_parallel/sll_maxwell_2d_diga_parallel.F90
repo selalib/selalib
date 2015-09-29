@@ -6,7 +6,7 @@
 !> Solve Maxwell equations on cartesian domain with Disconituous Galerkine method:
 !> * Gauss Lobatto for integration formula
 !> * Periodic boundary conditions.
-module sll_module_maxwell_2d_diga_parallel
+module sll_m_maxwell_2d_diga_parallel
 
 #include "sll_maxwell_solvers_macros.h"
 #include "sll_working_precision.h"
@@ -17,11 +17,11 @@ module sll_module_maxwell_2d_diga_parallel
 #include "sll_assert.h"
 
 use sll_cartesian_meshes
-use sll_module_coordinate_transformations_2d
+use sll_m_coordinate_transformations_2d
 use sll_common_coordinate_transformations
 use sll_dg_fields
 use sll_boundary_condition_descriptors
-use sll_module_maxwell_2d_diga
+use sll_m_maxwell_2d_diga
 
 implicit none
 private
@@ -463,6 +463,6 @@ subroutine solve_maxwell_2d_diga_parallel( this, fx, fy, fz, dx, dy, dz )
 end subroutine solve_maxwell_2d_diga_parallel
 
 
-end module sll_module_maxwell_2d_diga_parallel
+end module sll_m_maxwell_2d_diga_parallel
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

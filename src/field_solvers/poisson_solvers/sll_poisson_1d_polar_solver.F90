@@ -20,12 +20,12 @@
 
 !> @ingroup poisson_solvers
 !> solves axisymmetric poisson
-module sll_module_poisson_1d_polar_solver
+module sll_m_poisson_1d_polar_solver
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 !use sll_boundary_condition_descriptors
-use sll_module_poisson_1d_base
+use sll_m_poisson_1d_base
 !use sll_poisson_2d_polar
 implicit none
 
@@ -168,5 +168,5 @@ contains
   
   
   
-end module sll_module_poisson_1d_polar_solver
+end module sll_m_poisson_1d_polar_solver
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

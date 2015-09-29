@@ -1,4 +1,4 @@
-module sll_module_scalar_field_2d_base
+module sll_m_scalar_field_2d_base
 #include "sll_working_precision.h"
   use sll_coordinate_transformation_2d_base_module
   use sll_cartesian_meshes
@@ -180,4 +180,4 @@ module sll_module_scalar_field_2d_base
      end subroutine field_2d_subroutine
   end interface
 
-end module sll_module_scalar_field_2d_base
+end module sll_m_scalar_field_2d_base

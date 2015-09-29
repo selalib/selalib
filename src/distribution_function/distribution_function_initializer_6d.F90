@@ -3,7 +3,7 @@ module sll_distribution_function_6d_initializer
 #include "sll_assert.h"
 #include "sll_memory.h"
   use sll_constants
-!  use sll_module_mapped_meshes_2d_base
+!  use sll_m_mapped_meshes_2d_base
   use sll_scalar_field_initializers_base
   use sll_collective
   use sll_remapper

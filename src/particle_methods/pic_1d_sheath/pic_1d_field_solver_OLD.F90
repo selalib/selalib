@@ -16,7 +16,7 @@ module sll_pic_1d_field_solver
     use sll_fft
     use sll_constants
     use sll_collective
-    use sll_module_poisson_1d_periodic_solver
+    use sll_m_poisson_1d_periodic_solver
     use sll_poisson_1d_fem !Finite Element Bspline
     use sll_cartesian_meshes
     use sll_poisson_1d_fd !Finite difference solver

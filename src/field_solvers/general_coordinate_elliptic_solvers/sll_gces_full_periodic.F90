@@ -30,20 +30,20 @@
 !> @brief Elliptic solver on 2d curvilinear mesh
 !> @details This solver works with analytical 
 !> and discrete coordinate transformations.
-module sll_module_gces_full_periodic
+module sll_m_gces_full_periodic
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_errors.h"
 
 use sll_boundary_condition_descriptors
-use sll_module_scalar_field_2d_base, only: sll_scalar_field_2d_base
-use sll_module_scalar_field_2d, only: sll_scalar_field_2d_analytic,  &
+use sll_m_scalar_field_2d_base, only: sll_scalar_field_2d_base
+use sll_m_scalar_field_2d, only: sll_scalar_field_2d_analytic,  &
                                       sll_scalar_field_2d_discrete
-use sll_module_interpolators_2d_base, only: sll_interpolator_2d_base
-use sll_module_arbitrary_degree_spline_interpolator_2d, only:        &
+use sll_m_interpolators_2d_base, only: sll_interpolator_2d_base
+use sll_m_arbitrary_degree_spline_interpolator_2d, only:        &
   sll_arbitrary_degree_spline_interpolator_2d
-use sll_module_arbitrary_degree_spline_interpolator_1d, only:        &
+use sll_m_arbitrary_degree_spline_interpolator_1d, only:        &
   interv, deboor_type, bsplvd
 use gauss_legendre_integration
 use gauss_lobatto_integration
@@ -1205,4 +1205,4 @@ call phi%interp_2d%set_coefficients(es%phi_vec(1:es%num_cells1*es%num_cells2))
 
 end subroutine solve_gces_full_periodic
   
-end module sll_module_gces_full_periodic
+end module sll_m_gces_full_periodic
