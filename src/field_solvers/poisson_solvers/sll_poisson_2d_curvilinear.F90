@@ -2,7 +2,7 @@
 !> @brief Poisson solver on 2d curvilinear mesh
 !> @details This solver works with geometry defined on gauss points
 
-module sll_module_poisson_2d_curvilinear
+module sll_m_poisson_2d_curvilinear
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -11,7 +11,7 @@ use gauss_legendre_integration
 use gauss_lobatto_integration
 use sll_boundary_condition_descriptors
 use sll_sparse_matrix_module
-use sll_module_deboor_splines_1d
+use sll_m_deboor_splines_1d
 
 implicit none
 
@@ -1344,4 +1344,4 @@ subroutine compute_source_at_points( &
 end subroutine compute_source_at_points
 
 
-end module sll_module_poisson_2d_curvilinear
+end module sll_m_poisson_2d_curvilinear

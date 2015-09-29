@@ -3,7 +3,7 @@
 !> Module interface to solve Poisson equation in 2D
 !> @details
 !> Contains the abstract class to create a Poisson solver in 2D.
-module sll_module_poisson_2d_base
+module sll_m_poisson_2d_base
 #include "sll_working_precision.h"
 
   implicit none
@@ -59,4 +59,4 @@ module sll_module_poisson_2d_base
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
-end module sll_module_poisson_2d_base
+end module sll_m_poisson_2d_base

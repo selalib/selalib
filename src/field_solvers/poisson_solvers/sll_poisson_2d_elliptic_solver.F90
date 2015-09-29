@@ -23,17 +23,17 @@
 
 
 !> @ingroup poisson_solvers
-module sll_module_poisson_2d_elliptic_solver
+module sll_m_poisson_2d_elliptic_solver
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_errors.h"
 !use sll_boundary_condition_descriptors
-  use sll_module_poisson_2d_base
+  use sll_m_poisson_2d_base
   use sll_general_coordinate_elliptic_solver_module
-  use sll_module_scalar_field_2d_base
-  use sll_module_scalar_field_2d
-  use sll_module_cubic_spline_interpolator_2d
+  use sll_m_scalar_field_2d_base
+  use sll_m_scalar_field_2d
+  use sll_m_cubic_spline_interpolator_2d
 implicit none
 
   sll_int32, parameter :: SLL_NO_SOLVE_ELLIPTIC_SOLVER = 0 
@@ -824,6 +824,6 @@ contains
       
     end subroutine compute_E_from_rho_2d_elliptic_solver
     
- end module sll_module_poisson_2d_elliptic_solver
+ end module sll_m_poisson_2d_elliptic_solver
   
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

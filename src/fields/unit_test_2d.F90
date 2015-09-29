@@ -3,8 +3,8 @@ program unit_test_2d
 #include "sll_memory.h"
   use sll_cartesian_meshes
   use sll_constants
-  use sll_module_scalar_field_2d
-  use sll_module_coordinate_transformations_2d
+  use sll_m_scalar_field_2d
+  use sll_m_coordinate_transformations_2d
   use sll_common_coordinate_transformations
   use helper_functions
   implicit none

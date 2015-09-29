@@ -18,7 +18,7 @@
 program unit_test_advection_1d_PSM
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use sll_module_advection_1d_PSM
+use sll_m_advection_1d_PSM
 
 implicit none
   

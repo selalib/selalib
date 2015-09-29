@@ -20,12 +20,12 @@
 !> Class for the cubic spline sll_interpolator_2d_base
 !> @details
 !> Implements the sll_interpolator_2d_base interface
-module sll_module_cubic_spline_interpolator_2d
+module sll_m_cubic_spline_interpolator_2d
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-use sll_module_interpolators_2d_base
+use sll_m_interpolators_2d_base
 use sll_cubic_splines
 implicit none
 private
@@ -475,4 +475,4 @@ contains
     !stop
   end function coefficients_are_set_cs2d
 
-end module sll_module_cubic_spline_interpolator_2d
+end module sll_m_cubic_spline_interpolator_2d

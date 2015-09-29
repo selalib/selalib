@@ -38,7 +38,7 @@
 !>
 !>\f$\displaystyle E_y^{n+1} = E_y^{n} - c^2\Delta t  \frac{\partial B_z^{n+1/2}}{\partial x} \f$
 !>
-module sll_module_maxwell_2d_fdtd
+module sll_m_maxwell_2d_fdtd
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -542,4 +542,4 @@ end subroutine bc_silver_muller_2d_fdtd
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-end module sll_module_maxwell_2d_fdtd
+end module sll_m_maxwell_2d_fdtd

@@ -7,8 +7,8 @@ program test_operator_splitting_const_coef_adv_2d
 #include "sll_assert.h"
 #include "sll_field_2d.h"
   use sll_const_coef_advection_2d
-  use sll_module_cubic_spline_interpolator_1d
-  use sll_module_interpolators_1d_base
+  use sll_m_cubic_spline_interpolator_1d
+  use sll_m_interpolators_1d_base
   use sll_operator_splitting
   use sll_hdf5_io_serial
   implicit none

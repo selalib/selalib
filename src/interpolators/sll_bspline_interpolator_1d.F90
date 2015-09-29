@@ -18,7 +18,7 @@
 !> Class interpolator and methods for bspline interpolator
 !> @details
 !> This interpolator works for regular spaced mesh points.
-module sll_module_bspline_interpolator_1d
+module sll_m_bspline_interpolator_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -27,7 +27,7 @@ module sll_module_bspline_interpolator_1d
 #define interpo interpolator
 
 use sll_bsplines
-use sll_module_interpolators_1d_base
+use sll_m_interpolators_1d_base
 
 implicit none
 private
@@ -510,4 +510,4 @@ stop  'reconstruct_array 1d not implemented yet'
 
 end function reconstruct_array
 
-end module sll_module_bspline_interpolator_1d
+end module sll_m_bspline_interpolator_1d

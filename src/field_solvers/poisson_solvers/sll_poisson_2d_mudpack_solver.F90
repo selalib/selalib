@@ -42,17 +42,17 @@
 !> \f[ 
 !>      A_{1,1}\partial_{1,1}\hat{\phi}+B_1\partial_{1}\hat{\phi}+(C+A_{2,2}k^2)\hat{\phi} = \hat{\rho}
 !> \f]
-module sll_module_poisson_2d_mudpack
+module sll_m_poisson_2d_mudpack
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-use sll_module_poisson_2d_base
+use sll_m_poisson_2d_base
 use sll_mudpack_curvilinear
-use sll_module_cubic_spline_interpolator_1d
-use sll_module_cubic_spline_interpolator_2d
-use sll_module_interpolators_1d_base
-use sll_module_interpolators_2d_base
+use sll_m_cubic_spline_interpolator_1d
+use sll_m_cubic_spline_interpolator_2d
+use sll_m_interpolators_1d_base
+use sll_m_interpolators_2d_base
 
 implicit none
 private
@@ -1231,11 +1231,11 @@ contains
       
   end subroutine compute_E_from_rho_2d_mudpack
   
-end module sll_module_poisson_2d_mudpack
+end module sll_m_poisson_2d_mudpack
 
 !> input x dependent coefficients
 subroutine mudpack_cofx(x,cxx,cx,cex)
-use sll_module_poisson_2d_mudpack
+use sll_m_poisson_2d_mudpack
 implicit none
 real(8)  :: x,cxx,cx,cex
 cxx = mudpack_wrapper%cxx_1d_interp%interpolate_value(x)
@@ -1246,7 +1246,7 @@ end
 
 !> input y dependent coefficients
 subroutine mudpack_cofy(y,cyy,cy,cey)
-use sll_module_poisson_2d_mudpack
+use sll_m_poisson_2d_mudpack
 implicit none
 real(8)  :: y,cyy,cy,cey
 cyy = mudpack_wrapper%cyy_1d_interp%interpolate_value(y)
@@ -1256,7 +1256,7 @@ return
 end
 
 subroutine mudpack_cof(x,y,cxx,cyy,cx,cy,ce)
-use sll_module_poisson_2d_mudpack
+use sll_m_poisson_2d_mudpack
 implicit none
 real(8)  :: x,cxx,cx
 real(8)  :: y,cyy,cy,ce
@@ -1269,7 +1269,7 @@ return
 end
 
 subroutine mudpack_cofcr(x,y,cxx,cxy,cyy,cx,cy,ce)
-use sll_module_poisson_2d_mudpack
+use sll_m_poisson_2d_mudpack
 implicit none
 real(8)  :: x,cxx,cx,cxy
 real(8)  :: y,cyy,cy,ce
@@ -1283,7 +1283,7 @@ return
 end
 !> input mixed derivative b.c. to mud2sp
 subroutine mudpack_bndsp(kbdy,xory,alfa,gbdy)
-use sll_module_poisson_2d_mudpack
+use sll_m_poisson_2d_mudpack
 implicit none
 integer  :: kbdy
 real(8)  :: xory,alfa,gbdy,x,y,pe,px,py

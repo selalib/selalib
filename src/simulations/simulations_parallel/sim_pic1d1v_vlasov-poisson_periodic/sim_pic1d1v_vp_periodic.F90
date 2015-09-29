@@ -1,4 +1,4 @@
-module sll_module_simulation_pic1d1v_vp_periodic
+module sll_m_simulation_pic1d1v_vp_periodic
 
 #include "sll_working_precision.h"
 #include "sll_errors.h"
@@ -261,9 +261,10 @@ contains
 
   subroutine init_from_file( sim, filename )
     class( sll_simulation_pic1d1v_vp_periodic ), intent( inout ) :: sim
-    character( len=* )                         , intent( in    ) :: filename
+    character( len=* )                         , intent( in )    :: filename
     character( len=64 ), parameter :: this_sub_name = "init_fake"
 !    SLL_WARNING( this_sub_name, "'init_from_file' method not implemented" )
+    character( len=256 )                                         :: arg_filename
      
     CHARACTER(LEN=256) :: path
 
@@ -304,10 +305,10 @@ contains
     namelist /landau_params/ lalpha, lmode, pi_unit, interval_a, interval_b
  
     ! Read namelists from input file
-    call getarg(1,filename)
-    open(unit=input_file, file=trim(filename), IOStat=IO_stat)
+    call getarg(1,arg_filename)
+    open(unit=input_file, file=trim(arg_filename), IOStat=IO_stat)
     if( IO_stat /= 0 ) then
-        print *, 'init_file() failed to open file ', filename
+        print *, 'init_file() failed to open file ', arg_filename
         STOP
     end if
     read(input_file,landau_params)
@@ -1817,7 +1818,7 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
 
     
 
-end module sll_module_simulation_pic1d1v_vp_periodic
+end module sll_m_simulation_pic1d1v_vp_periodic
 
 
 

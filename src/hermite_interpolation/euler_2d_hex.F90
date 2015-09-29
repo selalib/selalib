@@ -3,7 +3,7 @@ module  euler_2d_hex
 #include "sll_working_precision.h"
 #include "sll_assert.h"
   use sll_constants
-  !use sll_module_characteristics_2d_base
+  !use sll_m_characteristics_2d_base
   implicit none
 
 !   type,extends(sll_characteristics_2d_base) :: euler_2d_hex_charac_computer

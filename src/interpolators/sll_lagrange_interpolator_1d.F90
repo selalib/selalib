@@ -3,11 +3,11 @@
 !> Interpolator class and methods of Lagrange 1D interpolator
 !> @details
 !> Implements the sll_interpolator_1d_base interface.
-module sll_module_lagrange_interpolator_1d
+module sll_m_lagrange_interpolator_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-use sll_module_interpolators_1d_base
+use sll_m_interpolators_1d_base
 use sll_lagrange_interpolation
 
 implicit none
@@ -326,4 +326,4 @@ end subroutine interpolate_pointer_values_li1d
 !DEFINE_NULL_INTERP_1D_ARRAY(sll_lagrange_interpolator_1d, interpolate_array_li1d)
 !DEFINE_NULL_INTERP_1D_ARRAY_MSG(sll_lagrange_interpolator_1d, compute_interpolants_li1d)
 
-end module sll_module_lagrange_interpolator_1d
+end module sll_m_lagrange_interpolator_1d
