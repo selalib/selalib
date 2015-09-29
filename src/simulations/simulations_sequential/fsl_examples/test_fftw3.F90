@@ -1,5 +1,5 @@
 program test_fftw3
-#include 'sll_fftw.h'
+#include "sll_fftw.h"
 use iso_c_binding
 use fftw3
 
