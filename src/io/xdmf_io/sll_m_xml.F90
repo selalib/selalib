@@ -238,12 +238,13 @@ contains
 
     if (allocated( self%header_lines )) then
       nl = size( self%header_lines )
+      allocate( tmp(nl+1) )
+      tmp(1:nl) = self%header_lines(1:nl)
     else
       nl = 0
+      allocate( tmp(1) )
     end if
 
-    allocate( tmp(nl+1) )
-    tmp(1:nl) = self%header_lines(1:nl)
     tmp(nl+1) = trim( line )
 
     call move_alloc( from=tmp, to=self%header_lines )
