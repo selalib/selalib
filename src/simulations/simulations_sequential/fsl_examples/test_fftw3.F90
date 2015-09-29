@@ -1,7 +1,11 @@
 program test_fftw3
-use, intrinsic :: iso_c_binding
+#include 'sll_fftw.h'
+use iso_c_binding
+use fftw3
+
 implicit none
-include 'fftw3.f03'
+
+#ifdef FFTW_F2003
 
 type(C_PTR) :: fw, bw
 complex(C_DOUBLE_COMPLEX), dimension(:,:), pointer :: rhot
@@ -37,5 +41,7 @@ call fftw_destroy_plan(bw)
 call cpu_time(t1)
 
 write(*,"('CPU time =', g15.3)") t1-t0
+
+#endif
 
 end program test_fftw3
