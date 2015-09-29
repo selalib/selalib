@@ -18,9 +18,9 @@
 program unit_test_advection_1d_CSL_periodic
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use sll_module_advection_1d_CSL_periodic
-use sll_module_characteristics_1d_explicit_euler
-use sll_module_cubic_spline_interpolator_1d
+use sll_m_advection_1d_CSL_periodic
+use sll_m_characteristics_1d_explicit_euler
+use sll_m_cubic_spline_interpolator_1d
 
 implicit none
   

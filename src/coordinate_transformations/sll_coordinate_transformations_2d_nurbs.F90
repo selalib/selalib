@@ -11,7 +11,7 @@
 !> to represent quantities. 
 !> This needs to be present to answer questions like T%x_node(i,j). 
 !> We set this logical mesh outside of the read_from_file routine.
-module sll_module_coordinate_transformations_2d_nurbs
+module sll_m_coordinate_transformations_2d_nurbs
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -20,11 +20,11 @@ module sll_module_coordinate_transformations_2d_nurbs
   use sll_xdmf
   use sll_meshes_base
   use sll_cartesian_meshes
-  use sll_module_cubic_spline_interpolator_2d
+  use sll_m_cubic_spline_interpolator_2d
   use sll_gnuplot
-  use sll_module_interpolators_2d_base
+  use sll_m_interpolators_2d_base
   use sll_coordinate_transformation_2d_base_module
-  use sll_module_deboor_splines_2d
+  use sll_m_deboor_splines_2d
 
   implicit none
   private
@@ -119,7 +119,7 @@ contains
   end function new_nurbs_2d_transformation_from_file
 
   subroutine read_from_file_2d_nurbs( transf, filename )
-    use sll_module_arbitrary_degree_spline_interpolator_2d
+    use sll_m_arbitrary_degree_spline_interpolator_2d
     class(sll_coordinate_transformation_2d_nurbs), intent(inout) :: transf
     character(len=*), intent(in) :: filename
     intrinsic :: trim
@@ -893,4 +893,4 @@ contains
   end subroutine delete_transformation_2d_nurbs
 
 
-end module sll_module_coordinate_transformations_2d_nurbs
+end module sll_m_coordinate_transformations_2d_nurbs

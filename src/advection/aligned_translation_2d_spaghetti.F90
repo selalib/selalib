@@ -29,11 +29,11 @@ program aligned_translation_2d
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-use sll_module_advection_1d_base
-use sll_module_advection_1d_periodic
+use sll_m_advection_1d_base
+use sll_m_advection_1d_periodic
 use lagrange_interpolation
 use sll_fcisl_module
-use sll_module_advection_2d_oblic
+use sll_m_advection_2d_oblic
 
 implicit none
   

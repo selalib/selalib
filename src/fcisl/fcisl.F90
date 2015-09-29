@@ -3,7 +3,7 @@ module sll_fcisl_module
 #include "sll_memory.h"
 #include "sll_assert.h"
   use sll_cartesian_meshes
-  use sll_module_advection_1d_base
+  use sll_m_advection_1d_base
 implicit none
 
 ! a direction is chosen for interpolation

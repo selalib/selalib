@@ -40,13 +40,13 @@ module sll_simulation_4d_vlasov_parallel_poisson_sequential_cartesian
   
   use sll_gnuplot_parallel
   use sll_coordinate_transformation_2d_base_module
-  use sll_module_coordinate_transformations_2d
+  use sll_m_coordinate_transformations_2d
   use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
   use sll_parallel_array_initializer_module
   use sll_hermite_interpolation_2d_module
   
-  use sll_module_advection_1d_periodic
+  use sll_m_advection_1d_periodic
 
   use sll_fft
   use sll_reduction_module

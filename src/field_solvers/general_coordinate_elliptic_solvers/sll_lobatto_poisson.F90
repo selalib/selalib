@@ -3,7 +3,7 @@ module sll_lobatto_poisson
 #include "sll_working_precision.h"
 
   use sll_coordinate_transformation_2d_base_module
-  use sll_module_coordinate_transformations_2d
+  use sll_m_coordinate_transformations_2d
   use sll_common_coordinate_transformations
   use map_function_module, only: set_map_function
   use lobalap
