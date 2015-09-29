@@ -1122,7 +1122,7 @@ end subroutine get_ltp_deformation_matrix
 !    p_group%debug_bsl_remap = -100
 !
 !
-!    ! <<loop_on_virtual_cells>> [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:loop_over_all_cells]]
+!    ! loop_on_virtual_cells [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:loop_over_all_cells]]
 !    ! Loop over all cells of indices i,j,l,m which contain at least one particle
 !
 !    do i = 1,num_virtual_cells_x
