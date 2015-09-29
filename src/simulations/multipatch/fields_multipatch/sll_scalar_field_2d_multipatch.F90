@@ -25,16 +25,16 @@
 ! 04 Feb 2014 - Initial Version
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
-module sll_module_scalar_field_2d_multipatch
+module sll_m_scalar_field_2d_multipatch
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_file_io.h"
-  use sll_module_scalar_field_2d
+  use sll_m_scalar_field_2d
   use sll_coordinate_transformation_multipatch_module
   use sll_constants
-  use sll_module_interpolators_2d_base
-  use sll_module_arbitrary_degree_spline_interpolator_2d
+  use sll_m_interpolators_2d_base
+  use sll_m_arbitrary_degree_spline_interpolator_2d
   use sll_utilities
   use sll_boundary_condition_descriptors
   use sll_gnuplot
@@ -1003,4 +1003,4 @@ contains   ! *****************************************************************
 !!$  end function get_spline_local_to_global_index_sfmp2d
   
 
-end module sll_module_scalar_field_2d_multipatch
+end module sll_m_scalar_field_2d_multipatch

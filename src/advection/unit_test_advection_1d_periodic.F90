@@ -17,8 +17,8 @@
 
 program unit_test_advection_1d_periodic
 #include "sll_working_precision.h"
-use sll_module_advection_1d_base
-use sll_module_advection_1d_periodic
+use sll_m_advection_1d_base
+use sll_m_advection_1d_periodic
 
 implicit none
   

@@ -1,4 +1,4 @@
-module sll_module_simulation_pic1d1v_vp_periodic
+module sll_m_simulation_pic1d1v_vp_periodic
 
 #include "sll_working_precision.h"
 #include "sll_errors.h"
@@ -1818,7 +1818,7 @@ subroutine sll_pic_1d_Verlet_scheme(sim, t)
 
     
 
-end module sll_module_simulation_pic1d1v_vp_periodic
+end module sll_m_simulation_pic1d1v_vp_periodic
 
 
 

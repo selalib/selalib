@@ -30,7 +30,7 @@
 !> \partial x_2(\eta_1,\eta_2) / \partial \eta_2 
 !> \end{bmatrix}
 !> \f]
-module sll_module_coordinate_transformations_2d
+module sll_m_coordinate_transformations_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -38,9 +38,9 @@ module sll_module_coordinate_transformations_2d
   use sll_cubic_splines
   use sll_xdmf
   use sll_cartesian_meshes
-  use sll_module_interpolators_2d_base
+  use sll_m_interpolators_2d_base
   use sll_coordinate_transformation_2d_base_module
-  use sll_module_deboor_splines_2d
+  use sll_m_deboor_splines_2d
   implicit none
   private
   
@@ -1242,7 +1242,7 @@ contains
   !   so this should be included.
  
   subroutine read_from_file_2d_discrete( transf, filename )
-    use sll_module_arbitrary_degree_spline_interpolator_2d
+    use sll_m_arbitrary_degree_spline_interpolator_2d
     class(sll_coordinate_transformation_2d_discrete), intent(inout) :: transf
     character(len=*), intent(in) :: filename
     intrinsic :: trim
@@ -1601,4 +1601,4 @@ contains
     mesh_2d_jacobian_cell = transf%jacobians_c(i,j)
   end function mesh_2d_jacobian_cell
 #endif
-end module sll_module_coordinate_transformations_2d
+end module sll_m_coordinate_transformations_2d

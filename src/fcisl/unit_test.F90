@@ -4,7 +4,7 @@ program fcisl_test
 #include "sll_memory.h"
   use sll_fcisl_module
   use sll_constants
-  use sll_module_advection_1d_periodic
+  use sll_m_advection_1d_periodic
   
   implicit none
   

@@ -19,8 +19,8 @@ program unit_test_advection_1d_spectral
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_file_io.h"
-use sll_module_advection_1d_base
-use sll_module_advection_1d_spectral
+use sll_m_advection_1d_base
+use sll_m_advection_1d_spectral
 use sll_boundary_condition_descriptors
 
 !$ use omp_lib

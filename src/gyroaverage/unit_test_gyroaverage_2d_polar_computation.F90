@@ -19,7 +19,7 @@ program unit_test_gyroaverage_2d_polar_computation
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-use sll_module_gyroaverage_2d_polar_computation
+use sll_m_gyroaverage_2d_polar_computation
 
 implicit none
   

@@ -1,4 +1,4 @@
-module sll_module_qn_2d_base
+module sll_m_qn_2d_base
 #include "sll_working_precision.h"
   implicit none
 
@@ -29,4 +29,4 @@ module sll_module_qn_2d_base
     end subroutine signature_solve_qn_2d
   end interface
 
-end module sll_module_qn_2d_base
+end module sll_m_qn_2d_base

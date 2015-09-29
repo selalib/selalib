@@ -6,7 +6,7 @@ module sll_scalar_field_2d_old
 #include "sll_file_io.h"
 #include "sll_utilities.h"
 #include "sll_constants.h"
-  use sll_module_interpolators_1d_base
+  use sll_m_interpolators_1d_base
   use sll_scalar_field_initializers_base
 
   implicit none

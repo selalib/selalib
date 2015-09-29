@@ -1,7 +1,7 @@
 !------------------------------------------------------------------------------
 ! SELALIB
 !------------------------------------------------------------------------------
-! MODULE:   sll_module_vector_space_real_arrays
+! MODULE:   sll_m_vector_space_real_arrays
 !
 ! DESCRIPTION:
 !> @ingroup vector_space
@@ -10,12 +10,12 @@
 !> @brief   Vector spaces for wrapping 1D/2D/3D Fortran arrays.
 !> @todo    Add detailed description
 !------------------------------------------------------------------------------
-module sll_module_vector_space_real_arrays
+module sll_m_vector_space_real_arrays
 
 #include "sll_working_precision.h"
 #include "sll_errors.h"
 
-  use sll_module_vector_space_base, only: sll_vector_space_base
+  use sll_m_vector_space_base, only: sll_vector_space_base
 
   implicit none
 
@@ -482,4 +482,4 @@ contains
 
   !============================================================================
 
-end module sll_module_vector_space_real_arrays
+end module sll_m_vector_space_real_arrays

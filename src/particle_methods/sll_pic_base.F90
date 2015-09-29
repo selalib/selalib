@@ -1,4 +1,4 @@
-module sll_module_pic_base
+module sll_m_pic_base
 
 #include "sll_working_precision.h"
 
@@ -86,4 +86,4 @@ contains
     r = self%q / self%m
   end function q_over_m
 
-end module sll_module_pic_base
+end module sll_m_pic_base

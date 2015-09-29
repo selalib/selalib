@@ -15,16 +15,16 @@ program qns_4d_general_multipatch
   use sll_collective
 !  use sll_constants
   use sll_cartesian_meshes
-  use sll_module_coordinate_transformations_2d
+  use sll_m_coordinate_transformations_2d
   use sll_common_coordinate_transformations
-!  use sll_module_coordinate_transformations_2d_nurbs
+!  use sll_m_coordinate_transformations_2d_nurbs
   use sll_common_array_initializers_module
-  ! use sll_module_poisson_2d_elliptic_solver, &
+  ! use sll_m_poisson_2d_elliptic_solver, &
   !    only: es_gauss_legendre
   use sll_coordinate_transformation_multipatch_module, only: &
      sll_coordinate_transformation_multipatch_2d
   use sll_general_coordinate_elliptic_solver_module
-!  use sll_module_scalar_field_2d_multipatch
+!  use sll_m_scalar_field_2d_multipatch
   implicit none
 
 

@@ -9,8 +9,8 @@ use sll_remapper
 #define MPI_MASTER 0
 
 
-use sll_module_interpolators_1d_base
-use sll_module_quintic_spline_interpolator_1d
+use sll_m_interpolators_1d_base
+use sll_m_quintic_spline_interpolator_1d
  
 
 implicit none
