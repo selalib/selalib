@@ -336,7 +336,7 @@ contains !************************** Operations **************************
 
   !> @brief Starts the paralell environment
   subroutine sll_boot_collective(required)
-    sll_int32, optional :: required
+    sll_int32, intent(in), optional :: required
     sll_int32 :: ierr
 
     SLL_ALLOCATE( sll_world_collective, ierr )
@@ -344,7 +344,7 @@ contains !************************** Operations **************************
     if(present(required)) then
        sll_world_collective%thread_level_required = required
     else
-       sll_world_collective%thread_level_required = MPI_THREAD_SINGLE
+       sll_world_collective%thread_level_required = MPI_THREAD_FUNNELED
     end if
 
     call MPI_Init_Thread(sll_world_collective%thread_level_required, &
