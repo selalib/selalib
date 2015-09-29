@@ -1007,7 +1007,7 @@ contains
     sll_real64                          :: tmp_loc(5)
     sll_real64                          :: tmp(5)
     sll_int32                           :: i
-    sll_int32                           :: istep
+    sll_int32                           :: istep = 0
     sll_int32                           :: ig
     sll_int32                           :: k
 
