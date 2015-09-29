@@ -22,7 +22,7 @@
 !> This is an abstract class, methods are implemented in other modules
 !> @todo
 !> delete function for this type
-module sll_module_interpolators_1d_base
+module sll_m_interpolators_1d_base
 #include "sll_working_precision.h"
   use sll_boundary_condition_descriptors
   implicit none
@@ -223,4 +223,4 @@ contains
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
-end module sll_module_interpolators_1d_base
+end module sll_m_interpolators_1d_base

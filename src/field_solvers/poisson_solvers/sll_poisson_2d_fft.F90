@@ -22,12 +22,12 @@
 !> Numerical method uses Fast Fourier Transform and periodic
 !> boundary conditions.
 !> @snippet poisson_solvers/test_poisson_2d_fft.F90 example
-module sll_module_poisson_2d_fft
+module sll_m_poisson_2d_fft
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-use sll_module_poisson_2d_base
+use sll_m_poisson_2d_base
 
 #ifdef FFTW
 use sll_poisson_2D_periodic_fftw
@@ -152,4 +152,4 @@ contains
       
   end subroutine compute_E_from_rho_2d_fft
   
-end module sll_module_poisson_2d_fft
+end module sll_m_poisson_2d_fft

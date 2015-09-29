@@ -31,13 +31,13 @@
 !! - get_coefficients(...)
 !!
 !> Classes available are:
-!!  - sll_module_interpolators_1d_base::sll_interpolator_1d_base
-!!  - sll_module_interpolators_2d_base::sll_interpolator_2d_base
-!!  - sll_module_cubic_spline_interpolator_1d::sll_cubic_spline_interpolator_1d
-!!  - sll_module_cubic_spline_interpolator_1d_nonuniform::sll_cubic_spline_interpolator_1d_nonuniform
-!!  - sll_module_cubic_spline_interpolator_2d::sll_cubic_spline_interpolator_2d
-!!  - sll_module_arbitrary_degree_spline_interpolator_1d::sll_arbitrary_degree_spline_interpolator_1d
-!!  - sll_module_arbitrary_degree_spline_interpolator_2d::sll_arbitrary_degree_spline_interpolator_2d
+!!  - sll_m_interpolators_1d_base::sll_interpolator_1d_base
+!!  - sll_m_interpolators_2d_base::sll_interpolator_2d_base
+!!  - sll_m_cubic_spline_interpolator_1d::sll_cubic_spline_interpolator_1d
+!!  - sll_m_cubic_spline_interpolator_1d_nonuniform::sll_cubic_spline_interpolator_1d_nonuniform
+!!  - sll_m_cubic_spline_interpolator_2d::sll_cubic_spline_interpolator_2d
+!!  - sll_m_arbitrary_degree_spline_interpolator_1d::sll_arbitrary_degree_spline_interpolator_1d
+!!  - sll_m_arbitrary_degree_spline_interpolator_2d::sll_arbitrary_degree_spline_interpolator_2d
 !!  - sll_periodic_interpolator_1d
 !!  - sll_lagrange_interpolator_1d
 !>

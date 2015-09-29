@@ -1,7 +1,7 @@
-module sll_module_vector_space_real_arrays
+module sll_m_vector_space_real_arrays
 
 #include "sll_working_precision.h"
-  use sll_module_vector_space_base, only: sll_vector_space_base
+  use sll_m_vector_space_base, only: sll_vector_space_base
 
   implicit none
   

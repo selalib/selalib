@@ -14,17 +14,17 @@ module sll_simulation_4d_qns_mixed_module
   use sll_collective
   use sll_remapper
   use sll_constants
-  use sll_module_cubic_spline_interpolator_2d
+  use sll_m_cubic_spline_interpolator_2d
   use sll_poisson_2d_periodic_cartesian_par
-  use sll_module_cubic_spline_interpolator_1d
+  use sll_m_cubic_spline_interpolator_1d
   use sll_simulation_base
   use sll_cartesian_meshes
   use sll_parallel_array_initializer_module
   use sll_coordinate_transformation_2d_base_module
   use sll_gnuplot_parallel
   use sll_general_coordinate_elliptic_solver_module
-  use sll_module_scalar_field_2d_base
-  use sll_module_scalar_field_2d
+  use sll_m_scalar_field_2d_base
+  use sll_m_scalar_field_2d
   implicit none
 
 #define PRINT_PLOTS 1

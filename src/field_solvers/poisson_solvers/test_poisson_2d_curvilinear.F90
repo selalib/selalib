@@ -23,7 +23,7 @@ program test_poisson_2d_curvilinear
 #include "sll_boundary_condition_descriptors.h"
 
 use sll_constants
-use sll_module_poisson_2d_curvilinear
+use sll_m_poisson_2d_curvilinear
 use sll_general_coordinate_elliptic_solver_module
 implicit none
 

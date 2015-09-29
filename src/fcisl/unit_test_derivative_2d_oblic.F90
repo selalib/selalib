@@ -18,8 +18,8 @@
 program unit_test_derivative_2d_oblic
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use sll_module_derivative_2d_oblic
-use sll_module_advection_1d_periodic
+use sll_m_derivative_2d_oblic
+use sll_m_advection_1d_periodic
 implicit none
 
   type(oblic_2d_derivative), pointer :: deriv
