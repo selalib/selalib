@@ -40,7 +40,7 @@ module sll_m_xml
   !----------------------------------------------------------------------------
   !> XML type: linked list of XML entities, used in element content
   type, extends(c_xml_item) :: t_xml_content
-    class(c_xml_item)   , allocatable :: item
+    class(c_xml_item)   , pointer     :: item
     type (t_xml_content), pointer     :: next => null()
   contains
     procedure :: write       => t_xml_content__write
@@ -177,7 +177,7 @@ contains
     integer             , intent(in) :: indent
     integer             , intent(in) :: fid
 
-    if (.not. allocated ( self%item )) then
+    if (.not. associated ( self%item )) then
       ! TODO: Give error, item should always exist
     end if
 
@@ -193,7 +193,7 @@ contains
   recursive subroutine t_xml_content__delete( self )
     class(t_xml_content), intent(inout) :: self
 
-    if (.not. allocated ( self%item )) then
+    if (.not. associated ( self%item )) then
       ! TODO: Give error, item should always exist
     end if
       
@@ -215,7 +215,7 @@ contains
 
     type(t_xml_content), pointer :: new_cont
 
-    if (.not. allocated ( self%item )) then
+    if (.not. associated ( self%item )) then
       ! TODO: Give error, item should always exist
     end if
 
