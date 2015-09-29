@@ -380,12 +380,13 @@ contains
 
     if (allocated( self%attributes )) then
       na = size( self%attributes )
+      allocate( tmp(na+1) )
+      tmp(1:na) = self%attributes(1:na)
     else
       na = 0
+      allocate( tmp(1) )
     end if
 
-    allocate( tmp(na+1) )
-    tmp(1:na) = self%attributes(1:na)
     tmp(na+1)%name     = name
     tmp(na+1)%attvalue = attvalue 
 
