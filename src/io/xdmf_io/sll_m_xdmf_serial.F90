@@ -37,7 +37,7 @@ module sll_m_xdmf_serial
 
   !----------------------------------------------------------------------------
   !> XDMF file, sequential
-  type, public :: sll_t_xdmf_file
+  type :: sll_t_xdmf_file
 
     sll_real64                            :: time =  0.0_f64
     type(sll_t_xml_document), allocatable :: xml_doc

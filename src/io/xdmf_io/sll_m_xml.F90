@@ -65,7 +65,7 @@ module sll_m_xml
 
   !----------------------------------------------------------------------------
   !> XML element type
-  type, public, extends(c_xml_item) :: sll_t_xml_element
+  type, extends(c_xml_item) :: sll_t_xml_element
 !    character(len=:)     ,  allocatable :: name
     character(len=maxlen)              :: name
     type(t_xml_attribute), allocatable :: attributes(:)
@@ -82,7 +82,7 @@ module sll_m_xml
 
   !----------------------------------------------------------------------------
   !> XML document type
-  type, public :: sll_t_xml_document
+  type :: sll_t_xml_document
     character(len=maxlen)  , allocatable :: header_lines(:)
     type(sll_t_xml_element), allocatable :: root
   contains
@@ -469,7 +469,7 @@ contains
     ! Create new element inside the container
     allocate( sll_t_xml_element :: new_cont%item )
     select type( new_item => new_cont%item ); type is( sll_t_xml_element )
-      new_elem => new_item
+      new_elem = new_item
       new_elem%name = name
     end select
 

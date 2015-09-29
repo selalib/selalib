@@ -72,7 +72,7 @@ contains
   subroutine t_hdf5_serial__create( self )
     class(sll_t_hdf5_serial), intent(inout) :: self
 
-    character(len=:), parameter   :: this_sub_name = "t_hdf5_serial__create"
+    character(len=*), parameter   :: this_sub_name = "t_hdf5_serial__create"
     character(len=:), allocatable :: err_msg
     integer                       :: file_id
     integer                       :: error
@@ -92,7 +92,7 @@ contains
   subroutine t_hdf5_serial__open( self )
     class(sll_t_hdf5_serial), intent(inout) :: self
 
-    character(len=:), parameter   :: this_sub_name = "t_hdf5_serial__open"
+    character(len=*), parameter   :: this_sub_name = "t_hdf5_serial__open"
     character(len=:), allocatable :: err_msg
     integer                       :: file_id
     integer                       :: error
@@ -117,7 +117,7 @@ contains
   subroutine t_hdf5_serial__close( self )
     class(sll_t_hdf5_serial), intent(inout) :: self
 
-    character(len=:), parameter   :: this_sub_name = "t_hdf5_serial__close"
+    character(len=*), parameter   :: this_sub_name = "t_hdf5_serial__close"
     character(len=:), allocatable :: err_msg
     integer                       :: error
 
@@ -155,7 +155,7 @@ contains
     sll_real64              , intent(in   ) :: array(:)
     character(len=*)        , intent(in   ) :: dsetname
 
-    character(len=:), parameter   :: this_sub_name = "t_hdf5_serial__write_dble_array_1d"
+    character(len=*), parameter   :: this_sub_name = "t_hdf5_serial__write_dble_array_1d"
     character(len=:), allocatable :: err_msg
     integer                       :: error
 
@@ -179,7 +179,7 @@ contains
     sll_real64              , intent(in   ) :: array(:,:)
     character(len=*)        , intent(in   ) :: dsetname
 
-    character(len=:), parameter   :: this_sub_name = "t_hdf5_serial__write_dble_array_2d"
+    character(len=*), parameter   :: this_sub_name = "t_hdf5_serial__write_dble_array_2d"
     character(len=:), allocatable :: err_msg
     integer                       :: error
 
@@ -203,7 +203,7 @@ contains
     sll_real64              , intent(in   ) :: array(:,:,:)
     character(len=*)        , intent(in   ) :: dsetname
 
-    character(len=:), parameter   :: this_sub_name = "t_hdf5_serial__write_dble_array_3d"
+    character(len=*), parameter   :: this_sub_name = "t_hdf5_serial__write_dble_array_3d"
     character(len=:), allocatable :: err_msg
     integer                       :: error
 
@@ -227,7 +227,7 @@ contains
     sll_int32               , intent(in   ) :: array(:)
     character(len=*)        , intent(in   ) :: dsetname
 
-    character(len=:), parameter   :: this_sub_name = "t_hdf5_serial__write_int_array_1d"
+    character(len=*), parameter   :: this_sub_name = "t_hdf5_serial__write_int_array_1d"
     character(len=:), allocatable :: err_msg
     integer                       :: error
 
@@ -251,7 +251,7 @@ contains
     sll_int32               , intent(in   ) :: array(:,:)
     character(len=*)        , intent(in   ) :: dsetname
 
-    character(len=:), parameter   :: this_sub_name = "t_hdf5_serial__write_int_array_2d"
+    character(len=*), parameter   :: this_sub_name = "t_hdf5_serial__write_int_array_2d"
     character(len=:), allocatable :: err_msg
     integer                       :: error
 
@@ -275,7 +275,7 @@ contains
     sll_int32               , intent(in   ) :: array(:,:,:)
     character(len=*)        , intent(in   ) :: dsetname
 
-    character(len=:), parameter   :: this_sub_name = "t_hdf5_serial__write_int_array_3d"
+    character(len=*), parameter   :: this_sub_name = "t_hdf5_serial__write_int_array_3d"
     character(len=:), allocatable :: err_msg
     integer                       :: error
 
