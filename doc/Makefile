@@ -1,4 +1,6 @@
 default: doc html
+
+sync:
 	rsync -vurz --exclude 'releases' --delete -e ssh ./build/html/* \
                scm.gforge.inria.fr:/home/groups/selalib/htdocs/ 
 html:
