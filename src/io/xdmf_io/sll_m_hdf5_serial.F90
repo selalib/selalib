@@ -11,6 +11,8 @@
 !------------------------------------------------------------------------------
 module sll_m_hdf5_serial
 
+#ifndef NOHDF5
+
 #include "sll_errors.h"
 #include "sll_working_precision.h"
 
@@ -293,5 +295,6 @@ contains
 
   end subroutine t_hdf5_serial__write_int_array_3d
 
+#endif /* NOHDF5 */
 
 end module sll_m_hdf5_serial
