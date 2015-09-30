@@ -15,7 +15,9 @@ use sll_m_xml, only:    &
 use sll_m_xdmf_serial, only: &
     sll_t_xdmf_file              ! helper: XML doc creation in XDMF database
 
+#ifndef NOHDF5
 use sll_m_hdf5_serial, only: &
     sll_t_hdf5_serial            ! OO wrapper to Pierre's sll_hdf5_io_serial
+#endif /* NOHDF5 */
 
 end module sll_xdmf_io
