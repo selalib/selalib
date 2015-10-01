@@ -43,21 +43,21 @@ sll_real64 :: eta2
 sll_int32  :: offset(2)
 sll_real64 :: offset_eta1, offset_eta2
 
-!#########################################################
-!Simulation parameters and geometry sizes                !
-                                                         !
-sll_int32,  parameter :: nc_eta1 = 64                    !
-sll_int32,  parameter :: nc_eta2 = 64                    !
-sll_real64, parameter :: eta1_min = - 5.0_f64            !
-sll_real64, parameter :: eta1_max =   5.0_f64            !
-sll_real64, parameter :: eta2_min = - 5.0_f64            !
-sll_real64, parameter :: eta2_max = + 5.0_f64            !
-sll_real64 :: delta_eta1 = (eta1_max-eta1_min)/nc_eta1   !
-sll_real64 :: delta_eta2 = (eta2_max-eta2_min)/nc_eta2   !
-sll_real64, parameter :: delta_t = 0.05_f64              !
-sll_int32,  parameter :: n_step  = 200                   !
-                                                         !
-!#########################################################
+!###################################################################!
+!Simulation parameters and geometry sizes                           !
+                                                                    !
+sll_int32,  parameter :: nc_eta1    = 64                            !
+sll_int32,  parameter :: nc_eta2    = 64                            !
+sll_real64, parameter :: eta1_min   = - 5.0_f64                     !
+sll_real64, parameter :: eta1_max   =   5.0_f64                     !
+sll_real64, parameter :: eta2_min   = - 5.0_f64                     !
+sll_real64, parameter :: eta2_max   = + 5.0_f64                     !
+sll_real64, parameter :: delta_eta1 = (eta1_max-eta1_min)/nc_eta1   !
+sll_real64, parameter :: delta_eta2 = (eta2_max-eta2_min)/nc_eta2   !
+sll_real64, parameter :: delta_t    = 0.05_f64                      !
+sll_int32,  parameter :: n_step     = 200                           !
+                                                                    !
+!###################################################################!
 
 sll_int32 :: i, j
 
