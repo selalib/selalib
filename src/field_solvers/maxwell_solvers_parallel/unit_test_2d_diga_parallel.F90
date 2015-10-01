@@ -10,7 +10,7 @@ program test_maxwell_2d_diga_parallel
 #include "sll_file_io.h"
 
 use sll_cartesian_meshes
-use sll_module_coordinate_transformations_2d
+use sll_m_coordinate_transformations_2d
 use sll_common_coordinate_transformations
 use sll_dg_fields
 use sll_maxwell_2d_diga

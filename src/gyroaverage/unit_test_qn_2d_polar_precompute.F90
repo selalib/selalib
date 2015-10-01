@@ -20,14 +20,14 @@ program unit_test_qn_2d_polar_precompute
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_field_2d.h"
-use sll_module_qn_2d_polar_precompute
+use sll_m_qn_2d_polar_precompute
 use sll_timer
 use sll_ascii_io
 use gauss_lobatto_integration
 use gauss_legendre_integration
 use sll_gnuplot
 use sll_qn_2d_polar
-use sll_module_gyroaverage_2d_polar_hermite_solver
+use sll_m_gyroaverage_2d_polar_hermite_solver
 
 implicit none
 

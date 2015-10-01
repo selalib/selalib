@@ -10,13 +10,13 @@ program gc_2d_general
   use sll_simulation_2d_guiding_center_generalized_coords_module
   use sll_constants
   use sll_cartesian_meshes
-  use sll_module_coordinate_transformations_2d
+  use sll_m_coordinate_transformations_2d
   use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
-  use sll_module_scalar_field_2d
-  use sll_module_scalar_field_2d_base
-  use sll_module_arbitrary_degree_spline_interpolator_2d
-  use sll_module_interpolators_2d_base
+  use sll_m_scalar_field_2d
+  use sll_m_scalar_field_2d_base
+  use sll_m_arbitrary_degree_spline_interpolator_2d
+  use sll_m_interpolators_2d_base
   implicit none
 
   character(len=256) :: filename

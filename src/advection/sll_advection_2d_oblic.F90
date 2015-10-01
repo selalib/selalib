@@ -18,15 +18,15 @@
 ! in development; use oblic interpolation
 ! data are on uniform (fine) grid in x1
 
-module sll_module_advection_2d_oblic
+module sll_m_advection_2d_oblic
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 use sll_boundary_condition_descriptors
-!use sll_module_advection_2d_base
-use sll_module_advection_1d_base
-use sll_module_characteristics_2d_base
-use sll_module_interpolators_2d_base
+!use sll_m_advection_2d_base
+use sll_m_advection_1d_base
+use sll_m_characteristics_2d_base
+use sll_m_interpolators_2d_base
 !use sll_fcisl_module
 use lagrange_interpolation
 
@@ -241,4 +241,4 @@ contains
 
 
 
-end module sll_module_advection_2d_oblic
+end module sll_m_advection_2d_oblic

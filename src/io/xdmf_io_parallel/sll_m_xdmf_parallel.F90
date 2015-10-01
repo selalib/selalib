@@ -37,7 +37,7 @@ module sll_m_xdmf_parallel
 
   !----------------------------------------------------------------------------
   !> XDMF parallel file
-  type, public :: sll_t_xdmf_parallel_file
+  type :: sll_t_xdmf_parallel_file
 
     type(sll_collective_t), pointer    :: comm => null()
     sll_int32                          :: rank = -1

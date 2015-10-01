@@ -17,11 +17,11 @@
 
 
 
-module sll_module_gyroaverage_2d_polar_computation
+module sll_m_gyroaverage_2d_polar_computation
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-use sll_module_gyroaverage_2d_base
+use sll_m_gyroaverage_2d_base
 use sll_gyroaverage_2d_polar
 implicit none
 
@@ -191,4 +191,4 @@ contains
     
   end subroutine compute_gyroaverage_2d_polar
   
-end module sll_module_gyroaverage_2d_polar_computation
+end module sll_m_gyroaverage_2d_polar_computation

@@ -40,7 +40,7 @@ module sll_m_xml
   !----------------------------------------------------------------------------
   !> XML type: linked list of XML entities, used in element content
   type, extends(c_xml_item) :: t_xml_content
-    class(c_xml_item)   , allocatable :: item
+    class(c_xml_item)   , pointer     :: item
     type (t_xml_content), pointer     :: next => null()
   contains
     procedure :: write       => t_xml_content__write
@@ -65,7 +65,7 @@ module sll_m_xml
 
   !----------------------------------------------------------------------------
   !> XML element type
-  type, public, extends(c_xml_item) :: sll_t_xml_element
+  type, extends(c_xml_item) :: sll_t_xml_element
 !    character(len=:)     ,  allocatable :: name
     character(len=maxlen)              :: name
     type(t_xml_attribute), allocatable :: attributes(:)
@@ -82,7 +82,7 @@ module sll_m_xml
 
   !----------------------------------------------------------------------------
   !> XML document type
-  type, public :: sll_t_xml_document
+  type :: sll_t_xml_document
     character(len=maxlen)  , allocatable :: header_lines(:)
     type(sll_t_xml_element), allocatable :: root
   contains
@@ -177,7 +177,7 @@ contains
     integer             , intent(in) :: indent
     integer             , intent(in) :: fid
 
-    if (.not. allocated ( self%item )) then
+    if (.not. associated ( self%item )) then
       ! TODO: Give error, item should always exist
     end if
 
@@ -193,7 +193,7 @@ contains
   recursive subroutine t_xml_content__delete( self )
     class(t_xml_content), intent(inout) :: self
 
-    if (.not. allocated ( self%item )) then
+    if (.not. associated ( self%item )) then
       ! TODO: Give error, item should always exist
     end if
       
@@ -215,7 +215,7 @@ contains
 
     type(t_xml_content), pointer :: new_cont
 
-    if (.not. allocated ( self%item )) then
+    if (.not. associated ( self%item )) then
       ! TODO: Give error, item should always exist
     end if
 
@@ -238,12 +238,13 @@ contains
 
     if (allocated( self%header_lines )) then
       nl = size( self%header_lines )
+      allocate( tmp(nl+1) )
+      tmp(1:nl) = self%header_lines(1:nl)
     else
       nl = 0
+      allocate( tmp(1) )
     end if
 
-    allocate( tmp(nl+1) )
-    tmp(1:nl) = self%header_lines(1:nl)
     tmp(nl+1) = trim( line )
 
     call move_alloc( from=tmp, to=self%header_lines )
@@ -379,12 +380,13 @@ contains
 
     if (allocated( self%attributes )) then
       na = size( self%attributes )
+      allocate( tmp(na+1) )
+      tmp(1:na) = self%attributes(1:na)
     else
       na = 0
+      allocate( tmp(1) )
     end if
 
-    allocate( tmp(na+1) )
-    tmp(1:na) = self%attributes(1:na)
     tmp(na+1)%name     = name
     tmp(na+1)%attvalue = attvalue 
 

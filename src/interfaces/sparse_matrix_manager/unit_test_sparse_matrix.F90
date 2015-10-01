@@ -11,15 +11,21 @@ program unit_test_sparse_matrix
   type(sll_csr_matrix), pointer :: mat
   sll_int32 :: num_rows
   sll_int32 :: num_elements
-  sll_int32, dimension(:,:), allocatable :: local_to_global_row
-  sll_real64, dimension(:), allocatable :: b
-  sll_real64, dimension(:), allocatable :: x
-  sll_int32 :: num_local_dof_row
-  sll_int32 :: ierr
-  sll_int32 :: i
+  sll_int32,  dimension(:,:), allocatable :: local_to_global_row
+  sll_real64, dimension(:),   allocatable :: b
+  sll_real64, dimension(:),   allocatable :: x
+  sll_int32  :: num_local_dof_row
+  sll_int32  :: ierr
+  sll_int32  :: i
   sll_real64 :: val
+  sll_int32  :: prank
+  sll_int32  :: psize
 
   call sll_boot_collective()
+  prank = sll_get_collective_rank( sll_world_collective )
+  psize = sll_get_collective_size( sll_world_collective )
+
+  write(*,*) " #", prank, " of ", psize
   
   num_rows = 2000
   num_elements = num_rows

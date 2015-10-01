@@ -35,7 +35,7 @@
 !! -->
 !!  + Import Fortran modules:
 !!    \code
-!!      use sll_module_ode_integrators_base
+!!      use sll_m_ode_integrators_base
 !!    \endcode
 !!  + Add dependency to *CMakeLists.txt*:
 !!    \code

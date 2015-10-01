@@ -16,16 +16,16 @@ module sll_simulation_4d_DK_hybrid_module
   use sll_simulation_base
   use sll_cartesian_meshes
   use sll_coordinate_transformation_2d_base_module
-  use sll_module_coordinate_transformations_2d
+  use sll_m_coordinate_transformations_2d
   use sll_fdistribu4D_DK
   use sll_general_coordinate_elliptic_solver_module
-  use sll_module_scalar_field_2d_base
-  use sll_module_scalar_field_2d
-  use sll_module_arbitrary_degree_spline_interpolator_1d
-  use sll_module_scalar_field_1d_base
-  use sll_module_scalar_field_1d
+  use sll_m_scalar_field_2d_base
+  use sll_m_scalar_field_2d
+  use sll_m_arbitrary_degree_spline_interpolator_1d
+  use sll_m_scalar_field_1d_base
+  use sll_m_scalar_field_1d
   use sll_timer
-  use sll_module_deboor_splines_1d
+  use sll_m_deboor_splines_1d
 
   implicit none
 

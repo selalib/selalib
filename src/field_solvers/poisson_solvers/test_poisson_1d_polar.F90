@@ -19,7 +19,7 @@ program unit_test_poisson_1d_polar_solver
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-use sll_module_poisson_1d_polar_solver
+use sll_m_poisson_1d_polar_solver
 !use sll_boundary_condition_descriptors
 
 implicit none

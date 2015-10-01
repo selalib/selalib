@@ -5,8 +5,8 @@ module sll_split_advection_2d
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_errors.h"
-  use sll_module_characteristics_1d_base
-  use sll_module_interpolators_1d_base
+  use sll_m_characteristics_1d_base
+  use sll_m_interpolators_1d_base
   use sll_operator_splitting
   use sll_cartesian_meshes  
   use sll_coordinate_transformation_2d_base_module

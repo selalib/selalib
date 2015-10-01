@@ -1,4 +1,4 @@
-module sll_module_deboor_splines_1d
+module sll_m_deboor_splines_1d
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -1118,4 +1118,4 @@ call banslv ( q, k+k-1, n+m, k-1, k-1, bcoef_spline )
 
 end subroutine splint_der
   
-end module sll_module_deboor_splines_1d
+end module sll_m_deboor_splines_1d

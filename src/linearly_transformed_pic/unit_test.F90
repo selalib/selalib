@@ -19,7 +19,7 @@ program ltpic_tester
   
   use sll_lin_trans_pic_2d
   use sll_poly_2d_initializer
-  use sll_module_mapped_meshes_2d_cartesian
+  use sll_m_mapped_meshes_2d_cartesian
   use sll_leap_frog_1st_flow_2d
   use sll_leap_frog_2nd_flow_2d
   use sll_poisson_1d_periodic

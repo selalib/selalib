@@ -21,9 +21,9 @@ module finite_elements_solver_module
   !------------------------------------------------
 
   use sll_boundary_condition_descriptors
-  use sll_module_scalar_field_2d_base
-  use sll_module_scalar_field_2d
-  use sll_module_arbitrary_degree_spline_interpolator_2d
+  use sll_m_scalar_field_2d_base
+  use sll_m_scalar_field_2d
+  use sll_m_arbitrary_degree_spline_interpolator_2d
   use connectivity_module
   use sll_knots
   use gauss_legendre_integration

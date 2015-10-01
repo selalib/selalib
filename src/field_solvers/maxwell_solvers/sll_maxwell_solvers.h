@@ -20,10 +20,10 @@
 !**************************************************************
 
 
-use sll_module_maxwell_2d_fdtd
+use sll_m_maxwell_2d_fdtd
 
 #ifdef FFTW
-use sll_module_maxwell_2d_pstd
+use sll_m_maxwell_2d_pstd
 #endif
 
 #endif
