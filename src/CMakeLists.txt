@@ -130,6 +130,7 @@ INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/modules)
 
 
+ADD_SUBDIRECTORY(external)
 ADD_SUBDIRECTORY(interfaces)
 ADD_SUBDIRECTORY(memory)
 ADD_SUBDIRECTORY(working_precision)
@@ -145,8 +146,8 @@ ADD_SUBDIRECTORY(lagrange_interpolation)
 ADD_SUBDIRECTORY(hermite_interpolation)
 ADD_SUBDIRECTORY(integration)
 ADD_SUBDIRECTORY(periodic_interpolation)
-ADD_SUBDIRECTORY(deboor_splines)
 ADD_SUBDIRECTORY(reduction)
+ADD_SUBDIRECTORY(deboor_splines)
 ADD_SUBDIRECTORY(pic_particle_types)
 ADD_SUBDIRECTORY(random_deviate_generators)
 ADD_SUBDIRECTORY(pic_particle_initializers)
@@ -179,7 +180,6 @@ IF(MPI_ENABLED)
    SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
    ADD_SUBDIRECTORY(parallelization)
    ADD_SUBDIRECTORY(pif)
-   #PN ADD_SUBDIRECTORY(maxwell_solvers_parallel)
 
 ENDIF()
 
@@ -225,6 +225,7 @@ IF($ENV{PFUNIT})
 ENDIF()
 
 SET(BUILD_SPRNG OFF CACHE BOOL   "Build SPRNG libraries")
+
 IF(BUILD_SPRNG)
   FIND_PACKAGE(MPI REQUIRED CXX)
   SET(SPRNG_CXX_COMPILER ${MPI_CXX_COMPILER} CACHE FILEPATH  "CXX compiler for SPRNG")
